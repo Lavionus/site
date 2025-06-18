@@ -124,6 +124,31 @@
             cursor: pointer;
         }
 
+        .display-options {
+            margin-bottom: 15px;
+            background: #444;
+            padding: 10px;
+            border-radius: 4px;
+        }
+
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            margin-bottom: 8px;
+            font-size: 12px;
+            color: #e0e0e0;
+        }
+
+        .checkbox-label:last-child {
+            margin-bottom: 0;
+        }
+
+        .checkbox-label input[type="checkbox"] {
+            margin-right: 8px;
+            transform: scale(1.2);
+        }
+
         .list-controls {
             display: flex;
             gap: 8px;
@@ -284,6 +309,12 @@
         .point-distance {
             font-size: 10px;
             color: #ffeb3b;
+        }
+
+        .point-notes {
+            font-size: 10px;
+            color: #ffeb3b;
+            font-style: italic;
         }
 
         .point-actions {
@@ -660,6 +691,17 @@
                         </div>
                     </div>
 
+                    <div class="display-options">
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="showDistances" checked>
+                            Zobrazit vzdálenosti na mapě
+                        </label>
+                        <label class="checkbox-label">
+                            <input type="checkbox" id="showNotes">
+                            Zobrazit poznámky na mapě
+                        </label>
+                    </div>
+
                     <div class="list-controls">
                         <button class="btn btn-small" id="newRoute"><i class="fas fa-plus"></i> Nová trasa</button>
                         <button class="btn btn-small btn-warning" id="optimizeRoute"><i class="fas fa-magic"></i> Optimalizovat</button>
@@ -749,15 +791,135 @@
                 this.currentDistanceColor = '#ffffff';
                 this.isMobile = window.innerWidth <= 768;
                 this.isMenuOpen = false;
+                this.showDistances = true;
+                this.showNotes = false;
+                this.settings = {
+                    mapLayer: 'osm',
+                    pointColor: '#4CAF50',
+                    lineColor: '#ffeb3b',
+                    distanceColor: '#ffffff',
+                    showDistances: true,
+                    showNotes: false,
+                    mapCenter: [49.7437, 15.3386],
+                    mapZoom: 8
+                };
                 
                 this.init();
             }
 
             init() {
+                this.loadFromStorage();
                 this.initMap();
                 this.initEventListeners();
                 this.initMobileFeatures();
                 this.updateUI();
+                this.restoreMapView();
+            }
+
+            saveToStorage() {
+                try {
+                    // Připraví data pro export bez DOM objektů
+                    const dataToSave = {
+                        routes: this.routes.map(route => ({
+                            id: route.id,
+                            name: route.name,
+                            points: route.points.map(point => ({
+                                id: point.id,
+                                name: point.name,
+                                lat: point.lat,
+                                lng: point.lng,
+                                created: point.created,
+                                notes: point.notes,
+                                distanceFromPrev: point.distanceFromPrev
+                            })),
+                            realDistances: route.realDistances || [],
+                            pointColor: route.pointColor,
+                            lineColor: route.lineColor,
+                            distanceColor: route.distanceColor,
+                            visible: route.visible,
+                            created: route.created
+                        })),
+                        currentRouteId: this.currentRouteId,
+                        selectedRouteId: this.selectedRouteId,
+                        settings: {
+                            ...this.settings,
+                            mapCenter: this.map ? [this.map.getCenter().lat, this.map.getCenter().lng] : this.settings.mapCenter,
+                            mapZoom: this.map ? this.map.getZoom() : this.settings.mapZoom
+                        },
+                        lastSaved: new Date().toISOString()
+                    };
+                    
+                    localStorage.setItem('walkingRoutesData', JSON.stringify(dataToSave));
+                } catch (error) {
+                    console.warn('Nepodařilo se uložit data do localStorage:', error);
+                }
+            }
+
+            loadFromStorage() {
+                try {
+                    const savedData = localStorage.getItem('walkingRoutesData');
+                    if (savedData) {
+                        const data = JSON.parse(savedData);
+                        
+                        if (data.settings) {
+                            this.settings = { ...this.settings, ...data.settings };
+                            this.currentPointColor = this.settings.pointColor;
+                            this.currentLineColor = this.settings.lineColor;
+                            this.currentDistanceColor = this.settings.distanceColor;
+                            this.showDistances = this.settings.showDistances;
+                            this.showNotes = this.settings.showNotes;
+                        }
+                        
+                        if (data.routes && Array.isArray(data.routes)) {
+                            this.routes = data.routes.map(routeData => ({
+                                ...routeData,
+                                markers: [],
+                                polylines: [],
+                                points: routeData.points.map(point => ({
+                                    ...point,
+                                    noteMarker: null
+                                }))
+                            }));
+                            
+                            this.currentRouteId = data.currentRouteId || null;
+                            this.selectedRouteId = data.selectedRouteId || null;
+                        }
+                    }
+                } catch (error) {
+                    console.warn('Nepodařilo se načíst data z localStorage:', error);
+                }
+            }
+
+            restoreMapView() {
+                if (this.map && this.settings.mapCenter && this.settings.mapZoom) {
+                    this.map.setView(this.settings.mapCenter, this.settings.mapZoom);
+                }
+            }
+
+            saveSettings() {
+                this.settings.pointColor = this.currentPointColor;
+                this.settings.lineColor = this.currentLineColor;
+                this.settings.distanceColor = this.currentDistanceColor;
+                this.settings.showDistances = this.showDistances;
+                this.settings.showNotes = this.showNotes;
+                this.settings.mapLayer = document.getElementById('mapLayer').value;
+                
+                if (this.map) {
+                    this.settings.mapCenter = [this.map.getCenter().lat, this.map.getCenter().lng];
+                    this.settings.mapZoom = this.map.getZoom();
+                }
+                
+                this.saveToStorage();
+            }
+
+            restoreUISettings() {
+                // Obnoví hodnoty v UI
+                document.getElementById('pointColor').value = this.settings.pointColor;
+                document.getElementById('lineColor').value = this.settings.lineColor;
+                document.getElementById('distanceColor').value = this.settings.distanceColor;
+                document.getElementById('showDistances').checked = this.settings.showDistances;
+                document.getElementById('showNotes').checked = this.settings.showNotes;
+                document.getElementById('mapLayer').value = this.settings.mapLayer;
             }
 
             initMobileFeatures() {
@@ -794,7 +956,7 @@
             }
 
             initMap() {
-                this.map = L.map('map').setView([49.7437, 15.3386], 8);
+                this.map = L.map('map').setView(this.settings.mapCenter, this.settings.mapZoom);
                 
                 this.layers = {
                     osm: L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
@@ -811,7 +973,7 @@
                     })
                 };
 
-                this.currentLayer = this.layers.osm;
+                this.currentLayer = this.layers[this.settings.mapLayer] || this.layers.osm;
                 this.currentLayer.addTo(this.map);
 
                 L.control.scale({
@@ -827,11 +989,30 @@
                     }
                 });
 
+                this.map.on('moveend', () => {
+                    this.saveSettings();
+                });
+
+                this.map.on('zoomend', () => {
+                    this.saveSettings();
+                });
+
                 if (this.isMobile) {
                     this.map.doubleClickZoom.disable();
                     this.map.touchZoom.enable();
                     this.map.tap.enable();
                 }
+
+                // Obnoví uložené trasy na mapě
+                this.routes.forEach(route => {
+                    route.points.forEach(point => {
+                        this.createMarkerForRoute(route, point);
+                    });
+                    
+                    if (route.points.length >= 2) {
+                        this.calculateRouteGeometry(route);
+                    }
+                });
             }
 
             initEventListeners() {
@@ -843,21 +1024,37 @@
 
                 document.getElementById('mapLayer').addEventListener('change', (e) => {
                     this.switchLayer(e.target.value);
+                    this.saveSettings();
                 });
 
                 document.getElementById('pointColor').addEventListener('change', (e) => {
                     this.currentPointColor = e.target.value;
                     this.updateCurrentRouteStyle();
+                    this.saveSettings();
                 });
 
                 document.getElementById('lineColor').addEventListener('change', (e) => {
                     this.currentLineColor = e.target.value;
                     this.updateCurrentRouteStyle();
+                    this.saveSettings();
                 });
 
                 document.getElementById('distanceColor').addEventListener('change', (e) => {
                     this.currentDistanceColor = e.target.value;
                     this.updateCurrentRouteStyle();
+                    this.saveSettings();
+                });
+
+                document.getElementById('showDistances').addEventListener('change', (e) => {
+                    this.showDistances = e.target.checked;
+                    this.updateAllRoutesDisplay();
+                    this.saveSettings();
+                });
+
+                document.getElementById('showNotes').addEventListener('change', (e) => {
+                    this.showNotes = e.target.checked;
+                    this.updateAllRoutesDisplay();
+                    this.saveSettings();
                 });
 
                 document.getElementById('newRoute').addEventListener('click', () => {
@@ -892,6 +1089,11 @@
                     this.fitMapToAllRoutes();
                     this.closeMenuIfMobile();
                 });
+
+                // Obnoví UI nastavení při načtení
+                setTimeout(() => {
+                    this.restoreUISettings();
+                }, 100);
             }
 
             closeMenuIfMobile() {
@@ -934,6 +1136,7 @@
                 this.currentRouteId = routeId;
                 this.selectedRouteId = routeId;
                 this.updateUI();
+                this.saveToStorage();
                 this.showNotification(`Nová trasa "${route.name}" byla vytvořena!`);
             }
 
@@ -948,7 +1151,9 @@
                     name: pointName,
                     lat: lat,
                     lng: lng,
-                    created: new Date().toISOString()
+                    created: new Date().toISOString(),
+                    notes: '',
+                    noteMarker: null
                 };
 
                 route.points.push(point);
@@ -959,6 +1164,7 @@
                 }
                 
                 this.updateUI();
+                this.saveToStorage();
                 document.getElementById('lastModified').textContent = new Date().toLocaleTimeString();
             }
 
@@ -984,6 +1190,7 @@
                         <p style="margin: 4px 0; font-size: 12px;">📍 ${point.lat.toFixed(6)}, ${point.lng.toFixed(6)}</p>
                         <p style="margin: 4px 0; font-size: 12px;">🕒 ${new Date(point.created).toLocaleString()}</p>
                         <p style="margin: 4px 0; font-size: 12px;">🎯 Trasa: ${route.name}</p>
+                        ${point.notes ? `<p style="margin: 4px 0; font-size: 11px; font-style: italic; color: #ffeb3b;">📝 ${point.notes}</p>` : ''}
                     </div>
                 `);
                 
@@ -1005,6 +1212,7 @@
                 });
 
                 route.markers.push(marker);
+                this.updatePointNoteDisplay(route, point);
             }
 
             updatePointPosition(routeId, pointId, lat, lng) {
@@ -1022,6 +1230,8 @@
                     }
                     
                     this.updateUI();
+                    this.saveToStorage();
+                    this.updatePointNoteDisplay(route, point);
                 }
             }
 
@@ -1053,19 +1263,21 @@
                     
                     route.polylines.push(polyline);
                     
-                    const midLat = (start.lat + end.lat) / 2;
-                    const midLng = (start.lng + end.lng) / 2;
-                    
-                    const distanceMarker = L.marker([midLat, midLng], {
-                        icon: L.divIcon({
-                            className: 'distance-line',
-                            html: `<span style="color: ${route.distanceColor}; background: rgba(0,0,0,0.7); padding: 2px 4px; border-radius: 3px; font-size: 11px;">${distance.toFixed(1)} km</span>`,
-                            iconSize: [80, 20],
-                            iconAnchor: [40, 10]
-                        })
-                    }).addTo(this.map);
-                    
-                    route.polylines.push(distanceMarker);
+                    if (this.showDistances) {
+                        const midLat = (start.lat + end.lat) / 2;
+                        const midLng = (start.lng + end.lng) / 2;
+                        
+                        const distanceMarker = L.marker([midLat, midLng], {
+                            icon: L.divIcon({
+                                className: 'distance-line',
+                                html: `<span style="color: ${route.distanceColor}; background: rgba(0,0,0,0.7); padding: 2px 4px; border-radius: 3px; font-size: 11px;">${distance.toFixed(1)} km</span>`,
+                                iconSize: [80, 20],
+                                iconAnchor: [40, 10]
+                            })
+                        }).addTo(this.map);
+                        
+                        route.polylines.push(distanceMarker);
+                    }
                 }
 
                 route.points.forEach((point, index) => {
@@ -1076,10 +1288,14 @@
                     }
                 });
 
-                this.fitMapToRoute(route);
                 this.showNotification(`Trasa "${route.name}" vypočítána! Celkem: ${totalRealDistance.toFixed(1)} km`);
                 this.updateStatistics();
                 this.updateUI();
+                this.saveToStorage();
+                
+                route.points.forEach(point => {
+                    this.updatePointNoteDisplay(route, point);
+                });
             }
 
             calculateDistance(point1, point2) {
@@ -1142,6 +1358,7 @@
                 this.selectedRouteId = routeId;
                 this.currentRouteId = routeId;
                 this.updateUI();
+                this.saveToStorage();
             }
 
             removeRoute(routeId) {
@@ -1150,6 +1367,11 @@
 
                 route.markers.forEach(marker => this.map.removeLayer(marker));
                 route.polylines.forEach(line => this.map.removeLayer(line));
+                route.points.forEach(point => {
+                    if (point.noteMarker) {
+                        this.map.removeLayer(point.noteMarker);
+                    }
+                });
 
                 this.routes = this.routes.filter(r => r.id !== routeId);
 
@@ -1162,6 +1384,7 @@
                 }
 
                 this.updateUI();
+                this.saveToStorage();
                 this.showNotification(`Trasa "${route.name}" byla smazána!`);
             }
 
@@ -1171,6 +1394,12 @@
 
                 const pointIndex = route.points.findIndex(p => p.id === pointId);
                 if (pointIndex === -1) return;
+
+                const point = route.points[pointIndex];
+                
+                if (point.noteMarker) {
+                    this.map.removeLayer(point.noteMarker);
+                }
 
                 route.points.splice(pointIndex, 1);
 
@@ -1189,6 +1418,7 @@
                 }
 
                 this.updateUI();
+                this.saveToStorage();
             }
 
             editRouteName(routeId) {
@@ -1199,6 +1429,7 @@
                 if (newName && newName.trim()) {
                     route.name = newName.trim();
                     this.updateUI();
+                    this.saveToStorage();
                 }
             }
 
@@ -1213,7 +1444,59 @@
                 if (newName && newName.trim()) {
                     point.name = newName.trim();
                     this.updateUI();
+                    this.saveToStorage();
                 }
+            }
+
+            addPointNotes(routeId, pointId) {
+                const route = this.routes.find(r => r.id === routeId);
+                if (!route) return;
+
+                const point = route.points.find(p => p.id === pointId);
+                if (!point) return;
+
+                const notes = prompt('Poznámka k bodu:', point.notes || '');
+                if (notes !== null) {
+                    point.notes = notes.trim();
+                    this.updateUI();
+                    this.updatePointNoteDisplay(route, point);
+                    this.saveToStorage();
+                    this.showNotification("Poznámka byla uložena!");
+                }
+            }
+
+            updatePointNoteDisplay(route, point) {
+                if (point.noteMarker) {
+                    this.map.removeLayer(point.noteMarker);
+                    point.noteMarker = null;
+                }
+                
+                if (this.showNotes && point.notes && point.notes.trim()) {
+                    const noteMarker = L.marker([point.lat, point.lng], {
+                        icon: L.divIcon({
+                            className: 'point-note',
+                            html: `<div style="background: rgba(255,235,59,0.9); color: #333; padding: 2px 5px; border-radius: 3px; font-size: 9px; margin-left: 5px; margin-top: -15px; max-width: 120px; word-wrap: break-word; box-shadow: 0 1px 3px rgba(0,0,0,0.3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">${point.notes}</div>`,
+                            iconSize: [120, 16],
+                            iconAnchor: [0, 8]
+                        })
+                    }).addTo(this.map);
+                    
+                    point.noteMarker = noteMarker;
+                }
+            }
+
+            updateAllRoutesDisplay() {
+                this.routes.forEach(route => {
+                    if (route.visible) {
+                        if (route.points.length >= 2) {
+                            this.calculateRouteGeometry(route);
+                        }
+                        
+                        route.points.forEach(point => {
+                            this.updatePointNoteDisplay(route, point);
+                        });
+                    }
+                });
             }
 
             toggleRouteVisibility(routeId) {
@@ -1228,9 +1511,15 @@
                 } else {
                     route.markers.forEach(marker => this.map.removeLayer(marker));
                     route.polylines.forEach(line => this.map.removeLayer(line));
+                    route.points.forEach(point => {
+                        if (point.noteMarker) {
+                            this.map.removeLayer(point.noteMarker);
+                        }
+                    });
                 }
 
                 this.updateUI();
+                this.saveToStorage();
             }
 
             optimizeCurrentRoute() {
@@ -1277,6 +1566,7 @@
                 route.realDistances = [];
                 this.calculateRouteGeometry(route);
                 this.updateUI();
+                this.saveToStorage();
                 this.showNotification(`Trasa "${route.name}" byla optimalizována!`);
             }
 
@@ -1302,6 +1592,7 @@
                 if (route.points.length >= 2) {
                     this.calculateRouteGeometry(route);
                 }
+                this.saveToStorage();
             }
 
             addCurrentLocation() {
@@ -1333,7 +1624,7 @@
                 const totalPoints = this.routes.reduce((sum, route) => sum + route.points.length, 0);
                 const totalDistance = this.routes.reduce((sum, route) => sum + this.getRouteDistance(route), 0);
                 
-                const avgSpeed = 5; // km/h
+                const avgSpeed = 5;
                 const estimatedTime = totalDistance / avgSpeed * 60;
 
                 document.getElementById('totalRoutesStat').textContent = totalRoutes;
@@ -1420,9 +1711,13 @@
                                         📍 ${point.lat.toFixed(6)}, ${point.lng.toFixed(6)}
                                     </div>
                                     ${point.distanceFromPrev ? `<div class="point-distance">📏 ${point.distanceFromPrev.toFixed(1)} km</div>` : ''}
+                                    ${point.notes ? `<div class="point-notes">📝 ${point.notes}</div>` : ''}
                                     <div class="point-actions">
-                                        <button class="btn btn-small btn-secondary" onclick="routeManager.editPointName(${route.id}, ${point.id})" title="Editovat">
+                                        <button class="btn btn-small btn-secondary" onclick="routeManager.editPointName(${route.id}, ${point.id})" title="Editovat název">
                                             <i class="fas fa-edit"></i>
+                                        </button>
+                                        <button class="btn btn-small btn-info" onclick="routeManager.addPointNotes(${route.id}, ${point.id})" title="Poznámka">
+                                            <i class="fas fa-sticky-note"></i>
                                         </button>
                                         <button class="btn btn-small btn-danger" onclick="routeManager.removePointFromRoute(${route.id}, ${point.id})" title="Smazat">
                                             <i class="fas fa-trash"></i>
@@ -1468,6 +1763,11 @@
                 this.routes.forEach(route => {
                     route.markers.forEach(marker => this.map.removeLayer(marker));
                     route.polylines.forEach(line => this.map.removeLayer(line));
+                    route.points.forEach(point => {
+                        if (point.noteMarker) {
+                            this.map.removeLayer(point.noteMarker);
+                        }
+                    });
                 });
                 
                 this.routes = [];
@@ -1475,39 +1775,55 @@
                 this.selectedRouteId = null;
                 
                 this.updateUI();
+                this.saveToStorage();
                 this.showNotification("Všechny trasy byly vymazány!");
             }
 
             exportData() {
-                const data = {
-                    routes: this.routes.map(route => ({
-                        id: route.id,
-                        name: route.name,
-                        points: route.points,
-                        realDistances: route.realDistances,
-                        pointColor: route.pointColor,
-                        lineColor: route.lineColor,
-                        distanceColor: route.distanceColor,
-                        visible: route.visible,
-                        created: route.created
-                    })),
-                    statistics: {
-                        totalRoutes: this.routes.length,
-                        totalPoints: this.routes.reduce((sum, route) => sum + route.points.length, 0),
-                        totalDistance: this.routes.reduce((sum, route) => sum + this.getRouteDistance(route), 0)
-                    },
-                    exported: new Date().toISOString(),
-                    version: "4.0"
-                };
-                
-                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-                const url = URL.createObjectURL(blob);
-                const a = document.createElement('a');
-                a.href = url;
-                a.download = `pesi-trasy-${new Date().toISOString().split('T')[0]}.json`;
-                a.click();
-                URL.revokeObjectURL(url);
-                this.showNotification("Data byla exportována!");
+                try {
+                    // Připraví data pro export bez DOM objektů
+                    const data = {
+                        routes: this.routes.map(route => ({
+                            id: route.id,
+                            name: route.name,
+                            points: route.points.map(point => ({
+                                id: point.id,
+                                name: point.name,
+                                lat: point.lat,
+                                lng: point.lng,
+                                created: point.created,
+                                notes: point.notes,
+                                distanceFromPrev: point.distanceFromPrev
+                            })),
+                            realDistances: route.realDistances || [],
+                            pointColor: route.pointColor,
+                            lineColor: route.lineColor,
+                            distanceColor: route.distanceColor,
+                            visible: route.visible,
+                            created: route.created
+                        })),
+                        statistics: {
+                            totalRoutes: this.routes.length,
+                            totalPoints: this.routes.reduce((sum, route) => sum + route.points.length, 0),
+                            totalDistance: this.routes.reduce((sum, route) => sum + this.getRouteDistance(route), 0)
+                        },
+                        settings: this.settings,
+                        exported: new Date().toISOString(),
+                        version: "4.1"
+                    };
+                    
+                    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `pesi-trasy-${new Date().toISOString().split('T')[0]}.json`;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                    this.showNotification("Data byla exportována!");
+                } catch (error) {
+                    console.error('Chyba při exportu:', error);
+                    this.showNotification("Chyba při exportu dat!", "error");
+                }
             }
 
             importData() {
@@ -1524,11 +1840,26 @@
                                 if (data.routes && Array.isArray(data.routes)) {
                                     this.clearAll();
                                     
+                                    // Obnoví nastavení pokud jsou v importovaných datech
+                                    if (data.settings) {
+                                        this.settings = { ...this.settings, ...data.settings };
+                                        this.currentPointColor = this.settings.pointColor;
+                                        this.currentLineColor = this.settings.lineColor;
+                                        this.currentDistanceColor = this.settings.distanceColor;
+                                        this.showDistances = this.settings.showDistances;
+                                        this.showNotes = this.settings.showNotes;
+                                        this.restoreUISettings();
+                                    }
+                                    
                                     data.routes.forEach(routeData => {
                                         const route = {
                                             id: routeData.id || Date.now() + Math.random(),
                                             name: routeData.name || `Importovaná trasa ${this.routes.length + 1}`,
-                                            points: routeData.points || [],
+                                            points: (routeData.points || []).map(pointData => ({
+                                                ...pointData,
+                                                notes: pointData.notes || '',
+                                                noteMarker: null
+                                            })),
                                             markers: [],
                                             polylines: [],
                                             realDistances: routeData.realDistances || [],
@@ -1550,7 +1881,12 @@
                                         }
                                     });
                                     
+                                    if (this.routes.length > 0) {
+                                        this.fitMapToAllRoutes();
+                                    }
+                                    
                                     this.updateUI();
+                                    this.saveToStorage();
                                     this.showNotification('Data byla úspěšně importována!');
                                 } else {
                                     this.showNotification('Neplatný formát souboru!', 'error');
