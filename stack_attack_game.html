@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stack Attack</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #ff6b35, #ff8c42, #ffa726);
+            font-family: Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        .game-container {
+            background: linear-gradient(135deg, #ff6b35, #ff8c42);
+            border: 3px solid #d84315;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            text-align: center;
+            max-width: 400px;
+            width: 100%;
+        }
+
+        .game-header {
+            color: white;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            margin-bottom: 20px;
+        }
+
+        .game-title {
+            font-size: 28px;
+            font-weight: bold;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+        }
+
+        .score {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .game-board {
+            background: rgba(255,255,255,0.1);
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 10px;
+            padding: 10px;
+            margin: 20px 0;
+            min-height: 400px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .block {
+            position: absolute;
+            height: 30px;
+            transition: all 0.3s ease;
+            border: 2px solid rgba(0,0,0,0.2);
+            border-radius: 4px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.3);
+        }
+
+        .block-row-0 { background: linear-gradient(45deg, #4CAF50, #66BB6A); }
+        .block-row-1 { background: linear-gradient(45deg, #2196F3, #42A5F5); }
+        .block-row-2 { background: linear-gradient(45deg, #FF9800, #FFB74D); }
+        .block-row-3 { background: linear-gradient(45deg, #9C27B0, #BA68C8); }
+        .block-row-4 { background: linear-gradient(45deg, #F44336, #EF5350); }
+        .block-row-5 { background: linear-gradient(45deg, #00BCD4, #26C6DA); }
+
+        .moving-block {
+            animation: glow 0.5s ease-in-out infinite alternate;
+        }
+
+        @keyframes glow {
+            from { box-shadow: 0 2px 4px rgba(0,0,0,0.3); }
+            to { box-shadow: 0 4px 12px rgba(255,255,255,0.6); }
+        }
+
+        .controls {
+            margin-top: 20px;
+        }
+
+        .btn {
+            background: linear-gradient(45deg, #ffffff, #f0f0f0);
+            color: #333;
+            border: none;
+            padding: 15px 30px;
+            font-size: 16px;
+            font-weight: bold;
+            border-radius: 25px;
+            cursor: pointer;
+            margin: 0 10px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+            transition: all 0.2s ease;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 12px rgba(0,0,0,0.3);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .game-over {
+            background: rgba(0,0,0,0.8);
+            color: white;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            padding: 30px;
+            border-radius: 15px;
+            text-align: center;
+            z-index: 1000;
+            display: none;
+        }
+
+        .game-over h2 {
+            color: #ff6b35;
+            margin-bottom: 20px;
+            font-size: 24px;
+        }
+
+        .instructions {
+            color: rgba(255,255,255,0.9);
+            font-size: 14px;
+            margin-top: 15px;
+            line-height: 1.4;
+        }
+
+        .level-indicator {
+            color: white;
+            font-size: 16px;
+            margin-bottom: 10px;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.5);
+        }
+
+        @media (max-width: 480px) {
+            .game-container {
+                margin: 10px;
+                padding: 15px;
+            }
+            
+            .btn {
+                padding: 12px 20px;
+                font-size: 14px;
+                margin: 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="game-header">
+            <div class="game-title">Stack Attack</div>
+            <div class="score">Skóre: <span id="score">0</span></div>
+            <div class="level-indicator">Úroveň: <span id="level">1</span></div>
+        </div>
+
+        <div class="game-board" id="gameBoard">
+            <div class="game-over" id="gameOver">
+                <h2>Konec hry!</h2>
+                <p>Vaše skóre: <span id="finalScore">0</span></p>
+                <button class="btn" onclick="restartGame()">Hrát znovu</button>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="btn" id="dropBtn" onclick="dropBlock()">Upustit blok</button>
+            <button class="btn" onclick="restartGame()">Nová hra</button>
+        </div>
+
+        <div class="instructions">
+            <p>Stavějte věž tak vysokou, jak jen můžete!</p>
+            <p>Stiskněte "Upustit blok" v pravý okamžik.</p>
+            <p>Čím menší blok, tím vyšší skóre!</p>
+        </div>
+    </div>
+
+    <script>
+        class StackAttackGame {
+            constructor() {
+                this.gameBoard = document.getElementById('gameBoard');
+                this.scoreElement = document.getElementById('score');
+                this.levelElement = document.getElementById('level');
+                this.gameOverElement = document.getElementById('gameOver');
+                this.finalScoreElement = document.getElementById('finalScore');
+                this.dropBtn = document.getElementById('dropBtn');
+                
+                this.boardWidth = 360;
+                this.boardHeight = 400;
+                this.blockHeight = 30;
+                
+                this.reset();
+                this.startGame();
+            }
+
+            reset() {
+                this.stack = [];
+                this.currentBlock = null;
+                this.score = 0;
+                this.level = 1;
+                this.gameRunning = false;
+                this.movingDirection = 1;
+                this.baseBlockWidth = 120;
+                this.currentBlockWidth = this.baseBlockWidth;
+                this.speed = 2;
+                
+                this.gameBoard.innerHTML = '<div class="game-over" id="gameOver"><h2>Konec hry!</h2><p>Vaše skóre: <span id="finalScore">0</span></p><button class="btn" onclick="restartGame()">Hrát znovu</button></div>';
+                this.gameOverElement = document.getElementById('gameOver');
+                this.finalScoreElement = document.getElementById('finalScore');
+                
+                this.updateScore();
+                this.updateLevel();
+            }
+
+            startGame() {
+                this.gameRunning = true;
+                this.dropBtn.disabled = false;
+                
+                // Vytvořit základní blok
+                this.createBaseBlock();
+                
+                // Spustit první pohyblivý blok
+                this.createMovingBlock();
+                
+                this.gameLoop();
+            }
+
+            createBaseBlock() {
+                const baseBlock = {
+                    x: (this.boardWidth - this.baseBlockWidth) / 2,
+                    y: this.boardHeight - this.blockHeight,
+                    width: this.baseBlockWidth,
+                    element: this.createBlockElement(0)
+                };
+                
+                baseBlock.element.style.left = baseBlock.x + 'px';
+                baseBlock.element.style.bottom = '0px';
+                baseBlock.element.style.width = baseBlock.width + 'px';
+                
+                this.stack.push(baseBlock);
+            }
+
+            createMovingBlock() {
+                if (!this.gameRunning) return;
+                
+                const y = this.boardHeight - (this.stack.length + 1) * this.blockHeight;
+                
+                this.currentBlock = {
+                    x: 0,
+                    y: y,
+                    width: this.currentBlockWidth,
+                    element: this.createBlockElement(this.stack.length)
+                };
+                
+                this.currentBlock.element.classList.add('moving-block');
+                this.currentBlock.element.style.left = this.currentBlock.x + 'px';
+                this.currentBlock.element.style.bottom = (this.boardHeight - y - this.blockHeight) + 'px';
+                this.currentBlock.element.style.width = this.currentBlock.width + 'px';
+                
+                this.gameBoard.appendChild(this.currentBlock.element);
+            }
+
+            createBlockElement(rowIndex) {
+                const element = document.createElement('div');
+                element.className = `block block-row-${rowIndex % 6}`;
+                return element;
+            }
+
+            gameLoop() {
+                if (!this.gameRunning) return;
+                
+                this.moveCurrentBlock();
+                
+                setTimeout(() => {
+                    this.gameLoop();
+                }, 16); // ~60 FPS
+            }
+
+            moveCurrentBlock() {
+                if (!this.currentBlock) return;
+                
+                this.currentBlock.x += this.movingDirection * this.speed;
+                
+                // Odraz od stěn
+                if (this.currentBlock.x <= 0 || this.currentBlock.x + this.currentBlock.width >= this.boardWidth) {
+                    this.movingDirection *= -1;
+                    this.currentBlock.x = Math.max(0, Math.min(this.boardWidth - this.currentBlock.width, this.currentBlock.x));
+                }
+                
+                this.currentBlock.element.style.left = this.currentBlock.x + 'px';
+            }
+
+            dropBlock() {
+                if (!this.currentBlock || !this.gameRunning) return;
+                
+                const lastBlock = this.stack[this.stack.length - 1];
+                const overlap = this.calculateOverlap(this.currentBlock, lastBlock);
+                
+                if (overlap <= 0) {
+                    this.gameOver();
+                    return;
+                }
+                
+                // Upravit blok podle překryvu
+                const newBlock = {
+                    x: Math.max(this.currentBlock.x, lastBlock.x),
+                    y: this.currentBlock.y,
+                    width: overlap,
+                    element: this.currentBlock.element
+                };
+                
+                // Aktualizovat vizuál
+                newBlock.element.classList.remove('moving-block');
+                newBlock.element.style.left = newBlock.x + 'px';
+                newBlock.element.style.width = newBlock.width + 'px';
+                
+                this.stack.push(newBlock);
+                this.currentBlock = null;
+                
+                // Aktualizovat skóre
+                const perfectBonus = overlap === lastBlock.width ? 50 : 0;
+                this.score += Math.floor(overlap / 2) + perfectBonus;
+                this.updateScore();
+                
+                // Zvýšit úroveň
+                if (this.stack.length % 10 === 0) {
+                    this.level++;
+                    this.speed += 0.5;
+                    this.updateLevel();
+                }
+                
+                // Další blok
+                this.currentBlockWidth = overlap;
+                
+                if (this.stack.length >= 20) {
+                    // Posunout celou věž dolů
+                    this.moveStackDown();
+                }
+                
+                this.createMovingBlock();
+            }
+
+            calculateOverlap(block1, block2) {
+                const left = Math.max(block1.x, block2.x);
+                const right = Math.min(block1.x + block1.width, block2.x + block2.width);
+                return Math.max(0, right - left);
+            }
+
+            moveStackDown() {
+                // Odstranit spodní blok
+                const removedBlock = this.stack.shift();
+                if (removedBlock && removedBlock.element) {
+                    removedBlock.element.remove();
+                }
+                
+                // Posunout zbylé bloky
+                this.stack.forEach((block, index) => {
+                    block.y += this.blockHeight;
+                    block.element.style.bottom = (this.boardHeight - block.y - this.blockHeight) + 'px';
+                });
+            }
+
+            gameOver() {
+                this.gameRunning = false;
+                this.dropBtn.disabled = true;
+                
+                if (this.currentBlock && this.currentBlock.element) {
+                    this.currentBlock.element.remove();
+                }
+                
+                this.finalScoreElement.textContent = this.score;
+                this.gameOverElement.style.display = 'block';
+            }
+
+            updateScore() {
+                this.scoreElement.textContent = this.score;
+            }
+
+            updateLevel() {
+                this.levelElement.textContent = this.level;
+            }
+        }
+
+        let game;
+
+        function startGame() {
+            game = new StackAttackGame();
+        }
+
+        function dropBlock() {
+            if (game) {
+                game.dropBlock();
+            }
+        }
+
+        function restartGame() {
+            if (game) {
+                game.reset();
+                game.startGame();
+            } else {
+                startGame();
+            }
+        }
+
+        // Spustit hru při načtení stránky
+        window.addEventListener('load', startGame);
+
+        // Přidat ovládání klávesnicí
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' || e.key === 'Enter') {
+                e.preventDefault();
+                dropBlock();
+            }
+        });
+    </script>
+</body>
+</html>
