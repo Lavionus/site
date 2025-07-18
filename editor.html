@@ -1,0 +1,500 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <title>Markdown Editor</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: sans-serif;
+      background-color: #121212;
+      color: #eee;
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+    }
+    header {
+      background-color: #1e1e1e;
+      padding: 10px 20px;
+      color: #ff9900;
+      font-size: 20px;
+      border-bottom: 1px solid #333;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .toolbar {
+      display: flex;
+      gap: 10px;
+      padding: 10px;
+      background: #1a1a1a;
+      border-bottom: 1px solid #333;
+      flex-wrap: wrap;
+    }
+    .toolbar input[type="file"] {
+      display: none;
+    }
+    .toolbar label, .toolbar button, .toolbar input {
+      background-color: #2a2a2a;
+      color: #eee;
+      border: 1px solid #444;
+      padding: 6px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+    }
+    .toolbar input {
+      min-width: 200px;
+      cursor: text;
+    }
+    .toolbar button:hover,
+    .toolbar label:hover {
+      background-color: #333;
+    }
+    .help-btn {
+      background-color: #ff9900 !important;
+      color: #000 !important;
+    }
+    .main-content {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+    .sidebar {
+      width: 250px;
+      background-color: #1a1a1a;
+      border-right: 1px solid #333;
+      padding: 10px;
+      overflow-y: auto;
+    }
+    .sidebar h3 {
+      margin-top: 0;
+      color: #ff9900;
+      font-size: 16px;
+    }
+    .document-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .document-item {
+      padding: 8px;
+      margin-bottom: 5px;
+      background-color: #2a2a2a;
+      border-radius: 4px;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .document-item:hover {
+      background-color: #333;
+    }
+    .document-item.active {
+      background-color: #ff9900;
+      color: #000;
+    }
+    .delete-btn {
+      background: none;
+      border: none;
+      color: #ff5555;
+      cursor: pointer;
+      font-size: 16px;
+      padding: 0;
+      width: 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .delete-btn:hover {
+      background-color: #ff5555;
+      color: #fff;
+      border-radius: 3px;
+    }
+    .editor-container {
+      flex: 1;
+      display: flex;
+    }
+    textarea {
+      width: 50%;
+      background-color: #1c1c1c;
+      color: #eee;
+      border: none;
+      resize: none;
+      padding: 10px;
+      font-size: 16px;
+      outline: none;
+    }
+    .preview {
+      width: 50%;
+      padding: 10px 20px;
+      background-color: #181818;
+      overflow-y: auto;
+      border-left: 1px solid #333;
+    }
+    .preview h1 { color: #ff9900; }
+    .preview h2 { color: #ffaa33; }
+    .preview h3 { color: #ffcc55; }
+    .preview strong { color: #ffffff; }
+    .preview em { color: #dddddd; }
+    .preview code {
+      background-color: #222;
+      padding: 2px 5px;
+      border-radius: 4px;
+      color: #ffcc00;
+    }
+    .preview pre {
+      background-color: #222;
+      padding: 10px;
+      border-radius: 4px;
+      overflow-x: auto;
+    }
+    .preview blockquote {
+      border-left: 4px solid #ff9900;
+      padding-left: 15px;
+      margin-left: 0;
+      color: #ccc;
+    }
+    footer {
+      text-align: center;
+      padding: 10px;
+      background-color: #1e1e1e;
+      border-top: 1px solid #333;
+      font-size: 12px;
+    }
+
+    /* Modal styles */
+    .modal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      background-color: rgba(0, 0, 0, 0.7);
+    }
+    .modal-content {
+      background-color: #1e1e1e;
+      margin: 5% auto;
+      padding: 20px;
+      border: 1px solid #333;
+      border-radius: 8px;
+      width: 80%;
+      max-width: 700px;
+      max-height: 80%;
+      overflow-y: auto;
+      position: relative;
+    }
+    .close {
+      color: #aaa;
+      float: right;
+      font-size: 28px;
+      font-weight: bold;
+      position: absolute;
+      right: 15px;
+      top: 10px;
+      cursor: pointer;
+    }
+    .close:hover {
+      color: #fff;
+    }
+    .modal h2 {
+      color: #ff9900;
+      margin-top: 0;
+    }
+    .modal h3 {
+      color: #ffaa33;
+      margin-top: 20px;
+    }
+    .modal code {
+      background-color: #222;
+      padding: 2px 5px;
+      border-radius: 4px;
+      color: #ffcc00;
+    }
+    .modal pre {
+      background-color: #222;
+      padding: 10px;
+      border-radius: 4px;
+      overflow-x: auto;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <span>📝 Markdown Editor</span>
+    <button class="help-btn" onclick="openHelp()">? Nápověda</button>
+  </header>
+  
+  <div class="toolbar">
+    <input type="text" id="documentName" placeholder="Název dokumentu..." value="Nový dokument">
+    <button onclick="saveDocument()">💾 Uložit</button>
+    <button onclick="newDocument()">📄 Nový</button>
+    <label for="fileInput">📂 Import</label>
+    <input type="file" id="fileInput" accept=".md,.txt">
+    <button onclick="exportFile()">📤 Export</button>
+  </div>
+
+  <div class="main-content">
+    <div class="sidebar">
+      <h3>📚 Moje dokumenty</h3>
+      <ul class="document-list" id="documentList"></ul>
+    </div>
+    
+    <div class="editor-container">
+      <textarea id="editor" oninput="updatePreview()" placeholder="Piš v Markdown syntaxi..."></textarea>
+      <div class="preview" id="preview"></div>
+    </div>
+  </div>
+
+  <footer>&copy; 2025 Markdown Editor Offline</footer>
+
+  <!-- Modal nápověda -->
+  <div id="helpModal" class="modal">
+    <div class="modal-content">
+      <span class="close" onclick="closeHelp()">&times;</span>
+      <h2>Markdown Nápověda</h2>
+      
+      <h3>Základní formátování</h3>
+      <pre><code># Nadpis 1
+## Nadpis 2
+### Nadpis 3
+
+**Tučný text**
+*Kurzíva*
+~~Přeškrtnutý text~~
+
+`Inline kód`</code></pre>
+
+      <h3>Seznamy</h3>
+      <pre><code>- Položka 1
+- Položka 2
+  - Podpoložka
+  
+1. Číslovaný seznam
+2. Druhá položka</code></pre>
+
+      <h3>Odkazy a obrázky</h3>
+      <pre><code>[Text odkazu](https://example.com)
+![Alt text obrázku](url-obrázku.jpg)</code></pre>
+
+      <h3>Citace a kód</h3>
+      <pre><code>> Toto je citace
+> Může být víceřádková
+
+```javascript
+function hello() {
+  console.log("Hello World!");
+}
+```</code></pre>
+
+      <h3>Tabulky</h3>
+      <pre><code>| Sloupec 1 | Sloupec 2 |
+|-----------|-----------|
+| Řádek 1   | Data 1    |
+| Řádek 2   | Data 2    |</code></pre>
+
+      <h3>Horizontální čára</h3>
+      <pre><code>---</code></pre>
+
+      <p><strong>Tip:</strong> Změny v editoru se zobrazují v náhledu okamžitě!</p>
+    </div>
+  </div>
+
+  <script>
+    const editor = document.getElementById('editor');
+    const preview = document.getElementById('preview');
+    const fileInput = document.getElementById('fileInput');
+    const documentName = document.getElementById('documentName');
+    const documentList = document.getElementById('documentList');
+    
+    let currentDocumentId = null;
+    let documents = JSON.parse(localStorage.getItem('markdownDocuments') || '{}');
+
+    function updatePreview() {
+      const text = editor.value;
+      if (typeof marked !== 'undefined') {
+        preview.innerHTML = marked.parse(text);
+      } else {
+        // Fallback pokud marked.js není načten
+        preview.innerHTML = '<p>Načítání náhledu...</p>';
+      }
+    }
+
+    function saveDocument() {
+      const name = documentName.value.trim() || 'Bez názvu';
+      const content = editor.value;
+      const id = currentDocumentId || generateId();
+      
+      documents[id] = {
+        id: id,
+        name: name,
+        content: content,
+        lastModified: new Date().toISOString()
+      };
+      
+      localStorage.setItem('markdownDocuments', JSON.stringify(documents));
+      currentDocumentId = id;
+      renderDocumentList();
+      
+      // Zobrazit potvrzení
+      const originalText = event.target.textContent;
+      event.target.textContent = '✓ Uloženo';
+      event.target.style.backgroundColor = '#4caf50';
+      setTimeout(() => {
+        event.target.textContent = originalText;
+        event.target.style.backgroundColor = '';
+      }, 1000);
+    }
+
+    function newDocument() {
+      currentDocumentId = null;
+      documentName.value = 'Nový dokument';
+      editor.value = '';
+      updatePreview();
+      renderDocumentList();
+    }
+
+    function loadDocument(id) {
+      const doc = documents[id];
+      if (doc) {
+        currentDocumentId = id;
+        documentName.value = doc.name;
+        editor.value = doc.content;
+        updatePreview();
+        renderDocumentList();
+      }
+    }
+
+    function deleteDocument(id, event) {
+      event.stopPropagation();
+      if (confirm('Opravdu chcete smazat tento dokument?')) {
+        delete documents[id];
+        localStorage.setItem('markdownDocuments', JSON.stringify(documents));
+        
+        if (currentDocumentId === id) {
+          newDocument();
+        } else {
+          renderDocumentList();
+        }
+      }
+    }
+
+    function renderDocumentList() {
+      documentList.innerHTML = '';
+      
+      const sortedDocs = Object.values(documents).sort((a, b) => 
+        new Date(b.lastModified) - new Date(a.lastModified)
+      );
+      
+      sortedDocs.forEach(doc => {
+        const li = document.createElement('li');
+        li.className = 'document-item';
+        if (doc.id === currentDocumentId) {
+          li.classList.add('active');
+        }
+        
+        li.innerHTML = `
+          <span title="${doc.name}">${doc.name.substring(0, 20)}${doc.name.length > 20 ? '...' : ''}</span>
+          <button class="delete-btn" onclick="deleteDocument('${doc.id}', event)" title="Smazat">×</button>
+        `;
+        
+        li.onclick = () => loadDocument(doc.id);
+        documentList.appendChild(li);
+      });
+      
+      if (sortedDocs.length === 0) {
+        const li = document.createElement('li');
+        li.textContent = 'Žádné dokumenty';
+        li.style.color = '#666';
+        li.style.cursor = 'default';
+        li.style.backgroundColor = 'transparent';
+        documentList.appendChild(li);
+      }
+    }
+
+    function generateId() {
+      return Date.now().toString(36) + Math.random().toString(36).substr(2);
+    }
+
+    function exportFile() {
+      const name = documentName.value.trim() || 'dokument';
+      const blob = new Blob([editor.value], { type: "text/markdown" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `${name}.md`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+    }
+
+    function openHelp() {
+      document.getElementById('helpModal').style.display = 'block';
+    }
+
+    function closeHelp() {
+      document.getElementById('helpModal').style.display = 'none';
+    }
+
+    // Zavření modalu při kliknutí mimo něj
+    window.onclick = function(event) {
+      const modal = document.getElementById('helpModal');
+      if (event.target === modal) {
+        modal.style.display = 'none';
+      }
+    }
+
+    fileInput.addEventListener("change", (event) => {
+      const file = event.target.files[0];
+      if (file) {
+        const reader = new FileReader();
+        reader.onload = e => {
+          editor.value = e.target.result;
+          documentName.value = file.name.replace(/\.[^/.]+$/, "");
+          updatePreview();
+        };
+        reader.readAsText(file);
+      }
+    });
+
+    // Automatické ukládání při psaní (volitelné)
+    let saveTimeout;
+    editor.addEventListener('input', () => {
+      clearTimeout(saveTimeout);
+      if (currentDocumentId) {
+        saveTimeout = setTimeout(() => {
+          saveDocument();
+        }, 2000); // Auto-save po 2 sekundách nečinnosti
+      }
+    });
+
+    // Klávesové zkratky
+    document.addEventListener('keydown', (e) => {
+      if (e.ctrlKey && e.key === 's') {
+        e.preventDefault();
+        saveDocument();
+      }
+      if (e.ctrlKey && e.key === 'n') {
+        e.preventDefault();
+        newDocument();
+      }
+    });
+
+    // Include Marked.js (lightweight markdown parser)
+    const script = document.createElement("script");
+    script.src = "https://cdn.jsdelivr.net/npm/marked/marked.min.js";
+    script.onload = () => {
+      updatePreview();
+      renderDocumentList();
+    };
+    document.body.appendChild(script);
+
+    // Inicializace
+    renderDocumentList();
+  </script>
+</body>
+</html>

@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <title>Stack Attack Reborn</title>
+  <style>
+    body {
+      margin: 0;
+      background-color: #121212;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      height: 100vh;
+      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+      overflow: hidden;
+      color: #ddd;
+    }
+
+    h1 {
+      color: #ff9900;
+      margin: 20px 0 10px;
+      font-size: 28px;
+      letter-spacing: 1px;
+    }
+
+    #score {
+      color: #ccc;
+      margin-bottom: 15px;
+      font-size: 16px;
+    }
+
+    #game {
+      display: grid;
+      grid-template-columns: repeat(10, 32px);
+      grid-template-rows: repeat(15, 32px);
+      gap: 1px;
+      background-color: #1e1e1e;
+      border: 2px solid #333;
+      box-shadow: 0 0 10px #000;
+    }
+
+    .cell {
+      width: 32px;
+      height: 32px;
+      background-color: #222;
+      box-sizing: border-box;
+    }
+
+    .box-red    { background-color: #e53935; }
+    .box-blue   { background-color: #1e88e5; }
+    .box-green  { background-color: #43a047; }
+    .box-yellow { background-color: #fdd835; }
+
+    .player {
+      background: radial-gradient(circle, #ccc 20%, #fff 60%);
+      border: 1px solid #fff;
+    }
+
+    .carrying {
+      box-shadow: 0 0 6px 3px #ff9900 inset;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Stack Attack Reborn</h1>
+  <div id="score">Skóre: 0</div>
+  <div id="game"></div>
+
+  <script>
+    const rows = 15;
+    const cols = 10;
+    const game = document.getElementById("game");
+    const scoreDisplay = document.getElementById("score");
+    const colors = ["box-red", "box-blue", "box-green", "box-yellow"];
+    const grid = [];
+
+    let score = 0;
+    let player = { x: 4, y: 14, carrying: null };
+
+    for (let y = 0; y < rows; y++) {
+      const row = [];
+      for (let x = 0; x < cols; x++) {
+        const div = document.createElement("div");
+        div.className = "cell";
+        game.appendChild(div);
+        row.push(null);
+      }
+      grid.push(row);
+    }
+
+    function draw() {
+      const cells = game.children;
+      let index = 0;
+      for (let y = 0; y < rows; y++) {
+        for (let x = 0; x < cols; x++) {
+          const cell = cells[index];
+          cell.className = "cell";
+          if (grid[y][x]) cell.classList.add(grid[y][x]);
+          if (x === player.x && y === player.y) {
+            cell.classList.add("player");
+            if (player.carrying) cell.classList.add("carrying");
+          }
+          index++;
+        }
+      }
+      scoreDisplay.textContent = `Skóre: ${score}`;
+    }
+
+    function dropBox() {
+      const x = Math.floor(Math.random() * cols);
+      const color = colors[Math.floor(Math.random() * colors.length)];
+      for (let y = 0; y < rows; y++) {
+        if (grid[y][x] !== null) {
+          if (y === 0) return gameOver();
+          grid[y - 1][x] = color;
+          checkMatches(y - 1, x);
+          return;
+        }
+      }
+      grid[rows - 1][x] = color;
+      checkMatches(rows - 1, x);
+    }
+
+    function gameOver() {
+      alert("Konec hry! Skóre: " + score);
+      location.reload();
+    }
+
+    function movePlayer(dx, dy = 0) {
+      const newX = player.x + dx;
+      const newY = player.y + dy;
+      if (newX >= 0 && newX < cols && newY >= 0 && newY < rows) {
+        player.x = newX;
+        player.y = newY;
+      }
+    }
+
+    function pickOrDrop() {
+      const box = grid[player.y][player.x];
+      if (player.carrying === null && box !== null) {
+        player.carrying = box;
+        grid[player.y][player.x] = null;
+      } else if (player.carrying !== null && box === null) {
+        grid[player.y][player.x] = player.carrying;
+        player.carrying = null;
+        checkMatches(player.y, player.x);
+      }
+    }
+
+    function checkMatches(y, x) {
+      const color = grid[y][x];
+      if (!color) return;
+      let count = 1;
+      for (let i = y - 1; i >= 0; i--) {
+        if (grid[i][x] === color) count++;
+        else break;
+      }
+      if (count >= 3) {
+        for (let i = y; i > y - count; i--) {
+          grid[i][x] = null;
+        }
+        score += count * 10;
+        collapseColumn(x);
+      }
+    }
+
+    function collapseColumn(x) {
+      for (let y = rows - 1; y >= 0; y--) {
+        if (grid[y][x] === null) {
+          for (let k = y - 1; k >= 0; k--) {
+            if (grid[k][x] !== null) {
+              grid[y][x] = grid[k][x];
+              grid[k][x] = null;
+              break;
+            }
+          }
+        }
+      }
+    }
+
+    document.addEventListener("keydown", e => {
+      switch (e.key) {
+        case "ArrowLeft": movePlayer(-1); break;
+        case "ArrowRight": movePlayer(1); break;
+        case "ArrowUp": movePlayer(0, -1); break;
+        case "ArrowDown": movePlayer(0, 1); break;
+        case " ": pickOrDrop(); break;
+      }
+      draw();
+    });
+
+    setInterval(() => {
+      dropBox();
+      draw();
+    }, 1500);
+
+    draw();
+  </script>
+</body>
+</html>
+

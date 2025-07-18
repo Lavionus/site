@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8" />
+  <title>Kalendář</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: sans-serif;
+      background-color: #121212;
+      color: #eee;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+      height: 100vh;
+    }
+
+    h1 {
+      color: #ff9900;
+      margin-bottom: 10px;
+    }
+
+    .calendar-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      width: 100%;
+      max-width: 700px;
+      margin-bottom: 10px;
+    }
+
+    .calendar-header button {
+      background-color: #1e1e1e;
+      color: #eee;
+      border: 1px solid #333;
+      padding: 6px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+
+    .calendar-header button:hover {
+      background-color: #333;
+    }
+
+    .month-year {
+      font-size: 20px;
+      color: #ffaa33;
+    }
+
+    .calendar {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 5px;
+      width: 100%;
+      max-width: 700px;
+    }
+
+    .day-name, .day {
+      text-align: center;
+      padding: 10px;
+      border-radius: 5px;
+    }
+
+    .day-name {
+      background-color: #1f1f1f;
+      font-weight: bold;
+      color: #bbb;
+    }
+
+    .day {
+      background-color: #1a1a1a;
+      cursor: pointer;
+      min-height: 60px;
+      position: relative;
+    }
+
+    .today {
+      border: 2px solid #ff9900;
+    }
+
+    .has-event::after {
+      content: "📌";
+      position: absolute;
+      top: 4px;
+      font-size: 14px;
+    }
+
+    #eventModal {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      background-color: #1e1e1e;
+      border: 1px solid #333;
+      border-radius: 6px;
+      padding: 20px;
+      display: none;
+      z-index: 100;
+      max-width: 90%;
+    }
+
+    #eventModal input, #eventModal textarea {
+      width: 100%;
+      margin-bottom: 10px;
+      background-color: #222;
+      color: #eee;
+      border: 1px solid #444;
+      padding: 8px;
+      border-radius: 4px;
+    }
+
+    #eventModal button {
+      background-color: #ff9900;
+      border: none;
+      color: #000;
+      padding: 8px 12px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-right: 5px;
+    }
+
+    #eventList {
+      margin-top: 20px;
+      max-width: 700px;
+      width: 100%;
+    }
+
+    .event-item {
+      background-color: #1a1a1a;
+      padding: 10px;
+      margin-bottom: 5px;
+      border-left: 4px solid #ffaa33;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .event-item button {
+      background: transparent;
+      color: #ff5555;
+      border: none;
+      cursor: pointer;
+    }
+
+    footer {
+      margin-top: auto;
+      padding: 10px;
+      font-size: 12px;
+      color: #555;
+    }
+  </style>
+</head>
+<body>
+  <h1>Kalendář</h1>
+
+  <div class="calendar-header">
+    <button onclick="changeMonth(-1)">← Předchozí</button>
+    <div class="month-year" id="monthYear"></div>
+    <button onclick="changeMonth(1)">Další →</button>
+  </div>
+
+  <div class="calendar" id="calendar"></div>
+
+  <div id="eventList"></div>
+
+  <footer>&copy; 2025 Offline Kalendář</footer>
+
+  <!-- Modal pro přidání události -->
+  <div id="eventModal">
+    <h3>Přidat událost</h3>
+    <div id="modalDate"></div>
+    <input type="text" id="eventTitle" placeholder="Název události" />
+    <textarea id="eventDesc" placeholder="Popis (nepovinný)"></textarea>
+    <button onclick="saveEvent()">Uložit</button>
+    <button onclick="closeModal()">Zrušit</button>
+  </div>
+
+  <script>
+    const calendar = document.getElementById("calendar");
+    const monthYear = document.getElementById("monthYear");
+    const eventModal = document.getElementById("eventModal");
+    const eventTitle = document.getElementById("eventTitle");
+    const eventDesc = document.getElementById("eventDesc");
+    const modalDate = document.getElementById("modalDate");
+    const eventList = document.getElementById("eventList");
+
+    let today = new Date();
+    let currentMonth = today.getMonth();
+    let currentYear = today.getFullYear();
+    let selectedDate = null;
+
+    function getEvents() {
+      return JSON.parse(localStorage.getItem("events") || "{}");
+    }
+
+    function setEvents(events) {
+      localStorage.setItem("events", JSON.stringify(events));
+    }
+
+    function renderCalendar(month, year) {
+      calendar.innerHTML = "";
+      const events = getEvents();
+
+      const firstDay = new Date(year, month, 1).getDay() || 7;
+      const daysInMonth = new Date(year, month + 1, 0).getDate();
+
+      monthYear.textContent = new Date(year, month).toLocaleString("cs-CZ", {
+        month: "long",
+        year: "numeric"
+      });
+
+      const dayNames = ["Po", "Út", "St", "Čt", "Pá", "So", "Ne"];
+      dayNames.forEach(d => {
+        const div = document.createElement("div");
+        div.className = "day-name";
+        div.textContent = d;
+        calendar.appendChild(div);
+      });
+
+      for (let i = 1; i < firstDay; i++) {
+        const empty = document.createElement("div");
+        empty.className = "day";
+        calendar.appendChild(empty);
+      }
+
+      for (let day = 1; day <= daysInMonth; day++) {
+        const dateStr = `${year}-${month + 1}-${day}`;
+        const cell = document.createElement("div");
+        cell.className = "day";
+        cell.textContent = day;
+
+        if (events[dateStr]) {
+          cell.classList.add("has-event");
+        }
+
+        if (
+          day === today.getDate() &&
+          month === today.getMonth() &&
+          year === today.getFullYear()
+        ) {
+          cell.classList.add("today");
+        }
+
+        cell.onclick = () => {
+        selectedDate = dateStr;
+        renderEventList(dateStr);
+      };
+        calendar.appendChild(cell);
+      }
+
+      renderEventList(`${year}-${month + 1}-${today.getDate()}`);
+    }
+
+    function openModal(dateStr) {
+      selectedDate = dateStr;
+      modalDate.textContent = `Datum: ${dateStr}`;
+      eventTitle.value = "";
+      eventDesc.value = "";
+      eventModal.style.display = "block";
+      renderEventList(dateStr);
+    }
+
+    function closeModal() {
+      eventModal.style.display = "none";
+    }
+
+    function saveEvent() {
+      if (!eventTitle.value.trim()) return;
+
+      const events = getEvents();
+      if (!events[selectedDate]) events[selectedDate] = [];
+      events[selectedDate].push({
+        title: eventTitle.value.trim(),
+        desc: eventDesc.value.trim()
+      });
+
+      setEvents(events);
+      closeModal();
+      renderCalendar(currentMonth, currentYear);
+    }
+
+    function renderEventList(dateStr) {
+      const events = getEvents();
+      selectedDate = dateStr;
+      eventList.innerHTML = `<h3>Události pro ${dateStr}</h3>`;
+
+      const addBtn = document.createElement("button");
+      addBtn.textContent = "+ Přidat událost";
+      addBtn.onclick = () => openModal(dateStr);
+      addBtn.style.marginBottom = "10px";
+      addBtn.style.backgroundColor = "#ffaa33";
+      addBtn.style.color = "#000";
+      addBtn.style.padding = "6px 12px";
+      addBtn.style.border = "none";
+      addBtn.style.borderRadius = "4px";
+      addBtn.style.cursor = "pointer";
+      eventList.appendChild(addBtn);
+
+      if (!events[dateStr] || events[dateStr].length === 0) {
+        const empty = document.createElement("div");
+        empty.textContent = "Žádné události.";
+        empty.style.color = "#777";
+        eventList.appendChild(empty);
+        return;
+      }
+
+      events[dateStr].forEach((event, i) => {
+        const div = document.createElement("div");
+        div.className = "event-item";
+        div.innerHTML = `
+          <div>
+            <strong>${event.title}</strong><br />
+            <small>${event.desc}</small>
+          </div>
+          <button onclick="deleteEvent('${dateStr}', ${i})">✕</button>
+        `;
+        eventList.appendChild(div);
+      });
+    }
+
+
+    function deleteEvent(dateStr, index) {
+      const events = getEvents();
+      events[dateStr].splice(index, 1);
+      if (events[dateStr].length === 0) delete events[dateStr];
+      setEvents(events);
+      renderCalendar(currentMonth, currentYear);
+      renderEventList(dateStr);
+    }
+
+    function changeMonth(offset) {
+      currentMonth += offset;
+      if (currentMonth < 0) {
+        currentMonth = 11;
+        currentYear--;
+      } else if (currentMonth > 11) {
+        currentMonth = 0;
+        currentYear++;
+      }
+      renderCalendar(currentMonth, currentYear);
+    }
+
+    renderCalendar(currentMonth, currentYear);
+  </script>
+</body>
+</html>
+
