@@ -909,31 +909,55 @@
         function createWeatherPreview(weatherData) {
             if (weatherData.length === 0) return '';
 
-            const sourceData = weatherData[0];
-            const days = sourceData.daily;
+            // Mapování dat podle data
+            const dailyAggregatedData = {};
+            weatherData[0].daily.forEach(day => {
+                dailyAggregatedData[day.date] = {
+                    temperatures: [],
+                    precipitations: [],
+                    humidities: [],
+                    windspeeds: []
+                };
+            });
+
+            weatherData.forEach(source => {
+                source.daily.forEach(day => {
+                    if (dailyAggregatedData[day.date]) {
+                        if (day.temperature_max !== null) dailyAggregatedData[day.date].temperatures.push(day.temperature_max);
+                        if (day.precipitation !== null) dailyAggregatedData[day.date].precipitations.push(day.precipitation);
+                        if (day.humidity !== null) dailyAggregatedData[day.date].humidities.push(day.humidity);
+                        if (day.windspeed !== null) dailyAggregatedData[day.date].windspeeds.push(day.windspeed);
+                    }
+                });
+            });
 
             const previewHtml = `
                 <div class="weather-preview">
                     <div class="weather-preview-title">📅 Předpověď na ${selectedDays} dní</div>
                     <div class="weather-days-grid">
-                        ${days.map((day, index) => {
-                            const date = new Date(day.date);
+                        ${Object.keys(dailyAggregatedData).map(dateKey => {
+                            const aggregated = dailyAggregatedData[dateKey];
+                            const date = new Date(dateKey);
                             const dayName = date.toLocaleDateString('cs-CZ', { weekday: 'short' });
                             const dayDate = date.toLocaleDateString('cs-CZ', { day: 'numeric', month: 'numeric' });
                             
-                            const temp = day.temperature_max || 0;
-                            const precipitation = day.precipitation || 0;
-                            const humidity = day.humidity || 50;
-                            const windspeed = day.windspeed || 0;
+                            // Průměrné hodnoty pro ikonku a popis
+                            const avgTemp = aggregated.temperatures.length ? aggregated.temperatures.reduce((a, b) => a + b, 0) / aggregated.temperatures.length : 0;
+                            const avgPrecipitation = aggregated.precipitations.length ? aggregated.precipitations.reduce((a, b) => a + b, 0) / aggregated.precipitations.length : 0;
+                            const avgHumidity = aggregated.humidities.length ? aggregated.humidities.reduce((a, b) => a + b, 0) / aggregated.humidities.length : 50;
+                            const avgWindspeed = aggregated.windspeeds.length ? aggregated.windspeeds.reduce((a, b) => a + b, 0) / aggregated.windspeeds.length : 0;
                             
-                            const icon = getWeatherIcon(temp, precipitation, humidity, windspeed);
-                            const description = getWeatherDescription(temp, precipitation, humidity, windspeed);
+                            const icon = getWeatherIcon(avgTemp, avgPrecipitation, avgHumidity, avgWindspeed);
+                            const description = getWeatherDescription(avgTemp, avgPrecipitation, avgHumidity, avgWindspeed);
                             
+                            // Pro zobrazenou teplotu použijeme průměrnou max. teplotu
+                            const displayTemp = aggregated.temperatures.length ? Math.round(avgTemp) : 'N/A';
+
                             return `
                                 <div class="weather-day">
                                     <div class="weather-day-date">${dayName} ${dayDate}</div>
                                     <div class="weather-day-icon">${icon}</div>
-                                    <div class="weather-day-temp">${temp}°C</div>
+                                    <div class="weather-day-temp">${displayTemp}°C</div>
                                     <div class="weather-day-desc">${description}</div>
                                 </div>
                             `;
