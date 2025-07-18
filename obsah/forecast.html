@@ -1,0 +1,1308 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Předpověď počasí - 7 dní</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #1a1a1a;
+            color: #e0e0e0;
+            min-height: 100vh;
+        }
+
+        .layout {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+
+        .hlavicka {
+            background-color: #2d2d2d;
+            color: #e0e0e0;
+            padding: 12px 20px;
+            border-bottom: 1px solid #404040;
+            flex-shrink: 0;
+        }
+
+        .hlavicka h1 {
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin: 0;
+        }
+
+        .obsah {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .menu {
+            width: 280px;
+            background-color: #2a2a2a;
+            border-right: 1px solid #404040;
+            padding: 20px;
+            overflow-y: auto;
+            flex-shrink: 0;
+        }
+
+        .sekce {
+            margin-bottom: 25px;
+        }
+
+        .sekce h2 {
+            font-size: 0.9rem;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+
+        .input-group {
+            margin-bottom: 15px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 5px;
+            font-size: 0.9rem;
+            color: #ccc;
+        }
+
+        .input-group input,
+        .input-group select {
+            width: 100%;
+            padding: 8px 12px;
+            background-color: #404040;
+            border: 1px solid #555;
+            border-radius: 4px;
+            color: #e0e0e0;
+            font-size: 0.9rem;
+        }
+
+        .input-group input:focus,
+        .input-group select:focus {
+            outline: none;
+            border-color: #6aa6fd;
+        }
+
+        .search-container {
+            position: relative;
+        }
+
+        .suggestions {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            right: 0;
+            background-color: #404040;
+            border: 1px solid #555;
+            border-top: none;
+            border-radius: 0 0 4px 4px;
+            max-height: 200px;
+            overflow-y: auto;
+            z-index: 1000;
+            display: none;
+        }
+
+        .suggestions.show {
+            display: block;
+        }
+
+        .suggestion-item {
+            padding: 10px 12px;
+            cursor: pointer;
+            color: #e0e0e0;
+            font-size: 0.9rem;
+            border-bottom: 1px solid #555;
+            transition: background-color 0.2s ease;
+        }
+
+        .suggestion-item:hover,
+        .suggestion-item.selected {
+            background-color: #6aa6fd;
+        }
+
+        .suggestion-item:last-child {
+            border-bottom: none;
+        }
+
+        .suggestion-name {
+            font-weight: 500;
+        }
+
+        .suggestion-details {
+            font-size: 0.8rem;
+            color: #bbb;
+            margin-top: 2px;
+        }
+
+        .checkbox-group {
+            margin-bottom: 8px;
+        }
+
+        .checkbox-group label {
+            display: flex;
+            align-items: center;
+            cursor: pointer;
+            font-size: 0.9rem;
+            color: #e0e0e0;
+            margin-bottom: 0;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: auto;
+            margin-right: 8px;
+        }
+
+        .btn {
+            background-color: #6aa6fd;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background-color 0.2s ease;
+        }
+
+        .btn:hover {
+            background-color: #5694f0;
+        }
+
+        .btn:disabled {
+            background-color: #555;
+            cursor: not-allowed;
+        }
+
+        .btn-secondary {
+            background-color: #666;
+            color: #e0e0e0;
+        }
+
+        .btn-secondary:hover {
+            background-color: #777;
+        }
+
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 15px 20px;
+            border-radius: 4px;
+            color: white;
+            font-size: 0.9rem;
+            z-index: 10000;
+            min-width: 300px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .notification.success {
+            background-color: #4caf50;
+            border-left: 4px solid #45a049;
+        }
+
+        .notification.info {
+            background-color: #2196f3;
+            border-left: 4px solid #1976d2;
+        }
+
+        .notification.warning {
+            background-color: #ff9800;
+            border-left: 4px solid #f57c00;
+        }
+
+        .notification.error {
+            background-color: #f44336;
+            border-left: 4px solid #d32f2f;
+        }
+
+        .notification-close {
+            background: none;
+            border: none;
+            color: white;
+            font-size: 1.2rem;
+            cursor: pointer;
+            margin-left: 10px;
+            padding: 0;
+            width: 20px;
+            height: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .notification-close:hover {
+            opacity: 0.7;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .pracovni-plocha {
+            flex: 1;
+            background-color: #1a1a1a;
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #888;
+        }
+
+        .error {
+            background-color: #4a2c2c;
+            border: 1px solid #8b4444;
+            color: #ff8888;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+        }
+
+        .chart-container {
+            background-color: #2a2a2a;
+            border: 1px solid #404040;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .chart-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #e0e0e0;
+        }
+
+        .chart-wrapper {
+            position: relative;
+            height: 400px;
+            margin-bottom: 20px;
+        }
+
+        .data-sources {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .source-indicator {
+            display: flex;
+            align-items: center;
+            font-size: 0.8rem;
+            color: #ccc;
+        }
+
+        .source-color {
+            width: 12px;
+            height: 12px;
+            margin-right: 5px;
+            border-radius: 2px;
+        }
+
+        @media (max-width: 768px) {
+            .obsah {
+                flex-direction: column;
+            }
+
+            .menu {
+                width: 100%;
+                height: auto;
+                max-height: 300px;
+                overflow-y: auto;
+            }
+
+            .chart-wrapper {
+                height: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="layout">
+        <div class="hlavicka">
+            <h1>🌤️ Předpověď počasí - 7 dní</h1>
+        </div>
+        
+        <div class="obsah">
+            <div class="menu">
+                <div class="sekce">
+                    <h2>Lokace</h2>
+                    <div class="input-group">
+                        <label for="location">Město nebo GPS souřadnice:</label>
+                        <div class="search-container">
+                            <input type="text" id="location" placeholder="Začněte psát název města..." value="Praha">
+                            <div class="suggestions" id="suggestions"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="sekce">
+                    <h2>Zdroje dat</h2>
+                    <div class="checkbox-group">
+                        <label>
+                            <input type="checkbox" id="openweather" checked>
+                            OpenWeatherMap
+                        </label>
+                    </div>
+                    <div class="checkbox-group">
+                        <label>
+                            <input type="checkbox" id="weatherapi" checked>
+                            WeatherAPI
+                        </label>
+                    </div>
+                    <div class="checkbox-group">
+                        <label>
+                            <input type="checkbox" id="openmeteo" checked>
+                            Open-Meteo
+                        </label>
+                    </div>
+                </div>
+
+                <div class="sekce">
+                    <h2>Zobrazované údaje</h2>
+                    <div class="checkbox-group">
+                        <label>
+                            <input type="checkbox" id="temperature" checked>
+                            Teplota (°C)
+                        </label>
+                    </div>
+                    <div class="checkbox-group">
+                        <label>
+                            <input type="checkbox" id="precipitation" checked>
+                            Srážky (mm)
+                        </label>
+                    </div>
+                    <div class="checkbox-group">
+                        <label>
+                            <input type="checkbox" id="humidity" checked>
+                            Vlhkost (%)
+                        </label>
+                    </div>
+                    <div class="checkbox-group">
+                        <label>
+                            <input type="checkbox" id="windspeed" checked>
+                            Rychlost větru (m/s)
+                        </label>
+                    </div>
+                    <div class="checkbox-group">
+                        <label>
+                            <input type="checkbox" id="pressure">
+                            Tlak (hPa)
+                        </label>
+                    </div>
+                </div>
+
+                <div class="sekce">
+                    <button class="btn" id="loadData">Načíst předpověď</button>
+                    <button class="btn btn-secondary" id="resetSettings" style="margin-top: 10px;">Resetovat nastavení</button>
+                </div>
+            </div>
+
+            <div class="pracovni-plocha">
+                <div id="charts-container">
+                    <div class="loading">
+                        <p>Vyberte lokaci a zdroje dat, poté klikněte na "Načíst předpověď"</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Globální proměnné
+        let charts = {};
+        let searchTimeout;
+        let selectedSuggestionIndex = -1;
+        let currentSuggestions = [];
+        
+        const API_KEYS = {
+            openweather: 'f28e1a8704dcd8ef304a4e7e83b5cc2d', // Zde byste měli použít vlastní API klíče
+            weatherapi: 'eb06c8a0f79f4f918ce103738251807'
+        };
+
+        // Funkce pro uložení nastavení
+        function saveSettings() {
+            const settings = {
+                location: document.getElementById('location').value,
+                sources: {
+                    openweather: document.getElementById('openweather').checked,
+                    weatherapi: document.getElementById('weatherapi').checked,
+                    openmeteo: document.getElementById('openmeteo').checked
+                },
+                metrics: {
+                    temperature: document.getElementById('temperature').checked,
+                    precipitation: document.getElementById('precipitation').checked,
+                    humidity: document.getElementById('humidity').checked,
+                    windspeed: document.getElementById('windspeed').checked,
+                    pressure: document.getElementById('pressure').checked
+                },
+                timestamp: new Date().toISOString()
+            };
+            
+            try {
+                localStorage.setItem('weatherAppSettings', JSON.stringify(settings));
+                console.log('Nastavení uloženo:', settings);
+            } catch (error) {
+                console.error('Chyba při ukládání nastavení:', error);
+            }
+        }
+
+        // Funkce pro načtení nastavení
+        function loadSettings() {
+            try {
+                const savedSettings = localStorage.getItem('weatherAppSettings');
+                if (savedSettings) {
+                    const settings = JSON.parse(savedSettings);
+                    console.log('Načítám uložené nastavení:', settings);
+                    
+                    // Obnovení lokace
+                    if (settings.location) {
+                        document.getElementById('location').value = settings.location;
+                    }
+                    
+                    // Obnovení zdrojů dat
+                    if (settings.sources) {
+                        document.getElementById('openweather').checked = settings.sources.openweather !== false;
+                        document.getElementById('weatherapi').checked = settings.sources.weatherapi !== false;
+                        document.getElementById('openmeteo').checked = settings.sources.openmeteo !== false;
+                    }
+                    
+                    // Obnovení metrik
+                    if (settings.metrics) {
+                        document.getElementById('temperature').checked = settings.metrics.temperature !== false;
+                        document.getElementById('precipitation').checked = settings.metrics.precipitation !== false;
+                        document.getElementById('humidity').checked = settings.metrics.humidity !== false;
+                        document.getElementById('windspeed').checked = settings.metrics.windspeed !== false;
+                        document.getElementById('pressure').checked = settings.metrics.pressure || false;
+                    }
+                    
+                    return true;
+                }
+            } catch (error) {
+                console.error('Chyba při načítání nastavení:', error);
+            }
+            return false;
+        }
+
+        // Funkce pro reset nastavení
+        function resetSettings() {
+            try {
+                localStorage.removeItem('weatherAppSettings');
+                console.log('Nastavení resetováno');
+                
+                // Obnovení výchozích hodnot
+                document.getElementById('location').value = 'Praha';
+                document.getElementById('openweather').checked = true;
+                document.getElementById('weatherapi').checked = true;
+                document.getElementById('openmeteo').checked = true;
+                document.getElementById('temperature').checked = true;
+                document.getElementById('precipitation').checked = true;
+                document.getElementById('humidity').checked = true;
+                document.getElementById('windspeed').checked = true;
+                document.getElementById('pressure').checked = false;
+                
+                // Zobrazení potvrzení
+                showNotification('Nastavení bylo resetováno na výchozí hodnoty', 'success');
+            } catch (error) {
+                console.error('Chyba při resetování nastavení:', error);
+            }
+        }
+
+        // Funkce pro zobrazení notifikace
+        function showNotification(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.innerHTML = `
+                <span>${message}</span>
+                <button class="notification-close" onclick="this.parentElement.remove()">×</button>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // Automatické zavření po 5 sekundách
+            setTimeout(() => {
+                if (notification.parentElement) {
+                    notification.remove();
+                }
+            }, 5000);
+        }
+
+        // Barvy pro různé zdroje dat
+        const SOURCE_COLORS = {
+            openweather: '#ff6b6b',
+            weatherapi: '#4ecdc4',
+            openmeteo: '#45b7d1',
+            average: '#feca57'
+        };
+
+        // Názvy zdrojů
+        const SOURCE_NAMES = {
+            openweather: 'OpenWeatherMap',
+            weatherapi: 'WeatherAPI',
+            openmeteo: 'Open-Meteo',
+            average: 'Průměr'
+        };
+
+        // Funkce pro vyhledávání lokací
+        async function searchLocations(query) {
+            if (query.length < 2) {
+                return [];
+            }
+
+            try {
+                // Používáme Open-Meteo geocoding API (bezplatné)
+                const response = await fetch(`https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(query)}&count=10&language=cs&format=json`);
+                const data = await response.json();
+                
+                if (data.results) {
+                    return data.results.map(location => ({
+                        name: location.name,
+                        country: location.country,
+                        admin1: location.admin1,
+                        lat: location.latitude,
+                        lon: location.longitude,
+                        displayName: `${location.name}${location.admin1 ? ', ' + location.admin1 : ''}, ${location.country}`
+                    }));
+                }
+                
+                return [];
+            } catch (error) {
+                console.error('Geocoding error:', error);
+                
+                // Fallback na některé české města
+                const czechCities = [
+                    { name: 'Praha', country: 'Česká republika', lat: 50.0755, lon: 14.4378 },
+                    { name: 'Brno', country: 'Česká republika', lat: 49.1951, lon: 16.6068 },
+                    { name: 'Ostrava', country: 'Česká republika', lat: 49.8209, lon: 18.2625 },
+                    { name: 'Plzeň', country: 'Česká republika', lat: 49.7384, lon: 13.3736 },
+                    { name: 'Liberec', country: 'Česká republika', lat: 50.7663, lon: 15.0543 },
+                    { name: 'Olomouc', country: 'Česká republika', lat: 49.5938, lon: 17.2509 },
+                    { name: 'Hradec Králové', country: 'Česká republika', lat: 50.2103, lon: 15.8267 },
+                    { name: 'České Budějovice', country: 'Česká republika', lat: 48.9747, lon: 14.4743 },
+                    { name: 'Pardubice', country: 'Česká republika', lat: 50.0343, lon: 15.7812 },
+                    { name: 'Havířov', country: 'Česká republika', lat: 49.7794, lon: 18.4369 }
+                ];
+                
+                return czechCities
+                    .filter(city => city.name.toLowerCase().includes(query.toLowerCase()))
+                    .map(city => ({
+                        name: city.name,
+                        country: city.country,
+                        lat: city.lat,
+                        lon: city.lon,
+                        displayName: `${city.name}, ${city.country}`
+                    }));
+            }
+        }
+
+        // Funkce pro zobrazení návrhů
+        function displaySuggestions(suggestions) {
+            const suggestionsDiv = document.getElementById('suggestions');
+            currentSuggestions = suggestions;
+            selectedSuggestionIndex = -1;
+            
+            if (suggestions.length === 0) {
+                suggestionsDiv.classList.remove('show');
+                return;
+            }
+            
+            suggestionsDiv.innerHTML = suggestions.map((suggestion, index) => `
+                <div class="suggestion-item" data-index="${index}" data-lat="${suggestion.lat}" data-lon="${suggestion.lon}">
+                    <div class="suggestion-name">${suggestion.name}</div>
+                    <div class="suggestion-details">${suggestion.displayName}</div>
+                </div>
+            `).join('');
+            
+            suggestionsDiv.classList.add('show');
+            
+            // Event listenery pro kliknutí na návrhy
+            suggestionsDiv.querySelectorAll('.suggestion-item').forEach(item => {
+                item.addEventListener('click', function() {
+                    const index = parseInt(this.dataset.index);
+                    selectSuggestion(index);
+                });
+            });
+        }
+
+        // Funkce pro výběr návrhu
+        function selectSuggestion(index) {
+            if (index >= 0 && index < currentSuggestions.length) {
+                const suggestion = currentSuggestions[index];
+                document.getElementById('location').value = suggestion.displayName;
+                document.getElementById('suggestions').classList.remove('show');
+                selectedSuggestionIndex = -1;
+                
+                // Uložení nastavení po výběru lokace
+                saveSettings();
+            }
+        }
+
+        // Funkce pro zvýraznění vybraného návrhu
+        function highlightSuggestion(index) {
+            const suggestions = document.querySelectorAll('.suggestion-item');
+            suggestions.forEach(item => item.classList.remove('selected'));
+            
+            if (index >= 0 && index < suggestions.length) {
+                suggestions[index].classList.add('selected');
+                selectedSuggestionIndex = index;
+            }
+        }
+        // Funkce pro získání GPS souřadnic z názvu města
+        async function getCoordinates(location) {
+            // Zkontrolujeme, zda už jsou to GPS souřadnice
+            const coordPattern = /^-?\d+\.?\d*,-?\d+\.?\d*$/;
+            if (coordPattern.test(location)) {
+                const [lat, lon] = location.split(',').map(Number);
+                return { lat, lon };
+            }
+
+            // Pokud máme uložené souřadnice z výběru návrhu, použijeme je
+            if (currentSuggestions.length > 0) {
+                const matchingSuggestion = currentSuggestions.find(s => 
+                    s.displayName === location || s.name === location
+                );
+                if (matchingSuggestion) {
+                    return { lat: matchingSuggestion.lat, lon: matchingSuggestion.lon };
+                }
+            }
+
+            // Pokud ne, pokusíme se najít lokaci pomocí geocoding
+            try {
+                const locations = await searchLocations(location);
+                if (locations.length > 0) {
+                    return { lat: locations[0].lat, lon: locations[0].lon };
+                } else {
+                    throw new Error('Lokace nebyla nalezena');
+                }
+            } catch (error) {
+                // Fallback na demo koordináty pro Praha
+                console.warn('Geocoding failed, using Prague coordinates:', error);
+                return { lat: 50.0755, lon: 14.4378 };
+            }
+        }
+
+        // Funkce pro získání dat z Open-Meteo (bezplatné API)
+        async function getOpenMeteoData(lat, lon) {
+            try {
+                const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&daily=temperature_2m_max,temperature_2m_min,precipitation_sum,windspeed_10m_max,relative_humidity_2m_max&timezone=auto&forecast_days=7`;
+                console.log('Open-Meteo API URL:', url);
+                
+                const response = await fetch(url);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                console.log('Open-Meteo API response:', data);
+                
+                // Zkontrolujeme, zda máme platná data
+                if (!data.daily || !data.daily.time || !Array.isArray(data.daily.time)) {
+                    throw new Error('Neplatná struktura dat z Open-Meteo API');
+                }
+                
+                return {
+                    source: 'openmeteo',
+                    daily: data.daily.time.map((date, index) => ({
+                        date: date,
+                        temperature_max: data.daily.temperature_2m_max ? data.daily.temperature_2m_max[index] : null,
+                        temperature_min: data.daily.temperature_2m_min ? data.daily.temperature_2m_min[index] : null,
+                        precipitation: data.daily.precipitation_sum ? data.daily.precipitation_sum[index] : null,
+                        humidity: data.daily.relative_humidity_2m_max ? data.daily.relative_humidity_2m_max[index] : null,
+                        windspeed: data.daily.windspeed_10m_max ? Math.round(data.daily.windspeed_10m_max[index] / 3.6 * 10) / 10 : null, // Převod z km/h na m/s
+                        pressure: null // Open-Meteo free tier nemá tlak v denní předpovědi
+                    }))
+                };
+            } catch (error) {
+                console.error('Open-Meteo API error:', error);
+                return null;
+            }
+        }
+
+        // Funkce pro získání dat z OpenWeatherMap API
+        async function getOpenWeatherData(lat, lon) {
+            try {
+                // Bez API klíče se pokusíme o volání, ale pravděpodobně selže
+                const url = `https://api.openweathermap.org/data/2.5/forecast?lat=${lat}&lon=${lon}&appid=${API_KEYS.openweather}&units=metric`;
+                console.log('OpenWeatherMap API URL:', url);
+                
+                const response = await fetch(url);
+                
+                if (!response.ok) {
+                    console.log(`OpenWeatherMap API error: ${response.status} ${response.statusText}`);
+                    return null;
+                }
+                
+                const data = await response.json();
+                
+                // Zpracování dat OpenWeatherMap (5-denní předpověď po 3 hodinách)
+                const dailyData = {};
+                
+                data.list.forEach(item => {
+                    const date = item.dt_txt.split(' ')[0];
+                    if (!dailyData[date]) {
+                        dailyData[date] = {
+                            temperatures: [],
+                            precipitation: 0,
+                            humidity: [],
+                            windspeed: [],
+                            pressure: []
+                        };
+                    }
+                    
+                    dailyData[date].temperatures.push(item.main.temp);
+                    dailyData[date].precipitation += (item.rain ? item.rain['3h'] || 0 : 0);
+                    dailyData[date].humidity.push(item.main.humidity);
+                    dailyData[date].windspeed.push(item.wind.speed); // Uložíme v m/s
+                    dailyData[date].pressure.push(item.main.pressure);
+                });
+                
+                return {
+                    source: 'openweather',
+                    daily: Object.keys(dailyData).slice(0, 7).map(date => ({
+                        date: date,
+                        temperature_max: Math.round(Math.max(...dailyData[date].temperatures)),
+                        temperature_min: Math.round(Math.min(...dailyData[date].temperatures)),
+                        precipitation: Math.round(dailyData[date].precipitation * 10) / 10,
+                        humidity: Math.round(dailyData[date].humidity.reduce((a, b) => a + b, 0) / dailyData[date].humidity.length),
+                        windspeed: Math.round(dailyData[date].windspeed.reduce((a, b) => a + b, 0) / dailyData[date].windspeed.length * 10) / 10,
+                        pressure: Math.round(dailyData[date].pressure.reduce((a, b) => a + b, 0) / dailyData[date].pressure.length)
+                    }))
+                };
+            } catch (error) {
+                console.error('OpenWeatherMap API error:', error);
+                return null;
+            }
+        }
+
+        // Funkce pro získání dat z WeatherAPI
+        async function getWeatherAPIData(lat, lon) {
+            try {
+                const url = `https://api.weatherapi.com/v1/forecast.json?key=${API_KEYS.weatherapi}&q=${lat},${lon}&days=7&aqi=no&alerts=no`;
+                console.log('WeatherAPI URL:', url);
+                
+                const response = await fetch(url);
+                
+                if (!response.ok) {
+                    console.log(`WeatherAPI error: ${response.status} ${response.statusText}`);
+                    return null;
+                }
+                
+                const data = await response.json();
+                
+                return {
+                    source: 'weatherapi',
+                    daily: data.forecast.forecastday.map(day => ({
+                        date: day.date,
+                        temperature_max: Math.round(day.day.maxtemp_c),
+                        temperature_min: Math.round(day.day.mintemp_c),
+                        precipitation: day.day.totalprecip_mm,
+                        humidity: day.day.avghumidity,
+                        windspeed: Math.round(day.day.maxwind_kph / 3.6 * 10) / 10, // Převod z km/h na m/s
+                        pressure: null // WeatherAPI nemá denní tlak v základní verzi
+                    }))
+                };
+            } catch (error) {
+                console.error('WeatherAPI error:', error);
+                return null;
+            }
+        }
+
+        // Funkce pro načtení dat ze všech vybraných zdrojů
+        async function loadWeatherData(location) {
+            const coords = await getCoordinates(location);
+            console.log('Používané souřadnice:', coords);
+            
+            const selectedSources = [];
+            
+            if (document.getElementById('openweather').checked) selectedSources.push('openweather');
+            if (document.getElementById('weatherapi').checked) selectedSources.push('weatherapi');
+            if (document.getElementById('openmeteo').checked) selectedSources.push('openmeteo');
+
+            const allData = [];
+            const failedSources = [];
+
+            for (const source of selectedSources) {
+                console.log(`Načítám data ze zdroje: ${source}`);
+                let data = null;
+                
+                if (source === 'openmeteo') {
+                    data = await getOpenMeteoData(coords.lat, coords.lon);
+                } else if (source === 'openweather') {
+                    data = await getOpenWeatherData(coords.lat, coords.lon);
+                } else if (source === 'weatherapi') {
+                    data = await getWeatherAPIData(coords.lat, coords.lon);
+                }
+                
+                if (data) {
+                    console.log(`Data ze zdroje ${source} úspěšně načtena:`, data);
+                    allData.push(data);
+                } else {
+                    console.log(`Zdroj ${source} není dostupný, přeskakuji`);
+                    failedSources.push(source);
+                }
+            }
+
+            // Informujeme uživatele o neúspěšných zdrojích
+            if (failedSources.length > 0) {
+                console.warn(`Následující zdroje nejsou dostupné: ${failedSources.join(', ')}`);
+            }
+
+            return allData;
+        }
+
+        // Funkce pro výpočet průměru
+        function calculateAverage(allData, metric) {
+            if (allData.length === 0) return [];
+            
+            const averageData = [];
+            const daysCount = allData[0].daily.length;
+            
+            for (let day = 0; day < daysCount; day++) {
+                let sum = 0;
+                let count = 0;
+                
+                for (const sourceData of allData) {
+                    const value = sourceData.daily[day][metric];
+                    if (value !== null && value !== undefined) {
+                        sum += value;
+                        count++;
+                    }
+                }
+                
+                averageData.push(count > 0 ? sum / count : null);
+            }
+            
+            return averageData;
+        }
+
+        // Funkce pro vytvoření grafu
+        function createChart(containerId, title, data, metric, unit) {
+            const ctx = document.getElementById(containerId).getContext('2d');
+            
+            // Zničíme starý graf, pokud existuje
+            if (charts[containerId]) {
+                charts[containerId].destroy();
+            }
+
+            const datasets = [];
+            const labels = data[0]?.daily.map(d => {
+                const date = new Date(d.date);
+                return date.toLocaleDateString('cs-CZ', { weekday: 'short', day: 'numeric', month: 'numeric' });
+            }) || [];
+
+            // Určíme typ grafu podle metriky
+            const chartType = metric === 'precipitation' ? 'bar' : 'line';
+            const isBarchart = chartType === 'bar';
+
+            // Přidáme data ze všech zdrojů
+            data.forEach((sourceData, index) => {
+                let values = sourceData.daily.map(d => d[metric]);
+                
+                // Převod rychlosti větru z km/h na m/s
+                if (metric === 'windspeed') {
+                    values = values.map(v => v !== null ? Math.round((v / 3.6) * 10) / 10 : null);
+                }
+                
+                const dataset = {
+                    label: SOURCE_NAMES[sourceData.source],
+                    data: values,
+                    borderColor: SOURCE_COLORS[sourceData.source],
+                    backgroundColor: isBarchart ? 
+                        SOURCE_COLORS[sourceData.source] + '80' : // Více průhlednosti pro sloupcový graf
+                        SOURCE_COLORS[sourceData.source] + '20',
+                    borderWidth: isBarchart ? 1 : 2,
+                    fill: false,
+                    tension: isBarchart ? 0 : 0.1
+                };
+
+                // Specifické nastavení pro sloupcový graf
+                if (isBarchart) {
+                    dataset.barPercentage = 0.8;
+                    dataset.categoryPercentage = 0.9;
+                }
+
+                datasets.push(dataset);
+            });
+
+            // Přidáme průměr, pokud máme více než jeden zdroj
+            if (data.length > 1) {
+                let averageValues = calculateAverage(data, metric);
+                
+                // Převod průměru rychlosti větru z km/h na m/s
+                if (metric === 'windspeed') {
+                    averageValues = averageValues.map(v => v !== null ? Math.round((v / 3.6) * 10) / 10 : null);
+                }
+                
+                const averageDataset = {
+                    label: SOURCE_NAMES.average,
+                    data: averageValues,
+                    borderColor: SOURCE_COLORS.average,
+                    backgroundColor: isBarchart ? 
+                        SOURCE_COLORS.average + '90' : // Méně průhlednosti pro průměr
+                        SOURCE_COLORS.average + '20',
+                    borderWidth: isBarchart ? 2 : 4,
+                    fill: false,
+                    tension: isBarchart ? 0 : 0.1
+                };
+
+                // Specifické nastavení pro průměr ve sloupcovém grafu
+                if (isBarchart) {
+                    averageDataset.barPercentage = 0.8;
+                    averageDataset.categoryPercentage = 0.9;
+                }
+
+                datasets.push(averageDataset);
+            }
+
+            charts[containerId] = new Chart(ctx, {
+                type: chartType,
+                data: {
+                    labels: labels,
+                    datasets: datasets
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: '#e0e0e0'
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            ticks: {
+                                color: '#e0e0e0'
+                            },
+                            grid: {
+                                color: '#404040'
+                            }
+                        },
+                        y: {
+                            beginAtZero: isBarchart, // Sloupcový graf začíná od nuly
+                            min: metric === 'humidity' ? 0 : undefined, // Vlhkost vždy od 0%
+                            max: metric === 'humidity' ? 100 : undefined, // Vlhkost vždy do 100%
+                            ticks: {
+                                color: '#e0e0e0',
+                                callback: function(value) {
+                                    return value + unit;
+                                },
+                                // Pro vlhkost nastavíme kroky po 10%
+                                stepSize: metric === 'humidity' ? 10 : undefined
+                            },
+                            grid: {
+                                color: '#404040'
+                            }
+                        }
+                    },
+                    // Specifické nastavení pro sloupcový graf
+                    ...(isBarchart && {
+                        interaction: {
+                            intersect: false,
+                        },
+                        plugins: {
+                            ...this.options?.plugins,
+                            tooltip: {
+                                backgroundColor: 'rgba(0,0,0,0.8)',
+                                titleColor: '#e0e0e0',
+                                bodyColor: '#e0e0e0',
+                                borderColor: '#6aa6fd',
+                                borderWidth: 1
+                            }
+                        }
+                    })
+                }
+            });
+        }
+
+        // Funkce pro zobrazení grafů
+        function displayCharts(weatherData) {
+            const container = document.getElementById('charts-container');
+            container.innerHTML = '';
+
+            if (weatherData.length === 0) {
+                container.innerHTML = `
+                    <div class="error">
+                        <strong>Žádná data k zobrazení:</strong> Všechny vybrané zdroje jsou nedostupné nebo vyžadují API klíče.
+                        <br><br>
+                        <strong>Doporučení:</strong>
+                        <ul style="margin-top: 10px; padding-left: 20px;">
+                            <li>Zkuste pouze Open-Meteo (obvykle funguje bez API klíče)</li>
+                            <li>Pro OpenWeatherMap a WeatherAPI potřebujete vlastní API klíče</li>
+                            <li>Zkontrolujte internetové připojení</li>
+                        </ul>
+                    </div>
+                `;
+                return;
+            }
+
+            const metrics = [];
+            if (document.getElementById('temperature').checked) {
+                metrics.push({ key: 'temperature_max', name: 'Maximální teplota', unit: '°C' });
+            }
+            if (document.getElementById('precipitation').checked) {
+                metrics.push({ key: 'precipitation', name: 'Srážky', unit: 'mm' });
+            }
+            if (document.getElementById('humidity').checked) {
+                metrics.push({ key: 'humidity', name: 'Vlhkost', unit: '%' });
+            }
+            if (document.getElementById('windspeed').checked) {
+                metrics.push({ key: 'windspeed', name: 'Rychlost větru', unit: 'm/s' });
+            }
+            if (document.getElementById('pressure').checked) {
+                metrics.push({ key: 'pressure', name: 'Atmosférický tlak', unit: 'hPa' });
+            }
+
+            // Informace o dostupných zdrojích
+            const availableSources = weatherData.map(data => SOURCE_NAMES[data.source]).join(', ');
+            const infoDiv = document.createElement('div');
+            infoDiv.className = 'chart-container';
+            infoDiv.innerHTML = `
+                <div class="chart-title">📊 Dostupné zdroje dat</div>
+                <p style="color: #ccc; margin-bottom: 10px;">Zobrazují se data z: <strong>${availableSources}</strong></p>
+                ${weatherData.length === 1 ? '<p style="color: #888; font-size: 0.9rem;">Pro zobrazení průměru vyberte více zdrojů.</p>' : ''}
+            `;
+            container.appendChild(infoDiv);
+
+            metrics.forEach((metric, index) => {
+                const chartContainer = document.createElement('div');
+                chartContainer.className = 'chart-container';
+                chartContainer.innerHTML = `
+                    <div class="chart-title">${metric.name}</div>
+                    <div class="data-sources">
+                        ${weatherData.map(data => `
+                            <div class="source-indicator">
+                                <div class="source-color" style="background-color: ${SOURCE_COLORS[data.source]}"></div>
+                                ${SOURCE_NAMES[data.source]}
+                            </div>
+                        `).join('')}
+                        ${weatherData.length > 1 ? `
+                            <div class="source-indicator">
+                                <div class="source-color" style="background-color: ${SOURCE_COLORS.average}"></div>
+                                ${SOURCE_NAMES.average}
+                            </div>
+                        ` : ''}
+                    </div>
+                    <div class="chart-wrapper">
+                        <canvas id="chart-${index}"></canvas>
+                    </div>
+                `;
+                container.appendChild(chartContainer);
+
+                // Vytvoříme graf po krátkém delay, aby se HTML stihlo vykreslit
+                setTimeout(() => {
+                    createChart(`chart-${index}`, metric.name, weatherData, metric.key, metric.unit);
+                }, 100);
+            });
+        }
+
+        // Funkce pro zobrazení chyby
+        function displayError(message) {
+            const container = document.getElementById('charts-container');
+            container.innerHTML = `
+                <div class="error">
+                    <strong>Chyba:</strong> ${message}
+                </div>
+            `;
+        }
+
+        // Funkce pro zobrazení loading stavu
+        function displayLoading() {
+            const container = document.getElementById('charts-container');
+            container.innerHTML = `
+                <div class="loading">
+                    <p>Načítám data z vybraných zdrojů...</p>
+                </div>
+            `;
+        }
+
+        // Hlavní funkce pro načtení a zobrazení dat
+        async function loadAndDisplayData() {
+            const location = document.getElementById('location').value.trim();
+            
+            if (!location) {
+                displayError('Zadejte prosím lokaci.');
+                return;
+            }
+
+            const selectedSources = [];
+            if (document.getElementById('openweather').checked) selectedSources.push('openweather');
+            if (document.getElementById('weatherapi').checked) selectedSources.push('weatherapi');
+            if (document.getElementById('openmeteo').checked) selectedSources.push('openmeteo');
+
+            if (selectedSources.length === 0) {
+                displayError('Vyberte alespoň jeden zdroj dat.');
+                return;
+            }
+
+            const selectedMetrics = [];
+            if (document.getElementById('temperature').checked) selectedMetrics.push('temperature');
+            if (document.getElementById('precipitation').checked) selectedMetrics.push('precipitation');
+            if (document.getElementById('humidity').checked) selectedMetrics.push('humidity');
+            if (document.getElementById('windspeed').checked) selectedMetrics.push('windspeed');
+            if (document.getElementById('pressure').checked) selectedMetrics.push('pressure');
+
+            if (selectedMetrics.length === 0) {
+                displayError('Vyberte alespoň jeden typ dat k zobrazení.');
+                return;
+            }
+
+            try {
+                displayLoading();
+                const weatherData = await loadWeatherData(location);
+                
+                // Zobrazíme grafy bez ohledu na počet dostupných zdrojů
+                // Pokud není žádný zdroj dostupný, displayCharts to vyřeší
+                displayCharts(weatherData);
+                
+            } catch (error) {
+                console.error('Error loading weather data:', error);
+                displayError('Nastala chyba při načítání dat: ' + error.message);
+            }
+        }
+
+        // Event listenery
+        document.getElementById('loadData').addEventListener('click', loadAndDisplayData);
+        document.getElementById('resetSettings').addEventListener('click', resetSettings);
+        
+        // Uložení nastavení při každé změně
+        function setupAutoSave() {
+            // Uložení při změně lokace
+            document.getElementById('location').addEventListener('change', saveSettings);
+            
+            // Uložení při změně zdrojů
+            document.getElementById('openweather').addEventListener('change', saveSettings);
+            document.getElementById('weatherapi').addEventListener('change', saveSettings);
+            document.getElementById('openmeteo').addEventListener('change', saveSettings);
+            
+            // Uložení při změně metrik
+            document.getElementById('temperature').addEventListener('change', saveSettings);
+            document.getElementById('precipitation').addEventListener('change', saveSettings);
+            document.getElementById('humidity').addEventListener('change', saveSettings);
+            document.getElementById('windspeed').addEventListener('change', saveSettings);
+            document.getElementById('pressure').addEventListener('change', saveSettings);
+        }
+        
+        // Vyhledávání lokací při psaní
+        document.getElementById('location').addEventListener('input', function(e) {
+            clearTimeout(searchTimeout);
+            const query = e.target.value.trim();
+            
+            if (query.length < 2) {
+                document.getElementById('suggestions').classList.remove('show');
+                return;
+            }
+            
+            searchTimeout = setTimeout(async () => {
+                const suggestions = await searchLocations(query);
+                displaySuggestions(suggestions);
+            }, 300);
+        });
+
+        // Ovládání klávesnicí
+        document.getElementById('location').addEventListener('keydown', function(e) {
+            const suggestionsDiv = document.getElementById('suggestions');
+            const isVisible = suggestionsDiv.classList.contains('show');
+            
+            if (!isVisible) {
+                if (e.key === 'Enter') {
+                    loadAndDisplayData();
+                }
+                return;
+            }
+            
+            switch (e.key) {
+                case 'ArrowDown':
+                    e.preventDefault();
+                    if (selectedSuggestionIndex < currentSuggestions.length - 1) {
+                        highlightSuggestion(selectedSuggestionIndex + 1);
+                    }
+                    break;
+                    
+                case 'ArrowUp':
+                    e.preventDefault();
+                    if (selectedSuggestionIndex > 0) {
+                        highlightSuggestion(selectedSuggestionIndex - 1);
+                    }
+                    break;
+                    
+                case 'Enter':
+                    e.preventDefault();
+                    if (selectedSuggestionIndex >= 0) {
+                        selectSuggestion(selectedSuggestionIndex);
+                    } else {
+                        loadAndDisplayData();
+                    }
+                    break;
+                    
+                case 'Escape':
+                    suggestionsDiv.classList.remove('show');
+                    selectedSuggestionIndex = -1;
+                    break;
+            }
+        });
+
+        // Skrytí návrhů při kliknutí mimo
+        document.addEventListener('click', function(e) {
+            if (!e.target.closest('.search-container')) {
+                document.getElementById('suggestions').classList.remove('show');
+            }
+        });
+        
+        // Načtení dat po stisknutí Enter v input poli
+        document.getElementById('location').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter' && !document.getElementById('suggestions').classList.contains('show')) {
+                loadAndDisplayData();
+            }
+        });
+
+        // Automatické načtení dat při spuštění s default lokací
+        window.addEventListener('load', function() {
+            console.log('Aplikace se načítá...');
+            
+            // Načtení uložených nastavení
+            const settingsLoaded = loadSettings();
+            
+            // Nastavení auto-save funkcionalita
+            setupAutoSave();
+            
+            // Zobrazení notifikace o načtení nastavení
+            if (settingsLoaded) {
+                showNotification('Načtena uložená nastavení', 'success');
+            } else {
+                showNotification('Používá se výchozí nastavení', 'info');
+            }
+            
+            // Automatické načtení dat po krátkém delay
+            setTimeout(loadAndDisplayData, 1500);
+        });
+    </script>
+</body>
+</html>
