@@ -312,6 +312,37 @@ function hello() {
     
     let currentDocumentId = null;
     let documents = JSON.parse(localStorage.getItem('markdownDocuments') || '{}');
+    let documentSaved = true;
+    let lastSavedContent = '';
+    let lastSavedName = '';
+
+    function updateSaveButtonState() {
+      const saveBtn = document.querySelector('button[onclick="saveDocument()"]');
+      if (!saveBtn) return;
+      
+      const currentContent = editor.value;
+      const currentName = documentName.value.trim();
+      
+      const hasChanges = currentContent !== lastSavedContent || currentName !== lastSavedName;
+      
+      if (hasChanges) {
+        saveBtn.textContent = '💾 Uložit';
+        saveBtn.style.opacity = '1';
+        saveBtn.style.backgroundColor = '#2a2a2a';
+        documentSaved = false;
+      } else {
+        saveBtn.textContent = '💾 Uloženo';
+        saveBtn.style.opacity = '0.7';
+        saveBtn.style.backgroundColor = '#1a5a1a';
+        documentSaved = true;
+      }
+    }
+
+    function markDocumentAsSaved() {
+      lastSavedContent = editor.value;
+      lastSavedName = documentName.value.trim();
+      updateSaveButtonState();
+    }
 
     function updatePreview() {
       const text = editor.value;
@@ -340,12 +371,14 @@ function hello() {
       renderDocumentList();
       
       // Zobrazit potvrzení
-      const originalText = event.target.textContent;
-      event.target.textContent = '✓ Uloženo';
-      event.target.style.backgroundColor = '#4caf50';
+      const saveBtn = document.querySelector('button[onclick="saveDocument()"]');
+      const originalText = saveBtn.textContent;
+      const originalBg = saveBtn.style.backgroundColor;
+      saveBtn.textContent = '✓ Uloženo';
+      saveBtn.style.backgroundColor = '#4caf50';
+      
       setTimeout(() => {
-        event.target.textContent = originalText;
-        event.target.style.backgroundColor = '';
+        markDocumentAsSaved();
       }, 1000);
     }
 
@@ -355,6 +388,9 @@ function hello() {
       editor.value = '';
       updatePreview();
       renderDocumentList();
+      lastSavedContent = '';
+      lastSavedName = 'Nový dokument';
+      updateSaveButtonState();
     }
 
     function loadDocument(id) {
@@ -365,6 +401,7 @@ function hello() {
         editor.value = doc.content;
         updatePreview();
         renderDocumentList();
+        markDocumentAsSaved();
       }
     }
 
@@ -456,6 +493,7 @@ function hello() {
           editor.value = e.target.result;
           documentName.value = file.name.replace(/\.[^/.]+$/, "");
           updatePreview();
+          markDocumentAsUnsaved();
         };
         reader.readAsText(file);
       }
@@ -464,12 +502,18 @@ function hello() {
     // Automatické ukládání při psaní (volitelné)
     let saveTimeout;
     editor.addEventListener('input', () => {
+      updateSaveButtonState();
       clearTimeout(saveTimeout);
       if (currentDocumentId) {
         saveTimeout = setTimeout(() => {
           saveDocument();
         }, 2000); // Auto-save po 2 sekundách nečinnosti
       }
+    });
+
+    // Sledování změn v názvu dokumentu
+    documentName.addEventListener('input', () => {
+      updateSaveButtonState();
     });
 
     // Klávesové zkratky
