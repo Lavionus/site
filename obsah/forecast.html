@@ -314,6 +314,109 @@
             padding: 20px;
             margin-bottom: 20px;
         }
+        
+        .hourly-weather-preview {
+            background-color: #2a2a2a;
+            border: 1px solid #404040;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+
+        .hourly-weather-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #e0e0e0;
+            text-align: center;
+        }
+
+        .hourly-weather-grid {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 10px;
+            overflow-x: auto;
+            overflow-y: hidden;
+            padding: 5px 0;
+            scrollbar-width: thin;
+            scrollbar-color: #6aa6fd #333;
+        }
+
+        .hourly-weather-grid::-webkit-scrollbar {
+            height: 8px;
+        }
+
+        .hourly-weather-grid::-webkit-scrollbar-track {
+            background: #333;
+            border-radius: 4px;
+        }
+
+        .hourly-weather-grid::-webkit-scrollbar-thumb {
+            background: #6aa6fd;
+            border-radius: 4px;
+        }
+
+        .hourly-weather-grid::-webkit-scrollbar-thumb:hover {
+            background: #5694f0;
+        }
+
+        .hourly-weather-item {
+            text-align: center;
+            padding: 8px 4px;
+            background-color: #333;
+            border-radius: 6px;
+            border: 1px solid #444;
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            min-width: 80px;
+            flex-shrink: 0;
+        }
+
+        .hourly-weather-item:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 3px 8px rgba(106, 166, 253, 0.3);
+        }
+
+        .hourly-weather-item.night-time {
+            background-color: #2c2c3e;
+            border-color: #3c3c5e;
+        }
+
+        .hourly-weather-item.day-time {
+            background-color: #3e3c2c;
+            border-color: #5e5c3c;
+        }
+
+        .hourly-time {
+            font-size: 0.7rem;
+            color: #ccc;
+            margin-bottom: 3px;
+            font-weight: 500;
+        }
+
+        .hourly-icon {
+            font-size: 1.3rem;
+            margin: 3px 0;
+            display: block;
+        }
+
+        .hourly-temp {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: #ff6b6b;
+            margin-bottom: 4px;
+        }
+
+        .hourly-details {
+            display: flex;
+            flex-direction: column;
+            gap: 1px;
+        }
+
+        .hourly-detail {
+            font-size: 0.6rem;
+            color: #999;
+            line-height: 1.1;
+        }
 
         .weather-preview {
             background-color: #2a2a2a;
@@ -904,60 +1007,282 @@
             
             return desc.join(", ");
         }
+        
+        // Funkce pro vytvoření 24hodinové předpovědi
+        function createHourlyWeatherPreview(hourlyData) {
+            if (!hourlyData || !hourlyData.hourly || hourlyData.hourly.length === 0) {
+                return '';
+            }
+
+            const now = new Date();
+            const currentHour = now.getHours();
+            
+            // Vezmeme pouze následujících 24 hodin od aktuální hodiny
+            const next24Hours = hourlyData.hourly.slice(currentHour, currentHour + 24);
+
+            const previewHtml = `
+                <div class="hourly-weather-preview">
+                    <div class="hourly-weather-title">⏰ Podrobná předpověď na 24 hodin</div>
+                    <div class="hourly-weather-grid">
+                        ${next24Hours.map((hour, index) => {
+                            const time = new Date(hour.time);
+                            const timeStr = time.toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' });
+                            const hourNum = time.getHours();
+                            
+                            const temp = hour.temperature || 0;
+                            const precipitation = hour.precipitation || 0;
+                            const humidity = hour.humidity || 50;
+                            const windspeed = hour.windspeed || 0;
+                            
+                            const icon = getWeatherIcon(temp, precipitation, humidity, windspeed);
+                            
+                            // Rozlišíme barvu podle času (den/noc)
+                            const isNight = hourNum >= 22 || hourNum <= 6;
+                            const timeClass = isNight ? 'night-time' : 'day-time';
+                            
+                            return `
+                                <div class="hourly-weather-item ${timeClass}">
+                                    <div class="hourly-time">${timeStr}</div>
+                                    <div class="hourly-icon">${icon}</div>
+                                    <div class="hourly-temp">${Math.round(temp)}°C</div>
+                                    <div class="hourly-details">
+                                        <div class="hourly-detail">💧 ${precipitation.toFixed(1)}mm</div>
+                                        <div class="hourly-detail">💨 ${windspeed.toFixed(1)}m/s</div>
+                                        <div class="hourly-detail">💦 ${humidity}%</div>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('')}
+                    </div>
+                </div>
+            `;
+
+            return previewHtml;
+        }
+
+        // Funkce pro vytvoření kombinovaného grafu hodinových dat
+        function createHourlyChart(containerId, hourlyData) {
+            const ctx = document.getElementById(containerId).getContext('2d');
+            
+            if (charts[containerId]) {
+                charts[containerId].destroy();
+            }
+
+            if (!hourlyData || !hourlyData.hourly || hourlyData.hourly.length === 0) {
+                return;
+            }
+
+            const now = new Date();
+            const currentHour = now.getHours();
+            const next24Hours = hourlyData.hourly.slice(currentHour, currentHour + 24);
+
+            const labels = next24Hours.map(hour => {
+                const time = new Date(hour.time);
+                return time.toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' });
+            });
+
+            const temperatureData = next24Hours.map(hour => hour.temperature);
+            const precipitationData = next24Hours.map(hour => hour.precipitation);
+            const windspeedData = next24Hours.map(hour => hour.windspeed);
+            const humidityData = next24Hours.map(hour => hour.humidity);
+
+            charts[containerId] = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: 'Teplota (°C)',
+                            data: temperatureData,
+                            borderColor: '#ff6b6b',
+                            backgroundColor: '#ff6b6b20',
+                            borderWidth: 3,
+                            fill: false,
+                            tension: 0.1,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: 'Srážky (mm)',
+                            data: precipitationData,
+                            type: 'bar',
+                            backgroundColor: '#4ecdc480',
+                            borderColor: '#4ecdc4',
+                            borderWidth: 1,
+                            yAxisID: 'y1'
+                        },
+                        {
+                            label: 'Rychlost větru (m/s)',
+                            data: windspeedData,
+                            borderColor: '#45b7d1',
+                            backgroundColor: '#45b7d120',
+                            borderWidth: 2,
+                            fill: false,
+                            tension: 0.1,
+                            yAxisID: 'y2'
+                        },
+                        {
+                            label: 'Vlhkost (%)',
+                            data: humidityData,
+                            borderColor: '#feca57',
+                            backgroundColor: '#feca5720',
+                            borderWidth: 2,
+                            fill: false,
+                            tension: 0.1,
+                            yAxisID: 'y3'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    interaction: {
+                        mode: 'index',
+                        intersect: false,
+                    },
+                    plugins: {
+                        legend: {
+                            labels: {
+                                color: '#e0e0e0',
+                                usePointStyle: true,
+                                pointStyle: 'circle'
+                            }
+                        },
+                        tooltip: {
+                            backgroundColor: 'rgba(0,0,0,0.8)',
+                            titleColor: '#e0e0e0',
+                            bodyColor: '#e0e0e0',
+                            borderColor: '#6aa6fd',
+                            borderWidth: 1,
+                            callbacks: {
+                                label: function(context) {
+                                    let label = context.dataset.label || '';
+                                    if (label) {
+                                        label += ': ';
+                                    }
+                                    
+                                    if (context.parsed.y !== null) {
+                                        const value = context.parsed.y.toFixed(1);
+                                        if (context.dataset.label.includes('Teplota')) {
+                                            label += value + '°C';
+                                        } else if (context.dataset.label.includes('Srážky')) {
+                                            label += value + 'mm';
+                                        } else if (context.dataset.label.includes('vítr')) {
+                                            label += value + 'm/s';
+                                        } else if (context.dataset.label.includes('Vlhkost')) {
+                                            label += value + '%';
+                                        }
+                                    }
+                                    
+                                    return label;
+                                },
+                                afterBody: function(tooltipItems) {
+                                    const index = tooltipItems[0].dataIndex;
+                                    const hour = next24Hours[index];
+                                    if (hour) {
+                                        const icon = getWeatherIcon(hour.temperature, hour.precipitation, hour.humidity, hour.windspeed);
+                                        const desc = getWeatherDescription(hour.temperature, hour.precipitation, hour.humidity, hour.windspeed);
+                                        return [`${icon} ${desc}`];
+                                    }
+                                    return [];
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            ticks: {
+                                color: '#e0e0e0',
+                                maxTicksLimit: 12
+                            },
+                            grid: {
+                                color: '#404040'
+                            }
+                        },
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            ticks: {
+                                color: '#ff6b6b',
+                                callback: function(value) {
+                                    return value + '°C';
+                                }
+                            },
+                            grid: {
+                                color: '#404040'
+                            },
+                            title: {
+                                display: true,
+                                text: 'Teplota (°C)',
+                                color: '#ff6b6b'
+                            }
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            min: 0,
+                            ticks: {
+                                color: '#4ecdc4',
+                                callback: function(value) {
+                                    return value + 'mm';
+                                }
+                            },
+                            grid: {
+                                drawOnChartArea: false,
+                            },
+                            title: {
+                                display: true,
+                                text: 'Srážky (mm)',
+                                color: '#4ecdc4'
+                            }
+                        },
+                        y2: {
+                            type: 'linear',
+                            display: false,
+                            min: 0,
+                            max: 20
+                        },
+                        y3: {
+                            type: 'linear',
+                            display: false,
+                            min: 0,
+                            max: 100
+                        }
+                    }
+                }
+            });
+        }
 
         // Funkce pro vytvoření náhledu počasí
         function createWeatherPreview(weatherData) {
             if (weatherData.length === 0) return '';
 
-            // Mapování dat podle data
-            const dailyAggregatedData = {};
-            weatherData[0].daily.forEach(day => {
-                dailyAggregatedData[day.date] = {
-                    temperatures: [],
-                    precipitations: [],
-                    humidities: [],
-                    windspeeds: []
-                };
-            });
-
-            weatherData.forEach(source => {
-                source.daily.forEach(day => {
-                    if (dailyAggregatedData[day.date]) {
-                        if (day.temperature_max !== null) dailyAggregatedData[day.date].temperatures.push(day.temperature_max);
-                        if (day.precipitation !== null) dailyAggregatedData[day.date].precipitations.push(day.precipitation);
-                        if (day.humidity !== null) dailyAggregatedData[day.date].humidities.push(day.humidity);
-                        if (day.windspeed !== null) dailyAggregatedData[day.date].windspeeds.push(day.windspeed);
-                    }
-                });
-            });
+            const sourceData = weatherData[0];
+            const days = sourceData.daily;
 
             const previewHtml = `
                 <div class="weather-preview">
                     <div class="weather-preview-title">📅 Předpověď na ${selectedDays} dní</div>
                     <div class="weather-days-grid">
-                        ${Object.keys(dailyAggregatedData).map(dateKey => {
-                            const aggregated = dailyAggregatedData[dateKey];
-                            const date = new Date(dateKey);
+                        ${days.map((day, index) => {
+                            const date = new Date(day.date);
                             const dayName = date.toLocaleDateString('cs-CZ', { weekday: 'short' });
                             const dayDate = date.toLocaleDateString('cs-CZ', { day: 'numeric', month: 'numeric' });
                             
-                            // Průměrné hodnoty pro ikonku a popis
-                            const avgTemp = aggregated.temperatures.length ? aggregated.temperatures.reduce((a, b) => a + b, 0) / aggregated.temperatures.length : 0;
-                            const avgPrecipitation = aggregated.precipitations.length ? aggregated.precipitations.reduce((a, b) => a + b, 0) / aggregated.precipitations.length : 0;
-                            const avgHumidity = aggregated.humidities.length ? aggregated.humidities.reduce((a, b) => a + b, 0) / aggregated.humidities.length : 50;
-                            const avgWindspeed = aggregated.windspeeds.length ? aggregated.windspeeds.reduce((a, b) => a + b, 0) / aggregated.windspeeds.length : 0;
+                            const temp = day.temperature_max || 0;
+                            const precipitation = day.precipitation || 0;
+                            const humidity = day.humidity || 50;
+                            const windspeed = day.windspeed || 0;
                             
-                            const icon = getWeatherIcon(avgTemp, avgPrecipitation, avgHumidity, avgWindspeed);
-                            const description = getWeatherDescription(avgTemp, avgPrecipitation, avgHumidity, avgWindspeed);
+                            const icon = getWeatherIcon(temp, precipitation, humidity, windspeed);
+                            const description = getWeatherDescription(temp, precipitation, humidity, windspeed);
                             
-                            // Pro zobrazenou teplotu použijeme průměrnou max. teplotu
-                            const displayTemp = aggregated.temperatures.length ? Math.round(avgTemp) : 'N/A';
-
                             return `
                                 <div class="weather-day">
                                     <div class="weather-day-date">${dayName} ${dayDate}</div>
                                     <div class="weather-day-icon">${icon}</div>
-                                    <div class="weather-day-temp">${displayTemp}°C</div>
+                                    <div class="weather-day-temp">${temp}°C</div>
                                     <div class="weather-day-desc">${description}</div>
                                 </div>
                             `;
@@ -1174,6 +1499,42 @@
                 return null;
             }
         }
+        
+        // Funkce pro získání hodinových dat z Open-Meteo
+        async function getOpenMeteoHourlyData(lat, lon) {
+            try {
+                const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=temperature_2m,precipitation,relative_humidity_2m,windspeed_10m,pressure_msl&timezone=auto&forecast_days=1`;
+                console.log('Open-Meteo Hourly API URL:', url);
+                
+                const response = await fetch(url);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                console.log('Open-Meteo Hourly API response:', data);
+                
+                if (!data.hourly || !data.hourly.time || !Array.isArray(data.hourly.time)) {
+                    throw new Error('Neplatná struktura hodinových dat z Open-Meteo API');
+                }
+                
+                return {
+                    source: 'openmeteo',
+                    hourly: data.hourly.time.map((time, index) => ({
+                        time: time,
+                        temperature: data.hourly.temperature_2m ? Math.round(data.hourly.temperature_2m[index] * 10) / 10 : null,
+                        precipitation: data.hourly.precipitation ? data.hourly.precipitation[index] : null,
+                        humidity: data.hourly.relative_humidity_2m ? Math.round(data.hourly.relative_humidity_2m[index]) : null,
+                        windspeed: data.hourly.windspeed_10m ? Math.round(data.hourly.windspeed_10m[index] / 3.6 * 10) / 10 : null,
+                        pressure: data.hourly.pressure_msl ? Math.round(data.hourly.pressure_msl[index]) : null
+                    }))
+                };
+            } catch (error) {
+                console.error('Open-Meteo Hourly API error:', error);
+                return null;
+            }
+        }
 
         // Funkce pro vytvoření mock dat pro demonstraci delších období
         function generateMockData(baseData, targetDays) {
@@ -1356,6 +1717,27 @@
 
             return allData;
         }
+        
+        // Funkce pro načtení hodinových dat
+        async function loadHourlyWeatherData(location) {
+            const coords = await getCoordinates(location);
+            console.log('Načítám hodinová data pro souřadnice:', coords);
+            
+            // Pro hodinová data používáme pouze Open-Meteo, který má nejlepší bezplatný přístup
+            try {
+                const hourlyData = await getOpenMeteoHourlyData(coords.lat, coords.lon);
+                if (hourlyData) {
+                    console.log('Hodinová data úspěšně načtena:', hourlyData);
+                    return hourlyData;
+                } else {
+                    console.log('Hodinová data nejsou dostupná');
+                    return null;
+                }
+            } catch (error) {
+                console.error('Chyba při načítání hodinových dat:', error);
+                return null;
+            }
+        }
 
         // Funkce pro výpočet průměru
         function calculateAverage(allData, metric) {
@@ -1511,7 +1893,7 @@
         }
 
         // Funkce pro zobrazení grafů předpovědi
-        function displayCharts(weatherData) {
+        function displayCharts(weatherData, hourlyData = null) {
             const container = document.getElementById('forecast-container');
             container.innerHTML = ''; // Vyčistíme kontejner
 
@@ -1531,8 +1913,29 @@
                 return;
             }
 
+            // Přidáme 24hodinovou předpověď na začátek
+            if (hourlyData) {
+                const hourlyPreview = createHourlyWeatherPreview(hourlyData);
+                container.innerHTML += hourlyPreview;
+
+                // Přidáme kombinovaný hodinový graf
+                const hourlyChartContainer = document.createElement('div');
+                hourlyChartContainer.className = 'chart-container';
+                hourlyChartContainer.innerHTML = `
+                    <div class="chart-title">📊 Detailní hodinový přehled (24h)</div>
+                    <div class="chart-wrapper">
+                        <canvas id="hourly-combined-chart"></canvas>
+                    </div>
+                `;
+                container.appendChild(hourlyChartContainer);
+
+                setTimeout(() => {
+                    createHourlyChart('hourly-combined-chart', hourlyData);
+                }, 100);
+            }
+
             const weatherPreview = createWeatherPreview(weatherData);
-            container.innerHTML = weatherPreview;
+            container.innerHTML += weatherPreview;
 
             const metrics = [];
             if (document.getElementById('temperature').checked) {
@@ -1558,6 +1961,7 @@
                 <div class="chart-title">📊 Dostupné zdroje dat</div>
                 <p style="color: #ccc; margin-bottom: 10px;">Zobrazují se data z: <strong>${availableSources}</strong></p>
                 ${weatherData.length === 1 ? '<p style="color: #888; font-size: 0.9rem;">Pro zobrazení průměru vyberte více zdrojů.</p>' : ''}
+                ${hourlyData ? '<p style="color: #4ecdc4; font-size: 0.9rem;">Hodinová data z Open-Meteo</p>' : '<p style="color: #888; font-size: 0.9rem;">Hodinová data nejsou k dispozici</p>'}
             `;
             container.appendChild(infoDiv);
 
@@ -1645,8 +2049,14 @@
 
             try {
                 displayLoading();
-                const weatherData = await loadWeatherData(location);
-                displayCharts(weatherData);
+                
+                // Načteme jak denní, tak hodinová data paralelně
+                const [weatherData, hourlyData] = await Promise.all([
+                    loadWeatherData(location),
+                    loadHourlyWeatherData(location)
+                ]);
+                
+                displayCharts(weatherData, hourlyData);
             } catch (error) {
                 console.error('Error loading weather data:', error);
                 displayError('Nastala chyba při načítání dat: ' + error.message);
