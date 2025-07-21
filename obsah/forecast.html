@@ -1,15 +1,15 @@
 <!DOCTYPE html>
 <html lang="cs">
 <head>
-    <meta charset="UTF-8"> 
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Předpověď počasí - rozšířená verze</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
     <style>
         * {
-            margin: 0;  
+            margin: 0;
             padding: 0;
-            box-sizing: border-box; 
+            box-sizing: border-box;
         }
 
         body {
@@ -406,6 +406,20 @@
             margin-bottom: 20px;
         }
 
+        /* Nové styly pro dvousloupcové rozložení grafů */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .chart-wrapper-small {
+            position: relative;
+            height: 300px;
+            margin-bottom: 10px;
+        }
+
         .data-sources {
             display: flex;
             flex-wrap: wrap;
@@ -488,6 +502,15 @@
 
             .chart-wrapper {
                 height: 300px;
+            }
+
+            .chart-wrapper-small {
+                height: 250px;
+            }
+
+            .charts-grid {
+                grid-template-columns: 1fr;
+                gap: 15px;
             }
 
             .weather-days-grid {
@@ -643,7 +666,7 @@
             weatherapi: 'eb06c8a0f79f4f918ce103738251807'
         };
 
-        // Funkce pro uložení nastavení
+        // Funkce pro uložení nastavení - OPRAVENO pro trvalé ukládání
         function saveSettings() {
             const settings = {
                 location: document.getElementById('location').value,
@@ -664,26 +687,93 @@
             };
             
             try {
+                // Ukládáme do URL parametrů jako fallback řešení
+                const encodedSettings = btoa(JSON.stringify(settings));
+                const url = new URL(window.location);
+                url.searchParams.set('settings', encodedSettings);
+                window.history.replaceState({}, '', url);
+                
+                // Také ukládáme do paměti pro použití během session
+                window.appSettings = settings;
                 console.log('Nastavení uloženo:', settings);
+                return true;
             } catch (error) {
                 console.error('Chyba při ukládání nastavení:', error);
+                return false;
             }
         }
 
-        // Funkce pro načtení nastavení
+        // Funkce pro načtení nastavení - OPRAVENO pro načítání z URL
         function loadSettings() {
             try {
-                console.log('Načítám výchozí nastavení');
-                return false;
+                // Nejdříve zkusíme načíst z URL parametrů
+                const url = new URL(window.location);
+                const settingsParam = url.searchParams.get('settings');
+                
+                if (settingsParam) {
+                    const settings = JSON.parse(atob(settingsParam));
+                    console.log('Načítám nastavení z URL:', settings);
+                    
+                    if (settings.location) {
+                        document.getElementById('location').value = settings.location;
+                    }
+                    if (settings.selectedDays) {
+                        selectedDays = settings.selectedDays;
+                    }
+                    
+                    if (settings.sources) {
+                        document.getElementById('openweather').checked = settings.sources.openweather !== false;
+                        document.getElementById('weatherapi').checked = settings.sources.weatherapi !== false;
+                        document.getElementById('openmeteo').checked = settings.sources.openmeteo !== false;
+                    }
+                    
+                    if (settings.metrics) {
+                        document.getElementById('temperature').checked = settings.metrics.temperature !== false;
+                        document.getElementById('precipitation').checked = settings.metrics.precipitation !== false;
+                        document.getElementById('humidity').checked = settings.metrics.humidity !== false;
+                        document.getElementById('windspeed').checked = settings.metrics.windspeed !== false;
+                        document.getElementById('pressure').checked = settings.metrics.pressure === true;
+                    }
+                    
+                    // Uložíme také do paměti
+                    window.appSettings = settings;
+                    
+                    updateDaysButtons();
+                    console.log('Nastavení úspěšně načteno z URL, lokace:', document.getElementById('location').value);
+                    return true;
+                }
+                
+                // Fallback: zkusíme načíst z paměti
+                if (window.appSettings) {
+                    const settings = window.appSettings;
+                    console.log('Načítám nastavení z paměti:', settings);
+                    
+                    if (settings.location) {
+                        document.getElementById('location').value = settings.location;
+                    }
+                    if (settings.selectedDays) {
+                        selectedDays = settings.selectedDays;
+                    }
+                    
+                    updateDaysButtons();
+                    console.log('Nastavení úspěšně načteno z paměti, lokace:', document.getElementById('location').value);
+                    return true;
+                }
             } catch (error) {
                 console.error('Chyba při načítání nastavení:', error);
             }
+            console.log('Žádná uložená nastavení nebyla nalezena');
             return false;
         }
 
-        // Funkce pro reset nastavení
+        // Funkce pro reset nastavení - OPRAVENO
         function resetSettings() {
             try {
+                // Vymažeme nastavení z URL i paměti
+                const url = new URL(window.location);
+                url.searchParams.delete('settings');
+                window.history.replaceState({}, '', url);
+                window.appSettings = null;
                 console.log('Nastavení resetováno');
                 
                 document.getElementById('location').value = 'Praha';
@@ -804,7 +894,7 @@
             return desc.join(", ");
         }
 
-        // Funkce pro vytvoření kombinovaného grafu hodinových dat
+        // Funkce pro vytvoření kombinovaného grafu hodinových dat - OPRAVENO zobrazení větru
         function createHourlyChart(containerId, hourlyData) {
             const ctx = document.getElementById(containerId).getContext('2d');
             
@@ -859,10 +949,11 @@
                             data: windspeedData,
                             borderColor: '#45b7d1',
                             backgroundColor: '#45b7d120',
-                            borderWidth: 2,
+                            borderWidth: 3,
                             fill: false,
                             tension: 0.1,
-                            yAxisID: 'y2'
+                            yAxisID: 'y2',
+                            pointRadius: 4
                         },
                         {
                             label: 'Vlhkost (%)',
@@ -983,9 +1074,24 @@
                         },
                         y2: {
                             type: 'linear',
-                            display: false,
+                            display: true,
+                            position: 'right',
                             min: 0,
-                            max: 20
+                            max: 20,
+                            ticks: {
+                                color: '#45b7d1',
+                                callback: function(value) {
+                                    return value + 'm/s';
+                                }
+                            },
+                            grid: {
+                                drawOnChartArea: false,
+                            },
+                            title: {
+                                display: true,
+                                text: 'Vítr (m/s)',
+                                color: '#45b7d1'
+                            }
                         },
                         y3: {
                             type: 'linear',
@@ -998,7 +1104,7 @@
             });
         }
 
-        // Funkce pro vytvoření kombinovaného grafu pro více dní
+        // Funkce pro vytvoření kombinovaného grafu pro více dní - OPRAVENO zobrazení větru
         function createDailyChart(containerId, weatherData) {
             const ctx = document.getElementById(containerId).getContext('2d');
             
@@ -1053,10 +1159,11 @@
                     data: windspeedData,
                     borderColor: '#45b7d1',
                     backgroundColor: '#45b7d120',
-                    borderWidth: 2,
+                    borderWidth: 3,
                     fill: false,
                     tension: 0.1,
-                    yAxisID: 'y2'
+                    yAxisID: 'y2',
+                    pointRadius: 5
                 },
                 {
                     label: 'Vlhkost (%)',
@@ -1199,9 +1306,24 @@
                         },
                         y2: {
                             type: 'linear',
-                            display: false,
+                            display: true,
+                            position: 'right',
                             min: 0,
-                            max: 25
+                            max: 25,
+                            ticks: {
+                                color: '#45b7d1',
+                                callback: function(value) {
+                                    return value + 'm/s';
+                                }
+                            },
+                            grid: {
+                                drawOnChartArea: false,
+                            },
+                            title: {
+                                display: true,
+                                text: 'Vítr (m/s)',
+                                color: '#45b7d1'
+                            }
                         },
                         y3: {
                             type: 'linear',
@@ -1722,7 +1844,7 @@
             return averageData;
         }
 
-        // Funkce pro vytvoření standardního grafu
+        // Funkce pro vytvoření standardního grafu - UPRAVENO pro menší velikost
         function createChart(containerId, title, data, metric, unit) {
             const ctx = document.getElementById(containerId).getContext('2d');
             
@@ -1797,7 +1919,10 @@
                     plugins: {
                         legend: {
                             labels: {
-                                color: '#e0e0e0'
+                                color: '#e0e0e0',
+                                font: {
+                                    size: 11
+                                }
                             }
                         },
                         tooltip: {
@@ -1823,7 +1948,10 @@
                     scales: {
                         x: {
                             ticks: {
-                                color: '#e0e0e0'
+                                color: '#e0e0e0',
+                                font: {
+                                    size: 10
+                                }
                             },
                             grid: {
                                 color: '#404040'
@@ -1835,6 +1963,9 @@
                             max: metric === 'humidity' ? 100 : undefined,
                             ticks: {
                                 color: '#e0e0e0',
+                                font: {
+                                    size: 10
+                                },
                                 callback: function(value) {
                                     return value + unit;
                                 },
@@ -1849,7 +1980,7 @@
             });
         }
 
-        // Funkce pro zobrazení grafů předpovědi
+        // Funkce pro zobrazení grafů předpovědi - UPRAVENO pro dvousloupcové rozložení
         function displayCharts(weatherData, hourlyData = null) {
             const container = document.getElementById('forecast-container');
             container.innerHTML = '';
@@ -1933,35 +2064,42 @@
             `;
             container.appendChild(infoDiv);
 
-            metrics.forEach((metric, index) => {
-                const chartContainer = document.createElement('div');
-                chartContainer.className = 'chart-container';
-                chartContainer.innerHTML = `
-                    <div class="chart-title">${metric.name}</div>
-                    <div class="data-sources">
-                        ${weatherData.map(data => `
-                            <div class="source-indicator">
-                                <div class="source-color" style="background-color: ${SOURCE_COLORS[data.source]}"></div>
-                                ${SOURCE_NAMES[data.source]}
-                            </div>
-                        `).join('')}
-                        ${weatherData.length > 1 ? `
-                            <div class="source-indicator">
-                                <div class="source-color" style="background-color: ${SOURCE_COLORS.average}"></div>
-                                ${SOURCE_NAMES.average}
-                            </div>
-                        ` : ''}
-                    </div>
-                    <div class="chart-wrapper">
-                        <canvas id="forecast-chart-${index}"></canvas>
-                    </div>
-                `;
-                container.appendChild(chartContainer);
+            // NOVÉ: Vytvoříme dvousloupcovou mřížku pro detailní grafy
+            if (metrics.length > 0) {
+                const chartsGridContainer = document.createElement('div');
+                chartsGridContainer.className = 'charts-grid';
+                container.appendChild(chartsGridContainer);
 
-                setTimeout(() => {
-                    createChart(`forecast-chart-${index}`, metric.name, weatherData, metric.key, metric.unit);
-                }, 100);
-            });
+                metrics.forEach((metric, index) => {
+                    const chartContainer = document.createElement('div');
+                    chartContainer.className = 'chart-container';
+                    chartContainer.innerHTML = `
+                        <div class="chart-title">${metric.name}</div>
+                        <div class="data-sources">
+                            ${weatherData.map(data => `
+                                <div class="source-indicator">
+                                    <div class="source-color" style="background-color: ${SOURCE_COLORS[data.source]}"></div>
+                                    ${SOURCE_NAMES[data.source]}
+                                </div>
+                            `).join('')}
+                            ${weatherData.length > 1 ? `
+                                <div class="source-indicator">
+                                    <div class="source-color" style="background-color: ${SOURCE_COLORS.average}"></div>
+                                    ${SOURCE_NAMES.average}
+                                </div>
+                            ` : ''}
+                        </div>
+                        <div class="chart-wrapper-small">
+                            <canvas id="forecast-chart-${index}"></canvas>
+                        </div>
+                    `;
+                    chartsGridContainer.appendChild(chartContainer);
+
+                    setTimeout(() => {
+                        createChart(`forecast-chart-${index}`, metric.name, weatherData, metric.key, metric.unit);
+                    }, 100);
+                });
+            }
         }
 
         // Funkce pro zobrazení chyby
@@ -2044,11 +2182,10 @@
             });
         });
 
-        // Funkcionalita automatického ukládání a aktualizace
+        // Funkcionalita automatického ukládání a aktualizace - OPRAVENO
         function setupAutoSaveAndLoad() {
             document.getElementById('location').addEventListener('change', () => {
                 saveSettings();
-                loadAndDisplayData();
             });
             document.getElementById('openweather').addEventListener('change', () => {
                 saveSettings();
@@ -2153,6 +2290,7 @@
         // Načtení dat po stisknutí Enter
         document.getElementById('location').addEventListener('keypress', function(e) {
             if (e.key === 'Enter' && !document.getElementById('suggestions').classList.contains('show')) {
+                saveSettings();
                 loadAndDisplayData();
             }
         });
@@ -2163,14 +2301,16 @@
             
             initTabs();
             
+            // Načteme uložená nastavení PŘED setupem auto-save
             const settingsLoaded = loadSettings();
+            console.log('Settings loaded:', settingsLoaded, 'Current location:', document.getElementById('location').value);
             
             setupAutoSaveAndLoad();
             
             updateDaysButtons();
             
             if (settingsLoaded) {
-                showNotification('Načtena uložená nastavení', 'success');
+                showNotification('Načtena uložená nastavení: ' + document.getElementById('location').value, 'success');
             } else {
                 showNotification('Používá se výchozí nastavení', 'info');
             }
