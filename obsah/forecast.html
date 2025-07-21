@@ -406,7 +406,6 @@
             margin-bottom: 20px;
         }
 
-        /* Nové styly pro dvousloupcové rozložení grafů */
         .charts-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -486,6 +485,34 @@
 
         .tab-content.active {
             display: block;
+        }
+
+        /* Styly pro ikonky počasí v grafu */
+        .weather-icons-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            padding: 10px;
+            z-index: 1000;
+            pointer-events: none;
+        }
+
+        .weather-icon-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-size: 0.7rem;
+            color: #ccc;
+        }
+
+        .weather-icon-emoji {
+            font-size: 1.5rem;
+            margin-bottom: 2px;
         }
 
         @media (max-width: 768px) {
@@ -638,7 +665,7 @@
                 <div class="tab-container">
                     <div class="tab-header" style="display: none;">
                         <button class="tab-button active" data-tab="forecast">📊 Předpověď</button>
-                        </div>
+                    </div>
                     
                     <div class="tab-content active" id="forecast-tab">
                         <div id="forecast-container">
@@ -647,8 +674,7 @@
                             </div>
                         </div>
                     </div>
-                    
-                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -666,7 +692,7 @@
             weatherapi: 'eb06c8a0f79f4f918ce103738251807'
         };
 
-        // Funkce pro uložení nastavení - OPRAVENO pro trvalé ukládání
+        // Funkce pro uložení nastavení
         function saveSettings() {
             const settings = {
                 location: document.getElementById('location').value,
@@ -687,13 +713,10 @@
             };
             
             try {
-                // Ukládáme do URL parametrů jako fallback řešení
                 const encodedSettings = btoa(JSON.stringify(settings));
                 const url = new URL(window.location);
                 url.searchParams.set('settings', encodedSettings);
                 window.history.replaceState({}, '', url);
-                
-                // Také ukládáme do paměti pro použití během session
                 window.appSettings = settings;
                 console.log('Nastavení uloženo:', settings);
                 return true;
@@ -703,10 +726,9 @@
             }
         }
 
-        // Funkce pro načtení nastavení - OPRAVENO pro načítání z URL
+        // Funkce pro načtení nastavení
         function loadSettings() {
             try {
-                // Nejdříve zkusíme načíst z URL parametrů
                 const url = new URL(window.location);
                 const settingsParam = url.searchParams.get('settings');
                 
@@ -735,15 +757,12 @@
                         document.getElementById('pressure').checked = settings.metrics.pressure === true;
                     }
                     
-                    // Uložíme také do paměti
                     window.appSettings = settings;
-                    
                     updateDaysButtons();
                     console.log('Nastavení úspěšně načteno z URL, lokace:', document.getElementById('location').value);
                     return true;
                 }
                 
-                // Fallback: zkusíme načíst z paměti
                 if (window.appSettings) {
                     const settings = window.appSettings;
                     console.log('Načítám nastavení z paměti:', settings);
@@ -766,10 +785,9 @@
             return false;
         }
 
-        // Funkce pro reset nastavení - OPRAVENO
+        // Funkce pro reset nastavení
         function resetSettings() {
             try {
-                // Vymažeme nastavení z URL i paměti
                 const url = new URL(window.location);
                 url.searchParams.delete('settings');
                 window.history.replaceState({}, '', url);
@@ -894,7 +912,7 @@
             return desc.join(", ");
         }
 
-        // Funkce pro vytvoření kombinovaného grafu hodinových dat - OPRAVENO zobrazení větru
+        // Funkce pro vytvoření kombinovaného grafu hodinových dat - OPRAVENO pro skutečných 24 hodin dopředu
         function createHourlyChart(containerId, hourlyData) {
             const ctx = document.getElementById(containerId).getContext('2d');
             
@@ -907,8 +925,26 @@
             }
 
             const now = new Date();
-            const currentHour = now.getHours();
-            const next24Hours = hourlyData.hourly.slice(currentHour, currentHour + 24);
+            console.log('Aktuální čas:', now.toLocaleString('cs-CZ'));
+            
+            // Najdeme aktuální hodinu v datech
+            const currentHourData = hourlyData.hourly.find(hour => {
+                const hourTime = new Date(hour.time);
+                return hourTime.getHours() === now.getHours() && 
+                       hourTime.toDateString() === now.toDateString();
+            });
+            
+            let currentHourIndex = currentHourData ? hourlyData.hourly.indexOf(currentHourData) : now.getHours();
+            console.log('Index aktuální hodiny:', currentHourIndex, 'Celkový počet hodin:', hourlyData.hourly.length);
+            
+            // Zajistíme, že máme dostatek dat
+            if (currentHourIndex + 24 > hourlyData.hourly.length) {
+                console.log('Nedostatek dat pro 24h předpověď, používám dostupná data');
+                currentHourIndex = Math.max(0, hourlyData.hourly.length - 24);
+            }
+            
+            const next24Hours = hourlyData.hourly.slice(currentHourIndex, currentHourIndex + 24);
+            console.log('Použité hodiny:', next24Hours.length, 'první:', next24Hours[0]?.time, 'poslední:', next24Hours[next24Hours.length-1]?.time);
 
             const labels = next24Hours.map(hour => {
                 const time = new Date(hour.time);
@@ -919,6 +955,36 @@
             const precipitationData = next24Hours.map(hour => hour.precipitation);
             const windspeedData = next24Hours.map(hour => hour.windspeed);
             const humidityData = next24Hours.map(hour => hour.humidity);
+
+            // Vytvoříme overlay s ikonkami počasí pro každé 4. hodiny
+            const iconsContainer = document.getElementById(containerId).parentElement;
+            let weatherIconsOverlay = iconsContainer.querySelector('.weather-icons-overlay');
+            if (weatherIconsOverlay) {
+                weatherIconsOverlay.remove();
+            }
+            
+            weatherIconsOverlay = document.createElement('div');
+            weatherIconsOverlay.className = 'weather-icons-overlay';
+            
+            // Zobrazíme ikony pro každé 4 hodiny (0, 4, 8, 12, 16, 20)
+            for (let i = 0; i < next24Hours.length; i += 4) {
+                const hour = next24Hours[i];
+                if (hour) {
+                    const icon = getWeatherIcon(hour.temperature, hour.precipitation, hour.humidity, hour.windspeed);
+                    const time = new Date(hour.time);
+                    const timeStr = time.toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' });
+                    
+                    const iconElement = document.createElement('div');
+                    iconElement.className = 'weather-icon-item';
+                    iconElement.innerHTML = `
+                        <div class="weather-icon-emoji">${icon}</div>
+                        <div>${timeStr}</div>
+                    `;
+                    weatherIconsOverlay.appendChild(iconElement);
+                }
+            }
+            
+            iconsContainer.appendChild(weatherIconsOverlay);
 
             charts[containerId] = new Chart(ctx, {
                 type: 'line',
@@ -970,6 +1036,11 @@
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    layout: {
+                        padding: {
+                            top: 70 // Prostor pro ikonky
+                        }
+                    },
                     interaction: {
                         mode: 'index',
                         intersect: false,
@@ -1027,7 +1098,7 @@
                         x: {
                             ticks: {
                                 color: '#e0e0e0',
-                                maxTicksLimit: 12
+                                maxTicksLimit: 8
                             },
                             grid: {
                                 color: '#404040'
@@ -1104,7 +1175,7 @@
             });
         }
 
-        // Funkce pro vytvoření kombinovaného grafu pro více dní - OPRAVENO zobrazení větru
+        // Funkce pro vytvoření kombinovaného grafu pro více dní - OPRAVENO zobrazení větru + přidány ikony
         function createDailyChart(containerId, weatherData) {
             const ctx = document.getElementById(containerId).getContext('2d');
             
@@ -1133,6 +1204,41 @@
             const windspeedData = days.map(day => day.windspeed);
             const humidityData = days.map(day => day.humidity);
             const pressureData = days.map(day => day.pressure);
+
+            // Vytvoříme overlay s ikonkami počasí pro denní přehled
+            const iconsContainer = document.getElementById(containerId).parentElement;
+            let weatherIconsOverlay = iconsContainer.querySelector('.weather-icons-overlay');
+            if (weatherIconsOverlay) {
+                weatherIconsOverlay.remove();
+            }
+            
+            weatherIconsOverlay = document.createElement('div');
+            weatherIconsOverlay.className = 'weather-icons-overlay';
+            
+            // Pro denní přehled zobrazíme ikony jen pro některé dny (aby se to vešlo)
+            const maxIcons = Math.min(7, days.length); // Maximálně 7 ikon
+            const step = Math.max(1, Math.floor(days.length / maxIcons));
+            
+            for (let i = 0; i < days.length; i += step) {
+                if (i < maxIcons * step) {
+                    const day = days[i];
+                    if (day) {
+                        const icon = getWeatherIcon(day.temperature_max, day.precipitation, day.humidity, day.windspeed);
+                        const date = new Date(day.date);
+                        const dayStr = date.toLocaleDateString('cs-CZ', { day: 'numeric', month: 'numeric' });
+                        
+                        const iconElement = document.createElement('div');
+                        iconElement.className = 'weather-icon-item';
+                        iconElement.innerHTML = `
+                            <div class="weather-icon-emoji">${icon}</div>
+                            <div>${dayStr}</div>
+                        `;
+                        weatherIconsOverlay.appendChild(iconElement);
+                    }
+                }
+            }
+            
+            iconsContainer.appendChild(weatherIconsOverlay);
 
             const datasets = [
                 {
@@ -1200,6 +1306,11 @@
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    layout: {
+                        padding: {
+                            top: 70 // Prostor pro ikonky
+                        }
+                    },
                     interaction: {
                         mode: 'index',
                         intersect: false,
@@ -1587,10 +1698,11 @@
             }
         }
         
-        // Funkce pro získání hodinových dat z Open-Meteo
+        // Funkce pro získání hodinových dat z Open-Meteo - OPRAVENO pro více hodin
         async function getOpenMeteoHourlyData(lat, lon) {
             try {
-                const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=temperature_2m,precipitation,relative_humidity_2m,windspeed_10m,pressure_msl&timezone=auto&forecast_days=1`;
+                // Požádáme o data na 2 dny dopředu, abychom měli dostatek hodinových dat
+                const url = `https://api.open-meteo.com/v1/forecast?latitude=${lat}&longitude=${lon}&hourly=temperature_2m,precipitation,relative_humidity_2m,windspeed_10m,pressure_msl&timezone=auto&forecast_days=2`;
                 console.log('Open-Meteo Hourly API URL:', url);
                 
                 const response = await fetch(url);
@@ -1844,7 +1956,7 @@
             return averageData;
         }
 
-        // Funkce pro vytvoření standardního grafu - UPRAVENO pro menší velikost
+        // Funkce pro vytvoření standardního grafu
         function createChart(containerId, title, data, metric, unit) {
             const ctx = document.getElementById(containerId).getContext('2d');
             
@@ -1980,7 +2092,7 @@
             });
         }
 
-        // Funkce pro zobrazení grafů předpovědi - UPRAVENO pro dvousloupcové rozložení
+        // Funkce pro zobrazení grafů předpovědi
         function displayCharts(weatherData, hourlyData = null) {
             const container = document.getElementById('forecast-container');
             container.innerHTML = '';
@@ -2006,7 +2118,7 @@
                 const hourlyChartContainer = document.createElement('div');
                 hourlyChartContainer.className = 'chart-container';
                 hourlyChartContainer.innerHTML = `
-                    <div class="chart-title">📊 Detailní hodinový přehled (24h)</div>
+                    <div class="chart-title">🕒 24hodinová předpověď od aktuálního času</div>
                     <div class="chart-wrapper">
                         <canvas id="hourly-combined-chart"></canvas>
                     </div>
@@ -2060,11 +2172,11 @@
                 <div class="chart-title">📊 Dostupné zdroje dat</div>
                 <p style="color: #ccc; margin-bottom: 10px;">Zobrazují se data z: <strong>${availableSources}</strong></p>
                 ${weatherData.length === 1 ? '<p style="color: #888; font-size: 0.9rem;">Pro zobrazení průměru vyberte více zdrojů.</p>' : ''}
-                ${hourlyData ? '<p style="color: #4ecdc4; font-size: 0.9rem;">Hodinová data z Open-Meteo</p>' : '<p style="color: #888; font-size: 0.9rem;">Hodinová data nejsou k dispozici</p>'}
+                ${hourlyData ? '<p style="color: #4ecdc4; font-size: 0.9rem;">✅ 24hodinová předpověď načtena z Open-Meteo</p>' : '<p style="color: #888; font-size: 0.9rem;">❌ Hodinová data nejsou k dispozici</p>'}
             `;
             container.appendChild(infoDiv);
 
-            // NOVÉ: Vytvoříme dvousloupcovou mřížku pro detailní grafy
+            // Vytvoříme dvousloupcovou mřížku pro detailní grafy
             if (metrics.length > 0) {
                 const chartsGridContainer = document.createElement('div');
                 chartsGridContainer.className = 'charts-grid';
@@ -2182,7 +2294,7 @@
             });
         });
 
-        // Funkcionalita automatického ukládání a aktualizace - OPRAVENO
+        // Funkcionalita automatického ukládání a aktualizace
         function setupAutoSaveAndLoad() {
             document.getElementById('location').addEventListener('change', () => {
                 saveSettings();
@@ -2301,7 +2413,6 @@
             
             initTabs();
             
-            // Načteme uložená nastavení PŘED setupem auto-save
             const settingsLoaded = loadSettings();
             console.log('Settings loaded:', settingsLoaded, 'Current location:', document.getElementById('location').value);
             
