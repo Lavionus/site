@@ -1,10 +1,10 @@
-<!DOCTYPE html>
 <html lang="cs">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Předpověď Počasí - 3 dny</title>
+  <title>🌦️ Předpověď počasí</title>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" />
   <style>
     * {
       margin: 0;
@@ -36,6 +36,42 @@
       margin: 0;
       margin-bottom: 10px;
       color: #e0e0e0;
+    }
+
+    .tabs {
+      display: flex;
+      margin-bottom: 20px;
+      border-bottom: 1px solid #404040;
+    }
+
+    .tab {
+      padding: 12px 24px;
+      background-color: #2a2a2a;
+      border: 1px solid #404040;
+      border-bottom: none;
+      border-radius: 8px 8px 0 0;
+      cursor: pointer;
+      font-weight: 500;
+      transition: all 0.3s ease;
+      margin-right: 5px;
+    }
+
+    .tab.active {
+      background-color: #404040;
+      color: #6aa6fd;
+      border-color: #6aa6fd;
+    }
+
+    .tab:hover:not(.active) {
+      background-color: #353535;
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
     }
 
     .controls-section {
@@ -270,6 +306,98 @@
       height: fit-content;
     }
 
+    /* Radar section styles */
+    .radar-container {
+      background-color: #2a2a2a;
+      border: 1px solid #404040;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 30px;
+      position: relative;
+    }
+
+    .radar-controls {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+
+    .radar-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #e0e0e0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .radar-map {
+      height: 500px;
+      width: 100%;
+      border-radius: 6px;
+      overflow: hidden;
+      z-index: 1;
+    }
+
+    .radar-info {
+      margin-top: 15px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.9rem;
+      color: #bbb;
+    }
+
+    .radar-status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .status-indicator {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background-color: #4caf50;
+    }
+
+    .status-indicator.loading {
+      background-color: #ff9800;
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0% { opacity: 1; }
+      50% { opacity: 0.5; }
+      100% { opacity: 1; }
+    }
+
+    .radar-legend {
+      display: flex;
+      gap: 15px;
+      flex-wrap: wrap;
+      margin-top: 15px;
+      padding: 10px;
+      background-color: #333;
+      border-radius: 4px;
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      font-size: 0.8rem;
+    }
+
+    .legend-color {
+      width: 15px;
+      height: 15px;
+      border-radius: 3px;
+    }
+
     @media (max-width: 1200px) {
       .search-form {
         flex-direction: column;
@@ -285,13 +413,20 @@
         padding: 10px;
       }
       .header h1 {
-        font-size: 1.2rem;
+        fontSize: 1.2rem;
       }
       .chart-wrapper {
         height: 300px;
       }
       .saved-location-info {
         display: none;
+      }
+      .radar-map {
+        height: 350px;
+      }
+      .radar-controls {
+        flex-direction: column;
+        align-items: flex-start;
       }
     }
 
@@ -304,12 +439,11 @@
 
     @media (min-width: 1200px) {
       .weather-icons {
-        padding-right: 60px; /* Větší kompenzace pro širší obrazovky */
+        padding-right: 60px;
         right: -20px;
       }
     }
 
-    /* Posun legendy dolů */
     .chartjs-legend {
       margin-top: 20px !important;
       text-align: center !important;
@@ -336,6 +470,43 @@
       height: 12px !important;
       margin-right: 5px !important;
     }
+
+    /* Leaflet overrides for dark theme */
+    .leaflet-container {
+      background: #2a2a2a;
+    }
+    .leaflet-bar {
+      background-color: #2a2a2a;
+      border: 1px solid #555;
+    }
+    .leaflet-bar a {
+      background-color: #2a2a2a;
+      border-bottom: 1px solid #555;
+      color: #e0e0e0;
+    }
+    .leaflet-bar a:hover {
+      background-color: #404040;
+    }
+    .leaflet-control-zoom-in, .leaflet-control-zoom-out {
+      font: bold 18px/20px Arial;
+    }
+    
+    /* Vlastní ikona pro špendlík */
+    .plus-marker {
+      background-color: transparent !important;
+      border-radius: 0 !important;
+      border: none !important;
+      background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="red" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather feather-plus"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>') !important;
+      background-size: contain !important;
+      width: 24px !important;
+      height: 24px !important;
+      transform: translate(-50%, -50%) !important;
+    }
+
+    /* Styly pro plynulou animaci radaru */
+    .radar-layer {
+      transition: opacity 0.3s ease-in-out;
+    }
   </style>
 </head>
 <body>
@@ -344,63 +515,119 @@
       <h1>🌤️ Předpověď Počasí</h1>
     </div>
     
-    <div class="controls-section">
-      <div class="search-form">
-        <div class="search-group">
-          <h3>📍 Lokace</h3>
-          <input
-            id="location"
-            class="search-input"
-            type="text"
-            placeholder="Začněte psát název města..."
-            autocomplete="off"
-          />
-          <div class="suggestions" id="suggestions"></div>
-        </div>
-        <div id="savedLocationInfo" class="saved-location-info" style="display: none;">
-          <span>💾</span>
-          <span id="savedLocationText">Používám uloženou lokaci</span>
-        </div>
-        <button class="load-btn" id="loadWeather">
-          🔍 Načíst předpověď počasí
-        </button>
-        <button class="load-btn" id="saveLocationBtn" style="display: none;">
-          💾 Uložit lokaci
-        </button>
-      </div>
+    <div class="tabs">
+      <div class="tab active" data-tab="forecast">📊 Předpověď</div>
+      <div class="tab" data-tab="radar">📡 Radar</div>
     </div>
     
-    <div id="loading" class="loading" style="display: none;">
-      <div class="spinner">⏳</div>
-      <p>Načítám meteorologická data...</p>
-    </div>
-    
-    <div id="error" class="error" style="display: none;"></div>
-    
-    <div class="charts-section" id="chartsSection" style="display: none;">
-      <div class="chart-container">
-        <div class="chart-title">⏳ 24hodinová předpověď</div>
-        <div class="chart-wrapper">
-          <canvas id="twentyFourHourChart"></canvas>
+    <div class="tab-content active" id="forecast-tab">
+      <div class="controls-section">
+        <div class="search-form">
+          <div class="search-group">
+            <h3>📍 Lokace</h3>
+            <input
+              id="location"
+              class="search-input"
+              type="text"
+              placeholder="Začněte psát název města..."
+              autocomplete="off"
+            />
+            <div class="suggestions" id="suggestions"></div>
+          </div>
+          <div id="savedLocationInfo" class="saved-location-info" style="display: none;">
+            <span>💾</span>
+            <span id="savedLocationText">Používám uloženou lokaci</span>
+          </div>
+          <button class="load-btn" id="loadWeather">
+            🔍 Načíst předpověď počasí
+          </button>
+          <button class="load-btn" id="saveLocationBtn" style="display: none;">
+            💾 Uložit lokaci
+          </button>
         </div>
       </div>
-    
-      <div class="chart-container">
-        <div class="chart-title">📅 3denní předpověď</div>
-        <div class="chart-wrapper">
-          <canvas id="threeDayChart"></canvas>
-        </div>
+      
+      <div id="loading" class="loading" style="display: none;">
+        <div class="spinner">⏳</div>
+        <p>Načítám meteorologická data...</p>
       </div>
+      
+      <div id="error" class="error" style="display: none;"></div>
+      
+      <div class="charts-section" id="chartsSection" style="display: none;">
+        <div class="chart-container">
+          <div class="chart-title">⏰ 24hodinová předpověď</div>
+          <div class="chart-wrapper">
+            <canvas id="twentyFourHourChart"></canvas>
+          </div>
+        </div>
+      
+        <div class="chart-container">
+          <div class="chart-title">📅 3denní předpověď</div>
+          <div class="chart-wrapper">
+            <canvas id="threeDayChart"></canvas>
+          </div>
+        </div>
 
-      <div class="chart-container">
-        <div class="chart-title">🗓️ 10denní předpověď</div>
-        <div class="chart-wrapper">
-          <canvas id="tenDayChart"></canvas>
+        <div class="chart-container">
+          <div class="chart-title">🗓️ 10denní předpověď</div>
+          <div class="chart-wrapper">
+            <canvas id="tenDayChart"></canvas>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="tab-content" id="radar-tab">
+      <div class="radar-container">
+        <div class="radar-controls">
+          <div class="radar-title">📡 Radarové odrazy</div>
+          <div>
+            <button class="load-btn" id="playRadar">▶️ Přehrát animaci</button>
+          </div>
+        </div>
+        
+        <div id="radar-map" class="radar-map"></div>
+        
+        <div class="radar-info">
+          <div class="radar-status">
+            <div class="status-indicator" id="radar-status"></div>
+            <span id="radar-status-text">Inicializace radaru...</span>
+          </div>
+          <div id="radar-time">Čas snímku: --:--</div>
+        </div>
+        
+        <div class="radar-legend">
+          <div class="legend-item">
+            <div class="legend-color" style="background-color: rgba(181, 208, 208, 0.8);"></div>
+            <span>Slabé (0.1-1 mm/h)</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-color" style="background-color: rgba(99, 140, 198, 0.8);"></div>
+            <span>Mírné (1-2.5 mm/h)</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-color" style="background-color: rgba(0, 158, 30, 0.8);"></div>
+            <span>Střední (2.5-10 mm/h)</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-color" style="background-color: rgba(255, 255, 0, 0.8);"></div>
+            <span>Silné (10-20 mm/h)</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-color" style="background-color: rgba(255, 165, 0, 0.8);"></div>
+            <span>Velmi silné (20-40 mm/h)</span>
+          </div>
+          <div class="legend-item">
+            <div class="legend-color" style="background-color: rgba(255, 0, 0, 0.8);"></div>
+            <span>Extrémní (40+ mm/h)</span>
+          </div>
         </div>
       </div>
     </div>
   </div>
 
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
   <script>
     // Globální proměnné
     let threeDayChart = null;
@@ -410,6 +637,17 @@
     let selectedSuggestionIndex = -1;
     let currentSuggestions = [];
     let currentLocationData = null;
+    
+    // Radarové proměnné
+    let radarMap = null;
+    let radarLayers = [];
+    let radarAnimation = null;
+    let currentRadarFrame = 0;
+    let radarData = [];
+    let locationMarker = null;
+    let currentRadarLayer = null;
+    let nextRadarLayer = null;
+    let smoothAnimation = true;
 
     // Funkce pro zobrazení notifikace
     function showNotification(message, type = 'info') {
@@ -752,10 +990,16 @@
         }
 
         tempData.push(temp[i]);
-        precipData.push(precip[i]);
         windData.push(wind[i]);
         windDirData.push(windDir[i]);
         cloudsData.push(clouds[i]);
+        
+        // Agregace srážek - sečteme srážky z následujících 3 hodin
+        let totalPrecip = 0;
+        for (let j = 0; j < 3 && (i + j) < hours72; j++) {
+          totalPrecip += precip[i + j];
+        }
+        precipData.push(totalPrecip);
       }
 
       // Plugin pro kreslení šipek směru větru
@@ -783,7 +1027,7 @@
 
               ctx.save();
               ctx.translate(x, y - 15);
-              const rotation = ((windDirection + 180) * Math.PI) / 180; // Modified line
+              const rotation = ((windDirection + 180) * Math.PI) / 180;
               ctx.rotate(rotation);
 
               ctx.beginPath();
@@ -917,6 +1161,11 @@
         options: {
           responsive: true,
           maintainAspectRatio: false,
+          layout: {
+            padding: {
+              top: 50
+            }
+          },
           plugins: {
             legend: {
               position: 'bottom',
@@ -939,15 +1188,22 @@
                   const index = tooltipItems[0].dataIndex;
                   const windSpeed = windData[index];
                   const windDirection = windDirData[index];
+                  const temperature = tempData[index];
+                  const precipitation = precipData[index];
+                  const cloudCover = cloudsData[index];
+                  const hour = new Date(time[index * 3]).getHours();
+                  const isDay = hour >= 6 && hour <= 20;
 
+                  const tooltipLines = [];
+                  
                   if (windSpeed > 0 && windDirection !== undefined) {
                     const directions = ['S', 'SSV', 'SV', 'VSV', 'V', 'VJV', 'JV', 'JJV', 'J', 'JJZ', 'JZ', 'ZJZ', 'Z', 'ZSZ', 'SZ', 'SSZ'];
                     const dirIndex = Math.round(windDirection / 22.5) % 16;
                     const dirText = directions[dirIndex];
 
-                    return [`🧭 Směr větru: ${dirText} (${Math.round(windDirection)}°)`];
+                    tooltipLines.push(`🧭 Směr větru: ${dirText} (${Math.round(windDirection)}°)`);
                   }
-                  return [];
+                  return tooltipLines;
                 }
               }
             }
@@ -1232,6 +1488,11 @@
         options: {
           responsive: true,
           maintainAspectRatio: false,
+          layout: {
+            padding: {
+              top: 40
+            }
+          },
           plugins: {
             legend: {
               position: 'bottom',
@@ -1254,15 +1515,22 @@
                   const index = tooltipItems[0].dataIndex;
                   const windSpeed = windData[index];
                   const windDirection = windDirData[index];
+                  const temperature = tempData[index];
+                  const precipitation = precipData[index];
+                  const cloudCover = cloudsData[index];
+                  const hour = new Date(time[index]).getHours();
+                  const isDay = hour >= 6 && hour <= 20;
 
+                  const tooltipLines = [];
+                  
                   if (windSpeed > 0 && windDirection !== undefined) {
                     const directions = ['S', 'SSV', 'SV', 'VSV', 'V', 'VJV', 'JV', 'JJV', 'J', 'JJZ', 'JZ', 'ZJZ', 'Z', 'ZSZ', 'SZ', 'SSZ'];
                     const dirIndex = Math.round(windDirection / 22.5) % 16;
                     const dirText = directions[dirIndex];
 
-                    return [`🧭 Směr větru: ${dirText} (${Math.round(windDirection)}°)`];
+                    tooltipLines.push(`🧭 Směr větru: ${dirText} (${Math.round(windDirection)}°)`);
                   }
-                  return [];
+                  return tooltipLines;
                 }
               }
             }
@@ -1477,6 +1745,11 @@
         options: {
           responsive: true,
           maintainAspectRatio: false,
+          layout: {
+            padding: {
+              top: 50
+            }
+          },
           plugins: {
             legend: {
               position: 'bottom',
@@ -1500,6 +1773,8 @@
                   const windSpeed = wind[index];
                   const windDirection = windDir[index];
                   const cloudCover = clouds[index];
+                  const temperature = (tempMax[index] + tempMin[index]) / 2;
+                  const precipitation = precip[index];
 
                   const tooltipLines = [];
 
@@ -1636,6 +1911,268 @@
       }
     }
 
+    // Vlastní ikona
+    const PlusIcon = L.Icon.extend({
+      options: {
+        iconUrl: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="red" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather feather-plus"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>',
+        iconSize: [24, 24],
+        iconAnchor: [12, 12],
+        popupAnchor: [0, 0]
+      }
+    });
+    const plusIcon = new PlusIcon();
+
+    // Funkce pro radar
+    function initRadar() {
+      // Bounding box pro Českou republiku (přibližné souřadnice pro dobrou viditelnost s okolím)
+      // JZ roh: [48.5, 12.0]
+      // SV roh: [51.5, 19.0]
+      const czechRepublicBounds = [
+        [48.5, 12.0], // Southwest
+        [51.5, 19.0]  // Northeast
+      ];
+
+      // Inicializace mapy
+      if (radarMap) {
+        radarMap.remove(); // Odstraní starou mapu, pokud existuje
+      }
+      
+      radarMap = L.map('radar-map'); // Inicializuje mapu bez počátečního setView
+
+      // Použití fitBounds k zaměření mapy na bounding box ČR
+      radarMap.fitBounds(czechRepublicBounds, {
+          padding: [20, 20] // Přidá 20px odsazení kolem hranic pro lepší pohled
+      });
+      
+      // Přidání špendlíku s polohou
+      if (currentLocationData) {
+        if (locationMarker) {
+            locationMarker.remove();
+        }
+        // Přidání špendlíku s lokací
+        locationMarker = L.marker([currentLocationData.lat, currentLocationData.lon], { icon: plusIcon }).addTo(radarMap);
+      }
+      
+      // Definování mapových podkladů
+      const baseLayers = {
+        'Topografická mapa': L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+          attribution: '© OpenTopoMap contributors, SRTM | Map style: © OpenTopoMap (CC-BY-SA)',
+          maxZoom: 17
+        }),
+        
+        'OpenStreetMap': L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '© OpenStreetMap contributors',
+          maxZoom: 18
+        })
+      };
+
+      // Přidání topografické mapy jako výchozí
+      baseLayers['Topografická mapa'].addTo(radarMap);
+
+      // Přidání ovladače vrstev
+      L.control.layers(baseLayers).addTo(radarMap);
+      
+      
+      
+      // Načtení radarových dat
+      loadRadarData();
+      
+      // Nastavení statusu
+      updateRadarStatus('online', 'Radar připojen');
+    }
+
+    async function loadRadarData() {
+      updateRadarStatus('loading', 'Načítám radarová data...');
+      
+      try {
+        const response = await fetch('https://api.rainviewer.com/public/weather-maps.json');
+        const data = await response.json();
+        
+        if (!data.radar || !data.radar.past) {
+          throw new Error('Neplatná odpověď z API');
+        }
+        
+        // Získání posledních 10 snímků pro plynulejší animaci
+        radarData = data.radar.past.slice(-10);
+        
+        // Vytvoření radarových vrstev
+        radarLayers = radarData.map(frame => {
+          const tileUrl = `https://tilecache.rainviewer.com/v2/radar/${frame.time}/256/{z}/{x}/{y}/2/1_1.png`;
+          return L.tileLayer(tileUrl, {
+            opacity: 0.7,
+            attribution: 'Radarová data: RainViewer',
+            className: 'radar-layer'
+          });
+        });
+        
+        // Zobrazení posledního snímku
+        if (radarLayers.length > 0) {
+          radarLayers[radarLayers.length - 1].addTo(radarMap);
+          currentRadarFrame = radarLayers.length - 1;
+          currentRadarLayer = radarLayers[currentRadarFrame];
+          
+          // Aktualizace času snímku
+          const frameTime = new Date(radarData[currentRadarFrame].time * 1000);
+          document.getElementById('radar-time').textContent = `Čas snímku: ${frameTime.toLocaleTimeString('cs-CZ')}`;
+        }
+        
+        updateRadarStatus('online', 'Radarová data načtena');
+        
+      } catch (error) {
+        console.error('Chyba při načítání radarových dat:', error);
+        updateRadarStatus('error', 'Chyba načítání dat');
+        showNotification('Nepodařilo se načíst radarová data', 'error');
+      }
+    }
+
+    // Funkce pro plynulé zobrazení radarového snímku
+    async function showRadarFrame(frameIndex) {
+      if (!radarLayers[frameIndex]) return;
+      
+      if (smoothAnimation && currentRadarLayer) {
+        // Plynulý přechod
+        if (nextRadarLayer) {
+          radarMap.removeLayer(nextRadarLayer);
+          nextRadarLayer = null;
+        }
+        
+        nextRadarLayer = radarLayers[frameIndex];
+        nextRadarLayer.addTo(radarMap);
+        nextRadarLayer.setOpacity(0);
+        
+        // Postupné zobrazení nového snímku
+        let opacity = 0;
+        const fadeInInterval = setInterval(() => {
+          opacity += 0.1;
+          if (nextRadarLayer) {
+            nextRadarLayer.setOpacity(opacity);
+            currentRadarLayer.setOpacity(0.7 - opacity);
+          }
+          
+          if (opacity >= 0.7) {
+            clearInterval(fadeInInterval);
+            if (currentRadarLayer) {
+              radarMap.removeLayer(currentRadarLayer);
+            }
+            currentRadarLayer = nextRadarLayer;
+            nextRadarLayer = null;
+            currentRadarLayer.setOpacity(0.7);
+          }
+        }, 30);
+        
+      } else {
+        // Obyčejná výměna
+        if (currentRadarLayer) {
+          radarMap.removeLayer(currentRadarLayer);
+        }
+        
+        currentRadarLayer = radarLayers[frameIndex];
+        currentRadarLayer.addTo(radarMap);
+        currentRadarLayer.setOpacity(0.7);
+      }
+      
+      // Aktualizace času snímku
+      const frameTime = new Date(radarData[frameIndex].time * 1000);
+      document.getElementById('radar-time').textContent = `Čas snímku: ${frameTime.toLocaleTimeString('cs-CZ')}`;
+    }
+
+    function playRadarAnimation() {
+      const playButton = document.getElementById('playRadar');
+      
+      if (radarAnimation) {
+        // Zastavení animace
+        clearInterval(radarAnimation);
+        radarAnimation = null;
+        playButton.textContent = '▶️ Přehrát animaci';
+        updateRadarStatus('online', 'Animace zastavena');
+        
+        // Vyčištění pending vrstev
+        if (nextRadarLayer) {
+          radarMap.removeLayer(nextRadarLayer);
+          nextRadarLayer = null;
+        }
+      } else {
+        // Spuštění animace
+        if (radarLayers.length === 0) {
+          showNotification('Nejsou dostupná žádná radarová data', 'error');
+          return;
+        }
+        
+        playButton.textContent = '⏹️ Zastavit animaci';
+        updateRadarStatus('loading', 'Přehrávám animaci...');
+        
+        let frameIndex = 0;
+        smoothAnimation = true; // Povolení plynulé animace
+
+        async function playRadarAnimation() {
+          while (true) {
+            await showRadarFrame(frameIndex);
+            frameIndex = (frameIndex + 1) % radarLayers.length;
+
+            if (frameIndex === 0) {
+              // Pauza po posledním snímku
+              await new Promise(resolve => setTimeout(resolve, 1500)); // 2 sekundy
+            } else {
+              // Běžná pauza mezi snímky
+              await new Promise(resolve => setTimeout(resolve, 500)); // 0.5 sekundy
+            }
+          }
+        }
+
+        // Spuštění animace
+        playRadarAnimation();
+      }
+    }
+
+    function updateRadarStatus(status, message) {
+      const statusIndicator = document.getElementById('radar-status');
+      const statusText = document.getElementById('radar-status-text');
+      
+      statusIndicator.className = 'status-indicator';
+      
+      if (status === 'loading') {
+        statusIndicator.classList.add('loading');
+      } else if (status === 'error') {
+        statusIndicator.style.backgroundColor = '#f44336';
+      } else {
+        statusIndicator.style.backgroundColor = '#4caf50';
+      }
+      
+      statusText.textContent = message;
+    }
+
+    // Funkce pro přepínání záložek
+    function switchTab(tabName) {
+      // Skrýt všechny obsahy záložek
+      document.querySelectorAll('.tab-content').forEach(tab => {
+        tab.classList.remove('active');
+      });
+      
+      // Zobrazit vybranou záložku
+      document.getElementById(`${tabName}-tab`).classList.add('active');
+      
+      // Aktualizovat aktivní záložku
+      document.querySelectorAll('.tab').forEach(tab => {
+        tab.classList.remove('active');
+      });
+      
+      document.querySelector(`.tab[data-tab="${tabName}"]`).classList.add('active');
+      
+      // Pokud přepínáme na radar a ještě není inicializován, inicializuj
+      if (tabName === 'radar' && !radarMap) {
+        setTimeout(initRadar, 100);
+      }
+      
+      // Přidání špendlíku na radarovou mapu po přepnutí
+      if (tabName === 'radar' && radarMap && currentLocationData) {
+        if (locationMarker) {
+            locationMarker.remove();
+        }
+        locationMarker = L.marker([currentLocationData.lat, currentLocationData.lon], { icon: plusIcon }).addTo(radarMap);
+        radarMap.setView([currentLocationData.lat, currentLocationData.lon], radarMap.getZoom());
+      }
+    }
+
     // Inicializace aplikace
     function initApp() {
       // Načtení uložené lokace
@@ -1646,6 +2183,14 @@
       // Nastavení event listenerů
       document.getElementById('loadWeather').addEventListener('click', loadWeather);
       document.getElementById('saveLocationBtn').addEventListener('click', saveLocation);
+      document.getElementById('playRadar').addEventListener('click', playRadarAnimation);
+
+      // Přepínání záložek
+      document.querySelectorAll('.tab').forEach(tab => {
+        tab.addEventListener('click', function() {
+          switchTab(this.dataset.tab);
+        });
+      });
 
       const locationInput = document.getElementById('location');
       locationInput.addEventListener('input', function() {
