@@ -1,0 +1,1184 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Generátor barevných a černobílých obrazců</title>
+    <style>
+        :root {
+            --bg-color: #1a1a1a;
+            --card-bg: #2d2d2d;
+            --text-color: #e0e0e0;
+            --accent-color: #4CAF50;
+            --accent-hover: #45a0a9;
+            --export-color: #2196F3;
+            --export-hover: #0b7dda;
+            --share-color: #FFC107;
+            --share-hover: #ffb300;
+            --delete-color: #F44336;
+            --delete-hover: #d32f2f;
+            --border-color: #444;
+            --svg-regen-color: #8c76e6;
+            --svg-regen-hover: #7b62e0;
+            --success-color: #66BB6A;
+        }
+        
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 15px;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+        }
+        h1 {
+            color: var(--text-color);
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+
+        /* === TAB KONTROLY === */
+        .tabs {
+            display: flex;
+            margin-bottom: 15px;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .tab-button {
+            background-color: transparent;
+            color: var(--text-color);
+            border: none;
+            padding: 8px 16px;
+            cursor: pointer;
+            font-size: 16px;
+            border-bottom: 3px solid transparent;
+            transition: border-bottom 0.3s, color 0.3s;
+        }
+        .tab-button.active {
+            border-bottom-color: var(--accent-color);
+            font-weight: bold;
+            color: white;
+        }
+        .tab-button:hover:not(.active) {
+            color: var(--accent-color);
+        }
+
+        /* === OBSAH KARET === */
+        .tab-content {
+            display: none;
+        }
+        .tab-content.active {
+            display: block;
+        }
+
+        /* === GENERATOR VIEW === */
+        .generator-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+        .controls {
+            flex: 1;
+            min-width: 280px;
+            background: var(--card-bg);
+            padding: 15px;
+            border-radius: 6px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            border: 1px solid var(--border-color);
+        }
+        .preview {
+            flex: 2;
+            min-width: 450px;
+            background: var(--card-bg);
+            padding: 15px;
+            border-radius: 6px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            border: 1px solid var(--border-color);
+        }
+        .form-group { 
+            margin-bottom: 10px; 
+        }
+        label { 
+            display: block; 
+            margin-bottom: 4px; 
+            font-weight: bold;
+            font-size: 0.9em;
+        }
+        input[type="number"], input[type="text"] {
+            width: 100%;
+            padding: 6px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            background-color: var(--bg-color);
+            color: var(--text-color);
+            font-size: 0.9em;
+        }
+        /* Nové styly pro Color a Range */
+        input[type="color"] {
+            -webkit-appearance: none;
+            -moz-appearance: none;
+            appearance: none;
+            border: none;
+            width: 30px;
+            height: 30px;
+            padding: 0;
+            border-radius: 4px;
+            vertical-align: middle;
+            cursor: pointer;
+        }
+        .color-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .range-group { 
+            display: flex; 
+            gap: 8px; 
+        }
+        .range-group > div { 
+            flex: 1; 
+        }
+        
+        /* Nový styl pro ikonku průhlednosti - šachovnice */
+        .transparent-icon {
+            cursor: pointer;
+            font-size: 1.2em;
+            padding: 4px 6px;
+            border-radius: 4px;
+            background-color: var(--border-color);
+            transition: background-color 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-width: 30px;
+            height: 30px;
+            background-image: 
+                linear-gradient(45deg, #888 25%, transparent 25%),
+                linear-gradient(-45deg, #888 25%, transparent 25%),
+                linear-gradient(45deg, transparent 75%, #888 75%),
+                linear-gradient(-45deg, transparent 75%, #888 75%);
+            background-size: 8px 8px;
+            background-position: 0 0, 0 4px, 4px -4px, -4px 0px;
+        }
+        .transparent-icon:hover {
+            background-color: var(--accent-color);
+        }
+        
+        .control-button-group {
+            display: flex;
+            gap: 8px;
+            margin-top: 15px;
+            margin-bottom: 10px;
+        }
+        .control-button-group button {
+            flex: 1;
+            font-size: 0.9em;
+            padding: 8px 12px;
+        }
+
+        .preview .button-group {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-top: 15px;
+            gap: 8px;
+        }
+        canvas {
+            border: 1px solid var(--border-color);
+            max-width: 100%;
+            background-image: repeating-conic-gradient(var(--border-color) 0% 25%, transparent 0% 50%);
+            background-size: 20px 20px;
+        }
+        .info {
+            margin-top: 8px;
+            font-size: 0.8em;
+            color: #aaa;
+            text-align: center;
+        }
+        #shareLinkOutput {
+            margin-top: 8px;
+            font-size: 0.8em;
+            color: var(--share-color);
+            word-break: break-all;
+            text-align: center;
+        }
+        
+        /* Nový styl pro toast notifikaci */
+        #saveMessage {
+            margin-top: 8px;
+            font-size: 0.85em;
+            color: white;
+            padding: 6px 12px;
+            border-radius: 4px;
+            text-align: center;
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out, background-color 0.3s;
+        }
+        #saveMessage.success {
+            background-color: var(--success-color);
+            opacity: 1;
+        }
+        #saveMessage.error {
+            background-color: var(--delete-color);
+            opacity: 1;
+        }
+        
+        /* === GALLERY VIEW === */
+        #gallery-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 15px;
+            padding: 10px;
+            min-height: 350px;
+        }
+        .gallery-item {
+            background-color: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 6px;
+            padding: 8px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            position: relative;
+        }
+        .gallery-item-content {
+            width: 100%;
+            height: 200px;
+            background-image: repeating-conic-gradient(var(--border-color) 0% 25%, transparent 0% 50%);
+            background-size: 20px 20px;
+            border: 1px solid var(--border-color);
+            border-radius: 4px;
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+        .gallery-item-content img, .gallery-item-content svg {
+            max-width: 100%;
+            max-height: 100%;
+            display: block;
+        }
+        .gallery-actions {
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            width: 100%;
+            padding-top: 5px;
+            gap: 4px;
+        }
+        .gallery-actions button {
+            margin: 0;
+            padding: 5px 6px;
+            font-size: 0.8em;
+            flex: 1;
+            min-width: 80px;
+        }
+        .delete-btn {
+            background-color: var(--delete-color);
+        }
+        .delete-btn:hover {
+            background-color: var(--delete-hover);
+        }
+        .svg-regen-btn {
+            background-color: var(--svg-regen-color);
+        }
+        .svg-regen-btn:hover {
+            background-color: var(--svg-regen-hover);
+        }
+
+        /* Společné styly pro tlačítka */
+        button {
+            background-color: var(--accent-color);
+            color: white;
+            border: none;
+            padding: 8px 12px;
+            text-align: center;
+            text-decoration: none;
+            display: inline-block;
+            font-size: 0.9em;
+            cursor: pointer;
+            border-radius: 4px;
+            transition: background-color 0.3s;
+        }
+        button:hover { background-color: var(--accent-hover); }
+        button.export { background-color: var(--export-color); }
+        button.export:hover { background-color: var(--export-hover); }
+        button.share { background-color: var(--share-color); }
+        button.share:hover { background-color: var(--share-hover); }
+    </style>
+</head>
+<body>
+    <h1>Generátor barevných a černobílých obrazců</h1>
+    
+    <div class="tabs">
+        <button class="tab-button active" onclick="switchTab('generator')">⚙️ Generátor</button>
+        <button class="tab-button" onclick="switchTab('gallery')">🖼️ Galerie</button>
+    </div>
+
+    <div id="generator" class="tab-content active">
+        <div class="generator-container">
+            <div class="controls">
+                
+                <div class="form-group">
+                    <label for="seed">Náhodné semeno (Seed):</label>
+                    <input type="number" id="seed" value="12345" min="1" max="9999999999">
+                </div>
+
+                <div class="form-group">
+                    <label for="foregroundColor">Barva tvaru:</label>
+                    <div class="color-group">
+                        <input type="color" id="foregroundColor" value="#000000">
+                        <input type="text" id="foregroundColorHex" value="#000000" onchange="syncColorInput(this, 'foregroundColor')">
+                        <span class="transparent-icon" title="Nastavit průhledný tvar" onclick="setTransparentForeground()"></span>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="backgroundColor">Barva pozadí:</label>
+                    <div class="color-group">
+                        <input type="color" id="backgroundColor" value="#ffffff" onchange="syncColorInput(this, 'backgroundColorHex')">
+                        <input type="text" id="backgroundColorHex" value="transparent" onchange="syncColorInput(this, 'backgroundColor')">
+                        <span class="transparent-icon" title="Nastavit průhledné pozadí" onclick="setTransparentBackground()"></span>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label for="circleDiameter">Průměr středového kruhu (px):</label>
+                    <input type="number" id="circleDiameter" min="10" max="500" value="100">
+                </div>
+                
+                <div class="form-group">
+                    <label>Tloušťka kružnic (px):</label>
+                    <div class="range-group">
+                        <div>
+                            <label for="minCircleThickness">Od:</label>
+                            <input type="number" id="minCircleThickness" min="1" max="50" value="5">
+                        </div>
+                        <div>
+                            <label for="maxCircleThickness">Do:</label>
+                            <input type="number" id="maxCircleThickness" min="1" max="50" value="15">
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="form-group">
+                    <label>Tloušťka rozestupu (px):</label>
+                    <div class="range-group">
+                        <div>
+                            <label for="minGapThickness">Od:</label>
+                            <input type="number" id="minGapThickness" min="1" max="50" value="3">
+                        </div>
+                        <div>
+                            <label for="maxGapThickness">Do:</label>
+                            <input type="number" id="maxGapThickness" min="1" max="50" value="10">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="segmentGapThickness">Tloušťka mezery (px):</label>
+                    <input type="number" id="segmentGapThickness" min="1" max="50" value="5">
+                </div>
+                
+                <div class="form-group">
+                    <label>Počet částí kružnic:</label>
+                    <div class="range-group">
+                        <div>
+                            <label for="minSegments">Od:</label>
+                            <input type="number" id="minSegments" min="1" max="10" value="3">
+                        </div>
+                        <div>
+                            <label for="maxSegments">Do:</label>
+                            <input type="number" id="maxSegments" min="1" max="10" value="5">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label for="numCircles">Počet kružnic:</label>
+                    <input type="number" id="numCircles" min="1" max="20" value="5">
+                </div>
+                
+                <div class="form-group">
+                    <label for="canvasSize">Velikost plátna (px):</label>
+                    <input type="number" id="canvasSize" min="100" max="2000" value="800">
+                </div>
+                
+                <div class="form-group">
+                    <label for="paddingPx">Okrajové odsazení (px):</label>
+                    <input type="number" id="paddingPx" min="0" max="100" value="20">
+                </div>
+                
+                <div class="control-button-group">
+                    <button id="generateBtn">Generovat (Nové Semeno)</button>
+                    <button id="generateFromSeedBtn">Generovat ze Seed</button>
+                </div>
+                
+                <div class="info">
+                    <p>Nastavení se automaticky ukládají. Pravý klik na "Uložit do Galerie" uloží SVG.</p>
+                </div>
+            </div>
+            
+            <div class="preview">
+                <canvas id="canvas" width="800" height="800"></canvas>
+                
+                <div class="button-group">
+                    <button id="saveGalleryBtn">🖼️ Uložit do Galerie (PNG)</button>
+                    <button id="shareLinkBtn" class="share">🔗 Generovat odkaz</button>
+                </div>
+                
+                <div id="saveMessage"></div> 
+                
+                <div class="button-group">
+                    <button id="downloadPngBtn" class="export">Stáhnout PNG</button>
+                    <button id="downloadSvgBtn" class="export">Stáhnout SVG (mm)</button>
+                </div>
+                <div id="shareLinkOutput"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="gallery" class="tab-content">
+        <h2>Uložené obrazce</h2>
+        <div id="gallery-container">
+            <p id="gallery-placeholder">Zatím nebyly uloženy žádné obrázky. Uložte si první obrázek pomocí tlačítka "Uložit do Galerie (PNG)".</p>
+        </div>
+        <div style="text-align: center; margin-top: 15px;">
+            <button class="delete-btn" onclick="clearGallery()">Vymazat celou galerii</button>
+        </div>
+    </div>
+
+    <script>
+        // === KONSTANTY ===
+        const PIXELS_PER_MM = 3.779527559; 
+        const STORAGE_KEY = 'bwGeneratorSettings'; 
+        const GALLERY_KEY = 'bwGallery'; 
+
+        // === ELEMENTY ===
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        const generateBtn = document.getElementById('generateBtn');
+        const generateFromSeedBtn = document.getElementById('generateFromSeedBtn');
+        const saveGalleryBtn = document.getElementById('saveGalleryBtn');
+        const downloadPngBtn = document.getElementById('downloadPngBtn');
+        const downloadSvgBtn = document.getElementById('downloadSvgBtn');
+        const shareLinkBtn = document.getElementById('shareLinkBtn');
+        const galleryContainer = document.getElementById('gallery-container');
+        const galleryPlaceholder = document.getElementById('gallery-placeholder');
+        const shareLinkOutput = document.getElementById('shareLinkOutput');
+        const seedInput = document.getElementById('seed');
+        const saveMessage = document.getElementById('saveMessage');
+
+        // Seznam všech inputů
+        const settingsInputs = [
+            seedInput, 
+            document.getElementById('foregroundColor'),
+            document.getElementById('backgroundColorHex'),
+            document.getElementById('circleDiameter'),
+            document.getElementById('minCircleThickness'),
+            document.getElementById('maxCircleThickness'),
+            document.getElementById('minGapThickness'),
+            document.getElementById('maxGapThickness'),
+            document.getElementById('segmentGapThickness'),
+            document.getElementById('minSegments'),
+            document.getElementById('maxSegments'),
+            document.getElementById('numCircles'),
+            document.getElementById('canvasSize'),
+            document.getElementById('paddingPx') 
+        ];
+        
+        // Mapování ID na krátké parametry pro URL
+        const URL_PARAM_MAP = {
+            'seed': 'S',
+            'foregroundColor': 'fC',
+            'backgroundColorHex': 'bC',
+            'circleDiameter': 'D',
+            'minCircleThickness': 'mCT',
+            'maxCircleThickness': 'MCT',
+            'minGapThickness': 'mGT',
+            'maxGapThickness': 'MGT',
+            'segmentGapThickness': 'sGT',
+            'minSegments': 'mS',
+            'maxSegments': 'MS',
+            'numCircles': 'nC',
+            'canvasSize': 'cS',
+            'paddingPx': 'P' 
+        };
+        
+        // Pomocná funkce pro synchronizaci Color a Text inputů
+        function syncColorInput(source, targetId) {
+            const target = document.getElementById(targetId);
+            
+            if (source.type === 'color') {
+                target.value = source.value.toUpperCase();
+            } else if (source.type === 'text') {
+                if (targetId === 'foregroundColor') {
+                    if (/^#[0-9A-F]{6}$/i.test(source.value)) {
+                        target.value = source.value.toUpperCase();
+                    } else {
+                        target.value = '#000000';
+                        source.value = '#000000';
+                    }
+                } else if (targetId === 'backgroundColor') {
+                    if (source.value.toLowerCase() === 'transparent') {
+                        // Color input nepodporuje transparent - necháme hodnotu
+                    } else if (/^#[0-9A-F]{6}$/i.test(source.value)) {
+                        target.value = source.value.toUpperCase();
+                    } else {
+                        target.value = '#ffffff';
+                        source.value = '#ffffff';
+                    }
+                }
+            }
+            drawPattern(false, true);
+        }
+        window.syncColorInput = syncColorInput;
+
+        // Funkce pro nastavení průhledného pozadí
+        function setTransparentBackground() {
+            const bgHexInput = document.getElementById('backgroundColorHex');
+            bgHexInput.value = 'transparent';
+            drawPattern(false, true);
+        }
+        window.setTransparentBackground = setTransparentBackground;
+
+        // Funkce pro nastavení průhledného tvaru
+        function setTransparentForeground() {
+            const fgHexInput = document.getElementById('foregroundColorHex');
+            fgHexInput.value = 'transparent';
+            drawPattern(false, true);
+        }
+        window.setTransparentForeground = setTransparentForeground;
+
+        // === SEEDABLE PSEUDO-RANDOM NUMBER GENERATOR (LCG) ===
+        let currentSeed = 1;
+
+        function setSeed(seed) {
+            currentSeed = parseInt(seed) || 1;
+            if (currentSeed <= 0) currentSeed = 1;
+        }
+
+        function seededRandom() {
+            const m = 0x100000000;
+            const a = 1664525;
+            const c = 1013904223;
+
+            currentSeed = (a * currentSeed + c) % m;
+            return currentSeed / m; 
+        }
+
+        function seededRandomInt(min, max) {
+            const actualMin = Math.min(min, max);
+            const actualMax = Math.max(min, max);
+            return Math.floor(seededRandom() * (actualMax - actualMin + 1)) + actualMin;
+        }
+        
+        /**
+         * Zobrazí neblokující zprávu o stavu
+         */
+        let messageTimeout;
+        function showTemporaryMessage(message, type) {
+            clearTimeout(messageTimeout);
+            
+            saveMessage.textContent = message;
+            saveMessage.className = ''; 
+            saveMessage.classList.add(type);
+
+            messageTimeout = setTimeout(() => {
+                saveMessage.classList.remove('success', 'error');
+            }, 3000);
+        }
+
+        // --- ŘÍZENÍ ZÁLOŽEK A GLOBÁLNÍ FUNKCE ---
+        window.switchTab = function(tabName) {
+            document.querySelectorAll('.tab-content').forEach(content => {
+                content.classList.remove('active');
+            });
+            document.querySelectorAll('.tab-button').forEach(button => {
+                button.classList.remove('active');
+            });
+
+            document.getElementById(tabName).classList.add('active');
+            document.querySelector(`.tab-button[onclick*="'${tabName}'"]`).classList.add('active');
+
+            if (tabName === 'gallery') {
+                renderGallery();
+            }
+        }
+        
+        window.clearGallery = function() {
+            if (confirm("Opravdu chcete VYMAZAT CELOU GALERII? Tuto akci nelze vrátit.")) {
+                localStorage.removeItem(GALLERY_KEY);
+                renderGallery();
+                showTemporaryMessage('🗑️ Galerie byla vymazána.', 'success');
+            }
+        }
+
+        // --- NASTAVENÍ A GALERIE LOGIKA ---
+        
+        function getParams() {
+            const params = {};
+            settingsInputs.forEach(input => {
+                if (input.id === 'foregroundColor') {
+                    params[input.id] = input.value.toUpperCase();
+                } else if (input.id === 'backgroundColorHex') {
+                    params['backgroundColor'] = input.value.toLowerCase() === 'transparent' ? 'transparent' : input.value.toUpperCase();
+                } else {
+                    params[input.id] = parseInt(input.value); 
+                }
+            });
+            
+            params.minCT = params.minCircleThickness;
+            params.maxCT = params.maxCircleThickness;
+            params.minGT = params.minGapThickness;
+            params.maxGT = params.maxGapThickness;
+            
+            return params;
+        }
+
+        function saveSettings() {
+            const settings = {};
+            settingsInputs.forEach(input => {
+                settings[input.id] = input.value;
+            });
+            try {
+                localStorage.setItem(STORAGE_KEY, JSON.stringify(settings));
+            } catch (e) {
+                console.warn("Chyba při ukládání nastavení do Local Storage:", e);
+            }
+        }
+
+        function loadFromUrl() {
+            const params = new URLSearchParams(window.location.search);
+            let loaded = false;
+
+            for (const [id, key] of Object.entries(URL_PARAM_MAP)) {
+                if (params.has(key)) {
+                    const input = document.getElementById(id);
+                    if (input) {
+                        input.value = params.get(key);
+                        loaded = true;
+                    }
+                }
+            }
+            
+            // Synchronizace barev po načtení z URL
+            syncColorsAfterLoad();
+            return loaded;
+        }
+
+        function syncColorsAfterLoad() {
+            // Synchronizace barev po načtení nastavení
+            const fgColor = document.getElementById('foregroundColor').value;
+            document.getElementById('foregroundColorHex').value = fgColor.toUpperCase();
+            
+            const bgHex = document.getElementById('backgroundColorHex').value;
+            if (bgHex.toLowerCase() !== 'transparent') {
+                document.getElementById('backgroundColor').value = bgHex.toUpperCase();
+            }
+        }
+
+        function loadSettings() {
+            if (loadFromUrl()) {
+                return;
+            }
+
+            try {
+                const storedSettings = localStorage.getItem(STORAGE_KEY);
+                if (storedSettings) {
+                    const settings = JSON.parse(storedSettings);
+                    settingsInputs.forEach(input => {
+                        if (settings[input.id] !== undefined) {
+                            input.value = settings[input.id];
+                        }
+                    });
+                    
+                    syncColorsAfterLoad();
+                    return;
+                }
+            } catch (e) {
+                console.error("Chyba při načítání nastavení z Local Storage:", e);
+            }
+            
+            // Defaultní nastavení
+            if (!seedInput.value || parseInt(seedInput.value) === 12345) {
+                 seedInput.value = Date.now() % 1000000000 + 1;
+            }
+            
+            syncColorsAfterLoad();
+        }
+        
+        function getGalleryItems() {
+            try {
+                const stored = localStorage.getItem(GALLERY_KEY);
+                return stored ? JSON.parse(stored) : [];
+            } catch (e) {
+                console.error("Chyba při načítání galerie:", e);
+                return [];
+            }
+        }
+
+        function saveImageToGallery(type, data, currentParams) {
+            const items = getGalleryItems();
+            
+            const paramsToSave = { ...currentParams };
+            paramsToSave.foregroundColor = document.getElementById('foregroundColor').value;
+            paramsToSave.backgroundColor = document.getElementById('backgroundColorHex').value;
+            
+            const newItem = {
+                id: Date.now(),
+                type: type,
+                data: data,
+                timestamp: new Date().toLocaleString(),
+                seed: currentParams.seed,
+                params: paramsToSave
+            };
+            
+            try {
+                const newItemSize = JSON.stringify(newItem).length;
+                if (localStorage.length > 5 * 1024 * 1024 - newItemSize) {
+                    showTemporaryMessage('💾 Lokální úložiště je plné!', 'error');
+                    return;
+                }
+                
+                items.push(newItem);
+                localStorage.setItem(GALLERY_KEY, JSON.stringify(items));
+                
+                showTemporaryMessage(`🖼️ Uloženo (${type.toUpperCase()})!`, 'success');
+            } catch (e) {
+                showTemporaryMessage('💾 Chyba při ukládání do galerie!', 'error');
+                console.error("Chyba při ukládání do galerie:", e);
+            }
+        }
+
+        function deleteGalleryItem(id) {
+            if (confirm("Opravdu chcete tento obrázek smazat z galerie?")) {
+                const items = getGalleryItems().filter(item => item.id !== id);
+                localStorage.setItem(GALLERY_KEY, JSON.stringify(items));
+                renderGallery(); 
+            }
+        }
+        
+        function getGalleryItemParamsForRegen(item) {
+            const params = { ...item.params };
+            params.minCT = params.minCircleThickness;
+            params.maxCT = params.maxCircleThickness;
+            params.minGT = params.minGapThickness;
+            params.maxGT = params.maxGapThickness;
+            return params;
+        }
+        
+        function downloadSvgFromGallery(item) {
+            const params = getGalleryItemParamsForRegen(item);
+            if (!params) {
+                alert("Chybí parametry pro regeneraci SVG.");
+                return;
+            }
+            
+            const svgContent = generateSvgContent(params);
+            downloadFile(svgContent, `cernobily_obrazec_mm_seed_${item.seed}.svg`, 'image/svg+xml');
+        }
+
+        function renderGallery() {
+            const items = getGalleryItems().reverse(); 
+            galleryContainer.innerHTML = ''; 
+
+            if (items.length === 0) {
+                galleryContainer.appendChild(galleryPlaceholder);
+                galleryPlaceholder.style.display = 'block';
+                return;
+            }
+            galleryPlaceholder.style.display = 'none';
+
+            items.forEach(item => {
+                const itemDiv = document.createElement('div');
+                itemDiv.className = 'gallery-item';
+                
+                const contentDiv = document.createElement('div');
+                contentDiv.className = 'gallery-item-content';
+                
+                if (item.params && item.params.backgroundColor && item.params.backgroundColor.toLowerCase() !== 'transparent') {
+                    contentDiv.style.backgroundColor = item.params.backgroundColor;
+                    contentDiv.style.backgroundImage = 'none';
+                } else {
+                    contentDiv.style.backgroundColor = 'transparent'; 
+                }
+
+                if (item.type === 'png') {
+                    const img = document.createElement('img');
+                    img.src = item.data;
+                    img.alt = `PNG obrazec z ${item.timestamp}`;
+                    contentDiv.appendChild(img);
+                } else if (item.type === 'svg') {
+                    contentDiv.innerHTML = item.data.replace(/<svg /, '<svg style="max-width: 100%; max-height: 100%; display: block;" ');
+                }
+                
+                const seedInfo = document.createElement('p');
+                const fgColor = (item.params && item.params.foregroundColor) ? item.params.foregroundColor : '#000000';
+                const bgColor = (item.params && item.params.backgroundColor) ? item.params.backgroundColor : 'transparent';
+
+                seedInfo.innerHTML = `**Seed:** ${item.seed || 'N/A'}<br>
+                                      **Barva:** <span style="color: ${fgColor}; font-weight: bold;">${fgColor}</span> / 
+                                      **Pozadí:** <span style="color: ${bgColor === 'transparent' ? '#ccc' : bgColor}; font-weight: bold;">${bgColor}</span>`;
+                itemDiv.appendChild(seedInfo);
+                
+                const actionsDiv = document.createElement('div');
+                actionsDiv.className = 'gallery-actions';
+                
+                const deleteBtn = document.createElement('button');
+                deleteBtn.className = 'delete-btn';
+                deleteBtn.textContent = 'Smazat';
+                deleteBtn.onclick = () => deleteGalleryItem(item.id);
+                
+                const downloadOriginalBtn = document.createElement('button');
+                downloadOriginalBtn.className = 'export';
+                downloadOriginalBtn.textContent = `Stáhnout (${item.type.toUpperCase()})`;
+                downloadOriginalBtn.onclick = () => {
+                    if (item.type === 'png') {
+                        downloadFile(item.data, `cernobily_obrazec_${item.id}.png`, 'image/png');
+                    } else if (item.type === 'svg') {
+                        downloadFile(item.data, `cernobily_obrazec_mm_${item.id}.svg`, 'image/svg+xml');
+                    }
+                };
+                
+                const downloadSvgRegenBtn = document.createElement('button');
+                downloadSvgRegenBtn.className = 'export svg-regen-btn';
+                downloadSvgRegenBtn.textContent = `SVG (Regen)`;
+                downloadSvgRegenBtn.onclick = () => downloadSvgFromGallery(item);
+
+                actionsDiv.appendChild(deleteBtn);
+                actionsDiv.appendChild(downloadOriginalBtn);
+                if (item.params) {
+                    actionsDiv.appendChild(downloadSvgRegenBtn);
+                }
+
+                itemDiv.appendChild(contentDiv);
+                itemDiv.appendChild(actionsDiv);
+                galleryContainer.appendChild(itemDiv);
+            });
+        }
+
+        // --- HLAVNÍ LOGIKA GENERÁTORU A EXPORTU ---
+
+        function drawPattern(newSeed = true, keepCurrentSeed = false) {
+            const params = getParams();
+            
+            if (newSeed) {
+                const newRandomSeed = Date.now() % 1000000000 + 1;
+                seedInput.value = newRandomSeed;
+                setSeed(newRandomSeed);
+            } else if (!keepCurrentSeed) {
+                setSeed(params.seed);
+            }
+            
+            shareLinkOutput.innerHTML = '';
+            
+            canvas.width = params.canvasSize;
+            canvas.height = params.canvasSize;
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            const canvasSize = params.canvasSize;
+
+            if (params.backgroundColor.toLowerCase() !== 'transparent') {
+                ctx.fillStyle = params.backgroundColor;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            }
+            
+            const paddingPx = Math.max(0, params.paddingPx);
+            const availableSize = Math.max(1, canvasSize - 2 * paddingPx); 
+            
+            const centerX = canvasSize / 2;
+            const centerY = canvasSize / 2;
+            
+            const savedSeedBeforeDryRun = currentSeed; 
+            setSeed(params.seed); 
+
+            let maxRadiusUnscaled = params.circleDiameter / 2; 
+
+            for (let i = 1; i <= params.numCircles; i++) {
+                const circleThickness = seededRandomInt(params.minCT, params.maxCT);
+                const gapThickness = seededRandomInt(params.minGT, params.maxGT); 
+                
+                const radius = maxRadiusUnscaled + gapThickness + circleThickness / 2;
+                maxRadiusUnscaled = radius + circleThickness / 2;
+            }
+
+            const drawingDiameter = 2 * maxRadiusUnscaled;
+            const scaleFactor = (drawingDiameter > 0) ? availableSize / drawingDiameter : 1;
+
+            setSeed(savedSeedBeforeDryRun); 
+            
+            const radiusCenterUnscaled = params.circleDiameter / 2;
+            const radiusCenterScaled = radiusCenterUnscaled * scaleFactor;
+            
+            // Kreslení středového kruhu pouze pokud barva není transparentní
+            if (params.foregroundColor.toLowerCase() !== 'transparent') {
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, radiusCenterScaled, 0, Math.PI * 2);
+                ctx.fillStyle = params.foregroundColor;
+                ctx.fill();
+            }
+            
+            let currentRadiusUnscaled = radiusCenterUnscaled;
+
+            for (let i = 1; i <= params.numCircles; i++) {
+                const circleThicknessUnscaled = seededRandomInt(params.minCT, params.maxCT);
+                const gapThicknessUnscaled = seededRandomInt(params.minGT, params.maxGT); 
+                
+                const radiusUnscaled = currentRadiusUnscaled + gapThicknessUnscaled + circleThicknessUnscaled / 2;
+                currentRadiusUnscaled = radiusUnscaled + circleThicknessUnscaled / 2; 
+
+                const radiusScaled = radiusUnscaled * scaleFactor;
+                const circleThicknessScaled = circleThicknessUnscaled * scaleFactor;
+                
+                const numSegments = seededRandomInt(params.minSegments, params.maxSegments);
+                const circumferenceUnscaled = 2 * Math.PI * radiusUnscaled; 
+                const totalSegmentGapLengthUnscaled = numSegments * params.segmentGapThickness; 
+                const totalSegmentLengthUnscaled = circumferenceUnscaled - totalSegmentGapLengthUnscaled;
+
+                const segmentLengthsUnscaled = [];
+                let remainingLength = totalSegmentLengthUnscaled;
+
+                const avgLength = totalSegmentLengthUnscaled / numSegments;
+                const minSegmentLength = avgLength * 0.1; 
+                const maxSegmentLength = avgLength * 1.5; 
+                
+                for (let j = 0; j < numSegments - 1; j++) {
+                    const maxPossible = remainingLength - (numSegments - 1 - j) * minSegmentLength;
+                    const segmentLength = seededRandomInt(minSegmentLength, Math.min(maxSegmentLength, maxPossible));
+                    
+                    segmentLengthsUnscaled.push(segmentLength);
+                    remainingLength -= segmentLength;
+                }
+                segmentLengthsUnscaled.push(remainingLength);
+                
+                const segmentGapAngle = (params.segmentGapThickness / radiusUnscaled);
+                
+                let currentAngle = seededRandom() * Math.PI * 2;
+                
+                for (let j = 0; j < numSegments; j++) {
+                    
+                    const segmentLengthUnscaled = segmentLengthsUnscaled[j]; 
+                    const segmentAngle = segmentLengthUnscaled / radiusUnscaled;
+                    
+                    const startAngle = currentAngle;
+                    const endAngle = startAngle + segmentAngle;
+                    
+                    // Kreslení segmentu pouze pokud barva není transparentní
+                    if (params.foregroundColor.toLowerCase() !== 'transparent') {
+                        ctx.beginPath();
+                        ctx.arc(centerX, centerY, radiusScaled, startAngle, endAngle);
+                        ctx.lineWidth = circleThicknessScaled; 
+                        ctx.strokeStyle = params.foregroundColor;
+                        ctx.lineCap = 'round';
+                        ctx.stroke();
+                    }
+                    
+                    currentAngle = endAngle + segmentGapAngle;
+                }
+            }
+            
+            saveSettings(); 
+        }
+        
+        function downloadFile(data, filename, mimeType) {
+            const link = document.createElement('a');
+            link.download = filename;
+            if (mimeType === 'image/png') {
+                link.href = data; 
+            } else {
+                const blob = new Blob([data], { type: mimeType });
+                link.href = URL.createObjectURL(blob);
+            }
+            link.click();
+            if (mimeType !== 'image/png' && link.href) {
+                URL.revokeObjectURL(link.href);
+            }
+        }
+
+        function generateSvgContent(params) {
+            const savedSeed = currentSeed; 
+            setSeed(params.seed); 
+
+            const savedSeedBeforeDryRun = currentSeed; 
+            setSeed(params.seed);
+
+            let maxRadiusUnscaled = params.circleDiameter / 2; 
+            for (let i = 1; i <= params.numCircles; i++) {
+                const circleThickness = seededRandomInt(params.minCT, params.maxCT);
+                const gapThickness = seededRandomInt(params.minGT, params.maxGT); 
+                const radius = maxRadiusUnscaled + gapThickness + circleThickness / 2;
+                maxRadiusUnscaled = radius + circleThickness / 2;
+            }
+            
+            const canvasSize_px = params.canvasSize;
+            const paddingPx = Math.max(0, params.paddingPx);
+            const availableSize_px = Math.max(1, canvasSize_px - 2 * paddingPx);
+            
+            const drawingDiameter_px = 2 * maxRadiusUnscaled;
+            const scaleFactor = (drawingDiameter_px > 0) ? availableSize_px / drawingDiameter_px : 1;
+
+            // Použijeme stejný scaleFactor pro všechny převody
+            const pxToMm = (px) => px / PIXELS_PER_MM;
+            
+            setSeed(savedSeedBeforeDryRun); 
+
+            const canvasSize_mm = pxToMm(canvasSize_px);
+            const padding_mm = pxToMm(paddingPx);
+            const availableSize_mm = pxToMm(availableSize_px);
+            
+            // Střed v SVG s přihlédnutím k padding
+            const centerX_mm = padding_mm + availableSize_mm / 2;
+            const centerY_mm = padding_mm + availableSize_mm / 2;
+            
+            let svgContent = `<?xml version="1.0" encoding="UTF-8"?>
+<svg width="${canvasSize_mm.toFixed(2)}mm" height="${canvasSize_mm.toFixed(2)}mm" viewBox="0 0 ${canvasSize_mm.toFixed(2)} ${canvasSize_mm.toFixed(2)}" xmlns="http://www.w3.org/2000/svg">`;
+
+            if (params.backgroundColor.toLowerCase() !== 'transparent') {
+                svgContent += `
+  <rect width="100%" height="100%" fill="${params.backgroundColor}"/>`;
+            }
+            
+            const radiusCenterUnscaled = params.circleDiameter / 2;
+            const radiusCenterScaled_mm = pxToMm(radiusCenterUnscaled * scaleFactor);
+
+            // Přidání středového kruhu pouze pokud barva není transparentní
+            if (params.foregroundColor.toLowerCase() !== 'transparent') {
+                svgContent += `
+  <circle cx="${centerX_mm.toFixed(2)}" cy="${centerY_mm.toFixed(2)}" r="${radiusCenterScaled_mm.toFixed(2)}" fill="${params.foregroundColor}"/>`;
+            }
+
+            let currentRadiusUnscaled = radiusCenterUnscaled;
+            
+            for (let i = 1; i <= params.numCircles; i++) {
+                const circleThicknessUnscaled = seededRandomInt(params.minCT, params.maxCT);
+                const gapThicknessUnscaled = seededRandomInt(params.minGT, params.maxGT); 
+                
+                const radiusUnscaled = currentRadiusUnscaled + gapThicknessUnscaled + circleThicknessUnscaled / 2;
+                currentRadiusUnscaled = radiusUnscaled + circleThicknessUnscaled / 2; 
+
+                const radiusScaled_mm = pxToMm(radiusUnscaled * scaleFactor);
+                const circleThicknessScaled_mm = pxToMm(circleThicknessUnscaled * scaleFactor);
+                const segmentGapThicknessUnscaled = params.segmentGapThickness; 
+                
+                const numSegments = seededRandomInt(params.minSegments, params.maxSegments);
+                const circumferenceUnscaled = 2 * Math.PI * radiusUnscaled; 
+                const totalSegmentGapLengthUnscaled = numSegments * segmentGapThicknessUnscaled; 
+                const totalSegmentLengthUnscaled = circumferenceUnscaled - totalSegmentGapLengthUnscaled;
+                
+                const segmentLengthsUnscaled = [];
+                let remainingLength = totalSegmentLengthUnscaled;
+
+                const avgLength = totalSegmentLengthUnscaled / numSegments;
+                const minSegmentLength = avgLength * 0.1; 
+                const maxSegmentLength = avgLength * 1.5; 
+                
+                for (let j = 0; j < numSegments - 1; j++) {
+                    const maxPossible = remainingLength - (numSegments - 1 - j) * minSegmentLength;
+                    const segmentLength = seededRandomInt(minSegmentLength, Math.min(maxSegmentLength, maxPossible));
+                    
+                    segmentLengthsUnscaled.push(segmentLength);
+                    remainingLength -= segmentLength;
+                }
+                segmentLengthsUnscaled.push(remainingLength);
+                
+                const segmentGapAngle = (segmentGapThicknessUnscaled / radiusUnscaled);
+                const offset = seededRandom() * Math.PI * 2;
+                
+                let currentAngle = offset;
+                
+                for (let j = 0; j < numSegments; j++) {
+                    
+                    const segmentLengthUnscaled = segmentLengthsUnscaled[j]; 
+                    const segmentAngle = segmentLengthUnscaled / radiusUnscaled;
+                    
+                    const startAngle = currentAngle;
+                    const endAngle = startAngle + segmentAngle;
+                    
+                    const startX = centerX_mm + radiusScaled_mm * Math.cos(startAngle);
+                    const startY = centerY_mm + radiusScaled_mm * Math.sin(startAngle);
+                    const endX = centerX_mm + radiusScaled_mm * Math.cos(endAngle);
+                    const endY = centerY_mm + radiusScaled_mm * Math.sin(endAngle);
+                    
+                    const largeArcFlag = segmentAngle > Math.PI ? 1 : 0;
+                    
+                    // Přidání segmentu pouze pokud barva není transparentní
+                    if (params.foregroundColor.toLowerCase() !== 'transparent') {
+                        svgContent += `
+  <path d="M ${startX.toFixed(2)} ${startY.toFixed(2)} A ${radiusScaled_mm.toFixed(2)} ${radiusScaled_mm.toFixed(2)} 0 ${largeArcFlag} 1 ${endX.toFixed(2)} ${endY.toFixed(2)}" 
+        stroke="${params.foregroundColor}" stroke-width="${circleThicknessScaled_mm.toFixed(2)}" fill="none" stroke-linecap="round"/>`;
+                    }
+                    
+                    currentAngle = endAngle + segmentGapAngle;
+                }
+            }
+            
+            svgContent += '\n</svg>';
+            setSeed(savedSeed); 
+            return svgContent;
+        }
+
+        // --- NAVÁZÁNÍ FUNKCÍ NA TLAČÍTKA ---
+        
+        generateBtn.addEventListener('click', () => drawPattern(true)); 
+        generateFromSeedBtn.addEventListener('click', () => drawPattern(false));
+
+        downloadPngBtn.addEventListener('click', () => {
+            const dataUrl = canvas.toDataURL('image/png');
+            downloadFile(dataUrl, 'obrazec_png.png', 'image/png');
+        });
+        
+        downloadSvgBtn.addEventListener('click', () => {
+            const svgContent = generateSvgContent(getParams());
+            downloadFile(svgContent, 'obrazec_mm.svg', 'image/svg+xml');
+        });
+
+        saveGalleryBtn.addEventListener('click', () => {
+            const params = getParams();
+            const dataUrl = canvas.toDataURL('image/png');
+            saveImageToGallery('png', dataUrl, params);
+        });
+
+        saveGalleryBtn.addEventListener('contextmenu', (e) => { 
+            e.preventDefault();
+            const params = getParams();
+            const svgContent = generateSvgContent(params);
+            saveImageToGallery('svg', svgContent, params);
+        });
+        
+        function generateShareLink() {
+            const params = new URLSearchParams();
+            settingsInputs.forEach(input => {
+                if (input.id !== 'backgroundColor' ) {
+                    const id = input.id;
+                    const key = URL_PARAM_MAP[id];
+                    params.set(key, input.value);
+                }
+            });
+
+            const currentUrl = window.location.href.split('?')[0];
+            const shareUrl = `${currentUrl}?${params.toString()}`;
+            
+            shareLinkOutput.innerHTML = `Odkaz pro sdílení: <a href="${shareUrl}" target="_blank">${shareUrl}</a>`;
+            
+            navigator.clipboard.writeText(shareUrl).then(() => {
+                shareLinkOutput.innerHTML += ' <span style="color: var(--accent-color);">(Zkopírováno!)</span>';
+            }).catch(err => {
+                console.error('Kopírování do schránky selhalo:', err);
+            });
+        }
+        
+        shareLinkBtn.addEventListener('click', generateShareLink);
+
+        // === INICIALIZACE ===
+        window.addEventListener('load', () => {
+            loadSettings();
+            drawPattern(false); 
+        });
+    </script>
+</body>
+</html>
