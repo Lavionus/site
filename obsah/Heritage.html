@@ -1,0 +1,1469 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Heritage Tree Builder</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #0f2027 0%, #203a43 50%, #2c5364 100%);
+            color: #fff;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        .app-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+        }
+
+        /* Header */
+        header {
+            background: rgba(15, 32, 39, 0.95);
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            z-index: 100;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 24px;
+            font-weight: bold;
+            color: #4a9cff;
+        }
+
+        .header-buttons {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        button {
+            background: linear-gradient(135deg, #4a9cff 0%, #3a7bd5 100%);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 600;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(74, 156, 255, 0.3);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 25px rgba(74, 156, 255, 0.5);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        /* Main Content */
+        .main-content {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        /* Canvas Container */
+        .canvas-container {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
+
+        canvas {
+            cursor: grab;
+            display: block;
+        }
+
+        canvas:active {
+            cursor: grabbing;
+        }
+
+        /* Zoom Controls */
+        .zoom-controls {
+            position: absolute;
+            bottom: 30px;
+            right: 30px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 10;
+        }
+
+        .zoom-btn {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 0;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 350px;
+            background: rgba(15, 32, 39, 0.95);
+            padding: 20px;
+            overflow-y: auto;
+            box-shadow: -4px 0 20px rgba(0, 0, 0, 0.3);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-section {
+            margin-bottom: 30px;
+            background: rgba(74, 156, 255, 0.1);
+            padding: 20px;
+            border-radius: 15px;
+            border: 1px solid rgba(74, 156, 255, 0.2);
+        }
+
+        .sidebar-section h3 {
+            color: #4a9cff;
+            margin-bottom: 15px;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .stat-item {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 12px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #4a9cff;
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: #aaa;
+            margin-top: 5px;
+        }
+
+        /* Form */
+        .form-group {
+            margin-bottom: 15px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 5px;
+            color: #aaa;
+            font-size: 13px;
+        }
+
+        input, select, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid rgba(74, 156, 255, 0.3);
+            border-radius: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            color: white;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        input:focus, select:focus, textarea:focus {
+            outline: none;
+            border-color: #4a9cff;
+            box-shadow: 0 0 10px rgba(74, 156, 255, 0.3);
+        }
+
+        textarea {
+            resize: vertical;
+            min-height: 60px;
+            font-family: inherit;
+        }
+
+        .form-actions {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #ff4a4a 0%, #d53a3a 100%);
+        }
+
+        .btn-success {
+            background: linear-gradient(135deg, #4aff88 0%, #3ad56e 100%);
+        }
+
+        .btn-warning {
+            background: linear-gradient(135deg, #ffaa4a 0%, #d58a3a 100%);
+        }
+
+        /* Hidden file input */
+        input[type="file"] {
+            display: none;
+        }
+
+        /* Spacer */
+        .spacer {
+            flex: 1;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                width: 100%;
+                max-width: 350px;
+                position: absolute;
+                right: -100%;
+                top: 0;
+                height: 100%;
+                transition: right 0.3s ease;
+                z-index: 50;
+            }
+
+            .sidebar.active {
+                right: 0;
+            }
+
+            .header-buttons {
+                font-size: 12px;
+            }
+
+            button {
+                padding: 8px 15px;
+                font-size: 12px;
+            }
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.2);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(74, 156, 255, 0.5);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(74, 156, 255, 0.7);
+        }
+
+        .parent-info {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 10px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            font-size: 13px;
+            color: #aaa;
+        }
+
+        .parent-info strong {
+            color: #4a9cff;
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <header>
+            <div class="logo">
+                <span>🌳</span>
+                <span>Heritage Tree Builder</span>
+            </div>
+            <div class="header-buttons">
+                <button onclick="app.autoAlign()">🎯 Auto-zarovnání</button>
+                <button onclick="app.clearAll()" style="background: linear-gradient(135deg, #ff4a4a 0%, #d53a3a 100%);">🗑️ Vymazat vše</button>
+                <button onclick="app.exportPNG()">🖼️ Export PNG</button>
+                <button onclick="app.exportSVG()">📄 Export SVG</button>
+                <button onclick="app.exportPDF()">📄 Export PDF</button>
+                <button onclick="app.exportJSON()">💾 Export JSON</button>
+                <button onclick="document.getElementById('importFile').click()">📂 Import</button>
+            </div>
+        </header>
+
+        <div class="main-content">
+            <div class="canvas-container">
+                <canvas id="treeCanvas"></canvas>
+                <div class="zoom-controls">
+                    <button class="zoom-btn" onclick="app.zoomIn()">+</button>
+                    <button class="zoom-btn" onclick="app.zoomOut()">−</button>
+                    <button class="zoom-btn" onclick="app.resetView()">⟲</button>
+                </div>
+            </div>
+
+            <div class="sidebar">
+                <div class="sidebar-section" id="editSection" style="display: none;">
+                    <h3>✏️ Editace</h3>
+                    <form id="editForm">
+                        <div class="form-group">
+                            <label>Jméno</label>
+                            <input type="text" id="firstName" placeholder="Jan" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Příjmení</label>
+                            <input type="text" id="lastName" placeholder="Novák" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Pohlaví</label>
+                            <select id="gender">
+                                <option value="male">Muž</option>
+                                <option value="female">Žena</option>
+                                <option value="unknown">Neurčeno</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Datum narození</label>
+                            <input type="text" id="birthDate" placeholder="15. 5. 1980">
+                        </div>
+                        <div class="form-group">
+                            <label>Datum úmrtí</label>
+                            <input type="text" id="deathDate" placeholder="20. 3. 2050">
+                        </div>
+                        <div class="form-group">
+                            <label>Místo</label>
+                            <input type="text" id="place" placeholder="Praha, Česká republika">
+                        </div>
+                        <div class="form-group">
+                            <label>Poznámky</label>
+                            <textarea id="notes" placeholder="Další informace..."></textarea>
+                        </div>
+                        
+                        <div id="parentInfo" class="parent-info" style="display: none;"></div>
+                        
+                        <div class="form-actions">
+                            <button type="submit" class="btn-success">💾 Uložit změny</button>
+                            <button type="button" id="addFatherBtn" onclick="app.addFather()" class="btn-primary">👨 Přidat otce</button>
+                            <button type="button" id="addMotherBtn" onclick="app.addMother()" class="btn-primary">👩 Přidat matku</button>
+                            <button type="button" onclick="app.addSibling()" class="btn-warning">👫 Přidat sourozence</button>
+                            <button type="button" onclick="app.deletePerson()" class="btn-danger">🗑️ Smazat osobu</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="sidebar-section" id="emptyState" style="display: none;">
+                    <h3>🌱 Začít nový rodokmen</h3>
+                    <p style="color: #aaa; margin-bottom: 15px; font-size: 14px;">
+                        Rodokmen je prázdný. Začněte přidáním první osoby (obvykle sebe).
+                    </p>
+                    <button onclick="app.addFirstPerson()" class="btn-success" style="width: 100%;">
+                        ➕ Přidat první osobu
+                    </button>
+                </div>
+
+                <div class="spacer"></div>
+
+                <div class="sidebar-section">
+                    <h3>📊 Statistiky</h3>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <div class="stat-value" id="statTotal">0</div>
+                            <div class="stat-label">Celkem osob</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="statGenerations">0</div>
+                            <div class="stat-label">Generací</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="statMales">0</div>
+                            <div class="stat-label">Mužů</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-value" id="statFemales">0</div>
+                            <div class="stat-label">Žen</div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="sidebar-section">
+                    <h3>🎨 Nastavení barev</h3>
+                    <div class="form-group">
+                        <label>Barva mužů</label>
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <input type="color" id="colorMale" value="#4a9cff" onchange="app.updateColors()" style="width: 60px; height: 40px; padding: 2px; cursor: pointer;">
+                            <div style="flex: 1; background: var(--male-color, #4a9cff); height: 40px; border-radius: 8px; border: 1px solid rgba(74, 156, 255, 0.3);"></div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Barva žen</label>
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <input type="color" id="colorFemale" value="#ff69b4" onchange="app.updateColors()" style="width: 60px; height: 40px; padding: 2px; cursor: pointer;">
+                            <div style="flex: 1; background: var(--female-color, #ff69b4); height: 40px; border-radius: 8px; border: 1px solid rgba(255, 105, 180, 0.3);"></div>
+                        </div>
+                    </div>
+                    <div class="form-group">
+                        <label>Barva neurčených</label>
+                        <div style="display: flex; gap: 10px; align-items: center;">
+                            <input type="color" id="colorUnknown" value="#888888" onchange="app.updateColors()" style="width: 60px; height: 40px; padding: 2px; cursor: pointer;">
+                            <div style="flex: 1; background: var(--unknown-color, #888888); height: 40px; border-radius: 8px; border: 1px solid rgba(136, 136, 136, 0.3);"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <input type="file" id="importFile" accept=".json" onchange="app.importJSON(event)">
+
+    <script>
+        // Konstanty a konfigurace
+        const CONFIG = {
+            NODE_WIDTH: 200,
+            NODE_MIN_HEIGHT: 120,
+            NODE_PADDING: 15,
+            HORIZONTAL_GAP: 80,
+            VERTICAL_GAP: 100,
+            LINE_WIDTH: 2,
+            FONT_SIZE: 13,
+            FONT_FAMILY: 'Segoe UI, sans-serif',
+            COLORS: {
+                male: '#4a9cff',
+                female: '#ff69b4',
+                unknown: '#888',
+                border: '#333',
+                text: '#fff',
+                line: '#666',
+                selected: '#ffd700'
+            }
+        };
+
+        // Třída pro reprezentaci osoby
+        class Person {
+            constructor(data = {}) {
+                this.id = data.id || Date.now() + Math.random();
+                this.firstName = data.firstName || '';
+                this.lastName = data.lastName || '';
+                this.gender = data.gender || 'unknown';
+                this.birthDate = data.birthDate || '';
+                this.deathDate = data.deathDate || '';
+                this.place = data.place || '';
+                this.notes = data.notes || '';
+                this.parents = data.parents || [];
+                this.siblings = data.siblings || [];
+                this.x = data.x || 0;
+                this.y = data.y || 0;
+                this.height = CONFIG.NODE_MIN_HEIGHT;
+            }
+
+            getFullName() {
+                return `${this.firstName} ${this.lastName}`.trim();
+            }
+
+            calculateHeight(ctx) {
+                const lines = this.getDisplayLines(ctx);
+                return Math.max(CONFIG.NODE_MIN_HEIGHT, lines.length * 20 + CONFIG.NODE_PADDING * 2);
+            }
+
+            getDisplayLines(ctx) {
+                const lines = [];
+                const name = this.getFullName();
+                if (name) lines.push(name);
+                if (this.birthDate) lines.push(`✦ ${this.birthDate}`);
+                if (this.deathDate) lines.push(`† ${this.deathDate}`);
+                if (this.place) lines.push(`📍 ${this.place}`);
+                if (this.notes) {
+                    const wrapped = this.wrapText(ctx, this.notes, CONFIG.NODE_WIDTH - CONFIG.NODE_PADDING * 2);
+                    lines.push(...wrapped);
+                }
+                return lines;
+            }
+
+            wrapText(ctx, text, maxWidth) {
+                const words = text.split(' ');
+                const lines = [];
+                let currentLine = '';
+
+                for (const word of words) {
+                    const testLine = currentLine + (currentLine ? ' ' : '') + word;
+                    const metrics = ctx.measureText(testLine);
+                    if (metrics.width > maxWidth && currentLine) {
+                        lines.push(currentLine);
+                        currentLine = word;
+                    } else {
+                        currentLine = testLine;
+                    }
+                }
+                if (currentLine) lines.push(currentLine);
+                return lines;
+            }
+
+            getFather() {
+                return this.parents.find(p => p.gender === 'male');
+            }
+
+            getMother() {
+                return this.parents.find(p => p.gender === 'female');
+            }
+
+            hasFather() {
+                return !!this.getFather();
+            }
+
+            hasMother() {
+                return !!this.getMother();
+            }
+        }
+
+        // Hlavní aplikace
+        class HeritageTreeApp {
+            constructor() {
+                this.canvas = document.getElementById('treeCanvas');
+                this.ctx = this.canvas.getContext('2d');
+                this.people = [];
+                this.selectedPerson = null;
+                this.camera = { x: 0, y: 0, zoom: 1 };
+                this.isDragging = false;
+                this.dragStart = { x: 0, y: 0 };
+                
+                this.initCanvas();
+                this.initEvents();
+                this.loadColors();
+                this.loadSampleData();
+                this.autoAlign();
+            }
+
+            initCanvas() {
+                this.resizeCanvas();
+                window.addEventListener('resize', () => this.resizeCanvas());
+            }
+
+            resizeCanvas() {
+                const container = this.canvas.parentElement;
+                this.canvas.width = container.clientWidth;
+                this.canvas.height = container.clientHeight;
+                this.render();
+            }
+
+            initEvents() {
+                // Mouse events
+                this.canvas.addEventListener('mousedown', (e) => this.onMouseDown(e));
+                this.canvas.addEventListener('mousemove', (e) => this.onMouseMove(e));
+                this.canvas.addEventListener('mouseup', (e) => this.onMouseUp(e));
+                this.canvas.addEventListener('wheel', (e) => this.onWheel(e));
+                this.canvas.addEventListener('click', (e) => this.onClick(e));
+
+                // Form events
+                document.getElementById('editForm').addEventListener('submit', (e) => {
+                    e.preventDefault();
+                    this.saveChanges();
+                });
+            }
+
+            loadColors() {
+                const savedColors = localStorage.getItem('familyTreeColors');
+                if (savedColors) {
+                    const colors = JSON.parse(savedColors);
+                    CONFIG.COLORS.male = colors.male;
+                    CONFIG.COLORS.female = colors.female;
+                    CONFIG.COLORS.unknown = colors.unknown;
+                    document.getElementById('colorMale').value = colors.male;
+                    document.getElementById('colorFemale').value = colors.female;
+                    document.getElementById('colorUnknown').value = colors.unknown;
+                }
+                this.updateColorPreview();
+            }
+
+            updateColors() {
+                const male = document.getElementById('colorMale').value;
+                const female = document.getElementById('colorFemale').value;
+                const unknown = document.getElementById('colorUnknown').value;
+                
+                CONFIG.COLORS.male = male;
+                CONFIG.COLORS.female = female;
+                CONFIG.COLORS.unknown = unknown;
+                
+                const colors = { male, female, unknown };
+                localStorage.setItem('familyTreeColors', JSON.stringify(colors));
+                
+                this.updateColorPreview();
+                this.render();
+            }
+
+            updateColorPreview() {
+                document.documentElement.style.setProperty('--male-color', CONFIG.COLORS.male);
+                document.documentElement.style.setProperty('--female-color', CONFIG.COLORS.female);
+                document.documentElement.style.setProperty('--unknown-color', CONFIG.COLORS.unknown);
+            }
+
+            loadSampleData() {
+                const me = new Person({
+                    firstName: 'Tomáš',
+                    lastName: 'Novák',
+                    gender: 'male',
+                    birthDate: '20. 12. 1990',
+                    place: 'Praha, Česká republika',
+                    notes: 'Tvůrce rodokmenu'
+                });
+
+                const father = new Person({
+                    firstName: 'Petr',
+                    lastName: 'Novák',
+                    gender: 'male',
+                    birthDate: '15. 5. 1960',
+                    place: 'Praha, Česká republika',
+                    notes: 'Inženýr, stavař'
+                });
+
+                const mother = new Person({
+                    firstName: 'Jana',
+                    lastName: 'Nováková',
+                    gender: 'female',
+                    birthDate: '8. 9. 1962',
+                    place: 'Praha, Česká republika',
+                    notes: 'Lékařka, pediatrička'
+                });
+
+                const grandpaPaternal = new Person({
+                    firstName: 'Josef',
+                    lastName: 'Novák',
+                    gender: 'male',
+                    birthDate: '10. 3. 1930',
+                    deathDate: '5. 8. 2005',
+                    place: 'Brno, Česká republika',
+                    notes: 'Řemeslník, truhlář'
+                });
+
+                const grandmaPaternal = new Person({
+                    firstName: 'Marie',
+                    lastName: 'Nováková',
+                    gender: 'female',
+                    birthDate: '22. 7. 1935',
+                    place: 'Brno, Česká republika',
+                    notes: 'Učitelka v mateřské škole'
+                });
+
+                const grandpaMaternal = new Person({
+                    firstName: 'Karel',
+                    lastName: 'Svoboda',
+                    gender: 'male',
+                    birthDate: '5. 1. 1932',
+                    deathDate: '12. 11. 2010',
+                    place: 'Praha, Česká republika',
+                    notes: 'Lékař, chirurg'
+                });
+
+                const grandmaMaternal = new Person({
+                    firstName: 'Anna',
+                    lastName: 'Svobodová',
+                    gender: 'female',
+                    birthDate: '18. 6. 1934',
+                    place: 'Praha, Česká republika',
+                    notes: 'Farmaceutka'
+                });
+
+                // Nastavení vztahů - děti mají odkazy na rodiče
+                me.parents = [father, mother];
+                father.parents = [grandpaPaternal, grandmaPaternal];
+                mother.parents = [grandpaMaternal, grandmaMaternal];
+
+                this.people = [me, father, mother, grandpaPaternal, grandmaPaternal, grandpaMaternal, grandmaMaternal];
+                this.updateStatistics();
+                this.updateEmptyState();
+            }
+
+            autoAlign() {
+                if (this.people.length === 0) return;
+
+                // Najdeme základní osobu (tu bez dětských vztahů - nejspíš mě)
+                const basePersons = this.findBasePeople();
+                
+                // Vypočítáme výšky nodů
+                this.people.forEach(person => {
+                    person.height = person.calculateHeight(this.ctx);
+                });
+
+                // Layout stromu od spodu nahoru
+                const generations = this.groupByGeneration(basePersons);
+                
+                // Začneme odspoda (nejvyšší Y)
+                let currentY = this.canvas.height - 150;
+                
+                // Procházíme generace od nejmladší k nejstarší
+                generations.forEach((generation, genIndex) => {
+                    const maxHeight = Math.max(...generation.map(p => p.height));
+                    const totalWidth = generation.length * (CONFIG.NODE_WIDTH + CONFIG.HORIZONTAL_GAP);
+                    let currentX = (this.canvas.width / 2) - (totalWidth / 2);
+
+                    generation.forEach(person => {
+                        person.x = currentX;
+                        person.y = currentY;
+                        currentX += CONFIG.NODE_WIDTH + CONFIG.HORIZONTAL_GAP;
+                    });
+
+                    currentY -= (maxHeight + CONFIG.VERTICAL_GAP);
+                });
+
+                this.render();
+            }
+
+            findBasePeople() {
+                // Základní osoby jsou ty, které nemají žádné potomky (nikdo na ně neukazuje jako na rodiče)
+                const parentIds = new Set();
+                this.people.forEach(person => {
+                    person.parents.forEach(parent => parentIds.add(parent.id));
+                });
+                return this.people.filter(person => !parentIds.has(person.id));
+            }
+
+            groupByGeneration(basePeople) {
+                const generations = [];
+                const visited = new Set();
+                
+                const traverse = (people, depth) => {
+                    if (!generations[depth]) generations[depth] = [];
+                    
+                    people.forEach(person => {
+                        if (!visited.has(person.id)) {
+                            visited.add(person.id);
+                            generations[depth].push(person);
+                            
+                            // Přejdeme k rodičům (další generace výše)
+                            if (person.parents.length > 0) {
+                                traverse(person.parents, depth + 1);
+                            }
+                        }
+                    });
+                };
+
+                traverse(basePeople, 0);
+                return generations;
+            }
+
+            render() {
+                this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+                
+                this.ctx.save();
+                this.ctx.translate(this.camera.x, this.camera.y);
+                this.ctx.scale(this.camera.zoom, this.camera.zoom);
+
+                // Kreslení spojnic
+                this.drawConnections();
+
+                // Kreslení nodů
+                this.people.forEach(person => {
+                    this.drawPerson(person, person === this.selectedPerson);
+                });
+
+                this.ctx.restore();
+            }
+
+            drawConnections() {
+                this.ctx.strokeStyle = CONFIG.COLORS.line;
+                this.ctx.lineWidth = CONFIG.LINE_WIDTH;
+
+                this.people.forEach(child => {
+                    child.parents.forEach(parent => {
+                        const startX = child.x + CONFIG.NODE_WIDTH / 2;
+                        const startY = child.y; // Horní hrana dítěte
+                        const endX = parent.x + CONFIG.NODE_WIDTH / 2;
+                        const endY = parent.y + parent.height; // Spodní hrana rodiče
+
+                        this.ctx.beginPath();
+                        this.ctx.moveTo(startX, startY);
+                        
+                        // Bezierova křivka pro hezčí spojení
+                        const midY = (startY + endY) / 2;
+                        this.ctx.bezierCurveTo(
+                            startX, midY,
+                            endX, midY,
+                            endX, endY
+                        );
+                        
+                        this.ctx.stroke();
+                    });
+                });
+            }
+
+            drawPerson(person, isSelected) {
+                const x = person.x;
+                const y = person.y;
+                const w = CONFIG.NODE_WIDTH;
+                const h = person.height;
+
+                // Stín
+                this.ctx.shadowColor = 'rgba(0, 0, 0, 0.5)';
+                this.ctx.shadowBlur = 15;
+                this.ctx.shadowOffsetX = 0;
+                this.ctx.shadowOffsetY = 5;
+
+                // Box
+                this.ctx.fillStyle = CONFIG.COLORS[person.gender];
+                this.ctx.strokeStyle = isSelected ? CONFIG.COLORS.selected : CONFIG.COLORS.border;
+                this.ctx.lineWidth = isSelected ? 4 : 2;
+                
+                this.roundRect(x, y, w, h, 10);
+                this.ctx.fill();
+                this.ctx.stroke();
+
+                this.ctx.shadowColor = 'transparent';
+
+                // Text
+                this.ctx.fillStyle = CONFIG.COLORS.text;
+                this.ctx.font = `bold ${CONFIG.FONT_SIZE}px ${CONFIG.FONT_FAMILY}`;
+                this.ctx.textAlign = 'center';
+                this.ctx.textBaseline = 'top';
+
+                const lines = person.getDisplayLines(this.ctx);
+                let textY = y + CONFIG.NODE_PADDING;
+
+                lines.forEach((line, i) => {
+                    if (i === 0) {
+                        this.ctx.font = `bold ${CONFIG.FONT_SIZE + 2}px ${CONFIG.FONT_FAMILY}`;
+                    } else {
+                        this.ctx.font = `${CONFIG.FONT_SIZE}px ${CONFIG.FONT_FAMILY}`;
+                    }
+                    this.ctx.fillText(line, x + w / 2, textY);
+                    textY += 20;
+                });
+
+                // Sourozenci - postranní panel
+                if (person.siblings && person.siblings.length > 0) {
+                    this.drawSiblingsPanel(person, x, y, w, h);
+                }
+            }
+
+            drawSiblingsPanel(person, x, y, w, h) {
+                const panelWidth = 150;
+                const panelX = x + w + 15;
+                const panelY = y;
+                const lineHeight = 22;
+                const panelHeight = Math.max(60, person.siblings.length * lineHeight + 30);
+
+                // Stín
+                this.ctx.shadowColor = 'rgba(0, 0, 0, 0.3)';
+                this.ctx.shadowBlur = 10;
+                this.ctx.shadowOffsetX = 0;
+                this.ctx.shadowOffsetY = 3;
+
+                // Panel pozadí
+                this.ctx.fillStyle = 'rgba(255, 255, 255, 0.1)';
+                this.ctx.strokeStyle = 'rgba(74, 156, 255, 0.5)';
+                this.ctx.lineWidth = 2;
+                this.roundRect(panelX, panelY, panelWidth, panelHeight, 8);
+                this.ctx.fill();
+                this.ctx.stroke();
+
+                this.ctx.shadowColor = 'transparent';
+
+                // Čára spojující hlavní box s panelem
+                this.ctx.strokeStyle = 'rgba(74, 156, 255, 0.5)';
+                this.ctx.lineWidth = 2;
+                this.ctx.setLineDash([5, 5]);
+                this.ctx.beginPath();
+                this.ctx.moveTo(x + w, y + h / 2);
+                this.ctx.lineTo(panelX, panelY + panelHeight / 2);
+                this.ctx.stroke();
+                this.ctx.setLineDash([]);
+
+                // Nadpis
+                this.ctx.fillStyle = '#4a9cff';
+                this.ctx.font = `bold 12px ${CONFIG.FONT_FAMILY}`;
+                this.ctx.textAlign = 'left';
+                this.ctx.fillText('👫 Sourozenci:', panelX + 10, panelY + 15);
+
+                // Seznam sourozenců
+                this.ctx.fillStyle = '#fff';
+                this.ctx.font = `11px ${CONFIG.FONT_FAMILY}`;
+                let siblingY = panelY + 35;
+
+                person.siblings.forEach((sibling, index) => {
+                    const genderIcon = sibling.gender === 'male' ? '👨' : sibling.gender === 'female' ? '👩' : '👤';
+                    const text = `${genderIcon} ${sibling.name}`;
+                    this.ctx.fillText(text, panelX + 10, siblingY);
+                    siblingY += lineHeight;
+                });
+            }
+
+            roundRect(x, y, w, h, r) {
+                this.ctx.beginPath();
+                this.ctx.moveTo(x + r, y);
+                this.ctx.lineTo(x + w - r, y);
+                this.ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+                this.ctx.lineTo(x + w, y + h - r);
+                this.ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+                this.ctx.lineTo(x + r, y + h);
+                this.ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+                this.ctx.lineTo(x, y + r);
+                this.ctx.quadraticCurveTo(x, y, x + r, y);
+                this.ctx.closePath();
+            }
+
+            getMousePos(e) {
+                const rect = this.canvas.getBoundingClientRect();
+                return {
+                    x: (e.clientX - rect.left - this.camera.x) / this.camera.zoom,
+                    y: (e.clientY - rect.top - this.camera.y) / this.camera.zoom
+                };
+            }
+
+            onMouseDown(e) {
+                this.isDragging = true;
+                this.dragStart = { x: e.clientX - this.camera.x, y: e.clientY - this.camera.y };
+            }
+
+            onMouseMove(e) {
+                if (this.isDragging) {
+                    this.camera.x = e.clientX - this.dragStart.x;
+                    this.camera.y = e.clientY - this.dragStart.y;
+                    this.render();
+                }
+            }
+
+            onMouseUp(e) {
+                this.isDragging = false;
+            }
+
+            onWheel(e) {
+                e.preventDefault();
+                const delta = e.deltaY > 0 ? 0.9 : 1.1;
+                this.camera.zoom = Math.max(0.1, Math.min(3, this.camera.zoom * delta));
+                this.render();
+            }
+
+            onClick(e) {
+                if (this.isDragging) return;
+
+                const pos = this.getMousePos(e);
+                const clicked = this.people.find(person => 
+                    pos.x >= person.x && pos.x <= person.x + CONFIG.NODE_WIDTH &&
+                    pos.y >= person.y && pos.y <= person.y + person.height
+                );
+
+                if (clicked) {
+                    this.selectPerson(clicked);
+                }
+            }
+
+            selectPerson(person) {
+                this.selectedPerson = person;
+                this.showEditForm(person);
+                this.updateParentButtons();
+                this.render();
+            }
+
+            showEditForm(person) {
+                document.getElementById('editSection').style.display = 'block';
+                document.getElementById('firstName').value = person.firstName;
+                document.getElementById('lastName').value = person.lastName;
+                document.getElementById('gender').value = person.gender;
+                document.getElementById('birthDate').value = person.birthDate;
+                document.getElementById('deathDate').value = person.deathDate;
+                document.getElementById('place').value = person.place;
+                document.getElementById('notes').value = person.notes;
+                
+                // Zobrazit info o rodičích
+                this.updateParentInfo(person);
+                // Zobrazit info o sourozencích
+                this.updateSiblingsInfo(person);
+            }
+
+            updateSiblingsInfo(person) {
+                const parentInfo = document.getElementById('parentInfo');
+                let info = '';
+                
+                const father = person.getFather();
+                const mother = person.getMother();
+                
+                if (father || mother) {
+                    info += '<strong>Rodiče:</strong><br>';
+                    if (father) info += `👨 Otec: ${father.getFullName()}<br>`;
+                    if (mother) info += `👩 Matka: ${mother.getFullName()}<br>`;
+                }
+                
+                if (person.siblings && person.siblings.length > 0) {
+                    info += '<br><strong>Sourozenci:</strong><br>';
+                    person.siblings.forEach(sibling => {
+                        const icon = sibling.gender === 'male' ? '👨' : sibling.gender === 'female' ? '👩' : '👤';
+                        info += `${icon} ${sibling.name}<br>`;
+                    });
+                }
+                
+                if (info) {
+                    parentInfo.innerHTML = info;
+                    parentInfo.style.display = 'block';
+                } else {
+                    parentInfo.style.display = 'none';
+                }
+            }
+
+            updateParentInfo(person) {
+                // Tato metoda je nyní spojena s updateSiblingsInfo
+                this.updateSiblingsInfo(person);
+            }
+
+            updateParentButtons() {
+                if (!this.selectedPerson) return;
+                
+                const addFatherBtn = document.getElementById('addFatherBtn');
+                const addMotherBtn = document.getElementById('addMotherBtn');
+                
+                addFatherBtn.disabled = this.selectedPerson.hasFather();
+                addMotherBtn.disabled = this.selectedPerson.hasMother();
+            }
+
+            saveChanges() {
+                if (!this.selectedPerson) return;
+
+                this.selectedPerson.firstName = document.getElementById('firstName').value;
+                this.selectedPerson.lastName = document.getElementById('lastName').value;
+                this.selectedPerson.gender = document.getElementById('gender').value;
+                this.selectedPerson.birthDate = document.getElementById('birthDate').value;
+                this.selectedPerson.deathDate = document.getElementById('deathDate').value;
+                this.selectedPerson.place = document.getElementById('place').value;
+                this.selectedPerson.notes = document.getElementById('notes').value;
+
+                this.updateParentInfo(this.selectedPerson);
+                this.updateParentButtons();
+                this.updateStatistics();
+                this.autoAlign();
+            }
+
+            addFather() {
+                if (!this.selectedPerson || this.selectedPerson.hasFather()) return;
+
+                const father = new Person({
+                    firstName: 'Nový',
+                    lastName: 'Otec',
+                    gender: 'male'
+                });
+
+                this.selectedPerson.parents.push(father);
+                this.people.push(father);
+                this.updateStatistics();
+                this.autoAlign();
+                this.selectPerson(father);
+            }
+
+            addMother() {
+                if (!this.selectedPerson || this.selectedPerson.hasMother()) return;
+
+                const mother = new Person({
+                    firstName: 'Nová',
+                    lastName: 'Matka',
+                    gender: 'female'
+                });
+
+                this.selectedPerson.parents.push(mother);
+                this.people.push(mother);
+                this.updateStatistics();
+                this.autoAlign();
+                this.selectPerson(mother);
+            }
+
+            addSibling() {
+                if (!this.selectedPerson) return;
+
+                const siblingName = prompt('Zadejte jméno sourozence:', 'Nový sourozenec');
+                if (!siblingName) return;
+
+                const sibling = {
+                    id: Date.now() + Math.random(),
+                    name: siblingName,
+                    gender: 'unknown'
+                };
+
+                this.selectedPerson.siblings.push(sibling);
+                this.updateStatistics();
+                this.autoAlign();
+            }
+
+            deletePerson() {
+                if (!this.selectedPerson) return;
+
+                if (!confirm(`Opravdu chcete smazat osobu ${this.selectedPerson.getFullName()} a všechny její předky?`)) {
+                    return;
+                }
+
+                // Najít všechny předky (rodiče, prarodiče atd.)
+                const toDelete = new Set();
+                const findAncestors = (person) => {
+                    toDelete.add(person.id);
+                    person.parents.forEach(parent => {
+                        if (!toDelete.has(parent.id)) {
+                            findAncestors(parent);
+                        }
+                    });
+                };
+                
+                findAncestors(this.selectedPerson);
+
+                // Odstranit ze všech parents arrays
+                this.people.forEach(person => {
+                    person.parents = person.parents.filter(parent => !toDelete.has(parent.id));
+                });
+
+                // Odstranit z hlavního pole
+                this.people = this.people.filter(p => !toDelete.has(p.id));
+                
+                this.selectedPerson = null;
+                document.getElementById('editSection').style.display = 'none';
+                
+                this.updateStatistics();
+                this.autoAlign();
+            }
+
+            clearAll() {
+                if (!confirm('Opravdu chcete smazat celý rodokmen? Tato akce je nevratná!')) {
+                    return;
+                }
+
+                this.people = [];
+                this.selectedPerson = null;
+                document.getElementById('editSection').style.display = 'none';
+                
+                this.updateStatistics();
+                this.updateEmptyState();
+                this.render();
+            }
+
+            updateEmptyState() {
+                const emptyState = document.getElementById('emptyState');
+                if (this.people.length === 0) {
+                    emptyState.style.display = 'block';
+                } else {
+                    emptyState.style.display = 'none';
+                }
+            }
+
+            addFirstPerson() {
+                const firstName = prompt('Zadejte jméno:', 'Jan');
+                if (!firstName) return;
+                
+                const lastName = prompt('Zadejte příjmení:', 'Novák');
+                if (!lastName) return;
+
+                const person = new Person({
+                    firstName: firstName,
+                    lastName: lastName,
+                    gender: 'unknown'
+                });
+
+                this.people.push(person);
+                this.updateStatistics();
+                this.updateEmptyState();
+                this.autoAlign();
+                this.selectPerson(person);
+            }
+
+            updateStatistics() {
+                const males = this.people.filter(p => p.gender === 'male').length;
+                const females = this.people.filter(p => p.gender === 'female').length;
+                const generations = this.people.length > 0 ? this.groupByGeneration(this.findBasePeople()).length : 0;
+
+                document.getElementById('statTotal').textContent = this.people.length;
+                document.getElementById('statGenerations').textContent = generations;
+                document.getElementById('statMales').textContent = males;
+                document.getElementById('statFemales').textContent = females;
+                
+                this.updateEmptyState();
+            }
+
+            zoomIn() {
+                this.camera.zoom = Math.min(3, this.camera.zoom * 1.2);
+                this.render();
+            }
+
+            zoomOut() {
+                this.camera.zoom = Math.max(0.1, this.camera.zoom / 1.2);
+                this.render();
+            }
+
+            resetView() {
+                this.camera = { x: 0, y: 0, zoom: 1 };
+                this.render();
+            }
+
+            exportPNG() {
+                // Dočasně uložit camera
+                const tempCamera = { ...this.camera };
+                this.camera = { x: 0, y: 0, zoom: 1 };
+
+                // Najít hranice stromu
+                let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+                this.people.forEach(person => {
+                    minX = Math.min(minX, person.x);
+                    minY = Math.min(minY, person.y);
+                    maxX = Math.max(maxX, person.x + CONFIG.NODE_WIDTH);
+                    maxY = Math.max(maxY, person.y + person.height);
+                });
+
+                const padding = 50;
+                const width = maxX - minX + padding * 2;
+                const height = maxY - minY + padding * 2;
+
+                // Vytvořit dočasný canvas
+                const tempCanvas = document.createElement('canvas');
+                tempCanvas.width = width;
+                tempCanvas.height = height;
+                const tempCtx = tempCanvas.getContext('2d');
+
+                // Bílé pozadí
+                tempCtx.fillStyle = '#1a1a2e';
+                tempCtx.fillRect(0, 0, width, height);
+
+                // Posunout kontext
+                tempCtx.translate(-minX + padding, -minY + padding);
+
+                // Nakreslit
+                const originalCtx = this.ctx;
+                this.ctx = tempCtx;
+                this.drawConnections();
+                this.people.forEach(person => this.drawPerson(person, false));
+                this.ctx = originalCtx;
+
+                // Stáhnout
+                tempCanvas.toBlob(blob => {
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = `rodokmen_${Date.now()}.png`;
+                    a.click();
+                    URL.revokeObjectURL(url);
+                });
+
+                // Obnovit camera
+                this.camera = tempCamera;
+                this.render();
+            }
+
+            exportSVG() {
+                let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+                this.people.forEach(person => {
+                    minX = Math.min(minX, person.x);
+                    minY = Math.min(minY, person.y);
+                    maxX = Math.max(maxX, person.x + CONFIG.NODE_WIDTH);
+                    maxY = Math.max(maxY, person.y + person.height);
+                });
+
+                const padding = 50;
+                const width = maxX - minX + padding * 2;
+                const height = maxY - minY + padding * 2;
+                const offsetX = -minX + padding;
+                const offsetY = -minY + padding;
+
+                let svg = `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${height}" viewBox="0 0 ${width} ${height}">
+<rect width="${width}" height="${height}" fill="#1a1a2e"/>
+<g transform="translate(${offsetX}, ${offsetY})">`;
+
+                // Spojnice
+                this.people.forEach(child => {
+                    child.parents.forEach(parent => {
+                        const startX = child.x + CONFIG.NODE_WIDTH / 2;
+                        const startY = child.y;
+                        const endX = parent.x + CONFIG.NODE_WIDTH / 2;
+                        const endY = parent.y + parent.height;
+                        const midY = (startY + endY) / 2;
+
+                        svg += `<path d="M ${startX} ${startY} C ${startX} ${midY}, ${endX} ${midY}, ${endX} ${endY}" 
+                                stroke="${CONFIG.COLORS.line}" stroke-width="${CONFIG.LINE_WIDTH}" fill="none"/>`;
+                    });
+                });
+
+                // Nody
+                this.people.forEach(person => {
+                    const x = person.x;
+                    const y = person.y;
+                    const w = CONFIG.NODE_WIDTH;
+                    const h = person.height;
+
+                    svg += `<rect x="${x}" y="${y}" width="${w}" height="${h}" rx="10" 
+                            fill="${CONFIG.COLORS[person.gender]}" stroke="${CONFIG.COLORS.border}" stroke-width="2"/>`;
+
+                    const lines = person.getDisplayLines(this.ctx);
+                    let textY = y + CONFIG.NODE_PADDING + 15;
+
+                    lines.forEach((line, i) => {
+                        const fontSize = i === 0 ? CONFIG.FONT_SIZE + 2 : CONFIG.FONT_SIZE;
+                        const weight = i === 0 ? 'bold' : 'normal';
+                        svg += `<text x="${x + w / 2}" y="${textY}" fill="${CONFIG.COLORS.text}" 
+                                font-size="${fontSize}" font-family="${CONFIG.FONT_FAMILY}" 
+                                font-weight="${weight}" text-anchor="middle">${this.escapeXml(line)}</text>`;
+                        textY += 20;
+                    });
+                });
+
+                svg += '</g></svg>';
+
+                const blob = new Blob([svg], { type: 'image/svg+xml' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `rodokmen_${Date.now()}.svg`;
+                a.click();
+                URL.revokeObjectURL(url);
+            }
+
+            exportPDF() {
+                const { jsPDF } = window.jspdf;
+                
+                let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+                this.people.forEach(person => {
+                    minX = Math.min(minX, person.x);
+                    minY = Math.min(minY, person.y);
+                    maxX = Math.max(maxX, person.x + CONFIG.NODE_WIDTH);
+                    maxY = Math.max(maxY, person.y + person.height);
+                });
+
+                const padding = 50;
+                const width = maxX - minX + padding * 2;
+                const height = maxY - minY + padding * 2;
+
+                // Vytvořit dočasný canvas
+                const tempCanvas = document.createElement('canvas');
+                tempCanvas.width = width;
+                tempCanvas.height = height;
+                const tempCtx = tempCanvas.getContext('2d');
+
+                tempCtx.fillStyle = '#1a1a2e';
+                tempCtx.fillRect(0, 0, width, height);
+                tempCtx.translate(-minX + padding, -minY + padding);
+
+                const originalCtx = this.ctx;
+                this.ctx = tempCtx;
+                this.drawConnections();
+                this.people.forEach(person => this.drawPerson(person, false));
+                this.ctx = originalCtx;
+
+                // Vytvořit PDF
+                const orientation = width > height ? 'landscape' : 'portrait';
+                const pdf = new jsPDF(orientation, 'px', [width, height]);
+                const imgData = tempCanvas.toDataURL('image/png');
+                pdf.addImage(imgData, 'PNG', 0, 0, width, height);
+                pdf.save(`rodokmen_${Date.now()}.pdf`);
+
+                this.render();
+            }
+
+            exportJSON() {
+                const data = {
+                    version: '1.0',
+                    exportDate: new Date().toISOString(),
+                    people: this.people.map(person => ({
+                        id: person.id,
+                        firstName: person.firstName,
+                        lastName: person.lastName,
+                        gender: person.gender,
+                        birthDate: person.birthDate,
+                        deathDate: person.deathDate,
+                        place: person.place,
+                        notes: person.notes,
+                        parentsIds: person.parents.map(p => p.id),
+                        siblings: person.siblings || []
+                    }))
+                };
+
+                const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `rodokmen_${Date.now()}.json`;
+                a.click();
+                URL.revokeObjectURL(url);
+            }
+
+            importJSON(event) {
+                const file = event.target.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const data = JSON.parse(e.target.result);
+                        
+                        // Vytvoříme mapu osob podle ID
+                        const personMap = new Map();
+                        data.people.forEach(personData => {
+                            const person = new Person(personData);
+                            person.parents = [];
+                            person.siblings = personData.siblings || [];
+                            personMap.set(person.id, person);
+                        });
+
+                        // Obnovit vztahy
+                        data.people.forEach(personData => {
+                            const person = personMap.get(personData.id);
+                            const parentsIds = personData.parentsIds || personData.childrenIds || []; // Zpětná kompatibilita
+                            parentsIds.forEach(parentId => {
+                                const parent = personMap.get(parentId);
+                                if (parent) {
+                                    person.parents.push(parent);
+                                }
+                            });
+                        });
+
+                        this.people = Array.from(personMap.values());
+                        this.selectedPerson = null;
+                        document.getElementById('editSection').style.display = 'none';
+                        
+                        this.updateStatistics();
+                        this.updateEmptyState();
+                        this.autoAlign();
+
+                        alert('Rodokmen byl úspěšně importován!');
+                    } catch (error) {
+                        alert('Chyba při importu souboru: ' + error.message);
+                    }
+                };
+                reader.readAsText(file);
+                event.target.value = '';
+            }
+
+            escapeXml(text) {
+                return text.replace(/[<>&'"]/g, (c) => {
+                    switch (c) {
+                        case '<': return '&lt;';
+                        case '>': return '&gt;';
+                        case '&': return '&amp;';
+                        case "'": return '&apos;';
+                        case '"': return '&quot;';
+                    }
+                });
+            }
+        }
+
+        // Inicializace aplikace
+        let app;
+        window.addEventListener('DOMContentLoaded', () => {
+            app = new HeritageTreeApp();
+        });
+    </script>
+</body>
+</html>
