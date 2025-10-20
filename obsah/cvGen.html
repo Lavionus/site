@@ -1,0 +1,1961 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>CV Generator – Světlý náhled</title>
+
+<!-- jsPDF + html2canvas CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js" crossorigin="anonymous"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js" crossorigin="anonymous"></script>
+
+<style>
+  :root{
+    --bg:#1a1a1a;
+    --card:#2a2a2a;
+    --text:#e0e0e0;
+    --muted:#888;
+    --accent:#6aa6fd;
+    --accent-2:#5694f0;
+    --radius:8px;
+    --gap:12px;
+    --shadow: 0 4px 12px rgba(0,0,0,0.3);
+    --scale: 0.5;
+  }
+  
+  *{box-sizing:border-box;margin:0;padding:0}
+  
+  html,body{height:100%;}
+  
+  body{
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+    background-color: var(--bg);
+    color:var(--text);
+    -webkit-font-smoothing:antialiased;
+    -moz-osx-font-smoothing:grayscale;
+    padding:20px;
+    min-height:100vh;
+  }
+
+  /* Container */
+  .app{
+    max-width:1400px;
+    margin:0 auto;
+    display:grid;
+    grid-template-columns: 420px 1fr;
+    gap:20px;
+  }
+
+  /* Left panel (tabs) */
+  .left{
+    background-color: var(--card);
+    border: 1px solid #404040;
+    border-radius:var(--radius);
+    padding:20px;
+    box-shadow:var(--shadow);
+    min-height:720px;
+    transition: all .22s ease;
+    width:100%;
+    overflow:hidden;
+  }
+
+  .tabs{
+    display:flex;
+    gap:6px;
+    margin-bottom:20px;
+  }
+  
+  .tabbtn{
+    flex:1;
+    background:#2a2a2a;
+    border:1px solid #404040;
+    color:var(--text);
+    padding:12px 14px;
+    border-radius:6px;
+    cursor:pointer;
+    font-weight:600;
+    font-size:14px;
+    display:flex;
+    gap:8px;
+    align-items:center;
+    justify-content:center;
+    transition: all .18s ease;
+    user-select: none;
+  }
+  
+  .tabbtn.active{
+    color:#fff;
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%);
+    border-color:var(--accent);
+    box-shadow: 0 4px 12px rgba(106,166,253,0.3);
+    transform: translateY(-1px);
+  }
+  
+  .tabbtn:hover:not(.active){
+    background-color: #353535;
+    border-color:#555;
+  }
+  
+  .tabbtn:focus{
+    outline:3px solid rgba(106,166,253,0.3);
+    outline-offset:2px;
+  }
+
+  /* Form area */
+  .panel{
+    display:none;
+    overflow:auto;
+    max-height:calc(100vh - 220px);
+    padding-right:6px;
+    width:100%;
+  }
+  
+  .panel::-webkit-scrollbar{width:8px}
+  .panel::-webkit-scrollbar-track{background:#2a2a2a;border-radius:4px}
+  .panel::-webkit-scrollbar-thumb{background:#555;border-radius:4px}
+  .panel::-webkit-scrollbar-thumb:hover{background:#666}
+  
+  .panel.active{display:block}
+  
+  label{
+    display:block;
+    font-size:14px;
+    color:var(--muted);
+    margin:16px 0 8px;
+    font-weight:600;
+    width:100%;
+  }
+  
+  input[type="text"], 
+  input[type="email"], 
+  input[type="tel"], 
+  input[type="number"],
+  input[type="range"],
+  textarea, 
+  select{
+    width:100%;
+    padding:10px 12px;
+    background-color: #404040;
+    border:1px solid #555;
+    color:var(--text);
+    border-radius:6px;
+    font-size:14px;
+    transition: all .2s ease;
+    font-family: inherit;
+    box-sizing: border-box;
+  }
+  
+  input:focus, 
+  textarea:focus, 
+  select:focus{
+    box-shadow:0 0 0 3px rgba(106,166,253,0.2);
+    border-color:var(--accent);
+    outline:none;
+  }
+  
+  input::placeholder,
+  textarea::placeholder{
+    color:#666;
+  }
+  
+  textarea{
+    min-height:100px;
+    resize:vertical;
+    line-height:1.5;
+  }
+  
+  .row{
+    display:flex;
+    gap:10px;
+    width:100%;
+  }
+  
+  .row .col{
+    flex:1;
+    min-width:0; /* Zabraňuje přetečení */
+  }
+
+  /* repeatable lists */
+  .list-item{
+    background-color: #2a2a2a;
+    padding:14px;
+    border-radius:6px;
+    margin-bottom:10px;
+    border:1px solid #404040;
+    transition: all .2s ease;
+    width:100%;
+    box-sizing: border-box;
+  }
+  
+  .list-item:hover{
+    transform: translateY(-2px);
+    box-shadow: var(--shadow);
+    border-color:#555;
+  }
+  
+  /* ZÁSADNÍ OPRAVA: Všechna editační pole v list-item musí mít tmavý motiv */
+  .list-item input[type="text"],
+  .list-item input[type="email"], 
+  .list-item input[type="tel"], 
+  .list-item input[type="number"],
+  .list-item input[type="range"],
+  .list-item textarea, 
+  .list-item select{
+    width:100%;
+    padding:10px 12px;
+    background-color: #404040 !important;
+    border:1px solid #555 !important;
+    color:var(--text) !important;
+    border-radius:6px;
+    font-size:14px;
+    transition: all .2s ease;
+    font-family: inherit;
+    box-sizing: border-box;
+  }
+  
+  .list-item input:focus, 
+  .list-item textarea:focus, 
+  .list-item select:focus{
+    box-shadow:0 0 0 3px rgba(106,166,253,0.2) !important;
+    border-color:var(--accent) !important;
+    outline:none;
+  }
+  
+  .list-item input::placeholder,
+  .list-item textarea::placeholder{
+    color:#666 !important;
+  }
+  
+  .small-btn{
+    background-color: #404040;
+    border:1px solid #555;
+    padding:8px 12px;
+    border-radius:6px;
+    color:var(--text);
+    cursor:pointer;
+    margin-left:6px;
+    font-weight:600;
+    font-size:13px;
+    transition:all .18s ease;
+    user-select: none;
+    white-space: nowrap;
+  }
+  
+  .small-btn:hover{
+    background-color: #4a4a4a;
+    border-color:#666;
+    transform: translateY(-1px);
+  }
+  
+  .small-btn:focus{
+    outline:2px solid var(--accent);
+    outline-offset:2px;
+  }
+
+  /* Appearance controls */
+  .controls{
+    display:grid;
+    gap:14px;
+    width:100%;
+  }
+  
+  .colors{
+    display:flex;
+    gap:10px;
+    flex-wrap:wrap;
+    width:100%;
+  }
+  
+  .color-item{
+    display:flex;
+    flex-direction:column;
+    align-items:flex-start;
+    gap:6px;
+  }
+  
+  .color-item input[type="color"]{
+    width:50px;
+    height:40px;
+    border-radius:6px;
+    padding:2px;
+    border:2px solid #555;
+    background:#404040;
+    cursor:pointer;
+    transition: all .2s ease;
+  }
+  
+  .color-item input[type="color"]:hover{
+    border-color:var(--accent);
+  }
+
+  /* Section manager */
+  .section-manager{
+    margin-top:8px;
+    background-color: #2a2a2a;
+    padding:12px;
+    border-radius:6px;
+    border:1px solid #404040;
+    width:100%;
+    box-sizing: border-box;
+  }
+  
+  .section-manager .item{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    padding:12px;
+    border-radius:6px;
+    margin-bottom:8px;
+    background:#353535;
+    border:1px solid #555;
+    cursor:grab;
+    transition: all .2s ease;
+    width:100%;
+    box-sizing: border-box;
+  }
+  
+  .section-manager .item:hover{
+    background:#3a3a3a;
+    border-color:#666;
+  }
+  
+  .section-manager .item:active{
+    cursor:grabbing;
+  }
+  
+  .section-manager .item.dragging{
+    opacity:0.5;
+  }
+  
+  .drag-handle{
+    width:24px;
+    text-align:center;
+    opacity:0.5;
+    font-size:18px;
+  }
+
+  /* Right panel */
+  .right{
+    min-height:720px;
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+    width:100%;
+  }
+
+  .actions{
+    display:flex;
+    gap:10px;
+    align-items:center;
+    justify-content:flex-end;
+    flex-wrap:wrap;
+    width:100%;
+  }
+  
+  .btn{
+    background-color: #404040;
+    border:1px solid #555;
+    color:var(--text);
+    padding:12px 18px;
+    border-radius:6px;
+    cursor:pointer;
+    font-weight:600;
+    font-size:14px;
+    transition: all .2s ease;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    gap:8px;
+    user-select: none;
+    white-space: nowrap;
+  }
+  
+  .btn.primary{
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent-2) 100%);
+    color:white;
+    border:0;
+    box-shadow: 0 4px 12px rgba(106,166,253,0.2);
+  }
+  
+  .btn:hover{
+    background-color: #4a4a4a;
+    transform: translateY(-2px);
+    box-shadow: var(--shadow);
+  }
+  
+  .btn.primary:hover{
+    box-shadow: 0 6px 16px rgba(106,166,253,0.35);
+  }
+  
+  .btn:active{
+    transform: translateY(0);
+  }
+  
+  .muted{
+    color:var(--muted);
+    font-size:13px;
+    margin-right:auto;
+    display:flex;
+    gap:8px;
+    align-items:center;
+  }
+
+  /* Export buttons */
+  .export-buttons{
+    display:flex;
+    gap:8px;
+    flex-wrap:wrap;
+    margin-bottom:12px;
+    width:100%;
+  }
+
+  /* Preview container */
+  .preview-wrap{
+    background-color: #2a2a2a;
+    border: 1px solid #404040;
+    padding:20px;
+    border-radius:var(--radius);
+    box-shadow:var(--shadow);
+    display:flex;
+    gap:12px;
+    align-items:flex-start;
+    width:100%;
+    box-sizing: border-box;
+  }
+  
+  .preview-scene{
+    width:100%;
+    display:flex;
+    justify-content:center;
+    padding:20px;
+    background-color: #1a1a1a;
+    border-radius:6px;
+    box-sizing: border-box;
+  }
+
+  /* CV preview - SVĚTLÉ BARVY */
+  #cvPreview{
+    transform-origin:top left;
+    transform: scale(var(--scale));
+    background:var(--cv-card, #ffffff);
+    color:var(--cv-text, #333333);
+    width:794px;
+    min-height:1123px;
+    border-radius:6px;
+    padding:20px;
+    box-shadow: var(--shadow);
+    position:relative;
+    overflow:hidden;
+    transition: all .2s ease;
+    box-sizing: border-box;
+  }
+
+  /* Header */
+  .cv-header{
+    background:var(--cv-header, #f5f5f5);
+    padding:16px;
+    border-radius:6px;
+    display:flex;
+    align-items:center;
+    gap:16px;
+    margin-bottom:14px;
+    border: 1px solid #e0e0e0;
+  }
+  
+  .cv-avatar{
+    width:70px;
+    height:70px;
+    border-radius:50%;
+    background: linear-gradient(135deg, var(--cv-accent, #0066cc) 0%, var(--cv-accent-2, #0052a3) 100%);
+    color:white;
+    font-weight:800;
+    font-size:24px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    flex-shrink:0;
+    box-shadow: 0 4px 12px rgba(0,102,204,0.3);
+  }
+  
+  .cv-name{
+    font-size:28px;
+    font-weight:800;
+    letter-spacing:0.3px;
+    margin-bottom:4px;
+  }
+  
+  .cv-contact{
+    color:var(--cv-muted, #666666);
+    font-size:13px;
+    display:flex;
+    gap:12px;
+    flex-wrap:wrap;
+    line-height:1.6;
+  }
+
+  /* layout containers */
+  .cv-body{
+    display:grid;
+    gap:14px;
+  }
+  
+  .cols-1{grid-template-columns:1fr}
+  .cols-2{grid-template-columns: 1fr 1fr}
+  .cols-3{grid-template-columns: 1fr 1fr 1fr}
+  .cols-sidebar{grid-template-columns: var(--cv-sidebar-width, 280px) 1fr}
+  .cols-sidebar.right-sidebar{grid-template-columns: 1fr var(--cv-sidebar-width, 280px)}
+
+  /* section card */
+  .cv-section{
+    background:var(--cv-section-bg, #f5f5f5);
+    padding:14px;
+    border-radius:6px;
+    border:1px solid #e0e0e0;
+  }
+  
+  .cv-section h3{
+    margin:0 0 10px;
+    color:var(--cv-accent, #0066cc);
+    font-size:18px;
+    font-weight:700;
+  }
+  
+  .cv-entry{
+    margin-bottom:10px;
+    line-height:1.6;
+  }
+  
+  .muted-small{
+    color:var(--cv-muted, #666666);
+    font-size:13px;
+    line-height:1.5;
+  }
+
+  /* skills thermometer */
+  .skill{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    margin-bottom:10px;
+    gap:10px;
+  }
+  
+  .skill .bar{
+    flex:1;
+    height:12px;
+    background:rgba(0,0,0,0.05);
+    border-radius:12px;
+    margin-left:12px;
+    overflow:hidden;
+  }
+  
+  .skill .fill{
+    height:100%;
+    width:0%;
+    background: linear-gradient(90deg, var(--cv-accent, #0066cc) 0%, var(--cv-accent-2, #0052a3) 100%);
+    border-radius:12px;
+    transition:width .6s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .skill .label{
+    min-width:100px;
+    font-size:14px;
+    font-weight:500;
+  }
+
+  /* helpers */
+  .muted-italic{
+    color:var(--muted);
+    font-style:italic;
+    font-size:13px;
+  }
+  
+  .inline{
+    display:inline-flex;
+    gap:6px;
+    align-items:center;
+  }
+
+  /* a4 indicator */
+  .a4-indicator{
+    position:absolute;
+    left:20px;
+    top:20px;
+    width:754px;
+    height:1083px;
+    border:2px dashed rgba(0,102,204,0.2);
+    border-radius:6px;
+    pointer-events:none;
+    display:none;
+  }
+  
+  .show-a4 .a4-indicator{
+    display:block;
+  }
+
+  /* responsive */
+  @media (max-width:1100px){
+    .app{
+      grid-template-columns:1fr;
+      padding-bottom:40px;
+    }
+    .left{order:2}
+    .right{order:1}
+  }
+  
+  @media (max-width:768px){
+    body{padding:10px}
+    .app{gap:10px}
+    .left, .preview-wrap{padding:15px}
+    .actions{justify-content:center}
+    .muted{display:none}
+    .export-buttons{justify-content:center}
+    .row{flex-direction:column}
+  }
+</style>
+</head>
+<body>
+<div class="app" role="application" aria-label="CV Generator">
+  <div class="left" aria-hidden="false">
+    <div class="tabs" role="tablist" aria-label="Hlavní záložky">
+      <button class="tabbtn active" data-tab="data" id="tabData" role="tab" aria-selected="true">👤 Osobní údaje</button>
+      <button class="tabbtn" data-tab="appearance" id="tabAppearance" role="tab" aria-selected="false">🎨 Vzhled & Náhled</button>
+    </div>
+
+    <!-- PERSONAL DATA TAB -->
+    <div class="panel active" id="panel-data" role="tabpanel" aria-labelledby="tabData">
+      <form id="cvForm" autocomplete="off">
+        <label>Jméno</label>
+        <div class="row">
+          <div class="col">
+            <input type="text" id="firstName" placeholder="Jméno" aria-label="Křestní jméno" />
+          </div>
+          <div class="col">
+            <input type="text" id="lastName" placeholder="Příjmení" aria-label="Příjmení" />
+          </div>
+        </div>
+
+        <label>Titul</label>
+        <input type="text" id="title" placeholder="PhDr., Ing., Bc., ..." />
+
+        <label>Kontakty</label>
+        <div class="row">
+          <div class="col">
+            <input type="email" id="email" placeholder="email@example.com" />
+          </div>
+          <div class="col">
+            <input type="tel" id="phone" placeholder="+420 123 456 789" />
+          </div>
+        </div>
+        
+        <label>Adresa, LinkedIn, Web (oddělte pomocí |)</label>
+        <textarea id="addressLinkedinWeb" placeholder="Ulice, Město|linkedin.com/in/...|osobni-web.cz (každá položka na nový řádek v CV)"></textarea>
+
+        <label>Profesní souhrn</label>
+        <textarea id="summary" placeholder="Krátký profesionální profil..."></textarea>
+
+        <label>Pracovní zkušenosti</label>
+        <div id="experienceList" aria-live="polite"></div>
+        <div style="display:flex;gap:8px;margin-bottom:8px;width:100%">
+          <button type="button" class="small-btn" id="addExperience" aria-label="Přidat zkušenost">➕ Přidat zkušenost</button>
+          <button type="button" class="small-btn" id="clearExperience">🧹 Vymazat všechny</button>
+        </div>
+
+        <label>Vzdělání</label>
+        <div id="educationList"></div>
+        <div style="display:flex;gap:8px;margin-bottom:8px;width:100%">
+          <button type="button" class="small-btn" id="addEducation">➕ Přidat vzdělání</button>
+          <button type="button" class="small-btn" id="clearEducation">🧹 Vymazat všechny</button>
+        </div>
+
+        <label>Dovednosti (název + úroveň 0–100)</label>
+        <div id="skillsList"></div>
+        <div style="display:flex;gap:8px;margin-bottom:8px;width:100%">
+          <button type="button" class="small-btn" id="addSkill">➕ Přidat dovednost</button>
+          <button type="button" class="small-btn" id="clearSkills">🧹 Vymazat všechny</button>
+        </div>
+
+        <label>Jazyky</label>
+        <div id="langsList"></div>
+        <div style="display:flex;gap:8px;margin-bottom:18px;width:100%">
+          <button type="button" class="small-btn" id="addLang">➕ Přidat jazyk</button>
+          <button type="button" class="small-btn" id="clearLangs">🧹 Vymazat všechny</button>
+        </div>
+
+        <div style="display:flex;gap:8px;align-items:center;margin-top:8px;width:100%">
+          <button type="button" class="btn" id="resetData">♻️ Resetovat data</button>
+          <div class="muted" title="Uložené v localStorage">💾 Data se ukládají automaticky</div>
+        </div>
+      </form>
+    </div>
+
+    <!-- APPEARANCE & PREVIEW TAB -->
+    <div class="panel" id="panel-appearance" role="tabpanel" aria-labelledby="tabAppearance">
+      <div class="controls">
+        <label>Šablona / Rozložení</label>
+        <div style="display:flex;gap:6px;width:100%">
+          <select id="layoutSelect">
+            <option value="cols-1">1 sloupec</option>
+            <option value="cols-2">2 sloupce</option>
+            <option value="cols-3">3 sloupce</option>
+            <option value="cols-sidebar">Postranní panel</option>
+          </select>
+        </div>
+
+        <div class="sidebar-controls" style="display:none;width:100%">
+          <label>Šířka postranního panelu (px)</label>
+          <input type="number" id="sidebarWidth" min="150" max="500" value="280" />
+          
+          <label>Pozice postranního panelu</label>
+          <select id="sidebarPosition">
+            <option value="left">Vlevo</option>
+            <option value="right">Vpravo</option>
+          </select>
+        </div>
+
+        <label>Barvy CV</label>
+        <div class="colors">
+          <div class="color-item"><small class="muted">Hlavička</small><input type="color" id="c-header" value="#f5f5f5" aria-label="Barva hlavičky"></div>
+          <div class="color-item"><small class="muted">Akcent</small><input type="color" id="c-accent" value="#0066cc" aria-label="Barva akcentu"></div>
+          <div class="color-item"><small class="muted">Pozadí</small><input type="color" id="c-card" value="#ffffff" aria-label="Barva pozadí"></div>
+          <div class="color-item"><small class="muted">Text</small><input type="color" id="c-text" value="#333333" aria-label="Barva textu"></div>
+          <div class="color-item"><small class="muted">Sekce</small><input type="color" id="c-section" value="#f5f5f5" aria-label="Barva sekce"></div>
+        </div>
+
+        <div style="display:flex;gap:8px;align-items:center;margin-top:6px;flex-wrap:wrap;width:100%">
+          <button class="btn" id="resetColors">♻️ Reset barev</button>
+          <label style="margin-left:auto" class="inline"><input type="checkbox" id="showA4" /> Indikátor A4</label>
+        </div>
+
+        <label style="margin-top:8px">Řazení a viditelnost sekcí (drag & drop)</label>
+        <div class="section-manager" id="sectionManager" aria-label="Správce sekcí" tabindex="0">
+          <!-- populated by JS -->
+        </div>
+
+        <div class="export-buttons">
+          <button class="btn primary" id="exportPdf">📄 Exportovat do PDF</button>
+          <button class="btn" id="exportHtml">🧾 Exportovat do HTML</button>
+          <button class="btn" id="exportPng">🖼️ Exportovat PNG</button>
+          <button class="btn" id="downloadJson">📥 Export JSON</button>
+          <button class="btn" id="importJson">📤 Import JSON</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- RIGHT: preview + actions -->
+  <div class="right">
+    <div class="actions">
+      <div class="muted">🔎 Náhled CV – aktualizuje se automaticky</div>
+      <button class="btn" id="zoomIn">➕ Zoom</button>
+      <button class="btn" id="zoomOut">➖ Zoom</button>
+      <button class="btn" id="resetZoom">🔄 Reset</button>
+    </div>
+
+    <div class="preview-wrap">
+      <div class="preview-scene">
+        <div id="cvPreview" role="document" aria-label="Náhled životopisu">
+          <div class="a4-indicator"></div>
+          <!-- Content generated by JS -->
+        </div>
+      </div>
+    </div>
+
+    <div style="display:flex;gap:8px;justify-content:space-between;align-items:center;flex-wrap:wrap;width:100%">
+      <div class="muted-italic">Tip: můžeš přesouvat sekce v "Vzhled & Náhled".</div>
+      <div style="display:flex;gap:8px;flex-wrap:wrap">
+        <button class="btn" id="clearStorage">❌ Vymazat localStorage</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/*
+  CV Generator - Světlý náhled s opravenými funkcemi
+  - Všechny exportní možnosti přesunuty nad náhled
+  - Barvy ovlivňují pouze CV, nikoliv GUI
+  - Náhled CV má světlé barvy
+*/
+
+// ---------- Helpers ----------
+const LS_KEY = 'cv_generator:data_v4';
+const UI_KEY = 'cv_generator:ui_v4';
+const FILE_VERSION = 4;
+const el = id => document.getElementById(id);
+const saveToLS = (k,v)=> localStorage.setItem(k, JSON.stringify(v));
+const loadFromLS = (k, fallback)=> { 
+  try{ 
+    const x = JSON.parse(localStorage.getItem(k)); 
+    return x ?? fallback; 
+  }catch(e){
+    return fallback;
+  } 
+}
+
+// debounce helper
+function debounce(fn, wait=200){
+  let t;
+  return function(...args){
+    clearTimeout(t);
+    t = setTimeout(()=>fn.apply(this,args), wait);
+  }
+}
+
+// ---------- Default dummy data ----------
+const defaultData = {
+  version: FILE_VERSION,
+  firstName:'Jan',
+  lastName:'Novák',
+  title:'Ing.',
+  email:'jan.novak@example.com',
+  phone:'+420 777 123 456',
+  addressLinkedinWeb:'Nám. Svobody 12, Praha|linkedin.com/in/jannovak|jannovak.dev',
+  summary:'Senior software engineer s 8+ lety zkušeností v návrhu webových aplikací, výkonových optimalizacích a vedení malých týmů.',
+  experiences:[
+    {company:'Acme Solutions', role:'Lead Developer', period:'2020 – současnost', desc:'Vedení týmu 6 vývojářů, architektura aplikací, CI/CD.'},
+    {company:'SoftWorks', role:'Senior Developer', period:'2016 – 2020', desc:'Vývoj frontendu i backendu, migrace monolitu na microservices.'}
+  ],
+  education:[
+    {school:'ČVUT', degree:'Ing. Informatika', period:'2011 – 2016', desc:'Zaměření: softwarové inženýrství.'}
+  ],
+  skills:[
+    {name:'JavaScript', level:90},
+    {name:'Python', level:80},
+    {name:'SQL', level:75}
+  ],
+  languages:[
+    {name:'Čeština', level:'rodilý mluvčí'},
+    {name:'Angličtina', level:'C1'}
+  ]
+};
+
+// ---------- UI defaults ----------
+const defaultUI = {
+  layout:'cols-2',
+  colors:{
+    header:'#f5f5f5',
+    accent:'#0066cc',
+    card:'#ffffff',
+    text:'#333333',
+    section:'#f5f5f5'
+  },
+  sectionsOrder:['summary','experience','education','skills','languages','contacts'],
+  sectionsVisible:{
+    summary:true, experience:true, education:true, skills:true, languages:true, contacts:true
+  },
+  panelAssign:{
+    summary:0, experience:1, education:1, skills:1, languages:1, contacts:0
+  },
+  showA4:false,
+  scale:0.5,
+  sidebarWidth: 280,
+  sidebarPosition: 'left'
+};
+
+// ---------- State ----------
+let DATA = loadFromLS(LS_KEY, defaultData);
+let UI = loadFromLS(UI_KEY, defaultUI);
+
+// migrate if needed
+if(!DATA.version || DATA.version < FILE_VERSION){
+  DATA.version = FILE_VERSION;
+  saveToLS(LS_KEY, DATA);
+}
+
+// ---------- DOM refs ----------
+const fields = {
+  firstName:el('firstName'), lastName:el('lastName'), title:el('title'),
+  email:el('email'), phone:el('phone'), addressLinkedinWeb:el('addressLinkedinWeb'),
+  summary:el('summary')
+};
+const experienceList = el('experienceList');
+const educationList = el('educationList');
+const skillsList = el('skillsList');
+const langsList = el('langsList');
+
+const layoutSelect = el('layoutSelect');
+const sectionManager = el('sectionManager');
+const cvPreview = el('cvPreview');
+const sidebarControls = document.querySelector('.sidebar-controls');
+const sidebarWidthInput = el('sidebarWidth');
+const sidebarPositionSelect = el('sidebarPosition');
+
+const colorInputs = {
+  header:el('c-header'), accent:el('c-accent'), card:el('c-card'), text:el('c-text'), section:el('c-section')
+};
+
+// ---------- Theme application ----------
+function applyTheme(theme){
+  // Apply colors only to CV preview, not to GUI
+  const preview = document.getElementById('cvPreview');
+  if (preview) {
+    preview.style.setProperty('--cv-header', theme.header);
+    preview.style.setProperty('--cv-accent', theme.accent);
+    const accent2 = lightenHex(theme.accent, 14);
+    preview.style.setProperty('--cv-accent-2', accent2);
+    preview.style.setProperty('--cv-card', theme.card);
+    preview.style.setProperty('--cv-text', theme.text);
+    preview.style.setProperty('--cv-section-bg', theme.section);
+    preview.style.setProperty('--cv-muted', lightenHex(theme.text, 40));
+    
+    // Apply sidebar width
+    preview.style.setProperty('--cv-sidebar-width', UI.sidebarWidth + 'px');
+  }
+}
+
+function lightenHex(hex, percent){
+  try{
+    const h = hex.replace('#','');
+    const bigint = parseInt(h.length===3?h.split('').map(c=>c+c).join(''):h,16);
+    let r = (bigint>>16)&255, g=(bigint>>8)&255, b=bigint&255;
+    r = Math.min(255, Math.round(r + (255 - r) * (percent/100)));
+    g = Math.min(255, Math.round(g + (255 - g) * (percent/100)));
+    b = Math.min(255, Math.round(b + (255 - b) * (percent/100)));
+    return `#${((1<<24)|(r<<16)|(g<<8)|b).toString(16).slice(1)}`;
+  }catch(e){ return hex; }
+}
+
+function hexToRGBA(hex, alpha=1){
+  if(!hex) return `rgba(255,255,255,${alpha})`;
+  const h = hex.replace('#','');
+  const bigint = parseInt(h.length===3?h.split('').map(c=>c+c).join(''):h,16);
+  const r = (bigint>>16)&255; const g=(bigint>>8)&255; const b=bigint&255;
+  return `rgba(${r},${g},${b},${alpha})`;
+}
+
+// ---------- Initialize form & bindings ----------
+function bindForm(){
+  const onChange = debounce(()=>{ persistAndRender(); }, 180);
+
+  for(let k of ['firstName','lastName','title','email','phone','addressLinkedinWeb','summary']){
+    if(fields[k]) {
+      fields[k].value = DATA[k] || '';
+      fields[k].addEventListener('input', (e)=>{ DATA[k] = e.target.value; onChange(); });
+    }
+  }
+
+  layoutSelect.value = UI.layout;
+  layoutSelect.addEventListener('change', ()=>{
+    UI.layout = layoutSelect.value;
+    toggleSidebarControls();
+    persistAndRender();
+  });
+
+  // Sidebar controls
+  sidebarWidthInput.value = UI.sidebarWidth;
+  sidebarWidthInput.addEventListener('input', (e)=>{
+    UI.sidebarWidth = parseInt(e.target.value) || 280;
+    persistAndRender();
+  });
+  
+  sidebarPositionSelect.value = UI.sidebarPosition;
+  sidebarPositionSelect.addEventListener('change', (e)=>{
+    UI.sidebarPosition = e.target.value;
+    persistAndRender();
+  });
+
+  for(const k in colorInputs){
+    colorInputs[k].value = UI.colors[k];
+    colorInputs[k].addEventListener('input', (e)=>{
+      UI.colors[k] = e.target.value;
+      applyTheme(UI.colors);
+      persistAndRender();
+    });
+  }
+
+  el('showA4').checked = UI.showA4;
+  el('showA4').addEventListener('change', (e)=>{ UI.showA4 = e.target.checked; persistAndRender(); });
+
+  el('zoomIn').addEventListener('click', ()=>{ UI.scale = Math.min(1.2, UI.scale + 0.05); applyScale(); saveToLS(UI_KEY, UI); });
+  el('zoomOut').addEventListener('click', ()=>{ UI.scale = Math.max(0.25, UI.scale - 0.05); applyScale(); saveToLS(UI_KEY, UI); });
+  el('resetZoom').addEventListener('click', ()=>{ UI.scale = 0.5; applyScale(); saveToLS(UI_KEY, UI); });
+
+  el('resetColors').addEventListener('click', ()=>{ 
+    if(confirm('Obnovit výchozí barvy CV?')){ 
+      UI.colors = {...defaultUI.colors}; 
+      for(const k in colorInputs){
+        colorInputs[k].value = UI.colors[k];
+      }
+      applyTheme(UI.colors); 
+      persistAndRender(); 
+    } 
+  });
+
+  el('resetData').addEventListener('click', ()=>{ 
+    if(confirm('Opravdu resetovat data na výchozí dummy hodnoty?')){ 
+      DATA = JSON.parse(JSON.stringify(defaultData)); 
+      saveToLS(LS_KEY, DATA); 
+      renderLists(); 
+      persistAndRender(); 
+    } 
+  });
+
+  el('exportPdf').addEventListener('click', exportToPdf);
+  el('exportHtml').addEventListener('click', exportToHtml);
+  el('exportPng').addEventListener('click', exportToPng);
+  el('downloadJson').addEventListener('click', ()=>{ 
+    const blob = new Blob([JSON.stringify(DATA, null, 2)],{type:'application/json'}); 
+    const a=document.createElement('a'); 
+    a.href=URL.createObjectURL(blob); 
+    a.download='cv_data.json'; 
+    a.click(); 
+  });
+
+  el('importJson').addEventListener('click', ()=>{ 
+    const input = document.createElement('input'); 
+    input.type='file'; 
+    input.accept='application/json'; 
+    input.onchange = (ev)=>{ 
+      const f = ev.target.files[0]; 
+      if(!f) return; 
+      const r = new FileReader(); 
+      r.onload = ()=>{ 
+        try{ 
+          const obj = JSON.parse(r.result); 
+          if(!obj || typeof obj !== 'object'){ 
+            alert('Neplatný JSON'); 
+            return; 
+          } 
+          if(!obj.version || obj.version !== FILE_VERSION){ 
+            if(!confirm('Importovaný formát se liší (verze '+(obj.version||'n/a')+'). Pokračovat?')) return; 
+          } 
+          DATA = obj; 
+          DATA.version = FILE_VERSION; 
+          saveToLS(LS_KEY, DATA); 
+          renderLists(); 
+          persistAndRender(); 
+          alert('Import hotov'); 
+        }catch(e){
+          alert('Chyba při importu JSON: ' + e.message);
+        } 
+      }; 
+      r.readAsText(f); 
+    }; 
+    input.click(); 
+  });
+
+  el('clearStorage').addEventListener('click', ()=>{ 
+    if(confirm('Vymazat celý localStorage pro tento nástroj?')){ 
+      localStorage.removeItem(LS_KEY); 
+      localStorage.removeItem(UI_KEY); 
+      DATA = JSON.parse(JSON.stringify(defaultData)); 
+      UI = JSON.parse(JSON.stringify(defaultUI)); 
+      renderAll(); 
+      alert('Vymazáno. Stránka se aktualizuje.'); 
+      location.reload();
+    } 
+  });
+}
+
+// Toggle sidebar controls visibility
+function toggleSidebarControls() {
+  const isSidebarLayout = layoutSelect.value === 'cols-sidebar';
+  sidebarControls.style.display = isSidebarLayout ? 'block' : 'none';
+}
+
+// ---------- Render repeatable lists ----------
+function renderLists(){
+  // experiences
+  experienceList.innerHTML = '';
+  DATA.experiences = DATA.experiences || [];
+  DATA.experiences.forEach((exp, idx)=>{
+    const d = document.createElement('div'); 
+    d.className='list-item';
+    d.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <strong>${escapeHtml(exp.role || 'Role')} @ ${escapeHtml(exp.company || 'Firma')}</strong>
+        <div>
+          <button data-idx="${idx}" class="small-btn del-exp" aria-label="Smazat zkušenost">🗑️</button>
+        </div>
+      </div>
+      <input type="text" data-idx="${idx}" class="exp-company" placeholder="Společnost" value="${escapeAttr(exp.company || '')}" />
+      <div class="row" style="margin-top:6px; margin-bottom: 12px;">
+        <div class="col"><input type="text" data-idx="${idx}" class="exp-role" placeholder="Pozice" value="${escapeAttr(exp.role || '')}" /></div>
+        <div class="col"><input type="text" data-idx="${idx}" class="exp-period" placeholder="Období" value="${escapeAttr(exp.period || '')}" /></div>
+      </div>
+      <textarea data-idx="${idx}" class="exp-desc" placeholder="Popis" style="margin-top: 8px;">${escapeHtml(exp.desc || '')}</textarea>
+    `;
+    experienceList.appendChild(d);
+  });
+  
+  el('addExperience').onclick = ()=>{ 
+    DATA.experiences.push({company:'Nová firma',role:'Pozice',period:'2025',desc:'Popis...' }); 
+    saveToLS(LS_KEY,DATA); 
+    renderLists(); 
+    persistAndRender(); 
+  };
+  
+  el('clearExperience').onclick = ()=>{ 
+    if(confirm('Smazat všechny zkušenosti?')){ 
+      DATA.experiences=[]; 
+      saveToLS(LS_KEY,DATA); 
+      renderLists(); 
+      persistAndRender(); 
+    } 
+  };
+
+  experienceList.querySelectorAll('.exp-company').forEach(inp=> inp.addEventListener('input',(e)=>{ DATA.experiences[e.target.dataset.idx].company=e.target.value; saveToLS(LS_KEY,DATA); debPersistAndRender(); }));
+  experienceList.querySelectorAll('.exp-role').forEach(inp=> inp.addEventListener('input',(e)=>{ DATA.experiences[e.target.dataset.idx].role=e.target.value; saveToLS(LS_KEY,DATA); debPersistAndRender(); }));
+  experienceList.querySelectorAll('.exp-period').forEach(inp=> inp.addEventListener('input',(e)=>{ DATA.experiences[e.target.dataset.idx].period=e.target.value; saveToLS(LS_KEY,DATA); debPersistAndRender(); }));
+  experienceList.querySelectorAll('.exp-desc').forEach(inp=> inp.addEventListener('input',(e)=>{ DATA.experiences[e.target.dataset.idx].desc=e.target.value; saveToLS(LS_KEY,DATA); debPersistAndRender(); }));
+  experienceList.querySelectorAll('.del-exp').forEach(b=> b.addEventListener('click',(e)=>{ const i=+e.target.dataset.idx; DATA.experiences.splice(i,1); saveToLS(LS_KEY,DATA); renderLists(); persistAndRender(); }));
+
+  // education
+  educationList.innerHTML = '';
+  DATA.education = DATA.education || [];
+  DATA.education.forEach((edu, idx)=>{
+    const d = document.createElement('div'); 
+    d.className='list-item';
+    d.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <strong>${escapeHtml(edu.school || 'Škola')}</strong>
+        <div>
+          <button data-idx="${idx}" class="small-btn del-edu">🗑️</button>
+        </div>
+      </div>
+      <input type="text" data-idx="${idx}" class="edu-school" placeholder="Škola" value="${escapeAttr(edu.school || '')}" />
+      <div class="row" style="margin-top:6px; margin-bottom: 12px;">
+        <div class="col"><input type="text" data-idx="${idx}" class="edu-degree" placeholder="Tituly/Studium" value="${escapeAttr(edu.degree || '')}" /></div>
+        <div class="col"><input type="text" data-idx="${idx}" class="edu-period" placeholder="Rok" value="${escapeAttr(edu.period || '')}" /></div>
+      </div>
+      <textarea data-idx="${idx}" class="edu-desc" placeholder="Popis" style="margin-top: 8px;">${escapeHtml(edu.desc || '')}</textarea>
+    `;
+    educationList.appendChild(d);
+  });
+  
+  el('addEducation').onclick = ()=>{ 
+    DATA.education.push({school:'Nová škola', degree:'Studium', period:'2020', desc:'Popis...' }); 
+    saveToLS(LS_KEY,DATA); 
+    renderLists(); 
+    persistAndRender(); 
+  };
+  
+  el('clearEducation').onclick = ()=>{ 
+    if(confirm('Smazat všechna vzdělání?')){ 
+      DATA.education=[]; 
+      saveToLS(LS_KEY,DATA); 
+      renderLists(); 
+      persistAndRender(); 
+    } 
+  };
+
+  educationList.querySelectorAll('.edu-school').forEach(inp=> inp.addEventListener('input',(e)=>{ DATA.education[e.target.dataset.idx].school=e.target.value; saveToLS(LS_KEY,DATA); debPersistAndRender(); }));
+  educationList.querySelectorAll('.edu-degree').forEach(inp=> inp.addEventListener('input',(e)=>{ DATA.education[e.target.dataset.idx].degree=e.target.value; saveToLS(LS_KEY,DATA); debPersistAndRender(); }));
+  educationList.querySelectorAll('.edu-period').forEach(inp=> inp.addEventListener('input',(e)=>{ DATA.education[e.target.dataset.idx].period=e.target.value; saveToLS(LS_KEY,DATA); debPersistAndRender(); }));
+  educationList.querySelectorAll('.edu-desc').forEach(inp=> inp.addEventListener('input',(e)=>{ DATA.education[e.target.dataset.idx].desc=e.target.value; saveToLS(LS_KEY,DATA); debPersistAndRender(); }));
+  educationList.querySelectorAll('.del-edu').forEach(b=> b.addEventListener('click',(e)=>{ DATA.education.splice(+e.target.dataset.idx,1); saveToLS(LS_KEY,DATA); renderLists(); persistAndRender(); }));
+
+  // skills
+  skillsList.innerHTML = '';
+  DATA.skills = DATA.skills || [];
+  DATA.skills.forEach((s, idx)=>{
+    const d = document.createElement('div'); 
+    d.className='list-item';
+    d.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <strong>${escapeHtml(s.name || 'Dovednost')}</strong>
+        <div><button data-idx="${idx}" class="small-btn del-skill">🗑️</button></div>
+      </div>
+      <div style="display:flex;gap:8px;align-items:center;width:100%">
+        <div style="flex:1"><input type="text" data-idx="${idx}" class="skill-name" placeholder="Název" value="${escapeAttr(s.name || '')}" /></div>
+        <div style="flex:1"><input type="range" data-idx="${idx}" min="0" max="100" class="skill-level" value="${s.level || 50}" /></div>
+        <div style="width:40px;text-align:right" class="muted-small">${s.level || 50}%</div>
+      </div>
+    `;
+    skillsList.appendChild(d);
+  });
+  
+  el('addSkill').onclick = ()=>{ 
+    DATA.skills.push({name:'Nová dovednost', level:60}); 
+    saveToLS(LS_KEY,DATA); 
+    renderLists(); 
+    persistAndRender(); 
+  };
+  
+  el('clearSkills').onclick = ()=>{ 
+    if(confirm('Smazat všechny dovednosti?')){ 
+      DATA.skills=[]; 
+      saveToLS(LS_KEY,DATA); 
+      renderLists(); 
+      persistAndRender(); 
+    } 
+  };
+  
+  skillsList.querySelectorAll('.skill-name').forEach(inp=> inp.addEventListener('input',(e)=>{ DATA.skills[e.target.dataset.idx].name=e.target.value; saveToLS(LS_KEY,DATA); debPersistAndRender(); }));
+  skillsList.querySelectorAll('.skill-level').forEach(inp=> inp.addEventListener('input',(e)=>{ DATA.skills[e.target.dataset.idx].level=+e.target.value; saveToLS(LS_KEY,DATA); renderLists(); debPersistAndRender(); }));
+  skillsList.querySelectorAll('.del-skill').forEach(b=> b.addEventListener('click',(e)=>{ DATA.skills.splice(+e.target.dataset.idx,1); saveToLS(LS_KEY,DATA); renderLists(); persistAndRender(); }));
+
+  // languages
+  langsList.innerHTML = '';
+  DATA.languages = DATA.languages || [];
+  DATA.languages.forEach((l, idx)=>{
+    const d = document.createElement('div'); 
+    d.className='list-item';
+    d.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+        <strong>${escapeHtml(l.name || 'Jazyk')}</strong>
+        <div><button data-idx="${idx}" class="small-btn del-lang">🗑️</button></div>
+      </div>
+      <div class="row">
+        <div class="col"><input type="text" data-idx="${idx}" class="lang-name" placeholder="Jazyk" value="${escapeAttr(l.name || '')}" /></div>
+        <div class="col"><input type="text" data-idx="${idx}" class="lang-level" placeholder="Úroveň (např. C1, rodilý mluvčí)" value="${escapeAttr(l.level || '')}" /></div>
+      </div>
+    `;
+    langsList.appendChild(d);
+  });
+  
+  el('addLang').onclick = ()=>{ 
+    DATA.languages.push({name:'Angličtina', level:'C1'}); 
+    saveToLS(LS_KEY,DATA); 
+    renderLists(); 
+    persistAndRender(); 
+  };
+  
+  el('clearLangs').onclick = ()=>{ 
+    if(confirm('Smazat všechny jazyky?')){ 
+      DATA.languages=[]; 
+      saveToLS(LS_KEY,DATA); 
+      renderLists(); 
+      persistAndRender(); 
+    } 
+  };
+
+  langsList.querySelectorAll('.lang-name').forEach(inp=> inp.addEventListener('input',(e)=>{ DATA.languages[e.target.dataset.idx].name=e.target.value; saveToLS(LS_KEY,DATA); debPersistAndRender(); }));
+  langsList.querySelectorAll('.lang-level').forEach(inp=> inp.addEventListener('input',(e)=>{ DATA.languages[e.target.dataset.idx].level=e.target.value; saveToLS(LS_KEY,DATA); debPersistAndRender(); }));
+  langsList.querySelectorAll('.del-lang').forEach(b=> b.addEventListener('click',(e)=>{ DATA.languages.splice(+e.target.dataset.idx,1); saveToLS(LS_KEY,DATA); renderLists(); persistAndRender(); }));
+}
+
+// ---------- Section manager ----------
+function renderSectionManager(){
+  const sections = ['contacts','summary','experience','education','skills','languages'];
+  UI.sectionsOrder = UI.sectionsOrder.filter(s=> sections.includes(s)).concat(sections.filter(s=>!UI.sectionsOrder.includes(s)));
+  sectionManager.innerHTML = '';
+  
+  UI.sectionsOrder.forEach((id, idx)=>{
+    const visible = UI.sectionsVisible[id] ?? true;
+    const panel = UI.panelAssign[id] ?? 0;
+    const item = document.createElement('div');
+    item.className = 'item';
+    item.draggable = true;
+    item.dataset.section = id;
+    item.tabIndex = 0;
+    item.innerHTML = `
+      <div class="drag-handle" aria-hidden="true">☰</div>
+      <div style="flex:1">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <div style="font-weight:700">${labelFromId(id)}</div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <select data-section="${id}" class="panel-select" title="Panel" style="padding:4px 8px;border-radius:4px;background:#404040;border:1px solid #555;color:var(--text);font-size:12px">
+              ${getPanelOptions().map((o,i)=>`<option value="${i}" ${i===panel?'selected':''}>${o}</option>`).join('')}
+            </select>
+            <label style="display:inline-flex;align-items:center;gap:4px;font-size:13px">
+              <input type="checkbox" data-section="${id}" class="vis-toggle" ${visible?'checked':''} /> vidět
+            </label>
+          </div>
+        </div>
+        <div class="muted-small">${descFromId(id)}</div>
+      </div>
+    `;
+    sectionManager.appendChild(item);
+
+    item.addEventListener('dragstart', (e)=>{ 
+      item.classList.add('dragging'); 
+      e.dataTransfer.setData('text/plain', id); 
+    });
+    
+    item.addEventListener('dragend', ()=>{ 
+      item.classList.remove('dragging'); 
+    });
+    
+    item.addEventListener('dragover', (e)=>{ 
+      e.preventDefault(); 
+      const target = e.currentTarget; 
+      const rect = target.getBoundingClientRect(); 
+      const after = (e.clientY - rect.top) > rect.height/2; 
+      if(after) target.style.borderBottom = '2px solid var(--accent)'; 
+      else target.style.borderTop='2px solid var(--accent)'; 
+    });
+    
+    item.addEventListener('dragleave', (e)=>{ 
+      e.currentTarget.style.borderTop=''; 
+      e.currentTarget.style.borderBottom=''; 
+    });
+    
+    item.addEventListener('drop', (e)=>{ 
+      e.preventDefault(); 
+      sectionManager.querySelectorAll('.item').forEach(it=>{
+        it.style.borderTop='';
+        it.style.borderBottom='';
+      }); 
+      const draggedId = e.dataTransfer.getData('text/plain'); 
+      const targetId = e.currentTarget.dataset.section; 
+      reorderSections(draggedId, targetId, e); 
+    });
+
+    item.addEventListener('keydown', (e)=>{
+      if(e.key === 'ArrowUp' || e.key === 'ArrowDown'){
+        e.preventDefault();
+        const idx = Array.from(sectionManager.children).indexOf(item);
+        const swapWith = e.key === 'ArrowUp' ? idx-1 : idx+1;
+        if(swapWith < 0 || swapWith >= sectionManager.children.length) return;
+        const order = [...UI.sectionsOrder];
+        const a = order[idx], b = order[swapWith];
+        order[idx] = b; order[swapWith] = a;
+        UI.sectionsOrder = order; 
+        saveToLS(UI_KEY, UI);
+        renderSectionManager(); 
+        renderPreview();
+        setTimeout(()=>{
+          const newItem = sectionManager.children[swapWith];
+          if(newItem) newItem.focus();
+        }, 50);
+      }
+    });
+  });
+
+  sectionManager.querySelectorAll('.panel-select').forEach(s=> s.addEventListener('change', (e)=>{ 
+    UI.panelAssign[e.target.dataset.section] = +e.target.value; 
+    persistAndRender(); 
+  }));
+  
+  sectionManager.querySelectorAll('.vis-toggle').forEach(c=> c.addEventListener('change', (e)=>{ 
+    UI.sectionsVisible[e.target.dataset.section] = e.target.checked; 
+    persistAndRender(); 
+  }));
+}
+
+function getPanelOptions(){
+  const l = UI.layout;
+  if(l === 'cols-1') return ['Panel'];
+  if(l === 'cols-2') return ['Levá', 'Pravá'];
+  if(l === 'cols-3') return ['1','2','3'];
+  if(l === 'cols-sidebar') return ['Sidebar','Hlavní'];
+  return ['1','2'];
+}
+
+function labelFromId(id){
+  return {
+    contacts:'Kontakty', 
+    summary:'Profesní souhrn', 
+    experience:'Pracovní zkušenosti', 
+    education:'Vzdělání', 
+    skills:'Dovednosti', 
+    languages:'Jazyky'
+  }[id] || id;
+}
+
+function descFromId(id){
+  return {
+    contacts:'Kontaktní informace (email, telefon, web)', 
+    summary:'Krátký přehled o vás', 
+    experience:'Seznam zaměstnání', 
+    education:'Seznam dosaženého vzdělání', 
+    skills:'Dovednosti s úrovní', 
+    languages:'Jazyky a úrovně'
+  }[id] || '';
+}
+
+function reorderSections(draggedId, targetId, e){
+  const order = [...UI.sectionsOrder];
+  const draggedIdx = order.indexOf(draggedId);
+  const targetIdx = order.indexOf(targetId);
+  if(draggedIdx === -1 || targetIdx === -1) return;
+  order.splice(draggedIdx,1);
+  const node = Array.from(sectionManager.children).find(n=>n.dataset.section===targetId);
+  const rect = node.getBoundingClientRect();
+  const after = (e.clientY - rect.top) > rect.height/2;
+  const newIdx = after ? targetIdx : targetIdx;
+  if(draggedIdx < targetIdx && !after) {
+    order.splice(newIdx, 0, draggedId);
+  } else if(draggedIdx < targetIdx && after) {
+    order.splice(newIdx + 1, 0, draggedId);
+  } else if(draggedIdx > targetIdx && !after) {
+    order.splice(newIdx, 0, draggedId);
+  } else {
+    order.splice(newIdx + 1, 0, draggedId);
+  }
+  UI.sectionsOrder = order;
+  saveToLS(UI_KEY,UI);
+  renderSectionManager();
+  persistAndRender();
+}
+
+// ---------- Build preview ----------
+function renderPreview(){
+  applyTheme(UI.colors);
+  applyScale();
+  if(UI.showA4) cvPreview.classList.add('show-a4'); 
+  else cvPreview.classList.remove('show-a4');
+
+  cvPreview.innerHTML = `<div class="a4-indicator"></div>`;
+  
+  const header = document.createElement('div'); 
+  header.className='cv-header';
+  
+  const avatar = document.createElement('div'); 
+  avatar.className='cv-avatar';
+  avatar.textContent = getInitials(DATA.firstName || '', DATA.lastName || '');
+  avatar.setAttribute('title','Avatar: ' + (DATA.firstName || '') + ' ' + (DATA.lastName || ''));
+  
+  const left = document.createElement('div'); 
+  left.style.flex='1';
+  
+  const name = document.createElement('div'); 
+  name.className='cv-name';
+  name.textContent = `${DATA.title ? (DATA.title + ' ') : ''}${DATA.firstName || ''} ${DATA.lastName || ''}`.trim();
+  
+  const contact = document.createElement('div'); 
+  contact.className='cv-contact';
+  
+  const contactParts = [];
+  if(DATA.email) contactParts.push('✉️ ' + escapeHtml(DATA.email));
+  if(DATA.phone) contactParts.push('📞 ' + escapeHtml(DATA.phone));
+  
+  // Process addressLinkedinWeb field with | separator
+  if(DATA.addressLinkedinWeb) {
+    const addressParts = DATA.addressLinkedinWeb.split('|').map(part => part.trim()).filter(part => part);
+    addressParts.forEach(part => {
+      if(part.includes('linkedin.com')) contactParts.push('in: ' + escapeHtml(part));
+      else if(part.includes('.')) contactParts.push('🔗 ' + escapeHtml(part));
+      else contactParts.push('📍 ' + escapeHtml(part));
+    });
+  }
+  
+  contact.innerHTML = contactParts.join(' • ');
+  
+  left.appendChild(name);
+  left.appendChild(contact);
+  header.appendChild(avatar);
+  header.appendChild(left);
+  cvPreview.appendChild(header);
+
+  const body = document.createElement('div'); 
+  body.className='cv-body';
+  
+  // Apply layout and sidebar position - OPRAVA: Přidáváme třídy správně
+  if (UI.layout === 'cols-sidebar') {
+    body.classList.add('cols-sidebar');
+    if (UI.sidebarPosition === 'right') {
+      body.classList.add('right-sidebar');
+    }
+  } else {
+    body.classList.add(UI.layout);
+  }
+
+  const panelCount = (UI.layout === 'cols-1') ? 1 : (UI.layout === 'cols-2' ? 2 : (UI.layout === 'cols-3' ? 3 : 2));
+  const panels = Array.from({length:panelCount}, ()=>[]);
+
+  UI.sectionsOrder.forEach(secId=>{
+    if(!UI.sectionsVisible[secId]) return;
+    const panelIndex = UI.panelAssign[secId] ?? 0;
+    const node = buildSectionNode(secId);
+    const pi = Math.max(0, Math.min(panelCount-1, panelIndex));
+    panels[pi].push(node);
+  });
+
+  if(UI.layout === 'cols-sidebar'){
+    const p0 = document.createElement('div'); 
+    p0.style.display='flex'; 
+    p0.style.flexDirection='column'; 
+    p0.style.gap='14px';
+    panels[0].forEach(n=>p0.appendChild(n));
+    
+    const p1 = document.createElement('div'); 
+    p1.style.display='flex'; 
+    p1.style.flexDirection='column'; 
+    p1.style.gap='14px';
+    panels[1].forEach(n=>p1.appendChild(n));
+    
+    // Apply sidebar position
+    if (UI.sidebarPosition === 'right') {
+      body.appendChild(p1); 
+      body.appendChild(p0);
+    } else {
+      body.appendChild(p0); 
+      body.appendChild(p1);
+    }
+  } else {
+    for(let i=0;i<panels.length;i++){
+      const col = document.createElement('div'); 
+      col.style.display='flex'; 
+      col.style.flexDirection='column'; 
+      col.style.gap='14px';
+      panels[i].forEach(n=>col.appendChild(n));
+      body.appendChild(col);
+    }
+  }
+
+  cvPreview.appendChild(body);
+
+  setTimeout(()=> {
+    cvPreview.querySelectorAll('.skill .fill').forEach(f=>{
+      const w = f.dataset.w || '0';
+      f.style.width = w + '%';
+    });
+  }, 120);
+}
+
+function buildSectionNode(id){
+  const sec = document.createElement('section'); 
+  sec.className='cv-section';
+  
+  if(id === 'contacts'){
+    const h = document.createElement('h3'); 
+    h.textContent='Kontakty';
+    const inner = document.createElement('div'); 
+    inner.className='cv-contacts muted-small';
+    
+    const contactParts = [];
+    if(DATA.email) contactParts.push('✉️ ' + escapeHtml(DATA.email));
+    if(DATA.phone) contactParts.push('📞 ' + escapeHtml(DATA.phone));
+    
+    // Process addressLinkedinWeb field with | separator for contacts section
+    if(DATA.addressLinkedinWeb) {
+      const addressParts = DATA.addressLinkedinWeb.split('|').map(part => part.trim()).filter(part => part);
+      addressParts.forEach(part => {
+        if(part.includes('linkedin.com')) contactParts.push('LinkedIn: ' + escapeHtml(part));
+        else if(part.includes('.')) contactParts.push('🔗 ' + escapeHtml(part));
+        else contactParts.push(escapeHtml(part));
+      });
+    }
+    
+    inner.innerHTML = contactParts.join(' • ');
+    
+    sec.appendChild(h); 
+    sec.appendChild(inner);
+  }
+  
+  if(id === 'summary'){
+    const h = document.createElement('h3'); 
+    h.textContent='Profesní souhrn';
+    const p = document.createElement('div'); 
+    p.className='muted-small'; 
+    p.textContent = DATA.summary || '';
+    sec.appendChild(h); 
+    sec.appendChild(p);
+  }
+  
+  if(id === 'experience'){
+    const h = document.createElement('h3'); 
+    h.textContent='Pracovní zkušenosti';
+    sec.appendChild(h);
+    (DATA.experiences||[]).forEach(e=>{
+      const entry = document.createElement('div'); 
+      entry.className='cv-entry';
+      entry.innerHTML = `
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+          <strong>${escapeHtml(e.role || '')} – ${escapeHtml(e.company || '')}</strong>
+          <div class="muted-small">${escapeHtml(e.period || '')}</div>
+        </div>
+        <div class="muted-small">${escapeHtml(e.desc || '')}</div>
+      `;
+      sec.appendChild(entry);
+    });
+  }
+  
+  if(id === 'education'){
+    const h = document.createElement('h3'); 
+    h.textContent='Vzdělání';
+    sec.appendChild(h);
+    (DATA.education||[]).forEach(e=>{
+      const entry = document.createElement('div'); 
+      entry.className='cv-entry';
+      entry.innerHTML = `
+        <div style="display:flex;justify-content:space-between;margin-bottom:4px">
+          <strong>${escapeHtml(e.school || '')}</strong>
+          <div class="muted-small">${escapeHtml(e.period || '')}</div>
+        </div>
+        <div class="muted-small">${escapeHtml(e.degree || '')}</div>
+        <div class="muted-small">${escapeHtml(e.desc || '')}</div>
+      `;
+      sec.appendChild(entry);
+    });
+  }
+  
+  if(id === 'skills'){
+    const h = document.createElement('h3'); 
+    h.textContent='Dovednosti';
+    sec.appendChild(h);
+    (DATA.skills||[]).forEach(s=>{
+      const row = document.createElement('div'); 
+      row.className='skill';
+      const label = document.createElement('div'); 
+      label.className='label'; 
+      label.textContent = s.name;
+      const bar = document.createElement('div'); 
+      bar.className='bar';
+      const fill = document.createElement('div'); 
+      fill.className='fill'; 
+      fill.dataset.w = (s.level || 0);
+      fill.style.width = '0%';
+      bar.appendChild(fill);
+      row.appendChild(label); 
+      row.appendChild(bar);
+      sec.appendChild(row);
+    });
+  }
+  
+  if(id === 'languages'){
+    const h = document.createElement('h3'); 
+    h.textContent='Jazyky';
+    sec.appendChild(h);
+    (DATA.languages||[]).forEach(l=>{
+      const entry = document.createElement('div'); 
+      entry.className='cv-entry';
+      entry.innerHTML = `
+        <div style="display:flex;justify-content:space-between">
+          <div>${escapeHtml(l.name || '')}</div>
+          <div class="muted-small">${escapeHtml(l.level || '')}</div>
+        </div>
+      `;
+      sec.appendChild(entry);
+    });
+  }
+  
+  return sec;
+}
+
+// ---------- apply scale ----------
+function applyScale(){
+  cvPreview.style.setProperty('--scale', UI.scale);
+}
+
+// ---------- persistence & render ----------
+const debPersistAndRender = debounce(()=>{ 
+  saveToLS(LS_KEY, DATA); 
+  saveToLS(UI_KEY, UI); 
+  renderSectionManager(); 
+  renderPreview(); 
+}, 160);
+
+function persistAndRender(){
+  saveToLS(LS_KEY, DATA);
+  saveToLS(UI_KEY, UI);
+  renderSectionManager();
+  renderPreview();
+}
+
+// ---------- EXPORT to PDF ----------
+async function exportToPdf(){
+  try{
+    const exportOptions = {scale:2, useCORS:true, scrollY:-window.scrollY, backgroundColor:UI.colors.card || '#ffffff'};
+    const hadA4 = UI.showA4;
+    UI.showA4 = false; 
+    renderPreview();
+
+    const canvas = await html2canvas(cvPreview, exportOptions);
+    UI.showA4 = hadA4; 
+    renderPreview();
+
+    const imgData = canvas.toDataURL('image/png');
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF({ orientation:'portrait', unit:'mm', format:'a4' });
+    const pageWidth = 210; 
+    const margin = 10;
+    const targetW = pageWidth - margin*2;
+    const imgRatio = canvas.width / canvas.height;
+    const targetH = targetW / imgRatio;
+    doc.addImage(imgData, 'PNG', margin, margin, targetW, targetH);
+    doc.save(`${safeFileName(DATA.firstName || 'CV')}_${safeFileName(DATA.lastName || 'zivotopis')}.pdf`);
+  }catch(e){ 
+    console.error(e); 
+    alert('Export selhal: ' + e.message); 
+  }
+}
+
+// ---------- EXPORT to PNG ----------
+async function exportToPng(){
+  try{
+    const exportOptions = {scale:3, useCORS:true, scrollY:-window.scrollY, backgroundColor:UI.colors.card || '#ffffff'};
+    const hadA4 = UI.showA4;
+    UI.showA4 = false; 
+    renderPreview();
+
+    const canvas = await html2canvas(cvPreview, exportOptions);
+    UI.showA4 = hadA4; 
+    renderPreview();
+
+    const a = document.createElement('a');
+    a.href = canvas.toDataURL('image/png');
+    a.download = `${safeFileName(DATA.firstName || 'CV')}_${safeFileName(DATA.lastName || 'zivotopis')}.png`;
+    a.click();
+  }catch(e){ 
+    console.error(e); 
+    alert('Export PNG selhal: ' + e.message); 
+  }
+}
+
+// ---------- EXPORT to standalone HTML ----------
+function exportToHtml(){
+  const sidebarWidth = UI.sidebarWidth || 280;
+  const sidebarPosition = UI.sidebarPosition || 'left';
+  
+  const vars = {
+    '--cv-card': UI.colors.card || '#ffffff',
+    '--cv-text': UI.colors.text || '#333333',
+    '--cv-accent': UI.colors.accent || '#0066cc',
+    '--cv-accent-2': lightenHex(UI.colors.accent || '#0066cc', 14),
+    '--cv-header': UI.colors.header || '#f5f5f5',
+    '--cv-section-bg': UI.colors.section || '#f5f5f5',
+    '--cv-muted': lightenHex(UI.colors.text || '#333333', 40),
+    '--cv-sidebar-width': sidebarWidth + 'px'
+  };
+  const styleVars = Object.entries(vars).map(([k,v])=>`${k}: ${v};`).join('\n    ');
+
+  let layoutCSS = '';
+  if (UI.layout === 'cols-sidebar') {
+    if (sidebarPosition === 'right') {
+      layoutCSS = '.cols-sidebar{grid-template-columns: 1fr ' + sidebarWidth + 'px} .cols-sidebar.right-sidebar{grid-template-columns: 1fr ' + sidebarWidth + 'px}';
+    } else {
+      layoutCSS = '.cols-sidebar{grid-template-columns: ' + sidebarWidth + 'px 1fr}';
+    }
+  } else {
+    layoutCSS = `
+      .cols-1{grid-template-columns:1fr}
+      .cols-2{grid-template-columns: 1fr 1fr}
+      .cols-3{grid-template-columns: 1fr 1fr 1fr}
+      .cols-sidebar{grid-template-columns: ${sidebarWidth}px 1fr}
+    `;
+  }
+
+  const style = `
+  :root{ 
+    ${styleVars}
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body{
+    background:#f9f9f9;
+    color:var(--cv-text);
+    font-family:-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    margin:0;
+    padding:20px;
+  }
+  .cv-container{
+    max-width:210mm;
+    margin:0 auto;
+    background:var(--cv-card);
+    padding:20px;
+    border-radius:6px;
+    box-shadow:0 4px 12px rgba(0,0,0,0.1);
+  }
+  .cv-header{
+    background:var(--cv-header);
+    padding:16px;
+    border-radius:6px;
+    display:flex;
+    gap:16px;
+    align-items:center;
+    margin-bottom:14px;
+    border:1px solid #e0e0e0;
+  }
+  .cv-avatar{
+    width:70px;
+    height:70px;
+    border-radius:50%;
+    background:linear-gradient(135deg, var(--cv-accent) 0%, var(--cv-accent-2) 100%);
+    color:white;
+    font-weight:800;
+    font-size:24px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    box-shadow:0 4px 12px rgba(0,102,204,0.3);
+  }
+  .cv-name{
+    font-size:28px;
+    font-weight:800;
+    margin-bottom:4px;
+  }
+  .cv-contact{
+    color:var(--cv-muted);
+    font-size:13px;
+    line-height:1.6;
+  }
+  .cv-body{
+    display:grid;
+    gap:14px;
+  }
+  .cv-section{
+    background:var(--cv-section-bg);
+    padding:14px;
+    border-radius:6px;
+    border:1px solid #e0e0e0;
+  }
+  .cv-section h3{
+    color:var(--cv-accent);
+    margin:0 0 10px;
+    font-size:18px;
+  }
+  .cv-entry{
+    margin-bottom:10px;
+    line-height:1.6;
+  }
+  .muted-small{
+    color:var(--cv-muted);
+    font-size:13px;
+    line-height:1.5;
+  }
+  .skill{
+    display:flex;
+    align-items:center;
+    margin-bottom:10px;
+    gap:10px;
+  }
+  .skill .label{
+    min-width:100px;
+    font-size:14px;
+    font-weight:500;
+  }
+  .skill .bar{
+    flex:1;
+    height:12px;
+    background:rgba(0,0,0,0.05);
+    border-radius:12px;
+    overflow:hidden;
+  }
+  .skill .fill{
+    height:100%;
+    background:linear-gradient(90deg, var(--cv-accent) 0%, var(--cv-accent-2) 100%);
+    border-radius:12px;
+  }
+  ${layoutCSS}
+  @media print {
+    body { padding: 0; background: white; }
+    .cv-container { box-shadow: none; }
+  }
+  `;
+  
+  const cvContent = cvPreview.cloneNode(true);
+  const indicator = cvContent.querySelector('.a4-indicator');
+  if(indicator) indicator.remove();
+  
+  // Apply correct layout class for export - OPRAVA: Přidáváme třídy správně
+  const body = cvContent.querySelector('.cv-body');
+  if (body) {
+    body.className = 'cv-body';
+    if (UI.layout === 'cols-sidebar') {
+      body.classList.add('cols-sidebar');
+      if (UI.sidebarPosition === 'right') {
+        body.classList.add('right-sidebar');
+      }
+    } else {
+      body.classList.add(UI.layout);
+    }
+  }
+  
+  const inner = cvContent.innerHTML;
+  const html = `<!doctype html>
+<html lang="cs">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>CV - ${escapeHtml(DATA.firstName || '')} ${escapeHtml(DATA.lastName || '')}</title>
+  <style>${style}</style>
+</head>
+<body>
+  <div class="cv-container">${inner}</div>
+</body>
+</html>`;
+  
+  const blob = new Blob([html], {type:'text/html;charset=utf-8'});
+  const a = document.createElement('a'); 
+  a.href = URL.createObjectURL(blob); 
+  a.download = `${safeFileName(DATA.firstName || 'CV')}_${safeFileName(DATA.lastName || 'zivotopis')}.html`; 
+  a.click();
+}
+
+// ---------- Utilities ----------
+function safeFileName(s){ 
+  return (s || '').replace(/[^\w\-_. ]+/g, '_').trim() || 'dokument'; 
+}
+
+function getInitials(first, last){
+  const f = (first||'').trim().split(' ')[0] || '';
+  const l = (last||'').trim().split(' ')[0] || '';
+  const fi = f ? f[0].toUpperCase() : '';
+  const li = l ? l[0].toUpperCase() : '';
+  return (fi + li) || '?';
+}
+
+function escapeHtml(unsafe){
+  if(!unsafe) return '';
+  return String(unsafe)
+    .replaceAll('&','&amp;')
+    .replaceAll('<','&lt;')
+    .replaceAll('>','&gt;')
+    .replaceAll('"','&quot;')
+    .replaceAll("'",'&#039;');
+}
+
+function escapeAttr(s){ 
+  return (s||'').replaceAll('"','&quot;').replaceAll("'",'&#039;'); 
+}
+
+// ---------- Initial render sequence ----------
+function renderAll(){
+  for(let k of ['firstName','lastName','title','email','phone','addressLinkedinWeb','summary']){
+    if(fields[k]) fields[k].value = DATA[k] || '';
+  }
+  layoutSelect.value = UI.layout || 'cols-2';
+  for(const k in colorInputs){
+    colorInputs[k].value = UI.colors[k] || defaultUI.colors[k];
+  }
+  el('showA4').checked = !!UI.showA4;
+  toggleSidebarControls();
+  applyTheme(UI.colors);
+  applyScale();
+  renderLists();
+  renderSectionManager();
+  renderPreview();
+}
+
+// ---------- Tab switching ----------
+document.querySelectorAll('.tabbtn').forEach(b=> b.addEventListener('click', (e)=>{
+  document.querySelectorAll('.tabbtn').forEach(x=>{
+    x.classList.remove('active');
+    x.setAttribute('aria-selected', 'false');
+  });
+  e.currentTarget.classList.add('active');
+  e.currentTarget.setAttribute('aria-selected', 'true');
+  const tab = e.currentTarget.dataset.tab;
+  document.querySelectorAll('.panel').forEach(p=> p.classList.remove('active'));
+  const panel = document.getElementById('panel-'+tab);
+  if(panel) panel.classList.add('active');
+}));
+
+// ---------- Section manager keyboard handling ----------
+sectionManager.addEventListener('keydown', (e)=>{
+  if(e.key === 'Enter' && e.target.classList.contains('item')){
+    const id = e.target.dataset.section;
+    UI.sectionsVisible[id] = !UI.sectionsVisible[id];
+    saveToLS(UI_KEY, UI);
+    renderSectionManager(); 
+    renderPreview();
+  }
+});
+
+// ---------- Initialize ----------
+if(!DATA || typeof DATA !== 'object') DATA = JSON.parse(JSON.stringify(defaultData));
+if(!UI || typeof UI !== 'object') UI = JSON.parse(JSON.stringify(defaultUI));
+
+// Merge defaults with loaded data
+UI = Object.assign({}, defaultUI, UI);
+UI.colors = Object.assign({}, defaultUI.colors, UI.colors || {});
+UI.sectionsOrder = UI.sectionsOrder || defaultUI.sectionsOrder;
+UI.sectionsVisible = Object.assign({}, defaultUI.sectionsVisible, UI.sectionsVisible || {});
+UI.panelAssign = Object.assign({}, defaultUI.panelAssign, UI.panelAssign || {});
+UI.sidebarWidth = UI.sidebarWidth || defaultUI.sidebarWidth;
+UI.sidebarPosition = UI.sidebarPosition || defaultUI.sidebarPosition;
+
+bindForm();
+renderAll();
+
+// Save initial state
+saveToLS(LS_KEY, DATA);
+saveToLS(UI_KEY, UI);
+
+console.log('CV Generator se světlým náhledem inicializován úspěšně! 🎉');
+</script>
+</body>
+</html>
