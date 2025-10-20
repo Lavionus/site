@@ -1,0 +1,1445 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>📄 Generátor stránek A4</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: #1a1a1a;
+      color: #e0e0e0;
+      min-height: 10vh;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 20px;
+      display: flex;
+      gap: 20px;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 30px;
+      display: none;
+    }
+
+    .controls-section {
+      background-color: #2a2a2a;
+      border: 1px solid #404040;
+      border-radius: 8px;
+      padding: 20px;
+      width: 350px;
+      flex-shrink: 0;
+      height: fit-content;
+    }
+
+    .controls-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 20px;
+      color: #e0e0e0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      margin-bottom: 20px;
+    }
+
+    .control-group h3 {
+      font-size: 0.9rem;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 8px;
+      font-weight: 600;
+    }
+
+    .control-input {
+      padding: 10px 12px;
+      background-color: #404040;
+      border: 1px solid #555;
+      border-radius: 4px;
+      color: #e0e0e0;
+      font-size: 0.9rem;
+      transition: all 0.3s ease;
+    }
+
+    .control-input:focus {
+      outline: none;
+      border-color: #6aa6fd;
+    }
+
+    .color-input {
+      height: 40px;
+      padding: 5px;
+      cursor: pointer;
+    }
+
+    .action-buttons {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      margin-top: 20px;
+    }
+
+    .action-btn {
+      background-color: #6aa6fd;
+      color: white;
+      border: none;
+      padding: 12px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: background-color 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .action-btn:hover {
+      background-color: #5694f0;
+    }
+
+    .action-btn.secondary {
+      background-color: #404040;
+    }
+
+    .action-btn.secondary:hover {
+      background-color: #4a4a4a;
+    }
+
+    .preview-section {
+      background-color: #2a2a2a;
+      border: 1px solid #404040;
+      border-radius: 8px;
+      padding: 20px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .preview-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 15px;
+      color: #e0e0e0;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .preview-container {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 20px;
+      background-color: #1a1a1a;
+      border-radius: 4px;
+      overflow: auto;
+    }
+
+    .a4-preview {
+      position: relative;
+      width: 595px;
+      height: 842px;
+      background-color: white;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      overflow: hidden;
+    }
+
+    .a4-preview canvas {
+      display: block;
+      width: 100%;
+      height: 100%;
+    }
+
+    .notification {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 15px 20px;
+      border-radius: 4px;
+      color: white;
+      font-size: 0.9rem;
+      z-index: 10000;
+      min-width: 300px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      animation: slideIn 0.3s ease-out;
+    }
+
+    .notification.success {
+      background-color: #4caf50;
+      border-left: 4px solid #45a049;
+    }
+
+    .notification.info {
+      background-color: #2196f3;
+      border-left: 4px solid #1976d2;
+    }
+
+    .notification.warning {
+      background-color: #ff9800;
+      border-left: 4px solid #f57c00;
+    }
+
+    .notification.error {
+      background-color: #f44336;
+      border-left: 4px solid #d32f2f;
+    }
+
+    @keyframes slideIn {
+      from {
+        transform: translateX(100%);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+
+    @media (max-width: 1024px) {
+      .container {
+        flex-direction: column;
+      }
+      .controls-section {
+        width: 100%;
+      }
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        padding: 10px;
+      }
+      .a4-preview {
+        width: 100%;
+        height: auto;
+        aspect-ratio: 1 / 1.414;
+      }
+    }
+
+    .pattern-info {
+      margin-top: 0;
+      font-size: 0.8rem;
+      color: #888;
+      line-height: 1.4;
+    }
+
+    .mm-info {
+      display: none;
+    }
+    
+    .input-with-unit-and-info {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .input-line {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .input-line .control-input {
+      flex-grow: 1;
+    }
+
+    .unit-text {
+      color: #888;
+      font-size: 0.9rem;
+      font-weight: 600;
+      line-height: 40px;
+      flex-shrink: 0;
+    }
+
+    .mm-info-inline {
+      color: #888;
+      font-size: 0.8rem;
+      flex-shrink: 0;
+      line-height: 40px;
+    }
+
+    .pattern-info-line {
+      margin-top: 5px;
+    }
+
+    .margin-controls {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    .margin-control {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .margin-control h4 {
+      font-size: 0.8rem;
+      color: #888;
+      margin-bottom: 5px;
+      font-weight: 600;
+    }
+
+    .quality-info {
+      background-color: #2d4a2d;
+      border: 1px solid #4caf50;
+      color: #81c784;
+      padding: 10px;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      margin-top: 10px;
+      line-height: 1.4;
+    }
+
+    .export-buttons {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 10px;
+    }
+
+    /* Tiskové styly */
+    @media print {
+      body {
+        background-color: white;
+      }
+
+      .container {
+        display: block;
+        max-width: none;
+        padding: 0;
+        margin: 0;
+      }
+
+      .controls-section {
+        display: none !important;
+      }
+
+      .preview-section {
+        background-color: white;
+        border: none;
+        padding: 0;
+        margin: 0;
+      }
+
+      .preview-title {
+        display: none !important;
+      }
+
+      .preview-container {
+        padding: 0;
+        background-color: white;
+        display: block;
+      }
+
+      .a4-preview {
+        width: 210mm;
+        height: 297mm;
+        box-shadow: none;
+        page-break-after: avoid;
+      }
+
+      .notification {
+        display: none !important;
+      }
+
+      @page {
+        size: A4;
+        margin: 0;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="controls-section">
+      <div class="controls-title">⚙️ Nastavení vzoru</div>
+      
+      <div class="control-group">
+        <h3>📊 Typ vzoru</h3>
+        <select id="patternType" class="control-input">
+          <option value="grid">Mřížka</option>
+          <option value="dots">Body</option>
+          <option value="lines">Linky (jako sešit)</option>
+          <option value="triangles">Trojúhelníky</option>
+          <option value="lineEnds">Koncové body linek</option>
+          <option value="triangleNodes">Uzlové body trojúhelníků</option>
+        </select>
+        <div class="pattern-info" id="patternInfo">
+          Vytvoří pravidelnou mřížku se zadaným rozestupem
+        </div>
+      </div>
+      
+      <div class="control-group">
+        <h3>📏 Rozestup</h3>
+        <div class="input-with-unit-and-info">
+          <div class="input-line">
+            <input type="number" id="spacing" class="control-input" min="10" max="200" value="50">
+            <span class="unit-text">px</span>
+            <div class="mm-info-inline" id="spacingMm">
+              (≈ 17.6 mm)
+            </div>
+          </div>
+          
+          <div class="pattern-info-line">
+            <div class="pattern-info">Rozestup mezi prvky v pixelech</div>
+          </div>
+        </div>
+      </div>
+      <div class="control-group">
+        <h3>🎨 Barva</h3>
+        <input type="color" id="color" class="control-input color-input" value="#000000">
+        <div class="pattern-info">Barva vzoru na stránce</div>
+      </div>
+      
+      <div class="control-group">
+        <h3>📐 Tloušťka čáry</h3>
+        <input type="number" id="lineWidth" class="control-input" min="0.5" max="5" step="0.5" value="1">
+        <div class="pattern-info">Tloušťka čar v pixelech</div>
+      </div>
+      
+      <div class="control-group">
+        <h3>📏 Tiskové okraje</h3>
+        <div class="margin-controls">
+          <div class="margin-control">
+            <h4>Horní okraj (mm)</h4>
+            <input type="number" id="marginTop" class="control-input" min="0" max="50" value="20">
+          </div>
+          <div class="margin-control">
+            <h4>Pravý okraj (mm)</h4>
+            <input type="number" id="marginRight" class="control-input" min="0" max="50" value="20">
+          </div>
+          <div class="margin-control">
+            <h4>Dolní okraj (mm)</h4>
+            <input type="number" id="marginBottom" class="control-input" min="0" max="50" value="20">
+          </div>
+          <div class="margin-control">
+            <h4>Levý okraj (mm)</h4>
+            <input type="number" id="marginLeft" class="control-input" min="0" max="50" value="20">
+          </div>
+        </div>
+      </div>
+      
+      <div class="action-buttons">
+        <button class="action-btn" id="generateBtn">
+          🔄 Generovat vzor
+        </button>
+        
+        <div class="export-buttons">
+          <button class="action-btn secondary" id="downloadPdf">
+            📥 PDF
+          </button>
+          <button class="action-btn secondary" id="downloadSvg">
+            📥 SVG
+          </button>
+          <button class="action-btn secondary" id="downloadPng">
+            📥 PNG
+          </button>
+          <button class="action-btn secondary" id="printPage">
+            🖨️ Tisk
+          </button>
+        </div>
+      </div>
+      
+      <div class="quality-info">
+        <strong>Tip pro kvalitní tisk:</strong> Pro nejlepší výsledky použijte vysoké rozlišení (300 DPI) při tisku PDF.
+      </div>
+    </div>
+    
+    <div class="preview-section">
+      <div class="preview-title">👁️ Náhled stránky A4</div>
+      <div class="preview-container">
+        <div class="a4-preview">
+          <canvas id="patternCanvas"></canvas>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // Globální proměnné
+    let canvas = null;
+    let ctx = null;
+    let currentPattern = 'grid';
+    let currentSpacing = 50;
+    let currentColor = '#000000';
+    let currentLineWidth = 1;
+    let marginTop = 20;
+    let marginRight = 20;
+    let marginBottom = 20;
+    let marginLeft = 20;
+
+    // Popisy vzorů
+    const patternDescriptions = {
+      grid: "Vytvoří pravidelnou mřížku se zadaným rozestupem",
+      dots: "Vytvoří pole bodů v pravidelných rozestupech",
+      lines: "Vytvoří vodorovné linky jako v sešitu",
+      triangles: "Vytvoří síť rovnostranných trojúhelníků",
+      dotlines: "Body propojené vodorovnými a svislými linkami",
+      dottriangles: "Body propojené do trojúhelníkové sítě",
+      lineEnds: "Koncové body linek (bez spojujících čar)",
+      triangleNodes: "Uzlové body trojúhelníkové sítě (bez čar)"
+    };
+
+    // Převod mm na pixely (při 72 DPI: 1mm = 2.8346456692913px)
+    function mmToPx(mm) {
+      return mm * 2.8346456692913;
+    }
+
+    // Převod pixelů na mm
+    function pxToMm(px) {
+      return px / 2.8346456692913;
+    }
+
+    // Funkce pro zobrazení notifikace
+    function showNotification(message, type = 'info') {
+      const notification = document.createElement('div');
+      notification.className = `notification ${type}`;
+      notification.innerHTML = `
+        <span>${message}</span>
+        <button onclick="this.parentElement.remove()" style="background:none;border:none;color:white;float:right;cursor:pointer;font-size:1.2rem;">×</button>
+      `;
+
+      document.body.appendChild(notification);
+
+      setTimeout(() => {
+        if (notification.parentElement) {
+          notification.remove();
+        }
+      }, 5000);
+    }
+
+    // Inicializace canvasu
+    function initCanvas() {
+      canvas = document.getElementById('patternCanvas');
+      ctx = canvas.getContext('2d');
+      
+      canvas.width = 595;
+      canvas.height = 842;
+      
+      generatePattern();
+    }
+
+    // Aktualizace zobrazení přepočtu pixelů na mm
+    function updateSpacingMm() {
+      const spacingMmElement = document.getElementById('spacingMm');
+      spacingMmElement.textContent = `(≈ ${pxToMm(currentSpacing).toFixed(1)} mm)`;
+    }
+
+    // Generování vzoru podle aktuálních nastavení
+    function generatePattern() {
+      if (!ctx) return;
+      
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      ctx.strokeStyle = currentColor;
+      ctx.fillStyle = currentColor;
+      ctx.lineWidth = currentLineWidth;
+      
+      const topPx = mmToPx(marginTop);
+      const rightPx = mmToPx(marginRight);
+      const bottomPx = mmToPx(marginBottom);
+      const leftPx = mmToPx(marginLeft);
+      
+      const workWidth = canvas.width - leftPx - rightPx;
+      const workHeight = canvas.height - topPx - bottomPx;
+      
+      switch(currentPattern) {
+        case 'grid':
+          drawGrid(leftPx, topPx, workWidth, workHeight, currentSpacing);
+          break;
+        case 'dots':
+          drawDots(leftPx, topPx, workWidth, workHeight, currentSpacing);
+          break;
+        case 'lines':
+          drawLines(leftPx, topPx, workWidth, workHeight, currentSpacing);
+          break;
+        case 'triangles':
+          drawTriangles(leftPx, topPx, workWidth, workHeight, currentSpacing);
+          break;
+        case 'dotlines':
+          drawDotLines(leftPx, topPx, workWidth, workHeight, currentSpacing);
+          break;
+        case 'dottriangles':
+          drawDotTriangles(leftPx, topPx, workWidth, workHeight, currentSpacing);
+          break;
+        case 'lineEnds':
+          drawLineEnds(leftPx, topPx, workWidth, workHeight, currentSpacing);
+          break;
+        case 'triangleNodes':
+          drawTriangleNodes(leftPx, topPx, workWidth, workHeight, currentSpacing);
+          break;
+      }
+      
+      drawMargins(leftPx, topPx, workWidth, workHeight);
+    }
+
+    // Kreslení okrajů (pouze pro náhled)
+    function drawMargins(left, top, width, height) {
+      ctx.save();
+      
+      ctx.strokeStyle = 'rgba(128, 128, 128, 0.5)';
+      ctx.lineWidth = 1;
+      ctx.setLineDash([5, 5]);
+      
+      ctx.beginPath();
+      ctx.rect(left, top, width, height);
+      ctx.stroke();
+      
+      ctx.restore();
+    }
+
+    // Kreslení mřížky
+    function drawGrid(left, top, width, height, spacing) {
+      for (let y = top; y <= top + height; y += spacing) {
+        ctx.beginPath();
+        ctx.moveTo(left, y);
+        ctx.lineTo(left + width, y);
+        ctx.stroke();
+      }
+      
+      for (let x = left; x <= left + width; x += spacing) {
+        ctx.beginPath();
+        ctx.moveTo(x, top);
+        ctx.lineTo(x, top + height);
+        ctx.stroke();
+      }
+    }
+
+    // Kreslení bodů
+    function drawDots(left, top, width, height, spacing) {
+      for (let y = top; y <= top + height; y += spacing) {
+        for (let x = left; x <= left + width; x += spacing) {
+          ctx.beginPath();
+          ctx.arc(x, y, currentLineWidth, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+    }
+
+    // Kreslení linek (jako v sešitu)
+    function drawLines(left, top, width, height, spacing) {
+      for (let y = top; y <= top + height; y += spacing) {
+        ctx.beginPath();
+        ctx.moveTo(left, y);
+        ctx.lineTo(left + width, y);
+        ctx.stroke();
+      }
+    }
+
+    // Kreslení trojúhelníků
+    function drawTriangles(left, top, width, height, spacing) {
+      const triangleHeight = spacing * Math.sqrt(3) / 2;
+      
+      const startY = top;
+      const startX = left;
+      
+      for (let row = 0; row * triangleHeight <= height + triangleHeight; row++) {
+        for (let col = 0; col * spacing <= width + spacing; col++) {
+          const offset = (row % 2) * spacing / 2;
+          
+          const x1 = startX + col * spacing + offset;
+          const y1 = startY + row * triangleHeight;
+          const x2 = startX + col * spacing + spacing / 2 + offset;
+          const y2 = startY + row * triangleHeight + triangleHeight;
+          const x3 = startX + col * spacing - spacing / 2 + offset;
+          const y3 = startY + row * triangleHeight + triangleHeight;
+          
+          if (x1 >= left && x1 <= left + width && y1 >= top && y1 <= top + height) {
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.lineTo(x3, y3);
+            ctx.closePath();
+            ctx.stroke();
+          }
+        }
+      }
+    }
+
+    // Kreslení bodů s linkami
+    function drawDotLines(left, top, width, height, spacing) {
+      for (let y = top; y <= top + height; y += spacing) {
+        for (let x = left; x <= left + width; x += spacing) {
+          ctx.beginPath();
+          ctx.arc(x, y, currentLineWidth * 1.5, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+      
+      for (let y = top; y <= top + height; y += spacing) {
+        ctx.beginPath();
+        for (let x = left; x <= left + width; x += spacing) {
+          if (x === left) {
+            ctx.moveTo(x, y);
+          } else {
+            ctx.lineTo(x, y);
+          }
+        }
+        ctx.stroke();
+      }
+      
+      for (let x = left; x <= left + width; x += spacing) {
+        ctx.beginPath();
+        for (let y = top; y <= top + height; y += spacing) {
+          if (y === top) {
+            ctx.moveTo(x, y);
+          } else {
+            ctx.lineTo(x, y);
+          }
+        }
+        ctx.stroke();
+      }
+    }
+
+    // Kreslení bodů s trojúhelníky
+    function drawDotTriangles(left, top, width, height, spacing) {
+      const triangleHeight = spacing * Math.sqrt(3) / 2;
+      
+      for (let row = 0; row * triangleHeight <= height + triangleHeight; row++) {
+        for (let col = 0; col * spacing <= width + spacing; col++) {
+          const offset = (row % 2) * spacing / 2;
+          const x = left + col * spacing + offset;
+          const y = top + row * triangleHeight;
+          
+          if (x >= left && x <= left + width && y >= top && y <= top + height) {
+            ctx.beginPath();
+            ctx.arc(x, y, currentLineWidth * 1.5, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+      }
+      
+      for (let row = 0; row * triangleHeight <= height + triangleHeight; row++) {
+        for (let col = 0; col * spacing <= width + spacing; col++) {
+          const offset = (row % 2) * spacing / 2;
+          
+          const x1 = left + col * spacing + offset;
+          const y1 = top + row * triangleHeight;
+          const x2 = left + col * spacing + spacing / 2 + offset;
+          const y2 = top + row * triangleHeight + triangleHeight;
+          const x3 = left + col * spacing - spacing / 2 + offset;
+          const y3 = top + row * triangleHeight + triangleHeight;
+          
+          if (x1 >= left && x1 <= left + width && y1 >= top && y1 <= top + height) {
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.lineTo(x3, y3);
+            ctx.closePath();
+            ctx.stroke();
+          }
+        }
+      }
+    }
+
+    // Kreslení koncových bodů linek
+    function drawLineEnds(left, top, width, height, spacing) {
+      for (let y = top; y <= top + height; y += spacing) {
+        ctx.beginPath();
+        ctx.arc(left, y, currentLineWidth * 1.5, 0, Math.PI * 2);
+        ctx.fill();
+        
+        ctx.beginPath();
+        ctx.arc(left + width, y, currentLineWidth * 1.5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    // Kreslení uzlů trojúhelníků (bez čar)
+    function drawTriangleNodes(left, top, width, height, spacing) {
+      const triangleHeight = spacing * Math.sqrt(3) / 2;
+      
+      const startY = top;
+      const startX = left;
+      
+      for (let row = 0; row * triangleHeight <= height + triangleHeight; row++) {
+        for (let col = 0; col * spacing <= width + spacing; col++) {
+          const offset = (row % 2) * spacing / 2;
+          
+          const x1 = startX + col * spacing + offset;
+          const y1 = startY + row * triangleHeight;
+          
+          if (x1 >= left && x1 <= left + width && y1 >= top && y1 <= top + height) {
+            ctx.beginPath();
+            ctx.arc(x1, y1, currentLineWidth * 1.5, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+      }
+    }
+
+    // Export do PDF s vysokým rozlišením
+    function exportToPDF() {
+      if (!canvas) return;
+      
+      try {
+        const { jsPDF } = window.jspdf;
+        const pdf = new jsPDF({
+          orientation: 'portrait',
+          unit: 'mm',
+          format: 'a4'
+        });
+        
+        const scale = 4;
+        const tempCanvas = document.createElement('canvas');
+        const tempCtx = tempCanvas.getContext('2d');
+        
+        tempCanvas.width = canvas.width * scale;
+        tempCanvas.height = canvas.height * scale;
+        
+        tempCtx.strokeStyle = currentColor;
+        tempCtx.fillStyle = currentColor;
+        tempCtx.lineWidth = currentLineWidth * scale;
+        
+        const topPx = mmToPx(marginTop) * scale;
+        const rightPx = mmToPx(marginRight) * scale;
+        const bottomPx = mmToPx(marginBottom) * scale;
+        const leftPx = mmToPx(marginLeft) * scale;
+        
+        const workWidth = tempCanvas.width - leftPx - rightPx;
+        const workHeight = tempCanvas.height - topPx - bottomPx;
+        
+        const spacingPx = currentSpacing * scale;
+        
+        switch(currentPattern) {
+          case 'grid':
+            drawHighResGrid(tempCtx, leftPx, topPx, workWidth, workHeight, spacingPx);
+            break;
+          case 'dots':
+            drawHighResDots(tempCtx, leftPx, topPx, workWidth, workHeight, spacingPx);
+            break;
+          case 'lines':
+            drawHighResLines(tempCtx, leftPx, topPx, workWidth, workHeight, spacingPx);
+            break;
+          case 'triangles':
+            drawHighResTriangles(tempCtx, leftPx, topPx, workWidth, workHeight, spacingPx);
+            break;
+          case 'dotlines':
+            drawHighResDotLines(tempCtx, leftPx, topPx, workWidth, workHeight, spacingPx);
+            break;
+          case 'dottriangles':
+            drawHighResDotTriangles(tempCtx, leftPx, topPx, workWidth, workHeight, spacingPx);
+            break;
+          case 'lineEnds':
+            drawHighResLineEnds(tempCtx, leftPx, topPx, workWidth, workHeight, spacingPx);
+            break;
+          case 'triangleNodes':
+            drawHighResTriangleNodes(tempCtx, leftPx, topPx, workWidth, workHeight, spacingPx);
+            break;
+        }
+        
+        const imgData = tempCanvas.toDataURL('image/png', 1.0);
+        pdf.addImage(imgData, 'PNG', 0, 0, 210, 297);
+        
+        pdf.save('vzor-a4.pdf');
+        
+        showNotification('PDF úspěšně staženo (vysoká kvalita)', 'success');
+      } catch (error) {
+        console.error('Chyba při exportu do PDF:', error);
+        showNotification('Chyba při exportu do PDF', 'error');
+      }
+    }
+
+    // Funkce pro kreslení s vysokým rozlišením
+    function drawHighResGrid(ctx, left, top, width, height, spacing) {
+      for (let y = top; y <= top + height; y += spacing) {
+        ctx.beginPath();
+        ctx.moveTo(left, y);
+        ctx.lineTo(left + width, y);
+        ctx.stroke();
+      }
+      
+      for (let x = left; x <= left + width; x += spacing) {
+        ctx.beginPath();
+        ctx.moveTo(x, top);
+        ctx.lineTo(x, top + height);
+        ctx.stroke();
+      }
+    }
+
+    function drawHighResDots(ctx, left, top, width, height, spacing) {
+      for (let y = top; y <= top + height; y += spacing) {
+        for (let x = left; x <= left + width; x += spacing) {
+          ctx.beginPath();
+          ctx.arc(x, y, ctx.lineWidth / 2, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+    }
+
+    function drawHighResLines(ctx, left, top, width, height, spacing) {
+      for (let y = top; y <= top + height; y += spacing) {
+        ctx.beginPath();
+        ctx.moveTo(left, y);
+        ctx.lineTo(left + width, y);
+        ctx.stroke();
+      }
+    }
+
+    function drawHighResTriangles(ctx, left, top, width, height, spacing) {
+      const triangleHeight = spacing * Math.sqrt(3) / 2;
+      
+      const startY = top;
+      const startX = left;
+      
+      for (let row = 0; row * triangleHeight <= height + triangleHeight; row++) {
+        for (let col = 0; col * spacing <= width + spacing; col++) {
+          const offset = (row % 2) * spacing / 2;
+          
+          const x1 = startX + col * spacing + offset;
+          const y1 = startY + row * triangleHeight;
+          const x2 = startX + col * spacing + spacing / 2 + offset;
+          const y2 = startY + row * triangleHeight + triangleHeight;
+          const x3 = startX + col * spacing - spacing / 2 + offset;
+          const y3 = startY + row * triangleHeight + triangleHeight;
+          
+          if (x1 >= left && x1 <= left + width && y1 >= top && y1 <= top + height) {
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.lineTo(x3, y3);
+            ctx.closePath();
+            ctx.stroke();
+          }
+        }
+      }
+    }
+
+    function drawHighResDotLines(ctx, left, top, width, height, spacing) {
+      for (let y = top; y <= top + height; y += spacing) {
+        for (let x = left; x <= left + width; x += spacing) {
+          ctx.beginPath();
+          ctx.arc(x, y, ctx.lineWidth * 1.5, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+      
+      for (let y = top; y <= top + height; y += spacing) {
+        ctx.beginPath();
+        for (let x = left; x <= left + width; x += spacing) {
+          if (x === left) {
+            ctx.moveTo(x, y);
+          } else {
+            ctx.lineTo(x, y);
+          }
+        }
+        ctx.stroke();
+      }
+      
+      for (let x = left; x <= left + width; x += spacing) {
+        ctx.beginPath();
+        for (let y = top; y <= top + height; y += spacing) {
+          if (y === top) {
+            ctx.moveTo(x, y);
+          } else {
+            ctx.lineTo(x, y);
+          }
+        }
+        ctx.stroke();
+      }
+    }
+
+    function drawHighResDotTriangles(ctx, left, top, width, height, spacing) {
+      const triangleHeight = spacing * Math.sqrt(3) / 2;
+      
+      for (let row = 0; row * triangleHeight <= height + triangleHeight; row++) {
+        for (let col = 0; col * spacing <= width + spacing; col++) {
+          const offset = (row % 2) * spacing / 2;
+          const x = left + col * spacing + offset;
+          const y = top + row * triangleHeight;
+          
+          if (x >= left && x <= left + width && y >= top && y <= top + height) {
+            ctx.beginPath();
+            ctx.arc(x, y, ctx.lineWidth * 1.5, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+      }
+      
+      for (let row = 0; row * triangleHeight <= height + triangleHeight; row++) {
+        for (let col = 0; col * spacing <= width + spacing; col++) {
+          const offset = (row % 2) * spacing / 2;
+          
+          const x1 = left + col * spacing + offset;
+          const y1 = top + row * triangleHeight;
+          const x2 = left + col * spacing + spacing / 2 + offset;
+          const y2 = top + row * triangleHeight + triangleHeight;
+          const x3 = left + col * spacing - spacing / 2 + offset;
+          const y3 = top + row * triangleHeight + triangleHeight;
+          
+          if (x1 >= left && x1 <= left + width && y1 >= top && y1 <= top + height) {
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.lineTo(x3, y3);
+            ctx.closePath();
+            ctx.stroke();
+          }
+        }
+      }
+    }
+
+    function drawHighResLineEnds(ctx, left, top, width, height, spacing) {
+      for (let y = top; y <= top + height; y += spacing) {
+        ctx.beginPath();
+        ctx.arc(left, y, ctx.lineWidth * 1.5, 0, Math.PI * 2);
+        ctx.fill();
+        
+        ctx.beginPath();
+        ctx.arc(left + width, y, ctx.lineWidth * 1.5, 0, Math.PI * 2);
+        ctx.fill();
+      }
+    }
+
+    function drawHighResTriangleNodes(ctx, left, top, width, height, spacing) {
+      const triangleHeight = spacing * Math.sqrt(3) / 2;
+      
+      const startY = top;
+      const startX = left;
+      
+      for (let row = 0; row * triangleHeight <= height + triangleHeight; row++) {
+        for (let col = 0; col * spacing <= width + spacing; col++) {
+          const offset = (row % 2) * spacing / 2;
+          
+          const x1 = startX + col * spacing + offset;
+          const y1 = startY + row * triangleHeight;
+          
+          if (x1 >= left && x1 <= left + width && y1 >= top && y1 <= top + height) {
+            ctx.beginPath();
+            ctx.arc(x1, y1, ctx.lineWidth * 1.5, 0, Math.PI * 2);
+            ctx.fill();
+          }
+        }
+      }
+    }
+
+    // Export do SVG
+    function exportToSVG() {
+      try {
+        const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
+        svg.setAttribute("xmlns", "http://www.w3.org/2000/svg");
+        svg.setAttribute("width", "595");
+        svg.setAttribute("height", "842");
+        svg.setAttribute("viewBox", "0 0 595 842");
+        
+        const topPx = mmToPx(marginTop);
+        const rightPx = mmToPx(marginRight);
+        const bottomPx = mmToPx(marginBottom);
+        const leftPx = mmToPx(marginLeft);
+        
+        const workWidth = 595 - leftPx - rightPx;
+        const workHeight = 842 - topPx - bottomPx;
+        
+        switch(currentPattern) {
+          case 'grid':
+            createSvgGrid(svg, leftPx, topPx, workWidth, workHeight, currentSpacing);
+            break;
+          case 'dots':
+            createSvgDots(svg, leftPx, topPx, workWidth, workHeight, currentSpacing);
+            break;
+          case 'lines':
+            createSvgLines(svg, leftPx, topPx, workWidth, workHeight, currentSpacing);
+            break;
+          case 'triangles':
+            createSvgTriangles(svg, leftPx, topPx, workWidth, workHeight, currentSpacing);
+            break;
+          case 'dotlines':
+            createSvgDotLines(svg, leftPx, topPx, workWidth, workHeight, currentSpacing);
+            break;
+          case 'dottriangles':
+            createSvgDotTriangles(svg, leftPx, topPx, workWidth, workHeight, currentSpacing);
+            break;
+          case 'lineEnds':
+            createSvgLineEnds(svg, leftPx, topPx, workWidth, workHeight, currentSpacing);
+            break;
+          case 'triangleNodes':
+            createSvgTriangleNodes(svg, leftPx, topPx, workWidth, workHeight, currentSpacing);
+            break;
+        }
+        
+        const serializer = new XMLSerializer();
+        let svgString = serializer.serializeToString(svg);
+        
+        svgString = '<?xml version="1.0" encoding="UTF-8" standalone="no"?>\n' + svgString;
+        
+        const blob = new Blob([svgString], {type: "image/svg+xml"});
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.download = "vzor-a4.svg";
+        link.href = url;
+        link.click();
+        
+        setTimeout(() => URL.revokeObjectURL(url), 100);
+        
+        showNotification('SVG úspěšně staženo', 'success');
+      } catch (error) {
+        console.error('Chyba při exportu do SVG:', error);
+        showNotification('Chyba při exportu do SVG', 'error');
+      }
+    }
+
+    // Funkce pro vytváření SVG elementů
+    function createSvgGrid(svg, left, top, width, height, spacing) {
+      for (let y = top; y <= top + height; y += spacing) {
+        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        line.setAttribute("x1", left);
+        line.setAttribute("y1", y);
+        line.setAttribute("x2", left + width);
+        line.setAttribute("y2", y);
+        line.setAttribute("stroke", currentColor);
+        line.setAttribute("stroke-width", currentLineWidth);
+        svg.appendChild(line);
+      }
+      
+      for (let x = left; x <= left + width; x += spacing) {
+        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        line.setAttribute("x1", x);
+        line.setAttribute("y1", top);
+        line.setAttribute("x2", x);
+        line.setAttribute("y2", top + height);
+        line.setAttribute("stroke", currentColor);
+        line.setAttribute("stroke-width", currentLineWidth);
+        svg.appendChild(line);
+      }
+    }
+
+    function createSvgDots(svg, left, top, width, height, spacing) {
+      for (let y = top; y <= top + height; y += spacing) {
+        for (let x = left; x <= left + width; x += spacing) {
+          const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+          circle.setAttribute("cx", x);
+          circle.setAttribute("cy", y);
+          circle.setAttribute("r", currentLineWidth);
+          circle.setAttribute("fill", currentColor);
+          svg.appendChild(circle);
+        }
+      }
+    }
+
+    function createSvgLines(svg, left, top, width, height, spacing) {
+      for (let y = top; y <= top + height; y += spacing) {
+        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
+        line.setAttribute("x1", left);
+        line.setAttribute("y1", y);
+        line.setAttribute("x2", left + width);
+        line.setAttribute("y2", y);
+        line.setAttribute("stroke", currentColor);
+        line.setAttribute("stroke-width", currentLineWidth);
+        svg.appendChild(line);
+      }
+    }
+
+    function createSvgTriangles(svg, left, top, width, height, spacing) {
+      const triangleHeight = spacing * Math.sqrt(3) / 2;
+      
+      const startY = top;
+      const startX = left;
+      
+      for (let row = 0; row * triangleHeight <= height + triangleHeight; row++) {
+        for (let col = 0; col * spacing <= width + spacing; col++) {
+          const offset = (row % 2) * spacing / 2;
+          
+          const x1 = startX + col * spacing + offset;
+          const y1 = startY + row * triangleHeight;
+          const x2 = startX + col * spacing + spacing / 2 + offset;
+          const y2 = startY + row * triangleHeight + triangleHeight;
+          const x3 = startX + col * spacing - spacing / 2 + offset;
+          const y3 = startY + row * triangleHeight + triangleHeight;
+          
+          if (x1 >= left && x1 <= left + width && y1 >= top && y1 <= top + height) {
+            const polygon = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+            polygon.setAttribute("points", `${x1},${y1} ${x2},${y2} ${x3},${y3}`);
+            polygon.setAttribute("stroke", currentColor);
+            polygon.setAttribute("stroke-width", currentLineWidth);
+            polygon.setAttribute("fill", "none");
+            svg.appendChild(polygon);
+          }
+        }
+      }
+    }
+
+    function createSvgDotLines(svg, left, top, width, height, spacing) {
+      for (let y = top; y <= top + height; y += spacing) {
+        for (let x = left; x <= left + width; x += spacing) {
+          const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+          circle.setAttribute("cx", x);
+          circle.setAttribute("cy", y);
+          circle.setAttribute("r", currentLineWidth * 1.5);
+          circle.setAttribute("fill", currentColor);
+          svg.appendChild(circle);
+        }
+      }
+      
+      for (let y = top; y <= top + height; y += spacing) {
+        const line = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
+        let points = '';
+        for (let x = left; x <= left + width; x += spacing) {
+          points += `${x},${y} `;
+        }
+        line.setAttribute("points", points.trim());
+        line.setAttribute("stroke", currentColor);
+        line.setAttribute("stroke-width", currentLineWidth);
+        line.setAttribute("fill", "none");
+        svg.appendChild(line);
+      }
+      
+      for (let x = left; x <= left + width; x += spacing) {
+        const line = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
+        let points = '';
+        for (let y = top; y <= top + height; y += spacing) {
+          points += `${x},${y} `;
+        }
+        line.setAttribute("points", points.trim());
+        line.setAttribute("stroke", currentColor);
+        line.setAttribute("stroke-width", currentLineWidth);
+        line.setAttribute("fill", "none");
+        svg.appendChild(line);
+      }
+    }
+
+    function createSvgDotTriangles(svg, left, top, width, height, spacing) {
+      const triangleHeight = spacing * Math.sqrt(3) / 2;
+      
+      for (let row = 0; row * triangleHeight <= height + triangleHeight; row++) {
+        for (let col = 0; col * spacing <= width + spacing; col++) {
+          const offset = (row % 2) * spacing / 2;
+          const x = left + col * spacing + offset;
+          const y = top + row * triangleHeight;
+          
+          if (x >= left && x <= left + width && y >= top && y <= top + height) {
+            const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+            circle.setAttribute("cx", x);
+            circle.setAttribute("cy", y);
+            circle.setAttribute("r", currentLineWidth * 1.5);
+            circle.setAttribute("fill", currentColor);
+            svg.appendChild(circle);
+          }
+        }
+      }
+      
+      for (let row = 0; row * triangleHeight <= height + triangleHeight; row++) {
+        for (let col = 0; col * spacing <= width + spacing; col++) {
+          const offset = (row % 2) * spacing / 2;
+          
+          const x1 = left + col * spacing + offset;
+          const y1 = top + row * triangleHeight;
+          const x2 = left + col * spacing + spacing / 2 + offset;
+          const y2 = top + row * triangleHeight + triangleHeight;
+          const x3 = left + col * spacing - spacing / 2 + offset;
+          const y3 = top + row * triangleHeight + triangleHeight;
+          
+          if (x1 >= left && x1 <= left + width && y1 >= top && y1 <= top + height) {
+            const polygon = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
+            polygon.setAttribute("points", `${x1},${y1} ${x2},${y2} ${x3},${y3}`);
+            polygon.setAttribute("stroke", currentColor);
+            polygon.setAttribute("stroke-width", currentLineWidth);
+            polygon.setAttribute("fill", "none");
+            svg.appendChild(polygon);
+          }
+        }
+      }
+    }
+
+    function createSvgLineEnds(svg, left, top, width, height, spacing) {
+      for (let y = top; y <= top + height; y += spacing) {
+        const circleLeft = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        circleLeft.setAttribute("cx", left);
+        circleLeft.setAttribute("cy", y);
+        circleLeft.setAttribute("r", currentLineWidth * 1.5);
+        circleLeft.setAttribute("fill", currentColor);
+        svg.appendChild(circleLeft);
+        
+        const circleRight = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+        circleRight.setAttribute("cx", left + width);
+        circleRight.setAttribute("cy", y);
+        circleRight.setAttribute("r", currentLineWidth * 1.5);
+        circleRight.setAttribute("fill", currentColor);
+        svg.appendChild(circleRight);
+      }
+    }
+
+    function createSvgTriangleNodes(svg, left, top, width, height, spacing) {
+      const triangleHeight = spacing * Math.sqrt(3) / 2;
+      
+      const startY = top;
+      const startX = left;
+      
+      for (let row = 0; row * triangleHeight <= height + triangleHeight; row++) {
+        for (let col = 0; col * spacing <= width + spacing; col++) {
+          const offset = (row % 2) * spacing / 2;
+          
+          const x1 = startX + col * spacing + offset;
+          const y1 = startY + row * triangleHeight;
+          
+          if (x1 >= left && x1 <= left + width && y1 >= top && y1 <= top + height) {
+            const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
+            circle.setAttribute("cx", x1);
+            circle.setAttribute("cy", y1);
+            circle.setAttribute("r", currentLineWidth * 1.5);
+            circle.setAttribute("fill", currentColor);
+            svg.appendChild(circle);
+          }
+        }
+      }
+    }
+
+    // Export do PNG
+    function exportToPNG() {
+      if (!canvas) return;
+      
+      try {
+        const scale = 4;
+        const tempCanvas = document.createElement('canvas');
+        const tempCtx = tempCanvas.getContext('2d');
+        
+        tempCanvas.width = canvas.width * scale;
+        tempCanvas.height = canvas.height * scale;
+        
+        tempCtx.strokeStyle = currentColor;
+        tempCtx.fillStyle = currentColor;
+        tempCtx.lineWidth = currentLineWidth * scale;
+        
+        const topPx = mmToPx(marginTop) * scale;
+        const rightPx = mmToPx(marginRight) * scale;
+        const bottomPx = mmToPx(marginBottom) * scale;
+        const leftPx = mmToPx(marginLeft) * scale;
+        
+        const workWidth = tempCanvas.width - leftPx - rightPx;
+        const workHeight = tempCanvas.height - topPx - bottomPx;
+        
+        const spacingPx = currentSpacing * scale;
+        
+        switch(currentPattern) {
+          case 'grid':
+            drawHighResGrid(tempCtx, leftPx, topPx, workWidth, workHeight, spacingPx);
+            break;
+          case 'dots':
+            drawHighResDots(tempCtx, leftPx, topPx, workWidth, workHeight, spacingPx);
+            break;
+          case 'lines':
+            drawHighResLines(tempCtx, leftPx, topPx, workWidth, workHeight, spacingPx);
+            break;
+          case 'triangles':
+            drawHighResTriangles(tempCtx, leftPx, topPx, workWidth, workHeight, spacingPx);
+            break;
+          case 'dotlines':
+            drawHighResDotLines(tempCtx, leftPx, topPx, workWidth, workHeight, spacingPx);
+            break;
+          case 'dottriangles':
+            drawHighResDotTriangles(tempCtx, leftPx, topPx, workWidth, workHeight, spacingPx);
+            break;
+          case 'lineEnds':
+            drawHighResLineEnds(tempCtx, leftPx, topPx, workWidth, workHeight, spacingPx);
+            break;
+          case 'triangleNodes':
+            drawHighResTriangleNodes(tempCtx, leftPx, topPx, workWidth, workHeight, spacingPx);
+            break;
+        }
+        
+        const dataURL = tempCanvas.toDataURL('image/png');
+        const link = document.createElement('a');
+        link.download = 'vzor-a4.png';
+        link.href = dataURL;
+        link.click();
+        
+        showNotification('PNG úspěšně staženo (vysoká kvalita)', 'success');
+      } catch (error) {
+        console.error('Chyba při exportu do PNG:', error);
+        showNotification('Chyba při exportu do PNG', 'error');
+      }
+    }
+
+    // Tisk stránky - OPRAVENO
+    function printPage() {
+      window.print();
+    }
+
+    // Aktualizace popisu vzoru
+    function updatePatternInfo() {
+      const patternInfo = document.getElementById('patternInfo');
+      patternInfo.textContent = patternDescriptions[currentPattern] || '';
+    }
+
+    // Inicializace aplikace
+    function initApp() {
+      initCanvas();
+      
+      updateSpacingMm();
+      
+      document.getElementById('generateBtn').addEventListener('click', generatePattern);
+      document.getElementById('downloadPdf').addEventListener('click', exportToPDF);
+      document.getElementById('downloadSvg').addEventListener('click', exportToSVG);
+      document.getElementById('downloadPng').addEventListener('click', exportToPNG);
+      document.getElementById('printPage').addEventListener('click', printPage);
+      
+      document.getElementById('patternType').addEventListener('change', function() {
+        currentPattern = this.value;
+        updatePatternInfo();
+        generatePattern();
+      });
+      
+      document.getElementById('spacing').addEventListener('change', function() {
+        currentSpacing = parseInt(this.value) || 50;
+        updateSpacingMm();
+        generatePattern();
+      });
+      
+      document.getElementById('color').addEventListener('change', function() {
+        currentColor = this.value;
+        generatePattern();
+      });
+      
+      document.getElementById('lineWidth').addEventListener('change', function() {
+        currentLineWidth = parseFloat(this.value) || 1;
+        generatePattern();
+      });
+      
+      document.getElementById('marginTop').addEventListener('change', function() {
+        marginTop = parseInt(this.value) || 20;
+        generatePattern();
+      });
+      
+      document.getElementById('marginRight').addEventListener('change', function() {
+        marginRight = parseInt(this.value) || 20;
+        generatePattern();
+      });
+      
+      document.getElementById('marginBottom').addEventListener('change', function() {
+        marginBottom = parseInt(this.value) || 20;
+        generatePattern();
+      });
+      
+      document.getElementById('marginLeft').addEventListener('change', function() {
+        marginLeft = parseInt(this.value) || 20;
+        generatePattern();
+      });
+      
+      updatePatternInfo();
+    }
+
+    document.addEventListener('DOMContentLoaded', initApp);
+  </script>
+</body>
+</html>
