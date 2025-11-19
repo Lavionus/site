@@ -358,21 +358,24 @@
     }
 
     .status-indicator {
-      width: 10px;
-      height: 10px;
+      display: inline-block;
+      width: 10px;           /* Pevná velikost */
+      height: 10px;          /* Pevná velikost */
       border-radius: 50%;
-      background-color: #4caf50;
+      background-color: #4caf50; /* Výchozí barva: Zelená (Online) */
+      transition: background-color 0.3s ease; /* Plynulý barevný přechod */
     }
 
+    /* Oranžová pro stav načítání nebo přehrávání */
     .status-indicator.loading {
-      background-color: #ff9800;
-      animation: pulse 1.5s infinite;
+      background-color: #ff9800; 
+      animation: none; /* 🚫 Animace rotace je odstraněna */
     }
 
-    @keyframes pulse {
-      0% { opacity: 1; }
-      50% { opacity: 0.5; }
-      100% { opacity: 1; }
+    /* Červená pro stav chyby (doplněno) */
+    .status-indicator.error {
+      background-color: #f44336;
+      animation: none; 
     }
 
     .radar-legend {
@@ -637,6 +640,49 @@
     let selectedSuggestionIndex = -1;
     let currentSuggestions = [];
     let currentLocationData = null;
+
+    // Funkce pro vytvoření šrafovaného vzoru
+    function createHatchPattern(ctx) {
+      const patternCanvas = document.createElement('canvas');
+      const patternContext = patternCanvas.getContext('2d');
+      
+      patternCanvas.width = 10;
+      patternCanvas.height = 10;
+      
+      // Pozadí - původní barva srážek
+      patternContext.fillStyle = '#06b6d480';
+      patternContext.fillRect(0, 0, 10, 10);
+      
+      // Šrafování - bílé čáry
+      patternContext.strokeStyle = 'rgba(255, 255, 255, 0.6)';
+      patternContext.lineWidth = 2;
+      
+      patternContext.beginPath();
+      patternContext.moveTo(0, 0);
+      patternContext.lineTo(10, 10);
+      patternContext.stroke();
+      
+      patternContext.beginPath();
+      patternContext.moveTo(10, 0);
+      patternContext.lineTo(0, 10);
+      patternContext.stroke();
+      
+      return ctx.createPattern(patternCanvas, 'repeat');
+    }
+
+    // Funkce pro určení barvy sloupce srážek podle teploty
+    function getPrecipitationColor(temperature, ctx) {
+      if (temperature > 2) {
+        // Déšť - původní barva
+        return '#06b6d480';
+      } else if (temperature >= 0) {
+        // Smíšené srážky - šrafovaný vzor
+        return createHatchPattern(ctx);
+      } else {
+        // Sníh - bílá barva
+        return 'rgba(255, 255, 255, 0.8)';
+      }
+    }
     
     // Radarové proměnné
     let radarMap = null;
@@ -1121,14 +1167,44 @@
               tension: 0.4,
               yAxisID: 'y',
               pointRadius: 4,
-              pointHoverRadius: 6
+              pointHoverRadius: 6,
+              pointBackgroundColor: tempData.map(t => t < 0 ? '#4a9eff' : '#ff6b6b'),
+              pointBorderColor: tempData.map(t => t < 0 ? '#4a9eff' : '#ff6b6b'),
+              segment: {
+                borderColor: ctx => {
+                  const p0 = ctx.p0.parsed.y;
+                  const p1 = ctx.p1.parsed.y;
+                  // Pokud oba body jsou pod nulou, modrá
+                  if (p0 < 0 && p1 < 0) return '#4a9eff';
+                  // Pokud oba body jsou nad nebo přesně na nule, červená
+                  if (p0 >= 0 && p1 >= 0) return '#ff6b6b';
+                  // Přechod přes nulu - použijeme barvu podle směru
+                  // Pokud klesáme z + do -, červená (horní část)
+                  // Pokud stoupáme z - do +, modrá (dolní část)
+                  return p0 > p1 ? '#ff6b6b' : '#4a9eff';
+                }
+              }
             },
             {
               label: 'Srážky (mm)',
               data: precipData,
               type: 'bar',
-              backgroundColor: '#06b6d480',
-              borderColor: '#06b6d4',
+              backgroundColor: function(context) {
+                const index = context.dataIndex;
+                const temperature = tempData[index];
+                return getPrecipitationColor(temperature, context.chart.ctx);
+              },
+              borderColor: function(context) {
+                const index = context.dataIndex;
+                const temperature = tempData[index];
+                if (temperature > 2) {
+                  return '#06b6d4';
+                } else if (temperature >= 0) {
+                  return '#06b6d4';
+                } else {
+                  return 'rgba(200, 200, 200, 0.8)';
+                }
+              },
               borderWidth: 1,
               yAxisID: 'y1'
             },
@@ -1243,7 +1319,20 @@
                 color: '#ff6b6b',
                 callback: function(value) { return value + '°C'; }
               },
-              grid: { color: '#404040' },
+              grid: { 
+                color: context => {
+                  if (context.tick.value === 0) {
+                    return '#ff9800';
+                  }
+                  return '#404040';
+                },
+                lineWidth: context => {
+                  if (context.tick.value === 0) {
+                    return 2;
+                  }
+                  return 1;
+                }
+              },
               title: {
                 display: true,
                 text: 'Teplota (°C)',
@@ -1448,14 +1537,39 @@
               tension: 0.4,
               yAxisID: 'y',
               pointRadius: 4,
-              pointHoverRadius: 6
+              pointHoverRadius: 6,
+              pointBackgroundColor: tempData.map(t => t < 0 ? '#4a9eff' : '#ff6b6b'),
+              pointBorderColor: tempData.map(t => t < 0 ? '#4a9eff' : '#ff6b6b'),
+              segment: {
+                borderColor: ctx => {
+                  const p0 = ctx.p0.parsed.y;
+                  const p1 = ctx.p1.parsed.y;
+                  if (p0 < 0 && p1 < 0) return '#4a9eff';
+                  if (p0 >= 0 && p1 >= 0) return '#ff6b6b';
+                  return p0 > p1 ? '#ff6b6b' : '#4a9eff';
+                }
+              }
             },
             {
               label: 'Srážky (mm)',
               data: precipData,
               type: 'bar',
-              backgroundColor: '#06b6d480',
-              borderColor: '#06b6d4',
+              backgroundColor: function(context) {
+                const index = context.dataIndex;
+                const temperature = tempData[index];
+                return getPrecipitationColor(temperature, context.chart.ctx);
+              },
+              borderColor: function(context) {
+                const index = context.dataIndex;
+                const temperature = tempData[index];
+                if (temperature > 2) {
+                  return '#06b6d4';
+                } else if (temperature >= 0) {
+                  return '#06b6d4';
+                } else {
+                  return 'rgba(200, 200, 200, 0.8)';
+                }
+              },
               borderWidth: 1,
               yAxisID: 'y1'
             },
@@ -1554,7 +1668,20 @@
                 color: '#ff6b6b',
                 callback: function(value) { return value + '°C'; }
               },
-              grid: { color: '#404040' },
+              grid: { 
+                color: context => {
+                  if (context.tick.value === 0) {
+                    return '#ff9800';
+                  }
+                  return '#404040';
+                },
+                lineWidth: context => {
+                  if (context.tick.value === 0) {
+                    return 2;
+                  }
+                  return 1;
+                }
+              },
               title: {
                 display: true,
                 text: 'Teplota (°C)',
@@ -1711,8 +1838,22 @@
               label: 'Srážky (mm)',
               data: precip,
               type: 'bar',
-              backgroundColor: '#06b6d480',
-              borderColor: '#06b6d4',
+              backgroundColor: function(context) {
+                const index = context.dataIndex;
+                const avgTemp = (tempMax[index] + tempMin[index]) / 2;
+                return getPrecipitationColor(avgTemp, context.chart.ctx);
+              },
+              borderColor: function(context) {
+                const index = context.dataIndex;
+                const avgTemp = (tempMax[index] + tempMin[index]) / 2;
+                if (avgTemp > 2) {
+                  return '#06b6d4';
+                } else if (avgTemp >= 0) {
+                  return '#06b6d4';
+                } else {
+                  return 'rgba(200, 200, 200, 0.8)';
+                }
+              },
               borderWidth: 1,
               yAxisID: 'y1'
             },
@@ -1813,7 +1954,20 @@
                 color: '#ff6b6b',
                 callback: function(value) { return value + '°C'; }
               },
-              grid: { color: '#404040' },
+              grid: { 
+                color: context => {
+                  if (context.tick.value === 0) {
+                    return '#ff9800';
+                  }
+                  return '#404040';
+                },
+                lineWidth: context => {
+                  if (context.tick.value === 0) {
+                    return 2;
+                  }
+                  return 1;
+                }
+              },
               title: {
                 display: true,
                 text: 'Teplota (°C)',
@@ -2126,15 +2280,16 @@
       const statusIndicator = document.getElementById('radar-status');
       const statusText = document.getElementById('radar-status-text');
       
+      // Reset všech tříd
       statusIndicator.className = 'status-indicator';
       
+      // Přidání příslušné třídy podle stavu
       if (status === 'loading') {
         statusIndicator.classList.add('loading');
       } else if (status === 'error') {
-        statusIndicator.style.backgroundColor = '#f44336';
-      } else {
-        statusIndicator.style.backgroundColor = '#4caf50';
+        statusIndicator.classList.add('error');
       }
+      // Pro 'online' stav zůstane pouze základní třída s zelenou barvou
       
       statusText.textContent = message;
     }
