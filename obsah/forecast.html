@@ -325,6 +325,53 @@
       gap: 10px;
     }
 
+    .radar-controls-right {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      flex-wrap: wrap;
+    }
+
+    .radar-speed-control {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: #333;
+      padding: 5px 12px;
+      border-radius: 4px;
+      border: 1px solid #444;
+    }
+
+    .radar-speed-control label {
+      font-size: 0.85rem;
+      color: #bbb;
+      white-space: nowrap;
+    }
+
+    .radar-speed-control input[type="range"] {
+      -webkit-appearance: none;
+      width: 120px;
+      height: 4px;
+      background: #555;
+      border-radius: 2px;
+      outline: none;
+    }
+
+    .radar-speed-control input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 16px;
+      height: 16px;
+      background: #6aa6fd;
+      border-radius: 50%;
+      cursor: pointer;
+      transition: background .15s ease-in-out;
+    }
+
+    .radar-speed-control input[type="range"]::-webkit-slider-thumb:hover {
+      background: #5694f0;
+      transform: scale(1.1);
+    }
+
     .radar-title {
       font-size: 1.1rem;
       font-weight: 600;
@@ -359,20 +406,18 @@
 
     .status-indicator {
       display: inline-block;
-      width: 10px;           /* Pevná velikost */
-      height: 10px;          /* Pevná velikost */
+      width: 10px;
+      height: 10px;
       border-radius: 50%;
-      background-color: #4caf50; /* Výchozí barva: Zelená (Online) */
-      transition: background-color 0.3s ease; /* Plynulý barevný přechod */
+      background-color: #4caf50;
+      transition: background-color 0.3s ease;
     }
 
-    /* Oranžová pro stav načítání nebo přehrávání */
     .status-indicator.loading {
       background-color: #ff9800; 
-      animation: none; /* 🚫 Animace rotace je odstraněna */
+      animation: none;
     }
 
-    /* Červená pro stav chyby (doplněno) */
     .status-indicator.error {
       background-color: #f44336;
       animation: none; 
@@ -430,6 +475,11 @@
       .radar-controls {
         flex-direction: column;
         align-items: flex-start;
+      }
+      .radar-controls-right {
+        width: 100%;
+        justify-content: space-between;
+        margin-top: 10px;
       }
     }
 
@@ -494,7 +544,6 @@
       font: bold 18px/20px Arial;
     }
     
-    /* Vlastní ikona pro špendlík */
     .plus-marker {
       background-color: transparent !important;
       border-radius: 0 !important;
@@ -506,9 +555,11 @@
       transform: translate(-50%, -50%) !important;
     }
 
-    /* Styly pro plynulou animaci radaru */
+    /* --- OPTIMALIZACE PRO PLYNULOU ANIMACI RADARU --- */
     .radar-layer {
-      transition: opacity 0.3s ease-in-out;
+      /* Zkrácen čas přechodu na 0.1s pro podporu rychlosti 100ms */
+      transition: opacity 0.1s linear; 
+      will-change: opacity;
     }
   </style>
 </head>
@@ -585,7 +636,11 @@
       <div class="radar-container">
         <div class="radar-controls">
           <div class="radar-title">📡 Radarové odrazy</div>
-          <div>
+          <div class="radar-controls-right">
+            <div class="radar-speed-control">
+              <label for="radarSpeed">Rychlost: <span id="radarSpeedValue">500</span>ms</label>
+              <input type="range" id="radarSpeed" min="100" max="1000" step="50" value="500">
+            </div>
             <button class="load-btn" id="playRadar">▶️ Přehrát animaci</button>
           </div>
         </div>
@@ -649,11 +704,11 @@
       patternCanvas.width = 10;
       patternCanvas.height = 10;
       
-      // Pozadí - původní barva srážek
+      // Pozadí
       patternContext.fillStyle = '#06b6d480';
       patternContext.fillRect(0, 0, 10, 10);
       
-      // Šrafování - bílé čáry
+      // Šrafování
       patternContext.strokeStyle = 'rgba(255, 255, 255, 0.6)';
       patternContext.lineWidth = 2;
       
@@ -670,16 +725,12 @@
       return ctx.createPattern(patternCanvas, 'repeat');
     }
 
-    // Funkce pro určení barvy sloupce srážek podle teploty
     function getPrecipitationColor(temperature, ctx) {
       if (temperature > 2) {
-        // Déšť - původní barva
         return '#06b6d480';
       } else if (temperature >= 0) {
-        // Smíšené srážky - šrafovaný vzor
         return createHatchPattern(ctx);
       } else {
-        // Sníh - bílá barva
         return 'rgba(255, 255, 255, 0.8)';
       }
     }
@@ -691,9 +742,7 @@
     let currentRadarFrame = 0;
     let radarData = [];
     let locationMarker = null;
-    let currentRadarLayer = null;
-    let nextRadarLayer = null;
-    let smoothAnimation = true;
+    let animationSpeed = 500; // Výchozí rychlost v ms
 
     // Funkce pro zobrazení notifikace
     function showNotification(message, type = 'info') {
@@ -805,7 +854,6 @@
       }
     }
 
-    // Funkce pro zvýraznění návrhu
     function highlightSuggestion(index) {
       const suggestions = document.querySelectorAll('.suggestion-item');
       suggestions.forEach(item => item.classList.remove('selected'));
@@ -838,7 +886,6 @@
       hideLoading();
     }
 
-    // Funkce pro získání souřadnic
     async function getCoordinates(location) {
       if (currentLocationData && currentLocationData.displayName === location) {
         return { lat: currentLocationData.lat, lon: currentLocationData.lon };
@@ -892,23 +939,19 @@
         }
         
         const coords = await getCoordinates(input);
-        console.log('Používané souřadnice:', coords);
         
         if (currentLocationData && currentLocationData.displayName !== input) {
           document.getElementById('location').value = currentLocationData.displayName;
         }
         
-        // Zobrazit tlačítko pro uložení lokace
         document.getElementById('saveLocationBtn').style.display = 'block';
         
-        // Načtení hodinových dat pro 3 dny
         const hourlyParams = [
           'temperature_2m', 'precipitation', 'wind_speed_10m', 'wind_direction_10m', 'cloud_cover', 'relative_humidity_2m'
         ].join(',');
 
         const hourlyUrl = `https://api.open-meteo.com/v1/forecast?latitude=${coords.lat}&longitude=${coords.lon}&hourly=${hourlyParams}&timezone=Europe%2FPrague&forecast_days=3`;
         
-        // Načtení denních dat pro 10 dní
         const dailyParams = [
           'temperature_2m_max', 'temperature_2m_min', 'precipitation_sum', 'wind_speed_10m_max', 
           'wind_direction_10m_dominant', 'cloud_cover_mean'
@@ -932,7 +975,7 @@
           throw new Error('Neplatná odpověď z API');
         }
         
-        // Zpracování hodinových dat pro 3 dny
+        // Zpracování dat
         const hourlyTime = hourly3DayData.hourly.time;
         const hourlyTemp = hourly3DayData.hourly.temperature_2m;
         const hourlyPrecip = hourly3DayData.hourly.precipitation;
@@ -940,14 +983,11 @@
         const hourlyWindDir = hourly3DayData.hourly.wind_direction_10m;
         const hourlyClouds = hourly3DayData.hourly.cloud_cover;
         
-        // Aktualizace grafu
         updateThreeDayChart('threeDayChart', hourlyTime, hourlyTemp, hourlyPrecip, hourlyWind, hourlyWindDir, hourlyClouds);
         
-        // Zpracování dat pro 24hodinový graf
         const now = new Date();
         const twentyFourHoursLater = new Date(now.getTime() + 24 * 60 * 60 * 1000);
 
-        // Filtrování dat pro následujících 24 hodin
         const twentyFourHourIndices = [];
         for (let i = 0; i < hourlyTime.length; i++) {
           const dataTime = new Date(hourlyTime[i]);
@@ -956,7 +996,6 @@
           }
         }
 
-        // Extrakce dat pro 24hodinový graf
         const twentyFourHourTime = twentyFourHourIndices.map(i => hourlyTime[i]);
         const twentyFourHourTemp = twentyFourHourIndices.map(i => hourlyTemp[i]);
         const twentyFourHourPrecip = twentyFourHourIndices.map(i => hourlyPrecip[i]);
@@ -964,7 +1003,6 @@
         const twentyFourHourWindDir = twentyFourHourIndices.map(i => hourlyWindDir[i]);
         const twentyFourHourClouds = twentyFourHourIndices.map(i => hourlyClouds[i]);
 
-        // Aktualizace 24hodinového grafu
         updateTwentyFourHourChart(
           'twentyFourHourChart',
           twentyFourHourTime,
@@ -975,7 +1013,6 @@
           twentyFourHourClouds
         );
         
-        // Zpracování 10denních dat
         const dailyTime = daily10DayData.daily.time;
         const dailyTempMax = daily10DayData.daily.temperature_2m_max;
         const dailyTempMin = daily10DayData.daily.temperature_2m_min;
@@ -984,7 +1021,6 @@
         const dailyWindDir = daily10DayData.daily.wind_direction_10m_dominant;
         const dailyClouds = daily10DayData.daily.cloud_cover_mean;
         
-        // Aktualizace 10denního grafu
         updateTenDayChart(
           'tenDayChart',
           dailyTime,
@@ -1040,7 +1076,6 @@
         windDirData.push(windDir[i]);
         cloudsData.push(clouds[i]);
         
-        // Agregace srážek - sečteme srážky z následujících 3 hodin
         let totalPrecip = 0;
         for (let j = 0; j < 3 && (i + j) < hours72; j++) {
           totalPrecip += precip[i + j];
@@ -1048,34 +1083,27 @@
         precipData.push(totalPrecip);
       }
 
-      // Plugin pro kreslení šipek směru větru
       const windArrowPlugin = {
         id: 'windArrows',
         afterDatasetsDraw: (chart) => {
           const ctx = chart.ctx;
           const meta = chart.getDatasetMeta(2);
-
           if (!meta || !meta.data) return;
-
           ctx.save();
           ctx.strokeStyle = '#4ecdc4';
           ctx.fillStyle = '#4ecdc4';
           ctx.lineWidth = 2;
-
           meta.data.forEach((point, index) => {
             const windSpeed = windData[index];
             const windDirection = windDirData[index];
-
             if (windSpeed > 1 && windDirection !== undefined && windDirection !== null) {
               const x = point.x;
               const y = point.y;
               const arrowSize = Math.min(20, Math.max(10, windSpeed * 2));
-
               ctx.save();
               ctx.translate(x, y - 15);
               const rotation = ((windDirection + 180) * Math.PI) / 180;
               ctx.rotate(rotation);
-
               ctx.beginPath();
               ctx.moveTo(0, -arrowSize/2);
               ctx.lineTo(0, arrowSize/2);
@@ -1083,27 +1111,22 @@
               ctx.lineTo(-arrowSize/4, -arrowSize/4);
               ctx.moveTo(0, -arrowSize/2);
               ctx.lineTo(arrowSize/4, -arrowSize/4);
-
               ctx.stroke();
               ctx.restore();
             }
           });
-
           ctx.restore();
         }
       };
 
-      // Plugin pro kreslení čáry aktuálního času
       const currentTimePlugin = {
         id: 'currentTimeLine',
         afterDatasetsDraw: (chart) => {
           const ctx = chart.ctx;
           const chartArea = chart.chartArea;
           const now = new Date();
-
           let currentTimeIndex = -1;
           const currentTimeMs = now.getTime();
-          
           for (let i = 0; i < time.length; i += 3) {
             const dataTimeMs = new Date(time[i]).getTime();
             if (dataTimeMs <= currentTimeMs && (i + 3 >= time.length || new Date(time[i + 3]).getTime() > currentTimeMs)) {
@@ -1119,33 +1142,26 @@
               break;
             }
           }
-
           if (currentTimeIndex >= 0 && currentTimeIndex < labels.length) {
             const xScale = chart.scales.x;
             const x = xScale.getPixelForValue(currentTimeIndex);
-
             if (x >= chartArea.left && x <= chartArea.right) {
               ctx.save();
-              
               ctx.strokeStyle = '#ff9800';
               ctx.lineWidth = 3;
               ctx.setLineDash([5, 5]);
-              
               ctx.beginPath();
               ctx.moveTo(x, chartArea.top);
               ctx.lineTo(x, chartArea.bottom);
               ctx.stroke();
-              
               ctx.fillStyle = '#ff9800';
               ctx.font = 'bold 12px sans-serif';
               ctx.textAlign = 'center';
-              
               const timeText = now.toLocaleTimeString('cs-CZ', { 
                 hour: '2-digit', 
                 minute: '2-digit' 
               });
               ctx.fillText(timeText, x, chartArea.top - 5);
-              
               ctx.restore();
             }
           }
@@ -1174,13 +1190,8 @@
                 borderColor: ctx => {
                   const p0 = ctx.p0.parsed.y;
                   const p1 = ctx.p1.parsed.y;
-                  // Pokud oba body jsou pod nulou, modrá
                   if (p0 < 0 && p1 < 0) return '#4a9eff';
-                  // Pokud oba body jsou nad nebo přesně na nule, červená
                   if (p0 >= 0 && p1 >= 0) return '#ff6b6b';
-                  // Přechod přes nulu - použijeme barvu podle směru
-                  // Pokud klesáme z + do -, červená (horní část)
-                  // Pokud stoupáme z - do +, modrá (dolní část)
                   return p0 > p1 ? '#ff6b6b' : '#4a9eff';
                 }
               }
@@ -1237,22 +1248,9 @@
         options: {
           responsive: true,
           maintainAspectRatio: false,
-          layout: {
-            padding: {
-              top: 50
-            }
-          },
+          layout: { padding: { top: 50 } },
           plugins: {
-            legend: {
-              position: 'bottom',
-              labels: {
-                color: '#e2e8f0',
-                font: { size: 12 },
-                padding: 20,
-                usePointStyle: true,
-                pointStyle: 'circle'
-              }
-            },
+            legend: { position: 'bottom', labels: { color: '#e2e8f0', font: { size: 12 }, padding: 20, usePointStyle: true, pointStyle: 'circle' } },
             tooltip: {
               backgroundColor: 'rgba(0,0,0,0.8)',
               titleColor: '#e2e8f0',
@@ -1264,19 +1262,11 @@
                   const index = tooltipItems[0].dataIndex;
                   const windSpeed = windData[index];
                   const windDirection = windDirData[index];
-                  const temperature = tempData[index];
-                  const precipitation = precipData[index];
-                  const cloudCover = cloudsData[index];
-                  const hour = new Date(time[index * 3]).getHours();
-                  const isDay = hour >= 6 && hour <= 20;
-
                   const tooltipLines = [];
-                  
                   if (windSpeed > 0 && windDirection !== undefined) {
                     const directions = ['S', 'SSV', 'SV', 'VSV', 'V', 'VJV', 'JV', 'JJV', 'J', 'JJZ', 'JZ', 'ZJZ', 'Z', 'ZSZ', 'SZ', 'SSZ'];
                     const dirIndex = Math.round(windDirection / 22.5) % 16;
                     const dirText = directions[dirIndex];
-
                     tooltipLines.push(`🧭 Směr větru: ${dirText} (${Math.round(windDirection)}°)`);
                   }
                   return tooltipLines;
@@ -1285,109 +1275,11 @@
             }
           },
           scales: {
-            x: {
-              ticks: {
-                color: '#94a3b8',
-                font: { size: 11 }
-              },
-              grid: {
-                color: function(context) {
-                  const labelIndex = context.index;
-                  const label = context.chart.data.labels[labelIndex];
-
-                  if (label && (label.includes('.') || label.includes('/'))) {
-                    return 'rgba(148, 163, 184, 0.4)';
-                  }
-                  return 'rgba(148, 163, 184, 0.1)';
-                },
-                lineWidth: function(context) {
-                  const labelIndex = context.index;
-                  const label = context.chart.data.labels[labelIndex];
-
-                  if (label && (label.includes('.') || label.includes('/'))) {
-                    return 2;
-                  }
-                  return 1;
-                }
-              }
-            },
-            y: {
-              type: 'linear',
-              display: true,
-              position: 'left',
-              ticks: {
-                color: '#ff6b6b',
-                callback: function(value) { return value + '°C'; }
-              },
-              grid: { 
-                color: context => {
-                  if (context.tick.value === 0) {
-                    return '#ff9800';
-                  }
-                  return '#404040';
-                },
-                lineWidth: context => {
-                  if (context.tick.value === 0) {
-                    return 2;
-                  }
-                  return 1;
-                }
-              },
-              title: {
-                display: true,
-                text: 'Teplota (°C)',
-                color: '#ff6b6b'
-              }
-            },
-            y1: {
-              type: 'linear',
-              display: true,
-              position: 'right',
-              min: 0,
-              ticks: {
-                color: '#06b6d4',
-                callback: function(value) { return value + 'mm'; }
-              },
-              grid: { drawOnChartArea: false },
-              title: {
-                display: true,
-                text: 'Srážky (mm)',
-                color: '#06b6d4'
-              }
-            },
-            y2: {
-              type: 'linear',
-              display: true,
-              position: 'right',
-              min: 0,
-              ticks: {
-                color: '#4ecdc4',
-                callback: function(value) { return value + 'm/s'; }
-              },
-              grid: { drawOnChartArea: false },
-              title: {
-                display: true,
-                text: 'Rychlost větru (m/s)',
-                color: '#4ecdc4'
-              }
-            },
-            y3: {
-              type: 'linear',
-              display: true,
-              position: 'right',
-              min: 0,
-              max: 100,
-              ticks: {
-                color: '#6b7280',
-                callback: function(value) { return value + '%'; }
-              },
-              grid: { drawOnChartArea: false },
-              title: {
-                display: true,
-                text: 'Oblačnost (%)',
-                color: '#6b7280'
-              }
-            }
+            x: { ticks: { color: '#94a3b8', font: { size: 11 } }, grid: { color: 'rgba(148, 163, 184, 0.1)', lineWidth: 1 } },
+            y: { type: 'linear', display: true, position: 'left', ticks: { color: '#ff6b6b', callback: function(value) { return value + '°C'; } }, grid: { color: context => context.tick.value === 0 ? '#ff9800' : '#404040', lineWidth: context => context.tick.value === 0 ? 2 : 1 }, title: { display: true, text: 'Teplota (°C)', color: '#ff6b6b' } },
+            y1: { type: 'linear', display: true, position: 'right', min: 0, ticks: { color: '#06b6d4', callback: function(value) { return value + 'mm'; } }, grid: { drawOnChartArea: false }, title: { display: true, text: 'Srážky (mm)', color: '#06b6d4' } },
+            y2: { type: 'linear', display: true, position: 'right', min: 0, ticks: { color: '#4ecdc4', callback: function(value) { return value + 'm/s'; } }, grid: { drawOnChartArea: false }, title: { display: true, text: 'Rychlost větru (m/s)', color: '#4ecdc4' } },
+            y3: { type: 'linear', display: true, position: 'right', min: 0, max: 100, ticks: { color: '#6b7280', callback: function(value) { return value + '%'; } }, grid: { drawOnChartArea: false }, title: { display: true, text: 'Oblačnost (%)', color: '#6b7280' } }
           }
         },
         plugins: [windArrowPlugin, currentTimePlugin]
@@ -1415,7 +1307,6 @@
           hour: '2-digit',
           minute: '2-digit'
         }));
-
         tempData.push(temp[i]);
         precipData.push(precip[i]);
         windData.push(wind[i]);
@@ -1423,34 +1314,27 @@
         cloudsData.push(clouds[i]);
       }
 
-      // Plugin pro kreslení šipek směru větru
       const windArrowPlugin = {
         id: 'windArrows24',
         afterDatasetsDraw: (chart) => {
           const ctx = chart.ctx;
           const meta = chart.getDatasetMeta(2);
-
           if (!meta || !meta.data) return;
-
           ctx.save();
           ctx.strokeStyle = '#4ecdc4';
           ctx.fillStyle = '#4ecdc4';
           ctx.lineWidth = 2;
-
           meta.data.forEach((point, index) => {
             const windSpeed = windData[index];
             const windDirection = windDirData[index];
-
             if (windSpeed > 1 && windDirection !== undefined && windDirection !== null) {
               const x = point.x;
               const y = point.y;
               const arrowSize = Math.min(20, Math.max(10, windSpeed * 2));
-
               ctx.save();
               ctx.translate(x, y - 15);
               const rotation = ((windDirection + 180) * Math.PI) / 180;
               ctx.rotate(rotation);
-
               ctx.beginPath();
               ctx.moveTo(0, -arrowSize/2);
               ctx.lineTo(0, arrowSize/2);
@@ -1458,27 +1342,22 @@
               ctx.lineTo(-arrowSize/4, -arrowSize/4);
               ctx.moveTo(0, -arrowSize/2);
               ctx.lineTo(arrowSize/4, -arrowSize/4);
-
               ctx.stroke();
               ctx.restore();
             }
           });
-
           ctx.restore();
         }
       };
 
-      // Plugin pro kreslení čáry aktuálního času
       const currentTimePlugin = {
         id: 'currentTimeLine24',
         afterDatasetsDraw: (chart) => {
           const ctx = chart.ctx;
           const chartArea = chart.chartArea;
           const now = new Date();
-
           let currentTimeIndex = -1;
           const currentTimeMs = now.getTime();
-          
           for (let i = 0; i < time.length; i++) {
             const dataTimeMs = new Date(time[i]).getTime();
             if (dataTimeMs <= currentTimeMs && (i + 1 >= time.length || new Date(time[i + 1]).getTime() > currentTimeMs)) {
@@ -1494,28 +1373,22 @@
               break;
             }
           }
-
           if (currentTimeIndex >= 0 && currentTimeIndex < labels.length) {
             const xScale = chart.scales.x;
             const x = xScale.getPixelForValue(currentTimeIndex);
-
             if (x >= chartArea.left && x <= chartArea.right) {
               ctx.save();
-              
               ctx.strokeStyle = '#ff9800';
               ctx.lineWidth = 3;
               ctx.setLineDash([5, 5]);
-              
               ctx.beginPath();
               ctx.moveTo(x, chartArea.top);
               ctx.lineTo(x, chartArea.bottom);
               ctx.stroke();
-              
               ctx.fillStyle = '#ff9800';
               ctx.font = 'bold 12px sans-serif';
               ctx.textAlign = 'center';
               ctx.fillText('NYNÍ', x, chartArea.top - 5);
-              
               ctx.restore();
             }
           }
@@ -1602,22 +1475,9 @@
         options: {
           responsive: true,
           maintainAspectRatio: false,
-          layout: {
-            padding: {
-              top: 40
-            }
-          },
+          layout: { padding: { top: 40 } },
           plugins: {
-            legend: {
-              position: 'bottom',
-              labels: {
-                color: '#e2e8f0',
-                font: { size: 12 },
-                padding: 20,
-                usePointStyle: true,
-                pointStyle: 'circle'
-              }
-            },
+            legend: { position: 'bottom', labels: { color: '#e2e8f0', font: { size: 12 }, padding: 20, usePointStyle: true, pointStyle: 'circle' } },
             tooltip: {
               backgroundColor: 'rgba(0,0,0,0.8)',
               titleColor: '#e2e8f0',
@@ -1629,19 +1489,11 @@
                   const index = tooltipItems[0].dataIndex;
                   const windSpeed = windData[index];
                   const windDirection = windDirData[index];
-                  const temperature = tempData[index];
-                  const precipitation = precipData[index];
-                  const cloudCover = cloudsData[index];
-                  const hour = new Date(time[index]).getHours();
-                  const isDay = hour >= 6 && hour <= 20;
-
                   const tooltipLines = [];
-                  
                   if (windSpeed > 0 && windDirection !== undefined) {
                     const directions = ['S', 'SSV', 'SV', 'VSV', 'V', 'VJV', 'JV', 'JJV', 'J', 'JJZ', 'JZ', 'ZJZ', 'Z', 'ZSZ', 'SZ', 'SSZ'];
                     const dirIndex = Math.round(windDirection / 22.5) % 16;
                     const dirText = directions[dirIndex];
-
                     tooltipLines.push(`🧭 Směr větru: ${dirText} (${Math.round(windDirection)}°)`);
                   }
                   return tooltipLines;
@@ -1650,93 +1502,11 @@
             }
           },
           scales: {
-            x: {
-              ticks: {
-                color: '#94a3b8',
-                font: { size: 11 }
-              },
-              grid: {
-                color: 'rgba(148, 163, 184, 0.1)',
-                lineWidth: 1
-              }
-            },
-            y: {
-              type: 'linear',
-              display: true,
-              position: 'left',
-              ticks: {
-                color: '#ff6b6b',
-                callback: function(value) { return value + '°C'; }
-              },
-              grid: { 
-                color: context => {
-                  if (context.tick.value === 0) {
-                    return '#ff9800';
-                  }
-                  return '#404040';
-                },
-                lineWidth: context => {
-                  if (context.tick.value === 0) {
-                    return 2;
-                  }
-                  return 1;
-                }
-              },
-              title: {
-                display: true,
-                text: 'Teplota (°C)',
-                color: '#ff6b6b'
-              }
-            },
-            y1: {
-              type: 'linear',
-              display: true,
-              position: 'right',
-              min: 0,
-              ticks: {
-                color: '#06b6d4',
-                callback: function(value) { return value + 'mm'; }
-              },
-              grid: { drawOnChartArea: false },
-              title: {
-                display: true,
-                text: 'Srážky (mm)',
-                color: '#06b6d4'
-              }
-            },
-            y2: {
-              type: 'linear',
-              display: true,
-              position: 'right',
-              min: 0,
-              ticks: {
-                color: '#4ecdc4',
-                callback: function(value) { return value + 'm/s'; }
-              },
-              grid: { drawOnChartArea: false },
-              title: {
-                display: true,
-                text: 'Rychlost větru (m/s)',
-                color: '#4ecdc4'
-              }
-            },
-            y3: {
-              type: 'linear',
-              display: true,
-              position: 'right',
-              min: 0,
-              max: 100,
-              ticks: {
-                color: '#6b7280',
-                callback: function(value) { return value + '%'; }
-              },
-              grid: { drawOnChartArea: false },
-              title: {
-                display: true,
-                text: 'Oblačnost (%)',
-                color: '#6b7280'
-              }
-            }
+            x: { ticks: { color: '#94a3b8', font: { size: 11 } }, grid: { color: 'rgba(148, 163, 184, 0.1)', lineWidth: 1 } },
+            y: { type: 'linear', display: true, position: 'left', ticks: { color: '#ff6b6b', callback: function(value) { return value + '°C'; } }, grid: { color: context => context.tick.value === 0 ? '#ff9800' : '#404040', lineWidth: context => context.tick.value === 0 ? 2 : 1 }, title: { display: true, text: 'Teplota (°C)', color: '#ff6b6b' } },
+            y1: { type: 'linear', display: true, position: 'right', min: 0, ticks: { color: '#06b6d4', callback: function(value) { return value + 'mm'; } }, grid: { drawOnChartArea: false }, title: { display: true, text: 'Srážky (mm)', color: '#06b6d4' } },
+            y2: { type: 'linear', display: true, position: 'right', min: 0, ticks: { color: '#4ecdc4', callback: function(value) { return value + 'm/s'; } }, grid: { drawOnChartArea: false }, title: { display: true, text: 'Rychlost větru (m/s)', color: '#4ecdc4' } },
+            y3: { type: 'linear', display: true, position: 'right', min: 0, max: 100, ticks: { color: '#6b7280', callback: function(value) { return value + '%'; } }, grid: { drawOnChartArea: false }, title: { display: true, text: 'Oblačnost (%)', color: '#6b7280' } }
           }
         },
         plugins: [windArrowPlugin, currentTimePlugin]
@@ -1760,34 +1530,27 @@
         });
       });
 
-      // Plugin pro kreslení šipek směru větru
       const windArrowPlugin = {
         id: 'windArrows10',
         afterDatasetsDraw: (chart) => {
           const ctx = chart.ctx;
           const meta = chart.getDatasetMeta(3);
-
           if (!meta || !meta.data) return;
-
           ctx.save();
           ctx.strokeStyle = '#4ecdc4';
           ctx.fillStyle = '#4ecdc4';
           ctx.lineWidth = 2;
-
           meta.data.forEach((point, index) => {
             const windSpeed = wind[index];
             const windDirection = windDir[index];
-
             if (windSpeed > 1 && windDirection !== undefined && windDirection !== null) {
               const x = point.x;
               const y = point.y;
               const arrowSize = Math.min(20, Math.max(10, windSpeed * 2));
-
               ctx.save();
               ctx.translate(x, y - 15);
               const rotation = ((windDirection + 180) * Math.PI) / 180;
               ctx.rotate(rotation);
-
               ctx.beginPath();
               ctx.moveTo(0, -arrowSize/2);
               ctx.lineTo(0, arrowSize/2);
@@ -1795,12 +1558,10 @@
               ctx.lineTo(-arrowSize/4, -arrowSize/4);
               ctx.moveTo(0, -arrowSize/2);
               ctx.lineTo(arrowSize/4, -arrowSize/4);
-
               ctx.stroke();
               ctx.restore();
             }
           });
-
           ctx.restore();
         }
       };
@@ -1886,22 +1647,9 @@
         options: {
           responsive: true,
           maintainAspectRatio: false,
-          layout: {
-            padding: {
-              top: 50
-            }
-          },
+          layout: { padding: { top: 50 } },
           plugins: {
-            legend: {
-              position: 'bottom',
-              labels: {
-                color: '#e2e8f0',
-                font: { size: 12 },
-                padding: 20,
-                usePointStyle: true,
-                pointStyle: 'circle'
-              }
-            },
+            legend: { position: 'bottom', labels: { color: '#e2e8f0', font: { size: 12 }, padding: 20, usePointStyle: true, pointStyle: 'circle' } },
             tooltip: {
               backgroundColor: 'rgba(0,0,0,0.8)',
               titleColor: '#e2e8f0',
@@ -1914,122 +1662,33 @@
                   const windSpeed = wind[index];
                   const windDirection = windDir[index];
                   const cloudCover = clouds[index];
-                  const temperature = (tempMax[index] + tempMin[index]) / 2;
-                  const precipitation = precip[index];
-
                   const tooltipLines = [];
-
                   if (windSpeed > 0 && windDirection !== undefined) {
                     const directions = ['S', 'SSV', 'SV', 'VSV', 'V', 'VJV', 'JV', 'JJV', 'J', 'JJZ', 'JZ', 'ZJZ', 'Z', 'ZSZ', 'SZ', 'SSZ'];
                     const dirIndex = Math.round(windDirection / 22.5) % 16;
                     const dirText = directions[dirIndex];
                     tooltipLines.push(`🧭 Směr větru: ${dirText} (${Math.round(windDirection)}°)`);
                   }
-
                   if (cloudCover !== undefined) {
                     tooltipLines.push(`☁️ Oblačnost: ${Math.round(cloudCover)}%`);
                   }
-
                   return tooltipLines;
                 }
               }
             }
           },
           scales: {
-            x: {
-              ticks: {
-                color: '#94a3b8',
-                font: { size: 11 }
-              },
-              grid: {
-                color: 'rgba(148, 163, 184, 0.1)',
-                lineWidth: 1
-              }
-            },
-            y: {
-              type: 'linear',
-              display: true,
-              position: 'left',
-              ticks: {
-                color: '#ff6b6b',
-                callback: function(value) { return value + '°C'; }
-              },
-              grid: { 
-                color: context => {
-                  if (context.tick.value === 0) {
-                    return '#ff9800';
-                  }
-                  return '#404040';
-                },
-                lineWidth: context => {
-                  if (context.tick.value === 0) {
-                    return 2;
-                  }
-                  return 1;
-                }
-              },
-              title: {
-                display: true,
-                text: 'Teplota (°C)',
-                color: '#ff6b6b'
-              }
-            },
-            y1: {
-              type: 'linear',
-              display: true,
-              position: 'right',
-              min: 0,
-              ticks: {
-                color: '#06b6d4',
-                callback: function(value) { return value + 'mm'; }
-              },
-              grid: { drawOnChartArea: false },
-              title: {
-                display: true,
-                text: 'Srážky (mm)',
-                color: '#06b6d4'
-              }
-            },
-            y2: {
-              type: 'linear',
-              display: true,
-              position: 'right',
-              min: 0,
-              ticks: {
-                color: '#4ecdc4',
-                callback: function(value) { return value + 'm/s'; }
-              },
-              grid: { drawOnChartArea: false },
-              title: {
-                display: true,
-                text: 'Rychlost větru (m/s)',
-                color: '#4ecdc4'
-              }
-            },
-            y3: {
-              type: 'linear',
-              display: true,
-              position: 'right',
-              min: 0,
-              max: 100,
-              ticks: {
-                color: '#6b7280',
-                callback: function(value) { return value + '%'; }
-              },
-              grid: { drawOnChartArea: false },
-              title: {
-                display: true,
-                text: 'Oblačnost (%)',
-                color: '#6b7280'
-              }
-            }
+            x: { ticks: { color: '#94a3b8', font: { size: 11 } }, grid: { color: 'rgba(148, 163, 184, 0.1)', lineWidth: 1 } },
+            y: { type: 'linear', display: true, position: 'left', ticks: { color: '#ff6b6b', callback: function(value) { return value + '°C'; } }, grid: { color: context => context.tick.value === 0 ? '#ff9800' : '#404040', lineWidth: context => context.tick.value === 0 ? 2 : 1 }, title: { display: true, text: 'Teplota (°C)', color: '#ff6b6b' } },
+            y1: { type: 'linear', display: true, position: 'right', min: 0, ticks: { color: '#06b6d4', callback: function(value) { return value + 'mm'; } }, grid: { drawOnChartArea: false }, title: { display: true, text: 'Srážky (mm)', color: '#06b6d4' } },
+            y2: { type: 'linear', display: true, position: 'right', min: 0, ticks: { color: '#4ecdc4', callback: function(value) { return value + 'm/s'; } }, grid: { drawOnChartArea: false }, title: { display: true, text: 'Rychlost větru (m/s)', color: '#4ecdc4' } },
+            y3: { type: 'linear', display: true, position: 'right', min: 0, max: 100, ticks: { color: '#6b7280', callback: function(value) { return value + '%'; } }, grid: { drawOnChartArea: false }, title: { display: true, text: 'Oblačnost (%)', color: '#6b7280' } }
           }
         },
         plugins: [windArrowPlugin]
       });
     }
 
-    // Uložení lokace do localStorage
     function saveLocation() {
       if (currentLocationData) {
         localStorage.setItem('savedLocation', JSON.stringify(currentLocationData));
@@ -2038,7 +1697,6 @@
       }
     }
 
-    // Načtení uložené lokace
     function loadSavedLocation() {
       const saved = localStorage.getItem('savedLocation');
       if (saved) {
@@ -2055,7 +1713,6 @@
       return false;
     }
 
-    // Aktualizace informace o uložené lokaci
     function updateSavedLocationInfo() {
       const savedLocationInfo = document.getElementById('savedLocationInfo');
       if (localStorage.getItem('savedLocation')) {
@@ -2065,7 +1722,6 @@
       }
     }
 
-    // Vlastní ikona
     const PlusIcon = L.Icon.extend({
       options: {
         iconUrl: 'data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="red" stroke-width="1" stroke-linecap="round" stroke-linejoin="round" class="feather feather-plus"><line x1="12" y1="5" x2="12" y2="19"></line><line x1="5" y1="12" x2="19" y2="12"></line></svg>',
@@ -2076,67 +1732,52 @@
     });
     const plusIcon = new PlusIcon();
 
-    // Funkce pro radar
+    // ---------------------------------------------------------
+    // VYLEPŠENÁ IMPLEMENTACE RADARU
+    // ---------------------------------------------------------
+
     function initRadar() {
-      // Bounding box pro Českou republiku (přibližné souřadnice pro dobrou viditelnost s okolím)
-      // JZ roh: [48.5, 12.0]
-      // SV roh: [51.5, 19.0]
       const czechRepublicBounds = [
-        [48.5, 12.0], // Southwest
-        [51.5, 19.0]  // Northeast
+        [48.5, 12.0],
+        [51.5, 19.0]
       ];
 
-      // Inicializace mapy
       if (radarMap) {
-        radarMap.remove(); // Odstraní starou mapu, pokud existuje
+        radarMap.remove();
       }
       
-      radarMap = L.map('radar-map'); // Inicializuje mapu bez počátečního setView
+      radarMap = L.map('radar-map');
 
-      // Použití fitBounds k zaměření mapy na bounding box ČR
       radarMap.fitBounds(czechRepublicBounds, {
-          padding: [20, 20] // Přidá 20px odsazení kolem hranic pro lepší pohled
+          padding: [20, 20]
       });
       
-      // Přidání špendlíku s polohou
       if (currentLocationData) {
         if (locationMarker) {
             locationMarker.remove();
         }
-        // Přidání špendlíku s lokací
         locationMarker = L.marker([currentLocationData.lat, currentLocationData.lon], { icon: plusIcon }).addTo(radarMap);
       }
       
-      // Definování mapových podkladů
       const baseLayers = {
         'Topografická mapa': L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
           attribution: '© OpenTopoMap contributors, SRTM | Map style: © OpenTopoMap (CC-BY-SA)',
           maxZoom: 17
         }),
-        
         'OpenStreetMap': L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
           attribution: '© OpenStreetMap contributors',
           maxZoom: 18
         })
       };
 
-      // Přidání topografické mapy jako výchozí
       baseLayers['Topografická mapa'].addTo(radarMap);
-
-      // Přidání ovladače vrstev
       L.control.layers(baseLayers).addTo(radarMap);
       
-      
-      
-      // Načtení radarových dat
       loadRadarData();
-      
-      // Nastavení statusu
-      updateRadarStatus('online', 'Radar připojen');
     }
 
     async function loadRadarData() {
-      updateRadarStatus('loading', 'Načítám radarová data...');
+      updateRadarStatus('loading', 'Načítám a předpřipravuji data...');
       
       try {
         const response = await fetch('https://api.rainviewer.com/public/weather-maps.json');
@@ -2146,31 +1787,45 @@
           throw new Error('Neplatná odpověď z API');
         }
         
-        // Získání posledních 10 snímků pro plynulejší animaci
-        radarData = data.radar.past.slice(-10);
+        radarLayers.forEach(layer => {
+            if (radarMap.hasLayer(layer)) radarMap.removeLayer(layer);
+        });
+        radarLayers = [];
+
+        radarData = data.radar.past.slice(-12);
         
-        // Vytvoření radarových vrstev
-        radarLayers = radarData.map(frame => {
-          const tileUrl = `https://tilecache.rainviewer.com/v2/radar/${frame.time}/256/{z}/{x}/{y}/2/1_1.png`;
-          return L.tileLayer(tileUrl, {
-            opacity: 0.7,
-            attribution: 'Radarová data: RainViewer',
-            className: 'radar-layer'
+        const layerPromises = radarData.map((frame, index) => {
+          return new Promise((resolve) => {
+            const tileUrl = `https://tilecache.rainviewer.com/v2/radar/${frame.time}/256/{z}/{x}/{y}/2/1_1.png`;
+            
+            const layer = L.tileLayer(tileUrl, {
+              opacity: 0,
+              attribution: 'Radarová data: RainViewer',
+              className: 'radar-layer',
+              zIndex: 100 + index
+            });
+
+            layer.on('load', resolve); 
+            setTimeout(resolve, 2000);
+
+            layer.addTo(radarMap);
+            radarLayers.push(layer);
           });
         });
         
-        // Zobrazení posledního snímku
+        await Promise.all(layerPromises);
+
         if (radarLayers.length > 0) {
-          radarLayers[radarLayers.length - 1].addTo(radarMap);
           currentRadarFrame = radarLayers.length - 1;
-          currentRadarLayer = radarLayers[currentRadarFrame];
+          radarLayers.forEach((layer, index) => {
+             layer.setOpacity(index === currentRadarFrame ? 0.7 : 0);
+          });
           
-          // Aktualizace času snímku
           const frameTime = new Date(radarData[currentRadarFrame].time * 1000);
           document.getElementById('radar-time').textContent = `Čas snímku: ${frameTime.toLocaleTimeString('cs-CZ')}`;
         }
         
-        updateRadarStatus('online', 'Radarová data načtena');
+        updateRadarStatus('online', 'Radar připraven');
         
       } catch (error) {
         console.error('Chyba při načítání radarových dat:', error);
@@ -2179,53 +1834,17 @@
       }
     }
 
-    // Funkce pro plynulé zobrazení radarového snímku
-    async function showRadarFrame(frameIndex) {
+    function showRadarFrame(frameIndex) {
       if (!radarLayers[frameIndex]) return;
       
-      if (smoothAnimation && currentRadarLayer) {
-        // Plynulý přechod
-        if (nextRadarLayer) {
-          radarMap.removeLayer(nextRadarLayer);
-          nextRadarLayer = null;
+      radarLayers.forEach((layer, index) => {
+        if (index === frameIndex) {
+            layer.setOpacity(0.7);
+        } else {
+            layer.setOpacity(0);
         }
-        
-        nextRadarLayer = radarLayers[frameIndex];
-        nextRadarLayer.addTo(radarMap);
-        nextRadarLayer.setOpacity(0);
-        
-        // Postupné zobrazení nového snímku
-        let opacity = 0;
-        const fadeInInterval = setInterval(() => {
-          opacity += 0.1;
-          if (nextRadarLayer) {
-            nextRadarLayer.setOpacity(opacity);
-            currentRadarLayer.setOpacity(0.7 - opacity);
-          }
-          
-          if (opacity >= 0.7) {
-            clearInterval(fadeInInterval);
-            if (currentRadarLayer) {
-              radarMap.removeLayer(currentRadarLayer);
-            }
-            currentRadarLayer = nextRadarLayer;
-            nextRadarLayer = null;
-            currentRadarLayer.setOpacity(0.7);
-          }
-        }, 30);
-        
-      } else {
-        // Obyčejná výměna
-        if (currentRadarLayer) {
-          radarMap.removeLayer(currentRadarLayer);
-        }
-        
-        currentRadarLayer = radarLayers[frameIndex];
-        currentRadarLayer.addTo(radarMap);
-        currentRadarLayer.setOpacity(0.7);
-      }
-      
-      // Aktualizace času snímku
+      });
+
       const frameTime = new Date(radarData[frameIndex].time * 1000);
       document.getElementById('radar-time').textContent = `Čas snímku: ${frameTime.toLocaleTimeString('cs-CZ')}`;
     }
@@ -2234,89 +1853,67 @@
       const playButton = document.getElementById('playRadar');
       
       if (radarAnimation) {
-        // Zastavení animace
         clearInterval(radarAnimation);
         radarAnimation = null;
         playButton.textContent = '▶️ Přehrát animaci';
         updateRadarStatus('online', 'Animace zastavena');
         
-        // Vyčištění pending vrstev
-        if (nextRadarLayer) {
-          radarMap.removeLayer(nextRadarLayer);
-          nextRadarLayer = null;
-        }
-        
-        return; // Důležité: ukončit funkci po zastavení animace
+        showRadarFrame(radarLayers.length - 1);
+        currentRadarFrame = radarLayers.length - 1;
+        return;
       }
       
-      // Spuštění animace
       if (radarLayers.length === 0) {
-        showNotification('Nejsou dostupná žádná radarová data', 'error');
+        showNotification('Nejsou dostupná žádná data', 'error');
         return;
       }
       
       playButton.textContent = '⏹️ Zastavit animaci';
-      updateRadarStatus('loading', 'Přehrávám animaci...');
+      updateRadarStatus('loading', 'Přehrávám smyčku...');
       
-      let frameIndex = 0;
-      smoothAnimation = true; // Povolení plynulé animace
+      let frameIndex = 0; 
 
+      showRadarFrame(frameIndex);
+
+      // Spuštění intervalu s aktuální rychlostí
       radarAnimation = setInterval(() => {
-        showRadarFrame(frameIndex);
         frameIndex = (frameIndex + 1) % radarLayers.length;
-        
-        // Po dosažení konce sekvence zastavit animaci
-        if (frameIndex === 0) {
-          // Volitelné: automatické zastavení po jednom cyklu
-          // clearInterval(radarAnimation);
-          // radarAnimation = null;
-          // playButton.textContent = '▶️ Přehrát animaci';
-          // updateRadarStatus('online', 'Animace dokončena');
-        }
-      }, 800); // Rychlost animace: 800ms mezi snímky
+        showRadarFrame(frameIndex);
+      }, animationSpeed); 
     }
 
     function updateRadarStatus(status, message) {
       const statusIndicator = document.getElementById('radar-status');
       const statusText = document.getElementById('radar-status-text');
       
-      // Reset všech tříd
       statusIndicator.className = 'status-indicator';
       
-      // Přidání příslušné třídy podle stavu
       if (status === 'loading') {
         statusIndicator.classList.add('loading');
       } else if (status === 'error') {
         statusIndicator.classList.add('error');
       }
-      // Pro 'online' stav zůstane pouze základní třída s zelenou barvou
       
       statusText.textContent = message;
     }
 
-    // Funkce pro přepínání záložek
     function switchTab(tabName) {
-      // Skrýt všechny obsahy záložek
       document.querySelectorAll('.tab-content').forEach(tab => {
         tab.classList.remove('active');
       });
       
-      // Zobrazit vybranou záložku
       document.getElementById(`${tabName}-tab`).classList.add('active');
       
-      // Aktualizovat aktivní záložku
       document.querySelectorAll('.tab').forEach(tab => {
         tab.classList.remove('active');
       });
       
       document.querySelector(`.tab[data-tab="${tabName}"]`).classList.add('active');
       
-      // Pokud přepínáme na radar a ještě není inicializován, inicializuj
       if (tabName === 'radar' && !radarMap) {
         setTimeout(initRadar, 100);
       }
       
-      // Přidání špendlíku na radarovou mapu po přepnutí
       if (tabName === 'radar' && radarMap && currentLocationData) {
         if (locationMarker) {
             locationMarker.remove();
@@ -2326,19 +1923,35 @@
       }
     }
 
-    // Inicializace aplikace
     function initApp() {
-      // Načtení uložené lokace
       if (loadSavedLocation()) {
         loadWeather();
       }
 
-      // Nastavení event listenerů
       document.getElementById('loadWeather').addEventListener('click', loadWeather);
       document.getElementById('saveLocationBtn').addEventListener('click', saveLocation);
       document.getElementById('playRadar').addEventListener('click', playRadarAnimation);
 
-      // Přepínání záložek
+      // Event listener pro slider rychlosti
+      const speedSlider = document.getElementById('radarSpeed');
+      speedSlider.addEventListener('input', function(e) {
+          animationSpeed = parseInt(e.target.value);
+          document.getElementById('radarSpeedValue').textContent = animationSpeed;
+          
+          // Pokud animace běží, okamžitě aktualizujeme interval
+          if (radarAnimation) {
+              clearInterval(radarAnimation);
+              // Zjistíme aktuální frame, abychom pokračovali plynule
+              // Protože `setInterval` volá funkci asynchronně, musíme ji zavolat znovu
+              let frameIndex = currentRadarFrame; // Pokračujeme od aktuálního
+              
+              radarAnimation = setInterval(() => {
+                  frameIndex = (frameIndex + 1) % radarLayers.length;
+                  showRadarFrame(frameIndex);
+              }, animationSpeed);
+          }
+      });
+
       document.querySelectorAll('.tab').forEach(tab => {
         tab.addEventListener('click', function() {
           switchTab(this.dataset.tab);
@@ -2391,7 +2004,6 @@
         }
       });
 
-      // Kliknutí mimo input skryje suggestions
       document.addEventListener('click', function(e) {
         if (e.target !== locationInput) {
           document.getElementById('suggestions').classList.remove('show');
@@ -2399,7 +2011,6 @@
       });
     }
 
-    // Spuštění aplikace po načtení DOM
     document.addEventListener('DOMContentLoaded', initApp);
   </script>
 </body>
