@@ -1,0 +1,798 @@
+<!doctype html>
+<html lang="cs">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>🔢 Vizualizace řadících algoritmů</title>
+
+  <!-- Tmavé téma převzaté z původní HTML šablony -->
+  <style>
+    :root{
+      --bg:#1a1a1a;
+      --panel:#2a2a2a;
+      --panel-2:#404040;
+      --muted:#94a3b8;
+      --accent:#6aa6fd;
+      --text:#e0e0e0;
+      --blue:#1f77b4;
+      --red:#ff6b6b;
+      --green:#4caf50;
+      --yellow:#ffd93d;
+      --purple:#a78bfa;
+    }
+    *{box-sizing:border-box;margin:0;padding:0}
+    body{
+      font-family: -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;
+      background:var(--bg); color:var(--text); min-height:100vh;
+      padding:20px;
+    }
+    .container{max-width:1200px;margin:0 auto;display:grid;grid-template-columns:360px 1fr;gap:20px;}
+    h1{font-size:1.2rem;margin-bottom:8px}
+    .panel{background:var(--panel);border:1px solid #404040;border-radius:10px;padding:14px}
+    .controls .row{margin-bottom:12px}
+    label{display:block;color:var(--muted);font-size:0.85rem;margin-bottom:6px}
+    select,input[type=number],button,.range{width:100%}
+    select,input[type=number]{padding:8px;border-radius:6px;background:#404040;border:1px solid #555;color:var(--text)}
+    select:focus, input[type=number]:focus{outline:2px solid var(--accent);outline-offset:2px}
+    .range{appearance:none;height:8px;background:#404040;border-radius:6px}
+    .range::-webkit-slider-thumb{appearance:none;width:16px;height:16px;border-radius:50%;background:var(--accent);border:2px solid #fff;cursor:pointer;transition:transform 0.1s}
+    .range::-webkit-slider-thumb:hover{transform:scale(1.1)}
+    .range::-moz-range-thumb{width:16px;height:16px;border-radius:50%;background:var(--accent);border:2px solid #fff;cursor:pointer}
+    .btn-row{display:flex;gap:8px}
+    button{background:var(--accent);color:#fff;padding:10px;border:none;border-radius:6px;cursor:pointer;transition:all 0.2s;font-weight:500}
+    button:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 4px 8px rgba(0,0,0,0.3)}
+    button:active:not(:disabled){transform:translateY(0)}
+    button:disabled{opacity:0.5;cursor:not-allowed}
+    button.ghost{background:#404040}
+    button.ghost:hover:not(:disabled){background:#505050}
+    .stats{display:flex;flex-direction:column;gap:6px;padding:8px;background:#232323;border-radius:6px;color:var(--muted)}
+    .legend{font-size:0.9rem;margin-top:8px;white-space:pre-line;color:var(--muted)}
+    .visual{background:#0f1720;border-radius:10px;padding:12px;display:flex;flex-direction:column;gap:10px}
+    #canvasWrap{background:#111;border-radius:6px;padding:12px;display:flex;align-items:center;justify-content:center;position:relative}
+    canvas{display:block;max-width:100%;height:420px;background:transparent}
+    .status{font-size:0.9rem;color:var(--muted);padding:6px}
+    .small{font-size:0.85rem;color:var(--muted)}
+    .desc{font-size:0.9rem;color:var(--muted);margin-bottom:6px;line-height:1.4}
+    .complexity{display:inline-block;padding:2px 6px;background:#333;border-radius:4px;font-family:monospace;font-size:0.8rem;margin-left:4px}
+    .kbd{display:inline-block;padding:2px 6px;background:#333;border:1px solid #555;border-radius:4px;font-family:monospace;font-size:0.75rem;margin:0 2px}
+    .progress-bar{height:4px;background:#333;border-radius:2px;overflow:hidden;margin-top:8px}
+    .progress-fill{height:100%;background:var(--accent);width:0%;transition:width 0.3s}
+    .tooltip{position:relative;display:inline-block;cursor:help}
+    .tooltip:hover::after{content:attr(data-tooltip);position:absolute;bottom:100%;left:50%;transform:translateX(-50%);background:#333;color:var(--text);padding:6px 10px;border-radius:6px;white-space:nowrap;font-size:0.75rem;z-index:1000;margin-bottom:5px}
+    .fade-in{animation:fadeIn 0.3s ease-in}
+    @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+    @media (max-width:900px){
+      .container{grid-template-columns:1fr; padding-bottom:40px}
+      canvas{height:300px}
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- levý panel -->
+    <div class="panel controls">
+      <h1>🔧 Ovládání</h1>
+
+      <div class="row">
+        <label for="algo">Vyberte algoritmus:</label>
+        <select id="algo">
+          <option>Bubble Sort</option>
+          <option>Selection Sort</option>
+          <option>Insertion Sort</option>
+          <option>Shell Sort</option>
+          <option>Quick Sort</option>
+          <option>Merge Sort</option>
+          <option>Heap Sort</option>
+        </select>
+        <div id="algoDesc" class="desc">Postupné prohazování sousedních prvků<span class="complexity">O(n²)</span></div>
+      </div>
+
+      <div class="row">
+        <label for="speed">⏱️ Rychlost (ms / krok): <span id="speedVal">100</span> ms</label>
+        <input id="speed" class="range" type="range" min="10" max="500" value="100">
+      </div>
+
+      <div class="row">
+        <label for="size">🔢 Počet prvků: <span class="small">(10-100)</span></label>
+        <input id="size" type="number" min="10" max="100" value="20">
+      </div>
+
+      <div class="row btn-row">
+        <button id="newData">🆕 Nová data</button>
+        <button id="start">▶️ Start</button>
+      </div>
+
+      <div class="row btn-row">
+        <button id="pause" class="ghost">⏸️ Pozastavit</button>
+        <button id="reset" class="ghost">↺ Reset</button>
+      </div>
+
+      <div class="row">
+        <button id="exportBtn" class="ghost" style="width:100%">💾 Export statistik</button>
+      </div>
+
+      <div class="row stats">
+        <div class="small">📊 Statistika</div>
+        <div id="iter">Iterace: 0</div>
+        <div id="comp">Porovnání: 0</div>
+        <div id="swaps">Prohození: 0</div>
+        <div id="timeElapsed" class="small" style="margin-top:4px;color:var(--accent)">Čas: 0.0s</div>
+      </div>
+
+      <div class="row legend panel" style="margin-top:10px;">
+        <div class="small">Legenda:</div>
+        <div>🔴 Červeně — porovnávané</div>
+        <div>🟢 Zeleně — seřazené</div>
+        <div>🔵 Modře — neseřazené</div>
+        <div>🟡 Žlutě — pivot (Quick/Heap)</div>
+      </div>
+
+      <div style="margin-top:12px" class="small">
+        <strong>💡 Klávesové zkratky:</strong><br>
+        <span class="kbd">Space</span> Start/Pauza<br>
+        <span class="kbd">R</span> Reset<br>
+        <span class="kbd">N</span> Nová data<br>
+        <span class="kbd">↑/↓</span> Rychlost
+      </div>
+    </div>
+
+    <!-- pravý panel -->
+    <div class="panel visual">
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div>
+          <h1>🔢 Vizualizace řazení</h1>
+          <div class="small" id="status">Připraveno — vyberte algoritmus a stiskněte Start nebo <span class="kbd">Space</span></div>
+        </div>
+        <div class="small">🎨 Téma: tmavé</div>
+      </div>
+
+      <div class="progress-bar">
+        <div id="progressFill" class="progress-fill"></div>
+      </div>
+
+      <div id="canvasWrap">
+        <canvas id="barsCanvas" width="900" height="420"></canvas>
+      </div>
+
+      <div id="finalSummary" class="small fade-in" style="text-align:center;margin-top:6px;"></div>
+
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-top:4px;">
+        <div class="small">© Vizualizér v2.0</div>
+        <div class="small" id="arrayInfo">Prvků: 0</div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    let data = [];
+    let originalData = []; // Uložení původních dat pro reset
+    let sorting = false;
+    let paused = false;
+    let currentGenerator = null;
+    let iterations = 0, comparisons = 0, swaps = 0;
+    let startTime = 0;
+    let timerInterval = null;
+    let totalSteps = 0;
+    let currentStep = 0;
+
+    const algoEl = document.getElementById('algo');
+    const algoDescEl = document.getElementById('algoDesc');
+    const speedEl = document.getElementById('speed');
+    const speedValEl = document.getElementById('speedVal');
+    const sizeEl = document.getElementById('size');
+    const newDataBtn = document.getElementById('newData');
+    const startBtn = document.getElementById('start');
+    const pauseBtn = document.getElementById('pause');
+    const resetBtn = document.getElementById('reset');
+    const exportBtn = document.getElementById('exportBtn');
+    const iterEl = document.getElementById('iter');
+    const compEl = document.getElementById('comp');
+    const swapsEl = document.getElementById('swaps');
+    const timeEl = document.getElementById('timeElapsed');
+    const statusEl = document.getElementById('status');
+    const canvas = document.getElementById('barsCanvas');
+    const ctx = canvas.getContext('2d');
+    const finalSummary = document.getElementById('finalSummary');
+    const progressFill = document.getElementById('progressFill');
+    const arrayInfo = document.getElementById('arrayInfo');
+
+    const descriptions = {
+      "Bubble Sort":"Postupné prohazování sousedních prvků",
+      "Selection Sort":"Výběr minima a umístění na správnou pozici",
+      "Insertion Sort":"Postupné vkládání prvků do seřazené části",
+      "Shell Sort":"Insertion Sort s postupně se zmenšujícími mezerami",
+      "Quick Sort":"Rekurzivní dělení pomocí pivota (využívá zásobník volání)",
+      "Merge Sort":"Rekurzivní dělení a slévání",
+      "Heap Sort":"Vytvoření heap struktury a řazení"
+    };
+
+    const complexities = {
+      "Bubble Sort":"O(n²)",
+      "Selection Sort":"O(n²)",
+      "Insertion Sort":"O(n²)",
+      "Shell Sort":"O(n log² n)",
+      "Quick Sort":"O(n log n)",
+      "Merge Sort":"O(n log n)",
+      "Heap Sort":"O(n log n)"
+    };
+
+    // Event listeners
+    algoEl.addEventListener('change', ()=> {
+      const algo = algoEl.value;
+      algoDescEl.innerHTML = descriptions[algo] + `<span class="complexity">${complexities[algo]}</span>`;
+      statusEl.textContent = `Vybraný algoritmus: ${algo}`;
+    });
+    
+    speedEl.addEventListener('input', ()=> speedValEl.textContent = speedEl.value);
+
+    newDataBtn.addEventListener('click', handleNewData);
+    startBtn.addEventListener('click', handleStart);
+    pauseBtn.addEventListener('click', handlePause);
+    resetBtn.addEventListener('click', handleReset);
+    exportBtn.addEventListener('click', exportStats);
+
+    // Klávesové zkratky
+    document.addEventListener('keydown', (e) => {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+      
+      switch(e.key.toLowerCase()) {
+        case ' ':
+          e.preventDefault();
+          if (sorting) handlePause();
+          else handleStart();
+          break;
+        case 'r':
+          e.preventDefault();
+          handleReset();
+          break;
+        case 'n':
+          e.preventDefault();
+          handleNewData();
+          break;
+        case 'arrowup':
+          e.preventDefault();
+          speedEl.value = Math.max(10, Number(speedEl.value) - 10);
+          speedValEl.textContent = speedEl.value;
+          break;
+        case 'arrowdown':
+          e.preventDefault();
+          speedEl.value = Math.min(500, Number(speedEl.value) + 10);
+          speedValEl.textContent = speedEl.value;
+          break;
+      }
+    });
+
+    function handleNewData() {
+      if (sorting && !paused) { 
+        alert('Nejdříve pozastavte nebo zastavte běžící řazení.'); 
+        return; 
+      }
+      generateData();
+    }
+
+    function handleStart() {
+      if (sorting) { 
+        alert('Řazení již běží'); 
+        return; 
+      }
+      startSorting();
+    }
+
+    function handlePause() {
+      if (!sorting) { 
+        alert('Žádné řazení neběží'); 
+        return; 
+      }
+      paused = !paused;
+      pauseBtn.textContent = paused ? '▶️ Pokračovat' : '⏸️ Pozastavit';
+      statusEl.textContent = paused ? '⏸️ Řazení pozastaveno' : `⚙️ Probíhá: ${algoEl.value}`;
+      
+      if (paused) {
+        stopTimer();
+      } else {
+        startTimer();
+        runStepLoop();
+      }
+    }
+
+    function handleReset() {
+      stopSorting();
+      resetToOriginalData();
+    }
+    
+    function resetToOriginalData() {
+      // Obnovení původních dat
+      data = [...originalData];
+      
+      iterations = comparisons = swaps = 0;
+      currentStep = 0;
+      updateStats();
+      drawBars();
+      progressFill.style.width = '0%';
+      statusEl.textContent = `🔄 Data obnovena na původní stav`;
+      finalSummary.textContent = '';
+      updateButtonStates();
+    }
+
+    function drawBars(highlight=[], comparing=[], pivot=[]) {
+      const w = canvas.width, h = canvas.height;
+      ctx.clearRect(0,0,w,h);
+      const n = data.length;
+      const barWidth = Math.max(4, (w - (n-1)*2) / n);
+      const maxVal = Math.max(...data, 1);
+      
+      for (let i=0;i<n;i++){
+        const val = data[i];
+        const x = i*(barWidth+2);
+        const barH = (val / maxVal) * (h - 30);
+        
+        let color = '#1f77b4'; // modrá - výchozí
+        if (pivot.includes(i)) color = '#ffd93d'; // žlutá - pivot
+        else if (comparing.includes(i)) color = '#ff6b6b'; // červená - porovnávané
+        else if (highlight.includes(i)) color = '#4caf50'; // zelená - seřazené
+        
+        ctx.fillStyle = color;
+        ctx.fillRect(x, h - barH - 20, barWidth, barH);
+        
+        // Zobrazit hodnotu u menšího počtu prvků
+        if (n <= 30 && barWidth > 15) {
+          ctx.fillStyle = '#fff';
+          ctx.font = '10px monospace';
+          ctx.textAlign = 'center';
+          ctx.fillText(val, x + barWidth/2, h - barH - 24);
+        }
+      }
+    }
+
+    function generateData() {
+      const size = Math.min(100, Math.max(10, Number(sizeEl.value) || 20));
+      sizeEl.value = size; // Normalizace hodnoty
+      
+      const pool = Array.from({length:100}, (_,i)=>i+1);
+      data = [];
+      for (let i=0;i<size;i++){
+        const idx = Math.floor(Math.random()*pool.length);
+        data.push(pool.splice(idx,1)[0]);
+      }
+      
+      // Uložení původních dat pro reset
+      originalData = [...data];
+      
+      iterations = comparisons = swaps = 0;
+      currentStep = 0;
+      updateStats();
+      drawBars();
+      progressFill.style.width = '0%';
+      statusEl.textContent = `✨ Vygenerována nová data (${size} prvků)`;
+      arrayInfo.textContent = `Prvků: ${size}`;
+      finalSummary.textContent = '';
+      
+      // Vypnutí tlačítek během generování
+      updateButtonStates();
+    }
+
+    function updateStats(){
+      iterEl.textContent = `Iterace: ${iterations}`;
+      compEl.textContent = `Porovnání: ${comparisons}`;
+      swapsEl.textContent = `Prohození: ${swaps}`;
+    }
+
+    function updateButtonStates() {
+      startBtn.disabled = sorting && !paused;
+      newDataBtn.disabled = sorting && !paused;
+      pauseBtn.disabled = !sorting;
+      resetBtn.disabled = false;
+    }
+
+    function startTimer() {
+      startTime = Date.now();
+      timerInterval = setInterval(() => {
+        const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+        timeEl.textContent = `Čas: ${elapsed}s`;
+      }, 100);
+    }
+
+    function stopTimer() {
+      if (timerInterval) {
+        clearInterval(timerInterval);
+        timerInterval = null;
+      }
+    }
+
+    // --- Algoritmy ---
+    function* bubbleSortGen() {
+      const n = data.length;
+      for (let i=0;i<n;i++){
+        for (let j=0;j<n-i-1;j++){
+          if (!sorting) return;
+          iterations++; comparisons++;
+          drawBars(range(n-i,n), [j,j+1]); 
+          currentStep++; updateProgress();
+          yield;
+          if (data[j] > data[j+1]) {
+            [data[j], data[j+1]] = [data[j+1], data[j]]; 
+            swaps++;
+            drawBars(range(n-i,n), [j,j+1]); yield;
+          }
+        }
+      }
+    }
+
+    function* selectionSortGen(){
+      const n = data.length;
+      for (let i=0;i<n;i++){
+        if (!sorting) return;
+        let minIdx = i;
+        for (let j=i+1;j<n;j++){
+          if (!sorting) return;
+          iterations++; comparisons++;
+          drawBars(range(0,i), [minIdx,j]); 
+          currentStep++; updateProgress();
+          yield;
+          if (data[j] < data[minIdx]) minIdx = j;
+        }
+        if (minIdx !== i){ 
+          [data[i], data[minIdx]] = [data[minIdx], data[i]]; 
+          swaps++; 
+        }
+        drawBars(range(0,i+1), []); yield;
+      }
+    }
+
+    function* insertionSortGen(){
+      for (let i=1;i<data.length;i++){
+        if (!sorting) return;
+        iterations++;
+        let key = data[i];
+        let j = i-1;
+        while (j>=0){
+          if (!sorting) return;
+          comparisons++;
+          if (key < data[j]){
+            data[j+1] = data[j];
+            swaps++;
+            j--;
+            drawBars(range(0,i), [j+1, j+2]); 
+            currentStep++; updateProgress();
+            yield;
+          } else break;
+        }
+        data[j+1] = key;
+        drawBars(range(0,i+1), []); yield;
+      }
+    }
+
+    function* shellSortGen(){
+      const n = data.length;
+      // Začínáme s velkou mezerou a postupně ji zmenšujeme
+      for (let gap = Math.floor(n/2); gap > 0; gap = Math.floor(gap/2)) {
+        if (!sorting) return;
+        
+        // Insertion sort s mezerou
+        for (let i = gap; i < n; i++) {
+          if (!sorting) return;
+          iterations++;
+          let temp = data[i];
+          let j = i;
+          
+          while (j >= gap) {
+            if (!sorting) return;
+            comparisons++;
+            drawBars([], [j-gap, j], [i]); 
+            currentStep++; updateProgress();
+            yield;
+            
+            if (data[j - gap] > temp) {
+              data[j] = data[j - gap];
+              swaps++;
+              j -= gap;
+              drawBars([], [j, j+gap]); 
+              yield;
+            } else {
+              break;
+            }
+          }
+          data[j] = temp;
+          drawBars([], [j]); 
+          yield;
+        }
+      }
+    }
+
+    function* quickSortGen() { yield* quickSortHelper(0, data.length-1); }
+    function* quickSortHelper(low, high){
+      if (low < high && sorting){
+        const pi = yield* partition(low, high);
+        yield* quickSortHelper(low, pi-1);
+        yield* quickSortHelper(pi+1, high);
+      }
+    }
+    function* partition(low, high){
+      if (!sorting) return;
+      const pivot = data[high];
+      let i = low-1;
+      for (let j=low;j<high;j++){
+        if (!sorting) return;
+        iterations++; comparisons++;
+        drawBars([], [j], [high]); 
+        currentStep++; updateProgress();
+        yield;
+        if (data[j] <= pivot){
+          i++;
+          if (i !== j){ 
+            [data[i], data[j]] = [data[j], data[i]]; 
+            swaps++; 
+          }
+          drawBars([], [i,j], [high]); yield;
+        }
+      }
+      [data[i+1], data[high]] = [data[high], data[i+1]]; 
+      swaps++;
+      drawBars([i+1], [], []); yield;
+      return i+1;
+    }
+
+    function* mergeSortGen(){ yield* mergeSortHelper(0, data.length-1); }
+    function* mergeSortHelper(l,r){
+      if (l<r && sorting){
+        const m = Math.floor((l+r)/2);
+        yield* mergeSortHelper(l,m);
+        yield* mergeSortHelper(m+1,r);
+        yield* merge(l,m,r);
+      }
+    }
+    function* merge(l,m,r){
+      if (!sorting) return;
+      const L = data.slice(l, m+1);
+      const R = data.slice(m+1, r+1);
+      let i=0,j=0,k=l;
+      while (i < L.length && j < R.length && sorting){
+        iterations++; comparisons++;
+        drawBars([], [l+i, m+1+j]); 
+        currentStep++; updateProgress();
+        yield;
+        if (L[i] <= R[j]) data[k++] = L[i++];
+        else data[k++] = R[j++];
+        drawBars(range(l, k), []); yield;
+      }
+      while (i < L.length && sorting){ 
+        data[k++] = L[i++]; 
+        drawBars(range(l, k), []); 
+        currentStep++; updateProgress();
+        yield; 
+      }
+      while (j < R.length && sorting){ 
+        data[k++] = R[j++]; 
+        drawBars(range(l, k), []); 
+        currentStep++; updateProgress();
+        yield; 
+      }
+    }
+
+    function* heapSortGen() {
+      const n = data.length;
+      
+      // Vytvoření heap struktury
+      for (let i = Math.floor(n / 2) - 1; i >= 0; i--) {
+        yield* heapify(n, i);
+      }
+      
+      // Extrakce prvků z heap
+      for (let i = n - 1; i > 0; i--) {
+        if (!sorting) return;
+        // Přesun aktuálního root na konec
+        [data[0], data[i]] = [data[i], data[0]];
+        swaps++;
+        drawBars(range(i, n), [0, i]);
+        currentStep++; updateProgress();
+        yield;
+        
+        // Heapify redukovaný heap
+        yield* heapify(i, 0);
+      }
+    }
+
+    function* heapify(n, i) {
+      if (!sorting) return;
+      let largest = i;
+      const left = 2 * i + 1;
+      const right = 2 * i + 2;
+      
+      if (left < n) {
+        iterations++; comparisons++;
+        drawBars([], [i, left, largest], [largest]);
+        currentStep++; updateProgress();
+        yield;
+        if (data[left] > data[largest]) {
+          largest = left;
+        }
+      }
+      
+      if (right < n) {
+        iterations++; comparisons++;
+        drawBars([], [i, right, largest], [largest]);
+        currentStep++; updateProgress();
+        yield;
+        if (data[right] > data[largest]) {
+          largest = right;
+        }
+      }
+      
+      if (largest !== i) {
+        [data[i], data[largest]] = [data[largest], data[i]];
+        swaps++;
+        drawBars([], [i, largest], [largest]);
+        yield;
+        yield* heapify(n, largest);
+      }
+    }
+
+    function range(a,b){ 
+      const out=[]; 
+      for (let i=a;i<b;i++) out.push(i); 
+      return out; 
+    }
+
+    function estimateTotalSteps(algo, n) {
+      // Hrubý odhad počtu kroků
+      switch(algo) {
+        case 'Bubble Sort': return n * n;
+        case 'Selection Sort': return n * n / 2;
+        case 'Insertion Sort': return n * n / 2;
+        case 'Shell Sort': return n * Math.log2(n) * Math.log2(n);
+        case 'Quick Sort': return n * Math.log2(n) * 3;
+        case 'Merge Sort': return n * Math.log2(n) * 2;
+        case 'Heap Sort': return n * Math.log2(n) * 2;
+        default: return n * n;
+      }
+    }
+
+    function updateProgress() {
+      if (totalSteps > 0) {
+        const percent = Math.min(100, (currentStep / totalSteps) * 100);
+        progressFill.style.width = percent + '%';
+      }
+    }
+
+    function startSorting(){
+      sorting = true; 
+      paused = false;
+      iterations = comparisons = swaps = 0;
+      currentStep = 0;
+      updateStats();
+      
+      const algo = algoEl.value;
+      totalSteps = estimateTotalSteps(algo, data.length);
+      
+      switch(algo){
+        case 'Bubble Sort': currentGenerator = bubbleSortGen(); break;
+        case 'Selection Sort': currentGenerator = selectionSortGen(); break;
+        case 'Insertion Sort': currentGenerator = insertionSortGen(); break;
+        case 'Shell Sort': currentGenerator = shellSortGen(); break;
+        case 'Quick Sort': currentGenerator = quickSortGen(); break;
+        case 'Merge Sort': currentGenerator = mergeSortGen(); break;
+        case 'Heap Sort': currentGenerator = heapSortGen(); break;
+        default: 
+          alert('Vyberte algoritmus'); 
+          sorting=false; 
+          return;
+      }
+      
+      statusEl.textContent = `⚙️ Probíhá řazení: ${algo}...`;
+      updateButtonStates();
+      startTimer();
+      runStepLoop();
+    }
+
+    function stopSorting(){
+      sorting = false;
+      paused = false;
+      currentGenerator = null;
+      stopTimer();
+      
+      pauseBtn.textContent = '⏸️ Pozastavit';
+      statusEl.textContent = '⏹️ Zastaveno';
+      updateStats();
+      updateButtonStates();
+      drawBars();
+      
+      finalSummary.innerHTML = `<div style="color:var(--muted)">ℹ️ Řazení bylo zastaveno.</div>`;
+    }
+    
+    function runStepLoop(){
+      if (!sorting || paused) return;
+      
+      const step = currentGenerator.next();
+      if (!step.done){
+        updateStats();
+        const delay = Number(speedEl.value) || 100;
+        setTimeout(runStepLoop, delay);
+      } else {
+        // Dokončeno
+        sorting = false;
+        stopTimer();
+        updateStats();
+        updateButtonStates();
+        
+        // Animace dokončení - všechny prvky zeleně
+        drawBars(range(0, data.length), []);
+        progressFill.style.width = '100%';
+        
+        const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+        statusEl.textContent = '✅ Řazení dokončeno!';
+        
+        finalSummary.innerHTML = `
+          <div style="color:var(--green);font-weight:500;font-size:1.1rem;">✅ Hotovo!</div>
+          <div style="margin-top:8px">
+            <strong>Iterace:</strong> ${iterations} | 
+            <strong>Porovnání:</strong> ${comparisons} | 
+            <strong>Prohození:</strong> ${swaps} | 
+            <strong>Čas:</strong> ${elapsed}s
+          </div>
+        `;
+        finalSummary.classList.add('fade-in');
+      }
+    }
+
+    function exportStats() {
+      const algo = algoEl.value;
+      const size = data.length;
+      const elapsed = timeEl.textContent.replace('Čas: ', '');
+      
+      const stats = {
+        algoritmus: algo,
+        casova_slozitost: complexities[algo],
+        pocet_prvku: size,
+        iterace: iterations,
+        porovnani: comparisons,
+        prohozeni: swaps,
+        cas: elapsed,
+        datum: new Date().toLocaleString('cs-CZ')
+      };
+      
+      const text = `STATISTIKY ŘAZENÍ
+${'='.repeat(50)}
+Algoritmus: ${stats.algoritmus}
+Časová složitost: ${stats.casova_slozitost}
+Počet prvků: ${stats.pocet_prvku}
+Iterace: ${stats.iterace}
+Porovnání: ${stats.porovnani}
+Prohození: ${stats.prohozeni}
+Čas: ${stats.cas}
+Datum: ${stats.datum}
+${'='.repeat(50)}`;
+      
+      // Stažení jako textový soubor
+      const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `statistiky_${algo.replace(/\s/g, '_')}_${Date.now()}.txt`;
+      a.click();
+      URL.revokeObjectURL(url);
+      
+      alert('📊 Statistiky exportovány!');
+    }
+
+    // Debounced resize handler
+    let resizeTimeout;
+    function fitCanvas(){
+      const wrap = document.getElementById('canvasWrap');
+      const rect = wrap.getBoundingClientRect();
+      canvas.width = Math.max(400, Math.floor(rect.width - 24));
+      canvas.height = window.innerWidth <= 900 ? 300 : 420;
+      drawBars();
+    }
+
+    window.addEventListener('resize', () => {
+      clearTimeout(resizeTimeout);
+      resizeTimeout = setTimeout(fitCanvas, 150);
+    });
+
+    // Inicializace
+    generateData();
+    fitCanvas();
+    algoDescEl.innerHTML = descriptions[algoEl.value] + `<span class="complexity">${complexities[algoEl.value]}</span>`;
+  </script>
+</body>
+</html>
