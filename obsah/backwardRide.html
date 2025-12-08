@@ -1,0 +1,1024 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🚗 Simulátor couvání s vozíkem</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: #1a1a1a;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 15px;
+      color: #e0e0e0;
+    }
+    
+    h1 {
+      color: #6aa6fd;
+      margin-bottom: 12px;
+      font-size: 1.5rem;
+      font-weight: 600;
+    }
+    
+    .top-bar {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+      justify-content: center;
+      align-items: center;
+    }
+    
+    .stat {
+      background: #2a2a2a;
+      padding: 6px 14px;
+      border-radius: 6px;
+      border: 1px solid #404040;
+      font-size: 14px;
+    }
+    
+    .stat-value { font-weight: 600; }
+    .time { color: #fbbf24; }
+    .best { color: #34d399; }
+    .level { color: #a78bfa; }
+    .score { color: #f472b6; }
+    .highscore { color: #fb923c; }
+    
+    .gamepad-status {
+      padding: 6px 14px;
+      border-radius: 6px;
+      font-size: 14px;
+    }
+    .gamepad-connected { background: #1a3a1a; color: #34d399; border: 1px solid #34d399; }
+    .gamepad-disconnected { background: #2a2a2a; color: #666; border: 1px solid #404040; }
+    
+    .controls-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 10px;
+      background: #2a2a2a;
+      padding: 10px 16px;
+      border-radius: 6px;
+      border: 1px solid #404040;
+      flex-wrap: wrap;
+      justify-content: center;
+      font-size: 13px;
+    }
+    
+    .controls-row label { color: #888; }
+    
+    .slider {
+      width: 100px;
+      accent-color: #6aa6fd;
+      cursor: pointer;
+    }
+    
+    .slider-value {
+      font-weight: 600;
+      min-width: 35px;
+      text-align: center;
+    }
+    
+    .btn-small {
+      padding: 5px 10px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 12px;
+      transition: all 0.15s;
+    }
+    .btn-small.active { background: #6aa6fd; color: #fff; }
+    .btn-small:not(.active) { background: #404040; color: #e0e0e0; }
+    .btn-small:hover:not(.active) { background: #505050; }
+    
+    .game-container {
+      position: relative;
+    }
+    
+    canvas {
+      border-radius: 8px;
+      border: 1px solid #404040;
+      display: block;
+    }
+    
+    .overlay {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.85);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 8px;
+    }
+    
+    .overlay-box {
+      text-align: center;
+      padding: 25px 40px;
+      background: #2a2a2a;
+      border-radius: 8px;
+      border: 1px solid;
+    }
+    .overlay-box.success { border-color: #34d399; }
+    .overlay-box.fail { border-color: #f87171; }
+    .overlay-box.pause { border-color: #6aa6fd; }
+    
+    .overlay-box h2 { font-size: 24px; margin: 10px 0; }
+    .overlay-box .icon { font-size: 40px; }
+    .overlay-box p { font-size: 15px; color: #888; margin-bottom: 15px; }
+    .overlay-box .score-detail { font-size: 13px; color: #666; margin-bottom: 10px; }
+    
+    .btn {
+      padding: 10px 20px;
+      border: none;
+      border-radius: 4px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      margin: 4px;
+      transition: all 0.15s;
+    }
+    .btn-primary { background: #6aa6fd; color: #fff; }
+    .btn-primary:hover { background: #5694f0; }
+    .btn-secondary { background: #a78bfa; color: #fff; }
+    .btn-secondary:hover { background: #8b5cf6; }
+    .btn-danger { background: #f87171; color: #fff; }
+    .btn-danger:hover { background: #ef4444; }
+    
+    .instructions {
+      margin-top: 12px;
+      text-align: center;
+      color: #666;
+      font-size: 12px;
+      line-height: 1.6;
+    }
+    .instructions kbd {
+      background: #404040;
+      padding: 2px 6px;
+      border-radius: 3px;
+      color: #e0e0e0;
+      font-size: 11px;
+    }
+    .hint { color: #6aa6fd; margin-top: 5px; }
+
+    .hidden { display: none !important; }
+  </style>
+</head>
+<body>
+  <h1>🚗 Simulátor couvání s vozíkem 🚛</h1>
+  
+  <div class="top-bar">
+    <div class="stat">⏱️ <span class="stat-value time" id="time">0.0s</span></div>
+    <div class="stat">🏆 <span class="stat-value best" id="best">---</span></div>
+    <div class="stat">📊 Level <span class="stat-value level" id="level">1</span>/5</div>
+    <div class="stat">⭐ <span class="stat-value score" id="score">0</span></div>
+    <div class="stat">🥇 High: <span class="stat-value highscore" id="highscore">0</span></div>
+    <div class="stat gamepad-status gamepad-disconnected" id="gamepadStatus">🎮 ---</div>
+  </div>
+  
+  <div class="controls-row">
+    <label>🏎️ Rychlost:</label>
+    <input type="range" class="slider" id="speedSlider" min="0.5" max="5" step="0.5" value="2">
+    <span class="slider-value" id="speedValue" style="color:#6aa6fd;">2.0x</span>
+    <button class="btn-small" onclick="setSpeed(1)">Pomalé</button>
+    <button class="btn-small active" onclick="setSpeed(2)">Normální</button>
+    <button class="btn-small" onclick="setSpeed(4)">Rychlé</button>
+    <span style="color:#404040; margin: 0 5px;">|</span>
+    <label>🎮 Řízení:</label>
+    <input type="range" class="slider" id="steerSlider" min="0.3" max="2" step="0.1" value="1">
+    <span class="slider-value" id="steerValue" style="color:#a78bfa;">1.0</span>
+    <label>⚡ Plyn:</label>
+    <input type="range" class="slider" id="throttleSlider" min="0.3" max="2" step="0.1" value="1">
+    <span class="slider-value" id="throttleValue" style="color:#fbbf24;">1.0</span>
+  </div>
+  
+  <div class="game-container">
+    <canvas id="canvas" width="950" height="600"></canvas>
+    
+    <div class="overlay hidden" id="successOverlay">
+      <div class="overlay-box success">
+        <div class="icon">🎉</div>
+        <h2 style="color:#34d399;">ZAPARKOVÁNO!</h2>
+        <p>Čas: <span id="finalTime">0.0</span>s</p>
+        <div class="score-detail">+<span id="scoreGained">0</span> bodů</div>
+        <button class="btn btn-primary" onclick="resetGame()">🔄 Znovu</button>
+        <button class="btn btn-secondary" id="nextLevelBtn" onclick="nextLevel()">➡️ Level <span id="nextLevelNum">2</span></button>
+      </div>
+    </div>
+    
+    <div class="overlay hidden" id="failOverlay">
+      <div class="overlay-box fail">
+        <div class="icon">💥</div>
+        <h2 style="color:#f87171;">KOLIZE!</h2>
+        <button class="btn btn-danger" onclick="resetGame()">🔄 Zkusit znovu</button>
+      </div>
+    </div>
+    
+    <div class="overlay hidden" id="pauseOverlay">
+      <div class="overlay-box pause">
+        <div class="icon">⏸️</div>
+        <h2 style="color:#6aa6fd;">PAUZA</h2>
+        <p>Stiskni P nebo Start pro pokračování</p>
+        <button class="btn btn-primary" onclick="togglePause()">▶️ Pokračovat</button>
+      </div>
+    </div>
+  </div>
+  
+  <div class="instructions">
+    <kbd>W</kbd>/<kbd>↑</kbd> Vpřed &nbsp;
+    <kbd>S</kbd>/<kbd>↓</kbd> Vzad &nbsp;
+    <kbd>A</kbd>/<kbd>←</kbd> Vlevo &nbsp;
+    <kbd>D</kbd>/<kbd>→</kbd> Vpravo &nbsp;
+    <kbd>R</kbd> Reset &nbsp;
+    <kbd>P</kbd> Pauza
+    <div class="hint">Zacouvej vozík do zelené zóny ve směru šipky. Čím rychleji, tím více bodů!</div>
+  </div>
+
+<script>
+// ==================== KONSTANTY ====================
+const CFG = {
+  CAR_LENGTH: 60,
+  CAR_WIDTH: 30,
+  HITCH_OFFSET: 5,
+  TRAILER_LENGTH: 40,
+  TRAILER_WIDTH: 28,
+  DRAWBAR_LENGTH: 20,
+  MAX_STEERING: 0.6,
+  STEERING_SPEED: 0.04,
+  FRICTION: 0.98,
+  MAX_LEVELS: 5
+};
+
+// ==================== STAV ====================
+const state = {
+  car: { x: 0, y: 0, angle: 0, steering: 0, velocity: 0 },
+  trailer: { angle: 0 },
+  keys: { up: false, down: false, left: false, right: false },
+  gamepad: { steering: 0, throttle: 0, brake: 0 },
+  parked: false,
+  collision: false,
+  paused: false,
+  attempts: 0,
+  bestTime: null,
+  currentTime: 0,
+  gameStarted: false,
+  level: 1,
+  score: 0,
+  highScore: parseInt(localStorage.getItem('trailerHighScore')) || 0,
+  tireMarks: [],
+  particles: [],
+  warningLevel: 0
+};
+
+let settings = {
+  speed: 2,
+  steeringSens: 1,
+  throttleSens: 1
+};
+
+let parkingZone = {};
+let obstacles = [];
+let startPos = {};
+let gamepadIndex = null;
+let lastTime = 0;
+
+// ==================== CANVAS ====================
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+
+// ==================== GENEROVÁNÍ LEVELU ====================
+function rand(min, max) {
+  return Math.random() * (max - min) + min;
+}
+
+function randInt(min, max) {
+  return Math.floor(rand(min, max + 1));
+}
+
+function generateLevel(level) {
+  // Složitost podle levelu
+  const difficulty = Math.min(level / CFG.MAX_LEVELS, 1);
+  
+  // Startovní pozice - více variací pro vyšší levely
+  const startVariants = [
+    { x: 180, y: 150 }, { x: 280, y: 180 }, { x: 150, y: 220 },
+    { x: 350, y: 130 }, { x: 220, y: 250 }
+  ];
+  const sv = startVariants[randInt(0, Math.min(level, startVariants.length - 1))];
+  startPos = {
+    x: sv.x + rand(-25, 25),
+    y: sv.y + rand(-20, 20),
+    angle: rand(0.3, Math.PI - 0.3)
+  };
+  
+  // Parkovací zóna
+  const parkVariants = [
+    { x: 720, y: 420, angle: Math.PI/2 },
+    { x: 780, y: 350, angle: Math.PI/2 },
+    { x: 650, y: 480, angle: 0 },
+    { x: 700, y: 380, angle: Math.PI * 0.7 },
+    { x: 600, y: 450, angle: Math.PI * 0.3 }
+  ];
+  const pv = parkVariants[randInt(0, Math.min(level - 1, parkVariants.length - 1))];
+  const isHorizontal = Math.abs(pv.angle) < 0.3 || Math.abs(pv.angle - Math.PI) < 0.3;
+  parkingZone = {
+    x: pv.x + rand(-20, 20),
+    y: pv.y + rand(-20, 20),
+    width: isHorizontal ? 130 : 90,
+    height: isHorizontal ? 90 : 130,
+    angle: pv.angle + rand(-0.1, 0.1)
+  };
+  
+  // Překážky - více pro vyšší levely
+  obstacles = [];
+  const numObstacles = 1 + level;
+  
+  for (let i = 0; i < numObstacles; i++) {
+    let obs, valid, attempts = 0;
+    do {
+      valid = true;
+      const isVertical = Math.random() > 0.5;
+      obs = {
+        x: rand(280, 700),
+        y: rand(200, 480),
+        width: isVertical ? rand(15, 25) : rand(60, 120),
+        height: isVertical ? rand(60, 120) : rand(15, 25)
+      };
+      
+      // Kontrola kolize se startem
+      if (Math.abs(obs.x - startPos.x) < 150 && Math.abs(obs.y - startPos.y) < 100) valid = false;
+      // Kontrola kolize s cílem
+      if (Math.abs(obs.x - parkingZone.x) < 150 && Math.abs(obs.y - parkingZone.y) < 150) valid = false;
+      // Kontrola kolize s jinými překážkami
+      for (const other of obstacles) {
+        if (Math.abs(obs.x - other.x) < 80 && Math.abs(obs.y - other.y) < 80) valid = false;
+      }
+      attempts++;
+    } while (!valid && attempts < 20);
+    
+    if (valid) obstacles.push(obs);
+  }
+  
+  // Reset stavu
+  state.tireMarks = [];
+  state.particles = [];
+  state.warningLevel = 0;
+}
+
+// ==================== VSTUP ====================
+document.addEventListener('keydown', e => {
+  const key = e.key.toLowerCase();
+  if (['arrowup','arrowdown','arrowleft','arrowright','w','a','s','d'].includes(key)) {
+    e.preventDefault();
+    if (!state.paused) state.gameStarted = true;
+  }
+  if (key === 'arrowup' || key === 'w') state.keys.up = true;
+  if (key === 'arrowdown' || key === 's') state.keys.down = true;
+  if (key === 'arrowleft' || key === 'a') state.keys.left = true;
+  if (key === 'arrowright' || key === 'd') state.keys.right = true;
+  if (key === 'r') resetGame();
+  if (key === 'p') togglePause();
+  if (key === 'escape') togglePause();
+});
+
+document.addEventListener('keyup', e => {
+  const key = e.key.toLowerCase();
+  if (key === 'arrowup' || key === 'w') state.keys.up = false;
+  if (key === 'arrowdown' || key === 's') state.keys.down = false;
+  if (key === 'arrowleft' || key === 'a') state.keys.left = false;
+  if (key === 'arrowright' || key === 'd') state.keys.right = false;
+});
+
+// ==================== GAMEPAD ====================
+window.addEventListener('gamepadconnected', e => {
+  gamepadIndex = e.gamepad.index;
+  updateGamepadUI(true);
+});
+
+window.addEventListener('gamepaddisconnected', e => {
+  if (e.gamepad.index === gamepadIndex) {
+    gamepadIndex = null;
+    updateGamepadUI(false);
+  }
+});
+
+function updateGamepadUI(connected) {
+  const el = document.getElementById('gamepadStatus');
+  el.className = 'stat gamepad-status ' + (connected ? 'gamepad-connected' : 'gamepad-disconnected');
+  el.textContent = '🎮 ' + (connected ? 'OK' : '---');
+}
+
+function pollGamepad() {
+  let gp = null;
+  try {
+    const gamepads = navigator.getGamepads();
+    if (gamepadIndex !== null) gp = gamepads[gamepadIndex];
+    else {
+      for (let i = 0; i < gamepads.length; i++) {
+        if (gamepads[i]) { gamepadIndex = i; gp = gamepads[i]; updateGamepadUI(true); break; }
+      }
+    }
+  } catch (e) { return; }
+  
+  if (!gp) return;
+  
+  const dz = 0.15;
+  let steering = 0, throttle = 0, brake = 0;
+  
+  // Řízení
+  if (Math.abs(gp.axes[0]) > dz) steering = gp.axes[0];
+  else if (gp.axes[2] && Math.abs(gp.axes[2]) > dz) steering = gp.axes[2];
+  if (gp.buttons[14]?.pressed) steering = -1;
+  if (gp.buttons[15]?.pressed) steering = 1;
+  
+  // Plyn/Brzda
+  if (gp.buttons[7]) throttle = Math.max(throttle, gp.buttons[7].value || (gp.buttons[7].pressed ? 1 : 0));
+  if (gp.buttons[6]) brake = Math.max(brake, gp.buttons[6].value || (gp.buttons[6].pressed ? 1 : 0));
+  
+  const leftY = gp.axes[1] || 0;
+  if (leftY < -dz) throttle = Math.max(throttle, -leftY);
+  if (leftY > dz) brake = Math.max(brake, leftY);
+  
+  if (gp.buttons[0]?.pressed) throttle = 1;
+  if (gp.buttons[1]?.pressed) brake = 1;
+  if (gp.buttons[5]?.pressed) throttle = 1;
+  if (gp.buttons[4]?.pressed) brake = 1;
+  if (gp.buttons[12]?.pressed) throttle = 1;
+  if (gp.buttons[13]?.pressed) brake = 1;
+  
+  // Pauza
+  if (gp.buttons[9]?.pressed) togglePause();
+  // Reset
+  if (gp.buttons[8]?.pressed) resetGame();
+  
+  state.gamepad = { steering, throttle, brake };
+  if ((throttle > 0.1 || brake > 0.1) && !state.paused) state.gameStarted = true;
+}
+
+// ==================== UI ====================
+document.getElementById('speedSlider').oninput = e => {
+  settings.speed = parseFloat(e.target.value);
+  document.getElementById('speedValue').textContent = settings.speed.toFixed(1) + 'x';
+  updateSpeedBtns();
+};
+
+document.getElementById('steerSlider').oninput = e => {
+  settings.steeringSens = parseFloat(e.target.value);
+  document.getElementById('steerValue').textContent = settings.steeringSens.toFixed(1);
+};
+
+document.getElementById('throttleSlider').oninput = e => {
+  settings.throttleSens = parseFloat(e.target.value);
+  document.getElementById('throttleValue').textContent = settings.throttleSens.toFixed(1);
+};
+
+function setSpeed(val) {
+  settings.speed = val;
+  document.getElementById('speedSlider').value = val;
+  document.getElementById('speedValue').textContent = val.toFixed(1) + 'x';
+  updateSpeedBtns();
+}
+
+function updateSpeedBtns() {
+  document.querySelectorAll('.btn-small').forEach(b => {
+    b.classList.toggle('active', 
+      (b.textContent === 'Pomalé' && settings.speed === 1) ||
+      (b.textContent === 'Normální' && settings.speed === 2) ||
+      (b.textContent === 'Rychlé' && settings.speed === 4)
+    );
+  });
+}
+
+function updateUI() {
+  document.getElementById('time').textContent = state.currentTime.toFixed(1) + 's';
+  document.getElementById('best').textContent = state.bestTime ? state.bestTime.toFixed(1) + 's' : '---';
+  document.getElementById('level').textContent = state.level;
+  document.getElementById('score').textContent = state.score;
+  document.getElementById('highscore').textContent = state.highScore;
+}
+
+// ==================== FYZIKA ====================
+function normalizeAngle(a) {
+  while (a > Math.PI) a -= Math.PI * 2;
+  while (a < -Math.PI) a += Math.PI * 2;
+  return a;
+}
+
+function getCorners(cx, cy, len, wid, angle) {
+  const cos = Math.cos(angle), sin = Math.sin(angle);
+  const hl = len/2, hw = wid/2;
+  return [
+    { x: cx + cos*hl - sin*hw, y: cy + sin*hl + cos*hw },
+    { x: cx + cos*hl + sin*hw, y: cy + sin*hl - cos*hw },
+    { x: cx - cos*hl + sin*hw, y: cy - sin*hl - cos*hw },
+    { x: cx - cos*hl - sin*hw, y: cy - sin*hl + cos*hw }
+  ];
+}
+
+function polygonsIntersect(p1, p2) {
+  for (const poly of [p1, p2]) {
+    for (let i = 0; i < poly.length; i++) {
+      const j = (i + 1) % poly.length;
+      const ax = -(poly[j].y - poly[i].y), ay = poly[j].x - poly[i].x;
+      let min1 = Infinity, max1 = -Infinity, min2 = Infinity, max2 = -Infinity;
+      for (const p of p1) { const d = p.x*ax + p.y*ay; min1 = Math.min(min1,d); max1 = Math.max(max1,d); }
+      for (const p of p2) { const d = p.x*ax + p.y*ay; min2 = Math.min(min2,d); max2 = Math.max(max2,d); }
+      if (max1 < min2 || max2 < min1) return false;
+    }
+  }
+  return true;
+}
+
+function distToObstacle(carCorners, trailerCorners) {
+  let minDist = Infinity;
+  const allCorners = [...carCorners, ...trailerCorners];
+  
+  for (const obs of obstacles) {
+    const cx = obs.x + obs.width/2, cy = obs.y + obs.height/2;
+    for (const c of allCorners) {
+      const d = Math.sqrt((c.x - cx)**2 + (c.y - cy)**2) - Math.max(obs.width, obs.height)/2;
+      minDist = Math.min(minDist, d);
+    }
+  }
+  
+  // Hranice
+  for (const c of allCorners) {
+    minDist = Math.min(minDist, c.x, c.y, canvas.width - c.x, canvas.height - c.y);
+  }
+  
+  return minDist;
+}
+
+function checkCollision(carCorners, trailerCorners) {
+  for (const obs of obstacles) {
+    const oc = [
+      {x: obs.x, y: obs.y}, {x: obs.x + obs.width, y: obs.y},
+      {x: obs.x + obs.width, y: obs.y + obs.height}, {x: obs.x, y: obs.y + obs.height}
+    ];
+    if (polygonsIntersect(carCorners, oc) || polygonsIntersect(trailerCorners, oc)) return true;
+  }
+  
+  for (const c of [...carCorners, ...trailerCorners]) {
+    if (c.x < 0 || c.x > canvas.width || c.y < 0 || c.y > canvas.height) return true;
+  }
+  return false;
+}
+
+function checkParked() {
+  const { car, trailer } = state;
+  const hitchX = car.x - Math.cos(car.angle) * (CFG.CAR_LENGTH/2 + CFG.HITCH_OFFSET);
+  const hitchY = car.y - Math.sin(car.angle) * (CFG.CAR_LENGTH/2 + CFG.HITCH_OFFSET);
+  const tcX = hitchX - Math.cos(trailer.angle) * (CFG.DRAWBAR_LENGTH + CFG.TRAILER_LENGTH/2);
+  const tcY = hitchY - Math.sin(trailer.angle) * (CFG.DRAWBAR_LENGTH + CFG.TRAILER_LENGTH/2);
+  
+  const zcx = parkingZone.x + parkingZone.width/2;
+  const zcy = parkingZone.y + parkingZone.height/2;
+  const relX = tcX - zcx, relY = tcY - zcy;
+  const rot = -(parkingZone.angle - Math.PI/2);
+  const lx = relX * Math.cos(rot) - relY * Math.sin(rot);
+  const ly = relX * Math.sin(rot) + relY * Math.cos(rot);
+  
+  const inZone = Math.abs(lx) < parkingZone.width/2 - 15 && Math.abs(ly) < parkingZone.height/2 - 15;
+  const angleDiff = Math.abs(normalizeAngle(trailer.angle - parkingZone.angle));
+  const aligned = angleDiff < 0.35 || Math.abs(angleDiff - Math.PI) < 0.35;
+  
+  return inZone && aligned && Math.abs(car.velocity) < 0.1;
+}
+
+// ==================== UPDATE ====================
+function update(dt) {
+  if (state.parked || state.collision || state.paused) return;
+  
+  if (state.gameStarted) state.currentTime += dt;
+  
+  const { car, trailer, keys, gamepad } = state;
+  const { speed, steeringSens, throttleSens } = settings;
+  
+  // Řízení
+  let steer = car.steering;
+  if (Math.abs(gamepad.steering) > 0.01) {
+    const curved = Math.sign(gamepad.steering) * Math.pow(Math.abs(gamepad.steering), 2 - steeringSens);
+    steer = curved * CFG.MAX_STEERING * steeringSens;
+  } else if (keys.left) {
+    steer = Math.max(steer - CFG.STEERING_SPEED * steeringSens, -CFG.MAX_STEERING);
+  } else if (keys.right) {
+    steer = Math.min(steer + CFG.STEERING_SPEED * steeringSens, CFG.MAX_STEERING);
+  } else {
+    steer *= 0.9;
+  }
+  steer = Math.max(-CFG.MAX_STEERING, Math.min(CFG.MAX_STEERING, steer));
+  
+  // Rychlost
+  let vel = car.velocity;
+  if (gamepad.throttle > 0.01 || gamepad.brake > 0.01) {
+    const accel = 0.12 * throttleSens;
+    if (gamepad.throttle > 0.01) {
+      const target = gamepad.throttle * speed * throttleSens;
+      vel = vel < target ? Math.min(vel + accel, target) : vel * 0.95;
+    }
+    if (gamepad.brake > 0.01) {
+      const target = -gamepad.brake * speed * throttleSens;
+      vel = vel > target ? Math.max(vel - accel, target) : vel * 0.95;
+    }
+    vel = Math.max(-speed, Math.min(speed, vel));
+  } else if (keys.up) {
+    vel = Math.min(vel + 0.1, speed);
+  } else if (keys.down) {
+    vel = Math.max(vel - 0.1, -speed);
+  } else {
+    vel *= CFG.FRICTION;
+  }
+  
+  // Pohyb
+  const turnRate = vel * Math.tan(steer) / CFG.CAR_LENGTH;
+  const newAngle = car.angle + turnRate;
+  const newX = car.x + Math.cos(newAngle) * vel;
+  const newY = car.y + Math.sin(newAngle) * vel;
+  
+  // Vozík
+  const pivotLen = CFG.DRAWBAR_LENGTH + CFG.TRAILER_LENGTH/2;
+  const oldHitchX = car.x - Math.cos(car.angle) * (CFG.CAR_LENGTH/2 + CFG.HITCH_OFFSET);
+  const oldHitchY = car.y - Math.sin(car.angle) * (CFG.CAR_LENGTH/2 + CFG.HITCH_OFFSET);
+  const oldWheelX = oldHitchX - Math.cos(trailer.angle) * pivotLen;
+  const oldWheelY = oldHitchY - Math.sin(trailer.angle) * pivotLen;
+  
+  const hitchX = newX - Math.cos(newAngle) * (CFG.CAR_LENGTH/2 + CFG.HITCH_OFFSET);
+  const hitchY = newY - Math.sin(newAngle) * (CFG.CAR_LENGTH/2 + CFG.HITCH_OFFSET);
+  
+  const long = (hitchX - oldHitchX) * Math.cos(trailer.angle) + (hitchY - oldHitchY) * Math.sin(trailer.angle);
+  const newWheelX = oldWheelX + long * Math.cos(trailer.angle);
+  const newWheelY = oldWheelY + long * Math.sin(trailer.angle);
+  const newTrailerAngle = Math.atan2(hitchY - newWheelY, hitchX - newWheelX);
+  
+  // Stopy pneumatik
+  if (Math.abs(vel) > 0.3 && state.gameStarted) {
+    if (state.tireMarks.length > 500) state.tireMarks.shift();
+    state.tireMarks.push({
+      x: oldWheelX, y: oldWheelY,
+      angle: trailer.angle,
+      age: 1
+    });
+  }
+  
+  // Update stavu
+  car.x = newX; car.y = newY;
+  car.angle = newAngle; car.steering = steer; car.velocity = vel;
+  trailer.angle = newTrailerAngle;
+  
+  // Corners pro kontroly
+  const carCorners = getCorners(car.x, car.y, CFG.CAR_LENGTH, CFG.CAR_WIDTH, car.angle);
+  const tcX = hitchX - Math.cos(newTrailerAngle) * (CFG.DRAWBAR_LENGTH + CFG.TRAILER_LENGTH/2);
+  const tcY = hitchY - Math.sin(newTrailerAngle) * (CFG.DRAWBAR_LENGTH + CFG.TRAILER_LENGTH/2);
+  const trailerCorners = getCorners(tcX, tcY, CFG.TRAILER_LENGTH, CFG.TRAILER_WIDTH, newTrailerAngle);
+  
+  // Varování
+  const dist = distToObstacle(carCorners, trailerCorners);
+  state.warningLevel = dist < 30 ? Math.max(0, 1 - dist/30) : 0;
+  
+  // Kolize
+  if (checkCollision(carCorners, trailerCorners)) {
+    state.collision = true;
+    createExplosion(car.x, car.y);
+    document.getElementById('failOverlay').classList.remove('hidden');
+  } else if (checkParked()) {
+    state.parked = true;
+    const timeBonus = Math.max(0, Math.floor((60 - state.currentTime) * 10));
+    const levelBonus = state.level * 100;
+    const attemptPenalty = Math.max(0, (state.attempts - 1) * 20);
+    const gained = Math.max(10, timeBonus + levelBonus - attemptPenalty);
+    state.score += gained;
+    
+    if (state.score > state.highScore) {
+      state.highScore = state.score;
+      localStorage.setItem('trailerHighScore', state.highScore);
+    }
+    
+    if (!state.bestTime || state.currentTime < state.bestTime) {
+      state.bestTime = state.currentTime;
+    }
+    
+    document.getElementById('finalTime').textContent = state.currentTime.toFixed(1);
+    document.getElementById('scoreGained').textContent = gained;
+    document.getElementById('nextLevelNum').textContent = Math.min(state.level + 1, CFG.MAX_LEVELS);
+    document.getElementById('nextLevelBtn').classList.toggle('hidden', state.level >= CFG.MAX_LEVELS);
+    document.getElementById('successOverlay').classList.remove('hidden');
+  }
+  
+  // Stárnutí stop
+  state.tireMarks.forEach(m => m.age *= 0.998);
+  state.tireMarks = state.tireMarks.filter(m => m.age > 0.1);
+  
+  // Částice
+  state.particles = state.particles.filter(p => {
+    p.x += p.vx; p.y += p.vy;
+    p.vy += 0.2; p.life -= 0.02;
+    return p.life > 0;
+  });
+  
+  updateUI();
+}
+
+function createExplosion(x, y) {
+  for (let i = 0; i < 20; i++) {
+    state.particles.push({
+      x, y,
+      vx: (Math.random() - 0.5) * 8,
+      vy: (Math.random() - 0.5) * 8,
+      life: 1,
+      color: Math.random() > 0.5 ? '#f87171' : '#fbbf24'
+    });
+  }
+}
+
+// ==================== VYKRESLOVÁNÍ ====================
+function draw() {
+  const { car, trailer, warningLevel } = state;
+  
+  // Pozadí
+  ctx.fillStyle = '#3a3a3a';
+  ctx.fillRect(0, 0, canvas.width, canvas.height);
+  
+  // Mřížka
+  ctx.strokeStyle = '#454545';
+  ctx.lineWidth = 1;
+  for (let i = 0; i < canvas.width; i += 50) {
+    ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, canvas.height); ctx.stroke();
+  }
+  for (let i = 0; i < canvas.height; i += 50) {
+    ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(canvas.width, i); ctx.stroke();
+  }
+  
+  // Stopy pneumatik
+  ctx.fillStyle = '#2a2a2a';
+  for (const m of state.tireMarks) {
+    ctx.save();
+    ctx.globalAlpha = m.age * 0.4;
+    ctx.translate(m.x, m.y);
+    ctx.rotate(m.angle);
+    ctx.fillRect(-3, -CFG.TRAILER_WIDTH/2 - 2, 6, 4);
+    ctx.fillRect(-3, CFG.TRAILER_WIDTH/2 - 2, 6, 4);
+    ctx.restore();
+  }
+  ctx.globalAlpha = 1;
+  
+  // Varování - červený okraj
+  if (warningLevel > 0) {
+    ctx.save();
+    ctx.strokeStyle = `rgba(248, 113, 113, ${warningLevel * 0.6})`;
+    ctx.lineWidth = 8;
+    ctx.strokeRect(4, 4, canvas.width - 8, canvas.height - 8);
+    ctx.restore();
+  }
+  
+  // Parkovací zóna
+  ctx.save();
+  const zcx = parkingZone.x + parkingZone.width/2;
+  const zcy = parkingZone.y + parkingZone.height/2;
+  ctx.translate(zcx, zcy);
+  ctx.rotate(parkingZone.angle - Math.PI/2);
+  ctx.fillStyle = state.parked ? '#34d39944' : '#34d39920';
+  ctx.strokeStyle = state.parked ? '#34d399' : '#34d39966';
+  ctx.lineWidth = 2;
+  ctx.setLineDash([8, 4]);
+  ctx.fillRect(-parkingZone.width/2, -parkingZone.height/2, parkingZone.width, parkingZone.height);
+  ctx.strokeRect(-parkingZone.width/2, -parkingZone.height/2, parkingZone.width, parkingZone.height);
+  ctx.setLineDash([]);
+  // Šipka
+  ctx.strokeStyle = state.parked ? '#34d399' : '#34d39955';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.moveTo(0, parkingZone.height * 0.3);
+  ctx.lineTo(0, -parkingZone.height * 0.3);
+  ctx.moveTo(-8, -parkingZone.height * 0.3 + 12);
+  ctx.lineTo(0, -parkingZone.height * 0.3);
+  ctx.lineTo(8, -parkingZone.height * 0.3 + 12);
+  ctx.stroke();
+  ctx.restore();
+  
+  // Překážky
+  for (const obs of obstacles) {
+    ctx.fillStyle = '#ef4444';
+    ctx.strokeStyle = '#b91c1c';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.roundRect(obs.x, obs.y, obs.width, obs.height, 3);
+    ctx.fill();
+    ctx.stroke();
+    // Čáry
+    ctx.strokeStyle = '#fbbf24';
+    ctx.lineWidth = 2;
+    const step = 12;
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(obs.x, obs.y, obs.width, obs.height);
+    ctx.clip();
+    for (let i = -obs.height; i < obs.width + obs.height; i += step) {
+      ctx.moveTo(obs.x + i, obs.y);
+      ctx.lineTo(obs.x + i + obs.height, obs.y + obs.height);
+    }
+    ctx.stroke();
+    ctx.restore();
+  }
+  
+  // Výpočet pozic
+  const hitchX = car.x - Math.cos(car.angle) * (CFG.CAR_LENGTH/2 + CFG.HITCH_OFFSET);
+  const hitchY = car.y - Math.sin(car.angle) * (CFG.CAR_LENGTH/2 + CFG.HITCH_OFFSET);
+  const tcX = hitchX - Math.cos(trailer.angle) * (CFG.DRAWBAR_LENGTH + CFG.TRAILER_LENGTH/2);
+  const tcY = hitchY - Math.sin(trailer.angle) * (CFG.DRAWBAR_LENGTH + CFG.TRAILER_LENGTH/2);
+  
+  // Stín
+  ctx.fillStyle = 'rgba(0,0,0,0.2)';
+  ctx.save();
+  ctx.translate(tcX + 4, tcY + 4);
+  ctx.rotate(trailer.angle);
+  ctx.beginPath();
+  ctx.roundRect(-CFG.TRAILER_LENGTH/2, -CFG.TRAILER_WIDTH/2, CFG.TRAILER_LENGTH, CFG.TRAILER_WIDTH, 4);
+  ctx.fill();
+  ctx.restore();
+  ctx.save();
+  ctx.translate(car.x + 4, car.y + 4);
+  ctx.rotate(car.angle);
+  ctx.beginPath();
+  ctx.roundRect(-CFG.CAR_LENGTH/2, -CFG.CAR_WIDTH/2, CFG.CAR_LENGTH, CFG.CAR_WIDTH, 5);
+  ctx.fill();
+  ctx.restore();
+  
+  // Oj
+  ctx.strokeStyle = '#555';
+  ctx.lineWidth = 5;
+  ctx.beginPath();
+  ctx.moveTo(car.x - Math.cos(car.angle) * CFG.CAR_LENGTH/2, car.y - Math.sin(car.angle) * CFG.CAR_LENGTH/2);
+  ctx.lineTo(hitchX, hitchY);
+  ctx.lineTo(hitchX - Math.cos(trailer.angle) * CFG.DRAWBAR_LENGTH, hitchY - Math.sin(trailer.angle) * CFG.DRAWBAR_LENGTH);
+  ctx.stroke();
+  
+  // Vozík
+  ctx.save();
+  ctx.translate(tcX, tcY);
+  ctx.rotate(trailer.angle);
+  const tg = ctx.createLinearGradient(-CFG.TRAILER_LENGTH/2, -CFG.TRAILER_WIDTH/2, CFG.TRAILER_LENGTH/2, CFG.TRAILER_WIDTH/2);
+  tg.addColorStop(0, '#6b7280'); tg.addColorStop(1, '#4b5563');
+  ctx.fillStyle = tg;
+  ctx.strokeStyle = state.collision ? '#ef4444' : '#9ca3af';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.roundRect(-CFG.TRAILER_LENGTH/2, -CFG.TRAILER_WIDTH/2, CFG.TRAILER_LENGTH, CFG.TRAILER_WIDTH, 4);
+  ctx.fill(); ctx.stroke();
+  // Kola
+  ctx.fillStyle = '#1f2937';
+  ctx.fillRect(-5, -CFG.TRAILER_WIDTH/2 - 4, 10, 6);
+  ctx.fillRect(-5, CFG.TRAILER_WIDTH/2 - 2, 10, 6);
+  ctx.restore();
+  
+  // Auto
+  ctx.save();
+  ctx.translate(car.x, car.y);
+  ctx.rotate(car.angle);
+  const cg = ctx.createLinearGradient(-CFG.CAR_LENGTH/2, -CFG.CAR_WIDTH/2, CFG.CAR_LENGTH/2, CFG.CAR_WIDTH/2);
+  cg.addColorStop(0, '#3b82f6'); cg.addColorStop(1, '#1d4ed8');
+  ctx.fillStyle = cg;
+  ctx.strokeStyle = state.collision ? '#ef4444' : '#60a5fa';
+  ctx.lineWidth = 2;
+  ctx.beginPath();
+  ctx.roundRect(-CFG.CAR_LENGTH/2, -CFG.CAR_WIDTH/2, CFG.CAR_LENGTH, CFG.CAR_WIDTH, 5);
+  ctx.fill(); ctx.stroke();
+  // Okna
+  ctx.fillStyle = 'rgba(30,30,30,0.7)';
+  ctx.beginPath();
+  ctx.roundRect(-CFG.CAR_LENGTH/2 + 22, -CFG.CAR_WIDTH/2 + 4, 22, CFG.CAR_WIDTH - 8, 3);
+  ctx.fill();
+  // Světla
+  ctx.fillStyle = '#fef08a';
+  ctx.beginPath();
+  ctx.arc(CFG.CAR_LENGTH/2 - 5, -CFG.CAR_WIDTH/2 + 6, 3, 0, Math.PI*2);
+  ctx.arc(CFG.CAR_LENGTH/2 - 5, CFG.CAR_WIDTH/2 - 6, 3, 0, Math.PI*2);
+  ctx.fill();
+  ctx.fillStyle = '#ef4444';
+  ctx.beginPath();
+  ctx.arc(-CFG.CAR_LENGTH/2 + 5, -CFG.CAR_WIDTH/2 + 6, 3, 0, Math.PI*2);
+  ctx.arc(-CFG.CAR_LENGTH/2 + 5, CFG.CAR_WIDTH/2 - 6, 3, 0, Math.PI*2);
+  ctx.fill();
+  // Kola
+  ctx.fillStyle = '#1f2937';
+  ctx.save();
+  ctx.translate(CFG.CAR_LENGTH/2 - 10, -CFG.CAR_WIDTH/2);
+  ctx.rotate(car.steering);
+  ctx.fillRect(-5, -5, 10, 6);
+  ctx.restore();
+  ctx.save();
+  ctx.translate(CFG.CAR_LENGTH/2 - 10, CFG.CAR_WIDTH/2);
+  ctx.rotate(car.steering);
+  ctx.fillRect(-5, -1, 10, 6);
+  ctx.restore();
+  ctx.fillRect(-CFG.CAR_LENGTH/2 + 5, -CFG.CAR_WIDTH/2 - 4, 10, 6);
+  ctx.fillRect(-CFG.CAR_LENGTH/2 + 5, CFG.CAR_WIDTH/2 - 2, 10, 6);
+  ctx.restore();
+  
+  // Částice
+  for (const p of state.particles) {
+    ctx.fillStyle = p.color;
+    ctx.globalAlpha = p.life;
+    ctx.beginPath();
+    ctx.arc(p.x, p.y, 4, 0, Math.PI * 2);
+    ctx.fill();
+  }
+  ctx.globalAlpha = 1;
+  
+  // HUD - rychlost
+  ctx.fillStyle = 'rgba(0,0,0,0.5)';
+  ctx.beginPath();
+  ctx.roundRect(canvas.width - 90, canvas.height - 50, 80, 40, 6);
+  ctx.fill();
+  ctx.fillStyle = '#e0e0e0';
+  ctx.font = '11px system-ui';
+  ctx.textAlign = 'center';
+  ctx.fillText('RYCHLOST', canvas.width - 50, canvas.height - 35);
+  ctx.font = 'bold 16px system-ui';
+  ctx.fillStyle = Math.abs(car.velocity) > settings.speed * 0.8 ? '#fbbf24' : '#34d399';
+  ctx.fillText(Math.abs(car.velocity).toFixed(1), canvas.width - 50, canvas.height - 18);
+  
+  // HUD - řízení
+  ctx.save();
+  ctx.translate(55, canvas.height - 55);
+  ctx.strokeStyle = '#404040';
+  ctx.lineWidth = 6;
+  ctx.beginPath();
+  ctx.arc(0, 0, 28, 0, Math.PI * 2);
+  ctx.stroke();
+  ctx.rotate(-car.steering * 2.5);
+  ctx.strokeStyle = '#e0e0e0';
+  ctx.lineWidth = 4;
+  ctx.beginPath();
+  ctx.arc(0, 0, 28, -Math.PI/2 - 0.4, -Math.PI/2 + 0.4);
+  ctx.stroke();
+  ctx.fillStyle = '#e0e0e0';
+  ctx.beginPath();
+  ctx.moveTo(0, -20);
+  ctx.lineTo(-6, -12);
+  ctx.lineTo(6, -12);
+  ctx.fill();
+  ctx.restore();
+  
+  // Pauza overlay
+  if (state.paused && !state.parked && !state.collision) {
+    ctx.fillStyle = 'rgba(0,0,0,0.4)';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+  }
+}
+
+// ==================== GAME LOOP ====================
+function gameLoop(timestamp) {
+  const dt = lastTime ? Math.min((timestamp - lastTime) / 1000, 0.1) : 0.016;
+  lastTime = timestamp;
+  
+  pollGamepad();
+  update(dt);
+  draw();
+  requestAnimationFrame(gameLoop);
+}
+
+// ==================== AKCE ====================
+function resetGame() {
+  generateLevel(state.level);
+  state.car = { x: startPos.x, y: startPos.y, angle: startPos.angle, steering: 0, velocity: 0 };
+  state.trailer = { angle: startPos.angle };
+  state.parked = false;
+  state.collision = false;
+  state.paused = false;
+  state.currentTime = 0;
+  state.gameStarted = false;
+  state.attempts++;
+  state.particles = [];
+  state.warningLevel = 0;
+  document.querySelectorAll('.overlay').forEach(o => o.classList.add('hidden'));
+  updateUI();
+}
+
+function nextLevel() {
+  state.level = Math.min(state.level + 1, CFG.MAX_LEVELS);
+  state.bestTime = null;
+  state.attempts = 0;
+  resetGame();
+  state.attempts = 0;
+}
+
+function togglePause() {
+  if (state.parked || state.collision) return;
+  state.paused = !state.paused;
+  document.getElementById('pauseOverlay').classList.toggle('hidden', !state.paused);
+}
+
+// ==================== INIT ====================
+generateLevel(1);
+state.car = { x: startPos.x, y: startPos.y, angle: startPos.angle, steering: 0, velocity: 0 };
+state.trailer = { angle: startPos.angle };
+updateUI();
+requestAnimationFrame(gameLoop);
+</script>
+</body>
+</html>
