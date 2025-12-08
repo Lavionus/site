@@ -1,0 +1,790 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🗺️ Mapový exportér</title>
+  
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" />
+  
+  <!-- Leaflet Draw CSS -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.css"/>
+  
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: #1a1a1a;
+      color: #e0e0e0;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 1600px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .header h1 {
+      font-size: 1.8rem;
+      font-weight: 600;
+      color: #e0e0e0;
+      margin-bottom: 10px;
+    }
+
+    .controls-section {
+      background-color: #2a2a2a;
+      border: 1px solid #404040;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+
+    .controls-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin-bottom: 15px;
+    }
+
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .control-group label {
+      font-size: 0.9rem;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-weight: 600;
+    }
+
+    .btn {
+      background-color: #6aa6fd;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: background-color 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .btn:hover {
+      background-color: #5694f0;
+    }
+
+    .btn:disabled {
+      background-color: #404040;
+      cursor: not-allowed;
+      opacity: 0.5;
+    }
+
+    .btn-secondary {
+      background-color: #404040;
+    }
+
+    .btn-secondary:hover {
+      background-color: #4a4a4a;
+    }
+
+    .btn-success {
+      background-color: #4caf50;
+    }
+
+    .btn-success:hover {
+      background-color: #45a049;
+    }
+
+    select, input[type="number"] {
+      padding: 8px 12px;
+      background-color: #404040;
+      border: 1px solid #555;
+      border-radius: 4px;
+      color: #e0e0e0;
+      font-size: 0.9rem;
+    }
+
+    select:focus, input[type="number"]:focus {
+      outline: none;
+      border-color: #6aa6fd;
+    }
+
+    #map {
+      width: 100%;
+      height: 600px;
+      border-radius: 8px;
+      border: 1px solid #404040;
+      background-color: #2a2a2a;
+    }
+
+    .info-box {
+      background-color: #2a2a2a;
+      border: 1px solid #404040;
+      border-radius: 8px;
+      padding: 15px;
+      margin-top: 20px;
+    }
+
+    .info-box h3 {
+      font-size: 1rem;
+      margin-bottom: 10px;
+      color: #6aa6fd;
+    }
+
+    .info-box p {
+      font-size: 0.9rem;
+      line-height: 1.6;
+      color: #bbb;
+    }
+
+    .notification {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 15px 20px;
+      border-radius: 4px;
+      color: white;
+      font-size: 0.9rem;
+      z-index: 10000;
+      min-width: 300px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      animation: slideIn 0.3s ease-out;
+    }
+
+    .notification.success {
+      background-color: #4caf50;
+      border-left: 4px solid #45a049;
+    }
+
+    .notification.error {
+      background-color: #f44336;
+      border-left: 4px solid #d32f2f;
+    }
+
+    .notification.info {
+      background-color: #2196f3;
+      border-left: 4px solid #1976d2;
+    }
+
+    @keyframes slideIn {
+      from {
+        transform: translateX(100%);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+
+    /* Styling pro tlačítko výběru oblasti */
+    .leaflet-draw-toolbar a {
+      background-color: #2a2a2a !important;
+    }
+
+    /* Print styles */
+    @media print {
+      body {
+        background: white;
+      }
+      
+      .controls-section,
+      .info-box,
+      .header {
+        display: none !important;
+      }
+      
+      #map {
+        width: 100% !important;
+        height: 100% !important;
+        border: none !important;
+        page-break-inside: avoid;
+      }
+
+      .container {
+        padding: 0;
+        max-width: none;
+      }
+    }
+
+    /* Multi-page print styling */
+    @page {
+      size: A4;
+      margin: 10mm;
+    }
+
+    .print-pages {
+      display: none;
+    }
+
+    @media print {
+      .print-pages {
+        display: block;
+      }
+      
+      .print-page {
+        page-break-after: always;
+        width: 100%;
+        height: 100vh;
+      }
+      
+      .print-page:last-child {
+        page-break-after: auto;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🗺️ Mapový exportér pro školu</h1>
+    </div>
+
+    <div class="controls-section">
+      <div class="controls-grid">
+        <div class="control-group">
+          <label>📍 Výběr oblasti</label>
+          <button id="selectArea" class="btn">
+            Vybrat oblast myší
+          </button>
+        </div>
+
+        <div class="control-group">
+          <label>🗑️ Smazat výběr</label>
+          <button id="clearArea" class="btn btn-secondary" disabled>
+            Vymazat oblast
+          </button>
+        </div>
+        
+        <div class="control-group">
+          <label>💾 Export PNG</label>
+          <button id="exportPng" class="btn btn-success" disabled>
+            Stáhnout jako PNG
+          </button>
+        </div>
+        
+        <div class="control-group">
+          <label>🖨️ Tisk</label>
+          <button id="printMap" class="btn btn-secondary">
+            Vytisknout mapu
+          </button>
+        </div>
+
+        <div class="control-group">
+          <label>📄 Počet stránek A4</label>
+          <select id="printPages">
+            <option value="1">1 stránka</option>
+            <option value="2">2 stránky (2x1)</option>
+            <option value="4">4 stránky (2x2)</option>
+            <option value="6">6 stránek (3x2)</option>
+            <option value="9">9 stránek (3x3)</option>
+          </select>
+        </div>
+
+        <div class="control-group">
+          <label>🗺️ Vrstva mapy</label>
+          <select id="mapLayer">
+            <option value="streets" selected>Mapa s ulicemi (detailní)</option>
+            <option value="topo">OpenStreetMap (základní)</option>
+            <option value="satellite">Satelitní snímky</option>
+            <option value="topo2">Topografická mapa</option>
+            <option value="terrain">Cyklistická mapa (s terénem)</option>
+            <option value="humanitarian">Humanitární mapa</option>
+            <option value="cartodb">CartoDB Voyager</option>
+            <option value="cartolight">CartoDB Light (světlá)</option>
+          </select>
+        </div>
+
+        <div class="control-group">
+          <label>🔍 Zoom</label>
+          <input type="number" id="zoomLevel" min="1" max="18" value="10">
+        </div>
+      </div>
+    </div>
+
+    <div id="map"></div>
+
+    <div class="info-box">
+      <h3>📚 Návod k použití</h3>
+      <p>
+        <strong>1.</strong> Přibližte si mapu pomocí kolečka myši nebo tlačítek +/- na mapě.<br>
+        <strong>2.</strong> Klikněte na "Vybrat oblast myší" a nakreslete obdélník na mapě.<br>
+        <strong>3.</strong> Po výběru oblasti klikněte "Stáhnout jako PNG" - exportuje se pouze vybraná oblast!<br>
+        <strong>4.</strong> Pro tisk klikněte "Vytisknout mapu" - mapa se automaticky přiblíží na vybranou oblast.<br>
+        <strong>5.</strong> Pro tisk na více stránek vyberte počet stránek A4 před tiskem.<br>
+        <strong>💡 Tip:</strong> Čím větší zoom a menší vybraná oblast, tím vyšší bude rozlišení exportu!<br>
+        <strong>📜 Historické mapy:</strong> Kvůli ochraně autorských práv nejsou historické mapy dostupné zde - viz odkaz níže.
+      </p>
+      <button class="btn" style="background-color: #ff9800; margin-top: 10px;" onclick="window.open('historicke_mapy_odkazy.html', '_blank')">
+        📜 Kde najít historické mapy
+      </button>
+    </div>
+  </div>
+
+  <!-- Leaflet JS -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+  
+  <!-- Leaflet Draw JS -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.draw/1.0.4/leaflet.draw.js"></script>
+  
+  <!-- html2canvas pro export PNG -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+  <script>
+    let map;
+    let selectedArea = null;
+    let drawnItems;
+    let currentLayer;
+    let mapLayers = {};
+    let drawControl;
+    let isDrawing = false;
+    let currentRectangle = null;
+
+    // Definice mapových vrstev
+    const layerDefinitions = {
+      'streets': {
+        name: 'Mapa s ulicemi (detailní)',
+        layer: L.tileLayer('https://{s}.tile.openstreetmap.de/{z}/{x}/{y}.png', {
+          attribution: '© OpenStreetMap contributors',
+          maxZoom: 18
+        })
+      },
+      'satellite': {
+        name: 'Satelitní snímky',
+        layer: L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+          attribution: '© Esri',
+          maxZoom: 18
+        })
+      },
+      'topo': {
+        name: 'OpenStreetMap (základní)',
+        layer: L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '© OpenStreetMap contributors',
+          maxZoom: 19
+        })
+      },
+      'topo2': {
+        name: 'Topografická mapa',
+        layer: L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
+          attribution: '© OpenTopoMap contributors',
+          maxZoom: 17
+        })
+      },
+      'terrain': {
+        name: 'Cyklistická mapa (s terénem)',
+        layer: L.tileLayer('https://{s}.tile-cyclosm.openstreetmap.fr/cyclosm/{z}/{x}/{y}.png', {
+          attribution: '© OpenStreetMap contributors, CyclOSM',
+          maxZoom: 20,
+          subdomains: 'abc'
+        })
+      },
+      'humanitarian': {
+        name: 'Humanitární mapa',
+        layer: L.tileLayer('https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png', {
+          attribution: '© OpenStreetMap contributors, Humanitarian OSM Team',
+          maxZoom: 19
+        })
+      },
+      'cartodb': {
+        name: 'CartoDB Voyager',
+        layer: L.tileLayer('https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png', {
+          attribution: '© OpenStreetMap contributors © CARTO',
+          subdomains: 'abcd',
+          maxZoom: 20
+        })
+      },
+      'cartolight': {
+        name: 'CartoDB Light (světlá)',
+        layer: L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+          attribution: '© OpenStreetMap contributors © CARTO',
+          subdomains: 'abcd',
+          maxZoom: 20
+        })
+      }
+    };
+
+    // Inicializace mapy
+    function initMap() {
+      try {
+        // Vytvoření mapy se střední Evropou jako výchozí pozicí
+        map = L.map('map').setView([49.8175, 15.4730], 7); // Česká republika
+
+        // Přidání výchozí vrstvy - standardní OSM (nejspolehlivější)
+        currentLayer = layerDefinitions['streets'].layer.addTo(map);
+
+        // Inicializace vrstvy pro kreslení
+        drawnItems = new L.FeatureGroup();
+        map.addLayer(drawnItems);
+
+        // Kontrola, zda je Leaflet Draw dostupný
+        if (typeof L.Draw !== 'undefined') {
+          // Nastavení ovládání kreslení
+          drawControl = new L.Control.Draw({
+            draw: {
+              polygon: false,
+              polyline: false,
+              circle: false,
+              circlemarker: false,
+              marker: false,
+              rectangle: {
+                shapeOptions: {
+                  color: '#6aa6fd',
+                  weight: 3,
+                  fillOpacity: 0.1
+                }
+              }
+            },
+            edit: {
+              featureGroup: drawnItems,
+              remove: true
+            }
+          });
+
+          // Event listener pro vytvoření oblasti
+          map.on(L.Draw.Event.CREATED, function(event) {
+            drawnItems.clearLayers();
+            const layer = event.layer;
+            drawnItems.addLayer(layer);
+            selectedArea = layer;
+            
+            document.getElementById('exportPng').disabled = false;
+            document.getElementById('clearArea').disabled = false;
+            showNotification('Oblast vybrána! Nyní můžete exportovat nebo tisknout.', 'success');
+          });
+
+          // Event listener pro smazání oblasti
+          map.on(L.Draw.Event.DELETED, function() {
+            selectedArea = null;
+            document.getElementById('exportPng').disabled = true;
+            document.getElementById('clearArea').disabled = true;
+            showNotification('Oblast byla odstraněna.', 'info');
+          });
+        } else {
+          // Fallback na jednoduché kreslení bez Leaflet Draw
+          console.warn('Leaflet Draw není dostupný, používám alternativní metodu');
+          setupSimpleDrawing();
+        }
+
+        // Přidání měřítka
+        L.control.scale({imperial: false, metric: true}).addTo(map);
+
+        // Update zoom level při změně
+        map.on('zoomend', function() {
+          document.getElementById('zoomLevel').value = map.getZoom();
+        });
+
+      } catch (error) {
+        console.error('Chyba při inicializaci mapy:', error);
+        showNotification('Chyba při načítání mapy: ' + error.message, 'error');
+      }
+    }
+
+    // Jednoduchá implementace kreslení bez Leaflet Draw
+    function setupSimpleDrawing() {
+      let startLatLng = null;
+      let tempRectangle = null;
+
+      map.on('mousedown', function(e) {
+        if (isDrawing) {
+          startLatLng = e.latlng;
+          
+          map.on('mousemove', function(e) {
+            if (tempRectangle) {
+              map.removeLayer(tempRectangle);
+            }
+            
+            const bounds = L.latLngBounds(startLatLng, e.latlng);
+            tempRectangle = L.rectangle(bounds, {
+              color: '#6aa6fd',
+              weight: 3,
+              fillOpacity: 0.1
+            }).addTo(map);
+          });
+        }
+      });
+
+      map.on('mouseup', function(e) {
+        if (isDrawing && startLatLng) {
+          map.off('mousemove');
+          
+          if (tempRectangle) {
+            map.removeLayer(tempRectangle);
+          }
+          
+          drawnItems.clearLayers();
+          
+          const bounds = L.latLngBounds(startLatLng, e.latlng);
+          currentRectangle = L.rectangle(bounds, {
+            color: '#6aa6fd',
+            weight: 3,
+            fillOpacity: 0.1
+          }).addTo(drawnItems);
+          
+          selectedArea = currentRectangle;
+          document.getElementById('exportPng').disabled = false;
+          document.getElementById('clearArea').disabled = false;
+          showNotification('Oblast vybrána! Nyní můžete exportovat nebo tisknout.', 'success');
+          
+          isDrawing = false;
+          document.getElementById('selectArea').textContent = 'Vybrat oblast myší';
+          document.getElementById('selectArea').classList.remove('btn-secondary');
+          map.dragging.enable();
+          
+          startLatLng = null;
+          tempRectangle = null;
+        }
+      });
+    }
+
+    // Funkce pro zobrazení notifikací
+    function showNotification(message, type = 'info') {
+      const notification = document.createElement('div');
+      notification.className = `notification ${type}`;
+      notification.textContent = message;
+      document.body.appendChild(notification);
+
+      setTimeout(() => {
+        notification.style.opacity = '0';
+        setTimeout(() => notification.remove(), 300);
+      }, 3000);
+    }
+
+    // Výběr oblasti
+    document.getElementById('selectArea').addEventListener('click', function() {
+      if (typeof L.Draw !== 'undefined' && drawControl) {
+        // Použití Leaflet Draw
+        showNotification('Klikněte a táhněte na mapě pro výběr oblasti', 'info');
+        new L.Draw.Rectangle(map, drawControl.options.draw.rectangle).enable();
+      } else {
+        // Použití jednoduché metody
+        isDrawing = !isDrawing;
+        
+        if (isDrawing) {
+          this.textContent = '⏹️ Zrušit výběr';
+          this.classList.add('btn-secondary');
+          showNotification('Klikněte a táhněte na mapě pro výběr oblasti', 'info');
+          map.dragging.disable(); // Zakázat přetahování mapy během kreslení
+        } else {
+          this.textContent = 'Vybrat oblast myší';
+          this.classList.remove('btn-secondary');
+          map.dragging.enable();
+        }
+      }
+    });
+
+    // Vymazání vybrané oblasti
+    document.getElementById('clearArea').addEventListener('click', function() {
+      if (selectedArea) {
+        drawnItems.clearLayers();
+        selectedArea = null;
+        document.getElementById('exportPng').disabled = true;
+        document.getElementById('clearArea').disabled = true;
+        showNotification('Oblast byla odstraněna.', 'info');
+      }
+    });
+
+    // Export do PNG
+    document.getElementById('exportPng').addEventListener('click', async function() {
+      if (!selectedArea) {
+        showNotification('Nejprve vyberte oblast na mapě!', 'error');
+        return;
+      }
+
+      showNotification('Generuji PNG obrázek...', 'info');
+
+      try {
+        // Získání boundaries vybrané oblasti
+        const bounds = selectedArea.getBounds();
+        
+        // Uložení původního pohledu
+        const originalView = {
+          center: map.getCenter(),
+          zoom: map.getZoom()
+        };
+        
+        // Získání pixelových souřadnic vybrané oblasti PŘED změnou pohledu
+        const northEast = map.latLngToContainerPoint(bounds.getNorthEast());
+        const southWest = map.latLngToContainerPoint(bounds.getSouthWest());
+        
+        // Výpočet rozměrů vybrané oblasti v pixelech
+        const width = Math.abs(northEast.x - southWest.x);
+        const height = Math.abs(southWest.y - northEast.y);
+        const left = Math.min(northEast.x, southWest.x);
+        const top = Math.min(northEast.y, southWest.y);
+        
+        // Informace o rozlišení
+        showNotification(`Export oblasti ${Math.round(width)}×${Math.round(height)} px...`, 'info');
+        
+        // Dočasné skrytí výběrového obdélníku
+        const rectangleElement = selectedArea._path;
+        if (rectangleElement) {
+          rectangleElement.style.display = 'none';
+        }
+        
+        // Počkat na vykreslení
+        await new Promise(resolve => setTimeout(resolve, 300));
+
+        // Vytvoření PNG pomocí html2canvas
+        const mapElement = document.getElementById('map');
+        const canvas = await html2canvas(mapElement, {
+          useCORS: true,
+          allowTaint: true,
+          backgroundColor: '#2a2a2a',
+          logging: false,
+          x: left,
+          y: top,
+          width: width,
+          height: height,
+          windowWidth: mapElement.offsetWidth,
+          windowHeight: mapElement.offsetHeight
+        });
+
+        // Vrátit zobrazení výběrového obdélníku
+        if (rectangleElement) {
+          rectangleElement.style.display = '';
+        }
+
+        // Převod na blob a stažení
+        canvas.toBlob(function(blob) {
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `mapa_export_${Math.round(width)}x${Math.round(height)}_${Date.now()}.png`;
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+          
+          showNotification(`PNG stažen! Rozlišení: ${Math.round(width)}×${Math.round(height)} px`, 'success');
+        });
+
+      } catch (error) {
+        console.error('Chyba při exportu:', error);
+        showNotification('Chyba při exportu PNG: ' + error.message, 'error');
+        
+        // Vrátit zobrazení obdélníku i v případě chyby
+        if (selectedArea && selectedArea._path) {
+          selectedArea._path.style.display = '';
+        }
+      }
+    });
+
+    // Tisk mapy
+    document.getElementById('printMap').addEventListener('click', function() {
+      const pageCount = parseInt(document.getElementById('printPages').value);
+      
+      // Pokud je vybrána oblast, přiblížit na ni před tiskem
+      if (selectedArea) {
+        const bounds = selectedArea.getBounds();
+        
+        // Uložení původního pohledu
+        const originalView = {
+          center: map.getCenter(),
+          zoom: map.getZoom()
+        };
+        
+        // Skrýt výběrový obdélník
+        const rectangleElement = selectedArea._path;
+        if (rectangleElement) {
+          rectangleElement.style.display = 'none';
+        }
+        
+        // Přiblížit na vybranou oblast
+        map.fitBounds(bounds, { padding: [20, 20], animate: false });
+        
+        // Počkat na vykreslení a pak tisknout
+        setTimeout(() => {
+          if (pageCount === 1) {
+            showNotification('Otevírám dialogové okno pro tisk...', 'info');
+            window.print();
+          } else {
+            showNotification('Připravuji tisk na více stránek...', 'info');
+            prepareMutiPagePrint(pageCount);
+          }
+          
+          // Po tisku vrátit původní pohled
+          setTimeout(() => {
+            if (rectangleElement) {
+              rectangleElement.style.display = '';
+            }
+            map.setView(originalView.center, originalView.zoom);
+          }, 1000);
+        }, 500);
+        
+      } else {
+        // Tisk bez výběru oblasti
+        if (pageCount === 1) {
+          showNotification('Otevírám dialogové okno pro tisk...', 'info');
+          window.print();
+        } else {
+          showNotification('Pro tisk na více stránek nejprve vyberte oblast!', 'error');
+        }
+      }
+    });
+
+    // Příprava tisku na více stránek
+    function prepareMutiPagePrint(pageCount) {
+      if (!selectedArea) {
+        showNotification('Pro tisk na více stránek nejprve vyberte oblast!', 'error');
+        return;
+      }
+
+      const bounds = selectedArea.getBounds();
+      const rows = Math.sqrt(pageCount);
+      const cols = pageCount / rows;
+
+      // Výpočet rozdělení oblasti
+      const latStep = (bounds.getNorth() - bounds.getSouth()) / rows;
+      const lngStep = (bounds.getEast() - bounds.getWest()) / cols;
+
+      showNotification(`Tisk bude rozdělen na ${rows}x${cols} stránek`, 'info');
+      
+      // Prozatím jednoduchý tisk celé oblasti
+      // Pro plnou implementaci by bylo potřeba vytvořit snapshot každé části
+      setTimeout(() => window.print(), 500);
+    }
+
+    // Změna vrstvy mapy
+    document.getElementById('mapLayer').addEventListener('change', function(e) {
+      const layerKey = e.target.value;
+      
+      if (currentLayer) {
+        map.removeLayer(currentLayer);
+      }
+      
+      currentLayer = layerDefinitions[layerKey].layer.addTo(map);
+      showNotification(`Přepnuto na: ${layerDefinitions[layerKey].name}`, 'info');
+    });
+
+    // Změna zoom úrovně
+    document.getElementById('zoomLevel').addEventListener('change', function(e) {
+      const zoom = parseInt(e.target.value);
+      map.setZoom(zoom);
+    });
+
+    // Inicializace při načtení stránky
+    document.addEventListener('DOMContentLoaded', function() {
+      initMap();
+      showNotification('Mapa byla načtena! Začněte výběrem oblasti.', 'success');
+    });
+  </script>
+</body>
+</html>

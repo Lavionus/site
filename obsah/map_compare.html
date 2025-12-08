@@ -1,0 +1,437 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>⚖️ Porovnání historických a moderních map</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" />
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: #1a1a1a;
+      color: #e0e0e0;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 1800px;
+      margin: 0 auto;
+      padding: 20px;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .header h1 {
+      font-size: 1.8rem;
+      font-weight: 600;
+      color: #e0e0e0;
+      margin-bottom: 10px;
+    }
+
+    .header p {
+      color: #888;
+      font-size: 0.9rem;
+    }
+
+    .controls {
+      background-color: #2a2a2a;
+      border: 1px solid #404040;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 20px;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 15px;
+    }
+
+    .control-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .control-group label {
+      font-size: 0.9rem;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-weight: 600;
+    }
+
+    select {
+      padding: 10px 12px;
+      background-color: #404040;
+      border: 1px solid #555;
+      border-radius: 4px;
+      color: #e0e0e0;
+      font-size: 0.9rem;
+      cursor: pointer;
+    }
+
+    select:focus {
+      outline: none;
+      border-color: #6aa6fd;
+    }
+
+    .maps-container {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+
+    .map-wrapper {
+      background-color: #2a2a2a;
+      border: 1px solid #404040;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .map-header {
+      padding: 15px;
+      background-color: #333;
+      border-bottom: 1px solid #404040;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .map-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #6aa6fd;
+    }
+
+    .map-subtitle {
+      font-size: 0.85rem;
+      color: #888;
+    }
+
+    .map {
+      width: 100%;
+      height: 600px;
+    }
+
+    .info-panel {
+      background-color: #2a2a2a;
+      border: 1px solid #404040;
+      border-radius: 8px;
+      padding: 20px;
+    }
+
+    .info-panel h3 {
+      font-size: 1rem;
+      margin-bottom: 10px;
+      color: #6aa6fd;
+    }
+
+    .info-panel p {
+      font-size: 0.9rem;
+      line-height: 1.6;
+      color: #bbb;
+      margin-bottom: 10px;
+    }
+
+    .btn {
+      background-color: #6aa6fd;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.9rem;
+      transition: background-color 0.2s ease;
+      margin-top: 10px;
+    }
+
+    .btn:hover {
+      background-color: #5694f0;
+    }
+
+    @media (max-width: 1200px) {
+      .maps-container {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .sync-badge {
+      background-color: #4caf50;
+      color: white;
+      padding: 4px 12px;
+      border-radius: 12px;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>⚖️ Porovnání historických a moderních map</h1>
+      <p>Obě mapy jsou synchronizované - pohyb na jedné ovládá i druhou</p>
+    </div>
+
+    <div class="controls">
+      <div class="control-group">
+        <label>📜 Historická mapa (vlevo)</label>
+        <select id="historicMap">
+          <option value="historic2" selected>Rakousko-Uhersko 1869-1887 (2. mapování)</option>
+          <option value="historic4">Rakousko-Uhersko 1918 (3. mapování)</option>
+          <option value="historic3">Rakousko-Uhersko 1806-1869 (1. mapování)</option>
+          <option value="historic1">USA Historické topo mapy 1800-1900</option>
+          <option value="soviet">Sovětské vojenské mapy (studená válka)</option>
+        </select>
+      </div>
+
+      <div class="control-group">
+        <label>🌍 Moderní mapa (vpravo)</label>
+        <select id="modernMap">
+          <option value="streets" selected>Mapa s ulicemi (detailní)</option>
+          <option value="satellite">Satelitní snímky</option>
+          <option value="topo2">Topografická detailní</option>
+          <option value="terrain">Cyklistická mapa (s terénem)</option>
+          <option value="humanitarian">Humanitární mapa</option>
+        </select>
+      </div>
+
+      <div class="control-group">
+        <label>📍 Rychlé lokace</label>
+        <select id="quickLocation">
+          <option value="">-- Vyberte lokaci --</option>
+          <option value="49.8175,15.4730,7">Česká republika</option>
+          <option value="50.0755,14.4378,13">Praha</option>
+          <option value="49.1951,16.6068,13">Brno</option>
+          <option value="49.5938,17.2509,13">Olomouc</option>
+          <option value="50.7663,15.0570,13">Liberec</option>
+          <option value="49.8346,18.2820,13">Ostrava</option>
+          <option value="48.9764,14.4747,13">České Budějovice</option>
+          <option value="50.2093,15.8326,13">Hradec Králové</option>
+          <option value="49.7437,13.3775,13">Plzeň</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="maps-container">
+      <div class="map-wrapper">
+        <div class="map-header">
+          <div>
+            <div class="map-title" id="historicTitle">📜 Historická mapa</div>
+            <div class="map-subtitle" id="historicSubtitle">Rakousko-Uhersko 1869-1887</div>
+          </div>
+          <span class="sync-badge">🔗 Synchronizováno</span>
+        </div>
+        <div id="mapHistoric" class="map"></div>
+      </div>
+
+      <div class="map-wrapper">
+        <div class="map-header">
+          <div>
+            <div class="map-title" id="modernTitle">🌍 Moderní mapa</div>
+            <div class="map-subtitle" id="modernSubtitle">Současný stav</div>
+          </div>
+          <span class="sync-badge">🔗 Synchronizováno</span>
+        </div>
+        <div id="mapModern" class="map"></div>
+      </div>
+    </div>
+
+    <div class="info-panel">
+      <h3>💡 Jak používat porovnávací mapy</h3>
+      <p>
+        <strong>🔍 Přibližování:</strong> Zoom na jedné mapě automaticky přiblíží i druhou mapu.<br>
+        <strong>🗺️ Posun:</strong> Přesun mapy ovládá obě mapy současně - zůstávají synchronizované.<br>
+        <strong>📍 Rychlé lokace:</strong> Vyberte město z rozbalovacího menu pro rychlý přesun.<br>
+        <strong>🎯 Tip:</strong> Vyberte zajímavé místo a pozorujte, jak se změnilo za 100+ let!
+      </p>
+      <button class="btn" onclick="window.open('map_export.html', '_blank')">
+        📥 Otevřít exportní nástroj
+      </button>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+  <script>
+    let mapHistoric, mapModern;
+    let historicLayer, modernLayer;
+    let isSyncing = false;
+
+    const layerDefinitions = {
+      'streets': {
+        name: 'Mapa s ulicemi (detailní)',
+        url: 'https://{s}.tile.openstreetmap.de/{z}/{x}/{y}.png',
+        options: {
+          attribution: '© OpenStreetMap contributors',
+          maxZoom: 18
+        }
+      },
+      'satellite': {
+        name: 'Satelitní snímky',
+        url: 'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+        options: {
+          attribution: '© Esri',
+          maxZoom: 18
+        }
+      },
+      'topo2': {
+        name: 'Topografická detailní',
+        url: 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
+        options: {
+          attribution: '© OpenTopoMap contributors',
+          maxZoom: 17
+        }
+      },
+      'terrain': {
+        name: 'Cyklistická mapa (s terénem)',
+        url: 'https://{s}.tile-cyclosm.openstreetmap.fr/cyclosm/{z}/{x}/{y}.png',
+        options: {
+          attribution: '© OpenStreetMap contributors, CyclOSM',
+          maxZoom: 20,
+          subdomains: 'abc'
+        }
+      },
+      'humanitarian': {
+        name: 'Humanitární mapa',
+        url: 'https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png',
+        options: {
+          attribution: '© OpenStreetMap contributors, Humanitarian OSM Team',
+          maxZoom: 19
+        }
+      },
+      'historic1': {
+        name: 'USA Historické topo mapy 1800-1900',
+        url: 'https://tiles.arcgis.com/tiles/nGt4QxSblgDfeJn9/arcgis/rest/services/USGS_Historical_Topographic_Maps/MapServer/tile/{z}/{y}/{x}',
+        options: {
+          attribution: '© USGS Historical Topos',
+          maxZoom: 16
+        }
+      },
+      'historic2': {
+        name: 'Rakousko-Uhersko 1869-1887',
+        url: 'https://mapire.eu/tiles/europe_19century_2nd_military_survey/{z}/{x}/{y}.png',
+        options: {
+          attribution: '© Mapire.eu, Arcanum',
+          maxZoom: 17
+        }
+      },
+      'historic3': {
+        name: 'Rakousko-Uhersko 1806-1869',
+        url: 'https://mapire.eu/tiles/europe_19century_1st_military_survey/{z}/{x}/{y}.png',
+        options: {
+          attribution: '© Mapire.eu, Arcanum',
+          maxZoom: 16
+        }
+      },
+      'historic4': {
+        name: 'Třetí vojenské mapování 1918',
+        url: 'https://mapire.eu/tiles/europe_19century_3rd_military_survey/{z}/{x}/{y}.png',
+        options: {
+          attribution: '© Mapire.eu, Arcanum',
+          maxZoom: 16
+        }
+      },
+      'soviet': {
+        name: 'Sovětské vojenské mapy (studená válka)',
+        url: 'https://tiles.arcgis.com/tiles/cFEFS0EWrhfDeVw9/arcgis/rest/services/Soviet_Military_Topographic_Maps/MapServer/tile/{z}/{y}/{x}',
+        options: {
+          attribution: '© Soviet Military Maps',
+          maxZoom: 15
+        }
+      }
+    };
+
+    function initMaps() {
+      // Inicializace historické mapy
+      mapHistoric = L.map('mapHistoric', {
+        center: [49.8175, 15.4730],
+        zoom: 7,
+        zoomControl: true
+      });
+
+      // Inicializace moderní mapy
+      mapModern = L.map('mapModern', {
+        center: [49.8175, 15.4730],
+        zoom: 7,
+        zoomControl: true
+      });
+
+      // Přidání výchozích vrstev
+      changeHistoricLayer('historic2');
+      changeModernLayer('streets');
+
+      // Synchronizace map
+      syncMaps();
+    }
+
+    function syncMaps() {
+      // Synchronizace při pohybu
+      mapHistoric.on('moveend', function() {
+        if (!isSyncing) {
+          isSyncing = true;
+          mapModern.setView(mapHistoric.getCenter(), mapHistoric.getZoom());
+          setTimeout(() => { isSyncing = false; }, 100);
+        }
+      });
+
+      mapModern.on('moveend', function() {
+        if (!isSyncing) {
+          isSyncing = true;
+          mapHistoric.setView(mapModern.getCenter(), mapModern.getZoom());
+          setTimeout(() => { isSyncing = false; }, 100);
+        }
+      });
+    }
+
+    function changeHistoricLayer(layerId) {
+      if (historicLayer) {
+        mapHistoric.removeLayer(historicLayer);
+      }
+      
+      const def = layerDefinitions[layerId];
+      historicLayer = L.tileLayer(def.url, def.options).addTo(mapHistoric);
+      
+      document.getElementById('historicSubtitle').textContent = def.name;
+    }
+
+    function changeModernLayer(layerId) {
+      if (modernLayer) {
+        mapModern.removeLayer(modernLayer);
+      }
+      
+      const def = layerDefinitions[layerId];
+      modernLayer = L.tileLayer(def.url, def.options).addTo(mapModern);
+      
+      document.getElementById('modernSubtitle').textContent = def.name;
+    }
+
+    // Event listenery pro změnu vrstev
+    document.getElementById('historicMap').addEventListener('change', function(e) {
+      changeHistoricLayer(e.target.value);
+    });
+
+    document.getElementById('modernMap').addEventListener('change', function(e) {
+      changeModernLayer(e.target.value);
+    });
+
+    // Rychlé lokace
+    document.getElementById('quickLocation').addEventListener('change', function(e) {
+      if (e.target.value) {
+        const [lat, lng, zoom] = e.target.value.split(',').map(Number);
+        mapHistoric.setView([lat, lng], zoom);
+        mapModern.setView([lat, lng], zoom);
+      }
+    });
+
+    // Inicializace při načtení stránky
+    document.addEventListener('DOMContentLoaded', initMaps);
+  </script>
+</body>
+</html>
