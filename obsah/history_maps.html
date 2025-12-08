@@ -1,0 +1,194 @@
+<!doctype html>
+<html lang="cs">
+<head>
+  <meta charset="utf-8" />
+  <title>🗺️ Historické mapy – Interaktivní prohlížeč</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: #1a1a1a; color: #e0e0e0; min-height: 100vh;
+    }
+    .container { max-width: 1600px; margin: 0 auto; padding: 20px; }
+    .header { text-align: center; margin-bottom: 30px; }
+    .header h1 { font-size: 1.8rem; font-weight: 600; color: #e0e0e0; }
+    .header p { color: #888; margin-top: 8px; font-size: 0.95rem; }
+    .controls-section {
+      background-color: #2a2a2a; border: 1px solid #404040;
+      border-radius: 8px; padding: 20px; margin-bottom: 20px;
+    }
+    .section-title { font-size: 0.9rem; color: #888; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 15px; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+    .control-group { display: grid; gap: 15px; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); margin-bottom: 20px; }
+    .input-wrapper { display: flex; flex-direction: column; gap: 8px; }
+    .input-wrapper label { font-size: 0.85rem; color: #bbb; font-weight: 500; }
+    select, input[type="text"], input[type="range"] {
+      width: 100%; padding: 10px 12px; background-color: #404040;
+      border: 1px solid #555; border-radius: 4px; color: #e0e0e0; font-size: 0.9rem;
+    }
+    .coords-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+    .opacity-control { display: flex; align-items: center; gap: 15px; }
+    .opacity-value { min-width: 50px; text-align: right; font-weight: 600; color: #6aa6fd; font-size: 1rem; }
+    .button-group { display: flex; gap: 10px; flex-wrap: wrap; }
+    .btn { padding: 10px 20px; border-radius: 4px; border: none; cursor: pointer; font-size: 0.9rem; font-weight: 600; display: flex; align-items: center; gap: 8px; }
+    .btn.primary { background-color: #6aa6fd; color: white; }
+    .btn.secondary { background-color: transparent; border: 1px solid #6aa6fd; color: #6aa6fd; }
+    .btn.small { padding: 6px 12px; font-size: 0.8rem; }
+    #map { height: 70vh; min-height: 500px; background-color: #2a2a2a; border: 1px solid #404040; border-radius: 8px; overflow: hidden; }
+    .map-info { background-color: #2a2a2a; border: 1px solid #404040; border-radius: 8px; padding: 15px; margin-top: 20px; font-size: 0.85rem; color: #bbb; }
+    .map-info h3 { color: #e0e0e0; margin-bottom: 10px; font-size: 1rem; }
+    .notification { position: fixed; top: 20px; right: 20px; padding: 15px 20px; border-radius: 4px; color: white; font-size: 0.9rem; z-index: 10001; min-width: 300px; display: none; }
+    .notification.show { display: block; }
+    .notification.success { background-color: #4caf50; }
+    .notification.error { background-color: #f44336; }
+    .notification.info { background-color: #2196f3; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🗺️ Historické mapy – Interaktivní prohlížeč</h1>
+      <p>Porovnání historických map s moderními podklady</p>
+    </div>
+
+    <div class="controls-section">
+      <div class="section-title">🖼️ Výběr historické mapy</div>
+      <div class="control-group">
+        <div class="input-wrapper">
+          <label>Předvolené mapy (OldMapsOnline):</label>
+          <select id="preset">
+            <option value="">— vyberte předvolenou mapu —</option>
+            <option value="https://mapy.oldmapsonline.org/1/1/1.png?year=1800&layer=stamen_toner">🗺️ Evropa 1800</option>
+            <option value="https://mapy.oldmapsonline.org/1/1/1.png?year=1850&layer=stamen_toner">🗺️ Evropa 1850</option>
+            <option value="https://mapy.oldmapsonline.org/1/1/1.png?year=1900&layer=stamen_toner">🗺️ Evropa 1900</option>
+            <option value="https://mapy.oldmapsonline.org/1/1/1.png?year=1920&layer=stamen_toner">🗺️ Evropa 1920</option>
+            <option value="https://mapy.oldmapsonline.org/1/1/1.png?year=1950&layer=stamen_toner">🗺️ Evropa 1950</option>
+          </select>
+        </div>
+
+        <div class="input-wrapper">
+          <label>Nebo vlastní URL z OldMapsOnline:</label>
+          <input id="imgUrl" type="text" placeholder="https://mapy.oldmapsonline.org/{z}/{x}/{y}.png?year=..." />
+        </div>
+      </div>
+
+      <div class="section-title">🧭 Souřadnice oblasti</div>
+      <div class="coords-grid">
+        <div class="input-wrapper">
+          <label>Střed mapy (lat, lng):</label>
+          <input id="center" type="text" value="49.8, 15.5" />
+        </div>
+        <div class="input-wrapper">
+          <label>Přiblížení:</label>
+          <input id="zoom" type="text" value="7" />
+        </div>
+      </div>
+
+      <div class="input-wrapper" style="margin-top: 20px;">
+        <label>Průhlednost overlay:</label>
+        <div class="opacity-control">
+          <input id="opacity" type="range" min="0" max="1" step="0.05" value="0.7" />
+          <span id="opval" class="opacity-value">0.70</span>
+        </div>
+      </div>
+
+      <div class="button-group" style="margin-top: 20px;">
+        <button id="loadBtn" class="btn primary">✅ Zobrazit historickou mapu</button>
+        <button id="clearBtn" class="btn secondary">🗑️ Odstranit historickou mapu</button>
+      </div>
+    </div>
+
+    <div id="map"></div>
+
+    <div class="map-info">
+      <h3>ℹ️ Mapové podklady</h3>
+      <ul>
+        <li>OpenStreetMap – moderní mapa</li>
+        <li>OpenTopoMap – topografická mapa</li>
+        <li>CartoDB Dark – tmavý styl</li>
+        <li>ESRI World Imagery – satelitní snímky</li>
+        <li>OldMapsOnline – historické mapy</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="notification" id="notification"></div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script>
+    let map = null, historicalLayer = null;
+
+    function showNotification(msg, type) {
+      const n = document.getElementById('notification');
+      n.textContent = msg;
+      n.className = 'notification ' + type + ' show';
+      setTimeout(() => n.classList.remove('show'), 3000);
+    }
+
+    function parseLatLng(str) {
+      const p = str.split(',').map(s => parseFloat(s.trim()));
+      return (p.length === 2 && !isNaN(p[0]) && !isNaN(p[1])) ? p : null;
+    }
+
+    window.addEventListener('load', () => {
+      map = L.map('map', { center: [49.8, 15.5], zoom: 7 });
+
+      const baseLayers = {
+        'OpenStreetMap': L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { maxZoom: 19 }),
+        'OpenTopoMap': L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', { maxZoom: 17 }),
+        'CartoDB Dark': L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}.png', { maxZoom: 19 }),
+        'ESRI Imagery': L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 18 })
+      };
+      baseLayers['OpenStreetMap'].addTo(map);
+      L.control.layers(baseLayers).addTo(map);
+
+      document.getElementById('preset').addEventListener('change', e => {
+        const val = e.target.value.trim();
+        if (val) {
+          document.getElementById('imgUrl').value = val;
+          showNotification('Předvolená mapa načtena', 'info');
+        }
+      });
+
+      document.getElementById('opacity').addEventListener('input', e => {
+        const v = parseFloat(e.target.value);
+        document.getElementById('opval').textContent = v.toFixed(2);
+        if (historicalLayer) historicalLayer.setOpacity(v);
+      });
+
+      document.getElementById('loadBtn').addEventListener('click', () => {
+        const urlTemplate = document.getElementById('imgUrl').value.trim();
+        const center = parseLatLng(document.getElementById('center').value);
+        const zoom = parseInt(document.getElementById('zoom').value);
+        
+        if (!urlTemplate) return showNotification('Zadejte URL šablonu z OldMapsOnline', 'error');
+        if (!center) return showNotification('Neplatné souřadnice středu', 'error');
+        if (isNaN(zoom) || zoom < 1 || zoom > 18) return showNotification('Neplatné přiblížení (1-18)', 'error');
+
+        if (historicalLayer) map.removeLayer(historicalLayer);
+        
+        historicalLayer = L.tileLayer(urlTemplate, {
+          maxZoom: 18,
+          opacity: parseFloat(document.getElementById('opacity').value),
+          attribution: 'Historical maps from <a href="https://www.oldmapsonline.org/">OldMapsOnline</a>'
+        });
+        
+        historicalLayer.addTo(map);
+        map.setView(center, zoom);
+        showNotification('Historická mapa načtena', 'success');
+      });
+
+      document.getElementById('clearBtn').addEventListener('click', () => {
+        if (historicalLayer) { 
+          map.removeLayer(historicalLayer); 
+          historicalLayer = null; 
+          showNotification('Historická mapa odstraněna', 'info'); 
+        } else {
+          showNotification('Žádná historická mapa není načtena', 'info');
+        }
+      });
+    });
+  </script>
+</body>
+</html>
