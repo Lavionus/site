@@ -211,14 +211,6 @@
       </div>
     </div>
     
-    <div class="overlay hidden" id="failOverlay">
-      <div class="overlay-box fail">
-        <div class="icon">💥</div>
-        <h2 style="color:#f87171;">KOLIZE!</h2>
-        <button class="btn btn-danger" onclick="resetGame()">🔄 Zkusit znovu</button>
-      </div>
-    </div>
-    
     <div class="overlay hidden" id="pauseOverlay">
       <div class="overlay-box pause">
         <div class="icon">⏸️</div>
@@ -261,7 +253,6 @@ const state = {
   keys: { up: false, down: false, left: false, right: false },
   gamepad: { steering: 0, throttle: 0, brake: 0 },
   parked: false,
-  collision: false,
   paused: false,
   attempts: 0,
   bestTime: null,
@@ -272,7 +263,9 @@ const state = {
   highScore: parseInt(localStorage.getItem('trailerHighScore')) || 0,
   tireMarks: [],
   particles: [],
-  warningLevel: 0
+  warningLevel: 0,
+  trailerCarCollision: false,
+  obstacleCollision: false
 };
 
 let settings = {
@@ -286,6 +279,7 @@ let obstacles = [];
 let startPos = {};
 let gamepadIndex = null;
 let lastTime = 0;
+let backgroundColor = '#3a3a3a';
 
 // ==================== CANVAS ====================
 const canvas = document.getElementById('canvas');
@@ -301,10 +295,13 @@ function randInt(min, max) {
 }
 
 function generateLevel(level) {
-  // Složitost podle levelu
   const difficulty = Math.min(level / CFG.MAX_LEVELS, 1);
   
-  // Startovní pozice - více variací pro vyšší levely
+  // Náhodná barva pozadí (bílá, zelená, antracitová)
+  const bgColors = ['#ffffff', '#2d5a3d', '#3a3a3a'];
+  backgroundColor = bgColors[randInt(0, 2)];
+  
+  // Startovní pozice
   const startVariants = [
     { x: 180, y: 150 }, { x: 280, y: 180 }, { x: 150, y: 220 },
     { x: 350, y: 130 }, { x: 220, y: 250 }
@@ -316,25 +313,40 @@ function generateLevel(level) {
     angle: rand(0.3, Math.PI - 0.3)
   };
   
-  // Parkovací zóna
-  const parkVariants = [
-    { x: 720, y: 420, angle: Math.PI/2 },
-    { x: 780, y: 350, angle: Math.PI/2 },
-    { x: 650, y: 480, angle: 0 },
-    { x: 700, y: 380, angle: Math.PI * 0.7 },
-    { x: 600, y: 450, angle: Math.PI * 0.3 }
-  ];
-  const pv = parkVariants[randInt(0, Math.min(level - 1, parkVariants.length - 1))];
-  const isHorizontal = Math.abs(pv.angle) < 0.3 || Math.abs(pv.angle - Math.PI) < 0.3;
+  // Parkovací zóna - VŽDY DOLE, náhodně vlevo/střed/vpravo
+  const parkPositions = ['left', 'center', 'right'];
+  const parkPos = parkPositions[randInt(0, 2)];
+  
+  // Rozměry zóny
+  const zoneWidth = 90;
+  const zoneHeight = 130;
+  
+  // X souřadnice s dostatečnou rezervou od okrajů (zóna + auto musí se vejít)
+  let parkX;
+  if (parkPos === 'left') {
+    parkX = rand(80, 180);
+  } else if (parkPos === 'center') {
+    parkX = rand(380, 480);
+  } else {
+    parkX = rand(680, 780);
+  }
+  
+  // Y souřadnice - střed zóny musí být tak, aby celá zóna byla viditelná
+  // Střed zóny je parkY + zoneHeight/2, takže dolní okraj je parkY + zoneHeight
+  // Canvas výška je 600, necháme rezervu 30px
+  const maxY = canvas.height - zoneHeight - 30; // 600 - 130 - 30 = 440
+  const parkY = rand(340, Math.min(400, maxY));
+  const parkAngle = Math.PI/2 + rand(-0.05, 0.05); // Menší rotace
+  
   parkingZone = {
-    x: pv.x + rand(-20, 20),
-    y: pv.y + rand(-20, 20),
-    width: isHorizontal ? 130 : 90,
-    height: isHorizontal ? 90 : 130,
-    angle: pv.angle + rand(-0.1, 0.1)
+    x: parkX,
+    y: parkY,
+    width: zoneWidth,
+    height: zoneHeight,
+    angle: parkAngle
   };
   
-  // Překážky - více pro vyšší levely
+  // Překážky
   obstacles = [];
   const numObstacles = 1 + level;
   
@@ -345,16 +357,13 @@ function generateLevel(level) {
       const isVertical = Math.random() > 0.5;
       obs = {
         x: rand(280, 700),
-        y: rand(200, 480),
+        y: rand(180, 420),
         width: isVertical ? rand(15, 25) : rand(60, 120),
         height: isVertical ? rand(60, 120) : rand(15, 25)
       };
       
-      // Kontrola kolize se startem
       if (Math.abs(obs.x - startPos.x) < 150 && Math.abs(obs.y - startPos.y) < 100) valid = false;
-      // Kontrola kolize s cílem
       if (Math.abs(obs.x - parkingZone.x) < 150 && Math.abs(obs.y - parkingZone.y) < 150) valid = false;
-      // Kontrola kolize s jinými překážkami
       for (const other of obstacles) {
         if (Math.abs(obs.x - other.x) < 80 && Math.abs(obs.y - other.y) < 80) valid = false;
       }
@@ -364,10 +373,11 @@ function generateLevel(level) {
     if (valid) obstacles.push(obs);
   }
   
-  // Reset stavu
   state.tireMarks = [];
   state.particles = [];
   state.warningLevel = 0;
+  state.trailerCarCollision = false;
+  state.obstacleCollision = false;
 }
 
 // ==================== VSTUP ====================
@@ -430,20 +440,36 @@ function pollGamepad() {
   const dz = 0.15;
   let steering = 0, throttle = 0, brake = 0;
   
-  // Řízení
-  if (Math.abs(gp.axes[0]) > dz) steering = gp.axes[0];
-  else if (gp.axes[2] && Math.abs(gp.axes[2]) > dz) steering = gp.axes[2];
+  // Řízení - levá páčka X nebo pravá páčka X
+  const leftX = gp.axes[0] || 0;
+  const rightX = gp.axes[2] || 0;
+  if (Math.abs(leftX) > dz) steering = leftX;
+  else if (Math.abs(rightX) > dz) steering = rightX;
   if (gp.buttons[14]?.pressed) steering = -1;
   if (gp.buttons[15]?.pressed) steering = 1;
   
-  // Plyn/Brzda
+  // Triggery pro plyn/brzdu (mají prioritu)
   if (gp.buttons[7]) throttle = Math.max(throttle, gp.buttons[7].value || (gp.buttons[7].pressed ? 1 : 0));
   if (gp.buttons[6]) brake = Math.max(brake, gp.buttons[6].value || (gp.buttons[6].pressed ? 1 : 0));
   
+  // Levá páčka Y pro plyn/brzdu - KOMPENZACE diagonálního pohybu
   const leftY = gp.axes[1] || 0;
-  if (leftY < -dz) throttle = Math.max(throttle, -leftY);
-  if (leftY > dz) brake = Math.max(brake, leftY);
+  if (Math.abs(leftY) > dz) {
+    // Vypočítáme magnitude vektoru páčky
+    const magnitude = Math.sqrt(leftX * leftX + leftY * leftY);
+    // Normalizujeme Y složku podle magnitude (kompenzace diagonály)
+    // Pokud hráč tlačí diagonálně, Y složka se kompenzuje
+    let normalizedY = leftY;
+    if (magnitude > dz) {
+      // Zachováme směr, ale použijeme větší hodnotu pro kompenzaci
+      normalizedY = (leftY / magnitude) * Math.min(magnitude, 1);
+    }
+    
+    if (normalizedY < -dz) throttle = Math.max(throttle, -normalizedY);
+    if (normalizedY > dz) brake = Math.max(brake, normalizedY);
+  }
   
+  // Tlačítka pro plyn/brzdu
   if (gp.buttons[0]?.pressed) throttle = 1;
   if (gp.buttons[1]?.pressed) brake = 1;
   if (gp.buttons[5]?.pressed) throttle = 1;
@@ -451,9 +477,7 @@ function pollGamepad() {
   if (gp.buttons[12]?.pressed) throttle = 1;
   if (gp.buttons[13]?.pressed) brake = 1;
   
-  // Pauza
   if (gp.buttons[9]?.pressed) togglePause();
-  // Reset
   if (gp.buttons[8]?.pressed) resetGame();
   
   state.gamepad = { steering, throttle, brake };
@@ -546,7 +570,6 @@ function distToObstacle(carCorners, trailerCorners) {
     }
   }
   
-  // Hranice
   for (const c of allCorners) {
     minDist = Math.min(minDist, c.x, c.y, canvas.width - c.x, canvas.height - c.y);
   }
@@ -554,19 +577,79 @@ function distToObstacle(carCorners, trailerCorners) {
   return minDist;
 }
 
-function checkCollision(carCorners, trailerCorners) {
+function checkObstacleCollision(carCorners, trailerCorners) {
+  let carCollision = false;
+  let trailerCollision = false;
+  let collisionPoint = null;
+  
   for (const obs of obstacles) {
     const oc = [
       {x: obs.x, y: obs.y}, {x: obs.x + obs.width, y: obs.y},
       {x: obs.x + obs.width, y: obs.y + obs.height}, {x: obs.x, y: obs.y + obs.height}
     ];
-    if (polygonsIntersect(carCorners, oc) || polygonsIntersect(trailerCorners, oc)) return true;
+    if (polygonsIntersect(carCorners, oc)) {
+      carCollision = true;
+      collisionPoint = { x: obs.x + obs.width/2, y: obs.y + obs.height/2 };
+    }
+    if (polygonsIntersect(trailerCorners, oc)) {
+      trailerCollision = true;
+      collisionPoint = { x: obs.x + obs.width/2, y: obs.y + obs.height/2 };
+    }
   }
   
+  return { car: carCollision, trailer: trailerCollision, point: collisionPoint };
+}
+
+function checkBoundaryCollision(carCorners, trailerCorners) {
   for (const c of [...carCorners, ...trailerCorners]) {
     if (c.x < 0 || c.x > canvas.width || c.y < 0 || c.y > canvas.height) return true;
   }
   return false;
+}
+
+function checkTrailerCarCollision(carCorners, trailerCorners) {
+  return polygonsIntersect(carCorners, trailerCorners);
+}
+
+function getPolygonInsideZonePercentage(corners, zone) {
+  const zcx = zone.x + zone.width/2;
+  const zcy = zone.y + zone.height/2;
+  const rot = -(zone.angle - Math.PI/2);
+  
+  let insideCount = 0;
+  const testPoints = [];
+  
+  for (const c of corners) {
+    testPoints.push(c);
+  }
+  
+  for (let i = 0; i < corners.length; i++) {
+    const c1 = corners[i];
+    const c2 = corners[(i + 1) % corners.length];
+    for (let t = 0.25; t < 1; t += 0.25) {
+      testPoints.push({
+        x: c1.x + (c2.x - c1.x) * t,
+        y: c1.y + (c2.y - c1.y) * t
+      });
+    }
+  }
+  
+  const centerX = corners.reduce((s, c) => s + c.x, 0) / corners.length;
+  const centerY = corners.reduce((s, c) => s + c.y, 0) / corners.length;
+  testPoints.push({ x: centerX, y: centerY });
+  
+  for (const p of testPoints) {
+    const relX = p.x - zcx;
+    const relY = p.y - zcy;
+    const lx = relX * Math.cos(rot) - relY * Math.sin(rot);
+    const ly = relX * Math.sin(rot) + relY * Math.cos(rot);
+    
+    if (Math.abs(lx) < zone.width/2 && Math.abs(ly) < zone.height/2) {
+      insideCount++;
+    }
+  }
+  
+  return insideCount / testPoints.length;
 }
 
 function checkParked() {
@@ -576,28 +659,44 @@ function checkParked() {
   const tcX = hitchX - Math.cos(trailer.angle) * (CFG.DRAWBAR_LENGTH + CFG.TRAILER_LENGTH/2);
   const tcY = hitchY - Math.sin(trailer.angle) * (CFG.DRAWBAR_LENGTH + CFG.TRAILER_LENGTH/2);
   
-  const zcx = parkingZone.x + parkingZone.width/2;
-  const zcy = parkingZone.y + parkingZone.height/2;
-  const relX = tcX - zcx, relY = tcY - zcy;
-  const rot = -(parkingZone.angle - Math.PI/2);
-  const lx = relX * Math.cos(rot) - relY * Math.sin(rot);
-  const ly = relX * Math.sin(rot) + relY * Math.cos(rot);
+  const trailerCorners = getCorners(tcX, tcY, CFG.TRAILER_LENGTH, CFG.TRAILER_WIDTH, trailer.angle);
+  const carCorners = getCorners(car.x, car.y, CFG.CAR_LENGTH, CFG.CAR_WIDTH, car.angle);
   
-  const inZone = Math.abs(lx) < parkingZone.width/2 - 15 && Math.abs(ly) < parkingZone.height/2 - 15;
+  const trailerInside = getPolygonInsideZonePercentage(trailerCorners, parkingZone);
+  const carInside = getPolygonInsideZonePercentage(carCorners, parkingZone);
+  
   const angleDiff = Math.abs(normalizeAngle(trailer.angle - parkingZone.angle));
   const aligned = angleDiff < 0.35 || Math.abs(angleDiff - Math.PI) < 0.35;
   
-  return inZone && aligned && Math.abs(car.velocity) < 0.1;
+  return trailerInside >= 0.99 && carInside >= 0.75 && aligned && Math.abs(car.velocity) < 0.1;
+}
+
+function createCollisionSparks(x, y, intensity) {
+  const count = Math.floor(5 + intensity * 10);
+  for (let i = 0; i < count; i++) {
+    state.particles.push({
+      x, y,
+      vx: (Math.random() - 0.5) * 6 * intensity,
+      vy: (Math.random() - 0.5) * 6 * intensity,
+      life: 0.3 + Math.random() * 0.4,
+      color: Math.random() > 0.5 ? '#fbbf24' : '#ef4444'
+    });
+  }
 }
 
 // ==================== UPDATE ====================
 function update(dt) {
-  if (state.parked || state.collision || state.paused) return;
+  if (state.parked || state.paused) return;
   
   if (state.gameStarted) state.currentTime += dt;
   
   const { car, trailer, keys, gamepad } = state;
   const { speed, steeringSens, throttleSens } = settings;
+  
+  const prevCarX = car.x;
+  const prevCarY = car.y;
+  const prevCarAngle = car.angle;
+  const prevTrailerAngle = trailer.angle;
   
   // Řízení
   let steer = car.steering;
@@ -618,12 +717,15 @@ function update(dt) {
   if (gamepad.throttle > 0.01 || gamepad.brake > 0.01) {
     const accel = 0.12 * throttleSens;
     if (gamepad.throttle > 0.01) {
-      const target = gamepad.throttle * speed * throttleSens;
-      vel = vel < target ? Math.min(vel + accel, target) : vel * 0.95;
+      // Cílová rychlost je vždy maximální, throttle ovlivňuje akceleraci
+      const target = speed * throttleSens;
+      const effectiveAccel = accel * gamepad.throttle; // Akcelerace závisí na síle stisku
+      vel = vel < target ? Math.min(vel + effectiveAccel, target) : vel * 0.98;
     }
     if (gamepad.brake > 0.01) {
-      const target = -gamepad.brake * speed * throttleSens;
-      vel = vel > target ? Math.max(vel - accel, target) : vel * 0.95;
+      const target = -speed * throttleSens;
+      const effectiveAccel = accel * gamepad.brake;
+      vel = vel > target ? Math.max(vel - effectiveAccel, target) : vel * 0.98;
     }
     vel = Math.max(-speed, Math.min(speed, vel));
   } else if (keys.up) {
@@ -636,9 +738,9 @@ function update(dt) {
   
   // Pohyb
   const turnRate = vel * Math.tan(steer) / CFG.CAR_LENGTH;
-  const newAngle = car.angle + turnRate;
-  const newX = car.x + Math.cos(newAngle) * vel;
-  const newY = car.y + Math.sin(newAngle) * vel;
+  let newAngle = car.angle + turnRate;
+  let newX = car.x + Math.cos(newAngle) * vel;
+  let newY = car.y + Math.sin(newAngle) * vel;
   
   // Vozík
   const pivotLen = CFG.DRAWBAR_LENGTH + CFG.TRAILER_LENGTH/2;
@@ -647,16 +749,87 @@ function update(dt) {
   const oldWheelX = oldHitchX - Math.cos(trailer.angle) * pivotLen;
   const oldWheelY = oldHitchY - Math.sin(trailer.angle) * pivotLen;
   
-  const hitchX = newX - Math.cos(newAngle) * (CFG.CAR_LENGTH/2 + CFG.HITCH_OFFSET);
-  const hitchY = newY - Math.sin(newAngle) * (CFG.CAR_LENGTH/2 + CFG.HITCH_OFFSET);
+  let hitchX = newX - Math.cos(newAngle) * (CFG.CAR_LENGTH/2 + CFG.HITCH_OFFSET);
+  let hitchY = newY - Math.sin(newAngle) * (CFG.CAR_LENGTH/2 + CFG.HITCH_OFFSET);
   
   const long = (hitchX - oldHitchX) * Math.cos(trailer.angle) + (hitchY - oldHitchY) * Math.sin(trailer.angle);
-  const newWheelX = oldWheelX + long * Math.cos(trailer.angle);
-  const newWheelY = oldWheelY + long * Math.sin(trailer.angle);
-  const newTrailerAngle = Math.atan2(hitchY - newWheelY, hitchX - newWheelX);
+  let newWheelX = oldWheelX + long * Math.cos(trailer.angle);
+  let newWheelY = oldWheelY + long * Math.sin(trailer.angle);
+  let newTrailerAngle = Math.atan2(hitchY - newWheelY, hitchX - newWheelX);
+  
+  // Kolize vozík-auto
+  let carCorners = getCorners(newX, newY, CFG.CAR_LENGTH, CFG.CAR_WIDTH, newAngle);
+  let tcX = hitchX - Math.cos(newTrailerAngle) * (CFG.DRAWBAR_LENGTH + CFG.TRAILER_LENGTH/2);
+  let tcY = hitchY - Math.sin(newTrailerAngle) * (CFG.DRAWBAR_LENGTH + CFG.TRAILER_LENGTH/2);
+  let trailerCorners = getCorners(tcX, tcY, CFG.TRAILER_LENGTH, CFG.TRAILER_WIDTH, newTrailerAngle);
+  
+  const trailerCarCollision = checkTrailerCarCollision(carCorners, trailerCorners);
+  
+  if (trailerCarCollision) {
+    state.trailerCarCollision = true;
+    
+    const maxJackknife = Math.PI * 0.45;
+    const angleDiffFromCar = normalizeAngle(newTrailerAngle - newAngle);
+    
+    if (Math.abs(angleDiffFromCar) > maxJackknife) {
+      const limitedAngleDiff = Math.sign(angleDiffFromCar) * maxJackknife;
+      newTrailerAngle = newAngle + limitedAngleDiff;
+      newWheelX = hitchX - Math.cos(newTrailerAngle) * pivotLen;
+      newWheelY = hitchY - Math.sin(newTrailerAngle) * pivotLen;
+    }
+    
+    if (Math.random() > 0.7) {
+      state.particles.push({
+        x: hitchX, y: hitchY,
+        vx: (Math.random() - 0.5) * 4,
+        vy: (Math.random() - 0.5) * 4,
+        life: 0.5,
+        color: '#fbbf24'
+      });
+    }
+  } else {
+    state.trailerCarCollision = false;
+  }
+  
+  // Přepočítáme pozice
+  tcX = hitchX - Math.cos(newTrailerAngle) * (CFG.DRAWBAR_LENGTH + CFG.TRAILER_LENGTH/2);
+  tcY = hitchY - Math.sin(newTrailerAngle) * (CFG.DRAWBAR_LENGTH + CFG.TRAILER_LENGTH/2);
+  carCorners = getCorners(newX, newY, CFG.CAR_LENGTH, CFG.CAR_WIDTH, newAngle);
+  trailerCorners = getCorners(tcX, tcY, CFG.TRAILER_LENGTH, CFG.TRAILER_WIDTH, newTrailerAngle);
+  
+  // Kolize s překážkami
+  const obstacleCollision = checkObstacleCollision(carCorners, trailerCorners);
+  const boundaryCollision = checkBoundaryCollision(carCorners, trailerCorners);
+  
+  if (obstacleCollision.car || obstacleCollision.trailer || boundaryCollision) {
+    state.obstacleCollision = true;
+    
+    const collisionIntensity = Math.abs(vel) / speed;
+    if (obstacleCollision.point) {
+      createCollisionSparks(obstacleCollision.point.x, obstacleCollision.point.y, collisionIntensity);
+    } else {
+      createCollisionSparks(
+        obstacleCollision.car ? newX : tcX,
+        obstacleCollision.car ? newY : tcY,
+        collisionIntensity
+      );
+    }
+    
+    vel = -vel * 0.3;
+    
+    newX = prevCarX;
+    newY = prevCarY;
+    newAngle = prevCarAngle;
+    newTrailerAngle = prevTrailerAngle;
+    
+    hitchX = newX - Math.cos(newAngle) * (CFG.CAR_LENGTH/2 + CFG.HITCH_OFFSET);
+    hitchY = newY - Math.sin(newAngle) * (CFG.CAR_LENGTH/2 + CFG.HITCH_OFFSET);
+  } else {
+    state.obstacleCollision = false;
+  }
   
   // Stopy pneumatik
-  if (Math.abs(vel) > 0.3 && state.gameStarted) {
+  if (Math.abs(vel) > 0.3 && state.gameStarted && !state.obstacleCollision) {
     if (state.tireMarks.length > 500) state.tireMarks.shift();
     state.tireMarks.push({
       x: oldWheelX, y: oldWheelY,
@@ -665,27 +838,21 @@ function update(dt) {
     });
   }
   
-  // Update stavu
   car.x = newX; car.y = newY;
   car.angle = newAngle; car.steering = steer; car.velocity = vel;
   trailer.angle = newTrailerAngle;
   
-  // Corners pro kontroly
-  const carCorners = getCorners(car.x, car.y, CFG.CAR_LENGTH, CFG.CAR_WIDTH, car.angle);
-  const tcX = hitchX - Math.cos(newTrailerAngle) * (CFG.DRAWBAR_LENGTH + CFG.TRAILER_LENGTH/2);
-  const tcY = hitchY - Math.sin(newTrailerAngle) * (CFG.DRAWBAR_LENGTH + CFG.TRAILER_LENGTH/2);
-  const trailerCorners = getCorners(tcX, tcY, CFG.TRAILER_LENGTH, CFG.TRAILER_WIDTH, newTrailerAngle);
+  const finalCarCorners = getCorners(car.x, car.y, CFG.CAR_LENGTH, CFG.CAR_WIDTH, car.angle);
+  const finalHitchX = car.x - Math.cos(car.angle) * (CFG.CAR_LENGTH/2 + CFG.HITCH_OFFSET);
+  const finalHitchY = car.y - Math.sin(car.angle) * (CFG.CAR_LENGTH/2 + CFG.HITCH_OFFSET);
+  const finalTcX = finalHitchX - Math.cos(trailer.angle) * (CFG.DRAWBAR_LENGTH + CFG.TRAILER_LENGTH/2);
+  const finalTcY = finalHitchY - Math.sin(trailer.angle) * (CFG.DRAWBAR_LENGTH + CFG.TRAILER_LENGTH/2);
+  const finalTrailerCorners = getCorners(finalTcX, finalTcY, CFG.TRAILER_LENGTH, CFG.TRAILER_WIDTH, trailer.angle);
   
-  // Varování
-  const dist = distToObstacle(carCorners, trailerCorners);
+  const dist = distToObstacle(finalCarCorners, finalTrailerCorners);
   state.warningLevel = dist < 30 ? Math.max(0, 1 - dist/30) : 0;
   
-  // Kolize
-  if (checkCollision(carCorners, trailerCorners)) {
-    state.collision = true;
-    createExplosion(car.x, car.y);
-    document.getElementById('failOverlay').classList.remove('hidden');
-  } else if (checkParked()) {
+  if (checkParked()) {
     state.parked = true;
     const timeBonus = Math.max(0, Math.floor((60 - state.currentTime) * 10));
     const levelBonus = state.level * 100;
@@ -709,11 +876,9 @@ function update(dt) {
     document.getElementById('successOverlay').classList.remove('hidden');
   }
   
-  // Stárnutí stop
   state.tireMarks.forEach(m => m.age *= 0.998);
   state.tireMarks = state.tireMarks.filter(m => m.age > 0.1);
   
-  // Částice
   state.particles = state.particles.filter(p => {
     p.x += p.vx; p.y += p.vy;
     p.vy += 0.2; p.life -= 0.02;
@@ -723,38 +888,15 @@ function update(dt) {
   updateUI();
 }
 
-function createExplosion(x, y) {
-  for (let i = 0; i < 20; i++) {
-    state.particles.push({
-      x, y,
-      vx: (Math.random() - 0.5) * 8,
-      vy: (Math.random() - 0.5) * 8,
-      life: 1,
-      color: Math.random() > 0.5 ? '#f87171' : '#fbbf24'
-    });
-  }
-}
-
 // ==================== VYKRESLOVÁNÍ ====================
 function draw() {
   const { car, trailer, warningLevel } = state;
   
-  // Pozadí
-  ctx.fillStyle = '#3a3a3a';
+  ctx.fillStyle = backgroundColor;
   ctx.fillRect(0, 0, canvas.width, canvas.height);
   
-  // Mřížka
-  ctx.strokeStyle = '#454545';
-  ctx.lineWidth = 1;
-  for (let i = 0; i < canvas.width; i += 50) {
-    ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, canvas.height); ctx.stroke();
-  }
-  for (let i = 0; i < canvas.height; i += 50) {
-    ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(canvas.width, i); ctx.stroke();
-  }
-  
-  // Stopy pneumatik
-  ctx.fillStyle = '#2a2a2a';
+  const tireMarkColor = backgroundColor === '#ffffff' ? '#cccccc' : '#2a2a2a';
+  ctx.fillStyle = tireMarkColor;
   for (const m of state.tireMarks) {
     ctx.save();
     ctx.globalAlpha = m.age * 0.4;
@@ -766,11 +908,11 @@ function draw() {
   }
   ctx.globalAlpha = 1;
   
-  // Varování - červený okraj
-  if (warningLevel > 0) {
+  if (warningLevel > 0 || state.obstacleCollision) {
     ctx.save();
-    ctx.strokeStyle = `rgba(248, 113, 113, ${warningLevel * 0.6})`;
-    ctx.lineWidth = 8;
+    const intensity = state.obstacleCollision ? 1 : warningLevel;
+    ctx.strokeStyle = `rgba(248, 113, 113, ${intensity * 0.6})`;
+    ctx.lineWidth = state.obstacleCollision ? 12 : 8;
     ctx.strokeRect(4, 4, canvas.width - 8, canvas.height - 8);
     ctx.restore();
   }
@@ -788,7 +930,6 @@ function draw() {
   ctx.fillRect(-parkingZone.width/2, -parkingZone.height/2, parkingZone.width, parkingZone.height);
   ctx.strokeRect(-parkingZone.width/2, -parkingZone.height/2, parkingZone.width, parkingZone.height);
   ctx.setLineDash([]);
-  // Šipka
   ctx.strokeStyle = state.parked ? '#34d399' : '#34d39955';
   ctx.lineWidth = 2;
   ctx.beginPath();
@@ -809,7 +950,6 @@ function draw() {
     ctx.roundRect(obs.x, obs.y, obs.width, obs.height, 3);
     ctx.fill();
     ctx.stroke();
-    // Čáry
     ctx.strokeStyle = '#fbbf24';
     ctx.lineWidth = 2;
     const step = 12;
@@ -825,7 +965,6 @@ function draw() {
     ctx.restore();
   }
   
-  // Výpočet pozic
   const hitchX = car.x - Math.cos(car.angle) * (CFG.CAR_LENGTH/2 + CFG.HITCH_OFFSET);
   const hitchY = car.y - Math.sin(car.angle) * (CFG.CAR_LENGTH/2 + CFG.HITCH_OFFSET);
   const tcX = hitchX - Math.cos(trailer.angle) * (CFG.DRAWBAR_LENGTH + CFG.TRAILER_LENGTH/2);
@@ -864,12 +1003,11 @@ function draw() {
   const tg = ctx.createLinearGradient(-CFG.TRAILER_LENGTH/2, -CFG.TRAILER_WIDTH/2, CFG.TRAILER_LENGTH/2, CFG.TRAILER_WIDTH/2);
   tg.addColorStop(0, '#6b7280'); tg.addColorStop(1, '#4b5563');
   ctx.fillStyle = tg;
-  ctx.strokeStyle = state.collision ? '#ef4444' : '#9ca3af';
-  ctx.lineWidth = 2;
+  ctx.strokeStyle = state.trailerCarCollision ? '#fbbf24' : (state.obstacleCollision ? '#ef4444' : '#9ca3af');
+  ctx.lineWidth = (state.trailerCarCollision || state.obstacleCollision) ? 3 : 2;
   ctx.beginPath();
   ctx.roundRect(-CFG.TRAILER_LENGTH/2, -CFG.TRAILER_WIDTH/2, CFG.TRAILER_LENGTH, CFG.TRAILER_WIDTH, 4);
   ctx.fill(); ctx.stroke();
-  // Kola
   ctx.fillStyle = '#1f2937';
   ctx.fillRect(-5, -CFG.TRAILER_WIDTH/2 - 4, 10, 6);
   ctx.fillRect(-5, CFG.TRAILER_WIDTH/2 - 2, 10, 6);
@@ -882,17 +1020,15 @@ function draw() {
   const cg = ctx.createLinearGradient(-CFG.CAR_LENGTH/2, -CFG.CAR_WIDTH/2, CFG.CAR_LENGTH/2, CFG.CAR_WIDTH/2);
   cg.addColorStop(0, '#3b82f6'); cg.addColorStop(1, '#1d4ed8');
   ctx.fillStyle = cg;
-  ctx.strokeStyle = state.collision ? '#ef4444' : '#60a5fa';
-  ctx.lineWidth = 2;
+  ctx.strokeStyle = state.trailerCarCollision ? '#fbbf24' : (state.obstacleCollision ? '#ef4444' : '#60a5fa');
+  ctx.lineWidth = (state.trailerCarCollision || state.obstacleCollision) ? 3 : 2;
   ctx.beginPath();
   ctx.roundRect(-CFG.CAR_LENGTH/2, -CFG.CAR_WIDTH/2, CFG.CAR_LENGTH, CFG.CAR_WIDTH, 5);
   ctx.fill(); ctx.stroke();
-  // Okna
   ctx.fillStyle = 'rgba(30,30,30,0.7)';
   ctx.beginPath();
   ctx.roundRect(-CFG.CAR_LENGTH/2 + 22, -CFG.CAR_WIDTH/2 + 4, 22, CFG.CAR_WIDTH - 8, 3);
   ctx.fill();
-  // Světla
   ctx.fillStyle = '#fef08a';
   ctx.beginPath();
   ctx.arc(CFG.CAR_LENGTH/2 - 5, -CFG.CAR_WIDTH/2 + 6, 3, 0, Math.PI*2);
@@ -903,7 +1039,6 @@ function draw() {
   ctx.arc(-CFG.CAR_LENGTH/2 + 5, -CFG.CAR_WIDTH/2 + 6, 3, 0, Math.PI*2);
   ctx.arc(-CFG.CAR_LENGTH/2 + 5, CFG.CAR_WIDTH/2 - 6, 3, 0, Math.PI*2);
   ctx.fill();
-  // Kola
   ctx.fillStyle = '#1f2937';
   ctx.save();
   ctx.translate(CFG.CAR_LENGTH/2 - 10, -CFG.CAR_WIDTH/2);
@@ -929,7 +1064,7 @@ function draw() {
   }
   ctx.globalAlpha = 1;
   
-  // HUD - rychlost
+  // HUD
   ctx.fillStyle = 'rgba(0,0,0,0.5)';
   ctx.beginPath();
   ctx.roundRect(canvas.width - 90, canvas.height - 50, 80, 40, 6);
@@ -942,7 +1077,6 @@ function draw() {
   ctx.fillStyle = Math.abs(car.velocity) > settings.speed * 0.8 ? '#fbbf24' : '#34d399';
   ctx.fillText(Math.abs(car.velocity).toFixed(1), canvas.width - 50, canvas.height - 18);
   
-  // HUD - řízení
   ctx.save();
   ctx.translate(55, canvas.height - 55);
   ctx.strokeStyle = '#404040';
@@ -964,8 +1098,29 @@ function draw() {
   ctx.fill();
   ctx.restore();
   
-  // Pauza overlay
-  if (state.paused && !state.parked && !state.collision) {
+  if (state.trailerCarCollision) {
+    ctx.fillStyle = 'rgba(251, 191, 36, 0.8)';
+    ctx.beginPath();
+    ctx.roundRect(canvas.width/2 - 60, 10, 120, 25, 4);
+    ctx.fill();
+    ctx.fillStyle = '#000';
+    ctx.font = 'bold 12px system-ui';
+    ctx.textAlign = 'center';
+    ctx.fillText('⚠️ ZLOM VOZÍKU', canvas.width/2, 27);
+  }
+  
+  if (state.obstacleCollision) {
+    ctx.fillStyle = 'rgba(239, 68, 68, 0.8)';
+    ctx.beginPath();
+    ctx.roundRect(canvas.width/2 - 50, state.trailerCarCollision ? 40 : 10, 100, 25, 4);
+    ctx.fill();
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 12px system-ui';
+    ctx.textAlign = 'center';
+    ctx.fillText('💥 NÁRAZ!', canvas.width/2, state.trailerCarCollision ? 57 : 27);
+  }
+  
+  if (state.paused && !state.parked) {
     ctx.fillStyle = 'rgba(0,0,0,0.4)';
     ctx.fillRect(0, 0, canvas.width, canvas.height);
   }
@@ -988,13 +1143,14 @@ function resetGame() {
   state.car = { x: startPos.x, y: startPos.y, angle: startPos.angle, steering: 0, velocity: 0 };
   state.trailer = { angle: startPos.angle };
   state.parked = false;
-  state.collision = false;
   state.paused = false;
   state.currentTime = 0;
   state.gameStarted = false;
   state.attempts++;
   state.particles = [];
   state.warningLevel = 0;
+  state.trailerCarCollision = false;
+  state.obstacleCollision = false;
   document.querySelectorAll('.overlay').forEach(o => o.classList.add('hidden'));
   updateUI();
 }
@@ -1008,7 +1164,7 @@ function nextLevel() {
 }
 
 function togglePause() {
-  if (state.parked || state.collision) return;
+  if (state.parked) return;
   state.paused = !state.paused;
   document.getElementById('pauseOverlay').classList.toggle('hidden', !state.paused);
 }
