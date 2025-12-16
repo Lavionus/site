@@ -1,0 +1,765 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>✂️ MP3 Studio - Profesionální ořez</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/lamejs/1.2.1/lame.min.js"></script>
+  <style>
+    :root {
+      --primary: #6aa6fd;
+      --primary-hover: #5694f0;
+      --bg-dark: #121212;
+      --bg-panel: #1e1e1e;
+      --bg-input: #2d2d2d;
+      --text-main: #e0e0e0;
+      --text-muted: #888;
+      --border: #333;
+      --mask-color: rgba(0, 0, 0, 0.6);
+      --handle-color: #fff;
+      --playhead-color: #ffcc00;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 30px 20px;
+      width: 100%;
+    }
+
+    /* Header */
+    .header { text-align: center; margin-bottom: 30px; }
+    .header h1 { font-size: 2rem; margin-bottom: 10px; background: linear-gradient(45deg, #6aa6fd, #a78bfa); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+    .header p { color: var(--text-muted); }
+
+    /* Upload Section */
+    .upload-area {
+      background-color: var(--bg-panel);
+      border: 2px dashed var(--border);
+      border-radius: 12px;
+      padding: 40px;
+      text-align: center;
+      cursor: pointer;
+      transition: 0.3s ease;
+      margin-bottom: 20px;
+    }
+    .upload-area:hover, .upload-area.dragover {
+      border-color: var(--primary);
+      background-color: rgba(106, 166, 253, 0.05);
+    }
+    .upload-icon { font-size: 3rem; margin-bottom: 15px; display: block; }
+    .file-input { display: none; }
+
+    /* Main Editor UI */
+    .editor-panel {
+      background-color: var(--bg-panel);
+      border-radius: 12px;
+      padding: 25px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+      display: none; /* Hidden by default */
+      animation: fadeIn 0.5s ease;
+    }
+
+    .file-meta {
+      display: flex;
+      justify-content: space-between;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      margin-bottom: 15px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid var(--border);
+    }
+    .filename { color: var(--primary); font-weight: 600; }
+
+    /* Unified Waveform Editor */
+    .waveform-stage {
+      position: relative;
+      height: 200px;
+      background-color: var(--bg-input);
+      border-radius: 8px;
+      overflow: hidden;
+      margin-bottom: 25px;
+      user-select: none;
+      cursor: pointer;
+    }
+
+    #waveformCanvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    /* Overlays (Masks) */
+    .mask {
+      position: absolute;
+      top: 0;
+      height: 100%;
+      background-color: var(--mask-color);
+      pointer-events: none;
+      z-index: 10;
+      backdrop-filter: grayscale(0.8);
+    }
+    .mask-left { left: 0; border-right: 1px solid rgba(255,255,255,0.1); }
+    .mask-right { right: 0; border-left: 1px solid rgba(255,255,255,0.1); }
+
+    /* Handles */
+    .handle {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 14px;
+      cursor: ew-resize;
+      z-index: 20;
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    
+    .handle::after {
+      content: '';
+      width: 2px;
+      height: 100%;
+      background-color: var(--handle-color);
+      box-shadow: 0 0 10px rgba(0,0,0,0.5);
+    }
+
+    .handle:hover::after { background-color: var(--primary); }
+
+    /* Playhead */
+    .playhead {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background-color: var(--playhead-color);
+      box-shadow: 0 0 6px rgba(255, 204, 0, 0.8);
+      z-index: 25;
+      display: none;
+      pointer-events: none;
+    }
+
+    /* Time Inputs */
+    .time-controls {
+      display: flex;
+      justify-content: center;
+      gap: 30px;
+      margin-bottom: 30px;
+      flex-wrap: wrap;
+    }
+
+    .time-group {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .time-group label {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-muted);
+      margin-bottom: 5px;
+    }
+
+    .time-input {
+      background-color: var(--bg-input);
+      border: 1px solid var(--border);
+      color: var(--primary);
+      font-family: 'Courier New', monospace;
+      font-size: 1.5rem;
+      padding: 10px 15px;
+      border-radius: 6px;
+      width: 160px;
+      text-align: center;
+      transition: 0.2s;
+    }
+
+    .time-input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(106, 166, 253, 0.2);
+    }
+
+    /* Actions */
+    .actions {
+      display: flex;
+      gap: 15px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    .btn {
+      padding: 12px 24px;
+      border-radius: 6px;
+      border: none;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 1rem;
+      transition: all 0.2s ease;
+      color: white;
+    }
+
+    .btn-play { background-color: #333; }
+    .btn-play:hover { background-color: #444; }
+    .btn-play.playing { background-color: #eab308; color: #000; }
+    
+    .btn-download { background-color: var(--primary); }
+    .btn-download:hover { background-color: var(--primary-hover); transform: translateY(-1px); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+    /* Notification & Loading */
+    .notification {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 15px 25px;
+      border-radius: 8px;
+      color: white;
+      z-index: 1000;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+      transform: translateX(150%);
+      transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .notification.show { transform: translateX(0); }
+    .notif-success { background-color: #10b981; }
+    .notif-error { background-color: #ef4444; }
+
+    .loader {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.8);
+      z-index: 2000;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+    .spinner {
+      width: 50px; height: 50px;
+      border: 5px solid rgba(255,255,255,0.1);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-bottom: 20px;
+    }
+    
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+    /* Responsive */
+    @media (max-width: 600px) {
+      .time-controls { gap: 10px; }
+      .time-input { width: 120px; font-size: 1.1rem; }
+      .actions { flex-direction: column; }
+      .btn { width: 100%; justify-content: center; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="header">
+      <h1>✂️ MP3 Studio</h1>
+      <p>Nahrajte, vizuálně ořízněte a exportujte přímo do MP3</p>
+    </div>
+
+    <div class="upload-area" id="dropZone">
+      <span class="upload-icon">🎵</span>
+      <h3>Klikněte nebo přetáhněte MP3 sem</h3>
+      <p style="font-size: 0.9rem; color: #666; margin-top: 5px;">Podporuje MP3 formáty</p>
+      <input type="file" id="fileInput" class="file-input" accept="audio/mpeg, .mp3">
+    </div>
+
+    <div class="editor-panel" id="editorPanel">
+      <div class="file-meta">
+        <span id="fileNameDisplay">song.mp3</span>
+        <span id="fileDurationDisplay">00:00</span>
+      </div>
+
+      <div class="waveform-stage" id="waveformStage">
+        <canvas id="waveformCanvas"></canvas>
+        
+        <div class="mask mask-left" id="maskLeft"></div>
+        <div class="mask mask-right" id="maskRight"></div>
+        
+        <div class="handle" id="handleStart"></div>
+        <div class="handle" id="handleEnd"></div>
+        
+        <div class="playhead" id="playhead"></div>
+      </div>
+
+      <div class="time-controls">
+        <div class="time-group">
+          <label>Začátek</label>
+          <input type="text" id="startTimeInput" class="time-input" value="00:00.00">
+        </div>
+        <div class="time-group">
+          <label>Konec</label>
+          <input type="text" id="endTimeInput" class="time-input" value="00:00.00">
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="btn btn-play" id="btnPreview">
+          <span>▶️</span> Přehrát výběr
+        </button>
+        <button class="btn btn-download" id="btnExport">
+          <span>💾</span> Uložit jako MP3
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="loader" id="loader">
+    <div class="spinner"></div>
+    <div id="loaderText" style="color: white;">Zpracovávám...</div>
+  </div>
+
+  <div class="notification" id="notification">Zpráva</div>
+
+  <script>
+    // --- STAV APLIKACE ---
+    const state = {
+      audioContext: null,
+      audioBuffer: null,
+      sourceNode: null,
+      isPlaying: false,
+      duration: 0,
+      startTime: 0,
+      endTime: 0,
+      fileName: 'audio',
+      dragging: null, // 'start' nebo 'end'
+      playheadTime: 0,
+      animationFrameId: null
+    };
+
+    // --- DOM ELEMENTY ---
+    const DOM = {
+      dropZone: document.getElementById('dropZone'),
+      fileInput: document.getElementById('fileInput'),
+      editorPanel: document.getElementById('editorPanel'),
+      waveformStage: document.getElementById('waveformStage'),
+      canvas: document.getElementById('waveformCanvas'),
+      maskLeft: document.getElementById('maskLeft'),
+      maskRight: document.getElementById('maskRight'),
+      handleStart: document.getElementById('handleStart'),
+      handleEnd: document.getElementById('handleEnd'),
+      startTimeInput: document.getElementById('startTimeInput'),
+      endTimeInput: document.getElementById('endTimeInput'),
+      btnPreview: document.getElementById('btnPreview'),
+      btnExport: document.getElementById('btnExport'),
+      loader: document.getElementById('loader'),
+      loaderText: document.getElementById('loaderText'),
+      fileNameDisplay: document.getElementById('fileNameDisplay'),
+      fileDurationDisplay: document.getElementById('fileDurationDisplay'),
+      notification: document.getElementById('notification'),
+      playhead: document.getElementById('playhead')
+    };
+
+    // --- FUNKCE PRO ENTER U INPUTŮ ---
+    function handleTimeInput() {
+      const t1 = parseTime(DOM.startTimeInput.value);
+      const t2 = parseTime(DOM.endTimeInput.value);
+      
+      if (t1 !== null && t2 !== null && t1 < t2 && t2 <= state.duration) {
+        state.startTime = t1;
+        state.endTime = t2;
+        updateUI();
+      } else {
+        updateUI();
+        showNotification('Neplatný časový rozsah', 'error');
+      }
+    }
+
+    // --- INITIALIZACE & UPLOAD ---
+    DOM.dropZone.addEventListener('click', () => DOM.fileInput.click());
+    
+    DOM.dropZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      DOM.dropZone.classList.add('dragover');
+    });
+    
+    DOM.dropZone.addEventListener('dragleave', () => DOM.dropZone.classList.remove('dragover'));
+    
+    DOM.dropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      DOM.dropZone.classList.remove('dragover');
+      if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+    });
+
+    DOM.fileInput.addEventListener('change', (e) => {
+      if (e.target.files.length) handleFile(e.target.files[0]);
+    });
+
+    // Přidání reakce na Enter u časových inputů
+    DOM.startTimeInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') handleTimeInput();
+    });
+    DOM.endTimeInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') handleTimeInput();
+    });
+    DOM.startTimeInput.addEventListener('change', handleTimeInput);
+    DOM.endTimeInput.addEventListener('change', handleTimeInput);
+
+    async function handleFile(file) {
+      if (!file.type.includes('audio')) return showNotification('Vyberte prosím MP3 soubor.', 'error');
+      
+      showLoader(true, 'Načítám a dekóduji audio...');
+      state.fileName = file.name.replace(/\.[^/.]+$/, "");
+
+      try {
+        const arrayBuffer = await file.arrayBuffer();
+        state.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        state.audioBuffer = await state.audioContext.decodeAudioData(arrayBuffer);
+        
+        state.duration = state.audioBuffer.duration;
+        state.startTime = 0;
+        state.endTime = state.duration;
+        state.playheadTime = 0;
+
+        // UI Update
+        DOM.fileNameDisplay.textContent = file.name;
+        DOM.fileDurationDisplay.textContent = formatTime(state.duration);
+        DOM.editorPanel.style.display = 'block';
+        DOM.dropZone.style.display = 'none';
+
+        drawWaveform();
+        updateUI();
+        showNotification('Soubor úspěšně načten', 'success');
+      } catch (err) {
+        console.error(err);
+        showNotification('Chyba při zpracování souboru.', 'error');
+      } finally {
+        showLoader(false);
+      }
+    }
+
+    // --- VYKRESLOVÁNÍ WAVEFORMU ---
+    function drawWaveform() {
+      const canvas = DOM.canvas;
+      const ctx = canvas.getContext('2d');
+      const width = canvas.width = DOM.waveformStage.offsetWidth;
+      const height = canvas.height = DOM.waveformStage.offsetHeight;
+      
+      const rawData = state.audioBuffer.getChannelData(0);
+      const samples = 2000;
+      const blockSize = Math.floor(rawData.length / samples);
+      
+      ctx.clearRect(0, 0, width, height);
+      ctx.fillStyle = '#6aa6fd';
+      
+      const centerY = height / 2;
+      
+      for (let i = 0; i < samples; i++) {
+        let blockStart = blockSize * i;
+        let sum = 0;
+        for (let j = 0; j < blockSize; j++) {
+          sum += Math.abs(rawData[blockStart + j]);
+        }
+        let avg = sum / blockSize;
+        
+        const barHeight = Math.max(2, avg * height * 1.5);
+        const x = (i / samples) * width;
+        const widthBar = (width / samples) * 0.8;
+
+        ctx.fillRect(x, centerY - barHeight / 2, widthBar, barHeight);
+      }
+    }
+
+    // --- INTERAKCE & LOGIKA OŘEZU ---
+    
+    const getXFromTime = (time) => (time / state.duration) * DOM.waveformStage.offsetWidth;
+    const getTimeFromX = (x) => (x / DOM.waveformStage.offsetWidth) * state.duration;
+
+    function updateUI() {
+      const width = DOM.waveformStage.offsetWidth;
+      const startX = getXFromTime(state.startTime);
+      const endX = getXFromTime(state.endTime);
+
+      DOM.handleStart.style.left = `${startX}px`;
+      DOM.handleEnd.style.left = `${endX}px`;
+
+      DOM.maskLeft.style.width = `${startX}px`;
+      DOM.maskRight.style.width = `${width - endX}px`;
+
+      DOM.startTimeInput.value = formatTime(state.startTime, true);
+      DOM.endTimeInput.value = formatTime(state.endTime, true);
+    }
+
+    // Update playhead pozice
+    function updatePlayhead() {
+      if (!state.isPlaying) return;
+      
+      const currentTime = state.audioContext.currentTime - (state.playStartTime || 0);
+      state.playheadTime = Math.min(state.startTime + currentTime, state.endTime);
+      
+      const playheadX = getXFromTime(state.playheadTime);
+      DOM.playhead.style.left = `${playheadX}px`;
+      
+      if (state.playheadTime < state.endTime) {
+        state.animationFrameId = requestAnimationFrame(updatePlayhead);
+      } else {
+        DOM.playhead.style.display = 'none';
+      }
+    }
+
+    // Dragging Logic
+    DOM.handleStart.addEventListener('mousedown', (e) => startDrag(e, 'start'));
+    DOM.handleEnd.addEventListener('mousedown', (e) => startDrag(e, 'end'));
+    
+    // Kliknutí na waveform pro nastavení playhead
+    DOM.waveformStage.addEventListener('mousedown', (e) => {
+      if (e.target === DOM.handleStart || e.target === DOM.handleEnd) return;
+      
+      const rect = DOM.waveformStage.getBoundingClientRect();
+      const x = e.clientX - rect.left;
+      const time = Math.min(Math.max(0, getTimeFromX(x)), state.duration);
+      
+      if (e.shiftKey) {
+        // Shift + kliknutí - posun nejbližšího handle
+        const distStart = Math.abs(state.startTime - time);
+        const distEnd = Math.abs(state.endTime - time);
+        
+        if (distStart < distEnd) {
+            state.startTime = Math.min(time, state.endTime - 0.1);
+            state.dragging = 'start';
+        } else {
+            state.endTime = Math.max(time, state.startTime + 0.1);
+            state.dragging = 'end';
+        }
+        updateUI();
+        
+        document.addEventListener('mousemove', handleDrag);
+        document.addEventListener('mouseup', stopDrag);
+      } else {
+        // Normální kliknutí - nastavení playhead a přehrávání
+        state.playheadTime = time;
+        DOM.playhead.style.display = 'block';
+        DOM.playhead.style.left = `${getXFromTime(time)}px`;
+        
+        if (state.isPlaying) {
+          stopAudio();
+        }
+        playAudioFromTime(time);
+      }
+    });
+
+    function startDrag(e, type) {
+      e.stopPropagation();
+      state.dragging = type;
+      document.addEventListener('mousemove', handleDrag);
+      document.addEventListener('mouseup', stopDrag);
+    }
+
+    function handleDrag(e) {
+      if (!state.dragging) return;
+
+      const rect = DOM.waveformStage.getBoundingClientRect();
+      let x = e.clientX - rect.left;
+      x = Math.max(0, Math.min(x, rect.width));
+      
+      let newTime = getTimeFromX(x);
+
+      if (state.dragging === 'start') {
+        state.startTime = Math.min(newTime, state.endTime - 0.1);
+      } else {
+        state.endTime = Math.max(newTime, state.startTime + 0.1);
+      }
+
+      updateUI();
+    }
+
+    function stopDrag() {
+      state.dragging = null;
+      document.removeEventListener('mousemove', handleDrag);
+      document.removeEventListener('mouseup', stopDrag);
+    }
+
+    // --- PŘEHRÁVÁNÍ ---
+    DOM.btnPreview.addEventListener('click', togglePlay);
+
+    function togglePlay() {
+      if (state.isPlaying) {
+        stopAudio();
+      } else {
+        playAudio();
+      }
+    }
+
+    function playAudio() {
+      if (!state.audioBuffer) return;
+      
+      stopAudio();
+      playAudioFromTime(state.startTime);
+    }
+
+    function playAudioFromTime(startTime) {
+      if (!state.audioBuffer) return;
+      
+      stopAudio();
+
+      state.sourceNode = state.audioContext.createBufferSource();
+      state.sourceNode.buffer = state.audioBuffer;
+      state.sourceNode.connect(state.audioContext.destination);
+      
+      const duration = state.endTime - startTime;
+      state.sourceNode.start(0, startTime, duration);
+      
+      state.isPlaying = true;
+      state.playStartTime = state.audioContext.currentTime - (startTime - state.startTime);
+      DOM.btnPreview.innerHTML = '<span>⏹️</span> Zastavit';
+      DOM.btnPreview.classList.add('playing');
+      
+      DOM.playhead.style.display = 'block';
+      state.animationFrameId = requestAnimationFrame(updatePlayhead);
+
+      state.sourceNode.onended = () => {
+        stopAudio();
+      };
+    }
+
+    function stopAudio() {
+      if (state.sourceNode) {
+        try { state.sourceNode.stop(); } catch(e){}
+        state.sourceNode = null;
+      }
+      state.isPlaying = false;
+      if (state.animationFrameId) {
+        cancelAnimationFrame(state.animationFrameId);
+        state.animationFrameId = null;
+      }
+      DOM.btnPreview.innerHTML = '<span>▶️</span> Přehrát výběr';
+      DOM.btnPreview.classList.remove('playing');
+      DOM.playhead.style.display = 'none';
+    }
+
+    // --- EXPORT DO MP3 ---
+    DOM.btnExport.addEventListener('click', async () => {
+      if (!state.audioBuffer) return;
+      
+      showLoader(true, 'Kóduji MP3 (to může chvíli trvat)...');
+      
+      setTimeout(async () => {
+        try {
+          const buffer = state.audioBuffer;
+          const sampleRate = buffer.sampleRate;
+          const channels = buffer.numberOfChannels;
+          
+          const startSample = Math.floor(state.startTime * sampleRate);
+          const endSample = Math.floor(state.endTime * sampleRate);
+          const length = endSample - startSample;
+          
+          const mp3encoder = new lamejs.Mp3Encoder(channels, sampleRate, 128);
+          const mp3Data = [];
+          
+          const leftData = buffer.getChannelData(0).subarray(startSample, endSample);
+          const rightData = channels > 1 ? buffer.getChannelData(1).subarray(startSample, endSample) : undefined;
+          
+          const sampleBlockSize = 1152;
+          const leftInt16 = new Int16Array(length);
+          const rightInt16 = channels > 1 ? new Int16Array(length) : undefined;
+          
+          for (let i = 0; i < length; i++) {
+            leftInt16[i] = Math.max(-1, Math.min(1, leftData[i])) * 0x7FFF;
+            if (rightInt16) {
+              rightInt16[i] = Math.max(-1, Math.min(1, rightData[i])) * 0x7FFF;
+            }
+          }
+          
+          for (let i = 0; i < length; i += sampleBlockSize) {
+            const leftChunk = leftInt16.subarray(i, i + sampleBlockSize);
+            let mp3buf;
+            
+            if (channels === 1) {
+              mp3buf = mp3encoder.encodeBuffer(leftChunk);
+            } else {
+              const rightChunk = rightInt16.subarray(i, i + sampleBlockSize);
+              mp3buf = mp3encoder.encodeBuffer(leftChunk, rightChunk);
+            }
+            
+            if (mp3buf.length > 0) mp3Data.push(mp3buf);
+          }
+          
+          const endBuf = mp3encoder.flush();
+          if (endBuf.length > 0) mp3Data.push(endBuf);
+          
+          const blob = new Blob(mp3Data, { type: 'audio/mp3' });
+          const url = URL.createObjectURL(blob);
+          
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `${state.fileName}_cut.mp3`;
+          a.click();
+          
+          showNotification('MP3 soubor stažen!', 'success');
+          
+        } catch (e) {
+          console.error(e);
+          showNotification('Chyba při exportu: ' + e.message, 'error');
+        } finally {
+          showLoader(false);
+        }
+      }, 100);
+    });
+
+    // --- POMOCNÉ FUNKCE ---
+    function formatTime(seconds, includeMs = false) {
+      const m = Math.floor(seconds / 60);
+      const s = Math.floor(seconds % 60);
+      const ms = Math.floor((seconds % 1) * 100);
+      
+      const str = `${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
+      return includeMs ? `${str}.${ms.toString().padStart(2, '0')}` : str;
+    }
+
+    function parseTime(timeStr) {
+      try {
+        const parts = timeStr.split(':');
+        if (parts.length !== 2) return null;
+        const m = parseInt(parts[0]);
+        const s = parseFloat(parts[1]);
+        if (isNaN(m) || isNaN(s)) return null;
+        return (m * 60) + s;
+      } catch {
+        return null;
+      }
+    }
+
+    function showNotification(msg, type) {
+      const el = DOM.notification;
+      el.textContent = msg;
+      el.className = `notification ${type === 'success' ? 'notif-success' : 'notif-error'} show`;
+      setTimeout(() => el.classList.remove('show'), 3000);
+    }
+
+    function showLoader(show, text = '') {
+      DOM.loader.style.display = show ? 'flex' : 'none';
+      if (text) DOM.loaderText.textContent = text;
+    }
+
+    // Resize observer
+    new ResizeObserver(() => {
+        if(state.audioBuffer) {
+            drawWaveform();
+            updateUI();
+        }
+    }).observe(DOM.waveformStage);
+
+  </script>
+</body>
+</html>
