@@ -102,9 +102,121 @@
         .md-textarea::placeholder {
             color: #64748b;
         }
+
+        /* Photo Crop Modal */
+        .crop-modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 9999;
+            align-items: center;
+            justify-content: center;
+        }
+        .crop-modal.active { display: flex; }
+        .crop-container {
+            background: #1e293b;
+            border-radius: 16px;
+            padding: 24px;
+            max-width: 500px;
+            width: 90%;
+            box-shadow: 0 25px 50px rgba(0,0,0,0.5);
+        }
+        .crop-canvas-wrapper {
+            position: relative;
+            width: 300px;
+            height: 300px;
+            margin: 0 auto 20px;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 3px solid #f97316;
+            cursor: grab;
+            background: #0f172a;
+        }
+        .crop-canvas-wrapper:active { cursor: grabbing; }
+        .crop-canvas-wrapper canvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+        .crop-overlay {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            border-radius: 50%;
+            box-shadow: 0 0 0 150px rgba(15, 23, 42, 0.7);
+        }
+        .crop-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+        .crop-slider-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        .crop-slider-row label {
+            font-size: 12px;
+            font-weight: 600;
+            color: #94a3b8;
+            width: 60px;
+        }
+        .crop-slider {
+            flex: 1;
+            -webkit-appearance: none;
+            height: 6px;
+            border-radius: 3px;
+            background: #334155;
+            outline: none;
+        }
+        .crop-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: #f97316;
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+        .crop-slider::-webkit-slider-thumb:hover { transform: scale(1.2); }
+        .crop-buttons {
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+            margin-top: 8px;
+        }
     </style>
 </head>
 <body class="bg-slate-900 h-screen overflow-hidden">
+
+    <!-- Photo Crop Modal -->
+    <div id="crop-modal" class="crop-modal">
+        <div class="crop-container">
+            <h3 class="text-lg font-bold text-white mb-4 flex items-center gap-2">
+                <i class="fa-solid fa-crop text-orange-500"></i> Upravit fotografii
+            </h3>
+            <p class="text-slate-400 text-sm mb-4">Přetáhněte obrázek pro posun, použijte posuvník pro přiblížení</p>
+            <div class="crop-canvas-wrapper" id="crop-wrapper">
+                <canvas id="crop-canvas"></canvas>
+            </div>
+            <div class="crop-controls">
+                <div class="crop-slider-row">
+                    <label><i class="fa-solid fa-magnifying-glass-plus mr-1"></i> Zoom</label>
+                    <input type="range" id="crop-zoom" class="crop-slider" min="100" max="300" value="100">
+                    <span id="crop-zoom-val" class="text-slate-400 text-xs w-12 text-right">100%</span>
+                </div>
+                <div class="crop-buttons">
+                    <button onclick="closeCropModal()" class="px-5 py-2 bg-slate-700 hover:bg-slate-600 text-slate-200 rounded-lg font-semibold transition-colors">
+                        <i class="fa-solid fa-xmark mr-1"></i> Zrušit
+                    </button>
+                    <button onclick="applyCrop()" class="px-5 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg font-semibold transition-colors">
+                        <i class="fa-solid fa-check mr-1"></i> Použít
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
 
     <!-- Header -->
     <header class="h-16 bg-slate-950 text-white flex items-center justify-between px-6 shadow-xl z-50 relative no-print">
@@ -163,8 +275,11 @@
                                 <i class="fa-solid fa-camera text-slate-500 text-2xl"></i>
                             </div>
                             <input type="file" id="photo-upload" accept="image/*" class="hidden" onchange="handlePhotoUpload(this)">
-                            <button onclick="document.getElementById('photo-upload').click()" class="absolute -bottom-1 -right-1 bg-orange-500 text-white p-2 rounded-full shadow-lg hover:scale-110 transition-transform">
+                            <button onclick="document.getElementById('photo-upload').click()" class="absolute -bottom-1 -right-1 bg-orange-500 text-white p-2 rounded-full shadow-lg hover:scale-110 transition-transform" title="Nahrát fotku">
                                 <i class="fa-solid fa-plus text-xs"></i>
+                            </button>
+                            <button id="btn-edit-photo" onclick="editExistingPhoto()" class="hidden absolute -bottom-1 left-0 bg-slate-600 text-white p-2 rounded-full shadow-lg hover:scale-110 hover:bg-slate-500 transition-transform" title="Upravit ořez">
+                                <i class="fa-solid fa-crop text-xs"></i>
                             </button>
                         </div>
                         <div class="flex-1 space-y-4">
@@ -521,6 +636,10 @@
                         profilePhoto = data.profilePhoto;
                         document.getElementById('photo-preview').innerHTML = `<img src="${profilePhoto}" class="w-full h-full object-cover">`;
                     }
+                    if (data.originalPhoto) {
+                        originalPhoto = data.originalPhoto;
+                        document.getElementById('btn-edit-photo').classList.remove('hidden');
+                    }
                     
                     // Links (pokud jsou uloženy jako pole)
                     if (data.links && data.links.length > 0 && links.length <= 1 && (!links[0] || !links[0].url)) {
@@ -635,6 +754,7 @@
                 interests: document.getElementById('data-interests').value,
                 extraInfo: document.getElementById('data-birthdate').value,
                 profilePhoto: profilePhoto,
+                originalPhoto: originalPhoto,
                 sectionLayout: sectionLayout,
                 settings: {
                     primary: document.getElementById('cfg-primary').value,
@@ -658,16 +778,154 @@
             URL.revokeObjectURL(url);
         }
 
+        // ============ PHOTO CROP MODAL ============
+        let cropImage = null;
+        let cropScale = 1;
+        let cropOffsetX = 0;
+        let cropOffsetY = 0;
+        let isDragging = false;
+        let dragStartX = 0;
+        let dragStartY = 0;
+        let originalPhoto = null; // Uložíme původní neoříznutou fotku
+
         function handlePhotoUpload(input) {
             if (input.files && input.files[0]) {
                 const reader = new FileReader();
                 reader.onload = function(e) {
-                    profilePhoto = e.target.result;
-                    document.getElementById('photo-preview').innerHTML = `<img src="${profilePhoto}" class="w-full h-full object-cover">`;
-                    updateCV();
+                    originalPhoto = e.target.result; // Uložit originál
+                    openCropModal(e.target.result);
                 }
                 reader.readAsDataURL(input.files[0]);
+                input.value = ''; // Reset pro opětovné nahrání stejného souboru
             }
+        }
+
+        function editExistingPhoto() {
+            if (originalPhoto) {
+                openCropModal(originalPhoto);
+            }
+        }
+
+        function openCropModal(imageSrc) {
+            cropImage = new Image();
+            cropImage.onload = function() {
+                cropScale = 1;
+                cropOffsetX = 0;
+                cropOffsetY = 0;
+                document.getElementById('crop-zoom').value = 100;
+                document.getElementById('crop-zoom-val').textContent = '100%';
+                document.getElementById('crop-modal').classList.add('active');
+                initCropCanvas();
+                drawCropCanvas();
+            };
+            cropImage.src = imageSrc;
+        }
+
+        function closeCropModal() {
+            document.getElementById('crop-modal').classList.remove('active');
+            cropImage = null;
+        }
+
+        function initCropCanvas() {
+            const wrapper = document.getElementById('crop-wrapper');
+            const canvas = document.getElementById('crop-canvas');
+            const size = 300;
+            canvas.width = size;
+            canvas.height = size;
+
+            // Drag events
+            wrapper.onmousedown = function(e) {
+                isDragging = true;
+                dragStartX = e.clientX - cropOffsetX;
+                dragStartY = e.clientY - cropOffsetY;
+            };
+            document.onmousemove = function(e) {
+                if (!isDragging) return;
+                cropOffsetX = e.clientX - dragStartX;
+                cropOffsetY = e.clientY - dragStartY;
+                drawCropCanvas();
+            };
+            document.onmouseup = function() { isDragging = false; };
+
+            // Touch events
+            wrapper.ontouchstart = function(e) {
+                isDragging = true;
+                const touch = e.touches[0];
+                dragStartX = touch.clientX - cropOffsetX;
+                dragStartY = touch.clientY - cropOffsetY;
+            };
+            wrapper.ontouchmove = function(e) {
+                if (!isDragging) return;
+                e.preventDefault();
+                const touch = e.touches[0];
+                cropOffsetX = touch.clientX - dragStartX;
+                cropOffsetY = touch.clientY - dragStartY;
+                drawCropCanvas();
+            };
+            wrapper.ontouchend = function() { isDragging = false; };
+
+            // Zoom slider
+            document.getElementById('crop-zoom').oninput = function() {
+                cropScale = this.value / 100;
+                document.getElementById('crop-zoom-val').textContent = this.value + '%';
+                drawCropCanvas();
+            };
+        }
+
+        function drawCropCanvas() {
+            const canvas = document.getElementById('crop-canvas');
+            const ctx = canvas.getContext('2d');
+            const size = 300;
+
+            ctx.clearRect(0, 0, size, size);
+
+            if (!cropImage) return;
+
+            // Vypočítat rozměry pro vycentrování
+            const imgRatio = cropImage.width / cropImage.height;
+            let drawW, drawH;
+            if (imgRatio > 1) {
+                drawH = size * cropScale;
+                drawW = drawH * imgRatio;
+            } else {
+                drawW = size * cropScale;
+                drawH = drawW / imgRatio;
+            }
+
+            const x = (size - drawW) / 2 + cropOffsetX;
+            const y = (size - drawH) / 2 + cropOffsetY;
+
+            ctx.drawImage(cropImage, x, y, drawW, drawH);
+        }
+
+        function applyCrop() {
+            const canvas = document.getElementById('crop-canvas');
+            const size = 300;
+
+            // Vytvořit výstupní canvas s kruhovým ořezem
+            const outputCanvas = document.createElement('canvas');
+            outputCanvas.width = size;
+            outputCanvas.height = size;
+            const ctx = outputCanvas.getContext('2d');
+
+            // Kruhová maska
+            ctx.beginPath();
+            ctx.arc(size / 2, size / 2, size / 2, 0, Math.PI * 2);
+            ctx.closePath();
+            ctx.clip();
+
+            // Překreslit obsah z crop canvasu
+            ctx.drawImage(canvas, 0, 0);
+
+            // Uložit jako base64
+            profilePhoto = outputCanvas.toDataURL('image/png');
+            document.getElementById('photo-preview').innerHTML = `<img src="${profilePhoto}" class="w-full h-full object-cover">`;
+            
+            // Zobrazit tlačítko pro editaci
+            document.getElementById('btn-edit-photo').classList.remove('hidden');
+            
+            closeCropModal();
+            updateCV();
         }
 
         function addLink() {
@@ -1263,6 +1521,7 @@ ${cvContent}
                 education: education,
                 // Fotka
                 profilePhoto: profilePhoto,
+                originalPhoto: originalPhoto,
                 // Rozložení sekcí
                 sectionLayout: sectionLayout,
                 // Nastavení vzhledu
@@ -1308,6 +1567,10 @@ ${cvContent}
                 if (data.profilePhoto) {
                     profilePhoto = data.profilePhoto;
                     document.getElementById('photo-preview').innerHTML = `<img src="${profilePhoto}" class="w-full h-full object-cover">`;
+                }
+                if (data.originalPhoto) {
+                    originalPhoto = data.originalPhoto;
+                    document.getElementById('btn-edit-photo').classList.remove('hidden');
                 }
                 
                 // Nastavení vzhledu
