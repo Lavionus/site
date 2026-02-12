@@ -1,0 +1,777 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🎬 Video Studio - Ořez & Export</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/lamejs/1.2.1/lame.min.js"></script>
+  <style>
+    :root {
+      --primary: #6aa6fd;
+      --primary-hover: #5694f0;
+      --accent: #a78bfa;
+      --bg-dark: #121212;
+      --bg-panel: #1e1e1e;
+      --bg-input: #2d2d2d;
+      --text-main: #e0e0e0;
+      --text-muted: #888;
+      --border: #333;
+      --mask-color: rgba(0, 0, 0, 0.6);
+      --handle-color: #fff;
+      --playhead-color: #ffcc00;
+      --success: #10b981;
+      --error: #ef4444;
+      --warning: #eab308;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      background-color: var(--bg-dark);
+      color: var(--text-main);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .container {
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 30px 20px;
+      width: 100%;
+    }
+
+    .header { text-align: center; margin-bottom: 30px; }
+    .header h1 {
+      font-size: 2rem;
+      margin-bottom: 10px;
+      background: linear-gradient(45deg, #6aa6fd, #a78bfa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .header p { color: var(--text-muted); }
+
+    .upload-area {
+      background-color: var(--bg-panel);
+      border: 2px dashed var(--border);
+      border-radius: 12px;
+      padding: 40px;
+      text-align: center;
+      cursor: pointer;
+      transition: 0.3s ease;
+      margin-bottom: 20px;
+    }
+    .upload-area:hover, .upload-area.dragover {
+      border-color: var(--primary);
+      background-color: rgba(106, 166, 253, 0.05);
+    }
+    .upload-icon { font-size: 3rem; margin-bottom: 15px; display: block; }
+    .file-input { display: none; }
+
+    .editor-panel {
+      background-color: var(--bg-panel);
+      border-radius: 12px;
+      padding: 25px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+      display: none;
+      animation: fadeIn 0.5s ease;
+    }
+
+    .file-meta {
+      display: flex;
+      justify-content: space-between;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      margin-bottom: 15px;
+      padding-bottom: 15px;
+      border-bottom: 1px solid var(--border);
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .filename { color: var(--primary); font-weight: 600; }
+    .file-meta-info { display: flex; gap: 20px; }
+
+    .video-preview {
+      background-color: #000;
+      border-radius: 8px;
+      overflow: hidden;
+      margin-bottom: 20px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      max-height: 500px;
+    }
+    .video-preview video {
+      max-width: 100%;
+      max-height: 500px;
+      display: block;
+    }
+
+    .timeline-stage {
+      position: relative;
+      height: 80px;
+      background-color: var(--bg-input);
+      border-radius: 8px;
+      overflow: hidden;
+      margin-bottom: 20px;
+      user-select: none;
+      cursor: pointer;
+    }
+    .timeline-stage canvas {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .mask {
+      position: absolute;
+      top: 0;
+      height: 100%;
+      background-color: var(--mask-color);
+      pointer-events: none;
+      z-index: 10;
+      backdrop-filter: grayscale(0.8);
+    }
+    .mask-left { left: 0; border-right: 1px solid rgba(255,255,255,0.1); }
+    .mask-right { right: 0; border-left: 1px solid rgba(255,255,255,0.1); }
+
+    .handle {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 14px;
+      cursor: ew-resize;
+      z-index: 20;
+      transform: translateX(-50%);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .handle::after {
+      content: '';
+      width: 2px;
+      height: 100%;
+      background-color: var(--handle-color);
+      box-shadow: 0 0 10px rgba(0,0,0,0.5);
+    }
+    .handle:hover::after { background-color: var(--primary); }
+
+    .playhead {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 2px;
+      background-color: var(--playhead-color);
+      box-shadow: 0 0 6px rgba(255, 204, 0, 0.8);
+      z-index: 25;
+      pointer-events: none;
+    }
+
+    .time-controls {
+      display: flex;
+      justify-content: center;
+      gap: 30px;
+      margin-bottom: 25px;
+      flex-wrap: wrap;
+      align-items: flex-end;
+    }
+    .time-group {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .time-group label {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-muted);
+      margin-bottom: 5px;
+    }
+    .time-input {
+      background-color: var(--bg-input);
+      border: 1px solid var(--border);
+      color: var(--primary);
+      font-family: 'Courier New', monospace;
+      font-size: 1.5rem;
+      padding: 10px 15px;
+      border-radius: 6px;
+      width: 160px;
+      text-align: center;
+      transition: 0.2s;
+    }
+    .time-input:focus {
+      outline: none;
+      border-color: var(--primary);
+      box-shadow: 0 0 0 3px rgba(106, 166, 253, 0.2);
+    }
+    .time-duration {
+      font-family: 'Courier New', monospace;
+      font-size: 1rem;
+      color: var(--accent);
+      padding: 12px 15px;
+    }
+
+    .actions {
+      display: flex;
+      gap: 15px;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+    .btn {
+      padding: 12px 24px;
+      border-radius: 6px;
+      border: none;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 1rem;
+      transition: all 0.2s ease;
+      color: white;
+    }
+    .btn-play { background-color: #333; }
+    .btn-play:hover { background-color: #444; }
+    .btn-play.playing { background-color: var(--warning); color: #000; }
+    .btn-export-mp3 { background-color: var(--accent); }
+    .btn-export-mp3:hover { background-color: #9171e8; transform: translateY(-1px); }
+    .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none !important; }
+
+    .notification {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 15px 25px;
+      border-radius: 8px;
+      color: white;
+      z-index: 1000;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.3);
+      transform: translateX(150%);
+      transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    }
+    .notification.show { transform: translateX(0); }
+    .notif-success { background-color: var(--success); }
+    .notif-error { background-color: var(--error); }
+    .notif-info { background-color: var(--primary); }
+
+    .loader {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.8);
+      z-index: 2000;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+    }
+    .spinner {
+      width: 50px; height: 50px;
+      border: 5px solid rgba(255,255,255,0.1);
+      border-top-color: var(--primary);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin-bottom: 20px;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes fadeIn { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+    @media (max-width: 600px) {
+      .time-controls { gap: 10px; }
+      .time-input { width: 120px; font-size: 1.1rem; }
+      .actions { flex-direction: column; }
+      .btn { width: 100%; justify-content: center; }
+      .video-preview, .video-preview video { max-height: 300px; }
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <div class="header">
+      <h1>🎬 Video Studio</h1>
+      <p>Nahrajte video, nastavte výřez a exportujte jako MP3</p>
+    </div>
+
+    <div class="upload-area" id="dropZone">
+      <span class="upload-icon">🎥</span>
+      <h3>Klikněte nebo přetáhněte video sem</h3>
+      <p style="font-size: 0.9rem; color: #666; margin-top: 5px;">Podporuje MP4, WebM, MOV, AVI a další formáty</p>
+      <input type="file" id="fileInput" class="file-input" accept="video/*">
+    </div>
+
+    <div class="editor-panel" id="editorPanel">
+      <div class="file-meta">
+        <span class="filename" id="fileNameDisplay">video.mp4</span>
+        <div class="file-meta-info">
+          <span id="fileResolution">-</span>
+          <span id="fileDurationDisplay">00:00</span>
+        </div>
+      </div>
+
+      <div class="video-preview">
+        <video id="videoPlayer" preload="auto"></video>
+      </div>
+
+      <div class="timeline-stage" id="timelineStage">
+        <canvas id="timelineCanvas"></canvas>
+        <div class="mask mask-left" id="maskLeft"></div>
+        <div class="mask mask-right" id="maskRight"></div>
+        <div class="handle" id="handleStart"></div>
+        <div class="handle" id="handleEnd"></div>
+        <div class="playhead" id="playhead"></div>
+      </div>
+
+      <div class="time-controls">
+        <div class="time-group">
+          <label>Začátek</label>
+          <input type="text" id="startTimeInput" class="time-input" value="00:00.00">
+        </div>
+        <div class="time-group">
+          <label>Délka výřezu</label>
+          <span class="time-duration" id="clipDuration">00:00.00</span>
+        </div>
+        <div class="time-group">
+          <label>Konec</label>
+          <input type="text" id="endTimeInput" class="time-input" value="00:00.00">
+        </div>
+      </div>
+
+      <div class="actions">
+        <button class="btn btn-play" id="btnPreview">
+          <span>▶️</span> Přehrát výběr
+        </button>
+        <button class="btn btn-export-mp3" id="btnExportMp3">
+          <span>🎵</span> Uložit jako MP3
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <div class="loader" id="loader">
+    <div class="spinner"></div>
+    <div id="loaderText" style="color: white;">Zpracovávám...</div>
+  </div>
+
+  <div class="notification" id="notification">Zpráva</div>
+
+  <script>
+    // --- STATE ---
+    const state = {
+      audioContext: null,
+      audioBuffer: null,
+      videoFile: null,
+      videoObjectURL: null,
+      duration: 0,
+      startTime: 0,
+      endTime: 0,
+      fileName: 'video',
+      dragging: null,
+      isPlaying: false,
+      animationFrameId: null,
+      thumbnailsDrawn: false,
+      clickPhase: 'set_start'
+    };
+
+    // --- DOM CACHE ---
+    const $ = (id) => document.getElementById(id);
+    const DOM = {
+      dropZone: $('dropZone'),
+      fileInput: $('fileInput'),
+      editorPanel: $('editorPanel'),
+      videoPlayer: $('videoPlayer'),
+      timelineStage: $('timelineStage'),
+      timelineCanvas: $('timelineCanvas'),
+      maskLeft: $('maskLeft'),
+      maskRight: $('maskRight'),
+      handleStart: $('handleStart'),
+      handleEnd: $('handleEnd'),
+      playhead: $('playhead'),
+      startTimeInput: $('startTimeInput'),
+      endTimeInput: $('endTimeInput'),
+      clipDuration: $('clipDuration'),
+      btnPreview: $('btnPreview'),
+      btnExportMp3: $('btnExportMp3'),
+      loader: $('loader'),
+      loaderText: $('loaderText'),
+      fileNameDisplay: $('fileNameDisplay'),
+      fileResolution: $('fileResolution'),
+      fileDurationDisplay: $('fileDurationDisplay'),
+      notification: $('notification')
+    };
+
+    // --- HELPERS ---
+    function formatTime(seconds, includeMs = false) {
+      const m = Math.floor(seconds / 60);
+      const s = Math.floor(seconds % 60);
+      const str = `${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
+      if (!includeMs) return str;
+      const ms = Math.floor((seconds % 1) * 100);
+      return `${str}.${String(ms).padStart(2, '0')}`;
+    }
+
+    function parseTime(timeStr) {
+      const parts = timeStr.split(':');
+      if (parts.length !== 2) return null;
+      const m = parseInt(parts[0]);
+      const s = parseFloat(parts[1]);
+      return (isNaN(m) || isNaN(s)) ? null : m * 60 + s;
+    }
+
+    function downloadBlob(blob, filename) {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      a.click();
+      setTimeout(() => URL.revokeObjectURL(url), 5000);
+    }
+
+    let notifTimer = null;
+    function showNotification(msg, type) {
+      clearTimeout(notifTimer);
+      const el = DOM.notification;
+      el.textContent = msg;
+      el.className = `notification notif-${type} show`;
+      notifTimer = setTimeout(() => el.classList.remove('show'), 3000);
+    }
+
+    function showLoader(show, text = '') {
+      DOM.loader.style.display = show ? 'flex' : 'none';
+      if (text) DOM.loaderText.textContent = text;
+    }
+
+    const clamp = (val, min, max) => Math.max(min, Math.min(max, val));
+    const getXFromTime = (time) => (time / state.duration) * DOM.timelineStage.offsetWidth;
+    const getTimeFromX = (x) => (x / DOM.timelineStage.offsetWidth) * state.duration;
+
+    // --- UPLOAD ---
+    DOM.dropZone.addEventListener('click', () => DOM.fileInput.click());
+
+    DOM.dropZone.addEventListener('dragover', (e) => {
+      e.preventDefault();
+      DOM.dropZone.classList.add('dragover');
+    });
+
+    DOM.dropZone.addEventListener('dragleave', () => DOM.dropZone.classList.remove('dragover'));
+
+    DOM.dropZone.addEventListener('drop', (e) => {
+      e.preventDefault();
+      DOM.dropZone.classList.remove('dragover');
+      if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+    });
+
+    DOM.fileInput.addEventListener('change', (e) => {
+      if (e.target.files.length) handleFile(e.target.files[0]);
+    });
+
+    function handleFile(file) {
+      if (!file.type.startsWith('video/')) {
+        return showNotification('Vyberte prosím video soubor.', 'error');
+      }
+
+      state.videoFile = file;
+      state.fileName = file.name.replace(/\.[^/.]+$/, '');
+
+      if (state.videoObjectURL) URL.revokeObjectURL(state.videoObjectURL);
+      state.videoObjectURL = URL.createObjectURL(file);
+
+      DOM.videoPlayer.src = state.videoObjectURL;
+
+      DOM.videoPlayer.addEventListener('loadedmetadata', function onMeta() {
+        DOM.videoPlayer.removeEventListener('loadedmetadata', onMeta);
+
+        state.duration = DOM.videoPlayer.duration;
+        state.startTime = 0;
+        state.endTime = state.duration;
+        state.clickPhase = 'set_start';
+
+        DOM.fileNameDisplay.textContent = file.name;
+        DOM.fileResolution.textContent = `${DOM.videoPlayer.videoWidth}×${DOM.videoPlayer.videoHeight}`;
+        DOM.fileDurationDisplay.textContent = formatTime(state.duration);
+
+        DOM.editorPanel.style.display = 'block';
+        DOM.dropZone.style.display = 'none';
+
+        generateThumbnails();
+        updateUI();
+        showNotification('Video úspěšně načteno', 'success');
+      });
+
+      // Decode audio in background (needed for MP3 export)
+      state.audioBuffer = null;
+      file.arrayBuffer().then(buf => {
+        state.audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        return state.audioContext.decodeAudioData(buf);
+      }).then(buffer => {
+        state.audioBuffer = buffer;
+      }).catch(err => {
+        console.error('Audio decode error:', err);
+      });
+    }
+
+    // --- TIMELINE THUMBNAILS ---
+    async function generateThumbnails() {
+      const canvas = DOM.timelineCanvas;
+      const ctx = canvas.getContext('2d');
+      const stageW = DOM.timelineStage.offsetWidth;
+      const stageH = DOM.timelineStage.offsetHeight;
+      canvas.width = stageW;
+      canvas.height = stageH;
+
+      ctx.fillStyle = '#1a1a1a';
+      ctx.fillRect(0, 0, stageW, stageH);
+
+      const thumbCount = Math.ceil(stageW / 120);
+      const thumbWidth = stageW / thumbCount;
+      const video = document.createElement('video');
+      video.src = state.videoObjectURL;
+      video.muted = true;
+      video.preload = 'auto';
+
+      await new Promise(r => video.addEventListener('loadeddata', r, { once: true }));
+
+      for (let i = 0; i < thumbCount; i++) {
+        video.currentTime = (i / thumbCount) * state.duration;
+        await new Promise(r => video.addEventListener('seeked', r, { once: true }));
+        ctx.drawImage(video, i * thumbWidth, 0, thumbWidth, stageH);
+      }
+
+      state.thumbnailsDrawn = true;
+      video.removeAttribute('src');
+      video.load();
+    }
+
+    // --- UI UPDATE ---
+    function updateUI() {
+      const width = DOM.timelineStage.offsetWidth;
+      const startX = getXFromTime(state.startTime);
+      const endX = getXFromTime(state.endTime);
+
+      DOM.handleStart.style.left = `${startX}px`;
+      DOM.handleEnd.style.left = `${endX}px`;
+      DOM.maskLeft.style.width = `${startX}px`;
+      DOM.maskRight.style.width = `${width - endX}px`;
+
+      DOM.startTimeInput.value = formatTime(state.startTime, true);
+      DOM.endTimeInput.value = formatTime(state.endTime, true);
+      DOM.clipDuration.textContent = formatTime(state.endTime - state.startTime, true);
+    }
+
+    // --- PLAYBACK ---
+    function stopPlayback() {
+      if (state.animationFrameId) {
+        cancelAnimationFrame(state.animationFrameId);
+        state.animationFrameId = null;
+      }
+      if (state.isPlaying) {
+        DOM.videoPlayer.pause();
+        state.isPlaying = false;
+        DOM.btnPreview.innerHTML = '<span>▶️</span> Přehrát výběr';
+        DOM.btnPreview.classList.remove('playing');
+      }
+    }
+
+    function updatePlayhead() {
+      const currentTime = DOM.videoPlayer.currentTime;
+      DOM.playhead.style.left = `${getXFromTime(currentTime)}px`;
+
+      if (currentTime >= state.endTime) {
+        stopPlayback();
+        return;
+      }
+      state.animationFrameId = requestAnimationFrame(updatePlayhead);
+    }
+
+    function togglePlay() {
+      if (state.isPlaying) {
+        stopPlayback();
+      } else {
+        DOM.videoPlayer.currentTime = state.startTime;
+        DOM.videoPlayer.play();
+        state.isPlaying = true;
+        DOM.btnPreview.innerHTML = '<span>⏹️</span> Zastavit';
+        DOM.btnPreview.classList.add('playing');
+        state.animationFrameId = requestAnimationFrame(updatePlayhead);
+      }
+    }
+
+    DOM.btnPreview.addEventListener('click', togglePlay);
+
+    DOM.videoPlayer.addEventListener('timeupdate', () => {
+      if (state.isPlaying && DOM.videoPlayer.currentTime >= state.endTime) {
+        stopPlayback();
+      }
+    });
+
+    // --- HANDLE DRAGGING ---
+    function startDrag(e, type) {
+      e.stopPropagation();
+      e.preventDefault();
+      state.dragging = type;
+      document.addEventListener('mousemove', handleDrag);
+      document.addEventListener('mouseup', stopDrag);
+      document.addEventListener('touchmove', handleDrag, { passive: false });
+      document.addEventListener('touchend', stopDrag);
+    }
+
+    function handleDrag(e) {
+      if (!state.dragging) return;
+      e.preventDefault();
+
+      const rect = DOM.timelineStage.getBoundingClientRect();
+      const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      const x = clamp(clientX - rect.left, 0, rect.width);
+      const newTime = getTimeFromX(x);
+
+      if (state.dragging === 'start') {
+        state.startTime = clamp(newTime, 0, state.endTime - 0.1);
+      } else {
+        state.endTime = clamp(newTime, state.startTime + 0.1, state.duration);
+      }
+      updateUI();
+    }
+
+    function stopDrag() {
+      state.dragging = null;
+      document.removeEventListener('mousemove', handleDrag);
+      document.removeEventListener('mouseup', stopDrag);
+      document.removeEventListener('touchmove', handleDrag);
+      document.removeEventListener('touchend', stopDrag);
+    }
+
+    DOM.handleStart.addEventListener('mousedown', (e) => startDrag(e, 'start'));
+    DOM.handleEnd.addEventListener('mousedown', (e) => startDrag(e, 'end'));
+    DOM.handleStart.addEventListener('touchstart', (e) => startDrag(e, 'start'), { passive: false });
+    DOM.handleEnd.addEventListener('touchstart', (e) => startDrag(e, 'end'), { passive: false });
+
+    // --- TIMELINE CLICK (state machine) ---
+    function handleTimelineClick(e) {
+      if (e.target === DOM.handleStart || e.target === DOM.handleEnd) return;
+
+      const rect = DOM.timelineStage.getBoundingClientRect();
+      const clientX = e.touches ? e.changedTouches[0].clientX : e.clientX;
+      const time = clamp(getTimeFromX(clientX - rect.left), 0, state.duration);
+
+      if (state.clickPhase === 'set_end') {
+        if (time > state.startTime + 0.1) {
+          state.endTime = time;
+        } else {
+          state.endTime = state.startTime;
+          state.startTime = time;
+        }
+        state.clickPhase = 'selection_done';
+        showNotification('Výběr hotov. Další klik nastaví nový začátek.', 'info');
+      } else {
+        // 'set_start' or 'selection_done' -> set new start
+        state.startTime = time;
+        state.endTime = state.duration;
+        state.clickPhase = 'set_end';
+        DOM.videoPlayer.currentTime = time;
+        showNotification('Začátek výběru nastaven. Klikněte pro konec.', 'info');
+      }
+      updateUI();
+    }
+
+    DOM.timelineStage.addEventListener('mousedown', handleTimelineClick);
+    DOM.timelineStage.addEventListener('touchend', handleTimelineClick);
+
+    // --- TIME INPUTS ---
+    function handleTimeInput() {
+      const t1 = parseTime(DOM.startTimeInput.value);
+      const t2 = parseTime(DOM.endTimeInput.value);
+
+      if (t1 !== null && t2 !== null && t1 < t2 && t2 <= state.duration) {
+        state.startTime = t1;
+        state.endTime = t2;
+      } else {
+        showNotification('Neplatný časový rozsah', 'error');
+      }
+      updateUI();
+    }
+
+    DOM.startTimeInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') handleTimeInput(); });
+    DOM.endTimeInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') handleTimeInput(); });
+    DOM.startTimeInput.addEventListener('change', handleTimeInput);
+    DOM.endTimeInput.addEventListener('change', handleTimeInput);
+
+    // --- EXPORT MP3 (lamejs) ---
+    DOM.btnExportMp3.addEventListener('click', () => {
+      if (!state.audioBuffer) {
+        showNotification('Audio se stále dekóduje, zkuste za chvíli...', 'info');
+        return;
+      }
+
+      showLoader(true, 'Kóduji MP3 (to může chvíli trvat)...');
+      DOM.btnExportMp3.disabled = true;
+
+      setTimeout(() => {
+        try {
+          const { sampleRate, numberOfChannels: channels } = state.audioBuffer;
+          const startSample = Math.floor(state.startTime * sampleRate);
+          const endSample = Math.floor(state.endTime * sampleRate);
+          const length = endSample - startSample;
+
+          const leftData = state.audioBuffer.getChannelData(0).subarray(startSample, endSample);
+          const rightData = channels > 1 ? state.audioBuffer.getChannelData(1).subarray(startSample, endSample) : null;
+
+          const mp3encoder = new lamejs.Mp3Encoder(channels, sampleRate, 192);
+          const mp3Data = [];
+          const blockSize = 1152;
+
+          for (let i = 0; i < length; i += blockSize) {
+            const end = Math.min(i + blockSize, length);
+            const blockLen = end - i;
+            const leftChunk = new Int16Array(blockLen);
+            let rightChunk = null;
+            if (rightData) rightChunk = new Int16Array(blockLen);
+
+            for (let j = 0; j < blockLen; j++) {
+              leftChunk[j] = clamp(leftData[i + j], -1, 1) * 0x7FFF;
+              if (rightChunk) rightChunk[j] = clamp(rightData[i + j], -1, 1) * 0x7FFF;
+            }
+
+            const mp3buf = rightChunk
+              ? mp3encoder.encodeBuffer(leftChunk, rightChunk)
+              : mp3encoder.encodeBuffer(leftChunk);
+            if (mp3buf.length > 0) mp3Data.push(mp3buf);
+          }
+
+          const endBuf = mp3encoder.flush();
+          if (endBuf.length > 0) mp3Data.push(endBuf);
+
+          downloadBlob(new Blob(mp3Data, { type: 'audio/mp3' }), `${state.fileName}_audio.mp3`);
+          showNotification('MP3 soubor stažen!', 'success');
+        } catch (e) {
+          console.error('Export MP3 error:', e);
+          showNotification('Chyba při exportu: ' + e.message, 'error');
+        } finally {
+          showLoader(false);
+          DOM.btnExportMp3.disabled = false;
+        }
+      }, 50);
+    });
+
+    // --- RESIZE (debounced) ---
+    let resizeTimer = null;
+    new ResizeObserver(() => {
+      if (state.duration <= 0) return;
+      clearTimeout(resizeTimer);
+      resizeTimer = setTimeout(() => {
+        if (state.thumbnailsDrawn) generateThumbnails();
+        updateUI();
+      }, 200);
+    }).observe(DOM.timelineStage);
+
+    // --- KEYBOARD ---
+    document.addEventListener('keydown', (e) => {
+      if (e.target.tagName === 'INPUT') return;
+      if (e.code === 'Space') {
+        e.preventDefault();
+        togglePlay();
+      }
+    });
+  </script>
+</body>
+</html>
