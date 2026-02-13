@@ -192,6 +192,75 @@
       box-shadow: 0 0 0 3px rgba(106, 166, 253, 0.2);
     }
 
+    /* Volume Control */
+    .volume-control {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      margin-bottom: 25px;
+      padding: 15px 20px;
+      background-color: var(--bg-input);
+      border-radius: 8px;
+    }
+
+    .volume-control label {
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-muted);
+      white-space: nowrap;
+    }
+
+    .volume-icon {
+      font-size: 1.2rem;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .volume-slider {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 200px;
+      height: 6px;
+      border-radius: 3px;
+      background: var(--border);
+      outline: none;
+      cursor: pointer;
+    }
+
+    .volume-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      appearance: none;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--primary);
+      cursor: pointer;
+      transition: transform 0.1s;
+    }
+
+    .volume-slider::-webkit-slider-thumb:hover {
+      transform: scale(1.2);
+    }
+
+    .volume-slider::-moz-range-thumb {
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      background: var(--primary);
+      cursor: pointer;
+      border: none;
+    }
+
+    .volume-value {
+      font-family: 'Courier New', monospace;
+      font-size: 1rem;
+      color: var(--primary);
+      min-width: 45px;
+      text-align: right;
+    }
+
     /* Actions */
     .actions {
       display: flex;
@@ -314,6 +383,13 @@
         </div>
       </div>
 
+      <div class="volume-control">
+        <label>Hlasitost</label>
+        <span class="volume-icon" id="volumeIcon" title="Ztlumit/obnovit">🔊</span>
+        <input type="range" id="volumeSlider" class="volume-slider" min="0" max="200" value="100">
+        <span class="volume-value" id="volumeValue">100%</span>
+      </div>
+
       <div class="actions">
         <button class="btn btn-play" id="btnPreview">
           <span>▶️</span> Přehrát výběr
@@ -345,7 +421,10 @@
       fileName: 'audio',
       dragging: null, // 'start' nebo 'end'
       playheadTime: 0,
-      animationFrameId: null
+      animationFrameId: null,
+      volume: 1.0,       // 0.0 - 2.0
+      gainNode: null,
+      previousVolume: 1.0
     };
 
     // --- DOM ELEMENTY ---
@@ -368,7 +447,10 @@
       fileNameDisplay: document.getElementById('fileNameDisplay'),
       fileDurationDisplay: document.getElementById('fileDurationDisplay'),
       notification: document.getElementById('notification'),
-      playhead: document.getElementById('playhead')
+      playhead: document.getElementById('playhead'),
+      volumeSlider: document.getElementById('volumeSlider'),
+      volumeValue: document.getElementById('volumeValue'),
+      volumeIcon: document.getElementById('volumeIcon')
     };
 
     // --- FUNKCE PRO ENTER U INPUTŮ ---
@@ -415,6 +497,41 @@
     });
     DOM.startTimeInput.addEventListener('change', handleTimeInput);
     DOM.endTimeInput.addEventListener('change', handleTimeInput);
+
+    // --- OVLÁDÁNÍ HLASITOSTI ---
+    DOM.volumeSlider.addEventListener('input', () => {
+      const val = parseInt(DOM.volumeSlider.value);
+      state.volume = val / 100;
+      DOM.volumeValue.textContent = `${val}%`;
+      updateVolumeIcon(val);
+      if (state.gainNode) {
+        state.gainNode.gain.value = state.volume;
+      }
+    });
+
+    DOM.volumeIcon.addEventListener('click', () => {
+      if (state.volume > 0) {
+        state.previousVolume = state.volume;
+        state.volume = 0;
+        DOM.volumeSlider.value = 0;
+        DOM.volumeValue.textContent = '0%';
+        updateVolumeIcon(0);
+      } else {
+        state.volume = state.previousVolume || 1.0;
+        DOM.volumeSlider.value = Math.round(state.volume * 100);
+        DOM.volumeValue.textContent = `${Math.round(state.volume * 100)}%`;
+        updateVolumeIcon(Math.round(state.volume * 100));
+      }
+      if (state.gainNode) {
+        state.gainNode.gain.value = state.volume;
+      }
+    });
+
+    function updateVolumeIcon(val) {
+      if (val === 0) DOM.volumeIcon.textContent = '🔇';
+      else if (val < 50) DOM.volumeIcon.textContent = '🔉';
+      else DOM.volumeIcon.textContent = '🔊';
+    }
 
     async function handleFile(file) {
       if (!file.type.includes('audio')) return showNotification('Vyberte prosím MP3 soubor.', 'error');
@@ -615,7 +732,10 @@
 
       state.sourceNode = state.audioContext.createBufferSource();
       state.sourceNode.buffer = state.audioBuffer;
-      state.sourceNode.connect(state.audioContext.destination);
+      state.gainNode = state.audioContext.createGain();
+      state.gainNode.gain.value = state.volume;
+      state.sourceNode.connect(state.gainNode);
+      state.gainNode.connect(state.audioContext.destination);
       
       const duration = state.endTime - startTime;
       state.sourceNode.start(0, startTime, duration);
@@ -674,10 +794,11 @@
           const leftInt16 = new Int16Array(length);
           const rightInt16 = channels > 1 ? new Int16Array(length) : undefined;
           
+          const vol = state.volume;
           for (let i = 0; i < length; i++) {
-            leftInt16[i] = Math.max(-1, Math.min(1, leftData[i])) * 0x7FFF;
+            leftInt16[i] = Math.max(-1, Math.min(1, leftData[i] * vol)) * 0x7FFF;
             if (rightInt16) {
-              rightInt16[i] = Math.max(-1, Math.min(1, rightData[i])) * 0x7FFF;
+              rightInt16[i] = Math.max(-1, Math.min(1, rightData[i] * vol)) * 0x7FFF;
             }
           }
           
