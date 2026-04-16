@@ -1082,6 +1082,56 @@
     .toggle-item input[type="checkbox"]:checked + .toggle-item-label {
       color: #e0e0e0;
     }
+
+    /* === NEDÁVNÉ LOKACE === */
+    .recent-locations-bar {
+      display: none;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+      padding-top: 12px;
+      border-top: 1px solid #404040;
+      align-items: center;
+    }
+
+    .recent-locations-label {
+      font-size: 0.78rem;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-weight: 600;
+      flex-shrink: 0;
+    }
+
+    .recent-loc-btn {
+      background-color: #333;
+      color: #bbb;
+      border: 1px solid #555;
+      padding: 5px 14px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: all 0.2s;
+    }
+
+    .recent-loc-btn:hover {
+      background-color: #404040;
+      border-color: #6aa6fd;
+      color: #e0e0e0;
+    }
+
+    .recent-loc-btn.active {
+      border-color: #6aa6fd;
+      color: #6aa6fd;
+      background-color: #354a6e;
+    }
+
+    .recent-loc-btn .cache-badge {
+      font-size: 0.7rem;
+      color: #4caf50;
+      margin-left: 4px;
+      vertical-align: middle;
+    }
   </style>
 </head>
 <body>
@@ -1121,6 +1171,9 @@
             💾 Uložit lokaci
           </button>
         </div>
+        <div class="recent-locations-bar" id="recentLocationsBar">
+          <span class="recent-locations-label">Nedávné:</span>
+        </div>
       </div>
       
 
@@ -1144,6 +1197,13 @@
           <div class="chart-title">📅 3denní předpověď</div>
           <div class="chart-wrapper">
             <canvas id="threeDayChart"></canvas>
+          </div>
+        </div>
+
+        <div class="chart-container">
+          <div class="chart-title">📆 Předpověď po 3 hodinách (10 dní)</div>
+          <div class="chart-wrapper">
+            <canvas id="longRangeChart"></canvas>
           </div>
         </div>
 
@@ -1294,6 +1354,7 @@
   <script>
     // Globální proměnné
     let threeDayChart = null;
+    let longRangeChart = null;
     let twentyFourHourChart = null;
     let tenDayChart = null;
     let extraChart = null;
@@ -1304,6 +1365,80 @@
 
     // Uložená data pro překreslení po otočení obrazovky
     let lastChartData = null;
+
+    // === NEDÁVNÉ LOKACE A CACHE PŘEDPOVĚDÍ ===
+    let recentLocations = []; // max 3 položky
+    const weatherCache = {};  // klíč: "lat,lon" → {timestamp, data}
+    const CACHE_TTL_MS = 60 * 60 * 1000; // 1 hodina
+
+    function getLocationKey(lat, lon) {
+      return `${Math.round(lat * 1000) / 1000},${Math.round(lon * 1000) / 1000}`;
+    }
+
+    function loadRecentLocations() {
+      try {
+        const saved = localStorage.getItem('recentLocations');
+        if (saved) recentLocations = JSON.parse(saved);
+      } catch (e) {
+        recentLocations = [];
+      }
+    }
+
+    function saveRecentLocations() {
+      try {
+        localStorage.setItem('recentLocations', JSON.stringify(recentLocations));
+      } catch (e) {}
+    }
+
+    function addToRecentLocations(locationData) {
+      if (!locationData || !locationData.lat || !locationData.lon) return;
+      const key = getLocationKey(locationData.lat, locationData.lon);
+      recentLocations = recentLocations.filter(loc => getLocationKey(loc.lat, loc.lon) !== key);
+      recentLocations.unshift({ ...locationData });
+      recentLocations = recentLocations.slice(0, 3);
+      saveRecentLocations();
+      renderRecentLocationButtons();
+    }
+
+    function renderRecentLocationButtons() {
+      const container = document.getElementById('recentLocationsBar');
+      if (!container) return;
+
+      // Odstraň stará tlačítka (ponech label)
+      Array.from(container.children).forEach(el => {
+        if (!el.classList.contains('recent-locations-label')) el.remove();
+      });
+
+      if (recentLocations.length <= 1) {
+        container.style.display = 'none';
+        return;
+      }
+
+      container.style.display = 'flex';
+
+      recentLocations.forEach(loc => {
+        const key = getLocationKey(loc.lat, loc.lon);
+        const cached = weatherCache[key];
+        const isFresh = cached && (Date.now() - cached.timestamp < CACHE_TTL_MS);
+
+        const btn = document.createElement('button');
+        btn.className = 'recent-loc-btn';
+        btn.dataset.locKey = key;
+
+        const isActive = currentLocationData && getLocationKey(currentLocationData.lat, currentLocationData.lon) === key;
+        if (isActive) btn.classList.add('active');
+
+        btn.innerHTML = `${loc.name || loc.displayName}${isFresh ? '<span class="cache-badge">✓</span>' : ''}`;
+
+        btn.addEventListener('click', () => {
+          currentLocationData = loc;
+          document.getElementById('location').value = loc.displayName;
+          loadWeather();
+        });
+
+        container.appendChild(btn);
+      });
+    }
 
     // === DETEKCE ZAŘÍZENÍ A MOBILNÍ OPTIMALIZACE ===
     const deviceInfo = {
@@ -1595,33 +1730,48 @@
           showError('Prosím zadejte město nebo souřadnice');
           return;
         }
-        
+
         const coords = await getCoordinates(input);
-        
+
         if (currentLocationData && currentLocationData.displayName !== input) {
           document.getElementById('location').value = currentLocationData.displayName;
         }
-        
+
         document.getElementById('saveLocationBtn').style.display = 'block';
-        
+
+        // Zkontroluj cache (platná max 1 hodinu)
+        const locKey = getLocationKey(coords.lat, coords.lon);
+        const cached = weatherCache[locKey];
+        if (cached && (Date.now() - cached.timestamp < CACHE_TTL_MS)) {
+          lastChartData = cached.data;
+          redrawChartsForOrientation();
+          showWeatherData();
+          addToRecentLocations(currentLocationData);
+          showNotification(`Předpověď (z cache): ${currentLocationData?.displayName || 'neznámou lokaci'}`, 'info');
+          if (geomagForecastCache) checkAuroraAlert(geomagForecastCache);
+          return;
+        }
+
         const hourlyParams = [
           'temperature_2m', 'precipitation', 'wind_speed_10m', 'wind_direction_10m', 'cloud_cover', 'relative_humidity_2m', 'surface_pressure', 'cape', 'shortwave_radiation'
         ].join(',');
 
         const hourlyUrl = `https://api.open-meteo.com/v1/forecast?latitude=${coords.lat}&longitude=${coords.lon}&hourly=${hourlyParams}&timezone=Europe%2FPrague&forecast_days=3`;
+        const hourly16Url = `https://api.open-meteo.com/v1/forecast?latitude=${coords.lat}&longitude=${coords.lon}&hourly=${hourlyParams}&timezone=Europe%2FPrague&forecast_days=10`;
         const aqUrl = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${coords.lat}&longitude=${coords.lon}&hourly=european_aqi&timezone=Europe%2FPrague&forecast_days=3`;
-        
+
         const dailyParams = [
-          'temperature_2m_max', 'temperature_2m_min', 'precipitation_sum', 'wind_speed_10m_max', 
+          'temperature_2m_max', 'temperature_2m_min', 'precipitation_sum', 'wind_speed_10m_max',
           'wind_direction_10m_dominant', 'cloud_cover_mean'
         ].join(',');
 
         const dailyUrl = `https://api.open-meteo.com/v1/forecast?latitude=${coords.lat}&longitude=${coords.lon}&daily=${dailyParams}&timezone=Europe%2FPrague&forecast_days=10`;
-        
-        const [hourlyResponse, dailyResponse, aqResponse] = await Promise.all([
+
+        const [hourlyResponse, dailyResponse, aqResponse, hourly16Response] = await Promise.all([
           fetch(hourlyUrl),
           fetch(dailyUrl),
-          fetch(aqUrl).catch(() => null)
+          fetch(aqUrl).catch(() => null),
+          fetch(hourly16Url).catch(() => null)
         ]);
 
         if (!hourlyResponse.ok || !dailyResponse.ok) {
@@ -1631,11 +1781,12 @@
         const hourly3DayData = await hourlyResponse.json();
         const daily10DayData = await dailyResponse.json();
         const aqData = aqResponse && aqResponse.ok ? await aqResponse.json() : null;
-        
+        const hourly16DayData = hourly16Response && hourly16Response.ok ? await hourly16Response.json() : null;
+
         if (!hourly3DayData.hourly || !daily10DayData.daily) {
           throw new Error('Neplatná odpověď z API');
         }
-        
+
         // Zpracování dat
         const hourlyTime = hourly3DayData.hourly.time;
         const hourlyTemp = hourly3DayData.hourly.temperature_2m;
@@ -1648,12 +1799,26 @@
         const hourlySolar = hourly3DayData.hourly.shortwave_radiation;
         const hourlyAqi = aqData && aqData.hourly ? aqData.hourly.european_aqi : null;
 
+        // 16-denní hodinová data
+        const lr16 = hourly16DayData && hourly16DayData.hourly ? {
+          time: hourly16DayData.hourly.time,
+          temp: hourly16DayData.hourly.temperature_2m,
+          precip: hourly16DayData.hourly.precipitation,
+          wind: hourly16DayData.hourly.wind_speed_10m.map(s => Math.round(s / 3.6 * 10) / 10),
+          windDir: hourly16DayData.hourly.wind_direction_10m,
+          clouds: hourly16DayData.hourly.cloud_cover,
+          pressure: hourly16DayData.hourly.surface_pressure,
+          cape: hourly16DayData.hourly.cape
+        } : null;
+
         // Uloží data pro případné překreslení po otočení telefonu
         lastChartData = {
-          hourly: { time: hourlyTime, temp: hourlyTemp, precip: hourlyPrecip, wind: hourlyWind, windDir: hourlyWindDir, clouds: hourlyClouds, pressure: hourlyPressure, cape: hourlyCape, solar: hourlySolar, aqi: hourlyAqi }
+          hourly: { time: hourlyTime, temp: hourlyTemp, precip: hourlyPrecip, wind: hourlyWind, windDir: hourlyWindDir, clouds: hourlyClouds, pressure: hourlyPressure, cape: hourlyCape, solar: hourlySolar, aqi: hourlyAqi },
+          hourly16: lr16
         };
 
         updateThreeDayChart('threeDayChart', hourlyTime, hourlyTemp, hourlyPrecip, hourlyWind, hourlyWindDir, hourlyClouds, hourlyPressure, hourlyCape);
+        if (lr16) updateLongRangeChart('longRangeChart', lr16.time, lr16.temp, lr16.precip, lr16.wind, lr16.windDir, lr16.clouds, lr16.pressure, lr16.cape);
         
         const now = new Date();
         const twentyFourHoursLater = new Date(now.getTime() + 24 * 60 * 60 * 1000);
@@ -1716,7 +1881,11 @@
 
         updateExtraChart('extraChart', hourlyTime, hourlyPressure, hourlyCape, hourlySolar, hourlyAqi);
 
+        // Ulož do cache
+        weatherCache[locKey] = { timestamp: Date.now(), data: lastChartData };
+
         showWeatherData();
+        addToRecentLocations(currentLocationData);
         showNotification(`Předpověď načtena pro: ${currentLocationData?.displayName || 'neznámou lokaci'}`, 'success');
         if (geomagForecastCache) checkAuroraAlert(geomagForecastCache);
 
@@ -1736,6 +1905,8 @@
       const d = lastChartData.daily;
       const h24 = lastChartData.h24;
       if (h) updateThreeDayChart('threeDayChart', h.time, h.temp, h.precip, h.wind, h.windDir, h.clouds, h.pressure, h.cape);
+      const lr = lastChartData.hourly16;
+      if (lr) updateLongRangeChart('longRangeChart', lr.time, lr.temp, lr.precip, lr.wind, lr.windDir, lr.clouds, lr.pressure, lr.cape);
       if (h24) updateTwentyFourHourChart('twentyFourHourChart', h24.time, h24.temp, h24.precip, h24.wind, h24.windDir, h24.clouds, h24.pressure, h24.cape);
       if (d) updateTenDayChart('tenDayChart', d.time, d.tempMax, d.tempMin, d.precip, d.wind, d.windDir, d.clouds);
       if (h) updateExtraChart('extraChart', h.time, h.pressure, h.cape, h.solar, h.aqi);
@@ -1799,6 +1970,41 @@
       };
     }
 
+    // === FÁZE MĚSÍCE ===
+    function getMoonPhase(date) {
+      // Reference: nový měsíc 6. 1. 2000 v 18:14 UTC
+      const knownNewMoon = new Date('2000-01-06T18:14:00Z');
+      const synodicPeriod = 29.53058867; // dní
+      const daysDiff = (date.getTime() - knownNewMoon.getTime()) / 86400000;
+      return (((daysDiff % synodicPeriod) + synodicPeriod) % synodicPeriod) / synodicPeriod; // 0–1
+    }
+
+    function getMoonEmoji(date) {
+      const p = getMoonPhase(date);
+      // Kardinální fáze (nový, 1. čtvrť, úplněk, poslední čtvrť) ~1 den každá → ±0.017
+      // Mezifáze (srpky, dorůstající/ubývající) ~6.4 dne každá
+      if (p < 0.017 || p >= 0.983) return '🌑'; // Nový měsíc
+      if (p < 0.233) return '🌒';               // Dorůstající srpek
+      if (p < 0.267) return '🌓';               // První čtvrť  (~1 den, střed 0.25)
+      if (p < 0.483) return '🌔';               // Dorůstající
+      if (p < 0.517) return '🌕';               // Úplněk        (~1 den, střed 0.50)
+      if (p < 0.733) return '🌖';               // Ubývající
+      if (p < 0.767) return '🌗';               // Poslední čtvrť (~1 den, střed 0.75)
+      return '🌘';                               // Ubývající srpek
+    }
+
+    function getMoonPhaseName(date) {
+      const p = getMoonPhase(date);
+      if (p < 0.017 || p >= 0.983) return 'Nový měsíc';
+      if (p < 0.233) return 'Dorůstající srpek';
+      if (p < 0.267) return 'První čtvrť';
+      if (p < 0.483) return 'Dorůstající měsíc';
+      if (p < 0.517) return 'Úplněk';
+      if (p < 0.733) return 'Ubývající měsíc';
+      if (p < 0.767) return 'Poslední čtvrť';
+      return 'Ubývající srpek';
+    }
+
     function updateThreeDayChart(canvasId, time, temp, precip, wind, windDir, clouds, pressure, cape) {
       const canvas = document.getElementById(canvasId);
 
@@ -1818,6 +2024,7 @@
       const capeData = [];
 
       const dayBoundaryIndices3 = [];
+      const moonDayIndices3 = []; // {idx, date} – jeden měsíc na den
 
       for (let i = 0; i < hours72; i += 3) {
         const date = new Date(time[i]);
@@ -1830,7 +2037,9 @@
             month: 'numeric'
           }));
           if (i > 0) dayBoundaryIndices3.push(i / 3);
+          moonDayIndices3.push({ idx: i / 3, date });
         } else {
+          if (i === 0) moonDayIndices3.push({ idx: 0, date }); // první bod, pokud nezačíná o půlnoci
           labels.push(hour.toString().padStart(2, '0') + ':00');
         }
 
@@ -1870,6 +2079,25 @@
       };
 
       const windArrowPlugin = createWindArrowPlugin('windArrows', 2, i => windData[i], i => windDirData[i]);
+
+      const moonPhasePlugin3 = {
+        id: 'moonPhase3',
+        afterDatasetsDraw: (chart) => {
+          const ctx = chart.ctx;
+          const { chartArea, scales } = chart;
+          ctx.save();
+          ctx.font = '18px serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'top';
+          moonDayIndices3.forEach(({ idx, date }) => {
+            const x = scales.x.getPixelForValue(idx);
+            if (x >= chartArea.left && x <= chartArea.right) {
+              ctx.fillText(getMoonEmoji(date), x, chartArea.top + 4);
+            }
+          });
+          ctx.restore();
+        }
+      };
 
       const currentTimePlugin = {
         id: 'currentTimeLine',
@@ -2037,6 +2265,11 @@
                     const dirIndex = Math.round(windDirection / 22.5) % 16;
                     tooltipLines.push(`🧭 Směr větru: ${WIND_DIRECTIONS[dirIndex]} (${Math.round(windDirection)}°)`);
                   }
+                  const realIdx = index * 3;
+                  if (realIdx < time.length) {
+                    const date = new Date(time[realIdx]);
+                    tooltipLines.push(`${getMoonEmoji(date)} Fáze měsíce: ${getMoonPhaseName(date)}`);
+                  }
                   return tooltipLines;
                 }
               }
@@ -2044,7 +2277,275 @@
           },
           scales: scales3day
         },
-        plugins: [dayBoundaryPlugin3, windArrowPlugin, currentTimePlugin]
+        plugins: [dayBoundaryPlugin3, windArrowPlugin, currentTimePlugin, moonPhasePlugin3]
+      });
+    }
+
+    function updateLongRangeChart(canvasId, time, temp, precip, wind, windDir, clouds, pressure, cape) {
+      const canvas = document.getElementById(canvasId);
+
+      if (longRangeChart) {
+        longRangeChart.destroy();
+      }
+      const ctx = canvas.getContext('2d');
+
+      const totalPoints = time.length;
+      const labels = [];
+      const tempData = [];
+      const precipData = [];
+      const windData = [];
+      const windDirData = [];
+      const cloudsData = [];
+
+      const dayBoundaryIndicesLR = [];
+      const moonDayIndicesLR = [];
+
+      for (let i = 0; i < totalPoints; i += 3) {
+        const date = new Date(time[i]);
+        const hour = date.getHours();
+
+        if (hour === 0) {
+          labels.push(date.toLocaleDateString('cs-CZ', {
+            weekday: 'short',
+            day: 'numeric',
+            month: 'numeric'
+          }));
+          if (i > 0) dayBoundaryIndicesLR.push(i / 3);
+          moonDayIndicesLR.push({ idx: i / 3, date });
+        } else {
+          if (i === 0) moonDayIndicesLR.push({ idx: 0, date });
+          labels.push(hour.toString().padStart(2, '0') + ':00');
+        }
+
+        tempData.push(temp[i]);
+        windData.push(wind[i]);
+        windDirData.push(windDir[i]);
+        cloudsData.push(clouds[i]);
+
+        let totalPrecip = 0;
+        for (let j = 0; j < 3 && (i + j) < totalPoints; j++) {
+          totalPrecip += precip[i + j];
+        }
+        precipData.push(totalPrecip);
+      }
+
+      const dayBoundaryPluginLR = {
+        id: 'dayBoundaryLR',
+        beforeDatasetsDraw: (chart) => {
+          const ctx = chart.ctx;
+          const { chartArea, scales } = chart;
+          ctx.save();
+          dayBoundaryIndicesLR.forEach(idx => {
+            const x = scales.x.getPixelForValue(idx);
+            if (x < chartArea.left || x > chartArea.right) return;
+            ctx.strokeStyle = 'rgba(106, 166, 253, 0.55)';
+            ctx.lineWidth = 1.5;
+            ctx.setLineDash([]);
+            ctx.beginPath();
+            ctx.moveTo(x, chartArea.top);
+            ctx.lineTo(x, chartArea.bottom);
+            ctx.stroke();
+          });
+          ctx.restore();
+        }
+      };
+
+      const windArrowPluginLR = createWindArrowPlugin('windArrowsLR', 2, i => windData[i], i => windDirData[i]);
+
+      const moonPhasePluginLR = {
+        id: 'moonPhaseLR',
+        afterDatasetsDraw: (chart) => {
+          const ctx = chart.ctx;
+          const { chartArea, scales } = chart;
+          ctx.save();
+          ctx.font = '18px serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'top';
+          moonDayIndicesLR.forEach(({ idx, date }) => {
+            const x = scales.x.getPixelForValue(idx);
+            if (x >= chartArea.left && x <= chartArea.right) {
+              ctx.fillText(getMoonEmoji(date), x, chartArea.top + 4);
+            }
+          });
+          ctx.restore();
+        }
+      };
+
+      const currentTimePluginLR = {
+        id: 'currentTimeLineLR',
+        afterDatasetsDraw: (chart) => {
+          const ctx = chart.ctx;
+          const chartArea = chart.chartArea;
+          const now = new Date();
+          let currentTimeIndex = -1;
+          const currentTimeMs = now.getTime();
+          for (let i = 0; i < time.length; i += 3) {
+            const dataTimeMs = new Date(time[i]).getTime();
+            if (dataTimeMs <= currentTimeMs && (i + 3 >= time.length || new Date(time[i + 3]).getTime() > currentTimeMs)) {
+              if (i + 3 < time.length) {
+                const nextTimeMs = new Date(time[i + 3]).getTime();
+                const timeDiff = nextTimeMs - dataTimeMs;
+                const currentDiff = currentTimeMs - dataTimeMs;
+                const ratio = currentDiff / timeDiff;
+                currentTimeIndex = (i / 3) + ratio;
+              } else {
+                currentTimeIndex = i / 3;
+              }
+              break;
+            }
+          }
+          if (currentTimeIndex >= 0 && currentTimeIndex < labels.length) {
+            const xScale = chart.scales.x;
+            const x = xScale.getPixelForValue(currentTimeIndex);
+            if (x >= chartArea.left && x <= chartArea.right) {
+              ctx.save();
+              ctx.strokeStyle = '#ff9800';
+              ctx.lineWidth = 3;
+              ctx.setLineDash([5, 5]);
+              ctx.beginPath();
+              ctx.moveTo(x, chartArea.top);
+              ctx.lineTo(x, chartArea.bottom);
+              ctx.stroke();
+              ctx.fillStyle = '#ff9800';
+              ctx.font = 'bold 12px sans-serif';
+              ctx.textAlign = 'center';
+              const timeText = now.toLocaleTimeString('cs-CZ', {
+                hour: '2-digit',
+                minute: '2-digit'
+              });
+              ctx.fillText(timeText, x, chartArea.top - 5);
+              ctx.restore();
+            }
+          }
+        }
+      };
+
+      const scalesLR = getMobileScales({
+        x: { ticks: { color: '#94a3b8', font: { size: 11 }, maxRotation: 45 }, grid: { color: 'rgba(148, 163, 184, 0.1)', lineWidth: 1 } },
+        y: { type: 'linear', display: true, position: 'left', ticks: { color: '#ff6b6b', callback: function(value) { return value.toFixed(1) + '°C'; } }, grid: { color: context => context.tick.value === 0 ? '#ff9800' : '#404040', lineWidth: context => context.tick.value === 0 ? 2 : 1 }, title: { display: true, text: 'Teplota (°C)', color: '#ff6b6b' } },
+        y1: { type: 'linear', display: true, position: 'right', min: 0, ticks: { color: '#06b6d4', callback: function(value) { return value.toFixed(1) + 'mm'; } }, grid: { drawOnChartArea: false }, title: { display: true, text: 'Srážky (mm)', color: '#06b6d4' } },
+        y2: { type: 'linear', display: true, position: 'right', min: 0, ticks: { color: '#4ecdc4', callback: function(value) { return value.toFixed(1) + 'm/s'; } }, grid: { drawOnChartArea: false }, title: { display: true, text: 'Rychlost větru (m/s)', color: '#4ecdc4' } },
+        y3: { type: 'linear', display: true, position: 'right', min: 0, max: 100, ticks: { color: '#6b7280', callback: function(value) { return value + '%'; } }, grid: { drawOnChartArea: false }, title: { display: true, text: 'Oblačnost (%)', color: '#6b7280' } }
+      });
+
+      longRangeChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              label: 'Teplota (°C)',
+              data: tempData,
+              borderColor: '#ff6b6b',
+              backgroundColor: '#ff6b6b20',
+              borderWidth: 2,
+              fill: false,
+              tension: 0.4,
+              yAxisID: 'y',
+              pointRadius: 1,
+              pointHoverRadius: 4,
+              pointBackgroundColor: tempData.map(t => t < 0 ? '#4a9eff' : '#ff6b6b'),
+              pointBorderColor: tempData.map(t => t < 0 ? '#4a9eff' : '#ff6b6b'),
+              segment: {
+                borderColor: ctx => {
+                  const p0 = ctx.p0.parsed.y;
+                  const p1 = ctx.p1.parsed.y;
+                  if (p0 < 0 && p1 < 0) return '#4a9eff';
+                  if (p0 >= 0 && p1 >= 0) return '#ff6b6b';
+                  return p0 > p1 ? '#ff6b6b' : '#4a9eff';
+                }
+              }
+            },
+            {
+              label: 'Srážky (mm)',
+              data: precipData,
+              type: 'bar',
+              backgroundColor: function(context) {
+                const index = context.dataIndex;
+                const temperature = tempData[index];
+                return getPrecipitationColor(temperature, context.chart.ctx);
+              },
+              borderColor: function(context) {
+                const index = context.dataIndex;
+                const temperature = tempData[index];
+                return temperature >= 0 ? '#06b6d4' : 'rgba(200, 200, 200, 0.8)';
+              },
+              borderWidth: 1,
+              yAxisID: 'y1'
+            },
+            {
+              label: 'Rychlost větru (m/s)',
+              data: windData,
+              borderColor: '#4ecdc4',
+              backgroundColor: '#4ecdc420',
+              borderWidth: 2,
+              fill: false,
+              tension: 0.4,
+              yAxisID: 'y2',
+              pointRadius: 1,
+              pointHoverRadius: 4
+            },
+            {
+              label: 'Oblačnost (%)',
+              data: cloudsData,
+              borderColor: '#6b7280',
+              backgroundColor: '#6b728020',
+              borderWidth: 2,
+              fill: true,
+              tension: 0.4,
+              yAxisID: 'y3',
+              pointRadius: 1,
+              pointHoverRadius: 4
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          layout: getMobileLayoutPadding({ top: 50 }),
+          plugins: {
+            legend: { position: 'bottom', labels: { color: '#e2e8f0', font: { size: 12 }, padding: 20, usePointStyle: true, pointStyle: 'circle' } },
+            tooltip: {
+              backgroundColor: 'rgba(0,0,0,0.8)',
+              titleColor: '#e2e8f0',
+              bodyColor: '#e2e8f0',
+              borderColor: '#6aa6fd',
+              borderWidth: 1,
+              callbacks: {
+                label: function(context) {
+                  let label = context.dataset.label || '';
+                  if (label) label += ': ';
+                  if (context.parsed.y !== null) {
+                    if (label.includes('Teplota')) label += context.parsed.y.toFixed(1) + '°C';
+                    else if (label.includes('Srážky')) label += context.parsed.y.toFixed(1) + ' mm';
+                    else if (label.includes('větru')) label += context.parsed.y.toFixed(1) + ' m/s';
+                    else if (label.includes('Oblačnost')) label += Math.round(context.parsed.y) + '%';
+                    else label += context.parsed.y;
+                  }
+                  return label;
+                },
+                afterBody: function(tooltipItems) {
+                  const index = tooltipItems[0].dataIndex;
+                  const windSpeed = windData[index];
+                  const windDirection = windDirData[index];
+                  const tooltipLines = [];
+                  if (windSpeed > 0 && windDirection !== undefined) {
+                    const dirIndex = Math.round(windDirection / 22.5) % 16;
+                    tooltipLines.push(`🧭 Směr větru: ${WIND_DIRECTIONS[dirIndex]} (${Math.round(windDirection)}°)`);
+                  }
+                  const realIdx = index * 3;
+                  if (realIdx < time.length) {
+                    const date = new Date(time[realIdx]);
+                    tooltipLines.push(`${getMoonEmoji(date)} Fáze měsíce: ${getMoonPhaseName(date)}`);
+                  }
+                  return tooltipLines;
+                }
+              }
+            }
+          },
+          scales: scalesLR
+        },
+        plugins: [dayBoundaryPluginLR, windArrowPluginLR, currentTimePluginLR, moonPhasePluginLR]
       });
     }
 
@@ -2105,6 +2606,28 @@
       };
 
       const windArrowPlugin = createWindArrowPlugin('windArrows24', 2, i => windData[i], i => windDirData[i]);
+
+      const moonPhasePlugin24 = {
+        id: 'moonPhase24',
+        afterDatasetsDraw: (chart) => {
+          if (!time || !time.length) return;
+          const ctx = chart.ctx;
+          const { chartArea } = chart;
+          const date = new Date(time[0]);
+          const emoji = getMoonEmoji(date);
+          const name = getMoonPhaseName(date);
+          ctx.save();
+          ctx.font = '22px serif';
+          ctx.textAlign = 'right';
+          ctx.textBaseline = 'top';
+          ctx.fillText(emoji, chartArea.right - 6, chartArea.top + 4);
+          ctx.font = '11px sans-serif';
+          ctx.fillStyle = '#888';
+          ctx.textAlign = 'right';
+          ctx.fillText(name, chartArea.right - 6, chartArea.top + 30);
+          ctx.restore();
+        }
+      };
 
       const currentTimePlugin = {
         id: 'currentTimeLine24',
@@ -2268,6 +2791,10 @@
                     const dirIndex = Math.round(windDirection / 22.5) % 16;
                     tooltipLines.push(`🧭 Směr větru: ${WIND_DIRECTIONS[dirIndex]} (${Math.round(windDirection)}°)`);
                   }
+                  if (index < time.length) {
+                    const date = new Date(time[index]);
+                    tooltipLines.push(`${getMoonEmoji(date)} Fáze měsíce: ${getMoonPhaseName(date)}`);
+                  }
                   return tooltipLines;
                 }
               }
@@ -2275,7 +2802,7 @@
           },
           scales: scales24h
         },
-        plugins: [dayBoundaryPlugin24, windArrowPlugin, currentTimePlugin]
+        plugins: [dayBoundaryPlugin24, windArrowPlugin, currentTimePlugin, moonPhasePlugin24]
       });
     }
 
@@ -2297,6 +2824,25 @@
       });
 
       const windArrowPlugin = createWindArrowPlugin('windArrows10', 3, i => wind[i], i => windDir[i]);
+
+      const moonPhasePlugin10 = {
+        id: 'moonPhase10',
+        afterDatasetsDraw: (chart) => {
+          const ctx = chart.ctx;
+          const { chartArea, scales } = chart;
+          ctx.save();
+          ctx.font = '20px serif';
+          ctx.textAlign = 'center';
+          ctx.textBaseline = 'top';
+          time.forEach((dateStr, i) => {
+            const x = scales.x.getPixelForValue(i);
+            if (x >= chartArea.left && x <= chartArea.right) {
+              ctx.fillText(getMoonEmoji(new Date(dateStr)), x, chartArea.top + 4);
+            }
+          });
+          ctx.restore();
+        }
+      };
 
       const scales10day = getMobileScales({
         x: { ticks: { color: '#94a3b8', font: { size: 11 } }, grid: { color: 'rgba(148, 163, 184, 0.1)', lineWidth: 1 } },
@@ -2429,6 +2975,10 @@
                   if (cloudCover !== undefined) {
                     tooltipLines.push(`☁️ Oblačnost: ${Math.round(cloudCover)}%`);
                   }
+                  if (index < time.length) {
+                    const date = new Date(time[index]);
+                    tooltipLines.push(`${getMoonEmoji(date)} Fáze měsíce: ${getMoonPhaseName(date)}`);
+                  }
                   return tooltipLines;
                 }
               }
@@ -2436,7 +2986,7 @@
           },
           scales: scales10day
         },
-        plugins: [windArrowPlugin]
+        plugins: [windArrowPlugin, moonPhasePlugin10]
       });
     }
 
@@ -2857,6 +3407,9 @@
     }
 
     function initApp() {
+      loadRecentLocations();
+      renderRecentLocationButtons();
+
       if (loadSavedLocation()) {
         loadWeather();
       }
@@ -3037,14 +3590,20 @@
         const now    = new Date();
         const cutoff = new Date(now.getTime() - 24 * 3600 * 1000);
 
-        // Pozorovaná data za posledních 24 h (přeskočit hlavičku)
-        const observed = obsRaw.slice(1)
-          .map(r => ({ time: new Date(r[0].replace(' ', 'T') + 'Z'), kp: parseFloat(r[1]) }))
+        // API vrací pole objektů {time_tag, Kp/kp, ...} – obs používá "Kp", forecast "kp"
+        const parseRow = (r, kpField) => ({
+          time: new Date(r.time_tag.replace(' ', 'T') + 'Z'),
+          kp: parseFloat(r[kpField])
+        });
+
+        // Pozorovaná data za posledních 24 h
+        const observed = obsRaw
+          .map(r => parseRow(r, 'Kp'))
           .filter(d => !isNaN(d.kp) && d.time >= cutoff && d.time <= now);
 
         // Předpověď – pouze budoucí data (max 48 h = 16 bodů po 3 h)
-        const forecast = fcRaw.slice(1)
-          .map(r => ({ time: new Date(r[0].replace(' ', 'T') + 'Z'), kp: parseFloat(r[1]) }))
+        const forecast = fcRaw
+          .map(r => parseRow(r, 'kp'))
           .filter(d => !isNaN(d.kp) && d.time > now)
           .slice(0, 16);
 
