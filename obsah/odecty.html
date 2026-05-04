@@ -1,0 +1,1157 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Domácí odečty</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: #1a1a1a;
+      color: #e0e0e0;
+      min-height: 100vh;
+    }
+
+    .top-bar {
+      height: 3px;
+      background: linear-gradient(90deg, #f9a825 0%, #29b6f6 50%, #66bb6a 100%);
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 24px 20px 40px;
+    }
+
+    .header { text-align: center; margin-bottom: 28px; }
+    .header h1 { font-size: 1.45rem; font-weight: 600; color: #e0e0e0; margin-bottom: 4px; letter-spacing: -0.3px; }
+    .header p  { color: #666; font-size: 0.85rem; }
+
+    /* Tabs */
+    .tabs { display: flex; margin-bottom: 20px; border-bottom: 1px solid #404040; gap: 4px; }
+    .tab {
+      padding: 9px 20px; background-color: #2a2a2a; border: 1px solid #404040;
+      border-bottom: none; border-radius: 6px 6px 0 0; cursor: pointer;
+      font-weight: 500; font-size: 0.88rem; transition: all 0.15s ease; color: #888;
+    }
+    .tab.active { background-color: #404040; color: #6aa6fd; border-color: #6aa6fd; }
+    .tab:hover:not(.active) { background-color: #333; color: #ccc; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    /* Cards */
+    .card { background-color: #2a2a2a; border: 1px solid #404040; border-radius: 8px; padding: 20px; margin-bottom: 20px; }
+    .card-title { font-size: 0.95rem; font-weight: 600; margin-bottom: 16px; color: #ccc; display: flex; align-items: center; gap: 8px; }
+
+    /* Form */
+    .form-row { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 14px; margin-bottom: 16px; }
+    .form-group { display: flex; flex-direction: column; gap: 5px; }
+    .form-group label { font-size: 0.78rem; color: #777; text-transform: uppercase; letter-spacing: 0.6px; font-weight: 600; }
+    .form-input {
+      padding: 8px 11px; background-color: #363636; border: 1px solid #505050;
+      border-radius: 5px; color: #e0e0e0; font-size: 0.92rem;
+      transition: border-color 0.15s ease; width: 100%;
+    }
+    .form-input:focus { outline: none; border-color: #6aa6fd; background-color: #3a3a3a; }
+    .form-input::placeholder { color: #555; }
+
+    /* Meter cards */
+    .meters-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 16px; }
+    .meter-card { background-color: #303030; border: 1px solid #484848; border-radius: 7px; padding: 14px; transition: border-color 0.15s; }
+    .meter-card.warn { border-color: #e65100 !important; }
+    .meter-card-header { display: flex; align-items: center; gap: 7px; margin-bottom: 8px; }
+    .meter-icon { font-size: 1.2rem; }
+    .meter-label { font-size: 0.83rem; font-weight: 600; color: #ccc; }
+    .meter-unit { font-size: 0.73rem; color: #777; margin-left: auto; }
+    .meter-hint { font-size: 0.78rem; color: #666; margin-bottom: 8px; min-height: 1.1em; }
+    .meter-hint .prev-val { color: #888; }
+    .meter-delta { font-size: 0.8rem; margin-top: 6px; min-height: 1.1em; font-weight: 500; }
+    .meter-delta.positive { color: #66bb6a; }
+    .meter-delta.negative { color: #ef5350; }
+    .meter-delta.warn-text { color: #ff7043; }
+    .meter-electricity { border-top: 3px solid #f9a825; }
+    .meter-water       { border-top: 3px solid #29b6f6; }
+    .meter-gas         { border-top: 3px solid #66bb6a; }
+
+    /* Buttons */
+    .btn { padding: 8px 16px; border: none; border-radius: 5px; cursor: pointer; font-size: 0.88rem; font-weight: 500; transition: all 0.15s ease; }
+    .btn-primary   { background-color: #6aa6fd; color: #fff; }
+    .btn-primary:hover   { background-color: #5594ee; }
+    .btn-secondary { background-color: #3c3c3c; color: #ddd; border: 1px solid #555; }
+    .btn-secondary:hover { background-color: #464646; }
+    .btn-danger    { background-color: #c62828; color: #fff; }
+    .btn-danger:hover    { background-color: #b71c1c; }
+    .btn-success   { background-color: #2e7d32; color: #fff; }
+    .btn-success:hover   { background-color: #256427; }
+    .btn-sm { padding: 4px 9px; font-size: 0.78rem; }
+    .btn-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+
+    /* Table */
+    .table-wrapper { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.88rem; }
+    thead th { padding: 9px 11px; text-align: left; background-color: #2f2f2f; color: #777; font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; border-bottom: 2px solid #404040; white-space: nowrap; }
+    tbody td { padding: 9px 11px; border-bottom: 1px solid #353535; color: #c0c0c0; }
+    tbody tr:hover td { background-color: #2d2d2d; }
+    tbody tr:last-child td { border-bottom: none; }
+    .consumption-positive { color: #66bb6a; }
+    .consumption-negative { color: #ef5350; }
+    .consumption-zero     { color: #666; }
+
+    /* Chart controls */
+    .chart-controls { display: flex; gap: 10px; align-items: center; margin-bottom: 14px; flex-wrap: wrap; }
+    .chart-controls label { font-size: 0.83rem; color: #777; }
+    .chart-wrapper { position: relative; height: 300px; }
+
+    .year-select {
+      padding: 5px 9px; background-color: #363636; border: 1px solid #505050;
+      border-radius: 4px; color: #ddd; font-size: 0.83rem;
+    }
+    .year-select:focus { outline: none; border-color: #6aa6fd; }
+
+    /* Summary */
+    .summary-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 14px; margin-bottom: 20px; }
+    .summary-box { background-color: #2a2a2a; border: 1px solid #404040; border-radius: 7px; padding: 14px 16px; }
+    .summary-box .s-label { font-size: 0.76rem; color: #777; margin-bottom: 4px; text-transform: uppercase; letter-spacing: 0.4px; }
+    .summary-box .s-value { font-size: 1.55rem; font-weight: 700; line-height: 1.1; }
+    .summary-box .s-unit  { font-size: 0.78rem; color: #777; margin-left: 3px; }
+    .summary-box .s-yoy   { font-size: 0.78rem; margin-top: 5px; }
+    .s-yoy.up   { color: #ef5350; }
+    .s-yoy.down { color: #66bb6a; }
+    .s-yoy.same { color: #777; }
+    .summary-electricity .s-value { color: #f9a825; }
+    .summary-water       .s-value { color: #29b6f6; }
+    .summary-gas         .s-value { color: #66bb6a; }
+
+    /* ── Heatmap ── */
+    .heatmap-container { overflow-x: auto; }
+    .heatmap { display: grid; grid-template-columns: 44px repeat(12, 1fr); gap: 3px; min-width: 480px; }
+    .heatmap-header { height: 22px; display: flex; align-items: center; justify-content: center; font-size: 0.7rem; color: #666; font-weight: 600; }
+    .heatmap-year   { height: 34px; display: flex; align-items: center; justify-content: flex-end; padding-right: 8px; font-size: 0.76rem; color: #777; font-weight: 600; }
+    .heatmap-cell {
+      height: 34px; border-radius: 4px; cursor: default; position: relative;
+      transition: transform 0.1s, box-shadow 0.1s;
+    }
+    .heatmap-cell:hover { transform: scale(1.12); box-shadow: 0 2px 10px rgba(0,0,0,0.6); z-index: 10; }
+    .heatmap-cell.no-data { background-color: #222 !important; border: 1px solid #2a2a2a; }
+    .heatmap-gradient-bar { height: 10px; border-radius: 3px; max-width: 220px; }
+    .heatmap-legend { display: flex; align-items: center; gap: 8px; margin-top: 12px; font-size: 0.75rem; color: #666; }
+
+    /* Custom tooltip */
+    .htip {
+      position: fixed; background: #111; border: 1px solid #555; border-radius: 5px;
+      padding: 7px 12px; font-size: 0.8rem; color: #e0e0e0; pointer-events: none;
+      z-index: 9000; white-space: nowrap; display: none; box-shadow: 0 4px 14px rgba(0,0,0,0.6);
+      line-height: 1.5;
+    }
+
+    /* Mini charts grid */
+    .mini-charts-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+    .mini-chart-label { font-size: 0.8rem; color: #888; margin-bottom: 8px; font-weight: 600; }
+    .mini-chart-legend { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 12px; }
+    .mini-legend-item  { display: flex; align-items: center; gap: 5px; font-size: 0.76rem; color: #777; }
+    .mini-legend-dot   { width: 10px; height: 10px; border-radius: 2px; flex-shrink: 0; }
+
+    /* Notification */
+    .notification {
+      position: fixed; top: 20px; right: 20px; padding: 12px 16px; border-radius: 6px;
+      color: #fff; font-size: 0.86rem; z-index: 9999; min-width: 240px; max-width: 340px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.6); animation: slideIn 0.2s ease-out;
+    }
+    .notification.success { background-color: #2e7d32; border-left: 4px solid #66bb6a; }
+    .notification.error   { background-color: #c62828; border-left: 4px solid #ef5350; }
+    .notification.info    { background-color: #1565c0; border-left: 4px solid #42a5f5; }
+    .notification.warning { background-color: #e65100; border-left: 4px solid #ff9800; }
+    @keyframes slideIn { from { transform: translateX(110%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+
+    .empty-state { text-align: center; padding: 36px 20px; color: #555; font-size: 0.88rem; }
+    .empty-state .icon { font-size: 2.2rem; margin-bottom: 8px; }
+
+    /* Modal */
+    .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.75); z-index: 5000; align-items: center; justify-content: center; }
+    .modal-overlay.open { display: flex; }
+    .modal { background: #2a2a2a; border: 1px solid #505050; border-radius: 8px; padding: 24px; max-width: 420px; width: 90%; }
+    .modal h3 { margin-bottom: 10px; font-size: 1rem; color: #e0e0e0; }
+    .modal p  { font-size: 0.88rem; color: #999; margin-bottom: 18px; line-height: 1.6; }
+    .modal .btn-row { justify-content: flex-end; }
+
+    /* Chart subtitle */
+    .chart-subtitle { font-size: 0.78rem; color: #666; margin-bottom: 12px; margin-top: -8px; }
+
+    @media (max-width: 700px) {
+      .meters-grid       { grid-template-columns: 1fr; }
+      .summary-grid      { grid-template-columns: 1fr; }
+      .mini-charts-grid  { grid-template-columns: 1fr; }
+      .form-row          { grid-template-columns: 1fr 1fr; }
+      .tabs              { flex-wrap: wrap; }
+      .tab               { flex: 1 1 auto; text-align: center; font-size: 0.8rem; padding: 8px 10px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="top-bar"></div>
+
+<!-- Floating heatmap tooltip -->
+<div class="htip" id="htip"></div>
+
+<div class="container">
+  <div class="header">
+    <h1>Domácí odečty</h1>
+    <p>Elektřina &middot; Voda &middot; Plyn</p>
+  </div>
+
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('zadani')">Zadat odečet</div>
+    <div class="tab" onclick="switchTab('prehled')">Přehled</div>
+    <div class="tab" onclick="switchTab('grafy')">Grafy</div>
+    <div class="tab" onclick="switchTab('nastaveni')">Nastavení</div>
+  </div>
+
+  <!-- TAB: Zadání -->
+  <div id="tab-zadani" class="tab-content active">
+    <div class="card">
+      <div class="card-title">Nový odečet</div>
+      <div class="form-row">
+        <div class="form-group">
+          <label>Rok</label>
+          <select class="form-input" id="input-year"></select>
+        </div>
+        <div class="form-group">
+          <label>Měsíc</label>
+          <select class="form-input" id="input-month" onchange="updateHints()">
+            <option value="1">Leden</option><option value="2">Únor</option>
+            <option value="3">Březen</option><option value="4">Duben</option>
+            <option value="5">Květen</option><option value="6">Červen</option>
+            <option value="7">Červenec</option><option value="8">Srpen</option>
+            <option value="9">Září</option><option value="10">Říjen</option>
+            <option value="11">Listopad</option><option value="12">Prosinec</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>Den</label>
+          <select class="form-input" id="input-day"></select>
+        </div>
+      </div>
+
+      <div class="meters-grid">
+        <div class="meter-card meter-electricity" id="card-electricity">
+          <div class="meter-card-header">
+            <span class="meter-icon">⚡</span>
+            <span class="meter-label">Elektřina</span>
+            <span class="meter-unit">kWh</span>
+          </div>
+          <div class="meter-hint" id="hint-electricity"></div>
+          <input type="number" class="form-input" id="input-electricity" placeholder="stav elektroměru" step="0.01" min="0" oninput="updateDelta('electricity')">
+          <div class="meter-delta" id="delta-electricity"></div>
+        </div>
+        <div class="meter-card meter-water" id="card-water">
+          <div class="meter-card-header">
+            <span class="meter-icon">💧</span>
+            <span class="meter-label">Voda</span>
+            <span class="meter-unit">m³</span>
+          </div>
+          <div class="meter-hint" id="hint-water"></div>
+          <input type="number" class="form-input" id="input-water" placeholder="stav vodoměru" step="0.01" min="0" oninput="updateDelta('water')">
+          <div class="meter-delta" id="delta-water"></div>
+        </div>
+        <div class="meter-card meter-gas" id="card-gas">
+          <div class="meter-card-header">
+            <span class="meter-icon">🔥</span>
+            <span class="meter-label">Plyn</span>
+            <span class="meter-unit">m³</span>
+          </div>
+          <div class="meter-hint" id="hint-gas"></div>
+          <input type="number" class="form-input" id="input-gas" placeholder="stav plynoměru" step="0.01" min="0" oninput="updateDelta('gas')">
+          <div class="meter-delta" id="delta-gas"></div>
+        </div>
+      </div>
+
+      <div class="form-group" style="margin-bottom:16px;">
+        <label>Poznámka (volitelná)</label>
+        <input type="text" class="form-input" id="input-note" placeholder="Např. odečet po dovolené..."
+          onkeydown="if(event.key==='Enter') saveReading()">
+      </div>
+      <div class="btn-row">
+        <button class="btn btn-primary" onclick="saveReading()">Uložit odečet</button>
+        <button class="btn btn-secondary" onclick="clearInputs()">Vymazat</button>
+        <span style="font-size:0.78rem;color:#555;margin-left:4px">Enter v poznámce uloží</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Poslední odečty</div>
+      <div id="last-readings-content">
+        <div class="empty-state"><div class="icon">📋</div>Zatím nejsou žádné odečty</div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: Přehled -->
+  <div id="tab-prehled" class="tab-content">
+    <div class="card">
+      <div class="card-title" style="justify-content:space-between;flex-wrap:wrap;gap:8px;">
+        <span>Všechny odečty</span>
+        <div class="btn-row">
+          <label style="font-size:0.83rem;color:#777;">Rok:</label>
+          <select class="year-select" id="filter-year" onchange="renderTable()">
+            <option value="all">Všechny</option>
+          </select>
+        </div>
+      </div>
+      <div class="table-wrapper">
+        <table>
+          <thead>
+            <tr>
+              <th>Datum</th>
+              <th>⚡ Elektřina (kWh)</th><th>Spotřeba</th>
+              <th>💧 Voda (m³)</th><th>Spotřeba</th>
+              <th>🔥 Plyn (m³)</th><th>Spotřeba</th>
+              <th>Poznámka</th><th></th>
+            </tr>
+          </thead>
+          <tbody id="readings-tbody"></tbody>
+        </table>
+      </div>
+      <div id="table-empty" class="empty-state" style="display:none;">
+        <div class="icon">📊</div>Žádné záznamy
+      </div>
+    </div>
+  </div>
+
+  <!-- TAB: Grafy -->
+  <div id="tab-grafy" class="tab-content">
+
+    <!-- Summary -->
+    <div class="summary-grid" id="summary-grid"></div>
+
+    <!-- 1. Přehled roku — 3 mini grafy -->
+    <div class="card">
+      <div class="card-title" style="justify-content:space-between;flex-wrap:wrap;gap:8px;">
+        <span>Přehled roku — všechna měřidla</span>
+        <select class="year-select" id="chart-year-overview" onchange="renderYearOverview()"></select>
+      </div>
+      <p class="chart-subtitle">Spotřeba po měsících. Světlejší sloupce = předchozí rok pro srovnání.</p>
+      <div class="mini-charts-grid">
+        <div>
+          <div class="mini-chart-label">⚡ Elektřina (kWh)</div>
+          <div style="position:relative;height:190px"><canvas id="chart-ov-e"></canvas></div>
+        </div>
+        <div>
+          <div class="mini-chart-label">💧 Voda (m³)</div>
+          <div style="position:relative;height:190px"><canvas id="chart-ov-w"></canvas></div>
+        </div>
+        <div>
+          <div class="mini-chart-label">🔥 Plyn (m³)</div>
+          <div style="position:relative;height:190px"><canvas id="chart-ov-g"></canvas></div>
+        </div>
+      </div>
+      <div class="mini-chart-legend" id="overview-legend"></div>
+    </div>
+
+    <!-- 2. Heatmapa -->
+    <div class="card">
+      <div class="card-title" style="justify-content:space-between;flex-wrap:wrap;gap:8px;">
+        <span>Heatmapa spotřeby</span>
+        <select class="year-select" id="chart-meter-heatmap" onchange="renderHeatmap()">
+          <option value="electricity">⚡ Elektřina</option>
+          <option value="water">💧 Voda</option>
+          <option value="gas">🔥 Plyn</option>
+        </select>
+      </div>
+      <p class="chart-subtitle">Každá buňka = jeden měsíc. Tmavá = nízká spotřeba, světlá = vysoká. Najeďte myší pro přesnou hodnotu.</p>
+      <div class="heatmap-container">
+        <div id="heatmap-grid"></div>
+      </div>
+      <div class="heatmap-legend">
+        <span>Nižší</span>
+        <div class="heatmap-gradient-bar" id="heatmap-grad" style="flex:1"></div>
+        <span>Vyšší spotřeba</span>
+      </div>
+    </div>
+
+    <!-- 3. Kumulativní -->
+    <div class="card">
+      <div class="card-title" style="justify-content:space-between;flex-wrap:wrap;gap:8px;">
+        <span>Kumulativní spotřeba v roce</span>
+        <select class="year-select" id="chart-meter-cumul" onchange="renderCumulativeChart()">
+          <option value="electricity">⚡ Elektřina</option>
+          <option value="water">💧 Voda</option>
+          <option value="gas">🔥 Plyn</option>
+        </select>
+      </div>
+      <p class="chart-subtitle">Celkem spotřebováno od začátku roku — přesně vidíte, jestli jste letos "před" nebo "za" loňskem.</p>
+      <div class="chart-wrapper"><canvas id="chart-cumul"></canvas></div>
+    </div>
+
+    <!-- 4. Porovnání let -->
+    <div class="card">
+      <div class="card-title" style="justify-content:space-between;flex-wrap:wrap;gap:8px;">
+        <span>Porovnání let — měsíční spotřeba</span>
+        <select class="year-select" id="chart-meter-compare" onchange="renderCompareChart()">
+          <option value="electricity">⚡ Elektřina</option>
+          <option value="water">💧 Voda</option>
+          <option value="gas">🔥 Plyn</option>
+        </select>
+      </div>
+      <p class="chart-subtitle">Spotřeba v každém měsíci roku — přímé srovnání stejných měsíců napříč roky.</p>
+      <div class="chart-wrapper"><canvas id="chart-compare"></canvas></div>
+    </div>
+
+    <!-- 5. Roční celky -->
+    <div class="card">
+      <div class="card-title" style="justify-content:space-between;flex-wrap:wrap;gap:8px;">
+        <span>Roční celková spotřeba</span>
+        <select class="year-select" id="chart-meter-annual" onchange="renderAnnualChart()">
+          <option value="electricity">⚡ Elektřina</option>
+          <option value="water">💧 Voda</option>
+          <option value="gas">🔥 Plyn</option>
+        </select>
+      </div>
+      <p class="chart-subtitle">Celkový součet spotřeby za celý rok. Procenta ukazují změnu oproti předchozímu roku.</p>
+      <div class="chart-wrapper" style="height:230px"><canvas id="chart-annual"></canvas></div>
+    </div>
+
+  </div>
+
+  <!-- TAB: Nastavení -->
+  <div id="tab-nastaveni" class="tab-content">
+    <div class="card">
+      <div class="card-title">Export a import dat</div>
+      <p style="font-size:0.86rem;color:#777;margin-bottom:16px;line-height:1.6;">
+        Data jsou uložena v lokálním úložišti prohlížeče (localStorage). Exportujte je pro zálohu nebo přenos na jiné zařízení.
+      </p>
+      <div class="btn-row">
+        <button class="btn btn-success" onclick="exportData()">Exportovat JSON</button>
+        <button class="btn btn-secondary" onclick="document.getElementById('import-file').click()">Importovat JSON</button>
+        <input type="file" id="import-file" accept=".json" style="display:none" onchange="importData(event)">
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">Nebezpečná zóna</div>
+      <p style="font-size:0.86rem;color:#777;margin-bottom:14px;">Vymazání všech dat je nevratné. Nejprve si data exportujte.</p>
+      <button class="btn btn-danger" onclick="openDeleteModal()">Vymazat všechna data</button>
+    </div>
+    <div class="card">
+      <div class="card-title">Jak to funguje</div>
+      <div style="font-size:0.86rem;color:#777;line-height:1.75;">
+        <p>Zadávejte <strong style="color:#aaa">stav měřidla</strong> — průběžné číslo z displeje přístroje, ne spotřebu za měsíc.</p>
+        <p>Spotřeba se vypočítá automaticky jako rozdíl dvou po sobě jdoucích odečtů.</p>
+        <p style="margin-top:8px;">Není nutné zadávat všechna tři měřidla najednou — každé lze doplnit zvlášť.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="delete-modal">
+  <div class="modal">
+    <h3>Vymazat všechna data?</h3>
+    <p>Tato akce je nevratná. Všechny záznamy odečtů budou trvale odstraněny z tohoto prohlížeče.</p>
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="closeDeleteModal()">Zrušit</button>
+      <button class="btn btn-danger" onclick="deleteAllData()">Vymazat vše</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const STORAGE_KEY = 'domaci-odecty-v1';
+const MONTHS = ['','Leden','Únor','Březen','Duben','Květen','Červen','Červenec','Srpen','Září','Říjen','Listopad','Prosinec'];
+const MONTH_SHORT = ['','Led','Úno','Bře','Dub','Kvě','Čvn','Čvc','Srp','Zář','Říj','Lis','Pro'];
+const CHART_COLORS = ['#6aa6fd','#f9a825','#66bb6a','#ef5350','#ab47bc','#26c6da','#ff7043','#ec407a'];
+
+let readings = [];
+let charts = {};
+
+// ── Data ──────────────────────────────────────────────────────────────────────
+
+function loadData() {
+  try { readings = JSON.parse(localStorage.getItem(STORAGE_KEY)) || []; }
+  catch(e) { readings = []; }
+  sortReadings();
+}
+
+function saveData() { localStorage.setItem(STORAGE_KEY, JSON.stringify(readings)); }
+
+function sortReadings() {
+  readings.sort((a,b) =>
+    a.year !== b.year ? a.year - b.year :
+    a.month !== b.month ? a.month - b.month :
+    (a.day||1) - (b.day||1)
+  );
+}
+
+function getYears() { return [...new Set(readings.map(r => r.year))].sort(); }
+
+// ── Consumption helpers ───────────────────────────────────────────────────────
+
+function getConsumption(arr, idx, field) {
+  if (idx <= 0) return null;
+  const p = arr[idx-1], c = arr[idx];
+  return (p[field] == null || c[field] == null) ? null : c[field] - p[field];
+}
+
+// Monthly consumption array[12] for a given year, using the global readings for cross-year boundary
+function getMonthlyConsumption(year, meter) {
+  const result = new Array(12).fill(null);
+  readings.forEach((r, gi) => {
+    if (r.year !== year || gi === 0 || r[meter] == null) return;
+    const prev = readings[gi - 1];
+    if (prev[meter] == null) return;
+    result[r.month - 1] = r[meter] - prev[meter];
+  });
+  return result;
+}
+
+// Cumulative sum through year (running total)
+function getCumulativeConsumption(year, meter) {
+  let running = 0;
+  let started = false;
+  return getMonthlyConsumption(year, meter).map(v => {
+    if (v == null) return started ? null : null;
+    running += v;
+    started = true;
+    return running;
+  });
+}
+
+function getPrevReading(year, month) {
+  for (let i = readings.length - 1; i >= 0; i--) {
+    const r = readings[i];
+    if (r.year < year || (r.year === year && r.month < month)) return r;
+  }
+  return null;
+}
+
+// ── Formatting ────────────────────────────────────────────────────────────────
+
+function fmtNum(n, dec=2) {
+  if (n == null) return '—';
+  return n.toLocaleString('cs-CZ', {minimumFractionDigits: dec, maximumFractionDigits: dec});
+}
+
+function fmtDate(r) {
+  return (r.day ? `${r.day}. ` : '') + `${MONTHS[r.month]} ${r.year}`;
+}
+
+function consumptionHtml(val) {
+  if (val == null) return '<span style="color:#555">—</span>';
+  if (val > 0) return `<span class="consumption-positive">+${fmtNum(val)}</span>`;
+  if (val < 0) return `<span class="consumption-negative">${fmtNum(val)}</span>`;
+  return `<span class="consumption-zero">0</span>`;
+}
+
+function getMeterLabel(m) { return {electricity:'⚡ Elektřina (kWh)', water:'💧 Voda (m³)', gas:'🔥 Plyn (m³)'}[m]; }
+function getMeterColor(m) { return {electricity:'#f9a825', water:'#29b6f6', gas:'#66bb6a'}[m]; }
+function getMeterUnit(m)  { return {electricity:'kWh', water:'m³', gas:'m³'}[m]; }
+
+// ── Color helpers ─────────────────────────────────────────────────────────────
+
+function hexToRgb(hex) {
+  return { r: parseInt(hex.slice(1,3),16), g: parseInt(hex.slice(3,5),16), b: parseInt(hex.slice(5,7),16) };
+}
+
+function interpolateColor(t, fromHex, toHex) {
+  const a = hexToRgb(fromHex), b = hexToRgb(toHex);
+  return `rgb(${Math.round(a.r+t*(b.r-a.r))},${Math.round(a.g+t*(b.g-a.g))},${Math.round(a.b+t*(b.b-a.b))})`;
+}
+
+// ── Notify ────────────────────────────────────────────────────────────────────
+
+function notify(msg, type='success') {
+  const el = document.createElement('div');
+  el.className = `notification ${type}`;
+  el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(() => { el.style.transition='opacity 0.3s'; el.style.opacity='0'; setTimeout(()=>el.remove(),300); }, 3000);
+}
+
+// ── Tabs ──────────────────────────────────────────────────────────────────────
+
+function switchTab(name) {
+  const names = ['zadani','prehled','grafy','nastaveni'];
+  document.querySelectorAll('.tab').forEach((t,i) => t.classList.toggle('active', names[i]===name));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+  document.getElementById(`tab-${name}`).classList.add('active');
+  if (name === 'prehled') renderTable();
+  if (name === 'grafy')   renderCharts();
+}
+
+// ── Selects ───────────────────────────────────────────────────────────────────
+
+function populateYearSelects() {
+  const years = getYears();
+  const now = new Date().getFullYear();
+
+  // Input year select
+  const inputYear = document.getElementById('input-year');
+  const curInput = inputYear.value;
+  inputYear.innerHTML = '';
+  for (let y = now + 1; y >= Math.min(now - 5, (years[0]||now)); y--) {
+    const o = document.createElement('option');
+    o.value = y; o.textContent = y;
+    inputYear.appendChild(o);
+  }
+  inputYear.value = curInput || now;
+
+  // Table filter
+  const filterSel = document.getElementById('filter-year');
+  const curFilter = filterSel.value;
+  filterSel.innerHTML = '<option value="all">Všechny</option>';
+  years.forEach(y => { const o=document.createElement('option'); o.value=y; o.textContent=y; filterSel.appendChild(o); });
+  if ([...filterSel.options].some(o=>o.value===curFilter)) filterSel.value=curFilter;
+
+  // Overview year select
+  const ovSel = document.getElementById('chart-year-overview');
+  const curOv = ovSel.value;
+  ovSel.innerHTML = '';
+  [...years].reverse().forEach(y => { const o=document.createElement('option'); o.value=y; o.textContent=y; ovSel.appendChild(o); });
+  if ([...ovSel.options].some(o=>o.value===curOv)) ovSel.value=curOv;
+  else if (years.length) ovSel.value = years[years.length-1];
+}
+
+function populateDaySelect(day) {
+  const sel = document.getElementById('input-day');
+  sel.innerHTML = '';
+  for (let d=1; d<=31; d++) { const o=document.createElement('option'); o.value=d; o.textContent=d; sel.appendChild(o); }
+  sel.value = day || new Date().getDate();
+}
+
+function setSmartDefaults() {
+  if (!readings.length) {
+    const now = new Date();
+    document.getElementById('input-year').value = now.getFullYear();
+    document.getElementById('input-month').value = now.getMonth()+1;
+    populateDaySelect(now.getDate());
+  } else {
+    const last = readings[readings.length-1];
+    let nm = last.month+1, ny = last.year;
+    if (nm > 12) { nm=1; ny++; }
+    document.getElementById('input-year').value = ny;
+    document.getElementById('input-month').value = nm;
+    populateDaySelect(1);
+  }
+  updateHints();
+}
+
+// ── Hints & live delta ────────────────────────────────────────────────────────
+
+function updateHints() {
+  const year  = parseInt(document.getElementById('input-year').value);
+  const month = parseInt(document.getElementById('input-month').value);
+  const prev  = getPrevReading(year, month);
+  ['electricity','water','gas'].forEach(f => {
+    const hint = document.getElementById(`hint-${f}`);
+    hint.innerHTML = (prev && prev[f] != null)
+      ? `<span class="prev-val">Předchozí: <strong>${fmtNum(prev[f])}</strong></span>`
+      : `<span style="color:#555">Žádný předchozí odečet</span>`;
+    updateDelta(f);
+  });
+}
+
+function updateDelta(field) {
+  const year  = parseInt(document.getElementById('input-year').value);
+  const month = parseInt(document.getElementById('input-month').value);
+  const val   = parseFloat(document.getElementById(`input-${field}`).value);
+  const prev  = getPrevReading(year, month);
+  const deltaEl = document.getElementById(`delta-${field}`);
+  const cardEl  = document.getElementById(`card-${field}`);
+  deltaEl.className = 'meter-delta';
+  deltaEl.textContent = '';
+  cardEl.classList.remove('warn');
+  if (isNaN(val) || !prev || prev[field] == null) return;
+  const diff = val - prev[field];
+  if (diff > 0)      { deltaEl.classList.add('positive'); deltaEl.textContent = `Spotřeba: +${fmtNum(diff)}`; }
+  else if (diff===0) { deltaEl.textContent = 'Spotřeba: 0'; deltaEl.style.color='#666'; }
+  else               { deltaEl.classList.add('warn-text'); deltaEl.textContent = `Pozor: nižší než minule (${fmtNum(diff)})`; cardEl.classList.add('warn'); }
+}
+
+// ── Save / Clear ──────────────────────────────────────────────────────────────
+
+function saveReading() {
+  const year  = parseInt(document.getElementById('input-year').value);
+  const month = parseInt(document.getElementById('input-month').value);
+  const day   = parseInt(document.getElementById('input-day').value);
+  const electricity = parseFloat(document.getElementById('input-electricity').value) || null;
+  const water       = parseFloat(document.getElementById('input-water').value)       || null;
+  const gas         = parseFloat(document.getElementById('input-gas').value)         || null;
+  const note  = document.getElementById('input-note').value.trim();
+
+  if (!electricity && !water && !gas) { notify('Zadejte alespoň jednu hodnotu.','error'); return; }
+
+  const record = { year, month, day, electricity, water, gas, note, updated: Date.now() };
+  const existing = readings.findIndex(r => r.year===year && r.month===month);
+  if (existing >= 0) { readings[existing]=record; notify(`Odečet ${fmtDate(record)} aktualizován.`); }
+  else               { readings.push(record);     notify(`Odečet ${fmtDate(record)} uložen.`); }
+
+  sortReadings(); saveData(); populateYearSelects(); renderLastReadings();
+  let nm=month+1, ny=year; if(nm>12){nm=1;ny++;}
+  document.getElementById('input-year').value=ny;
+  document.getElementById('input-month').value=nm;
+  populateDaySelect(1);
+  clearMeterInputs(); updateHints();
+}
+
+function clearMeterInputs() {
+  ['input-electricity','input-water','input-gas','input-note'].forEach(id => document.getElementById(id).value='');
+  ['electricity','water','gas'].forEach(f => { document.getElementById(`delta-${f}`).textContent=''; document.getElementById(`card-${f}`).classList.remove('warn'); });
+}
+
+function clearInputs() { clearMeterInputs(); setSmartDefaults(); }
+
+// ── Last readings ─────────────────────────────────────────────────────────────
+
+function renderLastReadings() {
+  const el = document.getElementById('last-readings-content');
+  if (!readings.length) { el.innerHTML='<div class="empty-state"><div class="icon">📋</div>Zatím nejsou žádné odečty</div>'; return; }
+  const last5 = readings.slice(-5).reverse();
+  el.innerHTML = `<div class="table-wrapper"><table>
+    <thead><tr><th>Datum</th><th>⚡ Elektřina</th><th>Spotřeba</th><th>💧 Voda</th><th>Spotřeba</th><th>🔥 Plyn</th><th>Spotřeba</th><th>Poznámka</th></tr></thead>
+    <tbody>${last5.map(r => {
+      const gi = readings.indexOf(r);
+      return `<tr><td>${fmtDate(r)}</td>
+        <td>${fmtNum(r.electricity)}</td><td>${consumptionHtml(getConsumption(readings,gi,'electricity'))}</td>
+        <td>${fmtNum(r.water)}</td><td>${consumptionHtml(getConsumption(readings,gi,'water'))}</td>
+        <td>${fmtNum(r.gas)}</td><td>${consumptionHtml(getConsumption(readings,gi,'gas'))}</td>
+        <td style="color:#666;font-size:0.82rem">${r.note||''}</td></tr>`;
+    }).join('')}</tbody></table></div>`;
+}
+
+// ── Table ─────────────────────────────────────────────────────────────────────
+
+function renderTable() {
+  const yearFilter = document.getElementById('filter-year').value;
+  let data = yearFilter==='all' ? readings : readings.filter(r => r.year==yearFilter);
+  const tbody = document.getElementById('readings-tbody');
+  const empty = document.getElementById('table-empty');
+  if (!data.length) { tbody.innerHTML=''; empty.style.display=''; return; }
+  empty.style.display='none';
+  tbody.innerHTML = [...data].reverse().map(r => {
+    const gi=readings.indexOf(r), ec=getConsumption(readings,gi,'electricity'), wc=getConsumption(readings,gi,'water'), gc=getConsumption(readings,gi,'gas');
+    return `<tr>
+      <td><strong>${fmtDate(r)}</strong></td>
+      <td>${fmtNum(r.electricity)}</td><td>${consumptionHtml(ec)}</td>
+      <td>${fmtNum(r.water)}</td><td>${consumptionHtml(wc)}</td>
+      <td>${fmtNum(r.gas)}</td><td>${consumptionHtml(gc)}</td>
+      <td style="color:#666;font-size:0.82rem">${r.note||''}</td>
+      <td style="white-space:nowrap">
+        <button class="btn btn-secondary btn-sm" onclick="editReading(${gi})">Upravit</button>
+        <button class="btn btn-danger btn-sm" onclick="deleteReading(${gi})" style="margin-left:3px">Smazat</button>
+      </td></tr>`;
+  }).join('');
+}
+
+function editReading(idx) {
+  const r=readings[idx];
+  document.getElementById('input-year').value=r.year;
+  document.getElementById('input-month').value=r.month;
+  populateDaySelect(r.day||1);
+  document.getElementById('input-electricity').value=r.electricity??'';
+  document.getElementById('input-water').value=r.water??'';
+  document.getElementById('input-gas').value=r.gas??'';
+  document.getElementById('input-note').value=r.note||'';
+  updateHints(); switchTab('zadani');
+  notify('Záznam načten k úpravě. Po uložení bude přepsán.','info');
+}
+
+function deleteReading(idx) {
+  if (!confirm(`Smazat odečet ${fmtDate(readings[idx])}?`)) return;
+  readings.splice(idx,1); saveData(); populateYearSelects(); renderTable(); renderLastReadings();
+  notify('Záznam smazán.');
+}
+
+// ── Charts — master ───────────────────────────────────────────────────────────
+
+function destroyChart(id) { if(charts[id]){charts[id].destroy();delete charts[id];} }
+
+function renderCharts() {
+  renderSummary();
+  renderYearOverview();
+  renderHeatmap();
+  renderCumulativeChart();
+  renderCompareChart();
+  renderAnnualChart();
+}
+
+// ── 1. Summary ────────────────────────────────────────────────────────────────
+
+function renderSummary() {
+  const years = getYears();
+  const currentYear = new Date().getFullYear();
+  const displayYear = years.includes(currentYear) ? currentYear : (years[years.length-1]||currentYear);
+  const prevYear = displayYear-1;
+  const hasPrev = years.includes(prevYear);
+
+  // Sum only the month indices where displayYear has data
+  function totalForSharedMonths(meter) {
+    const curr = getMonthlyConsumption(displayYear, meter);
+    const prev = hasPrev ? getMonthlyConsumption(prevYear, meter) : null;
+    let sumCurr = 0, sumPrev = 0, sharedCount = 0;
+    curr.forEach((v, mi) => {
+      if (v == null) return;
+      sumCurr += v;
+      if (prev && prev[mi] != null) { sumPrev += prev[mi]; sharedCount++; }
+    });
+    return { sumCurr, sumPrev: sharedCount > 0 ? sumPrev : null, sharedCount };
+  }
+
+  function yoyHtml(sumCurr, sumPrev, sharedCount) {
+    if (sumPrev == null) return '';
+    const pct = (sumCurr - sumPrev) / sumPrev * 100;
+    const cls   = pct > 5 ? 'up' : pct < -5 ? 'down' : 'same';
+    const arrow = pct > 5 ? '▲' : pct < -5 ? '▼' : '≈';
+    const months = sharedCount < 12 ? ` (${sharedCount} měs.)` : '';
+    return `<div class="s-yoy ${cls}">${arrow} ${pct>=0?'+':''}${fmtNum(pct,1)} % vs. ${prevYear}${months}</div>`;
+  }
+
+  const configs = [
+    {field:'electricity', cls:'summary-electricity', label:'Elektřina', unit:'kWh', dec:0},
+    {field:'water',       cls:'summary-water',       label:'Voda',      unit:'m³',  dec:1},
+    {field:'gas',         cls:'summary-gas',         label:'Plyn',      unit:'m³',  dec:1},
+  ];
+
+  document.getElementById('summary-grid').innerHTML = configs.map(c => {
+    const {sumCurr, sumPrev, sharedCount} = totalForSharedMonths(c.field);
+    return `<div class="summary-box ${c.cls}">
+      <div class="s-label">${c.label} ${displayYear}</div>
+      <div class="s-value">${fmtNum(sumCurr, c.dec)}<span class="s-unit">${c.unit}</span></div>
+      ${yoyHtml(sumCurr, sumPrev, sharedCount)}
+    </div>`;
+  }).join('');
+}
+
+// ── 2. Přehled roku — 3 mini grafy ───────────────────────────────────────────
+
+function renderYearOverview() {
+  const years = getYears();
+  if (!years.length) return;
+
+  const selYear = parseInt(document.getElementById('chart-year-overview').value) || years[years.length-1];
+  const prevYear = selYear-1;
+  const hasPrev = years.includes(prevYear);
+
+  const meters = [
+    {field:'electricity', id:'chart-ov-e', color:'#f9a825', unit:'kWh'},
+    {field:'water',       id:'chart-ov-w', color:'#29b6f6', unit:'m³'},
+    {field:'gas',         id:'chart-ov-g', color:'#66bb6a', unit:'m³'},
+  ];
+
+  meters.forEach(({field, id, color, unit}) => {
+    destroyChart(id);
+    const curr = getMonthlyConsumption(selYear, field);
+    const prev = hasPrev ? getMonthlyConsumption(prevYear, field) : null;
+
+    const datasets = [{
+      label: String(selYear),
+      data: curr,
+      backgroundColor: color+'cc',
+      borderColor: color,
+      borderWidth: 1,
+      borderRadius: 3,
+    }];
+    if (prev) datasets.push({
+      label: String(prevYear),
+      data: prev,
+      backgroundColor: color+'33',
+      borderColor: color+'77',
+      borderWidth: 1,
+      borderRadius: 3,
+    });
+
+    const ctx = document.getElementById(id).getContext('2d');
+    charts[id] = new Chart(ctx, {
+      type: 'bar',
+      data: { labels: MONTH_SHORT.slice(1), datasets },
+      options: {
+        responsive: true, maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: ${fmtNum(ctx.parsed.y)} ${unit}` } }
+        },
+        scales: {
+          x: { ticks: { color:'#666', font:{size:9} }, grid: { color:'#262626' } },
+          y: { ticks: { color:'#666', font:{size:9} }, grid: { color:'#262626' }, beginAtZero: true }
+        }
+      }
+    });
+  });
+
+  // Legend
+  const lg = document.getElementById('overview-legend');
+  lg.innerHTML = `
+    <div class="mini-legend-item"><div class="mini-legend-dot" style="background:#aaa"></div>${selYear} (aktuální rok)</div>
+    ${hasPrev ? `<div class="mini-legend-item"><div class="mini-legend-dot" style="background:#555;border:1px solid #888"></div>${prevYear} (předchozí rok)</div>` : ''}`;
+}
+
+// ── 3. Heatmapa ───────────────────────────────────────────────────────────────
+
+function renderHeatmap() {
+  const meter = document.getElementById('chart-meter-heatmap').value;
+  const years = getYears();
+  const color = getMeterColor(meter);
+  const unit  = getMeterUnit(meter);
+
+  // Collect all values for range
+  const allVals = [];
+  years.forEach(y => getMonthlyConsumption(y, meter).forEach(v => { if(v!=null) allVals.push(v); }));
+  const minVal = allVals.length ? Math.min(...allVals) : 0;
+  const maxVal = allVals.length ? Math.max(...allVals) : 1;
+
+  const grid = document.getElementById('heatmap-grid');
+  grid.innerHTML = '';
+
+  const hm = document.createElement('div');
+  hm.className = 'heatmap';
+
+  // Header row
+  const yh = document.createElement('div'); yh.className='heatmap-header'; hm.appendChild(yh);
+  MONTH_SHORT.slice(1).forEach(m => {
+    const h=document.createElement('div'); h.className='heatmap-header'; h.textContent=m; hm.appendChild(h);
+  });
+
+  const tip = document.getElementById('htip');
+
+  // Data rows
+  years.forEach(year => {
+    const yl = document.createElement('div'); yl.className='heatmap-year'; yl.textContent=year; hm.appendChild(yl);
+
+    getMonthlyConsumption(year, meter).forEach((v, mi) => {
+      const cell = document.createElement('div');
+      cell.className = 'heatmap-cell';
+
+      if (v != null) {
+        const t = maxVal>minVal ? (v-minVal)/(maxVal-minVal) : 0.5;
+        cell.style.backgroundColor = interpolateColor(t*0.85+0.05, '#1e1e1e', color);
+      } else {
+        cell.classList.add('no-data');
+      }
+
+      // Tooltip
+      cell.addEventListener('mousemove', e => {
+        tip.style.display = 'block';
+        tip.style.left = (e.clientX+14)+'px';
+        tip.style.top  = (e.clientY-10)+'px';
+        tip.innerHTML = v != null
+          ? `<strong>${MONTHS[mi+1]} ${year}</strong><br>${fmtNum(v)} ${unit}`
+          : `<strong>${MONTHS[mi+1]} ${year}</strong><br><span style="color:#666">žádný odečet</span>`;
+      });
+      cell.addEventListener('mouseleave', () => { tip.style.display='none'; });
+
+      hm.appendChild(cell);
+    });
+  });
+
+  grid.appendChild(hm);
+
+  // Gradient legend bar
+  document.getElementById('heatmap-grad').style.background =
+    `linear-gradient(90deg, ${interpolateColor(0.05,'#1e1e1e',color)}, ${color})`;
+}
+
+// ── 4. Kumulativní ───────────────────────────────────────────────────────────
+
+function renderCumulativeChart() {
+  destroyChart('cumul');
+  const meter = document.getElementById('chart-meter-cumul').value;
+  const years = getYears();
+  if (!years.length) return;
+
+  const unit = getMeterUnit(meter);
+  const datasets = years.map((year, yi) => {
+    const isLast = yi === years.length-1;
+    return {
+      label: String(year),
+      data: getCumulativeConsumption(year, meter),
+      borderColor: CHART_COLORS[yi % CHART_COLORS.length],
+      backgroundColor: 'transparent',
+      borderWidth: isLast ? 2.5 : 1.5,
+      pointRadius: isLast ? 3 : 1.5,
+      pointHoverRadius: 5,
+      spanGaps: false,
+    };
+  });
+
+  const ctx = document.getElementById('chart-cumul').getContext('2d');
+  charts['cumul'] = new Chart(ctx, {
+    type: 'line',
+    data: { labels: MONTH_SHORT.slice(1), datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode:'index', intersect:false },
+      plugins: {
+        legend: { labels: { color:'#aaa', boxWidth:12 } },
+        tooltip: { callbacks: { label: ctx => {
+          const v = ctx.parsed.y;
+          return v==null ? '' : ` ${ctx.dataset.label}: ${fmtNum(v)} ${unit} celkem`;
+        }}}
+      },
+      scales: {
+        x: { ticks:{color:'#777'}, grid:{color:'#2a2a2a'} },
+        y: { ticks:{color:'#777'}, grid:{color:'#2a2a2a'}, beginAtZero:true,
+             title:{display:true, text:`Celkem (${unit})`, color:'#666', font:{size:11}} }
+      }
+    }
+  });
+}
+
+// ── 5. Porovnání let ──────────────────────────────────────────────────────────
+
+function renderCompareChart() {
+  destroyChart('compare');
+  const meter = document.getElementById('chart-meter-compare').value;
+  const years = getYears();
+  if (!years.length) return;
+  const unit = getMeterUnit(meter);
+
+  const datasets = years.map((year, yi) => {
+    const isLast = yi === years.length-1;
+    return {
+      label: String(year),
+      data: getMonthlyConsumption(year, meter),
+      borderColor: CHART_COLORS[yi % CHART_COLORS.length],
+      backgroundColor: 'transparent',
+      borderWidth: isLast ? 2.5 : 1.5,
+      pointRadius: isLast ? 3 : 1.5,
+      pointHoverRadius: 5,
+      spanGaps: false,
+    };
+  });
+
+  const ctx = document.getElementById('chart-compare').getContext('2d');
+  charts['compare'] = new Chart(ctx, {
+    type: 'line',
+    data: { labels: MONTH_SHORT.slice(1), datasets },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      interaction: { mode:'index', intersect:false },
+      plugins: {
+        legend: { labels: { color:'#aaa', boxWidth:12 } },
+        tooltip: { callbacks: { label: ctx => {
+          const v = ctx.parsed.y;
+          return v==null ? '' : ` ${ctx.dataset.label}: ${fmtNum(v)} ${unit}`;
+        }}}
+      },
+      scales: {
+        x: { ticks:{color:'#777'}, grid:{color:'#2a2a2a'} },
+        y: { ticks:{color:'#777'}, grid:{color:'#2a2a2a'}, beginAtZero:true }
+      }
+    }
+  });
+}
+
+// ── 6. Roční celky ────────────────────────────────────────────────────────────
+
+function renderAnnualChart() {
+  destroyChart('annual');
+  const meter = document.getElementById('chart-meter-annual').value;
+  const years = getYears();
+  if (!years.length) return;
+  const unit  = getMeterUnit(meter);
+  const color = getMeterColor(meter);
+
+  const totals = years.map(year =>
+    getMonthlyConsumption(year, meter).reduce((s,v) => s+(v??0), 0)
+  );
+
+  // Plugin: % change labels above bars
+  const pctPlugin = {
+    id: 'pctLabels',
+    afterDatasetsDraw(chart) {
+      const {ctx, data} = chart;
+      ctx.save();
+      data.datasets[0].data.forEach((val, i) => {
+        if (i===0 || !val) return;
+        const prev = data.datasets[0].data[i-1];
+        if (!prev) return;
+        const pct = (val-prev)/prev*100;
+        const bar = chart.getDatasetMeta(0).data[i];
+        const sign = pct>=0?'+':'';
+        ctx.fillStyle = pct>2?'#ef5350':pct<-2?'#66bb6a':'#888';
+        ctx.font = 'bold 10px sans-serif';
+        ctx.textAlign = 'center';
+        ctx.fillText(`${sign}${pct.toFixed(0)} %`, bar.x, bar.y-7);
+      });
+      ctx.restore();
+    }
+  };
+
+  const ctx = document.getElementById('chart-annual').getContext('2d');
+  charts['annual'] = new Chart(ctx, {
+    type: 'bar',
+    data: {
+      labels: years.map(String),
+      datasets: [{
+        label: getMeterLabel(meter),
+        data: totals,
+        backgroundColor: years.map((_,i) => color+(i===years.length-1?'cc':'55')),
+        borderColor: color,
+        borderWidth: 1,
+        borderRadius: 4,
+      }]
+    },
+    options: {
+      responsive: true, maintainAspectRatio: false,
+      layout: { padding: { top: 22 } },
+      plugins: {
+        legend: { display:false },
+        tooltip: { callbacks: { label: ctx => ` ${fmtNum(ctx.parsed.y)} ${unit}` } }
+      },
+      scales: {
+        x: { ticks:{color:'#777'}, grid:{color:'#2a2a2a'} },
+        y: { ticks:{color:'#777'}, grid:{color:'#2a2a2a'} }
+      }
+    },
+    plugins: [pctPlugin]
+  });
+}
+
+// ── Export / Import ───────────────────────────────────────────────────────────
+
+function exportData() {
+  if (!readings.length) { notify('Žádná data k exportu.','error'); return; }
+  const blob = new Blob([JSON.stringify({version:1, exported:new Date().toISOString(), readings}, null, 2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `odecty-${new Date().toISOString().slice(0,10)}.json`;
+  a.click();
+  notify(`Exportováno ${readings.length} záznamů.`);
+}
+
+function importData(event) {
+  const file = event.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const parsed = JSON.parse(e.target.result);
+      if (!parsed.readings || !Array.isArray(parsed.readings)) throw new Error('Neplatný formát souboru');
+      readings = parsed.readings;
+      sortReadings(); saveData(); populateYearSelects(); setSmartDefaults(); renderLastReadings();
+      notify(`Importováno ${readings.length} záznamů.`);
+    } catch(err) { notify('Chyba při importu: '+err.message,'error'); }
+  };
+  reader.readAsText(file);
+  event.target.value='';
+}
+
+// ── Delete modal ──────────────────────────────────────────────────────────────
+
+function openDeleteModal()  { document.getElementById('delete-modal').classList.add('open'); }
+function closeDeleteModal() { document.getElementById('delete-modal').classList.remove('open'); }
+
+function deleteAllData() {
+  readings=[]; saveData(); populateYearSelects(); setSmartDefaults(); renderLastReadings();
+  closeDeleteModal(); notify('Všechna data byla vymazána.');
+}
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+
+loadData();
+populateYearSelects();
+setSmartDefaults();
+renderLastReadings();
+</script>
+</body>
+</html>
