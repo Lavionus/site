@@ -1,0 +1,861 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kondiciogram — Analýza Biorytmů</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: #0b0b0d;
+      color: #f8fafc;
+      min-height: 100vh;
+      line-height: 1.5;
+    }
+
+    header {
+      background-color: #131316;
+      border-bottom: 1px solid #22222a;
+      padding: 13px 22px;
+      display: flex;
+      align-items: baseline;
+      gap: 10px;
+    }
+    header h1 { font-size: 1.1rem; font-weight: 600; color: #f8fafc; letter-spacing: 0.4px; }
+    header .subtitle { font-size: 0.78rem; color: #64748b; }
+
+    .main-layout {
+      display: grid;
+      grid-template-columns: 284px 1fr;
+      min-height: calc(100vh - 50px);
+    }
+
+    /* ── Left panel ── */
+    .panel-inputs {
+      background-color: #0d0d11;
+      border-right: 1px solid #22222a;
+      padding: 20px 16px;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: #2a2a32 #0d0d11;
+    }
+
+    .section-label {
+      font-size: 0.68rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.3px;
+      color: #6aa6fd;
+      margin-bottom: 14px;
+    }
+
+    .form-group { margin-bottom: 13px; }
+
+    label {
+      display: block;
+      font-size: 0.78rem;
+      color: #94a3b8;
+      margin-bottom: 5px;
+      font-weight: 500;
+    }
+
+    input[type="date"], select {
+      width: 100%;
+      background-color: #18181d;
+      border: 1px solid #2a2a32;
+      border-radius: 6px;
+      color: #f8fafc;
+      padding: 8px 10px;
+      font-size: 0.84rem;
+      font-family: inherit;
+      transition: border-color 0.18s, box-shadow 0.18s;
+      appearance: none;
+      -webkit-appearance: none;
+      cursor: pointer;
+    }
+    input[type="date"]:focus, select:focus {
+      outline: none;
+      border-color: #6aa6fd;
+      box-shadow: 0 0 0 2px rgba(106,166,253,0.13);
+    }
+    input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.55) sepia(0.15); cursor: pointer; }
+    select option { background-color: #18181d; color: #f8fafc; }
+
+    /* Birth date 3-select row */
+    .date-row { display: grid; grid-template-columns: 52px 1fr 72px; gap: 6px; }
+    .date-row select { width: 100%; }
+
+    .divider { height: 1px; background-color: #22222a; margin: 18px 0; }
+
+    .info-box {
+      background-color: #14141a;
+      border: 1px solid #22222a;
+      border-radius: 8px;
+      padding: 11px 13px;
+      margin-top: 14px;
+    }
+    .info-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 3px 0;
+      font-size: 0.77rem;
+    }
+    .info-key { color: #64748b; }
+    .info-val { color: #94a3b8; font-weight: 500; }
+
+    /* ── Right panel ── */
+    .panel-dashboard {
+      padding: 20px;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: #2a2a32 #0b0b0d;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    #placeholder {
+      text-align: center;
+      padding: 80px 20px;
+      color: #64748b;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+    }
+    #placeholder .ph-icon { font-size: 2.6rem; margin-bottom: 10px; }
+    #placeholder p { font-size: 0.9rem; }
+
+    #dashboard { display: none; flex-direction: column; gap: 14px; }
+    #dashboard.visible { display: flex; }
+
+    .card {
+      background-color: #131316;
+      border: 1px solid #22222a;
+      border-radius: 10px;
+      transition: border-color 0.2s;
+    }
+    .card:hover { border-color: #32323e; }
+
+    /* Readiness card */
+    .card-main { padding: 26px 24px; text-align: center; }
+    .card-main-lbl {
+      font-size: 0.68rem; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 1.4px;
+      color: #64748b; margin-bottom: 14px;
+    }
+    .readiness-val {
+      font-size: 4.6rem; font-weight: 700;
+      letter-spacing: -3px; line-height: 1;
+      margin-bottom: 6px;
+      transition: color 0.3s, text-shadow 0.4s;
+    }
+    .readiness-desc { font-size: 0.83rem; color: #64748b; margin-bottom: 18px; min-height: 1.2em; }
+    .readiness-track {
+      max-width: 320px; margin: 0 auto; height: 5px;
+      background-color: #1d1d22; border-radius: 99px;
+      overflow: hidden; position: relative;
+    }
+    .readiness-track::before,
+    .readiness-track::after {
+      content: ''; position: absolute; top: -3px;
+      width: 1px; height: 11px; background-color: #2e2e3a; z-index: 1;
+    }
+    .readiness-track::before { left: 35%; }
+    .readiness-track::after  { left: 65%; }
+    .readiness-fill { height: 100%; border-radius: 99px; transition: width 0.5s ease, background-color 0.3s; }
+
+    /* Bio cards */
+    .cards-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; }
+    .card-bio { padding: 14px 14px 14px 16px; border-left: 3px solid transparent; transition: border-color 0.2s, border-left-color 0.3s; }
+    .bio-lbl { font-size: 0.66rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1.1px; color: #64748b; display: flex; align-items: center; gap: 6px; margin-bottom: 7px; }
+    .bio-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+    .bio-val { font-size: 1.95rem; font-weight: 700; letter-spacing: -0.5px; line-height: 1.1; margin-bottom: 1px; }
+    .bio-period { font-size: 0.72rem; color: #64748b; margin-bottom: 6px; }
+    .bio-phase { font-size: 0.73rem; font-weight: 600; margin-bottom: 2px; }
+    .bio-phase.rising   { color: #22c55e; }
+    .bio-phase.falling  { color: #ef4444; }
+    .bio-phase.critical { color: #f59e0b; }
+    .bio-next { font-size: 0.7rem; color: #4a5568; margin-bottom: 9px; }
+    .bio-track { height: 4px; background-color: #1d1d22; border-radius: 99px; position: relative; }
+    .bio-center-mark { position: absolute; left: 50%; top: -2px; width: 1px; height: 8px; background-color: #2e2e38; }
+    .bio-fill { position: absolute; height: 100%; border-radius: 99px; transition: left 0.4s ease, width 0.4s ease; }
+
+    /* Chart cards */
+    .card-chart { padding: 16px 18px 14px; }
+    .chart-header { display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+    .chart-title { font-size: 0.68rem; font-weight: 700; text-transform: uppercase; letter-spacing: 1.3px; color: #64748b; }
+    .chart-legend { display: flex; gap: 14px; flex-wrap: wrap; }
+    .legend-item { display: flex; align-items: center; gap: 5px; font-size: 0.72rem; color: #64748b; }
+    .legend-line { width: 14px; height: 2px; border-radius: 1px; }
+    canvas { display: block; width: 100%; cursor: crosshair; }
+
+    /* Responsive */
+    @media (max-width: 860px) {
+      .main-layout { grid-template-columns: 1fr; }
+      .panel-inputs { border-right: none; border-bottom: 1px solid #22222a; }
+      .cards-row { grid-template-columns: 1fr 1fr; }
+    }
+    @media (max-width: 520px) {
+      .cards-row { grid-template-columns: 1fr; }
+      .readiness-val { font-size: 3.4rem; }
+      .panel-dashboard { padding: 12px; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>Kondiciogram</h1>
+  <span class="subtitle">Biologicky korigovaná analýza biorytmů</span>
+</header>
+
+<div class="main-layout">
+
+  <aside class="panel-inputs">
+    <div class="section-label">Uživatelský profil</div>
+
+    <div class="form-group">
+      <label>Datum narození</label>
+      <div class="date-row">
+        <select id="birthDay"   title="Den"></select>
+        <select id="birthMonth" title="Měsíc"></select>
+        <select id="birthYear"  title="Rok"></select>
+      </div>
+    </div>
+    <div class="form-group">
+      <label for="gender">Biologické pohlaví</label>
+      <select id="gender">
+        <option value="male">Muž</option>
+        <option value="female">Žena</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label for="workType">Typ primární zátěže / profese</label>
+      <select id="workType">
+        <option value="mental">Mentální</option>
+        <option value="physical">Fyzická</option>
+      </select>
+    </div>
+    <div class="form-group">
+      <label for="sleep">Kvalita dnešního spánku</label>
+      <select id="sleep">
+        <option value="1.0">Vynikající</option>
+        <option value="0.7">Podprůměrný</option>
+        <option value="0.4">Kritický deficit</option>
+      </select>
+    </div>
+
+    <div class="divider"></div>
+    <div class="section-label">Cíl analýzy</div>
+    <div class="form-group">
+      <label for="targetDate">Cílový den analýzy</label>
+      <input type="date" id="targetDate" />
+    </div>
+
+    <div id="infoBox" class="info-box" style="display:none">
+      <div class="info-row"><span class="info-key">Věk</span><span class="info-val" id="infoAge">—</span></div>
+      <div class="info-row"><span class="info-key">Dní od narození</span><span class="info-val" id="infoDays">—</span></div>
+      <div class="info-row"><span class="info-key">Koef. spánku</span><span class="info-val" id="infoSleep">—</span></div>
+      <div class="info-row" id="penaltyRow" style="display:none">
+        <span class="info-key">Věková penalizace</span>
+        <span class="info-val" id="infoPenalty" style="color:#f59e0b"></span>
+      </div>
+    </div>
+  </aside>
+
+  <main class="panel-dashboard">
+    <div id="placeholder">
+      <div class="ph-icon" id="phIcon">📊</div>
+      <p id="phMsg">Zadejte datum narození pro zahájení analýzy</p>
+    </div>
+
+    <div id="dashboard">
+
+      <div class="card card-main">
+        <div class="card-main-lbl">Index Skutečné Připravenosti</div>
+        <div class="readiness-val" id="readinessVal">—</div>
+        <div class="readiness-desc" id="readinessDesc"></div>
+        <div class="readiness-track"><div class="readiness-fill" id="readinessFill" style="width:0%"></div></div>
+      </div>
+
+      <div class="cards-row">
+        <div class="card card-bio" id="cardPhys">
+          <div class="bio-lbl"><span class="bio-dot" style="background:#f97316"></span>Fyzický cyklus</div>
+          <div class="bio-val" id="physVal" style="color:#f97316">—</div>
+          <div class="bio-period">Perioda 23 dní</div>
+          <div class="bio-phase" id="physPhase"></div>
+          <div class="bio-next"  id="physNext"></div>
+          <div class="bio-track"><div class="bio-center-mark"></div><div class="bio-fill" id="physFill" style="background:rgba(249,115,22,0.8)"></div></div>
+        </div>
+        <div class="card card-bio" id="cardEmo">
+          <div class="bio-lbl"><span class="bio-dot" style="background:#ec4899"></span>Emoční cyklus</div>
+          <div class="bio-val" id="emoVal" style="color:#ec4899">—</div>
+          <div class="bio-period">Perioda 28 dní</div>
+          <div class="bio-phase" id="emoPhase"></div>
+          <div class="bio-next"  id="emoNext"></div>
+          <div class="bio-track"><div class="bio-center-mark"></div><div class="bio-fill" id="emoFill" style="background:rgba(236,72,153,0.8)"></div></div>
+        </div>
+        <div class="card card-bio" id="cardInt">
+          <div class="bio-lbl"><span class="bio-dot" style="background:#6aa6fd"></span>Intelektuální cyklus</div>
+          <div class="bio-val" id="intVal" style="color:#6aa6fd">—</div>
+          <div class="bio-period">Perioda 33 dní</div>
+          <div class="bio-phase" id="intPhase"></div>
+          <div class="bio-next"  id="intNext"></div>
+          <div class="bio-track"><div class="bio-center-mark"></div><div class="bio-fill" id="intFill" style="background:rgba(106,166,253,0.8)"></div></div>
+        </div>
+      </div>
+
+      <div class="card card-chart">
+        <div class="chart-header">
+          <div class="chart-title">Průběh biorytmů &mdash; ±15 dní od cíle</div>
+          <div class="chart-legend">
+            <div class="legend-item"><div class="legend-line" style="background:#f97316"></div>Fyzický</div>
+            <div class="legend-item"><div class="legend-line" style="background:#ec4899"></div>Emoční</div>
+            <div class="legend-item"><div class="legend-line" style="background:#6aa6fd"></div>Intelektuální</div>
+          </div>
+        </div>
+        <canvas id="bioChart"></canvas>
+      </div>
+
+      <div class="card card-chart">
+        <div class="chart-header">
+          <div class="chart-title">Roční přehled &mdash; <span id="yearLabel"></span></div>
+          <div class="chart-legend">
+            <div class="legend-item"><div class="legend-line" style="background:#f97316"></div>Fyzický</div>
+            <div class="legend-item"><div class="legend-line" style="background:#ec4899"></div>Emoční</div>
+            <div class="legend-item"><div class="legend-line" style="background:#6aa6fd"></div>Intelektuální</div>
+          </div>
+        </div>
+        <canvas id="yearChart"></canvas>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script>
+  const TWO_PI = Math.PI * 2;
+  const MS_DAY = 86400000;
+  const LS_KEY = 'kondiciogram_v1';
+  const $ = id => document.getElementById(id);
+
+  const elTarget = $('targetDate');
+  const elGender = $('gender');
+  const elWork   = $('workType');
+  const elSleep  = $('sleep');
+
+  let chartState     = null;
+  let yearChartState = null;
+
+  // ── Birth date 3-select setup ──────────────────────────────────────────────
+
+  function initBirthSelects() {
+    const months = ['Leden','Únor','Březen','Duben','Květen','Červen',
+                    'Červenec','Srpen','Září','Říjen','Listopad','Prosinec'];
+    $('birthMonth').innerHTML = '<option value="">Měsíc</option>' +
+      months.map((m, i) => `<option value="${i + 1}">${m}</option>`).join('');
+
+    const curYear = new Date().getFullYear();
+    $('birthYear').innerHTML = '<option value="">Rok</option>' +
+      Array.from({ length: curYear - 1919 }, (_, i) => curYear - i)
+           .map(y => `<option value="${y}">${y}</option>`).join('');
+
+    updateDays();
+  }
+
+  function updateDays() {
+    const m = parseInt($('birthMonth').value) || 0;
+    const y = parseInt($('birthYear').value)  || 0;
+    const sel = $('birthDay');
+    const prev = sel.value;
+    const max  = (m && y) ? new Date(y, m, 0).getDate() : 31;
+    sel.innerHTML = '<option value="">Den</option>' +
+      Array.from({ length: max }, (_, i) => `<option value="${i + 1}">${i + 1}</option>`).join('');
+    if (prev && parseInt(prev) <= max) sel.value = prev;
+  }
+
+  function getBirthDate() {
+    const d = parseInt($('birthDay').value);
+    const m = parseInt($('birthMonth').value);
+    const y = parseInt($('birthYear').value);
+    if (!d || !m || !y) return null;
+    const dt = new Date(y, m - 1, d);
+    if (dt.getFullYear() !== y || dt.getMonth() !== m - 1 || dt.getDate() !== d) return null;
+    return dt;
+  }
+
+  // ── localStorage ───────────────────────────────────────────────────────────
+
+  function saveLS() {
+    try {
+      localStorage.setItem(LS_KEY, JSON.stringify({
+        bd: $('birthDay').value, bm: $('birthMonth').value, by: $('birthYear').value,
+        gender: elGender.value, work: elWork.value, sleep: elSleep.value,
+        target: elTarget.value,
+      }));
+    } catch (e) {}
+  }
+
+  function loadLS() {
+    try {
+      const d = JSON.parse(localStorage.getItem(LS_KEY) || 'null');
+      if (!d) return;
+      if (d.by) $('birthYear').value  = d.by;
+      if (d.bm) { $('birthMonth').value = d.bm; updateDays(); }
+      if (d.bd) $('birthDay').value   = d.bd;
+      if (d.gender) elGender.value = d.gender;
+      if (d.work)   elWork.value   = d.work;
+      if (d.sleep)  elSleep.value  = d.sleep;
+      if (d.target) elTarget.value = d.target;
+    } catch (e) {}
+  }
+
+  // ── Event wiring ───────────────────────────────────────────────────────────
+
+  function onBirthChange(id) {
+    if (id === 'birthMonth' || id === 'birthYear') updateDays();
+    saveLS(); calculate();
+  }
+  ['birthDay', 'birthMonth', 'birthYear'].forEach(id =>
+    $(id).addEventListener('change', () => onBirthChange(id))
+  );
+  [elGender, elWork, elSleep, elTarget].forEach(el =>
+    el.addEventListener('change', () => { saveLS(); calculate(); })
+  );
+
+  // ── Hover wiring ───────────────────────────────────────────────────────────
+
+  function wireHover(canvasId, stateGetter, drawFn) {
+    const cv = $(canvasId);
+    cv.addEventListener('mousemove', e => {
+      if (!stateGetter()) return;
+      const r = cv.getBoundingClientRect();
+      drawFn((e.clientX - r.left) * (cv.width / r.width));
+    });
+    cv.addEventListener('mouseleave', () => { if (stateGetter()) drawFn(null); });
+  }
+  wireHover('bioChart',  () => chartState,     hx => drawChart(hx));
+  wireHover('yearChart', () => yearChartState,  hx => drawYearChart(hx));
+
+  // ── Helpers ────────────────────────────────────────────────────────────────
+
+  function daysBetween(a, b) { return (b - a) / MS_DAY; }
+
+  function formatAge(days) {
+    const y = Math.floor(days / 365.25);
+    const m = Math.floor((days % 365.25) / 30.44);
+    return `${y} let, ${m} měs.`;
+  }
+
+  function signedPct(v) {
+    const p = Math.round(Math.min(1, Math.max(-1, v)) * 100);
+    return (p >= 0 ? '+' : '') + p + ' %';
+  }
+
+  function getPhaseInfo(days, period) {
+    const v  = Math.sin(TWO_PI * days / period);
+    const v1 = Math.sin(TWO_PI * (days + 0.5) / period);
+    return { isCritical: Math.abs(v) < 0.15, ascending: v1 > v };
+  }
+
+  function getNextEventText(days, period) {
+    const phase = ((days % period) + period) % period;
+    const candidates = [
+      { label: 'vrchol',  d: ((period / 4     - phase + period) % period) || period },
+      { label: 'dno',     d: ((3 * period / 4 - phase + period) % period) || period },
+      { label: 'přechod', d: ((period / 2     - phase + period) % period) || period },
+      { label: 'přechod', d: ((period         - phase) % period) || period },
+    ];
+    candidates.sort((a, b) => a.d - b.d);
+    const { label, d } = candidates[0];
+    const n = Math.ceil(d);
+    return n <= 1 ? `${label} dnes` : `${label} za ${n} d.`;
+  }
+
+  function showPlaceholder(msg, icon) {
+    $('phMsg').textContent  = msg  ?? 'Zadejte datum narození pro zahájení analýzy';
+    $('phIcon').textContent = icon ?? '📊';
+    $('placeholder').style.display = '';
+    $('dashboard').classList.remove('visible');
+    $('infoBox').style.display = 'none';
+    chartState = yearChartState = null;
+  }
+
+  function updateBioCard(ids, raw, days, period, color) {
+    const [valId, fillId, phaseId, nextId, cardId] = ids;
+    $(valId).textContent = signedPct(raw);
+    const r = Math.min(1, Math.max(-1, raw));
+    const fill = $(fillId);
+    if (r >= 0) { fill.style.left = '50%';            fill.style.width = (r * 50) + '%'; }
+    else        { fill.style.left = (50 + r * 50) + '%'; fill.style.width = (-r * 50) + '%'; }
+    const { isCritical, ascending } = getPhaseInfo(days, period);
+    const ph = $(phaseId);
+    if (isCritical) { ph.textContent = '⚡ Kritický přechod'; ph.className = 'bio-phase critical'; }
+    else { ph.textContent = ascending ? '↑ Stoupá' : '↓ Klesá'; ph.className = 'bio-phase ' + (ascending ? 'rising' : 'falling'); }
+    $(cardId).style.borderLeftColor = color;
+    $(nextId).textContent = 'Příště: ' + getNextEventText(days, period);
+  }
+
+  // ── Core calculation ───────────────────────────────────────────────────────
+
+  function calculate() {
+    const birthDate  = getBirthDate();
+    const targetDate = (() => {
+      const v = elTarget.value; if (!v) return null;
+      const d = new Date(v + 'T00:00:00'); return isNaN(d.getTime()) ? null : d;
+    })();
+
+    if (!birthDate)  { showPlaceholder(); return; }
+    if (!targetDate) { showPlaceholder('Zadejte cílový den analýzy.', '📅'); return; }
+
+    const days = daysBetween(birthDate, targetDate);
+    if (days < 0) { showPlaceholder('Cílový den je před datem narození.', '⚠️'); return; }
+
+    const age = days / 365.25, gender = elGender.value, work = elWork.value;
+    const sleepOrig = parseFloat(elSleep.value);
+    let sleep = sleepOrig;
+    if (age > 35 && sleep < 1.0) sleep = Math.max(0.1, sleep - (age - 35) * 0.008);
+
+    let phys = Math.sin(TWO_PI * days / 23);
+    let emo  = Math.sin(TWO_PI * days / 28);
+    let intl = Math.sin(TWO_PI * days / 33);
+    if (gender === 'female') emo = Math.min(1, Math.max(-1, emo * 1.3));
+
+    let wP, wE, wI;
+    if (work === 'mental') { wI = 0.60; wE = 0.25; wP = 0.15; }
+    else                   { wP = 0.60; wE = 0.20; wI = 0.20; }
+    if (gender === 'female') {
+      wE += 0.05; wI -= 0.05;
+      const s = wP + wE + wI; wP /= s; wE /= s; wI /= s;
+    }
+    const readiness = Math.max(0, Math.min(100,
+      ((phys + 1) / 2 * wP + (emo + 1) / 2 * wE + (intl + 1) / 2 * wI) * sleep * 100
+    ));
+
+    // Info box
+    $('infoAge').textContent   = formatAge(days);
+    $('infoDays').textContent  = Math.round(days).toLocaleString('cs-CZ');
+    $('infoSleep').textContent = sleep.toFixed(3);
+    const penalized = sleep < sleepOrig - 0.0001;
+    $('penaltyRow').style.display = penalized ? '' : 'none';
+    if (penalized) $('infoPenalty').textContent = '−' + (sleepOrig - sleep).toFixed(3);
+
+    // Readiness card
+    const rv = $('readinessVal'), rf = $('readinessFill'), rd = $('readinessDesc');
+    rv.textContent = Math.round(readiness) + ' %';
+    rf.style.width = readiness + '%';
+    if (readiness >= 65) {
+      rv.style.color = '#22c55e'; rf.style.background = '#22c55e';
+      rv.style.textShadow = '0 0 50px rgba(34,197,94,0.4)';
+      rd.textContent = 'Vysoká připravenost — optimální čas pro náročné úkoly';
+    } else if (readiness < 35) {
+      rv.style.color = '#ef4444'; rf.style.background = '#ef4444';
+      rv.style.textShadow = '0 0 50px rgba(239,68,68,0.4)';
+      rd.textContent = 'Nízká připravenost — doporučena zvýšená opatrnost';
+    } else {
+      rv.style.color = '#f97316'; rf.style.background = '#f97316';
+      rv.style.textShadow = '0 0 50px rgba(249,115,22,0.4)';
+      rd.textContent = 'Střední připravenost — standardní výkonnostní den';
+    }
+
+    updateBioCard(['physVal','physFill','physPhase','physNext','cardPhys'], phys, days, 23, '#f97316');
+    updateBioCard(['emoVal', 'emoFill', 'emoPhase', 'emoNext', 'cardEmo'],  emo, days, 28, '#ec4899');
+    updateBioCard(['intVal', 'intFill', 'intPhase', 'intNext', 'cardInt'], intl, days, 33, '#6aa6fd');
+
+    $('placeholder').style.display = 'none';
+    $('dashboard').classList.add('visible');
+    $('infoBox').style.display = 'block';
+
+    // 30-day chart
+    const bc = $('bioChart');
+    bc.width  = bc.closest('.card-chart').clientWidth - 36;
+    bc.height = 240;
+    chartState = { birthDate, targetDate, centerDays: days, gender };
+    drawChart(null);
+
+    // Year chart
+    const yc = $('yearChart');
+    yc.width  = yc.closest('.card-chart').clientWidth - 36;
+    yc.height = 200;
+    $('yearLabel').textContent = targetDate.getFullYear();
+    yearChartState = { birthDate, targetDate, centerDays: days, gender };
+    drawYearChart(null);
+  }
+
+  // ── Canvas shared utilities ────────────────────────────────────────────────
+
+  function rrect(ctx, x, y, w, h, r) {
+    ctx.beginPath();
+    ctx.moveTo(x + r, y);
+    ctx.lineTo(x + w - r, y); ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+    ctx.lineTo(x + w, y + h - r); ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+    ctx.lineTo(x + r, y + h); ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+    ctx.lineTo(x, y + r); ctx.quadraticCurveTo(x, y, x + r, y);
+    ctx.closePath();
+  }
+
+  function drawTooltip(ctx, hoverX, hDate, values, PL, CW, PT) {
+    const dateStr = hDate.toLocaleDateString('cs-CZ', { day: 'numeric', month: 'numeric', year: 'numeric' });
+    const TW = 148, TH = 84, TM = 12;
+    const tx = (hoverX + TM + TW > PL + CW + 4) ? hoverX - TW - TM : hoverX + TM;
+    const ty = PT + 6;
+    rrect(ctx, tx, ty, TW, TH, 6);
+    ctx.fillStyle = 'rgba(10,10,14,0.94)'; ctx.fill();
+    ctx.strokeStyle = '#32323e'; ctx.lineWidth = 1; ctx.stroke();
+    ctx.font = 'bold 10px -apple-system, sans-serif';
+    ctx.fillStyle = '#94a3b8'; ctx.textAlign = 'left';
+    ctx.fillText(dateStr, tx + 9, ty + 16);
+    values.forEach(([lbl, v, c], i) => {
+      const ry = ty + 32 + i * 17;
+      ctx.font = '10px -apple-system, sans-serif';
+      ctx.fillStyle = '#4a5568'; ctx.textAlign = 'left'; ctx.fillText(lbl, tx + 9, ry);
+      ctx.fillStyle = c; ctx.textAlign = 'right'; ctx.fillText(signedPct(v), tx + TW - 9, ry);
+    });
+  }
+
+  // Build curve points array (shared logic)
+  function buildCurvePoints(centerDays, gender, STEPS, RANGE, PL, CW, midY, CH) {
+    const defs = [
+      { period: 23, color: '#f97316', emoScale: 1 },
+      { period: 28, color: '#ec4899', emoScale: gender === 'female' ? 1.3 : 1 },
+      { period: 33, color: '#6aa6fd', emoScale: 1 },
+    ];
+    return defs.map(({ period, color, emoScale }, ci) => ({
+      color,
+      pts: Array.from({ length: STEPS + 1 }, (_, i) => {
+        const d = centerDays + (i / STEPS) * RANGE;
+        let v = Math.sin(TWO_PI * d / period);
+        if (ci === 1) v = Math.min(1, Math.max(-1, v * emoScale));
+        return { x: PL + (i / STEPS) * CW, y: midY - v * (CH / 2), v };
+      }),
+    }));
+  }
+
+  function drawCurveFills(ctx, curves, midY, PT, CH, W) {
+    curves.forEach(({ color, pts }) => {
+      const buildPath = () => {
+        ctx.beginPath();
+        ctx.moveTo(pts[0].x, midY);
+        pts.forEach(p => ctx.lineTo(p.x, p.y));
+        ctx.lineTo(pts[pts.length - 1].x, midY);
+        ctx.closePath();
+      };
+      const gT = ctx.createLinearGradient(0, PT, 0, midY);
+      gT.addColorStop(0, color + '2e'); gT.addColorStop(1, color + '00');
+      ctx.save(); ctx.beginPath(); ctx.rect(0, PT, W, midY - PT); ctx.clip();
+      buildPath(); ctx.fillStyle = gT; ctx.fill(); ctx.restore();
+
+      const gB = ctx.createLinearGradient(0, midY, 0, PT + CH);
+      gB.addColorStop(0, color + '00'); gB.addColorStop(1, color + '2e');
+      ctx.save(); ctx.beginPath(); ctx.rect(0, midY, W, CH / 2 + 1); ctx.clip();
+      buildPath(); ctx.fillStyle = gB; ctx.fill(); ctx.restore();
+    });
+  }
+
+  function drawCurveLines(ctx, curves, lineWidth) {
+    curves.forEach(({ color, pts }) => {
+      ctx.beginPath(); ctx.strokeStyle = color; ctx.lineWidth = lineWidth;
+      pts.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y));
+      ctx.stroke();
+    });
+  }
+
+  function drawHGrid(ctx, PT, CH, PL, W, PR) {
+    [0, 0.25, 0.5, 0.75, 1].forEach((t, i) => {
+      ctx.strokeStyle = i === 2 ? '#272730' : '#1c1c22'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(PL, PT + t * CH); ctx.lineTo(W - PR, PT + t * CH); ctx.stroke();
+    });
+  }
+
+  function drawYLabels(ctx, PT, CH, PL) {
+    ctx.fillStyle = '#38404e'; ctx.font = '10px -apple-system, sans-serif'; ctx.textAlign = 'right';
+    ['+100%', '+50%', '0%', '−50%', '−100%'].forEach((lbl, i) =>
+      ctx.fillText(lbl, PL - 5, PT + i * CH / 4 + 3.5)
+    );
+  }
+
+  // ── 30-day chart ───────────────────────────────────────────────────────────
+
+  function drawChart(hoverX) {
+    if (!chartState) return;
+    const { birthDate, targetDate, centerDays, gender } = chartState;
+    const canvas = $('bioChart');
+    const W = canvas.width, H = canvas.height;
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, W, H);
+
+    const RANGE = 30, STEPS = RANGE * 4;
+    const PL = 42, PR = 14, PT = 26, PB = 36;
+    const CW = W - PL - PR, CH = H - PT - PB, midY = PT + CH / 2;
+
+    drawHGrid(ctx, PT, CH, PL, W, PR);
+    drawYLabels(ctx, PT, CH, PL);
+
+    const curves = buildCurvePoints(centerDays - 15, gender, STEPS, RANGE, PL, CW, midY, CH);
+    drawCurveFills(ctx, curves, midY, PT, CH, W);
+    drawCurveLines(ctx, curves, 2);
+
+    // Zero-crossing dots
+    const defs = [
+      { period: 23, emoScale: 1 },
+      { period: 28, emoScale: gender === 'female' ? 1.3 : 1 },
+      { period: 33, emoScale: 1 },
+    ];
+    const COLORS = ['#f97316', '#ec4899', '#6aa6fd'];
+    defs.forEach(({ period, emoScale }, ci) => {
+      const zPts = Array.from({ length: RANGE + 1 }, (_, i) => {
+        let v = Math.sin(TWO_PI * (centerDays - 15 + i) / period);
+        if (ci === 1) v = Math.min(1, Math.max(-1, v * emoScale));
+        return { x: PL + (i / RANGE) * CW, v };
+      });
+      ctx.fillStyle = COLORS[ci];
+      for (let i = 1; i < zPts.length; i++) {
+        const a = zPts[i - 1], b = zPts[i];
+        if (a.v * b.v <= 0) {
+          const f = Math.abs(a.v) / (Math.abs(a.v) + Math.abs(b.v) + 1e-9);
+          ctx.beginPath(); ctx.arc(a.x + f * (b.x - a.x), midY, 3.5, 0, TWO_PI); ctx.fill();
+        }
+      }
+    });
+
+    // X-axis labels
+    const startDate = new Date(targetDate.getTime() - 15 * MS_DAY);
+    ctx.fillStyle = '#38404e'; ctx.font = '10px -apple-system, sans-serif';
+    for (let i = 0; i <= RANGE; i += 5) {
+      const d = new Date(startDate.getTime() + i * MS_DAY);
+      ctx.textAlign = i === 0 ? 'left' : i === RANGE ? 'right' : 'center';
+      ctx.fillText(`${d.getDate()}.${d.getMonth() + 1}.`, PL + (i / RANGE) * CW, H - PB + 14);
+    }
+
+    // Center dashed line
+    const cx = PL + CW / 2;
+    ctx.save(); ctx.setLineDash([3, 4]); ctx.strokeStyle = '#4a4a5e'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(cx, PT - 8); ctx.lineTo(cx, PT + CH); ctx.stroke(); ctx.restore();
+    const isToday = targetDate.toISOString().slice(0, 10) === new Date().toISOString().slice(0, 10);
+    ctx.fillStyle = '#6aa6fd'; ctx.font = 'bold 11px -apple-system, sans-serif'; ctx.textAlign = 'center';
+    ctx.fillText(isToday ? 'Dnes' : 'Cíl', cx, PT - 10);
+
+    // Hover
+    if (hoverX !== null && hoverX >= PL && hoverX <= PL + CW) {
+      const frac = (hoverX - PL) / CW;
+      const dayOff = frac * RANGE - 15;
+      const hDay  = centerDays + dayOff;
+      const hDate = new Date(targetDate.getTime() + dayOff * MS_DAY);
+
+      ctx.save(); ctx.setLineDash([2, 3]); ctx.strokeStyle = 'rgba(248,250,252,0.1)'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(hoverX, PT); ctx.lineTo(hoverX, PT + CH); ctx.stroke(); ctx.restore();
+
+      let vP = Math.sin(TWO_PI * hDay / 23);
+      let vE = Math.sin(TWO_PI * hDay / 28);
+      let vI = Math.sin(TWO_PI * hDay / 33);
+      if (gender === 'female') vE = Math.min(1, Math.max(-1, vE * 1.3));
+
+      [[vP,'#f97316'],[vE,'#ec4899'],[vI,'#6aa6fd']].forEach(([v, c]) => {
+        ctx.beginPath(); ctx.arc(hoverX, midY - v * (CH / 2), 4.5, 0, TWO_PI);
+        ctx.fillStyle = c; ctx.fill(); ctx.strokeStyle = '#0f0f12'; ctx.lineWidth = 1.5; ctx.stroke();
+      });
+      drawTooltip(ctx, hoverX, hDate,
+        [['Fyzický',vP,'#f97316'],['Emoční',vE,'#ec4899'],['Intelektuální',vI,'#6aa6fd']], PL, CW, PT);
+    }
+  }
+
+  // ── Year chart ─────────────────────────────────────────────────────────────
+
+  const MONTH_SHORT = ['Led','Úno','Bře','Dub','Kvě','Čvn','Čvc','Srp','Zář','Říj','Lis','Pro'];
+
+  function drawYearChart(hoverX) {
+    if (!yearChartState) return;
+    const { birthDate, targetDate, gender } = yearChartState;
+
+    const year      = targetDate.getFullYear();
+    const yearStart = new Date(year, 0, 1);
+    const isLeap    = (year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0));
+    const totalDays = isLeap ? 366 : 365;
+    const dayOffset = daysBetween(birthDate, yearStart); // days from birth to Jan 1
+
+    const canvas = $('yearChart');
+    const W = canvas.width, H = canvas.height;
+    const ctx = canvas.getContext('2d');
+    ctx.clearRect(0, 0, W, H);
+
+    const PL = 42, PR = 14, PT = 22, PB = 34;
+    const CW = W - PL - PR, CH = H - PT - PB, midY = PT + CH / 2;
+    const STEPS = totalDays * 2;
+
+    drawHGrid(ctx, PT, CH, PL, W, PR);
+    drawYLabels(ctx, PT, CH, PL);
+
+    // Monthly vertical grid + x-axis labels
+    for (let m = 0; m < 12; m++) {
+      const dStart = daysBetween(yearStart, new Date(year, m,  1));
+      const dNext  = daysBetween(yearStart, new Date(year, m + 1, 1));
+      const xLine  = PL + (dStart / totalDays) * CW;
+      const xLabel = PL + ((dStart + dNext) / 2 / totalDays) * CW;
+
+      if (m > 0) {
+        ctx.strokeStyle = '#1e1e26'; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(xLine, PT); ctx.lineTo(xLine, PT + CH); ctx.stroke();
+      }
+      ctx.fillStyle = '#38404e'; ctx.font = '10px -apple-system, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText(MONTH_SHORT[m], xLabel, H - PB + 14);
+    }
+
+    const curves = buildCurvePoints(dayOffset, gender, STEPS, totalDays, PL, CW, midY, CH);
+    drawCurveFills(ctx, curves, midY, PT, CH, W);
+    drawCurveLines(ctx, curves, 1.5);
+
+    // Target date dashed line
+    const targetOff = daysBetween(yearStart, targetDate);
+    if (targetOff >= 0 && targetOff <= totalDays) {
+      const tx = PL + (targetOff / totalDays) * CW;
+      ctx.save(); ctx.setLineDash([3, 4]); ctx.strokeStyle = '#4a4a5e'; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.moveTo(tx, PT - 6); ctx.lineTo(tx, PT + CH); ctx.stroke(); ctx.restore();
+      const isToday = targetDate.toISOString().slice(0, 10) === new Date().toISOString().slice(0, 10);
+      ctx.fillStyle = '#6aa6fd'; ctx.font = 'bold 10px -apple-system, sans-serif'; ctx.textAlign = 'center';
+      ctx.fillText(isToday ? 'Dnes' : 'Cíl', tx, PT - 8);
+    }
+
+    // Hover
+    if (hoverX !== null && hoverX >= PL && hoverX <= PL + CW) {
+      const frac  = (hoverX - PL) / CW;
+      const dOff  = frac * totalDays;
+      const hDay  = dayOffset + dOff;
+      const hDate = new Date(yearStart.getTime() + dOff * MS_DAY);
+
+      ctx.save(); ctx.setLineDash([2, 3]); ctx.strokeStyle = 'rgba(248,250,252,0.1)'; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(hoverX, PT); ctx.lineTo(hoverX, PT + CH); ctx.stroke(); ctx.restore();
+
+      let vP = Math.sin(TWO_PI * hDay / 23);
+      let vE = Math.sin(TWO_PI * hDay / 28);
+      let vI = Math.sin(TWO_PI * hDay / 33);
+      if (gender === 'female') vE = Math.min(1, Math.max(-1, vE * 1.3));
+
+      [[vP,'#f97316'],[vE,'#ec4899'],[vI,'#6aa6fd']].forEach(([v, c]) => {
+        ctx.beginPath(); ctx.arc(hoverX, midY - v * (CH / 2), 3.5, 0, TWO_PI);
+        ctx.fillStyle = c; ctx.fill(); ctx.strokeStyle = '#0f0f12'; ctx.lineWidth = 1.5; ctx.stroke();
+      });
+      drawTooltip(ctx, hoverX, hDate,
+        [['Fyzický',vP,'#f97316'],['Emoční',vE,'#ec4899'],['Intelektuální',vI,'#6aa6fd']], PL, CW, PT);
+    }
+  }
+
+  // ── Init ───────────────────────────────────────────────────────────────────
+
+  elTarget.value = new Date().toISOString().slice(0, 10);
+  initBirthSelects();
+  loadLS();
+  calculate();
+
+  let resizeTimer;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(calculate, 120);
+  });
+</script>
+</body>
+</html>

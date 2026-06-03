@@ -1,0 +1,905 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>KONDICIOGRAM — ANALYZA BIORYMU</title>
+  <style>
+    :root {
+      --ink:    #1a1a30;
+      --ink2:   #4a4a6a;
+      --paper:  #f4f1e4;
+      --bar:    #e2ede2;
+      --red:    #7a1010;
+      --grn:    #0a2a10;
+      --amber:  #6a4800;
+      --stripe: 40px;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 13px;
+      background: #8a8880;
+      min-height: 100vh;
+      line-height: 1.55;
+    }
+
+    /* ── Sprocket | Paper | Sprocket ── */
+    .page-wrap { display: flex; min-height: 100vh; }
+
+    .sprocket {
+      width: 30px; flex-shrink: 0;
+      background: #bebab0;
+      background-image:
+        radial-gradient(circle at 50% 15px, #eae6d8 9px, transparent 9px),
+        linear-gradient(to right, #b0ac a4 0 2px, transparent 2px);
+      background-size: 30px 30px, 30px 100%;
+    }
+
+    /* ── Paper ── */
+    .paper {
+      flex: 1;
+      min-height: 100vh;
+      background-color: var(--paper);
+      background-image: repeating-linear-gradient(
+        to bottom,
+        var(--bar)   0px, var(--bar)   var(--stripe),
+        var(--paper) var(--stripe), var(--paper) calc(var(--stripe) * 2)
+      );
+      color: var(--ink);
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* ── Page header ── */
+    .page-hdr {
+      padding: 8px 18px 5px;
+      border-bottom: 2px solid var(--ink);
+      background: rgba(0,0,20,0.03);
+    }
+    .hdr-title {
+      font-size: 0.88rem; font-weight: bold;
+      letter-spacing: 2px; text-transform: uppercase;
+    }
+    .hdr-meta {
+      font-size: 0.7rem; color: var(--ink2);
+      display: flex; justify-content: space-between; flex-wrap: wrap; gap: 4px;
+    }
+    .hdr-rule { font-size: 0.65rem; color: var(--ink2); overflow: hidden; white-space: nowrap; margin-top: 2px; }
+
+    /* ── Main layout ── */
+    .main-layout {
+      display: grid;
+      grid-template-columns: 258px 1fr;
+      flex: 1;
+    }
+
+    /* ── Left: inputs ── */
+    .panel-inputs {
+      padding: 12px 12px 12px 14px;
+      border-right: 1px dashed var(--ink2);
+      overflow-y: auto; scrollbar-width: thin;
+    }
+
+    .sec-hdr {
+      font-size: 0.71rem; font-weight: bold;
+      text-transform: uppercase; letter-spacing: 0.8px;
+      color: var(--ink);
+      border-bottom: 1px solid var(--ink);
+      padding-bottom: 2px; margin-bottom: 9px;
+    }
+
+    .form-group { margin-bottom: 9px; }
+
+    label {
+      display: block; font-size: 0.68rem;
+      text-transform: uppercase; color: var(--ink2);
+      margin-bottom: 2px; letter-spacing: 0.4px;
+    }
+
+    input[type="date"], select {
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 0.79rem; width: 100%;
+      background: #fffef5;
+      border: 1px solid var(--ink); border-radius: 0;
+      color: var(--ink); padding: 3px 5px;
+      appearance: none; -webkit-appearance: none; cursor: pointer;
+    }
+    input[type="date"]:focus, select:focus {
+      outline: 1px dashed var(--ink); outline-offset: 1px; background: #fffff8;
+    }
+    input[type="date"]::-webkit-calendar-picker-indicator { filter: invert(0.25); cursor: pointer; }
+    select option { background: #fffef5; color: var(--ink); }
+
+    .date-row { display: grid; grid-template-columns: 46px 1fr 62px; gap: 4px; }
+
+    hr.divider { border: none; border-top: 1px dashed var(--ink2); margin: 10px 0; }
+
+    .info-box {
+      border: 1px solid var(--ink2); padding: 6px 8px;
+      margin-top: 10px; font-size: 0.76rem;
+    }
+    .info-row { display: flex; justify-content: space-between; padding: 1px 0; }
+    .info-key { color: var(--ink2); text-transform: uppercase; font-size: 0.68rem; }
+    .info-val { color: var(--ink); font-weight: bold; }
+
+    /* ── Right: dashboard ── */
+    .panel-dash {
+      padding: 12px 14px;
+      overflow-y: auto; scrollbar-width: thin;
+      display: flex; flex-direction: column; gap: 10px;
+    }
+
+    /* Placeholder */
+    #placeholder {
+      text-align: center; padding: 60px 20px; color: var(--ink2);
+    }
+    #placeholder .ph-ico { font-size: 1.5rem; display: block; margin-bottom: 8px; }
+    #placeholder p { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 1.5px; }
+
+    /* Dashboard */
+    #dashboard { display: none; flex-direction: column; gap: 10px; }
+    #dashboard.visible { display: flex; }
+
+    /* Retro box */
+    .rbox { border: 1px solid var(--ink); }
+    .rbox-title {
+      font-size: 0.71rem; font-weight: bold;
+      text-transform: uppercase; letter-spacing: 0.8px;
+      padding: 3px 8px; border-bottom: 1px solid var(--ink);
+      background: rgba(0,0,20,0.04);
+    }
+    .rbox-body { padding: 8px 10px; }
+
+    /* Readiness */
+    .read-num {
+      font-size: 4.2rem; font-weight: bold;
+      letter-spacing: -3px; line-height: 1;
+      text-align: center; margin-bottom: 2px;
+    }
+    .read-lbl {
+      font-size: 0.74rem; text-transform: uppercase;
+      letter-spacing: 1px; text-align: center; margin-bottom: 4px;
+    }
+    .read-bar { font-size: 0.84rem; text-align: center; letter-spacing: 0; }
+    .read-zones { font-size: 0.66rem; color: var(--ink2); text-align: center; margin-top: 2px; }
+
+    /* Bio row */
+    .bio-row { display: grid; grid-template-columns: repeat(3,1fr); gap: 8px; }
+    .card-bio .rbox-body { padding: 7px 8px; }
+    .bio-val { font-size: 1.7rem; font-weight: bold; line-height: 1.1; margin-bottom: 1px; }
+    .bio-per { font-size: 0.67rem; color: var(--ink2); text-transform: uppercase; margin-bottom: 3px; }
+    .bio-phase { font-size: 0.7rem; font-weight: bold; margin-bottom: 1px; }
+    .bio-phase.rising   { color: var(--grn); }
+    .bio-phase.falling  { color: var(--red); }
+    .bio-phase.critical { color: var(--amber); }
+    .bio-nxt { font-size: 0.67rem; color: var(--ink2); margin-bottom: 5px; }
+    .bio-bar { font-size: 0.71rem; letter-spacing: 0; }
+
+    /* Canvas chart */
+    .chart-wrap { border: 1px solid var(--ink); }
+    .chart-hdr {
+      font-size: 0.71rem; font-weight: bold;
+      text-transform: uppercase; letter-spacing: 0.8px;
+      padding: 3px 8px; border-bottom: 1px solid var(--ink);
+      background: rgba(0,0,20,0.04);
+      display: flex; justify-content: space-between; align-items: center;
+      flex-wrap: wrap; gap: 6px;
+    }
+    .legend { display: flex; gap: 10px; }
+    .leg { display: flex; align-items: center; gap: 4px; font-size: 0.68rem; color: var(--ink2); }
+    .leg-sq { width: 8px; height: 8px; flex-shrink: 0; }
+    canvas { display: block; width: 100%; cursor: crosshair; }
+
+    /* Page footer */
+    .page-ftr {
+      border-top: 2px solid var(--ink); padding: 4px 18px;
+      font-size: 0.67rem; color: var(--ink2);
+      display: flex; justify-content: space-between;
+      background: rgba(0,0,20,0.03);
+    }
+
+    /* Responsive */
+    @media (max-width: 820px) {
+      .main-layout { grid-template-columns: 1fr; }
+      .panel-inputs { border-right: none; border-bottom: 1px dashed var(--ink2); }
+      .bio-row { grid-template-columns: 1fr 1fr; }
+      .sprocket { width: 18px; }
+    }
+    @media (max-width: 500px) {
+      .bio-row { grid-template-columns: 1fr; }
+      .read-num { font-size: 3rem; }
+      .panel-dash { padding: 10px; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="page-wrap">
+  <div class="sprocket"></div>
+
+  <div class="paper">
+
+    <!-- Page header -->
+    <div class="page-hdr">
+      <div class="hdr-title">*** KONDICIOGRAM *** BIOLOGICKA ANALYZA BIORYMU ***</div>
+      <div class="hdr-meta">
+        <span>VER: 1.0  //  BIOLOGICKY KORIGOVANY VYPOCET</span>
+        <span id="hdrTs"></span>
+      </div>
+      <div class="hdr-rule" id="hdrRule"></div>
+    </div>
+
+    <div class="main-layout">
+
+      <!-- LEFT: Inputs -->
+      <aside class="panel-inputs">
+        <div class="sec-hdr">&gt;&gt; UZIVATELSKY PROFIL</div>
+
+        <div class="form-group">
+          <label>Datum narozeni</label>
+          <div class="date-row">
+            <select id="birthDay"   title="Den"></select>
+            <select id="birthMonth" title="Mesic"></select>
+            <select id="birthYear"  title="Rok"></select>
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="gender">Biologicke pohlavı</label>
+          <select id="gender">
+            <option value="male">MUZ</option>
+            <option value="female">ZENA</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="workType">Typ zateze / profese</label>
+          <select id="workType">
+            <option value="mental">MENTALNI</option>
+            <option value="physical">FYZICKA</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label for="sleep">Kvalita dnesniho spanku</label>
+          <select id="sleep">
+            <option value="1.0">VYNIKAJICI  [koef: 1.000]</option>
+            <option value="0.7">PODPRUMERNA [koef: 0.700]</option>
+            <option value="0.4">KRITICKA    [koef: 0.400]</option>
+          </select>
+        </div>
+
+        <hr class="divider" />
+        <div class="sec-hdr">&gt;&gt; CIL ANALYZY</div>
+
+        <div class="form-group">
+          <label for="targetDate">Cilovy den</label>
+          <input type="date" id="targetDate" />
+        </div>
+
+        <div id="infoBox" class="info-box" style="display:none">
+          <div class="info-row">
+            <span class="info-key">Vek</span>
+            <span class="info-val" id="infoAge">---</span>
+          </div>
+          <div class="info-row">
+            <span class="info-key">Dni od narozeni</span>
+            <span class="info-val" id="infoDays">---</span>
+          </div>
+          <div class="info-row">
+            <span class="info-key">Koef. spanku</span>
+            <span class="info-val" id="infoSleep">---</span>
+          </div>
+          <div class="info-row" id="penaltyRow" style="display:none">
+            <span class="info-key">Vek. penalizace</span>
+            <span class="info-val" id="infoPenalty" style="color:var(--amber)">---</span>
+          </div>
+        </div>
+      </aside>
+
+      <!-- RIGHT: Dashboard -->
+      <main class="panel-dash">
+
+        <div id="placeholder">
+          <span class="ph-ico">[ * ]</span>
+          <p id="phMsg">ZADEJTE DATUM NAROZENI</p>
+          <p style="margin-top:6px;font-size:0.65rem;letter-spacing:0.5px">PRO ZAHAJENI ANALYZY BIORYMU</p>
+        </div>
+
+        <div id="dashboard">
+
+          <!-- Readiness index -->
+          <div class="rbox">
+            <div class="rbox-title">==&gt; INDEX SKUTECNE PRIPRAVENOSTI</div>
+            <div class="rbox-body" style="text-align:center;padding:12px">
+              <div class="read-num" id="readNum">---</div>
+              <div class="read-lbl" id="readLbl">&nbsp;</div>
+              <div class="read-bar" id="readBar">&nbsp;</div>
+              <div class="read-zones">NIZKA [0..35%] ---- STREDNI [35..65%] ---- VYSOKA [65..100%]</div>
+            </div>
+          </div>
+
+          <!-- 3 bio cycle cards -->
+          <div class="bio-row">
+            <div class="rbox card-bio">
+              <div class="rbox-title">FYZICKY [23D]</div>
+              <div class="rbox-body">
+                <div class="bio-val" id="physVal" style="color:var(--ink)">---</div>
+                <div class="bio-per">Perioda: 23 dni</div>
+                <div class="bio-phase" id="physPhase"></div>
+                <div class="bio-nxt"  id="physNxt"></div>
+                <div class="bio-bar"  id="physBar"></div>
+              </div>
+            </div>
+            <div class="rbox card-bio">
+              <div class="rbox-title">EMOCNI [28D]</div>
+              <div class="rbox-body">
+                <div class="bio-val" id="emoVal"  style="color:var(--red)">---</div>
+                <div class="bio-per">Perioda: 28 dni</div>
+                <div class="bio-phase" id="emoPhase"></div>
+                <div class="bio-nxt"  id="emoNxt"></div>
+                <div class="bio-bar"  id="emoBar"></div>
+              </div>
+            </div>
+            <div class="rbox card-bio">
+              <div class="rbox-title">INTELEKT [33D]</div>
+              <div class="rbox-body">
+                <div class="bio-val" id="intVal"  style="color:var(--grn)">---</div>
+                <div class="bio-per">Perioda: 33 dni</div>
+                <div class="bio-phase" id="intPhase"></div>
+                <div class="bio-nxt"  id="intNxt"></div>
+                <div class="bio-bar"  id="intBar"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- 30-day chart -->
+          <div class="chart-wrap">
+            <div class="chart-hdr">
+              <span>GRAF BIORYMU &mdash; +-15 DNI OD CILE</span>
+              <div class="legend">
+                <div class="leg"><div class="leg-sq" style="background:var(--ink)"></div>FYZ</div>
+                <div class="leg"><div class="leg-sq" style="background:var(--red)"></div>EMO</div>
+                <div class="leg"><div class="leg-sq" style="background:var(--grn)"></div>INT</div>
+              </div>
+            </div>
+            <canvas id="bioChart"></canvas>
+          </div>
+
+          <!-- Year chart -->
+          <div class="chart-wrap">
+            <div class="chart-hdr">
+              <span>ROCNI PREHLED &mdash; <span id="yearLabel">----</span></span>
+              <div class="legend">
+                <div class="leg"><div class="leg-sq" style="background:var(--ink)"></div>FYZ</div>
+                <div class="leg"><div class="leg-sq" style="background:var(--red)"></div>EMO</div>
+                <div class="leg"><div class="leg-sq" style="background:var(--grn)"></div>INT</div>
+              </div>
+            </div>
+            <canvas id="yearChart"></canvas>
+          </div>
+
+        </div><!-- /#dashboard -->
+      </main>
+    </div><!-- /.main-layout -->
+
+    <!-- Page footer -->
+    <div class="page-ftr">
+      <span>KONDICIOGRAM V1.0 // BIOLOGICKY KORIGOVANY VYPOCET BIORYTMU</span>
+      <span>STRANA: 001/001  LPT1: OK</span>
+    </div>
+
+  </div><!-- /.paper -->
+  <div class="sprocket"></div>
+</div>
+
+<script>
+  const TWO_PI = Math.PI * 2;
+  const MS_DAY = 86400000;
+  const LS_KEY = 'kondiciogram_v1'; // shared with modern version
+  const $ = id => document.getElementById(id);
+
+  const elTarget = $('targetDate');
+  const elGender = $('gender');
+  const elWork   = $('workType');
+  const elSleep  = $('sleep');
+
+  let chartState     = null;
+  let yearChartState = null;
+
+  // ── Header ─────────────────────────────────────────────────────────────────
+  function refreshHeader() {
+    const now = new Date();
+    $('hdrTs').textContent =
+      'TIS: ' + now.toLocaleDateString('cs-CZ') + '  CAS: ' +
+      now.toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+    const cols = Math.max(30, Math.floor(($('.paper') ? document.querySelector('.paper').clientWidth : 800) / 7.8));
+    $('hdrRule').textContent = '='.repeat(cols);
+  }
+  refreshHeader();
+  setInterval(refreshHeader, 1000);
+
+  // ── Birth date 3-select ────────────────────────────────────────────────────
+  function initBirthSelects() {
+    const months = ['LEDEN','UNOR','BREZEN','DUBEN','KVETEN','CERVEN',
+                    'CERVENEC','SRPEN','ZARI','RIJEN','LISTOPAD','PROSINEC'];
+    $('birthMonth').innerHTML = '<option value="">-- MESIC --</option>' +
+      months.map((m, i) => `<option value="${i + 1}">${m}</option>`).join('');
+    const curYear = new Date().getFullYear();
+    $('birthYear').innerHTML  = '<option value="">- ROK -</option>' +
+      Array.from({ length: curYear - 1919 }, (_, i) => curYear - i)
+           .map(y => `<option value="${y}">${y}</option>`).join('');
+    updateDays();
+  }
+
+  function updateDays() {
+    const m = parseInt($('birthMonth').value) || 0;
+    const y = parseInt($('birthYear').value)  || 0;
+    const sel  = $('birthDay');
+    const prev = sel.value;
+    const max  = (m && y) ? new Date(y, m, 0).getDate() : 31;
+    sel.innerHTML = '<option value="">D</option>' +
+      Array.from({ length: max }, (_, i) => `<option value="${i + 1}">${i + 1}</option>`).join('');
+    if (prev && parseInt(prev) <= max) sel.value = prev;
+  }
+
+  function getBirthDate() {
+    const d = parseInt($('birthDay').value);
+    const m = parseInt($('birthMonth').value);
+    const y = parseInt($('birthYear').value);
+    if (!d || !m || !y) return null;
+    const dt = new Date(y, m - 1, d);
+    if (dt.getFullYear() !== y || dt.getMonth() !== m - 1 || dt.getDate() !== d) return null;
+    return dt;
+  }
+
+  // ── localStorage ───────────────────────────────────────────────────────────
+  function saveLS() {
+    try {
+      localStorage.setItem(LS_KEY, JSON.stringify({
+        bd: $('birthDay').value, bm: $('birthMonth').value, by: $('birthYear').value,
+        gender: elGender.value, work: elWork.value, sleep: elSleep.value,
+        target: elTarget.value,
+      }));
+    } catch (e) {}
+  }
+
+  function loadLS() {
+    try {
+      const d = JSON.parse(localStorage.getItem(LS_KEY) || 'null');
+      if (!d) return;
+      if (d.by) $('birthYear').value = d.by;
+      if (d.bm) { $('birthMonth').value = d.bm; updateDays(); }
+      if (d.bd) $('birthDay').value   = d.bd;
+      if (d.gender) elGender.value = d.gender;
+      if (d.work)   elWork.value   = d.work;
+      if (d.sleep)  elSleep.value  = d.sleep;
+      if (d.target) elTarget.value = d.target;
+    } catch (e) {}
+  }
+
+  // ── Events ─────────────────────────────────────────────────────────────────
+  function onBirthChange(id) {
+    if (id === 'birthMonth' || id === 'birthYear') updateDays();
+    saveLS(); calculate();
+  }
+  ['birthDay','birthMonth','birthYear'].forEach(id =>
+    $(id).addEventListener('change', () => onBirthChange(id))
+  );
+  [elGender, elWork, elSleep, elTarget].forEach(el =>
+    el.addEventListener('change', () => { saveLS(); calculate(); })
+  );
+
+  // Canvas hover wiring
+  function wireHover(cid, stateRef, drawFn) {
+    const cv = $(cid);
+    cv.addEventListener('mousemove', e => {
+      if (!stateRef()) return;
+      const r = cv.getBoundingClientRect();
+      drawFn((e.clientX - r.left) * (cv.width / r.width));
+    });
+    cv.addEventListener('mouseleave', () => { if (stateRef()) drawFn(null); });
+  }
+  wireHover('bioChart',  () => chartState,    hx => drawChart(hx));
+  wireHover('yearChart', () => yearChartState, hx => drawYearChart(hx));
+
+  // ── Helpers ────────────────────────────────────────────────────────────────
+  function daysBetween(a, b) { return (b - a) / MS_DAY; }
+
+  function formatAge(days) {
+    const y = Math.floor(days / 365.25);
+    const m = Math.floor((days % 365.25) / 30.44);
+    return `${y}L ${m}M`;
+  }
+
+  function signedPct(v) {
+    const p = Math.round(Math.min(1, Math.max(-1, v)) * 100);
+    return (p >= 0 ? '+' : '') + p + '%';
+  }
+
+  function getPhaseInfo(days, period) {
+    const v  = Math.sin(TWO_PI * days / period);
+    const v1 = Math.sin(TWO_PI * (days + 0.5) / period);
+    return { isCritical: Math.abs(v) < 0.15, ascending: v1 > v };
+  }
+
+  function getNextEvt(days, period) {
+    const phase = ((days % period) + period) % period;
+    const cands = [
+      { lbl: 'VRCHOL', d: ((period / 4     - phase + period) % period) || period },
+      { lbl: 'DNO',    d: ((3*period/4     - phase + period) % period) || period },
+      { lbl: 'PRECH',  d: ((period / 2     - phase + period) % period) || period },
+      { lbl: 'PRECH',  d: ((period         - phase) % period) || period },
+    ];
+    cands.sort((a, b) => a.d - b.d);
+    const n = Math.ceil(cands[0].d);
+    return n <= 1 ? `${cands[0].lbl}: DNES` : `${cands[0].lbl}: ZA ${n}D`;
+  }
+
+  // Text-based bars using block characters
+  function retroBar(value, W = 17) {
+    const c = Math.floor(W / 2);
+    const f = Math.round(Math.abs(value) * c);
+    const bar = Array(W).fill('░'); // ░
+    bar[c] = '|';
+    if (value >= 0) { for (let i = c+1; i <= c+f && i < W; i++) bar[i] = '█'; }
+    else            { for (let i = c-1; i >= c-f && i >= 0; i--) bar[i] = '█'; }
+    return '[' + bar.join('') + ']';
+  }
+
+  function readBar(pct, W = 20) {
+    const f = Math.round(pct / 100 * W);
+    return '[' + '█'.repeat(f) + '░'.repeat(W - f) + ']';
+  }
+
+  // ── Bio card update ────────────────────────────────────────────────────────
+  function updateBioCard(ids, raw, days, period) {
+    const [valId, phId, nxtId, barId] = ids;
+    $(valId).textContent = signedPct(raw);
+    $(barId).textContent = retroBar(raw);
+    const { isCritical, ascending } = getPhaseInfo(days, period);
+    const ph = $(phId);
+    if (isCritical) {
+      ph.textContent = '[~] KRITICKA FAZE'; ph.className = 'bio-phase critical';
+    } else {
+      ph.textContent = ascending ? '[^] STOUPA' : '[v] KLESA';
+      ph.className = 'bio-phase ' + (ascending ? 'rising' : 'falling');
+    }
+    $(nxtId).textContent = getNextEvt(days, period);
+  }
+
+  // ── Core calculation ───────────────────────────────────────────────────────
+  function calculate() {
+    const birthDate  = getBirthDate();
+    const targetDate = (() => {
+      const v = elTarget.value; if (!v) return null;
+      const d = new Date(v + 'T00:00:00'); return isNaN(d.getTime()) ? null : d;
+    })();
+
+    if (!birthDate)  { showPH(); return; }
+    if (!targetDate) { showPH('ZADEJTE CILOVY DEN ANALYZY'); return; }
+
+    const days = daysBetween(birthDate, targetDate);
+    if (days < 0) { showPH('CILOVY DEN JE PRED DATEM NAROZENI'); return; }
+
+    const age = days / 365.25;
+    const gender = elGender.value, work = elWork.value;
+    const sleepOrig = parseFloat(elSleep.value);
+    let sleep = sleepOrig;
+    if (age > 35 && sleep < 1.0) sleep = Math.max(0.1, sleep - (age - 35) * 0.008);
+
+    let phys = Math.sin(TWO_PI * days / 23);
+    let emo  = Math.sin(TWO_PI * days / 28);
+    let intl = Math.sin(TWO_PI * days / 33);
+    if (gender === 'female') emo = Math.min(1, Math.max(-1, emo * 1.3));
+
+    let wP, wE, wI;
+    if (work === 'mental') { wI = 0.60; wE = 0.25; wP = 0.15; }
+    else                   { wP = 0.60; wE = 0.20; wI = 0.20; }
+    if (gender === 'female') {
+      wE += 0.05; wI -= 0.05;
+      const s = wP + wE + wI; wP /= s; wE /= s; wI /= s;
+    }
+    const readiness = Math.max(0, Math.min(100,
+      ((phys+1)/2*wP + (emo+1)/2*wE + (intl+1)/2*wI) * sleep * 100
+    ));
+
+    // Info box
+    $('infoAge').textContent   = formatAge(days);
+    $('infoDays').textContent  = Math.round(days).toLocaleString('cs-CZ');
+    $('infoSleep').textContent = sleep.toFixed(3);
+    const penalized = sleep < sleepOrig - 0.0001;
+    $('penaltyRow').style.display = penalized ? '' : 'none';
+    if (penalized) $('infoPenalty').textContent = '-' + (sleepOrig - sleep).toFixed(3);
+
+    // Readiness card
+    const pct = Math.round(readiness);
+    $('readNum').textContent = pct + '%';
+    $('readBar').textContent = readBar(readiness);
+    if (readiness >= 65) {
+      $('readNum').style.color = 'var(--grn)';
+      $('readLbl').textContent = '>>> VYSOKA PRIPRAVENOST <<<';
+    } else if (readiness < 35) {
+      $('readNum').style.color = 'var(--red)';
+      $('readLbl').textContent = '!!! NIZKA PRIPRAVENOST !!!';
+    } else {
+      $('readNum').style.color = 'var(--ink)';
+      $('readLbl').textContent = '--- STREDNI PRIPRAVENOST ---';
+    }
+
+    updateBioCard(['physVal','physPhase','physNxt','physBar'], phys, days, 23);
+    updateBioCard(['emoVal', 'emoPhase', 'emoNxt', 'emoBar'],  emo, days, 28);
+    updateBioCard(['intVal', 'intPhase', 'intNxt', 'intBar'], intl, days, 33);
+
+    $('placeholder').style.display = 'none';
+    $('dashboard').classList.add('visible');
+    $('infoBox').style.display = 'block';
+
+    // Size and draw charts
+    const bc = $('bioChart');
+    bc.width  = bc.closest('.chart-wrap').clientWidth;
+    bc.height = 220;
+    chartState = { birthDate, targetDate, centerDays: days, gender };
+    drawChart(null);
+
+    const yc = $('yearChart');
+    yc.width  = yc.closest('.chart-wrap').clientWidth;
+    yc.height = 180;
+    $('yearLabel').textContent = targetDate.getFullYear();
+    yearChartState = { birthDate, targetDate, gender };
+    drawYearChart(null);
+  }
+
+  function showPH(msg) {
+    $('phMsg').textContent = msg ?? 'ZADEJTE DATUM NAROZENI';
+    $('placeholder').style.display = '';
+    $('dashboard').classList.remove('visible');
+    $('infoBox').style.display = 'none';
+    chartState = yearChartState = null;
+  }
+
+  // ── Retro canvas engine ────────────────────────────────────────────────────
+
+  const DOT = 3; // dot matrix pitch (px)
+  const INK = ['#1a1a30', '#7a1010', '#0a2a10']; // navy, maroon, forest
+
+  function snapDot(ctx, x, y, color) {
+    ctx.fillStyle = color;
+    ctx.fillRect(Math.round(x / DOT) * DOT, Math.round(y / DOT) * DOT, DOT - 1, DOT - 1);
+  }
+
+  function drawPaper(ctx, W, H) {
+    ctx.fillStyle = '#f4f1e4'; ctx.fillRect(0, 0, W, H);
+    for (let y = 0; y < H; y += 80) {
+      ctx.fillStyle = '#e2ede2';
+      ctx.fillRect(0, y, W, Math.min(40, H - y));
+    }
+  }
+
+  // Dashed grid lines
+  function drawGrid(ctx, PT, CH, PL, W, PR) {
+    [0, 0.25, 0.5, 0.75, 1].forEach((t, i) => {
+      const y = Math.round(PT + t * CH);
+      const segW = i === 2 ? 4 : 2, gap = i === 2 ? 3 : 8;
+      ctx.fillStyle = i === 2 ? '#808080' : '#b8b8b8';
+      for (let x = PL; x < W - PR; x += segW + gap) ctx.fillRect(x, y, segW, 1);
+    });
+  }
+
+  function drawYLbls(ctx, PT, CH, PL) {
+    ctx.fillStyle = '#4a4a6a'; ctx.textAlign = 'right';
+    ctx.font = '10px "Courier New", Courier, monospace';
+    ['+100', ' +50', '   0', ' -50', '-100'].forEach((lbl, i) =>
+      ctx.fillText(lbl, PL - 3, PT + i * CH / 4 + 3.5)
+    );
+  }
+
+  function drawRetroTooltip(ctx, hX, hDate, vals, PL, CW, PT) {
+    const ds = hDate.toLocaleDateString('cs-CZ', { day:'2-digit', month:'2-digit', year:'numeric' });
+    const lines = [ds,
+      `FYZ: ${signedPct(vals[0]).padStart(5)}`,
+      `EMO: ${signedPct(vals[1]).padStart(5)}`,
+      `INT: ${signedPct(vals[2]).padStart(5)}`,
+    ];
+    const LH = 14, TW = 112, TH = LH * 4 + 12, TM = 8;
+    const tx = (hX + TM + TW > PL + CW - 2) ? hX - TW - TM : hX + TM;
+    const ty = PT + 4;
+
+    ctx.fillStyle = '#fafaf0'; ctx.fillRect(tx, ty, TW, TH);
+    ctx.strokeStyle = '#1a1a30'; ctx.lineWidth = 1;
+    ctx.strokeRect(tx, ty, TW, TH);
+    ctx.strokeRect(tx + 2, ty + 2, TW - 4, TH - 4);
+
+    ctx.font = '11px "Courier New", Courier, monospace';
+    ctx.fillStyle = '#1a1a30'; ctx.textAlign = 'left';
+    lines.forEach((l, i) => ctx.fillText(l, tx + 6, ty + 12 + i * LH));
+  }
+
+  // ── 30-day dot-matrix chart ────────────────────────────────────────────────
+  function drawChart(hoverX) {
+    if (!chartState) return;
+    const { birthDate, targetDate, centerDays, gender } = chartState;
+    const cv = $('bioChart');
+    const W = cv.width, H = cv.height;
+    const ctx = cv.getContext('2d');
+
+    const RANGE = 30, STEPS = RANGE * 4;
+    const PL = 36, PR = 8, PT = 20, PB = 28;
+    const CW = W - PL - PR, CH = H - PT - PB, midY = PT + CH / 2;
+    const emoScale = gender === 'female' ? 1.3 : 1;
+    const periods = [23, 28, 33];
+    const scales  = [1, emoScale, 1];
+
+    drawPaper(ctx, W, H);
+    drawGrid(ctx, PT, CH, PL, W, PR);
+    drawYLbls(ctx, PT, CH, PL);
+
+    // Dot-matrix curves
+    periods.forEach((period, ci) => {
+      for (let i = 0; i <= STEPS; i++) {
+        const d = centerDays - 15 + (i / STEPS) * RANGE;
+        let v = Math.sin(TWO_PI * d / period) * scales[ci];
+        v = Math.min(1, Math.max(-1, v));
+        snapDot(ctx, PL + (i / STEPS) * CW, midY - v * (CH / 2), INK[ci]);
+      }
+    });
+
+    // Zero-crossing: tall mark
+    periods.forEach((period, ci) => {
+      const sc = scales[ci];
+      for (let i = 1; i <= RANGE; i++) {
+        let v1 = Math.min(1,Math.max(-1, Math.sin(TWO_PI*(centerDays-15+i-1)/period)*sc));
+        let v2 = Math.min(1,Math.max(-1, Math.sin(TWO_PI*(centerDays-15+i  )/period)*sc));
+        if (v1 * v2 <= 0) {
+          const f = Math.abs(v1) / (Math.abs(v1) + Math.abs(v2) + 1e-9);
+          const x = Math.round((PL + ((i-1+f)/RANGE)*CW) / DOT) * DOT;
+          ctx.fillStyle = INK[ci];
+          ctx.fillRect(x - 1, midY - 4, DOT + 1, 8);
+        }
+      }
+    });
+
+    // X labels
+    ctx.fillStyle = '#4a4a6a'; ctx.font = '10px "Courier New", Courier, monospace';
+    const startD = new Date(targetDate.getTime() - 15 * MS_DAY);
+    for (let i = 0; i <= RANGE; i += 5) {
+      const d = new Date(startD.getTime() + i * MS_DAY);
+      ctx.textAlign = i === 0 ? 'left' : i === RANGE ? 'right' : 'center';
+      ctx.fillText(`${d.getDate()}.${d.getMonth()+1}.`, PL + (i/RANGE)*CW, H - PB + 13);
+    }
+
+    // Center dashed line
+    const cx = Math.round(PL + CW / 2);
+    ctx.fillStyle = '#666';
+    for (let y = PT; y < PT + CH; y += 6) ctx.fillRect(cx, y, 1, 3);
+    const isTd = targetDate.toISOString().slice(0,10) === new Date().toISOString().slice(0,10);
+    ctx.fillStyle = '#1a1a30'; ctx.font = 'bold 10px "Courier New", Courier, monospace';
+    ctx.textAlign = 'center';
+    ctx.fillText(isTd ? '[DNES]' : '[ CIL ]', cx, PT - 5);
+
+    // Hover overlay
+    if (hoverX !== null && hoverX >= PL && hoverX <= PL + CW) {
+      const frac = (hoverX - PL) / CW;
+      const dayOff = frac * RANGE - 15;
+      const hDay  = centerDays + dayOff;
+      const hDate = new Date(targetDate.getTime() + dayOff * MS_DAY);
+
+      // Vertical tracker
+      ctx.fillStyle = 'rgba(80,80,120,0.2)';
+      for (let y = PT; y < PT + CH; y += 4) ctx.fillRect(Math.round(hoverX), y, 1, 2);
+
+      let vP = Math.sin(TWO_PI * hDay / 23);
+      let vE = Math.min(1,Math.max(-1, Math.sin(TWO_PI*hDay/28)*emoScale));
+      let vI = Math.sin(TWO_PI * hDay / 33);
+
+      // Cross-hair marks on each curve
+      [[vP,INK[0]],[vE,INK[1]],[vI,INK[2]]].forEach(([v,c]) => {
+        const y = Math.round(midY - v * (CH/2));
+        ctx.fillStyle = c; ctx.fillRect(Math.round(hoverX)-3, y-3, 7, 7);
+        ctx.fillStyle = '#f4f1e4'; ctx.fillRect(Math.round(hoverX)-1, y-1, 3, 3);
+      });
+
+      drawRetroTooltip(ctx, hoverX, hDate, [vP,vE,vI], PL, CW, PT);
+    }
+  }
+
+  // ── Year retro chart ───────────────────────────────────────────────────────
+  const MO_SH = ['LED','UNO','BRE','DUB','KVE','CVN','CVC','SRP','ZAR','RIJ','LIS','PRO'];
+
+  function drawYearChart(hoverX) {
+    if (!yearChartState) return;
+    const { birthDate, targetDate, gender } = yearChartState;
+    const year      = targetDate.getFullYear();
+    const yearStart = new Date(year, 0, 1);
+    const isLeap    = (year%4===0 && (year%100!==0 || year%400===0));
+    const totalDays = isLeap ? 366 : 365;
+    const dayOff    = daysBetween(birthDate, yearStart);
+    const emoScale  = gender === 'female' ? 1.3 : 1;
+
+    const cv = $('yearChart');
+    const W = cv.width, H = cv.height;
+    const ctx = cv.getContext('2d');
+
+    const PL = 36, PR = 8, PT = 18, PB = 26;
+    const CW = W - PL - PR, CH = H - PT - PB, midY = PT + CH / 2;
+
+    drawPaper(ctx, W, H);
+    drawGrid(ctx, PT, CH, PL, W, PR);
+    drawYLbls(ctx, PT, CH, PL);
+
+    // Monthly vertical dashes + labels
+    for (let m = 0; m < 12; m++) {
+      const dS = daysBetween(yearStart, new Date(year, m,   1));
+      const dN = daysBetween(yearStart, new Date(year, m+1, 1));
+      const xL = Math.round(PL + (dS / totalDays) * CW);
+      const xM = PL + ((dS + dN) / 2 / totalDays) * CW;
+      if (m > 0) {
+        ctx.fillStyle = '#c0c8c0';
+        for (let y = PT; y < PT + CH; y += 5) ctx.fillRect(xL, y, 1, 2);
+      }
+      ctx.fillStyle = '#4a4a6a'; ctx.font = '9px "Courier New", Courier, monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText(MO_SH[m], xM, H - PB + 12);
+    }
+
+    // Curves — thin lines (year = overview, dots would be too dense)
+    const periods = [23, 28, 33];
+    const scales  = [1, emoScale, 1];
+    periods.forEach((period, ci) => {
+      ctx.beginPath(); ctx.strokeStyle = INK[ci]; ctx.lineWidth = 1;
+      for (let i = 0; i <= totalDays; i++) {
+        let v = Math.sin(TWO_PI * (dayOff + i) / period) * scales[ci];
+        v = Math.min(1, Math.max(-1, v));
+        const x = PL + (i / totalDays) * CW;
+        const y = midY - v * (CH / 2);
+        i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+      }
+      ctx.stroke();
+    });
+
+    // Target date line
+    const tOff = daysBetween(yearStart, targetDate);
+    if (tOff >= 0 && tOff <= totalDays) {
+      const tx = Math.round(PL + (tOff / totalDays) * CW);
+      ctx.fillStyle = '#555';
+      for (let y = PT; y < PT + CH; y += 5) ctx.fillRect(tx, y, 1, 3);
+      const isTd = targetDate.toISOString().slice(0,10) === new Date().toISOString().slice(0,10);
+      ctx.fillStyle = '#1a1a30'; ctx.font = 'bold 9px "Courier New", Courier, monospace';
+      ctx.textAlign = 'center';
+      ctx.fillText(isTd ? '[D]' : '[C]', tx, PT - 4);
+    }
+
+    // Hover
+    if (hoverX !== null && hoverX >= PL && hoverX <= PL + CW) {
+      const frac  = (hoverX - PL) / CW;
+      const dOff  = frac * totalDays;
+      const hDay  = dayOff + dOff;
+      const hDate = new Date(yearStart.getTime() + dOff * MS_DAY);
+
+      ctx.fillStyle = 'rgba(80,80,120,0.2)';
+      for (let y = PT; y < PT + CH; y += 4) ctx.fillRect(Math.round(hoverX), y, 1, 2);
+
+      let vP = Math.sin(TWO_PI * hDay / 23);
+      let vE = Math.min(1,Math.max(-1, Math.sin(TWO_PI*hDay/28)*emoScale));
+      let vI = Math.sin(TWO_PI * hDay / 33);
+
+      [[vP,INK[0]],[vE,INK[1]],[vI,INK[2]]].forEach(([v,c]) => {
+        const y = Math.round(midY - v * (CH/2));
+        ctx.fillStyle = c; ctx.fillRect(Math.round(hoverX)-2, y-2, 5, 5);
+      });
+
+      drawRetroTooltip(ctx, hoverX, hDate, [vP,vE,vI], PL, CW, PT);
+    }
+  }
+
+  // ── Init ───────────────────────────────────────────────────────────────────
+  elTarget.value = new Date().toISOString().slice(0, 10);
+  initBirthSelects();
+  loadLS();
+  calculate();
+
+  let rt;
+  window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(calculate, 120); });
+</script>
+</body>
+</html>
