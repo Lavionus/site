@@ -1,0 +1,1623 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+  <title>✏️ Whiteboard</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: #1a1a1a;
+      color: #e0e0e0;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 20px;
+      background-color: #2a2a2a;
+      border-bottom: 1px solid #404040;
+      flex-shrink: 0;
+    }
+
+    .header h1 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #e0e0e0;
+    }
+
+    .toolbar {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 8px 16px;
+      background-color: #2a2a2a;
+      border-bottom: 1px solid #404040;
+      flex-wrap: wrap;
+      flex-shrink: 0;
+    }
+
+    .toolbar-separator {
+      width: 1px;
+      height: 28px;
+      background-color: #404040;
+      margin: 0 4px;
+      flex-shrink: 0;
+    }
+
+    .toolbar-group {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .tool-btn {
+      background-color: #404040;
+      color: #e0e0e0;
+      border: 1px solid #555;
+      border-radius: 6px;
+      padding: 6px 10px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: all 0.2s;
+      white-space: nowrap;
+      height: 34px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .tool-btn:hover {
+      background-color: #505050;
+      border-color: #6aa6fd;
+    }
+
+    .tool-btn.active {
+      background-color: #354a6e;
+      border-color: #6aa6fd;
+      color: #6aa6fd;
+    }
+
+    .action-btn {
+      background-color: #6aa6fd;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 6px 14px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: background-color 0.2s;
+      height: 34px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .action-btn:hover {
+      background-color: #5694f0;
+    }
+
+    .action-btn.danger {
+      background-color: #4a2c2c;
+      border: 1px solid #8b4444;
+      color: #ff8888;
+    }
+
+    .action-btn.danger:hover {
+      background-color: #5c3535;
+    }
+
+    .action-btn:disabled,
+    .tool-btn:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .size-slider {
+      -webkit-appearance: none;
+      width: 90px;
+      height: 4px;
+      background: #555;
+      border-radius: 2px;
+      outline: none;
+      cursor: pointer;
+    }
+
+    .size-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 16px;
+      height: 16px;
+      background: #6aa6fd;
+      border-radius: 50%;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+
+    .size-slider::-webkit-slider-thumb:hover {
+      background: #5694f0;
+      transform: scale(1.1);
+    }
+
+    .size-label {
+      font-size: 0.8rem;
+      color: #888;
+      min-width: 28px;
+      text-align: center;
+    }
+
+    .color-grid {
+      display: flex;
+      gap: 4px;
+      align-items: center;
+    }
+
+    .color-swatch {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: all 0.15s;
+      flex-shrink: 0;
+    }
+
+    .color-swatch:hover {
+      transform: scale(1.2);
+      border-color: #fff;
+    }
+
+    .color-swatch.active {
+      border-color: #6aa6fd;
+      transform: scale(1.15);
+      box-shadow: 0 0 0 1px #6aa6fd;
+    }
+
+    .color-picker-wrap {
+      position: relative;
+    }
+
+    .color-picker-btn {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      cursor: pointer;
+      border: 2px solid #555;
+      background: linear-gradient(135deg, #ff6b6b, #ffd93d, #6bcb77, #4d96ff);
+      transition: all 0.15s;
+      flex-shrink: 0;
+    }
+
+    .color-picker-btn:hover {
+      transform: scale(1.2);
+    }
+
+    .color-picker-btn.active {
+      border-color: #6aa6fd;
+      box-shadow: 0 0 0 1px #6aa6fd;
+    }
+
+    #customColorInput {
+      position: absolute;
+      opacity: 0;
+      width: 0;
+      height: 0;
+      pointer-events: none;
+    }
+
+    .opacity-label {
+      font-size: 0.8rem;
+      color: #888;
+      white-space: nowrap;
+    }
+
+    .canvas-container {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+      background-color: #252525;
+    }
+
+    #mainCanvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      cursor: crosshair;
+      touch-action: none;
+    }
+
+    #mainCanvas.cursor-eraser {
+      cursor: cell;
+    }
+
+    #mainCanvas.cursor-move {
+      cursor: grab;
+    }
+
+    #mainCanvas.cursor-moving {
+      cursor: grabbing;
+    }
+
+    #mainCanvas.cursor-fill {
+      cursor: copy;
+    }
+
+    #mainCanvas.cursor-text {
+      cursor: text;
+    }
+
+    .status-bar {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      padding: 5px 16px;
+      background-color: #2a2a2a;
+      border-top: 1px solid #404040;
+      font-size: 0.78rem;
+      color: #666;
+      flex-shrink: 0;
+    }
+
+    .status-item {
+      display: flex;
+      align-items: center;
+      gap: 5px;
+    }
+
+    .text-input-overlay {
+      position: absolute;
+      display: none;
+      border: 1px dashed #6aa6fd;
+      background: transparent;
+      color: #e0e0e0;
+      outline: none;
+      resize: none;
+      padding: 2px 4px;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      z-index: 10;
+      min-width: 100px;
+      min-height: 30px;
+      overflow: hidden;
+    }
+
+    /* === CRUD PANEL === */
+    .app-body {
+      flex: 1;
+      display: flex;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .drawings-panel {
+      width: 260px;
+      background-color: #222;
+      border-right: 1px solid #404040;
+      display: flex;
+      flex-direction: column;
+      flex-shrink: 0;
+      transform: translateX(-100%);
+      transition: transform 0.25s ease;
+      position: absolute;
+      top: 0; left: 0; bottom: 0;
+      z-index: 20;
+    }
+
+    .drawings-panel.open {
+      transform: translateX(0);
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 14px;
+      background-color: #2a2a2a;
+      border-bottom: 1px solid #404040;
+      flex-shrink: 0;
+    }
+
+    .panel-header h2 {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #e0e0e0;
+    }
+
+    .panel-close {
+      background: none;
+      border: none;
+      color: #888;
+      cursor: pointer;
+      font-size: 1.2rem;
+      padding: 2px 6px;
+      border-radius: 4px;
+      line-height: 1;
+    }
+
+    .panel-close:hover { color: #e0e0e0; background: #404040; }
+
+    .panel-new-btn {
+      margin: 10px;
+      background-color: #6aa6fd;
+      color: white;
+      border: none;
+      border-radius: 6px;
+      padding: 8px 12px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: background-color 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-shrink: 0;
+    }
+
+    .panel-new-btn:hover { background-color: #5694f0; }
+
+    .drawings-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0 10px 10px;
+    }
+
+    .drawings-list::-webkit-scrollbar { width: 5px; }
+    .drawings-list::-webkit-scrollbar-track { background: #1a1a1a; }
+    .drawings-list::-webkit-scrollbar-thumb { background: #404040; border-radius: 3px; }
+
+    .drawing-card {
+      background-color: #2a2a2a;
+      border: 1px solid #404040;
+      border-radius: 8px;
+      margin-bottom: 8px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: border-color 0.15s;
+    }
+
+    .drawing-card:hover { border-color: #6aa6fd; }
+
+    .drawing-card.active {
+      border-color: #6aa6fd;
+      background-color: #2c3a52;
+    }
+
+    .drawing-thumb {
+      width: 100%;
+      height: 110px;
+      object-fit: cover;
+      display: block;
+      background: #333;
+    }
+
+    .drawing-thumb-empty {
+      width: 100%;
+      height: 110px;
+      background: #333;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #555;
+      font-size: 2rem;
+    }
+
+    .drawing-meta {
+      padding: 8px 10px 6px;
+    }
+
+    .drawing-name {
+      font-size: 0.88rem;
+      font-weight: 600;
+      color: #e0e0e0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      margin-bottom: 3px;
+    }
+
+    .drawing-date {
+      font-size: 0.75rem;
+      color: #666;
+    }
+
+    .drawing-actions {
+      display: flex;
+      gap: 4px;
+      padding: 0 8px 8px;
+    }
+
+    .card-btn {
+      flex: 1;
+      background-color: #404040;
+      color: #bbb;
+      border: 1px solid #555;
+      border-radius: 4px;
+      padding: 4px 6px;
+      cursor: pointer;
+      font-size: 0.75rem;
+      transition: all 0.15s;
+      text-align: center;
+    }
+
+    .card-btn:hover { background-color: #505050; color: #e0e0e0; border-color: #6aa6fd; }
+    .card-btn.delete:hover { background-color: #4a2c2c; border-color: #f44336; color: #ff8888; }
+
+    .panel-empty {
+      text-align: center;
+      padding: 30px 16px;
+      color: #555;
+      font-size: 0.85rem;
+      line-height: 1.6;
+    }
+
+    /* === MODAL === */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.6);
+      z-index: 100;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-overlay.open { display: flex; }
+
+    .modal {
+      background: #2a2a2a;
+      border: 1px solid #404040;
+      border-radius: 10px;
+      padding: 24px;
+      width: 340px;
+      max-width: 90vw;
+    }
+
+    .modal h3 {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 16px;
+      color: #e0e0e0;
+    }
+
+    .modal input[type="text"] {
+      width: 100%;
+      padding: 9px 12px;
+      background-color: #404040;
+      border: 1px solid #555;
+      border-radius: 6px;
+      color: #e0e0e0;
+      font-size: 0.9rem;
+      margin-bottom: 16px;
+      outline: none;
+    }
+
+    .modal input[type="text"]:focus { border-color: #6aa6fd; }
+
+    .modal-actions {
+      display: flex;
+      gap: 8px;
+      justify-content: flex-end;
+    }
+
+    .modal-btn {
+      padding: 7px 18px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      font-size: 0.88rem;
+      transition: background 0.15s;
+    }
+
+    .modal-btn.primary { background: #6aa6fd; color: white; }
+    .modal-btn.primary:hover { background: #5694f0; }
+    .modal-btn.secondary { background: #404040; color: #bbb; border: 1px solid #555; }
+    .modal-btn.secondary:hover { background: #505050; color: #e0e0e0; }
+
+    @keyframes slideIn {
+      from { transform: translateX(30px); opacity: 0; }
+      to   { transform: translateX(0);    opacity: 1; }
+    }
+
+    /* current drawing name in header */
+    .current-drawing-name {
+      font-size: 0.85rem;
+      color: #888;
+      margin-left: 8px;
+      font-style: italic;
+    }
+
+    .current-drawing-name.unsaved { color: #ff9800; }
+
+    @media (max-width: 768px) {
+      .toolbar {
+        padding: 6px 10px;
+        gap: 4px;
+      }
+      .tool-btn {
+        padding: 5px 8px;
+        font-size: 0.8rem;
+      }
+      .size-slider {
+        width: 60px;
+      }
+      .color-swatch {
+        width: 20px;
+        height: 20px;
+      }
+      .drawings-panel {
+        width: 220px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="header">
+  <span style="font-size:1.3rem;">✏️</span>
+  <h1>Whiteboard</h1>
+  <span class="current-drawing-name" id="currentDrawingName"></span>
+</div>
+
+<div class="toolbar">
+
+  <!-- Nástroje kreslení -->
+  <div class="toolbar-group">
+    <button class="tool-btn active" id="toolPen" title="Pero (P)">✏️ Pero</button>
+    <button class="tool-btn" id="toolLine" title="Čára (L)">╱ Čára</button>
+    <button class="tool-btn" id="toolRect" title="Obdélník (R)">▭ Obdélník</button>
+    <button class="tool-btn" id="toolEllipse" title="Elipsa (E)">⬭ Elipsa</button>
+    <button class="tool-btn" id="toolArrow" title="Šipka (A)">➜ Šipka</button>
+    <button class="tool-btn" id="toolText" title="Text (T)">T Text</button>
+    <button class="tool-btn" id="toolFill" title="Výplň (F)">🪣 Výplň</button>
+    <button class="tool-btn" id="toolEraser" title="Guma (X)">⬜ Guma</button>
+    <button class="tool-btn" id="toolPan" title="Pohyb plátna (Space)">✋ Pohyb</button>
+  </div>
+
+  <div class="toolbar-separator"></div>
+
+  <!-- Barvy -->
+  <div class="toolbar-group color-grid">
+    <div class="color-swatch active" data-color="#e0e0e0" style="background:#e0e0e0;" title="Bílá"></div>
+    <div class="color-swatch" data-color="#ff5252" style="background:#ff5252;" title="Červená"></div>
+    <div class="color-swatch" data-color="#ff9800" style="background:#ff9800;" title="Oranžová"></div>
+    <div class="color-swatch" data-color="#ffd93d" style="background:#ffd93d;" title="Žlutá"></div>
+    <div class="color-swatch" data-color="#6bcb77" style="background:#6bcb77;" title="Zelená"></div>
+    <div class="color-swatch" data-color="#6aa6fd" style="background:#6aa6fd;" title="Modrá"></div>
+    <div class="color-swatch" data-color="#9c27b0" style="background:#9c27b0;" title="Fialová"></div>
+    <div class="color-swatch" data-color="#f44336" style="background:#f44336;" title="Tmavě červená"></div>
+    <div class="color-swatch" data-color="#4caf50" style="background:#4caf50;" title="Tmavě zelená"></div>
+    <div class="color-swatch" data-color="#1a1a1a" style="background:#1a1a1a;border:1px solid #555;" title="Černá"></div>
+    <div class="color-picker-wrap">
+      <div class="color-picker-btn" id="customColorBtn" title="Vlastní barva"></div>
+      <input type="color" id="customColorInput" value="#6aa6fd">
+    </div>
+  </div>
+
+  <div class="toolbar-separator"></div>
+
+  <!-- Velikost štětce -->
+  <div class="toolbar-group">
+    <span class="opacity-label">Velikost:</span>
+    <input type="range" class="size-slider" id="brushSize" min="1" max="60" value="3">
+    <span class="size-label" id="brushSizeLabel">3</span>
+  </div>
+
+  <div class="toolbar-separator"></div>
+
+  <!-- Průhlednost -->
+  <div class="toolbar-group">
+    <span class="opacity-label">Průhlednost:</span>
+    <input type="range" class="size-slider" id="opacitySlider" min="5" max="100" value="100">
+    <span class="size-label" id="opacityLabel">100%</span>
+  </div>
+
+  <div class="toolbar-separator"></div>
+
+  <!-- Akce -->
+  <div class="toolbar-group">
+    <button class="tool-btn" id="btnUndo" title="Zpět (Ctrl+Z)" disabled>↩ Zpět</button>
+    <button class="tool-btn" id="btnRedo" title="Znovu (Ctrl+Y)" disabled>↪ Znovu</button>
+  </div>
+
+  <div class="toolbar-separator"></div>
+
+  <div class="toolbar-group">
+    <button class="action-btn" id="btnSave" title="Uložit kresbu (Ctrl+S)">💾 Uložit</button>
+    <button class="action-btn" id="btnDownload" title="Stáhnout jako PNG">⬇ PNG</button>
+    <button class="action-btn" id="btnDownloadSVG" title="Stáhnout jako SVG">⬇ SVG</button>
+    <button class="action-btn danger" id="btnClear" title="Vymazat vše">🗑 Vymazat</button>
+  </div>
+
+  <div class="toolbar-separator"></div>
+
+  <div class="toolbar-group">
+    <button class="tool-btn" id="btnGallery" title="Uložené kresby">📂 Galerie</button>
+  </div>
+
+</div>
+
+<div class="app-body">
+
+  <!-- Drawings sidebar -->
+  <div class="drawings-panel" id="drawingsPanel">
+    <div class="panel-header">
+      <h2>📂 Uložené kresby</h2>
+      <button class="panel-close" id="panelClose" title="Zavřít">✕</button>
+    </div>
+    <button class="panel-new-btn" id="panelNewBtn">+ Nová kresba</button>
+    <div class="drawings-list" id="drawingsList"></div>
+  </div>
+
+  <div class="canvas-container" id="canvasContainer">
+    <canvas id="mainCanvas"></canvas>
+    <textarea id="textOverlay" class="text-input-overlay" rows="1" placeholder="Napište text..."></textarea>
+  </div>
+
+</div>
+
+<!-- Save / Rename modal -->
+<div class="modal-overlay" id="saveModal">
+  <div class="modal">
+    <h3 id="modalTitle">💾 Uložit kresbu</h3>
+    <input type="text" id="modalNameInput" placeholder="Název kresby..." maxlength="60">
+    <div class="modal-actions">
+      <button class="modal-btn secondary" id="modalCancel">Zrušit</button>
+      <button class="modal-btn primary" id="modalConfirm">Uložit</button>
+    </div>
+  </div>
+</div>
+
+<div class="status-bar">
+  <div class="status-item">
+    <span id="statusTool">Nástroj: Pero</span>
+  </div>
+  <div class="status-item">
+    <span id="statusCoords">X: 0, Y: 0</span>
+  </div>
+  <div class="status-item">
+    <span id="statusSize">Plátno: —</span>
+  </div>
+  <div class="status-item" style="margin-left:auto;">
+    <span style="color:#555">P=Pero L=Čára R=Obdélník E=Elipsa A=Šipka T=Text F=Výplň X=Guma | Ctrl+Z=Zpět Ctrl+Y=Znovu</span>
+  </div>
+</div>
+
+<script>
+  // === STATE ===
+  const canvas = document.getElementById('mainCanvas');
+  const ctx = canvas.getContext('2d');
+  const container = document.getElementById('canvasContainer');
+  const textOverlay = document.getElementById('textOverlay');
+
+  let currentTool = 'pen';
+  let currentColor = '#e0e0e0';
+  let brushSize = 3;
+  let opacity = 1;
+  let isDrawing = false;
+  let startX = 0, startY = 0;
+  let lastX = 0, lastY = 0;
+  let snapshot = null;
+
+  // Pan state
+  let panOffsetX = 0, panOffsetY = 0;
+  let isPanning = false;
+  let panStartX = 0, panStartY = 0;
+
+  // Undo/redo — each entry is { imageData, svgOps }
+  const undoStack = [];
+  const redoStack = [];
+  const MAX_HISTORY = 50;
+
+  // SVG operation log — vector ops added since last checkpoint
+  let svgOps = [];
+  let currentStrokePoints = [];
+
+  // Checkpoints — in-memory only, never serialized to localStorage.
+  // Each entry: { opsIndex: N, dataUrl: '...' }
+  // Meaning: "this PNG represents the canvas at the point where svgOps[N] starts."
+  // generateSVG() renders lastCheckpoint PNG + vector ops from opsIndex onwards.
+  let svgCheckpoints = [];
+
+  function syncCheckpoints() {
+    svgCheckpoints = svgCheckpoints.filter(cp => cp.opsIndex <= svgOps.length);
+  }
+
+  function addCheckpoint() {
+    svgCheckpoints.push({ opsIndex: svgOps.length, dataUrl: canvas.toDataURL('image/png') });
+  }
+
+  // Smooth bezier path from array of {x,y} points (quadratic midpoint algorithm)
+  function pointsToSVGPath(pts) {
+    if (pts.length < 2) return '';
+    let d = `M${pts[0].x.toFixed(1)},${pts[0].y.toFixed(1)}`;
+    if (pts.length === 2) return d + ` L${pts[1].x.toFixed(1)},${pts[1].y.toFixed(1)}`;
+    for (let i = 1; i < pts.length - 1; i++) {
+      const mx = ((pts[i].x + pts[i + 1].x) / 2).toFixed(1);
+      const my = ((pts[i].y + pts[i + 1].y) / 2).toFixed(1);
+      d += ` Q${pts[i].x.toFixed(1)},${pts[i].y.toFixed(1)} ${mx},${my}`;
+    }
+    const last = pts[pts.length - 1];
+    return d + ` L${last.x.toFixed(1)},${last.y.toFixed(1)}`;
+  }
+
+  // Remove near-duplicate points to reduce SVG path size
+  function decimatePoints(pts, threshold = 2) {
+    if (pts.length <= 2) return pts;
+    const out = [pts[0]];
+    let prev = pts[0];
+    for (let i = 1; i < pts.length - 1; i++) {
+      const dx = pts[i].x - prev.x, dy = pts[i].y - prev.y;
+      if (dx * dx + dy * dy >= threshold * threshold) { out.push(pts[i]); prev = pts[i]; }
+    }
+    out.push(pts[pts.length - 1]);
+    return out;
+  }
+
+  // === CANVAS RESIZE ===
+  function resizeCanvas() {
+    const w = container.clientWidth;
+    const h = container.clientHeight;
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    canvas.width = w;
+    canvas.height = h;
+    ctx.putImageData(imageData, 0, 0);
+    document.getElementById('statusSize').textContent = `Plátno: ${w} × ${h}`;
+  }
+
+  window.addEventListener('resize', () => {
+    resizeCanvas();
+  });
+
+  // Initial size
+  canvas.width = container.clientWidth;
+  canvas.height = container.clientHeight;
+  document.getElementById('statusSize').textContent = `Plátno: ${canvas.width} × ${canvas.height}`;
+
+  // === HELPERS ===
+  function getCanvasPos(e) {
+    const rect = canvas.getBoundingClientRect();
+    let clientX, clientY;
+    if (e.touches) {
+      clientX = e.touches[0].clientX;
+      clientY = e.touches[0].clientY;
+    } else {
+      clientX = e.clientX;
+      clientY = e.clientY;
+    }
+    return {
+      x: clientX - rect.left,
+      y: clientY - rect.top
+    };
+  }
+
+  function setCtxStyle() {
+    ctx.strokeStyle = currentColor;
+    ctx.fillStyle = currentColor;
+    ctx.lineWidth = brushSize;
+    ctx.globalAlpha = opacity;
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+  }
+
+  function saveSnapshot() {
+    snapshot = ctx.getImageData(0, 0, canvas.width, canvas.height);
+  }
+
+  function restoreSnapshot() {
+    if (snapshot) ctx.putImageData(snapshot, 0, 0);
+  }
+
+  function pushHistory() {
+    undoStack.push({ imageData: ctx.getImageData(0, 0, canvas.width, canvas.height), svgOps: svgOps.slice() });
+    if (undoStack.length > MAX_HISTORY) undoStack.shift();
+    redoStack.length = 0;
+    updateHistoryButtons();
+    if (typeof markDirty === 'function') markDirty();
+  }
+
+  function updateHistoryButtons() {
+    document.getElementById('btnUndo').disabled = undoStack.length === 0;
+    document.getElementById('btnRedo').disabled = redoStack.length === 0;
+  }
+
+  function undo() {
+    if (undoStack.length === 0) return;
+    redoStack.push({ imageData: ctx.getImageData(0, 0, canvas.width, canvas.height), svgOps: svgOps.slice() });
+    const state = undoStack.pop();
+    ctx.putImageData(state.imageData, 0, 0);
+    svgOps = state.svgOps;
+    syncCheckpoints();
+    updateHistoryButtons();
+  }
+
+  function redo() {
+    if (redoStack.length === 0) return;
+    undoStack.push({ imageData: ctx.getImageData(0, 0, canvas.width, canvas.height), svgOps: svgOps.slice() });
+    const state = redoStack.pop();
+    ctx.putImageData(state.imageData, 0, 0);
+    svgOps = state.svgOps;
+    syncCheckpoints();
+    updateHistoryButtons();
+  }
+
+  // === FLOOD FILL ===
+  function hexToRgba(hex) {
+    const r = parseInt(hex.slice(1, 3), 16);
+    const g = parseInt(hex.slice(3, 5), 16);
+    const b = parseInt(hex.slice(5, 7), 16);
+    const a = Math.round(opacity * 255);
+    return [r, g, b, a];
+  }
+
+  function colorMatch(data, idx, target) {
+    return data[idx] === target[0] && data[idx+1] === target[1] &&
+           data[idx+2] === target[2] && data[idx+3] === target[3];
+  }
+
+  function floodFill(x, y) {
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const data = imageData.data;
+    const w = canvas.width;
+    const h = canvas.height;
+    const startIdx = (Math.floor(y) * w + Math.floor(x)) * 4;
+    const targetColor = [data[startIdx], data[startIdx+1], data[startIdx+2], data[startIdx+3]];
+    const fillColor = hexToRgba(currentColor);
+
+    if (colorMatch(data, startIdx, fillColor)) return;
+
+    const stack = [[Math.floor(x), Math.floor(y)]];
+    const visited = new Uint8Array(w * h);
+
+    while (stack.length) {
+      const [cx, cy] = stack.pop();
+      if (cx < 0 || cx >= w || cy < 0 || cy >= h) continue;
+      const idx = (cy * w + cx) * 4;
+      if (visited[cy * w + cx]) continue;
+      if (!colorMatch(data, idx, targetColor)) continue;
+      visited[cy * w + cx] = 1;
+      data[idx] = fillColor[0];
+      data[idx+1] = fillColor[1];
+      data[idx+2] = fillColor[2];
+      data[idx+3] = fillColor[3];
+      stack.push([cx+1, cy], [cx-1, cy], [cx, cy+1], [cx, cy-1]);
+    }
+    ctx.putImageData(imageData, 0, 0);
+  }
+
+  // === DRAW SHAPES ===
+  function drawArrow(x1, y1, x2, y2) {
+    const headLen = Math.max(12, brushSize * 3);
+    const angle = Math.atan2(y2 - y1, x2 - x1);
+    ctx.beginPath();
+    ctx.moveTo(x1, y1);
+    ctx.lineTo(x2, y2);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(x2, y2);
+    ctx.lineTo(x2 - headLen * Math.cos(angle - Math.PI / 6), y2 - headLen * Math.sin(angle - Math.PI / 6));
+    ctx.lineTo(x2 - headLen * Math.cos(angle + Math.PI / 6), y2 - headLen * Math.sin(angle + Math.PI / 6));
+    ctx.closePath();
+    ctx.fill();
+  }
+
+  // === POINTER EVENTS ===
+  function onPointerDown(e) {
+    e.preventDefault();
+    const pos = getCanvasPos(e);
+
+    if (currentTool === 'pan') {
+      isPanning = true;
+      panStartX = e.clientX;
+      panStartY = e.clientY;
+      canvas.classList.add('cursor-moving');
+      canvas.classList.remove('cursor-move');
+      return;
+    }
+
+    if (currentTool === 'text') {
+      commitTextOverlay();
+      showTextOverlay(pos.x, pos.y);
+      return;
+    }
+
+    if (currentTool === 'fill') {
+      pushHistory();
+      setCtxStyle();
+      floodFill(pos.x, pos.y);
+      addCheckpoint(); // raster op — snapshot replaces approximation
+      return;
+    }
+
+    isDrawing = true;
+    startX = pos.x;
+    startY = pos.y;
+    lastX = pos.x;
+    lastY = pos.y;
+
+    pushHistory();
+    setCtxStyle();
+    saveSnapshot();
+
+    if (currentTool === 'pen' || currentTool === 'eraser') {
+      ctx.beginPath();
+      ctx.moveTo(startX, startY);
+      currentStrokePoints = [{ x: startX, y: startY }];
+    }
+  }
+
+  function onPointerMove(e) {
+    e.preventDefault();
+    const pos = getCanvasPos(e);
+
+    document.getElementById('statusCoords').textContent = `X: ${Math.round(pos.x)}, Y: ${Math.round(pos.y)}`;
+
+    if (isPanning) {
+      const dx = e.clientX - panStartX;
+      const dy = e.clientY - panStartY;
+      panOffsetX += dx;
+      panOffsetY += dy;
+      panStartX = e.clientX;
+      panStartY = e.clientY;
+      canvas.style.transform = `translate(${panOffsetX}px, ${panOffsetY}px)`;
+      return;
+    }
+
+    if (!isDrawing) return;
+
+    setCtxStyle();
+
+    if (currentTool === 'pen') {
+      ctx.lineTo(pos.x, pos.y);
+      ctx.stroke();
+      lastX = pos.x;
+      lastY = pos.y;
+      currentStrokePoints.push({ x: pos.x, y: pos.y });
+    } else if (currentTool === 'eraser') {
+      const savedComposite = ctx.globalCompositeOperation;
+      const savedAlpha = ctx.globalAlpha;
+      ctx.globalCompositeOperation = 'destination-out';
+      ctx.globalAlpha = 1;
+      ctx.lineTo(pos.x, pos.y);
+      ctx.stroke();
+      ctx.globalCompositeOperation = savedComposite;
+      ctx.globalAlpha = savedAlpha;
+      currentStrokePoints.push({ x: pos.x, y: pos.y });
+    } else {
+      restoreSnapshot();
+      setCtxStyle();
+      const x = Math.min(startX, pos.x);
+      const y = Math.min(startY, pos.y);
+      const w = Math.abs(pos.x - startX);
+      const h = Math.abs(pos.y - startY);
+
+      if (currentTool === 'line') {
+        ctx.beginPath();
+        ctx.moveTo(startX, startY);
+        ctx.lineTo(pos.x, pos.y);
+        ctx.stroke();
+      } else if (currentTool === 'rect') {
+        ctx.beginPath();
+        ctx.strokeRect(x, y, w, h);
+      } else if (currentTool === 'ellipse') {
+        ctx.beginPath();
+        ctx.ellipse(startX + (pos.x - startX) / 2, startY + (pos.y - startY) / 2, w / 2, h / 2, 0, 0, 2 * Math.PI);
+        ctx.stroke();
+      } else if (currentTool === 'arrow') {
+        drawArrow(startX, startY, pos.x, pos.y);
+      }
+    }
+  }
+
+  function onPointerUp(e) {
+    e.preventDefault();
+
+    if (isPanning) {
+      isPanning = false;
+      canvas.classList.remove('cursor-moving');
+      canvas.classList.add('cursor-move');
+      return;
+    }
+
+    if (!isDrawing) return;
+    isDrawing = false;
+    snapshot = null;
+
+    const pos = getCanvasPos(e.changedTouches ? { clientX: e.changedTouches[0].clientX, clientY: e.changedTouches[0].clientY } : e);
+
+    if (currentTool === 'pen') {
+      ctx.closePath();
+      if (currentStrokePoints.length > 1)
+        svgOps.push({ type: 'pen', color: currentColor, opacity, lineWidth: brushSize, points: currentStrokePoints });
+      currentStrokePoints = [];
+    } else if (currentTool === 'eraser') {
+      ctx.closePath();
+      currentStrokePoints = [];
+      addCheckpoint(); // raster op — snapshot captures the erasure accurately
+    } else if (currentTool === 'line') {
+      svgOps.push({ type: 'line', color: currentColor, opacity, lineWidth: brushSize, x1: startX, y1: startY, x2: pos.x, y2: pos.y });
+    } else if (currentTool === 'rect') {
+      svgOps.push({ type: 'rect', color: currentColor, opacity, lineWidth: brushSize,
+        x: Math.min(startX, pos.x), y: Math.min(startY, pos.y),
+        w: Math.abs(pos.x - startX), h: Math.abs(pos.y - startY) });
+    } else if (currentTool === 'ellipse') {
+      const w = Math.abs(pos.x - startX), h = Math.abs(pos.y - startY);
+      svgOps.push({ type: 'ellipse', color: currentColor, opacity, lineWidth: brushSize,
+        cx: startX + (pos.x - startX) / 2, cy: startY + (pos.y - startY) / 2, rx: w / 2, ry: h / 2 });
+    } else if (currentTool === 'arrow') {
+      svgOps.push({ type: 'arrow', color: currentColor, opacity, lineWidth: brushSize, x1: startX, y1: startY, x2: pos.x, y2: pos.y });
+    }
+
+    ctx.globalAlpha = 1;
+  }
+
+  canvas.addEventListener('mousedown', onPointerDown);
+  canvas.addEventListener('mousemove', onPointerMove);
+  canvas.addEventListener('mouseup', onPointerUp);
+  canvas.addEventListener('mouseleave', onPointerUp);
+  canvas.addEventListener('touchstart', onPointerDown, { passive: false });
+  canvas.addEventListener('touchmove', onPointerMove, { passive: false });
+  canvas.addEventListener('touchend', onPointerUp, { passive: false });
+
+  // === TEXT OVERLAY ===
+  function showTextOverlay(x, y) {
+    textOverlay.style.left = x + 'px';
+    textOverlay.style.top = y + 'px';
+    textOverlay.style.fontSize = Math.max(12, brushSize * 4) + 'px';
+    textOverlay.style.color = currentColor;
+    textOverlay.style.display = 'block';
+    textOverlay.value = '';
+    textOverlay.focus();
+  }
+
+  function commitTextOverlay() {
+    if (textOverlay.style.display === 'none') return;
+    const text = textOverlay.value.trim();
+    if (text) {
+      pushHistory();
+      setCtxStyle();
+      const fontSize = Math.max(12, brushSize * 4);
+      ctx.font = `${fontSize}px -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif`;
+      ctx.fillStyle = currentColor;
+      ctx.globalAlpha = opacity;
+      const x = parseInt(textOverlay.style.left);
+      const y = parseInt(textOverlay.style.top);
+      const lines = text.split('\n');
+      const lineH = Math.max(16, brushSize * 5);
+      lines.forEach((line, i) => {
+        ctx.fillText(line, x + 4, y + lineH * (i + 1));
+      });
+      ctx.globalAlpha = 1;
+      svgOps.push({ type: 'text', color: currentColor, opacity, fontSize, lineH, x: x + 4, y, lines });
+    }
+    textOverlay.style.display = 'none';
+    textOverlay.value = '';
+  }
+
+  textOverlay.addEventListener('blur', commitTextOverlay);
+  textOverlay.addEventListener('keydown', e => {
+    if (e.key === 'Escape') {
+      textOverlay.value = '';
+      textOverlay.style.display = 'none';
+    }
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      commitTextOverlay();
+    }
+  });
+
+  // === TOOL SELECTION ===
+  const toolMap = {
+    toolPen: 'pen',
+    toolLine: 'line',
+    toolRect: 'rect',
+    toolEllipse: 'ellipse',
+    toolArrow: 'arrow',
+    toolText: 'text',
+    toolFill: 'fill',
+    toolEraser: 'eraser',
+    toolPan: 'pan'
+  };
+
+  const toolNames = {
+    pen: 'Pero', line: 'Čára', rect: 'Obdélník', ellipse: 'Elipsa',
+    arrow: 'Šipka', text: 'Text', fill: 'Výplň', eraser: 'Guma', pan: 'Pohyb'
+  };
+
+  const toolCursors = {
+    pen: '', line: '', rect: '', ellipse: '', arrow: '',
+    text: 'cursor-text', fill: 'cursor-fill', eraser: 'cursor-eraser', pan: 'cursor-move'
+  };
+
+  function selectTool(tool) {
+    currentTool = tool;
+    commitTextOverlay();
+
+    Object.entries(toolMap).forEach(([btnId, t]) => {
+      document.getElementById(btnId).classList.toggle('active', t === tool);
+    });
+
+    ['cursor-eraser', 'cursor-move', 'cursor-fill', 'cursor-text'].forEach(c => canvas.classList.remove(c));
+    if (toolCursors[tool]) canvas.classList.add(toolCursors[tool]);
+
+    document.getElementById('statusTool').textContent = `Nástroj: ${toolNames[tool]}`;
+  }
+
+  Object.entries(toolMap).forEach(([btnId, tool]) => {
+    document.getElementById(btnId).addEventListener('click', () => selectTool(tool));
+  });
+
+  // === COLOR SELECTION ===
+  function selectColor(color, swatchEl) {
+    currentColor = color;
+    document.querySelectorAll('.color-swatch, .color-picker-btn').forEach(el => el.classList.remove('active'));
+    if (swatchEl) swatchEl.classList.add('active');
+  }
+
+  document.querySelectorAll('.color-swatch').forEach(swatch => {
+    swatch.addEventListener('click', () => selectColor(swatch.dataset.color, swatch));
+  });
+
+  document.getElementById('customColorBtn').addEventListener('click', () => {
+    document.getElementById('customColorInput').click();
+  });
+
+  document.getElementById('customColorInput').addEventListener('input', e => {
+    selectColor(e.target.value, document.getElementById('customColorBtn'));
+  });
+
+  // === BRUSH SIZE ===
+  document.getElementById('brushSize').addEventListener('input', e => {
+    brushSize = parseInt(e.target.value);
+    document.getElementById('brushSizeLabel').textContent = brushSize;
+  });
+
+  // === OPACITY ===
+  document.getElementById('opacitySlider').addEventListener('input', e => {
+    opacity = parseInt(e.target.value) / 100;
+    document.getElementById('opacityLabel').textContent = e.target.value + '%';
+  });
+
+  // === UNDO / REDO ===
+  document.getElementById('btnUndo').addEventListener('click', undo);
+  document.getElementById('btnRedo').addEventListener('click', redo);
+
+  // === CLEAR ===
+  document.getElementById('btnClear').addEventListener('click', () => {
+    if (!confirm('Opravdu vymazat celé plátno?')) return;
+    pushHistory();
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    svgOps = [];
+    svgCheckpoints = [];
+    currentDrawingId = null;
+    isDirty = false;
+    updateDrawingNameLabel();
+    renderDrawingsList();
+  });
+
+  // === SVG GENERATION ===
+  function escapeXml(s) {
+    return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function opToSVG(op) {
+    const a = (op.opacity !== undefined ? op.opacity : 1).toFixed(2);
+    switch (op.type) {
+      case 'pen': {
+        const pts = decimatePoints(op.points);
+        if (pts.length < 2) return '';
+        const d = pointsToSVGPath(pts);
+        return `<path d="${d}" fill="none" stroke="${op.color}" stroke-width="${op.lineWidth}" stroke-linecap="round" stroke-linejoin="round" opacity="${a}"/>`;
+      }
+      case 'line':
+        return `<line x1="${op.x1.toFixed(1)}" y1="${op.y1.toFixed(1)}" x2="${op.x2.toFixed(1)}" y2="${op.y2.toFixed(1)}" stroke="${op.color}" stroke-width="${op.lineWidth}" stroke-linecap="round" opacity="${a}"/>`;
+      case 'rect':
+        return `<rect x="${op.x.toFixed(1)}" y="${op.y.toFixed(1)}" width="${op.w.toFixed(1)}" height="${op.h.toFixed(1)}" fill="none" stroke="${op.color}" stroke-width="${op.lineWidth}" opacity="${a}"/>`;
+      case 'ellipse':
+        return `<ellipse cx="${op.cx.toFixed(1)}" cy="${op.cy.toFixed(1)}" rx="${op.rx.toFixed(1)}" ry="${op.ry.toFixed(1)}" fill="none" stroke="${op.color}" stroke-width="${op.lineWidth}" opacity="${a}"/>`;
+      case 'arrow': {
+        const angle = Math.atan2(op.y2 - op.y1, op.x2 - op.x1);
+        const hl = Math.max(12, op.lineWidth * 3);
+        const hx1 = (op.x2 - hl * Math.cos(angle - Math.PI/6)).toFixed(1);
+        const hy1 = (op.y2 - hl * Math.sin(angle - Math.PI/6)).toFixed(1);
+        const hx2 = (op.x2 - hl * Math.cos(angle + Math.PI/6)).toFixed(1);
+        const hy2 = (op.y2 - hl * Math.sin(angle + Math.PI/6)).toFixed(1);
+        return `<g opacity="${a}"><line x1="${op.x1.toFixed(1)}" y1="${op.y1.toFixed(1)}" x2="${op.x2.toFixed(1)}" y2="${op.y2.toFixed(1)}" stroke="${op.color}" stroke-width="${op.lineWidth}" stroke-linecap="round"/><polygon points="${op.x2.toFixed(1)},${op.y2.toFixed(1)} ${hx1},${hy1} ${hx2},${hy2}" fill="${op.color}"/></g>`;
+      }
+      case 'text': {
+        const tspans = op.lines.map((line, i) =>
+          `<tspan x="${op.x.toFixed(1)}" dy="${op.lineH}">${escapeXml(line)}</tspan>`
+        ).join('');
+        return `<text x="${op.x.toFixed(1)}" y="${op.y.toFixed(1)}" font-family="system-ui,sans-serif" font-size="${op.fontSize}" fill="${op.color}" opacity="${a}">${tspans}</text>`;
+      }
+      default:
+        return '';
+    }
+  }
+
+  function generateSVG() {
+    const w = canvas.width, h = canvas.height;
+    const lastCP = svgCheckpoints.length > 0 ? svgCheckpoints[svgCheckpoints.length - 1] : null;
+    const parts = [`<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">`];
+
+    if (!lastCP) {
+      // Pure vector drawing — no eraser/fill/load
+      parts.push(`<rect width="${w}" height="${h}" fill="#252525"/>`);
+      svgOps.forEach(op => { const s = opToSVG(op); if (s) parts.push(s); });
+    } else {
+      // Hybrid: checkpoint PNG as raster base, then vector ops added after it
+      parts.push(`<image href="${lastCP.dataUrl}" x="0" y="0" width="${w}" height="${h}"/>`);
+      for (let i = lastCP.opsIndex; i < svgOps.length; i++) {
+        const s = opToSVG(svgOps[i]);
+        if (s) parts.push(s);
+      }
+    }
+
+    parts.push('</svg>');
+    return parts.join('\n');
+  }
+
+  // === DOWNLOAD ===
+  document.getElementById('btnDownload').addEventListener('click', () => {
+    const link = document.createElement('a');
+    link.download = `whiteboard-${new Date().toISOString().slice(0,19).replace(/[:T]/g, '-')}.png`;
+    link.href = canvas.toDataURL('image/png');
+    link.click();
+  });
+
+  document.getElementById('btnDownloadSVG').addEventListener('click', () => {
+    const svg = generateSVG();
+    const blob = new Blob([svg], { type: 'image/svg+xml;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.download = `whiteboard-${new Date().toISOString().slice(0,19).replace(/[:T]/g, '-')}.svg`;
+    link.href = url;
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+  });
+
+  // === KEYBOARD SHORTCUTS ===
+  document.addEventListener('keydown', e => {
+    if (e.target === textOverlay) return;
+    if (e.ctrlKey || e.metaKey) {
+      if (e.key === 'z') { e.preventDefault(); undo(); }
+      if (e.key === 'y') { e.preventDefault(); redo(); }
+      return;
+    }
+    const keyMap = { p: 'pen', l: 'line', r: 'rect', e: 'ellipse', a: 'arrow', t: 'text', f: 'fill', x: 'eraser' };
+    if (e.key === ' ') { e.preventDefault(); selectTool('pan'); return; }
+    if (keyMap[e.key.toLowerCase()]) selectTool(keyMap[e.key.toLowerCase()]);
+  });
+
+  document.addEventListener('keyup', e => {
+    if (e.key === ' ' && currentTool === 'pan') {
+      selectTool('pen');
+    }
+  });
+
+  updateHistoryButtons();
+
+  // === CRUD — localStorage ===
+  const LS_KEY = 'whiteboard_drawings';
+  let currentDrawingId = null;
+  let isDirty = false;
+
+  function genId() {
+    return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+  }
+
+  function loadAllDrawings() {
+    try {
+      return JSON.parse(localStorage.getItem(LS_KEY) || '[]');
+    } catch { return []; }
+  }
+
+  function saveAllDrawings(list) {
+    try {
+      localStorage.setItem(LS_KEY, JSON.stringify(list));
+    } catch (e) {
+      if (e.name === 'QuotaExceededError' || e.code === 22) {
+        showToast('Úložiště je plné. Smažte starší kresby.', 'error');
+      } else {
+        showToast('Chyba při ukládání: ' + e.message, 'error');
+      }
+      throw e;
+    }
+  }
+
+  function formatDate(iso) {
+    const d = new Date(iso);
+    return d.toLocaleDateString('cs-CZ', { day: '2-digit', month: '2-digit', year: 'numeric' })
+      + ' ' + d.toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' });
+  }
+
+  function markDirty() {
+    if (!isDirty) {
+      isDirty = true;
+      updateDrawingNameLabel();
+    }
+  }
+
+  function updateDrawingNameLabel() {
+    const el = document.getElementById('currentDrawingName');
+    const list = loadAllDrawings();
+    const d = list.find(x => x.id === currentDrawingId);
+    if (d) {
+      el.textContent = isDirty ? `${d.name} *` : d.name;
+      el.className = 'current-drawing-name' + (isDirty ? ' unsaved' : '');
+    } else {
+      el.textContent = isDirty ? 'Neuloženo *' : '';
+      el.className = 'current-drawing-name' + (isDirty ? ' unsaved' : '');
+    }
+  }
+
+  function renderDrawingsList() {
+    const list = loadAllDrawings();
+    const container = document.getElementById('drawingsList');
+    if (list.length === 0) {
+      container.innerHTML = '<div class="panel-empty">Zatím žádné uložené kresby.<br>Nakreslete něco a uložte tlačítkem 💾 Uložit.</div>';
+      return;
+    }
+    container.innerHTML = '';
+    list.forEach(d => {
+      const card = document.createElement('div');
+      card.className = 'drawing-card' + (d.id === currentDrawingId ? ' active' : '');
+      card.dataset.id = d.id;
+
+      const thumb = d.thumb
+        ? `<img class="drawing-thumb" src="${d.thumb}" alt="${d.name}">`
+        : `<div class="drawing-thumb-empty">🖼️</div>`;
+
+      card.innerHTML = `
+        ${thumb}
+        <div class="drawing-meta">
+          <div class="drawing-name" title="${d.name}">${d.name}</div>
+          <div class="drawing-date">Uloženo: ${formatDate(d.updatedAt)}</div>
+        </div>
+        <div class="drawing-actions">
+          <button class="card-btn load-btn-card" data-id="${d.id}">📂 Načíst</button>
+          <button class="card-btn svg-btn" data-id="${d.id}" title="${d.svgData ? 'Stáhnout SVG' : 'SVG není k dispozici (uložte znovu)'}">⬇ SVG</button>
+          <button class="card-btn rename-btn" data-id="${d.id}">✏️</button>
+          <button class="card-btn delete" data-id="${d.id}">🗑</button>
+        </div>`;
+
+      card.querySelector('.load-btn-card').addEventListener('click', e => {
+        e.stopPropagation();
+        loadDrawing(d.id);
+      });
+      card.querySelector('.svg-btn').addEventListener('click', e => {
+        e.stopPropagation();
+        if (!d.svgData) { showToast('SVG není k dispozici — načtěte a znovu uložte kresbu', 'warning'); return; }
+        const blob = new Blob([d.svgData], { type: 'image/svg+xml;charset=utf-8' });
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.download = `${d.name.replace(/[^a-z0-9]/gi,'_')}.svg`;
+        link.href = url;
+        link.click();
+        setTimeout(() => URL.revokeObjectURL(url), 1000);
+      });
+      card.querySelector('.rename-btn').addEventListener('click', e => {
+        e.stopPropagation();
+        openRenameModal(d.id);
+      });
+      card.querySelector('.delete').addEventListener('click', e => {
+        e.stopPropagation();
+        deleteDrawing(d.id);
+      });
+
+      container.appendChild(card);
+    });
+  }
+
+  function saveDrawing(name) {
+    const thumb = canvas.toDataURL('image/jpeg', 0.4);
+    const dataUrl = canvas.toDataURL('image/png');
+    const svgData = generateSVG();
+    const list = loadAllDrawings();
+    const now = new Date().toISOString();
+
+    if (currentDrawingId) {
+      const idx = list.findIndex(x => x.id === currentDrawingId);
+      if (idx !== -1) {
+        list[idx].name = name;
+        list[idx].thumb = thumb;
+        list[idx].dataUrl = dataUrl;
+        list[idx].svgData = svgData;
+        list[idx].updatedAt = now;
+        saveAllDrawings(list);
+        isDirty = false;
+        updateDrawingNameLabel();
+        renderDrawingsList();
+        showToast(`Uloženo: ${name}`, 'success');
+        return;
+      }
+    }
+
+    // Create new
+    const newId = genId();
+    list.unshift({ id: newId, name, thumb, dataUrl, svgData, createdAt: now, updatedAt: now });
+    saveAllDrawings(list);
+    currentDrawingId = newId;
+    isDirty = false;
+    updateDrawingNameLabel();
+    renderDrawingsList();
+    showToast(`Uloženo: ${name}`, 'success');
+  }
+
+  function loadDrawing(id) {
+    if (isDirty) {
+      if (!confirm('Máte neuložené změny. Opravdu načíst jinou kresbu?')) return;
+    }
+    const list = loadAllDrawings();
+    const d = list.find(x => x.id === id);
+    if (!d) return;
+
+    const img = new Image();
+    img.onload = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.drawImage(img, 0, 0);
+      currentDrawingId = id;
+      svgOps = [];
+      // Use the loaded PNG as the SVG base so subsequent vector ops render on top correctly
+      svgCheckpoints = [{ opsIndex: 0, dataUrl: d.dataUrl }];
+      isDirty = false;
+      undoStack.length = 0;
+      redoStack.length = 0;
+      updateHistoryButtons();
+      updateDrawingNameLabel();
+      renderDrawingsList();
+      showToast(`Načteno: ${d.name}`, 'info');
+    };
+    img.src = d.dataUrl;
+  }
+
+  function deleteDrawing(id) {
+    const list = loadAllDrawings();
+    const d = list.find(x => x.id === id);
+    if (!d) return;
+    if (!confirm(`Smazat kresbu „${d.name}"?`)) return;
+    const newList = list.filter(x => x.id !== id);
+    saveAllDrawings(newList);
+    if (currentDrawingId === id) {
+      currentDrawingId = null;
+      isDirty = false;
+      updateDrawingNameLabel();
+    }
+    renderDrawingsList();
+    showToast(`Smazáno: ${d.name}`, 'warning');
+  }
+
+  function newDrawing() {
+    if (isDirty) {
+      if (!confirm('Máte neuložené změny. Opravdu začít novou kresbu?')) return;
+    }
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    svgOps = [];
+    svgCheckpoints = [];
+    currentDrawingId = null;
+    isDirty = false;
+    undoStack.length = 0;
+    redoStack.length = 0;
+    updateHistoryButtons();
+    updateDrawingNameLabel();
+    renderDrawingsList();
+  }
+
+  // === MODAL ===
+  const saveModal = document.getElementById('saveModal');
+  const modalNameInput = document.getElementById('modalNameInput');
+  const modalTitle = document.getElementById('modalTitle');
+  let modalMode = 'save'; // 'save' | 'rename'
+  let modalTargetId = null;
+
+  function openSaveModal() {
+    const list = loadAllDrawings();
+    const existing = list.find(x => x.id === currentDrawingId);
+    modalMode = 'save';
+    modalTargetId = null;
+    modalTitle.textContent = existing ? '💾 Přepsat kresbu' : '💾 Uložit kresbu';
+    modalNameInput.value = existing ? existing.name : `Kresba ${list.length + 1}`;
+    saveModal.classList.add('open');
+    setTimeout(() => { modalNameInput.focus(); modalNameInput.select(); }, 50);
+  }
+
+  function openRenameModal(id) {
+    const list = loadAllDrawings();
+    const d = list.find(x => x.id === id);
+    if (!d) return;
+    modalMode = 'rename';
+    modalTargetId = id;
+    modalTitle.textContent = '✏️ Přejmenovat kresbu';
+    modalNameInput.value = d.name;
+    saveModal.classList.add('open');
+    setTimeout(() => { modalNameInput.focus(); modalNameInput.select(); }, 50);
+  }
+
+  function closeModal() {
+    saveModal.classList.remove('open');
+  }
+
+  document.getElementById('modalCancel').addEventListener('click', closeModal);
+  saveModal.addEventListener('click', e => { if (e.target === saveModal) closeModal(); });
+
+  document.getElementById('modalConfirm').addEventListener('click', () => {
+    const name = modalNameInput.value.trim();
+    if (!name) { modalNameInput.focus(); return; }
+
+    if (modalMode === 'save') {
+      saveDrawing(name);
+    } else if (modalMode === 'rename') {
+      const list = loadAllDrawings();
+      const idx = list.findIndex(x => x.id === modalTargetId);
+      if (idx !== -1) {
+        list[idx].name = name;
+        saveAllDrawings(list);
+        if (currentDrawingId === modalTargetId) updateDrawingNameLabel();
+        renderDrawingsList();
+        showToast(`Přejmenováno na: ${name}`, 'info');
+      }
+    }
+    closeModal();
+  });
+
+  modalNameInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter') document.getElementById('modalConfirm').click();
+    if (e.key === 'Escape') closeModal();
+  });
+
+  // === PANEL TOGGLE ===
+  const drawingsPanel = document.getElementById('drawingsPanel');
+
+  document.getElementById('btnGallery').addEventListener('click', () => {
+    drawingsPanel.classList.toggle('open');
+    if (drawingsPanel.classList.contains('open')) renderDrawingsList();
+  });
+
+  document.getElementById('panelClose').addEventListener('click', () => {
+    drawingsPanel.classList.remove('open');
+  });
+
+  document.getElementById('panelNewBtn').addEventListener('click', () => {
+    newDrawing();
+    drawingsPanel.classList.remove('open');
+  });
+
+  // === SAVE BUTTON ===
+  document.getElementById('btnSave').addEventListener('click', openSaveModal);
+
+  // Ctrl+S
+  document.addEventListener('keydown', e => {
+    if ((e.ctrlKey || e.metaKey) && e.key === 's') {
+      e.preventDefault();
+      openSaveModal();
+    }
+  });
+
+  // === TOAST ===
+  function showToast(message, type = 'info') {
+    const el = document.createElement('div');
+    el.style.cssText = `
+      position:fixed; bottom:20px; right:20px; padding:10px 18px;
+      border-radius:6px; color:white; font-size:0.85rem; z-index:200;
+      box-shadow:0 4px 12px rgba(0,0,0,0.4); animation:slideIn 0.3s ease-out;
+      pointer-events:none;
+    `;
+    const bg = { success: '#4caf50', info: '#2196f3', warning: '#ff9800', error: '#f44336' };
+    el.style.background = bg[type] || bg.info;
+    el.textContent = message;
+    document.body.appendChild(el);
+    setTimeout(() => el.remove(), 2500);
+  }
+
+  renderDrawingsList();
+  updateDrawingNameLabel();
+</script>
+</body>
+</html>
