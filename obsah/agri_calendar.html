@@ -1,0 +1,583 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8" />
+  <title>Zemědělský kalendář</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #1a1a1a;
+      color: #e0e0e0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    header {
+      background: #2d2d2d;
+      border-bottom: 1px solid #404040;
+      padding: 10px 18px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+    header h1 { font-size: 1.05rem; font-weight: 700; color: #6bca6b; }
+    .month-nav {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-left: auto;
+    }
+    .month-nav button {
+      background: #333;
+      border: 1px solid #555;
+      color: #e0e0e0;
+      padding: 5px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.85rem;
+    }
+    .month-nav button:hover { background: #444; }
+    #monthLabel { font-size: 1rem; font-weight: 600; color: #8aca8a; min-width: 130px; text-align: center; }
+    .filter-bar {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+    .cat-btn {
+      padding: 4px 10px;
+      border-radius: 12px;
+      border: 2px solid transparent;
+      cursor: pointer;
+      font-size: 0.78rem;
+      font-weight: 600;
+      transition: all 0.2s;
+      opacity: 0.6;
+    }
+    .cat-btn.active { opacity: 1; }
+    .main {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+    /* Levý panel: kalendář měsíce */
+    .cal-panel {
+      width: 320px;
+      flex-shrink: 0;
+      background: #242424;
+      border-right: 1px solid #404040;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+    }
+    .mini-cal {
+      padding: 12px;
+    }
+    .mini-cal-grid {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 2px;
+      margin-top: 6px;
+    }
+    .mini-cal-grid .day-label {
+      text-align: center;
+      font-size: 0.68rem;
+      color: #666;
+      padding: 3px 0;
+    }
+    .mini-cal-grid .day-cell {
+      text-align: center;
+      font-size: 0.78rem;
+      padding: 4px 2px;
+      border-radius: 4px;
+      cursor: pointer;
+      color: #b0b0b0;
+      position: relative;
+      transition: background 0.15s;
+    }
+    .mini-cal-grid .day-cell:hover { background: #333; color: #fff; }
+    .mini-cal-grid .day-cell.today { background: #1e3a5f; color: #6aa6fd; font-weight: 700; }
+    .mini-cal-grid .day-cell.selected { background: #2a5a2a; color: #8aca8a; font-weight: 700; }
+    .mini-cal-grid .day-cell.has-task::after {
+      content: '';
+      position: absolute;
+      bottom: 2px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 4px;
+      height: 4px;
+      background: #6bca6b;
+      border-radius: 50%;
+    }
+    .mini-cal-grid .day-cell.empty { cursor: default; }
+    .day-tasks {
+      padding: 10px 12px;
+      border-top: 1px solid #333;
+      flex: 1;
+      overflow-y: auto;
+    }
+    .day-tasks h3 { font-size: 0.8rem; color: #6bca6b; margin-bottom: 8px; }
+    .day-task-item {
+      background: #1e1e1e;
+      border-radius: 6px;
+      padding: 8px 10px;
+      margin-bottom: 6px;
+      border-left: 3px solid #444;
+      font-size: 0.82rem;
+    }
+    .day-task-item .task-name { font-weight: 600; color: #e0e0e0; }
+    .day-task-item .task-detail { font-size: 0.73rem; color: #888; margin-top: 2px; }
+    /* Pravý panel: přehled celého roku */
+    .right-panel {
+      flex: 1;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: #404040 #1a1a1a;
+    }
+    .section-header {
+      font-size: 0.72rem;
+      color: #6bca6b;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      padding: 10px 16px 6px;
+      border-bottom: 1px solid #2a2a2a;
+      font-weight: 700;
+      background: #1e1e1e;
+      position: sticky;
+      top: 0;
+      z-index: 2;
+    }
+    .month-section { margin-bottom: 0; }
+    .month-title {
+      background: #242424;
+      padding: 8px 16px;
+      font-weight: 700;
+      font-size: 0.9rem;
+      color: #c0c0c0;
+      border-bottom: 1px solid #333;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      cursor: pointer;
+    }
+    .month-title:hover { background: #2d2d2d; }
+    .month-title .m-icon { font-size: 1.1rem; }
+    .tasks-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+      gap: 8px;
+      padding: 10px 14px;
+      background: #1a1a1a;
+    }
+    .task-card {
+      border-radius: 8px;
+      padding: 10px 12px;
+      border-left: 4px solid;
+      background: #222;
+      transition: transform 0.15s;
+    }
+    .task-card:hover { transform: translateY(-1px); }
+    .task-card .t-name { font-size: 0.88rem; font-weight: 600; margin-bottom: 3px; }
+    .task-card .t-dates { font-size: 0.72rem; color: #888; margin-bottom: 4px; }
+    .task-card .t-desc { font-size: 0.78rem; color: #a0a0a0; line-height: 1.4; }
+    .task-card .t-cat { font-size: 0.65rem; text-transform: uppercase; letter-spacing: 0.5px; font-weight: 700; margin-bottom: 5px; }
+    /* Přidání vlastního záznamu */
+    .add-panel {
+      padding: 12px;
+      border-top: 1px solid #333;
+      background: #1e1e1e;
+    }
+    .add-panel h3 { font-size: 0.8rem; color: #6bca6b; margin-bottom: 8px; }
+    .add-form { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+    .add-form .full { grid-column: 1 / -1; }
+    .add-form input, .add-form select, .add-form textarea {
+      background: #2a2a2a;
+      border: 1px solid #444;
+      color: #e0e0e0;
+      border-radius: 5px;
+      padding: 5px 8px;
+      font-size: 0.8rem;
+      width: 100%;
+      outline: none;
+    }
+    .add-form input:focus, .add-form select:focus { border-color: #6bca6b; }
+    label.tiny { font-size: 0.68rem; color: #777; display: block; margin-bottom: 2px; }
+    .btn-add {
+      background: #2a5a2a;
+      color: #8aca8a;
+      border: 1px solid #3a6a3a;
+      padding: 6px 12px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      width: 100%;
+      margin-top: 4px;
+    }
+    .btn-add:hover { background: #3a6a3a; }
+    .user-badge { font-size: 0.65rem; background: #2a4a2a; color: #6bca6b; padding: 1px 5px; border-radius: 8px; }
+    .delete-btn {
+      float: right;
+      background: none;
+      border: none;
+      color: #666;
+      cursor: pointer;
+      font-size: 0.75rem;
+      padding: 0 0 0 6px;
+    }
+    .delete-btn:hover { color: #ca6b6b; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>🌱 Zemědělský kalendář</h1>
+  <div class="filter-bar" id="filterBar"></div>
+  <div class="month-nav">
+    <button onclick="prevMonth()">‹</button>
+    <span id="monthLabel"></span>
+    <button onclick="nextMonth()">›</button>
+    <button onclick="goToday()" style="background:#2a4a2a;color:#8aca8a;border-color:#3a6a3a">Dnes</button>
+  </div>
+</header>
+
+<div class="main">
+  <div class="cal-panel">
+    <div class="mini-cal">
+      <div id="miniCalGrid" class="mini-cal-grid"></div>
+    </div>
+    <div class="day-tasks">
+      <h3 id="dayTasksTitle">Vyberte den</h3>
+      <div id="dayTasksList"></div>
+    </div>
+    <div class="add-panel">
+      <h3>➕ Přidat vlastní úkol</h3>
+      <div class="add-form">
+        <div>
+          <label class="tiny">Název</label>
+          <input type="text" id="u-name" placeholder="Název úkolu" />
+        </div>
+        <div>
+          <label class="tiny">Kategorie</label>
+          <select id="u-cat">
+            <option value="zelenina">🥦 Zelenina</option>
+            <option value="obiloviny">🌾 Obiloviny</option>
+            <option value="ovoce">🍎 Ovoce</option>
+            <option value="traviny">🌿 Trávy/Louky</option>
+            <option value="zivocisna">🐄 Živočišná</option>
+            <option value="stroje">🔧 Stroje</option>
+            <option value="ostatni">📋 Ostatní</option>
+          </select>
+        </div>
+        <div>
+          <label class="tiny">Od (měsíc-den)</label>
+          <input type="text" id="u-from" placeholder="03-15" maxlength="5" />
+        </div>
+        <div>
+          <label class="tiny">Do (měsíc-den)</label>
+          <input type="text" id="u-to" placeholder="04-10" maxlength="5" />
+        </div>
+        <div class="full">
+          <label class="tiny">Popis</label>
+          <input type="text" id="u-desc" placeholder="Volitelný popis..." />
+        </div>
+        <div class="full">
+          <button class="btn-add" onclick="addUserTask()">Přidat</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="right-panel" id="rightPanel"></div>
+</div>
+
+<script>
+// Kategorie
+const CATS = {
+  zelenina:  { label: '🥦 Zelenina',   color: '#4a9a4a', bg: '#1a3a1a' },
+  obiloviny: { label: '🌾 Obiloviny',  color: '#c8a840', bg: '#3a3010' },
+  ovoce:     { label: '🍎 Ovoce',      color: '#c85050', bg: '#3a1515' },
+  traviny:   { label: '🌿 Trávy/Louky',color: '#50c878', bg: '#153a20' },
+  zivocisna: { label: '🐄 Živočišná',  color: '#a07840', bg: '#2a2010' },
+  stroje:    { label: '🔧 Stroje',     color: '#7090c0', bg: '#182030' },
+  ostatni:   { label: '📋 Ostatní',    color: '#909090', bg: '#252525' }
+};
+
+const MONTHS = ['Leden','Únor','Březen','Duben','Květen','Červen','Červenec','Srpen','Září','Říjen','Listopad','Prosinec'];
+const MONTH_ICONS = ['❄️','❄️','🌱','🌸','🌻','☀️','🌞','🌾','🍂','🍁','🌧️','⛄'];
+const DAYS_CZ = ['Po','Út','St','Čt','Pá','So','Ne'];
+
+// Předdefinované úkoly (měsíc je 1-12)
+const DEFAULT_TASKS = [
+  // Obiloviny
+  { name: 'Setí ozimé pšenice', cat: 'obiloviny', from: '09-15', to: '10-31', desc: 'Setí ozimé pšenice a žita, příprava půdy, hnojení.' },
+  { name: 'Setí ozimého ječmene', cat: 'obiloviny', from: '09-15', to: '10-15', desc: 'Ozimý ječmen — dřívější termín než pšenice.' },
+  { name: 'Setí jarního ječmene', cat: 'obiloviny', from: '03-01', to: '03-31', desc: 'Co nejdříve na jaře, optimálně první dekáda března.' },
+  { name: 'Setí ovsa', cat: 'obiloviny', from: '03-15', to: '04-15', desc: 'Oves — odolný vůči chladu, sít brzy na jaře.' },
+  { name: 'Setí kukuřice', cat: 'obiloviny', from: '04-20', to: '05-20', desc: 'Až kdy teplota půdy přesáhne 10 °C.' },
+  { name: 'Sklizeň ozimé pšenice', cat: 'obiloviny', from: '07-10', to: '08-10', desc: 'Kombajnová sklizeň, sušení a uskladnění.' },
+  { name: 'Sklizeň ozimého ječmene', cat: 'obiloviny', from: '07-01', to: '07-25', desc: 'Dříve než pšenice, sledovat vlhkost zrna.' },
+  { name: 'Sklizeň kukuřice na zrno', cat: 'obiloviny', from: '10-01', to: '11-15', desc: 'Až při vlhkosti zrna pod 30 %.' },
+  { name: 'Hnojení dusíkem — jaro', cat: 'obiloviny', from: '03-01', to: '04-15', desc: 'Jarní přihnojení ozimů dusíkatými hnojivy.' },
+  // Zelenina
+  { name: 'Setí rajčat (předpěstování)', cat: 'zelenina', from: '02-15', to: '03-31', desc: 'Předpěstování v pařeništi nebo skleníku.' },
+  { name: 'Setí paprik (předpěst.)', cat: 'zelenina', from: '02-01', to: '03-15', desc: 'Papriky potřebují delší vegetaci — sít dříve.' },
+  { name: 'Setí zelí (předpěst.)', cat: 'zelenina', from: '03-01', to: '04-15', desc: 'Předpěstování, výsadba venku od dubna.' },
+  { name: 'Výsadba sadbových brambor', cat: 'zelenina', from: '04-10', to: '05-10', desc: 'Sadit po posledních mrazech, hloubka 10–15 cm.' },
+  { name: 'Setí mrkve', cat: 'zelenina', from: '03-20', to: '04-30', desc: 'Přímý výsev do záhonu, dobrá vlhkost půdy.' },
+  { name: 'Setí hrášku', cat: 'zelenina', from: '03-15', to: '04-20', desc: 'Hrášek snáší mírné mrazy — sít brzy.' },
+  { name: 'Setí fazolí', cat: 'zelenina', from: '05-10', to: '06-01', desc: 'Fazole jsou citlivé na mráz — sít po 15. 5.' },
+  { name: 'Výsadba rajčat ven', cat: 'zelenina', from: '05-15', to: '06-01', desc: 'Výsadba sazenic po zmrzlých.' },
+  { name: 'Výsadba paprik ven', cat: 'zelenina', from: '05-20', to: '06-05', desc: 'Teprve po definitivním skončení mrazů.' },
+  { name: 'Sklizeň brambor', cat: 'zelenina', from: '08-15', to: '10-15', desc: 'Rané odrůdy od srpna, pozdní do října.' },
+  { name: 'Sklizeň mrkve', cat: 'zelenina', from: '09-01', to: '10-31', desc: 'Sklizeň před silnými mrazy, uskladnění v písku.' },
+  { name: 'Sklizeň zelí', cat: 'zelenina', from: '09-01', to: '11-15', desc: 'Bílé i červené zelí, zpracování, uskladnění.' },
+  { name: 'Setí špenátu (podzim)', cat: 'zelenina', from: '08-20', to: '09-15', desc: 'Podzimní výsev pro sklizeň na podzim i jaro.' },
+  // Ovoce
+  { name: 'Zimní řez ovocných stromů', cat: 'ovoce', from: '01-15', to: '03-15', desc: 'Řez jabloní, hrušní, třešní — za bezmrazového dne.' },
+  { name: 'Postřik stromů na přezimující škůdce', cat: 'ovoce', from: '02-01', to: '03-10', desc: 'Olej nebo karblineum na vajíčka škůdců.' },
+  { name: 'Hnojení ovocných stromů', cat: 'ovoce', from: '03-01', to: '04-30', desc: 'Kompost nebo minerální hnojiva pod koruny.' },
+  { name: 'Ochrana kvetoucích stromů', cat: 'ovoce', from: '04-01', to: '05-15', desc: 'Sledovat mrazová varování, přikrytí nebo dýmení.' },
+  { name: 'Letní řez třešní', cat: 'ovoce', from: '07-01', to: '08-31', desc: 'Třešně řezat v létě (nižší riziko nemocí).' },
+  { name: 'Sklizeň třešní', cat: 'ovoce', from: '06-10', to: '07-15', desc: 'Sledovat zralost, sbírat za sucha.' },
+  { name: 'Sklizeň švestek', cat: 'ovoce', from: '08-15', to: '09-30', desc: 'Švestky, mirabelky, pološvestky.' },
+  { name: 'Sklizeň jablek', cat: 'ovoce', from: '08-20', to: '10-31', desc: 'Letní odrůdy od srpna, zimní až v říjnu.' },
+  { name: 'Sklizeň hrušek', cat: 'ovoce', from: '08-01', to: '10-15', desc: 'Trhání dříve než plně dozrají.' },
+  // Louky a trávy
+  { name: '1. seč louky', cat: 'traviny', from: '05-15', to: '06-15', desc: 'První sečení, optimální načasování pro výnos i kvalitu.' },
+  { name: '2. seč louky', cat: 'traviny', from: '07-15', to: '08-15', desc: 'Druhý otavy — záleží na srážkách a růstu.' },
+  { name: '3. seč louky', cat: 'traviny', from: '09-01', to: '10-01', desc: 'Pokud podmínky dovolí, třetí seč.' },
+  { name: 'Hnojení luk (jaro)', cat: 'traviny', from: '03-01', to: '04-15', desc: 'Dusíkaté hnojení pro nastartování jarního růstu.' },
+  { name: 'Přísev opotřebených luk', cat: 'traviny', from: '04-01', to: '05-15', desc: 'Dosev nebo přísev travní směsi.' },
+  // Živočišná
+  { name: 'Jarní pastva', cat: 'zivocisna', from: '04-15', to: '11-01', desc: 'Zahájení pastvy skotu a ovcí po jarním nárůstu trávy.' },
+  { name: 'Přesun na letní pastviny', cat: 'zivocisna', from: '05-01', to: '06-01', desc: 'Přesun stád na vrcholové pastviny.' },
+  { name: 'Stříhání ovcí', cat: 'zivocisna', from: '05-01', to: '06-15', desc: 'Jednou ročně — po skončení mrazů.' },
+  { name: 'Odčervení hospodářských zvířat', cat: 'zivocisna', from: '03-15', to: '04-30', desc: 'Jarní odčervení před výhonem na pastvu.' },
+  { name: 'Zimní přikrmování', cat: 'zivocisna', from: '11-01', to: '03-31', desc: 'Přikrmování senom, jádrem, minerály.' },
+  // Stroje
+  { name: 'Jarní kontrola strojů', cat: 'stroje', from: '02-15', to: '03-31', desc: 'Příprava traktorů, setů, postřikovačů na sezónu.' },
+  { name: 'Kalibrace secích strojů', cat: 'stroje', from: '02-20', to: '04-10', desc: 'Nastavení výsevku, mazání, kontrola disků.' },
+  { name: 'Příprava sklizňové techniky', cat: 'stroje', from: '06-01', to: '07-01', desc: 'Seřízení kombajnu před žněmi.' },
+  { name: 'Podzimní servis strojů', cat: 'stroje', from: '10-15', to: '12-15', desc: 'Zimní konzervace, výměna olejů, opravy.' },
+  // Ostatní
+  { name: 'Plánování osevního postupu', cat: 'ostatni', from: '12-01', to: '01-31', desc: 'Příprava osevního plánu na příští rok, výběr odrůd.' },
+  { name: 'Kontrola zásob semen', cat: 'ostatni', from: '01-01', to: '02-28', desc: 'Inventura, objednávka osiv.' },
+  { name: 'Příprava kompostu', cat: 'ostatni', from: '03-01', to: '04-30', desc: 'Probrat a aplikovat zralý kompost.' },
+  { name: 'Aplikace chlévského hnoje', cat: 'ostatni', from: '10-01', to: '11-30', desc: 'Podzimní zapravení organické hmoty.' },
+  { name: 'Příjem dotací / agro-administrativa', cat: 'ostatni', from: '04-01', to: '05-31', desc: 'Podávání žádostí o dotace (SZIF, LPIS).' },
+];
+
+let currentMonth = new Date().getMonth(); // 0-11
+let currentYear = new Date().getFullYear();
+let selectedDay = null;
+let activeFilters = new Set(Object.keys(CATS));
+let userTasks = JSON.parse(localStorage.getItem('agri_user_tasks') || '[]');
+
+function saveUserTasks() { localStorage.setItem('agri_user_tasks', JSON.stringify(userTasks)); }
+
+function getAllTasks() { return [...DEFAULT_TASKS, ...userTasks]; }
+
+function parseMMDD(str) {
+  const [m, d] = str.split('-').map(Number);
+  return { month: m, day: d };
+}
+
+function taskSpansDay(task, month1, day) {
+  // month1: 1-12
+  const from = parseMMDD(task.from);
+  const to = parseMMDD(task.to);
+  const cur = { month: month1, day };
+  const fromNum = from.month * 100 + from.day;
+  const toNum = to.month * 100 + to.day;
+  const curNum = cur.month * 100 + cur.day;
+  if (fromNum <= toNum) return curNum >= fromNum && curNum <= toNum;
+  // přechod přes rok (např. prosinec → leden)
+  return curNum >= fromNum || curNum <= toNum;
+}
+
+function taskSpansMonth(task, month1) {
+  const from = parseMMDD(task.from);
+  const to = parseMMDD(task.to);
+  if (from.month <= to.month) return month1 >= from.month && month1 <= to.month;
+  return month1 >= from.month || month1 <= to.month;
+}
+
+function renderFilterBar() {
+  const bar = document.getElementById('filterBar');
+  bar.innerHTML = Object.entries(CATS).map(([key, cat]) => `
+    <button class="cat-btn ${activeFilters.has(key) ? 'active' : ''}"
+      style="background:${cat.bg};color:${cat.color};border-color:${cat.color};"
+      onclick="toggleFilter('${key}')">${cat.label}</button>`).join('');
+}
+
+function toggleFilter(key) {
+  if (activeFilters.has(key)) { if (activeFilters.size > 1) activeFilters.delete(key); }
+  else activeFilters.add(key);
+  renderFilterBar();
+  renderAll();
+}
+
+function prevMonth() {
+  currentMonth--;
+  if (currentMonth < 0) { currentMonth = 11; currentYear--; }
+  renderAll();
+}
+function nextMonth() {
+  currentMonth++;
+  if (currentMonth > 11) { currentMonth = 0; currentYear++; }
+  renderAll();
+}
+function goToday() {
+  const now = new Date();
+  currentMonth = now.getMonth();
+  currentYear = now.getFullYear();
+  selectedDay = now.getDate();
+  renderAll();
+}
+
+function daysInMonth(month, year) { return new Date(year, month + 1, 0).getDate(); }
+function firstDayOfMonth(month, year) {
+  let d = new Date(year, month, 1).getDay();
+  return (d + 6) % 7; // Monday = 0
+}
+
+function renderMiniCal() {
+  document.getElementById('monthLabel').textContent = MONTHS[currentMonth] + ' ' + currentYear;
+  const grid = document.getElementById('miniCalGrid');
+  const days = daysInMonth(currentMonth, currentYear);
+  const firstDay = firstDayOfMonth(currentMonth, currentYear);
+  const today = new Date();
+  const todayD = today.getDate(), todayM = today.getMonth(), todayY = today.getFullYear();
+  const month1 = currentMonth + 1;
+
+  let html = DAYS_CZ.map(d => `<div class="day-label">${d}</div>`).join('');
+  for (let i = 0; i < firstDay; i++) html += '<div class="day-cell empty"></div>';
+  for (let d = 1; d <= days; d++) {
+    const isToday = d === todayD && currentMonth === todayM && currentYear === todayY;
+    const isSel = d === selectedDay;
+    const hasTasks = getAllTasks().some(t => activeFilters.has(t.cat) && taskSpansDay(t, month1, d));
+    html += `<div class="day-cell ${isToday ? 'today' : ''} ${isSel ? 'selected' : ''} ${hasTasks ? 'has-task' : ''}" onclick="selectDay(${d})">${d}</div>`;
+  }
+  grid.innerHTML = html;
+}
+
+function selectDay(d) {
+  selectedDay = d;
+  renderMiniCal();
+  renderDayTasks();
+}
+
+function renderDayTasks() {
+  if (!selectedDay) return;
+  const month1 = currentMonth + 1;
+  const title = document.getElementById('dayTasksTitle');
+  const list = document.getElementById('dayTasksList');
+  title.textContent = `${selectedDay}. ${MONTHS[currentMonth]}`;
+  const tasks = getAllTasks().filter(t => activeFilters.has(t.cat) && taskSpansDay(t, month1, selectedDay));
+  if (tasks.length === 0) {
+    list.innerHTML = '<div style="color:#555;font-size:0.8rem;padding:8px 0">Žádné úkoly pro tento den</div>';
+    return;
+  }
+  list.innerHTML = tasks.map(t => {
+    const cat = CATS[t.cat];
+    const isUser = !!t.id;
+    return `<div class="day-task-item" style="border-left-color:${cat.color}">
+      ${isUser ? `<button class="delete-btn" onclick="deleteUserTask('${t.id}')">✕</button>` : ''}
+      <div class="task-name" style="color:${cat.color}">${t.name} ${isUser ? '<span class="user-badge">vlastní</span>' : ''}</div>
+      <div class="task-detail">${cat.label} · ${t.from} – ${t.to}</div>
+      ${t.desc ? `<div class="task-detail">${t.desc}</div>` : ''}
+    </div>`;
+  }).join('');
+}
+
+function renderRightPanel() {
+  const panel = document.getElementById('rightPanel');
+  const month1 = currentMonth + 1;
+  const tasks = getAllTasks().filter(t => activeFilters.has(t.cat) && taskSpansMonth(t, month1));
+
+  panel.innerHTML = `<div class="section-header">🗓️ ${MONTHS[currentMonth]} ${currentYear} — Přehled úkolů (${tasks.length})</div>
+    <div class="tasks-grid">${tasks.length === 0
+      ? '<div style="color:#555;padding:20px;grid-column:1/-1">Žádné úkoly pro tento měsíc</div>'
+      : tasks.map(t => {
+          const cat = CATS[t.cat];
+          const isUser = !!t.id;
+          return `<div class="task-card" style="border-left-color:${cat.color};background:${cat.bg}20">
+            ${isUser ? `<button class="delete-btn" onclick="deleteUserTask('${t.id}')">✕</button>` : ''}
+            <div class="t-cat" style="color:${cat.color}">${cat.label} ${isUser ? '<span class="user-badge">vlastní</span>' : ''}</div>
+            <div class="t-name" style="color:${cat.color}">${t.name}</div>
+            <div class="t-dates">📅 ${t.from} – ${t.to}</div>
+            ${t.desc ? `<div class="t-desc">${t.desc}</div>` : ''}
+          </div>`;
+        }).join('')
+    }</div>
+
+    <div class="section-header">📆 Celý rok — přehled</div>
+    ${MONTHS.map((mName, mi) => {
+      const m1 = mi + 1;
+      const allT = getAllTasks().filter(t => activeFilters.has(t.cat) && taskSpansMonth(t, m1));
+      const icon = MONTH_ICONS[mi];
+      return `<div class="month-section">
+        <div class="month-title" onclick="jumpToMonth(${mi})">${icon} ${mName} <span style="color:#555;font-size:0.75rem;margin-left:auto">${allT.length} úkolů</span></div>
+        <div class="tasks-grid">${allT.length === 0
+          ? '<div style="color:#444;font-size:0.78rem;padding:8px 14px;grid-column:1/-1">Bez úkolů</div>'
+          : allT.map(t => {
+              const cat = CATS[t.cat];
+              return `<div class="task-card" style="border-left-color:${cat.color};background:${cat.bg}20">
+                <div class="t-cat" style="color:${cat.color}">${cat.label}</div>
+                <div class="t-name" style="color:${cat.color}">${t.name}</div>
+                <div class="t-dates">📅 ${t.from} – ${t.to}</div>
+              </div>`;
+            }).join('')
+        }</div>
+      </div>`;
+    }).join('')}`;
+}
+
+function jumpToMonth(mi) {
+  currentMonth = mi;
+  renderAll();
+  document.getElementById('rightPanel').scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+function addUserTask() {
+  const name = document.getElementById('u-name').value.trim();
+  const from = document.getElementById('u-from').value.trim();
+  const to = document.getElementById('u-to').value.trim();
+  if (!name || !from || !to) { alert('Vyplňte název, od a do'); return; }
+  if (!/^\d{2}-\d{2}$/.test(from) || !/^\d{2}-\d{2}$/.test(to)) { alert('Formát data: MM-DD (např. 03-15)'); return; }
+  const task = {
+    id: Date.now().toString(),
+    name,
+    cat: document.getElementById('u-cat').value,
+    from,
+    to,
+    desc: document.getElementById('u-desc').value.trim()
+  };
+  userTasks.push(task);
+  saveUserTasks();
+  document.getElementById('u-name').value = '';
+  document.getElementById('u-from').value = '';
+  document.getElementById('u-to').value = '';
+  document.getElementById('u-desc').value = '';
+  renderAll();
+}
+
+function deleteUserTask(id) {
+  if (!confirm('Smazat tento úkol?')) return;
+  userTasks = userTasks.filter(t => t.id !== id);
+  saveUserTasks();
+  renderAll();
+}
+
+function renderAll() {
+  renderMiniCal();
+  renderDayTasks();
+  renderRightPanel();
+}
+
+renderFilterBar();
+renderAll();
+</script>
+</body>
+</html>

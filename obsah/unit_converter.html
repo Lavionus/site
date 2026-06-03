@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8" />
+  <title>Konvertor jednotek</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #1a1a1a;
+      color: #e0e0e0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    header {
+      background: #2d2d2d;
+      border-bottom: 1px solid #404040;
+      padding: 10px 18px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+    header h1 { font-size: 1.05rem; font-weight: 700; color: #6aa6fd; }
+    .main {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+    /* Levý panel: kategorie */
+    .cat-panel {
+      width: 180px;
+      flex-shrink: 0;
+      background: #242424;
+      border-right: 1px solid #404040;
+      overflow-y: auto;
+    }
+    .cat-item {
+      padding: 10px 14px;
+      cursor: pointer;
+      font-size: 0.88rem;
+      border-left: 3px solid transparent;
+      color: #a0a0a0;
+      transition: all 0.15s;
+    }
+    .cat-item:hover { background: #333; color: #e0e0e0; }
+    .cat-item.active { background: #1e3050; border-left-color: #6aa6fd; color: #6aa6fd; font-weight: 600; }
+    /* Pravý panel */
+    .right {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .converter-area {
+      flex: 1;
+      overflow-y: auto;
+      padding: 20px;
+      scrollbar-width: thin;
+      scrollbar-color: #404040 #1a1a1a;
+    }
+    .cat-title {
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: #6aa6fd;
+      margin-bottom: 16px;
+    }
+    /* Hlavní konvertor */
+    .converter-box {
+      background: #242424;
+      border-radius: 10px;
+      border: 1px solid #404040;
+      padding: 18px;
+      margin-bottom: 20px;
+    }
+    .conv-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 10px;
+    }
+    .conv-input {
+      flex: 1;
+      background: #1a1a1a;
+      border: 1px solid #555;
+      color: #e0e0e0;
+      border-radius: 7px;
+      padding: 10px 14px;
+      font-size: 1.05rem;
+      outline: none;
+      min-width: 0;
+    }
+    .conv-input:focus { border-color: #6aa6fd; }
+    .conv-select {
+      background: #333;
+      color: #e0e0e0;
+      border: 1px solid #555;
+      border-radius: 7px;
+      padding: 10px 10px;
+      font-size: 0.9rem;
+      outline: none;
+      min-width: 150px;
+    }
+    .swap-btn {
+      background: #333;
+      border: 1px solid #555;
+      color: #8ab4f8;
+      padding: 8px 12px;
+      border-radius: 7px;
+      cursor: pointer;
+      font-size: 1rem;
+      transition: background 0.15s;
+    }
+    .swap-btn:hover { background: #444; }
+    /* Tabulka všech hodnot */
+    .all-table {
+      background: #242424;
+      border-radius: 10px;
+      border: 1px solid #404040;
+      overflow: hidden;
+    }
+    .all-table-title {
+      padding: 10px 14px;
+      font-size: 0.72rem;
+      color: #6aa6fd;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-weight: 700;
+      border-bottom: 1px solid #333;
+    }
+    table { width: 100%; border-collapse: collapse; }
+    thead th {
+      background: #2d2d2d;
+      color: #8ab4f8;
+      padding: 7px 14px;
+      text-align: left;
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    tbody tr { border-bottom: 1px solid #2a2a2a; }
+    tbody tr:hover { background: #2d2d2d; }
+    tbody td { padding: 7px 14px; font-size: 0.88rem; }
+    td.unit-name { color: #b0b0b0; }
+    td.unit-val { color: #e0e0e0; font-weight: 600; font-family: monospace; font-size: 0.92rem; }
+    td.unit-sym { color: #6aa6fd; font-size: 0.8rem; }
+    /* Speciální: teplota */
+    .temp-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .temp-card {
+      background: #242424;
+      border-radius: 8px;
+      border: 1px solid #404040;
+      padding: 12px;
+      text-align: center;
+    }
+    .temp-card .tc-label { font-size: 0.72rem; color: #888; text-transform: uppercase; letter-spacing: 0.5px; }
+    .temp-card .tc-input {
+      background: #1a1a1a;
+      border: 1px solid #555;
+      color: #e0e0e0;
+      border-radius: 6px;
+      padding: 8px 10px;
+      font-size: 1.1rem;
+      width: 100%;
+      text-align: center;
+      outline: none;
+      margin-top: 6px;
+    }
+    .temp-card .tc-input:focus { border-color: #6aa6fd; }
+    .temp-card .tc-unit { font-size: 1.5rem; color: #6aa6fd; font-weight: 700; margin-bottom: 4px; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>⚖️ Konvertor jednotek</h1>
+</header>
+
+<div class="main">
+  <div class="cat-panel" id="catPanel"></div>
+  <div class="right">
+    <div class="converter-area" id="converterArea"></div>
+  </div>
+</div>
+
+<script>
+const CATEGORIES = {
+  delka: {
+    label: '📏 Délka',
+    base: 'm',
+    units: [
+      { id: 'mm',  name: 'Milimetr',       sym: 'mm',  toBase: 0.001 },
+      { id: 'cm',  name: 'Centimetr',      sym: 'cm',  toBase: 0.01 },
+      { id: 'dm',  name: 'Decimetr',       sym: 'dm',  toBase: 0.1 },
+      { id: 'm',   name: 'Metr',           sym: 'm',   toBase: 1 },
+      { id: 'km',  name: 'Kilometr',       sym: 'km',  toBase: 1000 },
+      { id: 'in',  name: 'Palec (inch)',   sym: 'in',  toBase: 0.0254 },
+      { id: 'ft',  name: 'Stopa (foot)',   sym: 'ft',  toBase: 0.3048 },
+      { id: 'yd',  name: 'Yard',           sym: 'yd',  toBase: 0.9144 },
+      { id: 'mi',  name: 'Míle (mile)',    sym: 'mi',  toBase: 1609.344 },
+      { id: 'nmi', name: 'Námořní míle',   sym: 'nmi', toBase: 1852 },
+    ]
+  },
+  plocha: {
+    label: '🔲 Plocha',
+    base: 'm2',
+    units: [
+      { id: 'mm2', name: 'mm²',            sym: 'mm²', toBase: 1e-6 },
+      { id: 'cm2', name: 'cm²',            sym: 'cm²', toBase: 1e-4 },
+      { id: 'm2',  name: 'm²',             sym: 'm²',  toBase: 1 },
+      { id: 'a',   name: 'Ar',             sym: 'a',   toBase: 100 },
+      { id: 'ha',  name: 'Hektar',         sym: 'ha',  toBase: 10000 },
+      { id: 'km2', name: 'km²',            sym: 'km²', toBase: 1e6 },
+      { id: 'ft2', name: 'Čtvereční stopa',sym: 'ft²', toBase: 0.092903 },
+      { id: 'yd2', name: 'Čtvereční yard', sym: 'yd²', toBase: 0.836127 },
+      { id: 'ac',  name: 'Acre',           sym: 'ac',  toBase: 4046.86 },
+      { id: 'mi2', name: 'Čtvereční míle', sym: 'mi²', toBase: 2589988.1 },
+    ]
+  },
+  objem: {
+    label: '🧴 Objem',
+    base: 'l',
+    units: [
+      { id: 'ml',   name: 'Mililitr',      sym: 'ml',  toBase: 0.001 },
+      { id: 'cl',   name: 'Centilitr',     sym: 'cl',  toBase: 0.01 },
+      { id: 'dl',   name: 'Decilitr',      sym: 'dl',  toBase: 0.1 },
+      { id: 'l',    name: 'Litr',          sym: 'l',   toBase: 1 },
+      { id: 'm3',   name: 'Metr krychlový',sym: 'm³',  toBase: 1000 },
+      { id: 'tsp',  name: 'Čajová lžička', sym: 'tsp', toBase: 0.00492892 },
+      { id: 'tbsp', name: 'Polévková lžíce',sym:'tbsp', toBase: 0.0147868 },
+      { id: 'floz', name: 'Fl. oz (US)',   sym: 'fl oz',toBase: 0.0295735 },
+      { id: 'cup',  name: 'Cup (US)',       sym: 'cup', toBase: 0.236588 },
+      { id: 'pt',   name: 'Pint (US)',      sym: 'pt',  toBase: 0.473176 },
+      { id: 'qt',   name: 'Quart (US)',     sym: 'qt',  toBase: 0.946353 },
+      { id: 'gal',  name: 'Galon (US)',     sym: 'gal', toBase: 3.78541 },
+    ]
+  },
+  hmotnost: {
+    label: '⚖️ Hmotnost',
+    base: 'kg',
+    units: [
+      { id: 'mg',  name: 'Miligram',       sym: 'mg',  toBase: 1e-6 },
+      { id: 'g',   name: 'Gram',           sym: 'g',   toBase: 0.001 },
+      { id: 'dkg', name: 'Dekagram',       sym: 'dkg', toBase: 0.01 },
+      { id: 'kg',  name: 'Kilogram',       sym: 'kg',  toBase: 1 },
+      { id: 't',   name: 'Tuna',           sym: 't',   toBase: 1000 },
+      { id: 'oz',  name: 'Unce (oz)',      sym: 'oz',  toBase: 0.0283495 },
+      { id: 'lb',  name: 'Libra (lb)',     sym: 'lb',  toBase: 0.453592 },
+      { id: 'st',  name: 'Stone',          sym: 'st',  toBase: 6.35029 },
+      { id: 'q',   name: 'Metrickýcent',   sym: 'q',   toBase: 100 },
+    ]
+  },
+  teplota: {
+    label: '🌡️ Teplota',
+    special: 'temp'
+  },
+  cas: {
+    label: '⏱️ Čas',
+    base: 's',
+    units: [
+      { id: 'ns',  name: 'Nanosekunda',    sym: 'ns',  toBase: 1e-9 },
+      { id: 'us',  name: 'Mikrosekunda',   sym: 'µs',  toBase: 1e-6 },
+      { id: 'ms',  name: 'Milisekunda',    sym: 'ms',  toBase: 0.001 },
+      { id: 's',   name: 'Sekunda',        sym: 's',   toBase: 1 },
+      { id: 'min', name: 'Minuta',         sym: 'min', toBase: 60 },
+      { id: 'h',   name: 'Hodina',         sym: 'h',   toBase: 3600 },
+      { id: 'd',   name: 'Den',            sym: 'd',   toBase: 86400 },
+      { id: 'w',   name: 'Týden',          sym: 'týd', toBase: 604800 },
+      { id: 'mo',  name: 'Měsíc (30 d)',   sym: 'měs', toBase: 2592000 },
+      { id: 'y',   name: 'Rok (365 d)',    sym: 'rok', toBase: 31536000 },
+    ]
+  },
+  rychlost: {
+    label: '💨 Rychlost',
+    base: 'ms',
+    units: [
+      { id: 'ms',   name: 'm/s',           sym: 'm/s',   toBase: 1 },
+      { id: 'kmh',  name: 'km/h',          sym: 'km/h',  toBase: 1/3.6 },
+      { id: 'mph',  name: 'mph',           sym: 'mph',   toBase: 0.44704 },
+      { id: 'kn',   name: 'Uzel (knot)',   sym: 'kn',    toBase: 0.514444 },
+      { id: 'ftps', name: 'ft/s',          sym: 'ft/s',  toBase: 0.3048 },
+      { id: 'mach', name: 'Mach (≈340 m/s)',sym: 'Mach', toBase: 340.29 },
+    ]
+  },
+  tlak: {
+    label: '🔵 Tlak',
+    base: 'pa',
+    units: [
+      { id: 'pa',   name: 'Pascal',        sym: 'Pa',    toBase: 1 },
+      { id: 'kpa',  name: 'Kilopascal',    sym: 'kPa',   toBase: 1000 },
+      { id: 'mpa',  name: 'Megapascal',    sym: 'MPa',   toBase: 1e6 },
+      { id: 'bar',  name: 'Bar',           sym: 'bar',   toBase: 100000 },
+      { id: 'mbar', name: 'Milibar',       sym: 'mbar',  toBase: 100 },
+      { id: 'atm',  name: 'Atmosféra',     sym: 'atm',   toBase: 101325 },
+      { id: 'mmhg', name: 'mmHg (Torr)',   sym: 'mmHg',  toBase: 133.322 },
+      { id: 'psi',  name: 'PSI',           sym: 'psi',   toBase: 6894.76 },
+    ]
+  },
+  energie: {
+    label: '⚡ Energie',
+    base: 'j',
+    units: [
+      { id: 'j',    name: 'Joule',         sym: 'J',     toBase: 1 },
+      { id: 'kj',   name: 'Kilojoule',     sym: 'kJ',    toBase: 1000 },
+      { id: 'mj',   name: 'Megajoule',     sym: 'MJ',    toBase: 1e6 },
+      { id: 'cal',  name: 'Kalorie',       sym: 'cal',   toBase: 4.184 },
+      { id: 'kcal', name: 'Kilokalorie',   sym: 'kcal',  toBase: 4184 },
+      { id: 'wh',   name: 'Watt·hodina',   sym: 'Wh',    toBase: 3600 },
+      { id: 'kwh',  name: 'Kilowatt·hodina',sym: 'kWh',  toBase: 3600000 },
+      { id: 'ev',   name: 'Elektronvolt',  sym: 'eV',    toBase: 1.602176634e-19 },
+      { id: 'btu',  name: 'BTU',           sym: 'BTU',   toBase: 1055.06 },
+    ]
+  },
+  vykon: {
+    label: '🔋 Výkon',
+    base: 'w',
+    units: [
+      { id: 'w',    name: 'Watt',          sym: 'W',     toBase: 1 },
+      { id: 'kw',   name: 'Kilowatt',      sym: 'kW',    toBase: 1000 },
+      { id: 'mw',   name: 'Megawatt',      sym: 'MW',    toBase: 1e6 },
+      { id: 'hp',   name: 'Koňská síla (HP)',sym: 'HP',  toBase: 745.7 },
+      { id: 'ps',   name: 'Koňská síla (PS)',sym: 'PS',  toBase: 735.499 },
+      { id: 'btuh', name: 'BTU/h',         sym: 'BTU/h', toBase: 0.293071 },
+    ]
+  },
+  uhel: {
+    label: '📐 Úhel',
+    base: 'deg',
+    units: [
+      { id: 'deg',  name: 'Stupeň',        sym: '°',     toBase: 1 },
+      { id: 'rad',  name: 'Radián',        sym: 'rad',   toBase: 180 / Math.PI },
+      { id: 'grad', name: 'Gradian',       sym: 'grad',  toBase: 0.9 },
+      { id: 'arcmin',name: 'Úhlová minuta',sym: "'",     toBase: 1/60 },
+      { id: 'arcsec',name: 'Úhlová vteřina',sym: '"',    toBase: 1/3600 },
+    ]
+  },
+  data: {
+    label: '💾 Data',
+    base: 'b',
+    units: [
+      { id: 'b',    name: 'Bit',           sym: 'b',     toBase: 1 },
+      { id: 'B',    name: 'Bajt',          sym: 'B',     toBase: 8 },
+      { id: 'KB',   name: 'Kilobajt',      sym: 'KB',    toBase: 8192 },
+      { id: 'MB',   name: 'Megabajt',      sym: 'MB',    toBase: 8388608 },
+      { id: 'GB',   name: 'Gigabajt',      sym: 'GB',    toBase: 8589934592 },
+      { id: 'TB',   name: 'Terabajt',      sym: 'TB',    toBase: 8796093022208 },
+      { id: 'Kib',  name: 'Kibibajt',      sym: 'KiB',   toBase: 8192 },
+      { id: 'Mib',  name: 'Mebibajt',      sym: 'MiB',   toBase: 8388608 },
+      { id: 'Gib',  name: 'Gibibajt',      sym: 'GiB',   toBase: 9663676416 },
+    ]
+  },
+};
+
+let activeCat = 'delka';
+let fromUnit = '', toUnit = '';
+
+function renderCatPanel() {
+  const panel = document.getElementById('catPanel');
+  panel.innerHTML = Object.entries(CATEGORIES).map(([key, cat]) =>
+    `<div class="cat-item ${key === activeCat ? 'active' : ''}" onclick="setCategory('${key}')">${cat.label}</div>`
+  ).join('');
+}
+
+function setCategory(key) {
+  activeCat = key;
+  renderCatPanel();
+  renderConverter();
+}
+
+function renderConverter() {
+  const cat = CATEGORIES[activeCat];
+  const area = document.getElementById('converterArea');
+
+  if (cat.special === 'temp') {
+    renderTemp(area, cat);
+    return;
+  }
+
+  const units = cat.units;
+  if (!fromUnit || !units.find(u => u.id === fromUnit)) fromUnit = units[0].id;
+  if (!toUnit || !units.find(u => u.id === toUnit)) toUnit = units[1].id;
+
+  area.innerHTML = `
+    <div class="cat-title">${cat.label}</div>
+    <div class="converter-box">
+      <div class="conv-row">
+        <input class="conv-input" id="fromVal" type="number" placeholder="Zadejte hodnotu..." oninput="convert('from')" />
+        <select class="conv-select" id="fromSel" onchange="fromUnit=this.value;convert('from')">${units.map(u=>`<option value="${u.id}" ${u.id===fromUnit?'selected':''}>${u.name} (${u.sym})</option>`).join('')}</select>
+      </div>
+      <div style="text-align:center;margin:4px 0">
+        <button class="swap-btn" onclick="swapUnits()" title="Prohodit jednotky">⇅ Prohodit</button>
+      </div>
+      <div class="conv-row">
+        <input class="conv-input" id="toVal" type="number" placeholder="Výsledek..." oninput="convert('to')" />
+        <select class="conv-select" id="toSel" onchange="toUnit=this.value;convert('from')">${units.map(u=>`<option value="${u.id}" ${u.id===toUnit?'selected':''}>${u.name} (${u.sym})</option>`).join('')}</select>
+      </div>
+    </div>
+    <div class="all-table">
+      <div class="all-table-title">Všechny převody (ze zadané hodnoty)</div>
+      <table>
+        <thead><tr><th>Jednotka</th><th>Symbol</th><th>Hodnota</th></tr></thead>
+        <tbody id="allRows"></tbody>
+      </table>
+    </div>`;
+
+  convert('from');
+}
+
+function convert(dir) {
+  const cat = CATEGORIES[activeCat];
+  const units = cat.units;
+  const fromU = units.find(u => u.id === (document.getElementById('fromSel')?.value || fromUnit));
+  const toU = units.find(u => u.id === (document.getElementById('toSel')?.value || toUnit));
+  if (!fromU || !toU) return;
+
+  let val;
+  if (dir === 'from') {
+    val = parseFloat(document.getElementById('fromVal').value);
+    if (isNaN(val)) { clearTable(); return; }
+    const baseVal = val * fromU.toBase;
+    const result = baseVal / toU.toBase;
+    document.getElementById('toVal').value = formatNum(result);
+    updateAllRows(baseVal, units);
+  } else {
+    val = parseFloat(document.getElementById('toVal').value);
+    if (isNaN(val)) { clearTable(); return; }
+    const baseVal = val * toU.toBase;
+    const result = baseVal / fromU.toBase;
+    document.getElementById('fromVal').value = formatNum(result);
+    updateAllRows(baseVal, units);
+  }
+}
+
+function formatNum(n) {
+  if (Math.abs(n) >= 1e12 || (Math.abs(n) < 1e-6 && n !== 0)) return n.toExponential(6);
+  if (Math.abs(n) < 0.001 && n !== 0) return parseFloat(n.toPrecision(6)).toString();
+  return parseFloat(n.toPrecision(10)).toString();
+}
+
+function updateAllRows(baseVal, units) {
+  const tbody = document.getElementById('allRows');
+  if (!tbody) return;
+  tbody.innerHTML = units.map(u => {
+    const val = baseVal / u.toBase;
+    return `<tr><td class="unit-name">${u.name}</td><td class="unit-sym">${u.sym}</td><td class="unit-val">${formatNum(val)}</td></tr>`;
+  }).join('');
+}
+
+function clearTable() {
+  const tbody = document.getElementById('allRows');
+  if (tbody) tbody.innerHTML = '';
+  const tv = document.getElementById('toVal');
+  if (tv) tv.value = '';
+}
+
+function swapUnits() {
+  const tmpFrom = document.getElementById('fromSel').value;
+  const tmpVal = document.getElementById('fromVal').value;
+  document.getElementById('fromSel').value = document.getElementById('toSel').value;
+  document.getElementById('toSel').value = tmpFrom;
+  fromUnit = document.getElementById('fromSel').value;
+  toUnit = document.getElementById('toSel').value;
+  document.getElementById('fromVal').value = document.getElementById('toVal').value;
+  convert('from');
+}
+
+// Teplota — speciální (lineární přepočty)
+function renderTemp(area, cat) {
+  area.innerHTML = `
+    <div class="cat-title">${cat.label}</div>
+    <div class="temp-grid">
+      <div class="temp-card">
+        <div class="tc-unit">°C</div>
+        <div class="tc-label">Celsius</div>
+        <input class="tc-input" id="t-c" type="number" placeholder="0" oninput="tempConvert('c')" />
+      </div>
+      <div class="temp-card">
+        <div class="tc-unit">°F</div>
+        <div class="tc-label">Fahrenheit</div>
+        <input class="tc-input" id="t-f" type="number" placeholder="32" oninput="tempConvert('f')" />
+      </div>
+      <div class="temp-card">
+        <div class="tc-unit">K</div>
+        <div class="tc-label">Kelvin</div>
+        <input class="tc-input" id="t-k" type="number" placeholder="273.15" oninput="tempConvert('k')" />
+      </div>
+    </div>
+    <div class="converter-box" style="font-size:0.82rem;color:#888;line-height:1.8">
+      <b style="color:#6aa6fd">Vzorce přepočtu:</b><br/>
+      °F = °C × 9/5 + 32<br/>
+      K = °C + 273.15<br/>
+      °C = (°F − 32) × 5/9<br/>
+      °C = K − 273.15
+    </div>
+    <div class="all-table">
+      <div class="all-table-title">Referenční body</div>
+      <table>
+        <thead><tr><th>Popis</th><th>°C</th><th>°F</th><th>K</th></tr></thead>
+        <tbody>
+          <tr><td class="unit-name">Absolutní nula</td><td class="unit-val">−273.15</td><td class="unit-val">−459.67</td><td class="unit-val">0</td></tr>
+          <tr><td class="unit-name">Tání ledu</td><td class="unit-val">0</td><td class="unit-val">32</td><td class="unit-val">273.15</td></tr>
+          <tr><td class="unit-name">Tělesná teplota</td><td class="unit-val">37</td><td class="unit-val">98.6</td><td class="unit-val">310.15</td></tr>
+          <tr><td class="unit-name">Var vody</td><td class="unit-val">100</td><td class="unit-val">212</td><td class="unit-val">373.15</td></tr>
+        </tbody>
+      </table>
+    </div>`;
+}
+
+function tempConvert(src) {
+  let c, f, k;
+  if (src === 'c') {
+    c = parseFloat(document.getElementById('t-c').value);
+    if (isNaN(c)) return;
+    f = c * 9/5 + 32;
+    k = c + 273.15;
+    document.getElementById('t-f').value = formatNum(f);
+    document.getElementById('t-k').value = formatNum(k);
+  } else if (src === 'f') {
+    f = parseFloat(document.getElementById('t-f').value);
+    if (isNaN(f)) return;
+    c = (f - 32) * 5/9;
+    k = c + 273.15;
+    document.getElementById('t-c').value = formatNum(c);
+    document.getElementById('t-k').value = formatNum(k);
+  } else {
+    k = parseFloat(document.getElementById('t-k').value);
+    if (isNaN(k)) return;
+    c = k - 273.15;
+    f = c * 9/5 + 32;
+    document.getElementById('t-c').value = formatNum(c);
+    document.getElementById('t-f').value = formatNum(f);
+  }
+}
+
+renderCatPanel();
+renderConverter();
+</script>
+</body>
+</html>

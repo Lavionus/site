@@ -1,0 +1,2519 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ER Diagram Editor</title>
+  <style>
+    /* ═══════════════════════════════════════════════════════════
+       THEME VARIABLES
+    ═══════════════════════════════════════════════════════════ */
+    :root {
+      --bg-body:      #1a1a1a;
+      --bg-header:    #2a2a2a;
+      --bg-sidebar:   #222;
+      --bg-card:      #2a2a2a;
+      --bg-input:     #1a1a1a;
+      --bg-alt:       #242424;
+      --bg-hover:     #3a3a3a;
+      --border:       #404040;
+      --border-sub:   #333;
+      --text:         #e0e0e0;
+      --text-muted:   #888;
+      --text-dim:     #555;
+      --text-btn:     #ccc;
+      --accent:       #6aa6fd;
+      --accent-bg:    #354a6e;
+      --accent-dark:  #1e3a5e;
+      --tab-bg:       #333;
+      --modal-bg:     #2a2a2a;
+      --modal-overlay:rgba(0,0,0,0.7);
+      --canvas-bg:    #1a1a1a;
+      --canvas-grid:  rgba(255,255,255,0.025);
+      --danger-bg:    #4a2c2c;
+      --danger-border:#8b4444;
+      --danger-text:  #ff8888;
+      --notif-ok:     #2d5a2d;
+      --notif-info:   #1e3a5e;
+      --notif-err:    #4a2c2c;
+      --col-flag-bg:  #2a2a2a;
+      --scrollbar:    #444;
+    }
+
+    [data-theme="light"] {
+      --bg-body:      #f0f2f5;
+      --bg-header:    #ffffff;
+      --bg-sidebar:   #f4f5f7;
+      --bg-card:      #ffffff;
+      --bg-input:     #f8f9fa;
+      --bg-alt:       #f0f2f5;
+      --bg-hover:     #e8eaed;
+      --border:       #d0d4db;
+      --border-sub:   #e0e3e8;
+      --text:         #1a1a2e;
+      --text-muted:   #666;
+      --text-dim:     #aaa;
+      --text-btn:     #444;
+      --accent:       #2563eb;
+      --accent-bg:    #dbeafe;
+      --accent-dark:  #eff6ff;
+      --tab-bg:       #eef0f3;
+      --modal-bg:     #ffffff;
+      --modal-overlay:rgba(0,0,0,0.4);
+      --canvas-bg:    #f8f9fa;
+      --canvas-grid:  rgba(0,0,0,0.04);
+      --danger-bg:    #fee2e2;
+      --danger-border:#fca5a5;
+      --danger-text:  #dc2626;
+      --notif-ok:     #166534;
+      --notif-info:   #1e40af;
+      --notif-err:    #7f1d1d;
+      --col-flag-bg:  #f0f2f5;
+      --scrollbar:    #bbb;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: var(--bg-body);
+      color: var(--text);
+      min-height: 100vh;
+      overflow: hidden;
+      transition: background-color .25s, color .25s;
+    }
+
+    .app-layout { display: flex; flex-direction: column; height: 100vh; }
+
+    .header {
+      padding: 12px 20px;
+      background: var(--bg-header);
+      border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 20px; flex-shrink: 0;
+      transition: background .25s, border-color .25s;
+    }
+
+    .header h1 { font-size: 1.1rem; font-weight: 600; color: var(--text); }
+
+    .tabs { display: flex; gap: 4px; }
+
+    .tab {
+      padding: 7px 16px;
+      background-color: var(--tab-bg);
+      border: 1px solid var(--border);
+      border-radius: 6px; cursor: pointer;
+      font-size: 0.85rem; font-weight: 500; transition: all 0.2s;
+      color: var(--text-muted);
+    }
+
+    .tab.active  { background-color: var(--accent-bg); color: var(--accent); border-color: var(--accent); }
+    .tab:hover:not(.active) { background-color: var(--bg-hover); color: var(--text); }
+
+    .header-actions { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+
+    .btn {
+      background-color: var(--accent);
+      color: white; border: none;
+      padding: 7px 14px; border-radius: 4px; cursor: pointer;
+      font-size: 0.85rem; font-weight: 500; transition: opacity .2s, background .2s;
+      white-space: nowrap;
+    }
+
+    .btn:hover { opacity: .88; }
+
+    .btn.secondary {
+      background-color: var(--tab-bg);
+      border: 1px solid var(--border);
+      color: var(--text-btn);
+    }
+
+    .btn.secondary:hover { background-color: var(--bg-hover); border-color: var(--accent); color: var(--text); }
+
+    .btn.danger {
+      background-color: var(--danger-bg);
+      border: 1px solid var(--danger-border);
+      color: var(--danger-text);
+    }
+
+    .btn.danger:hover { opacity: .85; }
+
+    /* theme toggle */
+    .theme-btn {
+      width: 34px; height: 34px; border-radius: 50%;
+      border: 1px solid var(--border); background: var(--tab-bg);
+      cursor: pointer; font-size: 1rem; display: flex; align-items: center;
+      justify-content: center; transition: all .2s; flex-shrink: 0;
+    }
+    .theme-btn:hover { border-color: var(--accent); background: var(--bg-hover); }
+
+    .main-area { display: flex; flex: 1; overflow: hidden; }
+
+    /* === SIDEBAR === */
+    .sidebar {
+      width: 280px; background: var(--bg-sidebar);
+      border-right: 1px solid var(--border);
+      display: flex; flex-direction: column; flex-shrink: 0; overflow: hidden;
+      transition: background .25s;
+    }
+
+    .sidebar-section { border-bottom: 1px solid var(--border-sub); padding: 12px; }
+
+    .sidebar-section h3 {
+      font-size: 0.75rem; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: 0.5px; font-weight: 600; margin-bottom: 10px;
+    }
+
+    .table-list { flex: 1; overflow-y: auto; padding: 8px; }
+
+    .table-item {
+      padding: 8px 10px; border-radius: 4px; cursor: pointer;
+      display: flex; align-items: center; justify-content: space-between;
+      transition: background 0.15s; margin-bottom: 3px; border: 1px solid transparent;
+    }
+
+    .table-item:hover   { background: var(--bg-card); border-color: var(--border); }
+    .table-item.selected{ background: var(--accent-bg); border-color: var(--accent); }
+
+    .table-item-name { font-size: 0.88rem; font-weight: 500; color: var(--text); }
+    .table-item-meta { font-size: 0.75rem; color: var(--text-dim); }
+
+    .table-item-actions { display: flex; gap: 4px; opacity: 0; transition: opacity 0.15s; }
+    .table-item:hover .table-item-actions { opacity: 1; }
+
+    .icon-btn {
+      background: none; border: none; color: var(--text-muted);
+      cursor: pointer; padding: 2px 5px; border-radius: 3px;
+      font-size: 0.8rem; transition: all 0.15s;
+    }
+
+    .icon-btn:hover     { color: var(--text); background: var(--bg-hover); }
+    .icon-btn.del:hover { color: #f44336; }
+
+    /* === CANVAS AREA === */
+    .canvas-area {
+      flex: 1; position: relative; overflow: hidden;
+      background-color: var(--canvas-bg);
+      background-image:
+        linear-gradient(var(--canvas-grid) 1px, transparent 1px),
+        linear-gradient(90deg, var(--canvas-grid) 1px, transparent 1px);
+      background-size: 40px 40px;
+      transition: background-color .25s;
+    }
+
+    #erCanvas { position: absolute; top: 0; left: 0; cursor: default; }
+
+    .canvas-controls { position: absolute; bottom: 16px; right: 16px; display: flex; gap: 6px; }
+
+    .zoom-info { position: absolute; bottom: 16px; left: 16px; font-size: 0.78rem; color: var(--text-dim); }
+
+    /* === PANEL TABS === */
+    .panel-content { display: none; flex: 1; flex-direction: column; overflow: hidden; }
+    .panel-content.active { display: flex; }
+
+    /* SQL panel */
+    .sql-panel { padding: 16px; display: flex; flex-direction: column; gap: 12px; height: 100%; }
+
+    .sql-panel textarea {
+      flex: 1; background: var(--bg-input); border: 1px solid var(--border);
+      border-radius: 6px; color: var(--text);
+      font-family: 'Cascadia Code','Fira Code',monospace; font-size: 0.82rem;
+      padding: 12px; resize: none; outline: none; line-height: 1.5; transition: border-color 0.2s;
+    }
+
+    .sql-panel textarea:focus       { border-color: var(--accent); }
+    .sql-panel textarea::placeholder{ color: var(--text-dim); }
+
+    .sql-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+    /* Properties panel */
+    .props-panel { padding: 12px; overflow-y: auto; }
+
+    .prop-group { margin-bottom: 16px; }
+
+    .prop-label {
+      font-size: 0.78rem; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 6px;
+    }
+
+    .prop-input {
+      width: 100%; background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 4px; color: var(--text); padding: 6px 10px;
+      font-size: 0.85rem; outline: none; transition: border-color 0.2s;
+    }
+
+    .prop-input:focus { border-color: var(--accent); }
+
+    .column-list { display: flex; flex-direction: column; gap: 4px; }
+
+    .column-row { display: grid; grid-template-columns: 1fr 80px 30px 30px 30px; gap: 4px; align-items: center; }
+
+    .column-row input, .column-row select {
+      background: var(--bg-card); border: 1px solid var(--border);
+      border-radius: 3px; color: var(--text); padding: 4px 6px;
+      font-size: 0.78rem; outline: none; width: 100%;
+    }
+
+    .column-row input:focus, .column-row select:focus { border-color: var(--accent); }
+
+    .col-flag {
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.7rem; color: var(--text-muted); cursor: pointer;
+      border: 1px solid var(--border); border-radius: 3px; height: 26px;
+      transition: all 0.15s; user-select: none; background: var(--col-flag-bg);
+    }
+
+    .col-flag:hover           { border-color: var(--accent); color: var(--accent); }
+    .col-flag.active          { background: var(--accent-bg); border-color: var(--accent); color: var(--accent); }
+    .col-flag.pk.active       { background: #3d3000; border-color: #ffd700; color: #ffd700; }
+    .col-flag.fk.active       { background: #2d3d20; border-color: #4caf50; color: #4caf50; }
+
+    /* === MODALS === */
+    .modal-overlay {
+      position: fixed; inset: 0; background: var(--modal-overlay);
+      display: none; align-items: center; justify-content: center; z-index: 1000;
+    }
+
+    .modal-overlay.show { display: flex; }
+
+    .modal {
+      background: var(--modal-bg); border: 1px solid var(--border);
+      border-radius: 8px; padding: 24px; min-width: 400px; max-width: 600px;
+      width: 90vw; max-height: 80vh; overflow-y: auto;
+      transition: background .25s;
+    }
+
+    .modal h2 { font-size: 1rem; margin-bottom: 18px; color: var(--text); }
+
+    .modal-actions { display: flex; gap: 8px; justify-content: flex-end; margin-top: 20px; }
+
+    .form-group { margin-bottom: 14px; }
+
+    .form-group label {
+      display: block; font-size: 0.8rem; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 5px;
+    }
+
+    .form-group input, .form-group select {
+      width: 100%; background: var(--bg-input); border: 1px solid var(--border);
+      border-radius: 4px; color: var(--text); padding: 8px 10px;
+      font-size: 0.9rem; outline: none; transition: border-color 0.2s;
+    }
+
+    .form-group input:focus, .form-group select:focus { border-color: var(--accent); }
+
+    /* Notification */
+    .notification {
+      position: fixed; top: 20px; right: 20px;
+      padding: 12px 16px; border-radius: 4px; color: white;
+      font-size: 0.85rem; z-index: 10000; min-width: 260px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      display: flex; align-items: center; justify-content: space-between;
+      animation: slideIn 0.3s ease-out;
+    }
+
+    .notification.success { background: var(--notif-ok);   border-left: 3px solid #4caf50; }
+    .notification.info    { background: var(--notif-info);  border-left: 3px solid #6aa6fd; }
+    .notification.error   { background: var(--notif-err);   border-left: 3px solid #f44336; }
+
+    @keyframes slideIn {
+      from { transform: translateX(100%); opacity: 0; }
+      to   { transform: translateX(0);   opacity: 1; }
+    }
+
+    /* FK relation picker */
+    .fk-row {
+      display: grid; grid-template-columns: 1fr 20px 1fr 1fr 30px;
+      gap: 5px; align-items: center; margin-bottom: 6px; font-size: 0.82rem;
+    }
+
+    .fk-arrow { color: #6aa6fd; text-align: center; }
+
+    .fk-row select {
+      background: #1a1a1a; border: 1px solid #404040;
+      border-radius: 3px; color: #e0e0e0; padding: 4px 6px;
+      font-size: 0.78rem; outline: none; width: 100%;
+    }
+
+    .rel-line-label {
+      font-size: 0.7rem;
+      color: #6aa6fd;
+      background: #354a6e;
+      padding: 1px 5px;
+      border-radius: 3px;
+      pointer-events: none;
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: #1a1a1a; }
+    ::-webkit-scrollbar-thumb { background: #444; border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: #555; }
+
+    .badge {
+      display: inline-block;
+      padding: 1px 6px;
+      border-radius: 10px;
+      font-size: 0.7rem;
+      font-weight: 600;
+    }
+
+    .badge-pk { background: #3d3000; color: #ffd700; border: 1px solid #5a4800; }
+    .badge-fk { background: #2d3d20; color: #4caf50; border: 1px solid #3d5a30; }
+    .badge-nn { background: #333; color: #999; border: 1px solid #444; }
+
+    /* SQL Export modal */
+    .sql-export-toolbar {
+      display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+      padding: 10px 0 14px;
+      border-bottom: 1px solid #333;
+      margin-bottom: 12px;
+    }
+    .sql-export-toolbar label { font-size: 0.8rem; color: #888; }
+    .sql-export-toolbar select {
+      background: #1a1a1a; border: 1px solid #404040; border-radius: 4px;
+      color: #e0e0e0; padding: 5px 10px; font-size: 0.85rem; outline: none;
+    }
+    .sql-preview {
+      background: #111; border: 1px solid #333; border-radius: 6px;
+      color: #c9d1d9; font-family: 'Cascadia Code','Fira Code',monospace;
+      font-size: 0.78rem; line-height: 1.6; padding: 14px;
+      overflow: auto; max-height: 55vh; white-space: pre; tab-size: 2;
+    }
+    .sql-kw   { color: #ff7b72; }
+    .sql-type { color: #79c0ff; }
+    .sql-str  { color: #a5d6ff; }
+    .sql-cmt  { color: #8b949e; font-style: italic; }
+    .sql-tbl  { color: #ffa657; }
+    .sql-col  { color: #e0e0e0; }
+    .copy-flash { animation: copyFlash .5s ease; }
+    @keyframes copyFlash { 0%,100%{background:#333} 50%{background:#2d5a2d} }
+
+    /* ── Versions panel ─────────────────────────────────────── */
+    .ver-item {
+      display: flex; align-items: center; gap: 8px;
+      padding: 9px 10px; border-radius: 4px; margin-bottom: 4px;
+      background: #2a2a2a; border: 1px solid #333; transition: border-color .15s;
+    }
+    .ver-item:hover { border-color: #555; }
+    .ver-item.current { border-color: #6aa6fd; background: #1e3050; }
+    .ver-info { flex: 1; min-width: 0; }
+    .ver-name { font-size: .88rem; font-weight: 500; color: #e0e0e0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .ver-meta { font-size: .72rem; color: #555; margin-top: 1px; }
+    .ver-actions { display: flex; gap: 4px; }
+
+    /* ── Settings panel ─────────────────────────────────────── */
+    .setting-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 0; border-bottom: 1px solid #2d2d2d;
+    }
+    .setting-row:last-child { border-bottom: none; }
+    /* FK fk-row inputs reuse form-group selects */
+    .fk-row select {
+      background: var(--bg-input); border: 1px solid var(--border);
+      border-radius: 3px; color: var(--text); padding: 4px 6px;
+      font-size: .78rem; outline: none; width: 100%;
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: var(--bg-body); }
+    ::-webkit-scrollbar-thumb { background: var(--scrollbar); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--text-muted); }
+
+    /* versions */
+    .ver-item {
+      display: flex; align-items: center; gap: 8px;
+      padding: 9px 10px; border-radius: 4px; margin-bottom: 4px;
+      background: var(--bg-card); border: 1px solid var(--border-sub); transition: border-color .15s;
+    }
+    .ver-item:hover { border-color: var(--border); }
+    .ver-item.current { border-color: var(--accent); background: var(--accent-bg); }
+    .ver-info { flex: 1; min-width: 0; }
+    .ver-name { font-size: .88rem; font-weight: 500; color: var(--text); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .ver-meta { font-size: .72rem; color: var(--text-dim); margin-top: 1px; }
+    .ver-actions { display: flex; gap: 4px; }
+
+    /* settings */
+    .setting-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 0; border-bottom: 1px solid var(--border-sub);
+    }
+    .setting-row:last-child { border-bottom: none; }
+    .setting-label { font-size: .85rem; color: var(--text); }
+    .setting-sub   { font-size: .75rem; color: var(--text-muted); margin-top: 2px; }
+    .seg-ctrl { display: flex; gap: 3px; }
+    .seg-btn {
+      padding: 5px 10px; border: 1px solid var(--border); border-radius: 4px;
+      background: var(--tab-bg); color: var(--text-muted); font-size: .78rem; cursor: pointer; transition: all .15s;
+    }
+    .seg-btn:hover  { border-color: var(--accent); color: var(--text); }
+    .seg-btn.active { background: var(--accent-bg); border-color: var(--accent); color: var(--accent); font-weight: 600; }
+
+    /* SQL export */
+    .sql-export-toolbar {
+      display: flex; gap: 8px; align-items: center; flex-wrap: wrap;
+      padding: 10px 0 14px; border-bottom: 1px solid var(--border-sub); margin-bottom: 12px;
+    }
+    .sql-export-toolbar label { font-size: .8rem; color: var(--text-muted); }
+    .sql-export-toolbar select {
+      background: var(--bg-input); border: 1px solid var(--border); border-radius: 4px;
+      color: var(--text); padding: 5px 10px; font-size: .85rem; outline: none;
+    }
+    .sql-preview {
+      background: var(--bg-input); border: 1px solid var(--border-sub); border-radius: 6px;
+      color: var(--text); font-family: 'Cascadia Code','Fira Code',monospace;
+      font-size: .78rem; line-height: 1.6; padding: 14px;
+      overflow: auto; max-height: 55vh; white-space: pre; tab-size: 2;
+    }
+    .sql-kw  { color: #ef4444; }
+    .sql-cmt { color: var(--text-muted); font-style: italic; }
+
+    [data-theme="light"] .sql-kw  { color: #b91c1c; }
+
+    .copy-flash { animation: copyFlash .5s ease; }
+    @keyframes copyFlash { 0%,100%{background:var(--tab-bg)} 50%{background:#166534} }
+
+    /* autosave indicator */
+    #autosaveIndicator {
+      font-size: .72rem; color: var(--text-dim); padding: 3px 8px; border-radius: 10px;
+      border: 1px solid var(--border-sub); transition: all .3s;
+    }
+    #autosaveIndicator.saved { color: #4caf50; border-color: #4caf50; }
+    #autosaveIndicator.dirty { color: #ff9800; border-color: #ff9800; }
+
+    /* badge */
+    .badge-pk { background: #3d3000; color: #ffd700; border: 1px solid #5a4800; }
+    .badge-fk { background: #2d3d20; color: #4caf50; border: 1px solid #3d5a30; }
+  </style>
+</head>
+<body>
+<div class="app-layout">
+
+  <!-- HEADER -->
+  <div class="header">
+    <h1>🗂️ ER Diagram Editor</h1>
+    <div class="tabs">
+      <div class="tab active" data-tab="diagram">📐 Diagram</div>
+      <div class="tab" data-tab="sql">🗃️ SQL Import</div>
+      <div class="tab" data-tab="relations">🔗 Vztahy</div>
+      <div class="tab" data-tab="props">⚙️ Vlastnosti</div>
+      <div class="tab" data-tab="versions">📚 Verze</div>
+      <div class="tab" data-tab="settings">🔧 Nastavení</div>
+    </div>
+    <div class="header-actions">
+      <span id="autosaveIndicator" title="Automatické ukládání">●</span>
+      <button class="theme-btn" id="btnTheme" title="Přepnout téma">🌙</button>
+      <button class="btn secondary" id="btnAddTable">+ Tabulka</button>
+      <button class="btn secondary" id="btnAutoLayout">⊞ Grid</button>
+      <button class="btn secondary" id="btnSmartLayout">⬡ Smart</button>
+      <button class="btn secondary" id="btnExportPng">↓ PNG</button>
+      <button class="btn secondary" id="btnExportJson">↓ JSON</button>
+      <button class="btn secondary" id="btnExportSql">↓ SQL DDL</button>
+      <button class="btn secondary" id="btnImportJson">↑ JSON</button>
+      <button class="btn danger" id="btnClear">✕ Vymazat vše</button>
+    </div>
+  </div>
+
+  <div class="main-area">
+
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+      <div class="sidebar-section">
+        <h3>Tabulky (<span id="tableCount">0</span>)</h3>
+      </div>
+      <div class="table-list" id="tableList"></div>
+    </div>
+
+    <!-- CONTENT PANELS -->
+    <div style="flex:1; display:flex; flex-direction:column; overflow:hidden; position:relative;">
+
+      <!-- DIAGRAM PANEL -->
+      <div class="panel-content active" id="panel-diagram">
+        <div class="canvas-area" id="canvasArea">
+          <canvas id="erCanvas"></canvas>
+          <div class="zoom-info" id="zoomInfo">Zoom: 100%</div>
+          <div class="canvas-controls">
+            <button class="btn secondary" id="btnZoomIn">+</button>
+            <button class="btn secondary" id="btnZoomOut">−</button>
+            <button class="btn secondary" id="btnZoomReset">⊙</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- SQL PANEL -->
+      <div class="panel-content" id="panel-sql">
+        <div class="sql-panel">
+          <div>
+            <div style="font-size:0.8rem;color:var(--text-muted);margin-bottom:6px;">Vložte SQL DDL (CREATE TABLE ...)</div>
+          </div>
+          <textarea id="sqlInput" placeholder="CREATE TABLE users (
+  id INT PRIMARY KEY,
+  username VARCHAR(100) NOT NULL,
+  email VARCHAR(255) UNIQUE NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE posts (
+  id INT PRIMARY KEY,
+  user_id INT NOT NULL,
+  title VARCHAR(255) NOT NULL,
+  body TEXT,
+  FOREIGN KEY (user_id) REFERENCES users(id)
+);"></textarea>
+          <div class="sql-actions">
+            <button class="btn" id="btnParseSql">▶ Generovat diagram</button>
+            <button class="btn secondary" id="btnAppendSql">+ Přidat k diagramu</button>
+            <button class="btn secondary" id="btnClearSql">Vymazat SQL</button>
+            <button class="btn secondary" id="btnLoadExample">Příklad</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- RELATIONS PANEL -->
+      <div class="panel-content" id="panel-relations">
+        <div style="padding:16px;overflow-y:auto;height:100%;">
+          <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;">
+            <span style="font-size:0.8rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.4px;">Cizí klíče</span>
+            <button class="btn secondary" id="btnAddRelation" style="font-size:0.8rem;padding:5px 10px;">+ Přidat vztah</button>
+          </div>
+          <div id="relationList"></div>
+        </div>
+      </div>
+
+      <!-- PROPERTIES PANEL -->
+      <div class="panel-content" id="panel-props">
+        <div class="props-panel" id="propsPanel">
+          <div style="color:var(--text-dim);font-size:0.85rem;padding:20px 0;text-align:center;">
+            Klikněte na tabulku v diagramu nebo vyberte ji v seznamu
+          </div>
+        </div>
+      </div>
+
+      <!-- VERSIONS PANEL -->
+      <div class="panel-content" id="panel-versions">
+        <div style="padding:16px;overflow-y:auto;height:100%;display:flex;flex-direction:column;gap:12px;">
+          <div style="display:flex;gap:8px;align-items:center;">
+            <input id="verNameInput" class="prop-input" style="flex:1" placeholder="Název verze (volitelné)…" />
+            <button class="btn" id="btnSaveVersion" style="white-space:nowrap">💾 Uložit</button>
+          </div>
+          <div style="font-size:0.75rem;color:var(--text-dim);border-bottom:1px solid var(--border-sub);padding-bottom:8px;">
+            Verze jsou uloženy v prohlížeči (localStorage). Max 20 verzí.
+          </div>
+          <div id="versionList" style="display:flex;flex-direction:column;gap:4px;"></div>
+        </div>
+      </div>
+
+      <!-- SETTINGS PANEL -->
+      <div class="panel-content" id="panel-settings">
+        <div style="padding:16px;overflow-y:auto;height:100%;">
+          <div style="font-size:0.75rem;color:#888;text-transform:uppercase;letter-spacing:.4px;margin-bottom:14px;">Vykreslování spojnic</div>
+
+          <div class="setting-row">
+            <div>
+              <div class="setting-label">Styl spojnice</div>
+              <div class="setting-sub">Tvar čáry mezi tabulkami</div>
+            </div>
+            <div class="seg-ctrl" id="routingCtrl">
+              <button class="seg-btn active" data-val="bezier">Hladká</button>
+              <button class="seg-btn" data-val="ortho">Pravoúhlá</button>
+              <button class="seg-btn" data-val="smart">Chytrá ★</button>
+            </div>
+          </div>
+
+          <div class="setting-row" id="rowAvoidMargin" style="display:none">
+            <div>
+              <div class="setting-label">Mezera kolem tabulek</div>
+              <div class="setting-sub">Vzdálenost vyhýbání od hrany tabulky (px)</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <input type="range" id="avoidMarginRange" min="8" max="60" value="20"
+                style="-webkit-appearance:none;width:100px;height:4px;background:#555;border-radius:2px;outline:none;cursor:pointer">
+              <span id="avoidMarginVal" style="font-size:.85rem;color:#6aa6fd;min-width:28px;text-align:right">20</span>
+            </div>
+          </div>
+
+          <div class="setting-row">
+            <div>
+              <div class="setting-label">Symbolika spojnic</div>
+              <div class="setting-sub">Crow's foot = mnoho / šipka = jeden</div>
+            </div>
+            <div class="seg-ctrl" id="crowsCtrl">
+              <button class="seg-btn active" data-val="crow">Crow's foot</button>
+              <button class="seg-btn" data-val="arrow">Šipky</button>
+              <button class="seg-btn" data-val="line">Čáry</button>
+            </div>
+          </div>
+
+          <div class="setting-row">
+            <div>
+              <div class="setting-label">Automatické ukládání</div>
+              <div class="setting-sub">Ukládat stav diagramu po každé změně</div>
+            </div>
+            <label style="display:flex;align-items:center;gap:6px;cursor:pointer;">
+              <input type="checkbox" id="autoSaveChk" checked style="accent-color:#6aa6fd;width:16px;height:16px;">
+              <span style="font-size:.85rem;color:#bbb;">Zapnuto</span>
+            </label>
+          </div>
+
+          <div class="setting-row">
+            <div>
+              <div class="setting-label">Tloušťka čar</div>
+              <div class="setting-sub">Vizuální váha spojnic</div>
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;">
+              <input type="range" id="lineWidthRange" min="1" max="4" step=".5" value="1.5"
+                style="-webkit-appearance:none;width:100px;height:4px;background:#555;border-radius:2px;outline:none;cursor:pointer">
+              <span id="lineWidthVal" style="font-size:.85rem;color:#6aa6fd;min-width:28px;text-align:right">1.5</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- ADD TABLE MODAL -->
+<div class="modal-overlay" id="modalAddTable">
+  <div class="modal">
+    <h2>Nová tabulka</h2>
+    <div class="form-group">
+      <label>Název tabulky</label>
+      <input type="text" id="newTableName" placeholder="users" />
+    </div>
+    <div class="modal-actions">
+      <button class="btn secondary" onclick="closeModal('modalAddTable')">Zrušit</button>
+      <button class="btn" id="btnCreateTable">Vytvořit</button>
+    </div>
+  </div>
+</div>
+
+<!-- ADD RELATION MODAL -->
+<div class="modal-overlay" id="modalAddRelation">
+  <div class="modal">
+    <h2>Přidat vztah (Foreign Key)</h2>
+    <div class="form-group">
+      <label>Zdrojová tabulka</label>
+      <select id="relFromTable"></select>
+    </div>
+    <div class="form-group">
+      <label>Zdrojový sloupec (FK)</label>
+      <select id="relFromCol"></select>
+    </div>
+    <div class="form-group">
+      <label>Cílová tabulka (referenced)</label>
+      <select id="relToTable"></select>
+    </div>
+    <div class="form-group">
+      <label>Cílový sloupec (PK/referenced)</label>
+      <select id="relToCol"></select>
+    </div>
+    <div class="modal-actions">
+      <button class="btn secondary" onclick="closeModal('modalAddRelation')">Zrušit</button>
+      <button class="btn" id="btnSaveRelation">Přidat</button>
+    </div>
+  </div>
+</div>
+
+<!-- SQL EXPORT MODAL -->
+<div class="modal-overlay" id="modalSqlExport">
+  <div class="modal" style="max-width:780px;width:95vw;">
+    <h2>SQL DDL Export</h2>
+    <div class="sql-export-toolbar">
+      <label>Dialekt:</label>
+      <select id="sqlDialect">
+        <option value="mysql">MySQL / MariaDB</option>
+        <option value="postgres">PostgreSQL</option>
+        <option value="sqlite">SQLite</option>
+        <option value="mssql">MS SQL Server</option>
+      </select>
+      <label style="margin-left:8px;">Pořadí:</label>
+      <select id="sqlOrder">
+        <option value="topo">Topologické (FK závislosti)</option>
+        <option value="alpha">Abecední</option>
+        <option value="manual">Pořadí v diagramu</option>
+      </select>
+      <label style="margin-left:8px;display:flex;align-items:center;gap:5px;cursor:pointer;">
+        <input type="checkbox" id="sqlDropFirst" style="accent-color:#6aa6fd"> DROP IF EXISTS
+      </label>
+      <label style="display:flex;align-items:center;gap:5px;cursor:pointer;">
+        <input type="checkbox" id="sqlIfNotExists" checked style="accent-color:#6aa6fd"> IF NOT EXISTS
+      </label>
+      <label style="display:flex;align-items:center;gap:5px;cursor:pointer;">
+        <input type="checkbox" id="sqlAddIndexes" checked style="accent-color:#6aa6fd"> Indexy pro FK
+      </label>
+      <button class="btn secondary" id="btnRegeneraSql" style="margin-left:auto;padding:5px 12px;font-size:0.8rem;">↻ Obnovit</button>
+    </div>
+    <div class="sql-preview" id="sqlPreviewContent"></div>
+    <div class="modal-actions" style="margin-top:12px;">
+      <button class="btn secondary" onclick="closeModal('modalSqlExport')">Zavřít</button>
+      <button class="btn secondary" id="btnCopySql">📋 Kopírovat</button>
+      <button class="btn" id="btnDownloadSql">↓ Stáhnout .sql</button>
+    </div>
+  </div>
+</div>
+
+<!-- IMPORT JSON MODAL -->
+<div class="modal-overlay" id="modalImportJson">
+  <div class="modal">
+    <h2>Import JSON</h2>
+    <div class="form-group">
+      <label>JSON data diagramu</label>
+      <textarea id="jsonImportInput" rows="12"
+        style="width:100%;background:#1a1a1a;border:1px solid #404040;border-radius:4px;color:#e0e0e0;padding:10px;font-family:monospace;font-size:0.8rem;outline:none;resize:vertical;"
+        placeholder='{"tables":[],"relations":[]}'></textarea>
+    </div>
+    <div class="modal-actions">
+      <button class="btn secondary" onclick="closeModal('modalImportJson')">Zrušit</button>
+      <button class="btn" id="btnDoImportJson">Importovat</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+//  STATE
+// ============================================================
+let tables = [];      // { id, name, x, y, columns: [{id,name,type,pk,fk,nn,unique}] }
+let relations = [];   // { id, fromTable, fromCol, toTable, toCol }
+let selectedTableId = null;
+let nextId = 1;
+let zoom = 1;
+let panX = 0, panY = 0;
+let dragging = null;
+let panning = false;
+let panStart = { x: 0, y: 0, px: 0, py: 0 };
+let dpr = 1;
+
+// ── Theme ─────────────────────────────────────────────────────────────────────
+let currentTheme = localStorage.getItem('er_theme') || 'dark';
+
+function applyTheme(t) {
+  currentTheme = t;
+  document.documentElement.dataset.theme = t === 'light' ? 'light' : '';
+  const btn = document.getElementById('btnTheme');
+  if (btn) btn.textContent = t === 'dark' ? '🌙' : '☀️';
+  localStorage.setItem('er_theme', t);
+  render();
+}
+
+function toggleTheme() {
+  applyTheme(currentTheme === 'dark' ? 'light' : 'dark');
+}
+
+// Color palettes for canvas (two separate sets, no DOM dependency)
+const DARK_COLORS = {
+  tableBg: '#2a2a2a', tableBorder: '#404040', tableSelected: '#6aa6fd',
+  tableHeader: '#1e3a5e', tableHeaderText: '#6aa6fd',
+  colText: '#e0e0e0', colAlt: '#242424',
+  pkColor: '#ffd700', fkColor: '#4caf50',
+  relationLine: '#6aa6fd', relationArrow: '#6aa6fd',
+  textMuted: '#666', canvasBg: '#1a1a1a',
+};
+
+const LIGHT_COLORS = {
+  tableBg: '#ffffff', tableBorder: '#c8cdd5', tableSelected: '#2563eb',
+  tableHeader: '#dbeafe', tableHeaderText: '#1d4ed8',
+  colText: '#1a1a2e', colAlt: '#f4f6f9',
+  pkColor: '#b45309', fkColor: '#15803d',
+  relationLine: '#2563eb', relationArrow: '#2563eb',
+  textMuted: '#8a8fa8', canvasBg: '#f8f9fa',
+};
+
+function getColors(theme) {
+  return (theme ?? currentTheme) === 'light' ? LIGHT_COLORS : DARK_COLORS;
+}
+
+// C is set at start of each render() / renderToCtx() call
+let C = getColors();
+
+// ── User settings (persisted) ────────────────────────────────────────────────
+const settings = {
+  routing: 'bezier',   // 'bezier' | 'ortho' | 'smart'
+  crows:   'crow',     // 'crow' | 'arrow' | 'line'
+  avoidMargin: 20,
+  lineWidth: 1.5,
+  autoSave: true,
+};
+
+function loadSettings() {
+  try {
+    const s = JSON.parse(localStorage.getItem('er_settings') || '{}');
+    Object.assign(settings, s);
+  } catch {}
+}
+
+function saveSettings() {
+  localStorage.setItem('er_settings', JSON.stringify(settings));
+}
+
+loadSettings();
+
+const COLORS = {
+  tableBg: '#2a2a2a', tableBorder: '#404040', tableSelected: '#6aa6fd',
+  tableHeader: '#1e3a5e', tableHeaderText: '#6aa6fd',
+  colText: '#e0e0e0', colAlt: '#242424',
+  pkColor: '#ffd700', fkColor: '#4caf50', nnColor: '#888',
+  relationLine: '#6aa6fd', relationArrow: '#6aa6fd',
+  textMuted: '#666',
+};
+
+const COL_HEIGHT = 26;
+const TABLE_WIDTH = 220;
+const HEADER_H = 34;
+const PADDING = 10;
+
+// ============================================================
+//  CANVAS SETUP  (HiDPI / 4K aware)
+// ============================================================
+const canvasArea = document.getElementById('canvasArea');
+const canvas = document.getElementById('erCanvas');
+const ctx = canvas.getContext('2d');
+
+function resizeCanvas() {
+  dpr = window.devicePixelRatio || 1;
+  const w = canvasArea.clientWidth;
+  const h = canvasArea.clientHeight;
+  canvas.width  = Math.round(w * dpr);
+  canvas.height = Math.round(h * dpr);
+  canvas.style.width  = w + 'px';
+  canvas.style.height = h + 'px';
+  render();
+}
+
+window.addEventListener('resize', resizeCanvas);
+resizeCanvas();
+
+// ── Auto-save (debounced) ────────────────────────────────────────────────────
+let _saveDirty = false;
+let _saveTimer = null;
+const AS_KEY = 'er_diagram_autosave';
+
+function markDirty() {
+  _saveDirty = true;
+  setAutosaveIndicator('dirty');
+  if (!settings.autoSave) return;
+  clearTimeout(_saveTimer);
+  _saveTimer = setTimeout(persistState, 1200);
+}
+
+function persistState() {
+  if (!_saveDirty) return;
+  try {
+    localStorage.setItem(AS_KEY, JSON.stringify(buildSnapshot()));
+    _saveDirty = false;
+    setAutosaveIndicator('saved');
+    setTimeout(() => setAutosaveIndicator(''), 2000);
+  } catch {}
+}
+
+function buildSnapshot() {
+  return { tables, relations, zoom, panX, panY, nextId };
+}
+
+function setAutosaveIndicator(state) {
+  const el = document.getElementById('autosaveIndicator');
+  if (!el) return;
+  el.className = state;
+  el.title = state === 'saved' ? 'Uloženo' : state === 'dirty' ? 'Neuložené změny' : 'Automatické ukládání';
+}
+
+function loadPersistedState() {
+  try {
+    const raw = localStorage.getItem(AS_KEY);
+    if (!raw) return false;
+    const snap = JSON.parse(raw);
+    if (!snap.tables) return false;
+    tables    = snap.tables;
+    relations = snap.relations || [];
+    zoom      = snap.zoom ?? 1;
+    panX      = snap.panX ?? 0;
+    panY      = snap.panY ?? 0;
+    nextId    = snap.nextId ?? 1;
+    return true;
+  } catch { return false; }
+}
+
+// ── Version history ──────────────────────────────────────────────────────────
+const VER_KEY = 'er_diagram_versions';
+const MAX_VERS = 20;
+
+function loadVersions() {
+  try { return JSON.parse(localStorage.getItem(VER_KEY) || '[]'); } catch { return []; }
+}
+
+function saveVersion(name) {
+  const versions = loadVersions();
+  const entry = {
+    id: Date.now().toString(36),
+    name: name || `Verze ${new Date().toLocaleString('cs')}`,
+    ts: Date.now(),
+    tables: JSON.parse(JSON.stringify(tables)),
+    relations: JSON.parse(JSON.stringify(relations)),
+    zoom, panX, panY, nextId,
+    tableCount: tables.length,
+    relCount: relations.length,
+  };
+  versions.unshift(entry);
+  if (versions.length > MAX_VERS) versions.length = MAX_VERS;
+  localStorage.setItem(VER_KEY, JSON.stringify(versions));
+  renderVersionList();
+  showNotification(`Verze "${entry.name}" uložena`, 'success');
+}
+
+function restoreVersion(id) {
+  const versions = loadVersions();
+  const v = versions.find(v => v.id === id);
+  if (!v) return;
+  tables    = JSON.parse(JSON.stringify(v.tables));
+  relations = JSON.parse(JSON.stringify(v.relations));
+  zoom      = v.zoom ?? 1;
+  panX      = v.panX ?? 0;
+  panY      = v.panY ?? 0;
+  nextId    = v.nextId ?? 1;
+  selectedTableId = null;
+  renderSidebar(); renderRelations(); render(); showProps(null);
+  markDirty();
+  showNotification(`Obnovena verze: "${v.name}"`, 'info');
+}
+
+function deleteVersion(id) {
+  let versions = loadVersions();
+  versions = versions.filter(v => v.id !== id);
+  localStorage.setItem(VER_KEY, JSON.stringify(versions));
+  renderVersionList();
+}
+
+function renderVersionList() {
+  const list = document.getElementById('versionList');
+  if (!list) return;
+  const versions = loadVersions();
+  if (!versions.length) {
+    list.innerHTML = '<div style="color:#555;font-size:.85rem;padding:8px 0;">Žádné uložené verze.</div>';
+    return;
+  }
+  list.innerHTML = '';
+  versions.forEach(v => {
+    const d = new Date(v.ts);
+    const dstr = d.toLocaleDateString('cs') + ' ' + d.toLocaleTimeString('cs', { hour: '2-digit', minute: '2-digit' });
+    const div = document.createElement('div');
+    div.className = 'ver-item';
+    div.innerHTML = `
+      <div class="ver-info">
+        <div class="ver-name">${escHtml(v.name)}</div>
+        <div class="ver-meta">${dstr} &nbsp;·&nbsp; ${v.tableCount} tabulek, ${v.relCount} vztahů</div>
+      </div>
+      <div class="ver-actions">
+        <button class="icon-btn" title="Načíst verzi" data-restore="${v.id}">⏎</button>
+        <button class="icon-btn del" title="Smazat" data-delver="${v.id}">✕</button>
+      </div>`;
+    div.querySelector('[data-restore]').addEventListener('click', () => restoreVersion(v.id));
+    div.querySelector('[data-delver]').addEventListener('click', () => deleteVersion(v.id));
+    list.appendChild(div);
+  });
+}
+
+// ============================================================
+//  RENDER
+// ============================================================
+function tableHeight(t) {
+  return HEADER_H + t.columns.length * COL_HEIGHT + PADDING;
+}
+
+function render() {
+  C = getColors();
+  renderToCtx(ctx, canvas.width, canvas.height, dpr, zoom, panX, panY, currentTheme);
+}
+
+function renderToCtx(rc, w, h, pixelRatio, z, px, py, theme) {
+  C = getColors(theme);
+  rc.clearRect(0, 0, w, h);
+  rc.save();
+  rc.fillStyle = C.canvasBg;
+  rc.fillRect(0, 0, w, h);
+  rc.scale(pixelRatio, pixelRatio);
+  rc.translate(px, py);
+  rc.scale(z, z);
+  relations.forEach(rel => drawRelation(rel, rc));
+  tables.forEach(t => drawTable(t, t.id === selectedTableId, rc));
+  rc.restore();
+}
+
+// ─── FIT TO VIEW ─────────────────────────────────────────────────────────────
+function fitToView(padding = 60) {
+  if (!tables.length) return;
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  tables.forEach(t => {
+    minX = Math.min(minX, t.x);
+    minY = Math.min(minY, t.y);
+    maxX = Math.max(maxX, t.x + TABLE_WIDTH);
+    maxY = Math.max(maxY, t.y + tableHeight(t));
+  });
+  const diagW = maxX - minX + padding * 2;
+  const diagH = maxY - minY + padding * 2;
+  const viewW = canvas.width  / dpr;
+  const viewH = canvas.height / dpr;
+  zoom = Math.min(viewW / diagW, viewH / diagH, 1.5);
+  zoom = Math.max(zoom, 0.1);
+  panX = (viewW  - (maxX - minX) * zoom) / 2 - minX * zoom;
+  panY = (viewH - (maxY - minY) * zoom) / 2 - minY * zoom;
+  render();
+  updateZoomInfo();
+}
+
+function drawTable(t, selected, rc = ctx) {
+  const h = tableHeight(t);
+  const x = t.x, y = t.y, w = TABLE_WIDTH;
+  const isLight = C === LIGHT_COLORS;
+
+  // Shadow
+  rc.shadowColor = selected
+    ? (isLight ? 'rgba(37,99,235,0.25)' : 'rgba(106,166,253,0.3)')
+    : (isLight ? 'rgba(0,0,0,0.12)' : 'rgba(0,0,0,0.4)');
+  rc.shadowBlur = selected ? 14 : 6;
+  rc.shadowOffsetY = 2;
+
+  // Body
+  rc.fillStyle = C.tableBg;
+  roundRect(rc, x, y, w, h, 6);
+  rc.fill();
+  rc.shadowColor = 'transparent'; rc.shadowBlur = 0; rc.shadowOffsetY = 0;
+
+  // Border
+  rc.strokeStyle = selected ? C.tableSelected : C.tableBorder;
+  rc.lineWidth = selected ? 1.8 : 1;
+  roundRect(rc, x, y, w, h, 6);
+  rc.stroke();
+
+  // Header
+  rc.fillStyle = selected
+    ? (isLight ? '#bfdbfe' : '#1e3a6e')
+    : C.tableHeader;
+  roundRectTop(rc, x, y, w, HEADER_H, 6);
+  rc.fill();
+
+  rc.fillStyle = selected
+    ? (isLight ? '#1e40af' : '#88c4ff')
+    : C.tableHeaderText;
+  rc.font = 'bold 13px -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif';
+  rc.textBaseline = 'middle';
+  rc.fillText(t.name, x + 10, y + HEADER_H / 2);
+
+  // Column count badge
+  const badge = `${t.columns.length}`;
+  rc.font = '10px sans-serif';
+  const bw = rc.measureText(badge).width + 8;
+  rc.fillStyle = isLight ? '#e0e3e8' : '#333';
+  roundRect(rc, x + w - bw - 6, y + 9, bw, 16, 8);
+  rc.fill();
+  rc.fillStyle = C.textMuted;
+  rc.fillText(badge, x + w - bw / 2 - 6, y + 17);
+
+  // Columns
+  t.columns.forEach((col, i) => {
+    const cy = y + HEADER_H + i * COL_HEIGHT;
+    if (i % 2 === 0) {
+      rc.fillStyle = C.colAlt;
+      rc.fillRect(x + 1, cy, w - 2, COL_HEIGHT);
+    }
+
+    let iconX = x + 8;
+    if (col.pk) {
+      rc.fillStyle = C.pkColor;
+      rc.font = 'bold 10px sans-serif';
+      rc.fillText('PK', iconX, cy + COL_HEIGHT / 2);
+      iconX += 20;
+    } else if (col.fk) {
+      rc.fillStyle = C.fkColor;
+      rc.font = 'bold 10px sans-serif';
+      rc.fillText('FK', iconX, cy + COL_HEIGHT / 2);
+      iconX += 20;
+    } else {
+      iconX += 2;
+    }
+
+    rc.fillStyle = col.pk ? (isLight ? '#1d4ed8' : '#fff') : C.colText;
+    rc.font = (col.pk ? 'bold ' : '') + '11px -apple-system, BlinkMacSystemFont, Segoe UI, sans-serif';
+    rc.textBaseline = 'middle';
+    rc.fillText(col.name, iconX + (col.pk || col.fk ? 0 : 18), cy + COL_HEIGHT / 2);
+
+    rc.fillStyle = C.textMuted;
+    rc.font = 'italic 10px sans-serif';
+    const typeStr = col.type || '';
+    const tw = rc.measureText(typeStr).width;
+    rc.fillText(typeStr, x + w - tw - 8, cy + COL_HEIGHT / 2);
+
+    if (col.nn && !col.pk) {
+      rc.fillStyle = '#ef4444';
+      rc.beginPath();
+      rc.arc(x + w - tw - 15, cy + COL_HEIGHT / 2, 2.5, 0, Math.PI * 2);
+      rc.fill();
+    }
+  });
+
+  // Header divider line
+  rc.strokeStyle = C.tableBorder;
+  rc.lineWidth = 1;
+  rc.beginPath();
+  rc.moveTo(x + 1, y + HEADER_H);
+  rc.lineTo(x + w - 1, y + HEADER_H);
+  rc.stroke();
+}
+
+// ─── ROUTING ─────────────────────────────────────────────────────────────────
+
+function tableRect(t, margin = 0) {
+  return {
+    x: t.x - margin, y: t.y - margin,
+    r: t.x + TABLE_WIDTH + margin,
+    b: t.y + tableHeight(t) + margin,
+  };
+}
+
+// Does a horizontal or vertical segment hit a rect?
+function segHitsRect(x1, y1, x2, y2, rc) {
+  const isH = Math.abs(y1 - y2) < 0.5;
+  const isV = Math.abs(x1 - x2) < 0.5;
+  if (isH) {
+    const minX = Math.min(x1, x2), maxX = Math.max(x1, x2);
+    return y1 > rc.y && y1 < rc.b && minX < rc.r && maxX > rc.x;
+  }
+  if (isV) {
+    const minY = Math.min(y1, y2), maxY = Math.max(y1, y2);
+    return x1 > rc.x && x1 < rc.r && minY < rc.b && maxY > rc.y;
+  }
+  return false;
+}
+
+function countHits(pts, rects) {
+  let n = 0;
+  for (let i = 0; i < pts.length - 1; i++) {
+    for (const rc of rects) {
+      if (segHitsRect(pts[i][0], pts[i][1], pts[i+1][0], pts[i+1][1], rc)) n++;
+    }
+  }
+  return n;
+}
+
+// Build H-V-H path for given midX
+function hvhPath(fx, fy, tx, ty, midX) {
+  return [[fx, fy], [midX, fy], [midX, ty], [tx, ty]];
+}
+
+// For segments that still cross horizontal obstacles, deflect them above/below
+function deflectHorizontals(pts, rects) {
+  let result = pts.map(p => [...p]);
+  let changed = true, guard = 0;
+  while (changed && guard++ < 20) {
+    changed = false;
+    for (let i = 0; i < result.length - 1; i++) {
+      const [x1, y1] = result[i], [x2, y2] = result[i + 1];
+      if (Math.abs(y1 - y2) > 0.5) continue; // only horizontal segs
+      for (const rc of rects) {
+        if (!segHitsRect(x1, y1, x2, y2, rc)) continue;
+        changed = true;
+        // Choose above or below: pick whichever requires less vertical movement
+        const aboveY = rc.y - 1;
+        const belowY = rc.b + 1;
+        const newY = Math.abs(y1 - aboveY) < Math.abs(y1 - belowY) ? aboveY : belowY;
+        // Insert: prev vert seg ends at newY, horiz seg at newY, then vert back to original y
+        result.splice(i + 1, 0, [x1, newY], [x2, newY]);
+        // Fix the incoming vertical to now reach newY
+        if (i > 0 && Math.abs(result[i - 1][0] - x1) < 0.5) result[i][1] = newY;
+        // Fix the outgoing vertical to start from newY
+        if (i + 3 < result.length && Math.abs(result[i + 3][0] - x2) < 0.5) result[i + 3][1] = newY;
+        break;
+      }
+      if (changed) break;
+    }
+  }
+  return result;
+}
+
+function computeRoute(fx, fy, tx, ty, fromId, toId) {
+  if (settings.routing === 'bezier') return { type: 'bezier', pts: [[fx, fy], [tx, ty]] };
+
+  const M = settings.avoidMargin;
+  const obstacles = settings.routing === 'smart'
+    ? tables.filter(t => t.id !== fromId && t.id !== toId).map(t => tableRect(t, M))
+    : [];
+
+  // Candidate midX values: base midpoint + all obstacle left/right edges
+  const midXBase = (fx + tx) / 2;
+  const candidates = new Set([midXBase]);
+  obstacles.forEach(o => { candidates.add(o.x - 2); candidates.add(o.r + 2); });
+
+  // Pick midX that minimises vertical-segment obstacle hits
+  let bestMidX = midXBase, bestHits = Infinity;
+  for (const mx of candidates) {
+    const pts = hvhPath(fx, fy, tx, ty, mx);
+    const h = countHits(pts, obstacles);
+    if (h < bestHits || (h === bestHits && Math.abs(mx - midXBase) < Math.abs(bestMidX - midXBase))) {
+      bestHits = h; bestMidX = mx;
+    }
+  }
+
+  let pts = hvhPath(fx, fy, tx, ty, bestMidX);
+
+  // Secondary pass: deflect horizontal segments that still hit obstacles
+  if (obstacles.length && bestHits > 0) pts = deflectHorizontals(pts, obstacles);
+
+  return { type: 'ortho', pts };
+}
+
+// ─── DRAW RELATION ────────────────────────────────────────────────────────────
+function drawRelation(rel, rc = ctx) {
+  const ft = tables.find(t => t.id === rel.fromTable);
+  const tt = tables.find(t => t.id === rel.toTable);
+  if (!ft || !tt) return;
+
+  const fcIdx = ft.columns.findIndex(c => c.id === rel.fromCol);
+  const tcIdx = tt.columns.findIndex(c => c.id === rel.toCol);
+  if (fcIdx < 0 || tcIdx < 0) return;
+
+  const srcY = ft.y + HEADER_H + (fcIdx + 0.5) * COL_HEIGHT;
+  const dstY = tt.y + HEADER_H + (tcIdx + 0.5) * COL_HEIGHT;
+
+  const goRight = ft.x + TABLE_WIDTH / 2 < tt.x + TABLE_WIDTH / 2;
+  const srcX = goRight ? ft.x + TABLE_WIDTH : ft.x;
+  const dstX = goRight ? tt.x : tt.x + TABLE_WIDTH;
+
+  const lw = settings.lineWidth;
+  rc.strokeStyle = C.relationLine;
+  rc.lineWidth = lw;
+
+  const route = computeRoute(srcX, srcY, dstX, dstY, ft.id, tt.id);
+
+  if (route.type === 'bezier') {
+    const cpOff = Math.min(Math.abs(dstX - srcX) * 0.5, 80);
+    rc.setLineDash([5, 3]);
+    rc.beginPath();
+    rc.moveTo(srcX, srcY);
+    rc.bezierCurveTo(
+      srcX + (goRight ? cpOff : -cpOff), srcY,
+      dstX + (goRight ? -cpOff : cpOff), dstY,
+      dstX, dstY
+    );
+    rc.stroke();
+    rc.setLineDash([]);
+  } else {
+    rc.setLineDash([]);
+    rc.beginPath();
+    rc.moveTo(route.pts[0][0], route.pts[0][1]);
+    for (let i = 1; i < route.pts.length; i++) rc.lineTo(route.pts[i][0], route.pts[i][1]);
+    rc.stroke();
+  }
+
+  if (settings.crows !== 'line') {
+    if (settings.crows === 'crow') {
+      drawCrowsFoot(srcX, srcY, goRight ? Math.PI : 0, lw, rc);
+    } else {
+      drawArrowHead(srcX, srcY, goRight ? Math.PI : 0, lw, rc);
+    }
+    drawArrowHead(dstX, dstY, goRight ? 0 : Math.PI, lw, rc);
+  }
+}
+
+function drawArrowHead(x, y, angle, lw = 1.5, rc = ctx) {
+  const as = 9;
+  rc.fillStyle = C.relationArrow;
+  rc.beginPath();
+  rc.moveTo(x, y);
+  rc.lineTo(x + Math.cos(angle + 2.7) * as, y + Math.sin(angle + 2.7) * as);
+  rc.lineTo(x + Math.cos(angle - 2.7) * as, y + Math.sin(angle - 2.7) * as);
+  rc.closePath();
+  rc.fill();
+}
+
+function drawCrowsFoot(x, y, angle, lw = 1.5, rc = ctx) {
+  const len = 13, spread = 7;
+  rc.strokeStyle = C.relationLine;
+  rc.lineWidth = lw;
+  const dx = Math.cos(angle), dy = Math.sin(angle);
+  const px = -dy, py = dx;
+  rc.beginPath();
+  rc.moveTo(x, y);
+  rc.lineTo(x + dx * len + px * spread, y + dy * len + py * spread);
+  rc.moveTo(x, y);
+  rc.lineTo(x + dx * len - px * spread, y + dy * len - py * spread);
+  rc.moveTo(x, y);
+  rc.lineTo(x + dx * len, y + dy * len);
+  rc.stroke();
+}
+
+function roundRect(rc, x, y, w, h, r) {
+  rc.beginPath();
+  rc.moveTo(x + r, y);
+  rc.lineTo(x + w - r, y);
+  rc.quadraticCurveTo(x + w, y, x + w, y + r);
+  rc.lineTo(x + w, y + h - r);
+  rc.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  rc.lineTo(x + r, y + h);
+  rc.quadraticCurveTo(x, y + h, x, y + h - r);
+  rc.lineTo(x, y + r);
+  rc.quadraticCurveTo(x, y, x + r, y);
+  rc.closePath();
+}
+
+function roundRectTop(rc, x, y, w, h, r) {
+  rc.beginPath();
+  rc.moveTo(x + r, y);
+  rc.lineTo(x + w - r, y);
+  rc.quadraticCurveTo(x + w, y, x + w, y + r);
+  rc.lineTo(x + w, y + h);
+  rc.lineTo(x, y + h);
+  rc.lineTo(x, y + r);
+  rc.quadraticCurveTo(x, y, x + r, y);
+  rc.closePath();
+}
+
+// ============================================================
+//  CANVAS INTERACTION
+// ============================================================
+function worldXY(ex, ey) {
+  // offsetX/Y are CSS pixels; pan/zoom work in CSS-pixel space
+  return { x: (ex - panX) / zoom, y: (ey - panY) / zoom };
+}
+
+function hitTable(wx, wy) {
+  for (let i = tables.length - 1; i >= 0; i--) {
+    const t = tables[i];
+    const h = tableHeight(t);
+    if (wx >= t.x && wx <= t.x + TABLE_WIDTH && wy >= t.y && wy <= t.y + h) return t;
+  }
+  return null;
+}
+
+canvas.addEventListener('mousedown', e => {
+  if (e.button === 1 || e.button === 2) {
+    panning = true;
+    panStart = { x: e.clientX, y: e.clientY, px: panX, py: panY };
+    return;
+  }
+  const { x, y } = worldXY(e.offsetX, e.offsetY);
+  const t = hitTable(x, y);
+  if (t) {
+    // Only start drag if clicking on header
+    if (y <= t.y + HEADER_H) {
+      dragging = { tableId: t.id, startX: e.offsetX, startY: e.offsetY, origX: t.x, origY: t.y };
+    }
+    selectTable(t.id);
+  } else {
+    panning = true;
+    panStart = { x: e.clientX, y: e.clientY, px: panX, py: panY };
+    selectedTableId = null;
+    render();
+    renderSidebar();
+  }
+});
+
+canvas.addEventListener('mousemove', e => {
+  if (dragging) {
+    const dx = (e.offsetX - dragging.startX) / zoom;
+    const dy = (e.offsetY - dragging.startY) / zoom;
+    const t = tables.find(t => t.id === dragging.tableId);
+    if (t) { t.x = dragging.origX + dx; t.y = dragging.origY + dy; }
+    render();
+    return;
+  }
+  if (panning) {
+    panX = panStart.px + (e.clientX - panStart.x);
+    panY = panStart.py + (e.clientY - panStart.y);
+    render();
+    return;
+  }
+  // Cursor change
+  const { x, y } = worldXY(e.offsetX, e.offsetY);
+  const t = hitTable(x, y);
+  canvas.style.cursor = t ? (y <= t.y + HEADER_H ? 'grab' : 'default') : 'default';
+});
+
+canvas.addEventListener('mouseup', e => {
+  if (dragging) markDirty();
+  dragging = null;
+  panning = false;
+  canvas.style.cursor = 'default';
+});
+
+canvas.addEventListener('contextmenu', e => e.preventDefault());
+
+canvas.addEventListener('wheel', e => {
+  e.preventDefault();
+  const delta = e.deltaY > 0 ? 0.9 : 1.1;
+  const mx = e.offsetX, my = e.offsetY;
+  panX = mx - (mx - panX) * delta;
+  panY = my - (my - panY) * delta;
+  zoom = Math.max(0.2, Math.min(3, zoom * delta));
+  document.getElementById('zoomInfo').textContent = `Zoom: ${Math.round(zoom * 100)}%`;
+  render();
+}, { passive: false });
+
+document.getElementById('btnZoomIn').addEventListener('click', () => { zoom = Math.min(3, zoom * 1.2); render(); updateZoomInfo(); });
+document.getElementById('btnZoomOut').addEventListener('click', () => { zoom = Math.max(0.2, zoom / 1.2); render(); updateZoomInfo(); });
+document.getElementById('btnZoomReset').addEventListener('click', () => { zoom = 1; panX = 0; panY = 0; render(); updateZoomInfo(); });
+
+function updateZoomInfo() {
+  document.getElementById('zoomInfo').textContent = `Zoom: ${Math.round(zoom * 100)}%`;
+}
+
+// ============================================================
+//  TABLE OPERATIONS
+// ============================================================
+function uid() { return 't' + (nextId++); }
+function colUid() { return 'c' + (nextId++); }
+
+function createTable(name, cols = [], x, y) {
+  if (!x) { x = 40 + (tables.length % 4) * 260 + Math.random() * 30; }
+  if (!y) { y = 40 + Math.floor(tables.length / 4) * 220 + Math.random() * 30; }
+  const t = { id: uid(), name, x, y, columns: cols };
+  tables.push(t);
+  renderSidebar();
+  render();
+  return t;
+}
+
+function deleteTable(id) {
+  tables = tables.filter(t => t.id !== id);
+  relations = relations.filter(r => r.fromTable !== id && r.toTable !== id);
+  if (selectedTableId === id) selectedTableId = null;
+  renderSidebar();
+  renderRelations();
+  render();
+  showProps(null);
+  markDirty();
+}
+
+function selectTable(id) {
+  selectedTableId = id;
+  renderSidebar();
+  render();
+  if (document.getElementById('panel-props').classList.contains('active')) {
+    showProps(id);
+  }
+}
+
+function addColumn(tableId) {
+  const t = tables.find(t => t.id === tableId);
+  if (!t) return;
+  t.columns.push({ id: colUid(), name: 'new_column', type: 'VARCHAR(255)', pk: false, fk: false, nn: false, unique: false });
+  if (selectedTableId === tableId) showProps(tableId);
+  render();
+}
+
+// ─── SIMPLE GRID FALLBACK ───────────────────────────────────────────────────
+function autoLayout() {
+  const cols = Math.ceil(Math.sqrt(tables.length));
+  tables.forEach((t, i) => {
+    t.x = 60 + (i % cols) * (TABLE_WIDTH + 80);
+    t.y = 60 + Math.floor(i / cols) * 240;
+  });
+  fitToView();
+  markDirty();
+  showNotification('Grid layout aplikován', 'info');
+}
+
+// ─── SMART HIERARCHICAL LAYOUT (minimalizace křížení hran) ──────────────────
+function smartLayout() {
+  if (tables.length === 0) return;
+
+  const H_GAP = 90;   // horizontal gap between tables in same layer
+  const V_GAP = 90;   // vertical gap between layers
+  const MARGIN = 60;
+
+  // Build adjacency: deps[id] = Set of table-ids that id references (parents)
+  const deps    = {};   // child → Set<parent>
+  const revDeps = {};   // parent → Set<child>
+  tables.forEach(t => { deps[t.id] = new Set(); revDeps[t.id] = new Set(); });
+  relations.forEach(r => {
+    if (r.fromTable !== r.toTable) {
+      deps[r.fromTable].add(r.toTable);
+      revDeps[r.toTable].add(r.fromTable);
+    }
+  });
+
+  // ── Layer assignment: longest-path from root (Kahn-based) ──────────────────
+  const layer = {};   // tableId → layer index (0 = top)
+  const inDeg = {};   // in-degree for Kahn
+  tables.forEach(t => { inDeg[t.id] = deps[t.id].size; layer[t.id] = 0; });
+
+  // BFS from roots
+  const queue = tables.filter(t => inDeg[t.id] === 0).map(t => t.id);
+  if (queue.length === 0) {
+    // Cycle — fall back to simple grid
+    autoLayout(); return;
+  }
+
+  const processed = new Set();
+  while (queue.length) {
+    const id = queue.shift();
+    if (processed.has(id)) continue;
+    processed.add(id);
+    revDeps[id].forEach(childId => {
+      // child's layer = max of all parent layers + 1
+      layer[childId] = Math.max(layer[childId], layer[id] + 1);
+      inDeg[childId]--;
+      if (inDeg[childId] <= 0) queue.push(childId);
+    });
+  }
+  // Tables not reached (cycle participants) get their own layer
+  tables.forEach(t => { if (!processed.has(t.id)) layer[t.id] = 0; });
+
+  // ── Group into layers ───────────────────────────────────────────────────────
+  const numLayers = Math.max(...tables.map(t => layer[t.id])) + 1;
+  const layerGroups = Array.from({ length: numLayers }, () => []);
+  tables.forEach(t => layerGroups[layer[t.id]].push(t.id));
+
+  // ── Barycenter ordering (2 passes: top-down then bottom-up) ────────────────
+  function barycenter(id, refLayer, refGroups, edgeMap) {
+    const neighbors = [...(edgeMap[id] || [])].filter(nb => layer[nb] === refLayer);
+    if (!neighbors.length) return Infinity;
+    const refGroup = refGroups[refLayer] || [];
+    return neighbors.reduce((s, nb) => s + refGroup.indexOf(nb), 0) / neighbors.length;
+  }
+
+  // Top-down pass: order by average parent position
+  for (let l = 1; l < numLayers; l++) {
+    layerGroups[l].sort((a, b) =>
+      barycenter(a, l - 1, layerGroups, deps) -
+      barycenter(b, l - 1, layerGroups, deps)
+    );
+  }
+  // Bottom-up pass: order by average child position
+  for (let l = numLayers - 2; l >= 0; l--) {
+    layerGroups[l].sort((a, b) =>
+      barycenter(a, l + 1, layerGroups, revDeps) -
+      barycenter(b, l + 1, layerGroups, revDeps)
+    );
+  }
+
+  // ── Compute Y positions per layer ─────────────────────────────────────────
+  const layerH = layerGroups.map(group =>
+    Math.max(...group.map(id => tableHeight(tables.find(t => t.id === id) || { columns: [] })), 80)
+  );
+  const layerY = [MARGIN];
+  for (let l = 1; l < numLayers; l++) layerY[l] = layerY[l - 1] + layerH[l - 1] + V_GAP;
+
+  // ── Compute X positions per layer (centre within canvas) ──────────────────
+  layerGroups.forEach((group, l) => {
+    const totalW = group.length * TABLE_WIDTH + (group.length - 1) * H_GAP;
+    const startX = MARGIN + Math.max(0, (canvas.width / zoom - totalW) / 2 - MARGIN / 2);
+    group.forEach((id, i) => {
+      const t = tables.find(t => t.id === id);
+      if (t) { t.x = startX + i * (TABLE_WIDTH + H_GAP); t.y = layerY[l]; }
+    });
+  });
+
+  fitToView();
+  markDirty();
+  showNotification('Smart layout: vrstvy podle FK závislostí, křížení minimalizována', 'success');
+}
+
+// ============================================================
+//  SQL PARSER
+// ============================================================
+function parseSql(sql) {
+  const results = [];
+  const createRe = /CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?[`"']?(\w+)[`"']?\s*\(([^;]+)\)/gim;
+  let match;
+
+  while ((match = createRe.exec(sql)) !== null) {
+    const tableName = match[1];
+    const body = match[2];
+    const columns = [];
+    const tableConstraints = [];
+
+    // Split by comma but not inside parentheses
+    const parts = splitCols(body);
+
+    parts.forEach(part => {
+      part = part.trim();
+      if (!part) return;
+
+      const upperPart = part.toUpperCase();
+
+      // Table-level constraints
+      if (upperPart.match(/^PRIMARY\s+KEY/)) {
+        const pkCols = part.match(/\(([^)]+)\)/);
+        if (pkCols) {
+          pkCols[1].split(',').map(s => s.trim().replace(/[`"']/g, '')).forEach(colName => {
+            tableConstraints.push({ type: 'pk', col: colName });
+          });
+        }
+        return;
+      }
+
+      if (upperPart.match(/^(?:CONSTRAINT\s+\w+\s+)?FOREIGN\s+KEY/)) {
+        const fkMatch = part.match(/FOREIGN\s+KEY\s*\(([^)]+)\)\s*REFERENCES\s+[`"']?(\w+)[`"']?\s*\(([^)]+)\)/i);
+        if (fkMatch) {
+          tableConstraints.push({
+            type: 'fk',
+            fromCol: fkMatch[1].trim().replace(/[`"']/g, ''),
+            toTable: fkMatch[2].trim(),
+            toCol: fkMatch[3].trim().replace(/[`"']/g, '')
+          });
+        }
+        return;
+      }
+
+      if (upperPart.match(/^(?:UNIQUE|INDEX|KEY|CHECK|CONSTRAINT)/)) return;
+
+      // Column definition
+      const colMatch = part.match(/^[`"']?(\w+)[`"']?\s+([\w()]+(?:\s*\(\s*\d+(?:\s*,\s*\d+)?\s*\))?(?:\s+UNSIGNED)?)/i);
+      if (!colMatch) return;
+
+      const colName = colMatch[1];
+      const colType = colMatch[2].toUpperCase();
+      const rest = part.substring(colMatch[0].length).toUpperCase();
+
+      columns.push({
+        id: colUid(),
+        name: colName,
+        type: colType,
+        pk: rest.includes('PRIMARY KEY') || upperPart.includes('PRIMARY KEY'),
+        fk: false,
+        nn: rest.includes('NOT NULL') || rest.includes('PRIMARY KEY'),
+        unique: rest.includes('UNIQUE'),
+        autoIncrement: rest.includes('AUTO_INCREMENT') || rest.includes('AUTOINCREMENT') || rest.includes('SERIAL')
+      });
+    });
+
+    // Apply table-level PKs
+    tableConstraints.filter(c => c.type === 'pk').forEach(c => {
+      const col = columns.find(col => col.name === c.col);
+      if (col) { col.pk = true; col.nn = true; }
+    });
+
+    results.push({ name: tableName, columns, fks: tableConstraints.filter(c => c.type === 'fk') });
+  }
+
+  return results;
+}
+
+function splitCols(body) {
+  const parts = [];
+  let depth = 0, current = '';
+  for (const ch of body) {
+    if (ch === '(') depth++;
+    else if (ch === ')') depth--;
+    if (ch === ',' && depth === 0) { parts.push(current); current = ''; }
+    else current += ch;
+  }
+  if (current.trim()) parts.push(current);
+  return parts;
+}
+
+function applySqlParsed(parsed, append = false) {
+  if (!append) {
+    tables = []; relations = []; selectedTableId = null;
+    panX = 0; panY = 0; zoom = 1;
+  }
+
+  const tableMap = {};
+  parsed.forEach(td => {
+    const t = createTable(td.name, td.columns);
+    tableMap[td.name] = t;
+  });
+
+  // Create relations from FK constraints
+  parsed.forEach(td => {
+    const ft = tableMap[td.name];
+    if (!ft) return;
+    td.fks.forEach(fk => {
+      const tt = tableMap[fk.toTable] || tables.find(t => t.name === fk.toTable);
+      if (!tt) return;
+      const fc = ft.columns.find(c => c.name === fk.fromCol);
+      const tc = tt.columns.find(c => c.name === fk.toCol);
+      if (fc) fc.fk = true;
+      if (fc && tc) {
+        relations.push({ id: uid(), fromTable: ft.id, fromCol: fc.id, toTable: tt.id, toCol: tc.id });
+      }
+    });
+  });
+
+  smartLayout();
+  renderSidebar();
+  renderRelations();
+  updateZoomInfo();
+}
+
+// ============================================================
+//  EXPORT
+// ============================================================
+function exportPng() {
+  if (!tables.length) { showNotification('Diagram je prázdný', 'error'); return; }
+
+  // Calculate bounding box with padding
+  const PAD = 48;
+  let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+  tables.forEach(t => {
+    minX = Math.min(minX, t.x - PAD);
+    minY = Math.min(minY, t.y - PAD);
+    maxX = Math.max(maxX, t.x + TABLE_WIDTH + PAD);
+    maxY = Math.max(maxY, t.y + tableHeight(t) + PAD);
+  });
+
+  const diagW = maxX - minX;
+  const diagH = maxY - minY;
+  const EXPORT_DPR = 2;  // crisp 2× for PNG regardless of screen
+  const tmpCanvas = document.createElement('canvas');
+  tmpCanvas.width  = Math.round(diagW * EXPORT_DPR);
+  tmpCanvas.height = Math.round(diagH * EXPORT_DPR);
+
+  const tctx = tmpCanvas.getContext('2d');
+
+  // Always render in LIGHT theme for PNG
+  const savedC = C;
+  C = LIGHT_COLORS;
+
+  renderToCtx(
+    tctx,
+    tmpCanvas.width, tmpCanvas.height,
+    EXPORT_DPR,
+    1,            // zoom 1:1
+    -minX,        // pan to bounding box origin
+    -minY,
+    'light'
+  );
+
+  C = savedC;
+
+  const link = document.createElement('a');
+  link.download = 'er_diagram.png';
+  link.href = tmpCanvas.toDataURL('image/png');
+  link.click();
+  showNotification('Diagram exportován jako PNG (světlé téma)', 'success');
+}
+
+function exportJson() {
+  const data = { tables: tables.map(t => ({...t})), relations: relations.map(r => ({...r})) };
+  const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+  const link = document.createElement('a');
+  link.download = 'er_diagram.json';
+  link.href = URL.createObjectURL(blob);
+  link.click();
+  showNotification('Diagram exportován jako JSON', 'success');
+}
+
+// ─── TOPOLOGICAL SORT pro SQL export ────────────────────────────────────────
+function topoSort() {
+  // Returns tables in order: referenced tables first (safe for FK creation)
+  const deps = {};
+  tables.forEach(t => deps[t.id] = new Set());
+  relations.forEach(r => {
+    if (r.fromTable !== r.toTable) deps[r.fromTable].add(r.toTable);
+  });
+
+  const visited = new Set(), result = [];
+  function visit(id, stack = new Set()) {
+    if (visited.has(id)) return;
+    if (stack.has(id)) { result.push(id); visited.add(id); return; } // cycle
+    stack.add(id);
+    deps[id].forEach(pid => visit(pid, stack));
+    stack.delete(id);
+    visited.add(id);
+    result.push(id);
+  }
+  tables.forEach(t => visit(t.id));
+  // result is in reverse-post-order: referenced tables last → reverse it
+  // Actually with DFS post-order, referenced tables come AFTER the tables that depend on them
+  // So reverse to get referenced first
+  return result.reverse().map(id => tables.find(t => t.id === id)).filter(Boolean);
+}
+
+// ─── SQL DDL GENERATOR ───────────────────────────────────────────────────────
+function generateSql(opts = {}) {
+  const dialect   = opts.dialect   || 'mysql';
+  const order     = opts.order     || 'topo';
+  const dropFirst = opts.dropFirst || false;
+  const ifNE      = opts.ifNotExists !== false;
+  const addIdx    = opts.addIndexes !== false;
+
+  let sortedTables;
+  if (order === 'topo')   sortedTables = topoSort();
+  else if (order === 'alpha') sortedTables = [...tables].sort((a, b) => a.name.localeCompare(b.name));
+  else                    sortedTables = [...tables];
+
+  const q = dialect === 'postgres' ? '"' : dialect === 'mssql' ? '[' : '`';
+  const qe = dialect === 'mssql' ? ']' : q;
+  const wrap = n => `${q}${n}${qe}`;
+
+  const typeMap = (t) => {
+    if (dialect === 'sqlite') {
+      const u = t.toUpperCase();
+      if (u.includes('INT') || u.includes('SERIAL') || u.includes('BOOL')) return 'INTEGER';
+      if (u.includes('CHAR') || u.includes('TEXT') || u.includes('CLOB')) return 'TEXT';
+      if (u.includes('BLOB') || u.includes('BINARY')) return 'BLOB';
+      if (u.includes('REAL') || u.includes('FLOAT') || u.includes('DOUBLE')) return 'REAL';
+      if (u.includes('DECIMAL') || u.includes('NUMERIC') || u.includes('NUMBER')) return 'NUMERIC';
+      return 'TEXT';
+    }
+    if (dialect === 'postgres') {
+      const u = t.toUpperCase();
+      if (u === 'INT' || u === 'INTEGER') return 'INTEGER';
+      if (u === 'BIGINT') return 'BIGINT';
+      if (u === 'TINYINT' || u === 'SMALLINT') return 'SMALLINT';
+      if (u === 'BOOLEAN' || u === 'BOOL') return 'BOOLEAN';
+      if (u.startsWith('VARCHAR')) return t.toUpperCase().replace('VARCHAR', 'VARCHAR');
+      if (u === 'DATETIME' || u === 'TIMESTAMP') return 'TIMESTAMP';
+      return t.toUpperCase();
+    }
+    return t.toUpperCase();
+  };
+
+  const autoIncKw = { mysql: 'AUTO_INCREMENT', postgres: '', sqlite: '', mssql: 'IDENTITY(1,1)' };
+
+  const lines = [];
+  const ts = new Date().toISOString().replace('T', ' ').substring(0, 19);
+
+  lines.push(`-- ============================================================`);
+  lines.push(`-- ER Diagram SQL Export`);
+  lines.push(`-- Dialekt  : ${dialect.toUpperCase()}`);
+  lines.push(`-- Vygenerováno: ${ts}`);
+  lines.push(`-- Pořadí  : ${order === 'topo' ? 'topologické (FK závislosti)' : order === 'alpha' ? 'abecední' : 'ruční'}`);
+  lines.push(`-- ============================================================`);
+  lines.push(``);
+
+  if (dropFirst) {
+    lines.push(`-- DROP (v obráceném pořadí kvůli FK)`);
+    [...sortedTables].reverse().forEach(t => {
+      if (dialect === 'mysql' || dialect === 'mariadb')
+        lines.push(`DROP TABLE IF EXISTS ${wrap(t.name)};`);
+      else if (dialect === 'postgres')
+        lines.push(`DROP TABLE IF EXISTS ${wrap(t.name)} CASCADE;`);
+      else if (dialect === 'mssql')
+        lines.push(`IF OBJECT_ID(N'${t.name}', N'U') IS NOT NULL DROP TABLE ${wrap(t.name)};`);
+      else
+        lines.push(`DROP TABLE IF EXISTS ${wrap(t.name)};`);
+    });
+    lines.push(``);
+  }
+
+  sortedTables.forEach(t => {
+    lines.push(`-- Table: ${t.name}`);
+    const ifNEStr = ifNE ? ' IF NOT EXISTS' : '';
+    lines.push(`CREATE TABLE${ifNEStr} ${wrap(t.name)} (`);
+
+    const colDefs = [];
+
+    t.columns.forEach(col => {
+      let mappedType = typeMap(col.type);
+
+      // Auto-increment / serial
+      let autoInc = '';
+      if (col.pk && col.autoIncrement) {
+        if (dialect === 'postgres') {
+          mappedType = mappedType === 'BIGINT' ? 'BIGSERIAL' : 'SERIAL';
+        } else if (dialect === 'sqlite') {
+          // handled by INTEGER PRIMARY KEY
+        } else {
+          autoInc = ' ' + autoIncKw[dialect];
+        }
+      }
+
+      let def = `    ${wrap(col.name)} ${mappedType}${autoInc}`;
+      if ((col.nn || col.pk) && dialect !== 'sqlite') def += ' NOT NULL';
+      if (col.unique && !col.pk) def += ' UNIQUE';
+      if (col.default !== undefined && col.default !== '') def += ` DEFAULT ${col.default}`;
+      colDefs.push(def);
+    });
+
+    // PRIMARY KEY constraint
+    const pks = t.columns.filter(c => c.pk);
+    if (pks.length === 1 && pks[0].autoIncrement && dialect === 'sqlite') {
+      // SQLite: INTEGER PRIMARY KEY is implicit auto-increment
+      const idx = colDefs.findIndex((_, i) => t.columns[i]?.id === pks[0].id);
+      if (idx >= 0) colDefs[idx] += ' PRIMARY KEY';
+    } else if (pks.length) {
+      colDefs.push(`    CONSTRAINT ${wrap('pk_' + t.name)} PRIMARY KEY (${pks.map(c => wrap(c.name)).join(', ')})`);
+    }
+
+    // UNIQUE constraints for multi-unique (named)
+    const uniques = t.columns.filter(c => c.unique && !c.pk);
+    uniques.forEach(c => {
+      // inline UNIQUE already added above; skip named constraint to avoid duplication
+    });
+
+    // FOREIGN KEYS inline (embedded in CREATE TABLE — all dialects except SQLite can do this)
+    if (dialect !== 'sqlite') {
+      relations.filter(r => r.fromTable === t.id).forEach(rel => {
+        const fc = t.columns.find(c => c.id === rel.fromCol);
+        const tt2 = tables.find(t2 => t2.id === rel.toTable);
+        const tc = tt2?.columns.find(c => c.id === rel.toCol);
+        if (fc && tt2 && tc) {
+          const cname = `fk_${t.name}_${fc.name}`;
+          colDefs.push(`    CONSTRAINT ${wrap(cname)} FOREIGN KEY (${wrap(fc.name)}) REFERENCES ${wrap(tt2.name)} (${wrap(tc.name)})`);
+        }
+      });
+    }
+
+    lines.push(colDefs.join(',\n'));
+
+    if (dialect === 'mssql') lines.push(`);`);
+    else lines.push(`);`);
+
+    // SQLite: separate ALTER TABLE for FK (not supported — add as comment)
+    if (dialect === 'sqlite') {
+      relations.filter(r => r.fromTable === t.id).forEach(rel => {
+        const fc = t.columns.find(c => c.id === rel.fromCol);
+        const tt2 = tables.find(t2 => t2.id === rel.toTable);
+        const tc = tt2?.columns.find(c => c.id === rel.toCol);
+        if (fc && tt2 && tc) {
+          lines.push(`-- FK: ${t.name}.${fc.name} -> ${tt2.name}.${tc.name}  (SQLite enforces via PRAGMA foreign_keys = ON)`);
+        }
+      });
+    }
+
+    // Indexes for FK columns
+    if (addIdx) {
+      relations.filter(r => r.fromTable === t.id).forEach(rel => {
+        const fc = t.columns.find(c => c.id === rel.fromCol);
+        if (fc) {
+          lines.push(`CREATE INDEX ${wrap('idx_' + t.name + '_' + fc.name)} ON ${wrap(t.name)} (${wrap(fc.name)});`);
+        }
+      });
+    }
+
+    lines.push(``);
+  });
+
+  return lines.join('\n');
+}
+
+// ─── SQL HIGHLIGHT (minimal) ─────────────────────────────────────────────────
+function highlightSql(sql) {
+  const KW = /\b(CREATE|TABLE|DROP|ALTER|ADD|IF|NOT|EXISTS|PRIMARY|KEY|FOREIGN|REFERENCES|CONSTRAINT|INDEX|ON|DEFAULT|NULL|UNIQUE|SERIAL|INTEGER|INT|BIGINT|SMALLINT|TEXT|VARCHAR|BOOLEAN|TIMESTAMP|DATETIME|DATE|BLOB|REAL|NUMERIC|DECIMAL|FLOAT|DOUBLE|BIGSERIAL|IDENTITY|AUTO_INCREMENT|CASCADE|PRAGMA)\b/g;
+  return escHtml(sql)
+    .replace(/(--.+)/g, '<span class="sql-cmt">$1</span>')
+    .replace(KW, '<span class="sql-kw">$1</span>');
+}
+
+function openSqlExport() {
+  refreshSqlPreview();
+  openModal('modalSqlExport');
+}
+
+function refreshSqlPreview() {
+  const sql = generateSql({
+    dialect:    document.getElementById('sqlDialect').value,
+    order:      document.getElementById('sqlOrder').value,
+    dropFirst:  document.getElementById('sqlDropFirst').checked,
+    ifNotExists:document.getElementById('sqlIfNotExists').checked,
+    addIndexes: document.getElementById('sqlAddIndexes').checked,
+  });
+  document.getElementById('sqlPreviewContent').innerHTML = highlightSql(sql);
+  document.getElementById('sqlPreviewContent')._rawSql = sql;
+}
+
+function exportSqlDdl() { openSqlExport(); }
+
+// ============================================================
+//  SIDEBAR
+// ============================================================
+function renderSidebar() {
+  document.getElementById('tableCount').textContent = tables.length;
+  const list = document.getElementById('tableList');
+  list.innerHTML = '';
+
+  tables.forEach(t => {
+    const div = document.createElement('div');
+    div.className = 'table-item' + (t.id === selectedTableId ? ' selected' : '');
+    div.innerHTML = `
+      <div>
+        <div class="table-item-name">${escHtml(t.name)}</div>
+        <div class="table-item-meta">${t.columns.length} sloupců</div>
+      </div>
+      <div class="table-item-actions">
+        <button class="icon-btn" title="Zaměřit" data-focus="${t.id}">⊙</button>
+        <button class="icon-btn del" title="Smazat" data-del="${t.id}">✕</button>
+      </div>`;
+    div.addEventListener('click', e => {
+      if (e.target.dataset.del) { deleteTable(e.target.dataset.del); return; }
+      if (e.target.dataset.focus) { focusTable(e.target.dataset.focus); return; }
+      selectTable(t.id);
+      if (document.getElementById('panel-props').classList.contains('active')) showProps(t.id);
+    });
+    list.appendChild(div);
+  });
+}
+
+function focusTable(id) {
+  const t = tables.find(t => t.id === id);
+  if (!t) return;
+  zoom = 1;
+  panX = canvas.width / 2 - (t.x + TABLE_WIDTH / 2) * zoom;
+  panY = canvas.height / 2 - (t.y + tableHeight(t) / 2) * zoom;
+  render(); updateZoomInfo();
+}
+
+// ============================================================
+//  PROPERTIES PANEL
+// ============================================================
+function showProps(tableId) {
+  const panel = document.getElementById('propsPanel');
+  if (!tableId) {
+    panel.innerHTML = '<div style="color:#555;font-size:0.85rem;padding:20px 0;text-align:center;">Klikněte na tabulku v diagramu nebo vyberte ji v seznamu</div>';
+    return;
+  }
+  const t = tables.find(t => t.id === tableId);
+  if (!t) return;
+
+  const SQL_TYPES = ['INT','BIGINT','SMALLINT','TINYINT','DECIMAL(10,2)','FLOAT','DOUBLE','BOOLEAN','CHAR(1)','VARCHAR(50)','VARCHAR(100)','VARCHAR(255)','TEXT','DATE','DATETIME','TIMESTAMP','UUID','JSON','BLOB'];
+
+  let html = `
+    <div class="prop-group">
+      <div class="prop-label">Název tabulky</div>
+      <input class="prop-input" id="propTableName" value="${escHtml(t.name)}" />
+    </div>
+    <div class="prop-group">
+      <div class="prop-label" style="display:flex;justify-content:space-between;align-items:center;">
+        Sloupce
+        <button class="btn secondary" style="padding:3px 8px;font-size:0.75rem;" id="btnAddCol">+ Přidat</button>
+      </div>
+      <div style="font-size:0.72rem;color:#555;display:grid;grid-template-columns:1fr 80px 30px 30px 30px;gap:4px;margin-bottom:4px;padding:0 2px;">
+        <span>Název</span><span>Typ</span><span style="text-align:center">PK</span><span style="text-align:center">NN</span><span></span>
+      </div>
+      <div class="column-list" id="colList">`;
+
+  t.columns.forEach((col, i) => {
+    html += `<div class="column-row" data-colidx="${i}">
+      <input class="col-name" value="${escHtml(col.name)}" placeholder="column_name" />
+      <select class="col-type">
+        ${SQL_TYPES.map(tp => `<option${col.type === tp ? ' selected' : ''}>${tp}</option>`).join('')}
+        <option${!SQL_TYPES.includes(col.type) ? ' selected' : ''} value="${escHtml(col.type)}">${escHtml(col.type)}</option>
+      </select>
+      <div class="col-flag pk${col.pk ? ' active' : ''}" title="Primary Key">PK</div>
+      <div class="col-flag${col.nn ? ' active' : ''}" title="Not Null">NN</div>
+      <button class="icon-btn del" title="Smazat sloupec">✕</button>
+    </div>`;
+  });
+
+  html += `</div></div>
+    <div class="prop-group" style="margin-top:8px;">
+      <button class="btn" id="btnSaveProps" style="width:100%">💾 Uložit změny</button>
+    </div>`;
+
+  panel.innerHTML = html;
+
+  document.getElementById('btnAddCol').addEventListener('click', () => { addColumn(tableId); showProps(tableId); });
+
+  document.getElementById('btnSaveProps').addEventListener('click', () => {
+    t.name = document.getElementById('propTableName').value.trim() || t.name;
+    const rows = document.querySelectorAll('#colList .column-row');
+    rows.forEach((row, i) => {
+      const col = t.columns[i];
+      if (!col) return;
+      col.name = row.querySelector('.col-name').value.trim() || col.name;
+      col.type = row.querySelector('.col-type').value;
+      col.pk = row.querySelector('.col-flag.pk').classList.contains('active');
+      col.nn = row.querySelector('.col-flag:not(.pk)').classList.contains('active') || col.pk;
+    });
+    render(); renderSidebar(); renderRelations();
+    markDirty();
+    showNotification('Změny uloženy', 'success');
+  });
+
+  // PK / NN toggles
+  panel.querySelectorAll('.col-flag').forEach(flag => {
+    flag.addEventListener('click', () => flag.classList.toggle('active'));
+  });
+
+  // Delete column buttons
+  panel.querySelectorAll('.column-row .icon-btn.del').forEach((btn, i) => {
+    btn.addEventListener('click', () => {
+      t.columns.splice(i, 1);
+      render(); showProps(tableId);
+    });
+  });
+}
+
+// ============================================================
+//  RELATIONS PANEL
+// ============================================================
+function renderRelations() {
+  const list = document.getElementById('relationList');
+  if (!list) return;
+  if (relations.length === 0) {
+    list.innerHTML = '<div style="color:#555;font-size:0.85rem;padding:10px 0;">Žádné vztahy. Přidejte FK v SQL nebo klikněte „+ Přidat vztah".</div>';
+    return;
+  }
+
+  list.innerHTML = '';
+  relations.forEach((rel, i) => {
+    const ft = tables.find(t => t.id === rel.fromTable);
+    const tt = tables.find(t => t.id === rel.toTable);
+    const fc = ft && ft.columns.find(c => c.id === rel.fromCol);
+    const tc = tt && tt.columns.find(c => c.id === rel.toCol);
+    if (!ft || !tt || !fc || !tc) return;
+
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;gap:8px;padding:8px 10px;background:#2a2a2a;border:1px solid #333;border-radius:4px;margin-bottom:6px;font-size:0.82rem;';
+    row.innerHTML = `
+      <span style="color:#e0e0e0;flex:1">${escHtml(ft.name)}.<span style="color:#6aa6fd">${escHtml(fc.name)}</span></span>
+      <span style="color:#555">→</span>
+      <span style="color:#e0e0e0;flex:1">${escHtml(tt.name)}.<span style="color:#4caf50">${escHtml(tc.name)}</span></span>
+      <button class="icon-btn del" data-relidx="${i}" title="Smazat vztah">✕</button>`;
+    row.querySelector('.icon-btn.del').addEventListener('click', () => {
+      relations.splice(i, 1);
+      // Remove FK flag if no more relations use that column
+      if (fc) {
+        const stillUsed = relations.some(r => r.fromCol === fc.id);
+        if (!stillUsed) fc.fk = false;
+      }
+      renderRelations(); render();
+    });
+    list.appendChild(row);
+  });
+}
+
+// ============================================================
+//  ADD RELATION MODAL
+// ============================================================
+function openAddRelation() {
+  if (tables.length < 2) { showNotification('Nejdříve vytvořte alespoň 2 tabulky', 'error'); return; }
+  const fromSel = document.getElementById('relFromTable');
+  const toSel = document.getElementById('relToTable');
+  const fromColSel = document.getElementById('relFromCol');
+  const toColSel = document.getElementById('relToCol');
+
+  function populateCols(tableId, target) {
+    const t = tables.find(t => t.id === tableId);
+    target.innerHTML = t ? t.columns.map(c => `<option value="${c.id}">${escHtml(c.name)}</option>`).join('') : '';
+  }
+
+  fromSel.innerHTML = tables.map(t => `<option value="${t.id}">${escHtml(t.name)}</option>`).join('');
+  toSel.innerHTML = tables.map(t => `<option value="${t.id}">${escHtml(t.name)}</option>`).join('');
+  populateCols(fromSel.value, fromColSel);
+  populateCols(toSel.value, toColSel);
+
+  fromSel.onchange = () => populateCols(fromSel.value, fromColSel);
+  toSel.onchange = () => populateCols(toSel.value, toColSel);
+
+  openModal('modalAddRelation');
+}
+
+document.getElementById('btnSaveRelation').addEventListener('click', () => {
+  const fromTable = document.getElementById('relFromTable').value;
+  const fromCol = document.getElementById('relFromCol').value;
+  const toTable = document.getElementById('relToTable').value;
+  const toCol = document.getElementById('relToCol').value;
+  if (!fromTable || !fromCol || !toTable || !toCol) return;
+
+  const fc = tables.find(t => t.id === fromTable)?.columns.find(c => c.id === fromCol);
+  if (fc) fc.fk = true;
+
+  relations.push({ id: uid(), fromTable, fromCol, toTable, toCol });
+  closeModal('modalAddRelation');
+  renderRelations();
+  render();
+  markDirty();
+  showNotification('Vztah přidán', 'success');
+});
+
+// ============================================================
+//  TABS
+// ============================================================
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.panel-content').forEach(p => p.classList.remove('active'));
+    tab.classList.add('active');
+    const panel = document.getElementById('panel-' + tab.dataset.tab);
+    if (panel) panel.classList.add('active');
+    if (tab.dataset.tab === 'diagram') { resizeCanvas(); }
+    if (tab.dataset.tab === 'relations') renderRelations();
+    if (tab.dataset.tab === 'props' && selectedTableId) showProps(selectedTableId);
+    if (tab.dataset.tab === 'versions') renderVersionList();
+    if (tab.dataset.tab === 'settings') syncSettingsUI();
+  });
+});
+
+// ============================================================
+//  BUTTON HANDLERS
+// ============================================================
+document.getElementById('btnAddTable').addEventListener('click', () => openModal('modalAddTable'));
+document.getElementById('btnTheme').addEventListener('click', toggleTheme);
+document.getElementById('btnAutoLayout').addEventListener('click', autoLayout);
+document.getElementById('btnSmartLayout').addEventListener('click', smartLayout);
+document.getElementById('btnExportPng').addEventListener('click', exportPng);
+document.getElementById('btnExportJson').addEventListener('click', exportJson);
+document.getElementById('btnExportSql').addEventListener('click', exportSqlDdl);
+
+// SQL Export modal
+document.getElementById('btnRegeneraSql').addEventListener('click', refreshSqlPreview);
+['sqlDialect','sqlOrder'].forEach(id => document.getElementById(id).addEventListener('change', refreshSqlPreview));
+['sqlDropFirst','sqlIfNotExists','sqlAddIndexes'].forEach(id => document.getElementById(id).addEventListener('change', refreshSqlPreview));
+
+document.getElementById('btnCopySql').addEventListener('click', () => {
+  const sql = document.getElementById('sqlPreviewContent')._rawSql || '';
+  navigator.clipboard.writeText(sql).then(() => {
+    const btn = document.getElementById('btnCopySql');
+    btn.textContent = '✔ Zkopírováno';
+    btn.classList.add('copy-flash');
+    setTimeout(() => { btn.textContent = '📋 Kopírovat'; btn.classList.remove('copy-flash'); }, 1500);
+  });
+});
+
+document.getElementById('btnDownloadSql').addEventListener('click', () => {
+  const sql = document.getElementById('sqlPreviewContent')._rawSql || generateSql();
+  const blob = new Blob([sql], { type: 'text/plain;charset=utf-8' });
+  const link = document.createElement('a');
+  const dialect = document.getElementById('sqlDialect').value;
+  link.download = `er_diagram_${dialect}.sql`;
+  link.href = URL.createObjectURL(blob);
+  link.click();
+  showNotification('SQL soubor stažen', 'success');
+});
+document.getElementById('btnClear').addEventListener('click', () => {
+  if (!tables.length || confirm('Smazat celý diagram?')) {
+    tables = []; relations = []; selectedTableId = null;
+    renderSidebar(); renderRelations(); render(); showProps(null);
+    markDirty();
+  }
+});
+
+// ── Versions ──────────────────────────────────────────────────────────────────
+document.getElementById('btnSaveVersion').addEventListener('click', () => {
+  const name = document.getElementById('verNameInput').value.trim();
+  saveVersion(name);
+  document.getElementById('verNameInput').value = '';
+});
+document.getElementById('verNameInput').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('btnSaveVersion').click();
+});
+
+// ── Settings UI ───────────────────────────────────────────────────────────────
+function syncSettingsUI() {
+  // Routing buttons
+  document.querySelectorAll('#routingCtrl .seg-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.val === settings.routing);
+  });
+  document.getElementById('rowAvoidMargin').style.display = settings.routing === 'smart' ? 'flex' : 'none';
+
+  // Crows foot buttons
+  document.querySelectorAll('#crowsCtrl .seg-btn').forEach(b => {
+    b.classList.toggle('active', b.dataset.val === settings.crows);
+  });
+
+  document.getElementById('avoidMarginRange').value = settings.avoidMargin;
+  document.getElementById('avoidMarginVal').textContent = settings.avoidMargin;
+  document.getElementById('lineWidthRange').value = settings.lineWidth;
+  document.getElementById('lineWidthVal').textContent = settings.lineWidth;
+  document.getElementById('autoSaveChk').checked = settings.autoSave;
+}
+
+document.querySelectorAll('#routingCtrl .seg-btn').forEach(b => {
+  b.addEventListener('click', () => {
+    settings.routing = b.dataset.val;
+    saveSettings(); syncSettingsUI(); render();
+  });
+});
+
+document.querySelectorAll('#crowsCtrl .seg-btn').forEach(b => {
+  b.addEventListener('click', () => {
+    settings.crows = b.dataset.val;
+    saveSettings(); syncSettingsUI(); render();
+  });
+});
+
+document.getElementById('avoidMarginRange').addEventListener('input', function() {
+  settings.avoidMargin = +this.value;
+  document.getElementById('avoidMarginVal').textContent = this.value;
+  saveSettings(); render();
+});
+
+document.getElementById('lineWidthRange').addEventListener('input', function() {
+  settings.lineWidth = +this.value;
+  document.getElementById('lineWidthVal').textContent = this.value;
+  saveSettings(); render();
+});
+
+document.getElementById('autoSaveChk').addEventListener('change', function() {
+  settings.autoSave = this.checked;
+  saveSettings();
+  if (settings.autoSave) markDirty();
+});
+
+document.getElementById('btnCreateTable').addEventListener('click', () => {
+  const name = document.getElementById('newTableName').value.trim();
+  if (!name) return;
+  const t = createTable(name, [
+    { id: colUid(), name: 'id', type: 'INT', pk: true, fk: false, nn: true, unique: true }
+  ]);
+  selectTable(t.id);
+  closeModal('modalAddTable');
+  document.getElementById('newTableName').value = '';
+  showNotification(`Tabulka "${name}" vytvořena`, 'success');
+});
+
+document.getElementById('newTableName').addEventListener('keydown', e => {
+  if (e.key === 'Enter') document.getElementById('btnCreateTable').click();
+});
+
+document.getElementById('btnParseSql').addEventListener('click', () => {
+  const sql = document.getElementById('sqlInput').value.trim();
+  if (!sql) { showNotification('Vložte SQL DDL', 'error'); return; }
+  const parsed = parseSql(sql);
+  if (!parsed.length) { showNotification('Nepodařilo se najít CREATE TABLE', 'error'); return; }
+  applySqlParsed(parsed, false);
+  showNotification(`Vygenerováno ${parsed.length} tabulek`, 'success');
+  // Switch to diagram tab
+  document.querySelector('[data-tab="diagram"]').click();
+});
+
+document.getElementById('btnAppendSql').addEventListener('click', () => {
+  const sql = document.getElementById('sqlInput').value.trim();
+  if (!sql) { showNotification('Vložte SQL DDL', 'error'); return; }
+  const parsed = parseSql(sql);
+  if (!parsed.length) { showNotification('Nepodařilo se najít CREATE TABLE', 'error'); return; }
+  applySqlParsed(parsed, true);
+  showNotification(`Přidáno ${parsed.length} tabulek`, 'success');
+  document.querySelector('[data-tab="diagram"]').click();
+});
+
+document.getElementById('btnClearSql').addEventListener('click', () => {
+  document.getElementById('sqlInput').value = '';
+});
+
+document.getElementById('btnLoadExample').addEventListener('click', () => {
+  document.getElementById('sqlInput').value = `-- Příklad: Blog systém
+CREATE TABLE users (
+  id INT NOT NULL AUTO_INCREMENT,
+  username VARCHAR(100) NOT NULL,
+  email VARCHAR(255) NOT NULL UNIQUE,
+  password_hash VARCHAR(255) NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id)
+);
+
+CREATE TABLE categories (
+  id INT NOT NULL AUTO_INCREMENT,
+  name VARCHAR(100) NOT NULL,
+  slug VARCHAR(100) NOT NULL UNIQUE,
+  PRIMARY KEY (id)
+);
+
+CREATE TABLE posts (
+  id INT NOT NULL AUTO_INCREMENT,
+  user_id INT NOT NULL,
+  category_id INT,
+  title VARCHAR(255) NOT NULL,
+  body TEXT NOT NULL,
+  published BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  FOREIGN KEY (user_id) REFERENCES users(id),
+  FOREIGN KEY (category_id) REFERENCES categories(id)
+);
+
+CREATE TABLE comments (
+  id INT NOT NULL AUTO_INCREMENT,
+  post_id INT NOT NULL,
+  user_id INT NOT NULL,
+  body TEXT NOT NULL,
+  created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (id),
+  FOREIGN KEY (post_id) REFERENCES posts(id),
+  FOREIGN KEY (user_id) REFERENCES users(id)
+);
+
+CREATE TABLE tags (
+  id INT NOT NULL AUTO_INCREMENT,
+  name VARCHAR(50) NOT NULL UNIQUE,
+  PRIMARY KEY (id)
+);
+
+CREATE TABLE post_tags (
+  post_id INT NOT NULL,
+  tag_id INT NOT NULL,
+  PRIMARY KEY (post_id, tag_id),
+  FOREIGN KEY (post_id) REFERENCES posts(id),
+  FOREIGN KEY (tag_id) REFERENCES tags(id)
+);`;
+});
+
+document.getElementById('btnAddRelation').addEventListener('click', openAddRelation);
+
+document.getElementById('btnImportJson').addEventListener('click', () => openModal('modalImportJson'));
+
+document.getElementById('btnDoImportJson').addEventListener('click', () => {
+  try {
+    const data = JSON.parse(document.getElementById('jsonImportInput').value);
+    if (!data.tables) throw new Error('Chybí tables');
+    tables = data.tables;
+    relations = data.relations || [];
+    selectedTableId = null;
+    // Fix nextId
+    [...tables, ...relations].forEach(item => {
+      const num = parseInt((item.id || '').replace(/\D/g,''));
+      if (num >= nextId) nextId = num + 1;
+    });
+    tables.forEach(t => t.columns.forEach(c => {
+      const num = parseInt((c.id || '').replace(/\D/g,''));
+      if (num >= nextId) nextId = num + 1;
+    }));
+    renderSidebar(); renderRelations(); render();
+    closeModal('modalImportJson');
+    showNotification(`Importováno ${tables.length} tabulek`, 'success');
+    document.querySelector('[data-tab="diagram"]').click();
+  } catch (e) {
+    showNotification('Chyba při parsování JSON: ' + e.message, 'error');
+  }
+});
+
+// ============================================================
+//  MODALS
+// ============================================================
+function openModal(id) {
+  document.getElementById(id).classList.add('show');
+}
+
+function closeModal(id) {
+  document.getElementById(id).classList.remove('show');
+}
+
+window.closeModal = closeModal;
+
+document.querySelectorAll('.modal-overlay').forEach(overlay => {
+  overlay.addEventListener('click', e => {
+    if (e.target === overlay) overlay.classList.remove('show');
+  });
+});
+
+// ============================================================
+//  NOTIFICATION
+// ============================================================
+function showNotification(msg, type = 'info') {
+  const n = document.createElement('div');
+  n.className = `notification ${type}`;
+  n.innerHTML = `<span>${msg}</span><button onclick="this.parentElement.remove()" style="background:none;border:none;color:white;cursor:pointer;font-size:1rem;margin-left:10px;">×</button>`;
+  document.body.appendChild(n);
+  setTimeout(() => n.parentElement && n.remove(), 4000);
+}
+
+// ============================================================
+//  HELPERS
+// ============================================================
+function escHtml(s) {
+  return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+
+// ============================================================
+//  INIT
+// ============================================================
+(function init() {
+  applyTheme(currentTheme);            // set data-theme + button icon
+  const restored = loadPersistedState();
+  syncSettingsUI();
+  renderSidebar();
+  renderRelations();
+  render();
+  if (restored && tables.length) {
+    setTimeout(() => fitToView(80), 50); // fit after first paint
+    showNotification(`Obnovena rozpracovaná práce (${tables.length} tabulek)`, 'info');
+    setAutosaveIndicator('saved');
+  }
+})();
+</script>
+</body>
+</html>

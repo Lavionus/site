@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stained Glass Generator</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: #1a1a1a;
+      color: #e0e0e0;
+      min-height: 100vh;
+      display: flex;
+      gap: 0;
+    }
+
+    /* ── Sidebar ─────────────────────────────────────── */
+    #sidebar {
+      width: 280px;
+      min-width: 280px;
+      background-color: #222;
+      border-right: 1px solid #404040;
+      padding: 12px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    #sidebar h1 {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #6aa6fd;
+      letter-spacing: 0.5px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #404040;
+      flex-shrink: 0;
+    }
+
+    .section {
+      background-color: #2a2a2a;
+      border: 1px solid #404040;
+      border-radius: 6px;
+      padding: 8px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .section h3 {
+      font-size: 0.72rem;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-weight: 600;
+    }
+
+    label {
+      font-size: 0.82rem;
+      color: #ccc;
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    label span.val {
+      color: #6aa6fd;
+      float: right;
+    }
+
+    input[type="range"] {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 4px;
+      background: #555;
+      border-radius: 2px;
+      outline: none;
+    }
+    input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 14px; height: 14px;
+      background: #6aa6fd;
+      border-radius: 50%;
+      cursor: pointer;
+    }
+
+    input[type="number"], select {
+      width: 100%;
+      padding: 6px 10px;
+      background-color: #404040;
+      border: 1px solid #555;
+      border-radius: 4px;
+      color: #e0e0e0;
+      font-size: 0.85rem;
+    }
+    input[type="number"]:focus, select:focus {
+      outline: none;
+      border-color: #6aa6fd;
+    }
+
+    .lead-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      align-items: center;
+      gap: 8px;
+    }
+    input[type="color"] {
+      width: 36px; height: 28px;
+      border: 1px solid #555;
+      border-radius: 4px;
+      background: none;
+      cursor: pointer;
+      padding: 2px;
+    }
+
+    .row2 { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+
+    .btn {
+      padding: 6px 12px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.82rem;
+      font-weight: 500;
+      transition: background-color 0.2s;
+    }
+    .btn-primary { background-color: #6aa6fd; color: #fff; }
+    .btn-primary:hover { background-color: #5694f0; }
+    .btn-secondary { background-color: #404040; color: #e0e0e0; border: 1px solid #555; }
+    .btn-secondary:hover { background-color: #4a4a4a; }
+    .btn-success { background-color: #4caf50; color: #fff; }
+    .btn-success:hover { background-color: #45a049; }
+
+    .btn-row { display: flex; gap: 8px; flex-wrap: wrap; }
+
+    #poly-status {
+      font-size: 0.75rem;
+      color: #666;
+      text-align: center;
+      padding: 2px 0;
+    }
+    #poly-status span { color: #6aa6fd; }
+
+    /* ── Canvas area ─────────────────────────────────── */
+    #canvas-area {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: #333;
+      overflow: auto;
+      padding: 20px;
+    }
+
+    #svg-container svg {
+      display: block;
+      box-shadow: 0 0 40px rgba(0,0,0,0.6);
+    }
+
+    /* ── Export modal ────────────────────────────────── */
+    #export-modal {
+      display: none;
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.7);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+    #export-modal.open { display: flex; }
+    .modal-box {
+      background: #2a2a2a;
+      border: 1px solid #404040;
+      border-radius: 8px;
+      padding: 24px;
+      width: 360px;
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+    .modal-box h2 { font-size: 1rem; color: #6aa6fd; }
+    .modal-box .btn-row { justify-content: flex-end; }
+  </style>
+</head>
+<body>
+
+<!-- ══ SIDEBAR ══════════════════════════════════════════ -->
+<div id="sidebar">
+  <h1>🔷 Stained Glass Generator</h1>
+
+  <!-- Canvas size -->
+  <div class="section">
+    <h3>Rozměry plátna</h3>
+    <div class="row2">
+      <label>Šířka (px)<input type="number" id="canvasW" value="600" min="100" max="2000" step="10"></label>
+      <label>Výška (px)<input type="number" id="canvasH" value="800" min="100" max="2000" step="10"></label>
+    </div>
+  </div>
+
+  <!-- Pattern type -->
+  <div class="section">
+    <h3>Typ vzoru</h3>
+    <label>Styl
+      <select id="patternType">
+        <option value="voronoi">Voronoi — organické buňky</option>
+        <option value="hexagonal">Hexagonální — pravidelný</option>
+        <option value="delaunay">Delaunay — trojúhelníky</option>
+        <option value="rose">Radiální — ružicové okno</option>
+        <option value="bsp">BSP — mozaika plátků</option>
+      </select>
+    </label>
+  </div>
+
+  <!-- Parameters -->
+  <div class="section">
+    <h3>Parametry vzoru</h3>
+    <label>
+      Počet dílků <span class="val" id="cellsVal">40</span>
+      <input type="range" id="cells" min="5" max="200" value="40">
+    </label>
+    <label>
+      Náhodnost / jitter <span class="val" id="jitterVal">0.50</span>
+      <input type="range" id="jitter" min="0" max="1" step="0.01" value="0.5">
+    </label>
+    <label>
+      Tloušťka olova (px) <span class="val" id="lineWVal">3</span>
+      <input type="range" id="lineW" min="0.5" max="12" step="0.5" value="3">
+    </label>
+    <label>
+      Seed <input type="number" id="seed" value="42" min="0" max="99999">
+    </label>
+  </div>
+
+  <!-- Border -->
+  <div class="section">
+    <h3>Ohraničení</h3>
+    <label>Tvar rámu
+      <select id="borderShape">
+        <option value="rect">Obdélník</option>
+        <option value="circle">Kruh / Elipsa</option>
+        <option value="arch">Oblouk (gotický)</option>
+        <option value="none">Žádný</option>
+      </select>
+    </label>
+    <label>
+      Okraj (px) <span class="val" id="marginVal">20</span>
+      <input type="range" id="margin" min="0" max="80" value="20">
+    </label>
+  </div>
+
+  <!-- Colors -->
+  <div class="section">
+    <h3>Barvy</h3>
+    <label>Sklo
+      <select id="colorMode">
+        <option value="none">Průhledné (jen linie)</option>
+        <option value="random">Náhodné pastelové</option>
+        <option value="warm">Teplé tóny</option>
+        <option value="cool">Studené tóny</option>
+        <option value="jewel">Jewel tones</option>
+        <option value="earth">Zemité tóny</option>
+      </select>
+    </label>
+    <label>
+      Průhlednost skla <span class="val" id="fillAlphaVal">0.80</span>
+      <input type="range" id="fillAlpha" min="0" max="1" step="0.05" value="0.8">
+    </label>
+    <label>
+      <div class="lead-row">
+        <span>Barva olova</span>
+        <input type="color" id="leadColor" value="#111111">
+      </div>
+    </label>
+  </div>
+
+  <!-- Actions -->
+  <div class="section">
+    <h3>Akce</h3>
+    <div class="btn-row">
+      <button class="btn btn-primary" onclick="generate()">Generovat</button>
+      <button class="btn btn-secondary" onclick="randomSeed()">🎲 Seed</button>
+      <button class="btn btn-success" onclick="openExport()">Export…</button>
+    </div>
+    <div id="poly-status">—</div>
+  </div>
+</div>
+
+<!-- ══ CANVAS ════════════════════════════════════════════ -->
+<div id="canvas-area">
+  <div id="svg-container"></div>
+</div>
+
+<!-- ══ EXPORT MODAL ══════════════════════════════════════ -->
+<div id="export-modal">
+  <div class="modal-box">
+    <h2>Export</h2>
+    <label>Formát
+      <select id="exportFormat">
+        <option value="svg">SVG (vektory, pro řezání / CNC)</option>
+        <option value="stl">STL (3D model olůveného rámu)</option>
+        <option value="dxf">DXF (CAD linie)</option>
+      </select>
+    </label>
+    <label>
+      Pro STL — hloubka žlábku (mm) <span class="val" id="grooveDepthVal">4</span>
+      <input type="range" id="grooveDepth" min="1" max="20" step="0.5" value="4">
+    </label>
+    <label>
+      Pro STL — šířka žlábku (mm) <span class="val" id="grooveWidthVal">3</span>
+      <input type="range" id="grooveWidth" min="1" max="10" step="0.5" value="3">
+    </label>
+    <label>
+      Pro STL — tloušťka základny (mm)
+      <input type="number" id="baseThick" value="2" min="0.5" max="10" step="0.5">
+    </label>
+    <div class="btn-row">
+      <button class="btn btn-secondary" onclick="closeExport()">Zrušit</button>
+      <button class="btn btn-success" onclick="doExport()">Stáhnout</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ── Seeded PRNG (mulberry32) ─────────────────────────────
+function makePRNG(seed) {
+  let s = seed >>> 0;
+  return () => {
+    s |= 0; s = s + 0x6D2B79F5 | 0;
+    let t = Math.imul(s ^ s >>> 15, 1 | s);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+
+let rng = makePRNG(42);
+let currentPolygons = [];
+let currentW = 600, currentH = 800;
+
+// ── localStorage persistence ─────────────────────────────
+const LS_KEY = 'sg_settings';
+const LS_FIELDS = [
+  'canvasW','canvasH','patternType','cells','jitter','lineW','seed',
+  'borderShape','margin','colorMode','fillAlpha','leadColor'
+];
+
+function saveSettings() {
+  const obj = {};
+  for (const id of LS_FIELDS) obj[id] = document.getElementById(id).value;
+  localStorage.setItem(LS_KEY, JSON.stringify(obj));
+}
+
+function loadSettings() {
+  let saved;
+  try { saved = JSON.parse(localStorage.getItem(LS_KEY)); } catch(e) {}
+  if (!saved) return;
+  for (const id of LS_FIELDS) {
+    if (saved[id] == null) continue;
+    document.getElementById(id).value = saved[id];
+  }
+  // refresh all slider labels after loading
+  document.querySelectorAll('input[type="range"]').forEach(el => el.dispatchEvent(new Event('input')));
+}
+
+// ── Live slider labels ───────────────────────────────────
+function bindSlider(id, valId, fmt) {
+  const el = document.getElementById(id);
+  const vl = document.getElementById(valId);
+  el.addEventListener('input', () => { vl.textContent = fmt ? fmt(el.value) : el.value; });
+  vl.textContent = fmt ? fmt(el.value) : el.value;
+}
+bindSlider('cells', 'cellsVal');
+bindSlider('jitter', 'jitterVal', v => parseFloat(v).toFixed(2));
+bindSlider('lineW', 'lineWVal');
+bindSlider('margin', 'marginVal');
+bindSlider('fillAlpha', 'fillAlphaVal', v => parseFloat(v).toFixed(2));
+bindSlider('grooveDepth', 'grooveDepthVal');
+bindSlider('grooveWidth', 'grooveWidthVal');
+
+// ── Debounced live update ────────────────────────────────
+let _debTimer;
+function debouncedGenerate() {
+  clearTimeout(_debTimer);
+  _debTimer = setTimeout(generate, 320);
+}
+['patternType','borderShape','colorMode','leadColor'].forEach(id =>
+  document.getElementById(id).addEventListener('change', debouncedGenerate));
+['cells','jitter','lineW','margin','fillAlpha'].forEach(id =>
+  document.getElementById(id).addEventListener('input', debouncedGenerate));
+document.getElementById('seed').addEventListener('change', generate);
+document.addEventListener('keydown', e => {
+  if (e.code === 'Space' && e.target.tagName !== 'INPUT') { e.preventDefault(); randomSeed(); }
+});
+
+// ── Color palettes ───────────────────────────────────────
+const PALETTES = {
+  none:   () => '#ffffff',
+  random: (r) => `hsl(${r()*360|0},${40+r()*40|0}%,${60+r()*20|0}%)`,
+  warm:   (r) => `hsl(${r()*80|0},${55+r()*30|0}%,${55+r()*20|0}%)`,
+  cool:   (r) => `hsl(${185+r()*110|0},${40+r()*40|0}%,${48+r()*25|0}%)`,
+  jewel:  (r) => { const h=[340,0,28,120,200,260,290]; return `hsl(${h[r()*h.length|0]},${65+r()*25|0}%,${38+r()*20|0}%)`; },
+  earth:  (r) => `hsl(${20+r()*60|0},${30+r()*35|0}%,${45+r()*25|0}%)`,
+};
+
+// ── Clip path and border ─────────────────────────────────
+function getClipDef(shape, w, h, margin) {
+  const cx=w/2, cy=h/2, rx=w/2-margin, ry=h/2-margin;
+  if (shape==='rect')
+    return `<clipPath id="cp"><rect x="${margin}" y="${margin}" width="${w-margin*2}" height="${h-margin*2}"/></clipPath>`;
+  if (shape==='circle')
+    return `<clipPath id="cp"><ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}"/></clipPath>`;
+  if (shape==='arch') {
+    const x1=margin,x2=w-margin,yb=h-margin,yt=margin+ry*0.3,arcR=rx;
+    return `<clipPath id="cp"><path d="M${x1},${yb} L${x1},${yt+arcR} A${arcR},${arcR} 0 0,1 ${x2},${yt+arcR} L${x2},${yb} Z"/></clipPath>`;
+  }
+  return '';
+}
+function getBorderStroke(shape, w, h, margin, lw, color) {
+  const cx=w/2,cy=h/2,rx=w/2-margin,ry=h/2-margin,sw=lw*2;
+  if (shape==='rect')
+    return `<rect x="${margin}" y="${margin}" width="${w-margin*2}" height="${h-margin*2}" fill="none" stroke="${color}" stroke-width="${sw}"/>`;
+  if (shape==='circle')
+    return `<ellipse cx="${cx}" cy="${cy}" rx="${rx}" ry="${ry}" fill="none" stroke="${color}" stroke-width="${sw}"/>`;
+  if (shape==='arch') {
+    const x1=margin,x2=w-margin,yb=h-margin,yt=margin+ry*0.3,arcR=rx;
+    return `<path d="M${x1},${yb} L${x1},${yt+arcR} A${arcR},${arcR} 0 0,1 ${x2},${yt+arcR} L${x2},${yb} Z" fill="none" stroke="${color}" stroke-width="${sw}"/>`;
+  }
+  return '';
+}
+
+// ── Voronoi (pixel-scan + convex hull) ──────────────────
+function voronoiPolygons(w, h, n, jitter, r) {
+  const sites = [];
+  for (let i=0;i<n;i++) sites.push([r()*w, r()*h]);
+  return voronoiFromSeeds(sites, w, h);
+}
+
+function voronoiFromSeeds(sites, w, h) {
+  const n=sites.length, step=4;
+  const cells=sites.map(()=>({pts:[]}));
+  for (let y=0;y<h;y+=step)
+    for (let x=0;x<w;x+=step) {
+      let best=-1,bestD=Infinity;
+      for (let i=0;i<n;i++) { const dx=x-sites[i][0],dy=y-sites[i][1],d=dx*dx+dy*dy; if(d<bestD){bestD=d;best=i;} }
+      cells[best].pts.push([x,y]);
+    }
+  return cells.map(c=>c.pts.length>=3?convexHull(c.pts):null).filter(Boolean);
+}
+
+function convexHull(pts) {
+  pts=pts.slice().sort((a,b)=>a[0]-b[0]||a[1]-b[1]);
+  const cross=(o,a,b)=>(a[0]-o[0])*(b[1]-o[1])-(a[1]-o[1])*(b[0]-o[0]);
+  const lower=[],upper=[];
+  for(const p of pts){while(lower.length>=2&&cross(lower[lower.length-2],lower[lower.length-1],p)<=0)lower.pop();lower.push(p);}
+  for(let i=pts.length-1;i>=0;i--){const p=pts[i];while(upper.length>=2&&cross(upper[upper.length-2],upper[upper.length-1],p)<=0)upper.pop();upper.push(p);}
+  upper.pop();lower.pop();
+  return [...lower,...upper];
+}
+
+// ── Hexagonal (hex seeds → Voronoi) ─────────────────────
+function hexPolygons(w, h, n, jitter, r) {
+  const area=(w*h)/n, size=Math.sqrt(area/(3*Math.sqrt(3)/2));
+  const hexW=size*2, hexH=Math.sqrt(3)*size;
+  const cols=Math.ceil(w/(hexW*0.75))+2, rows=Math.ceil(h/hexH)+2;
+  const j=jitter*size*0.5, seeds=[];
+  for(let row=-1;row<rows;row++)
+    for(let col=-1;col<cols;col++) {
+      const cx=col*hexW*0.75, cy=row*hexH+(col%2===1?hexH/2:0);
+      seeds.push([cx+r()*j*2-j, cy+r()*j*2-j]);
+    }
+  return voronoiFromSeeds(seeds, w, h);
+}
+
+// ── Delaunay triangulation (Bowyer-Watson) ───────────────
+function inCC(a, b, c, p) {
+  const ax=a[0]-p[0],ay=a[1]-p[1];
+  const bx=b[0]-p[0],by=b[1]-p[1];
+  const cx=c[0]-p[0],cy=c[1]-p[1];
+  return (ax*ax+ay*ay)*(bx*cy-by*cx)
+       - (bx*bx+by*by)*(ax*cy-ay*cx)
+       + (cx*cx+cy*cy)*(ax*by-ay*bx) > 0;
+}
+
+function delaunayPolygons(w, h, n, jitter, r) {
+  const pts=[];
+  for(let i=0;i<n;i++) pts.push([r()*w, r()*h]);
+  // boundary seeds for full coverage
+  const bx=[0,w/4,w/2,3*w/4,w], by=[0,h/4,h/2,3*h/4,h];
+  for(const x of bx) for(const y of by) pts.push([x,y]);
+
+  const M=Math.max(w,h)*20;
+  const allPts=[[-M,-M],[w/2+M*2,-M],[w/2,h+M*2],...pts];
+
+  let tris=[[0,1,2]];
+  for(let pi=3;pi<allPts.length;pi++) {
+    const p=allPts[pi];
+    const bad=tris.filter(t=>inCC(allPts[t[0]],allPts[t[1]],allPts[t[2]],p));
+    const eCnt=new Map(), eDir=new Map();
+    for(const t of bad)
+      for(let i=0;i<3;i++) {
+        const a=t[i],b=t[(i+1)%3];
+        const key=Math.min(a,b)+','+Math.max(a,b);
+        eCnt.set(key,(eCnt.get(key)||0)+1);
+        eDir.set(key,[a,b]);
+      }
+    tris=tris.filter(t=>!bad.includes(t));
+    for(const [key,cnt] of eCnt)
+      if(cnt===1) { const [a,b]=eDir.get(key); tris.push([a,b,pi]); }
+  }
+  return tris
+    .filter(t=>!t.some(i=>i<3))
+    .map(t=>t.map(i=>allPts[i]));
+}
+
+// ── Radiální / ružicové okno ─────────────────────────────
+function rosePolygons(w, h, n, jitter, r) {
+  const cx=w/2, cy=h/2, maxR=Math.min(w,h)*0.47;
+  const rings=Math.max(2,Math.round(Math.sqrt(n/5)));
+  const sectors=Math.max(4,Math.round(n/rings));
+  const j=jitter*0.28, ARC=8;
+
+  // jittered radii
+  const radii=[0];
+  for(let ri=1;ri<rings;ri++) radii.push(maxR*ri/rings*(1+(r()-0.5)*j*0.5));
+  radii.push(maxR);
+
+  const polys=[];
+  for(let ri=0;ri<rings;ri++) {
+    const r0=radii[ri], r1=radii[ri+1];
+    const offset=(ri%2===1)?Math.PI/sectors:0;
+    const aStep=Math.PI*2/sectors;
+    for(let si=0;si<sectors;si++) {
+      const a0=si*aStep+offset+(r()-0.5)*j*aStep*0.3;
+      const a1=(si+1)*aStep+offset+(r()-0.5)*j*aStep*0.3;
+      const pts=[];
+      for(let k=0;k<=ARC;k++) { const a=a0+(a1-a0)*k/ARC; pts.push([cx+Math.cos(a)*r1,cy+Math.sin(a)*r1]); }
+      if(ri===0) {
+        pts.push([cx,cy]);
+      } else {
+        for(let k=ARC;k>=0;k--) { const a=a0+(a1-a0)*k/ARC; pts.push([cx+Math.cos(a)*r0,cy+Math.sin(a)*r0]); }
+      }
+      polys.push(pts);
+    }
+  }
+  return polys;
+}
+
+// ── BSP mozaika (polygon subdivision) ───────────────────
+function polyArea(poly) {
+  let a=0;
+  for(let i=0;i<poly.length;i++){const j=(i+1)%poly.length;a+=poly[i][0]*poly[j][1]-poly[j][0]*poly[i][1];}
+  return Math.abs(a)/2;
+}
+
+function splitPoly(poly, p1, p2) {
+  const side=pt=>(p2[0]-p1[0])*(pt[1]-p1[1])-(p2[1]-p1[1])*(pt[0]-p1[0]);
+  const left=[],right=[];
+  for(let i=0;i<poly.length;i++) {
+    const a=poly[i],b=poly[(i+1)%poly.length];
+    const sa=side(a),sb=side(b);
+    if(sa>=0)left.push(a); else right.push(a);
+    if((sa>0&&sb<0)||(sa<0&&sb>0)) {
+      const t=sa/(sa-sb);
+      const ip=[a[0]+t*(b[0]-a[0]),a[1]+t*(b[1]-a[1])];
+      left.push(ip); right.push(ip);
+    }
+  }
+  return [left.length>=3?left:null,right.length>=3?right:null];
+}
+
+function bspPolygons(w, h, n, jitter, r) {
+  let leaves=[[[0,0],[w,0],[w,h],[0,h]]];
+  const minArea=(w*h)/n*0.08;
+
+  while(leaves.length<n) {
+    leaves.sort((a,b)=>polyArea(b)-polyArea(a));
+    if(polyArea(leaves[0])<minArea) break;
+    const poly=leaves.shift();
+
+    const xs=poly.map(p=>p[0]),ys=poly.map(p=>p[1]);
+    const x0=Math.min(...xs),x1=Math.max(...xs);
+    const y0=Math.min(...ys),y1=Math.max(...ys);
+    const pw=x1-x0,ph=y1-y0;
+
+    // split position with jitter, clamped to avoid slivers
+    const t=Math.max(0.18,Math.min(0.82,0.5+(r()-0.5)*jitter*0.55));
+
+    let cut;
+    if(pw>=ph) {
+      const sx=x0+pw*t;
+      cut=[[sx,y0-1],[sx,y1+1]];
+    } else {
+      const sy=y0+ph*t;
+      cut=[[x0-1,sy],[x1+1,sy]];
+    }
+
+    const [left,right]=splitPoly(poly,cut[0],cut[1]);
+    if(left&&right) leaves.push(left,right);
+    else { leaves.push(poly); break; }
+  }
+
+  return leaves;
+}
+
+// ── Polygon → SVG path ───────────────────────────────────
+function polyToPath(pts) {
+  return 'M'+pts.map(p=>p[0].toFixed(2)+','+p[1].toFixed(2)).join('L')+'Z';
+}
+
+function addAlpha(colorStr, alpha) {
+  if(colorStr==='none') return 'none';
+  return colorStr.replace('hsl(','hsla(').replace(')',`,${alpha})`);
+}
+
+// ── Main generate ────────────────────────────────────────
+function generate() {
+  const w=parseInt(document.getElementById('canvasW').value);
+  const h=parseInt(document.getElementById('canvasH').value);
+  const n=parseInt(document.getElementById('cells').value);
+  const jitter=parseFloat(document.getElementById('jitter').value);
+  const lineW=parseFloat(document.getElementById('lineW').value);
+  const seed=parseInt(document.getElementById('seed').value);
+  const pattern=document.getElementById('patternType').value;
+  const border=document.getElementById('borderShape').value;
+  const margin=parseInt(document.getElementById('margin').value);
+  const colorMode=document.getElementById('colorMode').value;
+  const fillAlpha=parseFloat(document.getElementById('fillAlpha').value);
+  const leadColor=document.getElementById('leadColor').value;
+
+  currentW=w; currentH=h;
+  rng=makePRNG(seed);
+
+  let polys;
+  if      (pattern==='hexagonal') polys=hexPolygons(w,h,n,jitter,rng);
+  else if (pattern==='delaunay')  polys=delaunayPolygons(w,h,n,jitter,rng);
+  else if (pattern==='rose')      polys=rosePolygons(w,h,n,jitter,rng);
+  else if (pattern==='bsp')       polys=bspPolygons(w,h,n,jitter,rng);
+  else                            polys=voronoiPolygons(w,h,n,jitter,rng);
+
+  currentPolygons=polys;
+
+  const crng=makePRNG(seed+1);
+  const colorFn=PALETTES[colorMode]||PALETTES.none;
+
+  const clipDef=getClipDef(border,w,h,margin);
+  const clipAttr=border!=='none'?' clip-path="url(#cp)"':'';
+  const borderStroke=border!=='none'?getBorderStroke(border,w,h,margin,lineW,leadColor):'';
+
+  const pathsHtml=polys.map(pts=>{
+    const d=polyToPath(pts);
+    const raw=colorFn(crng);
+    const fill=colorMode==='none'?'#ffffff':addAlpha(raw,fillAlpha);
+    return `<path d="${d}" fill="${fill}" stroke="${leadColor}" stroke-width="${lineW}" stroke-linejoin="round"/>`;
+  }).join('\n');
+
+  const svg=`<svg xmlns="http://www.w3.org/2000/svg" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}">
+  <defs>${clipDef}</defs>
+  <rect width="${w}" height="${h}" fill="${leadColor}"/>
+  <g${clipAttr}>
+${pathsHtml}
+  </g>
+  ${borderStroke}
+</svg>`;
+
+  document.getElementById('svg-container').innerHTML=svg;
+  document.getElementById('poly-status').innerHTML=`<span>${polys.length}</span> dílků`;
+  saveSettings();
+}
+
+// ── Seed ─────────────────────────────────────────────────
+function randomSeed() {
+  document.getElementById('seed').value=Math.random()*99999|0;
+  generate();
+}
+
+// ── Export ───────────────────────────────────────────────
+function openExport() { document.getElementById('export-modal').classList.add('open'); }
+function closeExport() { document.getElementById('export-modal').classList.remove('open'); }
+document.getElementById('export-modal').addEventListener('click', e => { if(e.target===e.currentTarget) closeExport(); });
+
+function doExport() {
+  const fmt=document.getElementById('exportFormat').value;
+  if(fmt==='svg')exportSVG();
+  else if(fmt==='stl')exportSTL();
+  else if(fmt==='dxf')exportDXF();
+  closeExport();
+}
+
+function exportSVG() {
+  const svgEl=document.querySelector('#svg-container svg');
+  if(!svgEl) return;
+  downloadBlob(new Blob([svgEl.outerHTML],{type:'image/svg+xml'}),'stained_glass.svg');
+}
+
+function exportDXF() {
+  let dxf=`0\nSECTION\n2\nHEADER\n0\nENDSEC\n0\nSECTION\n2\nENTITIES\n`;
+  for(const poly of currentPolygons) {
+    dxf+=`0\nLWPOLYLINE\n8\n0\n70\n1\n90\n${poly.length}\n`;
+    for(const [x,y] of poly) dxf+=`10\n${x.toFixed(4)}\n20\n${y.toFixed(4)}\n`;
+  }
+  dxf+=`0\nENDSEC\n0\nEOF\n`;
+  downloadBlob(new Blob([dxf],{type:'text/plain'}),'stained_glass.dxf');
+}
+
+function exportSTL() {
+  const grooveDepth=parseFloat(document.getElementById('grooveDepth').value);
+  const grooveWidth=parseFloat(document.getElementById('grooveWidth').value);
+  const baseThick=parseFloat(document.getElementById('baseThick').value);
+  const triangles=[];
+
+  function addQuad(ax,ay,az,bx,by,bz,cx,cy,cz,dx,dy,dz) {
+    triangles.push([ax,ay,az,bx,by,bz,cx,cy,cz]);
+    triangles.push([ax,ay,az,cx,cy,cz,dx,dy,dz]);
+  }
+  function norm(ax,ay,az,bx,by,bz,cx,cy,cz) {
+    const ux=bx-ax,uy=by-ay,uz=bz-az,vx=cx-ax,vy=cy-ay,vz=cz-az;
+    return [uy*vz-uz*vy,uz*vx-ux*vz,ux*vy-uy*vx];
+  }
+
+  const W=currentW,H=currentH,z0=0,z1=baseThick,z2=baseThick+grooveDepth;
+  triangles.push([0,0,z0,W,0,z0,W,H,z0],[0,0,z0,W,H,z0,0,H,z0]);
+  triangles.push([0,0,z1,W,H,z1,W,0,z1],[0,0,z1,0,H,z1,W,H,z1]);
+  addQuad(0,0,z0,W,0,z0,W,0,z1,0,0,z1);
+  addQuad(W,0,z0,W,H,z0,W,H,z1,W,0,z1);
+  addQuad(W,H,z0,0,H,z0,0,H,z1,W,H,z1);
+  addQuad(0,H,z0,0,0,z0,0,0,z1,0,H,z1);
+
+  const hw=grooveWidth/2;
+  for(const poly of currentPolygons)
+    for(let i=0;i<poly.length;i++) {
+      const [x1,y1]=poly[i],[x2,y2]=poly[(i+1)%poly.length];
+      const dx=x2-x1,dy=y2-y1,len=Math.sqrt(dx*dx+dy*dy);
+      if(len<0.001) continue;
+      const nx=(-dy/len)*hw,ny=(dx/len)*hw;
+      const ax=x1+nx,ay=y1+ny,bx=x1-nx,by=y1-ny,cx=x2-nx,cy=y2-ny,dx2=x2+nx,dy2=y2+ny;
+      triangles.push([ax,ay,z2,bx,by,z2,cx,cy,z2],[ax,ay,z2,cx,cy,z2,dx2,dy2,z2]);
+      addQuad(ax,ay,z1,ax,ay,z2,dx2,dy2,z2,dx2,dy2,z1);
+      addQuad(bx,by,z2,bx,by,z1,cx,cy,z1,cx,cy,z2);
+      triangles.push([ax,ay,z1,bx,by,z1,bx,by,z2],[ax,ay,z1,bx,by,z2,ax,ay,z2]);
+      triangles.push([dx2,dy2,z1,cx,cy,z2,cx,cy,z1],[dx2,dy2,z1,dx2,dy2,z2,cx,cy,z2]);
+    }
+
+  const buf=new ArrayBuffer(84+triangles.length*50);
+  const view=new DataView(buf);
+  view.setUint32(80,triangles.length,true);
+  let off=84;
+  for(const t of triangles) {
+    const [ax,ay,az,bx,by,bz,cx,cy,cz]=t;
+    const [nx,ny,nz]=norm(ax,ay,az,bx,by,bz,cx,cy,cz);
+    const l=Math.sqrt(nx*nx+ny*ny+nz*nz)||1;
+    view.setFloat32(off,nx/l,true);off+=4;
+    view.setFloat32(off,ny/l,true);off+=4;
+    view.setFloat32(off,nz/l,true);off+=4;
+    for(const v of [ax,ay,az,bx,by,bz,cx,cy,cz]){view.setFloat32(off,v,true);off+=4;}
+    view.setUint16(off,0,true);off+=2;
+  }
+  downloadBlob(new Blob([buf],{type:'application/octet-stream'}),'stained_glass_lead.stl');
+}
+
+function downloadBlob(blob,name) {
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=name;
+  a.click();
+}
+
+loadSettings();
+generate();
+</script>
+</body>
+</html>

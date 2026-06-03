@@ -1,0 +1,924 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8" />
+  <title>Cestovní deník</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #1a1a1a;
+      color: #e0e0e0;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    header {
+      background: #2d2d2d;
+      border-bottom: 1px solid #404040;
+      padding: 10px 18px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-shrink: 0;
+      flex-wrap: wrap;
+    }
+    header h1 { font-size: 1.05rem; font-weight: 700; color: #f0a060; }
+    .btn {
+      padding: 5px 12px;
+      border-radius: 6px;
+      border: none;
+      cursor: pointer;
+      font-size: 0.82rem;
+      transition: background 0.2s;
+    }
+    .btn-orange { background: #4a2a10; color: #f0a060; border: 1px solid #8a5020; }
+    .btn-orange:hover { background: #5a3a20; }
+    .btn-yellow { background: #4a3a10; color: #f0c060; border: 1px solid #6a5a20; }
+    .btn-yellow:hover { background: #5a4a20; }
+    .btn-blue { background: #2a3a5a; color: #8ab4f8; border: 1px solid #3a5a8a; }
+    .btn-blue:hover { background: #3a4a6a; }
+    .btn-green { background: #2a5a2a; color: #8aca8a; border: 1px solid #3a6a3a; }
+    .btn-green:hover { background: #3a6a3a; }
+    .btn-red { background: #5a2a2a; color: #ca8a8a; border: 1px solid #6a3a3a; }
+    .btn-red:hover { background: #6a3a3a; }
+    .btn-xs { font-size: 0.7rem; padding: 2px 7px; }
+    .main { display: flex; flex: 1; overflow: hidden; }
+
+    /* ── Levý panel: výlety ── */
+    .trips-panel {
+      width: 240px;
+      flex-shrink: 0;
+      background: #242424;
+      border-right: 1px solid #404040;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .panel-title {
+      font-size: 0.72rem;
+      color: #f0a060;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      padding: 8px 12px 6px;
+      border-bottom: 1px solid #333;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .panel-title .edit-badge {
+      background: #4a3a10;
+      color: #f0c060;
+      font-size: 0.65rem;
+      padding: 2px 7px;
+      border-radius: 8px;
+      text-transform: none;
+      letter-spacing: 0;
+    }
+    .trip-list {
+      flex: 1;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: #404040 #242424;
+    }
+    .trip-item {
+      padding: 8px 10px;
+      border-bottom: 1px solid #2a2a2a;
+      cursor: pointer;
+      transition: background 0.15s;
+      border-left: 3px solid transparent;
+    }
+    .trip-item:hover { background: #333; }
+    .trip-item.active { background: #2a1a0a; border-left-color: #f0a060; }
+    .trip-item-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 6px; }
+    .trip-name { font-size: 0.88rem; color: #e0e0e0; font-weight: 600; }
+    .trip-meta { font-size: 0.72rem; color: #777; margin-top: 2px; }
+    .trip-btns { display: flex; gap: 3px; flex-shrink: 0; }
+
+    /* Trip form (add / edit) */
+    .trip-form {
+      padding: 10px 12px;
+      border-top: 1px solid #333;
+      background: #1e1e1e;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .trip-form input {
+      background: #2a2a2a;
+      border: 1px solid #444;
+      color: #e0e0e0;
+      border-radius: 5px;
+      padding: 5px 8px;
+      font-size: 0.8rem;
+      width: 100%;
+      outline: none;
+    }
+    .trip-form input:focus { border-color: #f0a060; }
+    .trip-form label { font-size: 0.68rem; color: #777; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+    .form-btn-row { display: flex; gap: 6px; }
+    .form-btn-row .btn { flex: 1; padding: 7px; }
+
+    /* ── Střed: záznamy ── */
+    .diary-panel {
+      width: 340px;
+      flex-shrink: 0;
+      background: #1e1e1e;
+      border-right: 1px solid #404040;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .diary-entries {
+      flex: 1;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: #404040 #1e1e1e;
+    }
+    .entry-card {
+      border-bottom: 1px solid #2a2a2a;
+      padding: 10px 12px;
+      cursor: pointer;
+      transition: background 0.15s;
+      border-left: 3px solid transparent;
+    }
+    .entry-card:hover { background: #252525; }
+    .entry-card.active { background: #2a1a08; border-left-color: #f0a060; }
+    .entry-card.editing { background: #2a200a; border-left-color: #f0c060; outline: 1px solid #6a5a20; }
+    .entry-top { display: flex; align-items: flex-start; justify-content: space-between; gap: 6px; }
+    .entry-date  { font-size: 0.72rem; color: #f0a060; font-weight: 700; }
+    .entry-title { font-size: 0.88rem; color: #e0e0e0; font-weight: 600; margin: 2px 0; }
+    .entry-preview { font-size: 0.78rem; color: #888; line-height: 1.4; }
+    .entry-photos { display: flex; gap: 4px; margin-top: 6px; flex-wrap: wrap; }
+    .entry-thumb { width: 44px; height: 44px; object-fit: cover; border-radius: 4px; border: 1px solid #444; }
+    .entry-loc { font-size: 0.7rem; color: #777; margin-top: 3px; }
+    .entry-btns { display: flex; gap: 3px; flex-shrink: 0; }
+
+    /* Entry form */
+    .entry-form {
+      padding: 10px 12px;
+      border-top: 1px solid #333;
+      background: #181818;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      overflow-y: auto;
+      max-height: 55vh;
+      scrollbar-width: thin;
+      scrollbar-color: #404040 #181818;
+    }
+    .entry-form input,
+    .entry-form textarea,
+    .entry-form select {
+      background: #2a2a2a;
+      border: 1px solid #444;
+      color: #e0e0e0;
+      border-radius: 5px;
+      padding: 5px 8px;
+      font-size: 0.8rem;
+      width: 100%;
+      outline: none;
+    }
+    .entry-form input:focus,
+    .entry-form textarea:focus { border-color: #f0a060; }
+    textarea { resize: vertical; min-height: 65px; font-family: inherit; }
+    .entry-form label { font-size: 0.68rem; color: #777; }
+    .coord-input { display: flex; gap: 6px; }
+    .coord-input input { flex: 1; }
+    .pick-btn {
+      background: #3a5020; color: #8aca8a; border: 1px solid #5a7030;
+      padding: 5px 8px; border-radius: 5px; cursor: pointer;
+      font-size: 0.75rem; white-space: nowrap;
+    }
+    .pick-btn.active { background: #5a7030; }
+
+    /* Existing photos row in edit mode */
+    .existing-photos {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 5px;
+      padding: 4px 0;
+    }
+    .existing-photo-wrap {
+      position: relative;
+      width: 52px;
+      height: 52px;
+      flex-shrink: 0;
+    }
+    .existing-photo-wrap img {
+      width: 52px;
+      height: 52px;
+      object-fit: cover;
+      border-radius: 5px;
+      border: 1px solid #555;
+    }
+    .existing-photo-wrap .remove-photo {
+      position: absolute;
+      top: -4px;
+      right: -4px;
+      width: 17px;
+      height: 17px;
+      background: #8a2020;
+      color: #fff;
+      border-radius: 50%;
+      font-size: 0.65rem;
+      border: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      line-height: 1;
+    }
+
+    /* ── Pravý panel: mapa + detail ── */
+    .right-panel { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+    #map { flex: 1; min-height: 0; }
+    .detail-panel {
+      height: 210px;
+      background: #1e1e1e;
+      border-top: 1px solid #404040;
+      overflow-y: auto;
+      scrollbar-width: thin;
+      scrollbar-color: #404040 #1e1e1e;
+    }
+    .detail-header {
+      padding: 8px 14px 6px;
+      background: #242424;
+      border-bottom: 1px solid #333;
+    }
+    .detail-header h2 { font-size: 0.95rem; color: #f0a060; }
+    .detail-meta { font-size: 0.72rem; color: #888; margin-top: 2px; }
+    .detail-body { padding: 10px 14px; font-size: 0.85rem; line-height: 1.6; color: #c0c0c0; }
+    .photo-gallery { display: flex; gap: 8px; flex-wrap: wrap; padding: 0 14px 10px; }
+    .gallery-img {
+      width: 76px; height: 76px; object-fit: cover;
+      border-radius: 6px; border: 2px solid #444;
+      cursor: pointer; transition: border-color 0.15s, transform 0.15s;
+    }
+    .gallery-img:hover { border-color: #f0a060; transform: scale(1.05); }
+
+    .empty-state {
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      height: 100%; color: #555; font-size: 0.88rem; gap: 8px;
+    }
+    .empty-state .icon { font-size: 2.5rem; }
+
+    /* Lightbox */
+    .lightbox {
+      display: none; position: fixed; inset: 0;
+      background: rgba(0,0,0,0.9); z-index: 1000;
+      align-items: center; justify-content: center; flex-direction: column;
+    }
+    .lightbox.open { display: flex; }
+    .lightbox img { max-width: 90vw; max-height: 85vh; border-radius: 8px; }
+    .lightbox-close { position: absolute; top: 20px; right: 24px; font-size: 2rem; color: #ccc; cursor: pointer; }
+
+    .stats-bar {
+      display: flex; gap: 12px; padding: 5px 12px;
+      background: #1a1a1a; border-bottom: 1px solid #333;
+      font-size: 0.75rem; color: #888; flex-wrap: wrap;
+    }
+    .stats-bar span { color: #f0a060; font-weight: 600; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>✈️ Cestovní deník</h1>
+  <button class="btn btn-blue" onclick="document.getElementById('importFile').click()">📥 Import</button>
+  <input type="file" id="importFile" accept=".json" style="display:none" onchange="importData(this)" />
+  <button class="btn btn-green" onclick="exportData()">📤 Export JSON</button>
+  <span style="font-size:0.78rem;color:#666;margin-left:auto">Klikněte na mapu pro výběr GPS bodu · Escape = zrušit editaci</span>
+</header>
+
+<div class="main">
+
+  <!-- ══ Levý panel: výlety ══ -->
+  <div class="trips-panel">
+    <div class="panel-title">
+      🗺️ Výlety / Cesty
+    </div>
+    <div class="trip-list" id="tripList"></div>
+
+    <!-- Formulář výletu (add / edit) -->
+    <div class="trip-form" id="tripForm">
+      <div class="panel-title" style="padding:0 0 6px; border:none;">
+        <span id="tripFormTitle">➕ Nový výlet</span>
+        <span class="edit-badge" id="tripEditBadge" style="display:none">✏️ Editace</span>
+      </div>
+      <input type="hidden" id="t-id" />
+      <div>
+        <label>Název výletu</label>
+        <input type="text" id="t-name" placeholder="Alpy 2024" />
+      </div>
+      <div class="form-row">
+        <div><label>Datum od</label><input type="date" id="t-from" /></div>
+        <div><label>Datum do</label><input type="date" id="t-to" /></div>
+      </div>
+      <div>
+        <label>Země / Region</label>
+        <input type="text" id="t-country" placeholder="Rakousko, Itálie" />
+      </div>
+      <div class="form-btn-row">
+        <button class="btn btn-orange" id="tripSaveBtn" onclick="saveTrip()">Přidat výlet</button>
+        <button class="btn btn-red" id="tripCancelBtn" onclick="cancelTripEdit()" style="display:none;flex:0 0 auto">✕</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ Střed: záznamy ══ -->
+  <div class="diary-panel">
+    <div class="panel-title" id="diaryTitle">📖 Záznamy</div>
+    <div class="stats-bar" id="statsBar"></div>
+    <div class="diary-entries" id="diaryEntries">
+      <div class="empty-state"><div class="icon">📔</div>Vyberte nebo vytvořte výlet</div>
+    </div>
+
+    <!-- Formulář záznamu (add / edit) -->
+    <div class="entry-form" id="entryForm" style="display:none">
+      <div class="panel-title" style="padding:0 0 6px;border:none;">
+        <span id="entryFormTitle">➕ Přidat záznam</span>
+        <span class="edit-badge" id="entryEditBadge" style="display:none">✏️ Editace</span>
+      </div>
+      <input type="hidden" id="e-id" />
+      <div class="form-row">
+        <div>
+          <label>Datum</label>
+          <input type="date" id="e-date" />
+        </div>
+        <div>
+          <label>Název / Lokalita</label>
+          <input type="text" id="e-title" placeholder="Grossglockner" />
+        </div>
+      </div>
+      <div>
+        <label>Text záznamu</label>
+        <textarea id="e-text" placeholder="Popište den, zážitky, dojmy..."></textarea>
+      </div>
+      <div>
+        <label>Souřadnice (klikněte na mapu nebo zadejte)</label>
+        <div class="coord-input">
+          <input type="text" id="e-lat" placeholder="Lat" style="max-width:90px" />
+          <input type="text" id="e-lon" placeholder="Lon" style="max-width:90px" />
+          <button class="pick-btn" id="pickBtn" onclick="togglePick()">📍 Vybrat</button>
+        </div>
+      </div>
+      <div class="form-row">
+        <div>
+          <label>Počasí</label>
+          <input type="text" id="e-weather" placeholder="☀️ 24°C" />
+        </div>
+        <div>
+          <label>Nálada</label>
+          <select id="e-mood">
+            <option value="😊">😊 Super</option>
+            <option value="🙂">🙂 Dobře</option>
+            <option value="😐">😐 Ušlo</option>
+            <option value="😴">😴 Unavený</option>
+            <option value="🥶">🥶 Zima</option>
+            <option value="🌧️">🌧️ Déšť</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Stávající fotky (jen při editaci) -->
+      <div id="existingPhotosRow" style="display:none">
+        <label>Stávající fotografie <span id="existingPhotoCount" style="color:#f0a060"></span></label>
+        <div class="existing-photos" id="existingPhotosList"></div>
+      </div>
+
+      <div>
+        <label id="newPhotosLabel">Fotografie</label>
+        <input type="file" id="e-photos" accept="image/*" multiple />
+      </div>
+
+      <div class="form-btn-row">
+        <button class="btn btn-orange" id="entrySaveBtn" onclick="saveEntry()">Přidat záznam</button>
+        <button class="btn btn-red" id="entryCancelBtn" onclick="cancelEntryEdit()" style="display:none;flex:0 0 auto">✕ Zrušit</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ Pravý panel: mapa + detail ══ -->
+  <div class="right-panel">
+    <div id="map"></div>
+    <div class="detail-panel" id="detailPanel">
+      <div class="empty-state" style="height:100%"><div class="icon">📍</div>Vyberte záznam pro detail</div>
+    </div>
+  </div>
+</div>
+
+<!-- Lightbox -->
+<div class="lightbox" id="lightbox" onclick="closeLightbox()">
+  <div class="lightbox-close" onclick="closeLightbox()">✕</div>
+  <img id="lightboxImg" src="" />
+</div>
+
+<script>
+let db = JSON.parse(localStorage.getItem('traveldiary_db') || '{"trips":[],"entries":[]}');
+let map, markerLayer, pickMode = false;
+let activeTrip  = null;
+let activeEntry = null;
+let editingEntryPhotos = [];   // working copy of photos during entry edit
+
+function save() { localStorage.setItem('traveldiary_db', JSON.stringify(db)); }
+function genId() { return Date.now().toString() + Math.random().toString(36).slice(2, 5); }
+
+// ── Mapa ─────────────────────────────────────────────────────────────────────
+
+map = L.map('map').setView([50.0, 15.5], 6);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '© OpenStreetMap contributors', maxZoom: 19
+}).addTo(map);
+markerLayer = L.layerGroup().addTo(map);
+
+map.on('click', e => {
+  if (!pickMode) return;
+  document.getElementById('e-lat').value = e.latlng.lat.toFixed(6);
+  document.getElementById('e-lon').value = e.latlng.lng.toFixed(6);
+  togglePick();
+});
+
+function togglePick() {
+  pickMode = !pickMode;
+  const btn = document.getElementById('pickBtn');
+  btn.classList.toggle('active', pickMode);
+  btn.textContent = pickMode ? '✋ Klikněte na mapu' : '📍 Vybrat';
+  map.getContainer().style.cursor = pickMode ? 'crosshair' : '';
+}
+
+// ── VÝLETY ───────────────────────────────────────────────────────────────────
+
+function saveTrip() {
+  const name = document.getElementById('t-name').value.trim();
+  if (!name) { alert('Zadejte název výletu'); return; }
+
+  const id = document.getElementById('t-id').value;
+  if (id) {
+    // editace
+    const trip = db.trips.find(t => t.id === id);
+    if (trip) {
+      trip.name    = name;
+      trip.from    = document.getElementById('t-from').value;
+      trip.to      = document.getElementById('t-to').value;
+      trip.country = document.getElementById('t-country').value.trim();
+    }
+    save();
+    cancelTripEdit();
+    renderTripList();
+    renderEntries();   // diaryTitle se změní
+  } else {
+    // nový
+    const trip = {
+      id: genId(), name,
+      from:    document.getElementById('t-from').value,
+      to:      document.getElementById('t-to').value,
+      country: document.getElementById('t-country').value.trim(),
+    };
+    db.trips.push(trip);
+    save();
+    clearTripForm();
+    renderTripList();
+    selectTrip(trip.id);
+  }
+}
+
+function startEditTrip(id) {
+  const trip = db.trips.find(t => t.id === id);
+  if (!trip) return;
+  document.getElementById('t-id').value      = trip.id;
+  document.getElementById('t-name').value    = trip.name;
+  document.getElementById('t-from').value    = trip.from || '';
+  document.getElementById('t-to').value      = trip.to   || '';
+  document.getElementById('t-country').value = trip.country || '';
+  document.getElementById('tripFormTitle').textContent = '✏️ Upravit výlet';
+  document.getElementById('tripEditBadge').style.display = 'inline';
+  document.getElementById('tripSaveBtn').textContent = 'Uložit změny';
+  document.getElementById('tripSaveBtn').className   = 'btn btn-yellow';
+  document.getElementById('tripCancelBtn').style.display = 'inline-block';
+  // scroll formuláře do pohledu
+  document.getElementById('tripForm').scrollIntoView({ behavior: 'smooth', block: 'end' });
+  setTimeout(() => document.getElementById('t-name').focus(), 150);
+}
+
+function cancelTripEdit() {
+  document.getElementById('t-id').value = '';
+  clearTripForm();
+  document.getElementById('tripFormTitle').textContent    = '➕ Nový výlet';
+  document.getElementById('tripEditBadge').style.display  = 'none';
+  document.getElementById('tripSaveBtn').textContent      = 'Přidat výlet';
+  document.getElementById('tripSaveBtn').className        = 'btn btn-orange';
+  document.getElementById('tripCancelBtn').style.display  = 'none';
+}
+
+function clearTripForm() {
+  document.getElementById('t-name').value    = '';
+  document.getElementById('t-from').value    = '';
+  document.getElementById('t-to').value      = '';
+  document.getElementById('t-country').value = '';
+}
+
+function deleteTrip(id) {
+  if (!confirm('Smazat výlet a všechny záznamy?')) return;
+  db.trips   = db.trips.filter(t => t.id !== id);
+  db.entries = db.entries.filter(e => e.tripId !== id);
+  if (activeTrip === id) { activeTrip = null; activeEntry = null; }
+  // pokud se editoval tento výlet, zrušit
+  if (document.getElementById('t-id').value === id) cancelTripEdit();
+  save();
+  renderTripList();
+  renderEntries();
+  renderMap();
+}
+
+function selectTrip(id) {
+  activeTrip  = id;
+  activeEntry = null;
+  cancelEntryEdit();
+  renderTripList();
+  renderEntries();
+  renderMap();
+  const form = document.getElementById('entryForm');
+  form.style.display          = id ? 'flex' : 'none';
+  form.style.flexDirection    = 'column';
+  const trip = db.trips.find(t => t.id === id);
+  document.getElementById('e-date').value = trip?.from || new Date().toISOString().split('T')[0];
+}
+
+function renderTripList() {
+  const el = document.getElementById('tripList');
+  if (db.trips.length === 0) {
+    el.innerHTML = '<div style="color:#555;padding:16px;font-size:0.82rem;text-align:center">Přidejte první výlet</div>';
+    return;
+  }
+  el.innerHTML = [...db.trips].reverse().map(t => {
+    const count = db.entries.filter(e => e.tripId === t.id).length;
+    const editingThis = document.getElementById('t-id').value === t.id;
+    return `<div class="trip-item ${t.id === activeTrip ? 'active' : ''} ${editingThis ? 'editing' : ''}"
+                 onclick="selectTrip('${t.id}')">
+      <div class="trip-item-top">
+        <div>
+          <div class="trip-name">${t.name}</div>
+          <div class="trip-meta">${[t.from, t.to].filter(Boolean).join(' – ')}${t.country ? ' · ' + t.country : ''}</div>
+          <div class="trip-meta">${count} záznamů</div>
+        </div>
+        <div class="trip-btns" onclick="event.stopPropagation()">
+          <button class="btn btn-yellow btn-xs" title="Upravit výlet" onclick="startEditTrip('${t.id}')">✏️</button>
+          <button class="btn btn-red btn-xs" onclick="deleteTrip('${t.id}')">✕</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+// ── ZÁZNAMY ──────────────────────────────────────────────────────────────────
+
+function openEntryFormForNew() {
+  cancelEntryEdit();   // reset form
+}
+
+async function saveEntry() {
+  if (!activeTrip) return;
+  const title = document.getElementById('e-title').value.trim();
+  const date  = document.getElementById('e-date').value;
+  if (!title) { alert('Zadejte název záznamu'); return; }
+
+  // Načíst nové fotky z file inputu
+  const newPhotos = [];
+  const fileInput = document.getElementById('e-photos');
+  for (const file of fileInput.files) {
+    newPhotos.push(await fileToDataURL(file));
+  }
+
+  const id = document.getElementById('e-id').value;
+
+  if (id) {
+    // ── Uložit editaci ──
+    const entry = db.entries.find(e => e.id === id);
+    if (entry) {
+      entry.date    = date;
+      entry.title   = title;
+      entry.text    = document.getElementById('e-text').value.trim();
+      entry.lat     = parseFloat(document.getElementById('e-lat').value) || null;
+      entry.lon     = parseFloat(document.getElementById('e-lon').value) || null;
+      entry.weather = document.getElementById('e-weather').value.trim();
+      entry.mood    = document.getElementById('e-mood').value;
+      entry.photos  = [...editingEntryPhotos, ...newPhotos];
+    }
+    db.entries.sort((a, b) => a.date.localeCompare(b.date));
+    save();
+    const savedId = id;
+    cancelEntryEdit();
+    renderEntries();
+    renderMap();
+    showEntryDetail(savedId);
+  } else {
+    // ── Nový záznam ──
+    const entry = {
+      id: genId(), tripId: activeTrip, date, title,
+      text:    document.getElementById('e-text').value.trim(),
+      lat:     parseFloat(document.getElementById('e-lat').value) || null,
+      lon:     parseFloat(document.getElementById('e-lon').value) || null,
+      weather: document.getElementById('e-weather').value.trim(),
+      mood:    document.getElementById('e-mood').value,
+      photos:  newPhotos,
+    };
+    db.entries.push(entry);
+    db.entries.sort((a, b) => a.date.localeCompare(b.date));
+    save();
+    resetEntryFormFields();
+    renderEntries();
+    renderMap();
+    showEntryDetail(entry.id);
+  }
+}
+
+function startEditEntry(id) {
+  const entry = db.entries.find(e => e.id === id);
+  if (!entry) return;
+
+  editingEntryPhotos = [...entry.photos];
+
+  document.getElementById('e-id').value      = entry.id;
+  document.getElementById('e-date').value    = entry.date;
+  document.getElementById('e-title').value   = entry.title;
+  document.getElementById('e-text').value    = entry.text || '';
+  document.getElementById('e-lat').value     = entry.lat  || '';
+  document.getElementById('e-lon').value     = entry.lon  || '';
+  document.getElementById('e-weather').value = entry.weather || '';
+  document.getElementById('e-mood').value    = entry.mood || '😊';
+  document.getElementById('e-photos').value  = '';
+
+  // Přepnout UI
+  document.getElementById('entryFormTitle').textContent    = '✏️ Upravit záznam';
+  document.getElementById('entryEditBadge').style.display  = 'inline';
+  document.getElementById('entrySaveBtn').textContent      = '💾 Uložit změny';
+  document.getElementById('entrySaveBtn').className        = 'btn btn-yellow';
+  document.getElementById('entryCancelBtn').style.display  = 'inline-block';
+  document.getElementById('newPhotosLabel').textContent    = 'Přidat nové fotografie';
+
+  renderExistingPhotos();
+
+  // Scroll formuláře do pohledu
+  const form = document.getElementById('entryForm');
+  form.style.display       = 'flex';
+  form.style.flexDirection = 'column';
+  setTimeout(() => {
+    form.scrollTop = 0;
+    document.getElementById('e-title').focus();
+  }, 50);
+
+  // Zvýraznit editovanou kartu
+  renderEntries();
+}
+
+function cancelEntryEdit() {
+  document.getElementById('e-id').value = '';
+  editingEntryPhotos = [];
+  resetEntryFormFields();
+
+  document.getElementById('entryFormTitle').textContent   = '➕ Přidat záznam';
+  document.getElementById('entryEditBadge').style.display = 'none';
+  document.getElementById('entrySaveBtn').textContent     = 'Přidat záznam';
+  document.getElementById('entrySaveBtn').className       = 'btn btn-orange';
+  document.getElementById('entryCancelBtn').style.display = 'none';
+  document.getElementById('newPhotosLabel').textContent   = 'Fotografie';
+  document.getElementById('existingPhotosRow').style.display = 'none';
+  document.getElementById('existingPhotosList').innerHTML = '';
+
+  renderEntries();
+}
+
+function resetEntryFormFields() {
+  document.getElementById('e-date').value    = activeTrip
+    ? (db.trips.find(t => t.id === activeTrip)?.from || new Date().toISOString().split('T')[0])
+    : new Date().toISOString().split('T')[0];
+  document.getElementById('e-title').value   = '';
+  document.getElementById('e-text').value    = '';
+  document.getElementById('e-lat').value     = '';
+  document.getElementById('e-lon').value     = '';
+  document.getElementById('e-weather').value = '';
+  document.getElementById('e-mood').value    = '😊';
+  document.getElementById('e-photos').value  = '';
+}
+
+function renderExistingPhotos() {
+  const row   = document.getElementById('existingPhotosRow');
+  const list  = document.getElementById('existingPhotosList');
+  const count = document.getElementById('existingPhotoCount');
+  if (editingEntryPhotos.length === 0) {
+    row.style.display = 'none';
+    list.innerHTML = '';
+    return;
+  }
+  row.style.display = 'block';
+  count.textContent = `(${editingEntryPhotos.length})`;
+  list.innerHTML = editingEntryPhotos.map((src, i) => `
+    <div class="existing-photo-wrap">
+      <img src="${src}" onclick="openLightbox('${src}')" title="Klik = zobrazit" />
+      <button class="remove-photo" onclick="removeExistingPhoto(${i})" title="Odebrat">✕</button>
+    </div>`).join('');
+}
+
+function removeExistingPhoto(i) {
+  editingEntryPhotos.splice(i, 1);
+  renderExistingPhotos();
+}
+
+function deleteEntry(id) {
+  if (!confirm('Smazat tento záznam?')) return;
+  if (document.getElementById('e-id').value === id) cancelEntryEdit();
+  db.entries = db.entries.filter(e => e.id !== id);
+  if (activeEntry === id) activeEntry = null;
+  save();
+  renderEntries();
+  renderMap();
+  document.getElementById('detailPanel').innerHTML =
+    '<div class="empty-state" style="height:100%"><div class="icon">📍</div>Vyberte záznam pro detail</div>';
+}
+
+function renderEntries() {
+  const el       = document.getElementById('diaryEntries');
+  const statsBar = document.getElementById('statsBar');
+  if (!activeTrip) {
+    el.innerHTML = '<div class="empty-state"><div class="icon">📔</div>Vyberte nebo vytvořte výlet</div>';
+    statsBar.innerHTML = '';
+    return;
+  }
+  const trip = db.trips.find(t => t.id === activeTrip);
+  document.getElementById('diaryTitle').textContent = `📖 ${trip?.name || 'Záznamy'}`;
+
+  const entries    = db.entries.filter(e => e.tripId === activeTrip);
+  const withPhotos = entries.reduce((s, e) => s + e.photos.length, 0);
+  const withGPS    = entries.filter(e => e.lat).length;
+  statsBar.innerHTML = `${entries.length} záznamů · <span>${withPhotos}</span> fotek · <span>${withGPS}</span> GPS bodů`;
+
+  if (entries.length === 0) {
+    el.innerHTML = '<div class="empty-state"><div class="icon">✏️</div>Přidejte první záznam níže</div>';
+    return;
+  }
+
+  const editingId = document.getElementById('e-id').value;
+  el.innerHTML = entries.map(e => {
+    const isActive  = e.id === activeEntry;
+    const isEditing = e.id === editingId;
+    const photoThumb = e.photos.length
+      ? `<div class="entry-photos">
+           ${e.photos.slice(0, 4).map(p => `<img class="entry-thumb" src="${p}" />`).join('')}
+           ${e.photos.length > 4 ? `<div style="width:44px;height:44px;background:#333;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:0.72rem;color:#888">+${e.photos.length - 4}</div>` : ''}
+         </div>`
+      : '';
+    return `<div class="entry-card ${isActive ? 'active' : ''} ${isEditing ? 'editing' : ''}"
+                 onclick="showEntryDetail('${e.id}')">
+      <div class="entry-top">
+        <div>
+          <div class="entry-date">${e.date} ${e.mood || ''}</div>
+          <div class="entry-title">${e.title}</div>
+        </div>
+        <div class="entry-btns" onclick="event.stopPropagation()">
+          <button class="btn btn-yellow btn-xs" title="Upravit záznam" onclick="startEditEntry('${e.id}')">✏️</button>
+          <button class="btn btn-red btn-xs" onclick="deleteEntry('${e.id}')">✕</button>
+        </div>
+      </div>
+      ${e.text ? `<div class="entry-preview">${e.text.slice(0, 110)}${e.text.length > 110 ? '…' : ''}</div>` : ''}
+      ${e.lat ? `<div class="entry-loc">📍 ${e.lat.toFixed(4)}, ${e.lon.toFixed(4)}</div>` : ''}
+      ${photoThumb}
+    </div>`;
+  }).join('');
+}
+
+function showEntryDetail(id) {
+  activeEntry = id;
+  renderEntries();
+  const entry = db.entries.find(e => e.id === id);
+  if (!entry) return;
+  const panel  = document.getElementById('detailPanel');
+  const photos = entry.photos.map(p =>
+    `<img class="gallery-img" src="${p}" onclick="openLightbox('${p}')" />`
+  ).join('');
+  panel.innerHTML = `
+    <div class="detail-header">
+      <h2>${entry.title}</h2>
+      <div class="detail-meta">
+        📅 ${entry.date}
+        ${entry.weather ? ' · ' + entry.weather : ''}
+        ${entry.mood    ? ' · ' + entry.mood    : ''}
+        ${entry.lat     ? ` · 📍 ${entry.lat.toFixed(4)}, ${entry.lon.toFixed(4)}` : ''}
+      </div>
+    </div>
+    ${entry.text   ? `<div class="detail-body">${entry.text.replace(/\n/g, '<br/>')}</div>` : ''}
+    ${photos       ? `<div class="photo-gallery">${photos}</div>` : ''}`;
+
+  if (entry.lat && entry.lon) {
+    map.flyTo([entry.lat, entry.lon], 12, { animate: true, duration: 0.8 });
+  }
+  renderMap();
+}
+
+function renderMap() {
+  markerLayer.clearLayers();
+  if (!activeTrip) return;
+  const entries = db.entries.filter(e => e.tripId === activeTrip && e.lat && e.lon);
+  const points  = [];
+  entries.forEach((e, i) => {
+    points.push([e.lat, e.lon]);
+    const isActive  = e.id === activeEntry;
+    const isEditing = e.id === document.getElementById('e-id').value;
+    const bg = isEditing ? '#f0c060' : isActive ? '#f0a060' : '#c07030';
+    const icon = L.divIcon({
+      className: '',
+      html: `<div style="background:${bg};color:#111;border-radius:50%;width:28px;height:28px;
+                         display:flex;align-items:center;justify-content:center;
+                         font-size:0.75rem;font-weight:700;border:2px solid #fff;
+                         box-shadow:0 2px 6px rgba(0,0,0,0.5)">${i + 1}</div>`,
+      iconSize: [28, 28], iconAnchor: [14, 14],
+    });
+    const marker = L.marker([e.lat, e.lon], { icon }).addTo(markerLayer);
+    marker.bindPopup(`<b>${e.title}</b><br/>${e.date}${e.mood ? ' ' + e.mood : ''}`);
+    marker.on('click', () => showEntryDetail(e.id));
+  });
+  if (points.length > 1) {
+    L.polyline(points, { color: '#f0a060', weight: 2, opacity: 0.6, dashArray: '6,4' }).addTo(markerLayer);
+    map.fitBounds(L.latLngBounds(points), { padding: [40, 40] });
+  } else if (points.length === 1) {
+    map.setView(points[0], 10);
+  }
+}
+
+// ── Pomocné ───────────────────────────────────────────────────────────────────
+
+function fileToDataURL(file) {
+  return new Promise(resolve => {
+    const r = new FileReader();
+    r.onload = e => resolve(e.target.result);
+    r.readAsDataURL(file);
+  });
+}
+
+function openLightbox(src) {
+  document.getElementById('lightboxImg').src = src;
+  document.getElementById('lightbox').classList.add('open');
+}
+function closeLightbox() {
+  document.getElementById('lightbox').classList.remove('open');
+  document.getElementById('lightboxImg').src = '';
+}
+
+function exportData() {
+  const blob = new Blob([JSON.stringify(db, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `cestovni_denik_${new Date().toISOString().slice(0, 10)}.json`;
+  a.click();
+}
+
+function importData(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = JSON.parse(e.target.result);
+      if (data.trips && data.entries) {
+        db = data;
+        save();
+        activeTrip = null; activeEntry = null;
+        cancelTripEdit();
+        cancelEntryEdit();
+        renderTripList();
+        renderEntries();
+        renderMap();
+        alert(`Import úspěšný: ${db.trips.length} výletů, ${db.entries.length} záznamů`);
+      } else alert('Neplatný formát souboru');
+    } catch { alert('Chyba při načítání'); }
+  };
+  reader.readAsText(file);
+  input.value = '';
+}
+
+// ── Klávesové zkratky ─────────────────────────────────────────────────────────
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') {
+    if (pickMode) { togglePick(); return; }
+    if (document.getElementById('e-id').value) { cancelEntryEdit(); return; }
+    if (document.getElementById('t-id').value) { cancelTripEdit();  return; }
+  }
+  if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+    if (document.getElementById('entryForm').style.display !== 'none') saveEntry();
+  }
+});
+
+// ── Init ──────────────────────────────────────────────────────────────────────
+
+renderTripList();
+renderEntries();
+</script>
+</body>
+</html>

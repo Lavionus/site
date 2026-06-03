@@ -1,0 +1,456 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8" />
+  <title>GPX Viewer</title>
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #1a1a1a;
+      color: #e0e0e0;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    header {
+      background: #2d2d2d;
+      border-bottom: 1px solid #404040;
+      padding: 10px 16px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-shrink: 0;
+      flex-wrap: wrap;
+    }
+    header h1 { font-size: 1rem; font-weight: 600; color: #6aa6fd; white-space: nowrap; }
+    .upload-btn {
+      background: #3a5a8a;
+      color: #fff;
+      border: none;
+      padding: 6px 14px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: background 0.2s;
+    }
+    .upload-btn:hover { background: #4a6a9a; }
+    #fileInput { display: none; }
+    .stats {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      flex: 1;
+    }
+    .stat-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      background: #1e3a5f;
+      border-radius: 6px;
+      padding: 4px 10px;
+      min-width: 80px;
+    }
+    .stat-label { font-size: 0.65rem; color: #8ab4f8; text-transform: uppercase; letter-spacing: 0.5px; }
+    .stat-value { font-size: 0.95rem; font-weight: 600; color: #e0e0e0; }
+    .main {
+      display: flex;
+      flex: 1;
+      overflow: hidden;
+    }
+    #map {
+      flex: 1;
+      min-height: 0;
+    }
+    .right-panel {
+      width: 260px;
+      background: #242424;
+      border-left: 1px solid #404040;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    .panel-title {
+      font-size: 0.75rem;
+      color: #6aa6fd;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      padding: 10px 12px 6px;
+      border-bottom: 1px solid #333;
+      font-weight: 700;
+    }
+    #elevation-container {
+      padding: 10px;
+      border-bottom: 1px solid #333;
+    }
+    canvas#elevChart {
+      width: 100%;
+      height: 120px;
+      display: block;
+    }
+    #waypoints-list {
+      flex: 1;
+      overflow-y: auto;
+      padding: 6px 0;
+      scrollbar-width: thin;
+      scrollbar-color: #404040 #242424;
+    }
+    .waypoint-item {
+      padding: 6px 12px;
+      font-size: 0.82rem;
+      border-bottom: 1px solid #2e2e2e;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    .waypoint-item:hover { background: #333; }
+    .waypoint-name { color: #e0e0e0; }
+    .waypoint-desc { color: #888; font-size: 0.75rem; }
+    .empty-state {
+      text-align: center;
+      padding: 40px 20px;
+      color: #555;
+    }
+    .empty-state .icon { font-size: 2.5rem; margin-bottom: 10px; }
+    .empty-state p { font-size: 0.85rem; line-height: 1.5; }
+    #track-list {
+      padding: 6px 0;
+      border-bottom: 1px solid #333;
+    }
+    .track-item {
+      padding: 5px 12px;
+      font-size: 0.82rem;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: pointer;
+    }
+    .track-color-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
+    .track-name { color: #c0c0c0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .tooltip-custom {
+      background: #2d2d2d;
+      border: 1px solid #555;
+      color: #e0e0e0;
+      font-size: 0.75rem;
+      padding: 4px 8px;
+      border-radius: 4px;
+    }
+    .export-btn {
+      background: #2a4a2a;
+      color: #8aca8a;
+      border: 1px solid #3a6a3a;
+      padding: 5px 10px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 0.8rem;
+      margin: 8px;
+      display: block;
+      text-align: center;
+    }
+    .export-btn:hover { background: #3a5a3a; }
+  </style>
+</head>
+<body>
+
+<header>
+  <h1>🗺️ GPX Viewer</h1>
+  <button class="upload-btn" onclick="document.getElementById('fileInput').click()">📂 Načíst GPX soubor</button>
+  <input type="file" id="fileInput" accept=".gpx,.xml" multiple />
+  <div class="stats" id="stats" style="display:none;">
+    <div class="stat-item"><span class="stat-label">Délka</span><span class="stat-value" id="s-dist">—</span></div>
+    <div class="stat-item"><span class="stat-label">Převýšení ↑</span><span class="stat-value" id="s-up">—</span></div>
+    <div class="stat-item"><span class="stat-label">Převýšení ↓</span><span class="stat-value" id="s-down">—</span></div>
+    <div class="stat-item"><span class="stat-label">Max výška</span><span class="stat-value" id="s-maxele">—</span></div>
+    <div class="stat-item"><span class="stat-label">Min výška</span><span class="stat-value" id="s-minele">—</span></div>
+    <div class="stat-item"><span class="stat-label">Body</span><span class="stat-value" id="s-pts">—</span></div>
+  </div>
+</header>
+
+<div class="main">
+  <div id="map"></div>
+  <div class="right-panel">
+    <div class="panel-title">📈 Výškový profil</div>
+    <div id="elevation-container">
+      <canvas id="elevChart" width="240" height="120"></canvas>
+    </div>
+    <div class="panel-title">🛤️ Trasy</div>
+    <div id="track-list"></div>
+    <div class="panel-title">📍 Waypointy</div>
+    <div id="waypoints-list">
+      <div class="empty-state">
+        <div class="icon">🗺️</div>
+        <p>Načtěte GPX soubor<br/>pro zobrazení trasy</p>
+      </div>
+    </div>
+    <button class="export-btn" id="exportBtn" style="display:none;" onclick="exportStats()">📄 Exportovat statistiky</button>
+  </div>
+</div>
+
+<script>
+const TRACK_COLORS = ['#4a9eff','#ff6b6b','#6bffb8','#ffd700','#ff8c00','#da70d6','#00ced1'];
+let map, allTracks = [], allWaypoints = [], markerLayer;
+
+map = L.map('map').setView([50.0, 15.5], 7);
+L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+  attribution: '© OpenStreetMap contributors',
+  maxZoom: 19
+}).addTo(map);
+markerLayer = L.layerGroup().addTo(map);
+
+document.getElementById('fileInput').addEventListener('change', e => {
+  Array.from(e.target.files).forEach(f => readGPX(f));
+  e.target.value = '';
+});
+
+function readGPX(file) {
+  const reader = new FileReader();
+  reader.onload = ev => parseAndDisplay(ev.target.result, file.name);
+  reader.readAsText(file);
+}
+
+function parseAndDisplay(xmlText, filename) {
+  const parser = new DOMParser();
+  const xml = parser.parseFromString(xmlText, 'application/xml');
+
+  // Parse tracks
+  const trkElements = xml.querySelectorAll('trk');
+  trkElements.forEach((trk, ti) => {
+    const name = trk.querySelector('name')?.textContent || filename;
+    const pts = [];
+    trk.querySelectorAll('trkpt').forEach(pt => {
+      const lat = parseFloat(pt.getAttribute('lat'));
+      const lon = parseFloat(pt.getAttribute('lon'));
+      const ele = parseFloat(pt.querySelector('ele')?.textContent || 0);
+      const timeStr = pt.querySelector('time')?.textContent;
+      pts.push({ lat, lon, ele, time: timeStr ? new Date(timeStr) : null });
+    });
+    if (pts.length === 0) return;
+    const color = TRACK_COLORS[(allTracks.length) % TRACK_COLORS.length];
+    const polyline = L.polyline(pts.map(p => [p.lat, p.lon]), { color, weight: 3, opacity: 0.85 }).addTo(map);
+    allTracks.push({ name, pts, color, polyline });
+  });
+
+  // Parse routes (rte)
+  const rteElements = xml.querySelectorAll('rte');
+  rteElements.forEach(rte => {
+    const name = rte.querySelector('name')?.textContent || filename;
+    const pts = [];
+    rte.querySelectorAll('rtept').forEach(pt => {
+      const lat = parseFloat(pt.getAttribute('lat'));
+      const lon = parseFloat(pt.getAttribute('lon'));
+      const ele = parseFloat(pt.querySelector('ele')?.textContent || 0);
+      pts.push({ lat, lon, ele, time: null });
+    });
+    if (pts.length === 0) return;
+    const color = TRACK_COLORS[allTracks.length % TRACK_COLORS.length];
+    const polyline = L.polyline(pts.map(p => [p.lat, p.lon]), { color, weight: 3, opacity: 0.85, dashArray: '6,4' }).addTo(map);
+    allTracks.push({ name, pts, color, polyline });
+  });
+
+  // Parse waypoints
+  xml.querySelectorAll('wpt').forEach(wpt => {
+    const lat = parseFloat(wpt.getAttribute('lat'));
+    const lon = parseFloat(wpt.getAttribute('lon'));
+    const name = wpt.querySelector('name')?.textContent || 'Waypoint';
+    const desc = wpt.querySelector('desc')?.textContent || '';
+    const ele = parseFloat(wpt.querySelector('ele')?.textContent || 0);
+    const marker = L.circleMarker([lat, lon], {
+      radius: 7, fillColor: '#ffd700', color: '#fff', weight: 2, fillOpacity: 0.95
+    }).addTo(markerLayer);
+    marker.bindPopup(`<b>${name}</b>${desc ? '<br/>' + desc : ''}${ele ? '<br/>Výška: ' + ele.toFixed(0) + ' m' : ''}`);
+    allWaypoints.push({ name, desc, ele, lat, lon, marker });
+  });
+
+  if (allTracks.length > 0) {
+    const allPts = allTracks.flatMap(t => t.pts);
+    if (allPts.length > 0) {
+      const bounds = L.latLngBounds(allPts.map(p => [p.lat, p.lon]));
+      map.fitBounds(bounds, { padding: [30, 30] });
+    }
+    updateUI();
+  }
+}
+
+function calcDistance(pts) {
+  let d = 0;
+  for (let i = 1; i < pts.length; i++) {
+    d += haversine(pts[i-1].lat, pts[i-1].lon, pts[i].lat, pts[i].lon);
+  }
+  return d;
+}
+
+function haversine(lat1, lon1, lat2, lon2) {
+  const R = 6371000;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLon = (lon2 - lon1) * Math.PI / 180;
+  const a = Math.sin(dLat/2)**2 + Math.cos(lat1*Math.PI/180)*Math.cos(lat2*Math.PI/180)*Math.sin(dLon/2)**2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+}
+
+function calcElevation(pts) {
+  let up = 0, down = 0;
+  for (let i = 1; i < pts.length; i++) {
+    const d = pts[i].ele - pts[i-1].ele;
+    if (d > 0.5) up += d;
+    else if (d < -0.5) down += Math.abs(d);
+  }
+  return { up, down };
+}
+
+function updateUI() {
+  if (allTracks.length === 0) return;
+  const allPts = allTracks.flatMap(t => t.pts);
+  const totalDist = allTracks.reduce((s, t) => s + calcDistance(t.pts), 0);
+  const elevPts = allPts.filter(p => p.ele > 0);
+  const { up, down } = allTracks.reduce((acc, t) => {
+    const e = calcElevation(t.pts);
+    return { up: acc.up + e.up, down: acc.down + e.down };
+  }, { up: 0, down: 0 });
+  const eles = elevPts.map(p => p.ele);
+  const maxEle = eles.length ? Math.max(...eles) : 0;
+  const minEle = eles.length ? Math.min(...eles) : 0;
+
+  document.getElementById('stats').style.display = 'flex';
+  document.getElementById('s-dist').textContent = totalDist > 1000 ? (totalDist/1000).toFixed(2) + ' km' : Math.round(totalDist) + ' m';
+  document.getElementById('s-up').textContent = Math.round(up) + ' m';
+  document.getElementById('s-down').textContent = Math.round(down) + ' m';
+  document.getElementById('s-maxele').textContent = maxEle ? Math.round(maxEle) + ' m' : '—';
+  document.getElementById('s-minele').textContent = minEle ? Math.round(minEle) + ' m' : '—';
+  document.getElementById('s-pts').textContent = allPts.length.toLocaleString('cs');
+  document.getElementById('exportBtn').style.display = 'block';
+
+  renderTrackList();
+  renderWaypointList();
+  drawElevationChart(allPts.filter(p => p.ele !== 0));
+}
+
+function renderTrackList() {
+  const el = document.getElementById('track-list');
+  el.innerHTML = allTracks.map((t, i) => `
+    <div class="track-item" onclick="flyToTrack(${i})" title="${t.name}">
+      <div class="track-color-dot" style="background:${t.color}"></div>
+      <div class="track-name">${t.name}</div>
+    </div>`).join('');
+}
+
+function flyToTrack(i) {
+  const bounds = L.latLngBounds(allTracks[i].pts.map(p => [p.lat, p.lon]));
+  map.fitBounds(bounds, { padding: [30, 30] });
+}
+
+function renderWaypointList() {
+  const el = document.getElementById('waypoints-list');
+  if (allWaypoints.length === 0) {
+    el.innerHTML = '<div style="padding:10px 12px;color:#666;font-size:0.8rem;">Žádné waypointy</div>';
+    return;
+  }
+  el.innerHTML = allWaypoints.map((w, i) => `
+    <div class="waypoint-item" onclick="flyToWaypoint(${i})">
+      <div class="waypoint-name">📍 ${w.name}</div>
+      ${w.desc ? `<div class="waypoint-desc">${w.desc}</div>` : ''}
+      ${w.ele ? `<div class="waypoint-desc">${w.ele.toFixed(0)} m n.m.</div>` : ''}
+    </div>`).join('');
+}
+
+function flyToWaypoint(i) {
+  const w = allWaypoints[i];
+  map.setView([w.lat, w.lon], 14);
+  w.marker.openPopup();
+}
+
+function drawElevationChart(pts) {
+  const canvas = document.getElementById('elevChart');
+  const ctx = canvas.getContext('2d');
+  canvas.width = canvas.offsetWidth || 240;
+  canvas.height = 120;
+  const W = canvas.width, H = canvas.height;
+  ctx.clearRect(0, 0, W, H);
+
+  if (pts.length < 2) {
+    ctx.fillStyle = '#555';
+    ctx.font = '12px sans-serif';
+    ctx.textAlign = 'center';
+    ctx.fillText('Žádná data výšky', W/2, H/2);
+    return;
+  }
+
+  const sample = pts.length > 500 ? pts.filter((_, i) => i % Math.ceil(pts.length/500) === 0) : pts;
+  const eles = sample.map(p => p.ele);
+  const minE = Math.min(...eles), maxE = Math.max(...eles);
+  const rangeE = maxE - minE || 1;
+  const padX = 38, padY = 8, padB = 20;
+  const chartW = W - padX - 4, chartH = H - padY - padB;
+
+  // Grid
+  ctx.strokeStyle = '#333'; ctx.lineWidth = 1;
+  for (let i = 0; i <= 4; i++) {
+    const y = padY + (i / 4) * chartH;
+    ctx.beginPath(); ctx.moveTo(padX, y); ctx.lineTo(W - 4, y); ctx.stroke();
+    const label = Math.round(maxE - (i / 4) * rangeE);
+    ctx.fillStyle = '#777'; ctx.font = '9px sans-serif'; ctx.textAlign = 'right';
+    ctx.fillText(label + 'm', padX - 2, y + 3);
+  }
+
+  // Fill
+  ctx.beginPath();
+  ctx.moveTo(padX, padY + chartH);
+  sample.forEach((p, i) => {
+    const x = padX + (i / (sample.length - 1)) * chartW;
+    const y = padY + chartH - ((p.ele - minE) / rangeE) * chartH;
+    i === 0 ? ctx.lineTo(x, y) : ctx.lineTo(x, y);
+  });
+  ctx.lineTo(padX + chartW, padY + chartH);
+  ctx.closePath();
+  const grad = ctx.createLinearGradient(0, padY, 0, padY + chartH);
+  grad.addColorStop(0, 'rgba(74,158,255,0.6)');
+  grad.addColorStop(1, 'rgba(74,158,255,0.05)');
+  ctx.fillStyle = grad;
+  ctx.fill();
+
+  // Line
+  ctx.beginPath();
+  ctx.strokeStyle = '#4a9eff'; ctx.lineWidth = 1.5;
+  sample.forEach((p, i) => {
+    const x = padX + (i / (sample.length - 1)) * chartW;
+    const y = padY + chartH - ((p.ele - minE) / rangeE) * chartH;
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  });
+  ctx.stroke();
+}
+
+function exportStats() {
+  const allPts = allTracks.flatMap(t => t.pts);
+  const totalDist = allTracks.reduce((s, t) => s + calcDistance(t.pts), 0);
+  const { up, down } = allTracks.reduce((acc, t) => {
+    const e = calcElevation(t.pts);
+    return { up: acc.up + e.up, down: acc.down + e.down };
+  }, { up: 0, down: 0 });
+  const eles = allPts.filter(p => p.ele > 0).map(p => p.ele);
+  const lines = [
+    'GPX Statistiky',
+    '==============',
+    `Počet tras: ${allTracks.length}`,
+    `Celková délka: ${totalDist > 1000 ? (totalDist/1000).toFixed(2) + ' km' : Math.round(totalDist) + ' m'}`,
+    `Převýšení nahoru: ${Math.round(up)} m`,
+    `Převýšení dolů: ${Math.round(down)} m`,
+    `Max výška: ${eles.length ? Math.round(Math.max(...eles)) + ' m' : '—'}`,
+    `Min výška: ${eles.length ? Math.round(Math.min(...eles)) + ' m' : '—'}`,
+    `Počet bodů: ${allPts.length}`,
+    '',
+    'Trasy:',
+    ...allTracks.map((t, i) => `  ${i+1}. ${t.name} — ${(calcDistance(t.pts)/1000).toFixed(2)} km, ${t.pts.length} bodů`),
+    '',
+    'Waypointy:',
+    ...allWaypoints.map(w => `  - ${w.name}${w.ele ? ' (' + Math.round(w.ele) + ' m)' : ''}${w.desc ? ': ' + w.desc : ''}`)
+  ];
+  const blob = new Blob([lines.join('\n')], { type: 'text/plain;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'gpx_statistiky.txt';
+  a.click();
+}
+</script>
+</body>
+</html>
