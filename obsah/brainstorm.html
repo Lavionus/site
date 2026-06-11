@@ -1,0 +1,535 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8" />
+  <title>Brainstorm</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #121212;
+      color: #e0e0e0;
+      height: 100vh;
+      overflow: hidden;
+      display: flex;
+      flex-direction: column;
+    }
+
+    /* Toolbar */
+    .toolbar {
+      background: #2d2d2d;
+      border-bottom: 1px solid #404040;
+      padding: 8px 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      flex-shrink: 0;
+      z-index: 100;
+    }
+
+    .toolbar-title {
+      font-size: 0.85rem;
+      color: #6aa6fd;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-right: 6px;
+    }
+
+    .btn {
+      background: #3a3a3a;
+      border: 1px solid #555;
+      color: #e0e0e0;
+      padding: 5px 12px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 0.82rem;
+      transition: background 0.15s;
+      white-space: nowrap;
+    }
+    .btn:hover { background: #4a4a4a; }
+
+    .color-palette {
+      display: flex;
+      gap: 6px;
+      align-items: center;
+    }
+
+    .color-btn {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      border: 2px solid transparent;
+      cursor: pointer;
+      transition: border-color 0.15s, transform 0.1s;
+    }
+    .color-btn:hover { transform: scale(1.15); }
+    .color-btn.selected { border-color: #fff; }
+
+    .separator { width: 1px; height: 24px; background: #444; margin: 0 4px; }
+
+    .group-input {
+      background: #3a3a3a;
+      border: 1px solid #555;
+      color: #e0e0e0;
+      padding: 4px 8px;
+      border-radius: 5px;
+      font-size: 0.82rem;
+      width: 130px;
+    }
+    .group-input::placeholder { color: #777; }
+
+    .toolbar-right { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+
+    .note-count {
+      font-size: 0.78rem;
+      color: #666;
+    }
+
+    /* Canvas */
+    #canvas {
+      flex: 1;
+      position: relative;
+      overflow: hidden;
+      background-color: #121212;
+      background-image:
+        radial-gradient(circle, #2a2a2a 1px, transparent 1px);
+      background-size: 30px 30px;
+      cursor: default;
+    }
+
+    /* Viewport (pan) */
+    #viewport {
+      position: absolute;
+      top: 0; left: 0;
+      width: 4000px;
+      height: 4000px;
+      transform-origin: 0 0;
+    }
+
+    /* Sticky note */
+    .note {
+      position: absolute;
+      width: 200px;
+      min-height: 130px;
+      border-radius: 6px;
+      padding: 0;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.5), 0 1px 3px rgba(0,0,0,0.4);
+      display: flex;
+      flex-direction: column;
+      user-select: none;
+      transition: box-shadow 0.15s;
+    }
+    .note:hover { box-shadow: 0 6px 24px rgba(0,0,0,0.7), 0 2px 6px rgba(0,0,0,0.5); }
+    .note.dragging { box-shadow: 0 12px 36px rgba(0,0,0,0.8); z-index: 999 !important; }
+
+    .note-header {
+      padding: 5px 8px;
+      border-radius: 6px 6px 0 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: grab;
+      filter: brightness(0.75);
+    }
+    .note-header:active { cursor: grabbing; }
+
+    .note-group-label {
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: rgba(0,0,0,0.65);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 140px;
+    }
+
+    .note-actions { display: flex; gap: 4px; }
+
+    .note-btn {
+      background: none;
+      border: none;
+      cursor: pointer;
+      font-size: 0.75rem;
+      color: rgba(0,0,0,0.5);
+      padding: 1px 3px;
+      border-radius: 3px;
+      line-height: 1;
+      transition: color 0.1s;
+    }
+    .note-btn:hover { color: rgba(0,0,0,0.85); }
+
+    .note-body {
+      flex: 1;
+      padding: 8px 10px;
+      border-radius: 0 0 6px 6px;
+    }
+
+    .note-text {
+      width: 100%;
+      min-height: 90px;
+      background: transparent;
+      border: none;
+      outline: none;
+      resize: none;
+      font-size: 0.88rem;
+      color: rgba(0,0,0,0.85);
+      font-family: inherit;
+      line-height: 1.5;
+    }
+    .note-text::placeholder { color: rgba(0,0,0,0.35); }
+
+    /* Resize handle */
+    .note-resize {
+      position: absolute;
+      bottom: 3px;
+      right: 4px;
+      width: 12px;
+      height: 12px;
+      cursor: se-resize;
+      color: rgba(0,0,0,0.3);
+      font-size: 0.65rem;
+      line-height: 12px;
+      text-align: center;
+    }
+
+    /* Pan hint */
+    #hint {
+      position: absolute;
+      bottom: 12px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 0.75rem;
+      color: #444;
+      pointer-events: none;
+      z-index: 50;
+    }
+  </style>
+</head>
+<body>
+
+<div class="toolbar">
+  <span class="toolbar-title">💡 Brainstorm</span>
+
+  <button class="btn" id="btnAdd">+ Přidat kartičku</button>
+
+  <div class="separator"></div>
+
+  <div class="color-palette" id="palette">
+    <div class="color-btn selected" data-color="#f9e976" style="background:#f9e976" title="Žlutá"></div>
+    <div class="color-btn" data-color="#f9a875" style="background:#f9a875" title="Oranžová"></div>
+    <div class="color-btn" data-color="#f97575" style="background:#f97575" title="Červená"></div>
+    <div class="color-btn" data-color="#a8f07a" style="background:#a8f07a" title="Zelená"></div>
+    <div class="color-btn" data-color="#79c8f9" style="background:#79c8f9" title="Modrá"></div>
+    <div class="color-btn" data-color="#c49cf9" style="background:#c49cf9" title="Fialová"></div>
+    <div class="color-btn" data-color="#f9b7e8" style="background:#f9b7e8" title="Růžová"></div>
+    <div class="color-btn" data-color="#d0d0d0" style="background:#d0d0d0" title="Šedá"></div>
+  </div>
+
+  <div class="separator"></div>
+
+  <input class="group-input" id="groupInput" type="text" placeholder="Skupina (volitelné)" maxlength="24" />
+
+  <div class="toolbar-right">
+    <span class="note-count" id="noteCount">0 kartiček</span>
+    <button class="btn" id="btnClearAll" title="Smazat vše">🗑 Vymazat vše</button>
+    <button class="btn" id="btnCenter" title="Vystředit pohled">⊙ Vystředit</button>
+  </div>
+</div>
+
+<div id="canvas">
+  <div id="viewport"></div>
+  <div id="hint">Středním tlačítkem nebo pravým tlačítkem + tah → posun plátna &nbsp;|&nbsp; Scroll → zoom</div>
+</div>
+
+<script>
+  const canvas = document.getElementById('canvas');
+  const viewport = document.getElementById('viewport');
+  const palette = document.getElementById('palette');
+  const groupInput = document.getElementById('groupInput');
+  const noteCountEl = document.getElementById('noteCount');
+
+  const STORAGE_KEY = 'brainstorm_notes_v2';
+  const PAN_KEY = 'brainstorm_pan_v2';
+
+  let notes = [];
+  let nextId = 1;
+  let selectedColor = '#f9e976';
+  let zCounter = 10;
+
+  // Pan & zoom state
+  let pan = { x: 0, y: 0 };
+  let scale = 1;
+  let isPanning = false;
+  let panStart = { x: 0, y: 0 };
+
+  // --- Pan & Zoom ---
+  function applyTransform() {
+    viewport.style.transform = `translate(${pan.x}px, ${pan.y}px) scale(${scale})`;
+  }
+
+  canvas.addEventListener('wheel', (e) => {
+    e.preventDefault();
+    const delta = e.deltaY > 0 ? 0.9 : 1.1;
+    const newScale = Math.min(2.5, Math.max(0.25, scale * delta));
+
+    const rect = canvas.getBoundingClientRect();
+    const mx = e.clientX - rect.left;
+    const my = e.clientY - rect.top;
+
+    pan.x = mx - (mx - pan.x) * (newScale / scale);
+    pan.y = my - (my - pan.y) * (newScale / scale);
+    scale = newScale;
+    applyTransform();
+    savePan();
+  }, { passive: false });
+
+  canvas.addEventListener('mousedown', (e) => {
+    if (e.button === 1 || e.button === 2) {
+      isPanning = true;
+      panStart = { x: e.clientX - pan.x, y: e.clientY - pan.y };
+      canvas.style.cursor = 'grabbing';
+      e.preventDefault();
+    }
+  });
+
+  window.addEventListener('mousemove', (e) => {
+    if (!isPanning) return;
+    pan.x = e.clientX - panStart.x;
+    pan.y = e.clientY - panStart.y;
+    applyTransform();
+  });
+
+  window.addEventListener('mouseup', (e) => {
+    if (e.button === 1 || e.button === 2) {
+      isPanning = false;
+      canvas.style.cursor = 'default';
+      savePan();
+    }
+  });
+
+  canvas.addEventListener('contextmenu', (e) => e.preventDefault());
+
+  // --- Color palette ---
+  palette.querySelectorAll('.color-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+      palette.querySelectorAll('.color-btn').forEach(b => b.classList.remove('selected'));
+      btn.classList.add('selected');
+      selectedColor = btn.dataset.color;
+    });
+  });
+
+  // --- Add note ---
+  document.getElementById('btnAdd').addEventListener('click', () => {
+    const canvasRect = canvas.getBoundingClientRect();
+    const cx = (canvasRect.width / 2 - pan.x) / scale;
+    const cy = (canvasRect.height / 2 - pan.y) / scale;
+
+    const scatter = () => (Math.random() - 0.5) * 160;
+    addNote({
+      id: nextId++,
+      x: cx + scatter(),
+      y: cy + scatter(),
+      w: 200,
+      color: selectedColor,
+      group: groupInput.value.trim(),
+      text: '',
+      z: zCounter++,
+    });
+    saveNotes();
+    updateCount();
+  });
+
+  function addNote(data) {
+    notes.push(data);
+    renderNote(data);
+  }
+
+  function renderNote(data) {
+    const el = document.createElement('div');
+    el.className = 'note';
+    el.id = 'note-' + data.id;
+    el.style.left = data.x + 'px';
+    el.style.top = data.y + 'px';
+    el.style.width = data.w + 'px';
+    el.style.background = data.color;
+    el.style.zIndex = data.z;
+
+    el.innerHTML = `
+      <div class="note-header">
+        <span class="note-group-label">${escHtml(data.group || '&nbsp;')}</span>
+        <div class="note-actions">
+          <button class="note-btn btn-color" title="Změnit barvu">🎨</button>
+          <button class="note-btn btn-delete" title="Smazat">✕</button>
+        </div>
+      </div>
+      <div class="note-body">
+        <textarea class="note-text" placeholder="Napiš nápad...">${escHtml(data.text)}</textarea>
+      </div>
+      <div class="note-resize">⤡</div>
+    `;
+
+    viewport.appendChild(el);
+
+    // Drag note
+    const header = el.querySelector('.note-header');
+    makeDraggable(el, header, data);
+
+    // Resize note
+    const resizeHandle = el.querySelector('.note-resize');
+    makeResizable(el, resizeHandle, data);
+
+    // Text edit
+    const textarea = el.querySelector('.note-text');
+    textarea.addEventListener('input', () => {
+      data.text = textarea.value;
+      saveNotes();
+    });
+    textarea.addEventListener('mousedown', (e) => e.stopPropagation());
+
+    // Delete
+    el.querySelector('.btn-delete').addEventListener('click', () => {
+      el.remove();
+      notes = notes.filter(n => n.id !== data.id);
+      saveNotes();
+      updateCount();
+    });
+
+    // Change color
+    el.querySelector('.btn-color').addEventListener('click', () => {
+      data.color = selectedColor;
+      el.style.background = selectedColor;
+      saveNotes();
+    });
+
+    // Bring to front on click
+    el.addEventListener('mousedown', () => {
+      data.z = ++zCounter;
+      el.style.zIndex = data.z;
+    });
+  }
+
+  function makeDraggable(el, handle, data) {
+    let dragging = false;
+    let startMouse, startPos;
+
+    handle.addEventListener('mousedown', (e) => {
+      if (e.button !== 0) return;
+      dragging = true;
+      el.classList.add('dragging');
+      startMouse = { x: e.clientX, y: e.clientY };
+      startPos = { x: data.x, y: data.y };
+      e.preventDefault();
+    });
+
+    window.addEventListener('mousemove', (e) => {
+      if (!dragging) return;
+      const dx = (e.clientX - startMouse.x) / scale;
+      const dy = (e.clientY - startMouse.y) / scale;
+      data.x = startPos.x + dx;
+      data.y = startPos.y + dy;
+      el.style.left = data.x + 'px';
+      el.style.top = data.y + 'px';
+    });
+
+    window.addEventListener('mouseup', (e) => {
+      if (e.button !== 0 || !dragging) return;
+      dragging = false;
+      el.classList.remove('dragging');
+      saveNotes();
+    });
+  }
+
+  function makeResizable(el, handle, data) {
+    let resizing = false;
+    let startMouse, startW;
+
+    handle.addEventListener('mousedown', (e) => {
+      if (e.button !== 0) return;
+      resizing = true;
+      startMouse = { x: e.clientX };
+      startW = data.w;
+      e.preventDefault();
+      e.stopPropagation();
+    });
+
+    window.addEventListener('mousemove', (e) => {
+      if (!resizing) return;
+      const dx = (e.clientX - startMouse.x) / scale;
+      data.w = Math.max(140, startW + dx);
+      el.style.width = data.w + 'px';
+    });
+
+    window.addEventListener('mouseup', (e) => {
+      if (e.button !== 0 || !resizing) return;
+      resizing = false;
+      saveNotes();
+    });
+  }
+
+  // --- Clear all ---
+  document.getElementById('btnClearAll').addEventListener('click', () => {
+    if (notes.length === 0) return;
+    if (!confirm('Opravdu smazat všechny kartičky?')) return;
+    notes = [];
+    viewport.innerHTML = '';
+    saveNotes();
+    updateCount();
+  });
+
+  // --- Center view ---
+  document.getElementById('btnCenter').addEventListener('click', () => {
+    pan = { x: 0, y: 0 };
+    scale = 1;
+    applyTransform();
+    savePan();
+  });
+
+  // --- Persistence ---
+  function saveNotes() {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ notes, nextId, zCounter }));
+  }
+
+  function savePan() {
+    localStorage.setItem(PAN_KEY, JSON.stringify({ pan, scale }));
+  }
+
+  function loadData() {
+    try {
+      const raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        const data = JSON.parse(raw);
+        notes = data.notes || [];
+        nextId = data.nextId || notes.length + 1;
+        zCounter = data.zCounter || 10;
+        notes.forEach(n => renderNote(n));
+      }
+      const panRaw = localStorage.getItem(PAN_KEY);
+      if (panRaw) {
+        const pd = JSON.parse(panRaw);
+        pan = pd.pan || { x: 0, y: 0 };
+        scale = pd.scale || 1;
+        applyTransform();
+      }
+    } catch (e) {
+      console.warn('Brainstorm: chyba načítání', e);
+    }
+    updateCount();
+  }
+
+  function updateCount() {
+    const n = notes.length;
+    noteCountEl.textContent = n === 0 ? '0 kartiček' : n === 1 ? '1 kartička' : n < 5 ? `${n} kartičky` : `${n} kartiček`;
+  }
+
+  function escHtml(str) {
+    return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  }
+
+  loadData();
+</script>
+</body>
+</html>
