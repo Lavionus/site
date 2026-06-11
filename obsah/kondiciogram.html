@@ -323,7 +323,7 @@
 
       <div class="card card-chart">
         <div class="chart-header">
-          <div class="chart-title">Roční přehled &mdash; <span id="yearLabel"></span></div>
+          <div class="chart-title">Roční přehled &mdash; <span id="yearLabel"></span> <span style="font-weight:400;font-size:0.6rem;opacity:0.5">klik → nastavit cíl</span></div>
           <div class="chart-legend">
             <div class="legend-item"><div class="legend-line" style="background:#f97316"></div>Fyzický</div>
             <div class="legend-item"><div class="legend-line" style="background:#ec4899"></div>Emoční</div>
@@ -440,6 +440,27 @@
   }
   wireHover('bioChart',  () => chartState,     hx => drawChart(hx));
   wireHover('yearChart', () => yearChartState,  hx => drawYearChart(hx));
+
+  // Click on year chart → set target date to clicked day
+  $('yearChart').addEventListener('click', e => {
+    if (!yearChartState) return;
+    const cv = $('yearChart');
+    const r  = cv.getBoundingClientRect();
+    const x  = (e.clientX - r.left) * (cv.width / r.width);
+    const PL = 42, CW = cv.width - 42 - 14;
+    if (x < PL || x > PL + CW) return;
+
+    const year  = yearChartState.targetDate.getFullYear();
+    const ys    = new Date(year, 0, 1);
+    const leap  = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
+    const total = leap ? 366 : 365;
+    const dayOff  = Math.max(0, Math.min(total - 1, Math.round((x - PL) / CW * total)));
+    const clicked = new Date(ys.getTime() + dayOff * MS_DAY);
+
+    elTarget.value = clicked.toISOString().slice(0, 10);
+    saveLS();
+    calculate();
+  });
 
   // ── Helpers ────────────────────────────────────────────────────────────────
 
@@ -678,6 +699,62 @@
     );
   }
 
+  // ── Critical day detection ────────────────────────────────────────────────
+  // Zero crossing = the EXACT moment a curve crosses the zero axis.
+  // Groups crossings within 0.5 day into one event; count = how many cycles cross.
+
+  function collectCritDays(startAbsDay, endAbsDay) {
+    const range = endAbsDay - startAbsDay;
+    const byKey = new Map();
+    [23, 28, 33].forEach((period, ci) => {
+      for (let d = Math.floor(startAbsDay); d < Math.ceil(endAbsDay); d++) {
+        const v1 = Math.sin(TWO_PI * d / period);
+        const v2 = Math.sin(TWO_PI * (d + 1) / period);
+        if (v1 * v2 <= 0) {
+          const frac  = Math.abs(v1) / (Math.abs(v1) + Math.abs(v2) + 1e-9);
+          const xFrac = (d + frac - startAbsDay) / range;
+          if (xFrac < 0 || xFrac > 1) continue;
+          const key = Math.round((d + frac) * 2) / 2;
+          if (!byKey.has(key)) byKey.set(key, { xFrac, cycles: new Set() });
+          byKey.get(key).xFrac = xFrac; // use interpolated position
+          byKey.get(key).cycles.add(ci);
+        }
+      }
+    });
+    return Array.from(byKey.values());
+  }
+
+  function drawCritMarkers(ctx, crits, PL, CW, PT, CH, yearMode) {
+    const BAND = ['rgba(180,130,0,0.10)', 'rgba(200,70,0,0.17)', 'rgba(190,0,0,0.26)'];
+    const TCOL = ['#b45309', '#c2410c', '#b91c1c'];
+    const LBL  = [null, '⚡', '⚠'];
+    crits.forEach(({ xFrac, cycles }) => {
+      const x = PL + xFrac * CW;
+      const n = cycles.size - 1; // 0=single, 1=double, 2=triple
+      if (yearMode) {
+        ctx.fillStyle = TCOL[n];
+        const h = [2, 4, 7][n], w = [1, 2, 3][n];
+        ctx.fillRect(x - Math.floor(w / 2), PT,          w, h);
+        ctx.fillRect(x - Math.floor(w / 2), PT + CH - h, w, h);
+      } else {
+        // Vertical band
+        const bw = [5, 9, 14][n];
+        ctx.fillStyle = BAND[n];
+        ctx.fillRect(x - bw / 2, PT, bw, CH);
+        // Top tick
+        const th = [5, 8, 12][n], tw = [2, 2, 3][n];
+        ctx.fillStyle = TCOL[n];
+        ctx.fillRect(x - Math.floor(tw / 2), PT, tw, th);
+        // Label for double & triple
+        if (LBL[n]) {
+          ctx.font = n === 2 ? 'bold 10px -apple-system,sans-serif' : '10px -apple-system,sans-serif';
+          ctx.fillStyle = TCOL[n]; ctx.textAlign = 'center';
+          ctx.fillText(LBL[n], x, PT - 3);
+        }
+      }
+    });
+  }
+
   // ── 30-day chart ───────────────────────────────────────────────────────────
 
   function drawChart(hoverX) {
@@ -694,6 +771,8 @@
 
     drawHGrid(ctx, PT, CH, PL, W, PR);
     drawYLabels(ctx, PT, CH, PL);
+
+    drawCritMarkers(ctx, collectCritDays(centerDays - 15, centerDays + 15), PL, CW, PT, CH, false);
 
     const curves = buildCurvePoints(centerDays - 15, gender, STEPS, RANGE, PL, CW, midY, CH);
     drawCurveFills(ctx, curves, midY, PT, CH, W);
@@ -804,6 +883,8 @@
       ctx.textAlign = 'center';
       ctx.fillText(MONTH_SHORT[m], xLabel, H - PB + 14);
     }
+
+    drawCritMarkers(ctx, collectCritDays(dayOffset, dayOffset + totalDays), PL, CW, PT, CH, true);
 
     const curves = buildCurvePoints(dayOffset, gender, STEPS, totalDays, PL, CW, midY, CH);
     drawCurveFills(ctx, curves, midY, PT, CH, W);

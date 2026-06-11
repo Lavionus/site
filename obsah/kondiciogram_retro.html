@@ -201,6 +201,38 @@
       background: rgba(0,0,20,0.03);
     }
 
+    /* Brightness strip */
+    .brightness-strip {
+      border-top: 1px dashed var(--ink2);
+      padding: 5px 18px;
+      display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+      font-size: 0.67rem; color: var(--ink2);
+      background: rgba(0,0,20,0.02);
+    }
+    .brightness-strip label {
+      font-size: 0.67rem; text-transform: uppercase;
+      letter-spacing: 0.5px; color: var(--ink2);
+      white-space: nowrap; margin-bottom: 0;
+    }
+    #brightness {
+      width: 140px; height: 3px;
+      appearance: none; -webkit-appearance: none;
+      background: linear-gradient(to right, var(--ink) 0%, var(--ink) var(--bpct,50%), #c0bbb0 var(--bpct,50%), #c0bbb0 100%);
+      border: 1px solid var(--ink2); border-radius: 0; cursor: pointer;
+      outline: none;
+    }
+    #brightness::-webkit-slider-thumb {
+      appearance: none; -webkit-appearance: none;
+      width: 10px; height: 14px;
+      background: var(--ink); border-radius: 0; cursor: pointer;
+    }
+    #brightness::-moz-range-thumb {
+      width: 10px; height: 14px;
+      background: var(--ink); border-radius: 0; border: none; cursor: pointer;
+    }
+    #brightness:focus { outline: 1px dashed var(--ink2); outline-offset: 2px; }
+    #brightnessVal { font-size: 0.67rem; color: var(--ink2); white-space: nowrap; letter-spacing: 0; }
+
     /* Responsive */
     @media (max-width: 820px) {
       .main-layout { grid-template-columns: 1fr; }
@@ -212,6 +244,59 @@
       .bio-row { grid-template-columns: 1fr; }
       .read-num { font-size: 3rem; }
       .panel-dash { padding: 10px; }
+    }
+
+    /* Print button */
+    .print-btn {
+      font-family: 'Courier New', Courier, monospace;
+      font-size: 0.72rem; font-weight: bold;
+      text-transform: uppercase; letter-spacing: 1px;
+      background: var(--ink); color: var(--paper);
+      border: 1px solid var(--ink); padding: 3px 10px;
+      cursor: pointer; white-space: nowrap;
+      margin-left: auto;
+    }
+    .print-btn:hover  { background: var(--paper); color: var(--ink); }
+    .print-btn:active { opacity: 0.7; }
+
+    /* ── Print styles ── */
+    @media print {
+      /* Force all background colours and images to print */
+      *, *::before, *::after {
+        -webkit-print-color-adjust: exact !important;
+        print-color-adjust: exact !important;
+      }
+
+      @page {
+        margin: 0;
+        size: A4 landscape;
+      }
+
+      /* Remove the brightness filter — let the page print at full fidelity */
+      .paper { filter: none !important; }
+
+      /* Hide screen-only controls */
+      .brightness-strip { display: none !important; }
+
+      /* Un-scroll the panels so all content is visible */
+      .panel-inputs,
+      .panel-dash {
+        overflow: visible !important;
+        max-height: none !important;
+        height: auto !important;
+      }
+
+      /* Don't split cards across pages */
+      .rbox, .chart-wrap, .bio-row {
+        break-inside: avoid !important;
+        page-break-inside: avoid !important;
+      }
+
+      /* Canvases print at their rendered pixel size */
+      canvas { display: block; }
+
+      /* Keep the full tractor-feed look: sprocket strips stay visible */
+      .page-wrap { min-height: 0; }
     }
   </style>
 </head>
@@ -369,7 +454,7 @@
           <!-- Year chart -->
           <div class="chart-wrap">
             <div class="chart-hdr">
-              <span>ROCNI PREHLED &mdash; <span id="yearLabel">----</span></span>
+              <span>ROCNI PREHLED &mdash; <span id="yearLabel">----</span> <span style="font-weight:normal;color:var(--ink2)">[KLIK = NASTAVIT CIL]</span></span>
               <div class="legend">
                 <div class="leg"><div class="leg-sq" style="background:var(--ink)"></div>FYZ</div>
                 <div class="leg"><div class="leg-sq" style="background:var(--red)"></div>EMO</div>
@@ -387,6 +472,14 @@
     <div class="page-ftr">
       <span>KONDICIOGRAM V1.0 // BIOLOGICKY KORIGOVANY VYPOCET BIORYTMU</span>
       <span>STRANA: 001/001  LPT1: OK</span>
+    </div>
+
+    <!-- Brightness strip + print button -->
+    <div class="brightness-strip">
+      <label for="brightness">JAS PAPIRU:</label>
+      <input type="range" id="brightness" min="20" max="150" value="100" step="1" />
+      <span id="brightnessVal"></span>
+      <button class="print-btn" id="printBtn" onclick="window.print()">[&gt;&gt; TISK &lt;&lt;]</button>
     </div>
 
   </div><!-- /.paper -->
@@ -502,6 +595,27 @@
   }
   wireHover('bioChart',  () => chartState,    hx => drawChart(hx));
   wireHover('yearChart', () => yearChartState, hx => drawYearChart(hx));
+
+  // Click on year chart → set target date to clicked day
+  $('yearChart').addEventListener('click', e => {
+    if (!yearChartState) return;
+    const cv = $('yearChart');
+    const r  = cv.getBoundingClientRect();
+    const x  = (e.clientX - r.left) * (cv.width / r.width);
+    const PL = 36, CW = cv.width - 36 - 8;
+    if (x < PL || x > PL + CW) return;
+
+    const year  = yearChartState.targetDate.getFullYear();
+    const ys    = new Date(year, 0, 1);
+    const leap  = year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0);
+    const total = leap ? 366 : 365;
+    const dayOff  = Math.max(0, Math.min(total - 1, Math.round((x - PL) / CW * total)));
+    const clicked = new Date(ys.getTime() + dayOff * MS_DAY);
+
+    elTarget.value = clicked.toISOString().slice(0, 10);
+    saveLS();
+    calculate();
+  });
 
   // ── Helpers ────────────────────────────────────────────────────────────────
   function daysBetween(a, b) { return (b - a) / MS_DAY; }
@@ -715,6 +829,54 @@
     lines.forEach((l, i) => ctx.fillText(l, tx + 6, ty + 12 + i * LH));
   }
 
+  // ── Critical day detection ─────────────────────────────────────────────────
+
+  function collectCritDays(startAbsDay, endAbsDay) {
+    const range = endAbsDay - startAbsDay;
+    const byKey = new Map();
+    [23, 28, 33].forEach((period, ci) => {
+      for (let d = Math.floor(startAbsDay); d < Math.ceil(endAbsDay); d++) {
+        const v1 = Math.sin(TWO_PI * d / period);
+        const v2 = Math.sin(TWO_PI * (d + 1) / period);
+        if (v1 * v2 <= 0) {
+          const frac  = Math.abs(v1) / (Math.abs(v1) + Math.abs(v2) + 1e-9);
+          const xFrac = (d + frac - startAbsDay) / range;
+          if (xFrac < 0 || xFrac > 1) continue;
+          const key = Math.round((d + frac) * 2) / 2;
+          if (!byKey.has(key)) byKey.set(key, { xFrac, cycles: new Set() });
+          byKey.get(key).xFrac = xFrac;
+          byKey.get(key).cycles.add(ci);
+        }
+      }
+    });
+    return Array.from(byKey.values());
+  }
+
+  function drawRetroCrit(ctx, crits, PL, CW, PT, CH, yearMode) {
+    const CCOL = ['#7a5000', '#7a1a00', '#6a0000'];
+    const LBL  = ['[!]', '[!!]', '[!!!]'];
+    crits.forEach(({ xFrac, cycles }) => {
+      const x = Math.round(PL + xFrac * CW);
+      const n = cycles.size - 1;
+      ctx.fillStyle = CCOL[n];
+      if (yearMode) {
+        const h = [3, 5, 8][n];
+        ctx.fillRect(x, PT,          1, h);
+        ctx.fillRect(x, PT + CH - h, 1, h);
+      } else {
+        // Dashed vertical warning line
+        const dashH = [4, 3, 2][n], gap = [5, 4, 3][n], lw = n + 1;
+        for (let y = PT; y < PT + CH; y += dashH + gap) ctx.fillRect(x, y, lw, dashH);
+        // Label above chart
+        ctx.font = n === 2
+          ? 'bold 9px "Courier New",Courier,monospace'
+          : '9px "Courier New",Courier,monospace';
+        ctx.textAlign = 'center';
+        ctx.fillText(LBL[n], x, PT - 3);
+      }
+    });
+  }
+
   // ── 30-day dot-matrix chart ────────────────────────────────────────────────
   function drawChart(hoverX) {
     if (!chartState) return;
@@ -733,6 +895,7 @@
     drawPaper(ctx, W, H);
     drawGrid(ctx, PT, CH, PL, W, PR);
     drawYLbls(ctx, PT, CH, PL);
+    drawRetroCrit(ctx, collectCritDays(centerDays - 15, centerDays + 15), PL, CW, PT, CH, false);
 
     // Dot-matrix curves
     periods.forEach((period, ci) => {
@@ -842,6 +1005,8 @@
       ctx.fillText(MO_SH[m], xM, H - PB + 12);
     }
 
+    drawRetroCrit(ctx, collectCritDays(dayOff, dayOff + totalDays), PL, CW, PT, CH, true);
+
     // Curves — thin lines (year = overview, dots would be too dense)
     const periods = [23, 28, 33];
     const scales  = [1, emoScale, 1];
@@ -892,6 +1057,29 @@
     }
   }
 
+  // ── Brightness slider ──────────────────────────────────────────────────────
+  const elBr = $('brightness');
+
+  function applyBrightness() {
+    const v   = parseInt(elBr.value);
+    const pct = (v - 20) / 130; // normalised over range 20–150
+    document.querySelector('.paper').style.filter = `brightness(${v / 100})`;
+    elBr.style.setProperty('--bpct', (pct * 100).toFixed(1) + '%');
+    const W = 15, f = Math.round(pct * W);
+    $('brightnessVal').textContent =
+      '[' + '░'.repeat(W - f) + '█'.repeat(f) + '] ' + v + '%';
+    try { localStorage.setItem('kondiciogram_brightness', v); } catch (e) {}
+  }
+
+  elBr.addEventListener('input', applyBrightness);
+
+  // restore saved brightness
+  try {
+    const saved = localStorage.getItem('kondiciogram_brightness');
+    if (saved) elBr.value = saved;
+  } catch (e) {}
+  applyBrightness();
+
   // ── Init ───────────────────────────────────────────────────────────────────
   elTarget.value = new Date().toISOString().slice(0, 10);
   initBirthSelects();
@@ -900,6 +1088,28 @@
 
   let rt;
   window.addEventListener('resize', () => { clearTimeout(rt); rt = setTimeout(calculate, 120); });
+
+  // ── Print handlers ─────────────────────────────────────────────────────────
+  window.addEventListener('beforeprint', () => {
+    // Strip the brightness filter so the print is at full fidelity
+    document.querySelector('.paper').style.filter = 'none';
+    // Redraw canvases at their current layout size (clean, no hover overlay)
+    if (chartState) {
+      const bc = $('bioChart');
+      bc.width = bc.closest('.chart-wrap').clientWidth;
+      drawChart(null);
+    }
+    if (yearChartState) {
+      const yc = $('yearChart');
+      yc.width = yc.closest('.chart-wrap').clientWidth;
+      drawYearChart(null);
+    }
+  });
+
+  window.addEventListener('afterprint', () => {
+    // Restore the user's brightness setting
+    applyBrightness();
+  });
 </script>
 </body>
 </html>

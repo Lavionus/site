@@ -1,0 +1,1667 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Plánovač nákupů</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: #1a1a1a;
+      color: #e0e0e0;
+      min-height: 100vh;
+    }
+
+    .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+
+    /* ── Header ── */
+    .header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 24px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .header h1 { font-size: 1.4rem; font-weight: 600; color: #e0e0e0; }
+    .header-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+    /* ── Buttons ── */
+    .btn {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 0.85rem;
+      font-weight: 500;
+      transition: background-color 0.2s;
+    }
+    .btn-primary { background: #6aa6fd; color: #fff; }
+    .btn-primary:hover { background: #5694f0; }
+    .btn-secondary { background: #404040; color: #e0e0e0; border: 1px solid #555; }
+    .btn-secondary:hover { background: #4a4a4a; }
+    .btn-danger { background: #c0392b; color: #fff; }
+    .btn-danger:hover { background: #a93226; }
+    .btn-success { background: #27ae60; color: #fff; }
+    .btn-success:hover { background: #219a52; }
+    .btn-sm { padding: 4px 10px; font-size: 0.78rem; }
+    .btn-icon { padding: 4px 8px; font-size: 0.9rem; background: transparent; border: 1px solid #555; border-radius: 4px; cursor: pointer; color: #bbb; transition: all 0.2s; }
+    .btn-icon:hover { background: #404040; color: #e0e0e0; }
+
+    /* ── Tabs ── */
+    .tabs { display: flex; margin-bottom: 20px; border-bottom: 1px solid #404040; }
+    .tab {
+      padding: 12px 24px;
+      background: #2a2a2a;
+      border: 1px solid #404040;
+      border-bottom: none;
+      border-radius: 8px 8px 0 0;
+      cursor: pointer;
+      font-weight: 500;
+      font-size: 0.9rem;
+      transition: all 0.2s;
+      margin-right: 4px;
+      color: #bbb;
+    }
+    .tab.active { background: #404040; color: #6aa6fd; border-color: #6aa6fd; }
+    .tab:hover:not(.active) { background: #353535; color: #e0e0e0; }
+    .tab-content { display: none; }
+    .tab-content.active { display: block; }
+
+    /* ── Card / Panel ── */
+    .card {
+      background: #2a2a2a;
+      border: 1px solid #404040;
+      border-radius: 8px;
+      padding: 20px;
+      margin-bottom: 20px;
+    }
+    .card-title {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: #888;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 14px;
+    }
+
+    /* ── Form elements ── */
+    .form-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: 14px; }
+    .form-grid-wide { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 14px; }
+    .form-group { display: flex; flex-direction: column; gap: 5px; }
+    .form-group label { font-size: 0.8rem; color: #999; font-weight: 500; }
+    .form-group input, .form-group select, .form-group textarea {
+      background: #404040;
+      border: 1px solid #555;
+      border-radius: 4px;
+      color: #e0e0e0;
+      padding: 8px 10px;
+      font-size: 0.88rem;
+      font-family: inherit;
+      transition: border-color 0.2s;
+    }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+      outline: none;
+      border-color: #6aa6fd;
+    }
+    .form-group input::placeholder, .form-group textarea::placeholder { color: #666; }
+    .form-group textarea { resize: vertical; min-height: 70px; }
+    .form-group select option { background: #2a2a2a; }
+    .form-row { display: flex; gap: 10px; flex-wrap: wrap; }
+    .form-actions { display: flex; gap: 8px; margin-top: 16px; flex-wrap: wrap; }
+
+    /* ── Table ── */
+    .table-wrap { overflow-x: auto; border-radius: 6px; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.87rem; }
+    thead th {
+      background: #333;
+      color: #bbb;
+      font-weight: 600;
+      font-size: 0.78rem;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+      padding: 10px 12px;
+      text-align: left;
+      border-bottom: 1px solid #404040;
+      white-space: nowrap;
+    }
+    thead th.sortable { cursor: pointer; user-select: none; }
+    thead th.sortable:hover { color: #6aa6fd; }
+    tbody tr { border-bottom: 1px solid #333; transition: background 0.15s; }
+    tbody tr:hover { background: #2f2f2f; }
+    tbody tr:last-child { border-bottom: none; }
+    tbody td { padding: 10px 12px; vertical-align: middle; }
+    .td-actions { display: flex; gap: 4px; }
+
+    /* ── Badges ── */
+    .badge {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+    .badge-high { background: #4a1515; color: #ff8080; border: 1px solid #8b3333; }
+    .badge-medium { background: #3a3015; color: #ffc060; border: 1px solid #7a6020; }
+    .badge-low { background: #1a2a1a; color: #80c080; border: 1px solid #3a7a3a; }
+    .badge-considering { background: #1e2d3d; color: #6aa6fd; border: 1px solid #3a5a8a; }
+    .badge-planning { background: #2d2060; color: #a080ff; border: 1px solid #5a4a90; }
+    .badge-purchased { background: #1a3a1a; color: #60c060; border: 1px solid #3a7a3a; }
+    .badge-dropped { background: #2d2d2d; color: #888; border: 1px solid #555; }
+    .badge-cat { background: #252535; color: #9090cc; border: 1px solid #404060; font-size: 0.73rem; }
+
+    /* ── Price display ── */
+    .price { font-weight: 600; color: #e0e0e0; }
+    .price-sale { color: #60c080; }
+    .price-planned { color: #6aa6fd; font-size: 0.82rem; }
+    .price-best { background: #1a3a1a; color: #60c060; border-radius: 3px; padding: 1px 5px; }
+
+    /* ── Filters bar ── */
+    .filters-bar {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+      align-items: flex-end;
+      margin-bottom: 16px;
+    }
+    .filter-group { display: flex; flex-direction: column; gap: 4px; }
+    .filter-group label { font-size: 0.75rem; color: #888; }
+    .filter-group input, .filter-group select {
+      background: #333;
+      border: 1px solid #4a4a4a;
+      border-radius: 4px;
+      color: #e0e0e0;
+      padding: 6px 10px;
+      font-size: 0.85rem;
+    }
+    .filter-group input:focus, .filter-group select:focus { outline: none; border-color: #6aa6fd; }
+
+    /* ── Empty state ── */
+    .empty-state {
+      text-align: center;
+      padding: 50px 20px;
+      color: #666;
+    }
+    .empty-state .icon { font-size: 2.5rem; margin-bottom: 12px; }
+    .empty-state p { font-size: 0.9rem; margin-bottom: 16px; }
+
+    /* ── Modal ── */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.7);
+      z-index: 5000;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .modal-overlay.show { display: flex; }
+    .modal {
+      background: #252525;
+      border: 1px solid #404040;
+      border-radius: 10px;
+      padding: 24px;
+      max-width: 680px;
+      width: 100%;
+      max-height: 90vh;
+      overflow-y: auto;
+      position: relative;
+    }
+    .modal-title {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 20px;
+      color: #6aa6fd;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .modal-close {
+      background: transparent;
+      border: none;
+      color: #888;
+      font-size: 1.2rem;
+      cursor: pointer;
+      padding: 2px 6px;
+      border-radius: 4px;
+    }
+    .modal-close:hover { background: #404040; color: #e0e0e0; }
+
+    /* ── Custom properties editor ── */
+    .prop-row { display: flex; gap: 6px; align-items: center; margin-bottom: 6px; }
+    .prop-row input {
+      background: #333;
+      border: 1px solid #4a4a4a;
+      border-radius: 4px;
+      color: #e0e0e0;
+      padding: 6px 8px;
+      font-size: 0.85rem;
+      flex: 1;
+    }
+    .prop-row input:focus { outline: none; border-color: #6aa6fd; }
+
+    /* ── Star rating ── */
+    .stars { display: flex; gap: 2px; cursor: pointer; }
+    .star { font-size: 1.1rem; color: #555; transition: color 0.1s; }
+    .star.on { color: #f0c040; }
+    .star:hover { color: #f0c040; }
+
+    /* ── Comparison tab ── */
+    .product-selector {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-bottom: 20px;
+    }
+    .product-chip {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      background: #333;
+      border: 1px solid #4a4a4a;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 0.83rem;
+      transition: all 0.2s;
+      user-select: none;
+    }
+    .product-chip.selected {
+      background: #1e2d4d;
+      border-color: #6aa6fd;
+      color: #6aa6fd;
+    }
+    .product-chip:hover:not(.selected) { border-color: #666; }
+
+    .compare-table { border-collapse: collapse; width: 100%; font-size: 0.87rem; }
+    .compare-table thead th {
+      background: #2a2a2a;
+      color: #bbb;
+      padding: 10px 14px;
+      text-align: center;
+      font-size: 0.82rem;
+      border: 1px solid #404040;
+      min-width: 160px;
+    }
+    .compare-table thead th:first-child {
+      text-align: left;
+      min-width: 140px;
+      background: #222;
+      color: #888;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.4px;
+    }
+    .compare-table tbody td {
+      padding: 10px 14px;
+      border: 1px solid #333;
+      text-align: center;
+      vertical-align: middle;
+    }
+    .compare-table tbody td:first-child {
+      text-align: left;
+      font-size: 0.8rem;
+      color: #999;
+      background: #222;
+      font-weight: 500;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+    .compare-table tbody tr:hover td { background: #2a2a2a; }
+    .compare-table tbody tr:hover td:first-child { background: #252525; }
+    .cell-best { background: #1a3020 !important; color: #60d080 !important; font-weight: 600; }
+    .cell-worst { background: #301a1a !important; color: #d06060 !important; }
+    .cell-empty { color: #555; font-style: italic; }
+    .product-header-cell { display: flex; flex-direction: column; align-items: center; gap: 4px; }
+
+    /* ── Financials ── */
+    .fin-grid { display: grid; grid-template-columns: 1fr 2fr; gap: 20px; margin-bottom: 20px; }
+    @media (max-width: 900px) { .fin-grid { grid-template-columns: 1fr; } }
+
+    .fin-settings { display: flex; flex-direction: column; gap: 14px; }
+    .fin-stat { display: flex; flex-direction: column; gap: 4px; }
+    .fin-stat label { font-size: 0.78rem; color: #888; font-weight: 500; text-transform: uppercase; letter-spacing: 0.4px; }
+    .fin-stat .value { font-size: 1.3rem; font-weight: 700; color: #6aa6fd; }
+
+    .timeline-table thead th { font-size: 0.75rem; }
+    .month-row-highlight { background: #1e2d4d !important; }
+    .purchase-entry {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 6px;
+      padding: 4px 8px;
+      background: #1e2030;
+      border: 1px solid #404060;
+      border-radius: 4px;
+      margin-bottom: 4px;
+      font-size: 0.8rem;
+    }
+    .purchase-entry .pname { font-weight: 500; color: #a080ff; max-width: 120px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .purchase-entry .pprice { color: #60c080; white-space: nowrap; }
+
+    .afford-tag {
+      display: inline-block;
+      background: #1a3020;
+      border: 1px solid #3a7a4a;
+      color: #60c080;
+      border-radius: 3px;
+      padding: 1px 6px;
+      font-size: 0.75rem;
+      white-space: nowrap;
+    }
+    .afford-tag.soon { background: #2a3020; border-color: #5a8a3a; color: #a0e060; }
+
+    .chart-wrap { position: relative; height: 320px; }
+
+    .plan-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px;
+      background: #242424;
+      border: 1px solid #383838;
+      border-radius: 6px;
+      margin-bottom: 8px;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+    .plan-row .plan-info { flex: 1; min-width: 120px; }
+    .plan-row .plan-name { font-weight: 500; font-size: 0.9rem; }
+    .plan-row .plan-price { font-size: 0.82rem; color: #aaa; margin-top: 2px; }
+    .plan-row .plan-controls { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .plan-row select {
+      background: #333;
+      border: 1px solid #4a4a4a;
+      border-radius: 4px;
+      color: #e0e0e0;
+      padding: 5px 8px;
+      font-size: 0.82rem;
+    }
+    .plan-row select:focus { outline: none; border-color: #6aa6fd; }
+
+    /* ── Toast stack ── */
+    #toast-container {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      pointer-events: none;
+    }
+    .toast {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      padding: 12px 16px;
+      border-radius: 8px;
+      color: #fff;
+      font-size: 0.87rem;
+      min-width: 260px;
+      max-width: 380px;
+      box-shadow: 0 6px 20px rgba(0,0,0,0.5);
+      pointer-events: all;
+      animation: toastIn 0.25s ease-out forwards;
+      position: relative;
+      overflow: hidden;
+    }
+    .toast.removing { animation: toastOut 0.3s ease-in forwards; }
+    .toast-success { background: #1d3d25; border: 1px solid #2ecc71; }
+    .toast-error   { background: #3d1d1d; border: 1px solid #e74c3c; }
+    .toast-info    { background: #1d2f3d; border: 1px solid #3498db; }
+    .toast-warning { background: #3d3010; border: 1px solid #f39c12; }
+    .toast-icon { font-size: 1rem; flex-shrink: 0; margin-top: 1px; }
+    .toast-body { flex: 1; line-height: 1.4; }
+    .toast-title { font-weight: 600; font-size: 0.82rem; opacity: 0.75; text-transform: uppercase; letter-spacing: 0.4px; margin-bottom: 2px; }
+    .toast-msg { color: #e8e8e8; }
+    .toast-close {
+      background: transparent;
+      border: none;
+      color: #888;
+      font-size: 1rem;
+      cursor: pointer;
+      padding: 0 2px;
+      line-height: 1;
+      flex-shrink: 0;
+      margin-top: -1px;
+    }
+    .toast-close:hover { color: #fff; }
+    .toast-bar {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      height: 2px;
+      animation: toastBar 4s linear forwards;
+    }
+    .toast-success .toast-bar { background: #2ecc71; }
+    .toast-error   .toast-bar { background: #e74c3c; }
+    .toast-info    .toast-bar { background: #3498db; }
+    .toast-warning .toast-bar { background: #f39c12; }
+    @keyframes toastIn  { from { transform: translateX(110%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+    @keyframes toastOut { from { transform: translateX(0); opacity: 1; } to { transform: translateX(110%); opacity: 0; } }
+    @keyframes toastBar { from { width: 100%; } to { width: 0%; } }
+
+    /* ── Confirm modal ── */
+    #confirm-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.75);
+      z-index: 8000;
+      align-items: center;
+      justify-content: center;
+    }
+    #confirm-overlay.show { display: flex; }
+    #confirm-box {
+      background: #252525;
+      border: 1px solid #4a4a4a;
+      border-radius: 10px;
+      padding: 28px 32px;
+      max-width: 420px;
+      width: 90%;
+      text-align: center;
+      box-shadow: 0 12px 40px rgba(0,0,0,0.6);
+    }
+    #confirm-box .confirm-icon { font-size: 2rem; margin-bottom: 12px; }
+    #confirm-box .confirm-title { font-size: 1rem; font-weight: 600; margin-bottom: 8px; color: #e0e0e0; }
+    #confirm-box .confirm-msg { font-size: 0.87rem; color: #999; margin-bottom: 22px; line-height: 1.5; }
+    #confirm-box .confirm-actions { display: flex; gap: 10px; justify-content: center; }
+
+    /* ── Misc ── */
+    .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 14px; flex-wrap: wrap; gap: 8px; }
+    .section-title { font-size: 0.9rem; font-weight: 600; color: #ccc; }
+    .divider { border: none; border-top: 1px solid #353535; margin: 18px 0; }
+    .text-muted { color: #777; font-size: 0.82rem; }
+    .text-right { text-align: right; }
+    a { color: #6aa6fd; text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    .url-cell { max-width: 140px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .balance-positive { color: #60c080; }
+    .balance-negative { color: #e06060; }
+    input[type="file"] { display: none; }
+    .import-label { display: inline-block; padding: 8px 16px; background: #404040; border: 1px solid #555; border-radius: 4px; cursor: pointer; font-size: 0.85rem; font-weight: 500; color: #e0e0e0; transition: background 0.2s; }
+    .import-label:hover { background: #4a4a4a; }
+    .tooltip { position: relative; }
+    .tooltip:hover::after { content: attr(data-tip); position: absolute; bottom: 125%; left: 50%; transform: translateX(-50%); background: #333; color: #e0e0e0; padding: 4px 8px; border-radius: 4px; font-size: 0.75rem; white-space: nowrap; border: 1px solid #555; pointer-events: none; z-index: 100; }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <!-- ── Header ── -->
+  <div class="header">
+    <h1>🛒 Plánovač nákupů</h1>
+    <div class="header-actions">
+      <button class="btn btn-secondary" onclick="exportJSON()">⬇ Export JSON</button>
+      <label class="import-label">
+        ⬆ Import JSON
+        <input type="file" id="importFile" accept=".json" onchange="importJSON(this)">
+      </label>
+    </div>
+  </div>
+
+  <!-- ── Tabs ── -->
+  <div class="tabs">
+    <div class="tab active" data-tab="comparison" onclick="switchTab('comparison')">📊 Porovnání</div>
+    <div class="tab" data-tab="products" onclick="switchTab('products')">📦 Produkty</div>
+    <div class="tab" data-tab="financials" onclick="switchTab('financials')">💰 Finanční rozvaha</div>
+  </div>
+
+  <!-- ════════════════════════════════════
+       TAB 1 – POROVNÁNÍ
+  ════════════════════════════════════ -->
+  <div id="tab-comparison" class="tab-content active">
+    <div class="card">
+      <div class="card-title">Vyberte produkty k porovnání</div>
+      <div id="comparisonChips" class="product-selector">
+        <span class="text-muted">Nejsou přidány žádné produkty. Přejděte na záložku Produkty.</span>
+      </div>
+      <div class="form-row" style="margin-top:10px; align-items:center; gap:12px; flex-wrap:wrap;">
+        <button class="btn btn-secondary btn-sm" onclick="selectAllForComparison()">Vybrat vše</button>
+        <button class="btn btn-secondary btn-sm" onclick="clearComparison()">Zrušit výběr</button>
+        <label style="display:flex;align-items:center;gap:6px;font-size:0.82rem;color:#aaa;cursor:pointer;">
+          <input type="checkbox" id="showOnlyPlanning" onchange="renderComparison()" style="accent-color:#6aa6fd;">
+          Jen produkty ke koupi
+        </label>
+        <label style="display:flex;align-items:center;gap:6px;font-size:0.82rem;color:#aaa;cursor:pointer;">
+          <input type="checkbox" id="highlightBest" checked onchange="renderComparison()" style="accent-color:#6aa6fd;">
+          Zvýraznit nejlepší cenu
+        </label>
+      </div>
+    </div>
+
+    <div id="comparisonTableWrap">
+      <div class="empty-state">
+        <div class="icon">📊</div>
+        <p>Vyberte alespoň 2 produkty pro porovnání.</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════
+       TAB 2 – PRODUKTY
+  ════════════════════════════════════ -->
+  <div id="tab-products" class="tab-content">
+    <!-- Add / Edit form -->
+    <div class="card" id="productFormCard">
+      <div class="section-header">
+        <div class="card-title" id="formTitle">Přidat produkt</div>
+        <button class="btn btn-secondary btn-sm" onclick="toggleForm()">Skrýt formulář</button>
+      </div>
+      <div id="productForm">
+        <div class="form-grid">
+          <div class="form-group" style="grid-column:span 2;">
+            <label>Název produktu *</label>
+            <input type="text" id="f_name" placeholder="např. Notebook Lenovo IdeaPad 5">
+          </div>
+          <div class="form-group">
+            <label>Kategorie</label>
+            <input type="text" id="f_category" placeholder="např. Elektronika" list="categoryList">
+            <datalist id="categoryList"></datalist>
+          </div>
+          <div class="form-group">
+            <label>Stav</label>
+            <select id="f_status">
+              <option value="considering">Zvažuji</option>
+              <option value="planning">Plánuji koupit</option>
+              <option value="purchased">Koupeno</option>
+              <option value="dropped">Zrušeno</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Priorita</label>
+            <select id="f_priority">
+              <option value="medium">Střední</option>
+              <option value="high">Vysoká</option>
+              <option value="low">Nízká</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label>Hodnocení</label>
+            <div class="stars" id="starRating">
+              <span class="star" data-v="1" onclick="setRating(1)">★</span>
+              <span class="star" data-v="2" onclick="setRating(2)">★</span>
+              <span class="star" data-v="3" onclick="setRating(3)">★</span>
+              <span class="star" data-v="4" onclick="setRating(4)">★</span>
+              <span class="star" data-v="5" onclick="setRating(5)">★</span>
+            </div>
+            <input type="hidden" id="f_rating" value="0">
+          </div>
+        </div>
+        <hr class="divider">
+        <div class="form-grid">
+          <div class="form-group">
+            <label>Běžná cena (Kč)</label>
+            <input type="number" id="f_regularPrice" placeholder="0" min="0">
+          </div>
+          <div class="form-group">
+            <label>Cílová cena / rozpočet (Kč)</label>
+            <input type="number" id="f_plannedPrice" placeholder="0" min="0">
+          </div>
+          <div class="form-group">
+            <label>Akční cena (Kč)</label>
+            <input type="number" id="f_salePrice" placeholder="0" min="0">
+          </div>
+          <div class="form-group">
+            <label>Datum konce akce</label>
+            <input type="date" id="f_saleEnd">
+          </div>
+        </div>
+        <div class="form-group" style="margin-top:12px;">
+          <label>URL odkaz</label>
+          <input type="url" id="f_url" placeholder="https://...">
+        </div>
+        <div class="form-group" style="margin-top:12px;">
+          <label>Poznámky</label>
+          <textarea id="f_notes" placeholder="Vlastní poznámky k produktu..."></textarea>
+        </div>
+        <hr class="divider">
+        <!-- Custom properties -->
+        <div class="section-header">
+          <div class="section-title" style="font-size:0.82rem;color:#888;">Vlastní parametry (pro porovnání)</div>
+          <button class="btn btn-secondary btn-sm" onclick="addPropRow()">+ Přidat parametr</button>
+        </div>
+        <div id="customProps"></div>
+        <div class="form-actions">
+          <button class="btn btn-primary" onclick="saveProduct()">💾 Uložit produkt</button>
+          <button class="btn btn-secondary" onclick="clearForm()">Zrušit</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Products list -->
+    <div class="card">
+      <div class="section-header">
+        <div class="section-title">Seznam produktů (<span id="productCount">0</span>)</div>
+        <button class="btn btn-primary btn-sm" onclick="showForm()">+ Přidat produkt</button>
+      </div>
+      <div class="filters-bar">
+        <div class="filter-group">
+          <label>Hledat</label>
+          <input type="text" id="filterSearch" placeholder="název, kategorie..." oninput="renderProducts()" style="width:200px;">
+        </div>
+        <div class="filter-group">
+          <label>Kategorie</label>
+          <select id="filterCategory" onchange="renderProducts()">
+            <option value="">Všechny</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label>Stav</label>
+          <select id="filterStatus" onchange="renderProducts()">
+            <option value="">Všechny</option>
+            <option value="considering">Zvažuji</option>
+            <option value="planning">Plánuji koupit</option>
+            <option value="purchased">Koupeno</option>
+            <option value="dropped">Zrušeno</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label>Priorita</label>
+          <select id="filterPriority" onchange="renderProducts()">
+            <option value="">Všechny</option>
+            <option value="high">Vysoká</option>
+            <option value="medium">Střední</option>
+            <option value="low">Nízká</option>
+          </select>
+        </div>
+        <div class="filter-group">
+          <label>Řadit dle</label>
+          <select id="sortBy" onchange="renderProducts()">
+            <option value="name">Název</option>
+            <option value="regularPrice">Cena</option>
+            <option value="priority">Priorita</option>
+            <option value="createdAt">Datum přidání</option>
+          </select>
+        </div>
+      </div>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th>Název</th>
+              <th>Kategorie</th>
+              <th>Běžná cena</th>
+              <th>Cílová cena</th>
+              <th>Akční cena</th>
+              <th>Priorita</th>
+              <th>Stav</th>
+              <th>Hodnocení</th>
+              <th>Odkaz</th>
+              <th>Akce</th>
+            </tr>
+          </thead>
+          <tbody id="productsBody">
+            <tr><td colspan="10"><div class="empty-state" style="padding:30px;"><div class="icon">📦</div><p>Žádné produkty. Přidejte první!</p></div></td></tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════
+       TAB 3 – FINANČNÍ ROZVAHA
+  ════════════════════════════════════ -->
+  <div id="tab-financials" class="tab-content">
+    <div class="fin-grid">
+      <!-- Settings -->
+      <div class="card">
+        <div class="card-title">Nastavení úspor</div>
+        <div class="fin-settings">
+          <div class="form-group">
+            <label>Aktuální úspory (Kč)</label>
+            <input type="number" id="fin_current" placeholder="0" min="0" oninput="saveFinancials()">
+          </div>
+          <div class="form-group">
+            <label>Měsíční úspory (Kč)</label>
+            <input type="number" id="fin_monthly" placeholder="0" min="0" oninput="saveFinancials()">
+          </div>
+          <div class="form-group">
+            <label>Počáteční měsíc</label>
+            <input type="month" id="fin_startDate" oninput="saveFinancials()">
+          </div>
+          <div class="form-group">
+            <label>Zobrazit měsíců dopředu</label>
+            <input type="number" id="fin_months" value="24" min="6" max="60" oninput="renderFinancials()">
+          </div>
+          <hr class="divider" style="margin:4px 0;">
+          <div style="display:flex;flex-direction:column;gap:8px;">
+            <div class="fin-stat">
+              <label>Celková cílová útrata</label>
+              <div class="value" id="fin_totalPlanned">0 Kč</div>
+            </div>
+            <div class="fin-stat">
+              <label>Naplánované nákupy</label>
+              <div class="value" id="fin_scheduledCount">0 produktů</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Chart -->
+      <div class="card">
+        <div class="card-title">Vývoj úspor</div>
+        <div class="chart-wrap">
+          <canvas id="finChart"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <!-- Plan purchases -->
+    <div class="card">
+      <div class="section-header">
+        <div class="section-title">Plánované nákupy</div>
+        <button class="btn btn-secondary btn-sm" onclick="autoSchedule()">⚡ Automaticky naplánovat</button>
+      </div>
+      <div id="planList">
+        <div class="empty-state" style="padding:20px;">
+          <p class="text-muted">Označte produkty stavem „Plánuji koupit" na záložce Produkty.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Timeline -->
+    <div class="card">
+      <div class="card-title">Měsíční přehled</div>
+      <div class="table-wrap">
+        <table class="timeline-table">
+          <thead>
+            <tr>
+              <th>Měsíc</th>
+              <th class="text-right">Přidáno (Kč)</th>
+              <th class="text-right">Výdaje (Kč)</th>
+              <th class="text-right">Zůstatek (Kč)</th>
+              <th>Naplánované nákupy</th>
+              <th>Možné nákupy</th>
+            </tr>
+          </thead>
+          <tbody id="timelineBody"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+</div><!-- /container -->
+
+<!-- ── Toast container ── -->
+<div id="toast-container"></div>
+
+<!-- ── Confirm modal ── -->
+<div id="confirm-overlay">
+  <div id="confirm-box">
+    <div class="confirm-icon" id="confirm-icon">⚠️</div>
+    <div class="confirm-title" id="confirm-title">Jste si jisti?</div>
+    <div class="confirm-msg" id="confirm-msg"></div>
+    <div class="confirm-actions">
+      <button class="btn btn-secondary" onclick="closeConfirm()">Zrušit</button>
+      <button class="btn btn-danger" id="confirm-ok">Potvrdit</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════════════
+//  DATA MODEL
+// ══════════════════════════════════════════════
+const STORAGE_KEY = 'shopplanner_v1';
+let currentRating = 0;
+let editingId = null;
+let formVisible = true;
+let finChart = null;
+let selectedProducts = new Set();
+
+const defaultData = {
+  products: [],
+  financials: {
+    currentSavings: 0,
+    monthlySavings: 0,
+    startDate: todayMonth(),
+    plannedPurchases: []   // [{productId, month: "YYYY-MM"}]
+  }
+};
+
+let D = deepClone(defaultData);
+
+function todayMonth() {
+  return new Date().toISOString().slice(0, 7);
+}
+
+function deepClone(o) {
+  return JSON.parse(JSON.stringify(o));
+}
+
+function uid() {
+  return Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+}
+
+// ── Load / Save ──
+function load() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const parsed = JSON.parse(raw);
+      D = { ...defaultData, ...parsed };
+      if (!D.financials) D.financials = deepClone(defaultData.financials);
+      if (!D.financials.plannedPurchases) D.financials.plannedPurchases = [];
+    }
+  } catch (e) { console.error(e); }
+}
+
+function save() {
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(D));
+}
+
+// ── Export / Import ──
+function exportJSON() {
+  const blob = new Blob([JSON.stringify(D, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `shopplanner_${todayMonth()}.json`;
+  a.click();
+  toast('Data exportována.', 'success');
+}
+
+function importJSON(input) {
+  const file = input.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const parsed = JSON.parse(e.target.result);
+      if (!parsed.products) throw new Error('Neplatný formát');
+      D = { ...defaultData, ...parsed };
+      if (!D.financials) D.financials = deepClone(defaultData.financials);
+      if (!D.financials.plannedPurchases) D.financials.plannedPurchases = [];
+      save();
+      const active = document.querySelector('.tab.active').dataset.tab;
+      switchTab(active);
+      toast('Data importována (' + parsed.products.length + ' produktů).', 'success');
+    } catch (err) {
+      toast('Chyba importu: ' + err.message, 'error');
+    }
+  };
+  reader.readAsText(file);
+  input.value = '';
+}
+
+// ── Toast system ──
+const TOAST_ICONS = { success: '✅', error: '❌', info: 'ℹ️', warning: '⚠️' };
+const TOAST_TITLES = { success: 'Hotovo', error: 'Chyba', info: 'Info', warning: 'Pozor' };
+
+function toast(msg, type = 'info', title) {
+  const container = document.getElementById('toast-container');
+  const el = document.createElement('div');
+  el.className = `toast toast-${type}`;
+  el.innerHTML = `
+    <div class="toast-icon">${TOAST_ICONS[type] || 'ℹ️'}</div>
+    <div class="toast-body">
+      <div class="toast-title">${title || TOAST_TITLES[type] || type}</div>
+      <div class="toast-msg">${escHtml(msg)}</div>
+    </div>
+    <button class="toast-close" onclick="dismissToast(this.parentElement)">✕</button>
+    <div class="toast-bar"></div>`;
+  container.appendChild(el);
+  const t = setTimeout(() => dismissToast(el), 4000);
+  el._dismissTimer = t;
+}
+
+function dismissToast(el) {
+  if (!el || el._removing) return;
+  el._removing = true;
+  clearTimeout(el._dismissTimer);
+  el.classList.add('removing');
+  el.addEventListener('animationend', () => el.remove(), { once: true });
+}
+
+// Legacy alias kept for backwards-compat inside this file
+function notify(msg, type = 'info') { toast(msg, type); }
+
+// ── Confirm modal ──
+let _confirmCallback = null;
+function confirmModal(msg, onConfirm, { title = 'Jste si jisti?', icon = '⚠️', confirmLabel = 'Potvrdit', danger = true } = {}) {
+  document.getElementById('confirm-icon').textContent = icon;
+  document.getElementById('confirm-title').textContent = title;
+  document.getElementById('confirm-msg').textContent = msg;
+  const btn = document.getElementById('confirm-ok');
+  btn.textContent = confirmLabel;
+  btn.className = 'btn ' + (danger ? 'btn-danger' : 'btn-primary');
+  _confirmCallback = onConfirm;
+  document.getElementById('confirm-overlay').classList.add('show');
+}
+function closeConfirm() {
+  document.getElementById('confirm-overlay').classList.remove('show');
+  _confirmCallback = null;
+}
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') closeConfirm();
+});
+document.getElementById('confirm-ok').addEventListener('click', () => {
+  closeConfirm();
+  if (_confirmCallback) _confirmCallback();
+});
+document.getElementById('confirm-overlay').addEventListener('click', e => {
+  if (e.target === document.getElementById('confirm-overlay')) closeConfirm();
+});
+
+// ══════════════════════════════════════════════
+//  TABS
+// ══════════════════════════════════════════════
+function switchTab(tab) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.toggle('active', t.dataset.tab === tab));
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + tab).classList.add('active');
+  if (tab === 'comparison') renderComparison();
+  if (tab === 'products')   renderProducts();
+  if (tab === 'financials') renderFinancials();
+}
+
+// ══════════════════════════════════════════════
+//  PRODUCT FORM
+// ══════════════════════════════════════════════
+function toggleForm() {
+  formVisible = !formVisible;
+  document.getElementById('productForm').style.display = formVisible ? '' : 'none';
+}
+function showForm() {
+  if (!formVisible) toggleForm();
+  clearForm();          // resets editingId → only call for NEW products
+  document.getElementById('productFormCard').scrollIntoView({ behavior: 'smooth' });
+}
+
+function openFormForEdit() {
+  // Shows the form WITHOUT clearing state (used by editProduct)
+  if (!formVisible) toggleForm();
+  document.getElementById('productFormCard').scrollIntoView({ behavior: 'smooth' });
+}
+
+function clearForm() {
+  editingId = null;
+  document.getElementById('formTitle').textContent = 'Přidat produkt';
+  ['f_name','f_category','f_regularPrice','f_plannedPrice','f_salePrice','f_saleEnd','f_url','f_notes'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.value = '';
+  });
+  document.getElementById('f_status').value = 'considering';
+  document.getElementById('f_priority').value = 'medium';
+  setRating(0);
+  document.getElementById('customProps').innerHTML = '';
+}
+
+function setRating(val) {
+  currentRating = val;
+  document.getElementById('f_rating').value = val;
+  document.querySelectorAll('#starRating .star').forEach(s => {
+    s.classList.toggle('on', parseInt(s.dataset.v) <= val);
+  });
+}
+
+function addPropRow(key = '', value = '') {
+  const div = document.createElement('div');
+  div.className = 'prop-row';
+  div.innerHTML = `
+    <input type="text" placeholder="Parametr (např. RAM)" value="${escHtml(key)}" class="prop-key">
+    <input type="text" placeholder="Hodnota (např. 16 GB)" value="${escHtml(value)}" class="prop-val">
+    <button class="btn-icon" onclick="this.parentElement.remove()">✕</button>`;
+  document.getElementById('customProps').appendChild(div);
+}
+
+function getFormData() {
+  const name = document.getElementById('f_name').value.trim();
+  if (!name) { toast('Zadejte název produktu.', 'error'); return null; }
+  const props = [];
+  document.querySelectorAll('#customProps .prop-row').forEach(row => {
+    const k = row.querySelector('.prop-key').value.trim();
+    const v = row.querySelector('.prop-val').value.trim();
+    if (k) props.push({ key: k, value: v });
+  });
+  return {
+    name,
+    category:     document.getElementById('f_category').value.trim(),
+    status:       document.getElementById('f_status').value,
+    priority:     document.getElementById('f_priority').value,
+    rating:       parseInt(document.getElementById('f_rating').value) || 0,
+    regularPrice: parseFloatSafe(document.getElementById('f_regularPrice').value),
+    plannedPrice: parseFloatSafe(document.getElementById('f_plannedPrice').value),
+    salePrice:    parseFloatSafe(document.getElementById('f_salePrice').value),
+    saleEnd:      document.getElementById('f_saleEnd').value,
+    url:          document.getElementById('f_url').value.trim(),
+    notes:        document.getElementById('f_notes').value.trim(),
+    properties:   props
+  };
+}
+
+function saveProduct() {
+  const data = getFormData();
+  if (!data) return;
+  if (editingId) {
+    const idx = D.products.findIndex(p => p.id === editingId);
+    if (idx !== -1) D.products[idx] = { ...D.products[idx], ...data };
+    toast(`„${data.name}" upraven.`, 'success');
+  } else {
+    data.id = uid();
+    data.createdAt = new Date().toISOString();
+    D.products.push(data);
+    toast(`„${data.name}" přidán.`, 'success');
+  }
+  save();
+  clearForm();
+  renderProducts();
+}
+
+function editProduct(id) {
+  const p = D.products.find(p => p.id === id);
+  if (!p) return;
+  // Set editingId BEFORE showing form (showForm calls clearForm which resets it)
+  editingId = id;
+  openFormForEdit();   // ← does NOT call clearForm()
+  document.getElementById('formTitle').textContent = 'Upravit produkt';
+  document.getElementById('f_name').value = p.name || '';
+  document.getElementById('f_category').value = p.category || '';
+  document.getElementById('f_status').value = p.status || 'considering';
+  document.getElementById('f_priority').value = p.priority || 'medium';
+  document.getElementById('f_regularPrice').value = p.regularPrice != null ? p.regularPrice : '';
+  document.getElementById('f_plannedPrice').value = p.plannedPrice != null ? p.plannedPrice : '';
+  document.getElementById('f_salePrice').value = p.salePrice != null ? p.salePrice : '';
+  document.getElementById('f_saleEnd').value = p.saleEnd || '';
+  document.getElementById('f_url').value = p.url || '';
+  document.getElementById('f_notes').value = p.notes || '';
+  setRating(p.rating || 0);
+  document.getElementById('customProps').innerHTML = '';
+  (p.properties || []).forEach(pr => addPropRow(pr.key, pr.value));
+}
+
+function deleteProduct(id) {
+  const p = D.products.find(p => p.id === id);
+  if (!p) return;
+  confirmModal(
+    `Smazat produkt „${p.name}"? Tato akce je nevratná.`,
+    () => {
+      D.products = D.products.filter(p => p.id !== id);
+      D.financials.plannedPurchases = D.financials.plannedPurchases.filter(pp => pp.productId !== id);
+      selectedProducts.delete(id);
+      if (editingId === id) clearForm();
+      save();
+      renderProducts();
+      toast('Produkt smazán.', 'success');
+    },
+    { title: 'Smazat produkt', icon: '🗑️', confirmLabel: 'Smazat' }
+  );
+}
+
+function duplicateProduct(id) {
+  const p = D.products.find(p => p.id === id);
+  if (!p) return;
+  const clone = deepClone(p);
+  clone.id = uid();
+  clone.name = p.name + ' (kopie)';
+  clone.createdAt = new Date().toISOString();
+  D.products.push(clone);
+  save();
+  renderProducts();
+  toast(`Produkt „${p.name}" zkopírován.`, 'info');
+}
+
+function quickStatus(id) {
+  const p = D.products.find(p => p.id === id);
+  if (!p) return;
+  const cycle = ['considering', 'planning', 'purchased', 'dropped'];
+  const next = cycle[(cycle.indexOf(p.status) + 1) % cycle.length];
+  const labels = { considering: 'Zvažuji', planning: 'Plánuji', purchased: 'Koupeno', dropped: 'Zrušeno' };
+  p.status = next;
+  save();
+  renderProducts();
+  toast(`Stav změněn na: ${labels[next]}`, 'info');
+}
+
+// ══════════════════════════════════════════════
+//  TAB 2 – PRODUCTS RENDER
+// ══════════════════════════════════════════════
+function renderProducts() {
+  // Update category datalist & filter
+  const cats = [...new Set(D.products.map(p => p.category).filter(Boolean))].sort();
+  const dl = document.getElementById('categoryList');
+  dl.innerHTML = cats.map(c => `<option value="${escHtml(c)}">`).join('');
+  const fc = document.getElementById('filterCategory');
+  const prevCat = fc.value;
+  fc.innerHTML = `<option value="">Všechny</option>` + cats.map(c => `<option value="${escHtml(c)}" ${c===prevCat?'selected':''}>${escHtml(c)}</option>`).join('');
+
+  let list = [...D.products];
+
+  // Filters
+  const search = document.getElementById('filterSearch').value.toLowerCase();
+  const cat    = document.getElementById('filterCategory').value;
+  const status = document.getElementById('filterStatus').value;
+  const prio   = document.getElementById('filterPriority').value;
+  const sort   = document.getElementById('sortBy').value;
+
+  if (search) list = list.filter(p =>
+    p.name.toLowerCase().includes(search) ||
+    (p.category || '').toLowerCase().includes(search) ||
+    (p.notes || '').toLowerCase().includes(search)
+  );
+  if (cat) list = list.filter(p => p.category === cat);
+  if (status) list = list.filter(p => p.status === status);
+  if (prio) list = list.filter(p => p.priority === prio);
+
+  const prioOrder = { high: 0, medium: 1, low: 2 };
+  list.sort((a, b) => {
+    if (sort === 'name') return a.name.localeCompare(b.name);
+    if (sort === 'regularPrice') return (a.regularPrice || 0) - (b.regularPrice || 0);
+    if (sort === 'priority') return (prioOrder[a.priority] || 1) - (prioOrder[b.priority] || 1);
+    if (sort === 'createdAt') return new Date(b.createdAt) - new Date(a.createdAt);
+    return 0;
+  });
+
+  document.getElementById('productCount').textContent = D.products.length;
+  const tbody = document.getElementById('productsBody');
+
+  if (!list.length) {
+    tbody.innerHTML = `<tr><td colspan="10"><div class="empty-state" style="padding:30px;"><div class="icon">📦</div><p>Žádné výsledky.</p></div></td></tr>`;
+    return;
+  }
+
+  tbody.innerHTML = list.map(p => {
+    const sale = p.salePrice != null && p.salePrice > 0;
+    const nameEl = p.notes
+      ? `<span title="${escAttr(p.notes)}" style="border-bottom:1px dashed #555;cursor:help;">${escHtml(p.name)}</span>`
+      : escHtml(p.name);
+    return `<tr>
+      <td style="font-weight:500;max-width:200px;">${nameEl}</td>
+      <td>${p.category ? `<span class="badge badge-cat">${escHtml(p.category)}</span>` : '<span class="text-muted">—</span>'}</td>
+      <td class="text-right price">${fmtPrice(p.regularPrice)}</td>
+      <td class="text-right price-planned">${fmtPrice(p.plannedPrice)}</td>
+      <td class="text-right ${sale ? 'price-sale' : 'price'}">${fmtPrice(p.salePrice)}${p.saleEnd ? `<br><span class="text-muted" style="font-size:0.72rem;">do ${p.saleEnd}</span>` : ''}</td>
+      <td>${badgePriority(p.priority)}</td>
+      <td><span class="badge badge-${p.status}" onclick="quickStatus('${p.id}')" style="cursor:pointer;" title="Kliknutím změnit stav">${{considering:'Zvažuji',planning:'Plánuji',purchased:'Koupeno',dropped:'Zrušeno'}[p.status]||p.status}</span></td>
+      <td>${renderStars(p.rating)}</td>
+      <td class="url-cell">${p.url ? `<a href="${escAttr(p.url)}" target="_blank" rel="noopener">🔗 odkaz</a>` : '<span class="text-muted">—</span>'}</td>
+      <td><div class="td-actions">
+        <button class="btn-icon tooltip" data-tip="Upravit" onclick="editProduct('${p.id}')">✏️</button>
+        <button class="btn-icon tooltip" data-tip="Duplikovat" onclick="duplicateProduct('${p.id}')">📋</button>
+        <button class="btn-icon tooltip" data-tip="Smazat" onclick="deleteProduct('${p.id}')">🗑️</button>
+      </div></td>
+    </tr>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════════════
+//  TAB 1 – COMPARISON RENDER
+// ══════════════════════════════════════════════
+function renderComparison() {
+  const onlyPlanning = document.getElementById('showOnlyPlanning').checked;
+  const highlight = document.getElementById('highlightBest').checked;
+
+  let products = D.products;
+  if (onlyPlanning) products = products.filter(p => p.status === 'planning');
+
+  // Chips
+  const chips = document.getElementById('comparisonChips');
+  if (!products.length) {
+    chips.innerHTML = `<span class="text-muted">Nejsou přidány žádné produkty. Přejděte na záložku Produkty.</span>`;
+    document.getElementById('comparisonTableWrap').innerHTML = `<div class="empty-state"><div class="icon">📊</div><p>Žádné produkty k porovnání.</p></div>`;
+    return;
+  }
+
+  chips.innerHTML = products.map(p =>
+    `<div class="product-chip ${selectedProducts.has(p.id) ? 'selected' : ''}" onclick="toggleCompare('${p.id}')">
+      ${badgeStatus(p.status, true)} ${escHtml(p.name)}
+    </div>`
+  ).join('');
+
+  const selected = products.filter(p => selectedProducts.has(p.id));
+  const wrap = document.getElementById('comparisonTableWrap');
+
+  if (selected.length < 2) {
+    wrap.innerHTML = `<div class="empty-state"><div class="icon">📊</div><p>Vyberte alespoň 2 produkty pro porovnání.</p></div>`;
+    return;
+  }
+
+  // Collect all custom property keys
+  const propKeys = [];
+  selected.forEach(p => {
+    (p.properties || []).forEach(pr => {
+      if (!propKeys.includes(pr.key)) propKeys.push(pr.key);
+    });
+  });
+
+  // Find best prices
+  const allEffective = selected.map(p => effectivePrice(p)).filter(v => v != null);
+  const bestPrice = allEffective.length ? Math.min(...allEffective) : null;
+  const worstPrice = allEffective.length > 1 ? Math.max(...allEffective) : null;
+
+  const rows = [];
+
+  // Fixed rows
+  rows.push({ label: 'Kategorie', get: p => p.category || null, type: 'text' });
+  rows.push({ label: 'Běžná cena', get: p => p.regularPrice, type: 'price' });
+  rows.push({ label: 'Cílová cena', get: p => p.plannedPrice, type: 'price' });
+  rows.push({ label: 'Akční cena', get: p => p.salePrice, type: 'price' });
+  rows.push({
+    label: 'Nejlepší cena', get: p => effectivePrice(p), type: 'price_best'
+  });
+  rows.push({ label: 'Priorita', get: p => ({ high: 'Vysoká', medium: 'Střední', low: 'Nízká' }[p.priority] || '—'), type: 'text' });
+  rows.push({ label: 'Stav', get: p => ({ considering: 'Zvažuji', planning: 'Plánuji', purchased: 'Koupeno', dropped: 'Zrušeno' }[p.status] || '—'), type: 'text' });
+  rows.push({ label: 'Hodnocení', get: p => p.rating ? '★'.repeat(p.rating) + '☆'.repeat(5 - p.rating) : null, type: 'text' });
+  rows.push({ label: 'Poznámky', get: p => p.notes || null, type: 'text' });
+  propKeys.forEach(k => {
+    rows.push({ label: k, get: p => { const pr = (p.properties||[]).find(x=>x.key===k); return pr ? pr.value : null; }, type: 'text' });
+  });
+
+  let html = `<div class="card" style="overflow-x:auto;padding:0;"><table class="compare-table"><thead><tr>
+    <th style="position:sticky;left:0;z-index:2;">Parametr</th>
+    ${selected.map(p => `<th>
+      <div class="product-header-cell">
+        <span style="font-weight:700;font-size:0.9rem;">${escHtml(p.name)}</span>
+        ${p.category ? `<span class="badge badge-cat">${escHtml(p.category)}</span>` : ''}
+        ${badgeStatus(p.status, true)}
+        ${p.url ? `<a href="${escAttr(p.url)}" target="_blank" rel="noopener" style="font-size:0.75rem;">🔗 odkaz</a>` : ''}
+      </div>
+    </th>`).join('')}
+  </tr></thead><tbody>`;
+
+  rows.forEach(row => {
+    const values = selected.map(p => row.get(p));
+    const hasAny = values.some(v => v != null && v !== '');
+    if (!hasAny) return;
+
+    // For price_best row: find best & worst
+    let bestVal = null, worstVal = null;
+    if (row.type === 'price' || row.type === 'price_best') {
+      const nums = values.filter(v => v != null && !isNaN(v));
+      if (nums.length > 1) {
+        bestVal = Math.min(...nums);
+        worstVal = Math.max(...nums);
+      }
+    }
+
+    html += `<tr><td style="position:sticky;left:0;background:#222;z-index:1;">${escHtml(row.label)}</td>`;
+    values.forEach(v => {
+      let cls = '';
+      let display = '';
+      if (v == null || v === '') {
+        display = '<span class="cell-empty">—</span>';
+      } else if (row.type === 'price' || row.type === 'price_best') {
+        display = fmtPrice(v);
+        if (highlight && bestVal !== null && v === bestVal) cls = 'cell-best';
+        else if (highlight && worstVal !== null && v === worstVal && v !== bestVal) cls = 'cell-worst';
+      } else {
+        display = escHtml(String(v));
+      }
+      html += `<td class="${cls}">${display}</td>`;
+    });
+    html += `</tr>`;
+  });
+
+  html += `</tbody></table></div>`;
+  wrap.innerHTML = html;
+}
+
+function toggleCompare(id) {
+  if (selectedProducts.has(id)) selectedProducts.delete(id);
+  else selectedProducts.add(id);
+  renderComparison();
+}
+
+function selectAllForComparison() {
+  D.products.forEach(p => selectedProducts.add(p.id));
+  renderComparison();
+}
+function clearComparison() {
+  selectedProducts.clear();
+  renderComparison();
+}
+
+// ══════════════════════════════════════════════
+//  TAB 3 – FINANCIALS
+// ══════════════════════════════════════════════
+function saveFinancials() {
+  D.financials.currentSavings = parseFloatSafe(document.getElementById('fin_current').value) || 0;
+  D.financials.monthlySavings = parseFloatSafe(document.getElementById('fin_monthly').value) || 0;
+  D.financials.startDate      = document.getElementById('fin_startDate').value || todayMonth();
+  save();
+  renderFinancials();
+}
+
+function renderFinancials() {
+  const fin = D.financials;
+  // Populate inputs if empty / first render
+  const inpCur = document.getElementById('fin_current');
+  const inpMon = document.getElementById('fin_monthly');
+  const inpSt  = document.getElementById('fin_startDate');
+  if (inpCur.value === '') inpCur.value = fin.currentSavings || 0;
+  if (inpMon.value === '') inpMon.value = fin.monthlySavings || 0;
+  if (inpSt.value === '')  inpSt.value  = fin.startDate || todayMonth();
+
+  const months = parseInt(document.getElementById('fin_months').value) || 24;
+
+  // Build timeline
+  const timeline = buildTimeline(months);
+
+  // Update summary stats
+  const planProds = D.products.filter(p => p.status === 'planning' || p.status === 'considering');
+  const totalPlanned = planProds.reduce((s, p) => s + (effectivePrice(p) || 0), 0);
+  document.getElementById('fin_totalPlanned').textContent = fmtNum(totalPlanned) + ' Kč';
+  document.getElementById('fin_scheduledCount').textContent = D.financials.plannedPurchases.length + ' produktů';
+
+  renderPlanList(timeline);
+  renderTimeline(timeline);
+  renderChart(timeline);
+}
+
+function buildTimeline(monthsCount) {
+  const fin = D.financials;
+  const start = fin.startDate || todayMonth();
+  let balance = fin.currentSavings || 0;
+  const monthly = fin.monthlySavings || 0;
+
+  const rows = [];
+  for (let i = 0; i < monthsCount; i++) {
+    const m = addMonths(start, i);
+    const purchases = fin.plannedPurchases
+      .filter(pp => pp.month === m)
+      .map(pp => D.products.find(p => p.id === pp.productId))
+      .filter(Boolean);
+
+    const spent = purchases.reduce((s, p) => s + (effectivePrice(p) || 0), 0);
+    balance = balance + monthly - spent;
+
+    // Which unscheduled planning products can be afforded this month?
+    const scheduledIds = new Set(fin.plannedPurchases.map(pp => pp.productId));
+    const canAfford = D.products.filter(p =>
+      (p.status === 'planning' || p.status === 'considering') &&
+      !scheduledIds.has(p.id) &&
+      (effectivePrice(p) || 0) <= balance
+    );
+
+    rows.push({ month: m, added: monthly, spent, balance, purchases, canAfford });
+  }
+  return rows;
+}
+
+function renderPlanList(timeline) {
+  const planProds = D.products.filter(p => p.status === 'planning');
+  const el = document.getElementById('planList');
+
+  if (!planProds.length) {
+    el.innerHTML = `<div class="empty-state" style="padding:20px;"><p class="text-muted">Označte produkty stavem „Plánuji koupit" na záložce Produkty.</p></div>`;
+    return;
+  }
+
+  // For each product, find earliest affordable month
+  const affordMap = {};
+  timeline.forEach(row => {
+    row.canAfford.forEach(p => {
+      if (!(p.id in affordMap)) affordMap[p.id] = row.month;
+    });
+    // also check scheduled ones
+    row.purchases.forEach(p => {
+      if (!(p.id in affordMap)) affordMap[p.id] = row.month;
+    });
+  });
+
+  // Sort by priority then price
+  const prioOrder = { high: 0, medium: 1, low: 2 };
+  planProds.sort((a,b) => (prioOrder[a.priority]||1) - (prioOrder[b.priority]||1) || (effectivePrice(a)||0) - (effectivePrice(b)||0));
+
+  const scheduled = new Set(D.financials.plannedPurchases.map(pp => pp.productId));
+  const months = parseInt(document.getElementById('fin_months').value) || 24;
+  const start = D.financials.startDate || todayMonth();
+  const monthOptions = Array.from({length: months}, (_, i) => addMonths(start, i));
+
+  el.innerHTML = planProds.map(p => {
+    const pp = D.financials.plannedPurchases.find(x => x.productId === p.id);
+    const selMonth = pp ? pp.month : '';
+    const afford = affordMap[p.id];
+    return `<div class="plan-row">
+      <div class="plan-info">
+        <div class="plan-name">${badgePriority(p.priority, true)} ${escHtml(p.name)}</div>
+        <div class="plan-price">${p.category ? escHtml(p.category) + ' · ' : ''}Cena: <strong>${fmtPrice(effectivePrice(p))}</strong>
+          ${afford ? `· <span class="afford-tag">od ${fmtMonth(afford)}</span>` : '<span class="text-muted">nesplní</span>'}
+        </div>
+      </div>
+      <div class="plan-controls">
+        <select onchange="schedulePurchase('${p.id}', this.value)">
+          <option value="">Neplánovat</option>
+          ${monthOptions.map(m => `<option value="${m}" ${m===selMonth?'selected':''}>${fmtMonth(m)}</option>`).join('')}
+        </select>
+        ${p.url ? `<a href="${escAttr(p.url)}" target="_blank" rel="noopener" class="btn btn-secondary btn-sm">🔗</a>` : ''}
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function schedulePurchase(productId, month) {
+  D.financials.plannedPurchases = D.financials.plannedPurchases.filter(pp => pp.productId !== productId);
+  if (month) D.financials.plannedPurchases.push({ productId, month });
+  save();
+  renderFinancials();
+}
+
+function autoSchedule() {
+  // Auto-assign "planning" products to earliest affordable months
+  const planProds = D.products.filter(p => p.status === 'planning');
+  const prioOrder = { high: 0, medium: 1, low: 2 };
+  planProds.sort((a,b) => (prioOrder[a.priority]||1) - (prioOrder[b.priority]||1) || (effectivePrice(a)||0) - (effectivePrice(b)||0));
+
+  // Remove existing scheduled for planning products
+  D.financials.plannedPurchases = D.financials.plannedPurchases.filter(pp => {
+    const prod = D.products.find(p => p.id === pp.productId);
+    return prod && prod.status !== 'planning';
+  });
+
+  const months = parseInt(document.getElementById('fin_months').value) || 24;
+  const start = D.financials.startDate || todayMonth();
+  let balance = D.financials.currentSavings || 0;
+  const monthly = D.financials.monthlySavings || 0;
+
+  // Month balances tracking
+  const monthSpend = {};
+
+  for (let i = 0; i < months; i++) {
+    const m = addMonths(start, i);
+    balance += monthly;
+    balance -= (monthSpend[m] || 0);
+
+    for (const p of planProds) {
+      const alreadyScheduled = D.financials.plannedPurchases.find(pp => pp.productId === p.id);
+      if (alreadyScheduled) continue;
+      const price = effectivePrice(p) || 0;
+      if (balance >= price) {
+        D.financials.plannedPurchases.push({ productId: p.id, month: m });
+        balance -= price;
+        monthSpend[m] = (monthSpend[m] || 0) + price;
+        break;
+      }
+    }
+  }
+
+  save();
+  renderFinancials();
+  toast('Nákupy automaticky naplánovány.', 'success');
+}
+
+function renderTimeline(timeline) {
+  const tbody = document.getElementById('timelineBody');
+  const today = todayMonth();
+  tbody.innerHTML = timeline.map(row => {
+    const isNow = row.month === today;
+    const purchaseHtml = row.purchases.length
+      ? row.purchases.map(p => `<div class="purchase-entry">
+          <span class="pname" title="${escAttr(p.name)}">${escHtml(p.name)}</span>
+          <span class="pprice">-${fmtNum(effectivePrice(p)||0)} Kč</span>
+        </div>`).join('')
+      : '<span class="text-muted">—</span>';
+    const canHtml = row.canAfford.length
+      ? row.canAfford.slice(0, 3).map(p => `<span class="afford-tag soon" title="${fmtNum(effectivePrice(p)||0)} Kč">${escHtml(p.name.slice(0,20))}${p.name.length>20?'…':''}</span>`).join(' ')
+        + (row.canAfford.length > 3 ? ` <span class="text-muted">+${row.canAfford.length-3}</span>` : '')
+      : '<span class="text-muted">—</span>';
+    return `<tr class="${isNow ? 'month-row-highlight' : ''}">
+      <td style="white-space:nowrap;font-weight:${isNow?700:400};">${fmtMonth(row.month)}${isNow?' <span style="color:#6aa6fd;font-size:0.75rem;">← nyní</span>':''}</td>
+      <td class="text-right" style="color:#60c080;">+${fmtNum(row.added)} Kč</td>
+      <td class="text-right" style="color:${row.spent?'#e06060':'#666'};">${row.spent ? '-'+fmtNum(row.spent)+' Kč' : '—'}</td>
+      <td class="text-right ${row.balance >= 0 ? 'balance-positive' : 'balance-negative'}" style="font-weight:600;">${fmtNum(Math.round(row.balance))} Kč</td>
+      <td style="min-width:160px;">${purchaseHtml}</td>
+      <td style="min-width:160px;">${canHtml}</td>
+    </tr>`;
+  }).join('');
+}
+
+function renderChart(timeline) {
+  const canvas = document.getElementById('finChart');
+  const ctx = canvas.getContext('2d');
+
+  if (finChart) { finChart.destroy(); finChart = null; }
+
+  const labels = timeline.map(r => fmtMonth(r.month));
+  const balances = timeline.map(r => Math.round(r.balance));
+
+  // Mark purchase months
+  const purchaseMonths = new Set(D.financials.plannedPurchases.map(pp => pp.month));
+
+  const pointBg = timeline.map(r =>
+    r.purchases.length ? '#a080ff' : (r.balance < 0 ? '#e06060' : '#6aa6fd')
+  );
+  const pointR = timeline.map(r => r.purchases.length ? 6 : 3);
+
+  finChart = new Chart(ctx, {
+    type: 'line',
+    data: {
+      labels,
+      datasets: [{
+        label: 'Zůstatek (Kč)',
+        data: balances,
+        borderColor: '#6aa6fd',
+        backgroundColor: 'rgba(106,166,253,0.08)',
+        fill: true,
+        tension: 0.3,
+        pointBackgroundColor: pointBg,
+        pointRadius: pointR,
+        pointHoverRadius: 7
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: { mode: 'index', intersect: false },
+      plugins: {
+        legend: { display: false },
+        tooltip: {
+          backgroundColor: '#2a2a2a',
+          borderColor: '#404040',
+          borderWidth: 1,
+          titleColor: '#e0e0e0',
+          bodyColor: '#bbb',
+          callbacks: {
+            label: ctx => ' ' + fmtNum(ctx.parsed.y) + ' Kč',
+            afterBody: (items) => {
+              const idx = items[0].dataIndex;
+              const row = timeline[idx];
+              if (row.purchases.length) {
+                return row.purchases.map(p => '🛒 ' + p.name + ' (-' + fmtNum(effectivePrice(p)||0) + ' Kč)');
+              }
+              return [];
+            }
+          }
+        }
+      },
+      scales: {
+        x: {
+          ticks: { color: '#888', font: { size: 11 }, maxTicksLimit: 12 },
+          grid: { color: '#2d2d2d' }
+        },
+        y: {
+          ticks: { color: '#888', font: { size: 11 }, callback: v => fmtNum(v) + ' Kč' },
+          grid: { color: '#2d2d2d' }
+        }
+      }
+    }
+  });
+}
+
+// ══════════════════════════════════════════════
+//  HELPERS
+// ══════════════════════════════════════════════
+function effectivePrice(p) {
+  // Best available price: salePrice > plannedPrice > regularPrice
+  if (p.salePrice != null && p.salePrice > 0) return p.salePrice;
+  if (p.plannedPrice != null && p.plannedPrice > 0) return p.plannedPrice;
+  if (p.regularPrice != null && p.regularPrice > 0) return p.regularPrice;
+  return null;
+}
+
+function parseFloatSafe(v) {
+  const n = parseFloat(String(v).replace(',', '.'));
+  return isNaN(n) ? null : n;
+}
+
+function fmtNum(n) {
+  if (n == null) return '—';
+  return Math.round(n).toLocaleString('cs-CZ');
+}
+
+function fmtPrice(v) {
+  if (v == null || v === '' || isNaN(v)) return '<span class="text-muted">—</span>';
+  return fmtNum(v) + ' Kč';
+}
+
+function fmtMonth(m) {
+  if (!m) return '—';
+  const [y, mo] = m.split('-');
+  const names = ['led','úno','bře','dub','kvě','čvn','čvc','srp','zář','říj','lis','pro'];
+  return `${names[parseInt(mo)-1]} ${y}`;
+}
+
+function addMonths(ym, n) {
+  let [y, m] = ym.split('-').map(Number);
+  m += n;
+  while (m > 12) { m -= 12; y++; }
+  return `${y}-${String(m).padStart(2,'0')}`;
+}
+
+function badgePriority(p, inline = false) {
+  const map = { high: ['badge-high','Vysoká'], medium: ['badge-medium','Střední'], low: ['badge-low','Nízká'] };
+  const [cls, label] = map[p] || ['badge-low','—'];
+  return `<span class="badge ${cls}"${inline?' style="font-size:0.72rem;"':''}>${label}</span>`;
+}
+
+function badgeStatus(s, inline = false) {
+  const map = {
+    considering: ['badge-considering','Zvažuji'],
+    planning:    ['badge-planning','Plánuji'],
+    purchased:   ['badge-purchased','Koupeno'],
+    dropped:     ['badge-dropped','Zrušeno']
+  };
+  const [cls, label] = map[s] || ['','—'];
+  return `<span class="badge ${cls}"${inline?' style="font-size:0.72rem;"':''}>${label}</span>`;
+}
+
+function renderStars(r) {
+  if (!r) return '<span class="text-muted">—</span>';
+  return '<span style="color:#f0c040;font-size:0.9rem;">' + '★'.repeat(r) + '<span style="color:#444;">' + '★'.repeat(5-r) + '</span></span>';
+}
+
+function escHtml(s) {
+  return String(s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+}
+function escAttr(s) { return escHtml(s); }
+
+// ══════════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════════
+load();
+renderProducts();
+renderComparison();
+// Prefill fin fields
+document.getElementById('fin_current').value = D.financials.currentSavings || 0;
+document.getElementById('fin_monthly').value = D.financials.monthlySavings || 0;
+document.getElementById('fin_startDate').value = D.financials.startDate || todayMonth();
+</script>
+</body>
+</html>
