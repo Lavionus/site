@@ -320,6 +320,11 @@
             background-color: #404040;
         }
 
+        /* Plynulý přechod mezi radarovými snímky */
+        .radar-layer {
+            transition: opacity 0.35s ease-in-out;
+        }
+
         /* Leaflet overrides for dark theme */
         .leaflet-container {
             background: #2a2a2a;
@@ -594,6 +599,7 @@
         let currentFrame = 0;
         let animationSpeed = 800;
         let radarFrames = [];
+        let radarLayers = [];
         let currentRadarLayer = null;
         let nextRadarLayer = null;
         let autoUpdateInterval = null;
@@ -757,12 +763,13 @@
 
                 radarFrames = data.radar.past;
                 console.log('Počet radarových snímků:', radarFrames.length);
-                
+
+                preloadRadarLayers();
                 updateTimeControls();
                 updateInfo(data);
-                
+
                 currentFrame = radarFrames.length - 1;
-                await showRadarFrame(currentFrame);
+                showRadarFrame(currentFrame);
                 
                 setStatus('online', 'Online');
                 hideLoading();
@@ -786,94 +793,46 @@
             }
         }
 
-        function restoreRadarLayers() {
-            console.log('Obnovuji radarové vrstvy po změně mapového podkladu...');
-            
-            if (currentRadarLayer && radarFrames.length > 0) {
-                try {
-                    map.removeLayer(currentRadarLayer);
-                } catch (e) {
-                    console.warn('Vrstva již byla odebrána:', e);
-                }
-                
-                setTimeout(() => {
-                    if (currentRadarLayer) {
-                        currentRadarLayer.addTo(map);
-                        console.log('Radarová vrstva obnovena');
-                    }
-                }, 100);
-            }
-        }
+        function preloadRadarLayers() {
+            // Odeber případné staré vrstvy
+            cleanupRadarLayers();
 
-        async function showRadarFrame(frameIndex) {
-            if (!radarFrames[frameIndex]) return;
-            
-            const frame = radarFrames[frameIndex];
-            const tileUrl = `https://tilecache.rainviewer.com/v2/radar/${frame.time}/256/{z}/{x}/{y}/2/1_1.png`;
-            
-            if (currentRadarLayer) {
-                if (nextRadarLayer) {
-                    map.removeLayer(nextRadarLayer);
-                    nextRadarLayer = null;
-                }
-                
-                nextRadarLayer = L.tileLayer(tileUrl, {
+            // Vytvoř a přednačti všechny snímky najednou – vrstvy zůstanou
+            // v mapě s nulovou průhledností, takže animace už nic nestahuje
+            radarLayers = radarFrames.map(frame => {
+                const tileUrl = `https://tilecache.rainviewer.com${frame.path}/256/{z}/{x}/{y}/2/1_1.png`;
+                const layer = L.tileLayer(tileUrl, {
                     opacity: 0,
                     attribution: 'Radarová data: RainViewer',
                     className: 'radar-layer',
                     pane: 'overlayPane'
                 });
-                
-                nextRadarLayer.addTo(map);
-                
-                setTimeout(() => {
-                    if (nextRadarLayer) {
-                        nextRadarLayer.setOpacity(0.7);
-                    }
-                }, 10);
-                
-                setTimeout(() => {
-                    if (currentRadarLayer) {
-                        currentRadarLayer.setOpacity(0);
-                    }
-                }, 50);
-                
-                setTimeout(() => {
-                    if (currentRadarLayer) {
-                        try {
-                            map.removeLayer(currentRadarLayer);
-                        } catch (e) {
-                            console.warn('Chyba při odebírání staré vrstvy:', e);
-                        }
-                    }
-                    
-                    if (nextRadarLayer) {
-                        currentRadarLayer = nextRadarLayer;
-                        nextRadarLayer = null;
-                        currentRadarLayer.setOpacity(0.7);
-                    }
-                }, 600);
-                
-            } else {
-                if (nextRadarLayer) {
-                    try {
-                        map.removeLayer(nextRadarLayer);
-                    } catch (e) {
-                        console.warn('Chyba při odebírání next vrstvy:', e);
-                    }
-                    nextRadarLayer = null;
+                layer.addTo(map);
+                return layer;
+            });
+        }
+
+        function restoreRadarLayers() {
+            console.log('Obnovuji radarové vrstvy po změně mapového podkladu...');
+
+            radarLayers.forEach((layer, i) => {
+                if (!map.hasLayer(layer)) {
+                    layer.addTo(map);
                 }
-                
-                currentRadarLayer = L.tileLayer(tileUrl, {
-                    opacity: 0.7,
-                    attribution: 'Radarová data: RainViewer',
-                    className: 'radar-layer',
-                    pane: 'overlayPane'
-                });
-                
-                currentRadarLayer.addTo(map);
-            }
-            
+                layer.setOpacity(i === currentFrame ? 0.7 : 0);
+            });
+        }
+
+        function showRadarFrame(frameIndex) {
+            if (!radarLayers[frameIndex]) return;
+
+            // Plynulý přechod: jen přepneme průhlednost, dlaždice jsou
+            // už přednačtené a CSS transition se postará o crossfade
+            radarLayers.forEach((layer, i) => {
+                layer.setOpacity(i === frameIndex ? 0.7 : 0);
+            });
+
+            currentRadarLayer = radarLayers[frameIndex];
             updateCurrentFrameInfo(frameIndex);
         }
 
@@ -924,17 +883,15 @@
                 isAnimating = false;
                 btn.textContent = '▶️ Spustit';
                 btn.classList.remove('active');
-                
-                cleanupRadarLayers();
             } else {
-                if (radarFrames.length === 0) {
+                if (radarLayers.length === 0) {
                     showError('Nejsou dostupná žádná data pro animaci');
                     return;
                 }
-                
-                animationInterval = setInterval(async () => {
+
+                animationInterval = setInterval(() => {
                     currentFrame = (currentFrame + 1) % radarFrames.length;
-                    await showRadarFrame(currentFrame);
+                    showRadarFrame(currentFrame);
                     document.getElementById('timeSlider').value = currentFrame;
                 }, animationSpeed);
                 
@@ -945,23 +902,16 @@
         }
 
         function cleanupRadarLayers() {
-            if (currentRadarLayer) {
+            radarLayers.forEach(layer => {
                 try {
-                    map.removeLayer(currentRadarLayer);
+                    map.removeLayer(layer);
                 } catch (e) {
-                    console.warn('Chyba při čištění current vrstvy:', e);
+                    console.warn('Chyba při čištění vrstvy:', e);
                 }
-                currentRadarLayer = null;
-            }
-            
-            if (nextRadarLayer) {
-                try {
-                    map.removeLayer(nextRadarLayer);
-                } catch (e) {
-                    console.warn('Chyba při čištění next vrstvy:', e);
-                }
-                nextRadarLayer = null;
-            }
+            });
+            radarLayers = [];
+            currentRadarLayer = null;
+            nextRadarLayer = null;
         }
 
         function changeSpeed() {

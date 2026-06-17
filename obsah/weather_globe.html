@@ -1,0 +1,744 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🌍 Glóbus počasí</title>
+  <!-- three.js MUSÍ být před globe.gl: globe.gl použije window.THREE (jedna sdílená instance) -->
+  <script src="https://unpkg.com/three@0.160.0/build/three.min.js"></script>
+  <script src="https://unpkg.com/globe.gl@2.34.4/dist/globe.gl.min.js"></script>
+  <script src="https://unpkg.com/solar-calculator@0.3.0/dist/solar-calculator.min.js"></script>
+  <style>
+    :root {
+      --primary: #6aa6fd; --accent: #a78bfa; --gold: #f0c14b; --rain: #78beff;
+      --bg-dark: #05070d; --panel: rgba(20,24,34,0.9); --border: rgba(255,255,255,0.1);
+      --text: #e6ebf5; --muted: #8a93a6;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { height: 100%; overflow: hidden; }
+    body { font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background: var(--bg-dark); color: var(--text); }
+    #globeViz { position: fixed; inset: 0; }
+
+    .topbar {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 10;
+      display: flex; justify-content: space-between; align-items: flex-start;
+      padding: 14px 20px; gap: 12px; flex-wrap: wrap;
+      background: linear-gradient(180deg, rgba(5,7,13,0.85), rgba(5,7,13,0)); pointer-events: none;
+    }
+    .topbar .title { pointer-events: auto; }
+    .topbar h1 {
+      font-size: 1.25rem; font-weight: 700;
+      background: linear-gradient(45deg, #6aa6fd, #a78bfa);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .topbar .subtitle { font-size: 0.78rem; color: var(--muted); margin-top: 2px; }
+    .toolbar { display: flex; gap: 8px; pointer-events: auto; flex-wrap: wrap; justify-content: flex-end; }
+    .search { display: flex; gap: 6px; }
+    .toolbar input, .toolbar select, .toolbar button {
+      background: var(--panel); color: var(--text); border: 1px solid var(--border);
+      border-radius: 8px; padding: 8px 12px; font-size: 0.82rem; backdrop-filter: blur(6px); white-space: nowrap;
+    }
+    .toolbar input { width: 150px; }
+    .toolbar input:focus, .toolbar select:focus { outline: none; border-color: var(--primary); }
+    .toolbar button { cursor: pointer; transition: border-color .15s, background .15s; }
+    .toolbar button:hover, .toolbar select:hover { border-color: var(--primary); }
+    .toolbar button.on { border-color: var(--primary); color: var(--primary); }
+
+    .detail {
+      position: fixed; top: 92px; left: 20px; z-index: 10; width: 290px;
+      background: var(--panel); border: 1px solid var(--border); border-radius: 14px;
+      padding: 16px 18px; backdrop-filter: blur(10px); box-shadow: 0 12px 40px rgba(0,0,0,0.5); display: none;
+    }
+    .detail.show { display: block; }
+    .detail .close { position: absolute; top: 10px; right: 12px; cursor: pointer; color: var(--muted); font-size: 1.1rem; line-height: 1; border: none; background: none; }
+    .detail .close:hover { color: var(--text); }
+    .detail .place { font-size: 0.95rem; font-weight: 600; padding-right: 18px; }
+    .detail .coords { font-size: 0.72rem; color: var(--muted); margin-bottom: 12px; }
+    .detail .big { display: flex; align-items: center; gap: 12px; }
+    .detail .emoji { font-size: 2.6rem; line-height: 1; }
+    .detail .temp { font-size: 2.2rem; font-weight: 700; }
+    .detail .desc { font-size: 0.85rem; color: var(--text); margin: 8px 0 12px; }
+    .detail .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .detail .cell { background: rgba(255,255,255,0.04); border-radius: 8px; padding: 8px 10px; }
+    .detail .cell .k { font-size: 0.66rem; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; }
+    .detail .cell .v { font-size: 0.92rem; font-weight: 600; margin-top: 2px; }
+
+    /* Předpověď */
+    .forecast { margin-top: 14px; }
+    .fc-title { font-size: 0.7rem; text-transform: uppercase; letter-spacing: .5px; color: var(--primary); margin-bottom: 8px; }
+    .fc-row { display: flex; gap: 4px; overflow-x: auto; padding-bottom: 4px; }
+    .fc-row::-webkit-scrollbar { height: 5px; }
+    .fc-row::-webkit-scrollbar-thumb { background: var(--border); border-radius: 3px; }
+    .fc-day { flex: 0 0 auto; width: 44px; text-align: center; background: rgba(255,255,255,0.04); border-radius: 8px; padding: 6px 2px; }
+    .fc-wd { font-size: 0.66rem; color: var(--muted); text-transform: capitalize; }
+    .fc-emoji { font-size: 1.1rem; margin: 2px 0; }
+    .fc-temp { font-size: 0.72rem; font-weight: 700; }
+    .fc-temp span { color: var(--muted); font-weight: 500; margin-left: 2px; }
+    .fc-pop { font-size: 0.64rem; color: var(--rain); margin-top: 2px; min-height: 0.8em; }
+    .fc-loading { font-size: 0.78rem; color: var(--muted); }
+
+    .act { margin-top: 12px; display: flex; gap: 6px; }
+    .act button { flex: 1; border: 1px solid var(--border); border-radius: 8px; padding: 9px; font-size: 0.78rem; cursor: pointer; color: var(--text); background: rgba(255,255,255,0.05); }
+    .act button.zoom:hover { border-color: var(--primary); color: var(--primary); }
+    .act button.save:hover { border-color: var(--gold); color: var(--gold); }
+    .act button.remove:hover { border-color: #ef4444; color: #ff8a8a; }
+
+    .places {
+      position: fixed; top: 92px; right: 20px; z-index: 10; width: 210px;
+      background: var(--panel); border: 1px solid var(--border); border-radius: 14px;
+      padding: 12px 14px; backdrop-filter: blur(10px); display: none; max-height: 56vh; overflow-y: auto;
+    }
+    .places.show { display: block; }
+    .places h3 { font-size: 0.72rem; text-transform: uppercase; letter-spacing: .5px; color: var(--gold); margin-bottom: 8px; }
+    .places .item { display: flex; align-items: center; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid rgba(255,255,255,0.06); font-size: 0.85rem; }
+    .places .item:last-child { border-bottom: none; }
+    .places .item .nm { cursor: pointer; flex: 1; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .places .item .nm:hover { color: var(--primary); }
+    .places .item .x { cursor: pointer; color: var(--muted); padding: 0 4px; border: none; background: none; font-size: 0.95rem; }
+    .places .item .x:hover { color: #ff8a8a; }
+
+    .legend { position: fixed; bottom: 18px; left: 20px; z-index: 10; background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 10px 14px; backdrop-filter: blur(8px); font-size: 0.72rem; color: var(--muted); }
+    .legend .bar { height: 8px; width: 200px; border-radius: 4px; margin: 6px 0 4px; background: linear-gradient(90deg, hsl(240,80%,55%), hsl(180,70%,50%), hsl(110,65%,48%), hsl(55,85%,52%), hsl(25,90%,55%), hsl(0,85%,55%)); }
+    .legend .scale { display: flex; justify-content: space-between; }
+    .legend .rain-note { margin-top: 6px; color: var(--rain); }
+    .wind-arrow { display: inline-block; font-weight: 700; color: var(--primary); transform-origin: center; }
+
+    .hint { position: fixed; bottom: 18px; right: 20px; z-index: 10; font-size: 0.74rem; color: var(--muted); background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; backdrop-filter: blur(8px); }
+    .toast { position: fixed; bottom: 70px; left: 50%; transform: translateX(-50%); z-index: 30; background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 10px 16px; font-size: 0.82rem; backdrop-filter: blur(8px); opacity: 0; transition: opacity .3s; pointer-events: none; }
+    .toast.show { opacity: 1; }
+
+    .loader { position: fixed; inset: 0; z-index: 20; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 14px; background: var(--bg-dark); transition: opacity .5s; }
+    .loader.hide { opacity: 0; pointer-events: none; }
+    .spinner { width: 42px; height: 42px; border: 3px solid rgba(255,255,255,0.15); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.9s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loader span { font-size: 0.85rem; color: var(--muted); }
+
+    /* Špendlík: kompaktní štítek s teplotou, jehož HROT míří přesně na souřadnici */
+    .marker {
+      position: relative; display: flex; flex-direction: column; align-items: center;
+      transform: translate(-50%, -100%); transform-origin: bottom center;
+      cursor: pointer; user-select: none; transition: transform .12s;
+    }
+    .marker:hover { transform: translate(-50%, -100%) scale(1.3); z-index: 5; }
+    .marker .tag {
+      font-size: 10px; font-weight: 700; color: #fff; line-height: 1;
+      padding: 3px 6px; border-radius: 9px; white-space: nowrap;
+      border: 1px solid rgba(255,255,255,0.45); box-shadow: 0 1px 5px rgba(0,0,0,0.55);
+      text-shadow: 0 1px 2px rgba(0,0,0,0.7);
+    }
+    .marker.custom .tag { border-color: var(--gold); }
+    .marker .tip {
+      width: 0; height: 0; margin-top: -1px;
+      border-left: 4px solid transparent; border-right: 4px solid transparent;
+      border-top: 5px solid #000; /* barva se nastaví inline dle teploty */
+      filter: drop-shadow(0 1px 1px rgba(0,0,0,0.4));
+    }
+    .marker .point { /* přesný bod na souřadnici (hrot špendlíku) */
+      width: 4px; height: 4px; margin-top: -2px; border-radius: 50%;
+      background: #fff; box-shadow: 0 0 3px rgba(0,0,0,0.8);
+    }
+    .marker .wet { margin-left: 2px; font-size: 8px; }
+
+    @media (max-width: 640px) {
+      .detail, .places { width: calc(100% - 40px); }
+      .places { top: auto; bottom: 70px; max-height: 30vh; }
+      .legend .bar { width: 150px; }
+      .hint { display: none; }
+      .toolbar input { width: 110px; }
+    }
+  </style>
+</head>
+<body>
+  <div id="globeViz"></div>
+
+  <div class="topbar">
+    <div class="title">
+      <h1>🌍 Glóbus počasí</h1>
+      <div class="subtitle">Aktuální počasí, srážky a předpověď · data Open-Meteo</div>
+    </div>
+    <div class="toolbar">
+      <div class="search">
+        <input type="text" id="searchInput" placeholder="Najít místo…" />
+        <button id="searchBtn" title="Přidat místo">➕</button>
+      </div>
+      <button id="geoBtn" title="Počasí v mé poloze">📍 Poloha</button>
+      <select id="continentSel" title="Přiblížit na kontinent">
+        <option value="">🌐 Kontinent…</option>
+        <option value="world">🌍 Celý svět</option>
+        <option value="europe">Evropa</option>
+        <option value="asia">Asie</option>
+        <option value="africa">Afrika</option>
+        <option value="namerica">Severní Amerika</option>
+        <option value="samerica">Jižní Amerika</option>
+        <option value="oceania">Austrálie a Oceánie</option>
+        <option value="arctic">Arktida</option>
+        <option value="antarctica">Antarktida</option>
+      </select>
+      <button id="cloudsBtn" title="Vrstva mraků">☁️ Mraky</button>
+      <button id="rainBtn" title="Zvýraznit srážky">🌧️ Srážky</button>
+      <button id="dayNightBtn" title="Zobrazení den / noc">🌓 Den/noc</button>
+      <button id="rotateBtn" class="on" title="Automatické otáčení">🔄 Rotace</button>
+      <button id="refreshBtn" title="Načíst čerstvá data">↻ Obnovit</button>
+    </div>
+  </div>
+
+  <div class="detail" id="detail">
+    <button class="close" id="dClose" title="Zavřít">✕</button>
+    <div class="place" id="dPlace">—</div>
+    <div class="coords" id="dCoords"></div>
+    <div class="big">
+      <div class="emoji" id="dEmoji">⏳</div>
+      <div class="temp" id="dTemp">—</div>
+    </div>
+    <div class="desc" id="dDesc"></div>
+    <div class="grid">
+      <div class="cell"><div class="k">Vítr</div><div class="v" id="dWind">—</div></div>
+      <div class="cell"><div class="k">Vlhkost</div><div class="v" id="dHum">—</div></div>
+      <div class="cell"><div class="k">Pocitově</div><div class="v" id="dFeels">—</div></div>
+      <div class="cell"><div class="k">Srážky</div><div class="v" id="dPrec">—</div></div>
+      <div class="cell"><div class="k">Oblačnost</div><div class="v" id="dCloud">—</div></div>
+      <div class="cell"><div class="k">Místní čas</div><div class="v" id="dTime">—</div></div>
+    </div>
+    <div class="forecast" id="forecast"></div>
+    <div class="act" id="dAct"></div>
+  </div>
+
+  <div class="places" id="placesPanel">
+    <h3>📍 Moje místa</h3>
+    <div id="placesList"></div>
+  </div>
+
+  <div class="legend">
+    Teplota (°C)
+    <div class="bar"></div>
+    <div class="scale"><span>-20</span><span>0</span><span>20</span><span>40</span></div>
+    <div class="rain-note">💧 Právě prší: <span id="rainCount">—</span></div>
+  </div>
+
+  <div class="hint">🖱️ Klikni na glóbus = počasí + předpověď v bodě</div>
+  <div class="toast" id="toast"></div>
+
+  <div class="loader" id="loader">
+    <div class="spinner"></div>
+    <span>Načítám glóbus a počasí…</span>
+  </div>
+
+  <script>
+    // ===================== Konfigurace & úložiště =====================
+    const API = 'https://api.open-meteo.com/v1/forecast';
+    const GEO = 'https://geocoding-api.open-meteo.com/v1/search';
+    const CURRENT = 'temperature_2m,apparent_temperature,relative_humidity_2m,weather_code,wind_speed_10m,wind_direction_10m,precipitation,cloud_cover';
+    const DAILY = 'weather_code,temperature_2m_max,temperature_2m_min,precipitation_probability_max';
+    const TTL = 15 * 60 * 1000;            // platnost cache: 15 min
+    const STATE_KEY = 'weatherGlobe.state.v2';
+    const CACHE_KEY = 'weatherGlobe.cache.v3';   // lehká cache: jen current (pro markery)
+    const FCACHE_KEY = 'weatherGlobe.fcache.v3'; // detail: current + denní předpověď
+
+    let state = { autoRotate: true, clouds: true, rings: true, daynight: true, places: [], pov: null };
+    try { Object.assign(state, JSON.parse(localStorage.getItem(STATE_KEY) || '{}')); } catch (e) {}
+    const saveState = () => { try { localStorage.setItem(STATE_KEY, JSON.stringify(state)); } catch (e) {} };
+
+    let cache = {}, fcache = {};
+    try { cache = JSON.parse(localStorage.getItem(CACHE_KEY) || '{}'); } catch (e) {}
+    try { fcache = JSON.parse(localStorage.getItem(FCACHE_KEY) || '{}'); } catch (e) {}
+    const saveCache = () => { try { localStorage.setItem(CACHE_KEY, JSON.stringify(cache)); } catch (e) {} };
+    const saveFcache = () => { try { localStorage.setItem(FCACHE_KEY, JSON.stringify(fcache)); } catch (e) {} };
+    const keyOf = (lat, lon) => lat.toFixed(2) + ',' + lon.toFixed(2);
+
+    // ===================== Kontinenty (rychlý zoom) =====================
+    const CONTINENTS = {
+      world:      { lat: 25, lng: 10, altitude: 2.4 },
+      europe:     { lat: 54, lng: 15, altitude: 1.3 },
+      asia:       { lat: 34, lng: 100, altitude: 1.7 },
+      africa:     { lat: 2, lng: 20, altitude: 1.7 },
+      namerica:   { lat: 46, lng: -100, altitude: 1.7 },
+      samerica:   { lat: -18, lng: -60, altitude: 1.6 },
+      oceania:    { lat: -25, lng: 135, altitude: 1.6 },
+      arctic:     { lat: 78, lng: 0, altitude: 1.6 },
+      antarctica: { lat: -80, lng: 0, altitude: 1.6 }
+    };
+
+    // ===================== Výchozí města =====================
+    const CITIES = [
+      { name: 'Praha', lat: 50.08, lon: 14.44 }, { name: 'Londýn', lat: 51.51, lon: -0.13 },
+      { name: 'Paříž', lat: 48.85, lon: 2.35 }, { name: 'Madrid', lat: 40.42, lon: -3.70 },
+      { name: 'Řím', lat: 41.90, lon: 12.50 }, { name: 'Berlín', lat: 52.52, lon: 13.40 },
+      { name: 'Moskva', lat: 55.75, lon: 37.62 }, { name: 'Istanbul', lat: 41.01, lon: 28.98 },
+      { name: 'Káhira', lat: 30.04, lon: 31.24 }, { name: 'Lagos', lat: 6.52, lon: 3.38 },
+      { name: 'Nairobi', lat: -1.29, lon: 36.82 }, { name: 'Kapské Město', lat: -33.92, lon: 18.42 },
+      { name: 'Dubaj', lat: 25.20, lon: 55.27 }, { name: 'Dillí', lat: 28.61, lon: 77.21 },
+      { name: 'Bombaj', lat: 19.08, lon: 72.88 }, { name: 'Bangkok', lat: 13.76, lon: 100.50 },
+      { name: 'Singapur', lat: 1.35, lon: 103.82 }, { name: 'Peking', lat: 39.90, lon: 116.41 },
+      { name: 'Šanghaj', lat: 31.23, lon: 121.47 }, { name: 'Tokio', lat: 35.68, lon: 139.69 },
+      { name: 'Soul', lat: 37.57, lon: 126.98 }, { name: 'Sydney', lat: -33.87, lon: 151.21 },
+      { name: 'Auckland', lat: -36.85, lon: 174.76 }, { name: 'Jakarta', lat: -6.21, lon: 106.85 },
+      { name: 'New York', lat: 40.71, lon: -74.01 }, { name: 'Toronto', lat: 43.65, lon: -79.38 },
+      { name: 'Chicago', lat: 41.88, lon: -87.63 }, { name: 'Los Angeles', lat: 34.05, lon: -118.24 },
+      { name: 'Mexico City', lat: 19.43, lon: -99.13 }, { name: 'Bogotá', lat: 4.71, lon: -74.07 },
+      { name: 'Lima', lat: -12.05, lon: -77.04 }, { name: 'São Paulo', lat: -23.55, lon: -46.63 },
+      { name: 'Buenos Aires', lat: -34.60, lon: -58.38 }, { name: 'Reykjavík', lat: 64.15, lon: -21.94 },
+      { name: 'Anchorage', lat: 61.22, lon: -149.90 }, { name: 'Nuuk', lat: 64.18, lon: -51.69 }
+    ];
+
+    // ===================== Pomocné funkce =====================
+    function weather(code) {
+      const m = {
+        0: ['☀️', 'Jasno'], 1: ['🌤️', 'Skoro jasno'], 2: ['⛅', 'Polojasno'], 3: ['☁️', 'Zataženo'],
+        45: ['🌫️', 'Mlha'], 48: ['🌫️', 'Námrazová mlha'],
+        51: ['🌦️', 'Slabé mrholení'], 53: ['🌦️', 'Mrholení'], 55: ['🌦️', 'Silné mrholení'],
+        56: ['🌧️', 'Mrznoucí mrholení'], 57: ['🌧️', 'Mrznoucí mrholení'],
+        61: ['🌧️', 'Slabý déšť'], 63: ['🌧️', 'Déšť'], 65: ['🌧️', 'Silný déšť'],
+        66: ['🌧️', 'Mrznoucí déšť'], 67: ['🌧️', 'Mrznoucí déšť'],
+        71: ['🌨️', 'Slabé sněžení'], 73: ['🌨️', 'Sněžení'], 75: ['❄️', 'Husté sněžení'], 77: ['🌨️', 'Sněhové krupky'],
+        80: ['🌦️', 'Přeháňky'], 81: ['🌧️', 'Přeháňky'], 82: ['⛈️', 'Silné přeháňky'],
+        85: ['🌨️', 'Sněhové přeháňky'], 86: ['❄️', 'Sněhové přeháňky'],
+        95: ['⛈️', 'Bouřka'], 96: ['⛈️', 'Bouřka s kroupami'], 99: ['⛈️', 'Silná bouřka']
+      };
+      return m[code] || ['🌡️', '—'];
+    }
+    function tempColor(t) {
+      const c = Math.max(-20, Math.min(40, t));
+      return `hsl(${240 - ((c + 20) / 60) * 240}, 80%, 52%)`;
+    }
+    function enrich(cur) {
+      const [emoji, desc] = weather(cur.weather_code);
+      return {
+        emoji, desc, code: cur.weather_code, temp: cur.temperature_2m, feels: cur.apparent_temperature,
+        hum: cur.relative_humidity_2m, wind: cur.wind_speed_10m, windDir: cur.wind_direction_10m,
+        precip: cur.precipitation, clouds: cur.cloud_cover, time: cur.time
+      };
+    }
+    // Srážky: dle naměřeného množství NEBO dle weather_code (≥51 = mrholení/déšť/sníh/přeháňky/bouřka).
+    // Open-Meteo totiž často hlásí 0 mm i při přeháňkách, proto se nelze spolehnout jen na mm.
+    const isWet = (p) => (p.precip || 0) > 0 || (p.code != null && p.code >= 51);
+    // Světová strana, odkud vítr vane (meteorologická konvence)
+    const dirCardinal = (deg) => ['S', 'SV', 'V', 'JV', 'J', 'JZ', 'Z', 'SZ'][Math.round(deg / 45) % 8];
+    let toastT = null;
+    function toast(msg) {
+      const el = document.getElementById('toast');
+      el.textContent = msg; el.classList.add('show');
+      clearTimeout(toastT); toastT = setTimeout(() => el.classList.remove('show'), 2200);
+    }
+
+    // ===================== Optimalizované načítání =====================
+    // Markery: lehký batch (jen current) pro body chybějící v čerstvé cache → max 1 request.
+    let inFlight = false;
+    async function fetchCurrentFor(points, force = false) {
+      const now = Date.now();
+      const need = points.filter(p => {
+        if (force) return true;
+        const c = cache[keyOf(p.lat, p.lon)];
+        return !c || (now - c.ts) > TTL;
+      });
+      if (need.length) {
+        const lats = need.map(p => p.lat.toFixed(4)).join(',');
+        const lons = need.map(p => p.lon.toFixed(4)).join(',');
+        const res = await fetch(`${API}?latitude=${lats}&longitude=${lons}&current=${CURRENT}&timezone=auto`);
+        if (!res.ok) throw new Error('Open-Meteo: ' + res.status);
+        const data = await res.json();
+        const arr = Array.isArray(data) ? data : [data];
+        need.forEach((p, i) => { if (arr[i] && arr[i].current) cache[keyOf(p.lat, p.lon)] = { ts: now, cur: arr[i].current }; });
+        saveCache();
+      }
+      return points.map(p => {
+        const c = cache[keyOf(p.lat, p.lon)];
+        return c ? { ...p, ...enrich(c.cur) } : null;
+      }).filter(Boolean);
+    }
+
+    // Detail: current + 7denní předpověď v JEDNOM requestu, cache 15 min na bod.
+    async function loadFull(lat, lon) {
+      const k = keyOf(lat, lon), now = Date.now();
+      const fc = fcache[k];
+      if (fc && (now - fc.ts) < TTL) return fc;
+      const res = await fetch(`${API}?latitude=${lat.toFixed(4)}&longitude=${lon.toFixed(4)}&current=${CURRENT}&daily=${DAILY}&forecast_days=7&timezone=auto`);
+      if (!res.ok) throw new Error('Open-Meteo: ' + res.status);
+      const data = await res.json();
+      const entry = { ts: now, cur: data.current, daily: data.daily };
+      fcache[k] = entry; saveFcache();
+      cache[k] = { ts: now, cur: data.current }; saveCache(); // current sdílíme i pro marker
+      return entry;
+    }
+
+    function allPoints() {
+      return CITIES.map(c => ({ ...c, custom: false }))
+        .concat(state.places.map(p => ({ ...p, custom: true })));
+    }
+
+    let lastPts = [];      // poslední vykreslené body (pro přepočet prstenců bez requestu)
+    let selected = null;   // aktuálně vybraná poloha { lat, lon }
+
+    async function refreshMarkers(force = false) {
+      if (inFlight) return;
+      inFlight = true;
+      try {
+        const pts = await fetchCurrentFor(allPoints(), force);
+        lastPts = pts;
+        world.htmlElementsData(pts);
+        renderRings();
+      } catch (e) { console.error(e); toast('Počasí se nepodařilo načíst.'); }
+      finally { inFlight = false; }
+    }
+
+    function renderRings() {
+      const arr = [];
+      if (state.rings) lastPts.forEach(p => {
+        if (isWet(p)) arr.push({ lat: p.lat, lon: p.lon, amount: p.precip || 0, kind: 'rain' });
+      });
+      if (selected) arr.push({ lat: selected.lat, lon: selected.lon, kind: 'sel' });
+      world.ringsData(arr);
+      // počítadlo srážek v legendě
+      const rc = arr.filter(r => r.kind === 'rain').length;
+      const el = document.getElementById('rainCount');
+      if (el) el.textContent = !state.rings ? 'vrstva vypnuta'
+        : rc === 0 ? 'nikde ze sledovaných míst'
+        : rc === 1 ? '1 místo' : rc < 5 ? rc + ' místa' : rc + ' míst';
+    }
+
+    function setSelected(lat, lon) { selected = { lat, lon }; renderRings(); }
+    function clearSelected() { selected = null; renderRings(); }
+
+    // ===================== Glóbus =====================
+    const world = Globe()
+      (document.getElementById('globeViz'))
+      .backgroundImageUrl('https://unpkg.com/three-globe@2.31.0/example/img/night-sky.png')
+      .atmosphereColor('#6aa6fd').atmosphereAltitude(0.18)
+      // teplotní špendlíky (hrot míří přesně na souřadnici)
+      .htmlElementsData([]).htmlLat('lat').htmlLng('lon').htmlAltitude(0.005)
+      .htmlElement(d => {
+        const color = tempColor(d.temp);
+        const el = document.createElement('div');
+        el.className = 'marker' + (d.custom ? ' custom' : '');
+        el.title = `${d.name} · ${d.desc} · ${Math.round(d.temp)}°C`;
+        el.innerHTML =
+          `<div class="tag" style="background:${color}">${Math.round(d.temp)}°` +
+          (isWet(d) ? '<span class="wet">💧</span>' : '') + `</div>` +
+          `<div class="tip" style="border-top-color:${color}"></div>` +
+          `<div class="point"></div>`;
+        el.onclick = (ev) => { ev.stopPropagation(); focusPoint(d); };
+        return el;
+      })
+      // prstence: srážky (modré) + zvýraznění vybraného místa (zlaté, výraznější)
+      .ringLat('lat').ringLng('lon')
+      .ringColor(d => d.kind === 'sel'
+        ? (t => `rgba(255,210,90,${1 - t})`)
+        : (t => `rgba(120,190,255,${1 - t})`))
+      .ringMaxRadius(d => d.kind === 'sel' ? 5 : Math.min(8, 4 + (d.amount || 0)))
+      .ringPropagationSpeed(d => d.kind === 'sel' ? 3 : 2)
+      .ringRepeatPeriod(d => d.kind === 'sel' ? 550 : 900);
+
+    world.controls().autoRotate = state.autoRotate;
+    world.controls().autoRotateSpeed = 0.45;
+    world.pointOfView(state.pov || CONTINENTS.world);
+
+    // Vrstva mraků (sdílená instance THREE z window.THREE).
+    // POZN. k synchronizaci: globe.gl při „rotaci" otáčí KAMERU, povrch Země je v prostoru pevný.
+    // Mraky proto necháváme rovněž PEVNÉ (rotation = 0) — pak se vůči povrchu i srážkovým prstencům
+    // (ty jsou přilepené k povrchu) nehýbou a vše je synchronizované, ať kamera běží nebo stojí.
+    // Max. anizotropní filtrování = výrazně ostřejší textury při zoomu a pod úhlem
+    const maxAniso = world.renderer().capabilities.getMaxAnisotropy();
+
+    let cloudsMesh = null;
+    new THREE.TextureLoader().load('https://unpkg.com/three-globe@2.31.0/example/clouds/clouds.png', tex => {
+      tex.anisotropy = maxAniso; tex.needsUpdate = true;
+      cloudsMesh = new THREE.Mesh(
+        new THREE.SphereGeometry(world.getGlobeRadius() * 1.008, 75, 75),
+        new THREE.MeshPhongMaterial({ map: tex, transparent: true, opacity: 0.5, depthWrite: false })
+      );
+      cloudsMesh.visible = state.clouds;
+      world.scene().add(cloudsMesh);
+    });
+
+    // ===================== Den / noc (oficiální shader globe.gl) =====================
+    let dayNightMaterial = null, plainMaterial = null;
+    const dayNightShader = {
+      vertexShader: `
+        varying vec3 vNormal; varying vec2 vUv;
+        void main() {
+          vNormal = normalize(normalMatrix * normal); vUv = uv;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }`,
+      fragmentShader: `
+        #define PI 3.141592653589793
+        uniform sampler2D dayTexture; uniform sampler2D nightTexture;
+        uniform vec2 sunPosition; uniform vec2 globeRotation;
+        varying vec3 vNormal; varying vec2 vUv;
+        float toRad(in float a) { return a * PI / 180.0; }
+        vec3 Polar2Cartesian(in vec2 c) {
+          float theta = toRad(90.0 - c.x); float phi = toRad(90.0 - c.y);
+          return vec3(sin(phi)*cos(theta), cos(phi), sin(phi)*sin(theta));
+        }
+        void main() {
+          float invLon = toRad(globeRotation.x); float invLat = -toRad(globeRotation.y);
+          mat3 rotX = mat3(1,0,0, 0,cos(invLat),-sin(invLat), 0,sin(invLat),cos(invLat));
+          mat3 rotY = mat3(cos(invLon),0,sin(invLon), 0,1,0, -sin(invLon),0,cos(invLon));
+          vec3 sunDir = rotX * rotY * Polar2Cartesian(sunPosition);
+          float intensity = dot(normalize(vNormal), normalize(sunDir));
+          vec4 dayColor = texture2D(dayTexture, vUv);
+          vec4 nightColor = texture2D(nightTexture, vUv);
+          gl_FragColor = mix(nightColor, dayColor, smoothstep(-0.1, 0.1, intensity));
+        }`
+    };
+    // Poloha Slunce pro daný čas (lng, lat podsluneční bod)
+    function sunPosAt(dt) {
+      const day = new Date(+dt).setUTCHours(0, 0, 0, 0);
+      const t = solar.century(dt);
+      const lng = (day - dt) / 864e5 * 360 - 180;
+      return [lng - solar.equationOfTime(t) / 4, solar.declination(t)];
+    }
+    function applyGlobeMaterial() {
+      if (state.daynight && dayNightMaterial) world.globeMaterial(dayNightMaterial);
+      else if (plainMaterial) world.globeMaterial(plainMaterial);
+    }
+    const texLoader = new THREE.TextureLoader();
+    // načte texturu a nastaví anizotropii (ostřejší při zoomu)
+    const loadTex = (url) => new Promise(res => texLoader.load(url, t => { t.anisotropy = maxAniso; t.needsUpdate = true; res(t); }));
+    const texReady = Promise.all([
+      // jako denní vrstvu používáme blue-marble (4096×2048) – ostřejší než earth-day.jpg (1600×800)
+      loadTex('https://unpkg.com/three-globe@2.31.0/example/img/earth-blue-marble.jpg'),
+      loadTex('https://unpkg.com/three-globe@2.31.0/example/img/earth-night.jpg'),
+      loadTex('https://unpkg.com/three-globe@2.31.0/example/img/earth-topology.png')
+    ]).then(([dayTex, nightTex, bump]) => {
+      dayNightMaterial = new THREE.ShaderMaterial({
+        uniforms: {
+          dayTexture: { value: dayTex }, nightTexture: { value: nightTex },
+          sunPosition: { value: new THREE.Vector2() }, globeRotation: { value: new THREE.Vector2() }
+        },
+        vertexShader: dayNightShader.vertexShader, fragmentShader: dayNightShader.fragmentShader
+      });
+      plainMaterial = new THREE.MeshPhongMaterial({ map: dayTex, bumpMap: bump, bumpScale: 6 });
+      // počáteční Slunce + aktualizace každou minutu (reálný čas, bez sítě)
+      dayNightMaterial.uniforms.sunPosition.value.set(...sunPosAt(Date.now()));
+      setInterval(() => {
+        if (dayNightMaterial) dayNightMaterial.uniforms.sunPosition.value.set(...sunPosAt(Date.now()));
+      }, 60 * 1000);
+      applyGlobeMaterial();
+    });
+
+    // globeRotation musí sledovat pohled kamery i během auto-rotace (kvůli správnému terminátoru)
+    (function trackRotation() {
+      if (dayNightMaterial) {
+        const pov = world.pointOfView();
+        dayNightMaterial.uniforms.globeRotation.value.set(pov.lng, pov.lat);
+      }
+      requestAnimationFrame(trackRotation);
+    })();
+
+    // Uloží polohu kamery (debounced)
+    let povT = null;
+    world.controls().addEventListener('end', () => {
+      clearTimeout(povT);
+      povT = setTimeout(() => { state.pov = world.pointOfView(); saveState(); }, 400);
+    });
+
+    function resize() { world.width(window.innerWidth).height(window.innerHeight); }
+    window.addEventListener('resize', resize); resize();
+
+    // Let na cíl + vypnutí rotace (ať kamera neujede)
+    function flyTo(pov, ms = 900) {
+      if (world.controls().autoRotate) {
+        world.controls().autoRotate = false; state.autoRotate = false; saveState();
+        rotateBtn.classList.remove('on');
+      }
+      world.pointOfView(pov, ms);
+    }
+
+    // ===================== Detail panel =====================
+    const detail = document.getElementById('detail');
+    const dAct = document.getElementById('dAct');
+    const forecastEl = document.getElementById('forecast');
+
+    const isSaved = (lat, lon) => state.places.some(p => keyOf(p.lat, p.lon) === keyOf(lat, lon));
+    const isCity = (lat, lon) => CITIES.some(c => keyOf(c.lat, c.lon) === keyOf(lat, lon));
+
+    function fillDetail(d) {
+      document.getElementById('dPlace').textContent = d.name || 'Vybraný bod';
+      document.getElementById('dCoords').textContent = `${d.lat.toFixed(2)}°, ${d.lon.toFixed(2)}°`;
+      document.getElementById('dEmoji').textContent = d.emoji;
+      document.getElementById('dTemp').textContent = Math.round(d.temp) + '°C';
+      document.getElementById('dDesc').textContent = d.desc;
+      const arrow = (d.windDir != null) ? `<span class="wind-arrow" style="transform:rotate(${d.windDir + 180}deg)">↑</span> ` : '';
+      const card = (d.windDir != null) ? ` · ${dirCardinal(d.windDir)}` : '';
+      document.getElementById('dWind').innerHTML = `${arrow}${Math.round(d.wind)} km/h${card}`;
+      document.getElementById('dHum').textContent = (d.hum != null ? d.hum + ' %' : '—');
+      document.getElementById('dFeels').textContent = (d.feels != null ? Math.round(d.feels) + '°C' : '—');
+      document.getElementById('dPrec').textContent = (d.precip != null ? d.precip + ' mm' : '—');
+      document.getElementById('dCloud').textContent = (d.clouds != null ? d.clouds + ' %' : '—');
+      document.getElementById('dTime').textContent = d.time ? d.time.replace('T', ' ') : '—';
+
+      // Akce: zoom + uložit / odebrat
+      const btns = [`<button class="zoom">🔍 Přiblížit</button>`];
+      if (isSaved(d.lat, d.lon)) btns.push(`<button class="remove">🗑 Odebrat</button>`);
+      else if (!isCity(d.lat, d.lon)) btns.push(`<button class="save">➕ Uložit</button>`);
+      dAct.innerHTML = btns.join('');
+      dAct.querySelector('.zoom').onclick = () => flyTo({ lat: d.lat, lng: d.lon, altitude: 0.6 }, 900);
+      const rm = dAct.querySelector('.remove'); if (rm) rm.onclick = () => removePlace(d.lat, d.lon);
+      const sv = dAct.querySelector('.save');
+      if (sv) { const nm = (d.name && d.name !== 'Vybraný bod') ? d.name : null; sv.onclick = () => addPlace(nm, d.lat, d.lon); }
+    }
+
+    function renderForecast(daily) {
+      if (!daily || !daily.time) { forecastEl.innerHTML = ''; return; }
+      const wdf = new Intl.DateTimeFormat('cs-CZ', { weekday: 'short' });
+      let html = '<div class="fc-title">Předpověď na 7 dní</div><div class="fc-row">';
+      for (let i = 0; i < daily.time.length; i++) {
+        const wd = i === 0 ? 'Dnes' : wdf.format(new Date(daily.time[i]));
+        const [emoji] = weather(daily.weather_code[i]);
+        const pop = daily.precipitation_probability_max[i];
+        html += `<div class="fc-day">
+            <div class="fc-wd">${wd}</div>
+            <div class="fc-emoji">${emoji}</div>
+            <div class="fc-temp">${Math.round(daily.temperature_2m_max[i])}°<span>${Math.round(daily.temperature_2m_min[i])}°</span></div>
+            <div class="fc-pop">${pop != null ? '💧' + pop + '%' : ''}</div>
+          </div>`;
+      }
+      forecastEl.innerHTML = html + '</div>';
+    }
+
+    async function openDetail(lat, lon, name, custom) {
+      detail.classList.add('show');
+      setSelected(lat, lon);   // zvýrazni vybranou polohu na glóbu
+      document.getElementById('dPlace').textContent = name || 'Načítám…';
+      document.getElementById('dEmoji').textContent = '⏳';
+      dAct.innerHTML = '';
+      forecastEl.innerHTML = '<div class="fc-loading">Načítám předpověď…</div>';
+      try {
+        const e = await loadFull(lat, lon);
+        fillDetail({ name, lat, lon, custom, ...enrich(e.cur) });
+        renderForecast(e.daily);
+      } catch (err) {
+        console.error(err);
+        document.getElementById('dPlace').textContent = 'Chyba načítání';
+        document.getElementById('dEmoji').textContent = '⚠️';
+        forecastEl.innerHTML = '';
+      }
+    }
+
+    function focusPoint(d) { flyTo({ lat: d.lat, lng: d.lon, altitude: 1.4 }, 900); openDetail(d.lat, d.lon, d.name, d.custom); }
+    document.getElementById('dClose').onclick = () => { detail.classList.remove('show'); clearSelected(); };
+    world.onGlobeClick(({ lat, lng }) => openDetail(lat, lng, 'Vybraný bod', false));
+
+    // ===================== Moje místa =====================
+    const placesPanel = document.getElementById('placesPanel');
+    const placesList = document.getElementById('placesList');
+    function renderPlaces() {
+      placesList.innerHTML = '';
+      if (!state.places.length) { placesPanel.classList.remove('show'); return; }
+      state.places.forEach(p => {
+        const row = document.createElement('div'); row.className = 'item';
+        const nm = document.createElement('span'); nm.className = 'nm'; nm.textContent = p.name; nm.title = p.name;
+        nm.onclick = () => focusPoint({ ...p, custom: true });
+        const x = document.createElement('button'); x.className = 'x'; x.textContent = '✕'; x.title = 'Odebrat';
+        x.onclick = () => removePlace(p.lat, p.lon);
+        row.appendChild(nm); row.appendChild(x); placesList.appendChild(row);
+      });
+      placesPanel.classList.add('show');
+    }
+    async function addPlace(name, lat, lon) {
+      if (isSaved(lat, lon)) { toast('Místo už je uložené.'); return; }
+      const nm = name || `${lat.toFixed(2)}, ${lon.toFixed(2)}`;
+      state.places.push({ name: nm, lat, lon });
+      saveState(); renderPlaces();
+      await refreshMarkers();          // stáhne jen nový bod (zbytek z cache)
+      openDetail(lat, lon, nm, true);
+      toast('Místo uloženo.');
+    }
+    function removePlace(lat, lon) {
+      state.places = state.places.filter(p => keyOf(p.lat, p.lon) !== keyOf(lat, lon));
+      saveState(); renderPlaces(); refreshMarkers();
+      detail.classList.remove('show'); clearSelected(); toast('Místo odebráno.');
+    }
+
+    // ===================== Vyhledávání (geocoding, jen na akci) =====================
+    async function searchPlace() {
+      const q = document.getElementById('searchInput').value.trim();
+      if (!q) return;
+      try {
+        const res = await fetch(`${GEO}?name=${encodeURIComponent(q)}&count=1&language=cs&format=json`);
+        const data = await res.json();
+        const r = data.results && data.results[0];
+        if (!r) { toast('Místo nenalezeno.'); return; }
+        document.getElementById('searchInput').value = '';
+        const nm = r.country ? `${r.name}, ${r.country}` : r.name;
+        await addPlace(nm, r.latitude, r.longitude);
+        flyTo({ lat: r.latitude, lng: r.longitude, altitude: 1.4 }, 900);
+      } catch (e) { toast('Vyhledávání selhalo.'); }
+    }
+    document.getElementById('searchBtn').onclick = searchPlace;
+    document.getElementById('searchInput').addEventListener('keydown', e => { if (e.key === 'Enter') searchPlace(); });
+
+    // Moje poloha (GPS) → zaměří a ukáže počasí
+    document.getElementById('geoBtn').onclick = () => {
+      if (!navigator.geolocation) { toast('Prohlížeč nepodporuje geolokaci.'); return; }
+      toast('Zjišťuji polohu…');
+      navigator.geolocation.getCurrentPosition(
+        pos => {
+          const { latitude, longitude } = pos.coords;
+          flyTo({ lat: latitude, lng: longitude, altitude: 1.2 }, 1000);
+          openDetail(latitude, longitude, 'Moje poloha', false);
+        },
+        () => toast('Polohu se nepodařilo zjistit (zamítnuto nebo nedostupné).'),
+        { enableHighAccuracy: false, timeout: 8000, maximumAge: 600000 }
+      );
+    };
+
+    // ===================== Ovládání =====================
+    const rotateBtn = document.getElementById('rotateBtn');
+    const cloudsBtn = document.getElementById('cloudsBtn');
+    const rainBtn = document.getElementById('rainBtn');
+
+    rotateBtn.classList.toggle('on', state.autoRotate);
+    rotateBtn.onclick = () => {
+      const c = world.controls(); c.autoRotate = !c.autoRotate;
+      state.autoRotate = c.autoRotate; saveState();
+      rotateBtn.classList.toggle('on', c.autoRotate);
+    };
+
+    cloudsBtn.classList.toggle('on', state.clouds);
+    cloudsBtn.onclick = () => {
+      state.clouds = !state.clouds; saveState();
+      if (cloudsMesh) cloudsMesh.visible = state.clouds;
+      cloudsBtn.classList.toggle('on', state.clouds);
+    };
+
+    rainBtn.classList.toggle('on', state.rings);
+    rainBtn.onclick = () => {
+      state.rings = !state.rings; saveState();
+      rainBtn.classList.toggle('on', state.rings);
+      refreshMarkers(); // přepočítá prstence z cache (bez nového requestu)
+    };
+
+    const dayNightBtn = document.getElementById('dayNightBtn');
+    dayNightBtn.classList.toggle('on', state.daynight);
+    dayNightBtn.onclick = () => {
+      state.daynight = !state.daynight; saveState();
+      dayNightBtn.classList.toggle('on', state.daynight);
+      applyGlobeMaterial();
+    };
+
+    document.getElementById('continentSel').onchange = (e) => {
+      const c = CONTINENTS[e.target.value];
+      if (c) flyTo(c, 1100);
+      e.target.value = '';
+    };
+
+    document.getElementById('refreshBtn').onclick = () => {
+      fcache = {}; saveFcache();              // detailní data zneplatníme
+      toast('Načítám čerstvá data…');
+      refreshMarkers(true);
+    };
+
+    // ===================== Start =====================
+    renderPlaces();
+    const loader = document.getElementById('loader');
+    const markersReady = refreshMarkers()
+      .catch(err => { console.error(err); loader.querySelector('span').textContent = 'Počasí se nepodařilo načíst — zkus Obnovit.'; });
+    // loader skryjeme, až je glóbus otexturovaný i s prvními daty
+    Promise.all([markersReady, texReady.catch(() => {})])
+      .finally(() => setTimeout(() => loader.classList.add('hide'), 400));
+
+    // Auto-obnova: po vypršení cache (15 min) stáhne čerstvá data, jinak nic (1 request / 15 min).
+    setInterval(() => { if (document.visibilityState === 'visible') refreshMarkers(); }, TTL);
+  </script>
+</body>
+</html>
