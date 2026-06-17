@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🔍 Regex tester</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1a1a1a;color:#e0e0e0;min-height:100vh;padding:20px}
+.container{max-width:960px;margin:0 auto}
+h1{font-size:1.6rem;margin-bottom:18px;font-weight:600;text-align:center}
+.card{background:#2a2a2a;border:1px solid #404040;border-radius:8px;padding:20px;margin-bottom:18px}
+h2{font-size:.95rem;color:#6aa6fd;margin-bottom:10px}
+.regex-input{display:flex;align-items:center;background:#1e1e1e;border:1px solid #555;border-radius:6px;padding:0 10px;font-family:monospace}
+.regex-input span{color:#888;font-size:1.1rem}
+.regex-input input{flex:1;background:none;border:none;color:#f39c12;padding:12px 6px;font-family:monospace;font-size:1rem}
+.regex-input input:focus{outline:none}
+.flags{display:flex;gap:14px;margin-top:10px;flex-wrap:wrap}
+.flags label{display:flex;align-items:center;gap:5px;font-size:.85rem;color:#bbb;cursor:pointer}
+textarea{width:100%;min-height:160px;background:#1e1e1e;border:1px solid #555;border-radius:6px;color:#e0e0e0;padding:12px;font-family:monospace;font-size:.92rem;resize:vertical;line-height:1.6}
+.highlight{width:100%;min-height:160px;background:#1e1e1e;border:1px solid #404040;border-radius:6px;padding:12px;font-family:monospace;font-size:.92rem;line-height:1.6;white-space:pre-wrap;word-break:break-word}
+mark{background:#6aa6fd;color:#000;border-radius:3px;padding:0 1px}
+mark:nth-child(even){background:#f39c12}
+.status{font-size:.88rem;margin-top:8px}.status.ok{color:#27ae60}.status.err{color:#e74c3c}
+.matches{margin-top:6px}
+.match-item{background:#1e1e1e;border-left:3px solid #6aa6fd;padding:8px 12px;margin-bottom:6px;border-radius:0 6px 6px 0;font-family:monospace;font-size:.86rem}
+.match-item .grp{color:#888;font-size:.8rem}
+.cheat{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:6px;font-size:.8rem;font-family:monospace}
+.cheat div{padding:4px 8px;background:#1e1e1e;border-radius:4px}.cheat code{color:#f39c12}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>🔍 Regex tester</h1>
+  <div class="card">
+    <h2>Regulární výraz</h2>
+    <div class="regex-input"><span>/</span><input type="text" id="pattern" value="\b\w+@\w+\.\w+\b" spellcheck="false"><span>/</span><input type="text" id="flagsView" value="gi" readonly style="flex:0;width:40px;color:#888"></div>
+    <div class="flags">
+      <label><input type="checkbox" id="g" checked> g (global)</label>
+      <label><input type="checkbox" id="i" checked> i (ignore case)</label>
+      <label><input type="checkbox" id="m"> m (multiline)</label>
+      <label><input type="checkbox" id="s"> s (dotall)</label>
+    </div>
+    <div class="status" id="status"></div>
+  </div>
+  <div class="card">
+    <h2>Testovací text</h2>
+    <textarea id="text">Kontakty: info@farma.cz, prodej@statek.com a podpora@example.org.
+Telefon: +420 777 123 456. Web: www.example.cz</textarea>
+    <h2 style="margin-top:14px">Zvýraznění shod</h2>
+    <div class="highlight" id="highlight"></div>
+    <div class="matches" id="matches"></div>
+  </div>
+  <div class="card">
+    <h2>📖 Tahák</h2>
+    <div class="cheat">
+      <div><code>\d</code> číslice</div><div><code>\w</code> písmeno/číslice</div><div><code>\s</code> mezera</div>
+      <div><code>.</code> libovolný znak</div><div><code>^</code> začátek</div><div><code>$</code> konec</div>
+      <div><code>*</code> 0+</div><div><code>+</code> 1+</div><div><code>?</code> 0 nebo 1</div>
+      <div><code>{n,m}</code> n až m</div><div><code>[abc]</code> množina</div><div><code>(...)</code> skupina</div>
+      <div><code>a|b</code> nebo</div><div><code>\b</code> hranice slova</div><div><code>(?:...)</code> bez záchytu</div>
+    </div>
+  </div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+function run(){
+  const flags=['g','i','m','s'].filter(f=>$(f).checked).join('');
+  $('flagsView').value=flags;
+  const text=$('text').value;
+  $('matches').innerHTML='';
+  let re;
+  try{re=new RegExp($('pattern').value,flags);$('status').className='status ok';}
+  catch(e){$('status').className='status err';$('status').textContent='❌ '+e.message;$('highlight').textContent=text;return;}
+  const esc=s=>s.replace(/&/g,'&amp;').replace(/</g,'&lt;');
+  let matches=[],html,count=0;
+  if(flags.includes('g')){
+    let m;const r2=new RegExp(re.source,flags);let last=0,parts='';
+    while((m=r2.exec(text))!==null){
+      if(m.index===r2.lastIndex)r2.lastIndex++;
+      matches.push(m);count++;
+      parts+=esc(text.slice(last,m.index))+'<mark>'+esc(m[0])+'</mark>';
+      last=m.index+m[0].length;
+      if(count>5000)break;
+    }
+    parts+=esc(text.slice(last));html=parts;
+  }else{
+    const m=re.exec(text);
+    if(m){count=1;matches.push(m);html=esc(text.slice(0,m.index))+'<mark>'+esc(m[0])+'</mark>'+esc(text.slice(m.index+m[0].length));}
+    else html=esc(text);
+  }
+  $('highlight').innerHTML=html||esc(text);
+  $('status').textContent=`✅ Platný regex — ${count} ${count===1?'shoda':count>=2&&count<=4?'shody':'shod'}`;
+  $('matches').innerHTML=matches.slice(0,50).map((m,i)=>{
+    let g='';if(m.length>1)g=m.slice(1).map((x,j)=>`<span class="grp">skupina ${j+1}:</span> ${x===undefined?'<i>—</i>':esc(x)}`).join('<br>');
+    return `<div class="match-item"><b>#${i+1}</b> „${esc(m[0])}" <span class="grp">(pozice ${m.index})</span>${g?'<br>'+g:''}</div>`;
+  }).join('');
+}
+['pattern','text'].forEach(id=>$(id).oninput=run);
+['g','i','m','s'].forEach(id=>$(id).onchange=run);
+run();
+</script>
+</body>
+</html>

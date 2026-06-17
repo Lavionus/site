@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🧾 Faktura / nabídka</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1a1a1a;color:#e0e0e0;min-height:100vh;padding:20px}
+.container{max-width:900px;margin:0 auto}
+h1{font-size:1.6rem;margin-bottom:16px;font-weight:600;text-align:center}
+.toolbar{display:flex;gap:8px;justify-content:center;margin-bottom:16px;flex-wrap:wrap}
+.btn{background:#6aa6fd;color:#fff;border:none;padding:10px 18px;border-radius:6px;cursor:pointer;font-weight:600;font-size:.88rem}
+.btn:hover{background:#5694f0}.btn-sec{background:#404040}.btn-sec:hover{background:#4a4a4a}
+.card{background:#2a2a2a;border:1px solid #404040;border-radius:8px;padding:20px;margin-bottom:18px}
+h2{font-size:.95rem;color:#6aa6fd;margin-bottom:12px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media(max-width:640px){.grid2{grid-template-columns:1fr}}
+label{display:block;font-size:.76rem;color:#888;margin-bottom:3px}
+input,textarea,select{width:100%;background:#404040;border:1px solid #555;border-radius:4px;color:#e0e0e0;padding:8px;margin-bottom:8px;font-family:inherit}
+table{width:100%;border-collapse:collapse;margin-bottom:10px}
+th{text-align:left;font-size:.74rem;color:#888;padding:6px;text-transform:uppercase}
+td{padding:4px}
+td input{margin:0}
+.del{background:none;border:none;color:#c0392b;cursor:pointer}
+.totals{text-align:right;font-size:.95rem;line-height:1.9}
+.totals .grand{font-size:1.4rem;font-weight:700;color:#4caf50}
+/* Print preview */
+#preview{display:none}
+@media print{
+  body{background:#fff;color:#000;padding:0}
+  .container>*:not(#preview){display:none}
+  #preview{display:block;padding:30px;font-size:13px}
+  .pv-head{display:flex;justify-content:space-between;margin-bottom:30px}
+  .pv-title{font-size:26px;font-weight:700;color:#222}
+  .pv-box h3{font-size:11px;color:#888;text-transform:uppercase;margin-bottom:4px}
+  .pv-table{width:100%;border-collapse:collapse;margin:20px 0}
+  .pv-table th{background:#f0f0f0;text-align:left;padding:8px;border:1px solid #ddd}
+  .pv-table td{padding:8px;border:1px solid #ddd}
+  .pv-totals{text-align:right;line-height:1.8}
+  .pv-grand{font-size:18px;font-weight:700}
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>🧾 Faktura / cenová nabídka</h1>
+  <div class="toolbar">
+    <select id="docType" style="width:auto;margin:0"><option value="Faktura">Faktura</option><option value="Cenová nabídka">Cenová nabídka</option><option value="Zálohová faktura">Zálohová faktura</option></select>
+    <button class="btn" id="printBtn">🖨️ Tisk / PDF</button>
+    <button class="btn btn-sec" id="saveBtn">💾 Uložit</button>
+    <button class="btn btn-sec" id="loadBtn">📂 Načíst</button>
+  </div>
+  <div class="card">
+    <div class="grid2">
+      <div><h2>Dodavatel</h2>
+        <label>Název / jméno</label><input id="sName" value="Moje firma s.r.o.">
+        <label>Adresa</label><textarea id="sAddr" rows="2">Polní 1, 100 00 Praha</textarea>
+        <label>IČO / DIČ</label><input id="sId" value="IČO 12345678">
+        <label>Bankovní účet</label><input id="sBank" value="123456789/0800">
+      </div>
+      <div><h2>Odběratel</h2>
+        <label>Název / jméno</label><input id="cName" value="Zákazník a.s.">
+        <label>Adresa</label><textarea id="cAddr" rows="2">Lesní 2, 200 00 Kolín</textarea>
+        <label>IČO / DIČ</label><input id="cId" value="IČO 87654321">
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <h2>Údaje dokladu</h2>
+    <div class="grid2">
+      <div><label>Číslo dokladu</label><input id="num" value="2026001"></div>
+      <div><label>Datum vystavení</label><input type="date" id="issueDate"></div>
+      <div><label>Datum splatnosti</label><input type="date" id="dueDate"></div>
+      <div><label>Sazba DPH (%)</label><input type="number" id="vat" value="21" min="0"></div>
+    </div>
+  </div>
+  <div class="card">
+    <h2>Položky <button class="btn btn-sec" id="addRow" style="float:right;padding:4px 12px;font-size:.78rem">➕ Přidat</button></h2>
+    <table id="itemsTable">
+      <thead><tr><th style="width:44%">Popis</th><th>Množství</th><th>Cena/ks</th><th>Celkem</th><th></th></tr></thead>
+      <tbody id="items"></tbody>
+    </table>
+    <div class="totals">
+      <div>Základ: <b id="subtotal">0</b> Kč</div>
+      <div>DPH <span id="vatPct">21</span> %: <b id="vatAmount">0</b> Kč</div>
+      <div class="grand">Celkem: <span id="grand">0</span> Kč</div>
+    </div>
+  </div>
+  <div id="preview"></div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const today=new Date();$('issueDate').value=today.toISOString().slice(0,10);
+const due=new Date(today);due.setDate(due.getDate()+14);$('dueDate').value=due.toISOString().slice(0,10);
+let items=[{desc:'Poradenská služba',qty:1,price:5000},{desc:'Doprava',qty:2,price:450}];
+function renderItems(){
+  $('items').innerHTML=items.map((it,i)=>`<tr>
+    <td><input data-i="${i}" data-f="desc" value="${(it.desc||'').replace(/"/g,'&quot;')}"></td>
+    <td><input type="number" data-i="${i}" data-f="qty" value="${it.qty}" step="any" style="width:80px"></td>
+    <td><input type="number" data-i="${i}" data-f="price" value="${it.price}" step="any" style="width:100px"></td>
+    <td style="padding-left:8px">${(it.qty*it.price).toLocaleString('cs')} Kč</td>
+    <td><button class="del" data-del="${i}">🗑️</button></td></tr>`).join('');
+  $('items').querySelectorAll('input').forEach(inp=>inp.oninput=()=>{
+    const it=items[+inp.dataset.i];it[inp.dataset.f]=inp.dataset.f==='desc'?inp.value:+inp.value;calc();});
+  $('items').querySelectorAll('.del').forEach(b=>b.onclick=()=>{items.splice(+b.dataset.del,1);renderItems();});
+  calc();
+}
+function calc(){
+  const sub=items.reduce((s,it)=>s+it.qty*it.price,0);
+  const vat=+$('vat').value;const vatAmt=sub*vat/100;
+  $('subtotal').textContent=sub.toLocaleString('cs');
+  $('vatPct').textContent=vat;$('vatAmount').textContent=Math.round(vatAmt).toLocaleString('cs');
+  $('grand').textContent=Math.round(sub+vatAmt).toLocaleString('cs');
+}
+$('addRow').onclick=()=>{items.push({desc:'',qty:1,price:0});renderItems();};
+$('vat').oninput=calc;
+function buildPreview(){
+  const sub=items.reduce((s,it)=>s+it.qty*it.price,0),vat=+$('vat').value,vatAmt=sub*vat/100;
+  $('preview').innerHTML=`
+    <div class="pv-head"><div><div class="pv-title">${$('docType').value} č. ${$('num').value}</div>
+      <div>Vystaveno: ${$('issueDate').value} &nbsp; Splatnost: ${$('dueDate').value}</div></div></div>
+    <div style="display:flex;justify-content:space-between;margin-bottom:20px">
+      <div class="pv-box"><h3>Dodavatel</h3><b>${$('sName').value}</b><br>${$('sAddr').value.replace(/\n/g,'<br>')}<br>${$('sId').value}<br>Účet: ${$('sBank').value}</div>
+      <div class="pv-box"><h3>Odběratel</h3><b>${$('cName').value}</b><br>${$('cAddr').value.replace(/\n/g,'<br>')}<br>${$('cId').value}</div>
+    </div>
+    <table class="pv-table"><thead><tr><th>Popis</th><th>Množství</th><th>Cena/ks</th><th>Celkem</th></tr></thead>
+    <tbody>${items.map(it=>`<tr><td>${it.desc}</td><td>${it.qty}</td><td>${it.price.toLocaleString('cs')} Kč</td><td>${(it.qty*it.price).toLocaleString('cs')} Kč</td></tr>`).join('')}</tbody></table>
+    <div class="pv-totals">Základ: ${sub.toLocaleString('cs')} Kč<br>DPH ${vat} %: ${Math.round(vatAmt).toLocaleString('cs')} Kč<br>
+      <span class="pv-grand">Celkem k úhradě: ${Math.round(sub+vatAmt).toLocaleString('cs')} Kč</span></div>`;
+}
+$('printBtn').onclick=()=>{buildPreview();window.print();};
+$('saveBtn').onclick=()=>{const data={items,fields:{}};['docType','sName','sAddr','sId','sBank','cName','cAddr','cId','num','issueDate','dueDate','vat'].forEach(f=>data.fields[f]=$(f).value);localStorage.setItem('invoice_data',JSON.stringify(data));$('saveBtn').textContent='✅ Uloženo';setTimeout(()=>$('saveBtn').textContent='💾 Uložit',1200);};
+$('loadBtn').onclick=()=>{const d=JSON.parse(localStorage.getItem('invoice_data')||'null');if(!d)return alert('Nic uloženého.');items=d.items;Object.entries(d.fields).forEach(([k,v])=>$(k).value=v);renderItems();};
+renderItems();
+</script>
+</body>
+</html>

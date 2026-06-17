@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>⚡ Ohmův zákon</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1a1a1a;color:#e0e0e0;min-height:100vh;padding:20px}
+.container{max-width:780px;margin:0 auto}
+h1{font-size:1.6rem;margin-bottom:18px;font-weight:600;text-align:center}
+.tabs{display:flex;margin-bottom:18px;border-bottom:1px solid #404040;flex-wrap:wrap}
+.tab{padding:11px 18px;background:#2a2a2a;border:1px solid #404040;border-bottom:none;cursor:pointer;color:#bbb;border-radius:8px 8px 0 0}
+.tab.active{background:#6aa6fd;color:#fff;border-color:#6aa6fd}
+.pane{display:none}.pane.active{display:block}
+.card{background:#2a2a2a;border:1px solid #404040;border-radius:8px;padding:22px;margin-bottom:20px}
+h2{font-size:1.05rem;color:#6aa6fd;margin-bottom:16px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+label{display:block;font-size:.82rem;color:#888;margin-bottom:5px}
+.field{display:flex;gap:6px}
+input,select{width:100%;background:#404040;border:1px solid #555;border-radius:4px;color:#e0e0e0;padding:10px}
+.field select{width:90px}
+.note{font-size:.8rem;color:#888;margin-bottom:14px}
+.res{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:16px}
+.rescard{background:#1e1e1e;border-radius:8px;padding:14px;text-align:center}
+.rescard .v{font-size:1.5rem;font-weight:700;color:#4caf50}.rescard .l{font-size:.76rem;color:#888}
+/* resistor */
+.bands{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+.bandsel label{font-size:.74rem}
+.bandsel select{width:auto;padding:6px}
+.resistor{height:50px;background:#d9c089;border-radius:8px;display:flex;align-items:center;justify-content:center;gap:8px;margin:16px 0;position:relative}
+.band{width:10px;height:50px}
+.rval{font-size:1.6rem;font-weight:700;color:#6aa6fd;text-align:center}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>⚡ Elektro kalkulačka</h1>
+  <div class="tabs">
+    <div class="tab active" data-pane="ohm">Ohmův zákon</div>
+    <div class="tab" data-pane="resistor">Barevné proužky</div>
+  </div>
+
+  <div class="pane active" id="ohm">
+    <div class="card">
+      <h2>Zadej 2 hodnoty, dopočítají se zbylé</h2>
+      <p class="note">U = R·I &nbsp;•&nbsp; P = U·I</p>
+      <div class="grid">
+        <div><label>Napětí U (V)</label><input type="number" id="U" step="any" placeholder="volty"></div>
+        <div><label>Proud I (A)</label><input type="number" id="I" step="any" placeholder="ampéry"></div>
+        <div><label>Odpor R (Ω)</label><input type="number" id="R" step="any" placeholder="ohmy"></div>
+        <div><label>Výkon P (W)</label><input type="number" id="P" step="any" placeholder="watty"></div>
+      </div>
+      <button class="tab" id="resetBtn" style="margin-top:14px;border-radius:6px;border:1px solid #555">🗑️ Vymazat</button>
+      <div class="res" id="ohmRes" style="display:none"></div>
+    </div>
+  </div>
+
+  <div class="pane" id="resistor">
+    <div class="card">
+      <h2>Dekodér barevných proužků rezistoru</h2>
+      <div class="grid" style="grid-template-columns:1fr 1fr 1fr 1fr;gap:8px" id="bandSelectors"></div>
+      <div class="resistor" id="resistorView"></div>
+      <div class="rval" id="resistorValue">–</div>
+      <p class="note" style="text-align:center;margin-top:8px" id="resistorTol"></p>
+    </div>
+  </div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+document.querySelectorAll('.tab[data-pane]').forEach(t=>t.onclick=()=>{
+  document.querySelectorAll('.tab[data-pane]').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.pane').forEach(x=>x.classList.remove('active'));
+  t.classList.add('active');$(t.dataset.pane).classList.add('active');
+});
+// Ohm
+const fields=['U','I','R','P'];
+function ohmCalc(){
+  const v={};fields.forEach(f=>{const x=parseFloat($(f).value);if(!isNaN(x))v[f]=x;});
+  const known=Object.keys(v);
+  if(known.length<2){$('ohmRes').style.display='none';return;}
+  let {U,I,R,P}=v;
+  // derive U,I first
+  if(U==null){if(I!=null&&R!=null)U=I*R;else if(P!=null&&I!=null)U=P/I;else if(P!=null&&R!=null)U=Math.sqrt(P*R);}
+  if(I==null){if(U!=null&&R!=null)I=U/R;else if(P!=null&&U!=null)I=P/U;else if(P!=null&&R!=null)I=Math.sqrt(P/R);}
+  if(R==null&&U!=null&&I!=null)R=U/I;
+  if(P==null&&U!=null&&I!=null)P=U*I;
+  const fmt=(x,u)=>x==null||isNaN(x)?'–':(Math.abs(x)>=1000?(x/1000).toFixed(3)+' k'+u:Math.abs(x)<0.01&&x!==0?(x*1000).toFixed(3)+' m'+u:x.toFixed(3)+' '+u);
+  $('ohmRes').style.display='grid';
+  $('ohmRes').innerHTML=[['Napětí U',U,'V'],['Proud I',I,'A'],['Odpor R',R,'Ω'],['Výkon P',P,'W']].map(([l,x,u])=>`<div class="rescard"><div class="v">${fmt(x,u)}</div><div class="l">${l}</div></div>`).join('');
+}
+fields.forEach(f=>$(f).oninput=ohmCalc);
+$('resetBtn').onclick=()=>{fields.forEach(f=>$(f).value='');$('ohmRes').style.display='none';};
+// Resistor
+const COLORS=[['Černá','#000',0],['Hnědá','#8b4513',1],['Červená','#e74c3c',2],['Oranžová','#e67e22',3],['Žlutá','#f1c40f',4],['Zelená','#27ae60',5],['Modrá','#3498db',6],['Fialová','#9b59b6',7],['Šedá','#95a5a6',8],['Bílá','#fff',9]];
+const MULT=[...COLORS.map((c,i)=>[c[0],c[1],i]),['Zlatá','#d4af37',-1],['Stříbrná','#c0c0c0',-2]];
+const TOL=[['Hnědá','#8b4513','±1%'],['Červená','#e74c3c','±2%'],['Zlatá','#d4af37','±5%'],['Stříbrná','#c0c0c0','±10%']];
+function opt(arr){return arr.map((c,i)=>`<option value="${i}">${c[0]}</option>`).join('');}
+$('bandSelectors').innerHTML=`
+  <div class="bandsel"><label>1. proužek</label><select id="b1">${opt(COLORS)}</select></div>
+  <div class="bandsel"><label>2. proužek</label><select id="b2">${opt(COLORS)}</select></div>
+  <div class="bandsel"><label>Násobitel</label><select id="b3">${opt(MULT)}</select></div>
+  <div class="bandsel"><label>Tolerance</label><select id="b4">${opt(TOL)}</select></div>`;
+function resistorCalc(){
+  const b1=+$('b1').value,b2=+$('b2').value,b3=+$('b3').value,b4=+$('b4').value;
+  const mult=Math.pow(10,MULT[b3][2]);
+  let val=(b1*10+b2)*mult;
+  $('resistorView').innerHTML=[COLORS[b1][1],COLORS[b2][1],MULT[b3][1],TOL[b4][1]].map(c=>`<div class="band" style="background:${c};border:1px solid #0003"></div>`).join('');
+  let disp=val>=1e6?(val/1e6)+' MΩ':val>=1000?(val/1000)+' kΩ':val+' Ω';
+  $('resistorValue').textContent=disp;
+  $('resistorTol').textContent='Tolerance: '+TOL[b4][2];
+}
+['b1','b2','b3','b4'].forEach(id=>$(id).onchange=resistorCalc);
+$('b1').value=2;$('b2').value=2;$('b3').value=2;$('b4').value=2;
+resistorCalc();
+</script>
+</body>
+</html>

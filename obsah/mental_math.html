@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🧠 Mentální matematika</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1a1a1a;color:#e0e0e0;min-height:100vh;padding:20px}
+.container{max-width:560px;margin:0 auto}
+h1{font-size:1.6rem;margin-bottom:18px;font-weight:600;text-align:center}
+.card{background:#2a2a2a;border:1px solid #404040;border-radius:8px;padding:24px;margin-bottom:20px}
+.setup{display:flex;gap:12px;flex-wrap:wrap;align-items:end;justify-content:center}
+label{display:block;font-size:.78rem;color:#888;margin-bottom:4px}
+select{background:#404040;border:1px solid #555;border-radius:4px;color:#e0e0e0;padding:9px}
+.ops{display:flex;gap:8px;justify-content:center;margin:14px 0;flex-wrap:wrap}
+.op{padding:8px 14px;background:#404040;border:1px solid #555;border-radius:20px;cursor:pointer;font-size:1.1rem}
+.op.active{background:#6aa6fd;color:#fff;border-color:#6aa6fd}
+.btn{background:#6aa6fd;color:#fff;border:none;padding:12px 28px;border-radius:6px;cursor:pointer;font-weight:600}
+.btn:hover{background:#5694f0}
+.game,.results{display:none;text-align:center}
+.scorebar{display:flex;justify-content:space-around;margin-bottom:18px}
+.scorebar .v{font-size:1.5rem;font-weight:700;color:#6aa6fd}.scorebar .l{font-size:.72rem;color:#888}
+.question{font-size:3.2rem;font-weight:700;margin:18px 0}
+.answer{font-size:2.2rem;width:200px;text-align:center;background:#1e1e1e;border:2px solid #555;border-radius:10px;color:#fff;padding:12px}
+.answer.correct{border-color:#27ae60}.answer.wrong{border-color:#e74c3c}
+.feedback{font-size:1.3rem;margin:14px 0;min-height:32px;font-weight:600}
+.timer-bar{height:8px;background:#404040;border-radius:4px;overflow:hidden;margin-bottom:16px}
+.timer-bar>div{height:100%;background:#6aa6fd;transition:width .1s linear}
+.results .big{font-size:2.6rem;font-weight:700;color:#6aa6fd}
+.best{color:#f39c12;margin-top:8px}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>🧠 Trénink mentální matematiky</h1>
+  <div class="card" id="setupCard">
+    <div class="ops" id="ops">
+      <div class="op active" data-op="+">➕</div><div class="op active" data-op="-">➖</div>
+      <div class="op" data-op="*">✖️</div><div class="op" data-op="/">➗</div>
+    </div>
+    <div class="setup">
+      <div><label>Obtížnost</label><select id="level"><option value="1">Lehká (do 20)</option><option value="2" selected>Střední (do 100)</option><option value="3">Těžká (do 1000)</option></select></div>
+      <div><label>Délka</label><select id="duration"><option value="60">60 sekund</option><option value="120">2 minuty</option><option value="0">20 příkladů</option></select></div>
+      <button class="btn" id="startBtn">▶️ Start</button>
+    </div>
+  </div>
+
+  <div class="card game" id="gameCard">
+    <div class="scorebar">
+      <div><div class="v" id="score">0</div><div class="l">Správně</div></div>
+      <div><div class="v" id="streak">0</div><div class="l">Série 🔥</div></div>
+      <div><div class="v" id="timeLeft">60</div><div class="l">Zbývá</div></div>
+    </div>
+    <div class="timer-bar"><div id="timerFill" style="width:100%"></div></div>
+    <div class="question" id="question"></div>
+    <input class="answer" id="answer" type="number" inputmode="numeric">
+    <div class="feedback" id="feedback"></div>
+  </div>
+
+  <div class="card results" id="resultsCard">
+    <div style="font-size:2rem" id="emoji"></div>
+    <div class="big" id="finalScore"></div>
+    <p style="color:#888" id="finalDetail"></p>
+    <p class="best" id="best"></p>
+    <button class="btn" id="againBtn" style="margin-top:14px">🔄 Znovu</button>
+  </div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+let ops=['+','-'],score,total,streak,seconds,timer,answer,limitMode,qLimit,qCount;
+document.querySelectorAll('.op').forEach(o=>o.onclick=()=>{o.classList.toggle('active');ops=[...document.querySelectorAll('.op.active')].map(x=>x.dataset.op);if(!ops.length){o.classList.add('active');ops=[o.dataset.op];}});
+function gen(){
+  const lvl=+$('level').value;const max=lvl===1?20:lvl===2?100:1000;
+  const op=ops[Math.floor(Math.random()*ops.length)];
+  let a,b;
+  if(op==='+'){a=1+Math.floor(Math.random()*max);b=1+Math.floor(Math.random()*max);answer=a+b;}
+  else if(op==='-'){a=1+Math.floor(Math.random()*max);b=1+Math.floor(Math.random()*a);answer=a-b;}
+  else if(op==='*'){const m=lvl===1?9:lvl===2?15:25;a=2+Math.floor(Math.random()*m);b=2+Math.floor(Math.random()*m);answer=a*b;}
+  else{b=2+Math.floor(Math.random()*(lvl===1?9:12));answer=1+Math.floor(Math.random()*(lvl===1?9:12));a=b*answer;}
+  $('question').textContent=`${a} ${op==='*'?'×':op==='/'?'÷':op} ${b} = ?`;
+}
+function start(){
+  score=0;total=0;streak=0;qCount=0;
+  const dur=+$('duration').value;limitMode=dur===0;qLimit=20;seconds=dur||999;
+  $('setupCard').style.display='none';$('resultsCard').style.display='none';$('gameCard').style.display='block';
+  $('score').textContent=0;$('streak').textContent=0;
+  if(!limitMode){
+    $('timeLeft').parentElement.style.display='block';
+    timer=setInterval(()=>{seconds--;$('timeLeft').textContent=seconds;$('timerFill').style.width=(seconds/dur*100)+'%';if(seconds<=0)finish();},1000);
+  }else{$('timeLeft').textContent='–';$('timerFill').parentElement.style.display='none';}
+  gen();$('answer').value='';$('answer').focus();$('feedback').textContent='';
+}
+$('answer').addEventListener('input',()=>{
+  if($('answer').value===''||$('answer').value==='-')return;
+  if(+$('answer').value===answer){
+    score++;streak++;total++;qCount++;
+    $('answer').className='answer correct';$('feedback').textContent='✅';$('feedback').style.color='#27ae60';
+    $('score').textContent=score;$('streak').textContent=streak;
+    setTimeout(()=>{$('answer').value='';$('answer').className='answer';$('feedback').textContent='';gen();if(limitMode&&qCount>=qLimit)finish();},250);
+  }
+});
+$('answer').addEventListener('keydown',e=>{if(e.key==='Enter'&&+$('answer').value!==answer&&$('answer').value!==''){streak=0;total++;$('streak').textContent=0;$('answer').className='answer wrong';$('feedback').textContent='❌ '+answer;$('feedback').style.color='#e74c3c';setTimeout(()=>{$('answer').value='';$('answer').className='answer';$('feedback').textContent='';gen();},700);}});
+function finish(){
+  clearInterval(timer);
+  $('gameCard').style.display='none';$('resultsCard').style.display='block';
+  $('finalScore').textContent=score+(limitMode?' / '+qLimit:' správně');
+  const acc=total?Math.round(score/total*100):0;
+  $('emoji').textContent=score>=20?'🏆':score>=12?'🎉':score>=6?'👍':'💪';
+  $('finalDetail').textContent=`Přesnost ${acc}% (${total} pokusů)`;
+  const best=+(localStorage.getItem('mentalmath_best')||0);
+  if(score>best){localStorage.setItem('mentalmath_best',score);$('best').textContent='🌟 Nový rekord!';}
+  else $('best').textContent='Tvůj rekord: '+best;
+}
+$('startBtn').onclick=start;$('againBtn').onclick=()=>{$('setupCard').style.display='block';$('resultsCard').style.display='none';$('timeLeft').parentElement.style.display='block';$('timerFill').parentElement.style.display='block';};
+</script>
+</body>
+</html>

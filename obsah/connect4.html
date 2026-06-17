@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🔴 Čtyři v řadě</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;user-select:none}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1a1a1a;color:#e0e0e0;min-height:100vh;padding:20px;display:flex;flex-direction:column;align-items:center}
+h1{font-size:1.6rem;margin-bottom:14px;font-weight:600}
+.top{display:flex;gap:10px;align-items:center;margin-bottom:16px;flex-wrap:wrap;justify-content:center}
+.btn{background:#6aa6fd;color:#fff;border:none;padding:9px 16px;border-radius:6px;cursor:pointer;font-weight:600}
+.btn:hover{background:#5694f0}.btn-sec{background:#404040}
+select{background:#404040;border:1px solid #555;border-radius:4px;color:#e0e0e0;padding:9px}
+.status{font-size:1.2rem;font-weight:600;margin-bottom:12px;min-height:30px}
+.board{background:#2a4a8a;border-radius:12px;padding:10px;display:grid;grid-template-columns:repeat(7,1fr);gap:6px}
+.cell{width:48px;height:48px;border-radius:50%;background:#1a1a1a;cursor:pointer;transition:.1s}
+@media(max-width:520px){.cell{width:40px;height:40px}}
+.cell.red{background:radial-gradient(circle at 35% 35%,#ff6b6b,#c0392b)}
+.cell.yellow{background:radial-gradient(circle at 35% 35%,#ffe066,#f1c40f)}
+.cell.win{box-shadow:0 0 0 3px #27ae60}
+.col-hover{background:#3a5a9a !important}
+.hint{color:#888;font-size:.84rem;margin-top:14px}
+</style>
+</head>
+<body>
+<h1>🔴 Čtyři v řadě</h1>
+<div class="top">
+  <select id="mode"><option value="cpu">Proti počítači</option><option value="2p">Dva hráči</option></select>
+  <button class="btn" id="newBtn">🔄 Nová hra</button>
+</div>
+<div class="status" id="status"></div>
+<div class="board" id="board"></div>
+<p class="hint">Klikni na sloupec a spusť žeton. Vyhrává ten, kdo má 4 v řadě (vodorovně, svisle nebo šikmo).</p>
+<script>
+const $=id=>document.getElementById(id);
+const ROWS=6,COLS=7;
+let grid,turn,over;
+function init(){grid=Array.from({length:ROWS},()=>Array(COLS).fill(0));turn=1;over=false;render();$('status').textContent='Na tahu: 🔴 (ty)';}
+function render(){
+  const b=$('board');b.innerHTML='';
+  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){
+    const d=document.createElement('div');d.className='cell'+(grid[r][c]===1?' red':grid[r][c]===2?' yellow':'');
+    d.dataset.c=c;b.appendChild(d);
+  }
+  b.querySelectorAll('.cell').forEach(cell=>{
+    cell.onmouseenter=()=>{if(!over)b.querySelectorAll(`.cell[data-c="${cell.dataset.c}"]`).forEach(x=>{if(!x.classList.contains('red')&&!x.classList.contains('yellow'))x.classList.add('col-hover');});};
+    cell.onmouseleave=()=>b.querySelectorAll('.col-hover').forEach(x=>x.classList.remove('col-hover'));
+    cell.onclick=()=>drop(+cell.dataset.c);
+  });
+}
+function drop(c){
+  if(over)return;
+  if($('mode').value==='cpu'&&turn===2)return;
+  if(!place(c,turn))return;
+  if(checkEnd())return;
+  turn=turn===1?2:1;
+  updateStatus();
+  if($('mode').value==='cpu'&&turn===2&&!over)setTimeout(cpuMove,400);
+}
+function place(c,player){
+  for(let r=ROWS-1;r>=0;r--)if(!grid[r][c]){grid[r][c]=player;render();return true;}
+  return false;
+}
+function updateStatus(){$('status').textContent='Na tahu: '+(turn===1?'🔴'+($('mode').value==='cpu'?' (ty)':' (hráč 1)'):'🟡'+($('mode').value==='cpu'?' (počítač)':' (hráč 2)'));}
+function cpuMove(){
+  // try win, then block, else heuristic
+  let move=findWinning(2);if(move==null)move=findWinning(1);
+  if(move==null){const valid=[];for(let c=0;c<COLS;c++)if(!grid[0][c])valid.push(c);
+    const center=[3,2,4,1,5,0,6].filter(c=>valid.includes(c));move=center[0]+Math.floor(Math.random()*Math.min(2,center.length))*0;move=center[Math.floor(Math.random()*Math.min(3,center.length))];}
+  place(move,2);if(checkEnd())return;turn=1;updateStatus();
+}
+function findWinning(player){
+  for(let c=0;c<COLS;c++){const r=dropRow(c);if(r<0)continue;grid[r][c]=player;const win=winnerAt(r,c);grid[r][c]=0;if(win)return c;}
+  return null;
+}
+function dropRow(c){for(let r=ROWS-1;r>=0;r--)if(!grid[r][c])return r;return -1;}
+function winnerAt(r,c){
+  const p=grid[r][c];const dirs=[[0,1],[1,0],[1,1],[1,-1]];
+  for(const[dr,dc]of dirs){let count=1,cells=[[r,c]];
+    for(const s of[1,-1])for(let i=1;i<4;i++){const nr=r+dr*i*s,nc=c+dc*i*s;if(nr<0||nr>=ROWS||nc<0||nc>=COLS||grid[nr][nc]!==p)break;count++;cells.push([nr,nc]);}
+    if(count>=4)return cells;
+  }
+  return null;
+}
+function checkEnd(){
+  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++)if(grid[r][c]){const w=winnerAt(r,c);if(w){over=true;
+    w.forEach(([wr,wc])=>$('board').children[wr*COLS+wc].classList.add('win'));
+    $('status').textContent=(grid[r][c]===1?'🔴':'🟡')+' vyhrává! 🎉';return true;}}
+  if(grid[0].every(x=>x)){over=true;$('status').textContent='Remíza! 🤝';return true;}
+  return false;
+}
+$('newBtn').onclick=init;$('mode').onchange=init;
+init();
+</script>
+</body>
+</html>

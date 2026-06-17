@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>⛰️ Výškový profil trasy</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1a1a1a;color:#e0e0e0;min-height:100vh;padding:20px}
+.container{max-width:1000px;margin:0 auto}
+h1{font-size:1.6rem;margin-bottom:18px;font-weight:600;text-align:center}
+.card{background:#2a2a2a;border:1px solid #404040;border-radius:8px;padding:20px;margin-bottom:20px}
+h2{font-size:1.05rem;color:#6aa6fd;margin-bottom:14px}
+.drop{border:2px dashed #555;border-radius:10px;padding:26px;text-align:center;cursor:pointer}
+.drop:hover,.drop.over{border-color:#6aa6fd;background:#1e2530}
+.btn{background:#6aa6fd;color:#fff;border:none;padding:9px 16px;border-radius:6px;cursor:pointer;font-weight:600;font-size:.85rem}
+.btn:hover{background:#5694f0}.btn-sec{background:#404040}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px;margin-bottom:16px}
+.stat{background:#1e1e1e;border-radius:8px;padding:14px;text-align:center}
+.stat .v{font-size:1.4rem;font-weight:700;color:#6aa6fd}.stat .l{font-size:.74rem;color:#888;margin-top:2px}
+.up{color:#27ae60}.down{color:#e74c3c}
+.note{font-size:.78rem;color:#666;margin-top:8px}
+textarea{width:100%;min-height:90px;background:#1e1e1e;border:1px solid #555;border-radius:6px;color:#e0e0e0;padding:10px;font-family:monospace;font-size:.85rem;margin-top:10px}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>⛰️ Výškový profil trasy</h1>
+  <div class="card">
+    <div class="drop" id="drop">📁 Přetáhni GPX soubor sem nebo klikni pro výběr<input type="file" id="file" accept=".gpx,.xml" hidden></div>
+    <details style="margin-top:12px"><summary style="cursor:pointer;color:#888;font-size:.85rem">…nebo vlož ručně body „lat,lon,výška" (každý na řádek)</summary>
+      <textarea id="manual" placeholder="50.08,14.42,200&#10;50.09,14.43,250&#10;50.10,14.44,230"></textarea>
+      <button class="btn btn-sec" id="loadManual" style="margin-top:8px">Načíst body</button>
+    </details>
+  </div>
+  <div class="card" id="resultCard" style="display:none">
+    <h2 id="trackName">Profil</h2>
+    <div class="stats">
+      <div class="stat"><div class="v" id="sDist">–</div><div class="l">Délka</div></div>
+      <div class="stat"><div class="v up" id="sUp">–</div><div class="l">▲ Stoupání</div></div>
+      <div class="stat"><div class="v down" id="sDown">–</div><div class="l">▼ Klesání</div></div>
+      <div class="stat"><div class="v" id="sMin">–</div><div class="l">Min. výška</div></div>
+      <div class="stat"><div class="v" id="sMax">–</div><div class="l">Max. výška</div></div>
+      <div class="stat"><div class="v" id="sPoints">–</div><div class="l">Bodů</div></div>
+    </div>
+    <canvas id="chart" height="120"></canvas>
+    <p class="note">Profil ukazuje nadmořskou výšku v závislosti na ujeté vzdálenosti. Vyžaduje, aby GPX obsahoval výškové údaje (&lt;ele&gt;).</p>
+  </div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const drop=$('drop'),fileInput=$('file');let chart;
+drop.onclick=()=>fileInput.click();
+drop.ondragover=e=>{e.preventDefault();drop.classList.add('over');};
+drop.ondragleave=()=>drop.classList.remove('over');
+drop.ondrop=e=>{e.preventDefault();drop.classList.remove('over');if(e.dataTransfer.files[0])readFile(e.dataTransfer.files[0]);};
+fileInput.onchange=()=>{if(fileInput.files[0])readFile(fileInput.files[0]);};
+function readFile(f){const r=new FileReader();r.onload=()=>parseGPX(r.result,f.name);r.readAsText(f);}
+function parseGPX(xml,name){
+  const doc=new DOMParser().parseFromString(xml,'text/xml');
+  const pts=[...doc.querySelectorAll('trkpt,rtept,wpt')].map(p=>({
+    lat:+p.getAttribute('lat'),lon:+p.getAttribute('lon'),ele:+(p.querySelector('ele')?.textContent||0)}));
+  if(!pts.length){alert('V souboru nebyly nalezeny body trasy.');return;}
+  render(pts,name.replace(/\.[^.]+$/,''));
+}
+$('loadManual').onclick=()=>{
+  const pts=$('manual').value.split('\n').map(l=>l.split(',').map(Number)).filter(a=>a.length>=2&&!isNaN(a[0])).map(a=>({lat:a[0],lon:a[1],ele:a[2]||0}));
+  if(pts.length<2)return alert('Zadej alespoň 2 body.');
+  render(pts,'Ruční zadání');
+};
+const rad=d=>d*Math.PI/180;
+function dist(a,b){const R=6371000,dLa=rad(b.lat-a.lat),dLo=rad(b.lon-a.lon);
+  const x=Math.sin(dLa/2)**2+Math.cos(rad(a.lat))*Math.cos(rad(b.lat))*Math.sin(dLo/2)**2;return R*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x));}
+function render(pts,name){
+  let cum=0,up=0,down=0;const labels=[],eles=[];
+  for(let i=0;i<pts.length;i++){
+    if(i>0){cum+=dist(pts[i-1],pts[i]);const de=pts[i].ele-pts[i-1].ele;if(de>0)up+=de;else down-=de;}
+    labels.push((cum/1000).toFixed(2));eles.push(pts[i].ele);
+  }
+  $('resultCard').style.display='block';$('trackName').textContent='📍 '+name;
+  $('sDist').textContent=(cum/1000).toFixed(2)+' km';
+  $('sUp').textContent='+'+Math.round(up)+' m';
+  $('sDown').textContent='−'+Math.round(down)+' m';
+  $('sMin').textContent=Math.round(Math.min(...eles))+' m';
+  $('sMax').textContent=Math.round(Math.max(...eles))+' m';
+  $('sPoints').textContent=pts.length;
+  if(chart)chart.destroy();
+  chart=new Chart($('chart'),{type:'line',data:{labels,datasets:[{label:'Výška (m)',data:eles,borderColor:'#6aa6fd',backgroundColor:'rgba(106,166,253,.2)',fill:true,pointRadius:0,tension:.3}]},
+    options:{plugins:{legend:{display:false},tooltip:{callbacks:{title:i=>'km '+i[0].label}}},scales:{x:{title:{display:true,text:'Vzdálenost (km)',color:'#888'},ticks:{color:'#888',maxTicksLimit:12},grid:{color:'#333'}},y:{title:{display:true,text:'Výška (m)',color:'#888'},ticks:{color:'#888'},grid:{color:'#333'}}}}});
+}
+</script>
+</body>
+</html>

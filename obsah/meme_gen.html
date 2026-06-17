@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🖼️ Generátor meme</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1a1a1a;color:#e0e0e0;min-height:100vh;padding:20px}
+.container{max-width:900px;margin:0 auto}
+h1{font-size:1.6rem;margin-bottom:18px;font-weight:600;text-align:center}
+.layout{display:grid;grid-template-columns:300px 1fr;gap:20px}
+@media(max-width:680px){.layout{grid-template-columns:1fr}}
+.card{background:#2a2a2a;border:1px solid #404040;border-radius:8px;padding:18px}
+h2{font-size:1rem;color:#6aa6fd;margin-bottom:12px}
+label{display:block;font-size:.78rem;color:#888;margin:10px 0 4px}
+input,select{width:100%;background:#404040;border:1px solid #555;border-radius:4px;color:#e0e0e0;padding:9px}
+.drop{border:2px dashed #555;border-radius:8px;padding:16px;text-align:center;cursor:pointer;font-size:.85rem;margin-bottom:8px}
+.drop:hover{border-color:#6aa6fd}
+.btn{background:#6aa6fd;color:#fff;border:none;padding:10px 16px;border-radius:6px;cursor:pointer;font-weight:600;font-size:.85rem;width:100%;margin-top:14px}
+.btn-sec{background:#404040;margin-top:8px}
+.canvaswrap{display:flex;justify-content:center;align-items:start}
+canvas{max-width:100%;border-radius:8px;border:1px solid #404040;background:#000}
+.row{display:flex;gap:8px}.row>div{flex:1}
+.presets{display:flex;gap:6px;flex-wrap:wrap}
+.preset{background:#1e1e1e;border:1px solid #404040;border-radius:6px;padding:6px 10px;cursor:pointer;font-size:.78rem}
+.preset:hover{border-color:#6aa6fd}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>🖼️ Generátor meme</h1>
+  <div class="layout">
+    <div class="card">
+      <h2>Obrázek</h2>
+      <div class="drop" id="drop">📁 Nahraj obrázek<input type="file" id="file" accept="image/*" hidden></div>
+      <div class="presets" id="presets"></div>
+      <h2 style="margin-top:14px">Text</h2>
+      <label>Horní text</label><input id="top" value="KDYŽ TO KONEČNĚ FUNGUJE">
+      <label>Dolní text</label><input id="bottom" value="A NEVÍŠ PROČ">
+      <div class="row">
+        <div><label>Velikost <span id="sizeVal">40</span></label><input type="range" id="size" min="16" max="90" value="40"></div>
+      </div>
+      <label>Barva textu / obrysu</label>
+      <div class="row"><input type="color" id="fill" value="#ffffff" style="height:38px"><input type="color" id="stroke" value="#000000" style="height:38px"></div>
+      <button class="btn" id="dlBtn">💾 Stáhnout meme</button>
+    </div>
+    <div class="card canvaswrap"><canvas id="canvas" width="500" height="500"></canvas></div>
+  </div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const canvas=$('canvas'),ctx=canvas.getContext('2d');
+let img=null;
+function placeholder(){
+  const c=canvas;c.width=500;c.height=400;
+  const g=ctx.createLinearGradient(0,0,500,400);g.addColorStop(0,'#3a4a6a');g.addColorStop(1,'#6aa6fd');
+  ctx.fillStyle=g;ctx.fillRect(0,0,500,400);
+  ctx.fillStyle='rgba(255,255,255,.5)';ctx.font='20px sans-serif';ctx.textAlign='center';ctx.fillText('Nahraj obrázek →',250,200);
+  draw();
+}
+const drop=$('drop'),fileInput=$('file');
+drop.onclick=()=>fileInput.click();
+drop.ondragover=e=>{e.preventDefault();drop.style.borderColor='#6aa6fd';};
+drop.ondrop=e=>{e.preventDefault();if(e.dataTransfer.files[0])load(e.dataTransfer.files[0]);};
+fileInput.onchange=()=>{if(fileInput.files[0])load(fileInput.files[0]);};
+function load(f){img=new Image();img.onload=()=>{const maxW=600;let w=img.width,h=img.height;if(w>maxW){h=h*maxW/w;w=maxW;}canvas.width=w;canvas.height=h;draw();};img.src=URL.createObjectURL(f);}
+function draw(){
+  if(img)ctx.drawImage(img,0,0,canvas.width,canvas.height);
+  else{/* keep placeholder bg already drawn */}
+  const size=+$('size').value;
+  ctx.font=`bold ${size}px Impact, "Arial Black", sans-serif`;
+  ctx.textAlign='center';ctx.lineJoin='round';
+  ctx.fillStyle=$('fill').value;ctx.strokeStyle=$('stroke').value;ctx.lineWidth=size/7;
+  function text(str,y){str=str.toUpperCase();ctx.strokeText(str,canvas.width/2,y);ctx.fillText(str,canvas.width/2,y);}
+  ctx.textBaseline='top';if($('top').value)text($('top').value,12);
+  ctx.textBaseline='bottom';if($('bottom').value)text($('bottom').value,canvas.height-12);
+}
+function redraw(){if(img||true){if(img){draw();}else{placeholder();}}}
+['top','bottom','size','fill','stroke'].forEach(id=>$(id).oninput=()=>{$('sizeVal').textContent=$('size').value;if(img)draw();else placeholder();});
+$('dlBtn').onclick=()=>{const a=document.createElement('a');a.href=canvas.toDataURL('image/png');a.download='meme.png';a.click();};
+// preset solid backgrounds
+const PRESETS=[['Modrá','#3a4a6a'],['Černá','#111'],['Bílá','#eee'],['Zelená','#1e3a26']];
+$('presets').innerHTML=PRESETS.map((p,i)=>`<div class="preset" data-c="${p[1]}">${p[0]}</div>`).join('');
+$('presets').querySelectorAll('.preset').forEach(b=>b.onclick=()=>{img=null;canvas.width=500;canvas.height=400;ctx.fillStyle=b.dataset.c;ctx.fillRect(0,0,500,400);draw();});
+placeholder();
+</script>
+</body>
+</html>

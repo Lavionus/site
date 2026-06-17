@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>⚖️ Hmotnost materiálu</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1a1a1a;color:#e0e0e0;min-height:100vh;padding:20px}
+.container{max-width:780px;margin:0 auto}
+h1{font-size:1.6rem;margin-bottom:18px;font-weight:600;text-align:center}
+.card{background:#2a2a2a;border:1px solid #404040;border-radius:8px;padding:22px;margin-bottom:20px}
+h2{font-size:1.05rem;color:#6aa6fd;margin-bottom:16px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:560px){.grid{grid-template-columns:1fr}}
+label{display:block;font-size:.82rem;color:#888;margin-bottom:5px}
+input,select{width:100%;background:#404040;border:1px solid #555;border-radius:4px;color:#e0e0e0;padding:10px;margin-bottom:12px}
+.shape-fields{margin-top:8px}
+.big{font-size:2.4rem;font-weight:700;color:#6aa6fd;text-align:center;margin:10px 0}
+.res-row{display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid #333}
+.res-row:last-child{border:none}.res-row b{color:#4caf50}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>⚖️ Kalkulačka hmotnosti materiálu</h1>
+  <div class="card">
+    <h2>Materiál a tvar</h2>
+    <div class="grid">
+      <div><label>Materiál</label>
+        <select id="material">
+          <option value="7850">Ocel (7850 kg/m³)</option>
+          <option value="7200">Litina (7200)</option>
+          <option value="2700">Hliník (2700)</option>
+          <option value="8960">Měď (8960)</option>
+          <option value="8500">Mosaz (8500)</option>
+          <option value="11340">Olovo (11340)</option>
+          <option value="700">Dřevo měkké (700)</option>
+          <option value="1000">Dřevo tvrdé (1000)</option>
+          <option value="1380">PVC (1380)</option>
+          <option value="1240">PLA filament (1240)</option>
+          <option value="2500">Sklo (2500)</option>
+          <option value="2400">Beton (2400)</option>
+          <option value="custom">— vlastní hustota —</option>
+        </select>
+      </div>
+      <div><label>Tvar</label>
+        <select id="shape"><option value="box">Kvádr / deska</option><option value="cylinder">Válec / tyč kruhová</option><option value="tube">Trubka</option><option value="sphere">Koule</option><option value="hex">Šestihran</option></select>
+      </div>
+    </div>
+    <div id="customRow" style="display:none"><label>Vlastní hustota (kg/m³)</label><input type="number" id="customDensity" value="1000"></div>
+    <div class="shape-fields grid" id="dims"></div>
+    <label>Počet kusů</label><input type="number" id="count" value="1" min="1">
+  </div>
+  <div class="card">
+    <h2>📋 Výsledek</h2>
+    <div class="big" id="totalWeight">–</div>
+    <p style="text-align:center;color:#888;margin-bottom:14px">celková hmotnost</p>
+    <div class="res-row"><span>Objem (1 kus)</span><b id="volume">–</b></div>
+    <div class="res-row"><span>Hmotnost (1 kus)</span><b id="weight1">–</b></div>
+    <div class="res-row"><span>Počet kusů</span><b id="countOut">–</b></div>
+  </div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const SHAPES={
+  box:[['Délka (mm)','l',100],['Šířka (mm)','w',100],['Výška (mm)','h',10]],
+  cylinder:[['Průměr (mm)','d',50],['Délka (mm)','l',200]],
+  tube:[['Vnější ø (mm)','d',50],['Tloušťka stěny (mm)','t',3],['Délka (mm)','l',200]],
+  sphere:[['Průměr (mm)','d',50]],
+  hex:[['Velikost klíče SW (mm)','s',24],['Délka (mm)','l',200]]
+};
+function buildDims(){
+  const s=SHAPES[$('shape').value];
+  $('dims').innerHTML=s.map(([lab,k,def])=>`<div><label>${lab}</label><input type="number" id="dim_${k}" value="${def}" step="any"></div>`).join('');
+  s.forEach(([,k])=>$('dim_'+k).oninput=calc);
+  calc();
+}
+function vol(){ // returns m³
+  const sh=$('shape').value,g=k=>+($('dim_'+k)?.value||0)/1000;
+  if(sh==='box')return g('l')*g('w')*g('h');
+  if(sh==='cylinder'){const r=g('d')/2;return Math.PI*r*r*g('l');}
+  if(sh==='tube'){const ro=g('d')/2,ri=ro-g('t');return Math.PI*(ro*ro-ri*ri)*g('l');}
+  if(sh==='sphere'){const r=g('d')/2;return 4/3*Math.PI*r*r*r;}
+  if(sh==='hex'){const sw=g('s');const area=Math.sqrt(3)/2*sw*sw;return area*g('l');}
+  return 0;
+}
+function calc(){
+  const density=$('material').value==='custom'?+$('customDensity').value:+$('material').value;
+  const v=vol();const w=v*density;const count=+$('count').value;
+  const fmtW=x=>x>=1000?(x/1000).toFixed(3)+' t':x>=1?x.toFixed(3)+' kg':(x*1000).toFixed(1)+' g';
+  $('volume').textContent=(v*1e6).toFixed(2)+' cm³ ('+v.toExponential(2)+' m³)';
+  $('weight1').textContent=fmtW(w);
+  $('totalWeight').textContent=fmtW(w*count);
+  $('countOut').textContent=count+'×';
+}
+$('shape').onchange=buildDims;
+$('material').onchange=()=>{$('customRow').style.display=$('material').value==='custom'?'block':'none';calc();};
+$('customDensity').oninput=calc;$('count').oninput=calc;
+buildDims();
+</script>
+</body>
+</html>

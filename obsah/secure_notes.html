@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🔒 Šifrované poznámky</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1a1a1a;color:#e0e0e0;min-height:100vh;padding:20px}
+.container{max-width:720px;margin:0 auto}
+h1{font-size:1.6rem;margin-bottom:8px;font-weight:600;text-align:center}
+.sub{text-align:center;color:#888;font-size:.85rem;margin-bottom:20px}
+.card{background:#2a2a2a;border:1px solid #404040;border-radius:8px;padding:22px;margin-bottom:20px}
+label{display:block;font-size:.82rem;color:#888;margin-bottom:6px}
+input,textarea{width:100%;background:#404040;border:1px solid #555;border-radius:6px;color:#e0e0e0;padding:11px;margin-bottom:14px;font-family:inherit}
+textarea{min-height:240px;resize:vertical;font-size:.98rem;line-height:1.6}
+.btn{background:#6aa6fd;color:#fff;border:none;padding:11px 20px;border-radius:6px;cursor:pointer;font-weight:600}
+.btn:hover{background:#5694f0}.btn-sec{background:#404040}.btn-sec:hover{background:#4a4a4a}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.status{text-align:center;font-size:.88rem;margin-top:10px;min-height:20px}
+.status.err{color:#e74c3c}.status.ok{color:#27ae60}
+.hidden{display:none}
+.note{font-size:.78rem;color:#666;margin-top:10px;line-height:1.5}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>🔒 Šifrované poznámky</h1>
+  <p class="sub">Text se zašifruje heslem (AES-GCM) a uloží lokálně. Bez hesla ho nelze přečíst.</p>
+
+  <div class="card" id="lockedView">
+    <label>Heslo</label>
+    <input type="password" id="password" placeholder="Zadej heslo…">
+    <div class="row">
+      <button class="btn" id="unlockBtn">🔓 Odemknout / vytvořit</button>
+    </div>
+    <div class="status" id="lockStatus"></div>
+    <p class="note">Heslo se nikam neukládá ani neodesílá. Pokud ho zapomeneš, data nepůjdou obnovit.</p>
+  </div>
+
+  <div class="card hidden" id="editorView">
+    <label>Tvoje poznámky (zašifrované při uložení)</label>
+    <textarea id="content" placeholder="Piš sem…"></textarea>
+    <div class="row">
+      <button class="btn" id="saveBtn">💾 Zašifrovat &amp; uložit</button>
+      <button class="btn btn-sec" id="lockBtn">🔒 Zamknout</button>
+      <button class="btn btn-sec" id="clearBtn" style="margin-left:auto">🗑️ Smazat vše</button>
+    </div>
+    <div class="status" id="editStatus"></div>
+  </div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+let key=null;
+const enc=new TextEncoder(),dec=new TextDecoder();
+async function deriveKey(password,salt){
+  const baseKey=await crypto.subtle.importKey('raw',enc.encode(password),'PBKDF2',false,['deriveKey']);
+  return crypto.subtle.deriveKey({name:'PBKDF2',salt,iterations:120000,hash:'SHA-256'},baseKey,{name:'AES-GCM',length:256},false,['encrypt','decrypt']);
+}
+function b64(buf){return btoa(String.fromCharCode(...new Uint8Array(buf)));}
+function unb64(s){return Uint8Array.from(atob(s),c=>c.charCodeAt(0));}
+async function unlock(){
+  const pw=$('password').value;if(!pw){$('lockStatus').className='status err';$('lockStatus').textContent='Zadej heslo.';return;}
+  const stored=localStorage.getItem('secure_notes');
+  if(!stored){
+    // new vault
+    const salt=crypto.getRandomValues(new Uint8Array(16));
+    key=await deriveKey(pw,salt);
+    localStorage.setItem('secure_notes_salt',b64(salt));
+    $('content').value='';openEditor();$('editStatus').textContent='Nový trezor vytvořen. Napiš poznámky a ulož.';
+    return;
+  }
+  try{
+    const salt=unb64(localStorage.getItem('secure_notes_salt'));
+    key=await deriveKey(pw,salt);
+    const{iv,data}=JSON.parse(stored);
+    const plain=await crypto.subtle.decrypt({name:'AES-GCM',iv:unb64(iv)},key,unb64(data));
+    $('content').value=dec.decode(plain);openEditor();
+  }catch(e){key=null;$('lockStatus').className='status err';$('lockStatus').textContent='❌ Nesprávné heslo.';}
+}
+async function saveNotes(){
+  if(!key)return;
+  const iv=crypto.getRandomValues(new Uint8Array(12));
+  const cipher=await crypto.subtle.encrypt({name:'AES-GCM',iv},key,enc.encode($('content').value));
+  localStorage.setItem('secure_notes',JSON.stringify({iv:b64(iv),data:b64(cipher)}));
+  $('editStatus').className='status ok';$('editStatus').textContent='✅ Uloženo a zašifrováno '+new Date().toLocaleTimeString('cs');
+}
+function openEditor(){$('lockedView').classList.add('hidden');$('editorView').classList.remove('hidden');$('lockStatus').textContent='';}
+function lock(){key=null;$('password').value='';$('content').value='';$('editorView').classList.add('hidden');$('lockedView').classList.remove('hidden');}
+$('unlockBtn').onclick=unlock;
+$('password').onkeydown=e=>{if(e.key==='Enter')unlock();};
+$('saveBtn').onclick=saveNotes;
+$('lockBtn').onclick=lock;
+$('clearBtn').onclick=()=>{if(confirm('Opravdu smazat zašifrovaná data? Nelze vrátit.')){localStorage.removeItem('secure_notes');localStorage.removeItem('secure_notes_salt');lock();}};
+</script>
+</body>
+</html>

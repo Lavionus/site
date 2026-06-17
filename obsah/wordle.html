@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🟩 Slovo (Wordle)</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;user-select:none}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1a1a1a;color:#e0e0e0;min-height:100vh;padding:20px;display:flex;flex-direction:column;align-items:center}
+h1{font-size:1.6rem;margin-bottom:6px;font-weight:600}
+.sub{color:#888;font-size:.85rem;margin-bottom:16px}
+.btn{background:#6aa6fd;color:#fff;border:none;padding:8px 16px;border-radius:6px;cursor:pointer;font-weight:600;margin-bottom:16px}
+.grid{display:grid;gap:6px;margin-bottom:20px}
+.row{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.tile{width:56px;height:56px;border:2px solid #404040;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:1.8rem;font-weight:700;text-transform:uppercase}
+.tile.filled{border-color:#666}
+.tile.correct{background:#27ae60;border-color:#27ae60;color:#fff}
+.tile.present{background:#f1c40f;border-color:#f1c40f;color:#000}
+.tile.absent{background:#3a3a3a;border-color:#3a3a3a;color:#888}
+.msg{min-height:28px;font-weight:600;margin-bottom:12px;text-align:center}
+.keyboard{display:flex;flex-direction:column;gap:6px;align-items:center}
+.krow{display:flex;gap:5px}
+.key{background:#555;border:none;border-radius:5px;padding:14px 10px;cursor:pointer;color:#fff;font-weight:600;font-size:.9rem;min-width:30px}
+.key.wide{min-width:54px;font-size:.75rem}
+.key.correct{background:#27ae60}.key.present{background:#f1c40f;color:#000}.key.absent{background:#2a2a2a;color:#666}
+</style>
+</head>
+<body>
+<h1>🟩 Slovo</h1>
+<div class="sub">Uhádni pětipísmenné slovo na 6 pokusů</div>
+<button class="btn" id="newBtn">🔄 Nová hra</button>
+<div class="grid" id="grid"></div>
+<div class="msg" id="msg"></div>
+<div class="keyboard" id="keyboard"></div>
+<script>
+const $=id=>document.getElementById(id);
+const WORDS=['kotel','sklep','obraz','vlasy','strom','kniha','mraky','prach','vlčák','medvě','liška','polní','úroda','semen','sklen','hrnec','lopta','křídy','dveře','okno','plech','traum','čerty','sníh','děti','holub','svíce','plody','strop','klika','brána','mlýny','rybíz','salát','okurk','mrkev','jablk','hruška','švestka'].filter(w=>[...w].length===5);
+const FALLBACK=['kotel','sklep','obraz','vlasy','strom','kniha','mraky','prach','hrnec','dveře','plech','svíce','strop','klika','brána'];
+let answer,row,col,guesses,done;
+function newGame(){
+  const pool=WORDS.length?WORDS:FALLBACK;
+  answer=[...pool[Math.floor(Math.random()*pool.length)]];
+  row=0;col=0;guesses=Array.from({length:6},()=>Array(5).fill(''));done=false;$('msg').textContent='';
+  buildGrid();buildKeyboard();
+}
+function buildGrid(){
+  $('grid').innerHTML=guesses.map((g,r)=>`<div class="row" data-r="${r}">${g.map((c,i)=>`<div class="tile" data-r="${r}" data-c="${i}"></div>`).join('')}</div>`).join('');
+}
+const LAYOUT=['ěščřžýáíé','qwertzuiop','asdfghjklů','yxcvbnm'];
+function buildKeyboard(){
+  $('keyboard').innerHTML='';
+  LAYOUT.forEach((rowStr,ri)=>{
+    const div=document.createElement('div');div.className='krow';
+    if(ri===3){const e=document.createElement('button');e.className='key wide';e.textContent='ENTER';e.onclick=submit;div.appendChild(e);}
+    [...rowStr].forEach(ch=>{const b=document.createElement('button');b.className='key';b.textContent=ch;b.dataset.k=ch;b.onclick=()=>type(ch);div.appendChild(b);});
+    if(ri===3){const e=document.createElement('button');e.className='key wide';e.textContent='⌫';e.onclick=del;div.appendChild(e);}
+    $('keyboard').appendChild(div);
+  });
+}
+function type(ch){if(done||col>=5)return;guesses[row][col]=ch;updateTile(row,col,ch);col++;}
+function del(){if(done||col<=0)return;col--;guesses[row][col]='';updateTile(row,col,'');}
+function updateTile(r,c,ch){const t=document.querySelector(`.tile[data-r="${r}"][data-c="${c}"]`);t.textContent=ch;t.classList.toggle('filled',!!ch);}
+function submit(){
+  if(done)return;
+  if(col<5){flash('Příliš krátké slovo');return;}
+  const guess=guesses[row];
+  const ansCopy=[...answer];const result=Array(5).fill('absent');
+  for(let i=0;i<5;i++)if(guess[i]===answer[i]){result[i]='correct';ansCopy[i]=null;}
+  for(let i=0;i<5;i++)if(result[i]!=='correct'){const idx=ansCopy.indexOf(guess[i]);if(idx>=0){result[i]='present';ansCopy[idx]=null;}}
+  for(let i=0;i<5;i++){const t=document.querySelector(`.tile[data-r="${row}"][data-c="${i}"]`);t.classList.add(result[i]);
+    const k=document.querySelector(`.key[data-k="${guess[i]}"]`);
+    if(k){if(result[i]==='correct')k.className='key correct';else if(result[i]==='present'&&!k.classList.contains('correct'))k.className='key present';else if(result[i]==='absent'&&!k.classList.contains('correct')&&!k.classList.contains('present'))k.className='key absent';}}
+  if(result.every(r=>r==='correct')){done=true;$('msg').textContent='🎉 Výborně!';$('msg').style.color='#27ae60';return;}
+  row++;col=0;
+  if(row>=6){done=true;$('msg').textContent='💀 Slovo bylo: '+answer.join('').toUpperCase();$('msg').style.color='#e74c3c';}
+}
+function flash(m){$('msg').textContent=m;$('msg').style.color='#f39c12';setTimeout(()=>{if(!done)$('msg').textContent='';},1200);}
+document.addEventListener('keydown',e=>{if(e.key==='Enter')submit();else if(e.key==='Backspace')del();else if(/^[a-zěščřžýáíéůú]$/i.test(e.key))type(e.key.toLowerCase());});
+$('newBtn').onclick=newGame;
+newGame();
+</script>
+</body>
+</html>

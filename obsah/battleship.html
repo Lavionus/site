@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🚢 Lodě</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;user-select:none}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1a1a1a;color:#e0e0e0;min-height:100vh;padding:20px;display:flex;flex-direction:column;align-items:center}
+h1{font-size:1.6rem;margin-bottom:10px;font-weight:600}
+.status{font-size:1.1rem;font-weight:600;margin-bottom:14px;min-height:28px;text-align:center}
+.top{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;justify-content:center}
+.btn{background:#6aa6fd;color:#fff;border:none;padding:9px 16px;border-radius:6px;cursor:pointer;font-weight:600}
+.btn:hover{background:#5694f0}.btn-sec{background:#404040}
+.boards{display:flex;gap:30px;flex-wrap:wrap;justify-content:center}
+.board-wrap h2{text-align:center;font-size:.9rem;color:#888;margin-bottom:8px}
+.grid{display:grid;grid-template-columns:repeat(10,1fr);gap:2px;background:#1a3a5a;padding:6px;border-radius:8px}
+.cell{width:30px;height:30px;background:#2a5a8a;border-radius:3px;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.9rem}
+@media(max-width:480px){.cell{width:26px;height:26px}}
+.cell.ship{background:#555}
+.cell.hit{background:#c0392b}
+.cell.miss{background:#1a3a5a;color:#6aa6fd}
+.cell.sunk{background:#7a1010}
+.enemy .cell.ship{background:#2a5a8a}
+.hint{color:#888;font-size:.84rem;margin-top:14px;text-align:center;max-width:500px}
+.fleet{font-size:.82rem;color:#888;margin-top:6px;text-align:center}
+</style>
+</head>
+<body>
+<h1>🚢 Lodě (Battleship)</h1>
+<div class="status" id="status">Klikni na nepřátelské pole a potop všechny lodě!</div>
+<div class="top"><button class="btn" id="newBtn">🔄 Nová hra</button></div>
+<div class="boards">
+  <div class="board-wrap"><h2>🎯 Nepřítel (klikej sem)</h2><div class="grid enemy" id="enemyBoard"></div><div class="fleet" id="enemyFleet"></div></div>
+  <div class="board-wrap"><h2>⚓ Tvoje flotila</h2><div class="grid" id="myBoard"></div><div class="fleet" id="myFleet"></div></div>
+</div>
+<p class="hint">Lodě: 1× (4 pole), 2× (3), 3× (2), 4× (1). Střídavě střílíš ty a počítač. Vyhrává, kdo první potopí celou flotilu.</p>
+<script>
+const $=id=>document.getElementById(id);
+const SIZE=10;const FLEET=[4,3,3,2,2,2,1,1,1,1];
+let enemy,my,enemyShots,myShots,over,enemyHits,myHits,totalShipCells;
+function emptyBoard(){return Array.from({length:SIZE},()=>Array(SIZE).fill(0));}
+function placeFleet(){
+  const b=emptyBoard();
+  for(const len of FLEET){
+    let placed=false;
+    while(!placed){
+      const horiz=Math.random()<0.5;
+      const r=Math.floor(Math.random()*SIZE),c=Math.floor(Math.random()*SIZE);
+      if(horiz&&c+len>SIZE)continue;if(!horiz&&r+len>SIZE)continue;
+      let ok=true;
+      for(let i=-1;i<=len;i++)for(let j=-1;j<=1;j++){const rr=r+(horiz?j:i),cc=c+(horiz?i:j);if(rr>=0&&rr<SIZE&&cc>=0&&cc<SIZE&&b[rr][cc])ok=false;}
+      if(!ok)continue;
+      for(let i=0;i<len;i++)b[horiz?r:r+i][horiz?c+i:c]=1;
+      placed=true;
+    }
+  }
+  return b;
+}
+function init(){
+  enemy=placeFleet();my=placeFleet();enemyShots=emptyBoard();myShots=emptyBoard();over=false;enemyHits=0;myHits=0;
+  totalShipCells=FLEET.reduce((a,b)=>a+b,0);
+  $('status').textContent='Tvůj tah – střílej na nepřítele!';
+  render();
+}
+function render(){
+  const eb=$('enemyBoard');eb.innerHTML='';
+  for(let r=0;r<SIZE;r++)for(let c=0;c<SIZE;c++){
+    const d=document.createElement('div');d.className='cell';
+    if(enemyShots[r][c]===1)d.classList.add(enemy[r][c]?'hit':'miss'),d.textContent=enemy[r][c]?'💥':'·';
+    d.onclick=()=>shoot(r,c);eb.appendChild(d);
+  }
+  const mb=$('myBoard');mb.innerHTML='';
+  for(let r=0;r<SIZE;r++)for(let c=0;c<SIZE;c++){
+    const d=document.createElement('div');d.className='cell';
+    if(my[r][c])d.classList.add('ship');
+    if(myShots[r][c]===1){d.classList.add(my[r][c]?'hit':'miss');d.textContent=my[r][c]?'💥':'·';}
+    mb.appendChild(d);
+  }
+  $('enemyFleet').textContent='Zásahy: '+enemyHits+' / '+totalShipCells;
+  $('myFleet').textContent='Tvé ztráty: '+myHits+' / '+totalShipCells;
+}
+function shoot(r,c){
+  if(over||enemyShots[r][c])return;
+  enemyShots[r][c]=1;
+  if(enemy[r][c]){enemyHits++;render();if(enemyHits>=totalShipCells){over=true;$('status').textContent='🎉 Vyhráls! Potopil jsi celou flotilu!';return;}$('status').textContent='💥 Zásah! Střílej znovu.';}
+  else{render();$('status').textContent='💧 Vedle. Tah počítače…';setTimeout(cpuTurn,500);}
+}
+function cpuTurn(){
+  if(over)return;
+  let r,c;do{r=Math.floor(Math.random()*SIZE);c=Math.floor(Math.random()*SIZE);}while(myShots[r][c]);
+  myShots[r][c]=1;
+  if(my[r][c]){myHits++;render();if(myHits>=totalShipCells){over=true;$('status').textContent='💀 Prohráls! Počítač potopil tvou flotilu.';return;}$('status').textContent='💥 Počítač tě zasáhl! Střílí znovu…';setTimeout(cpuTurn,500);}
+  else{render();$('status').textContent='Tvůj tah – střílej!';}
+}
+$('newBtn').onclick=init;
+init();
+</script>
+</body>
+</html>

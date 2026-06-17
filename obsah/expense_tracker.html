@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>💰 Sledování výdajů</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1a1a1a;color:#e0e0e0;min-height:100vh;padding:20px}
+.container{max-width:1000px;margin:0 auto}
+h1{font-size:1.6rem;margin-bottom:18px;font-weight:600;text-align:center}
+.card{background:#2a2a2a;border:1px solid #404040;border-radius:8px;padding:20px;margin-bottom:20px}
+h2{font-size:1.05rem;color:#6aa6fd;margin-bottom:14px}
+.form{display:flex;gap:10px;flex-wrap:wrap;align-items:end}
+label{display:block;font-size:.76rem;color:#888;margin-bottom:4px}
+input,select{background:#404040;border:1px solid #555;border-radius:4px;color:#e0e0e0;padding:9px}
+.btn{background:#6aa6fd;color:#fff;border:none;padding:10px 18px;border-radius:6px;cursor:pointer;font-weight:600}
+.btn:hover{background:#5694f0}.btn-sec{background:#404040}
+.layout{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media(max-width:760px){.layout{grid-template-columns:1fr}}
+.stat-row{display:flex;justify-content:space-around;text-align:center;margin-bottom:14px}
+.stat .v{font-size:1.5rem;font-weight:700}.stat .l{font-size:.76rem;color:#888}
+.income{color:#27ae60}.expense{color:#e74c3c}.balance{color:#6aa6fd}
+table{width:100%;border-collapse:collapse;font-size:.88rem}
+th{text-align:left;color:#888;padding:6px;font-size:.74rem;text-transform:uppercase}
+td{padding:7px 6px;border-bottom:1px solid #333}
+.tag{padding:2px 8px;border-radius:10px;font-size:.74rem;color:#fff}
+.del{background:none;border:none;color:#c0392b;cursor:pointer}
+.amt-in{color:#27ae60}.amt-out{color:#e74c3c}
+.filter{margin-left:auto}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>💰 Sledování výdajů / rozpočet</h1>
+  <div class="card">
+    <h2>Nový záznam</h2>
+    <div class="form">
+      <div><label>Typ</label><select id="type"><option value="expense">Výdaj</option><option value="income">Příjem</option></select></div>
+      <div><label>Částka (Kč)</label><input type="number" id="amount" value="" placeholder="0" step="any" style="width:120px"></div>
+      <div><label>Kategorie</label><select id="cat"><option>Jídlo</option><option>Bydlení</option><option>Doprava</option><option>Zábava</option><option>Zdraví</option><option>Nákupy</option><option>Výplata</option><option>Ostatní</option></select></div>
+      <div><label>Popis</label><input id="desc" placeholder="volitelné"></div>
+      <div><label>Datum</label><input type="date" id="date"></div>
+      <button class="btn" id="addBtn">➕ Přidat</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="stat-row">
+      <div class="stat"><div class="v income" id="totalIn">0</div><div class="l">Příjmy</div></div>
+      <div class="stat"><div class="v expense" id="totalOut">0</div><div class="l">Výdaje</div></div>
+      <div class="stat"><div class="v balance" id="balance">0</div><div class="l">Bilance</div></div>
+    </div>
+  </div>
+  <div class="layout">
+    <div class="card"><h2>Výdaje podle kategorií</h2><canvas id="chart"></canvas></div>
+    <div class="card">
+      <h2>Záznamy <select id="monthFilter" class="filter" style="font-size:.8rem"></select></h2>
+      <table><thead><tr><th>Datum</th><th>Kategorie</th><th>Popis</th><th style="text-align:right">Částka</th><th></th></tr></thead><tbody id="list"></tbody></table>
+    </div>
+  </div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+$('date').value=new Date().toISOString().slice(0,10);
+const COLORS={'Jídlo':'#e74c3c','Bydlení':'#9b59b6','Doprava':'#3498db','Zábava':'#f39c12','Zdraví':'#1abc9c','Nákupy':'#e67e22','Výplata':'#27ae60','Ostatní':'#95a5a6'};
+let tx=JSON.parse(localStorage.getItem('expenses')||'[]');
+const save=()=>localStorage.setItem('expenses',JSON.stringify(tx));
+let chart;
+$('addBtn').onclick=()=>{
+  const amt=+$('amount').value;if(!amt){$('amount').focus();return;}
+  tx.push({id:Date.now(),type:$('type').value,amount:amt,cat:$('cat').value,desc:$('desc').value,date:$('date').value});
+  save();$('amount').value='';$('desc').value='';render();
+};
+function monthKey(d){return d.slice(0,7);}
+function render(){
+  // month filter options
+  const months=[...new Set(tx.map(t=>monthKey(t.date)))].sort().reverse();
+  const cur=$('monthFilter').value;
+  $('monthFilter').innerHTML='<option value="">Vše</option>'+months.map(m=>`<option value="${m}">${m}</option>`).join('');
+  if(cur)$('monthFilter').value=cur;
+  const filter=$('monthFilter').value;
+  const list=tx.filter(t=>!filter||monthKey(t.date)===filter).sort((a,b)=>b.date.localeCompare(a.date));
+  const totIn=list.filter(t=>t.type==='income').reduce((s,t)=>s+t.amount,0);
+  const totOut=list.filter(t=>t.type==='expense').reduce((s,t)=>s+t.amount,0);
+  $('totalIn').textContent=totIn.toLocaleString('cs')+' Kč';
+  $('totalOut').textContent=totOut.toLocaleString('cs')+' Kč';
+  $('balance').textContent=(totIn-totOut).toLocaleString('cs')+' Kč';
+  $('list').innerHTML=list.map(t=>`<tr><td>${t.date.slice(5)}</td><td><span class="tag" style="background:${COLORS[t.cat]||'#888'}">${t.cat}</span></td><td>${(t.desc||'').replace(/</g,'&lt;')}</td><td style="text-align:right" class="${t.type==='income'?'amt-in':'amt-out'}">${t.type==='income'?'+':'−'}${t.amount.toLocaleString('cs')}</td><td><button class="del" data-id="${t.id}">🗑️</button></td></tr>`).join('')||'<tr><td colspan="5" style="text-align:center;color:#666;padding:20px">Žádné záznamy</td></tr>';
+  $('list').querySelectorAll('.del').forEach(b=>b.onclick=()=>{tx=tx.filter(t=>t.id!=b.dataset.id);save();render();});
+  // chart
+  const byCat={};list.filter(t=>t.type==='expense').forEach(t=>byCat[t.cat]=(byCat[t.cat]||0)+t.amount);
+  const labels=Object.keys(byCat);
+  if(chart)chart.destroy();
+  chart=new Chart($('chart'),{type:'doughnut',data:{labels,datasets:[{data:labels.map(l=>byCat[l]),backgroundColor:labels.map(l=>COLORS[l]||'#888')}]},options:{plugins:{legend:{position:'bottom',labels:{color:'#bbb',font:{size:11}}}}}});
+}
+$('monthFilter').onchange=render;
+render();
+</script>
+</body>
+</html>

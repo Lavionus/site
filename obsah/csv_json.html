@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🔄 CSV ↔ JSON</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1a1a1a;color:#e0e0e0;min-height:100vh;padding:20px}
+.container{max-width:1300px;margin:0 auto}
+h1{font-size:1.6rem;margin-bottom:14px;font-weight:600;text-align:center}
+.toolbar{display:flex;gap:8px;justify-content:center;margin-bottom:14px;flex-wrap:wrap;align-items:center}
+.btn{background:#6aa6fd;color:#fff;border:none;padding:9px 15px;border-radius:6px;cursor:pointer;font-size:.84rem;font-weight:600}
+.btn:hover{background:#5694f0}.btn-sec{background:#404040}
+select{background:#404040;border:1px solid #555;border-radius:4px;color:#e0e0e0;padding:8px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:820px){.grid{grid-template-columns:1fr}}
+.panel{background:#2a2a2a;border:1px solid #404040;border-radius:8px;overflow:hidden;display:flex;flex-direction:column}
+.panel h2{font-size:.82rem;color:#6aa6fd;padding:10px 14px;background:#333;border-bottom:1px solid #404040;text-transform:uppercase;display:flex;justify-content:space-between}
+textarea{min-height:360px;background:#1e1e1e;border:none;color:#e0e0e0;padding:14px;font-family:'SF Mono',Consolas,monospace;font-size:.86rem;resize:vertical;line-height:1.5}
+textarea:focus{outline:none}
+.status{text-align:center;padding:8px;font-size:.86rem;min-height:30px}
+.status.err{color:#e74c3c}.status.ok{color:#27ae60}
+.preview{padding:10px;overflow:auto;max-height:200px}
+table{border-collapse:collapse;font-size:.82rem;width:100%}
+th,td{border:1px solid #404040;padding:5px 8px;text-align:left}
+th{background:#333;color:#6aa6fd}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>🔄 CSV ↔ JSON převodník</h1>
+  <div class="toolbar">
+    <button class="btn" id="toJson">CSV → JSON ▶</button>
+    <button class="btn" id="toCsv">◀ JSON → CSV</button>
+    <label style="color:#888;font-size:.84rem">Oddělovač: <select id="delim"><option value=",">čárka</option><option value=";">středník</option><option value="\t">tabulátor</option></select></label>
+    <button class="btn btn-sec" id="sampleBtn">📄 Vzorek</button>
+  </div>
+  <div class="status" id="status"></div>
+  <div class="grid">
+    <div class="panel"><h2>CSV</h2><textarea id="csv" spellcheck="false" placeholder="jmeno,vek&#10;Anna,30"></textarea></div>
+    <div class="panel"><h2>JSON</h2><textarea id="json" spellcheck="false" placeholder='[{"jmeno":"Anna","vek":30}]'></textarea></div>
+  </div>
+  <div class="panel" style="margin-top:14px"><h2>Náhled tabulky</h2><div class="preview" id="preview"></div></div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+function getDelim(){const v=$('delim').value;return v==='\\t'?'\t':v;}
+function parseCSV(text,delim){
+  const rows=[];let row=[],cur='',inQ=false;
+  for(let i=0;i<text.length;i++){const c=text[i];
+    if(inQ){if(c==='"'){if(text[i+1]==='"'){cur+='"';i++;}else inQ=false;}else cur+=c;}
+    else{if(c==='"')inQ=true;else if(c===delim){row.push(cur);cur='';}
+      else if(c==='\n'){row.push(cur);rows.push(row);row=[];cur='';}
+      else if(c==='\r'){}else cur+=c;}
+  }
+  if(cur!==''||row.length){row.push(cur);rows.push(row);}
+  return rows.filter(r=>r.length>1||r[0]!=='');
+}
+$('toJson').onclick=()=>{
+  try{
+    const rows=parseCSV($('csv').value,getDelim());
+    if(!rows.length)throw new Error('Prázdný CSV');
+    const headers=rows[0];
+    const data=rows.slice(1).map(r=>{const o={};headers.forEach((h,i)=>{let v=r[i]??'';
+      if(v!==''&&!isNaN(v)&&v.trim()!=='')o[h]=Number(v);else if(v==='true'||v==='false')o[h]=v==='true';else o[h]=v;});return o;});
+    $('json').value=JSON.stringify(data,null,2);
+    $('status').className='status ok';$('status').textContent=`✅ Převedeno ${data.length} řádků`;
+    showPreview(headers,data);
+  }catch(e){$('status').className='status err';$('status').textContent='❌ '+e.message;}
+};
+$('toCsv').onclick=()=>{
+  try{
+    const data=JSON.parse($('json').value);
+    if(!Array.isArray(data))throw new Error('JSON musí být pole objektů');
+    const headers=[...new Set(data.flatMap(o=>Object.keys(o)))];
+    const delim=getDelim();
+    const esc=v=>{v=v==null?'':String(v);return /["\n\r,;\t]/.test(v)?'"'+v.replace(/"/g,'""')+'"':v;};
+    const lines=[headers.map(esc).join(delim),...data.map(o=>headers.map(h=>esc(o[h])).join(delim))];
+    $('csv').value=lines.join('\n');
+    $('status').className='status ok';$('status').textContent=`✅ Převedeno ${data.length} záznamů`;
+    showPreview(headers,data);
+  }catch(e){$('status').className='status err';$('status').textContent='❌ '+e.message;}
+};
+function showPreview(headers,data){
+  $('preview').innerHTML='<table><thead><tr>'+headers.map(h=>`<th>${h}</th>`).join('')+'</tr></thead><tbody>'+
+    data.slice(0,50).map(o=>'<tr>'+headers.map(h=>`<td>${o[h]??''}</td>`).join('')+'</tr>').join('')+'</tbody></table>';
+}
+$('sampleBtn').onclick=()=>{$('csv').value='jmeno,vek,mesto,bio\nAnna Nováková,34,Praha,true\nPetr Svoboda,41,Brno,false\nJana Dvořáková,28,Olomouc,true';$('toJson').click();};
+$('sampleBtn').onclick();
+</script>
+</body>
+</html>

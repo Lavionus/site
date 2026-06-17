@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🌫️ Dithering obrázku</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1a1a1a;color:#e0e0e0;min-height:100vh;padding:20px}
+.container{max-width:1000px;margin:0 auto}
+h1{font-size:1.6rem;margin-bottom:18px;font-weight:600;text-align:center}
+.card{background:#2a2a2a;border:1px solid #404040;border-radius:8px;padding:20px;margin-bottom:18px}
+.drop{border:2px dashed #555;border-radius:10px;padding:24px;text-align:center;cursor:pointer}
+.drop:hover,.drop.over{border-color:#6aa6fd;background:#1e2530}
+.opts{display:flex;gap:16px;flex-wrap:wrap;align-items:end;margin-top:16px}
+label{display:block;font-size:.78rem;color:#888;margin-bottom:4px}
+select,input[type=range]{background:#404040;border:1px solid #555;border-radius:4px;color:#e0e0e0;padding:8px}
+.btn{background:#6aa6fd;color:#fff;border:none;padding:10px 18px;border-radius:6px;cursor:pointer;font-weight:600}
+.btn:hover{background:#5694f0}
+canvas{max-width:100%;border-radius:8px;border:1px solid #404040;image-rendering:pixelated;display:block;margin-top:16px;background:#fff}
+.note{font-size:.78rem;color:#666;margin-top:10px}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>🌫️ Dithering / pixelizace obrázku</h1>
+  <div class="card">
+    <div class="drop" id="drop">📁 Přetáhni obrázek sem nebo klikni<input type="file" id="file" accept="image/*" hidden></div>
+    <div class="opts">
+      <div><label>Algoritmus</label><select id="algo"><option value="floyd">Floyd-Steinberg</option><option value="bayer">Bayer (uspořádaný)</option><option value="threshold">Práh (1-bit)</option><option value="none">Jen kvantizace</option></select></div>
+      <div><label>Paleta</label><select id="palette"><option value="bw">Černobílá</option><option value="gray4">4 odstíny šedi</option><option value="gameboy">Game Boy</option><option value="amber">Jantarový terminál</option></select></div>
+      <div><label>Pixelizace: <span id="scaleVal">1</span>×</label><input type="range" id="scale" min="1" max="8" value="1"></div>
+      <button class="btn" id="dlBtn">💾 Stáhnout</button>
+    </div>
+    <canvas id="canvas"></canvas>
+    <p class="note">Dithering simuluje více barev pomocí rozptylu pixelů – typický retro/tiskový efekt. Vše běží lokálně přes canvas.</p>
+  </div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const canvas=$('canvas'),ctx=canvas.getContext('2d');
+let img=null;
+const PALETTES={bw:[[0,0,0],[255,255,255]],gray4:[[0,0,0],[85,85,85],[170,170,170],[255,255,255]],gameboy:[[15,56,15],[48,98,48],[139,172,15],[155,188,15]],amber:[[20,10,0],[120,70,0],[200,130,0],[255,190,60]]};
+const drop=$('drop'),fileInput=$('file');
+drop.onclick=()=>fileInput.click();
+drop.ondragover=e=>{e.preventDefault();drop.classList.add('over');};
+drop.ondragleave=()=>drop.classList.remove('over');
+drop.ondrop=e=>{e.preventDefault();drop.classList.remove('over');if(e.dataTransfer.files[0])load(e.dataTransfer.files[0]);};
+fileInput.onchange=()=>{if(fileInput.files[0])load(fileInput.files[0]);};
+function load(f){img=new Image();img.onload=process;img.src=URL.createObjectURL(f);}
+function nearest(pal,r,g,b){let best=pal[0],bd=1e9;for(const c of pal){const d=(c[0]-r)**2+(c[1]-g)**2+(c[2]-b)**2;if(d<bd){bd=d;best=c;}}return best;}
+function process(){
+  if(!img)return;
+  const scale=+$('scale').value;
+  let w=Math.max(1,Math.round(img.width/scale)),h=Math.max(1,Math.round(img.height/scale));
+  const maxW=800;if(w>maxW){h=Math.round(h*maxW/w);w=maxW;}
+  const tmp=document.createElement('canvas');tmp.width=w;tmp.height=h;
+  const tctx=tmp.getContext('2d');tctx.drawImage(img,0,0,w,h);
+  const imgData=tctx.getImageData(0,0,w,h),d=imgData.data;
+  const pal=PALETTES[$('palette').value],algo=$('algo').value;
+  const BAYER=[[0,8,2,10],[12,4,14,6],[3,11,1,9],[15,7,13,5]];
+  for(let y=0;y<h;y++)for(let x=0;x<w;x++){
+    const i=(y*w+x)*4;let r=d[i],g=d[i+1],b=d[i+2];
+    if(algo==='bayer'){const t=(BAYER[y%4][x%4]/16-0.5)*64;r+=t;g+=t;b+=t;}
+    if(algo==='threshold'){const lum=0.299*r+0.587*g+0.114*b;const v=lum>127?255:0;[d[i],d[i+1],d[i+2]]=[v,v,v];continue;}
+    const nc=nearest(pal,r,g,b);
+    if(algo==='floyd'){
+      const er=d[i]-nc[0],eg=d[i+1]-nc[1],eb=d[i+2]-nc[2];
+      const spread=(xx,yy,f)=>{if(xx<0||xx>=w||yy<0||yy>=h)return;const j=(yy*w+xx)*4;d[j]+=er*f;d[j+1]+=eg*f;d[j+2]+=eb*f;};
+      spread(x+1,y,7/16);spread(x-1,y+1,3/16);spread(x,y+1,5/16);spread(x+1,y+1,1/16);
+    }
+    d[i]=nc[0];d[i+1]=nc[1];d[i+2]=nc[2];
+  }
+  tctx.putImageData(imgData,0,0);
+  canvas.width=w*scale;canvas.height=h*scale;
+  ctx.imageSmoothingEnabled=false;ctx.drawImage(tmp,0,0,canvas.width,canvas.height);
+}
+['algo','palette','scale'].forEach(id=>$(id).oninput=()=>{$('scaleVal').textContent=$('scale').value;process();});
+['algo','palette'].forEach(id=>$(id).onchange=process);
+$('dlBtn').onclick=()=>{if(!img)return;const a=document.createElement('a');a.href=canvas.toDataURL('image/png');a.download='dither.png';a.click();};
+</script>
+</body>
+</html>

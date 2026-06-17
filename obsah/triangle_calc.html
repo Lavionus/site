@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📐 Trojúhelník</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1a1a1a;color:#e0e0e0;min-height:100vh;padding:20px}
+.container{max-width:860px;margin:0 auto}
+h1{font-size:1.6rem;margin-bottom:18px;font-weight:600;text-align:center}
+.layout{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media(max-width:680px){.layout{grid-template-columns:1fr}}
+.card{background:#2a2a2a;border:1px solid #404040;border-radius:8px;padding:20px}
+h2{font-size:1rem;color:#6aa6fd;margin-bottom:14px}
+.field{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.field label{width:120px;font-size:.88rem}
+.field label .s{color:#6aa6fd;font-weight:700}.field label .a{color:#f39c12;font-weight:700}
+.field input{flex:1;background:#404040;border:1px solid #555;border-radius:4px;color:#e0e0e0;padding:10px}
+.btn{background:#6aa6fd;color:#fff;border:none;padding:10px 18px;border-radius:6px;cursor:pointer;font-weight:600;width:100%}
+.btn-sec{background:#404040;margin-top:8px}
+.res-row{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid #333}
+.res-row:last-child{border:none}.res-row b{color:#4caf50}
+svg{width:100%;height:auto;background:#1e1e1e;border-radius:8px}
+.err{color:#e74c3c;font-size:.85rem;margin-top:8px;text-align:center}
+.hint{font-size:.78rem;color:#666;margin-top:10px;line-height:1.5}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>📐 Trigonometrická kalkulačka trojúhelníku</h1>
+  <div class="layout">
+    <div class="card">
+      <h2>Zadej 3 hodnoty (alespoň 1 strana)</h2>
+      <div class="field"><label>Strana <span class="s">a</span></label><input type="number" id="a" step="any" placeholder="protilehlá A"></div>
+      <div class="field"><label>Strana <span class="s">b</span></label><input type="number" id="b" step="any" placeholder="protilehlá B"></div>
+      <div class="field"><label>Strana <span class="s">c</span></label><input type="number" id="c" step="any" placeholder="protilehlá C"></div>
+      <div class="field"><label>Úhel <span class="a">α</span> (°)</label><input type="number" id="A" step="any" placeholder="proti a"></div>
+      <div class="field"><label>Úhel <span class="a">β</span> (°)</label><input type="number" id="B" step="any" placeholder="proti b"></div>
+      <div class="field"><label>Úhel <span class="a">γ</span> (°)</label><input type="number" id="C" step="any" placeholder="proti c"></div>
+      <button class="btn" id="calcBtn">🧮 Vypočítat</button>
+      <button class="btn btn-sec" id="resetBtn">🗑️ Vymazat</button>
+      <div class="err" id="err"></div>
+    </div>
+    <div class="card">
+      <h2>Výsledek</h2>
+      <svg id="draw" viewBox="0 0 300 220"></svg>
+      <div id="results" style="margin-top:14px"></div>
+      <p class="hint">Používá sinovou a kosinovou větu. Zadej např. 3 strany (SSS), 2 strany a úhel (SUS), nebo stranu a 2 úhly (USU).</p>
+    </div>
+  </div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const D=x=>x*180/Math.PI,R=x=>x*Math.PI/180;
+function solve(){
+  $('err').textContent='';
+  let a=pf('a'),b=pf('b'),c=pf('c'),A=pf('A'),B=pf('B'),C=pf('C');
+  function pf(id){const v=parseFloat($(id).value);return isNaN(v)?null:v;}
+  const given=[a,b,c,A,B,C].filter(x=>x!=null).length;
+  if(given<3){$('err').textContent='Zadej alespoň 3 hodnoty.';return;}
+  if([a,b,c].every(x=>x==null)){$('err').textContent='Zadej alespoň jednu stranu.';return;}
+  // angles to radians
+  let aA=A!=null?R(A):null,aB=B!=null?R(B):null,aC=C!=null?R(C):null;
+  for(let iter=0;iter<5;iter++){
+    // third angle
+    const known=[aA,aB,aC].filter(x=>x!=null).length;
+    if(known===2){if(aA==null)aA=Math.PI-aB-aC;else if(aB==null)aB=Math.PI-aA-aC;else aC=Math.PI-aA-aB;}
+    // law of cosines for SSS
+    if(a&&b&&c){if(aA==null)aA=Math.acos((b*b+c*c-a*a)/(2*b*c));if(aB==null)aB=Math.acos((a*a+c*c-b*b)/(2*a*c));if(aC==null)aC=Math.PI-aA-aB;}
+    // SUS: two sides + included angle
+    if(a&&b&&aC!=null&&!c)c=Math.sqrt(a*a+b*b-2*a*b*Math.cos(aC));
+    if(a&&c&&aB!=null&&!b)b=Math.sqrt(a*a+c*c-2*a*c*Math.cos(aB));
+    if(b&&c&&aA!=null&&!a)a=Math.sqrt(b*b+c*c-2*b*c*Math.cos(aA));
+    // law of sines: side from angle pair
+    let ratio=null;
+    if(a&&aA!=null)ratio=a/Math.sin(aA);else if(b&&aB!=null)ratio=b/Math.sin(aB);else if(c&&aC!=null)ratio=c/Math.sin(aC);
+    if(ratio){if(!a&&aA!=null)a=ratio*Math.sin(aA);if(!b&&aB!=null)b=ratio*Math.sin(aB);if(!c&&aC!=null)c=ratio*Math.sin(aC);
+      if(a&&aA==null)aA=Math.asin(Math.min(1,a/ratio));if(b&&aB==null)aB=Math.asin(Math.min(1,b/ratio));if(c&&aC==null)aC=Math.asin(Math.min(1,c/ratio));}
+  }
+  if(!a||!b||!c||aA==null||aB==null||aC==null||isNaN(a+b+c)){$('err').textContent='Nelze jednoznačně vyřešit – zkontroluj zadání.';return;}
+  // outputs
+  $('a').value=a.toFixed(3);$('b').value=b.toFixed(3);$('c').value=c.toFixed(3);
+  $('A').value=D(aA).toFixed(2);$('B').value=D(aB).toFixed(2);$('C').value=D(aC).toFixed(2);
+  const s=(a+b+c)/2,area=Math.sqrt(s*(s-a)*(s-b)*(s-c));
+  $('results').innerHTML=[
+    ['Obvod',(a+b+c).toFixed(3)],['Obsah',area.toFixed(3)],['Výška k a',(2*area/a).toFixed(3)],
+    ['Poloměr kružnice opsané',(a/(2*Math.sin(aA))).toFixed(3)],['Poloměr kružnice vepsané',(area/s).toFixed(3)],
+    ['Součet úhlů',(D(aA)+D(aB)+D(aC)).toFixed(1)+'°']
+  ].map(([l,v])=>`<div class="res-row"><span>${l}</span><b>${v}</b></div>`).join('');
+  draw(a,b,c,aA,aB,aC);
+}
+function draw(a,b,c,aA,aB,aC){
+  // place: C at origin, B along x. Vertex A computed.
+  const scale=Math.min(240/Math.max(a,b,c,1),60);
+  // points: put side a (BC) horizontal. B=(0,0), C=(a,0). A from angles.
+  const Bx=0,By=0,Cx=a,Cy=0;
+  const Ax=c*Math.cos(aB),Ay=c*Math.sin(aB);
+  const xs=[Bx,Cx,Ax],ys=[By,Cy,Ay];
+  const minX=Math.min(...xs),maxX=Math.max(...xs),minY=Math.min(...ys),maxY=Math.max(...ys);
+  const w=maxX-minX||1,h=maxY-minY||1,sc=Math.min(260/w,180/h);
+  const tx=x=>20+(x-minX)*sc,ty=y=>200-(y-minY)*sc;
+  $('draw').innerHTML=`<polygon points="${tx(Bx)},${ty(By)} ${tx(Cx)},${ty(Cy)} ${tx(Ax)},${ty(Ay)}" fill="#6aa6fd33" stroke="#6aa6fd" stroke-width="2"/>
+    <text x="${tx(Ax)}" y="${ty(Ay)-6}" fill="#f39c12" font-size="13" text-anchor="middle">A</text>
+    <text x="${tx(Bx)-8}" y="${ty(By)+14}" fill="#f39c12" font-size="13">B</text>
+    <text x="${tx(Cx)+4}" y="${ty(Cy)+14}" fill="#f39c12" font-size="13">C</text>
+    <text x="${(tx(Bx)+tx(Cx))/2}" y="${ty(0)+16}" fill="#6aa6fd" font-size="12" text-anchor="middle">a=${a.toFixed(1)}</text>`;
+}
+['a','b','c','A','B','C'].forEach(id=>$(id).addEventListener('keydown',e=>{if(e.key==='Enter')solve();}));
+$('calcBtn').onclick=solve;
+$('resetBtn').onclick=()=>{['a','b','c','A','B','C'].forEach(id=>$(id).value='');$('results').innerHTML='';$('draw').innerHTML='';$('err').textContent='';};
+$('a').value=3;$('b').value=4;$('c').value=5;solve();
+</script>
+</body>
+</html>

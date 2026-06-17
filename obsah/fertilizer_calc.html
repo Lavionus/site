@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🌱 Kalkulačka hnojení N-P-K</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1a1a1a;color:#e0e0e0;min-height:100vh;padding:20px}
+.container{max-width:840px;margin:0 auto}
+h1{font-size:1.6rem;margin-bottom:20px;font-weight:600;text-align:center}
+.card{background:#2a2a2a;border:1px solid #404040;border-radius:8px;padding:22px;margin-bottom:20px}
+h2{font-size:1.05rem;color:#6aa6fd;margin-bottom:16px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:560px){.grid{grid-template-columns:1fr}}
+label{display:block;font-size:.85rem;color:#888;margin-bottom:6px}
+input,select{width:100%;background:#404040;border:1px solid #555;border-radius:4px;color:#e0e0e0;padding:10px;margin-bottom:12px}
+.npk{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+.btn{background:#6aa6fd;color:#fff;border:none;padding:11px 20px;border-radius:6px;cursor:pointer;font-weight:600;width:100%}
+.btn:hover{background:#5694f0}
+.res-row{display:flex;justify-content:space-between;padding:12px 0;border-bottom:1px solid #333;align-items:center}
+.res-row:last-child{border:none}
+.res-row b{font-size:1.2rem;color:#4caf50}
+.big{font-size:1.8rem;font-weight:700;color:#6aa6fd;text-align:center;margin:10px 0}
+.note{font-size:.78rem;color:#666;margin-top:8px;line-height:1.5}
+.warn{color:#f39c12}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>🌱 Kalkulačka hnojení N-P-K</h1>
+  <div class="card">
+    <h2>1️⃣ Plocha a cílová dávka živin</h2>
+    <div class="grid">
+      <div><label>Plocha pole (ha)</label><input type="number" id="area" value="10" min="0.01" step="0.1"></div>
+      <div><label>Plodina (orientační dávka)</label>
+        <select id="crop">
+          <option value="">— vlastní zadání —</option>
+          <option value="180,40,160">Pšenice ozimá (180-40-160)</option>
+          <option value="160,35,140">Ječmen jarní (160-35-140)</option>
+          <option value="180,80,200">Řepka ozimá (180-80-200)</option>
+          <option value="200,60,200">Kukuřice (200-60-200)</option>
+          <option value="120,90,220">Brambory (120-90-220)</option>
+          <option value="0,40,160">Cukrová řepa N dle rozboru (0-40-160)</option>
+        </select>
+      </div>
+    </div>
+    <label>Cílová dávka čistých živin (kg/ha)</label>
+    <div class="npk">
+      <div><label style="color:#6aa6fd">N</label><input type="number" id="needN" value="180"></div>
+      <div><label style="color:#e67e22">P₂O₅</label><input type="number" id="needP" value="40"></div>
+      <div><label style="color:#27ae60">K₂O</label><input type="number" id="needK" value="160"></div>
+    </div>
+  </div>
+  <div class="card">
+    <h2>2️⃣ Použité hnojivo</h2>
+    <label>Typ hnojiva (obsah živin %)</label>
+    <select id="fert" style="margin-bottom:14px">
+      <option value="27,0,0">LAV / Ledek amonný (27-0-0)</option>
+      <option value="15,15,15">NPK 15-15-15</option>
+      <option value="0,0,60">Draselná sůl (0-0-60)</option>
+      <option value="18,46,0">DAP (18-46-0)</option>
+      <option value="46,0,0">Močovina (46-0-0)</option>
+      <option value="">— vlastní zadání —</option>
+    </select>
+    <label>Obsah živin v hnojivu (%)</label>
+    <div class="npk">
+      <div><label style="color:#6aa6fd">N</label><input type="number" id="fN" value="27"></div>
+      <div><label style="color:#e67e22">P₂O₅</label><input type="number" id="fP" value="0"></div>
+      <div><label style="color:#27ae60">K₂O</label><input type="number" id="fK" value="0"></div>
+    </div>
+    <button class="btn" id="calcBtn">🧮 Vypočítat dávku</button>
+  </div>
+  <div class="card">
+    <h2>📋 Výsledek</h2>
+    <div id="result">
+      <p style="color:#666;text-align:center">Zadej hodnoty a stiskni „Vypočítat".</p>
+    </div>
+  </div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+$('crop').onchange=()=>{if($('crop').value){const[n,p,k]=$('crop').value.split(',');$('needN').value=n;$('needP').value=p;$('needK').value=k;}};
+$('fert').onchange=()=>{if($('fert').value){const[n,p,k]=$('fert').value.split(',');$('fN').value=n;$('fP').value=p;$('fK').value=k;}};
+function calc(){
+  const area=+$('area').value;
+  const need={N:+$('needN').value,P:+$('needP').value,K:+$('needK').value};
+  const f={N:+$('fN').value,P:+$('fP').value,K:+$('fK').value};
+  // dávka hnojiva určená podle limitujícího prvku (aby se nepřehnojilo)
+  let limiting=null,rateHa=Infinity;
+  ['N','P','K'].forEach(el=>{if(f[el]>0&&need[el]>0){const r=need[el]/(f[el]/100);if(r<rateHa){rateHa=r;limiting=el;}}});
+  if(!isFinite(rateHa)){$('result').innerHTML='<p class="warn" style="text-align:center">⚠️ Hnojivo neobsahuje žádný z požadovaných prvků.</p>';return;}
+  const supplied={N:rateHa*f.N/100,P:rateHa*f.P/100,K:rateHa*f.K/100};
+  const names={N:'N',P:'P₂O₅',K:'K₂O'};
+  const rows=['N','P','K'].map(el=>{
+    const rest=need[el]-supplied[el];
+    const txt=rest>0.5?`<span class="warn">chybí ${rest.toFixed(0)} kg/ha</span>`:rest<-0.5?`přebytek ${(-rest).toFixed(0)} kg/ha`:'pokryto ✅';
+    return `<div class="res-row"><span>${names[el]}: dodáno ${supplied[el].toFixed(0)} / cíl ${need[el]} kg/ha</span><span>${txt}</span></div>`;
+  }).join('');
+  $('result').innerHTML=`
+    <div class="big">${rateHa.toFixed(0)} kg/ha</div>
+    <p style="text-align:center;color:#888;margin-bottom:14px">dávka hnojiva (limituje ${names[limiting]}) → celkem <b style="color:#4caf50">${(rateHa*area).toFixed(0)} kg</b> na ${area} ha</p>
+    ${rows}
+    <p class="note">Výpočet vychází z limitujícího prvku, aby nedošlo k jeho předávkování. Pro plné pokrytí ostatních prvků doplň jednosložkové hnojivo. Hodnoty jsou orientační – řiďte se agrochemickým rozborem půdy.</p>`;
+}
+$('calcBtn').onclick=calc;
+calc();
+</script>
+</body>
+</html>

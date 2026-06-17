@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🔩 Kalkulačka šroubů a závitů</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1a1a1a;color:#e0e0e0;min-height:100vh;padding:20px}
+.container{max-width:860px;margin:0 auto}
+h1{font-size:1.6rem;margin-bottom:18px;font-weight:600;text-align:center}
+.tabs{display:flex;margin-bottom:18px;border-bottom:1px solid #404040;flex-wrap:wrap}
+.tab{padding:11px 18px;background:#2a2a2a;border:1px solid #404040;border-bottom:none;cursor:pointer;color:#bbb;border-radius:8px 8px 0 0}
+.tab.active{background:#6aa6fd;color:#fff;border-color:#6aa6fd}
+.pane{display:none}.pane.active{display:block}
+.card{background:#2a2a2a;border:1px solid #404040;border-radius:8px;padding:22px;margin-bottom:20px}
+h2{font-size:1.05rem;color:#6aa6fd;margin-bottom:14px}
+label{display:block;font-size:.8rem;color:#888;margin-bottom:4px}
+input,select{width:100%;background:#404040;border:1px solid #555;border-radius:4px;color:#e0e0e0;padding:10px;margin-bottom:12px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:560px){.grid{grid-template-columns:1fr}}
+table{width:100%;border-collapse:collapse;font-size:.9rem}
+th{text-align:left;color:#888;padding:8px;font-size:.78rem;text-transform:uppercase;border-bottom:2px solid #404040}
+td{padding:8px;border-bottom:1px solid #333}
+.res-row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #333}
+.res-row:last-child{border:none}.res-row b{color:#4caf50}
+.note{font-size:.78rem;color:#666;margin-top:10px;line-height:1.5}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>🔩 Kalkulačka šroubů a závitů</h1>
+  <div class="tabs">
+    <div class="tab active" data-pane="table">📋 Metrické závity</div>
+    <div class="tab" data-pane="drill">🛠️ Vrták pro závit</div>
+    <div class="tab" data-pane="torque">⚙️ Utahovací moment</div>
+  </div>
+
+  <div class="pane active" id="table">
+    <div class="card">
+      <h2>Tabulka metrických závitů (ISO, hrubé stoupání)</h2>
+      <table id="threadTable"></table>
+      <p class="note">d = jmenovitý průměr, P = stoupání, d₂ = střední průměr, d₃ = malý (jádrový) průměr, A_s = nosný průřez.</p>
+    </div>
+  </div>
+
+  <div class="pane" id="drill">
+    <div class="card">
+      <h2>Průměr vrtáku pro řezání závitu</h2>
+      <div class="grid">
+        <div><label>Velikost závitu</label><select id="dThread"></select></div>
+        <div><label>Stoupání P (mm)</label><input type="number" id="dPitch" step="0.05"></div>
+      </div>
+      <div class="res-row"><span>Doporučený vrták (předvrtání)</span><b id="drillDia">–</b></div>
+      <div class="res-row"><span>Vrták pro průchozí díru (řada střední)</span><b id="clearDia">–</b></div>
+      <p class="note">Vrták pro závit ≈ d − P. Průchozí díra dle ISO 273 (střední řada).</p>
+    </div>
+  </div>
+
+  <div class="pane" id="torque">
+    <div class="card">
+      <h2>Orientační utahovací moment</h2>
+      <div class="grid">
+        <div><label>Velikost závitu</label><select id="tThread"></select></div>
+        <div><label>Pevnostní třída</label><select id="grade"><option value="400">8.8 (Rp≈640)</option><option value="500">10.9 (Rp≈900)</option><option value="600">12.9 (Rp≈1080)</option></select></div>
+        <div><label>Součinitel tření μ</label><input type="number" id="mu" value="0.14" step="0.01"></div>
+      </div>
+      <div class="res-row"><span>Předpětí F (přibližné)</span><b id="force">–</b></div>
+      <div class="res-row"><span>Utahovací moment M</span><b id="torque">–</b></div>
+      <p class="note">M ≈ F · (0,16·P + 0,58·d₂·μ + 0,5·D_kn·μ). Hodnoty orientační, řiďte se technickou dokumentací.</p>
+    </div>
+  </div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+// d, P, d2, d3, As
+const THREADS=[['M3',3,0.5,2.675,2.387,5.03],['M4',4,0.7,3.545,3.141,8.78],['M5',5,0.8,4.480,4.019,14.2],['M6',6,1.0,5.350,4.773,20.1],['M8',8,1.25,7.188,6.466,36.6],['M10',10,1.5,9.026,8.160,58.0],['M12',12,1.75,10.863,9.853,84.3],['M14',14,2.0,12.701,11.546,115],['M16',16,2.0,14.701,13.546,157],['M20',20,2.5,18.376,16.933,245],['M24',24,3.0,22.051,20.319,353],['M30',30,3.5,27.727,25.706,561]];
+$('threadTable').innerHTML='<tr><th>Závit</th><th>d (mm)</th><th>P (mm)</th><th>d₂ (mm)</th><th>d₃ (mm)</th><th>A_s (mm²)</th></tr>'+
+  THREADS.map(t=>`<tr><td><b>${t[0]}</b></td><td>${t[1]}</td><td>${t[2]}</td><td>${t[3]}</td><td>${t[4]}</td><td>${t[5]}</td></tr>`).join('');
+const opts=THREADS.map((t,i)=>`<option value="${i}">${t[0]} (P=${t[2]})</option>`).join('');
+$('dThread').innerHTML=opts;$('tThread').innerHTML=opts;
+document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.pane').forEach(x=>x.classList.remove('active'));
+  t.classList.add('active');$(t.dataset.pane).classList.add('active');
+});
+const CLEAR={3:3.4,4:4.5,5:5.5,6:6.6,8:9,10:11,12:13.5,14:15.5,16:17.5,20:22,24:26,30:33};
+function drillCalc(){const t=THREADS[+$('dThread').value];$('dPitch').value=t[2];
+  $('drillDia').textContent=(t[1]-t[2]).toFixed(1)+' mm';$('clearDia').textContent=(CLEAR[t[1]]||'—')+' mm';}
+$('dThread').onchange=drillCalc;$('dPitch').oninput=()=>{const t=THREADS[+$('dThread').value];$('drillDia').textContent=(t[1]-(+$('dPitch').value)).toFixed(1)+' mm';};
+function torqueCalc(){
+  const t=THREADS[+$('tThread').value];const Rp=+$('grade').value;const mu=+$('mu').value;
+  const As=t[5],d2=t[3],P=t[2],d=t[1];
+  const F=0.7*Rp*As; // 70% využití meze kluzu, N (Rp v MPa ~ N/mm²)
+  const Dkn=(d+CLEAR[d]||d)/2*0?0:( (d+ (CLEAR[d]||d) )/2 ); // mean bearing diameter approx
+  const Dm=(d+(CLEAR[d]||d))/2;
+  const M=F*(0.16*P+0.58*d2*mu+0.5*Dm*mu)/1000; // Nm
+  $('force').textContent=(F/1000).toFixed(1)+' kN';
+  $('torque').textContent=M.toFixed(1)+' Nm';
+}
+$('tThread').onchange=torqueCalc;$('grade').onchange=torqueCalc;$('mu').oninput=torqueCalc;
+drillCalc();torqueCalc();
+</script>
+</body>
+</html>

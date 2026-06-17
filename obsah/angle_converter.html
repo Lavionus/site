@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📐 Převodník úhlů a měřítek</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1a1a1a;color:#e0e0e0;min-height:100vh;padding:20px}
+.container{max-width:820px;margin:0 auto}
+h1{font-size:1.6rem;margin-bottom:18px;font-weight:600;text-align:center}
+.tabs{display:flex;margin-bottom:18px;border-bottom:1px solid #404040;flex-wrap:wrap}
+.tab{padding:11px 18px;background:#2a2a2a;border:1px solid #404040;border-bottom:none;cursor:pointer;color:#bbb;border-radius:8px 8px 0 0}
+.tab.active{background:#6aa6fd;color:#fff;border-color:#6aa6fd}
+.pane{display:none}.pane.active{display:block}
+.card{background:#2a2a2a;border:1px solid #404040;border-radius:8px;padding:22px;margin-bottom:20px}
+h2{font-size:1.05rem;color:#6aa6fd;margin-bottom:14px}
+.row{display:grid;grid-template-columns:1fr 1.2fr;gap:12px;align-items:center;margin-bottom:12px}
+label{font-size:.9rem;color:#bbb}
+input,select{width:100%;background:#404040;border:1px solid #555;border-radius:4px;color:#e0e0e0;padding:10px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:560px){.grid{grid-template-columns:1fr}}
+.res-row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #333}
+.res-row:last-child{border:none}.res-row b{color:#4caf50}
+.note{font-size:.78rem;color:#666;margin-top:10px;line-height:1.5}
+.compass{display:block;margin:10px auto}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>📐 Převodník úhlů a měřítek</h1>
+  <div class="tabs">
+    <div class="tab active" data-pane="angle">📐 Úhly</div>
+    <div class="tab" data-pane="slope">📈 Sklon / spád</div>
+    <div class="tab" data-pane="scale">🗺️ Měřítko</div>
+  </div>
+
+  <div class="pane active" id="angle">
+    <div class="card">
+      <h2>Převod jednotek úhlu</h2>
+      <div class="row"><label>Stupně (°)</label><input type="number" id="deg" value="45" step="any"></div>
+      <div class="row"><label>Radiány (rad)</label><input type="number" id="rad" step="any"></div>
+      <div class="row"><label>Grady / gony (gon)</label><input type="number" id="gon" step="any"></div>
+      <div class="row"><label>Otáčky (turn)</label><input type="number" id="turn" step="any"></div>
+      <div class="row"><label>Tisíciny (mil, NATO)</label><input type="number" id="mil" step="any"></div>
+      <svg class="compass" id="compass" width="160" height="160" viewBox="0 0 160 160"></svg>
+    </div>
+  </div>
+
+  <div class="pane" id="slope">
+    <div class="card">
+      <h2>Sklon ↔ procenta ↔ stupně</h2>
+      <div class="grid">
+        <div><label>Úhel (°)</label><input type="number" id="sDeg" value="10" step="any"></div>
+        <div><label>Sklon (%)</label><input type="number" id="sPct" step="any"></div>
+        <div><label>Poměr 1 : n</label><input type="number" id="sRatio" step="any"></div>
+        <div><label>Promile (‰)</label><input type="number" id="sPm" step="any"></div>
+      </div>
+      <p class="note">Sklon % = tan(úhel)·100. Poměr 1:n znamená 1 výškový na n vodorovných.</p>
+    </div>
+  </div>
+
+  <div class="pane" id="scale">
+    <div class="card">
+      <h2>Mapové měřítko</h2>
+      <div class="grid">
+        <div><label>Měřítko 1 :</label><input type="number" id="scaleN" value="50000"></div>
+        <div><label>Vzdálenost na mapě (cm)</label><input type="number" id="mapCm" value="4" step="any"></div>
+      </div>
+      <div class="res-row"><span>Skutečná vzdálenost</span><b id="realDist">–</b></div>
+      <div class="res-row"><span>1 cm na mapě odpovídá</span><b id="cmReal">–</b></div>
+      <hr style="border-color:#333;margin:14px 0">
+      <div class="grid">
+        <div><label>Skutečná vzdálenost (m)</label><input type="number" id="realM" value="2000" step="any"></div>
+        <div><label>→ na mapě (cm)</label><input type="number" id="mapOut" readonly></div>
+      </div>
+      <p class="note">Měřítko 1:50 000 → 1 cm = 500 m.</p>
+    </div>
+  </div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.pane').forEach(x=>x.classList.remove('active'));
+  t.classList.add('active');$(t.dataset.pane).classList.add('active');
+});
+// Angles
+function setAngles(deg,src){
+  if(src!=='deg')$('deg').value=+deg.toFixed(6);
+  if(src!=='rad')$('rad').value=+(deg*Math.PI/180).toFixed(6);
+  if(src!=='gon')$('gon').value=+(deg/0.9).toFixed(6);
+  if(src!=='turn')$('turn').value=+(deg/360).toFixed(6);
+  if(src!=='mil')$('mil').value=+(deg/360*6400).toFixed(4);
+  drawCompass(deg);
+}
+function drawCompass(deg){
+  const cx=80,cy=80,r=60;const a=(deg-90)*Math.PI/180;
+  $('compass').innerHTML=`<circle cx="80" cy="80" r="62" fill="#1a1a1a" stroke="#404040"/>
+    <line x1="80" y1="80" x2="${(cx+r*Math.cos(a)).toFixed(1)}" y2="${(cy+r*Math.sin(a)).toFixed(1)}" stroke="#6aa6fd" stroke-width="3"/>
+    <line x1="80" y1="20" x2="80" y2="80" stroke="#555" stroke-width="1"/>
+    <line x1="80" y1="80" x2="140" y2="80" stroke="#555" stroke-width="1"/>
+    <circle cx="80" cy="80" r="4" fill="#6aa6fd"/>
+    <text x="80" y="150" fill="#888" font-size="12" text-anchor="middle">${(((deg%360)+360)%360).toFixed(1)}°</text>`;
+}
+$('deg').oninput=()=>setAngles(+$('deg').value||0,'deg');
+$('rad').oninput=()=>setAngles((+$('rad').value||0)*180/Math.PI,'rad');
+$('gon').oninput=()=>setAngles((+$('gon').value||0)*0.9,'gon');
+$('turn').oninput=()=>setAngles((+$('turn').value||0)*360,'turn');
+$('mil').oninput=()=>setAngles((+$('mil').value||0)/6400*360,'mil');
+// Slope
+function setSlope(deg,src){
+  const rad=deg*Math.PI/180;
+  if(src!=='sDeg')$('sDeg').value=+deg.toFixed(4);
+  if(src!=='sPct')$('sPct').value=+(Math.tan(rad)*100).toFixed(4);
+  if(src!=='sRatio')$('sRatio').value=Math.tan(rad)!==0?+(1/Math.tan(rad)).toFixed(3):'';
+  if(src!=='sPm')$('sPm').value=+(Math.tan(rad)*1000).toFixed(3);
+}
+$('sDeg').oninput=()=>setSlope(+$('sDeg').value||0,'sDeg');
+$('sPct').oninput=()=>setSlope(Math.atan((+$('sPct').value||0)/100)*180/Math.PI,'sPct');
+$('sRatio').oninput=()=>setSlope(Math.atan(1/(+$('sRatio').value||1))*180/Math.PI,'sRatio');
+$('sPm').oninput=()=>setSlope(Math.atan((+$('sPm').value||0)/1000)*180/Math.PI,'sPm');
+// Scale
+function scaleCalc(){
+  const n=+$('scaleN').value,cm=+$('mapCm').value;
+  const realCm=cm*n;
+  $('realDist').textContent=realCm>=100000?(realCm/100000).toFixed(2)+' km':(realCm/100).toFixed(1)+' m';
+  $('cmReal').textContent=n>=100000?(n/100000).toFixed(2)+' km':(n/100).toFixed(0)+' m';
+  $('mapOut').value=(( +$('realM').value*100)/n).toFixed(2);
+}
+['scaleN','mapCm','realM'].forEach(id=>$(id).oninput=scaleCalc);
+setAngles(45,'');setSlope(10,'');scaleCalc();
+</script>
+</body>
+</html>

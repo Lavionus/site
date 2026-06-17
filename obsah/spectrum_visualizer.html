@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎵 Zvukový vizualizér</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1a1a1a;color:#e0e0e0;min-height:100vh;padding:20px}
+.container{max-width:1000px;margin:0 auto}
+h1{font-size:1.6rem;margin-bottom:18px;font-weight:600;text-align:center}
+.bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:center;margin-bottom:16px;background:#2a2a2a;border:1px solid #404040;border-radius:8px;padding:16px}
+.btn{background:#6aa6fd;color:#fff;border:none;padding:10px 18px;border-radius:6px;cursor:pointer;font-weight:600}
+.btn:hover{background:#5694f0}.btn-sec{background:#404040}.btn-sec:hover{background:#4a4a4a}
+.btn.active{background:#27ae60}
+select{background:#404040;border:1px solid #555;border-radius:4px;color:#e0e0e0;padding:9px}
+canvas{width:100%;height:420px;background:#0d0d0d;border-radius:8px;border:1px solid #404040;display:block}
+.hint{font-size:.84rem;color:#888;text-align:center;margin-top:12px}
+.status{text-align:center;color:#f39c12;margin-top:8px;min-height:20px}
+input[type=file]{display:none}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>🎵 Generátor zvukového spektra / vizualizér</h1>
+  <div class="bar">
+    <button class="btn" id="micBtn">🎤 Mikrofon</button>
+    <label class="btn btn-sec" for="audioFile">📂 Audio soubor</label>
+    <input type="file" id="audioFile" accept="audio/*">
+    <button class="btn btn-sec" id="stopBtn">⏹️ Stop</button>
+    <select id="style">
+      <option value="bars">Sloupce</option>
+      <option value="wave">Vlna (osciloskop)</option>
+      <option value="circle">Kruh</option>
+      <option value="mirror">Zrcadlo</option>
+    </select>
+    <select id="palette">
+      <option value="rainbow">Duha</option>
+      <option value="blue">Modrá</option>
+      <option value="fire">Oheň</option>
+      <option value="green">Zelená</option>
+    </select>
+  </div>
+  <canvas id="canvas"></canvas>
+  <audio id="audio" style="display:none" controls></audio>
+  <div class="status" id="status"></div>
+  <p class="hint">Klikni na 🎤 Mikrofon (povol přístup) nebo nahraj audio soubor. Vizualizace běží lokálně přes Web Audio API.</p>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const canvas=$('canvas'),ctx=canvas.getContext('2d');
+let audioCtx,analyser,source,dataArray,raf,stream;
+function resize(){canvas.width=canvas.clientWidth*devicePixelRatio;canvas.height=canvas.clientHeight*devicePixelRatio;}
+window.onresize=resize;resize();
+function setup(){if(!audioCtx){audioCtx=new(window.AudioContext||window.webkitAudioContext)();analyser=audioCtx.createAnalyser();analyser.fftSize=2048;dataArray=new Uint8Array(analyser.frequencyBinCount);}}
+function stopAll(){if(raf)cancelAnimationFrame(raf);if(source)try{source.disconnect();}catch(e){}if(stream){stream.getTracks().forEach(t=>t.stop());stream=null;}$('micBtn').classList.remove('active');$('audio').pause();$('status').textContent='';ctx.clearRect(0,0,canvas.width,canvas.height);}
+$('micBtn').onclick=async()=>{
+  stopAll();setup();await audioCtx.resume();
+  try{stream=await navigator.mediaDevices.getUserMedia({audio:true});source=audioCtx.createMediaStreamSource(stream);source.connect(analyser);$('micBtn').classList.add('active');$('status').textContent='🎤 Naslouchám mikrofonu…';draw();}
+  catch(e){$('status').textContent='Nelze spustit mikrofon: '+e.message;}
+};
+$('audioFile').onchange=async()=>{
+  const f=$('audioFile').files[0];if(!f)return;stopAll();setup();await audioCtx.resume();
+  const audio=$('audio');audio.src=URL.createObjectURL(f);audio.style.display='block';
+  source=audioCtx.createMediaElementSource(audio);source.connect(analyser);analyser.connect(audioCtx.destination);
+  audio.play();$('status').textContent='▶️ Přehrávám: '+f.name;draw();
+};
+$('stopBtn').onclick=stopAll;
+function colorFor(i,n,v){
+  const p=$('palette').value;
+  if(p==='rainbow')return`hsl(${i/n*300},90%,${30+v/255*40}%)`;
+  if(p==='blue')return`hsl(210,90%,${20+v/255*55}%)`;
+  if(p==='fire')return`hsl(${v/255*45},95%,${30+v/255*30}%)`;
+  return`hsl(130,80%,${20+v/255*50}%)`;
+}
+function draw(){
+  raf=requestAnimationFrame(draw);
+  const W=canvas.width,H=canvas.height,style=$('style').value;
+  ctx.clearRect(0,0,W,H);
+  if(style==='wave'){
+    analyser.getByteTimeDomainData(dataArray);
+    ctx.lineWidth=2*devicePixelRatio;ctx.strokeStyle=colorFor(1,2,200);ctx.beginPath();
+    const slice=W/dataArray.length;let x=0;
+    for(let i=0;i<dataArray.length;i++){const y=dataArray[i]/255*H;i===0?ctx.moveTo(x,y):ctx.lineTo(x,y);x+=slice;}
+    ctx.stroke();return;
+  }
+  analyser.getByteFrequencyData(dataArray);
+  const n=Math.min(dataArray.length,128);
+  if(style==='circle'){
+    const cx=W/2,cy=H/2,r=Math.min(W,H)/5;
+    for(let i=0;i<n;i++){const v=dataArray[i];const ang=i/n*Math.PI*2;const len=v/255*r*1.6;
+      ctx.strokeStyle=colorFor(i,n,v);ctx.lineWidth=3*devicePixelRatio;ctx.beginPath();
+      ctx.moveTo(cx+Math.cos(ang)*r,cy+Math.sin(ang)*r);ctx.lineTo(cx+Math.cos(ang)*(r+len),cy+Math.sin(ang)*(r+len));ctx.stroke();}
+    return;
+  }
+  const bw=W/n;
+  for(let i=0;i<n;i++){const v=dataArray[i];const bh=v/255*H;
+    ctx.fillStyle=colorFor(i,n,v);
+    if(style==='mirror'){ctx.fillRect(i*bw,H/2-bh/2,bw-2,bh);}
+    else ctx.fillRect(i*bw,H-bh,bw-2,bh);}
+}
+</script>
+</body>
+</html>

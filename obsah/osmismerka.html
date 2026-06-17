@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🔡 Osmisměrka</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;user-select:none}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1a1a1a;color:#e0e0e0;min-height:100vh;padding:20px}
+.container{max-width:980px;margin:0 auto}
+h1{font-size:1.6rem;margin-bottom:16px;font-weight:600;text-align:center}
+.layout{display:grid;grid-template-columns:1fr 240px;gap:20px}
+@media(max-width:720px){.layout{grid-template-columns:1fr}}
+.board-card{background:#2a2a2a;border:1px solid #404040;border-radius:8px;padding:14px;display:flex;justify-content:center}
+.grid{display:grid;gap:2px;touch-action:none}
+.gc{width:30px;height:30px;background:#1e1e1e;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.95rem;cursor:pointer;border-radius:3px;text-transform:uppercase}
+.gc.sel{background:#6aa6fd;color:#fff}
+.gc.found{background:#27ae60;color:#fff}
+.card{background:#2a2a2a;border:1px solid #404040;border-radius:8px;padding:16px}
+h2{font-size:.95rem;color:#6aa6fd;margin-bottom:10px}
+.words{list-style:none;font-size:.95rem;columns:2;gap:6px}
+@media(max-width:720px){.words{columns:3}}
+.words li{padding:3px 0}
+.words li.done{text-decoration:line-through;color:#666}
+.controls{margin-bottom:14px}
+textarea{width:100%;min-height:80px;background:#404040;border:1px solid #555;border-radius:4px;color:#e0e0e0;padding:9px;font-size:.85rem;margin-bottom:8px}
+.btn{background:#6aa6fd;color:#fff;border:none;padding:9px 16px;border-radius:6px;cursor:pointer;font-weight:600;font-size:.85rem;width:100%}
+.btn-sec{background:#404040;margin-top:8px}
+.msg{text-align:center;font-weight:700;color:#27ae60;min-height:26px;margin-top:10px}
+.progress{text-align:center;color:#888;margin-bottom:10px}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>🔡 Osmisměrka</h1>
+  <div class="controls" style="text-align:center">
+    <details style="display:inline-block;text-align:left"><summary style="cursor:pointer;color:#888;font-size:.85rem">⚙️ Vlastní slova</summary>
+      <textarea id="customWords" placeholder="Jedno slovo na řádek…">traktor
+pole
+seno
+obilí
+mrkev
+sklizeň
+zahrada
+strom</textarea>
+      <button class="btn" id="genCustom">Vytvořit osmisměrku</button>
+    </details>
+  </div>
+  <div class="layout">
+    <div class="board-card"><div class="grid" id="grid"></div></div>
+    <div class="card">
+      <h2>📋 Hledaná slova</h2>
+      <div class="progress" id="progress"></div>
+      <ul class="words" id="wordList"></ul>
+      <button class="btn btn-sec" id="newBtn">🔄 Nová hra</button>
+      <div class="msg" id="msg"></div>
+    </div>
+  </div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const DEFAULT=['traktor','pole','seno','obilí','mrkev','sklizeň','zahrada','strom','kombajn','pluh'];
+const ALPHA='AÁBCČDEÉĚFGHIÍJKLMNOÓPRŘSŠTUÚVYÝZŽ';
+const DIRS=[[0,1],[1,0],[1,1],[1,-1],[0,-1],[-1,0],[-1,-1],[-1,1]];
+let grid,size,words,found,selecting,startCell,path;
+function deaccent(s){return s.toUpperCase();}
+function build(wordInput){
+  words=wordInput.map(w=>w.trim()).filter(Boolean).map(w=>w.toUpperCase());
+  const maxLen=Math.max(...words.map(w=>[...w].length),8);
+  size=Math.max(maxLen+2,12);
+  grid=Array.from({length:size},()=>Array(size).fill(''));
+  found=new Set();
+  const placed=[];
+  for(const word of words){
+    const letters=[...word];let ok=false;
+    for(let tries=0;tries<200&&!ok;tries++){
+      const dir=DIRS[Math.floor(Math.random()*DIRS.length)];
+      const sr=Math.floor(Math.random()*size),sc=Math.floor(Math.random()*size);
+      const er=sr+dir[0]*(letters.length-1),ec=sc+dir[1]*(letters.length-1);
+      if(er<0||er>=size||ec<0||ec>=size)continue;
+      let fits=true;
+      for(let i=0;i<letters.length;i++){const r=sr+dir[0]*i,c=sc+dir[1]*i;if(grid[r][c]&&grid[r][c]!==letters[i]){fits=false;break;}}
+      if(!fits)continue;
+      for(let i=0;i<letters.length;i++){const r=sr+dir[0]*i,c=sc+dir[1]*i;grid[r][c]=letters[i];}
+      placed.push({word,cells:letters.map((_,i)=>[sr+dir[0]*i,sc+dir[1]*i])});ok=true;
+    }
+  }
+  for(let r=0;r<size;r++)for(let c=0;c<size;c++)if(!grid[r][c])grid[r][c]=ALPHA[Math.floor(Math.random()*ALPHA.length)];
+  window.placedWords=placed;
+  render();
+}
+function render(){
+  const g=$('grid');g.style.gridTemplateColumns=`repeat(${size},30px)`;g.innerHTML='';
+  for(let r=0;r<size;r++)for(let c=0;c<size;c++){
+    const d=document.createElement('div');d.className='gc';d.dataset.r=r;d.dataset.c=c;d.textContent=grid[r][c];g.appendChild(d);
+  }
+  renderWords();attachEvents();
+}
+function renderWords(){
+  $('wordList').innerHTML=words.map(w=>`<li class="${found.has(w)?'done':''}">${w}</li>`).join('');
+  $('progress').textContent=found.size+' / '+words.length+' nalezeno';
+  if(found.size===words.length&&words.length)$('msg').textContent='🎉 Všechna slova nalezena!';
+}
+let path2=[];
+function attachEvents(){
+  const cells=[...$('grid').children];
+  let dragging=false,startRC=null;
+  function cellAt(x,y){const el=document.elementFromPoint(x,y);return el&&el.classList.contains('gc')?el:null;}
+  function clearSel(){cells.forEach(c=>{if(!c.classList.contains('found'))c.classList.remove('sel');});}
+  function lineCells(a,b){
+    const dr=Math.sign(b[0]-a[0]),dc=Math.sign(b[1]-a[1]);
+    const len=Math.max(Math.abs(b[0]-a[0]),Math.abs(b[1]-a[1]));
+    // must be straight (horiz/vert/diag)
+    if(!((a[0]===b[0])||(a[1]===b[1])||(Math.abs(b[0]-a[0])===Math.abs(b[1]-a[1]))))return null;
+    const out=[];for(let i=0;i<=len;i++)out.push([a[0]+dr*i,a[1]+dc*i]);return out;
+  }
+  function start(el){dragging=true;startRC=[+el.dataset.r,+el.dataset.c];clearSel();el.classList.add('sel');}
+  function moveTo(el){if(!dragging||!el)return;clearSel();const cur=[+el.dataset.r,+el.dataset.c];const line=lineCells(startRC,cur);
+    if(line)line.forEach(([r,c])=>cells[r*size+c].classList.add('sel'));}
+  function end(){if(!dragging)return;dragging=false;
+    const sel=cells.filter(c=>c.classList.contains('sel')&&!c.classList.contains('found'));
+    const word=sel.map(c=>c.textContent).join('');const rev=[...word].reverse().join('');
+    const match=words.find(w=>!found.has(w)&&(w===word||w===rev));
+    if(match){found.add(match);sel.forEach(c=>{c.classList.add('found');c.classList.remove('sel');});renderWords();}
+    else clearSel();
+  }
+  cells.forEach(c=>{
+    c.onmousedown=e=>{e.preventDefault();start(c);};
+    c.onmouseenter=()=>moveTo(c);
+  });
+  document.onmouseup=end;
+  $('grid').ontouchstart=e=>{const el=cellAt(e.touches[0].clientX,e.touches[0].clientY);if(el){e.preventDefault();start(el);}};
+  $('grid').ontouchmove=e=>{const el=cellAt(e.touches[0].clientX,e.touches[0].clientY);moveTo(el);e.preventDefault();};
+  $('grid').ontouchend=end;
+}
+$('newBtn').onclick=()=>{$('msg').textContent='';build(DEFAULT);};
+$('genCustom').onclick=()=>{const w=$('customWords').value.split('\n');if(w.filter(x=>x.trim()).length<2)return alert('Zadej alespoň 2 slova.');$('msg').textContent='';build(w);};
+build(DEFAULT);
+</script>
+</body>
+</html>

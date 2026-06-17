@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>⏳ Odpočet do události</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1a1a1a;color:#e0e0e0;min-height:100vh;padding:20px}
+.container{max-width:840px;margin:0 auto}
+h1{font-size:1.6rem;margin-bottom:18px;font-weight:600;text-align:center}
+.add{background:#2a2a2a;border:1px solid #404040;border-radius:8px;padding:18px;margin-bottom:20px;display:flex;gap:10px;flex-wrap:wrap;align-items:end}
+label{display:block;font-size:.76rem;color:#888;margin-bottom:4px}
+input{background:#404040;border:1px solid #555;border-radius:4px;color:#e0e0e0;padding:9px}
+.btn{background:#6aa6fd;color:#fff;border:none;padding:10px 18px;border-radius:6px;cursor:pointer;font-weight:600}
+.btn:hover{background:#5694f0}
+.events{display:grid;gap:16px}
+.event{background:#2a2a2a;border:1px solid #404040;border-radius:10px;padding:20px;position:relative;overflow:hidden}
+.event.past{opacity:.6}
+.event h2{font-size:1.2rem;margin-bottom:4px}
+.event .date{font-size:.82rem;color:#888;margin-bottom:14px}
+.timer{display:flex;gap:14px;flex-wrap:wrap}
+.unit{text-align:center;min-width:64px}
+.unit .v{font-size:2.2rem;font-weight:700;color:#6aa6fd;font-variant-numeric:tabular-nums}
+.unit .l{font-size:.72rem;color:#888;text-transform:uppercase}
+.del{position:absolute;top:14px;right:14px;background:none;border:none;color:#888;cursor:pointer;font-size:1.1rem}
+.del:hover{color:#e74c3c}
+.passed{font-size:1.6rem;color:#27ae60;font-weight:700}
+.empty{text-align:center;color:#666;padding:30px}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>⏳ Odpočet do události</h1>
+  <div class="add">
+    <div style="flex:1;min-width:160px"><label>Název události</label><input id="name" placeholder="Např. Dovolená, Narozeniny…" style="width:100%"></div>
+    <div><label>Datum a čas</label><input type="datetime-local" id="date"></div>
+    <button class="btn" id="addBtn">➕ Přidat</button>
+  </div>
+  <div class="events" id="events"></div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const d=new Date();d.setDate(d.getDate()+30);d.setMinutes(d.getMinutes()-d.getTimezoneOffset());$('date').value=d.toISOString().slice(0,16);
+let events=JSON.parse(localStorage.getItem('countdowns')||'null')||[{id:1,name:'Nový rok',date:new Date(new Date().getFullYear()+1,0,1,0,0).toISOString()}];
+const save=()=>localStorage.setItem('countdowns',JSON.stringify(events));
+$('addBtn').onclick=()=>{const n=$('name').value.trim();if(!n||!$('date').value)return;events.push({id:Date.now(),name:n,date:new Date($('date').value).toISOString()});save();$('name').value='';render();};
+function render(){
+  if(!events.length){$('events').innerHTML='<div class="empty">Zatím žádné události. Přidej první výše! 🎯</div>';return;}
+  events.sort((a,b)=>new Date(a.date)-new Date(b.date));
+  $('events').innerHTML=events.map(e=>`<div class="event" data-id="${e.id}"><button class="del" data-del="${e.id}">🗑️</button>
+    <h2>${e.name.replace(/</g,'&lt;')}</h2><div class="date">${new Date(e.date).toLocaleString('cs',{dateStyle:'full',timeStyle:'short'})}</div>
+    <div class="timer" data-date="${e.date}"></div></div>`).join('');
+  document.querySelectorAll('.del').forEach(b=>b.onclick=()=>{events=events.filter(x=>x.id!=b.dataset.del);save();render();});
+  tick();
+}
+function tick(){
+  document.querySelectorAll('.event').forEach(ev=>{
+    const t=ev.querySelector('.timer');const diff=new Date(t.dataset.date)-Date.now();
+    if(diff<=0){ev.classList.add('past');t.innerHTML='<span class="passed">🎉 Už nastalo!</span>';return;}
+    const days=Math.floor(diff/86400000),h=Math.floor(diff/3600000)%24,m=Math.floor(diff/60000)%60,s=Math.floor(diff/1000)%60;
+    t.innerHTML=[[days,'dní'],[h,'hodin'],[m,'minut'],[s,'sekund']].map(([v,l])=>`<div class="unit"><div class="v">${v}</div><div class="l">${l}</div></div>`).join('');
+  });
+}
+setInterval(tick,1000);
+render();
+</script>
+</body>
+</html>

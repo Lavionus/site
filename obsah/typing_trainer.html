@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>⌨️ Trenažér psaní</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1a1a1a;color:#e0e0e0;min-height:100vh;padding:20px}
+.container{max-width:820px;margin:0 auto}
+h1{font-size:1.6rem;margin-bottom:18px;font-weight:600;text-align:center}
+.controls{display:flex;gap:12px;justify-content:center;margin-bottom:18px;flex-wrap:wrap;align-items:end}
+label{display:block;font-size:.78rem;color:#888;margin-bottom:4px}
+select{background:#404040;border:1px solid #555;border-radius:4px;color:#e0e0e0;padding:9px}
+.btn{background:#6aa6fd;color:#fff;border:none;padding:9px 16px;border-radius:6px;cursor:pointer;font-weight:600}
+.btn:hover{background:#5694f0}.btn-sec{background:#404040}
+.stats{display:flex;justify-content:space-around;margin-bottom:18px}
+.stat .v{font-size:1.8rem;font-weight:700;color:#6aa6fd}.stat .l{font-size:.74rem;color:#888}
+.textbox{background:#2a2a2a;border:1px solid #404040;border-radius:8px;padding:24px;font-size:1.4rem;line-height:2;font-family:'SF Mono',Consolas,monospace;margin-bottom:18px;min-height:140px;white-space:pre-wrap;overflow-wrap:break-word;word-break:break-word}
+.textbox .char{position:relative}
+.textbox .correct{color:#27ae60}
+.textbox .wrong{color:#e74c3c;background:rgba(231,76,60,.2);border-radius:3px}
+.textbox .current{background:#6aa6fd;color:#fff;border-radius:3px;animation:blink 1s step-end infinite}
+@keyframes blink{50%{opacity:.4}}
+.textbox .pending{color:#777}
+#hidden{position:absolute;left:-9999px;opacity:0}
+.hint{text-align:center;color:#888;font-size:.9rem}
+.done{background:#2a2a2a;border:1px solid #404040;border-radius:8px;padding:24px;text-align:center;display:none}
+.done .big{font-size:2.6rem;font-weight:700;color:#6aa6fd}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>⌨️ Trenažér psaní všemi deseti</h1>
+  <div class="controls">
+    <div><label>Obtížnost</label><select id="level"><option value="words">Slova</option><option value="sentences">Věty</option><option value="numbers">Čísla &amp; symboly</option></select></div>
+    <button class="btn" id="newBtn">🔄 Nový text</button>
+  </div>
+  <div class="stats">
+    <div class="stat"><div class="v" id="wpm">0</div><div class="l">WPM (slov/min)</div></div>
+    <div class="stat"><div class="v" id="cpm">0</div><div class="l">úhozů/min</div></div>
+    <div class="stat"><div class="v" id="acc">100%</div><div class="l">Přesnost</div></div>
+    <div class="stat"><div class="v" id="time">0 s</div><div class="l">Čas</div></div>
+  </div>
+  <div class="textbox" id="textbox"></div>
+  <input id="hidden" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false">
+  <p class="hint">Klikni do textu a začni psát. Měření začne prvním stiskem klávesy.</p>
+  <div class="done" id="doneCard">
+    <div class="big" id="doneWpm"></div>
+    <p style="color:#888;margin:8px 0" id="doneDetail"></p>
+    <button class="btn" id="retryBtn">🔄 Znovu</button>
+  </div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const WORDS='kůň pole louka strom voda slunce vítr déšť mraky tráva kámen řeka cesta dům okno střecha brána plot zahrada studna pták lesík obilí seno sklizeň traktor pluh brázda úroda zrno mlýn'.split(' ');
+const SENTENCES=['Příliš žluťoučký kůň úpěl ďábelské ódy.','Na poli za vsí dozrávala pšenice.','Slunce zapadalo za obzor a ochladilo se.','Traktor zoral celé pole během jednoho dne.','V zahradě kvetly růže a voněl bez.','Déšť skrápěl suchou zem po dlouhém létě.'];
+let target='',typed='',startTime=null,timer=null,errors=0;
+function genText(){
+  const lvl=$('level').value;
+  if(lvl==='words')target=Array.from({length:25},()=>WORDS[Math.floor(Math.random()*WORDS.length)]).join(' ');
+  else if(lvl==='sentences')target=Array.from({length:3},()=>SENTENCES[Math.floor(Math.random()*SENTENCES.length)]).join(' ');
+  else target=Array.from({length:12},()=>Math.floor(Math.random()*9000+1000)+'+'+Math.floor(Math.random()*90)).join(' ');
+  typed='';errors=0;startTime=null;clearInterval(timer);
+  $('wpm').textContent=0;$('cpm').textContent=0;$('acc').textContent='100%';$('time').textContent='0 s';
+  $('doneCard').style.display='none';$('textbox').style.display='block';
+  render();$('hidden').value='';$('hidden').focus();
+}
+function render(){
+  $('textbox').innerHTML=[...target].map((ch,i)=>{
+    let cls='pending';
+    if(i<typed.length)cls=typed[i]===ch?'correct':'wrong';
+    else if(i===typed.length)cls='current';
+    return `<span class="char ${cls}">${ch===' '?' ':ch}</span>`;
+  }).join('');
+}
+function update(){
+  if(!startTime)return;
+  const elapsed=(Date.now()-startTime)/1000;
+  $('time').textContent=Math.floor(elapsed)+' s';
+  const correctChars=[...typed].filter((c,i)=>c===target[i]).length;
+  const wpm=Math.round((correctChars/5)/(elapsed/60))||0;
+  $('wpm').textContent=wpm;
+  $('cpm').textContent=Math.round(correctChars/(elapsed/60))||0;
+  const acc=typed.length?Math.round(correctChars/typed.length*100):100;
+  $('acc').textContent=acc+'%';
+}
+$('hidden').addEventListener('input',e=>{
+  if(!startTime){startTime=Date.now();timer=setInterval(update,200);}
+  typed=$('hidden').value;
+  if(typed.length>target.length)typed=typed.slice(0,target.length);
+  render();update();
+  if(typed.length>=target.length)finish();
+});
+$('textbox').onclick=()=>$('hidden').focus();
+function finish(){
+  clearInterval(timer);update();
+  const elapsed=(Date.now()-startTime)/1000;
+  const correctChars=[...typed].filter((c,i)=>c===target[i]).length;
+  const wpm=Math.round((correctChars/5)/(elapsed/60))||0;
+  const acc=Math.round(correctChars/typed.length*100);
+  $('textbox').style.display='none';$('doneCard').style.display='block';
+  $('doneWpm').textContent=wpm+' WPM';
+  $('doneDetail').textContent=`Přesnost ${acc}% · ${Math.round(elapsed)} s · ${target.length} znaků`;
+}
+$('newBtn').onclick=genText;$('retryBtn').onclick=genText;$('level').onchange=genText;
+genText();
+</script>
+</body>
+</html>

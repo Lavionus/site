@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🌅 Slunce a Měsíc</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/suncalc/1.9.0/suncalc.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1a1a1a;color:#e0e0e0;min-height:100vh;padding:20px}
+.container{max-width:840px;margin:0 auto}
+h1{font-size:1.6rem;margin-bottom:18px;font-weight:600;text-align:center}
+.card{background:#2a2a2a;border:1px solid #404040;border-radius:8px;padding:22px;margin-bottom:20px}
+h2{font-size:1.05rem;color:#6aa6fd;margin-bottom:14px}
+.controls{display:flex;gap:10px;flex-wrap:wrap;align-items:end}
+label{display:block;font-size:.78rem;color:#888;margin-bottom:4px}
+input,select{background:#404040;border:1px solid #555;border-radius:4px;color:#e0e0e0;padding:9px}
+.btn{background:#6aa6fd;color:#fff;border:none;padding:9px 16px;border-radius:6px;cursor:pointer;font-weight:600}
+.btn:hover{background:#5694f0}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media(max-width:640px){.grid{grid-template-columns:1fr}}
+.sun-times .row{display:flex;justify-content:space-between;padding:9px 0;border-bottom:1px solid #333}
+.sun-times .row:last-child{border:none}
+.sun-times b{color:#f39c12}
+.moon-visual{text-align:center}
+.moon-emoji{font-size:5rem;margin:10px 0}
+.moon-name{font-size:1.2rem;color:#6aa6fd;font-weight:600}
+.moon-pct{color:#888;margin-top:6px}
+.daylen{text-align:center;font-size:1.3rem;color:#27ae60;font-weight:600;margin-top:8px}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>🌅 Východ/západ slunce a fáze měsíce</h1>
+  <div class="card">
+    <div class="controls">
+      <div><label>Lokace</label>
+        <select id="loc">
+          <option value="50.0755,14.4378">Praha</option>
+          <option value="49.1951,16.6068">Brno</option>
+          <option value="49.8346,18.2820">Ostrava</option>
+          <option value="49.7437,13.3775">Plzeň</option>
+          <option value="48.9764,14.4747">České Budějovice</option>
+          <option value="custom">Vlastní souřadnice…</option>
+        </select>
+      </div>
+      <div id="customCoords" style="display:none;gap:8px"><label>Lat, Lon</label><input type="text" id="coords" placeholder="50.08, 14.44" style="width:140px"></div>
+      <div><label>Datum</label><input type="date" id="date"></div>
+      <button class="btn" id="todayBtn">Dnes</button>
+    </div>
+  </div>
+  <div class="grid">
+    <div class="card">
+      <h2>☀️ Slunce</h2>
+      <div class="sun-times" id="sunTimes"></div>
+      <div class="daylen" id="dayLen"></div>
+    </div>
+    <div class="card moon-visual">
+      <h2 style="text-align:left">🌙 Měsíc</h2>
+      <div class="moon-emoji" id="moonEmoji">🌕</div>
+      <div class="moon-name" id="moonName"></div>
+      <div class="moon-pct" id="moonPct"></div>
+      <div class="sun-times" id="moonTimes" style="margin-top:16px"></div>
+    </div>
+  </div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+$('date').value=new Date().toISOString().slice(0,10);
+$('todayBtn').onclick=()=>{$('date').value=new Date().toISOString().slice(0,10);update();};
+$('loc').onchange=()=>{$('customCoords').style.display=$('loc').value==='custom'?'block':'none';update();};
+$('coords').oninput=update;$('date').onchange=update;
+function getLatLon(){
+  if($('loc').value==='custom'){const p=$('coords').value.split(',').map(s=>parseFloat(s.trim()));if(p.length===2&&!isNaN(p[0]))return p;return[50.0755,14.4378];}
+  return $('loc').value.split(',').map(Number);
+}
+function fmt(d){return d&&!isNaN(d)?d.toLocaleTimeString('cs',{hour:'2-digit',minute:'2-digit'}):'—';}
+function moonPhaseName(p){
+  if(p<0.03||p>0.97)return['🌑','Nov'];
+  if(p<0.22)return['🌒','Dorůstající srpek'];
+  if(p<0.28)return['🌓','První čtvrt'];
+  if(p<0.47)return['🌔','Dorůstající měsíc'];
+  if(p<0.53)return['🌕','Úplněk'];
+  if(p<0.72)return['🌖','Couvající měsíc'];
+  if(p<0.78)return['🌗','Poslední čtvrt'];
+  return['🌘','Couvající srpek'];
+}
+function update(){
+  const [lat,lon]=getLatLon();
+  const date=new Date($('date').value+'T12:00:00');
+  const t=SunCalc.getTimes(date,lat,lon);
+  const rows=[['🌅 Východ slunce',t.sunrise],['🌄 Západ slunce',t.sunset],['🌇 Občanský soumrak (konec)',t.dusk],['🌃 Občanský úsvit',t.dawn],['☀️ Sluneční poledne',t.solarNoon],['🌌 Astron. soumrak',t.night]];
+  $('sunTimes').innerHTML=rows.map(([l,v])=>`<div class="row"><span>${l}</span><b>${fmt(v)}</b></div>`).join('');
+  if(t.sunrise&&t.sunset&&!isNaN(t.sunrise)&&!isNaN(t.sunset)){
+    const ms=t.sunset-t.sunrise;const h=Math.floor(ms/3600000),m=Math.round(ms%3600000/60000);
+    $('dayLen').textContent=`Délka dne: ${h} h ${m} min`;
+  }else $('dayLen').textContent='Délka dne: — (polární den/noc)';
+  const ill=SunCalc.getMoonIllumination(date);
+  const [emoji,name]=moonPhaseName(ill.phase);
+  $('moonEmoji').textContent=emoji;$('moonName').textContent=name;
+  $('moonPct').textContent='Osvětlení: '+Math.round(ill.fraction*100)+'%';
+  const mt=SunCalc.getMoonTimes(date,lat,lon);
+  $('moonTimes').innerHTML=`<div class="row"><span>🌙 Východ měsíce</span><b>${fmt(mt.rise)}</b></div><div class="row"><span>🌙 Západ měsíce</span><b>${fmt(mt.set)}</b></div>`;
+}
+update();
+</script>
+</body>
+</html>

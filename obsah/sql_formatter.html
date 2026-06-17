@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🗄️ SQL formatter</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1a1a1a;color:#e0e0e0;height:100vh;padding:20px;display:flex;flex-direction:column;overflow:hidden}
+.container{max-width:1300px;width:100%;margin:0 auto;flex:1;display:flex;flex-direction:column;min-height:0}
+h1{font-size:1.6rem;margin-bottom:14px;font-weight:600;text-align:center}
+.toolbar{display:flex;gap:8px;justify-content:center;margin-bottom:14px;flex-wrap:wrap;align-items:center}
+.btn{background:#6aa6fd;color:#fff;border:none;padding:9px 15px;border-radius:6px;cursor:pointer;font-size:.84rem;font-weight:600}
+.btn:hover{background:#5694f0}.btn-sec{background:#404040}.btn-sec:hover{background:#4a4a4a}
+select{background:#404040;border:1px solid #555;border-radius:4px;color:#e0e0e0;padding:8px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;flex:1;min-height:0}
+@media(max-width:820px){.grid{grid-template-columns:1fr;grid-template-rows:1fr 1fr}}
+.panel{background:#2a2a2a;border:1px solid #404040;border-radius:8px;overflow:hidden;display:flex;flex-direction:column;min-height:0}
+.panel h2{font-size:.82rem;color:#6aa6fd;padding:10px 14px;background:#333;border-bottom:1px solid #404040;text-transform:uppercase;letter-spacing:1px;flex-shrink:0}
+textarea{flex:1;min-height:0;background:#1e1e1e;border:none;color:#e0e0e0;padding:14px;font-family:'SF Mono',Consolas,monospace;font-size:.9rem;resize:none;line-height:1.5}
+textarea:focus{outline:none}
+.output{flex:1;min-height:0;padding:14px;overflow:auto;font-family:'SF Mono',Consolas,monospace;font-size:.9rem;line-height:1.6;white-space:pre-wrap}
+.kw{color:#6aa6fd;font-weight:600}.str{color:#a5d6a7}.num{color:#f39c12}.fn{color:#ce93d8}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>🗄️ SQL formatter</h1>
+  <div class="toolbar">
+    <button class="btn" id="formatBtn">✨ Formátovat</button>
+    <button class="btn btn-sec" id="minifyBtn">🗜️ Na jeden řádek</button>
+    <select id="case"><option value="upper">Klíč. slova VELKÁ</option><option value="lower">klíč. slova malá</option><option value="keep">Neměnit</option></select>
+    <button class="btn btn-sec" id="copyBtn">📋 Kopírovat</button>
+    <button class="btn btn-sec" id="sampleBtn">📄 Vzorek</button>
+  </div>
+  <div class="grid">
+    <div class="panel"><h2>Vstup</h2><textarea id="input" placeholder="Vlož SQL dotaz…" spellcheck="false"></textarea></div>
+    <div class="panel"><h2>Výstup</h2><div class="output" id="output"></div></div>
+  </div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const KEYWORDS=['SELECT','FROM','WHERE','AND','OR','INNER JOIN','LEFT JOIN','RIGHT JOIN','OUTER JOIN','FULL JOIN','JOIN','ON','GROUP BY','ORDER BY','HAVING','LIMIT','OFFSET','INSERT INTO','VALUES','UPDATE','SET','DELETE FROM','DELETE','CREATE TABLE','ALTER TABLE','DROP TABLE','UNION ALL','UNION','AS','IN','NOT','NULL','IS','LIKE','BETWEEN','DISTINCT','COUNT','SUM','AVG','MIN','MAX','CASE','WHEN','THEN','ELSE','END','ASC','DESC','INNER','LEFT','RIGHT','PRIMARY KEY','FOREIGN KEY','REFERENCES','DEFAULT','INT','VARCHAR','TEXT','DATE','BOOLEAN'];
+const NEWLINE_BEFORE=['FROM','WHERE','GROUP BY','ORDER BY','HAVING','LIMIT','UNION ALL','UNION','INNER JOIN','LEFT JOIN','RIGHT JOIN','OUTER JOIN','FULL JOIN','JOIN','VALUES','SET'];
+const NEWLINE_AND=['AND','OR'];
+function applyCase(sql){
+  const mode=$('case').value;if(mode==='keep')return sql;
+  let out=sql;
+  KEYWORDS.sort((a,b)=>b.length-a.length).forEach(kw=>{
+    const re=new RegExp('\\b'+kw.replace(/ /g,'\\s+')+'\\b','gi');
+    out=out.replace(re,m=>mode==='upper'?kw:kw.toLowerCase());
+  });
+  return out;
+}
+function format(sql){
+  sql=sql.replace(/\s+/g,' ').trim();
+  let out=sql;
+  NEWLINE_BEFORE.forEach(kw=>{out=out.replace(new RegExp('\\s+'+kw.replace(/ /g,'\\s+')+'\\b','gi'),'\n'+kw);});
+  NEWLINE_AND.forEach(kw=>{out=out.replace(new RegExp('\\s+'+kw+'\\b','gi'),'\n  '+kw);});
+  // SELECT columns: comma -> newline indent
+  out=out.replace(/,\s*/g,',\n  ');
+  out=out.replace(/\bSELECT\b\s*/gi,'SELECT\n  ');
+  // collapse accidental double indents on clause lines
+  out=out.split('\n').map(l=>l.replace(/\s+$/,'')).join('\n');
+  out=out.replace(/;\s*/g,';\n');
+  return applyCase(out).trim();
+}
+function highlight(sql){
+  let h=sql.replace(/&/g,'&amp;').replace(/</g,'&lt;');
+  h=h.replace(/('[^']*'|"[^"]*")/g,'<span class="str">$1</span>');
+  h=h.replace(/\b(\d+\.?\d*)\b/g,'<span class="num">$1</span>');
+  KEYWORDS.sort((a,b)=>b.length-a.length).forEach(kw=>{
+    const re=new RegExp('\\b('+kw.replace(/ /g,'\\s+')+')\\b','gi');
+    h=h.replace(re,'<span class="kw">$1</span>');
+  });
+  return h;
+}
+function run(min){
+  const raw=$('input').value;if(!raw.trim()){$('output').innerHTML='';return;}
+  let out=min?applyCase(raw.replace(/\s+/g,' ').trim()):format(raw);
+  $('output').innerHTML=highlight(out);$('output').dataset.raw=out;
+}
+$('formatBtn').onclick=()=>run(false);
+$('minifyBtn').onclick=()=>run(true);
+$('input').oninput=()=>run(false);
+$('case').onchange=()=>run(false);
+$('copyBtn').onclick=()=>{navigator.clipboard.writeText($('output').dataset.raw||'');$('copyBtn').textContent='✅';setTimeout(()=>$('copyBtn').textContent='📋 Kopírovat',1000);};
+$('sampleBtn').onclick=()=>{$('input').value="select p.id, p.nazev, count(o.id) as pocet, sum(o.mnozstvi) from plodiny p left join osev o on o.plodina_id=p.id where p.bio=1 and p.rok>=2020 group by p.id, p.nazev having count(o.id)>2 order by pocet desc limit 10;";run(false);};
+$('sampleBtn').onclick();
+</script>
+</body>
+</html>

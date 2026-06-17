@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>😊 Tracker nálady</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1a1a1a;color:#e0e0e0;min-height:100vh;padding:20px}
+.container{max-width:860px;margin:0 auto}
+h1{font-size:1.6rem;margin-bottom:18px;font-weight:600;text-align:center}
+.card{background:#2a2a2a;border:1px solid #404040;border-radius:8px;padding:22px;margin-bottom:20px}
+h2{font-size:1.05rem;color:#6aa6fd;margin-bottom:14px}
+.moods{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:14px}
+.mood{font-size:2.4rem;cursor:pointer;padding:8px;border-radius:12px;border:2px solid transparent;transition:.15s;background:#1e1e1e}
+.mood:hover{transform:scale(1.1)}
+.mood.sel{border-color:#6aa6fd;background:#2a3548}
+.note-in{width:100%;background:#404040;border:1px solid #555;border-radius:6px;color:#e0e0e0;padding:10px;margin-bottom:12px}
+.btn{background:#6aa6fd;color:#fff;border:none;padding:10px 20px;border-radius:6px;cursor:pointer;font-weight:600;width:100%}
+.cal{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}
+.cal .dow{text-align:center;font-size:.72rem;color:#888;padding-bottom:4px}
+.day{aspect-ratio:1;border-radius:8px;background:#1e1e1e;display:flex;flex-direction:column;align-items:center;justify-content:center;font-size:1.4rem;position:relative;cursor:default}
+.day .num{position:absolute;top:2px;left:4px;font-size:.6rem;color:#666}
+.day.empty{background:transparent}
+.stats{display:flex;justify-content:space-around;text-align:center;margin-top:14px}
+.stat .v{font-size:1.6rem;font-weight:700;color:#6aa6fd}.stat .l{font-size:.74rem;color:#888}
+.monthnav{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.monthnav button{background:#404040;border:none;color:#e0e0e0;border-radius:6px;padding:6px 12px;cursor:pointer}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>😊 Tracker nálady</h1>
+  <div class="card">
+    <h2>Jak se dnes cítíš?</h2>
+    <div class="moods" id="moods"></div>
+    <input class="note-in" id="note" placeholder="Poznámka k dnešku (volitelné)…">
+    <button class="btn" id="saveBtn">💾 Uložit dnešní náladu</button>
+  </div>
+  <div class="card">
+    <div class="monthnav"><button id="prevM">◀</button><h2 id="monthLabel" style="margin:0"></h2><button id="nextM">▶</button></div>
+    <div class="cal" id="cal"></div>
+    <div class="stats" id="stats"></div>
+  </div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const MOODS=[['😣',1,'Mizerně'],['🙁',2,'Špatně'],['😐',3,'Neutrálně'],['🙂',4,'Dobře'],['😄',5,'Skvěle']];
+let selected=null;
+let data=JSON.parse(localStorage.getItem('mood_data')||'{}');
+let viewDate=new Date();
+$('moods').innerHTML=MOODS.map(m=>`<div class="mood" data-v="${m[1]}" title="${m[2]}">${m[0]}</div>`).join('');
+document.querySelectorAll('.mood').forEach(m=>m.onclick=()=>{document.querySelectorAll('.mood').forEach(x=>x.classList.remove('sel'));m.classList.add('sel');selected=+m.dataset.v;});
+// preload today
+const todayKey=new Date().toISOString().slice(0,10);
+if(data[todayKey]){selected=data[todayKey].mood;$('note').value=data[todayKey].note||'';document.querySelector(`.mood[data-v="${selected}"]`)?.classList.add('sel');}
+$('saveBtn').onclick=()=>{if(!selected){alert('Vyber náladu.');return;}data[todayKey]={mood:selected,note:$('note').value};localStorage.setItem('mood_data',JSON.stringify(data));render();$('saveBtn').textContent='✅ Uloženo';setTimeout(()=>$('saveBtn').textContent='💾 Uložit dnešní náladu',1200);};
+$('prevM').onclick=()=>{viewDate.setMonth(viewDate.getMonth()-1);render();};
+$('nextM').onclick=()=>{viewDate.setMonth(viewDate.getMonth()+1);render();};
+function render(){
+  const y=viewDate.getFullYear(),m=viewDate.getMonth();
+  $('monthLabel').textContent=viewDate.toLocaleDateString('cs',{month:'long',year:'numeric'});
+  const first=(new Date(y,m,1).getDay()+6)%7;const days=new Date(y,m+1,0).getDate();
+  let html=['Po','Út','St','Čt','Pá','So','Ne'].map(d=>`<div class="dow">${d}</div>`).join('');
+  for(let i=0;i<first;i++)html+='<div class="day empty"></div>';
+  const moodMap={};MOODS.forEach(mo=>moodMap[mo[1]]=mo[0]);
+  let sum=0,cnt=0;
+  for(let d=1;d<=days;d++){
+    const key=`${y}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const e=data[key];if(e){sum+=e.mood;cnt++;}
+    html+=`<div class="day" title="${e?(e.note||''):''}"><span class="num">${d}</span>${e?moodMap[e.mood]:''}</div>`;
+  }
+  $('cal').innerHTML=html;
+  $('stats').innerHTML=`<div class="stat"><div class="v">${cnt}</div><div class="l">Záznamů</div></div>
+    <div class="stat"><div class="v">${cnt?(sum/cnt).toFixed(1):'–'}</div><div class="l">Průměr (1-5)</div></div>
+    <div class="stat"><div class="v">${cnt?moodMap[Math.round(sum/cnt)]:'–'}</div><div class="l">Převažuje</div></div>`;
+}
+render();
+</script>
+</body>
+</html>

@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>⏰ Cron builder</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1a1a1a;color:#e0e0e0;min-height:100vh;padding:20px}
+.container{max-width:820px;margin:0 auto}
+h1{font-size:1.6rem;margin-bottom:18px;font-weight:600;text-align:center}
+.card{background:#2a2a2a;border:1px solid #404040;border-radius:8px;padding:22px;margin-bottom:20px}
+.cronbig{display:flex;gap:10px;justify-content:center;margin-bottom:10px;flex-wrap:wrap}
+.cronfield{text-align:center}
+.cronfield input{width:90px;background:#1e1e1e;border:1px solid #555;border-radius:6px;color:#6aa6fd;padding:12px;font-family:monospace;font-size:1.3rem;text-align:center}
+.cronfield .l{font-size:.72rem;color:#888;margin-top:5px}
+.expr{text-align:center;font-family:monospace;font-size:1.6rem;color:#6aa6fd;background:#1e1e1e;border-radius:8px;padding:14px;margin:14px 0;letter-spacing:3px}
+.human{text-align:center;font-size:1.1rem;color:#27ae60;margin-bottom:8px}
+.err{text-align:center;color:#e74c3c}
+h2{font-size:1rem;color:#6aa6fd;margin-bottom:12px}
+.presets{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px}
+.preset{background:#1e1e1e;border:1px solid #404040;border-radius:6px;padding:10px;cursor:pointer;font-size:.85rem}
+.preset:hover{border-color:#6aa6fd}
+.preset code{color:#f39c12;font-size:.78rem}
+.next{font-family:monospace;font-size:.9rem;line-height:1.9}
+.next div{padding:4px 0;border-bottom:1px solid #333}
+.copy{background:#404040;border:1px solid #555;color:#bbb;border-radius:6px;padding:9px 16px;cursor:pointer;display:block;margin:0 auto}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>⏰ Cron expression builder</h1>
+  <div class="card">
+    <div class="cronbig">
+      <div class="cronfield"><input id="f0" value="*"><div class="l">Minuta<br>(0-59)</div></div>
+      <div class="cronfield"><input id="f1" value="*"><div class="l">Hodina<br>(0-23)</div></div>
+      <div class="cronfield"><input id="f2" value="*"><div class="l">Den měsíce<br>(1-31)</div></div>
+      <div class="cronfield"><input id="f3" value="*"><div class="l">Měsíc<br>(1-12)</div></div>
+      <div class="cronfield"><input id="f4" value="*"><div class="l">Den týdne<br>(0-6, 0=ne)</div></div>
+    </div>
+    <div class="expr" id="expr">* * * * *</div>
+    <div class="human" id="human"></div>
+    <button class="copy" id="copyBtn">📋 Kopírovat výraz</button>
+  </div>
+  <div class="card">
+    <h2>📅 Příští spuštění</h2>
+    <div class="next" id="next"></div>
+  </div>
+  <div class="card">
+    <h2>⚡ Předvolby</h2>
+    <div class="presets" id="presets"></div>
+  </div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const FIELDS=['f0','f1','f2','f3','f4'];
+const PRESETS=[
+  ['Každou minutu','* * * * *'],['Každých 5 minut','*/5 * * * *'],['Každou hodinu','0 * * * *'],
+  ['Každý den o půlnoci','0 0 * * *'],['Každý den v 8:30','30 8 * * *'],['Každé pondělí v 9:00','0 9 * * 1'],
+  ['1. den v měsíci','0 0 1 * *'],['Každou neděli','0 0 * * 0'],['Pracovní dny 18:00','0 18 * * 1-5'],
+  ['Každých 15 min v prac. době','*/15 9-17 * * 1-5'],['1. ledna','0 0 1 1 *'],['Každých 6 hodin','0 */6 * * *']
+];
+const DOW=['neděli','pondělí','úterý','středu','čtvrtek','pátek','sobotu'];
+const MONTHS=['','lednu','únoru','březnu','dubnu','květnu','červnu','červenci','srpnu','září','říjnu','listopadu','prosinci'];
+function expr(){return FIELDS.map(f=>$(f).value.trim()||'*').join(' ');}
+function describe(){
+  const[m,h,dom,mon,dow]=FIELDS.map(f=>$(f).value.trim()||'*');
+  let parts=[];
+  if(m==='*'&&h==='*')parts.push('každou minutu');
+  else{
+    if(m.startsWith('*/'))parts.push('každých '+m.slice(2)+' minut');
+    else if(m==='*')parts.push('každou minutu');
+    else parts.push('v minutě '+m);
+    if(h!=='*'){if(h.startsWith('*/'))parts.push('každých '+h.slice(2)+' hodin');else parts.push('v '+h+'. hodinu');}
+  }
+  if(dom!=='*')parts.push(dom.includes('-')||dom.includes(',')?'ve dnech '+dom:dom+'. den v měsíci');
+  if(mon!=='*')parts.push('v '+(MONTHS[+mon]||'měsíci '+mon));
+  if(dow!=='*'){
+    if(dow.includes('-')){const[a,b]=dow.split('-');parts.push('od '+DOW[+a]+' do '+DOW[+b]);}
+    else if(/^\d$/.test(dow))parts.push('v '+DOW[+dow]);
+    else parts.push('ve dnech týdne '+dow);
+  }
+  return parts.join(', ');
+}
+// simple cron matcher for next runs
+function matchField(val,v,min,max){
+  if(val==='*')return true;
+  return val.split(',').some(part=>{
+    if(part.includes('/')){const[range,step]=part.split('/');const s=+step;let lo=min,hi=max;
+      if(range!=='*'){if(range.includes('-')){[lo,hi]=range.split('-').map(Number);}else{lo=+range;hi=max;}}
+      for(let i=lo;i<=hi;i+=s)if(i===v)return true;return false;}
+    if(part.includes('-')){const[a,b]=part.split('-').map(Number);return v>=a&&v<=b;}
+    return +part===v;
+  });
+}
+function nextRuns(){
+  const[m,h,dom,mon,dow]=FIELDS.map(f=>$(f).value.trim()||'*');
+  const runs=[];const d=new Date();d.setSeconds(0,0);d.setMinutes(d.getMinutes()+1);
+  let guard=0;
+  while(runs.length<5&&guard++<525600){
+    if(matchField(m,d.getMinutes(),0,59)&&matchField(h,d.getHours(),0,23)&&matchField(dom,d.getDate(),1,31)&&matchField(mon,d.getMonth()+1,1,12)&&matchField(dow,d.getDay(),0,6))
+      runs.push(new Date(d));
+    d.setMinutes(d.getMinutes()+1);
+  }
+  return runs;
+}
+function update(){
+  $('expr').textContent=expr();
+  let valid=true;
+  FIELDS.forEach(f=>{if(!/^[\d*,\/-]+$/.test($(f).value.trim()||'*'))valid=false;});
+  if(!valid){$('human').innerHTML='<span class="err">Neplatný výraz</span>';$('next').innerHTML='';return;}
+  $('human').textContent='Spustí se '+describe();
+  try{const runs=nextRuns();$('next').innerHTML=runs.length?runs.map(r=>`<div>${r.toLocaleString('cs',{weekday:'short',day:'numeric',month:'numeric',year:'numeric',hour:'2-digit',minute:'2-digit'})}</div>`).join(''):'<div style="color:#888">Žádné spuštění v příštím roce</div>';}
+  catch(e){$('next').innerHTML='<div style="color:#e74c3c">Nelze vypočítat</div>';}
+}
+FIELDS.forEach(f=>$(f).oninput=update);
+$('copyBtn').onclick=()=>{navigator.clipboard.writeText(expr());$('copyBtn').textContent='✅ Zkopírováno';setTimeout(()=>$('copyBtn').textContent='📋 Kopírovat výraz',1200);};
+$('presets').innerHTML=PRESETS.map(([l,e])=>`<div class="preset" data-e="${e}"><b>${l}</b><br><code>${e}</code></div>`).join('');
+$('presets').querySelectorAll('.preset').forEach(p=>p.onclick=()=>{p.dataset.e.split(' ').forEach((v,i)=>$(FIELDS[i]).value=v);update();});
+update();
+</script>
+</body>
+</html>

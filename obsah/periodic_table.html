@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>⚛️ Periodická tabulka</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1a1a1a;color:#e0e0e0;min-height:100vh;padding:20px}
+.container{max-width:1200px;margin:0 auto}
+h1{font-size:1.6rem;margin-bottom:16px;font-weight:600;text-align:center}
+.legend{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-bottom:16px;font-size:.76rem}
+.legend span{display:flex;align-items:center;gap:5px;cursor:pointer;padding:3px 8px;border-radius:6px}
+.legend span:hover{background:#333}
+.dot{width:12px;height:12px;border-radius:3px}
+.table{display:grid;grid-template-columns:repeat(18,1fr);gap:3px;overflow-x:auto;padding-bottom:10px}
+.el{aspect-ratio:1;border-radius:4px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;font-size:.5rem;min-width:30px;transition:transform .1s;position:relative}
+.el:hover{transform:scale(1.15);z-index:5;box-shadow:0 0 10px rgba(0,0,0,.6)}
+.el .num{position:absolute;top:1px;left:2px;font-size:.42rem;opacity:.8}
+.el .sym{font-size:.85rem;font-weight:700}
+.el.dim{opacity:.25}
+.controls{text-align:center;margin-bottom:14px}
+.controls input{background:#404040;border:1px solid #555;border-radius:6px;color:#e0e0e0;padding:9px 14px;width:260px}
+.modal{position:fixed;inset:0;background:rgba(0,0,0,.7);display:none;align-items:center;justify-content:center;z-index:100;padding:20px}
+.modal.show{display:flex}
+.modalcard{background:#2a2a2a;border:1px solid #404040;border-radius:12px;padding:24px;max-width:420px;width:100%}
+.modalcard .big{font-size:4rem;font-weight:700;text-align:center}
+.modalcard h2{text-align:center;margin-bottom:14px}
+.prop{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #333}
+.prop:last-child{border:none}.prop b{color:#6aa6fd}
+.close{background:#6aa6fd;color:#fff;border:none;padding:10px;border-radius:6px;width:100%;margin-top:16px;cursor:pointer;font-weight:600}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>⚛️ Periodická tabulka prvků</h1>
+  <div class="controls"><input type="text" id="search" placeholder="🔍 Hledat (název, značka, číslo)…"></div>
+  <div class="legend" id="legend"></div>
+  <div class="table" id="table"></div>
+</div>
+<div class="modal" id="modal"><div class="modalcard" id="modalCard"></div></div>
+<script>
+const $=id=>document.getElementById(id);
+const CATS={'alkalicke':['Alkalické kovy','#e74c3c'],'kovy-alk-zem':['Kovy alk. zemin','#e67e22'],'prechodne':['Přechodné kovy','#f1c40f'],'kovy':['Kovy','#27ae60'],'polokovy':['Polokovy','#1abc9c'],'nekovy':['Nekovy','#3498db'],'halogeny':['Halogeny','#9b59b6'],'vzacne':['Vzácné plyny','#e84393'],'lanthanoidy':['Lanthanoidy','#16a085'],'aktinoidy':['Aktinoidy','#8e44ad']};
+// [num,sym,name,group,period,category, mass]
+const EL=[
+[1,'H','Vodík',1,1,'nekovy',1.008],[2,'He','Helium',18,1,'vzacne',4.003],
+[3,'Li','Lithium',1,2,'alkalicke',6.94],[4,'Be','Beryllium',2,2,'kovy-alk-zem',9.012],[5,'B','Bor',13,2,'polokovy',10.81],[6,'C','Uhlík',14,2,'nekovy',12.011],[7,'N','Dusík',15,2,'nekovy',14.007],[8,'O','Kyslík',16,2,'nekovy',15.999],[9,'F','Fluor',17,2,'halogeny',18.998],[10,'Ne','Neon',18,2,'vzacne',20.18],
+[11,'Na','Sodík',1,3,'alkalicke',22.99],[12,'Mg','Hořčík',2,3,'kovy-alk-zem',24.305],[13,'Al','Hliník',13,3,'kovy',26.982],[14,'Si','Křemík',14,3,'polokovy',28.085],[15,'P','Fosfor',15,3,'nekovy',30.974],[16,'S','Síra',16,3,'nekovy',32.06],[17,'Cl','Chlor',17,3,'halogeny',35.45],[18,'Ar','Argon',18,3,'vzacne',39.948],
+[19,'K','Draslík',1,4,'alkalicke',39.098],[20,'Ca','Vápník',2,4,'kovy-alk-zem',40.078],[21,'Sc','Skandium',3,4,'prechodne',44.956],[22,'Ti','Titan',4,4,'prechodne',47.867],[23,'V','Vanad',5,4,'prechodne',50.942],[24,'Cr','Chrom',6,4,'prechodne',51.996],[25,'Mn','Mangan',7,4,'prechodne',54.938],[26,'Fe','Železo',8,4,'prechodne',55.845],[27,'Co','Kobalt',9,4,'prechodne',58.933],[28,'Ni','Nikl',10,4,'prechodne',58.693],[29,'Cu','Měď',11,4,'prechodne',63.546],[30,'Zn','Zinek',12,4,'prechodne',65.38],[31,'Ga','Gallium',13,4,'kovy',69.723],[32,'Ge','Germanium',14,4,'polokovy',72.63],[33,'As','Arsen',15,4,'polokovy',74.922],[34,'Se','Selen',16,4,'nekovy',78.971],[35,'Br','Brom',17,4,'halogeny',79.904],[36,'Kr','Krypton',18,4,'vzacne',83.798],
+[37,'Rb','Rubidium',1,5,'alkalicke',85.468],[38,'Sr','Stroncium',2,5,'kovy-alk-zem',87.62],[39,'Y','Yttrium',3,5,'prechodne',88.906],[40,'Zr','Zirkonium',4,5,'prechodne',91.224],[41,'Nb','Niob',5,5,'prechodne',92.906],[42,'Mo','Molybden',6,5,'prechodne',95.95],[43,'Tc','Technecium',7,5,'prechodne',98],[44,'Ru','Ruthenium',8,5,'prechodne',101.07],[45,'Rh','Rhodium',9,5,'prechodne',102.91],[46,'Pd','Palladium',10,5,'prechodne',106.42],[47,'Ag','Stříbro',11,5,'prechodne',107.87],[48,'Cd','Kadmium',12,5,'prechodne',112.41],[49,'In','Indium',13,5,'kovy',114.82],[50,'Sn','Cín',14,5,'kovy',118.71],[51,'Sb','Antimon',15,5,'polokovy',121.76],[52,'Te','Tellur',16,5,'polokovy',127.6],[53,'I','Jod',17,5,'halogeny',126.9],[54,'Xe','Xenon',18,5,'vzacne',131.29],
+[55,'Cs','Cesium',1,6,'alkalicke',132.91],[56,'Ba','Baryum',2,6,'kovy-alk-zem',137.33],[57,'La','Lanthan',3,6,'lanthanoidy',138.91],[72,'Hf','Hafnium',4,6,'prechodne',178.49],[73,'Ta','Tantal',5,6,'prechodne',180.95],[74,'W','Wolfram',6,6,'prechodne',183.84],[75,'Re','Rhenium',7,6,'prechodne',186.21],[76,'Os','Osmium',8,6,'prechodne',190.23],[77,'Ir','Iridium',9,6,'prechodne',192.22],[78,'Pt','Platina',10,6,'prechodne',195.08],[79,'Au','Zlato',11,6,'prechodne',196.97],[80,'Hg','Rtuť',12,6,'prechodne',200.59],[81,'Tl','Thallium',13,6,'kovy',204.38],[82,'Pb','Olovo',14,6,'kovy',207.2],[83,'Bi','Bismut',15,6,'kovy',208.98],[84,'Po','Polonium',16,6,'kovy',209],[85,'At','Astat',17,6,'halogeny',210],[86,'Rn','Radon',18,6,'vzacne',222],
+[87,'Fr','Francium',1,7,'alkalicke',223],[88,'Ra','Radium',2,7,'kovy-alk-zem',226],[89,'Ac','Aktinium',3,7,'aktinoidy',227],[104,'Rf','Rutherfordium',4,7,'prechodne',267],[105,'Db','Dubnium',5,7,'prechodne',268],[106,'Sg','Seaborgium',6,7,'prechodne',269],[107,'Bh','Bohrium',7,7,'prechodne',270],[108,'Hs','Hassium',8,7,'prechodne',269],[109,'Mt','Meitnerium',9,7,'prechodne',278],[110,'Ds','Darmstadtium',10,7,'prechodne',281],[111,'Rg','Roentgenium',11,7,'prechodne',282],[112,'Cn','Kopernicium',12,7,'prechodne',285],[113,'Nh','Nihonium',13,7,'kovy',286],[114,'Fl','Flerovium',14,7,'kovy',289],[115,'Mc','Moscovium',15,7,'kovy',290],[116,'Lv','Livermorium',16,7,'kovy',293],[117,'Ts','Tennessin',17,7,'halogeny',294],[118,'Og','Oganesson',18,7,'vzacne',294],
+[58,'Ce','Cer',4,9,'lanthanoidy',140.12],[59,'Pr','Praseodym',5,9,'lanthanoidy',140.91],[60,'Nd','Neodym',6,9,'lanthanoidy',144.24],[61,'Pm','Promethium',7,9,'lanthanoidy',145],[62,'Sm','Samarium',8,9,'lanthanoidy',150.36],[63,'Eu','Europium',9,9,'lanthanoidy',151.96],[64,'Gd','Gadolinium',10,9,'lanthanoidy',157.25],[65,'Tb','Terbium',11,9,'lanthanoidy',158.93],[66,'Dy','Dysprosium',12,9,'lanthanoidy',162.5],[67,'Ho','Holmium',13,9,'lanthanoidy',164.93],[68,'Er','Erbium',14,9,'lanthanoidy',167.26],[69,'Tm','Thulium',15,9,'lanthanoidy',168.93],[70,'Yb','Ytterbium',16,9,'lanthanoidy',173.05],[71,'Lu','Lutecium',17,9,'lanthanoidy',174.97],
+[90,'Th','Thorium',4,10,'aktinoidy',232.04],[91,'Pa','Protaktinium',5,10,'aktinoidy',231.04],[92,'U','Uran',6,10,'aktinoidy',238.03],[93,'Np','Neptunium',7,10,'aktinoidy',237],[94,'Pu','Plutonium',8,10,'aktinoidy',244],[95,'Am','Americium',9,10,'aktinoidy',243],[96,'Cm','Curium',10,10,'aktinoidy',247],[97,'Bk','Berkelium',11,10,'aktinoidy',247],[98,'Cf','Kalifornium',12,10,'aktinoidy',251],[99,'Es','Einsteinium',13,10,'aktinoidy',252],[100,'Fm','Fermium',14,10,'aktinoidy',257],[101,'Md','Mendelevium',15,10,'aktinoidy',258],[102,'No','Nobelium',16,10,'aktinoidy',259],[103,'Lr','Lawrencium',17,10,'aktinoidy',262]
+];
+$('legend').innerHTML=Object.entries(CATS).map(([k,[n,c]])=>`<span data-cat="${k}"><i class="dot" style="background:${c}"></i>${n}</span>`).join('');
+function build(){
+  $('table').innerHTML=EL.map(e=>{
+    const[num,sym,name,group,period,cat]=e;const col=CATS[cat][1];
+    return `<div class="el" style="grid-column:${group};grid-row:${period};background:${col}" data-num="${num}">
+      <span class="num">${num}</span><span class="sym">${sym}</span><span style="font-size:.42rem">${name.slice(0,7)}</span></div>`;
+  }).join('');
+  $('table').querySelectorAll('.el').forEach(el=>el.onclick=()=>showDetail(+el.dataset.num));
+}
+function showDetail(num){
+  const e=EL.find(x=>x[0]===num);const[n,sym,name,group,period,cat,mass]=e;
+  $('modalCard').innerHTML=`<div class="big" style="color:${CATS[cat][1]}">${sym}</div>
+    <h2>${name}</h2>
+    <div class="prop"><span>Protonové číslo</span><b>${n}</b></div>
+    <div class="prop"><span>Relativní atomová hmotnost</span><b>${mass}</b></div>
+    <div class="prop"><span>Skupina / perioda</span><b>${group<=18?group:'—'} / ${period<=7?period:'—'}</b></div>
+    <div class="prop"><span>Kategorie</span><b>${CATS[cat][0]}</b></div>
+    <button class="close" id="closeBtn">Zavřít</button>`;
+  $('modal').classList.add('show');
+  $('closeBtn').onclick=()=>$('modal').classList.remove('show');
+}
+$('modal').onclick=e=>{if(e.target===$('modal'))$('modal').classList.remove('show');};
+$('search').oninput=()=>{
+  const q=$('search').value.toLowerCase().trim();
+  $('table').querySelectorAll('.el').forEach(el=>{
+    const e=EL.find(x=>x[0]===+el.dataset.num);
+    const match=!q||e[1].toLowerCase().includes(q)||e[2].toLowerCase().includes(q)||String(e[0])===q;
+    el.classList.toggle('dim',!match);
+  });
+};
+$('legend').querySelectorAll('span').forEach(s=>s.onclick=()=>{
+  const cat=s.dataset.cat;
+  $('table').querySelectorAll('.el').forEach(el=>{const e=EL.find(x=>x[0]===+el.dataset.num);el.classList.toggle('dim',e[5]!==cat);});
+});
+build();
+</script>
+</body>
+</html>

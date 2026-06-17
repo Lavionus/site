@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🕐 Světové hodiny</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1a1a1a;color:#e0e0e0;min-height:100vh;padding:20px}
+.container{max-width:900px;margin:0 auto}
+h1{font-size:1.6rem;margin-bottom:18px;font-weight:600;text-align:center}
+.add{display:flex;gap:10px;justify-content:center;margin-bottom:20px;flex-wrap:wrap}
+select{background:#404040;border:1px solid #555;border-radius:4px;color:#e0e0e0;padding:10px;min-width:240px}
+.btn{background:#6aa6fd;color:#fff;border:none;padding:10px 18px;border-radius:6px;cursor:pointer;font-weight:600}
+.btn:hover{background:#5694f0}
+.clocks{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:16px}
+.clock{background:#2a2a2a;border:1px solid #404040;border-radius:10px;padding:20px;position:relative}
+.clock .city{font-size:1.1rem;font-weight:600;color:#6aa6fd;margin-bottom:4px}
+.clock .zone{font-size:.76rem;color:#888;margin-bottom:12px}
+.clock .time{font-size:2.4rem;font-weight:700;font-variant-numeric:tabular-nums}
+.clock .date{font-size:.85rem;color:#aaa;margin-top:4px}
+.clock .diff{font-size:.78rem;color:#f39c12;margin-top:8px}
+.clock .del{position:absolute;top:12px;right:12px;background:none;border:none;color:#c0392b;cursor:pointer;font-size:1rem}
+.daynight{position:absolute;top:14px;right:38px;font-size:1.1rem}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>🕐 Světové hodiny / časová pásma</h1>
+  <div class="add">
+    <select id="tzSelect"></select>
+    <button class="btn" id="addBtn">➕ Přidat hodiny</button>
+  </div>
+  <div class="clocks" id="clocks"></div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const ZONES=[
+  ['Praha','Europe/Prague'],['Londýn','Europe/London'],['New York','America/New_York'],['Los Angeles','America/Los_Angeles'],
+  ['Tokio','Asia/Tokyo'],['Sydney','Australia/Sydney'],['Dubaj','Asia/Dubai'],['Moskva','Europe/Moscow'],
+  ['Peking','Asia/Shanghai'],['Bombaj','Asia/Kolkata'],['São Paulo','America/Sao_Paulo'],['Berlín','Europe/Berlin'],
+  ['Honolulu','Pacific/Honolulu'],['Káhira','Africa/Cairo'],['Bangkok','Asia/Bangkok'],['Aljaška','America/Anchorage']
+];
+$('tzSelect').innerHTML=ZONES.map(z=>`<option value="${z[1]}">${z[0]} (${z[1]})</option>`).join('');
+let clocks=JSON.parse(localStorage.getItem('world_clocks')||'null')||['Europe/Prague','Europe/London','America/New_York','Asia/Tokyo'];
+const save=()=>localStorage.setItem('world_clocks',JSON.stringify(clocks));
+$('addBtn').onclick=()=>{const z=$('tzSelect').value;if(!clocks.includes(z)){clocks.push(z);save();renderStructure();}};
+function cityName(tz){const f=ZONES.find(z=>z[1]===tz);return f?f[0]:tz.split('/').pop().replace(/_/g,' ');}
+function offsetDiff(tz){
+  const now=new Date();
+  const local=new Date(now.toLocaleString('en-US',{timeZone:'Europe/Prague'}));
+  const target=new Date(now.toLocaleString('en-US',{timeZone:tz}));
+  const diff=Math.round((target-local)/3600000);
+  return diff;
+}
+function renderStructure(){
+  $('clocks').innerHTML=clocks.map(tz=>`<div class="clock" data-tz="${tz}">
+    <button class="del" data-del="${tz}">✕</button><span class="daynight"></span>
+    <div class="city">${cityName(tz)}</div><div class="zone">${tz}</div>
+    <div class="time">--:--:--</div><div class="date"></div><div class="diff"></div></div>`).join('');
+  document.querySelectorAll('.del').forEach(b=>b.onclick=()=>{clocks=clocks.filter(z=>z!==b.dataset.del);save();renderStructure();});
+  tick();
+}
+function tick(){
+  const now=new Date();
+  document.querySelectorAll('.clock').forEach(el=>{
+    const tz=el.dataset.tz;
+    el.querySelector('.time').textContent=now.toLocaleTimeString('cs',{timeZone:tz});
+    el.querySelector('.date').textContent=now.toLocaleDateString('cs',{timeZone:tz,weekday:'long',day:'numeric',month:'long'});
+    const h=+now.toLocaleString('en-US',{timeZone:tz,hour:'2-digit',hour12:false}).slice(0,2);
+    el.querySelector('.daynight').textContent=(h>=6&&h<19)?'☀️':'🌙';
+    const d=offsetDiff(tz);
+    el.querySelector('.diff').textContent=d===0?'Stejně jako Praha':`${d>0?'+':''}${d} h oproti Praze`;
+  });
+}
+renderStructure();
+setInterval(tick,1000);
+</script>
+</body>
+</html>

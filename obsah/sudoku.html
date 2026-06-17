@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🔢 Sudoku</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;user-select:none}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1a1a1a;color:#e0e0e0;min-height:100vh;padding:20px;display:flex;flex-direction:column;align-items:center}
+h1{font-size:1.6rem;margin-bottom:14px;font-weight:600}
+.top{display:flex;gap:10px;align-items:center;margin-bottom:16px;flex-wrap:wrap;justify-content:center}
+.btn{background:#6aa6fd;color:#fff;border:none;padding:9px 16px;border-radius:6px;cursor:pointer;font-weight:600}
+.btn:hover{background:#5694f0}.btn-sec{background:#404040}
+select{background:#404040;border:1px solid #555;border-radius:4px;color:#e0e0e0;padding:9px}
+.board{display:grid;grid-template-columns:repeat(9,1fr);background:#555;gap:1px;border:3px solid #6aa6fd;border-radius:4px;width:min(450px,92vw);aspect-ratio:1}
+.cell{background:#2a2a2a;display:flex;align-items:center;justify-content:center;font-size:clamp(1rem,5vw,1.5rem);cursor:pointer;font-weight:600}
+.cell.given{color:#888;background:#242424}
+.cell.sel{background:#3a4a6a}
+.cell.same{background:#33384a}
+.cell.err{color:#e74c3c}
+.cell:nth-child(3n){border-right:2px solid #6aa6fd}
+.cell:nth-child(9n){border-right:none}
+.board>.cell:nth-child(n+19):nth-child(-n+27),.board>.cell:nth-child(n+46):nth-child(-n+54){border-bottom:2px solid #6aa6fd}
+.pad{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:16px;width:min(450px,92vw)}
+.key{background:#2a2a2a;border:1px solid #404040;border-radius:6px;padding:14px 0;text-align:center;cursor:pointer;font-size:1.2rem;font-weight:600}
+.key:hover{background:#333}
+.msg{margin-top:14px;font-size:1.2rem;font-weight:700;min-height:30px;color:#27ae60}
+</style>
+</head>
+<body>
+<h1>🔢 Sudoku</h1>
+<div class="top">
+  <select id="level"><option value="40">Lehká</option><option value="48" selected>Střední</option><option value="54">Těžká</option></select>
+  <button class="btn" id="newBtn">🔄 Nová hra</button>
+  <button class="btn btn-sec" id="checkBtn">✓ Zkontrolovat</button>
+  <div style="color:#888">⏱️ <span id="time">0:00</span></div>
+</div>
+<div class="board" id="board"></div>
+<div class="pad" id="pad"></div>
+<div class="msg" id="msg"></div>
+<script>
+const $=id=>document.getElementById(id);
+let solution,puzzle,given,selected=-1,timer,seconds;
+function genSolved(){
+  const g=Array.from({length:9},()=>Array(9).fill(0));
+  function valid(r,c,n){for(let i=0;i<9;i++)if(g[r][i]===n||g[i][c]===n)return false;
+    const br=r-r%3,bc=c-c%3;for(let i=0;i<3;i++)for(let j=0;j<3;j++)if(g[br+i][bc+j]===n)return false;return true;}
+  function fill(pos){if(pos===81)return true;const r=Math.floor(pos/9),c=pos%9;
+    const nums=[1,2,3,4,5,6,7,8,9].sort(()=>Math.random()-0.5);
+    for(const n of nums)if(valid(r,c,n)){g[r][c]=n;if(fill(pos+1))return true;g[r][c]=0;}return false;}
+  fill(0);return g;
+}
+function newGame(){
+  solution=genSolved();
+  puzzle=solution.map(r=>[...r]);
+  const remove=+$('level').value;const cells=[...Array(81).keys()].sort(()=>Math.random()-0.5);
+  for(let i=0;i<remove;i++){const idx=cells[i];puzzle[Math.floor(idx/9)][idx%9]=0;}
+  given=puzzle.map(r=>r.map(v=>v!==0));
+  selected=-1;seconds=0;clearInterval(timer);timer=setInterval(()=>{seconds++;$('time').textContent=Math.floor(seconds/60)+':'+String(seconds%60).padStart(2,'0');},1000);
+  $('msg').textContent='';render();
+}
+function render(){
+  const b=$('board');b.innerHTML='';
+  for(let i=0;i<81;i++){const r=Math.floor(i/9),c=i%9;const v=puzzle[r][c];
+    const d=document.createElement('div');d.className='cell'+(given[r][c]?' given':'');d.dataset.i=i;
+    d.textContent=v||'';
+    if(i===selected)d.classList.add('sel');
+    if(selected>=0){const sv=puzzle[Math.floor(selected/9)][selected%9];if(sv&&v===sv&&i!==selected)d.classList.add('same');}
+    d.onclick=()=>{selected=i;render();};
+    b.appendChild(d);
+  }
+}
+function place(n){
+  if(selected<0)return;const r=Math.floor(selected/9),c=selected%9;
+  if(given[r][c])return;
+  puzzle[r][c]=n;render();
+  if(puzzle.flat().every(v=>v!==0))checkWin();
+}
+function checkWin(){
+  for(let r=0;r<9;r++)for(let c=0;c<9;c++)if(puzzle[r][c]!==solution[r][c])return;
+  clearInterval(timer);$('msg').textContent='🎉 Vyřešeno za '+Math.floor(seconds/60)+':'+String(seconds%60).padStart(2,'0')+'!';
+}
+$('checkBtn').onclick=()=>{
+  let ok=true;document.querySelectorAll('.cell').forEach(d=>{const i=+d.dataset.i,r=Math.floor(i/9),c=i%9;
+    if(puzzle[r][c]&&puzzle[r][c]!==solution[r][c]){d.classList.add('err');ok=false;}});
+  $('msg').textContent=ok?'✅ Zatím bez chyb!':'❌ Některá čísla jsou špatně';
+  setTimeout(()=>document.querySelectorAll('.err').forEach(d=>d.classList.remove('err')),1500);
+};
+$('pad').innerHTML=[1,2,3,4,5,6,7,8,9].map(n=>`<div class="key" data-n="${n}">${n}</div>`).join('')+'<div class="key" data-n="0">⌫</div>';
+$('pad').querySelectorAll('.key').forEach(k=>k.onclick=()=>place(+k.dataset.n));
+document.addEventListener('keydown',e=>{if(e.key>='1'&&e.key<='9')place(+e.key);else if(e.key==='Backspace'||e.key==='Delete'||e.key==='0')place(0);
+  else if(e.key.startsWith('Arrow')&&selected>=0){let r=Math.floor(selected/9),c=selected%9;
+    if(e.key==='ArrowUp')r=(r+8)%9;if(e.key==='ArrowDown')r=(r+1)%9;if(e.key==='ArrowLeft')c=(c+8)%9;if(e.key==='ArrowRight')c=(c+1)%9;selected=r*9+c;render();}});
+$('newBtn').onclick=newGame;$('level').onchange=newGame;
+newGame();
+</script>
+</body>
+</html>

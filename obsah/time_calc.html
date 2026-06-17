@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>⏱️ Kalkulačka času</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1a1a1a;color:#e0e0e0;min-height:100vh;padding:20px}
+.container{max-width:780px;margin:0 auto}
+h1{font-size:1.6rem;margin-bottom:18px;font-weight:600;text-align:center}
+.tabs{display:flex;margin-bottom:18px;border-bottom:1px solid #404040;flex-wrap:wrap}
+.tab{padding:11px 16px;background:#2a2a2a;border:1px solid #404040;border-bottom:none;cursor:pointer;color:#bbb;border-radius:8px 8px 0 0;font-size:.88rem}
+.tab.active{background:#6aa6fd;color:#fff;border-color:#6aa6fd}
+.pane{display:none}.pane.active{display:block}
+.card{background:#2a2a2a;border:1px solid #404040;border-radius:8px;padding:22px;margin-bottom:20px}
+h2{font-size:1.05rem;color:#6aa6fd;margin-bottom:16px}
+label{display:block;font-size:.82rem;color:#888;margin-bottom:5px}
+input,select{width:100%;background:#404040;border:1px solid #555;border-radius:4px;color:#e0e0e0;padding:10px;margin-bottom:12px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:520px){.grid{grid-template-columns:1fr}}
+.big{font-size:2rem;font-weight:700;color:#6aa6fd;text-align:center;margin:10px 0}
+.res-row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #333}
+.res-row:last-child{border:none}.res-row b{color:#4caf50}
+.rows{margin-bottom:12px}
+.timerow{display:flex;gap:8px;margin-bottom:8px;align-items:center}
+.timerow input{margin:0}.timerow select{margin:0;width:90px}
+.del{background:none;border:none;color:#c0392b;cursor:pointer;font-size:1.1rem}
+.btn{background:#6aa6fd;color:#fff;border:none;padding:9px 16px;border-radius:6px;cursor:pointer;font-weight:600;font-size:.85rem}
+.btn-sec{background:#404040}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>⏱️ Kalkulačka času</h1>
+  <div class="tabs">
+    <div class="tab active" data-pane="sum">➕ Sčítání časů</div>
+    <div class="tab" data-pane="work">🕘 Odpracováno</div>
+    <div class="tab" data-pane="date">📅 Rozdíl dat</div>
+  </div>
+
+  <div class="pane active" id="sum">
+    <div class="card">
+      <h2>Sčítání / odčítání časů (hh:mm)</h2>
+      <div class="rows" id="timeRows"></div>
+      <button class="btn btn-sec" id="addTime">➕ Přidat řádek</button>
+      <div class="big" id="sumResult">0:00</div>
+      <p style="text-align:center;color:#888" id="sumDec"></p>
+    </div>
+  </div>
+
+  <div class="pane" id="work">
+    <div class="card">
+      <h2>Odpracované hodiny</h2>
+      <div class="grid">
+        <div><label>Příchod</label><input type="time" id="start" value="08:00"></div>
+        <div><label>Odchod</label><input type="time" id="end" value="16:30"></div>
+        <div><label>Přestávka (min)</label><input type="number" id="break" value="30" min="0"></div>
+        <div><label>Hodinová sazba (Kč, volitelné)</label><input type="number" id="rate" value="250" min="0"></div>
+      </div>
+      <div class="big" id="workResult">–</div>
+      <div class="res-row"><span>Čistý odpracovaný čas</span><b id="netTime">–</b></div>
+      <div class="res-row"><span>Desetinně</span><b id="netDec">–</b></div>
+      <div class="res-row"><span>Mzda</span><b id="wage">–</b></div>
+    </div>
+  </div>
+
+  <div class="pane" id="date">
+    <div class="card">
+      <h2>Rozdíl mezi daty</h2>
+      <div class="grid">
+        <div><label>Od</label><input type="date" id="dFrom"></div>
+        <div><label>Do</label><input type="date" id="dTo"></div>
+      </div>
+      <div class="big" id="dateResult">–</div>
+      <div class="res-row"><span>Celkem dní</span><b id="totalDays">–</b></div>
+      <div class="res-row"><span>Týdnů</span><b id="totalWeeks">–</b></div>
+      <div class="res-row"><span>Pracovních dní (po–pá)</span><b id="workDays">–</b></div>
+    </div>
+  </div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.pane').forEach(x=>x.classList.remove('active'));
+  t.classList.add('active');$(t.dataset.pane).classList.add('active');
+});
+// Sum
+let timeList=[{op:'+',v:'1:30'},{op:'+',v:'2:45'}];
+function renderTimes(){
+  $('timeRows').innerHTML=timeList.map((t,i)=>`<div class="timerow">
+    <select data-i="${i}" data-f="op"><option ${t.op==='+'?'selected':''}>+</option><option ${t.op==='-'?'selected':''}>-</option></select>
+    <input data-i="${i}" data-f="v" value="${t.v}" placeholder="hh:mm" style="flex:1">
+    <button class="del" data-del="${i}">✕</button></div>`).join('');
+  $('timeRows').querySelectorAll('select,input').forEach(el=>el.oninput=()=>{timeList[+el.dataset.i][el.dataset.f]=el.value;sumCalc();});
+  $('timeRows').querySelectorAll('.del').forEach(b=>b.onclick=()=>{timeList.splice(+b.dataset.del,1);renderTimes();});
+  sumCalc();
+}
+function parseT(s){const m=(s||'').split(':');return (+m[0]||0)*60+(+m[1]||0);}
+function fmtT(min){const sign=min<0?'-':'';min=Math.abs(min);return sign+Math.floor(min/60)+':'+String(min%60).padStart(2,'0');}
+function sumCalc(){
+  let total=timeList.reduce((s,t)=>s+(t.op==='-'?-1:1)*parseT(t.v),0);
+  $('sumResult').textContent=fmtT(total);
+  $('sumDec').textContent=(total/60).toFixed(2)+' hodin';
+}
+$('addTime').onclick=()=>{timeList.push({op:'+',v:'0:00'});renderTimes();};
+// Work
+function workCalc(){
+  let s=parseT($('start').value),e=parseT($('end').value);if(e<s)e+=1440;
+  const net=e-s-(+$('break').value);
+  $('workResult').textContent=fmtT(net);
+  $('netTime').textContent=fmtT(net)+' h';
+  $('netDec').textContent=(net/60).toFixed(2)+' h';
+  $('wage').textContent=$('rate').value?Math.round(net/60*+$('rate').value).toLocaleString('cs')+' Kč':'—';
+}
+['start','end','break','rate'].forEach(id=>$(id).oninput=workCalc);
+// Date
+$('dFrom').value=new Date().toISOString().slice(0,10);
+const t30=new Date();t30.setDate(t30.getDate()+30);$('dTo').value=t30.toISOString().slice(0,10);
+function dateCalc(){
+  const a=new Date($('dFrom').value),b=new Date($('dTo').value);
+  if(isNaN(a)||isNaN(b))return;
+  const days=Math.round((b-a)/86400000);
+  $('dateResult').textContent=days+' dní';
+  $('totalDays').textContent=days;
+  $('totalWeeks').textContent=(days/7).toFixed(1);
+  let wd=0;const dir=days>=0?1:-1;const d=new Date(a);
+  for(let i=0;i<Math.abs(days);i++){d.setDate(d.getDate()+dir);const dow=d.getDay();if(dow!==0&&dow!==6)wd+=dir;}
+  $('workDays').textContent=wd;
+}
+['dFrom','dTo'].forEach(id=>$(id).oninput=dateCalc);
+renderTimes();workCalc();dateCalc();
+</script>
+</body>
+</html>

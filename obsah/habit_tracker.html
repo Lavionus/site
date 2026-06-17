@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎯 Sledování návyků</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1a1a1a;color:#e0e0e0;min-height:100vh;padding:20px}
+.container{max-width:1000px;margin:0 auto}
+h1{font-size:1.6rem;margin-bottom:20px;font-weight:600;text-align:center}
+.card{background:#2a2a2a;border:1px solid #404040;border-radius:8px;padding:20px;margin-bottom:20px}
+.add{display:flex;gap:10px;flex-wrap:wrap}
+input[type=text]{flex:1;min-width:180px;background:#404040;border:1px solid #555;border-radius:4px;color:#e0e0e0;padding:10px}
+.btn{background:#6aa6fd;color:#fff;border:none;padding:10px 18px;border-radius:6px;cursor:pointer;font-size:.9rem;font-weight:600}
+.btn:hover{background:#5694f0}
+.habit{display:flex;align-items:center;gap:14px;padding:14px;border-bottom:1px solid #333}
+.habit:last-child{border-bottom:none}
+.habit-info{flex:1}
+.habit-name{font-size:1.05rem;font-weight:600}
+.streak{font-size:.8rem;color:#f39c12;margin-top:2px}
+.week{display:flex;gap:6px}
+.day{width:34px;height:34px;border-radius:8px;background:#404040;border:1px solid #555;cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:.7rem;color:#888;flex-direction:column;line-height:1}
+.day small{font-size:.6rem}
+.day.done{background:#27ae60;border-color:#27ae60;color:#fff}
+.day.today{box-shadow:0 0 0 2px #6aa6fd}
+.del{background:none;border:none;color:#c0392b;cursor:pointer;font-size:1.1rem}
+.empty{text-align:center;color:#666;padding:30px}
+.legend{font-size:.8rem;color:#888;margin-top:10px;text-align:center}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>🎯 Sledování návyků</h1>
+  <div class="card">
+    <div class="add">
+      <input type="text" id="newHabit" placeholder="Nový návyk (např. Pít 2l vody, Cvičit, Číst)…" maxlength="40">
+      <button class="btn" id="addBtn">➕ Přidat</button>
+    </div>
+  </div>
+  <div class="card" id="list"></div>
+  <p class="legend">Klikni na den v týdnu pro označení splnění. Data se ukládají lokálně v prohlížeči.</p>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const DAYS=['Po','Út','St','Čt','Pá','So','Ne'];
+let habits=JSON.parse(localStorage.getItem('habits')||'[]');
+function save(){localStorage.setItem('habits',JSON.stringify(habits));}
+function weekDates(){ // Monday-based current week
+  const now=new Date();const day=(now.getDay()+6)%7;
+  const monday=new Date(now);monday.setDate(now.getDate()-day);monday.setHours(0,0,0,0);
+  return [...Array(7)].map((_,i)=>{const d=new Date(monday);d.setDate(monday.getDate()+i);return d.toISOString().slice(0,10);});
+}
+function streak(h){ // consecutive days up to today
+  let s=0;const d=new Date();
+  for(;;){const key=d.toISOString().slice(0,10);if(h.done&&h.done[key]){s++;d.setDate(d.getDate()-1);}else break;}
+  return s;
+}
+function render(){
+  if(!habits.length){$('list').innerHTML='<div class="empty">Zatím žádné návyky. Přidej první výše! 🌱</div>';return;}
+  const week=weekDates(),today=new Date().toISOString().slice(0,10);
+  $('list').innerHTML=habits.map((h,i)=>{
+    const days=week.map((date,di)=>{
+      const done=h.done&&h.done[date];
+      return `<div class="day ${done?'done':''} ${date===today?'today':''}" data-h="${i}" data-d="${date}">${DAYS[di]}<small>${date.slice(8)}</small></div>`;
+    }).join('');
+    const st=streak(h);
+    return `<div class="habit"><div class="habit-info"><div class="habit-name">${h.name.replace(/</g,'&lt;')}</div><div class="streak">🔥 Série: ${st} ${st===1?'den':st>=2&&st<=4?'dny':'dní'}</div></div><div class="week">${days}</div><button class="del" data-del="${i}" title="Smazat">🗑️</button></div>`;
+  }).join('');
+  document.querySelectorAll('.day').forEach(el=>el.onclick=()=>{
+    const h=habits[+el.dataset.h];h.done=h.done||{};
+    h.done[el.dataset.d]=!h.done[el.dataset.d];if(!h.done[el.dataset.d])delete h.done[el.dataset.d];
+    save();render();
+  });
+  document.querySelectorAll('.del').forEach(el=>el.onclick=()=>{if(confirm('Smazat návyk?')){habits.splice(+el.dataset.del,1);save();render();}});
+}
+function add(){const v=$('newHabit').value.trim();if(!v)return;habits.push({name:v,done:{}});save();$('newHabit').value='';render();}
+$('addBtn').onclick=add;
+$('newHabit').onkeydown=e=>{if(e.key==='Enter')add();};
+render();
+</script>
+</body>
+</html>

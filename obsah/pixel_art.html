@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎨 Pixel art editor</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;user-select:none}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1a1a1a;color:#e0e0e0;min-height:100vh;padding:20px}
+.container{max-width:900px;margin:0 auto}
+h1{font-size:1.6rem;margin-bottom:18px;font-weight:600;text-align:center}
+.layout{display:grid;grid-template-columns:1fr 240px;gap:20px}
+@media(max-width:680px){.layout{grid-template-columns:1fr}}
+.canvaswrap{background:#2a2a2a;border:1px solid #404040;border-radius:8px;padding:14px;display:flex;justify-content:center}
+#grid{display:grid;gap:0;touch-action:none;box-shadow:0 0 0 1px #444}
+.px{width:100%;aspect-ratio:1;cursor:crosshair}
+.card{background:#2a2a2a;border:1px solid #404040;border-radius:8px;padding:16px}
+h2{font-size:.92rem;color:#6aa6fd;margin-bottom:10px}
+.palette{display:grid;grid-template-columns:repeat(6,1fr);gap:6px;margin-bottom:12px}
+.swatch{aspect-ratio:1;border-radius:4px;cursor:pointer;border:2px solid transparent}
+.swatch.active{border-color:#fff}
+.tools{display:flex;gap:6px;margin-bottom:12px}
+.tool{flex:1;padding:8px;background:#404040;border:1px solid #555;border-radius:6px;color:#bbb;cursor:pointer;font-size:1rem}
+.tool.active{background:#6aa6fd;color:#fff}
+label{display:block;font-size:.76rem;color:#888;margin:8px 0 4px}
+input[type=color]{width:100%;height:38px;border:none;border-radius:6px;background:none;cursor:pointer}
+select{width:100%;background:#404040;border:1px solid #555;border-radius:4px;color:#e0e0e0;padding:8px}
+.btn{background:#6aa6fd;color:#fff;border:none;padding:9px 14px;border-radius:6px;cursor:pointer;font-weight:600;font-size:.82rem;width:100%;margin-top:8px}
+.btn-sec{background:#404040}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>🎨 Pixel art editor</h1>
+  <div class="layout">
+    <div class="canvaswrap"><div id="grid"></div></div>
+    <div class="card">
+      <h2>Nástroj</h2>
+      <div class="tools">
+        <button class="tool active" data-tool="pen" title="Tužka">✏️</button>
+        <button class="tool" data-tool="erase" title="Guma">🧽</button>
+        <button class="tool" data-tool="fill" title="Plechovka">🪣</button>
+        <button class="tool" data-tool="pick" title="Kapátko">💧</button>
+      </div>
+      <h2>Barva</h2>
+      <input type="color" id="color" value="#6aa6fd">
+      <div class="palette" id="palette"></div>
+      <label>Velikost mřížky</label>
+      <select id="size"><option value="8">8×8</option><option value="16" selected>16×16</option><option value="24">24×24</option><option value="32">32×32</option></select>
+      <button class="btn btn-sec" id="clearBtn">🗑️ Vymazat</button>
+      <button class="btn" id="exportBtn">💾 Export PNG</button>
+      <label style="margin-top:8px">Měřítko exportu</label>
+      <select id="exportScale"><option value="10">10×</option><option value="20" selected>20×</option><option value="40">40×</option></select>
+    </div>
+  </div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+let N=16,tool='pen',drawing=false,pixels=[];
+const PALETTE=['#000000','#ffffff','#e74c3c','#e67e22','#f1c40f','#27ae60','#1abc9c','#3498db','#6aa6fd','#9b59b6','#e84393','#8b5a2b'];
+function buildPalette(){$('palette').innerHTML=PALETTE.map((c,i)=>`<div class="swatch ${i===8?'active':''}" style="background:${c}" data-c="${c}"></div>`).join('');
+  $('palette').querySelectorAll('.swatch').forEach(s=>s.onclick=()=>{$('color').value=s.dataset.c;document.querySelectorAll('.swatch').forEach(x=>x.classList.remove('active'));s.classList.add('active');});}
+function build(){
+  N=+$('size').value;pixels=Array(N*N).fill(null);
+  const g=$('grid');g.style.gridTemplateColumns=`repeat(${N},1fr)`;
+  g.style.width='min(440px,80vw)';g.style.height=g.style.width;
+  g.innerHTML='';
+  for(let i=0;i<N*N;i++){const d=document.createElement('div');d.className='px';d.dataset.i=i;
+    d.style.background=((Math.floor(i/N)+i)%2)?'#3a3a3a':'#333';g.appendChild(d);}
+}
+function paint(el){
+  const i=+el.dataset.i;const col=$('color').value;
+  if(tool==='pick'){const c=pixels[i];if(c){$('color').value=c;}return;}
+  if(tool==='fill'){flood(i,pixels[i]);renderPixels();return;}
+  const c=tool==='erase'?null:col;pixels[i]=c;
+  el.style.background=c||(((Math.floor(i/N)+i)%2)?'#3a3a3a':'#333');
+}
+function flood(start,target){
+  const col=$('color').value;if(target===col)return;
+  const stack=[start];
+  while(stack.length){const i=stack.pop();if(pixels[i]!==target)continue;pixels[i]=col;
+    const x=i%N,y=Math.floor(i/N);
+    if(x>0)stack.push(i-1);if(x<N-1)stack.push(i+1);if(y>0)stack.push(i-N);if(y<N-1)stack.push(i+N);}
+}
+function renderPixels(){document.querySelectorAll('.px').forEach((el,i)=>el.style.background=pixels[i]||(((Math.floor(i/N)+i)%2)?'#3a3a3a':'#333'));}
+const g=$('grid');
+g.addEventListener('mousedown',e=>{if(e.target.classList.contains('px')){drawing=true;paint(e.target);}});
+g.addEventListener('mouseover',e=>{if(drawing&&e.target.classList.contains('px')&&(tool==='pen'||tool==='erase'))paint(e.target);});
+document.addEventListener('mouseup',()=>drawing=false);
+g.addEventListener('touchstart',e=>{e.preventDefault();drawing=true;const t=document.elementFromPoint(e.touches[0].clientX,e.touches[0].clientY);if(t&&t.classList.contains('px'))paint(t);},{passive:false});
+g.addEventListener('touchmove',e=>{e.preventDefault();const t=document.elementFromPoint(e.touches[0].clientX,e.touches[0].clientY);if(drawing&&t&&t.classList.contains('px')&&(tool==='pen'||tool==='erase'))paint(t);},{passive:false});
+g.addEventListener('touchend',()=>drawing=false);
+document.querySelectorAll('.tool').forEach(b=>b.onclick=()=>{document.querySelectorAll('.tool').forEach(x=>x.classList.remove('active'));b.classList.add('active');tool=b.dataset.tool;});
+$('size').onchange=build;
+$('clearBtn').onclick=()=>{pixels.fill(null);renderPixels();};
+$('exportBtn').onclick=()=>{const s=+$('exportScale').value,c=document.createElement('canvas');c.width=c.height=N*s;const ctx=c.getContext('2d');
+  for(let i=0;i<N*N;i++){if(pixels[i]){ctx.fillStyle=pixels[i];ctx.fillRect((i%N)*s,Math.floor(i/N)*s,s,s);}}
+  const a=document.createElement('a');a.href=c.toDataURL('image/png');a.download='pixelart.png';a.click();};
+buildPalette();build();
+</script>
+</body>
+</html>

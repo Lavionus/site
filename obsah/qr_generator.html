@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📱 QR generátor + čtečka</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1a1a1a;color:#e0e0e0;min-height:100vh;padding:20px}
+.container{max-width:700px;margin:0 auto}
+h1{font-size:1.6rem;margin-bottom:20px;font-weight:600;text-align:center}
+.tabs{display:flex;margin-bottom:20px;border-bottom:1px solid #404040}
+.tab{padding:12px 24px;background:#2a2a2a;border:1px solid #404040;border-bottom:none;cursor:pointer;color:#bbb;border-radius:8px 8px 0 0}
+.tab.active{background:#6aa6fd;color:#fff;border-color:#6aa6fd}
+.card{background:#2a2a2a;border:1px solid #404040;border-radius:8px;padding:24px;margin-bottom:20px}
+.pane{display:none}.pane.active{display:block}
+textarea,input,select{width:100%;background:#404040;border:1px solid #555;border-radius:4px;color:#e0e0e0;padding:10px;font-size:.9rem;margin-bottom:12px;font-family:inherit}
+textarea{min-height:90px;resize:vertical}
+.btn{background:#6aa6fd;color:#fff;border:none;padding:10px 18px;border-radius:6px;cursor:pointer;font-size:.9rem;font-weight:600}
+.btn:hover{background:#5694f0}
+.btn-sec{background:#404040}.btn-sec:hover{background:#4a4a4a}
+#qrcode{display:flex;justify-content:center;padding:20px;background:#fff;border-radius:8px;margin:16px 0;min-height:60px}
+.opts{display:flex;gap:12px;flex-wrap:wrap;align-items:end}
+.opts label{font-size:.8rem;color:#888;display:block;margin-bottom:4px}
+.opts>div{flex:1;min-width:120px}
+video{width:100%;border-radius:8px;background:#000;max-height:360px}
+.result{background:#1a1a1a;border:1px solid #555;border-radius:6px;padding:14px;margin-top:12px;word-break:break-all;min-height:20px}
+.result a{color:#6aa6fd}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>📱 QR generátor + čtečka</h1>
+  <div class="tabs">
+    <div class="tab active" data-pane="gen">🔲 Generovat</div>
+    <div class="tab" data-pane="read">📷 Číst kamerou</div>
+  </div>
+  <div class="card">
+    <div class="pane active" id="gen">
+      <textarea id="qrText" placeholder="Zadejte text, URL, telefon...">https://example.cz</textarea>
+      <div class="opts">
+        <div><label>Velikost</label><select id="qrSize"><option value="160">Malá</option><option value="256" selected>Střední</option><option value="380">Velká</option></select></div>
+        <div><label>Barva</label><input type="color" id="qrColor" value="#000000" style="padding:4px;height:42px"></div>
+        <div style="flex:0"><button class="btn" id="dlBtn">💾 Stáhnout PNG</button></div>
+      </div>
+      <div id="qrcode"></div>
+    </div>
+    <div class="pane" id="read">
+      <button class="btn" id="startCam">▶️ Spustit kameru</button>
+      <button class="btn btn-sec" id="stopCam">⏹️ Zastavit</button>
+      <video id="video" playsinline style="margin-top:12px;display:none"></video>
+      <canvas id="canvas" hidden></canvas>
+      <div class="result" id="readResult">Naskenovaný obsah se zobrazí zde…</div>
+    </div>
+  </div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+let qr;
+function makeQR(){
+  $('qrcode').innerHTML='';
+  const txt=$('qrText').value.trim();if(!txt)return;
+  qr=new QRCode($('qrcode'),{text:txt,width:+$('qrSize').value,height:+$('qrSize').value,colorDark:$('qrColor').value,colorLight:'#ffffff',correctLevel:QRCode.CorrectLevel.M});
+}
+$('qrText').oninput=makeQR;$('qrSize').onchange=makeQR;$('qrColor').oninput=makeQR;
+$('dlBtn').onclick=()=>{const img=$('qrcode').querySelector('img')||$('qrcode').querySelector('canvas');if(!img)return;
+  const url=img.tagName==='IMG'?img.src:img.toDataURL('image/png');
+  const a=document.createElement('a');a.href=url;a.download='qr.png';a.click();};
+document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.pane').forEach(x=>x.classList.remove('active'));
+  t.classList.add('active');$(t.dataset.pane).classList.add('active');
+  if(t.dataset.pane!=='read')stopCam();
+});
+// Reader
+let stream=null,scanning=false;
+const video=$('video'),canvas=$('canvas'),ctx=canvas.getContext('2d',{willReadFrequently:true});
+$('startCam').onclick=async()=>{
+  try{stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:'environment'}});
+    video.srcObject=stream;video.style.display='block';await video.play();scanning=true;requestAnimationFrame(scan);
+  }catch(e){$('readResult').textContent='Nepodařilo se spustit kameru: '+e.message;}
+};
+$('stopCam').onclick=stopCam;
+function stopCam(){scanning=false;if(stream){stream.getTracks().forEach(t=>t.stop());stream=null;}video.style.display='none';}
+function scan(){
+  if(!scanning)return;
+  if(video.readyState===video.HAVE_ENOUGH_DATA){
+    canvas.width=video.videoWidth;canvas.height=video.videoHeight;
+    ctx.drawImage(video,0,0,canvas.width,canvas.height);
+    const img=ctx.getImageData(0,0,canvas.width,canvas.height);
+    const code=jsQR(img.data,img.width,img.height);
+    if(code&&code.data){
+      const d=code.data;
+      const isUrl=/^https?:\/\//i.test(d);
+      $('readResult').innerHTML='✅ '+(isUrl?`<a href="${d}" target="_blank">${d}</a>`:d.replace(/</g,'&lt;'));
+      stopCam();return;
+    }
+  }
+  requestAnimationFrame(scan);
+}
+makeQR();
+</script>
+</body>
+</html>

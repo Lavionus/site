@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🧭 Kompas &amp; azimut</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css"/>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1a1a1a;color:#e0e0e0;min-height:100vh;padding:20px}
+.container{max-width:980px;margin:0 auto}
+h1{font-size:1.6rem;margin-bottom:18px;font-weight:600;text-align:center}
+.layout{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+@media(max-width:720px){.layout{grid-template-columns:1fr}}
+.card{background:#2a2a2a;border:1px solid #404040;border-radius:8px;padding:20px}
+h2{font-size:1rem;color:#6aa6fd;margin-bottom:14px}
+label{display:block;font-size:.78rem;color:#888;margin-bottom:4px}
+.pt{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+input{width:100%;background:#404040;border:1px solid #555;border-radius:4px;color:#e0e0e0;padding:9px}
+.res-row{display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid #333}
+.res-row:last-child{border:none}.res-row b{color:#4caf50}
+.big{font-size:2.2rem;font-weight:700;color:#6aa6fd;text-align:center;margin:8px 0}
+#map{height:300px;border-radius:8px;border:1px solid #404040;margin-top:12px}
+.compass{display:block;margin:0 auto}
+.hint{font-size:.78rem;color:#666;margin-top:8px}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>🧭 Kompas &amp; azimut mezi body</h1>
+  <div class="layout">
+    <div class="card">
+      <h2>Body (klikni do mapy nebo zadej)</h2>
+      <label>Bod A (výchozí)</label>
+      <div class="pt"><input type="number" id="lat1" value="50.0875" step="any"><input type="number" id="lon1" value="14.4213" step="any"></div>
+      <label>Bod B (cíl)</label>
+      <div class="pt"><input type="number" id="lat2" value="49.1951" step="any"><input type="number" id="lon2" value="16.6068" step="any"></div>
+      <div class="big" id="azimuth">–</div>
+      <p style="text-align:center;color:#888;margin-bottom:10px">azimut A → B</p>
+      <div class="res-row"><span>Vzdálenost</span><b id="dist">–</b></div>
+      <div class="res-row"><span>Světová strana</span><b id="dir">–</b></div>
+      <div class="res-row"><span>Zpětný azimut (B → A)</span><b id="back">–</b></div>
+      <div id="map"></div>
+    </div>
+    <div class="card">
+      <h2>Vizuální kompas</h2>
+      <svg class="compass" id="compass" width="260" height="260" viewBox="0 0 260 260"></svg>
+      <p class="hint">Azimut se měří ve směru hodinových ručiček od severu (0° = sever, 90° = východ, 180° = jih, 270° = západ).</p>
+    </div>
+  </div>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+<script>
+const $=id=>document.getElementById(id);
+const rad=d=>d*Math.PI/180,deg=r=>r*180/Math.PI;
+function bearing(la1,lo1,la2,lo2){
+  const y=Math.sin(rad(lo2-lo1))*Math.cos(rad(la2));
+  const x=Math.cos(rad(la1))*Math.sin(rad(la2))-Math.sin(rad(la1))*Math.cos(rad(la2))*Math.cos(rad(lo2-lo1));
+  return (deg(Math.atan2(y,x))+360)%360;
+}
+function distance(la1,lo1,la2,lo2){
+  const R=6371000,dLa=rad(la2-la1),dLo=rad(lo2-lo1);
+  const a=Math.sin(dLa/2)**2+Math.cos(rad(la1))*Math.cos(rad(la2))*Math.sin(dLo/2)**2;
+  return R*2*Math.atan2(Math.sqrt(a),Math.sqrt(1-a));
+}
+function dirName(az){const dirs=['Sever','SV','Východ','JV','Jih','JZ','Západ','SZ'];return dirs[Math.round(az/45)%8];}
+let map,m1,m2,line;
+function update(){
+  const la1=+$('lat1').value,lo1=+$('lon1').value,la2=+$('lat2').value,lo2=+$('lon2').value;
+  const az=bearing(la1,lo1,la2,lo2),d=distance(la1,lo1,la2,lo2);
+  $('azimuth').textContent=az.toFixed(1)+'°';
+  $('dist').textContent=d<1000?d.toFixed(0)+' m':(d/1000).toFixed(2)+' km';
+  $('dir').textContent=dirName(az);
+  $('back').textContent=((az+180)%360).toFixed(1)+'°';
+  drawCompass(az);
+  if(map){m1.setLatLng([la1,lo1]);m2.setLatLng([la2,lo2]);line.setLatLngs([[la1,lo1],[la2,lo2]]);}
+}
+function drawCompass(az){
+  const cx=130,cy=130,r=110,a=rad(az-90);
+  let ticks='';for(let i=0;i<360;i+=30){const t=rad(i-90);const r1=i%90===0?r-18:r-10;
+    ticks+=`<line x1="${cx+r*Math.cos(t)}" y1="${cy+r*Math.sin(t)}" x2="${cx+r1*Math.cos(t)}" y2="${cy+r1*Math.sin(t)}" stroke="#555"/>`;}
+  $('compass').innerHTML=`<circle cx="130" cy="130" r="118" fill="#1a1a1a" stroke="#404040" stroke-width="2"/>${ticks}
+    <text x="130" y="28" fill="#e74c3c" font-size="16" font-weight="bold" text-anchor="middle">S</text>
+    <text x="240" y="136" fill="#888" font-size="14" text-anchor="middle">V</text>
+    <text x="130" y="244" fill="#888" font-size="14" text-anchor="middle">J</text>
+    <text x="20" y="136" fill="#888" font-size="14" text-anchor="middle">Z</text>
+    <line x1="130" y1="130" x2="${(cx+r*Math.cos(a)).toFixed(1)}" y2="${(cy+r*Math.sin(a)).toFixed(1)}" stroke="#6aa6fd" stroke-width="4"/>
+    <polygon points="${cx+r*Math.cos(a)},${cy+r*Math.sin(a)} ${cx+(r-14)*Math.cos(a-0.1)},${cy+(r-14)*Math.sin(a-0.1)} ${cx+(r-14)*Math.cos(a+0.1)},${cy+(r-14)*Math.sin(a+0.1)}" fill="#6aa6fd"/>
+    <circle cx="130" cy="130" r="6" fill="#6aa6fd"/>
+    <text x="130" y="150" fill="#6aa6fd" font-size="20" font-weight="bold" text-anchor="middle">${az.toFixed(0)}°</text>`;
+}
+['lat1','lon1','lat2','lon2'].forEach(id=>$(id).oninput=update);
+map=L.map('map').setView([49.6,15.5],6);
+L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap'}).addTo(map);
+m1=L.marker([+$('lat1').value,+$('lon1').value],{draggable:true}).addTo(map).bindTooltip('A');
+m2=L.marker([+$('lat2').value,+$('lon2').value],{draggable:true}).addTo(map).bindTooltip('B');
+line=L.polyline([[+$('lat1').value,+$('lon1').value],[+$('lat2').value,+$('lon2').value]],{color:'#6aa6fd'}).addTo(map);
+m1.on('dragend',()=>{const p=m1.getLatLng();$('lat1').value=p.lat.toFixed(4);$('lon1').value=p.lng.toFixed(4);update();});
+m2.on('dragend',()=>{const p=m2.getLatLng();$('lat2').value=p.lat.toFixed(4);$('lon2').value=p.lng.toFixed(4);update();});
+update();
+</script>
+</body>
+</html>

@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📏 Měřič vzdáleností a ploch</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css"/>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1a1a1a;color:#e0e0e0;min-height:100vh;padding:20px}
+.container{max-width:1200px;margin:0 auto}
+h1{font-size:1.5rem;margin-bottom:16px;font-weight:600;text-align:center}
+.bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin-bottom:14px;background:#2a2a2a;border:1px solid #404040;border-radius:8px;padding:14px}
+.btn{background:#6aa6fd;color:#fff;border:none;padding:9px 16px;border-radius:6px;cursor:pointer;font-size:.88rem;font-weight:600}
+.btn:hover{background:#5694f0}.btn.active{background:#27ae60}
+.btn-sec{background:#404040}.btn-sec:hover{background:#4a4a4a}
+.result{margin-left:auto;font-size:1rem}
+.result b{color:#6aa6fd;font-size:1.2rem}
+#map{height:600px;border-radius:8px;border:1px solid #404040}
+.hint{font-size:.82rem;color:#888;margin-top:10px;text-align:center}
+.mode-label{color:#888;font-size:.85rem}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>📏 Měřič vzdáleností a ploch na mapě</h1>
+  <div class="bar">
+    <span class="mode-label">Režim:</span>
+    <button class="btn active" id="distBtn">📏 Vzdálenost</button>
+    <button class="btn btn-sec" id="areaBtn">⬛ Plocha</button>
+    <button class="btn btn-sec" id="clearBtn">🗑️ Vymazat</button>
+    <span class="result" id="result">Klikni na mapu pro první bod</span>
+  </div>
+  <div id="map"></div>
+  <p class="hint">Klikej na mapu pro přidávání bodů. Vzdálenost se počítá po segmentech, plocha jako uzavřený polygon. Dvojklik ukončí měření plochy.</p>
+</div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+<script>
+const $=id=>document.getElementById(id);
+const map=L.map('map').setView([49.8175,15.4730],8);
+L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap',maxZoom:19}).addTo(map);
+L.control.scale({imperial:false}).addTo(map);
+let mode='dist',points=[],markers=[],line=null,poly=null;
+function reset(){points=[];markers.forEach(m=>map.removeLayer(m));markers=[];if(line){map.removeLayer(line);line=null;}if(poly){map.removeLayer(poly);poly=null;}
+  $('result').innerHTML=mode==='dist'?'Klikni na mapu pro první bod':'Klikni pro vrcholy plochy';}
+function setMode(m){mode=m;$('distBtn').classList.toggle('active',m==='dist');$('distBtn').classList.toggle('btn-sec',m!=='dist');
+  $('areaBtn').classList.toggle('active',m==='area');$('areaBtn').classList.toggle('btn-sec',m!=='area');reset();}
+$('distBtn').onclick=()=>setMode('dist');
+$('areaBtn').onclick=()=>setMode('area');
+$('clearBtn').onclick=reset;
+map.on('click',e=>{
+  points.push(e.latlng);
+  const m=L.circleMarker(e.latlng,{radius:5,color:'#fff',fillColor:'#6aa6fd',fillOpacity:1,weight:2}).addTo(map);
+  markers.push(m);update();
+});
+map.on('dblclick',e=>{if(mode==='area')update(true);});
+function update(closed){
+  if(mode==='dist'){
+    if(poly){map.removeLayer(poly);poly=null;}
+    if(line)map.removeLayer(line);
+    line=L.polyline(points,{color:'#6aa6fd',weight:3}).addTo(map);
+    let d=0;for(let i=1;i<points.length;i++)d+=points[i-1].distanceTo(points[i]);
+    $('result').innerHTML=`Vzdálenost: <b>${d<1000?d.toFixed(0)+' m':(d/1000).toFixed(2)+' km'}</b> (${points.length} bodů)`;
+  }else{
+    if(line){map.removeLayer(line);line=null;}
+    if(poly)map.removeLayer(poly);
+    poly=L.polygon(points,{color:'#27ae60',weight:3,fillOpacity:.2}).addTo(map);
+    if(points.length>=3){
+      const a=geoArea(points);
+      $('result').innerHTML=`Plocha: <b>${a<10000?a.toFixed(0)+' m²':(a/10000).toFixed(2)+' ha'}</b> (${(a/10000).toFixed(3)} ha / ${(a/1e6).toFixed(3)} km²)`;
+    }else $('result').innerHTML=`Plocha: potřeba alespoň 3 body (${points.length})`;
+  }
+}
+// Spherical polygon area
+function geoArea(latlngs){
+  const R=6378137;let area=0;const n=latlngs.length;
+  for(let i=0;i<n;i++){
+    const p1=latlngs[i],p2=latlngs[(i+1)%n];
+    area+=(p2.lng-p1.lng)*Math.PI/180*(2+Math.sin(p1.lat*Math.PI/180)+Math.sin(p2.lat*Math.PI/180));
+  }
+  return Math.abs(area*R*R/2);
+}
+setMode('dist');
+</script>
+</body>
+</html>

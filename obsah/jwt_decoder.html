@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🔑 JWT decoder</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1a1a1a;color:#e0e0e0;min-height:100vh;padding:20px}
+.container{max-width:900px;margin:0 auto}
+h1{font-size:1.6rem;margin-bottom:18px;font-weight:600;text-align:center}
+.card{background:#2a2a2a;border:1px solid #404040;border-radius:8px;padding:20px;margin-bottom:18px}
+h2{font-size:.95rem;color:#6aa6fd;margin-bottom:10px}
+textarea{width:100%;min-height:120px;background:#1e1e1e;border:1px solid #555;border-radius:6px;color:#e0e0e0;padding:12px;font-family:monospace;font-size:.9rem;resize:vertical;word-break:break-all;line-height:1.5}
+.token-colored{font-family:monospace;font-size:.9rem;word-break:break-all;line-height:1.6;background:#1e1e1e;border-radius:6px;padding:12px;margin-top:10px}
+.c-header{color:#e74c3c}.c-payload{color:#9b59b6}.c-sig{color:#3498db}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:640px){.grid{grid-template-columns:1fr}}
+pre{background:#1e1e1e;border-radius:6px;padding:12px;overflow:auto;font-family:monospace;font-size:.86rem;line-height:1.5}
+.k{color:#6aa6fd}.s{color:#a5d6a7}.n{color:#f39c12}
+.claims{margin-top:10px}
+.claim{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #333;font-size:.85rem}
+.claim .name{color:#888}
+.err{color:#e74c3c;text-align:center;padding:10px}
+.btn{background:#404040;color:#e0e0e0;border:1px solid #555;padding:8px 14px;border-radius:6px;cursor:pointer;font-size:.82rem}
+.note{font-size:.78rem;color:#666;margin-top:10px}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>🔑 JWT decoder</h1>
+  <div class="card">
+    <h2>JWT token <button class="btn" id="sampleBtn" style="float:right">📄 Vzorek</button></h2>
+    <textarea id="token" placeholder="Vlož JWT (eyJ...)" spellcheck="false"></textarea>
+    <div class="token-colored" id="colored"></div>
+  </div>
+  <div class="err" id="err"></div>
+  <div class="grid" id="output" style="display:none">
+    <div class="card"><h2 style="color:#e74c3c">Hlavička (Header)</h2><pre id="header"></pre></div>
+    <div class="card"><h2 style="color:#9b59b6">Obsah (Payload)</h2><pre id="payload"></pre><div class="claims" id="claims"></div></div>
+  </div>
+  <p class="note">Dekódování probíhá lokálně. JWT není šifrovaný – payload je jen Base64, takže do něj nikdy nepatří hesla. Podpis se zde neověřuje (k tomu je potřeba tajný klíč).</p>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+function b64url(str){str=str.replace(/-/g,'+').replace(/_/g,'/');while(str.length%4)str+='=';return decodeURIComponent(escape(atob(str)));}
+function hl(obj){return JSON.stringify(obj,null,2).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/("(\\.|[^"\\])*"(\s*:)?|\b(true|false|null)\b|-?\d+\.?\d*)/g,m=>{let c='n';if(/^"/.test(m))c=/:$/.test(m)?'k':'s';return`<span class="${c}">${m}</span>`;});}
+const CLAIM_NAMES={iss:'Vydavatel',sub:'Subjekt (uživatel)',aud:'Příjemce',exp:'Expirace',nbf:'Platný od',iat:'Vydáno',jti:'ID tokenu'};
+function decode(){
+  const t=$('token').value.trim();
+  $('err').textContent='';$('colored').innerHTML='';
+  if(!t){$('output').style.display='none';return;}
+  const parts=t.split('.');
+  if(parts.length!==3){$('err').textContent='⚠️ JWT musí mít 3 části oddělené tečkou.';$('output').style.display='none';return;}
+  $('colored').innerHTML=`<span class="c-header">${parts[0]}</span>.<span class="c-payload">${parts[1]}</span>.<span class="c-sig">${parts[2]}</span>`;
+  try{
+    const header=JSON.parse(b64url(parts[0]));
+    const payload=JSON.parse(b64url(parts[1]));
+    $('header').innerHTML=hl(header);$('payload').innerHTML=hl(payload);
+    let claims='';
+    ['iss','sub','aud','iat','nbf','exp','jti'].forEach(k=>{if(payload[k]!==undefined){
+      let v=payload[k];
+      if(['exp','nbf','iat'].includes(k)&&typeof v==='number'){const d=new Date(v*1000);const exp=k==='exp'&&d<new Date();v=d.toLocaleString('cs')+(exp?' ⚠️ vypršel':'');}
+      claims+=`<div class="claim"><span class="name">${CLAIM_NAMES[k]}</span><span>${v}</span></div>`;
+    }});
+    $('claims').innerHTML=claims;
+    $('output').style.display='grid';
+  }catch(e){$('err').textContent='❌ Neplatný JWT: '+e.message;$('output').style.display='none';}
+}
+$('token').oninput=decode;
+$('sampleBtn').onclick=()=>{
+  const header=btoa(JSON.stringify({alg:'HS256',typ:'JWT'})).replace(/=/g,'').replace(/\+/g,'-').replace(/\//g,'_');
+  const payload=btoa(JSON.stringify({sub:'1234567890',name:'Jan Novák',role:'admin',iat:Math.floor(Date.now()/1000),exp:Math.floor(Date.now()/1000)+3600})).replace(/=/g,'').replace(/\+/g,'-').replace(/\//g,'_');
+  $('token').value=`${header}.${payload}.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c`;decode();
+};
+$('sampleBtn').onclick();
+</script>
+</body>
+</html>

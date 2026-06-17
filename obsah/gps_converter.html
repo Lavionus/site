@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🧭 Převodník GPS souřadnic</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css"/>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1a1a1a;color:#e0e0e0;min-height:100vh;padding:20px}
+.container{max-width:900px;margin:0 auto}
+h1{font-size:1.6rem;margin-bottom:18px;font-weight:600;text-align:center}
+.card{background:#2a2a2a;border:1px solid #404040;border-radius:8px;padding:20px;margin-bottom:18px}
+h2{font-size:.95rem;color:#6aa6fd;margin-bottom:12px}
+label{display:block;font-size:.8rem;color:#888;margin-bottom:5px}
+.fmt{display:flex;gap:8px;align-items:center;margin-bottom:14px}
+.fmt input{flex:1;background:#1e1e1e;border:1px solid #555;border-radius:6px;color:#e0e0e0;padding:11px;font-family:monospace;font-size:.95rem}
+.fmt button{background:#404040;border:1px solid #555;color:#bbb;border-radius:6px;padding:11px 14px;cursor:pointer}
+.fmt button:hover{background:#4a4a4a}
+.inputrow{display:flex;gap:10px;margin-bottom:12px}
+.inputrow input{flex:1;background:#404040;border:1px solid #555;border-radius:4px;color:#e0e0e0;padding:10px}
+.btn{background:#6aa6fd;color:#fff;border:none;padding:10px 18px;border-radius:6px;cursor:pointer;font-weight:600}
+.btn:hover{background:#5694f0}
+#map{height:340px;border-radius:8px;border:1px solid #404040;margin-top:12px}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#27ae60;color:#fff;padding:10px 18px;border-radius:6px;opacity:0;transition:.3s;pointer-events:none}
+.toast.show{opacity:1}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>🧭 Převodník GPS souřadnic</h1>
+  <div class="card">
+    <h2>Zadej souřadnice (lat, lon)</h2>
+    <div class="inputrow">
+      <input type="number" id="lat" value="50.087465" step="any" placeholder="zem. šířka">
+      <input type="number" id="lon" value="14.421253" step="any" placeholder="zem. délka">
+      <button class="btn" id="locBtn">📍 Moje poloha</button>
+    </div>
+  </div>
+  <div class="card">
+    <h2>Formáty</h2>
+    <label>Desetinné stupně (DD)</label>
+    <div class="fmt"><input id="dd" readonly><button data-c="dd">📋</button></div>
+    <label>Stupně, minuty, vteřiny (DMS)</label>
+    <div class="fmt"><input id="dms" readonly><button data-c="dms">📋</button></div>
+    <label>Stupně a desetinné minuty (DDM)</label>
+    <div class="fmt"><input id="ddm" readonly><button data-c="ddm">📋</button></div>
+    <label>UTM (WGS84)</label>
+    <div class="fmt"><input id="utm" readonly><button data-c="utm">📋</button></div>
+    <label>Geo URI / odkaz</label>
+    <div class="fmt"><input id="geouri" readonly><button data-c="geouri">📋</button></div>
+    <div id="map"></div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+<script>
+const $=id=>document.getElementById(id);
+let map,marker;
+function toDMS(deg,pos,neg){
+  const dir=deg>=0?pos:neg;deg=Math.abs(deg);
+  const d=Math.floor(deg),mFloat=(deg-d)*60,m=Math.floor(mFloat),s=((mFloat-m)*60).toFixed(2);
+  return {dms:`${d}°${m}'${s}"${dir}`,ddm:`${d}°${m.toString()}.${((mFloat-m)*60/60*1000).toFixed(0).padStart(0)}'${dir}`,ddmClean:`${d}° ${mFloat.toFixed(4)}'${dir}`};
+}
+function toUTM(lat,lon){
+  const a=6378137,f=1/298.257223563,k0=0.9996;
+  const zone=Math.floor((lon+180)/6)+1;
+  const lonOrigin=(zone-1)*6-180+3;
+  const e2=f*(2-f),ep2=e2/(1-e2);
+  const latR=lat*Math.PI/180,lonR=lon*Math.PI/180,lonOR=lonOrigin*Math.PI/180;
+  const N=a/Math.sqrt(1-e2*Math.sin(latR)**2);
+  const T=Math.tan(latR)**2,C=ep2*Math.cos(latR)**2,A=Math.cos(latR)*(lonR-lonOR);
+  const M=a*((1-e2/4-3*e2*e2/64-5*e2**3/256)*latR-(3*e2/8+3*e2*e2/32+45*e2**3/1024)*Math.sin(2*latR)+(15*e2*e2/256+45*e2**3/1024)*Math.sin(4*latR)-(35*e2**3/3072)*Math.sin(6*latR));
+  let easting=k0*N*(A+(1-T+C)*A**3/6+(5-18*T+T*T+72*C-58*ep2)*A**5/120)+500000;
+  let northing=k0*(M+N*Math.tan(latR)*(A*A/2+(5-T+9*C+4*C*C)*A**4/24+(61-58*T+T*T+600*C-330*ep2)*A**6/720));
+  if(lat<0)northing+=10000000;
+  const band='CDEFGHJKLMNPQRSTUVWX'[Math.floor((lat+80)/8)]||'?';
+  return `${zone}${band} ${Math.round(easting)}E ${Math.round(northing)}N`;
+}
+function update(){
+  const lat=+$('lat').value,lon=+$('lon').value;
+  if(isNaN(lat)||isNaN(lon))return;
+  $('dd').value=`${lat.toFixed(6)}, ${lon.toFixed(6)}`;
+  const la=toDMS(lat,'N','S'),lo=toDMS(lon,'E','W');
+  $('dms').value=`${la.dms} ${lo.dms}`;
+  $('ddm').value=`${la.ddmClean} ${lo.ddmClean}`;
+  $('utm').value=toUTM(lat,lon);
+  $('geouri').value=`geo:${lat.toFixed(6)},${lon.toFixed(6)}`;
+  if(map){marker.setLatLng([lat,lon]);map.setView([lat,lon],map.getZoom());}
+}
+['lat','lon'].forEach(id=>$(id).oninput=update);
+$('locBtn').onclick=()=>navigator.geolocation.getCurrentPosition(p=>{$('lat').value=p.coords.latitude.toFixed(6);$('lon').value=p.coords.longitude.toFixed(6);update();},()=>alert('Polohu nelze získat.'));
+document.querySelectorAll('.fmt button').forEach(b=>b.onclick=()=>{const v=$(b.dataset.c).value;navigator.clipboard.writeText(v);const t=$('toast');t.textContent='Zkopírováno: '+v;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),1200);});
+map=L.map('map').setView([+$('lat').value,+$('lon').value],13);
+L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap'}).addTo(map);
+marker=L.marker([+$('lat').value,+$('lon').value],{draggable:true}).addTo(map);
+marker.on('dragend',()=>{const p=marker.getLatLng();$('lat').value=p.lat.toFixed(6);$('lon').value=p.lng.toFixed(6);update();});
+map.on('click',e=>{$('lat').value=e.latlng.lat.toFixed(6);$('lon').value=e.latlng.lng.toFixed(6);update();});
+update();
+</script>
+</body>
+</html>

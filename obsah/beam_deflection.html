@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🏗️ Průhyb nosníku</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1a1a1a;color:#e0e0e0;min-height:100vh;padding:20px}
+.container{max-width:800px;margin:0 auto}
+h1{font-size:1.6rem;margin-bottom:18px;font-weight:600;text-align:center}
+.card{background:#2a2a2a;border:1px solid #404040;border-radius:8px;padding:22px;margin-bottom:20px}
+h2{font-size:1.05rem;color:#6aa6fd;margin-bottom:16px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:560px){.grid{grid-template-columns:1fr}}
+label{display:block;font-size:.82rem;color:#888;margin-bottom:5px}
+input,select{width:100%;background:#404040;border:1px solid #555;border-radius:4px;color:#e0e0e0;padding:10px;margin-bottom:12px}
+.big{font-size:2.2rem;font-weight:700;color:#6aa6fd;text-align:center;margin:8px 0}
+.res-row{display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid #333}
+.res-row:last-child{border:none}.res-row b{color:#4caf50}
+svg{width:100%;height:auto;background:#1e1e1e;border-radius:8px;margin-top:8px}
+.note{font-size:.78rem;color:#666;margin-top:10px;line-height:1.5}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>🏗️ Kalkulačka průhybu nosníku</h1>
+  <div class="card">
+    <h2>Případ zatížení a parametry</h2>
+    <div class="grid">
+      <div><label>Uložení a zatížení</label>
+        <select id="case">
+          <option value="ss_center">Prostý nosník, síla uprostřed</option>
+          <option value="ss_udl">Prostý nosník, spojité zatížení</option>
+          <option value="cant_end">Vetknutý, síla na konci</option>
+          <option value="cant_udl">Vetknutý, spojité zatížení</option>
+        </select>
+      </div>
+      <div><label>Délka L (mm)</label><input type="number" id="L" value="2000" step="any"></div>
+      <div><label id="loadLabel">Síla F (N)</label><input type="number" id="F" value="1000" step="any"></div>
+      <div><label>Průřez</label><select id="section"><option value="rect">Obdélník</option><option value="circle">Kruh</option><option value="tube">Trubka</option><option value="custom">Vlastní I (mm⁴)</option></select></div>
+    </div>
+    <div class="grid" id="sectionFields"></div>
+    <div><label>Modul pružnosti E (MPa) – ocel 210000, hliník 70000</label><input type="number" id="E" value="210000" step="any"></div>
+  </div>
+  <div class="card">
+    <h2>📋 Výsledek</h2>
+    <div class="big" id="deflection">–</div>
+    <p style="text-align:center;color:#888;margin-bottom:14px">maximální průhyb</p>
+    <div class="res-row"><span>Moment setrvačnosti I</span><b id="inertia">–</b></div>
+    <div class="res-row"><span>Poměr průhyb / délka</span><b id="ratio">–</b></div>
+    <svg id="draw" viewBox="0 0 300 110"></svg>
+    <p class="note">Pružná deformace dle teorie nosníků (Euler-Bernoulli). Spojité zatížení zadej jako celkovou sílu (přepočte se na q). Orientační výpočet – nezahrnuje smyk ani bezpečnostní součinitele.</p>
+  </div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const SECTIONS={
+  rect:[['Šířka b (mm)','b',40],['Výška h (mm)','h',60]],
+  circle:[['Průměr d (mm)','d',40]],
+  tube:[['Vnější ø D (mm)','D',40],['Vnitřní ø d (mm)','d',30]],
+  custom:[['Moment setrvačnosti I (mm⁴)','I',100000]]
+};
+function buildSection(){
+  $('sectionFields').innerHTML=SECTIONS[$('section').value].map(([l,k,v])=>`<div><label>${l}</label><input type="number" id="s_${k}" value="${v}" step="any"></div>`).join('');
+  SECTIONS[$('section').value].forEach(([,k])=>$('s_'+k).oninput=calc);
+  calc();
+}
+function inertia(){
+  const s=$('section').value,g=k=>+($('s_'+k)?.value||0);
+  if(s==='rect')return g('b')*Math.pow(g('h'),3)/12;
+  if(s==='circle')return Math.PI*Math.pow(g('d'),4)/64;
+  if(s==='tube')return Math.PI*(Math.pow(g('D'),4)-Math.pow(g('d'),4))/64;
+  return g('I');
+}
+function calc(){
+  const L=+$('L').value,F=+$('F').value,E=+$('E').value,I=inertia();
+  $('loadLabel').textContent=$('case').value.includes('udl')?'Celková síla F (N) – spojité':'Síla F (N)';
+  if(!I||!E){return;}
+  let d;
+  switch($('case').value){
+    case 'ss_center':d=F*Math.pow(L,3)/(48*E*I);break;
+    case 'ss_udl':d=5*F*Math.pow(L,3)/(384*E*I);break; // F = total load = q*L
+    case 'cant_end':d=F*Math.pow(L,3)/(3*E*I);break;
+    case 'cant_udl':d=F*Math.pow(L,3)/(8*E*I);break;
+  }
+  $('deflection').textContent=d<1?(d*1000).toFixed(1)+' µm':d.toFixed(3)+' mm';
+  $('inertia').textContent=I.toExponential(3)+' mm⁴';
+  $('ratio').textContent='L / '+Math.round(L/d)+(L/d>250?' ✅':' ⚠️ velký průhyb');
+  drawBeam($('case').value.startsWith('cant'));
+}
+function drawBeam(cant){
+  const baseY=45,defl=25;
+  if(cant){
+    $('draw').innerHTML=`<rect x="20" y="20" width="10" height="50" fill="#555"/>
+      <path d="M30,${baseY} Q165,${baseY} 280,${baseY+defl}" fill="none" stroke="#6aa6fd" stroke-width="5"/>
+      <line x1="280" y1="${baseY+defl}" x2="280" y2="${baseY+defl-18}" stroke="#e74c3c" stroke-width="3" marker-end="url(#a)"/>
+      <defs><marker id="a" markerWidth="8" markerHeight="8" refX="4" refY="0" orient="auto"><path d="M0,0 L4,8 L8,0" fill="#e74c3c"/></marker></defs>`;
+  }else{
+    $('draw').innerHTML=`<polygon points="15,${baseY+10} 30,${baseY} 45,${baseY+10}" fill="#555"/><polygon points="255,${baseY+10} 270,${baseY} 285,${baseY+10}" fill="#555"/>
+      <path d="M30,${baseY} Q150,${baseY+defl} 270,${baseY}" fill="none" stroke="#6aa6fd" stroke-width="5"/>
+      <line x1="150" y1="${baseY-18}" x2="150" y2="${baseY+defl}" stroke="#e74c3c" stroke-width="3"/>`;
+  }
+}
+$('section').onchange=buildSection;
+['L','F','E','case'].forEach(id=>$(id).oninput=calc);
+$('case').onchange=calc;
+buildSection();
+</script>
+</body>
+</html>

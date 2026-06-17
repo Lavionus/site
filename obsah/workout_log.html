@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🏋️ Tréninkový deník</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1a1a1a;color:#e0e0e0;min-height:100vh;padding:20px}
+.container{max-width:900px;margin:0 auto}
+h1{font-size:1.6rem;margin-bottom:20px;font-weight:600;text-align:center}
+.card{background:#2a2a2a;border:1px solid #404040;border-radius:8px;padding:20px;margin-bottom:20px}
+h2{font-size:1.05rem;color:#6aa6fd;margin-bottom:14px}
+.form{display:grid;grid-template-columns:2fr 1fr 1fr 1fr auto;gap:10px;align-items:end}
+@media(max-width:680px){.form{grid-template-columns:1fr 1fr}}
+label{display:block;font-size:.78rem;color:#888;margin-bottom:4px}
+input,select{width:100%;background:#404040;border:1px solid #555;border-radius:4px;color:#e0e0e0;padding:9px}
+.btn{background:#6aa6fd;color:#fff;border:none;padding:10px 18px;border-radius:6px;cursor:pointer;font-size:.9rem;font-weight:600;white-space:nowrap}
+.btn:hover{background:#5694f0}
+.btn-sec{background:#404040}.btn-sec:hover{background:#4a4a4a}
+.day-group{margin-bottom:18px}
+.day-head{display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:2px solid #6aa6fd;margin-bottom:8px}
+.day-head h3{font-size:1rem}.day-vol{font-size:.85rem;color:#4caf50}
+table{width:100%;border-collapse:collapse;font-size:.9rem}
+th{text-align:left;color:#888;font-weight:600;padding:6px 8px;font-size:.78rem;text-transform:uppercase}
+td{padding:8px;border-bottom:1px solid #333}
+.del{background:none;border:none;color:#c0392b;cursor:pointer}
+.empty{text-align:center;color:#666;padding:30px}
+.stats{display:flex;gap:20px;justify-content:center;flex-wrap:wrap}
+.stat{text-align:center}.stat .v{font-size:1.6rem;font-weight:700;color:#6aa6fd}.stat .l{font-size:.78rem;color:#888}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>🏋️ Tréninkový deník</h1>
+  <div class="card">
+    <h2>➕ Nový záznam</h2>
+    <div class="form">
+      <div><label>Cvik</label><input type="text" id="ex" placeholder="Dřep, Bench press…"></div>
+      <div><label>Série</label><input type="number" id="sets" value="3" min="1"></div>
+      <div><label>Opakování</label><input type="number" id="reps" value="10" min="1"></div>
+      <div><label>Váha (kg)</label><input type="number" id="weight" value="20" min="0" step="0.5"></div>
+      <button class="btn" id="addBtn">Přidat</button>
+    </div>
+    <div style="margin-top:10px"><label style="display:inline">Datum:</label> <input type="date" id="date" style="width:auto;display:inline-block"></div>
+  </div>
+  <div class="card">
+    <h2>📊 Statistiky</h2>
+    <div class="stats">
+      <div class="stat"><div class="v" id="sTotal">0</div><div class="l">Záznamů</div></div>
+      <div class="stat"><div class="v" id="sDays">0</div><div class="l">Tréninků</div></div>
+      <div class="stat"><div class="v" id="sVol">0</div><div class="l">Celkový objem (kg)</div></div>
+    </div>
+  </div>
+  <div class="card">
+    <h2>📒 Historie <button class="btn btn-sec" id="clearBtn" style="float:right;padding:4px 12px;font-size:.78rem">Vymazat vše</button></h2>
+    <div id="list"></div>
+  </div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+let log=JSON.parse(localStorage.getItem('workout_log')||'[]');
+$('date').value=new Date().toISOString().slice(0,10);
+function save(){localStorage.setItem('workout_log',JSON.stringify(log));}
+function add(){
+  const ex=$('ex').value.trim();if(!ex){$('ex').focus();return;}
+  log.push({id:Date.now(),date:$('date').value,ex,sets:+$('sets').value,reps:+$('reps').value,weight:+$('weight').value});
+  save();$('ex').value='';render();
+}
+$('addBtn').onclick=add;
+$('ex').onkeydown=e=>{if(e.key==='Enter')add();};
+$('clearBtn').onclick=()=>{if(confirm('Smazat celý deník?')){log=[];save();render();}};
+function render(){
+  const vol=e=>e.sets*e.reps*e.weight;
+  $('sTotal').textContent=log.length;
+  $('sVol').textContent=log.reduce((s,e)=>s+vol(e),0).toLocaleString('cs');
+  const byDate={};log.forEach(e=>{(byDate[e.date]=byDate[e.date]||[]).push(e);});
+  $('sDays').textContent=Object.keys(byDate).length;
+  const dates=Object.keys(byDate).sort().reverse();
+  if(!dates.length){$('list').innerHTML='<div class="empty">Zatím žádné tréninky. Přidej první cvik! 💪</div>';return;}
+  $('list').innerHTML=dates.map(d=>{
+    const items=byDate[d];const dvol=items.reduce((s,e)=>s+vol(e),0);
+    const rows=items.map(e=>`<tr><td>${e.ex.replace(/</g,'&lt;')}</td><td>${e.sets}</td><td>${e.reps}</td><td>${e.weight}</td><td>${vol(e)}</td><td><button class="del" data-id="${e.id}">🗑️</button></td></tr>`).join('');
+    const dd=new Date(d).toLocaleDateString('cs',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+    return `<div class="day-group"><div class="day-head"><h3>${dd}</h3><span class="day-vol">Objem: ${dvol.toLocaleString('cs')} kg</span></div>
+      <table><thead><tr><th>Cvik</th><th>Série</th><th>Opak.</th><th>Kg</th><th>Objem</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>`;
+  }).join('');
+  document.querySelectorAll('.del').forEach(b=>b.onclick=()=>{log=log.filter(e=>e.id!=b.dataset.id);save();render();});
+}
+render();
+</script>
+</body>
+</html>

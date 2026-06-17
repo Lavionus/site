@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>⚙️ Generátor ozubených kol</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1a1a1a;color:#e0e0e0;min-height:100vh;padding:20px}
+.container{max-width:1100px;margin:0 auto}
+h1{font-size:1.6rem;margin-bottom:18px;font-weight:600;text-align:center}
+.layout{display:grid;grid-template-columns:320px 1fr;gap:20px}
+@media(max-width:780px){.layout{grid-template-columns:1fr}}
+.card{background:#2a2a2a;border:1px solid #404040;border-radius:8px;padding:20px}
+h2{font-size:1.05rem;color:#6aa6fd;margin-bottom:14px}
+label{display:block;font-size:.82rem;color:#888;margin-bottom:4px}
+input,select{width:100%;background:#404040;border:1px solid #555;border-radius:4px;color:#e0e0e0;padding:9px;margin-bottom:12px}
+.range-val{color:#6aa6fd;float:right}
+.btn{background:#6aa6fd;color:#fff;border:none;padding:10px 16px;border-radius:6px;cursor:pointer;font-weight:600;width:100%;margin-bottom:8px}
+.btn:hover{background:#5694f0}.btn-sec{background:#404040}.btn-sec:hover{background:#4a4a4a}
+.viewport{background:#0d0d0d;border-radius:8px;display:flex;align-items:center;justify-content:center;min-height:480px;overflow:hidden}
+svg{max-width:100%;max-height:560px}
+.spec{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid #333;font-size:.88rem}
+.spec:last-child{border:none}.spec b{color:#4caf50}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>⚙️ Generátor ozubených kol (SVG)</h1>
+  <div class="layout">
+    <div>
+      <div class="card" style="margin-bottom:20px">
+        <h2>Parametry</h2>
+        <label>Počet zubů <span class="range-val" id="teethV">20</span></label><input type="range" id="teeth" min="6" max="80" value="20">
+        <label>Modul (mm)</label><input type="number" id="module" value="4" min="0.5" step="0.5">
+        <label>Úhel záběru (°)</label><select id="pa"><option value="20" selected>20° (standard)</option><option value="14.5">14,5°</option><option value="25">25°</option></select>
+        <label>Průměr díry (mm)</label><input type="number" id="bore" value="8" min="0" step="1">
+        <button class="btn" id="dlBtn">💾 Stáhnout SVG</button>
+      </div>
+      <div class="card">
+        <h2>Vypočtené rozměry</h2>
+        <div id="specs"></div>
+      </div>
+    </div>
+    <div class="card viewport"><div id="gearWrap"></div></div>
+  </div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+function involutePoint(baseR,t){return[baseR*(Math.cos(t)+t*Math.sin(t)),baseR*(Math.sin(t)-t*Math.cos(t))];}
+function buildGear(){
+  const z=+$('teeth').value,m=+$('module').value,pa=+$('pa').value*Math.PI/180,bore=+$('bore').value;
+  const pitchR=m*z/2, baseR=pitchR*Math.cos(pa), addR=pitchR+m, dedR=pitchR-1.25*m;
+  const rootR=Math.max(dedR,baseR*0.6,2);
+  let path='';
+  const angStep=2*Math.PI/z;
+  function invForR(r){const a=Math.acos(Math.min(1,baseR/r));return Math.tan(a)-a;}
+  const pitchInv=invForR(pitchR);
+  const halfTooth=(Math.PI/(2*z));
+  let pts=[];
+  for(let i=0;i<z;i++){
+    const center=i*angStep;
+    // one tooth: rising involute, tip, falling involute, root
+    const steps=8;
+    const rise=[],fall=[];
+    for(let s=0;s<=steps;s++){
+      const r=baseR+(addR-baseR)*s/steps;if(r<baseR)continue;
+      const inv=invForR(r);
+      const a1=center - (halfTooth+pitchInv) + inv;
+      const a2=center + (halfTooth+pitchInv) - inv;
+      rise.push([r*Math.cos(a1),r*Math.sin(a1)]);
+      fall.push([r*Math.cos(a2),r*Math.sin(a2)]);
+    }
+    pts=pts.concat(rise);
+    pts=pts.concat(fall.reverse());
+    // root arc to next tooth
+    const aRoot=center+angStep- (halfTooth+pitchInv);
+    pts.push([rootR*Math.cos(center+halfTooth+pitchInv),rootR*Math.sin(center+halfTooth+pitchInv)]);
+    pts.push([rootR*Math.cos(center+angStep-(halfTooth+pitchInv)),rootR*Math.sin(center+angStep-(halfTooth+pitchInv))]);
+  }
+  path='M '+pts.map(p=>p[0].toFixed(2)+' '+p[1].toFixed(2)).join(' L ')+' Z';
+  const size=addR*2.2;
+  const svg=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="${-size/2} ${-size/2} ${size} ${size}" width="520" height="520">
+    <path d="${path}" fill="#3a4a6a" stroke="#6aa6fd" stroke-width="${m*0.15}" stroke-linejoin="round"/>
+    <circle r="${pitchR.toFixed(2)}" fill="none" stroke="#27ae60" stroke-width="${m*0.06}" stroke-dasharray="${m*0.6} ${m*0.4}"/>
+    ${bore>0?`<circle r="${(bore/2).toFixed(2)}" fill="#0d0d0d" stroke="#6aa6fd" stroke-width="${m*0.12}"/>`:''}
+  </svg>`;
+  $('gearWrap').innerHTML=svg;
+  $('specs').innerHTML=[
+    ['Roztečný průměr',pitchR*2],['Hlavový průměr',addR*2],['Patní průměr',dedR*2],
+    ['Základní průměr',baseR*2],['Rozteč (p = π·m)',Math.PI*m]
+  ].map(([l,v])=>`<div class="spec"><span>${l}</span><b>${v.toFixed(2)} mm</b></div>`).join('')
+   +`<div class="spec"><span>Převodový poměr (na 1 zub)</span><b>${z} zubů</b></div>`;
+}
+$('teeth').oninput=()=>{$('teethV').textContent=$('teeth').value;buildGear();};
+['module','pa','bore'].forEach(id=>$(id).oninput=buildGear);
+$('dlBtn').onclick=()=>{const svg=$('gearWrap').innerHTML;const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([svg],{type:'image/svg+xml'}));a.download=`kolo_z${$('teeth').value}_m${$('module').value}.svg`;a.click();};
+buildGear();
+</script>
+</body>
+</html>

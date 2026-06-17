@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🔀 Diff nástroj</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1a1a1a;color:#e0e0e0;min-height:100vh;padding:20px}
+.container{max-width:1300px;margin:0 auto}
+h1{font-size:1.6rem;margin-bottom:14px;font-weight:600;text-align:center}
+.toolbar{display:flex;gap:8px;justify-content:center;margin-bottom:14px;flex-wrap:wrap;align-items:center}
+.btn{background:#6aa6fd;color:#fff;border:none;padding:9px 15px;border-radius:6px;cursor:pointer;font-size:.84rem;font-weight:600}
+.btn:hover{background:#5694f0}.btn-sec{background:#404040}.btn-sec:hover{background:#4a4a4a}
+.chk{display:flex;align-items:center;gap:5px;color:#bbb;font-size:.85rem}
+.inputs{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:16px}
+@media(max-width:820px){.inputs{grid-template-columns:1fr}}
+.panel{background:#2a2a2a;border:1px solid #404040;border-radius:8px;overflow:hidden;display:flex;flex-direction:column}
+.panel h2{font-size:.82rem;color:#6aa6fd;padding:10px 14px;background:#333;border-bottom:1px solid #404040;text-transform:uppercase}
+textarea{min-height:220px;background:#1e1e1e;border:none;color:#e0e0e0;padding:12px;font-family:'SF Mono',Consolas,monospace;font-size:.88rem;resize:vertical;line-height:1.5}
+textarea:focus{outline:none}
+.result{background:#2a2a2a;border:1px solid #404040;border-radius:8px;overflow:hidden}
+.result h2{font-size:.82rem;color:#6aa6fd;padding:10px 14px;background:#333;border-bottom:1px solid #404040;display:flex;justify-content:space-between}
+.diff{font-family:'SF Mono',Consolas,monospace;font-size:.88rem;line-height:1.6;overflow:auto}
+.line{display:flex;white-space:pre-wrap;word-break:break-word}
+.ln{width:48px;flex-shrink:0;text-align:right;padding-right:10px;color:#666;user-select:none;border-right:1px solid #333}
+.txt{padding:0 10px;flex:1}
+.add{background:rgba(39,174,96,.18)}.add .txt::before{content:'+ ';color:#27ae60}
+.del{background:rgba(231,76,60,.18)}.del .txt::before{content:'- ';color:#e74c3c}
+.eq .txt::before{content:'  '}
+.stats{font-size:.8rem;color:#888;font-weight:400}
+.stats b.a{color:#27ae60}.stats b.d{color:#e74c3c}
+ins{background:rgba(39,174,96,.4);text-decoration:none;border-radius:2px}
+del{background:rgba(231,76,60,.4);text-decoration:none;border-radius:2px}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>🔀 Diff nástroj (porovnání textů)</h1>
+  <div class="toolbar">
+    <button class="btn" id="cmpBtn">🔍 Porovnat</button>
+    <label class="chk"><input type="checkbox" id="ignoreWs"> Ignorovat mezery</label>
+    <label class="chk"><input type="checkbox" id="ignoreCase"> Ignorovat velikost</label>
+    <button class="btn btn-sec" id="swapBtn">🔄 Prohodit</button>
+    <button class="btn btn-sec" id="sampleBtn">📄 Vzorek</button>
+  </div>
+  <div class="inputs">
+    <div class="panel"><h2>Původní (A)</h2><textarea id="a" spellcheck="false"></textarea></div>
+    <div class="panel"><h2>Nový (B)</h2><textarea id="b" spellcheck="false"></textarea></div>
+  </div>
+  <div class="result">
+    <h2>Rozdíly <span class="stats" id="stats"></span></h2>
+    <div class="diff" id="diff"></div>
+  </div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+function norm(l){let s=l;if($('ignoreCase').checked)s=s.toLowerCase();if($('ignoreWs').checked)s=s.replace(/\s+/g,' ').trim();return s;}
+// LCS-based line diff
+function diffLines(a,b){
+  const A=a.split('\n'),B=b.split('\n');
+  const nA=A.map(norm),nB=B.map(norm);
+  const m=A.length,n=B.length;
+  const dp=Array.from({length:m+1},()=>new Int32Array(n+1));
+  for(let i=m-1;i>=0;i--)for(let j=n-1;j>=0;j--)
+    dp[i][j]=nA[i]===nB[j]?dp[i+1][j+1]+1:Math.max(dp[i+1][j],dp[i][j+1]);
+  const out=[];let i=0,j=0;
+  while(i<m&&j<n){
+    if(nA[i]===nB[j]){out.push(['eq',A[i],i+1,j+1]);i++;j++;}
+    else if(dp[i+1][j]>=dp[i][j+1]){out.push(['del',A[i],i+1,null]);i++;}
+    else{out.push(['add',B[j],null,j+1]);j++;}
+  }
+  while(i<m)out.push(['del',A[i],i+1,null]),i++;
+  while(j<n)out.push(['add',B[j],null,j+1]),j++;
+  return out;
+}
+function esc(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;');}
+function run(){
+  const lines=diffLines($('a').value,$('b').value);
+  let adds=0,dels=0;
+  $('diff').innerHTML=lines.map(([type,txt,la,lb])=>{
+    if(type==='add')adds++;if(type==='del')dels++;
+    return `<div class="line ${type}"><span class="ln">${la||''}</span><span class="ln">${lb||''}</span><span class="txt">${esc(txt)||' '}</span></div>`;
+  }).join('');
+  $('stats').innerHTML=`<b class="a">+${adds} přidáno</b> · <b class="d">−${dels} odebráno</b> · ${lines.filter(l=>l[0]==='eq').length} beze změny`;
+}
+$('cmpBtn').onclick=run;
+['ignoreWs','ignoreCase'].forEach(id=>$(id).onchange=run);
+$('swapBtn').onclick=()=>{const t=$('a').value;$('a').value=$('b').value;$('b').value=t;run();};
+$('sampleBtn').onclick=()=>{
+  $('a').value="Farma Zelený statek\nZaloženo: 1998\nPlodiny: pšenice, řepka\nBIO certifikace: ne\nVýměra: 240 ha";
+  $('b').value="Farma Zelený statek\nZaloženo: 1998\nPlodiny: pšenice, řepka, kukuřice\nBIO certifikace: ano\nVýměra: 285 ha\nKontakt: info@statek.cz";
+  run();
+};
+$('sampleBtn').onclick();
+</script>
+</body>
+</html>

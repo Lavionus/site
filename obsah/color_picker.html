@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎨 Color picker &amp; palety</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1a1a1a;color:#e0e0e0;min-height:100vh;padding:20px}
+.container{max-width:900px;margin:0 auto}
+h1{font-size:1.6rem;margin-bottom:18px;font-weight:600;text-align:center}
+.card{background:#2a2a2a;border:1px solid #404040;border-radius:8px;padding:22px;margin-bottom:20px}
+h2{font-size:1.05rem;color:#6aa6fd;margin-bottom:14px}
+.main{display:grid;grid-template-columns:200px 1fr;gap:24px;align-items:center}
+@media(max-width:600px){.main{grid-template-columns:1fr}}
+.preview{height:200px;border-radius:12px;border:1px solid #555}
+.picker-row{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+input[type=color]{width:60px;height:48px;border:none;border-radius:8px;background:none;cursor:pointer}
+.fields{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.field label{font-size:.78rem;color:#888;display:block;margin-bottom:4px}
+.field input{width:100%;background:#404040;border:1px solid #555;border-radius:4px;color:#e0e0e0;padding:9px;font-family:monospace}
+.copy{cursor:pointer}
+.harmony-controls{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.hbtn{padding:8px 14px;background:#404040;border:1px solid #555;border-radius:20px;cursor:pointer;font-size:.84rem;color:#bbb}
+.hbtn.active{background:#6aa6fd;color:#fff;border-color:#6aa6fd}
+.palette{display:flex;gap:10px;flex-wrap:wrap}
+.swatch{flex:1;min-width:90px;height:90px;border-radius:8px;cursor:pointer;position:relative;display:flex;align-items:end;justify-content:center;padding-bottom:6px;font-size:.72rem;color:#fff;text-shadow:0 1px 2px #000;font-family:monospace}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#27ae60;color:#fff;padding:10px 20px;border-radius:6px;opacity:0;transition:opacity .3s;pointer-events:none}
+.toast.show{opacity:1}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>🎨 Color picker &amp; generátor palet</h1>
+  <div class="card">
+    <div class="main">
+      <div class="preview" id="preview"></div>
+      <div>
+        <div class="picker-row"><input type="color" id="picker" value="#6aa6fd"><span style="color:#888;font-size:.85rem">Vyber barvu →</span></div>
+        <div class="fields">
+          <div class="field"><label>HEX (klikni pro kopii)</label><input type="text" id="hex" class="copy" value="#6AA6FD"></div>
+          <div class="field"><label>RGB</label><input type="text" id="rgb" class="copy" readonly></div>
+          <div class="field"><label>HSL</label><input type="text" id="hsl" class="copy" readonly></div>
+          <div class="field"><label>CMYK</label><input type="text" id="cmyk" class="copy" readonly></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <h2>🎭 Harmonická paleta</h2>
+    <div class="harmony-controls" id="harmony">
+      <div class="hbtn active" data-h="comp">Komplementární</div>
+      <div class="hbtn" data-h="analog">Analogická</div>
+      <div class="hbtn" data-h="triad">Triáda</div>
+      <div class="hbtn" data-h="tetrad">Tetráda</div>
+      <div class="hbtn" data-h="mono">Monochromatická</div>
+    </div>
+    <div class="palette" id="palette"></div>
+  </div>
+</div>
+<div class="toast" id="toast"></div>
+<script>
+const $=id=>document.getElementById(id);
+let harmony='comp';
+function hexToRgb(h){h=h.replace('#','');return[parseInt(h.slice(0,2),16),parseInt(h.slice(2,4),16),parseInt(h.slice(4,6),16)];}
+function rgbToHex(r,g,b){return '#'+[r,g,b].map(x=>Math.round(x).toString(16).padStart(2,'0')).join('').toUpperCase();}
+function rgbToHsl(r,g,b){r/=255;g/=255;b/=255;const mx=Math.max(r,g,b),mn=Math.min(r,g,b);let h,s,l=(mx+mn)/2;
+  if(mx===mn){h=s=0;}else{const d=mx-mn;s=l>.5?d/(2-mx-mn):d/(mx+mn);
+    h=mx===r?(g-b)/d+(g<b?6:0):mx===g?(b-r)/d+2:(r-g)/d+4;h/=6;}
+  return[h*360,s*100,l*100];}
+function hslToRgb(h,s,l){h/=360;s/=100;l/=100;let r,g,b;
+  if(s===0){r=g=b=l;}else{const hue2rgb=(p,q,t)=>{if(t<0)t+=1;if(t>1)t-=1;if(t<1/6)return p+(q-p)*6*t;if(t<1/2)return q;if(t<2/3)return p+(q-p)*(2/3-t)*6;return p;};
+    const q=l<.5?l*(1+s):l+s-l*s,p=2*l-q;r=hue2rgb(p,q,h+1/3);g=hue2rgb(p,q,h);b=hue2rgb(p,q,h-1/3);}
+  return[r*255,g*255,b*255];}
+function update(hex){
+  $('preview').style.background=hex;$('picker').value=hex;
+  const[r,g,b]=hexToRgb(hex);const[h,s,l]=rgbToHsl(r,g,b);
+  $('hex').value=hex.toUpperCase();
+  $('rgb').value=`rgb(${r}, ${g}, ${b})`;
+  $('hsl').value=`hsl(${Math.round(h)}, ${Math.round(s)}%, ${Math.round(l)}%)`;
+  const k=1-Math.max(r,g,b)/255;const c=k<1?(1-r/255-k)/(1-k):0,m=k<1?(1-g/255-k)/(1-k):0,y=k<1?(1-b/255-k)/(1-k):0;
+  $('cmyk').value=`cmyk(${Math.round(c*100)}, ${Math.round(m*100)}, ${Math.round(y*100)}, ${Math.round(k*100)})`;
+  buildPalette(h,s,l);
+}
+function buildPalette(h,s,l){
+  let hues=[];
+  if(harmony==='comp')hues=[[h,s,l],[(h+180)%360,s,l]];
+  else if(harmony==='analog')hues=[[(h-30+360)%360,s,l],[h,s,l],[(h+30)%360,s,l]];
+  else if(harmony==='triad')hues=[[h,s,l],[(h+120)%360,s,l],[(h+240)%360,s,l]];
+  else if(harmony==='tetrad')hues=[[h,s,l],[(h+90)%360,s,l],[(h+180)%360,s,l],[(h+270)%360,s,l]];
+  else hues=[[h,s,Math.max(15,l-30)],[h,s,Math.max(25,l-15)],[h,s,l],[h,s,Math.min(85,l+15)],[h,s,Math.min(95,l+30)]];
+  $('palette').innerHTML=hues.map(([H,S,L])=>{const[r,g,b]=hslToRgb(H,S,L);const hex=rgbToHex(r,g,b);
+    return `<div class="swatch" style="background:${hex}" data-hex="${hex}">${hex}</div>`;}).join('');
+  document.querySelectorAll('.swatch').forEach(sw=>sw.onclick=()=>{copy(sw.dataset.hex);update(sw.dataset.hex);});
+}
+function copy(t){navigator.clipboard.writeText(t);const to=$('toast');to.textContent='Zkopírováno: '+t;to.classList.add('show');setTimeout(()=>to.classList.remove('show'),1200);}
+$('picker').oninput=()=>update($('picker').value);
+$('hex').onchange=()=>{let v=$('hex').value.trim();if(!v.startsWith('#'))v='#'+v;if(/^#[0-9a-fA-F]{6}$/.test(v))update(v);};
+document.querySelectorAll('.copy').forEach(el=>el.onclick=()=>{if(el.value)copy(el.value);});
+document.querySelectorAll('.hbtn').forEach(b=>b.onclick=()=>{document.querySelectorAll('.hbtn').forEach(x=>x.classList.remove('active'));b.classList.add('active');harmony=b.dataset.h;update($('picker').value);});
+update('#6AA6FD');
+</script>
+</body>
+</html>

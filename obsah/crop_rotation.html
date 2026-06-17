@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🔄 Plánovač střídání plodin</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1a1a1a;color:#e0e0e0;min-height:100vh;padding:20px}
+.container{max-width:1000px;margin:0 auto}
+h1{font-size:1.6rem;margin-bottom:8px;font-weight:600;text-align:center}
+.sub{text-align:center;color:#888;font-size:.9rem;margin-bottom:20px}
+.card{background:#2a2a2a;border:1px solid #404040;border-radius:8px;padding:20px;margin-bottom:20px}
+h2{font-size:1.05rem;color:#6aa6fd;margin-bottom:14px}
+.add{display:flex;gap:10px;flex-wrap:wrap;align-items:end}
+label{display:block;font-size:.78rem;color:#888;margin-bottom:4px}
+input,select{background:#404040;border:1px solid #555;border-radius:4px;color:#e0e0e0;padding:9px}
+.btn{background:#6aa6fd;color:#fff;border:none;padding:10px 18px;border-radius:6px;cursor:pointer;font-weight:600}
+.btn:hover{background:#5694f0}
+.fields{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:16px}
+.field{background:#1e1e1e;border:1px solid #404040;border-radius:8px;padding:14px}
+.field-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.field-head h3{font-size:1rem}
+.del{background:none;border:none;color:#c0392b;cursor:pointer}
+.years{display:flex;flex-direction:column;gap:6px}
+.year{display:flex;align-items:center;gap:8px;font-size:.88rem}
+.year .y{color:#888;width:42px}
+.crop-chip{flex:1;padding:6px 10px;border-radius:6px;font-size:.85rem;color:#fff;display:flex;justify-content:space-between;align-items:center}
+.warn{color:#f39c12;font-size:.78rem;margin-top:8px;display:flex;gap:6px;align-items:start}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:.8rem;color:#888;margin-top:6px}
+.legend span{display:flex;align-items:center;gap:5px}
+.dot{width:12px;height:12px;border-radius:3px;display:inline-block}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>🔄 Plánovač střídání plodin</h1>
+  <p class="sub">Plánuj osevní postup a hlídej zásady střídání (nepěstovat stejnou skupinu po sobě)</p>
+  <div class="card">
+    <h2>Nastavení</h2>
+    <div class="add">
+      <div><label>Počet polí</label><input type="number" id="numFields" value="4" min="1" max="12" style="width:90px"></div>
+      <div><label>Počet let</label><input type="number" id="numYears" value="4" min="2" max="8" style="width:90px"></div>
+      <div><label>První rok</label><input type="number" id="startYear" value="2026" min="2000" max="2100" style="width:110px"></div>
+      <button class="btn" id="buildBtn">Vytvořit plán</button>
+    </div>
+    <div class="legend" id="legend"></div>
+  </div>
+  <div class="card">
+    <h2>Plán osevu</h2>
+    <div class="fields" id="fields"></div>
+  </div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const GROUPS={
+  obiloviny:{label:'Obiloviny (pšenice, ječmen, žito)',color:'#d4a017'},
+  okopaniny:{label:'Okopaniny (brambory, řepa, kukuřice)',color:'#c0653a'},
+  luskoviny:{label:'Luskoviny (hrách, sója, fazole)',color:'#3a8a4a'},
+  olejniny:{label:'Olejniny (řepka, slunečnice)',color:'#c9a227'},
+  pícniny:{label:'Pícniny / jeteloviny (vojtěška, jetel)',color:'#5a9e6f'},
+  zelenina:{label:'Zelenina',color:'#7b5ea7'},
+  uhor:{label:'Úhor / zelené hnojení',color:'#555'}
+};
+const CROPS={Pšenice:'obiloviny',Ječmen:'obiloviny',Žito:'obiloviny',Oves:'obiloviny',Kukuřice:'okopaniny',Brambory:'okopaniny','Cukrová řepa':'okopaniny',Hrách:'luskoviny',Sója:'luskoviny',Fazole:'luskoviny',Řepka:'olejniny',Slunečnice:'olejniny',Vojtěška:'pícniny',Jetel:'pícniny',Zelenina:'zelenina','Zelené hnojení':'uhor'};
+let plan=null;
+function build(){
+  const nf=+$('numFields').value,ny=+$('numYears').value,sy=+$('startYear').value;
+  plan={nf,ny,sy,data:Array.from({length:nf},()=>Array.from({length:ny},()=>'Pšenice'))};
+  // default rotation offset for variety
+  const cropList=Object.keys(CROPS);
+  for(let f=0;f<nf;f++)for(let y=0;y<ny;y++)plan.data[f][y]=cropList[(f+y)%cropList.length];
+  render();
+}
+function render(){
+  $('legend').innerHTML=Object.values(GROUPS).map(g=>`<span><i class="dot" style="background:${g.color}"></i>${g.label.split(' ')[0]}</span>`).join('');
+  const opts=Object.keys(CROPS).map(c=>`<option value="${c}">${c}</option>`).join('');
+  $('fields').innerHTML=plan.data.map((rows,f)=>{
+    const years=rows.map((crop,y)=>{
+      const grp=CROPS[crop];const color=GROUPS[grp].color;
+      const prev=y>0?CROPS[rows[y-1]]:null;
+      const conflict=prev&&prev===grp&&grp!=='uhor';
+      return `<div class="year"><span class="y">${plan.sy+y}</span>
+        <select data-f="${f}" data-y="${y}" class="crop-chip" style="background:${color};border:none;cursor:pointer">${opts}</select>
+        ${conflict?'<span title="Stejná skupina jako loni">⚠️</span>':''}</div>`;
+    }).join('');
+    return `<div class="field"><div class="field-head"><h3>🌾 Pole ${f+1}</h3></div><div class="years">${years}</div></div>`;
+  }).join('');
+  document.querySelectorAll('select.crop-chip').forEach(s=>{
+    s.value=plan.data[+s.dataset.f][+s.dataset.y];
+    s.onchange=()=>{plan.data[+s.dataset.f][+s.dataset.y]=s.value;render();};
+  });
+}
+$('buildBtn').onclick=build;
+build();
+</script>
+</body>
+</html>

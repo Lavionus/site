@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🫧 Generátor SVG blobů</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1a1a1a;color:#e0e0e0;min-height:100vh;padding:20px}
+.container{max-width:920px;margin:0 auto}
+h1{font-size:1.6rem;margin-bottom:18px;font-weight:600;text-align:center}
+.layout{display:grid;grid-template-columns:1fr 300px;gap:20px}
+@media(max-width:680px){.layout{grid-template-columns:1fr}}
+.stage{background:#2a2a2a;border:1px solid #404040;border-radius:12px;min-height:400px;display:flex;align-items:center;justify-content:center;padding:20px}
+.stage svg{max-width:100%;height:auto}
+.card{background:#2a2a2a;border:1px solid #404040;border-radius:8px;padding:18px}
+h2{font-size:1rem;color:#6aa6fd;margin-bottom:12px}
+label{display:block;font-size:.78rem;color:#888;margin:10px 0 4px;display:flex;justify-content:space-between}
+label b{color:#6aa6fd}
+input[type=range]{width:100%}
+input[type=color]{width:100%;height:40px;border:none;border-radius:6px;background:none;cursor:pointer}
+.seg{display:flex;gap:6px;margin-bottom:8px}
+.seg button{flex:1;padding:7px;background:#404040;border:1px solid #555;border-radius:6px;color:#bbb;cursor:pointer;font-size:.78rem}
+.seg button.active{background:#6aa6fd;color:#fff}
+.btn{background:#6aa6fd;color:#fff;border:none;padding:9px 14px;border-radius:6px;cursor:pointer;font-weight:600;font-size:.82rem;width:100%;margin-top:8px}
+.btn-sec{background:#404040}
+.code{background:#1e1e1e;border:1px solid #404040;border-radius:8px;padding:12px;margin-top:14px;font-family:monospace;font-size:.74rem;white-space:pre-wrap;word-break:break-all;max-height:120px;overflow:auto}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>🫧 Generátor SVG blobů</h1>
+  <div class="layout">
+    <div>
+      <div class="stage" id="stage"></div>
+      <div class="code" id="code"></div>
+    </div>
+    <div class="card">
+      <h2>Nastavení</h2>
+      <label>Hran (složitost) <b id="pointsVal">6</b></label><input type="range" id="points" min="3" max="12" value="6">
+      <label>Nepravidelnost <b id="randVal">30</b>%</label><input type="range" id="rand" min="0" max="60" value="30">
+      <h2 style="margin-top:14px">Výplň</h2>
+      <div class="seg"><button class="active" id="fillSolid">Plná</button><button id="fillGrad">Gradient</button></div>
+      <input type="color" id="color1" value="#6aa6fd">
+      <input type="color" id="color2" value="#9b59b6" style="margin-top:6px;display:none">
+      <button class="btn" id="randomBtn">🎲 Náhodný tvar</button>
+      <button class="btn btn-sec" id="copyBtn">📋 Kopírovat SVG</button>
+      <button class="btn btn-sec" id="dlBtn">💾 Stáhnout .svg</button>
+    </div>
+  </div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+let fillMode='solid',seed=Math.random();
+function blobPath(n,rand,size){
+  const cx=size/2,cy=size/2,base=size*0.38;
+  const pts=[];
+  for(let i=0;i<n;i++){
+    const ang=i/n*2*Math.PI;
+    const r=base*(1+(rng(i)*2-1)*rand/100);
+    pts.push([cx+Math.cos(ang)*r,cy+Math.sin(ang)*r]);
+  }
+  // Catmull-Rom to bezier smooth closed path
+  let d=`M ${pts[0][0].toFixed(1)} ${pts[0][1].toFixed(1)} `;
+  for(let i=0;i<n;i++){
+    const p0=pts[(i-1+n)%n],p1=pts[i],p2=pts[(i+1)%n],p3=pts[(i+2)%n];
+    const c1x=p1[0]+(p2[0]-p0[0])/6,c1y=p1[1]+(p2[1]-p0[1])/6;
+    const c2x=p2[0]-(p3[0]-p1[0])/6,c2y=p2[1]-(p3[1]-p1[1])/6;
+    d+=`C ${c1x.toFixed(1)} ${c1y.toFixed(1)}, ${c2x.toFixed(1)} ${c2y.toFixed(1)}, ${p2[0].toFixed(1)} ${p2[1].toFixed(1)} `;
+  }
+  return d+'Z';
+}
+let rngState;
+function rng(i){const x=Math.sin(seed*9999+i*127.1)*43758.5453;return x-Math.floor(x);}
+function build(){
+  const n=+$('points').value,rand=+$('rand').value,size=300;
+  $('pointsVal').textContent=n;$('randVal').textContent=rand;
+  const path=blobPath(n,rand,size);
+  let fill;
+  if(fillMode==='grad'){fill='url(#g)';}else fill=$('color1').value;
+  const grad=fillMode==='grad'?`<defs><linearGradient id="g" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="${$('color1').value}"/><stop offset="100%" stop-color="${$('color2').value}"/></linearGradient></defs>`:'';
+  const svg=`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${size} ${size}" width="340" height="340">${grad}<path fill="${fill}" d="${path}"/></svg>`;
+  $('stage').innerHTML=svg;
+  $('code').textContent=svg.replace(/width="340" height="340"/,'width="300" height="300"');
+}
+$('points').oninput=build;$('rand').oninput=build;
+['color1','color2'].forEach(id=>$(id).oninput=build);
+$('fillSolid').onclick=()=>{fillMode='solid';$('fillSolid').classList.add('active');$('fillGrad').classList.remove('active');$('color2').style.display='none';build();};
+$('fillGrad').onclick=()=>{fillMode='grad';$('fillGrad').classList.add('active');$('fillSolid').classList.remove('active');$('color2').style.display='block';build();};
+$('randomBtn').onclick=()=>{seed=Math.random();build();};
+$('copyBtn').onclick=()=>{navigator.clipboard.writeText($('code').textContent);$('copyBtn').textContent='✅ Zkopírováno';setTimeout(()=>$('copyBtn').textContent='📋 Kopírovat SVG',1200);};
+$('dlBtn').onclick=()=>{const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([$('code').textContent],{type:'image/svg+xml'}));a.download='blob.svg';a.click();};
+build();
+</script>
+</body>
+</html>

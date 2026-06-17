@@ -1,0 +1,103 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📡 Morseova abeceda</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1a1a1a;color:#e0e0e0;min-height:100vh;padding:20px}
+.container{max-width:820px;margin:0 auto}
+h1{font-size:1.6rem;margin-bottom:18px;font-weight:600;text-align:center}
+.card{background:#2a2a2a;border:1px solid #404040;border-radius:8px;padding:20px;margin-bottom:18px}
+h2{font-size:1rem;color:#6aa6fd;margin-bottom:12px}
+textarea{width:100%;min-height:90px;background:#1e1e1e;border:1px solid #555;border-radius:6px;color:#e0e0e0;padding:12px;font-size:1rem;resize:vertical}
+#morseOut{font-family:monospace;color:#6aa6fd;letter-spacing:1px}
+.arrows{display:flex;gap:10px;justify-content:center;margin:12px 0;flex-wrap:wrap}
+.btn{background:#6aa6fd;color:#fff;border:none;padding:10px 18px;border-radius:6px;cursor:pointer;font-weight:600;font-size:.88rem}
+.btn:hover{background:#5694f0}.btn-sec{background:#404040}
+.controls{display:flex;gap:14px;align-items:center;justify-content:center;flex-wrap:wrap;color:#888;font-size:.85rem}
+.controls input[type=range]{vertical-align:middle}
+.ref{display:grid;grid-template-columns:repeat(auto-fill,minmax(90px,1fr));gap:6px}
+.ref div{background:#1e1e1e;border-radius:4px;padding:7px 10px;font-size:.85rem;display:flex;justify-content:space-between}
+.ref b{color:#6aa6fd}.ref code{color:#f39c12;font-family:monospace}
+.playing{color:#27ae60;text-align:center;min-height:20px;margin-top:8px}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>📡 Morseova abeceda</h1>
+  <div class="card">
+    <h2>Text</h2>
+    <textarea id="text" placeholder="Napiš text…">SOS Ahoj</textarea>
+    <div class="arrows">
+      <button class="btn" id="toMorse">⬇️ Na Morse</button>
+      <button class="btn btn-sec" id="toText">⬆️ Na text</button>
+      <button class="btn btn-sec" id="playBtn">🔊 Přehrát</button>
+      <button class="btn btn-sec" id="stopBtn">⏹️ Stop</button>
+    </div>
+    <h2>Morse</h2>
+    <textarea id="morse" placeholder="... --- ..."></textarea>
+    <div id="morseOut"></div>
+    <div class="playing" id="playing"></div>
+    <div class="controls" style="margin-top:12px">
+      <label>Rychlost (WPM): <span id="wpmVal">15</span> <input type="range" id="wpm" min="5" max="30" value="15"></label>
+      <label>Tón (Hz): <span id="freqVal">600</span> <input type="range" id="freq" min="300" max="1000" value="600"></label>
+    </div>
+  </div>
+  <div class="card">
+    <h2>📖 Referenční tabulka</h2>
+    <div class="ref" id="ref"></div>
+  </div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const MAP={A:'.-',B:'-...',C:'-.-.',D:'-..',E:'.',F:'..-.',G:'--.',H:'....',I:'..',J:'.---',K:'-.-',L:'.-..',M:'--',N:'-.',O:'---',P:'.--.',Q:'--.-',R:'.-.',S:'...',T:'-',U:'..-',V:'...-',W:'.--',X:'-..-',Y:'-.--',Z:'--..','0':'-----','1':'.----','2':'..---','3':'...--','4':'....-','5':'.....','6':'-....','7':'--...','8':'---..','9':'----.','.':'.-.-.-',',':'--..--','?':'..--..','/':'-..-.','@':'.--.-.','=':'-...-','+':'.-.-.','-':'-....-'};
+const REV={};Object.entries(MAP).forEach(([k,v])=>REV[v]=k);
+function deaccent(s){return s.replace(/[áä]/g,'a').replace(/[čć]/g,'c').replace(/[ď]/g,'d').replace(/[éě]/g,'e').replace(/[í]/g,'i').replace(/[ňń]/g,'n').replace(/[óö]/g,'o').replace(/[ř]/g,'r').replace(/[šś]/g,'s').replace(/[ť]/g,'t').replace(/[úůü]/g,'u').replace(/[ý]/g,'y').replace(/[žź]/g,'z');}
+function textToMorse(t){
+  return deaccent(t.toUpperCase()).split('\n').map(line=>
+    line.split(' ').map(word=>[...word].map(c=>MAP[c]||'').filter(Boolean).join(' ')).join(' / ')
+  ).join('\n');
+}
+function morseToText(m){
+  return m.split('\n').map(line=>line.trim().split(/\s*\/\s*/).map(word=>word.trim().split(/\s+/).map(code=>REV[code]||'').join('')).join(' ')).join('\n');
+}
+$('toMorse').onclick=()=>{const r=textToMorse($('text').value);$('morse').value=r;$('morseOut').textContent=r;};
+$('toText').onclick=()=>{$('text').value=morseToText($('morse').value);};
+$('text').oninput=()=>{const r=textToMorse($('text').value);$('morse').value=r;$('morseOut').textContent=r;};
+$('wpm').oninput=()=>$('wpmVal').textContent=$('wpm').value;
+$('freq').oninput=()=>$('freqVal').textContent=$('freq').value;
+// audio playback
+let audioCtx,playing=false,timeouts=[];
+function play(){
+  stop();playing=true;
+  const morse=$('morse').value;
+  audioCtx=audioCtx||new(window.AudioContext||window.webkitAudioContext)();
+  const wpm=+$('wpm').value;const dot=1200/wpm; // ms
+  const freq=+$('freq').value;
+  let t=audioCtx.currentTime;const seq=[];
+  for(const ch of morse){
+    if(ch==='.'){seq.push([t,dot]);t+=dot/1000;t+=dot/1000;}
+    else if(ch==='-'){seq.push([t,dot*3]);t+=dot*3/1000;t+=dot/1000;}
+    else if(ch===' ')t+=dot*2/1000;
+    else if(ch==='/')t+=dot*4/1000;
+  }
+  seq.forEach(([start,dur])=>{
+    const o=audioCtx.createOscillator(),g=audioCtx.createGain();
+    o.frequency.value=freq;o.connect(g);g.connect(audioCtx.destination);
+    g.gain.setValueAtTime(0,start);g.gain.linearRampToValueAtTime(0.3,start+0.005);
+    g.gain.setValueAtTime(0.3,start+dur/1000-0.005);g.gain.linearRampToValueAtTime(0,start+dur/1000);
+    o.start(start);o.stop(start+dur/1000);
+  });
+  $('playing').textContent='🔊 Přehrávám…';
+  const total=(t-audioCtx.currentTime)*1000;
+  timeouts.push(setTimeout(()=>{$('playing').textContent='';playing=false;},total+200));
+}
+function stop(){timeouts.forEach(clearTimeout);timeouts=[];if(audioCtx){audioCtx.close();audioCtx=null;}$('playing').textContent='';playing=false;}
+$('playBtn').onclick=play;$('stopBtn').onclick=stop;
+$('ref').innerHTML=Object.entries(MAP).map(([k,v])=>`<div><b>${k}</b><code>${v}</code></div>`).join('');
+$('text').oninput();
+</script>
+</body>
+</html>

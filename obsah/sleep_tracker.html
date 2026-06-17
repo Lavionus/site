@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>😴 Tracker spánku</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1a1a1a;color:#e0e0e0;min-height:100vh;padding:20px}
+.container{max-width:920px;margin:0 auto}
+h1{font-size:1.6rem;margin-bottom:18px;font-weight:600;text-align:center}
+.card{background:#2a2a2a;border:1px solid #404040;border-radius:8px;padding:20px;margin-bottom:20px}
+h2{font-size:1.05rem;color:#6aa6fd;margin-bottom:14px}
+.form{display:flex;gap:10px;flex-wrap:wrap;align-items:end}
+label{display:block;font-size:.76rem;color:#888;margin-bottom:4px}
+input{background:#404040;border:1px solid #555;border-radius:4px;color:#e0e0e0;padding:9px}
+.quality{display:flex;gap:6px}
+.quality span{font-size:1.4rem;cursor:pointer;filter:grayscale(1);opacity:.5}
+.quality span.on{filter:none;opacity:1}
+.btn{background:#6aa6fd;color:#fff;border:none;padding:10px 18px;border-radius:6px;cursor:pointer;font-weight:600}
+.btn:hover{background:#5694f0}
+.stats{display:flex;justify-content:space-around;text-align:center;margin-bottom:14px}
+.stat .v{font-size:1.6rem;font-weight:700;color:#6aa6fd}.stat .l{font-size:.74rem;color:#888}
+table{width:100%;border-collapse:collapse;font-size:.88rem}
+th{text-align:left;color:#888;padding:6px;font-size:.74rem;text-transform:uppercase}
+td{padding:8px 6px;border-bottom:1px solid #333}
+.del{background:none;border:none;color:#c0392b;cursor:pointer}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>😴 Tracker spánku</h1>
+  <div class="card">
+    <h2>Nový záznam</h2>
+    <div class="form">
+      <div><label>Datum (ráno)</label><input type="date" id="date"></div>
+      <div><label>Usnutí</label><input type="time" id="bed" value="23:00"></div>
+      <div><label>Probuzení</label><input type="time" id="wake" value="07:00"></div>
+      <div><label>Kvalita</label><div class="quality" id="quality"></div></div>
+      <button class="btn" id="addBtn">➕ Přidat</button>
+    </div>
+  </div>
+  <div class="card">
+    <div class="stats" id="stats"></div>
+    <canvas id="chart" height="110"></canvas>
+  </div>
+  <div class="card">
+    <h2>Záznamy</h2>
+    <table><thead><tr><th>Datum</th><th>Usnutí</th><th>Probuzení</th><th>Délka</th><th>Kvalita</th><th></th></tr></thead><tbody id="list"></tbody></table>
+  </div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+$('date').value=new Date().toISOString().slice(0,10);
+let quality=3;
+$('quality').innerHTML=[1,2,3,4,5].map(i=>`<span data-v="${i}">⭐</span>`).join('');
+function paintQ(){document.querySelectorAll('#quality span').forEach(s=>s.classList.toggle('on',+s.dataset.v<=quality));}
+document.querySelectorAll('#quality span').forEach(s=>s.onclick=()=>{quality=+s.dataset.v;paintQ();});
+paintQ();
+let data=JSON.parse(localStorage.getItem('sleep_log')||'[]');
+const save=()=>localStorage.setItem('sleep_log',JSON.stringify(data));
+let chart;
+function duration(bed,wake){let b=+bed.slice(0,2)*60+ +bed.slice(3),w=+wake.slice(0,2)*60+ +wake.slice(3);if(w<=b)w+=1440;return w-b;}
+$('addBtn').onclick=()=>{
+  data.push({id:Date.now(),date:$('date').value,bed:$('bed').value,wake:$('wake').value,q:quality,min:duration($('bed').value,$('wake').value)});
+  data.sort((a,b)=>a.date.localeCompare(b.date));save();render();
+};
+function fmt(min){return Math.floor(min/60)+' h '+(min%60)+' min';}
+function render(){
+  if(data.length){
+    const avg=data.reduce((s,d)=>s+d.min,0)/data.length;
+    const avgQ=data.reduce((s,d)=>s+d.q,0)/data.length;
+    $('stats').innerHTML=`<div class="stat"><div class="v">${fmt(Math.round(avg))}</div><div class="l">Průměrná délka</div></div>
+      <div class="stat"><div class="v">${avgQ.toFixed(1)}⭐</div><div class="l">Průměrná kvalita</div></div>
+      <div class="stat"><div class="v">${data.length}</div><div class="l">Nocí</div></div>`;
+  }else $('stats').innerHTML='<div class="stat"><div class="l">Zatím žádné záznamy</div></div>';
+  $('list').innerHTML=data.slice().reverse().map(d=>`<tr><td>${d.date.slice(5)}</td><td>${d.bed}</td><td>${d.wake}</td><td>${fmt(d.min)}</td><td>${'⭐'.repeat(d.q)}</td><td><button class="del" data-id="${d.id}">🗑️</button></td></tr>`).join('')||'<tr><td colspan="6" style="text-align:center;color:#666;padding:16px">—</td></tr>';
+  $('list').querySelectorAll('.del').forEach(b=>b.onclick=()=>{data=data.filter(x=>x.id!=b.dataset.id);save();render();});
+  if(chart)chart.destroy();
+  chart=new Chart($('chart'),{type:'bar',data:{labels:data.map(d=>d.date.slice(5)),datasets:[{label:'Hodiny spánku',data:data.map(d=>+(d.min/60).toFixed(1)),backgroundColor:data.map(d=>d.min/60>=7?'#27ae60':d.min/60>=6?'#f39c12':'#e74c3c')}]},
+    options:{plugins:{legend:{display:false}},scales:{x:{ticks:{color:'#888'},grid:{color:'#333'}},y:{ticks:{color:'#888'},grid:{color:'#333'},title:{display:true,text:'hodin',color:'#888'}}}}});
+}
+render();
+</script>
+</body>
+</html>

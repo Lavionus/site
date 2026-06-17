@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📦 Sokoban</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;user-select:none}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1a1a1a;color:#e0e0e0;min-height:100vh;padding:20px;display:flex;flex-direction:column;align-items:center}
+h1{font-size:1.6rem;margin-bottom:14px;font-weight:600}
+.top{display:flex;gap:10px;align-items:center;margin-bottom:16px;flex-wrap:wrap;justify-content:center}
+.btn{background:#6aa6fd;color:#fff;border:none;padding:9px 16px;border-radius:6px;cursor:pointer;font-weight:600}
+.btn:hover{background:#5694f0}.btn-sec{background:#404040}
+select{background:#404040;border:1px solid #555;border-radius:4px;color:#e0e0e0;padding:9px}
+.info{color:#888}
+.board{display:grid;gap:0;background:#222;padding:8px;border-radius:8px}
+.cell{width:46px;height:46px;display:flex;align-items:center;justify-content:center;font-size:1.8rem}
+.wall{background:#555;border-radius:3px}
+.floor{background:#2a2a2a}
+.target{background:#2a3a2a}
+.target.dot::after{content:'';width:10px;height:10px;background:#27ae60;border-radius:50%;position:absolute}
+.cell{position:relative}
+.dpad{display:grid;grid-template-columns:repeat(3,56px);grid-template-rows:repeat(3,56px);gap:6px;margin-top:18px}
+.dpad button{background:#2a2a2a;border:1px solid #404040;border-radius:8px;font-size:1.4rem;cursor:pointer;color:#e0e0e0}
+.dpad button:hover{background:#333}
+.msg{margin-top:14px;font-size:1.2rem;font-weight:700;min-height:30px;color:#27ae60}
+.hint{color:#888;font-size:.84rem;margin-top:8px;text-align:center}
+</style>
+</head>
+<body>
+<h1>📦 Sokoban</h1>
+<div class="top">
+  <select id="level"></select>
+  <button class="btn btn-sec" id="undoBtn">↩️ Zpět</button>
+  <button class="btn" id="resetBtn">🔄 Restart</button>
+  <span class="info">Tahy: <b id="moves">0</b></span>
+</div>
+<div class="board" id="board"></div>
+<div class="dpad">
+  <span></span><button data-d="up">⬆️</button><span></span>
+  <button data-d="left">⬅️</button><span></span><button data-d="right">➡️</button>
+  <span></span><button data-d="down">⬇️</button><span></span>
+</div>
+<div class="msg" id="msg"></div>
+<p class="hint">Tlač bedny 📦 na cíle 🎯. Šipky / WASD nebo tlačítka. Bedny nelze táhnout, jen tlačit.</p>
+<script>
+const $=id=>document.getElementById(id);
+// # wall, space floor, . target, $ box, * box on target, @ player, + player on target
+const LEVELS=[
+['#####','#@  #','# $ #','#  .#','#####'],
+['######','#    #','# #$ #','# .  #','#  @ #','######'],
+['#######','#  .  #','# #$# #','# $@$ #','# #.# #','#  .  #','#######'],
+['########','#  .   #','# $$ # #','# @ .  #','####  ##','   #  # ','   #### '],
+];
+let grid,player,moves,history,levelIdx;
+$('level').innerHTML=LEVELS.map((_,i)=>`<option value="${i}">Úroveň ${i+1}</option>`).join('');
+function load(idx){
+  levelIdx=idx;
+  grid=LEVELS[idx].map(r=>[...r]);moves=0;history=[];
+  for(let y=0;y<grid.length;y++)for(let x=0;x<grid[y].length;x++){
+    if(grid[y][x]==='@'||grid[y][x]==='+'){player={x,y};grid[y][x]=grid[y][x]==='+'?'.':' ';}
+  }
+  $('msg').textContent='';render();
+}
+function render(){
+  const b=$('board');const w=Math.max(...grid.map(r=>r.length));
+  b.style.gridTemplateColumns=`repeat(${w},46px)`;b.innerHTML='';
+  for(let y=0;y<grid.length;y++)for(let x=0;x<w;x++){
+    const ch=grid[y][x]||' ';const d=document.createElement('div');
+    let cls='cell ',content='';
+    if(ch==='#')cls+='wall';
+    else if(ch==='.'){cls+='target';if(!(player.x===x&&player.y===y))content='🎯';}
+    else if(ch==='$')content='📦';
+    else if(ch==='*'){cls+='target';content='📦';}
+    else cls+='floor';
+    if(player.x===x&&player.y===y)content='🧍';
+    d.className=cls;d.textContent=content;b.appendChild(d);
+  }
+  $('moves').textContent=moves;
+}
+function isWall(x,y){return (grid[y]?.[x]||'#')==='#';}
+function isBox(x,y){const c=grid[y]?.[x];return c==='$'||c==='*';}
+function move(dx,dy){
+  const nx=player.x+dx,ny=player.y+dy;
+  if(isWall(nx,ny))return;
+  if(isBox(nx,ny)){
+    const bx=nx+dx,by=ny+dy;
+    if(isWall(bx,by)||isBox(bx,by))return;
+    history.push(JSON.stringify({grid,player}));
+    // move box
+    grid[ny][nx]=grid[ny][nx]==='*'?'.':' ';
+    grid[by][bx]=grid[by][bx]==='.'?'*':'$';
+  }else{history.push(JSON.stringify({grid,player}));}
+  player={x:nx,y:ny};moves++;render();checkWin();
+}
+function checkWin(){
+  const hasBox=grid.some(r=>r.includes('$'));
+  if(!hasBox){$('msg').textContent='🎉 Úroveň vyřešena na '+moves+' tahů!';}
+}
+$('undoBtn').onclick=()=>{if(history.length){const s=JSON.parse(history.pop());grid=s.grid;player=s.player;moves=Math.max(0,moves-1);$('msg').textContent='';render();}};
+$('resetBtn').onclick=()=>load(levelIdx);
+$('level').onchange=()=>load(+$('level').value);
+document.querySelectorAll('.dpad button').forEach(b=>b.onclick=()=>{const m={up:[0,-1],down:[0,1],left:[-1,0],right:[1,0]}[b.dataset.d];move(m[0],m[1]);});
+document.addEventListener('keydown',e=>{const m={ArrowUp:[0,-1],w:[0,-1],ArrowDown:[0,1],s:[0,1],ArrowLeft:[-1,0],a:[-1,0],ArrowRight:[1,0],d:[1,0]}[e.key];if(m){e.preventDefault();move(m[0],m[1]);}});
+load(0);
+</script>
+</body>
+</html>

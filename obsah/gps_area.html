@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📐 Plocha pozemku z GPS bodů</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1a1a1a;color:#e0e0e0;min-height:100vh;padding:20px}
+.container{max-width:840px;margin:0 auto}
+h1{font-size:1.6rem;margin-bottom:18px;font-weight:600;text-align:center}
+.layout{display:grid;grid-template-columns:1fr 1fr;gap:20px}
+@media(max-width:680px){.layout{grid-template-columns:1fr}}
+.card{background:#2a2a2a;border:1px solid #404040;border-radius:8px;padding:20px;margin-bottom:20px}
+h2{font-size:1rem;color:#6aa6fd;margin-bottom:12px}
+textarea{width:100%;min-height:200px;background:#1e1e1e;border:1px solid #555;border-radius:6px;color:#e0e0e0;padding:12px;font-family:monospace;font-size:.9rem;resize:vertical;line-height:1.6}
+.btn{background:#6aa6fd;color:#fff;border:none;padding:10px 16px;border-radius:6px;cursor:pointer;font-weight:600;font-size:.85rem;width:100%;margin-top:10px}
+.btn:hover{background:#5694f0}.btn-sec{background:#404040}
+.big{font-size:2.4rem;font-weight:700;color:#6aa6fd;text-align:center;margin:6px 0}
+.res-row{display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid #333}
+.res-row:last-child{border:none}.res-row b{color:#4caf50}
+svg{width:100%;height:auto;background:#1e1e1e;border-radius:8px;margin-top:10px}
+.note{font-size:.78rem;color:#666;margin-top:10px;line-height:1.5}
+.err{color:#e74c3c;font-size:.85rem;margin-top:8px}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>📐 Plocha pozemku z GPS bodů</h1>
+  <div class="layout">
+    <div>
+      <div class="card">
+        <h2>Body polygonu (lat, lon)</h2>
+        <textarea id="points" placeholder="50.0801, 14.4200&#10;50.0810, 14.4225&#10;50.0795, 14.4240">50.08010, 14.42000
+50.08100, 14.42250
+50.07950, 14.42400
+50.07880, 14.42100</textarea>
+        <button class="btn" id="calcBtn">🧮 Vypočítat plochu</button>
+        <button class="btn btn-sec" id="locBtn">📍 Přidat moji polohu</button>
+        <div class="err" id="err"></div>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <h2>Výsledek</h2>
+        <div class="big" id="haBig">–</div>
+        <p style="text-align:center;color:#888;margin-bottom:14px">výměra</p>
+        <div class="res-row"><span>Plocha (m²)</span><b id="m2">–</b></div>
+        <div class="res-row"><span>Plocha (ha)</span><b id="ha">–</b></div>
+        <div class="res-row"><span>Plocha (a / ar)</span><b id="ar">–</b></div>
+        <div class="res-row"><span>Obvod</span><b id="perim">–</b></div>
+        <div class="res-row"><span>Počet vrcholů</span><b id="count">–</b></div>
+        <svg id="shape" viewBox="0 0 200 160"></svg>
+      </div>
+    </div>
+  </div>
+  <p class="note">Plocha se počítá geodeticky (sférický mnohoúhelník na WGS84). Body zadej v pořadí po obvodu pozemku. Vhodné pro orientační výměru polí, pozemků a luk.</p>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const R=6378137;
+function parse(){return $('points').value.split('\n').map(l=>l.split(',').map(s=>parseFloat(s.trim()))).filter(a=>a.length>=2&&!isNaN(a[0])&&!isNaN(a[1])).map(a=>({lat:a[0],lon:a[1]}));}
+function area(pts){let a=0;const n=pts.length;
+  for(let i=0;i<n;i++){const p1=pts[i],p2=pts[(i+1)%n];a+=(p2.lon-p1.lon)*Math.PI/180*(2+Math.sin(p1.lat*Math.PI/180)+Math.sin(p2.lat*Math.PI/180));}
+  return Math.abs(a*R*R/2);}
+function perimeter(pts){let d=0;const n=pts.length;const rad=x=>x*Math.PI/180;
+  for(let i=0;i<n;i++){const a=pts[i],b=pts[(i+1)%n];const dLa=rad(b.lat-a.lat),dLo=rad(b.lon-a.lon);
+    const x=Math.sin(dLa/2)**2+Math.cos(rad(a.lat))*Math.cos(rad(b.lat))*Math.sin(dLo/2)**2;d+=R*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x));}
+  return d;}
+function calc(){
+  const pts=parse();
+  if(pts.length<3){$('err').textContent='Zadej alespoň 3 body.';return;}
+  $('err').textContent='';
+  const A=area(pts),P=perimeter(pts);
+  $('haBig').textContent=(A/10000).toFixed(3)+' ha';
+  $('m2').textContent=A.toLocaleString('cs',{maximumFractionDigits:1})+' m²';
+  $('ha').textContent=(A/10000).toFixed(4)+' ha';
+  $('ar').textContent=(A/100).toFixed(2)+' a';
+  $('perim').textContent=P<1000?P.toFixed(1)+' m':(P/1000).toFixed(3)+' km';
+  $('count').textContent=pts.length;
+  // draw
+  const lats=pts.map(p=>p.lat),lons=pts.map(p=>p.lon);
+  const minLa=Math.min(...lats),maxLa=Math.max(...lats),minLo=Math.min(...lons),maxLo=Math.max(...lons);
+  const w=maxLo-minLo||1,h=maxLa-minLa||1,sc=Math.min(180/w,140/h);
+  const tx=lo=>10+(lo-minLo)*sc,ty=la=>150-(la-minLa)*sc;
+  $('shape').innerHTML=`<polygon points="${pts.map(p=>tx(p.lon)+','+ty(p.lat)).join(' ')}" fill="#6aa6fd33" stroke="#6aa6fd" stroke-width="1.5"/>${pts.map(p=>`<circle cx="${tx(p.lon)}" cy="${ty(p.lat)}" r="2.5" fill="#fff"/>`).join('')}`;
+}
+$('calcBtn').onclick=calc;
+$('points').oninput=calc;
+$('locBtn').onclick=()=>navigator.geolocation.getCurrentPosition(p=>{$('points').value+=(($('points').value.trim()?'\n':'')+p.coords.latitude.toFixed(6)+', '+p.coords.longitude.toFixed(6));calc();},()=>$('err').textContent='Polohu nelze získat.');
+calc();
+</script>
+</body>
+</html>
