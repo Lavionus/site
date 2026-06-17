@@ -1734,10 +1734,9 @@ function markClean() {
 }
 
 // ── Inicializace ───────────────────────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded', () => {
-  loadFormulas();
-  addVariable('', '', '');
-});
+// Modul je deferred → DOM je v době spuštění už naparsovaný, voláme přímo.
+loadFormulas();
+addVariable('', '', '');
 
 // ── Načtení vzorců ─────────────────────────────────────────────────────────────
 function loadFormulas() {
@@ -1881,6 +1880,12 @@ function newFormula() {
   hideError();
   markClean();
   setTimeout(() => formulaName.focus(), 50);
+}
+
+// Nový vzorec z UI (tlačítko +, Ctrl+N) — upozorní na zahozené neuložené změny.
+function requestNewFormula() {
+  if (isDirty) showToast('Neuložené změny byly zahozeny', 'info', 1800);
+  newFormula();
 }
 
 // ── Duplikování vzorce ─────────────────────────────────────────────────────────
@@ -2099,7 +2104,7 @@ function exprToVisual() {
 }
 
 // ── Serializace AST → LaTeX ────────────────────────────────────────────────────
-const _LATEX_PREC = { '+':1, '-':1, '*':2, '/':2, '^':3 };
+const _LATEX_PREC = { '+':1, '-':1, '*':2, '/':2, '%':2, '^':3 };
 const _LATEX_CONSTS = { pi: '\\pi', tau: '\\tau', e: 'e', inf: '\\infty' };
 const _LATEX_FUNS = {
   sin: '\\sin', cos: '\\cos', tan: '\\tan',
@@ -2151,7 +2156,7 @@ function serLatex(node, prec = 0) {
         return `${base}^{${serLatex(node.r, 0)}}`;
       }
       const p     = _LATEX_PREC[node.op] ?? 0;
-      const opStr = node.op === '*' ? ' \\cdot ' : ` ${node.op} `;
+      const opStr = node.op === '*' ? ' \\cdot ' : node.op === '%' ? ' \\bmod ' : ` ${node.op} `;
       const left  = serLatex(node.l, p);
       const right = serLatex(node.r, node.op === '-' ? p + 1 : p);
       const s     = left + opStr + right;
@@ -2194,6 +2199,7 @@ function latexToExpr(latex) {
   s = s.replace(/\\cdot/g, '*');
   s = s.replace(/\\times/g, '*');
   s = s.replace(/\\div/g, '/');
+  s = s.replace(/\\bmod/g, '%');
   s = s.replace(/\\left\|/g, '|');
   s = s.replace(/\\right\|/g, '|');
   s = s.replace(/\\left\(/g, '(');
@@ -2316,8 +2322,11 @@ function tokenizeExpr(str) {
     const c = str[i];
     if (/\s/.test(c)) { i++; continue; }
     if ((c >= '0' && c <= '9') || (c === '.' && i+1 < str.length && str[i+1] >= '0' && str[i+1] <= '9')) {
-      let s = '';
-      while (i < str.length && ((str[i] >= '0' && str[i] <= '9') || str[i] === '.')) s += str[i++];
+      let s = '', seenDot = false;
+      while (i < str.length && ((str[i] >= '0' && str[i] <= '9') || (str[i] === '.' && !seenDot))) {
+        if (str[i] === '.') seenDot = true;
+        s += str[i++];
+      }
       toks.push({ t:'n', v: parseFloat(s) }); continue;
     }
     if (/[a-zA-Z_]/.test(c) || c.charCodeAt(0) > 127) {
@@ -2487,14 +2496,33 @@ function serAst(node, outerPrec = 0) {
   return '?';
 }
 
-function fmtStep(n) {
+// Společné jádro formátování čísla do české notace (desetinná čárka).
+//   group     – tisícové oddělování u celých čísel
+//   sciHi/sciLo – prahy pro vědeckou notaci (|n| ≥ sciHi nebo < sciLo)
+//   sciFormat – 'pow' (× 10^n) nebo 'e' (1,23e4)
+//   prec      – počet platných číslic běžného čísla
+function formatNumber(n, { group, sciHi, sciLo, sciFormat, prec }) {
   if (!isFinite(n)) return String(n);
-  const r = parseFloat(n.toPrecision(12));
-  if (Number.isInteger(r)) return String(r);
-  const a = Math.abs(r);
-  if (a !== 0 && (a >= 1e8 || a < 1e-3))
-    return parseFloat(r.toPrecision(4)).toExponential().replace('.', ',');
-  return parseFloat(r.toPrecision(8)).toString().replace('.', ',');
+  if (Number.isInteger(n)) return group ? n.toLocaleString('cs-CZ') : String(n);
+  const abs = Math.abs(n);
+  if (abs !== 0 && (abs >= sciHi || abs < sciLo)) {
+    if (sciFormat === 'pow') {
+      return n.toExponential(4)
+        .replace(/e([+-]\d+)$/, (_, e) => {
+          const sign = e.startsWith('-') ? '−' : '';
+          const num  = e.replace(/^[+-]/, '').replace(/^0+/, '') || '0';
+          return ` × 10^${sign}${num}`;
+        }).replace('.', ',');
+    }
+    return parseFloat(n.toPrecision(4)).toExponential().replace('.', ',');
+  }
+  return parseFloat(n.toPrecision(prec)).toString().replace('.', ',');
+}
+
+// Mezikrok rozkladu — bez tisícového oddělování, kratší notace s 'e'.
+function fmtStep(n) {
+  const r = isFinite(n) ? parseFloat(n.toPrecision(12)) : n;
+  return formatNumber(r, { group: false, sciHi: 1e8, sciLo: 1e-3, sciFormat: 'e', prec: 8 });
 }
 
 function substAll(node, vars) {
@@ -2625,19 +2653,9 @@ function hideResult() { resultSection.style.display = 'none'; hideBreakdown(); l
 function showError(msg) { errorMsgEl.textContent = msg; errorSection.style.display = 'block'; }
 function hideError() { errorSection.style.display = 'none'; }
 
+// Výsledek — s tisícovým oddělováním a notací × 10^n.
 function formatNum(n) {
-  if (!isFinite(n)) return String(n);
-  if (Number.isInteger(n)) return n.toLocaleString('cs-CZ');
-  const abs = Math.abs(n);
-  if (abs !== 0 && (abs >= 1e10 || abs < 1e-4)) {
-    return n.toExponential(4)
-      .replace(/e([+-]\d+)$/, (_, e) => {
-        const sign = e.startsWith('-') ? '−' : '';
-        const num  = e.replace(/^[+-]/, '').replace(/^0+/, '') || '0';
-        return ` × 10^${sign}${num}`;
-      }).replace('.', ',');
-  }
-  return parseFloat(n.toPrecision(10)).toString().replace('.', ',');
+  return formatNumber(n, { group: true, sciHi: 1e10, sciLo: 1e-4, sciFormat: 'pow', prec: 10 });
 }
 
 function esc(str) {
@@ -2670,7 +2688,7 @@ document.addEventListener('keydown', e => {
   if (e.ctrlKey && !e.shiftKey && !e.altKey) {
     switch (e.key.toLowerCase()) {
       case 's':     e.preventDefault(); saveFormula();     break;
-      case 'n':     e.preventDefault(); newFormula();      break;
+      case 'n':     e.preventDefault(); requestNewFormula(); break;
       case 'enter': e.preventDefault(); calculateFormula(); break;
     }
   }
@@ -2813,7 +2831,7 @@ document.getElementById('import-file-input').addEventListener('change', function
 const btnExport = document.getElementById('btn-export');
 const btnImport = document.getElementById('btn-import');
 
-btnNew.addEventListener('click', newFormula);
+btnNew.addEventListener('click', requestNewFormula);
 btnSave.addEventListener('click', saveFormula);
 btnCalculate.addEventListener('click', calculateFormula);
 btnDelete.addEventListener('click', deleteFormula);
