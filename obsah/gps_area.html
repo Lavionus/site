@@ -3,92 +3,134 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>📐 Plocha pozemku z GPS bodů</title>
+<title>📐 Plocha pozemku</title>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css"/>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1a1a1a;color:#e0e0e0;min-height:100vh;padding:20px}
-.container{max-width:840px;margin:0 auto}
-h1{font-size:1.6rem;margin-bottom:18px;font-weight:600;text-align:center}
-.layout{display:grid;grid-template-columns:1fr 1fr;gap:20px}
-@media(max-width:680px){.layout{grid-template-columns:1fr}}
-.card{background:#2a2a2a;border:1px solid #404040;border-radius:8px;padding:20px;margin-bottom:20px}
+.container{max-width:1100px;margin:0 auto}
+h1{font-size:1.6rem;margin-bottom:14px;font-weight:600;text-align:center}
+.bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:12px;background:#2a2a2a;border:1px solid #404040;border-radius:8px;padding:12px}
+.btn{background:#6aa6fd;color:#fff;border:none;padding:9px 15px;border-radius:6px;cursor:pointer;font-size:.85rem;font-weight:600}
+.btn:hover{background:#5694f0}.btn-sec{background:#404040}.btn-sec:hover{background:#4a4a4a}
+select{background:#404040;border:1px solid #555;border-radius:4px;color:#e0e0e0;padding:8px}
+.layout{display:grid;grid-template-columns:1fr 280px;gap:16px}
+@media(max-width:760px){.layout{grid-template-columns:1fr}}
+#map{height:520px;border-radius:8px;border:1px solid #404040}
+.card{background:#2a2a2a;border:1px solid #404040;border-radius:8px;padding:18px;height:fit-content}
 h2{font-size:1rem;color:#6aa6fd;margin-bottom:12px}
-textarea{width:100%;min-height:200px;background:#1e1e1e;border:1px solid #555;border-radius:6px;color:#e0e0e0;padding:12px;font-family:monospace;font-size:.9rem;resize:vertical;line-height:1.6}
-.btn{background:#6aa6fd;color:#fff;border:none;padding:10px 16px;border-radius:6px;cursor:pointer;font-weight:600;font-size:.85rem;width:100%;margin-top:10px}
-.btn:hover{background:#5694f0}.btn-sec{background:#404040}
-.big{font-size:2.4rem;font-weight:700;color:#6aa6fd;text-align:center;margin:6px 0}
-.res-row{display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid #333}
+.big{font-size:2rem;font-weight:700;color:#6aa6fd;text-align:center;margin:4px 0}
+.res-row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #333}
 .res-row:last-child{border:none}.res-row b{color:#4caf50}
-svg{width:100%;height:auto;background:#1e1e1e;border-radius:8px;margin-top:10px}
-.note{font-size:.78rem;color:#666;margin-top:10px;line-height:1.5}
-.err{color:#e74c3c;font-size:.85rem;margin-top:8px}
+.hint{font-size:.8rem;color:#888;margin-top:12px;line-height:1.5}
+details{margin-top:12px}
+summary{cursor:pointer;color:#888;font-size:.84rem}
+textarea{width:100%;min-height:120px;background:#1e1e1e;border:1px solid #555;border-radius:6px;color:#e0e0e0;padding:10px;font-family:monospace;font-size:.82rem;margin-top:8px;resize:vertical}
+.marker-num{background:#6aa6fd;color:#fff;border-radius:50%;width:22px;height:22px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.78rem;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.5)}
 </style>
 </head>
 <body>
 <div class="container">
-  <h1>📐 Plocha pozemku z GPS bodů</h1>
+  <h1>📐 Plocha pozemku z mapy</h1>
+  <div class="bar">
+    <span style="color:#888;font-size:.88rem">Klikej do mapy = přidávej body pozemku</span>
+    <button class="btn btn-sec" id="undoBtn">↩️ Zpět</button>
+    <button class="btn btn-sec" id="clearBtn">🗑️ Vymazat</button>
+    <button class="btn btn-sec" id="locBtn">📍 Moje poloha</button>
+    <span style="margin-left:auto"></span>
+    <label style="color:#888;font-size:.84rem">Podklad:</label>
+    <select id="basemap">
+      <option value="osm">Mapa</option>
+      <option value="sat">Satelit</option>
+      <option value="topo">Topo</option>
+    </select>
+  </div>
   <div class="layout">
-    <div>
-      <div class="card">
-        <h2>Body polygonu (lat, lon)</h2>
-        <textarea id="points" placeholder="50.0801, 14.4200&#10;50.0810, 14.4225&#10;50.0795, 14.4240">50.08010, 14.42000
-50.08100, 14.42250
-50.07950, 14.42400
-50.07880, 14.42100</textarea>
-        <button class="btn" id="calcBtn">🧮 Vypočítat plochu</button>
-        <button class="btn btn-sec" id="locBtn">📍 Přidat moji polohu</button>
-        <div class="err" id="err"></div>
-      </div>
-    </div>
-    <div>
-      <div class="card">
-        <h2>Výsledek</h2>
-        <div class="big" id="haBig">–</div>
-        <p style="text-align:center;color:#888;margin-bottom:14px">výměra</p>
-        <div class="res-row"><span>Plocha (m²)</span><b id="m2">–</b></div>
-        <div class="res-row"><span>Plocha (ha)</span><b id="ha">–</b></div>
-        <div class="res-row"><span>Plocha (a / ar)</span><b id="ar">–</b></div>
-        <div class="res-row"><span>Obvod</span><b id="perim">–</b></div>
-        <div class="res-row"><span>Počet vrcholů</span><b id="count">–</b></div>
-        <svg id="shape" viewBox="0 0 200 160"></svg>
-      </div>
+    <div id="map"></div>
+    <div class="card">
+      <h2>📋 Výměra</h2>
+      <div class="big" id="haBig">0 ha</div>
+      <p style="text-align:center;color:#888;margin-bottom:12px">plocha pozemku</p>
+      <div class="res-row"><span>Plocha (m²)</span><b id="m2">0</b></div>
+      <div class="res-row"><span>Plocha (ha)</span><b id="ha">0</b></div>
+      <div class="res-row"><span>Plocha (ar)</span><b id="ar">0</b></div>
+      <div class="res-row"><span>Obvod</span><b id="perim">0</b></div>
+      <div class="res-row"><span>Počet bodů</span><b id="count">0</b></div>
+      <details>
+        <summary>✏️ Body ručně (lat, lon)</summary>
+        <textarea id="manual" placeholder="50.0801, 14.4200&#10;…"></textarea>
+        <button class="btn btn-sec" id="loadManual" style="margin-top:8px;width:100%">Načíst body do mapy</button>
+      </details>
+      <p class="hint">Body taháním upravíš, klikem na bod ho smažeš. Plocha se počítá geodeticky (WGS84). Vhodné pro pole, louky, pozemky.</p>
     </div>
   </div>
-  <p class="note">Plocha se počítá geodeticky (sférický mnohoúhelník na WGS84). Body zadej v pořadí po obvodu pozemku. Vhodné pro orientační výměru polí, pozemků a luk.</p>
 </div>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
 <script>
 const $=id=>document.getElementById(id);
 const R=6378137;
-function parse(){return $('points').value.split('\n').map(l=>l.split(',').map(s=>parseFloat(s.trim()))).filter(a=>a.length>=2&&!isNaN(a[0])&&!isNaN(a[1])).map(a=>({lat:a[0],lon:a[1]}));}
-function area(pts){let a=0;const n=pts.length;
-  for(let i=0;i<n;i++){const p1=pts[i],p2=pts[(i+1)%n];a+=(p2.lon-p1.lon)*Math.PI/180*(2+Math.sin(p1.lat*Math.PI/180)+Math.sin(p2.lat*Math.PI/180));}
+const map=L.map('map').setView([49.8175,15.4730],8);
+const bases={
+  osm:L.tileLayer('https://tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'© OpenStreetMap',maxZoom:19}),
+  sat:L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{attribution:'© Esri',maxZoom:19}),
+  topo:L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',{attribution:'© OpenTopoMap',maxZoom:17})
+};
+let curBase=bases.osm.addTo(map);
+$('basemap').onchange=()=>{map.removeLayer(curBase);curBase=bases[$('basemap').value].addTo(map);};
+L.control.scale({imperial:false}).addTo(map);
+
+let points=[]; // {marker, latlng}
+let poly=null;
+function numIcon(i){return L.divIcon({className:'',html:`<div class="marker-num">${i+1}</div>`,iconSize:[22,22],iconAnchor:[11,11]});}
+function addPoint(latlng){
+  const marker=L.marker(latlng,{draggable:true,icon:numIcon(points.length)}).addTo(map);
+  const p={marker,latlng};
+  marker.on('drag',e=>{p.latlng=e.target.getLatLng();redraw();});
+  marker.on('click',e=>{L.DomEvent.stopPropagation(e);removePoint(p);});
+  points.push(p);redraw();
+}
+function removePoint(p){map.removeLayer(p.marker);points=points.filter(x=>x!==p);reindex();redraw();}
+function reindex(){points.forEach((p,i)=>p.marker.setIcon(numIcon(i)));}
+function redraw(){
+  const latlngs=points.map(p=>p.latlng);
+  if(poly)map.removeLayer(poly);
+  if(latlngs.length>=2)poly=L.polygon(latlngs,{color:'#6aa6fd',weight:2,fillColor:'#6aa6fd',fillOpacity:.2}).addTo(map);
+  else poly=null;
+  compute();
+}
+function geoArea(latlngs){let a=0;const n=latlngs.length;
+  for(let i=0;i<n;i++){const p1=latlngs[i],p2=latlngs[(i+1)%n];
+    a+=(p2.lng-p1.lng)*Math.PI/180*(2+Math.sin(p1.lat*Math.PI/180)+Math.sin(p2.lat*Math.PI/180));}
   return Math.abs(a*R*R/2);}
-function perimeter(pts){let d=0;const n=pts.length;const rad=x=>x*Math.PI/180;
-  for(let i=0;i<n;i++){const a=pts[i],b=pts[(i+1)%n];const dLa=rad(b.lat-a.lat),dLo=rad(b.lon-a.lon);
-    const x=Math.sin(dLa/2)**2+Math.cos(rad(a.lat))*Math.cos(rad(b.lat))*Math.sin(dLo/2)**2;d+=R*2*Math.atan2(Math.sqrt(x),Math.sqrt(1-x));}
-  return d;}
-function calc(){
-  const pts=parse();
-  if(pts.length<3){$('err').textContent='Zadej alespoň 3 body.';return;}
-  $('err').textContent='';
-  const A=area(pts),P=perimeter(pts);
+function geoPerim(latlngs){let d=0;const n=latlngs.length;
+  for(let i=0;i<n;i++)d+=latlngs[i].distanceTo(latlngs[(i+1)%n]);return d;}
+function compute(){
+  const latlngs=points.map(p=>p.latlng);
+  $('count').textContent=latlngs.length;
+  if(latlngs.length<3){$('haBig').textContent='0 ha';['m2','ha','ar','perim'].forEach(id=>$(id).textContent='0');syncManual();return;}
+  const A=geoArea(latlngs),P=geoPerim(latlngs);
   $('haBig').textContent=(A/10000).toFixed(3)+' ha';
   $('m2').textContent=A.toLocaleString('cs',{maximumFractionDigits:1})+' m²';
   $('ha').textContent=(A/10000).toFixed(4)+' ha';
   $('ar').textContent=(A/100).toFixed(2)+' a';
   $('perim').textContent=P<1000?P.toFixed(1)+' m':(P/1000).toFixed(3)+' km';
-  $('count').textContent=pts.length;
-  // draw
-  const lats=pts.map(p=>p.lat),lons=pts.map(p=>p.lon);
-  const minLa=Math.min(...lats),maxLa=Math.max(...lats),minLo=Math.min(...lons),maxLo=Math.max(...lons);
-  const w=maxLo-minLo||1,h=maxLa-minLa||1,sc=Math.min(180/w,140/h);
-  const tx=lo=>10+(lo-minLo)*sc,ty=la=>150-(la-minLa)*sc;
-  $('shape').innerHTML=`<polygon points="${pts.map(p=>tx(p.lon)+','+ty(p.lat)).join(' ')}" fill="#6aa6fd33" stroke="#6aa6fd" stroke-width="1.5"/>${pts.map(p=>`<circle cx="${tx(p.lon)}" cy="${ty(p.lat)}" r="2.5" fill="#fff"/>`).join('')}`;
+  syncManual();
 }
-$('calcBtn').onclick=calc;
-$('points').oninput=calc;
-$('locBtn').onclick=()=>navigator.geolocation.getCurrentPosition(p=>{$('points').value+=(($('points').value.trim()?'\n':'')+p.coords.latitude.toFixed(6)+', '+p.coords.longitude.toFixed(6));calc();},()=>$('err').textContent='Polohu nelze získat.');
-calc();
+function syncManual(){$('manual').value=points.map(p=>p.latlng.lat.toFixed(6)+', '+p.latlng.lng.toFixed(6)).join('\n');}
+map.on('click',e=>addPoint(e.latlng));
+$('undoBtn').onclick=()=>{if(points.length)removePoint(points[points.length-1]);};
+$('clearBtn').onclick=()=>{points.forEach(p=>map.removeLayer(p.marker));points=[];redraw();};
+$('locBtn').onclick=()=>navigator.geolocation.getCurrentPosition(p=>map.setView([p.coords.latitude,p.coords.longitude],17),()=>alert('Polohu nelze získat.'));
+$('loadManual').onclick=()=>{
+  const coords=$('manual').value.split('\n').map(l=>l.split(',').map(s=>parseFloat(s.trim()))).filter(a=>a.length>=2&&!isNaN(a[0])&&!isNaN(a[1]));
+  if(!coords.length)return;
+  points.forEach(p=>map.removeLayer(p.marker));points=[];
+  coords.forEach(c=>addPoint(L.latLng(c[0],c[1])));
+  if(points.length)map.fitBounds(L.latLngBounds(points.map(p=>p.latlng)).pad(0.3));
+};
+// ukázkový pozemek
+[[50.0801,14.4200],[50.0810,14.4225],[50.0795,14.4240],[50.0788,14.4210]].forEach(c=>addPoint(L.latLng(c[0],c[1])));
+map.fitBounds(L.latLngBounds(points.map(p=>p.latlng)).pad(0.5));
 </script>
 </body>
 </html>

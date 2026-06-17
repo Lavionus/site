@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🏰 Tower Defense</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;user-select:none}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1a1a1a;color:#e0e0e0;min-height:100vh;padding:14px;display:flex;flex-direction:column;align-items:center}
+h1{font-size:1.5rem;margin-bottom:10px;font-weight:600}
+.game{max-width:680px;width:100%}
+.hud{display:flex;gap:8px;flex-wrap:wrap;align-items:center;background:#2a2a2a;border:1px solid #404040;border-radius:8px;padding:8px 12px;margin-bottom:10px}
+.hud .stat{display:flex;align-items:center;gap:5px;font-size:.95rem;font-weight:600}
+.hud .stat b{font-variant-numeric:tabular-nums}
+.gold{color:#f1c40f}.lives{color:#e74c3c}.wave{color:#6aa6fd}.score{color:#27ae60}
+.hud .spacer{flex:1}
+.hud button{background:#383838;border:1px solid #4a4a4a;color:#ddd;border-radius:6px;padding:6px 10px;cursor:pointer;font-size:.82rem;font-weight:600}
+.hud button:hover{background:#4a4a4a}
+.hud button.on{background:#6aa6fd;color:#fff;border-color:#6aa6fd}
+.startbtn{background:#27ae60 !important;color:#fff !important;border-color:#27ae60 !important}
+.startbtn:disabled{opacity:.4;cursor:not-allowed}
+.canvaswrap{position:relative;line-height:0}
+canvas{width:100%;background:#1d2b1d;border-radius:8px;border:1px solid #404040;cursor:pointer;touch-action:manipulation}
+.overlay{position:absolute;inset:0;background:rgba(20,20,20,.86);border-radius:8px;display:none;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;padding:20px}
+.overlay.show{display:flex}
+.overlay h2{font-size:2rem;color:#e74c3c}
+.overlay .win h2{color:#27ae60}
+.overlay button{background:#6aa6fd;color:#fff;border:none;padding:11px 26px;border-radius:8px;cursor:pointer;font-weight:600;font-size:1rem}
+.shop{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px}
+@media(max-width:560px){.shop{grid-template-columns:repeat(2,1fr)}}
+.tower-card{background:#2a2a2a;border:2px solid #404040;border-radius:8px;padding:10px;cursor:pointer;text-align:center;transition:.12s}
+.tower-card:hover{border-color:#6aa6fd}
+.tower-card.sel{border-color:#6aa6fd;background:#23304a}
+.tower-card.cant{opacity:.45}
+.tower-card .ico{font-size:1.6rem}
+.tower-card .nm{font-size:.82rem;font-weight:600;margin-top:2px}
+.tower-card .cost{font-size:.82rem;color:#f1c40f;font-weight:700}
+.tower-card .ds{font-size:.68rem;color:#888;margin-top:3px;line-height:1.2}
+.selpanel{background:#2a2a2a;border:1px solid #6aa6fd;border-radius:8px;padding:12px;margin-top:10px;display:none}
+.selpanel.show{display:block}
+.selpanel .row{display:flex;justify-content:space-between;font-size:.85rem;padding:2px 0;color:#bbb}
+.selpanel .row b{color:#e0e0e0}
+.selpanel .acts{display:flex;gap:8px;margin-top:10px}
+.selpanel .acts button{flex:1;border:none;border-radius:6px;padding:9px;cursor:pointer;font-weight:600;font-size:.85rem}
+.btn-up{background:#27ae60;color:#fff}.btn-up:disabled{opacity:.4;cursor:not-allowed}
+.btn-sell{background:#c0392b;color:#fff}
+.hint{color:#888;font-size:.82rem;margin-top:10px;text-align:center;line-height:1.5}
+.banner{text-align:center;color:#f39c12;font-weight:600;min-height:20px;margin-top:6px}
+</style>
+</head>
+<body>
+<h1>🏰 Tower Defense</h1>
+<div class="game">
+  <div class="hud">
+    <span class="stat gold">💰 <b id="gold">0</b></span>
+    <span class="stat lives">❤️ <b id="lives">0</b></span>
+    <span class="stat wave">🌊 <b id="wave">0</b></span>
+    <span class="stat score">⭐ <b id="score">0</b></span>
+    <span class="spacer"></span>
+    <button id="speedBtn" title="Rychlost">⏩ 1×</button>
+    <button id="muteBtn" title="Zvuk">🔊</button>
+    <button class="startbtn" id="startBtn">▶️ Vlna</button>
+    <button id="autoBtn" title="Automatické vlny">🔁 Auto</button>
+  </div>
+  <div class="banner" id="banner">Postav věže a stiskni „Vlna"!</div>
+  <div class="canvaswrap">
+    <canvas id="canvas" width="660" height="396"></canvas>
+    <div class="overlay" id="overlay">
+      <h2 id="overTitle">Konec hry</h2>
+      <p id="overText" style="color:#bbb"></p>
+      <button id="restartBtn">🔄 Hrát znovu</button>
+    </div>
+  </div>
+  <div class="shop" id="shop"></div>
+  <div class="selpanel" id="selpanel"></div>
+  <p class="hint">Klikni na věž v obchodě, pak na volné pole vedle cesty. Klikni na postavenou věž pro <b>vylepšení</b> nebo <b>prodej</b>. Pravým tlačítkem zrušíš výběr. Věže útočí automaticky.</p>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const canvas=$('canvas'), ctx=canvas.getContext('2d');
+const COLS=15, ROWS=9, TILE=44, W=COLS*TILE, H=ROWS*TILE;
+
+/* ---------- Cesta ---------- */
+const corners=[[0,4],[2,4],[2,7],[6,7],[6,1],[9,1],[9,7],[12,7],[12,4],[14,4]];
+const pathSet=new Set();
+for(let i=0;i<corners.length-1;i++){
+  let [c1,r1]=corners[i], [c2,r2]=corners[i+1];
+  const dc=Math.sign(c2-c1), dr=Math.sign(r2-r1);
+  let c=c1,r=r1;
+  pathSet.add(c+','+r);
+  while(c!==c2||r!==r2){ c+=dc; r+=dr; pathSet.add(c+','+r); }
+}
+const cellCenter=(c,r)=>({x:c*TILE+TILE/2, y:r*TILE+TILE/2});
+const waypoints=corners.map(([c,r])=>cellCenter(c,r));
+waypoints[0]={x:-TILE/2, y:corners[0][1]*TILE+TILE/2}; // vstup zleva mimo plochu
+
+/* ---------- Definice věží ---------- */
+const TOWERS={
+  gun:   {name:'Kulomet',  icon:'🔫', cost:55,  color:'#6aa6fd', range:92,  rate:0.28, dmg:7,  bullet:'#cfe9ff', desc:'Rychlá palba'},
+  cannon:{name:'Kanón',    icon:'💣', cost:110, color:'#e67e22', range:108, rate:1.05, dmg:30, splash:46, bullet:'#ffb060', desc:'Plošný výbuch'},
+  frost: {name:'Mrazák',   icon:'❄️', cost:85,  color:'#3aa0e0', range:96,  rate:0.7,  dmg:5,  slow:0.45, slowDur:1.6, bullet:'#aee6ff', desc:'Zpomaluje'},
+  sniper:{name:'Odstřelovač',icon:'🎯',cost:150, color:'#9b59b6', range:215, rate:1.7,  dmg:80, bullet:'#ff7bff', desc:'Dosah + zásah'}
+};
+function towerStats(t){
+  const b=TOWERS[t.type], l=t.level;
+  return {
+    range: b.range*(1+(l-1)*0.12),
+    dmg: Math.round(b.dmg*Math.pow(1.65,l-1)),
+    rate: b.rate*Math.pow(0.86,l-1),
+    splash: b.splash ? b.splash*(1+(l-1)*0.15) : 0,
+    slow: b.slow||0,
+    slowDur: b.slowDur ? b.slowDur*(1+(l-1)*0.25) : 0
+  };
+}
+const upgradeCost=t=>Math.floor(TOWERS[t.type].cost*0.8*t.level);
+const MAXLVL=3;
+
+/* ---------- Nepřátelé ---------- */
+const ENEMIES={
+  normal:{hp:42, speed:54, reward:7,  color:'#e74c3c', size:11, leak:1, icon:'😈'},
+  fast:  {hp:26, speed:104,reward:9,  color:'#f1c40f', size:9,  leak:1, icon:'⚡'},
+  tank:  {hp:150,speed:34, reward:18, color:'#7f8c8d', size:14, leak:2, icon:'🛡️'},
+  boss:  {hp:1400,speed:30,reward:160, color:'#8e44ad', size:21, leak:12, icon:'👹'}
+};
+
+/* ---------- Stav hry ---------- */
+let gold, lives, wave, score, towers, enemies, projectiles, effects;
+let inWave, spawnQueue, spawnTimer, waveResolved;
+let buildType=null, selectedTower=null, hoverCell=null;
+let speed=1, auto=false, muted=false, gameOver=false;
+let best=+(localStorage.getItem('td_best')||0);
+
+function reset(){
+  gold=220; lives=20; wave=0; score=0;
+  towers=[]; enemies=[]; projectiles=[]; effects=[];
+  inWave=false; spawnQueue=[]; spawnTimer=0; waveResolved=true;
+  buildType=null; selectedTower=null; gameOver=false;
+  $('overlay').classList.remove('show');
+  banner('Postav věže a stiskni „Vlna"!');
+  updateHUD(); renderShop(); renderSelected();
+}
+
+/* ---------- Vlny ---------- */
+function buildWave(n){
+  const q=[]; const hpMul=1+(n-1)*0.24;
+  if(n%5===0){
+    const bosses=Math.floor(n/5);
+    for(let i=0;i<bosses;i++) q.push('boss');
+    for(let i=0;i<5+n;i++) q.push(Math.random()<0.5?'fast':'tank');
+  } else {
+    const base=7+n*2;
+    for(let i=0;i<base;i++){
+      const r=Math.random();
+      if(n>=3 && r<0.22) q.push('tank');
+      else if(n>=2 && r<0.5) q.push('fast');
+      else q.push('normal');
+    }
+  }
+  for(let i=q.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[q[i],q[j]]=[q[j],q[i]];}
+  return q.map(type=>({type,hpMul}));
+}
+function startWave(){
+  if(inWave||gameOver) return;
+  wave++; gold+=18; // příjem na začátku vlny
+  spawnQueue=buildWave(wave); spawnTimer=0; inWave=true; waveResolved=false;
+  banner((wave%5===0?'⚠️ BOSS VLNA! ':'') + 'Vlna '+wave+' útočí!');
+  updateHUD();
+}
+function spawnEnemy(type,hpMul){
+  const b=ENEMIES[type];
+  const hp=Math.round(b.hp*hpMul);
+  enemies.push({type,x:waypoints[0].x,y:waypoints[0].y,hp,maxHp:hp,speed:b.speed,
+    reward:b.reward+Math.floor(wave/3),color:b.color,size:b.size,leak:b.leak,icon:b.icon,wp:1,slowT:0,slowF:1});
+}
+
+/* ---------- Zvuk ---------- */
+let actx=null;
+function snd(freq,dur,type='square',vol=.08){
+  if(muted) return;
+  try{ actx=actx||new (window.AudioContext||window.webkitAudioContext)();
+    const o=actx.createOscillator(),g=actx.createGain();
+    o.type=type;o.frequency.value=freq;o.connect(g);g.connect(actx.destination);
+    g.gain.setValueAtTime(vol,actx.currentTime);g.gain.exponentialRampToValueAtTime(.0001,actx.currentTime+dur);
+    o.start();o.stop(actx.currentTime+dur);
+  }catch(e){}
+}
+
+/* ---------- Hlavní smyčka ---------- */
+let last=performance.now();
+function loop(now){
+  let dt=(now-last)/1000; last=now;
+  if(dt>0.05) dt=0.05;
+  dt*=speed;
+  if(!gameOver && speed>0) update(dt);
+  draw();
+  requestAnimationFrame(loop);
+}
+function update(dt){
+  // spawn
+  if(inWave){
+    spawnTimer-=dt;
+    if(spawnQueue.length && spawnTimer<=0){
+      const s=spawnQueue.shift(); spawnEnemy(s.type,s.hpMul);
+      spawnTimer=Math.max(0.35,0.7-wave*0.01);
+    }
+    if(!spawnQueue.length && enemies.length===0 && !waveResolved){
+      waveResolved=true; inWave=false;
+      gold+=12+wave*2; score+=wave*5;
+      if(wave>best){best=wave;localStorage.setItem('td_best',best);}
+      banner('✅ Vlna '+wave+' zničena! +'+(12+wave*2)+' 💰');
+      snd(660,.15,'sine',.12);
+      if(auto && !gameOver) setTimeout(()=>startWave(),900);
+      updateHUD();
+    }
+  }
+  // nepřátelé
+  for(let i=enemies.length-1;i>=0;i--){
+    const e=enemies[i];
+    if(e.slowT>0)e.slowT-=dt;
+    const tw=waypoints[e.wp];
+    const eff=e.speed*(e.slowT>0?e.slowF:1);
+    const dx=tw.x-e.x, dy=tw.y-e.y, d=Math.hypot(dx,dy), step=eff*dt;
+    if(d<=step){ e.x=tw.x;e.y=tw.y;e.wp++;
+      if(e.wp>=waypoints.length){ // únik
+        lives-=e.leak; enemies.splice(i,1); addEffect(e.x,e.y,'#e74c3c');
+        snd(120,.2,'sawtooth',.1); updateHUD();
+        if(lives<=0){ endGame(false); }
+        continue;
+      }
+    } else { e.x+=dx/d*step; e.y+=dy/d*step; }
+  }
+  // věže – míření a střelba
+  for(const t of towers){
+    const st=towerStats(t);
+    t.cd-=dt;
+    // najdi cíl nejdál na cestě v dosahu
+    let target=null, bestProg=-1;
+    for(const e of enemies){
+      const dd=Math.hypot(e.x-t.x,e.y-t.y);
+      if(dd<=st.range){ const prog=e.wp*10000-Math.hypot(waypoints[e.wp].x-e.x,waypoints[e.wp].y-e.y);
+        if(prog>bestProg){bestProg=prog;target=e;} }
+    }
+    if(target){ t.angle=Math.atan2(target.y-t.y,target.x-t.x);
+      if(t.cd<=0){ t.cd=st.rate; fire(t,st,target); } }
+  }
+  // projektily
+  for(let i=projectiles.length-1;i>=0;i--){
+    const p=projectiles[i];
+    if(!enemies.includes(p.target)){ projectiles.splice(i,1); continue; }
+    const dx=p.target.x-p.x, dy=p.target.y-p.y, d=Math.hypot(dx,dy), step=p.speed*dt;
+    if(d<=step+4){ hit(p); projectiles.splice(i,1); }
+    else { p.x+=dx/d*step; p.y+=dy/d*step; }
+  }
+  // efekty
+  for(let i=effects.length-1;i>=0;i--){ effects[i].t-=dt; if(effects[i].t<=0)effects.splice(i,1); }
+}
+function fire(t,st,target){
+  projectiles.push({x:t.x,y:t.y,target,speed:340,dmg:st.dmg,type:t.type,
+    splash:st.splash,slow:st.slow,slowDur:st.slowDur,color:TOWERS[t.type].bullet});
+  snd(t.type==='sniper'?300:t.type==='cannon'?160:520, .05,'square',.05);
+}
+function hit(p){
+  addEffect(p.x,p.y,p.color,p.splash?p.splash:8);
+  if(p.splash){
+    for(const e of enemies){ if(Math.hypot(e.x-p.x,e.y-p.y)<=p.splash) damage(e,p.dmg); }
+    snd(140,.12,'sawtooth',.09);
+  } else { damage(p.target,p.dmg);
+    if(p.slow){ p.target.slowT=p.slowDur; p.target.slowF=p.slow; } }
+}
+function damage(e,dmg){
+  e.hp-=dmg;
+  if(e.hp<=0){
+    const idx=enemies.indexOf(e);
+    if(idx>=0){ enemies.splice(idx,1); gold+=e.reward; score+=e.reward;
+      addEffect(e.x,e.y,e.color,e.size); snd(440,.06,'triangle',.06); updateHUD(); }
+  }
+}
+function addEffect(x,y,color,r=10){ effects.push({x,y,color,r,t:0.3,max:0.3}); }
+
+function endGame(win){
+  gameOver=true;
+  $('overlay').classList.toggle('win',win);
+  $('overTitle').textContent=win?'🎉 Vítězství!':'💀 Konec hry';
+  $('overTitle').style.color=win?'#27ae60':'#e74c3c';
+  $('overText').innerHTML=`Dosáhl jsi vlny <b>${wave}</b> · skóre <b>${score}</b><br>Nejlepší vlna: <b>${best}</b>`;
+  $('overlay').classList.add('show');
+  snd(win?700:90,.4,'sine',.12);
+}
+
+/* ---------- Vykreslení ---------- */
+function draw(){
+  ctx.clearRect(0,0,W,H);
+  // pozadí mřížka + stavební pole
+  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){
+    if(!pathSet.has(c+','+r)){ ctx.fillStyle=((c+r)%2)?'#243024':'#202a20'; ctx.fillRect(c*TILE,r*TILE,TILE,TILE); }
+  }
+  // cesta
+  ctx.strokeStyle='#5a4a32'; ctx.lineWidth=TILE-6; ctx.lineJoin='round'; ctx.lineCap='round';
+  ctx.beginPath();
+  ctx.moveTo(Math.max(0,waypoints[0].x),waypoints[0].y);
+  for(let i=1;i<waypoints.length;i++)ctx.lineTo(waypoints[i].x,waypoints[i].y);
+  ctx.stroke();
+  ctx.strokeStyle='#6b5838'; ctx.lineWidth=TILE-16; ctx.stroke();
+  // cílová zóna
+  const ex=waypoints[waypoints.length-1];
+  ctx.fillStyle='#27ae60'; ctx.font='20px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+  ctx.fillText('🏠', ex.x-6, ex.y);
+
+  // náhled stavby
+  if(buildType && hoverCell){
+    const {c,r}=hoverCell; const ok=canBuild(c,r);
+    const cen=cellCenter(c,r); const st0=TOWERS[buildType];
+    ctx.fillStyle=ok?'rgba(106,166,253,.18)':'rgba(231,76,60,.18)';
+    ctx.beginPath(); ctx.arc(cen.x,cen.y,st0.range,0,7); ctx.fill();
+    ctx.fillStyle=ok?'rgba(106,166,253,.35)':'rgba(231,76,60,.4)';
+    ctx.fillRect(c*TILE+4,r*TILE+4,TILE-8,TILE-8);
+  }
+  // dosah vybrané věže
+  if(selectedTower){ const st=towerStats(selectedTower);
+    ctx.fillStyle='rgba(255,255,255,.07)'; ctx.strokeStyle='rgba(106,166,253,.5)'; ctx.lineWidth=1.5;
+    ctx.beginPath(); ctx.arc(selectedTower.x,selectedTower.y,st.range,0,7); ctx.fill(); ctx.stroke(); }
+
+  // věže
+  for(const t of towers){
+    const b=TOWERS[t.type];
+    ctx.save(); ctx.translate(t.x,t.y);
+    ctx.fillStyle='#1a1a1a'; ctx.beginPath(); ctx.arc(0,0,15,0,7); ctx.fill();
+    ctx.fillStyle=b.color; ctx.beginPath(); ctx.arc(0,0,12,0,7); ctx.fill();
+    ctx.rotate(t.angle||0);
+    ctx.fillStyle='#111'; ctx.fillRect(0,-3.5,18,7);
+    ctx.restore();
+    ctx.font='13px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(b.icon,t.x,t.y);
+    // úroveň – tečky
+    for(let i=0;i<t.level;i++){ ctx.fillStyle='#f1c40f'; ctx.beginPath(); ctx.arc(t.x-6+i*6,t.y+15,2,0,7); ctx.fill(); }
+  }
+  // projektily
+  for(const p of projectiles){ ctx.fillStyle=p.color; ctx.beginPath(); ctx.arc(p.x,p.y,p.splash?5:3.2,0,7); ctx.fill(); }
+  // nepřátelé
+  for(const e of enemies){
+    ctx.fillStyle=e.color; ctx.beginPath(); ctx.arc(e.x,e.y,e.size,0,7); ctx.fill();
+    if(e.slowT>0){ ctx.strokeStyle='#aee6ff'; ctx.lineWidth=2; ctx.beginPath(); ctx.arc(e.x,e.y,e.size+2,0,7); ctx.stroke(); }
+    ctx.font=(e.size+2)+'px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle'; ctx.fillText(e.icon,e.x,e.y);
+    // health bar
+    const w=e.size*2, hpp=Math.max(0,e.hp/e.maxHp);
+    ctx.fillStyle='#000'; ctx.fillRect(e.x-w/2,e.y-e.size-7,w,4);
+    ctx.fillStyle=hpp>0.5?'#27ae60':hpp>0.25?'#f1c40f':'#e74c3c'; ctx.fillRect(e.x-w/2,e.y-e.size-7,w*hpp,4);
+  }
+  // efekty
+  for(const ef of effects){ const a=ef.t/ef.max; ctx.globalAlpha=a; ctx.fillStyle=ef.color;
+    ctx.beginPath(); ctx.arc(ef.x,ef.y,ef.r*(1.4-a),0,7); ctx.fill(); ctx.globalAlpha=1; }
+}
+
+/* ---------- Stavba / interakce ---------- */
+function canBuild(c,r){
+  if(c<0||c>=COLS||r<0||r>=ROWS) return false;
+  if(pathSet.has(c+','+r)) return false;
+  return !towers.some(t=>t.c===c&&t.r===r);
+}
+function evPos(e){
+  const rect=canvas.getBoundingClientRect();
+  const cx=(e.touches?e.touches[0].clientX:e.clientX), cy=(e.touches?e.touches[0].clientY:e.clientY);
+  return {x:(cx-rect.left)*(W/rect.width), y:(cy-rect.top)*(H/rect.height)};
+}
+canvas.addEventListener('mousemove',e=>{const p=evPos(e);hoverCell={c:Math.floor(p.x/TILE),r:Math.floor(p.y/TILE)};});
+canvas.addEventListener('mouseleave',()=>hoverCell=null);
+canvas.addEventListener('contextmenu',e=>{e.preventDefault();buildType=null;selectedTower=null;renderShop();renderSelected();});
+canvas.addEventListener('click',e=>{
+  if(gameOver) return;
+  const p=evPos(e); const c=Math.floor(p.x/TILE), r=Math.floor(p.y/TILE);
+  const existing=towers.find(t=>t.c===c&&t.r===r);
+  if(buildType){
+    if(canBuild(c,r)){
+      const cost=TOWERS[buildType].cost;
+      if(gold>=cost){ const cen=cellCenter(c,r);
+        towers.push({type:buildType,c,r,x:cen.x,y:cen.y,level:1,cd:0,angle:0,spent:cost});
+        gold-=cost; snd(330,.08,'square',.08); updateHUD(); renderShop();
+        if(!e.shiftKey){ buildType=null; renderShop(); }
+      } else banner('Nedostatek zlata!');
+    } else banner('Sem nelze stavět.');
+    return;
+  }
+  selectedTower = existing||null;
+  renderSelected();
+});
+
+/* ---------- UI ---------- */
+function banner(t){ $('banner').textContent=t; }
+function updateHUD(){
+  $('gold').textContent=gold; $('lives').textContent=lives;
+  $('wave').textContent=wave; $('score').textContent=score;
+  $('startBtn').disabled=inWave;
+  // přebarvit obchod podle dostupnosti
+  document.querySelectorAll('.tower-card').forEach(card=>{
+    card.classList.toggle('cant', gold<TOWERS[card.dataset.t].cost);
+  });
+  // průběžně zpřístupnit „Vylepšit" u vybrané věže, jakmile je dost zlata
+  if(selectedTower && selectedTower.level<MAXLVL){
+    const upBtn=document.getElementById('upBtn');
+    if(upBtn) upBtn.disabled = gold < upgradeCost(selectedTower);
+  }
+}
+function renderShop(){
+  $('shop').innerHTML=Object.entries(TOWERS).map(([k,b])=>`
+    <div class="tower-card ${buildType===k?'sel':''} ${gold<b.cost?'cant':''}" data-t="${k}">
+      <div class="ico">${b.icon}</div><div class="nm">${b.name}</div>
+      <div class="cost">${b.cost} 💰</div><div class="ds">${b.desc}<br>dmg ${b.dmg} · dosah ${Math.round(b.range)}</div>
+    </div>`).join('');
+  document.querySelectorAll('.tower-card').forEach(card=>card.onclick=()=>{
+    buildType = buildType===card.dataset.t ? null : card.dataset.t;
+    selectedTower=null; renderShop(); renderSelected(); banner(buildType?'Klikni na volné pole vedle cesty (Shift = stavět víc)':'');
+  });
+}
+function renderSelected(){
+  const p=$('selpanel');
+  if(!selectedTower){ p.classList.remove('show'); return; }
+  const t=selectedTower, b=TOWERS[t.type], st=towerStats(t);
+  const up=upgradeCost(t), canUp=t.level<MAXLVL && gold>=up;
+  const refund=Math.floor(t.spent*0.7);
+  p.classList.add('show');
+  p.innerHTML=`
+    <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+      <span style="font-size:1.4rem">${b.icon}</span>
+      <b style="font-size:1rem">${b.name}</b>
+      <span style="color:#f1c40f;font-size:.85rem">úroveň ${t.level}/${MAXLVL}</span>
+    </div>
+    <div class="row"><span>Poškození</span><b>${st.dmg}</b></div>
+    <div class="row"><span>Dosah</span><b>${Math.round(st.range)}</b></div>
+    <div class="row"><span>Rychlost palby</span><b>${(1/st.rate).toFixed(1)}/s</b></div>
+    ${st.splash?`<div class="row"><span>Plošný zásah</span><b>${Math.round(st.splash)}</b></div>`:''}
+    ${st.slow?`<div class="row"><span>Zpomalení</span><b>${Math.round(st.slow*100)}% / ${st.slowDur.toFixed(1)}s</b></div>`:''}
+    <div class="acts">
+      <button class="btn-up" id="upBtn" ${canUp?'':'disabled'}>${t.level<MAXLVL?`⬆️ Vylepšit (${up} 💰)`:'⭐ Max úroveň'}</button>
+      <button class="btn-sell" id="sellBtn">💵 Prodat (${refund})</button>
+    </div>`;
+  $('upBtn').onclick=()=>{ if(t.level<MAXLVL&&gold>=up){ gold-=up; t.spent+=up; t.level++; snd(550,.1,'sine',.09); updateHUD(); renderSelected(); } };
+  $('sellBtn').onclick=()=>{ gold+=refund; towers=towers.filter(x=>x!==t); selectedTower=null; snd(300,.1,'triangle',.08); updateHUD(); renderSelected(); };
+}
+
+/* ---------- Ovládací tlačítka ---------- */
+$('startBtn').onclick=startWave;
+$('autoBtn').onclick=()=>{ auto=!auto; $('autoBtn').classList.toggle('on',auto); if(auto&&!inWave&&!gameOver)startWave(); };
+const SPEEDS=[1,2,3,0];
+$('speedBtn').onclick=()=>{ let i=SPEEDS.indexOf(speed); speed=SPEEDS[(i+1)%SPEEDS.length];
+  $('speedBtn').textContent = speed===0?'⏸️ Pauza':'⏩ '+speed+'×'; $('speedBtn').classList.toggle('on',speed===0); };
+$('muteBtn').onclick=()=>{ muted=!muted; $('muteBtn').textContent=muted?'🔇':'🔊'; };
+$('restartBtn').onclick=()=>{ reset(); };
+
+reset();
+requestAnimationFrame(loop);
+</script>
+</body>
+</html>

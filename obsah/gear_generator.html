@@ -35,7 +35,9 @@ svg{max-width:100%;max-height:560px}
         <label>Modul (mm)</label><input type="number" id="module" value="4" min="0.5" step="0.5">
         <label>Úhel záběru (°)</label><select id="pa"><option value="20" selected>20° (standard)</option><option value="14.5">14,5°</option><option value="25">25°</option></select>
         <label>Průměr díry (mm)</label><input type="number" id="bore" value="8" min="0" step="1">
-        <button class="btn" id="dlBtn">💾 Stáhnout SVG</button>
+        <label>Výška / tloušťka kola (mm)</label><input type="number" id="height" value="10" min="0.5" step="0.5">
+        <button class="btn" id="dlBtn">💾 Stáhnout SVG (2D)</button>
+        <button class="btn" id="stlBtn" style="background:#27ae60;margin-top:6px">🧊 Stáhnout STL (3D pro tisk)</button>
       </div>
       <div class="card">
         <h2>Vypočtené rozměry</h2>
@@ -86,16 +88,54 @@ function buildGear(){
     ${bore>0?`<circle r="${(bore/2).toFixed(2)}" fill="#0d0d0d" stroke="#6aa6fd" stroke-width="${m*0.12}"/>`:''}
   </svg>`;
   $('gearWrap').innerHTML=svg;
+  const h=+$('height').value;
+  lastGear={pts, br:bore>0?bore/2:0, h, z, m};
   $('specs').innerHTML=[
     ['Roztečný průměr',pitchR*2],['Hlavový průměr',addR*2],['Patní průměr',dedR*2],
-    ['Základní průměr',baseR*2],['Rozteč (p = π·m)',Math.PI*m]
+    ['Základní průměr',baseR*2],['Rozteč (p = π·m)',Math.PI*m],['Výška / tloušťka',h]
   ].map(([l,v])=>`<div class="spec"><span>${l}</span><b>${v.toFixed(2)} mm</b></div>`).join('')
-   +`<div class="spec"><span>Převodový poměr (na 1 zub)</span><b>${z} zubů</b></div>`;
+   +`<div class="spec"><span>Počet zubů</span><b>${z}</b></div>`;
 }
+let lastGear=null;
+
+// ---- Export STL (3D) – vytlačení profilu kola do výšky, s otvorem pro díru ----
+function buildSTL(){
+  if(!lastGear) return '';
+  const {pts,br,h}=lastGear, N=pts.length, out=[];
+  function v(p){return `${p[0].toExponential(6)} ${p[1].toExponential(6)} ${p[2].toExponential(6)}`;}
+  function tri(a,b,c){
+    const ux=b[0]-a[0],uy=b[1]-a[1],uz=b[2]-a[2], vx=c[0]-a[0],vy=c[1]-a[1],vz=c[2]-a[2];
+    let nx=uy*vz-uz*vy, ny=uz*vx-ux*vz, nz=ux*vy-uy*vx;
+    const L=Math.hypot(nx,ny,nz)||1; nx/=L;ny/=L;nz/=L;
+    out.push(`facet normal ${nx.toExponential(6)} ${ny.toExponential(6)} ${nz.toExponential(6)}`,
+      'outer loop',`vertex ${v(a)}`,`vertex ${v(b)}`,`vertex ${v(c)}`,'endloop','endfacet');
+  }
+  const O0=pts.map(p=>[p[0],p[1],0]), O1=pts.map(p=>[p[0],p[1],h]);
+  if(br>0){
+    const I=pts.map(p=>{const a=Math.atan2(p[1],p[0]);return [br*Math.cos(a),br*Math.sin(a)];});
+    const I0=I.map(p=>[p[0],p[1],0]), I1=I.map(p=>[p[0],p[1],h]);
+    for(let i=0;i<N;i++){const j=(i+1)%N;
+      tri(O1[i],O1[j],I1[j]); tri(O1[i],I1[j],I1[i]);     // horní mezikruží
+      tri(O0[i],I0[j],O0[j]); tri(O0[i],I0[i],I0[j]);     // dolní mezikruží
+      tri(O0[i],O0[j],O1[j]); tri(O0[i],O1[j],O1[i]);     // vnější stěna
+      tri(I0[i],I1[j],I0[j]); tri(I0[i],I1[i],I1[j]);     // stěna díry
+    }
+  } else {
+    const C0=[0,0,0], C1=[0,0,h];
+    for(let i=0;i<N;i++){const j=(i+1)%N;
+      tri(C1,O1[i],O1[j]); tri(C0,O0[j],O0[i]);           // horní + dolní vějíř
+      tri(O0[i],O0[j],O1[j]); tri(O0[i],O1[j],O1[i]);     // vnější stěna
+    }
+  }
+  return 'solid gear\n'+out.join('\n')+'\nendsolid gear\n';
+}
+
 $('teeth').oninput=()=>{$('teethV').textContent=$('teeth').value;buildGear();};
-['module','pa','bore'].forEach(id=>$(id).oninput=buildGear);
+['module','pa','bore','height'].forEach(id=>$(id).oninput=buildGear);
 $('dlBtn').onclick=()=>{const svg=$('gearWrap').innerHTML;const a=document.createElement('a');
   a.href=URL.createObjectURL(new Blob([svg],{type:'image/svg+xml'}));a.download=`kolo_z${$('teeth').value}_m${$('module').value}.svg`;a.click();};
+$('stlBtn').onclick=()=>{const stl=buildSTL();if(!stl)return;const a=document.createElement('a');
+  a.href=URL.createObjectURL(new Blob([stl],{type:'model/stl'}));a.download=`kolo_z${$('teeth').value}_m${$('module').value}_h${$('height').value}.stl`;a.click();};
 buildGear();
 </script>
 </body>
