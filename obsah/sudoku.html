@@ -12,8 +12,11 @@ h1{font-size:1.6rem;margin-bottom:14px;font-weight:600}
 .btn{background:#6aa6fd;color:#fff;border:none;padding:9px 16px;border-radius:6px;cursor:pointer;font-weight:600}
 .btn:hover{background:#5694f0}.btn-sec{background:#404040}
 select{background:#404040;border:1px solid #555;border-radius:4px;color:#e0e0e0;padding:9px}
-.board{display:grid;grid-template-columns:repeat(9,1fr);background:#555;gap:1px;border:3px solid #6aa6fd;border-radius:4px;width:min(450px,92vw);aspect-ratio:1}
-.cell{background:#2a2a2a;display:flex;align-items:center;justify-content:center;font-size:clamp(1rem,5vw,1.5rem);cursor:pointer;font-weight:600}
+.board{display:grid;grid-template-columns:repeat(9,1fr);grid-template-rows:repeat(9,1fr);background:#555;gap:1px;border:3px solid #6aa6fd;border-radius:4px;width:min(450px,92vw);aspect-ratio:1}
+.cell{background:#2a2a2a;display:flex;align-items:center;justify-content:center;font-size:clamp(1rem,5vw,1.5rem);cursor:pointer;font-weight:600;overflow:hidden}
+.notes{display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);width:100%;height:100%;font-size:clamp(.45rem,1.8vw,.7rem);color:#7a8aa0;font-weight:500;line-height:1}
+.notes span{display:flex;align-items:center;justify-content:center}
+.btn.active{background:#27ae60}
 .cell.given{color:#888;background:#242424}
 .cell.sel{background:#3a4a6a}
 .cell.same{background:#33384a}
@@ -32,6 +35,7 @@ select{background:#404040;border:1px solid #555;border-radius:4px;color:#e0e0e0;
 <div class="top">
   <select id="level"><option value="40">Lehká</option><option value="48" selected>Střední</option><option value="54">Těžká</option></select>
   <button class="btn" id="newBtn">🔄 Nová hra</button>
+  <button class="btn btn-sec" id="notesBtn">✏️ Poznámky</button>
   <button class="btn btn-sec" id="checkBtn">✓ Zkontrolovat</button>
   <div style="color:#888">⏱️ <span id="time">0:00</span></div>
 </div>
@@ -40,7 +44,7 @@ select{background:#404040;border:1px solid #555;border-radius:4px;color:#e0e0e0;
 <div class="msg" id="msg"></div>
 <script>
 const $=id=>document.getElementById(id);
-let solution,puzzle,given,selected=-1,timer,seconds;
+let solution,puzzle,given,notes,selected=-1,timer,seconds,notesMode=false;
 function genSolved(){
   const g=Array.from({length:9},()=>Array(9).fill(0));
   function valid(r,c,n){for(let i=0;i<9;i++)if(g[r][i]===n||g[i][c]===n)return false;
@@ -56,6 +60,7 @@ function newGame(){
   const remove=+$('level').value;const cells=[...Array(81).keys()].sort(()=>Math.random()-0.5);
   for(let i=0;i<remove;i++){const idx=cells[i];puzzle[Math.floor(idx/9)][idx%9]=0;}
   given=puzzle.map(r=>r.map(v=>v!==0));
+  notes=Array.from({length:81},()=>new Set());
   selected=-1;seconds=0;clearInterval(timer);timer=setInterval(()=>{seconds++;$('time').textContent=Math.floor(seconds/60)+':'+String(seconds%60).padStart(2,'0');},1000);
   $('msg').textContent='';render();
 }
@@ -63,7 +68,8 @@ function render(){
   const b=$('board');b.innerHTML='';
   for(let i=0;i<81;i++){const r=Math.floor(i/9),c=i%9;const v=puzzle[r][c];
     const d=document.createElement('div');d.className='cell'+(given[r][c]?' given':'');d.dataset.i=i;
-    d.textContent=v||'';
+    if(v)d.textContent=v;
+    else if(notes[i].size){d.innerHTML='<div class="notes">'+[1,2,3,4,5,6,7,8,9].map(n=>'<span>'+(notes[i].has(n)?n:'')+'</span>').join('')+'</div>';}
     if(i===selected)d.classList.add('sel');
     if(selected>=0){const sv=puzzle[Math.floor(selected/9)][selected%9];if(sv&&v===sv&&i!==selected)d.classList.add('same');}
     d.onclick=()=>{selected=i;render();};
@@ -73,7 +79,16 @@ function render(){
 function place(n){
   if(selected<0)return;const r=Math.floor(selected/9),c=selected%9;
   if(given[r][c])return;
-  puzzle[r][c]=n;render();
+  if(n===0){puzzle[r][c]=0;notes[selected].clear();render();return;}
+  if(notesMode){
+    if(puzzle[r][c])return;
+    notes[selected].has(n)?notes[selected].delete(n):notes[selected].add(n);
+    render();return;
+  }
+  puzzle[r][c]=n;notes[selected].clear();
+  for(let k=0;k<81;k++){const kr=Math.floor(k/9),kc=k%9;
+    if(kr===r||kc===c||(Math.floor(kr/3)===Math.floor(r/3)&&Math.floor(kc/3)===Math.floor(c/3)))notes[k].delete(n);}
+  render();
   if(puzzle.flat().every(v=>v!==0))checkWin();
 }
 function checkWin(){
@@ -88,7 +103,10 @@ $('checkBtn').onclick=()=>{
 };
 $('pad').innerHTML=[1,2,3,4,5,6,7,8,9].map(n=>`<div class="key" data-n="${n}">${n}</div>`).join('')+'<div class="key" data-n="0">⌫</div>';
 $('pad').querySelectorAll('.key').forEach(k=>k.onclick=()=>place(+k.dataset.n));
+function toggleNotes(){notesMode=!notesMode;$('notesBtn').classList.toggle('active',notesMode);}
+$('notesBtn').onclick=toggleNotes;
 document.addEventListener('keydown',e=>{if(e.key>='1'&&e.key<='9')place(+e.key);else if(e.key==='Backspace'||e.key==='Delete'||e.key==='0')place(0);
+  else if(e.key==='n'||e.key==='N')toggleNotes();
   else if(e.key.startsWith('Arrow')&&selected>=0){let r=Math.floor(selected/9),c=selected%9;
     if(e.key==='ArrowUp')r=(r+8)%9;if(e.key==='ArrowDown')r=(r+1)%9;if(e.key==='ArrowLeft')c=(c+8)%9;if(e.key==='ArrowRight')c=(c+1)%9;selected=r*9+c;render();}});
 $('newBtn').onclick=newGame;$('level').onchange=newGame;
