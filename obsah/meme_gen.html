@@ -113,9 +113,10 @@ canvas#editCanvas{max-width:100%;touch-action:none;cursor:crosshair;border-radiu
           <button class="btn btn-sec" id="backOne" title="O krok dozadu">↓</button>
           <button class="btn btn-sec" id="fwdOne" title="O krok dopředu">↑</button>
           <button class="btn btn-sec" id="toFront" title="Úplně dopředu">⤒</button>
+          <button class="btn btn-sec" id="dupSel" title="Duplikovat (Ctrl+D)" style="flex:0 0 46px">⧉</button>
           <button class="btn btn-sec" id="delSel" title="Smazat vybraný (Delete)" style="flex:0 0 46px">🗑️</button>
         </div>
-        <div class="hint">Tip: tvary kreslíš tažením. Nástrojem ↖ objekt vybereš, táhnutím posuneš a kroužkem nad ním otočíš. Guma maže tah pod kurzorem.</div>
+        <div class="hint">Tip: tvary kreslíš tažením. Nástrojem ↖ objekt vybereš, táhnutím posuneš, kroužkem nad ním otočíš a rohy změníš velikost. Guma maže tah pod kurzorem.</div>
       </div>
 
       <button class="btn btn-lg" id="dlBtn">💾 Stáhnout meme</button>
@@ -239,6 +240,9 @@ function drawSelection(){
   ctx.strokeStyle='#6aa6fd';ctx.lineWidth=1.5;ctx.setLineDash([5,4]);
   ctx.strokeRect(-b.w/2-SEL_PAD,-b.h/2-SEL_PAD,b.w+SEL_PAD*2,b.h+SEL_PAD*2);
   ctx.setLineDash([]);
+  const hw=b.w/2+SEL_PAD,hh=b.h/2+SEL_PAD;
+  ctx.fillStyle='#fff';ctx.lineWidth=1.5;
+  [[-hw,-hh],[hw,-hh],[hw,hh],[-hw,hh]].forEach(([x,y])=>{ctx.fillRect(x-4,y-4,8,8);ctx.strokeRect(x-4,y-4,8,8);});
   ctx.beginPath();ctx.moveTo(0,-b.h/2-SEL_PAD);ctx.lineTo(0,-b.h/2-SEL_PAD-HANDLE_GAP);ctx.stroke();
   ctx.beginPath();ctx.arc(0,-b.h/2-SEL_PAD-HANDLE_GAP,6,0,7);ctx.fillStyle='#6aa6fd';ctx.fill();
   ctx.restore();
@@ -375,10 +379,19 @@ function finish(){
 canvas.addEventListener('pointerup',finish);
 canvas.addEventListener('pointercancel',finish);
 
-/* ---- selection: move / rotate ---- */
+/* ---- selection: move / rotate / resize ---- */
 function translateShape(s,dx,dy){
   if(s.type==='pen')s.points.forEach(q=>{q.x+=dx;q.y+=dy;});
   else{s.a.x+=dx;s.a.y+=dy;s.b.x+=dx;s.b.y+=dy;}
+}
+function snapshot(s){return s.type==='pen'?{points:s.points.map(q=>({...q}))}:{a:{...s.a},b:{...s.b}};}
+function cornerPts(s){
+  const b=bbox(s),hw=b.w/2+SEL_PAD,hh=b.h/2+SEL_PAD,a=s.rot||0,c=Math.cos(a),si=Math.sin(a);
+  return [[-hw,-hh],[hw,-hh],[hw,hh],[-hw,hh]].map(([lx,ly])=>({x:b.cx+lx*c-ly*si,y:b.cy+lx*si+ly*c}));
+}
+function applyScale(s,snap,cx,cy,sx,sy){
+  if(s.type==='pen')s.points=snap.points.map(q=>({x:cx+(q.x-cx)*sx,y:cy+(q.y-cy)*sy}));
+  else{s.a={x:cx+(snap.a.x-cx)*sx,y:cy+(snap.a.y-cy)*sy};s.b={x:cx+(snap.b.x-cx)*sx,y:cy+(snap.b.y-cy)*sy};}
 }
 function selectDown(p){
   if(selected&&shapes.indexOf(selected)>=0){
@@ -386,6 +399,11 @@ function selectDown(p){
     if(Math.hypot(hp.x-p.x,hp.y-p.y)<12){
       const b=bbox(selected);
       selAction={mode:'rotate',cx:b.cx,cy:b.cy,startAng:Math.atan2(p.y-b.cy,p.x-b.cx),startRot:selected.rot||0};
+      return;
+    }
+    if(cornerPts(selected).some(c=>Math.hypot(c.x-p.x,c.y-p.y)<12)){
+      const b=bbox(selected),lp=rotPt(p,b.cx,b.cy,-(selected.rot||0));
+      selAction={mode:'resize',cx:b.cx,cy:b.cy,startLp:lp,snap:snapshot(selected)};
       return;
     }
   }
@@ -398,8 +416,21 @@ function selectDown(p){
 function selectMove(p){
   if(!selAction)return;
   if(selAction.mode==='move'){translateShape(selected,p.x-selAction.last.x,p.y-selAction.last.y);selAction.last=p;}
-  else{const ang=Math.atan2(p.y-selAction.cy,p.x-selAction.cx);selected.rot=selAction.startRot+(ang-selAction.startAng);}
+  else if(selAction.mode==='rotate'){const ang=Math.atan2(p.y-selAction.cy,p.x-selAction.cx);selected.rot=selAction.startRot+(ang-selAction.startAng);}
+  else{
+    const lp=rotPt(p,selAction.cx,selAction.cy,-(selected.rot||0));
+    const dx0=selAction.startLp.x-selAction.cx,dy0=selAction.startLp.y-selAction.cy;
+    const sx=Math.abs(dx0)>2?Math.max(.05,(lp.x-selAction.cx)/dx0):1;
+    const sy=Math.abs(dy0)>2?Math.max(.05,(lp.y-selAction.cy)/dy0):1;
+    applyScale(selected,selAction.snap,selAction.cx,selAction.cy,sx,sy);
+  }
   draw();
+}
+function duplicateSelected(){
+  if(!selected)return;
+  const copy=JSON.parse(JSON.stringify(selected));
+  translateShape(copy,14,14);
+  shapes.push(copy);selected=copy;redoStack=[];draw();
 }
 /* reorder & delete selected */
 function reorder(dir){
@@ -413,6 +444,7 @@ $('toFront').onclick=()=>reorder('front');
 $('toBack').onclick=()=>reorder('back');
 $('fwdOne').onclick=()=>reorder('fwd');
 $('backOne').onclick=()=>reorder('back-one');
+$('dupSel').onclick=duplicateSelected;
 $('delSel').onclick=deleteSelected;
 
 function eraseAt(p){for(let i=shapes.length-1;i>=0;i--)if(shapeHit(shapes[i],p)){shapes.splice(i,1);redoStack=[];draw();return;}}
@@ -443,6 +475,7 @@ document.addEventListener('keydown',e=>{
   if($('editor').classList.contains('show')){if(e.key==='Escape')closeEditor();return;}
   if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'){e.preventDefault();e.shiftKey?$('redoBtn').click():$('undoBtn').click();}
   else if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='y'){e.preventDefault();$('redoBtn').click();}
+  else if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='d'&&selected&&tool==='select'){e.preventDefault();duplicateSelected();}
   else if((e.key==='Delete'||e.key==='Backspace')&&selected&&tool==='select'&&!/^(INPUT|TEXTAREA)$/.test(document.activeElement.tagName)){e.preventDefault();deleteSelected();}
 });
 
