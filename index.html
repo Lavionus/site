@@ -62,6 +62,43 @@
       scrollbar-color: #404040 #242424;
     }
 
+    /* Filtrovací pilulky nadřazených témat */
+    .skupiny {
+      position: sticky;
+      top: 0;
+      z-index: 5;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      padding: 10px;
+      background-color: #242424;
+      border-bottom: 1px solid #404040;
+    }
+
+    .skupina-pill {
+      background-color: #2d2d2d;
+      border: 1px solid #404040;
+      color: #b0b0b0;
+      border-radius: 14px;
+      padding: 4px 10px;
+      font-size: 0.78rem;
+      cursor: pointer;
+      transition: all 0.15s ease;
+      white-space: nowrap;
+    }
+
+    .skupina-pill:hover {
+      background-color: #333;
+      color: #fff;
+    }
+
+    .skupina-pill.active {
+      background-color: #6aa6fd;
+      border-color: #6aa6fd;
+      color: #fff;
+      font-weight: 600;
+    }
+
     .sekce {
       padding: 10px 0;
       border-bottom: 1px solid #333;
@@ -536,8 +573,45 @@
 
     /* ---- Sbalitelné kategorie + hledání ---- */
     const COLLAPSE_KEY = 'webapp_collapsed_sections';
+    const SKUPINA_KEY = 'webapp_skupina';
     const sekce = document.querySelectorAll('.menu .sekce');
     let collapsedSet = new Set(JSON.parse(localStorage.getItem(COLLAPSE_KEY) || '[]'));
+    let aktivniSkupina = localStorage.getItem(SKUPINA_KEY) || 'vse';
+
+    // nadřazená témata (pořadí pilulek) + přiřazení sekcí (klíč = název bez emoji)
+    const SKUPINY = [
+      { id: 'produktivita', label: '🗂️ Produktivita' },
+      { id: 'zdravi',       label: '🩺 Zdraví' },
+      { id: 'priroda',      label: '🌿 Příroda & venku' },
+      { id: 'tvorba',       label: '🎨 Tvorba & média' },
+      { id: 'technika',     label: '📐 Technika' },
+      { id: 'vyvoj',        label: '💻 Vývoj & data' },
+      { id: 'vzdelavani',   label: '🎓 Vzdělávání' },
+      { id: 'hry',          label: '🎮 Hry' },
+      { id: 'ostatni',      label: '✉️ Ostatní' },
+    ];
+    const SEKCE_SKUPINA = {
+      'Psaní & text': 'produktivita',
+      'Organizace & čas': 'produktivita',
+      'Finance & domácnost': 'produktivita',
+      'Drobné nástroje': 'produktivita',
+      'Zdraví & kondice': 'zdravi',
+      'Zemědělství': 'priroda',
+      'Počasí': 'priroda',
+      'Mapy & cesty': 'priroda',
+      'Navigace & čas': 'priroda',
+      'Grafika & generátory': 'tvorba',
+      'Obrázky & foto': 'tvorba',
+      'Audio & video': 'tvorba',
+      'Strojní & 3D': 'technika',
+      'Výpočty & převody': 'technika',
+      'Vývoj & nástroje': 'vyvoj',
+      'Data & převodníky': 'vyvoj',
+      'Vzdělávání': 'vzdelavani',
+      'Akční & arkády': 'hry',
+      'Hlavolamy & logické': 'hry',
+      'Ostatní': 'ostatni',
+    };
 
     function saveCollapsed() {
       localStorage.setItem(COLLAPSE_KEY, JSON.stringify([...collapsedSet]));
@@ -555,6 +629,8 @@
       const h2 = s.querySelector('h2');
       const nazev = h2.textContent.trim();
       s.dataset.nazev = nazev;                          // stabilní klíč
+      const klic = nazev.replace(/^[^\p{L}]+/u, '').trim();   // název bez úvodního emoji
+      s.dataset.skupina = SEKCE_SKUPINA[klic] || 'ostatni';
       const pocet = s.querySelectorAll('a[data-page]').length;
 
       // šipka + počet položek do hlavičky sekce
@@ -577,6 +653,40 @@
       });
     });
 
+    /* ---- Filtrovací pilulky nadřazených témat ---- */
+    const skupinyEl = document.createElement('div');
+    skupinyEl.className = 'skupiny';
+    const menuEl = document.querySelector('.menu');
+    menuEl.insertBefore(skupinyEl, menuEl.firstChild);
+
+    const pills = [];
+    function updatePillState() {
+      pills.forEach(p => p.classList.toggle('active', p.dataset.skupina === aktivniSkupina));
+    }
+    function makePill(id, label) {
+      const b = document.createElement('button');
+      b.className = 'skupina-pill';
+      b.dataset.skupina = id;
+      b.textContent = label;
+      b.addEventListener('click', () => {
+        aktivniSkupina = id;
+        localStorage.setItem(SKUPINA_KEY, id);
+        if (hledat) hledat.value = '';     // přepnutí tématu vyčistí hledání
+        updatePillState();
+        aplikujFiltr();
+      });
+      skupinyEl.appendChild(b);
+      pills.push(b);
+    }
+
+    makePill('vse', '⭐ Vše');
+    SKUPINY.forEach(g => {
+      if ([...sekce].some(s => s.dataset.skupina === g.id)) makePill(g.id, g.label);
+    });
+    // kdyby uložené téma už neexistovalo
+    if (!pills.some(p => p.dataset.skupina === aktivniSkupina)) aktivniSkupina = 'vse';
+    updatePillState();
+
     const btnRozbalit = document.getElementById('rozbalitVse');
     const btnSbalit = document.getElementById('sbalitVse');
 
@@ -595,37 +705,53 @@
       const active = document.querySelector('.menu a.active');
       if (active) {
         const s = active.closest('.sekce');
-        if (s) { setCollapsed(s, false); saveCollapsed(); }
+        if (s) {
+          setCollapsed(s, false); saveCollapsed();
+          // ať je sekce s aktivní stránkou vidět i přes filtr
+          if (aktivniSkupina !== 'vse' && s.dataset.skupina !== aktivniSkupina) {
+            aktivniSkupina = s.dataset.skupina;
+            localStorage.setItem(SKUPINA_KEY, aktivniSkupina);
+            updatePillState();
+          }
+        }
       }
+      aplikujFiltr();
     }
     window.addEventListener('load', expandActiveSection);
 
-    /* ---- Hledání napříč všemi nástroji ---- */
+    /* ---- Hledání + filtr skupin ---- */
     const hledat = document.getElementById('hledat');
-    if (hledat) hledat.addEventListener('input', () => {
-      const q = hledat.value.trim().toLowerCase();
-      if (!q) {
-        // obnovit původní stav
+
+    function aplikujFiltr() {
+      const q = hledat ? hledat.value.trim().toLowerCase() : '';
+      if (q) {
+        // režim hledání – napříč všemi tématy, ignoruje pilulky
         sekce.forEach(s => {
-          s.classList.remove('skryto');
-          s.classList.toggle('collapsed', collapsedSet.has(s.dataset.nazev));
-          s.querySelectorAll('a[data-page]').forEach(a => a.classList.remove('skryto', 'zvyrazneno'));
+          let shoda = 0;
+          s.querySelectorAll('a[data-page]').forEach(a => {
+            const match = a.textContent.toLowerCase().includes(q);
+            a.classList.toggle('skryto', !match);
+            a.classList.toggle('zvyrazneno', match);
+            if (match) shoda++;
+          });
+          s.classList.toggle('skryto', shoda === 0);
+          if (shoda > 0) s.classList.remove('collapsed');
         });
         return;
       }
+      // režim skupin – zobrazí jen sekce vybraného tématu
       sekce.forEach(s => {
-        let shoda = 0;
-        s.querySelectorAll('a[data-page]').forEach(a => {
-          const match = a.textContent.toLowerCase().includes(q);
-          a.classList.toggle('skryto', !match);
-          a.classList.toggle('zvyrazneno', match);
-          if (match) shoda++;
-        });
-        // při hledání rozbalíme sekce se shodou a skryjeme prázdné (bez ukládání)
-        s.classList.toggle('skryto', shoda === 0);
-        if (shoda > 0) s.classList.remove('collapsed');
+        const patri = (aktivniSkupina === 'vse' || s.dataset.skupina === aktivniSkupina);
+        s.classList.toggle('skryto', !patri);
+        s.classList.toggle('collapsed', collapsedSet.has(s.dataset.nazev));
+        s.querySelectorAll('a[data-page]').forEach(a => a.classList.remove('skryto', 'zvyrazneno'));
       });
-    });
+    }
+
+    if (hledat) hledat.addEventListener('input', aplikujFiltr);
+
+    // počáteční vykreslení podle uloženého tématu
+    aplikujFiltr();
   </script>
 </body>
 </html>
