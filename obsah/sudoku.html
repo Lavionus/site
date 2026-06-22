@@ -28,6 +28,16 @@ select{background:#404040;border:1px solid #555;border-radius:4px;color:#e0e0e0;
 .key{background:#2a2a2a;border:1px solid #404040;border-radius:6px;padding:14px 0;text-align:center;cursor:pointer;font-size:1.2rem;font-weight:600}
 .key:hover{background:#333}
 .msg{margin-top:14px;font-size:1.2rem;font-weight:700;min-height:30px;color:#27ae60}
+.cell.conflict{background:#5a2a2a;color:#e74c3c}
+.snaps{margin-top:18px;width:min(450px,92vw)}
+.snaps h2{font-size:1rem;margin-bottom:8px;color:#bbb;font-weight:600}
+.snap{display:flex;align-items:center;gap:8px;background:#242424;border:1px solid #383838;border-radius:6px;padding:8px 10px;margin-bottom:6px}
+.snap .info{flex:1;font-size:.85rem;color:#ccc}
+.snap .info small{display:block;color:#777;font-size:.72rem}
+.snap button{background:#404040;color:#e0e0e0;border:none;padding:6px 10px;border-radius:5px;cursor:pointer;font-size:.8rem;font-weight:600}
+.snap button:hover{background:#4d4d4d}
+.snap .del:hover{background:#7a3030}
+.snaps .empty{color:#666;font-size:.85rem}
 </style>
 </head>
 <body>
@@ -37,11 +47,16 @@ select{background:#404040;border:1px solid #555;border-radius:4px;color:#e0e0e0;
   <button class="btn" id="newBtn">🔄 Nová hra</button>
   <button class="btn btn-sec" id="notesBtn">✏️ Poznámky</button>
   <button class="btn btn-sec" id="checkBtn">✓ Zkontrolovat</button>
+  <button class="btn btn-sec" id="snapBtn">📸 Uložit snímek</button>
   <div style="color:#888">⏱️ <span id="time">0:00</span></div>
 </div>
 <div class="board" id="board"></div>
 <div class="pad" id="pad"></div>
 <div class="msg" id="msg"></div>
+<div class="snaps">
+  <h2>📸 Snímky</h2>
+  <div id="snapList"></div>
+</div>
 <script>
 const $=id=>document.getElementById(id);
 let solution,puzzle,given,notes,selected=-1,timer,seconds,notesMode=false;
@@ -61,9 +76,11 @@ function newGame(){
   for(let i=0;i<remove;i++){const idx=cells[i];puzzle[Math.floor(idx/9)][idx%9]=0;}
   given=puzzle.map(r=>r.map(v=>v!==0));
   notes=Array.from({length:81},()=>new Set());
-  selected=-1;seconds=0;clearInterval(timer);timer=setInterval(()=>{seconds++;$('time').textContent=Math.floor(seconds/60)+':'+String(seconds%60).padStart(2,'0');},1000);
+  selected=-1;seconds=0;startTimer();
   $('msg').textContent='';render();
 }
+function startTimer(){clearInterval(timer);$('time').textContent=Math.floor(seconds/60)+':'+String(seconds%60).padStart(2,'0');
+  timer=setInterval(()=>{seconds++;$('time').textContent=Math.floor(seconds/60)+':'+String(seconds%60).padStart(2,'0');},1000);}
 function render(){
   const b=$('board');b.innerHTML='';
   for(let i=0;i<81;i++){const r=Math.floor(i/9),c=i%9;const v=puzzle[r][c];
@@ -91,15 +108,30 @@ function place(n){
   render();
   if(puzzle.flat().every(v=>v!==0))checkWin();
 }
+// Vrátí množinu indexů buněk, které jsou v rozporu s pravidly (duplicita v řádku/sloupci/bloku).
+// Validuje podle pravidel sudoku, ne proti jednomu vygenerovanému řešení – proto se uzná
+// i jiné platné řešení, pokud má hádanka řešení více.
+function findConflicts(){
+  const bad=new Set();const units=[];
+  for(let r=0;r<9;r++)units.push([...Array(9)].map((_,c)=>r*9+c));
+  for(let c=0;c<9;c++)units.push([...Array(9)].map((_,r)=>r*9+c));
+  for(let br=0;br<3;br++)for(let bc=0;bc<3;bc++){const u=[];
+    for(let i=0;i<3;i++)for(let j=0;j<3;j++)u.push((br*3+i)*9+(bc*3+j));units.push(u);}
+  for(const u of units){const map={};
+    for(const idx of u){const v=puzzle[Math.floor(idx/9)][idx%9];if(v)(map[v]=map[v]||[]).push(idx);}
+    for(const v in map)if(map[v].length>1)map[v].forEach(i=>bad.add(i));}
+  return bad;
+}
 function checkWin(){
-  for(let r=0;r<9;r++)for(let c=0;c<9;c++)if(puzzle[r][c]!==solution[r][c])return;
+  if(findConflicts().size)return; // plné, ale s rozporem – ještě není vyřešeno
   clearInterval(timer);$('msg').textContent='🎉 Vyřešeno za '+Math.floor(seconds/60)+':'+String(seconds%60).padStart(2,'0')+'!';
 }
 $('checkBtn').onclick=()=>{
-  let ok=true;document.querySelectorAll('.cell').forEach(d=>{const i=+d.dataset.i,r=Math.floor(i/9),c=i%9;
-    if(puzzle[r][c]&&puzzle[r][c]!==solution[r][c]){d.classList.add('err');ok=false;}});
-  $('msg').textContent=ok?'✅ Zatím bez chyb!':'❌ Některá čísla jsou špatně';
-  setTimeout(()=>document.querySelectorAll('.err').forEach(d=>d.classList.remove('err')),1500);
+  const bad=findConflicts();
+  bad.forEach(i=>document.querySelector('.cell[data-i="'+i+'"]').classList.add('conflict'));
+  const full=puzzle.flat().every(v=>v!==0);
+  $('msg').textContent=bad.size?'❌ Některá čísla jsou v rozporu':(full?'🎉 Správně vyřešeno!':'✅ Zatím bez chyb!');
+  setTimeout(()=>document.querySelectorAll('.conflict').forEach(d=>d.classList.remove('conflict')),1500);
 };
 $('pad').innerHTML=[1,2,3,4,5,6,7,8,9].map(n=>`<div class="key" data-n="${n}">${n}</div>`).join('')+'<div class="key" data-n="0">⌫</div>';
 $('pad').querySelectorAll('.key').forEach(k=>k.onclick=()=>place(+k.dataset.n));
@@ -109,6 +141,51 @@ document.addEventListener('keydown',e=>{if(e.key>='1'&&e.key<='9')place(+e.key);
   else if(e.key==='n'||e.key==='N')toggleNotes();
   else if(e.key.startsWith('Arrow')&&selected>=0){let r=Math.floor(selected/9),c=selected%9;
     if(e.key==='ArrowUp')r=(r+8)%9;if(e.key==='ArrowDown')r=(r+1)%9;if(e.key==='ArrowLeft')c=(c+8)%9;if(e.key==='ArrowRight')c=(c+1)%9;selected=r*9+c;render();}});
+// ---- Snímky (snapshots) ----
+let snapshots=[];
+try{snapshots=JSON.parse(localStorage.getItem('sudokuSnaps')||'[]');}catch(e){snapshots=[];}
+function persistSnaps(){try{localStorage.setItem('sudokuSnaps',JSON.stringify(snapshots));}catch(e){}}
+function saveSnapshot(){
+  const d=new Date();
+  const filled=puzzle.flat().filter(v=>v!==0).length;
+  snapshots.unshift({
+    name:d.toLocaleDateString('cs-CZ')+' '+d.toLocaleTimeString('cs-CZ'),
+    seconds,filled,
+    puzzle:puzzle.map(r=>[...r]),
+    given:given.map(r=>[...r]),
+    solution:solution.map(r=>[...r]),
+    notes:notes.map(s=>[...s])
+  });
+  persistSnaps();renderSnaps();
+  $('msg').textContent='📸 Snímek uložen';setTimeout(()=>{if($('msg').textContent==='📸 Snímek uložen')$('msg').textContent='';},1500);
+}
+function restoreSnapshot(idx){
+  const s=snapshots[idx];if(!s)return;
+  puzzle=s.puzzle.map(r=>[...r]);
+  given=s.given.map(r=>[...r]);
+  solution=s.solution.map(r=>[...r]);
+  notes=s.notes.map(a=>new Set(a));
+  seconds=s.seconds;selected=-1;startTimer();
+  $('msg').textContent='';render();
+}
+function deleteSnapshot(idx){snapshots.splice(idx,1);persistSnaps();renderSnaps();}
+function renderSnaps(){
+  const list=$('snapList');
+  if(!snapshots.length){list.innerHTML='<div class="empty">Žádné uložené snímky.</div>';return;}
+  list.innerHTML='';
+  snapshots.forEach((s,idx)=>{
+    const row=document.createElement('div');row.className='snap';
+    const t=Math.floor(s.seconds/60)+':'+String(s.seconds%60).padStart(2,'0');
+    row.innerHTML='<div class="info">'+s.name+'<small>vyplněno '+s.filled+'/81 · ⏱️ '+t+'</small></div>'+
+      '<button class="load">Načíst</button><button class="del">Smazat</button>';
+    row.querySelector('.load').onclick=()=>restoreSnapshot(idx);
+    row.querySelector('.del').onclick=()=>deleteSnapshot(idx);
+    list.appendChild(row);
+  });
+}
+$('snapBtn').onclick=saveSnapshot;
+renderSnaps();
+
 $('newBtn').onclick=newGame;$('level').onchange=newGame;
 newGame();
 </script>

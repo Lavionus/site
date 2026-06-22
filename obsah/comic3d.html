@@ -1,0 +1,429 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Komiksový 3D prostor</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: #1a1a1a;
+      color: #e0e0e0;
+      height: 100vh;
+      display: flex;
+      overflow: hidden;
+    }
+
+    /* ── Boční panel s ovládáním ──────────────────────── */
+    #sidebar {
+      width: 280px;
+      min-width: 280px;
+      background-color: #222;
+      border-right: 1px solid #404040;
+      padding: 12px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    #sidebar h1 {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #6aa6fd;
+      letter-spacing: 0.5px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #404040;
+      flex-shrink: 0;
+    }
+
+    #sidebar .hint {
+      font-size: 0.72rem;
+      color: #888;
+      line-height: 1.4;
+    }
+
+    .section {
+      background-color: #2a2a2a;
+      border: 1px solid #404040;
+      border-radius: 6px;
+      padding: 8px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .section h2 {
+      font-size: 0.72rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: #6aa6fd;
+      font-weight: 700;
+    }
+
+    .row {
+      display: flex;
+      flex-direction: column;
+      gap: 3px;
+    }
+
+    .row label {
+      font-size: 0.78rem;
+      color: #c0c0c0;
+      display: flex;
+      justify-content: space-between;
+    }
+
+    .row label .val { color: #6aa6fd; font-variant-numeric: tabular-nums; }
+
+    input[type="range"] { width: 100%; accent-color: #6aa6fd; }
+
+    .toggle {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 0.82rem;
+      color: #c0c0c0;
+      cursor: pointer;
+    }
+    .toggle input { accent-color: #6aa6fd; width: 16px; height: 16px; }
+
+    button {
+      background-color: #383838;
+      border: 1px solid #4a4a4a;
+      color: #c0c0c0;
+      border-radius: 6px;
+      padding: 7px 10px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    button:hover { background-color: #6aa6fd; color: #fff; border-color: #6aa6fd; }
+
+    .swatches { display: flex; gap: 6px; flex-wrap: wrap; }
+    .swatch {
+      width: 26px; height: 26px; border-radius: 50%;
+      border: 2px solid #555; cursor: pointer; transition: transform .1s;
+    }
+    .swatch:hover { transform: scale(1.15); }
+    .swatch.active { border-color: #fff; }
+
+    /* ── Scéna ────────────────────────────────────────── */
+    #stage {
+      position: relative;
+      flex: 1;
+      overflow: hidden;
+      background: #cfe3ff;
+    }
+    #scene { display: block; width: 100%; height: 100%; }
+
+    /* Komiksový rámeček kolem celé scény */
+    #stage::before {
+      content: "";
+      position: absolute;
+      inset: 14px;
+      border: 5px solid #111;
+      border-radius: 4px;
+      box-shadow: 0 0 0 3px #fff inset;
+      pointer-events: none;
+      z-index: 3;
+    }
+
+    /* Halftone / rastrová tečkovaná vrstva přes scénu */
+    #halftone {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      mix-blend-mode: multiply;
+      opacity: 0.35;
+      z-index: 2;
+      background-image: radial-gradient(rgba(0,0,0,.85) 1px, transparent 1.4px);
+      background-size: 5px 5px;
+      transition: opacity .2s;
+    }
+
+    /* Komiksový "POW!" popisek */
+    #label {
+      position: absolute;
+      top: 26px; left: 50%;
+      transform: translateX(-50%) rotate(-3deg);
+      z-index: 3;
+      font-weight: 900;
+      font-size: 1.3rem;
+      letter-spacing: 1px;
+      color: #ffd23f;
+      text-shadow: 2px 2px 0 #111, -2px 2px 0 #111, 2px -2px 0 #111, -2px -2px 0 #111;
+      pointer-events: none;
+      font-family: 'Comic Sans MS', 'Segoe UI', sans-serif;
+    }
+  </style>
+</head>
+<body>
+  <aside id="sidebar">
+    <h1>💥 Komiksový 3D prostor</h1>
+    <p class="hint">Pokusná stránka: jak vytvořit 3D scénu vykreslenou v komiksovém / kreslené stylu.
+      Kombinujeme <b>toon shading</b> (stupňovité stínování), <b>inkoustové obrysy</b> a
+      <b>halftone</b> rastr. Táhni myší = rotace, kolečko = zoom.</p>
+
+    <div class="section">
+      <h2>Styl vykreslení</h2>
+      <label class="toggle">Toon stínování (cel-shading)
+        <input type="checkbox" id="cToon" checked></label>
+      <div class="row">
+        <label>Počet stupňů stínu <span class="val" id="vSteps">3</span></label>
+        <input type="range" id="cSteps" min="2" max="6" value="3" step="1">
+      </div>
+      <label class="toggle">Inkoustové obrysy
+        <input type="checkbox" id="cOutline" checked></label>
+      <div class="row">
+        <label>Tloušťka obrysu <span class="val" id="vThick">4</span></label>
+        <input type="range" id="cThick" min="0" max="12" value="4" step="1">
+      </div>
+    </div>
+
+    <div class="section">
+      <h2>Komiksové efekty</h2>
+      <label class="toggle">Halftone rastr
+        <input type="checkbox" id="cHalf" checked></label>
+      <div class="row">
+        <label>Hustota rastru <span class="val" id="vDot">5</span> px</label>
+        <input type="range" id="cDot" min="3" max="12" value="5" step="1">
+      </div>
+      <label class="toggle">Komiksový rámeček + popisek
+        <input type="checkbox" id="cFrame" checked></label>
+    </div>
+
+    <div class="section">
+      <h2>Scéna</h2>
+      <label class="toggle">Otáčet scénou
+        <input type="checkbox" id="cSpin" checked></label>
+      <div class="row">
+        <label>Barva pozadí (obloha)</label>
+        <div class="swatches" id="bgSwatches"></div>
+      </div>
+      <button id="btnShuffle">🎲 Náhodně rozmístit objekty</button>
+    </div>
+
+    <p class="hint">Tip: pro „čistě kreslený" vzhled vypni toon a nech jen obrysy.
+      Pro retro tisk zvýši halftone a sniž stupně stínu na 2.</p>
+  </aside>
+
+  <div id="stage">
+    <canvas id="scene"></canvas>
+    <div id="halftone"></div>
+    <div id="label">KABOOM!</div>
+  </div>
+
+  <!-- three.js jako ES modul + OrbitControls (importmap) -->
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
+
+  <script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+    const stage   = document.getElementById('stage');
+    const canvas  = document.getElementById('scene');
+
+    /* ── Renderer / scéna / kamera ─────────────────────── */
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color('#cfe3ff');
+
+    const camera = new THREE.PerspectiveCamera(45, 1, 0.1, 100);
+    camera.position.set(4, 3, 7);
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.minDistance = 3;
+    controls.maxDistance = 20;
+
+    /* ── Světla (tvrdé, aby toon stínování bylo výrazné) ── */
+    const key = new THREE.DirectionalLight(0xffffff, 2.4);
+    key.position.set(5, 8, 5);
+    scene.add(key);
+    scene.add(new THREE.AmbientLight(0xffffff, 0.55));
+
+    /* ── Toon gradientní mapa: stupňovité stínování ─────── */
+    // MeshToonMaterial používá 1px vysokou texturu jako „schody" světla.
+    function makeGradientMap(steps) {
+      const data = new Uint8Array(steps);
+      for (let i = 0; i < steps; i++) data[i] = Math.round((i / (steps - 1)) * 255);
+      const tex = new THREE.DataTexture(data, steps, 1, THREE.RedFormat);
+      tex.minFilter = tex.magFilter = THREE.NearestFilter; // ostré přechody
+      tex.needsUpdate = true;
+      return tex;
+    }
+
+    /* ── Stav / nastavení ──────────────────────────────── */
+    const state = {
+      toon: true, steps: 3, outline: true, thick: 4,
+      spin: true,
+    };
+
+    const PALETTE = ['#ff4d4d', '#ffd23f', '#4dd2ff', '#7bdc7b', '#c78bff', '#ff9f4d', '#ffffff', '#2d2d2d'];
+
+    // Vytvoří materiál podle aktuálního stylu (toon vs. plochý kreslený).
+    function makeMaterial(color) {
+      if (state.toon) {
+        return new THREE.MeshToonMaterial({ color, gradientMap: makeGradientMap(state.steps) });
+      }
+      // plochý „omalovánkový" vzhled = jen základní barva bez stínu
+      return new THREE.MeshBasicMaterial({ color });
+    }
+
+    /* ── Objekty ve scéně ──────────────────────────────── */
+    const group = new THREE.Group();
+    scene.add(group);
+
+    // Pro každý objekt si pamatujeme barvu, abychom uměli přestavět materiál.
+    const items = [];
+
+    function addShape(geo, color, pos) {
+      const mesh = new THREE.Mesh(geo, makeMaterial(color));
+      mesh.position.copy(pos);
+      mesh.userData.color = color;
+
+      // Obrys technikou „inverted hull": kopie meshe zvětšená podél normál,
+      // vykreslená černě a zevnitř (BackSide) → vznikne inkoustová linka.
+      const outlineMat = new THREE.MeshBasicMaterial({ color: 0x111111, side: THREE.BackSide });
+      const outline = new THREE.Mesh(geo, outlineMat);
+      mesh.add(outline);
+      mesh.userData.outline = outline;
+
+      group.add(mesh);
+      items.push(mesh);
+      return mesh;
+    }
+
+    function buildScene() {
+      group.clear();
+      items.length = 0;
+
+      // „Země" jako placka
+      const ground = addShape(new THREE.CylinderGeometry(4.2, 4.2, 0.4, 32), '#7bdc7b', new THREE.Vector3(0, -1.4, 0));
+      ground.userData.static = true;
+
+      // Pár hrdinských objektů
+      addShape(new THREE.IcosahedronGeometry(1, 0), '#ff4d4d', new THREE.Vector3(-1.6, 0, 0));
+      addShape(new THREE.TorusKnotGeometry(0.6, 0.22, 80, 12), '#ffd23f', new THREE.Vector3(1.6, 0.2, -0.5));
+      addShape(new THREE.ConeGeometry(0.8, 1.6, 6), '#4dd2ff', new THREE.Vector3(0.2, 0.6, 1.8));
+      addShape(new THREE.BoxGeometry(1, 1, 1), '#c78bff', new THREE.Vector3(-1.4, -0.2, 1.9));
+      addShape(new THREE.DodecahedronGeometry(0.7), '#ff9f4d', new THREE.Vector3(1.9, -0.4, 1.4));
+
+      applyOutline();
+    }
+
+    /* ── Aktualizace stylu bez znovupostavení geometrie ── */
+    function rebuildMaterials() {
+      items.forEach(m => {
+        m.material.dispose();
+        m.material = makeMaterial(m.userData.color);
+      });
+    }
+
+    function applyOutline() {
+      items.forEach(m => {
+        const o = m.userData.outline;
+        if (!o) return;
+        o.visible = state.outline && state.thick > 0;
+        // Tloušťka obrysu = mírné zvětšení kopie. Škálujeme dle velikosti objektu.
+        const s = 1 + (state.thick / 100);
+        o.scale.setScalar(s);
+      });
+    }
+
+    buildScene();
+
+    /* ── Ovládací prvky ────────────────────────────────── */
+    const $ = id => document.getElementById(id);
+
+    $('cToon').onchange   = e => { state.toon = e.target.checked; rebuildMaterials(); };
+    $('cSteps').oninput   = e => { state.steps = +e.target.value; $('vSteps').textContent = state.steps; if (state.toon) rebuildMaterials(); };
+    $('cOutline').onchange = e => { state.outline = e.target.checked; applyOutline(); };
+    $('cThick').oninput   = e => { state.thick = +e.target.value; $('vThick').textContent = state.thick; applyOutline(); };
+    $('cSpin').onchange   = e => { state.spin = e.target.checked; };
+
+    // Halftone vrstva (čistě CSS přes scénou)
+    const halftone = document.getElementById('halftone');
+    $('cHalf').onchange = e => halftone.style.display = e.target.checked ? 'block' : 'none';
+    $('cDot').oninput   = e => { const v = +e.target.value; $('vDot').textContent = v; halftone.style.backgroundSize = `${v}px ${v}px`; };
+
+    // Rámeček + popisek
+    const labelEl = document.getElementById('label');
+    $('cFrame').onchange = e => {
+      const on = e.target.checked;
+      stage.style.setProperty('--frame', on ? '1' : '0');
+      labelEl.style.display = on ? 'block' : 'none';
+      // rámeček je ::before – přepneme přes třídu
+      stage.classList.toggle('noframe', !on);
+    };
+
+    // Barvy pozadí (obloha)
+    const SKY = ['#cfe3ff', '#ffe9c7', '#ffd6e7', '#d7ffd9', '#2a2a3a', '#fff'];
+    const bgWrap = document.getElementById('bgSwatches');
+    SKY.forEach((c, i) => {
+      const d = document.createElement('div');
+      d.className = 'swatch' + (i === 0 ? ' active' : '');
+      d.style.background = c;
+      d.onclick = () => {
+        scene.background.set(c);
+        stage.style.background = c;
+        bgWrap.querySelectorAll('.swatch').forEach(s => s.classList.remove('active'));
+        d.classList.add('active');
+      };
+      bgWrap.appendChild(d);
+    });
+
+    $('btnShuffle').onclick = () => {
+      items.forEach(m => {
+        if (m.userData.static) return;
+        m.position.set((Math.random() - 0.5) * 5, Math.random() * 1.5 - 0.4, (Math.random() - 0.5) * 4);
+        m.userData.color = PALETTE[Math.floor(Math.random() * PALETTE.length)];
+        m.material.dispose();
+        m.material = makeMaterial(m.userData.color);
+      });
+    };
+
+    // CSS pro skrytí rámečku
+    const style = document.createElement('style');
+    style.textContent = '#stage.noframe::before{display:none}';
+    document.head.appendChild(style);
+
+    /* ── Smyčka + resize ───────────────────────────────── */
+    function resize() {
+      const w = stage.clientWidth, h = stage.clientHeight;
+      renderer.setSize(w, h, false);
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+    }
+    new ResizeObserver(resize).observe(stage);
+    resize();
+
+    function animate() {
+      requestAnimationFrame(animate);
+      if (state.spin) group.rotation.y += 0.004;
+      // jemné pohupování objektů jako v komiksu
+      const t = performance.now() / 1000;
+      items.forEach((m, i) => {
+        if (m.userData.static) return;
+        m.rotation.x = t * 0.3 + i;
+        m.rotation.z = Math.sin(t + i) * 0.15;
+      });
+      controls.update();
+      renderer.render(scene, camera);
+    }
+    animate();
+  </script>
+</body>
+</html>
