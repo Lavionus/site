@@ -1,0 +1,1306 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🌦️ Počasí Evropy</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" />
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: #1a1a1a;
+            color: #e0e0e0;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+
+        .container {
+            max-width: 100%;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .header {
+            background-color: #2a2a2a;
+            padding: 12px 20px;
+            border-bottom: 1px solid #404040;
+            flex-shrink: 0;
+        }
+
+        .header h1 {
+            font-size: 1.4rem;
+            font-weight: 600;
+            margin: 0 0 15px 0;
+            color: #e0e0e0;
+        }
+
+        .controls-section {
+            display: flex;
+            align-items: flex-end;
+            gap: 15px;
+            flex-wrap: wrap;
+        }
+
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 5px;
+        }
+
+        .control-label {
+            font-size: 0.9rem;
+            color: #888;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+        }
+
+        .search-box {
+            display: flex;
+            gap: 6px;
+        }
+
+        .search-input {
+            background-color: #404040;
+            border: 1px solid #555;
+            border-radius: 4px;
+            padding: 9px 12px;
+            color: #e0e0e0;
+            font-size: 0.9rem;
+            min-width: 220px;
+        }
+
+        .search-input:focus {
+            outline: none;
+            border-color: #6aa6fd;
+        }
+
+        .load-btn {
+            background-color: #6aa6fd;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background-color 0.2s ease;
+            flex-shrink: 0;
+            height: fit-content;
+        }
+
+        .load-btn:hover {
+            background-color: #5694f0;
+        }
+
+        .load-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .status-info {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 12px;
+            background-color: #2d4a2d;
+            border: 1px solid #4caf50;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            height: fit-content;
+        }
+
+        .status-indicator {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background-color: #4caf50;
+        }
+
+        .status-indicator.loading {
+            background-color: #ff9800;
+            animation: pulse 1.5s infinite;
+        }
+
+        .status-indicator.error {
+            background-color: #f44336;
+            animation: none;
+        }
+
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+
+        .main-content {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+
+        .sidebar {
+            width: 320px;
+            background-color: #2a2a2a;
+            border-right: 1px solid #404040;
+            padding: 15px;
+            overflow-y: auto;
+            flex-shrink: 0;
+        }
+
+        .map-container {
+            flex: 1;
+            position: relative;
+            background-color: #1a1a1a;
+        }
+
+        #map {
+            width: 100%;
+            height: 100%;
+        }
+
+        .panel {
+            background-color: #2a2a2a;
+            border: 1px solid #404040;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 16px;
+        }
+
+        .panel h3 {
+            font-size: 1.05rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: #e0e0e0;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .hint {
+            font-size: 0.8rem;
+            color: #888;
+            margin-bottom: 8px;
+        }
+
+        /* Vyhledávací výsledky */
+        .search-results {
+            list-style: none;
+            margin-top: 8px;
+        }
+
+        .search-results li {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 8px;
+            padding: 8px 10px;
+            border-radius: 4px;
+            background-color: #333;
+            margin-bottom: 6px;
+            font-size: 0.88rem;
+        }
+
+        .search-results li .loc-name {
+            flex: 1;
+            cursor: pointer;
+        }
+
+        .search-results li .loc-name small {
+            color: #888;
+            display: block;
+            font-size: 0.78rem;
+        }
+
+        .mini-btn {
+            background-color: #4caf50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            padding: 5px 9px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            flex-shrink: 0;
+        }
+
+        .mini-btn:hover { background-color: #43a047; }
+
+        .mini-btn.del { background-color: #8b4444; }
+        .mini-btn.del:hover { background-color: #a35050; }
+
+        /* Sledovaná místa */
+        .saved-list {
+            list-style: none;
+        }
+
+        .saved-list li {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 10px;
+            border-radius: 4px;
+            background-color: #333;
+            margin-bottom: 6px;
+            cursor: pointer;
+            transition: background-color 0.15s ease;
+        }
+
+        .saved-list li:hover { background-color: #3d3d3d; }
+
+        .saved-list li .saved-icon { font-size: 1.4rem; flex-shrink: 0; }
+
+        .saved-list li .saved-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .saved-list li .saved-info .nm {
+            font-weight: 600;
+            font-size: 0.9rem;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .saved-list li .saved-info .tp {
+            color: #6aa6fd;
+            font-size: 0.82rem;
+        }
+
+        .empty-note {
+            color: #777;
+            font-size: 0.85rem;
+            font-style: italic;
+            padding: 6px 0;
+        }
+
+        .info-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+
+        .info-value {
+            color: #6aa6fd;
+            font-weight: 600;
+        }
+
+        .timestamp {
+            color: #888;
+            font-size: 0.8rem;
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        .loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 1000;
+            background: #2a2a2a;
+            padding: 30px;
+            border-radius: 8px;
+            border: 1px solid #404040;
+            display: none;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #404040;
+            border-top: 4px solid #6aa6fd;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 15px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error {
+            background-color: #4a2c2c;
+            border: 1px solid #8b4444;
+            color: #ff8888;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            font-size: 0.9rem;
+        }
+
+        .sidebar-toggle {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 1000;
+            background: #2a2a2a;
+            border: 1px solid #404040;
+            border-radius: 4px;
+            color: #e0e0e0;
+            padding: 8px 12px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            display: none;
+        }
+
+        .sidebar-toggle:hover { background-color: #404040; }
+
+        /* Značky počasí na mapě */
+        .weather-marker {
+            background: rgba(42, 42, 42, 0.92);
+            border: 1px solid #555;
+            border-radius: 16px;
+            padding: 2px 7px 2px 4px;
+            display: flex;
+            align-items: center;
+            gap: 3px;
+            white-space: nowrap;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+            font-size: 12px;
+            color: #fff;
+            cursor: pointer;
+        }
+
+        .weather-marker.saved {
+            border-color: #4caf50;
+            background: rgba(45, 74, 45, 0.92);
+        }
+
+        .weather-marker .wm-icon { font-size: 15px; }
+        .weather-marker .wm-temp { font-weight: 700; }
+
+        /* Leaflet popup dark theme */
+        .leaflet-popup-content-wrapper {
+            background: #2a2a2a;
+            color: #e0e0e0;
+            border: 1px solid #555;
+        }
+        .leaflet-popup-tip { background: #2a2a2a; border: 1px solid #555; }
+        .leaflet-popup-content { margin: 12px 14px; }
+
+        .popup-title { font-weight: 700; font-size: 1rem; margin-bottom: 6px; }
+        .popup-row { font-size: 0.85rem; margin-bottom: 3px; }
+        .popup-big { display:flex; align-items:center; gap:8px; margin-bottom:6px; }
+        .popup-big .pi { font-size: 2rem; }
+        .popup-big .pt { font-size: 1.5rem; font-weight: 700; }
+        .popup-btn {
+            margin-top: 8px;
+            background-color: #6aa6fd;
+            color: #fff;
+            border: none;
+            border-radius: 4px;
+            padding: 7px 10px;
+            cursor: pointer;
+            font-size: 0.82rem;
+            width: 100%;
+        }
+        .popup-btn:hover { background-color: #5694f0; }
+
+        /* Leaflet overrides for dark theme */
+        .leaflet-container { background: #2a2a2a; }
+        .leaflet-bar { background-color: #2a2a2a; border: 1px solid #555; }
+        .leaflet-bar a {
+            background-color: #2a2a2a;
+            border-bottom: 1px solid #555;
+            color: #e0e0e0;
+        }
+        .leaflet-bar a:hover { background-color: #404040; }
+        .leaflet-control-zoom-in, .leaflet-control-zoom-out { font: bold 18px/20px Arial; }
+        .leaflet-control-layers {
+            background: #2a2a2a !important;
+            border: 1px solid #404040 !important;
+            border-radius: 4px !important;
+        }
+        .leaflet-control-layers-expanded { color: #e0e0e0 !important; }
+        .leaflet-control-layers label { color: #e0e0e0 !important; }
+
+        /* ====== Modální detail předpovědi ====== */
+        .detail-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.65);
+            backdrop-filter: blur(3px);
+            z-index: 2000;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        .detail-overlay.visible { display: flex; }
+
+        .detail-modal {
+            background: #232323;
+            border: 1px solid #404040;
+            border-radius: 14px;
+            width: 100%;
+            max-width: 720px;
+            max-height: 92vh;
+            overflow-y: auto;
+            position: relative;
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+            animation: modalIn 0.22s ease;
+        }
+        @keyframes modalIn {
+            from { opacity: 0; transform: translateY(14px) scale(0.98); }
+            to   { opacity: 1; transform: translateY(0) scale(1); }
+        }
+
+        .detail-close {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            z-index: 5;
+            background: rgba(0,0,0,0.35);
+            border: 1px solid #555;
+            color: #e0e0e0;
+            width: 34px;
+            height: 34px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1rem;
+            line-height: 1;
+        }
+        .detail-close:hover { background: #8b4444; border-color: #a35050; }
+
+        .detail-loading { text-align: center; padding: 60px 20px; color: #aaa; }
+
+        /* Hlavička s aktuálním počasím – barevný gradient */
+        .dm-hero {
+            padding: 22px 24px;
+            border-radius: 14px 14px 0 0;
+            background: linear-gradient(135deg, #3a5a8c 0%, #2a3f5f 100%);
+            display: flex;
+            align-items: center;
+            gap: 18px;
+            flex-wrap: wrap;
+        }
+        .dm-hero .hero-icon { font-size: 4rem; line-height: 1; }
+        .dm-hero .hero-main { flex: 1; min-width: 160px; }
+        .dm-hero .hero-temp { font-size: 3rem; font-weight: 700; color: #fff; line-height: 1; }
+        .dm-hero .hero-name { font-size: 1.25rem; font-weight: 600; color: #fff; }
+        .dm-hero .hero-sub { color: #cdd9ec; font-size: 0.9rem; }
+        .dm-hero .hero-cond { color: #eaf1fb; font-size: 1rem; margin-top: 4px; }
+        .dm-hero .hero-save {
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.4);
+            color: #fff;
+            padding: 8px 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            align-self: flex-start;
+        }
+        .dm-hero .hero-save:hover { background: rgba(255,255,255,0.28); }
+
+        .dm-section { padding: 18px 24px; }
+        .dm-section h4 {
+            font-size: 0.95rem;
+            color: #e0e0e0;
+            margin-bottom: 12px;
+            font-weight: 600;
+        }
+
+        /* Dlaždice s aktuálními hodnotami */
+        .dm-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+            gap: 10px;
+            padding: 0 24px 4px;
+        }
+        .dm-stat {
+            background: #2c2c2c;
+            border: 1px solid #3a3a3a;
+            border-radius: 8px;
+            padding: 12px;
+            text-align: center;
+        }
+        .dm-stat .s-lbl { color: #888; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.4px; }
+        .dm-stat .s-val { color: #6aa6fd; font-weight: 700; font-size: 1.15rem; margin-top: 3px; }
+
+        .dm-chart-wrap { position: relative; height: 220px; }
+
+        /* 7denní předpověď jako dlaždice */
+        .dm-days {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(86px, 1fr));
+            gap: 8px;
+        }
+        .dm-day {
+            background: #2c2c2c;
+            border: 1px solid #3a3a3a;
+            border-radius: 8px;
+            padding: 10px 6px;
+            text-align: center;
+        }
+        .dm-day .dd-name { color: #ccc; font-size: 0.8rem; font-weight: 600; text-transform: capitalize; }
+        .dm-day .dd-date { color: #777; font-size: 0.7rem; margin-bottom: 4px; }
+        .dm-day .dd-icon { font-size: 1.6rem; margin: 2px 0; }
+        .dm-day .dd-max { color: #ff8a65; font-weight: 700; font-size: 0.95rem; }
+        .dm-day .dd-min { color: #6aa6fd; font-size: 0.85rem; }
+        .dm-day .dd-prec { color: #4fc3f7; font-size: 0.72rem; margin-top: 3px; min-height: 1em; }
+
+        .dm-updated { padding: 4px 24px 20px; text-align: center; color: #777; font-size: 0.78rem; }
+
+        @media (max-width: 768px) {
+            .header { padding: 10px 15px; }
+            .header h1 { font-size: 1.2rem; margin-bottom: 10px; }
+            .search-input { min-width: 150px; }
+            .main-content { position: relative; }
+            .sidebar {
+                position: absolute;
+                top: 0;
+                left: 0;
+                width: 100%;
+                max-width: 340px;
+                height: 100%;
+                z-index: 999;
+                transform: translateX(-100%);
+                transition: transform 0.3s ease;
+            }
+            .sidebar.visible { transform: translateX(0); }
+            .sidebar-toggle { display: block; }
+            .sidebar-overlay {
+                position: absolute;
+                top: 0; left: 0;
+                width: 100%; height: 100%;
+                background: rgba(0, 0, 0, 0.5);
+                z-index: 998;
+                display: none;
+            }
+            .sidebar-overlay.visible { display: block; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🌦️ Počasí Evropy</h1>
+            <div class="controls-section">
+                <div class="control-group">
+                    <div class="control-label">Vyhledat místo</div>
+                    <div class="search-box">
+                        <input type="text" id="searchInput" class="search-input" placeholder="Např. Brno, Paříž, Řím…" autocomplete="off">
+                        <button class="load-btn" id="searchBtn" onclick="doSearch()">🔍 Hledat</button>
+                    </div>
+                </div>
+                <div class="control-group">
+                    <div class="control-label">Data</div>
+                    <button class="load-btn" id="refreshBtn" onclick="loadCapitals(true)">🔄 Obnovit</button>
+                </div>
+                <div class="status-info">
+                    <div class="status-indicator" id="statusIndicator"></div>
+                    <span id="statusText">Načítání…</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="main-content">
+            <button class="sidebar-toggle" id="sidebarToggle" onclick="toggleSidebar()">☰ Panel</button>
+            <div class="sidebar-overlay" id="sidebarOverlay" onclick="toggleSidebar()"></div>
+
+            <div class="sidebar" id="sidebar">
+                <div id="errorContainer"></div>
+
+                <div class="panel" id="searchPanel" style="display:none;">
+                    <h3>Výsledky hledání
+                        <button class="mini-btn del" onclick="hideSearchResults()" title="Zavřít">✕</button>
+                    </h3>
+                    <ul class="search-results" id="searchResults"></ul>
+                </div>
+
+                <div class="panel">
+                    <h3>⭐ Sledovaná místa</h3>
+                    <div class="hint">Klikněte na místo pro detailní předpověď. Místa se ukládají do prohlížeče.</div>
+                    <ul class="saved-list" id="savedList"></ul>
+                    <div class="empty-note" id="savedEmpty">Zatím žádná uložená místa. Vyhledejte místo výše a přidejte ho.</div>
+                </div>
+
+                <div class="panel">
+                    <h3>ℹ️ Přehled</h3>
+                    <div class="info-item">
+                        <span>Hlavní města:</span>
+                        <span class="info-value" id="capCount">0</span>
+                    </div>
+                    <div class="info-item">
+                        <span>Sledovaná místa:</span>
+                        <span class="info-value" id="savedCount">0</span>
+                    </div>
+                    <div class="timestamp" id="lastUpdate">Inicializace…</div>
+                    <div class="hint" style="margin-top:8px;">Zdroj dat: Open-Meteo. Data se ukládají do mezipaměti na 30 minut, aby se zbytečně nezatěžovaly servery.</div>
+                </div>
+            </div>
+
+            <div class="map-container">
+                <div id="map"></div>
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                    <div id="loadingText">Načítání předpovědí…</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modální okno detailní předpovědi -->
+    <div class="detail-overlay" id="detailOverlay" onclick="closeDetail(event)">
+        <div class="detail-modal" onclick="event.stopPropagation()">
+            <button class="detail-close" onclick="closeDetail()" title="Zavřít">✕</button>
+            <div class="detail-body" id="detailBody">
+                <div class="detail-loading"><div class="spinner"></div><div>Načítání předpovědi…</div></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <script>
+        // ====== Konfigurace ======
+        const CACHE_TTL = 30 * 60 * 1000;          // 30 minut
+        const CACHE_PREFIX = 'weathereu_cache_';
+        const SAVED_KEY = 'weathereu_saved';
+        const SETTINGS_KEY = 'weathereu_settings';
+
+        // Hlavní města evropských států (lat, lon)
+        const CAPITALS = [
+            { name: 'Praha',        country: 'Česko',           lat: 50.0755, lon: 14.4378 },
+            { name: 'Bratislava',   country: 'Slovensko',       lat: 48.1486, lon: 17.1077 },
+            { name: 'Vídeň',        country: 'Rakousko',        lat: 48.2082, lon: 16.3738 },
+            { name: 'Berlín',       country: 'Německo',         lat: 52.5200, lon: 13.4050 },
+            { name: 'Varšava',      country: 'Polsko',          lat: 52.2297, lon: 21.0122 },
+            { name: 'Budapešť',     country: 'Maďarsko',        lat: 47.4979, lon: 19.0402 },
+            { name: 'Lublaň',       country: 'Slovinsko',       lat: 46.0569, lon: 14.5058 },
+            { name: 'Záhřeb',       country: 'Chorvatsko',      lat: 45.8150, lon: 15.9819 },
+            { name: 'Bělehrad',     country: 'Srbsko',          lat: 44.7866, lon: 20.4489 },
+            { name: 'Sarajevo',     country: 'Bosna a Herc.',   lat: 43.8563, lon: 18.4131 },
+            { name: 'Podgorica',    country: 'Černá Hora',      lat: 42.4304, lon: 19.2594 },
+            { name: 'Priština',     country: 'Kosovo',          lat: 42.6629, lon: 21.1655 },
+            { name: 'Skopje',       country: 'Sev. Makedonie',  lat: 41.9981, lon: 21.4254 },
+            { name: 'Tirana',       country: 'Albánie',         lat: 41.3275, lon: 19.8187 },
+            { name: 'Sofie',        country: 'Bulharsko',       lat: 42.6977, lon: 23.3219 },
+            { name: 'Bukurešť',     country: 'Rumunsko',        lat: 44.4268, lon: 26.1025 },
+            { name: 'Kišiněv',      country: 'Moldavsko',       lat: 47.0105, lon: 28.8638 },
+            { name: 'Kyjev',        country: 'Ukrajina',        lat: 50.4501, lon: 30.5234 },
+            { name: 'Minsk',        country: 'Bělorusko',       lat: 53.9006, lon: 27.5590 },
+            { name: 'Vilnius',      country: 'Litva',           lat: 54.6872, lon: 25.2797 },
+            { name: 'Riga',         country: 'Lotyšsko',        lat: 56.9496, lon: 24.1052 },
+            { name: 'Tallinn',      country: 'Estonsko',        lat: 59.4370, lon: 24.7536 },
+            { name: 'Helsinky',     country: 'Finsko',          lat: 60.1699, lon: 24.9384 },
+            { name: 'Stockholm',    country: 'Švédsko',         lat: 59.3293, lon: 18.0686 },
+            { name: 'Oslo',         country: 'Norsko',          lat: 59.9139, lon: 10.7522 },
+            { name: 'Kodaň',        country: 'Dánsko',          lat: 55.6761, lon: 12.5683 },
+            { name: 'Reykjavík',    country: 'Island',          lat: 64.1466, lon: -21.9426 },
+            { name: 'Dublin',       country: 'Irsko',           lat: 53.3498, lon: -6.2603 },
+            { name: 'Londýn',       country: 'Velká Británie',  lat: 51.5074, lon: -0.1278 },
+            { name: 'Amsterdam',    country: 'Nizozemsko',      lat: 52.3676, lon: 4.9041 },
+            { name: 'Brusel',       country: 'Belgie',          lat: 50.8503, lon: 4.3517 },
+            { name: 'Lucemburk',    country: 'Lucembursko',     lat: 49.6116, lon: 6.1319 },
+            { name: 'Paříž',        country: 'Francie',         lat: 48.8566, lon: 2.3522 },
+            { name: 'Madrid',       country: 'Španělsko',       lat: 40.4168, lon: -3.7038 },
+            { name: 'Lisabon',      country: 'Portugalsko',     lat: 38.7223, lon: -9.1393 },
+            { name: 'Řím',          country: 'Itálie',          lat: 41.9028, lon: 12.4964 },
+            { name: 'Bern',         country: 'Švýcarsko',       lat: 46.9480, lon: 7.4474 },
+            { name: 'Vaduz',        country: 'Lichtenštejnsko', lat: 47.1410, lon: 9.5209 },
+            { name: 'Atény',        country: 'Řecko',           lat: 37.9838, lon: 23.7275 },
+            { name: 'Valletta',     country: 'Malta',           lat: 35.8989, lon: 14.5146 },
+            { name: 'Nikósie',      country: 'Kypr',            lat: 35.1856, lon: 33.3823 },
+            { name: 'Andorra',      country: 'Andorra',         lat: 42.5063, lon: 1.5218 },
+            { name: 'Monako',       country: 'Monako',          lat: 43.7384, lon: 7.4246 },
+            { name: 'San Marino',   country: 'San Marino',      lat: 43.9424, lon: 12.4578 },
+            { name: 'Moskva',       country: 'Rusko',           lat: 55.7558, lon: 37.6173 }
+        ];
+
+        // WMO kódy počasí -> ikona + český popis
+        const WMO = {
+            0:  ['☀️', 'Jasno'],
+            1:  ['🌤️', 'Skoro jasno'],
+            2:  ['⛅', 'Polojasno'],
+            3:  ['☁️', 'Zataženo'],
+            45: ['🌫️', 'Mlha'],
+            48: ['🌫️', 'Námrazová mlha'],
+            51: ['🌦️', 'Slabé mrholení'],
+            53: ['🌦️', 'Mrholení'],
+            55: ['🌦️', 'Silné mrholení'],
+            56: ['🌧️', 'Mrznoucí mrholení'],
+            57: ['🌧️', 'Silné mrznoucí mrholení'],
+            61: ['🌧️', 'Slabý déšť'],
+            63: ['🌧️', 'Déšť'],
+            65: ['🌧️', 'Silný déšť'],
+            66: ['🌧️', 'Mrznoucí déšť'],
+            67: ['🌧️', 'Silný mrznoucí déšť'],
+            71: ['🌨️', 'Slabé sněžení'],
+            73: ['🌨️', 'Sněžení'],
+            75: ['❄️', 'Silné sněžení'],
+            77: ['🌨️', 'Sněhová zrna'],
+            80: ['🌦️', 'Slabé přeháňky'],
+            81: ['🌦️', 'Přeháňky'],
+            82: ['⛈️', 'Silné přeháňky'],
+            85: ['🌨️', 'Sněhové přeháňky'],
+            86: ['❄️', 'Silné sněhové přeháňky'],
+            95: ['⛈️', 'Bouřka'],
+            96: ['⛈️', 'Bouřka s kroupami'],
+            99: ['⛈️', 'Silná bouřka s kroupami']
+        };
+        function wmo(code) { return WMO[code] || ['❓', 'Neznámé']; }
+
+        // ====== Stav ======
+        let map;
+        let capitalMarkers = [];
+        let savedMarkers = [];
+        let savedPlaces = [];
+        let currentDetailPlace = null;   // {name, lat, lon, country} právě zobrazené v detailu
+        let isMobile = window.innerWidth <= 768;
+        let sidebarVisible = false;
+
+        // ====== Mezipaměť (localStorage + TTL) ======
+        function cacheGet(key) {
+            try {
+                const raw = localStorage.getItem(CACHE_PREFIX + key);
+                if (!raw) return null;
+                const obj = JSON.parse(raw);
+                if (Date.now() - obj.ts > CACHE_TTL) {
+                    localStorage.removeItem(CACHE_PREFIX + key);
+                    return null;
+                }
+                return obj.data;
+            } catch (e) { return null; }
+        }
+        function cacheSet(key, data) {
+            try {
+                localStorage.setItem(CACHE_PREFIX + key, JSON.stringify({ ts: Date.now(), data }));
+            } catch (e) {
+                // localStorage plný – vyčistíme staré položky počasí
+                cleanupCache();
+            }
+        }
+        function cleanupCache() {
+            const now = Date.now();
+            for (let i = localStorage.length - 1; i >= 0; i--) {
+                const k = localStorage.key(i);
+                if (k && k.startsWith(CACHE_PREFIX)) {
+                    try {
+                        const obj = JSON.parse(localStorage.getItem(k));
+                        if (now - obj.ts > CACHE_TTL) localStorage.removeItem(k);
+                    } catch (e) { localStorage.removeItem(k); }
+                }
+            }
+        }
+
+        // Fetch s mezipamětí; force=true mezipaměť obejde
+        async function cachedFetch(cacheKey, url, force = false) {
+            if (!force) {
+                const hit = cacheGet(cacheKey);
+                if (hit) return hit;
+            }
+            const controller = new AbortController();
+            const t = setTimeout(() => controller.abort(), 15000);
+            const res = await fetch(url, { signal: controller.signal });
+            clearTimeout(t);
+            if (!res.ok) throw new Error('HTTP ' + res.status);
+            const data = await res.json();
+            cacheSet(cacheKey, data);
+            return data;
+        }
+
+        // ====== Inicializace mapy ======
+        function initMap() {
+            const settings = loadSettings();
+            const view = settings.view || { lat: 50.0, lon: 14.0, zoom: 4 };
+
+            map = L.map('map', {
+                scrollWheelZoom: true,
+                wheelDebounceTime: 40,
+                wheelPxPerZoomLevel: 120,
+                worldCopyJump: true
+            }).setView([view.lat, view.lon], view.zoom);
+
+            const baseLayers = {
+                'OpenStreetMap': L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+                    attribution: '© OpenStreetMap contributors', maxZoom: 18
+                }),
+                'Tmavá mapa': L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
+                    attribution: '© OpenStreetMap, © CARTO', maxZoom: 19
+                }),
+                'Satelitní mapa': L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+                    attribution: '© Esri', maxZoom: 18
+                })
+            };
+
+            // Obnov dříve zvolený mapový podklad (jinak výchozí Tmavá mapa)
+            const savedLayer = baseLayers[settings.baseLayer] ? settings.baseLayer : 'Tmavá mapa';
+            baseLayers[savedLayer].addTo(map);
+            L.control.layers(baseLayers, null, { position: 'topright', collapsed: true }).addTo(map);
+
+            // Zapamatuj si změnu mapového podkladu
+            map.on('baselayerchange', e => saveSettings({ baseLayer: e.name }));
+
+            // Zapamatuj si pozici a přiblížení mapy
+            map.on('moveend', () => {
+                const c = map.getCenter();
+                saveSettings({ view: { lat: +c.lat.toFixed(4), lon: +c.lng.toFixed(4), zoom: map.getZoom() } });
+            });
+
+            loadCapitals(false);
+            renderSavedList();
+            refreshSavedMarkers();
+        }
+
+        // ====== Hlavní města ======
+        async function loadCapitals(force) {
+            setStatus('loading', 'Načítání…');
+            showLoading('Načítání předpovědí pro hlavní města…');
+            try {
+                const lats = CAPITALS.map(c => c.lat.toFixed(4)).join(',');
+                const lons = CAPITALS.map(c => c.lon.toFixed(4)).join(',');
+                const url = `https://api.open-meteo.com/v1/forecast?latitude=${lats}&longitude=${lons}`
+                    + `&current=temperature_2m,weather_code,wind_speed_10m&timezone=auto`;
+                // Jeden dávkový požadavek pro všechna hlavní města -> minimální zátěž serveru
+                let data = await cachedFetch('capitals', url, force);
+
+                // Open-Meteo vrací při více lokacích pole, při jedné objekt
+                const arr = Array.isArray(data) ? data : [data];
+                clearCapitalMarkers();
+                arr.forEach((d, i) => {
+                    const cap = CAPITALS[i];
+                    if (!cap || !d.current) return;
+                    addCapitalMarker(cap, d.current);
+                });
+
+                document.getElementById('capCount').textContent = CAPITALS.length;
+                document.getElementById('lastUpdate').textContent =
+                    'Aktualizováno: ' + new Date().toLocaleTimeString('cs-CZ');
+                setStatus('online', 'Online');
+                clearError();
+            } catch (e) {
+                console.error(e);
+                setStatus('error', 'Chyba');
+                showError('Nepodařilo se načíst data hlavních měst: ' + e.message);
+            } finally {
+                hideLoading();
+            }
+        }
+
+        function addCapitalMarker(cap, current) {
+            const [icon] = wmo(current.weather_code);
+            const temp = Math.round(current.temperature_2m);
+            const html = `<div class="weather-marker"><span class="wm-icon">${icon}</span>`
+                + `<span class="wm-temp">${temp}°</span></div>`;
+            const marker = L.marker([cap.lat, cap.lon], {
+                icon: L.divIcon({ className: '', html, iconSize: null, iconAnchor: [0, 0] })
+            }).addTo(map);
+            marker.bindPopup(buildPopup(cap, current, false));
+            marker.on('click', () => marker.openPopup());
+            capitalMarkers.push(marker);
+        }
+
+        function clearCapitalMarkers() {
+            capitalMarkers.forEach(m => map.removeLayer(m));
+            capitalMarkers = [];
+        }
+
+        function buildPopup(place, current, isSaved) {
+            const [icon, desc] = wmo(current.weather_code);
+            const temp = Math.round(current.temperature_2m);
+            const wind = Math.round(current.wind_speed_10m);
+            const id = `${place.lat.toFixed(4)},${place.lon.toFixed(4)}`;
+            return `<div>
+                <div class="popup-title">${place.name}<br><small style="color:#888;">${place.country || ''}</small></div>
+                <div class="popup-big"><span class="pi">${icon}</span><span class="pt">${temp}°C</span></div>
+                <div class="popup-row">${desc}</div>
+                <div class="popup-row">💨 Vítr: ${wind} km/h</div>
+                <button class="popup-btn" onclick='showDetailFromPopup(${JSON.stringify(JSON.stringify(place))})'>📊 Detailní předpověď</button>
+            </div>`;
+        }
+
+        function showDetailFromPopup(placeJson) {
+            const place = JSON.parse(placeJson);
+            showDetail(place);
+        }
+
+        // ====== Vyhledávání míst (geokódování Open-Meteo) ======
+        async function doSearch() {
+            const q = document.getElementById('searchInput').value.trim();
+            if (!q) return;
+            const panel = document.getElementById('searchPanel');
+            const list = document.getElementById('searchResults');
+            panel.style.display = 'block';
+            list.innerHTML = '<li class="empty-note">Hledám…</li>';
+            try {
+                const url = `https://geocoding-api.open-meteo.com/v1/search?name=${encodeURIComponent(q)}&count=8&language=cs&format=json`;
+                const data = await cachedFetch('geo_' + q.toLowerCase(), url, false);
+                const results = data.results || [];
+                if (results.length === 0) {
+                    list.innerHTML = '<li class="empty-note">Nic nenalezeno.</li>';
+                    return;
+                }
+                list.innerHTML = '';
+                results.forEach(r => {
+                    const place = {
+                        name: r.name,
+                        country: r.country || '',
+                        admin: r.admin1 || '',
+                        lat: r.latitude,
+                        lon: r.longitude
+                    };
+                    const li = document.createElement('li');
+                    const sub = [place.admin, place.country].filter(Boolean).join(', ');
+                    li.innerHTML = `<span class="loc-name">${place.name}<small>${sub}</small></span>`;
+                    li.querySelector('.loc-name').onclick = () => {
+                        map.flyTo([place.lat, place.lon], 8);
+                        showDetail(place);
+                        hideSearchResults();
+                    };
+                    const btn = document.createElement('button');
+                    btn.className = 'mini-btn';
+                    btn.textContent = '+ Uložit';
+                    btn.onclick = () => { addSaved(place); btn.textContent = '✓'; btn.disabled = true; };
+                    li.appendChild(btn);
+                    list.appendChild(li);
+                });
+            } catch (e) {
+                list.innerHTML = '<li class="empty-note">Chyba hledání: ' + e.message + '</li>';
+            }
+        }
+
+        function hideSearchResults() {
+            document.getElementById('searchPanel').style.display = 'none';
+            document.getElementById('searchResults').innerHTML = '';
+            document.getElementById('searchInput').value = '';
+        }
+
+        // ====== Nastavení stránky (localStorage) ======
+        function loadSettings() {
+            try { return JSON.parse(localStorage.getItem(SETTINGS_KEY)) || {}; }
+            catch (e) { return {}; }
+        }
+        function saveSettings(patch) {
+            const s = loadSettings();
+            Object.assign(s, patch);
+            try { localStorage.setItem(SETTINGS_KEY, JSON.stringify(s)); } catch (e) {}
+        }
+
+        // ====== Sledovaná místa (localStorage) ======
+        function loadSaved() {
+            try { savedPlaces = JSON.parse(localStorage.getItem(SAVED_KEY)) || []; }
+            catch (e) { savedPlaces = []; }
+        }
+        function persistSaved() {
+            localStorage.setItem(SAVED_KEY, JSON.stringify(savedPlaces));
+        }
+        function placeKey(p) { return p.lat.toFixed(3) + ',' + p.lon.toFixed(3); }
+
+        function addSaved(place) {
+            if (savedPlaces.some(p => placeKey(p) === placeKey(place))) return;
+            savedPlaces.push(place);
+            persistSaved();
+            renderSavedList();
+            refreshSavedMarkers();
+        }
+        function removeSaved(key) {
+            savedPlaces = savedPlaces.filter(p => placeKey(p) !== key);
+            persistSaved();
+            renderSavedList();
+            refreshSavedMarkers();
+        }
+
+        function renderSavedList() {
+            const list = document.getElementById('savedList');
+            const empty = document.getElementById('savedEmpty');
+            list.innerHTML = '';
+            document.getElementById('savedCount').textContent = savedPlaces.length;
+            if (savedPlaces.length === 0) { empty.style.display = 'block'; return; }
+            empty.style.display = 'none';
+            savedPlaces.forEach(p => {
+                const li = document.createElement('li');
+                const sub = [p.admin, p.country].filter(Boolean).join(', ');
+                li.innerHTML = `<span class="saved-icon">📍</span>
+                    <div class="saved-info"><div class="nm">${p.name}</div><div class="tp">${sub}</div></div>`;
+                li.onclick = (ev) => {
+                    if (ev.target.classList.contains('del')) return;
+                    map.flyTo([p.lat, p.lon], 8);
+                    showDetail(p);
+                    if (isMobile) toggleSidebar();
+                };
+                const del = document.createElement('button');
+                del.className = 'mini-btn del';
+                del.textContent = '🗑';
+                del.title = 'Odebrat';
+                del.onclick = (ev) => { ev.stopPropagation(); removeSaved(placeKey(p)); };
+                li.appendChild(del);
+                list.appendChild(li);
+            });
+        }
+
+        async function refreshSavedMarkers() {
+            savedMarkers.forEach(m => map.removeLayer(m));
+            savedMarkers = [];
+            for (const p of savedPlaces) {
+                try {
+                    const cur = await fetchCurrent(p);
+                    const [icon] = wmo(cur.weather_code);
+                    const temp = Math.round(cur.temperature_2m);
+                    const html = `<div class="weather-marker saved"><span class="wm-icon">${icon}</span>`
+                        + `<span class="wm-temp">${temp}°</span></div>`;
+                    const marker = L.marker([p.lat, p.lon], {
+                        icon: L.divIcon({ className: '', html, iconSize: null, iconAnchor: [0, 0] }),
+                        zIndexOffset: 1000
+                    }).addTo(map);
+                    marker.bindPopup(buildPopup(p, cur, true));
+                    savedMarkers.push(marker);
+                } catch (e) { /* tiše přeskočíme */ }
+            }
+        }
+
+        async function fetchCurrent(place) {
+            const key = 'cur_' + placeKey(place);
+            const url = `https://api.open-meteo.com/v1/forecast?latitude=${place.lat}&longitude=${place.lon}`
+                + `&current=temperature_2m,weather_code,wind_speed_10m&timezone=auto`;
+            const d = await cachedFetch(key, url, false);
+            return d.current;
+        }
+
+        // ====== Detailní předpověď (modální okno + grafy) ======
+        let tempChart = null;
+        let precipChart = null;
+
+        async function showDetail(place) {
+            currentDetailPlace = place;
+            const overlay = document.getElementById('detailOverlay');
+            const body = document.getElementById('detailBody');
+            overlay.classList.add('visible');
+            destroyCharts();
+            body.innerHTML = '<div class="detail-loading"><div class="spinner"></div><div>Načítání předpovědi…</div></div>';
+
+            try {
+                const key = 'detail_' + placeKey(place);
+                const url = `https://api.open-meteo.com/v1/forecast?latitude=${place.lat}&longitude=${place.lon}`
+                    + `&current=temperature_2m,relative_humidity_2m,apparent_temperature,weather_code,wind_speed_10m,wind_direction_10m,surface_pressure,precipitation`
+                    + `&hourly=temperature_2m,precipitation_probability,precipitation`
+                    + `&daily=weather_code,temperature_2m_max,temperature_2m_min,precipitation_sum`
+                    + `&forecast_days=7&timezone=auto`;
+                let data = await cachedFetch(key, url, false);
+                // Stará/neúplná položka v mezipaměti (bez hodinových/denních dat) -> načti znovu
+                if (!data || !data.hourly || !data.daily) {
+                    data = await cachedFetch(key, url, true);
+                }
+                renderDetail(place, data);
+            } catch (e) {
+                body.innerHTML = '<div class="detail-loading"><div class="error">Nepodařilo se načíst předpověď: ' + e.message + '</div></div>';
+            }
+        }
+
+        function closeDetail(ev) {
+            if (ev && ev.target && !ev.target.classList.contains('detail-overlay')
+                && !ev.target.classList.contains('detail-close')) return;
+            document.getElementById('detailOverlay').classList.remove('visible');
+            destroyCharts();
+        }
+
+        function destroyCharts() {
+            if (tempChart) { tempChart.destroy(); tempChart = null; }
+            if (precipChart) { precipChart.destroy(); precipChart = null; }
+        }
+
+        function renderDetail(place, data) {
+            const c = data.current;
+            const [icon, desc] = wmo(c.weather_code);
+            const sub = [place.admin, place.country].filter(Boolean).join(', ');
+            const already = savedPlaces.some(p => placeKey(p) === placeKey(place));
+            const body = document.getElementById('detailBody');
+
+            body.innerHTML = `
+                <div class="dm-hero">
+                    <div class="hero-icon">${icon}</div>
+                    <div class="hero-main">
+                        <div class="hero-name">${place.name}</div>
+                        <div class="hero-sub">${sub}</div>
+                        <div class="hero-temp">${Math.round(c.temperature_2m)}°C</div>
+                        <div class="hero-cond">${desc} · pocitově ${Math.round(c.apparent_temperature)}°C</div>
+                    </div>
+                    ${already ? '' : '<button class="hero-save" id="heroSaveBtn">⭐ Uložit místo</button>'}
+                </div>
+
+                <div class="dm-stats">
+                    <div class="dm-stat"><div class="s-lbl">Vlhkost</div><div class="s-val">${c.relative_humidity_2m}%</div></div>
+                    <div class="dm-stat"><div class="s-lbl">Vítr</div><div class="s-val">${Math.round(c.wind_speed_10m)} km/h</div></div>
+                    <div class="dm-stat"><div class="s-lbl">Směr</div><div class="s-val">${windDir(c.wind_direction_10m)}</div></div>
+                    <div class="dm-stat"><div class="s-lbl">Tlak</div><div class="s-val">${Math.round(c.surface_pressure)} hPa</div></div>
+                    <div class="dm-stat"><div class="s-lbl">Srážky</div><div class="s-val">${c.precipitation} mm</div></div>
+                </div>
+
+                <div class="dm-section">
+                    <h4>🌡️ Teplota – příštích 48 h</h4>
+                    <div class="dm-chart-wrap"><canvas id="tempChart"></canvas></div>
+                </div>
+
+                <div class="dm-section">
+                    <h4>🌧️ Srážky a pravděpodobnost – příštích 48 h</h4>
+                    <div class="dm-chart-wrap"><canvas id="precipChart"></canvas></div>
+                </div>
+
+                <div class="dm-section">
+                    <h4>📅 7denní předpověď</h4>
+                    <div class="dm-days">${renderDays(data.daily)}</div>
+                </div>
+
+                <div class="dm-updated">Zdroj: Open-Meteo · aktualizováno ${new Date().toLocaleTimeString('cs-CZ')}</div>
+            `;
+
+            const saveBtn = document.getElementById('heroSaveBtn');
+            if (saveBtn) saveBtn.onclick = () => { addSaved(place); saveBtn.style.display = 'none'; };
+
+            renderCharts(data.hourly);
+        }
+
+        function renderDays(d) {
+            let html = '';
+            for (let i = 0; i < d.time.length; i++) {
+                const [di] = wmo(d.weather_code[i]);
+                const dt = new Date(d.time[i]);
+                const name = i === 0 ? 'Dnes' : dt.toLocaleDateString('cs-CZ', { weekday: 'short' });
+                const date = dt.toLocaleDateString('cs-CZ', { day: 'numeric', month: 'numeric' });
+                const prec = d.precipitation_sum[i];
+                html += `<div class="dm-day">
+                    <div class="dd-name">${name}</div>
+                    <div class="dd-date">${date}</div>
+                    <div class="dd-icon">${di}</div>
+                    <div class="dd-max">${Math.round(d.temperature_2m_max[i])}°</div>
+                    <div class="dd-min">${Math.round(d.temperature_2m_min[i])}°</div>
+                    <div class="dd-prec">${prec > 0 ? '💧 ' + prec + ' mm' : ''}</div>
+                </div>`;
+            }
+            return html;
+        }
+
+        function renderCharts(hourly) {
+            // Začni od aktuální hodiny, ne od půlnoci
+            const now = Date.now();
+            let start = hourly.time.findIndex(t => new Date(t).getTime() >= now - 3600000);
+            if (start < 0) start = 0;
+            const end = Math.min(start + 48, hourly.time.length);
+
+            const labels = hourly.time.slice(start, end).map(t => {
+                const dt = new Date(t);
+                const h = dt.toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' });
+                return dt.getHours() === 0
+                    ? [h, dt.toLocaleDateString('cs-CZ', { day: 'numeric', month: 'numeric' })]
+                    : h;
+            });
+            const temps = hourly.temperature_2m.slice(start, end);
+            const probs = (hourly.precipitation_probability || []).slice(start, end);
+            const precs = hourly.precipitation.slice(start, end);
+
+            const grid = 'rgba(255,255,255,0.07)';
+            const tick = '#9aa';
+            const xAxis = { grid: { color: grid }, ticks: { color: tick, maxRotation: 0, autoSkip: true, maxTicksLimit: 8 } };
+
+            tempChart = new Chart(document.getElementById('tempChart'), {
+                type: 'line',
+                data: { labels, datasets: [{
+                    label: 'Teplota', data: temps,
+                    borderColor: '#ff8a65', backgroundColor: 'rgba(255,138,101,0.15)',
+                    fill: true, tension: 0.35, pointRadius: 0, borderWidth: 2
+                }]},
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => c.parsed.y + ' °C' } } },
+                    scales: { x: xAxis, y: { grid: { color: grid }, ticks: { color: tick, callback: v => v + '°' } } }
+                }
+            });
+
+            precipChart = new Chart(document.getElementById('precipChart'), {
+                data: { labels, datasets: [
+                    { type: 'bar', label: 'Srážky (mm)', data: precs,
+                      backgroundColor: 'rgba(79,195,247,0.55)', yAxisID: 'y', order: 2 },
+                    { type: 'line', label: 'Pravděpodobnost (%)', data: probs,
+                      borderColor: '#6aa6fd', backgroundColor: 'transparent', yAxisID: 'y1',
+                      tension: 0.35, pointRadius: 0, borderWidth: 2, order: 1 }
+                ]},
+                options: {
+                    responsive: true, maintainAspectRatio: false,
+                    interaction: { mode: 'index', intersect: false },
+                    plugins: { legend: { display: true, labels: { color: '#bbb', boxWidth: 12, font: { size: 11 } } } },
+                    scales: {
+                        x: xAxis,
+                        y: { position: 'left', beginAtZero: true, grid: { color: grid }, ticks: { color: tick, callback: v => v + ' mm' } },
+                        y1: { position: 'right', beginAtZero: true, max: 100, grid: { drawOnChartArea: false }, ticks: { color: tick, callback: v => v + '%' } }
+                    }
+                }
+            });
+        }
+
+        function windDir(deg) {
+            const dirs = ['S', 'SV', 'V', 'JV', 'J', 'JZ', 'Z', 'SZ'];
+            return dirs[Math.round(deg / 45) % 8];
+        }
+
+        // ====== UI pomocné ======
+        function setStatus(type, text) {
+            document.getElementById('statusIndicator').className = 'status-indicator ' + type;
+            document.getElementById('statusText').textContent = text;
+        }
+        function showLoading(text) {
+            document.getElementById('loadingText').textContent = text || 'Načítání…';
+            document.getElementById('loading').style.display = 'block';
+            document.getElementById('refreshBtn').disabled = true;
+        }
+        function hideLoading() {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('refreshBtn').disabled = false;
+        }
+        function showError(msg) {
+            document.getElementById('errorContainer').innerHTML = `<div class="error">⚠️ ${msg}</div>`;
+        }
+        function clearError() {
+            document.getElementById('errorContainer').innerHTML = '';
+        }
+
+        function toggleSidebar() {
+            if (!isMobile) return;
+            const sidebar = document.getElementById('sidebar');
+            const overlay = document.getElementById('sidebarOverlay');
+            const toggle = document.getElementById('sidebarToggle');
+            sidebarVisible = !sidebarVisible;
+            sidebar.classList.toggle('visible', sidebarVisible);
+            overlay.classList.toggle('visible', sidebarVisible);
+            toggle.textContent = sidebarVisible ? '✕ Zavřít' : '☰ Panel';
+        }
+
+        function handleResize() {
+            const wasMobile = isMobile;
+            isMobile = window.innerWidth <= 768;
+            if (wasMobile !== isMobile && map) {
+                setTimeout(() => map.invalidateSize(), 300);
+            }
+        }
+
+        // ====== Start ======
+        document.addEventListener('DOMContentLoaded', function () {
+            cleanupCache();
+            loadSaved();
+            isMobile = window.innerWidth <= 768;
+            window.addEventListener('resize', handleResize);
+            document.getElementById('searchInput').addEventListener('keydown', e => {
+                if (e.key === 'Enter') doSearch();
+            });
+            document.addEventListener('keydown', e => {
+                if (e.key === 'Escape') {
+                    document.getElementById('detailOverlay').classList.remove('visible');
+                    destroyCharts();
+                }
+            });
+            setTimeout(initMap, 100);
+        });
+    </script>
+</body>
+</html>

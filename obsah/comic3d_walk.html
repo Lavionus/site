@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Komiksový 3D svět – procházka</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background-color: #1a1a1a;
+      color: #e0e0e0;
+      height: 100vh;
+      display: flex;
+      overflow: hidden;
+    }
+
+    /* ── Boční panel ──────────────────────────────────── */
+    #sidebar {
+      width: 280px;
+      min-width: 280px;
+      background-color: #222;
+      border-right: 1px solid #404040;
+      padding: 12px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    #sidebar h1 {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: #6aa6fd;
+      letter-spacing: 0.5px;
+      padding-bottom: 8px;
+      border-bottom: 1px solid #404040;
+    }
+    #sidebar .hint { font-size: 0.72rem; color: #888; line-height: 1.4; }
+
+    .section {
+      background-color: #2a2a2a;
+      border: 1px solid #404040;
+      border-radius: 6px;
+      padding: 8px 10px;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    .section h2 {
+      font-size: 0.72rem; text-transform: uppercase; letter-spacing: 1px;
+      color: #6aa6fd; font-weight: 700;
+    }
+    .row { display: flex; flex-direction: column; gap: 3px; }
+    .row label { font-size: 0.78rem; color: #c0c0c0; display: flex; justify-content: space-between; }
+    .row label .val { color: #6aa6fd; font-variant-numeric: tabular-nums; }
+    input[type="range"] { width: 100%; accent-color: #6aa6fd; }
+    .toggle { display: flex; align-items: center; justify-content: space-between; font-size: 0.82rem; color: #c0c0c0; cursor: pointer; }
+    .toggle input { accent-color: #6aa6fd; width: 16px; height: 16px; }
+    button {
+      background-color: #383838; border: 1px solid #4a4a4a; color: #c0c0c0;
+      border-radius: 6px; padding: 7px 10px; font-size: 0.8rem; cursor: pointer; transition: all .15s;
+    }
+    button:hover { background-color: #6aa6fd; color: #fff; border-color: #6aa6fd; }
+
+    .keys { display: grid; grid-template-columns: repeat(3, 1fr); gap: 4px; }
+    .keys .k {
+      background:#333; border:1px solid #4a4a4a; border-radius:5px; text-align:center;
+      padding:8px 0; font-size:0.8rem; color:#bbb; user-select:none; cursor:pointer;
+    }
+    .keys .k.wide { grid-column: 1 / 4; }
+    .keys .k.active { background:#6aa6fd; color:#fff; border-color:#6aa6fd; }
+
+    /* ── Scéna ────────────────────────────────────────── */
+    #stage { position: relative; flex: 1; overflow: hidden; background:#cfe3ff; }
+    #scene { display:block; width:100%; height:100%; }
+
+    /* komiksový rámeček */
+    #stage::before {
+      content:""; position:absolute; inset:14px; border:5px solid #111;
+      border-radius:4px; box-shadow:0 0 0 3px #fff inset; pointer-events:none; z-index:3;
+    }
+    #stage.noframe::before { display:none; }
+
+    /* halftone rastr */
+    #halftone {
+      position:absolute; inset:0; pointer-events:none; mix-blend-mode:multiply;
+      opacity:.35; z-index:2;
+      background-image: radial-gradient(rgba(0,0,0,.85) 1px, transparent 1.4px);
+      background-size:5px 5px;
+    }
+
+    /* nápověda dole ve scéně */
+    #help {
+      position:absolute; left:50%; bottom:26px; transform:translateX(-50%);
+      z-index:3; background:#111; color:#ffd23f; padding:6px 14px; border-radius:20px;
+      font-size:.8rem; font-weight:700; border:2px solid #fff; pointer-events:none;
+      font-family:'Comic Sans MS','Segoe UI',sans-serif; white-space:nowrap;
+    }
+    /* "bublina" nad avatarem */
+    #bubble {
+      position:absolute; z-index:3; transform:translate(-50%,-100%);
+      background:#fff; color:#111; border:3px solid #111; border-radius:14px;
+      padding:4px 12px; font-weight:900; font-size:.95rem; pointer-events:none;
+      font-family:'Comic Sans MS','Segoe UI',sans-serif; display:none; white-space:nowrap;
+    }
+    #bubble::after {
+      content:""; position:absolute; left:24px; bottom:-12px;
+      border:7px solid transparent; border-top-color:#111;
+    }
+  </style>
+</head>
+<body>
+  <aside id="sidebar">
+    <h1>🚶 Komiksový 3D svět</h1>
+    <p class="hint">Procházej se vygenerovanou 3D scénou. <b>Šipkami</b> (nebo W A S D) hýbeš avatarem,
+      kamera ho sleduje. Scéna je vykreslená v komiksovém / kresleném stylu (toon shading + obrysy).</p>
+
+    <div class="section">
+      <h2>Ovládání</h2>
+      <div class="keys">
+        <div class="k" data-k="up">↑</div>
+        <div class="k" data-k="_"></div>
+        <div class="k" data-k="space" title="skok">⤒</div>
+        <div class="k" data-k="left">←</div>
+        <div class="k" data-k="down">↓</div>
+        <div class="k" data-k="right">→</div>
+      </div>
+      <p class="hint">↑/↓ chůze vpřed a vzad · ←/→ otáčení · mezerník = skok</p>
+    </div>
+
+    <div class="section">
+      <h2>Pohyb</h2>
+      <div class="row">
+        <label>Rychlost chůze <span class="val" id="vSpeed">5</span></label>
+        <input type="range" id="cSpeed" min="2" max="12" value="5" step="1">
+      </div>
+      <div class="row">
+        <label>Rychlost otáčení <span class="val" id="vTurn">3</span></label>
+        <input type="range" id="cTurn" min="1" max="6" value="3" step="1">
+      </div>
+      <label class="toggle">Kamera následuje avatara
+        <input type="checkbox" id="cFollow" checked></label>
+    </div>
+
+    <div class="section">
+      <h2>Styl</h2>
+      <label class="toggle">Toon stínování
+        <input type="checkbox" id="cToon" checked></label>
+      <label class="toggle">Inkoustové obrysy
+        <input type="checkbox" id="cOutline" checked></label>
+      <label class="toggle">Halftone rastr
+        <input type="checkbox" id="cHalf" checked></label>
+      <label class="toggle">Komiksový rámeček
+        <input type="checkbox" id="cFrame" checked></label>
+    </div>
+
+    <div class="section">
+      <h2>Svět</h2>
+      <button id="btnRegen">🎲 Nová náhodná scéna</button>
+      <button id="btnReset">📍 Zpět na start</button>
+    </div>
+
+    <p class="hint">Při nárazu do objektu se avatar zastaví a vyskočí komiksová bublina.</p>
+  </aside>
+
+  <div id="stage">
+    <canvas id="scene"></canvas>
+    <div id="halftone"></div>
+    <div id="bubble">OUCH!</div>
+    <div id="help">Hýbej šipkami ← ↑ ↓ → · mezerník = skok</div>
+  </div>
+
+  <script type="importmap">
+  { "imports": {
+      "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+  } }
+  </script>
+
+  <script type="module">
+    import * as THREE from 'three';
+
+    const stage  = document.getElementById('stage');
+    const canvas = document.getElementById('scene');
+
+    /* ── Renderer / scéna / kamera ─────────────────────── */
+    const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+    renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color('#cfe3ff');
+
+    const camera = new THREE.PerspectiveCamera(50, 1, 0.1, 200);
+
+    const key = new THREE.DirectionalLight(0xffffff, 2.4);
+    key.position.set(6, 10, 4);
+    scene.add(key, new THREE.AmbientLight(0xffffff, 0.55));
+
+    /* ── Toon gradientní mapa ──────────────────────────── */
+    function gradientMap(steps = 3) {
+      const data = new Uint8Array(steps);
+      for (let i = 0; i < steps; i++) data[i] = Math.round((i / (steps - 1)) * 255);
+      const t = new THREE.DataTexture(data, steps, 1, THREE.RedFormat);
+      t.minFilter = t.magFilter = THREE.NearestFilter;
+      t.needsUpdate = true;
+      return t;
+    }
+
+    const state = { toon: true, outline: true, speed: 5, turn: 3, follow: true };
+
+    function makeMat(color) {
+      return state.toon
+        ? new THREE.MeshToonMaterial({ color, gradientMap: gradientMap(3) })
+        : new THREE.MeshBasicMaterial({ color });
+    }
+
+    // mesh + inkoustový obrys (inverted hull)
+    function comicMesh(geo, color) {
+      const mesh = new THREE.Mesh(geo, makeMat(color));
+      mesh.userData.color = color;
+      const outline = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({ color: 0x111111, side: THREE.BackSide }));
+      outline.scale.setScalar(1.05);
+      outline.visible = state.outline;
+      mesh.add(outline);
+      mesh.userData.outline = outline;
+      return mesh;
+    }
+
+    /* ── Země ──────────────────────────────────────────── */
+    const WORLD = 30; // poloměr herní plochy
+    const ground = comicMesh(new THREE.CylinderGeometry(WORLD, WORLD, 1, 48), '#7bdc7b');
+    ground.position.y = -0.5;
+    ground.userData.outline.scale.setScalar(1.01);
+    scene.add(ground);
+
+    /* ── Avatar ────────────────────────────────────────── */
+    // jednoduchá komiksová postavička: tělo (kapsle) + hlava + oči
+    const avatar = new THREE.Group();
+    const body = comicMesh(new THREE.CapsuleGeometry(0.45, 0.7, 6, 14), '#ff4d4d');
+    body.position.y = 0.8;
+    const head = comicMesh(new THREE.SphereGeometry(0.4, 20, 16), '#ffd9b3');
+    head.position.y = 1.7;
+    avatar.add(body, head);
+
+    // oči + nos (aby bylo poznat, kam je „čelem")
+    const eyeGeo = new THREE.SphereGeometry(0.07, 8, 8);
+    const eyeMat = new THREE.MeshBasicMaterial({ color: 0x111111 });
+    [-0.14, 0.14].forEach(x => {
+      const e = new THREE.Mesh(eyeGeo, eyeMat);
+      e.position.set(x, 1.75, 0.34);
+      avatar.add(e);
+    });
+    const nose = comicMesh(new THREE.ConeGeometry(0.12, 0.3, 8), '#ff9f4d');
+    nose.rotation.x = Math.PI / 2;
+    nose.position.set(0, 1.62, 0.4);
+    avatar.add(nose);
+
+    scene.add(avatar);
+
+    /* ── Náhodné překážky ──────────────────────────────── */
+    const PALETTE = ['#ffd23f', '#4dd2ff', '#c78bff', '#ff9f4d', '#7bdc7b', '#ff4d4d', '#ffffff'];
+    let obstacles = [];
+
+    function regenerate() {
+      obstacles.forEach(o => scene.remove(o));
+      obstacles = [];
+      const shapes = [
+        () => new THREE.BoxGeometry(1.4, 1.4, 1.4),
+        () => new THREE.ConeGeometry(0.9, 2, 6),
+        () => new THREE.IcosahedronGeometry(0.9, 0),
+        () => new THREE.CylinderGeometry(0.7, 0.7, 1.8, 12),
+        () => new THREE.TorusKnotGeometry(0.6, 0.2, 64, 10),
+        () => new THREE.DodecahedronGeometry(0.85),
+      ];
+      const n = 16;
+      for (let i = 0; i < n; i++) {
+        const geo = shapes[Math.floor(Math.random() * shapes.length)]();
+        const m = comicMesh(geo, PALETTE[Math.floor(Math.random() * PALETTE.length)]);
+        // rozmístění v kruhu, mimo střed (start avatara)
+        let x, z;
+        do {
+          x = (Math.random() - 0.5) * (WORLD - 4) * 2;
+          z = (Math.random() - 0.5) * (WORLD - 4) * 2;
+        } while (Math.hypot(x, z) < 4 || Math.hypot(x, z) > WORLD - 2);
+        m.position.set(x, 1, z);
+        m.rotation.y = Math.random() * Math.PI;
+        m.userData.radius = 1.1; // hrubý poloměr pro kolize
+        scene.add(m);
+        obstacles.push(m);
+      }
+    }
+    regenerate();
+
+    /* ── Vstup z klávesnice ────────────────────────────── */
+    const keysDown = {};
+    const KEYMAP = {
+      ArrowUp: 'up', KeyW: 'up',
+      ArrowDown: 'down', KeyS: 'down',
+      ArrowLeft: 'left', KeyA: 'left',
+      ArrowRight: 'right', KeyD: 'right',
+      Space: 'space',
+    };
+    // poslouchej i na window (iframe musí mít fokus – klikni do scény)
+    function setKey(code, val) {
+      const k = KEYMAP[code];
+      if (!k) return;
+      keysDown[k] = val;
+      const el = document.querySelector(`.k[data-k="${k}"]`);
+      if (el) el.classList.toggle('active', val);
+    }
+    addEventListener('keydown', e => { if (KEYMAP[e.code]) { e.preventDefault(); setKey(e.code, true); } });
+    addEventListener('keyup',   e => { if (KEYMAP[e.code]) { e.preventDefault(); setKey(e.code, false); } });
+    // klik do scény = převzít fokus (kvůli iframu)
+    canvas.tabIndex = 0;
+    stage.addEventListener('click', () => canvas.focus());
+    canvas.focus();
+
+    // ovládání i tlačítky na panelu (dotyk / myš)
+    document.querySelectorAll('.k[data-k]').forEach(el => {
+      const code = Object.keys(KEYMAP).find(c => KEYMAP[c] === el.dataset.k);
+      if (!code) return;
+      const down = e => { e.preventDefault(); setKey(code, true); };
+      const up   = e => { e.preventDefault(); setKey(code, false); };
+      el.addEventListener('mousedown', down); el.addEventListener('mouseup', up); el.addEventListener('mouseleave', up);
+      el.addEventListener('touchstart', down, {passive:false}); el.addEventListener('touchend', up);
+    });
+
+    /* ── Stav avatara ──────────────────────────────────── */
+    let heading = 0;      // směr (rad)
+    let velY = 0;         // svislá rychlost (skok)
+    let onGround = true;
+    const startPos = new THREE.Vector3(0, 0, 0);
+
+    function resetAvatar() {
+      avatar.position.copy(startPos);
+      heading = 0; velY = 0; onGround = true;
+    }
+    resetAvatar();
+
+    /* ── Komiksová bublina při nárazu ──────────────────── */
+    const bubble = document.getElementById('bubble');
+    const BUBBLES = ['OUCH!', 'BONK!', 'AU!', 'OOF!'];
+    let bubbleUntil = 0;
+    const tmpV = new THREE.Vector3();
+    function showBubble() {
+      bubble.textContent = BUBBLES[Math.floor(Math.random() * BUBBLES.length)];
+      bubble.style.display = 'block';
+      bubbleUntil = performance.now() + 700;
+    }
+
+    /* ── Ovládací prvky panelu ─────────────────────────── */
+    const $ = id => document.getElementById(id);
+    $('cSpeed').oninput = e => { state.speed = +e.target.value; $('vSpeed').textContent = state.speed; };
+    $('cTurn').oninput  = e => { state.turn = +e.target.value; $('vTurn').textContent = state.turn; };
+    $('cFollow').onchange = e => state.follow = e.target.checked;
+
+    function rebuildMaterials() {
+      scene.traverse(o => {
+        if (o.isMesh && o.userData.color && o.material) {
+          o.material.dispose();
+          o.material = makeMat(o.userData.color);
+        }
+      });
+    }
+    function applyOutline() {
+      scene.traverse(o => { if (o.userData.outline) o.userData.outline.visible = state.outline; });
+    }
+    $('cToon').onchange = e => { state.toon = e.target.checked; rebuildMaterials(); };
+    $('cOutline').onchange = e => { state.outline = e.target.checked; applyOutline(); };
+
+    const halftone = document.getElementById('halftone');
+    $('cHalf').onchange  = e => halftone.style.display = e.target.checked ? 'block' : 'none';
+    $('cFrame').onchange = e => stage.classList.toggle('noframe', !e.target.checked);
+
+    $('btnRegen').onclick = () => { regenerate(); canvas.focus(); };
+    $('btnReset').onclick = () => { resetAvatar(); canvas.focus(); };
+
+    /* ── Resize ────────────────────────────────────────── */
+    function resize() {
+      const w = stage.clientWidth, h = stage.clientHeight;
+      renderer.setSize(w, h, false);
+      camera.aspect = w / h;
+      camera.updateProjectionMatrix();
+    }
+    new ResizeObserver(resize).observe(stage);
+    resize();
+
+    /* ── Herní smyčka ──────────────────────────────────── */
+    let last = performance.now();
+    function animate() {
+      requestAnimationFrame(animate);
+      const now = performance.now();
+      const dt = Math.min((now - last) / 1000, 0.05);
+      last = now;
+
+      // otáčení
+      if (keysDown.left)  heading += state.turn * dt;
+      if (keysDown.right) heading -= state.turn * dt;
+      avatar.rotation.y = heading;
+
+      // chůze vpřed/vzad ve směru hlavy
+      let move = 0;
+      if (keysDown.up)   move += 1;
+      if (keysDown.down) move -= 1;
+
+      if (move !== 0) {
+        const dist = move * state.speed * dt;
+        const nx = avatar.position.x + Math.sin(heading) * dist;
+        const nz = avatar.position.z + Math.cos(heading) * dist;
+
+        // kolize s překážkami
+        let blocked = false;
+        for (const o of obstacles) {
+          if (Math.hypot(nx - o.position.x, nz - o.position.z) < o.userData.radius + 0.5) { blocked = true; break; }
+        }
+        // hranice světa
+        if (Math.hypot(nx, nz) > WORLD - 1) blocked = true;
+
+        if (blocked) { showBubble(); }
+        else { avatar.position.x = nx; avatar.position.z = nz; }
+      }
+
+      // skok + gravitace
+      if (keysDown.space && onGround) { velY = 7; onGround = false; }
+      velY -= 20 * dt;
+      avatar.position.y += velY * dt;
+      if (avatar.position.y <= 0) { avatar.position.y = 0; velY = 0; onGround = true; }
+
+      // lehké houpání při chůzi
+      const t = now / 1000;
+      const wob = (move !== 0) ? Math.sin(t * 12) * 0.06 : 0;
+      avatar.children[0].position.y = 0.8 + wob;
+
+      // kamera za zády (3rd person)
+      if (state.follow) {
+        const camDist = 7, camHeight = 4.5;
+        const tx = avatar.position.x - Math.sin(heading) * camDist;
+        const tz = avatar.position.z - Math.cos(heading) * camDist;
+        camera.position.lerp(tmpV.set(tx, avatar.position.y + camHeight, tz), 0.12);
+        camera.lookAt(avatar.position.x, avatar.position.y + 1.2, avatar.position.z);
+      }
+
+      // bublina nad hlavou → 2D pozice
+      if (bubble.style.display === 'block') {
+        if (now > bubbleUntil) bubble.style.display = 'none';
+        else {
+          tmpV.set(avatar.position.x, avatar.position.y + 2.6, avatar.position.z).project(camera);
+          bubble.style.left = (tmpV.x * 0.5 + 0.5) * stage.clientWidth + 'px';
+          bubble.style.top  = (-tmpV.y * 0.5 + 0.5) * stage.clientHeight + 'px';
+        }
+      }
+
+      renderer.render(scene, camera);
+    }
+    animate();
+  </script>
+</body>
+</html>
