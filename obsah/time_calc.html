@@ -23,9 +23,14 @@ input,select{width:100%;background:#404040;border:1px solid #555;border-radius:4
 .res-row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #333}
 .res-row:last-child{border:none}.res-row b{color:#4caf50}
 .rows{margin-bottom:12px}
-.timerow{display:flex;gap:8px;margin-bottom:8px;align-items:center}
-.timerow input{margin:0}.timerow select{margin:0;width:90px}
-.del{background:none;border:none;color:#c0392b;cursor:pointer;font-size:1.1rem}
+.timerow{display:flex;gap:8px;margin-bottom:8px;align-items:center;flex-wrap:wrap}
+.timerow input{margin:0}.timerow select{margin:0;width:64px;flex:0 0 auto}
+.timerow .t-time{width:90px;flex:0 0 auto}
+.timerow .t-date{width:150px;flex:0 0 auto}
+.timerow .t-note{flex:1 1 140px;min-width:120px}
+.dow{font-size:.78rem;color:#6aa6fd;min-width:30px;text-align:center;flex:0 0 auto}
+@media(max-width:520px){.timerow .t-date,.timerow .t-time,.timerow .t-note{width:auto;flex:1 1 100%}}
+.del{background:none;border:none;color:#c0392b;cursor:pointer;font-size:1.1rem;flex:0 0 auto}
 .btn{background:#6aa6fd;color:#fff;border:none;padding:9px 16px;border-radius:6px;cursor:pointer;font-weight:600;font-size:.85rem}
 .btn-sec{background:#404040}
 </style>
@@ -86,14 +91,35 @@ document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
   document.querySelectorAll('.pane').forEach(x=>x.classList.remove('active'));
   t.classList.add('active');$(t.dataset.pane).classList.add('active');
 });
+// --- Trvalé uložení (localStorage) ---
+const STORE='timeCalc.v2';
+function loadStore(){try{return JSON.parse(localStorage.getItem(STORE))||{};}catch(e){return {};}}
+function saveStore(){
+  localStorage.setItem(STORE,JSON.stringify({
+    timeList,
+    work:{start:$('start').value,end:$('end').value,brk:$('break').value,rate:$('rate').value},
+    date:{from:$('dFrom').value,to:$('dTo').value}
+  }));
+}
+const saved=loadStore();
 // Sum
-let timeList=[{op:'+',v:'1:30'},{op:'+',v:'2:45'}];
+const DOW=['Ne','Po','Út','St','Čt','Pá','So'];
+function dowOf(d){if(!d)return '';const dt=new Date(d);return isNaN(dt)?'':DOW[dt.getDay()];}
+function esc(s){return (s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));}
+let timeList=(saved.timeList&&saved.timeList.length)?saved.timeList:[{op:'+',v:'1:30',date:'',note:''},{op:'+',v:'2:45',date:'',note:''}];
 function renderTimes(){
   $('timeRows').innerHTML=timeList.map((t,i)=>`<div class="timerow">
     <select data-i="${i}" data-f="op"><option ${t.op==='+'?'selected':''}>+</option><option ${t.op==='-'?'selected':''}>-</option></select>
-    <input data-i="${i}" data-f="v" value="${t.v}" placeholder="hh:mm" style="flex:1">
+    <input class="t-time" data-i="${i}" data-f="v" value="${esc(t.v)}" placeholder="hh:mm">
+    <input class="t-date" type="date" data-i="${i}" data-f="date" value="${esc(t.date||'')}">
+    <span class="dow" data-dow="${i}">${dowOf(t.date)}</span>
+    <input class="t-note" data-i="${i}" data-f="note" value="${esc(t.note||'')}" placeholder="poznámka">
     <button class="del" data-del="${i}">✕</button></div>`).join('');
-  $('timeRows').querySelectorAll('select,input').forEach(el=>el.oninput=()=>{timeList[+el.dataset.i][el.dataset.f]=el.value;sumCalc();});
+  $('timeRows').querySelectorAll('select,input').forEach(el=>el.oninput=()=>{
+    timeList[+el.dataset.i][el.dataset.f]=el.value;
+    if(el.dataset.f==='date')$('timeRows').querySelector(`[data-dow="${el.dataset.i}"]`).textContent=dowOf(el.value);
+    sumCalc();
+  });
   $('timeRows').querySelectorAll('.del').forEach(b=>b.onclick=()=>{timeList.splice(+b.dataset.del,1);renderTimes();});
   sumCalc();
 }
@@ -103,9 +129,11 @@ function sumCalc(){
   let total=timeList.reduce((s,t)=>s+(t.op==='-'?-1:1)*parseT(t.v),0);
   $('sumResult').textContent=fmtT(total);
   $('sumDec').textContent=(total/60).toFixed(2)+' hodin';
+  saveStore();
 }
-$('addTime').onclick=()=>{timeList.push({op:'+',v:'0:00'});renderTimes();};
+$('addTime').onclick=()=>{timeList.push({op:'+',v:'0:00',date:'',note:''});renderTimes();};
 // Work
+if(saved.work){$('start').value=saved.work.start;$('end').value=saved.work.end;$('break').value=saved.work.brk;$('rate').value=saved.work.rate;}
 function workCalc(){
   let s=parseT($('start').value),e=parseT($('end').value);if(e<s)e+=1440;
   const net=e-s-(+$('break').value);
@@ -113,11 +141,13 @@ function workCalc(){
   $('netTime').textContent=fmtT(net)+' h';
   $('netDec').textContent=(net/60).toFixed(2)+' h';
   $('wage').textContent=$('rate').value?Math.round(net/60*+$('rate').value).toLocaleString('cs')+' Kč':'—';
+  saveStore();
 }
 ['start','end','break','rate'].forEach(id=>$(id).oninput=workCalc);
 // Date
-$('dFrom').value=new Date().toISOString().slice(0,10);
-const t30=new Date();t30.setDate(t30.getDate()+30);$('dTo').value=t30.toISOString().slice(0,10);
+$('dFrom').value=(saved.date&&saved.date.from)||new Date().toISOString().slice(0,10);
+if(saved.date&&saved.date.to){$('dTo').value=saved.date.to;}
+else{const t30=new Date();t30.setDate(t30.getDate()+30);$('dTo').value=t30.toISOString().slice(0,10);}
 function dateCalc(){
   const a=new Date($('dFrom').value),b=new Date($('dTo').value);
   if(isNaN(a)||isNaN(b))return;
@@ -128,6 +158,7 @@ function dateCalc(){
   let wd=0;const dir=days>=0?1:-1;const d=new Date(a);
   for(let i=0;i<Math.abs(days);i++){d.setDate(d.getDate()+dir);const dow=d.getDay();if(dow!==0&&dow!==6)wd+=dir;}
   $('workDays').textContent=wd;
+  saveStore();
 }
 ['dFrom','dTo'].forEach(id=>$(id).oninput=dateCalc);
 renderTimes();workCalc();dateCalc();

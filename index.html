@@ -62,20 +62,48 @@
       scrollbar-color: #404040 #242424;
     }
 
-    /* Filtrovací pilulky nadřazených témat */
-    .skupiny {
+    /* Lepkavá horní lišta menu: hledání + filtrovací pilulky */
+    .menu-top {
       position: sticky;
       top: 0;
       z-index: 5;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
-      padding: 10px;
       background-color: #242424;
       border-bottom: 1px solid #404040;
     }
 
+    /* Hledání aplikací přímo v menu */
+    .menu-search-wrap {
+      padding: 10px 10px 6px 10px;
+    }
+
+    .menu-search {
+      width: 100%;
+      background-color: #1e1e1e;
+      border: 1px solid #404040;
+      border-radius: 8px;
+      color: #e0e0e0;
+      padding: 8px 12px;
+      font-size: 0.85rem;
+    }
+
+    .menu-search:focus {
+      outline: none;
+      border-color: #6aa6fd;
+      box-shadow: 0 0 0 2px rgba(106, 166, 253, 0.15);
+    }
+
+    /* Filtrovací pilulky nadřazených témat */
+    .skupiny {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      padding: 4px 10px 10px 10px;
+    }
+
     .skupina-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
       background-color: #2d2d2d;
       border: 1px solid #404040;
       color: #b0b0b0;
@@ -98,6 +126,32 @@
       color: #fff;
       font-weight: 600;
     }
+
+    .skupina-pill .pill-pocet {
+      font-size: 0.68rem;
+      font-weight: 600;
+      color: #888;
+      background-color: #1e1e1e;
+      border-radius: 9px;
+      padding: 0 6px;
+      line-height: 1.4;
+    }
+
+    .skupina-pill:hover .pill-pocet,
+    .skupina-pill.active .pill-pocet {
+      color: #fff;
+      background-color: rgba(0, 0, 0, 0.25);
+    }
+
+    /* Hláška, když hledání nic nenajde */
+    .bez-vysledku {
+      display: none;
+      padding: 18px 16px;
+      color: #888;
+      font-size: 0.85rem;
+      text-align: center;
+    }
+    .bez-vysledku.zobraz { display: block; }
 
     .sekce {
       padding: 10px 0;
@@ -657,11 +711,45 @@
       });
     });
 
-    /* ---- Filtrovací pilulky nadřazených témat ---- */
+    /* ---- Horní lišta menu: hledání aplikací + filtrovací pilulky ---- */
+    const menuEl = document.querySelector('.menu');
+
+    const menuTop = document.createElement('div');
+    menuTop.className = 'menu-top';
+
+    const searchWrap = document.createElement('div');
+    searchWrap.className = 'menu-search-wrap';
+    const hledatMenu = document.createElement('input');
+    hledatMenu.type = 'search';
+    hledatMenu.id = 'hledatMenu';
+    hledatMenu.className = 'menu-search';
+    hledatMenu.placeholder = '🔍 Hledat aplikaci…';
+    hledatMenu.autocomplete = 'off';
+    searchWrap.appendChild(hledatMenu);
+
     const skupinyEl = document.createElement('div');
     skupinyEl.className = 'skupiny';
-    const menuEl = document.querySelector('.menu');
-    menuEl.insertBefore(skupinyEl, menuEl.firstChild);
+
+    menuTop.appendChild(searchWrap);
+    menuTop.appendChild(skupinyEl);
+    menuEl.insertBefore(menuTop, menuEl.firstChild);
+
+    // hláška „nic nenalezeno"
+    const bezVysledku = document.createElement('div');
+    bezVysledku.className = 'bez-vysledku';
+    bezVysledku.textContent = 'Žádná aplikace neodpovídá hledání.';
+    menuEl.appendChild(bezVysledku);
+
+    // počet aplikací v dané skupině (vše = celkem)
+    function skupinaPocet(id) {
+      let n = 0;
+      sekce.forEach(s => {
+        if (id === 'vse' || s.dataset.skupina === id) {
+          n += s.querySelectorAll('a[data-page]').length;
+        }
+      });
+      return n;
+    }
 
     const pills = [];
     function updatePillState() {
@@ -671,11 +759,11 @@
       const b = document.createElement('button');
       b.className = 'skupina-pill';
       b.dataset.skupina = id;
-      b.textContent = label;
+      b.innerHTML = `<span>${label}</span><span class="pill-pocet">${skupinaPocet(id)}</span>`;
       b.addEventListener('click', () => {
         aktivniSkupina = id;
         localStorage.setItem(SKUPINA_KEY, id);
-        if (hledat) hledat.value = '';     // přepnutí tématu vyčistí hledání
+        nastavDotaz('');                   // přepnutí tématu vyčistí hledání
         updatePillState();
         aplikujFiltr();
       });
@@ -723,13 +811,24 @@
     }
     window.addEventListener('load', expandActiveSection);
 
-    /* ---- Hledání + filtr skupin ---- */
+    /* ---- Hledání (lišta v hlavičce + v menu) + filtr skupin ---- */
     const hledat = document.getElementById('hledat');
+    const searchInputs = [hledat, hledatMenu].filter(Boolean);
+
+    // jeden zdroj pravdy pro dotaz – obě pole drží stejnou hodnotu
+    function nastavDotaz(val) {
+      searchInputs.forEach(i => { i.value = val; });
+    }
+    function aktualniDotaz() {
+      const i = searchInputs.find(x => x.value.trim());
+      return i ? i.value.trim().toLowerCase() : '';
+    }
 
     function aplikujFiltr() {
-      const q = hledat ? hledat.value.trim().toLowerCase() : '';
+      const q = aktualniDotaz();
       if (q) {
         // režim hledání – napříč všemi tématy, ignoruje pilulky
+        let celkemShod = 0;
         sekce.forEach(s => {
           let shoda = 0;
           s.querySelectorAll('a[data-page]').forEach(a => {
@@ -740,10 +839,13 @@
           });
           s.classList.toggle('skryto', shoda === 0);
           if (shoda > 0) s.classList.remove('collapsed');
+          celkemShod += shoda;
         });
+        bezVysledku.classList.toggle('zobraz', celkemShod === 0);
         return;
       }
       // režim skupin – zobrazí jen sekce vybraného tématu
+      bezVysledku.classList.remove('zobraz');
       sekce.forEach(s => {
         const patri = (aktivniSkupina === 'vse' || s.dataset.skupina === aktivniSkupina);
         s.classList.toggle('skryto', !patri);
@@ -752,7 +854,13 @@
       });
     }
 
-    if (hledat) hledat.addEventListener('input', aplikujFiltr);
+    // psaní v jednom poli synchronizuje druhé a přefiltruje
+    searchInputs.forEach(input => {
+      input.addEventListener('input', () => {
+        nastavDotaz(input.value);
+        aplikujFiltr();
+      });
+    });
 
     // počáteční vykreslení podle uloženého tématu
     aplikujFiltr();

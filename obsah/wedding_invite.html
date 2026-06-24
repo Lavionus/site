@@ -24,7 +24,8 @@ h1.app{font-size:1.5rem;font-weight:600;text-align:center;padding:16px 10px 4px}
 /* Layout */
 .wrap{display:flex;gap:18px;align-items:flex-start;padding:0 16px 40px;max-width:1500px;margin:0 auto}
 .editor{flex:0 0 380px;max-width:380px}
-.stage{flex:1;position:sticky;top:14px;display:flex;flex-direction:column;align-items:center;gap:12px}
+.stage{flex:1;min-width:0;position:sticky;top:14px;display:flex;flex-direction:column;align-items:center;gap:12px}
+.stage-view{width:100%;max-width:100%;overflow:auto;display:flex;justify-content:safe center;padding:6px}
 @media(max-width:980px){.wrap{flex-direction:column}.editor{flex:none;max-width:none;width:100%}.stage{position:static;width:100%}}
 
 /* Editor cards */
@@ -98,17 +99,32 @@ input[type=range]{width:100%;accent-color:#6aa6fd}
 .inv-deco-bottom{margin-top:calc(10px*var(--sp))}
 .inv-section{margin:8px 0}
 
-@media print{
-  body{background:#fff}
-  .editor,.toolbar,.app,.sub,.zoombar,.stage>.note{display:none!important}
-  .wrap{display:block;padding:0}
-  .stage{position:static}
-  .paper-shadow{filter:none}
-  .invitation{transform:none!important;box-shadow:none!important;margin:0 auto}
-  body.batch-mode .wrap{display:none!important}
-  body.batch-mode #batchBox{display:block!important;position:static!important;left:auto!important}
-  body.batch-mode #batchBox .batch-card{page-break-after:always;break-after:page;margin:0 auto;box-shadow:none!important;transform:none!important}
-}
+/* ---- Floating objects layer ---- */
+.free-layer{position:absolute;inset:0;z-index:5;pointer-events:none}
+.fo{position:absolute;transform-origin:center center;pointer-events:auto;cursor:move;touch-action:none;will-change:transform}
+.fo .fo-clip{width:100%;height:100%;overflow:hidden;background-repeat:no-repeat}
+.fo.text{padding:2px 6px;line-height:1.35;white-space:pre-wrap;word-break:break-word}
+.fo.selected{outline:1.5px dashed #6aa6fd;outline-offset:2px}
+.fo-ui{position:absolute;display:none;pointer-events:auto;z-index:6}
+.fo.selected .fo-ui{display:block}
+.fo-handle{position:absolute;width:16px;height:16px;border-radius:50%;background:#6aa6fd;border:2px solid #fff;box-shadow:0 1px 4px rgba(0,0,0,.4)}
+.fo-rotate{top:-30px;left:50%;transform:translateX(-50%);cursor:grab;background:#7ed957}
+.fo-rotate::before{content:"";position:absolute;left:50%;top:14px;width:1px;height:14px;background:#7ed957;transform:translateX(-50%)}
+.fo-resize{bottom:-8px;right:-8px;cursor:nwse-resize}
+.fo-del{top:-30px;right:-8px;width:18px;height:18px;border-radius:50%;background:#d9534f;color:#fff;border:2px solid #fff;font-size:11px;line-height:14px;text-align:center;cursor:pointer;font-weight:700}
+.exporting .fo-ui,.exporting .fo.selected{outline:none!important}
+.exporting .fo-ui{display:none!important}
+
+/* floating-objects editor list */
+.folist{display:flex;flex-direction:column;gap:6px;margin-top:8px}
+.foitem{display:flex;align-items:center;gap:8px;background:#2c2c2c;border:1px solid #3a3a3a;border-radius:6px;padding:6px 8px;font-size:.74rem;color:#cfcfcf;cursor:pointer}
+.foitem.sel{border-color:#6aa6fd}
+.foitem .thumb{width:26px;height:26px;border-radius:4px;background:#444 center/cover;flex:0 0 26px;display:flex;align-items:center;justify-content:center;font-size:.9rem}
+.foitem .lab{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.foitem button{background:none;border:none;color:#888;cursor:pointer;font-size:.9rem;padding:2px 4px}
+.foitem button:hover{color:#e0b0b0}
+.foedit{background:#1f1f1f;border:1px solid #3a3a3a;border-radius:6px;padding:8px;margin-top:8px}
+
 .note{font-size:.72rem;color:#777;text-align:center;max-width:380px}
 </style>
 </head>
@@ -117,8 +133,7 @@ input[type=range]{width:100%;accent-color:#6aa6fd}
 <div class="sub">Navrhněte si vlastní oznámení — texty, barvy, písma, rámečky i dekorace. Vše se ukládá ve vašem prohlížeči.</div>
 
 <div class="toolbar">
-  <button class="btn" id="printBtn">🖨️ Tisk / PDF</button>
-  <button class="btn btn-sec" id="pngBtn">🖼️ Stáhnout PNG</button>
+  <button class="btn" id="pngBtn">🖼️ Stáhnout PNG</button>
   <button class="btn btn-sec" id="randomBtn">🎲 Náhodný styl</button>
   <button class="btn btn-sec" id="saveBtn">💾 Uložit návrh</button>
   <button class="btn btn-sec" id="loadBtn">📂 Načíst</button>
@@ -201,7 +216,6 @@ input[type=range]{width:100%;accent-color:#6aa6fd}
       <div class="body">
         <label>Oslovení (řádek nad jmény)</label>
         <input type="text" id="greeting" placeholder="např. Milí přátelé,">
-        <div class="hint">Použijte <b>{jmeno}</b> pro doplnění jména hosta při hromadném tisku.</div>
         <label class="chk"><input type="checkbox" id="parentsOn"> Uvést rodiče („společně s rodiči")</label>
         <label>Text rodičů</label>
         <textarea id="parents" rows="2">společně s rodiči Janou a Petrem Novákovými a Marií a Josefem Svobodovými</textarea>
@@ -280,6 +294,15 @@ input[type=range]{width:100%;accent-color:#6aa6fd}
           <input type="file" id="bgImgFile" accept="image/*">
           <label>Ztlumení obrázku (překryv) <span class="rangeval" id="bgOverVal">35%</span></label>
           <input type="range" id="bgOverlay" min="0" max="90" value="35">
+          <label class="chk"><input type="checkbox" id="bgCrop"> Vlastní ořez / poloha</label>
+          <div id="bgCropBox" style="display:none">
+            <label>Přiblížení <span class="rangeval" id="bgZoomVal">100%</span></label>
+            <input type="range" id="bgZoom" min="100" max="300" value="100">
+            <label>Posun vodorovně <span class="rangeval" id="bgPosXVal">50%</span></label>
+            <input type="range" id="bgPosX" min="0" max="100" value="50">
+            <label>Posun svisle <span class="rangeval" id="bgPosYVal">50%</span></label>
+            <input type="range" id="bgPosY" min="0" max="100" value="50">
+          </div>
           <button class="btn btn-sec" id="bgImgClear" style="margin-top:8px;width:100%">Odebrat obrázek</button>
         </div>
         <label>Vzor přes pozadí</label>
@@ -413,17 +436,23 @@ input[type=range]{width:100%;accent-color:#6aa6fd}
         </select>
         <label>Velikost <span class="rangeval" id="photoSzVal">120px</span></label>
         <input type="range" id="photoSize" min="60" max="220" value="120">
+        <label class="chk"><input type="checkbox" id="photoFloat"> Volně umístit (přetáhnout &amp; otočit)</label>
+        <div class="hint">Při volném umístění lze fotku táhnout přímo v náhledu, otáčet a měnit velikost.</div>
         <button class="btn btn-sec" id="photoClear" style="margin-top:8px;width:100%">Odebrat fotografii</button>
       </div>
     </div>
 
-    <div class="group collapsed">
-      <h2>💌 Hromadný tisk pro hosty <span class="arr">▾</span></h2>
+    <div class="group">
+      <h2>🪄 Plovoucí prvky <span class="arr">▾</span></h2>
       <div class="body">
-        <div class="hint">Vyplňte v sekci „Rodiče &amp; oslovení" oslovení s <b>{jmeno}</b>. Sem napište jména hostů, každého na nový řádek — vytvoří se oznámení pro každého zvlášť.</div>
-        <label>Seznam hostů</label>
-        <textarea id="guestList" rows="5" placeholder="Babička Marie&#10;Rodina Dvořákova&#10;Petr a Lucie"></textarea>
-        <button class="btn" id="batchPrint" style="width:100%;margin-top:8px">🖨️ Vytisknout pro všechny hosty</button>
+        <div class="hint">Přidejte obrázky nebo text, které lze v náhledu volně posouvat, otáčet a zvětšovat. Pozice se ukládají.</div>
+        <div class="row" style="margin-top:8px">
+          <button class="btn btn-sec" id="addFloatImg">🖼️ Přidat obrázek</button>
+          <button class="btn btn-sec" id="addFloatText">🆎 Přidat text</button>
+        </div>
+        <input type="file" id="floatImgFile" accept="image/*" hidden>
+        <div class="folist" id="foList"></div>
+        <div class="foedit" id="foEdit" style="display:none"></div>
       </div>
     </div>
 
@@ -437,6 +466,7 @@ input[type=range]{width:100%;accent-color:#6aa6fd}
       <button id="zoomIn">+</button>
       <button id="zoomFit" style="width:auto;padding:0 10px">Přizpůsobit</button>
     </div>
+    <div class="stage-view" id="stageView">
     <div class="paper-shadow" id="paperShadow">
       <div class="invitation" id="inv">
         <div class="inv-frame" id="invFrame"></div>
@@ -463,9 +493,11 @@ input[type=range]{width:100%;accent-color:#6aa6fd}
           <div class="inv-deco-bottom" id="pDecoBottom"></div>
          </div>
         </div>
+        <div class="free-layer" id="freeLayer"></div>
       </div>
     </div>
-    <div class="note">💡 Tip: pro tisk vyberte v dialogu „Okraje: žádné" a vypněte záhlaví/zápatí. PNG zachytí oznámení v plné kvalitě.</div>
+    </div>
+    <div class="note">💡 Tip: tlačítkem „Stáhnout PNG" uložíte oznámení v plné kvalitě. Plovoucí prvky táhněte myší, zelený puntík otáčí, modrý mění velikost.</div>
   </div>
 </div>
 
@@ -551,14 +583,28 @@ function render(){
 
   // background
   const bgType=$('bgType').value;
-  let bg='';
-  if(bgType==='solid') bg=$('bgColor').value;
-  else if(bgType==='gradient') bg=`linear-gradient(${$('bgAngle').value}deg, ${$('bgColor2').value}, ${$('bgColor3').value})`;
+  $('bgCropBox').style.display=$('bgCrop').checked?'block':'none';
+  // clear explicit background props (image branch sets them individually)
+  inv.style.backgroundImage='';inv.style.backgroundSize='';inv.style.backgroundPosition='';inv.style.backgroundRepeat='';
+  if(bgType==='solid') inv.style.background=$('bgColor').value;
+  else if(bgType==='gradient') inv.style.background=`linear-gradient(${$('bgAngle').value}deg, ${$('bgColor2').value}, ${$('bgColor3').value})`;
   else if(bgType==='image' && bgImageData){
     const ov=$('bgOverlay').value/100;
-    bg=`linear-gradient(rgba(255,255,255,${ov}),rgba(255,255,255,${ov})), url(${bgImageData}) center/cover`;
-  } else bg=$('bgColor').value;
-  inv.style.background=bg;
+    let size='cover',pos='center';
+    if($('bgCrop').checked){
+      const cw=inv.clientWidth, ch=inv.clientHeight;
+      const natW=(bgImgNat&&bgImgNat.w)||cw, natH=(bgImgNat&&bgImgNat.h)||ch;
+      const cover=Math.max(cw/natW, ch/natH), z=$('bgZoom').value/100;
+      size=`${(natW*cover*z).toFixed(1)}px ${(natH*cover*z).toFixed(1)}px`;
+      pos=`${$('bgPosX').value}% ${$('bgPosY').value}%`;
+    }
+    inv.style.background='';
+    inv.style.backgroundColor=$('bgColor').value;
+    inv.style.backgroundImage=`linear-gradient(rgba(255,255,255,${ov}),rgba(255,255,255,${ov})), url(${bgImageData})`;
+    inv.style.backgroundSize=`auto, ${size}`;
+    inv.style.backgroundPosition=`center, ${pos}`;
+    inv.style.backgroundRepeat='no-repeat, no-repeat';
+  } else inv.style.background=$('bgColor').value;
 
   // pattern overlay
   const pat=$('pattern').value, patOp=$('patternOpacity').value/100;
@@ -667,15 +713,18 @@ function render(){
   // QR
   renderQR(accent);
 
-  // photo
+  // photo (inline — only when NOT floating)
   const photoOn=$('photoOn').checked;
   const ph=$('pPhoto');
-  if(photoOn&&photoData){
+  if(photoOn&&photoData&&!$('photoFloat').checked){
     ph.src=photoData;ph.style.display='block';
     ph.style.width=ph.style.height=$('photoSize').value+'px';
     ph.style.borderRadius=$('photoShape').value;
     ph.style.border=`3px solid ${accent}`;
   } else ph.style.display='none';
+
+  // floating objects (images, free text, floating couple photo)
+  renderFloats();
 
   // range labels
   $('nameSzVal').textContent=$('nameSize').value+'px';
@@ -693,7 +742,9 @@ function render(){
   $('dtSzVal').textContent=($('dateSize').value/100).toFixed(1)+'×';
   $('spVal').textContent=$('spacing').value+'%';
   $('cScaleVal').textContent=$('contentScale').value+'%';
-  updatePrintCSS(w,h);
+  $('bgZoomVal').textContent=$('bgZoom').value+'%';
+  $('bgPosXVal').textContent=$('bgPosX').value+'%';
+  $('bgPosYVal').textContent=$('bgPosY').value+'%';
   requestAnimationFrame(fitContent);
 }
 
@@ -761,13 +812,6 @@ function renderQR(accent){
     ${$('qrLabel').value?`<span class="qrlabel" style="color:${accent}">${escapeHtml($('qrLabel').value)}</span>`:''}`;
 }
 
-/* ---------- True-to-size print CSS ---------- */
-function updatePrintCSS(w,h){
-  let st=$('pageStyle');
-  if(!st){st=document.createElement('style');st.id='pageStyle';document.head.appendChild(st);}
-  st.textContent=`@page{size:${w}mm ${h}mm;margin:0}
-  @media print{#inv{width:${w}mm!important;height:${h}mm!important}}`;
-}
 function composeDate(){
   const d=fmtDate($('date').value,$('dateLong').checked);
   const t=$('time').value;
@@ -797,11 +841,40 @@ $('bgType').onchange=()=>{syncBgBoxes();render();save();};
 $('format').onchange=()=>{render();fitZoom();save();};
 
 /* ---------- Image uploads ---------- */
-$('bgImgFile').onchange=e=>readImg(e,d=>{bgImageData=d;$('bgType').value='image';syncBgBoxes();render();save();});
-$('bgImgClear').onclick=()=>{bgImageData='';$('bgImgFile').value='';render();save();};
-$('photoFile').onchange=e=>readImg(e,d=>{photoData=d;$('photoOn').checked=true;render();save();});
-$('photoClear').onclick=()=>{photoData='';$('photoFile').value='';$('photoOn').checked=false;render();save();};
-function readImg(e,cb){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>cb(r.result);r.readAsDataURL(f);}
+$('bgImgFile').onchange=e=>readImg(e,d=>{bgImageData=d;$('bgType').value='image';
+  loadAR(d,(ar,w,h)=>{bgImgNat={w,h};syncBgBoxes();render();save();});});
+$('bgImgClear').onclick=()=>{bgImageData='';bgImgNat=null;$('bgImgFile').value='';render();save();};
+$('photoFile').onchange=e=>readImg(e,d=>{photoData=d;$('photoOn').checked=true;$('photoFloat').checked=true;
+  photoFloatPos={x:50,y:50,w:34,rot:0};
+  loadAR(d,ar=>{photoAR=ar;selectFo(PHOTO_FO_ID);render();renderFoEditor();save();});});
+$('photoClear').onclick=()=>{photoData='';$('photoFile').value='';$('photoOn').checked=false;render();renderFoEditor();save();};
+function readImg(e,cb){const f=e.target.files[0];if(!f)return;const r=new FileReader();r.onload=()=>downscaleImg(r.result,f.type,cb);r.readAsDataURL(f);}
+function loadAR(src,cb){const im=new Image();im.onload=()=>cb(im.naturalWidth/im.naturalHeight||1,im.naturalWidth,im.naturalHeight);im.onerror=()=>cb(1,1,1);im.src=src;}
+/* Zmenší a zkomprimuje vložený obrázek, aby se vešel do localStorage.
+   Zachová průhlednost (PNG), jinak použije JPEG kvůli velikosti. */
+function downscaleImg(src,type,cb,maxDim=1600){
+  const im=new Image();
+  im.onload=()=>{
+    let w=im.naturalWidth, h=im.naturalHeight;
+    const scale=Math.min(1, maxDim/Math.max(w,h));
+    if(scale>=1 && src.length<600000){cb(src);return;}   // už dost malé
+    const cw=Math.max(1,Math.round(w*scale)), ch=Math.max(1,Math.round(h*scale));
+    const cv=document.createElement('canvas');cv.width=cw;cv.height=ch;
+    const ctx=cv.getContext('2d');ctx.drawImage(im,0,0,cw,ch);
+    let out;
+    try{ out = imgHasAlpha(ctx,cw,ch) ? cv.toDataURL('image/png') : cv.toDataURL('image/jpeg',0.85); }
+    catch(err){ out = cv.toDataURL('image/jpeg',0.85); }
+    cb(out.length<src.length?out:src);
+  };
+  im.onerror=()=>cb(src);
+  im.src=src;
+}
+function imgHasAlpha(ctx,w,h){
+  try{const d=ctx.getImageData(0,0,w,h).data;
+    for(let i=3;i<d.length;i+=28){if(d[i]<250)return true;}   // vzorkování každého 7. pixelu
+    return false;
+  }catch(e){return false;}
+}
 
 /* ---------- Bind all inputs ---------- */
 document.querySelectorAll('#editor input, #editor select, #editor textarea').forEach(el=>{
@@ -811,16 +884,16 @@ document.querySelectorAll('#editor input, #editor select, #editor textarea').for
 });
 
 /* ---------- Collapsible groups ---------- */
-document.querySelectorAll('.group>h2').forEach(h=>h.onclick=()=>h.parentElement.classList.toggle('collapsed'));
+document.querySelectorAll('.group>h2').forEach(h=>h.onclick=()=>{h.parentElement.classList.toggle('collapsed');save();});
 
 /* ---------- Zoom ---------- */
 let zoom=1;
 function setZoom(z){zoom=Math.max(.2,Math.min(2,z));$('inv').style.transform=`scale(${zoom})`;
   const inv=$('inv');$('paperShadow').style.width=(inv.offsetWidth*zoom)+'px';$('paperShadow').style.height=(inv.offsetHeight*zoom)+'px';
   $('zoomVal').textContent=Math.round(zoom*100)+' %';}
-$('zoomIn').onclick=()=>setZoom(zoom+.1);
-$('zoomOut').onclick=()=>setZoom(zoom-.1);
-$('zoomFit').onclick=fitZoom;
+$('zoomIn').onclick=()=>{setZoom(zoom+.1);save();};
+$('zoomOut').onclick=()=>{setZoom(zoom-.1);save();};
+$('zoomFit').onclick=()=>{fitZoom();save();};
 function fitZoom(){
   const inv=$('inv');const availH=window.innerHeight-160;const availW=$('inv').parentElement.parentElement.offsetWidth-20;
   const z=Math.min(availW/inv.offsetWidth, availH/inv.offsetHeight, 1.4);
@@ -829,29 +902,78 @@ function fitZoom(){
 
 /* ---------- Save / Load ---------- */
 const KEY='wedding_invite_design';
+
+/* IndexedDB — pojme velké obrázky bez limitu localStorage */
+const DB_NAME='wedding_invite_db', STORE='state';
+function idbOpen(){return new Promise((res,rej)=>{
+  if(!window.indexedDB){rej(new Error('no idb'));return;}
+  const r=indexedDB.open(DB_NAME,1);
+  r.onupgradeneeded=()=>{r.result.createObjectStore(STORE);};
+  r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error);});}
+function idbSet(k,v){return idbOpen().then(db=>new Promise((res,rej)=>{
+  const tx=db.transaction(STORE,'readwrite');tx.objectStore(STORE).put(v,k);
+  tx.oncomplete=()=>res(); tx.onerror=()=>rej(tx.error);}));}
+function idbGet(k){return idbOpen().then(db=>new Promise((res,rej)=>{
+  const tx=db.transaction(STORE,'readonly');const rq=tx.objectStore(STORE).get(k);
+  rq.onsuccess=()=>res(rq.result); rq.onerror=()=>rej(rq.error);}));}
+function idbDel(k){return idbOpen().then(db=>new Promise((res)=>{
+  const tx=db.transaction(STORE,'readwrite');tx.objectStore(STORE).delete(k);
+  tx.oncomplete=()=>res(); tx.onerror=()=>res();}));}
+
 function collect(){
   const o={};
   document.querySelectorAll('#editor input, #editor select, #editor textarea').forEach(el=>{
-    if(el.type==='file'||!el.id)return;
+    if(el.type==='file'||!el.id||el.id.indexOf('foe_')===0)return;
     o[el.id]=el.type==='checkbox'?el.checked:el.value;
   });
   o._bg=bgImageData;o._photo=photoData;o._program=programData;
+  o._floats=floatObjects;o._photoFO=photoFloatPos;
+  o._zoom=zoom;
+  o._collapsed=[...document.querySelectorAll('.group')].map(g=>g.classList.contains('collapsed'));
   return o;
 }
 function apply(o){
+  let savedZoom=null;
   Object.entries(o).forEach(([k,v])=>{
     if(k==='_bg'){bgImageData=v||'';return;}
     if(k==='_photo'){photoData=v||'';return;}
     if(k==='_program'){if(Array.isArray(v))programData=v;buildProgramRows();return;}
+    if(k==='_floats'){if(Array.isArray(v))floatObjects=v;return;}
+    if(k==='_photoFO'){if(v&&typeof v==='object')photoFloatPos=v;return;}
+    if(k==='_zoom'){if(typeof v==='number')savedZoom=v;return;}
+    if(k==='_collapsed'){if(Array.isArray(v)){const gs=document.querySelectorAll('.group');v.forEach((c,i)=>{if(gs[i])gs[i].classList.toggle('collapsed',!!c);});}return;}
+    if(k.indexOf('foe_')===0)return;
     const el=$(k);if(!el)return;
     if(el.type==='checkbox')el.checked=v;else el.value=v;
   });
-  syncBgBoxes();render();
+  // recompute aspect ratios for loaded images
+  floatObjects.forEach(o2=>{if(o2.type==='image'&&o2.src&&!o2.ar)loadAR(o2.src,ar=>{o2.ar=ar;renderFloats();});});
+  if(photoData)loadAR(photoData,ar=>{photoAR=ar;renderFloats();});
+  if(bgImageData)loadAR(bgImageData,(ar,w,h)=>{bgImgNat={w,h};render();});
+  floatObjects.forEach(o2=>{const n=+String(o2.id||'').replace(/\D/g,'')||0;if(n>=foUid)foUid=n+1;});
+  foSelected=null;
+  syncBgBoxes();render();renderFoEditor();
+  if(savedZoom!=null)setZoom(savedZoom);
 }
-function save(){try{localStorage.setItem(KEY,JSON.stringify(collect()));}catch(e){}}
+let saveWarned=false, saveT;
+function save(){
+  const data=collect();
+  // localStorage as a fast/fallback store (může selhat u velkých obrázků — to řeší IDB)
+  try{localStorage.setItem(KEY,JSON.stringify(data));}catch(e){}
+  clearTimeout(saveT);
+  saveT=setTimeout(()=>{ idbSet(KEY,data).then(()=>{saveWarned=false;}).catch(()=>{
+    if(!saveWarned){saveWarned=true;flash('⚠ Nepodařilo se uložit návrh do prohlížeče — použijte Export JSON.');}
+  }); },150);
+}
 $('saveBtn').onclick=()=>{save();flash('Návrh uložen ✓');};
-$('loadBtn').onclick=()=>{const s=localStorage.getItem(KEY);if(s){apply(JSON.parse(s));flash('Návrh načten ✓');}else flash('Není co načíst');};
-$('resetBtn').onclick=()=>{if(confirm('Obnovit výchozí návrh? Neuložené změny se ztratí.')){localStorage.removeItem(KEY);location.reload();}};
+$('loadBtn').onclick=async()=>{
+  let s=null;
+  try{s=await idbGet(KEY);}catch(e){}
+  if(!s){try{s=JSON.parse(localStorage.getItem(KEY)||'null');}catch(e){}}
+  if(s){apply(s);flash('Návrh načten ✓');}else flash('Není co načíst');
+};
+$('resetBtn').onclick=async()=>{if(confirm('Obnovit výchozí návrh? Neuložené změny se ztratí.')){
+  try{await idbDel(KEY);}catch(e){} try{localStorage.removeItem(KEY);}catch(e){} location.reload();}};
 
 /* Export / Import JSON */
 $('exportBtn').onclick=()=>{
@@ -863,20 +985,18 @@ $('importBtn').onclick=()=>$('importFile').click();
 $('importFile').onchange=e=>{const f=e.target.files[0];if(!f)return;const r=new FileReader();
   r.onload=()=>{try{apply(JSON.parse(r.result));save();flash('Import OK ✓');}catch(err){flash('Chyba importu');}};r.readAsText(f);};
 
-/* ---------- Print & PNG ---------- */
-$('printBtn').onclick=()=>{const t=$('inv').style.transform;$('inv').style.transform='none';
-  $('paperShadow').style.width='auto';$('paperShadow').style.height='auto';
-  window.print();
-  setTimeout(()=>{$('inv').style.transform=t;setZoom(zoom);},300);};
+/* ---------- PNG export ---------- */
 $('pngBtn').onclick=async()=>{
-  if(typeof html2canvas==='undefined'){flash('PNG export není dostupný offline — použijte Tisk/PDF');return;}
+  if(typeof html2canvas==='undefined'){flash('PNG export není dostupný — chybí knihovna html2canvas');return;}
   const inv=$('inv');const t=inv.style.transform;inv.style.transform='none';
+  document.body.classList.add('exporting');
   flash('Generuji PNG…');
   try{
     const canvas=await html2canvas(inv,{scale:3,backgroundColor:null,useCORS:true});
     const a=document.createElement('a');a.href=canvas.toDataURL('image/png');a.download='svatebni-oznameni.png';a.click();
     flash('PNG staženo ✓');
   }catch(e){flash('Chyba při generování PNG');}
+  document.body.classList.remove('exporting');
   inv.style.transform=t;setZoom(zoom);
 };
 
@@ -903,40 +1023,276 @@ $('randomBtn').onclick=()=>{
   render();save();flash('Náhodný styl 🎲');
 };
 
-/* ---------- Batch print pro hosty ---------- */
-$('batchPrint').onclick=()=>{
-  const guests=$('guestList').value.split('\n').map(s=>s.trim()).filter(Boolean);
-  if(!guests.length){flash('Zadejte alespoň jednoho hosta');return;}
-  const greetTpl=$('greeting').value||'';
-  let box=$('batchBox');
-  if(box)box.remove();
-  box=document.createElement('div');box.id='batchBox';
-  box.style.cssText='position:absolute;left:-99999px;top:0';
-  guests.forEach(g=>{
-    const clone=$('inv').cloneNode(true);
-    clone.style.transform='none';clone.removeAttribute('id');
-    clone.classList.add('batch-card');
-    const gr=clone.querySelector('#pGreeting')||clone.querySelector('.inv-greeting');
-    if(gr){
-      const txt=greetTpl?greetTpl.replace(/\{jmeno\}/g,g):('Milí '+g+',');
-      gr.textContent=txt;gr.style.display='block';
-    }
-    box.appendChild(clone);
+/* ===================================================================
+   FLOATING OBJECTS — images, free text & floating couple photo
+   Geometry is stored in % of the card, so it survives zoom, format
+   changes and exports identically.
+   =================================================================== */
+let bgImgNat=null, photoAR=1;
+let floatObjects=[];                       // user-added images & text boxes
+let photoFloatPos={x:50,y:30,w:30,rot:0};  // geometry for floating couple photo
+let foSelected=null, foUid=1, foDrag=null;
+const PHOTO_FO_ID='__photo';
+const ALL_FONTS=[...new Set([...SCRIPT_FONTS,...BODY_FONTS])];
+const clamp=(v,a,b)=>Math.max(a,Math.min(b,v));
+
+function newFloatImage(src,ar){
+  return {id:'fo'+(foUid++),type:'image',src,ar:ar||1,xPct:50,yPct:45,wPct:34,rot:0,
+          shape:'0',zoom:100,ox:50,oy:50,opacity:100};
+}
+function newFloatText(){
+  return {id:'fo'+(foUid++),type:'text',text:'Nový text',xPct:50,yPct:50,wPct:46,rot:0,
+          font:$('fontBody').value,size:18,color:$('textColor').value,align:'center',bold:false,italic:false};
+}
+function getFo(id){
+  if(id===PHOTO_FO_ID) return {id,type:'image',src:photoData,ar:photoAR||1,
+      xPct:photoFloatPos.x,yPct:photoFloatPos.y,wPct:photoFloatPos.w,rot:photoFloatPos.rot,
+      shape:$('photoShape').value,zoom:100,ox:50,oy:50,opacity:100,border:$('accentColor').value,_photo:true};
+  return floatObjects.find(o=>o.id===id);
+}
+function foSet(id,key,val){
+  if(id===PHOTO_FO_ID){
+    if(key==='wPct')photoFloatPos.w=val;
+    else if(key==='rot')photoFloatPos.rot=val;
+    else if(key==='shape')$('photoShape').value=val;
+  } else { const o=floatObjects.find(x=>x.id===id); if(o)o[key]=val; }
+  renderFloats();save();
+}
+
+/* ---- list of floating objects (incl. virtual couple photo) ---- */
+function floatList(){
+  const list=floatObjects.slice();
+  if($('photoOn').checked&&photoData&&$('photoFloat').checked) list.unshift(getFo(PHOTO_FO_ID));
+  return list;
+}
+
+/* ---- render the floating layer in the preview ---- */
+function renderFloats(){
+  const layer=$('freeLayer');
+  const list=floatList();
+  [...layer.children].forEach(n=>{if(!list.find(o=>o.id===n.dataset.id))n.remove();});
+  const inv=$('inv'), cw=inv.clientWidth, ch=inv.clientHeight;
+  list.forEach(o=>{
+    let el=layer.querySelector(`.fo[data-id="${o.id}"]`);
+    if(!el){el=buildFoEl(o);layer.appendChild(el);}
+    layoutFoEl(el,o,cw,ch);
   });
-  document.body.appendChild(box);
-  document.body.classList.add('batch-mode');
-  setTimeout(()=>{window.print();},250);
-  const cleanup=()=>{document.body.classList.remove('batch-mode');const b=$('batchBox');if(b)b.remove();window.removeEventListener('afterprint',cleanup);};
-  window.addEventListener('afterprint',cleanup);
-  flash(`Připraveno ${guests.length} oznámení`);
-};
+}
+function buildFoEl(o){
+  const el=document.createElement('div');
+  el.className='fo '+o.type; el.dataset.id=o.id;
+  el.innerHTML=(o.type==='image'?'<div class="fo-clip"></div>':'<div class="fo-txt"></div>')+
+    '<div class="fo-ui">'+
+    '<span class="fo-handle fo-rotate" data-act="rotate"></span>'+
+    '<span class="fo-handle fo-resize" data-act="resize"></span>'+
+    '<span class="fo-del" data-act="del">✕</span></div>';
+  el.addEventListener('pointerdown',foPointerDown);
+  return el;
+}
+function layoutFoEl(el,o,cw,ch){
+  const wpx=o.wPct/100*cw;
+  el.style.left=o.xPct+'%'; el.style.top=o.yPct+'%'; el.style.width=wpx+'px';
+  if(o.type==='image'){
+    el.style.height=(wpx/(o.ar||1))+'px';
+    const clip=el.querySelector('.fo-clip');
+    clip.style.backgroundImage=`url(${o.src})`;
+    clip.style.backgroundSize=`${o.zoom||100}% ${o.zoom||100}%`;
+    clip.style.backgroundPosition=`${o.ox==null?50:o.ox}% ${o.oy==null?50:o.oy}%`;
+    const rad=o.shape==='50%'?'50%':(o.shape||'0');
+    clip.style.borderRadius=rad; el.style.borderRadius=rad;
+    el.style.opacity=(o.opacity==null?100:o.opacity)/100;
+    el.style.border=o.border?`3px solid ${o.border}`:'none';
+  } else {
+    el.style.height='auto';
+    const t=el.querySelector('.fo-txt');
+    t.textContent=o.text||'';
+    el.style.fontFamily=`'${o.font}',serif`;
+    el.style.fontSize=(o.size||18)+'px';
+    el.style.color=o.color||'#333';
+    el.style.textAlign=o.align||'center';
+    el.style.fontWeight=o.bold?'700':'400';
+    el.style.fontStyle=o.italic?'italic':'normal';
+  }
+  el.style.transform=`translate(-50%,-50%) rotate(${o.rot||0}deg)`;
+  el.classList.toggle('selected',o.id===foSelected);
+}
+
+/* ---- pointer drag / rotate / resize ---- */
+function foPointerDown(e){
+  const el=e.currentTarget, id=el.dataset.id, act=e.target.dataset.act;
+  selectFo(id);
+  if(act==='del'){e.stopPropagation();deleteFo(id);return;}
+  const o=getFo(id); if(!o)return;
+  const rect=$('inv').getBoundingClientRect();
+  const er=el.getBoundingClientRect(), cx=er.left+er.width/2, cy=er.top+er.height/2;
+  foDrag={id,mode:act||'move',rect,cx,cy,sx:e.clientX,sy:e.clientY,
+    o0:Object.assign({},o),startAng:Math.atan2(e.clientY-cy,e.clientX-cx)};
+  el.setPointerCapture(e.pointerId);
+  el.addEventListener('pointermove',foPointerMove);
+  el.addEventListener('pointerup',foPointerUp);
+  el.addEventListener('pointercancel',foPointerUp);
+  e.preventDefault();e.stopPropagation();
+}
+function foPointerMove(e){
+  if(!foDrag)return;
+  const o=getFo(foDrag.id); if(!o)return;
+  const r=foDrag.rect;
+  if(foDrag.mode==='move'){
+    o.xPct=clamp(foDrag.o0.xPct+(e.clientX-foDrag.sx)/r.width*100,-10,110);
+    o.yPct=clamp(foDrag.o0.yPct+(e.clientY-foDrag.sy)/r.height*100,-10,110);
+  } else if(foDrag.mode==='rotate'){
+    let deg=foDrag.o0.rot+(Math.atan2(e.clientY-foDrag.cy,e.clientX-foDrag.cx)-foDrag.startAng)*180/Math.PI;
+    if(e.shiftKey)deg=Math.round(deg/15)*15;
+    o.rot=Math.round(deg);
+  } else if(foDrag.mode==='resize'){
+    o.wPct=clamp(foDrag.o0.wPct+(e.clientX-foDrag.sx)/r.width*200,5,150);
+  }
+  if(foDrag.id===PHOTO_FO_ID){photoFloatPos={x:o.xPct,y:o.yPct,w:o.wPct,rot:o.rot};}
+  const el=$('freeLayer').querySelector(`.fo[data-id="${foDrag.id}"]`);
+  if(el)layoutFoEl(el,o,$('inv').clientWidth,$('inv').clientHeight);
+}
+function foPointerUp(){
+  if(!foDrag)return;
+  const el=$('freeLayer').querySelector(`.fo[data-id="${foDrag.id}"]`);
+  if(el){el.removeEventListener('pointermove',foPointerMove);el.removeEventListener('pointerup',foPointerUp);el.removeEventListener('pointercancel',foPointerUp);}
+  foDrag=null; refreshFoEditPanelValues(); save();
+}
+
+/* ---- selection & deletion ---- */
+function selectFo(id){
+  foSelected=id;
+  $('freeLayer').querySelectorAll('.fo').forEach(el=>el.classList.toggle('selected',el.dataset.id===id));
+  renderFoEditor();
+}
+function deleteFo(id){
+  if(id===PHOTO_FO_ID)$('photoFloat').checked=false;
+  else floatObjects=floatObjects.filter(o=>o.id!==id);
+  if(foSelected===id)foSelected=null;
+  render();renderFoEditor();save();
+}
+
+/* ---- editor sidebar: list + edit panel ---- */
+function foRow(o){
+  const row=document.createElement('div');
+  const isPhoto=o.id===PHOTO_FO_ID;
+  row.className='foitem'+(o.id===foSelected?' sel':'');
+  const thumb=document.createElement('div'); thumb.className='thumb';
+  if(o.type==='image'){thumb.style.backgroundImage=`url(${o.src})`;} else thumb.textContent='🆎';
+  if(isPhoto){thumb.style.backgroundImage=`url(${o.src})`;}
+  const lab=document.createElement('div'); lab.className='lab';
+  lab.textContent=isPhoto?'Fotka páru':(o.type==='text'?('„'+(o.text||'').slice(0,20)+'"'):'Obrázek');
+  row.appendChild(thumb);row.appendChild(lab);
+  if(!isPhoto){const del=document.createElement('button');del.textContent='🗑';del.title='Odebrat';
+    del.onclick=ev=>{ev.stopPropagation();deleteFo(o.id);};row.appendChild(del);}
+  row.onclick=()=>selectFo(o.id);
+  return row;
+}
+function renderFoEditor(){
+  const listEl=$('foList'), editEl=$('foEdit');
+  const list=floatList();
+  listEl.innerHTML='';
+  if(!list.length){listEl.innerHTML='<div class="hint" style="margin-top:8px">Zatím žádné plovoucí prvky.</div>';}
+  else list.forEach(o=>listEl.appendChild(foRow(o)));
+  const o=foSelected?getFo(foSelected):null;
+  if(!o){editEl.style.display='none';editEl.innerHTML='';return;}
+  editEl.style.display='block';
+  editEl.innerHTML=buildFoEditHTML(o);
+  wireFoEdit(o);
+}
+function buildFoEditHTML(o){
+  const isPhoto=o.id===PHOTO_FO_ID;
+  if(o.type==='image'){
+    return `
+    <label>Velikost <span class="rangeval" id="foe_w_v">${Math.round(o.wPct)}%</span></label>
+    <input type="range" id="foe_w" data-unit="%" min="5" max="150" value="${o.wPct}">
+    <label>Otočení <span class="rangeval" id="foe_rot_v">${o.rot}°</span></label>
+    <input type="range" id="foe_rot" data-unit="°" min="-180" max="180" value="${o.rot}">
+    <label>Tvar</label>
+    <select id="foe_shape">
+      <option value="0"${o.shape==='0'?' selected':''}>Hranatý</option>
+      <option value="14px"${o.shape==='14px'?' selected':''}>Zaoblený</option>
+      <option value="50%"${o.shape==='50%'?' selected':''}>Kruh / ovál</option>
+    </select>`+(isPhoto?'<div class="hint" style="margin-top:8px">Fotku páru nahradíte/odeberete v sekci 📷 Fotografie.</div>':`
+    <label>Průhlednost <span class="rangeval" id="foe_op_v">${o.opacity}%</span></label>
+    <input type="range" id="foe_op" data-unit="%" min="10" max="100" value="${o.opacity}">
+    <label>Ořez – přiblížení <span class="rangeval" id="foe_zoom_v">${o.zoom}%</span></label>
+    <input type="range" id="foe_zoom" data-unit="%" min="100" max="300" value="${o.zoom}">
+    <div class="row">
+      <div><label>Ořez ↔ <span class="rangeval" id="foe_ox_v">${o.ox}%</span></label><input type="range" id="foe_ox" data-unit="%" min="0" max="100" value="${o.ox}"></div>
+      <div><label>Ořez ↕ <span class="rangeval" id="foe_oy_v">${o.oy}%</span></label><input type="range" id="foe_oy" data-unit="%" min="0" max="100" value="${o.oy}"></div>
+    </div>
+    <div class="row" style="margin-top:8px">
+      <button class="btn btn-sec" id="foe_replace">Nahradit obrázek</button>
+      <button class="btn btn-warn" id="foe_del">Odebrat</button>
+    </div>
+    <input type="file" id="foe_replaceFile" accept="image/*" hidden>`);
+  }
+  return `
+    <label>Text</label>
+    <textarea id="foe_text" rows="2">${(o.text||'').replace(/&/g,'&amp;').replace(/</g,'&lt;')}</textarea>
+    <label>Písmo</label>
+    <select id="foe_font">${ALL_FONTS.map(f=>`<option value="${f}"${o.font===f?' selected':''} style="font-family:'${f}'">${f}</option>`).join('')}</select>
+    <div class="row">
+      <div><label>Velikost <span class="rangeval" id="foe_size_v">${o.size}px</span></label><input type="range" id="foe_size" data-unit="px" min="8" max="80" value="${o.size}"></div>
+      <div><label>Otočení <span class="rangeval" id="foe_rot_v">${o.rot}°</span></label><input type="range" id="foe_rot" data-unit="°" min="-180" max="180" value="${o.rot}"></div>
+    </div>
+    <div class="row">
+      <div><label>Barva</label><input type="color" id="foe_color" value="${o.color}"></div>
+      <div><label>Zarovnání</label><select id="foe_align">
+        <option value="center"${o.align==='center'?' selected':''}>Na střed</option>
+        <option value="left"${o.align==='left'?' selected':''}>Vlevo</option>
+        <option value="right"${o.align==='right'?' selected':''}>Vpravo</option>
+      </select></div>
+    </div>
+    <label class="chk"><input type="checkbox" id="foe_bold"${o.bold?' checked':''}> Tučně</label>
+    <label class="chk"><input type="checkbox" id="foe_italic"${o.italic?' checked':''}> Kurzíva</label>
+    <label>Šířka boxu <span class="rangeval" id="foe_w_v">${Math.round(o.wPct)}%</span></label>
+    <input type="range" id="foe_w" data-unit="%" min="10" max="100" value="${o.wPct}">
+    <button class="btn btn-warn" id="foe_del" style="margin-top:8px;width:100%">Odebrat text</button>`;
+}
+function wireFoEdit(o){
+  const P=$('foEdit');
+  const bind=(id,key,num)=>{const el=P.querySelector('#'+id);if(!el)return;
+    const ev=(el.tagName==='SELECT'||el.type==='checkbox'||el.type==='color')?'change':'input';
+    el.addEventListener(ev,()=>{let v=el.type==='checkbox'?el.checked:el.value; if(num)v=Number(v);
+      foSet(o.id,key,v);
+      const lab=P.querySelector('#'+id+'_v'); if(lab)lab.textContent=el.value+(el.dataset.unit||'');});};
+  bind('foe_w','wPct',1);bind('foe_rot','rot',1);bind('foe_op','opacity',1);
+  bind('foe_shape','shape');bind('foe_zoom','zoom',1);bind('foe_ox','ox',1);bind('foe_oy','oy',1);
+  bind('foe_text','text');bind('foe_font','font');bind('foe_size','size',1);
+  bind('foe_color','color');bind('foe_align','align');bind('foe_bold','bold');bind('foe_italic','italic');
+  const rep=P.querySelector('#foe_replace'), repF=P.querySelector('#foe_replaceFile');
+  if(rep&&repF){rep.onclick=()=>repF.click();
+    repF.onchange=e=>readImg(e,d=>{loadAR(d,ar=>{const t=floatObjects.find(x=>x.id===o.id);if(t){t.src=d;t.ar=ar;}renderFloats();renderFoEditor();save();});e.target.value='';});}
+  const del=P.querySelector('#foe_del'); if(del)del.onclick=()=>deleteFo(o.id);
+}
+function refreshFoEditPanelValues(){
+  if(!foSelected)return;
+  const o=getFo(foSelected), P=$('foEdit'); if(!o)return;
+  const set=(id,val,unit)=>{const el=P.querySelector('#'+id);if(el)el.value=val;const lab=P.querySelector('#'+id+'_v');if(lab)lab.textContent=val+(unit||'');};
+  set('foe_w',Math.round(o.wPct),'%');set('foe_rot',o.rot,'°');
+}
+
+/* ---- add floating elements ---- */
+$('addFloatImg').onclick=()=>$('floatImgFile').click();
+$('floatImgFile').onchange=e=>readImg(e,d=>{loadAR(d,ar=>{const o=newFloatImage(d,ar);floatObjects.push(o);foSelected=o.id;render();renderFoEditor();save();});e.target.value='';});
+$('addFloatText').onclick=()=>{const o=newFloatText();floatObjects.push(o);foSelected=o.id;render();renderFoEditor();save();};
+
+/* ---- couple-photo float toggle + deselect on empty click ---- */
+$('photoFloat').addEventListener('change',()=>renderFoEditor());
+$('stageView').addEventListener('pointerdown',e=>{if(!e.target.closest('.fo'))selectFo(null);});
 
 /* ---------- Init ---------- */
 buildProgramRows();
-const saved=localStorage.getItem(KEY);
-if(saved){try{apply(JSON.parse(saved));}catch(e){render();}}
-else{document.querySelector('.preset').classList.add('active');render();}
-window.addEventListener('load',()=>{setTimeout(()=>{fitZoom();fitContent();},300);});
+(async function init(){
+  let saved=null;
+  try{saved=await idbGet(KEY);}catch(e){}
+  if(!saved){try{saved=JSON.parse(localStorage.getItem(KEY)||'null');}catch(e){}}
+  if(saved){try{apply(saved);}catch(e){render();renderFoEditor();}}
+  else{document.querySelector('.preset').classList.add('active');render();renderFoEditor();}
+  // default zoom 100 %, případně obnovit fitContent (auto-fit obsahu zůstává)
+  setTimeout(()=>{setZoom(zoom);fitContent();},300);
+})();
 if(document.fonts&&document.fonts.ready)document.fonts.ready.then(()=>{render();});
 </script>
 </body>
