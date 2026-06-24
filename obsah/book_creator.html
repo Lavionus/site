@@ -1,0 +1,1198 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tvůrce knih</title>
+<style>
+  :root{
+    --bg:#1d2330; --panel:#262d3d; --panel2:#2f3850; --line:#3a4258;
+    --txt:#e9edf5; --muted:#9aa4bd; --accent:#e0a458; --accent2:#5b8def;
+    --danger:#d9534f; --ok:#4caf72; --radius:10px;
+  }
+  *{box-sizing:border-box}
+  html,body{margin:0;height:100%}
+  body{
+    font-family:system-ui,'Segoe UI',Roboto,Arial,sans-serif;
+    background:var(--bg);color:var(--txt);display:flex;flex-direction:column;height:100vh;overflow:hidden;
+  }
+  header{
+    display:flex;align-items:center;gap:14px;padding:10px 18px;
+    background:var(--panel);border-bottom:1px solid var(--line);flex-shrink:0;
+  }
+  header h1{font-size:18px;margin:0;color:var(--accent);letter-spacing:.5px}
+  header h1 small{color:var(--muted);font-weight:normal;font-size:12px;margin-left:6px}
+  .grow{flex:1}
+  button,select,input[type=text],input[type=number]{
+    font-family:inherit;font-size:13px;color:var(--txt);background:var(--panel2);
+    border:1px solid var(--line);border-radius:7px;padding:7px 11px;cursor:pointer;
+  }
+  input[type=text],input[type=number],select{cursor:text}
+  select{cursor:pointer}
+  button:hover{border-color:var(--accent)}
+  button.primary{background:var(--accent);color:#1d2330;border-color:var(--accent);font-weight:600}
+  button.accent{background:var(--accent2);color:#fff;border-color:var(--accent2)}
+  button.danger{background:transparent;color:var(--danger);border-color:var(--danger)}
+  button.ghost{background:transparent}
+  .layout{display:flex;flex:1;min-height:0}
+
+  /* ---- Manager sidebar ---- */
+  aside{
+    width:250px;background:var(--panel);border-right:1px solid var(--line);
+    display:flex;flex-direction:column;flex-shrink:0;
+  }
+  aside .head{padding:12px 14px;border-bottom:1px solid var(--line);display:flex;gap:8px;align-items:center}
+  aside .head b{font-size:13px;color:var(--muted);text-transform:uppercase;letter-spacing:1px}
+  .booklist{flex:1;overflow:auto;padding:8px}
+  .bookcard{
+    background:var(--panel2);border:1px solid var(--line);border-radius:var(--radius);
+    padding:10px 11px;margin-bottom:8px;cursor:pointer;position:relative;
+  }
+  .bookcard:hover{border-color:var(--accent2)}
+  .bookcard.active{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+  .bookcard .t{font-weight:600;font-size:14px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .bookcard .a{font-size:12px;color:var(--muted)}
+  .bookcard .meta{font-size:11px;color:var(--muted);margin-top:4px}
+  .bookcard .del{position:absolute;top:6px;right:6px;opacity:0;font-size:11px;padding:3px 6px}
+  .bookcard:hover .del{opacity:1}
+  aside .foot{padding:10px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:8px}
+
+  /* ---- Editor area ---- */
+  main{flex:1;display:flex;flex-direction:column;min-width:0}
+  .tabs{display:flex;gap:4px;padding:10px 14px 0;background:var(--panel);border-bottom:1px solid var(--line);flex-wrap:wrap}
+  .tab{padding:8px 16px;border-radius:8px 8px 0 0;background:transparent;border:1px solid transparent;border-bottom:none;color:var(--muted)}
+  .tab.active{background:var(--bg);color:var(--accent);border-color:var(--line)}
+  .pane{flex:1;overflow:auto;padding:18px;display:none}
+  .pane.active{display:block}
+
+  .field{margin-bottom:14px;max-width:640px}
+  .field label{display:block;font-size:12px;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px}
+  .field input[type=text],.field textarea,.field select{width:100%}
+  textarea{font-family:inherit;font-size:13px;color:var(--txt);background:var(--panel2);border:1px solid var(--line);border-radius:7px;padding:9px;resize:vertical}
+  .row{display:flex;gap:14px;flex-wrap:wrap}
+  .row .field{flex:1;min-width:180px}
+  input[type=color]{width:46px;height:34px;padding:2px;border:1px solid var(--line);border-radius:7px;background:var(--panel2);cursor:pointer;vertical-align:middle}
+
+  /* ---- Cover designer ---- */
+  .coverwrap{display:flex;gap:30px;flex-wrap:wrap}
+  .covercol{flex:1;min-width:300px}
+  .covercol h3{margin:0 0 12px;color:var(--accent);font-size:15px}
+  .cover-preview{
+    width:280px;height:400px;border-radius:6px;margin:0 auto 14px;position:relative;overflow:hidden;
+    box-shadow:0 12px 30px rgba(0,0,0,.5);display:flex;flex-direction:column;
+    background-size:cover;background-position:center;
+  }
+  .cover-preview .ov{position:absolute;inset:0}
+  .cover-preview .frame{position:absolute;inset:14px;pointer-events:none;border-radius:2px}
+  .cover-preview .cover-txt{position:absolute;max-width:84%;width:max-content;cursor:grab;touch-action:none;user-select:none}
+  .cover-preview .cover-txt:active{cursor:grabbing}
+  .cover-preview .ct{font-size:26px;font-weight:700;line-height:1.15;word-break:break-word}
+  .cover-preview .cs{font-size:15px;margin-top:8px;opacity:.9}
+  .cover-preview .ca{font-size:14px;margin-top:10px;opacity:.92}
+  .cover-preview .cback{font-size:13px;line-height:1.5;white-space:pre-wrap}
+
+  /* ---- Chapters submenu (in library) ---- */
+  .booksub{margin:-2px 0 8px;padding:4px 4px 4px 10px;border-left:2px solid var(--line);margin-left:6px}
+  .chapitem{background:transparent;border:1px solid transparent;border-radius:7px;padding:5px 7px;margin-bottom:3px;cursor:pointer;display:flex;align-items:center;gap:6px}
+  .chapitem:hover{background:var(--panel2)}
+  .chapitem.active{background:var(--panel2);border-color:var(--accent)}
+  .chapitem .num{font-size:10px;color:var(--muted);min-width:14px}
+  .chapitem .nm{flex:1;font-size:12px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .chapitem .mini{font-size:10px;color:var(--muted)}
+  .chapitem .x{opacity:0;font-size:11px;padding:1px 5px}
+  .chapitem:hover .x{opacity:1}
+  .addchap{width:100%;font-size:12px;padding:5px;margin-top:2px}
+
+  /* ---- Text editor / toolbar ---- */
+  .toolbar{
+    display:flex;flex-wrap:wrap;gap:5px;align-items:center;
+    background:var(--panel);border:1px solid var(--line);border-radius:8px;padding:7px;margin-bottom:12px;position:sticky;top:0;z-index:5;
+  }
+  .toolbar .sep{width:1px;align-self:stretch;background:var(--line);margin:0 3px}
+  .toolbar button{padding:6px 9px;min-width:32px}
+  .toolbar button.on{background:var(--accent2);color:#fff;border-color:var(--accent2)}
+  .toolbar select{padding:6px 8px}
+  #editor{
+    background:#fff;color:#111;border-radius:6px;padding:48px 56px;min-height:55vh;height:auto;
+    max-width:760px;margin:0 auto 40px;box-shadow:0 4px 24px rgba(0,0,0,.4);outline:none;
+    font-family:'Georgia',serif;font-size:17px;line-height:1.7;overflow:visible;
+  }
+  #editor:focus{box-shadow:0 0 0 2px var(--accent2),0 4px 24px rgba(0,0,0,.4)}
+  #editor h1,#editor h2,#editor h3{line-height:1.25}
+  #editor img{max-width:100%}
+  #editor blockquote{border-left:3px solid #ccc;margin:1em 0;padding:.2em 1em;color:#555;font-style:italic}
+  .chaptitle{max-width:760px;margin:0 auto 10px;display:flex;align-items:center;gap:10px}
+  .chaptitle input{flex:1;font-size:18px;font-weight:600;background:transparent;border:none;border-bottom:1px solid var(--line);border-radius:0;color:var(--accent);padding:6px 2px}
+
+  .hint{font-size:12px;color:var(--muted);margin-top:6px}
+  .fontchip{display:inline-flex;align-items:center;gap:6px;background:var(--panel2);border:1px solid var(--line);border-radius:20px;padding:4px 6px 4px 12px;margin:4px 6px 0 0;font-size:12px}
+  .fontchip button{padding:2px 7px;border-radius:50%;font-size:11px;line-height:1}
+  .uploadbtn{position:relative;overflow:hidden;display:inline-block}
+  .uploadbtn input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;font-size:0}
+
+  /* ---- Statistics ---- */
+  .statgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:14px;max-width:760px;margin-bottom:24px}
+  .statcard{background:var(--panel2);border:1px solid var(--line);border-radius:var(--radius);padding:16px}
+  .statcard .v{font-size:28px;font-weight:700;color:var(--accent)}
+  .statcard .l{font-size:12px;color:var(--muted);margin-top:4px;text-transform:uppercase;letter-spacing:.5px}
+  table.chaptbl{border-collapse:collapse;max-width:760px;width:100%}
+  table.chaptbl th,table.chaptbl td{border-bottom:1px solid var(--line);padding:8px 10px;text-align:left;font-size:13px}
+  table.chaptbl th{color:var(--muted);font-size:11px;text-transform:uppercase;letter-spacing:.5px}
+  table.chaptbl td.r,table.chaptbl th.r{text-align:right}
+  .bar{height:6px;background:var(--line);border-radius:4px;overflow:hidden;margin-top:4px}
+  .bar > i{display:block;height:100%;background:var(--accent2)}
+
+  .empty{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100%;color:var(--muted);text-align:center;gap:10px}
+  .toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:var(--ok);color:#fff;padding:11px 22px;border-radius:8px;box-shadow:0 8px 24px rgba(0,0,0,.4);opacity:0;transition:.3s;pointer-events:none;z-index:50}
+  .toast.show{opacity:1}
+  .pagecount{font-size:12px;color:var(--muted)}
+  ::-webkit-scrollbar{width:10px;height:10px}
+  ::-webkit-scrollbar-thumb{background:var(--line);border-radius:6px}
+</style>
+</head>
+<body>
+<header>
+  <h1>📖 Tvůrce knih <small>vše se ukládá lokálně</small></h1>
+  <div class="grow"></div>
+  <button id="btnPreview" class="ghost">👁 Náhled</button>
+  <button id="btnPDF" class="ghost">🖨 PDF</button>
+  <button id="btnMD" class="ghost">📝 MD</button>
+  <button id="btnODT" class="ghost">📄 ODT</button>
+  <button id="btnExportOne" class="ghost">⬇ JSON</button>
+  <button id="btnExportAll" class="ghost">⬇ Vše</button>
+  <label class="uploadbtn"><button class="ghost" type="button">⬆ Import</button><input type="file" id="importFile" accept=".json"></label>
+</header>
+
+<div class="layout">
+  <!-- ============ MANAGER ============ -->
+  <aside>
+    <div class="head"><b>Knihovna</b><span class="grow"></span><span class="pagecount" id="lib-count">0</span></div>
+    <div class="booklist" id="booklist"></div>
+    <div class="foot">
+      <button class="primary" id="btnNew">＋ Nová kniha</button>
+      <input type="text" id="search" placeholder="Hledat…">
+    </div>
+  </aside>
+
+  <!-- ============ EDITOR ============ -->
+  <main id="main">
+    <div class="empty" id="emptyState">
+      <div style="font-size:48px">📚</div>
+      <div>Žádná kniha není vybraná.</div>
+      <button class="primary" id="btnNew2">Vytvořit první knihu</button>
+    </div>
+
+    <div id="editorRoot" style="display:none;flex-direction:column;flex:1;min-height:0">
+      <div class="tabs">
+        <button class="tab active" data-tab="info">ℹ️ Informace</button>
+        <button class="tab" data-tab="front">🎨 Přední strana</button>
+        <button class="tab" data-tab="back">📄 Zadní strana</button>
+        <button class="tab" data-tab="text">✍️ Text knihy</button>
+        <button class="tab" data-tab="stats">📊 Statistiky</button>
+        <button class="tab" data-tab="fonts">🔤 Fonty</button>
+      </div>
+
+      <!-- INFO -->
+      <section class="pane active" data-pane="info">
+        <div class="row">
+          <div class="field"><label>Název knihy</label><input type="text" id="f-title"></div>
+          <div class="field"><label>Autor</label><input type="text" id="f-author"></div>
+        </div>
+        <div class="field"><label>Podtitul</label><input type="text" id="f-subtitle"></div>
+        <div class="field"><label>Žánr / štítky</label><input type="text" id="f-genre" placeholder="např. román, fantasy"></div>
+        <div class="field"><label>Popis</label><textarea id="f-desc" rows="4"></textarea></div>
+        <div class="field" style="max-width:300px"><label>Číslování stránek (náhled / PDF)</label>
+          <select id="f-pagenum">
+            <option value="none">Vypnuto</option>
+            <option value="center">Dole uprostřed</option>
+            <option value="right">Dole vpravo</option>
+          </select>
+        </div>
+        <div class="hint">Vytvořeno: <span id="f-created">—</span> · Naposledy upraveno: <span id="f-updated">—</span></div>
+      </section>
+
+      <!-- FRONT COVER -->
+      <section class="pane" data-pane="front">
+        <div class="coverwrap">
+          <div class="covercol">
+            <h3>Náhled přední strany</h3>
+            <div class="cover-preview" id="prev-front">
+              <div class="frame" id="pf-frame"></div>
+              <div class="ov" id="prev-front-ov">
+                <div class="cover-txt" id="pf-txt">
+                  <div class="ct" id="pf-title"></div>
+                  <div class="cs" id="pf-sub"></div>
+                  <div class="ca" id="pf-author"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="covercol">
+            <h3>Nastavení</h3>
+            <div class="field"><label>Barva pozadí</label>
+              <input type="color" id="fc-bg" value="#2b3a55">
+              <input type="color" id="fc-bg2" value="#16202e"> <span class="hint">přechod (2 barvy)</span>
+            </div>
+            <div class="field"><label>Barva textu</label><input type="color" id="fc-color" value="#ffffff"></div>
+            <div class="field"><label>Font obálky</label><select id="fc-font"></select></div>
+            <div class="field"><label>Obrázek pozadí</label>
+              <label class="uploadbtn"><button class="ghost" type="button">⬆ Nahrát obrázek</button><input type="file" id="fc-img" accept="image/*"></label>
+              <button class="danger" id="fc-img-clear" style="margin-left:6px">Odebrat</button>
+            </div>
+            <div class="field"><label>Ztmavení obrázku</label><input type="range" id="fc-dim" min="0" max="80" value="30" style="width:100%"></div>
+            <div class="row">
+              <div class="field"><label>Poloha textu</label><select id="fc-vpos"><option value="top">Nahoře</option><option value="center">Na střed</option><option value="bottom">Dole</option></select></div>
+              <div class="field"><label>Zarovnání</label><select id="fc-halign"><option value="left">Vlevo</option><option value="center">Na střed</option><option value="right">Vpravo</option></select></div>
+            </div>
+            <div class="field"><label>Otočení textu (<span id="fc-rot-v">0</span>°)</label><input type="range" id="fc-rotate" min="-180" max="180" value="0" style="width:100%">
+              <div class="hint">💡 Text můžeš v náhledu chytit myší a přetáhnout kamkoli.</div></div>
+            <div class="row">
+              <div class="field"><label>Ohraničení</label><select id="fc-border"></select></div>
+              <div class="field"><label>Barva rámečku</label><input type="color" id="fc-bcolor" value="#ffffff"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- BACK COVER -->
+      <section class="pane" data-pane="back">
+        <div class="coverwrap">
+          <div class="covercol">
+            <h3>Náhled zadní strany</h3>
+            <div class="cover-preview" id="prev-back">
+              <div class="frame" id="pb-frame"></div>
+              <div class="ov" id="prev-back-ov"><div class="cover-txt" id="pb-txt"><div class="cback" id="pb-text"></div></div></div>
+            </div>
+          </div>
+          <div class="covercol">
+            <h3>Nastavení</h3>
+            <div class="field"><label>Text zadní strany (anotace)</label><textarea id="bc-text" rows="8"></textarea></div>
+            <div class="row">
+              <div class="field"><label>Barva pozadí</label><input type="color" id="bc-bg" value="#16202e"></div>
+              <div class="field"><label>Barva textu</label><input type="color" id="bc-color" value="#ffffff"></div>
+            </div>
+            <div class="field"><label>Font</label><select id="bc-font"></select></div>
+            <div class="field"><label>Obrázek pozadí</label>
+              <label class="uploadbtn"><button class="ghost" type="button">⬆ Nahrát obrázek</button><input type="file" id="bc-img" accept="image/*"></label>
+              <button class="danger" id="bc-img-clear" style="margin-left:6px">Odebrat</button>
+            </div>
+            <div class="field"><label>Ztmavení obrázku</label><input type="range" id="bc-dim" min="0" max="80" value="30" style="width:100%"></div>
+            <div class="row">
+              <div class="field"><label>Poloha textu</label><select id="bc-vpos"><option value="top">Nahoře</option><option value="center">Na střed</option><option value="bottom">Dole</option></select></div>
+              <div class="field"><label>Zarovnání</label><select id="bc-halign"><option value="left">Vlevo</option><option value="center">Na střed</option><option value="right">Vpravo</option></select></div>
+            </div>
+            <div class="field"><label>Otočení textu (<span id="bc-rot-v">0</span>°)</label><input type="range" id="bc-rotate" min="-180" max="180" value="0" style="width:100%">
+              <div class="hint">💡 Text můžeš v náhledu chytit myší a přetáhnout kamkoli.</div></div>
+            <div class="row">
+              <div class="field"><label>Ohraničení</label><select id="bc-border"></select></div>
+              <div class="field"><label>Barva rámečku</label><input type="color" id="bc-bcolor" value="#ffffff"></div>
+            </div>
+            <div class="field"><label>ISBN / kód</label><input type="text" id="bc-isbn"></div>
+          </div>
+        </div>
+      </section>
+
+      <!-- TEXT (editor; kapitoly jsou v podmenu knihovny) -->
+      <section class="pane" data-pane="text">
+          <div class="toolbar" id="toolbar">
+            <select id="t-block" title="Styl odstavce">
+              <option value="P">Odstavec</option>
+              <option value="H1">Nadpis 1</option>
+              <option value="H2">Nadpis 2</option>
+              <option value="H3">Nadpis 3</option>
+              <option value="BLOCKQUOTE">Citace</option>
+              <option value="PRE">Kód</option>
+            </select>
+            <select id="t-font" title="Font textu"></select>
+            <select id="t-size" title="Velikost">
+              <option value="">Velikost</option>
+              <option value="1">XS</option><option value="2">S</option>
+              <option value="3" selected>M</option><option value="4">L</option>
+              <option value="5">XL</option><option value="6">XXL</option><option value="7">XXXL</option>
+            </select>
+            <span class="sep"></span>
+            <button data-cmd="bold" title="Tučně"><b>B</b></button>
+            <button data-cmd="italic" title="Kurzíva"><i>I</i></button>
+            <button data-cmd="underline" title="Podtržení"><u>U</u></button>
+            <button data-cmd="strikeThrough" title="Přeškrtnutí"><s>S</s></button>
+            <span class="sep"></span>
+            <button data-cmd="justifyLeft" title="Vlevo">⬅</button>
+            <button data-cmd="justifyCenter" title="Na střed">↔</button>
+            <button data-cmd="justifyRight" title="Vpravo">➡</button>
+            <button data-cmd="justifyFull" title="Do bloku">☰</button>
+            <span class="sep"></span>
+            <button data-cmd="insertUnorderedList" title="Odrážky">• —</button>
+            <button data-cmd="insertOrderedList" title="Číslování">1.</button>
+            <span class="sep"></span>
+            <input type="color" id="t-color" title="Barva písma" value="#111111">
+            <button id="t-link" title="Odkaz">🔗</button>
+            <button id="t-img" title="Vložit obrázek">🖼</button>
+            <button id="t-hr" title="Oddělovač">―</button>
+            <span class="sep"></span>
+            <button data-cmd="removeFormat" title="Vymazat formát">⌫</button>
+            <span class="grow" style="flex:1"></span>
+            <span class="pagecount" id="t-stats"></span>
+          </div>
+          <div class="chaptitle"><input type="text" id="chap-title" placeholder="Název kapitoly"></div>
+          <div id="editor" contenteditable="true"></div>
+      </section>
+
+      <!-- STATS -->
+      <section class="pane" data-pane="stats">
+        <h3 style="color:var(--accent);margin-top:0">Statistiky knihy</h3>
+        <div class="statgrid" id="statgrid"></div>
+        <h3 style="color:var(--accent)">Podle kapitol</h3>
+        <table class="chaptbl">
+          <thead><tr><th>#</th><th>Kapitola</th><th class="r">Slova</th><th class="r">Znaky</th><th class="r">Čtení</th><th>Podíl</th></tr></thead>
+          <tbody id="chaptbl-body"></tbody>
+        </table>
+      </section>
+
+      <!-- FONTS -->
+      <section class="pane" data-pane="fonts">
+        <div class="field" style="max-width:700px">
+          <h3 style="color:var(--accent)">Importované fonty</h3>
+          <p class="hint">Nahrajte vlastní font (.ttf, .otf, .woff, .woff2). Font se uloží přímo do knihy a bude dostupný v rozbalovacích nabídkách obálek i textu.</p>
+          <label class="uploadbtn"><button class="accent" type="button">⬆ Nahrát font</button><input type="file" id="font-upload" accept=".ttf,.otf,.woff,.woff2" multiple></label>
+          <div id="fontchips" style="margin-top:14px"></div>
+        </div>
+        <div class="field" style="max-width:700px;margin-top:20px">
+          <label>Ukázka</label>
+          <select id="font-sample-sel" style="max-width:300px"></select>
+          <div id="font-sample" style="background:#fff;color:#111;padding:18px;border-radius:6px;margin-top:8px;font-size:24px">
+            Příliš žluťoučký kůň úpěl ďábelské ódy. 0123456789
+          </div>
+        </div>
+      </section>
+    </div>
+  </main>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+"use strict";
+const LS_KEY = "bookCreator.v1";
+const WPM = 200; // čtecí rychlost slov za minutu
+const $ = s => document.querySelector(s);
+const $$ = s => [...document.querySelectorAll(s)];
+
+const DEFAULT_FONTS = [
+  ["Georgia, serif","Georgia"],
+  ["'Times New Roman', serif","Times New Roman"],
+  ["Garamond, serif","Garamond"],
+  ["'Palatino Linotype', serif","Palatino"],
+  ["Arial, sans-serif","Arial"],
+  ["'Helvetica Neue', sans-serif","Helvetica"],
+  ["Verdana, sans-serif","Verdana"],
+  ["Tahoma, sans-serif","Tahoma"],
+  ["'Trebuchet MS', sans-serif","Trebuchet"],
+  ["'Courier New', monospace","Courier"],
+  ["'Comic Sans MS', cursive","Comic Sans"]
+];
+
+const BORDERS = [
+  ["none","Žádné"],["single","Jednoduchá čára"],["double","Dvojlinka"],
+  ["thick","Silná čára"],["dashed","Čárkovaná"],["dotted","Tečkovaná"],
+  ["ridge","Ozdobná (3D)"],["inset","Vsazená"]
+];
+function borderCSS(preset,color){
+  switch(preset){
+    case "single": return `3px solid ${color}`;
+    case "double": return `6px double ${color}`;
+    case "thick":  return `7px solid ${color}`;
+    case "dashed": return `3px dashed ${color}`;
+    case "dotted": return `4px dotted ${color}`;
+    case "ridge":  return `8px ridge ${color}`;
+    case "inset":  return `8px inset ${color}`;
+    default: return "none";
+  }
+}
+const VPOS={top:"flex-start",center:"center",bottom:"flex-end"};
+const HALIGN={left:"flex-start",center:"center",right:"flex-end"};
+
+let state = { books: [], currentId: null };
+let loadedFontFaces = new Set();
+
+/* ---------- persistence (IndexedDB) ---------- */
+const DB_NAME="bookCreatorDB", STORE="state", STATE_KEY="state";
+let idb=null;
+function idbOpen(){ return new Promise((res,rej)=>{ const r=indexedDB.open(DB_NAME,1);
+  r.onupgradeneeded=()=>r.result.createObjectStore(STORE);
+  r.onsuccess=()=>res(r.result); r.onerror=()=>rej(r.error); }); }
+function idbPut(k,v){ return new Promise((res,rej)=>{ const tx=idb.transaction(STORE,"readwrite");
+  tx.objectStore(STORE).put(v,k); tx.oncomplete=()=>res(); tx.onerror=()=>rej(tx.error); }); }
+function idbGet(k){ return new Promise((res,rej)=>{ const tx=idb.transaction(STORE,"readonly");
+  const q=tx.objectStore(STORE).get(k); q.onsuccess=()=>res(q.result); q.onerror=()=>rej(q.error); }); }
+
+function migrate(){
+  state.books.forEach(b=>{
+    if(!b.chapters){ b.chapters=[{ id:uid(), title:"Kapitola 1", content: b.content || "<p></p>" }]; }
+    delete b.content;
+    if(!b.currentChapter || !b.chapters.some(c=>c.id===b.currentChapter))
+      b.currentChapter = b.chapters[0] ? b.chapters[0].id : null;
+    if(b.back && b.back.img===undefined){ b.back.img=null; b.back.dim=30; }
+    if(b.pageNum===undefined) b.pageNum="none";
+    [["front","center"],["back","left"]].forEach(([k,defAlign])=>{
+      const o=b[k]; if(!o) return;
+      if(o.vpos===undefined) o.vpos="center";
+      if(o.halign===undefined) o.halign=defAlign;
+      if(o.rotate===undefined) o.rotate=0;
+      if(o.border===undefined) o.border="none";
+      if(o.borderColor===undefined) o.borderColor="#ffffff";
+      if(o.posX===undefined) o.posX=50;
+      if(o.posY===undefined) o.posY={top:18,center:50,bottom:82}[o.vpos]||50;
+    });
+  });
+}
+async function load(){
+  idb=await idbOpen();
+  let d=await idbGet(STATE_KEY);
+  if(!d){ // jednorázová migrace ze staršího localStorage
+    try{ const ls=JSON.parse(localStorage.getItem(LS_KEY)); if(ls&&ls.books){ d=ls; localStorage.removeItem(LS_KEY); } }catch(e){}
+  }
+  if(d&&d.books) state=d;
+  migrate();
+}
+let saveT;
+function saveNow(){ if(idb) idbPut(STATE_KEY,state).catch(e=>console.warn("Uložení selhalo:",e)); }
+function save(){ clearTimeout(saveT); saveT=setTimeout(saveNow,300); }
+function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
+function cur(){ return state.books.find(b=>b.id===state.currentId); }
+function curChap(){ const b=cur(); if(!b) return null; return b.chapters.find(c=>c.id===b.currentChapter) || b.chapters[0]; }
+
+function newBook(){
+  const ch={ id:uid(), title:"Kapitola 1", content:"<p>Začněte psát svou knihu…</p>" };
+  return {
+    id: uid(), title:"Nová kniha", author:"", subtitle:"", genre:"", desc:"",
+    created: Date.now(), updated: Date.now(),
+    front:{ bg:"#2b3a55", bg2:"#16202e", color:"#ffffff", font:"Georgia, serif", img:null, dim:30,
+            vpos:"center", halign:"center", rotate:0, border:"none", borderColor:"#ffffff", posX:50, posY:50 },
+    back:{ text:"", bg:"#16202e", color:"#ffffff", font:"Georgia, serif", isbn:"", img:null, dim:30,
+           vpos:"center", halign:"left", rotate:0, border:"none", borderColor:"#ffffff", posX:50, posY:50 },
+    pageNum:"none",
+    chapters:[ch], currentChapter:ch.id,
+    fonts:[]
+  };
+}
+
+/* ---------- fonts ---------- */
+function fontFamilyName(f){ return "uf-"+f.name.replace(/[^a-z0-9]/gi,"_"); }
+function applyBookFonts(b){
+  if(!b) return;
+  (b.fonts||[]).forEach(f=>{
+    const fam = fontFamilyName(f);
+    if(loadedFontFaces.has(b.id+fam)) return;
+    try{
+      const ff = new FontFace(fam, `url(${f.data})`);
+      ff.load().then(face=>{ document.fonts.add(face); refreshPreview(); }).catch(()=>{});
+      loadedFontFaces.add(b.id+fam);
+    }catch(e){}
+  });
+}
+function fontOptionsHTML(b, selected){
+  let html = '<optgroup label="Výchozí fonty">';
+  DEFAULT_FONTS.forEach(([val,label])=>{
+    html += `<option value="${val}" ${val===selected?"selected":""}>${label}</option>`;
+  });
+  html += '</optgroup>';
+  if(b && b.fonts && b.fonts.length){
+    html += '<optgroup label="Importované fonty">';
+    b.fonts.forEach(f=>{
+      const val = `'${fontFamilyName(f)}'`;
+      html += `<option value="${val}" ${val===selected?"selected":""}>${f.name}</option>`;
+    });
+    html += '</optgroup>';
+  }
+  return html;
+}
+function refreshFontSelectors(){
+  const b = cur(); if(!b) return;
+  $("#fc-font").innerHTML = fontOptionsHTML(b, b.front.font);
+  $("#bc-font").innerHTML = fontOptionsHTML(b, b.back.font);
+  $("#t-font").innerHTML  = '<option value="">Font</option>'+fontOptionsHTML(b,"");
+  const chips = $("#fontchips");
+  if(!b.fonts.length){ chips.innerHTML = '<span class="hint">Zatím žádný importovaný font.</span>'; }
+  else chips.innerHTML = b.fonts.map(f=>
+    `<span class="fontchip" style="font-family:'${fontFamilyName(f)}'">${f.name}<button class="danger" data-delfont="${f.name}">✕</button></span>`).join("");
+  $("#font-sample-sel").innerHTML = fontOptionsHTML(b, b.front.font);
+}
+
+/* ---------- helpers ---------- */
+function esc(s){ return (s||"").replace(/[&<>"]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c])); }
+function plainText(html){ return (html||"").replace(/<[^>]+>/g," ").replace(/&[a-z]+;/g," "); }
+function wordCount(html){ const t=plainText(html).trim(); return t?t.split(/\s+/).length:0; }
+function charCount(html){ return plainText(html).replace(/\s+/g," ").trim().length; }
+function bookWords(b){ return (b.chapters||[]).reduce((s,c)=>s+wordCount(c.content),0); }
+function readTime(words){ const m=words/WPM; if(m<1) return "<1 min"; if(m<60) return Math.round(m)+" min"; const h=Math.floor(m/60); return h+" h "+Math.round(m-h*60)+" min"; }
+
+/* ---------- manager render ---------- */
+function renderLibrary(){
+  const q = ($("#search").value||"").toLowerCase();
+  const list = $("#booklist"); list.innerHTML="";
+  const books = state.books
+    .filter(b=> (b.title+b.author+b.genre).toLowerCase().includes(q))
+    .sort((a,b)=>b.updated-a.updated);
+  $("#lib-count").textContent = state.books.length;
+  books.forEach(b=>{
+    const el = document.createElement("div");
+    el.className = "bookcard"+(b.id===state.currentId?" active":"");
+    el.innerHTML = `<div class="t">${esc(b.title)||"Bez názvu"}</div>
+      <div class="a">${esc(b.author)||"—"}</div>
+      <div class="meta">${bookWords(b)} slov · ${b.chapters.length} kap. · ${new Date(b.updated).toLocaleDateString("cs")}</div>
+      <button class="del danger" data-del="${b.id}">smazat</button>`;
+    el.onclick = e=>{ if(e.target.dataset.del) return; selectBook(b.id); };
+    list.appendChild(el);
+    if(b.id===state.currentId) list.appendChild(renderChapSubmenu(b));
+  });
+}
+
+/* ---------- chapters submenu (under active book) ---------- */
+function renderChapSubmenu(b){
+  const wrap=document.createElement("div"); wrap.className="booksub";
+  b.chapters.forEach((c,i)=>{
+    const el=document.createElement("div");
+    el.className="chapitem"+(c.id===b.currentChapter?" active":"");
+    el.draggable=true; el.dataset.cid=c.id;
+    el.innerHTML=`<span class="num">${i+1}.</span>
+      <span class="nm">${esc(c.title)||"Bez názvu"} <span class="mini">${wordCount(c.content)}sl.</span></span>
+      <button class="x danger" data-delchap="${c.id}">✕</button>`;
+    el.onclick=e=>{ if(e.target.dataset.delchap){ delChapter(c.id); return; } selectChapter(c.id); openTextTab(); };
+    el.addEventListener("dragstart",ev=>{ ev.stopPropagation(); ev.dataTransfer.setData("cid",c.id); });
+    el.addEventListener("dragover",ev=>ev.preventDefault());
+    el.addEventListener("drop",ev=>{
+      ev.preventDefault(); ev.stopPropagation();
+      const from=ev.dataTransfer.getData("cid"); if(!from||from===c.id) return;
+      const arr=b.chapters; const fi=arr.findIndex(x=>x.id===from), ti=arr.findIndex(x=>x.id===c.id);
+      const [m]=arr.splice(fi,1); arr.splice(ti,0,m); touch(); renderLibrary();
+    });
+    wrap.appendChild(el);
+  });
+  const add=document.createElement("button");
+  add.className="primary addchap"; add.textContent="＋ Kapitola";
+  add.onclick=addChapter;
+  wrap.appendChild(add);
+  return wrap;
+}
+function openTextTab(){ const t=$('.tab[data-tab="text"]'); if(t&&!t.classList.contains("active")) t.click(); }
+function addChapter(){
+  const b=cur(); if(!b) return; flushEditor();
+  const ch={ id:uid(), title:"Kapitola "+(b.chapters.length+1), content:"<p></p>" };
+  b.chapters.push(ch); selectChapter(ch.id); openTextTab(); touch();
+}
+function delChapter(id){
+  const b=cur(); if(b.chapters.length<=1){ toast("Kniha musí mít alespoň 1 kapitolu"); return; }
+  const c=b.chapters.find(x=>x.id===id);
+  if(confirm(`Smazat kapitolu „${c.title}“?`)){
+    b.chapters=b.chapters.filter(x=>x.id!==id);
+    if(b.currentChapter===id) b.currentChapter=b.chapters[0].id;
+    selectChapter(b.currentChapter); touch();
+  }
+}
+function selectChapter(id){
+  const b=cur(); if(!b) return;
+  flushEditor();
+  b.currentChapter=id; save();
+  const c=curChap();
+  $("#chap-title").value=c?c.title:"";
+  $("#editor").innerHTML=c?c.content:"";
+  renderLibrary(); updateStats();
+}
+function flushEditor(){
+  const c=curChap(); if(c){ c.content=$("#editor").innerHTML; }
+}
+
+/* ---------- load book into editor ---------- */
+function selectBook(id){
+  state.currentId = id; save();
+  const b = cur();
+  $("#emptyState").style.display = b?"none":"flex";
+  $("#editorRoot").style.display = b?"flex":"none";
+  if(!b){ renderLibrary(); return; }
+  applyBookFonts(b);
+  $("#f-title").value=b.title; $("#f-author").value=b.author; $("#f-subtitle").value=b.subtitle;
+  $("#f-genre").value=b.genre; $("#f-desc").value=b.desc;
+  $("#f-created").textContent=new Date(b.created).toLocaleString("cs");
+  $("#f-updated").textContent=new Date(b.updated).toLocaleString("cs");
+  $("#fc-bg").value=b.front.bg; $("#fc-bg2").value=b.front.bg2; $("#fc-color").value=b.front.color; $("#fc-dim").value=b.front.dim;
+  $("#fc-vpos").value=b.front.vpos; $("#fc-halign").value=b.front.halign; $("#fc-rotate").value=b.front.rotate; $("#fc-rot-v").textContent=b.front.rotate;
+  $("#fc-border").value=b.front.border; $("#fc-bcolor").value=b.front.borderColor;
+  $("#bc-text").value=b.back.text; $("#bc-bg").value=b.back.bg; $("#bc-color").value=b.back.color; $("#bc-isbn").value=b.back.isbn; $("#bc-dim").value=b.back.dim;
+  $("#bc-vpos").value=b.back.vpos; $("#bc-halign").value=b.back.halign; $("#bc-rotate").value=b.back.rotate; $("#bc-rot-v").textContent=b.back.rotate;
+  $("#bc-border").value=b.back.border; $("#bc-bcolor").value=b.back.borderColor;
+  $("#f-pagenum").value=b.pageNum;
+  const c=curChap();
+  $("#chap-title").value=c?c.title:"";
+  $("#editor").innerHTML=c?c.content:"";
+  refreshFontSelectors();
+  refreshPreview();
+  renderStats();
+  updateStats();
+  renderLibrary();
+}
+
+/* ---------- preview covers ---------- */
+function refreshPreview(){
+  const b = cur(); if(!b) return;
+  const f=b.front;
+  const fp=$("#prev-front"), ov=$("#prev-front-ov");
+  if(f.img){ fp.style.background=`url(${f.img}) center/cover`; ov.style.background=`rgba(0,0,0,${f.dim/100})`; }
+  else{ fp.style.background=`linear-gradient(160deg, ${f.bg}, ${f.bg2})`; ov.style.background="none"; }
+  ov.style.color=f.color; ov.style.fontFamily=f.font;
+  applyCoverText($("#pf-txt"),f);
+  $("#pf-frame").style.border=borderCSS(f.border,f.borderColor);
+  $("#pf-title").textContent=b.title; $("#pf-sub").textContent=b.subtitle; $("#pf-author").textContent=b.author;
+  const bk=b.back, bp=$("#prev-back"), bov=$("#prev-back-ov");
+  if(bk.img){ bp.style.background=`url(${bk.img}) center/cover`; bov.style.background=`rgba(0,0,0,${bk.dim/100})`; }
+  else{ bp.style.background=bk.bg; bov.style.background="none"; }
+  bov.style.color=bk.color; bov.style.fontFamily=bk.font;
+  applyCoverText($("#pb-txt"),bk);
+  $("#pb-frame").style.border=borderCSS(bk.border,bk.borderColor);
+  $("#pb-text").textContent=bk.text || "Anotace zadní strany…";
+}
+function applyCoverText(el,o){
+  el.style.left=o.posX+"%"; el.style.top=o.posY+"%";
+  el.style.transform=`translate(-50%,-50%) rotate(${o.rotate}deg)`;
+  el.style.textAlign=o.halign;
+}
+function makeDraggable(box, el, getObj){
+  el.addEventListener("pointerdown",e=>{
+    const o=getObj(); if(!o) return;
+    e.preventDefault(); el.setPointerCapture(e.pointerId);
+    const rect=box.getBoundingClientRect();
+    const move=ev=>{
+      o.posX=Math.max(2,Math.min(98,Math.round((ev.clientX-rect.left)/rect.width*100)));
+      o.posY=Math.max(2,Math.min(98,Math.round((ev.clientY-rect.top)/rect.height*100)));
+      applyCoverText(el,o);
+    };
+    const up=()=>{ el.removeEventListener("pointermove",move); el.removeEventListener("pointerup",up); touch(); };
+    el.addEventListener("pointermove",move); el.addEventListener("pointerup",up);
+  });
+}
+
+/* ---------- statistics ---------- */
+function renderStats(){
+  const b=cur(); if(!b) return;
+  flushEditor();
+  const words=bookWords(b);
+  const chars=b.chapters.reduce((s,c)=>s+charCount(c.content),0);
+  const sentences=b.chapters.reduce((s,c)=>s+(plainText(c.content).match(/[.!?]+/g)||[]).length,0);
+  const pages=Math.max(1,Math.round(words/250)); // ~250 slov/strana
+  const stats=[
+    [words,"Slova"],[chars,"Znaky"],[b.chapters.length,"Kapitoly"],
+    [sentences,"Věty"],[pages,"Stran (~250 sl.)"],[readTime(words),"Doba čtení"]
+  ];
+  $("#statgrid").innerHTML=stats.map(([v,l])=>`<div class="statcard"><div class="v">${v}</div><div class="l">${l}</div></div>`).join("");
+  const max=Math.max(1,...b.chapters.map(c=>wordCount(c.content)));
+  $("#chaptbl-body").innerHTML=b.chapters.map((c,i)=>{
+    const w=wordCount(c.content);
+    return `<tr><td>${i+1}</td><td>${esc(c.title)||"—"}</td><td class="r">${w}</td>
+      <td class="r">${charCount(c.content)}</td><td class="r">${readTime(w)}</td>
+      <td><div class="bar"><i style="width:${Math.round(w/max*100)}%"></i></div></td></tr>`;
+  }).join("");
+}
+
+function touch(){ const b=cur(); if(b){ b.updated=Date.now(); $("#f-updated").textContent=new Date(b.updated).toLocaleString("cs"); } save(); }
+function updateStats(){ const b=cur(); if(b) $("#t-stats").textContent = bookWords(b)+" slov v knize"; }
+
+/* ---------- toast ---------- */
+let toastT;
+function toast(msg){ const t=$("#toast"); t.textContent=msg; t.classList.add("show"); clearTimeout(toastT); toastT=setTimeout(()=>t.classList.remove("show"),1800); }
+
+/* ============ EVENTS ============ */
+$$(".tab").forEach(t=>t.onclick=()=>{
+  $$(".tab").forEach(x=>x.classList.remove("active"));
+  $$(".pane").forEach(x=>x.classList.remove("active"));
+  t.classList.add("active");
+  $(`.pane[data-pane="${t.dataset.tab}"]`).classList.add("active");
+  if(t.dataset.tab==="stats") renderStats();
+});
+
+function doNew(){ const b=newBook(); state.books.push(b); selectBook(b.id); toast("Kniha vytvořena"); }
+$("#btnNew").onclick=doNew; $("#btnNew2").onclick=doNew;
+$("#booklist").addEventListener("click",e=>{
+  const id=e.target.dataset.del; if(!id) return;
+  const b=state.books.find(x=>x.id===id);
+  if(confirm(`Smazat knihu „${b.title}“?`)){
+    state.books=state.books.filter(x=>x.id!==id);
+    if(state.currentId===id) state.currentId=null;
+    selectBook(state.currentId); save(); toast("Smazáno");
+  }
+});
+$("#search").oninput=renderLibrary;
+
+const bind=(sel,key)=>{ $(sel).oninput=()=>{ const b=cur(); if(!b)return; b[key]=$(sel).value; touch(); if(["title","author","subtitle"].includes(key)){refreshPreview();renderLibrary();} }; };
+bind("#f-title","title"); bind("#f-author","author"); bind("#f-subtitle","subtitle");
+bind("#f-genre","genre"); bind("#f-desc","desc");
+
+["fc-bg","fc-bg2","fc-color","fc-dim"].forEach(id=>{
+  const key={ "fc-bg":"bg","fc-bg2":"bg2","fc-color":"color","fc-dim":"dim"}[id];
+  $("#"+id).oninput=()=>{ const b=cur(); b.front[key]=$("#"+id).value; touch(); refreshPreview(); };
+});
+$("#fc-font").onchange=()=>{ cur().front.font=$("#fc-font").value; touch(); refreshPreview(); };
+$("#fc-img").onchange=e=>readImage(e.target.files[0],data=>{ cur().front.img=data; touch(); refreshPreview(); });
+$("#fc-img-clear").onclick=()=>{ cur().front.img=null; $("#fc-img").value=""; touch(); refreshPreview(); };
+$("#fc-vpos").onchange=()=>{ const o=cur().front; o.vpos=$("#fc-vpos").value; o.posY={top:18,center:50,bottom:82}[o.vpos]; touch(); refreshPreview(); };
+$("#fc-halign").onchange=()=>{ const o=cur().front; o.halign=$("#fc-halign").value; o.posX={left:25,center:50,right:75}[o.halign]; touch(); refreshPreview(); };
+$("#fc-rotate").oninput=()=>{ cur().front.rotate=+$("#fc-rotate").value; $("#fc-rot-v").textContent=$("#fc-rotate").value; touch(); refreshPreview(); };
+$("#fc-border").onchange=()=>{ cur().front.border=$("#fc-border").value; touch(); refreshPreview(); };
+$("#fc-bcolor").oninput=()=>{ cur().front.borderColor=$("#fc-bcolor").value; touch(); refreshPreview(); };
+
+["bc-text","bc-bg","bc-color","bc-isbn","bc-dim"].forEach(id=>{
+  const key={ "bc-text":"text","bc-bg":"bg","bc-color":"color","bc-isbn":"isbn","bc-dim":"dim"}[id];
+  $("#"+id).oninput=()=>{ const b=cur(); b.back[key]=$("#"+id).value; touch(); refreshPreview(); };
+});
+$("#bc-font").onchange=()=>{ cur().back.font=$("#bc-font").value; touch(); refreshPreview(); };
+$("#bc-img").onchange=e=>readImage(e.target.files[0],data=>{ cur().back.img=data; touch(); refreshPreview(); });
+$("#bc-img-clear").onclick=()=>{ cur().back.img=null; $("#bc-img").value=""; touch(); refreshPreview(); };
+$("#bc-vpos").onchange=()=>{ const o=cur().back; o.vpos=$("#bc-vpos").value; o.posY={top:18,center:50,bottom:82}[o.vpos]; touch(); refreshPreview(); };
+$("#bc-halign").onchange=()=>{ const o=cur().back; o.halign=$("#bc-halign").value; o.posX={left:25,center:50,right:75}[o.halign]; touch(); refreshPreview(); };
+$("#bc-rotate").oninput=()=>{ cur().back.rotate=+$("#bc-rotate").value; $("#bc-rot-v").textContent=$("#bc-rotate").value; touch(); refreshPreview(); };
+$("#bc-border").onchange=()=>{ cur().back.border=$("#bc-border").value; touch(); refreshPreview(); };
+$("#bc-bcolor").oninput=()=>{ cur().back.borderColor=$("#bc-bcolor").value; touch(); refreshPreview(); };
+$("#f-pagenum").onchange=()=>{ cur().pageNum=$("#f-pagenum").value; touch(); };
+
+/* ---- chapters ---- */
+$("#chap-title").oninput=()=>{ const c=curChap(); if(c){ c.title=$("#chap-title").value; touch(); renderLibrary(); } };
+
+/* ---- text editor toolbar ---- */
+function exec(cmd,val=null){ $("#editor").focus(); document.execCommand(cmd,false,val); syncContent(); }
+$$("#toolbar button[data-cmd]").forEach(btn=>btn.onclick=()=>{ exec(btn.dataset.cmd); updateToolbarState(); });
+$("#t-block").onchange=()=>exec("formatBlock", $("#t-block").value);
+$("#t-size").onchange=()=>{ if($("#t-size").value) exec("fontSize",$("#t-size").value); };
+$("#t-color").oninput=()=>exec("foreColor",$("#t-color").value);
+$("#t-font").onchange=()=>{ if($("#t-font").value) exec("fontName",$("#t-font").value); };
+$("#t-link").onclick=()=>{ const u=prompt("URL odkazu:","https://"); if(u) exec("createLink",u); };
+$("#t-hr").onclick=()=>exec("insertHorizontalRule");
+$("#t-img").onclick=()=>{
+  const inp=document.createElement("input"); inp.type="file"; inp.accept="image/*";
+  inp.onchange=e=>readImage(e.target.files[0],data=>exec("insertImage",data)); inp.click();
+};
+function updateToolbarState(){
+  ["bold","italic","underline","strikeThrough"].forEach(c=>{
+    const btn=$(`#toolbar button[data-cmd="${c}"]`);
+    try{ btn.classList.toggle("on", document.queryCommandState(c)); }catch(e){}
+  });
+}
+let syncT;
+function syncContent(){
+  const c=curChap(); if(!c) return;
+  clearTimeout(syncT);
+  syncT=setTimeout(()=>{ c.content=$("#editor").innerHTML; touch(); updateStats(); renderLibrary(); },200);
+}
+$("#editor").addEventListener("input",syncContent);
+$("#editor").addEventListener("keyup",updateToolbarState);
+$("#editor").addEventListener("mouseup",updateToolbarState);
+// vkládání obrázků ze schránky
+$("#editor").addEventListener("paste",e=>{
+  const items=e.clipboardData&&e.clipboardData.items; if(!items) return;
+  for(const it of items){ if(it.type.indexOf("image")===0){ e.preventDefault(); readImage(it.getAsFile(),d=>exec("insertImage",d)); return; } }
+});
+// přetažení obrázku přímo do textu
+$("#editor").addEventListener("dragover",e=>{ if(e.dataTransfer&&[...e.dataTransfer.types].includes("Files")) e.preventDefault(); });
+$("#editor").addEventListener("drop",e=>{
+  const files=e.dataTransfer&&e.dataTransfer.files; if(!files||!files.length) return;
+  const imgs=[...files].filter(f=>f.type.startsWith("image/")); if(!imgs.length) return;
+  e.preventDefault();
+  const r=document.caretRangeFromPoint&&document.caretRangeFromPoint(e.clientX,e.clientY);
+  if(r){ const s=getSelection(); s.removeAllRanges(); s.addRange(r); }
+  imgs.forEach(f=>readImage(f,d=>exec("insertImage",d)));
+});
+// dvojklik na obrázek = změna velikosti / zarovnání
+$("#editor").addEventListener("dblclick",e=>{
+  if(e.target.tagName!=="IMG") return;
+  const img=e.target;
+  const v=prompt("Šířka obrázku (např. 60%, 300px) – prázdné = původní:", img.style.width||"100%");
+  if(v===null) return;
+  if(v.trim()===""){ img.style.width=""; img.style.height=""; }
+  else { img.style.width=v.trim(); img.style.height="auto"; }
+  img.removeAttribute("width"); img.removeAttribute("height");
+  const al=prompt("Zarovnání obrázku: left / center / right / none", img.style.display==="block"?(img.style.marginLeft==="auto"?"center":"left"):"none");
+  if(al!==null){
+    img.style.float=""; img.style.display=""; img.style.margin="";
+    if(al==="left"){ img.style.float="left"; img.style.margin="0 14px 8px 0"; }
+    else if(al==="right"){ img.style.float="right"; img.style.margin="0 0 8px 14px"; }
+    else if(al==="center"){ img.style.display="block"; img.style.margin="10px auto"; }
+  }
+  syncContent();
+});
+
+/* ---- font upload ---- */
+$("#font-upload").onchange=e=>{
+  const b=cur(); if(!b) return;
+  [...e.target.files].forEach(file=>{
+    const r=new FileReader();
+    r.onload=()=>{
+      const name=file.name.replace(/\.[^.]+$/,"");
+      if(b.fonts.some(f=>f.name===name)){ toast("Font už existuje"); return; }
+      b.fonts.push({name, data:r.result});
+      applyBookFonts(b); refreshFontSelectors(); touch(); toast("Font přidán: "+name);
+    };
+    r.readAsDataURL(file);
+  });
+  e.target.value="";
+};
+$("#fontchips").addEventListener("click",e=>{
+  const n=e.target.dataset.delfont; if(!n) return;
+  const b=cur(); b.fonts=b.fonts.filter(f=>f.name!==n); refreshFontSelectors(); refreshPreview(); touch();
+});
+$("#font-sample-sel").onchange=()=>{ $("#font-sample").style.fontFamily=$("#font-sample-sel").value; };
+
+function readImage(file,cb){ if(!file)return; const r=new FileReader(); r.onload=()=>cb(r.result); r.readAsDataURL(file); }
+
+/* ============ EXPORT / IMPORT ============ */
+function download(name,data,mime){
+  const blob=new Blob([data],{type:mime||"application/json"});
+  const a=document.createElement("a"); a.href=URL.createObjectURL(blob); a.download=name; a.click();
+  URL.revokeObjectURL(a.href);
+}
+function safeName(b){ return (b.title||"kniha").replace(/[^\wÀ-ſ-]+/g,"_"); }
+$("#btnExportOne").onclick=()=>{ flushEditor(); const b=cur(); if(!b){toast("Vyberte knihu");return;}
+  download((b.title||"kniha").replace(/[^\wÀ-ſ-]+/g,"_")+".json", JSON.stringify({type:"book",book:b},null,2)); };
+$("#btnExportAll").onclick=()=>{ flushEditor(); download("knihovna_"+new Date().toISOString().slice(0,10)+".json",
+  JSON.stringify({type:"library",books:state.books},null,2)); };
+$("#importFile").onchange=e=>{
+  const file=e.target.files[0]; if(!file)return;
+  const r=new FileReader();
+  r.onload=()=>{
+    try{
+      const d=JSON.parse(r.result);
+      let added=0;
+      const imp=bk=>{ bk.id=uid();
+        if(!bk.chapters){ bk.chapters=[{id:uid(),title:"Kapitola 1",content:bk.content||"<p></p>"}]; delete bk.content; }
+        bk.currentChapter=bk.chapters[0].id;
+        state.books.push(bk); added++; };
+      if(d.type==="library"&&Array.isArray(d.books)) d.books.forEach(imp);
+      else if(d.type==="book"&&d.book) imp(d.book);
+      else if(d.book) imp(d.book);
+      else if(Array.isArray(d.books)) d.books.forEach(imp);
+      else if(d.title) imp(d);
+      else throw new Error("neznámý formát");
+      save(); selectBook(state.books[state.books.length-1].id);
+      toast(`Importováno: ${added} ${added===1?"kniha":"knih"}`);
+    }catch(err){ alert("Import selhal: "+err.message); }
+  };
+  r.readAsText(file); e.target.value="";
+};
+
+/* ============ EXPORT: MARKDOWN ============ */
+function htmlToMD(html){
+  const box=document.createElement("div"); box.innerHTML=html||"";
+  function inline(node){
+    let s="";
+    node.childNodes.forEach(n=>{
+      if(n.nodeType===3){ s+=n.nodeValue.replace(/\s+/g," "); return; }
+      if(n.nodeType!==1) return;
+      const t=n.tagName.toLowerCase(); const inner=inline(n);
+      if(t==="strong"||t==="b") s+="**"+inner+"**";
+      else if(t==="em"||t==="i") s+="*"+inner+"*";
+      else if(t==="u") s+="<u>"+inner+"</u>";
+      else if(t==="s"||t==="strike"||t==="del") s+="~~"+inner+"~~";
+      else if(t==="code") s+="`"+inner+"`";
+      else if(t==="a") s+="["+inner+"]("+(n.getAttribute("href")||"")+")";
+      else if(t==="br") s+="  \n";
+      else if(t==="img") s+="!["+(n.getAttribute("alt")||"obrázek")+"]("+(n.getAttribute("src")||"")+")";
+      else s+=inner;
+    });
+    return s;
+  }
+  let out="";
+  box.childNodes.forEach(n=>{
+    if(n.nodeType===3){ const t=n.nodeValue.trim(); if(t) out+=t+"\n\n"; return; }
+    if(n.nodeType!==1) return;
+    const tag=n.tagName.toLowerCase();
+    if(tag==="h1") out+="# "+inline(n).trim()+"\n\n";
+    else if(tag==="h2") out+="## "+inline(n).trim()+"\n\n";
+    else if(tag==="h3") out+="### "+inline(n).trim()+"\n\n";
+    else if(tag==="blockquote") out+="> "+inline(n).trim().replace(/\n/g,"\n> ")+"\n\n";
+    else if(tag==="pre") out+="```\n"+n.textContent+"\n```\n\n";
+    else if(tag==="hr") out+="---\n\n";
+    else if(tag==="ul"){ [...n.children].forEach(li=>out+="- "+inline(li).trim()+"\n"); out+="\n"; }
+    else if(tag==="ol"){ [...n.children].forEach((li,i)=>out+=(i+1)+". "+inline(li).trim()+"\n"); out+="\n"; }
+    else { const s=inline(n).trim(); if(s) out+=s+"\n\n"; }
+  });
+  return out;
+}
+function bookToMarkdown(b){
+  let md="";
+  if(b.front.img) md+="!["+(b.title||"obálka")+"]("+b.front.img+")\n\n";
+  md+="# "+(b.title||"Bez názvu")+"\n\n";
+  if(b.subtitle) md+="*"+b.subtitle+"*\n\n";
+  if(b.author) md+="**Autor:** "+b.author+"  \n";
+  if(b.genre) md+="**Žánr:** "+b.genre+"\n";
+  md+="\n";
+  if(b.desc) md+="> "+b.desc.replace(/\n/g,"\n> ")+"\n\n";
+  md+="---\n\n";
+  b.chapters.forEach((c,i)=>{ md+="## "+(i+1)+". "+(c.title||"Kapitola")+"\n\n"+htmlToMD(c.content).trim()+"\n\n"; });
+  if(b.back.text||b.back.isbn){
+    md+="---\n\n### Zadní strana\n\n";
+    if(b.back.text) md+=b.back.text+"\n\n";
+    if(b.back.isbn) md+="**ISBN:** "+b.back.isbn+"\n";
+  }
+  return md;
+}
+$("#btnMD").onclick=()=>{ flushEditor(); const b=cur(); if(!b){toast("Vyberte knihu");return;}
+  download(safeName(b)+".md", bookToMarkdown(b), "text/markdown"); toast("Exportováno do Markdown"); };
+
+/* ============ EXPORT: ODT (OpenDocument Text) ============ */
+function crc32(bytes){
+  let t=crc32.t; if(!t){ t=crc32.t=[]; for(let n=0;n<256;n++){ let c=n; for(let k=0;k<8;k++) c=c&1?0xEDB88320^(c>>>1):c>>>1; t[n]=c>>>0; } }
+  let crc=-1; for(let i=0;i<bytes.length;i++) crc=(crc>>>8)^t[(crc^bytes[i])&0xFF];
+  return (crc^-1)>>>0;
+}
+function strBytes(s){ return new TextEncoder().encode(s); }
+function makeZip(files){ // STORED (bez komprese) – mimetype musí být první
+  const u16=n=>[n&255,(n>>8)&255], u32=n=>[n&255,(n>>8)&255,(n>>16)&255,(n>>24)&255];
+  const parts=[], central=[]; let offset=0;
+  files.forEach(f=>{
+    const nameB=strBytes(f.name), data=f.data, crc=crc32(data);
+    const lh=new Uint8Array([].concat(u32(0x04034b50),u16(20),u16(0),u16(0),u16(0),u16(0),u32(crc),u32(data.length),u32(data.length),u16(nameB.length),u16(0)));
+    parts.push(lh,nameB,data);
+    central.push(new Uint8Array([].concat(u32(0x02014b50),u16(20),u16(20),u16(0),u16(0),u16(0),u16(0),u32(crc),u32(data.length),u32(data.length),u16(nameB.length),u16(0),u16(0),u16(0),u16(0),u32(0),u32(offset))),nameB);
+    offset+=lh.length+nameB.length+data.length;
+  });
+  let cenSize=0; central.forEach(c=>cenSize+=c.length);
+  const end=new Uint8Array([].concat(u32(0x06054b50),u16(0),u16(0),u16(files.length),u16(files.length),u32(cenSize),u32(offset),u16(0)));
+  const all=[...parts,...central,end]; let total=0; all.forEach(a=>total+=a.length);
+  const out=new Uint8Array(total); let p=0; all.forEach(a=>{ out.set(a,p); p+=a.length; });
+  return out;
+}
+function dataURLparts(u){ const m=/^data:([^;]+);base64,(.*)$/.exec(u||""); if(!m) return null;
+  const bin=atob(m[2]); const bytes=new Uint8Array(bin.length); for(let i=0;i<bin.length;i++) bytes[i]=bin.charCodeAt(i);
+  return {mime:m[1],bytes}; }
+function loadSize(u){ return new Promise(res=>{ const im=new Image(); im.onload=()=>res({w:im.naturalWidth||600,h:im.naturalHeight||400}); im.onerror=()=>res({w:600,h:400}); im.src=u; }); }
+function odtEsc(s){ return (s||"").replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c])); }
+
+function buildODTContent(b, picSizes, pics){
+  const styleDefs=[], styleMap={}; let sc=0;
+  function tStyle(f){
+    const key=(f.b?"b":"")+(f.i?"i":"")+(f.u?"u":"")+(f.s?"s":""); if(!key) return null;
+    if(styleMap[key]) return styleMap[key];
+    const name="T"+(++sc); let p="";
+    if(f.b) p+=' fo:font-weight="bold"';
+    if(f.i) p+=' fo:font-style="italic"';
+    if(f.u) p+=' style:text-underline-style="solid" style:text-underline-width="auto" style:text-underline-color="font-color"';
+    if(f.s) p+=' style:text-line-through-style="solid"';
+    styleDefs.push(`<style:style style:name="${name}" style:family="text"><style:text-properties${p}/></style:style>`);
+    return styleMap[key]=name;
+  }
+  function imgFrame(src){
+    const parts=dataURLparts(src); if(!parts) return "";
+    const ext=(parts.mime.split("/")[1]||"png").replace("jpeg","jpg").replace("svg+xml","svg");
+    const href="Pictures/img"+(pics.length+1)+"."+ext;
+    pics.push({href,bytes:parts.bytes,mime:parts.mime});
+    const sz=picSizes[src]||{w:600,h:400};
+    const w=Math.min(16, sz.w/96*2.54), h=w*sz.h/sz.w;
+    return `<draw:frame draw:style-name="Fr" text:anchor-type="as-char" svg:width="${w.toFixed(2)}cm" svg:height="${h.toFixed(2)}cm"><draw:image xlink:href="${href}" xlink:type="simple" xlink:show="embed" xlink:actuate="onLoad"/></draw:frame>`;
+  }
+  function inline(node,f){
+    let s="";
+    node.childNodes.forEach(n=>{
+      if(n.nodeType===3){ const st=tStyle(f); const tx=odtEsc(n.nodeValue); s+= st?`<text:span text:style-name="${st}">${tx}</text:span>`:tx; return; }
+      if(n.nodeType!==1) return;
+      const t=n.tagName.toLowerCase(), nf=Object.assign({},f);
+      if(t==="strong"||t==="b") nf.b=true;
+      if(t==="em"||t==="i") nf.i=true;
+      if(t==="u") nf.u=true;
+      if(t==="s"||t==="strike"||t==="del") nf.s=true;
+      if(t==="br"){ s+="<text:line-break/>"; return; }
+      if(t==="img"){ s+=imgFrame(n.getAttribute("src")); return; }
+      if(t==="a"){ s+=`<text:a xlink:type="simple" xlink:href="${odtEsc(n.getAttribute("href")||"")}">`+inline(n,nf)+"</text:a>"; return; }
+      s+=inline(n,nf);
+    });
+    return s;
+  }
+  let body="";
+  function paras(html){
+    const box=document.createElement("div"); box.innerHTML=html||"";
+    box.childNodes.forEach(n=>{
+      if(n.nodeType===3){ const tx=n.nodeValue.trim(); if(tx) body+=`<text:p text:style-name="Pbody">${odtEsc(tx)}</text:p>`; return; }
+      if(n.nodeType!==1) return;
+      const t=n.tagName.toLowerCase();
+      if(t==="h1") body+=`<text:h text:style-name="HH1" text:outline-level="2">${inline(n,{})}</text:h>`;
+      else if(t==="h2") body+=`<text:h text:style-name="HH2" text:outline-level="3">${inline(n,{})}</text:h>`;
+      else if(t==="h3") body+=`<text:h text:style-name="HH3" text:outline-level="4">${inline(n,{})}</text:h>`;
+      else if(t==="blockquote") body+=`<text:p text:style-name="Pquote">${inline(n,{})}</text:p>`;
+      else if(t==="pre") body+=`<text:p text:style-name="Pcode">${odtEsc(n.textContent)}</text:p>`;
+      else if(t==="hr") body+=`<text:p text:style-name="Pbody"/>`;
+      else if(t==="ul"||t==="ol"){ body+="<text:list>"; [...n.children].forEach(li=>body+=`<text:list-item><text:p text:style-name="Pbody">${inline(li,{})}</text:p></text:list-item>`); body+="</text:list>"; }
+      else if(t==="img"){ body+=`<text:p text:style-name="Pbody">${imgFrame(n.getAttribute("src"))}</text:p>`; }
+      else { const s=inline(n,{}); body+=`<text:p text:style-name="Pbody">${s}</text:p>`; }
+    });
+  }
+  body+=`<text:p text:style-name="Ptitle">${odtEsc(b.title||"Bez názvu")}</text:p>`;
+  if(b.subtitle) body+=`<text:p text:style-name="Psub">${odtEsc(b.subtitle)}</text:p>`;
+  if(b.author) body+=`<text:p text:style-name="Psub">${odtEsc(b.author)}</text:p>`;
+  b.chapters.forEach((c,i)=>{ body+=`<text:h text:style-name="HH1" text:outline-level="1">${odtEsc((i+1)+". "+(c.title||"Kapitola"))}</text:h>`; paras(c.content); });
+  if(b.back.text||b.back.isbn){
+    body+=`<text:h text:style-name="HH1" text:outline-level="1">Zadní strana</text:h>`;
+    if(b.back.text) b.back.text.split(/\n/).forEach(l=>body+=`<text:p text:style-name="Pbody">${odtEsc(l)}</text:p>`);
+    if(b.back.isbn) body+=`<text:p text:style-name="Pbody">ISBN: ${odtEsc(b.back.isbn)}</text:p>`;
+  }
+  const baseStyles=`
+    <style:style style:name="Ptitle" style:family="paragraph"><style:paragraph-properties fo:text-align="center" fo:margin-bottom="0.3cm"/><style:text-properties fo:font-size="28pt" fo:font-weight="bold"/></style:style>
+    <style:style style:name="Psub" style:family="paragraph"><style:paragraph-properties fo:text-align="center" fo:margin-bottom="0.2cm"/><style:text-properties fo:font-size="14pt" fo:font-style="italic"/></style:style>
+    <style:style style:name="HH1" style:family="paragraph"><style:paragraph-properties fo:margin-top="0.6cm" fo:margin-bottom="0.2cm"/><style:text-properties fo:font-size="20pt" fo:font-weight="bold"/></style:style>
+    <style:style style:name="HH2" style:family="paragraph"><style:paragraph-properties fo:margin-top="0.4cm" fo:margin-bottom="0.15cm"/><style:text-properties fo:font-size="16pt" fo:font-weight="bold"/></style:style>
+    <style:style style:name="HH3" style:family="paragraph"><style:paragraph-properties fo:margin-top="0.3cm" fo:margin-bottom="0.1cm"/><style:text-properties fo:font-size="13pt" fo:font-weight="bold"/></style:style>
+    <style:style style:name="Pbody" style:family="paragraph"><style:paragraph-properties fo:margin-bottom="0.25cm" fo:text-align="justify"/><style:text-properties fo:font-size="12pt"/></style:style>
+    <style:style style:name="Pquote" style:family="paragraph"><style:paragraph-properties fo:margin-left="1cm" fo:margin-bottom="0.25cm"/><style:text-properties fo:font-size="12pt" fo:font-style="italic"/></style:style>
+    <style:style style:name="Pcode" style:family="paragraph"><style:text-properties style:font-name="Courier New" fo:font-size="11pt"/></style:style>
+    <style:style style:name="Fr" style:family="graphic"><style:graphic-properties style:vertical-pos="middle" style:vertical-rel="text"/></style:style>`;
+  const NS=`xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0" xmlns:style="urn:oasis:names:tc:opendocument:xmlns:style:1.0" xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0" xmlns:fo="urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0" xmlns:draw="urn:oasis:names:tc:opendocument:xmlns:drawing:1.0" xmlns:svg="urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0" xmlns:xlink="http://www.w3.org/1999/xlink"`;
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<office:document-content ${NS} office:version="1.2">
+<office:automatic-styles>${baseStyles}${styleDefs.join("")}</office:automatic-styles>
+<office:body><office:text>${body}</office:text></office:body>
+</office:document-content>`;
+}
+async function exportODT(){
+  flushEditor(); const b=cur(); if(!b){ toast("Vyberte knihu"); return; }
+  toast("Vytvářím ODT…");
+  // posbírej obrázky z kapitol pro zjištění rozměrů
+  const srcs=new Set();
+  b.chapters.forEach(c=>{ const box=document.createElement("div"); box.innerHTML=c.content||""; box.querySelectorAll("img").forEach(im=>srcs.add(im.getAttribute("src"))); });
+  const picSizes={}; for(const s of srcs){ picSizes[s]=await loadSize(s); }
+  const pics=[];
+  const content=buildODTContent(b, picSizes, pics);
+  const manifest=`<?xml version="1.0" encoding="UTF-8"?>
+<manifest:manifest xmlns:manifest="urn:oasis:names:tc:opendocument:xmlns:manifest:1.0" manifest:version="1.2">
+<manifest:file-entry manifest:full-path="/" manifest:media-type="application/vnd.oasis.opendocument.text"/>
+<manifest:file-entry manifest:full-path="content.xml" manifest:media-type="text/xml"/>
+<manifest:file-entry manifest:full-path="styles.xml" manifest:media-type="text/xml"/>
+${pics.map(p=>`<manifest:file-entry manifest:full-path="${p.href}" manifest:media-type="${p.mime}"/>`).join("\n")}
+</manifest:manifest>`;
+  const styles=`<?xml version="1.0" encoding="UTF-8"?>
+<office:document-styles xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0" xmlns:style="urn:oasis:names:tc:opendocument:xmlns:style:1.0" xmlns:fo="urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0" office:version="1.2"><office:styles/></office:document-styles>`;
+  const files=[
+    {name:"mimetype", data:strBytes("application/vnd.oasis.opendocument.text")},
+    {name:"META-INF/manifest.xml", data:strBytes(manifest)},
+    {name:"styles.xml", data:strBytes(styles)},
+    {name:"content.xml", data:strBytes(content)},
+    ...pics.map(p=>({name:p.href, data:p.bytes}))
+  ];
+  download(safeName(b)+".odt", makeZip(files), "application/vnd.oasis.opendocument.text");
+  toast("Exportováno do ODT");
+}
+$("#btnODT").onclick=exportODT;
+
+/* ============ RENDER BOOK (preview / PDF) ============ */
+function buildBookHTML(b, forPrint){
+  const fontFaces=(b.fonts||[]).map(f=>`@font-face{font-family:'${fontFamilyName(f)}';src:url(${f.data})}`).join("\n");
+  const fimg=b.front.img?`background:url(${b.front.img}) center/cover`:`background:linear-gradient(160deg,${b.front.bg},${b.front.bg2})`;
+  const f=b.front, bk=b.back;
+  const posStyle=o=>`left:${o.posX}%;top:${o.posY}%;transform:translate(-50%,-50%) rotate(${o.rotate}deg);text-align:${o.halign}`;
+  const fStyle=posStyle(f), bStyle=posStyle(bk);
+
+  // jednotlivé stránky (sheety)
+  const sheets=[];
+  let pageIdx=0;
+  const pnum=()=>{ pageIdx++; return b.pageNum!=="none"?`<div class="pnum ${b.pageNum}">${pageIdx}</div>`:""; };
+  // přední strana
+  sheets.push(`<div class="sheet cover">
+      <div class="dim"></div>
+      <div class="cframe" style="border:${borderCSS(f.border,f.borderColor)}"></div>
+      <div class="cover-in">
+        <div class="cover-txt" style="${fStyle}">
+          <h1>${esc(b.title)}</h1>${b.subtitle?`<div class="sub">${esc(b.subtitle)}</div>`:""}
+          <div class="au">${esc(b.author)}</div>
+        </div>
+      </div></div>`);
+  // obsah (jen u více kapitol)
+  if(b.chapters.length>1){
+    const toc=b.chapters.map((c,i)=>`<li><span>${i+1}. ${esc(c.title)}</span></li>`).join("");
+    sheets.push(`<div class="sheet pad"><div class="toc"><h2>Obsah</h2><ol>${toc}</ol></div></div>`);
+  }
+  // každá kapitola = vlastní stránka
+  b.chapters.forEach((c,i)=>{
+    sheets.push(`<div class="sheet pad"><section class="chapter">
+      <h2 class="chap-h">${i+1}. ${esc(c.title)}</h2>
+      <div class="chap-body">${c.content}</div></section>${pnum()}</div>`);
+  });
+  // zadní strana
+  if(bk.text||bk.isbn||bk.img){
+    sheets.push(`<div class="sheet back">
+      <div class="back-dim"></div>
+      <div class="cframe" style="border:${borderCSS(bk.border,bk.borderColor)}"></div>
+      <div class="back-in"><div class="cover-txt" style="${bStyle}">${esc(bk.text)}${bk.isbn?`<div class="isbn">ISBN: ${esc(bk.isbn)}</div>`:""}</div></div></div>`);
+  }
+
+  return `<!DOCTYPE html><html lang="cs"><head><meta charset="utf-8"><title>${esc(b.title)}</title>
+  <style>
+    ${fontFaces}
+    *{box-sizing:border-box; -webkit-print-color-adjust:exact; print-color-adjust:exact}
+    html,body{margin:0}
+    body{background:#33373f;font-family:${b.front.font};color:#111;padding:24px 0}
+    .sheet{width:210mm;min-height:297mm;margin:0 auto 24px;background:#fff;
+      box-shadow:0 6px 30px rgba(0,0,0,.45);position:relative;overflow:visible;display:flex;flex-direction:column}
+    .sheet.cover,.sheet.back{overflow:hidden}
+    .sheet.pad{padding:24mm 22mm 28mm}
+    .cframe{position:absolute;inset:10mm;pointer-events:none;border-radius:2px;z-index:1}
+    .pnum{position:absolute;bottom:12mm;font-size:11pt;color:#666}
+    .pnum.center{left:0;right:0;text-align:center}
+    .pnum.right{right:22mm}
+    /* cover */
+    .cover{${fimg};color:${b.front.color}}
+    .cover .dim{position:absolute;inset:0;background:rgba(0,0,0,${b.front.img?b.front.dim/100:0})}
+    .cover-in{position:relative;z-index:2;flex:1}
+    .cover-txt{position:absolute;max-width:84%;width:max-content}
+    .cover-in h1{font-size:42px;margin:0}
+    .cover-in .sub{font-size:20px;margin-top:10px;opacity:.9}
+    .cover-in .au{margin-top:14px;font-size:18px}
+    /* toc */
+    .toc h2{color:#444;border-bottom:2px solid #ddd;padding-bottom:8px}
+    .toc ol{line-height:2;font-size:17px;padding-left:1.2em}
+    /* chapters */
+    .chapter{font-family:${b.front.font};font-size:18px;line-height:1.7}
+    .chap-h{font-size:28px;color:#222;border-bottom:1px solid #eee;padding-bottom:6px;margin-top:0}
+    .chapter img{max-width:100%}
+    .chapter blockquote{border-left:3px solid #ccc;margin:1em 0;padding:.2em 1em;color:#555;font-style:italic}
+    /* back */
+    .back{${bk.img?`background:url(${bk.img}) center/cover`:`background:${bk.bg}`};color:${bk.color};font-family:${bk.font}}
+    .back-dim{position:absolute;inset:0;background:rgba(0,0,0,${bk.img?bk.dim/100:0})}
+    .back-in{position:relative;z-index:2;flex:1}
+    .back .cover-txt{white-space:pre-wrap;line-height:1.6}
+    .back .isbn{margin-top:30px;font-size:13px;opacity:.7}
+    @media print{
+      @page{ size:A4; margin:18mm 16mm;
+        ${b.pageNum==="center"?"@bottom-center{ content:counter(page); font-size:10pt; color:#666; }":""}
+        ${b.pageNum==="right"?"@bottom-right{ content:counter(page); font-size:10pt; color:#666; }":""}
+      }
+      @page coverpage{ margin:0; @bottom-center{content:""} @bottom-right{content:""} }
+      @page backpage{ margin:0; @bottom-center{content:""} @bottom-right{content:""} }
+      body{background:#fff;padding:0}
+      .sheet{box-shadow:none;margin:0;width:auto;min-height:0;page-break-after:always}
+      .sheet:last-child{page-break-after:auto}
+      .sheet.cover{page:coverpage} .sheet.back{page:backpage}
+      .sheet.cover,.sheet.back{min-height:100vh}
+      .sheet.pad{padding:0}
+      .pnum{display:none}  /* v tisku zajišťuje čísla @page counter */
+    }
+  </style></head><body>
+  ${sheets.join("\n")}
+  ${forPrint?'<script>window.onload=function(){setTimeout(function(){window.print()},500)}<\/script>':''}
+  </body></html>`;
+}
+$("#btnPreview").onclick=()=>{ flushEditor(); const b=cur(); if(!b){toast("Vyberte knihu");return;}
+  const w=window.open("","_blank"); w.document.write(buildBookHTML(b,false)); w.document.close(); };
+$("#btnPDF").onclick=()=>{ flushEditor(); const b=cur(); if(!b){toast("Vyberte knihu");return;}
+  toast("Otevírám tiskový dialog – zvolte „Uložit jako PDF“");
+  const w=window.open("","_blank"); w.document.write(buildBookHTML(b,true)); w.document.close(); };
+
+/* ============ INIT ============ */
+const borderOpts=BORDERS.map(([v,l])=>`<option value="${v}">${l}</option>`).join("");
+$("#fc-border").innerHTML=borderOpts; $("#bc-border").innerHTML=borderOpts;
+makeDraggable($("#prev-front"), $("#pf-txt"), ()=>cur()&&cur().front);
+makeDraggable($("#prev-back"),  $("#pb-txt"), ()=>cur()&&cur().back);
+(async function init(){
+  try{ await load(); }catch(e){ alert("Načtení dat selhalo: "+e.message); }
+  state.books.forEach(applyBookFonts);
+  if(state.books.length && !state.currentId) state.currentId=state.books.sort((a,b)=>b.updated-a.updated)[0].id;
+  selectBook(state.currentId);
+  renderLibrary();
+})();
+window.addEventListener("beforeunload",()=>{ flushEditor(); saveNow(); });
+document.addEventListener("visibilitychange",()=>{ if(document.visibilityState==="hidden"){ flushEditor(); saveNow(); } });
+</script>
+</body>
+</html>
