@@ -22,6 +22,9 @@
   }
   header h1{font-size:18px;margin:0;color:var(--accent);letter-spacing:.5px}
   header h1 small{color:var(--muted);font-weight:normal;font-size:12px;margin-left:6px}
+  .savestatus{font-size:12px;color:var(--muted);padding:3px 9px;border:1px solid var(--line);border-radius:20px;transition:.2s}
+  .savestatus.saving{color:var(--accent);border-color:var(--accent)}
+  .savestatus.saved{color:var(--ok);border-color:var(--ok)}
   .grow{flex:1}
   button,select,input[type=text],input[type=number]{
     font-family:inherit;font-size:13px;color:var(--txt);background:var(--panel2);
@@ -53,8 +56,9 @@
   .bookcard .t{font-weight:600;font-size:14px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
   .bookcard .a{font-size:12px;color:var(--muted)}
   .bookcard .meta{font-size:11px;color:var(--muted);margin-top:4px}
-  .bookcard .del{position:absolute;top:6px;right:6px;opacity:0;font-size:11px;padding:3px 6px}
-  .bookcard:hover .del{opacity:1}
+  .bookcard .cardbtns{position:absolute;top:6px;right:6px;display:flex;gap:4px;opacity:0}
+  .bookcard:hover .cardbtns{opacity:1}
+  .bookcard .cardbtns button{font-size:11px;padding:3px 6px}
   aside .foot{padding:10px;border-top:1px solid var(--line);display:flex;flex-direction:column;gap:8px}
 
   /* ---- Editor area ---- */
@@ -84,7 +88,8 @@
   }
   .cover-preview .ov{position:absolute;inset:0}
   .cover-preview .frame{position:absolute;inset:14px;pointer-events:none;border-radius:2px}
-  .cover-preview .cover-txt{position:absolute;max-width:84%;width:max-content;cursor:grab;touch-action:none;user-select:none}
+  .cover-preview .cover-txt{position:absolute;max-width:84%;width:max-content;cursor:grab;touch-action:none;user-select:none;outline:1px dashed transparent;outline-offset:6px}
+  .cover-preview .cover-txt:hover{outline-color:rgba(255,255,255,.6)}
   .cover-preview .cover-txt:active{cursor:grabbing}
   .cover-preview .ct{font-size:26px;font-weight:700;line-height:1.15;word-break:break-word}
   .cover-preview .cs{font-size:15px;margin-top:8px;opacity:.9}
@@ -152,10 +157,12 @@
 </head>
 <body>
 <header>
-  <h1>📖 Tvůrce knih <small>vše se ukládá lokálně</small></h1>
+  <h1>📖 Tvůrce knih</h1>
+  <span id="saveStatus" class="savestatus">uloženo</span>
   <div class="grow"></div>
   <button id="btnPreview" class="ghost">👁 Náhled</button>
   <button id="btnPDF" class="ghost">🖨 PDF</button>
+  <button id="btnEPUB" class="ghost">📚 EPUB</button>
   <button id="btnMD" class="ghost">📝 MD</button>
   <button id="btnODT" class="ghost">📄 ODT</button>
   <button id="btnExportOne" class="ghost">⬇ JSON</button>
@@ -455,8 +462,10 @@ async function load(){
   migrate();
 }
 let saveT;
-function saveNow(){ if(idb) idbPut(STATE_KEY,state).catch(e=>console.warn("Uložení selhalo:",e)); }
-function save(){ clearTimeout(saveT); saveT=setTimeout(saveNow,300); }
+function setSaveStatus(s){ const el=document.getElementById("saveStatus"); if(!el) return;
+  el.className="savestatus "+s; el.textContent= s==="saving"?"ukládám…":"uloženo"; }
+function saveNow(){ if(!idb) return; idbPut(STATE_KEY,state).then(()=>setSaveStatus("saved")).catch(e=>{ console.warn("Uložení selhalo:",e); }); }
+function save(){ setSaveStatus("saving"); clearTimeout(saveT); saveT=setTimeout(saveNow,300); }
 function uid(){ return Date.now().toString(36)+Math.random().toString(36).slice(2,7); }
 function cur(){ return state.books.find(b=>b.id===state.currentId); }
 function curChap(){ const b=cur(); if(!b) return null; return b.chapters.find(c=>c.id===b.currentChapter) || b.chapters[0]; }
@@ -540,8 +549,8 @@ function renderLibrary(){
     el.innerHTML = `<div class="t">${esc(b.title)||"Bez názvu"}</div>
       <div class="a">${esc(b.author)||"—"}</div>
       <div class="meta">${bookWords(b)} slov · ${b.chapters.length} kap. · ${new Date(b.updated).toLocaleDateString("cs")}</div>
-      <button class="del danger" data-del="${b.id}">smazat</button>`;
-    el.onclick = e=>{ if(e.target.dataset.del) return; selectBook(b.id); };
+      <div class="cardbtns"><button class="ghost" data-dup="${b.id}" title="Duplikovat">⧉</button><button class="danger" data-del="${b.id}" title="Smazat">🗑</button></div>`;
+    el.onclick = e=>{ if(e.target.dataset.del||e.target.dataset.dup) return; selectBook(b.id); };
     list.appendChild(el);
     if(b.id===state.currentId) list.appendChild(renderChapSubmenu(b));
   });
@@ -711,6 +720,8 @@ $$(".tab").forEach(t=>t.onclick=()=>{
 function doNew(){ const b=newBook(); state.books.push(b); selectBook(b.id); toast("Kniha vytvořena"); }
 $("#btnNew").onclick=doNew; $("#btnNew2").onclick=doNew;
 $("#booklist").addEventListener("click",e=>{
+  const dupId=e.target.dataset.dup;
+  if(dupId){ duplicateBook(dupId); return; }
   const id=e.target.dataset.del; if(!id) return;
   const b=state.books.find(x=>x.id===id);
   if(confirm(`Smazat knihu „${b.title}“?`)){
@@ -719,6 +730,16 @@ $("#booklist").addEventListener("click",e=>{
     selectBook(state.currentId); save(); toast("Smazáno");
   }
 });
+function duplicateBook(id){
+  flushEditor();
+  const src=state.books.find(x=>x.id===id); if(!src) return;
+  const copy=JSON.parse(JSON.stringify(src));
+  copy.id=uid(); copy.title=(src.title||"Bez názvu")+" (kopie)";
+  copy.created=copy.updated=Date.now();
+  copy.chapters.forEach(c=>c.id=uid());
+  copy.currentChapter=copy.chapters[0].id;
+  state.books.push(copy); selectBook(copy.id); save(); toast("Kniha zduplikována");
+}
 $("#search").oninput=renderLibrary;
 
 const bind=(sel,key)=>{ $(sel).oninput=()=>{ const b=cur(); if(!b)return; b[key]=$(sel).value; touch(); if(["title","author","subtitle"].includes(key)){refreshPreview();renderLibrary();} }; };
@@ -783,6 +804,15 @@ function syncContent(){
 $("#editor").addEventListener("input",syncContent);
 $("#editor").addEventListener("keyup",updateToolbarState);
 $("#editor").addEventListener("mouseup",updateToolbarState);
+$("#editor").addEventListener("keydown",e=>{
+  if(!(e.ctrlKey||e.metaKey)) return;
+  const k=e.key.toLowerCase();
+  if(k==="b"||k==="i"||k==="u"){ setTimeout(updateToolbarState,0); } // necháme nativní formátování, jen obnovíme stav lišty
+});
+// Ctrl+S = okamžité uložení (globálně)
+document.addEventListener("keydown",e=>{
+  if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="s"){ e.preventDefault(); flushEditor(); saveNow(); toast("Uloženo"); }
+});
 // vkládání obrázků ze schránky
 $("#editor").addEventListener("paste",e=>{
   const items=e.clipboardData&&e.clipboardData.items; if(!items) return;
@@ -1075,6 +1105,122 @@ ${pics.map(p=>`<manifest:file-entry manifest:full-path="${p.href}" manifest:medi
   toast("Exportováno do ODT");
 }
 $("#btnODT").onclick=exportODT;
+
+/* ============ EXPORT: EPUB (e-book) ============ */
+function uuid4(){ return "xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g,c=>{const r=Math.random()*16|0;return (c==="x"?r:(r&0x3|0x8)).toString(16);}); }
+function extOf(mime,fb){ return (mime.split("/")[1]||fb||"bin").replace("jpeg","jpg").replace("svg+xml","svg").replace("x-font-ttf","ttf").replace("vnd.ms-opentype","otf"); }
+function xhtmlDoc(title, inner){ return `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml"><head><meta charset="utf-8"/><title>${esc(title)}</title><link rel="stylesheet" type="text/css" href="style.css"/></head>
+<body>${inner}</body></html>`; }
+function chapterBodyXHTML(content, images){
+  const div=document.createElement("div"); div.innerHTML=content||"";
+  div.querySelectorAll("img").forEach(im=>{
+    const parts=dataURLparts(im.getAttribute("src")); if(!parts) return;
+    const n=images.length+1, href="images/img"+n+"."+extOf(parts.mime,"png");
+    images.push({name:"OEBPS/"+href, data:parts.bytes, mime:parts.mime, id:"img"+n, href});
+    im.setAttribute("src",href); im.removeAttribute("width"); im.removeAttribute("height");
+  });
+  const xs=new XMLSerializer(); let out="";
+  div.childNodes.forEach(n=> out+=xs.serializeToString(n));
+  return out.replace(/ xmlns="http:\/\/www\.w3\.org\/1999\/xhtml"/g,"");
+}
+function exportEPUB(){
+  flushEditor(); const b=cur(); if(!b){ toast("Vyberte knihu"); return; }
+  toast("Vytvářím EPUB…");
+  const id=uuid4(), images=[], fonts=[], docs=[];
+  // fonty -> @font-face
+  let fontFaces="";
+  (b.fonts||[]).forEach((f,i)=>{
+    const parts=dataURLparts(f.data); if(!parts) return;
+    const ext=extOf(parts.mime,"ttf"), href="fonts/font"+(i+1)+"."+ext;
+    const fmime={ttf:"application/x-font-ttf",otf:"application/vnd.ms-opentype",woff:"application/font-woff",woff2:"font/woff2"}[ext]||"application/octet-stream";
+    fonts.push({name:"OEBPS/"+href, data:parts.bytes, id:"font"+(i+1), href, mime:fmime});
+    fontFaces+=`@font-face{font-family:'${fontFamilyName(f)}';src:url(${href});}\n`;
+  });
+  // cover image
+  let coverMeta="", coverExt="";
+  if(b.front.img){ const parts=dataURLparts(b.front.img);
+    if(parts){ coverExt=extOf(parts.mime,"jpg"); const href="images/cover."+coverExt;
+      images.push({name:"OEBPS/"+href, data:parts.bytes, mime:parts.mime, id:"cover-image", href});
+      coverMeta=`<meta name="cover" content="cover-image"/>`;
+    }
+  }
+  // obálka
+  const coverInner = coverExt
+    ? `<div class="coverimg"><img src="images/cover.${coverExt}" alt="${esc(b.title)}"/></div>`
+    : `<div class="titlepage"><h1>${esc(b.title)}</h1>${b.subtitle?`<p class="sub">${esc(b.subtitle)}</p>`:""}<p class="au">${esc(b.author)}</p></div>`;
+  docs.push({id:"cover", href:"cover.xhtml", title:"Obálka", xhtml:xhtmlDoc(b.title||"Obálka", coverInner)});
+  // kapitoly
+  b.chapters.forEach((c,i)=>{
+    const t=(i+1)+". "+(c.title||"Kapitola");
+    docs.push({id:"chap"+(i+1), href:"chap"+(i+1)+".xhtml", title:t,
+      xhtml:xhtmlDoc(t, `<h2 class="chap-h">${esc(t)}</h2>`+chapterBodyXHTML(c.content,images))});
+  });
+  // zadní strana
+  if(b.back.text||b.back.isbn){
+    const inner=`<div class="backcover"><h2>Zadní strana</h2><p>${esc(b.back.text).replace(/\n/g,"<br/>")}</p>${b.back.isbn?`<p class="isbn">ISBN: ${esc(b.back.isbn)}</p>`:""}</div>`;
+    docs.push({id:"back", href:"back.xhtml", title:"Zadní strana", xhtml:xhtmlDoc("Zadní strana", inner)});
+  }
+  // style.css
+  const css=`${fontFaces}body{font-family:${b.front.font};line-height:1.6;margin:5%}
+h1{font-size:1.8em;text-align:center}
+h2.chap-h{font-size:1.35em;border-bottom:1px solid #ccc;padding-bottom:.2em}
+p{text-align:justify;margin:.6em 0}
+img{max-width:100%;height:auto}
+blockquote{border-left:3px solid #ccc;margin:1em 0;padding:.2em 1em;color:#555;font-style:italic}
+.titlepage{text-align:center;margin-top:30%}
+.titlepage .sub{font-style:italic}
+.titlepage .au{margin-top:2.5em}
+.coverimg{text-align:center;margin:0;padding:0}
+.coverimg img{max-height:100%}
+.backcover{margin-top:8%}
+.isbn{margin-top:2em;font-size:.85em;color:#666}`;
+  // manifest + spine + ncx
+  let man=`<item id="ncx" href="toc.ncx" media-type="application/x-dtbncx+xml"/><item id="css" href="style.css" media-type="text/css"/>`;
+  docs.forEach(d=> man+=`<item id="${d.id}" href="${d.href}" media-type="application/xhtml+xml"/>`);
+  images.forEach(im=> man+=`<item id="${im.id}" href="${im.href}" media-type="${im.mime}"/>`);
+  fonts.forEach(ft=> man+=`<item id="${ft.id}" href="${ft.href}" media-type="${ft.mime}"/>`);
+  let spine=""; docs.forEach(d=> spine+=`<itemref idref="${d.id}"/>`);
+  let nav=""; docs.forEach((d,i)=> nav+=`<navPoint id="np${i+1}" playOrder="${i+1}"><navLabel><text>${esc(d.title)}</text></navLabel><content src="${d.href}"/></navPoint>`);
+  const opf=`<?xml version="1.0" encoding="UTF-8"?>
+<package xmlns="http://www.idpf.org/2007/opf" version="2.0" unique-identifier="bookid">
+<metadata xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:opf="http://www.idpf.org/2007/opf">
+<dc:title>${esc(b.title||"Bez názvu")}</dc:title>
+<dc:creator opf:role="aut">${esc(b.author||"Neznámý")}</dc:creator>
+<dc:language>cs</dc:language>
+<dc:identifier id="bookid">urn:uuid:${id}</dc:identifier>
+${b.desc?`<dc:description>${esc(b.desc)}</dc:description>`:""}
+${b.genre?`<dc:subject>${esc(b.genre)}</dc:subject>`:""}
+${coverMeta}
+</metadata>
+<manifest>${man}</manifest>
+<spine toc="ncx">${spine}</spine>
+</package>`;
+  const ncx=`<?xml version="1.0" encoding="UTF-8"?>
+<ncx xmlns="http://www.daisy.org/z3986/2005/ncx/" version="2005-1">
+<head><meta name="dtb:uid" content="urn:uuid:${id}"/><meta name="dtb:depth" content="1"/><meta name="dtb:totalPageCount" content="0"/><meta name="dtb:maxPageNumber" content="0"/></head>
+<docTitle><text>${esc(b.title||"Bez názvu")}</text></docTitle>
+<navMap>${nav}</navMap>
+</ncx>`;
+  const container=`<?xml version="1.0" encoding="UTF-8"?>
+<container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container">
+<rootfiles><rootfile full-path="OEBPS/content.opf" media-type="application/oebps-package+xml"/></rootfiles>
+</container>`;
+  const files=[
+    {name:"mimetype", data:strBytes("application/epub+zip")},
+    {name:"META-INF/container.xml", data:strBytes(container)},
+    {name:"OEBPS/content.opf", data:strBytes(opf)},
+    {name:"OEBPS/toc.ncx", data:strBytes(ncx)},
+    {name:"OEBPS/style.css", data:strBytes(css)},
+    ...docs.map(d=>({name:"OEBPS/"+d.href, data:strBytes(d.xhtml)})),
+    ...images.map(im=>({name:im.name, data:im.data})),
+    ...fonts.map(ft=>({name:ft.name, data:ft.data}))
+  ];
+  download(safeName(b)+".epub", makeZip(files), "application/epub+zip");
+  toast("Exportováno do EPUB");
+}
+$("#btnEPUB").onclick=exportEPUB;
 
 /* ============ RENDER BOOK (preview / PDF) ============ */
 function buildBookHTML(b, forPrint){
