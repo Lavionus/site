@@ -45,6 +45,7 @@ select{background:#404040;border:1px solid #555;border-radius:4px;color:#e0e0e0;
 <div class="top">
   <select id="level"><option value="40">Lehká</option><option value="48" selected>Střední</option><option value="54">Těžká</option></select>
   <button class="btn" id="newBtn">🔄 Nová hra</button>
+  <button class="btn btn-sec" id="undoBtn">↩️ Zpět</button>
   <button class="btn btn-sec" id="notesBtn">✏️ Poznámky</button>
   <button class="btn btn-sec" id="checkBtn">✓ Zkontrolovat</button>
   <button class="btn btn-sec" id="snapBtn">📸 Uložit snímek</button>
@@ -59,7 +60,7 @@ select{background:#404040;border:1px solid #555;border-radius:4px;color:#e0e0e0;
 </div>
 <script>
 const $=id=>document.getElementById(id);
-let solution,puzzle,given,notes,selected=-1,timer,seconds,notesMode=false;
+let solution,puzzle,given,notes,selected=-1,timer,seconds,notesMode=false,history=[];
 function genSolved(){
   const g=Array.from({length:9},()=>Array(9).fill(0));
   function valid(r,c,n){for(let i=0;i<9;i++)if(g[r][i]===n||g[i][c]===n)return false;
@@ -69,14 +70,38 @@ function genSolved(){
     for(const n of nums)if(valid(r,c,n)){g[r][c]=n;if(fill(pos+1))return true;g[r][c]=0;}return false;}
   fill(0);return g;
 }
-function newGame(){
+// Spočítá počet řešení mřížky (zastaví se na `limit`). Slouží k zajištění,
+// aby vygenerovaná hádanka měla právě jedno řešení.
+function countSolutions(grid,limit){
+  const g=grid.map(r=>[...r]);let count=0;
+  function valid(r,c,n){for(let i=0;i<9;i++)if(g[r][i]===n||g[i][c]===n)return false;
+    const br=r-r%3,bc=c-c%3;for(let i=0;i<3;i++)for(let j=0;j<3;j++)if(g[br+i][bc+j]===n)return false;return true;}
+  function solve(){
+    let r=-1,c=-1;
+    outer:for(let i=0;i<9;i++)for(let j=0;j<9;j++)if(g[i][j]===0){r=i;c=j;break outer;}
+    if(r===-1){count++;return;}
+    for(let n=1;n<=9;n++){if(valid(r,c,n)){g[r][c]=n;solve();g[r][c]=0;if(count>=limit)return;}}
+  }
+  solve();return count;
+}
+function newGame(clearSnaps){
   solution=genSolved();
   puzzle=solution.map(r=>[...r]);
-  const remove=+$('level').value;const cells=[...Array(81).keys()].sort(()=>Math.random()-0.5);
-  for(let i=0;i<remove;i++){const idx=cells[i];puzzle[Math.floor(idx/9)][idx%9]=0;}
+  // Cílový počet odebraných buněk podle obtížnosti. Buňku odebereme jen tehdy,
+  // pokud hádanka i poté zůstane s jediným řešením – jinak ji vrátíme zpět.
+  const target=+$('level').value;const cells=[...Array(81).keys()].sort(()=>Math.random()-0.5);
+  let removed=0;
+  for(const idx of cells){
+    if(removed>=target)break;
+    const r=Math.floor(idx/9),c=idx%9,backup=puzzle[r][c];
+    puzzle[r][c]=0;
+    if(countSolutions(puzzle,2)===1)removed++;else puzzle[r][c]=backup;
+  }
   given=puzzle.map(r=>r.map(v=>v!==0));
   notes=Array.from({length:81},()=>new Set());
+  history=[];
   selected=-1;seconds=0;startTimer();
+  if(clearSnaps){snapshots=[];persistSnaps();renderSnaps();}
   $('msg').textContent='';render();
 }
 function startTimer(){clearInterval(timer);$('time').textContent=Math.floor(seconds/60)+':'+String(seconds%60).padStart(2,'0');
@@ -93,15 +118,28 @@ function render(){
     b.appendChild(d);
   }
 }
+// Uloží aktuální stav (hodnoty + poznámky) do historie pro funkci „Zpět".
+function pushHistory(){
+  history.push({puzzle:puzzle.map(r=>[...r]),notes:notes.map(s=>[...s])});
+  if(history.length>300)history.shift();
+}
+function undo(){
+  const s=history.pop();if(!s)return;
+  puzzle=s.puzzle.map(r=>[...r]);
+  notes=s.notes.map(a=>new Set(a));
+  render();
+}
 function place(n){
   if(selected<0)return;const r=Math.floor(selected/9),c=selected%9;
   if(given[r][c])return;
-  if(n===0){puzzle[r][c]=0;notes[selected].clear();render();return;}
+  if(n===0){pushHistory();puzzle[r][c]=0;notes[selected].clear();render();return;}
   if(notesMode){
     if(puzzle[r][c])return;
+    pushHistory();
     notes[selected].has(n)?notes[selected].delete(n):notes[selected].add(n);
     render();return;
   }
+  pushHistory();
   puzzle[r][c]=n;notes[selected].clear();
   for(let k=0;k<81;k++){const kr=Math.floor(k/9),kc=k%9;
     if(kr===r||kc===c||(Math.floor(kr/3)===Math.floor(r/3)&&Math.floor(kc/3)===Math.floor(c/3)))notes[k].delete(n);}
@@ -137,7 +175,10 @@ $('pad').innerHTML=[1,2,3,4,5,6,7,8,9].map(n=>`<div class="key" data-n="${n}">${
 $('pad').querySelectorAll('.key').forEach(k=>k.onclick=()=>place(+k.dataset.n));
 function toggleNotes(){notesMode=!notesMode;$('notesBtn').classList.toggle('active',notesMode);}
 $('notesBtn').onclick=toggleNotes;
-document.addEventListener('keydown',e=>{if(e.key>='1'&&e.key<='9')place(+e.key);else if(e.key==='Backspace'||e.key==='Delete'||e.key==='0')place(0);
+$('undoBtn').onclick=undo;
+document.addEventListener('keydown',e=>{
+  if((e.ctrlKey||e.metaKey)&&(e.key==='z'||e.key==='Z')){e.preventDefault();undo();return;}
+  if(e.key>='1'&&e.key<='9')place(+e.key);else if(e.key==='Backspace'||e.key==='Delete'||e.key==='0')place(0);
   else if(e.key==='n'||e.key==='N')toggleNotes();
   else if(e.key.startsWith('Arrow')&&selected>=0){let r=Math.floor(selected/9),c=selected%9;
     if(e.key==='ArrowUp')r=(r+8)%9;if(e.key==='ArrowDown')r=(r+1)%9;if(e.key==='ArrowLeft')c=(c+8)%9;if(e.key==='ArrowRight')c=(c+1)%9;selected=r*9+c;render();}});
@@ -165,7 +206,7 @@ function restoreSnapshot(idx){
   given=s.given.map(r=>[...r]);
   solution=s.solution.map(r=>[...r]);
   notes=s.notes.map(a=>new Set(a));
-  seconds=s.seconds;selected=-1;startTimer();
+  seconds=s.seconds;selected=-1;history=[];startTimer();
   $('msg').textContent='';render();
 }
 function deleteSnapshot(idx){snapshots.splice(idx,1);persistSnaps();renderSnaps();}
@@ -186,8 +227,9 @@ function renderSnaps(){
 $('snapBtn').onclick=saveSnapshot;
 renderSnaps();
 
-$('newBtn').onclick=newGame;$('level').onchange=newGame;
-newGame();
+// Nová hra spuštěná uživatelem smaže uložené snímky; prvotní načtení stránky je zachová.
+$('newBtn').onclick=()=>newGame(true);$('level').onchange=()=>newGame(true);
+newGame(false);
 </script>
 </body>
 </html>
