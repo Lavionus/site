@@ -336,9 +336,14 @@
             <div class="field"><label>Otočení textu (<span id="fc-rot-v">0</span>°)</label><input type="range" id="fc-rotate" min="-180" max="180" value="0" style="width:100%">
               <div class="hint">💡 Text můžeš v náhledu chytit myší a přetáhnout kamkoli.</div></div>
             <div class="row">
-              <div class="field"><label>Ohraničení</label><select id="fc-border"></select></div>
+              <div class="field"><label>Ohraničení – styl</label><select id="fc-border"></select></div>
               <div class="field"><label>Barva rámečku</label><input type="color" id="fc-bcolor" value="#ffffff"></div>
             </div>
+            <div class="row">
+              <div class="field"><label>Tloušťka (<span id="fc-bw-v">3</span> px)</label><input type="range" id="fc-bwidth" min="0" max="24" value="3" style="width:100%"></div>
+              <div class="field"><label>Zaoblení rohů (<span id="fc-br-v">2</span> px)</label><input type="range" id="fc-bradius" min="0" max="60" value="2" style="width:100%"></div>
+            </div>
+            <div class="field"><label>Odsazení od okraje (<span id="fc-bi-v">14</span> px)</label><input type="range" id="fc-binset" min="0" max="60" value="14" style="width:100%"></div>
           </div>
         </div>
       </section>
@@ -373,9 +378,14 @@
             <div class="field"><label>Otočení textu (<span id="bc-rot-v">0</span>°)</label><input type="range" id="bc-rotate" min="-180" max="180" value="0" style="width:100%">
               <div class="hint">💡 Text můžeš v náhledu chytit myší a přetáhnout kamkoli.</div></div>
             <div class="row">
-              <div class="field"><label>Ohraničení</label><select id="bc-border"></select></div>
+              <div class="field"><label>Ohraničení – styl</label><select id="bc-border"></select></div>
               <div class="field"><label>Barva rámečku</label><input type="color" id="bc-bcolor" value="#ffffff"></div>
             </div>
+            <div class="row">
+              <div class="field"><label>Tloušťka (<span id="bc-bw-v">3</span> px)</label><input type="range" id="bc-bwidth" min="0" max="24" value="3" style="width:100%"></div>
+              <div class="field"><label>Zaoblení rohů (<span id="bc-br-v">2</span> px)</label><input type="range" id="bc-bradius" min="0" max="60" value="2" style="width:100%"></div>
+            </div>
+            <div class="field"><label>Odsazení od okraje (<span id="bc-bi-v">14</span> px)</label><input type="range" id="bc-binset" min="0" max="60" value="14" style="width:100%"></div>
             <div class="field"><label>ISBN / kód</label><input type="text" id="bc-isbn"></div>
           </div>
         </div>
@@ -462,6 +472,11 @@
             Příliš žluťoučký kůň úpěl ďábelské ódy. 0123456789
           </div>
         </div>
+        <div class="row" style="max-width:700px;margin-top:8px">
+          <div class="field"><label>Font názvů kapitol</label><select id="chaptitle-font"></select></div>
+          <div class="field"><label>Font čísel stránek</label><select id="pagenum-font"></select></div>
+        </div>
+        <p class="hint" style="max-width:700px">Projeví se v náhledu, PDF a exportech.</p>
       </section>
     </div>
   </main>
@@ -518,21 +533,24 @@ const DEFAULT_FONTS = [
   ["'Courier New', monospace","Courier"],
   ["'Comic Sans MS', cursive","Comic Sans"]
 ];
-const BORDERS = [["none","Žádné"],["single","Jednoduchá čára"],["double","Dvojlinka"],
-  ["thick","Silná čára"],["dashed","Čárkovaná"],["dotted","Tečkovaná"],
-  ["ridge","Ozdobná (3D)"],["inset","Vsazená"]];
+/* CSS border-style hodnoty + české popisky */
+const BORDER_STYLES = [
+  ["none","Žádné"],["solid","Plná čára"],["double","Dvojitá"],
+  ["dashed","Čárkovaná"],["dotted","Tečkovaná"],
+  ["groove","Drážka (3D)"],["ridge","Hřbet (3D)"],
+  ["inset","Vsazená (3D)"],["outset","Vystouplá (3D)"]];
 
-function borderCSS(preset,color){
-  switch(preset){
-    case "single": return `3px solid ${color}`;
-    case "double": return `6px double ${color}`;
-    case "thick":  return `7px solid ${color}`;
-    case "dashed": return `3px dashed ${color}`;
-    case "dotted": return `4px dotted ${color}`;
-    case "ridge":  return `8px ridge ${color}`;
-    case "inset":  return `8px inset ${color}`;
-    default: return "none";
-  }
+/* Převod starých přednastavení (pole `border`) na styl + tloušťku. */
+const LEGACY_BORDER = {
+  none:["none",0], single:["solid",3], double:["double",6], thick:["solid",7],
+  dashed:["dashed",3], dotted:["dotted",4], ridge:["ridge",8], inset:["inset",8] };
+
+/* Sestaví CSS border z objektu obálky (front/back). */
+function borderCSS(o){
+  if(!o) return "none";
+  const w=o.borderWidth, st=o.borderStyle;
+  if(!w || !st || st==="none") return "none";
+  return `${w}px ${st} ${o.borderColor||"#ffffff"}`;
 }
 const VPOS={top:"flex-start",center:"center",bottom:"flex-end"};
 const HALIGN={left:"flex-start",center:"center",right:"flex-end"};
@@ -564,14 +582,20 @@ function migrate(){
       if(o.vpos===undefined) o.vpos="center";
       if(o.halign===undefined) o.halign=defAlign;
       if(o.rotate===undefined) o.rotate=0;
-      if(o.border===undefined) o.border="none";
+      if(o.borderStyle===undefined){ const m=LEGACY_BORDER[o.border]||["none",0]; o.borderStyle=m[0]; o.borderWidth=m[1]; }
       if(o.borderColor===undefined) o.borderColor="#ffffff";
+      if(o.borderWidth===undefined) o.borderWidth=3;
+      if(o.borderRadius===undefined) o.borderRadius=2;
+      if(o.borderInset===undefined) o.borderInset=14;
+      delete o.border;
       if(o.posX===undefined) o.posX=50;
       if(o.posY===undefined) o.posY={top:18,center:50,bottom:82}[o.vpos]||50;
     });
     if(!b.fonts) b.fonts=[];
     if(b.defaultFont===undefined) b.defaultFont = b.sampleFont || b.front.font || "Georgia, serif";
     delete b.sampleFont;
+    if(b.chapTitleFont===undefined) b.chapTitleFont = b.defaultFont;
+    if(b.pageNumFont===undefined) b.pageNumFont = b.defaultFont;
   });
   if(!state.deletedBooks) state.deletedBooks=[];
 }
@@ -608,11 +632,15 @@ function newBook(){
     id: uid(), title:"Nová kniha", author:"", subtitle:"", genre:"", desc:"", lang:"cs",
     created: Date.now(), updated: Date.now(),
     front:{ bg:"#2b3a55", bg2:"#16202e", color:"#ffffff", font:"Georgia, serif", img:null, dim:30,
-            vpos:"center", halign:"center", rotate:0, border:"none", borderColor:"#ffffff", posX:50, posY:50 },
+            vpos:"center", halign:"center", rotate:0,
+            borderStyle:"none", borderWidth:3, borderColor:"#ffffff", borderRadius:2, borderInset:14, posX:50, posY:50 },
     back:{ text:"", bg:"#16202e", color:"#ffffff", font:"Georgia, serif", isbn:"", img:null, dim:30,
-           vpos:"center", halign:"left", rotate:0, border:"none", borderColor:"#ffffff", posX:50, posY:50 },
+           vpos:"center", halign:"left", rotate:0,
+           borderStyle:"none", borderWidth:3, borderColor:"#ffffff", borderRadius:2, borderInset:14, posX:50, posY:50 },
     pageNum:"none",
     defaultFont:"Georgia, serif",
+    chapTitleFont:"Georgia, serif",
+    pageNumFont:"Georgia, serif",
     chapters:[ch], currentChapter:ch.id,
     fonts:[]
   };
@@ -659,6 +687,8 @@ function refreshFontSelectors(){
     `<span class="fontchip" style="font-family:'${fontFamilyName(f)}'">${f.name}<button class="danger" data-delfont="${f.name}">✕</button></span>`).join("");
   $("#font-sample-sel").innerHTML = fontOptionsHTML(b, b.defaultFont);
   $("#font-sample").style.fontFamily = $("#font-sample-sel").value;
+  $("#chaptitle-font").innerHTML = fontOptionsHTML(b, b.chapTitleFont);
+  $("#pagenum-font").innerHTML = fontOptionsHTML(b, b.pageNumFont);
 }
 
 /* ---------- helpers ---------- */
@@ -761,10 +791,16 @@ function selectBook(id){
   $("#f-updated").textContent=new Date(b.updated).toLocaleString("cs");
   $("#fc-bg").value=b.front.bg; $("#fc-bg2").value=b.front.bg2; $("#fc-color").value=b.front.color; $("#fc-dim").value=b.front.dim;
   $("#fc-vpos").value=b.front.vpos; $("#fc-halign").value=b.front.halign; $("#fc-rotate").value=b.front.rotate; $("#fc-rot-v").textContent=b.front.rotate;
-  $("#fc-border").value=b.front.border; $("#fc-bcolor").value=b.front.borderColor;
+  $("#fc-border").value=b.front.borderStyle; $("#fc-bcolor").value=b.front.borderColor;
+  $("#fc-bwidth").value=b.front.borderWidth; $("#fc-bw-v").textContent=b.front.borderWidth;
+  $("#fc-bradius").value=b.front.borderRadius; $("#fc-br-v").textContent=b.front.borderRadius;
+  $("#fc-binset").value=b.front.borderInset; $("#fc-bi-v").textContent=b.front.borderInset;
   $("#bc-text").value=b.back.text; $("#bc-bg").value=b.back.bg; $("#bc-color").value=b.back.color; $("#bc-isbn").value=b.back.isbn; $("#bc-dim").value=b.back.dim;
   $("#bc-vpos").value=b.back.vpos; $("#bc-halign").value=b.back.halign; $("#bc-rotate").value=b.back.rotate; $("#bc-rot-v").textContent=b.back.rotate;
-  $("#bc-border").value=b.back.border; $("#bc-bcolor").value=b.back.borderColor;
+  $("#bc-border").value=b.back.borderStyle; $("#bc-bcolor").value=b.back.borderColor;
+  $("#bc-bwidth").value=b.back.borderWidth; $("#bc-bw-v").textContent=b.back.borderWidth;
+  $("#bc-bradius").value=b.back.borderRadius; $("#bc-br-v").textContent=b.back.borderRadius;
+  $("#bc-binset").value=b.back.borderInset; $("#bc-bi-v").textContent=b.back.borderInset;
   $("#f-pagenum").value=b.pageNum;
   const c=curChap();
   $("#chap-title").value=c?c.title:"";
@@ -785,15 +821,20 @@ function refreshPreview(){
   else{ fp.style.background=`linear-gradient(160deg, ${f.bg}, ${f.bg2})`; ov.style.background="none"; }
   ov.style.color=f.color; ov.style.fontFamily=f.font;
   applyCoverText($("#pf-txt"),f);
-  $("#pf-frame").style.border=borderCSS(f.border,f.borderColor);
+  applyFrame($("#pf-frame"),f);
   $("#pf-title").textContent=b.title; $("#pf-sub").textContent=b.subtitle; $("#pf-author").textContent=b.author;
   const bk=b.back, bp=$("#prev-back"), bov=$("#prev-back-ov");
   if(bk.img){ bp.style.background=`url(${bk.img}) center/cover`; bov.style.background=`rgba(0,0,0,${bk.dim/100})`; }
   else{ bp.style.background=bk.bg; bov.style.background="none"; }
   bov.style.color=bk.color; bov.style.fontFamily=bk.font;
   applyCoverText($("#pb-txt"),bk);
-  $("#pb-frame").style.border=borderCSS(bk.border,bk.borderColor);
+  applyFrame($("#pb-frame"),bk);
   $("#pb-text").textContent=bk.text || "Anotace zadní strany…";
+}
+function applyFrame(el,o){
+  el.style.border=borderCSS(o);
+  el.style.borderRadius=(o.borderRadius||0)+"px";
+  el.style.inset=(o.borderInset||0)+"px";
 }
 function applyCoverText(el,o){
   el.style.left=o.posX+"%"; el.style.top=o.posY+"%";
@@ -926,8 +967,11 @@ $("#fc-img-clear").onclick=()=>{ cur().front.img=null; $("#fc-img").value=""; to
 $("#fc-vpos").onchange=()=>{ const o=cur().front; o.vpos=$("#fc-vpos").value; o.posY={top:18,center:50,bottom:82}[o.vpos]; touch(); refreshPreview(); };
 $("#fc-halign").onchange=()=>{ const o=cur().front; o.halign=$("#fc-halign").value; o.posX={left:25,center:50,right:75}[o.halign]; touch(); refreshPreview(); };
 $("#fc-rotate").oninput=()=>{ cur().front.rotate=+$("#fc-rotate").value; $("#fc-rot-v").textContent=$("#fc-rotate").value; touch(); refreshPreview(); };
-$("#fc-border").onchange=()=>{ cur().front.border=$("#fc-border").value; touch(); refreshPreview(); };
+$("#fc-border").onchange=()=>{ cur().front.borderStyle=$("#fc-border").value; touch(); refreshPreview(); };
 $("#fc-bcolor").oninput=()=>{ cur().front.borderColor=$("#fc-bcolor").value; touch(); refreshPreview(); };
+$("#fc-bwidth").oninput=()=>{ cur().front.borderWidth=+$("#fc-bwidth").value; $("#fc-bw-v").textContent=$("#fc-bwidth").value; touch(); refreshPreview(); };
+$("#fc-bradius").oninput=()=>{ cur().front.borderRadius=+$("#fc-bradius").value; $("#fc-br-v").textContent=$("#fc-bradius").value; touch(); refreshPreview(); };
+$("#fc-binset").oninput=()=>{ cur().front.borderInset=+$("#fc-binset").value; $("#fc-bi-v").textContent=$("#fc-binset").value; touch(); refreshPreview(); };
 
 ["bc-text","bc-bg","bc-color","bc-isbn","bc-dim"].forEach(id=>{
   const key={ "bc-text":"text","bc-bg":"bg","bc-color":"color","bc-isbn":"isbn","bc-dim":"dim"}[id];
@@ -939,8 +983,11 @@ $("#bc-img-clear").onclick=()=>{ cur().back.img=null; $("#bc-img").value=""; tou
 $("#bc-vpos").onchange=()=>{ const o=cur().back; o.vpos=$("#bc-vpos").value; o.posY={top:18,center:50,bottom:82}[o.vpos]; touch(); refreshPreview(); };
 $("#bc-halign").onchange=()=>{ const o=cur().back; o.halign=$("#bc-halign").value; o.posX={left:25,center:50,right:75}[o.halign]; touch(); refreshPreview(); };
 $("#bc-rotate").oninput=()=>{ cur().back.rotate=+$("#bc-rotate").value; $("#bc-rot-v").textContent=$("#bc-rotate").value; touch(); refreshPreview(); };
-$("#bc-border").onchange=()=>{ cur().back.border=$("#bc-border").value; touch(); refreshPreview(); };
+$("#bc-border").onchange=()=>{ cur().back.borderStyle=$("#bc-border").value; touch(); refreshPreview(); };
 $("#bc-bcolor").oninput=()=>{ cur().back.borderColor=$("#bc-bcolor").value; touch(); refreshPreview(); };
+$("#bc-bwidth").oninput=()=>{ cur().back.borderWidth=+$("#bc-bwidth").value; $("#bc-bw-v").textContent=$("#bc-bwidth").value; touch(); refreshPreview(); };
+$("#bc-bradius").oninput=()=>{ cur().back.borderRadius=+$("#bc-bradius").value; $("#bc-br-v").textContent=$("#bc-bradius").value; touch(); refreshPreview(); };
+$("#bc-binset").oninput=()=>{ cur().back.borderInset=+$("#bc-binset").value; $("#bc-bi-v").textContent=$("#bc-binset").value; touch(); refreshPreview(); };
 $("#f-pagenum").onchange=()=>{ cur().pageNum=$("#f-pagenum").value; touch(); };
 
 /* ---- chapters ---- */
@@ -1083,6 +1130,8 @@ $("#font-sample-sel").onchange=()=>{ const b=cur(); if(!b) return; const v=$("#f
   $("#font-sample").style.fontFamily=v;
   refreshFontSelectors(); refreshPreview(); touch();
 };
+$("#chaptitle-font").onchange=()=>{ const b=cur(); if(!b) return; b.chapTitleFont=$("#chaptitle-font").value; touch(); };
+$("#pagenum-font").onchange=()=>{ const b=cur(); if(!b) return; b.pageNumFont=$("#pagenum-font").value; touch(); };
 
 /* ============ EXPORT / IMPORT ============ */
 function download(name,data,mime){
@@ -1402,7 +1451,7 @@ function exportEPUB(){
   }
   const css=`${fontFaces}body{font-family:${b.front.font};line-height:1.6;margin:5%}
 h1{font-size:1.8em;text-align:center}
-h2.chap-h{font-size:1.35em;border-bottom:1px solid #ccc;padding-bottom:.2em}
+h2.chap-h{font-size:1.35em;border-bottom:1px solid #ccc;padding-bottom:.2em;font-family:${b.chapTitleFont}}
 p{text-align:justify;margin:.6em 0}
 img{max-width:100%;height:auto}
 blockquote{border-left:3px solid #ccc;margin:1em 0;padding:.2em 1em;color:#555;font-style:italic}
@@ -1487,6 +1536,8 @@ function buildBookHTML(b, forPrint){
   const f=b.front, bk=b.back;
   const posStyle=o=>`left:${o.posX}%;top:${o.posY}%;transform:translate(-50%,-50%) rotate(${o.rotate}deg);text-align:${o.halign}`;
   const fStyle=posStyle(f), bStyle=posStyle(bk);
+  // px náhledu (~14px = 10mm) → mm pro tisk
+  const frameStyle=o=>`border:${borderCSS(o)};border-radius:${((o.borderRadius||0)*10/14).toFixed(1)}mm;inset:${((o.borderInset||0)*10/14).toFixed(1)}mm`;
 
   const sheets=[];
   let pageIdx=0;
@@ -1494,7 +1545,7 @@ function buildBookHTML(b, forPrint){
   // front
   sheets.push(`<div class="sheet cover">
       <div class="dim"></div>
-      <div class="cframe" style="border:${borderCSS(f.border,f.borderColor)}"></div>
+      <div class="cframe" style="${frameStyle(f)}"></div>
       <div class="cover-in">
         <div class="cover-txt" style="${fStyle}">
           <h1>${esc(b.title)}</h1>${b.subtitle?`<div class="sub">${esc(b.subtitle)}</div>`:""}
@@ -1516,7 +1567,7 @@ function buildBookHTML(b, forPrint){
   if(bk.text||bk.isbn||bk.img){
     sheets.push(`<div class="sheet back">
       <div class="back-dim"></div>
-      <div class="cframe" style="border:${borderCSS(bk.border,bk.borderColor)}"></div>
+      <div class="cframe" style="${frameStyle(bk)}"></div>
       <div class="back-in"><div class="cover-txt" style="${bStyle}">${esc(bk.text)}${bk.isbn?`<div class="isbn">ISBN: ${esc(bk.isbn)}</div>`:""}</div></div></div>`);
   }
 
@@ -1546,7 +1597,7 @@ function buildBookHTML(b, forPrint){
     .sheet.cover,.sheet.back{overflow:hidden}
     .sheet.pad{padding:24mm 22mm 28mm}
     .cframe{position:absolute;inset:10mm;pointer-events:none;border-radius:2px;z-index:1}
-    .pnum{position:absolute;bottom:12mm;font-size:11pt;color:#666}
+    .pnum{position:absolute;bottom:12mm;font-size:11pt;color:#666;font-family:${b.pageNumFont}}
     .pnum.center{left:0;right:0;text-align:center}
     .pnum.right{right:22mm}
     .cover{${fimg};color:${b.front.color}}
@@ -1556,10 +1607,10 @@ function buildBookHTML(b, forPrint){
     .cover-in h1{font-size:42px;margin:0}
     .cover-in .sub{font-size:20px;margin-top:10px;opacity:.9}
     .cover-in .au{margin-top:14px;font-size:18px}
-    .toc h2{color:#444;border-bottom:2px solid #ddd;padding-bottom:8px}
+    .toc h2{color:#444;border-bottom:2px solid #ddd;padding-bottom:8px;font-family:${b.chapTitleFont}}
     .toc ol{line-height:2;font-size:17px;padding-left:1.2em}
     .chapter{font-family:${b.front.font};font-size:18px;line-height:1.7}
-    .chap-h{font-size:28px;color:#222;border-bottom:1px solid #eee;padding-bottom:6px;margin-top:0}
+    .chap-h{font-size:28px;color:#222;border-bottom:1px solid #eee;padding-bottom:6px;margin-top:0;font-family:${b.chapTitleFont}}
     .chapter img{max-width:100%}
     .chapter blockquote{border-left:3px solid #ccc;margin:1em 0;padding:.2em 1em;color:#555;font-style:italic}
     .back{${bk.img?`background:url(${bk.img}) center/cover`:`background:${bk.bg}`};color:${bk.color};font-family:${bk.font}}
@@ -1637,7 +1688,7 @@ $("#btnPDF").onclick=()=>{ flushEditor(); const b=cur(); if(!b){toast("Vyberte k
 setInterval(()=>{ flushEditor(); saveNow(); }, 5*60*1000);
 
 /* ============ INIT ============ */
-const borderOpts=BORDERS.map(([v,l])=>`<option value="${v}">${l}</option>`).join("");
+const borderOpts=BORDER_STYLES.map(([v,l])=>`<option value="${v}">${l}</option>`).join("");
 $("#fc-border").innerHTML=borderOpts; $("#bc-border").innerHTML=borderOpts;
 makeDraggable($("#prev-front"), $("#pf-txt"), ()=>cur()&&cur().front);
 makeDraggable($("#prev-back"),  $("#pb-txt"), ()=>cur()&&cur().back);
