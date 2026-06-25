@@ -455,8 +455,9 @@
           <div id="fontchips" style="margin-top:14px"></div>
         </div>
         <div class="field" style="max-width:700px;margin-top:20px">
-          <label>Ukázka</label>
+          <label>Výchozí font knihy</label>
           <select id="font-sample-sel" style="max-width:300px"></select>
+          <p class="hint">Použije se na přední i zadní obálku. Text knihy se formátuje samostatně v editoru (lišta nahoře).</p>
           <div id="font-sample" style="background:#fff;color:#111;padding:18px;border-radius:6px;margin-top:8px;font-size:24px">
             Příliš žluťoučký kůň úpěl ďábelské ódy. 0123456789
           </div>
@@ -569,6 +570,8 @@ function migrate(){
       if(o.posY===undefined) o.posY={top:18,center:50,bottom:82}[o.vpos]||50;
     });
     if(!b.fonts) b.fonts=[];
+    if(b.defaultFont===undefined) b.defaultFont = b.sampleFont || b.front.font || "Georgia, serif";
+    delete b.sampleFont;
   });
   if(!state.deletedBooks) state.deletedBooks=[];
 }
@@ -609,6 +612,7 @@ function newBook(){
     back:{ text:"", bg:"#16202e", color:"#ffffff", font:"Georgia, serif", isbn:"", img:null, dim:30,
            vpos:"center", halign:"left", rotate:0, border:"none", borderColor:"#ffffff", posX:50, posY:50 },
     pageNum:"none",
+    defaultFont:"Georgia, serif",
     chapters:[ch], currentChapter:ch.id,
     fonts:[]
   };
@@ -653,7 +657,7 @@ function refreshFontSelectors(){
   if(!b.fonts.length){ chips.innerHTML = '<span class="hint">Zatím žádný importovaný font.</span>'; }
   else chips.innerHTML = b.fonts.map(f=>
     `<span class="fontchip" style="font-family:'${fontFamilyName(f)}'">${f.name}<button class="danger" data-delfont="${f.name}">✕</button></span>`).join("");
-  $("#font-sample-sel").innerHTML = fontOptionsHTML(b, b.sampleFont || b.front.font);
+  $("#font-sample-sel").innerHTML = fontOptionsHTML(b, b.defaultFont);
   $("#font-sample").style.fontFamily = $("#font-sample-sel").value;
 }
 
@@ -855,13 +859,12 @@ $$(".tab").forEach(t=>t.onclick=()=>{
   if(t.dataset.tab==="fonts") renderFontSample();
 });
 
-/* Naformátuje ukázkový text podle fontu vybraného v poli "Ukázka". */
+/* Naformátuje ukázkový text podle výchozího fontu knihy. */
 function renderFontSample(){
   const b=cur(); if(!b) return;
   applyBookFonts(b);                 // zajistí načtení importovaných fontů
   const sel=$("#font-sample-sel");
-  const want=b.sampleFont || b.front.font;
-  if(sel.value!==want) sel.value=want;   // přednastav uloženou volbu
+  if(sel.value!==b.defaultFont) sel.value=b.defaultFont;
   $("#font-sample").style.fontFamily=sel.value;
 }
 
@@ -1074,8 +1077,12 @@ $("#fontchips").addEventListener("click",e=>{
   // v kapitolách se font nastavuje přes fontName, to neřešíme (uživatel si musí změnit ručně)
   refreshFontSelectors(); refreshPreview(); touch();
 });
-$("#font-sample-sel").onchange=()=>{ const b=cur(); const v=$("#font-sample-sel").value;
-  $("#font-sample").style.fontFamily=v; if(b){ b.sampleFont=v; touch(); } };
+$("#font-sample-sel").onchange=()=>{ const b=cur(); if(!b) return; const v=$("#font-sample-sel").value;
+  // výchozí font knihy = font obou obálek (tělo textu se formátuje samostatně v editoru)
+  b.defaultFont=v; b.front.font=v; b.back.font=v;
+  $("#font-sample").style.fontFamily=v;
+  refreshFontSelectors(); refreshPreview(); touch();
+};
 
 /* ============ EXPORT / IMPORT ============ */
 function download(name,data,mime){
