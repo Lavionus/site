@@ -147,8 +147,6 @@ function place(n){
   if(puzzle.flat().every(v=>v!==0))checkWin();
 }
 // Vrátí množinu indexů buněk, které jsou v rozporu s pravidly (duplicita v řádku/sloupci/bloku).
-// Validuje podle pravidel sudoku, ne proti jednomu vygenerovanému řešení – proto se uzná
-// i jiné platné řešení, pokud má hádanka řešení více.
 function findConflicts(){
   const bad=new Set();const units=[];
   for(let r=0;r<9;r++)units.push([...Array(9)].map((_,c)=>r*9+c));
@@ -160,15 +158,24 @@ function findConflicts(){
     for(const v in map)if(map[v].length>1)map[v].forEach(i=>bad.add(i));}
   return bad;
 }
+// Vrátí množinu indexů vyplněných buněk, které se neshodují s jediným správným řešením.
+// Hádanka má vždy právě jedno řešení (zajišťuje newGame), takže odchylka = chyba –
+// i když ještě nezpůsobila duplicitu. Bez tohoto by se hráč mohl zaseknout v neřešitelném stavu.
+function findWrong(){
+  const bad=new Set();
+  for(let i=0;i<81;i++){const r=Math.floor(i/9),c=i%9;
+    if(puzzle[r][c]&&puzzle[r][c]!==solution[r][c])bad.add(i);}
+  return bad;
+}
 function checkWin(){
-  if(findConflicts().size)return; // plné, ale s rozporem – ještě není vyřešeno
+  if(findConflicts().size||findWrong().size)return; // plné, ale chybné – ještě není vyřešeno
   clearInterval(timer);$('msg').textContent='🎉 Vyřešeno za '+Math.floor(seconds/60)+':'+String(seconds%60).padStart(2,'0')+'!';
 }
 $('checkBtn').onclick=()=>{
-  const bad=findConflicts();
+  const bad=new Set([...findConflicts(),...findWrong()]);
   bad.forEach(i=>document.querySelector('.cell[data-i="'+i+'"]').classList.add('conflict'));
   const full=puzzle.flat().every(v=>v!==0);
-  $('msg').textContent=bad.size?'❌ Některá čísla jsou v rozporu':(full?'🎉 Správně vyřešeno!':'✅ Zatím bez chyb!');
+  $('msg').textContent=bad.size?'❌ Některá čísla jsou špatně':(full?'🎉 Správně vyřešeno!':'✅ Zatím bez chyb!');
   setTimeout(()=>document.querySelectorAll('.conflict').forEach(d=>d.classList.remove('conflict')),1500);
 };
 $('pad').innerHTML=[1,2,3,4,5,6,7,8,9].map(n=>`<div class="key" data-n="${n}">${n}</div>`).join('')+'<div class="key" data-n="0">⌫</div>';
