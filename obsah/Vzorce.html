@@ -1449,7 +1449,7 @@ code {
 
             <div class="section">
               <label class="section-label">Vizuální editor</label>
-              <math-field id="mathfield" math-virtual-keyboard-policy="sandboxed"></math-field>
+              <math-field id="mathfield" virtual-keyboard-mode="onfocus"></math-field>
             </div>
 
             <div class="section">
@@ -1613,18 +1613,9 @@ code {
     </div>
   </div>
 
-  <!-- MathLive jako klasický UMD skript – načte se i uvnitř iframu na file:// (ES-modul import se v iframu nenačítal a math-field zůstal prázdný) -->
-  <script src="https://cdn.jsdelivr.net/npm/mathlive@0.110.0/mathlive.min.js"></script>
-  <script>
-    // Pevně určená cesta k fontům – auto-detekce MathLive je nespolehlivá (špatná cesta → glyfy vzorce se nevykreslí, box vypadá prázdný).
-    if (window.MathfieldElement) {
-      MathfieldElement.fontsDirectory  = 'https://cdn.jsdelivr.net/npm/mathlive@0.110.0/fonts';
-      MathfieldElement.soundsDirectory = null;
-    }
-  </script>
-  <script>
-// ── Klasický skript (NE type=module) – inline ES-modul se v iframu na file:// nespouštěl ──
-// MathLive (custom element <math-field>) je definován UMD skriptem výše.
+  <script type="module">
+// ── MathLive z CDN ─────────────────────────────────────────────────────────────
+import 'https://cdn.jsdelivr.net/npm/mathlive@0.110.0/+esm';
 
 // ── localStorage — ukládání vzorců ────────────────────────────────────────────
 const STORAGE_KEY = 'vzorce_app_v1';
@@ -2175,17 +2166,102 @@ function serLatex(node, prec = 0) {
   return '';
 }
 
+// Přečte vyváženou složenou závorku počínaje pozicí i (po případných mezerách).
+// Vrací { content, end } nebo null, pokud na pozici není '{' nebo není uzavřená.
+function _readBraceGroup(s, i) {
+  while (i < s.length && s[i] === ' ') i++;
+  if (s[i] !== '{') return null;
+  let depth = 0;
+  for (let j = i; j < s.length; j++) {
+    if (s[j] === '{') depth++;
+    else if (s[j] === '}' && --depth === 0) return { content: s.slice(i + 1, j), end: j + 1 };
+  }
+  return null;
+}
+
+// Převede \frac{..}{..}, \sqrt{..} a \sqrt[n]{..} se SPRÁVNÝM párováním závorek
+// (rekurzivně i pro vnořené příkazy). Tím se vyřeší případy jako \frac{1}{\sqrt{\pi}}
+// nebo \sqrt{a^{2}+b^{2}}, kde regex na [^{}] selhával a příkaz se ztratil.
+function convertLatexCommands(s) {
+  let out = '';
+  let i = 0;
+  while (i < s.length) {
+    if (s.startsWith('\\frac', i)) {
+      const num = _readBraceGroup(s, i + 5);
+      const den = num && _readBraceGroup(s, num.end);
+      if (num && den) {
+        out += `((${convertLatexCommands(num.content)})/(${convertLatexCommands(den.content)}))`;
+        i = den.end;
+        continue;
+      }
+    } else if (s.startsWith('\\sqrt', i)) {
+      let k = i + 5;
+      while (k < s.length && s[k] === ' ') k++;
+      let index = null;
+      if (s[k] === '[') {
+        const close = s.indexOf(']', k);
+        if (close !== -1) { index = s.slice(k + 1, close); k = close + 1; }
+      }
+      while (k < s.length && s[k] === ' ') k++;
+      // Argument je buď {…}, nebo (bez závorek) jediný token — číslice, písmeno
+      // či \příkaz (MathLive zapisuje odmocninu z čísla jako \sqrt2 bez závorek).
+      let arg = null, argEnd = k;
+      const g = _readBraceGroup(s, k);
+      if (g) {
+        arg = g.content; argEnd = g.end;
+      } else {
+        const m = /^(\\[a-zA-Z]+|[0-9]|[a-zA-Z])/.exec(s.slice(k));
+        if (m) { arg = m[1]; argEnd = k + m[1].length; }
+      }
+      if (arg !== null) {
+        const inner = convertLatexCommands(arg);
+        out += index !== null
+          ? `(${inner})^(1/(${convertLatexCommands(index)}))`
+          : `sqrt(${inner})`;
+        i = argEnd;
+        continue;
+      }
+    }
+    out += s[i];
+    i++;
+  }
+  return out;
+}
+
 function latexToExpr(latex) {
   let s = latex;
-  s = s.replace(/\\[dt]frac/g, '\\frac');
+
+  // Oddělíme každý \příkaz mezerou od předchozího znaku, aby se proměnná
+  // neslepila s funkcí/symbolem (např.  s\sqrt{2}  → "s sqrt(2)",  a\pi → "a pi").
+  s = s.replace(/\\/g, ' \\');
+
+  // Normalizace variant zlomku na \frac
+  s = s.replace(/\\[dt]frac/g, '\\frac');      // \dfrac, \tfrac → \frac
+  // {a \over b} — starší TeX syntaxe
   s = s.replace(/\{([^{}]*?)\\over\s*([^{}]*?)\}/g, (_, a, b) => `((${a.trim()})/(${b.trim()}))`);
-  for (let i = 0; i < 3; i++)
-    s = s.replace(/\\frac\{([^{}]*)\}\{([^{}]*)\}/g, '(($1)/($2))');
+  // \frac{..}{..}, \sqrt{..} a \sqrt[n]{..} s korektním párováním závorek —
+  // zvládne i vnořené závorky (např. \frac{1}{\sqrt{\pi}}, \sqrt{a^{2}+b^{2}}).
+  s = convertLatexCommands(s);
+  // \frac bez závorek — jednoznakový čitatel a jmenovatel: \frac12 → (1/2)
   s = s.replace(/\\frac\s*([0-9a-zA-Z])\s*([0-9a-zA-Z])/g, '($1/$2)');
-  s = s.replace(/\\sqrt\[([^\]]+)\]\{([^{}]*)\}/g, '($2)^(1/($1))');
-  s = s.replace(/\\sqrt\{([^{}]*)\}/g, 'sqrt($1)');
-  s = s.replace(/\\sqrt(?!\{)/g, 'sqrt');
+  // zbylé \sqrt bez složené závorky (např. \sqrt x)
+  s = s.replace(/\\sqrt(?![[{])/g, 'sqrt');
+  // \operatorname{fn} → fn  (tak serLatex zapisuje funkce bez vlastního LaTeX
+  // příkazu, např. \operatorname{atan2}, \operatorname{floor}). MUSÍ přijít před
+  // obecným mazáním \příkazů i převodem { } na ( ), jinak by se název funkce ztratil.
+  s = s.replace(/\\operatorname\s*\{([a-zA-Z0-9_]+)\}/g, '$1');
   s = s.replace(/\^\{([^{}]+)\}/g, '^($1)');
+  // Dolní index (subscript): a_{n} → a_n, v_{0} → v_0.
+  s = s.replace(/_\{([^{}]*)\}/g, (_m, inner) => '_' + inner.replace(/[^a-zA-Z0-9]/g, ''));
+  // \min, \max — serLatex je takto zapisuje; bez explicitní náhrady by je
+  // generické mazání \příkazů zahodilo a zůstalo by jen (a, b, c) → chyba parseru.
+  s = s.replace(/\\min/g, 'min');
+  s = s.replace(/\\max/g, 'max');
+  // Hyperbolické — \sinh/\cosh/\tanh; explicitně, ať nezávisí na náhodném
+  // pořadí náhrad \sin/\cos/\tan (které by jinak daly stejný výsledek jen shodou).
+  s = s.replace(/\\sinh/g, 'sinh');
+  s = s.replace(/\\cosh/g, 'cosh');
+  s = s.replace(/\\tanh/g, 'tanh');
   s = s.replace(/\\arcsin/g, 'asin');
   s = s.replace(/\\arccos/g, 'acos');
   s = s.replace(/\\arctan/g, 'atan');
@@ -2203,18 +2279,23 @@ function latexToExpr(latex) {
   s = s.replace(/\\log/g, 'log10');
   s = s.replace(/\\exp/g, 'exp');
   s = s.replace(/\\abs/g, 'abs');
+  s = s.replace(/\\tau/g, 'tau');
   s = s.replace(/\\pi/g, 'pi');
   s = s.replace(/\\infty/g, 'inf');
   s = s.replace(/\\cdot/g, '*');
   s = s.replace(/\\times/g, '*');
   s = s.replace(/\\div/g, '/');
   s = s.replace(/\\bmod/g, '%');
+  s = s.replace(/\\%/g, '');          // procento je v LaTeXu jen znak (\%) — odstraníme
+  s = s.replace(/\\[ ,;:!]/g, ' ');   // LaTeXové mezery (\,  \;  \:  \!  "\ ")
   s = s.replace(/\\left\|/g, '|');
   s = s.replace(/\\right\|/g, '|');
   s = s.replace(/\\left\(/g, '(');
   s = s.replace(/\\right\)/g, ')');
   s = s.replace(/\\left\[/g, '(');
   s = s.replace(/\\right\]/g, ')');
+  // Řecká písmena → názvy proměnných (kromě \pi a \tau — konstanty nahrazené výše).
+  s = s.replace(/\\(varepsilon|varphi|vartheta|varrho|varsigma|alpha|beta|gamma|delta|epsilon|zeta|eta|theta|iota|kappa|lambda|mu|nu|xi|rho|sigma|upsilon|phi|chi|psi|omega|Gamma|Delta|Theta|Lambda|Xi|Pi|Sigma|Upsilon|Phi|Psi|Omega)/g, '$1');
   s = s.replace(/\\[a-zA-Z]+/g, '');
   s = s.replace(/\{/g, '(').replace(/\}/g, ')');
   s = convertAbs(s);
