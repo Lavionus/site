@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TABU — jen slova</title>
+<style>
+  :root{
+    --bg:#1a1a1a; --panel:#2d2d2d; --card:#fff; --ink:#e0e0e0;
+    --accent:#6aa6fd; --accent2:#3d7fd6; --taboo:#e11d48;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;min-height:100%;}
+  body{
+    background:radial-gradient(circle at 50% -10%, #333333 0%, #1a1a1a 60%, #121212 100%);
+    color:var(--ink); font-family:"Segoe UI",system-ui,Arial,sans-serif;
+    display:flex; flex-direction:column; align-items:center; min-height:100vh;
+    -webkit-tap-highlight-color:transparent;
+  }
+  .head{display:flex; align-items:center; gap:14px; margin-top:16px; flex-wrap:wrap; justify-content:center;}
+  h1{margin:0; font-size:clamp(26px,6vw,44px); letter-spacing:5px; font-weight:900;
+     background:linear-gradient(90deg,#8bbcff,#6aa6fd,#3d7fd6);
+     -webkit-background-clip:text; background-clip:text; color:transparent;
+     text-shadow:0 4px 24px rgba(106,166,253,.4);}
+  .sub{opacity:.7; font-size:13px; margin:6px 0 12px; letter-spacing:1px; text-align:center; padding:0 12px;}
+  .langtoggle{display:flex; border:1px solid #404040; border-radius:20px; overflow:hidden;}
+  .langtoggle button{padding:6px 12px; font-size:14px; background:#1e1e1e; border:none; border-radius:0;}
+  .langtoggle button.sel{background:var(--accent);}
+  .stage{ width:min(540px,96vw); padding:8px 10px 24px; }
+
+  button{font-family:inherit; cursor:pointer; font-weight:700; color:var(--ink);
+    background:#383838; border:1px solid #404040; border-radius:12px; padding:12px 18px;
+    font-size:16px; transition:transform .05s, filter .15s, background .15s;}
+  button:hover{filter:brightness(1.15);} button:active{transform:translateY(2px);}
+
+  /* kategorie / lišta */
+  .bar{display:flex; gap:8px; flex-wrap:wrap; justify-content:center; margin-bottom:12px;}
+  .bar button{background:#1e1e1e; padding:7px 12px; font-size:13px;}
+  .bar button.sel{background:var(--accent); border-color:var(--accent);}
+
+  /* obtížnost */
+  .diffbar{display:flex; gap:8px; flex-wrap:wrap; justify-content:center; align-items:center; margin-bottom:12px;}
+  .diffbar .lbl{font-size:11px; opacity:.55; letter-spacing:1px; text-transform:uppercase; margin-right:2px;}
+  .diffbar button{background:#1e1e1e; padding:7px 14px; font-size:13px; border-radius:20px;}
+  .diffbar button[data-d="1"].sel{background:#2e7d4f; border-color:#2e7d4f;}
+  .diffbar button[data-d="2"].sel{background:#c08a1e; border-color:#c08a1e;}
+  .diffbar button[data-d="3"].sel{background:#b1083a; border-color:#b1083a;}
+
+  /* karta */
+  .tcard{background:var(--card); color:#1a1a1a; border-radius:22px; padding:26px 20px;
+    box-shadow:0 24px 60px rgba(0,0,0,.5); position:relative; overflow:hidden; touch-action:pan-y; min-height:330px;
+    display:flex; flex-direction:column; justify-content:center;}
+  .tcard::before{content:""; position:absolute; inset:0; height:14px;
+    background:linear-gradient(90deg,var(--accent),var(--accent2));}
+  .cat{position:absolute; top:22px; right:18px; font-size:12px; font-weight:800; color:#3d7fd6; letter-spacing:1px; text-transform:uppercase;}
+  .cdiff{position:absolute; top:21px; left:18px; font-size:12px; font-weight:800; letter-spacing:1px;}
+  .mainword{font-size:clamp(36px,10vw,54px); font-weight:900; text-align:center;
+    margin:10px 0 20px; letter-spacing:1px; word-break:break-word; text-transform:uppercase;}
+  .tabooline{border-top:3px solid #1a1a1a; padding-top:14px;}
+  .tabooline .lbl{font-size:12px; font-weight:800; color:var(--taboo); letter-spacing:2px; text-align:center; margin-bottom:8px;}
+  .taboowords{list-style:none; margin:0; padding:0; text-align:center;}
+  .taboowords li{font-size:clamp(19px,5.5vw,25px); font-weight:800; color:#b1083a; padding:6px 0;
+    text-transform:uppercase; letter-spacing:.5px;}
+
+  .nextbtn{width:100%; padding:18px; font-size:22px; letter-spacing:1px; margin-top:16px;
+    background:linear-gradient(90deg,var(--accent),var(--accent2)); border:none;}
+  .controls{display:flex; gap:10px; margin-top:10px;}
+  .controls button{flex:1; background:#2d2d2d;}
+  .counter{text-align:center; font-size:13px; opacity:.6; margin-top:12px;}
+  .keyhint{text-align:center; margin-top:8px; font-size:12px; opacity:.55;}
+  .kbd{display:inline-block; background:#1e1e1e; border:1px solid #404040; border-bottom-width:3px;
+    border-radius:6px; padding:1px 8px; font-weight:800; font-size:12px;}
+  footer{opacity:.45; font-size:11px; margin:10px 0 22px;}
+  a{color:#8bbcff;}
+  .swap{transition:opacity .12s;}
+</style>
+</head>
+<body>
+  <div class="head">
+    <h1>TABU</h1>
+    <div class="langtoggle">
+      <button data-lang="cs" class="sel">🇨🇿 CZ</button>
+      <button data-lang="en">🇬🇧 EN</button>
+    </div>
+  </div>
+  <div class="sub" data-t="subtitle">Jen slova — žádné soutěžení. Klepni a házej dál.</div>
+
+  <div class="stage">
+    <div class="diffbar" id="diffBar"></div>
+    <div class="bar" id="catBar"></div>
+
+    <div class="tcard swap" id="tcard">
+      <div class="cdiff" id="cardDiff"></div>
+      <div class="cat" id="cardCat"></div>
+      <div class="mainword" id="mainWord">—</div>
+      <div class="tabooline">
+        <div class="lbl" data-t="tabooLabel">⛔ ZAKÁZANÁ SLOVA ⛔</div>
+        <ul class="taboowords" id="tabooWords"></ul>
+      </div>
+    </div>
+
+    <button class="nextbtn" id="nextBtn" data-t="next">DALŠÍ SLOVO ▶</button>
+    <div class="controls">
+      <button id="prevBtn" data-t="prev">‹ Zpět</button>
+      <button id="shuffleBtn" data-t="shuffle">🔀 Zamíchat</button>
+      <button id="hideBtn" data-t="hide">🙈 Skrýt zakázaná</button>
+    </div>
+    <div class="counter" id="counter"></div>
+    <div class="keyhint" data-t="keyhint"></div>
+  </div>
+
+  <footer><span data-t="footer">TABU · jen slova</span> · <a href="index.html" data-t="toGame">přejít na hru s týmy →</a></footer>
+
+<script>
+(() => {
+const $ = s => document.querySelector(s);
+
+/* ---- překlady rozhraní ---- */
+const I18N = {
+  cs:{ subtitle:"Jen slova — žádné soutěžení. Klepni a házej dál.",
+    tabooLabel:"⛔ ZAKÁZANÁ SLOVA ⛔", next:"DALŠÍ SLOVO ▶", prev:"‹ Zpět",
+    shuffle:"🔀 Zamíchat", hide:"🙈 Skrýt zakázaná", showT:"👁 Zobrazit zakázaná",
+    keyhint:'<span class="kbd">→ / mezera</span> další · <span class="kbd">←</span> zpět · <span class="kbd">H</span> skrýt · nebo táhni prstem',
+    footer:"TABU · jen slova", toGame:"přejít na hru s týmy →", all:"Vše",
+    diffLbl:"Obtížnost", diffEasy:"● Lehká", diffMed:"●● Střední", diffHard:"●●● Těžká",
+    diffName:{1:"Lehká",2:"Střední",3:"Těžká"}, empty:"Žádná slova — vyber jinou obtížnost nebo kategorii",
+    counter:(i,n)=>`${i} / ${n} · projeto: %`, hidden:"slovo zakryto — odhal popisem" },
+  en:{ subtitle:"Just words — no competition. Tap and keep flipping.",
+    tabooLabel:"⛔ FORBIDDEN WORDS ⛔", next:"NEXT WORD ▶", prev:"‹ Back",
+    shuffle:"🔀 Shuffle", hide:"🙈 Hide forbidden", showT:"👁 Show forbidden",
+    keyhint:'<span class="kbd">→ / space</span> next · <span class="kbd">←</span> back · <span class="kbd">H</span> hide · or swipe',
+    footer:"TABOO · words only", toGame:"go to team game →", all:"All",
+    diffLbl:"Difficulty", diffEasy:"● Easy", diffMed:"●● Medium", diffHard:"●●● Hard",
+    diffName:{1:"Easy",2:"Medium",3:"Hard"}, empty:"No words — pick another difficulty or category",
+    counter:(i,n)=>`${i} / ${n}`, hidden:"word hidden — reveal by describing" }
+};
+let lang = localStorage.getItem('tabooLang') || 'cs';
+const T = () => I18N[lang];
+
+/* ============================================================
+   DATABÁZE SLOV — načítá se z words.json (fetch)
+   POZOR: fetch lokálního souboru nefunguje přes file://,
+   spusť přes lokální server, např.:  python -m http.server
+   ============================================================ */
+let DB = null;
+
+/* ---- stav ---- */
+let selectedCats = new Set();
+let selectedDiff = loadDiff();
+let deck=[], pos=-1, hideTaboo=false;
+
+function loadDiff(){
+  try{ const s=JSON.parse(localStorage.getItem('tabooDiff')); if(Array.isArray(s)&&s.length) return new Set(s.filter(d=>[1,2,3].includes(d))); }catch(e){}
+  return new Set([1,2,3]);
+}
+function saveDiff(){ localStorage.setItem('tabooDiff', JSON.stringify([...selectedDiff])); }
+
+function cats(){ return Object.keys(DB[lang]); }
+function buildDeck(){
+  let pool=[];
+  selectedCats.forEach(c=> pool=pool.concat(DB[lang][c].filter(x=>selectedDiff.has(x.d)).map(x=>({...x, cat:c}))));
+  for(let i=pool.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [pool[i],pool[j]]=[pool[j],pool[i]]; }
+  deck=pool; pos=-1;
+}
+
+/* ---- vykreslení lišty obtížnosti ---- */
+function renderDiffBar(){
+  const bar=$('#diffBar'); bar.innerHTML='';
+  const lbl=document.createElement('span'); lbl.className='lbl'; lbl.textContent=T().diffLbl; bar.appendChild(lbl);
+  [[1,T().diffEasy],[2,T().diffMed],[3,T().diffHard]].forEach(([d,txt])=>{
+    const b=document.createElement('button');
+    b.dataset.d=d; b.textContent=txt; b.classList.toggle('sel', selectedDiff.has(d));
+    b.onclick=()=>{ if(selectedDiff.has(d)){ if(selectedDiff.size>1) selectedDiff.delete(d);} else selectedDiff.add(d);
+      saveDiff(); renderDiffBar(); buildDeck(); next(); };
+    bar.appendChild(b);
+  });
+}
+
+/* ---- vykreslení lišty kategorií ---- */
+function renderBar(){
+  const bar=$('#catBar'); bar.innerHTML='';
+  const cs=cats();
+  const all=document.createElement('button');
+  all.textContent=T().all; all.classList.toggle('sel', selectedCats.size===cs.length);
+  all.onclick=()=>{ selectedCats = selectedCats.size===cs.length ? new Set([cs[0]]) : new Set(cs); afterCatChange(); };
+  bar.appendChild(all);
+  cs.forEach(c=>{
+    const b=document.createElement('button');
+    b.textContent=c; b.classList.toggle('sel', selectedCats.has(c));
+    b.onclick=()=>{ if(selectedCats.has(c)){ if(selectedCats.size>1) selectedCats.delete(c);} else selectedCats.add(c); afterCatChange(); };
+    bar.appendChild(b);
+  });
+}
+function afterCatChange(){ renderBar(); buildDeck(); next(); }
+
+/* ---- navigace kartami ---- */
+const DIFF_COL={1:"#2e7d4f",2:"#c08a1e",3:"#b1083a"};
+function render(){
+  const c=deck[pos];
+  const card=$('#tcard'); card.style.opacity=0;
+  setTimeout(()=>{
+    const ul=$('#tabooWords'); ul.innerHTML='';
+    if(!c){
+      $('#mainWord').textContent='—'; $('#cardCat').textContent='';
+      $('#cardDiff').textContent=''; $('#counter').textContent=T().empty;
+      card.style.opacity=1; return;
+    }
+    $('#mainWord').textContent=c.w;
+    $('#cardCat').textContent=c.cat;
+    const cd=$('#cardDiff'); cd.textContent='●'.repeat(c.d); cd.style.color=DIFF_COL[c.d]; cd.title=T().diffName[c.d];
+    c.t.forEach(w=>{ const li=document.createElement('li'); li.textContent= hideTaboo?'•••':w; ul.appendChild(li); });
+    $('#counter').textContent=T().counter(pos+1, deck.length);
+    card.style.opacity=1;
+  },120);
+}
+function next(){ if(!deck.length){ render(); return; } pos++; if(pos>=deck.length){ buildDeck(); pos=0; } render(); }
+function prev(){ if(!deck.length){ render(); return; } pos--; if(pos<0) pos=deck.length-1; render(); }
+
+/* ---- překlad UI ---- */
+function applyLang(){
+  document.documentElement.lang=lang;
+  document.querySelectorAll('[data-t]').forEach(el=>{ const v=T()[el.dataset.t]; if(typeof v==='string') el.innerHTML=v; });
+  document.querySelectorAll('[data-lang]').forEach(b=>b.classList.toggle('sel', b.dataset.lang===lang));
+  $('#hideBtn').textContent = hideTaboo ? T().showT : T().hide;
+  selectedCats=new Set(cats());
+  renderDiffBar(); renderBar(); buildDeck(); next();
+}
+
+/* ---- ovládání ---- */
+document.querySelectorAll('[data-lang]').forEach(b=> b.onclick=()=>{ lang=b.dataset.lang; localStorage.setItem('tabooLang',lang); applyLang(); });
+$('#nextBtn').onclick=next;
+$('#prevBtn').onclick=prev;
+$('#shuffleBtn').onclick=()=>{ buildDeck(); next(); };
+$('#hideBtn').onclick=()=>{ hideTaboo=!hideTaboo; $('#hideBtn').textContent=hideTaboo?T().showT:T().hide; render(); };
+
+window.addEventListener('keydown',e=>{
+  if(e.code==='ArrowRight'||e.code==='Space'){ e.preventDefault(); next(); }
+  else if(e.code==='ArrowLeft'){ e.preventDefault(); prev(); }
+  else if(e.code==='KeyH'){ $('#hideBtn').click(); }
+});
+
+/* swipe */
+let sx=0,sy=0,st=0; const card=$('#tcard');
+card.addEventListener('pointerdown',e=>{ sx=e.clientX; sy=e.clientY; st=Date.now(); });
+card.addEventListener('pointerup',e=>{
+  const dx=e.clientX-sx, dy=e.clientY-sy; if(Date.now()-st>700) return;
+  if(Math.abs(dx)<40 && Math.abs(dy)<40){ next(); return; } // klepnutí = další
+  if(Math.abs(dx)>Math.abs(dy)) (dx>0?prev:next)(); // táhni vpravo = zpět, vlevo = další
+});
+
+/* ---- načtení databáze a start ---- */
+fetch('words.json')
+  .then(r => { if(!r.ok) throw new Error(r.status); return r.json(); })
+  .then(db => { DB = db; applyLang(); })
+  .catch(() => {
+    const msgs = {
+      cs:'Nepodařilo se načíst words.json. Otevři stránku přes lokální server (např. „python -m http.server"), ne přímo z disku.',
+      en:'Failed to load words.json. Open the page via a local server (e.g. "python -m http.server"), not directly from disk.'
+    };
+    $('#mainWord').textContent = '⚠';
+    $('#cardCat').textContent = ''; $('#cardDiff').textContent = '';
+    $('#tabooWords').innerHTML = '';
+    $('#counter').textContent = msgs[lang] || msgs.en;
+  });
+})();
+</script>
+</body>
+</html>
