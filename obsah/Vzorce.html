@@ -480,6 +480,12 @@ math-virtual-keyboard {
   animation: shake 0.3s ease;
 }
 
+.var-name.duplicate {
+  border-color: var(--yellow) !important;
+  box-shadow: 0 0 0 2px rgba(200, 160, 92, 0.2);
+  animation: shake 0.3s ease;
+}
+
 @keyframes shake {
   0%, 100% { transform: translateX(0); }
   20%       { transform: translateX(-4px); }
@@ -1926,6 +1932,13 @@ function saveFormula() {
   if (!name) { showError('Zadejte název vzorce.'); formulaName.focus(); return; }
   if (!expr)  { showError('Zadejte výpočtový výraz.'); exprInput.focus(); return; }
 
+  // Duplicitní název aplikace záměrně podporuje (Kopie/Duplikovat, import „add"),
+  // ale u nového vzorce jde nejčastěji o omyl.
+  if (currentFormulaId === null &&
+      allFormulas.some(f => f.name.trim().toLowerCase() === name.toLowerCase())) {
+    if (!confirm(`Vzorec s názvem „${name}" už existuje.\nUložit i tak jako duplicitní název?`)) return;
+  }
+
   try {
     if (currentFormulaId !== null) {
       dbUpdateFormula(currentFormulaId, name, latex, expr, vars);
@@ -1992,7 +2005,13 @@ function doExtract() {
   const raw = exprInput.value.trim();
   if (!raw) return;
   const names = extractVarNames(raw);
-  variables = names.map(name => ({ id: uid(), name, value: '', unit: '' }));
+  // Proměnná se stejným názvem jako už existuje, si zachová zadanou hodnotu
+  // i jednotku — jinak by přegenerování seznamu smazalo právě vyplněná čísla.
+  const existingByName = new Map(variables.map(v => [v.name.trim(), v]));
+  variables = names.map(name => {
+    const existing = existingByName.get(name);
+    return { id: uid(), name, value: existing?.value ?? '', unit: existing?.unit ?? '' };
+  });
   if (variables.length === 0) {
     variables = [{ id: uid(), name: '', value: '', unit: '' }];
     showExtractHint('Výraz neobsahuje proměnné.', false);
@@ -2011,6 +2030,18 @@ function showExtractHint(msg, success) {
   extractHint._timer = setTimeout(() => { extractHint.style.display = 'none'; }, 3000);
 }
 
+// Víceznakový identifikátor následovaný `(` se v parseru vždy chápe jako
+// volání funkce — např. "obvod(1+2)" tak vyhodí „Neznámá funkce: obvod",
+// i když uživatel myslel násobení proměnné závorkou. Pokud X odpovídá názvu
+// definované proměnné, přidáme nápovědu.
+function friendlyEvalError(msg) {
+  const m = /^Neznámá funkce: (.+)$/.exec(msg);
+  if (m && variables.some(v => v.name.trim() === m[1])) {
+    return `${msg}. Chtěli jste násobit? Zkuste „${m[1]} * (...)".`;
+  }
+  return msg;
+}
+
 // ── Výpočet vzorce ─────────────────────────────────────────────────────────────
 function calculateFormula() {
   const raw = exprInput.value.trim();
@@ -2020,9 +2051,13 @@ function calculateFormula() {
 
   const vars = {};
   let missingAny = false;
+  const seenNames      = new Set();
+  const duplicateNames = new Set();   // druhá a další proměnná se stejným názvem — tiše přepíše první
   variables.forEach(v => {
     const trimmed = v.name.trim();
     if (trimmed) {
+      if (seenNames.has(trimmed)) duplicateNames.add(trimmed);
+      seenNames.add(trimmed);
       if (v.value === '' || v.value === null || v.value === undefined) {
         const input = variablesListEl.querySelector(
           `input[data-id="${v.id}"][data-field="value"]`);
@@ -2043,6 +2078,21 @@ function calculateFormula() {
     return;
   }
 
+  // Dvě proměnné se stejným názvem — poslední zadaná hodnota potichu přepíše
+  // předchozí. Výpočet proběhne, jen zvýrazníme dotčené řádky a upozorníme.
+  if (duplicateNames.size) {
+    variables.forEach(v => {
+      if (duplicateNames.has(v.name.trim())) {
+        const input = variablesListEl.querySelector(`input[data-id="${v.id}"][data-field="name"]`);
+        if (input) {
+          input.classList.add('duplicate');
+          setTimeout(() => input.classList.remove('duplicate'), 1000);
+        }
+      }
+    });
+    showToast(`Pozor: proměnná ${[...duplicateNames].join(', ')} je zadána vícekrát — použije se poslední hodnota.`, 'info', 3500);
+  }
+
   try {
     const result = evaluateExpr(expr, vars);
     lastResult = result;
@@ -2051,7 +2101,7 @@ function calculateFormula() {
     hideError();
     renderFormulaList();
   } catch (err) {
-    showError('Chyba výpočtu: ' + err.message);
+    showError('Chyba výpočtu: ' + friendlyEvalError(err.message));
     hideResult();
     lastResult = null;
   }

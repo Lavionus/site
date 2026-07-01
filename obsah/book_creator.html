@@ -70,6 +70,7 @@
   .tab.active{background:var(--bg);color:var(--accent);border-color:var(--line)}
   .pane{flex:1;overflow:auto;padding:18px;display:none}
   .pane.active{display:block}
+  .pane[data-pane="text"]{padding-top:0}
 
   .field{margin-bottom:14px;max-width:640px}
   .field label{display:block;font-size:12px;color:var(--muted);margin-bottom:5px;text-transform:uppercase;letter-spacing:.5px}
@@ -111,7 +112,7 @@
   .addchap{width:100%;font-size:12px;padding:5px;margin-top:2px}
 
   /* ---- Text editor / toolbar ---- */
-  .toolbar-wrap{position:relative;overflow-x:auto;white-space:nowrap;padding:0 0 6px 0;margin-bottom:12px;background:var(--panel);border:1px solid var(--line);border-radius:8px;}
+  .toolbar-wrap{position:sticky;top:0;z-index:20;overflow-x:auto;white-space:nowrap;padding:10px 0 6px 0;margin-bottom:12px;background:var(--panel);border:1px solid var(--line);border-radius:8px;}
   .toolbar{
     display:flex;flex-wrap:nowrap;gap:5px;align-items:center;
     padding:7px;min-width:max-content;
@@ -676,11 +677,18 @@ function fontOptionsHTML(b, selected){
   }
   return html;
 }
+/* Vrátí čitelný název fontu (popisek) pro danou CSS hodnotu font-family. */
+function fontLabel(b, val){
+  const d = DEFAULT_FONTS.find(([v])=>v===val); if(d) return d[1];
+  const f = (b && b.fonts||[]).find(f=>`'${fontFamilyName(f)}'`===val); if(f) return f.name;
+  return val || "—";
+}
 function refreshFontSelectors(){
   const b = cur(); if(!b) return;
   $("#fc-font").innerHTML = fontOptionsHTML(b, b.front.font);
   $("#bc-font").innerHTML = fontOptionsHTML(b, b.back.font);
-  $("#t-font").innerHTML  = '<option value="">Font</option>'+fontOptionsHTML(b,"");
+  // Prázdná volba = bez vlastního fontu → text zdědí výchozí font knihy.
+  $("#t-font").innerHTML  = `<option value="">Výchozí (${esc(fontLabel(b, b.defaultFont))})</option>`+fontOptionsHTML(b,"");
   const chips = $("#fontchips");
   if(!b.fonts.length){ chips.innerHTML = '<span class="hint">Zatím žádný importovaný font.</span>'; }
   else chips.innerHTML = b.fonts.map(f=>
@@ -806,10 +814,18 @@ function selectBook(id){
   $("#chap-title").value=c?c.title:"";
   $("#editor").innerHTML=c?c.content:"";
   refreshFontSelectors();
+  applyEditorFont();
   refreshPreview();
   renderStats();
   updateStats();
   renderLibrary();
+}
+
+/* WYSIWYG: editor zobrazuje text bez vlastního fontu ve výchozím fontu knihy,
+   stejně jako náhled a PDF. */
+function applyEditorFont(){
+  const b=cur();
+  $("#editor").style.fontFamily = (b && b.defaultFont) || "Georgia, serif";
 }
 
 /* ---------- preview covers ---------- */
@@ -1010,7 +1026,18 @@ $("#t-size").onchange=()=>{
 };
 $("#t-color").oninput=()=>exec("foreColor",$("#t-color").value);
 $("#t-bgcolor").oninput=()=>exec("hiliteColor",$("#t-bgcolor").value);
-$("#t-font").onchange=()=>{ if($("#t-font").value) exec("fontName",$("#t-font").value); };
+$("#t-font").onchange=()=>{
+  const b=cur(); if(!b) return;
+  // Prázdná volba „Výchozí“ → nastav výchozí font knihy (vrácení textu na výchozí).
+  const v=$("#t-font").value || b.defaultFont;
+  $("#editor").focus();
+  // styleWithCSS přinutí prohlížeč zapsat font jako inline style="font-family:…"
+  // (místo zastaralého <font face="…">), což se správně projeví i v náhledu a PDF.
+  try{ document.execCommand("styleWithCSS",false,true); }catch(e){}
+  document.execCommand("fontName",false,v);
+  try{ document.execCommand("styleWithCSS",false,false); }catch(e){}
+  syncContent();
+};
 $("#t-link").onclick=()=>{ const u=prompt("URL odkazu:","https://"); if(u) exec("createLink",u); };
 $("#t-hr").onclick=()=>exec("insertHorizontalRule");
 $("#t-img").onclick=()=>{
@@ -1128,7 +1155,7 @@ $("#font-sample-sel").onchange=()=>{ const b=cur(); if(!b) return; const v=$("#f
   // výchozí font knihy = font obou obálek (tělo textu se formátuje samostatně v editoru)
   b.defaultFont=v; b.front.font=v; b.back.font=v;
   $("#font-sample").style.fontFamily=v;
-  refreshFontSelectors(); refreshPreview(); touch();
+  refreshFontSelectors(); applyEditorFont(); refreshPreview(); touch();
 };
 $("#chaptitle-font").onchange=()=>{ const b=cur(); if(!b) return; b.chapTitleFont=$("#chaptitle-font").value; touch(); };
 $("#pagenum-font").onchange=()=>{ const b=cur(); if(!b) return; b.pageNumFont=$("#pagenum-font").value; touch(); };
@@ -1529,6 +1556,22 @@ ${coverMeta}
 }
 $("#btnEPUB").onclick=exportEPUB;
 
+/* Převede zastaralé <font face="…"> (z dřívějších verzí editoru) na
+   <span style="font-family:…">. Atribut face se nemapuje spolehlivě na CSS
+   font-family (hlavně u názvů v uvozovkách a importovaných fontů), takže bez
+   tohoto kroku se font v náhledu / PDF neprojevil. */
+function normalizeFontTags(html){
+  const box=document.createElement("div"); box.innerHTML=html||"";
+  box.querySelectorAll("font[face]").forEach(fn=>{
+    const span=document.createElement("span");
+    span.style.fontFamily=fn.getAttribute("face");
+    if(fn.getAttribute("color")) span.style.color=fn.getAttribute("color");
+    while(fn.firstChild) span.appendChild(fn.firstChild);
+    fn.replaceWith(span);
+  });
+  return box.innerHTML;
+}
+
 /* ============ RENDER BOOK (preview / PDF) s čísly stránek ============ */
 function buildBookHTML(b, forPrint){
   const fontFaces=(b.fonts||[]).map(f=>`@font-face{font-family:'${fontFamilyName(f)}';src:url(${f.data})}`).join("\n");
@@ -1561,7 +1604,7 @@ function buildBookHTML(b, forPrint){
   b.chapters.forEach((c,i)=>{
     sheets.push(`<div class="sheet pad"><section class="chapter">
       <h2 class="chap-h">${i+1}. ${esc(c.title)}</h2>
-      <div class="chap-body">${c.content}</div></section>${pnum()}</div>`);
+      <div class="chap-body">${normalizeFontTags(c.content)}</div></section>${pnum()}</div>`);
   });
   // back
   if(bk.text||bk.isbn||bk.img){
