@@ -1739,6 +1739,14 @@ function markClean() {
   isDirty = false; dirtyBadge.style.display = 'none'; renderFormulaList();
 }
 
+// Vrátí true, pokud lze pokračovat (žádné neuložené změny, nebo je uživatel
+// potvrdil jejich zahození) — jinak by přepnutí na jiný vzorec či nový vzorec
+// tiše zahodilo rozpracovanou práci.
+function guardUnsaved() {
+  if (!isDirty) return true;
+  return confirm('Máte neuložené změny v rozpracovaném vzorci.\nZahodit je a pokračovat?');
+}
+
 // ── Inicializace ───────────────────────────────────────────────────────────────
 // Modul je deferred → DOM je v době spuštění už naparsovaný, voláme přímo.
 loadFormulas();
@@ -1780,7 +1788,7 @@ function renderDataTable() {
   dataTbody.querySelectorAll('.dt-open').forEach(btn => {
     btn.addEventListener('click', () => {
       const f = allFormulas.find(x => String(x.id) === btn.dataset.id);
-      if (f) { loadFormula(f); activateTab('editor'); }
+      if (f) { if (!guardUnsaved()) return; loadFormula(f); activateTab('editor'); }
     });
   });
   dataTbody.querySelectorAll('.dt-del').forEach(btn => {
@@ -1844,8 +1852,8 @@ function renderFormulaList() {
         : ''}
     `;
     item.addEventListener('click', () => {
-      if (isDirty && currentFormulaId !== f.id)
-        showToast('Přecházíte bez uložení změn', 'info', 1800);
+      if (f.id === currentFormulaId && !isDirty) return;   // už otevřený, nic neměníme
+      if (!guardUnsaved()) return;                         // neuložené změny — uživatel zrušil
       loadFormula(f);
     });
     formulaListEl.appendChild(item);
@@ -1888,9 +1896,9 @@ function newFormula() {
   setTimeout(() => formulaName.focus(), 50);
 }
 
-// Nový vzorec z UI (tlačítko +, Ctrl+N) — upozorní na zahozené neuložené změny.
+// Nový vzorec z UI (tlačítko +, Ctrl+N) — hlídá neuložené změny.
 function requestNewFormula() {
-  if (isDirty) showToast('Neuložené změny byly zahozeny', 'info', 1800);
+  if (!guardUnsaved()) return;
   newFormula();
 }
 
