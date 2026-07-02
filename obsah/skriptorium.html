@@ -1,0 +1,2379 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Skriptorium</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><path d='M27 4c-6 0-16 5-19 15l-2 6 6-2C22 20 27 10 27 4Z' fill='%23c9a45c'/><path d='M6 25l7-7' stroke='%23c9a45c' stroke-width='2' stroke-linecap='round'/></svg>">
+<style>
+/* ============================================================
+   SKRIPTORIUM — psací dílna pro knihy
+   Jeden soubor, žádné externí závislosti, vše offline.
+   Téma „inkoust a papír“: světlý i tmavý režim.
+   ============================================================ */
+:root{
+  --paper:#f4efe4; --sheet:#fdfbf4; --ink:#232633; --ink2:#5c6070;
+  --line:#ddd5c2; --panel:#ece5d4; --panel2:#e2dac6;
+  --acc:#39558c; --acc-ink:#2c4370; --brass:#a07d33;
+  --ok:#4a7a4f; --warn:#b5892f; --danger:#a63d32;
+  --shadow:0 2px 10px rgba(40,35,20,.10);
+  --r:8px;
+  color-scheme:light;
+}
+[data-theme="dark"]{
+  --paper:#171a22; --sheet:#f4eedd; --ink:#e7e0cd; --ink2:#a49d8a;
+  --line:#363b49; --panel:#20242f; --panel2:#2a2f3d;
+  --acc:#c9a45c; --acc-ink:#dbb96f; --brass:#c9a45c;
+  --ok:#6fa075; --warn:#cfa649; --danger:#c9584a;
+  --shadow:0 2px 14px rgba(0,0,0,.45);
+  color-scheme:dark;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{
+  font-family:Georgia,'Palatino Linotype','Times New Roman',serif;
+  background:var(--paper);color:var(--ink);
+  height:100vh;overflow:hidden;font-size:15px;
+}
+button,input,select,textarea{font-family:inherit;font-size:14px;color:var(--ink)}
+.grow{flex:1}
+svg.i{width:1.05em;height:1.05em;vertical-align:-.16em;fill:none;stroke:currentColor;stroke-width:1.7;stroke-linecap:round;stroke-linejoin:round;flex-shrink:0}
+
+/* ---------- základní ovládací prvky ---------- */
+.btn{display:inline-flex;align-items:center;gap:7px;padding:8px 14px;border-radius:var(--r);
+  border:1px solid var(--line);background:var(--panel2);cursor:pointer}
+.btn:hover{border-color:var(--acc);color:var(--acc-ink)}
+.btn.primary{background:var(--acc);border-color:var(--acc);color:var(--paper);font-weight:600}
+[data-theme="dark"] .btn.primary{color:#1c1708}
+.btn.primary:hover{filter:brightness(1.1);color:var(--paper)}
+[data-theme="dark"] .btn.primary:hover{color:#1c1708}
+.btn.ghost{background:transparent}
+.btn.danger{background:transparent;color:var(--danger);border-color:var(--danger)}
+.btn.danger:hover{background:var(--danger);color:#fff}
+.btn.small{padding:5px 10px;font-size:13px}
+.ibtn{width:34px;height:34px;display:inline-flex;align-items:center;justify-content:center;
+  border-radius:8px;border:1px solid transparent;background:transparent;cursor:pointer;color:var(--ink2)}
+.ibtn:hover{border-color:var(--line);color:var(--acc-ink);background:var(--panel2)}
+input[type=text],input[type=number],select,textarea{
+  background:var(--panel2);border:1px solid var(--line);border-radius:var(--r);padding:8px 10px;width:100%}
+input:focus,select:focus,textarea:focus{outline:2px solid var(--acc);outline-offset:-1px}
+input[type=color]{width:44px;height:32px;padding:2px;border:1px solid var(--line);border-radius:6px;background:var(--panel2);cursor:pointer}
+input[type=range]{width:100%;accent-color:var(--acc)}
+textarea{resize:vertical}
+label.f{display:block;font-size:11px;letter-spacing:.8px;text-transform:uppercase;color:var(--ink2);margin:0 0 5px}
+.field{margin-bottom:15px}
+.frow{display:flex;gap:14px;flex-wrap:wrap}
+.frow .field{flex:1;min-width:170px}
+
+/* ---------- rozvržení ---------- */
+#app{display:flex;height:100vh}
+aside{width:270px;flex-shrink:0;background:var(--panel);border-right:1px solid var(--line);
+  display:flex;flex-direction:column}
+body.noside aside{display:none}
+main{flex:1;min-width:0;display:flex;flex-direction:column}
+
+/* ---------- postranní panel ---------- */
+.s-head{display:flex;align-items:center;gap:10px;padding:14px 16px;border-bottom:1px solid var(--line)}
+.s-head b{font-size:17px;letter-spacing:.4px;color:var(--acc-ink)}
+.s-head .logo{width:26px;height:26px;color:var(--brass)}
+.s-search{padding:10px 12px 4px;position:relative}
+.s-search svg{position:absolute;left:22px;top:19px;width:14px;height:14px;color:var(--ink2);pointer-events:none}
+.s-search input{padding-left:30px}
+.s-list{flex:1;overflow:auto;padding:8px 10px}
+.bk{border:1px solid var(--line);border-radius:var(--r);background:var(--panel2);
+  padding:9px 11px;margin-bottom:7px;cursor:pointer;position:relative}
+.bk:hover{border-color:var(--acc)}
+.bk.on{border-color:var(--acc);box-shadow:inset 3px 0 0 var(--acc)}
+.bk .t{font-weight:700;font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.bk .m{font-size:12px;color:var(--ink2);margin-top:2px;font-style:italic}
+.bk .del{position:absolute;top:7px;right:7px;opacity:0;background:transparent;border:none;
+  color:var(--danger);cursor:pointer;font-size:13px;padding:2px 5px}
+.bk .dup{position:absolute;top:7px;right:28px;opacity:0;background:transparent;border:none;
+  color:var(--ink2);cursor:pointer;font-size:13px;padding:2px 5px}
+.bk .dup:hover{color:var(--acc-ink)}
+.bk:hover .del,.bk:hover .dup{opacity:1}
+.chs{margin:2px 0 10px 10px;border-left:2px solid var(--line);padding-left:8px}
+.ch{display:flex;align-items:center;gap:6px;padding:4px 7px;border-radius:6px;cursor:pointer;
+  font-size:13px;color:var(--ink2)}
+.ch:hover{background:var(--panel2)}
+.ch.on{background:var(--panel2);color:var(--ink);box-shadow:inset 2px 0 0 var(--brass)}
+.ch .n{font-size:10px;min-width:14px;opacity:.7}
+.ch .nm{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ch .wc{font-size:10px;opacity:.65}
+.ch .x{opacity:0;border:none;background:none;color:var(--danger);cursor:pointer;padding:0 3px}
+.ch:hover .x{opacity:1}
+.addch{width:100%;margin-top:3px;font-size:12px;padding:4px;border:1px dashed var(--line);
+  border-radius:6px;background:transparent;color:var(--ink2);cursor:pointer}
+.addch:hover{border-color:var(--acc);color:var(--acc-ink)}
+.s-foot{padding:10px 12px;border-top:1px solid var(--line);display:flex;gap:8px}
+.s-foot .btn{flex:1;justify-content:center}
+
+/* ---------- horní lišta ---------- */
+#topbar{display:flex;align-items:center;gap:6px;padding:8px 14px;background:var(--panel);
+  border-bottom:1px solid var(--line);flex-shrink:0}
+#vtabs{display:flex;gap:2px}
+.vtab{padding:7px 14px;border:none;background:transparent;border-radius:7px;cursor:pointer;
+  color:var(--ink2);font-size:14px}
+.vtab:hover{color:var(--ink)}
+.vtab.on{background:var(--paper);color:var(--acc-ink);font-weight:600;box-shadow:var(--shadow)}
+.save-dot{width:9px;height:9px;border-radius:50%;background:var(--ok);margin:0 6px;transition:.2s}
+.save-dot.busy{background:var(--warn)}
+
+/* ---------- pohledy ---------- */
+#views{flex:1;overflow:auto;position:relative}
+.view{display:none;padding:22px;max-width:860px;margin:0 auto}
+.view.on{display:block}
+.view h2{font-size:17px;color:var(--acc-ink);margin:0 0 18px;letter-spacing:.3px;
+  border-bottom:1px solid var(--line);padding-bottom:9px}
+
+/* ---------- psaní ---------- */
+.view[data-view=write]{max-width:900px;padding-top:14px}
+#chTitle{background:transparent;border:none;border-bottom:1px solid var(--line);border-radius:0;
+  font-size:21px;font-weight:700;color:var(--acc-ink);padding:8px 2px;max-width:760px;margin:0 auto 10px;display:block}
+#chTitle:focus{outline:none;border-bottom-color:var(--acc)}
+#toolbar{position:sticky;top:0;z-index:5;display:flex;flex-wrap:wrap;gap:4px;align-items:center;
+  background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:6px 8px;
+  max-width:760px;margin:0 auto 14px;box-shadow:var(--shadow)}
+#toolbar .sep{width:1px;align-self:stretch;background:var(--line);margin:0 3px}
+#toolbar button{min-width:30px;padding:5px 8px;border:1px solid transparent;border-radius:6px;
+  background:transparent;cursor:pointer;color:var(--ink)}
+#toolbar button:hover{border-color:var(--line);background:var(--panel2)}
+#toolbar button.on{background:var(--acc);color:var(--paper)}
+[data-theme="dark"] #toolbar button.on{color:#1c1708}
+#toolbar select{width:auto;padding:5px 7px;font-size:13px}
+#editor{background:var(--sheet);color:#26221a;min-height:58vh;max-width:760px;margin:0 auto 12px;
+  padding:52px 58px;border-radius:3px;outline:none;font-size:17px;line-height:1.75;
+  box-shadow:var(--shadow), inset 0 0 0 1px rgba(120,100,50,.15)}
+#editor:focus{box-shadow:0 0 0 2px var(--acc), var(--shadow)}
+#editor h1,#editor h2,#editor h3{line-height:1.3;color:#1d1a12}
+#editor img{max-width:100%;cursor:pointer}
+#editor img:hover{outline:2px dashed var(--brass);outline-offset:2px}
+#editor blockquote{border-left:3px solid #b7a878;margin:1em 0;padding:.2em 1em;color:#6a614c;font-style:italic}
+#editor pre{background:#eee7d2;padding:10px 13px;border-radius:6px;font-size:14px;overflow:auto}
+#editor a{color:#39558c}
+#wfoot{display:flex;align-items:center;justify-content:space-between;gap:10px;max-width:760px;margin:0 auto 30px}
+#wfoot .btn:disabled{opacity:.4;cursor:default}
+#winfo{font-size:12.5px;color:var(--ink2)}
+
+/* ---------- obálky (přední + zadní) ---------- */
+.cwrap{display:flex;gap:34px;flex-wrap:wrap}
+.cprev-col{flex:0 0 auto}
+.cpv{width:265px;height:380px;border-radius:4px;box-shadow:0 14px 30px rgba(20,15,5,.35);
+  position:relative;overflow:hidden;background-size:cover;background-position:center}
+.cpv .dim{position:absolute;inset:0}
+.cpv .frame{position:absolute;pointer-events:none;border-radius:2px}
+.cpv .txt{position:absolute;max-width:86%;width:max-content;z-index:2;cursor:grab;
+  touch-action:none;user-select:none;outline:1px dashed transparent;outline-offset:5px}
+.cpv .txt:hover{outline-color:rgba(255,255,255,.55)}
+.cpv .txt:active{cursor:grabbing}
+.cpv .ct{font-size:24px;font-weight:700;line-height:1.2;word-break:break-word}
+.cpv .cs{font-size:14px;margin-top:8px;opacity:.9}
+.cpv .ca{font-size:13px;margin-top:12px;opacity:.95;letter-spacing:.5px}
+.cpv .cb{font-size:12.5px;line-height:1.55;white-space:pre-wrap}
+.cpv .isbn{margin-top:14px;font-size:10.5px;opacity:.75}
+.cctrl{flex:1;min-width:280px}
+.covblock{margin-bottom:36px}
+.covblock h3{font-size:15px;color:var(--acc-ink);margin:0 0 14px;border-bottom:1px solid var(--line);padding-bottom:7px}
+
+/* ---------- vlastní fonty ---------- */
+.fchip{display:inline-flex;align-items:center;gap:7px;background:var(--panel2);border:1px solid var(--line);
+  border-radius:16px;padding:3px 7px 3px 12px;margin:4px 6px 0 0;font-size:13px}
+.fchip button{border:none;background:none;color:var(--danger);cursor:pointer;font-size:12px;padding:1px 4px}
+
+/* ---------- editor obrázků (ořez) ---------- */
+#dlgImg{max-width:620px}
+.cropwrap{position:relative;display:inline-block;max-width:100%;background:#111;border-radius:6px;
+  overflow:hidden;line-height:0;touch-action:none}
+.cropwrap img{display:block;max-width:100%;max-height:340px;user-select:none;-webkit-user-drag:none}
+.cropbox{position:absolute;border:2px dashed var(--acc);background:rgba(120,140,200,.25);display:none;
+  box-shadow:0 0 0 2000px rgba(0,0,0,.45)}
+.imgacts{display:flex;justify-content:space-between;gap:8px;margin-top:14px;flex-wrap:wrap}
+.imgacts .grp{display:flex;gap:8px}
+
+/* ---------- toolbar: barvy ---------- */
+#toolbar input[type=color]{width:26px;height:24px;padding:1px;border:1px solid var(--line);
+  border-radius:5px;background:transparent;cursor:pointer;vertical-align:middle}
+
+/* ---------- statistiky ---------- */
+.statwrap{display:flex;gap:26px;align-items:flex-start;flex-wrap:wrap;margin-bottom:22px}
+.ringbox{text-align:center;flex:0 0 auto}
+.ringbox svg{width:130px;height:130px;transform:rotate(-90deg)}
+.ringbox .rb{stroke:var(--panel2);stroke-width:11;fill:none}
+.ringbox .rf{stroke:var(--acc);stroke-width:11;fill:none;stroke-linecap:round;transition:stroke-dashoffset .4s}
+.ringbox .rt{font-size:13px;color:var(--ink2);margin-top:6px}
+.tiles{flex:1;display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:12px;min-width:260px}
+.tile{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:13px 15px}
+.tile .v{font-size:24px;font-weight:700;color:var(--acc-ink)}
+.tile .l{font-size:11px;letter-spacing:.7px;text-transform:uppercase;color:var(--ink2);margin-top:3px}
+table.cht{border-collapse:collapse;width:100%}
+table.cht th,table.cht td{padding:7px 9px;border-bottom:1px solid var(--line);font-size:13.5px;text-align:left}
+table.cht th{font-size:11px;text-transform:uppercase;letter-spacing:.6px;color:var(--ink2)}
+table.cht td.r,table.cht th.r{text-align:right}
+.hbar{height:6px;border-radius:4px;background:var(--panel2);overflow:hidden;min-width:70px}
+.hbar i{display:block;height:100%;background:var(--acc)}
+
+/* ---------- export ---------- */
+.excards{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px}
+.exc{background:var(--panel);border:1px solid var(--line);border-radius:var(--r);padding:16px}
+.exc b{display:flex;gap:8px;align-items:center;color:var(--acc-ink);font-size:15px}
+.exc p{font-size:12.5px;color:var(--ink2);margin:8px 0 12px;line-height:1.5}
+.filebtn{position:relative;overflow:hidden;display:inline-flex}
+.filebtn input{position:absolute;inset:0;opacity:0;cursor:pointer}
+
+/* ---------- prázdný stav ---------- */
+#empty{display:none;flex-direction:column;align-items:center;justify-content:center;height:100%;
+  gap:14px;color:var(--ink2);text-align:center}
+#empty svg{width:70px;height:70px;color:var(--brass);opacity:.8}
+body[data-empty] #empty{display:flex}
+body[data-empty] #views,body[data-empty] #vtabs{display:none}
+
+/* ---------- režim soustředění ---------- */
+body.focus aside,body.focus #topbar{display:none}
+body.focus .view[data-view=write]{max-width:980px}
+body.focus #editor{max-width:820px}
+body.focus #toolbar,body.focus #chTitle{max-width:820px}
+#focusOff{display:none;position:fixed;right:18px;bottom:16px;z-index:40}
+body.focus #focusOff{display:inline-flex}
+
+/* ---------- historie verzí, řazení, připnutí ---------- */
+.chtwrap{max-width:760px;margin:0 auto 10px;display:flex;align-items:center;gap:8px}
+.chtwrap #chTitle{margin:0;flex:1;max-width:none}
+body.focus .chtwrap{max-width:820px}
+.bk .pin{position:absolute;top:7px;right:49px;opacity:0;background:transparent;border:none;
+  cursor:pointer;font-size:12px;padding:2px 4px;color:var(--ink2)}
+.bk:hover .pin{opacity:1}
+.bk .pin.on{opacity:.95;color:var(--acc-ink)}
+.s-sort{padding:0 12px 8px}
+.s-sort select{font-size:12.5px;padding:5px 8px}
+
+/* ---------- dialogy, toast ---------- */
+dialog{border:1px solid var(--line);border-radius:12px;background:var(--panel);color:var(--ink);
+  max-width:460px;width:92%;padding:0;box-shadow:0 24px 60px rgba(0,0,0,.4)}
+dialog::backdrop{background:rgba(15,12,5,.55)}
+dialog .dh{display:flex;align-items:center;gap:8px;padding:14px 18px;border-bottom:1px solid var(--line)}
+dialog .dh b{color:var(--acc-ink);font-size:16px}
+dialog .db{padding:12px 18px 18px;max-height:60vh;overflow:auto}
+.krow{display:flex;justify-content:space-between;gap:12px;padding:6px 0;border-bottom:1px solid var(--line);font-size:13.5px}
+.krow:last-child{border:none}
+kbd{background:var(--panel2);border:1px solid var(--line);border-bottom-width:2px;border-radius:5px;
+  padding:1px 7px;font-size:12px;white-space:nowrap}
+.trow{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--line);font-size:14px}
+.trow:last-child{border:none}
+#toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%);background:var(--ink);
+  color:var(--paper);padding:10px 20px;border-radius:8px;opacity:0;transition:.25s;pointer-events:none;z-index:60;font-size:14px}
+[data-theme="dark"] #toast{background:#e7e0cd;color:#171a22}
+#toast.show{opacity:1}
+
+/* ---------- responsivita ---------- */
+@media (max-width:760px){
+  aside{position:fixed;left:0;top:0;bottom:0;z-index:30;box-shadow:10px 0 30px rgba(0,0,0,.4)}
+  body.noside aside{display:none}
+  .view{padding:14px}
+  #editor{padding:26px 20px}
+}
+</style>
+</head>
+<body class="noside-init">
+<div id="app">
+<aside>
+  <div class="s-head">
+    <svg class="logo" viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M4 25V8c0-1.7 1.3-3 3-3h6c1.6 0 3 1.4 3 3v17"/><path d="M28 25V8c0-1.7-1.3-3-3-3h-6c-1.6 0-3 1.4-3 3"/>
+      <path d="M2 25h28"/><path d="M22 20l6-9-1.8-1.2L20 18l-.5 2.8z" fill="currentColor" stroke="none" opacity=".8"/>
+    </svg>
+    <b>Skriptorium</b>
+  </div>
+  <div class="s-search">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="10.5" cy="10.5" r="6.5"/><line x1="20" y1="20" x2="15.3" y2="15.3"/></svg>
+    <input type="text" id="q" placeholder="Hledat i v textu…" aria-label="Hledat v knihovně a textu knih">
+  </div>
+  <div class="s-sort">
+    <select id="sortSel" aria-label="Řazení knihovny">
+      <option value="updated">Naposledy upravené</option>
+      <option value="title">Podle názvu</option>
+      <option value="created">Nejnovější</option>
+    </select>
+  </div>
+  <div class="s-list" id="bookList"></div>
+  <div class="s-foot">
+    <button class="btn primary" id="btnNewBook">＋ Nová kniha</button>
+    <button class="btn ghost small" id="btnTrash" title="Koš">🗑</button>
+  </div>
+</aside>
+
+<main>
+  <div id="topbar">
+    <button class="ibtn" id="btnSide" title="Skrýt / zobrazit knihovnu (Ctrl+\)" aria-label="Panel knih">
+      <svg class="i" viewBox="0 0 24 24"><line x1="4" y1="6" x2="20" y2="6"/><line x1="4" y1="12" x2="20" y2="12"/><line x1="4" y1="18" x2="20" y2="18"/></svg>
+    </button>
+    <nav id="vtabs">
+      <button class="vtab on" data-view="write">Psaní</button>
+      <button class="vtab" data-view="book">Kniha</button>
+      <button class="vtab" data-view="cover">Obálka</button>
+      <button class="vtab" data-view="notes">Poznámky</button>
+      <button class="vtab" data-view="stats">Statistiky</button>
+      <button class="vtab" data-view="export">Export</button>
+    </nav>
+    <span class="grow"></span>
+    <span class="save-dot" id="saveDot" title="Vše uloženo"></span>
+    <button class="ibtn" id="btnTheme" title="Světlý / tmavý režim" aria-label="Přepnout téma">
+      <svg class="i" viewBox="0 0 24 24"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4 6.8 6.8 0 0 0 20 14.5Z"/></svg>
+    </button>
+    <button class="ibtn" id="btnFocus" title="Režim soustředění (Esc ukončí)" aria-label="Soustředění">
+      <svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8.5"/><circle cx="12" cy="12" r="3"/></svg>
+    </button>
+    <button class="ibtn" id="btnHelp" title="Nápověda (?)" aria-label="Nápověda">
+      <svg class="i" viewBox="0 0 24 24"><circle cx="12" cy="12" r="9"/><path d="M9.4 9.4a2.7 2.7 0 0 1 5.2 1c0 1.7-2.5 2-2.5 3.7"/><line x1="12" y1="17" x2="12" y2="17.1"/></svg>
+    </button>
+  </div>
+
+  <div id="empty">
+    <svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M4 25V8c0-1.7 1.3-3 3-3h6c1.6 0 3 1.4 3 3v17"/><path d="M28 25V8c0-1.7-1.3-3-3-3h-6c-1.6 0-3 1.4-3 3"/><path d="M2 25h28"/>
+    </svg>
+    <div>Zatím tu není žádná kniha.<br>Založte první a začněte psát.</div>
+    <button class="btn primary" id="btnNewBook2">＋ Založit knihu</button>
+  </div>
+
+  <div id="views">
+    <!-- PSANÍ -->
+    <section class="view on" data-view="write">
+      <div class="chtwrap">
+        <input type="text" id="chTitle" placeholder="Název kapitoly" aria-label="Název kapitoly">
+        <button class="ibtn" id="btnHist" title="Historie verzí kapitoly">🕘</button>
+      </div>
+      <div id="toolbar">
+        <button data-cmd="undo" title="Zpět (Ctrl+Z)">↶</button>
+        <button data-cmd="redo" title="Znovu (Ctrl+Y)">↷</button>
+        <span class="sep"></span>
+        <select id="tBlock" title="Styl odstavce">
+          <option value="p">Odstavec</option><option value="h1">Nadpis 1</option>
+          <option value="h2">Nadpis 2</option><option value="h3">Nadpis 3</option>
+          <option value="blockquote">Citace</option><option value="pre">Kód</option>
+        </select>
+        <select id="tFont" title="Písmo"></select>
+        <select id="tSize" title="Velikost (pt)">
+          <option value="">Velikost</option>
+          <option>8</option><option>9</option><option>10</option><option>11</option>
+          <option>12</option><option>14</option><option>16</option><option>18</option>
+          <option>20</option><option>24</option><option>28</option><option>32</option><option>36</option>
+        </select>
+        <span class="sep"></span>
+        <button data-cmd="bold" title="Tučně (Ctrl+B)"><b>B</b></button>
+        <button data-cmd="italic" title="Kurzíva (Ctrl+I)"><i>I</i></button>
+        <button data-cmd="underline" title="Podtržení (Ctrl+U)"><u>U</u></button>
+        <button data-cmd="strikeThrough" title="Přeškrtnutí"><s>S</s></button>
+        <span class="sep"></span>
+        <button data-cmd="justifyLeft" title="Zarovnat vlevo">⬅</button>
+        <button data-cmd="justifyCenter" title="Na střed">↔</button>
+        <button data-cmd="justifyRight" title="Zarovnat vpravo">➡</button>
+        <button data-cmd="justifyFull" title="Do bloku">☰</button>
+        <span class="sep"></span>
+        <button data-cmd="outdent" title="Zmenšit odsazení">⇤</button>
+        <button data-cmd="indent" title="Zvětšit odsazení">⇥</button>
+        <span class="sep"></span>
+        <button data-cmd="insertUnorderedList" title="Odrážky">•–</button>
+        <button data-cmd="insertOrderedList" title="Číslovaný seznam">1.</button>
+        <span class="sep"></span>
+        <input type="color" id="tColor" title="Barva písma" value="#26221a">
+        <input type="color" id="tBg" title="Barva zvýraznění" value="#fff3a3">
+        <span class="sep"></span>
+        <button id="tLink" title="Odkaz (Ctrl+K)">🔗</button>
+        <button id="tImg" title="Vložit obrázek (s ořezem)">🖼</button>
+        <button id="tHr" title="Oddělovač">—</button>
+        <button id="tSpell" title="Kontrola pravopisu zap. / vyp." style="font-size:12px;text-decoration:underline wavy var(--danger)">abc</button>
+        <button id="tTypo" title="Auto-typografie: „uvozovky“, pomlčky, trojtečka">„“</button>
+        <button id="tFind" title="Najít a nahradit (Ctrl+H)">🔍</button>
+        <span class="sep"></span>
+        <button data-cmd="removeFormat" title="Smazat formátování">⌫</button>
+      </div>
+      <div id="editor" contenteditable="true"></div>
+      <div id="wfoot">
+        <button class="btn ghost small" id="chPrev">‹ Předchozí</button>
+        <span id="winfo"></span>
+        <button class="btn ghost small" id="chNext">Další ›</button>
+      </div>
+    </section>
+
+    <!-- KNIHA -->
+    <section class="view" data-view="book">
+      <h2>O knize</h2>
+      <div class="frow">
+        <div class="field"><label class="f">Název</label><input type="text" id="bTitle"></div>
+        <div class="field"><label class="f">Autor</label><input type="text" id="bAuthor"></div>
+      </div>
+      <div class="field"><label class="f">Podtitul</label><input type="text" id="bSubtitle"></div>
+      <div class="frow">
+        <div class="field"><label class="f">Žánr</label><input type="text" id="bGenre" placeholder="román, povídky…"></div>
+        <div class="field"><label class="f">Jazyk</label>
+          <select id="bLang"><option value="cs">čeština</option><option value="sk">slovenština</option>
+          <option value="en">angličtina</option><option value="de">němčina</option><option value="pl">polština</option></select></div>
+        <div class="field"><label class="f">Cíl (slov)</label><input type="number" id="bGoal" min="0" step="1000" placeholder="např. 60000"></div>
+      </div>
+      <div class="field"><label class="f">Anotace (zadní strana)</label><textarea id="bDesc" rows="5"></textarea></div>
+      <div class="field" style="max-width:260px"><label class="f">Číslování stránek (náhled / PDF)</label>
+        <select id="bPage">
+          <option value="none">Vypnuto</option>
+          <option value="center">Dole uprostřed</option>
+          <option value="right">Dole vpravo</option>
+        </select>
+      </div>
+      <h2 style="margin-top:28px">Písma</h2>
+      <div class="field"><label class="f">Vlastní fonty (.ttf, .otf, .woff, .woff2 — max 3 MB)</label>
+        <span class="filebtn btn">Nahrát font<input type="file" id="fUp" accept=".ttf,.otf,.woff,.woff2" multiple></span>
+        <div id="fchips" style="margin-top:10px"></div>
+      </div>
+      <div class="frow">
+        <div class="field"><label class="f">Výchozí font knihy</label><select id="defFont"></select></div>
+        <div class="field"><label class="f">Font názvů kapitol</label><select id="chtFont"></select></div>
+        <div class="field"><label class="f">Font čísel stránek</label><select id="pnFont"></select></div>
+      </div>
+      <p class="hint" style="font-size:12.5px;color:var(--ink2)">Výchozí font se použije v editoru, na obálkách a v exportech. Vlastní fonty se přibalí i do EPUB.</p>
+      <p class="rt" style="font-size:12.5px;color:var(--ink2)" id="bMeta"></p>
+    </section>
+
+    <!-- OBÁLKA -->
+    <section class="view" data-view="cover">
+      <div class="covblock">
+        <h3>Přední strana</h3>
+        <div class="cwrap">
+          <div class="cprev-col">
+            <div class="cpv" id="cprev">
+              <div class="dim" id="cdim"></div>
+              <div class="frame" id="cframe"></div>
+              <div class="txt" id="ctxt">
+                <div class="ct" id="cvt"></div>
+                <div class="cs" id="cvs"></div>
+                <div class="ca" id="cva"></div>
+              </div>
+            </div>
+            <p class="hint" style="font-size:12px;color:var(--ink2);max-width:265px">Text lze v náhledu chytit myší a přetáhnout kamkoli.</p>
+          </div>
+          <div class="cctrl">
+            <div class="frow">
+              <div class="field"><label class="f">Barva shora</label><input type="color" id="cBg1" value="#39558c"></div>
+              <div class="field"><label class="f">Barva dole</label><input type="color" id="cBg2" value="#101c33"></div>
+              <div class="field"><label class="f">Barva textu</label><input type="color" id="cColor" value="#f2ead8"></div>
+            </div>
+            <div class="field"><label class="f">Úhel přechodu (<span id="cAngleV">160</span>°)</label>
+              <input type="range" id="cAngle" min="0" max="360" value="160"></div>
+            <div class="field"><label class="f">Obrázek na pozadí</label>
+              <span class="filebtn btn">Nahrát obrázek<input type="file" id="cImg" accept="image/*"></span>
+              <button class="btn danger small" id="cImgDel" style="margin-left:8px">Odebrat</button>
+            </div>
+            <div class="field"><label class="f">Ztmavení obrázku (<span id="cDimV">35</span> %)</label>
+              <input type="range" id="cDim" min="0" max="85" value="35"></div>
+            <div class="frow">
+              <div class="field"><label class="f">Písmo</label><select id="cFont"></select></div>
+              <div class="field"><label class="f">Umístění textu</label>
+                <select id="cVpos"><option value="top">Nahoře</option><option value="center">Uprostřed</option><option value="bottom">Dole</option></select></div>
+              <div class="field"><label class="f">Zarovnání</label>
+                <select id="cAlign"><option value="left">Vlevo</option><option value="center">Na střed</option><option value="right">Vpravo</option></select></div>
+            </div>
+            <div class="field"><label class="f">Otočení textu (<span id="cRotV">0</span>°)</label>
+              <input type="range" id="cRot" min="-180" max="180" value="0"></div>
+            <div class="frow">
+              <div class="field"><label class="f">Rámeček — styl</label><select id="cBStyle"></select></div>
+              <div class="field"><label class="f">Barva rámečku</label><input type="color" id="cBColor" value="#f2ead8"></div>
+            </div>
+            <div class="frow">
+              <div class="field"><label class="f">Tloušťka (<span id="cBWv">3</span> px)</label>
+                <input type="range" id="cBW" min="0" max="24" value="3"></div>
+              <div class="field"><label class="f">Zaoblení (<span id="cBRv">2</span> px)</label>
+                <input type="range" id="cBR" min="0" max="60" value="2"></div>
+              <div class="field"><label class="f">Odsazení (<span id="cBIv">14</span> px)</label>
+                <input type="range" id="cBI" min="0" max="60" value="14"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="covblock">
+        <h3>Zadní strana</h3>
+        <div class="cwrap">
+          <div class="cprev-col">
+            <div class="cpv" id="bprev">
+              <div class="dim" id="bdim"></div>
+              <div class="frame" id="bframe"></div>
+              <div class="txt" id="btxt">
+                <div class="cb" id="bcb"></div>
+                <div class="isbn" id="bisbn"></div>
+              </div>
+            </div>
+          </div>
+          <div class="cctrl">
+            <div class="field"><label class="f">Text zadní strany (výchozí je anotace)</label>
+              <textarea id="kText" rows="5" placeholder="Necháte-li prázdné, použije se anotace z karty Kniha."></textarea></div>
+            <div class="frow">
+              <div class="field"><label class="f">ISBN / kód</label><input type="text" id="kIsbn"></div>
+              <div class="field"><label class="f">Barva pozadí</label><input type="color" id="kBg" value="#101c33"></div>
+              <div class="field"><label class="f">Barva textu</label><input type="color" id="kColor" value="#f2ead8"></div>
+            </div>
+            <div class="field"><label class="f">Obrázek na pozadí</label>
+              <span class="filebtn btn">Nahrát obrázek<input type="file" id="kImg" accept="image/*"></span>
+              <button class="btn danger small" id="kImgDel" style="margin-left:8px">Odebrat</button>
+            </div>
+            <div class="field"><label class="f">Ztmavení obrázku (<span id="kDimV">35</span> %)</label>
+              <input type="range" id="kDim" min="0" max="85" value="35"></div>
+            <div class="frow">
+              <div class="field"><label class="f">Písmo</label><select id="kFont"></select></div>
+              <div class="field"><label class="f">Umístění textu</label>
+                <select id="kVpos"><option value="top">Nahoře</option><option value="center">Uprostřed</option><option value="bottom">Dole</option></select></div>
+              <div class="field"><label class="f">Zarovnání</label>
+                <select id="kAlign"><option value="left">Vlevo</option><option value="center">Na střed</option><option value="right">Vpravo</option></select></div>
+            </div>
+            <div class="field"><label class="f">Otočení textu (<span id="kRotV">0</span>°)</label>
+              <input type="range" id="kRot" min="-180" max="180" value="0"></div>
+            <div class="frow">
+              <div class="field"><label class="f">Rámeček — styl</label><select id="kBStyle"></select></div>
+              <div class="field"><label class="f">Barva rámečku</label><input type="color" id="kBColor" value="#f2ead8"></div>
+            </div>
+            <div class="frow">
+              <div class="field"><label class="f">Tloušťka (<span id="kBWv">3</span> px)</label>
+                <input type="range" id="kBW" min="0" max="24" value="3"></div>
+              <div class="field"><label class="f">Zaoblení (<span id="kBRv">2</span> px)</label>
+                <input type="range" id="kBR" min="0" max="60" value="2"></div>
+              <div class="field"><label class="f">Odsazení (<span id="kBIv">14</span> px)</label>
+                <input type="range" id="kBI" min="0" max="60" value="14"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- POZNÁMKY -->
+    <section class="view" data-view="notes">
+      <h2>Poznámky ke knize</h2>
+      <p style="font-size:12.5px;color:var(--ink2);margin:-8px 0 12px">Synopse, postavy, nápady, rešerše — do žádného exportu se nedostanou.</p>
+      <textarea id="bNotes" rows="22" style="font-size:15px;line-height:1.65" placeholder="Pište si sem cokoli k příběhu…"></textarea>
+    </section>
+
+    <!-- STATISTIKY -->
+    <section class="view" data-view="stats">
+      <h2>Statistiky</h2>
+      <div class="statwrap">
+        <div class="ringbox" id="ringbox">
+          <svg viewBox="0 0 120 120">
+            <circle class="rb" cx="60" cy="60" r="52"/>
+            <circle class="rf" id="ringF" cx="60" cy="60" r="52" stroke-dasharray="326.7" stroke-dashoffset="326.7"/>
+          </svg>
+          <div class="rt" id="ringT">bez cíle</div>
+        </div>
+        <div class="tiles" id="tiles"></div>
+      </div>
+      <h2 style="margin-top:24px">Psaní za posledních 14 dní</h2>
+      <div class="field" style="max-width:200px"><label class="f">Denní cíl slov</label>
+        <input type="number" id="dayGoal" min="0" step="100" placeholder="např. 500"></div>
+      <div id="daysChart" style="max-width:620px"></div>
+      <h2 style="margin-top:24px">Nejčastější slova</h2>
+      <div id="topWords" style="max-width:620px"></div>
+      <h2 style="margin-top:24px">Kapitoly</h2>
+      <table class="cht">
+        <thead><tr><th>#</th><th>Kapitola</th><th class="r">Slova</th><th class="r">Znaky</th><th class="r">Čtení</th><th>Podíl</th></tr></thead>
+        <tbody id="chtBody"></tbody>
+      </table>
+    </section>
+
+    <!-- EXPORT -->
+    <section class="view" data-view="export">
+      <h2>Export a záloha</h2>
+      <div class="field" style="max-width:280px"><label class="f">Vzhled knihy (náhled, HTML, EPUB)</label>
+        <select id="exTheme"></select></div>
+      <div class="excards">
+        <div class="exc"><b>📖 Náhled & tisk</b><p>Otevře knihu jako elegantní webovou stránku. Přes tisk prohlížeče lze uložit do PDF.</p>
+          <button class="btn" id="exPrev">Otevřít náhled</button>
+          <button class="btn" id="exPrint" style="margin-top:6px">Tisk / PDF</button></div>
+        <div class="exc"><b>🌐 HTML soubor</b><p>Samostatná webová stránka s obálkou, obsahem a celým textem. Otevře se kdekoli.</p>
+          <button class="btn" id="exHtml">Stáhnout .html</button></div>
+        <div class="exc"><b>📚 EPUB</b><p>E-kniha pro čtečky (Kindle přes převod, PocketBook, mobily). Včetně obrázků i vlastních fontů.</p>
+          <button class="btn" id="exEpub">Stáhnout .epub</button></div>
+        <div class="exc"><b>📄 ODT</b><p>Textový dokument pro LibreOffice Writer či Word — k finální sazbě a korekturám.</p>
+          <button class="btn" id="exOdt">Stáhnout .odt</button></div>
+        <div class="exc"><b>🟦 DOCX (Word)</b><p>Formát Microsoft Word s formátováním textu. Obrázky zachová export do ODT.</p>
+          <button class="btn" id="exDocx">Stáhnout .docx</button></div>
+        <div class="exc" id="fbCard"><b>🔗 Živá záloha do souboru</b><p id="fbStat">Nepropojen — data jsou jen v prohlížeči.</p>
+          <button class="btn primary" id="fbPickBtn">Vybrat soubor</button>
+          <button class="btn" id="fbNow" style="margin-top:6px;display:none">Zapsat teď</button>
+          <button class="btn danger" id="fbOffBtn" style="margin-top:6px;display:none">Odpojit</button></div>
+        <div class="exc"><b>📝 Markdown / text</b><p>Prostý text pro další zpracování — sazbu, blog, korektury.</p>
+          <button class="btn" id="exMd">Stáhnout .md</button>
+          <button class="btn" id="exTxt" style="margin-top:6px">Stáhnout .txt</button></div>
+        <div class="exc"><b>💾 Záloha JSON</b><p>Kompletní data pro přenos či zálohu. Import přijme i zálohy z aplikace Tvůrce knih.</p>
+          <button class="btn" id="exJson">Tato kniha</button>
+          <button class="btn" id="exJsonAll" style="margin-top:6px">Celá knihovna</button></div>
+        <div class="exc"><b>⬆ Import</b><p>Načte zálohu JSON — knihu či celou knihovnu.</p>
+          <span class="filebtn btn primary">Vybrat soubor<input type="file" id="impFile" accept=".json,application/json"></span></div>
+      </div>
+    </section>
+  </div>
+</main>
+</div>
+
+<button class="btn" id="focusOff">✓ Ukončit soustředění (Esc)</button>
+
+<dialog id="dlgHelp">
+  <div class="dh"><b>Nápověda a zkratky</b><span class="grow"></span><button class="ibtn" id="dlgHelpX">✕</button></div>
+  <div class="db">
+    <div class="krow"><span>Uložit ihned (jinak průběžně samo)</span><span><kbd>Ctrl</kbd>+<kbd>S</kbd></span></div>
+    <div class="krow"><span>Tučně / kurzíva / podtržení</span><span><kbd>Ctrl</kbd>+<kbd>B</kbd> <kbd>I</kbd> <kbd>U</kbd></span></div>
+    <div class="krow"><span>Vložit odkaz</span><span><kbd>Ctrl</kbd>+<kbd>K</kbd></span></div>
+    <div class="krow"><span>Najít a nahradit</span><span><kbd>Ctrl</kbd>+<kbd>H</kbd></span></div>
+    <div class="krow"><span>Rychlé formátování na začátku řádku</span><span><kbd># </kbd> <kbd>## </kbd> <kbd>&gt; </kbd> <kbd>- </kbd> <kbd>1. </kbd></span></div>
+    <div class="krow"><span>Auto-typografie („uvozovky“, — pomlčka, … trojtečka)</span><span>tlačítko „“ v liště</span></div>
+    <div class="krow"><span>Historie verzí kapitoly</span><span>tlačítko 🕘 u názvu kapitoly</span></div>
+    <div class="krow"><span>Zpět / znovu</span><span><kbd>Ctrl</kbd>+<kbd>Z</kbd> / <kbd>Y</kbd></span></div>
+    <div class="krow"><span>Skrýt / zobrazit knihovnu</span><span><kbd>Ctrl</kbd>+<kbd>\</kbd></span></div>
+    <div class="krow"><span>Nápověda</span><span><kbd>?</kbd></span></div>
+    <div class="krow"><span>Konec režimu soustředění</span><span><kbd>Esc</kbd></span></div>
+    <div class="krow"><span>Obrázek do textu (s ořezem)</span><span>vložit ze schránky či přetáhnout</span></div>
+    <div class="krow"><span>Ořez, velikost, zarovnání, smazání obrázku</span><span>dvojklik na obrázek</span></div>
+    <div class="krow"><span>Přesun kapitoly</span><span>přetáhnout v seznamu</span></div>
+    <div class="krow"><span>Posunout text na obálce</span><span>chytit a táhnout v náhledu</span></div>
+    <div class="krow"><span>Vlastní fonty knihy</span><span>karta Kniha → Písma</span></div>
+  </div>
+</dialog>
+
+<dialog id="dlgTrash">
+  <div class="dh"><b>Koš</b><span class="grow"></span><button class="ibtn" id="dlgTrashX">✕</button></div>
+  <div class="db" id="trashList"></div>
+</dialog>
+
+<dialog id="dlgImg">
+  <div class="dh"><b>Obrázek</b><span class="grow"></span><button class="ibtn" id="dlgImgX">✕</button></div>
+  <div class="db">
+    <div class="cropwrap" id="ceWrap">
+      <img id="ceImg" alt="">
+      <div class="cropbox" id="ceBox"></div>
+    </div>
+    <p class="hint" style="font-size:12.5px;color:var(--ink2)">Tažením myší v náhledu označte oblast k oříznutí. „Zrušit ořez“ vrátí celý obrázek.</p>
+    <div class="frow">
+      <div class="field"><label class="f">Šířka (<span id="ceWv">100</span> % textu)</label>
+        <input type="range" id="ceW" min="10" max="100" value="100"></div>
+      <div class="field" style="max-width:200px"><label class="f">Zarovnání</label>
+        <select id="ceAlign">
+          <option value="none">Bez obtékání</option>
+          <option value="left">Vlevo (obtékat)</option>
+          <option value="right">Vpravo (obtékat)</option>
+          <option value="center">Na střed</option>
+        </select></div>
+    </div>
+    <div class="imgacts">
+      <button class="btn danger" id="ceDel">Smazat obrázek</button>
+      <div class="grp">
+        <button class="btn" id="ceReset">Zrušit ořez</button>
+        <button class="btn primary" id="ceOk">Použít</button>
+      </div>
+    </div>
+  </div>
+</dialog>
+
+<dialog id="dlgFind">
+  <div class="dh"><b>Najít a nahradit</b><span class="grow"></span><button class="ibtn" id="dlgFindX">✕</button></div>
+  <div class="db">
+    <div class="field"><label class="f">Najít</label><input type="text" id="fnFind"></div>
+    <div class="field"><label class="f">Nahradit čím</label><input type="text" id="fnRepl"></div>
+    <div class="frow" style="align-items:center">
+      <label style="display:flex;gap:7px;align-items:center;font-size:13.5px;flex:1">
+        <input type="checkbox" id="fnCase" style="width:auto"> rozlišovat velká/malá</label>
+      <select id="fnScope" style="max-width:190px">
+        <option value="book" selected>celá kniha</option>
+        <option value="ch">aktuální kapitola</option>
+      </select>
+    </div>
+    <div class="imgacts">
+      <span id="fnInfo" style="font-size:13px;color:var(--ink2);align-self:center"></span>
+      <div class="grp">
+        <button class="btn" id="fnCount">Spočítat</button>
+        <button class="btn primary" id="fnGo">Nahradit vše</button>
+      </div>
+    </div>
+    <p style="font-size:12px;color:var(--ink2);margin:10px 0 0">Před nahrazením se automaticky uloží verze kapitol (🕘), takže se lze vrátit.</p>
+  </div>
+</dialog>
+
+<dialog id="dlgHist">
+  <div class="dh"><b>Historie verzí kapitoly</b><span class="grow"></span><button class="ibtn" id="dlgHistX">✕</button></div>
+  <div class="db" id="histList"></div>
+</dialog>
+
+<div id="toast" role="status"></div>
+
+<script>
+"use strict";
+/* ============================================================
+   Pomocníci
+   ============================================================ */
+const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const esc=s=>(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const fmt=n=>Number(n).toLocaleString("cs");
+const plain=h=>{const d=document.createElement("div");d.innerHTML=h||"";return d.textContent||"";};
+const words=h=>{const t=plain(h).trim();return t?t.split(/\s+/).length:0;};
+const chars=h=>plain(h).replace(/\s+/g," ").trim().length;
+const bookWords=b=>b.chapters.reduce((s,c)=>s+words(c.html),0);
+const readT=w=>{const m=w/200;return m<1?"<1 min":m<60?Math.round(m)+" min":Math.floor(m/60)+" h "+Math.round(m%60)+" min";};
+const today=()=>new Date().toISOString().slice(0,10);
+const safeName=t=>(t||"kniha").normalize("NFD").replace(/[̀-ͯ]/g,"").replace(/[^\w-]+/g,"_").slice(0,60);
+let toastT;function toast(m,ms=2000){const t=$("#toast");t.textContent=m;t.classList.add("show");clearTimeout(toastT);toastT=setTimeout(()=>t.classList.remove("show"),ms);}
+
+/* Odstraní z HTML potenciálně nebezpečné prvky – používá se při importu. */
+function sanitize(html){
+  const d=document.createElement("div");d.innerHTML=html||"";
+  d.querySelectorAll("script,style,iframe,object,embed,link,meta,base,form").forEach(e=>e.remove());
+  d.querySelectorAll("*").forEach(el=>[...el.attributes].forEach(a=>{
+    const n=a.name.toLowerCase();
+    if(n.startsWith("on"))el.removeAttribute(a.name);
+    else if((n==="href"||n==="src")&&/^\s*javascript:/i.test(a.value))el.removeAttribute(a.name);
+  }));
+  return d.innerHTML;
+}
+
+/* ============================================================
+   Úložiště: IndexedDB, záložně localStorage
+   ============================================================ */
+const KEY="skriptorium.v1";
+let idb=null;
+const idbReady=new Promise(res=>{
+  try{
+    const r=indexedDB.open("skriptoriumDB",1);
+    r.onupgradeneeded=()=>r.result.createObjectStore("kv");
+    r.onsuccess=()=>{idb=r.result;res();};
+    r.onerror=()=>res();
+  }catch(e){res();}
+});
+const lsGet=k=>{try{return JSON.parse(localStorage.getItem(k));}catch(e){return null;}};
+const lsSet=(k,v)=>{try{localStorage.setItem(k,JSON.stringify(v));return true;}catch(e){return false;}};
+function dbGet(k){return new Promise(res=>{
+  if(!idb)return res(lsGet(k));
+  try{const t=idb.transaction("kv").objectStore("kv").get(k);
+    t.onsuccess=()=>res(t.result??lsGet(k));t.onerror=()=>res(lsGet(k));}
+  catch(e){res(lsGet(k));}});}
+function dbSet(k,v){return new Promise(res=>{
+  if(!idb){lsSet(k,v);return res();}
+  try{const t=idb.transaction("kv","readwrite");t.objectStore("kv").put(v,k);
+    t.oncomplete=()=>res();t.onerror=()=>{lsSet(k,v);res();};}
+  catch(e){lsSet(k,v);res();}});}
+
+/* ============================================================
+   Datový model
+   ============================================================ */
+const FONTS=[["Georgia, serif","Georgia"],["'Palatino Linotype', serif","Palatino"],
+  ["'Times New Roman', serif","Times"],["Garamond, serif","Garamond"],
+  ["Arial, sans-serif","Arial"],["'Courier New', monospace","Courier"]];
+
+/* Vzhledové šablony pro náhled / HTML / EPUB export. */
+const EXTHEMES={
+  classic:{label:"Klasická kniha",
+    html:`.chap p{text-align:justify;text-indent:1.35em;margin:0 0 .15em}
+.chap h2{text-align:center;border-bottom:none;letter-spacing:.06em}
+.toc h2{text-align:center;border-bottom:none}`,
+    epub:`p{text-align:justify;text-indent:1.35em;margin:0 0 .15em}
+h2{text-align:center;border-bottom:none;letter-spacing:.06em}`},
+  modern:{label:"Moderní",
+    html:`.chap{font-family:'Helvetica Neue',Arial,sans-serif}
+.chap p{text-align:left;margin:0 0 .95em}
+.chap h2{border-bottom:none;border-left:6px solid #999;padding:0 0 0 14px;font-family:'Helvetica Neue',Arial,sans-serif}`,
+    epub:`body{font-family:sans-serif}
+p{text-align:left;margin:0 0 .95em}
+h2{border-bottom:none;border-left:6px solid #999;padding-left:.5em}`},
+  script:{label:"Rukopis",
+    html:`.page{background:#fbf6e6}
+.chap{font-family:'Segoe Script','Bradley Hand','Comic Sans MS',cursive;line-height:2.05;font-size:16.5px}
+.chap h2{border-bottom:none;font-family:inherit}`,
+    epub:`body{line-height:2}
+h2{border-bottom:none}`}
+};
+
+let S={books:[],cur:null,theme:null,daily:{},trash:[]};
+let lastWords=null;   // pro denní počítadlo
+
+function newBook(){
+  const ch={id:uid(),title:"Kapitola 1",html:"<p>Příběh začíná…</p>"};
+  return {id:uid(),title:"Nová kniha",author:"",subtitle:"",genre:"",lang:"cs",desc:"",goal:0,
+    pageNum:"none",fonts:[],
+    defaultFont:"Georgia, serif",chapTitleFont:"Georgia, serif",pageNumFont:"Georgia, serif",
+    created:Date.now(),updated:Date.now(),
+    cover:{bg1:"#39558c",bg2:"#101c33",angle:160,img:null,dim:35,color:"#f2ead8",
+      font:"Georgia, serif",align:"center",posX:50,posY:50,rotate:0,
+      bStyle:"none",bColor:"#f2ead8",bWidth:3,bRadius:2,bInset:14},
+    back:{text:"",isbn:"",bg:"#101c33",color:"#f2ead8",font:"Georgia, serif",img:null,dim:35,
+      align:"left",posX:50,posY:50,rotate:0,
+      bStyle:"none",bColor:"#f2ead8",bWidth:3,bRadius:2,bInset:14},
+    chapters:[ch],curCh:ch.id};
+}
+/* Doplní chybějící pole. Rozumí i starším verzím Skriptoria a zálohám
+   z aplikace „Tvůrce knih“ (front/back/halign/borderStyle/wordGoal…). */
+function fixBook(b){
+  b.id=b.id||uid();
+  if(!b.chapters||!b.chapters.length)
+    b.chapters=[{id:uid(),title:"Kapitola 1",html:b.content||"<p></p>"}];
+  b.chapters.forEach(c=>{c.id=c.id||uid();c.title=c.title||"Kapitola";
+    if(c.html===undefined)c.html=c.content||"";delete c.content;
+    if(!Array.isArray(c.hist))c.hist=[];});
+  b.notes=b.notes||"";
+  b.exTheme=EXTHEMES[b.exTheme]?b.exTheme:"classic";
+  b.pin=!!b.pin;
+  if(!b.curCh||!b.chapters.some(c=>c.id===b.curCh))
+    b.curCh=(b.currentChapter&&b.chapters.some(c=>c.id===b.currentChapter))?b.currentChapter:b.chapters[0].id;
+  delete b.currentChapter;
+  b.title=b.title||"Bez názvu";b.author=b.author||"";b.subtitle=b.subtitle||"";
+  b.genre=b.genre||"";b.lang=b.lang||"cs";b.desc=b.desc??"";
+  b.goal=b.goal??b.wordGoal??0;delete b.wordGoal;
+  b.pageNum=["center","right"].includes(b.pageNum)?b.pageNum:"none";
+  b.created=b.created||Date.now();b.updated=b.updated||b.created;
+  b.fonts=Array.isArray(b.fonts)?b.fonts.filter(f=>f&&f.name&&f.data):[];
+  const legacyPos={top:18,center:50,bottom:82,"flex-start":18,"flex-end":82};
+  const alignOf=(...v)=>v.find(x=>["left","center","right"].includes(x));
+  const fc=b.cover||b.front||{};
+  b.cover={
+    bg1:fc.bg1||fc.bg||"#39558c",bg2:fc.bg2||"#101c33",angle:fc.angle??160,
+    img:fc.img??null,dim:fc.dim??35,color:fc.color||"#f2ead8",font:fc.font||"Georgia, serif",
+    align:alignOf(fc.align,fc.halign)||"center",
+    rotate:fc.rotate??0,posX:fc.posX??50,posY:fc.posY??legacyPos[fc.vpos]??50,
+    bStyle:fc.bStyle||fc.borderStyle||"none",bColor:fc.bColor||fc.borderColor||"#f2ead8",
+    bWidth:fc.bWidth??fc.borderWidth??3,bRadius:fc.bRadius??fc.borderRadius??2,bInset:fc.bInset??fc.borderInset??14};
+  const bk=b.back||{};
+  b.back={
+    text:bk.text||"",isbn:bk.isbn||"",
+    bg:bk.bg||"#101c33",color:bk.color||"#f2ead8",font:bk.font||"Georgia, serif",
+    img:bk.img??null,dim:bk.dim??35,
+    align:alignOf(bk.align,bk.halign)||"left",
+    rotate:bk.rotate??0,posX:bk.posX??50,posY:bk.posY??legacyPos[bk.vpos]??50,
+    bStyle:bk.bStyle||bk.borderStyle||"none",bColor:bk.bColor||bk.borderColor||"#f2ead8",
+    bWidth:bk.bWidth??bk.borderWidth??3,bRadius:bk.bRadius??bk.borderRadius??2,bInset:bk.bInset??bk.borderInset??14};
+  delete b.front;
+  b.defaultFont=b.defaultFont||b.sampleFont||b.cover.font||"Georgia, serif";delete b.sampleFont;
+  b.chapTitleFont=b.chapTitleFont||b.defaultFont;
+  b.pageNumFont=b.pageNumFont||b.defaultFont;
+  return b;
+}
+const cur=()=>S.books.find(b=>b.id===S.cur);
+const curCh=()=>{const b=cur();return b?(b.chapters.find(c=>c.id===b.curCh)||b.chapters[0]):null;};
+
+/* ============================================================
+   Vlastní fonty knihy (ukládané jako data URI přímo v knize)
+   ============================================================ */
+const fontFam=f=>"uf-"+f.name.replace(/[^a-z0-9]/gi,"_");
+const loadedFonts=new Set();
+function applyBookFonts(b){
+  if(!b)return;
+  (b.fonts||[]).forEach(f=>{
+    const fam=fontFam(f);
+    if(loadedFonts.has(b.id+fam))return;
+    try{
+      const ff=new FontFace(fam,`url(${f.data})`);
+      ff.load().then(x=>{document.fonts.add(x);renderCover();}).catch(()=>{});
+      loadedFonts.add(b.id+fam);
+    }catch(e){}
+  });
+}
+function fontLabel(b,val){
+  const d=FONTS.find(([v])=>v===val);if(d)return d[1];
+  const f=(b.fonts||[]).find(f=>`'${fontFam(f)}'`===val);
+  return f?f.name:(val||"—");
+}
+function fontOptions(b,selected){
+  let h=FONTS.map(([v,l])=>`<option value="${esc(v)}"${v===selected?" selected":""}>${l}</option>`).join("");
+  if(b.fonts&&b.fonts.length){
+    h+='<optgroup label="Vlastní fonty">'+b.fonts.map(f=>{
+      const v=`'${fontFam(f)}'`;
+      return `<option value="${esc(v)}"${v===selected?" selected":""}>${esc(f.name)}</option>`;
+    }).join("")+"</optgroup>";
+  }
+  return h;
+}
+function refreshFontUI(){
+  const b=cur();if(!b)return;
+  $("#cFont").innerHTML=fontOptions(b,b.cover.font);
+  $("#kFont").innerHTML=fontOptions(b,b.back.font);
+  $("#defFont").innerHTML=fontOptions(b,b.defaultFont);
+  $("#chtFont").innerHTML=fontOptions(b,b.chapTitleFont);
+  $("#pnFont").innerHTML=fontOptions(b,b.pageNumFont);
+  $("#tFont").innerHTML=`<option value="">Výchozí (${esc(fontLabel(b,b.defaultFont))})</option>`+fontOptions(b,"");
+  $("#fchips").innerHTML=b.fonts.length
+    ?b.fonts.map(f=>`<span class="fchip" style="font-family:'${fontFam(f)}'">${esc(f.name)}<button data-df="${esc(f.name)}" title="Odebrat font">✕</button></span>`).join("")
+    :'<span style="font-size:12.5px;color:var(--ink2)">Zatím žádný vlastní font.</span>';
+}
+function applyEditorFont(b){$("#editor").style.fontFamily=(b&&b.defaultFont)||"Georgia, serif";}
+
+/* ============================================================
+   Ukládání
+   ============================================================ */
+let saveT;
+function status(st){const d=$("#saveDot");d.classList.toggle("busy",st==="saving");
+  d.title=st==="saving"?"Ukládám…":"Vše uloženo";}
+function save(){status("saving");clearTimeout(saveT);saveT=setTimeout(saveNow,500);}
+function saveNow(){flush();dbSet(KEY,S).then(()=>status("saved"));if(typeof fbSchedule==="function")fbSchedule();}
+function touch(){const b=cur();if(b)b.updated=Date.now();save();}
+/* Editor si pamatuje, KTERÉ kapitole jeho obsah patří (edCh) – flush tak
+   nikdy nezapíše obsah do cizí kapitoly, ani když se mezitím přepnula
+   kniha. (Zápis podle „aktuální kapitoly“ by při přepnutí knihy přepsal
+   její kapitolu obsahem té předchozí – nebo prázdným editorem při startu.) */
+let edCh=null;
+function flush(){
+  if(!edCh)return;
+  for(const b of S.books){
+    const c=b.chapters.find(x=>x.id===edCh);
+    if(c){c.html=$("#editor").innerHTML;return;}
+  }
+}
+function findChap(id){
+  if(!id)return null;
+  for(const b of S.books){const c=b.chapters.find(x=>x.id===id);if(c)return c;}
+  return null;
+}
+/* Uloží verzi kapitoly, pokud se obsah od poslední verze liší.
+   Velké kapitoly (vložené obrázky) drží méně verzí, ať neroste úložiště. */
+function maybeSnap(c){
+  if(!c)return;
+  if(!Array.isArray(c.hist))c.hist=[];
+  const last=c.hist[c.hist.length-1];
+  if(last&&last.html===c.html)return;
+  c.hist.push({t:Date.now(),html:c.html});
+  const cap=c.html.length>400000?3:8;
+  while(c.hist.length>cap)c.hist.shift();
+}
+
+/* ============================================================
+   Postranní panel
+   ============================================================ */
+function renderSide(){
+  const q=($("#q").value||"").toLowerCase();
+  const list=$("#bookList");list.innerHTML="";
+  const cmp={
+    updated:(a,b)=>b.updated-a.updated,
+    created:(a,b)=>b.created-a.created,
+    title:(a,b)=>(a.title||"").localeCompare(b.title||"","cs")
+  }[S.sort||"updated"];
+  S.books.slice()
+    .sort((a,b)=>(b.pin?1:0)-(a.pin?1:0)||cmp(a,b))   // připnuté první
+    // hledá se i v žánru, názvech kapitol a plném textu knihy
+    .filter(b=>!q||(b.title+" "+b.author+" "+b.genre+" "+
+      b.chapters.map(c=>c.title+" "+plain(c.html)).join(" ")).toLowerCase().includes(q))
+    .forEach(b=>{
+      const el=document.createElement("div");
+      el.className="bk"+(b.id===S.cur?" on":"");
+      el.innerHTML=`<div class="t">${esc(b.title)}</div>
+        <div class="m">${esc(b.author)||"—"} · ${fmt(bookWords(b))} slov</div>
+        <button class="pin${b.pin?" on":""}" title="${b.pin?"Odepnout":"Připnout nahoru"}">📌</button>
+        <button class="dup" title="Duplikovat knihu">⧉</button>
+        <button class="del" title="Smazat knihu">✕</button>`;
+      el.querySelector(".pin").onclick=e=>{e.stopPropagation();b.pin=!b.pin;save();renderSide();};
+      el.querySelector(".dup").onclick=e=>{e.stopPropagation();dupBook(b.id);};
+      el.querySelector(".del").onclick=e=>{e.stopPropagation();delBook(b.id);};
+      el.onclick=()=>openBook(b.id);
+      list.appendChild(el);
+      if(b.id===S.cur)list.appendChild(renderChs(b));
+    });
+}
+function renderChs(b){
+  const box=document.createElement("div");box.className="chs";
+  b.chapters.forEach((c,i)=>{
+    const el=document.createElement("div");
+    el.className="ch"+(c.id===b.curCh?" on":"");
+    el.draggable=true;
+    el.innerHTML=`<span class="n">${i+1}.</span><span class="nm">${esc(c.title)||"Bez názvu"}</span>
+      <span class="wc">${fmt(words(c.html))}</span><button class="x" title="Smazat kapitolu">✕</button>`;
+    el.querySelector(".x").onclick=e=>{e.stopPropagation();delCh(c.id);};
+    el.onclick=()=>{openCh(c.id);switchView("write");};
+    el.addEventListener("dragstart",ev=>ev.dataTransfer.setData("chid",c.id));
+    el.addEventListener("dragover",ev=>ev.preventDefault());
+    el.addEventListener("drop",ev=>{
+      ev.preventDefault();
+      const from=ev.dataTransfer.getData("chid");if(!from||from===c.id)return;
+      const a=b.chapters,fi=a.findIndex(x=>x.id===from),ti=a.findIndex(x=>x.id===c.id);
+      const [m]=a.splice(fi,1);a.splice(ti,0,m);touch();renderSide();updateWinfo();
+    });
+    box.appendChild(el);
+  });
+  const add=document.createElement("button");
+  add.className="addch";add.textContent="＋ přidat kapitolu";
+  add.onclick=()=>{flush();const ch={id:uid(),title:"Kapitola "+(b.chapters.length+1),html:"<p></p>"};
+    b.chapters.push(ch);openCh(ch.id);switchView("write");touch();};
+  box.appendChild(add);
+  return box;
+}
+let qT;
+$("#q").oninput=()=>{clearTimeout(qT);qT=setTimeout(renderSide,150);};
+$("#sortSel").onchange=()=>{S.sort=$("#sortSel").value;save();renderSide();};
+
+/* ============================================================
+   Otevírání knih a kapitol
+   ============================================================ */
+function openBook(id){
+  flush();S.cur=id;const b=cur();
+  document.body.toggleAttribute("data-empty",!b);
+  if(!b){renderSide();document.title="Skriptorium";save();return;}
+  lastWords=bookWords(b);
+  applyBookFonts(b);
+  fillBookForm(b);refreshFontUI();fillCoverForm(b);applyEditorFont(b);
+  openCh(b.curCh);
+  document.title=(b.title||"Kniha")+" · Skriptorium";
+  renderSide();save();
+}
+function openCh(id){
+  const b=cur();if(!b)return;
+  flush();
+  if(edCh&&edCh!==id)maybeSnap(findChap(edCh));   // verze opouštěné kapitoly
+  b.curCh=id;
+  const c=curCh();
+  $("#chTitle").value=c?c.title:"";
+  $("#editor").innerHTML=c?c.html:"";
+  edCh=c?c.id:null;
+  renderSide();updateWinfo();save();
+}
+function dupBook(id){
+  flush();
+  const src=S.books.find(b=>b.id===id);if(!src)return;
+  const c=JSON.parse(JSON.stringify(src));
+  c.id=uid();c.title=(src.title||"Kniha")+" (kopie)";
+  c.created=c.updated=Date.now();
+  c.chapters.forEach(x=>x.id=uid());c.curCh=c.chapters[0].id;
+  S.books.push(c);openBook(c.id);toast("Kniha zduplikována");
+}
+function delBook(id){
+  const b=S.books.find(x=>x.id===id);if(!b)return;
+  if(!confirm(`Přesunout knihu „${b.title}“ do koše?`))return;
+  S.books=S.books.filter(x=>x.id!==id);
+  S.trash.unshift({t:Date.now(),book:b});S.trash=S.trash.slice(0,15);
+  if(S.cur===id)openBook(S.books.length?S.books.sort((a,c)=>c.updated-a.updated)[0].id:null);
+  else renderSide();
+  save();toast("Kniha je v koši");
+}
+function delCh(id){
+  const b=cur();if(!b)return;
+  if(b.chapters.length<=1){toast("Kniha musí mít alespoň jednu kapitolu");return;}
+  const c=b.chapters.find(x=>x.id===id);
+  if(!confirm(`Smazat kapitolu „${c.title}“?`))return;
+  b.chapters=b.chapters.filter(x=>x.id!==id);
+  if(b.curCh===id)b.curCh=b.chapters[0].id;
+  openCh(b.curCh);touch();
+}
+$("#chTitle").oninput=()=>{const c=curCh();if(c){c.title=$("#chTitle").value;touch();renderSide();}};
+
+function chIdx(b){return b.chapters.findIndex(c=>c.id===b.curCh);}
+function updateWinfo(){
+  const b=cur();if(!b)return;
+  const i=chIdx(b),c=curCh(),d=S.daily[today()]||0;
+  const s=getSelection();let selInfo="";
+  if(s.rangeCount&&!s.isCollapsed&&$("#editor").contains(s.anchorNode)){
+    const t=s.toString().trim();
+    if(t)selInfo=` · výběr ${fmt(t.split(/\s+/).length)} slov`;
+  }
+  const goal=S.dayGoal?` / ${fmt(S.dayGoal)}`:"";
+  $("#winfo").textContent=`Kapitola ${i+1} z ${b.chapters.length} · ${fmt(words(c?c.html:""))} slov v kapitole · dnes +${fmt(d)}${goal}${selInfo}`;
+  $("#chPrev").disabled=i<=0;
+  $("#chNext").disabled=i>=b.chapters.length-1;
+}
+$("#chPrev").onclick=()=>{const b=cur();const i=chIdx(b);if(i>0)openCh(b.chapters[i-1].id);};
+$("#chNext").onclick=()=>{const b=cur();const i=chIdx(b);if(i<b.chapters.length-1)openCh(b.chapters[i+1].id);};
+
+/* ============================================================
+   Přepínání pohledů
+   ============================================================ */
+function switchView(v){
+  $$(".vtab").forEach(t=>t.classList.toggle("on",t.dataset.view===v));
+  $$(".view").forEach(s=>s.classList.toggle("on",s.dataset.view===v));
+  if(v==="stats")renderStats();
+  if(v==="cover")renderCover();
+}
+$$(".vtab").forEach(t=>t.onclick=()=>switchView(t.dataset.view));
+
+/* ============================================================
+   Editor
+   ============================================================ */
+const ed=$("#editor");
+try{document.execCommand("styleWithCSS",false,false);}catch(e){}
+let savedRange=null;
+let selT=null;
+document.addEventListener("selectionchange",()=>{
+  const s=getSelection();
+  if(s.rangeCount&&ed.contains(s.anchorNode)){
+    savedRange=s.getRangeAt(0).cloneRange();
+    updateTb();
+    // počet slov ve výběru v patičce (škrceně, výběr se mění často)
+    if(!selT)selT=setTimeout(()=>{selT=null;updateWinfo();},200);
+  }
+});
+function restoreSel(){ed.focus();if(savedRange){const s=getSelection();s.removeAllRanges();s.addRange(savedRange);}}
+const normFont=v=>(v||"").replace(/['"]/g,"").trim().toLowerCase();
+/* Nastaví <select> na možnost odpovídající CSS hodnotě font-family
+   (prohlížeče při čtení zpět někdy odstraní uvozovky). */
+function setFontSel(sel,v){
+  if(!v){sel.value="";return;}
+  const t=normFont(v);
+  const o=[...sel.options].find(o=>normFont(o.value)===t);
+  sel.value=o?o.value:"";
+}
+function updateTb(){
+  ["bold","italic","underline","strikeThrough"].forEach(c=>{
+    const btn=$(`#toolbar button[data-cmd="${c}"]`);
+    try{btn.classList.toggle("on",document.queryCommandState(c));}catch(e){}
+  });
+  try{
+    let v=(document.queryCommandValue("formatBlock")||"p").toLowerCase();
+    if(![...$("#tBlock").options].some(o=>o.value===v))v="p";
+    $("#tBlock").value=v;
+  }catch(e){}
+  // Font a velikost v místě kurzoru: projdi předky od výběru k editoru.
+  // Font vkládáme jako <font face>, velikost jako <font style="font-size:…pt">.
+  const s=getSelection();
+  if(!s.rangeCount||!ed.contains(s.anchorNode))return;
+  let n=s.anchorNode;
+  if(n.nodeType===3)n=n.parentNode;
+  let fontV="",sizeV="";
+  while(n&&n!==ed){
+    if(n.nodeType===1){
+      if(!fontV&&n.tagName==="FONT"&&n.getAttribute("face"))fontV=n.getAttribute("face");
+      if(!fontV&&n.style&&n.style.fontFamily)fontV=n.style.fontFamily;
+      if(!sizeV&&n.style&&n.style.fontSize){
+        const m=/^([\d.]+)pt$/.exec(n.style.fontSize);
+        if(m)sizeV=m[1];
+      }
+    }
+    n=n.parentNode;
+  }
+  setFontSel($("#tFont"),fontV);
+  const zs=$("#tSize");
+  zs.value=[...zs.options].some(o=>o.value===sizeV)?sizeV:"";
+}
+$$("#toolbar button").forEach(b=>b.addEventListener("mousedown",e=>e.preventDefault()));
+$$("#toolbar button[data-cmd]").forEach(b=>b.onclick=()=>{
+  document.execCommand(b.dataset.cmd,false,null);ed.focus();sync();
+});
+$("#tBlock").onchange=()=>{restoreSel();document.execCommand("formatBlock",false,$("#tBlock").value);sync();};
+$("#tLink").onclick=()=>{
+  const u=prompt("Adresa odkazu (prázdná = odebrat):","https://");
+  restoreSel();
+  if(u===null)return;
+  document.execCommand(u.trim()?"createLink":"unlink",false,u.trim()||null);
+  sync();
+};
+$("#tHr").onclick=()=>{restoreSel();document.execCommand("insertHorizontalRule");sync();};
+/* Kontrola pravopisu (globální volba, ukládá se). */
+function applySpell(){
+  const on=S.spell!==false;
+  ed.spellcheck=on;
+  $("#tSpell").classList.toggle("on",on);
+}
+$("#tSpell").onclick=()=>{S.spell=!(S.spell!==false);applySpell();save();ed.focus();};
+ed.addEventListener("keydown",e=>{
+  if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="k"){e.preventDefault();$("#tLink").click();}
+});
+/* Font a velikost výběru. execCommand('fontSize') umí jen stupně 1–7,
+   proto vložíme stupeň 7 a vzniklé <font size="7"> hned přepíšeme na
+   přesnou velikost v pt. */
+$("#tFont").onchange=()=>{
+  const b=cur();if(!b)return;
+  restoreSel();
+  document.execCommand("fontName",false,$("#tFont").value||b.defaultFont);
+  sync();
+};
+$("#tSize").onchange=()=>{
+  const v=$("#tSize").value;if(!v)return;
+  restoreSel();
+  document.execCommand("fontSize",false,"7");
+  ed.querySelectorAll('font[size="7"]').forEach(f=>{f.removeAttribute("size");f.style.fontSize=v+"pt";});
+  sync();
+};
+$("#tColor").oninput=()=>{restoreSel();document.execCommand("foreColor",false,$("#tColor").value);sync();};
+$("#tBg").oninput=()=>{
+  restoreSel();
+  if(!document.execCommand("hiliteColor",false,$("#tBg").value))
+    document.execCommand("backColor",false,$("#tBg").value);
+  sync();
+};
+$("#tImg").onclick=()=>{
+  const inp=document.createElement("input");inp.type="file";inp.accept="image/*";
+  inp.onchange=async()=>{const d=await fileURL(inp.files[0]);if(d)openImgEd(d,null);};
+  inp.click();
+};
+const fileURL=f=>new Promise(r=>{
+  if(!f)return r(null);
+  const fr=new FileReader();fr.onload=()=>r(fr.result);fr.onerror=()=>r(null);fr.readAsDataURL(f);
+});
+
+/* ============================================================
+   Editor obrázků: ořez, šířka, zarovnání, smazání
+   ============================================================ */
+let imgEd=null;   // {el:<img>|null, crop:{x,y,w,h,dw,dh}|null}
+function imgAlignOf(img){
+  if(img.style.display==="block")return"center";
+  if(img.style.float==="left")return"left";
+  if(img.style.float==="right")return"right";
+  return"none";
+}
+function openImgEd(src,el){
+  imgEd={el:el||null,crop:null};
+  $("#ceBox").style.display="none";
+  $("#ceImg").src=src;
+  const w=el?Math.min(100,Math.max(10,parseInt(el.style.width)||100)):100;
+  $("#ceW").value=w;$("#ceWv").textContent=w;
+  $("#ceAlign").value=el?imgAlignOf(el):"none";
+  $("#ceDel").style.display=el?"inline-flex":"none";
+  $("#dlgImg").showModal();
+}
+$("#dlgImgX").onclick=()=>{$("#dlgImg").close();imgEd=null;};
+$("#ceW").oninput=()=>$("#ceWv").textContent=$("#ceW").value;
+(function(){
+  const wrap=$("#ceWrap"),im=$("#ceImg"),box=$("#ceBox");
+  let drag=false,sx=0,sy=0;
+  const pt=e=>{const r=im.getBoundingClientRect();
+    return{x:Math.max(0,Math.min(r.width,e.clientX-r.left)),y:Math.max(0,Math.min(r.height,e.clientY-r.top))};};
+  wrap.addEventListener("pointerdown",e=>{
+    if(!imgEd)return;
+    const p=pt(e);sx=p.x;sy=p.y;drag=true;
+    Object.assign(box.style,{left:sx+"px",top:sy+"px",width:"0px",height:"0px",display:"block"});
+    wrap.setPointerCapture(e.pointerId);
+  });
+  wrap.addEventListener("pointermove",e=>{
+    if(!drag)return;
+    const p=pt(e);
+    Object.assign(box.style,{left:Math.min(sx,p.x)+"px",top:Math.min(sy,p.y)+"px",
+      width:Math.abs(p.x-sx)+"px",height:Math.abs(p.y-sy)+"px"});
+  });
+  const end=()=>{
+    if(!drag)return;drag=false;
+    const w=parseFloat(box.style.width),h=parseFloat(box.style.height);
+    if(w<8||h<8){box.style.display="none";imgEd.crop=null;return;}
+    imgEd.crop={x:parseFloat(box.style.left),y:parseFloat(box.style.top),w,h,dw:im.clientWidth,dh:im.clientHeight};
+  };
+  wrap.addEventListener("pointerup",end);
+  wrap.addEventListener("pointercancel",end);
+})();
+$("#ceReset").onclick=()=>{$("#ceBox").style.display="none";if(imgEd)imgEd.crop=null;};
+$("#ceDel").onclick=()=>{
+  if(imgEd&&imgEd.el&&confirm("Smazat tento obrázek z textu?")){
+    imgEd.el.remove();$("#dlgImg").close();imgEd=null;sync();toast("Obrázek smazán");
+  }
+};
+$("#ceOk").onclick=async()=>{
+  if(!imgEd)return;
+  const im=$("#ceImg");
+  if(im.decode){try{await im.decode();}catch(e){}}
+  if(!imgEd)return;   // modál mohl být mezitím zavřen
+  const nW=im.naturalWidth,nH=im.naturalHeight;
+  if(!nW||!nH){toast("Obrázek se nepodařilo načíst");return;}
+  let sx=0,sy=0,sw=nW,sh=nH;
+  if(imgEd.crop){
+    const c=imgEd.crop,kx=nW/c.dw,ky=nH/c.dh;
+    sx=c.x*kx;sy=c.y*ky;sw=c.w*kx;sh=c.h*ky;
+  }
+  let ow=sw,oh=sh;
+  if(ow>1000){oh*=1000/ow;ow=1000;}
+  if(oh>1400){ow*=1400/oh;oh=1400;}
+  const cv=document.createElement("canvas");
+  cv.width=Math.max(1,Math.round(ow));cv.height=Math.max(1,Math.round(oh));
+  cv.getContext("2d").drawImage(im,sx,sy,sw,sh,0,0,cv.width,cv.height);
+  const url=cv.toDataURL("image/jpeg",.85);
+  const wPct=$("#ceW").value,al=$("#ceAlign").value;
+  let el=imgEd.el;const isNew=!el;
+  imgEd=null;
+  // Modál je nutné zavřít PŘED vkládáním: showModal() dělá zbytek
+  // dokumentu inertním, takže dokud je otevřený, editor nejde fokusovat
+  // a execCommand("insertImage") by tiše selhal.
+  $("#dlgImg").close();
+  if(isNew){
+    restoreSel();
+    document.execCommand("insertImage",false,url);
+    el=[...ed.querySelectorAll("img")].filter(i=>i.getAttribute("src")===url).pop();
+  }else el.src=url;
+  if(el){
+    el.style.width=wPct+"%";el.style.height="auto";
+    el.style.float="";el.style.display="";el.style.margin="";
+    if(al==="left"){el.style.float="left";el.style.margin="0 14px 8px 0";}
+    else if(al==="right"){el.style.float="right";el.style.margin="0 0 8px 14px";}
+    else if(al==="center"){el.style.display="block";el.style.margin="10px auto";}
+  }
+  sync();
+  toast(isNew?"Obrázek vložen":"Obrázek upraven");
+};
+
+/* ============================================================
+   Historie verzí kapitoly
+   ============================================================ */
+$("#btnHist").onclick=()=>{flush();maybeSnap(curCh());renderHist();$("#dlgHist").showModal();};
+$("#dlgHistX").onclick=()=>$("#dlgHist").close();
+function renderHist(){
+  const c=curCh(),box=$("#histList");
+  if(!c||!c.hist||!c.hist.length){
+    box.innerHTML='<p style="color:var(--ink2)">Zatím žádné uložené verze. Verze se ukládají při přepínání kapitol, každých 5 minut a před hromadným nahrazením.</p>';
+    return;
+  }
+  box.innerHTML="";
+  [...c.hist].reverse().forEach((v,ri)=>{
+    const i=c.hist.length-1-ri;
+    const row=document.createElement("div");row.className="trow";
+    row.innerHTML=`<span class="grow">${new Date(v.t).toLocaleString("cs")} · ${fmt(words(v.html))} slov</span>`;
+    const rb=document.createElement("button");rb.className="btn small";rb.textContent="Obnovit";
+    rb.onclick=()=>{
+      maybeSnap(c);              // aktuální stav se neztratí
+      c.html=v.html;
+      $("#editor").innerHTML=c.html;
+      touch();renderSide();updateWinfo();
+      $("#dlgHist").close();toast("Verze obnovena");
+    };
+    const db=document.createElement("button");db.className="btn danger small";db.textContent="✕";
+    db.onclick=()=>{c.hist.splice(i,1);save();renderHist();};
+    row.append(rb,db);box.appendChild(row);
+  });
+}
+
+/* ============================================================
+   Najít a nahradit
+   ============================================================ */
+const escRe=s=>s.replace(/[.*+?^${}()|[\]\\]/g,"\\$&");
+function replInChapter(c,rx,repl,doRepl){
+  const box=document.createElement("div");box.innerHTML=c.html;
+  let n=0,t;
+  const w=document.createTreeWalker(box,NodeFilter.SHOW_TEXT),ns=[];
+  while(t=w.nextNode())ns.push(t);
+  ns.forEach(nd=>{
+    const m=nd.nodeValue.match(rx);
+    if(m){n+=m.length;if(doRepl)nd.nodeValue=nd.nodeValue.replace(rx,repl);}
+  });
+  if(doRepl&&n)c.html=box.innerHTML;
+  return n;
+}
+function runFind(doRepl){
+  const b=cur();if(!b)return;
+  const f=$("#fnFind").value;
+  if(!f){$("#fnInfo").textContent="Zadejte hledaný text.";return;}
+  flush();
+  const rx=new RegExp(escRe(f),$("#fnCase").checked?"g":"gi");
+  const list=$("#fnScope").value==="ch"?[curCh()]:b.chapters;
+  let n=0;
+  list.forEach(c=>{
+    if(!c)return;
+    if(doRepl)maybeSnap(c);
+    n+=replInChapter(c,rx,$("#fnRepl").value,doRepl);
+  });
+  if(doRepl&&n){
+    const c=curCh();
+    $("#editor").innerHTML=c?c.html:"";
+    touch();renderSide();updateWinfo();
+  }
+  $("#fnInfo").textContent=(doRepl?"Nahrazeno":"Nalezeno")+" "+fmt(n)+" výskytů";
+}
+function openFind(){if(!cur())return;$("#fnInfo").textContent="";$("#dlgFind").showModal();$("#fnFind").focus();}
+$("#tFind").onclick=openFind;
+$("#dlgFindX").onclick=()=>$("#dlgFind").close();
+$("#fnCount").onclick=()=>runFind(false);
+$("#fnGo").onclick=()=>runFind(true);
+
+/* ============================================================
+   Auto-typografie a markdown zkratky (beforeinput)
+   ============================================================ */
+function applyTypo(){$("#tTypo").classList.toggle("on",S.typo!==false);}
+$("#tTypo").onclick=()=>{S.typo=!(S.typo!==false);applyTypo();save();ed.focus();};
+function charBefore(sel){
+  const r=sel.getRangeAt(0),n=r.startContainer;
+  return(n.nodeType===3&&r.startOffset>0)?n.nodeValue[r.startOffset-1]:"";
+}
+function textBefore(sel,k){
+  const r=sel.getRangeAt(0),n=r.startContainer;
+  return(n.nodeType===3&&r.startOffset>=k)?n.nodeValue.slice(r.startOffset-k,r.startOffset):"";
+}
+function delBefore(sel,k){
+  const r=sel.getRangeAt(0),n=r.startContainer;
+  const nr=document.createRange();
+  nr.setStart(n,r.startOffset-k);nr.setEnd(n,r.startOffset);
+  sel.removeAllRanges();sel.addRange(nr);
+  document.execCommand("delete");   // zachová nativní krok Zpět
+}
+function blockOf(n){
+  if(n&&n.nodeType===3)n=n.parentNode;
+  while(n&&n!==ed){
+    if(/^(P|DIV|H1|H2|H3|BLOCKQUOTE|PRE|LI)$/.test(n.tagName))return n;
+    n=n.parentNode;
+  }
+  return null;
+}
+/* `# `→nadpis, `> `→citace, `- `→odrážky, `1. `→číslovaný seznam. */
+function mdShortcut(sel){
+  const blk=blockOf(sel.anchorNode);
+  if(!blk||!/^(P|DIV)$/.test(blk.tagName))return false;
+  const r=document.createRange();
+  r.setStart(blk,0);r.setEnd(sel.anchorNode,sel.anchorOffset);
+  const t=r.toString();
+  const map={"#":"h1","##":"h2","###":"h3",">":"blockquote"};
+  if(map[t]){delBefore(sel,t.length);document.execCommand("formatBlock",false,map[t]);sync();return true;}
+  if(t==="-"||t==="*"){delBefore(sel,1);document.execCommand("insertUnorderedList");sync();return true;}
+  if(t==="1."){delBefore(sel,2);document.execCommand("insertOrderedList");sync();return true;}
+  return false;
+}
+ed.addEventListener("beforeinput",e=>{
+  if(e.inputType!=="insertText"||!e.data)return;
+  const sel=getSelection();
+  if(!sel.rangeCount||!ed.contains(sel.anchorNode))return;
+  if(e.data===" "&&mdShortcut(sel)){e.preventDefault();return;}
+  if(S.typo===false)return;
+  if(e.data==='"'){
+    e.preventDefault();
+    const ch=charBefore(sel);
+    document.execCommand("insertText",false,(!ch||/[\s(\[{]/.test(ch))?"„":"“");
+  }else if(e.data==="."&&textBefore(sel,2)===".."){
+    e.preventDefault();delBefore(sel,2);
+    document.execCommand("insertText",false,"…");
+  }else if(e.data===" "&&textBefore(sel,2)===" -"){
+    e.preventDefault();delBefore(sel,1);
+    document.execCommand("insertText",false,"— ");
+  }
+});
+
+function shrinkImg(file,maxW=900,maxH=1300,q=.78){
+  return new Promise(res=>{
+    if(!file)return res(null);
+    const r=new FileReader();
+    r.onload=()=>{const im=new Image();
+      im.onload=()=>{let w=im.width,h=im.height;
+        if(w>maxW){h*=maxW/w;w=maxW;}if(h>maxH){w*=maxH/h;h=maxH;}
+        const cv=document.createElement("canvas");cv.width=w;cv.height=h;
+        cv.getContext("2d").drawImage(im,0,0,w,h);
+        res(cv.toDataURL("image/jpeg",q));};
+      im.onerror=()=>res(r.result);im.src=r.result;};
+    r.onerror=()=>res(null);r.readAsDataURL(file);
+  });
+}
+ed.addEventListener("paste",e=>{
+  const its=e.clipboardData&&e.clipboardData.items;if(!its)return;
+  for(const it of its)if(it.type.startsWith("image/")){
+    e.preventDefault();
+    fileURL(it.getAsFile()).then(d=>{if(d)openImgEd(d,null);});
+    return;
+  }
+});
+ed.addEventListener("dragover",e=>{if(e.dataTransfer&&[...e.dataTransfer.types].includes("Files"))e.preventDefault();});
+ed.addEventListener("drop",async e=>{
+  const fs=[...(e.dataTransfer?.files||[])].filter(f=>f.type.startsWith("image/"));
+  if(!fs.length)return;e.preventDefault();
+  const r=document.caretRangeFromPoint&&document.caretRangeFromPoint(e.clientX,e.clientY);
+  if(r){const s=getSelection();s.removeAllRanges();s.addRange(r);}
+  if(fs.length===1){const d=await fileURL(fs[0]);if(d)openImgEd(d,null);return;}
+  // více obrázků najednou: ořez po jednom by zdržoval, vloží se rovnou
+  for(const f of fs){const d=await shrinkImg(f);if(d)document.execCommand("insertImage",false,d);}
+  sync();
+});
+ed.addEventListener("dblclick",e=>{
+  if(e.target.tagName!=="IMG")return;
+  openImgEd(e.target.getAttribute("src"),e.target);
+});
+let syncT2;
+function sync(){
+  clearTimeout(syncT2);
+  syncT2=setTimeout(()=>{
+    const b=cur();if(!b)return;
+    flush();   // zapíše obsah editoru kapitole, které skutečně patří (edCh)
+    const w=bookWords(b);
+    if(lastWords!=null&&w>lastWords)S.daily[today()]=(S.daily[today()]||0)+(w-lastWords);
+    lastWords=w;
+    touch();updateWinfo();renderSide();
+  },350);
+}
+ed.addEventListener("input",sync);
+
+/* ============================================================
+   Formulář knihy
+   ============================================================ */
+function fillBookForm(b){
+  $("#bTitle").value=b.title;$("#bAuthor").value=b.author;$("#bSubtitle").value=b.subtitle;
+  $("#bGenre").value=b.genre;$("#bLang").value=b.lang;$("#bGoal").value=b.goal||"";
+  $("#bDesc").value=b.desc;$("#bPage").value=b.pageNum;
+  $("#bNotes").value=b.notes||"";$("#exTheme").value=b.exTheme||"classic";
+  $("#bMeta").textContent="Založeno "+new Date(b.created).toLocaleDateString("cs")+
+    " · naposledy upraveno "+new Date(b.updated).toLocaleString("cs");
+}
+[["#bTitle","title"],["#bAuthor","author"],["#bSubtitle","subtitle"],["#bGenre","genre"],["#bDesc","desc"]]
+.forEach(([sel,k])=>{$(sel).oninput=()=>{const b=cur();if(!b)return;b[k]=$(sel).value;touch();
+  renderSide();renderCover();
+  if(k==="title")document.title=(b.title||"Kniha")+" · Skriptorium";};});
+$("#bLang").onchange=()=>{const b=cur();if(b){b.lang=$("#bLang").value;touch();}};
+$("#bGoal").oninput=()=>{const b=cur();if(b){b.goal=Math.max(0,parseInt($("#bGoal").value)||0);touch();}};
+$("#bPage").onchange=()=>{const b=cur();if(b){b.pageNum=$("#bPage").value;touch();}};
+$("#bNotes").oninput=()=>{const b=cur();if(b){b.notes=$("#bNotes").value;touch();}};
+$("#exTheme").innerHTML=Object.entries(EXTHEMES).map(([k,v])=>`<option value="${k}">${v.label}</option>`).join("");
+$("#exTheme").onchange=()=>{const b=cur();if(b){b.exTheme=$("#exTheme").value;touch();}};
+$("#dayGoal").oninput=()=>{S.dayGoal=Math.max(0,parseInt($("#dayGoal").value)||0);save();updateWinfo();renderDaysChart();};
+
+/* ---------- vlastní fonty: nahrání, mazání, výchozí volby ---------- */
+$("#fUp").onchange=e=>{
+  const b=cur();if(!b)return;
+  [...e.target.files].forEach(f=>{
+    if(f.size>3*1024*1024){toast(`Font „${f.name}“ je příliš velký (max 3 MB)`);return;}
+    const r=new FileReader();
+    r.onload=()=>{
+      const name=f.name.replace(/\.[^.]+$/,"");
+      if(b.fonts.some(x=>x.name===name)){toast("Font už existuje");return;}
+      b.fonts.push({name,data:r.result,ext:(f.name.split(".").pop()||"ttf").toLowerCase()});
+      applyBookFonts(b);refreshFontUI();touch();toast("Font přidán: "+name);
+    };
+    r.readAsDataURL(f);
+  });
+  e.target.value="";
+};
+$("#fchips").addEventListener("click",e=>{
+  const btn=e.target.closest("[data-df]");if(!btn)return;
+  const b=cur();if(!b)return;
+  const n=btn.dataset.df,v=`'uf-${n.replace(/[^a-z0-9]/gi,"_")}'`,def="Georgia, serif";
+  b.fonts=b.fonts.filter(f=>f.name!==n);
+  if(b.cover.font===v)b.cover.font=def;
+  if(b.back.font===v)b.back.font=def;
+  if(b.defaultFont===v)b.defaultFont=def;
+  if(b.chapTitleFont===v)b.chapTitleFont=def;
+  if(b.pageNumFont===v)b.pageNumFont=def;
+  refreshFontUI();renderCover();applyEditorFont(b);touch();
+});
+$("#defFont").onchange=()=>{const b=cur();if(!b)return;const v=$("#defFont").value;
+  // výchozí font = font obou obálek; text kapitol se formátuje v editoru
+  b.defaultFont=v;b.cover.font=v;b.back.font=v;
+  refreshFontUI();applyEditorFont(b);renderCover();touch();};
+$("#chtFont").onchange=()=>{const b=cur();if(b){b.chapTitleFont=$("#chtFont").value;touch();}};
+$("#pnFont").onchange=()=>{const b=cur();if(b){b.pageNumFont=$("#pnFont").value;touch();}};
+
+/* ============================================================
+   Obálky (přední c / zadní k)
+   ============================================================ */
+const BSTYLES=[["none","Žádný"],["solid","Plná čára"],["double","Dvojitá"],["dashed","Čárkovaná"],
+  ["dotted","Tečkovaná"],["groove","Drážka (3D)"],["ridge","Hřbet (3D)"],["inset","Vsazený"],["outset","Vystouplý"]];
+$("#cBStyle").innerHTML=$("#kBStyle").innerHTML=BSTYLES.map(([v,l])=>`<option value="${v}">${l}</option>`).join("");
+function frameCSS(o){return(!o.bStyle||o.bStyle==="none"||!o.bWidth)?"none":`${o.bWidth}px ${o.bStyle} ${o.bColor}`;}
+function placeTxt(el,o){
+  el.style.left=o.posX+"%";el.style.top=o.posY+"%";
+  el.style.transform=`translate(-50%,-50%) rotate(${o.rotate||0}deg)`;
+  el.style.textAlign=o.align;
+}
+function vposOf(o){return o.posY<=30?"top":o.posY>=70?"bottom":"center";}
+function fillCoverForm(b){
+  const c=b.cover,k=b.back;
+  $("#cBg1").value=c.bg1;$("#cBg2").value=c.bg2;$("#cColor").value=c.color;
+  $("#cAngle").value=c.angle;$("#cAngleV").textContent=c.angle;
+  $("#cDim").value=c.dim;$("#cDimV").textContent=c.dim;
+  $("#cVpos").value=vposOf(c);$("#cAlign").value=c.align;
+  $("#cRot").value=c.rotate;$("#cRotV").textContent=c.rotate;
+  $("#cBStyle").value=c.bStyle;$("#cBColor").value=c.bColor;
+  $("#cBW").value=c.bWidth;$("#cBWv").textContent=c.bWidth;
+  $("#cBR").value=c.bRadius;$("#cBRv").textContent=c.bRadius;
+  $("#cBI").value=c.bInset;$("#cBIv").textContent=c.bInset;
+  $("#kText").value=k.text;$("#kIsbn").value=k.isbn;
+  $("#kBg").value=k.bg;$("#kColor").value=k.color;
+  $("#kDim").value=k.dim;$("#kDimV").textContent=k.dim;
+  $("#kVpos").value=vposOf(k);$("#kAlign").value=k.align;
+  $("#kRot").value=k.rotate;$("#kRotV").textContent=k.rotate;
+  $("#kBStyle").value=k.bStyle;$("#kBColor").value=k.bColor;
+  $("#kBW").value=k.bWidth;$("#kBWv").textContent=k.bWidth;
+  $("#kBR").value=k.bRadius;$("#kBRv").textContent=k.bRadius;
+  $("#kBI").value=k.bInset;$("#kBIv").textContent=k.bInset;
+  renderCover();
+}
+function renderCover(){
+  const b=cur();if(!b)return;
+  const c=b.cover,p=$("#cprev");
+  p.style.background=c.img?`url(${c.img}) center/cover`:`linear-gradient(${c.angle}deg,${c.bg1},${c.bg2})`;
+  $("#cdim").style.background=c.img?`rgba(0,0,0,${c.dim/100})`:"none";
+  const cf=$("#cframe");
+  cf.style.border=frameCSS(c);cf.style.borderRadius=(c.bRadius||0)+"px";cf.style.inset=(c.bInset||0)+"px";
+  const t=$("#ctxt");t.style.color=c.color;t.style.fontFamily=c.font;placeTxt(t,c);
+  $("#cvt").textContent=b.title;$("#cvs").textContent=b.subtitle;$("#cva").textContent=b.author;
+  const k=b.back,bp=$("#bprev");
+  bp.style.background=k.img?`url(${k.img}) center/cover`:k.bg;
+  $("#bdim").style.background=k.img?`rgba(0,0,0,${k.dim/100})`:"none";
+  const kf=$("#bframe");
+  kf.style.border=frameCSS(k);kf.style.borderRadius=(k.bRadius||0)+"px";kf.style.inset=(k.bInset||0)+"px";
+  const bt=$("#btxt");bt.style.color=k.color;bt.style.fontFamily=k.font;placeTxt(bt,k);
+  $("#bcb").textContent=k.text||b.desc||"Text zadní strany…";
+  $("#bisbn").textContent=k.isbn?"ISBN: "+k.isbn:"";
+}
+/* Tažení textu po náhledu obálky. */
+function makeDrag(prevEl,txtEl,getO){
+  txtEl.addEventListener("pointerdown",e=>{
+    const o=getO();if(!o)return;
+    e.preventDefault();txtEl.setPointerCapture(e.pointerId);
+    const r=prevEl.getBoundingClientRect();
+    const mv=ev=>{
+      o.posX=Math.max(3,Math.min(97,Math.round((ev.clientX-r.left)/r.width*100)));
+      o.posY=Math.max(3,Math.min(97,Math.round((ev.clientY-r.top)/r.height*100)));
+      placeTxt(txtEl,o);
+    };
+    const up=()=>{txtEl.removeEventListener("pointermove",mv);txtEl.removeEventListener("pointerup",up);touch();};
+    txtEl.addEventListener("pointermove",mv);txtEl.addEventListener("pointerup",up);
+  });
+}
+makeDrag($("#cprev"),$("#ctxt"),()=>cur()&&cur().cover);
+makeDrag($("#bprev"),$("#btxt"),()=>cur()&&cur().back);
+/* Hromadné navázání ovládacích prvků obou stran. */
+function bindCov(sel,side,key,isNum,lbl){
+  $(sel).oninput=()=>{
+    const b=cur();if(!b)return;
+    b[side][key]=isNum?+$(sel).value:$(sel).value;
+    if(lbl)$(lbl).textContent=$(sel).value;
+    touch();renderCover();
+  };
+}
+bindCov("#cBg1","cover","bg1");bindCov("#cBg2","cover","bg2");bindCov("#cColor","cover","color");
+bindCov("#cAngle","cover","angle",1,"#cAngleV");bindCov("#cDim","cover","dim",1,"#cDimV");
+bindCov("#cRot","cover","rotate",1,"#cRotV");
+bindCov("#cBColor","cover","bColor");bindCov("#cBW","cover","bWidth",1,"#cBWv");
+bindCov("#cBR","cover","bRadius",1,"#cBRv");bindCov("#cBI","cover","bInset",1,"#cBIv");
+bindCov("#kText","back","text");bindCov("#kIsbn","back","isbn");
+bindCov("#kBg","back","bg");bindCov("#kColor","back","color");
+bindCov("#kDim","back","dim",1,"#kDimV");bindCov("#kRot","back","rotate",1,"#kRotV");
+bindCov("#kBColor","back","bColor");bindCov("#kBW","back","bWidth",1,"#kBWv");
+bindCov("#kBR","back","bRadius",1,"#kBRv");bindCov("#kBI","back","bInset",1,"#kBIv");
+$("#cBStyle").onchange=()=>{const b=cur();if(b){b.cover.bStyle=$("#cBStyle").value;touch();renderCover();}};
+$("#kBStyle").onchange=()=>{const b=cur();if(b){b.back.bStyle=$("#kBStyle").value;touch();renderCover();}};
+$("#cFont").onchange=()=>{const b=cur();if(b){b.cover.font=$("#cFont").value;touch();renderCover();}};
+$("#kFont").onchange=()=>{const b=cur();if(b){b.back.font=$("#kFont").value;touch();renderCover();}};
+const VPOSY={top:18,center:50,bottom:82};
+$("#cVpos").onchange=()=>{const b=cur();if(b){b.cover.posY=VPOSY[$("#cVpos").value];touch();renderCover();}};
+$("#kVpos").onchange=()=>{const b=cur();if(b){b.back.posY=VPOSY[$("#kVpos").value];touch();renderCover();}};
+$("#cAlign").onchange=()=>{const b=cur();if(b){b.cover.align=$("#cAlign").value;touch();renderCover();}};
+$("#kAlign").onchange=()=>{const b=cur();if(b){b.back.align=$("#kAlign").value;touch();renderCover();}};
+$("#cImg").onchange=async e=>{const d=await shrinkImg(e.target.files[0],1000,1500,.8);
+  const b=cur();if(b&&d){b.cover.img=d;touch();renderCover();}e.target.value="";};
+$("#cImgDel").onclick=()=>{const b=cur();if(b){b.cover.img=null;touch();renderCover();}};
+$("#kImg").onchange=async e=>{const d=await shrinkImg(e.target.files[0],1000,1500,.8);
+  const b=cur();if(b&&d){b.back.img=d;touch();renderCover();}e.target.value="";};
+$("#kImgDel").onclick=()=>{const b=cur();if(b){b.back.img=null;touch();renderCover();}};
+
+/* ============================================================
+   Statistiky
+   ============================================================ */
+function renderStats(){
+  const b=cur();if(!b)return;
+  flush();
+  const w=bookWords(b);
+  const ch=b.chapters.reduce((s,c)=>s+chars(c.html),0);
+  const sent=b.chapters.reduce((s,c)=>s+(plain(c.html).match(/[.!?]+/g)||[]).length,0);
+  const ns=(ch/1800);
+  const tiles=[
+    [fmt(w),"slov"],[fmt(ch),"znaků"],[fmt(sent),"vět"],
+    [ns<10?ns.toFixed(1):Math.round(ns),"normostran"],
+    [fmt(Math.max(1,Math.round(w/250))),"stran (~250 sl.)"],
+    [readT(w),"doba čtení"],
+    [b.chapters.length,"kapitol"],
+    ["+"+fmt(S.daily[today()]||0),"slov dnes"]
+  ];
+  $("#tiles").innerHTML=tiles.map(([v,l])=>`<div class="tile"><div class="v">${v}</div><div class="l">${l}</div></div>`).join("");
+  const C=326.7,goal=b.goal||0;
+  const p=goal?Math.min(1,w/goal):0;
+  $("#ringF").style.strokeDashoffset=C*(1-p);
+  $("#ringT").textContent=goal?`${Math.round(p*100)} % cíle ${fmt(goal)}`:"cíl není nastaven";
+  const mx=Math.max(1,...b.chapters.map(c=>words(c.html)));
+  $("#chtBody").innerHTML=b.chapters.map((c,i)=>{
+    const cw=words(c.html);
+    return `<tr><td>${i+1}</td><td>${esc(c.title)}</td><td class="r">${fmt(cw)}</td>
+      <td class="r">${fmt(chars(c.html))}</td><td class="r">${readT(cw)}</td>
+      <td><div class="hbar"><i style="width:${Math.round(cw/mx*100)}%"></i></div></td></tr>`;
+  }).join("");
+  $("#dayGoal").value=S.dayGoal||"";
+  renderTopWords(b);
+  renderDaysChart();
+}
+/* Nejčastější slova knihy (odhalí slovní tiky). */
+const STOPWORDS=new Set(("a i v ve na se si je to že s z do o u k ke po za ale jak tak co když já on ona ono my vy oni "+
+  "byl byla bylo byly jsem jsi jsme jste jsou být bude buď nebo aby jen jenom už při pro od pak před mezi "+
+  "její jeho jejich ten ta ti ty té tím tom která který které kteří kde kam proč ještě také ani až tam tady "+
+  "něco nic všechno kdo mě mi mu ho ji jí ně něj nich svou svůj své nad pod bez přes").split(" "));
+function renderTopWords(b){
+  const freq={};
+  b.chapters.forEach(c=>plain(c.html).toLowerCase()
+    .replace(/[^\p{L}\s]/gu," ").split(/\s+/).forEach(w=>{
+      if(w.length>=3&&!STOPWORDS.has(w))freq[w]=(freq[w]||0)+1;
+    }));
+  const top=Object.entries(freq).sort((x,y)=>y[1]-x[1]).slice(0,15).filter(x=>x[1]>1);
+  $("#topWords").innerHTML=top.length
+    ?top.map(([w,n])=>`<span class="fchip">${esc(w)}&nbsp;<b style="color:var(--acc-ink)">${n}×</b></span>`).join("")
+    :'<span style="color:var(--ink2);font-size:13px">Zatím málo textu na smysluplnou statistiku.</span>';
+}
+/* Sloupcový graf slov napsaných v posledních 14 dnech (napříč knihami). */
+function renderDaysChart(){
+  const days=[];
+  for(let i=13;i>=0;i--){
+    const d=new Date(Date.now()-i*864e5);
+    days.push({k:d.toISOString().slice(0,10),n:0,d});
+  }
+  days.forEach(x=>x.n=S.daily[x.k]||0);
+  const goal=S.dayGoal||0;
+  const mx=Math.max(1,goal,...days.map(x=>x.n));
+  const total=days.reduce((s,x)=>s+x.n,0);
+  const goalLine=goal?`<line x1="2" x2="558" y1="${98-goal/mx*88}" y2="${98-goal/mx*88}"
+    stroke="var(--warn)" stroke-width="1.5" stroke-dasharray="5 4"><title>Denní cíl: ${fmt(goal)} slov</title></line>`:"";
+  $("#daysChart").innerHTML=
+    `<p style="font-size:12.5px;color:var(--ink2);margin:0 0 8px">Celkem ${fmt(total)} slov za 14 dní (ve všech knihách).</p>`+
+    `<svg viewBox="0 0 560 128" style="width:100%">`+
+    days.map((x,i)=>{
+      const h=Math.round(x.n/mx*88);
+      const bx=i*40+6;
+      return `<g><title>${x.d.toLocaleDateString("cs")}: ${fmt(x.n)} slov</title>
+        <rect x="${bx}" y="${98-h}" width="28" height="${Math.max(h,2)}" rx="3"
+          fill="${x.n?"var(--acc)":"var(--panel2)"}"></rect>
+        <text x="${bx+14}" y="114" text-anchor="middle" font-size="10" fill="var(--ink2)">${x.d.getDate()}.</text></g>`;
+    }).join("")+goalLine+`</svg>`;
+}
+
+/* ============================================================
+   Export: společné
+   ============================================================ */
+function download(name,data,mime){
+  const blob=data instanceof Blob?data:new Blob([data],{type:mime||"application/octet-stream"});
+  const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download=name;a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),4000);
+}
+function needBook(){const b=cur();if(!b)toast("Nejprve vyberte knihu");return b;}
+
+/* ---------- kniha jako HTML stránka ---------- */
+function bookHTML(b,autoPrint){
+  const c=b.cover,k=b.back;
+  const ffaces=(b.fonts||[]).map(f=>`@font-face{font-family:'${fontFam(f)}';src:url(${f.data})}`).join("\n");
+  const cbg=c.img?`background:url(${c.img}) center/cover;`:`background:linear-gradient(${c.angle}deg,${c.bg1},${c.bg2});`;
+  const kbg=k.img?`background:url(${k.img}) center/cover;`:`background:${k.bg};`;
+  const pos=o=>`left:${o.posX}%;top:${o.posY}%;transform:translate(-50%,-50%) rotate(${o.rotate||0}deg);text-align:${o.align};`;
+  /* px náhledu (~14 px ≈ 10 mm) → mm pro tisk */
+  const frm=o=>{const bd=frameCSS(o);
+    return bd==="none"?"display:none":`border:${bd};border-radius:${((o.bRadius||0)*10/14).toFixed(1)}mm;inset:${((o.bInset||0)*10/14).toFixed(1)}mm`;};
+  const toc=b.chapters.map((ch,i)=>`<li>${i+1}. ${esc(ch.title)}</li>`).join("");
+  const backText=k.text||b.desc;
+  const hasBack=!!(backText||k.isbn||k.img);
+  const pn=b.pageNum;
+  const pnPrint=pn==="none"?"":
+    `@bottom-${pn==="center"?"center":"right"}{content:counter(page);font-size:10pt;color:#666;font-family:${b.pageNumFont}}`;
+  const pnScript=pn==="none"?"":`<scr`+`ipt>
+document.querySelectorAll('.page.chap').forEach((p,i)=>{
+  const d=document.createElement('div');d.className='pn ${pn}';d.textContent=i+1;p.appendChild(d);});
+<\/scr`+`ipt>`;
+  return `<!DOCTYPE html><html lang="${esc(b.lang)}"><head><meta charset="utf-8">
+<title>${esc(b.title)}</title>
+<style>
+${ffaces}
+*{box-sizing:border-box;-webkit-print-color-adjust:exact;print-color-adjust:exact}
+body{margin:0;font-family:${b.defaultFont};background:#4a4a48;color:#222}
+.page{width:210mm;min-height:297mm;background:#fff;margin:18px auto;box-shadow:0 6px 26px rgba(0,0,0,.4);
+  padding:26mm 24mm;position:relative}
+.page.cover,.page.back{padding:0;overflow:hidden}
+.cover{${cbg}color:${c.color};font-family:${c.font}}
+.back{${kbg}color:${k.color};font-family:${k.font}}
+.cvin{position:absolute;max-width:84%;width:max-content;z-index:2}
+.cover .d,.back .d{position:absolute;inset:0}
+.cover .d{background:rgba(0,0,0,${c.img?c.dim/100:0})}
+.back .d{background:rgba(0,0,0,${k.img?k.dim/100:0})}
+.cfr{position:absolute;pointer-events:none;z-index:1}
+.cover h1{font-size:42px;margin:0 0 10px}
+.cover .s{font-size:20px;opacity:.9}.cover .a{margin-top:16px;font-size:17px}
+.back .bt{font-size:15px;line-height:1.65;white-space:pre-wrap}
+.back .isbn{margin-top:22px;font-size:12px;opacity:.75}
+.toc h2,.chap h2{border-bottom:1px solid #ddd;padding-bottom:8px;color:#333;font-family:${b.chapTitleFont}}
+.toc ol{line-height:2.1;font-size:17px}
+.chap{font-size:17.5px;line-height:1.75}
+.chap img{max-width:100%}
+.chap blockquote{border-left:3px solid #bbb;margin:1em 0;padding:.2em 1em;color:#555;font-style:italic}
+.pn{position:absolute;bottom:10mm;font-size:11pt;color:#666;font-family:${b.pageNumFont}}
+.pn.center{left:0;right:0;text-align:center}
+.pn.right{right:20mm}
+/* vzhledová šablona: ${EXTHEMES[b.exTheme]?EXTHEMES[b.exTheme].label:b.exTheme} */
+${(EXTHEMES[b.exTheme]||EXTHEMES.classic).html}
+@media print{
+ @page{size:A4;margin:18mm 16mm;${pnPrint}}
+ @page blank{margin:0}
+ body{background:#fff}
+ .page{width:auto;min-height:0;margin:0;box-shadow:none;padding:0;page-break-after:always}
+ .page:last-child{page-break-after:auto}
+ .page.cover,.page.back{page:blank;min-height:100vh}
+ .pn{display:none}
+}
+</style></head><body>
+<div class="page cover"><div class="d"></div><div class="cfr" style="${frm(c)}"></div>
+ <div class="cvin" style="${pos(c)}">
+ <h1>${esc(b.title)}</h1>
+ ${b.subtitle?`<div class="s">${esc(b.subtitle)}</div>`:""}
+ <div class="a">${esc(b.author)}</div></div></div>
+${b.chapters.length>1?`<div class="page toc"><h2>Obsah</h2><ol style="list-style:none;padding:0">${toc}</ol></div>`:""}
+${b.chapters.map((ch,i)=>`<div class="page chap"><h2>${i+1}. ${esc(ch.title)}</h2>${sanitize(ch.html)}</div>`).join("\n")}
+${hasBack?`<div class="page back"><div class="d"></div><div class="cfr" style="${frm(k)}"></div>
+ <div class="cvin" style="${pos(k)}"><div class="bt">${esc(backText)}</div>
+ ${k.isbn?`<div class="isbn">ISBN: ${esc(k.isbn)}</div>`:""}</div></div>`:""}
+${pnScript}
+${autoPrint?'<scr'+'ipt>onload=()=>setTimeout(()=>print(),400)<\/scr'+'ipt>':""}
+</body></html>`;
+}
+function openBookWin(autoPrint){
+  const b=needBook();if(!b)return;flush();
+  const w=window.open("","_blank");
+  if(!w){toast("Prohlížeč zablokoval nové okno – povolte vyskakovací okna");return;}
+  w.document.write(bookHTML(b,autoPrint));w.document.close();
+}
+$("#exPrev").onclick=()=>openBookWin(false);
+$("#exPrint").onclick=()=>{openBookWin(true);toast("V dialogu tisku zvolte „Uložit jako PDF“");};
+$("#exHtml").onclick=()=>{const b=needBook();if(!b)return;flush();
+  download(safeName(b.title)+".html",bookHTML(b,false),"text/html");toast("HTML staženo");};
+
+/* ---------- ZIP (bez komprese, offline, pro EPUB) ---------- */
+function crc32(u8){
+  let t=crc32.T;
+  if(!t){t=crc32.T=new Int32Array(256);
+    for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;t[n]=c;}}
+  let c=-1;for(let i=0;i<u8.length;i++)c=(c>>>8)^t[(c^u8[i])&255];
+  return (c^-1)>>>0;
+}
+const enc=s=>new TextEncoder().encode(s);
+function makeZip(files){
+  const u16=n=>[n&255,n>>8&255],u32=n=>[n&255,n>>8&255,n>>16&255,n>>>24&255];
+  const parts=[],cen=[];let off=0;
+  for(const f of files){
+    const nm=enc(f.name),d=f.data,crc=crc32(d);
+    const lh=new Uint8Array([80,75,3,4,20,0,0,0,0,0,0,0,0,0,
+      ...u32(crc),...u32(d.length),...u32(d.length),...u16(nm.length),0,0]);
+    parts.push(lh,nm,d);
+    cen.push(new Uint8Array([80,75,1,2,20,0,20,0,0,0,0,0,0,0,0,0,
+      ...u32(crc),...u32(d.length),...u32(d.length),...u16(nm.length),
+      0,0,0,0,0,0,0,0,0,0,0,0,...u32(off)]),nm);
+    off+=lh.length+nm.length+d.length;
+  }
+  let cs=0;cen.forEach(c=>cs+=c.length);
+  const end=new Uint8Array([80,75,5,6,0,0,0,0,...u16(files.length),...u16(files.length),...u32(cs),...u32(off),0,0]);
+  const all=[...parts,...cen,end];let L=0;all.forEach(a=>L+=a.length);
+  const out=new Uint8Array(L);let p=0;all.forEach(a=>{out.set(a,p);p+=a.length;});
+  return out;
+}
+function b64bytes(b64){const bin=atob(b64);const u=new Uint8Array(bin.length);
+  for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);return u;}
+
+/* ---------- EPUB ---------- */
+function toXHTML(html,images){
+  const d=document.createElement("div");d.innerHTML=sanitize(html);
+  // <font> (z execCommand fontName/foreColor) není v EPUB3 XHTML validní → <span style>
+  d.querySelectorAll("font").forEach(f=>{
+    const sp=document.createElement("span");
+    const st=[];
+    if(f.getAttribute("face"))st.push("font-family:"+f.getAttribute("face"));
+    if(f.getAttribute("color"))st.push("color:"+f.getAttribute("color"));
+    if(f.getAttribute("style"))st.push(f.getAttribute("style"));
+    if(st.length)sp.setAttribute("style",st.join(";"));
+    while(f.firstChild)sp.appendChild(f.firstChild);
+    f.replaceWith(sp);
+  });
+  d.querySelectorAll("img").forEach(im=>{
+    const m=/^data:(image\/[a-z+.]+);base64,(.+)$/.exec(im.getAttribute("src")||"");
+    if(!m){im.remove();return;}
+    const ext=m[1].split("/")[1].replace("jpeg","jpg").replace("svg+xml","svg");
+    const name="img"+(images.length+1)+"."+ext;
+    images.push({file:"OEBPS/"+name,href:name,mime:m[1],data:b64bytes(m[2]),id:"im"+(images.length+1)});
+    im.setAttribute("src",name);im.removeAttribute("width");im.removeAttribute("height");
+  });
+  const xs=new XMLSerializer();let out="";
+  [...d.childNodes].forEach(n=>out+=xs.serializeToString(n));
+  return out.replace(/ xmlns="http:\/\/www\.w3\.org\/1999\/xhtml"/g,"");
+}
+function xdoc(title,body,lang){
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE html>
+<html xmlns="http://www.w3.org/1999/xhtml" lang="${lang}" xml:lang="${lang}">
+<head><meta charset="utf-8"/><title>${esc(title)}</title>
+<link rel="stylesheet" type="text/css" href="style.css"/></head><body>${body}</body></html>`;
+}
+const dataParts=u=>{const m=/^data:([^;]+);base64,(.*)$/.exec(u||"");
+  return m?{mime:m[1],data:b64bytes(m[2])}:null;};
+$("#exEpub").onclick=()=>{
+  const b=needBook();if(!b)return;flush();
+  const id="urn:uuid:"+"xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx".replace(/[xy]/g,ch=>{
+    const r=Math.random()*16|0;return (ch==="x"?r:(r&3|8)).toString(16);});
+  const images=[],docs=[],fonts=[];
+  let ffaces="";
+  const FMIME={ttf:"font/ttf",otf:"font/otf",woff:"font/woff",woff2:"font/woff2"};
+  (b.fonts||[]).forEach((f,i)=>{
+    const p=dataParts(f.data);if(!p)return;
+    const ext=(f.ext&&FMIME[f.ext])?f.ext:"ttf";
+    const href="fonts/f"+(i+1)+"."+ext;
+    fonts.push({file:"OEBPS/"+href,href,id:"fnt"+(i+1),mime:FMIME[ext],data:p.data});
+    ffaces+=`@font-face{font-family:'${fontFam(f)}';src:url(${href});}\n`;
+  });
+  const c=b.cover,k=b.back;
+  const coverBody=`<div class="cv" style="text-align:${c.align}">
+    <h1>${esc(b.title)}</h1>${b.subtitle?`<p class="s">${esc(b.subtitle)}</p>`:""}
+    <p class="a">${esc(b.author)}</p></div>`;
+  docs.push({id:"cover",href:"cover.xhtml",title:"Titulní strana",body:coverBody});
+  b.chapters.forEach((ch,i)=>{
+    docs.push({id:"c"+(i+1),href:"c"+(i+1)+".xhtml",title:(i+1)+". "+(ch.title||"Kapitola"),
+      body:`<h2>${esc((i+1)+". "+(ch.title||"Kapitola"))}</h2>`+toXHTML(ch.html,images)});
+  });
+  if(b.desc)docs.push({id:"about",href:"about.xhtml",title:"O knize",
+    body:`<h2>O knize</h2><p class="desc">${esc(b.desc).replace(/\n/g,"<br/>")}</p>`});
+  if(k.text||k.isbn)docs.push({id:"backp",href:"back.xhtml",title:"Zadní strana",
+    body:`<h2>Zadní strana</h2><p class="desc">${esc(k.text).replace(/\n/g,"<br/>")}</p>`+
+      (k.isbn?`<p class="isbn">ISBN: ${esc(k.isbn)}</p>`:"")});
+  const css=`${ffaces}body{font-family:${b.defaultFont};line-height:1.65;margin:5%}
+h1{text-align:center}h2{border-bottom:1px solid #ccc;padding-bottom:.2em;font-family:${b.chapTitleFont}}
+.cv{margin-top:28%;font-family:${c.font}}.cv .s{font-style:italic}.cv .a{margin-top:2.4em}
+img{max-width:100%}.desc{font-style:italic}.isbn{margin-top:2em;font-size:.85em;color:#666}
+blockquote{border-left:3px solid #ccc;margin:1em 0;padding:.2em 1em;font-style:italic}
+${(EXTHEMES[b.exTheme]||EXTHEMES.classic).epub}`;
+  const nav=`<nav epub:type="toc" xmlns:epub="http://www.idpf.org/2007/ops"><h1>Obsah</h1><ol>${
+    docs.map(d=>`<li><a href="${d.href}">${esc(d.title)}</a></li>`).join("")}</ol></nav>`;
+  const manifest=[
+    `<item id="nav" href="nav.xhtml" media-type="application/xhtml+xml" properties="nav"/>`,
+    `<item id="css" href="style.css" media-type="text/css"/>`,
+    ...docs.map(d=>`<item id="${d.id}" href="${d.href}" media-type="application/xhtml+xml"/>`),
+    ...images.map(im=>`<item id="${im.id}" href="${im.href}" media-type="${im.mime}"/>`),
+    ...fonts.map(f=>`<item id="${f.id}" href="${f.href}" media-type="${f.mime}"/>`)
+  ].join("");
+  const spine=docs.map(d=>`<itemref idref="${d.id}"/>`).join("");
+  const opf=`<?xml version="1.0" encoding="UTF-8"?>
+<package xmlns="http://www.idpf.org/2007/opf" version="3.0" unique-identifier="bid" xml:lang="${b.lang}">
+<metadata xmlns:dc="http://purl.org/dc/elements/1.1/">
+<dc:identifier id="bid">${id}</dc:identifier>
+<dc:title>${esc(b.title)}</dc:title>
+<dc:creator>${esc(b.author||"Neznámý autor")}</dc:creator>
+<dc:language>${b.lang}</dc:language>
+${b.desc?`<dc:description>${esc(b.desc)}</dc:description>`:""}
+<meta property="dcterms:modified">${new Date().toISOString().replace(/\.\d+Z$/,"Z")}</meta>
+</metadata><manifest>${manifest}</manifest><spine>${spine}</spine></package>`;
+  const files=[
+    {name:"mimetype",data:enc("application/epub+zip")},
+    {name:"META-INF/container.xml",data:enc(`<?xml version="1.0" encoding="UTF-8"?>
+<container version="1.0" xmlns="urn:oasis:names:tc:opendocument:xmlns:container">
+<rootfiles><rootfile full-path="OEBPS/content.opf" media-type="application/oebps-package+xml"/></rootfiles></container>`)},
+    {name:"OEBPS/content.opf",data:enc(opf)},
+    {name:"OEBPS/nav.xhtml",data:enc(xdoc("Obsah",nav,b.lang))},
+    {name:"OEBPS/style.css",data:enc(css)},
+    ...docs.map(d=>({name:"OEBPS/"+d.href,data:enc(xdoc(d.title,d.body,b.lang))})),
+    ...images.map(im=>({name:im.file,data:im.data})),
+    ...fonts.map(f=>({name:f.file,data:f.data}))
+  ];
+  download(safeName(b.title)+".epub",makeZip(files),"application/epub+zip");
+  toast("EPUB staženo");
+};
+
+/* ---------- ODT (OpenDocument Text) ---------- */
+const odtEsc=s=>(s||"").replace(/[&<>"']/g,ch=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&apos;"}[ch]));
+function buildODT(b,pics){
+  const styleDefs=[],styleMap={};let sc=0;
+  function tStyle(f){
+    const key=(f.b?"b":"")+(f.i?"i":"")+(f.u?"u":"")+(f.s?"s":"");if(!key)return null;
+    if(styleMap[key])return styleMap[key];
+    const name="T"+(++sc);let p="";
+    if(f.b)p+=' fo:font-weight="bold"';
+    if(f.i)p+=' fo:font-style="italic"';
+    if(f.u)p+=' style:text-underline-style="solid" style:text-underline-width="auto" style:text-underline-color="font-color"';
+    if(f.s)p+=' style:text-line-through-style="solid"';
+    styleDefs.push(`<style:style style:name="${name}" style:family="text"><style:text-properties${p}/></style:style>`);
+    return styleMap[key]=name;
+  }
+  function imgFrame(src){
+    const p=dataParts(src);if(!p)return"";
+    const ext=(p.mime.split("/")[1]||"png").replace("jpeg","jpg").replace("svg+xml","svg");
+    const href="Pictures/img"+(pics.length+1)+"."+ext;
+    pics.push({href,mime:p.mime,data:p.data});
+    return `<draw:frame draw:style-name="Fr" text:anchor-type="as-char" svg:width="12cm" svg:height="8cm"><draw:image xlink:href="${href}" xlink:type="simple" xlink:show="embed" xlink:actuate="onLoad"/></draw:frame>`;
+  }
+  function inline(node,f){
+    let s="";
+    node.childNodes.forEach(n=>{
+      if(n.nodeType===3){const st=tStyle(f),tx=odtEsc(n.nodeValue);
+        s+=st?`<text:span text:style-name="${st}">${tx}</text:span>`:tx;return;}
+      if(n.nodeType!==1)return;
+      const t=n.tagName.toLowerCase(),nf=Object.assign({},f);
+      if(t==="strong"||t==="b")nf.b=true;
+      if(t==="em"||t==="i")nf.i=true;
+      if(t==="u")nf.u=true;
+      if(t==="s"||t==="strike"||t==="del")nf.s=true;
+      if(t==="br"){s+="<text:line-break/>";return;}
+      if(t==="img"){s+=imgFrame(n.getAttribute("src"));return;}
+      if(t==="a"){s+=`<text:a xlink:type="simple" xlink:href="${odtEsc(n.getAttribute("href")||"")}">`+inline(n,nf)+"</text:a>";return;}
+      s+=inline(n,nf);
+    });
+    return s;
+  }
+  let body="";
+  function paras(html){
+    const box=document.createElement("div");box.innerHTML=sanitize(html);
+    box.childNodes.forEach(n=>{
+      if(n.nodeType===3){const tx=n.nodeValue.trim();if(tx)body+=`<text:p text:style-name="Pb">${odtEsc(tx)}</text:p>`;return;}
+      if(n.nodeType!==1)return;
+      const t=n.tagName.toLowerCase();
+      if(t==="h1")body+=`<text:h text:style-name="H1s" text:outline-level="2">${inline(n,{})}</text:h>`;
+      else if(t==="h2")body+=`<text:h text:style-name="H2s" text:outline-level="3">${inline(n,{})}</text:h>`;
+      else if(t==="h3")body+=`<text:h text:style-name="H3s" text:outline-level="4">${inline(n,{})}</text:h>`;
+      else if(t==="blockquote")body+=`<text:p text:style-name="Pq">${inline(n,{})}</text:p>`;
+      else if(t==="pre")body+=`<text:p text:style-name="Pc">${odtEsc(n.textContent)}</text:p>`;
+      else if(t==="hr")body+=`<text:p text:style-name="Pb"/>`;
+      else if(t==="ul"||t==="ol"){body+="<text:list>";
+        [...n.children].forEach(li=>body+=`<text:list-item><text:p text:style-name="Pb">${inline(li,{})}</text:p></text:list-item>`);
+        body+="</text:list>";}
+      else if(t==="img")body+=`<text:p text:style-name="Pb">${imgFrame(n.getAttribute("src"))}</text:p>`;
+      else body+=`<text:p text:style-name="Pb">${inline(n,{})}</text:p>`;
+    });
+  }
+  body+=`<text:p text:style-name="Pt">${odtEsc(b.title||"Bez názvu")}</text:p>`;
+  if(b.subtitle)body+=`<text:p text:style-name="Ps">${odtEsc(b.subtitle)}</text:p>`;
+  if(b.author)body+=`<text:p text:style-name="Ps">${odtEsc(b.author)}</text:p>`;
+  b.chapters.forEach((ch,i)=>{
+    body+=`<text:h text:style-name="H1s" text:outline-level="1">${odtEsc((i+1)+". "+(ch.title||"Kapitola"))}</text:h>`;
+    paras(ch.html);
+  });
+  const back=b.back.text||b.desc;
+  if(back||b.back.isbn){
+    body+=`<text:h text:style-name="H1s" text:outline-level="1">Zadní strana</text:h>`;
+    if(back)back.split(/\n/).forEach(l=>body+=`<text:p text:style-name="Pb">${odtEsc(l)}</text:p>`);
+    if(b.back.isbn)body+=`<text:p text:style-name="Pb">ISBN: ${odtEsc(b.back.isbn)}</text:p>`;
+  }
+  const baseStyles=`
+<style:style style:name="Pt" style:family="paragraph"><style:paragraph-properties fo:text-align="center" fo:margin-bottom="0.3cm"/><style:text-properties fo:font-size="28pt" fo:font-weight="bold"/></style:style>
+<style:style style:name="Ps" style:family="paragraph"><style:paragraph-properties fo:text-align="center" fo:margin-bottom="0.2cm"/><style:text-properties fo:font-size="14pt" fo:font-style="italic"/></style:style>
+<style:style style:name="H1s" style:family="paragraph"><style:paragraph-properties fo:margin-top="0.6cm" fo:margin-bottom="0.2cm"/><style:text-properties fo:font-size="20pt" fo:font-weight="bold"/></style:style>
+<style:style style:name="H2s" style:family="paragraph"><style:paragraph-properties fo:margin-top="0.4cm" fo:margin-bottom="0.15cm"/><style:text-properties fo:font-size="16pt" fo:font-weight="bold"/></style:style>
+<style:style style:name="H3s" style:family="paragraph"><style:paragraph-properties fo:margin-top="0.3cm" fo:margin-bottom="0.1cm"/><style:text-properties fo:font-size="13pt" fo:font-weight="bold"/></style:style>
+<style:style style:name="Pb" style:family="paragraph"><style:paragraph-properties fo:margin-bottom="0.25cm" fo:text-align="justify"/><style:text-properties fo:font-size="12pt"/></style:style>
+<style:style style:name="Pq" style:family="paragraph"><style:paragraph-properties fo:margin-left="1cm" fo:margin-bottom="0.25cm"/><style:text-properties fo:font-size="12pt" fo:font-style="italic"/></style:style>
+<style:style style:name="Pc" style:family="paragraph"><style:text-properties style:font-name="Courier New" fo:font-size="11pt"/></style:style>
+<style:style style:name="Fr" style:family="graphic"><style:graphic-properties style:vertical-pos="middle" style:vertical-rel="text"/></style:style>`;
+  const NS='xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0" xmlns:style="urn:oasis:names:tc:opendocument:xmlns:style:1.0" xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0" xmlns:fo="urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0" xmlns:draw="urn:oasis:names:tc:opendocument:xmlns:drawing:1.0" xmlns:svg="urn:oasis:names:tc:opendocument:xmlns:svg-compatible:1.0" xmlns:xlink="http://www.w3.org/1999/xlink"';
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<office:document-content ${NS} office:version="1.2">
+<office:automatic-styles>${baseStyles}${styleDefs.join("")}</office:automatic-styles>
+<office:body><office:text>${body}</office:text></office:body>
+</office:document-content>`;
+}
+$("#exOdt").onclick=()=>{
+  const b=needBook();if(!b)return;flush();
+  const pics=[];
+  const content=buildODT(b,pics);
+  const manifest=`<?xml version="1.0" encoding="UTF-8"?>
+<manifest:manifest xmlns:manifest="urn:oasis:names:tc:opendocument:xmlns:manifest:1.0" manifest:version="1.2">
+<manifest:file-entry manifest:full-path="/" manifest:media-type="application/vnd.oasis.opendocument.text"/>
+<manifest:file-entry manifest:full-path="content.xml" manifest:media-type="text/xml"/>
+<manifest:file-entry manifest:full-path="styles.xml" manifest:media-type="text/xml"/>
+${pics.map(p=>`<manifest:file-entry manifest:full-path="${p.href}" manifest:media-type="${p.mime}"/>`).join("\n")}
+</manifest:manifest>`;
+  const styles=`<?xml version="1.0" encoding="UTF-8"?>
+<office:document-styles xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0" office:version="1.2"><office:styles/></office:document-styles>`;
+  const files=[
+    {name:"mimetype",data:enc("application/vnd.oasis.opendocument.text")},
+    {name:"META-INF/manifest.xml",data:enc(manifest)},
+    {name:"styles.xml",data:enc(styles)},
+    {name:"content.xml",data:enc(content)},
+    ...pics.map(p=>({name:p.href,data:p.data}))
+  ];
+  download(safeName(b.title)+".odt",makeZip(files),"application/vnd.oasis.opendocument.text");
+  toast("ODT staženo");
+};
+
+/* ---------- DOCX (Microsoft Word) ---------- */
+const xEsc=s=>(s||"").replace(/[&<>]/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c]));
+function docxRuns(node,f){
+  let out="";
+  node.childNodes.forEach(n=>{
+    if(n.nodeType===3){
+      const pr=(f.b?"<w:b/>":"")+(f.i?"<w:i/>":"")+(f.u?'<w:u w:val="single"/>':"")+(f.s?"<w:strike/>":"");
+      out+=`<w:r>${pr?`<w:rPr>${pr}</w:rPr>`:""}<w:t xml:space="preserve">${xEsc(n.nodeValue)}</w:t></w:r>`;
+      return;
+    }
+    if(n.nodeType!==1)return;
+    const t=n.tagName,nf={...f};
+    if(t==="B"||t==="STRONG")nf.b=1;
+    if(t==="I"||t==="EM")nf.i=1;
+    if(t==="U")nf.u=1;
+    if(t==="S"||t==="STRIKE"||t==="DEL")nf.s=1;
+    if(t==="BR"){out+="<w:r><w:br/></w:r>";return;}
+    if(t==="IMG")return;   // obrázky zachová ODT/EPUB
+    out+=docxRuns(n,nf);
+  });
+  return out;
+}
+function docxHead(text,sz){
+  return `<w:p><w:pPr><w:spacing w:before="240" w:after="120"/></w:pPr>`+
+    `<w:r><w:rPr><w:b/><w:sz w:val="${sz}"/></w:rPr><w:t xml:space="preserve">${xEsc(text)}</w:t></w:r></w:p>`;
+}
+function docxBlocks(html){
+  const box=document.createElement("div");box.innerHTML=sanitize(html);
+  let out="";
+  box.childNodes.forEach(n=>{
+    if(n.nodeType===3){
+      const t=n.nodeValue.trim();
+      if(t)out+=`<w:p><w:r><w:t xml:space="preserve">${xEsc(t)}</w:t></w:r></w:p>`;
+      return;
+    }
+    if(n.nodeType!==1)return;
+    const tag=n.tagName;
+    if(tag==="H1")out+=docxHead(n.textContent,"40");
+    else if(tag==="H2")out+=docxHead(n.textContent,"34");
+    else if(tag==="H3")out+=docxHead(n.textContent,"28");
+    else if(tag==="BLOCKQUOTE")
+      out+=`<w:p><w:pPr><w:ind w:left="720"/></w:pPr><w:r><w:rPr><w:i/></w:rPr><w:t xml:space="preserve">${xEsc(n.textContent)}</w:t></w:r></w:p>`;
+    else if(tag==="PRE")
+      n.textContent.split("\n").forEach(l=>out+=`<w:p><w:r><w:rPr><w:rFonts w:ascii="Courier New" w:hAnsi="Courier New"/></w:rPr><w:t xml:space="preserve">${xEsc(l)}</w:t></w:r></w:p>`);
+    else if(tag==="UL")
+      [...n.children].forEach(li=>out+=`<w:p><w:r><w:t xml:space="preserve">• ${xEsc(li.textContent)}</w:t></w:r></w:p>`);
+    else if(tag==="OL")
+      [...n.children].forEach((li,i)=>out+=`<w:p><w:r><w:t xml:space="preserve">${i+1}. ${xEsc(li.textContent)}</w:t></w:r></w:p>`);
+    else if(tag==="HR")out+="<w:p/>";
+    else out+=`<w:p>${docxRuns(n,{})||'<w:r><w:t xml:space="preserve"> </w:t></w:r>'}</w:p>`;
+  });
+  return out;
+}
+$("#exDocx").onclick=()=>{
+  const b=needBook();if(!b)return;flush();
+  let body=`<w:p><w:pPr><w:jc w:val="center"/><w:spacing w:after="120"/></w:pPr>`+
+    `<w:r><w:rPr><w:b/><w:sz w:val="56"/></w:rPr><w:t xml:space="preserve">${xEsc(b.title||"Bez názvu")}</w:t></w:r></w:p>`;
+  if(b.subtitle)body+=`<w:p><w:pPr><w:jc w:val="center"/></w:pPr><w:r><w:rPr><w:i/><w:sz w:val="28"/></w:rPr><w:t xml:space="preserve">${xEsc(b.subtitle)}</w:t></w:r></w:p>`;
+  if(b.author)body+=`<w:p><w:pPr><w:jc w:val="center"/><w:spacing w:after="360"/></w:pPr><w:r><w:sz w:val="26"/><w:t xml:space="preserve">${xEsc(b.author)}</w:t></w:r></w:p>`;
+  b.chapters.forEach((ch,i)=>{
+    body+=docxHead((i+1)+". "+(ch.title||"Kapitola"),"36");
+    body+=docxBlocks(ch.html);
+  });
+  const back=b.back.text||b.desc;
+  if(back||b.back.isbn){
+    body+=docxHead("Zadní strana","36");
+    if(back)back.split(/\n/).forEach(l=>body+=`<w:p><w:r><w:t xml:space="preserve">${xEsc(l)}</w:t></w:r></w:p>`);
+    if(b.back.isbn)body+=`<w:p><w:r><w:t xml:space="preserve">ISBN: ${xEsc(b.back.isbn)}</w:t></w:r></w:p>`;
+  }
+  const doc=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:body>${body}</w:body></w:document>`;
+  const files=[
+    {name:"[Content_Types].xml",data:enc(`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+<Default Extension="xml" ContentType="application/xml"/>
+<Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>
+</Types>`)},
+    {name:"_rels/.rels",data:enc(`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>
+</Relationships>`)},
+    {name:"word/document.xml",data:enc(doc)}
+  ];
+  download(safeName(b.title)+".docx",makeZip(files),
+    "application/vnd.openxmlformats-officedocument.wordprocessingml.document");
+  toast("DOCX staženo");
+};
+
+/* ---------- Živá záloha do souboru (File System Access API) ---------- */
+let fbHandle=null,fbT=null;
+const fbSupported=!!window.showSaveFilePicker;
+function fbUpdateUI(){
+  if(!fbSupported)return;
+  $("#fbStat").textContent=fbHandle
+    ?("Propojeno se souborem: "+fbHandle.name)
+    :"Nepropojen — data jsou jen v prohlížeči.";
+  $("#fbOffBtn").style.display=fbHandle?"inline-flex":"none";
+  $("#fbNow").style.display=fbHandle?"inline-flex":"none";
+}
+async function fbInit(){
+  if(!fbSupported){$("#fbCard").style.display="none";return;}
+  try{
+    const h=await dbGet("fileHandle");
+    if(h&&typeof h.createWritable==="function")fbHandle=h;
+  }catch(e){}
+  fbUpdateUI();
+}
+async function fbEnsurePerm(){
+  if(!fbHandle)return false;
+  let p=await fbHandle.queryPermission({mode:"readwrite"});
+  if(p!=="granted")p=await fbHandle.requestPermission({mode:"readwrite"});
+  return p==="granted";
+}
+async function fbWrite(){
+  if(!fbHandle)return;
+  try{
+    if(!await fbEnsurePerm()){
+      $("#fbStat").textContent="Přístup k souboru vypršel — klikněte na „Zapsat teď“.";
+      return;
+    }
+    const w=await fbHandle.createWritable();
+    await w.write(JSON.stringify({app:"skriptorium",type:"library",books:S.books},null,1));
+    await w.close();
+    $("#fbStat").textContent="Uloženo do "+fbHandle.name+" ("+new Date().toLocaleTimeString("cs")+")";
+  }catch(e){$("#fbStat").textContent="Zápis selhal: "+e.message;}
+}
+/* Zápis se škrtí – soubor se přepíše nejdřív 8 s po poslední změně. */
+function fbSchedule(){if(!fbHandle)return;clearTimeout(fbT);fbT=setTimeout(fbWrite,8000);}
+$("#fbPickBtn").onclick=async()=>{
+  try{
+    fbHandle=await showSaveFilePicker({
+      suggestedName:"skriptorium-zaloha.json",
+      types:[{description:"Záloha JSON",accept:{"application/json":[".json"]}}]
+    });
+    await dbSet("fileHandle",fbHandle);
+    fbUpdateUI();fbWrite();
+  }catch(e){/* uživatel zrušil výběr */}
+};
+$("#fbNow").onclick=()=>{flush();fbWrite();};
+$("#fbOffBtn").onclick=()=>{fbHandle=null;dbSet("fileHandle",null);fbUpdateUI();};
+
+/* ---------- Markdown / TXT ---------- */
+function htmlToMd(html){
+  const d=document.createElement("div");d.innerHTML=sanitize(html);
+  function inl(n){let s="";
+    n.childNodes.forEach(c=>{
+      if(c.nodeType===3){s+=c.nodeValue.replace(/\s+/g," ");return;}
+      if(c.nodeType!==1)return;
+      const t=c.tagName,i=inl(c);
+      if(t==="B"||t==="STRONG")s+="**"+i+"**";
+      else if(t==="I"||t==="EM")s+="*"+i+"*";
+      else if(t==="S"||t==="STRIKE"||t==="DEL")s+="~~"+i+"~~";
+      else if(t==="U")s+="<u>"+i+"</u>";
+      else if(t==="A")s+="["+i+"]("+(c.getAttribute("href")||"")+")";
+      else if(t==="BR")s+="  \n";
+      else if(t==="IMG")s+="![obrázek]("+(c.getAttribute("src")||"")+")";
+      else s+=i;
+    });return s;}
+  let out="";
+  [...d.childNodes].forEach(n=>{
+    if(n.nodeType===3){const t=n.nodeValue.trim();if(t)out+=t+"\n\n";return;}
+    if(n.nodeType!==1)return;
+    const t=n.tagName;
+    if(t==="H1")out+="# "+inl(n).trim()+"\n\n";
+    else if(t==="H2")out+="## "+inl(n).trim()+"\n\n";
+    else if(t==="H3")out+="### "+inl(n).trim()+"\n\n";
+    else if(t==="BLOCKQUOTE")out+="> "+inl(n).trim()+"\n\n";
+    else if(t==="PRE")out+="```\n"+n.textContent+"\n```\n\n";
+    else if(t==="HR")out+="---\n\n";
+    else if(t==="UL"){[...n.children].forEach(li=>out+="- "+inl(li).trim()+"\n");out+="\n";}
+    else if(t==="OL"){[...n.children].forEach((li,i)=>out+=(i+1)+". "+inl(li).trim()+"\n");out+="\n";}
+    else{const s=inl(n).trim();if(s)out+=s+"\n\n";}
+  });
+  return out;
+}
+$("#exMd").onclick=()=>{
+  const b=needBook();if(!b)return;flush();
+  let md="# "+(b.title||"Bez názvu")+"\n\n";
+  if(b.subtitle)md+="*"+b.subtitle+"*\n\n";
+  if(b.author)md+="**Autor:** "+b.author+"\n\n";
+  if(b.desc)md+="> "+b.desc.replace(/\n/g,"\n> ")+"\n\n";
+  md+="---\n\n";
+  b.chapters.forEach((c,i)=>{md+="## "+(i+1)+". "+(c.title||"Kapitola")+"\n\n"+htmlToMd(c.html).trim()+"\n\n";});
+  download(safeName(b.title)+".md",md,"text/markdown");toast("Markdown stažen");
+};
+$("#exTxt").onclick=()=>{
+  const b=needBook();if(!b)return;flush();
+  const box=document.createElement("div");
+  box.style.cssText="position:fixed;left:-9999px;top:0;white-space:pre-wrap";
+  document.body.appendChild(box);
+  let txt=(b.title||"")+"\n"+(b.author||"")+"\n\n";
+  b.chapters.forEach((c,i)=>{
+    box.innerHTML=sanitize(c.html);
+    txt+="═══ "+(i+1)+". "+(c.title||"Kapitola")+" ═══\n\n"+box.innerText.trim()+"\n\n";
+  });
+  box.remove();
+  download(safeName(b.title)+".txt",txt,"text/plain");toast("Text stažen");
+};
+
+/* ---------- JSON záloha + import ---------- */
+$("#exJson").onclick=()=>{const b=needBook();if(!b)return;flush();
+  download(safeName(b.title)+".json",JSON.stringify({app:"skriptorium",type:"book",book:b},null,1),"application/json");};
+$("#exJsonAll").onclick=()=>{flush();
+  download("skriptorium_"+today()+".json",
+    JSON.stringify({app:"skriptorium",type:"library",books:S.books},null,1),"application/json");};
+$("#impFile").onchange=e=>{
+  const f=e.target.files[0];if(!f)return;
+  const r=new FileReader();
+  r.onload=()=>{
+    try{
+      const d=JSON.parse(r.result);
+      let list=[];
+      if(Array.isArray(d.books))list=d.books;         // knihovna (naše i Tvůrce knih)
+      else if(d.book)list=[d.book];                   // jedna kniha
+      else if(d.title&&(d.chapters||d.content))list=[d];
+      else throw new Error("neznámý formát");
+      if(!list.length)throw new Error("záloha neobsahuje žádnou knihu");
+      list.forEach(bk=>{
+        fixBook(bk);bk.id=uid();
+        bk.chapters.forEach(c=>c.html=sanitize(c.html));
+        S.books.push(bk);
+      });
+      openBook(S.books[S.books.length-1].id);
+      toast("Importováno knih: "+list.length);
+    }catch(err){alert("Import selhal: "+err.message);}
+  };
+  r.readAsText(f);e.target.value="";
+};
+
+/* ============================================================
+   Koš
+   ============================================================ */
+$("#btnTrash").onclick=()=>{renderTrash();$("#dlgTrash").showModal();};
+$("#dlgTrashX").onclick=()=>$("#dlgTrash").close();
+function renderTrash(){
+  const box=$("#trashList");
+  if(!S.trash.length){box.innerHTML='<p style="color:var(--ink2)">Koš je prázdný.</p>';return;}
+  box.innerHTML="";
+  S.trash.forEach((t,i)=>{
+    const row=document.createElement("div");row.className="trow";
+    row.innerHTML=`<span class="grow">${esc(t.book.title)} <small style="color:var(--ink2)">(${new Date(t.t).toLocaleDateString("cs")})</small></span>`;
+    const rb=document.createElement("button");rb.className="btn small";rb.textContent="Obnovit";
+    rb.onclick=()=>{S.trash.splice(i,1);S.books.push(t.book);openBook(t.book.id);save();
+      renderTrash();toast("Kniha obnovena");};
+    const db=document.createElement("button");db.className="btn danger small";db.textContent="Smazat";
+    db.onclick=()=>{if(confirm("Trvale smazat? Nelze vrátit."))
+      {S.trash.splice(i,1);save();renderTrash();}};
+    row.append(rb,db);box.appendChild(row);
+  });
+}
+
+/* ============================================================
+   Téma, soustředění, panel, nápověda, zkratky
+   ============================================================ */
+function applyTheme(){
+  const t=S.theme||(matchMedia("(prefers-color-scheme: dark)").matches?"dark":"light");
+  document.documentElement.dataset.theme=t;
+}
+$("#btnTheme").onclick=()=>{
+  const now=document.documentElement.dataset.theme;
+  S.theme=now==="dark"?"light":"dark";applyTheme();save();
+};
+$("#btnSide").onclick=()=>document.body.classList.toggle("noside");
+$("#btnFocus").onclick=()=>{document.body.classList.add("focus");switchView("write");ed.focus();};
+$("#focusOff").onclick=()=>document.body.classList.remove("focus");
+$("#btnHelp").onclick=()=>$("#dlgHelp").showModal();
+$("#dlgHelpX").onclick=()=>$("#dlgHelp").close();
+document.addEventListener("keydown",e=>{
+  if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="s"){e.preventDefault();saveNow();toast("Uloženo");return;}
+  if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="h"&&cur()){e.preventDefault();openFind();return;}
+  if((e.ctrlKey||e.metaKey)&&e.key==="\\"){e.preventDefault();document.body.classList.toggle("noside");return;}
+  if(e.key==="Escape"&&document.body.classList.contains("focus")){document.body.classList.remove("focus");return;}
+  const a=document.activeElement;
+  const typing=a&&(/^(INPUT|TEXTAREA|SELECT)$/.test(a.tagName)||a.isContentEditable);
+  if(e.key==="?"&&!typing){e.preventDefault();$("#dlgHelp").showModal();}
+});
+
+/* ============================================================
+   Založení knihy, start
+   ============================================================ */
+function createBook(){const b=newBook();S.books.push(b);openBook(b.id);toast("Kniha založena");}
+$("#btnNewBook").onclick=createBook;
+$("#btnNewBook2").onclick=createBook;
+
+window.addEventListener("beforeunload",()=>{flush();saveNow();});
+document.addEventListener("visibilitychange",()=>{if(document.visibilityState==="hidden"){flush();saveNow();}});
+
+/* Hlídání kvóty úložiště + záložní pravidelné ukládání (pojistka pro
+   případy, kdy prohlížeč ukončí kartu bez beforeunload). */
+let quotaWarned=false;
+async function quotaCheck(){
+  if(quotaWarned||!(navigator.storage&&navigator.storage.estimate))return;
+  try{
+    const {usage,quota}=await navigator.storage.estimate();
+    if(quota&&usage/quota>0.8){
+      quotaWarned=true;
+      toast("Úložiště prohlížeče je téměř plné — zálohujte knihovnu (Export → Záloha JSON).",6000);
+    }
+  }catch(e){}
+}
+setInterval(()=>{flush();maybeSnap(curCh());saveNow();quotaCheck();},5*60*1000);
+
+(async function init(){
+  await idbReady;
+  const d=await dbGet(KEY);
+  if(d&&d.books)S=d;
+  if(!S.daily)S.daily={};if(!S.trash)S.trash=[];
+  S.books.forEach(fixBook);
+  applyTheme();applySpell();applyTypo();
+  $("#sortSel").value=S.sort||"updated";
+  fbInit();
+  document.body.classList.remove("noside-init");
+  if(window.innerWidth<=760)document.body.classList.add("noside");
+  const first=S.books.slice().sort((a,b)=>b.updated-a.updated)[0];
+  openBook(S.cur&&S.books.some(b=>b.id===S.cur)?S.cur:(first?first.id:null));
+  quotaCheck();
+})();
+</script>
+</body>
+</html>
