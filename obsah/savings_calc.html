@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📈 Spoření & složené úročení</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1a1a1a;color:#e0e0e0;min-height:100vh;padding:20px}
+.container{max-width:860px;margin:0 auto}
+h1{font-size:1.6rem;margin-bottom:18px;font-weight:600;text-align:center}
+.tabs{display:flex;margin-bottom:18px;border-bottom:1px solid #404040;flex-wrap:wrap}
+.tab{padding:11px 16px;background:#2a2a2a;border:1px solid #404040;border-bottom:none;cursor:pointer;color:#bbb;border-radius:8px 8px 0 0;font-size:.88rem}
+.tab.active{background:#6aa6fd;color:#fff;border-color:#6aa6fd}
+.pane{display:none}.pane.active{display:block}
+.card{background:#2a2a2a;border:1px solid #404040;border-radius:8px;padding:22px;margin-bottom:20px}
+h2{font-size:1.05rem;color:#6aa6fd;margin-bottom:16px}
+label{display:block;font-size:.82rem;color:#888;margin-bottom:5px}
+input{width:100%;background:#404040;border:1px solid #555;border-radius:4px;color:#e0e0e0;padding:10px;margin-bottom:12px;font-size:.95rem}
+.chk{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.chk input{width:auto;margin:0}
+.chk label{margin:0;color:#bbb}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:520px){.grid{grid-template-columns:1fr}}
+.big{font-size:2rem;font-weight:700;color:#6aa6fd;text-align:center;margin:10px 0}
+.res-row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #333}
+.res-row:last-child{border:none}.res-row b{color:#4caf50}
+table{width:100%;border-collapse:collapse;font-size:.85rem}
+th,td{padding:7px 9px;text-align:right;border-bottom:1px solid #333}
+th{color:#6aa6fd;font-weight:600}
+th:first-child,td:first-child{text-align:left}
+tr:hover td{background:#303030}
+.graf{display:flex;align-items:flex-end;gap:3px;height:140px;margin:14px 0 4px}
+.graf .sloupec{flex:1;height:100%;display:flex;flex-direction:column-reverse;justify-content:flex-start;gap:2px;border-radius:3px 3px 0 0;overflow:hidden;min-width:4px}
+.graf .vklad{background:#6193d6}
+.graf .vynos{background:#43a047}
+.legend{display:flex;gap:18px;font-size:.78rem;color:#999;justify-content:center;margin-bottom:6px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px}
+.note{font-size:.78rem;color:#777;margin-top:8px}
+.scroll{overflow-x:auto}
+.mimo-radek{display:flex;gap:10px;align-items:flex-end;margin-bottom:4px}
+.mimo-radek>div{flex:1}
+.mimo-radek input{margin-bottom:8px}
+.btn{background:#404040;border:1px solid #555;border-radius:4px;color:#e0e0e0;padding:9px 14px;cursor:pointer;font-size:.85rem}
+.btn:hover{background:#4a4a4a}
+.btn-x{background:#404040;border:1px solid #555;border-radius:4px;color:#e57373;cursor:pointer;padding:9px 12px;margin-bottom:8px;font-size:.9rem;line-height:1}
+.btn-x:hover{background:#4a3535}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>📈 Spoření & složené úročení</h1>
+  <div class="tabs">
+    <div class="tab active" data-pane="sporeni">💰 Kolik naspořím</div>
+    <div class="tab" data-pane="cil">🎯 Kolik odkládat na cíl</div>
+    <div class="tab" data-pane="etf">📊 Predikce ETF</div>
+  </div>
+
+  <div class="pane active" id="sporeni">
+    <div class="card">
+      <h2>Parametry spoření</h2>
+      <div class="grid">
+        <div><label>Počáteční vklad (Kč)</label><input type="number" id="pocatek" value="50000" min="0" step="1000"></div>
+        <div><label>Měsíční úložka (Kč)</label><input type="number" id="mesicne" value="2000" min="0" step="100"></div>
+        <div><label>Roční úrok / výnos (%)</label><input type="number" id="urok" value="5" min="0" step="0.1"></div>
+        <div><label>Doba spoření (roky)</label><input type="number" id="roky" value="20" min="1" max="80"></div>
+      </div>
+      <div class="chk"><input type="checkbox" id="dan"><label for="dan">Odečítat srážkovou daň z úroků 15 % (spořicí účty, termínované vklady)</label></div>
+    </div>
+    <div class="card">
+      <h2>Výsledek</h2>
+      <div class="big" id="vysledek">–</div>
+      <div class="legend"><span><i style="background:#6193d6"></i>Vloženo</span><span><i style="background:#43a047"></i>Výnos z úroků</span></div>
+      <div class="graf" id="graf"></div>
+      <div class="res-row"><span>Celkem vloženo</span><b id="vlozeno">–</b></div>
+      <div class="res-row"><span>Výnos z úroků</span><b id="vynos">–</b></div>
+      <div class="res-row"><span>Kolik z konečné částky vydělaly úroky</span><b id="podil">–</b></div>
+    </div>
+    <div class="card">
+      <h2>Vývoj po letech</h2>
+      <div class="scroll"><table id="tab">
+        <thead><tr><th>Rok</th><th>Vloženo celkem</th><th>Úroky za rok</th><th>Zůstatek</th></tr></thead>
+        <tbody></tbody>
+      </table></div>
+      <p class="note">Měsíční připisování úroků, úložka na začátku měsíce. Orientační výpočet – nezohledňuje inflaci ani změny sazby.</p>
+    </div>
+  </div>
+
+  <div class="pane" id="cil">
+    <div class="card">
+      <h2>Kolik měsíčně odkládat, abych dosáhl cíle</h2>
+      <div class="grid">
+        <div><label>Cílová částka (Kč)</label><input type="number" id="cCastka" value="1000000" min="0" step="10000"></div>
+        <div><label>Už mám naspořeno (Kč)</label><input type="number" id="cMam" value="0" min="0" step="1000"></div>
+        <div><label>Roční úrok / výnos (%)</label><input type="number" id="cUrok" value="5" min="0" step="0.1"></div>
+        <div><label>Za kolik let</label><input type="number" id="cRoky" value="15" min="1" max="80"></div>
+      </div>
+      <div class="big" id="cVysledek">–</div>
+      <div class="res-row"><span>Celkem vložíte</span><b id="cVlozeno">–</b></div>
+      <div class="res-row"><span>Zbytek zařídí úroky</span><b id="cVynos">–</b></div>
+    </div>
+  </div>
+
+  <div class="pane" id="etf">
+    <div class="card">
+      <h2>Parametry investice do ETF</h2>
+      <div class="grid">
+        <div><label>Jednorázová investice (Kč)</label><input type="number" id="ePocatek" value="50000" min="0" step="1000"></div>
+        <div><label>Měsíční investice (Kč)</label><input type="number" id="eMesicne" value="3000" min="0" step="100"></div>
+        <div><label>Roční navýšení měsíční investice (Kč)</label><input type="number" id="eNavyseni" value="0" min="0" step="100"></div>
+        <div><label>Očekávaný roční výnos (%)</label><input type="number" id="eVynosPct" value="7" min="0" step="0.1"></div>
+        <div><label>Roční poplatek fondu TER (%)</label><input type="number" id="eTer" value="0.20" min="0" step="0.01"></div>
+        <div><label>Volatilita – roční kolísání (%)</label><input type="number" id="eVol" value="15" min="0" step="1"></div>
+        <div><label>Investiční horizont (roky)</label><input type="number" id="eRoky" value="20" min="1" max="80"></div>
+      </div>
+      <p class="note">Výnos i volatilitu najdete v dokumentu KID daného fondu. Světové akciové ETF (např. na index MSCI World) měly historicky výnos ~7–8 % ročně při volatilitě ~15 %.</p>
+    </div>
+    <div class="card">
+      <h2>Mimořádné investice</h2>
+      <div id="eMimoSeznam"></div>
+      <button class="btn" id="eMimoPridat" type="button">+ Přidat mimořádnou investici</button>
+      <p class="note">Jednorázový vklad navíc (bonus, dědictví, prodej…) na začátku zvoleného roku investování.</p>
+    </div>
+    <div class="card">
+      <h2>Očekávaná hodnota portfolia</h2>
+      <div class="big" id="eVysledek">–</div>
+      <div class="legend"><span><i style="background:#6193d6"></i>Vloženo</span><span><i style="background:#43a047"></i>Výnos</span></div>
+      <div class="graf" id="eGraf"></div>
+      <div class="res-row"><span>Celkem vloženo</span><b id="eVlozeno">–</b></div>
+      <div class="res-row"><span>Očekávaný výnos</span><b id="eZisk">–</b></div>
+      <div class="res-row"><span>Pesimistický scénář (horších jen ~10 % případů)</span><b id="ePes">–</b></div>
+      <div class="res-row"><span>Optimistický scénář (lepších jen ~10 % případů)</span><b id="eOpt">–</b></div>
+      <div class="res-row"><span>Kolik ukously poplatky (TER) za celou dobu</span><b id="ePoplatky">–</b></div>
+      <div style="display:flex;gap:10px;margin-top:16px;flex-wrap:wrap">
+        <button class="btn" id="eExportPng" type="button">🖼️ Uložit jako obrázek (PNG)</button>
+        <button class="btn" id="eExportCsv" type="button">📄 Stáhnout tabulku (CSV)</button>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Vývoj po letech</h2>
+      <div class="scroll"><table id="eTab">
+        <thead><tr><th>Rok</th><th>Vloženo</th><th>Pesimisticky</th><th>Očekávaně</th><th>Optimisticky</th></tr></thead>
+        <tbody></tbody>
+      </table></div>
+      <p class="note">Orientační odhad: scénáře vychází z očekávaného výnosu ± volatilita přepočtená na délku horizontu (přibližně 10.–90. percentil). Skutečné výnosy nejsou garantované. Při držení přes 3 roky je výnos v ČR osvobozen od daně (časový test). Nezohledňuje inflaci.</p>
+    </div>
+  </div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.pane').forEach(x=>x.classList.remove('active'));
+  t.classList.add('active');$(t.dataset.pane).classList.add('active');
+  uloz();
+});
+const STORE='savingsCalc.v2';
+const POLE=['pocatek','mesicne','urok','roky','cCastka','cMam','cUrok','cRoky',
+  'ePocatek','eMesicne','eNavyseni','eVynosPct','eTer','eVol','eRoky'];
+function uloz(){
+  const vals={};POLE.forEach(id=>vals[id]=$(id).value);
+  localStorage.setItem(STORE,JSON.stringify({vals,d:$('dan').checked,emi:mimoradne,
+    tab:document.querySelector('.tab.active').dataset.pane}));
+}
+function fmt(n){return isFinite(n)?Math.round(n).toLocaleString('cs-CZ')+' Kč':'–';}
+
+function simuluj(pocatek,mesicne,rocniUrok,roky,dan){
+  const r=rocniUrok/100/12, danK=dan?0.85:1;
+  let z=pocatek, vlozeno=pocatek;
+  const data=[]; let rokUrok=0;
+  for(let m=1;m<=roky*12;m++){
+    z+=mesicne; vlozeno+=mesicne;
+    const u=z*r*danK;
+    z+=u; rokUrok+=u;
+    if(m%12===0){data.push({rok:m/12,vlozeno,urok:rokUrok,zustatek:z});rokUrok=0;}
+  }
+  return {z,vlozeno,data};
+}
+
+function prepocti(){
+  const p=+$('pocatek').value||0,m=+$('mesicne').value||0,u=+$('urok').value||0,
+        roky=Math.max(1,+$('roky').value||1),dan=$('dan').checked;
+  const {z,vlozeno,data}=simuluj(p,m,u,roky,dan);
+  $('vysledek').textContent=fmt(z);
+  $('vlozeno').textContent=fmt(vlozeno);
+  $('vynos').textContent=fmt(z-vlozeno);
+  $('podil').textContent=z>0?((z-vlozeno)/z*100).toFixed(1)+' %':'–';
+
+  const max=data.length?data[data.length-1].zustatek:1;
+  $('graf').innerHTML=data.map(d=>{
+    const hV=d.vlozeno/max*100, hU=(d.zustatek-d.vlozeno)/max*100;
+    return `<div class="sloupec" title="Rok ${d.rok}: ${fmt(d.zustatek)}">
+      <div class="vklad" style="height:${hV}%"></div><div class="vynos" style="height:${hU}%"></div></div>`;
+  }).join('');
+
+  $('tab').querySelector('tbody').innerHTML=data.map(d=>
+    `<tr><td>${d.rok}.</td><td>${fmt(d.vlozeno)}</td><td>${fmt(d.urok)}</td><td>${fmt(d.zustatek)}</td></tr>`).join('');
+
+  uloz();
+}
+
+function prepoctiCil(){
+  const cil=+$('cCastka').value||0,mam=+$('cMam').value||0,u=+$('cUrok').value||0,roky=Math.max(1,+$('cRoky').value||1);
+  const r=u/100/12,n=roky*12;
+  // budoucí hodnota již naspořeného
+  const fvMam=mam*Math.pow(1+r,n);
+  const potreba=Math.max(0,cil-fvMam);
+  // FV anuity (úložka na začátku měsíce): m*((1+r)^n-1)/r*(1+r)
+  const mesicne=r===0?potreba/n:potreba/(((Math.pow(1+r,n)-1)/r)*(1+r));
+  $('cVysledek').textContent=fmt(mesicne)+' / měsíc';
+  $('cVlozeno').textContent=fmt(mam+mesicne*n);
+  $('cVynos').textContent=fmt(cil-mam-mesicne*n);
+}
+
+// geometrické měsíční zhodnocení: (1+r)^(1/12)-1
+function simulujETF(pocatek,mesicne,rocniVynos,roky,mimo,navyseni){
+  const rm=Math.pow(1+rocniVynos/100,1/12)-1;
+  let z=pocatek, vlozeno=pocatek, ulozka=mesicne;
+  const data=[];
+  for(let m=1;m<=roky*12;m++){
+    if((m-1)%12===0){
+      if(m>1)ulozka+=navyseni||0;
+      const extra=mimo&&mimo[(m-1)/12+1]||0; z+=extra; vlozeno+=extra;
+    }
+    z+=ulozka; vlozeno+=ulozka;
+    z*=1+rm;
+    if(m%12===0)data.push({rok:m/12,vlozeno,zustatek:z});
+  }
+  return {z,vlozeno,data};
+}
+
+let mimoradne=[]; // [{rok, castka}]
+let etfPosledni=null; // poslední výsledky pro export
+
+function stahni(blob,nazev){
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);a.download=nazev;a.click();
+  setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+}
+const dnes=()=>new Date().toISOString().slice(0,10);
+
+function exportujCSV(){
+  const d=etfPosledni;if(!d)return;
+  const radky=['Rok;Vloženo (Kč);Pesimisticky (Kč);Očekávaně (Kč);Optimisticky (Kč)'];
+  d.oc.data.forEach((x,i)=>radky.push([x.rok,Math.round(x.vlozeno),
+    Math.round(d.pes.data[i].zustatek),Math.round(x.zustatek),
+    Math.round(d.opt.data[i].zustatek)].join(';')));
+  stahni(new Blob(['﻿'+radky.join('\r\n')],{type:'text/csv;charset=utf-8'}),
+    'etf-predikce-'+dnes()+'.csv');
+}
+
+function nakresliExport(){
+  const d=etfPosledni;if(!d)return null;
+  const W=1000,H=800,S=2,pct=x=>String(x).replace('.',',')+' %';
+  const cv=document.createElement('canvas');cv.width=W*S;cv.height=H*S;
+  const c=cv.getContext('2d');c.scale(S,S);
+  const F=(w,s)=>c.font=w+' '+s+'px -apple-system,"Segoe UI",Roboto,sans-serif';
+  c.fillStyle='#1a1a1a';c.fillRect(0,0,W,H);
+
+  c.textAlign='center';c.fillStyle='#e0e0e0';F(600,26);
+  c.fillText('📊 Predikce investice do ETF',W/2,52);
+  c.fillStyle='#999';F(400,14);
+  let popis=`Jednorázově ${fmt(d.p)} · měsíčně ${fmt(d.m)}`;
+  if(d.nav)popis+=` (+${fmt(d.nav)}/rok)`;
+  popis+=` · výnos ${pct(d.v)} · TER ${pct(d.ter)} · volatilita ${pct(d.vol)} · ${d.roky} let`;
+  c.fillText(popis,W/2,88);
+  const mimoRoky=Object.keys(d.mimo);
+  if(mimoRoky.length){F(400,13);c.fillStyle='#888';
+    c.fillText('Mimořádně: '+mimoRoky.map(r=>`${r}. rok ${fmt(d.mimo[r])}`).join(', '),W/2,110);}
+
+  c.fillStyle='#888';F(400,14);c.fillText(`Očekávaná hodnota po ${d.roky} letech`,W/2,158);
+  c.fillStyle='#6aa6fd';F(700,42);c.fillText(fmt(d.oc.z),W/2,204);
+
+  // legenda
+  F(400,13);c.textAlign='left';
+  c.fillStyle='#6193d6';c.fillRect(W/2-110,232,11,11);
+  c.fillStyle='#999';c.fillText('Vloženo',W/2-93,242);
+  c.fillStyle='#43a047';c.fillRect(W/2+5,232,11,11);
+  c.fillStyle='#999';c.fillText('Výnos',W/2+22,242);
+
+  // graf
+  const data=d.oc.data,n=data.length,max=data[n-1].zustatek||1;
+  const gx=60,gy=262,gw=W-120,gh=200,bw=gw/n;
+  data.forEach((x,i)=>{
+    const hV=x.vlozeno/max*gh,hU=Math.max(0,x.zustatek-x.vlozeno)/max*gh,bx=gx+i*bw;
+    c.fillStyle='#6193d6';c.fillRect(bx,gy+gh-hV,Math.max(2,bw-3),hV);
+    c.fillStyle='#43a047';c.fillRect(bx,gy+gh-hV-hU-2,Math.max(2,bw-3),Math.max(0,hU));
+  });
+  c.strokeStyle='#404040';c.beginPath();c.moveTo(gx,gy+gh+.5);c.lineTo(gx+gw,gy+gh+.5);c.stroke();
+  c.fillStyle='#888';F(400,11);c.textAlign='center';
+  data.forEach((x,i)=>{if(x.rok===1||x.rok%5===0)c.fillText(x.rok+'.',gx+i*bw+(bw-3)/2,gy+gh+16);});
+
+  // řádky výsledků
+  const radky=[
+    ['Celkem vloženo',fmt(d.oc.vlozeno)],
+    ['Očekávaný výnos',fmt(d.oc.z-d.oc.vlozeno)],
+    ['Pesimistický scénář (horších jen ~10 % případů)',fmt(d.pes.z)],
+    ['Optimistický scénář (lepších jen ~10 % případů)',fmt(d.opt.z)],
+    ['Kolik ukously poplatky (TER) za celou dobu',fmt(d.bezTer.z-d.oc.z)]];
+  let y=530;
+  radky.forEach(r=>{
+    c.textAlign='left';c.fillStyle='#ccc';F(400,15);c.fillText(r[0],70,y);
+    c.textAlign='right';c.fillStyle='#4caf50';F(600,15);c.fillText(r[1],W-70,y);
+    c.strokeStyle='#333';c.beginPath();c.moveTo(70,y+12.5);c.lineTo(W-70,y+12.5);c.stroke();
+    y+=36;
+  });
+
+  c.textAlign='center';c.fillStyle='#777';F(400,11);
+  c.fillText('Orientační odhad, výnosy nejsou garantované. Nezohledňuje inflaci; při držení přes 3 roky je výnos v ČR osvobozen od daně.',W/2,y+28);
+  c.fillText('Vygenerováno '+dnes(),W/2,y+46);
+  return cv;
+}
+
+function exportujPNG(){
+  const cv=nakresliExport();if(!cv)return;
+  cv.toBlob(b=>stahni(b,'etf-predikce-'+dnes()+'.png'),'image/png');
+}
+function renderMimo(){
+  $('eMimoSeznam').innerHTML=mimoradne.map((x,i)=>
+    `<div class="mimo-radek">
+      <div><label>V roce (1–${Math.max(1,+$('eRoky').value||1)})</label><input type="number" min="1" value="${x.rok}" data-i="${i}" data-pole="rok"></div>
+      <div><label>Částka (Kč)</label><input type="number" min="0" step="1000" value="${x.castka}" data-i="${i}" data-pole="castka"></div>
+      <button class="btn-x" type="button" data-smaz="${i}" title="Odebrat">✕</button>
+    </div>`).join('');
+  $('eMimoSeznam').querySelectorAll('input').forEach(inp=>inp.oninput=()=>{
+    mimoradne[+inp.dataset.i][inp.dataset.pole]=+inp.value||0;
+    prepoctiETF();prepocti();
+  });
+  $('eMimoSeznam').querySelectorAll('[data-smaz]').forEach(b=>b.onclick=()=>{
+    mimoradne.splice(+b.dataset.smaz,1);renderMimo();prepoctiETF();prepocti();
+  });
+}
+
+function prepoctiETF(){
+  const p=+$('ePocatek').value||0,m=+$('eMesicne').value||0,v=+$('eVynosPct').value||0,
+        ter=+$('eTer').value||0,vol=+$('eVol').value||0,roky=Math.max(1,+$('eRoky').value||1),
+        nav=+$('eNavyseni').value||0;
+  const rCisty=v-ter;
+  const mimo={};
+  mimoradne.forEach(x=>{if(x.rok>=1&&x.rok<=roky)mimo[Math.round(x.rok)]=(mimo[Math.round(x.rok)]||0)+x.castka;});
+  // ~10./90. percentil průměrného ročního výnosu: r ± 1.282·σ/√roky
+  const odchylka=1.282*vol/Math.sqrt(roky);
+  const oc=simulujETF(p,m,rCisty,roky,mimo,nav);
+  const pes=simulujETF(p,m,rCisty-odchylka,roky,mimo,nav);
+  const opt=simulujETF(p,m,rCisty+odchylka,roky,mimo,nav);
+  const bezTer=simulujETF(p,m,v,roky,mimo,nav);
+  etfPosledni={oc,pes,opt,bezTer,p,m,nav,v,ter,vol,roky,mimo};
+
+  $('eVysledek').textContent=fmt(oc.z);
+  $('eVlozeno').textContent=fmt(oc.vlozeno);
+  $('eZisk').textContent=fmt(oc.z-oc.vlozeno);
+  $('ePes').textContent=fmt(pes.z);
+  $('eOpt').textContent=fmt(opt.z);
+  $('ePoplatky').textContent=fmt(bezTer.z-oc.z);
+
+  const max=oc.data.length?oc.data[oc.data.length-1].zustatek:1;
+  $('eGraf').innerHTML=oc.data.map(d=>{
+    const hV=d.vlozeno/max*100, hU=Math.max(0,d.zustatek-d.vlozeno)/max*100;
+    return `<div class="sloupec" title="Rok ${d.rok}: ${fmt(d.zustatek)}">
+      <div class="vklad" style="height:${hV}%"></div><div class="vynos" style="height:${hU}%"></div></div>`;
+  }).join('');
+
+  $('eTab').querySelector('tbody').innerHTML=oc.data.map((d,i)=>
+    `<tr><td>${d.rok}.</td><td>${fmt(d.vlozeno)}</td><td>${fmt(pes.data[i].zustatek)}</td><td>${fmt(d.zustatek)}</td><td>${fmt(opt.data[i].zustatek)}</td></tr>`).join('');
+}
+
+try{
+  let s=JSON.parse(localStorage.getItem(STORE));
+  if(!s){ // migrace ze starého formátu v1
+    const v1=JSON.parse(localStorage.getItem('savingsCalc.v1'));
+    if(v1){
+      s={d:v1.d,emi:v1.emi,vals:{pocatek:v1.p,mesicne:v1.m,urok:v1.u,roky:v1.r,
+        cCastka:v1.cc,cMam:v1.cm,cUrok:v1.cu,cRoky:v1.cr,ePocatek:v1.ep,eMesicne:v1.em,
+        eVynosPct:v1.ev,eTer:v1.et,eVol:v1.eo,eRoky:v1.er,eNavyseni:v1.en}};
+      localStorage.removeItem('savingsCalc.v1');
+    }
+  }
+  s=s||{};
+  if(s.vals)POLE.forEach(id=>{if(s.vals[id]!=null&&s.vals[id]!=='')$(id).value=s.vals[id];});
+  $('dan').checked=!!s.d;
+  if(Array.isArray(s.emi))mimoradne=s.emi.filter(x=>x&&isFinite(x.rok)&&isFinite(x.castka));
+  if(s.tab&&$(s.tab))document.querySelector(`.tab[data-pane="${s.tab}"]`).click();
+}catch(e){}
+$('eExportPng').onclick=exportujPNG;
+$('eExportCsv').onclick=exportujCSV;
+$('eMimoPridat').onclick=()=>{
+  mimoradne.push({rok:Math.min(5,Math.max(1,+$('eRoky').value||1)),castka:50000});
+  renderMimo();prepoctiETF();prepocti();
+};
+renderMimo();
+['pocatek','mesicne','urok','roky'].forEach(id=>$(id).oninput=prepocti);
+$('dan').onchange=prepocti;
+['cCastka','cMam','cUrok','cRoky'].forEach(id=>$(id).oninput=()=>{prepoctiCil();prepocti();});
+['ePocatek','eMesicne','eNavyseni','eVynosPct','eTer','eVol','eRoky'].forEach(id=>$(id).oninput=()=>{
+  if(id==='eRoky')renderMimo();
+  prepoctiETF();prepocti();
+});
+prepocti();prepoctiCil();prepoctiETF();
+</script>
+</body>
+</html>

@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🗓️ Tisknutelný kalendář</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1a1a1a;color:#e0e0e0;min-height:100vh;padding:20px}
+.container{max-width:1050px;margin:0 auto}
+h1{font-size:1.6rem;margin-bottom:18px;font-weight:600;text-align:center}
+.ovladani{background:#2a2a2a;border:1px solid #404040;border-radius:8px;padding:16px;margin-bottom:20px;display:flex;gap:14px;align-items:flex-end;flex-wrap:wrap}
+.ovladani>div{display:flex;flex-direction:column;gap:5px}
+label{font-size:.8rem;color:#888}
+input,select{background:#404040;border:1px solid #555;border-radius:4px;color:#e0e0e0;padding:8px 10px;font-size:.9rem}
+input[type=number]{width:100px}
+.chk{flex-direction:row!important;align-items:center;gap:7px}
+.chk label{color:#bbb;font-size:.85rem}
+.btn{background:#6aa6fd;color:#fff;border:none;padding:10px 20px;border-radius:6px;cursor:pointer;font-weight:600;font-size:.9rem}
+.btn:hover{background:#5590e8}
+
+/* náhled kalendáře – na obrazovce tmavě, v tisku světle */
+#kalendar{background:#fff;color:#111;border-radius:8px;padding:24px}
+.rok-nadpis{text-align:center;font-size:1.9rem;font-weight:700;margin-bottom:18px;color:#111}
+.mesice{display:grid;grid-template-columns:repeat(3,1fr);gap:18px}
+.mesic h3{text-align:center;font-size:.95rem;margin-bottom:6px;color:#111}
+.mesic table{width:100%;border-collapse:collapse;font-size:.72rem;table-layout:fixed}
+.mesic th{color:#666;font-weight:600;padding:2px;text-align:center}
+.mesic th.vik{color:#c0392b}
+.mesic td{text-align:center;padding:3px 2px;color:#222}
+.mesic td.vik{color:#c0392b}
+.mesic td.svatek{color:#c0392b;font-weight:700;background:#fdecea;border-radius:4px}
+.mesic td.dnes{background:#6aa6fd;color:#fff;border-radius:4px;font-weight:700}
+.mesic td.tyden{color:#999;font-size:.62rem;font-style:italic}
+.mesic th.tyden{font-size:.62rem}
+
+/* režim „měsíc na stránku" */
+.velky .mesice{grid-template-columns:1fr}
+.velky .mesic{page-break-after:always;margin-bottom:30px}
+.velky .mesic h3{font-size:1.5rem;margin-bottom:12px}
+.velky .mesic table{font-size:1rem}
+.velky .mesic td{height:68px;vertical-align:top;text-align:left;padding:5px;border:1px solid #ccc}
+.velky .mesic td:empty{border:none}
+.velky .mesic td.tyden{height:auto;vertical-align:middle;text-align:center;border:none}
+.svatky-seznam{margin-top:16px;font-size:.72rem;color:#555;columns:3}
+.svatky-seznam b{color:#c0392b}
+
+@media(max-width:760px){.mesice{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:500px){.mesice{grid-template-columns:1fr}}
+
+@media print{
+  body{background:#fff;padding:0}
+  h1,.ovladani{display:none}
+  #kalendar{border-radius:0;padding:0}
+  .mesice{gap:10px}
+  .velky .mesic{page-break-after:always}
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>🗓️ Generátor tisknutelného kalendáře</h1>
+  <div class="ovladani">
+    <div><label>Rok</label><input type="number" id="rok" min="1900" max="2200"></div>
+    <div><label>Rozvržení</label><select id="rezim">
+      <option value="rok">Celý rok na stránku</option>
+      <option value="mesic">Měsíc na stránku (s místem na poznámky)</option>
+    </select></div>
+    <div class="chk"><input type="checkbox" id="svatky" checked><label for="svatky">Státní svátky ČR</label></div>
+    <div class="chk"><input type="checkbox" id="tydny"><label for="tydny">Čísla týdnů</label></div>
+    <button class="btn" onclick="window.print()">🖨️ Tisk</button>
+  </div>
+  <div id="kalendar"></div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const MESICE=['Leden','Únor','Březen','Duben','Květen','Červen','Červenec','Srpen','Září','Říjen','Listopad','Prosinec'];
+const DNY=['Po','Út','St','Čt','Pá','So','Ne'];
+
+// Velikonoční neděle (Meeus/Jones/Butcher)
+function velikonoce(y){
+  const a=y%19,b=Math.floor(y/100),c=y%100,d=Math.floor(b/4),e=b%4,
+        f=Math.floor((b+8)/25),g=Math.floor((b-f+1)/3),h=(19*a+b-d-g+15)%30,
+        i=Math.floor(c/4),k=c%4,l=(32+2*e+2*i-h-k)%7,m=Math.floor((a+11*h+22*l)/451),
+        mes=Math.floor((h+l-7*m+114)/31),den=((h+l-7*m+114)%31)+1;
+  return new Date(y,mes-1,den);
+}
+function svatkyCR(y){
+  const s={
+    '1-1':'Nový rok; Den obnovy samostatného českého státu',
+    '5-1':'Svátek práce','5-8':'Den vítězství',
+    '7-5':'Den slovanských věrozvěstů Cyrila a Metoděje','7-6':'Den upálení mistra Jana Husa',
+    '9-28':'Den české státnosti','10-28':'Den vzniku samostatného československého státu',
+    '11-17':'Den boje za svobodu a demokracii',
+    '12-24':'Štědrý den','12-25':'1. svátek vánoční','12-26':'2. svátek vánoční'
+  };
+  const vn=velikonoce(y);
+  const vp=new Date(vn);vp.setDate(vn.getDate()-2);
+  const po=new Date(vn);po.setDate(vn.getDate()+1);
+  s[(vp.getMonth()+1)+'-'+vp.getDate()]='Velký pátek';
+  s[(po.getMonth()+1)+'-'+po.getDate()]='Velikonoční pondělí';
+  return s;
+}
+function isoTyden(d){
+  const t=new Date(Date.UTC(d.getFullYear(),d.getMonth(),d.getDate()));
+  const den=t.getUTCDay()||7;
+  t.setUTCDate(t.getUTCDate()+4-den);
+  const zac=new Date(Date.UTC(t.getUTCFullYear(),0,1));
+  return Math.ceil(((t-zac)/86400000+1)/7);
+}
+
+function vykresli(){
+  const y=+$('rok').value||new Date().getFullYear();
+  const seSvatky=$('svatky').checked, sTydny=$('tydny').checked;
+  const rezim=$('rezim').value;
+  const sv=seSvatky?svatkyCR(y):{};
+  const dnes=new Date();
+  const kal=$('kalendar');
+  kal.className=rezim==='mesic'?'velky':'';
+
+  let html=`<div class="rok-nadpis">${y}</div><div class="mesice">`;
+  for(let m=0;m<12;m++){
+    html+=`<div class="mesic"><h3>${MESICE[m]} ${rezim==='mesic'?y:''}</h3><table><tr>`;
+    if(sTydny)html+='<th class="tyden">Týd</th>';
+    DNY.forEach((d,i)=>html+=`<th class="${i>=5?'vik':''}">${d}</th>`);
+    html+='</tr><tr>';
+    const prvni=new Date(y,m,1);
+    const posun=(prvni.getDay()+6)%7; // Po=0
+    if(sTydny)html+=`<td class="tyden">${isoTyden(prvni)}</td>`;
+    for(let i=0;i<posun;i++)html+='<td></td>';
+    const dniVMes=new Date(y,m+1,0).getDate();
+    let sloupec=posun;
+    for(let den=1;den<=dniVMes;den++){
+      const dt=new Date(y,m,den);
+      const klic=(m+1)+'-'+den;
+      const cls=[];
+      if(sloupec>=5)cls.push('vik');
+      if(sv[klic])cls.push('svatek');
+      if(dt.getFullYear()===dnes.getFullYear()&&dt.getMonth()===dnes.getMonth()&&den===dnes.getDate())cls.push('dnes');
+      html+=`<td class="${cls.join(' ')}" ${sv[klic]?`title="${sv[klic]}"`:''}>${den}</td>`;
+      sloupec++;
+      if(sloupec===7&&den<dniVMes){
+        sloupec=0;html+='</tr><tr>';
+        if(sTydny)html+=`<td class="tyden">${isoTyden(new Date(y,m,den+1))}</td>`;
+      }
+    }
+    html+='</tr></table></div>';
+  }
+  html+='</div>';
+  if(seSvatky){
+    html+='<div class="svatky-seznam">'+Object.entries(sv)
+      .sort((a,b)=>{const[pa,da]=a[0].split('-').map(Number),[pb,db]=b[0].split('-').map(Number);return pa-pb||da-db;})
+      .map(([k,v])=>{const[mm,dd]=k.split('-');return `<div><b>${dd}. ${mm}.</b> ${v}</div>`;}).join('')+'</div>';
+  }
+  kal.innerHTML=html;
+  localStorage.setItem('calPrint.v1',JSON.stringify({y,s:seSvatky,t:sTydny,r:rezim}));
+}
+
+try{
+  const s=JSON.parse(localStorage.getItem('calPrint.v1'))||{};
+  $('rok').value=s.y||new Date().getFullYear();
+  if(s.s!==undefined)$('svatky').checked=s.s;
+  if(s.t!==undefined)$('tydny').checked=s.t;
+  if(s.r)$('rezim').value=s.r;
+}catch(e){$('rok').value=new Date().getFullYear();}
+['rok','rezim','svatky','tydny'].forEach(id=>{$(id).onchange=vykresli;$(id).oninput=vykresli;});
+vykresli();
+</script>
+</body>
+</html>

@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🏦 Kalkulačka úvěru</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1a1a1a;color:#e0e0e0;min-height:100vh;padding:20px}
+.container{max-width:860px;margin:0 auto}
+h1{font-size:1.6rem;margin-bottom:18px;font-weight:600;text-align:center}
+.tabs{display:flex;margin-bottom:18px;border-bottom:1px solid #404040;flex-wrap:wrap}
+.tab{padding:11px 16px;background:#2a2a2a;border:1px solid #404040;border-bottom:none;cursor:pointer;color:#bbb;border-radius:8px 8px 0 0;font-size:.88rem}
+.tab.active{background:#6aa6fd;color:#fff;border-color:#6aa6fd}
+.pane{display:none}.pane.active{display:block}
+.card{background:#2a2a2a;border:1px solid #404040;border-radius:8px;padding:22px;margin-bottom:20px}
+h2{font-size:1.05rem;color:#6aa6fd;margin-bottom:16px}
+label{display:block;font-size:.82rem;color:#888;margin-bottom:5px}
+input,select{width:100%;background:#404040;border:1px solid #555;border-radius:4px;color:#e0e0e0;padding:10px;margin-bottom:12px;font-size:.95rem}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:520px){.grid{grid-template-columns:1fr}}
+.big{font-size:2rem;font-weight:700;color:#6aa6fd;text-align:center;margin:10px 0}
+.res-row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #333}
+.res-row:last-child{border:none}.res-row b{color:#4caf50}
+.res-row b.warn{color:#e67e22}
+table{width:100%;border-collapse:collapse;font-size:.85rem}
+th,td{padding:7px 9px;text-align:right;border-bottom:1px solid #333}
+th{color:#6aa6fd;font-weight:600;text-align:right}
+th:first-child,td:first-child{text-align:left}
+tr:hover td{background:#303030}
+.bar{height:22px;border-radius:5px;overflow:hidden;display:flex;margin:12px 0 4px}
+.bar .jistina{background:#4caf50}
+.bar .urok{background:#e67e22}
+.legend{display:flex;gap:18px;font-size:.78rem;color:#999;justify-content:center;margin-bottom:6px}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px}
+.note{font-size:.78rem;color:#777;margin-top:8px}
+.scroll{overflow-x:auto}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>🏦 Kalkulačka úvěru / hypotéky</h1>
+  <div class="tabs">
+    <div class="tab active" data-pane="splatka">💳 Splátka & umoření</div>
+    <div class="tab" data-pane="kolik">🤔 Kolik si můžu půjčit</div>
+  </div>
+
+  <div class="pane active" id="splatka">
+    <div class="card">
+      <h2>Parametry úvěru</h2>
+      <div class="grid">
+        <div><label>Výše úvěru (Kč)</label><input type="number" id="castka" value="3000000" min="0" step="10000"></div>
+        <div><label>Roční úroková sazba (%)</label><input type="number" id="urok" value="4.8" min="0" step="0.1"></div>
+        <div><label>Doba splácení (roky)</label><input type="number" id="roky" value="25" min="1" max="50"></div>
+        <div><label>Mimořádná splátka měsíčně navíc (Kč)</label><input type="number" id="extra" value="0" min="0" step="500"></div>
+      </div>
+    </div>
+    <div class="card">
+      <h2>Výsledek</h2>
+      <div class="big" id="splatkaVys">–</div>
+      <div class="legend"><span><i style="background:#4caf50"></i>Jistina</span><span><i style="background:#e67e22"></i>Úroky</span></div>
+      <div class="bar"><div class="jistina" id="barJ"></div><div class="urok" id="barU"></div></div>
+      <div class="res-row"><span>Celkem zaplaceno</span><b id="celkem">–</b></div>
+      <div class="res-row"><span>Z toho úroky (přeplatek)</span><b class="warn" id="preplatek">–</b></div>
+      <div class="res-row" id="rowExtra1" style="display:none"><span>Skutečná doba splácení</span><b id="dobaSkut">–</b></div>
+      <div class="res-row" id="rowExtra2" style="display:none"><span>Úspora na úrocích díky mimořádným splátkám</span><b id="uspora">–</b></div>
+    </div>
+    <div class="card">
+      <h2>Umořovací plán (po letech)</h2>
+      <div class="scroll"><table id="planTab">
+        <thead><tr><th>Rok</th><th>Zaplaceno</th><th>Úroky</th><th>Jistina</th><th>Zbývá splatit</th></tr></thead>
+        <tbody></tbody>
+      </table></div>
+      <p class="note">Anuitní splácení, měsíční úročení. Orientační výpočet – banka může počítat mírně odlišně (poplatky, fixace…).</p>
+    </div>
+  </div>
+
+  <div class="pane" id="kolik">
+    <div class="card">
+      <h2>Kolik si můžu půjčit při dané splátce</h2>
+      <div class="grid">
+        <div><label>Měsíční splátka, kterou zvládnu (Kč)</label><input type="number" id="kSplatka" value="18000" min="0" step="500"></div>
+        <div><label>Roční úroková sazba (%)</label><input type="number" id="kUrok" value="4.8" min="0" step="0.1"></div>
+        <div><label>Doba splácení (roky)</label><input type="number" id="kRoky" value="25" min="1" max="50"></div>
+      </div>
+      <div class="big" id="kVys">–</div>
+      <div class="res-row"><span>Celkem zaplatíte</span><b id="kCelkem">–</b></div>
+      <div class="res-row"><span>Z toho úroky</span><b class="warn" id="kPreplatek">–</b></div>
+    </div>
+  </div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.pane').forEach(x=>x.classList.remove('active'));
+  t.classList.add('active');$(t.dataset.pane).classList.add('active');
+});
+const STORE='loanCalc.v1';
+function fmt(n){return isFinite(n)?Math.round(n).toLocaleString('cs-CZ')+' Kč':'–';}
+
+function anuita(P,rocni,mesicu){
+  const r=rocni/100/12;
+  if(r===0)return P/mesicu;
+  return P*r/(1-Math.pow(1+r,-mesicu));
+}
+
+function prepocti(){
+  const P=+$('castka').value||0, sazba=+$('urok').value||0,
+        roky=Math.max(1,+$('roky').value||1), extra=+$('extra').value||0;
+  const n=roky*12, r=sazba/100/12;
+  const spl=anuita(P,sazba,n);
+  $('splatkaVys').textContent=fmt(spl)+' / měsíc';
+
+  // simulace splácení (s případnou mimořádnou splátkou)
+  let zbytek=P, uroky=0, zaplaceno=0, mesic=0;
+  const rokyData=[]; let rokUrok=0,rokJist=0,rokPlatba=0;
+  while(zbytek>0.005&&mesic<12*100){
+    mesic++;
+    const u=zbytek*r;
+    let platba=Math.min(spl+extra,zbytek+u);
+    uroky+=u; zaplaceno+=platba;
+    const j=platba-u; zbytek-=j;
+    rokUrok+=u; rokJist+=j; rokPlatba+=platba;
+    if(mesic%12===0||zbytek<=0.005){
+      rokyData.push({rok:Math.ceil(mesic/12),platba:rokPlatba,urok:rokUrok,jist:rokJist,zbytek:Math.max(0,zbytek)});
+      rokUrok=rokJist=rokPlatba=0;
+    }
+  }
+  $('celkem').textContent=fmt(zaplaceno);
+  $('preplatek').textContent=fmt(uroky);
+  const podil=zaplaceno>0?P/zaplaceno*100:50;
+  $('barJ').style.width=podil+'%';$('barU').style.width=(100-podil)+'%';
+
+  if(extra>0){
+    // srovnání s variantou bez mimořádných splátek
+    const urokyBez=spl*n-P;
+    $('rowExtra1').style.display='flex';$('rowExtra2').style.display='flex';
+    const rr=Math.floor(mesic/12),mm=mesic%12;
+    $('dobaSkut').textContent=rr+' let'+(mm?' '+mm+' měs.':'')+' (místo '+roky+' let)';
+    $('uspora').textContent=fmt(urokyBez-uroky);
+  }else{
+    $('rowExtra1').style.display='none';$('rowExtra2').style.display='none';
+  }
+
+  $('planTab').querySelector('tbody').innerHTML=rokyData.map(d=>
+    `<tr><td>${d.rok}.</td><td>${fmt(d.platba)}</td><td>${fmt(d.urok)}</td><td>${fmt(d.jist)}</td><td>${fmt(d.zbytek)}</td></tr>`).join('');
+
+  localStorage.setItem(STORE,JSON.stringify({c:$('castka').value,u:$('urok').value,r:$('roky').value,e:$('extra').value,
+    kc:$('kSplatka').value,ku:$('kUrok').value,kr:$('kRoky').value}));
+}
+
+function prepoctiKolik(){
+  const spl=+$('kSplatka').value||0, sazba=+$('kUrok').value||0, roky=Math.max(1,+$('kRoky').value||1);
+  const n=roky*12, r=sazba/100/12;
+  const P=r===0?spl*n:spl*(1-Math.pow(1+r,-n))/r;
+  $('kVys').textContent=fmt(P);
+  $('kCelkem').textContent=fmt(spl*n);
+  $('kPreplatek').textContent=fmt(spl*n-P);
+}
+
+try{
+  const s=JSON.parse(localStorage.getItem(STORE))||{};
+  if(s.c)$('castka').value=s.c; if(s.u)$('urok').value=s.u; if(s.r)$('roky').value=s.r; if(s.e)$('extra').value=s.e;
+  if(s.kc)$('kSplatka').value=s.kc; if(s.ku)$('kUrok').value=s.ku; if(s.kr)$('kRoky').value=s.kr;
+}catch(e){}
+['castka','urok','roky','extra'].forEach(id=>$(id).oninput=prepocti);
+['kSplatka','kUrok','kRoky'].forEach(id=>$(id).oninput=()=>{prepoctiKolik();prepocti();});
+prepocti();prepoctiKolik();
+</script>
+</body>
+</html>

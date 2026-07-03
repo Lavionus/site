@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎒 Balicí seznam</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1a1a1a;color:#e0e0e0;min-height:100vh;padding:20px}
+.container{max-width:760px;margin:0 auto}
+h1{font-size:1.6rem;margin-bottom:18px;font-weight:600;text-align:center}
+.ovladani{display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:center}
+select,button,input[type=text]{background:#2a2a2a;border:1px solid #404040;border-radius:6px;color:#e0e0e0;padding:9px 12px;font-size:.88rem}
+select{flex:1;min-width:180px}
+button{cursor:pointer}
+button:hover{background:#383838}
+button.primary{background:#6aa6fd;border-color:#6aa6fd;color:#fff;font-weight:600}
+.progres-wrap{background:#2a2a2a;border:1px solid #404040;border-radius:8px;padding:14px 18px;margin-bottom:16px}
+.progres-info{display:flex;justify-content:space-between;font-size:.85rem;color:#999;margin-bottom:8px}
+.progres-info b{color:#6aa6fd}
+.progres{height:10px;background:#404040;border-radius:5px;overflow:hidden}
+.progres div{height:100%;background:linear-gradient(90deg,#6aa6fd,#4caf50);transition:width .3s;border-radius:5px}
+.kat{background:#2a2a2a;border:1px solid #404040;border-radius:8px;margin-bottom:14px;overflow:hidden}
+.kat h2{font-size:.85rem;color:#6aa6fd;text-transform:uppercase;letter-spacing:.5px;padding:12px 16px;background:#242424;border-bottom:1px solid #333;display:flex;justify-content:space-between}
+.kat h2 span{color:#777;font-weight:400;text-transform:none}
+.polozka{display:flex;align-items:center;gap:12px;padding:10px 16px;border-bottom:1px solid #303030;cursor:pointer;user-select:none}
+.polozka:last-child{border-bottom:none}
+.polozka:hover{background:#303030}
+.polozka input{width:18px;height:18px;accent-color:#4caf50;cursor:pointer;flex-shrink:0}
+.polozka .text{flex:1}
+.polozka.hotovo .text{text-decoration:line-through;color:#666}
+.polozka .smaz{background:none;border:none;color:#555;cursor:pointer;font-size:1rem;padding:2px 6px}
+.polozka .smaz:hover{color:#c0392b}
+.pridat{display:flex;gap:8px;padding:10px 16px;background:#242424}
+.pridat input{flex:1}
+.hotova-zprava{text-align:center;padding:14px;color:#4caf50;font-weight:600;display:none}
+.hotova-zprava.zobraz{display:block}
+@media print{
+  body{background:#fff;color:#000}
+  .ovladani,.pridat,.smaz{display:none!important}
+  .kat{border-color:#999;background:#fff}
+  .kat h2{background:#eee;color:#000}
+  .polozka{color:#000}
+  .progres-wrap{display:none}
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>🎒 Balicí seznam</h1>
+  <div class="ovladani">
+    <select id="sablona"></select>
+    <button class="primary" id="nacti">📋 Načíst šablonu</button>
+    <button id="odskrtnout">↩️ Odškrtnout vše</button>
+    <button onclick="window.print()">🖨️ Tisk</button>
+  </div>
+  <div class="progres-wrap">
+    <div class="progres-info"><span>Sbaleno</span><b id="stav">0 / 0</b></div>
+    <div class="progres"><div id="progresBar" style="width:0%"></div></div>
+    <div class="hotova-zprava" id="hotovo">🎉 Vše sbaleno, šťastnou cestu!</div>
+  </div>
+  <div id="seznam"></div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const STORE='packingList.v1';
+
+const SABLONY={
+  more:{nazev:'🏖️ Letní dovolená u moře',kat:{
+    'Doklady & peníze':['Občanka / pas','Peníze, platební karty','Kartička pojišťovny / cestovní pojištění','Řidičský průkaz','Vouchery / rezervace (i offline)'],
+    'Oblečení':['Plavky (2×)','Trička / tílka','Kraťasy / sukně','Šaty','Spodní prádlo','Ponožky','Mikina na večer','Sandály / žabky','Pokrývka hlavy'],
+    'Hygiena & lékárna':['Kartáček + pasta','Opalovací krém','Krém po opalování','Deodorant','Šampon / sprchový gel','Hřeben','Osobní léky','Repelent','Náplasti, kinedryl'],
+    'Pláž':['Osuška / plážová podložka','Sluneční brýle','Kniha / čtečka','Plážová taška','Šnorchl / potápěčské brýle','Hračky k vodě'],
+    'Elektronika':['Telefon + nabíječka','Powerbanka','Sluchátka','Fotoaparát','Cestovní adaptér']}},
+  hory:{nazev:'⛷️ Hory – zima / lyže',kat:{
+    'Doklady & peníze':['Občanka / pas','Peníze, karty','Kartička pojišťovny','Skipas / rezervace'],
+    'Lyžařská výbava':['Lyže / snowboard + hůlky','Lyžáky / boty','Helma','Lyžařské brýle','Rukavice (raději 2×)','Vosk, servisní drobnosti'],
+    'Oblečení':['Lyžařská bunda a kalhoty','Termoprádlo (2×)','Fleece / mikina','Lyžařské ponožky (více párů)','Čepice, nákrčník','Náhradní oblečení na večer','Boty na sníh'],
+    'Hygiena & lékárna':['Kartáček + pasta','Opalovací krém (hory!)','Balzám na rty','Osobní léky','Náplasti, elastické obinadlo'],
+    'Ostatní':['Termoska','Batůžek na svah','Powerbanka (mráz vybíjí)','Karty / společenské hry na večer']}},
+  turistika:{nazev:'🥾 Turistika / kemp',kat:{
+    'Vybavení':['Batoh','Stan','Spacák','Karimatka','Čelovka + baterie','Nůž / multitool','Zapalovač / sirky','Vařič + kartuše','Ešus, lžíce','Mapa / GPS'],
+    'Oblečení':['Pohorky','Funkční trička','Nepromokavá bunda','Náhradní ponožky (více párů)','Teplá vrstva','Čepice / klobouk'],
+    'Jídlo & pití':['Voda / filtr na vodu','Jídlo na cestu','Energetické tyčinky','Káva / čaj'],
+    'Lékárna':['Náplasti na puchýře!','Obvaz, dezinfekce','Osobní léky','Repelent','Opalovací krém','Izotermická fólie'],
+    'Ostatní':['Powerbanka','Toaletní papír','Pytle na odpadky','Šňůra / prádelní guma']}},
+  sluzebni:{nazev:'💼 Služební cesta',kat:{
+    'Práce':['Notebook + nabíječka','Telefon + nabíječka','Prezentace / podklady','Vizitky','Blok a propiska','Sluchátka'],
+    'Doklady':['Občanka / pas','Peníze, karty','Jízdenky / letenky','Rezervace hotelu'],
+    'Oblečení':['Košile / halenky','Kalhoty / sukně','Sako','Boty (společenské)','Spodní prádlo, ponožky','Oblečení na večer'],
+    'Hygiena':['Kartáček + pasta','Deodorant','Holení','Hřeben','Osobní léky']}},
+  vikend:{nazev:'🚗 Víkendový výlet',kat:{
+    'Základ':['Občanka','Peníze, karty','Telefon + nabíječka','Klíče'],
+    'Oblečení':['Náhradní tričko','Spodní prádlo','Ponožky','Mikina','Přezůvky'],
+    'Hygiena':['Kartáček + pasta','Deodorant','Osobní léky'],
+    'Ostatní':['Kniha','Svačina + pití','Powerbanka']}},
+  deti:{nazev:'👶 Cesta s dětmi',kat:{
+    'Doklady':['Pas / občanka dítěte','Kartička pojišťovny','Očkovací průkaz'],
+    'Oblečení':['Oblečení na každý den + rezerva','Pyžamo','Boty (2 páry)','Pokrývka hlavy','Plavky'],
+    'Hygiena & péče':['Pleny / vlhčené ubrousky','Krém na opruzeniny','Dětský opalovací krém','Kartáček + pasta','Teploměr','Léky na horečku (sirup)','Nosní odsávačka'],
+    'Jídlo':['Láhev / hrneček','Svačiny','Kojenecké mléko / příkrmy','Bryndák'],
+    'Zábava':['Oblíbená hračka / plyšák','Knížky','Pastelky a papír','Tablet se staženými pohádkami'],
+    'Ostatní':['Kočárek / nosítko','Autosedačka','Deka','Náhradní oblečení do příruční tašky']}}
+};
+
+let stav={sablona:'more',polozky:[]};
+
+function zSablony(klic){
+  const s=SABLONY[klic];const p=[];
+  Object.entries(s.kat).forEach(([kat,items])=>items.forEach(t=>p.push({t,kat,ch:false})));
+  return p;
+}
+function uloz(){localStorage.setItem(STORE,JSON.stringify(stav));}
+
+function vykresli(){
+  const kats=[...new Set(stav.polozky.map(p=>p.kat))];
+  $('seznam').innerHTML=kats.map(kat=>{
+    const items=stav.polozky.map((p,i)=>({...p,i})).filter(p=>p.kat===kat);
+    const hotovo=items.filter(p=>p.ch).length;
+    return `<div class="kat"><h2>${kat}<span>${hotovo}/${items.length}</span></h2>
+      ${items.map(p=>`<div class="polozka ${p.ch?'hotovo':''}" data-i="${p.i}">
+        <input type="checkbox" ${p.ch?'checked':''}><span class="text">${p.t}</span>
+        <button class="smaz" data-del="${p.i}" title="Odebrat">✕</button></div>`).join('')}
+      <div class="pridat"><input type="text" placeholder="+ přidat vlastní položku…" data-kat="${kat}">
+        <button data-add="${kat}">➕</button></div></div>`;
+  }).join('');
+
+  const celkem=stav.polozky.length, sbaleno=stav.polozky.filter(p=>p.ch).length;
+  $('stav').textContent=sbaleno+' / '+celkem;
+  $('progresBar').style.width=(celkem?sbaleno/celkem*100:0)+'%';
+  $('hotovo').classList.toggle('zobraz',celkem>0&&sbaleno===celkem);
+
+  document.querySelectorAll('.polozka').forEach(el=>{
+    el.onclick=e=>{
+      if(e.target.dataset.del!==undefined)return;
+      const p=stav.polozky[+el.dataset.i];p.ch=!p.ch;uloz();vykresli();
+    };
+  });
+  document.querySelectorAll('[data-del]').forEach(b=>b.onclick=()=>{
+    stav.polozky.splice(+b.dataset.del,1);uloz();vykresli();
+  });
+  document.querySelectorAll('[data-add]').forEach(b=>b.onclick=()=>pridej(b.dataset.add));
+  document.querySelectorAll('.pridat input').forEach(inp=>inp.onkeydown=e=>{
+    if(e.key==='Enter')pridej(inp.dataset.kat);
+  });
+}
+function pridej(kat){
+  const inp=document.querySelector(`.pridat input[data-kat="${kat}"]`);
+  const t=inp.value.trim();if(!t)return;
+  const posledni=stav.polozky.map((p,i)=>p.kat===kat?i:-1).filter(i=>i>=0).pop();
+  stav.polozky.splice(posledni+1,0,{t,kat,ch:false,vlastni:true});
+  uloz();vykresli();
+  const novy=document.querySelector(`.pridat input[data-kat="${kat}"]`);if(novy)novy.focus();
+}
+
+$('sablona').innerHTML=Object.entries(SABLONY).map(([k,s])=>`<option value="${k}">${s.nazev}</option>`).join('');
+$('nacti').onclick=()=>{
+  if(stav.polozky.length&&!confirm('Nahradit aktuální seznam šablonou? Vlastní položky i zaškrtnutí se ztratí.'))return;
+  stav.sablona=$('sablona').value;
+  stav.polozky=zSablony(stav.sablona);
+  uloz();vykresli();
+};
+$('odskrtnout').onclick=()=>{stav.polozky.forEach(p=>p.ch=false);uloz();vykresli();};
+
+try{
+  const s=JSON.parse(localStorage.getItem(STORE));
+  if(s&&s.polozky&&s.polozky.length){stav=s;}
+  else stav.polozky=zSablony('more');
+}catch(e){stav.polozky=zSablony('more');}
+$('sablona').value=stav.sablona||'more';
+vykresli();
+</script>
+</body>
+</html>

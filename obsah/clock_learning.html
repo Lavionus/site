@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🕐 Učení hodin</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1a1a1a;color:#e0e0e0;min-height:100vh;padding:20px}
+.container{max-width:640px;margin:0 auto}
+h1{font-size:1.6rem;margin-bottom:18px;font-weight:600;text-align:center}
+.tabs{display:flex;margin-bottom:18px;border-bottom:1px solid #404040;flex-wrap:wrap}
+.tab{padding:11px 16px;background:#2a2a2a;border:1px solid #404040;border-bottom:none;cursor:pointer;color:#bbb;border-radius:8px 8px 0 0;font-size:.88rem}
+.tab.active{background:#6aa6fd;color:#fff;border-color:#6aa6fd}
+.pane{display:none}.pane.active{display:block}
+.card{background:#2a2a2a;border:1px solid #404040;border-radius:8px;padding:22px;margin-bottom:18px;text-align:center}
+select,button{background:#383838;border:1px solid #4a4a4a;color:#e0e0e0;border-radius:6px;padding:10px 14px;font-size:.9rem;cursor:pointer}
+button.primary{background:#6aa6fd;border-color:#6aa6fd;color:#fff;font-weight:600}
+.hodiny{max-width:300px;margin:0 auto 14px}
+.volby{display:grid;grid-template-columns:1fr 1fr;gap:10px;max-width:360px;margin:0 auto 12px}
+.volby button{font-size:1.25rem;font-weight:700;padding:13px}
+.volby button.spravne{background:#2e7d32;border-color:#2e7d32;color:#fff}
+.volby button.chybne{background:#c0392b;border-color:#c0392b;color:#fff}
+.zpetna{min-height:34px;font-size:1rem;color:#999;margin-bottom:6px}
+.skore{font-size:.85rem;color:#888;margin-top:8px}
+.skore b{color:#6aa6fd}
+.cil{font-size:2.4rem;font-weight:700;color:#6aa6fd;margin:6px 0 14px}
+.nastav-btns{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:14px}
+.nastav-btns button{font-size:1rem;font-weight:600;min-width:64px}
+.digital{font-size:2.2rem;font-weight:700;color:#6aa6fd;margin:10px 0 2px}
+.slovy{font-size:1.15rem;color:#ccc;margin-bottom:14px;min-height:28px}
+.serie{color:#e67e22;font-weight:700}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>🕐 Učíme se hodiny</h1>
+  <div class="tabs">
+    <div class="tab active" data-pane="poznej">❓ Kolik je hodin?</div>
+    <div class="tab" data-pane="nastav">🔧 Nastav čas</div>
+    <div class="tab" data-pane="volne">🕰️ Prozkoumej</div>
+  </div>
+
+  <div class="pane active" id="poznej">
+    <div class="card">
+      <div style="margin-bottom:14px">
+        <select id="obtiznost">
+          <option value="60">Celé hodiny</option>
+          <option value="30">Půlhodiny</option>
+          <option value="15">Čtvrthodiny</option>
+          <option value="5">Po 5 minutách</option>
+        </select>
+      </div>
+      <div class="hodiny" id="hodinyKviz"></div>
+      <div class="zpetna" id="kvizZpetna">Kolik hodin ukazují ručičky?</div>
+      <div class="volby" id="kvizVolby"></div>
+      <div class="skore">Správně: <b id="kvizOK">0</b> · Série: <span class="serie" id="kvizSerie">0</span> 🔥</div>
+    </div>
+  </div>
+
+  <div class="pane" id="nastav">
+    <div class="card">
+      <div>Nastav ručičky na:</div>
+      <div class="cil" id="nastavCil">–</div>
+      <div class="hodiny" id="hodinyNastav"></div>
+      <div class="nastav-btns">
+        <button data-min="-60">−1 hod</button>
+        <button data-min="-5">−5 min</button>
+        <button data-min="5">+5 min</button>
+        <button data-min="60">+1 hod</button>
+      </div>
+      <button class="primary" id="zkontrolovat">✔️ Zkontrolovat</button>
+      <div class="zpetna" id="nastavZpetna" style="margin-top:10px"></div>
+      <div class="skore">Správně: <b id="nastavOK">0</b></div>
+    </div>
+  </div>
+
+  <div class="pane" id="volne">
+    <div class="card">
+      <div class="hodiny" id="hodinyVolne"></div>
+      <div class="nastav-btns">
+        <button data-vmin="-60">−1 hod</button>
+        <button data-vmin="-15">−15 min</button>
+        <button data-vmin="-1">−1 min</button>
+        <button data-vmin="1">+1 min</button>
+        <button data-vmin="15">+15 min</button>
+        <button data-vmin="60">+1 hod</button>
+      </div>
+      <div class="digital" id="volneDigital"></div>
+      <div class="slovy" id="volneSlovy"></div>
+      <button id="ted">🕐 Aktuální čas</button>
+    </div>
+  </div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.pane').forEach(x=>x.classList.remove('active'));
+  t.classList.add('active');$(t.dataset.pane).classList.add('active');
+});
+
+/* --- SVG ciferník --- */
+function vytvorHodiny(el){
+  let cisla='',tiky='';
+  for(let i=1;i<=12;i++){
+    const a=(i*30-90)*Math.PI/180;
+    cisla+=`<text x="${100+76*Math.cos(a)}" y="${100+76*Math.sin(a)+6}" text-anchor="middle" font-size="17" font-weight="700" fill="#e0e0e0">${i}</text>`;
+  }
+  for(let i=0;i<60;i++){
+    const a=i*6*Math.PI/180,dlouhy=i%5===0;
+    const r1=dlouhy?88:92;
+    tiky+=`<line x1="${100+r1*Math.sin(a)}" y1="${100-r1*Math.cos(a)}" x2="${100+95*Math.sin(a)}" y2="${100-95*Math.cos(a)}" stroke="${dlouhy?'#888':'#555'}" stroke-width="${dlouhy?2.5:1}"/>`;
+  }
+  el.innerHTML=`<svg viewBox="0 0 200 200">
+    <circle cx="100" cy="100" r="97" fill="#242424" stroke="#6aa6fd" stroke-width="4"/>
+    ${tiky}${cisla}
+    <line class="rucicka-h" x1="100" y1="100" x2="100" y2="56" stroke="#e0e0e0" stroke-width="7" stroke-linecap="round"/>
+    <line class="rucicka-m" x1="100" y1="100" x2="100" y2="34" stroke="#6aa6fd" stroke-width="4.5" stroke-linecap="round"/>
+    <circle cx="100" cy="100" r="6" fill="#6aa6fd"/>
+  </svg>`;
+}
+function nastavRucicky(el,h,m){
+  el.querySelector('.rucicka-h').setAttribute('transform',`rotate(${(h%12)*30+m*0.5} 100 100)`);
+  el.querySelector('.rucicka-m').setAttribute('transform',`rotate(${m*6} 100 100)`);
+}
+
+/* --- čas slovy (česky) --- */
+const CELA=['dvanáct','jedna','dvě','tři','čtyři','pět','šest','sedm','osm','devět','deset','jedenáct'];
+const NA=['dvanáct','jednu','dvě','tři','čtyři','pět','šest','sedm','osm','devět','deset','jedenáct'];
+const PUL=['dvanácté','jedné','druhé','třetí','čtvrté','páté','šesté','sedmé','osmé','deváté','desáté','jedenácté'];
+function slovy(h,m){
+  const h12=h%12;
+  if(m===0){
+    const n=h12===0?12:h12;
+    return CELA[h12]+' '+(n===1?'hodina':n<5?'hodiny':'hodin');
+  }
+  if(m===15)return 'čtvrt na '+NA[(h12+1)%12];
+  if(m===30)return 'půl '+PUL[(h12+1)%12];
+  if(m===45)return 'tři čtvrtě na '+NA[(h12+1)%12];
+  return '';
+}
+function digital(h,m){return h+':'+String(m).padStart(2,'0');}
+
+/* ========== 1) Kolik je hodin? ========== */
+vytvorHodiny($('hodinyKviz'));
+let kvizCas=null,kvizOK=0,kvizSerie=0,kvizZamek=false;
+function nahodnyCas(krok){
+  const h=1+Math.floor(Math.random()*12);
+  const m=krok===60?0:Math.floor(Math.random()*(60/krok))*krok;
+  return {h,m};
+}
+function novyKviz(){
+  kvizZamek=false;
+  const krok=+$('obtiznost').value;
+  kvizCas=nahodnyCas(krok);
+  nastavRucicky($('hodinyKviz'),kvizCas.h,kvizCas.m);
+  $('kvizZpetna').textContent='Kolik hodin ukazují ručičky?';
+  // 4 možnosti
+  const spravna=digital(kvizCas.h,kvizCas.m);
+  const moznosti=new Set([spravna]);
+  let pojistka=0;
+  while(moznosti.size<4&&pojistka++<200){
+    const t=nahodnyCas(krok);
+    moznosti.add(digital(t.h,t.m));
+  }
+  const pole=[...moznosti].sort(()=>Math.random()-.5);
+  $('kvizVolby').innerHTML=pole.map(t=>`<button data-t="${t}">${t}</button>`).join('');
+  $('kvizVolby').querySelectorAll('button').forEach(b=>b.onclick=()=>{
+    if(kvizZamek)return;kvizZamek=true;
+    const ok=b.dataset.t===spravna;
+    b.classList.add(ok?'spravne':'chybne');
+    if(!ok)$('kvizVolby').querySelector(`[data-t="${spravna}"]`).classList.add('spravne');
+    const sl=slovy(kvizCas.h,kvizCas.m);
+    $('kvizZpetna').textContent=(ok?'✅ Správně! ':'❌ Bylo to '+spravna+'. ')+(sl?'Slovy: '+sl:'');
+    if(ok){kvizOK++;kvizSerie++;}else kvizSerie=0;
+    $('kvizOK').textContent=kvizOK;$('kvizSerie').textContent=kvizSerie;
+    setTimeout(novyKviz,ok?1300:2600);
+  });
+}
+$('obtiznost').onchange=novyKviz;
+novyKviz();
+
+/* ========== 2) Nastav čas ========== */
+vytvorHodiny($('hodinyNastav'));
+let nastavCil=null,aktualni={h:12,m:0},nastavOK=0;
+function novyNastav(){
+  nastavCil=nahodnyCas(15);
+  aktualni={h:12,m:0};
+  nastavRucicky($('hodinyNastav'),12,0);
+  const sl=slovy(nastavCil.h,nastavCil.m);
+  $('nastavCil').textContent=digital(nastavCil.h,nastavCil.m)+(sl?' ('+sl+')':'');
+  $('nastavZpetna').textContent='';
+}
+document.querySelectorAll('#nastav [data-min]').forEach(b=>b.onclick=()=>{
+  let celkem=aktualni.h*60+aktualni.m+ +b.dataset.min;
+  celkem=((celkem%720)+720)%720;
+  aktualni.h=Math.floor(celkem/60)||12;
+  if(aktualni.h===0)aktualni.h=12;
+  aktualni.m=celkem%60;
+  nastavRucicky($('hodinyNastav'),aktualni.h,aktualni.m);
+  $('nastavZpetna').textContent='';
+});
+$('zkontrolovat').onclick=()=>{
+  const ok=(aktualni.h%12)===(nastavCil.h%12)&&aktualni.m===nastavCil.m;
+  if(ok){
+    nastavOK++;$('nastavOK').textContent=nastavOK;
+    $('nastavZpetna').textContent='✅ Výborně!';
+    setTimeout(novyNastav,1400);
+  }else{
+    $('nastavZpetna').textContent='❌ Ještě to není ono, zkus to upravit. Teď máš '+digital(aktualni.h,aktualni.m)+'.';
+  }
+};
+novyNastav();
+
+/* ========== 3) Prozkoumej ========== */
+vytvorHodiny($('hodinyVolne'));
+let volny={h:8,m:0};
+function ukazVolny(){
+  nastavRucicky($('hodinyVolne'),volny.h,volny.m);
+  $('volneDigital').textContent=digital(volny.h,volny.m);
+  const sl=slovy(volny.h,volny.m);
+  $('volneSlovy').textContent=sl||(volny.h+' hodin a '+volny.m+' minut');
+}
+document.querySelectorAll('#volne [data-vmin]').forEach(b=>b.onclick=()=>{
+  let celkem=volny.h*60+volny.m+ +b.dataset.vmin;
+  celkem=((celkem%720)+720)%720;
+  volny.h=Math.floor(celkem/60)||12;
+  if(volny.h===0)volny.h=12;
+  volny.m=celkem%60;
+  ukazVolny();
+});
+$('ted').onclick=()=>{
+  const d=new Date();
+  volny.h=d.getHours()%12||12;volny.m=d.getMinutes();
+  ukazVolny();
+};
+ukazVolny();
+</script>
+</body>
+</html>

@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🪐 Sluneční soustava</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#0a0a14;color:#e0e0e0;height:100vh;overflow:hidden;display:flex;flex-direction:column}
+.horni{display:flex;gap:12px;align-items:center;padding:10px 16px;background:#16161f;border-bottom:1px solid #2a2a3a;flex-wrap:wrap}
+.horni h1{font-size:1.05rem;font-weight:600;margin-right:auto}
+.horni label{font-size:.78rem;color:#888;display:flex;align-items:center;gap:7px}
+input[type=range]{width:130px;accent-color:#6aa6fd}
+button{background:#2a2a3a;border:1px solid #3a3a4d;color:#ccc;border-radius:6px;padding:6px 13px;font-size:.82rem;cursor:pointer}
+button:hover{background:#6aa6fd;color:#fff}
+.plocha{flex:1;position:relative;overflow:hidden}
+canvas{display:block;width:100%;height:100%;cursor:pointer}
+.info{position:absolute;top:14px;right:14px;width:270px;max-width:calc(100% - 28px);background:rgba(22,22,31,.95);border:1px solid #3a3a4d;border-radius:10px;padding:16px;display:none;max-height:calc(100% - 28px);overflow-y:auto}
+.info.zobraz{display:block}
+.info h2{font-size:1.2rem;margin-bottom:4px}
+.info .lat{font-size:.75rem;color:#777;font-style:italic;margin-bottom:10px}
+.info .radek{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #2a2a3a;font-size:.82rem}
+.info .radek span{color:#888}
+.info .radek b{color:#6aa6fd;text-align:right}
+.info p{font-size:.8rem;color:#aaa;line-height:1.5;margin-top:10px}
+.info .zavrit{position:absolute;top:8px;right:10px;background:none;border:none;color:#777;font-size:1rem;padding:2px 6px}
+.napoveda{position:absolute;bottom:12px;left:14px;font-size:.72rem;color:#556;pointer-events:none}
+</style>
+</head>
+<body>
+<div class="horni">
+  <h1>🪐 Sluneční soustava</h1>
+  <label>Rychlost <input type="range" id="rychlost" min="0" max="100" value="40"></label>
+  <button id="pauza">⏸️ Pauza</button>
+  <button id="popisky" class="aktivni">🏷️ Popisky</button>
+  <button id="drahy">⭕ Dráhy</button>
+</div>
+<div class="plocha">
+  <canvas id="platno"></canvas>
+  <div class="info" id="info"><button class="zavrit" id="zavrit">✕</button><div id="infoObsah"></div></div>
+  <div class="napoveda">Klikni na planetu nebo Slunce pro informace. Velikosti a vzdálenosti nejsou ve skutečném měřítku.</div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const canvas=$('platno'),ctx=canvas.getContext('2d');
+
+const SLUNCE={nazev:'Slunce',lat:'Sol',barva:'#ffd54f',
+  data:{'Průměr':'1 392 700 km','Hmotnost':'333 000× Země','Povrchová teplota':'≈ 5 500 °C','Stáří':'≈ 4,6 miliardy let'},
+  fakt:'Slunce obsahuje 99,86 % veškeré hmotnosti sluneční soustavy. Každou sekundu přemění asi 4 miliony tun hmoty na energii.'};
+
+const PLANETY=[
+ {nazev:'Merkur',lat:'Mercurius',barva:'#9c9c9c',velikost:4,perioda:88,
+  data:{'Průměr':'4 879 km','Vzdálenost od Slunce':'57,9 mil. km','Oběh kolem Slunce':'88 dní','Délka dne':'59 pozemských dní','Měsíce':'0'},
+  fakt:'Nejmenší planeta. Rozdíl teplot mezi dnem (+430 °C) a nocí (−180 °C) je největší v celé soustavě.'},
+ {nazev:'Venuše',lat:'Venus',barva:'#e6c87a',velikost:7,perioda:225,
+  data:{'Průměr':'12 104 km','Vzdálenost od Slunce':'108,2 mil. km','Oběh kolem Slunce':'225 dní','Délka dne':'243 pozemských dní','Měsíce':'0'},
+  fakt:'Nejžhavější planeta (≈ 465 °C) díky skleníkovému efektu. Otáčí se opačným směrem než ostatní planety – Slunce tam vychází na západě.'},
+ {nazev:'Země',lat:'Terra',barva:'#4a90d9',velikost:7.5,perioda:365,mesic:true,
+  data:{'Průměr':'12 756 km','Vzdálenost od Slunce':'149,6 mil. km','Oběh kolem Slunce':'365,25 dne','Délka dne':'24 hodin','Měsíce':'1 (Měsíc)'},
+  fakt:'Jediné známé místo ve vesmíru, kde existuje život. 71 % povrchu pokrývá voda.'},
+ {nazev:'Mars',lat:'Mars',barva:'#d1603d',velikost:5.5,perioda:687,
+  data:{'Průměr':'6 792 km','Vzdálenost od Slunce':'227,9 mil. km','Oběh kolem Slunce':'687 dní','Délka dne':'24,6 hodiny','Měsíce':'2 (Phobos, Deimos)'},
+  fakt:'Rudá barva pochází z oxidu železitého (rzi). Je zde nejvyšší hora sluneční soustavy – Olympus Mons, vysoká 22 km.'},
+ {nazev:'Jupiter',lat:'Iuppiter',barva:'#d8b48a',velikost:16,perioda:4333,
+  data:{'Průměr':'142 984 km','Vzdálenost od Slunce':'778,5 mil. km','Oběh kolem Slunce':'11,9 let','Délka dne':'9,9 hodiny','Měsíce':'95'},
+  fakt:'Největší planeta – vešlo by se do ní 1 300 Zemí. Velká rudá skvrna je bouře větší než Země, která zuří už stovky let.'},
+ {nazev:'Saturn',lat:'Saturnus',barva:'#e3cf9a',velikost:13,perioda:10759,prstenec:true,
+  data:{'Průměr':'120 536 km','Vzdálenost od Slunce':'1 433,5 mil. km','Oběh kolem Slunce':'29,4 let','Délka dne':'10,7 hodiny','Měsíce':'146'},
+  fakt:'Proslulý prstenci z ledu a kamení – jsou široké 280 000 km, ale tlusté jen desítky metrů. Má tak nízkou hustotu, že by plaval na vodě.'},
+ {nazev:'Uran',lat:'Uranus',barva:'#7fd4d4',velikost:10,perioda:30687,
+  data:{'Průměr':'51 118 km','Vzdálenost od Slunce':'2 872,5 mil. km','Oběh kolem Slunce':'84 let','Délka dne':'17,2 hodiny','Měsíce':'28'},
+  fakt:'Otáčí se „na boku" – jeho osa je skloněná o 98°. Pravděpodobně ho v minulosti převrátila srážka s velkým tělesem.'},
+ {nazev:'Neptun',lat:'Neptunus',barva:'#4666e0',velikost:10,perioda:60190,
+  data:{'Průměr':'49 528 km','Vzdálenost od Slunce':'4 495,1 mil. km','Oběh kolem Slunce':'165 let','Délka dne':'16,1 hodiny','Měsíce':'16'},
+  fakt:'Nejvzdálenější planeta s nejrychlejšími větry v soustavě – až 2 100 km/h. Od objevu v roce 1846 stihl oběhnout Slunce jen jednou.'}
+];
+
+let bezi=true,ukazPopisky=true,ukazDrahy=true,cas=0;
+let hvezdy=[];
+
+function velikostPlatna(){
+  const r=canvas.parentElement.getBoundingClientRect();
+  canvas.width=r.width*devicePixelRatio;canvas.height=r.height*devicePixelRatio;
+  ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
+  hvezdy=[];
+  for(let i=0;i<160;i++)hvezdy.push({x:Math.random()*r.width,y:Math.random()*r.height,v:Math.random()*1.3+.3,a:Math.random()*.5+.2});
+}
+window.addEventListener('resize',velikostPlatna);
+velikostPlatna();
+
+function geometrie(){
+  const w=canvas.width/devicePixelRatio,h=canvas.height/devicePixelRatio;
+  const cx=w/2,cy=h/2;
+  const maxR=Math.min(w,h)/2-30;
+  return {cx,cy,krok:(maxR-46)/(PLANETY.length-1)};
+}
+function polohaPlanety(p,i,g){
+  const r=46+i*g.krok;
+  // úhlová rychlost ~ 1/perioda, normovaná na Zemi
+  const uhel=cas*365/p.perioda+i*1.7;
+  return {x:g.cx+r*Math.cos(uhel),y:g.cy+r*Math.sin(uhel),r,uhel};
+}
+
+function kresli(){
+  const w=canvas.width/devicePixelRatio,h=canvas.height/devicePixelRatio;
+  const g=geometrie();
+  ctx.clearRect(0,0,w,h);
+  // hvězdy
+  hvezdy.forEach(s=>{ctx.globalAlpha=s.a;ctx.fillStyle='#fff';ctx.fillRect(s.x,s.y,s.v,s.v);});
+  ctx.globalAlpha=1;
+  // dráhy
+  if(ukazDrahy){
+    ctx.strokeStyle='rgba(255,255,255,.07)';ctx.lineWidth=1;
+    PLANETY.forEach((p,i)=>{
+      ctx.beginPath();ctx.arc(g.cx,g.cy,46+i*g.krok,0,7);ctx.stroke();
+    });
+  }
+  // Slunce
+  const zar=ctx.createRadialGradient(g.cx,g.cy,4,g.cx,g.cy,34);
+  zar.addColorStop(0,'#fff3b0');zar.addColorStop(.4,'#ffd54f');zar.addColorStop(1,'rgba(255,180,60,0)');
+  ctx.fillStyle=zar;ctx.beginPath();ctx.arc(g.cx,g.cy,34,0,7);ctx.fill();
+  ctx.fillStyle='#ffd54f';ctx.beginPath();ctx.arc(g.cx,g.cy,15,0,7);ctx.fill();
+  // planety
+  PLANETY.forEach((p,i)=>{
+    const poz=polohaPlanety(p,i,g);
+    if(p.prstenec){
+      ctx.save();ctx.translate(poz.x,poz.y);ctx.rotate(-.45);
+      ctx.strokeStyle='rgba(227,207,154,.6)';ctx.lineWidth=3;
+      ctx.beginPath();ctx.ellipse(0,0,p.velikost+9,(p.velikost+9)*.36,0,0,7);ctx.stroke();
+      ctx.restore();
+    }
+    ctx.fillStyle=p.barva;
+    ctx.beginPath();ctx.arc(poz.x,poz.y,p.velikost,0,7);ctx.fill();
+    if(p.mesic){
+      const mu=cas*13.4;
+      ctx.fillStyle='#bbb';
+      ctx.beginPath();ctx.arc(poz.x+13*Math.cos(mu),poz.y+13*Math.sin(mu),2,0,7);ctx.fill();
+    }
+    if(ukazPopisky){
+      ctx.fillStyle='rgba(220,225,255,.75)';ctx.font='11px sans-serif';ctx.textAlign='center';
+      ctx.fillText(p.nazev,poz.x,poz.y-p.velikost-7);
+    }
+  });
+}
+
+let minule=performance.now();
+function smycka(t){
+  const dt=(t-minule)/1000;minule=t;
+  if(bezi)cas+=dt*(+$('rychlost').value/100)*.9;
+  kresli();
+  requestAnimationFrame(smycka);
+}
+requestAnimationFrame(smycka);
+
+/* interakce */
+canvas.addEventListener('click',e=>{
+  const rect=canvas.getBoundingClientRect();
+  const x=e.clientX-rect.left,y=e.clientY-rect.top;
+  const g=geometrie();
+  if(Math.hypot(x-g.cx,y-g.cy)<20){ukazInfo(SLUNCE);return;}
+  for(let i=PLANETY.length-1;i>=0;i--){
+    const p=PLANETY[i],poz=polohaPlanety(p,i,g);
+    if(Math.hypot(x-poz.x,y-poz.y)<Math.max(p.velikost+6,12)){ukazInfo(p);return;}
+  }
+  $('info').classList.remove('zobraz');
+});
+function ukazInfo(p){
+  $('infoObsah').innerHTML=`<h2 style="color:${p.barva||'#ffd54f'}">${p.nazev}</h2><div class="lat">${p.lat}</div>`+
+    Object.entries(p.data).map(([k,v])=>`<div class="radek"><span>${k}</span><b>${v}</b></div>`).join('')+
+    `<p>💡 ${p.fakt}</p>`;
+  $('info').classList.add('zobraz');
+}
+$('zavrit').onclick=()=>$('info').classList.remove('zobraz');
+$('pauza').onclick=()=>{bezi=!bezi;$('pauza').textContent=bezi?'⏸️ Pauza':'▶️ Spustit';};
+$('popisky').onclick=()=>{ukazPopisky=!ukazPopisky;};
+$('drahy').onclick=()=>{ukazDrahy=!ukazDrahy;};
+</script>
+</body>
+</html>

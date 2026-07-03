@@ -14,7 +14,9 @@
   <meta name="twitter:card" content="summary" />
 
   <!-- PWA / přidání na plochu -->
-  <link rel="manifest" href='data:application/manifest+json,{"name":"Předpověď počasí","short_name":"Počasí","start_url":".","display":"standalone","background_color":"#1a1a1a","theme_color":"#1a1a1a"}' />
+  <link rel="manifest" href="forecast.webmanifest" />
+  <link rel="icon" type="image/png" sizes="192x192" href="forecast-icon-192.png" />
+  <link rel="apple-touch-icon" href="forecast-icon-192.png" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="Počasí" />
@@ -202,6 +204,26 @@
 
     .load-btn:hover {
       background-color: #5694f0;
+    }
+
+    .load-btn:disabled {
+      opacity: 0.6;
+      cursor: default;
+    }
+
+    /* Indikátor stáří dat (v liště exportu) */
+    .data-freshness {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.8rem;
+      color: #888;
+      padding: 8px 0;
+    }
+
+    .data-freshness.stale {
+      color: #ff9800;
     }
 
     .charts-section {
@@ -1149,10 +1171,10 @@
       vertical-align: middle;
     }
 
-    /* === PANEL AKTUÁLNÍCH PODMÍNEK (riziko bouřek + UV) === */
+    /* === PANEL AKTUÁLNÍCH PODMÍNEK (aktuálně + riziko bouřek + UV) === */
     .conditions-panel {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+      grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
       gap: 16px;
       margin-bottom: 20px;
     }
@@ -1217,6 +1239,21 @@
 
     .storm-alert-icon { font-size: 2rem; flex-shrink: 0; }
     .storm-alert-body { flex: 1; }
+
+    /* Varování na mráz / vedro – přebarvené varianty bouřkového banneru */
+    .temp-alert.frost {
+      background: linear-gradient(135deg, #0a1a2e 0%, #16283e 100%);
+      border-color: #4a9eff;
+      animation: none;
+      box-shadow: 0 0 14px #4a9eff44;
+    }
+
+    .temp-alert.heat {
+      background: linear-gradient(135deg, #2e1a0a 0%, #3e2513 100%);
+      border-color: #ff9800;
+      animation: none;
+      box-shadow: 0 0 14px #ff980044;
+    }
 
     .storm-alert-title {
       font-size: 1rem;
@@ -1317,6 +1354,86 @@
         grid-template-columns: 1fr;
       }
     }
+
+    /* === KIOSK REŽIM (celoobrazovková meteostanice) === */
+    .kiosk-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 20000;
+      background: #101318;
+      color: #e0e0e0;
+      flex-direction: column;
+      padding: 3vh 4vw;
+      gap: 2.5vh;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .kiosk-overlay.active { display: flex; }
+
+    .kiosk-topbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: baseline;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .kiosk-clock { font-size: 9vmin; font-weight: 800; line-height: 1; }
+    .kiosk-date  { font-size: 3.2vmin; color: #94a3b8; }
+    .kiosk-date::first-letter { text-transform: uppercase; }
+
+    .kiosk-main {
+      display: flex;
+      align-items: center;
+      gap: 4vw;
+      flex-wrap: wrap;
+    }
+
+    .kiosk-icon { font-size: 15vmin; line-height: 1; }
+    .kiosk-temp { font-size: 16vmin; font-weight: 800; line-height: 1; }
+    .kiosk-desc { font-size: 3.6vmin; color: #94a3b8; margin-top: 1vh; }
+
+    .kiosk-minmax {
+      margin-left: auto;
+      font-size: 4.2vmin;
+      text-align: right;
+      line-height: 1.6;
+      font-weight: 600;
+    }
+
+    .kiosk-minmax .max { color: #ff6b6b; }
+    .kiosk-minmax .min { color: #6aa6fd; }
+
+    .kiosk-details {
+      display: flex;
+      gap: 4vw;
+      font-size: 3.4vmin;
+      color: #cbd5e1;
+      flex-wrap: wrap;
+    }
+
+    .kiosk-radar {
+      flex: 1;
+      min-height: 0;
+      border-radius: 10px;
+      overflow: hidden;
+      display: none;
+      border: 1px solid #2a2f3a;
+    }
+
+    .kiosk-radar.active { display: block; }
+
+    .kiosk-footer {
+      display: flex;
+      justify-content: space-between;
+      font-size: 2.6vmin;
+      color: #64748b;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: auto; /* přišpendlí patičku ke spodnímu okraji */
+    }
   </style>
 </head>
 <body>
@@ -1376,6 +1493,14 @@
 
       <!-- Panel aktuálních podmínek: riziko bouřek + UV index -->
       <div class="conditions-panel" id="conditionsPanel" style="display: none;">
+        <div class="condition-card" id="nowCard">
+          <div class="condition-icon" id="nowIcon">🌡️</div>
+          <div class="condition-body">
+            <div class="condition-label">Aktuálně</div>
+            <div class="condition-value" id="nowValue">--</div>
+            <div class="condition-detail" id="nowDetail"></div>
+          </div>
+        </div>
         <div class="condition-card" id="stormRiskCard">
           <div class="condition-icon">⛈️</div>
           <div class="condition-body">
@@ -1403,10 +1528,24 @@
         </div>
       </div>
 
+      <!-- Banner varování na mráz / vedro (příštích 72 h) -->
+      <div class="storm-alert temp-alert" id="tempAlert">
+        <div class="storm-alert-icon" id="tempAlertIcon">❄️</div>
+        <div class="storm-alert-body">
+          <div class="storm-alert-title" id="tempAlertTitle"></div>
+          <div class="storm-alert-detail" id="tempAlertDetail"></div>
+        </div>
+      </div>
+
       <!-- Lišta exportu / sdílení -->
       <div class="export-bar" id="exportBar" style="display: none;">
         <button class="export-btn" id="shareLinkBtn">🔗 Sdílet odkaz</button>
         <button class="export-btn" id="csvBtn">📄 Export CSV</button>
+        <label class="toggle-item" title="Zobrazí teplotu z modelů ICON, GFS a ECMWF – když se čáry rozcházejí, je předpověď nejistá">
+          <input type="checkbox" id="modelCompareToggle">
+          <span class="toggle-item-label">🧮 Porovnání modelů</span>
+        </label>
+        <span class="data-freshness" id="dataFreshness" title="Čas posledního stažení dat z API">🕓 <span id="dataFreshnessText">–</span></span>
       </div>
 
       <div class="charts-section" id="chartsSection" style="display: none;">
@@ -1589,6 +1728,41 @@
         <ul class="settings-chart-list" id="settingsChartList"></ul>
         <button class="export-btn" id="resetChartSettings" style="margin-top:16px;">↺ Obnovit výchozí</button>
       </div>
+      <div class="controls-section" style="margin-top:20px;">
+        <h3 style="font-size:0.9rem;color:#888;text-transform:uppercase;letter-spacing:0.5px;margin-bottom:6px;font-weight:600;">🖥️ Kiosk režim (meteostanice na zeď)</h3>
+        <p style="color:#888;font-size:0.85rem;margin-bottom:16px;">Celoobrazovkový přehled s velkými číslicemi – pro tablet trvale zobrazující počasí. Data se obnovují automaticky každých 15 minut a obrazovka se udržuje vzhůru (Wake Lock). Ukončí se klepnutím kamkoli nebo klávesou Esc.</p>
+        <label class="toggle-item" style="margin-bottom:12px;">
+          <input type="checkbox" id="kioskRadarToggle">
+          <span class="toggle-item-label">Zobrazit radar srážek</span>
+        </label>
+        <label class="toggle-item" style="margin-bottom:18px;">
+          <input type="checkbox" id="kioskAutoStartToggle">
+          <span class="toggle-item-label">Spouštět automaticky při otevření stránky (lze i přes URL parametr <code style="color:#6aa6fd;">?kiosk=1</code>)</span>
+        </label>
+        <button class="load-btn" id="startKioskBtn">🖥️ Spustit kiosk režim</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ======= KIOSK REŽIM (celoobrazovková meteostanice) ======= -->
+  <div class="kiosk-overlay" id="kioskOverlay">
+    <div class="kiosk-topbar">
+      <div class="kiosk-clock" id="kioskClock">--:--</div>
+      <div class="kiosk-date" id="kioskDate"></div>
+    </div>
+    <div class="kiosk-main">
+      <div class="kiosk-icon" id="kioskIcon">🌡️</div>
+      <div class="kiosk-temp-block">
+        <div class="kiosk-temp" id="kioskTemp">--°</div>
+        <div class="kiosk-desc" id="kioskDesc"></div>
+      </div>
+      <div class="kiosk-minmax" id="kioskMinMax"></div>
+    </div>
+    <div class="kiosk-details" id="kioskDetails"></div>
+    <div class="kiosk-radar" id="kioskRadarMap"></div>
+    <div class="kiosk-footer">
+      <span id="kioskLocation"></span>
+      <span id="kioskUpdated"></span>
     </div>
   </div>
 
@@ -2041,13 +2215,26 @@
       );
     }
 
-    async function loadWeather() {
+    async function loadWeather(opts = {}) {
+      // silent: true → tichá aktualizace na pozadí (bez spinneru, grafy zůstanou vidět)
+      const silent = opts.silent === true;
+
       // Zruš případné předchozí rozpracované načítání (rychlé přepnutí lokace)
       if (weatherAbortController) weatherAbortController.abort();
       weatherAbortController = new AbortController();
       const signal = weatherAbortController.signal;
+      const myController = weatherAbortController;
 
-      showLoading();
+      // Stihli jsme už vykreslit předpověď z cache? (kvůli chybové hlášce v catch)
+      let paintedFromCache = false;
+
+      const loadBtn = document.getElementById('loadWeather');
+      if (loadBtn) {
+        loadBtn.disabled = true;
+        loadBtn.textContent = '⏳ Načítám…';
+      }
+
+      if (!silent) showLoading();
 
       try {
         const input = document.getElementById('location').value.trim();
@@ -2069,7 +2256,10 @@
 
         document.getElementById('saveLocationBtn').style.display = 'block';
 
-        // Zkontroluj cache (platná max 1 hodinu)
+        // Cache slouží jen k OKAMŽITÉMU vykreslení – čerstvá data se stáhnou vždy.
+        // (Dříve se zde končilo return-em: 24h/3denní graf se ořezávají od aktuálního
+        // času, takže vypadaly aktualizovaně, ale 10denní a UV graf se kreslí od
+        // začátku dat a zůstávaly "zamrzlé".)
         const locKey = getLocationKey(coords.lat, coords.lon);
         const cached = weatherCache[locKey];
         if (cached && (Date.now() - cached.timestamp < CACHE_TTL_MS)) {
@@ -2079,9 +2269,10 @@
           showWeatherData();
           applyChartSettings();
           addToRecentLocations(currentLocationData);
-          showNotification(`Předpověď (z cache): ${currentLocationData?.displayName || 'neznámou lokaci'}`, 'info');
+          paintedFromCache = true;
+          lastDataTimestamp = cached.timestamp;
+          updateFreshnessIndicator();
           if (geomagForecastCache) checkAuroraAlert(geomagForecastCache);
-          return;
         }
 
         const hourlyParams = [
@@ -2090,20 +2281,27 @@
         ].join(',');
 
         // forecast_days=4 (96 h): potřebujeme zobrazit 72 h OD AKTUÁLNÍ hodiny, ne od dnešní půlnoci
-        const hourlyUrl = `https://api.open-meteo.com/v1/forecast?latitude=${coords.lat}&longitude=${coords.lon}&hourly=${hourlyParams}&timezone=Europe%2FPrague&forecast_days=4`;
-        const aqUrl = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${coords.lat}&longitude=${coords.lon}&hourly=european_aqi&timezone=Europe%2FPrague&forecast_days=4`;
-        
+        // past_days=1: včerejšek pro kontext v 3denním grafu; daily=sunrise,sunset pro stínování nocí
+        const hourlyUrl = `https://api.open-meteo.com/v1/forecast?latitude=${coords.lat}&longitude=${coords.lon}&hourly=${hourlyParams}&daily=sunrise,sunset&timezone=Europe%2FPrague&forecast_days=4&past_days=1`;
+        const aqUrl = `https://air-quality-api.open-meteo.com/v1/air-quality?latitude=${coords.lat}&longitude=${coords.lon}&hourly=european_aqi&timezone=Europe%2FPrague&forecast_days=4&past_days=1`;
+
         const dailyParams = [
-          'temperature_2m_max', 'temperature_2m_min', 'precipitation_sum', 'wind_speed_10m_max', 
-          'wind_direction_10m_dominant', 'cloud_cover_mean'
+          'temperature_2m_max', 'temperature_2m_min', 'precipitation_sum', 'wind_speed_10m_max',
+          'wind_direction_10m_dominant', 'cloud_cover_mean', 'weather_code', 'precipitation_probability_max'
         ].join(',');
 
         const dailyUrl = `https://api.open-meteo.com/v1/forecast?latitude=${coords.lat}&longitude=${coords.lon}&daily=${dailyParams}&timezone=Europe%2FPrague&forecast_days=10`;
-        
-        const [hourlyResponse, dailyResponse, aqResponse] = await Promise.all([
-          fetch(hourlyUrl, { signal }),
-          fetch(dailyUrl, { signal }),
-          fetch(aqUrl, { signal }).catch(() => null)
+
+        // Porovnání modelů (jen když je zapnuté) – stejná časová osa jako hlavní hourly dotaz
+        const modelsUrl = `https://api.open-meteo.com/v1/forecast?latitude=${coords.lat}&longitude=${coords.lon}&hourly=temperature_2m&models=${MODEL_LIST.map(m => m.key).join(',')}&timezone=Europe%2FPrague&forecast_days=4&past_days=1`;
+
+        // cache: 'no-store' – URL jsou pořád stejné a API neposílá Cache-Control,
+        // některé mobilní prohlížeče by jinak vracely starou odpověď z HTTP cache
+        const [hourlyResponse, dailyResponse, aqResponse, modelsResponse] = await Promise.all([
+          fetch(hourlyUrl, { signal, cache: 'no-store' }),
+          fetch(dailyUrl, { signal, cache: 'no-store' }),
+          fetch(aqUrl, { signal, cache: 'no-store' }).catch(() => null),
+          modelCompareEnabled ? fetch(modelsUrl, { signal, cache: 'no-store' }).catch(() => null) : Promise.resolve(null)
         ]);
 
         if (hourlyResponse.status === 429 || dailyResponse.status === 429) {
@@ -2116,7 +2314,8 @@
         const hourly3DayData = await hourlyResponse.json();
         const daily10DayData = await dailyResponse.json();
         const aqData = aqResponse && aqResponse.ok ? await aqResponse.json() : null;
-        
+        const modelsData = modelsResponse && modelsResponse.ok ? await modelsResponse.json() : null;
+
         if (!hourly3DayData.hourly || !daily10DayData.daily) {
           throw new Error('Neplatná odpověď z API');
         }
@@ -2129,6 +2328,7 @@
         const hourlyWindDir = hourly3DayData.hourly.wind_direction_10m;
         const hourlyClouds = hourly3DayData.hourly.cloud_cover;
         const hourlyPressure = hourly3DayData.hourly.surface_pressure;
+        const hourlyHumidity = hourly3DayData.hourly.relative_humidity_2m;
         const hourlyCape = hourly3DayData.hourly.cape;
         const hourlySolar = hourly3DayData.hourly.shortwave_radiation;
         const hourlyAqi = aqData && aqData.hourly ? aqData.hourly.european_aqi : null;
@@ -2137,12 +2337,28 @@
         const hourlyCin = hourly3DayData.hourly.convective_inhibition;
         const hourlyUv = hourly3DayData.hourly.uv_index;
 
+        // Východy/západy slunce (pro stínování nocí v grafech)
+        const sunData = hourly3DayData.daily && hourly3DayData.daily.sunrise
+          ? { sunrise: hourly3DayData.daily.sunrise, sunset: hourly3DayData.daily.sunset }
+          : null;
+
+        // Teploty z jednotlivých modelů (jen když je porovnání zapnuté)
+        const modelTemps = {};
+        if (modelsData && modelsData.hourly) {
+          MODEL_LIST.forEach(m => {
+            const arr = modelsData.hourly['temperature_2m_' + m.key];
+            if (Array.isArray(arr)) modelTemps[m.key] = arr;
+          });
+        }
+
         // Uloží data pro případné překreslení po otočení telefonu
         lastChartData = {
-          hourly: { time: hourlyTime, temp: hourlyTemp, precip: hourlyPrecip, wind: hourlyWind, windDir: hourlyWindDir, clouds: hourlyClouds, pressure: hourlyPressure, cape: hourlyCape, solar: hourlySolar, aqi: hourlyAqi, precipProb: hourlyPrecipProb, weatherCode: hourlyWeatherCode, cin: hourlyCin, uv: hourlyUv }
+          hourly: { time: hourlyTime, temp: hourlyTemp, precip: hourlyPrecip, wind: hourlyWind, windDir: hourlyWindDir, clouds: hourlyClouds, pressure: hourlyPressure, humidity: hourlyHumidity, cape: hourlyCape, solar: hourlySolar, aqi: hourlyAqi, precipProb: hourlyPrecipProb, weatherCode: hourlyWeatherCode, cin: hourlyCin, uv: hourlyUv },
+          sun: sunData,
+          modelTemps: modelTemps
         };
 
-        updateThreeDayChart('threeDayChart', hourlyTime, hourlyTemp, hourlyPrecip, hourlyWind, hourlyWindDir, hourlyClouds, hourlyPressure, hourlyCape);
+        updateThreeDayChart('threeDayChart', hourlyTime, hourlyTemp, hourlyPrecip, hourlyWind, hourlyWindDir, hourlyClouds, hourlyPressure, hourlyCape, sunData, modelTemps);
         
         const now = new Date();
         const twentyFourHoursLater = new Date(now.getTime() + 24 * 60 * 60 * 1000);
@@ -2173,9 +2389,10 @@
           twentyFourHourWindDir,
           twentyFourHourClouds,
           twentyFourHourPressure,
-          twentyFourHourCape
+          twentyFourHourCape,
+          sunData
         );
-        
+
         const dailyTime = daily10DayData.daily.time;
         const dailyTempMax = daily10DayData.daily.temperature_2m_max;
         const dailyTempMin = daily10DayData.daily.temperature_2m_min;
@@ -2183,9 +2400,11 @@
         const dailyWind = daily10DayData.daily.wind_speed_10m_max.map(speed => Math.round(speed / 3.6 * 10) / 10);
         const dailyWindDir = daily10DayData.daily.wind_direction_10m_dominant;
         const dailyClouds = daily10DayData.daily.cloud_cover_mean;
-        
+        const dailyWeatherCode = daily10DayData.daily.weather_code;
+        const dailyPrecipProb = daily10DayData.daily.precipitation_probability_max;
+
         // Doplnění denních dat do lastChartData pro překreslení po otočení
-        lastChartData.daily = { time: dailyTime, tempMax: dailyTempMax, tempMin: dailyTempMin, precip: dailyPrecip, wind: dailyWind, windDir: dailyWindDir, clouds: dailyClouds };
+        lastChartData.daily = { time: dailyTime, tempMax: dailyTempMax, tempMin: dailyTempMin, precip: dailyPrecip, wind: dailyWind, windDir: dailyWindDir, clouds: dailyClouds, weatherCode: dailyWeatherCode, precipProb: dailyPrecipProb };
 
         // 24h data do lastChartData
         const h = lastChartData.hourly;
@@ -2200,7 +2419,9 @@
           dailyPrecip,
           dailyWind,
           dailyWindDir,
-          dailyClouds
+          dailyClouds,
+          dailyWeatherCode,
+          dailyPrecipProb
         );
 
         updateExtraChart('extraChart', hourlyTime, hourlyPressure, hourlyCape, hourlySolar, hourlyAqi);
@@ -2211,6 +2432,8 @@
         // Ulož do cache (v paměti i do localStorage – přežije reload)
         weatherCache[locKey] = { timestamp: Date.now(), data: lastChartData };
         saveWeatherCache();
+        lastDataTimestamp = Date.now();
+        updateFreshnessIndicator();
 
         showWeatherData();
         applyChartSettings();
@@ -2221,11 +2444,23 @@
       } catch (error) {
         // Zrušené načítání (přepnutí lokace) není chyba – neukazuj nic
         if (error.name === 'AbortError') return;
+        // Když už je vykreslena předpověď (z cache nebo tichá aktualizace),
+        // nech ji zobrazenou a jen upozorni, že aktualizace neprošla
+        if (paintedFromCache || silent) {
+          showNotification('Aktualizace se nezdařila – zobrazuji poslední uloženou předpověď.', 'warning');
+          return;
+        }
         // Síťová chyba (offline / DNS / CORS) má jinou hlášku než chyba serveru
         if (error instanceof TypeError) {
           showError('Nepodařilo se spojit se serverem. Zkontrolujte připojení k internetu.');
         } else {
           showError(`Chyba při načítání předpovědi: ${error.message}`);
+        }
+      } finally {
+        // Tlačítko vrať do původního stavu jen pokud mezitím nezačalo nové načítání
+        if (loadBtn && weatherAbortController === myController) {
+          loadBtn.disabled = false;
+          loadBtn.textContent = '🔍 Načíst předpověď počasí';
         }
       }
     }
@@ -2239,12 +2474,114 @@
       const h = lastChartData.hourly;
       const d = lastChartData.daily;
       const h24 = lastChartData.h24;
-      if (h) updateThreeDayChart('threeDayChart', h.time, h.temp, h.precip, h.wind, h.windDir, h.clouds, h.pressure, h.cape);
-      if (h24) updateTwentyFourHourChart('twentyFourHourChart', h24.time, h24.temp, h24.precip, h24.wind, h24.windDir, h24.clouds, h24.pressure, h24.cape);
-      if (d) updateTenDayChart('tenDayChart', d.time, d.tempMax, d.tempMin, d.precip, d.wind, d.windDir, d.clouds);
+      const sun = lastChartData.sun || null;
+      const mt = lastChartData.modelTemps || null;
+      if (h) updateThreeDayChart('threeDayChart', h.time, h.temp, h.precip, h.wind, h.windDir, h.clouds, h.pressure, h.cape, sun, mt);
+      if (h24) updateTwentyFourHourChart('twentyFourHourChart', h24.time, h24.temp, h24.precip, h24.wind, h24.windDir, h24.clouds, h24.pressure, h24.cape, sun);
+      if (d) updateTenDayChart('tenDayChart', d.time, d.tempMax, d.tempMin, d.precip, d.wind, d.windDir, d.clouds, d.weatherCode, d.precipProb);
       if (h) updateExtraChart('extraChart', h.time, h.pressure, h.cape, h.solar, h.aqi);
       if (h) updateUvChart('uvChart', h.time, h.uv);
     }
+
+    // =========================================================
+    // POROVNÁNÍ PŘEDPOVĚDNÍCH MODELŮ
+    // =========================================================
+    // Popisky obsahují slovo „Teplota", aby je tooltip grafu formátoval jako °C
+    const MODEL_LIST = [
+      { key: 'icon_seamless', label: 'Teplota ICON (DWD)',  color: '#f472b6' },
+      { key: 'gfs_seamless',  label: 'Teplota GFS (NOAA)',  color: '#a78bfa' },
+      { key: 'ecmwf_ifs025',  label: 'Teplota ECMWF',       color: '#fbbf24' }
+    ];
+    let modelCompareEnabled = localStorage.getItem('modelCompare') === '1';
+
+    // =========================================================
+    // STÍNOVÁNÍ NOCI (mezi západem a východem slunce)
+    // =========================================================
+    /**
+     * Plugin podbarvující noční hodiny v grafu.
+     * @param id        unikátní id pluginu
+     * @param pointTimes pole časů (ISO) VYKRESLENÝCH bodů grafu (po případném 3h kroku)
+     * @param sun       { sunrise: [...], sunset: [...] } z daily API (pokrývá rozsah dat)
+     */
+    function createNightShadePlugin(id, pointTimes, sun) {
+      const valid = sun && Array.isArray(sun.sunrise) && sun.sunrise.length > 0;
+      const sunTimes = valid
+        ? sun.sunrise.map((sr, d) => ({ rise: new Date(sr).getTime(), set: new Date(sun.sunset[d]).getTime() }))
+        : [];
+
+      function isNight(ms) {
+        if (!sunTimes.length) return false;
+        for (const s of sunTimes) {
+          if (ms >= s.rise && ms < s.set) return false; // den
+        }
+        // Stínuj jen v rozsahu, který sunrise/sunset data pokrývají (±1 den)
+        const DAY = 24 * 3600 * 1000;
+        return ms >= sunTimes[0].rise - DAY && ms <= sunTimes[sunTimes.length - 1].set + DAY;
+      }
+
+      const night = pointTimes.map(t => isNight(new Date(t).getTime()));
+
+      return {
+        id,
+        beforeDatasetsDraw: (chart) => {
+          const { ctx, chartArea, scales } = chart;
+          if (!chartArea || !night.length) return;
+          ctx.save();
+          ctx.fillStyle = 'rgba(8, 12, 28, 0.38)';
+          let runStart = -1;
+          for (let i = 0; i <= night.length; i++) {
+            const n = i < night.length ? night[i] : false;
+            if (n && runStart === -1) runStart = i;
+            if (!n && runStart !== -1) {
+              // Pás roztáhni o půl kroku na obě strany (hranice sloupců)
+              const x1 = scales.x.getPixelForValue(runStart - 0.5);
+              const x2 = scales.x.getPixelForValue(i - 0.5);
+              const left = Math.max(chartArea.left, Math.min(x1, x2));
+              const right = Math.min(chartArea.right, Math.max(x1, x2));
+              if (right > left) ctx.fillRect(left, chartArea.top, right - left, chartArea.bottom - chartArea.top);
+              runStart = -1;
+            }
+          }
+          ctx.restore();
+        }
+      };
+    }
+
+    // =========================================================
+    // STÁŘÍ DAT + TICHÁ AKTUALIZACE PŘI NÁVRATU NA ZÁLOŽKU
+    // =========================================================
+    let lastDataTimestamp = null;
+    const REVALIDATE_AFTER_MS = 10 * 60 * 1000; // data starší 10 min se po návratu obnoví
+
+    function updateFreshnessIndicator() {
+      const el = document.getElementById('dataFreshness');
+      const textEl = document.getElementById('dataFreshnessText');
+      if (!el || !textEl || !lastDataTimestamp) return;
+      const age = Date.now() - lastDataTimestamp;
+      const ageMin = Math.floor(age / 60000);
+      let text;
+      if (ageMin < 1) {
+        text = 'aktualizováno právě teď';
+      } else if (ageMin < 60) {
+        text = `aktualizováno před ${ageMin} min`;
+      } else {
+        text = 'aktualizováno v ' + new Date(lastDataTimestamp).toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' });
+      }
+      textEl.textContent = text;
+      el.classList.toggle('stale', age > CACHE_TTL_MS);
+    }
+    setInterval(updateFreshnessIndicator, 60 * 1000);
+
+    // Typický scénář na tabletu: stránka zůstane otevřená na pozadí.
+    // Po návratu na záložku se stará předpověď potichu obnoví (bez spinneru).
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState !== 'visible') return;
+      updateFreshnessIndicator();
+      if (!lastDataTimestamp || !currentLocationData) return;
+      if (Date.now() - lastDataTimestamp >= REVALIDATE_AFTER_MS) {
+        loadWeather({ silent: true });
+      }
+    });
 
     // Překreslení grafů po změně orientace — debounce 300 ms aby se čekalo na dokončení animace
     let orientationTimer = null;
@@ -2339,7 +2676,7 @@
       return 'Ubývající srpek';
     }
 
-    function updateThreeDayChart(canvasId, time, temp, precip, wind, windDir, clouds, pressure, cape) {
+    function updateThreeDayChart(canvasId, time, temp, precip, wind, windDir, clouds, pressure, cape, sun, modelTemps) {
       const canvas = document.getElementById(canvasId);
 
       if (threeDayChart) {
@@ -2347,10 +2684,12 @@
       }
       const ctx = canvas.getContext('2d');
 
-      // 72 h OD AKTUÁLNÍ hodiny (ne od dnešní půlnoci)
-      const startIdx = findStartHourIndex(time);
-      const endIdx = Math.min(startIdx + 72, time.length);
+      // Okno: 24 h ZPĚT (včerejšek šedě pro kontext) + 72 h dopředu od aktuální hodiny
+      const nowIdx = findStartHourIndex(time);
+      const startIdx = Math.max(0, nowIdx - 24);
+      const endIdx = Math.min(nowIdx + 72, time.length);
       const labels = [];
+      const pointTimes = [];
       const tempData = [];
       const precipData = [];
       const windData = [];
@@ -2391,6 +2730,7 @@
         }
         prevDayStr3 = dayStr;
 
+        pointTimes.push(time[i]);
         tempData.push(temp[i]);
         windData.push(wind[i]);
         windDirData.push(windDir[i]);
@@ -2405,6 +2745,11 @@
         precipData.push(totalPrecip);
         pos3++;
       }
+
+      // Počet vykreslených bodů ležících v minulosti (kreslí se šedě)
+      const nowMs = Date.now();
+      const pastPointCount = pointTimes.filter(t => new Date(t).getTime() < nowMs).length;
+      const PAST_GREY = 'rgba(148, 163, 184, 0.55)';
 
       const dayBoundaryPlugin3 = {
         id: 'dayBoundary3',
@@ -2428,6 +2773,7 @@
       };
 
       const windArrowPlugin = createWindArrowPlugin('windArrows', 2, i => windData[i], i => windDirData[i]);
+      const nightShadePlugin3 = createNightShadePlugin('nightShade3', pointTimes, sun);
 
       const currentTimePlugin = {
         id: 'currentTimeLine',
@@ -2502,10 +2848,11 @@
               yAxisID: 'y',
               pointRadius: 4,
               pointHoverRadius: 6,
-              pointBackgroundColor: tempData.map(t => t < 0 ? '#4a9eff' : '#ff6b6b'),
-              pointBorderColor: tempData.map(t => t < 0 ? '#4a9eff' : '#ff6b6b'),
+              pointBackgroundColor: tempData.map((t, idx) => idx < pastPointCount ? PAST_GREY : (t < 0 ? '#4a9eff' : '#ff6b6b')),
+              pointBorderColor: tempData.map((t, idx) => idx < pastPointCount ? PAST_GREY : (t < 0 ? '#4a9eff' : '#ff6b6b')),
               segment: {
                 borderColor: ctx => {
+                  if (ctx.p1DataIndex < pastPointCount) return PAST_GREY;
                   const p0 = ctx.p0.parsed.y;
                   const p1 = ctx.p1.parsed.y;
                   if (p0 < 0 && p1 < 0) return '#4a9eff';
@@ -2520,11 +2867,13 @@
               type: 'bar',
               backgroundColor: function(context) {
                 const index = context.dataIndex;
+                if (index < pastPointCount) return 'rgba(148, 163, 184, 0.3)';
                 const temperature = tempData[index];
                 return getPrecipitationColor(temperature, context.chart.ctx);
               },
               borderColor: function(context) {
                 const index = context.dataIndex;
+                if (index < pastPointCount) return PAST_GREY;
                 const temperature = tempData[index];
                 if (temperature >= 0) {
                   return '#06b6d4';
@@ -2545,7 +2894,10 @@
               tension: 0.4,
               yAxisID: 'y2',
               pointRadius: 3,
-              pointHoverRadius: 5
+              pointHoverRadius: 5,
+              segment: {
+                borderColor: ctx => ctx.p1DataIndex < pastPointCount ? PAST_GREY : undefined
+              }
             },
             {
               label: 'Oblačnost (%)',
@@ -2557,7 +2909,10 @@
               tension: 0.4,
               yAxisID: 'y3',
               pointRadius: 2,
-              pointHoverRadius: 4
+              pointHoverRadius: 4,
+              segment: {
+                borderColor: ctx => ctx.p1DataIndex < pastPointCount ? PAST_GREY : undefined
+              }
             }
           ]
         },
@@ -2602,11 +2957,56 @@
           },
           scales: scales3day
         },
-        plugins: [dayBoundaryPlugin3, windArrowPlugin, currentTimePlugin]
+        plugins: [nightShadePlugin3, dayBoundaryPlugin3, windArrowPlugin, currentTimePlugin]
       });
+
+      // Legenda by si jinak vzala barvu prvního (šedého, včerejšího) bodu – vrať jí pravé barvy
+      const legendColors3 = {
+        'Teplota (°C)': '#ff6b6b',
+        'Srážky (mm)': '#06b6d4',
+        'Rychlost větru (m/s)': '#4ecdc4',
+        'Oblačnost (%)': '#6b7280'
+      };
+      threeDayChart.options.plugins.legend.labels.generateLabels = (chart) => {
+        const items = Chart.defaults.plugins.legend.labels.generateLabels(chart);
+        items.forEach(it => {
+          const c = legendColors3[it.text] || (MODEL_LIST.find(m => m.label === it.text) || {}).color;
+          if (c) { it.fillStyle = c; it.strokeStyle = c; }
+        });
+        return items;
+      };
+      threeDayChart.update('none');
+
+      // Porovnání modelů – tenké čárkované čáry teploty jednotlivých modelů
+      if (modelCompareEnabled && modelTemps) {
+        const modelDatasets = [];
+        MODEL_LIST.forEach(m => {
+          const arr = modelTemps[m.key];
+          if (!Array.isArray(arr)) return;
+          const data = [];
+          for (let i = startIdx; i < endIdx; i += 3) data.push(arr[i] != null ? arr[i] : null);
+          modelDatasets.push({
+            label: m.label,
+            data: data,
+            borderColor: m.color,
+            backgroundColor: 'transparent',
+            borderWidth: 1.5,
+            borderDash: [5, 3],
+            pointRadius: 0,
+            pointHoverRadius: 3,
+            tension: 0.4,
+            yAxisID: 'y',
+            fill: false
+          });
+        });
+        if (modelDatasets.length) {
+          threeDayChart.data.datasets.push(...modelDatasets);
+          threeDayChart.update('none');
+        }
+      }
     }
 
-    function updateTwentyFourHourChart(canvasId, time, temp, precip, wind, windDir, clouds, pressure, cape) {
+    function updateTwentyFourHourChart(canvasId, time, temp, precip, wind, windDir, clouds, pressure, cape, sun) {
       const canvas = document.getElementById(canvasId);
 
       if (twentyFourHourChart) {
@@ -2663,6 +3063,7 @@
       };
 
       const windArrowPlugin = createWindArrowPlugin('windArrows24', 2, i => windData[i], i => windDirData[i]);
+      const nightShadePlugin24 = createNightShadePlugin('nightShade24', time, sun);
 
       const currentTimePlugin = {
         id: 'currentTimeLine24',
@@ -2833,11 +3234,11 @@
           },
           scales: scales24h
         },
-        plugins: [dayBoundaryPlugin24, windArrowPlugin, currentTimePlugin]
+        plugins: [nightShadePlugin24, dayBoundaryPlugin24, windArrowPlugin, currentTimePlugin]
       });
     }
 
-    function updateTenDayChart(canvasId, time, tempMax, tempMin, precip, wind, windDir, clouds) {
+    function updateTenDayChart(canvasId, time, tempMax, tempMin, precip, wind, windDir, clouds, weatherCode, precipProb) {
       const canvas = document.getElementById(canvasId);
 
       if (tenDayChart) {
@@ -2856,19 +3257,27 @@
 
       const windArrowPlugin = createWindArrowPlugin('windArrows10', 3, i => wind[i], i => windDir[i]);
 
+      // Ikony počasí (nahoře) + fáze měsíce (pod nimi)
       const moonPhasePlugin10 = {
         id: 'moonPhase10',
         afterDatasetsDraw: (chart) => {
           const ctx = chart.ctx;
           const { chartArea, scales } = chart;
           ctx.save();
-          ctx.font = '20px serif';
           ctx.textAlign = 'center';
           ctx.textBaseline = 'top';
           time.forEach((dateStr, i) => {
             const x = scales.x.getPixelForValue(i);
             if (x >= chartArea.left && x <= chartArea.right) {
-              ctx.fillText(getMoonEmoji(new Date(dateStr)), x, chartArea.top + 4);
+              if (weatherCode && weatherCode[i] != null) {
+                ctx.font = '20px serif';
+                ctx.fillText(getWeatherInfo(weatherCode[i]).icon, x, chartArea.top + 2);
+                ctx.font = '15px serif';
+                ctx.fillText(getMoonEmoji(new Date(dateStr)), x, chartArea.top + 27);
+              } else {
+                ctx.font = '20px serif';
+                ctx.fillText(getMoonEmoji(new Date(dateStr)), x, chartArea.top + 4);
+              }
             }
           });
           ctx.restore();
@@ -2956,13 +3365,26 @@
               yAxisID: 'y3',
               pointRadius: 2,
               pointHoverRadius: 4
+            },
+            {
+              label: 'Šance srážek (%)',
+              data: precipProb || [],
+              borderColor: '#38bdf8',
+              backgroundColor: 'transparent',
+              borderWidth: 2,
+              borderDash: [6, 4],
+              fill: false,
+              tension: 0.4,
+              yAxisID: 'y3',
+              pointRadius: 2,
+              pointHoverRadius: 4
             }
           ]
         },
         options: {
           responsive: true,
           maintainAspectRatio: false,
-          layout: getMobileLayoutPadding({ top: 50 }),
+          layout: getMobileLayoutPadding({ top: 55 }),
           plugins: {
             legend: { position: 'bottom', labels: { color: '#e2e8f0', font: { size: 12 }, padding: 20, usePointStyle: true, pointStyle: 'circle' } },
             tooltip: {
@@ -2984,7 +3406,7 @@
                       label += context.parsed.y.toFixed(1) + ' mm';
                     } else if (label.includes('větru')) {
                       label += context.parsed.y.toFixed(1) + ' m/s';
-                    } else if (label.includes('Oblačnost')) {
+                    } else if (label.includes('Oblačnost') || label.includes('Šance')) {
                       label += Math.round(context.parsed.y) + '%';
                     } else {
                       label += context.parsed.y;
@@ -3508,7 +3930,75 @@
       return best;
     }
 
-    /** Aktualizuje panel: špičkové riziko bouřek v příštích 24 h + dnešní max UV. */
+    /** WMO weather_code → emoji + český popis (kódy dle dokumentace Open-Meteo). */
+    function getWeatherInfo(code) {
+      if (code == null)                 return { icon: '🌡️', text: '' };
+      if (code === 0)                   return { icon: '☀️', text: 'Jasno' };
+      if (code === 1)                   return { icon: '🌤️', text: 'Skoro jasno' };
+      if (code === 2)                   return { icon: '⛅', text: 'Polojasno' };
+      if (code === 3)                   return { icon: '☁️', text: 'Zataženo' };
+      if (code === 45 || code === 48)   return { icon: '🌫️', text: 'Mlha' };
+      if (code >= 51 && code <= 57)     return { icon: '🌦️', text: 'Mrholení' };
+      if (code === 66 || code === 67)   return { icon: '🌧️', text: 'Mrznoucí déšť' };
+      if (code >= 61 && code <= 65)     return { icon: '🌧️', text: 'Déšť' };
+      if (code >= 71 && code <= 77)     return { icon: '🌨️', text: 'Sněžení' };
+      if (code >= 80 && code <= 82)     return { icon: '🌦️', text: 'Přeháňky' };
+      if (code === 85 || code === 86)   return { icon: '🌨️', text: 'Sněhové přeháňky' };
+      if (code >= 95)                   return { icon: '⛈️', text: 'Bouřka' };
+      return { icon: '🌡️', text: '' };
+    }
+
+    /** Varování na mráz / přízemní mráz / vedro v příštích 72 h. */
+    function updateTempAlert(hourly, time, startIdx) {
+      const el = document.getElementById('tempAlert');
+      if (!el || !hourly.temp || !time.length) return;
+      const iconEl = document.getElementById('tempAlertIcon');
+      const titleEl = document.getElementById('tempAlertTitle');
+      const detailEl = document.getElementById('tempAlertDetail');
+
+      const endIdx = Math.min(startIdx + 72, time.length);
+      let minT = Infinity, minIdx = -1, maxT = -Infinity, maxIdx = -1;
+      for (let i = startIdx; i < endIdx; i++) {
+        const t = hourly.temp[i];
+        if (t == null) continue;
+        if (t < minT) { minT = t; minIdx = i; }
+        if (t > maxT) { maxT = t; maxIdx = i; }
+      }
+      if (minIdx < 0) { el.style.display = 'none'; return; }
+
+      const fmtTime = i => new Date(time[i]).toLocaleString('cs-CZ', { weekday: 'long', hour: '2-digit', minute: '2-digit' });
+      el.classList.remove('frost', 'heat');
+
+      if (minT <= 0.5) {
+        el.classList.add('frost');
+        iconEl.textContent = '❄️';
+        titleEl.textContent = `Mráz: až ${minT.toFixed(1)} °C`;
+        detailEl.textContent = `Nejnižší teplota ${fmtTime(minIdx)}. Riziko poškození rostlin – zvažte ochranu proti mrazu.`;
+        el.style.display = 'flex';
+      } else if (minT <= 3) {
+        el.classList.add('frost');
+        iconEl.textContent = '❄️';
+        titleEl.textContent = `Riziko přízemního mrazu (minimum ${minT.toFixed(1)} °C)`;
+        detailEl.textContent = `Minimum ${fmtTime(minIdx)}. Při vyjasnění může teplota při zemi klesnout pod bod mrazu.`;
+        el.style.display = 'flex';
+      } else if (maxT >= 33) {
+        el.classList.add('heat');
+        iconEl.textContent = '🥵';
+        titleEl.textContent = `Extrémní vedro: až ${maxT.toFixed(1)} °C`;
+        detailEl.textContent = `Nejvyšší teplota ${fmtTime(maxIdx)}. Omezte pobyt na slunci a dbejte na pitný režim.`;
+        el.style.display = 'flex';
+      } else if (maxT >= 30) {
+        el.classList.add('heat');
+        iconEl.textContent = '🌡️';
+        titleEl.textContent = `Tropický den: až ${maxT.toFixed(1)} °C`;
+        detailEl.textContent = `Nejvyšší teplota ${fmtTime(maxIdx)}.`;
+        el.style.display = 'flex';
+      } else {
+        el.style.display = 'none';
+      }
+    }
+
+    /** Aktualizuje panel: aktuální podmínky + špičkové riziko bouřek v příštích 24 h + dnešní max UV. */
     function updateConditionsPanel(hourly) {
       if (!hourly) return;
       const panel = document.getElementById('conditionsPanel');
@@ -3519,6 +4009,43 @@
       const time = hourly.time || [];
       const startIdx = findCurrentHourIndex(time);
       const endIdx = Math.min(startIdx + 24, time.length);
+
+      // --- Aktuální podmínky (hodina nejbližší současnosti) ---
+      const nowTemp = hourly.temp ? hourly.temp[startIdx] : null;
+      const wInfo = getWeatherInfo(hourly.weatherCode ? hourly.weatherCode[startIdx] : null);
+      const nowIconEl = document.getElementById('nowIcon');
+      const nowValueEl = document.getElementById('nowValue');
+      const nowDetailEl = document.getElementById('nowDetail');
+      if (nowIconEl && nowValueEl && nowDetailEl) {
+        nowIconEl.textContent = wInfo.icon;
+        nowValueEl.textContent = nowTemp != null
+          ? `${nowTemp.toFixed(1)} °C${wInfo.text ? ' – ' + wInfo.text : ''}`
+          : '–';
+        const details = [];
+        if (hourly.wind && hourly.wind[startIdx] != null) {
+          const dir = hourly.windDir && hourly.windDir[startIdx] != null
+            ? WIND_DIRECTIONS[Math.round(hourly.windDir[startIdx] / 22.5) % 16]
+            : '';
+          details.push(`💨 ${hourly.wind[startIdx].toFixed(1)} m/s${dir ? ' (' + dir + ')' : ''}`);
+        }
+        if (hourly.humidity && hourly.humidity[startIdx] != null) {
+          details.push(`💧 ${Math.round(hourly.humidity[startIdx])} %`);
+        }
+        if (hourly.precipProb && hourly.precipProb[startIdx] != null) {
+          details.push(`🌧️ srážky ${Math.round(hourly.precipProb[startIdx])} %`);
+        }
+        nowDetailEl.textContent = details.join(' · ');
+      }
+      // Teplota v titulku — rychlá orientace mezi otevřenými záložkami
+      if (nowTemp != null) {
+        document.title = `${wInfo.icon} ${Math.round(nowTemp)} °C | Předpověď počasí`;
+      }
+
+      // --- Varování na mráz / vedro v příštích 72 h ---
+      updateTempAlert(hourly, time, startIdx);
+
+      // --- Kiosk režim (pokud běží, promítni nová data) ---
+      updateKioskPanel();
 
       // --- Riziko bouřek: najdi maximum v příštích 24 h ---
       let peakScore = 0, peakIdx = startIdx;
@@ -3592,24 +4119,32 @@
       if (uvChart) uvChart.destroy();
       const ctx = canvas.getContext('2d');
 
-      const hours72 = Math.min(72, time.length);
+      // 72 h od aktuální hodiny (data začínají včerejškem kvůli past_days=1)
+      const startIdx = findStartHourIndex(time);
+      const endIdx = Math.min(startIdx + 72, time.length);
       const labels = [];
       const uvData = [];
       const colors = [];
       const dayBoundaryIdx = [];
 
-      for (let i = 0; i < hours72; i += 3) {
+      let pos = 0;
+      let prevDayStr = null;
+      for (let i = startIdx; i < endIdx; i += 3) {
         const date = new Date(time[i]);
         const hour = date.getHours();
-        if (hour === 0) {
+        const dayStr = date.toDateString();
+        const isNewDay = prevDayStr !== null && dayStr !== prevDayStr;
+        if (i === startIdx || isNewDay) {
           labels.push(date.toLocaleDateString('cs-CZ', { weekday: 'short', day: 'numeric', month: 'numeric' }));
-          if (i > 0) dayBoundaryIdx.push(i / 3);
+          if (isNewDay) dayBoundaryIdx.push(pos);
         } else {
           labels.push(hour.toString().padStart(2, '0') + ':00');
         }
+        prevDayStr = dayStr;
         const v = uv ? uv[i] : null;
         uvData.push(v);
         colors.push(getUvInfo(v).color);
+        pos++;
       }
 
       const scalesUv = getMobileScales({
@@ -3917,6 +4452,147 @@
       }
     }
 
+    // =========================================================
+    // KIOSK REŽIM (celoobrazovková meteostanice na zeď)
+    // =========================================================
+    let kioskActive = false;
+    let kioskClockTimer = null;
+    let kioskRefreshTimer = null;
+    let kioskRadarTimer = null;
+    let kioskMap = null;
+    let kioskRadarLayer = null;
+    let kioskWakeLock = null;
+    const KIOSK_REFRESH_MS = 15 * 60 * 1000;       // obnova předpovědi
+    const KIOSK_RADAR_REFRESH_MS = 10 * 60 * 1000; // obnova radarového snímku
+
+    function updateKioskClock() {
+      const now = new Date();
+      const c = document.getElementById('kioskClock');
+      const d = document.getElementById('kioskDate');
+      if (c) c.textContent = now.toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' });
+      if (d) d.textContent = now.toLocaleDateString('cs-CZ', { weekday: 'long', day: 'numeric', month: 'long' });
+    }
+
+    /** Naplní kiosk aktuálními hodnotami z lastChartData (volá se i po každé aktualizaci dat). */
+    function updateKioskPanel() {
+      if (!kioskActive || !lastChartData || !lastChartData.hourly) return;
+      const hourly = lastChartData.hourly;
+      const time = hourly.time || [];
+      const idx = findCurrentHourIndex(time);
+      const wInfo = getWeatherInfo(hourly.weatherCode ? hourly.weatherCode[idx] : null);
+      const t = hourly.temp ? hourly.temp[idx] : null;
+      document.getElementById('kioskIcon').textContent = wInfo.icon;
+      document.getElementById('kioskTemp').textContent = t != null ? `${t.toFixed(1)}°` : '--°';
+      document.getElementById('kioskDesc').textContent = wInfo.text || '';
+
+      const d = lastChartData.daily;
+      const mm = document.getElementById('kioskMinMax');
+      if (d && Array.isArray(d.tempMax) && d.tempMax.length && d.tempMax[0] != null) {
+        mm.innerHTML = `<div class="max">▲ ${d.tempMax[0].toFixed(1)} °C</div><div class="min">▼ ${d.tempMin[0].toFixed(1)} °C</div>`;
+      } else {
+        mm.textContent = '';
+      }
+
+      const parts = [];
+      if (hourly.wind && hourly.wind[idx] != null) {
+        const dir = hourly.windDir && hourly.windDir[idx] != null
+          ? WIND_DIRECTIONS[Math.round(hourly.windDir[idx] / 22.5) % 16]
+          : '';
+        parts.push(`💨 ${hourly.wind[idx].toFixed(1)} m/s${dir ? ' (' + dir + ')' : ''}`);
+      }
+      if (hourly.humidity && hourly.humidity[idx] != null) parts.push(`💧 ${Math.round(hourly.humidity[idx])} %`);
+      if (hourly.precipProb && hourly.precipProb[idx] != null) parts.push(`🌧️ ${Math.round(hourly.precipProb[idx])} %`);
+      if (hourly.pressure && hourly.pressure[idx] != null) parts.push(`⏱️ ${Math.round(hourly.pressure[idx])} hPa`);
+      document.getElementById('kioskDetails').innerHTML = parts.map(p => `<span>${p}</span>`).join('');
+
+      document.getElementById('kioskLocation').textContent =
+        currentLocationData ? (currentLocationData.displayName || currentLocationData.name || '') : '';
+      document.getElementById('kioskUpdated').textContent = lastDataTimestamp
+        ? 'Aktualizováno ' + new Date(lastDataTimestamp).toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' })
+        : '';
+    }
+
+    /** Načte nejnovější radarový snímek (jen poslední frame, bez animace). */
+    async function updateKioskRadar() {
+      if (!kioskActive || !kioskMap) return;
+      try {
+        const resp = await fetch('https://api.rainviewer.com/public/weather-maps.json', { cache: 'no-store' });
+        const data = await resp.json();
+        const frames = data && data.radar && data.radar.past;
+        if (!frames || !frames.length) return;
+        const latest = frames[frames.length - 1];
+        const url = `https://tilecache.rainviewer.com${latest.path}/256/{z}/{x}/{y}/2/1_1.png`;
+        const newLayer = L.tileLayer(url, { opacity: 0.75 });
+        newLayer.addTo(kioskMap);
+        if (kioskRadarLayer) kioskMap.removeLayer(kioskRadarLayer);
+        kioskRadarLayer = newLayer;
+      } catch (e) { /* radar je jen doplněk – chybu ignoruj */ }
+    }
+
+    function initKioskRadar() {
+      const el = document.getElementById('kioskRadarMap');
+      if (!el || typeof L === 'undefined') return;
+      el.classList.add('active');
+      if (!kioskMap) {
+        kioskMap = L.map('kioskRadarMap', {
+          zoomControl: false, attributionControl: false, dragging: false,
+          scrollWheelZoom: false, doubleClickZoom: false, boxZoom: false,
+          keyboard: false, touchZoom: false
+        });
+        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 12 }).addTo(kioskMap);
+      }
+      const center = currentLocationData ? [currentLocationData.lat, currentLocationData.lon] : [49.8, 15.5];
+      kioskMap.setView(center, 7);
+      setTimeout(() => kioskMap.invalidateSize(), 150);
+      updateKioskRadar();
+    }
+
+    /** Udržení rozsvícené obrazovky (tablet na zdi). */
+    async function requestKioskWakeLock() {
+      try {
+        if ('wakeLock' in navigator) {
+          kioskWakeLock = await navigator.wakeLock.request('screen');
+          kioskWakeLock.addEventListener('release', () => { kioskWakeLock = null; });
+        }
+      } catch (e) { /* nepodporováno nebo zamítnuto – nevadí */ }
+    }
+
+    function enterKiosk() {
+      if (kioskActive) return;
+      kioskActive = true;
+      document.getElementById('kioskOverlay').classList.add('active');
+      document.body.style.overflow = 'hidden';
+      updateKioskClock();
+      updateKioskPanel();
+      kioskClockTimer = setInterval(updateKioskClock, 1000);
+      kioskRefreshTimer = setInterval(() => {
+        if (currentLocationData) loadWeather({ silent: true });
+      }, KIOSK_REFRESH_MS);
+      if (localStorage.getItem('kioskRadar') === '1') {
+        initKioskRadar();
+        kioskRadarTimer = setInterval(updateKioskRadar, KIOSK_RADAR_REFRESH_MS);
+      }
+      requestKioskWakeLock();
+    }
+
+    function exitKiosk() {
+      if (!kioskActive) return;
+      kioskActive = false;
+      document.getElementById('kioskOverlay').classList.remove('active');
+      document.body.style.overflow = '';
+      clearInterval(kioskClockTimer);
+      clearInterval(kioskRefreshTimer);
+      clearInterval(kioskRadarTimer);
+      const radarEl = document.getElementById('kioskRadarMap');
+      if (radarEl) radarEl.classList.remove('active');
+      if (kioskWakeLock) { try { kioskWakeLock.release(); } catch (e) {} kioskWakeLock = null; }
+    }
+
+    // Po návratu na záložku znovu požádej o Wake Lock (systém ho při skrytí uvolní)
+    document.addEventListener('visibilitychange', () => {
+      if (kioskActive && document.visibilityState === 'visible' && !kioskWakeLock) requestKioskWakeLock();
+    });
+
     function initApp() {
       loadRecentLocations();
       loadWeatherCache();
@@ -3933,7 +4609,7 @@
         loadWeather();
       }
 
-      document.getElementById('loadWeather').addEventListener('click', loadWeather);
+      document.getElementById('loadWeather').addEventListener('click', () => loadWeather());
       document.getElementById('geolocateBtn').addEventListener('click', useMyLocation);
       document.getElementById('saveLocationBtn').addEventListener('click', saveLocation);
       document.getElementById('playRadar').addEventListener('click', playRadarAnimation);
@@ -3941,6 +4617,48 @@
       // Export / sdílení
       document.getElementById('shareLinkBtn').addEventListener('click', shareLink);
       document.getElementById('csvBtn').addEventListener('click', exportCsv);
+
+      // Porovnání předpovědních modelů
+      const mcToggle = document.getElementById('modelCompareToggle');
+      if (mcToggle) {
+        mcToggle.checked = modelCompareEnabled;
+        mcToggle.addEventListener('change', () => {
+          modelCompareEnabled = mcToggle.checked;
+          try { localStorage.setItem('modelCompare', modelCompareEnabled ? '1' : '0'); } catch (e) {}
+          if (!currentLocationData) return;
+          if (modelCompareEnabled) {
+            loadWeather({ silent: true }); // modelová data je potřeba stáhnout
+          } else {
+            redrawChartsForOrientation(); // vypnutí – stačí překreslit
+          }
+        });
+      }
+
+      // Kiosk režim – ovládání v nastavení
+      const kioskRadarToggle = document.getElementById('kioskRadarToggle');
+      if (kioskRadarToggle) {
+        kioskRadarToggle.checked = localStorage.getItem('kioskRadar') === '1';
+        kioskRadarToggle.addEventListener('change', () => {
+          try { localStorage.setItem('kioskRadar', kioskRadarToggle.checked ? '1' : '0'); } catch (e) {}
+        });
+      }
+      const kioskAutoStartToggle = document.getElementById('kioskAutoStartToggle');
+      if (kioskAutoStartToggle) {
+        kioskAutoStartToggle.checked = localStorage.getItem('kioskAutoStart') === '1';
+        kioskAutoStartToggle.addEventListener('change', () => {
+          try { localStorage.setItem('kioskAutoStart', kioskAutoStartToggle.checked ? '1' : '0'); } catch (e) {}
+        });
+      }
+      const startKioskBtn = document.getElementById('startKioskBtn');
+      if (startKioskBtn) startKioskBtn.addEventListener('click', enterKiosk);
+      document.getElementById('kioskOverlay').addEventListener('click', exitKiosk);
+      document.addEventListener('keydown', e => { if (e.key === 'Escape') exitKiosk(); });
+
+      // Automatický start kiosku: ?kiosk=1 v URL nebo volba v nastavení
+      const kioskParams = new URLSearchParams(window.location.search);
+      if (kioskParams.get('kiosk') === '1' || localStorage.getItem('kioskAutoStart') === '1') {
+        enterKiosk();
+      }
       document.getElementById('resetChartSettings').addEventListener('click', resetChartSettings);
       document.querySelectorAll('.chart-png-btn').forEach(btn => {
         btn.addEventListener('click', () => downloadChartPng(btn.dataset.canvas));
@@ -4318,6 +5036,14 @@
     }
 
     document.addEventListener('DOMContentLoaded', initApp);
+
+    // PWA: registrace service workeru (jen přes HTTPS, tj. na GitHub Pages).
+    // SW používá network-first pro HTML – stránka se tedy nikdy nedrží stará.
+    if ('serviceWorker' in navigator && location.protocol === 'https:') {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('forecast-sw.js').catch(() => {});
+      });
+    }
   </script>
 </body>
 </html>

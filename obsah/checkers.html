@@ -1,0 +1,311 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>♟️ Dáma</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1a1a1a;color:#e0e0e0;min-height:100vh;padding:20px}
+.container{max-width:560px;margin:0 auto}
+h1{font-size:1.6rem;margin-bottom:14px;font-weight:600;text-align:center}
+.horni{display:flex;gap:10px;justify-content:center;align-items:center;margin-bottom:14px;flex-wrap:wrap}
+select,button{background:#383838;border:1px solid #4a4a4a;color:#e0e0e0;border-radius:6px;padding:9px 14px;font-size:.88rem;cursor:pointer}
+button.primary{background:#6aa6fd;border-color:#6aa6fd;color:#fff;font-weight:600}
+button:disabled{opacity:.4;cursor:default}
+.stav{text-align:center;font-size:1rem;margin-bottom:12px;min-height:26px}
+.stav.vyhra{color:#4caf50;font-weight:700}
+.stav.prohra{color:#e67e22;font-weight:700}
+.stav .mysli{color:#888;font-style:italic}
+.deska{display:grid;grid-template-columns:repeat(8,1fr);aspect-ratio:1;max-width:520px;margin:0 auto;border:4px solid #4a3a2a;border-radius:6px;overflow:hidden;user-select:none}
+.pole{position:relative;display:flex;align-items:center;justify-content:center}
+.pole.svetle{background:#d9c9a3}
+.pole.tmave{background:#7a5c3e;cursor:pointer}
+.pole.tmave:hover{filter:brightness(1.1)}
+.pole.vybrane{background:#5a7ca8}
+.pole.cil::after{content:'';position:absolute;width:26%;height:26%;border-radius:50%;background:rgba(106,166,253,.75)}
+.pole.tah-ai{box-shadow:inset 0 0 0 3px rgba(230,126,34,.7)}
+.kamen{width:76%;height:76%;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:clamp(14px,3.4vw,24px);box-shadow:0 2px 5px rgba(0,0,0,.45)}
+.kamen.bily{background:radial-gradient(circle at 35% 30%,#fff,#c9c9c9 60%,#9a9a9a);color:#6a5a10}
+.kamen.cerny{background:radial-gradient(circle at 35% 30%,#555,#222 65%,#000);color:#ffd54f}
+.dolni{display:flex;justify-content:space-between;align-items:center;max-width:520px;margin:12px auto 0;font-size:.85rem;color:#888;flex-wrap:wrap;gap:8px}
+.dolni b{color:#6aa6fd}
+.pravidla{max-width:520px;margin:16px auto 0;font-size:.76rem;color:#666;line-height:1.5}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>♟️ Dáma</h1>
+  <div class="horni">
+    <select id="obtiznost">
+      <option value="2">😊 Lehká</option>
+      <option value="4" selected>🙂 Střední</option>
+      <option value="6">😈 Těžká</option>
+    </select>
+    <button class="primary" id="nova">🔄 Nová hra</button>
+    <button id="zpet">↩️ Tah zpět</button>
+  </div>
+  <div class="stav" id="stav">Jsi na tahu (bílé kameny).</div>
+  <div class="deska" id="deska"></div>
+  <div class="dolni">
+    <span>Sebráno tebou: <b id="sebranoHrac">0</b></span>
+    <span>Skóre: <b id="skore">0 : 0</b></span>
+    <span>Sebráno soupeřem: <b id="sebranoAI">0</b></span>
+  </div>
+  <div class="pravidla">Pravidla: kameny táhnou šikmo vpřed o jedno pole, skáčou (berou) přes soupeřovy kameny vpřed. Braní je povinné, včetně vícenásobných skoků. Kámen, který dojde na poslední řadu, se stává dámou (♛) – ta se pohybuje i skáče všemi směry. Vyhrává, kdo soupeři sebere všechny kameny nebo mu znemožní tah.</div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const SKORE_KEY='dama.skore';
+
+/* --- reprezentace: 'w'/'W' hráč (dole, táhne nahoru), 'b'/'B' AI --- */
+let board,turn,forced,selected,history,konec,bezBrani,aiPath;
+let sebranoHrac=0,sebranoAI=0;
+let skore={v:0,p:0};
+try{skore=JSON.parse(localStorage.getItem(SKORE_KEY))||skore;}catch(e){}
+
+function inB(r,c){return r>=0&&r<8&&c>=0&&c<8;}
+function sideOf(p){return p?(p==='w'||p==='W'?'w':'b'):null;}
+function dirs(p){
+  if(p==='W'||p==='B')return[[-1,-1],[-1,1],[1,-1],[1,1]];
+  return p==='w'?[[-1,-1],[-1,1]]:[[1,-1],[1,1]];
+}
+
+function novaDeska(){
+  const b=Array.from({length:8},()=>Array(8).fill(''));
+  for(let r=0;r<3;r++)for(let c=0;c<8;c++)if((r+c)%2===1)b[r][c]='b';
+  for(let r=5;r<8;r++)for(let c=0;c<8;c++)if((r+c)%2===1)b[r][c]='w';
+  return b;
+}
+
+/* --- generování tahů (celé sekvence, pro AI a kontrolu konce) --- */
+function genMoves(bd,side){
+  const caps=[],quiet=[];
+  for(let r=0;r<8;r++)for(let c=0;c<8;c++){
+    const p=bd[r][c];
+    if(!p||sideOf(p)!==side)continue;
+    dfsCaps(bd,r,c,p,[],[],caps,[r,c]);
+    for(const[dr,dc]of dirs(p)){
+      const nr=r+dr,nc=c+dc;
+      if(inB(nr,nc)&&!bd[nr][nc])quiet.push({from:[r,c],path:[[nr,nc]],caps:[]});
+    }
+  }
+  return caps.length?caps:quiet;
+}
+function dfsCaps(bd,r,c,p,taken,path,out,from){
+  let dal=false;
+  for(const[dr,dc]of dirs(p)){
+    const mr=r+dr,mc=c+dc,tr=r+2*dr,tc=c+2*dc;
+    if(!inB(tr,tc)||bd[tr][tc])continue;
+    const cap=bd[mr][mc];
+    if(!cap||sideOf(cap)===sideOf(p))continue;
+    dal=true;
+    bd[r][c]='';bd[mr][mc]='';bd[tr][tc]=p;
+    taken.push([mr,mc]);path.push([tr,tc]);
+    const povysen=(p==='w'&&tr===0)||(p==='b'&&tr===7);
+    if(povysen){
+      out.push({from:from.slice(),path:path.slice(),caps:taken.map(x=>x.slice())});
+    }else{
+      const pred=out.length;
+      dfsCaps(bd,tr,tc,p,taken,path,out,from);
+      if(out.length===pred)out.push({from:from.slice(),path:path.slice(),caps:taken.map(x=>x.slice())});
+    }
+    bd[tr][tc]='';bd[mr][mc]=cap;bd[r][c]=p;
+    taken.pop();path.pop();
+  }
+  return dal;
+}
+function aplikuj(bd,m){
+  const p=bd[m.from[0]][m.from[1]];
+  bd[m.from[0]][m.from[1]]='';
+  m.caps.forEach(([r,c])=>bd[r][c]='');
+  const[tr,tc]=m.path[m.path.length-1];
+  let np=p;
+  if(p==='w'&&tr===0)np='W';
+  if(p==='b'&&tr===7)np='B';
+  bd[tr][tc]=np;
+}
+
+/* --- AI: minimax s alfa-beta --- */
+function evalB(bd){
+  let s=0;
+  for(let r=0;r<8;r++)for(let c=0;c<8;c++){
+    const p=bd[r][c];if(!p)continue;
+    if(p==='b')s+=100+r*3;
+    else if(p==='B')s+=185;
+    else if(p==='w')s-=100+(7-r)*3;
+    else s-=185;
+    if(r>=2&&r<=5&&c>=2&&c<=5)s+=sideOf(p)==='b'?4:-4;
+  }
+  return s;
+}
+function minimax(bd,side,depth,alpha,beta){
+  const moves=genMoves(bd,side);
+  if(!moves.length)return side==='b'?-10000-depth:10000+depth;
+  if(depth<=0)return evalB(bd);
+  if(side==='b'){
+    let best=-Infinity;
+    for(const m of moves){
+      const nb=bd.map(x=>x.slice());aplikuj(nb,m);
+      best=Math.max(best,minimax(nb,'w',depth-1,alpha,beta));
+      alpha=Math.max(alpha,best);
+      if(beta<=alpha)break;
+    }
+    return best;
+  }
+  let best=Infinity;
+  for(const m of moves){
+    const nb=bd.map(x=>x.slice());aplikuj(nb,m);
+    best=Math.min(best,minimax(nb,'b',depth-1,alpha,beta));
+    beta=Math.min(beta,best);
+    if(beta<=alpha)break;
+  }
+  return best;
+}
+
+function aiTah(){
+  const moves=genMoves(board,'b');
+  if(!moves.length){konecHry('w');return;}
+  const hloubka=+$('obtiznost').value;
+  moves.sort(()=>Math.random()-.5);
+  let best=moves[0],bestS=-Infinity;
+  for(const m of moves){
+    const nb=board.map(x=>x.slice());aplikuj(nb,m);
+    const s=minimax(nb,'w',hloubka-1,-Infinity,Infinity);
+    if(s>bestS){bestS=s;best=m;}
+  }
+  sebranoAI+=best.caps.length;
+  bezBrani=best.caps.length||board[best.from[0]][best.from[1]]==='b'?0:bezBrani+1;
+  aiPath=[best.from,...best.path];
+  aplikuj(board,best);
+  turn='w';forced=null;selected=null;
+  const tahyHrace=genMoves(board,'w');
+  if(!tahyHrace.length){konecHry('b');vykresli();return;}
+  if(bezBrani>=80){konecHry('remiza');vykresli();return;}
+  historie();
+  $('stav').textContent='Jsi na tahu (bílé kameny).';
+  vykresli();
+}
+
+/* --- tahy hráče po krocích (kvůli vícenásobným skokům) --- */
+function skoky(r,c){
+  const p=board[r][c],res=[];
+  for(const[dr,dc]of dirs(p)){
+    const mr=r+dr,mc=c+dc,tr=r+2*dr,tc=c+2*dc;
+    if(inB(tr,tc)&&!board[tr][tc]&&board[mr][mc]&&sideOf(board[mr][mc])==='b')
+      res.push({to:[tr,tc],cap:[mr,mc]});
+  }
+  return res;
+}
+function kroky(r,c){
+  const p=board[r][c];
+  if(!p||sideOf(p)!=='w')return[];
+  if(forced)return(forced[0]===r&&forced[1]===c)?skoky(r,c):[];
+  const musiSkakat=existujeSkok();
+  if(musiSkakat)return skoky(r,c);
+  const res=[];
+  for(const[dr,dc]of dirs(p)){
+    const nr=r+dr,nc=c+dc;
+    if(inB(nr,nc)&&!board[nr][nc])res.push({to:[nr,nc],cap:null});
+  }
+  return res;
+}
+function existujeSkok(){
+  for(let r=0;r<8;r++)for(let c=0;c<8;c++)
+    if(board[r][c]&&sideOf(board[r][c])==='w'&&skoky(r,c).length)return true;
+  return false;
+}
+
+function klik(r,c){
+  if(konec||turn!=='w')return;
+  const p=board[r][c];
+  if(p&&sideOf(p)==='w'&&!forced){
+    if(kroky(r,c).length){selected=[r,c];vykresli();}
+    return;
+  }
+  if(!selected)return;
+  const krok=kroky(selected[0],selected[1]).find(k=>k.to[0]===r&&k.to[1]===c);
+  if(!krok)return;
+  // proveď krok
+  let kamen=board[selected[0]][selected[1]];
+  board[selected[0]][selected[1]]='';
+  if(krok.cap){board[krok.cap[0]][krok.cap[1]]='';sebranoHrac++;bezBrani=0;}
+  else bezBrani=kamen==='w'?0:bezBrani+1;
+  let povysen=false;
+  if(kamen==='w'&&r===0){kamen='W';povysen=true;}
+  board[r][c]=kamen;
+  aiPath=null;
+  if(krok.cap&&!povysen&&skoky(r,c).length){
+    forced=[r,c];selected=[r,c];
+    $('stav').textContent='Pokračuj ve skákání!';
+    vykresli();return;
+  }
+  forced=null;selected=null;turn='b';
+  vykresli();
+  const tahyAI=genMoves(board,'b');
+  if(!tahyAI.length){konecHry('w');vykresli();return;}
+  if(bezBrani>=80){konecHry('remiza');vykresli();return;}
+  $('stav').innerHTML='<span class="mysli">🤔 Soupeř přemýšlí…</span>';
+  setTimeout(aiTah,350);
+}
+
+/* --- historie / zpět --- */
+function historie(){
+  history.push({board:board.map(x=>x.slice()),sh:sebranoHrac,sa:sebranoAI,bb:bezBrani});
+  if(history.length>200)history.shift();
+}
+$('zpet').onclick=()=>{
+  if(konec||turn!=='w'||history.length<2)return;
+  history.pop();
+  const s=history[history.length-1];
+  board=s.board.map(x=>x.slice());
+  sebranoHrac=s.sh;sebranoAI=s.sa;bezBrani=s.bb;
+  forced=null;selected=null;aiPath=null;
+  $('stav').textContent='Jsi na tahu (bílé kameny).';
+  vykresli();
+};
+
+function konecHry(vitez){
+  konec=true;
+  if(vitez==='w'){skore.v++;$('stav').textContent='🎉 Vyhrál jsi!';$('stav').className='stav vyhra';}
+  else if(vitez==='b'){skore.p++;$('stav').textContent='💀 Prohrál jsi. Zkus to znovu!';$('stav').className='stav prohra';}
+  else{$('stav').textContent='🤝 Remíza (dlouho se nebralo).';$('stav').className='stav';}
+  localStorage.setItem(SKORE_KEY,JSON.stringify(skore));
+}
+
+/* --- vykreslení --- */
+function vykresli(){
+  const cile=selected?kroky(selected[0],selected[1]).map(k=>k.to.join(',')):[];
+  let html='';
+  for(let r=0;r<8;r++)for(let c=0;c<8;c++){
+    const tmave=(r+c)%2===1;
+    const cls=['pole',tmave?'tmave':'svetle'];
+    if(selected&&selected[0]===r&&selected[1]===c)cls.push('vybrane');
+    if(cile.includes(r+','+c))cls.push('cil');
+    if(aiPath&&aiPath.some(p=>p[0]===r&&p[1]===c))cls.push('tah-ai');
+    const p=board[r][c];
+    let kamen='';
+    if(p)kamen=`<div class="kamen ${sideOf(p)==='w'?'bily':'cerny'}">${(p==='W'||p==='B')?'♛':''}</div>`;
+    html+=`<div class="${cls.join(' ')}" data-r="${r}" data-c="${c}">${kamen}</div>`;
+  }
+  $('deska').innerHTML=html;
+  $('deska').querySelectorAll('.tmave').forEach(el=>el.onclick=()=>klik(+el.dataset.r,+el.dataset.c));
+  $('sebranoHrac').textContent=sebranoHrac;
+  $('sebranoAI').textContent=sebranoAI;
+  $('skore').textContent=skore.v+' : '+skore.p;
+  $('zpet').disabled=konec||turn!=='w'||history.length<2;
+}
+
+function novaHra(){
+  board=novaDeska();turn='w';forced=null;selected=null;konec=false;bezBrani=0;aiPath=null;
+  sebranoHrac=0;sebranoAI=0;history=[];
+  historie();
+  $('stav').textContent='Jsi na tahu (bílé kameny).';
+  $('stav').className='stav';
+  vykresli();
+}
+$('nova').onclick=novaHra;
+novaHra();
+</script>
+</body>
+</html>
