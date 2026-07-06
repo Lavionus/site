@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📊 Statistika</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1a1a1a;color:#e0e0e0;min-height:100vh;padding:20px}
+.container{max-width:820px;margin:0 auto}
+h1{font-size:1.6rem;margin-bottom:18px;font-weight:600;text-align:center}
+.card{background:#2a2a2a;border:1px solid #404040;border-radius:8px;padding:22px;margin-bottom:20px}
+h2{font-size:1.05rem;color:#6aa6fd;margin-bottom:16px}
+label{display:block;font-size:.82rem;color:#888;margin-bottom:5px}
+textarea{width:100%;background:#404040;border:1px solid #555;border-radius:4px;color:#e0e0e0;padding:10px;font-family:monospace;min-height:110px;resize:vertical}
+.mrizka{display:grid;grid-template-columns:1fr 1fr;gap:0 30px}
+@media(max-width:560px){.mrizka{grid-template-columns:1fr}}
+.res-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #333;font-size:.92rem}
+.res-row b{color:#4caf50}
+canvas{width:100%;height:220px;background:#1e1e1e;border-radius:6px;margin-top:6px}
+.pocet{color:#888;font-size:.82rem;margin-top:8px}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>📊 Statistika souboru dat</h1>
+  <div class="card">
+    <label>Čísla (oddělená čárkou, mezerou, středníkem nebo novým řádkem; desetinná čárka i tečka)</label>
+    <textarea id="data">12,5  13,1  11,8  12,9  14,2  12,4  13,6  12,1  15,0  12,8  13,3  11,5</textarea>
+    <div class="pocet" id="pocet"></div>
+  </div>
+  <div class="card">
+    <h2>Výsledky</h2>
+    <div class="mrizka">
+      <div>
+        <div class="res-row"><span>Počet hodnot n</span><b id="n">–</b></div>
+        <div class="res-row"><span>Součet</span><b id="soucet">–</b></div>
+        <div class="res-row"><span>Minimum</span><b id="min">–</b></div>
+        <div class="res-row"><span>Maximum</span><b id="max">–</b></div>
+        <div class="res-row"><span>Rozpětí</span><b id="rozpeti">–</b></div>
+        <div class="res-row"><span>Aritmetický průměr</span><b id="prumer">–</b></div>
+        <div class="res-row"><span>Medián</span><b id="median">–</b></div>
+      </div>
+      <div>
+        <div class="res-row"><span>Modus</span><b id="modus">–</b></div>
+        <div class="res-row"><span>1. kvartil Q1</span><b id="q1">–</b></div>
+        <div class="res-row"><span>3. kvartil Q3</span><b id="q3">–</b></div>
+        <div class="res-row"><span>Rozptyl (výběrový s²)</span><b id="rozptyl">–</b></div>
+        <div class="res-row"><span>Směrodatná odchylka s</span><b id="sd">–</b></div>
+        <div class="res-row"><span>Variační koeficient</span><b id="vk">–</b></div>
+        <div class="res-row"><span>Geometrický průměr</span><b id="geo">–</b></div>
+      </div>
+    </div>
+  </div>
+  <div class="card">
+    <h2>Histogram</h2>
+    <canvas id="hist"></canvas>
+  </div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+function parsuj(t){
+  return t.replace(/(\d),(\d)/g,'$1.$2')
+    .split(/[\s,;]+/).map(s=>parseFloat(s)).filter(x=>!isNaN(x));
+}
+function kvantil(sorted,p){
+  const i=(sorted.length-1)*p,lo=Math.floor(i),hi=Math.ceil(i);
+  return sorted[lo]+(sorted[hi]-sorted[lo])*(i-lo);
+}
+const f=x=>x.toLocaleString('cs-CZ',{maximumFractionDigits:4});
+function spocitej(){
+  const d=parsuj($('data').value);
+  $('pocet').textContent='Načteno '+d.length+' hodnot.';
+  if(d.length<1){document.querySelectorAll('.res-row b').forEach(b=>b.textContent='–');return;}
+  const n=d.length,s=[...d].sort((a,b)=>a-b);
+  const soucet=d.reduce((a,b)=>a+b,0),prumer=soucet/n;
+  const rozptyl=n>1?d.reduce((a,b)=>a+(b-prumer)**2,0)/(n-1):0;
+  const sd=Math.sqrt(rozptyl);
+  // modus
+  const cet={};d.forEach(x=>cet[x]=(cet[x]||0)+1);
+  const maxCet=Math.max(...Object.values(cet));
+  const modus=maxCet>1?Object.keys(cet).filter(k=>cet[k]===maxCet).slice(0,4).join(', '):'žádný';
+  $('n').textContent=n;$('soucet').textContent=f(soucet);
+  $('min').textContent=f(s[0]);$('max').textContent=f(s[n-1]);
+  $('rozpeti').textContent=f(s[n-1]-s[0]);
+  $('prumer').textContent=f(prumer);
+  $('median').textContent=f(kvantil(s,0.5));
+  $('modus').textContent=modus;
+  $('q1').textContent=f(kvantil(s,0.25));$('q3').textContent=f(kvantil(s,0.75));
+  $('rozptyl').textContent=f(rozptyl);$('sd').textContent=f(sd);
+  $('vk').textContent=prumer!==0?f(sd/Math.abs(prumer)*100)+' %':'–';
+  $('geo').textContent=s[0]>0?f(Math.exp(d.reduce((a,b)=>a+Math.log(b),0)/n)):'– (záporné hodnoty)';
+  histogram(s);
+}
+function histogram(s){
+  const c=$('hist'),ctx=c.getContext('2d');
+  c.width=c.clientWidth;c.height=c.clientHeight;
+  ctx.clearRect(0,0,c.width,c.height);
+  if(s.length<2)return;
+  const kosu=Math.min(20,Math.max(5,Math.ceil(Math.sqrt(s.length))));
+  const min=s[0],max=s[s.length-1],sirka=(max-min)/kosu||1;
+  const kose=new Array(kosu).fill(0);
+  s.forEach(x=>kose[Math.min(kosu-1,Math.floor((x-min)/sirka))]++);
+  const maxK=Math.max(...kose);
+  const okrajD=24,okrajL=8;
+  const bw=(c.width-okrajL*2)/kosu;
+  kose.forEach((k,i)=>{
+    const h=(c.height-okrajD-10)*k/maxK;
+    ctx.fillStyle='#6aa6fd';
+    ctx.fillRect(okrajL+i*bw+1,c.height-okrajD-h,bw-2,h);
+  });
+  ctx.fillStyle='#888';ctx.font='11px sans-serif';
+  ctx.textAlign='left';ctx.fillText(f(min),okrajL,c.height-8);
+  ctx.textAlign='right';ctx.fillText(f(max),c.width-okrajL,c.height-8);
+  ctx.textAlign='center';ctx.fillText('max četnost '+maxK,c.width/2,c.height-8);
+}
+$('data').addEventListener('input',spocitej);
+window.addEventListener('resize',spocitej);
+spocitej();
+</script>
+</body>
+</html>

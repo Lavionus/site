@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>⏲️ Stopky & časovače</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1a1a1a;color:#e0e0e0;min-height:100vh;padding:20px}
+.container{max-width:780px;margin:0 auto}
+h1{font-size:1.6rem;margin-bottom:18px;font-weight:600;text-align:center}
+.card{background:#2a2a2a;border:1px solid #404040;border-radius:8px;padding:22px;margin-bottom:20px}
+h2{font-size:1.05rem;color:#6aa6fd;margin-bottom:16px}
+label{display:block;font-size:.82rem;color:#888;margin-bottom:5px}
+input{background:#404040;border:1px solid #555;border-radius:4px;color:#e0e0e0;padding:9px}
+.btn{background:#6aa6fd;color:#fff;border:none;padding:9px 16px;border-radius:6px;cursor:pointer;font-weight:600;font-size:.85rem}
+.btn-sec{background:#404040}.btn-red{background:#c0392b}.btn-green{background:#27ae60}
+.stopky-cas{font-size:3rem;font-weight:700;color:#6aa6fd;text-align:center;font-variant-numeric:tabular-nums;margin:10px 0}
+.mezicasy{list-style:none;margin-top:12px;max-height:160px;overflow-y:auto}
+.mezicasy li{display:flex;justify-content:space-between;padding:6px 10px;border-bottom:1px solid #333;font-variant-numeric:tabular-nums;font-size:.9rem}
+.novy{display:flex;gap:8px;flex-wrap:wrap;align-items:end}
+.novy>div{flex:1;min-width:90px}
+.timer{background:#242424;border:1px solid #404040;border-radius:8px;padding:14px;margin-top:12px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+.timer.dobehl{border-color:#e67e22;animation:blik 1s infinite}
+@keyframes blik{50%{background:#3a2a1a}}
+.timer .nazev{flex:1;min-width:120px;font-weight:600}
+.timer .cas{font-size:1.6rem;font-weight:700;color:#6aa6fd;font-variant-numeric:tabular-nums;min-width:110px;text-align:right}
+.timer .cas.malo{color:#e67e22}
+.ovl{display:flex;gap:6px}
+.stred{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>⏲️ Stopky & časovače</h1>
+
+  <div class="card">
+    <h2>⏱️ Stopky</h2>
+    <div class="stopky-cas" id="stopkyCas">0:00.0</div>
+    <div class="stred">
+      <button class="btn btn-green" id="sStart">▶ Start</button>
+      <button class="btn btn-sec" id="sMezicas">🏁 Mezičas</button>
+      <button class="btn btn-red" id="sReset">↺ Reset</button>
+    </div>
+    <ol class="mezicasy" id="mezicasy"></ol>
+  </div>
+
+  <div class="card">
+    <h2>⏲️ Časovače (více najednou)</h2>
+    <div class="novy">
+      <div><label>Název</label><input type="text" id="tNazev" placeholder="Čaj, vejce…" style="width:100%"></div>
+      <div><label>Min</label><input type="number" id="tMin" value="5" min="0" style="width:100%"></div>
+      <div><label>Sek</label><input type="number" id="tSek" value="0" min="0" max="59" style="width:100%"></div>
+      <div style="flex:0"><button class="btn" id="tPridat">➕ Přidat</button></div>
+    </div>
+    <div id="timery"></div>
+  </div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+/* ---- pípnutí ---- */
+let actx;
+function beep(n=3){
+  actx=actx||new (window.AudioContext||window.webkitAudioContext)();
+  for(let i=0;i<n;i++){
+    const o=actx.createOscillator(),g=actx.createGain();
+    o.connect(g);g.connect(actx.destination);
+    o.frequency.value=880;o.type='sine';
+    const t=actx.currentTime+i*0.35;
+    g.gain.setValueAtTime(0.001,t);g.gain.exponentialRampToValueAtTime(0.4,t+0.02);
+    g.gain.exponentialRampToValueAtTime(0.001,t+0.28);
+    o.start(t);o.stop(t+0.3);
+  }
+}
+/* ---- stopky ---- */
+let sBezi=false,sStartCas=0,sNabehnuto=0,sTick;
+function sFmt(ms){
+  const c=Math.floor(ms/3600000),m=Math.floor(ms%3600000/60000),s=Math.floor(ms%60000/1000),d=Math.floor(ms%1000/100);
+  return (c?c+':'+String(m).padStart(2,'0'):m)+':'+String(s).padStart(2,'0')+'.'+d;
+}
+function sUkaz(){$('stopkyCas').textContent=sFmt(sNabehnuto+(sBezi?Date.now()-sStartCas:0));}
+$('sStart').onclick=()=>{
+  if(sBezi){sNabehnuto+=Date.now()-sStartCas;sBezi=false;clearInterval(sTick);$('sStart').textContent='▶ Start';$('sStart').className='btn btn-green';}
+  else{sStartCas=Date.now();sBezi=true;sTick=setInterval(sUkaz,100);$('sStart').textContent='⏸ Pauza';$('sStart').className='btn';}
+};
+$('sReset').onclick=()=>{sBezi=false;clearInterval(sTick);sNabehnuto=0;$('mezicasy').innerHTML='';$('sStart').textContent='▶ Start';$('sStart').className='btn btn-green';sUkaz();};
+$('sMezicas').onclick=()=>{
+  const cas=sNabehnuto+(sBezi?Date.now()-sStartCas:0);
+  if(cas===0)return;
+  const li=document.createElement('li');
+  li.innerHTML=`<span>Mezičas ${$('mezicasy').children.length+1}</span><b>${sFmt(cas)}</b>`;
+  $('mezicasy').prepend(li);
+};
+/* ---- časovače ---- */
+let timery=[],tid=0;
+function tPridat(){
+  const min=+$('tMin').value||0,sek=+$('tSek').value||0;
+  const celkem=(min*60+sek)*1000;
+  if(celkem<=0)return;
+  timery.push({id:++tid,nazev:$('tNazev').value.trim()||'Časovač '+tid,celkem,konec:Date.now()+celkem,bezi:true,zbyva:celkem,dobehl:false});
+  $('tNazev').value='';
+  tRender();
+}
+$('tPridat').onclick=tPridat;
+function tFmt(ms){
+  ms=Math.max(0,ms);
+  const m=Math.floor(ms/60000),s=Math.ceil(ms%60000/1000);
+  return s===60?(m+1)+':00':m+':'+String(s).padStart(2,'0');
+}
+function tRender(){
+  $('timery').innerHTML=timery.map(t=>`
+    <div class="timer ${t.dobehl?'dobehl':''}" data-id="${t.id}">
+      <span class="nazev">${t.nazev.replace(/</g,'&lt;')}</span>
+      <span class="cas ${!t.dobehl&&t.zbyva<11000?'malo':''}">${t.dobehl?'HOTOVO!':tFmt(t.zbyva)}</span>
+      <span class="ovl">
+        ${t.dobehl?'':`<button class="btn btn-sec" data-akce="pauza">${t.bezi?'⏸':'▶'}</button>`}
+        <button class="btn btn-sec" data-akce="restart">↺</button>
+        <button class="btn btn-red" data-akce="smazat">✕</button>
+      </span>
+    </div>`).join('');
+}
+$('timery').addEventListener('click',e=>{
+  const akce=e.target.dataset.akce;
+  if(!akce)return;
+  const id=+e.target.closest('.timer').dataset.id;
+  const t=timery.find(x=>x.id===id);
+  if(akce==='smazat')timery=timery.filter(x=>x.id!==id);
+  if(akce==='restart'){t.konec=Date.now()+t.celkem;t.zbyva=t.celkem;t.bezi=true;t.dobehl=false;}
+  if(akce==='pauza'){
+    if(t.bezi){t.zbyva=t.konec-Date.now();t.bezi=false;}
+    else{t.konec=Date.now()+t.zbyva;t.bezi=true;}
+  }
+  tRender();
+});
+setInterval(()=>{
+  let zmena=false;
+  timery.forEach(t=>{
+    if(t.bezi&&!t.dobehl){
+      t.zbyva=t.konec-Date.now();
+      if(t.zbyva<=0){t.dobehl=true;t.bezi=false;beep();}
+      zmena=true;
+    }
+  });
+  if(zmena){
+    // aktualizace časů bez překreslení tlačítek
+    timery.forEach(t=>{
+      const el=document.querySelector(`.timer[data-id="${t.id}"]`);
+      if(!el)return;
+      el.classList.toggle('dobehl',t.dobehl);
+      const c=el.querySelector('.cas');
+      c.textContent=t.dobehl?'HOTOVO!':tFmt(t.zbyva);
+      c.classList.toggle('malo',!t.dobehl&&t.zbyva<11000);
+      if(t.dobehl&&el.querySelector('[data-akce=pauza]'))tRender();
+    });
+  }
+},250);
+sUkaz();
+</script>
+</body>
+</html>

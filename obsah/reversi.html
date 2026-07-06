@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>⚫ Reversi / Othello</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1a1a1a;color:#e0e0e0;min-height:100vh;padding:20px}
+.container{max-width:560px;margin:0 auto;text-align:center}
+h1{font-size:1.6rem;margin-bottom:14px;font-weight:600}
+.stat{display:flex;justify-content:space-around;align-items:center;background:#2a2a2a;border:1px solid #404040;border-radius:8px;padding:10px;margin-bottom:14px}
+.hrac{display:flex;align-items:center;gap:8px;font-size:1.05rem;padding:6px 12px;border-radius:6px}
+.hrac.aktivni{background:#2d3a4d;outline:1px solid #6aa6fd}
+.kamen{width:22px;height:22px;border-radius:50%}
+.kamen.c{background:radial-gradient(circle at 35% 30%,#555,#000)}
+.kamen.b{background:radial-gradient(circle at 35% 30%,#fff,#bbb)}
+#deska{display:grid;grid-template-columns:repeat(8,1fr);gap:2px;background:#0d3d1e;padding:6px;border-radius:8px;border:3px solid #555}
+.pole{aspect-ratio:1;background:#1b6b38;border-radius:3px;display:flex;align-items:center;justify-content:center;cursor:pointer;position:relative}
+.pole .k{width:78%;height:78%;border-radius:50%;transition:transform .15s}
+.pole .k.c{background:radial-gradient(circle at 35% 30%,#555,#000)}
+.pole .k.b{background:radial-gradient(circle at 35% 30%,#fff,#bbb)}
+.pole.moznost::after{content:'';width:26%;height:26%;border-radius:50%;background:rgba(255,255,255,.28);position:absolute}
+.ovl{display:flex;gap:10px;justify-content:center;margin-top:14px;flex-wrap:wrap;align-items:center}
+.btn{background:#6aa6fd;color:#fff;border:none;padding:9px 16px;border-radius:6px;cursor:pointer;font-weight:600;font-size:.85rem}
+select{background:#404040;border:1px solid #555;border-radius:4px;color:#e0e0e0;padding:8px}
+.zprava{min-height:1.5em;margin-top:12px;font-weight:600;color:#ffd54f}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>⚫ Reversi</h1>
+  <div class="stat">
+    <div class="hrac" id="hC"><span class="kamen c"></span><b id="skoreC">2</b></div>
+    <div class="hrac" id="hB"><span class="kamen b"></span><b id="skoreB">2</b></div>
+  </div>
+  <div id="deska"></div>
+  <div class="zprava" id="zprava"></div>
+  <div class="ovl">
+    <select id="rezim">
+      <option value="2p">👥 Dva hráči</option>
+      <option value="ai">🤖 Proti počítači (bílý)</option>
+    </select>
+    <button class="btn" id="nova">↺ Nová hra</button>
+  </div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const SMERY=[[0,1],[0,-1],[1,0],[-1,0],[1,1],[1,-1],[-1,1],[-1,-1]];
+let deska,naTahu,konec;
+function novaHra(){
+  deska=Array.from({length:8},()=>Array(8).fill(0)); // 0 prázdné, 1 černý, 2 bílý
+  deska[3][3]=2;deska[4][4]=2;deska[3][4]=1;deska[4][3]=1;
+  naTahu=1;konec=false;
+  $('zprava').textContent='';
+  render();
+}
+function otoceni(r,c,hrac,d=deska){
+  if(d[r][c])return[];
+  const oponent=hrac===1?2:1;
+  const vysledek=[];
+  SMERY.forEach(([dr,dc])=>{
+    const rada=[];
+    let rr=r+dr,cc=c+dc;
+    while(rr>=0&&rr<8&&cc>=0&&cc<8&&d[rr][cc]===oponent){rada.push([rr,cc]);rr+=dr;cc+=dc;}
+    if(rada.length&&rr>=0&&rr<8&&cc>=0&&cc<8&&d[rr][cc]===hrac)vysledek.push(...rada);
+  });
+  return vysledek;
+}
+function tahyHrace(hrac,d=deska){
+  const t=[];
+  for(let r=0;r<8;r++)for(let c=0;c<8;c++)
+    if(otoceni(r,c,hrac,d).length)t.push([r,c]);
+  return t;
+}
+function tahni(r,c){
+  const ot=otoceni(r,c,naTahu);
+  if(!ot.length)return false;
+  deska[r][c]=naTahu;
+  ot.forEach(([rr,cc])=>deska[rr][cc]=naTahu);
+  dalsiTah();
+  return true;
+}
+function dalsiTah(){
+  const oponent=naTahu===1?2:1;
+  if(tahyHrace(oponent).length){naTahu=oponent;}
+  else if(tahyHrace(naTahu).length){
+    $('zprava').textContent=(oponent===1?'Černý':'Bílý')+' nemá tah – hraje znovu '+(naTahu===1?'černý':'bílý')+'.';
+    render();return;
+  }else{
+    konec=true;
+    const {c,b}=skore();
+    $('zprava').textContent=c>b?'🏁 Vyhrál černý!':b>c?'🏁 Vyhrál bílý!':'🏁 Remíza!';
+    render();return;
+  }
+  $('zprava').textContent='';
+  render();
+  if(!konec&&$('rezim').value==='ai'&&naTahu===2)setTimeout(aiTah,600);
+}
+function skore(){
+  let c=0,b=0;
+  deska.flat().forEach(x=>{if(x===1)c++;if(x===2)b++;});
+  return{c,b};
+}
+// AI: rohy > kraje > max otočení
+function aiTah(){
+  if(konec||naTahu!==2)return;
+  const tahy=tahyHrace(2);
+  if(!tahy.length)return;
+  const vaha=(r,c)=>{
+    const roh=(r===0||r===7)&&(c===0||c===7);
+    const kraj=r===0||r===7||c===0||c===7;
+    const uRohu=(r<=1||r>=6)&&(c<=1||c>=6)&&!roh;
+    return (roh?1000:0)+(kraj?50:0)-(uRohu?60:0)+otoceni(r,c,2).length;
+  };
+  tahy.sort((a,b)=>vaha(b[0],b[1])-vaha(a[0],a[1]));
+  tahni(tahy[0][0],tahy[0][1]);
+}
+function render(){
+  const d=$('deska');
+  const mozne=konec?[]:tahyHrace(naTahu);
+  d.innerHTML='';
+  for(let r=0;r<8;r++)for(let c=0;c<8;c++){
+    const el=document.createElement('div');
+    el.className='pole';
+    if(deska[r][c])el.innerHTML=`<div class="k ${deska[r][c]===1?'c':'b'}"></div>`;
+    else if(mozne.some(([a,b])=>a===r&&b===c)&&!($('rezim').value==='ai'&&naTahu===2))el.classList.add('moznost');
+    el.onclick=()=>{
+      if(konec)return;
+      if($('rezim').value==='ai'&&naTahu===2)return;
+      tahni(r,c);
+    };
+    d.appendChild(el);
+  }
+  const{c,b}=skore();
+  $('skoreC').textContent=c;$('skoreB').textContent=b;
+  $('hC').classList.toggle('aktivni',naTahu===1&&!konec);
+  $('hB').classList.toggle('aktivni',naTahu===2&&!konec);
+}
+$('nova').onclick=novaHra;
+$('rezim').addEventListener('change',novaHra);
+novaHra();
+</script>
+</body>
+</html>

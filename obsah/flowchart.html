@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🔀 Flowchart editor</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1a1a1a;color:#e0e0e0;height:100vh;display:flex;flex-direction:column;overflow:hidden}
+.listy{background:#2a2a2a;border-bottom:1px solid #404040;padding:8px 12px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.btn{background:#404040;color:#e0e0e0;border:1px solid #555;padding:7px 12px;border-radius:6px;cursor:pointer;font-size:.83rem}
+.btn:hover{background:#555}
+.btn.active{background:#6aa6fd;color:#fff;border-color:#6aa6fd}
+.btn-red{color:#ff8a80}
+.info{color:#888;font-size:.78rem;margin-left:auto}
+#platno{flex:1;cursor:default}
+svg{width:100%;height:100%;background:#151515}
+.uzel{cursor:grab}
+.uzel text{fill:#fff;font-size:13px;text-anchor:middle;dominant-baseline:middle;pointer-events:none}
+.uzel .tvar{stroke:#6aa6fd;stroke-width:1.5;fill:#2d3a4d}
+.uzel.vybrany .tvar{stroke:#ffd54f;stroke-width:2.5}
+.hrana{stroke:#888;stroke-width:1.8;fill:none;marker-end:url(#sipka)}
+.hrana.vybrana{stroke:#ffd54f}
+</style>
+</head>
+<body>
+<div class="listy">
+  <button class="btn" data-add="obdelnik">▭ Proces</button>
+  <button class="btn" data-add="kosoctverec">◇ Rozhodnutí</button>
+  <button class="btn" data-add="oval">⬭ Start/Konec</button>
+  <button class="btn" id="rezimSpoj">🔗 Spojovat</button>
+  <button class="btn" id="prejmenuj">✏️ Přejmenovat</button>
+  <button class="btn btn-red" id="smaz">🗑️ Smazat vybrané</button>
+  <button class="btn" id="exportSvg">💾 Export SVG</button>
+  <button class="btn btn-red" id="vseSmaz">Nový diagram</button>
+  <span class="info">Klik = vybrat · tažení = přesun · režim Spojovat: klikni na 2 uzly · dvojklik = přejmenovat</span>
+</div>
+<div id="platno">
+<svg id="svg" xmlns="http://www.w3.org/2000/svg">
+  <defs><marker id="sipka" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0,0 L10,4 L0,8 z" fill="#888"/></marker></defs>
+  <g id="hrany"></g><g id="uzly"></g>
+</svg>
+</div>
+<script>
+const svg=document.getElementById('svg');
+const gU=document.getElementById('uzly'),gH=document.getElementById('hrany');
+const STORE='flowchart.v1';
+let st;
+try{st=JSON.parse(localStorage.getItem(STORE));}catch(e){}
+if(!st)st={uzly:[{id:1,typ:'oval',x:300,y:60,text:'Start'},{id:2,typ:'obdelnik',x:300,y:180,text:'Krok 1'},{id:3,typ:'kosoctverec',x:300,y:310,text:'Podmínka?'}],hrany:[{a:1,b:2,text:''},{a:2,b:3,text:''}],nid:4};
+const save=()=>localStorage.setItem(STORE,JSON.stringify(st));
+let vybranyUzel=null,vybranaHrana=null,spojRezim=false,spojPrvni=null,drag=null;
+
+function tvarSvg(u){
+  const w=120,h=u.typ==='kosoctverec'?70:46;
+  if(u.typ==='obdelnik')return `<rect class="tvar" x="${-w/2}" y="${-h/2}" width="${w}" height="${h}" rx="4"/>`;
+  if(u.typ==='oval')return `<rect class="tvar" x="${-w/2}" y="${-h/2}" width="${w}" height="${h}" rx="${h/2}"/>`;
+  return `<polygon class="tvar" points="0,${-h/2} ${w/2+10},0 0,${h/2} ${-w/2-10},0"/>`;
+}
+function render(){
+  gU.innerHTML=st.uzly.map(u=>
+    `<g class="uzel ${vybranyUzel===u.id?'vybrany':''}" data-id="${u.id}" transform="translate(${u.x},${u.y})">${tvarSvg(u)}<text>${esc(u.text)}</text></g>`).join('');
+  gH.innerHTML=st.hrany.map((h,i)=>{
+    const a=st.uzly.find(u=>u.id===h.a),b=st.uzly.find(u=>u.id===h.b);
+    if(!a||!b)return'';
+    // zkrátit čáru k okraji uzlu (přibližně)
+    const dx=b.x-a.x,dy=b.y-a.y,d=Math.hypot(dx,dy)||1;
+    const r1=38,r2=44;
+    const x1=a.x+dx/d*r1,y1=a.y+dy/d*r1,x2=b.x-dx/d*r2,y2=b.y-dy/d*r2;
+    const mx=(x1+x2)/2,my=(y1+y2)/2;
+    return `<path class="hrana ${vybranaHrana===i?'vybrana':''}" data-i="${i}" d="M${x1},${y1} L${x2},${y2}" pointer-events="stroke" stroke-linecap="round"/>`+
+      (h.text?`<text x="${mx}" y="${my-6}" fill="#ffd54f" font-size="11" text-anchor="middle">${esc(h.text)}</text>`:'');
+  }).join('');
+}
+const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;');
+function poz(e){
+  const pt=svg.createSVGPoint();pt.x=e.clientX;pt.y=e.clientY;
+  const p=pt.matrixTransform(svg.getScreenCTM().inverse());
+  return {x:p.x,y:p.y};
+}
+svg.addEventListener('pointerdown',e=>{
+  const g=e.target.closest('.uzel');
+  const hr=e.target.closest('.hrana');
+  if(g){
+    const id=+g.dataset.id;
+    if(spojRezim){
+      if(spojPrvni===null){spojPrvni=id;vybranyUzel=id;}
+      else if(spojPrvni!==id){
+        const text=st.uzly.find(u=>u.id===spojPrvni).typ==='kosoctverec'?prompt('Popisek větve (ano/ne, volitelné):','')||'':'';
+        st.hrany.push({a:spojPrvni,b:id,text});
+        spojPrvni=null;vybranyUzel=null;save();
+      }
+      render();return;
+    }
+    vybranyUzel=id;vybranaHrana=null;
+    const u=st.uzly.find(x=>x.id===id);
+    const p=poz(e);
+    drag={u,ox:p.x-u.x,oy:p.y-u.y};
+    render();
+  }else if(hr){
+    vybranaHrana=+hr.dataset.i;vybranyUzel=null;render();
+  }else{
+    vybranyUzel=null;vybranaHrana=null;spojPrvni=null;render();
+  }
+});
+svg.addEventListener('pointermove',e=>{
+  if(!drag)return;
+  const p=poz(e);
+  drag.u.x=Math.round(p.x-drag.ox);drag.u.y=Math.round(p.y-drag.oy);
+  render();
+});
+svg.addEventListener('pointerup',()=>{if(drag){drag=null;save();}});
+svg.addEventListener('dblclick',e=>{
+  const g=e.target.closest('.uzel');
+  if(!g)return;
+  const u=st.uzly.find(x=>x.id===+g.dataset.id);
+  const t=prompt('Text uzlu:',u.text);
+  if(t!==null){u.text=t;save();render();}
+});
+document.querySelectorAll('[data-add]').forEach(b=>b.onclick=()=>{
+  st.uzly.push({id:st.nid++,typ:b.dataset.add,x:150+Math.random()*300,y:100+Math.random()*250,text:'Nový'});
+  save();render();
+});
+document.getElementById('rezimSpoj').onclick=function(){
+  spojRezim=!spojRezim;spojPrvni=null;
+  this.classList.toggle('active',spojRezim);
+};
+document.getElementById('prejmenuj').onclick=()=>{
+  if(vybranyUzel===null)return alert('Nejdřív vyberte uzel.');
+  const u=st.uzly.find(x=>x.id===vybranyUzel);
+  const t=prompt('Text uzlu:',u.text);
+  if(t!==null){u.text=t;save();render();}
+};
+document.getElementById('smaz').onclick=()=>{
+  if(vybranyUzel!==null){
+    st.uzly=st.uzly.filter(u=>u.id!==vybranyUzel);
+    st.hrany=st.hrany.filter(h=>h.a!==vybranyUzel&&h.b!==vybranyUzel);
+    vybranyUzel=null;
+  }else if(vybranaHrana!==null){
+    st.hrany.splice(vybranaHrana,1);vybranaHrana=null;
+  }
+  save();render();
+};
+document.getElementById('vseSmaz').onclick=()=>{
+  if(!confirm('Smazat celý diagram?'))return;
+  st={uzly:[],hrany:[],nid:1};save();render();
+};
+document.getElementById('exportSvg').onclick=()=>{
+  const klon=svg.cloneNode(true);
+  klon.setAttribute('width',svg.clientWidth);klon.setAttribute('height',svg.clientHeight);
+  // vložit styly přímo
+  const css=`.uzel text{fill:#fff;font-size:13px;text-anchor:middle;dominant-baseline:middle;font-family:sans-serif}.uzel .tvar{stroke:#6aa6fd;stroke-width:1.5;fill:#2d3a4d}.hrana{stroke:#888;stroke-width:1.8;fill:none;marker-end:url(#sipka)}`;
+  const styl=document.createElementNS('http://www.w3.org/2000/svg','style');
+  styl.textContent=css;klon.prepend(styl);
+  klon.style.background='#151515';
+  const blob=new Blob([new XMLSerializer().serializeToString(klon)],{type:'image/svg+xml'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);a.download='diagram.svg';a.click();
+};
+window.addEventListener('keydown',e=>{
+  if(e.key==='Delete')document.getElementById('smaz').click();
+});
+render();
+</script>
+</body>
+</html>

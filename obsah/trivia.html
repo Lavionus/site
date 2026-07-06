@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>❓ Vědomostní kvíz</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1a1a1a;color:#e0e0e0;min-height:100vh;padding:20px}
+.container{max-width:680px;margin:0 auto}
+h1{font-size:1.6rem;margin-bottom:18px;font-weight:600;text-align:center}
+.card{background:#2a2a2a;border:1px solid #404040;border-radius:8px;padding:24px;margin-bottom:20px}
+.kategorie{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+@media(max-width:480px){.kategorie{grid-template-columns:1fr}}
+.kat{background:#404040;border:1px solid #555;color:#e0e0e0;border-radius:8px;padding:16px;cursor:pointer;font-size:1rem;text-align:center;transition:all .12s}
+.kat:hover{background:#6aa6fd;color:#fff}
+.stav{display:flex;justify-content:space-between;color:#888;font-size:.88rem;margin-bottom:14px}
+.otazka{font-size:1.25rem;font-weight:600;margin-bottom:18px;line-height:1.45;min-height:3.6rem}
+.odpovedi{display:grid;gap:10px}
+.odp{background:#404040;border:1px solid #555;color:#e0e0e0;border-radius:8px;padding:13px 16px;cursor:pointer;font-size:.95rem;text-align:left;transition:all .12s}
+.odp:hover{background:#555}
+.odp.spravne{background:#27ae60;border-color:#27ae60;color:#fff}
+.odp.spatne{background:#c0392b;border-color:#c0392b;color:#fff}
+.progres{background:#333;border-radius:4px;height:8px;overflow:hidden;margin-bottom:16px}
+.progres>div{height:100%;background:#6aa6fd;transition:width .3s}
+.vysledek{text-align:center}
+.vysledek .velke{font-size:3rem;font-weight:700;color:#6aa6fd;margin:14px 0}
+.vysledek .hodnoceni{font-size:1.1rem;color:#ffd54f;margin-bottom:18px}
+.btn{background:#6aa6fd;color:#fff;border:none;padding:11px 22px;border-radius:8px;cursor:pointer;font-weight:600;font-size:.95rem}
+.skryto{display:none}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>❓ Vědomostní kvíz</h1>
+  <div class="card" id="vyberKat">
+    <p style="color:#888;margin-bottom:14px;text-align:center">Vyber okruh – 10 náhodných otázek:</p>
+    <div class="kategorie" id="kategorie"></div>
+  </div>
+  <div class="card skryto" id="hra">
+    <div class="stav"><span id="poradi"></span><span id="skore"></span></div>
+    <div class="progres"><div id="progres" style="width:0%"></div></div>
+    <div class="otazka" id="otazka"></div>
+    <div class="odpovedi" id="odpovedi"></div>
+  </div>
+  <div class="card skryto vysledek" id="konec">
+    <div>Výsledek</div>
+    <div class="velke" id="finale"></div>
+    <div class="hodnoceni" id="hodnoceni"></div>
+    <button class="btn" id="znovu">↺ Hrát znovu</button>
+  </div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+// [otázka, správná, špatná, špatná, špatná]
+const OTAZKY={
+'🌍 Zeměpis':[
+['Hlavní město Austrálie je…','Canberra','Sydney','Melbourne','Perth'],
+['Nejdelší řeka světa (podle většiny měření) je…','Nil','Amazonka','Jang-c’-ťiang','Mississippi'],
+['Nejvyšší hora ČR je…','Sněžka','Praděd','Lysá hora','Ještěd'],
+['Kolik států sousedí s Českem?','4','3','5','6'],
+['Největší poušť světa je…','Antarktická poušť','Sahara','Gobi','Kalahari'],
+['Mount Everest leží na hranici Nepálu a…','Číny (Tibetu)','Indie','Bhútánu','Pákistánu'],
+['Hlavní město Kanady je…','Ottawa','Toronto','Vancouver','Montreal'],
+['Řeka Vltava se vlévá do…','Labe','Dunaje','Odry','Moravy'],
+['Který stát má nejvíce obyvatel?','Indie','Čína','USA','Indonésie'],
+['Nejhlubší místo oceánů je…','Mariánský příkop','Portorický příkop','Jávský příkop','Tonžský příkop'],
+['Baltské moře omývá břehy…','Polska','Norska','Rumunska','Nizozemska'],
+['Kilimandžáro leží v…','Tanzanii','Keni','Etiopii','Ugandě'],
+],
+'📜 Historie':[
+['Karel IV. byl korunován českým králem v roce…','1347','1305','1378','1415'],
+['První prezident Československa byl…','T. G. Masaryk','E. Beneš','K. Kramář','M. R. Štefánik'],
+['Bitva na Bílé hoře se odehrála roku…','1620','1618','1648','1526'],
+['Sametová revoluce začala v roce…','1989','1968','1993','1985'],
+['Jan Hus byl upálen v roce…','1415','1420','1402','1436'],
+['Druhá světová válka skončila v Evropě roku…','1945','1944','1946','1943'],
+['Kdo objevil Ameriku roku 1492?','Kryštof Kolumbus','Vasco da Gama','F. Magalhães','Amerigo Vespucci'],
+['Rozdělení Československa proběhlo k 1. lednu…','1993','1992','1990','1995'],
+['Velká francouzská revoluce začala roku…','1789','1776','1804','1815'],
+['První člověk na Měsíci byl…','Neil Armstrong','Buzz Aldrin','Jurij Gagarin','John Glenn'],
+['Přemyslovci vymřeli po meči roku 1306 vraždou…','Václava III.','Václava II.','Přemysla Otakara II.','Karla IV.'],
+['Marie Terezie vládla v… století','18.','17.','16.','19.'],
+],
+'🔬 Věda a příroda':[
+['Chemická značka zlata je…','Au','Ag','Fe','Zn'],
+['Kolik planet má sluneční soustava?','8','9','7','10'],
+['Rychlost světla je přibližně…','300 000 km/s','150 000 km/s','1 000 000 km/s','30 000 km/s'],
+['Voda vře (za normálního tlaku) při…','100 °C','90 °C','110 °C','120 °C'],
+['Nejtvrdší přírodní nerost je…','diamant','křemen','korund','topaz'],
+['DNA je uložena především v…','buněčném jádře','mitochondrii','ribozomu','membráně'],
+['Fotosyntézou rostliny vytvářejí…','kyslík a cukry','dusík','oxid uhličitý','metan'],
+['Který plyn tvoří většinu zemské atmosféry?','dusík','kyslík','oxid uhličitý','argon'],
+['Jednotka elektrického odporu je…','ohm','volt','ampér','watt'],
+['Srdce dospělého člověka má… komory a síně','2 + 2','1 + 1','3 + 1','2 + 1'],
+['Penicilin objevil…','A. Fleming','L. Pasteur','R. Koch','J. Salk'],
+['Nejbližší hvězda k Zemi (mimo Slunce) je…','Proxima Centauri','Sirius','Polárka','Betelgeuse'],
+],
+'🎭 Kultura a sport':[
+['Prodanou nevěstu složil…','B. Smetana','A. Dvořák','L. Janáček','Z. Fibich'],
+['Kolik hráčů má fotbalové mužstvo na hřišti?','11','10','12','9'],
+['Mona Lisu namaloval…','Leonardo da Vinci','Michelangelo','Rafael','Rembrandt'],
+['Olympijské hry se konají každé… roky','4','2','3','5'],
+['Babičku napsala…','B. Němcová','K. Světlá','E. Krásnohorská','M. Majerová'],
+['Hokejové mužstvo má na ledě… hráčů (vč. brankáře)','6','5','7','8'],
+['Autorem Osudové symfonie je…','L. van Beethoven','W. A. Mozart','J. S. Bach','J. Haydn'],
+['Ve kterém městě se hraje Wimbledon?','Londýn','Paříž','New York','Melbourne'],
+['R.U.R. a slovo „robot" pochází od…','K. Čapka','J. Haška','F. Kafky','B. Hrabala'],
+['Kolik strun má klasická kytara?','6','4','5','7'],
+['Maraton měří přibližně…','42 km','36 km','50 km','21 km'],
+['Národní divadlo v Praze bylo (po požáru) otevřeno roku…','1883','1868','1891','1875'],
+],
+};
+let otazky,poradi,skore,zamceno;
+$('kategorie').innerHTML=Object.keys(OTAZKY).map(k=>`<button class="kat" data-k="${k}">${k}</button>`).join('')
+  +'<button class="kat" data-k="mix">🎲 Mix ze všech</button>';
+$('kategorie').addEventListener('click',e=>{
+  const k=e.target.closest('.kat')?.dataset.k;
+  if(!k)return;
+  const zdroj=k==='mix'?Object.values(OTAZKY).flat():OTAZKY[k];
+  otazky=[...zdroj].sort(()=>Math.random()-0.5).slice(0,10);
+  poradi=0;skore=0;
+  $('vyberKat').classList.add('skryto');
+  $('konec').classList.add('skryto');
+  $('hra').classList.remove('skryto');
+  ukazOtazku();
+});
+function ukazOtazku(){
+  zamceno=false;
+  const o=otazky[poradi];
+  $('poradi').textContent=`Otázka ${poradi+1} / ${otazky.length}`;
+  $('skore').textContent=`Skóre: ${skore}`;
+  $('progres').style.width=(poradi/otazky.length*100)+'%';
+  $('otazka').textContent=o[0];
+  const odpovedi=[[o[1],true],[o[2],false],[o[3],false],[o[4],false]].sort(()=>Math.random()-0.5);
+  $('odpovedi').innerHTML=odpovedi.map(([t,ok],i)=>
+    `<button class="odp" data-ok="${ok}">${String.fromCharCode(65+i)}) ${t}</button>`).join('');
+}
+$('odpovedi').addEventListener('click',e=>{
+  const b=e.target.closest('.odp');
+  if(!b||zamceno)return;
+  zamceno=true;
+  const ok=b.dataset.ok==='true';
+  if(ok){b.classList.add('spravne');skore++;}
+  else{
+    b.classList.add('spatne');
+    document.querySelector('.odp[data-ok="true"]').classList.add('spravne');
+  }
+  setTimeout(()=>{
+    poradi++;
+    if(poradi<otazky.length)ukazOtazku();
+    else konec();
+  },1200);
+});
+function konec(){
+  $('hra').classList.add('skryto');
+  $('konec').classList.remove('skryto');
+  $('finale').textContent=skore+' / '+otazky.length;
+  const pct=skore/otazky.length;
+  $('hodnoceni').textContent=pct===1?'🏆 Fenomenální! Vše správně!':pct>=0.8?'🌟 Výborně!':pct>=0.5?'👍 Slušný výkon.':pct>=0.3?'📚 Je co zlepšovat…':'😅 Nevadí, zkus to znovu!';
+}
+$('znovu').onclick=()=>{
+  $('konec').classList.add('skryto');
+  $('vyberKat').classList.remove('skryto');
+};
+</script>
+</body>
+</html>

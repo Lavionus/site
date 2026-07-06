@@ -278,6 +278,28 @@
     .lightbox.open { display: flex; }
     .lightbox img { max-width: 90vw; max-height: 85vh; border-radius: 8px; }
     .lightbox-close { position: absolute; top: 20px; right: 24px; font-size: 2rem; color: #ccc; cursor: pointer; }
+    .lightbox-nav {
+      position: absolute; top: 50%; transform: translateY(-50%);
+      font-size: 2.2rem; color: #ccc; cursor: pointer; user-select: none;
+      padding: 12px 16px; background: rgba(0,0,0,0.35); border-radius: 10px;
+      transition: background 0.15s, color 0.15s;
+    }
+    .lightbox-nav:hover { background: rgba(0,0,0,0.6); color: #f0a060; }
+    .lightbox-prev { left: 16px; }
+    .lightbox-next { right: 16px; }
+    .lightbox-counter {
+      position: absolute; bottom: 18px; left: 50%; transform: translateX(-50%);
+      color: #aaa; font-size: 0.85rem; background: rgba(0,0,0,0.5);
+      padding: 3px 12px; border-radius: 12px;
+    }
+
+    /* Vyhledávání v záznamech */
+    .search-box { padding: 6px 10px; border-bottom: 1px solid #2a2a2a; }
+    .search-box input {
+      width: 100%; background: #2a2a2a; border: 1px solid #444; color: #e0e0e0;
+      border-radius: 5px; padding: 5px 8px; font-size: 0.8rem; outline: none;
+    }
+    .search-box input:focus { border-color: #f0a060; }
 
     .stats-bar {
       display: flex; gap: 12px; padding: 5px 12px;
@@ -336,6 +358,9 @@
   <div class="diary-panel">
     <div class="panel-title" id="diaryTitle">📖 Záznamy</div>
     <div class="stats-bar" id="statsBar"></div>
+    <div class="search-box" id="searchBox" style="display:none">
+      <input type="search" id="searchInput" placeholder="🔍 Hledat v záznamech…" oninput="searchQuery = this.value; renderEntries()" />
+    </div>
     <div class="diary-entries" id="diaryEntries">
       <div class="empty-state"><div class="icon">📔</div>Vyberte nebo vytvořte výlet</div>
     </div>
@@ -417,7 +442,10 @@
 <!-- Lightbox -->
 <div class="lightbox" id="lightbox" onclick="closeLightbox()">
   <div class="lightbox-close" onclick="closeLightbox()">✕</div>
-  <img id="lightboxImg" src="" />
+  <div class="lightbox-nav lightbox-prev" id="lightboxPrev" onclick="event.stopPropagation(); lightboxStep(-1)">‹</div>
+  <img id="lightboxImg" src="" onclick="event.stopPropagation()" />
+  <div class="lightbox-nav lightbox-next" id="lightboxNext" onclick="event.stopPropagation(); lightboxStep(1)">›</div>
+  <div class="lightbox-counter" id="lightboxCounter"></div>
 </div>
 
 <script>
@@ -426,9 +454,45 @@ let map, markerLayer, pickMode = false;
 let activeTrip  = null;
 let activeEntry = null;
 let editingEntryPhotos = [];   // working copy of photos during entry edit
+let searchQuery = '';
 
-function save() { localStorage.setItem('traveldiary_db', JSON.stringify(db)); }
+function save() {
+  try {
+    localStorage.setItem('traveldiary_db', JSON.stringify(db));
+  } catch (err) {
+    alert('⚠️ Úložiště prohlížeče je plné – data se nepodařilo uložit.\n' +
+          'Odeberte některé fotografie nebo si zálohujte data přes Export JSON.');
+  }
+}
 function genId() { return Date.now().toString() + Math.random().toString(36).slice(2, 5); }
+
+function escapeHtml(s) {
+  return String(s ?? '')
+    .replaceAll('&', '&amp;').replaceAll('<', '&lt;').replaceAll('>', '&gt;')
+    .replaceAll('"', '&quot;').replaceAll("'", '&#39;');
+}
+
+// Zmenší fotku přes canvas (max 1400 px, JPEG) – localStorage má jen ~5 MB
+function compressImage(file, maxDim = 1400, quality = 0.82) {
+  return new Promise(resolve => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      let { width: w, height: h } = img;
+      if (Math.max(w, h) > maxDim) {
+        const k = maxDim / Math.max(w, h);
+        w = Math.round(w * k); h = Math.round(h * k);
+      }
+      const canvas = document.createElement('canvas');
+      canvas.width = w; canvas.height = h;
+      canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+      resolve(canvas.toDataURL('image/jpeg', quality));
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); fileToDataURL(file).then(resolve); };
+    img.src = url;
+  });
+}
 
 // ── Mapa ─────────────────────────────────────────────────────────────────────
 
@@ -540,6 +604,8 @@ function deleteTrip(id) {
 function selectTrip(id) {
   activeTrip  = id;
   activeEntry = null;
+  searchQuery = '';
+  document.getElementById('searchInput').value = '';
   cancelEntryEdit();
   renderTripList();
   renderEntries();
@@ -564,8 +630,8 @@ function renderTripList() {
                  onclick="selectTrip('${t.id}')">
       <div class="trip-item-top">
         <div>
-          <div class="trip-name">${t.name}</div>
-          <div class="trip-meta">${[t.from, t.to].filter(Boolean).join(' – ')}${t.country ? ' · ' + t.country : ''}</div>
+          <div class="trip-name">${escapeHtml(t.name)}</div>
+          <div class="trip-meta">${[t.from, t.to].filter(Boolean).join(' – ')}${t.country ? ' · ' + escapeHtml(t.country) : ''}</div>
           <div class="trip-meta">${count} záznamů</div>
         </div>
         <div class="trip-btns" onclick="event.stopPropagation()">
@@ -589,11 +655,11 @@ async function saveEntry() {
   const date  = document.getElementById('e-date').value;
   if (!title) { alert('Zadejte název záznamu'); return; }
 
-  // Načíst nové fotky z file inputu
+  // Načíst nové fotky z file inputu (zkomprimované)
   const newPhotos = [];
   const fileInput = document.getElementById('e-photos');
   for (const file of fileInput.files) {
-    newPhotos.push(await fileToDataURL(file));
+    newPhotos.push(await compressImage(file));
   }
 
   const id = document.getElementById('e-id').value;
@@ -643,7 +709,7 @@ function startEditEntry(id) {
   const entry = db.entries.find(e => e.id === id);
   if (!entry) return;
 
-  editingEntryPhotos = [...entry.photos];
+  editingEntryPhotos = [...(entry.photos || [])];
 
   document.getElementById('e-id').value      = entry.id;
   document.getElementById('e-date').value    = entry.date;
@@ -721,7 +787,7 @@ function renderExistingPhotos() {
   count.textContent = `(${editingEntryPhotos.length})`;
   list.innerHTML = editingEntryPhotos.map((src, i) => `
     <div class="existing-photo-wrap">
-      <img src="${src}" onclick="openLightbox('${src}')" title="Klik = zobrazit" />
+      <img src="${src}" onclick="openLightbox(editingEntryPhotos, ${i})" title="Klik = zobrazit" />
       <button class="remove-photo" onclick="removeExistingPhoto(${i})" title="Odebrat">✕</button>
     </div>`).join('');
 }
@@ -743,35 +809,67 @@ function deleteEntry(id) {
     '<div class="empty-state" style="height:100%"><div class="icon">📍</div>Vyberte záznam pro detail</div>';
 }
 
+// Vzdálenost trasy (haversine) přes GPS body výletu, v km
+function tripDistanceKm(entries) {
+  const pts = entries.filter(e => e.lat != null && e.lon != null);
+  let km = 0;
+  for (let i = 1; i < pts.length; i++) {
+    const toRad = d => d * Math.PI / 180;
+    const dLat = toRad(pts[i].lat - pts[i-1].lat);
+    const dLon = toRad(pts[i].lon - pts[i-1].lon);
+    const a = Math.sin(dLat/2)**2 +
+              Math.cos(toRad(pts[i-1].lat)) * Math.cos(toRad(pts[i].lat)) * Math.sin(dLon/2)**2;
+    km += 6371 * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
+  }
+  return km;
+}
+
 function renderEntries() {
-  const el       = document.getElementById('diaryEntries');
-  const statsBar = document.getElementById('statsBar');
+  const el        = document.getElementById('diaryEntries');
+  const statsBar  = document.getElementById('statsBar');
+  const searchBox = document.getElementById('searchBox');
   if (!activeTrip) {
     el.innerHTML = '<div class="empty-state"><div class="icon">📔</div>Vyberte nebo vytvořte výlet</div>';
     statsBar.innerHTML = '';
+    searchBox.style.display = 'none';
     return;
   }
   const trip = db.trips.find(t => t.id === activeTrip);
   document.getElementById('diaryTitle').textContent = `📖 ${trip?.name || 'Záznamy'}`;
 
   const entries    = db.entries.filter(e => e.tripId === activeTrip);
-  const withPhotos = entries.reduce((s, e) => s + e.photos.length, 0);
-  const withGPS    = entries.filter(e => e.lat).length;
-  statsBar.innerHTML = `${entries.length} záznamů · <span>${withPhotos}</span> fotek · <span>${withGPS}</span> GPS bodů`;
+  const withPhotos = entries.reduce((s, e) => s + (e.photos || []).length, 0);
+  const withGPS    = entries.filter(e => e.lat != null && e.lon != null).length;
+  const km         = tripDistanceKm(entries);
+  statsBar.innerHTML = `${entries.length} záznamů · <span>${withPhotos}</span> fotek · <span>${withGPS}</span> GPS bodů`
+    + (km > 0 ? ` · <span>${km < 10 ? km.toFixed(1) : Math.round(km)} km</span> trasa` : '');
+
+  searchBox.style.display = entries.length > 0 ? 'block' : 'none';
 
   if (entries.length === 0) {
     el.innerHTML = '<div class="empty-state"><div class="icon">✏️</div>Přidejte první záznam níže</div>';
     return;
   }
 
+  const q = searchQuery.trim().toLowerCase();
+  const shown = q
+    ? entries.filter(e => (e.title + ' ' + (e.text || '') + ' ' + e.date).toLowerCase().includes(q))
+    : entries;
+
+  if (shown.length === 0) {
+    el.innerHTML = '<div class="empty-state"><div class="icon">🔍</div>Nic nenalezeno</div>';
+    return;
+  }
+
   const editingId = document.getElementById('e-id').value;
-  el.innerHTML = entries.map(e => {
+  el.innerHTML = shown.map(e => {
     const isActive  = e.id === activeEntry;
     const isEditing = e.id === editingId;
-    const photoThumb = e.photos.length
+    const photos    = e.photos || [];
+    const photoThumb = photos.length
       ? `<div class="entry-photos">
-           ${e.photos.slice(0, 4).map(p => `<img class="entry-thumb" src="${p}" />`).join('')}
-           ${e.photos.length > 4 ? `<div style="width:44px;height:44px;background:#333;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:0.72rem;color:#888">+${e.photos.length - 4}</div>` : ''}
+           ${photos.slice(0, 4).map(p => `<img class="entry-thumb" src="${p}" />`).join('')}
+           ${photos.length > 4 ? `<div style="width:44px;height:44px;background:#333;border-radius:4px;display:flex;align-items:center;justify-content:center;font-size:0.72rem;color:#888">+${photos.length - 4}</div>` : ''}
          </div>`
       : '';
     return `<div class="entry-card ${isActive ? 'active' : ''} ${isEditing ? 'editing' : ''}"
@@ -779,19 +877,21 @@ function renderEntries() {
       <div class="entry-top">
         <div>
           <div class="entry-date">${e.date} ${e.mood || ''}</div>
-          <div class="entry-title">${e.title}</div>
+          <div class="entry-title">${escapeHtml(e.title)}</div>
         </div>
         <div class="entry-btns" onclick="event.stopPropagation()">
           <button class="btn btn-yellow btn-xs" title="Upravit záznam" onclick="startEditEntry('${e.id}')">✏️</button>
           <button class="btn btn-red btn-xs" onclick="deleteEntry('${e.id}')">✕</button>
         </div>
       </div>
-      ${e.text ? `<div class="entry-preview">${e.text.slice(0, 110)}${e.text.length > 110 ? '…' : ''}</div>` : ''}
-      ${e.lat ? `<div class="entry-loc">📍 ${e.lat.toFixed(4)}, ${e.lon.toFixed(4)}</div>` : ''}
+      ${e.text ? `<div class="entry-preview">${escapeHtml(e.text.slice(0, 110))}${e.text.length > 110 ? '…' : ''}</div>` : ''}
+      ${e.lat != null && e.lon != null ? `<div class="entry-loc">📍 ${e.lat.toFixed(4)}, ${e.lon.toFixed(4)}</div>` : ''}
       ${photoThumb}
     </div>`;
   }).join('');
 }
+
+let detailPhotos = [];   // fotky právě zobrazeného záznamu (pro lightbox)
 
 function showEntryDetail(id) {
   activeEntry = id;
@@ -799,23 +899,24 @@ function showEntryDetail(id) {
   const entry = db.entries.find(e => e.id === id);
   if (!entry) return;
   const panel  = document.getElementById('detailPanel');
-  const photos = entry.photos.map(p =>
-    `<img class="gallery-img" src="${p}" onclick="openLightbox('${p}')" />`
+  detailPhotos = entry.photos || [];
+  const photos = detailPhotos.map((p, i) =>
+    `<img class="gallery-img" src="${p}" onclick="openLightbox(detailPhotos, ${i})" />`
   ).join('');
   panel.innerHTML = `
     <div class="detail-header">
-      <h2>${entry.title}</h2>
+      <h2>${escapeHtml(entry.title)}</h2>
       <div class="detail-meta">
         📅 ${entry.date}
-        ${entry.weather ? ' · ' + entry.weather : ''}
+        ${entry.weather ? ' · ' + escapeHtml(entry.weather) : ''}
         ${entry.mood    ? ' · ' + entry.mood    : ''}
-        ${entry.lat     ? ` · 📍 ${entry.lat.toFixed(4)}, ${entry.lon.toFixed(4)}` : ''}
+        ${entry.lat != null && entry.lon != null ? ` · 📍 ${entry.lat.toFixed(4)}, ${entry.lon.toFixed(4)}` : ''}
       </div>
     </div>
-    ${entry.text   ? `<div class="detail-body">${entry.text.replace(/\n/g, '<br/>')}</div>` : ''}
+    ${entry.text   ? `<div class="detail-body">${escapeHtml(entry.text).replace(/\n/g, '<br/>')}</div>` : ''}
     ${photos       ? `<div class="photo-gallery">${photos}</div>` : ''}`;
 
-  if (entry.lat && entry.lon) {
+  if (entry.lat != null && entry.lon != null) {
     map.flyTo([entry.lat, entry.lon], 12, { animate: true, duration: 0.8 });
   }
   renderMap();
@@ -840,7 +941,7 @@ function renderMap() {
       iconSize: [28, 28], iconAnchor: [14, 14],
     });
     const marker = L.marker([e.lat, e.lon], { icon }).addTo(markerLayer);
-    marker.bindPopup(`<b>${e.title}</b><br/>${e.date}${e.mood ? ' ' + e.mood : ''}`);
+    marker.bindPopup(`<b>${escapeHtml(e.title)}</b><br/>${e.date}${e.mood ? ' ' + e.mood : ''}`);
     marker.on('click', () => showEntryDetail(e.id));
   });
   if (points.length > 1) {
@@ -861,13 +962,33 @@ function fileToDataURL(file) {
   });
 }
 
-function openLightbox(src) {
-  document.getElementById('lightboxImg').src = src;
+let lightboxPhotos = [];
+let lightboxIndex  = 0;
+
+function openLightbox(photos, index = 0) {
+  // zpětná kompatibilita: openLightbox('data:...') s jedinou fotkou
+  lightboxPhotos = Array.isArray(photos) ? photos : [photos];
+  lightboxIndex  = index;
+  updateLightbox();
   document.getElementById('lightbox').classList.add('open');
+}
+function updateLightbox() {
+  document.getElementById('lightboxImg').src = lightboxPhotos[lightboxIndex] || '';
+  const multi = lightboxPhotos.length > 1;
+  document.getElementById('lightboxPrev').style.display = multi ? 'block' : 'none';
+  document.getElementById('lightboxNext').style.display = multi ? 'block' : 'none';
+  document.getElementById('lightboxCounter').textContent =
+    multi ? `${lightboxIndex + 1} / ${lightboxPhotos.length}` : '';
+}
+function lightboxStep(dir) {
+  if (lightboxPhotos.length < 2) return;
+  lightboxIndex = (lightboxIndex + dir + lightboxPhotos.length) % lightboxPhotos.length;
+  updateLightbox();
 }
 function closeLightbox() {
   document.getElementById('lightbox').classList.remove('open');
   document.getElementById('lightboxImg').src = '';
+  lightboxPhotos = [];
 }
 
 function exportData() {
@@ -886,6 +1007,7 @@ function importData(input) {
     try {
       const data = JSON.parse(e.target.result);
       if (data.trips && data.entries) {
+        data.entries.forEach(en => { if (!Array.isArray(en.photos)) en.photos = []; });
         db = data;
         save();
         activeTrip = null; activeEntry = null;
@@ -905,6 +1027,13 @@ function importData(input) {
 // ── Klávesové zkratky ─────────────────────────────────────────────────────────
 
 document.addEventListener('keydown', e => {
+  const lightboxOpen = document.getElementById('lightbox').classList.contains('open');
+  if (lightboxOpen) {
+    if (e.key === 'Escape')     { closeLightbox(); return; }
+    if (e.key === 'ArrowLeft')  { lightboxStep(-1); return; }
+    if (e.key === 'ArrowRight') { lightboxStep(1);  return; }
+    return;
+  }
   if (e.key === 'Escape') {
     if (pickMode) { togglePick(); return; }
     if (document.getElementById('e-id').value) { cancelEntryEdit(); return; }

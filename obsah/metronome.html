@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🥁 Metronom</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1a1a1a;color:#e0e0e0;min-height:100vh;padding:20px}
+.container{max-width:560px;margin:0 auto;text-align:center}
+h1{font-size:1.6rem;margin-bottom:18px;font-weight:600}
+.card{background:#2a2a2a;border:1px solid #404040;border-radius:8px;padding:26px;margin-bottom:20px}
+.bpm{font-size:4.5rem;font-weight:700;color:#6aa6fd;line-height:1}
+.bpm small{font-size:1.1rem;color:#888;font-weight:400}
+.tempoNazev{color:#888;margin:4px 0 18px;font-style:italic}
+input[type=range]{width:100%;margin-bottom:18px}
+.doby{display:flex;gap:8px;justify-content:center;margin-bottom:20px}
+.doba{width:26px;height:26px;border-radius:50%;background:#404040;transition:all .05s}
+.doba.aktivni{background:#6aa6fd;transform:scale(1.35)}
+.doba.prizvuk.aktivni{background:#e67e22}
+.radek{display:flex;gap:10px;justify-content:center;align-items:center;flex-wrap:wrap;margin-bottom:16px}
+select{background:#404040;border:1px solid #555;border-radius:4px;color:#e0e0e0;padding:9px}
+.btn{background:#6aa6fd;color:#fff;border:none;padding:12px 26px;border-radius:8px;cursor:pointer;font-weight:600;font-size:1rem}
+.btn-red{background:#c0392b}
+.btn-sec{background:#404040;padding:10px 16px;font-size:.9rem}
+.mini{background:#404040;border:1px solid #555;color:#ccc;border-radius:6px;width:46px;height:40px;cursor:pointer;font-size:1rem}
+.mini:hover{background:#555}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>🥁 Metronom</h1>
+  <div class="card">
+    <div class="bpm"><span id="bpmText">100</span> <small>BPM</small></div>
+    <div class="tempoNazev" id="tempoNazev"></div>
+    <div class="radek">
+      <button class="mini" data-d="-5">−5</button>
+      <button class="mini" data-d="-1">−1</button>
+      <input type="range" id="bpm" min="30" max="240" value="100" style="flex:1;min-width:140px">
+      <button class="mini" data-d="1">+1</button>
+      <button class="mini" data-d="5">+5</button>
+    </div>
+    <div class="doby" id="doby"></div>
+    <div class="radek">
+      <label style="color:#888;font-size:.85rem">Takt:</label>
+      <select id="takt">
+        <option value="1">1 (bez přízvuku)</option>
+        <option value="2">2/4</option>
+        <option value="3">3/4</option>
+        <option value="4" selected>4/4</option>
+        <option value="6">6/8</option>
+      </select>
+      <button class="btn btn-sec" id="tap">👆 Tap tempo</button>
+    </div>
+    <button class="btn" id="start">▶ Spustit</button>
+  </div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+let actx=null,bezi=false,dalsiCas=0,doba=0,casovac=null;
+const TEMPA=[[40,'Grave'],[60,'Largo'],[66,'Adagio'],[76,'Andante'],[108,'Moderato'],[120,'Allegro'],[168,'Presto'],[200,'Prestissimo'],[241,'']];
+
+function bpm(){return +$('bpm').value;}
+function taktu(){return +$('takt').value;}
+
+function tik(cas,prizvuk){
+  const o=actx.createOscillator(),g=actx.createGain();
+  o.connect(g);g.connect(actx.destination);
+  o.frequency.value=prizvuk?1600:1000;
+  g.gain.setValueAtTime(0.001,cas);
+  g.gain.exponentialRampToValueAtTime(prizvuk?0.6:0.35,cas+0.002);
+  g.gain.exponentialRampToValueAtTime(0.001,cas+0.06);
+  o.start(cas);o.stop(cas+0.07);
+}
+function planuj(){
+  while(dalsiCas<actx.currentTime+0.12){
+    const prizvuk=taktu()>1&&doba%taktu()===0;
+    tik(dalsiCas,prizvuk);
+    const mojeDoba=doba%Math.max(1,taktu());
+    const zpozdeni=(dalsiCas-actx.currentTime)*1000;
+    setTimeout(()=>ukazDobu(mojeDoba),Math.max(0,zpozdeni));
+    dalsiCas+=60/bpm();
+    doba++;
+  }
+}
+function ukazDobu(i){
+  document.querySelectorAll('.doba').forEach((d,j)=>d.classList.toggle('aktivni',j===i));
+}
+function kresliDoby(){
+  const n=taktu();
+  $('doby').innerHTML=Array.from({length:n},(_,i)=>`<div class="doba ${i===0&&n>1?'prizvuk':''}"></div>`).join('');
+}
+function start(){
+  if(bezi){
+    bezi=false;clearInterval(casovac);
+    $('start').textContent='▶ Spustit';$('start').className='btn';
+    document.querySelectorAll('.doba').forEach(d=>d.classList.remove('aktivni'));
+    return;
+  }
+  actx=actx||new (window.AudioContext||window.webkitAudioContext)();
+  if(actx.state==='suspended')actx.resume();
+  bezi=true;doba=0;dalsiCas=actx.currentTime+0.05;
+  casovac=setInterval(planuj,25);
+  $('start').textContent='⏹ Zastavit';$('start').className='btn btn-red';
+}
+$('start').onclick=start;
+function obnovText(){
+  $('bpmText').textContent=bpm();
+  $('tempoNazev').textContent=(TEMPA.find(([max])=>bpm()<max)||['',''])[1];
+}
+$('bpm').addEventListener('input',obnovText);
+$('takt').addEventListener('change',()=>{doba=0;kresliDoby();});
+document.querySelectorAll('.mini').forEach(b=>b.onclick=()=>{
+  $('bpm').value=Math.max(30,Math.min(240,bpm()+ +b.dataset.d));
+  obnovText();
+});
+// tap tempo
+let tapy=[];
+$('tap').onclick=()=>{
+  const t=performance.now();
+  tapy=tapy.filter(x=>t-x<3000);
+  tapy.push(t);
+  if(tapy.length>=2){
+    const dif=[];
+    for(let i=1;i<tapy.length;i++)dif.push(tapy[i]-tapy[i-1]);
+    const prumer=dif.reduce((a,b)=>a+b,0)/dif.length;
+    $('bpm').value=Math.max(30,Math.min(240,Math.round(60000/prumer)));
+    obnovText();
+  }
+};
+kresliDoby();obnovText();
+</script>
+</body>
+</html>

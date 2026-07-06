@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎙️ Hlasový záznamník</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1a1a1a;color:#e0e0e0;min-height:100vh;padding:20px}
+.container{max-width:700px;margin:0 auto}
+h1{font-size:1.6rem;margin-bottom:8px;font-weight:600;text-align:center}
+.pod{color:#888;text-align:center;font-size:.85rem;margin-bottom:18px}
+.card{background:#2a2a2a;border:1px solid #404040;border-radius:8px;padding:22px;margin-bottom:20px;text-align:center}
+canvas{width:100%;height:80px;background:#151515;border-radius:6px;margin-bottom:14px}
+.cas{font-size:2.2rem;font-weight:700;color:#6aa6fd;font-variant-numeric:tabular-nums;margin-bottom:14px}
+.cas.nahrava{color:#e74c3c}
+.btn{background:#6aa6fd;color:#fff;border:none;padding:12px 22px;border-radius:8px;cursor:pointer;font-weight:600;font-size:1rem;margin:0 6px}
+.btn:hover{background:#5591e8}
+.btn-red{background:#c0392b}.btn-red:hover{background:#a93226}
+.zaznamy{list-style:none;text-align:left;margin-top:8px}
+.zaznamy li{padding:12px;border-bottom:1px solid #333;display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+.zaznamy li:last-child{border:none}
+.zaznamy .nazev{flex:1;min-width:120px}
+.zaznamy audio{height:36px;max-width:240px}
+.zaznamy a,.zaznamy button{color:#6aa6fd;background:none;border:none;cursor:pointer;font-size:.85rem;text-decoration:none}
+.zaznamy button.del{color:#e74c3c}
+.chyba{color:#e74c3c;margin-top:10px}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>🎙️ Hlasový záznamník</h1>
+  <p class="pod">Nahrávání běží jen ve vašem prohlížeči, nic se nikam neodesílá. Nahrávky vydrží do zavření stránky – nezapomeňte si je stáhnout.</p>
+  <div class="card">
+    <canvas id="vlna"></canvas>
+    <div class="cas" id="cas">0:00</div>
+    <button class="btn" id="rec">🔴 Nahrávat</button>
+    <div class="chyba" id="chyba"></div>
+    <ul class="zaznamy" id="zaznamy"></ul>
+  </div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+let mediaRec=null,chunks=[],stream=null,startCas=0,tick=null,cislo=0;
+let actx,analyser,anim;
+
+function fmtCas(s){return Math.floor(s/60)+':'+String(Math.floor(s%60)).padStart(2,'0');}
+
+async function start(){
+  try{stream=await navigator.mediaDevices.getUserMedia({audio:true});}
+  catch(e){$('chyba').textContent='Mikrofon není dostupný: '+e.message;return;}
+  $('chyba').textContent='';
+  const mime=MediaRecorder.isTypeSupported('audio/webm')?'audio/webm':'';
+  mediaRec=new MediaRecorder(stream,mime?{mimeType:mime}:undefined);
+  chunks=[];
+  mediaRec.ondataavailable=e=>chunks.push(e.data);
+  mediaRec.onstop=()=>{
+    const blob=new Blob(chunks,{type:mediaRec.mimeType||'audio/webm'});
+    pridejZaznam(blob);
+    stream.getTracks().forEach(t=>t.stop());
+    cancelAnimationFrame(anim);
+  };
+  mediaRec.start();
+  startCas=Date.now();
+  $('cas').classList.add('nahrava');
+  tick=setInterval(()=>$('cas').textContent=fmtCas((Date.now()-startCas)/1000),200);
+  $('rec').textContent='⏹️ Zastavit';
+  $('rec').className='btn btn-red';
+  // vizualizace
+  actx=actx||new (window.AudioContext||window.webkitAudioContext)();
+  const src=actx.createMediaStreamSource(stream);
+  analyser=actx.createAnalyser();analyser.fftSize=1024;
+  src.connect(analyser);
+  kresliVlnu();
+}
+function stop(){
+  mediaRec.stop();
+  clearInterval(tick);
+  $('cas').classList.remove('nahrava');
+  $('rec').textContent='🔴 Nahrávat';
+  $('rec').className='btn';
+}
+$('rec').onclick=()=>{ (mediaRec&&mediaRec.state==='recording')?stop():start(); };
+
+function kresliVlnu(){
+  const c=$('vlna'),ctx=c.getContext('2d');
+  c.width=c.clientWidth;c.height=c.clientHeight;
+  const data=new Uint8Array(analyser.fftSize);
+  (function smycka(){
+    anim=requestAnimationFrame(smycka);
+    analyser.getByteTimeDomainData(data);
+    ctx.fillStyle='#151515';ctx.fillRect(0,0,c.width,c.height);
+    ctx.strokeStyle='#6aa6fd';ctx.lineWidth=2;ctx.beginPath();
+    for(let i=0;i<data.length;i++){
+      const x=i/data.length*c.width,y=data[i]/255*c.height;
+      i?ctx.lineTo(x,y):ctx.moveTo(x,y);
+    }
+    ctx.stroke();
+  })();
+}
+function pridejZaznam(blob){
+  cislo++;
+  const url=URL.createObjectURL(blob);
+  const pripona=(blob.type.includes('ogg'))?'ogg':'webm';
+  const li=document.createElement('li');
+  const datum=new Date().toLocaleTimeString('cs-CZ',{hour:'2-digit',minute:'2-digit'});
+  li.innerHTML=`<span class="nazev">Nahrávka ${cislo} <small style="color:#777">(${datum}, ${(blob.size/1024).toFixed(0)} kB)</small></span>
+    <audio controls src="${url}"></audio>
+    <a href="${url}" download="nahravka_${cislo}.${pripona}">💾 stáhnout</a>
+    <button class="del">✕</button>`;
+  li.querySelector('.del').onclick=()=>{URL.revokeObjectURL(url);li.remove();};
+  $('zaznamy').prepend(li);
+}
+</script>
+</body>
+</html>

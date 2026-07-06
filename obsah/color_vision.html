@@ -1,0 +1,129 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>👁️ Test barvocitu</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1a1a1a;color:#e0e0e0;min-height:100vh;padding:20px}
+.container{max-width:640px;margin:0 auto}
+h1{font-size:1.6rem;margin-bottom:8px;font-weight:600;text-align:center}
+.pod{color:#888;text-align:center;font-size:.85rem;margin-bottom:18px;line-height:1.5}
+.card{background:#2a2a2a;border:1px solid #404040;border-radius:8px;padding:22px;margin-bottom:20px;text-align:center}
+canvas{border-radius:50%;max-width:100%;background:#eee}
+.odpovedi{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:16px}
+.btn{background:#404040;color:#e0e0e0;border:1px solid #555;padding:12px 22px;border-radius:8px;cursor:pointer;font-weight:700;font-size:1.2rem;min-width:64px}
+.btn:hover{background:#6aa6fd;color:#fff}
+.btn-main{background:#6aa6fd;color:#fff;border:none;font-size:.9rem}
+.stav{color:#888;margin-top:12px;font-size:.9rem}
+.vysledek{font-size:1.2rem;font-weight:700;margin:12px 0;color:#6aa6fd}
+.upozorneni{color:#e67e22;font-size:.8rem;margin-top:14px;line-height:1.5}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>👁️ Test barvocitu</h1>
+  <p class="pod">Orientační test inspirovaný Ishiharovými tabulkami. V kruhu z teček je skryté číslo – vyberte, které vidíte.</p>
+  <div class="card">
+    <canvas id="plate" width="360" height="360"></canvas>
+    <div class="odpovedi" id="odpovedi"></div>
+    <div class="stav" id="stav"></div>
+    <div class="vysledek" id="vysledek"></div>
+    <button class="btn btn-main" id="restart" style="display:none">↺ Nový test</button>
+    <p class="upozorneni">⚠️ Jde jen o orientační hru – kalibrace monitoru výsledek zkresluje. Skutečné vyšetření barvocitu provede oční lékař.</p>
+  </div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const cv=$('plate'),ctx=cv.getContext('2d');
+// dvojice barev pozadí/číslice: normální vidění je rozliší, při deficitu splývají
+const SADY=[
+  {poz:['#8ab04a','#a9c46a','#93a556','#b9cf85'],cis:['#d98f36','#c77b2e','#e0a050','#cc8840']},   // zeleno-oranžová (protan/deutan)
+  {poz:['#c98d5a','#b57e4e','#d9a06a','#c69268'],cis:['#7f9e56','#8fae62','#6f8e4a','#9bba70']},   // hnědo-zelená
+  {poz:['#9d9f6c','#aeb07c','#8d8f5e','#bcbf8c'],cis:['#d0806a','#c0705c','#e09078','#b06450']},   // olivová-lososová
+];
+// vzor číslic 5×7 (1 = tečka číslice)
+const FONT={
+  '1':['00100','01100','00100','00100','00100','00100','01110'],
+  '2':['01110','10001','00001','00010','00100','01000','11111'],
+  '3':['01110','10001','00001','00110','00001','10001','01110'],
+  '4':['00010','00110','01010','10010','11111','00010','00010'],
+  '5':['11111','10000','11110','00001','00001','10001','01110'],
+  '6':['00110','01000','10000','11110','10001','10001','01110'],
+  '7':['11111','00001','00010','00100','01000','01000','01000'],
+  '8':['01110','10001','10001','01110','10001','10001','01110'],
+  '9':['01110','10001','10001','01111','00001','00010','01100'],
+  '0':['01110','10001','10011','10101','11001','10001','01110'],
+};
+const nahodne=a=>a[Math.floor(Math.random()*a.length)];
+let spravne,kolo,skore,konec=false;
+const KOL=8;
+
+function jeVCislici(x,y,cislice){
+  // číslice vykreslená do mřížky ~ uprostřed kruhu
+  const S=360,bunka=S*0.09,sirka=5*bunka,vyska=7*bunka;
+  const ox=(S-cislice.length*sirka-(cislice.length-1)*bunka*0.6)/2,oy=(S-vyska)/2;
+  for(let c=0;c<cislice.length;c++){
+    const vzor=FONT[cislice[c]];
+    const bx=ox+c*(sirka+bunka*0.6);
+    const gx=Math.floor((x-bx)/bunka),gy=Math.floor((y-oy)/bunka);
+    if(gx>=0&&gx<5&&gy>=0&&gy<7&&vzor[gy][gx]==='1')return true;
+  }
+  return false;
+}
+function kresli(cislice,sada){
+  ctx.clearRect(0,0,360,360);
+  ctx.fillStyle='#f2ede4';
+  ctx.beginPath();ctx.arc(180,180,178,0,7);ctx.fill();
+  // náhodné tečky (rejection sampling, bez překryvů přes mřížku by bylo pomalé – stačí hustý rozsyp)
+  for(let i=0;i<2600;i++){
+    const a=Math.random()*Math.PI*2,r=Math.sqrt(Math.random())*172;
+    const x=180+Math.cos(a)*r,y=180+Math.sin(a)*r;
+    const pol=2+Math.random()*4.5;
+    ctx.fillStyle=jeVCislici(x,y,cislice)?nahodne(sada.cis):nahodne(sada.poz);
+    ctx.beginPath();ctx.arc(x,y,pol,0,7);ctx.fill();
+  }
+}
+function dalsi(){
+  if(kolo>=KOL){
+    konec=true;
+    $('odpovedi').innerHTML='';
+    $('stav').textContent='';
+    const pct=Math.round(skore/KOL*100);
+    $('vysledek').textContent=`Výsledek: ${skore} / ${KOL} (${pct} %) – `+
+      (pct>=90?'barvocit v pořádku 👍':pct>=60?'drobné zaváhání, zkuste znovu':'častější chyby – při pochybách navštivte očního lékaře');
+    $('restart').style.display='inline-block';
+    return;
+  }
+  const cislic=Math.random()<0.5?1:2;
+  spravne='';
+  for(let i=0;i<cislic;i++)spravne+=Math.floor(Math.random()*10);
+  if(spravne[0]==='0'&&cislic===2)spravne='1'+spravne[1];
+  kresli(spravne,nahodne(SADY));
+  // nabídka odpovědí
+  const moznosti=new Set([spravne]);
+  while(moznosti.size<4){
+    let m='';
+    for(let i=0;i<spravne.length;i++)m+=Math.floor(Math.random()*10);
+    if(m[0]==='0'&&m.length===2)m='9'+m[1];
+    moznosti.add(m);
+  }
+  $('odpovedi').innerHTML=[...moznosti].sort(()=>Math.random()-0.5)
+    .map(m=>`<button class="btn" data-v="${m}">${m}</button>`).join('')
+    +'<button class="btn" data-v="?" style="font-size:.85rem">Nevidím nic</button>';
+  $('stav').textContent=`Tabulka ${kolo+1} / ${KOL} · skóre ${skore}`;
+}
+$('odpovedi').addEventListener('click',e=>{
+  const v=e.target.dataset.v;
+  if(!v||konec)return;
+  if(v===spravne)skore++;
+  kolo++;
+  dalsi();
+});
+function start(){kolo=0;skore=0;konec=false;$('vysledek').textContent='';$('restart').style.display='none';dalsi();}
+$('restart').onclick=start;
+start();
+</script>
+</body>
+</html>

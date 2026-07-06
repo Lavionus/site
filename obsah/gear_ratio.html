@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>⚙️ Převodové poměry</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1a1a1a;color:#e0e0e0;min-height:100vh;padding:20px}
+.container{max-width:780px;margin:0 auto}
+h1{font-size:1.6rem;margin-bottom:8px;font-weight:600;text-align:center}
+.pod{color:#888;text-align:center;font-size:.85rem;margin-bottom:18px}
+.card{background:#2a2a2a;border:1px solid #404040;border-radius:8px;padding:22px;margin-bottom:20px}
+h2{font-size:1.05rem;color:#6aa6fd;margin-bottom:16px}
+label{display:block;font-size:.82rem;color:#888;margin-bottom:5px}
+input,select{width:100%;background:#404040;border:1px solid #555;border-radius:4px;color:#e0e0e0;padding:9px;margin-bottom:10px}
+.grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+@media(max-width:560px){.grid{grid-template-columns:1fr 1fr}}
+.stupen{border:1px solid #404040;border-radius:8px;padding:14px;margin-bottom:12px;background:#242424;position:relative}
+.stupen h3{font-size:.85rem;color:#6aa6fd;margin-bottom:10px}
+.stupen .del{position:absolute;top:10px;right:12px;background:none;border:none;color:#c0392b;cursor:pointer;font-size:1rem}
+.btn{background:#6aa6fd;color:#fff;border:none;padding:9px 16px;border-radius:6px;cursor:pointer;font-weight:600;font-size:.85rem;margin-right:8px}
+.btn-sec{background:#404040}
+.res-row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #333}
+.res-row:last-child{border:none}.res-row b{color:#4caf50}
+.big{font-size:1.9rem;font-weight:700;color:#6aa6fd;text-align:center;margin:8px 0}
+.hint{color:#777;font-size:.8rem;margin-top:10px;line-height:1.5}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>⚙️ Převodové poměry</h1>
+  <p class="pod">Ozubená kola, řemenice i řetězová kola – i víc stupňů za sebou. Zadejte zuby nebo průměry.</p>
+  <div class="card">
+    <h2>Vstup</h2>
+    <div class="grid">
+      <div><label>Otáčky vstupu (ot/min)</label><input type="number" id="rpm" value="1450"></div>
+      <div><label>Krout. moment (N·m, volit.)</label><input type="number" id="moment" value="10"></div>
+      <div><label>Účinnost na stupeň (%)</label><input type="number" id="ucinnost" value="97" min="50" max="100"></div>
+    </div>
+  </div>
+  <div class="card">
+    <h2>Převodové stupně</h2>
+    <div id="stupne"></div>
+    <button class="btn" id="pridat">➕ Přidat stupeň</button>
+  </div>
+  <div class="card">
+    <h2>Výsledek</h2>
+    <div class="big" id="celkovyPomer">–</div>
+    <div class="res-row"><span>Otáčky výstupu</span><b id="rRpm">–</b></div>
+    <div class="res-row"><span>Krouticí moment výstupu</span><b id="rMoment">–</b></div>
+    <div class="res-row"><span>Charakter</span><b id="rTyp">–</b></div>
+    <p class="hint">Poměr i = z₂/z₁ (poháněné/hnací). i &gt; 1 → otáčky klesají, moment roste (do pomala). Moment se násobí poměrem a účinností.</p>
+  </div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+let stupne=[{z1:20,z2:60}];
+function render(){
+  $('stupne').innerHTML=stupne.map((s,i)=>`
+    <div class="stupen">
+      <h3>Stupeň ${i+1}</h3>
+      ${stupne.length>1?`<button class="del" data-i="${i}">✕</button>`:''}
+      <div class="grid">
+        <div><label>Hnací kolo – zuby / ø</label><input type="number" data-i="${i}" data-p="z1" value="${s.z1}" min="1"></div>
+        <div><label>Poháněné kolo – zuby / ø</label><input type="number" data-i="${i}" data-p="z2" value="${s.z2}" min="1"></div>
+        <div><label>Poměr stupně</label><input value="${(s.z2/s.z1).toFixed(3)}" disabled></div>
+      </div>
+    </div>`).join('');
+  spocitej();
+}
+$('stupne').addEventListener('input',e=>{
+  const{i,p}=e.target.dataset;
+  if(i===undefined)return;
+  stupne[+i][p]=Math.max(1,+e.target.value||1);
+  // aktualizovat jen poměr stupně
+  const box=e.target.closest('.stupen');
+  box.querySelector('input[disabled]').value=(stupne[+i].z2/stupne[+i].z1).toFixed(3);
+  spocitej();
+});
+$('stupne').addEventListener('click',e=>{
+  if(e.target.dataset.i!==undefined&&e.target.classList.contains('del')){
+    stupne.splice(+e.target.dataset.i,1);render();
+  }
+});
+$('pridat').onclick=()=>{stupne.push({z1:20,z2:40});render();};
+function spocitej(){
+  const rpm=+$('rpm').value||0,m=+$('moment').value||0,eta=(+$('ucinnost').value||100)/100;
+  let pomer=1,etaCelk=1;
+  stupne.forEach(s=>{pomer*=s.z2/s.z1;etaCelk*=eta;});
+  $('celkovyPomer').textContent='i = '+pomer.toFixed(3)+' : 1';
+  $('rRpm').textContent=(rpm/pomer).toFixed(1)+' ot/min';
+  $('rMoment').textContent=m?(m*pomer*etaCelk).toFixed(2)+' N·m (η '+(etaCelk*100).toFixed(1)+' %)':'–';
+  $('rTyp').textContent=pomer>1.01?'🐢 Do pomala (redukce) – moment roste':pomer<0.99?'🐇 Do rychla (multiplikace) – moment klesá':'1:1';
+}
+['rpm','moment','ucinnost'].forEach(i=>$(i).addEventListener('input',spocitej));
+render();
+</script>
+</body>
+</html>

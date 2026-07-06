@@ -301,6 +301,23 @@
     }
     .kbd { background: #333; border: 1px solid #555; border-radius: 3px; padding: 1px 6px; font-size:.72rem; }
 
+    /* Lightning flash overlay */
+    #flash {
+      position: fixed; inset: 0; z-index: 999;
+      background: linear-gradient(to bottom, rgba(215,228,255,1), rgba(215,228,255,.2));
+      opacity: 0; pointer-events: none;
+    }
+
+    /* Per-card action button (⚡ Zahřmít hned) */
+    .action-btn {
+      margin-top: 4px;
+      background: #354a6e; border: 1px solid #6aa6fd;
+      color: #9ec5f7; border-radius: 6px;
+      padding: 6px 10px; font-size: .78rem; cursor: pointer;
+      transition: all .2s;
+    }
+    .action-btn:hover { background: #3f5a85; color: #fff; }
+
     /* Responsive */
     @media (max-width: 600px) {
       .sound-grid { grid-template-columns: 1fr; }
@@ -311,6 +328,7 @@
   </style>
 </head>
 <body>
+<div id="flash"></div>
 <div class="container">
 
   <!-- HEADER -->
@@ -335,6 +353,12 @@
         <label>Hlasitost</label>
         <input type="range" id="masterVol" min="0" max="100" value="80" style="width:130px">
         <span id="masterVolVal" style="color:#6aa6fd;font-size:.8rem;min-width:30px;">80%</span>
+      </div>
+
+      <div class="master-row" title="Konvoluční dozvuk — dodá zvukům prostor">
+        <label>Prostor</label>
+        <input type="range" id="spaceVol" min="0" max="100" value="22" style="width:100px">
+        <span id="spaceVolVal" style="color:#6aa6fd;font-size:.8rem;min-width:30px;">22%</span>
       </div>
 
       <div class="sleep-ctrl">
@@ -408,6 +432,8 @@ let _whiteBuf = null;
 let _brownBuf = null;
 const FADE = 0.18; // gain smoothing time constant (seconds)
 
+let wetGain = null;
+
 function initAudio() {
   if (audioCtx) return;
   audioCtx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 44100 });
@@ -416,10 +442,40 @@ function initAudio() {
   analyser = audioCtx.createAnalyser();
   analyser.fftSize = 2048;
   analyser.smoothingTimeConstant = 0.88;
-  masterGain.connect(analyser);
+  // Prostor: paralelní konvoluční dozvuk (syntetická impulzní odezva).
+  // masterGain → dry ─┬─→ bus → analyser → výstup
+  // masterGain → hall → wet ┘
+  const bus = audioCtx.createGain();
+  const dry = audioCtx.createGain();
+  const hall = audioCtx.createConvolver();
+  hall.buffer = makeIR(2.6);
+  wetGain = audioCtx.createGain();
+  wetGain.gain.value = (+document.getElementById('spaceVol').value/100)*1.1;
+  masterGain.connect(dry);  dry.connect(bus);
+  masterGain.connect(hall); hall.connect(wetGain); wetGain.connect(bus);
+  bus.connect(analyser);
   analyser.connect(audioCtx.destination);
   mediaStreamDest = audioCtx.createMediaStreamDestination();
-  masterGain.connect(mediaStreamDest);
+  bus.connect(mediaStreamDest);
+}
+
+// Syntetická impulzní odezva sálu: exponenciálně dohasínající šum
+// s pár ranými odrazy — levý a pravý kanál dekorelované
+function makeIR(dur=2.6) {
+  const sr=audioCtx.sampleRate, n=Math.ceil(dur*sr);
+  const ir=audioCtx.createBuffer(2,n,sr);
+  for(let ch=0;ch<2;ch++){
+    const d=ir.getChannelData(ch);
+    for(let i=0;i<n;i++){
+      const t=i/n;
+      d[i]=(Math.random()*2-1)*Math.pow(1-t,2.4)*Math.exp(-3.2*t);
+    }
+    for(let e=0;e<6;e++){
+      const p=Math.floor((0.008+Math.random()*0.05)*sr);
+      if(p<n) d[p]+=(Math.random()<0.5?1:-1)*(0.25+Math.random()*0.2);
+    }
+  }
+  return ir;
 }
 
 function getWhiteBuf() {
@@ -477,6 +533,141 @@ function fadeIn(g, target) {
 function fadeOut(g, cb) {
   g.gain.setTargetAtTime(0, audioCtx.currentTime, FADE);
   setTimeout(cb, 800);
+}
+
+// ═══════════════════════════════════════════════════════════════
+// HROM — celý úder se renderuje po vzorcích do bufferu.
+// Grafy uzlů (šum + filtry) zněly jako "fén"; tady máme plnou
+// kontrolu: roj mikroimpulzů podél větví kanálu blesku, trhavý
+// sestupný chirp, sub-basovou tlakovou vlnu, vícenásobné ozvěny
+// od mraků a terénu a dozvuk s filtrem zavírajícím se v čase.
+// ═══════════════════════════════════════════════════════════════
+
+const TAU = 6.28318530718;
+
+function renderThunder(dist /* 0 = nad hlavou … 1 = daleko */) {
+  const sr    = audioCtx.sampleRate;
+  const close = 1 - dist;
+  const dur   = 7 + Math.random()*3 + dist*5;          // 7–15 s
+  const n     = Math.ceil(dur*sr);
+  const buf   = audioCtx.createBuffer(2, n, sr);
+  const L = buf.getChannelData(0), R = buf.getChannelData(1);
+
+  /* ── řídicí obálky na 200 Hz (pak lineární interpolace) ── */
+  const cr = 200, M = Math.ceil(dur*cr)+2;
+  const body = new Float32Array(M), cut = new Float32Array(M);
+  // hlavní úder + 1–3 ozvěny (odrazy zvuku od mraků a terénu)
+  const peals = [{ t:0.02+dist*0.55, a:1, w:0.5+dist*1.4 }];
+  const nEcho = 1 + Math.floor(Math.random()*2.6);
+  let te = 1 + Math.random()*1.5;
+  for (let e=0; e<nEcho; e++) {
+    peals.push({ t:te, a:0.45*Math.pow(0.62,e)*(0.7+Math.random()*0.6), w:1.2+e*0.8+Math.random() });
+    te += 1.2 + Math.random()*2.2;
+  }
+  // nepravidelné pomalé "válení" dozvuku
+  const rf1=0.28+Math.random()*0.5, rp1=Math.random()*TAU;
+  const rf2=0.9 +Math.random()*0.9, rp2=Math.random()*TAU;
+  const f0 = 300 + close*900;   // jak moc se filtr otevře při úderu
+  for (let i=0; i<M; i++) {
+    const tc = i/cr;
+    let env=0, cf=55;
+    for (const p of peals) {
+      const dt = tc - p.t;
+      if (dt > 0) {
+        const x = p.a * (1-Math.exp(-dt/(0.02+p.w*0.06))) * Math.exp(-dt/(p.w*1.3));
+        env += x;
+        cf  += x * f0 * Math.exp(-dt/2.2);   // výšky dozní jako první
+      }
+    }
+    const roll = 0.62 + 0.28*Math.sin(TAU*rf1*tc+rp1) + 0.10*Math.sin(TAU*rf2*tc+rp2);
+    body[i] = env * Math.max(0.05, roll);
+    cut[i]  = 1 - Math.exp(-TAU*Math.min(sr*0.35, 45 + cf)/sr);  // rovnou koeficient filtru
+  }
+
+  /* ── tělo: dekorelovaný hnědý šum přes časově proměnný 12dB lowpass ── */
+  let bL=0,bR=0, lpL=0,lpR=0, lp2L=0,lp2R=0;
+  const crStep = cr/sr;
+  let ci = 0;
+  for (let i=0; i<n; i++) {
+    const i0 = ci|0, fr = ci-i0;
+    const k = (body[i0] + (body[i0+1]-body[i0])*fr) * 9;
+    const a =  cut[i0]  + (cut[i0+1]-cut[i0])*fr;
+    ci += crStep;
+    bL = (bL + 0.03*(Math.random()*2-1)) / 1.03;
+    bR = (bR + 0.03*(Math.random()*2-1)) / 1.03;
+    lpL += a*(bL*k - lpL);  lp2L += a*(lpL - lp2L);
+    lpR += a*(bR*k - lpR);  lp2R += a*(lpR - lp2R);
+    L[i] = lp2L;  R[i] = lp2R;
+  }
+
+  /* ── prásknutí — jen blízké údery ──
+     Čistě šumové (žádné sinusové sweepy — ty zněly jako laser):
+     2–5 překrývajících se výbuchů bílého šumu, každý s okamžitým
+     nástupem, trhaným nepravidelným rozpadem a filtrem, který se
+     z ~7 kHz rychle zavírá. Zní jako roztržení vzduchu, ne jako tón. */
+  if (close > 0.35) {
+    const cAmp = Math.pow(close, 1.6);
+    const nCr = 2 + Math.floor(Math.random()*3);   // blesk mívá víc zpětných výbojů
+    for (let c=0; c<nCr; c++) {
+      const t0  = Math.floor((c===0 ? 0.005 : Math.random()*0.35)*sr);
+      const dur = 0.06 + Math.random()*0.12;       // 60–180 ms jádro
+      const len = Math.min(n-t0, Math.floor(dur*3*sr));
+      const amp = cAmp * (c===0 ? 1 : 0.4+Math.random()*0.5) * 1.5;
+      const panL = 0.35+Math.random()*0.3;
+      let lp=0, lp2=0, slow=0, gate=1;
+      for (let j=0; j<len; j++) {
+        const tj = j/sr;
+        if ((j&31)===0) gate = 0.35+0.65*Math.random();  // trhaný rozpad po ~0,7 ms blocích
+        const w = (Math.random()*2-1) * Math.exp(-tj/dur) * gate * amp;
+        // lowpass zavírající se 7 kHz → 1,2 kHz (vzduch spolkne výšky okamžitě)
+        const fc = 1200 + 5800*Math.exp(-tj/(dur*0.7));
+        const a  = 1 - Math.exp(-TAU*fc/sr);
+        lp  += a*(w - lp);   lp2 += a*(lp - lp2);
+        slow += 0.02*(lp2 - slow);                 // odečtením pomalé složky ~ highpass
+        const v = (lp2 - slow)*1.6;
+        L[t0+j] += v*(1.3-panL);  R[t0+j] += v*(0.3+panL);
+      }
+    }
+  }
+
+  /* ── sub-basová tlaková vlna ── */
+  if (close > 0.25) {
+    const sAmp = Math.pow(close,1.3) * 1.1;
+    const sDur = 1.4 + close*1.3, sLen = Math.floor(sDur*sr);
+    const fS   = 46 + Math.random()*18;
+    const t0   = Math.floor((0.02+dist*0.5)*sr);
+    let ph = 0;
+    for (let j=0; j<sLen && t0+j<n; j++) {
+      const tj = j/sr, p = j/sLen;
+      const f  = 26 + (fS-26)*Math.exp(-tj/0.55);
+      ph += TAU*f/sr;
+      const env = (1-Math.exp(-tj/0.03)) * Math.pow(1-p,1.7);
+      const v = sAmp * env * Math.sin(ph);
+      L[t0+j] += v;  R[t0+j] += v*0.94;
+    }
+  }
+
+  /* ── měkká saturace (váha) + normalizace ── */
+  let peak = 0;
+  for (let i=0; i<n; i++) {
+    let x = Math.max(-3, Math.min(3, L[i]));  x = x*(27+x*x)/(27+9*x*x);  L[i] = x;
+    let y = Math.max(-3, Math.min(3, R[i]));  y = y*(27+y*y)/(27+9*y*y);  R[i] = y;
+    const ax = Math.abs(x), ay = Math.abs(y);
+    if (ax > peak) peak = ax;
+    if (ay > peak) peak = ay;
+  }
+  const gN = peak > 0 ? 0.88/peak : 1;
+  for (let i=0; i<n; i++) { L[i] *= gN;  R[i] *= gN; }
+  return buf;
+}
+
+// Vizuální záblesk — světlo dorazí okamžitě, hrom až po něm
+function lightningFlash(dist) {
+  const el = document.getElementById('flash');
+  if (!el) return;
+  const s = Math.max(0.06, 0.4*(1-dist*0.8));
+  const seq = [[0,s,'40ms'],[70,s*0.25,'50ms'],[130,s*0.9,'40ms'],[220,0,'600ms']];
+  seq.forEach(([t,o,tr])=>setTimeout(()=>{ el.style.transition='opacity '+tr; el.style.opacity=o; }, t));
 }
 
 // ═══════════════════════════════════════════════════════════════
@@ -616,16 +807,19 @@ const SOUNDS = [
   // ═══ STORM ═══
   {
     id:'thunder', cat:'storm', icon:'⚡', name:'Hrom',
-    volume:80, paramVal:40, nodes:null, active:false, _timer:null, _mg:null,
-    param:{ name:'Frekvence', min:0, max:100, unit:'%' },
+    volume:80, paramVal:40, param2Val:35, nodes:null, active:false, _timer:null, _mg:null, _pre:null, _preDist:0,
+    param:{ name:'Četnost', min:0, max:100, unit:'%' },
+    param2:{ name:'Vzdálenost', min:0, max:100, unit:'%' },
+    action:{ label:'⚡ Zahřmít hned' },
     start(mg) {
       this.active=true; this._mg=mg;
       // První hrom brzy po zapnutí, ať uživatel ví, že funguje
       this._timer = setTimeout(()=>{ if(this.active){this._burst(); this._scheduleNext();} }, 800+Math.random()*1500);
     },
-    stop() { this.active=false; if(this._timer){clearTimeout(this._timer);this._timer=null;} },
+    stop() { this.active=false; if(this._timer){clearTimeout(this._timer);this._timer=null;} this._pre=null; },
     setVol(v) { this.volume=v; },
     setPar(v) { this.paramVal=v; },
+    setPar2(v) { this.param2Val=v; this._pre=null; }, // předrenderovaný úder už neodpovídá nové vzdálenosti
     _scheduleNext() {
       if(!this.active) return;
       const density = this.paramVal/100;
@@ -635,117 +829,30 @@ const SOUNDS = [
       const delay = (minS + Math.random()*(maxS-minS)) * 1000;
       this._timer = setTimeout(()=>{ if(this.active){this._burst(); this._scheduleNext();} }, delay);
     },
-    _burst() {
+    _dist() {
+      // Slider udává těžiště bouřky, jednotlivé údery se kolem něj rozptylují
+      const bias = this.param2Val/100;
+      return Math.min(1, Math.max(0.02, bias + (Math.random()-0.5)*0.55));
+    },
+    _burst(manual) {
       // Při pauze (suspended) currentTime stojí — neplánovat, jinak by se
       // všechny údery nahromadily a po obnovení zazněly naráz
-      if (audioCtx.state !== 'running') return;
-      const now  = audioCtx.currentTime;
-      const vol  = this.volume / 100;
-      const dist = Math.random();          // 0 = přímo nad hlavou … 1 = daleko
-      const isClose = dist < 0.33;
-
-      // Sběrnice úderu: tanh saturace "slepí" vrstvy dohromady, dodá hromu
-      // váhu a zabrání tvrdému clippingu (hlavní zdroj dřívějšího chrastění)
-      const ws  = makeSoftClip(2.5);
-      const out = makeGain(vol * (isClose ? 0.9 : 0.6));
+      if (!audioCtx || audioCtx.state !== 'running') return;
+      let buf, dist;
+      if (this._pre && !manual) { buf=this._pre; dist=this._preDist; this._pre=null; }
+      else { dist=this._dist(); buf=renderThunder(dist); }
+      // Světlo dorazí okamžitě, zvuk se zpožděním podle vzdálenosti
+      const delay = manual ? 0.06 : dist*2.2;
+      lightningFlash(dist);
+      const src = audioCtx.createBufferSource(); src.buffer = buf;
+      const g   = makeGain((this.volume/100) * (1.0 - dist*0.45));
       const pan = audioCtx.createStereoPanner();
-      const panV = (Math.random() * 0.8 - 0.4) * (0.4 + dist);
-      pan.pan.setValueAtTime(panV, now);
-      ws.connect(out); out.connect(pan); pan.connect(this._mg);
-
-      // ── 1. CRACK — trhavé prásknutí blesku (jen blízký úder) ──────
-      // Blesk vzduch neroztrhne jednou ranou, ale po větvích kanálu —
-      // série rychlých nepravidelných impulzů s klesající frekvencí.
-      if (isClose) {
-        const dur = 0.25 + Math.random() * 0.2;
-        const src = makeNoiseSrc(); src.loop = false;
-        const hpf = makeHPF(2200);
-        hpf.frequency.setValueAtTime(2200 + Math.random() * 1800, now);
-        hpf.frequency.exponentialRampToValueAtTime(250, now + dur);
-        const g = makeGain(0);
-        const N = 48, env = new Float32Array(N);
-        for (let i = 1; i < N - 1; i++) {
-          env[i] = 2.4 * Math.pow(1 - i / (N - 1), 1.8) * (0.25 + Math.random() * 0.75);
-        }
-        env[1] = 2.4;   // okamžitý nástup (~6 ms)
-        g.gain.setValueCurveAtTime(env, now, dur);
-        src.connect(hpf); hpf.connect(g); g.connect(ws);
-        src.start(now, Math.random() * 3); src.stop(now + dur + 0.05);
-        src.onended = () => { try { g.disconnect(); } catch(e){} };
-      }
-
-      // ── 2. BOOM — hluboký úder ────────────────────────────────────
-      // U vzdálené bouřky vysoké frekvence pohltí vzduch a nástup se
-      // rozmaže — proto pomalejší attack a tmavší filtr.
-      const boomAt  = now + (isClose ? 0.03 : 0.08 + dist * 0.25);
-      const boomAtt = isClose ? 0.05 : 0.25 + dist * 0.45;
-      const boomDur = 2.0 + Math.random() * 1.6;
-      {
-        const f0  = isClose ? 700 : 450 - dist * 230;
-        const src = makeNoiseSrc(getBrownBuf());
-        const lpf = makeLPF(f0);
-        lpf.frequency.setValueAtTime(f0, boomAt);
-        lpf.frequency.exponentialRampToValueAtTime(75, boomAt + boomDur);
-        const g = makeGain(0);
-        g.gain.setValueAtTime(0.0001, boomAt);
-        g.gain.exponentialRampToValueAtTime(isClose ? 2.7 : 1.5, boomAt + boomAtt);
-        g.gain.exponentialRampToValueAtTime(0.0001, boomAt + boomDur);
-        src.connect(lpf); lpf.connect(g); g.connect(ws);
-        src.start(boomAt, Math.random() * 3); src.stop(boomAt + boomDur + 0.1);
-        src.onended = () => { try { g.disconnect(); } catch(e){} };
-      }
-
-      // ── 3. SUB — basový tlak pod blízkým úderem ───────────────────
-      // Klesající sinus 50→28 Hz dodá tělo, které samotný šum nemá.
-      if (isClose) {
-        const osc = audioCtx.createOscillator();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(50 + Math.random() * 16, boomAt);
-        osc.frequency.exponentialRampToValueAtTime(28, boomAt + 1.4);
-        const g = makeGain(0);
-        g.gain.setValueAtTime(0.0001, boomAt);
-        g.gain.exponentialRampToValueAtTime(1.5, boomAt + 0.06);
-        g.gain.exponentialRampToValueAtTime(0.0001, boomAt + 1.6);
-        osc.connect(g); g.connect(ws);
-        osc.start(boomAt); osc.stop(boomAt + 1.7);
-        osc.onended = () => { try { g.disconnect(); } catch(e){} };
-      }
-
-      // ── 4. RUMBLE — převalující se dozvuk ─────────────────────────
-      // Zvuk přichází odrazy z různých vzdáleností: nepravidelné pomalé
-      // vlny (0.3–1.6 Hz) na dohasínající obálce + filtr, který se
-      // postupně zavírá — vysoké frekvence dozní jako první.
-      const rumAt  = boomAt + boomAtt + 0.15;
-      const rumDur = 5 + Math.random() * 6 + dist * 5;
-      {
-        const src = makeNoiseSrc(getBrownBuf());
-        const lpf = makeLPF(isClose ? 600 : 380);
-        lpf.frequency.setValueAtTime(isClose ? 600 : 380, rumAt);
-        lpf.frequency.exponentialRampToValueAtTime(65, rumAt + rumDur);
-        const g = makeGain(0);
-
-        const N = 256, env = new Float32Array(N);
-        const f1 = 0.25 + Math.random() * 0.5, p1 = Math.random() * 6.283;
-        const f2 = 0.7  + Math.random() * 0.9, p2 = Math.random() * 6.283;
-        const peak = isClose ? 1.6 : 1.25;
-        for (let i = 1; i < N - 1; i++) {
-          const t01 = i / (N - 1), ts = t01 * rumDur;
-          const decay = Math.pow(1 - t01, 1.3);
-          const waves = 0.55 + 0.3  * Math.sin(6.283 * f1 * ts + p1)
-                             + 0.18 * Math.sin(6.283 * f2 * ts + p2);
-          env[i] = peak * decay * Math.max(0.04, waves);
-        }
-        g.gain.setValueCurveAtTime(env, rumAt, rumDur);
-
-        // pomalý pohyb ve stereu, jak se dozvuk valí oblohou
-        pan.pan.linearRampToValueAtTime(-panV * 0.7, rumAt + rumDur);
-
-        src.connect(lpf); lpf.connect(g); g.connect(ws);
-        src.start(rumAt, Math.random() * 3); src.stop(rumAt + rumDur + 0.1);
-        src.onended = () => {
-          try { g.disconnect(); ws.disconnect(); out.disconnect(); pan.disconnect(); } catch(e){}
-        };
-      }
+      pan.pan.value = (Math.random()*1.2-0.6) * (0.3+dist*0.7);
+      src.connect(g); g.connect(pan); pan.connect(this._mg);
+      src.start(audioCtx.currentTime + delay);
+      src.onended = ()=>{ try{ pan.disconnect(); }catch(e){} };
+      // Další úder předrenderuj s předstihem, ať nikdy neškubne UI
+      setTimeout(()=>{ if(this.active && !this._pre){ this._preDist=this._dist(); this._pre=renderThunder(this._preDist); } }, 1500);
     },
     _kill() { this.stop(); },
   },
@@ -1017,6 +1124,142 @@ const SOUNDS = [
   },
 
   {
+    id:'chimes', cat:'ambient', icon:'🎐', name:'Zvonkohra',
+    volume:55, paramVal:45, nodes:null, active:false, _timer:null, _mg:null, _gust:0.3,
+    param:{ name:'Vánek', min:0, max:100, unit:'%' },
+    start(mg) { this.active=true; this._mg=mg; this._loop(); },
+    stop() { this.active=false; if(this._timer){clearTimeout(this._timer);this._timer=null;} },
+    setVol(v) { this.volume=v; },
+    setPar(v) { this.paramVal=v; },
+    _loop() {
+      if(!this.active) return;
+      // síla vánku = pomalá náhodná procházka; trubice cinkají ve shlucích
+      this._gust=Math.min(1,Math.max(0.05,this._gust+(Math.random()-0.48)*0.25));
+      const wind=(0.2+this.paramVal/100*0.8)*this._gust;
+      if(audioCtx.state==='running' && Math.random()<wind*0.9){
+        const notes=1+Math.floor(Math.random()*Math.ceil(wind*4));
+        let t=0;
+        for(let i=0;i<notes;i++){ setTimeout(()=>this._strike(), t); t+=60+Math.random()*320; }
+      }
+      this._timer=setTimeout(()=>this._loop(), 350+Math.random()*900);
+    },
+    _strike() {
+      if(!this.active||audioCtx.state!=='running') return;
+      const now=audioCtx.currentTime;
+      // pentatonika; trubicový zvon = neharmonické parciály ~1 : 2.0 : 3.0
+      const scale=[523.3,587.3,659.3,784,880,1046.5];
+      const idx=Math.floor(Math.random()*scale.length);
+      const f=scale[idx]*(0.998+Math.random()*0.004);
+      const vol=(this.volume/100)*0.16*(0.5+Math.random()*0.5);
+      const pan=audioCtx.createStereoPanner();
+      pan.pan.value=(idx/(scale.length-1))*1.1-0.55;   // každá trubice má své místo
+      pan.connect(this._mg);
+      [[1,1,3.2+Math.random()*2],[2.004,0.42,1.5],[2.98,0.22,0.8],[4.2,0.1,0.4]].forEach(([r,a,dec])=>{
+        const o=audioCtx.createOscillator(); o.type='sine'; o.frequency.value=f*r;
+        const g=makeGain(0);
+        g.gain.setValueAtTime(0,now);
+        g.gain.linearRampToValueAtTime(vol*a,now+0.004);
+        g.gain.exponentialRampToValueAtTime(0.0001,now+dec);
+        o.connect(g); g.connect(pan);
+        o.start(now); o.stop(now+dec+0.05);
+      });
+      // ťuknutí úderníku
+      const click=makeNoiseSrc(); click.loop=false;
+      const cb=makeBPF(f*2.5,8), cg=makeGain(0);
+      cg.gain.setValueAtTime(vol*0.5,now);
+      cg.gain.exponentialRampToValueAtTime(0.0001,now+0.02);
+      click.connect(cb); cb.connect(cg); cg.connect(pan);
+      click.start(now,Math.random()*2); click.stop(now+0.03);
+      setTimeout(()=>{try{pan.disconnect()}catch(e){}},6500);
+    },
+    _kill() { this.stop(); },
+  },
+
+  {
+    id:'train', cat:'ambient', icon:'🚂', name:'Noční vlak',
+    volume:60, paramVal:50, nodes:null, active:false, _timer:null, _hornT:null, _mg:null,
+    param:{ name:'Rychlost', min:0, max:100, unit:'%' },
+    start(mg) {
+      this.active=true; this._mg=mg;
+      // dunění vagonu + tichý svist kolejí
+      const src=makeNoiseSrc(getBrownBuf()), lpf=makeLPF(150);
+      const lfo=makeLFO(0.07,'sine'), lfoG=makeGain(0.06);
+      const g=makeGain(0), fade=makeGain(0);
+      lfo.connect(lfoG); lfoG.connect(g.gain);
+      src.connect(lpf); lpf.connect(g); g.connect(fade); fade.connect(mg);
+      const hSrc=makeNoiseSrc(), hbp=makeBPF(3000,4), hg=makeGain(0);
+      hSrc.connect(hbp); hbp.connect(hg); hg.connect(fade);
+      src.start(); hSrc.start(); fadeIn(fade,1);
+      g.gain.value=this._vol(); hg.gain.value=this._vol()*0.06;
+      this.nodes={src,hSrc,fade,g,hg,lfo};
+      this._clackLoop(); this._hornLoop();
+    },
+    stop() {
+      this.active=false;
+      if(this._timer){clearTimeout(this._timer);this._timer=null;}
+      if(this._hornT){clearTimeout(this._hornT);this._hornT=null;}
+      if(this.nodes) fadeOut(this.nodes.fade,()=>this._kill());
+    },
+    setVol(v) { this.volume=v; if(this.nodes){this.nodes.g.gain.value=this._vol(); this.nodes.hg.gain.value=this._vol()*0.06;} },
+    setPar(v) { this.paramVal=v; },
+    _clackLoop() {
+      if(!this.active) return;
+      // klapot podvozků: dva rychlé páry — „ka-klak … ka-klak"
+      const T=1.9-this.paramVal/100*1.25;
+      if(audioCtx.state==='running'){
+        const now=audioCtx.currentTime;
+        [[0,1],[0.14,0.8],[T*0.42,0.9],[T*0.42+0.14,0.7]].forEach(([dt,a])=>this._clack(now+dt,a));
+      }
+      this._timer=setTimeout(()=>this._clackLoop(), T*1000);
+    },
+    _clack(t,a) {
+      const vol=(this.volume/100)*0.30*a*(0.85+Math.random()*0.3);
+      const src=makeNoiseSrc(); src.loop=false;
+      const bp=makeBPF(420+Math.random()*350,2.5), g=makeGain(0);
+      g.gain.setValueAtTime(vol,t);
+      g.gain.exponentialRampToValueAtTime(0.0001,t+0.05);
+      src.connect(bp); bp.connect(g); g.connect(this._mg);
+      src.start(t,Math.random()*3); src.stop(t+0.08);
+      src.onended=()=>{try{g.disconnect()}catch(e){}};
+      // tupý náraz pod tím
+      const s2=makeNoiseSrc(getBrownBuf()); s2.loop=false;
+      const lp=makeLPF(140), g2=makeGain(0);
+      g2.gain.setValueAtTime(vol*1.4,t);
+      g2.gain.exponentialRampToValueAtTime(0.0001,t+0.09);
+      s2.connect(lp); lp.connect(g2); g2.connect(this._mg);
+      s2.start(t,Math.random()*3); s2.stop(t+0.12);
+      s2.onended=()=>{try{g2.disconnect()}catch(e){}};
+    },
+    _hornLoop() {
+      if(!this.active) return;
+      this._hornT=setTimeout(()=>{
+        if(this.active&&audioCtx.state==='running'&&Math.random()<0.6) this._horn();
+        this._hornLoop();
+      }, (45+Math.random()*100)*1000);
+    },
+    _horn() {
+      // vzdálená houkačka — mollový akord, jen občas a potichu
+      const now=audioCtx.currentTime;
+      const vol=(this.volume/100)*0.05;
+      const pan=audioCtx.createStereoPanner(); pan.pan.value=Math.random()*1.2-0.6;
+      const lp=makeLPF(900); lp.connect(pan); pan.connect(this._mg);
+      [311,370,466].forEach(f=>{
+        const o=audioCtx.createOscillator(); o.type='sawtooth'; o.frequency.value=f*(0.995+Math.random()*0.01);
+        const g=makeGain(0);
+        g.gain.setValueAtTime(0,now);
+        g.gain.linearRampToValueAtTime(vol,now+0.35);
+        g.gain.setValueAtTime(vol,now+1.4);
+        g.gain.linearRampToValueAtTime(0,now+2.4);
+        o.connect(g); g.connect(lp);
+        o.start(now); o.stop(now+2.5);
+      });
+      setTimeout(()=>{try{pan.disconnect()}catch(e){}},3000);
+    },
+    _vol() { return (this.volume/100)*0.4; },
+    _kill() { if(!this.nodes)return; try{this.nodes.src.stop();this.nodes.hSrc.stop();this.nodes.lfo.stop()}catch(e){}; try{this.nodes.fade.disconnect()}catch(e){}; this.nodes=null; },
+  },
+
+  {
     id:'brownNoise', cat:'ambient', icon:'🟤', name:'Hnědý šum',
     volume:65, paramVal:null, nodes:null, param:null,
     start(mg) {
@@ -1060,6 +1303,8 @@ const PRESETS = [
   { name:'🔥 Teplá noc',    sounds:{ crickets:65, campfire:70, brownNoise:25 } },
   { name:'📚 Soustředění',  sounds:{ brownNoise:72, lightRain:28, whiteNoise:15 } },
   { name:'😴 Hluboký spánek', sounds:{ heavyRain:45, brownNoise:80, wind:20 } },
+  { name:'🎐 Zen zahrada',  sounds:{ chimes:60, river:45, birds:25, wind:20 } },
+  { name:'🚂 Nočním vlakem', sounds:{ train:70, medRain:35, brownNoise:18 } },
 ];
 
 let activePreset = -1;
@@ -1151,6 +1396,12 @@ function buildUI() {
             <input type="range" id="par-${sound.id}" min="${sound.param.min}" max="${sound.param.max}" value="${sound.paramVal??50}">
             <span class="ctrl-val" id="par-val-${sound.id}">${sound.paramVal??50}${sound.param.unit}</span>
           </div>` : ''}
+          ${sound.param2 ? `<div class="ctrl-row">
+            <span class="ctrl-lbl">${sound.param2.name}</span>
+            <input type="range" id="par2-${sound.id}" min="${sound.param2.min}" max="${sound.param2.max}" value="${sound.param2Val??50}">
+            <span class="ctrl-val" id="par2-val-${sound.id}">${sound.param2Val??50}${sound.param2.unit}</span>
+          </div>` : ''}
+          ${sound.action ? `<button class="action-btn" id="act-${sound.id}">${sound.action.label}</button>` : ''}
         </div>`;
       grid.appendChild(card);
     });
@@ -1199,6 +1450,27 @@ function buildUI() {
         saveMix();
       });
       updateSliderFill(parSl);
+    }
+
+    if(s.param2){
+      const par2Sl=document.getElementById('par2-'+s.id);
+      par2Sl.addEventListener('input',()=>{
+        const v=+par2Sl.value;
+        document.getElementById('par2-val-'+s.id).textContent=v+(s.param2.unit||'');
+        updateSliderFill(par2Sl);
+        s.setPar2(v);
+        saveMix();
+      });
+      updateSliderFill(par2Sl);
+    }
+
+    if(s.action){
+      document.getElementById('act-'+s.id).addEventListener('click',()=>{
+        initAudio();
+        if(audioCtx.state==='suspended') audioCtx.resume();
+        s._mg = s._mg || masterGain;
+        s._burst(true);
+      });
     }
   });
 
@@ -1295,6 +1567,16 @@ masterVolSl.addEventListener('input',function(){
 updateSliderFill(masterVolSl);
 let savedMasterVol=80;
 
+// Prostor (dozvuk)
+const spaceVolSl = document.getElementById('spaceVol');
+spaceVolSl.addEventListener('input',function(){
+  const v=+this.value;
+  document.getElementById('spaceVolVal').textContent=v+'%';
+  updateSliderFill(this);
+  if(wetGain) wetGain.gain.setTargetAtTime(v/100*1.1, audioCtx.currentTime, 0.1);
+});
+updateSliderFill(spaceVolSl);
+
 // ═══════════════════════════════════════════════════════════════
 // SLEEP TIMER
 // ═══════════════════════════════════════════════════════════════
@@ -1356,7 +1638,7 @@ document.addEventListener('keydown', e=>{
 function saveMix(){
   const mix={};
   SOUNDS.forEach(s=>{
-    mix[s.id]={ vol:s.volume, par:s.paramVal, on:document.getElementById('tog-'+s.id)?.checked };
+    mix[s.id]={ vol:s.volume, par:s.paramVal, par2:s.param2Val, on:document.getElementById('tog-'+s.id)?.checked };
   });
   try{ localStorage.setItem('relaxMix2', JSON.stringify(mix)); } catch(e){}
 }
@@ -1373,6 +1655,11 @@ function restoreMix(){
       const parSl=s.param?document.getElementById('par-'+s.id):null;
       if(volSl){ volSl.value=d.vol; document.getElementById('vol-val-'+s.id).textContent=d.vol+'%'; updateSliderFill(volSl); }
       if(parSl&&d.par!=null){ parSl.value=d.par; document.getElementById('par-val-'+s.id).textContent=d.par+(s.param.unit||''); updateSliderFill(parSl); }
+      if(s.param2&&d.par2!=null){
+        s.param2Val=d.par2;
+        const p2=document.getElementById('par2-'+s.id);
+        if(p2){ p2.value=d.par2; document.getElementById('par2-val-'+s.id).textContent=d.par2+(s.param2.unit||''); updateSliderFill(p2); }
+      }
       // Don't auto-start — requires user gesture
     });
   } catch(e){}

@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📷 EXIF prohlížeč</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1a1a1a;color:#e0e0e0;min-height:100vh;padding:20px}
+.container{max-width:900px;margin:0 auto}
+h1{font-size:1.6rem;margin-bottom:8px;font-weight:600;text-align:center}
+.pod{color:#888;text-align:center;font-size:.85rem;margin-bottom:18px}
+.card{background:#2a2a2a;border:1px solid #404040;border-radius:8px;padding:22px;margin-bottom:20px}
+h2{font-size:1.05rem;color:#6aa6fd;margin-bottom:14px}
+input[type=file]{color:#b0b0b0;margin-bottom:10px}
+.mrizka{display:grid;grid-template-columns:280px 1fr;gap:20px}
+@media(max-width:700px){.mrizka{grid-template-columns:1fr}}
+img{max-width:100%;border-radius:6px}
+table{width:100%;border-collapse:collapse;font-size:.88rem}
+td{padding:7px 8px;border-bottom:1px solid #333;vertical-align:top}
+td:first-child{color:#6aa6fd;width:44%}
+.btn{background:#6aa6fd;color:#fff;border:none;padding:10px 16px;border-radius:6px;cursor:pointer;font-weight:600;font-size:.88rem;margin-top:12px}
+.btn:hover{background:#5591e8}
+a.gps{color:#6aa6fd}
+.zadne{color:#888;font-style:italic}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>📷 EXIF prohlížeč</h1>
+  <p class="pod">Zobrazí metadata z fotky (JPEG) a umí je odstranit. Vše probíhá jen ve vašem prohlížeči – nic se nikam nenahrává.</p>
+  <div class="card">
+    <input type="file" id="soubor" accept="image/jpeg,image/jpg,image/png,image/webp">
+    <div class="mrizka" id="obsahBox" style="display:none">
+      <div>
+        <img id="nahled">
+        <button class="btn" id="stahnout">🧹 Stáhnout bez metadat</button>
+      </div>
+      <div>
+        <h2>Metadata</h2>
+        <table id="tabulka"></table>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+let puvodniNazev='foto';
+
+const TAGY={
+  0x010F:'Výrobce',0x0110:'Model',0x0112:'Orientace',0x0131:'Software',0x0132:'Datum změny',
+  0x829A:'Expoziční čas',0x829D:'Clona (F)',0x8827:'ISO',0x9003:'Datum pořízení',
+  0x920A:'Ohnisková vzdálenost',0xA405:'Ohnisko (ekv. 35 mm)',0x9209:'Blesk',
+  0xA002:'Šířka (EXIF)',0xA003:'Výška (EXIF)',0x8822:'Režim expozice',0x9204:'Korekce expozice',
+  0xA434:'Objektiv',0x0113:'—',
+};
+const GPS_TAGY={1:'GPSLatRef',2:'GPSLat',3:'GPSLonRef',4:'GPSLon',6:'GPSAlt',5:'GPSAltRef'};
+
+function ctiExif(buffer){
+  const v=new DataView(buffer);
+  if(v.getUint16(0)!==0xFFD8)return null; // není JPEG
+  let off=2;
+  while(off<v.byteLength-4){
+    if(v.getUint8(off)!==0xFF)break;
+    const marker=v.getUint8(off+1),len=v.getUint16(off+2);
+    if(marker===0xE1&&v.getUint32(off+4)===0x45786966){ // "Exif"
+      return parsujTiff(buffer,off+10);
+    }
+    if(marker===0xDA)break; // start of scan
+    off+=2+len;
+  }
+  return null;
+}
+function parsujTiff(buffer,start){
+  const v=new DataView(buffer);
+  const little=v.getUint16(start)===0x4949;
+  const u16=o=>v.getUint16(o,little),u32=o=>v.getUint32(o,little);
+  const ifd0=start+u32(start+4);
+  const vysledek={},gps={};
+  function ctiIfd(off,doTabulky,tagMapa){
+    if(off<=0||off>=v.byteLength-2)return{};
+    const n=u16(off),extra={};
+    for(let i=0;i<n;i++){
+      const e=off+2+i*12;
+      const tag=u16(e),typ=u16(e+2),cnt=u32(e+4);
+      let hodOff=e+8;
+      const velikosti={1:1,2:1,3:2,4:4,5:8,7:1,10:8};
+      const bajtu=(velikosti[typ]||1)*cnt;
+      if(bajtu>4)hodOff=start+u32(e+8);
+      let hodnota;
+      if(typ===2){ // ASCII
+        let s='';
+        for(let j=0;j<cnt-1;j++)s+=String.fromCharCode(v.getUint8(hodOff+j));
+        hodnota=s.trim();
+      }else if(typ===3){hodnota=cnt===1?u16(hodOff):Array.from({length:cnt},(_,j)=>u16(hodOff+j*2));}
+      else if(typ===4){hodnota=u32(hodOff);}
+      else if(typ===5||typ===10){ // rational
+        const arr=[];
+        for(let j=0;j<cnt;j++){
+          const a=typ===5?u32(hodOff+j*8):v.getInt32(hodOff+j*8,little);
+          const b=typ===5?u32(hodOff+j*8+4):v.getInt32(hodOff+j*8+4,little);
+          arr.push(b?a/b:0);
+        }
+        hodnota=cnt===1?arr[0]:arr;
+      }else continue;
+      if(tag===0x8769)extra.exifIfd=start+ (typeof hodnota==='number'?hodnota:0); // ExifIFD pointer
+      else if(tag===0x8825)extra.gpsIfd=start+(typeof hodnota==='number'?hodnota:0);
+      else if(tagMapa[tag])doTabulky[tagMapa[tag]]=hodnota;
+    }
+    return extra;
+  }
+  const ex1=ctiIfd(ifd0,vysledek,TAGY);
+  if(ex1.exifIfd)ctiIfd(ex1.exifIfd,vysledek,TAGY);
+  if(ex1.gpsIfd)ctiIfd(ex1.gpsIfd,gps,GPS_TAGY);
+  if(gps.GPSLat&&gps.GPSLon){
+    const dms=a=>Array.isArray(a)?a[0]+a[1]/60+a[2]/3600:a;
+    let lat=dms(gps.GPSLat)*(gps.GPSLatRef==='S'?-1:1);
+    let lon=dms(gps.GPSLon)*(gps.GPSLonRef==='W'?-1:1);
+    vysledek['GPS poloha']={lat:+lat.toFixed(6),lon:+lon.toFixed(6)};
+    if(gps.GPSAlt)vysledek['Nadm. výška']=Math.round(gps.GPSAlt)+' m';
+  }
+  return vysledek;
+}
+function fmt(k,h){
+  if(k==='GPS poloha')return `<a class="gps" target="_blank" href="https://www.openstreetmap.org/?mlat=${h.lat}&mlon=${h.lon}#map=15/${h.lat}/${h.lon}">${h.lat}, ${h.lon} 🗺️</a>`;
+  if(k==='Expoziční čas'&&h<1&&h>0)return '1/'+Math.round(1/h)+' s';
+  if(k==='Clona (F)')return 'f/'+(+h).toFixed(1);
+  if(k==='Ohnisková vzdálenost'||k==='Ohnisko (ekv. 35 mm)')return Math.round(h)+' mm';
+  if(k==='Orientace'){const o={1:'normální',3:'180°',6:'90° po směru',8:'90° proti směru'};return o[h]||h;}
+  if(Array.isArray(h))return h.join(', ');
+  return String(h).replace(/</g,'&lt;');
+}
+$('soubor').addEventListener('change',async e=>{
+  const f=e.target.files[0];
+  if(!f)return;
+  puvodniNazev=f.name.replace(/\.[^.]+$/,'');
+  $('nahled').src=URL.createObjectURL(f);
+  $('obsahBox').style.display='grid';
+  const zaklad=[["Soubor",f.name],["Velikost",(f.size/1024).toFixed(1)+' kB'],["Typ",f.type]];
+  let exif=null;
+  if(f.type==='image/jpeg'){
+    try{exif=ctiExif(await f.arrayBuffer());}catch(err){exif=null;}
+  }
+  let radky=zaklad.map(([k,v])=>`<tr><td>${k}</td><td>${String(v).replace(/</g,'&lt;')}</td></tr>`).join('');
+  if(exif&&Object.keys(exif).length)
+    radky+=Object.entries(exif).map(([k,v])=>`<tr><td>${k}</td><td>${fmt(k,v)}</td></tr>`).join('');
+  else
+    radky+=`<tr><td colspan="2" class="zadne">${f.type==='image/jpeg'?'Žádná EXIF metadata nenalezena.':'EXIF čtení podporováno jen u JPEG – ale vyčistit lze každý obrázek.'}</td></tr>`;
+  $('tabulka').innerHTML=radky;
+});
+$('stahnout').onclick=()=>{
+  const img=$('nahled');
+  if(!img.src)return;
+  const c=document.createElement('canvas');
+  c.width=img.naturalWidth;c.height=img.naturalHeight;
+  c.getContext('2d').drawImage(img,0,0);
+  c.toBlob(b=>{
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(b);
+    a.download=puvodniNazev+'_bez_exif.jpg';
+    a.click();
+  },'image/jpeg',0.95);
+};
+</script>
+</body>
+</html>

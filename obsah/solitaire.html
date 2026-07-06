@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🃏 Solitaire</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1f4e2e;color:#e0e0e0;min-height:100vh;padding:14px}
+.container{max-width:820px;margin:0 auto}
+h1{font-size:1.4rem;margin-bottom:10px;font-weight:600;text-align:center;color:#fff}
+.horni,.dolni{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin-bottom:14px}
+.slot{aspect-ratio:0.7;border:2px dashed rgba(255,255,255,.25);border-radius:8px;position:relative}
+.sloupec{aspect-ratio:auto;min-height:120px;position:relative}
+.karta{position:absolute;width:100%;aspect-ratio:0.7;background:#fff;border-radius:8px;border:1px solid #999;cursor:pointer;padding:4px 6px;font-weight:700;font-size:clamp(.8rem,2.4vw,1.15rem);line-height:1.1;box-shadow:0 1px 3px rgba(0,0,0,.4)}
+.karta.cervena{color:#c62828}.karta.cerna{color:#212121}
+.karta.rub{background:linear-gradient(135deg,#3949ab 25%,#5c6bc0 25% 50%,#3949ab 50% 75%,#5c6bc0 75%);color:transparent}
+.karta.vybrana{outline:3px solid #ffd54f;outline-offset:-2px}
+.karta .dole{position:absolute;bottom:4px;right:6px;transform:rotate(180deg)}
+.stat{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;color:#cfe8d6;font-size:.9rem}
+.btn{background:#2e7d32;color:#fff;border:1px solid #4caf50;padding:8px 14px;border-radius:6px;cursor:pointer;font-weight:600;font-size:.85rem}
+.vyhra{position:fixed;inset:0;background:rgba(0,0,0,.75);display:none;align-items:center;justify-content:center;flex-direction:column;gap:16px;z-index:10}
+.vyhra.zobraz{display:flex}
+.vyhra h2{font-size:2.2rem;color:#ffd54f}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>🃏 Solitaire (Klondike)</h1>
+  <div class="stat">
+    <span>Tahů: <b id="tahy">0</b></span>
+    <button class="btn" id="nova">↺ Nová hra</button>
+  </div>
+  <div class="horni">
+    <div class="slot" id="balicek" title="Klikni pro otočení karty"></div>
+    <div class="slot" id="odkladaci"></div>
+    <div class="slot"></div>
+    <div class="slot zaklad" data-z="0"></div>
+    <div class="slot zaklad" data-z="1"></div>
+    <div class="slot zaklad" data-z="2"></div>
+    <div class="slot zaklad" data-z="3"></div>
+  </div>
+  <div class="dolni" id="sloupce"></div>
+</div>
+<div class="vyhra" id="vyhra"><h2>🎉 Výhra!</h2><button class="btn" onclick="novaHra();document.getElementById('vyhra').classList.remove('zobraz')">Hrát znovu</button></div>
+<script>
+const $=id=>document.getElementById(id);
+const BARVY=['♠','♥','♦','♣'];
+const HODN=['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
+const jeCervena=b=>b===1||b===2;
+let balicek,odkladaci,zaklady,sloupce,vybrano,tahu;
+
+function novaHra(){
+  const karty=[];
+  for(let b=0;b<4;b++)for(let h=0;h<13;h++)karty.push({b,h,licem:false});
+  for(let i=karty.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[karty[i],karty[j]]=[karty[j],karty[i]];}
+  sloupce=[];
+  for(let s=0;s<7;s++){
+    sloupce.push(karty.splice(0,s+1));
+    sloupce[s][sloupce[s].length-1].licem=true;
+  }
+  balicek=karty;odkladaci=[];zaklady=[[],[],[],[]];
+  vybrano=null;tahu=0;
+  render();
+}
+function kartaHtml(k,vybr){
+  const text=HODN[k.h]+BARVY[k.b];
+  return `<div class="karta ${k.licem?(jeCervena(k.b)?'cervena':'cerna'):'rub'} ${vybr?'vybrana':''}">${k.licem?text+`<span class="dole">${text}</span>`:''}</div>`;
+}
+function render(){
+  $('tahy').textContent=tahu;
+  // balíček
+  $('balicek').innerHTML=balicek.length?kartaHtml({licem:false}):'<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.4);font-size:1.6rem">↺</div>';
+  // odkládací
+  const od=odkladaci[odkladaci.length-1];
+  $('odkladaci').innerHTML=od?kartaHtml(od,vybrano&&vybrano.typ==='odkladaci'):'';
+  // základy
+  document.querySelectorAll('.zaklad').forEach((el,i)=>{
+    const k=zaklady[i][zaklady[i].length-1];
+    el.innerHTML=k?kartaHtml(k):`<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.3);font-size:1.5rem">${BARVY[i]}</div>`;
+  });
+  // sloupce
+  const kontejner=$('sloupce');
+  kontejner.innerHTML='';
+  const krok=Math.min(26,Math.max(14,Math.floor(340/Math.max(...sloupce.map(s=>s.length),1))));
+  sloupce.forEach((sl,si)=>{
+    const div=document.createElement('div');
+    div.className='slot sloupec';
+    div.dataset.s=si;
+    div.style.minHeight=(120+sl.length*krok)+'px';
+    sl.forEach((k,ki)=>{
+      const w=document.createElement('div');
+      w.innerHTML=kartaHtml(k,vybrano&&vybrano.typ==='sloupec'&&vybrano.s===si&&ki>=vybrano.i);
+      const el=w.firstChild;
+      el.style.top=(ki*krok)+'px';
+      el.dataset.s=si;el.dataset.i=ki;
+      div.appendChild(el);
+    });
+    kontejner.appendChild(div);
+  });
+}
+function muzeNaZaklad(k,z){
+  return k.b===z&&k.h===zaklady[z].length;
+}
+function muzeNaSloupec(k,sl){
+  const cil=sl[sl.length-1];
+  if(!cil)return k.h===12; // král na prázdné
+  return cil.licem&&jeCervena(cil.b)!==jeCervena(k.b)&&cil.h===k.h+1;
+}
+function polozVybrane(cilTyp,cilIndex){
+  let karty;
+  if(vybrano.typ==='odkladaci')karty=[odkladaci[odkladaci.length-1]];
+  else karty=sloupce[vybrano.s].slice(vybrano.i);
+  if(cilTyp==='zaklad'){
+    if(karty.length!==1||!muzeNaZaklad(karty[0],cilIndex))return false;
+    zaklady[cilIndex].push(karty[0]);
+  }else{
+    if(!muzeNaSloupec(karty[0],sloupce[cilIndex]))return false;
+    sloupce[cilIndex].push(...karty);
+  }
+  // odebrat ze zdroje
+  if(vybrano.typ==='odkladaci')odkladaci.pop();
+  else{
+    sloupce[vybrano.s].length=vybrano.i;
+    const posledni=sloupce[vybrano.s][sloupce[vybrano.s].length-1];
+    if(posledni)posledni.licem=true;
+  }
+  tahu++;
+  return true;
+}
+function zkusAutoZaklad(k){
+  for(let z=0;z<4;z++)if(muzeNaZaklad(k,z))return z;
+  return -1;
+}
+document.addEventListener('click',e=>{
+  const karta=e.target.closest('.karta');
+  // balíček
+  if(e.target.closest('#balicek')){
+    if(balicek.length){const k=balicek.pop();k.licem=true;odkladaci.push(k);}
+    else{balicek=odkladaci.reverse().map(k=>({...k,licem:false}));odkladaci=[];}
+    tahu++;vybrano=null;render();return;
+  }
+  // klik na základ – položit vybranou kartu
+  const zakladEl=e.target.closest('.zaklad');
+  if(zakladEl&&vybrano){
+    if(polozVybrane('zaklad',+zakladEl.dataset.z)){vybrano=null;render();zkontrolujVyhru();}
+    return;
+  }
+  // odkládací balíček
+  if(e.target.closest('#odkladaci')){
+    const k=odkladaci[odkladaci.length-1];
+    if(!k)return;
+    if(vybrano&&vybrano.typ==='odkladaci'){
+      // dvojklik chování: zkusit základ
+      const z=zkusAutoZaklad(k);
+      if(z>=0){zaklady[z].push(odkladaci.pop());tahu++;vybrano=null;render();zkontrolujVyhru();return;}
+      vybrano=null;render();return;
+    }
+    vybrano={typ:'odkladaci'};render();return;
+  }
+  // sloupce
+  const sloupecEl=e.target.closest('.sloupec');
+  if(sloupecEl){
+    const si=+sloupecEl.dataset.s;
+    if(karta&&karta.dataset.i!==undefined){
+      const ki=+karta.dataset.i;
+      const k=sloupce[si][ki];
+      if(!k.licem){vybrano=null;render();return;}
+      if(vybrano){
+        // pokus o položení
+        if(!(vybrano.typ==='sloupec'&&vybrano.s===si)&&polozVybrane('sloupec',si)){
+          vybrano=null;render();return;
+        }
+        // klik na stejnou vybranou vrchní kartu → zkusit základ
+        if(vybrano.typ==='sloupec'&&vybrano.s===si&&vybrano.i===ki&&ki===sloupce[si].length-1){
+          const z=zkusAutoZaklad(k);
+          if(z>=0){
+            zaklady[z].push(sloupce[si].pop());
+            const posl=sloupce[si][sloupce[si].length-1];
+            if(posl)posl.licem=true;
+            tahu++;vybrano=null;render();zkontrolujVyhru();return;
+          }
+        }
+      }
+      vybrano={typ:'sloupec',s:si,i:ki};render();return;
+    }
+    // prázdný sloupec
+    if(vybrano){
+      if(polozVybrane('sloupec',si))vybrano=null;
+      render();return;
+    }
+  }
+  vybrano=null;render();
+});
+function zkontrolujVyhru(){
+  if(zaklady.every(z=>z.length===13))$('vyhra').classList.add('zobraz');
+}
+$('nova').onclick=novaHra;
+novaHra();
+</script>
+</body>
+</html>

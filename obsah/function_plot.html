@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📈 Kreslič grafů funkcí</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1a1a1a;color:#e0e0e0;min-height:100vh;padding:20px}
+.container{max-width:900px;margin:0 auto}
+h1{font-size:1.6rem;margin-bottom:18px;font-weight:600;text-align:center}
+.card{background:#2a2a2a;border:1px solid #404040;border-radius:8px;padding:22px;margin-bottom:20px}
+label{display:block;font-size:.82rem;color:#888;margin-bottom:5px}
+input{background:#404040;border:1px solid #555;border-radius:4px;color:#e0e0e0;padding:9px;font-family:monospace}
+.fce{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+.fce .barva{width:16px;height:16px;border-radius:4px;flex:0 0 auto}
+.fce input{flex:1}
+.fce .del{background:none;border:none;color:#c0392b;cursor:pointer;font-size:1rem}
+.rozsahy{display:flex;gap:12px;flex-wrap:wrap;margin:12px 0}
+.rozsahy input{width:90px}
+.btn{background:#6aa6fd;color:#fff;border:none;padding:9px 16px;border-radius:6px;cursor:pointer;font-weight:600;font-size:.85rem}
+canvas{width:100%;height:440px;background:#151515;border-radius:8px}
+.chyba{color:#e74c3c;font-size:.82rem;min-height:1.2em;margin-top:6px}
+.hint{color:#777;font-size:.8rem;margin-top:10px;line-height:1.5}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>📈 Kreslič grafů funkcí</h1>
+  <div class="card">
+    <label>Funkce y = f(x)</label>
+    <div id="funkce"></div>
+    <button class="btn" id="pridat">➕ Přidat funkci</button>
+    <div class="rozsahy">
+      <div><label>x od</label><input type="number" id="xmin" value="-10" step="any"></div>
+      <div><label>x do</label><input type="number" id="xmax" value="10" step="any"></div>
+      <div><label>y od (auto = prázdné)</label><input id="ymin" placeholder="auto"></div>
+      <div><label>y do</label><input id="ymax" placeholder="auto"></div>
+    </div>
+    <div class="chyba" id="chyba"></div>
+    <canvas id="graf"></canvas>
+    <p class="hint">Povolené: + − * / ^ ( ), čísla, x, pi, e, sin cos tan asin acos atan sqrt abs log ln exp floor round min max. Příklady: <code>sin(x)</code> · <code>x^2-3*x+1</code> · <code>exp(-x^2)</code> · <code>1/x</code></p>
+  </div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const BARVY=['#6aa6fd','#4caf50','#e67e22','#e74c3c','#ab47bc','#26c6da'];
+let vzorce=['sin(x)','x^2/10'];
+
+function render(){
+  $('funkce').innerHTML=vzorce.map((v,i)=>`
+    <div class="fce">
+      <div class="barva" style="background:${BARVY[i%BARVY.length]}"></div>
+      <input data-i="${i}" value="${v.replace(/"/g,'&quot;')}" spellcheck="false">
+      ${vzorce.length>1?`<button class="del" data-del="${i}">✕</button>`:''}
+    </div>`).join('');
+  kresli();
+}
+$('funkce').addEventListener('input',e=>{
+  if(e.target.dataset.i!==undefined){vzorce[+e.target.dataset.i]=e.target.value;kresli();}
+});
+$('funkce').addEventListener('click',e=>{
+  if(e.target.dataset.del!==undefined){vzorce.splice(+e.target.dataset.del,1);render();}
+});
+$('pridat').onclick=()=>{if(vzorce.length<6){vzorce.push('x');render();}};
+
+function prelozVzorec(v){
+  // bezpečnostní filtr znaků
+  if(!/^[0-9x+\-*/^().,\s a-z]*$/i.test(v))return null;
+  let s=v.toLowerCase()
+    .replace(/\^/g,'**')
+    .replace(/\bpi\b/g,'Math.PI')
+    .replace(/\bln\b/g,'Math.log')
+    .replace(/\blog\b/g,'Math.log10')
+    .replace(/\b(sin|cos|tan|asin|acos|atan|sqrt|abs|exp|floor|round|min|max|cbrt|sinh|cosh|tanh)\b/g,'Math.$1')
+    .replace(/\be\b/g,'Math.E');
+  // zakázat cokoli jiného než Math., x, čísla, operátory
+  const test=s.replace(/Math\.[a-z10]+/g,'').replace(/x/g,'');
+  if(/[a-wyz_$]/i.test(test))return null;
+  try{
+    const f=new Function('x','return '+s);
+    f(1); // zkouška
+    return f;
+  }catch(e){return null;}
+}
+function kresli(){
+  const c=$('graf'),ctx=c.getContext('2d');
+  c.width=c.clientWidth;c.height=c.clientHeight;
+  const W=c.width,H=c.height;
+  ctx.fillStyle='#151515';ctx.fillRect(0,0,W,H);
+  const xmin=+$('xmin').value||-10,xmax=+$('xmax').value||10;
+  if(xmax<=xmin)return;
+  // vzorkování pro auto-y
+  const fns=[];
+  let chyby=[];
+  vzorce.forEach((v,i)=>{
+    if(!v.trim())return;
+    const f=prelozVzorec(v);
+    if(f)fns.push({f,barva:BARVY[i%BARVY.length]});
+    else chyby.push('„'+v+'"');
+  });
+  $('chyba').textContent=chyby.length?'Nelze vyhodnotit: '+chyby.join(', '):'';
+  let ymin=parseFloat($('ymin').value),ymax=parseFloat($('ymax').value);
+  const autoY=isNaN(ymin)||isNaN(ymax);
+  if(autoY){
+    let lo=Infinity,hi=-Infinity;
+    fns.forEach(({f})=>{
+      for(let i=0;i<=300;i++){
+        const y=f(xmin+(xmax-xmin)*i/300);
+        if(isFinite(y)){lo=Math.min(lo,y);hi=Math.max(hi,y);}
+      }
+    });
+    if(!isFinite(lo)){lo=-10;hi=10;}
+    const pad=(hi-lo)*0.1||1;
+    // omezit extrémy (asymptoty)
+    const rozsah=hi-lo;
+    if(rozsah>1e4){lo=-20;hi=20;}
+    ymin=lo-pad;ymax=hi+pad;
+  }
+  const px=x=>(x-xmin)/(xmax-xmin)*W;
+  const py=y=>H-(y-ymin)/(ymax-ymin)*H;
+  // mřížka
+  const krok=r=>{const s=Math.pow(10,Math.floor(Math.log10(r/6)));const k=r/6/s;return (k>5?10:k>2?5:k>1?2:1)*s;};
+  const kx=krok(xmax-xmin),ky=krok(ymax-ymin);
+  ctx.strokeStyle='#252525';ctx.fillStyle='#666';ctx.font='11px sans-serif';ctx.lineWidth=1;
+  for(let x=Math.ceil(xmin/kx)*kx;x<=xmax;x+=kx){
+    ctx.beginPath();ctx.moveTo(px(x),0);ctx.lineTo(px(x),H);ctx.stroke();
+    ctx.fillText(+x.toFixed(6),px(x)+3,H-5);
+  }
+  for(let y=Math.ceil(ymin/ky)*ky;y<=ymax;y+=ky){
+    ctx.beginPath();ctx.moveTo(0,py(y));ctx.lineTo(W,py(y));ctx.stroke();
+    ctx.fillText(+y.toFixed(6),4,py(y)-3);
+  }
+  // osy
+  ctx.strokeStyle='#555';ctx.lineWidth=1.5;
+  if(ymin<0&&ymax>0){ctx.beginPath();ctx.moveTo(0,py(0));ctx.lineTo(W,py(0));ctx.stroke();}
+  if(xmin<0&&xmax>0){ctx.beginPath();ctx.moveTo(px(0),0);ctx.lineTo(px(0),H);ctx.stroke();}
+  // funkce
+  fns.forEach(({f,barva})=>{
+    ctx.strokeStyle=barva;ctx.lineWidth=2;ctx.beginPath();
+    let kreslim=false;
+    for(let i=0;i<=W;i++){
+      const x=xmin+(xmax-xmin)*i/W;
+      let y;
+      try{y=f(x);}catch(e){y=NaN;}
+      if(isFinite(y)&&y>ymin-(ymax-ymin)&&y<ymax+(ymax-ymin)){
+        const Y=py(y);
+        kreslim?ctx.lineTo(i,Y):ctx.moveTo(i,Y);
+        kreslim=true;
+      }else kreslim=false;
+    }
+    ctx.stroke();
+  });
+}
+['xmin','xmax','ymin','ymax'].forEach(i=>$(i).addEventListener('input',kresli));
+window.addEventListener('resize',kresli);
+render();
+</script>
+</body>
+</html>

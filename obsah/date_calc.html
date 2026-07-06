@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📅 Kalkulačka datumů</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1a1a1a;color:#e0e0e0;min-height:100vh;padding:20px}
+.container{max-width:780px;margin:0 auto}
+h1{font-size:1.6rem;margin-bottom:18px;font-weight:600;text-align:center}
+.tabs{display:flex;margin-bottom:18px;border-bottom:1px solid #404040;flex-wrap:wrap}
+.tab{padding:11px 16px;background:#2a2a2a;border:1px solid #404040;border-bottom:none;cursor:pointer;color:#bbb;border-radius:8px 8px 0 0;font-size:.88rem}
+.tab.active{background:#6aa6fd;color:#fff;border-color:#6aa6fd}
+.pane{display:none}.pane.active{display:block}
+.card{background:#2a2a2a;border:1px solid #404040;border-radius:8px;padding:22px;margin-bottom:20px}
+h2{font-size:1.05rem;color:#6aa6fd;margin-bottom:16px}
+label{display:block;font-size:.82rem;color:#888;margin-bottom:5px}
+input,select{width:100%;background:#404040;border:1px solid #555;border-radius:4px;color:#e0e0e0;padding:10px;margin-bottom:12px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:520px){.grid{grid-template-columns:1fr}}
+.big{font-size:1.7rem;font-weight:700;color:#6aa6fd;text-align:center;margin:10px 0}
+.res-row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #333}
+.res-row:last-child{border:none}.res-row b{color:#4caf50}
+table{width:100%;border-collapse:collapse;font-size:.9rem}
+td,th{padding:8px;border-bottom:1px solid #333;text-align:left}
+th{color:#6aa6fd;font-size:.8rem;text-transform:uppercase}
+.vikend{color:#e67e22}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>📅 Kalkulačka datumů</h1>
+  <div class="tabs">
+    <div class="tab active" data-pane="rozdil">↔️ Rozdíl dat</div>
+    <div class="tab" data-pane="pridat">➕ Přičíst dny</div>
+    <div class="tab" data-pane="svatky">🇨🇿 Svátky ČR</div>
+  </div>
+
+  <div class="pane active" id="rozdil">
+    <div class="card">
+      <h2>Rozdíl mezi dvěma daty</h2>
+      <div class="grid">
+        <div><label>Od</label><input type="date" id="od"></div>
+        <div><label>Do</label><input type="date" id="do"></div>
+      </div>
+      <div class="big" id="rozdilVysledek">–</div>
+      <div class="res-row"><span>Kalendářních dní</span><b id="rDny">–</b></div>
+      <div class="res-row"><span>Pracovních dní (bez so, ne a svátků ČR)</span><b id="rPrac">–</b></div>
+      <div class="res-row"><span>Víkendových dní</span><b id="rVik">–</b></div>
+      <div class="res-row"><span>Svátků připadajících na všední den</span><b id="rSvatky">–</b></div>
+      <div class="res-row"><span>Týdnů</span><b id="rTydny">–</b></div>
+    </div>
+  </div>
+
+  <div class="pane" id="pridat">
+    <div class="card">
+      <h2>Přičíst / odečíst dny</h2>
+      <div class="grid">
+        <div><label>Výchozí datum</label><input type="date" id="zaklad"></div>
+        <div><label>Počet dní (záporné = zpět)</label><input type="number" id="dnu" value="30"></div>
+      </div>
+      <label><input type="checkbox" id="jenPracovni" style="width:auto;margin-right:8px">Počítat jen pracovní dny (přeskočit víkendy a svátky)</label>
+      <div class="big" id="pridatVysledek">–</div>
+    </div>
+  </div>
+
+  <div class="pane" id="svatky">
+    <div class="card">
+      <h2>Státní svátky ČR</h2>
+      <label>Rok</label><input type="number" id="rok" min="1990" max="2100" style="max-width:140px">
+      <table><thead><tr><th>Datum</th><th>Den</th><th>Svátek</th></tr></thead><tbody id="svatkyTelo"></tbody></table>
+    </div>
+  </div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.pane').forEach(x=>x.classList.remove('active'));
+  t.classList.add('active');$(t.dataset.pane).classList.add('active');
+});
+// Velikonoce – Gaussův algoritmus (gregoriánský kalendář)
+function velikonoce(rok){
+  const a=rok%19,b=Math.floor(rok/100),c=rok%100,d=Math.floor(b/4),e=b%4,
+    f=Math.floor((b+8)/25),g=Math.floor((b-f+1)/3),h=(19*a+b-d-g+15)%30,
+    i=Math.floor(c/4),k=c%4,l=(32+2*e+2*i-h-k)%7,m=Math.floor((a+11*h+22*l)/451),
+    mesic=Math.floor((h+l-7*m+114)/31),den=((h+l-7*m+114)%31)+1;
+  return new Date(rok,mesic-1,den); // neděle velikonoční
+}
+function svatkyRoku(rok){
+  const ned=velikonoce(rok);
+  const patek=new Date(ned);patek.setDate(ned.getDate()-2);
+  const pondeli=new Date(ned);pondeli.setDate(ned.getDate()+1);
+  return [
+    [new Date(rok,0,1),'Nový rok / Den obnovy samostatného českého státu'],
+    [patek,'Velký pátek'],
+    [pondeli,'Velikonoční pondělí'],
+    [new Date(rok,4,1),'Svátek práce'],
+    [new Date(rok,4,8),'Den vítězství'],
+    [new Date(rok,6,5),'Den slovanských věrozvěstů Cyrila a Metoděje'],
+    [new Date(rok,6,6),'Den upálení mistra Jana Husa'],
+    [new Date(rok,8,28),'Den české státnosti'],
+    [new Date(rok,9,28),'Den vzniku samostatného československého státu'],
+    [new Date(rok,10,17),'Den boje za svobodu a demokracii'],
+    [new Date(rok,11,24),'Štědrý den'],
+    [new Date(rok,11,25),'1. svátek vánoční'],
+    [new Date(rok,11,26),'2. svátek vánoční'],
+  ];
+}
+const klic=d=>d.toISOString().slice(0,10);
+function svatkySet(r1,r2){
+  const s=new Set();
+  for(let r=r1;r<=r2;r++)svatkyRoku(r).forEach(([d])=>s.add(klic(d)));
+  return s;
+}
+const DNY=['ne','po','út','st','čt','pá','so'];
+function jeVikend(d){const x=d.getDay();return x===0||x===6;}
+
+function spocitejRozdil(){
+  const a=$('od').valueAsDate,b=$('do').valueAsDate;
+  if(!a||!b){$('rozdilVysledek').textContent='–';return;}
+  const ms=b-a,dny=Math.round(ms/86400000);
+  $('rDny').textContent=dny;
+  $('rTydny').textContent=(dny/7).toFixed(1);
+  const [od,doD]=dny>=0?[a,b]:[b,a];
+  const sv=svatkySet(od.getFullYear(),doD.getFullYear());
+  let prac=0,vik=0,svat=0;
+  const d=new Date(od);
+  while(d<doD){
+    if(jeVikend(d))vik++;
+    else if(sv.has(klic(d)))svat++;
+    else prac++;
+    d.setDate(d.getDate()+1);
+  }
+  $('rPrac').textContent=prac;$('rVik').textContent=vik;$('rSvatky').textContent=svat;
+  const roky=Math.floor(Math.abs(dny)/365.25);
+  $('rozdilVysledek').textContent=`${dny} dní`+(roky>=1?` (≈ ${roky} ${roky===1?'rok':roky<5?'roky':'let'})`:'');
+}
+function spocitejPridat(){
+  const z=$('zaklad').valueAsDate;let n=+$('dnu').value||0;
+  if(!z){$('pridatVysledek').textContent='–';return;}
+  const d=new Date(z);
+  if($('jenPracovni').checked){
+    const smer=n<0?-1:1;let zbyva=Math.abs(n);
+    const sv=svatkySet(z.getFullYear()-1,z.getFullYear()+Math.ceil(Math.abs(n)/200)+1);
+    while(zbyva>0){
+      d.setDate(d.getDate()+smer);
+      if(!jeVikend(d)&&!sv.has(klic(d)))zbyva--;
+    }
+  }else d.setDate(d.getDate()+n);
+  $('pridatVysledek').textContent=DNY[d.getDay()]+' '+d.toLocaleDateString('cs-CZ');
+}
+function vypisSvatky(){
+  const r=+$('rok').value||new Date().getFullYear();
+  $('svatkyTelo').innerHTML=svatkyRoku(r).map(([d,n])=>
+    `<tr><td>${d.toLocaleDateString('cs-CZ')}</td><td class="${jeVikend(d)?'vikend':''}">${DNY[d.getDay()]}</td><td>${n}</td></tr>`).join('');
+}
+const dnes=new Date();
+$('od').valueAsDate=dnes;$('zaklad').valueAsDate=dnes;$('rok').value=dnes.getFullYear();
+['od','do'].forEach(i=>$(i).addEventListener('input',spocitejRozdil));
+['zaklad','dnu','jenPracovni'].forEach(i=>$(i).addEventListener('input',spocitejPridat));
+$('rok').addEventListener('input',vypisSvatky);
+spocitejRozdil();spocitejPridat();vypisSvatky();
+</script>
+</body>
+</html>

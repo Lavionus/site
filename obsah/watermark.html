@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>💧 Vodoznak</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1a1a1a;color:#e0e0e0;min-height:100vh;padding:20px}
+.container{max-width:1000px;margin:0 auto;display:grid;grid-template-columns:300px 1fr;gap:20px}
+@media(max-width:800px){.container{grid-template-columns:1fr}}
+h1{font-size:1.6rem;margin-bottom:18px;font-weight:600;text-align:center;grid-column:1/-1}
+.card{background:#2a2a2a;border:1px solid #404040;border-radius:8px;padding:20px;align-self:start}
+label{display:block;font-size:.82rem;color:#888;margin-bottom:5px}
+input,select{width:100%;background:#404040;border:1px solid #555;border-radius:4px;color:#e0e0e0;padding:9px;margin-bottom:12px}
+input[type=file]{background:none;border:none;padding:0;color:#b0b0b0}
+input[type=range]{padding:0}
+input[type=color]{height:42px;padding:2px}
+.btn{background:#6aa6fd;color:#fff;border:none;padding:10px 16px;border-radius:6px;cursor:pointer;font-weight:600;font-size:.9rem;width:100%}
+.btn:hover{background:#5591e8}
+canvas{max-width:100%;border-radius:6px;background:#111}
+.nahledbox{text-align:center}
+.zprava{color:#888;padding:40px 10px;text-align:center}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>💧 Vodoznak do obrázku</h1>
+  <div class="card">
+    <label>Obrázek</label><input type="file" id="soubor" accept="image/*">
+    <label>Text vodoznaku</label><input id="text" value="© Moje jméno 2026">
+    <label>Umístění</label>
+    <select id="pozice">
+      <option value="dlazba">Dlaždice přes celý obrázek</option>
+      <option value="pd" selected>Pravý dolní roh</option>
+      <option value="ld">Levý dolní roh</option>
+      <option value="ph">Pravý horní roh</option>
+      <option value="lh">Levý horní roh</option>
+      <option value="stred">Střed</option>
+    </select>
+    <label>Velikost písma: <span id="velT">5</span> % šířky</label>
+    <input type="range" id="vel" min="2" max="15" value="5">
+    <label>Průhlednost: <span id="opaT">40</span> %</label>
+    <input type="range" id="opa" min="5" max="100" value="40">
+    <label>Sklon (jen dlaždice): <span id="uhelT">-30</span>°</label>
+    <input type="range" id="uhel" min="-60" max="60" value="-30">
+    <label>Barva</label><input type="color" id="barva" value="#ffffff">
+    <label>Formát ke stažení</label>
+    <select id="format"><option value="image/jpeg">JPG</option><option value="image/png">PNG</option></select>
+    <button class="btn" id="stahnout">💾 Stáhnout</button>
+  </div>
+  <div class="card nahledbox">
+    <div class="zprava" id="zprava">Vyberte obrázek…</div>
+    <canvas id="c" style="display:none"></canvas>
+  </div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const c=$('c'),ctx=c.getContext('2d');
+let img=null,nazev='obrazek';
+
+function kresli(){
+  if(!img)return;
+  c.width=img.width;c.height=img.height;
+  ctx.drawImage(img,0,0);
+  const text=$('text').value;
+  if(!text)return;
+  const velikost=img.width*(+$('vel').value)/100;
+  ctx.font=`bold ${velikost}px sans-serif`;
+  ctx.fillStyle=$('barva').value;
+  ctx.globalAlpha=(+$('opa').value)/100;
+  ctx.shadowColor='rgba(0,0,0,.4)';ctx.shadowBlur=velikost/10;
+  const pozice=$('pozice').value;
+  const okraj=velikost*0.8;
+  const w=ctx.measureText(text).width;
+  if(pozice==='dlazba'){
+    ctx.save();
+    ctx.translate(c.width/2,c.height/2);
+    ctx.rotate((+$('uhel').value)*Math.PI/180);
+    ctx.textAlign='center';ctx.textBaseline='middle';
+    const krokX=w+velikost*3,krokY=velikost*4;
+    const R=Math.hypot(c.width,c.height)/2+krokX;
+    for(let y=-R;y<R;y+=krokY)
+      for(let x=-R;x<R;x+=krokX)
+        ctx.fillText(text,x+(Math.round(y/krokY)%2)*krokX/2,y);
+    ctx.restore();
+  }else{
+    ctx.textBaseline='alphabetic';
+    let x,y;
+    if(pozice==='pd'){x=c.width-w-okraj;y=c.height-okraj;}
+    else if(pozice==='ld'){x=okraj;y=c.height-okraj;}
+    else if(pozice==='ph'){x=c.width-w-okraj;y=okraj+velikost;}
+    else if(pozice==='lh'){x=okraj;y=okraj+velikost;}
+    else{x=(c.width-w)/2;y=(c.height+velikost*0.7)/2;}
+    ctx.fillText(text,x,y);
+  }
+  ctx.globalAlpha=1;ctx.shadowBlur=0;
+}
+$('soubor').addEventListener('change',e=>{
+  const f=e.target.files[0];
+  if(!f)return;
+  nazev=f.name.replace(/\.[^.]+$/,'');
+  const i=new Image();
+  i.onload=()=>{img=i;$('zprava').style.display='none';c.style.display='inline';kresli();};
+  i.src=URL.createObjectURL(f);
+});
+['text','pozice','vel','opa','uhel','barva'].forEach(id=>$(id).addEventListener('input',()=>{
+  $('velT').textContent=$('vel').value;
+  $('opaT').textContent=$('opa').value;
+  $('uhelT').textContent=$('uhel').value;
+  kresli();
+}));
+$('stahnout').onclick=()=>{
+  if(!img)return;
+  const typ=$('format').value;
+  c.toBlob(b=>{
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(b);
+    a.download=nazev+'_vodoznak.'+(typ==='image/png'?'png':'jpg');
+    a.click();
+  },typ,0.92);
+};
+</script>
+</body>
+</html>

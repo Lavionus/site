@@ -2,7 +2,7 @@
 
 > Dokument shrnuje doporučení pro rozcestník `index.html`.
 > Vznikl jako podklad – stav realizace je vyznačen níže.
-> Datum vzniku: 2026-06-17 · Aktualizováno: 2026-06-17
+> Datum vzniku: 2026-06-17 · Aktualizováno: 2026-07-06 (dokončeno kolo 4)
 
 ---
 
@@ -197,3 +197,72 @@ Dva `.md` průvodci zatím bez odkazu (ponecháno):
 - [x] **Lights Out** → `obsah/lights_out.html`
 - [x] **Hanojské věže** → `obsah/hanoi.html`
 - [x] **Breakout / Arkanoid** → `obsah/breakout.html`
+
+---
+
+## 6. 💡 Další návrhy na nové stránky (kolo 4) — ✅ HOTOVO (vše vytvořeno a napojeno)
+
+### 📝 Psaní & text
+- [x] **Částka slovy** — převod čísla na český slovní zápis (hodí se k fakturám) → `obsah/amount_words.html`
+- [x] **Generátor jmen** — náhodná jména osob/postav/projektů → `obsah/name_gen.html`
+
+### ✅ Organizace & čas
+- [x] **Kalkulačka datumů** — dny mezi daty, pracovní dny, státní svátky ČR → `obsah/date_calc.html`
+- [x] **Týdenní jídelníček** — plánovač jídel s generováním nákupního seznamu → `obsah/meal_planner.html`
+- [x] **Rozhodovací matice** — vážené hodnocení variant podle kritérií → `obsah/decision_matrix.html`
+- [x] **Vícenásobné stopky & časovače** — několik nezávislých časovačů najednou → `obsah/timers.html`
+
+### 🩺 Zdraví & kondice
+- [x] **Pitný režim** — denní tracker vypité vody s cílem → `obsah/water_tracker.html`
+- [x] **Reakční test** — měření reakční doby → `obsah/reaction_test.html`
+- [x] **Test barvocitu** — orientační Ishihara tabulky → `obsah/color_vision.html`
+
+### 🗺️ Mapy & cesty
+- [x] **Náklady na cestu** — palivo, opotřebení, rozpočítání mezi spolujezdce → `obsah/trip_cost.html`
+
+### 🎨 Grafika & generátory
+- [x] **Flowchart / diagramy** — jednoduchý editor vývojových diagramů (SVG export) → `obsah/flowchart.html`
+- [x] **Generátor diplomů** — certifikát/diplom k tisku podle šablony → `obsah/certificate_gen.html`
+- [x] **Náhled a párování fontů** — ukázky systémových fontů vedle sebe → `obsah/font_preview.html`
+- [x] **Simulace barvosleposti** — náhled barev/obrázku očima barvoslepého → `obsah/colorblind_sim.html`
+
+### 🖼️ Obrázky & foto
+- [x] **EXIF prohlížeč** — zobrazení a odstranění metadat z fotky → `obsah/exif_viewer.html`
+- [x] **Vodoznak** — text/logo do obrázku, dávkově → `obsah/watermark.html`
+- [x] **Ořez obrázku** — crop s poměry stran (4:3, 16:9, čtverec…) → `obsah/image_crop.html`
+
+### 🎬 Audio & video
+- [x] **Hlasový záznamník** — nahrávání z mikrofonu, export WAV/WebM → `obsah/voice_recorder.html`
+- [x] **Ladička** — chromatická ladička přes mikrofon → `obsah/tuner.html`
+- [x] **Metronom** — tempo, takty, akcenty → `obsah/metronome.html`
+- [x] **Piano** — hratelná klaviatura s klávesnicí → `obsah/piano.html`
+
+### 📐 Strojní & 3D
+- [x] **Tolerance a uložení ISO** — H7/g6 apod., mezní úchylky → `obsah/iso_tolerance.html`
+- [x] **Převodník tvrdosti** — HRC ↔ HB ↔ HV ↔ Rm → `obsah/hardness_conv.html`
+- [x] **Převodové poměry** — řemeny/řetězy/ozubení, otáčky a momenty → `obsah/gear_ratio.html`
+
+### 🧮 Výpočty & převody
+- [x] **Statistika** — průměr, medián, rozptyl, směrodatná odchylka ze seznamu čísel → `obsah/statistics.html`
+- [x] **Kreslič grafů funkcí** — vykreslení y = f(x) → `obsah/function_plot.html`
+- [x] **Řešič rovnic** — lineární a kvadratické rovnice s postupem → `obsah/equation_solver.html`
+
+### 💻 Vývoj & nástroje
+- [x] **Generátor Markdown tabulek** — vizuální editor → MD → `obsah/md_table.html`
+- [x] **Keycode tester** — zobrazení event.key/code stisknuté klávesy → `obsah/keycode.html`
+- [x] **Generátor testovacích dat** — mock jména, adresy, IČO, e-maily (CSV/JSON) → `obsah/mock_data.html`
+
+### 🎓 Vzdělávání
+- [x] **Hvězdná obloha** — souhvězdí podle data a polohy → `obsah/star_map.html`
+- [x] **Hudební nauka** — noty, stupnice, kvintakord → `obsah/music_theory.html`
+- [x] **Fyzikální vzorce a konstanty** — přehled s dosazovací kalkulačkou → `obsah/physics_ref.html`
+- [x] **Slovní druhy** — procvičování pro školáky → `obsah/slovni_druhy.html`
+
+### 🕹️ Hry
+- [x] **Šachy** — proti druhému hráči u jednoho PC → `obsah/chess.html`
+- [x] **Solitaire (Klondike)** → `obsah/solitaire.html`
+- [x] **Kostky (Yahtzee)** → `obsah/yahtzee.html`
+- [x] **Reversi / Othello** → `obsah/reversi.html`
+- [x] **Pong** → `obsah/pong.html`
+- [x] **Asteroids** → `obsah/asteroids.html`
+- [x] **Vědomostní kvíz (trivia)** — otázky z okruhů, skóre → `obsah/trivia.html`

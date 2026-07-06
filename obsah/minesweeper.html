@@ -95,22 +95,35 @@ function checkWin(){
 function flagsUsed(){let n=0;flagged.forEach(r=>r.forEach(f=>{if(f)n++;}));return n;}
 $('board').addEventListener('click',e=>{
   const c=e.target.closest('.cell');if(!c||gameDone)return;
+  if(Date.now()<lpSuppress)return; // ghost click po dlouhém tapu nesmí odkrýt pole
   const x=+c.dataset.x,y=+c.dataset.y;
   if(flagged[y][x])return;
   if(first){placeMines(x,y);first=false;timer=setInterval(()=>{seconds++;$('time').textContent=seconds;},1000);}
   reveal(x,y);if(!gameDone)checkWin();
 });
-$('board').addEventListener('contextmenu',e=>{
-  e.preventDefault();const c=e.target.closest('.cell');if(!c||gameDone)return;
+function toggleFlag(c){
+  if(gameDone)return;
   const x=+c.dataset.x,y=+c.dataset.y;if(revealed[y][x])return;
   flagged[y][x]=!flagged[y][x];c.classList.toggle('flag',flagged[y][x]);c.textContent=flagged[y][x]?'🚩':'';
   $('mines').textContent=mineCount-flagsUsed();
+}
+$('board').addEventListener('contextmenu',e=>{
+  e.preventDefault();const c=e.target.closest('.cell');if(!c)return;
+  // nativní contextmenu z dlouhého tapu by přehodil vlajku podruhé — dlouhý tap a contextmenu se navzájem potlačují
+  if(Date.now()<lpSuppress)return;
+  clearTimeout(lpTimer);lpTimer=null;lpSuppress=Date.now()+700;
+  toggleFlag(c);
 });
 // long-press for touch flag
-let lpTimer;
+let lpTimer=null,lpSuppress=0;
 $('board').addEventListener('touchstart',e=>{const c=e.target.closest('.cell');if(!c)return;
-  lpTimer=setTimeout(()=>{c.dispatchEvent(new Event('contextmenu',{bubbles:true}));lpTimer=null;},450);},{passive:true});
-$('board').addEventListener('touchend',e=>{if(lpTimer){clearTimeout(lpTimer);}},{passive:true});
+  clearTimeout(lpTimer);
+  lpTimer=setTimeout(()=>{lpTimer=null;lpSuppress=Date.now()+700;toggleFlag(c);},450);},{passive:true});
+$('board').addEventListener('touchmove',()=>{clearTimeout(lpTimer);lpTimer=null;},{passive:true});
+$('board').addEventListener('touchend',e=>{
+  if(lpTimer){clearTimeout(lpTimer);lpTimer=null;}
+  else{e.preventDefault();} // dlouhý tap už vlajku přepnul — zablokuj následný click/contextmenu
+},{passive:false});
 $('newBtn').onclick=init;$('level').onchange=init;
 init();
 </script>

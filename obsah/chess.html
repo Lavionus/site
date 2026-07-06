@@ -1,0 +1,339 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>♟️ Šachy</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1a1a1a;color:#e0e0e0;min-height:100vh;padding:20px}
+.container{max-width:860px;margin:0 auto;display:grid;grid-template-columns:auto 220px;gap:20px;justify-content:center}
+@media(max-width:760px){.container{grid-template-columns:1fr}}
+h1{font-size:1.6rem;margin-bottom:14px;font-weight:600;text-align:center;grid-column:1/-1}
+#deska{display:grid;grid-template-columns:repeat(8,minmax(38px,64px));border:3px solid #555;border-radius:4px;user-select:none;align-self:start}
+.pole{aspect-ratio:1;display:flex;align-items:center;justify-content:center;font-size:clamp(26px,5.5vw,44px);cursor:pointer;position:relative}
+.pole.svetle{background:#e8d5b0}.pole.tmave{background:#a97c50}
+.pole.vybrane{outline:3px solid #ffd54f;outline-offset:-3px}
+.pole.tah::after{content:'';position:absolute;width:26%;height:26%;border-radius:50%;background:rgba(30,120,50,.55)}
+.pole.brani::after{content:'';position:absolute;inset:4%;border-radius:50%;border:4px solid rgba(200,40,40,.65);background:none;width:auto;height:auto}
+.pole.sach{background:#e57373!important}
+.panel{background:#2a2a2a;border:1px solid #404040;border-radius:8px;padding:16px;align-self:start}
+.panel h2{font-size:.95rem;color:#6aa6fd;margin-bottom:10px}
+.naTahu{font-size:1.05rem;font-weight:700;margin-bottom:12px;text-align:center}
+.stavHry{color:#e67e22;font-weight:700;text-align:center;min-height:1.4em;margin-bottom:10px}
+.tahy{max-height:280px;overflow-y:auto;font-family:monospace;font-size:.85rem;color:#b0b0b0;line-height:1.6}
+.btn{background:#6aa6fd;color:#fff;border:none;padding:9px 14px;border-radius:6px;cursor:pointer;font-weight:600;font-size:.85rem;width:100%;margin-top:10px}
+.btn-sec{background:#404040}
+.sel{width:100%;background:#333;color:#e0e0e0;border:1px solid #505050;border-radius:6px;padding:8px;margin-bottom:8px;font-size:.85rem;cursor:pointer}
+figcaption{display:none}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>♟️ Šachy</h1>
+  <div id="deska"></div>
+  <div class="panel">
+    <h2>Protivník</h2>
+    <select class="sel" id="rezim">
+      <option value="ai" selected>🤖 Počítač (hraje černým)</option>
+      <option value="2p">👥 2 hráči</option>
+    </select>
+    <select class="sel" id="obtiznost">
+      <option value="1">Lehká</option>
+      <option value="3" selected>Střední</option>
+      <option value="4">Těžká</option>
+    </select>
+    <div class="naTahu" id="naTahu">Na tahu: bílý</div>
+    <div class="stavHry" id="stavHry"></div>
+    <h2>Tahy</h2>
+    <div class="tahy" id="tahy"></div>
+    <button class="btn btn-sec" id="zpet">↶ Tah zpět</button>
+    <button class="btn" id="nova">↺ Nová hra</button>
+  </div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const FIG={wK:'♔',wQ:'♕',wR:'♖',wB:'♗',wN:'♘',wP:'♙',bK:'♚',bQ:'♛',bR:'♜',bB:'♝',bN:'♞',bP:'♟'};
+let deska,naTahu,vybrane,mozneTahy,rosady,enPassant,historie,konecHry,mysli=false;
+const jeAI=()=>$('rezim').value==='ai';
+
+function novaHra(){
+  deska=[
+    ['bR','bN','bB','bQ','bK','bB','bN','bR'],
+    Array(8).fill('bP'),
+    ...Array(4).fill(null).map(()=>Array(8).fill(null)),
+    Array(8).fill('wP'),
+    ['wR','wN','wB','wQ','wK','wB','wN','wR'],
+  ];
+  naTahu='w';vybrane=null;mozneTahy=[];konecHry=false;mysli=false;
+  rosady={wK:true,wQ:true,bK:true,bQ:true};
+  enPassant=null;historie=[];
+  $('tahy').innerHTML='';$('stavHry').textContent='';
+  render();
+}
+const uvnitr=(r,c)=>r>=0&&r<8&&c>=0&&c<8;
+const barva=f=>f?f[0]:null;
+
+// pseudolegální tahy figury (bez kontroly šachu)
+function tahyFigury(r,c,d=deska,ep=enPassant,ros=rosady){
+  const f=d[r][c];
+  if(!f)return[];
+  const me=f[0],typ=f[1],vys=[];
+  const push=(rr,cc,jen)=>{ if(uvnitr(rr,cc)&&barva(d[rr][cc])!==me&&(!jen||jen(rr,cc)))vys.push([rr,cc]); };
+  if(typ==='P'){
+    const smer=me==='w'?-1:1,start=me==='w'?6:1;
+    if(uvnitr(r+smer,c)&&!d[r+smer][c]){
+      vys.push([r+smer,c]);
+      if(r===start&&!d[r+2*smer][c])vys.push([r+2*smer,c]);
+    }
+    [-1,1].forEach(dc=>{
+      const rr=r+smer,cc=c+dc;
+      if(uvnitr(rr,cc)&&(d[rr][cc]&&barva(d[rr][cc])!==me||ep&&ep[0]===rr&&ep[1]===cc))vys.push([rr,cc]);
+    });
+  }else if(typ==='N'){
+    [[1,2],[2,1],[-1,2],[-2,1],[1,-2],[2,-1],[-1,-2],[-2,-1]].forEach(([dr,dc])=>push(r+dr,c+dc));
+  }else if(typ==='K'){
+    for(let dr=-1;dr<=1;dr++)for(let dc=-1;dc<=1;dc++)if(dr||dc)push(r+dr,c+dc);
+    // rošády – jen na výchozím poli, políčka volná (kontrola šachu se dělá při filtraci)
+    const rada=me==='w'?7:0;
+    if(r===rada&&c===4){
+      if(ros[me+'K']&&!d[rada][5]&&!d[rada][6]&&d[rada][7]===me+'R')vys.push([rada,6]);
+      if(ros[me+'Q']&&!d[rada][3]&&!d[rada][2]&&!d[rada][1]&&d[rada][0]===me+'R')vys.push([rada,2]);
+    }
+  }else{
+    const smery={R:[[0,1],[0,-1],[1,0],[-1,0]],B:[[1,1],[1,-1],[-1,1],[-1,-1]],
+      Q:[[0,1],[0,-1],[1,0],[-1,0],[1,1],[1,-1],[-1,1],[-1,-1]]}[typ];
+    smery.forEach(([dr,dc])=>{
+      let rr=r+dr,cc=c+dc;
+      while(uvnitr(rr,cc)){
+        if(!d[rr][cc]){vys.push([rr,cc]);}
+        else{if(barva(d[rr][cc])!==me)vys.push([rr,cc]);break;}
+        rr+=dr;cc+=dc;
+      }
+    });
+  }
+  return vys;
+}
+function najdiKrale(me,d){
+  for(let r=0;r<8;r++)for(let c=0;c<8;c++)if(d[r][c]===me+'K')return[r,c];
+}
+function jeNapadeno(r,c,utocnik,d){
+  for(let rr=0;rr<8;rr++)for(let cc=0;cc<8;cc++){
+    if(barva(d[rr][cc])===utocnik){
+      // pro útoky nepočítat rošádu (tahyFigury s prázdnými rošádami)
+      if(tahyFigury(rr,cc,d,null,{wK:false,wQ:false,bK:false,bQ:false}).some(([a,b])=>a===r&&b===c))return true;
+    }
+  }
+  return false;
+}
+function proved(d,od,kam,ep){
+  // vrátí kopii desky po tahu (vč. en passant a rošády)
+  const n=d.map(x=>[...x]);
+  const f=n[od[0]][od[1]];
+  n[kam[0]][kam[1]]=f;n[od[0]][od[1]]=null;
+  // en passant braní
+  if(f[1]==='P'&&ep&&kam[0]===ep[0]&&kam[1]===ep[1]&&!d[kam[0]][kam[1]])
+    n[od[0]][kam[1]]=null;
+  // rošáda – přesun věže
+  if(f[1]==='K'&&Math.abs(kam[1]-od[1])===2){
+    const rada=od[0];
+    if(kam[1]===6){n[rada][5]=n[rada][7];n[rada][7]=null;}
+    else{n[rada][3]=n[rada][0];n[rada][0]=null;}
+  }
+  // proměna (automaticky dáma)
+  if(f[1]==='P'&&(kam[0]===0||kam[0]===7))n[kam[0]][kam[1]]=f[0]+'Q';
+  return n;
+}
+function legalniTahy(r,c){
+  const me=barva(deska[r][c]);
+  const oponent=me==='w'?'b':'w';
+  return tahyFigury(r,c).filter(([rr,cc])=>{
+    const f=deska[r][c];
+    // rošáda: král nesmí být v šachu a nesmí projít napadeným polem
+    if(f[1]==='K'&&Math.abs(cc-c)===2){
+      const mezi=cc>c?5:3;
+      if(jeNapadeno(r,c,oponent,deska))return false;
+      if(jeNapadeno(r,mezi,oponent,deska))return false;
+    }
+    const po=proved(deska,[r,c],[rr,cc],enPassant);
+    const [kr,kc]=najdiKrale(me,po);
+    return !jeNapadeno(kr,kc,oponent,po);
+  });
+}
+function maNejakyTah(me){
+  for(let r=0;r<8;r++)for(let c=0;c<8;c++)
+    if(barva(deska[r][c])===me&&legalniTahy(r,c).length)return true;
+  return false;
+}
+function zapisTah(f,od,kam,brani){
+  const sloupce='abcdefgh';
+  const pis=f[1]==='P'?'':{K:'K',Q:'D',R:'V',B:'S',N:'J'}[f[1]];
+  return pis+(brani?(f[1]==='P'?sloupce[od[1]]:'')+'x':'')+sloupce[kam[1]]+(8-kam[0]);
+}
+function tahni(od,kam){
+  const f=deska[od[0]][od[1]];
+  const brani=!!deska[kam[0]][kam[1]]||(f[1]==='P'&&enPassant&&kam[0]===enPassant[0]&&kam[1]===enPassant[1]);
+  historie.push({deska:deska.map(x=>[...x]),naTahu,rosady:{...rosady},enPassant,zapis:$('tahy').innerHTML});
+  const noticka=zapisTah(f,od,kam,brani);
+  deska=proved(deska,od,kam,enPassant);
+  // aktualizace práv rošády
+  if(f==='wK'){rosady.wK=rosady.wQ=false;}
+  if(f==='bK'){rosady.bK=rosady.bQ=false;}
+  if(od[0]===7&&od[1]===0||kam[0]===7&&kam[1]===0)rosady.wQ=false;
+  if(od[0]===7&&od[1]===7||kam[0]===7&&kam[1]===7)rosady.wK=false;
+  if(od[0]===0&&od[1]===0||kam[0]===0&&kam[1]===0)rosady.bQ=false;
+  if(od[0]===0&&od[1]===7||kam[0]===0&&kam[1]===7)rosady.bK=false;
+  // en passant cíl
+  enPassant=(f[1]==='P'&&Math.abs(kam[0]-od[0])===2)?[(kam[0]+od[0])/2,od[1]]:null;
+  naTahu=naTahu==='w'?'b':'w';
+  // zápis tahu
+  const cislo=Math.ceil((historie.length)/2);
+  if(naTahu==='b')$('tahy').innerHTML+=`<b>${cislo}.</b> ${noticka} `;
+  else $('tahy').innerHTML+=noticka+'<br>';
+  $('tahy').scrollTop=$('tahy').scrollHeight;
+  // konec hry?
+  const oponent=naTahu==='w'?'b':'w';
+  const [kr,kc]=najdiKrale(naTahu,deska);
+  const vSachu=jeNapadeno(kr,kc,oponent,deska);
+  if(!maNejakyTah(naTahu)){
+    konecHry=true;
+    $('stavHry').textContent=vSachu?('♛ MAT! Vyhrál '+(oponent==='w'?'bílý':'černý')+'.'):'½ PAT – remíza.';
+  }else if(vSachu)$('stavHry').textContent='ŠACH!';
+  else $('stavHry').textContent='';
+  vybrane=null;mozneTahy=[];
+  render();
+  if(!konecHry&&jeAI()&&naTahu==='b')tahAI();
+}
+function render(){
+  const d=$('deska');
+  d.innerHTML='';
+  const [kr,kc]=najdiKrale(naTahu,deska)||[];
+  const vSachu=kr!==undefined&&jeNapadeno(kr,kc,naTahu==='w'?'b':'w',deska);
+  for(let r=0;r<8;r++)for(let c=0;c<8;c++){
+    const el=document.createElement('div');
+    el.className='pole '+((r+c)%2?'tmave':'svetle');
+    if(vybrane&&vybrane[0]===r&&vybrane[1]===c)el.classList.add('vybrane');
+    const tah=mozneTahy.find(([a,b])=>a===r&&b===c);
+    if(tah)el.classList.add(deska[r][c]?'brani':'tah');
+    if(vSachu&&r===kr&&c===kc)el.classList.add('sach');
+    el.textContent=deska[r][c]?FIG[deska[r][c]]:'';
+    el.onclick=()=>klik(r,c);
+    d.appendChild(el);
+  }
+  $('naTahu').textContent='Na tahu: '+(naTahu==='w'?'bílý ♔':'černý ♚');
+}
+function klik(r,c){
+  if(konecHry||mysli||(jeAI()&&naTahu==='b'))return;
+  const tah=mozneTahy.find(([a,b])=>a===r&&b===c);
+  if(vybrane&&tah){tahni(vybrane,[r,c]);return;}
+  if(barva(deska[r][c])===naTahu){
+    vybrane=[r,c];mozneTahy=legalniTahy(r,c);
+  }else{vybrane=null;mozneTahy=[];}
+  render();
+}
+// ===== AI protivník (minimax + alfa-beta) =====
+const HODNOTA={P:100,N:320,B:330,R:500,Q:900,K:20000};
+// poziční tabulky (z pohledu bílého; pro černého zrcadlově)
+const PST={
+P:[0,0,0,0,0,0,0,0,50,50,50,50,50,50,50,50,10,10,20,30,30,20,10,10,5,5,10,25,25,10,5,5,0,0,0,20,20,0,0,0,5,-5,-10,0,0,-10,-5,5,5,10,10,-20,-20,10,10,5,0,0,0,0,0,0,0,0],
+N:[-50,-40,-30,-30,-30,-30,-40,-50,-40,-20,0,0,0,0,-20,-40,-30,0,10,15,15,10,0,-30,-30,5,15,20,20,15,5,-30,-30,0,15,20,20,15,0,-30,-30,5,10,15,15,10,5,-30,-40,-20,0,5,5,0,-20,-40,-50,-40,-30,-30,-30,-30,-40,-50],
+B:[-20,-10,-10,-10,-10,-10,-10,-20,-10,0,0,0,0,0,0,-10,-10,0,5,10,10,5,0,-10,-10,5,5,10,10,5,5,-10,-10,0,10,10,10,10,0,-10,-10,10,10,10,10,10,10,-10,-10,5,0,0,0,0,5,-10,-20,-10,-10,-10,-10,-10,-10,-20],
+R:[0,0,0,0,0,0,0,0,5,10,10,10,10,10,10,5,-5,0,0,0,0,0,0,-5,-5,0,0,0,0,0,0,-5,-5,0,0,0,0,0,0,-5,-5,0,0,0,0,0,0,-5,-5,0,0,0,0,0,0,-5,0,0,0,5,5,0,0,0],
+Q:[-20,-10,-10,-5,-5,-10,-10,-20,-10,0,0,0,0,0,0,-10,-10,0,5,5,5,5,0,-10,-5,0,5,5,5,5,0,-5,0,0,5,5,5,5,0,-5,-10,5,5,5,5,5,0,-10,-10,0,5,0,0,0,0,-10,-20,-10,-10,-5,-5,-10,-10,-20],
+K:[-30,-40,-40,-50,-50,-40,-40,-30,-30,-40,-40,-50,-50,-40,-40,-30,-30,-40,-40,-50,-50,-40,-40,-30,-30,-40,-40,-50,-50,-40,-40,-30,-20,-30,-30,-40,-40,-30,-30,-20,-10,-20,-20,-20,-20,-20,-20,-10,20,20,0,0,0,0,20,20,20,30,10,0,0,10,30,20]
+};
+// kladné skóre = výhoda bílého
+function ohodnot(d){
+  let s=0;
+  for(let r=0;r<8;r++)for(let c=0;c<8;c++){
+    const f=d[r][c];
+    if(!f)continue;
+    const t=f[1];
+    if(f[0]==='w')s+=HODNOTA[t]+PST[t][r*8+c];
+    else s-=HODNOTA[t]+PST[t][(7-r)*8+c];
+  }
+  return s;
+}
+function pseudoTahy(d,me,ep,ros){
+  const t=[];
+  for(let r=0;r<8;r++)for(let c=0;c<8;c++)
+    if(barva(d[r][c])===me)tahyFigury(r,c,d,ep,ros).forEach(kam=>t.push([[r,c],kam]));
+  // braní napřed – lepší prořezávání
+  return t.sort((a,b)=>(d[b[1][0]][b[1][1]]?1:0)-(d[a[1][0]][a[1][1]]?1:0));
+}
+function novaPrava(ros,f,od,kam){
+  const n={...ros};
+  if(f==='wK')n.wK=n.wQ=false;
+  if(f==='bK')n.bK=n.bQ=false;
+  [[7,0,'wQ'],[7,7,'wK'],[0,0,'bQ'],[0,7,'bK']].forEach(([r,c,k])=>{
+    if((od[0]===r&&od[1]===c)||(kam[0]===r&&kam[1]===c))n[k]=false;
+  });
+  return n;
+}
+function novyEP(d,od,kam){
+  const f=d[od[0]][od[1]];
+  return(f[1]==='P'&&Math.abs(kam[0]-od[0])===2)?[(kam[0]+od[0])/2,od[1]]:null;
+}
+// ve stromu stačí pseudolegální tahy – ztráta krále = prohra (u kořene se hrají jen legální)
+function minimax(d,hloubka,alfa,beta,me,ep,ros){
+  if(!najdiKrale('w',d))return -99000-hloubka;
+  if(!najdiKrale('b',d))return 99000+hloubka;
+  if(hloubka===0)return ohodnot(d);
+  const tahy=pseudoTahy(d,me,ep,ros);
+  if(me==='w'){
+    let nej=-Infinity;
+    for(const[od,kam]of tahy){
+      nej=Math.max(nej,minimax(proved(d,od,kam,ep),hloubka-1,alfa,beta,'b',novyEP(d,od,kam),novaPrava(ros,d[od[0]][od[1]],od,kam)));
+      alfa=Math.max(alfa,nej);
+      if(beta<=alfa)break;
+    }
+    return nej;
+  }
+  let nej=Infinity;
+  for(const[od,kam]of tahy){
+    nej=Math.min(nej,minimax(proved(d,od,kam,ep),hloubka-1,alfa,beta,'w',novyEP(d,od,kam),novaPrava(ros,d[od[0]][od[1]],od,kam)));
+    beta=Math.min(beta,nej);
+    if(beta<=alfa)break;
+  }
+  return nej;
+}
+function tahAI(){
+  mysli=true;
+  $('naTahu').textContent='Černý ♚ přemýšlí…';
+  setTimeout(()=>{
+    // mezitím mohla začít nová hra / změnit se režim
+    if(konecHry||!jeAI()||naTahu!=='b'){mysli=false;return;}
+    const hloubka=+$('obtiznost').value;
+    const tahy=[];
+    for(let r=0;r<8;r++)for(let c=0;c<8;c++)
+      if(barva(deska[r][c])==='b')legalniTahy(r,c).forEach(kam=>tahy.push([[r,c],kam]));
+    if(!tahy.length){mysli=false;return;}
+    let nejS=Infinity,nej=[];
+    for(const[od,kam]of tahy){
+      const s=minimax(proved(deska,od,kam,enPassant),hloubka-1,-Infinity,nejS+1,'w',novyEP(deska,od,kam),novaPrava(rosady,deska[od[0]][od[1]],od,kam));
+      if(s<nejS){nejS=s;nej=[[od,kam]];}
+      else if(s===nejS)nej.push([od,kam]);
+    }
+    const[od,kam]=nej[Math.random()*nej.length|0];
+    mysli=false;
+    tahni(od,kam);
+  },80);
+}
+$('zpet').onclick=()=>{
+  if(mysli)return;
+  let h=historie.pop();
+  if(!h)return;
+  // proti počítači vracet celý pár tahů (zpět až na tah bílého)
+  if(jeAI()&&h.naTahu==='b'&&historie.length)h=historie.pop();
+  deska=h.deska;naTahu=h.naTahu;rosady=h.rosady;enPassant=h.enPassant;
+  $('tahy').innerHTML=h.zapis;
+  konecHry=false;$('stavHry').textContent='';
+  vybrane=null;mozneTahy=[];
+  render();
+};
+$('nova').onclick=novaHra;
+$('rezim').onchange=novaHra;
+novaHra();
+</script>
+</body>
+</html>

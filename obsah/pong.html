@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🏓 Pong</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1a1a1a;color:#e0e0e0;min-height:100vh;padding:20px;text-align:center}
+h1{font-size:1.6rem;margin-bottom:12px;font-weight:600}
+.ovl{display:flex;gap:10px;justify-content:center;margin-bottom:12px;flex-wrap:wrap;align-items:center}
+select,.btn{background:#404040;border:1px solid #555;border-radius:6px;color:#e0e0e0;padding:9px 14px;font-size:.88rem;cursor:pointer}
+.btn{background:#6aa6fd;border:none;color:#fff;font-weight:600}
+canvas{background:#0a0a0a;border:2px solid #404040;border-radius:8px;max-width:100%;touch-action:none}
+.napoveda{color:#888;font-size:.82rem;margin-top:10px}
+</style>
+</head>
+<body>
+<h1>🏓 Pong</h1>
+<div class="ovl">
+  <select id="rezim">
+    <option value="ai">🤖 Proti počítači</option>
+    <option value="2p">👥 Dva hráči</option>
+  </select>
+  <select id="obtiznost">
+    <option value="3">Lehká</option>
+    <option value="4.6" selected>Střední</option>
+    <option value="6.2">Těžká</option>
+  </select>
+  <button class="btn" id="start">▶ Start</button>
+</div>
+<canvas id="c" width="800" height="480"></canvas>
+<div class="napoveda">Levý hráč: <b>W / S</b> · Pravý hráč: <b>↑ / ↓</b> · na dotykové obrazovce táhni prstem · hraje se do 10 bodů</div>
+<script>
+const c=document.getElementById('c'),ctx=c.getContext('2d');
+const W=c.width,H=c.height,PAD_H=90,PAD_W=12;
+let l,r,mic,bezi=false,anim,klav={};
+function reset(servis){
+  mic={x:W/2,y:H/2,vx:(servis||Math.random()<0.5?1:-1)*5,vy:(Math.random()*4-2)||1.5,r:9};
+}
+function novaHra(){
+  l={y:H/2-PAD_H/2,skore:0};
+  r={y:H/2-PAD_H/2,skore:0};
+  reset();
+}
+function krok(){
+  const rychlostPadel=7;
+  // ovládání
+  if(klav['w'])l.y-=rychlostPadel;
+  if(klav['s'])l.y+=rychlostPadel;
+  const rezim=document.getElementById('rezim').value;
+  if(rezim==='2p'){
+    if(klav['ArrowUp'])r.y-=rychlostPadel;
+    if(klav['ArrowDown'])r.y+=rychlostPadel;
+  }else{
+    // AI sleduje míč
+    const ai=+document.getElementById('obtiznost').value;
+    const cil=mic.y-PAD_H/2;
+    if(Math.abs(cil-r.y)>6)r.y+=Math.sign(cil-r.y)*ai;
+  }
+  l.y=Math.max(0,Math.min(H-PAD_H,l.y));
+  r.y=Math.max(0,Math.min(H-PAD_H,r.y));
+  // míč
+  mic.x+=mic.vx;mic.y+=mic.vy;
+  if(mic.y<mic.r||mic.y>H-mic.r){mic.vy*=-1;mic.y=Math.max(mic.r,Math.min(H-mic.r,mic.y));}
+  // pálky
+  if(mic.vx<0&&mic.x-mic.r<30+PAD_W&&mic.x-mic.r>18&&mic.y>l.y-mic.r&&mic.y<l.y+PAD_H+mic.r){
+    mic.vx=Math.abs(mic.vx)*1.04;
+    mic.vy+=((mic.y-(l.y+PAD_H/2))/PAD_H)*6;
+  }
+  if(mic.vx>0&&mic.x+mic.r>W-30-PAD_W&&mic.x+mic.r<W-18&&mic.y>r.y-mic.r&&mic.y<r.y+PAD_H+mic.r){
+    mic.vx=-Math.abs(mic.vx)*1.04;
+    mic.vy+=((mic.y-(r.y+PAD_H/2))/PAD_H)*6;
+  }
+  mic.vy=Math.max(-9,Math.min(9,mic.vy));
+  // gól
+  if(mic.x<-20){r.skore++;overKonec();reset(1);}
+  if(mic.x>W+20){l.skore++;overKonec();reset(-1);}
+}
+function overKonec(){
+  if(l.skore>=10||r.skore>=10){
+    bezi=false;
+    setTimeout(()=>kresli(true),50);
+  }
+}
+function kresli(konec){
+  ctx.fillStyle='#0a0a0a';ctx.fillRect(0,0,W,H);
+  // středová čára
+  ctx.strokeStyle='#333';ctx.setLineDash([10,12]);ctx.lineWidth=3;
+  ctx.beginPath();ctx.moveTo(W/2,0);ctx.lineTo(W/2,H);ctx.stroke();ctx.setLineDash([]);
+  // skóre
+  ctx.fillStyle='#444';ctx.font='bold 56px monospace';ctx.textAlign='center';
+  ctx.fillText(l.skore,W/2-70,66);ctx.fillText(r.skore,W/2+70,66);
+  // pálky a míč
+  ctx.fillStyle='#6aa6fd';ctx.fillRect(30,l.y,PAD_W,PAD_H);
+  ctx.fillStyle='#e67e22';ctx.fillRect(W-30-PAD_W,r.y,PAD_W,PAD_H);
+  ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(mic.x,mic.y,mic.r,0,7);ctx.fill();
+  if(konec){
+    ctx.fillStyle='rgba(0,0,0,.6)';ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#ffd54f';ctx.font='bold 42px sans-serif';
+    ctx.fillText((l.skore>r.skore?'Levý hráč':'Pravý hráč')+' vyhrál!',W/2,H/2-10);
+    ctx.fillStyle='#aaa';ctx.font='20px sans-serif';
+    ctx.fillText('Stiskni Start pro novou hru',W/2,H/2+34);
+  }
+}
+function smycka(){
+  if(!bezi)return;
+  krok();kresli();
+  anim=requestAnimationFrame(smycka);
+}
+document.getElementById('start').onclick=()=>{
+  cancelAnimationFrame(anim);
+  novaHra();bezi=true;smycka();
+};
+window.addEventListener('keydown',e=>{
+  if(['ArrowUp','ArrowDown',' '].includes(e.key))e.preventDefault();
+  klav[e.key.length===1?e.key.toLowerCase():e.key]=true;
+});
+window.addEventListener('keyup',e=>{klav[e.key.length===1?e.key.toLowerCase():e.key]=false;});
+// dotyk: levá polovina ovládá levou pálku, pravá pravou
+c.addEventListener('pointermove',e=>{
+  const rect=c.getBoundingClientRect();
+  const x=(e.clientX-rect.left)/rect.width*W;
+  const y=(e.clientY-rect.top)/rect.height*H-PAD_H/2;
+  if(x<W/2)l.y=y;
+  else if(document.getElementById('rezim').value==='2p')r.y=y;
+});
+novaHra();kresli();
+</script>
+</body>
+</html>

@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎹 Piano</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1a1a1a;color:#e0e0e0;min-height:100vh;padding:20px}
+.container{max-width:900px;margin:0 auto;text-align:center}
+h1{font-size:1.6rem;margin-bottom:8px;font-weight:600}
+.pod{color:#888;font-size:.85rem;margin-bottom:18px}
+.card{background:#2a2a2a;border:1px solid #404040;border-radius:8px;padding:22px;margin-bottom:20px}
+.klaviatura{position:relative;display:flex;justify-content:center;height:190px;user-select:none;touch-action:none}
+.bila{position:relative;width:46px;height:100%;background:linear-gradient(#fff,#f0f0f0);border:1px solid #999;border-radius:0 0 5px 5px;cursor:pointer;z-index:1}
+.bila.stisk{background:#bcd6ff}
+.cerna{position:absolute;top:0;width:30px;height:60%;background:linear-gradient(#333,#111);border-radius:0 0 4px 4px;cursor:pointer;z-index:2}
+.cerna.stisk{background:#4a6fa5}
+.popisek{position:absolute;bottom:6px;left:0;right:0;font-size:.7rem;color:#888;pointer-events:none}
+.cerna .popisek{color:#777;bottom:4px}
+.radek{display:flex;gap:12px;justify-content:center;align-items:center;flex-wrap:wrap;margin-top:18px}
+select{background:#404040;border:1px solid #555;border-radius:4px;color:#e0e0e0;padding:8px}
+label{color:#888;font-size:.85rem}
+input[type=range]{width:130px}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>🎹 Piano</h1>
+  <p class="pod">Hrajte myší/dotykem nebo klávesnicí: spodní řada <b>A S D F G H J K</b> (bílé), <b>W E T Y U</b> (černé), vyšší oktáva od <b>K</b>.</p>
+  <div class="card">
+    <div class="klaviatura" id="klaviatura"></div>
+    <div class="radek">
+      <label>Zvuk: <select id="zvuk">
+        <option value="triangle">Piano (jemné)</option>
+        <option value="sawtooth">Varhany (ostré)</option>
+        <option value="square">Retro (8-bit)</option>
+        <option value="sine">Flétna (čistá)</option>
+      </select></label>
+      <label>Hlasitost <input type="range" id="hlasitost" min="5" max="100" value="50"></label>
+      <label>Oktáva: <select id="oktava"><option value="3">C3</option><option value="4" selected>C4 (střední)</option><option value="5">C5</option></select></label>
+    </div>
+  </div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const NOTY=['C','C♯','D','D♯','E','F','F♯','G','G♯','A','A♯','H'];
+const JE_CERNA=[false,true,false,true,false,false,true,false,true,false,true,false];
+const KLAVESY='awsedftgyhujk'; // mapování od C: a=C w=C# s=D ...
+let actx;
+const znejici={};
+
+function frek(midi){return 440*Math.pow(2,(midi-69)/12);}
+function zahraj(midi){
+  if(znejici[midi])return;
+  actx=actx||new (window.AudioContext||window.webkitAudioContext)();
+  if(actx.state==='suspended')actx.resume();
+  const o=actx.createOscillator(),g=actx.createGain();
+  o.type=$('zvuk').value;
+  o.frequency.value=frek(midi);
+  o.connect(g);g.connect(actx.destination);
+  const v=(+$('hlasitost').value)/100*0.5;
+  const t=actx.currentTime;
+  g.gain.setValueAtTime(0.001,t);
+  g.gain.exponentialRampToValueAtTime(v,t+0.015);
+  g.gain.exponentialRampToValueAtTime(v*0.6,t+0.3);
+  o.start(t);
+  znejici[midi]={o,g};
+  klavesaEl(midi)?.classList.add('stisk');
+}
+function pust(midi){
+  const z=znejici[midi];
+  if(!z)return;
+  const t=actx.currentTime;
+  z.g.gain.cancelScheduledValues(t);
+  z.g.gain.setValueAtTime(z.g.gain.value,t);
+  z.g.gain.exponentialRampToValueAtTime(0.001,t+0.25);
+  z.o.stop(t+0.3);
+  delete znejici[midi];
+  klavesaEl(midi)?.classList.remove('stisk');
+}
+const klavesaEl=midi=>document.querySelector(`[data-midi="${midi}"]`);
+
+function postavKlaviaturu(){
+  const zakladniOktava=+$('oktava').value;
+  const start=12*(zakladniOktava+1); // MIDI C
+  const kl=$('klaviatura');
+  kl.innerHTML='';
+  // 2 oktávy + C
+  const bile=[];
+  for(let i=0;i<=24;i++){
+    const midi=start+i;
+    if(!JE_CERNA[i%12]){
+      const d=document.createElement('div');
+      d.className='bila';d.dataset.midi=midi;
+      d.innerHTML=`<span class="popisek">${NOTY[i%12]}${Math.floor(midi/12)-1}</span>`;
+      kl.appendChild(d);bile.push({el:d,i});
+    }
+  }
+  // černé přes bílé
+  for(let i=0;i<24;i++){
+    const midi=start+i;
+    if(JE_CERNA[i%12]){
+      const d=document.createElement('div');
+      d.className='cerna';d.dataset.midi=midi;
+      d.innerHTML=`<span class="popisek">${NOTY[i%12]}</span>`;
+      // pozice: za kterou bílou patří
+      const predchoziBila=bile.filter(b=>b.i<i).length-1;
+      kl.appendChild(d);
+      requestAnimationFrame(()=>{
+        const b=bile[predchoziBila].el;
+        d.style.left=(b.offsetLeft+b.offsetWidth-15)+'px';
+      });
+    }
+  }
+}
+$('oktava').addEventListener('change',postavKlaviaturu);
+window.addEventListener('resize',postavKlaviaturu);
+
+// myš / dotyk
+let mysDrzi=false;
+$('klaviatura').addEventListener('pointerdown',e=>{
+  const midi=e.target.closest('[data-midi]')?.dataset.midi;
+  if(midi){mysDrzi=true;zahraj(+midi);}
+});
+window.addEventListener('pointerup',()=>{
+  mysDrzi=false;
+  Object.keys(znejici).filter(m=>!drzeneKlavesy.has(+m)).forEach(m=>pust(+m));
+});
+$('klaviatura').addEventListener('pointerover',e=>{
+  if(!mysDrzi)return;
+  const midi=e.target.closest('[data-midi]')?.dataset.midi;
+  if(midi)zahraj(+midi);
+});
+$('klaviatura').addEventListener('pointerout',e=>{
+  if(!mysDrzi)return;
+  const midi=e.target.closest('[data-midi]')?.dataset.midi;
+  if(midi&&!drzeneKlavesy.has(+midi))pust(+midi);
+});
+// klávesnice
+const drzeneKlavesy=new Set();
+window.addEventListener('keydown',e=>{
+  if(e.repeat)return;
+  const i=KLAVESY.indexOf(e.key.toLowerCase());
+  if(i<0)return;
+  const midi=12*(+$('oktava').value+1)+i;
+  drzeneKlavesy.add(midi);
+  zahraj(midi);
+});
+window.addEventListener('keyup',e=>{
+  const i=KLAVESY.indexOf(e.key.toLowerCase());
+  if(i<0)return;
+  const midi=12*(+$('oktava').value+1)+i;
+  drzeneKlavesy.delete(midi);
+  pust(midi);
+});
+postavKlaviaturu();
+</script>
+</body>
+</html>

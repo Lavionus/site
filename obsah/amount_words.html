@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>💬 Částka slovy</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1a1a1a;color:#e0e0e0;min-height:100vh;padding:20px}
+.container{max-width:780px;margin:0 auto}
+h1{font-size:1.6rem;margin-bottom:18px;font-weight:600;text-align:center}
+.card{background:#2a2a2a;border:1px solid #404040;border-radius:8px;padding:22px;margin-bottom:20px}
+h2{font-size:1.05rem;color:#6aa6fd;margin-bottom:16px}
+label{display:block;font-size:.82rem;color:#888;margin-bottom:5px}
+input,select{width:100%;background:#404040;border:1px solid #555;border-radius:4px;color:#e0e0e0;padding:10px;margin-bottom:12px;font-size:1rem}
+.grid{display:grid;grid-template-columns:2fr 1fr;gap:14px}
+@media(max-width:520px){.grid{grid-template-columns:1fr}}
+.vysledek{background:#1e1e1e;border:1px solid #404040;border-radius:6px;padding:16px;font-size:1.15rem;line-height:1.5;min-height:60px;color:#4caf50}
+.vysledek.maly{font-size:.95rem;color:#b0b0b0;margin-top:10px;min-height:0}
+.btn{background:#6aa6fd;color:#fff;border:none;padding:9px 16px;border-radius:6px;cursor:pointer;font-weight:600;font-size:.85rem;margin-top:10px}
+.btn:hover{background:#5591e8}
+.hint{color:#777;font-size:.8rem;margin-top:12px;line-height:1.5}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>💬 Částka slovy</h1>
+  <div class="card">
+    <h2>Převod čísla na slovní zápis</h2>
+    <div class="grid">
+      <div><label>Částka</label><input type="text" id="castka" value="1234,56" inputmode="decimal"></div>
+      <div><label>Měna / režim</label>
+        <select id="mena">
+          <option value="czk">Kč (koruny)</option>
+          <option value="eur">€ (eura)</option>
+          <option value="none">Jen číslo</option>
+        </select>
+      </div>
+    </div>
+    <label>Slovy</label>
+    <div class="vysledek" id="vysledek">–</div>
+    <div class="vysledek maly" id="vysledekVelka">–</div>
+    <button class="btn" id="kopirovat">📋 Kopírovat</button>
+    <p class="hint">Podporuje čísla do 999 miliard, desetinnou čárku i tečku. Tvar „slovy: =…=" se hodí na faktury a smlouvy. Skloňování: 1 koruna, 2–4 koruny, 5+ korun.</p>
+  </div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const JEDNOTKY=['nula','jedna','dvě','tři','čtyři','pět','šest','sedm','osm','devět','deset','jedenáct','dvanáct','třináct','čtrnáct','patnáct','šestnáct','sedmnáct','osmnáct','devatenáct'];
+const JEDNOTKY_M=['nula','jeden','dva','tři','čtyři','pět','šest','sedm','osm','devět','deset','jedenáct','dvanáct','třináct','čtrnáct','patnáct','šestnáct','sedmnáct','osmnáct','devatenáct'];
+const DESITKY=['','','dvacet','třicet','čtyřicet','padesát','šedesát','sedmdesát','osmdesát','devadesát'];
+const STOVKY=['','sto','dvě stě','tři sta','čtyři sta','pět set','šest set','sedm set','osm set','devět set'];
+
+// trojice 0–999; rod: 'f' (jedna/dvě), 'm' (jeden/dva)
+function trojice(n,rod){
+  const J=rod==='m'?JEDNOTKY_M:JEDNOTKY;
+  if(n===0)return'';
+  let s='';
+  const st=Math.floor(n/100),zb=n%100;
+  if(st)s+=STOVKY[st];
+  if(zb){
+    if(s)s+=' ';
+    if(zb<20)s+=J[zb];
+    else{
+      s+=DESITKY[Math.floor(zb/10)];
+      if(zb%10)s+=' '+J[zb%10];
+    }
+  }
+  return s;
+}
+// skupiny: [1, 2-4, 5+], rod skupiny
+const SKUPINY=[
+  null,
+  {tvary:['tisíc','tisíce','tisíc'],rod:'m'},
+  {tvary:['milion','miliony','milionů'],rod:'m'},
+  {tvary:['miliarda','miliardy','miliard'],rod:'f'},
+];
+function tvar(n,t){ if(n===1)return t[0]; if(n>=2&&n<=4)return t[1]; return t[2]; }
+
+function cisloSlovy(n,rod){
+  if(n===0)return rod==='m'?'nula':'nula';
+  const casti=[];
+  let i=0;
+  while(n>0&&i<4){
+    const tri=n%1000;
+    if(tri>0){
+      if(i===0)casti.unshift(trojice(tri,rod));
+      else{
+        const g=SKUPINY[i];
+        let pred='';
+        if(!(tri===1))pred=trojice(tri,g.rod)+' ';
+        casti.unshift(pred+tvar(tri,g.tvary));
+      }
+    }
+    n=Math.floor(n/1000);i++;
+  }
+  return casti.join(' ');
+}
+function sklonuj(n,tvary){ if(n===1)return tvary[0]; if(n>=2&&n<=4)return tvary[1]; return tvary[2]; }
+
+function preved(){
+  let raw=$('castka').value.trim().replace(/\s/g,'').replace(',','.');
+  const mena=$('mena').value;
+  if(!raw||isNaN(parseFloat(raw))){$('vysledek').textContent='Neplatné číslo';$('vysledekVelka').textContent='–';return;}
+  let num=Math.abs(parseFloat(raw));
+  if(num>=1e12){$('vysledek').textContent='Číslo je příliš velké (max 999 miliard)';$('vysledekVelka').textContent='–';return;}
+  const zaporne=parseFloat(raw)<0;
+  const cela=Math.floor(num);
+  const hal=Math.round((num-cela)*100);
+  let s='';
+  if(mena==='czk'){
+    s=cisloSlovy(cela,'f')+' '+sklonuj(cela,['koruna česká','koruny české','korun českých']);
+    if(hal>0)s+=' a '+cisloSlovy(hal,'m')+' '+sklonuj(hal,['haléř','haléře','haléřů']);
+  }else if(mena==='eur'){
+    s=cisloSlovy(cela,'m').replace(/^jedna\b/,'jedno')+' '+sklonuj(cela,['euro','eura','eur']);
+    if(hal>0)s+=' a '+cisloSlovy(hal,'m')+' '+sklonuj(hal,['cent','centy','centů']);
+  }else{
+    s=cisloSlovy(cela,'m');
+    if(hal>0)s+=' celá '+cisloSlovy(hal,'f')+(String(hal).padStart(2,'0')[0]==='0'||hal<10?' (setin)':' (setin)');
+    if(mena==='none'&&hal>0)s=cisloSlovy(cela,'m')+' celá '+(hal<10?'nula ':'')+cisloSlovy(hal,'f');
+  }
+  if(zaporne)s='minus '+s;
+  $('vysledek').textContent=s;
+  $('vysledekVelka').textContent='Slovy: ='+s.charAt(0).toUpperCase()+s.slice(1)+'=';
+}
+$('castka').addEventListener('input',preved);
+$('mena').addEventListener('change',preved);
+$('kopirovat').addEventListener('click',()=>{
+  navigator.clipboard.writeText($('vysledekVelka').textContent).then(()=>{
+    $('kopirovat').textContent='✅ Zkopírováno';
+    setTimeout(()=>$('kopirovat').textContent='📋 Kopírovat',1500);
+  });
+});
+preved();
+</script>
+</body>
+</html>

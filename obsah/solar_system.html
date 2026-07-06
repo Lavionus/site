@@ -13,18 +13,26 @@ body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;b
 input[type=range]{width:130px;accent-color:#6aa6fd}
 button{background:#2a2a3a;border:1px solid #3a3a4d;color:#ccc;border-radius:6px;padding:6px 13px;font-size:.82rem;cursor:pointer}
 button:hover{background:#6aa6fd;color:#fff}
+.zalozky{display:flex;gap:6px;padding:8px 16px;background:#12121b;border-bottom:1px solid #2a2a3a;flex-wrap:wrap}
+.zalozky button{padding:6px 14px;border-radius:8px}
+.zalozky button.aktivni{background:#6aa6fd;color:#fff;border-color:#6aa6fd}
 .plocha{flex:1;position:relative;overflow:hidden}
 canvas{display:block;width:100%;height:100%;cursor:pointer}
-.info{position:absolute;top:14px;right:14px;width:270px;max-width:calc(100% - 28px);background:rgba(22,22,31,.95);border:1px solid #3a3a4d;border-radius:10px;padding:16px;display:none;max-height:calc(100% - 28px);overflow-y:auto}
+.info{position:absolute;top:14px;right:14px;width:300px;max-width:calc(100% - 28px);background:rgba(22,22,31,.96);border:1px solid #3a3a4d;border-radius:10px;padding:16px;display:none;max-height:calc(100% - 28px);overflow-y:auto}
 .info.zobraz{display:block}
-.info h2{font-size:1.2rem;margin-bottom:4px}
-.info .lat{font-size:.75rem;color:#777;font-style:italic;margin-bottom:10px}
-.info .radek{display:flex;justify-content:space-between;padding:5px 0;border-bottom:1px solid #2a2a3a;font-size:.82rem}
+.info h2{font-size:1.2rem;margin-bottom:2px}
+.info .lat{font-size:.75rem;color:#777;font-style:italic}
+.info .typ{display:inline-block;font-size:.68rem;background:#2a2a3a;color:#9ab;border-radius:10px;padding:2px 9px;margin:6px 0 10px}
+.info .radek{display:flex;justify-content:space-between;gap:10px;padding:5px 0;border-bottom:1px solid #2a2a3a;font-size:.8rem}
 .info .radek span{color:#888}
 .info .radek b{color:#6aa6fd;text-align:right}
-.info p{font-size:.8rem;color:#aaa;line-height:1.5;margin-top:10px}
+.info p{font-size:.8rem;color:#bbb;line-height:1.55;margin-top:10px}
+.info ul{margin:8px 0 0 0;list-style:none}
+.info li{font-size:.78rem;color:#aaa;line-height:1.5;padding:4px 0 4px 22px;position:relative}
+.info li::before{content:'💡';position:absolute;left:0;font-size:.72rem}
 .info .zavrit{position:absolute;top:8px;right:10px;background:none;border:none;color:#777;font-size:1rem;padding:2px 6px}
-.napoveda{position:absolute;bottom:12px;left:14px;font-size:.72rem;color:#556;pointer-events:none}
+.vysvetleni{position:absolute;bottom:0;left:0;right:0;background:rgba(10,10,20,.85);border-top:1px solid #2a2a3a;padding:9px 16px;font-size:.76rem;color:#8b93a8;line-height:1.5;pointer-events:none}
+.vysvetleni b{color:#c6cde0}
 </style>
 </head>
 <body>
@@ -32,51 +40,68 @@ canvas{display:block;width:100%;height:100%;cursor:pointer}
   <h1>🪐 Sluneční soustava</h1>
   <label>Rychlost <input type="range" id="rychlost" min="0" max="100" value="40"></label>
   <button id="pauza">⏸️ Pauza</button>
-  <button id="popisky" class="aktivni">🏷️ Popisky</button>
+  <button id="popisky">🏷️ Popisky</button>
   <button id="drahy">⭕ Dráhy</button>
+</div>
+<div class="zalozky" id="zalozky">
+  <button data-r="soustava" class="aktivni">🪐 Soustava</button>
+  <button data-r="meritko">📏 Skutečné měřítko</button>
+  <button data-r="mesic">🌗 Fáze Měsíce</button>
+  <button data-r="obdobi">🌞 Roční období</button>
 </div>
 <div class="plocha">
   <canvas id="platno"></canvas>
   <div class="info" id="info"><button class="zavrit" id="zavrit">✕</button><div id="infoObsah"></div></div>
-  <div class="napoveda">Klikni na planetu nebo Slunce pro informace. Velikosti a vzdálenosti nejsou ve skutečném měřítku.</div>
+  <div class="vysvetleni" id="vysvetleni"></div>
 </div>
 <script>
 const $=id=>document.getElementById(id);
 const canvas=$('platno'),ctx=canvas.getContext('2d');
 
-const SLUNCE={nazev:'Slunce',lat:'Sol',barva:'#ffd54f',
-  data:{'Průměr':'1 392 700 km','Hmotnost':'333 000× Země','Povrchová teplota':'≈ 5 500 °C','Stáří':'≈ 4,6 miliardy let'},
-  fakt:'Slunce obsahuje 99,86 % veškeré hmotnosti sluneční soustavy. Každou sekundu přemění asi 4 miliony tun hmoty na energii.'};
+/* ================= NAUČNÁ DATA ================= */
+const SLUNCE={nazev:'Slunce',lat:'Sol',barva:'#ffd54f',typ:'Hvězda — žlutý trpaslík (třída G2V)',
+  data:{'Průměr':'1 392 700 km (109× Země)','Hmotnost':'333 000× Země','Povrchová teplota':'≈ 5 500 °C','Teplota jádra':'≈ 15 000 000 °C','Stáří':'≈ 4,6 miliardy let','Složení':'73 % vodík, 25 % helium'},
+  popis:'Slunce je obyčejná hvězda, jakých jsou v naší Galaxii stovky miliard — pro nás je ale zdrojem prakticky veškeré energie. V jádře probíhá termojaderná fúze: vodík se slučuje na helium a uvolněná energie putuje k povrchu statisíce let, než se vyzáří do prostoru jako světlo a teplo.',
+  fakta:['Obsahuje 99,86 % veškeré hmotnosti sluneční soustavy.','Každou sekundu přemění asi 4 miliony tun hmoty na čistou energii.','Světlo ze Slunce letí k Zemi 8 minut a 19 sekund.','Za dalších zhruba 5 miliard let se nafoukne v červeného obra a pohltí Merkur i Venuši.']};
 
 const PLANETY=[
- {nazev:'Merkur',lat:'Mercurius',barva:'#9c9c9c',velikost:4,perioda:88,
-  data:{'Průměr':'4 879 km','Vzdálenost od Slunce':'57,9 mil. km','Oběh kolem Slunce':'88 dní','Délka dne':'59 pozemských dní','Měsíce':'0'},
-  fakt:'Nejmenší planeta. Rozdíl teplot mezi dnem (+430 °C) a nocí (−180 °C) je největší v celé soustavě.'},
- {nazev:'Venuše',lat:'Venus',barva:'#e6c87a',velikost:7,perioda:225,
-  data:{'Průměr':'12 104 km','Vzdálenost od Slunce':'108,2 mil. km','Oběh kolem Slunce':'225 dní','Délka dne':'243 pozemských dní','Měsíce':'0'},
-  fakt:'Nejžhavější planeta (≈ 465 °C) díky skleníkovému efektu. Otáčí se opačným směrem než ostatní planety – Slunce tam vychází na západě.'},
- {nazev:'Země',lat:'Terra',barva:'#4a90d9',velikost:7.5,perioda:365,mesic:true,
-  data:{'Průměr':'12 756 km','Vzdálenost od Slunce':'149,6 mil. km','Oběh kolem Slunce':'365,25 dne','Délka dne':'24 hodin','Měsíce':'1 (Měsíc)'},
-  fakt:'Jediné známé místo ve vesmíru, kde existuje život. 71 % povrchu pokrývá voda.'},
- {nazev:'Mars',lat:'Mars',barva:'#d1603d',velikost:5.5,perioda:687,
-  data:{'Průměr':'6 792 km','Vzdálenost od Slunce':'227,9 mil. km','Oběh kolem Slunce':'687 dní','Délka dne':'24,6 hodiny','Měsíce':'2 (Phobos, Deimos)'},
-  fakt:'Rudá barva pochází z oxidu železitého (rzi). Je zde nejvyšší hora sluneční soustavy – Olympus Mons, vysoká 22 km.'},
- {nazev:'Jupiter',lat:'Iuppiter',barva:'#d8b48a',velikost:16,perioda:4333,
-  data:{'Průměr':'142 984 km','Vzdálenost od Slunce':'778,5 mil. km','Oběh kolem Slunce':'11,9 let','Délka dne':'9,9 hodiny','Měsíce':'95'},
-  fakt:'Největší planeta – vešlo by se do ní 1 300 Zemí. Velká rudá skvrna je bouře větší než Země, která zuří už stovky let.'},
- {nazev:'Saturn',lat:'Saturnus',barva:'#e3cf9a',velikost:13,perioda:10759,prstenec:true,
-  data:{'Průměr':'120 536 km','Vzdálenost od Slunce':'1 433,5 mil. km','Oběh kolem Slunce':'29,4 let','Délka dne':'10,7 hodiny','Měsíce':'146'},
-  fakt:'Proslulý prstenci z ledu a kamení – jsou široké 280 000 km, ale tlusté jen desítky metrů. Má tak nízkou hustotu, že by plaval na vodě.'},
- {nazev:'Uran',lat:'Uranus',barva:'#7fd4d4',velikost:10,perioda:30687,
-  data:{'Průměr':'51 118 km','Vzdálenost od Slunce':'2 872,5 mil. km','Oběh kolem Slunce':'84 let','Délka dne':'17,2 hodiny','Měsíce':'28'},
-  fakt:'Otáčí se „na boku" – jeho osa je skloněná o 98°. Pravděpodobně ho v minulosti převrátila srážka s velkým tělesem.'},
- {nazev:'Neptun',lat:'Neptunus',barva:'#4666e0',velikost:10,perioda:60190,
-  data:{'Průměr':'49 528 km','Vzdálenost od Slunce':'4 495,1 mil. km','Oběh kolem Slunce':'165 let','Délka dne':'16,1 hodiny','Měsíce':'16'},
-  fakt:'Nejvzdálenější planeta s nejrychlejšími větry v soustavě – až 2 100 km/h. Od objevu v roce 1846 stihl oběhnout Slunce jen jednou.'}
+ {nazev:'Merkur',lat:'Mercurius',barva:'#9c9c9c',velikost:4,perioda:88,prumerKm:4879,au:0.39,rotace:58.6,typ:'Kamenná planeta',
+  data:{'Průměr':'4 879 km','Vzdálenost od Slunce':'57,9 mil. km (0,39 AU)','Oběh kolem Slunce':'88 dní','Délka dne':'59 pozemských dní','Gravitace':'0,38× Země','Prům. teplota':'+167 °C (den +430, noc −180)','Atmosféra':'prakticky žádná','Měsíce':'0'},
+  popis:'Nejmenší a Slunci nejbližší planeta. Povrch posetý krátery připomíná Měsíc — bez atmosféry ho nic nechrání před dopady ani nevyrovnává teplotu. Přestože je Slunci nejblíž, není nejteplejší planetou: bez atmosféry teplo v noci okamžitě uniká.',
+  fakta:['Rozdíl teplot mezi dnem a nocí (přes 600 °C) je největší v celé soustavě.','Rok na Merkuru (88 dní) je kratší než jeho den — od východu do východu Slunce tam uplyne 176 pozemských dní.','V trvale zastíněných kráterech u pólů se skrývá vodní led.']},
+ {nazev:'Venuše',lat:'Venus',barva:'#e6c87a',velikost:7,perioda:225,prumerKm:12104,au:0.72,rotace:-243,typ:'Kamenná planeta',
+  data:{'Průměr':'12 104 km','Vzdálenost od Slunce':'108,2 mil. km (0,72 AU)','Oběh kolem Slunce':'225 dní','Délka dne':'243 pozemských dní','Gravitace':'0,90× Země','Prům. teplota':'+465 °C','Atmosféra':'96 % CO₂, hustá, mraky z kyseliny sírové','Měsíce':'0'},
+  popis:'Velikostí je Venuše téměř dvojče Země, podmínkami je to ale peklo: extrémní skleníkový efekt husté atmosféry z oxidu uhličitého ji rozpálil na teplotu, při které taje olovo, a tlak na povrchu odpovídá kilometrovému ponoru do oceánu. Je to varovný příklad, kam může vést skleníkový efekt, který v mírné podobě zkoumáme i na Zemi.',
+  fakta:['Nejžhavější planeta soustavy — teplejší než Merkur, přestože je od Slunce dál.','Otáčí se opačným směrem než ostatní planety: Slunce tam vychází na západě.','Den (243 dní) je delší než rok (225 dní).','Po Měsíci je nejjasnějším objektem noční oblohy — proto se jí říká Večernice či Jitřenka.']},
+ {nazev:'Země',lat:'Terra',barva:'#4a90d9',velikost:7.5,perioda:365,mesic:true,prumerKm:12756,au:1,rotace:1,typ:'Kamenná planeta',
+  data:{'Průměr':'12 756 km','Vzdálenost od Slunce':'149,6 mil. km (1 AU)','Oběh kolem Slunce':'365,25 dne','Délka dne':'24 hodin','Gravitace':'1 g (9,81 m/s²)','Prům. teplota':'+15 °C','Atmosféra':'78 % dusík, 21 % kyslík','Měsíce':'1 (Měsíc)'},
+  popis:'Náš domov — jediné známé místo ve vesmíru, kde existuje život. Za obyvatelnost vděčí kombinaci šťastných okolností: správné vzdálenosti od Slunce (kapalná voda), atmosféře s kyslíkem, magnetickému poli, které odklání sluneční vítr, a velkému Měsíci, jenž stabilizuje sklon zemské osy.',
+  fakta:['71 % povrchu pokrývá voda — z vesmíru je Země „modrá planeta".','Vzdálenost Země–Slunce (149,6 mil. km) slouží jako základní jednotka: 1 astronomická jednotka (AU).','Zemská osa je skloněná o 23,5° — proto se střídají roční období (viz záložka 🌞).','Je to nejhustší planeta sluneční soustavy.']},
+ {nazev:'Mars',lat:'Mars',barva:'#d1603d',velikost:5.5,perioda:687,prumerKm:6792,au:1.52,rotace:1.03,typ:'Kamenná planeta',
+  data:{'Průměr':'6 792 km','Vzdálenost od Slunce':'227,9 mil. km (1,52 AU)','Oběh kolem Slunce':'687 dní','Délka dne':'24,6 hodiny','Gravitace':'0,38× Země','Prům. teplota':'−63 °C','Atmosféra':'95 % CO₂, velmi řídká','Měsíce':'2 (Phobos, Deimos)'},
+  popis:'Rudá planeta je nejprozkoumanějším tělesem po Zemi — brázdí ji vozítka a krouží kolem ní flotila sond. Kdysi po jejím povrchu tekla voda: dodnes jsou vidět vyschlá říční koryta a jezerní pánve. Dnes je Mars studená poušť, ale led se skrývá pod povrchem i v polárních čepičkách.',
+  fakta:['Rudou barvu způsobuje oxid železitý — planeta je doslova rezavá.','Olympus Mons je nejvyšší sopka soustavy: 22 km, dvaapůlkrát vyšší než Everest.','Kaňon Valles Marineris by se táhl přes celé USA.','Marsovský den (24,6 h) je téměř stejně dlouhý jako pozemský.']},
+ {nazev:'Jupiter',lat:'Iuppiter',barva:'#d8b48a',velikost:16,perioda:4333,prumerKm:142984,au:5.2,rotace:0.41,typ:'Plynný obr',
+  data:{'Průměr':'142 984 km','Vzdálenost od Slunce':'778,5 mil. km (5,2 AU)','Oběh kolem Slunce':'11,9 let','Délka dne':'9,9 hodiny','Gravitace':'2,53× Země','Prům. teplota':'−110 °C','Atmosféra':'90 % vodík, 10 % helium','Měsíce':'95'},
+  popis:'Král planet — je hmotnější než všechny ostatní planety dohromady. Nemá pevný povrch: pásy mraků přecházejí do stále hustšího vodíku, který je v hloubce stlačen do exotického kovového stavu. Jupiterova obrovská gravitace funguje jako „vysavač" soustavy a chrání vnitřní planety před částí komet a asteroidů.',
+  fakta:['Vešlo by se do něj přes 1 300 Zemí.','Velká rudá skvrna je bouře větší než celá Země, která zuří už nejméně 350 let.','Měsíc Europa skrývá pod ledovou kůrou oceán tekuté vody — horký kandidát na mimozemský život.','Otočí se kolem osy za pouhých 10 hodin — nejrychleji ze všech planet.']},
+ {nazev:'Saturn',lat:'Saturnus',barva:'#e3cf9a',velikost:13,perioda:10759,prstenec:true,prumerKm:120536,au:9.58,rotace:0.45,typ:'Plynný obr',
+  data:{'Průměr':'120 536 km','Vzdálenost od Slunce':'1 433,5 mil. km (9,6 AU)','Oběh kolem Slunce':'29,4 let','Délka dne':'10,7 hodiny','Gravitace':'1,07× Země','Prům. teplota':'−140 °C','Atmosféra':'96 % vodík, 3 % helium','Měsíce':'146'},
+  popis:'Nejkrásnější planeta dalekohledu. Jeho prstence tvoří miliardy úlomků ledu a kamení — od zrnek prachu po balvany velikosti domu — a každý obíhá planetu jako samostatný malý měsíc. Saturn má nejvíce potvrzených měsíců v soustavě; největší z nich, Titan, má hustou atmosféru a jezera z tekutého metanu.',
+  fakta:['Prstence měří napříč 280 000 km, ale tlusté jsou místy jen pár desítek metrů.','Má nejnižší hustotu ze všech planet — v dostatečně velkém oceánu by plaval.','Měsíc Enceladus chrlí do vesmíru gejzíry vody z podpovrchového oceánu.','Prstence jsou astronomicky mladé a pomalu mizí — za pár set milionů let zaniknou.']},
+ {nazev:'Uran',lat:'Uranus',barva:'#7fd4d4',velikost:10,perioda:30687,prumerKm:51118,au:19.2,rotace:-0.72,typ:'Ledový obr',
+  data:{'Průměr':'51 118 km','Vzdálenost od Slunce':'2 872,5 mil. km (19,2 AU)','Oběh kolem Slunce':'84 let','Délka dne':'17,2 hodiny','Gravitace':'0,89× Země','Prům. teplota':'−195 °C','Atmosféra':'vodík, helium, metan (modrozelená barva)','Měsíce':'28'},
+  popis:'První planeta objevená dalekohledem (William Herschel, 1781) — do té doby lidstvo znalo jen planety viditelné okem. Uran je „ledový obr": pod vodíkovou atmosférou se skrývá plášť z horké stlačené vody, čpavku a metanu. Právě metan pohlcuje červené světlo a dává planetě modrozelený nádech.',
+  fakta:['Otáčí se „na boku" — osa je skloněná o 98°, zřejmě po dávné srážce s tělesem velikosti Země.','Póly tak zažívají 42 let světla a poté 42 let tmy.','Je to nejchladnější planeta soustavy (−224 °C v atmosféře).','Navštívila ho jediná sonda: Voyager 2 v roce 1986.']},
+ {nazev:'Neptun',lat:'Neptunus',barva:'#4666e0',velikost:10,perioda:60190,prumerKm:49528,au:30.05,rotace:0.67,typ:'Ledový obr',
+  data:{'Průměr':'49 528 km','Vzdálenost od Slunce':'4 495,1 mil. km (30 AU)','Oběh kolem Slunce':'165 let','Délka dne':'16,1 hodiny','Gravitace':'1,14× Země','Prům. teplota':'−200 °C','Atmosféra':'vodík, helium, metan','Měsíce':'16'},
+  popis:'Nejvzdálenější planeta byla objevena roku 1846 „na hrotu pera": astronomové ji nejprve vypočítali z odchylek dráhy Uranu a teprve pak našli dalekohledem — velký triumf nebeské mechaniky. Přestože k ní dorazí tisíckrát méně slunečního světla než k Zemi, zuří v její atmosféře nejrychlejší větry soustavy.',
+  fakta:['Větry dosahují rychlosti až 2 100 km/h — rychleji, než letí dopravní letadlo.','Od svého objevu v roce 1846 stihl oběhnout Slunce teprve jednou (2011).','Největší měsíc Triton obíhá „pozpátku" — nejspíš je to zachycené těleso z Kuiperova pásu.','Sluneční světlo k němu letí přes 4 hodiny.']}
 ];
 
-let bezi=true,ukazPopisky=true,ukazDrahy=true,cas=0;
-let hvezdy=[];
+/* ================= SPOLEČNÉ ================= */
+let bezi=true,ukazPopisky=true,ukazDrahy=true,cas=0,fotonMin=0,rezim='soustava';
+let hvezdy=[],mtkHit=[];
 
 function velikostPlatna(){
   const r=canvas.parentElement.getBoundingClientRect();
@@ -88,39 +113,30 @@ function velikostPlatna(){
 window.addEventListener('resize',velikostPlatna);
 velikostPlatna();
 
+const rozmer=()=>({w:canvas.width/devicePixelRatio,h:canvas.height/devicePixelRatio});
+
+/* ================= ZÁLOŽKA: SOUSTAVA ================= */
 function geometrie(){
-  const w=canvas.width/devicePixelRatio,h=canvas.height/devicePixelRatio;
+  const {w,h}=rozmer();
   const cx=w/2,cy=h/2;
   const maxR=Math.min(w,h)/2-30;
   return {cx,cy,krok:(maxR-46)/(PLANETY.length-1)};
 }
 function polohaPlanety(p,i,g){
   const r=46+i*g.krok;
-  // úhlová rychlost ~ 1/perioda, normovaná na Zemi
-  const uhel=cas*365/p.perioda+i*1.7;
+  const uhel=cas*365/p.perioda+i*1.7; // úhlová rychlost ~ 1/perioda, normovaná na Zemi
   return {x:g.cx+r*Math.cos(uhel),y:g.cy+r*Math.sin(uhel),r,uhel};
 }
-
-function kresli(){
-  const w=canvas.width/devicePixelRatio,h=canvas.height/devicePixelRatio;
+function kresliSoustavu(){
   const g=geometrie();
-  ctx.clearRect(0,0,w,h);
-  // hvězdy
-  hvezdy.forEach(s=>{ctx.globalAlpha=s.a;ctx.fillStyle='#fff';ctx.fillRect(s.x,s.y,s.v,s.v);});
-  ctx.globalAlpha=1;
-  // dráhy
   if(ukazDrahy){
     ctx.strokeStyle='rgba(255,255,255,.07)';ctx.lineWidth=1;
-    PLANETY.forEach((p,i)=>{
-      ctx.beginPath();ctx.arc(g.cx,g.cy,46+i*g.krok,0,7);ctx.stroke();
-    });
+    PLANETY.forEach((p,i)=>{ctx.beginPath();ctx.arc(g.cx,g.cy,46+i*g.krok,0,7);ctx.stroke();});
   }
-  // Slunce
   const zar=ctx.createRadialGradient(g.cx,g.cy,4,g.cx,g.cy,34);
   zar.addColorStop(0,'#fff3b0');zar.addColorStop(.4,'#ffd54f');zar.addColorStop(1,'rgba(255,180,60,0)');
   ctx.fillStyle=zar;ctx.beginPath();ctx.arc(g.cx,g.cy,34,0,7);ctx.fill();
   ctx.fillStyle='#ffd54f';ctx.beginPath();ctx.arc(g.cx,g.cy,15,0,7);ctx.fill();
-  // planety
   PLANETY.forEach((p,i)=>{
     const poz=polohaPlanety(p,i,g);
     if(p.prstenec){
@@ -143,37 +159,293 @@ function kresli(){
   });
 }
 
+/* ================= ZÁLOŽKA: SKUTEČNÉ MĚŘÍTKO ================= */
+const SVETLO_MIN_AU=8.317; // světlu trvá 1 AU 8,3 minuty
+function kresliMeritko(){
+  const {w,h}=rozmer();
+  mtkHit=[];
+  /* --- horní část: velikosti v jednotném měřítku --- */
+  const RJ=Math.min(60,w*0.045);       // poloměr Jupiteru v px
+  const k=2*RJ/142984;                 // px na km
+  const y1=h*0.30;
+  // Slunce – jen výřez obřího kotouče u levého okraje
+  const rS=1392700/2*k;
+  const sx=-rS+Math.min(90,w*0.10);
+  const grad=ctx.createRadialGradient(sx,y1,rS*0.8,sx,y1,rS);
+  grad.addColorStop(0,'#ffd54f');grad.addColorStop(1,'#ffb340');
+  ctx.fillStyle=grad;ctx.beginPath();ctx.arc(sx,y1,rS,0,7);ctx.fill();
+  ctx.fillStyle='rgba(220,225,255,.85)';ctx.font='12px sans-serif';ctx.textAlign='left';
+  ctx.fillText('☀️ Slunce (jen výřez!)',12,y1-RJ-38);
+  ctx.fillStyle='#889';ctx.font='10px sans-serif';
+  ctx.fillText('Ø 1 392 700 km — 109× Země',12,y1-RJ-24);
+  mtkHit.push({x:20,y:y1,r:40,p:SLUNCE});
+  // planety rovnoměrně vedle sebe, poloměry ve skutečném poměru
+  const x0=sx+rS+30, xk=(w-40-x0)/(PLANETY.length-1);
+  PLANETY.forEach((p,i)=>{
+    const x=x0+i*xk, r=Math.max(1.2,p.prumerKm/2*k);
+    ctx.fillStyle=p.barva;ctx.beginPath();ctx.arc(x,y1,r,0,7);ctx.fill();
+    // rotace úměrná skutečné době otáčení (záporná = retrográdní: Venuše, Uran)
+    const uhelRot=cas*4.4/p.rotace;
+    if(r>2.5){
+      ctx.save();ctx.translate(x,y1);ctx.rotate(uhelRot);
+      ctx.beginPath();ctx.arc(0,0,r,0,7);ctx.clip();
+      ctx.strokeStyle='rgba(0,0,0,.45)';ctx.lineWidth=Math.max(1.2,r*0.12);
+      ctx.beginPath();ctx.moveTo(0,0);ctx.lineTo(r,0);ctx.stroke();
+      ctx.fillStyle='rgba(255,255,255,.85)';
+      ctx.beginPath();ctx.arc(r*0.62,0,Math.max(1.5,r*0.13),0,7);ctx.fill();
+      ctx.restore();
+    } else { // u drobných planet aspoň obíhající tečka
+      ctx.fillStyle='#fff';
+      ctx.beginPath();ctx.arc(x+(r+2.5)*Math.cos(uhelRot),y1+(r+2.5)*Math.sin(uhelRot),1.2,0,7);ctx.fill();
+    }
+    if(p.prstenec){
+      ctx.save();ctx.translate(x,y1);ctx.rotate(-.45);
+      ctx.strokeStyle='rgba(227,207,154,.6)';ctx.lineWidth=2.5;
+      ctx.beginPath();ctx.ellipse(0,0,r*1.7,r*1.7*.36,0,0,7);ctx.stroke();ctx.restore();
+    }
+    ctx.fillStyle='rgba(220,225,255,.85)';ctx.font='11px sans-serif';ctx.textAlign='center';
+    ctx.fillText(p.nazev,x,y1-RJ-14);
+    ctx.fillStyle='#889';ctx.font='10px sans-serif';
+    ctx.fillText(Math.round(p.prumerKm).toLocaleString('cs')+' km',x,y1+RJ+18);
+    const abs=Math.abs(p.rotace);
+    const den=abs<1?Math.round(abs*24)+' h':Math.round(abs)+' d';
+    ctx.fillStyle=p.rotace<0?'#d69ac9':'#7a92b8';
+    ctx.fillText((p.rotace<0?'↺ ':'↻ ')+den,x,y1+RJ+31);
+    mtkHit.push({x,y:y1,r:Math.max(r+6,14),p});
+  });
+  ctx.fillStyle='#667';ctx.font='11px sans-serif';ctx.textAlign='center';
+  ctx.fillText('— velikosti i rychlosti otáčení jsou ve skutečném poměru (↺ = otáčí se pozpátku) —',w/2,y1+RJ+50);
+
+  /* --- dolní část: vzdálenosti a let světla --- */
+  const y2=h*0.72, xL=50, xR=w-30, auPx=(xR-xL)/30.5;
+  // pás asteroidů
+  ctx.fillStyle='rgba(160,140,110,.13)';
+  ctx.fillRect(xL+2.2*auPx,y2-16,1.1*auPx,32);
+  ctx.fillStyle='#776';ctx.font='9px sans-serif';ctx.textAlign='center';
+  ctx.fillText('pás asteroidů',xL+2.75*auPx,y2-22);
+  // osa
+  ctx.strokeStyle='rgba(255,255,255,.25)';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(xL,y2);ctx.lineTo(xR,y2);ctx.stroke();
+  // Slunce
+  ctx.fillStyle='#ffd54f';ctx.beginPath();ctx.arc(xL,y2,7,0,7);ctx.fill();
+  // planety na skutečných vzdálenostech
+  PLANETY.forEach((p,i)=>{
+    const x=xL+p.au*auPx;
+    ctx.fillStyle=p.barva;ctx.beginPath();ctx.arc(x,y2,4,0,7);ctx.fill();
+    const nahore=i%2===0;
+    ctx.fillStyle='rgba(220,225,255,.8)';ctx.font='10px sans-serif';ctx.textAlign='center';
+    ctx.fillText(p.nazev,x,nahore?y2-30:y2+28);
+    ctx.fillStyle='#778';ctx.font='9px sans-serif';
+    const min=p.au*SVETLO_MIN_AU;
+    ctx.fillText(min<60?('světlo '+min.toFixed(1)+' min'):('světlo '+(min/60).toFixed(1)+' h'),x,nahore?y2-19:y2+39);
+    ctx.strokeStyle='rgba(255,255,255,.2)';
+    ctx.beginPath();ctx.moveTo(x,y2-8);ctx.lineTo(x,y2+8);ctx.stroke();
+    mtkHit.push({x,y:y2,r:14,p});
+  });
+  // letící foton
+  const fx=xL+(fotonMin/SVETLO_MIN_AU)*auPx;
+  ctx.strokeStyle='rgba(255,244,150,.35)';ctx.lineWidth=2;
+  ctx.beginPath();ctx.moveTo(xL,y2);ctx.lineTo(fx,y2);ctx.stroke();
+  ctx.fillStyle='#fff9c0';ctx.beginPath();ctx.arc(fx,y2,4.5,0,7);ctx.fill();
+  const zar=ctx.createRadialGradient(fx,y2,1,fx,y2,12);
+  zar.addColorStop(0,'rgba(255,249,192,.8)');zar.addColorStop(1,'rgba(255,249,192,0)');
+  ctx.fillStyle=zar;ctx.beginPath();ctx.arc(fx,y2,12,0,7);ctx.fill();
+  ctx.fillStyle='#ffe97a';ctx.font='12px sans-serif';ctx.textAlign='center';
+  const t=fotonMin<60?fotonMin.toFixed(1)+' minut':(fotonMin/60).toFixed(2)+' hodin';
+  ctx.fillText('💫 foton letí už '+t,w/2,y2+62);
+}
+
+/* ================= ZÁLOŽKA: FÁZE MĚSÍCE ================= */
+const FAZE_NAZVY=f=>
+  f<0.03||f>0.97?'🌑 Nov':
+  f<0.22?'🌒 Dorůstající srpek':
+  f<0.28?'🌓 První čtvrť':
+  f<0.47?'🌔 Dorůstající Měsíc':
+  f<0.53?'🌕 Úplněk':
+  f<0.72?'🌖 Couvající Měsíc':
+  f<0.78?'🌗 Poslední čtvrť':'🌘 Ubývající srpek';
+
+function kresliFaziDisk(x,y,r,f){
+  // f: 0 = nov, 0.5 = úplněk (dorůstá zprava, jak Měsíc vidíme od nás)
+  const svetla='#e8e4d8', tmava='#23232e', kk=Math.cos(2*Math.PI*f);
+  ctx.fillStyle=tmava;ctx.beginPath();ctx.arc(x,y,r,0,7);ctx.fill();
+  ctx.fillStyle=svetla;ctx.beginPath();
+  if(f<0.5) ctx.arc(x,y,r,-Math.PI/2,Math.PI/2);        // pravá půlka
+  else      ctx.arc(x,y,r,Math.PI/2,Math.PI*1.5);       // levá půlka
+  ctx.fill();
+  ctx.fillStyle=kk>0?tmava:svetla;
+  ctx.beginPath();ctx.ellipse(x,y,Math.abs(kk)*r,r,0,0,7);ctx.fill();
+  // pár kráterů pro plastičnost
+  ctx.fillStyle='rgba(0,0,0,.08)';
+  [[-.3,-.25,.18],[.25,.15,.13],[-.05,.4,.1],[.4,-.35,.09]].forEach(([dx,dy,dr])=>{
+    ctx.beginPath();ctx.arc(x+dx*r,y+dy*r,dr*r,0,7);ctx.fill();
+  });
+  ctx.strokeStyle='rgba(255,255,255,.15)';ctx.lineWidth=1;
+  ctx.beginPath();ctx.arc(x,y,r,0,7);ctx.stroke();
+}
+function kresliMesic(){
+  const {w,h}=rozmer();
+  const dny=(cas*3)%29.53, f=dny/29.53;
+  /* levá část: pohled shora na oběh */
+  const ex=w*0.30, ey=h*0.47, orb=Math.min(w*0.17,h*0.28);
+  // sluneční paprsky zleva
+  ctx.strokeStyle='rgba(255,213,79,.35)';ctx.lineWidth=2;
+  for(let i=-2;i<=2;i++){
+    const yy=ey+i*orb*0.55;
+    ctx.beginPath();ctx.moveTo(10,yy);ctx.lineTo(ex-orb-38,yy);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(ex-orb-38,yy);ctx.lineTo(ex-orb-48,yy-5);ctx.moveTo(ex-orb-38,yy);ctx.lineTo(ex-orb-48,yy+5);ctx.stroke();
+  }
+  ctx.fillStyle='#ffd54f';ctx.font='13px sans-serif';ctx.textAlign='left';
+  ctx.fillText('☀️ sluneční světlo',12,ey-orb*1.35);
+  // dráha Měsíce
+  ctx.strokeStyle='rgba(255,255,255,.12)';ctx.lineWidth=1;
+  ctx.beginPath();ctx.arc(ex,ey,orb,0,7);ctx.stroke();
+  // Země (osvětlená zleva)
+  ctx.fillStyle='#23324d';ctx.beginPath();ctx.arc(ex,ey,16,0,7);ctx.fill();
+  ctx.fillStyle='#4a90d9';ctx.beginPath();ctx.arc(ex,ey,16,Math.PI/2,Math.PI*1.5);ctx.fill();
+  ctx.font='12px sans-serif';ctx.textAlign='center';ctx.fillStyle='#cdd6ea';
+  ctx.fillText('Země',ex,ey+30);
+  // Měsíc na dráze: úhel π = mezi Zemí a Sluncem (nov)
+  const mu=Math.PI+2*Math.PI*f;
+  const mx=ex+orb*Math.cos(mu), my=ey+orb*Math.sin(mu);
+  ctx.fillStyle='#3a3a45';ctx.beginPath();ctx.arc(mx,my,9,0,7);ctx.fill();
+  ctx.fillStyle='#d8d4c8';ctx.beginPath();ctx.arc(mx,my,9,Math.PI/2,Math.PI*1.5);ctx.fill(); // osvětlen zleva
+  ctx.strokeStyle='rgba(255,255,255,.25)';ctx.setLineDash([3,4]);
+  ctx.beginPath();ctx.moveTo(ex,ey);ctx.lineTo(mx,my);ctx.stroke();ctx.setLineDash([]);
+  /* pravá část: jak Měsíc vidíme ze Země */
+  const px=w*0.73, py=h*0.44, pr=Math.min(h*0.24,w*0.14);
+  kresliFaziDisk(px,py,pr,f);
+  ctx.fillStyle='#e0e0e0';ctx.font='600 17px sans-serif';ctx.textAlign='center';
+  ctx.fillText(FAZE_NAZVY(f),px,py+pr+32);
+  ctx.fillStyle='#889';ctx.font='12px sans-serif';
+  ctx.fillText('den '+dny.toFixed(1)+' z 29,5denního cyklu',px,py+pr+52);
+  ctx.fillStyle='#aab';ctx.font='12px sans-serif';
+  ctx.fillText('takhle Měsíc právě vidíme ze Země ↑',px,py-pr-18);
+}
+
+/* ================= ZÁLOŽKA: ROČNÍ OBDOBÍ ================= */
+const MESICE=['červen','červenec','srpen','září','říjen','listopad','prosinec','leden','únor','březen','duben','květen'];
+function kresliObdobi(){
+  const {w,h}=rozmer();
+  const cx=w/2, cy=h/2+8, rx=Math.min(w*0.34,h*0.62), ry=rx*0.42;
+  const rok=(cas*0.12)%1;
+  // dráha
+  ctx.strokeStyle='rgba(255,255,255,.12)';ctx.lineWidth=1;
+  ctx.beginPath();ctx.ellipse(cx,cy,rx,ry,0,0,7);ctx.stroke();
+  // Slunce
+  const zar=ctx.createRadialGradient(cx,cy,3,cx,cy,30);
+  zar.addColorStop(0,'#fff3b0');zar.addColorStop(.4,'#ffd54f');zar.addColorStop(1,'rgba(255,180,60,0)');
+  ctx.fillStyle=zar;ctx.beginPath();ctx.arc(cx,cy,30,0,7);ctx.fill();
+  ctx.fillStyle='#ffd54f';ctx.beginPath();ctx.arc(cx,cy,13,0,7);ctx.fill();
+  // popisky ročních období (pro severní polokouli) u skutečných poloh Země na dráze
+  ctx.font='600 13px sans-serif';ctx.textAlign='center';ctx.fillStyle='#9fc46a';
+  ctx.fillText('☀️ LÉTO — červen',cx-rx,cy-34);
+  ctx.fillStyle='#7fb4e0';
+  ctx.fillText('❄️ ZIMA — prosinec',cx+rx,cy-34);
+  ctx.fillStyle='#d8a86a';
+  ctx.fillText('🍂 podzim — září',cx,cy-ry-24);
+  ctx.fillStyle='#c987b8';
+  ctx.fillText('🌸 jaro — březen',cx,cy+ry+34);
+  ctx.font='10px sans-serif';ctx.fillStyle='#667';
+  ctx.fillText('(severní pól přikloněn ke Slunci)',cx-rx,cy-20);
+  ctx.fillText('(severní pól odkloněn od Slunce)',cx+rx,cy-20);
+  // Země: úhel π = léto (vlevo)
+  const a=Math.PI+2*Math.PI*rok;
+  const ZR=17, zx=cx+rx*Math.cos(a), zy=cy+ry*Math.sin(a);
+  // osvětlená polovina směrem ke Slunci
+  const fi=Math.atan2(cy-zy,cx-zx);
+  ctx.fillStyle='#1d2a44';ctx.beginPath();ctx.arc(zx,zy,ZR,0,7);ctx.fill();
+  ctx.fillStyle='#4a90d9';ctx.beginPath();ctx.arc(zx,zy,ZR,fi-Math.PI/2,fi+Math.PI/2);ctx.fill();
+  // zemská osa — stále stejný směr (23,5° od svislice, nakloněná doprava)
+  const t=0.41, ax=Math.sin(t), ay=-Math.cos(t);
+  ctx.strokeStyle='#e0e0e0';ctx.lineWidth=2;
+  ctx.beginPath();ctx.moveTo(zx-ax*ZR*1.5,zy-ay*ZR*1.5);ctx.lineTo(zx+ax*ZR*1.5,zy+ay*ZR*1.5);ctx.stroke();
+  ctx.fillStyle='#e0e0e0';ctx.font='10px sans-serif';ctx.textAlign='center';
+  ctx.fillText('S',zx+ax*ZR*1.9,zy+ay*ZR*1.9);
+  // rovník kolmo na osu
+  ctx.strokeStyle='rgba(255,255,255,.4)';ctx.lineWidth=1;
+  ctx.beginPath();ctx.moveTo(zx+ay*ZR,zy-ax*ZR);ctx.lineTo(zx-ay*ZR,zy+ax*ZR);ctx.stroke();
+  // aktuální měsíc
+  const mes=MESICE[Math.floor(rok*12)%12];
+  ctx.fillStyle='#e0e0e0';ctx.font='600 15px sans-serif';
+  ctx.fillText('měsíc: '+mes,cx,h-52);
+  ctx.fillStyle='#889';ctx.font='12px sans-serif';
+  ctx.fillText('Všimni si: osa Země míří pořád stejným směrem, mění se jen strana přikloněná ke Slunci.',cx,h-32);
+}
+
+/* ================= SMYČKA ================= */
+function kresli(){
+  const {w,h}=rozmer();
+  ctx.clearRect(0,0,w,h);
+  hvezdy.forEach(s=>{ctx.globalAlpha=s.a;ctx.fillStyle='#fff';ctx.fillRect(s.x,s.y,s.v,s.v);});
+  ctx.globalAlpha=1;
+  if(rezim==='soustava')kresliSoustavu();
+  else if(rezim==='meritko')kresliMeritko();
+  else if(rezim==='mesic')kresliMesic();
+  else kresliObdobi();
+}
 let minule=performance.now();
 function smycka(t){
   const dt=(t-minule)/1000;minule=t;
-  if(bezi)cas+=dt*(+$('rychlost').value/100)*.9;
+  const krok=dt*(+$('rychlost').value/100)*.9;
+  if(bezi){
+    cas+=krok;
+    fotonMin+=krok*40;                      // zrychlený let fotonu
+    if(fotonMin>SVETLO_MIN_AU*31)fotonMin=0; // za Neptunem začni znovu
+  }
   kresli();
   requestAnimationFrame(smycka);
 }
 requestAnimationFrame(smycka);
 
-/* interakce */
+/* ================= INTERAKCE ================= */
 canvas.addEventListener('click',e=>{
   const rect=canvas.getBoundingClientRect();
   const x=e.clientX-rect.left,y=e.clientY-rect.top;
-  const g=geometrie();
-  if(Math.hypot(x-g.cx,y-g.cy)<20){ukazInfo(SLUNCE);return;}
-  for(let i=PLANETY.length-1;i>=0;i--){
-    const p=PLANETY[i],poz=polohaPlanety(p,i,g);
-    if(Math.hypot(x-poz.x,y-poz.y)<Math.max(p.velikost+6,12)){ukazInfo(p);return;}
+  if(rezim==='soustava'){
+    const g=geometrie();
+    if(Math.hypot(x-g.cx,y-g.cy)<20){ukazInfo(SLUNCE);return;}
+    for(let i=PLANETY.length-1;i>=0;i--){
+      const p=PLANETY[i],poz=polohaPlanety(p,i,g);
+      if(Math.hypot(x-poz.x,y-poz.y)<Math.max(p.velikost+6,12)){ukazInfo(p);return;}
+    }
+  } else if(rezim==='meritko'){
+    for(const c of mtkHit){
+      if(Math.hypot(x-c.x,y-c.y)<c.r){ukazInfo(c.p);return;}
+    }
   }
   $('info').classList.remove('zobraz');
 });
 function ukazInfo(p){
-  $('infoObsah').innerHTML=`<h2 style="color:${p.barva||'#ffd54f'}">${p.nazev}</h2><div class="lat">${p.lat}</div>`+
+  $('infoObsah').innerHTML=
+    `<h2 style="color:${p.barva||'#ffd54f'}">${p.nazev}</h2><div class="lat">${p.lat}</div>`+
+    `<div class="typ">${p.typ}</div>`+
     Object.entries(p.data).map(([k,v])=>`<div class="radek"><span>${k}</span><b>${v}</b></div>`).join('')+
-    `<p>💡 ${p.fakt}</p>`;
+    `<p>${p.popis}</p><ul>${p.fakta.map(f=>`<li>${f}</li>`).join('')}</ul>`;
   $('info').classList.add('zobraz');
 }
 $('zavrit').onclick=()=>$('info').classList.remove('zobraz');
 $('pauza').onclick=()=>{bezi=!bezi;$('pauza').textContent=bezi?'⏸️ Pauza':'▶️ Spustit';};
 $('popisky').onclick=()=>{ukazPopisky=!ukazPopisky;};
 $('drahy').onclick=()=>{ukazDrahy=!ukazDrahy;};
+
+/* záložky */
+const VYSVETLENI={
+  soustava:'Klikni na <b>planetu nebo Slunce</b> — otevře se naučná karta s údaji, popisem a zajímavostmi. Velikosti a vzdálenosti v této animaci <b>nejsou</b> ve skutečném měřítku (jinak by se planety nevešly na obrazovku — viz záložka 📏).',
+  meritko:'Nahoře: <b>skutečný poměr velikostí</b> — Slunce je tak obrovské, že se na obrazovku vejde jen jeho okraj — a <b>skutečný poměr rychlostí rotace</b>: plynní obři stihnou celý den za ~10 hodin, zatímco Venuše se otočí jednou za 243 dní, a navíc pozpátku (↺). Dole: <b>skutečné vzdálenosti</b> a letící foton — i světlo potřebuje k Neptunu přes 4 hodiny. Na tělesa jde kliknout.',
+  mesic:'Vlevo: pohled „shora" na Měsíc obíhající Zemi — Slunce vždy osvětluje jen jednu polovinu Měsíce. Vpravo: <b>jak Měsíc právě vidíme ze Země</b>. Fáze nevznikají stínem Země (to je zatmění!), ale tím, pod jakým úhlem se díváme na osvětlenou polovinu. Celý cyklus trvá 29,5 dne.',
+  obdobi:'Roční období <b>nezpůsobuje vzdálenost od Slunce</b>, ale sklon zemské osy 23,5°. Osa míří stále stejným směrem, takže je půl roku ke Slunci přikloněná severní polokoule (naše léto — paprsky dopadají strměji a den je delší) a půl roku jižní (naše zima). Proto je v Austrálii léto, když je u nás zima.'
+};
+document.querySelectorAll('#zalozky button').forEach(b=>b.onclick=()=>{
+  rezim=b.dataset.r;
+  document.querySelectorAll('#zalozky button').forEach(x=>x.classList.toggle('aktivni',x===b));
+  $('info').classList.remove('zobraz');
+  $('vysvetleni').innerHTML=VYSVETLENI[rezim];
+  const jeSoustava=rezim==='soustava';
+  $('popisky').style.display=jeSoustava?'':'none';
+  $('drahy').style.display=jeSoustava?'':'none';
+});
+$('vysvetleni').innerHTML=VYSVETLENI.soustava;
 </script>
 </body>
 </html>

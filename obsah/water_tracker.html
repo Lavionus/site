@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>💧 Pitný režim</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1a1a1a;color:#e0e0e0;min-height:100vh;padding:20px}
+.container{max-width:640px;margin:0 auto}
+h1{font-size:1.6rem;margin-bottom:18px;font-weight:600;text-align:center}
+.card{background:#2a2a2a;border:1px solid #404040;border-radius:8px;padding:22px;margin-bottom:20px}
+h2{font-size:1.05rem;color:#6aa6fd;margin-bottom:16px}
+label{display:block;font-size:.82rem;color:#888;margin-bottom:5px}
+input{background:#404040;border:1px solid #555;border-radius:4px;color:#e0e0e0;padding:9px;width:120px}
+.sklenice{position:relative;width:140px;height:200px;margin:10px auto;border:4px solid #555;border-top:none;border-radius:0 0 22px 22px;overflow:hidden;background:#1e1e1e}
+.hladina{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(180deg,#4aa3f0,#2874c9);transition:height .5s ease}
+.big{font-size:2rem;font-weight:700;color:#4aa3f0;text-align:center;margin:8px 0 2px}
+.cil{text-align:center;color:#888;font-size:.9rem;margin-bottom:14px}
+.tlacitka{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin:12px 0}
+.btn{background:#6aa6fd;color:#fff;border:none;padding:10px 16px;border-radius:6px;cursor:pointer;font-weight:600;font-size:.9rem}
+.btn:hover{background:#5591e8}
+.btn-sec{background:#404040}.btn-red{background:#c0392b}
+.hotovo{text-align:center;color:#4caf50;font-weight:700;font-size:1.1rem;margin-top:8px}
+table{width:100%;border-collapse:collapse;font-size:.9rem}
+td,th{padding:8px;border-bottom:1px solid #333;text-align:left}
+th{color:#6aa6fd;font-size:.8rem;text-transform:uppercase}
+.bar{background:#333;border-radius:4px;height:10px;overflow:hidden}
+.bar>div{height:100%;background:#4aa3f0}
+.bar>div.plno{background:#4caf50}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>💧 Pitný režim</h1>
+  <div class="card">
+    <div class="sklenice"><div class="hladina" id="hladina" style="height:0%"></div></div>
+    <div class="big" id="dnes">0 ml</div>
+    <div class="cil">Denní cíl: <span id="cilText">2000</span> ml · <span id="procent">0 %</span></div>
+    <div class="tlacitka">
+      <button class="btn" data-ml="200">🥛 +200 ml</button>
+      <button class="btn" data-ml="300">☕ +300 ml</button>
+      <button class="btn" data-ml="500">🍶 +500 ml</button>
+      <button class="btn btn-sec" data-ml="-200">−200 ml</button>
+    </div>
+    <div class="hotovo" id="hotovo"></div>
+    <div style="display:flex;gap:14px;align-items:end;justify-content:center;margin-top:14px">
+      <div><label>Denní cíl (ml)</label><input type="number" id="cil" step="100" min="500"></div>
+      <button class="btn btn-red" id="vynulovat">Vynulovat dnešek</button>
+    </div>
+  </div>
+  <div class="card">
+    <h2>Posledních 14 dní</h2>
+    <table><thead><tr><th>Den</th><th>Vypito</th><th style="width:40%">Plnění</th></tr></thead><tbody id="historie"></tbody></table>
+  </div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const STORE='waterTracker.v1';
+let st;
+try{st=JSON.parse(localStorage.getItem(STORE));}catch(e){}
+if(!st)st={cil:2000,dny:{}};
+const save=()=>localStorage.setItem(STORE,JSON.stringify(st));
+const dnesKlic=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');};
+
+function render(){
+  const ml=st.dny[dnesKlic()]||0;
+  const pct=Math.min(100,Math.round(ml/st.cil*100));
+  $('dnes').textContent=ml+' ml';
+  $('cilText').textContent=st.cil;
+  $('procent').textContent=Math.round(ml/st.cil*100)+' %';
+  $('hladina').style.height=pct+'%';
+  $('hotovo').textContent=ml>=st.cil?'🎉 Denní cíl splněn!':'';
+  $('cil').value=st.cil;
+  // historie
+  const radky=[];
+  for(let i=0;i<14;i++){
+    const d=new Date();d.setDate(d.getDate()-i);
+    const k=d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+    const v=st.dny[k]||0;
+    const p=Math.min(100,Math.round(v/st.cil*100));
+    radky.push(`<tr><td>${i===0?'Dnes':d.toLocaleDateString('cs-CZ',{weekday:'short',day:'numeric',month:'numeric'})}</td>
+      <td>${v} ml</td><td><div class="bar"><div class="${v>=st.cil?'plno':''}" style="width:${p}%"></div></div></td></tr>`);
+  }
+  $('historie').innerHTML=radky.join('');
+}
+document.querySelector('.tlacitka').addEventListener('click',e=>{
+  const ml=+e.target.dataset.ml;
+  if(!ml)return;
+  const k=dnesKlic();
+  st.dny[k]=Math.max(0,(st.dny[k]||0)+ml);
+  save();render();
+});
+$('cil').addEventListener('input',()=>{st.cil=Math.max(500,+$('cil').value||2000);save();render();});
+$('vynulovat').onclick=()=>{st.dny[dnesKlic()]=0;save();render();};
+render();
+</script>
+</body>
+</html>

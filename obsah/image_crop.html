@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>✂️ Ořez obrázku</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1a1a1a;color:#e0e0e0;min-height:100vh;padding:20px}
+.container{max-width:1000px;margin:0 auto}
+h1{font-size:1.6rem;margin-bottom:18px;font-weight:600;text-align:center}
+.card{background:#2a2a2a;border:1px solid #404040;border-radius:8px;padding:20px;margin-bottom:20px}
+.ovladani{display:flex;gap:12px;flex-wrap:wrap;align-items:end;margin-bottom:14px}
+label{display:block;font-size:.82rem;color:#888;margin-bottom:5px}
+input[type=file]{color:#b0b0b0}
+select{background:#404040;border:1px solid #555;border-radius:4px;color:#e0e0e0;padding:9px}
+.btn{background:#6aa6fd;color:#fff;border:none;padding:10px 16px;border-radius:6px;cursor:pointer;font-weight:600;font-size:.9rem}
+.btn:hover{background:#5591e8}
+.scena{position:relative;display:inline-block;max-width:100%;user-select:none}
+.scena img{max-width:100%;display:block;border-radius:4px}
+#ram{position:absolute;border:2px dashed #6aa6fd;background:rgba(106,166,253,.12);cursor:move;box-shadow:0 0 0 9999px rgba(0,0,0,.55)}
+#ram .rohy{position:absolute;right:-8px;bottom:-8px;width:16px;height:16px;background:#6aa6fd;border-radius:50%;cursor:nwse-resize}
+.info{color:#888;font-size:.82rem;margin-top:10px}
+.zprava{color:#888;padding:40px;text-align:center}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>✂️ Ořez obrázku</h1>
+  <div class="card">
+    <div class="ovladani">
+      <div><label>Obrázek</label><input type="file" id="soubor" accept="image/*"></div>
+      <div><label>Poměr stran</label>
+        <select id="pomer">
+          <option value="0">Volný</option>
+          <option value="1">1:1 (čtverec)</option>
+          <option value="1.3333">4:3</option>
+          <option value="1.7778">16:9</option>
+          <option value="0.75">3:4 (na výšku)</option>
+          <option value="0.5625">9:16 (na výšku)</option>
+          <option value="1.4142">√2 (A4 na šířku)</option>
+        </select>
+      </div>
+      <div><label>Formát</label><select id="format"><option value="image/jpeg">JPG</option><option value="image/png">PNG</option></select></div>
+      <button class="btn" id="stahnout">💾 Stáhnout výřez</button>
+    </div>
+    <div class="zprava" id="zprava">Vyberte obrázek, pak tažením posouvejte výřez a rohem měňte velikost.</div>
+    <div class="scena" id="scena" style="display:none">
+      <img id="obr">
+      <div id="ram"><div class="rohy"></div></div>
+    </div>
+    <div class="info" id="info"></div>
+  </div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const obr=$('obr'),ram=$('ram'),scena=$('scena');
+let img=null,nazev='obrazek';
+let box={x:40,y:40,w:200,h:150};
+let akce=null; // {typ:'move'|'resize',sx,sy,box0}
+
+function pomer(){return +$('pomer').value||0;}
+function clamp(){
+  const W=obr.clientWidth,H=obr.clientHeight;
+  box.w=Math.max(30,Math.min(box.w,W));
+  box.h=Math.max(30,Math.min(box.h,H));
+  const p=pomer();
+  if(p){box.h=box.w/p;if(box.h>H){box.h=H;box.w=H*p;}}
+  box.x=Math.max(0,Math.min(box.x,W-box.w));
+  box.y=Math.max(0,Math.min(box.y,H-box.h));
+}
+function render(){
+  clamp();
+  ram.style.left=box.x+'px';ram.style.top=box.y+'px';
+  ram.style.width=box.w+'px';ram.style.height=box.h+'px';
+  if(img){
+    const k=img.naturalWidth/obr.clientWidth;
+    $('info').textContent=`Výřez: ${Math.round(box.w*k)} × ${Math.round(box.h*k)} px (originál ${img.naturalWidth} × ${img.naturalHeight} px)`;
+  }
+}
+$('soubor').addEventListener('change',e=>{
+  const f=e.target.files[0];
+  if(!f)return;
+  nazev=f.name.replace(/\.[^.]+$/,'');
+  const i=new Image();
+  i.onload=()=>{
+    img=i;obr.src=i.src;
+    $('zprava').style.display='none';scena.style.display='inline-block';
+    setTimeout(()=>{
+      box={x:obr.clientWidth*0.1,y:obr.clientHeight*0.1,w:obr.clientWidth*0.8,h:obr.clientHeight*0.8};
+      render();
+    },50);
+  };
+  i.src=URL.createObjectURL(f);
+});
+$('pomer').addEventListener('change',render);
+function pointerPos(e){
+  const r=scena.getBoundingClientRect();
+  return {x:e.clientX-r.left,y:e.clientY-r.top};
+}
+ram.addEventListener('pointerdown',e=>{
+  e.preventDefault();
+  const p=pointerPos(e);
+  const typ=e.target.classList.contains('rohy')?'resize':'move';
+  akce={typ,sx:p.x,sy:p.y,box0:{...box}};
+  ram.setPointerCapture(e.pointerId);
+});
+ram.addEventListener('pointermove',e=>{
+  if(!akce)return;
+  const p=pointerPos(e);
+  const dx=p.x-akce.sx,dy=p.y-akce.sy;
+  if(akce.typ==='move'){box.x=akce.box0.x+dx;box.y=akce.box0.y+dy;}
+  else{
+    box.w=akce.box0.w+dx;
+    box.h=pomer()?box.w/pomer():akce.box0.h+dy;
+  }
+  render();
+});
+ram.addEventListener('pointerup',()=>akce=null);
+$('stahnout').onclick=()=>{
+  if(!img)return;
+  const k=img.naturalWidth/obr.clientWidth;
+  const c=document.createElement('canvas');
+  c.width=Math.round(box.w*k);c.height=Math.round(box.h*k);
+  c.getContext('2d').drawImage(img,box.x*k,box.y*k,box.w*k,box.h*k,0,0,c.width,c.height);
+  const typ=$('format').value;
+  c.toBlob(b=>{
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(b);
+    a.download=nazev+'_orez.'+(typ==='image/png'?'png':'jpg');
+    a.click();
+  },typ,0.92);
+};
+window.addEventListener('resize',render);
+</script>
+</body>
+</html>

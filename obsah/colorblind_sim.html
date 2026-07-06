@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🌈 Simulace barvosleposti</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1a1a1a;color:#e0e0e0;min-height:100vh;padding:20px}
+.container{max-width:1000px;margin:0 auto}
+h1{font-size:1.6rem;margin-bottom:8px;font-weight:600;text-align:center}
+.pod{color:#888;text-align:center;font-size:.85rem;margin-bottom:18px}
+.card{background:#2a2a2a;border:1px solid #404040;border-radius:8px;padding:22px;margin-bottom:20px}
+h2{font-size:1.05rem;color:#6aa6fd;margin-bottom:14px}
+input[type=file]{color:#b0b0b0;margin-bottom:14px}
+.mrizka{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:700px){.mrizka{grid-template-columns:1fr}}
+.bunka{background:#1e1e1e;border:1px solid #404040;border-radius:8px;padding:10px;text-align:center}
+.bunka h3{font-size:.85rem;color:#6aa6fd;margin-bottom:8px}
+canvas{max-width:100%;border-radius:4px}
+.palety{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.vzorek{width:44px;height:44px;border-radius:6px;border:1px solid #555;cursor:pointer}
+input[type=color]{width:60px;height:40px;padding:0;border:none;background:none;cursor:pointer}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>🌈 Simulace barvosleposti</h1>
+  <p class="pod">Jak vidí obrázek či paletu lidé s protanopií (bez červených čípků), deuteranopií (bez zelených) a tritanopií (bez modrých). ~8 % mužů má poruchu červeno-zeleného vidění.</p>
+  <div class="card">
+    <h2>Vlastní obrázek nebo testovací paleta</h2>
+    <input type="file" id="soubor" accept="image/*">
+    <div class="palety" id="palety"></div>
+  </div>
+  <div class="mrizka">
+    <div class="bunka"><h3>Původní</h3><canvas id="c0"></canvas></div>
+    <div class="bunka"><h3>Protanopie (bez červené)</h3><canvas id="c1"></canvas></div>
+    <div class="bunka"><h3>Deuteranopie (bez zelené)</h3><canvas id="c2"></canvas></div>
+    <div class="bunka"><h3>Tritanopie (bez modré)</h3><canvas id="c3"></canvas></div>
+  </div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+// Brettel/Viénot aproximace – matice v lineárním RGB
+const MATICE={
+  1:[0.152286,1.052583,-0.204868, 0.114503,0.786281,0.099216, -0.003882,-0.048116,1.051998],
+  2:[0.367322,0.860646,-0.227968, 0.280085,0.672501,0.047413, -0.011820,0.042940,0.968881],
+  3:[1.255528,-0.076749,-0.178779, -0.078411,0.930809,0.147602, 0.004733,0.691367,0.303900],
+};
+const s2l=c=>{c/=255;return c<=0.04045?c/12.92:Math.pow((c+0.055)/1.055,2.4);};
+const l2s=c=>{c=c<=0.0031308?c*12.92:1.055*Math.pow(c,1/2.4)-0.055;return Math.max(0,Math.min(255,Math.round(c*255)));};
+const platna=[0,1,2,3].map(i=>$('c'+i));
+
+function aplikuj(zdroj){
+  const w=zdroj.width,h=zdroj.height;
+  platna.forEach(c=>{c.width=w;c.height=h;});
+  const ctx0=platna[0].getContext('2d');
+  ctx0.drawImage(zdroj,0,0);
+  const orig=ctx0.getImageData(0,0,w,h);
+  for(let typ=1;typ<=3;typ++){
+    const m=MATICE[typ];
+    const out=new ImageData(w,h);
+    const s=orig.data,d=out.data;
+    for(let i=0;i<s.length;i+=4){
+      const r=s2l(s[i]),g=s2l(s[i+1]),b=s2l(s[i+2]);
+      d[i]  =l2s(m[0]*r+m[1]*g+m[2]*b);
+      d[i+1]=l2s(m[3]*r+m[4]*g+m[5]*b);
+      d[i+2]=l2s(m[6]*r+m[7]*g+m[8]*b);
+      d[i+3]=s[i+3];
+    }
+    platna[typ].getContext('2d').putImageData(out,0,0);
+  }
+}
+function testovaciPaleta(){
+  const c=document.createElement('canvas');c.width=480;c.height=300;
+  const x=c.getContext('2d');
+  // duha
+  const barvy=['#e6194b','#f58231','#ffe119','#bfef45','#3cb44b','#42d4f4','#4363d8','#911eb4','#f032e6','#a9a9a9'];
+  barvy.forEach((b,i)=>{x.fillStyle=b;x.fillRect(i*48,0,48,110);});
+  // semafor
+  x.fillStyle='#222';x.fillRect(20,130,120,150);
+  ['#d32f2f','#f9a825','#388e3c'].forEach((b,i)=>{x.fillStyle=b;x.beginPath();x.arc(80,160+i*45,18,0,7);x.fill();});
+  // graf s červenou/zelenou
+  x.fillStyle='#388e3c';x.fillRect(200,150,60,130);
+  x.fillStyle='#d32f2f';x.fillRect(280,190,60,90);
+  x.fillStyle='#1976d2';x.fillRect(360,170,60,110);
+  x.fillStyle='#fff';x.font='14px sans-serif';
+  x.fillText('zisk',215,145);x.fillText('ztráta',290,185);x.fillText('plán',375,165);
+  aplikuj(c);
+}
+$('soubor').addEventListener('change',e=>{
+  const f=e.target.files[0];
+  if(!f)return;
+  const img=new Image();
+  img.onload=()=>{
+    // zmenšit velké obrázky
+    const MAX=900,k=Math.min(1,MAX/Math.max(img.width,img.height));
+    const c=document.createElement('canvas');
+    c.width=img.width*k;c.height=img.height*k;
+    c.getContext('2d').drawImage(img,0,0,c.width,c.height);
+    aplikuj(c);
+  };
+  img.src=URL.createObjectURL(f);
+});
+// rychlé palety
+const PALETY=[['#e6194b','#3cb44b','#4363d8'],['#d32f2f','#f9a825','#388e3c'],['#ff7043','#8bc34a','#26c6da'],['#8e24aa','#43a047','#fdd835']];
+$('palety').innerHTML=PALETY.map((p,i)=>`<div class="vzorek" data-i="${i}" style="background:linear-gradient(90deg,${p[0]} 33%,${p[1]} 33% 66%,${p[2]} 66%)" title="Vyzkoušet paletu"></div>`).join('')+'<button class="vzorek" id="reset" style="background:#404040;color:#fff;font-size:.65rem">test</button>';
+$('palety').addEventListener('click',e=>{
+  if(e.target.id==='reset'){testovaciPaleta();return;}
+  const i=e.target.dataset.i;
+  if(i===undefined)return;
+  const c=document.createElement('canvas');c.width=480;c.height=160;
+  const x=c.getContext('2d');
+  PALETY[i].forEach((b,j)=>{x.fillStyle=b;x.fillRect(j*160,0,160,160);});
+  aplikuj(c);
+});
+testovaciPaleta();
+</script>
+</body>
+</html>

@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🔨 Převodník tvrdosti</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1a1a1a;color:#e0e0e0;min-height:100vh;padding:20px}
+.container{max-width:780px;margin:0 auto}
+h1{font-size:1.6rem;margin-bottom:8px;font-weight:600;text-align:center}
+.pod{color:#888;text-align:center;font-size:.85rem;margin-bottom:18px}
+.card{background:#2a2a2a;border:1px solid #404040;border-radius:8px;padding:22px;margin-bottom:20px}
+h2{font-size:1.05rem;color:#6aa6fd;margin-bottom:16px}
+label{display:block;font-size:.82rem;color:#888;margin-bottom:5px}
+input,select{width:100%;background:#404040;border:1px solid #555;border-radius:4px;color:#e0e0e0;padding:10px;margin-bottom:12px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:520px){.grid{grid-template-columns:1fr}}
+.res-row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #333}
+.res-row:last-child{border:none}.res-row b{color:#4caf50;font-size:1.1rem}
+.hint{color:#777;font-size:.8rem;margin-top:12px;line-height:1.5}
+table{width:100%;border-collapse:collapse;font-size:.85rem}
+td,th{padding:5px 8px;border-bottom:1px solid #333;text-align:right}
+th{color:#6aa6fd;font-size:.78rem}
+tr.zvyraznen td{background:#2d3a4d}
+.mimo{color:#e67e22;text-align:center;margin-top:8px;font-size:.85rem}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>🔨 Převodník tvrdosti</h1>
+  <p class="pod">HB ↔ HV ↔ HRC ↔ pevnost Rm pro nelegované a nízkolegované oceli (dle ISO 18265 / EN, interpolováno). Orientační hodnoty.</p>
+  <div class="card">
+    <div class="grid">
+      <div><label>Hodnota</label><input type="number" id="hodnota" value="45" step="1"></div>
+      <div><label>Stupnice</label>
+        <select id="stupnice">
+          <option value="HRC" selected>HRC (Rockwell C)</option>
+          <option value="HV">HV (Vickers)</option>
+          <option value="HB">HB (Brinell)</option>
+          <option value="RM">Rm (MPa)</option>
+        </select>
+      </div>
+    </div>
+    <div class="res-row"><span>Vickers HV</span><b id="rHV">–</b></div>
+    <div class="res-row"><span>Brinell HB</span><b id="rHB">–</b></div>
+    <div class="res-row"><span>Rockwell HRC</span><b id="rHRC">–</b></div>
+    <div class="res-row"><span>Pevnost v tahu Rm</span><b id="rRM">–</b></div>
+    <div class="mimo" id="mimo"></div>
+    <p class="hint">HRC má smysl až od ~20 HRC (pod tím se používá HRB). HB se běžně měří do ~650. Převody platí pro ocel – pro hliník, mosaz apod. neplatí.</p>
+  </div>
+  <div class="card">
+    <h2>Převodní tabulka (ocel)</h2>
+    <table><thead><tr><th>HV</th><th>HB</th><th>HRC</th><th>Rm (MPa)</th></tr></thead><tbody id="telo"></tbody></table>
+  </div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+// [HV, HB, HRC(nebo null), Rm] – výběr z ISO 18265 tab. A.1
+const TAB=[
+[80,76,null,255],[90,86,null,285],[100,95,null,320],[110,105,null,350],[120,114,null,385],
+[130,124,null,415],[140,133,null,450],[150,143,null,480],[160,152,null,510],[170,162,null,545],
+[180,171,null,575],[190,181,null,610],[200,190,null,640],[220,209,null,700],[240,228,20.3,770],
+[260,247,24.0,830],[280,266,27.1,900],[300,285,29.8,965],[320,304,32.2,1030],[340,323,34.4,1095],
+[360,342,36.6,1155],[380,361,38.8,1220],[400,380,40.8,1290],[420,399,42.7,1350],[440,418,44.5,1420],
+[460,437,46.1,1485],[480,456,47.7,1555],[500,475,49.1,1620],[520,494,50.5,1690],[540,513,51.7,1755],
+[560,532,53.0,1825],[580,551,54.1,1895],[600,570,55.2,1960],[640,608,57.3,2100],[680,646,59.2,null],
+[720,684,61.0,null],[760,722,62.5,null],[800,760,64.0,null],[850,null,65.5,null],[900,null,67.0,null],
+];
+function interp(x,sloupecIn,sloupecOut){
+  const body=TAB.filter(r=>r[sloupecIn]!==null&&r[sloupecOut]!==null);
+  if(!body.length)return null;
+  if(x<body[0][sloupecIn]||x>body[body.length-1][sloupecIn])return null;
+  for(let i=0;i<body.length-1;i++){
+    const a=body[i],b=body[i+1];
+    if(x>=a[sloupecIn]&&x<=b[sloupecIn]){
+      const t=(x-a[sloupecIn])/(b[sloupecIn]-a[sloupecIn]||1);
+      return a[sloupecOut]+t*(b[sloupecOut]-a[sloupecOut]);
+    }
+  }
+  return null;
+}
+const IDX={HV:0,HB:1,HRC:2,RM:3};
+function spocitej(){
+  const x=+$('hodnota').value;
+  const vst=IDX[$('stupnice').value];
+  const fmt=(v,des=0)=>v===null?'mimo rozsah':v.toFixed(des);
+  const hv=vst===0?x:interp(x,vst,0);
+  $('rHV').textContent=fmt(hv);
+  $('rHB').textContent=fmt(vst===1?x:interp(x,vst,1));
+  $('rHRC').textContent=fmt(vst===2?x:interp(x,vst,2),1);
+  $('rRM').textContent=(vst===3?x.toFixed(0):fmt(interp(x,vst,3)))+((vst===3||interp(x,vst,3)!==null)?' MPa':'');
+  $('mimo').textContent=(hv===null&&vst!==0)?'⚠️ Hodnota je mimo rozsah převodní tabulky.':'';
+  // tabulka se zvýrazněním
+  $('telo').innerHTML=TAB.map(r=>{
+    const blizko=hv!==null&&Math.abs(r[0]-hv)<=10;
+    return `<tr class="${blizko?'zvyraznen':''}"><td>${r[0]}</td><td>${r[1]??'–'}</td><td>${r[2]??'–'}</td><td>${r[3]??'–'}</td></tr>`;
+  }).join('');
+}
+document.querySelectorAll('input,select').forEach(e=>e.addEventListener('input',spocitej));
+spocitej();
+</script>
+</body>
+</html>

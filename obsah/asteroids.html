@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🚀 Asteroids</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1a1a1a;color:#e0e0e0;min-height:100vh;padding:20px;text-align:center}
+h1{font-size:1.6rem;margin-bottom:12px;font-weight:600}
+canvas{background:#05050f;border:2px solid #404040;border-radius:8px;max-width:100%}
+.napoveda{color:#888;font-size:.82rem;margin-top:10px}
+.btn{background:#6aa6fd;border:none;color:#fff;font-weight:600;border-radius:6px;padding:9px 18px;cursor:pointer;margin-bottom:12px;font-size:.9rem}
+</style>
+</head>
+<body>
+<h1>🚀 Asteroids</h1>
+<button class="btn" id="start">▶ Start</button>
+<br>
+<canvas id="c" width="800" height="560"></canvas>
+<div class="napoveda"><b>← →</b> otáčení · <b>↑</b> motor · <b>mezerník</b> střelba · velké asteroidy se rozpadají na menší</div>
+<script>
+const c=document.getElementById('c'),ctx=c.getContext('2d');
+const W=c.width,H=c.height;
+let lod,strely,asteroidy,skore,zivoty,uroven,bezi=false,anim,klav={},nesmrtelnost=0;
+let rekord=+localStorage.getItem('asteroidsBest')||0;
+
+function novaHra(){
+  lod={x:W/2,y:H/2,uhel:-Math.PI/2,vx:0,vy:0};
+  strely=[];skore=0;zivoty=3;uroven=1;nesmrtelnost=120;
+  vytvorAsteroidy(4);
+}
+function vytvorAsteroidy(n){
+  asteroidy=[];
+  for(let i=0;i<n;i++){
+    let x,y;
+    do{x=Math.random()*W;y=Math.random()*H;}while(Math.hypot(x-lod.x,y-lod.y)<160);
+    asteroidy.push(novyAsteroid(x,y,3));
+  }
+}
+function novyAsteroid(x,y,vel){
+  const uhel=Math.random()*Math.PI*2;
+  const rychlost=(4-vel)*0.5+0.5+uroven*0.15;
+  // nepravidelný tvar
+  const body=[];
+  const n=9+Math.floor(Math.random()*4);
+  for(let i=0;i<n;i++)body.push(0.72+Math.random()*0.45);
+  return{x,y,vel,r:vel*17,vx:Math.cos(uhel)*rychlost,vy:Math.sin(uhel)*rychlost,rot:(Math.random()-0.5)*0.03,a:0,body};
+}
+function krok(){
+  // loď
+  if(klav['ArrowLeft'])lod.uhel-=0.075;
+  if(klav['ArrowRight'])lod.uhel+=0.075;
+  if(klav['ArrowUp']){
+    lod.vx+=Math.cos(lod.uhel)*0.14;
+    lod.vy+=Math.sin(lod.uhel)*0.14;
+  }
+  lod.vx*=0.992;lod.vy*=0.992;
+  lod.x=(lod.x+lod.vx+W)%W;lod.y=(lod.y+lod.vy+H)%H;
+  if(nesmrtelnost>0)nesmrtelnost--;
+  // střely
+  strely.forEach(s=>{s.x=(s.x+s.vx+W)%W;s.y=(s.y+s.vy+H)%H;s.zivot--;});
+  strely=strely.filter(s=>s.zivot>0);
+  // asteroidy
+  asteroidy.forEach(a=>{
+    a.x=(a.x+a.vx+W)%W;a.y=(a.y+a.vy+H)%H;a.a+=a.rot;
+  });
+  // kolize střela × asteroid
+  for(let i=asteroidy.length-1;i>=0;i--){
+    const a=asteroidy[i];
+    for(let j=strely.length-1;j>=0;j--){
+      if(Math.hypot(a.x-strely[j].x,a.y-strely[j].y)<a.r){
+        strely.splice(j,1);
+        asteroidy.splice(i,1);
+        skore+=(4-a.vel)*20;
+        if(a.vel>1){
+          asteroidy.push(novyAsteroid(a.x,a.y,a.vel-1),novyAsteroid(a.x,a.y,a.vel-1));
+        }
+        break;
+      }
+    }
+  }
+  // kolize loď × asteroid
+  if(nesmrtelnost<=0){
+    for(const a of asteroidy){
+      if(Math.hypot(a.x-lod.x,a.y-lod.y)<a.r+9){
+        zivoty--;
+        nesmrtelnost=140;
+        lod.x=W/2;lod.y=H/2;lod.vx=0;lod.vy=0;
+        if(zivoty<=0){
+          bezi=false;
+          if(skore>rekord){rekord=skore;localStorage.setItem('asteroidsBest',rekord);}
+        }
+        break;
+      }
+    }
+  }
+  // další úroveň
+  if(!asteroidy.length){
+    uroven++;
+    nesmrtelnost=120;
+    vytvorAsteroidy(3+uroven);
+  }
+}
+function kresli(){
+  ctx.fillStyle='#05050f';ctx.fillRect(0,0,W,H);
+  // HUD
+  ctx.fillStyle='#888';ctx.font='16px monospace';ctx.textAlign='left';
+  ctx.fillText('Skóre: '+skore+'   Životy: '+'▲'.repeat(Math.max(0,zivoty))+'   Úroveň '+uroven,14,24);
+  ctx.textAlign='right';ctx.fillText('Rekord: '+rekord,W-14,24);
+  // loď
+  if(bezi||zivoty>0){
+    ctx.save();
+    ctx.translate(lod.x,lod.y);ctx.rotate(lod.uhel);
+    ctx.strokeStyle=nesmrtelnost>0&&Math.floor(nesmrtelnost/8)%2?'#333':'#fff';
+    ctx.lineWidth=2;
+    ctx.beginPath();ctx.moveTo(14,0);ctx.lineTo(-10,-9);ctx.lineTo(-6,0);ctx.lineTo(-10,9);ctx.closePath();ctx.stroke();
+    if(klav['ArrowUp']&&Math.random()<0.8){
+      ctx.strokeStyle='#e67e22';
+      ctx.beginPath();ctx.moveTo(-8,-4);ctx.lineTo(-16-Math.random()*6,0);ctx.lineTo(-8,4);ctx.stroke();
+    }
+    ctx.restore();
+  }
+  // střely
+  ctx.fillStyle='#ffd54f';
+  strely.forEach(s=>{ctx.beginPath();ctx.arc(s.x,s.y,2.4,0,7);ctx.fill();});
+  // asteroidy
+  ctx.strokeStyle='#9aa5b1';ctx.lineWidth=1.8;
+  asteroidy.forEach(a=>{
+    ctx.save();ctx.translate(a.x,a.y);ctx.rotate(a.a);
+    ctx.beginPath();
+    a.body.forEach((k,i)=>{
+      const u=i/a.body.length*Math.PI*2;
+      const x=Math.cos(u)*a.r*k,y=Math.sin(u)*a.r*k;
+      i?ctx.lineTo(x,y):ctx.moveTo(x,y);
+    });
+    ctx.closePath();ctx.stroke();ctx.restore();
+  });
+  if(!bezi&&zivoty<=0){
+    ctx.fillStyle='rgba(0,0,0,.6)';ctx.fillRect(0,0,W,H);
+    ctx.fillStyle='#e74c3c';ctx.font='bold 46px sans-serif';ctx.textAlign='center';
+    ctx.fillText('KONEC HRY',W/2,H/2-16);
+    ctx.fillStyle='#aaa';ctx.font='20px sans-serif';
+    ctx.fillText('Skóre: '+skore+' · stiskni Start',W/2,H/2+26);
+  }
+}
+function smycka(){
+  if(!bezi)return;
+  krok();kresli();
+  anim=requestAnimationFrame(smycka);
+}
+document.getElementById('start').onclick=()=>{
+  cancelAnimationFrame(anim);
+  novaHra();bezi=true;smycka();
+};
+let poslVystrel=0;
+window.addEventListener('keydown',e=>{
+  if(['ArrowUp','ArrowDown','ArrowLeft','ArrowRight',' '].includes(e.key))e.preventDefault();
+  klav[e.key]=true;
+  if(e.key===' '&&bezi&&performance.now()-poslVystrel>200){
+    poslVystrel=performance.now();
+    strely.push({x:lod.x+Math.cos(lod.uhel)*14,y:lod.y+Math.sin(lod.uhel)*14,
+      vx:Math.cos(lod.uhel)*8+lod.vx,vy:Math.sin(lod.uhel)*8+lod.vy,zivot:70});
+  }
+});
+window.addEventListener('keyup',e=>klav[e.key]=false);
+novaHra();kresli();
+</script>
+</body>
+</html>
