@@ -228,6 +228,13 @@
       background-color: #252525;
     }
 
+    .canvas-container.grid-on {
+      background-image:
+        linear-gradient(rgba(255,255,255,0.06) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(255,255,255,0.06) 1px, transparent 1px);
+      background-size: 25px 25px;
+    }
+
     #mainCanvas {
       position: absolute;
       top: 0;
@@ -571,6 +578,7 @@
   <!-- Nástroje kreslení -->
   <div class="toolbar-group">
     <button class="tool-btn active" id="toolPen" title="Pero (P)">✏️ Pero</button>
+    <button class="tool-btn" id="toolHighlighter" title="Zvýrazňovač (H)">🖍️ Zvýraz.</button>
     <button class="tool-btn" id="toolLine" title="Čára (L)">╱ Čára</button>
     <button class="tool-btn" id="toolRect" title="Obdélník (R)">▭ Obdélník</button>
     <button class="tool-btn" id="toolEllipse" title="Elipsa (E)">⬭ Elipsa</button>
@@ -579,6 +587,16 @@
     <button class="tool-btn" id="toolFill" title="Výplň (F)">🪣 Výplň</button>
     <button class="tool-btn" id="toolEraser" title="Guma (X)">⬜ Guma</button>
     <button class="tool-btn" id="toolPan" title="Pohyb plátna (Space)">✋ Pohyb</button>
+  </div>
+
+  <div class="toolbar-separator"></div>
+
+  <!-- Volby tvarů a plátna -->
+  <div class="toolbar-group">
+    <button class="tool-btn" id="btnFillShapes" title="Vyplněné tvary (obdélník/elipsa)">🔳 Výplň tvarů</button>
+    <button class="tool-btn" id="btnGrid" title="Mřížka (G)">📏 Mřížka</button>
+    <button class="tool-btn" id="btnInsertImage" title="Vložit obrázek ze souboru">🖼️ Obrázek</button>
+    <input type="file" id="imageFileInput" accept="image/*" style="display:none">
   </div>
 
   <div class="toolbar-separator"></div>
@@ -686,7 +704,7 @@
     <span id="statusSize">Plátno: —</span>
   </div>
   <div class="status-item" style="margin-left:auto;">
-    <span style="color:#555">P=Pero L=Čára R=Obdélník E=Elipsa A=Šipka T=Text F=Výplň X=Guma | Ctrl+Z=Zpět Ctrl+Y=Znovu</span>
+    <span style="color:#555">P=Pero H=Zvýrazňovač L=Čára R=Obdélník E=Elipsa A=Šipka T=Text F=Výplň X=Guma G=Mřížka | Shift=rovné úhly/čtverec | Ctrl+Z=Zpět Ctrl+Y=Znovu</span>
   </div>
 </div>
 
@@ -701,6 +719,10 @@
   let currentColor = '#e0e0e0';
   let brushSize = 3;
   let opacity = 1;
+  let fillShapes = false;
+  let gridOn = false;
+  const HIGHLIGHTER_ALPHA = 0.35;
+  const hlWidth = () => Math.max(8, brushSize * 3);
   let isDrawing = false;
   let startX = 0, startY = 0;
   let lastX = 0, lastY = 0;
@@ -950,12 +972,47 @@
       ctx.beginPath();
       ctx.moveTo(startX, startY);
       currentStrokePoints = [{ x: startX, y: startY }];
+    } else if (currentTool === 'highlighter') {
+      currentStrokePoints = [{ x: startX, y: startY }];
     }
+  }
+
+  // Shift = rovné úhly u čar/šipek, čtverec/kružnice u tvarů
+  function constrainPos(e, pos) {
+    if (!e.shiftKey) return pos;
+    if (currentTool === 'line' || currentTool === 'arrow') {
+      const dx = pos.x - startX, dy = pos.y - startY;
+      const dist = Math.hypot(dx, dy);
+      const angle = Math.round(Math.atan2(dy, dx) / (Math.PI / 4)) * (Math.PI / 4);
+      return { x: startX + Math.cos(angle) * dist, y: startY + Math.sin(angle) * dist };
+    }
+    if (currentTool === 'rect' || currentTool === 'ellipse') {
+      const dx = pos.x - startX, dy = pos.y - startY;
+      const s = Math.max(Math.abs(dx), Math.abs(dy));
+      return { x: startX + Math.sign(dx || 1) * s, y: startY + Math.sign(dy || 1) * s };
+    }
+    return pos;
+  }
+
+  // Zvýrazňovač: celý tah se překresluje najednou, aby měl jednotnou průhlednost
+  function drawHighlightStroke(pts) {
+    if (pts.length < 2) return;
+    ctx.save();
+    ctx.strokeStyle = currentColor;
+    ctx.globalAlpha = HIGHLIGHTER_ALPHA * opacity;
+    ctx.lineWidth = hlWidth();
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.beginPath();
+    ctx.moveTo(pts[0].x, pts[0].y);
+    for (let i = 1; i < pts.length; i++) ctx.lineTo(pts[i].x, pts[i].y);
+    ctx.stroke();
+    ctx.restore();
   }
 
   function onPointerMove(e) {
     e.preventDefault();
-    const pos = getCanvasPos(e);
+    let pos = getCanvasPos(e);
 
     document.getElementById('statusCoords').textContent = `X: ${Math.round(pos.x)}, Y: ${Math.round(pos.y)}`;
 
@@ -990,7 +1047,12 @@
       ctx.globalCompositeOperation = savedComposite;
       ctx.globalAlpha = savedAlpha;
       currentStrokePoints.push({ x: pos.x, y: pos.y });
+    } else if (currentTool === 'highlighter') {
+      currentStrokePoints.push({ x: pos.x, y: pos.y });
+      restoreSnapshot();
+      drawHighlightStroke(currentStrokePoints);
     } else {
+      pos = constrainPos(e, pos);
       restoreSnapshot();
       setCtxStyle();
       const x = Math.min(startX, pos.x);
@@ -1005,10 +1067,12 @@
         ctx.stroke();
       } else if (currentTool === 'rect') {
         ctx.beginPath();
+        if (fillShapes) ctx.fillRect(x, y, w, h);
         ctx.strokeRect(x, y, w, h);
       } else if (currentTool === 'ellipse') {
         ctx.beginPath();
         ctx.ellipse(startX + (pos.x - startX) / 2, startY + (pos.y - startY) / 2, w / 2, h / 2, 0, 0, 2 * Math.PI);
+        if (fillShapes) ctx.fill();
         ctx.stroke();
       } else if (currentTool === 'arrow') {
         drawArrow(startX, startY, pos.x, pos.y);
@@ -1030,12 +1094,16 @@
     isDrawing = false;
     snapshot = null;
 
-    const pos = getCanvasPos(e.changedTouches ? { clientX: e.changedTouches[0].clientX, clientY: e.changedTouches[0].clientY } : e);
+    const pos = constrainPos(e, getCanvasPos(e.changedTouches ? { clientX: e.changedTouches[0].clientX, clientY: e.changedTouches[0].clientY } : e));
 
     if (currentTool === 'pen') {
       ctx.closePath();
       if (currentStrokePoints.length > 1)
         svgOps.push({ type: 'pen', color: currentColor, opacity, lineWidth: brushSize, points: currentStrokePoints });
+      currentStrokePoints = [];
+    } else if (currentTool === 'highlighter') {
+      if (currentStrokePoints.length > 1)
+        svgOps.push({ type: 'pen', color: currentColor, opacity: HIGHLIGHTER_ALPHA * opacity, lineWidth: hlWidth(), points: currentStrokePoints });
       currentStrokePoints = [];
     } else if (currentTool === 'eraser') {
       ctx.closePath();
@@ -1044,12 +1112,12 @@
     } else if (currentTool === 'line') {
       svgOps.push({ type: 'line', color: currentColor, opacity, lineWidth: brushSize, x1: startX, y1: startY, x2: pos.x, y2: pos.y });
     } else if (currentTool === 'rect') {
-      svgOps.push({ type: 'rect', color: currentColor, opacity, lineWidth: brushSize,
+      svgOps.push({ type: 'rect', color: currentColor, opacity, lineWidth: brushSize, fill: fillShapes,
         x: Math.min(startX, pos.x), y: Math.min(startY, pos.y),
         w: Math.abs(pos.x - startX), h: Math.abs(pos.y - startY) });
     } else if (currentTool === 'ellipse') {
       const w = Math.abs(pos.x - startX), h = Math.abs(pos.y - startY);
-      svgOps.push({ type: 'ellipse', color: currentColor, opacity, lineWidth: brushSize,
+      svgOps.push({ type: 'ellipse', color: currentColor, opacity, lineWidth: brushSize, fill: fillShapes,
         cx: startX + (pos.x - startX) / 2, cy: startY + (pos.y - startY) / 2, rx: w / 2, ry: h / 2 });
     } else if (currentTool === 'arrow') {
       svgOps.push({ type: 'arrow', color: currentColor, opacity, lineWidth: brushSize, x1: startX, y1: startY, x2: pos.x, y2: pos.y });
@@ -1116,6 +1184,7 @@
   // === TOOL SELECTION ===
   const toolMap = {
     toolPen: 'pen',
+    toolHighlighter: 'highlighter',
     toolLine: 'line',
     toolRect: 'rect',
     toolEllipse: 'ellipse',
@@ -1127,12 +1196,12 @@
   };
 
   const toolNames = {
-    pen: 'Pero', line: 'Čára', rect: 'Obdélník', ellipse: 'Elipsa',
+    pen: 'Pero', highlighter: 'Zvýrazňovač', line: 'Čára', rect: 'Obdélník', ellipse: 'Elipsa',
     arrow: 'Šipka', text: 'Text', fill: 'Výplň', eraser: 'Guma', pan: 'Pohyb'
   };
 
   const toolCursors = {
-    pen: '', line: '', rect: '', ellipse: '', arrow: '',
+    pen: '', highlighter: '', line: '', rect: '', ellipse: '', arrow: '',
     text: 'cursor-text', fill: 'cursor-fill', eraser: 'cursor-eraser', pan: 'cursor-move'
   };
 
@@ -1219,9 +1288,9 @@
       case 'line':
         return `<line x1="${op.x1.toFixed(1)}" y1="${op.y1.toFixed(1)}" x2="${op.x2.toFixed(1)}" y2="${op.y2.toFixed(1)}" stroke="${op.color}" stroke-width="${op.lineWidth}" stroke-linecap="round" opacity="${a}"/>`;
       case 'rect':
-        return `<rect x="${op.x.toFixed(1)}" y="${op.y.toFixed(1)}" width="${op.w.toFixed(1)}" height="${op.h.toFixed(1)}" fill="none" stroke="${op.color}" stroke-width="${op.lineWidth}" opacity="${a}"/>`;
+        return `<rect x="${op.x.toFixed(1)}" y="${op.y.toFixed(1)}" width="${op.w.toFixed(1)}" height="${op.h.toFixed(1)}" fill="${op.fill ? op.color : 'none'}" stroke="${op.color}" stroke-width="${op.lineWidth}" opacity="${a}"/>`;
       case 'ellipse':
-        return `<ellipse cx="${op.cx.toFixed(1)}" cy="${op.cy.toFixed(1)}" rx="${op.rx.toFixed(1)}" ry="${op.ry.toFixed(1)}" fill="none" stroke="${op.color}" stroke-width="${op.lineWidth}" opacity="${a}"/>`;
+        return `<ellipse cx="${op.cx.toFixed(1)}" cy="${op.cy.toFixed(1)}" rx="${op.rx.toFixed(1)}" ry="${op.ry.toFixed(1)}" fill="${op.fill ? op.color : 'none'}" stroke="${op.color}" stroke-width="${op.lineWidth}" opacity="${a}"/>`;
       case 'arrow': {
         const angle = Math.atan2(op.y2 - op.y1, op.x2 - op.x1);
         const hl = Math.max(12, op.lineWidth * 3);
@@ -1291,8 +1360,9 @@
       if (e.key === 'y') { e.preventDefault(); redo(); }
       return;
     }
-    const keyMap = { p: 'pen', l: 'line', r: 'rect', e: 'ellipse', a: 'arrow', t: 'text', f: 'fill', x: 'eraser' };
+    const keyMap = { p: 'pen', h: 'highlighter', l: 'line', r: 'rect', e: 'ellipse', a: 'arrow', t: 'text', f: 'fill', x: 'eraser' };
     if (e.key === ' ') { e.preventDefault(); selectTool('pan'); return; }
+    if (e.key.toLowerCase() === 'g') { toggleGrid(); return; }
     if (keyMap[e.key.toLowerCase()]) selectTool(keyMap[e.key.toLowerCase()]);
   });
 
@@ -1303,6 +1373,40 @@
   });
 
   updateHistoryButtons();
+
+  // === VÝPLŇ TVARŮ / MŘÍŽKA / VLOŽENÍ OBRÁZKU ===
+  document.getElementById('btnFillShapes').addEventListener('click', function() {
+    fillShapes = !fillShapes;
+    this.classList.toggle('active', fillShapes);
+  });
+
+  function toggleGrid() {
+    gridOn = !gridOn;
+    container.classList.toggle('grid-on', gridOn);
+    document.getElementById('btnGrid').classList.toggle('active', gridOn);
+  }
+  document.getElementById('btnGrid').addEventListener('click', toggleGrid);
+
+  const imageFileInput = document.getElementById('imageFileInput');
+  document.getElementById('btnInsertImage').addEventListener('click', () => imageFileInput.click());
+  imageFileInput.addEventListener('change', e => {
+    const file = e.target.files[0];
+    if (!file) return;
+    const img = new Image();
+    img.onload = () => {
+      pushHistory();
+      const scale = Math.min(1, canvas.width * 0.8 / img.width, canvas.height * 0.8 / img.height);
+      const w = img.width * scale, h = img.height * scale;
+      ctx.globalAlpha = 1;
+      ctx.drawImage(img, (canvas.width - w) / 2, (canvas.height - h) / 2, w, h);
+      addCheckpoint(); // rastrová operace — do SVG jde jako podkladový snímek
+      URL.revokeObjectURL(img.src);
+      showToast('Obrázek vložen', 'success');
+    };
+    img.onerror = () => showToast('Obrázek se nepodařilo načíst', 'error');
+    img.src = URL.createObjectURL(file);
+    e.target.value = '';
+  });
 
   // === CRUD — localStorage ===
   const LS_KEY = 'whiteboard_drawings';
