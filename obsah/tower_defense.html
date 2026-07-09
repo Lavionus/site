@@ -20,6 +20,9 @@ h1{font-size:1.5rem;margin-bottom:10px;font-weight:600}
 .startbtn{background:#27ae60 !important;color:#fff !important;border-color:#27ae60 !important}
 .startbtn:disabled{opacity:.4;cursor:not-allowed}
 .abilbar{display:flex;gap:8px;margin-bottom:8px}
+.artifacts{display:flex;gap:5px;min-height:22px;margin-bottom:2px}
+.artifacts .art{font-size:1.05rem;background:#2a2a2a;border:1px solid #4a4a4a;border-radius:5px;padding:1px 5px;cursor:default}
+.wavemod{display:inline-flex;align-items:center;gap:3px;font-size:.78rem;color:#f39c12;margin-left:6px}
 .abil{flex:1;background:#2a2a2a;border:1px solid #404040;border-radius:8px;padding:7px 10px;cursor:pointer;font-size:.85rem;font-weight:600;color:#ddd;text-align:center;transition:.12s}
 .abil small{display:block;font-weight:400;color:#888;font-size:.7rem;margin-top:1px}
 .abil:hover:not(:disabled){border-color:#6aa6fd}
@@ -82,7 +85,7 @@ canvas{width:100%;background:#141b14;border-radius:8px;border:1px solid #404040;
     <span class="stat gold">💰 <b id="gold">0</b></span>
     <span class="stat lives">❤️ <b id="lives">0</b></span>
     <span class="stat lvl">🗺️ <b id="level">1</b></span>
-    <span class="stat wave">🌊 <b id="wave">0</b><span style="color:#888;font-weight:400">/8</span></span>
+    <span class="stat wave">🌊 <b id="wave">0</b><span style="color:#888;font-weight:400">/8</span><span class="wavemod" id="waveModBadge"></span></span>
     <span class="stat score">⭐ <b id="score">0</b></span>
     <span class="spacer"></span>
     <button id="speedBtn" title="Rychlost (mezerník = vlna, P = pauza)">⏩ 1×</button>
@@ -94,6 +97,7 @@ canvas{width:100%;background:#141b14;border-radius:8px;border:1px solid #404040;
     <button class="abil" id="abilStrike">💣 Nálet <small id="abilStrikeInfo">klikni na mapu · plošné poškození</small></button>
     <button class="abil" id="abilFreeze">❄️ Zmrazení <small id="abilFreezeInfo">na 3 s zmrazí všechny nepřátele</small></button>
   </div>
+  <div class="artifacts" id="artifacts"></div>
   <div class="banner" id="banner">Postav věže a stiskni „Vlna"!</div>
   <div class="preview" id="preview"></div>
   <div class="canvaswrap">
@@ -115,11 +119,14 @@ canvas{width:100%;background:#141b14;border-radius:8px;border:1px solid #404040;
   <div class="shoplabel">⚠️ Pasti — staví se přímo na cestu, jsou na jedno použití / omezenou dobu</div>
   <div class="shop" id="trapshop"></div>
   <div class="shopinfo" id="shopinfo">Najeď na kartu v obchodě pro popis. Kliknutím na postavenou věž otevřeš její panel přímo na mapě.</div>
-  <p class="hint">Klikni na věž/past v obchodě (nebo klávesy <b>1–8</b>, pasti <b>Q W E</b>), pak na pole; Shift = stavět víc.
+  <p class="hint">Klikni na věž/past v obchodě (nebo klávesy <b>1–9, 0</b>, pasti <b>Q W E</b>), pak na pole; Shift = stavět víc.
   Klikni na postavenou věž pro <b>vylepšení</b> (max. úroveň 5), <b>specializaci</b> (od úrovně 3), <b>cílení</b> nebo <b>prodej</b>.
   Sousední věže se navzájem posilují aurami. <b>4 stejné věže ve čtverci 2×2</b> jde sloučit v mohutnou věž (zlatý rámeček).
   🦇 <b>Létající nepřátele</b> zasáhnou jen odstřelovač, tesla a laser. 🔰 <b>Štít</b> pohltí celý zásah — spíš rychlá palba než jedna těžká rána ho sundá.
-  👹 <b>Boss</b> na 66 % HP aktivuje dočasný štít a na 33 % HP přivolá posily — počítej s tím dopředu.
+  👹 <b>Boss</b> na 66 % HP aktivuje dočasný štít a na 33 % HP přivolá posily — počítej s tím dopředu. Za zabití bosse získáš trvalý <b>artefakt</b>.
+  ⛰️ <b>Kopce</b> dávají věžím větší dosah, 🌊 <b>doliky</b> rychlejší palbu. Mrazák+Tesla, Kanón+Jed a Kulomet+Odstřelovač vedle sebe spouští speciální synergii.
+  📡 <b>Radar</b> dovolí sousedům zasáhnout létající, 🏭 <b>Sklad</b> pomalu doplňuje životy. Některé vlny mají náhodný modifikátor (mlha, bouře…) — sleduj banner.
+  🔀 Cesta se od 2. levelu občas <b>rozdvojí</b> — nepřátelé si náhodně vyberou větev, braň obě.
   <b>Mezerník</b> = další vlna, <b>P</b> = pauza, <b>Esc</b> = zrušit výběr.
   Po 8 vlnách postoupíš do dalšího levelu — nový biom, těžší nepřátelé.</p>
 </div>
@@ -164,8 +171,10 @@ function shade(hex,f){
 }
 
 /* ---------- Generátor mapy ---------- */
-let corners, pathSet, waypoints, decos=[];
+const FORK_CHANCE=0.5; // šance na rozdvojení cesty (vypnutí: nastav na 0)
+let corners, pathSet, waypoints, waypointsB=null, decos=[], terrain=new Map();
 const cellCenter=(c,r)=>({x:c*TILE+TILE/2, y:r*TILE+TILE/2});
+const terrainAt=(c,r)=>terrain.get(c+','+r)||null;
 function genPath(){
   const cs=[]; let c=0, r=2+Math.floor(Math.random()*(ROWS-4));
   cs.push([0,r]);
@@ -179,20 +188,50 @@ function genPath(){
   return cs;
 }
 function setPath(cs){
-  corners=cs; pathSet=new Set();
-  for(let i=0;i<cs.length-1;i++){
-    let [c1,r1]=cs[i], [c2,r2]=cs[i+1];
-    const dc=Math.sign(c2-c1), dr=Math.sign(r2-r1);
-    let c=c1,r=r1; pathSet.add(c+','+r);
-    while(c!==c2||r!==r2){ c+=dc; r+=dr; pathSet.add(c+','+r); }
+  corners=cs;
+  // rozdvojení cesty — vezme jeden "roh" (vodorovný pak svislý úsek) a nahradí ho
+  // dvěma alternativními L-cestami mezi stejnými dvěma body (diamant), ne na 1. levelu
+  let csB=null;
+  if((level||1)>1 && Math.random()<FORK_CHANCE){
+    const cand=[];
+    for(let i=2;i+2<cs.length-1;i+=2) cand.push(i); // vynech první/poslední úsek (u vstupu/domečku)
+    if(cand.length){
+      const i=cand[Math.floor(Math.random()*cand.length)];
+      const [ca,ra]=cs[i], [cb,rb]=cs[i+2];
+      csB=cs.map(p=>p.slice());
+      csB[i+1]=[ca,rb]; // originál jde přes (cb,ra), větev B přes (ca,rb) — stejný start/cíl
+    }
   }
+  const walk=arr=>{
+    for(let i=0;i<arr.length-1;i++){
+      let [c1,r1]=arr[i], [c2,r2]=arr[i+1];
+      const dc=Math.sign(c2-c1), dr=Math.sign(r2-r1);
+      let c=c1,r=r1; pathSet.add(c+','+r);
+      while(c!==c2||r!==r2){ c+=dc; r+=dr; pathSet.add(c+','+r); }
+    }
+  };
+  pathSet=new Set();
+  walk(cs);
   waypoints=cs.map(([c,r])=>cellCenter(c,r));
   waypoints[0]={x:-TILE/2, y:cs[0][1]*TILE+TILE/2}; // vstup zleva mimo plochu
+  if(csB){
+    walk(csB);
+    waypointsB=csB.map(([c,r])=>cellCenter(c,r));
+    waypointsB[0]=waypoints[0];
+  } else waypointsB=null;
   // dekorace biomu na náhodných volných polích
   decos=[];
   for(let i=0;i<10;i++){
     const c=Math.floor(Math.random()*COLS), r=Math.floor(Math.random()*ROWS);
     if(!pathSet.has(c+','+r)) decos.push({c,r,s:0.6+Math.random()*0.5});
+  }
+  // terén — kopce (+dosah, -kadence) a doliky (-dosah, +kadence), nikdy na cestě
+  terrain=new Map();
+  for(let r=0;r<ROWS;r++)for(let c=0;c<COLS;c++){
+    if(pathSet.has(c+','+r)) continue;
+    const roll=Math.random();
+    if(roll<0.14) terrain.set(c+','+r,'hill');
+    else if(roll<0.28) terrain.set(c+','+r,'valley');
   }
   renderBG();
 }
@@ -209,14 +248,36 @@ function renderBG(){
       g.beginPath(); g.arc(c*TILE+rnd()*TILE,r*TILE+rnd()*TILE,1+rnd()*2.2,0,7); g.fill();
     }
   }
+  // terén — kopec (vyvýšený, světlejší se stínem) / dolík (prohlubeň, tmavší s lemem)
+  for(const [key,tr] of terrain){
+    const [c,r]=key.split(',').map(Number), cx=c*TILE+TILE/2, cy=r*TILE+TILE/2;
+    if(tr==='hill'){
+      const hg=g.createRadialGradient(cx-4,cy-5,2,cx,cy,TILE*0.62);
+      hg.addColorStop(0,shade(B.g1,.28)); hg.addColorStop(1,shade(B.g1,-.05));
+      g.fillStyle=hg; g.beginPath(); g.arc(cx,cy,TILE*0.42,0,7); g.fill();
+      g.strokeStyle='rgba(0,0,0,.18)'; g.lineWidth=2;
+      g.beginPath(); g.arc(cx+2,cy+3,TILE*0.42,0,7); g.stroke();
+    } else {
+      const vg2=g.createRadialGradient(cx,cy,2,cx,cy,TILE*0.6);
+      vg2.addColorStop(0,shade(B.g2,-.35)); vg2.addColorStop(1,shade(B.g2,-.05));
+      g.fillStyle=vg2; g.beginPath(); g.arc(cx,cy,TILE*0.42,0,7); g.fill();
+      g.strokeStyle='rgba(255,255,255,.08)'; g.lineWidth=1.5;
+      g.beginPath(); g.arc(cx,cy,TILE*0.42,0,7); g.stroke();
+    }
+  }
   g.lineJoin='round'; g.lineCap='round';
-  const drawPath=(w,style)=>{ g.strokeStyle=style; g.lineWidth=w; g.beginPath();
-    g.moveTo(Math.max(0,waypoints[0].x),waypoints[0].y);
-    for(let i=1;i<waypoints.length;i++)g.lineTo(waypoints[i].x,waypoints[i].y);
+  const drawPath=(w,style,wps)=>{ g.strokeStyle=style; g.lineWidth=w; g.beginPath();
+    g.moveTo(Math.max(0,wps[0].x),wps[0].y);
+    for(let i=1;i<wps.length;i++)g.lineTo(wps[i].x,wps[i].y);
     g.stroke(); };
-  drawPath(TILE-2,'rgba(0,0,0,.35)'); // tmavý okraj cesty
-  drawPath(TILE-6,B.p1);
-  drawPath(TILE-16,B.p2);
+  drawPath(TILE-2,'rgba(0,0,0,.35)',waypoints); // tmavý okraj cesty
+  drawPath(TILE-6,B.p1,waypoints);
+  drawPath(TILE-16,B.p2,waypoints);
+  if(waypointsB){ // druhá větev rozdvojené cesty
+    drawPath(TILE-2,'rgba(0,0,0,.35)',waypointsB);
+    drawPath(TILE-6,B.p1,waypointsB);
+    drawPath(TILE-16,B.p2,waypointsB);
+  }
   for(const key of pathSet){ // kamínky na cestě
     const [c,r]=key.split(',').map(Number);
     for(let i=0;i<3;i++){
@@ -402,6 +463,38 @@ const SPRITES={
         +`<circle cx="24" cy="10" r="2.1" fill="${rimColor(lvl)}"/>`
         +flags+star+emblem
         +svgDome('#f5dc9a','#d4a017','#8a6708',6.5,'#8a6708')
+      );
+    }
+  },
+  radar:{
+    tips:()=>[[0,0]],
+    svg:(spec,lvl)=>{
+      const dishCol=spec===1?'#8fd8ff':'#cfeeff';
+      const sweep=lvl>=4?'<circle cx="24" cy="14" r="9" fill="none" stroke="#6aa6fd" stroke-width="1" stroke-dasharray="2 3" opacity="0.6"/>':'';
+      const dish2=spec===0?'<ellipse cx="24" cy="13" rx="5.5" ry="2.6" fill="none" stroke="#2b4a5e" stroke-width="0.8"/>':''; // Zesílený signál — dodatečný prstenec
+      return svgWrap(
+        svgPlate(lvl,'#2b4a5e')
+        +'<rect x="22.8" y="14" width="2.4" height="20" rx="1.2" fill="#3d5a6e"/>'
+        +`<ellipse cx="24" cy="13" rx="9" ry="4.2" fill="${dishCol}" stroke="#2b4a5e" stroke-width="1.2"/>`
+        +'<circle cx="24" cy="13" r="1.6" fill="#1f3a4a"/>'
+        +dish2+sweep
+        +svgDome('#cfeeff','#6aa6fd','#2b4a75',6.5,'#2b4a75')
+      );
+    }
+  },
+  depot:{
+    tips:()=>[[0,0]],
+    svg:(spec,lvl)=>{
+      const crateCol=spec===1?'#e08fd0':'#7fbf4d';
+      const spare=spec===0?'<rect x="16.5" y="26" width="6" height="5" rx="1" fill="#5e4a2a" stroke="#3a2e18" stroke-width="0.8"/>':''; // Zásoby navíc — druhá bedna
+      return svgWrap(
+        svgPlate(lvl,'#4a3c26')
+        +'<rect x="16" y="13" width="16" height="13" rx="1.5" fill="#8a6d3f" stroke="#4a3c26" stroke-width="1.2"/>'
+        +'<rect x="16" y="18" width="16" height="2.4" fill="#5e4a2a"/>'
+        +`<rect x="21.8" y="15" width="4.4" height="9" rx="1" fill="${crateCol}"/>`
+        +`<rect x="19.4" y="17.4" width="9.2" height="4.2" rx="1" fill="${crateCol}"/>`
+        +spare
+        +svgDome('#ffe1ea','#e08fd0','#a34f92',6.5,'#a34f92')
       );
     }
   }
@@ -592,9 +685,14 @@ const TOWERS={
   laser: {name:'Laser',   icon:'🔆', cost:170, color:'#e05b5b', range:120, rate:0.15, dmg:6,  bullet:'#ff9a9a', desc:'Trvalý paprsek · zasáhne i létající', aura:'sousedé +8 % dmg', antiAir:true,
           specs:[{n:'Fokus',d:'dmg roste s dobou na cíli'},{n:'Rozptyl',d:'pálí na 2 cíle'}]},
   banner:{name:'Prapor',  icon:'🚩', cost:100, color:'#d4a017', range:0,   rate:0,    dmg:0,  bullet:'#fff',    desc:'Neútočí', aura:'sousedé +dmg/kadence/dosah, sílí s úrovní',
-          specs:[{n:'Válečný pokřik',d:'aura dává +15 % dmg navíc'},{n:'Široký prapor',d:'aura dosáhne o 1 pole dál'}]}
+          specs:[{n:'Válečný pokřik',d:'aura dává +15 % dmg navíc'},{n:'Široký prapor',d:'aura dosáhne o 1 pole dál'}]},
+  radar: {name:'Radar',   icon:'📡', cost:120, color:'#6aa6fd', range:0,   rate:0,    dmg:0,  bullet:'#fff',    desc:'Neútočí — odemkne sousedům protivzdušnou obranu', aura:'sousedé zasáhnou i létající, +10 % dmg proti nim',
+          specs:[{n:'Zesílené sledování',d:'sousedé +25 % dmg proti létajícím'},{n:'Široký dosah',d:'aura dosáhne o 1 pole dál'}]},
+  depot: {name:'Sklad',   icon:'🏭', cost:140, color:'#e08fd0', range:0,   rate:0,    dmg:0,  bullet:'#fff',    desc:'Neútočí — pomalu obnovuje ztracené životy', aura:'čas od času vrátí 1 život (do maxima)',
+          specs:[{n:'Rychlé zásoby',d:'obnovuje životy 2× rychleji'},{n:'Velké zásoby',d:'obnoví vždy +2 životy'}]}
 };
 const TOWER_KEYS=Object.keys(TOWERS);
+const SUPPORT_TYPES=new Set(['banner','radar','depot']); // věže bez vlastního útoku
 const upgradeCost=t=>Math.floor(TOWERS[t.type].cost*0.8*t.level*(t.mega?2.5:1));
 
 /* ---------- Mohutné věže (sloučení 2×2) ---------- */
@@ -641,10 +739,29 @@ const TRAPS={
 };
 const TRAP_KEYS=Object.keys(TRAPS);
 
+/* ---------- Modifikátory vln (náhodně, mění pravidla pro jednu vlnu) ---------- */
+const WAVE_MODS={
+  fog:    {name:'Mlha',      icon:'🌫️', desc:'dosah věží -15 %'},
+  storm:  {name:'Bouře',     icon:'🌩️', desc:'nepřátelé o 12 % rychlejší'},
+  bless:  {name:'Požehnání', icon:'✨', desc:'+25 % zlata ze zabití'},
+  hardy:  {name:'Posílení',  icon:'🩸', desc:'nepřátelé o 10 % odolnější'}
+};
+const WAVE_MOD_KEYS=Object.keys(WAVE_MODS);
+
+/* ---------- Artefakty (trvalé pasivní bonusy, sbírají se z bossů) ---------- */
+const ARTIFACTS={
+  ember:      {name:'Jádro ohně',     icon:'🔥', desc:'+10 % poškození všech věží'},
+  chrono:     {name:'Chronoslupka',   icon:'⏱️', desc:'-8 % nabíjení všech věží'},
+  goldidol:   {name:'Zlatý idol',     icon:'💰', desc:'+15 % zlata ze zabití'},
+  vitality:   {name:'Střep vitality', icon:'❤️', desc:'okamžitě +3 životy, +1 k bonusu za level'},
+  frostheart: {name:'Ledové srdce',   icon:'🧊', desc:'zpomalovací efekty o 15 % silnější'}
+};
+const ARTIFACT_KEYS=Object.keys(ARTIFACTS);
+
 /* ---------- Aury sousedních věží ---------- */
 // dosah aury: prapor se specializací „Široký prapor" +1 pole, mohutný prapor +1 pole
 function auraReach(o){
-  if(o.type!=='banner') return 1;
+  if(o.type!=='banner'&&o.type!=='radar') return 1;
   return (o.spec===1?2:1)+(o.mega?1:0);
 }
 // aura praporu roste s úrovní; mohutný prapor ji dává s mocninou 2,5 (víc než 2 samostatné)
@@ -658,11 +775,14 @@ function bannerAura(o){
   };
 }
 function neighborBuffs(t){
-  const b={rate:1,dmg:1,range:1,slow:false,poison:0,stun:0};
+  const b={rate:1,dmg:1,range:1,slow:false,poison:0,stun:0,antiAir:false,flyDmg:1,
+    shatter:false,toxicSplash:false,markBonus:false};
+  const neighborTypes=new Set();
   for(const o of towers){
     if(o===t) continue;
     const dist=chebDist(t,o);
     if(dist>auraReach(o)) continue;
+    neighborTypes.add(o.type);
     if(o.type==='banner'){
       const a=bannerAura(o);
       b.dmg*=a.dmg; b.rate*=a.rate; b.range*=a.range;
@@ -677,8 +797,13 @@ function neighborBuffs(t){
       case 'tesla':  b.stun=Math.max(b.stun+ (k?0.04:0),0.08); break;
       case 'poison': b.poison=Math.max(b.poison,k?7:4); break;
       case 'laser':  b.dmg*=1.08; break;
+      case 'radar':  b.antiAir=true; b.flyDmg*=(o.spec===0?1.25:1.10); break;
     }
   }
+  // signature synergie sousedních dvojic věží — netýká se jen bonusů z aury, ale odemyká nový efekt
+  if(t.type==='tesla'  && neighborTypes.has('frost'))  b.shatter=true;      // Roztříštění
+  if(t.type==='cannon' && neighborTypes.has('poison')) b.toxicSplash=true; // Toxický výbuch
+  if(t.type==='gun'    && neighborTypes.has('sniper')) b.markBonus=true;   // Značený cíl
   return b;
 }
 function towerStats(t){
@@ -690,7 +815,7 @@ function towerStats(t){
     splash:b.splash?b.splash*(1+(l-1)*0.15):0,
     slow:b.slow||0, slowDur:b.slowDur?b.slowDur*(1+(l-1)*0.2):0,
     chains:b.chains||0, dot:b.dot?b.dot*Math.pow(1.4,l-1):0, dotDur:b.dotDur||0, dotSlow:0,
-    crit:0, targets:1, stun:nb.stun, auraSlow:nb.slow
+    crit:0, targets:1, stun:nb.stun, auraSlow:nb.slow, antiAir:nb.antiAir, flyDmg:nb.flyDmg
   };
   if(t.spec!=null){
     const k=t.type+t.spec;
@@ -715,6 +840,20 @@ function towerStats(t){
     if(s.slowDur) s.slowDur*=1.5;
     if(s.dot) s.dot*=2;
   }
+  // terén pod věží — kopec: dál dohlédne, ale střílí o něco pomaleji; dolík: naopak
+  const tr=terrainAt(t.c,t.r);
+  if(tr==='hill'){ s.range*=1.18; s.rate*=1.08; }
+  else if(tr==='valley'){ s.range*=0.85; s.rate*=0.82; }
+  // signature synergie sousedních dvojic věží
+  if(nb.shatter) s.shatter=true;
+  if(nb.toxicSplash) s.toxicSplash=true;
+  if(nb.markBonus) s.markBonus=true;
+  // modifikátor aktuální vlny
+  if(waveModifier==='fog') s.range*=0.85;
+  // permanentní artefakty
+  if(artifacts.has('ember')) s.dmg*=1.10;
+  if(artifacts.has('chrono')) s.rate*=0.92;
+  if(artifacts.has('frostheart') && s.slow) s.slow*=0.85;
   s.dmg=Math.round(s.dmg*10)/10;
   return s;
 }
@@ -743,6 +882,7 @@ let speed=1, auto=false, muted=false, gameOver=true;
 let abilities={strike:{cd:0,max:45},freeze:{cd:0,max:60}};
 let abilityArm=null;
 let stats={kills:0};
+let waveModifier=null, artifacts=new Set(), markedTarget=null;
 let best=+(localStorage.getItem('td_best')||0);
 let bestScore=+(localStorage.getItem('td_bestScore')||0);
 const totalWave=()=> (level-1)*WPL+wave;
@@ -755,10 +895,12 @@ function reset(){
   inWave=false; spawnQueue=[]; spawnTimer=0; waveResolved=true;
   buildType=null; selectedTower=null; gameOver=false; overlayMode='over';
   abilities.strike.cd=0; abilities.freeze.cd=0; abilityArm=null; stats={kills:0}; shake=0;
+  waveModifier=null; artifacts=new Set(); // artefakty se resetují jen s novou hrou, přes levely přetrvávají
+  $('waveModBadge').textContent=''; $('waveModBadge').title='';
   $('overlay').classList.remove('show');
   computeNext();
   banner('🗺️ Biom: '+biome().name+' · obtížnost '+D.name+'. Postav věže a stiskni „Vlna"!');
-  updateHUD(); renderShop(); renderSelected(); renderAbil();
+  updateHUD(); renderShop(); renderSelected(); renderAbil(); renderArtifacts();
 }
 // plná refundace věží (stavba + vylepšení) a bonus při postupu do dalšího levelu
 const towersValue=()=>towers.reduce((a,t)=>a+t.spent,0);
@@ -768,13 +910,14 @@ function nextLevel(){
   level++;
   setPath(genPath());
   towers=[]; enemies=[]; projectiles=[]; effects=[]; traps=[]; particles=[]; floats=[];
-  lives=Math.min(25,lives+5);
-  wave=0; inWave=false; spawnQueue=[]; waveResolved=true;
+  lives=Math.min(25,lives+5+(artifacts.has('vitality')?1:0));
+  wave=0; inWave=false; spawnQueue=[]; waveResolved=true; waveModifier=null;
   buildType=null; selectedTower=null; overlayMode='over'; abilityArm=null;
+  $('waveModBadge').textContent=''; $('waveModBadge').title='';
   $('overlay').classList.remove('show');
   computeNext();
   banner('🗺️ Level '+level+' — biom '+biome().name+', silnější nepřátelé!');
-  updateHUD(); renderShop(); renderSelected(); renderAbil();
+  updateHUD(); renderShop(); renderSelected(); renderAbil(); renderArtifacts();
 }
 
 /* ---------- Vlny ---------- */
@@ -816,15 +959,22 @@ function startWave(){
   wave++; gold+=18; // příjem na začátku vlny
   spawnQueue=nextQueue; nextQueue=[];
   spawnTimer=0; inWave=true; waveResolved=false;
-  banner((wave===WPL?'⚠️ BOSS VLNA! ':'')+'Vlna '+wave+'/'+WPL+' útočí!');
+  // náhodný modifikátor vlny (ne o boss vlnách, aby zůstaly předvídatelné)
+  waveModifier = (wave<WPL && Math.random()<0.55) ? WAVE_MOD_KEYS[Math.floor(Math.random()*WAVE_MOD_KEYS.length)] : null;
+  const modTxt=waveModifier?(' '+WAVE_MODS[waveModifier].icon+' '+WAVE_MODS[waveModifier].name+' — '+WAVE_MODS[waveModifier].desc):'';
+  banner((wave===WPL?'⚠️ BOSS VLNA! ':'')+'Vlna '+wave+'/'+WPL+' útočí!'+modTxt);
+  $('waveModBadge').textContent=waveModifier?WAVE_MODS[waveModifier].icon+' '+WAVE_MODS[waveModifier].name:'';
+  $('waveModBadge').title=waveModifier?WAVE_MODS[waveModifier].desc:'';
   snd(420,.08,'sine',.07); snd(560,.1,'sine',.07);
   updateHUD();
 }
-function spawnEnemy(type,hpMul,x,y,wp){
-  const b=ENEMIES[type], hp=Math.round(b.hp*hpMul);
-  enemies.push({type,x:x??waypoints[0].x,y:y??waypoints[0].y,hp,maxHp:hp,speed:b.speed,
+function spawnEnemy(type,hpMul,x,y,wp,wps){
+  const b=ENEMIES[type], hardy=waveModifier==='hardy'?1.1:1, hp=Math.round(b.hp*hpMul*hardy);
+  const path=wps||(waypointsB&&Math.random()<0.5?waypointsB:waypoints); // rozdvojená cesta: náhodná větev, potomci dědí přes wps
+  enemies.push({type,x:x??path[0].x,y:y??path[0].y,hp,maxHp:hp,
+    speed:b.speed*(waveModifier==='storm'?1.12:1),
     reward:b.reward+Math.floor(totalWave()/4),color:b.color,size:b.size,leak:b.leak,icon:b.icon,
-    wp:wp??1,slowT:0,slowF:1,stunT:0,chill:1,dot:null,armor:b.armor||0,regen:b.regen||0,healer:!!b.healer,healCd:1.5,hpMul,
+    wp:wp??1,wps:path,slowT:0,slowF:1,stunT:0,chill:1,dot:null,armor:b.armor||0,regen:b.regen||0,healer:!!b.healer,healCd:1.5,hpMul,
     flying:!!b.flying,shield:b.shieldMax||0,shieldMax:b.shieldMax||0,
     bossShielded:false,bossSummoned:false,
     phase:Math.random()*7,tilt:0,fxT:Math.random()*0.3});
@@ -955,6 +1105,7 @@ function update(dt){
     }
     if(!spawnQueue.length && enemies.length===0 && !waveResolved){
       waveResolved=true; inWave=false;
+      waveModifier=null; $('waveModBadge').textContent=''; $('waveModBadge').title='';
       const D=totalWave();
       gold+=15+D*2; score+=D*5;
       if(D>best){best=D;localStorage.setItem('td_best',best);}
@@ -1024,7 +1175,7 @@ function update(dt){
       }
     }
     if(e.stunT>0) e.stunT-=dt;
-    const tw=waypoints[e.wp];
+    const tw=e.wps[e.wp];
     // zpomalení má spodní strop 15 % rychlosti — úplně zastavit smí jen dočasné omráčení/zmrazení
     const slowMul=Math.max(0.15,(e.slowT>0?e.slowF:1)*e.chill);
     const eff=e.stunT>0?0:e.speed*slowMul;
@@ -1040,7 +1191,7 @@ function update(dt){
       else e.fxT=0.3;
     }
     if(d<=step){ e.x=tw.x;e.y=tw.y;e.wp++;
-      if(e.wp>=waypoints.length){ // únik
+      if(e.wp>=e.wps.length){ // únik
         lives-=e.leak; enemies.splice(i,1); addEffect(e.x,e.y,'#e74c3c');
         addFloat(e.x-10,e.y-14,'-'+e.leak+' ❤️','#ff7b6b',13);
         addShake(3+e.leak);
@@ -1053,7 +1204,16 @@ function update(dt){
   // věže – míření a střelba
   for(const t of towers){
     if(t.flash>0) t.flash-=dt;
-    if(t.type==='banner') continue;
+    if(t.type==='depot'){ // 🏭 pomalu obnovuje ztracené životy
+      const lvlSpeed=1+(t.level-1)*0.12, specSpeed=t.spec===0?2:1, mult=lvlSpeed*specSpeed*(t.mega?1.6:1);
+      t.healCd=(t.healCd??26)-dt*mult;
+      if(t.healCd<=0){
+        const amount=(t.spec===1?2:1)*(t.mega?2:1);
+        if(lives<25){ lives=Math.min(25,lives+amount); addFloat(t.x,t.y-20,'+'+amount+' ❤️','#7bd88f',12); updateHUD(); }
+        t.healCd=26;
+      }
+    }
+    if(SUPPORT_TYPES.has(t.type)) continue;
     const st=towerStats(t);
     t.cd-=dt;
     const target=findTargets(t,st,1)[0];
@@ -1080,7 +1240,7 @@ function update(dt){
 }
 function findTargets(t,st,n){
   const cand=[];
-  const canFlying=TOWERS[t.type].antiAir;
+  const canFlying=TOWERS[t.type].antiAir||st.antiAir; // 📡 Radar dovolí i sousedům zasáhnout létající
   for(const e of enemies){
     if(e.flying && !canFlying) continue; // bez protivzdušné obrany nelze zamířit na létající
     const dd=Math.hypot(e.x-t.x,e.y-t.y);
@@ -1089,7 +1249,7 @@ function findTargets(t,st,n){
       if(t.priority==='strong') s=e.hp;
       else if(t.priority==='weak') s=-e.hp;
       else if(t.priority==='near') s=-dd;
-      else s=e.wp*10000-Math.hypot(waypoints[e.wp].x-e.x,waypoints[e.wp].y-e.y);
+      else s=e.wp*10000-Math.hypot(e.wps[e.wp].x-e.x,e.wps[e.wp].y-e.y);
       cand.push({e,s});
     }
   }
@@ -1104,6 +1264,8 @@ function strike(e,o){
     return;
   }
   let d=o.dmg;
+  if(o.flyDmg && o.flyDmg!==1 && e.flying) d*=o.flyDmg; // 📡 Radar: bonus dmg sousedů proti létajícím
+  if(o.shatter && e.slowT>0){ d*=1.5; burst(e.x,e.y,'#cfeeff',6,70); } // ⚡❄️ Roztříštění: Tesla vedle Mrazáku
   if(o.crit && Math.random()<o.crit){ d*=3; addEffect(e.x,e.y,'#fff',7); addFloat(e.x,e.y-e.size-8,Math.round(d),'#ffe97a',13); }
   else if(d>=15) addFloat(e.x,e.y-e.size-8,Math.round(d),'#eee');
   damage(e,d,false,o.charType);
@@ -1115,6 +1277,7 @@ function strike(e,o){
   else if(o.auraSlow && e.slowT<=0){ e.slowF=0.85; e.slowT=0.8; }
   if(o.stun && Math.random()<o.stun){ e.stunT=Math.max(e.stunT,0.4); addEffect(e.x,e.y,'#ffe97a',10); sndTeslaCrackle(); }
   if(o.dot){ if(!e.dot) sndDotApplied(); e.dot={t:o.dotDur,dps:o.dot,slow:o.dotSlow||0}; }
+  else if(o.toxicSplash){ if(!e.dot) sndDotApplied(); e.dot={t:2.5,dps:6,slow:0}; } // 💣🧪 Toxický výbuch: Kanón vedle Jedu
 }
 function fire(t,st,target){
   const b=TOWERS[t.type];
@@ -1152,8 +1315,12 @@ function fire(t,st,target){
   }
   findTargets(t,st,st.targets).forEach((g,i)=>{
     const m=towerMuzzle(t,i);
-    projectiles.push({x:m.x,y:m.y,target:g,speed:340,dmg:st.dmg,splash:st.splash,slow:st.slow,slowDur:st.slowDur,
-      auraSlow:st.auraSlow,stun:st.stun,dot:st.dot,dotDur:st.dotDur,dotSlow:st.dotSlow,crit:st.crit,color:b.bullet});
+    if(t.type==='sniper') markedTarget=g; // 🔫🎯 Značený cíl: Kulomet vedle Odstřelovače
+    let dmg=st.dmg;
+    if(t.type==='gun' && st.markBonus && g===markedTarget) dmg*=1.25;
+    projectiles.push({x:m.x,y:m.y,target:g,speed:340,dmg,splash:st.splash,slow:st.slow,slowDur:st.slowDur,
+      auraSlow:st.auraSlow,stun:st.stun,dot:st.dot,dotDur:st.dotDur,dotSlow:st.dotSlow,crit:st.crit,color:b.bullet,
+      flyDmg:st.flyDmg,shatter:st.shatter,toxicSplash:st.toxicSplash});
   });
   // zvuk výstřelu podle typu — kombinace šumu a tónu zní míň jako čisté „cvaknutí"
   switch(t.type){
@@ -1234,7 +1401,7 @@ function bossPhaseCheck(e){
     banner('👹 Boss přivolal posily!');
     for(let i=0;i<3;i++){
       const ox=e.x+(Math.random()*44-22), oy=e.y+(Math.random()*44-22);
-      spawnEnemy('fast',Math.max(1,e.hpMul*0.55),ox,oy,e.wp);
+      spawnEnemy('fast',Math.max(1,e.hpMul*0.55),ox,oy,e.wp,e.wps);
       burst(ox,oy,'#8e44ad',7,55);
     }
     addShake(6);
@@ -1248,13 +1415,29 @@ function damage(e,dmg,ignoreArmor,charType){
   if(e.hp<=0){
     const idx=enemies.indexOf(e);
     if(idx>=0){
-      enemies.splice(idx,1); gold+=e.reward; score+=e.reward; stats.kills++;
+      let reward=e.reward;
+      if(waveModifier==='bless') reward=Math.round(reward*1.25);
+      if(artifacts.has('goldidol')) reward=Math.round(reward*1.15);
+      enemies.splice(idx,1); gold+=reward; score+=e.reward; stats.kills++;
       deathEffect(e,charType);
-      addFloat(e.x,e.y-e.size-4,'+'+e.reward+' 💰','#f1c40f');
-      if(e.type==='split'){ spawnEnemy('mini',e.hpMul,e.x-7,e.y,e.wp); spawnEnemy('mini',e.hpMul,e.x+7,e.y,e.wp); }
+      addFloat(e.x,e.y-e.size-4,'+'+reward+' 💰','#f1c40f');
+      if(e.type==='split'){ spawnEnemy('mini',e.hpMul,e.x-7,e.y,e.wp,e.wps); spawnEnemy('mini',e.hpMul,e.x+7,e.y,e.wp,e.wps); }
+      if(e.type==='boss') awardArtifact();
       updateHUD();
     }
   }
+}
+// odměna za zabití bosse — náhodný dosud nevlastněný artefakt, trvá po celý běh (i přes levely)
+function awardArtifact(){
+  const pool=ARTIFACT_KEYS.filter(k=>!artifacts.has(k));
+  if(!pool.length) return;
+  const key=pool[Math.floor(Math.random()*pool.length)];
+  artifacts.add(key);
+  const a=ARTIFACTS[key];
+  if(key==='vitality') lives=Math.min(25,lives+3);
+  banner('🏆 Artefakt získán: '+a.icon+' '+a.name+' — '+a.desc);
+  snd(700,.15,'sine',.11); setTimeout(()=>snd(880,.18,'sine',.11),140);
+  renderArtifacts();
 }
 function addEffect(x,y,color,r=10){ effects.push({x,y,color,r,t:0.3,max:0.3}); }
 
@@ -1309,6 +1492,10 @@ function draw(){
   ctx.beginPath();
   ctx.moveTo(Math.max(0,waypoints[0].x),waypoints[0].y);
   for(let i=1;i<waypoints.length;i++)ctx.lineTo(waypoints[i].x,waypoints[i].y);
+  if(waypointsB){ // druhá větev rozdvojené cesty
+    ctx.moveTo(Math.max(0,waypointsB[0].x),waypointsB[0].y);
+    for(let i=1;i<waypointsB.length;i++)ctx.lineTo(waypointsB[i].x,waypointsB[i].y);
+  }
   ctx.stroke();
   ctx.setLineDash([]);
   const ex=waypoints[waypoints.length-1];
@@ -1406,7 +1593,7 @@ function draw(){
       ctx.strokeStyle=shade(b.color,-0.45); ctx.lineWidth=1.5;
       ctx.beginPath(); ctx.arc(0,0,R-0.5,0,7); ctx.stroke();
       if(t.mega){ ctx.strokeStyle='#f1c40f'; ctx.lineWidth=2.5; ctx.beginPath(); ctx.arc(0,0,R+2,0,7); ctx.stroke(); }
-      if(t.type!=='banner'){
+      if(!SUPPORT_TYPES.has(t.type)){
         ctx.rotate(t.angle||0);
         const rec=t.flash>0?-2:0; // zákluz hlavně
         const bl=BAR+(t.mega?10:0);
@@ -1648,6 +1835,11 @@ function updateHUD(){
     if(upBtn) upBtn.disabled = gold < upgradeCost(selectedTower);
   }
 }
+function renderArtifacts(){
+  $('artifacts').innerHTML=[...artifacts].map(k=>{
+    const a=ARTIFACTS[k]; return `<span class="art" title="${a.name}: ${a.desc}">${a.icon}</span>`;
+  }).join('');
+}
 function shopInfo(key){
   if(TOWERS[key]){ const b=TOWERS[key];
     $('shopinfo').innerHTML=`<b>${b.icon} ${b.name}</b> · ${b.desc} · <span class="aura">aura: ${b.aura}</span>`;
@@ -1721,7 +1913,12 @@ function renderSelected(){
       <span style="color:#f1c40f;font-size:.76rem">úr. ${t.level}/${MAXLVL}</span>
       ${t.spec!=null?`<span style="color:#c39bd3;font-size:.72rem">◆ ${b.specs[t.spec].n}</span>`:''}
     </div>
-    ${t.type!=='banner'?`
+    ${!SUPPORT_TYPES.has(t.type)&&terrainAt(t.c,t.r)==='hill'?`<div class="row"><span>Terén</span><b style="color:#f1c40f">⛰️ Kopec (+18 % dosah, +8 % kadence)</b></div>`:''}
+    ${!SUPPORT_TYPES.has(t.type)&&terrainAt(t.c,t.r)==='valley'?`<div class="row"><span>Terén</span><b style="color:#6aa6fd">🌊 Dolík (-15 % dosah, -18 % kadence)</b></div>`:''}
+    ${st.shatter?`<div class="row"><span>⚡❄️ Roztříštění</span><b style="color:#bfe9ff">+50 % dmg na zpomalené</b></div>`:''}
+    ${st.toxicSplash?`<div class="row"><span>💣🧪 Toxický výbuch</span><b style="color:#b8f078">výbuch přiotráví</b></div>`:''}
+    ${st.markBonus?`<div class="row"><span>🔫🎯 Značený cíl</span><b style="color:#ff9a9a">+25 % dmg na cíl odstřelovače</b></div>`:''}
+    ${!SUPPORT_TYPES.has(t.type)?`
     <div class="row"><span>Poškození</span><b>${st.dmg}</b></div>
     <div class="row"><span>Dosah</span><b>${Math.round(st.range)}</b></div>
     <div class="row"><span>Rychlost palby</span><b>${(1/st.rate).toFixed(1)}/s</b></div>
@@ -1733,6 +1930,7 @@ function renderSelected(){
       <button data-p="weak" class="${t.priority==='weak'?'on':''}">Nejslabší</button>
     </div>
     ${TOWERS[t.type].antiAir?'':'<div class="row" style="color:#888;font-size:.72rem">🦇 Nezasáhne létající</div>'}`:''}
+    ${t.type==='depot'?`<div class="row"><span>Do dalšího léčení</span><b>${Math.max(0,t.healCd??26).toFixed(0)} s</b></div>`:''}
     ${st.splash?`<div class="row"><span>Plošný zásah</span><b>${Math.round(st.splash)}</b></div>`:''}
     ${st.slow?`<div class="row"><span>Zpomalení na</span><b>${Math.round(st.slow*100)} % / ${st.slowDur.toFixed(1)} s</b></div>`:''}
     ${st.dot?`<div class="row"><span>Jed/oheň</span><b>${st.dot.toFixed(0)}/s po ${st.dotDur.toFixed(1)} s</b></div>`:''}
@@ -1749,7 +1947,7 @@ function renderSelected(){
       <button class="btn-spec" data-s="0">${b.specs[0].n}<br><small>${b.specs[0].d}</small></button>
       <button class="btn-spec" data-s="1">${b.specs[1].n}<br><small>${b.specs[1].d}</small></button>
     </div>`:''}
-    ${quad?`<div class="acts"><button class="btn-merge" id="mergeBtn">🏯 Sloučit 4× ${b.name} v mohutnou věž (2×2)<br><small>${t.type==='banner'?'mnohem silnější aura (2,5×) a dosah aury +1 pole':'3× poškození, +35 % dosah, rychlejší palba, 2× aura'}</small></button></div>`:''}
+    ${quad?`<div class="acts"><button class="btn-merge" id="mergeBtn">🏯 Sloučit 4× ${b.name} v mohutnou věž (2×2)<br><small>${t.type==='banner'?'mnohem silnější aura (2,5×) a dosah aury +1 pole':t.type==='radar'?'2× silnější aura proti létajícím':t.type==='depot'?'2× rychlejší i vydatnější doplňování životů':'3× poškození, +35 % dosah, rychlejší palba, 2× aura'}</small></button></div>`:''}
     <div class="acts">
       <button class="btn-up" id="upBtn" ${canUp?'':'disabled'}>${t.level<MAXLVL?`⬆️ Vylepšit (${up} 💰)`:'⭐ Max úroveň'}</button>
       <button class="btn-sell" id="sellBtn">💵 Prodat (${refund})</button>
@@ -1792,7 +1990,7 @@ document.addEventListener('keydown',e=>{
   if(code==='KeyM'){ $('muteBtn').click(); return; }
   if(code==='Escape'){ buildType=null; selectedTower=null; abilityArm=null; renderShop(); renderSelected(); renderAbil(); banner(''); return; }
   if(gameOver) return;
-  const digit=code.match(/^Digit([1-8])$/);
+  const digit=code.match(/^Digit([1-9])$/)||(code==='Digit0'?[null,'10']:null);
   if(digit){ const k=TOWER_KEYS[+digit[1]-1];
     buildType=buildType===k?null:k; selectedTower=null; abilityArm=null;
     renderShop(); renderSelected(); renderAbil();
