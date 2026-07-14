@@ -2,19 +2,232 @@
 <html lang="cs">
 <head>
   <meta charset="UTF-8">
-  <title>Aplikace</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Přehled aplikací</title>
+  <link rel="stylesheet" href="../common.css">
+  <script>
+    (function () {
+      if (localStorage.getItem('webapp_theme') === 'light') {
+        document.documentElement.dataset.theme = 'light';
+      }
+    })();
+  </script>
   <style>
     body {
-      background-color: #181818;
-      color: #f0f0f0;
-      font-family: Arial, sans-serif;
-      padding: 2rem;
+      background-color: var(--bg-deep);
+      padding: 28px clamp(16px, 4vw, 48px);
+      min-height: 100vh;
     }
+
+    header.uvod {
+      margin-bottom: 26px;
+    }
+    header.uvod h1 {
+      font-size: 1.5rem;
+      font-weight: 650;
+      margin-bottom: 6px;
+    }
+    header.uvod p {
+      color: var(--text-muted);
+      font-size: 0.92rem;
+    }
+    header.uvod .statistika {
+      color: var(--text-faint);
+      font-size: 0.8rem;
+      margin-top: 4px;
+    }
+
+    section {
+      margin-bottom: 30px;
+    }
+    section h2 {
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--accent);
+      margin-bottom: 12px;
+      font-weight: 700;
+    }
+
+    .dlazdice {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(190px, 1fr));
+      gap: 12px;
+    }
+
+    .dlazdice a {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background-color: var(--bg-panel);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 14px 14px;
+      color: var(--text);
+      text-decoration: none;
+      font-size: 0.9rem;
+      transition: transform 0.12s ease, border-color 0.12s ease, background-color 0.12s ease;
+      overflow: hidden;
+    }
+    .dlazdice a:hover {
+      border-color: var(--accent);
+      background-color: var(--bg-elevated);
+      transform: translateY(-2px);
+    }
+    .dlazdice .emoji {
+      font-size: 1.3rem;
+      flex-shrink: 0;
+    }
+    .dlazdice .nazev {
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .prazdne {
+      color: var(--text-faint);
+      font-size: 0.85rem;
+      border: 1px dashed var(--border);
+      border-radius: var(--radius);
+      padding: 16px;
+    }
+
+    .tip {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: linear-gradient(120deg, var(--accent-soft), transparent 70%);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 16px 18px;
+    }
+    .tip .emoji { font-size: 1.8rem; }
+    .tip .text b { display: block; margin-bottom: 3px; }
+    .tip .text span { color: var(--text-muted); font-size: 0.85rem; }
+    .tip a.otevrit {
+      margin-left: auto;
+      flex-shrink: 0;
+      background-color: var(--accent);
+      color: #fff;
+      text-decoration: none;
+      border-radius: 6px;
+      padding: 8px 14px;
+      font-size: 0.85rem;
+    }
+    .tip a.otevrit:hover { background-color: var(--accent-hover); }
   </style>
 </head>
 <body>
-  <h2>📄 Aplikace</h2>
-  <p>Zde najdete různé nástroje a aplikace.</p>
+  <header class="uvod">
+    <h1>👋 Vítejte</h1>
+    <p>Vyberte aplikaci v menu vlevo, nebo začněte jednou z dlaždic níže.</p>
+    <div class="statistika" id="statistika"></div>
+  </header>
+
+  <section class="tip-sekce">
+    <h2>💡 Tip na vyzkoušení</h2>
+    <div class="tip" id="tip"></div>
+  </section>
+
+  <section>
+    <h2>⭐ Oblíbené</h2>
+    <div class="dlazdice" id="oblibene"></div>
+  </section>
+
+  <section>
+    <h2>🕘 Naposledy otevřené</h2>
+    <div class="dlazdice" id="nedavne"></div>
+  </section>
+
+  <script src="../apps.js"></script>
+  <script>
+    const podleSouboru = new Map();
+    KATALOG_SEKCE.forEach(s => s.polozky.forEach(p => podleSouboru.set(p.soubor, p)));
+    const vsechny = [...podleSouboru.values()];
+
+    const nactiJson = key => {
+      try { return JSON.parse(localStorage.getItem(key)) || []; }
+      catch { return []; }
+    };
+
+    // rozdělení "🌧️ Předpověď" na emoji + text
+    function rozdel(nazev) {
+      const m = nazev.match(/^(\P{L}+)\s*(.*)$/u);
+      return (m && m[2]) ? { emoji: m[1].trim(), text: m[2] } : { emoji: '🔹', text: nazev };
+    }
+
+    // otevření aplikace: uvnitř rozcestníku přes postMessage, samostatně přímým odkazem
+    function odkaz(p, popisek) {
+      const a = document.createElement('a');
+      a.href = '../index.html#' + p.soubor;
+      a.target = '_top';
+      if (popisek) {
+        a.className = 'otevrit';
+        a.textContent = popisek;
+      } else {
+        const { emoji, text } = rozdel(p.nazev);
+        const e = document.createElement('span');
+        e.className = 'emoji';
+        e.textContent = emoji;
+        const n = document.createElement('span');
+        n.className = 'nazev';
+        n.textContent = text;
+        a.append(e, n);
+      }
+      a.addEventListener('click', ev => {
+        if (window.parent !== window) {
+          ev.preventDefault();
+          window.parent.postMessage({ otevri: p.soubor }, '*');
+        }
+      });
+      return a;
+    }
+
+    function naplnDlazdice(elId, soubory, prazdnyText) {
+      const el = document.getElementById(elId);
+      const apps = soubory.map(f => podleSouboru.get(f)).filter(Boolean);
+      if (!apps.length) {
+        const d = document.createElement('div');
+        d.className = 'prazdne';
+        d.textContent = prazdnyText;
+        el.appendChild(d);
+        return;
+      }
+      apps.forEach(p => el.appendChild(odkaz(p)));
+    }
+
+    naplnDlazdice('oblibene', nactiJson('webapp_oblibene'),
+      'Zatím nic – najeďte v menu na aplikaci a klikněte na ★.');
+    naplnDlazdice('nedavne', nactiJson('webapp_nedavne'),
+      'Historie je prázdná – otevřete první aplikaci z menu.');
+
+    document.getElementById('statistika').textContent =
+      `K dispozici je ${vsechny.length} aplikací ve ${KATALOG_SEKCE.length} kategoriích.`;
+
+    // tip dne – deterministicky podle data
+    const den = Math.floor(Date.now() / 86400000);
+    const tipApp = vsechny[den % vsechny.length];
+    const { emoji, text } = rozdel(tipApp.nazev);
+    const tipEl = document.getElementById('tip');
+    const te = document.createElement('span');
+    te.className = 'emoji';
+    te.textContent = emoji;
+    const tt = document.createElement('div');
+    tt.className = 'text';
+    const b = document.createElement('b');
+    b.textContent = text;
+    const sub = document.createElement('span');
+    sub.textContent = (tipApp.tagy || []).join(' · ') || 'Vyzkoušejte dnešní náhodně vybranou aplikaci.';
+    tt.append(b, sub);
+    tipEl.append(te, tt, odkaz(tipApp, 'Otevřít'));
+
+    // reaguje na přepnutí tématu v rozcestníku
+    window.addEventListener('storage', e => {
+      if (e.key === 'webapp_theme') {
+        if (e.newValue === 'light') document.documentElement.dataset.theme = 'light';
+        else delete document.documentElement.dataset.theme;
+      }
+    });
+  </script>
 </body>
 </html>
-

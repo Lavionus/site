@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Kalkulačka DPH</title>
+  <link rel="stylesheet" href="../common.css">
+  <script>
+    if (localStorage.getItem('webapp_theme') === 'light') document.documentElement.dataset.theme = 'light';
+  </script>
+  <style>
+    body { background-color: var(--bg-deep); padding: 24px clamp(14px, 3vw, 40px); min-height: 100vh; }
+    h1 { font-size: 1.4rem; margin-bottom: 4px; }
+    .podtitul { color: var(--text-muted); font-size: 0.88rem; margin-bottom: 22px; }
+    .karta {
+      background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 20px; max-width: 620px; margin-bottom: 18px;
+    }
+    label { display: block; font-size: 0.8rem; color: var(--text-muted); margin: 12px 0 5px; }
+    input[type="number"] {
+      width: 100%; background: var(--bg-input); border: 1px solid var(--border); border-radius: 6px;
+      color: var(--text); padding: 10px 12px; font-size: 1.05rem;
+    }
+    input:focus { outline: none; border-color: var(--accent); }
+    .prepinace { display: flex; flex-wrap: wrap; gap: 8px; }
+    .prepinace button {
+      background: var(--bg-control); border: 1px solid var(--border-strong); color: var(--text-muted);
+      border-radius: 6px; padding: 8px 14px; font-size: 0.85rem; cursor: pointer;
+    }
+    .prepinace button.active { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+    #vlastniSazba { width: 90px; display: none; }
+    .vysledky { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-top: 18px; }
+    .box { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; }
+    .box .popis { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-faint); margin-bottom: 6px; }
+    .box .cislo { font-size: 1.35rem; font-weight: 700; }
+    .box.hlavni .cislo { color: var(--accent); }
+    .pozn { color: var(--text-faint); font-size: 0.78rem; max-width: 620px; line-height: 1.5; }
+  </style>
+</head>
+<body>
+  <h1>🧾 Kalkulačka DPH</h1>
+  <p class="podtitul">Výpočet daně z přidané hodnoty – sazby platné v ČR od 1.&nbsp;1.&nbsp;2024.</p>
+
+  <div class="karta">
+    <label>Směr výpočtu</label>
+    <div class="prepinace" id="smer">
+      <button data-smer="pridat" class="active">Bez DPH → s DPH</button>
+      <button data-smer="odebrat">S DPH → bez DPH</button>
+    </div>
+
+    <label>Sazba DPH</label>
+    <div class="prepinace" id="sazby">
+      <button data-sazba="21" class="active">21 % základní</button>
+      <button data-sazba="12">12 % snížená</button>
+      <button data-sazba="0">0 % (knihy)</button>
+      <button data-sazba="vlastni">Vlastní</button>
+      <input type="number" id="vlastniSazba" value="10" min="0" max="100" step="0.1">
+    </div>
+
+    <label id="popisCastky">Cena bez DPH (Kč)</label>
+    <input type="number" id="castka" placeholder="např. 1000" step="0.01" min="0" autofocus>
+
+    <div class="vysledky">
+      <div class="box"><div class="popis">Základ (bez DPH)</div><div class="cislo" id="vBez">–</div></div>
+      <div class="box"><div class="popis" id="popisDan">DPH 21 %</div><div class="cislo" id="vDan">–</div></div>
+      <div class="box hlavni"><div class="popis">Celkem s DPH</div><div class="cislo" id="vS">–</div></div>
+    </div>
+  </div>
+
+  <p class="pozn">Od roku 2024 platí v ČR dvě sazby: základní 21 % a snížená 12 % (potraviny, léky, stavební práce pro bydlení, vodné a stočné…). Knihy jsou od DPH osvobozeny (0 %). Kalkulačka je orientační.</p>
+
+  <script>
+    let smer = 'pridat';
+    let sazba = 21;
+    const castkaEl = document.getElementById('castka');
+    const vlastniEl = document.getElementById('vlastniSazba');
+    const fmt = n => n.toLocaleString('cs-CZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' Kč';
+
+    function aktivuj(kontejner, btn) {
+      kontejner.querySelectorAll('button').forEach(b => b.classList.remove('active'));
+      btn.classList.add('active');
+    }
+
+    document.getElementById('smer').addEventListener('click', e => {
+      const b = e.target.closest('button'); if (!b) return;
+      aktivuj(e.currentTarget, b);
+      smer = b.dataset.smer;
+      document.getElementById('popisCastky').textContent =
+        smer === 'pridat' ? 'Cena bez DPH (Kč)' : 'Cena s DPH (Kč)';
+      spocitej();
+    });
+
+    document.getElementById('sazby').addEventListener('click', e => {
+      const b = e.target.closest('button'); if (!b) return;
+      aktivuj(e.currentTarget, b);
+      vlastniEl.style.display = b.dataset.sazba === 'vlastni' ? 'inline-block' : 'none';
+      sazba = b.dataset.sazba === 'vlastni' ? parseFloat(vlastniEl.value) || 0 : parseFloat(b.dataset.sazba);
+      spocitej();
+    });
+
+    vlastniEl.addEventListener('input', () => { sazba = parseFloat(vlastniEl.value) || 0; spocitej(); });
+    castkaEl.addEventListener('input', spocitej);
+
+    function spocitej() {
+      document.getElementById('popisDan').textContent = `DPH ${sazba.toLocaleString('cs-CZ')} %`;
+      const c = parseFloat(castkaEl.value);
+      if (!isFinite(c)) {
+        ['vBez', 'vDan', 'vS'].forEach(id => document.getElementById(id).textContent = '–');
+        return;
+      }
+      let bez, s;
+      if (smer === 'pridat') { bez = c; s = c * (1 + sazba / 100); }
+      else { s = c; bez = c / (1 + sazba / 100); }
+      document.getElementById('vBez').textContent = fmt(bez);
+      document.getElementById('vDan').textContent = fmt(s - bez);
+      document.getElementById('vS').textContent = fmt(s);
+    }
+  </script>
+</body>
+</html>

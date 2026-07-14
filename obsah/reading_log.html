@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Čtenářský deník</title>
+  <link rel="stylesheet" href="../common.css">
+  <script>
+    if (localStorage.getItem('webapp_theme') === 'light') document.documentElement.dataset.theme = 'light';
+  </script>
+  <style>
+    body { background-color: var(--bg-deep); padding: 24px clamp(14px, 3vw, 40px); min-height: 100vh; }
+    h1 { font-size: 1.4rem; margin-bottom: 4px; }
+    .podtitul { color: var(--text-muted); font-size: 0.88rem; margin-bottom: 16px; }
+    .listy { display: grid; grid-template-columns: minmax(280px, 380px) 1fr; gap: 16px; align-items: start; }
+    @media (max-width: 820px) { .listy { grid-template-columns: 1fr; } }
+    .karta { background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; }
+    label { display: block; font-size: 0.78rem; color: var(--text-muted); margin: 10px 0 4px; }
+    input, select, textarea {
+      width: 100%; background: var(--bg-input); border: 1px solid var(--border); border-radius: 6px;
+      color: var(--text); padding: 8px 10px; font-size: 0.92rem; font-family: var(--font);
+    }
+    input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); }
+    textarea { resize: vertical; min-height: 64px; }
+    .hvezdicky { display: flex; gap: 4px; font-size: 1.4rem; cursor: pointer; user-select: none; }
+    .hvezdicky span { color: var(--text-faint); }
+    .hvezdicky span.plna { color: var(--warn); }
+    .btn {
+      background: var(--accent); border: 1px solid var(--accent); color: #fff; border-radius: 6px;
+      padding: 9px 16px; font-size: 0.88rem; cursor: pointer; margin-top: 14px;
+    }
+    .btn:hover { background: var(--accent-hover); }
+    .btn.sekundarni { background: var(--bg-control); border-color: var(--border-strong); color: var(--text-muted); }
+    .btn.sekundarni:hover { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .nastroje { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 12px; }
+    .nastroje input[type="search"] { max-width: 220px; }
+    .nastroje select { max-width: 170px; }
+    .statistiky { color: var(--text-faint); font-size: 0.8rem; margin-left: auto; }
+    .kniha {
+      border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 14px; margin-bottom: 10px;
+      background: var(--bg-elevated); display: grid; grid-template-columns: 1fr auto; gap: 4px 12px;
+    }
+    .kniha h3 { font-size: 1rem; }
+    .kniha .autor { color: var(--text-muted); font-size: 0.85rem; }
+    .kniha .meta { grid-column: 1 / -1; display: flex; flex-wrap: wrap; gap: 10px; font-size: 0.8rem; color: var(--text-faint); align-items: center; }
+    .kniha .stav-badge { border-radius: 10px; padding: 1px 9px; font-weight: 600; font-size: 0.72rem; }
+    .stav-prectena { background: rgba(76, 175, 125, 0.18); color: var(--ok); }
+    .stav-ctu { background: var(--accent-soft); color: var(--accent); }
+    .stav-chci { background: rgba(224, 166, 63, 0.15); color: var(--warn); }
+    .kniha .hodnoceni { color: var(--warn); letter-spacing: 1px; }
+    .kniha .pozn { grid-column: 1 / -1; font-size: 0.85rem; color: var(--text-muted); white-space: pre-wrap; }
+    .kniha .akce { display: flex; gap: 6px; align-self: start; }
+    .kniha .akce button { background: none; border: none; color: var(--text-faint); cursor: pointer; font-size: 0.95rem; padding: 2px 4px; }
+    .kniha .akce button:hover { color: var(--accent); }
+    .prazdne { color: var(--text-faint); font-size: 0.86rem; border: 1px dashed var(--border); border-radius: var(--radius); padding: 18px; text-align: center; }
+  </style>
+</head>
+<body>
+  <h1>📚 Čtenářský deník</h1>
+  <p class="podtitul">Evidence přečtených knih s hodnocením a poznámkami. Data zůstávají v prohlížeči; zálohujte exportem.</p>
+
+  <div class="listy">
+    <div class="karta">
+      <h2 style="font-size:0.95rem" id="formTitulek">Přidat knihu</h2>
+      <label>Název *</label>
+      <input id="fNazev" placeholder="např. Babička">
+      <label>Autor</label>
+      <input id="fAutor" placeholder="např. Božena Němcová">
+      <label>Stav</label>
+      <select id="fStav">
+        <option value="chci">📖 Chci číst</option>
+        <option value="ctu">👀 Právě čtu</option>
+        <option value="prectena" selected>✅ Přečtená</option>
+      </select>
+      <label>Datum dočtení</label>
+      <input id="fDatum" type="date">
+      <label>Hodnocení</label>
+      <div class="hvezdicky" id="fHvezdy"></div>
+      <label>Poznámky / obsah</label>
+      <textarea id="fPozn" placeholder="Hlavní postavy, děj, dojmy…"></textarea>
+      <button class="btn" id="fUlozit">Uložit knihu</button>
+      <button class="btn sekundarni" id="fZrusit" style="display:none">Zrušit úpravu</button>
+      <hr style="border-color: var(--border); margin: 16px 0">
+      <button class="btn sekundarni" id="btnExport">⬇ Export JSON</button>
+      <button class="btn sekundarni" id="btnImport">⬆ Import JSON</button>
+      <input type="file" id="souborImport" accept=".json" style="display:none">
+    </div>
+
+    <div>
+      <div class="nastroje">
+        <input type="search" id="hledani" placeholder="🔍 Hledat…">
+        <select id="filtrStav">
+          <option value="">Vše</option>
+          <option value="prectena">Přečtené</option>
+          <option value="ctu">Právě čtu</option>
+          <option value="chci">Chci číst</option>
+        </select>
+        <select id="razeni">
+          <option value="pridani">Nejnovější</option>
+          <option value="nazev">Podle názvu</option>
+          <option value="hodnoceni">Podle hodnocení</option>
+        </select>
+        <div class="statistiky" id="statistiky"></div>
+      </div>
+      <div id="seznam"></div>
+    </div>
+  </div>
+
+  <script>
+    const KEY = 'reading_log_knihy';
+    const STAVY = { prectena: ['Přečtená', 'stav-prectena'], ctu: ['Právě čtu', 'stav-ctu'], chci: ['Chci číst', 'stav-chci'] };
+    let knihy = [];
+    try { knihy = JSON.parse(localStorage.getItem(KEY)) || []; } catch { knihy = []; }
+    let upravovaneId = null;
+    let hodnoceni = 0;
+
+    const $ = id => document.getElementById(id);
+    const uloz = () => localStorage.setItem(KEY, JSON.stringify(knihy));
+
+    /* hvězdičky ve formuláři */
+    const hvezdyEl = $('fHvezdy');
+    for (let i = 1; i <= 5; i++) {
+      const s = document.createElement('span');
+      s.textContent = '★';
+      s.addEventListener('click', () => { hodnoceni = (hodnoceni === i) ? 0 : i; vykresliHvezdy(); });
+      hvezdyEl.appendChild(s);
+    }
+    function vykresliHvezdy() {
+      [...hvezdyEl.children].forEach((s, i) => s.classList.toggle('plna', i < hodnoceni));
+    }
+
+    function vycistiFormular() {
+      upravovaneId = null;
+      hodnoceni = 0;
+      ['fNazev', 'fAutor', 'fDatum', 'fPozn'].forEach(id => $(id).value = '');
+      $('fStav').value = 'prectena';
+      $('formTitulek').textContent = 'Přidat knihu';
+      $('fUlozit').textContent = 'Uložit knihu';
+      $('fZrusit').style.display = 'none';
+      vykresliHvezdy();
+    }
+
+    $('fUlozit').addEventListener('click', () => {
+      const nazev = $('fNazev').value.trim();
+      if (!nazev) { $('fNazev').focus(); return; }
+      const zaznam = {
+        id: upravovaneId ?? Date.now(),
+        nazev,
+        autor: $('fAutor').value.trim(),
+        stav: $('fStav').value,
+        datum: $('fDatum').value,
+        hodnoceni,
+        pozn: $('fPozn').value.trim(),
+      };
+      if (upravovaneId != null) {
+        const i = knihy.findIndex(k => k.id === upravovaneId);
+        if (i >= 0) knihy[i] = zaznam;
+      } else {
+        knihy.unshift(zaznam);
+      }
+      uloz();
+      vycistiFormular();
+      vykresli();
+    });
+
+    $('fZrusit').addEventListener('click', vycistiFormular);
+
+    function upravit(id) {
+      const k = knihy.find(x => x.id === id);
+      if (!k) return;
+      upravovaneId = id;
+      $('fNazev').value = k.nazev;
+      $('fAutor').value = k.autor;
+      $('fStav').value = k.stav;
+      $('fDatum').value = k.datum || '';
+      $('fPozn').value = k.pozn || '';
+      hodnoceni = k.hodnoceni || 0;
+      vykresliHvezdy();
+      $('formTitulek').textContent = 'Upravit knihu';
+      $('fUlozit').textContent = 'Uložit změny';
+      $('fZrusit').style.display = 'inline-block';
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+
+    function smazat(id) {
+      const k = knihy.find(x => x.id === id);
+      if (!confirm(`Smazat knihu „${k?.nazev}“?`)) return;
+      knihy = knihy.filter(x => x.id !== id);
+      uloz();
+      vykresli();
+    }
+
+    function vykresli() {
+      const q = $('hledani').value.trim().toLowerCase();
+      const fs = $('filtrStav').value;
+      let seznam = knihy.filter(k =>
+        (!fs || k.stav === fs) &&
+        (!q || (k.nazev + ' ' + k.autor + ' ' + (k.pozn || '')).toLowerCase().includes(q)));
+      const r = $('razeni').value;
+      if (r === 'nazev') seznam = [...seznam].sort((a, b) => a.nazev.localeCompare(b.nazev, 'cs'));
+      else if (r === 'hodnoceni') seznam = [...seznam].sort((a, b) => (b.hodnoceni || 0) - (a.hodnoceni || 0));
+
+      const el = $('seznam');
+      el.innerHTML = '';
+      if (!seznam.length) {
+        el.innerHTML = '<div class="prazdne">Žádné knihy – přidejte první vlevo.</div>';
+      }
+      seznam.forEach(k => {
+        const [stavText, stavTrida] = STAVY[k.stav] || STAVY.chci;
+        const div = document.createElement('div');
+        div.className = 'kniha';
+        div.innerHTML = `
+          <div><h3></h3><div class="autor"></div></div>
+          <div class="akce">
+            <button class="e" title="Upravit">✏️</button>
+            <button class="x" title="Smazat">🗑️</button>
+          </div>
+          <div class="meta">
+            <span class="stav-badge ${stavTrida}">${stavText}</span>
+            <span class="hodnoceni">${k.hodnoceni ? '★'.repeat(k.hodnoceni) + '☆'.repeat(5 - k.hodnoceni) : ''}</span>
+            <span>${k.datum ? '📅 ' + new Date(k.datum).toLocaleDateString('cs-CZ') : ''}</span>
+          </div>
+          ${k.pozn ? '<div class="pozn"></div>' : ''}`;
+        div.querySelector('h3').textContent = k.nazev;
+        div.querySelector('.autor').textContent = k.autor;
+        if (k.pozn) div.querySelector('.pozn').textContent = k.pozn;
+        div.querySelector('.e').addEventListener('click', () => upravit(k.id));
+        div.querySelector('.x').addEventListener('click', () => smazat(k.id));
+        el.appendChild(div);
+      });
+
+      const prectene = knihy.filter(k => k.stav === 'prectena');
+      const letos = prectene.filter(k => k.datum && k.datum.startsWith(String(new Date().getFullYear())));
+      $('statistiky').textContent = `${knihy.length} knih · ${prectene.length} přečteno · ${letos.length} letos`;
+    }
+
+    ['hledani', 'filtrStav', 'razeni'].forEach(id => $(id).addEventListener('input', vykresli));
+
+    /* export / import */
+    $('btnExport').addEventListener('click', () => {
+      const blob = new Blob([JSON.stringify(knihy, null, 2)], { type: 'application/json' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = `ctenarsky-denik-${new Date().toISOString().slice(0, 10)}.json`;
+      a.click();
+      URL.revokeObjectURL(a.href);
+    });
+    $('btnImport').addEventListener('click', () => $('souborImport').click());
+    $('souborImport').addEventListener('change', e => {
+      const f = e.target.files[0];
+      if (!f) return;
+      f.text().then(t => {
+        const data = JSON.parse(t);
+        if (!Array.isArray(data)) throw 0;
+        if (!confirm(`Načíst ${data.length} knih? Stávající seznam bude nahrazen.`)) return;
+        knihy = data;
+        uloz();
+        vykresli();
+      }).catch(() => alert('Soubor se nepodařilo načíst – očekávám JSON export z této aplikace.'));
+      e.target.value = '';
+    });
+
+    vykresli();
+  </script>
+</body>
+</html>

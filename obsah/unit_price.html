@@ -1,0 +1,135 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Jednotková cena</title>
+  <link rel="stylesheet" href="../common.css">
+  <script>
+    if (localStorage.getItem('webapp_theme') === 'light') document.documentElement.dataset.theme = 'light';
+  </script>
+  <style>
+    body { background-color: var(--bg-deep); padding: 24px clamp(14px, 3vw, 40px); min-height: 100vh; }
+    h1 { font-size: 1.4rem; margin-bottom: 4px; }
+    .podtitul { color: var(--text-muted); font-size: 0.88rem; margin-bottom: 18px; }
+    .karta { background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; max-width: 760px; }
+    .radek {
+      display: grid; grid-template-columns: 1.4fr 1fr 1fr 0.9fr 1.2fr auto; gap: 8px;
+      align-items: center; margin-bottom: 8px;
+    }
+    .radek.hlavicka { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-faint); margin-bottom: 4px; }
+    @media (max-width: 640px) {
+      .radek { grid-template-columns: 1fr 1fr; }
+      .radek.hlavicka { display: none; }
+      .radek input[data-pole="nazev"] { grid-column: 1 / -1; }
+    }
+    input, select {
+      width: 100%; background: var(--bg-input); border: 1px solid var(--border); border-radius: 6px;
+      color: var(--text); padding: 8px 10px; font-size: 0.92rem;
+    }
+    input:focus, select:focus { outline: none; border-color: var(--accent); }
+    .jednotkova { font-variant-numeric: tabular-nums; font-size: 0.9rem; color: var(--text-muted); white-space: nowrap; }
+    .radek.nejlevnejsi input { border-color: var(--ok); }
+    .radek.nejlevnejsi .jednotkova { color: var(--ok); font-weight: 700; }
+    .smazat {
+      background: none; border: none; color: var(--text-faint); cursor: pointer; font-size: 1rem; padding: 4px;
+    }
+    .smazat:hover { color: var(--danger); }
+    .akce { margin-top: 14px; display: flex; gap: 8px; }
+    .akce button {
+      background: var(--bg-control); border: 1px solid var(--border-strong); color: var(--text-muted);
+      border-radius: 6px; padding: 8px 14px; font-size: 0.85rem; cursor: pointer;
+    }
+    .akce button:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
+    .shrnuti { margin-top: 16px; font-size: 0.95rem; color: var(--ok); font-weight: 600; min-height: 1.4rem; }
+  </style>
+</head>
+<body>
+  <h1>🛒 Jednotková cena</h1>
+  <p class="podtitul">Porovnání balení podle ceny za kilogram, litr nebo kus – které balení se vyplatí?</p>
+
+  <div class="karta">
+    <div class="radek hlavicka">
+      <div>Název / obchod</div><div>Cena (Kč)</div><div>Množství</div><div>Jednotka</div><div>Cena / jedn.</div><div></div>
+    </div>
+    <div id="radky"></div>
+    <div class="akce">
+      <button id="pridat">+ Přidat balení</button>
+      <button id="vycistit">Vyčistit</button>
+    </div>
+    <div class="shrnuti" id="shrnuti"></div>
+  </div>
+
+  <script>
+    // převod na základní jednotku (kg, l, ks)
+    const JEDNOTKY = {
+      kg: { koef: 1, zaklad: 'kg' }, g: { koef: 0.001, zaklad: 'kg' },
+      l: { koef: 1, zaklad: 'l' }, ml: { koef: 0.001, zaklad: 'l' },
+      ks: { koef: 1, zaklad: 'ks' },
+    };
+    const radkyEl = document.getElementById('radky');
+
+    function pridejRadek(data = {}) {
+      const div = document.createElement('div');
+      div.className = 'radek';
+      div.innerHTML = `
+        <input data-pole="nazev" placeholder="např. Lidl 500 g" value="">
+        <input data-pole="cena" type="number" min="0" step="0.01" placeholder="Kč" value="">
+        <input data-pole="mnozstvi" type="number" min="0" step="any" placeholder="množství" value="">
+        <select data-pole="jednotka">
+          ${Object.keys(JEDNOTKY).map(j => `<option value="${j}">${j}</option>`).join('')}
+        </select>
+        <span class="jednotkova">–</span>
+        <button class="smazat" title="Odebrat">✕</button>`;
+      div.querySelector('[data-pole="nazev"]').value = data.nazev || '';
+      if (data.cena != null) div.querySelector('[data-pole="cena"]').value = data.cena;
+      if (data.mnozstvi != null) div.querySelector('[data-pole="mnozstvi"]').value = data.mnozstvi;
+      div.querySelector('[data-pole="jednotka"]').value = data.jednotka || 'g';
+      div.querySelectorAll('input, select').forEach(el => el.addEventListener('input', prepocitej));
+      div.querySelector('.smazat').addEventListener('click', () => { div.remove(); prepocitej(); });
+      radkyEl.appendChild(div);
+    }
+
+    function prepocitej() {
+      const radky = [...radkyEl.querySelectorAll('.radek')];
+      let nejlepsi = null;
+      const vysledky = radky.map(r => {
+        r.classList.remove('nejlevnejsi');
+        const cena = parseFloat(r.querySelector('[data-pole="cena"]').value);
+        const mn = parseFloat(r.querySelector('[data-pole="mnozstvi"]').value);
+        const j = JEDNOTKY[r.querySelector('[data-pole="jednotka"]').value];
+        const span = r.querySelector('.jednotkova');
+        if (!isFinite(cena) || !isFinite(mn) || mn <= 0) { span.textContent = '–'; return null; }
+        const naZaklad = cena / (mn * j.koef);
+        span.textContent = naZaklad.toLocaleString('cs-CZ', { maximumFractionDigits: 2 }) + ` Kč/${j.zaklad}`;
+        const v = { r, naZaklad, zaklad: j.zaklad };
+        if (!nejlepsi || (v.zaklad === nejlepsi.zaklad && v.naZaklad < nejlepsi.naZaklad)) nejlepsi = v;
+        return v;
+      }).filter(Boolean);
+
+      const shrnuti = document.getElementById('shrnuti');
+      // zvýraznit jen pokud jsou aspoň dva srovnatelné (stejný základ)
+      const srovnatelne = vysledky.filter(v => nejlepsi && v.zaklad === nejlepsi.zaklad);
+      if (nejlepsi && srovnatelne.length >= 2) {
+        nejlepsi.r.classList.add('nejlevnejsi');
+        const nazev = nejlepsi.r.querySelector('[data-pole="nazev"]').value || 'zvýrazněné balení';
+        const nejhorsi = srovnatelne.reduce((a, b) => a.naZaklad > b.naZaklad ? a : b);
+        const uspora = (1 - nejlepsi.naZaklad / nejhorsi.naZaklad) * 100;
+        shrnuti.textContent = `✓ Nejvýhodnější: ${nazev}` +
+          (uspora > 0.5 ? ` (o ${uspora.toLocaleString('cs-CZ', { maximumFractionDigits: 0 })} % levnější než nejdražší)` : '');
+      } else {
+        shrnuti.textContent = '';
+      }
+    }
+
+    document.getElementById('pridat').addEventListener('click', () => pridejRadek());
+    document.getElementById('vycistit').addEventListener('click', () => {
+      radkyEl.innerHTML = '';
+      pridejRadek(); pridejRadek();
+      prepocitej();
+    });
+
+    pridejRadek(); pridejRadek();
+  </script>
+</body>
+</html>

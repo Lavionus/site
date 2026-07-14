@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Čistá mzda ČR</title>
+  <link rel="stylesheet" href="../common.css">
+  <script>
+    if (localStorage.getItem('webapp_theme') === 'light') document.documentElement.dataset.theme = 'light';
+  </script>
+  <style>
+    body { background-color: var(--bg-deep); padding: 24px clamp(14px, 3vw, 40px); min-height: 100vh; }
+    h1 { font-size: 1.4rem; margin-bottom: 4px; }
+    .podtitul { color: var(--text-muted); font-size: 0.88rem; margin-bottom: 22px; }
+    .rozlozeni { display: grid; grid-template-columns: minmax(280px, 420px) minmax(280px, 480px); gap: 18px; align-items: start; }
+    @media (max-width: 760px) { .rozlozeni { grid-template-columns: 1fr; } }
+    .karta { background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; }
+    label { display: block; font-size: 0.8rem; color: var(--text-muted); margin: 12px 0 5px; }
+    input[type="number"], select {
+      width: 100%; background: var(--bg-input); border: 1px solid var(--border); border-radius: 6px;
+      color: var(--text); padding: 9px 12px; font-size: 1rem;
+    }
+    input:focus, select:focus { outline: none; border-color: var(--accent); }
+    .radek2 { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .checkline { display: flex; align-items: center; gap: 8px; margin-top: 12px; font-size: 0.88rem; }
+    .checkline input { width: auto; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.9rem; }
+    td { padding: 7px 4px; border-bottom: 1px solid var(--border); }
+    td:last-child { text-align: right; font-variant-numeric: tabular-nums; }
+    tr.mezisoucet td { color: var(--text-muted); }
+    tr.hlavni td { font-size: 1.15rem; font-weight: 700; color: var(--ok); border-bottom: none; padding-top: 12px; }
+    tr.sekce td { padding-top: 14px; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-faint); border-bottom: none; }
+    .pozn { color: var(--text-faint); font-size: 0.78rem; margin-top: 18px; line-height: 1.5; max-width: 920px; }
+    details { margin-top: 14px; font-size: 0.85rem; }
+    summary { cursor: pointer; color: var(--accent); }
+    details .radek2 { margin-top: 10px; }
+  </style>
+</head>
+<body>
+  <h1>💵 Čistá mzda ČR</h1>
+  <p class="podtitul">Orientační výpočet čisté mzdy zaměstnance a nákladů zaměstnavatele (výchozí parametry pro rok 2025).</p>
+
+  <div class="rozlozeni">
+    <div class="karta">
+      <label>Hrubá měsíční mzda (Kč)</label>
+      <input type="number" id="hruba" value="45000" min="0" step="500">
+
+      <label>Počet vyživovaných dětí</label>
+      <div class="radek2">
+        <input type="number" id="deti" value="0" min="0" max="10" step="1">
+        <select id="ztpDeti" title="Z toho dětí s průkazem ZTP/P">
+          <option value="0">bez ZTP/P</option>
+          <option value="1">1 dítě ZTP/P</option>
+          <option value="2">2 děti ZTP/P</option>
+        </select>
+      </div>
+
+      <div class="checkline">
+        <input type="checkbox" id="slevaManzel">
+        <label for="slevaManzel" style="margin:0">Sleva na manžela/manželku (pečuje o dítě do 3 let)</label>
+      </div>
+      <div class="checkline">
+        <input type="checkbox" id="invalidita">
+        <label for="invalidita" style="margin:0">Invalidita I./II. stupně</label>
+      </div>
+
+      <details>
+        <summary>Parametry výpočtu (upravitelné)</summary>
+        <div class="radek2">
+          <div><label>Soc. pojištění zaměstnanec (%)</label><input type="number" id="pSocZam" value="7.1" step="0.1"></div>
+          <div><label>Zdr. pojištění zaměstnanec (%)</label><input type="number" id="pZdrZam" value="4.5" step="0.1"></div>
+          <div><label>Soc. pojištění firma (%)</label><input type="number" id="pSocFir" value="24.8" step="0.1"></div>
+          <div><label>Zdr. pojištění firma (%)</label><input type="number" id="pZdrFir" value="9" step="0.1"></div>
+          <div><label>Daň – základní sazba (%)</label><input type="number" id="pDan1" value="15" step="1"></div>
+          <div><label>Daň – zvýšená sazba (%)</label><input type="number" id="pDan2" value="23" step="1"></div>
+          <div><label>Hranice zvýšené sazby (Kč/měs)</label><input type="number" id="pHranice" value="139671" step="1"></div>
+          <div><label>Sleva na poplatníka (Kč/měs)</label><input type="number" id="pSleva" value="2570" step="10"></div>
+        </div>
+      </details>
+    </div>
+
+    <div class="karta">
+      <table id="vysledek"></table>
+    </div>
+  </div>
+
+  <p class="pozn">⚠️ Výpočet je orientační – nezohledňuje všechny situace (dohody, důchodce, progresivní ročné zúčtování, benefity…). Daňové zvýhodnění na děti: 1.&nbsp;dítě 1&nbsp;267&nbsp;Kč, 2.&nbsp;dítě 1&nbsp;860&nbsp;Kč, 3.&nbsp;a další 2&nbsp;320&nbsp;Kč měsíčně (u ZTP/P dvojnásobek); přeplatek zvýhodnění se vyplácí jako daňový bonus. Parametry lze upravit pro jiný rok.</p>
+
+  <script>
+    const $ = id => document.getElementById(id);
+    const fmt = n => Math.round(n).toLocaleString('cs-CZ') + ' Kč';
+    const vstupy = ['hruba','deti','ztpDeti','slevaManzel','invalidita',
+      'pSocZam','pZdrZam','pSocFir','pZdrFir','pDan1','pDan2','pHranice','pSleva'];
+    vstupy.forEach(id => $(id).addEventListener('input', spocitej));
+
+    function spocitej() {
+      const hruba = +$('hruba').value || 0;
+      const deti = Math.max(0, Math.floor(+$('deti').value || 0));
+      const ztp = Math.min(deti, +$('ztpDeti').value || 0);
+
+      const socZam = hruba * (+$('pSocZam').value || 0) / 100;
+      const zdrZam = hruba * (+$('pZdrZam').value || 0) / 100;
+      const socFir = hruba * (+$('pSocFir').value || 0) / 100;
+      const zdrFir = hruba * (+$('pZdrFir').value || 0) / 100;
+
+      const hranice = +$('pHranice').value || Infinity;
+      const zaklad1 = Math.min(hruba, hranice);
+      const zaklad2 = Math.max(0, hruba - hranice);
+      let dan = zaklad1 * (+$('pDan1').value || 0) / 100 + zaklad2 * (+$('pDan2').value || 0) / 100;
+
+      // slevy na dani (nemohou jít pod nulu)
+      let slevy = +$('pSleva').value || 0;
+      if ($('slevaManzel').checked) slevy += 2070;
+      if ($('invalidita').checked) slevy += 210;
+      dan = Math.max(0, dan - slevy);
+
+      // daňové zvýhodnění na děti – může vytvořit bonus (zápornou daň)
+      const sazbyDeti = [1267, 1860, 2320];
+      let zvyhodneni = 0;
+      for (let i = 0; i < deti; i++) {
+        const zakladni = sazbyDeti[Math.min(i, 2)];
+        zvyhodneni += (i < ztp) ? zakladni * 2 : zakladni;
+      }
+      const poZvyhodneni = dan - zvyhodneni;
+      const danFinal = Math.max(0, poZvyhodneni);
+      const bonus = Math.max(0, -poZvyhodneni);
+
+      const cista = hruba - socZam - zdrZam - danFinal + bonus;
+      const naklady = hruba + socFir + zdrFir;
+
+      $('vysledek').innerHTML = `
+        <tr class="sekce"><td colspan="2">Zaměstnanec</td></tr>
+        <tr class="mezisoucet"><td>Hrubá mzda</td><td>${fmt(hruba)}</td></tr>
+        <tr><td>− Sociální pojištění</td><td>${fmt(socZam)}</td></tr>
+        <tr><td>− Zdravotní pojištění</td><td>${fmt(zdrZam)}</td></tr>
+        <tr><td>− Záloha na daň (po slevách)</td><td>${fmt(danFinal)}</td></tr>
+        ${bonus ? `<tr><td>+ Daňový bonus na děti</td><td>${fmt(bonus)}</td></tr>` : ''}
+        <tr class="hlavni"><td>Čistá mzda</td><td>${fmt(cista)}</td></tr>
+        <tr class="sekce"><td colspan="2">Zaměstnavatel</td></tr>
+        <tr><td>+ Sociální pojištění (firma)</td><td>${fmt(socFir)}</td></tr>
+        <tr><td>+ Zdravotní pojištění (firma)</td><td>${fmt(zdrFir)}</td></tr>
+        <tr class="mezisoucet"><td><b>Celkové náklady zaměstnavatele</b></td><td><b>${fmt(naklady)}</b></td></tr>`;
+    }
+    spocitej();
+  </script>
+</body>
+</html>

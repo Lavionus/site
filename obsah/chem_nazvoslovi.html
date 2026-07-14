@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Chemické názvosloví</title>
+  <link rel="stylesheet" href="../common.css">
+  <script>
+    if (localStorage.getItem('webapp_theme') === 'light') document.documentElement.dataset.theme = 'light';
+  </script>
+  <style>
+    body { background-color: var(--bg-deep); padding: 24px clamp(14px, 3vw, 40px); min-height: 100vh; }
+    h1 { font-size: 1.4rem; margin-bottom: 4px; }
+    .podtitul { color: var(--text-muted); font-size: 0.88rem; margin-bottom: 16px; }
+    .rezimy, .kategorie { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; }
+    .rezimy button, .kategorie button {
+      background: var(--bg-control); border: 1px solid var(--border-strong); color: var(--text-muted);
+      border-radius: 6px; padding: 7px 13px; font-size: 0.84rem; cursor: pointer;
+    }
+    .rezimy button.active, .kategorie button.active {
+      background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600;
+    }
+    .karta { background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 22px; max-width: 640px; }
+    .zadani { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-faint); margin-bottom: 8px; }
+    .dotaz { font-size: 1.7rem; font-weight: 700; margin-bottom: 18px; min-height: 2.2rem; }
+    .dotaz sub { font-size: 60%; }
+    .moznosti { display: grid; gap: 8px; }
+    .moznosti button {
+      background: var(--bg-elevated); border: 1px solid var(--border); color: var(--text);
+      border-radius: 8px; padding: 12px 14px; font-size: 1rem; cursor: pointer; text-align: left;
+      transition: border-color 0.12s ease;
+    }
+    .moznosti button:hover { border-color: var(--accent); }
+    .moznosti button.ok { background: rgba(76, 175, 125, 0.2); border-color: var(--ok); }
+    .moznosti button.spatne { background: rgba(224, 93, 93, 0.18); border-color: var(--danger); }
+    .moznosti button:disabled { cursor: default; }
+    .stavovy { display: flex; align-items: center; gap: 16px; margin-top: 16px; font-size: 0.9rem; }
+    .stavovy .serie { color: var(--warn); }
+    .stavovy .pomer { color: var(--text-muted); margin-left: auto; font-variant-numeric: tabular-nums; }
+    .dalsi {
+      background: var(--accent); border: 1px solid var(--accent); color: #fff; border-radius: 6px;
+      padding: 8px 16px; font-size: 0.88rem; cursor: pointer; visibility: hidden;
+    }
+    .dalsi:hover { background: var(--accent-hover); }
+    /* tabulka učení */
+    .uceni-nastroje { margin: 4px 0 10px; }
+    .uceni-nastroje input {
+      background: var(--bg-input); border: 1px solid var(--border); border-radius: 6px;
+      color: var(--text); padding: 8px 12px; font-size: 0.9rem; width: min(300px, 100%);
+    }
+    table { width: 100%; border-collapse: collapse; font-size: 0.95rem; }
+    th, td { padding: 8px 10px; text-align: left; border-bottom: 1px solid var(--border); }
+    th { color: var(--text-faint); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; }
+    td.vzorec { font-weight: 600; white-space: nowrap; }
+    td .kat { font-size: 0.72rem; color: var(--text-faint); }
+  </style>
+</head>
+<body>
+  <h1>⚗️ Chemické názvosloví</h1>
+  <p class="podtitul">Procvičování vzorců a názvů anorganických sloučenin (učivo ZŠ/SŠ).</p>
+
+  <div class="rezimy" id="rezimy">
+    <button data-rezim="vzorec" class="active">Vzorec → název</button>
+    <button data-rezim="nazev">Název → vzorec</button>
+    <button data-rezim="uceni">Přehled (učení)</button>
+  </div>
+  <div class="kategorie" id="kategorie"></div>
+
+  <div class="karta" id="kvizKarta">
+    <div class="zadani" id="zadani"></div>
+    <div class="dotaz" id="dotaz"></div>
+    <div class="moznosti" id="moznosti"></div>
+    <div class="stavovy">
+      <button class="dalsi" id="btnDalsi">Další →</button>
+      <span class="serie" id="serie"></span>
+      <span class="pomer" id="pomer"></span>
+    </div>
+  </div>
+
+  <div class="karta" id="uceniKarta" style="display:none">
+    <div class="uceni-nastroje">
+      <input type="search" id="uceniHledat" placeholder="🔍 Hledat sloučeninu…">
+    </div>
+    <table>
+      <thead><tr><th>Vzorec</th><th>Název</th><th>Kategorie</th></tr></thead>
+      <tbody id="uceniTelo"></tbody>
+    </table>
+  </div>
+
+  <script>
+    // Vzorce jako HTML s <sub> – v datech používáme čísla, sub se doplní při vykreslení
+    const LATKY = [
+      // oxidy
+      ['CO2', 'oxid uhličitý', 'oxidy'], ['CO', 'oxid uhelnatý', 'oxidy'],
+      ['SO2', 'oxid siřičitý', 'oxidy'], ['SO3', 'oxid sírový', 'oxidy'],
+      ['NO', 'oxid dusnatý', 'oxidy'], ['NO2', 'oxid dusičitý', 'oxidy'],
+      ['N2O', 'oxid dusný', 'oxidy'], ['N2O5', 'oxid dusičný', 'oxidy'],
+      ['CaO', 'oxid vápenatý', 'oxidy'], ['MgO', 'oxid hořečnatý', 'oxidy'],
+      ['Al2O3', 'oxid hlinitý', 'oxidy'], ['SiO2', 'oxid křemičitý', 'oxidy'],
+      ['Fe2O3', 'oxid železitý', 'oxidy'], ['FeO', 'oxid železnatý', 'oxidy'],
+      ['CuO', 'oxid měďnatý', 'oxidy'], ['Cu2O', 'oxid měďný', 'oxidy'],
+      ['ZnO', 'oxid zinečnatý', 'oxidy'], ['P2O5', 'oxid fosforečný', 'oxidy'],
+      ['Cl2O7', 'oxid chloristý', 'oxidy'], ['MnO2', 'oxid manganičitý', 'oxidy'],
+      ['CrO3', 'oxid chromový', 'oxidy'], ['K2O', 'oxid draselný', 'oxidy'],
+      ['Na2O', 'oxid sodný', 'oxidy'], ['PbO2', 'oxid olovičitý', 'oxidy'],
+      // kyseliny
+      ['HCl', 'kyselina chlorovodíková', 'kyseliny'], ['HF', 'kyselina fluorovodíková', 'kyseliny'],
+      ['H2SO4', 'kyselina sírová', 'kyseliny'], ['H2SO3', 'kyselina siřičitá', 'kyseliny'],
+      ['HNO3', 'kyselina dusičná', 'kyseliny'], ['HNO2', 'kyselina dusitá', 'kyseliny'],
+      ['H2CO3', 'kyselina uhličitá', 'kyseliny'], ['H3PO4', 'kyselina fosforečná', 'kyseliny'],
+      ['HClO', 'kyselina chlorná', 'kyseliny'], ['HClO2', 'kyselina chloritá', 'kyseliny'],
+      ['HClO3', 'kyselina chlorečná', 'kyseliny'], ['HClO4', 'kyselina chloristá', 'kyseliny'],
+      ['H2S', 'sulfan (sirovodík)', 'kyseliny'], ['HBr', 'kyselina bromovodíková', 'kyseliny'],
+      ['H2SiO3', 'kyselina křemičitá', 'kyseliny'], ['HMnO4', 'kyselina manganistá', 'kyseliny'],
+      // hydroxidy
+      ['NaOH', 'hydroxid sodný', 'hydroxidy'], ['KOH', 'hydroxid draselný', 'hydroxidy'],
+      ['Ca(OH)2', 'hydroxid vápenatý', 'hydroxidy'], ['Mg(OH)2', 'hydroxid hořečnatý', 'hydroxidy'],
+      ['Al(OH)3', 'hydroxid hlinitý', 'hydroxidy'], ['Fe(OH)3', 'hydroxid železitý', 'hydroxidy'],
+      ['NH4OH', 'hydroxid amonný', 'hydroxidy'], ['Ba(OH)2', 'hydroxid barnatý', 'hydroxidy'],
+      // soli
+      ['NaCl', 'chlorid sodný', 'soli'], ['KCl', 'chlorid draselný', 'soli'],
+      ['CaCl2', 'chlorid vápenatý', 'soli'], ['AlCl3', 'chlorid hlinitý', 'soli'],
+      ['FeCl3', 'chlorid železitý', 'soli'], ['CaCO3', 'uhličitan vápenatý', 'soli'],
+      ['Na2CO3', 'uhličitan sodný', 'soli'], ['NaHCO3', 'hydrogenuhličitan sodný', 'soli'],
+      ['CaSO4', 'síran vápenatý', 'soli'], ['CuSO4', 'síran měďnatý', 'soli'],
+      ['FeSO4', 'síran železnatý', 'soli'], ['Na2SO4', 'síran sodný', 'soli'],
+      ['KNO3', 'dusičnan draselný', 'soli'], ['AgNO3', 'dusičnan stříbrný', 'soli'],
+      ['NH4NO3', 'dusičnan amonný', 'soli'], ['Ca3(PO4)2', 'fosforečnan vápenatý', 'soli'],
+      ['KMnO4', 'manganistan draselný', 'soli'], ['K2CrO4', 'chroman draselný', 'soli'],
+      ['Na2S', 'sulfid sodný', 'soli'], ['ZnS', 'sulfid zinečnatý', 'soli'],
+      ['AgBr', 'bromid stříbrný', 'soli'], ['KI', 'jodid draselný', 'soli'],
+      // ostatní
+      ['H2O', 'voda', 'ostatní'], ['NH3', 'amoniak (čpavek)', 'ostatní'],
+      ['CH4', 'methan', 'ostatní'], ['H2O2', 'peroxid vodíku', 'ostatní'],
+    ];
+    const KATEGORIE = ['vše', 'oxidy', 'kyseliny', 'hydroxidy', 'soli', 'ostatní'];
+
+    let rezim = 'vzorec';
+    let kategorie = 'vše';
+    let aktualni = null;
+    let serie = 0, spravne = 0, celkem = 0;
+    let zodpovezeno = false;
+
+    const $ = id => document.getElementById(id);
+    const subHtml = v => v.replace(/(\d+)/g, '<sub>$1</sub>');
+    const nahodne = arr => arr[Math.floor(Math.random() * arr.length)];
+    const vyber = () => LATKY.filter(l => kategorie === 'vše' || l[2] === kategorie);
+
+    /* kategorie pilulky */
+    KATEGORIE.forEach(k => {
+      const b = document.createElement('button');
+      b.textContent = k;
+      if (k === 'vše') b.classList.add('active');
+      b.addEventListener('click', () => {
+        document.querySelectorAll('#kategorie button').forEach(x => x.classList.remove('active'));
+        b.classList.add('active');
+        kategorie = k;
+        if (rezim === 'uceni') vykresliUceni();
+        else dalsiOtazka();
+      });
+      $('kategorie').appendChild(b);
+    });
+
+    $('rezimy').addEventListener('click', e => {
+      const b = e.target.closest('button'); if (!b) return;
+      document.querySelectorAll('#rezimy button').forEach(x => x.classList.remove('active'));
+      b.classList.add('active');
+      rezim = b.dataset.rezim;
+      const uceni = rezim === 'uceni';
+      $('kvizKarta').style.display = uceni ? 'none' : '';
+      $('uceniKarta').style.display = uceni ? '' : 'none';
+      if (uceni) vykresliUceni();
+      else dalsiOtazka();
+    });
+
+    function dalsiOtazka() {
+      const zdroj = vyber();
+      if (zdroj.length < 4) { $('dotaz').textContent = 'Málo položek v kategorii.'; $('moznosti').innerHTML = ''; return; }
+      aktualni = nahodne(zdroj);
+      zodpovezeno = false;
+      $('btnDalsi').style.visibility = 'hidden';
+
+      const naVzorec = rezim === 'nazev';
+      $('zadani').textContent = naVzorec ? 'Jaký vzorec má:' : 'Jak se jmenuje:';
+      $('dotaz').innerHTML = naVzorec ? aktualni[1] : subHtml(aktualni[0]);
+
+      // 3 náhodné špatné odpovědi ze stejné kategorie (nebo ze všech, když nestačí)
+      const spatneKandidati = LATKY.filter(l => l !== aktualni && l[2] === aktualni[2]);
+      while (spatneKandidati.length < 3) spatneKandidati.push(nahodne(LATKY.filter(l => l !== aktualni)));
+      const spatneOdpovedi = [...new Set(spatneKandidati)].sort(() => Math.random() - 0.5).slice(0, 3);
+      const moznosti = [aktualni, ...spatneOdpovedi].sort(() => Math.random() - 0.5);
+
+      const el = $('moznosti');
+      el.innerHTML = '';
+      moznosti.forEach(m => {
+        const b = document.createElement('button');
+        b.innerHTML = naVzorec ? subHtml(m[0]) : m[1];
+        b.addEventListener('click', () => odpoved(b, m));
+        el.appendChild(b);
+      });
+    }
+
+    function odpoved(btn, m) {
+      if (zodpovezeno) return;
+      zodpovezeno = true;
+      celkem++;
+      const dobre = m === aktualni;
+      if (dobre) { spravne++; serie++; btn.classList.add('ok'); }
+      else {
+        serie = 0;
+        btn.classList.add('spatne');
+        [...$('moznosti').children].forEach(b => {
+          const jeSpravna = (rezim === 'nazev') ? b.innerHTML === subHtml(aktualni[0]) : b.textContent === aktualni[1];
+          if (jeSpravna) b.classList.add('ok');
+        });
+      }
+      [...$('moznosti').children].forEach(b => b.disabled = true);
+      $('serie').textContent = serie >= 3 ? `🔥 série ${serie}` : '';
+      $('pomer').textContent = `${spravne}/${celkem}`;
+      $('btnDalsi').style.visibility = 'visible';
+    }
+
+    $('btnDalsi').addEventListener('click', dalsiOtazka);
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Enter' && zodpovezeno && rezim !== 'uceni') dalsiOtazka();
+    });
+
+    function vykresliUceni() {
+      const q = $('uceniHledat').value.trim().toLowerCase();
+      const telo = $('uceniTelo');
+      telo.innerHTML = '';
+      vyber()
+        .filter(l => !q || (l[0] + ' ' + l[1]).toLowerCase().includes(q))
+        .forEach(l => {
+          const tr = document.createElement('tr');
+          tr.innerHTML = `<td class="vzorec">${subHtml(l[0])}</td><td>${l[1]}</td><td class="kat">${l[2]}</td>`;
+          telo.appendChild(tr);
+        });
+    }
+    $('uceniHledat').addEventListener('input', vykresliUceni);
+
+    dalsiOtazka();
+  </script>
+</body>
+</html>

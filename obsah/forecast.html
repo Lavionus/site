@@ -21,11 +21,11 @@
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
   <meta name="apple-mobile-web-app-title" content="Počasí" />
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js" integrity="sha384-9MhbyIRcBVQiiC7FSd7T38oJNj2Zh+EfxS7/vjhBi4OOT78NlHSnzM31EZRWR1LZ" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="lib/chart.min.js"></script>
   <!-- Zoom/pan v grafech (hammer.js = dotyková gesta); při výpadku CDN grafy fungují bez zoomu -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/hammer.js/2.0.8/hammer.min.js" integrity="sha384-Cs3dgUx6+jDxxuqHvVH8Onpyj2LF1gKZurLDlhqzuJmUqVYMJ0THTWpxK5Z086Zm" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/chartjs-plugin-zoom/1.2.1/chartjs-plugin-zoom.min.js" integrity="sha384-4ujnoFIaCz8xsHAu9NwdZDeFVVV0SHFY9KLc+MJIWK7KMSVimFAnmdhc9fXWhMXt" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.css" integrity="sha384-sHL9NAb7lN7rfvG5lfHpm643Xkcjzp4jFvuavGOndn6pjVqS6ny56CAt3nsEVT4H" crossorigin="anonymous" referrerpolicy="no-referrer" />
+  <script src="lib/hammer.min.js"></script>
+  <script src="lib/chartjs-plugin-zoom.min.js"></script>
+  <link rel="stylesheet" href="lib/leaflet/leaflet.css" />
   <style>
     * {
       margin: 0;
@@ -1646,6 +1646,14 @@
             <div class="condition-detail" id="nowDetail"></div>
           </div>
         </div>
+        <div class="condition-card" id="climateCard" style="display: none;">
+          <div class="condition-icon">📈</div>
+          <div class="condition-body">
+            <div class="condition-label">Vs. dlouhodobý průměr</div>
+            <div class="condition-value" id="climateValue">--</div>
+            <div class="condition-detail" id="climateDetail"></div>
+          </div>
+        </div>
         <div class="condition-card" id="stormRiskCard">
           <div class="condition-icon">⛈️</div>
           <div class="condition-body">
@@ -1676,6 +1684,14 @@
             <div class="condition-label">UV index (dnes max)</div>
             <div class="condition-value" id="uvValue">--</div>
             <div class="condition-detail" id="uvDetail"></div>
+          </div>
+        </div>
+        <div class="condition-card" id="biometCard">
+          <div class="condition-icon">🧠</div>
+          <div class="condition-body">
+            <div class="condition-label">Biometeorologická zátěž</div>
+            <div class="condition-value" id="biometValue">--</div>
+            <div class="condition-detail" id="biometDetail"></div>
           </div>
         </div>
         <div class="condition-card" id="sunCard" style="border-left-color: #fbbf24;">
@@ -2011,7 +2027,7 @@
     </div>
   </div>
 
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.js" integrity="sha384-cxOPjt7s7Iz04uaHJceBmS+qpjv2JkIHNVcuOrM+YHwZOmJGBXI00mdUXEq65HTH" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+  <script src="lib/leaflet/leaflet.js"></script>
   <script>
     // Pojistka: pokud se z CDN nenačte Chart.js (výpadek / blokace), dej uživateli vědět
     if (typeof Chart === 'undefined') {
@@ -4695,6 +4711,170 @@
       }
     }
 
+    // =========================================================
+    // SROVNÁNÍ S DLOUHODOBÝM PRŮMĚREM (archive API, 10 let, ±7 dní)
+    // =========================================================
+    let climateNormalCache = {};        // klíč: "locKey|MM-DD" → průměrná teplota (°C)
+    const climateFetching = new Set();  // ochrana proti souběžným dotazům
+
+    function loadClimateCache() {
+      try {
+        const saved = JSON.parse(localStorage.getItem('climateNormals'));
+        if (saved && typeof saved === 'object') climateNormalCache = saved;
+      } catch (e) {}
+    }
+
+    function saveClimateCache() {
+      try {
+        // Historická data se nemění – stačí omezit počet záznamů
+        const entries = Object.entries(climateNormalCache).slice(-12);
+        localStorage.setItem('climateNormals', JSON.stringify(Object.fromEntries(entries)));
+      } catch (e) {}
+    }
+
+    async function updateClimateNormalCard() {
+      const card = document.getElementById('climateCard');
+      if (!card) return;
+      const d = lastChartData && lastChartData.daily;
+      if (!currentLocationData || !d || !Array.isArray(d.tempMax) || d.tempMax[0] == null || d.tempMin[0] == null) {
+        card.style.display = 'none';
+        return;
+      }
+      const todayMean = (d.tempMax[0] + d.tempMin[0]) / 2;
+      const now = new Date();
+      const mmdd = `${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+      const locKey = getLocationKey(currentLocationData.lat, currentLocationData.lon);
+      const cacheKey = `${locKey}|${mmdd}`;
+      const yEnd = now.getFullYear() - 1;
+      const yStart = yEnd - 9;
+      let normal = climateNormalCache[cacheKey];
+
+      if (normal == null) {
+        if (climateFetching.has(cacheKey)) return;
+        climateFetching.add(cacheKey);
+        card.style.display = 'none'; // ukázat až s daty
+        try {
+          const url = `https://archive-api.open-meteo.com/v1/archive?latitude=${currentLocationData.lat}&longitude=${currentLocationData.lon}&start_date=${yStart}-01-01&end_date=${yEnd}-12-31&daily=temperature_2m_mean&timezone=Europe%2FPrague`;
+          const resp = await fetch(url);
+          if (!resp.ok) throw new Error('HTTP ' + resp.status);
+          const data = await resp.json();
+          const times = data.daily && data.daily.time;
+          const temps = data.daily && data.daily.temperature_2m_mean;
+          if (!Array.isArray(times) || !Array.isArray(temps)) throw new Error('Neplatná odpověď');
+
+          // Sezónní okno: MM-DD ±7 dní kolem dneška (funguje i přes přelom roku)
+          const windowSet = new Set();
+          for (let off = -7; off <= 7; off++) {
+            const dt = new Date(now);
+            dt.setDate(dt.getDate() + off);
+            windowSet.add(`${String(dt.getMonth() + 1).padStart(2, '0')}-${String(dt.getDate()).padStart(2, '0')}`);
+          }
+          let sum = 0, cnt = 0;
+          for (let i = 0; i < times.length; i++) {
+            if (temps[i] != null && windowSet.has(times[i].slice(5))) { sum += temps[i]; cnt++; }
+          }
+          if (cnt < 30) throw new Error('Málo historických dat');
+          normal = Math.round((sum / cnt) * 10) / 10;
+          climateNormalCache[cacheKey] = normal;
+          saveClimateCache();
+        } catch (e) {
+          return; // bez dat karta zůstane skrytá
+        } finally {
+          climateFetching.delete(cacheKey);
+        }
+        // Uživatel mezitím mohl přepnout lokaci
+        if (!currentLocationData || getLocationKey(currentLocationData.lat, currentLocationData.lon) !== locKey) return;
+      }
+
+      const diff = todayMean - normal;
+      let text, color;
+      if (Math.abs(diff) < 1) {
+        text = 'V normálu'; color = '#4caf50';
+      } else if (diff > 0) {
+        text = `O ${diff.toFixed(1)} °C tepleji`;
+        color = diff >= 5 ? '#f44336' : diff >= 3 ? '#ff5722' : '#ff9800';
+      } else {
+        text = `O ${Math.abs(diff).toFixed(1)} °C chladněji`;
+        color = diff <= -5 ? '#2196f3' : diff <= -3 ? '#4a9eff' : '#6aa6fd';
+      }
+      const valEl = document.getElementById('climateValue');
+      const detEl = document.getElementById('climateDetail');
+      valEl.textContent = text;
+      valEl.style.color = color;
+      card.style.borderLeftColor = color;
+      detEl.textContent = `Dnes ~${todayMean.toFixed(1)} °C; obvyklá teplota v tomto období (${yStart}–${yEnd}) je ${normal.toFixed(1)} °C.`;
+      card.style.display = 'flex';
+    }
+
+    // =========================================================
+    // BIOMETEOROLOGICKÁ ZÁTĚŽ (změny tlaku, teplotní výkyvy, dusno)
+    // =========================================================
+    function updateBiometCard(hourly, time, startIdx) {
+      const card = document.getElementById('biometCard');
+      if (!card || !hourly.temp) return;
+      const endIdx = Math.min(startIdx + 24, time.length);
+
+      let score = 0;
+      const reasons = [];
+
+      // 1) Změny tlaku: největší 3h změna v okně od -6 h do +24 h
+      if (hourly.pressure) {
+        let maxDrop = 0, maxRise = 0;
+        const from = Math.max(0, startIdx - 6);
+        for (let i = from; i + 3 < endIdx; i++) {
+          const a = hourly.pressure[i], b = hourly.pressure[i + 3];
+          if (a == null || b == null) continue;
+          const delta = b - a;
+          if (delta < maxDrop) maxDrop = delta;
+          if (delta > maxRise) maxRise = delta;
+        }
+        const change = Math.max(-maxDrop, maxRise);
+        if (change >= 4)      { score += 2; reasons.push(maxRise > -maxDrop ? 'rychlý vzestup tlaku' : 'rychlý pokles tlaku'); }
+        else if (change >= 2) { score += 1; reasons.push('kolísání tlaku'); }
+      }
+
+      // 2) Teplotní rozdíl v příštích 24 h
+      let minT = Infinity, maxT = -Infinity;
+      for (let i = startIdx; i < endIdx; i++) {
+        const t = hourly.temp[i];
+        if (t == null) continue;
+        if (t < minT) minT = t;
+        if (t > maxT) maxT = t;
+      }
+      if (maxT > minT) {
+        const swing = maxT - minT;
+        if (swing >= 14)      { score += 2; reasons.push('velké teplotní výkyvy'); }
+        else if (swing >= 10) { score += 1; reasons.push('teplotní výkyvy'); }
+      }
+
+      // 3) Dusno (kombinace tepla a vysoké vlhkosti)
+      if (hourly.humidity) {
+        let sultry = 0;
+        for (let i = startIdx; i < endIdx; i++) {
+          const t = hourly.temp[i], rh = hourly.humidity[i];
+          if (t == null || rh == null) continue;
+          if (t >= 28 && rh >= 60)      sultry = Math.max(sultry, 2);
+          else if (t >= 25 && rh >= 70) sultry = Math.max(sultry, 1);
+        }
+        if (sultry === 2)      { score += 2; reasons.push('dusno'); }
+        else if (sultry === 1) { score += 1; reasons.push('mírné dusno'); }
+      }
+
+      const LEVELS = [
+        { name: 'Nízká (1. stupeň)',   color: '#4caf50', desc: 'Počasí většinu lidí nijak neomezí.' },
+        { name: 'Střední (2. stupeň)', color: '#ff9800', desc: 'Citlivější lidé mohou pociťovat únavu, bolesti hlavy či kloubů.' },
+        { name: 'Vysoká (3. stupeň)',  color: '#f44336', desc: 'Výrazná zátěž pro citlivé osoby – vhodné omezit náročné aktivity.' }
+      ];
+      const info = LEVELS[score >= 4 ? 2 : score >= 2 ? 1 : 0];
+
+      const valEl = document.getElementById('biometValue');
+      const detEl = document.getElementById('biometDetail');
+      valEl.textContent = info.name;
+      valEl.style.color = info.color;
+      card.style.borderLeftColor = info.color;
+      detEl.textContent = info.desc + (reasons.length ? ` Příčiny: ${reasons.join(', ')}.` : '');
+    }
+
     /** Aktualizuje panel: aktuální podmínky + špičkové riziko bouřek v příštích 24 h + dnešní max UV. */
     function updateConditionsPanel(hourly) {
       if (!hourly) return;
@@ -4762,6 +4942,10 @@
       // --- Riziko silného větru + sněžení/blizzard/ledovka ---
       updateWindRiskCard(hourly, time, startIdx);
       updateSnowRiskCard(hourly, time, startIdx);
+
+      // --- Biometeo zátěž + srovnání s dlouhodobým průměrem ---
+      updateBiometCard(hourly, time, startIdx);
+      updateClimateNormalCard(); // async, karta se ukáže po načtení historie
 
       // --- Kiosk režim (pokud běží, promítni nová data) ---
       updateKioskPanel();
@@ -5186,7 +5370,7 @@
     // EXPORT / SDÍLENÍ
     // =========================================================
 
-    /** Sestaví sdílecí URL s lokací (a pořadím/viditelností grafů). */
+    /** Sestaví sdílecí URL s lokací, druhou lokací porovnání, přepínači a nastavením grafů. */
     function buildShareUrl() {
       const url = new URL(window.location.href.split('#')[0].split('?')[0]);
       if (currentLocationData) {
@@ -5194,6 +5378,15 @@
         url.searchParams.set('lon', currentLocationData.lon);
         if (currentLocationData.displayName) url.searchParams.set('name', currentLocationData.displayName);
       }
+      // Druhá lokace porovnání
+      if (compareLocation) {
+        url.searchParams.set('lat2', compareLocation.lat);
+        url.searchParams.set('lon2', compareLocation.lon);
+        if (compareLocation.displayName) url.searchParams.set('name2', compareLocation.displayName);
+      }
+      // Přepínače datových vrstev
+      url.searchParams.set('ens', ensembleEnabled ? '1' : '0');
+      url.searchParams.set('models', modelCompareEnabled ? '1' : '0');
       // Kompaktní zápis nastavení grafů: id=1/0 oddělené čárkou
       const cfg = chartSettings.map(s => `${s.id}:${s.enabled ? 1 : 0}`).join(',');
       url.searchParams.set('charts', cfg);
@@ -5305,6 +5498,30 @@
           chartSettings = parsed;
           saveChartSettings();
         }
+      }
+
+      // Přepínače datových vrstev z odkazu (projeví se i do checkboxů – ty se
+      // nastavují až později v initApp podle těchto proměnných)
+      if (params.has('ens')) {
+        ensembleEnabled = params.get('ens') === '1';
+        try { localStorage.setItem('ensembleBand', ensembleEnabled ? '1' : '0'); } catch (e) {}
+      }
+      if (params.has('models')) {
+        modelCompareEnabled = params.get('models') === '1';
+        try { localStorage.setItem('modelCompare', modelCompareEnabled ? '1' : '0'); } catch (e) {}
+      }
+
+      // Druhá lokace porovnání z odkazu – uloží se do localStorage,
+      // obnovovací blok v initApp ji pak načte a stáhne data
+      const lat2 = parseFloat(params.get('lat2'));
+      const lon2 = parseFloat(params.get('lon2'));
+      if (!isNaN(lat2) && !isNaN(lon2)) {
+        const name2 = params.get('name2') || `${lat2.toFixed(3)}, ${lon2.toFixed(3)}`;
+        try {
+          localStorage.setItem('compareLocation', JSON.stringify({
+            lat: lat2, lon: lon2, displayName: name2, name: name2.split(',')[0]
+          }));
+        } catch (e) {}
       }
 
       // Lokace z odkazu
@@ -5529,6 +5746,7 @@
     function initApp() {
       loadRecentLocations();
       loadWeatherCache();
+      loadClimateCache();
       renderRecentLocationButtons();
 
       loadChartSettings();

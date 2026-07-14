@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Měnový převodník</title>
+  <link rel="stylesheet" href="../common.css">
+  <script>
+    if (localStorage.getItem('webapp_theme') === 'light') document.documentElement.dataset.theme = 'light';
+  </script>
+  <style>
+    body { background-color: var(--bg-deep); padding: 24px clamp(14px, 3vw, 40px); min-height: 100vh; }
+    h1 { font-size: 1.4rem; margin-bottom: 4px; }
+    .podtitul { color: var(--text-muted); font-size: 0.88rem; margin-bottom: 18px; }
+    .karta { background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; max-width: 640px; margin-bottom: 16px; }
+    .prevod { display: grid; grid-template-columns: 1fr auto 1fr; gap: 10px; align-items: end; }
+    @media (max-width: 560px) { .prevod { grid-template-columns: 1fr; } #prohodit { justify-self: center; } }
+    label { display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 5px; }
+    input, select {
+      width: 100%; background: var(--bg-input); border: 1px solid var(--border); border-radius: 6px;
+      color: var(--text); padding: 10px 12px; font-size: 1.05rem;
+    }
+    input:focus, select:focus { outline: none; border-color: var(--accent); }
+    #prohodit {
+      background: var(--bg-control); border: 1px solid var(--border-strong); color: var(--text-muted);
+      border-radius: 6px; padding: 10px 14px; cursor: pointer; font-size: 1rem;
+    }
+    #prohodit:hover { background: var(--accent); color: #fff; border-color: var(--accent); }
+    .vysledek { font-size: 1.6rem; font-weight: 700; color: var(--accent); margin-top: 16px; min-height: 2rem; }
+    .kurz-info { color: var(--text-faint); font-size: 0.8rem; margin-top: 6px; }
+    .stav { font-size: 0.82rem; margin-bottom: 10px; }
+    .stav.ok { color: var(--ok); }
+    .stav.chyba { color: var(--danger); }
+    table { width: 100%; border-collapse: collapse; font-size: 0.85rem; }
+    th, td { padding: 6px 8px; text-align: left; border-bottom: 1px solid var(--border); }
+    th { color: var(--text-faint); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; }
+    td:last-child, th:last-child { text-align: right; font-variant-numeric: tabular-nums; }
+    tbody tr { cursor: pointer; }
+    tbody tr:hover td { background: var(--bg-hover); }
+  </style>
+</head>
+<body>
+  <h1>💱 Měnový převodník</h1>
+  <p class="podtitul">Denní kurzy ČNB (záložně ECB). Poslední stažené kurzy fungují i offline.</p>
+
+  <div class="karta">
+    <div class="stav" id="stav">Načítám kurzy…</div>
+    <div class="prevod">
+      <div>
+        <label>Částka</label>
+        <input type="number" id="castka" value="100" step="0.01">
+        <label style="margin-top:10px">Z měny</label>
+        <select id="zMeny"></select>
+      </div>
+      <button id="prohodit" title="Prohodit měny">⇄</button>
+      <div>
+        <label>Na měnu</label>
+        <select id="naMenu"></select>
+      </div>
+    </div>
+    <div class="vysledek" id="vysledek">–</div>
+    <div class="kurz-info" id="kurzInfo"></div>
+  </div>
+
+  <div class="karta">
+    <table>
+      <thead><tr><th>Měna</th><th>Kód</th><th>Množství</th><th>Kurz (Kč)</th></tr></thead>
+      <tbody id="tabulka"></tbody>
+    </table>
+  </div>
+
+  <script>
+    const KEY_CACHE = 'currency_conv_kurzy';
+    let kurzy = {};   // kod -> Kč za 1 jednotku
+    let nazvy = {};   // kod -> název
+    let datumKurzu = '';
+
+    const $ = id => document.getElementById(id);
+    const fmt = (n, d = 2) => n.toLocaleString('cs-CZ', { minimumFractionDigits: d, maximumFractionDigits: d });
+
+    function nastavStav(text, trida) {
+      const el = $('stav');
+      el.textContent = text;
+      el.className = 'stav ' + (trida || '');
+    }
+
+    function zpracujData(seznam, datum, zdroj) {
+      kurzy = { CZK: 1 };
+      nazvy = { CZK: 'česká koruna' };
+      seznam.forEach(r => {
+        kurzy[r.kod] = r.kurz / r.mnozstvi;
+        nazvy[r.kod] = r.nazev;
+      });
+      datumKurzu = datum;
+      localStorage.setItem(KEY_CACHE, JSON.stringify({ seznam, datum }));
+      naplnUI(zdroj);
+    }
+
+    function naplnUI(zdroj) {
+      const kody = Object.keys(kurzy).sort();
+      const zVal = $('zMeny').value || 'EUR';
+      const naVal = $('naMenu').value || 'CZK';
+      [['zMeny', zVal], ['naMenu', naVal]].forEach(([id, val]) => {
+        const sel = $(id);
+        sel.innerHTML = '';
+        kody.forEach(k => {
+          const o = document.createElement('option');
+          o.value = k;
+          o.textContent = `${k} – ${nazvy[k]}`;
+          sel.appendChild(o);
+        });
+        sel.value = kurzy[val] ? val : 'CZK';
+      });
+      const tb = $('tabulka');
+      tb.innerHTML = '';
+      kody.filter(k => k !== 'CZK').forEach(k => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${nazvy[k]}</td><td>${k}</td><td>1</td><td>${fmt(kurzy[k], 3)}</td>`;
+        tr.addEventListener('click', () => { $('zMeny').value = k; $('naMenu').value = 'CZK'; preved(); });
+        tb.appendChild(tr);
+      });
+      nastavStav(`Kurzy ${zdroj} k ${datumKurzu}.`, 'ok');
+      preved();
+    }
+
+    function preved() {
+      const c = parseFloat($('castka').value);
+      const z = $('zMeny').value, na = $('naMenu').value;
+      if (!isFinite(c) || !kurzy[z] || !kurzy[na]) { $('vysledek').textContent = '–'; return; }
+      const vKc = c * kurzy[z];
+      const vysledek = vKc / kurzy[na];
+      $('vysledek').textContent = `${fmt(c)} ${z} = ${fmt(vysledek)} ${na}`;
+      $('kurzInfo').textContent = `1 ${z} = ${fmt(kurzy[z] / kurzy[na], 4)} ${na}`;
+    }
+
+    ['castka', 'zMeny', 'naMenu'].forEach(id => $(id).addEventListener('input', preved));
+    $('prohodit').addEventListener('click', () => {
+      const t = $('zMeny').value;
+      $('zMeny').value = $('naMenu').value;
+      $('naMenu').value = t;
+      preved();
+    });
+
+    // 1) ČNB REST API (JSON, s CORS), 2) záloha: ECB přes frankfurter.dev, 3) poslední uložené kurzy
+    async function nactiCNB() {
+      const r = await fetch('https://api.cnb.cz/cnbapi/exrates/daily?lang=CZ');
+      if (!r.ok) throw new Error('CNB ' + r.status);
+      const data = await r.json();
+      const seznam = data.rates.map(x => ({
+        kod: x.currencyCode, nazev: x.currency, mnozstvi: x.amount, kurz: x.rate,
+      }));
+      zpracujData(seznam, data.rates[0]?.validFor || '', 'ČNB');
+    }
+
+    async function nactiECB() {
+      const r = await fetch('https://api.frankfurter.dev/v1/latest?base=CZK');
+      if (!r.ok) throw new Error('ECB ' + r.status);
+      const data = await r.json();
+      const seznam = Object.entries(data.rates).map(([kod, kurz]) => ({
+        kod, nazev: kod, mnozstvi: 1, kurz: 1 / kurz,
+      }));
+      zpracujData(seznam, data.date, 'ECB (ČNB nedostupná)');
+    }
+
+    function nactiCache() {
+      try {
+        const c = JSON.parse(localStorage.getItem(KEY_CACHE));
+        if (!c) throw 0;
+        kurzy = { CZK: 1 }; nazvy = { CZK: 'česká koruna' };
+        c.seznam.forEach(r => { kurzy[r.kod] = r.kurz / r.mnozstvi; nazvy[r.kod] = r.nazev; });
+        datumKurzu = c.datum;
+        naplnUI('(offline, uložené)');
+      } catch {
+        nastavStav('Kurzy se nepodařilo načíst a žádné nejsou uložené. Připojte se k internetu.', 'chyba');
+      }
+    }
+
+    nactiCNB().catch(() => nactiECB()).catch(() => nactiCache());
+  </script>
+</body>
+</html>
