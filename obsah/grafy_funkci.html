@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Grafy funkcí</title>
+  <link rel="stylesheet" href="../common.css">
+  <script>
+    if (localStorage.getItem('webapp_theme') === 'light') document.documentElement.dataset.theme = 'light';
+  </script>
+  <style>
+    body { background-color: var(--bg-deep); padding: 24px clamp(14px, 3vw, 40px); min-height: 100vh; }
+    h1 { font-size: 1.4rem; margin-bottom: 4px; }
+    .podtitul { color: var(--text-muted); font-size: 0.88rem; margin-bottom: 16px; }
+    .plocha { display: flex; gap: 16px; flex-wrap: wrap; max-width: 1000px; }
+    .panel { background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; }
+    .graf-obal { flex: 1 1 420px; min-width: 300px; }
+    canvas { width: 100%; height: auto; display: block; border-radius: 6px; background: var(--bg-deep); }
+    .nastaveni { flex: 0 1 320px; }
+    .typy { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 14px; }
+    .typy button { background: var(--bg-control); border: 1px solid var(--border-strong); color: var(--text-muted); border-radius: 6px; padding: 6px 11px; font-size: 0.82rem; cursor: pointer; }
+    .typy button.active { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+    .predpis { font-family: Georgia, serif; font-size: 1.15rem; margin-bottom: 14px; text-align: center; color: var(--accent); min-height: 1.6rem; }
+    .tahlo { margin-bottom: 12px; }
+    .tahlo label { display: flex; justify-content: space-between; font-size: 0.88rem; color: var(--text-muted); margin-bottom: 4px; }
+    .tahlo output { font-variant-numeric: tabular-nums; color: var(--text); font-weight: 600; }
+    input[type=range] { width: 100%; accent-color: var(--accent); }
+    .popis { font-size: 0.84rem; color: var(--text-faint); line-height: 1.6; margin-top: 12px; border-top: 1px solid var(--border); padding-top: 10px; }
+  </style>
+</head>
+<body>
+  <h1>📈 Grafy funkcí</h1>
+  <p class="podtitul">Interaktivní vykreslování základních funkcí – posouvej parametry a sleduj, co se s grafem děje (9. ročník ZŠ, SŠ).</p>
+
+  <div class="plocha">
+    <div class="panel graf-obal"><canvas id="graf" width="640" height="480"></canvas></div>
+    <div class="panel nastaveni">
+      <div class="typy" id="typy"></div>
+      <div class="predpis" id="predpis"></div>
+      <div id="tahla"></div>
+      <div class="popis" id="popis"></div>
+    </div>
+  </div>
+
+<script>
+const $ = id => document.getElementById(id);
+const canvas = $('graf'), ctx = canvas.getContext('2d');
+
+const FUNKCE = [
+  { id: 'lin', nazev: 'Lineární', predpis: p => `y = ${p.a}·x ${p.b < 0 ? '−' : '+'} ${Math.abs(p.b)}`,
+    f: p => x => p.a * x + p.b,
+    parametry: { a: [-5, 5, 0.1, 1], b: [-5, 5, 0.1, 0] },
+    popis: 'Přímka. Parametr a určuje sklon (a > 0 roste, a < 0 klesá), b posouvá přímku po ose y.' },
+  { id: 'kvadr', nazev: 'Kvadratická', predpis: p => `y = ${p.a}·x² ${p.b < 0 ? '−' : '+'} ${Math.abs(p.b)}·x ${p.c < 0 ? '−' : '+'} ${Math.abs(p.c)}`,
+    f: p => x => p.a * x * x + p.b * x + p.c,
+    parametry: { a: [-3, 3, 0.1, 1], b: [-5, 5, 0.1, 0], c: [-5, 5, 0.1, 0] },
+    popis: 'Parabola. a určuje otevření (a > 0 nahoru, a < 0 dolů) a šířku, c posouvá vrchol po ose y.' },
+  { id: 'abs', nazev: '|x|', predpis: p => `y = ${p.a}·|x ${p.b < 0 ? '−' : '+'} ${Math.abs(p.b)}| ${p.c < 0 ? '−' : '+'} ${Math.abs(p.c)}`,
+    f: p => x => p.a * Math.abs(x + p.b) + p.c,
+    parametry: { a: [-3, 3, 0.1, 1], b: [-5, 5, 0.1, 0], c: [-5, 5, 0.1, 0] },
+    popis: 'Lomená čára tvaru V. Parametr b posouvá vrchol vodorovně, c svisle.' },
+  { id: 'neprima', nazev: 'k/x', predpis: p => `y = ${p.a} / x`,
+    f: p => x => p.a / x,
+    parametry: { a: [-6, 6, 0.1, 2] },
+    popis: 'Nepřímá úměrnost – hyperbola. Není definována pro x = 0. Znaménko a překlápí větve.' },
+  { id: 'sin', nazev: 'sinus', predpis: p => `y = ${p.a}·sin(${p.b}·x)`,
+    f: p => x => p.a * Math.sin(p.b * x),
+    parametry: { a: [-3, 3, 0.1, 1], b: [0.2, 4, 0.1, 1] },
+    popis: 'Vlna. a je amplituda (výška vln), b frekvence (hustota vln).' },
+  { id: 'cos', nazev: 'kosinus', predpis: p => `y = ${p.a}·cos(${p.b}·x)`,
+    f: p => x => p.a * Math.cos(p.b * x),
+    parametry: { a: [-3, 3, 0.1, 1], b: [0.2, 4, 0.1, 1] },
+    popis: 'Stejná vlna jako sinus, posunutá o čtvrt periody – v x = 0 začíná v maximu.' },
+  { id: 'exp', nazev: 'exponenciální', predpis: p => `y = ${p.a}ˣ`,
+    f: p => x => Math.pow(p.a, x),
+    parametry: { a: [0.2, 3, 0.05, 2] },
+    popis: 'Pro a > 1 prudce roste, pro 0 < a < 1 klesá. Vždy prochází bodem [0; 1].' },
+  { id: 'odm', nazev: '√x', predpis: p => `y = ${p.a}·√x`,
+    f: p => x => x < 0 ? NaN : p.a * Math.sqrt(x),
+    parametry: { a: [-3, 3, 0.1, 1] },
+    popis: 'Odmocnina je definována jen pro x ≥ 0. Je to „položená“ polovina paraboly.' },
+];
+
+let aktualni = FUNKCE[0];
+let hodnoty = {};
+
+const ROZSAH = 8;   // osa x i y od -8 do 8
+
+function souradnice(x, y) {
+  return [ (x + ROZSAH) / (2 * ROZSAH) * canvas.width, (ROZSAH - y) / (2 * ROZSAH) * canvas.height ];
+}
+function kresli() {
+  const w = canvas.width, h = canvas.height;
+  const styl = getComputedStyle(document.documentElement);
+  ctx.clearRect(0, 0, w, h);
+  // mřížka
+  ctx.strokeStyle = styl.getPropertyValue('--border').trim() || '#404040';
+  ctx.lineWidth = 1;
+  ctx.font = '12px sans-serif';
+  ctx.fillStyle = styl.getPropertyValue('--text-faint').trim() || '#888';
+  for (let i = -ROZSAH; i <= ROZSAH; i += 2) {
+    const [x1, y1] = souradnice(i, -ROZSAH), [x2, y2] = souradnice(i, ROZSAH);
+    ctx.beginPath(); ctx.moveTo(x1, y1); ctx.lineTo(x2, y2); ctx.stroke();
+    const [x3, y3] = souradnice(-ROZSAH, i), [x4, y4] = souradnice(ROZSAH, i);
+    ctx.beginPath(); ctx.moveTo(x3, y3); ctx.lineTo(x4, y4); ctx.stroke();
+    if (i) {
+      const [tx, ty] = souradnice(i, 0); ctx.fillText(i, tx + 3, ty + 14);
+      const [tx2, ty2] = souradnice(0, i); ctx.fillText(i, tx2 + 5, ty2 - 3);
+    }
+  }
+  // osy
+  ctx.strokeStyle = styl.getPropertyValue('--text-muted').trim() || '#b0b0b0';
+  ctx.lineWidth = 1.6;
+  let [ox1, oy1] = souradnice(-ROZSAH, 0), [ox2, oy2] = souradnice(ROZSAH, 0);
+  ctx.beginPath(); ctx.moveTo(ox1, oy1); ctx.lineTo(ox2, oy2); ctx.stroke();
+  [ox1, oy1] = souradnice(0, -ROZSAH); [ox2, oy2] = souradnice(0, ROZSAH);
+  ctx.beginPath(); ctx.moveTo(ox1, oy1); ctx.lineTo(ox2, oy2); ctx.stroke();
+  // funkce
+  const f = aktualni.f(hodnoty);
+  ctx.strokeStyle = styl.getPropertyValue('--accent').trim() || '#6aa6fd';
+  ctx.lineWidth = 2.6;
+  ctx.beginPath();
+  let kreslim = false;
+  for (let px = 0; px <= w; px++) {
+    const x = px / w * 2 * ROZSAH - ROZSAH;
+    const y = f(x);
+    if (!isFinite(y) || isNaN(y) || Math.abs(y) > ROZSAH * 4) { kreslim = false; continue; }
+    const [cx, cy] = souradnice(x, y);
+    if (kreslim) ctx.lineTo(cx, cy); else { ctx.moveTo(cx, cy); kreslim = true; }
+  }
+  ctx.stroke();
+  $('predpis').textContent = aktualni.predpis(zaokrouhlene());
+  $('popis').textContent = '💡 ' + aktualni.popis;
+}
+function zaokrouhlene() {
+  const z = {};
+  for (const k in hodnoty) z[k] = Math.round(hodnoty[k] * 100) / 100;
+  return z;
+}
+function postavTahla() {
+  hodnoty = {};
+  $('tahla').innerHTML = '';
+  for (const [jmeno, [min, max, krok, vychozi]] of Object.entries(aktualni.parametry)) {
+    hodnoty[jmeno] = vychozi;
+    const div = document.createElement('div');
+    div.className = 'tahlo';
+    div.innerHTML = `<label>parametr ${jmeno} <output>${vychozi}</output></label>
+      <input type="range" min="${min}" max="${max}" step="${krok}" value="${vychozi}">`;
+    const vstup = div.querySelector('input'), vystup = div.querySelector('output');
+    vstup.oninput = () => { hodnoty[jmeno] = +vstup.value; vystup.textContent = vstup.value; kresli(); };
+    $('tahla').appendChild(div);
+  }
+}
+FUNKCE.forEach((fn, i) => {
+  const b = document.createElement('button');
+  b.textContent = fn.nazev;
+  if (!i) b.classList.add('active');
+  b.onclick = () => {
+    document.querySelectorAll('#typy button').forEach(x => x.classList.remove('active'));
+    b.classList.add('active'); aktualni = fn; postavTahla(); kresli();
+  };
+  $('typy').appendChild(b);
+});
+new MutationObserver(kresli).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+postavTahla(); kresli();
+</script>
+</body>
+</html>

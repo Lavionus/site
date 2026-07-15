@@ -1240,155 +1240,243 @@ const KATALOG_SEKCE = [
     ]
   },
   {
-    "nazev": "🎓 Vzdělávání",
+    "nazev": "📖 Čeština",
     "skupina": "vzdelavani",
     "polozky": [
       {
-        "soubor": "obsah/eduSort.html",
-        "nazev": "🔢 Algoritmy řazení"
-      },
-      {
-        "soubor": "obsah/eduMaps.html",
-        "nazev": "🗺️ Mapy",
-        "tagy": [
-          "zeměpis",
-          "mapy",
-          "výuka"
-        ]
-      },
-      {
-        "soubor": "obsah/AI_prednaska.html",
-        "nazev": "AI přednáška"
-      },
-      {
-        "soubor": "obsah/historicke_mapy_odkazy.html",
-        "nazev": "📜 Kde najít historické mapy"
-      },
-      {
-        "soubor": "obsah/multiplication.html",
-        "nazev": "✖️ Procvičování násobilky"
-      },
-      {
-        "soubor": "obsah/periodic_table.html",
-        "nazev": "⚛️ Periodická tabulka",
-        "tagy": [
-          "chemie",
-          "prvky",
-          "mendělejev"
-        ]
-      },
-      {
-        "soubor": "obsah/flags_quiz.html",
-        "nazev": "🏳️ Kvíz vlajky a města",
-        "tagy": [
-          "vlajky",
-          "státy",
-          "hlavní města",
-          "zeměpis"
-        ]
-      },
-      {
-        "soubor": "obsah/typing_trainer.html",
-        "nazev": "⌨️ Trenažér psaní",
-        "tagy": [
-          "psaní všemi deseti",
-          "klávesnice"
-        ]
-      },
-      {
-        "soubor": "obsah/morse_code.html",
-        "nazev": "📡 Morseova abeceda",
-        "tagy": [
-          "morseovka",
-          "kód",
-          "vysílání"
-        ]
-      },
-      {
-        "soubor": "obsah/roman_numerals.html",
-        "nazev": "🏛️ Římské číslice"
-      },
-      {
-        "soubor": "obsah/fraction_calc.html",
-        "nazev": "➗ Kalkulačka zlomků"
-      },
-      {
-        "soubor": "obsah/mental_math.html",
-        "nazev": "🧠 Mentální matematika"
-      },
-      {
-        "soubor": "obsah/flashcards.html",
-        "nazev": "🎴 Kartičky (flashcards)"
+        "soubor": "obsah/slabiky.html",
+        "nazev": "📖 Slabiky a první čtení",
+        "tagy": ["1. stupeň", "1. ročník", "2. ročník", "čtení", "slabikování"]
       },
       {
         "soubor": "obsah/vyjmenovana_slova.html",
-        "nazev": "✍️ Vyjmenovaná slova"
+        "nazev": "✍️ Vyjmenovaná slova",
+        "tagy": ["1. stupeň", "3. ročník", "pravopis", "i/y"]
       },
       {
-        "soubor": "obsah/clock_learning.html",
-        "nazev": "🕐 Učení hodin"
-      },
-      {
-        "soubor": "obsah/solar_system.html",
-        "nazev": "🪐 Sluneční soustava",
-        "tagy": [
-          "planety",
-          "vesmír",
-          "astronomie"
-        ]
-      },
-      {
-        "soubor": "obsah/star_map.html",
-        "nazev": "🌌 Hvězdná obloha",
-        "tagy": [
-          "hvězdy",
-          "souhvězdí",
-          "astronomie",
-          "obloha"
-        ]
-      },
-      {
-        "soubor": "obsah/music_theory.html",
-        "nazev": "🎼 Hudební nauka"
-      },
-      {
-        "soubor": "obsah/physics_ref.html",
-        "nazev": "⚛️ Fyzikální vzorce"
+        "soubor": "obsah/doplnovacky.html",
+        "nazev": "✍️ Doplňovačky i/y",
+        "tagy": ["1. stupeň", "3. ročník", "4. ročník", "5. ročník", "pravopis", "diktát", "vyjmenovaná slova"]
       },
       {
         "soubor": "obsah/slovni_druhy.html",
-        "nazev": "✏️ Slovní druhy"
+        "nazev": "✏️ Slovní druhy",
+        "tagy": ["1. stupeň", "2. stupeň", "mluvnice"]
       },
       {
-        "soubor": "obsah/slepa_mapa.html",
-        "nazev": "🗺️ Slepá mapa ČR",
-        "tagy": [
-          "kraje",
-          "krajská města",
-          "zeměpis",
-          "česko"
-        ]
+        "soubor": "obsah/shoda_podmetu.html",
+        "nazev": "✏️ Shoda podmětu s přísudkem",
+        "tagy": ["2. stupeň", "6. ročník", "7. ročník", "pravopis", "koncovky", "příčestí"]
+      },
+      {
+        "soubor": "obsah/literarni_smery.html",
+        "nazev": "📚 Literární směry a autoři",
+        "tagy": ["střední škola", "sš", "maturita", "literatura", "sloh"]
       },
       {
         "soubor": "obsah/reading_log.html",
         "nazev": "📚 Čtenářský deník",
-        "tagy": [
-          "knihy",
-          "četba",
-          "hodnocení",
-          "literatura"
-        ]
+        "tagy": ["knihy", "četba", "hodnocení", "literatura"]
+      }
+    ]
+  },
+  {
+    "nazev": "🔢 Matematika",
+    "skupina": "vzdelavani",
+    "polozky": [
+      {
+        "soubor": "obsah/pocitani.html",
+        "nazev": "🔢 Počítání do 20 a 100",
+        "tagy": ["1. stupeň", "1. ročník", "2. ročník", "3. ročník", "sčítání", "odčítání"]
+      },
+      {
+        "soubor": "obsah/multiplication.html",
+        "nazev": "✖️ Procvičování násobilky",
+        "tagy": ["1. stupeň", "3. ročník", "násobení"]
+      },
+      {
+        "soubor": "obsah/clock_learning.html",
+        "nazev": "🕐 Učení hodin",
+        "tagy": ["1. stupeň", "2. ročník", "čas", "hodiny"]
+      },
+      {
+        "soubor": "obsah/prevody_jednotek.html",
+        "nazev": "📏 Převody jednotek",
+        "tagy": ["1. stupeň", "2. stupeň", "délka", "hmotnost", "objem", "čas", "jednotky"]
+      },
+      {
+        "soubor": "obsah/fraction_calc.html",
+        "nazev": "➗ Kalkulačka zlomků",
+        "tagy": ["2. stupeň", "zlomky"]
+      },
+      {
+        "soubor": "obsah/procenta.html",
+        "nazev": "💯 Procenta a trojčlenka",
+        "tagy": ["2. stupeň", "7. ročník", "8. ročník", "9. ročník", "úměra"]
+      },
+      {
+        "soubor": "obsah/rovnice.html",
+        "nazev": "🧮 Lineární rovnice",
+        "tagy": ["2. stupeň", "8. ročník", "9. ročník", "neznámá", "algebra"]
+      },
+      {
+        "soubor": "obsah/geo_tvary.html",
+        "nazev": "🔺 Geometrické tvary a tělesa",
+        "tagy": ["1. stupeň", "2. stupeň", "geometrie", "útvary"]
+      },
+      {
+        "soubor": "obsah/geometrie_vzorce.html",
+        "nazev": "📐 Obvody, obsahy, objemy",
+        "tagy": ["2. stupeň", "6. ročník", "7. ročník", "8. ročník", "9. ročník", "geometrie", "vzorce"]
+      },
+      {
+        "soubor": "obsah/grafy_funkci.html",
+        "nazev": "📈 Grafy funkcí",
+        "tagy": ["2. stupeň", "9. ročník", "střední škola", "sš", "funkce", "graf", "parabola"]
+      },
+      {
+        "soubor": "obsah/roman_numerals.html",
+        "nazev": "🏛️ Římské číslice",
+        "tagy": ["číslice", "převod"]
+      },
+      {
+        "soubor": "obsah/mental_math.html",
+        "nazev": "🧠 Mentální matematika",
+        "tagy": ["počítání zpaměti", "trénink"]
+      }
+    ]
+  },
+  {
+    "nazev": "🔬 Přírodní vědy",
+    "skupina": "vzdelavani",
+    "polozky": [
+      {
+        "soubor": "obsah/periodic_table.html",
+        "nazev": "⚛️ Periodická tabulka",
+        "tagy": ["chemie", "prvky", "mendělejev", "2. stupeň", "sš"]
       },
       {
         "soubor": "obsah/chem_nazvoslovi.html",
         "nazev": "⚗️ Chemické názvosloví",
-        "tagy": [
-          "chemie",
-          "vzorce",
-          "oxidy",
-          "kyseliny",
-          "soli"
-        ]
+        "tagy": ["chemie", "vzorce", "oxidy", "kyseliny", "soli", "2. stupeň", "sš"]
+      },
+      {
+        "soubor": "obsah/vycislovani_rovnic.html",
+        "nazev": "🧪 Vyčíslování chemických rovnic",
+        "tagy": ["chemie", "2. stupeň", "8. ročník", "9. ročník", "sš", "koeficienty", "stechiometrie"]
+      },
+      {
+        "soubor": "obsah/punnett.html",
+        "nazev": "🧬 Punnettův čtverec",
+        "tagy": ["biologie", "genetika", "2. stupeň", "sš", "křížení", "dědičnost", "alely"]
+      },
+      {
+        "soubor": "obsah/physics_ref.html",
+        "nazev": "⚛️ Fyzikální vzorce",
+        "tagy": ["fyzika", "2. stupeň", "sš"]
+      },
+      {
+        "soubor": "obsah/solar_system.html",
+        "nazev": "🪐 Sluneční soustava",
+        "tagy": ["planety", "vesmír", "astronomie"]
+      },
+      {
+        "soubor": "obsah/star_map.html",
+        "nazev": "🌌 Hvězdná obloha",
+        "tagy": ["hvězdy", "souhvězdí", "astronomie", "obloha"]
+      }
+    ]
+  },
+  {
+    "nazev": "🌍 Zeměpis & dějepis",
+    "skupina": "vzdelavani",
+    "polozky": [
+      {
+        "soubor": "obsah/slepa_mapa.html",
+        "nazev": "🗺️ Slepá mapa ČR",
+        "tagy": ["kraje", "krajská města", "zeměpis", "česko", "2. stupeň"]
+      },
+      {
+        "soubor": "obsah/slepa_mapa_evropa.html",
+        "nazev": "🗺️ Slepá mapa Evropy",
+        "tagy": ["státy", "evropa", "zeměpis", "2. stupeň", "sš"]
+      },
+      {
+        "soubor": "obsah/flags_quiz.html",
+        "nazev": "🏳️ Kvíz vlajky a města",
+        "tagy": ["vlajky", "státy", "hlavní města", "zeměpis"]
+      },
+      {
+        "soubor": "obsah/eduMaps.html",
+        "nazev": "🗺️ Mapy",
+        "tagy": ["zeměpis", "mapy", "výuka"]
+      },
+      {
+        "soubor": "obsah/casova_osa.html",
+        "nazev": "📜 Časová osa českých dějin",
+        "tagy": ["dějepis", "historie", "letopočty", "2. stupeň", "sš"]
+      },
+      {
+        "soubor": "obsah/historicke_mapy_odkazy.html",
+        "nazev": "📜 Kde najít historické mapy",
+        "tagy": ["dějepis", "mapy", "archiv"]
+      }
+    ]
+  },
+  {
+    "nazev": "🇬🇧 Cizí jazyky",
+    "skupina": "vzdelavani",
+    "polozky": [
+      {
+        "soubor": "obsah/aj_slovicka.html",
+        "nazev": "🇬🇧 Angličtina – první slovíčka",
+        "tagy": ["angličtina", "english", "1. stupeň", "slovíčka", "obrázky", "začátečník"]
+      },
+      {
+        "soubor": "obsah/aj_slovesa.html",
+        "nazev": "🇬🇧 Anglická nepravidelná slovesa",
+        "tagy": ["angličtina", "english", "2. stupeň", "sš", "irregular verbs", "slovesa"]
+      }
+    ]
+  },
+  {
+    "nazev": "🎓 Kartičky & další výuka",
+    "skupina": "vzdelavani",
+    "polozky": [
+      {
+        "soubor": "obsah/flashcards.html",
+        "nazev": "🎴 Kartičky (flashcards)",
+        "tagy": ["učení", "opakování", "sady"]
+      },
+      {
+        "soubor": "obsah/knihovna_sad.html",
+        "nazev": "🗂️ Knihovna sad kartiček",
+        "tagy": ["kartičky", "flashcards", "sady", "vyjmenovaná slova", "slovíčka", "letopočty", "ke stažení"]
+      },
+      {
+        "soubor": "obsah/typing_trainer.html",
+        "nazev": "⌨️ Trenažér psaní",
+        "tagy": ["psaní všemi deseti", "klávesnice"]
+      },
+      {
+        "soubor": "obsah/music_theory.html",
+        "nazev": "🎼 Hudební nauka",
+        "tagy": ["hudba", "noty"]
+      },
+      {
+        "soubor": "obsah/morse_code.html",
+        "nazev": "📡 Morseova abeceda",
+        "tagy": ["morseovka", "kód", "vysílání"]
+      },
+      {
+        "soubor": "obsah/eduSort.html",
+        "nazev": "🔢 Algoritmy řazení",
+        "tagy": ["informatika", "programování", "sorting"]
+      },
+      {
+        "soubor": "obsah/AI_prednaska.html",
+        "nazev": "🤖 AI přednáška",
+        "tagy": ["umělá inteligence", "informatika", "prezentace", "chatgpt", "prompt"]
       }
     ]
   },

@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Shoda podmětu s přísudkem</title>
+  <link rel="stylesheet" href="../common.css">
+  <script>
+    if (localStorage.getItem('webapp_theme') === 'light') document.documentElement.dataset.theme = 'light';
+  </script>
+  <style>
+    body { background-color: var(--bg-deep); padding: 24px clamp(14px, 3vw, 40px); min-height: 100vh; }
+    h1 { font-size: 1.4rem; margin-bottom: 4px; }
+    .podtitul { color: var(--text-muted); font-size: 0.88rem; margin-bottom: 16px; }
+    .karta { background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; max-width: 640px; }
+    .veta { font-size: 1.5rem; line-height: 1.5; margin-bottom: 20px; min-height: 4.4rem; }
+    .veta .mezera { color: var(--accent); font-weight: 700; border-bottom: 2px dashed var(--accent); padding: 0 3px; }
+    .volby { display: flex; gap: 12px; }
+    .volby button {
+      flex: 1; max-width: 110px; background: var(--bg-elevated); border: 1px solid var(--border); color: var(--text);
+      border-radius: 8px; padding: 14px; font-size: 1.4rem; font-weight: 700; cursor: pointer;
+    }
+    .volby button:hover { border-color: var(--accent); }
+    .volby button.ok { background: rgba(76, 175, 125, 0.2); border-color: var(--ok); }
+    .volby button.spatne { background: rgba(224, 93, 93, 0.18); border-color: var(--danger); }
+    .volby button:disabled { cursor: default; }
+    .vysvetleni { margin-top: 16px; font-size: 0.92rem; color: var(--text-muted); min-height: 1.4rem; }
+    .stavovy { display: flex; align-items: center; gap: 16px; margin-top: 16px; font-size: 0.9rem; }
+    .serie { color: var(--warn); }
+    .pomer { color: var(--text-muted); margin-left: auto; font-variant-numeric: tabular-nums; }
+    .dalsi {
+      background: var(--accent); border: 1px solid var(--accent); color: #fff; border-radius: 6px;
+      padding: 8px 16px; font-size: 0.88rem; cursor: pointer; visibility: hidden;
+    }
+    .dalsi:hover { background: var(--accent-hover); }
+    details { max-width: 640px; margin-bottom: 16px; background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px 16px; }
+    summary { cursor: pointer; font-weight: 600; font-size: 0.92rem; }
+    details ul { margin: 10px 0 4px 20px; font-size: 0.9rem; color: var(--text-muted); line-height: 1.7; }
+  </style>
+</head>
+<body>
+  <h1>✏️ Shoda podmětu s přísudkem</h1>
+  <p class="podtitul">Doplň koncovku příčestí minulého: -li, -ly, nebo -la (6.–9. ročník ZŠ).</p>
+
+  <details>
+    <summary>📖 Pravidla</summary>
+    <ul>
+      <li><b>-li</b> – podmět rodu <b>mužského životného</b> (muži pracovali, psi štěkali)</li>
+      <li><b>-ly</b> – podmět rodu <b>mužského neživotného</b> nebo <b>ženského</b> (stroje pracovaly, ženy zpívaly)</li>
+      <li><b>-la</b> – podmět rodu <b>středního</b> v množném čísle (kuřata pípala)</li>
+      <li>Několikanásobný podmět: je-li aspoň jeden člen mužský životný → <b>-li</b></li>
+      <li>Pozor: <b>děti, oči, uši</b> → -ly (v množném čísle rod ženský)</li>
+    </ul>
+  </details>
+
+  <div class="karta">
+    <div class="veta" id="veta"></div>
+    <div class="volby">
+      <button data-k="i">-li</button>
+      <button data-k="y">-ly</button>
+      <button data-k="a">-la</button>
+    </div>
+    <div class="vysvetleni" id="vysvetleni"></div>
+    <div class="stavovy">
+      <button class="dalsi" id="btnDalsi">Další →</button>
+      <span class="serie" id="serie"></span>
+      <span class="pomer" id="pomer"></span>
+    </div>
+  </div>
+
+<script>
+// [věta s _ místo koncovky, 'i'|'y'|'a', vysvětlení]
+const ULOHY = [
+  ['Muži pracoval_ na poli.', 'i', 'muži – rod mužský životný → -li'],
+  ['Stroje pracoval_ celou noc.', 'y', 'stroje – rod mužský neživotný → -ly'],
+  ['Ženy zpíval_ koledy.', 'y', 'ženy – rod ženský → -ly'],
+  ['Kuřata na dvoře pípal_.', 'a', 'kuřata – rod střední → -la'],
+  ['Děti si hrál_ na zahradě.', 'y', 'děti – v množném čísle rod ženský → -ly'],
+  ['Psi štěkal_ celou noc.', 'i', 'psi – rod mužský životný → -li'],
+  ['Města se rychle rozrůstal_.', 'a', 'města – rod střední → -la'],
+  ['Dívky tancoval_ na plese.', 'y', 'dívky – rod ženský → -ly'],
+  ['Rodiče přijel_ na návštěvu.', 'i', 'rodiče – rod mužský životný → -li'],
+  ['Koně běžel_ tryskem.', 'i', 'koně – rod mužský životný → -li'],
+  ['Vlaky jezdil_ přesně podle řádu.', 'y', 'vlaky – rod mužský neživotný → -ly'],
+  ['Lidé se srdečně smál_.', 'i', 'lidé – rod mužský životný → -li'],
+  ['Housata se batolil_ k rybníku.', 'a', 'housata – rod střední → -la'],
+  ['Oči jí slzel_ od cibule.', 'y', 'oči – v množném čísle rod ženský → -ly'],
+  ['Uši mě od mrazu bolel_.', 'y', 'uši – v množném čísle rod ženský → -ly'],
+  ['Chlapci a dívky spolu soutěžil_.', 'i', 'několikanásobný podmět s mužským životným členem → -li'],
+  ['Sněhuláci na jaře roztál_.', 'i', 'sněhuláci – mluvnicky rod mužský životný → -li'],
+  ['Dny se začal_ krátit.', 'y', 'dny – rod mužský neživotný → -ly'],
+  ['Auta hlasitě troubil_.', 'a', 'auta – rod střední → -la'],
+  ['Letadla přistával_ za mlhy.', 'a', 'letadla – rod střední → -la'],
+  ['Stromy se ohýbal_ ve větru.', 'y', 'stromy – rod mužský neživotný → -ly'],
+  ['Učitelé nás chválil_.', 'i', 'učitelé – rod mužský životný → -li'],
+  ['Kočky mňoukal_ přede dveřmi.', 'y', 'kočky – rod ženský → -ly'],
+  ['Telata se pásl_ u lesa.', 'a', 'telata – rod střední → -la'],
+  ['Hodiny právě odbíjel_ půlnoc.', 'y', 'hodiny – rod ženský → -ly'],
+  ['Turisté v horách zabloudil_.', 'i', 'turisté – rod mužský životný → -li'],
+  ['Světla ve městě zhasl_.', 'a', 'světla – rod střední → -la'],
+  ['Sourozenci se zase hádal_.', 'i', 'sourozenci – rod mužský životný → -li'],
+  ['Vrány kroužil_ nad polem.', 'y', 'vrány – rod ženský → -ly'],
+  ['Klíče ležel_ na stole.', 'y', 'klíče – rod mužský neživotný → -ly'],
+  ['Štěňata kousal_ všechno kolem.', 'a', 'štěňata – rod střední → -la'],
+  ['Žáci i žákyně uspěl_.', 'i', 'několikanásobný podmět s mužským životným členem → -li'],
+  ['Květiny krásně voněl_.', 'y', 'květiny – rod ženský → -ly'],
+  ['Slepice snesl_ hodně vajec.', 'y', 'slepice – rod ženský → -ly'],
+  ['Hejna ptáků odlétal_ na jih.', 'a', 'hejna – rod střední → -la'],
+];
+
+const $ = id => document.getElementById(id);
+let uloha = null, spravne = 0, celkem = 0, serie = 0, posledni = -1;
+const KONCOVKY = { i: 'li', y: 'ly', a: 'la' };
+
+function dalsi() {
+  let i;
+  do { i = Math.floor(Math.random() * ULOHY.length); } while (i === posledni);
+  posledni = i; uloha = ULOHY[i];
+  $('veta').innerHTML = uloha[0].replace('_', '<span class="mezera">&nbsp;_&nbsp;</span>');
+  $('vysvetleni').textContent = '';
+  $('btnDalsi').style.visibility = 'hidden';
+  document.querySelectorAll('.volby button').forEach(b => { b.disabled = false; b.classList.remove('ok', 'spatne'); });
+}
+function odpoved(k, btn) {
+  celkem++;
+  const ok = k === uloha[1];
+  if (ok) { spravne++; serie++; btn.classList.add('ok'); }
+  else {
+    serie = 0; btn.classList.add('spatne');
+    document.querySelector('.volby button[data-k="' + uloha[1] + '"]').classList.add('ok');
+  }
+  document.querySelectorAll('.volby button').forEach(b => b.disabled = true);
+  $('vysvetleni').textContent = uloha[0].replace('_', KONCOVKY[uloha[1]].slice(1)) + ' — ' + uloha[2];
+  $('serie').textContent = serie >= 3 ? '🔥 série ' + serie : '';
+  $('pomer').textContent = spravne + ' / ' + celkem;
+  $('btnDalsi').style.visibility = 'visible';
+}
+document.querySelectorAll('.volby button').forEach(b => b.onclick = () => odpoved(b.dataset.k, b));
+$('btnDalsi').onclick = dalsi;
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && $('btnDalsi').style.visibility === 'visible') dalsi();
+});
+dalsi();
+</script>
+</body>
+</html>

@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Slabiky a první čtení</title>
+  <link rel="stylesheet" href="../common.css">
+  <script>
+    if (localStorage.getItem('webapp_theme') === 'light') document.documentElement.dataset.theme = 'light';
+  </script>
+  <style>
+    body { background-color: var(--bg-deep); padding: 24px clamp(14px, 3vw, 40px); min-height: 100vh; }
+    h1 { font-size: 1.4rem; margin-bottom: 4px; }
+    .podtitul { color: var(--text-muted); font-size: 0.88rem; margin-bottom: 16px; }
+    .rezimy { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+    .rezimy button {
+      background: var(--bg-control); border: 1px solid var(--border-strong); color: var(--text-muted);
+      border-radius: 6px; padding: 7px 13px; font-size: 0.84rem; cursor: pointer;
+    }
+    .rezimy button.active { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+    .tabule {
+      background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius);
+      max-width: 720px; min-height: 300px; display: flex; align-items: center; justify-content: center;
+      padding: 30px; text-align: center; cursor: pointer; user-select: none;
+    }
+    .tabule .text { font-weight: 700; line-height: 1.35; letter-spacing: 0.05em; }
+    .tabule .text .zvyraz { color: var(--accent); }
+    .ovladani { display: flex; gap: 10px; align-items: center; margin-top: 14px; max-width: 720px; flex-wrap: wrap; }
+    .ovladani button {
+      background: var(--bg-control); border: 1px solid var(--border-strong); color: var(--text);
+      border-radius: 6px; padding: 10px 18px; font-size: 0.95rem; cursor: pointer;
+    }
+    .ovladani button.hlavni { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+    .ovladani button.hlavni:hover { background: var(--accent-hover); }
+    .pocitadlo { margin-left: auto; color: var(--text-faint); font-size: 0.9rem; font-variant-numeric: tabular-nums; }
+    label.prep { display: inline-flex; align-items: center; gap: 6px; color: var(--text-muted); font-size: 0.88rem; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <h1>📖 Slabiky a první čtení</h1>
+  <p class="podtitul">Nácvik čtení pro 1.–2. ročník: písmena → slabiky → slova → věty. Klepnutím na tabuli zobrazíš další.</p>
+
+  <div class="rezimy" id="rezimy">
+    <button data-rezim="pismena" class="active">Písmena</button>
+    <button data-rezim="slabiky">Slabiky</button>
+    <button data-rezim="slova">Slova</button>
+    <button data-rezim="vety">Věty</button>
+  </div>
+
+  <div class="tabule" id="tabule"><div class="text" id="text"></div></div>
+
+  <div class="ovladani">
+    <button id="btnPredchozi">← Předchozí</button>
+    <button class="hlavni" id="btnDalsi">Další →</button>
+    <button id="btnCist" title="Přečíst nahlas">🔊</button>
+    <label class="prep"><input type="checkbox" id="chkVelka" checked> VELKÁ písmena</label>
+    <label class="prep"><input type="checkbox" id="chkSlabikovat" checked> dělit na slabiky</label>
+    <span class="pocitadlo" id="pocitadlo"></span>
+  </div>
+
+<script>
+const $ = id => document.getElementById(id);
+
+const SOUHLASKY = ['M', 'L', 'S', 'P', 'T', 'J', 'N', 'D', 'K', 'V', 'Z', 'R', 'B', 'C', 'H'];
+const SAMOHLASKY = ['A', 'Á', 'E', 'É', 'I', 'Í', 'O', 'Ó', 'U', 'Ú', 'Y', 'Ý'];
+
+const DATA = {
+  pismena: [...'AÁBCČDĎEÉĚFGHIÍJKLMNŇOÓPRŘSŠTŤUÚVYÝZŽ'],
+  slabiky: (() => {
+    const s = [];
+    for (const k of SOUHLASKY) for (const v of ['A', 'Á', 'E', 'É', 'I', 'Í', 'O', 'U', 'Y']) s.push(k + v.toLowerCase());
+    return s;
+  })(),
+  // slova dělená na slabiky pomlčkou
+  slova: [
+    'má-ma', 'tá-ta', 'te-ta', 'se-le', 'pi-je', 'me-le', 'mí-sa', 'má-me',
+    'pes', 'les', 'los', 'sud', 'dům', 'kos', 'nos', 'sýr',
+    'so-va', 'ry-ba', 'ko-za', 'no-ha', 'lo-pa-ta', 'ko-le-no', 'ba-nán', 'je-le-ni',
+    'mo-tý-li', 'ho-di-ny', 'ma-li-na', 'ka-lu-že', 'pa-pí-ry', 'ko-lo-toč', 've-se-lo',
+  ],
+  vety: [
+    'Máma má mísu.', 'Ema má maso.', 'Táta je doma.', 'Pes leží u boudy.', 'Sova sedí na dubu.',
+    'Jana nese jahody.', 'U lesa je louka.', 'Kolo je u domu.', 'Míša pije kakao.',
+    'Teta peče koláče.', 'Na dubu sedí sojka.', 'Máme malé kotě.', 'Vlak jede tunelem.',
+    'Děti si hrají na písku.', 'Ryba plave v rybníce.', 'Sluníčko hřeje.',
+  ],
+};
+// úklid pokusné položky
+DATA.slova = DATA.slova.filter(s => !s.includes('?'));
+
+let rezim = 'pismena', poradi = [], idx = 0;
+
+function zamichej(pole) {
+  const p = [...pole];
+  for (let i = p.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [p[i], p[j]] = [p[j], p[i]]; }
+  return p;
+}
+function start() { poradi = zamichej(DATA[rezim]); idx = 0; ukaz(); }
+function ukaz() {
+  let t = poradi[idx];
+  const velka = $('chkVelka').checked;
+  const slabikovat = $('chkSlabikovat').checked;
+  if (!slabikovat) t = t.replace(/-/g, '');
+  if (velka) t = t.toUpperCase(); else if (rezim !== 'vety') t = t.toLowerCase();
+  // slabiky střídavě obarvit
+  const casti = t.split('-');
+  $('text').innerHTML = casti.map((c, i) => i % 2 ? '<span class="zvyraz">' + c + '</span>' : c).join('<span style="opacity:.35">-</span>');
+  const delka = t.replace(/-/g, '').length;
+  $('text').style.fontSize = rezim === 'vety' ? 'clamp(1.6rem, 5vw, 3rem)' : delka > 8 ? 'clamp(2.2rem, 9vw, 4.5rem)' : 'clamp(3rem, 14vw, 7rem)';
+  $('pocitadlo').textContent = (idx + 1) + ' / ' + poradi.length;
+}
+function dalsi() { idx = (idx + 1) % poradi.length; ukaz(); }
+function predchozi() { idx = (idx - 1 + poradi.length) % poradi.length; ukaz(); }
+
+document.querySelectorAll('#rezimy button').forEach(b => b.onclick = () => {
+  document.querySelectorAll('#rezimy button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active'); rezim = b.dataset.rezim; start();
+});
+$('tabule').onclick = dalsi;
+$('btnDalsi').onclick = dalsi;
+$('btnPredchozi').onclick = predchozi;
+$('chkVelka').onchange = ukaz;
+$('chkSlabikovat').onchange = ukaz;
+$('btnCist').onclick = e => {
+  e.stopPropagation();
+  if (!('speechSynthesis' in window)) { alert('Prohlížeč neumí čtení nahlas.'); return; }
+  const u = new SpeechSynthesisUtterance(poradi[idx].replace(/-/g, ''));
+  u.lang = 'cs-CZ'; u.rate = 0.8;
+  speechSynthesis.cancel(); speechSynthesis.speak(u);
+};
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === ' ') { e.preventDefault(); dalsi(); }
+  if (e.key === 'ArrowLeft') predchozi();
+});
+start();
+</script>
+</body>
+</html>

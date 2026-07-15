@@ -92,3 +92,79 @@
 6. ⏳ neprovedeno – sjednocení zpětných odkazů při otevření mimo iframe.
 
 **Kolo 5 (sekce 10):** všech 7 stránek vytvořeno, napojeno v `apps.js` a otestováno v prohlížeči (headless Chromium). Poznámky: ČNB API nemá CORS, převodník proto automaticky přechází na ECB kurzy a poslední stažené kurzy ukládá pro offline; slepá mapa má vlastní zjednodušenou geometrii krajů (bez závislosti na internetu).
+
+---
+
+## 12. 🎓 Návrh: rozšíření výuky podle stupňů / ročníků (2026-07-15) — ✅ IMPLEMENTOVÁNO
+
+> **Schváleno:** členění A-3 (podle předmětů), B = všech 17 aplikací, C = knihovna sad. Hotovo 2026-07-15 – viz sekce 13.
+
+
+
+Sekce Vzdělávání má dnes 23 aplikací v jednom seznamu. Návrh má dvě části: **(A) členění menu** a **(B) nové výukové aplikace po stupních**.
+
+### A) Členění menu – varianty
+
+**Varianta 1 (doporučená): sekce podle stupňů.** Skupina 🎓 Vzdělávání se rozdělí na 3 sekce – čistě přesun položek v `apps.js`, žádný nový kód:
+- 🧒 **1. stupeň ZŠ (1.–5. ročník):** násobilka, mentální matematika, učení hodin, vyjmenovaná slova, slovní druhy, kartičky
+- 🎒 **2. stupeň ZŠ (6.–9. ročník):** zlomky, římské číslice, periodická tabulka, chemické názvosloví, fyzikální vzorce, slepá mapa ČR, kvíz vlajky, sluneční soustava, hvězdná obloha, morseovka, hudební nauka, čtenářský deník
+- 🎓 **SŠ & obecné:** algoritmy řazení, AI přednáška, historické mapy, trenažér psaní, mapy, mentální matematika (nebo do 1. st.)
+
+Nevýhoda: aplikace může být jen v jedné sekci (duplicita by rozbila oblíbené/hledání, klíčem je `soubor`). Hraniční aplikace zařadíme podle převažujícího použití a do `tagy` dáme ročníky („3. ročník", „2. stupeň"…), takže hledání najde vše.
+
+**Varianta 2: jedna sekce + filtr stupně.** Položky dostanou pole `stupen: [1,2,3]` a v menu přibudou filtrační pilulky (1. st. / 2. st. / SŠ). Aplikace může patřit do více stupňů, ale vyžaduje zásah do index.html.
+
+**Varianta 3: sekce podle předmětů** (Čeština, Matematika, Přírodní vědy, Zeměpis & dějepis, Ostatní) + ročníky jen v tazích.
+
+### B) Nové výukové aplikace (výběr k odsouhlasení)
+
+**🧒 1. stupeň:**
+- [ ] 🔢 Počítání do 20/100 – sčítání/odčítání, volba ročníku a oboru čísel
+- [ ] 📖 Slabiky a první čtení (1.–2. ročník)
+- [ ] ✍️ Doplňovačky i/y – diktáty navazující na vyjmenovaná slova
+- [ ] 📏 Převody jednotek pro děti (délka, hmotnost, čas, objem)
+- [ ] 🔺 Geometrické tvary a tělesa – poznávačka
+- [ ] 🇬🇧 Angličtina – první slovíčka (obrázkové kartičky)
+
+**🎒 2. stupeň:**
+- [ ] 💯 Procenta a trojčlenka – trenažér
+- [ ] 🧮 Lineární rovnice – procvičování krok za krokem
+- [ ] 📐 Obvody, obsahy, objemy – kvíz se vzorci
+- [ ] 🗺️ Slepá mapa Evropy / světa (rozšíření stávající ČR)
+- [ ] 🇬🇧 Anglická nepravidelná slovesa
+- [ ] 📜 Časová osa českých dějin
+- [ ] ✏️ Shoda podmětu s přísudkem + větné členy
+
+**🎓 SŠ & obecné:**
+- [ ] 📈 Grafy funkcí – interaktivní vykreslování (lineární, kvadratické, goniometrické)
+- [ ] 🧬 Genetika – Punnettův čtverec (křížení)
+- [ ] 🧪 Vyčíslování chemických rovnic
+- [ ] 📚 Literární směry a autoři – kvíz/kartičky
+
+**Navíc – synergie s kartičkami:** hotové sady kartiček po ročnících (vyjmenovaná slova, slovíčka AJ, letopočty, vzorce…) jako JSON soubory ke stažení/importu – využije nový per-sada export/import ve flashcards.html; stačí stránka „knihovna sad".
+
+### Postup po schválení
+1. Fáze 1: členění menu (schválená varianta) – jen `apps.js`.
+2. Fáze 2: nové aplikace dle zaškrtnutého výběru, po dávkách.
+3. Fáze 3: knihovna sad kartiček po ročnících.
+
+---
+
+## 13. ✅ Záznam implementace rozšíření výuky (2026-07-15)
+
+**Členění menu (A-3):** sekce 🎓 Vzdělávání v `apps.js` rozdělena podle předmětů na 6 sekcí (skupina `vzdelavani` zůstává, takže pilulka Vzdělávání drží vše pohromadě):
+📖 Čeština (7) · 🔢 Matematika (12) · 🔬 Přírodní vědy (7) · 🌍 Zeměpis & dějepis (6) · 🇬🇧 Cizí jazyky (2) · 🎓 Kartičky & další výuka (7). Ke každé položce doplněny tagy s ročníky/stupni („3. ročník", „2. stupeň", „sš"…), takže hledání najde aplikace i podle ročníku.
+
+**Nové aplikace (B – všech 17 + knihovna):**
+- Čeština: `doplnovacky.html` (i/y), `shoda_podmetu.html`, `slabiky.html` (první čtení + čtení nahlas přes SpeechSynthesis), `literarni_smery.html` (přehled + kvíz).
+- Matematika: `pocitani.html` (do 20/100, vysvědčení), `procenta.html` (procenta + trojčlenka), `rovnice.html` (5 úrovní, postup), `geometrie_vzorce.html` (přehled + kvíz), `prevody_jednotek.html`, `geo_tvary.html` (SVG poznávačka), `grafy_funkci.html` (canvas, interaktivní parametry).
+- Přírodní vědy: `punnett.html` (monohybridní křížení), `vycislovani_rovnic.html`.
+- Zeměpis & dějepis: `slepa_mapa_evropa.html` (46 států, vlastní zjednodušená geometrie), `casova_osa.html` (26 událostí, 3 kvízy).
+- Angličtina: `aj_slovicka.html` (6 témat, obrázkové kartičky + kvíz + čtení), `aj_slovesa.html` (62 nepravidelných sloves, tabulka + doplňování).
+- Knihovna (C): `knihovna_sad.html` – 15 hotových sad kartiček po předmětech; tlačítko „➕ Přidat do Kartiček" zapisuje přímo do `localStorage` (`flashcards_state`), nebo „⬇️ JSON" stáhne ve formátu importu flashcards.
+
+**Slepá mapa Evropy – data:** vygenerována z veřejného `map-of-europe` GeoJSON, zjednodušena Douglas–Peuckerem, promítnuta do Mercatoru a vestavěna přímo do stránky (~92 kB, žádná CDN závislost). Osm ministátů (Andorra, Lichtenštejnsko, Lucembursko, Monako, San Marino, Vatikán, Malta, Kypr) je jako klikací tečky.
+
+**Ověření:** `node --check` na apps.js i na inline skriptech všech 18 stránek; kontrola katalogu (244 položek, 0 chybějících souborů, 0 duplicit); headless Chromium render všech stránek bez JS chyb + kontrola, že se dynamický obsah vykreslil (mapa 46 států, kvízy, knihovna 15 sad).
+
+**Styl:** všechny nové stránky používají sdílený `common.css` (tmavý i světlý režim přes `webapp_theme`), mají viewport i `lang="cs"` a jsou plně offline (žádné CDN).

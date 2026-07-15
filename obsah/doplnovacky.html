@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Doplňovačky i/y</title>
+  <link rel="stylesheet" href="../common.css">
+  <script>
+    if (localStorage.getItem('webapp_theme') === 'light') document.documentElement.dataset.theme = 'light';
+  </script>
+  <style>
+    body { background-color: var(--bg-deep); padding: 24px clamp(14px, 3vw, 40px); min-height: 100vh; }
+    h1 { font-size: 1.4rem; margin-bottom: 4px; }
+    .podtitul { color: var(--text-muted); font-size: 0.88rem; margin-bottom: 16px; }
+    .kategorie { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+    .kategorie button {
+      background: var(--bg-control); border: 1px solid var(--border-strong); color: var(--text-muted);
+      border-radius: 6px; padding: 7px 13px; font-size: 0.84rem; cursor: pointer;
+    }
+    .kategorie button.active { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+    .karta { background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; max-width: 640px; }
+    .veta { font-size: 1.5rem; line-height: 1.5; margin-bottom: 20px; min-height: 4.4rem; }
+    .veta .mezera { color: var(--accent); font-weight: 700; border-bottom: 2px dashed var(--accent); padding: 0 3px; }
+    .volby { display: flex; gap: 12px; }
+    .volby button {
+      flex: 1; max-width: 130px; background: var(--bg-elevated); border: 1px solid var(--border); color: var(--text);
+      border-radius: 8px; padding: 14px; font-size: 1.4rem; font-weight: 700; cursor: pointer;
+    }
+    .volby button:hover { border-color: var(--accent); }
+    .volby button.ok { background: rgba(76, 175, 125, 0.2); border-color: var(--ok); }
+    .volby button.spatne { background: rgba(224, 93, 93, 0.18); border-color: var(--danger); }
+    .volby button:disabled { cursor: default; }
+    .vysvetleni { margin-top: 16px; font-size: 0.92rem; color: var(--text-muted); min-height: 1.4rem; }
+    .stavovy { display: flex; align-items: center; gap: 16px; margin-top: 16px; font-size: 0.9rem; }
+    .serie { color: var(--warn); }
+    .pomer { color: var(--text-muted); margin-left: auto; font-variant-numeric: tabular-nums; }
+    .dalsi {
+      background: var(--accent); border: 1px solid var(--accent); color: #fff; border-radius: 6px;
+      padding: 8px 16px; font-size: 0.88rem; cursor: pointer; visibility: hidden;
+    }
+    .dalsi:hover { background: var(--accent-hover); }
+  </style>
+</head>
+<body>
+  <h1>✍️ Doplňovačky i/y</h1>
+  <p class="podtitul">Vyjmenovaná slova a slova s nimi příbuzná – doplň i/í, nebo y/ý (3.–5. ročník ZŠ).</p>
+
+  <div class="kategorie" id="kategorie"></div>
+
+  <div class="karta">
+    <div class="veta" id="veta"></div>
+    <div class="volby">
+      <button id="btnI">i / í</button>
+      <button id="btnY">y / ý</button>
+    </div>
+    <div class="vysvetleni" id="vysvetleni"></div>
+    <div class="stavovy">
+      <button class="dalsi" id="btnDalsi">Další →</button>
+      <span class="serie" id="serie"></span>
+      <span class="pomer" id="pomer"></span>
+    </div>
+  </div>
+
+<script>
+// [věta s _, správně 'i'|'y', vysvětlení]
+const ULOHY = {
+  'B': [
+    ['Na pastvině bučel b_k.', 'y', 'býk – vyjmenované slovo'],
+    ['Kob_la se hnala tryskem.', 'y', 'kobyla – vyjmenované slovo'],
+    ['Náb_tek jsme složili sami.', 'y', 'nábytek – příbuzné slovo k „byt“'],
+    ['Ptáček seděl na dlouhém b_dle.', 'i', 'bidlo = tyč (pozor: bydlo = živobytí)'],
+    ['Chudák přišel o své b_dlo.', 'y', 'bydlo = živobytí (příbuzné k „bydlet“)'],
+    ['Budeme b_dlet v novém domě.', 'y', 'bydlet – vyjmenované slovo'],
+    ['Ob_lí letos pěkně vzrostlo.', 'i', 'obilí – není vyjmenované ani příbuzné'],
+    ['Je to starob_lý zámek.', 'y', 'starobylý – příbuzné k „bydlet/obývat“'],
+    ['Sb_rám poštovní známky.', 'i', 'sbírám – od slovesa sbírat'],
+    ['Zvyk je prostě starý ob_čej.', 'y', 'obyčej – vyjmenované slovo'],
+    ['Na louce se pásl dob_tek.', 'y', 'dobytek – vyjmenované slovo'],
+  ],
+  'L': [
+    ['Ve ml_ně se mele mouka.', 'y', 'mlýn – vyjmenované slovo'],
+    ['Budeme ml_t kávu.', 'i', 'mlít (mele) – píše se s i'],
+    ['Dostal pl_šového medvěda.', 'y', 'plyš – vyjmenované slovo'],
+    ['L_že mám čerstvě namazané.', 'y', 'lyže – vyjmenované slovo'],
+    ['Na obloze se bl_ská.', 'ý', 'blýskat se – vyjmenované slovo'],
+    ['L_stí na podzim opadalo.', 'i', 'listí – není vyjmenované'],
+    ['Nemocný těžce pol_kal.', 'y', 'polykat – vyjmenované slovo'],
+    ['Sl_šel jsem krásnou hudbu.', 'y', 'slyšet – vyjmenované slovo'],
+    ['L_ška je chytrá šelma.', 'i', 'liška – není vyjmenované'],
+    ['Dítě tiše vzl_kalo.', 'y', 'vzlykat – vyjmenované slovo'],
+    ['Přemohla ho l_tost.', 'í', 'lítost – není vyjmenované'],
+  ],
+  'M': [
+    ['M_dlo krásně voní.', 'ý', 'mýdlo – vyjmenované slovo (od mýt)'],
+    ['M_š utekla do díry.', 'y', 'myš – vyjmenované slovo'],
+    ['Hlem_žď leze pomalu.', 'ý', 'hlemýžď – vyjmenované slovo'],
+    ['M_slím, že máš pravdu.', 'y', 'myslet – vyjmenované slovo'],
+    ['Um_j si před jídlem ruce.', 'y', 'umýt – vyjmenované slovo'],
+    ['M_nulý týden pršelo.', 'i', 'minulý – není vyjmenované'],
+    ['Houslista natáhl sm_čec.', 'y', 'smyčec – příbuzné ke „smýkat“'],
+    ['Kolem se m_hlo auto.', 'i', 'mihnout se – není vyjmenované'],
+    ['M_slivec obcházel les.', 'y', 'myslivec – příbuzné k „myslet“'],
+    ['Přišla m_lá návštěva.', 'i', 'milá – není vyjmenované'],
+    ['Praha je m_sto? Ne, město! Ale om_l se stal.', 'y', 'omyl – vyjmenované slovo'],
+  ],
+  'P': [
+    ['P_cha předchází pád.', 'ý', 'pýcha – vyjmenované slovo'],
+    ['Slep_š není had, je to ještěrka.', 'ý', 'slepýš – vyjmenované slovo'],
+    ['Koupili jsme p_tel brambor.', 'y', 'pytel – vyjmenované slovo'],
+    ['Netop_r létá v noci.', 'ý', 'netopýr – vyjmenované slovo'],
+    ['Rozhodčí p_skl na píšťalku.', 'í', 'pískat – není vyjmenované'],
+    ['P_l jsem studený čaj.', 'i', 'pil – od slovesa pít'],
+    ['Musí si odp_kat trest.', 'y', 'pykat – vyjmenované slovo'],
+    ['Kůň ztratil podkovu z kop_ta.', 'y', 'kopyto – vyjmenované slovo'],
+    ['P_šný král nikoho neposlouchal.', 'y', 'pyšný – příbuzné k „pýcha“'],
+    ['Sníh se třp_tí na slunci.', 'y', 'třpytit se – vyjmenované slovo'],
+    ['Ptáci p_li vodu z louže.', 'i', 'pili – od slovesa pít'],
+  ],
+  'S': [
+    ['S_r nechali uzrát ve sklepě.', 'ý', 'sýr – vyjmenované slovo'],
+    ['Přijel k nám s_novec.', 'y', 'synovec – příbuzné k „syn“'],
+    ['Květiny bez vody us_chají.', 'y', 'usychat – příbuzné k „(u)sychat“'],
+    ['Budeme s_pat ptákům zrní.', 'y', 'sypat – vyjmenované slovo'],
+    ['Foukal s_lný vítr.', 'i', 'silný – není vyjmenované'],
+    ['Had výhružně s_čel.', 'y', 'syčet – vyjmenované slovo'],
+    ['Mouku prosej přes s_to.', 'í', 'síto – není vyjmenované'],
+    ['S_rové maso se musí tepelně upravit.', 'y', 'syrový – vyjmenované slovo'],
+    ['Polévka nás dobře nas_tila.', 'y', 'nasytit – vyjmenované slovo'],
+    ['Firma přestěhovala své s_dlo.', 'í', 'sídlo – není vyjmenované'],
+    ['Přezůvky nos v s_ťovce.', 'í', 'síťovka (od síť) – není vyjmenované'],
+  ],
+  'V': [
+    ['V_dra loví ryby.', 'y', 'vydra – vyjmenované slovo'],
+    ['Postavili v_sokou věž.', 'y', 'vysoký – vyjmenované slovo'],
+    ['Zv_k je železná košile.', 'y', 'zvyk – vyjmenované slovo'],
+    ['Na ulici se strhl pov_k.', 'y', 'povyk – příbuzné ke „zvyk/vy-“'],
+    ['V_no zrálo na jižním svahu.', 'í', 'víno – není vyjmenované'],
+    ['V lese houkal v_r.', 'ý', 'výr (sova) – vyjmenované slovo'],
+    ['Loďku stáhl vodní v_r.', 'í', 'vír (točící se voda) – není vyjmenované'],
+    ['V_žle je štíhlý lovecký pes.', 'y', 'vyžle – vyjmenované slovo'],
+    ['Bydlí v krásné v_le.', 'i', 'vila (dům) – není vyjmenované'],
+    ['V_la mávla kouzelným proutkem.', 'í', 'víla (pohádková bytost) – není vyjmenované'],
+    ['Pes celou noc v_l na měsíc.', 'y', 'vyl – od slovesa výt'],
+  ],
+  'Z': [
+    ['Brz_ přijde jaro.', 'y', 'brzy – vyjmenované slovo'],
+    ['Jaz_k mě pálí od horkého čaje.', 'y', 'jazyk – vyjmenované slovo'],
+    ['Jak se naz_vá hlavní město Moravy?', 'ý', 'nazývat – vyjmenované slovo'],
+    ['Z_ma letos udeřila brzy.', 'i', 'zima – není vyjmenované'],
+    ['Z_tra jedeme na výlet.', 'í', 'zítra – není vyjmenované'],
+    ['Soupeř nás vyz_val k boji.', 'ý', 'vyzývat – příbuzné k „nazývat“'],
+    ['Podařilo se mu z_skat první cenu.', 'í', 'získat – není vyjmenované'],
+    ['Únavou hlasitě z_val.', 'í', 'zívat – není vyjmenované'],
+    ['Ruz_ně je pražská čtvrť s letištěm.', 'y', 'Ruzyně – vyjmenované slovo'],
+  ],
+};
+// úklid: vyhoď pokusné položky bez i/y
+for (const k in ULOHY) ULOHY[k] = ULOHY[k].filter(u => 'iíyý'.includes(u[1]));
+
+const $ = id => document.getElementById(id);
+let kat = 'Vše', uloha = null, spravne = 0, celkem = 0, serie = 0, posledni = -1;
+
+const katDiv = $('kategorie');
+['Vše', ...Object.keys(ULOHY)].forEach(k => {
+  const b = document.createElement('button');
+  b.textContent = k === 'Vše' ? 'Vše' : 'po ' + k;
+  if (k === kat) b.classList.add('active');
+  b.onclick = () => { kat = k; [...katDiv.children].forEach(x => x.classList.remove('active')); b.classList.add('active'); dalsi(); };
+  katDiv.appendChild(b);
+});
+
+function zasobnik() {
+  return kat === 'Vše' ? Object.values(ULOHY).flat() : ULOHY[kat];
+}
+function dalsi() {
+  const vse = zasobnik();
+  let i;
+  do { i = Math.floor(Math.random() * vse.length); } while (vse.length > 1 && i === posledni);
+  posledni = i; uloha = vse[i];
+  $('veta').innerHTML = uloha[0].replace('_', '<span class="mezera">&nbsp;_&nbsp;</span>');
+  $('vysvetleni').textContent = '';
+  $('btnDalsi').style.visibility = 'hidden';
+  for (const b of [$('btnI'), $('btnY')]) { b.disabled = false; b.classList.remove('ok', 'spatne'); }
+}
+function odpoved(pismeno) {
+  const ok = 'ií'.includes(uloha[1]) ? pismeno === 'i' : pismeno === 'y';
+  celkem++;
+  const stisknuty = pismeno === 'i' ? $('btnI') : $('btnY');
+  const spravny = 'ií'.includes(uloha[1]) ? $('btnI') : $('btnY');
+  if (ok) { spravne++; serie++; stisknuty.classList.add('ok'); }
+  else { serie = 0; stisknuty.classList.add('spatne'); spravny.classList.add('ok'); }
+  $('btnI').disabled = $('btnY').disabled = true;
+  $('vysvetleni').textContent = uloha[0].replace('_', uloha[1]) + ' — ' + uloha[2];
+  $('serie').textContent = serie >= 3 ? '🔥 série ' + serie : '';
+  $('pomer').textContent = spravne + ' / ' + celkem;
+  $('btnDalsi').style.visibility = 'visible';
+}
+$('btnI').onclick = () => odpoved('i');
+$('btnY').onclick = () => odpoved('y');
+$('btnDalsi').onclick = dalsi;
+document.addEventListener('keydown', e => {
+  if (e.key === 'i' && !$('btnI').disabled) odpoved('i');
+  if (e.key === 'y' && !$('btnY').disabled) odpoved('y');
+  if (e.key === 'Enter' && $('btnDalsi').style.visibility === 'visible') dalsi();
+});
+dalsi();
+</script>
+</body>
+</html>

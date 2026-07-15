@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Geometrické tvary a tělesa</title>
+  <link rel="stylesheet" href="../common.css">
+  <script>
+    if (localStorage.getItem('webapp_theme') === 'light') document.documentElement.dataset.theme = 'light';
+  </script>
+  <style>
+    body { background-color: var(--bg-deep); padding: 24px clamp(14px, 3vw, 40px); min-height: 100vh; }
+    h1 { font-size: 1.4rem; margin-bottom: 4px; }
+    .podtitul { color: var(--text-muted); font-size: 0.88rem; margin-bottom: 16px; }
+    .rezimy { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+    .rezimy button { background: var(--bg-control); border: 1px solid var(--border-strong); color: var(--text-muted); border-radius: 6px; padding: 7px 13px; font-size: 0.84rem; cursor: pointer; }
+    .rezimy button.active { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+    .mrizka { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 12px; max-width: 860px; }
+    .dlazdice { background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; text-align: center; }
+    .dlazdice svg { width: 100%; height: 90px; }
+    .dlazdice .nazev { font-weight: 600; font-size: 0.9rem; margin-top: 6px; }
+    .karta { background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; max-width: 560px; text-align: center; }
+    .karta svg { width: min(260px, 70vw); height: 170px; }
+    .moznosti { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 16px; }
+    .moznosti button { background: var(--bg-elevated); border: 1px solid var(--border); color: var(--text); border-radius: 8px; padding: 12px; font-size: 1rem; cursor: pointer; }
+    .moznosti button:hover { border-color: var(--accent); }
+    .moznosti button.ok { background: rgba(76, 175, 125, 0.2); border-color: var(--ok); }
+    .moznosti button.spatne { background: rgba(224, 93, 93, 0.18); border-color: var(--danger); }
+    .moznosti button:disabled { cursor: default; }
+    .stavovy { display: flex; align-items: center; gap: 16px; margin-top: 16px; font-size: 0.9rem; }
+    .serie { color: var(--warn); }
+    .pomer { color: var(--text-muted); margin-left: auto; font-variant-numeric: tabular-nums; }
+    .dalsi { background: var(--accent); border: 1px solid var(--accent); color: #fff; border-radius: 6px; padding: 8px 16px; font-size: 0.88rem; cursor: pointer; visibility: hidden; }
+  </style>
+</head>
+<body>
+  <h1>🔺 Geometrické tvary a tělesa</h1>
+  <p class="podtitul">Poznávání rovinných útvarů a těles (1.–6. ročník ZŠ).</p>
+
+  <div class="rezimy" id="rezimy">
+    <button data-rezim="prehled" class="active">📖 Přehled</button>
+    <button data-rezim="kviz2d">Kvíz: rovinné útvary</button>
+    <button data-rezim="kviz3d">Kvíz: tělesa</button>
+  </div>
+
+  <div class="mrizka" id="prehled"></div>
+
+  <div class="karta" id="kviz" style="display:none">
+    <div id="obrazek"></div>
+    <div class="moznosti" id="moznosti"></div>
+    <div class="stavovy">
+      <button class="dalsi" id="btnDalsi">Další →</button>
+      <span class="serie" id="serie"></span>
+      <span class="pomer" id="pomer"></span>
+    </div>
+  </div>
+
+<script>
+const $ = id => document.getElementById(id);
+// SVG kresby ve viewBox 0 0 120 90; f = výplň, s = obrys
+const F = 'fill="rgba(106,166,253,.25)" stroke="var(--accent)" stroke-width="2.5" stroke-linejoin="round"';
+const F2 = 'fill="rgba(106,166,253,.12)" stroke="var(--accent)" stroke-width="2" stroke-linejoin="round"';
+const DASH = 'fill="none" stroke="var(--accent)" stroke-width="1.6" stroke-dasharray="4 4" opacity=".65"';
+
+const TVARY_2D = [
+  ['čtverec',        `<rect x="35" y="15" width="60" height="60" ${F}/>`],
+  ['obdélník',       `<rect x="20" y="25" width="80" height="45" ${F}/>`],
+  ['trojúhelník',    `<polygon points="60,12 105,75 15,75" ${F}/>`],
+  ['kruh',           `<circle cx="60" cy="45" r="33" ${F}/>`],
+  ['ovál (elipsa)',  `<ellipse cx="60" cy="45" rx="45" ry="27" ${F}/>`],
+  ['kosočtverec',    `<polygon points="60,10 95,45 60,80 25,45" ${F}/>`],
+  ['lichoběžník',    `<polygon points="35,20 85,20 105,72 15,72" ${F}/>`],
+  ['pětiúhelník',    `<polygon points="60,10 99,38 84,80 36,80 21,38" ${F}/>`],
+  ['šestiúhelník',   `<polygon points="38,15 82,15 104,45 82,75 38,75 16,45" ${F}/>`],
+  ['hvězda',         `<polygon points="60,8 69,34 97,34 75,51 83,78 60,62 37,78 45,51 23,34 51,34" ${F}/>`],
+  ['půlkruh',        `<path d="M 20 65 A 40 40 0 0 1 100 65 Z" ${F}/>`],
+];
+const TVARY_3D = [
+  ['krychle',  `<polygon points="30,30 70,30 70,70 30,70" ${F}/><polygon points="30,30 45,18 85,18 70,30" ${F2}/><polygon points="70,30 85,18 85,58 70,70" ${F2}/>`],
+  ['kvádr',    `<polygon points="18,35 78,35 78,72 18,72" ${F}/><polygon points="18,35 34,22 94,22 78,35" ${F2}/><polygon points="78,35 94,22 94,60 78,72" ${F2}/>`],
+  ['koule',    `<circle cx="60" cy="45" r="33" ${F}/><ellipse cx="60" cy="45" rx="33" ry="10" ${DASH}/>`],
+  ['válec',    `<path d="M 32 22 v 46 a 28 9 0 0 0 56 0 v -46" ${F}/><ellipse cx="60" cy="22" rx="28" ry="9" ${F2}/>`],
+  ['kužel',    `<path d="M 60 10 L 88 70 a 28 9 0 0 1 -56 0 Z" ${F}/><ellipse cx="60" cy="70" rx="28" ry="9" ${DASH}/>`],
+  ['jehlan',   `<polygon points="60,10 100,72 20,72" ${F}/><polyline points="60,10 60,78" ${DASH}/><polygon points="20,72 60,78 100,72" ${F2}/>`],
+];
+
+const svg = kresba => `<svg viewBox="0 0 120 90" xmlns="http://www.w3.org/2000/svg">${kresba}</svg>`;
+
+/* přehled */
+$('prehled').innerHTML =
+  TVARY_2D.map(([n, k]) => `<div class="dlazdice">${svg(k)}<div class="nazev">${n}</div></div>`).join('') +
+  TVARY_3D.map(([n, k]) => `<div class="dlazdice">${svg(k)}<div class="nazev">${n} (těleso)</div></div>`).join('');
+
+/* kvíz */
+let rezim = 'prehled', uloha = null, spravne = 0, celkem = 0, serie = 0, posledni = -1;
+const zamichej = p => { p = [...p]; for (let i = p.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [p[i], p[j]] = [p[j], p[i]]; } return p; };
+
+function dalsi() {
+  const zdroj = rezim === 'kviz2d' ? TVARY_2D : TVARY_3D;
+  let i;
+  do { i = Math.floor(Math.random() * zdroj.length); } while (i === posledni);
+  posledni = i; uloha = zdroj[i];
+  $('obrazek').innerHTML = svg(uloha[1]);
+  const spatne = zamichej(zdroj.filter(t => t[0] !== uloha[0])).slice(0, 3).map(t => t[0]);
+  $('moznosti').innerHTML = '';
+  zamichej([uloha[0], ...spatne]).forEach(n => {
+    const b = document.createElement('button');
+    b.textContent = n;
+    b.onclick = () => {
+      celkem++;
+      if (n === uloha[0]) { spravne++; serie++; b.classList.add('ok'); }
+      else { serie = 0; b.classList.add('spatne'); [...$('moznosti').children].find(x => x.textContent === uloha[0]).classList.add('ok'); }
+      [...$('moznosti').children].forEach(x => x.disabled = true);
+      $('serie').textContent = serie >= 3 ? '🔥 série ' + serie : '';
+      $('pomer').textContent = spravne + ' / ' + celkem;
+      $('btnDalsi').style.visibility = 'visible';
+    };
+    $('moznosti').appendChild(b);
+  });
+  $('btnDalsi').style.visibility = 'hidden';
+}
+$('btnDalsi').onclick = dalsi;
+document.querySelectorAll('#rezimy button').forEach(b => b.onclick = () => {
+  document.querySelectorAll('#rezimy button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active'); rezim = b.dataset.rezim;
+  $('prehled').style.display = rezim === 'prehled' ? '' : 'none';
+  $('kviz').style.display = rezim === 'prehled' ? 'none' : '';
+  if (rezim !== 'prehled') { posledni = -1; dalsi(); }
+});
+</script>
+</body>
+</html>

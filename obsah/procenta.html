@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Procenta a trojčlenka</title>
+  <link rel="stylesheet" href="../common.css">
+  <script>
+    if (localStorage.getItem('webapp_theme') === 'light') document.documentElement.dataset.theme = 'light';
+  </script>
+  <style>
+    body { background-color: var(--bg-deep); padding: 24px clamp(14px, 3vw, 40px); min-height: 100vh; }
+    h1 { font-size: 1.4rem; margin-bottom: 4px; }
+    .podtitul { color: var(--text-muted); font-size: 0.88rem; margin-bottom: 16px; }
+    .rezimy { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+    .rezimy button {
+      background: var(--bg-control); border: 1px solid var(--border-strong); color: var(--text-muted);
+      border-radius: 6px; padding: 7px 13px; font-size: 0.84rem; cursor: pointer;
+    }
+    .rezimy button.active { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+    .karta { background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; max-width: 640px; }
+    .zadani { font-size: 1.25rem; line-height: 1.55; margin-bottom: 18px; min-height: 3.6rem; }
+    .odpovedni { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+    input[type=number] {
+      background: var(--bg-input); border: 2px solid var(--border-strong); border-radius: 8px;
+      color: var(--text); font-size: 1.3rem; text-align: center; width: 150px; padding: 9px;
+    }
+    input:focus { outline: none; border-color: var(--accent); }
+    .jednotka { color: var(--text-muted); font-size: 1.1rem; }
+    .potvrdit {
+      background: var(--accent); border: none; color: #fff; border-radius: 8px;
+      padding: 11px 26px; font-size: 0.95rem; font-weight: 600; cursor: pointer;
+    }
+    .potvrdit:hover { background: var(--accent-hover); }
+    .zprava { margin-top: 14px; min-height: 1.5rem; font-size: 0.98rem; }
+    .zprava.ok { color: var(--ok); } .zprava.spatne { color: var(--danger); }
+    .reseni { margin-top: 10px; padding: 12px 14px; background: var(--bg-elevated); border-left: 3px solid var(--accent); border-radius: 6px; font-size: 0.92rem; color: var(--text-muted); line-height: 1.7; display: none; }
+    .stav { display: flex; justify-content: space-between; max-width: 640px; margin-top: 12px; color: var(--text-muted); font-size: 0.9rem; }
+    .serie { color: var(--warn); }
+  </style>
+</head>
+<body>
+  <h1>💯 Procenta a trojčlenka</h1>
+  <p class="podtitul">Procvičování pro 7.–9. ročník ZŠ. Výsledky zaokrouhluj na 2 desetinná místa.</p>
+
+  <div class="rezimy" id="rezimy">
+    <button data-rezim="zceho" class="active">Kolik je p % z čísla</button>
+    <button data-rezim="kolikpct">Kolik % je a z b</button>
+    <button data-rezim="zaklad">Výpočet základu</button>
+    <button data-rezim="trojclenka">Trojčlenka</button>
+  </div>
+
+  <div class="karta">
+    <div class="zadani" id="zadani"></div>
+    <div class="odpovedni">
+      <input type="number" id="odpoved" step="any" autocomplete="off">
+      <span class="jednotka" id="jednotka"></span>
+      <button class="potvrdit" id="btnPotvrdit">Potvrdit</button>
+    </div>
+    <div class="zprava" id="zprava"></div>
+    <div class="reseni" id="reseni"></div>
+  </div>
+  <div class="stav">
+    <span class="serie" id="serie"></span>
+    <span id="skore"></span>
+  </div>
+
+<script>
+const $ = id => document.getElementById(id);
+let rezim = 'zceho', uloha = null, spravne = 0, celkem = 0, serie = 0, vyhodnoceno = false;
+
+const nahodnyPrvek = p => p[Math.floor(Math.random() * p.length)];
+const cislo2 = x => Math.round(x * 100) / 100;
+const fmt = x => String(cislo2(x)).replace('.', ',');
+
+const TROJCLENKY = [
+  // [text s {A} {B} {C}, generátor -> {a,b,c,vysledek,jednotka, postup}]
+  () => { const kusu = nahodnyPrvek([3, 4, 5, 6]), cena = nahodnyPrvek([12, 15, 18, 24, 30]), chci = kusu + nahodnyPrvek([1, 2, 3]);
+    return { text: `${kusu} ${kusu < 5 ? 'sešity stojí' : 'sešitů stojí'} ${kusu * cena} Kč. Kolik zaplatíš za ${chci} sešitů?`,
+      vysledek: chci * cena, jednotka: 'Kč',
+      postup: `1 sešit … ${kusu * cena} ÷ ${kusu} = ${cena} Kč → ${chci} sešitů … ${chci} × ${cena} = ${chci * cena} Kč` }; },
+  () => { const os = nahodnyPrvek([2, 3, 4]), hod = nahodnyPrvek([6, 8, 10, 12]), os2 = os + nahodnyPrvek([1, 2, 3]);
+    const v = cislo2(os * hod / os2);
+    return { text: `${os} malíři vymalují dům za ${hod} hodin. Za jak dlouho ho ${os2 < 5 ? 'vymalují ' + os2 + ' malíři' : 'vymaluje ' + os2 + ' malířů'} (nepřímá úměra)?`,
+      vysledek: v, jednotka: 'hodin',
+      postup: `Nepřímá úměra: ${os} × ${hod} = ${os * hod} „malířohodin“ → ${os * hod} ÷ ${os2} = ${fmt(v)} hodin` }; },
+  () => { const km = nahodnyPrvek([90, 120, 150, 180]), l = nahodnyPrvek([6, 7, 8, 9]), km2 = nahodnyPrvek([200, 250, 300]);
+    const v = cislo2(l / km * km2);
+    return { text: `Auto spotřebuje na ${km} km celkem ${l} litrů benzínu. Kolik litrů spotřebuje na ${km2} km?`,
+      vysledek: v, jednotka: 'l',
+      postup: `Na 1 km … ${l} ÷ ${km} l → na ${km2} km … ${km2} × ${l}/${km} = ${fmt(v)} l` }; },
+  () => { const prac = nahodnyPrvek([5, 6, 8]), dni = nahodnyPrvek([12, 18, 24]), prac2 = nahodnyPrvek([3, 4]);
+    const v = cislo2(prac * dni / prac2);
+    return { text: `${prac} dělníků postaví plot za ${dni} dní. Za kolik dní ho postaví ${prac2} dělníci (nepřímá úměra)?`,
+      vysledek: v, jednotka: 'dní',
+      postup: `${prac} × ${dni} = ${prac * dni} „dělníkodní“ → ${prac * dni} ÷ ${prac2} = ${fmt(v)} dní` }; },
+];
+
+function nova() {
+  vyhodnoceno = false;
+  $('odpoved').value = '';
+  $('zprava').textContent = ''; $('zprava').className = 'zprava';
+  $('reseni').style.display = 'none';
+  $('btnPotvrdit').textContent = 'Potvrdit';
+  if (rezim === 'zceho') {
+    const p = nahodnyPrvek([5, 10, 12, 15, 20, 25, 30, 40, 50, 75]);
+    const z = nahodnyPrvek([40, 60, 80, 120, 150, 200, 240, 300, 500, 640, 800, 1200]);
+    uloha = { vysledek: cislo2(z * p / 100), jednotka: '',
+      postup: `1 % z ${z} je ${fmt(z / 100)} → ${p} % je ${p} × ${fmt(z / 100)} = ${fmt(z * p / 100)}` };
+    $('zadani').textContent = `Kolik je ${p} % z čísla ${z}?`;
+  } else if (rezim === 'kolikpct') {
+    const b = nahodnyPrvek([40, 50, 80, 120, 200, 250, 400, 500]);
+    const a = cislo2(b * nahodnyPrvek([5, 10, 15, 20, 25, 30, 40, 60, 75, 90]) / 100);
+    uloha = { vysledek: cislo2(a / b * 100), jednotka: '%',
+      postup: `${fmt(a)} ÷ ${b} = ${fmt(a / b)} → × 100 = ${fmt(a / b * 100)} %` };
+    $('zadani').textContent = `Kolik procent je ${fmt(a)} z čísla ${b}?`;
+  } else if (rezim === 'zaklad') {
+    const p = nahodnyPrvek([10, 20, 25, 40, 50, 60, 75, 80]);
+    const zaklad = nahodnyPrvek([80, 120, 160, 200, 240, 300, 400, 500]);
+    const c = cislo2(zaklad * p / 100);
+    uloha = { vysledek: zaklad, jednotka: '',
+      postup: `${p} % je ${fmt(c)} → 1 % je ${fmt(c)} ÷ ${p} = ${fmt(c / p)} → 100 % = ${fmt(zaklad)}` };
+    $('zadani').textContent = `${p} % z neznámého čísla je ${fmt(c)}. Jaké je celé číslo (základ)?`;
+  } else {
+    uloha = nahodnyPrvek(TROJCLENKY)();
+    $('zadani').textContent = uloha.text;
+  }
+  $('jednotka').textContent = uloha.jednotka;
+  $('odpoved').focus();
+}
+function vyhodnot() {
+  if (vyhodnoceno) { nova(); return; }
+  const v = $('odpoved').value.trim().replace(',', '.');
+  if (v === '') { $('odpoved').focus(); return; }
+  vyhodnoceno = true; celkem++;
+  const ok = Math.abs(Number(v) - uloha.vysledek) < 0.011;
+  if (ok) { spravne++; serie++; $('zprava').textContent = '✅ Správně!'; $('zprava').classList.add('ok'); }
+  else { serie = 0; $('zprava').textContent = '❌ Správný výsledek: ' + fmt(uloha.vysledek) + (uloha.jednotka ? ' ' + uloha.jednotka : ''); $('zprava').classList.add('spatne'); }
+  $('reseni').textContent = '💡 ' + uloha.postup;
+  $('reseni').style.display = 'block';
+  $('serie').textContent = serie >= 3 ? '🔥 série ' + serie : '';
+  $('skore').textContent = spravne + ' / ' + celkem;
+  $('btnPotvrdit').textContent = 'Další →';
+}
+$('btnPotvrdit').onclick = vyhodnot;
+$('odpoved').addEventListener('keydown', e => { if (e.key === 'Enter') vyhodnot(); });
+document.querySelectorAll('#rezimy button').forEach(b => b.onclick = () => {
+  document.querySelectorAll('#rezimy button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active'); rezim = b.dataset.rezim; nova();
+});
+nova();
+</script>
+</body>
+</html>

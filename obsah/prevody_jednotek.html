@@ -1,0 +1,138 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Převody jednotek</title>
+  <link rel="stylesheet" href="../common.css">
+  <script>
+    if (localStorage.getItem('webapp_theme') === 'light') document.documentElement.dataset.theme = 'light';
+  </script>
+  <style>
+    body { background-color: var(--bg-deep); padding: 24px clamp(14px, 3vw, 40px); min-height: 100vh; }
+    h1 { font-size: 1.4rem; margin-bottom: 4px; }
+    .podtitul { color: var(--text-muted); font-size: 0.88rem; margin-bottom: 16px; }
+    .volby { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; align-items: center; }
+    .volby .skupina { display: flex; gap: 6px; background: var(--bg-panel); border: 1px solid var(--border); border-radius: 8px; padding: 5px; flex-wrap: wrap; }
+    .volby button { background: transparent; border: 1px solid transparent; color: var(--text-muted); border-radius: 6px; padding: 6px 12px; font-size: 0.86rem; cursor: pointer; }
+    .volby button.active { background: var(--accent); color: #fff; font-weight: 600; }
+    .karta { background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 28px; max-width: 560px; text-align: center; }
+    .priklad { font-size: clamp(1.8rem, 8vw, 3rem); font-weight: 700; margin-bottom: 20px; font-variant-numeric: tabular-nums; }
+    .priklad .j { color: var(--accent); }
+    .odpovedni { display: flex; gap: 10px; align-items: center; justify-content: center; flex-wrap: wrap; }
+    input[type=number] { background: var(--bg-input); border: 2px solid var(--border-strong); border-radius: 8px; color: var(--text); font-size: 1.4rem; text-align: center; width: 170px; padding: 9px; }
+    input:focus { outline: none; border-color: var(--accent); }
+    .jednotka { font-size: 1.3rem; font-weight: 600; min-width: 2.6em; text-align: left; }
+    .potvrdit { background: var(--accent); border: none; color: #fff; border-radius: 8px; padding: 11px 26px; font-size: 0.95rem; font-weight: 600; cursor: pointer; }
+    .potvrdit:hover { background: var(--accent-hover); }
+    .zprava { margin-top: 14px; min-height: 1.5rem; font-size: 0.98rem; }
+    .zprava.ok { color: var(--ok); } .zprava.spatne { color: var(--danger); }
+    .napoveda { margin-top: 12px; color: var(--text-faint); font-size: 0.85rem; }
+    .stav { display: flex; justify-content: space-between; max-width: 560px; margin-top: 12px; color: var(--text-muted); font-size: 0.9rem; }
+    .serie { color: var(--warn); }
+  </style>
+</head>
+<body>
+  <h1>📏 Převody jednotek</h1>
+  <p class="podtitul">Délka, hmotnost, objem a čas (3.–6. ročník ZŠ). Desetinná čísla piš s čárkou i tečkou, jak chceš.</p>
+
+  <div class="volby">
+    <div class="skupina" id="veliciny">
+      <button data-v="delka" class="active">📏 Délka</button>
+      <button data-v="hmotnost">⚖️ Hmotnost</button>
+      <button data-v="objem">🧴 Objem</button>
+      <button data-v="cas">🕐 Čas</button>
+    </div>
+    <div class="skupina" id="obtiznost">
+      <button data-v="1" class="active">Lehké (celá čísla)</button>
+      <button data-v="2">Těžší</button>
+    </div>
+  </div>
+
+  <div class="karta">
+    <div class="priklad" id="priklad"></div>
+    <div class="odpovedni">
+      <input type="number" id="odpoved" step="any" autocomplete="off">
+      <span class="jednotka" id="jednotka"></span>
+      <button class="potvrdit" id="btnPotvrdit">Potvrdit</button>
+    </div>
+    <div class="zprava" id="zprava"></div>
+    <div class="napoveda" id="napoveda"></div>
+  </div>
+  <div class="stav">
+    <span class="serie" id="serie"></span>
+    <span id="skore"></span>
+  </div>
+
+<script>
+const $ = id => document.getElementById(id);
+// jednotky od nejmenší; faktor = kolik jednotek předchozí (menší) jednotky
+const VELICINY = {
+  delka:    { jednotky: ['mm', 'cm', 'dm', 'm', 'km'], faktory: [10, 10, 10, 1000], napoveda: '1 cm = 10 mm · 1 dm = 10 cm · 1 m = 10 dm · 1 km = 1000 m' },
+  hmotnost: { jednotky: ['g', 'dkg', 'kg', 't'], faktory: [10, 100, 1000], napoveda: '1 dkg = 10 g · 1 kg = 100 dkg · 1 t = 1000 kg' },
+  objem:    { jednotky: ['ml', 'l', 'hl'], faktory: [1000, 100], napoveda: '1 l = 1000 ml · 1 hl = 100 l' },
+  cas:      { jednotky: ['s', 'min', 'h', 'den'], faktory: [60, 60, 24], napoveda: '1 min = 60 s · 1 h = 60 min · 1 den = 24 h' },
+};
+let velicina = 'delka', obtiznost = 1;
+let uloha = null, spravne = 0, celkem = 0, serie = 0, vyhodnoceno = false;
+
+const ni = (od, doC) => od + Math.floor(Math.random() * (doC - od + 1));
+const fmt = x => String(Math.round(x * 1000) / 1000).replace('.', ',');
+
+function pomer(v, i, j) {          // kolik jednotky j je 1 jednotka i (i > j = větší → menší)
+  let f = 1;
+  for (let k = j; k < i; k++) f *= v.faktory[k];
+  return f;
+}
+function nova() {
+  vyhodnoceno = false;
+  const v = VELICINY[velicina];
+  const n = v.jednotky.length;
+  let i, j;
+  if (obtiznost === 1) { i = ni(1, n - 1); j = i - 1; }                    // sousední, větší → menší
+  else {
+    do { i = ni(0, n - 1); j = ni(0, n - 1); } while (i === j || Math.abs(i - j) > 2);
+  }
+  const vetsiNaMensi = i > j;
+  let hodnota;
+  if (vetsiNaMensi) hodnota = obtiznost === 1 ? ni(1, 9) : ni(1, 50);      // 3 m = ? cm
+  else {                                                                    // 300 cm = ? m
+    const f = pomer(v, j, i);
+    hodnota = (obtiznost === 1 ? ni(1, 9) : ni(1, 50)) * f;
+    if (obtiznost === 2 && Math.random() < 0.4) hodnota += ni(1, 9) * f / 10; // občas desetinný výsledek
+  }
+  const f = vetsiNaMensi ? pomer(v, i, j) : pomer(v, j, i);
+  const vysledek = vetsiNaMensi ? hodnota * f : hodnota / f;
+  uloha = { hodnota, odJ: v.jednotky[i], naJ: v.jednotky[j], vysledek };
+  $('priklad').innerHTML = fmt(hodnota) + ' <span class="j">' + v.jednotky[i] + '</span> = ? <span class="j">' + v.jednotky[j] + '</span>';
+  $('jednotka').textContent = v.jednotky[j];
+  $('napoveda').textContent = '💡 ' + v.napoveda;
+  $('odpoved').value = '';
+  $('zprava').textContent = ''; $('zprava').className = 'zprava';
+  $('btnPotvrdit').textContent = 'Potvrdit';
+  $('odpoved').focus();
+}
+function vyhodnot() {
+  if (vyhodnoceno) { nova(); return; }
+  const v = $('odpoved').value.trim().replace(',', '.');
+  if (v === '') { $('odpoved').focus(); return; }
+  vyhodnoceno = true; celkem++;
+  const ok = Math.abs(Number(v) - uloha.vysledek) < 1e-9;
+  if (ok) { spravne++; serie++; $('zprava').textContent = '✅ Správně!'; $('zprava').classList.add('ok'); }
+  else { serie = 0; $('zprava').textContent = '❌ Správně: ' + fmt(uloha.hodnota) + ' ' + uloha.odJ + ' = ' + fmt(uloha.vysledek) + ' ' + uloha.naJ; $('zprava').classList.add('spatne'); }
+  $('serie').textContent = serie >= 3 ? '🔥 série ' + serie : '';
+  $('skore').textContent = spravne + ' / ' + celkem;
+  $('btnPotvrdit').textContent = 'Další →';
+}
+$('btnPotvrdit').onclick = vyhodnot;
+$('odpoved').addEventListener('keydown', e => { if (e.key === 'Enter') vyhodnot(); });
+for (const [id, set] of [['veliciny', x => velicina = x], ['obtiznost', x => obtiznost = +x]]) {
+  document.querySelectorAll('#' + id + ' button').forEach(b => b.onclick = () => {
+    document.querySelectorAll('#' + id + ' button').forEach(x => x.classList.remove('active'));
+    b.classList.add('active'); set(b.dataset.v); nova();
+  });
+}
+nova();
+</script>
+</body>
+</html>

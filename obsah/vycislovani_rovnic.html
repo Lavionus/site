@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Vyčíslování chemických rovnic</title>
+  <link rel="stylesheet" href="../common.css">
+  <script>
+    if (localStorage.getItem('webapp_theme') === 'light') document.documentElement.dataset.theme = 'light';
+  </script>
+  <style>
+    body { background-color: var(--bg-deep); padding: 24px clamp(14px, 3vw, 40px); min-height: 100vh; }
+    h1 { font-size: 1.4rem; margin-bottom: 4px; }
+    .podtitul { color: var(--text-muted); font-size: 0.88rem; margin-bottom: 16px; max-width: 720px; }
+    .karta { background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 26px 24px; max-width: 720px; }
+    .rovnice { display: flex; flex-wrap: wrap; align-items: center; gap: 4px; font-size: clamp(1.3rem, 5vw, 1.9rem); justify-content: center; margin-bottom: 22px; }
+    .clen { display: inline-flex; align-items: baseline; }
+    .clen input {
+      width: 52px; background: var(--bg-input); border: 2px solid var(--border-strong); border-radius: 6px;
+      color: var(--accent); font-size: 1.3rem; font-weight: 700; text-align: center; padding: 4px; margin-right: 2px;
+    }
+    .clen input:focus { outline: none; border-color: var(--accent); }
+    .clen input.ok { border-color: var(--ok); color: var(--ok); }
+    .clen input.spatne { border-color: var(--danger); color: var(--danger); }
+    .vzorec sub { font-size: 62%; }
+    .op { margin: 0 6px; color: var(--text-muted); }
+    .sipka { margin: 0 10px; color: var(--accent); }
+    .ovladani { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+    .ovladani button { border: none; border-radius: 8px; padding: 10px 20px; font-size: 0.92rem; font-weight: 600; cursor: pointer; }
+    .btn-hlavni { background: var(--accent); color: #fff; }
+    .btn-hlavni:hover { background: var(--accent-hover); }
+    .btn-vedle { background: var(--bg-control); color: var(--text); border: 1px solid var(--border-strong) !important; }
+    .zprava { text-align: center; margin-top: 16px; min-height: 1.5rem; font-size: 1rem; }
+    .zprava.ok { color: var(--ok); } .zprava.spatne { color: var(--danger); }
+    .stav { display: flex; justify-content: space-between; max-width: 720px; margin-top: 12px; color: var(--text-muted); font-size: 0.9rem; }
+    .serie { color: var(--warn); }
+    .napoveda { max-width: 720px; margin-top: 10px; font-size: 0.85rem; color: var(--text-faint); line-height: 1.6; }
+  </style>
+</head>
+<body>
+  <h1>🧪 Vyčíslování chemických rovnic</h1>
+  <p class="podtitul">Doplň stechiometrické koeficienty tak, aby počet atomů každého prvku byl vlevo i vpravo stejný (8.–9. ročník ZŠ, SŠ). Koeficient 1 se nechává, ale zapiš ho.</p>
+
+  <div class="karta">
+    <div class="rovnice" id="rovnice"></div>
+    <div class="ovladani">
+      <button class="btn-hlavni" id="btnZkontrolovat">Zkontrolovat</button>
+      <button class="btn-vedle" id="btnNapoveda">💡 Napovědět</button>
+      <button class="btn-vedle" id="btnDalsi">Další →</button>
+    </div>
+    <div class="zprava" id="zprava"></div>
+  </div>
+  <div class="stav">
+    <span class="serie" id="serie"></span>
+    <span id="skore"></span>
+  </div>
+  <div class="napoveda">Tip: začni prvkem, který je jen v jedné látce vlevo a jedné vpravo. Vodík a kyslík dolaď nakonec.</div>
+
+<script>
+const $ = id => document.getElementById(id);
+
+// reaktanty a produkty: [vzorec, správný koeficient]
+const ROVNICE = [
+  { r: [['H2', 1], ['O2', 1]], p: [['H2O', 2]] },
+  { r: [['H2', 2], ['O2', 1]], p: [['H2O', 2]] },
+  { r: [['N2', 1], ['H2', 3]], p: [['NH3', 2]] },
+  { r: [['Fe', 4], ['O2', 3]], p: [['Fe2O3', 2]] },
+  { r: [['C', 1], ['O2', 1]], p: [['CO2', 1]] },
+  { r: [['CH4', 1], ['O2', 2]], p: [['CO2', 1], ['H2O', 2]] },
+  { r: [['Na', 2], ['Cl2', 1]], p: [['NaCl', 2]] },
+  { r: [['Al', 4], ['O2', 3]], p: [['Al2O3', 2]] },
+  { r: [['H2', 1], ['Cl2', 1]], p: [['HCl', 2]] },
+  { r: [['CaCO3', 1]], p: [['CaO', 1], ['CO2', 1]] },
+  { r: [['Mg', 2], ['O2', 1]], p: [['MgO', 2]] },
+  { r: [['C3H8', 1], ['O2', 5]], p: [['CO2', 3], ['H2O', 4]] },
+  { r: [['KClO3', 2]], p: [['KCl', 2], ['O2', 3]] },
+  { r: [['Zn', 1], ['HCl', 2]], p: [['ZnCl2', 1], ['H2', 1]] },
+  { r: [['SO2', 2], ['O2', 1]], p: [['SO3', 2]] },
+  { r: [['N2', 1], ['O2', 1]], p: [['NO', 2]] },
+  { r: [['Fe', 2], ['Cl2', 3]], p: [['FeCl3', 2]] },
+  { r: [['H2O2', 2]], p: [['H2O', 2], ['O2', 1]] },
+  { r: [['P4', 1], ['O2', 5]], p: [['P2O5', 2]] },
+  { r: [['C2H6', 2], ['O2', 7]], p: [['CO2', 4], ['H2O', 6]] },
+];
+
+let aktualni = null, spravne = 0, celkem = 0, serie = 0, poradi = -1, hotovo = false;
+
+function vzorecHtml(v) {
+  return v.replace(/(\d+)/g, '<sub>$1</sub>');
+}
+function postavClen(vzorec, i, strana) {
+  return `<span class="clen"><input type="number" min="1" max="30" data-strana="${strana}" data-i="${i}" autocomplete="off">` +
+    `<span class="vzorec">${vzorecHtml(vzorec)}</span></span>`;
+}
+function nova() {
+  let i;
+  do { i = Math.floor(Math.random() * ROVNICE.length); } while (i === poradi && ROVNICE.length > 1);
+  poradi = i; aktualni = ROVNICE[i]; hotovo = false;
+  const r = aktualni.r.map(([v], k) => postavClen(v, k, 'r')).join('<span class="op">+</span>');
+  const p = aktualni.p.map(([v], k) => postavClen(v, k, 'p')).join('<span class="op">+</span>');
+  $('rovnice').innerHTML = r + '<span class="sipka">→</span>' + p;
+  $('zprava').textContent = ''; $('zprava').className = 'zprava';
+  $('skore').textContent = spravne + ' / ' + celkem;
+  const prvni = $('rovnice').querySelector('input'); if (prvni) prvni.focus();
+}
+function vstupy() { return [...$('rovnice').querySelectorAll('input')]; }
+function koef(strana, i) { return strana === 'r' ? aktualni.r[i][1] : aktualni.p[i][1]; }
+
+function zkontroluj() {
+  if (hotovo) { nova(); return; }
+  const ins = vstupy();
+  if (ins.some(x => x.value.trim() === '')) { $('zprava').textContent = 'Doplň všechny koeficienty.'; $('zprava').className = 'zprava spatne'; return; }
+  // porovnání s nejmenším celočíselným řešením (uživatel může zadat i násobek – zkontrolujeme poměr)
+  const zadane = ins.map(x => Number(x.value));
+  const spravneKoef = ins.map(x => koef(x.dataset.strana, +x.dataset.i));
+  const nasobek = zadane[0] / spravneKoef[0];
+  const ok = Number.isFinite(nasobek) && nasobek > 0 &&
+    zadane.every((z, k) => Math.abs(z - spravneKoef[k] * nasobek) < 1e-9);
+  celkem++; hotovo = true;
+  ins.forEach((x, k) => x.classList.add(ok ? 'ok' : 'spatne'));
+  if (ok) {
+    spravne++; serie++;
+    $('zprava').textContent = nasobek === 1 ? '✅ Správně vyčísleno!' : '✅ Správně (zapsal(a) jsi ' + nasobek + '× základní řešení).';
+    $('zprava').className = 'zprava ok';
+  } else {
+    serie = 0;
+    $('zprava').innerHTML = '❌ Zatím nesedí. Správné řešení: ' + spravneKoef.join(', ') + '.';
+    $('zprava').className = 'zprava spatne';
+  }
+  $('serie').textContent = serie >= 3 ? '🔥 série ' + serie : '';
+  $('skore').textContent = spravne + ' / ' + celkem;
+}
+function napovez() {
+  const ins = vstupy();
+  const prazdne = ins.filter(x => x.value.trim() === '');
+  const cil = prazdne.length ? prazdne[0] : ins[0];
+  cil.value = koef(cil.dataset.strana, +cil.dataset.i);
+  cil.classList.add('ok');
+}
+$('btnZkontrolovat').onclick = zkontroluj;
+$('btnDalsi').onclick = nova;
+$('btnNapoveda').onclick = napovez;
+$('rovnice').addEventListener('keydown', e => { if (e.key === 'Enter') zkontroluj(); });
+nova();
+</script>
+</body>
+</html>

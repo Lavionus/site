@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Punnettův čtverec (genetika)</title>
+  <link rel="stylesheet" href="../common.css">
+  <script>
+    if (localStorage.getItem('webapp_theme') === 'light') document.documentElement.dataset.theme = 'light';
+  </script>
+  <style>
+    body { background-color: var(--bg-deep); padding: 24px clamp(14px, 3vw, 40px); min-height: 100vh; }
+    h1 { font-size: 1.4rem; margin-bottom: 4px; }
+    .podtitul { color: var(--text-muted); font-size: 0.88rem; margin-bottom: 16px; max-width: 720px; }
+    .panel { background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; max-width: 720px; margin-bottom: 16px; }
+    .radek { display: flex; gap: 18px; flex-wrap: wrap; align-items: flex-end; }
+    .pole { display: flex; flex-direction: column; gap: 5px; }
+    .pole label { font-size: 0.8rem; color: var(--text-muted); }
+    .pole input, .pole select {
+      background: var(--bg-input); border: 1px solid var(--border-strong); border-radius: 6px;
+      color: var(--text); padding: 8px 10px; font-size: 1rem;
+    }
+    .pole input.genotyp { width: 90px; text-align: center; font-family: monospace; font-size: 1.15rem; letter-spacing: 1px; }
+    .pole .chyba { color: var(--danger); font-size: 0.78rem; min-height: 1rem; }
+    table.ctverec { border-collapse: collapse; margin: 8px 0; }
+    table.ctverec th, table.ctverec td {
+      border: 1px solid var(--border-strong); width: 64px; height: 64px; text-align: center;
+      font-family: monospace; font-size: 1.3rem; font-weight: 700;
+    }
+    table.ctverec th { background: var(--bg-elevated); color: var(--accent); }
+    table.ctverec th.rohovy { background: transparent; border: none; }
+    table.ctverec td.dominant { background: rgba(106,166,253,.18); }
+    table.ctverec td.recesiv { background: rgba(224,163,63,.14); }
+    .vysledky { display: flex; gap: 24px; flex-wrap: wrap; margin-top: 12px; }
+    .vysledky .blok h3 { font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-faint); margin-bottom: 6px; }
+    .vysledky .radka { display: flex; justify-content: space-between; gap: 16px; font-size: 0.95rem; padding: 3px 0; font-family: monospace; }
+    .vysledky .radka span:last-child { color: var(--text-muted); }
+    .fenotyp .dom { color: var(--accent); } .fenotyp .rec { color: var(--warn); }
+    .legenda { font-size: 0.85rem; color: var(--text-muted); line-height: 1.7; }
+    .prikladbtn { background: var(--bg-control); border: 1px solid var(--border-strong); color: var(--text-muted); border-radius: 6px; padding: 6px 12px; font-size: 0.82rem; cursor: pointer; margin-right: 6px; margin-top: 6px; }
+    .prikladbtn:hover { border-color: var(--accent); color: var(--text); }
+  </style>
+</head>
+<body>
+  <h1>🧬 Punnettův čtverec</h1>
+  <p class="podtitul">Křížení jednoho znaku (monohybridismus). Zadej genotypy rodičů – jedna dominantní (velké písmeno) a jedna recesivní alela (malé). Např. <b>Aa × Aa</b>.</p>
+
+  <div class="panel">
+    <div class="radek">
+      <div class="pole">
+        <label>Rodič 1 (genotyp)</label>
+        <input class="genotyp" id="rodic1" value="Aa" maxlength="2" autocomplete="off">
+      </div>
+      <div style="font-size:1.5rem;padding-bottom:8px">×</div>
+      <div class="pole">
+        <label>Rodič 2 (genotyp)</label>
+        <input class="genotyp" id="rodic2" value="Aa" maxlength="2" autocomplete="off">
+      </div>
+      <div class="pole" style="flex:1;min-width:180px">
+        <label>Popis znaku (nepovinné)</label>
+        <input id="znak" placeholder="např. A = hnědé oči, a = modré oči" autocomplete="off">
+      </div>
+    </div>
+    <div class="chyba" id="chyba"></div>
+    <div>
+      <button class="prikladbtn" data-p="Aa" data-q="Aa" data-z="A = hnědá barva (dominantní), a = modrá barva">Aa × Aa</button>
+      <button class="prikladbtn" data-p="AA" data-q="aa" data-z="A = vysoký vzrůst, a = nízký vzrůst">AA × aa</button>
+      <button class="prikladbtn" data-p="Aa" data-q="aa" data-z="A = hladká semena, a = svraštělá semena">Aa × aa</button>
+      <button class="prikladbtn" data-p="Bb" data-q="Bb" data-z="B = černá srst, b = bílá srst">Bb × Bb</button>
+    </div>
+  </div>
+
+  <div class="panel" id="vystup"></div>
+
+<script>
+const $ = id => document.getElementById(id);
+
+function normalizuj(g) {
+  // seřaď na tvar Velké-malé (Aa), stejné nech (AA, aa)
+  if (g.length !== 2) return null;
+  const pismeno = g[0].toLowerCase();
+  if (g[1].toLowerCase() !== pismeno) return null;               // musí být stejná alela
+  if (!/[a-z]/i.test(pismeno)) return null;
+  const velke = g.split('').filter(c => c === c.toUpperCase()).length;
+  if (velke === 2) return g[0].toUpperCase() + g[0].toUpperCase();
+  if (velke === 0) return pismeno + pismeno;
+  return g[0].toUpperCase() + pismeno;                            // heterozygot: velké první
+}
+function alely(g) { return [g[0], g[1]]; }
+
+function spocti() {
+  const r1 = normalizuj($('rodic1').value.trim());
+  const r2 = normalizuj($('rodic2').value.trim());
+  if (!r1 || !r2) {
+    $('chyba').textContent = 'Zadej platné genotypy – dvě stejné alely, např. Aa, AA nebo aa.';
+    $('vystup').style.display = 'none';
+    return;
+  }
+  if (r1[0].toLowerCase() !== r2[0].toLowerCase()) {
+    $('chyba').textContent = 'Oba rodiče musí sledovat stejný znak (stejné písmeno alely).';
+    $('vystup').style.display = 'none';
+    return;
+  }
+  $('chyba').textContent = '';
+  $('vystup').style.display = '';
+  const pismeno = r1[0].toLowerCase();
+  const velke = pismeno.toUpperCase();
+  const a1 = alely(r1), a2 = alely(r2);
+  const potomci = [];
+  const bunky = [];
+  for (const x of a1) {
+    const radek = [];
+    for (const y of a2) {
+      const g = [x, y].sort((p, q) => (p === p.toUpperCase() ? 0 : 1) - (q === q.toUpperCase() ? 0 : 1)).join('');
+      radek.push(g); potomci.push(g);
+    }
+    bunky.push(radek);
+  }
+  // genotypy
+  const genPocty = {};
+  potomci.forEach(g => genPocty[g] = (genPocty[g] || 0) + 1);
+  // fenotypy: dominantní projev, pokud aspoň jedna velká alela
+  const dominant = potomci.filter(g => g.includes(velke)).length;
+  const recesiv = 4 - dominant;
+
+  // popisky znaku
+  const znak = $('znak').value.trim();
+  let popisDom = 'dominantní znak', popisRec = 'recesivní znak';
+  const m = znak.match(new RegExp(velke + '\\s*=\\s*([^,;]+)', 'i'));
+  const m2 = znak.match(new RegExp(pismeno + '\\s*=\\s*([^,;]+)'));
+  if (m) popisDom = m[1].trim();
+  if (m2) popisRec = m2[1].trim();
+
+  const tabulka = `
+    <table class="ctverec">
+      <tr><th class="rohovy"></th><th>${a2[0]}</th><th>${a2[1]}</th></tr>
+      ${bunky.map((radek, i) => `<tr><th>${a1[i]}</th>${radek.map(g =>
+        `<td class="${g.includes(velke) ? 'dominant' : 'recesiv'}">${g}</td>`).join('')}</tr>`).join('')}
+    </table>`;
+
+  const genRadky = Object.entries(genPocty).sort().map(([g, n]) =>
+    `<div class="radka"><span>${g}</span><span>${n}/4 (${n * 25} %)</span></div>`).join('');
+
+  $('vystup').innerHTML = tabulka + `
+    <div class="vysledky">
+      <div class="blok">
+        <h3>Genotypový štěpný poměr</h3>
+        ${genRadky}
+        <div class="radka" style="border-top:1px solid var(--border);margin-top:4px;padding-top:6px">
+          <span>poměr</span><span>${Object.values(genPocty).sort((a, b) => b - a).join(' : ')}</span></div>
+      </div>
+      <div class="blok fenotyp">
+        <h3>Fenotypový štěpný poměr</h3>
+        <div class="radka"><span class="dom">${popisDom}</span><span>${dominant}/4 (${dominant * 25} %)</span></div>
+        <div class="radka"><span class="rec">${popisRec}</span><span>${recesiv}/4 (${recesiv * 25} %)</span></div>
+        <div class="radka" style="border-top:1px solid var(--border);margin-top:4px;padding-top:6px">
+          <span>poměr</span><span>${dominant} : ${recesiv}</span></div>
+      </div>
+    </div>
+    <div class="legenda" style="margin-top:14px;border-top:1px solid var(--border);padding-top:10px">
+      <b>${velke}</b> = ${popisDom} (dominantní alela) &nbsp;·&nbsp; <b>${pismeno}</b> = ${popisRec} (recesivní alela)<br>
+      Modré buňky mají dominantní projev (aspoň jedna alela ${velke}), oranžové recesivní (${pismeno}${pismeno}).
+    </div>`;
+}
+['rodic1', 'rodic2', 'znak'].forEach(id => $(id).addEventListener('input', spocti));
+document.querySelectorAll('.prikladbtn').forEach(b => b.onclick = () => {
+  $('rodic1').value = b.dataset.p; $('rodic2').value = b.dataset.q; $('znak').value = b.dataset.z; spocti();
+});
+spocti();
+</script>
+</body>
+</html>

@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Časová osa českých dějin</title>
+  <link rel="stylesheet" href="../common.css">
+  <script>
+    if (localStorage.getItem('webapp_theme') === 'light') document.documentElement.dataset.theme = 'light';
+  </script>
+  <style>
+    body { background-color: var(--bg-deep); padding: 24px clamp(14px, 3vw, 40px); min-height: 100vh; }
+    h1 { font-size: 1.4rem; margin-bottom: 4px; }
+    .podtitul { color: var(--text-muted); font-size: 0.88rem; margin-bottom: 16px; }
+    .rezimy { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+    .rezimy button { background: var(--bg-control); border: 1px solid var(--border-strong); color: var(--text-muted); border-radius: 6px; padding: 7px 13px; font-size: 0.84rem; cursor: pointer; }
+    .rezimy button.active { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+
+    /* přehled – svislá osa */
+    .osa { max-width: 760px; position: relative; padding-left: 30px; }
+    .osa::before { content: ''; position: absolute; left: 9px; top: 6px; bottom: 6px; width: 2px; background: var(--border-strong); }
+    .udalost { position: relative; margin-bottom: 18px; }
+    .udalost::before { content: ''; position: absolute; left: -26px; top: 5px; width: 12px; height: 12px; border-radius: 50%; background: var(--accent); border: 2px solid var(--bg-deep); }
+    .udalost .rok { font-weight: 700; color: var(--accent); font-size: 1.05rem; }
+    .udalost .co { margin-top: 2px; }
+    .udalost .era { display: inline-block; font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-faint); margin-left: 8px; }
+
+    /* kvíz */
+    .karta { background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px; max-width: 640px; }
+    .zadani { font-size: 1.2rem; line-height: 1.5; margin-bottom: 18px; min-height: 3rem; }
+    .zadani .rok { color: var(--accent); font-weight: 700; }
+    .moznosti { display: grid; gap: 8px; }
+    .moznosti button { background: var(--bg-elevated); border: 1px solid var(--border); color: var(--text); border-radius: 8px; padding: 12px 14px; font-size: 0.98rem; cursor: pointer; text-align: left; }
+    .moznosti button:hover { border-color: var(--accent); }
+    .moznosti button.ok { background: rgba(76, 175, 125, 0.2); border-color: var(--ok); }
+    .moznosti button.spatne { background: rgba(224, 93, 93, 0.18); border-color: var(--danger); }
+    .moznosti button:disabled { cursor: default; }
+    .odpovedni { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+    input[type=number] { background: var(--bg-input); border: 2px solid var(--border-strong); border-radius: 8px; color: var(--text); font-size: 1.3rem; text-align: center; width: 130px; padding: 9px; }
+    input:focus { outline: none; border-color: var(--accent); }
+    .potvrdit { background: var(--accent); border: none; color: #fff; border-radius: 8px; padding: 11px 22px; font-size: 0.92rem; font-weight: 600; cursor: pointer; }
+    .zprava { margin-top: 14px; min-height: 1.5rem; font-size: 0.96rem; }
+    .zprava.ok { color: var(--ok); } .zprava.spatne { color: var(--danger); }
+    .stavovy { display: flex; align-items: center; gap: 16px; margin-top: 16px; font-size: 0.9rem; }
+    .serie { color: var(--warn); }
+    .pomer { color: var(--text-muted); margin-left: auto; font-variant-numeric: tabular-nums; }
+    .dalsi { background: var(--accent); border: 1px solid var(--accent); color: #fff; border-radius: 6px; padding: 8px 16px; font-size: 0.88rem; cursor: pointer; visibility: hidden; }
+  </style>
+</head>
+<body>
+  <h1>📜 Časová osa českých dějin</h1>
+  <p class="podtitul">Přehled klíčových událostí a procvičování letopočtů (2. stupeň ZŠ, SŠ).</p>
+
+  <div class="rezimy" id="rezimy">
+    <button data-rezim="prehled" class="active">📖 Časová osa</button>
+    <button data-rezim="rokudalost">Kvíz: rok → událost</button>
+    <button data-rezim="udalostrok">Kvíz: událost → rok</button>
+    <button data-rezim="letopocet">Kvíz: napiš letopočet</button>
+  </div>
+
+  <div class="osa" id="prehled"></div>
+
+  <div class="karta" id="kviz" style="display:none">
+    <div class="zadani" id="zadani"></div>
+    <div class="moznosti" id="moznosti"></div>
+    <div class="odpovedni" id="odpovedni" style="display:none">
+      <input type="number" id="odpoved" autocomplete="off" placeholder="rok">
+      <button class="potvrdit" id="btnPotvrdit">Potvrdit</button>
+    </div>
+    <div class="zprava" id="zprava"></div>
+    <div class="stavovy">
+      <button class="dalsi" id="btnDalsi">Další →</button>
+      <span class="serie" id="serie"></span>
+      <span class="pomer" id="pomer"></span>
+    </div>
+  </div>
+
+<script>
+const $ = id => document.getElementById(id);
+// [rok, událost, éra]  (rok < 0 = př. n. l.)
+const UDALOSTI = [
+  [863, 'Příchod Cyrila a Metoděje na Velkou Moravu', 'Raný středověk'],
+  [935, 'Zavraždění knížete Václava ve Staré Boleslavi', 'Přemyslovci'],
+  [973, 'Založení pražského biskupství', 'Přemyslovci'],
+  [1212, 'Zlatá bula sicilská – dědičný královský titul', 'Přemyslovci'],
+  [1278, 'Bitva na Moravském poli – smrt Přemysla Otakara II.', 'Přemyslovci'],
+  [1306, 'Vymření Přemyslovců po meči (Václav III.)', 'Přemyslovci'],
+  [1348, 'Založení Univerzity Karlovy a Nového Města pražského', 'Lucemburkové'],
+  [1355, 'Karel IV. korunován císařem Svaté říše římské', 'Lucemburkové'],
+  [1415, 'Upálení mistra Jana Husa v Kostnici', 'Husitství'],
+  [1420, 'Bitva na Vítkově – husitské války', 'Husitství'],
+  [1526, 'Nástup Habsburků na český trůn (Ferdinand I.)', 'Habsburkové'],
+  [1618, 'Druhá pražská defenestrace – začátek stavovského povstání', 'Habsburkové'],
+  [1620, 'Bitva na Bílé hoře – porážka českých stavů', 'Habsburkové'],
+  [1648, 'Vestfálský mír – konec třicetileté války', 'Habsburkové'],
+  [1740, 'Nástup Marie Terezie na trůn', 'Osvícenství'],
+  [1781, 'Zrušení nevolnictví a toleranční patent (Josef II.)', 'Osvícenství'],
+  [1848, 'Revoluční rok, zrušení roboty', 'Národní obrození'],
+  [1918, 'Vznik samostatného Československa', '20. století'],
+  [1938, 'Mnichovská dohoda', '20. století'],
+  [1939, 'Okupace a vznik Protektorátu Čechy a Morava', '20. století'],
+  [1945, 'Konec 2. světové války, osvobození', '20. století'],
+  [1948, 'Únorový komunistický převrat', '20. století'],
+  [1968, 'Pražské jaro a okupace vojsky Varšavské smlouvy', '20. století'],
+  [1989, 'Sametová revoluce – pád komunistického režimu', '20. století'],
+  [1993, 'Vznik samostatné České republiky', '20. století'],
+  [2004, 'Vstup České republiky do Evropské unie', '21. století'],
+];
+
+/* přehled */
+$('prehled').innerHTML = UDALOSTI.map(([r, u, e]) =>
+  `<div class="udalost"><span class="rok">${r}</span><span class="era">${e}</span><div class="co">${u}</div></div>`).join('');
+
+/* kvíz */
+let rezim = 'prehled', uloha = null, spravne = 0, celkem = 0, serie = 0, vyhodnoceno = false, posledni = -1;
+const zamichej = p => { p = [...p]; for (let i = p.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [p[i], p[j]] = [p[j], p[i]]; } return p; };
+
+function volbovyKviz() {
+  $('odpovedni').style.display = 'none';
+  $('moznosti').style.display = '';
+  let i; do { i = Math.floor(Math.random() * UDALOSTI.length); } while (i === posledni); posledni = i;
+  uloha = UDALOSTI[i];
+  const rokUdalost = rezim === 'rokudalost';
+  $('zadani').innerHTML = rokUdalost
+    ? `Co se stalo v roce <span class="rok">${uloha[0]}</span>?`
+    : `Ve kterém roce nastala tato událost?<br><b>${uloha[1]}</b>`;
+  const spravnaOdpoved = rokUdalost ? uloha[1] : String(uloha[0]);
+  const ostatni = zamichej(UDALOSTI.filter(u => u[0] !== uloha[0])).slice(0, 3).map(u => rokUdalost ? u[1] : String(u[0]));
+  $('moznosti').innerHTML = '';
+  zamichej([spravnaOdpoved, ...ostatni]).forEach(m => {
+    const b = document.createElement('button'); b.textContent = m;
+    b.onclick = () => {
+      celkem++;
+      if (m === spravnaOdpoved) { spravne++; serie++; b.classList.add('ok'); }
+      else { serie = 0; b.classList.add('spatne'); [...$('moznosti').children].find(x => x.textContent === spravnaOdpoved).classList.add('ok'); }
+      [...$('moznosti').children].forEach(x => x.disabled = true);
+      dokonci();
+    };
+    $('moznosti').appendChild(b);
+  });
+  $('btnDalsi').style.visibility = 'hidden';
+}
+function letopocetKviz() {
+  $('moznosti').style.display = 'none';
+  $('odpovedni').style.display = 'flex';
+  vyhodnoceno = false;
+  let i; do { i = Math.floor(Math.random() * UDALOSTI.length); } while (i === posledni); posledni = i;
+  uloha = UDALOSTI[i];
+  $('zadani').innerHTML = `Napiš rok, kdy nastala událost:<br><b>${uloha[1]}</b>`;
+  $('odpoved').value = ''; $('odpoved').focus();
+  $('zprava').textContent = ''; $('zprava').className = 'zprava';
+  $('btnPotvrdit').textContent = 'Potvrdit';
+  $('btnDalsi').style.visibility = 'hidden';
+}
+function overLetopocet() {
+  if (vyhodnoceno) { letopocetKviz(); return; }
+  const v = $('odpoved').value.trim();
+  if (v === '') { $('odpoved').focus(); return; }
+  vyhodnoceno = true; celkem++;
+  const rozdil = Math.abs(Number(v) - uloha[0]);
+  if (rozdil === 0) { spravne++; serie++; $('zprava').textContent = '✅ Přesně tak, rok ' + uloha[0] + '.'; $('zprava').className = 'zprava ok'; }
+  else if (rozdil <= 3) { spravne++; serie++; $('zprava').textContent = '✅ Skoro přesně! Správně je ' + uloha[0] + ' (lišíš se o ' + rozdil + ').'; $('zprava').className = 'zprava ok'; }
+  else { serie = 0; $('zprava').textContent = '❌ Správný rok je ' + uloha[0] + '.'; $('zprava').className = 'zprava spatne'; }
+  $('btnPotvrdit').textContent = 'Další →';
+  dokonci();
+}
+function dokonci() {
+  $('serie').textContent = serie >= 3 ? '🔥 série ' + serie : '';
+  $('pomer').textContent = spravne + ' / ' + celkem;
+  $('btnDalsi').style.visibility = 'visible';
+}
+function novaOtazka() { rezim === 'letopocet' ? letopocetKviz() : volbovyKviz(); }
+$('btnDalsi').onclick = novaOtazka;
+$('btnPotvrdit').onclick = overLetopocet;
+$('odpoved').addEventListener('keydown', e => { if (e.key === 'Enter') overLetopocet(); });
+
+document.querySelectorAll('#rezimy button').forEach(b => b.onclick = () => {
+  document.querySelectorAll('#rezimy button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active'); rezim = b.dataset.rezim; posledni = -1;
+  $('prehled').style.display = rezim === 'prehled' ? '' : 'none';
+  $('kviz').style.display = rezim === 'prehled' ? 'none' : '';
+  if (rezim !== 'prehled') novaOtazka();
+});
+</script>
+</body>
+</html>

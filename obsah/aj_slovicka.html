@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Angličtina – první slovíčka</title>
+  <link rel="stylesheet" href="../common.css">
+  <script>
+    if (localStorage.getItem('webapp_theme') === 'light') document.documentElement.dataset.theme = 'light';
+  </script>
+  <style>
+    body { background-color: var(--bg-deep); padding: 24px clamp(14px, 3vw, 40px); min-height: 100vh; }
+    h1 { font-size: 1.4rem; margin-bottom: 4px; }
+    .podtitul { color: var(--text-muted); font-size: 0.88rem; margin-bottom: 14px; }
+    .radek { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; align-items: center; }
+    .radek .skupina { display: flex; gap: 6px; flex-wrap: wrap; background: var(--bg-panel); border: 1px solid var(--border); border-radius: 8px; padding: 5px; }
+    .radek button.chip { background: transparent; border: 1px solid transparent; color: var(--text-muted); border-radius: 6px; padding: 6px 12px; font-size: 0.84rem; cursor: pointer; }
+    .radek button.chip.active { background: var(--accent); color: #fff; font-weight: 600; }
+
+    .karta { background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 26px; max-width: 520px; text-align: center; }
+    .emoji { font-size: clamp(5rem, 22vw, 9rem); line-height: 1; margin-bottom: 10px; user-select: none; }
+    .en { font-size: 2rem; font-weight: 700; }
+    .en .vyslov { font-size: 1rem; color: var(--text-faint); font-weight: 400; margin-left: 8px; }
+    .cz { font-size: 1.3rem; color: var(--accent); margin-top: 6px; min-height: 1.6rem; }
+    .cz.skryto { visibility: hidden; }
+    .tlacitka { display: flex; gap: 10px; justify-content: center; margin-top: 18px; flex-wrap: wrap; }
+    .tlacitka button { border: none; border-radius: 8px; padding: 11px 20px; font-size: 0.95rem; font-weight: 600; cursor: pointer; }
+    .b-hlavni { background: var(--accent); color: #fff; }
+    .b-vedle { background: var(--bg-control); color: var(--text); border: 1px solid var(--border-strong) !important; }
+    .pocet { color: var(--text-faint); font-size: 0.85rem; margin-top: 12px; font-variant-numeric: tabular-nums; }
+
+    /* kvíz */
+    .moznosti { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-top: 16px; }
+    .moznosti button { background: var(--bg-elevated); border: 1px solid var(--border); color: var(--text); border-radius: 8px; padding: 12px; font-size: 1.05rem; cursor: pointer; }
+    .moznosti button:hover { border-color: var(--accent); }
+    .moznosti button.ok { background: rgba(76, 175, 125, 0.2); border-color: var(--ok); }
+    .moznosti button.spatne { background: rgba(224, 93, 93, 0.18); border-color: var(--danger); }
+    .moznosti button:disabled { cursor: default; }
+    .serie { color: var(--warn); font-size: 0.9rem; margin-top: 10px; min-height: 1.2rem; }
+  </style>
+</head>
+<body>
+  <h1>🇬🇧 Angličtina – první slovíčka</h1>
+  <p class="podtitul">Obrázkové kartičky pro začátečníky (1. stupeň ZŠ). Klepnutím na kartičku zobrazíš překlad.</p>
+
+  <div class="radek">
+    <div class="skupina" id="temata"></div>
+  </div>
+  <div class="radek">
+    <div class="skupina" id="rezimy">
+      <button class="chip active" data-rezim="karticky">🎴 Kartičky</button>
+      <button class="chip" data-rezim="kviz">❓ Kvíz</button>
+    </div>
+    <button class="chip" id="btnZvuk" title="Přečíst slovo nahlas">🔊 Číst nahlas: zap</button>
+  </div>
+
+  <!-- kartičky -->
+  <div class="karta" id="karta">
+    <div class="emoji" id="emoji"></div>
+    <div class="en" id="en"></div>
+    <div class="cz skryto" id="cz"></div>
+    <div class="tlacitka">
+      <button class="b-vedle" id="btnPrev">← Zpět</button>
+      <button class="b-hlavni" id="btnOtoc">Ukázat překlad</button>
+      <button class="b-vedle" id="btnNext">Další →</button>
+    </div>
+    <div class="pocet" id="pocet"></div>
+  </div>
+
+  <!-- kvíz -->
+  <div class="karta" id="kvizKarta" style="display:none">
+    <div class="emoji" id="kvizEmoji"></div>
+    <div style="color:var(--text-muted);font-size:.9rem">Co je to anglicky?</div>
+    <div class="moznosti" id="moznosti"></div>
+    <div class="serie" id="serie"></div>
+    <div class="pocet" id="kvizPocet"></div>
+  </div>
+
+<script>
+const $ = id => document.getElementById(id);
+// slovo: [emoji, anglicky, výslovnost, česky]
+const TEMATA = {
+  'Zvířata': [
+    ['🐶', 'dog', 'dog', 'pes'], ['🐱', 'cat', 'ket', 'kočka'], ['🐭', 'mouse', 'maus', 'myš'],
+    ['🐴', 'horse', 'hórs', 'kůň'], ['🐮', 'cow', 'kau', 'kráva'], ['🐷', 'pig', 'pig', 'prase'],
+    ['🐰', 'rabbit', 'rebit', 'králík'], ['🦊', 'fox', 'foks', 'liška'], ['🐻', 'bear', 'bér', 'medvěd'],
+    ['🦁', 'lion', 'lajn', 'lev'], ['🐟', 'fish', 'fiš', 'ryba'], ['🐦', 'bird', 'bérd', 'pták'],
+  ],
+  'Barvy': [
+    ['🔴', 'red', 'red', 'červená'], ['🔵', 'blue', 'blú', 'modrá'], ['🟢', 'green', 'grín', 'zelená'],
+    ['🟡', 'yellow', 'jelou', 'žlutá'], ['🟠', 'orange', 'orindž', 'oranžová'], ['🟣', 'purple', 'pérpl', 'fialová'],
+    ['⚫', 'black', 'blek', 'černá'], ['⚪', 'white', 'wajt', 'bílá'], ['🟤', 'brown', 'braun', 'hnědá'],
+    ['🩷', 'pink', 'pink', 'růžová'],
+  ],
+  'Jídlo': [
+    ['🍎', 'apple', 'epl', 'jablko'], ['🍌', 'banana', 'benána', 'banán'], ['🍞', 'bread', 'bred', 'chléb'],
+    ['🧀', 'cheese', 'číz', 'sýr'], ['🥛', 'milk', 'milk', 'mléko'], ['🥚', 'egg', 'eg', 'vejce'],
+    ['🍰', 'cake', 'kejk', 'dort'], ['🍫', 'chocolate', 'čoklit', 'čokoláda'], ['💧', 'water', 'wótr', 'voda'],
+    ['🍓', 'strawberry', 'stróberi', 'jahoda'],
+  ],
+  'Rodina': [
+    ['👩', 'mother', 'mazr', 'matka'], ['👨', 'father', 'fázr', 'otec'], ['👧', 'sister', 'sistr', 'sestra'],
+    ['👦', 'brother', 'brazr', 'bratr'], ['👵', 'grandmother', 'grendmazr', 'babička'], ['👴', 'grandfather', 'grendfázr', 'dědeček'],
+    ['👶', 'baby', 'bejbi', 'miminko'],
+  ],
+  'Čísla': [
+    ['1️⃣', 'one', 'wan', 'jedna'], ['2️⃣', 'two', 'tú', 'dva'], ['3️⃣', 'three', 'srí', 'tři'],
+    ['4️⃣', 'four', 'fór', 'čtyři'], ['5️⃣', 'five', 'fajv', 'pět'], ['6️⃣', 'six', 'siks', 'šest'],
+    ['7️⃣', 'seven', 'sevn', 'sedm'], ['8️⃣', 'eight', 'ejt', 'osm'], ['9️⃣', 'nine', 'najn', 'devět'],
+    ['🔟', 'ten', 'ten', 'deset'],
+  ],
+  'Škola': [
+    ['📕', 'book', 'buk', 'kniha'], ['✏️', 'pencil', 'pensl', 'tužka'], ['🖊️', 'pen', 'pen', 'pero'],
+    ['🎒', 'bag', 'beg', 'taška'], ['📏', 'ruler', 'rúlr', 'pravítko'], ['✂️', 'scissors', 'sizrs', 'nůžky'],
+    ['🪑', 'chair', 'čér', 'židle'], ['🏫', 'school', 'skúl', 'škola'], ['📓', 'notebook', 'noutbuk', 'sešit'],
+  ],
+};
+const NAZVY = Object.keys(TEMATA);
+let tema = NAZVY[0], rezim = 'karticky', zvuk = true;
+let slova = [], idx = 0, otoceno = false;
+let spravne = 0, celkem = 0, serie = 0, posledni = -1;
+
+/* přepínače témat */
+NAZVY.forEach((n, i) => {
+  const b = document.createElement('button');
+  b.className = 'chip' + (i ? '' : ' active'); b.textContent = n;
+  b.onclick = () => { document.querySelectorAll('#temata .chip').forEach(x => x.classList.remove('active')); b.classList.add('active'); tema = n; start(); };
+  $('temata').appendChild(b);
+});
+
+function rekni(text) {
+  if (!zvuk || !('speechSynthesis' in window)) return;
+  const u = new SpeechSynthesisUtterance(text); u.lang = 'en-GB'; u.rate = 0.85;
+  speechSynthesis.cancel(); speechSynthesis.speak(u);
+}
+function start() {
+  slova = [...TEMATA[tema]];
+  idx = 0; posledni = -1;
+  if (rezim === 'karticky') ukazKarticku(); else novyKviz();
+}
+
+/* kartičky */
+function ukazKarticku() {
+  otoceno = false;
+  const s = slova[idx];
+  $('emoji').textContent = s[0];
+  $('en').innerHTML = s[1] + '<span class="vyslov">[' + s[2] + ']</span>';
+  $('cz').textContent = s[3]; $('cz').classList.add('skryto');
+  $('btnOtoc').textContent = 'Ukázat překlad';
+  $('pocet').textContent = (idx + 1) + ' / ' + slova.length;
+  rekni(s[1]);
+}
+function otoc() {
+  otoceno = !otoceno;
+  $('cz').classList.toggle('skryto', !otoceno);
+  $('btnOtoc').textContent = otoceno ? 'Skrýt překlad' : 'Ukázat překlad';
+}
+$('btnOtoc').onclick = otoc;
+$('emoji').onclick = otoc;
+$('en').onclick = () => rekni(slova[idx][1]);
+$('btnNext').onclick = () => { idx = (idx + 1) % slova.length; ukazKarticku(); };
+$('btnPrev').onclick = () => { idx = (idx - 1 + slova.length) % slova.length; ukazKarticku(); };
+
+/* kvíz */
+const zamichej = p => { p = [...p]; for (let i = p.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [p[i], p[j]] = [p[j], p[i]]; } return p; };
+function novyKviz() {
+  let i; do { i = Math.floor(Math.random() * slova.length); } while (i === posledni && slova.length > 1); posledni = i;
+  const s = slova[i];
+  $('kvizEmoji').textContent = s[0];
+  const ostatni = zamichej(slova.filter(x => x[1] !== s[1])).slice(0, 3).map(x => x[1]);
+  $('moznosti').innerHTML = '';
+  zamichej([s[1], ...ostatni]).forEach(en => {
+    const b = document.createElement('button'); b.textContent = en;
+    b.onclick = () => {
+      celkem++;
+      if (en === s[1]) { spravne++; serie++; b.classList.add('ok'); rekni(s[1]); }
+      else { serie = 0; b.classList.add('spatne'); [...$('moznosti').children].find(x => x.textContent === s[1]).classList.add('ok'); }
+      [...$('moznosti').children].forEach(x => x.disabled = true);
+      $('serie').textContent = serie >= 3 ? '🔥 série ' + serie : '';
+      $('kvizPocet').textContent = spravne + ' / ' + celkem + '  ·  klikni sem pro další';
+    };
+    $('moznosti').appendChild(b);
+  });
+  $('serie').textContent = serie >= 3 ? '🔥 série ' + serie : '';
+  $('kvizPocet').textContent = spravne + ' / ' + celkem + '  ·  klikni sem pro další';
+}
+$('kvizPocet').onclick = novyKviz;
+
+/* přepínače režimu a zvuku */
+document.querySelectorAll('#rezimy .chip').forEach(b => b.onclick = () => {
+  document.querySelectorAll('#rezimy .chip').forEach(x => x.classList.remove('active')); b.classList.add('active');
+  rezim = b.dataset.rezim;
+  $('karta').style.display = rezim === 'karticky' ? '' : 'none';
+  $('kvizKarta').style.display = rezim === 'kviz' ? '' : 'none';
+  start();
+});
+$('btnZvuk').onclick = () => { zvuk = !zvuk; $('btnZvuk').textContent = '🔊 Číst nahlas: ' + (zvuk ? 'zap' : 'vyp'); };
+
+start();
+</script>
+</body>
+</html>

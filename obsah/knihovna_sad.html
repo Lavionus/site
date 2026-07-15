@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Knihovna sad kartiček</title>
+  <link rel="stylesheet" href="../common.css">
+  <script>
+    if (localStorage.getItem('webapp_theme') === 'light') document.documentElement.dataset.theme = 'light';
+  </script>
+  <style>
+    body { background-color: var(--bg-deep); padding: 24px clamp(14px, 3vw, 40px); min-height: 100vh; }
+    h1 { font-size: 1.4rem; margin-bottom: 4px; }
+    .podtitul { color: var(--text-muted); font-size: 0.88rem; margin-bottom: 6px; max-width: 760px; }
+    .odkaz-app { font-size: 0.85rem; margin-bottom: 16px; }
+    .odkaz-app a { color: var(--accent); }
+    .filtry { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 16px; }
+    .filtry button { background: var(--bg-control); border: 1px solid var(--border-strong); color: var(--text-muted); border-radius: 6px; padding: 7px 13px; font-size: 0.84rem; cursor: pointer; }
+    .filtry button.active { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+    .mrizka { display: grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 14px; max-width: 1000px; }
+    .sada { background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; display: flex; flex-direction: column; }
+    .sada .predmet { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-faint); }
+    .sada h3 { font-size: 1.05rem; margin: 4px 0; }
+    .sada .info { color: var(--text-muted); font-size: 0.85rem; margin-bottom: 10px; }
+    .sada .ukazka { color: var(--text-faint); font-size: 0.82rem; font-style: italic; margin-bottom: 12px; line-height: 1.5; flex: 1; }
+    .sada .akce { display: flex; gap: 8px; flex-wrap: wrap; }
+    .sada .akce button { flex: 1; border: none; border-radius: 7px; padding: 9px; font-size: 0.85rem; font-weight: 600; cursor: pointer; }
+    .b-pridat { background: var(--accent); color: #fff; }
+    .b-pridat:hover { background: var(--accent-hover); }
+    .b-stahnout { background: var(--bg-control); color: var(--text); border: 1px solid var(--border-strong) !important; }
+    .toast { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); background: var(--ok); color: #fff; padding: 12px 20px; border-radius: 8px; font-size: 0.9rem; opacity: 0; transition: opacity 0.25s ease; pointer-events: none; }
+    .toast.show { opacity: 1; }
+  </style>
+</head>
+<body>
+  <h1>🗂️ Knihovna sad kartiček</h1>
+  <p class="podtitul">Hotové sady k procvičování. Přidej si je jedním klikem do aplikace <b>🎴 Kartičky</b>, nebo stáhni jako JSON a naimportuj později.</p>
+  <p class="odkaz-app">➡️ <a href="../index.html#obsah/flashcards.html" target="_top">Otevřít aplikaci Kartičky</a></p>
+
+  <div class="filtry" id="filtry"></div>
+  <div class="mrizka" id="mrizka"></div>
+  <div class="toast" id="toast"></div>
+
+<script>
+const $ = id => document.getElementById(id);
+// každá sada: { predmet, stupen, name, cards:[[otázka, odpověď], ...] }
+const SADY = [
+  { predmet: 'Čeština', stupen: '1. stupeň', name: 'Vyjmenovaná slova po B', cards: [
+    ['být', 'existovat (např. „být doma“)'], ['bydlit', 'obývat, mít bydliště'], ['obyvatel', 'ten, kdo někde bydlí'],
+    ['byt', 'místo k bydlení'], ['příbytek', 'obydlí, dům'], ['nábytek', 'zařízení bytu'],
+    ['dobytek', 'hospodářská zvířata'], ['obyčej', 'zvyk, tradice'], ['bystrý', 'chytrý, rychlý'],
+    ['bylina', 'léčivá rostlina'], ['kobyla', 'samice koně'], ['býk', 'samec skotu'], ['babyka', 'druh javoru'],
+  ]},
+  { predmet: 'Čeština', stupen: '1. stupeň', name: 'Vyjmenovaná slova po L', cards: [
+    ['slyšet', 'vnímat ušima'], ['mlýn', 'stavba na mletí obilí'], ['blýskat se', 'svítit bleskem'],
+    ['polykat', 'nechat projít hrdlem'], ['plynout', 'téci, ubíhat'], ['plýtvat', 'zbytečně utrácet'],
+    ['vzlykat', 'plakat se vzdechy'], ['lýko', 'vrstva pod kůrou stromu'], ['lysý', 'holohlavý, bez porostu'],
+    ['lýtko', 'zadní část nohy'], ['plyš', 'měkká látka'], ['pelyněk', 'hořká bylina'],
+  ]},
+  { predmet: 'Čeština', stupen: '2. stupeň', name: 'Slovní druhy', cards: [
+    ['podstatná jména', 'názvy osob, zvířat, věcí (1. druh)'], ['přídavná jména', 'vlastnosti (jaký? který? čí?)'],
+    ['zájmena', 'zastupují podstatná/přídavná jména (já, ten, který)'], ['číslovky', 'počet, pořadí (pět, druhý)'],
+    ['slovesa', 'děj, stav (dělat, být)'], ['příslovce', 'okolnosti děje (kde, kdy, jak)'],
+    ['předložky', 'vztahy mezi slovy (na, v, pod)'], ['spojky', 'spojují slova a věty (a, ale, protože)'],
+    ['částice', 'uvozují věty, postoj (ať, kéž, snad)'], ['citoslovce', 'zvuky a pocity (bum, ach)'],
+  ]},
+  { predmet: 'Matematika', stupen: '1. stupeň', name: 'Malá násobilka (výběr)', cards: [
+    ['6 × 7', '42'], ['7 × 8', '56'], ['6 × 8', '48'], ['9 × 6', '54'], ['7 × 7', '49'],
+    ['8 × 8', '64'], ['9 × 7', '63'], ['9 × 8', '72'], ['9 × 9', '81'], ['6 × 6', '36'],
+    ['8 × 4', '32'], ['7 × 6', '42'], ['8 × 9', '72'], ['7 × 9', '63'],
+  ]},
+  { predmet: 'Matematika', stupen: '2. stupeň', name: 'Druhé mocniny a odmocniny', cards: [
+    ['11²', '121'], ['12²', '144'], ['13²', '169'], ['14²', '196'], ['15²', '225'],
+    ['√144', '12'], ['√169', '13'], ['√225', '15'], ['√400', '20'], ['√81', '9'],
+    ['16²', '256'], ['20²', '400'], ['√256', '16'], ['√196', '14'],
+  ]},
+  { predmet: 'Přírodní vědy', stupen: '2. stupeň', name: 'Chemické značky prvků', cards: [
+    ['vodík', 'H'], ['kyslík', 'O'], ['uhlík', 'C'], ['dusík', 'N'], ['sodík', 'Na'],
+    ['draslík', 'K'], ['vápník', 'Ca'], ['železo', 'Fe'], ['měď', 'Cu'], ['zlato', 'Au'],
+    ['stříbro', 'Ag'], ['síra', 'S'], ['chlor', 'Cl'], ['hliník', 'Al'], ['zinek', 'Zn'], ['olovo', 'Pb'],
+  ]},
+  { predmet: 'Přírodní vědy', stupen: '2. stupeň', name: 'Planety sluneční soustavy', cards: [
+    ['Merkur', 'nejbližší Slunci, nejmenší planeta'], ['Venuše', 'nejteplejší, hustá atmosféra CO₂'],
+    ['Země', 'jediná se známým životem'], ['Mars', 'rudá planeta, oxid železa'],
+    ['Jupiter', 'největší planeta, plynný obr'], ['Saturn', 'nápadné prstence'],
+    ['Uran', 'ledový obr, otáčí se „naležato“'], ['Neptun', 'nejvzdálenější planeta, modrá'],
+  ]},
+  { predmet: 'Zeměpis', stupen: '2. stupeň', name: 'Hlavní města Evropy', cards: [
+    ['Německo', 'Berlín'], ['Francie', 'Paříž'], ['Itálie', 'Řím'], ['Španělsko', 'Madrid'],
+    ['Polsko', 'Varšava'], ['Rakousko', 'Vídeň'], ['Slovensko', 'Bratislava'], ['Maďarsko', 'Budapešť'],
+    ['Velká Británie', 'Londýn'], ['Nizozemsko', 'Amsterodam'], ['Řecko', 'Atény'], ['Norsko', 'Oslo'],
+    ['Švédsko', 'Stockholm'], ['Portugalsko', 'Lisabon'], ['Chorvatsko', 'Záhřeb'], ['Rumunsko', 'Bukurešť'],
+  ]},
+  { predmet: 'Dějepis', stupen: '2. stupeň', name: 'Důležité letopočty ČR', cards: [
+    ['863', 'příchod Cyrila a Metoděje'], ['1212', 'Zlatá bula sicilská'], ['1348', 'založení Univerzity Karlovy'],
+    ['1415', 'upálení Jana Husa'], ['1620', 'bitva na Bílé hoře'], ['1918', 'vznik Československa'],
+    ['1938', 'Mnichovská dohoda'], ['1945', 'konec 2. světové války'], ['1948', 'únorový převrat'],
+    ['1968', 'okupace vojsky Varšavské smlouvy'], ['1989', 'sametová revoluce'], ['1993', 'vznik České republiky'],
+  ]},
+  { predmet: 'Angličtina', stupen: '1. stupeň', name: 'Zvířata (animals)', cards: [
+    ['dog', 'pes'], ['cat', 'kočka'], ['horse', 'kůň'], ['cow', 'kráva'], ['pig', 'prase'],
+    ['rabbit', 'králík'], ['bear', 'medvěd'], ['lion', 'lev'], ['fish', 'ryba'], ['bird', 'pták'],
+    ['mouse', 'myš'], ['fox', 'liška'],
+  ]},
+  { predmet: 'Angličtina', stupen: '2. stupeň', name: 'Nepravidelná slovesa (výběr)', cards: [
+    ['go – ? – gone', 'went'], ['see – ? – seen', 'saw'], ['take – took – ?', 'taken'],
+    ['buy – ? – bought', 'bought'], ['make – ? – made', 'made'], ['come – came – ?', 'come'],
+    ['write – wrote – ?', 'written'], ['break – broke – ?', 'broken'], ['drink – ? – drunk', 'drank'],
+    ['speak – spoke – ?', 'spoken'], ['bring – ? – brought', 'brought'], ['think – ? – thought', 'thought'],
+  ]},
+];
+
+const KEY = 'flashcards_state';
+const uid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 7);
+
+/* filtry podle předmětu */
+const PREDMETY = ['Vše', ...new Set(SADY.map(s => s.predmet))];
+let filtr = 'Vše';
+PREDMETY.forEach(p => {
+  const b = document.createElement('button');
+  b.textContent = p; if (p === filtr) b.classList.add('active');
+  b.onclick = () => { filtr = p; document.querySelectorAll('#filtry button').forEach(x => x.classList.remove('active')); b.classList.add('active'); vykresli(); };
+  $('filtry').appendChild(b);
+});
+
+function vykresli() {
+  $('mrizka').innerHTML = SADY
+    .filter(s => filtr === 'Vše' || s.predmet === filtr)
+    .map((s, i) => {
+      const ukazka = s.cards.slice(0, 2).map(c => c[0] + ' → ' + c[1]).join(' · ');
+      return `<div class="sada">
+        <div class="predmet">${s.predmet} · ${s.stupen}</div>
+        <h3>${s.name}</h3>
+        <div class="info">${s.cards.length} kartiček</div>
+        <div class="ukazka">${ukazka} …</div>
+        <div class="akce">
+          <button class="b-pridat" data-i="${SADY.indexOf(s)}">➕ Přidat do Kartiček</button>
+          <button class="b-stahnout" data-i="${SADY.indexOf(s)}">⬇️ JSON</button>
+        </div>
+      </div>`;
+    }).join('');
+}
+function balik(s) {
+  return { type: 'flashcards', version: 2, decks: [{ name: s.name, cards: s.cards }] };
+}
+function safeName(str) { return (str || 'sada').replace(/[^\wá-žÁ-Ž -]/g, '').trim().replace(/ +/g, '-').toLowerCase() || 'sada'; }
+
+function pridatDoAplikace(s) {
+  let state;
+  try { state = JSON.parse(localStorage.getItem(KEY) || 'null'); } catch (e) { state = null; }
+  if (!state || !Array.isArray(state.decks)) {
+    state = { decks: [], currentId: null, settings: { anim: 'flipY', speed: '0.5', hold: false } };
+  }
+  const novy = { id: uid(), name: s.name, cards: s.cards.map(c => [c[0], c[1]]) };
+  state.decks.push(novy);
+  state.currentId = novy.id;
+  localStorage.setItem(KEY, JSON.stringify(state));
+  toast('✅ Sada „' + s.name + '“ přidána do Kartiček');
+}
+function stahnout(s) {
+  const blob = new Blob([JSON.stringify(balik(s), null, 2)], { type: 'application/json' });
+  const a = document.createElement('a'); a.href = URL.createObjectURL(blob);
+  a.download = safeName(s.name) + '.json'; a.click(); URL.revokeObjectURL(a.href);
+}
+let toastTimer;
+function toast(text) {
+  $('toast').textContent = text; $('toast').classList.add('show');
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => $('toast').classList.remove('show'), 2200);
+}
+$('mrizka').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  const s = SADY[+b.dataset.i];
+  if (b.classList.contains('b-pridat')) pridatDoAplikace(s);
+  else stahnout(s);
+});
+vykresli();
+</script>
+</body>
+</html>

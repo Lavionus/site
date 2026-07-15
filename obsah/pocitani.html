@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Počítání do 20 a 100</title>
+  <link rel="stylesheet" href="../common.css">
+  <script>
+    if (localStorage.getItem('webapp_theme') === 'light') document.documentElement.dataset.theme = 'light';
+  </script>
+  <style>
+    body { background-color: var(--bg-deep); padding: 24px clamp(14px, 3vw, 40px); min-height: 100vh; }
+    h1 { font-size: 1.4rem; margin-bottom: 4px; }
+    .podtitul { color: var(--text-muted); font-size: 0.88rem; margin-bottom: 16px; }
+    .volby { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; align-items: center; }
+    .volby .skupina { display: flex; gap: 6px; background: var(--bg-panel); border: 1px solid var(--border); border-radius: 8px; padding: 5px; }
+    .volby button {
+      background: transparent; border: 1px solid transparent; color: var(--text-muted);
+      border-radius: 6px; padding: 6px 12px; font-size: 0.86rem; cursor: pointer;
+    }
+    .volby button.active { background: var(--accent); color: #fff; font-weight: 600; }
+    .karta {
+      background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 30px; max-width: 560px; text-align: center;
+    }
+    .priklad { font-size: clamp(2.4rem, 10vw, 4rem); font-weight: 700; margin-bottom: 20px; font-variant-numeric: tabular-nums; }
+    .priklad .vysledek { color: var(--accent); min-width: 1.4em; display: inline-block; border-bottom: 3px dashed var(--accent); }
+    .priklad.ok .vysledek { color: var(--ok); border-color: var(--ok); }
+    .priklad.spatne .vysledek { color: var(--danger); border-color: var(--danger); }
+    input[type=number] {
+      background: var(--bg-input); border: 2px solid var(--border-strong); border-radius: 10px;
+      color: var(--text); font-size: 2rem; text-align: center; width: 160px; padding: 10px;
+      -moz-appearance: textfield;
+    }
+    input::-webkit-outer-spin-button, input::-webkit-inner-spin-button { -webkit-appearance: none; }
+    input:focus { outline: none; border-color: var(--accent); }
+    .potvrdit {
+      display: block; margin: 18px auto 0; background: var(--accent); border: none; color: #fff;
+      border-radius: 8px; padding: 12px 34px; font-size: 1.05rem; font-weight: 600; cursor: pointer;
+    }
+    .potvrdit:hover { background: var(--accent-hover); }
+    .zprava { margin-top: 14px; min-height: 1.5rem; font-size: 1rem; }
+    .zprava.ok { color: var(--ok); } .zprava.spatne { color: var(--danger); }
+    .stav { display: flex; justify-content: space-between; max-width: 560px; margin-top: 12px; color: var(--text-muted); font-size: 0.9rem; }
+    .serie { color: var(--warn); }
+    .souhrn { font-size: 1.1rem; line-height: 1.8; }
+    .hvezdy { font-size: 2rem; margin: 10px 0; }
+  </style>
+</head>
+<body>
+  <h1>🔢 Počítání do 20 a 100</h1>
+  <p class="podtitul">Sčítání a odčítání pro 1.–3. ročník ZŠ. Série 10 příkladů, na konci vysvědčení.</p>
+
+  <div class="volby">
+    <div class="skupina" id="obor">
+      <button data-v="10">do 10</button>
+      <button data-v="20" class="active">do 20</button>
+      <button data-v="100">do 100</button>
+    </div>
+    <div class="skupina" id="operace">
+      <button data-v="+">jen +</button>
+      <button data-v="-">jen −</button>
+      <button data-v="mix" class="active">+ i −</button>
+    </div>
+  </div>
+
+  <div class="karta">
+    <div class="priklad" id="priklad"></div>
+    <input type="number" id="odpoved" inputmode="numeric" autocomplete="off">
+    <button class="potvrdit" id="btnPotvrdit">Potvrdit</button>
+    <div class="zprava" id="zprava"></div>
+  </div>
+  <div class="stav">
+    <span id="postup"></span>
+    <span class="serie" id="serie"></span>
+    <span id="skore"></span>
+  </div>
+
+<script>
+const $ = id => document.getElementById(id);
+let obor = 20, operace = 'mix';
+let a, b, op, cislo = 0, spravne = 0, serie = 0, vyhodnoceno = false;
+
+function nahodne(n) { return Math.floor(Math.random() * (n + 1)); }
+function novyPriklad() {
+  op = operace === 'mix' ? (Math.random() < 0.5 ? '+' : '-') : operace;
+  if (op === '+') { a = nahodne(obor); b = nahodne(obor - a); }
+  else { a = nahodne(obor); b = nahodne(a); }
+  vyhodnoceno = false;
+  $('priklad').className = 'priklad';
+  $('priklad').innerHTML = a + ' ' + (op === '-' ? '−' : '+') + ' ' + b + ' = <span class="vysledek" id="vysl">?</span>';
+  $('odpoved').value = ''; $('odpoved').focus();
+  $('zprava').textContent = ''; $('zprava').className = 'zprava';
+  $('postup').textContent = 'Příklad ' + (cislo + 1) + ' / 10';
+  $('skore').textContent = '✅ ' + spravne;
+  $('btnPotvrdit').textContent = 'Potvrdit';
+}
+function vyhodnot() {
+  if (vyhodnoceno) { dalsiKrok(); return; }
+  const v = $('odpoved').value.trim();
+  if (v === '') { $('odpoved').focus(); return; }
+  const ok = Number(v) === (op === '+' ? a + b : a - b);
+  vyhodnoceno = true; cislo++;
+  $('vysl').textContent = op === '+' ? a + b : a - b;
+  $('priklad').classList.add(ok ? 'ok' : 'spatne');
+  if (ok) { spravne++; serie++; $('zprava').textContent = '✅ Správně!'; $('zprava').classList.add('ok'); }
+  else { serie = 0; $('zprava').textContent = '❌ Zadal(a) jsi ' + v + '. Správně je ' + (op === '+' ? a + b : a - b) + '.'; $('zprava').classList.add('spatne'); }
+  $('serie').textContent = serie >= 3 ? '🔥 série ' + serie : '';
+  $('skore').textContent = '✅ ' + spravne;
+  $('btnPotvrdit').textContent = cislo >= 10 ? 'Vyhodnotit' : 'Další →';
+}
+function dalsiKrok() {
+  if (cislo >= 10) { vysvedceni(); return; }
+  novyPriklad();
+}
+function vysvedceni() {
+  const hvezdy = spravne >= 10 ? '⭐⭐⭐' : spravne >= 8 ? '⭐⭐' : spravne >= 5 ? '⭐' : '💪';
+  const text = spravne >= 10 ? 'Bez chyby, paráda!' : spravne >= 8 ? 'Výborně!' : spravne >= 5 ? 'Dobrá práce, trénuj dál.' : 'Nevadí, zkus to znovu!';
+  $('priklad').className = 'priklad';
+  $('priklad').innerHTML = '<div class="souhrn">Hotovo!<div class="hvezdy">' + hvezdy + '</div>' + spravne + ' z 10 správně<br>' + text + '</div>';
+  $('priklad').style.fontSize = '1.2rem';
+  $('zprava').textContent = '';
+  $('btnPotvrdit').textContent = '🔄 Nová série';
+  cislo = 0; spravne = 0; serie = 0; vyhodnoceno = false;
+  $('btnPotvrdit').onclick = () => { $('priklad').style.fontSize = ''; $('btnPotvrdit').onclick = klik; novyPriklad(); };
+}
+function klik() { vyhodnoceno ? dalsiKrok() : vyhodnot(); }
+$('btnPotvrdit').onclick = klik;
+$('odpoved').addEventListener('keydown', e => { if (e.key === 'Enter') klik(); });
+
+for (const [id, set] of [['obor', v => obor = +v], ['operace', v => operace = v]]) {
+  document.querySelectorAll('#' + id + ' button').forEach(b => b.onclick = () => {
+    document.querySelectorAll('#' + id + ' button').forEach(x => x.classList.remove('active'));
+    b.classList.add('active'); set(b.dataset.v);
+    cislo = 0; spravne = 0; serie = 0; $('priklad').style.fontSize = '';
+    $('btnPotvrdit').onclick = klik;
+    novyPriklad();
+  });
+}
+novyPriklad();
+</script>
+</body>
+</html>
