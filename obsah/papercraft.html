@@ -1,0 +1,1020 @@
+<!doctype html>
+<html lang="cs">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Rozkládač papírových modelů (mini Pepakura)</title>
+<style>
+:root{--bg:#1e2228;--panel:#2a2f37;--txt:#e8eaed}
+*{box-sizing:border-box}
+body{margin:0;font:14px/1.4 system-ui,sans-serif;background:var(--bg);color:var(--txt);height:100vh;display:flex;flex-direction:column}
+header{display:flex;flex-wrap:wrap;gap:12px;align-items:center;padding:8px 12px;background:var(--panel);border-bottom:1px solid #000}
+header .grp{display:flex;gap:6px;align-items:center}
+header label{font-size:12px;color:#aab}
+button,select,input[type=number]{background:#3a4150;color:var(--txt);border:1px solid #555;border-radius:4px;padding:4px 10px;font:inherit}
+button:hover{background:#495267;cursor:pointer}
+input[type=number]{width:64px}
+input[type=checkbox]{accent-color:#4da3ff}
+#bar2{display:flex;flex-wrap:wrap;gap:16px;align-items:center;padding:4px 12px;background:var(--panel);font-size:12px;color:#aab;border-bottom:1px solid #000}
+#warn{color:#ffb454}
+.legend span{margin-right:12px;white-space:nowrap}
+.legend b{font-weight:normal;letter-spacing:2px;margin-right:3px}
+main{display:flex;flex:1;min-height:0}
+#left{width:42%;min-width:280px;position:relative;border-right:1px solid #000}
+#c3d{width:100%;height:100%;display:block;touch-action:none;cursor:grab}
+#hint3d{position:absolute;left:8px;bottom:6px;font-size:11px;color:#889;pointer-events:none}
+#pattern{flex:1;overflow:auto;padding:14px;background:#14161a}
+.page-wrap{margin:0 auto 18px;max-width:640px}
+.page-head{display:flex;justify-content:space-between;align-items:center;font-size:12px;color:#99a;padding:2px 2px 4px}
+.page-head button{padding:2px 8px;font-size:11px}
+.page{background:#fff;box-shadow:0 2px 12px #0008}
+.page svg{width:100%;height:auto;display:block}
+#jinfo{color:#7ec7ff}
+#guide{background:#fff;color:#222;margin:0 auto 18px;max-width:640px;padding:12px 18px;border-radius:6px;font-size:13px;box-shadow:0 2px 12px #0008}
+#guide h3{margin:0 0 4px;font-size:15px}
+#guide ol,#guide ul{margin:6px 0 2px 18px;padding:0}
+#guide li{margin:3px 0}
+#guide .tips{color:#555;font-size:12px}
+#guide summary{cursor:pointer;color:#0a6fd6;font-size:12px;margin:4px 0}
+.jref{color:#0a6fd6;cursor:pointer;text-decoration:underline}
+.jhit{cursor:pointer}
+.join-hl{stroke:#ff8c00;stroke-width:1.6;stroke-linecap:round;opacity:.9}
+text.join-active{fill:#ff8c00;font-weight:700}
+span.join-active{background:#ff8c00;color:#fff;text-decoration:none;border-radius:3px;padding:0 3px}
+@media print{
+  header,#bar2,#left,.page-head{display:none!important}
+  .join-hl{display:none}
+  #guide{box-shadow:none;max-width:none;border-radius:0;padding:12mm;page-break-after:always}
+  #guide summary{display:none}
+  #guide details{display:block}
+  body{background:#fff}
+  main{display:block;height:auto}
+  #pattern{overflow:visible;padding:0;background:#fff}
+  .page-wrap{max-width:none;margin:0;page-break-after:always}
+  .page{box-shadow:none}
+  .page svg{width:210mm;height:297mm}
+}
+@page{size:A4 portrait;margin:0}
+</style>
+</head>
+<body>
+<header>
+  <div class="grp">
+    <button id="btnFile">Načíst OBJ / STL</button>
+    <input type="file" id="file" accept=".obj,.stl" hidden>
+  </div>
+  <div class="grp">
+    <label>Ukázka:</label>
+    <select id="sample">
+      <option value="krychle">Krychle</option>
+      <option value="jehlan">Jehlan</option>
+      <option value="domek">Domek</option>
+      <option value="diamant">Diamant</option>
+      <option value="dvacetisten">Dvacetistěn</option>
+      <option value="koule">Koule (320 stěn)</option>
+      <option value="torus">Torus (360 stěn)</option>
+    </select>
+  </div>
+  <div class="grp"><label>Velikost (mm):</label><input type="number" id="sizeMM" value="80" min="1" max="2000" step="5"></div>
+  <div class="grp"><label>= (%):</label><input type="number" id="sizePct" value="100" min="1" max="10000" step="5" title="procento původní velikosti modelu"></div>
+  <div class="grp"><label>Zjednodušení:</label><input type="range" id="simplify" min="5" max="100" value="100" step="5" style="width:90px" title="kolik % stěn modelu zůstane"><span id="simplifyVal" style="font-size:12px;color:#aab;min-width:44px">100 %</span></div>
+  <div class="grp"><label>Chlopně (mm):</label><input type="number" id="tabH" value="7" min="2" max="20" step="1"></div>
+  <div class="grp"><label><input type="checkbox" id="tabs" checked> chlopně</label></div>
+  <div class="grp"><label><input type="checkbox" id="numbers" checked> čísla hran</label></div>
+  <div class="grp"><label><input type="checkbox" id="targets" checked title="u čísla spoje vytiskne i cílový díl, např. 12→3"> cíle spojů</label></div>
+  <div class="grp"><button id="btnPrint">🖨 Tisk</button></div>
+</header>
+<div id="bar2">
+  <span id="stats"></span>
+  <span class="legend">
+    <span><b style="color:#000">───</b> střih</span>
+    <span><b style="color:#c33">─·─</b> hora (ohyb od tisku)</span>
+    <span><b style="color:#36c">- - -</b> údolí (ohyb k tisku)</span>
+  </span>
+  <span id="jinfo"></span>
+  <span id="warn"></span>
+</div>
+<main>
+  <div id="left">
+    <canvas id="c3d"></canvas>
+    <div id="hint3d">tažením otáčet · kolečkem zoom · barvy = díly střihu</div>
+  </div>
+  <div id="pattern"></div>
+</main>
+
+<script>
+"use strict";
+const HAS_DOM = (typeof document !== "undefined");
+
+/* ---------------- vektorové utility ---------------- */
+const vsub=(a,b)=>[a[0]-b[0],a[1]-b[1],a[2]-b[2]];
+const vadd=(a,b)=>[a[0]+b[0],a[1]+b[1],a[2]+b[2]];
+const vcross=(a,b)=>[a[1]*b[2]-a[2]*b[1],a[2]*b[0]-a[0]*b[2],a[0]*b[1]-a[1]*b[0]];
+const vdot=(a,b)=>a[0]*b[0]+a[1]*b[1]+a[2]*b[2];
+const vlen=a=>Math.hypot(a[0],a[1],a[2]);
+const vnorm=a=>{const l=vlen(a)||1;return[a[0]/l,a[1]/l,a[2]/l];};
+const dist3=(a,b)=>vlen(vsub(a,b));
+const dist2=(a,b)=>Math.hypot(a[0]-b[0],a[1]-b[1]);
+const cr2=(a,b,c)=>(b[0]-a[0])*(c[1]-a[1])-(b[1]-a[1])*(c[0]-a[0]);
+const EK=(i,j)=>i<j?i+"_"+j:j+"_"+i;
+
+/* ---------------- parsery ---------------- */
+function parseOBJ(text){
+  const verts=[],tris=[];
+  for(const line of text.split(/\r?\n/)){
+    const t=line.trim();
+    if(t.startsWith("v ")){
+      const p=t.split(/\s+/);
+      verts.push([+p[1],+p[2],+p[3]]);
+    }else if(t.startsWith("f ")){
+      const p=t.split(/\s+/).slice(1);
+      const idx=p.map(s=>{let i=parseInt(s.split("/")[0],10);return i<0?verts.length+i:i-1;});
+      for(let k=1;k+1<idx.length;k++){
+        const tri=[idx[0],idx[k],idx[k+1]];
+        if(tri[0]!==tri[1]&&tri[1]!==tri[2]&&tri[0]!==tri[2])tris.push(tri);
+      }
+    }
+  }
+  return{verts,tris};
+}
+function weld(rawTris){
+  const map=new Map(),verts=[],tris=[];
+  const key=p=>p.map(v=>Math.round(v*1e4)).join(",");
+  for(const t of rawTris){
+    const ids=t.map(p=>{const k=key(p);let i=map.get(k);if(i===undefined){i=verts.length;map.set(k,i);verts.push(p);}return i;});
+    if(ids[0]!==ids[1]&&ids[1]!==ids[2]&&ids[0]!==ids[2])tris.push(ids);
+  }
+  return{verts,tris};
+}
+function parseSTLBinary(dv,n){
+  const raw=[];let o=84;
+  for(let i=0;i<n;i++){
+    o+=12;const t=[];
+    for(let k=0;k<3;k++){t.push([dv.getFloat32(o,true),dv.getFloat32(o+4,true),dv.getFloat32(o+8,true)]);o+=12;}
+    o+=2;raw.push(t);
+  }
+  return weld(raw);
+}
+function parseSTLAscii(text){
+  const raw=[];const re=/vertex\s+([-\d.eE+]+)\s+([-\d.eE+]+)\s+([-\d.eE+]+)/g;
+  let m;const pts=[];
+  while((m=re.exec(text))){
+    pts.push([+m[1],+m[2],+m[3]]);
+    if(pts.length===3){raw.push([pts[0],pts[1],pts[2]]);pts.length=0;}
+  }
+  return weld(raw);
+}
+function parseSTL(buf){
+  if(buf.byteLength>=84){
+    const dv=new DataView(buf);
+    const n=dv.getUint32(80,true);
+    if(84+n*50===buf.byteLength)return parseSTLBinary(dv,n);
+  }
+  return parseSTLAscii(new TextDecoder().decode(buf));
+}
+
+/* ---------------- ukázkové modely ---------------- */
+const SAMPLES={
+  krychle(){
+    const v=[[-1,-1,-1],[1,-1,-1],[1,1,-1],[-1,1,-1],[-1,-1,1],[1,-1,1],[1,1,1],[-1,1,1]];
+    const t=[[0,3,2],[0,2,1],[4,5,6],[4,6,7],[0,4,7],[0,7,3],[1,2,6],[1,6,5],[0,1,5],[0,5,4],[3,7,6],[3,6,2]];
+    return{verts:v,tris:t};
+  },
+  jehlan(){
+    const v=[[-1,0,-1],[1,0,-1],[1,0,1],[-1,0,1],[0,1.6,0]];
+    const t=[[0,1,2],[0,2,3],[0,4,1],[1,4,2],[2,4,3],[3,4,0]];
+    return{verts:v,tris:t};
+  },
+  domek(){
+    const v=[[-1,0,-.7],[1,0,-.7],[1,0,.7],[-1,0,.7],[-1,1,-.7],[1,1,-.7],[1,1,.7],[-1,1,.7],[-1,1.5,0],[1,1.5,0]];
+    const t=[[0,1,2],[0,2,3],[0,4,5],[0,5,1],[3,2,6],[3,6,7],[1,5,6],[1,6,2],
+             [0,3,7],[0,7,8],[0,8,4],[5,9,6],[4,8,9],[4,9,5],[7,6,9],[7,9,8]];
+    return{verts:v,tris:t};
+  },
+  diamant(){
+    const n=8,v=[],t=[];
+    for(let i=0;i<n;i++){const a=i*2*Math.PI/n;v.push([Math.cos(a),0,Math.sin(a)]);}
+    v.push([0,.6,0]);v.push([0,-1.3,0]);
+    for(let i=0;i<n;i++){const j=(i+1)%n;t.push([i,n,j]);t.push([i,j,n+1]);}
+    return{verts:v,tris:t};
+  },
+  dvacetisten(){
+    const p=(1+Math.sqrt(5))/2;
+    const v=[[-1,p,0],[1,p,0],[-1,-p,0],[1,-p,0],[0,-1,p],[0,1,p],[0,-1,-p],[0,1,-p],[p,0,-1],[p,0,1],[-p,0,-1],[-p,0,1]];
+    const t=[[0,11,5],[0,5,1],[0,1,7],[0,7,10],[0,10,11],[1,5,9],[5,11,4],[11,10,2],[10,7,6],[7,1,8],
+             [3,9,4],[3,4,2],[3,2,6],[3,6,8],[3,8,9],[4,9,5],[2,4,11],[6,2,10],[8,6,7],[9,8,1]];
+    return{verts:v,tris:t};
+  },
+  koule(){
+    let{verts:v,tris:t}=SAMPLES.dvacetisten();
+    v=v.map(a=>{const l=Math.hypot(a[0],a[1],a[2]);return[a[0]/l,a[1]/l,a[2]/l];});
+    for(let s=0;s<2;s++){
+      const mid=new Map(),nt=[];
+      const gm=(a,b)=>{
+        const k=Math.min(a,b)+"_"+Math.max(a,b);
+        if(!mid.has(k)){
+          const p=[(v[a][0]+v[b][0])/2,(v[a][1]+v[b][1])/2,(v[a][2]+v[b][2])/2];
+          const l=Math.hypot(p[0],p[1],p[2]);
+          mid.set(k,v.length);v.push([p[0]/l,p[1]/l,p[2]/l]);
+        }
+        return mid.get(k);
+      };
+      for(const[a,b,c]of t){
+        const ab=gm(a,b),bc=gm(b,c),ca=gm(c,a);
+        nt.push([a,ab,ca],[b,bc,ab],[c,ca,bc],[ab,bc,ca]);
+      }
+      t=nt;
+    }
+    return{verts:v,tris:t};
+  },
+  torus(){
+    const N=18,M=10,R=1,r=0.45,v=[],t=[];
+    for(let i=0;i<N;i++)for(let j=0;j<M;j++){
+      const a=i*2*Math.PI/N,b=j*2*Math.PI/M;
+      v.push([(R+r*Math.cos(b))*Math.cos(a),r*Math.sin(b),(R+r*Math.cos(b))*Math.sin(a)]);
+    }
+    const idx=(i,j)=>((i+N)%N)*M+((j+M)%M);
+    for(let i=0;i<N;i++)for(let j=0;j<M;j++){
+      t.push([idx(i,j),idx(i+1,j),idx(i+1,j+1)]);
+      t.push([idx(i,j),idx(i+1,j+1),idx(i,j+1)]);
+    }
+    return{verts:v,tris:t};
+  }
+};
+
+/* ---------------- zjednodušení sítě (QEM edge collapse) ---------------- */
+function solveQ(Q){
+  /* min vᵀQv → řešení 3x3 soustavy Cramerem; Q=[xx,xy,xz,xd,yy,yz,yd,zz,zd,dd] */
+  const a=Q[0],b=Q[1],c=Q[2],d=Q[4],e=Q[5],f=Q[7];
+  const det=a*(d*f-e*e)-b*(b*f-e*c)+c*(b*e-d*c);
+  if(Math.abs(det)<1e-12)return null;
+  const rx=-Q[3],ry=-Q[6],rz=-Q[8];
+  return[
+    (rx*(d*f-e*e)-b*(ry*f-e*rz)+c*(ry*e-d*rz))/det,
+    (a*(ry*f-e*rz)-rx*(b*f-e*c)+c*(b*rz-ry*c))/det,
+    (a*(d*rz-ry*e)-b*(b*rz-ry*c)+rx*(b*e-d*c))/det
+  ];
+}
+function simplifyMesh(vertsIn,trisIn,ratio){
+  const verts=vertsIn.map(v=>v.slice());
+  const tris=trisIn.map(t=>t.slice());
+  const target=Math.max(4,Math.round(trisIn.length*ratio));
+  let alive=tris.length,guard=0;
+
+  while(alive>target&&guard++<60){
+    const nv=verts.length;
+    const vFaces=Array.from({length:nv},()=>[]);
+    tris.forEach((t,i)=>{if(t)for(const v of t)vFaces[v].push(i);});
+    const edges=new Map();
+    tris.forEach(t=>{if(!t)return;for(let e=0;e<3;e++){
+      const k=EK(t[e],t[(e+1)%3]);
+      const r=edges.get(k);
+      if(r)r.n++;else edges.set(k,{a:Math.min(t[e],t[(e+1)%3]),b:Math.max(t[e],t[(e+1)%3]),n:1});
+    }});
+    const boundary=new Uint8Array(nv);
+    for(const r of edges.values())if(r.n===1){boundary[r.a]=1;boundary[r.b]=1;}
+
+    /* kvadriky vrcholů (roviny stěn vážené plochou) */
+    const Q=Array.from({length:nv},()=>new Float64Array(10));
+    tris.forEach(t=>{
+      if(!t)return;
+      const n=vcross(vsub(verts[t[1]],verts[t[0]]),vsub(verts[t[2]],verts[t[0]]));
+      const a2=vlen(n);if(a2<1e-12)return;
+      const p=[n[0]/a2,n[1]/a2,n[2]/a2,0];p[3]=-vdot(p,verts[t[0]]);
+      const w=a2/2,q=[];
+      for(let i=0;i<4;i++)for(let j=i;j<4;j++)q.push(p[i]*p[j]*w);
+      for(const v of t){const Qv=Q[v];for(let k=0;k<10;k++)Qv[k]+=q[k];}
+    });
+    const qCost=(Qs,v)=>Qs[0]*v[0]*v[0]+2*Qs[1]*v[0]*v[1]+2*Qs[2]*v[0]*v[2]+2*Qs[3]*v[0]
+                       +Qs[4]*v[1]*v[1]+2*Qs[5]*v[1]*v[2]+2*Qs[6]*v[1]
+                       +Qs[7]*v[2]*v[2]+2*Qs[8]*v[2]+Qs[9];
+    const neigh=v=>{
+      const s=new Set();
+      for(const fi of vFaces[v]){const t=tris[fi];if(t)for(const u of t)if(u!==v)s.add(u);}
+      return s;
+    };
+
+    /* kandidáti na kolaps, seřazení podle chyby */
+    const cands=[];
+    for(const r of edges.values()){
+      if(r.n>2)continue;
+      if(boundary[r.a]&&boundary[r.b])continue;
+      const Qs=new Float64Array(10);
+      for(let k=0;k<10;k++)Qs[k]=Q[r.a][k]+Q[r.b][k];
+      let pos;
+      if(boundary[r.a])pos=verts[r.a].slice();
+      else if(boundary[r.b])pos=verts[r.b].slice();
+      else{
+        pos=solveQ(Qs);
+        const mid=[(verts[r.a][0]+verts[r.b][0])/2,(verts[r.a][1]+verts[r.b][1])/2,(verts[r.a][2]+verts[r.b][2])/2];
+        if(!pos||dist3(pos,mid)>3*dist3(verts[r.a],verts[r.b])+1e-9){
+          pos=[verts[r.a],verts[r.b],mid].map(p=>p.slice())
+              .reduce((x,y)=>qCost(Qs,y)<qCost(Qs,x)?y:x);
+        }
+      }
+      cands.push({a:r.a,b:r.b,pos,cost:qCost(Qs,pos)});
+    }
+    cands.sort((x,y)=>x.cost-y.cost);
+
+    const locked=new Uint8Array(nv);
+    let collapsed=0;
+    for(const c of cands){
+      if(alive<=target)break;
+      if(locked[c.a]||locked[c.b])continue;
+      const na=neigh(c.a),nb=neigh(c.b);
+      /* podmínka manifoldnosti: společní sousedé = protilehlé vrcholy hrany */
+      let common=0;for(const u of na)if(nb.has(u))common++;
+      if(common!==edges.get(EK(c.a,c.b)).n)continue;
+      /* zákaz překlopení normál okolních stěn */
+      let flip=false;
+      for(const v of[c.a,c.b]){
+        for(const fi of vFaces[v]){
+          const t=tris[fi];if(!t)continue;
+          if(t.includes(c.a)&&t.includes(c.b))continue;
+          const p=t.map(u=>(u===c.a||u===c.b)?c.pos:verts[u]);
+          const n0=vcross(vsub(verts[t[1]],verts[t[0]]),vsub(verts[t[2]],verts[t[0]]));
+          const n1=vcross(vsub(p[1],p[0]),vsub(p[2],p[0]));
+          if(vdot(n0,n1)<=1e-12){flip=true;break;}
+        }
+        if(flip)break;
+      }
+      if(flip)continue;
+      /* kolaps b → a */
+      verts[c.a]=c.pos;
+      for(const fi of vFaces[c.b]){
+        const t=tris[fi];if(!t)continue;
+        if(t.includes(c.a)){tris[fi]=null;alive--;}
+        else{
+          for(let k=0;k<3;k++)if(t[k]===c.b)t[k]=c.a;
+          vFaces[c.a].push(fi);
+        }
+      }
+      collapsed++;
+      locked[c.a]=1;locked[c.b]=1;
+      for(const u of na)locked[u]=1;
+      for(const u of nb)locked[u]=1;
+    }
+    if(!collapsed)break;
+  }
+
+  /* zhutnění */
+  const map=new Map(),nverts=[],ntris=[];
+  for(const t of tris){
+    if(!t||t[0]===t[1]||t[1]===t[2]||t[0]===t[2])continue;
+    ntris.push(t.map(v=>{
+      if(!map.has(v)){map.set(v,nverts.length);nverts.push(verts[v]);}
+      return map.get(v);
+    }));
+  }
+  return{verts:nverts,tris:ntris};
+}
+
+/* ---------------- příprava sítě ---------------- */
+function prepMesh(verts,tris,name){
+  const lo=[1/0,1/0,1/0],hi=[-1/0,-1/0,-1/0];
+  for(const v of verts)for(let k=0;k<3;k++){lo[k]=Math.min(lo[k],v[k]);hi[k]=Math.max(hi[k],v[k]);}
+  const size=vsub(hi,lo);
+  return{verts,tris,name,center:[(lo[0]+hi[0])/2,(lo[1]+hi[1])/2,(lo[2]+hi[2])/2],
+         maxDim:Math.max(size[0],size[1],size[2])||1,
+         radius:vlen(size)/2||1};
+}
+
+/* ---------------- rozklad do roviny ---------------- */
+function placeThird(p3,q3,r3,p2,q2,opp2){
+  const L=dist2(p2,q2)||1e-9;
+  const ux=(q2[0]-p2[0])/L,uy=(q2[1]-p2[1])/L;
+  const dpr=dist3(p3,r3),dqr=dist3(q3,r3);
+  const x=(dpr*dpr-dqr*dqr+L*L)/(2*L);
+  const y=Math.sqrt(Math.max(0,dpr*dpr-x*x));
+  const nx=-uy,ny=ux;
+  const c1=[p2[0]+ux*x+nx*y,p2[1]+uy*x+ny*y];
+  if(!opp2)return c1;
+  const c2=[p2[0]+ux*x-nx*y,p2[1]+uy*x-ny*y];
+  const sOpp=cr2(p2,q2,opp2);
+  return (cr2(p2,q2,c1)*sOpp<=0)?c1:c2;
+}
+function segInt(p,q,r,s){
+  const d1=cr2(r,s,p),d2=cr2(r,s,q),d3=cr2(p,q,r),d4=cr2(p,q,s);
+  return((d1>0&&d2<0)||(d1<0&&d2>0))&&((d3>0&&d4<0)||(d3<0&&d4>0));
+}
+function pointInTri(p,t){
+  const a=cr2(t[0],t[1],p),b=cr2(t[1],t[2],p),c=cr2(t[2],t[0],p);
+  return(a>0&&b>0&&c>0)||(a<0&&b<0&&c<0);
+}
+function shrinkTri(t,k){
+  const cx=(t[0][0]+t[1][0]+t[2][0])/3,cy=(t[0][1]+t[1][1]+t[2][1])/3;
+  return t.map(p=>[cx+(p[0]-cx)*k,cy+(p[1]-cy)*k]);
+}
+function triBBox(t){
+  return[Math.min(t[0][0],t[1][0],t[2][0]),Math.min(t[0][1],t[1][1],t[2][1]),
+         Math.max(t[0][0],t[1][0],t[2][0]),Math.max(t[0][1],t[1][1],t[2][1])];
+}
+function trisOverlap(a,b){
+  for(let i=0;i<3;i++)for(let j=0;j<3;j++)
+    if(segInt(a[i],a[(i+1)%3],b[j],b[(j+1)%3]))return true;
+  return pointInTri(a[0],b)||pointInTri(b[0],a);
+}
+function makeHeap(){
+  const a=[];
+  return{
+    push(w,x){
+      a.push([w,x]);let i=a.length-1;
+      while(i>0){const p=(i-1)>>1;if(a[p][0]<=a[i][0])break;[a[p],a[i]]=[a[i],a[p]];i=p;}
+    },
+    pop(){
+      const top=a[0],last=a.pop();
+      if(a.length){
+        a[0]=last;let i=0;
+        for(;;){
+          let l=2*i+1,r=l+1,s=i;
+          if(l<a.length&&a[l][0]<a[s][0])s=l;
+          if(r<a.length&&a[r][0]<a[s][0])s=r;
+          if(s===i)break;[a[i],a[s]]=[a[s],a[i]];i=s;
+        }
+      }
+      return top[1];
+    },
+    get size(){return a.length;}
+  };
+}
+
+function unfoldMesh(mesh,opt){
+  const f=opt.sizeMM/mesh.maxDim;
+  const V=mesh.verts.map(v=>[v[0]*f,v[1]*f,v[2]*f]);
+  const T=mesh.tris;
+
+  const edgeMap=new Map();
+  T.forEach((t,fi)=>{for(let e=0;e<3;e++){
+    const k=EK(t[e],t[(e+1)%3]);
+    if(!edgeMap.has(k))edgeMap.set(k,[]);
+    edgeMap.get(k).push({f:fi,i:t[e],j:t[(e+1)%3]});
+  }});
+
+  const normals=T.map(t=>vnorm(vcross(vsub(V[t[1]],V[t[0]]),vsub(V[t[2]],V[t[0]]))));
+  const cents3=T.map(t=>[(V[t[0]][0]+V[t[1]][0]+V[t[2]][0])/3,(V[t[0]][1]+V[t[1]][1]+V[t[2]][1])/3,(V[t[0]][2]+V[t[1]][2]+V[t[2]][2])/3]);
+
+  /* úhel ohybu každé hrany – řídí pořadí rozbalování */
+  const dihed=new Map();
+  for(const[k,list]of edgeMap)
+    dihed.set(k,list.length===2
+      ?Math.acos(Math.max(-1,Math.min(1,vdot(normals[list[0].f],normals[list[1].f]))))
+      :Math.PI);
+  /* oblý model (medián úhlů < 30°) → díly rostou jako úzké pásy */
+  const pairAngs=[...edgeMap.values()].filter(l=>l.length===2)
+    .map(l=>dihed.get(EK(l[0].i,l[0].j))).sort((a,b)=>a-b);
+  const curved=pairAngs.length>0&&pairAngs[pairAngs.length>>1]<0.52;
+  const capH=curved?55:Infinity;
+
+  const placed=new Array(T.length).fill(null);
+  const islands=[];
+  /* limit velikosti dílu, aby se (i s chlopněmi) vešel na A4 */
+  const limW=190-2*(opt.tabH+3),limH=277-2*(opt.tabH+3);
+
+  for(let seed=0;seed<T.length;seed++){
+    if(placed[seed])continue;
+    const isl={idx:islands.length,faces:[],shrunk:[],bboxes:[],ib:null};
+    /* prioritní růst: nejdřív ploché hrany (pásy se odvinou vcelku),
+       vzdálenost od středu dílu drží díl kompaktní */
+    const heap=makeHeap();
+    heap.push(0,{f:seed,via:null});
+    while(heap.size){
+      const{f:fi,via}=heap.pop();
+      if(placed[fi])continue;
+      const t=T[fi];let pts2;
+      if(!via){
+        const L=dist3(V[t[0]],V[t[1]]);
+        const p2=[0,0],q2=[L,0];
+        pts2=[p2,q2,placeThird(V[t[0]],V[t[1]],V[t[2]],p2,q2,null)];
+      }else{
+        const r=t.find(v=>v!==via.p&&v!==via.q);
+        const r2=placeThird(V[via.p],V[via.q],V[r],via.p2,via.q2,via.opp2);
+        pts2=t.map(v=>v===via.p?via.p2:(v===via.q?via.q2:r2));
+      }
+      const rawBB=triBBox(pts2);
+      if(via){
+        const s=shrinkTri(pts2,0.995),bb=triBBox(s);
+        let hit=false;
+        for(let k=0;k<isl.shrunk.length&&!hit;k++){
+          const ob=isl.bboxes[k];
+          if(bb[0]>ob[2]||bb[2]<ob[0]||bb[1]>ob[3]||bb[3]<ob[1])continue;
+          hit=trisOverlap(s,isl.shrunk[k]);
+        }
+        if(!hit&&isl.ib){
+          const w=Math.max(isl.ib[2],rawBB[2])-Math.min(isl.ib[0],rawBB[0]);
+          const h=Math.max(isl.ib[3],rawBB[3])-Math.min(isl.ib[1],rawBB[1]);
+          /* u oblých modelů smí díl růst do délky, ne do šířky → pásy;
+             přes rovinné hrany (plochy) se limit neuplatní */
+          if(w>limW||h>limH||
+             (Math.min(w,h)>capH&&dihed.get(EK(via.p,via.q))>0.01))hit=true;
+        }
+        if(hit)continue; /* zůstane nerozložený → semínko dalšího dílu */
+      }
+      isl.ib=isl.ib?[Math.min(isl.ib[0],rawBB[0]),Math.min(isl.ib[1],rawBB[1]),
+                     Math.max(isl.ib[2],rawBB[2]),Math.max(isl.ib[3],rawBB[3])]:rawBB.slice();
+      placed[fi]={island:isl.idx,pts2};
+      isl.faces.push(fi);
+      isl.shrunk.push(shrinkTri(pts2,0.995));
+      isl.bboxes.push(triBBox(isl.shrunk[isl.shrunk.length-1]));
+      for(let e=0;e<3;e++){
+        const i=t[e],j=t[(e+1)%3];
+        for(const nb of edgeMap.get(EK(i,j))){
+          if(nb.f===fi||placed[nb.f])continue;
+          const oppIdx=t.findIndex(v=>v!==i&&v!==j);
+          const p2=pts2[e],q2=pts2[(e+1)%3];
+          /* pořadí růstu: nejplošší hrany první, díl se natahuje podél osy x
+             (u oblých tvarů vzniknou pásy) a teprve pak roste do šířky */
+          const mx=(p2[0]+q2[0])/2,my=(p2[1]+q2[1])/2;
+          let w=2*dihed.get(EK(i,j));
+          if(curved&&isl.ib){
+            /* setrvačnost: pokračovat podél delší osy dílu, ne do šířky */
+            const cx=(isl.ib[0]+isl.ib[2])/2,cy=(isl.ib[1]+isl.ib[3])/2;
+            const horiz=(isl.ib[2]-isl.ib[0])>=(isl.ib[3]-isl.ib[1]);
+            const off=horiz?Math.abs(my-cy):Math.abs(mx-cx);
+            const along=horiz?Math.abs(mx-cx):Math.abs(my-cy);
+            w+=off/12+along/150;
+          }else{
+            w+=Math.abs(my)/25+Math.abs(mx)/150;
+          }
+          heap.push(w,{f:nb.f,via:{p:i,q:j,p2,q2,opp2:pts2[oppIdx]}});
+        }
+      }
+    }
+    if(isl.faces.length)islands.push(isl);
+  }
+
+  /* kreslicí primitiva pro každý díl */
+  const draw=islands.map(()=>({cuts:[],folds:[],tabs:[],labels:[],pts:[]}));
+  const pos2=(rec)=>{ /* 2D souřadnice hrany rec v jejím trojúhelníku */
+    const P=placed[rec.f],t=T[rec.f];
+    return[P.pts2[t.indexOf(rec.i)],P.pts2[t.indexOf(rec.j)],P];
+  };
+  const cent2=(fi)=>{
+    const p=placed[fi].pts2;
+    return[(p[0][0]+p[1][0]+p[2][0])/3,(p[0][1]+p[1][1]+p[2][1])/3];
+  };
+  let edgeNum=0;
+  const joins=[]; /* páry střihových hran – podklad pro nápovědu lepení */
+  const EPSW=0.05;
+
+  for(const list of edgeMap.values()){
+    if(list.length===2){
+      const[r1,r2]=list;
+      const[a1,b1]=pos2(r1),[a2,b2]=pos2(r2);
+      const i1=placed[r1.f].island,i2=placed[r2.f].island;
+      /* sousední stěny mají hranu navinutou opačně, porovnat obě pořadí */
+      const sameSpot=i1===i2&&
+        ((dist2(a1,a2)<EPSW&&dist2(b1,b2)<EPSW)||(dist2(a1,b2)<EPSW&&dist2(b1,a2)<EPSW));
+      if(sameSpot){
+        const n1=normals[r1.f],n2=normals[r2.f];
+        if(vdot(n1,n2)>0.99999)continue; /* rovinné – bez čáry */
+        const convex=vdot(n1,vsub(cents3[r2.f],cents3[r1.f]))<0;
+        draw[i1].folds.push({a:a1,b:b1,type:convex?"mnt":"val"});
+        draw[i1].pts.push(a1,b1);
+      }else{
+        edgeNum++;
+        /* chlopeň: zkusit obě strany spoje i poloviční výšku, aby nekolidovala */
+        const tabPoly=(rec,h)=>{
+          const[a,b,P]=pos2(rec);
+          const c=cent2(rec.f);
+          const L=dist2(a,b)||1e-9;
+          const ux=(b[0]-a[0])/L,uy=(b[1]-a[1])/L;
+          let nx=-uy,ny=ux;
+          if((c[0]-a[0])*nx+(c[1]-a[1])*ny>0){nx=-nx;ny=-ny;}
+          const hh=Math.min(h,L*0.45),ins=Math.min(hh,L/3);
+          return{isl:P.island,poly:[a,
+            [a[0]+ux*ins+nx*hh,a[1]+uy*ins+ny*hh],
+            [b[0]-ux*ins+nx*hh,b[1]-uy*ins+ny*hh],b]};
+        };
+        const tabTris=t=>[[t.poly[0],t.poly[1],t.poly[2]],[t.poly[0],t.poly[2],t.poly[3]]];
+        const tabFree=t=>{
+          const isl=islands[t.isl];
+          const occ=isl.shrunk.concat(isl.tabOcc||[]);
+          const occBB=isl.bboxes.concat(isl.tabOccBB||[]);
+          for(const tr of tabTris(t)){
+            const s=shrinkTri(tr,0.97),bb=triBBox(s);
+            for(let k=0;k<occ.length;k++){
+              const ob=occBB[k];
+              if(bb[0]>ob[2]||bb[2]<ob[0]||bb[1]>ob[3]||bb[3]<ob[1])continue;
+              if(trisOverlap(s,occ[k]))return false;
+            }
+          }
+          return true;
+        };
+        let chosen=null;
+        if(opt.tabs){
+          outer:for(const h of[opt.tabH,opt.tabH*0.5]){
+            for(const rec of[r1,r2]){
+              const t=tabPoly(rec,h);
+              if(tabFree(t)){chosen={rec,t};break outer;}
+            }
+          }
+          if(chosen){
+            const isl=islands[chosen.t.isl];
+            isl.tabOcc=isl.tabOcc||[];isl.tabOccBB=isl.tabOccBB||[];
+            for(const tr of tabTris(chosen.t)){
+              const s=shrinkTri(tr,0.97);
+              isl.tabOcc.push(s);isl.tabOccBB.push(triBBox(s));
+            }
+          }
+        }
+        const addSide=(rec,tab,targetIsl)=>{
+          const[a,b,P]=pos2(rec);
+          const isl=P.island,c=cent2(rec.f);
+          if(tab){
+            draw[isl].tabs.push({poly:tab.poly});
+            draw[isl].folds.push({a,b,type:"mnt"});
+            draw[isl].pts.push(...tab.poly);
+          }else{
+            draw[isl].cuts.push({a,b});
+            draw[isl].pts.push(a,b);
+          }
+          if(opt.numbers){
+            const L=dist2(a,b);
+            const fsz=Math.min(2.4,Math.max(1.3,L*0.4));
+            const mx=(a[0]+b[0])/2,my=(a[1]+b[1])/2;
+            const d=Math.hypot(c[0]-mx,c[1]-my)||1;
+            const off=fsz*0.9;
+            const lx=mx+(c[0]-mx)/d*off,ly=my+(c[1]-my)/d*off;
+            const txt=(opt.targets&&targetIsl!=null&&targetIsl!==isl)
+              ?edgeNum+"→"+(targetIsl+1):String(edgeNum);
+            const hw=txt.length*fsz*0.35;
+            draw[isl].labels.push({x:lx,y:ly,text:txt,fs:fsz,join:edgeNum});
+            draw[isl].pts.push([lx-hw,ly-2],[lx+hw,ly+2]);
+          }
+        };
+        joins.push({num:edgeNum,vi:r1.i,vj:r1.j,
+          sides:[{isl:i1,a:a1,b:b1},{isl:i2,a:a2,b:b2}]});
+        addSide(r1,chosen&&chosen.rec===r1?chosen.t:null,i2);
+        addSide(r2,chosen&&chosen.rec===r2?chosen.t:null,i1);
+      }
+    }else{
+      /* okraj (1 stěna) nebo ne-manifold – jen střih */
+      for(const rec of list){
+        const[a,b,P]=pos2(rec);
+        draw[P.island].cuts.push({a,b});
+        draw[P.island].pts.push(a,b);
+      }
+    }
+  }
+
+  /* meze dílů */
+  islands.forEach((isl,i)=>{
+    let x0=1/0,y0=1/0,x1=-1/0,y1=-1/0;
+    for(const p of draw[i].pts){x0=Math.min(x0,p[0]);y0=Math.min(y0,p[1]);x1=Math.max(x1,p[0]);y1=Math.max(y1,p[1]);}
+    isl.draw=draw[i];
+    isl.bounds={x0,y0,w:x1-x0,h:y1-y0};
+  });
+
+  return{islands,placed,joins,stats:{tris:T.length,islands:islands.length,cutEdges:edgeNum},name:mesh.name,sizeMM:opt.sizeMM};
+}
+
+/* ---------------- postup slepování ---------------- */
+function buildGuide(unf){
+  const n=unf.islands.length;
+  const intra=Array.from({length:n},()=>[]);
+  const between=new Map();
+  for(const j of unf.joins){
+    const A=j.sides[0].isl,B=j.sides[1].isl;
+    if(A===B)intra[A].push(j.num);
+    else{
+      const k=Math.min(A,B)+"_"+Math.max(A,B);
+      if(!between.has(k))between.set(k,{a:Math.min(A,B),b:Math.max(A,B),nums:[]});
+      between.get(k).nums.push(j.num);
+    }
+  }
+  const adj=Array.from({length:n},()=>[]);
+  for(const r of between.values()){
+    adj[r.a].push({to:r.b,nums:r.nums});
+    adj[r.b].push({to:r.a,nums:r.nums});
+  }
+  const done=new Uint8Array(n),steps=[];
+  let remaining=n;
+  while(remaining>0){
+    /* začít největším dosud nezpracovaným dílem */
+    let seed=-1;
+    for(let i=0;i<n;i++)
+      if(!done[i]&&(seed<0||unf.islands[i].faces.length>unf.islands[seed].faces.length))seed=i;
+    done[seed]=1;remaining--;
+    steps.push({isl:seed,attach:null,nums:[],intra:intra[seed].sort((a,b)=>a-b)});
+    /* pak vždy díl s nejvíce spoji k už slepené části */
+    for(;;){
+      let best=-1,bestNums=null,bestFrom=-1;
+      for(let i=0;i<n;i++){
+        if(done[i])continue;
+        let nums=[],from=-1;
+        for(const e of adj[i])if(done[e.to]){nums=nums.concat(e.nums);if(from<0)from=e.to;}
+        if(nums.length&&(best<0||nums.length>bestNums.length)){best=i;bestNums=nums;bestFrom=from;}
+      }
+      if(best<0)break;
+      done[best]=1;remaining--;
+      steps.push({isl:best,attach:bestFrom,nums:bestNums.sort((a,b)=>a-b),intra:intra[best].sort((a,b)=>a-b)});
+    }
+  }
+  return steps;
+}
+
+/* ---------------- rozmístění na stránky A4 ---------------- */
+function layoutPages(unf){
+  const M=10,PW=210,PH=297,availW=PW-2*M,availH=PH-2*M,pad=4;
+  const items=unf.islands.slice().sort((a,b)=>b.bounds.h-a.bounds.h);
+  const pages=[];let page,x,y,shelfH;
+  const newPage=()=>{page={placed:[]};pages.push(page);x=M;y=M;shelfH=0;};
+  newPage();
+  const oversized=[];
+  for(const isl of items){
+    const w=isl.bounds.w+pad,h=isl.bounds.h+pad;
+    if(isl.bounds.w>availW||isl.bounds.h>availH)oversized.push(isl.idx);
+    if(x+w>M+availW&&x>M){x=M;y+=shelfH;shelfH=0;}
+    if(y+h>M+availH&&page.placed.length)newPage();
+    page.placed.push({isl,tx:x-isl.bounds.x0,ty:y-isl.bounds.y0});
+    x+=w;shelfH=Math.max(shelfH,h);
+  }
+  pages.oversized=oversized;
+  return pages;
+}
+
+/* ---------------- SVG stránky ---------------- */
+const F2=n=>(+n.toFixed(3));
+function pageSVG(unf,page,idx,total){
+  let s='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 210 297">';
+  s+='<rect x="0" y="0" width="210" height="297" fill="#fff"/>';
+  for(const pl of page.placed){
+    const d=pl.isl.draw;
+    s+=`<g transform="translate(${F2(pl.tx)},${F2(pl.ty)})">`;
+    for(const tb of d.tabs)
+      s+=`<path d="M${tb.poly.map(p=>F2(p[0])+" "+F2(p[1])).join("L")}" fill="#f4f4f4" stroke="#000" stroke-width="0.25" stroke-linejoin="round"/>`;
+    for(const c of d.cuts)
+      s+=`<line x1="${F2(c.a[0])}" y1="${F2(c.a[1])}" x2="${F2(c.b[0])}" y2="${F2(c.b[1])}" stroke="#000" stroke-width="0.25"/>`;
+    for(const fo of d.folds){
+      const st=fo.type==="mnt"?'stroke="#c0392b" stroke-dasharray="3 1.2 0.4 1.2"':'stroke="#2e6bc4" stroke-dasharray="2 1.4"';
+      s+=`<line x1="${F2(fo.a[0])}" y1="${F2(fo.a[1])}" x2="${F2(fo.b[0])}" y2="${F2(fo.b[1])}" ${st} stroke-width="0.22"/>`;
+    }
+    for(const lb of d.labels){
+      s+=`<text x="${F2(lb.x)}" y="${F2(lb.y)}" font-size="${lb.fs||2.4}" text-anchor="middle" dominant-baseline="middle" fill="#777" font-family="sans-serif" data-join="${lb.join}">${lb.text}</text>`;
+      s+=`<circle cx="${F2(lb.x)}" cy="${F2(lb.y)}" r="3" fill="transparent" pointer-events="all" class="jhit" data-join="${lb.join}"/>`;
+    }
+    s+=`<text x="${F2(pl.isl.bounds.x0)}" y="${F2(pl.isl.bounds.y0-1)}" font-size="3" fill="${islColor(pl.isl.idx)}" font-family="sans-serif">díl ${pl.isl.idx+1}</text>`;
+    s+="</g>";
+  }
+  s+=`<text x="105" y="293" font-size="3" text-anchor="middle" fill="#999" font-family="sans-serif">${unf.name||"model"} · ${unf.sizeMM} mm · strana ${idx+1}/${total}</text>`;
+  s+="</svg>";
+  return s;
+}
+function islColor(i){return`hsl(${(i*67)%360},60%,45%)`;}
+
+/* ================= UI (jen v prohlížeči) ================= */
+if(HAS_DOM){
+  let origRaw=SAMPLES.krychle();origRaw.name="krychle";
+  let origMaxDim=prepMesh(origRaw.verts,origRaw.tris,"").maxDim;
+  let simpCache={src:null,ratio:1,mesh:null};
+  let mesh=null,unf=null,pages=null,svgPages=[];
+  let rotX=-0.45,rotY=0.7,zoom=1;
+  let activeJoin=null,islandPage={};
+
+  const $=id=>document.getElementById(id);
+  const canvas=$("c3d"),ctx=canvas.getContext("2d");
+
+  function getOpts(){
+    return{sizeMM:Math.max(1,+$("sizeMM").value||80),
+           tabH:Math.max(1,+$("tabH").value||7),
+           tabs:$("tabs").checked,numbers:$("numbers").checked,
+           targets:$("targets").checked};
+  }
+
+  function rebuildMesh(){
+    const r=Math.min(100,Math.max(5,+$("simplify").value||100))/100;
+    if(simpCache.src!==origRaw||simpCache.ratio!==r){
+      const vt=r>=1?origRaw:simplifyMesh(origRaw.verts,origRaw.tris,r);
+      simpCache={src:origRaw,ratio:r,mesh:prepMesh(vt.verts,vt.tris,origRaw.name)};
+    }
+    mesh=simpCache.mesh;
+  }
+
+  let pctBase=80; /* 100 % = velikost modelu při načtení */
+
+  function syncPct(){
+    $("sizePct").value=Math.round((+$("sizeMM").value||0)/pctBase*100);
+  }
+
+  function setModel(raw,name,autoSize){
+    raw.name=name;origRaw=raw;
+    origMaxDim=prepMesh(raw.verts,raw.tris,"").maxDim;
+    if(autoSize){
+      /* soubory bývají v mm → 100 % = skutečná velikost, jinak rozumný default */
+      const mm=(origMaxDim>=10&&origMaxDim<=500)?Math.round(origMaxDim):100;
+      $("sizeMM").value=mm;
+    }
+    pctBase=+$("sizeMM").value||80;
+    syncPct();
+    refresh();
+  }
+
+  function refresh(){
+    rebuildMesh();
+    if(!mesh)return;
+    if(mesh.tris.length>30000){
+      $("warn").textContent="⚠ přes 30 000 trojúhelníků – posuň Zjednodušení doleva.";
+      $("stats").textContent=`${mesh.name} · ${mesh.tris.length} / ${origRaw.tris.length} trojúhelníků`;
+      $("pattern").innerHTML="";unf=null;draw3d();
+      return;
+    }
+    unf=unfoldMesh(mesh,getOpts());
+    pages=layoutPages(unf);
+    svgPages=pages.map((p,i)=>pageSVG(unf,p,i,pages.length));
+    activeJoin=null;$("jinfo").textContent="";
+    islandPage={};
+    pages.forEach((p,pi)=>p.placed.forEach(pl=>{islandPage[pl.isl.idx]={page:pi,tx:pl.tx,ty:pl.ty};}));
+    renderPattern();
+    const triTxt=mesh.tris.length===origRaw.tris.length
+      ?`${unf.stats.tris} trojúhelníků`
+      :`${unf.stats.tris} / ${origRaw.tris.length} trojúhelníků`;
+    $("stats").textContent=`${mesh.name} · ${triTxt} · ${unf.stats.islands} dílů · ${unf.stats.cutEdges} spojů · ${pages.length} stran`;
+    $("warn").textContent=pages.oversized.length?`⚠ díl ${pages.oversized.map(i=>i+1).join(", ")} se nevejde na A4 – zmenši velikost modelu`:"";
+    draw3d();
+  }
+
+  function renderGuide(){
+    const steps=buildGuide(unf);
+    const el=document.createElement("div");el.id="guide";
+    const jr=n=>`<span class="jref" data-join="${n}">${n}</span>`;
+    const pg=i=>islandPage[i]?` (str. ${islandPage[i].page+1})`:"";
+    let h=`<h3>Návod na slepení · ${unf.stats.islands} dílů</h3>
+    <details><summary>obecné tipy</summary><ul class="tips">
+      <li>Tiskni na tvrdší papír (160–200 g/m²), 100% měřítko bez přizpůsobení stránce.</li>
+      <li>Před vystřižením prorýhuj všechny ohybové čáry podle pravítka: <span style="color:#c0392b">─ · ─ hora</span> (ohyb od potisku), <span style="color:#2e6bc4">- - - údolí</span> (ohyb k potisku).</li>
+      <li>Stejná čísla patří k sobě; „12→3“ znamená, že spoj 12 se lepí na díl 3.</li>
+      <li>Kliknutím na číslo spoje (tady i ve výkresu) se zvýrazní obě jeho poloviny a spoj na 3D náhledu.</li>
+      <li>Lepidlo nanášej na chlopeň tence a slabě; drž, dokud nechytne. Poslední spoje dílu zavírej trpělivě.</li>
+    </ul></details><ol>`;
+    steps.forEach(st=>{
+      if(st.attach===null)
+        h+=`<li><b>Díl ${st.isl+1}</b>${pg(st.isl)}: vystřihni, prorýhuj a ohni${st.intra.length?`, slep vnitřní spoje ${st.intra.map(jr).join(", ")}`:""}.</li>`;
+      else
+        h+=`<li><b>Díl ${st.isl+1}</b>${pg(st.isl)}: přilep k dílu ${st.attach+1} spoji ${st.nums.map(jr).join(", ")}${st.intra.length?`; vnitřní spoje ${st.intra.map(jr).join(", ")}`:""}.</li>`;
+    });
+    h+="</ol>";
+    el.innerHTML=h;
+    return el;
+  }
+
+  function clearHl(){
+    document.querySelectorAll(".join-hl").forEach(el=>el.remove());
+    document.querySelectorAll(".join-active").forEach(el=>el.classList.remove("join-active"));
+  }
+
+  function highlightJoin(num,clickedPage){
+    clearHl();activeJoin=null;$("jinfo").textContent="";
+    const j=unf&&unf.joins.find(x=>x.num===num);
+    if(!j){draw3d();return;}
+    activeJoin=j;
+    const svgs=$("pattern").querySelectorAll(".page svg");
+    let scrollEl=null;
+    for(const s of j.sides){
+      const loc=islandPage[s.isl];
+      if(!loc||!svgs[loc.page])continue;
+      const ln=document.createElementNS("http://www.w3.org/2000/svg","line");
+      ln.setAttribute("x1",loc.tx+s.a[0]);ln.setAttribute("y1",loc.ty+s.a[1]);
+      ln.setAttribute("x2",loc.tx+s.b[0]);ln.setAttribute("y2",loc.ty+s.b[1]);
+      ln.setAttribute("class","join-hl");
+      svgs[loc.page].appendChild(ln);
+      if(loc.page!==clickedPage)scrollEl=svgs[loc.page];
+    }
+    document.querySelectorAll(`[data-join="${num}"]`).forEach(el=>el.classList.add("join-active"));
+    const[A,B]=j.sides.map(s=>s.isl);
+    const pgTxt=i=>islandPage[i]?` (str. ${islandPage[i].page+1})`:"";
+    $("jinfo").textContent=`Spoj ${num}: díl ${A+1}${pgTxt(A)} ↔ díl ${B+1}${pgTxt(B)}`;
+    if(scrollEl)scrollEl.closest(".page-wrap").scrollIntoView({behavior:"smooth",block:"center"});
+    draw3d();
+  }
+
+  function renderPattern(){
+    const cont=$("pattern");cont.innerHTML="";
+    cont.appendChild(renderGuide());
+    svgPages.forEach((svg,i)=>{
+      const wrap=document.createElement("div");wrap.className="page-wrap";
+      const head=document.createElement("div");head.className="page-head";
+      head.innerHTML=`<span>Strana ${i+1} / ${svgPages.length}</span>`;
+      const btn=document.createElement("button");btn.textContent="Stáhnout SVG";
+      btn.onclick=()=>{
+        const blob=new Blob([svg],{type:"image/svg+xml"});
+        const a=document.createElement("a");
+        a.href=URL.createObjectURL(blob);
+        a.download=`${(mesh.name||"model").replace(/\W+/g,"_")}_strana${i+1}.svg`;
+        a.click();setTimeout(()=>URL.revokeObjectURL(a.href),5000);
+      };
+      head.appendChild(btn);
+      const pg=document.createElement("div");pg.className="page";pg.innerHTML=svg;
+      wrap.appendChild(head);wrap.appendChild(pg);cont.appendChild(wrap);
+    });
+  }
+
+  /* ---------- 3D náhled ---------- */
+  function draw3d(){
+    const dpr=window.devicePixelRatio||1;
+    const w=canvas.clientWidth,h=canvas.clientHeight;
+    if(!w||!h)return;
+    if(canvas.width!==w*dpr||canvas.height!==h*dpr){canvas.width=w*dpr;canvas.height=h*dpr;}
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    ctx.fillStyle="#1a1d22";ctx.fillRect(0,0,w,h);
+    if(!mesh)return;
+    const cy=Math.cos(rotY),sy=Math.sin(rotY),cx=Math.cos(rotX),sx=Math.sin(rotX);
+    const R=mesh.radius,C=mesh.center;
+    const scale=Math.min(w,h)*0.42/R*zoom;
+    const tv=mesh.verts.map(v=>{
+      const x=v[0]-C[0],y=v[1]-C[1],z=v[2]-C[2];
+      const x1=x*cy+z*sy,z1=-x*sy+z*cy;
+      const y1=y*cx-z1*sx,z2=y*sx+z1*cx;
+      const f=1/(1+z2/(4*R));
+      return[w/2+x1*f*scale,h/2-y1*f*scale,z2];
+    });
+    const L=vnorm([0.4,0.6,-0.7]);
+    const order=mesh.tris.map((t,i)=>({i,z:(tv[t[0]][2]+tv[t[1]][2]+tv[t[2]][2])/3}))
+                         .sort((a,b)=>b.z-a.z);
+    for(const{i}of order){
+      const t=mesh.tris[i];
+      const a3=vsub(mesh.verts[t[1]],mesh.verts[t[0]]),b3=vsub(mesh.verts[t[2]],mesh.verts[t[0]]);
+      let n=vnorm(vcross(a3,b3));
+      const nT=[n[0]*cy+n[2]*sy,0,0];
+      const nz1=-n[0]*sy+n[2]*cy;
+      nT[1]=n[1]*cx-nz1*sx;nT[2]=n[1]*sx+nz1*cx;
+      const lam=0.35+0.65*Math.abs(vdot(nT,L));
+      let hue=210,sat=15;
+      if(unf&&unf.placed[i]){hue=(unf.placed[i].island*67)%360;sat=55;}
+      ctx.fillStyle=`hsl(${hue},${sat}%,${Math.round(lam*62)}%)`;
+      ctx.strokeStyle="rgba(0,0,0,0.35)";ctx.lineWidth=0.6;
+      ctx.beginPath();
+      ctx.moveTo(tv[t[0]][0],tv[t[0]][1]);
+      ctx.lineTo(tv[t[1]][0],tv[t[1]][1]);
+      ctx.lineTo(tv[t[2]][0],tv[t[2]][1]);
+      ctx.closePath();ctx.fill();ctx.stroke();
+    }
+    if(activeJoin){
+      const A=tv[activeJoin.vi],B=tv[activeJoin.vj];
+      if(A&&B){
+        ctx.strokeStyle="#ff8c00";ctx.lineWidth=3.5;ctx.lineCap="round";
+        ctx.beginPath();ctx.moveTo(A[0],A[1]);ctx.lineTo(B[0],B[1]);ctx.stroke();
+      }
+    }
+  }
+
+  let dragging=false,lx=0,ly=0;
+  canvas.addEventListener("pointerdown",e=>{dragging=true;lx=e.clientX;ly=e.clientY;canvas.setPointerCapture(e.pointerId);});
+  canvas.addEventListener("pointermove",e=>{
+    if(!dragging)return;
+    rotY-=(e.clientX-lx)*0.01;rotX-=(e.clientY-ly)*0.01;
+    rotX=Math.max(-1.55,Math.min(1.55,rotX));
+    lx=e.clientX;ly=e.clientY;draw3d();
+  });
+  canvas.addEventListener("pointerup",()=>dragging=false);
+  canvas.addEventListener("wheel",e=>{e.preventDefault();zoom*=e.deltaY<0?1.1:0.9;zoom=Math.max(0.2,Math.min(6,zoom));draw3d();},{passive:false});
+  window.addEventListener("resize",draw3d);
+
+  /* ---------- načítání souborů ---------- */
+  function loadFile(file){
+    const rd=new FileReader();
+    const isObj=/\.obj$/i.test(file.name);
+    rd.onload=()=>{
+      try{
+        const r=isObj?parseOBJ(rd.result):parseSTL(rd.result);
+        if(!r.tris.length)throw new Error("v souboru nejsou žádné stěny");
+        if(r.tris.length>300000)throw new Error("přes 300 000 trojúhelníků, to je příliš");
+        setModel(r,file.name.replace(/\.[^.]+$/,""),true);
+      }catch(err){alert("Soubor se nepodařilo načíst: "+err.message);}
+    };
+    if(isObj)rd.readAsText(file);else rd.readAsArrayBuffer(file);
+  }
+  $("btnFile").onclick=()=>$("file").click();
+  $("file").onchange=e=>{if(e.target.files[0])loadFile(e.target.files[0]);e.target.value="";};
+  document.addEventListener("dragover",e=>e.preventDefault());
+  document.addEventListener("drop",e=>{e.preventDefault();if(e.dataTransfer.files[0])loadFile(e.dataTransfer.files[0]);});
+
+  $("sample").onchange=e=>setModel(SAMPLES[e.target.value](),e.target.options[e.target.selectedIndex].text,false);
+  ["tabH","tabs","numbers","targets"].forEach(id=>$(id).addEventListener("change",refresh));
+  $("pattern").addEventListener("click",e=>{
+    const t=e.target.closest("[data-join]");
+    if(t){
+      const wraps=[...$("pattern").querySelectorAll(".page-wrap")];
+      const pw=e.target.closest(".page-wrap");
+      highlightJoin(+t.getAttribute("data-join"),pw?wraps.indexOf(pw):-1);
+    }else{
+      clearHl();activeJoin=null;$("jinfo").textContent="";draw3d();
+    }
+  });
+  $("sizeMM").addEventListener("change",()=>{syncPct();refresh();});
+  $("sizePct").addEventListener("change",()=>{
+    const pct=Math.max(1,+$("sizePct").value||100);
+    $("sizeMM").value=Math.round(pctBase*pct/100*10)/10;
+    refresh();
+  });
+  $("simplify").addEventListener("input",()=>{$("simplifyVal").textContent=$("simplify").value+" %";});
+  $("simplify").addEventListener("change",refresh);
+  $("btnPrint").onclick=()=>window.print();
+
+  syncPct();
+  refresh();
+}
+/* export pro testy v node */
+if(typeof module!=="undefined")module.exports={SAMPLES,prepMesh,unfoldMesh,layoutPages,pageSVG,parseOBJ,parseSTL,simplifyMesh,buildGuide};
+</script>
+</body>
+</html>

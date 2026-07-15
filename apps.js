@@ -968,6 +968,20 @@ const KATALOG_SEKCE = [
         "nazev": "🕸 Voronoi z STL"
       },
       {
+        "soubor": "obsah/papercraft.html",
+        "nazev": "📦 Papírové modely",
+        "tagy": [
+          "pepakura",
+          "papercraft",
+          "stl",
+          "obj",
+          "3d",
+          "střih",
+          "rozklad",
+          "lepení"
+        ]
+      },
+      {
         "soubor": "obsah/gridGen.html",
         "nazev": "📏 Mřížka A4"
       },
