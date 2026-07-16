@@ -85,6 +85,24 @@ body { font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background
 }
 .credit a { color: var(--muted); pointer-events: auto; }
 
+/* Načítání: celoplošný loader při startu, malá pilulka při přepnutí tělesa */
+.loader {
+  position: fixed; inset: 0; z-index: 20; display: flex; align-items: center; justify-content: center;
+  flex-direction: column; gap: 14px; background: var(--bg-dark); transition: opacity .5s;
+}
+.loader.skryt { opacity: 0; pointer-events: none; }
+.spinner { width: 42px; height: 42px; border: 3px solid rgba(255,255,255,0.15); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.9s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+.loader span { font-size: 0.85rem; color: var(--muted); }
+.miniloader {
+  position: fixed; top: 72px; left: 50%; transform: translateX(-50%); z-index: 15;
+  display: none; align-items: center; gap: 9px;
+  background: var(--panel); border: 1px solid var(--border); border-radius: 20px;
+  padding: 7px 15px; font-size: 0.78rem; color: var(--muted); backdrop-filter: blur(8px);
+}
+.miniloader.zobraz { display: flex; }
+.miniloader .spinner { width: 15px; height: 15px; border-width: 2px; }
+
 @media (max-width: 640px) {
   .info { width: calc(100% - 40px); top: auto; bottom: 96px; max-height: 45vh; }
   .bodies { bottom: 40px; }
@@ -117,46 +135,54 @@ body { font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background
 
 <div class="credit">Textury: <a href="https://www.solarsystemscope.com/textures/" target="_blank" rel="noopener">Solar System Scope</a> (CC BY 4.0) · 🖱️ tažením otáčej, kolečkem přibližuj</div>
 
+<div class="miniloader" id="miniloader"><div class="spinner"></div><span>Načítám texturu…</span></div>
+<div class="loader" id="loader">
+  <div class="spinner"></div>
+  <span>Načítám glóbus…</span>
+</div>
+
 <script>
 /* ================= NAUČNÁ DATA (shodná se Sluneční soustavou) ================= */
+/* „sklon" = skutečný sklon rotační osy tělesa ve stupních (Venuše 177° = otáčí se pozpátku,
+   Uran 98° = leží „na boku"). Planeta i případné prstence se naklánějí společně. */
 const TELESA = {
- slunce: {nazev:'Slunce',lat:'Sol',emoji:'☀️',tex:'textures/2k_sun.jpg',atm:'#ffb340',atmAlt:0.3,barva:'#ffd54f',typ:'Hvězda — žlutý trpaslík (třída G2V)',
+ slunce: {nazev:'Slunce',lat:'Sol',emoji:'☀️',tex:'textures/2k_sun.jpg',sklon:7.3,atm:'#ffb340',atmAlt:0.3,barva:'#ffd54f',typ:'Hvězda — žlutý trpaslík (třída G2V)',
   data:{'Průměr':'1 392 700 km (109× Země)','Hmotnost':'333 000× Země','Povrchová teplota':'≈ 5 500 °C','Teplota jádra':'≈ 15 000 000 °C','Stáří':'≈ 4,6 miliardy let','Složení':'73 % vodík, 25 % helium'},
   popis:'Slunce je obyčejná hvězda, jakých jsou v naší Galaxii stovky miliard — pro nás je ale zdrojem prakticky veškeré energie. V jádře probíhá termojaderná fúze: vodík se slučuje na helium a uvolněná energie putuje k povrchu statisíce let, než se vyzáří do prostoru jako světlo a teplo.',
   fakta:['Obsahuje 99,86 % veškeré hmotnosti sluneční soustavy.','Každou sekundu přemění asi 4 miliony tun hmoty na čistou energii.','Světlo ze Slunce letí k Zemi 8 minut a 19 sekund.','Za dalších zhruba 5 miliard let se nafoukne v červeného obra a pohltí Merkur i Venuši.']},
- merkur: {nazev:'Merkur',lat:'Mercurius',emoji:'🪨',tex:'textures/2k_mercury.jpg',atm:null,barva:'#9c9c9c',typ:'Kamenná planeta',
+ merkur: {nazev:'Merkur',lat:'Mercurius',emoji:'🪨',tex:'textures/2k_mercury.jpg',sklon:0,atm:null,barva:'#9c9c9c',typ:'Kamenná planeta',
   data:{'Průměr':'4 879 km','Vzdálenost od Slunce':'57,9 mil. km (0,39 AU)','Oběh kolem Slunce':'88 dní','Délka dne':'59 pozemských dní','Gravitace':'0,38× Země','Prům. teplota':'+167 °C (den +430, noc −180)','Atmosféra':'prakticky žádná','Měsíce':'0'},
   popis:'Nejmenší a Slunci nejbližší planeta. Povrch posetý krátery připomíná Měsíc — bez atmosféry ho nic nechrání před dopady ani nevyrovnává teplotu. Přestože je Slunci nejblíž, není nejteplejší planetou: bez atmosféry teplo v noci okamžitě uniká.',
   fakta:['Rozdíl teplot mezi dnem a nocí (přes 600 °C) je největší v celé soustavě.','Rok na Merkuru (88 dní) je kratší než jeho den — od východu do východu Slunce tam uplyne 176 pozemských dní.','V trvale zastíněných kráterech u pólů se skrývá vodní led.']},
- venuse: {nazev:'Venuše',lat:'Venus',emoji:'🌕',tex:'textures/2k_venus_atmosphere.jpg',atm:'#e6c87a',atmAlt:0.18,barva:'#e6c87a',typ:'Kamenná planeta',
+ venuse: {nazev:'Venuše',lat:'Venus',emoji:'🌕',tex:'textures/2k_venus_atmosphere.jpg',sklon:177,atm:'#e6c87a',atmAlt:0.18,barva:'#e6c87a',typ:'Kamenná planeta',
   data:{'Průměr':'12 104 km','Vzdálenost od Slunce':'108,2 mil. km (0,72 AU)','Oběh kolem Slunce':'225 dní','Délka dne':'243 pozemských dní','Gravitace':'0,90× Země','Prům. teplota':'+465 °C','Atmosféra':'96 % CO₂, hustá, mraky z kyseliny sírové','Měsíce':'0'},
   popis:'Velikostí je Venuše téměř dvojče Země, podmínkami je to ale peklo: extrémní skleníkový efekt husté atmosféry z oxidu uhličitého ji rozpálil na teplotu, při které taje olovo, a tlak na povrchu odpovídá kilometrovému ponoru do oceánu. Na glóbusu vidíš vrchní vrstvu mraků — povrch není okem vidět nikdy.',
   fakta:['Nejžhavější planeta soustavy — teplejší než Merkur, přestože je od Slunce dál.','Otáčí se opačným směrem než ostatní planety: Slunce tam vychází na západě.','Den (243 dní) je delší než rok (225 dní).','Po Měsíci je nejjasnějším objektem noční oblohy — proto se jí říká Večernice či Jitřenka.']},
- zeme: {nazev:'Země',lat:'Terra',emoji:'🌍',tex:'textures/8k_earth_daymap.jpg',atm:'#6aa6fd',atmAlt:0.18,barva:'#4a90d9',typ:'Kamenná planeta',
+ zeme: {nazev:'Země',lat:'Terra',emoji:'🌍',tex:'textures/8k_earth_daymap.jpg',sklon:23.4,atm:'#6aa6fd',atmAlt:0.18,barva:'#4a90d9',typ:'Kamenná planeta',
   data:{'Průměr':'12 756 km','Vzdálenost od Slunce':'149,6 mil. km (1 AU)','Oběh kolem Slunce':'365,25 dne','Délka dne':'24 hodin','Gravitace':'1 g (9,81 m/s²)','Prům. teplota':'+15 °C','Atmosféra':'78 % dusík, 21 % kyslík','Měsíce':'1 (Měsíc)'},
   popis:'Náš domov — jediné známé místo ve vesmíru, kde existuje život. Za obyvatelnost vděčí kombinaci šťastných okolností: správné vzdálenosti od Slunce (kapalná voda), atmosféře s kyslíkem, magnetickému poli, které odklání sluneční vítr, a velkému Měsíci, jenž stabilizuje sklon zemské osy.',
   fakta:['71 % povrchu pokrývá voda — z vesmíru je Země „modrá planeta".','Vzdálenost Země–Slunce (149,6 mil. km) slouží jako základní jednotka: 1 astronomická jednotka (AU).','Zemská osa je skloněná o 23,5° — proto se střídají roční období.','Je to nejhustší planeta sluneční soustavy.']},
- mesic: {nazev:'Měsíc',lat:'Luna',emoji:'🌗',tex:'textures/8k_moon.jpg',atm:null,barva:'#c9c5b8',typ:'Přirozená družice Země',
+ mesic: {nazev:'Měsíc',lat:'Luna',emoji:'🌗',tex:'textures/8k_moon.jpg',sklon:6.7,atm:null,barva:'#c9c5b8',typ:'Přirozená družice Země',
   data:{'Průměr':'3 474 km (0,27× Země)','Vzdálenost od Země':'384 400 km','Oběh kolem Země':'27,3 dne','Den (od úplňku k úplňku)':'29,5 dne','Gravitace':'0,17× Země','Teplota':'den +120 °C, noc −170 °C','Atmosféra':'prakticky žádná','Stáří':'≈ 4,5 miliardy let'},
   popis:'Jediné mimozemské těleso, na kterém stanul člověk. Vznikl nejspíš ze srážky mladé Země s tělesem velikosti Marsu — vyvržený materiál se spojil v Měsíc. Tmavé skvrny („moře") jsou ztuhlé lávové pláně, světlé oblasti jsou starší pohoří pokrytá krátery.',
   fakta:['K Zemi je natočen stále stejnou stranou — odvrácenou stranu poprvé vyfotila sonda Luna 3 (1959).','Způsobuje příliv a odliv a stabilizuje sklon zemské osy.','Každý rok se od Země vzdálí asi o 3,8 cm.','V letech 1969–1972 po něm chodilo 12 astronautů programu Apollo.']},
- mars: {nazev:'Mars',lat:'Mars',emoji:'🔴',tex:'textures/8k_mars.jpg',atm:'#d1603d',atmAlt:0.08,barva:'#d1603d',typ:'Kamenná planeta',
+ mars: {nazev:'Mars',lat:'Mars',emoji:'🔴',tex:'textures/8k_mars.jpg',sklon:25.2,atm:'#d1603d',atmAlt:0.08,barva:'#d1603d',typ:'Kamenná planeta',
   data:{'Průměr':'6 792 km','Vzdálenost od Slunce':'227,9 mil. km (1,52 AU)','Oběh kolem Slunce':'687 dní','Délka dne':'24,6 hodiny','Gravitace':'0,38× Země','Prům. teplota':'−63 °C','Atmosféra':'95 % CO₂, velmi řídká','Měsíce':'2 (Phobos, Deimos)'},
   popis:'Rudá planeta je nejprozkoumanějším tělesem po Zemi — brázdí ji vozítka a krouží kolem ní flotila sond. Kdysi po jejím povrchu tekla voda: dodnes jsou vidět vyschlá říční koryta a jezerní pánve. Dnes je Mars studená poušť, ale led se skrývá pod povrchem i v polárních čepičkách.',
   fakta:['Rudou barvu způsobuje oxid železitý — planeta je doslova rezavá.','Olympus Mons je nejvyšší sopka soustavy: 22 km, dvaapůlkrát vyšší než Everest.','Kaňon Valles Marineris by se táhl přes celé USA.','Marsovský den (24,6 h) je téměř stejně dlouhý jako pozemský.']},
- jupiter: {nazev:'Jupiter',lat:'Iuppiter',emoji:'🟠',tex:'textures/2k_jupiter.jpg',atm:'#d8b48a',atmAlt:0.15,barva:'#d8b48a',typ:'Plynný obr',
+ jupiter: {nazev:'Jupiter',lat:'Iuppiter',emoji:'🟠',tex:'textures/2k_jupiter.jpg',sklon:3.1,atm:'#d8b48a',atmAlt:0.15,barva:'#d8b48a',typ:'Plynný obr',
   data:{'Průměr':'142 984 km','Vzdálenost od Slunce':'778,5 mil. km (5,2 AU)','Oběh kolem Slunce':'11,9 let','Délka dne':'9,9 hodiny','Gravitace':'2,53× Země','Prům. teplota':'−110 °C','Atmosféra':'90 % vodík, 10 % helium','Měsíce':'95'},
   popis:'Král planet — je hmotnější než všechny ostatní planety dohromady. Nemá pevný povrch: pásy mraků přecházejí do stále hustšího vodíku, který je v hloubce stlačen do exotického kovového stavu. Jupiterova obrovská gravitace funguje jako „vysavač" soustavy a chrání vnitřní planety před částí komet a asteroidů.',
   fakta:['Vešlo by se do něj přes 1 300 Zemí.','Velká rudá skvrna je bouře větší než celá Země, která zuří už nejméně 350 let.','Měsíc Europa skrývá pod ledovou kůrou oceán tekuté vody — horký kandidát na mimozemský život.','Otočí se kolem osy za pouhých 10 hodin — nejrychleji ze všech planet.']},
- saturn: {nazev:'Saturn',lat:'Saturnus',emoji:'🪐',tex:'textures/2k_saturn.jpg',atm:'#e3cf9a',atmAlt:0.15,barva:'#e3cf9a',typ:'Plynný obr',prstence:true,
+ saturn: {nazev:'Saturn',lat:'Saturnus',emoji:'🪐',tex:'textures/2k_saturn.jpg',sklon:26.7,alt:4.2,atm:'#e3cf9a',atmAlt:0.15,barva:'#e3cf9a',typ:'Plynný obr',prstence:true,
   data:{'Průměr':'120 536 km','Vzdálenost od Slunce':'1 433,5 mil. km (9,6 AU)','Oběh kolem Slunce':'29,4 let','Délka dne':'10,7 hodiny','Gravitace':'1,07× Země','Prům. teplota':'−140 °C','Atmosféra':'96 % vodík, 3 % helium','Měsíce':'146'},
   popis:'Nejkrásnější planeta dalekohledu. Jeho prstence tvoří miliardy úlomků ledu a kamení — od zrnek prachu po balvany velikosti domu — a každý obíhá planetu jako samostatný malý měsíc. Saturn má nejvíce potvrzených měsíců v soustavě; největší z nich, Titan, má hustou atmosféru a jezera z tekutého metanu.',
   fakta:['Prstence měří napříč 280 000 km, ale tlusté jsou místy jen pár desítek metrů.','Má nejnižší hustotu ze všech planet — v dostatečně velkém oceánu by plaval.','Měsíc Enceladus chrlí do vesmíru gejzíry vody z podpovrchového oceánu.','Prstence jsou astronomicky mladé a pomalu mizí — za pár set milionů let zaniknou.']},
- uran: {nazev:'Uran',lat:'Uranus',emoji:'🔵',tex:'textures/2k_uranus.jpg',atm:'#7fd4d4',atmAlt:0.15,barva:'#7fd4d4',typ:'Ledový obr',
+ uran: {nazev:'Uran',lat:'Uranus',emoji:'🔵',tex:'textures/2k_uranus.jpg',sklon:97.8,atm:'#7fd4d4',atmAlt:0.15,barva:'#7fd4d4',typ:'Ledový obr',
   data:{'Průměr':'51 118 km','Vzdálenost od Slunce':'2 872,5 mil. km (19,2 AU)','Oběh kolem Slunce':'84 let','Délka dne':'17,2 hodiny','Gravitace':'0,89× Země','Prům. teplota':'−195 °C','Atmosféra':'vodík, helium, metan (modrozelená barva)','Měsíce':'28'},
   popis:'První planeta objevená dalekohledem (William Herschel, 1781) — do té doby lidstvo znalo jen planety viditelné okem. Uran je „ledový obr": pod vodíkovou atmosférou se skrývá plášť z horké stlačené vody, čpavku a metanu. Právě metan pohlcuje červené světlo a dává planetě modrozelený nádech.',
   fakta:['Otáčí se „na boku" — osa je skloněná o 98°, zřejmě po dávné srážce s tělesem velikosti Země.','Póly tak zažívají 42 let světla a poté 42 let tmy.','Je to nejchladnější planeta soustavy (−224 °C v atmosféře).','Navštívila ho jediná sonda: Voyager 2 v roce 1986.']},
- neptun: {nazev:'Neptun',lat:'Neptunus',emoji:'🔷',tex:'textures/2k_neptune.jpg',atm:'#4666e0',atmAlt:0.15,barva:'#4666e0',typ:'Ledový obr',
+ neptun: {nazev:'Neptun',lat:'Neptunus',emoji:'🔷',tex:'textures/2k_neptune.jpg',sklon:28.3,atm:'#4666e0',atmAlt:0.15,barva:'#4666e0',typ:'Ledový obr',
   data:{'Průměr':'49 528 km','Vzdálenost od Slunce':'4 495,1 mil. km (30 AU)','Oběh kolem Slunce':'165 let','Délka dne':'16,1 hodiny','Gravitace':'1,14× Země','Prům. teplota':'−200 °C','Atmosféra':'vodík, helium, metan','Měsíce':'16'},
   popis:'Nejvzdálenější planeta byla objevena roku 1846 „na hrotu pera": astronomové ji nejprve vypočítali z odchylek dráhy Uranu a teprve pak našli dalekohledem — velký triumf nebeské mechaniky. Přestože k ní dorazí tisíckrát méně slunečního světla než k Zemi, zuří v její atmosféře nejrychlejší větry soustavy.',
   fakta:['Větry dosahují rychlosti až 2 100 km/h — rychleji, než letí dopravní letadlo.','Od svého objevu v roce 1846 stihl oběhnout Slunce teprve jednou (2011).','Největší měsíc Triton obíhá „pozpátku" — nejspíš je to zachycené těleso z Kuiperova pásu.','Sluneční světlo k němu letí přes 4 hodiny.']}
@@ -168,11 +194,35 @@ const world = Globe()
   .backgroundColor('#02030a')
   .showGraticules(false);
 
-world.controls().autoRotate = true;
-world.controls().autoRotateSpeed = 0.6;
 world.pointOfView({ lat: 15, lng: 0, altitude: 2.4 });
 
-// Max. anizotropní filtrování = ostřejší textury při zoomu a pod úhlem
+/* Rotace: neotáčíme kamerou (ta by kroužila kolem svislé osy), ale samotnou planetou
+   kolem její skutečné, nakloněné osy. Hvězdné pozadí tak správně stojí.
+   Objekt glóbu najdeme ve scéně podle metody getGlobeRadius (instance three-globe);
+   pořadí rotací ZXY = nejdřív vlastní otáčení (Y), pak náklon osy (X, Z). */
+const globeObj = world.scene().children.find(o => typeof o.getGlobeRadius === 'function');
+const naklonGroup = new THREE.Group(); // nese prstence, naklání se spolu s planetou
+world.scene().add(naklonGroup);
+[globeObj, naklonGroup].forEach(o => { if (o) o.rotation.order = 'ZXY'; });
+
+let toceni = true;
+(function tocPlanetou() {
+  if (toceni && globeObj) globeObj.rotation.y += 0.001;
+  requestAnimationFrame(tocPlanetou);
+})();
+
+// náklon osy tělesa: v rovině obrazovky (Z, klasický „glóbusový" náklon)
+// + částečně k divákovi (X) — u Saturnu tak jsou prstence vidět rozevřené
+function nastavSklon(deg) {
+  const a = THREE.MathUtils.degToRad(deg || 0);
+  [globeObj, naklonGroup].forEach(o => {
+    if (o) { o.rotation.z = -a * 0.7; o.rotation.x = a * 0.55; }
+  });
+}
+
+// Max. anizotropní filtrování = ostřejší textury při zoomu a pod úhlem.
+// Hlídač změny textury zároveň schovává loadery: teprve když si globe.gl
+// novou mapu opravdu vymění, je těleso vykreslené.
 const maxAniso = world.renderer().capabilities.getMaxAnisotropy();
 let lastMap = null;
 setInterval(() => {
@@ -180,8 +230,10 @@ setInterval(() => {
   if (m && m.map && m.map !== lastMap) {
     lastMap = m.map;
     m.map.anisotropy = maxAniso; m.map.needsUpdate = true;
+    document.getElementById('loader').classList.add('skryt');
+    document.getElementById('miniloader').classList.remove('zobraz');
   }
-}, 400);
+}, 200);
 
 /* ================= Hvězdné pozadí =================
    Procedurální hvězdy (THREE.Points, velikost v pixelech) — ostré při libovolném zoomu.
@@ -226,9 +278,11 @@ new THREE.TextureLoader().load('textures/2k_saturn_ring_alpha.png', tex => {
   ringsMesh = new THREE.Mesh(geo, new THREE.MeshBasicMaterial({
     map: tex, side: THREE.DoubleSide, transparent: true, depthWrite: false
   }));
-  ringsMesh.rotation.x = Math.PI / 2 - 0.47; // sklon prstenců ~27°
+  // prstence leží přesně v rovině rovníku; náklon celé soustavy obstarává naklonGroup,
+  // takže planeta i prstence jsou skloněné stejně (26,7°), jak je tomu doopravdy
+  ringsMesh.rotation.x = Math.PI / 2;
   ringsMesh.visible = (aktualni === 'saturn');
-  world.scene().add(ringsMesh);
+  naklonGroup.add(ringsMesh);
 });
 
 /* ================= Přepínání těles ================= */
@@ -263,20 +317,37 @@ function ukazInfo(t) {
   nastavInfo(infoZapnuto);
 }
 
+let nacitaniToken = 0;
 function zobraz(id) {
   const t = TELESA[id];
   if (!t || id === aktualni) return;
   aktualni = id;
-  world.globeImageUrl(t.tex);
   if (t.atm) world.showAtmosphere(true).atmosphereColor(t.atm).atmosphereAltitude(t.atmAlt);
   else world.showAtmosphere(false);
   if (ringsMesh) ringsMesh.visible = !!t.prstence;
+  nastavSklon(t.sklon);
+  // výchozí odstup kamery — Saturn potřebuje víc místa kvůli prstencům (2,27× poloměr)
+  const pov = world.pointOfView();
+  world.pointOfView({ lat: pov.lat, lng: pov.lng, altitude: t.alt || 2.4 }, 700);
   weatherLink.style.display = (id === 'zeme') ? '' : 'none';
   document.querySelectorAll('#bodies button').forEach(b => b.classList.toggle('aktivni', b.dataset.id === id));
   ukazInfo(t);
   document.title = `${t.emoji} Glóbus — ${t.nazev}`;
   // URL parametr, ať jde těleso sdílet odkazem / prolinkovat ze Sluneční soustavy
   history.replaceState(null, '', '?telo=' + id);
+
+  // Texturu nejdřív předstáhneme (8K = jednotky MB), ať běží loading indikátor;
+  // globe.gl ji pak vezme z cache prohlížeče. Loader zhasne hlídač změny mapy.
+  const token = ++nacitaniToken;
+  document.getElementById('miniloader').classList.add('zobraz');
+  const img = new Image();
+  img.onload = () => { if (token === nacitaniToken) world.globeImageUrl(t.tex); };
+  img.onerror = () => {
+    if (token !== nacitaniToken) return;
+    document.getElementById('miniloader').classList.remove('zobraz');
+    document.getElementById('loader').classList.add('skryt');
+  };
+  img.src = t.tex;
 }
 
 // Tlačítka výběru
@@ -290,8 +361,8 @@ Object.entries(TELESA).forEach(([id, t]) => {
 
 /* ================= Ovládání ================= */
 document.getElementById('rotateBtn').onclick = function () {
-  const c = world.controls(); c.autoRotate = !c.autoRotate;
-  this.classList.toggle('on', c.autoRotate);
+  toceni = !toceni;
+  this.classList.toggle('on', toceni);
 };
 document.getElementById('infoBtn').onclick = function () {
   infoZapnuto = !infoZapnuto;
