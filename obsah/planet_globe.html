@@ -198,27 +198,54 @@ world.pointOfView({ lat: 15, lng: 0, altitude: 2.4 });
 
 /* Rotace: neotáčíme kamerou (ta by kroužila kolem svislé osy), ale samotnou planetou
    kolem její skutečné, nakloněné osy. Hvězdné pozadí tak správně stojí.
-   Objekt glóbu najdeme ve scéně podle metody getGlobeRadius (instance three-globe);
-   pořadí rotací ZXY = nejdřív vlastní otáčení (Y), pak náklon osy (X, Z). */
-const globeObj = world.scene().children.find(o => typeof o.getGlobeRadius === 'function');
+   Kořenový objekt glóbu se v některých prohlížečích objeví ve scéně až later,
+   proto ho hledáme opakovaně (v animační smyčce) a dvěma způsoby:
+   1) podle metody getGlobeRadius (instance three-globe),
+   2) podle interní značky __globeObjType === 'globe' (odtud nahoru ke kořeni).
+   Dokud není nalezen, otáčí kamera; jakmile se najde, převezme rotaci planeta. */
 const naklonGroup = new THREE.Group(); // nese prstence, naklání se spolu s planetou
+naklonGroup.rotation.order = 'ZXY';    // nejdřív vlastní otáčení (Y), pak náklon osy (X, Z)
 world.scene().add(naklonGroup);
-[globeObj, naklonGroup].forEach(o => { if (o) o.rotation.order = 'ZXY'; });
 
-let toceni = true;
+let globeObj = null, aktSklon = 0, toceni = true;
+world.controls().autoRotate = true;    // provizorium, než se najde objekt glóbu
+world.controls().autoRotateSpeed = 0.6;
+
+function najdiGlobeObj() {
+  if (globeObj) return globeObj;
+  const sc = world.scene();
+  globeObj = sc.children.find(o => typeof o.getGlobeRadius === 'function') || null;
+  if (!globeObj) {
+    let vnitrni = null;
+    sc.traverse(o => { if (!vnitrni && o.__globeObjType === 'globe') vnitrni = o; });
+    if (vnitrni) {
+      let n = vnitrni;
+      while (n.parent && n.parent !== sc) n = n.parent;
+      globeObj = n;
+    }
+  }
+  if (globeObj) {
+    globeObj.rotation.order = 'ZXY';
+    world.controls().autoRotate = false; // rotaci přebírá samotná planeta
+    aplikujSklon();
+  }
+  return globeObj;
+}
+
 (function tocPlanetou() {
-  if (toceni && globeObj) globeObj.rotation.y += 0.001;
+  if (najdiGlobeObj() && toceni) globeObj.rotation.y += 0.001;
   requestAnimationFrame(tocPlanetou);
 })();
 
 // náklon osy tělesa: v rovině obrazovky (Z, klasický „glóbusový" náklon)
 // + částečně k divákovi (X) — u Saturnu tak jsou prstence vidět rozevřené
-function nastavSklon(deg) {
-  const a = THREE.MathUtils.degToRad(deg || 0);
+function aplikujSklon() {
+  const a = THREE.MathUtils.degToRad(aktSklon || 0);
   [globeObj, naklonGroup].forEach(o => {
     if (o) { o.rotation.z = -a * 0.7; o.rotation.x = a * 0.55; }
   });
 }
+function nastavSklon(deg) { aktSklon = deg; aplikujSklon(); }
 
 // Max. anizotropní filtrování = ostřejší textury při zoomu a pod úhlem.
 // Hlídač změny textury zároveň schovává loadery: teprve když si globe.gl
@@ -363,6 +390,7 @@ Object.entries(TELESA).forEach(([id, t]) => {
 document.getElementById('rotateBtn').onclick = function () {
   toceni = !toceni;
   this.classList.toggle('on', toceni);
+  if (!globeObj) world.controls().autoRotate = toceni; // záložní režim: točí kamera
 };
 document.getElementById('infoBtn').onclick = function () {
   infoZapnuto = !infoZapnuto;
