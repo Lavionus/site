@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🌌 Pohyb vesmírem</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#0a0a14;color:#e0e0e0;height:100vh;overflow:hidden;display:flex;flex-direction:column}
+.horni{display:flex;gap:12px;align-items:center;padding:10px 16px;background:#16161f;border-bottom:1px solid #2a2a3a;flex-wrap:wrap}
+.horni h1{font-size:1.05rem;font-weight:600;margin-right:auto}
+.horni label{font-size:.78rem;color:#888;display:flex;align-items:center;gap:7px}
+input[type=range]{width:130px;accent-color:#6aa6fd}
+button,a.odkaz{background:#2a2a3a;border:1px solid #3a3a4d;color:#ccc;border-radius:6px;padding:6px 13px;font-size:.82rem;cursor:pointer;text-decoration:none;display:inline-block}
+button:hover,a.odkaz:hover{background:#6aa6fd;color:#fff}
+button.on{border-color:#6aa6fd;color:#6aa6fd}
+.zalozky{display:flex;gap:6px;padding:8px 16px;background:#12121b;border-bottom:1px solid #2a2a3a;flex-wrap:wrap}
+.zalozky button{padding:6px 14px;border-radius:8px}
+.zalozky button.aktivni{background:#6aa6fd;color:#fff;border-color:#6aa6fd}
+.plocha{flex:1;position:relative;overflow:hidden}
+canvas{display:block;width:100%;height:100%}
+#platno.tahani{cursor:grabbing}
+.fakta{position:absolute;top:14px;right:14px;width:270px;max-width:calc(100% - 28px);background:rgba(22,22,31,.94);border:1px solid #3a3a4d;border-radius:10px;padding:12px 15px}
+.fakta h3{font-size:.72rem;text-transform:uppercase;letter-spacing:.5px;color:#6aa6fd;margin-bottom:7px}
+.fakta .radek{display:flex;justify-content:space-between;gap:10px;padding:4px 0;border-bottom:1px solid #2a2a3a;font-size:.76rem}
+.fakta .radek:last-child{border-bottom:none}
+.fakta .radek span{color:#888}
+.fakta .radek b{color:#e0e0e0;text-align:right}
+.vysvetleni{position:absolute;bottom:0;left:0;right:0;background:rgba(10,10,20,.85);border-top:1px solid #2a2a3a;padding:9px 16px;font-size:.76rem;color:#8b93a8;line-height:1.5;pointer-events:none}
+.vysvetleni b{color:#c6cde0}
+@media (max-width:700px){.fakta{display:none}}
+</style>
+</head>
+<body>
+<div class="horni">
+  <h1>🌌 Pohyb vesmírem</h1>
+  <label>Rychlost <input type="range" id="rychlost" min="0" max="100" value="40"></label>
+  <button id="pauza">⏸️ Pauza</button>
+  <button id="stopy" class="on">〰️ Stopy</button>
+  <button id="resetBtn" style="display:none">↺ Pohled</button>
+  <a class="odkaz" href="solar_system.html" title="Naučná animace sluneční soustavy">🪐 Soustava</a>
+  <a class="odkaz" href="planet_globe.html" title="3D glóbusy planet">🌐 Glóbusy</a>
+</div>
+<div class="zalozky" id="zalozky">
+  <button data-r="zememesic" class="aktivni">🌍 Země a Měsíc</button>
+  <button data-r="helix">🌀 Let Galaxií</button>
+  <button data-r="galaxie">🌌 Oběh Galaxií</button>
+</div>
+<div class="plocha">
+  <canvas id="platno"></canvas>
+  <div class="fakta" id="fakta"></div>
+  <div class="vysvetleni" id="vysvetleni"></div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const canvas=$('platno'),ctx=canvas.getContext('2d');
+
+/* ================= SPOLEČNÉ ================= */
+let bezi=true,ukazStopy=true,cas=0,rezim='zememesic';
+let hvezdy=[];
+
+function velikostPlatna(){
+  const r=canvas.parentElement.getBoundingClientRect();
+  canvas.width=r.width*devicePixelRatio;canvas.height=r.height*devicePixelRatio;
+  ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
+  hvezdy=[];
+  for(let i=0;i<170;i++)hvezdy.push({x:Math.random()*r.width,y:Math.random()*r.height,v:Math.random()*1.3+.3,a:Math.random()*.5+.2});
+  genGalaxie();
+}
+window.addEventListener('resize',velikostPlatna);
+const rozmer=()=>({w:canvas.width/devicePixelRatio,h:canvas.height/devicePixelRatio});
+
+/* ================= ZÁLOŽKA: ZEMĚ A MĚSÍC =================
+   Pohled shora: Země obíhá Slunce, Měsíc obíhá Zemi (13,4 oběhu za rok).
+   Odstup Měsíce je zvětšený jen tolik, aby jeho dráha kolem Slunce zůstala
+   fyzikálně věrná — vlnitá a všude vypouklá ke Slunci (bez smyček). */
+let stopaZeme=[],stopaMesice=[];
+function kresliZemiMesic(){
+  const {w,h}=rozmer();
+  const cx=w/2,cy=h/2;
+  const R=Math.min(w,h)*0.36;          // dráha Země
+  const rM=R*0.06;                     // dráha Měsíce (zvětšeno ~9×, viz popis)
+  const uZ=cas*0.9;                    // 1 rok ≈ 7 s při plné rychlosti
+  const uM=uZ*13.37;                   // skutečný poměr oběhů (siderický měsíc)
+  const zx=cx+R*Math.cos(uZ),zy=cy+R*Math.sin(uZ);
+  const mx=zx+rM*Math.cos(uM),my=zy+rM*Math.sin(uM);
+
+  if(bezi){
+    stopaZeme.push({x:zx,y:zy});if(stopaZeme.length>460)stopaZeme.shift();
+    stopaMesice.push({x:mx,y:my});if(stopaMesice.length>460)stopaMesice.shift();
+  }
+  // dráha Země (vodicí kružnice)
+  ctx.strokeStyle='rgba(255,255,255,.08)';ctx.lineWidth=1;
+  ctx.beginPath();ctx.arc(cx,cy,R,0,7);ctx.stroke();
+  // stopy (Země modrá, Měsíc šedá vlnovka)
+  function kresliStopu(st,barva,sirka){
+    ctx.lineWidth=sirka;
+    for(let i=1;i<st.length;i++){
+      ctx.strokeStyle=barva+(0.55*i/st.length)+')';
+      ctx.beginPath();ctx.moveTo(st[i-1].x,st[i-1].y);ctx.lineTo(st[i].x,st[i].y);ctx.stroke();
+    }
+  }
+  if(ukazStopy){kresliStopu(stopaZeme,'rgba(74,144,217,',1.5);kresliStopu(stopaMesice,'rgba(220,215,200,',1.2);}
+  // Slunce
+  const zar=ctx.createRadialGradient(cx,cy,4,cx,cy,36);
+  zar.addColorStop(0,'#fff3b0');zar.addColorStop(.4,'#ffd54f');zar.addColorStop(1,'rgba(255,180,60,0)');
+  ctx.fillStyle=zar;ctx.beginPath();ctx.arc(cx,cy,36,0,7);ctx.fill();
+  ctx.fillStyle='#ffd54f';ctx.beginPath();ctx.arc(cx,cy,16,0,7);ctx.fill();
+  // spojnice Země–Měsíc
+  ctx.strokeStyle='rgba(255,255,255,.15)';ctx.setLineDash([2,4]);
+  ctx.beginPath();ctx.moveTo(zx,zy);ctx.lineTo(mx,my);ctx.stroke();ctx.setLineDash([]);
+  // Země + Měsíc
+  ctx.fillStyle='#4a90d9';ctx.beginPath();ctx.arc(zx,zy,8,0,7);ctx.fill();
+  ctx.fillStyle='#d8d4c8';ctx.beginPath();ctx.arc(mx,my,3.2,0,7);ctx.fill();
+  // popisky
+  ctx.font='11px sans-serif';ctx.textAlign='center';
+  ctx.fillStyle='rgba(220,225,255,.85)';
+  ctx.fillText('Slunce',cx,cy+30);
+  ctx.fillText('Země',zx,zy-14);
+  ctx.fillStyle='rgba(220,215,200,.8)';
+  ctx.fillText('Měsíc',mx,my-9);
+  // počítadlo
+  const roky=uZ/(2*Math.PI);
+  ctx.fillStyle='#8b93a8';ctx.font='12px sans-serif';ctx.textAlign='left';
+  ctx.fillText('uplynulo: '+roky.toFixed(1)+' roku · '+Math.floor(roky*12.37)+' úplňků',14,22);
+}
+
+/* ================= ZÁLOŽKA: LET GALAXIÍ (šroubovice) =================
+   Slunce letí prostorem (~230 km/s kolem středu Galaxie) a planety za ním
+   opisují šroubovice. Rovina oběhu planet je ke směru letu skloněná ~60°.
+   Vlastní jednoduchá 3D projekce: kamera sleduje Slunce, tažením myši se otáčí. */
+const HTELESA=[
+  {nazev:'Merkur',barva:'#9c9c9c',r:34,T:0.24,vel:2.2},
+  {nazev:'Venuše',barva:'#e6c87a',r:52,T:0.615,vel:3.4},
+  {nazev:'Země',barva:'#4a90d9',r:70,T:1,vel:3.6,mesic:true},
+  {nazev:'Mars',barva:'#d1603d',r:88,T:1.88,vel:2.8},
+  {nazev:'Jupiter',barva:'#d8b48a',r:118,T:11.9,vel:7},
+  {nazev:'Saturn',barva:'#e3cf9a',r:146,T:29.4,vel:6},
+  {nazev:'Uran',barva:'#7fd4d4',r:172,T:84,vel:4.6},
+  {nazev:'Neptun',barva:'#4666e0',r:196,T:165,vel:4.4}
+];
+const rad=d=>d*Math.PI/180;
+const SKLON=rad(60);                // sklon ekliptiky ke směru letu
+const PITCH=170;                    // posun Slunce za 1 rok (zpomaleno, reálně ~48 AU)
+const kamera={yaw:-0.9,pitch:0.35,dist:640,autoDrift:true};
+let stopyH=HTELESA.map(()=>[]),snimek=0;
+
+function polohaH(t,uhelCasu){       // světová poloha tělesa v čase
+  const u=uhelCasu*2*Math.PI/t.T+t.r; // fázový posun dle poloměru, ať nestartují v řadě
+  // oběh v rovině YZ, skloněný kolem osy Z o SKLON, posun Slunce podél X
+  const oy=Math.cos(u)*t.r, oz=Math.sin(u)*t.r;
+  return {
+    x:uhelCasu*PITCH + oy*Math.sin(SKLON),
+    y:oy*Math.cos(SKLON),
+    z:oz
+  };
+}
+function projektuj(p,slunceX,w,h){
+  let x=p.x-slunceX,y=p.y,z=p.z;
+  const cy=Math.cos(kamera.yaw),sy=Math.sin(kamera.yaw);
+  let x1=x*cy+z*sy, z1=-x*sy+z*cy;
+  const cp=Math.cos(kamera.pitch),sp=Math.sin(kamera.pitch);
+  let y2=y*cp-z1*sp, z2=y*sp+z1*cp;
+  const zc=z2+kamera.dist;
+  if(zc<20)return null;
+  const f=560/zc;
+  return {x:w/2+x1*f,y:h/2-y2*f,f};
+}
+function kresliHelix(){
+  const {w,h}=rozmer();
+  const roky=cas*0.14;               // pomalejší čas než u Země+Měsíce
+  const sx=roky*PITCH;
+  if(kamera.autoDrift&&bezi)kamera.yaw+=0.0006;
+
+  if(bezi&&(snimek++%2===0)){
+    HTELESA.forEach((t,i)=>{
+      const st=stopyH[i];
+      st.push(polohaH(t,roky));
+      if(st.length>560)st.shift();
+    });
+  }
+  // přímá dráha Slunce (zlatá čára ve směru letu)
+  const a=projektuj({x:sx-PITCH*8,y:0,z:0},sx,w,h),b=projektuj({x:sx+PITCH*1.5,y:0,z:0},sx,w,h);
+  if(a&&b){
+    ctx.strokeStyle='rgba(255,213,79,.35)';ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();
+  }
+  // šroubovice planet
+  if(ukazStopy)HTELESA.forEach((t,i)=>{
+    const st=stopyH[i];
+    ctx.lineWidth=1.2;
+    for(let j=1;j<st.length;j++){
+      const p1=projektuj(st[j-1],sx,w,h),p2=projektuj(st[j],sx,w,h);
+      if(!p1||!p2)continue;
+      ctx.strokeStyle=t.barva+Math.round(150*j/st.length).toString(16).padStart(2,'0');
+      ctx.beginPath();ctx.moveTo(p1.x,p1.y);ctx.lineTo(p2.x,p2.y);ctx.stroke();
+    }
+  });
+  // Slunce se září
+  const ps=projektuj({x:sx,y:0,z:0},sx,w,h);
+  if(ps){
+    const zr=ctx.createRadialGradient(ps.x,ps.y,2,ps.x,ps.y,26*ps.f);
+    zr.addColorStop(0,'#fff3b0');zr.addColorStop(.4,'#ffd54f');zr.addColorStop(1,'rgba(255,180,60,0)');
+    ctx.fillStyle=zr;ctx.beginPath();ctx.arc(ps.x,ps.y,26*ps.f,0,7);ctx.fill();
+    ctx.fillStyle='#ffd54f';ctx.beginPath();ctx.arc(ps.x,ps.y,10*ps.f,0,7);ctx.fill();
+  }
+  // planety (seřazené od zadních k předním, ať se správně překrývají)
+  const vykresli=HTELESA.map((t,i)=>({t,p3:polohaH(t,roky)}))
+    .map(o=>({...o,p:projektuj(o.p3,sx,w,h)}))
+    .filter(o=>o.p)
+    .sort((m,n)=>m.p.f-n.p.f);
+  vykresli.forEach(({t,p})=>{
+    ctx.fillStyle=t.barva;
+    ctx.beginPath();ctx.arc(p.x,p.y,Math.max(1.4,t.vel*p.f),0,7);ctx.fill();
+    if(p.f>0.5){
+      ctx.fillStyle='rgba(220,225,255,.65)';ctx.font='10px sans-serif';ctx.textAlign='center';
+      ctx.fillText(t.nazev,p.x,p.y-t.vel*p.f-5);
+    }
+  });
+  // počítadlo: reálně uletěná vzdálenost
+  const km=roky*7.26;                // mld km za rok při 230 km/s
+  ctx.fillStyle='#8b93a8';ctx.font='12px sans-serif';ctx.textAlign='left';
+  ctx.fillText('uplynulo: '+roky.toFixed(1)+' roku · soustava uletěla ~'+km.toFixed(0)+' miliard km',14,22);
+}
+
+/* ================= ZÁLOŽKA: OBĚH GALAXIÍ =================
+   Stylizovaná Mléčná dráha shora; Slunce obíhá střed ve 26 000 sv. letech,
+   jeden oběh („galaktický rok") trvá ~230 milionů let. */
+let galaxieBody=[];
+function genGalaxie(){
+  galaxieBody=[];
+  const {w,h}=rozmer();if(!w)return;
+  const R=Math.min(w,h)*0.42;
+  for(let i=0;i<2400;i++){           // 2 spirální ramena
+    const t=Math.pow(Math.random(),0.75);
+    const rameno=(i%2)*Math.PI;
+    const uhel=4.4*Math.pow(t,0.65)+rameno+(Math.random()-.5)*(0.9-0.55*t);
+    const r=(0.08+0.92*t)*R*(1+(Math.random()-.5)*0.14);
+    const stud=Math.random();
+    galaxieBody.push({r,uhel,v:Math.random()*1.5+.4,
+      barva:stud<.72?'200,215,255':stud<.9?'255,240,215':'255,205,215',
+      a:(Math.random()*.5+.18)*(1-0.35*t)});
+  }
+  for(let i=0;i<450;i++){            // střední výduť
+    const r=Math.abs(gauss())*R*0.13, uhel=Math.random()*7;
+    galaxieBody.push({r,uhel,v:Math.random()*1.6+.5,barva:'255,228,170',a:Math.random()*.6+.25});
+  }
+}
+function gauss(){return (Math.random()+Math.random()+Math.random())/1.5-1}
+function kresliGalaxii(){
+  const {w,h}=rozmer();
+  const cx=w/2,cy=h/2,R=Math.min(w,h)*0.42;
+  const rot=cas*0.05;                // celá galaxie se zvolna otáčí
+  // záře jádra
+  const zr=ctx.createRadialGradient(cx,cy,2,cx,cy,R*0.3);
+  zr.addColorStop(0,'rgba(255,235,190,.5)');zr.addColorStop(.4,'rgba(255,220,170,.14)');zr.addColorStop(1,'rgba(255,220,170,0)');
+  ctx.fillStyle=zr;ctx.beginPath();ctx.arc(cx,cy,R*0.3,0,7);ctx.fill();
+  // hvězdy ramen
+  galaxieBody.forEach(b=>{
+    const u=b.uhel+rot;
+    ctx.globalAlpha=b.a;ctx.fillStyle='rgb('+b.barva+')';
+    ctx.fillRect(cx+b.r*Math.cos(u)-b.v/2,cy+b.r*Math.sin(u)-b.v/2,b.v,b.v);
+  });
+  ctx.globalAlpha=1;
+  // dráha Slunce
+  const rS=R*0.55;
+  ctx.strokeStyle='rgba(255,213,79,.25)';ctx.setLineDash([3,5]);ctx.lineWidth=1;
+  ctx.beginPath();ctx.arc(cx,cy,rS,0,7);ctx.stroke();ctx.setLineDash([]);
+  // Slunce (obíhá se stejnou úhlovou rychlostí jako okolní ramena)
+  const uS=rot+0.7;
+  const sxx=cx+rS*Math.cos(uS),syy=cy+rS*Math.sin(uS);
+  const puls=3.5+Math.sin(cas*4)*0.8;
+  ctx.strokeStyle='rgba(255,213,79,.8)';ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.arc(sxx,syy,puls+6,0,7);ctx.stroke();
+  ctx.fillStyle='#ffd54f';ctx.beginPath();ctx.arc(sxx,syy,puls,0,7);ctx.fill();
+  ctx.fillStyle='#ffe97a';ctx.font='600 12px sans-serif';ctx.textAlign='center';
+  ctx.fillText('☀️ Slunce — tady jsme',sxx,syy-16);
+  // střed
+  ctx.fillStyle='rgba(220,225,255,.6)';ctx.font='10px sans-serif';
+  ctx.fillText('střed Galaxie',cx,cy+4);
+  // počítadlo galaktického času (1 oběh = 230 mil. let)
+  const obehy=(rot)/(2*Math.PI);
+  ctx.fillStyle='#8b93a8';ctx.font='12px sans-serif';ctx.textAlign='left';
+  ctx.fillText('uplynulo: '+(obehy*230).toFixed(0)+' milionů let · '+obehy.toFixed(2)+' galaktického roku',14,22);
+}
+
+/* ================= SMYČKA ================= */
+function kresli(){
+  const {w,h}=rozmer();
+  ctx.clearRect(0,0,w,h);
+  if(rezim!=='galaxie'){
+    hvezdy.forEach(s=>{ctx.globalAlpha=s.a;ctx.fillStyle='#fff';ctx.fillRect(s.x,s.y,s.v,s.v);});
+    ctx.globalAlpha=1;
+  }
+  if(rezim==='zememesic')kresliZemiMesic();
+  else if(rezim==='helix')kresliHelix();
+  else kresliGalaxii();
+}
+let minule=performance.now();
+function smycka(t){
+  const dt=Math.min((t-minule)/1000,0.1);minule=t;
+  if(bezi)cas+=dt*(+$('rychlost').value/100)*0.9;
+  kresli();
+  requestAnimationFrame(smycka);
+}
+
+/* ================= OVLÁDÁNÍ ================= */
+$('pauza').onclick=()=>{bezi=!bezi;$('pauza').textContent=bezi?'⏸️ Pauza':'▶️ Spustit';};
+$('stopy').onclick=function(){ukazStopy=!ukazStopy;this.classList.toggle('on',ukazStopy);};
+$('resetBtn').onclick=()=>{kamera.yaw=-0.9;kamera.pitch=0.35;kamera.dist=640;kamera.autoDrift=true;};
+
+// otáčení pohledu tažením + zoom kolečkem (jen záložka Let Galaxií)
+let tazeni=null;
+canvas.addEventListener('pointerdown',e=>{
+  if(rezim!=='helix')return;
+  tazeni={x:e.clientX,y:e.clientY};kamera.autoDrift=false;
+  canvas.classList.add('tahani');canvas.setPointerCapture(e.pointerId);
+});
+canvas.addEventListener('pointermove',e=>{
+  if(!tazeni)return;
+  kamera.yaw+=(e.clientX-tazeni.x)*0.005;
+  kamera.pitch=Math.max(-1.4,Math.min(1.4,kamera.pitch+(e.clientY-tazeni.y)*0.005));
+  tazeni={x:e.clientX,y:e.clientY};
+});
+canvas.addEventListener('pointerup',()=>{tazeni=null;canvas.classList.remove('tahani');});
+canvas.addEventListener('wheel',e=>{
+  if(rezim!=='helix')return;
+  e.preventDefault();
+  kamera.dist=Math.max(160,Math.min(2400,kamera.dist*(e.deltaY>0?1.12:0.9)));
+},{passive:false});
+
+/* ================= ZÁLOŽKY, VYSVĚTLENÍ, FAKTA ================= */
+const VYSVETLENI={
+  zememesic:'Měsíc oběhne Zemi 13,4× za rok a Země přitom letí kolem Slunce rychlostí <b>29,8 km/s</b>. Pohyby se skládají: dráha Měsíce kolem Slunce je jemná <b>vlnovka, všude vypouklá ke Slunci</b> — Měsíc nikdy necouvá. Odstup Měsíce od Země je v animaci ~9× zvětšený, jinak by vlnky nebyly vidět.',
+  helix:'Ani Slunce nestojí: řítí se rychlostí <b>~230 km/s</b> kolem středu Galaxie a planety za ním opisují <b>šroubovice</b>. Rovina oběhu planet je ke směru letu skloněná asi o 60°. Let Slunce je tu ~30× zpomalený — ve skutečnosti by šroubovice byly mnohem natáhlejší. 🖱️ <b>Tažením otočíš pohled, kolečkem přiblížíš.</b>',
+  galaxie:'Sluneční soustava obíhá střed Mléčné dráhy ve vzdálenosti ~26 000 světelných let. Jeden oběh — <b>galaktický rok</b> — trvá zhruba <b>230 milionů let</b>. Když Slunce dokončovalo ten minulý, po Zemi zrovna začínali chodit dinosauři.'
+};
+const FAKTA={
+  zememesic:[['Rychlost Země','29,8 km/s'],['Rychlost Měsíce kolem Země','1,0 km/s'],['Oběh Měsíce','27,3 dne'],['Úplněk → úplněk','29,5 dne'],['Slunce je dál než Měsíc','400×']],
+  helix:[['Rychlost Slunce','~230 km/s'],['Za 1 rok uletí','~7,3 mld km'],['Sklon ekliptiky k dráze','~60°'],['Návrat do téhož místa','nikdy']],
+  galaxie:[['Průměr Galaxie','~100 000 sv. let'],['Hvězd v Galaxii','100–400 miliard'],['Galaktický rok','~230 mil. let'],['Stáří Slunce','~20 gal. let'],['Galaxie letí vůči CMB','~600 km/s']]
+};
+function prepni(r){
+  rezim=r;
+  document.querySelectorAll('#zalozky button').forEach(b=>b.classList.toggle('aktivni',b.dataset.r===r));
+  $('vysvetleni').innerHTML=VYSVETLENI[r];
+  $('fakta').innerHTML='<h3>Čísla</h3>'+FAKTA[r].map(([k,v])=>`<div class="radek"><span>${k}</span><b>${v}</b></div>`).join('');
+  $('resetBtn').style.display=(r==='helix')?'':'none';
+  $('stopy').style.display=(r==='galaxie')?'none':'';
+  if(r==='zememesic'){stopaZeme=[];stopaMesice=[];}
+  if(r==='helix')stopyH=HTELESA.map(()=>[]);
+  history.replaceState(null,'','?rezim='+r);
+}
+document.querySelectorAll('#zalozky button').forEach(b=>b.onclick=()=>prepni(b.dataset.r));
+
+/* ================= START ================= */
+velikostPlatna();
+const param=new URLSearchParams(location.search).get('rezim');
+prepni(VYSVETLENI[param]?param:'zememesic');
+requestAnimationFrame(smycka);
+</script>
+</body>
+</html>

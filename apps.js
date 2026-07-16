@@ -1337,6 +1337,11 @@ const KATALOG_SEKCE = [
         "tagy": ["planety", "vesmír", "astronomie", "mars", "měsíc", "3d", "glóbus"]
       },
       {
+        "soubor": "obsah/pohyb_vesmirem.html",
+        "nazev": "🌌 Pohyb vesmírem",
+        "tagy": ["vesmír", "galaxie", "měsíc", "slunce", "oběh", "astronomie", "mléčná dráha"]
+      },
+      {
         "soubor": "obsah/star_map.html",
         "nazev": "🌌 Hvězdná obloha",
         "tagy": ["hvězdy", "souhvězdí", "astronomie", "obloha"]
