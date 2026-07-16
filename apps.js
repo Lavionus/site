@@ -469,60 +469,6 @@ const KATALOG_SEKCE = [
     ]
   },
   {
-    "nazev": "🌱 Zemědělství",
-    "skupina": "priroda",
-    "polozky": [
-      {
-        "soubor": "obsah/agri_calendar.html",
-        "nazev": "📅 Zemědělský kalendář",
-        "tagy": [
-          "farma",
-          "pole",
-          "agro",
-          "práce"
-        ]
-      },
-      {
-        "soubor": "obsah/fertilizer_calc.html",
-        "nazev": "🌱 Kalkulačka hnojení N-P-K",
-        "tagy": [
-          "hnojivo",
-          "dusík",
-          "npk",
-          "pole"
-        ]
-      },
-      {
-        "soubor": "obsah/rainfall_gdd.html",
-        "nazev": "🌧️ Srážky & GDD",
-        "tagy": [
-          "srážky",
-          "déšť",
-          "teplotní suma"
-        ]
-      },
-      {
-        "soubor": "obsah/crop_rotation.html",
-        "nazev": "🔄 Střídání plodin",
-        "tagy": [
-          "osevní postup",
-          "plodiny",
-          "pole"
-        ]
-      },
-      {
-        "soubor": "obsah/seeding_calc.html",
-        "nazev": "🌾 Kalkulačka výsevku",
-        "tagy": [
-          "setí",
-          "osivo",
-          "výsev",
-          "pole"
-        ]
-      }
-    ]
-  },
-  {
     "nazev": "🌦️ Počasí",
     "skupina": "priroda",
     "polozky": [
@@ -944,15 +890,6 @@ const KATALOG_SEKCE = [
           "výpočty",
           "vzorce",
           "latex"
-        ]
-      },
-      {
-        "soubor": "obsah/tinkercad.html",
-        "nazev": "🧊 3D Návrhář (Tinkercad)",
-        "tagy": [
-          "3d",
-          "modelování",
-          "návrh"
         ]
       },
       {
@@ -1393,6 +1330,11 @@ const KATALOG_SEKCE = [
         "soubor": "obsah/solar_system.html",
         "nazev": "🪐 Sluneční soustava",
         "tagy": ["planety", "vesmír", "astronomie"]
+      },
+      {
+        "soubor": "obsah/planet_globe.html",
+        "nazev": "🌐 Glóbusy planet",
+        "tagy": ["planety", "vesmír", "astronomie", "mars", "měsíc", "3d", "glóbus"]
       },
       {
         "soubor": "obsah/star_map.html",

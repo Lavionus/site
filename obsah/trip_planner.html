@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>🥾 Správce pěších tras v7.0</title>
+    <title>🥾 Správce pěších tras v8.0</title>
     <link rel="manifest" href="data:application/json;base64,eyJuYW1lIjoiU3Byw6F2Y2UgdHJhcyIsInNob3J0X25hbWUiOiJUcmFzeSIsImRlc2NyaXB0aW9uIjoiU3Byw6F2Y2UgcMSbc8OtY2ggdHJhcyIsInN0YXJ0X3VybCI6Ii4iLCJkaXNwbGF5Ijoic3RhbmRhbG9uZSIsImJhY2tncm91bmRfY29sb3IiOiIjMGEwZjFhIiwidGhlbWVfY29sb3IiOiIjMTBiOTgxIiwiaWNvbnMiOlt7InNyYyI6ImRhdGE6aW1hZ2Uvc3ZnK3htbCw8c3ZnIHhtbG5zPSdodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2Zycgdmlld0JveD0nMCAwIDEwMCAxMDAnPjx0ZXh0IHk9Jy45ZW0nIGZvbnQtc2l6ZT0nOTAnPvCfpb48L3RleHQ+PC9zdmc+Iiwic2l6ZXMiOiI5Nng5NiIsInR5cGUiOiJpbWFnZS9zdmcreG1sIn1dfQ==">
     <meta name="theme-color" content="#10b981">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -459,6 +459,24 @@
         }
 
         .point-name { font-weight: 500; color: var(--text-primary); }
+
+        .point-drag {
+            cursor: grab;
+            color: var(--text-muted);
+            padding: 2px 8px 2px 2px;
+            touch-action: none;
+        }
+
+        .point-drag:hover { color: var(--primary-light); }
+        .point-drag:active { cursor: grabbing; }
+
+        .point-item.dragging {
+            opacity: 0.7;
+            border-color: var(--accent);
+            box-shadow: 0 4px 14px rgba(0, 0, 0, 0.5);
+            user-select: none;
+            -webkit-user-select: none;
+        }
         .point-coords { font-size: 9px; color: var(--text-muted); font-family: 'JetBrains Mono', monospace; }
         .point-meta { font-size: 9px; color: var(--accent); margin-top: 2px; }
         .point-actions { display: flex; gap: 3px; margin-top: 5px; flex-wrap: wrap; }
@@ -509,6 +527,7 @@
         #elevationChart {
             width: 100%;
             height: 100px;
+            cursor: crosshair;
         }
 
         /* Layer Switcher */
@@ -1227,7 +1246,7 @@
             <div class="sidebar-header">
                 <div class="logo">
                     <div class="logo-icon">🥾</div>
-                    <h1>Správce tras <span>v7.0</span></h1>
+                    <h1>Správce tras <span>v8.0</span></h1>
                     <span class="offline-badge" id="offlineBadge">OFFLINE</span>
                 </div>
 
@@ -1260,6 +1279,16 @@
                         <button class="btn" id="showStats"><i class="fas fa-chart-bar"></i></button>
                         <button class="btn" id="showElevation"><i class="fas fa-mountain"></i></button>
                         <button class="btn" id="exportImage"><i class="fas fa-camera"></i></button>
+                    </div>
+
+                    <div class="speed-profile-group" style="margin-bottom: 0;">
+                        <label><i class="fas fa-route"></i> Režim trasování (vybraná i nové trasy)</label>
+                        <select id="routingModeSelect">
+                            <option value="straight">📏 Vzdušnou čarou</option>
+                            <option value="foot">🥾 Pěšky po cestách</option>
+                            <option value="bike">🚴 Na kole po cestách</option>
+                            <option value="car">🚗 Autem po silnicích</option>
+                        </select>
                     </div>
                 </div>
 
@@ -1471,6 +1500,14 @@
             'fa-info-circle', 'fa-exclamation-triangle', 'fa-question-circle', 'fa-phone', 'fa-wifi', 'fa-bolt'
         ];
 
+        // ========== ROUTING MODES ==========
+        const ROUTING_MODES = {
+            straight: { icon: 'fa-ruler',   label: 'Vzdušnou čarou',      next: 'foot' },
+            foot:     { icon: 'fa-hiking',  label: 'Pěšky po cestách',    service: 'routed-foot', next: 'bike' },
+            bike:     { icon: 'fa-bicycle', label: 'Na kole po cestách',  service: 'routed-bike', next: 'car' },
+            car:      { icon: 'fa-car',     label: 'Autem po silnicích',  service: 'routed-car',  next: 'straight' }
+        };
+
         class WalkingRouteManager {
             constructor() {
                 this.routes = [];
@@ -1487,6 +1524,7 @@
                 this.draggableMarkers = false;
                 this.insertMode = false;
                 this.speedProfile = 5;
+                this.defaultRoutingMode = 'straight';
                 
                 this.pendingEditCallback = null;
                 this.pendingConfirmCallback = null;
@@ -1502,6 +1540,7 @@
                     showNotes: false,
                     draggableMarkers: false,
                     speedProfile: 5,
+                    defaultRoutingMode: 'straight',
                     mapLayer: 'osm',
                     mapCenter: [49.8175, 15.4730],
                     mapZoom: 8
@@ -1535,6 +1574,82 @@
                 return `${h}h ${m}m`;
             }
 
+            escapeHtml(str) {
+                return String(str ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+            }
+
+            // ========== ROUTING (po cestách) ==========
+            routingKey(route) {
+                return `${route.routingMode || 'straight'}|${route.points.map(p => `${p.lat.toFixed(5)},${p.lng.toFixed(5)}`).join(';')}`;
+            }
+
+            hasValidRoutedGeo(route) {
+                return route.routingMode && route.routingMode !== 'straight' &&
+                       route.routedGeo && !route.routedGeo.failed &&
+                       route.routedGeo.key === this.routingKey(route);
+            }
+
+            getRoutePath(route) {
+                if (this.hasValidRoutedGeo(route)) return route.routedGeo.coords;
+                return route.points.map(p => [p.lat, p.lng]);
+            }
+
+            setRoutingMode(route, mode) {
+                if (!ROUTING_MODES[mode]) return;
+                route.routingMode = mode;
+                route.routedGeo = null;
+                this.defaultRoutingMode = mode;
+                this.settings.defaultRoutingMode = mode;
+                this.recalculateDistances(route);
+                this.redrawRoute(route);
+                this.updateUI();
+                this.saveToStorage();
+                this.showNotification(`Trasování: ${ROUTING_MODES[mode].label}`, 'info');
+            }
+
+            cycleRoutingMode(id) {
+                const route = this.routes.find(r => r.id === id);
+                if (!route) return;
+                this.setRoutingMode(route, ROUTING_MODES[route.routingMode || 'straight'].next);
+            }
+
+            async fetchRoutedGeometry(route) {
+                const key = this.routingKey(route);
+                if (route.points.length < 2 || route._routingFetchKey === key) return;
+                route._routingFetchKey = key;
+
+                const mode = ROUTING_MODES[route.routingMode];
+                const coords = route.points.map(p => `${p.lng.toFixed(6)},${p.lat.toFixed(6)}`).join(';');
+
+                try {
+                    const response = await fetch(`https://routing.openstreetmap.de/${mode.service}/route/v1/driving/${coords}?overview=full&geometries=geojson&steps=false`);
+                    if (!response.ok) throw new Error('Routing API error');
+                    const data = await response.json();
+                    if (data.code !== 'Ok' || !data.routes?.[0]) throw new Error('No route found');
+
+                    const r = data.routes[0];
+                    route.routedGeo = {
+                        key,
+                        coords: r.geometry.coordinates.map(c => [c[1], c[0]]),
+                        distanceKm: r.distance / 1000,
+                        legs: (r.legs || []).map(l => l.distance / 1000)
+                    };
+                } catch (error) {
+                    route.routedGeo = { key, failed: true };
+                    this.showNotification('Trasování po cestách selhalo – zobrazena vzdušná čára', 'warning');
+                } finally {
+                    route._routingFetchKey = null;
+                }
+
+                // Překreslit jen pokud mezitím nedošlo ke změně bodů či režimu
+                if (route.routedGeo && route.routedGeo.key === this.routingKey(route)) {
+                    this.recalculateDistances(route);
+                    this.redrawRoute(route);
+                    this.updateUI();
+                    this.saveToStorage();
+                }
+            }
+
             // ========== ICON PICKER ==========
             initIconPicker() {
                 const picker = document.getElementById('iconPicker');
@@ -1563,28 +1678,50 @@
             }
 
             // ========== ELEVATION PROFILE ==========
-            async fetchElevation(route) {
-                if (route.points.length < 2) return null;
-                
-                const cacheKey = route.points.map(p => `${p.lat.toFixed(4)},${p.lng.toFixed(4)}`).join('|');
+            samplePath(path, n = 100) {
+                if (path.length < 2) return null;
+                const cum = [0];
+                for (let i = 1; i < path.length; i++) {
+                    cum.push(cum[i - 1] + this.calculateDistance(path[i - 1][0], path[i - 1][1], path[i][0], path[i][1]));
+                }
+                const total = cum[cum.length - 1];
+                if (total <= 0) return null;
+
+                const samples = [];
+                let seg = 0;
+                for (let k = 0; k < n; k++) {
+                    const target = (total * k) / (n - 1);
+                    while (seg < path.length - 2 && cum[seg + 1] < target) seg++;
+                    const segLen = cum[seg + 1] - cum[seg] || 1e-9;
+                    const t = Math.min(1, Math.max(0, (target - cum[seg]) / segLen));
+                    samples.push({
+                        lat: path[seg][0] + (path[seg + 1][0] - path[seg][0]) * t,
+                        lng: path[seg][1] + (path[seg + 1][1] - path[seg][1]) * t,
+                        dist: target
+                    });
+                }
+                return { samples, total };
+            }
+
+            async fetchElevation(samples, cacheKey) {
                 if (this.elevationCache.has(cacheKey)) {
                     return this.elevationCache.get(cacheKey);
                 }
 
                 try {
                     // Using Open-Meteo API (free, no key required)
-                    const lats = route.points.map(p => p.lat.toFixed(4)).join(',');
-                    const lngs = route.points.map(p => p.lng.toFixed(4)).join(',');
-                    
+                    const lats = samples.map(s => s.lat.toFixed(5)).join(',');
+                    const lngs = samples.map(s => s.lng.toFixed(5)).join(',');
+
                     const response = await fetch(
                         `https://api.open-meteo.com/v1/elevation?latitude=${lats}&longitude=${lngs}`
                     );
-                    
+
                     if (!response.ok) throw new Error('Elevation API error');
-                    
+
                     const data = await response.json();
                     const elevations = data.elevation || [];
-                    
+
                     this.elevationCache.set(cacheKey, elevations);
                     return elevations;
                 } catch (error) {
@@ -1601,23 +1738,29 @@
                 }
 
                 this.showNotification('Načítám výškový profil...', 'info');
-                
-                const elevations = await this.fetchElevation(route);
-                if (!elevations || elevations.length === 0) {
+
+                const sampled = this.samplePath(this.getRoutePath(route));
+                if (!sampled) {
+                    this.showNotification('Trasa nemá žádnou délku', 'warning');
+                    return;
+                }
+
+                const cacheKey = this.routingKey(route) + (this.hasValidRoutedGeo(route) ? '|routed' : '|air');
+                const elevations = await this.fetchElevation(sampled.samples, cacheKey);
+                if (!elevations || elevations.length !== sampled.samples.length) {
                     this.showNotification('Nepodařilo se načíst výšková data', 'error');
                     return;
                 }
 
-                // Calculate stats
-                let totalAscent = 0, totalDescent = 0;
+                // Stoupání/klesání s hysterezí 2 m (filtruje šum výškových dat)
+                let totalAscent = 0, totalDescent = 0, ref = elevations[0];
+                for (let i = 1; i < elevations.length; i++) {
+                    const diff = elevations[i] - ref;
+                    if (diff >= 2) { totalAscent += diff; ref = elevations[i]; }
+                    else if (diff <= -2) { totalDescent += -diff; ref = elevations[i]; }
+                }
                 const minElev = Math.min(...elevations);
                 const maxElev = Math.max(...elevations);
-                
-                for (let i = 1; i < elevations.length; i++) {
-                    const diff = elevations[i] - elevations[i-1];
-                    if (diff > 0) totalAscent += diff;
-                    else totalDescent += Math.abs(diff);
-                }
 
                 document.getElementById('elevationStats').innerHTML = `
                     <span>↑ <strong>${Math.round(totalAscent)} m</strong></span>
@@ -1626,41 +1769,38 @@
                     <span>Max: <strong>${Math.round(maxElev)} m</strong></span>
                 `;
 
-                this.drawElevationChart(route, elevations);
+                this.elevState = { sampled, elevations };
+                this.drawElevationChart();
                 document.getElementById('elevationPanel').classList.add('show');
             }
 
-            drawElevationChart(route, elevations) {
+            drawElevationChart(hoverIndex = null) {
+                if (!this.elevState) return;
+                const { sampled, elevations } = this.elevState;
                 const canvas = document.getElementById('elevationChart');
                 const ctx = canvas.getContext('2d');
-                
+
                 // Set canvas size
                 canvas.width = canvas.parentElement.clientWidth;
                 canvas.height = 100;
-                
+
                 const padding = { top: 10, right: 10, bottom: 20, left: 40 };
                 const width = canvas.width - padding.left - padding.right;
                 const height = canvas.height - padding.top - padding.bottom;
-                
-                // Calculate cumulative distances
-                const distances = [0];
-                for (let i = 1; i < route.points.length; i++) {
-                    const d = this.calculateDistance(
-                        route.points[i-1].lat, route.points[i-1].lng,
-                        route.points[i].lat, route.points[i].lng
-                    );
-                    distances.push(distances[i-1] + d);
-                }
-                const totalDist = distances[distances.length - 1];
-                
+
+                const totalDist = sampled.total;
                 const minElev = Math.min(...elevations) - 10;
                 const maxElev = Math.max(...elevations) + 10;
                 const elevRange = maxElev - minElev || 1;
-                
+
+                const toX = i => padding.left + (sampled.samples[i].dist / totalDist) * width;
+                const toY = i => padding.top + height - ((elevations[i] - minElev) / elevRange) * height;
+                this.elevState.layout = { padding, width };
+
                 // Clear canvas
                 ctx.fillStyle = '#1f2937';
                 ctx.fillRect(0, 0, canvas.width, canvas.height);
-                
+
                 // Draw grid
                 ctx.strokeStyle = '#374151';
                 ctx.lineWidth = 1;
@@ -1671,53 +1811,105 @@
                     ctx.lineTo(canvas.width - padding.right, y);
                     ctx.stroke();
                 }
-                
+
                 // Draw elevation profile (filled)
                 ctx.beginPath();
                 ctx.moveTo(padding.left, padding.top + height);
-                
-                elevations.forEach((elev, i) => {
-                    const x = padding.left + (distances[i] / totalDist) * width;
-                    const y = padding.top + height - ((elev - minElev) / elevRange) * height;
-                    if (i === 0) ctx.lineTo(x, y);
-                    else ctx.lineTo(x, y);
-                });
-                
+                elevations.forEach((elev, i) => ctx.lineTo(toX(i), toY(i)));
                 ctx.lineTo(padding.left + width, padding.top + height);
                 ctx.closePath();
-                
+
                 const gradient = ctx.createLinearGradient(0, padding.top, 0, padding.top + height);
                 gradient.addColorStop(0, 'rgba(16, 185, 129, 0.6)');
                 gradient.addColorStop(1, 'rgba(16, 185, 129, 0.1)');
                 ctx.fillStyle = gradient;
                 ctx.fill();
-                
+
                 // Draw line
                 ctx.beginPath();
                 elevations.forEach((elev, i) => {
-                    const x = padding.left + (distances[i] / totalDist) * width;
-                    const y = padding.top + height - ((elev - minElev) / elevRange) * height;
-                    if (i === 0) ctx.moveTo(x, y);
-                    else ctx.lineTo(x, y);
+                    if (i === 0) ctx.moveTo(toX(i), toY(i));
+                    else ctx.lineTo(toX(i), toY(i));
                 });
                 ctx.strokeStyle = '#10b981';
                 ctx.lineWidth = 2;
                 ctx.stroke();
-                
+
                 // Draw labels
                 ctx.fillStyle = '#9ca3af';
                 ctx.font = '9px Poppins';
                 ctx.textAlign = 'right';
                 ctx.fillText(`${Math.round(maxElev)} m`, padding.left - 5, padding.top + 10);
                 ctx.fillText(`${Math.round(minElev)} m`, padding.left - 5, padding.top + height);
-                
+
                 ctx.textAlign = 'center';
                 ctx.fillText('0 km', padding.left, canvas.height - 5);
                 ctx.fillText(`${totalDist.toFixed(1)} km`, canvas.width - padding.right, canvas.height - 5);
+
+                // Hover crosshair + tooltip
+                if (hoverIndex !== null) {
+                    const hx = toX(hoverIndex);
+                    const hy = toY(hoverIndex);
+
+                    ctx.strokeStyle = 'rgba(251, 191, 36, 0.8)';
+                    ctx.lineWidth = 1;
+                    ctx.beginPath();
+                    ctx.moveTo(hx, padding.top);
+                    ctx.lineTo(hx, padding.top + height);
+                    ctx.stroke();
+
+                    ctx.beginPath();
+                    ctx.arc(hx, hy, 4, 0, Math.PI * 2);
+                    ctx.fillStyle = '#fbbf24';
+                    ctx.fill();
+                    ctx.strokeStyle = '#0a0f1a';
+                    ctx.stroke();
+
+                    const text = `${sampled.samples[hoverIndex].dist.toFixed(2)} km · ${Math.round(elevations[hoverIndex])} m`;
+                    ctx.font = '10px Poppins';
+                    const tw = ctx.measureText(text).width + 12;
+                    const tx = Math.min(Math.max(hx - tw / 2, padding.left), canvas.width - padding.right - tw);
+                    ctx.fillStyle = 'rgba(10, 15, 26, 0.9)';
+                    ctx.fillRect(tx, padding.top, tw, 16);
+                    ctx.fillStyle = '#fbbf24';
+                    ctx.textAlign = 'center';
+                    ctx.fillText(text, tx + tw / 2, padding.top + 11);
+                }
+            }
+
+            handleElevationHover(e) {
+                if (!this.elevState || !this.elevState.layout) return;
+                const canvas = document.getElementById('elevationChart');
+                const rect = canvas.getBoundingClientRect();
+                const x = (e.clientX - rect.left) * (canvas.width / rect.width);
+                const { padding, width } = this.elevState.layout;
+                const frac = Math.min(1, Math.max(0, (x - padding.left) / width));
+                const clamped = Math.min(this.elevState.sampled.samples.length - 1, Math.max(0, Math.round(frac * (this.elevState.sampled.samples.length - 1))));
+
+                this.drawElevationChart(clamped);
+
+                const s = this.elevState.sampled.samples[clamped];
+                if (!this.elevHoverMarker) {
+                    this.elevHoverMarker = L.circleMarker([s.lat, s.lng], {
+                        radius: 7, color: '#0a0f1a', weight: 2,
+                        fillColor: '#fbbf24', fillOpacity: 1, interactive: false
+                    }).addTo(this.map);
+                } else {
+                    this.elevHoverMarker.setLatLng([s.lat, s.lng]);
+                }
+            }
+
+            clearElevationHover() {
+                if (this.elevState) this.drawElevationChart();
+                if (this.elevHoverMarker) {
+                    this.map.removeLayer(this.elevHoverMarker);
+                    this.elevHoverMarker = null;
+                }
             }
 
             hideElevation() {
                 document.getElementById('elevationPanel').classList.remove('show');
+                this.clearElevationHover();
             }
 
             // ========== EXPORT TO PNG/PDF ==========
@@ -1897,6 +2089,7 @@
                 const data = {
                     n: route.name,
                     c: [route.pointColor, route.lineColor],
+                    m: route.routingMode || 'straight',
                     p: route.points.map(pt => [
                         Math.round(pt.lat * 1e6) / 1e6,
                         Math.round(pt.lng * 1e6) / 1e6,
@@ -1928,6 +2121,7 @@
                         pointColor: data.c?.[0] || this.currentPointColor,
                         lineColor: data.c?.[1] || this.currentLineColor,
                         distanceColor: this.currentDistanceColor,
+                        routingMode: ROUTING_MODES[data.m] ? data.m : 'straight',
                         visible: true,
                         created: new Date().toISOString()
                     };
@@ -1974,6 +2168,7 @@
                         pointColor: r.pointColor,
                         lineColor: r.lineColor,
                         distanceColor: r.distanceColor,
+                        routingMode: r.routingMode || 'straight',
                         visible: r.visible,
                         created: r.created
                     })),
@@ -2087,6 +2282,20 @@
                     });
                 });
 
+                // Routing Mode
+                document.getElementById('routingModeSelect').addEventListener('change', (e) => {
+                    const mode = e.target.value;
+                    this.defaultRoutingMode = mode;
+                    this.settings.defaultRoutingMode = mode;
+                    const route = this.routes.find(r => r.id === this.selectedRouteId);
+                    if (route && (route.routingMode || 'straight') !== mode) {
+                        this.setRoutingMode(route, mode);
+                    } else {
+                        this.saveSettings();
+                        this.showNotification(`Nové trasy: ${ROUTING_MODES[mode].label}`, 'info');
+                    }
+                });
+
                 // Speed Profile
                 document.getElementById('speedProfile').addEventListener('change', (e) => {
                     this.speedProfile = parseFloat(e.target.value);
@@ -2153,14 +2362,15 @@
                 // Throttled map move save
                 this.map.on('moveend', () => this.throttledSaveSettings());
 
+                // Elevation chart hover
+                const elevCanvas = document.getElementById('elevationChart');
+                elevCanvas.addEventListener('mousemove', (e) => this.handleElevationHover(e));
+                elevCanvas.addEventListener('mouseleave', () => this.clearElevationHover());
+
                 // Resize elevation chart
                 window.addEventListener('resize', () => {
-                    if (document.getElementById('elevationPanel').classList.contains('show')) {
-                        const route = this.routes.find(r => r.id === this.selectedRouteId);
-                        if (route && this.elevationCache.has(route.points.map(p => `${p.lat.toFixed(4)},${p.lng.toFixed(4)}`).join('|'))) {
-                            const elevations = this.elevationCache.get(route.points.map(p => `${p.lat.toFixed(4)},${p.lng.toFixed(4)}`).join('|'));
-                            this.drawElevationChart(route, elevations);
-                        }
+                    if (document.getElementById('elevationPanel').classList.contains('show') && this.elevState) {
+                        this.drawElevationChart();
                     }
                 });
             }
@@ -2183,7 +2393,7 @@
                         results.forEach(result => {
                             const item = document.createElement('div');
                             item.className = 'search-result-item';
-                            item.innerHTML = `<strong>${result.display_name.split(',')[0]}</strong><br><small>${result.display_name}</small>`;
+                            item.innerHTML = `<strong>${this.escapeHtml(result.display_name.split(',')[0])}</strong><br><small>${this.escapeHtml(result.display_name)}</small>`;
                             item.addEventListener('click', () => {
                                 this.map.setView([parseFloat(result.lat), parseFloat(result.lon)], 14);
                                 container.classList.remove('show');
@@ -2267,6 +2477,13 @@
                         route.points[i].distanceFromPrev = this.calculateDistance(p1.lat, p1.lng, p2.lat, p2.lng);
                     }
                 }
+
+                // Máme-li routovanou geometrii, použijeme skutečné délky úseků po cestách
+                if (this.hasValidRoutedGeo(route) && route.routedGeo.legs.length === route.points.length - 1) {
+                    route.points.forEach((p, i) => {
+                        p.distanceFromPrev = i === 0 ? 0 : route.routedGeo.legs[i - 1];
+                    });
+                }
             }
 
             createNewRoute() {
@@ -2281,6 +2498,7 @@
                     pointColor: this.currentPointColor,
                     lineColor: this.currentLineColor,
                     distanceColor: this.currentDistanceColor,
+                    routingMode: this.defaultRoutingMode || 'straight',
                     visible: true,
                     created: new Date().toISOString()
                 };
@@ -2370,9 +2588,9 @@
                     draggable: this.draggableMarkers && isEditing 
                 })
                 .bindPopup(`
-                    <strong>${point.name}</strong><br>
+                    <strong>${this.escapeHtml(point.name)}</strong><br>
                     <small style="font-family: 'JetBrains Mono';">${point.lat.toFixed(6)}, ${point.lng.toFixed(6)}</small>
-                    ${point.notes ? `<br><em style="color: #60a5fa;">${point.notes}</em>` : ''}
+                    ${point.notes ? `<br><em style="color: #60a5fa;">${this.escapeHtml(point.notes)}</em>` : ''}
                     ${point.distanceFromPrev > 0 ? `<br><span style="color: #fbbf24;">📏 ${point.distanceFromPrev.toFixed(2)} km</span>` : ''}
                 `)
                 .addTo(this.map);
@@ -2394,13 +2612,21 @@
             }
 
             calculateRouteGeometry(route) {
-                const coords = route.points.map(p => [p.lat, p.lng]);
                 const isEditing = this.editingRouteId === route.id;
-                
+                const wantsRouting = route.routingMode && route.routingMode !== 'straight';
+                const routed = this.hasValidRoutedGeo(route);
+                const coords = routed ? route.routedGeo.coords : route.points.map(p => [p.lat, p.lng]);
+
+                // Chybí platná routovaná geometrie a poslední pokus neselhal -> stáhnout
+                if (wantsRouting && !routed && !(route.routedGeo?.failed && route.routedGeo.key === this.routingKey(route))) {
+                    this.fetchRoutedGeometry(route);
+                }
+
                 const polyline = L.polyline(coords, {
                     color: route.lineColor,
                     weight: 4,
-                    opacity: 0.9
+                    opacity: 0.9,
+                    dashArray: wantsRouting && !routed ? '8 8' : null
                 }).addTo(this.map);
 
                 if (this.insertMode && isEditing) {
@@ -2428,7 +2654,7 @@
                         const p2 = route.points[i];
                         const midLat = (p1.lat + p2.lat) / 2;
                         const midLng = (p1.lng + p2.lng) / 2;
-                        const distance = this.calculateDistance(p1.lat, p1.lng, p2.lat, p2.lng);
+                        const distance = route.points[i].distanceFromPrev || this.calculateDistance(p1.lat, p1.lng, p2.lat, p2.lng);
 
                         const label = L.divIcon({
                             className: 'distance-label',
@@ -2608,34 +2834,55 @@
                 });
             }
 
-            movePointUp(routeId, pointId) {
-                const route = this.routes.find(r => r.id === routeId);
-                if (!route) return;
-                const idx = route.points.findIndex(p => p.id === pointId);
-                if (idx <= 0) return;
+            startPointDrag(e, routeId) {
+                e.preventDefault();
+                const handle = e.currentTarget;
+                const item = handle.closest('.point-item');
+                const list = document.getElementById('routesList');
+                if (!item) return;
 
-                this.saveState('Přesun bodu');
-                [route.points[idx - 1], route.points[idx]] = [route.points[idx], route.points[idx - 1]];
-                this.renumberPoints(route);
-                this.recalculateDistances(route);
-                this.redrawRoute(route);
-                this.updateUI();
-                this.saveToStorage();
-            }
+                handle.setPointerCapture(e.pointerId);
+                item.classList.add('dragging');
 
-            movePointDown(routeId, pointId) {
-                const route = this.routes.find(r => r.id === routeId);
-                if (!route) return;
-                const idx = route.points.findIndex(p => p.id === pointId);
-                if (idx < 0 || idx >= route.points.length - 1) return;
+                const move = (ev) => {
+                    const siblings = [...list.querySelectorAll(`.point-item[data-route-id="${routeId}"]`)].filter(el => el !== item);
+                    let placed = false;
+                    for (const sib of siblings) {
+                        const r = sib.getBoundingClientRect();
+                        if (ev.clientY < r.top + r.height / 2) {
+                            list.insertBefore(item, sib);
+                            placed = true;
+                            break;
+                        }
+                    }
+                    if (!placed && siblings.length) {
+                        siblings[siblings.length - 1].after(item);
+                    }
+                };
 
-                this.saveState('Přesun bodu');
-                [route.points[idx], route.points[idx + 1]] = [route.points[idx + 1], route.points[idx]];
-                this.renumberPoints(route);
-                this.recalculateDistances(route);
-                this.redrawRoute(route);
-                this.updateUI();
-                this.saveToStorage();
+                const finish = () => {
+                    handle.removeEventListener('pointermove', move);
+                    item.classList.remove('dragging');
+
+                    const route = this.routes.find(r => r.id === routeId);
+                    if (route) {
+                        const orderIds = [...list.querySelectorAll(`.point-item[data-route-id="${routeId}"]`)].map(el => parseFloat(el.dataset.pointId));
+                        const changed = route.points.some((p, i) => p.id !== orderIds[i]);
+                        if (changed) {
+                            this.saveState('Přesun bodu');
+                            route.points.sort((a, b) => orderIds.indexOf(a.id) - orderIds.indexOf(b.id));
+                            this.renumberPoints(route);
+                            this.recalculateDistances(route);
+                            this.redrawRoute(route);
+                            this.saveToStorage();
+                        }
+                    }
+                    this.updateUI();
+                };
+
+                handle.addEventListener('pointermove', move);
+                handle.addEventListener('pointerup', finish, { once: true });
+                handle.addEventListener('pointercancel', finish, { once: true });
             }
 
             duplicateRoute(id) {
@@ -2653,6 +2900,7 @@
                     pointColor: original.pointColor,
                     lineColor: original.lineColor,
                     distanceColor: original.distanceColor,
+                    routingMode: original.routingMode || 'straight',
                     visible: true,
                     created: new Date().toISOString()
                 };
@@ -2719,13 +2967,15 @@
                         const isEditing = route.id === this.editingRouteId;
                         const isSelected = route.id === this.selectedRouteId;
                         const distance = this.getRouteDistance(route);
-                        
+                        const routingMode = ROUTING_MODES[route.routingMode || 'straight'];
+                        const isRouted = route.routingMode && route.routingMode !== 'straight';
+
                         const routeEl = document.createElement('div');
                         routeEl.className = `route-item ${isSelected ? 'selected' : ''} ${isEditing ? 'editing' : ''}`;
-                        
+
                         routeEl.innerHTML = `
                             <div class="route-header">
-                                <span class="route-name">${route.name}</span>
+                                <span class="route-name">${this.escapeHtml(route.name)}</span>
                                 <div class="route-badges">
                                     ${isEditing ? '<span class="route-badge editing">EDIT</span>' : ''}
                                     <span class="route-badge">${route.visible ? '👁' : '🚫'}</span>
@@ -2733,13 +2983,14 @@
                             </div>
                             <div class="route-info">
                                 <span><i class="fas fa-map-pin"></i> ${route.points.length}</span>
-                                <span><i class="fas fa-ruler"></i> ${distance.toFixed(2)} km</span>
+                                <span><i class="fas ${routingMode.icon}"></i> ${distance.toFixed(2)} km</span>
                                 <span><i class="fas fa-clock"></i> ${this.formatTime(distance)}</span>
                             </div>
                             <div class="route-actions">
                                 <button class="btn btn-small ${isEditing ? 'btn-warning' : 'btn-primary'}" onclick="event.stopPropagation(); ${isEditing ? 'routeManager.stopEditing()' : `routeManager.startEditing(${route.id})`}" title="${isEditing ? 'Ukončit' : 'Upravit'}">
                                     <i class="fas fa-${isEditing ? 'stop' : 'edit'}"></i>
                                 </button>
+                                <button class="btn btn-small ${isRouted ? 'btn-info' : ''}" onclick="event.stopPropagation(); routeManager.cycleRoutingMode(${route.id})" title="Trasování: ${routingMode.label} (kliknutím přepnete)"><i class="fas ${routingMode.icon}"></i></button>
                                 <button class="btn btn-small" onclick="event.stopPropagation(); routeManager.renameRoute(${route.id})" title="Přejmenovat"><i class="fas fa-pen"></i></button>
                                 <button class="btn btn-small" onclick="event.stopPropagation(); routeManager.duplicateRoute(${route.id})" title="Kopírovat"><i class="fas fa-copy"></i></button>
                                 <button class="btn btn-small" onclick="event.stopPropagation(); routeManager.reverseRoute(${route.id})" title="Obrátit"><i class="fas fa-exchange-alt"></i></button>
@@ -2753,26 +3004,29 @@
 
                         // Points
                         if (isSelected && route.points.length > 0) {
+                            let cumulative = 0;
                             route.points.forEach((point, idx) => {
+                                cumulative += point.distanceFromPrev || 0;
                                 const pointEl = document.createElement('div');
                                 pointEl.className = 'point-item';
+                                pointEl.dataset.routeId = route.id;
+                                pointEl.dataset.pointId = point.id;
                                 pointEl.innerHTML = `
                                     <div class="point-header">
-                                        <span><span class="point-number">${idx + 1}</span><span class="point-name">${point.name}</span></span>
+                                        <span><span class="point-drag" title="Přetažením změníte pořadí"><i class="fas fa-grip-vertical"></i></span><span class="point-number">${idx + 1}</span><span class="point-name">${this.escapeHtml(point.name)}</span></span>
                                         <i class="fas ${point.icon || 'fa-map-marker-alt'}" style="color: ${route.pointColor};"></i>
                                     </div>
                                     <div class="point-coords">${point.lat.toFixed(6)}, ${point.lng.toFixed(6)}</div>
-                                    ${point.distanceFromPrev > 0 ? `<div class="point-meta">📏 ${point.distanceFromPrev.toFixed(2)} km od předchozího</div>` : ''}
-                                    ${point.notes ? `<div class="point-meta">📝 ${point.notes}</div>` : ''}
+                                    ${point.distanceFromPrev > 0 ? `<div class="point-meta">📏 ${point.distanceFromPrev.toFixed(2)} km od předchozího · ${cumulative.toFixed(2)} km od startu</div>` : ''}
+                                    ${point.notes ? `<div class="point-meta">📝 ${this.escapeHtml(point.notes)}</div>` : ''}
                                     <div class="point-actions">
                                         <button class="btn btn-small" onclick="routeManager.editPointName(${route.id}, ${point.id})" title="Přejmenovat"><i class="fas fa-pen"></i></button>
                                         <button class="btn btn-small" onclick="routeManager.changePointIcon(${route.id}, ${point.id})" title="Změnit ikonu"><i class="fas fa-icons"></i></button>
                                         <button class="btn btn-small" onclick="routeManager.addPointNotes(${route.id}, ${point.id})" title="Poznámka"><i class="fas fa-sticky-note"></i></button>
-                                        <button class="btn btn-small" onclick="routeManager.movePointUp(${route.id}, ${point.id})" title="Nahoru" ${idx === 0 ? 'disabled' : ''}><i class="fas fa-arrow-up"></i></button>
-                                        <button class="btn btn-small" onclick="routeManager.movePointDown(${route.id}, ${point.id})" title="Dolů" ${idx === route.points.length - 1 ? 'disabled' : ''}><i class="fas fa-arrow-down"></i></button>
                                         <button class="btn btn-small btn-danger" onclick="routeManager.removePointFromRoute(${route.id}, ${point.id})" title="Smazat"><i class="fas fa-trash"></i></button>
                                     </div>
                                 `;
+                                pointEl.querySelector('.point-drag').addEventListener('pointerdown', (e) => this.startPointDrag(e, route.id));
                                 listContainer.appendChild(pointEl);
                             });
                         }
@@ -2781,6 +3035,16 @@
 
                 document.getElementById('totalRoutes').textContent = this.routes.length;
                 document.getElementById('totalPoints').textContent = this.routes.reduce((sum, r) => sum + r.points.length, 0);
+
+                // Select režimu trasování drží krok s vybranou trasou (a určuje režim nových tras)
+                const selectedRoute = this.routes.find(r => r.id === this.selectedRouteId);
+                if (selectedRoute) {
+                    const mode = selectedRoute.routingMode || 'straight';
+                    document.getElementById('routingModeSelect').value = mode;
+                    this.defaultRoutingMode = mode;
+                    this.settings.defaultRoutingMode = mode;
+                }
+
                 this.updateEditModeBanner();
             }
 
@@ -2894,7 +3158,7 @@
                     routes: this.routes.map(r => ({
                         id: r.id, name: r.name,
                         points: r.points.map(p => ({ id: p.id, name: p.name, lat: p.lat, lng: p.lng, created: p.created, notes: p.notes, icon: p.icon, distanceFromPrev: p.distanceFromPrev })),
-                        pointColor: r.pointColor, lineColor: r.lineColor, distanceColor: r.distanceColor, visible: r.visible, created: r.created
+                        pointColor: r.pointColor, lineColor: r.lineColor, distanceColor: r.distanceColor, routingMode: r.routingMode || 'straight', visible: r.visible, created: r.created
                     })),
                     settings: this.settings,
                     exported: new Date().toISOString(),
@@ -2912,11 +3176,18 @@
             exportGPX() {
                 if (this.routes.length === 0) { this.showNotification('Žádné trasy', 'warning'); return; }
 
-                let gpx = `<?xml version="1.0" encoding="UTF-8"?>\n<gpx version="1.1" creator="TripPlanner v7.0">\n`;
+                let gpx = `<?xml version="1.0" encoding="UTF-8"?>\n<gpx version="1.1" creator="TripPlanner v8.0">\n`;
+                // Pojmenované body jako waypointy (dle GPX schématu musí předcházet trasám)
+                this.routes.forEach(route => {
+                    route.points.forEach(p => {
+                        gpx += `<wpt lat="${p.lat}" lon="${p.lng}"><name>${this.escapeXml(p.name)}</name>${p.notes ? `<desc>${this.escapeXml(p.notes)}</desc>` : ''}</wpt>\n`;
+                    });
+                });
                 this.routes.forEach(route => {
                     gpx += `<trk><name>${this.escapeXml(route.name)}</name><trkseg>\n`;
-                    route.points.forEach(p => {
-                        gpx += `<trkpt lat="${p.lat}" lon="${p.lng}"><name>${this.escapeXml(p.name)}</name>${p.notes ? `<desc>${this.escapeXml(p.notes)}</desc>` : ''}</trkpt>\n`;
+                    // Routovaná geometrie po cestách, jinak spojnice bodů
+                    this.getRoutePath(route).forEach(([lat, lng]) => {
+                        gpx += `<trkpt lat="${lat}" lon="${lng}"></trkpt>\n`;
                     });
                     gpx += `</trkseg></trk>\n`;
                 });
@@ -2935,7 +3206,7 @@
                 let kml = `<?xml version="1.0" encoding="UTF-8"?>\n<kml xmlns="http://www.opengis.net/kml/2.2">\n<Document><name>Trasy</name>\n`;
                 this.routes.forEach(route => {
                     kml += `<Placemark><name>${this.escapeXml(route.name)}</name><LineString><coordinates>`;
-                    route.points.forEach(p => { kml += `${p.lng},${p.lat},0 `; });
+                    this.getRoutePath(route).forEach(([lat, lng]) => { kml += `${lng},${lat},0 `; });
                     kml += `</coordinates></LineString></Placemark>\n`;
                 });
                 kml += `</Document></kml>`;
@@ -2989,6 +3260,7 @@
                         pointColor: rd.pointColor || this.currentPointColor,
                         lineColor: rd.lineColor || this.currentLineColor,
                         distanceColor: rd.distanceColor || this.currentDistanceColor,
+                        routingMode: rd.routingMode || 'straight',
                         visible: true,
                         created: new Date().toISOString()
                     };
@@ -3113,7 +3385,7 @@
                         routes: this.routes.map(r => ({
                             id: r.id, name: r.name,
                             points: r.points.map(p => ({ id: p.id, name: p.name, lat: p.lat, lng: p.lng, created: p.created, notes: p.notes, icon: p.icon, distanceFromPrev: p.distanceFromPrev })),
-                            pointColor: r.pointColor, lineColor: r.lineColor, distanceColor: r.distanceColor, visible: r.visible, created: r.created
+                            pointColor: r.pointColor, lineColor: r.lineColor, distanceColor: r.distanceColor, routingMode: r.routingMode || 'straight', visible: r.visible, created: r.created
                         })),
                         editingRouteId: this.editingRouteId,
                         selectedRouteId: this.selectedRouteId,
@@ -3138,6 +3410,7 @@
                             this.showNotes = this.settings.showNotes;
                             this.draggableMarkers = this.settings.draggableMarkers || false;
                             this.speedProfile = this.settings.speedProfile || 5;
+                            this.defaultRoutingMode = ROUTING_MODES[this.settings.defaultRoutingMode] ? this.settings.defaultRoutingMode : 'straight';
                         }
                         if (data.routes) {
                             this.routes = data.routes.map(r => ({ 
@@ -3178,6 +3451,7 @@
                 this.settings.showNotes = this.showNotes;
                 this.settings.draggableMarkers = this.draggableMarkers;
                 this.settings.speedProfile = this.speedProfile;
+                this.settings.defaultRoutingMode = this.defaultRoutingMode;
                 if (this.map) {
                     this.settings.mapCenter = [this.map.getCenter().lat, this.map.getCenter().lng];
                     this.settings.mapZoom = this.map.getZoom();
@@ -3193,6 +3467,7 @@
                 document.getElementById('showNotes').checked = this.settings.showNotes;
                 document.getElementById('draggableMarkers').checked = this.settings.draggableMarkers || false;
                 document.getElementById('speedProfile').value = this.settings.speedProfile || 5;
+                document.getElementById('routingModeSelect').value = this.defaultRoutingMode || 'straight';
             }
 
             showNotification(message, type = 'success') {

@@ -39,7 +39,17 @@ self.addEventListener('fetch', e => {
           if (resp.ok) cache.put(e.request, resp.clone());
           return resp;
         })
-        .catch(() => cached);
+        // offline a stránka není v cache -> respondWith(undefined) by
+        // vrátil bílou chybovou stránku; místo toho srozumitelná hláška
+        .catch(() => cached || new Response(
+          '<!DOCTYPE html><html lang="cs"><meta charset="UTF-8">' +
+          '<meta name="viewport" content="width=device-width, initial-scale=1">' +
+          '<body style="margin:0;min-height:100vh;display:flex;align-items:center;justify-content:center;' +
+          'background:#1a1a1a;color:#e0e0e0;font-family:sans-serif;text-align:center;padding:20px">' +
+          '<div><h1 style="font-size:1.2rem">📡 Aplikace není dostupná offline</h1>' +
+          '<p style="color:#888;margin-top:8px">Tato stránka se uloží při prvním otevření online.</p></div></body></html>',
+          { status: 503, headers: { 'Content-Type': 'text/html; charset=utf-8' } }
+        ));
       return cached || zeSite;
     })
   );

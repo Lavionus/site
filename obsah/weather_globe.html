@@ -179,6 +179,7 @@
       <button id="dayNightBtn" title="Zobrazení den / noc">🌓 Den/noc</button>
       <button id="rotateBtn" class="on" title="Automatické otáčení">🔄 Rotace</button>
       <button id="refreshBtn" title="Načíst čerstvá data">↻ Obnovit</button>
+      <button id="planetsBtn" title="Glóbusy dalších těles sluneční soustavy" onclick="location.href='planet_globe.html'">🪐 Planety</button>
     </div>
   </div>
 
@@ -401,7 +402,7 @@
     // ===================== Glóbus =====================
     const world = Globe()
       (document.getElementById('globeViz'))
-      .backgroundImageUrl('https://unpkg.com/three-globe@2.31.0/example/img/night-sky.png')
+      .backgroundColor('#02030a')
       .atmosphereColor('#6aa6fd').atmosphereAltitude(0.18)
       // teplotní špendlíky (hrot míří přesně na souřadnici)
       .htmlElementsData([]).htmlLat('lat').htmlLng('lon').htmlAltitude(0.005)
@@ -430,6 +431,33 @@
     world.controls().autoRotate = state.autoRotate;
     world.controls().autoRotateSpeed = 0.45;
     world.pointOfView(state.pov || CONTINENTS.world);
+
+    // ===================== Hvězdné pozadí =====================
+    // Procedurální hvězdy (THREE.Points, velikost v pixelech) místo bitmapového pozadí —
+    // zůstávají ostré při libovolném zoomu. Tři vrstvy: drobné slabé, střední a pár jasných,
+    // s jemnými hvězdnými odstíny (namodralé, nažloutlé, naoranžovělé).
+    (function starfield() {
+      world.camera().far = 20000; world.camera().updateProjectionMatrix();
+      [ { n: 3000, size: 1.1, op: 0.55 },
+        { n: 1200, size: 1.8, op: 0.8 },
+        { n: 250,  size: 2.7, op: 1 } ].forEach(l => {
+        const pos = new Float32Array(l.n * 3), col = new Float32Array(l.n * 3);
+        for (let i = 0; i < l.n; i++) {
+          const u = Math.random() * 2 - 1, ph = Math.random() * 2 * Math.PI;
+          const r = 3000 + Math.random() * 3000, s = Math.sqrt(1 - u * u);
+          pos.set([r * s * Math.cos(ph), r * u, r * s * Math.sin(ph)], i * 3);
+          const t = Math.random();
+          col.set(t < .6 ? [1, 1, 1] : t < .78 ? [.72, .82, 1] : t < .93 ? [1, .93, .78] : [1, .8, .65], i * 3);
+        }
+        const g = new THREE.BufferGeometry();
+        g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+        g.setAttribute('color', new THREE.BufferAttribute(col, 3));
+        world.scene().add(new THREE.Points(g, new THREE.PointsMaterial({
+          size: l.size, sizeAttenuation: false, vertexColors: true,
+          transparent: true, opacity: l.op, depthWrite: false
+        })));
+      });
+    })();
 
     // Vrstva mraků (sdílená instance THREE z window.THREE).
     // POZN. k synchronizaci: globe.gl při „rotaci" otáčí KAMERU, povrch Země je v prostoru pevný.
@@ -494,9 +522,10 @@
     // načte texturu a nastaví anizotropii (ostřejší při zoomu)
     const loadTex = (url) => new Promise(res => texLoader.load(url, t => { t.anisotropy = maxAniso; t.needsUpdate = true; res(t); }));
     const texReady = Promise.all([
-      // jako denní vrstvu používáme blue-marble (4096×2048) – ostřejší než earth-day.jpg (1600×800)
-      loadTex('https://unpkg.com/three-globe@2.31.0/example/img/earth-blue-marble.jpg'),
-      loadTex('https://unpkg.com/three-globe@2.31.0/example/img/earth-night.jpg'),
+      // lokální 8K textury (8192×4096, solarsystemscope.com, CC BY 4.0) — 2× ostřejší při zoomu
+      // než blue-marble z unpkg (4096×2048); díky service workeru fungují i offline
+      loadTex('textures/8k_earth_daymap.jpg'),
+      loadTex('textures/8k_earth_nightmap.jpg'),
       loadTex('https://unpkg.com/three-globe@2.31.0/example/img/earth-topology.png')
     ]).then(([dayTex, nightTex, bump]) => {
       dayNightMaterial = new THREE.ShaderMaterial({
