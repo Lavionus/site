@@ -155,16 +155,20 @@ function polohaH(t,uhelCasu){       // světová poloha tělesa v čase
     z:oz
   };
 }
-function projektuj(p,slunceX,w,h){
+const NEAR=20;                      // rovina kamery: blíž už se nekreslí
+function doKamery(p,slunceX){       // světové souřadnice → souřadnice kamery
   let x=p.x-slunceX,y=p.y,z=p.z;
   const cy=Math.cos(kamera.yaw),sy=Math.sin(kamera.yaw);
   let x1=x*cy+z*sy, z1=-x*sy+z*cy;
   const cp=Math.cos(kamera.pitch),sp=Math.sin(kamera.pitch);
   let y2=y*cp-z1*sp, z2=y*sp+z1*cp;
-  const zc=z2+kamera.dist;
-  if(zc<20)return null;
-  const f=560/zc;
-  return {x:w/2+x1*f,y:h/2-y2*f,f};
+  return {x:x1,y:y2,z:z2+kamera.dist};
+}
+function projektuj(p,slunceX,w,h){
+  const k=doKamery(p,slunceX);
+  if(k.z<NEAR)return null;
+  const f=560/k.z;
+  return {x:w/2+k.x*f,y:h/2-k.y*f,f};
 }
 function kresliHelix(){
   const {w,h}=rozmer();
@@ -179,11 +183,16 @@ function kresliHelix(){
       if(st.length>560)st.shift();
     });
   }
-  // přímá dráha Slunce (zlatá čára ve směru letu)
-  const a=projektuj({x:sx-PITCH*8,y:0,z:0},sx,w,h),b=projektuj({x:sx+PITCH*1.5,y:0,z:0},sx,w,h);
-  if(a&&b){
+  // přímá dráha Slunce (zlatá čára ve směru letu) — úsečka se u roviny kamery
+  // ořezává, ne zahazuje: jinak by zmizela celá, kdykoli se jeden její konec
+  // dostane při otáčení pohledu za záda kamery
+  let A=doKamery({x:sx-PITCH*8,y:0,z:0},sx), B=doKamery({x:sx+PITCH*1.5,y:0,z:0},sx);
+  if(A.z>=NEAR||B.z>=NEAR){
+    if(A.z<NEAR){const t=(NEAR-A.z)/(B.z-A.z);A={x:A.x+(B.x-A.x)*t,y:A.y+(B.y-A.y)*t,z:NEAR};}
+    if(B.z<NEAR){const t=(NEAR-B.z)/(A.z-B.z);B={x:B.x+(A.x-B.x)*t,y:B.y+(A.y-B.y)*t,z:NEAR};}
+    const fA=560/A.z,fB=560/B.z;
     ctx.strokeStyle='rgba(255,213,79,.35)';ctx.lineWidth=1.5;
-    ctx.beginPath();ctx.moveTo(a.x,a.y);ctx.lineTo(b.x,b.y);ctx.stroke();
+    ctx.beginPath();ctx.moveTo(w/2+A.x*fA,h/2-A.y*fA);ctx.lineTo(w/2+B.x*fB,h/2-B.y*fB);ctx.stroke();
   }
   // šroubovice planet
   if(ukazStopy)HTELESA.forEach((t,i)=>{
