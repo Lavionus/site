@@ -2,7 +2,9 @@
    Jádro (index, katalog, styly) se předcachuje; jednotlivé aplikace
    se cachují průběžně při prvním otevření (stale-while-revalidate),
    takže jednou navštívená aplikace funguje i offline. */
-const CACHE = 'webapp-v1';
+/* Při větší aktualizaci webu zvyš číslo verze — stará cache se u návštěvníků
+   smaže a vše se stáhne čerstvé (jinak SWR ukáže novou verzi až na druhé načtení). */
+const CACHE = 'webapp-v2';
 const JADRO = [
   './',
   './index.html',
