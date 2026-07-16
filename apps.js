@@ -1342,9 +1342,19 @@ const KATALOG_SEKCE = [
         "tagy": ["vesmír", "galaxie", "měsíc", "slunce", "oběh", "astronomie", "mléčná dráha"]
       },
       {
+        "soubor": "obsah/gravitacni_hriste.html",
+        "nazev": "🎯 Gravitační hřiště",
+        "tagy": ["gravitace", "fyzika", "kepler", "oběžná dráha", "vesmír", "simulace", "kosmická rychlost"]
+      },
+      {
+        "soubor": "obsah/iss.html",
+        "nazev": "🛰️ ISS živě",
+        "tagy": ["vesmír", "stanice", "družice", "oběžná dráha", "astronomie", "živě"]
+      },
+      {
         "soubor": "obsah/star_map.html",
         "nazev": "🌌 Hvězdná obloha",
-        "tagy": ["hvězdy", "souhvězdí", "astronomie", "obloha"]
+        "tagy": ["hvězdy", "souhvězdí", "astronomie", "obloha", "roční období", "zimní obloha", "letní obloha"]
       }
     ]
   },

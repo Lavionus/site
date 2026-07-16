@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎯 Gravitační hřiště</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#0a0a14;color:#e0e0e0;height:100vh;overflow:hidden;display:flex;flex-direction:column}
+.horni{display:flex;gap:10px;align-items:center;padding:10px 16px;background:#16161f;border-bottom:1px solid #2a2a3a;flex-wrap:wrap}
+.horni h1{font-size:1.05rem;font-weight:600;margin-right:auto}
+.horni label{font-size:.78rem;color:#888;display:flex;align-items:center;gap:7px}
+input[type=range]{width:120px;accent-color:#6aa6fd}
+button,a.odkaz{background:#2a2a3a;border:1px solid #3a3a4d;color:#ccc;border-radius:6px;padding:6px 12px;font-size:.82rem;cursor:pointer;text-decoration:none;display:inline-block}
+button:hover,a.odkaz:hover{background:#6aa6fd;color:#fff}
+button.on{border-color:#6aa6fd;color:#6aa6fd}
+.priklady{display:flex;gap:6px;padding:8px 16px;background:#12121b;border-bottom:1px solid #2a2a3a;flex-wrap:wrap;align-items:center}
+.priklady span{font-size:.76rem;color:#888;margin-right:4px}
+.plocha{flex:1;position:relative;overflow:hidden}
+canvas{display:block;width:100%;height:100%;cursor:crosshair}
+.fakta{position:absolute;top:14px;right:14px;width:280px;max-width:calc(100% - 28px);background:rgba(22,22,31,.94);border:1px solid #3a3a4d;border-radius:10px;padding:12px 15px}
+.fakta h3{font-size:.72rem;text-transform:uppercase;letter-spacing:.5px;color:#6aa6fd;margin-bottom:7px}
+.fakta .radek{padding:5px 0;border-bottom:1px solid #2a2a3a;font-size:.75rem;line-height:1.45;color:#aab}
+.fakta .radek:last-child{border-bottom:none}
+.fakta .radek b{color:#e0e0e0}
+.vysvetleni{position:absolute;bottom:0;left:0;right:0;background:rgba(10,10,20,.85);border-top:1px solid #2a2a3a;padding:9px 16px;font-size:.76rem;color:#8b93a8;line-height:1.5;pointer-events:none}
+.vysvetleni b{color:#c6cde0}
+@media (max-width:700px){.fakta{display:none}}
+</style>
+</head>
+<body>
+<div class="horni">
+  <h1>🎯 Gravitační hřiště</h1>
+  <label>Rychlost <input type="range" id="rychlost" min="0" max="100" value="40"></label>
+  <button id="pauza">⏸️ Pauza</button>
+  <button id="stopy" class="on">〰️ Stopy</button>
+  <button id="plochy" title="II. Keplerův zákon: průvodič opíše za stejný čas stejnou plochu">🍰 Plochy</button>
+  <button id="smazat">🗑 Smazat vše</button>
+  <a class="odkaz" href="pohyb_vesmirem.html">🌌 Pohyb vesmírem</a>
+  <a class="odkaz" href="solar_system.html">🪐 Soustava</a>
+</div>
+<div class="priklady">
+  <span>Vyzkoušej:</span>
+  <button data-p="kruh">⭕ Kruhová dráha</button>
+  <button data-p="elipsa">🥚 Protáhlá elipsa</button>
+  <button data-p="unik">💫 Úniková rychlost</button>
+  <button data-p="soustava">🪐 Malá soustava</button>
+</div>
+<div class="plocha">
+  <canvas id="platno"></canvas>
+  <div class="fakta">
+    <h3>Keplerovy zákony &amp; kosmické rychlosti</h3>
+    <div class="radek"><b>I.</b> Tělesa obíhají po <b>elipsách</b>, Slunce je v jejich ohnisku.</div>
+    <div class="radek"><b>II.</b> Průvodič opíše za stejný čas <b>stejnou plochu</b> — u Slunce těleso letí rychleji (zapni 🍰 Plochy).</div>
+    <div class="radek"><b>III.</b> Čím větší dráha, tím (nepoměrně) delší oběh: T² ∝ a³.</div>
+    <div class="radek">🚀 <b>1. kosmická rychlost</b> (7,9 km/s u Země) = nejmenší rychlost pro kruhovou dráhu.</div>
+    <div class="radek">💫 <b>2. kosmická rychlost</b> (11,2 km/s u Země, √2× první) = únik pryč navždy.</div>
+  </div>
+  <div class="vysvetleni" id="vysvetleni">
+    <b>Natáhni prak:</b> stiskni tlačítko myši (planetka se objeví), táhni — čárkovaná čára ukazuje, kudy poletí — a pusť.
+    Podle rychlosti vznikne <b>kružnice, elipsa, nebo těleso unikne po hyperbole</b>. Spadne-li do Slunce, shoří. 💡 Zkus vystřelit kolmo vzhůru různě silně.
+  </div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const canvas=$('platno'),ctx=canvas.getContext('2d');
+
+/* ================= STAV ================= */
+const MU=36e6;                 // gravitační parametr Slunce (px³/s²)
+const R_SLUNCE=16;             // poloměr Slunce (px) — pod ~22 px těleso shoří
+let telesa=[],vybuchy=[],hvezdy=[];
+let bezi=true,ukazStopy=true,ukazPlochy=false,simCas=0;
+let pocitadla={shorelo:0,uniklo:0};
+const BARVY=['#6aa6fd','#e06666','#7fd48f','#e6c87a','#c98bd4','#7fd4d4','#f0975a'];
+let dalsiBarva=0;
+
+function velikostPlatna(){
+  const r=canvas.parentElement.getBoundingClientRect();
+  canvas.width=r.width*devicePixelRatio;canvas.height=r.height*devicePixelRatio;
+  ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);
+  hvezdy=[];
+  for(let i=0;i<160;i++)hvezdy.push({x:Math.random()*r.width,y:Math.random()*r.height,v:Math.random()*1.3+.3,a:Math.random()*.5+.2});
+}
+window.addEventListener('resize',velikostPlatna);velikostPlatna();
+const rozmer=()=>({w:canvas.width/devicePixelRatio,h:canvas.height/devicePixelRatio});
+const stred=()=>{const {w,h}=rozmer();return {x:w/2,y:h/2}};
+
+/* ================= FYZIKA =================
+   Leapfrog (kick-drift-kick) s dělenými kroky — drží energii dráhy stabilní,
+   takže elipsy zůstávají elipsami a nerozpadají se numerickou chybou. */
+function zrychleni(x,y){
+  const s=stred(),dx=s.x-x,dy=s.y-y;
+  const r2=dx*dx+dy*dy,r=Math.sqrt(r2);
+  const a=MU/r2;
+  return {ax:a*dx/r,ay:a*dy/r,r};
+}
+function krok(t,h){
+  let a=zrychleni(t.x,t.y);
+  t.vx+=a.ax*h/2;t.vy+=a.ay*h/2;
+  t.x+=t.vx*h;t.y+=t.vy*h;
+  a=zrychleni(t.x,t.y);
+  t.vx+=a.ax*h/2;t.vy+=a.ay*h/2;
+  return a.r;
+}
+function novaPlanetka(x,y,vx,vy){
+  const t={x,y,vx,vy,barva:BARVY[dalsiBarva++%BARVY.length],stopa:[],zivy:true};
+  telesa.push(t);
+  if(telesa.length>12)telesa.shift();   // ať to nezahltí obrazovku ani procesor
+  return t;
+}
+
+/* ================= MÍŘENÍ (prak) ================= */
+let mireni=null;
+canvas.addEventListener('pointerdown',e=>{
+  const r=canvas.getBoundingClientRect();
+  mireni={x:e.clientX-r.left,y:e.clientY-r.top,mx:e.clientX-r.left,my:e.clientY-r.top};
+  canvas.setPointerCapture(e.pointerId);
+});
+canvas.addEventListener('pointermove',e=>{
+  if(!mireni)return;
+  const r=canvas.getBoundingClientRect();
+  mireni.mx=e.clientX-r.left;mireni.my=e.clientY-r.top;
+});
+canvas.addEventListener('pointerup',()=>{
+  if(!mireni)return;
+  const vx=(mireni.mx-mireni.x)*4,vy=(mireni.my-mireni.y)*4;
+  novaPlanetka(mireni.x,mireni.y,vx,vy);
+  mireni=null;
+});
+
+/* ================= PŘÍKLADY ================= */
+const vKruh=r=>Math.sqrt(MU/r);
+const PRIKLADY={
+  kruh(){const s=stred();novaPlanetka(s.x+220,s.y,0,-vKruh(220));},
+  elipsa(){const s=stred();novaPlanetka(s.x+300,s.y,0,-vKruh(300)*0.62);},
+  unik(){const s=stred();novaPlanetka(s.x+170,s.y,0,-vKruh(170)*1.48);},
+  soustava(){const s=stred();
+    novaPlanetka(s.x+110,s.y,0,-vKruh(110));
+    novaPlanetka(s.x-200,s.y,0,vKruh(200));
+    novaPlanetka(s.x,s.y+290,-vKruh(290)*0.85,0);}
+};
+document.querySelectorAll('.priklady button').forEach(b=>b.onclick=()=>PRIKLADY[b.dataset.p]());
+
+/* ================= KRESLENÍ ================= */
+function typDrahy(t){
+  const s=stred(),dx=t.x-s.x,dy=t.y-s.y;
+  const r=Math.hypot(dx,dy),v2=t.vx*t.vx+t.vy*t.vy;
+  return v2/2-MU/r;   // měrná energie: <0 elipsa, >0 hyperbola (únik)
+}
+function kresliKeplerovyPlochy(t){
+  // trail nese časové značky; výseče Slunce–úsek dráhy obarvíme střídavě
+  // po pevných intervalech — II. Keplerův zákon: plochy jsou stejně velké
+  const s=stred(),P=0.55;
+  let i=t.stopa.length-1;
+  const skupiny=[];
+  while(i>0&&skupiny.length<9){
+    const k=Math.floor(t.stopa[i].t/P);
+    const body=[];
+    while(i>=0&&Math.floor(t.stopa[i].t/P)===k){body.push(t.stopa[i]);i--;}
+    skupiny.push({k,body});
+  }
+  skupiny.forEach(g=>{
+    if(g.body.length<2)return;
+    ctx.fillStyle=g.k%2?'rgba(255,213,79,.14)':'rgba(106,166,253,.14)';
+    ctx.beginPath();ctx.moveTo(s.x,s.y);
+    g.body.forEach(p=>ctx.lineTo(p.x,p.y));
+    ctx.closePath();ctx.fill();
+  });
+}
+function kresli(){
+  const {w,h}=rozmer(),s=stred();
+  ctx.clearRect(0,0,w,h);
+  hvezdy.forEach(hv=>{ctx.globalAlpha=hv.a;ctx.fillStyle='#fff';ctx.fillRect(hv.x,hv.y,hv.v,hv.v);});
+  ctx.globalAlpha=1;
+  // Keplerovy plochy (pod vším ostatním)
+  if(ukazPlochy)telesa.forEach(t=>kresliKeplerovyPlochy(t));
+  // Slunce
+  const zar=ctx.createRadialGradient(s.x,s.y,4,s.x,s.y,42);
+  zar.addColorStop(0,'#fff3b0');zar.addColorStop(.4,'#ffd54f');zar.addColorStop(1,'rgba(255,180,60,0)');
+  ctx.fillStyle=zar;ctx.beginPath();ctx.arc(s.x,s.y,42,0,7);ctx.fill();
+  ctx.fillStyle='#ffd54f';ctx.beginPath();ctx.arc(s.x,s.y,R_SLUNCE,0,7);ctx.fill();
+  // stopy a tělesa
+  telesa.forEach(t=>{
+    if(ukazStopy&&t.stopa.length>1){
+      ctx.lineWidth=1.4;
+      for(let i=1;i<t.stopa.length;i++){
+        ctx.strokeStyle=t.barva+Math.round(30+120*i/t.stopa.length).toString(16).padStart(2,'0');
+        ctx.beginPath();ctx.moveTo(t.stopa[i-1].x,t.stopa[i-1].y);ctx.lineTo(t.stopa[i].x,t.stopa[i].y);ctx.stroke();
+      }
+    }
+    ctx.fillStyle=t.barva;ctx.beginPath();ctx.arc(t.x,t.y,5,0,7);ctx.fill();
+    const eps=typDrahy(t);
+    ctx.font='10px sans-serif';ctx.textAlign='left';
+    ctx.fillStyle=eps<0?'rgba(150,220,160,.85)':'rgba(255,160,140,.9)';
+    ctx.fillText(eps<0?'elipsa':'únik (hyperbola)',t.x+9,t.y-8);
+  });
+  // výbuchy (pád do Slunce)
+  vybuchy.forEach(v=>{
+    ctx.strokeStyle=`rgba(255,${180-v.f*120},60,${1-v.f})`;ctx.lineWidth=2;
+    ctx.beginPath();ctx.arc(v.x,v.y,4+v.f*26,0,7);ctx.stroke();
+  });
+  // prak při míření: čára + predikce dráhy stejnou fyzikou
+  if(mireni){
+    ctx.strokeStyle='rgba(255,255,255,.5)';ctx.lineWidth=1.5;ctx.setLineDash([5,4]);
+    ctx.beginPath();ctx.moveTo(mireni.x,mireni.y);ctx.lineTo(mireni.mx,mireni.my);ctx.stroke();
+    ctx.setLineDash([]);
+    const g={x:mireni.x,y:mireni.y,vx:(mireni.mx-mireni.x)*4,vy:(mireni.my-mireni.y)*4};
+    ctx.strokeStyle='rgba(255,255,255,.28)';ctx.lineWidth=1;ctx.beginPath();ctx.moveTo(g.x,g.y);
+    for(let i=0;i<620;i++){
+      const r=krok(g,0.012);
+      if(i%4===0)ctx.lineTo(g.x,g.y);
+      if(r<R_SLUNCE+6)break;
+    }
+    ctx.stroke();
+    ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(mireni.x,mireni.y,5,0,7);ctx.fill();
+  }
+  // počítadla
+  ctx.fillStyle='#8b93a8';ctx.font='12px sans-serif';ctx.textAlign='left';
+  ctx.fillText(`planetek: ${telesa.length} · shořelo ve Slunci: ${pocitadla.shorelo} · uniklo: ${pocitadla.uniklo}`,14,22);
+}
+
+/* ================= SMYČKA ================= */
+let minule=performance.now();
+function smycka(cas){
+  const dtReal=Math.min((cas-minule)/1000,0.1);minule=cas;
+  if(bezi){
+    const dt=dtReal*(+$('rychlost').value/100)*0.9;
+    simCas+=dt;
+    const POD=8,hh=dt/POD;
+    telesa.forEach(t=>{
+      for(let i=0;i<POD&&t.zivy;i++){
+        const r=krok(t,hh);
+        if(r<R_SLUNCE+6){t.zivy=false;pocitadla.shorelo++;vybuchy.push({x:t.x,y:t.y,f:0});}
+        if(r>4200){t.zivy=false;pocitadla.uniklo++;}
+      }
+      if(t.zivy&&dt>0){t.stopa.push({x:t.x,y:t.y,t:simCas});if(t.stopa.length>520)t.stopa.shift();}
+    });
+    telesa=telesa.filter(t=>t.zivy);
+    vybuchy.forEach(v=>v.f+=dtReal*1.6);
+    vybuchy=vybuchy.filter(v=>v.f<1);
+  }
+  kresli();
+  requestAnimationFrame(smycka);
+}
+requestAnimationFrame(smycka);
+
+/* ================= OVLÁDÁNÍ ================= */
+$('pauza').onclick=function(){bezi=!bezi;this.textContent=bezi?'⏸️ Pauza':'▶️ Spustit';};
+$('stopy').onclick=function(){ukazStopy=!ukazStopy;this.classList.toggle('on',ukazStopy);};
+$('plochy').onclick=function(){ukazPlochy=!ukazPlochy;this.classList.toggle('on',ukazPlochy);};
+$('smazat').onclick=()=>{telesa=[];vybuchy=[];pocitadla={shorelo:0,uniklo:0};};
+</script>
+</body>
+</html>

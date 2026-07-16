@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🛰️ ISS živě</title>
+  <!-- three.js MUSÍ být před globe.gl: globe.gl použije window.THREE (jedna sdílená instance) -->
+  <script src="lib/three.0.160.0.min.js"></script>
+  <script src="lib/globe.gl.min.js"></script>
+  <script src="lib/solar-calculator.min.js"></script>
+  <style>
+    :root {
+      --primary: #6aa6fd; --accent: #7fd4d4;
+      --bg-dark: #05070d; --panel: rgba(20,24,34,0.9); --border: rgba(255,255,255,0.1);
+      --text: #e6ebf5; --muted: #8a93a6;
+    }
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html, body { height: 100%; overflow: hidden; }
+    body { font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background: var(--bg-dark); color: var(--text); }
+    #globeViz { position: fixed; inset: 0; }
+
+    .topbar {
+      position: fixed; top: 0; left: 0; right: 0; z-index: 10;
+      display: flex; justify-content: space-between; align-items: flex-start;
+      padding: 14px 20px; gap: 12px; flex-wrap: wrap;
+      background: linear-gradient(180deg, rgba(5,7,13,0.85), rgba(5,7,13,0)); pointer-events: none;
+    }
+    .topbar .title { pointer-events: auto; }
+    .topbar h1 {
+      font-size: 1.25rem; font-weight: 700;
+      background: linear-gradient(45deg, #6aa6fd, #7fd4d4);
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+    }
+    .topbar .subtitle { font-size: 0.78rem; color: var(--muted); margin-top: 2px; }
+    .toolbar { display: flex; gap: 8px; pointer-events: auto; flex-wrap: wrap; justify-content: flex-end; }
+    .toolbar button, .toolbar a {
+      background: var(--panel); color: var(--text); border: 1px solid var(--border);
+      border-radius: 8px; padding: 8px 12px; font-size: 0.82rem; backdrop-filter: blur(6px);
+      white-space: nowrap; cursor: pointer; text-decoration: none; display: inline-block; transition: border-color .15s;
+    }
+    .toolbar button:hover, .toolbar a:hover { border-color: var(--primary); }
+    .toolbar button.on { border-color: var(--primary); color: var(--primary); }
+
+    .panel {
+      position: fixed; top: 92px; left: 20px; z-index: 10; width: 290px;
+      background: var(--panel); border: 1px solid var(--border); border-radius: 14px;
+      padding: 16px 18px; backdrop-filter: blur(10px); box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+    }
+    .panel h2 { font-size: 1rem; display: flex; align-items: center; gap: 8px; }
+    .panel .stav { font-size: 0.72rem; color: var(--muted); margin: 2px 0 10px; }
+    .panel .stav.zivy::before { content: '●'; color: #7fd48f; margin-right: 5px; }
+    .panel .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .panel .cell { background: rgba(255,255,255,0.04); border-radius: 8px; padding: 8px 10px; }
+    .panel .cell .k { font-size: 0.64rem; color: var(--muted); text-transform: uppercase; letter-spacing: .5px; }
+    .panel .cell .v { font-size: 0.95rem; font-weight: 600; margin-top: 2px; }
+    .panel .cell.siroka { grid-column: 1 / -1; }
+    .panel .fakta { margin-top: 12px; border-top: 1px solid var(--border); padding-top: 10px; }
+    .panel .fakta div { font-size: 0.74rem; color: #aab; line-height: 1.5; padding: 3px 0 3px 20px; position: relative; }
+    .panel .fakta div::before { content: '💡'; position: absolute; left: 0; font-size: 0.68rem; }
+    .panel .chyba { margin-top: 10px; font-size: 0.78rem; color: #ff9a8a; display: none; }
+
+    .hint { position: fixed; bottom: 18px; right: 20px; z-index: 10; font-size: 0.74rem; color: var(--muted); background: var(--panel); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; backdrop-filter: blur(8px); }
+
+    .loader { position: fixed; inset: 0; z-index: 20; display: flex; align-items: center; justify-content: center; flex-direction: column; gap: 14px; background: var(--bg-dark); transition: opacity .5s; }
+    .loader.skryt { opacity: 0; pointer-events: none; }
+    .spinner { width: 42px; height: 42px; border: 3px solid rgba(255,255,255,0.15); border-top-color: var(--primary); border-radius: 50%; animation: spin 0.9s linear infinite; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .loader span { font-size: 0.85rem; color: var(--muted); }
+
+    .iss-marker { transform: translate(-50%, -50%); text-align: center; pointer-events: none; }
+    .iss-marker .ikona { font-size: 26px; filter: drop-shadow(0 0 6px rgba(127,212,212,0.9)); animation: puls 2s ease-in-out infinite; }
+    @keyframes puls { 50% { filter: drop-shadow(0 0 14px rgba(127,212,212,1)); } }
+    .iss-marker .jm { font-size: 10px; font-weight: 700; color: #bfeeee; text-shadow: 0 1px 3px #000; }
+
+    @media (max-width: 640px) { .panel { width: calc(100% - 40px); } .hint { display: none; } }
+  </style>
+</head>
+<body>
+  <div id="globeViz"></div>
+
+  <div class="topbar">
+    <div class="title">
+      <h1>🛰️ ISS živě</h1>
+      <div class="subtitle">Mezinárodní vesmírná stanice v reálném čase · data wheretheiss.at</div>
+    </div>
+    <div class="toolbar">
+      <button id="followBtn" class="on" title="Kamera sleduje stanici">🔭 Sledovat</button>
+      <button id="dayNightBtn" class="on" title="Zobrazení den / noc">🌓 Den/noc</button>
+      <a href="weather_globe.html" title="Glóbus s počasím">🌍 Počasí</a>
+      <a href="planet_globe.html" title="3D glóbusy planet">🌐 Glóbusy</a>
+    </div>
+  </div>
+
+  <div class="panel">
+    <h2>🛰️ Mezinárodní vesmírná stanice</h2>
+    <div class="stav" id="stav">připojuji se…</div>
+    <div class="grid">
+      <div class="cell"><div class="k">Výška</div><div class="v" id="vyska">—</div></div>
+      <div class="cell"><div class="k">Rychlost</div><div class="v" id="rychlost">—</div></div>
+      <div class="cell"><div class="k">Zem. šířka</div><div class="v" id="lat">—</div></div>
+      <div class="cell"><div class="k">Zem. délka</div><div class="v" id="lon">—</div></div>
+      <div class="cell"><div class="k">Osvětlení</div><div class="v" id="svetlo">—</div></div>
+      <div class="cell"><div class="k">Právě letí nad</div><div class="v" id="nad">—</div></div>
+    </div>
+    <div class="fakta">
+      <div>Obletí Zemi za ~92 minut — posádka vidí <b>16 východů slunce denně</b>.</div>
+      <div>Letí ve výšce ~420 km rychlostí ~28 000 km/h.</div>
+      <div>Je velká jako fotbalové hřiště a nepřetržitě obydlená od roku 2000.</div>
+      <div>Čára na glóbu = jeden oběh: plná za stanicí, tečkovaná před ní.</div>
+    </div>
+    <div class="chyba" id="chyba">⚠️ Data se nepodařilo načíst — zkontroluj připojení. Zkusím to znovu…</div>
+  </div>
+
+  <div class="hint">🖱️ tažením otáčej · kolečkem přibližuj</div>
+
+  <div class="loader" id="loader">
+    <div class="spinner"></div>
+    <span>Načítám glóbus a polohu ISS…</span>
+  </div>
+
+  <script>
+    const API = 'https://api.wheretheiss.at/v1/satellites/25544';
+
+    /* ================= Glóbus (den/noc jako u glóbusu počasí) ================= */
+    const world = Globe()
+      (document.getElementById('globeViz'))
+      .backgroundColor('#02030a')
+      .atmosphereColor('#6aa6fd').atmosphereAltitude(0.18)
+      .htmlElementsData([]).htmlLat('lat').htmlLng('lng').htmlAltitude(d => d.alt)
+      .htmlElement(() => {
+        const el = document.createElement('div');
+        el.className = 'iss-marker';
+        el.innerHTML = '<div class="ikona">🛰️</div><div class="jm">ISS</div>';
+        return el;
+      })
+      .pathsData([]).pathPoints('body').pathPointLat(p => p[0]).pathPointLng(p => p[1]).pathPointAlt(p => p[2])
+      .pathColor(d => d.budouci ? ['rgba(127,212,212,0.16)', 'rgba(127,212,212,0.34)'] : ['rgba(127,212,212,0.85)', 'rgba(127,212,212,0.45)'])
+      .pathStroke(1.6).pathDashLength(0.06).pathDashGap(0.025).pathTransitionDuration(0);
+
+    world.controls().autoRotate = false;
+    world.pointOfView({ lat: 30, lng: 15, altitude: 2.2 });
+
+    // hvězdné pozadí (procedurální, ostré při zoomu)
+    (function starfield() {
+      world.camera().far = 20000; world.camera().updateProjectionMatrix();
+      [ { n: 3000, size: 1.1, op: 0.55 }, { n: 1200, size: 1.8, op: 0.8 }, { n: 250, size: 2.7, op: 1 } ].forEach(l => {
+        const pos = new Float32Array(l.n * 3), col = new Float32Array(l.n * 3);
+        for (let i = 0; i < l.n; i++) {
+          const u = Math.random() * 2 - 1, ph = Math.random() * 2 * Math.PI;
+          const r = 3000 + Math.random() * 3000, s = Math.sqrt(1 - u * u);
+          pos.set([r * s * Math.cos(ph), r * u, r * s * Math.sin(ph)], i * 3);
+          const t = Math.random();
+          col.set(t < .6 ? [1, 1, 1] : t < .78 ? [.72, .82, 1] : t < .93 ? [1, .93, .78] : [1, .8, .65], i * 3);
+        }
+        const g = new THREE.BufferGeometry();
+        g.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+        g.setAttribute('color', new THREE.BufferAttribute(col, 3));
+        world.scene().add(new THREE.Points(g, new THREE.PointsMaterial({
+          size: l.size, sizeAttenuation: false, vertexColors: true, transparent: true, opacity: l.op, depthWrite: false
+        })));
+      });
+    })();
+
+    // den / noc — stejný shader jako na glóbusu počasí (lokální 8K textury)
+    const maxAniso = world.renderer().capabilities.getMaxAnisotropy();
+    let dayNightMaterial = null, plainMaterial = null, denNoc = true;
+    const dayNightShader = {
+      vertexShader: `
+        varying vec3 vNormal; varying vec2 vUv;
+        void main() {
+          vNormal = normalize(normalMatrix * normal); vUv = uv;
+          gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0);
+        }`,
+      fragmentShader: `
+        #define PI 3.141592653589793
+        uniform sampler2D dayTexture; uniform sampler2D nightTexture;
+        uniform vec2 sunPosition; uniform vec2 globeRotation;
+        varying vec3 vNormal; varying vec2 vUv;
+        float toRad(in float a) { return a * PI / 180.0; }
+        vec3 Polar2Cartesian(in vec2 c) {
+          float theta = toRad(90.0 - c.x); float phi = toRad(90.0 - c.y);
+          return vec3(sin(phi)*cos(theta), cos(phi), sin(phi)*sin(theta));
+        }
+        void main() {
+          float invLon = toRad(globeRotation.x); float invLat = -toRad(globeRotation.y);
+          mat3 rotX = mat3(1,0,0, 0,cos(invLat),-sin(invLat), 0,sin(invLat),cos(invLat));
+          mat3 rotY = mat3(cos(invLon),0,sin(invLon), 0,1,0, -sin(invLon),0,cos(invLon));
+          vec3 sunDir = rotX * rotY * Polar2Cartesian(sunPosition);
+          float intensity = dot(normalize(vNormal), normalize(sunDir));
+          vec4 dayColor = texture2D(dayTexture, vUv);
+          vec4 nightColor = texture2D(nightTexture, vUv);
+          gl_FragColor = mix(nightColor, dayColor, smoothstep(-0.1, 0.1, intensity));
+        }`
+    };
+    function sunPosAt(dt) {
+      const day = new Date(+dt).setUTCHours(0, 0, 0, 0);
+      const t = solar.century(dt);
+      const lng = (day - dt) / 864e5 * 360 - 180;
+      return [lng - solar.equationOfTime(t) / 4, solar.declination(t)];
+    }
+    function aplikujMaterial() {
+      if (denNoc && dayNightMaterial) world.globeMaterial(dayNightMaterial);
+      else if (plainMaterial) world.globeMaterial(plainMaterial);
+    }
+    const texLoader = new THREE.TextureLoader();
+    const loadTex = (url) => new Promise(res => texLoader.load(url, t => { t.anisotropy = maxAniso; t.needsUpdate = true; res(t); }));
+    const texReady = Promise.all([
+      loadTex('textures/8k_earth_daymap.jpg'),
+      loadTex('textures/8k_earth_nightmap.jpg')
+    ]).then(([dayTex, nightTex]) => {
+      dayNightMaterial = new THREE.ShaderMaterial({
+        uniforms: {
+          dayTexture: { value: dayTex }, nightTexture: { value: nightTex },
+          sunPosition: { value: new THREE.Vector2() }, globeRotation: { value: new THREE.Vector2() }
+        },
+        vertexShader: dayNightShader.vertexShader, fragmentShader: dayNightShader.fragmentShader
+      });
+      plainMaterial = new THREE.MeshPhongMaterial({ map: dayTex });
+      dayNightMaterial.uniforms.sunPosition.value.set(...sunPosAt(Date.now()));
+      setInterval(() => {
+        if (dayNightMaterial) dayNightMaterial.uniforms.sunPosition.value.set(...sunPosAt(Date.now()));
+      }, 60 * 1000);
+      aplikujMaterial();
+    });
+    (function trackRotation() {
+      if (dayNightMaterial) {
+        const pov = world.pointOfView();
+        dayNightMaterial.uniforms.globeRotation.value.set(pov.lng, pov.lat);
+      }
+      requestAnimationFrame(trackRotation);
+    })();
+
+    function resize() { world.width(window.innerWidth).height(window.innerHeight); }
+    window.addEventListener('resize', resize); resize();
+
+    /* ================= Živá data ISS ================= */
+    const R_ZEME = 6371; // km — pro převod výšky na jednotky glóbu
+    let sledovat = true, prvniPoloha = true;
+    const chybaEl = document.getElementById('chyba'), stavEl = document.getElementById('stav');
+
+    function vlajka(cc) { // ISO kód země → emoji vlajka
+      if (!cc || cc.length !== 2 || cc === '??') return '';
+      return String.fromCodePoint(...[...cc.toUpperCase()].map(c => 0x1F1A5 + c.charCodeAt(0))) + ' ';
+    }
+
+    async function aktualizujPolohu() {
+      try {
+        const res = await fetch(API + '?units=kilometers');
+        if (!res.ok) throw new Error(res.status);
+        const d = await res.json();
+        chybaEl.style.display = 'none';
+        stavEl.className = 'stav zivy';
+        stavEl.textContent = 'živá poloha · obnovuje se každých 5 s';
+        world.htmlElementsData([{ lat: d.latitude, lng: d.longitude, alt: d.altitude / R_ZEME }]);
+        document.getElementById('vyska').textContent = Math.round(d.altitude) + ' km';
+        document.getElementById('rychlost').textContent = Math.round(d.velocity).toLocaleString('cs-CZ') + ' km/h';
+        document.getElementById('lat').textContent = d.latitude.toFixed(2) + '°';
+        document.getElementById('lon').textContent = d.longitude.toFixed(2) + '°';
+        document.getElementById('svetlo').textContent = d.visibility === 'daylight' ? '☀️ na slunci' : '🌑 ve stínu';
+        if (sledovat) {
+          const pov = world.pointOfView();
+          world.pointOfView({ lat: d.latitude, lng: d.longitude, altitude: pov.altitude }, prvniPoloha ? 0 : 900);
+        }
+        if (prvniPoloha) { prvniPoloha = false; nactiTrasu(); nactiZemi(d.latitude, d.longitude); }
+      } catch (e) {
+        stavEl.className = 'stav';
+        stavEl.textContent = 'bez spojení';
+        chybaEl.style.display = 'block';
+      }
+    }
+
+    // Nad kterou zemí ISS právě letí (1 dotaz za 30 s, ať šetříme API)
+    let posledniLat = null, posledniLon = null;
+    async function nactiZemi(lat, lon) {
+      try {
+        const res = await fetch(`https://api.wheretheiss.at/v1/coordinates/${lat.toFixed(4)},${lon.toFixed(4)}`);
+        if (!res.ok) throw 0;
+        const d = await res.json();
+        document.getElementById('nad').textContent =
+          (d.country_code && d.country_code !== '??') ? vlajka(d.country_code) + d.country_code : '🌊 oceán';
+      } catch (e) { document.getElementById('nad').textContent = '—'; }
+    }
+    setInterval(() => { if (posledniLat != null) nactiZemi(posledniLat, posledniLon); }, 30000);
+
+    // Trasa: jeden oběh (~46 min zpět + ~46 min dopředu), max 10 časů na request
+    async function nactiTrasu() {
+      try {
+        const now = Math.floor(Date.now() / 1000), krok = 4 * 60;
+        const casy = [];
+        for (let t = now - 46 * 60; t <= now + 46 * 60; t += krok) casy.push(t);
+        const body = [];
+        for (let i = 0; i < casy.length; i += 10) {
+          const res = await fetch(API + '/positions?timestamps=' + casy.slice(i, i + 10).join(',') + '&units=kilometers');
+          if (!res.ok) throw 0;
+          (await res.json()).forEach(p => body.push({ t: p.timestamp, b: [p.latitude, p.longitude, p.altitude / R_ZEME] }));
+          await new Promise(r => setTimeout(r, 600)); // ohleduplnost k rate-limitu API
+        }
+        world.pathsData([
+          { budouci: false, body: body.filter(p => p.t <= now).map(p => p.b) },
+          { budouci: true,  body: body.filter(p => p.t >= now).map(p => p.b) }
+        ]);
+      } catch (e) { /* trasa je bonus — bez ní stránka funguje dál */ }
+    }
+    setInterval(nactiTrasu, 10 * 60 * 1000); // trasu stačí obnovit jednou za 10 minut
+
+    // hlavní cyklus polohy — 5 s je ohleduplné k API a přitom plynulé
+    setInterval(aktualizujPolohu, 5000);
+    const prvni = aktualizujPolohu().then(() => {
+      // zapamatuj si polohu pro dotaz na zemi
+      setInterval(() => {
+        const d = world.htmlElementsData()[0];
+        if (d) { posledniLat = d.lat; posledniLon = d.lng; }
+      }, 5000);
+    });
+
+    /* ================= Ovládání ================= */
+    document.getElementById('followBtn').onclick = function () {
+      sledovat = !sledovat;
+      this.classList.toggle('on', sledovat);
+    };
+    document.getElementById('dayNightBtn').onclick = function () {
+      denNoc = !denNoc;
+      this.classList.toggle('on', denNoc);
+      aplikujMaterial();
+    };
+
+    /* ================= Start ================= */
+    const loader = document.getElementById('loader');
+    Promise.all([texReady.catch(() => {}), prvni.catch(() => {})])
+      .finally(() => setTimeout(() => loader.classList.add('skryt'), 400));
+  </script>
+</body>
+</html>

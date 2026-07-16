@@ -15,6 +15,14 @@ h1{font-size:1.6rem;margin-bottom:8px;font-weight:600;text-align:center}
 label{display:block;font-size:.8rem;color:#888;margin-bottom:4px}
 input{background:#404040;border:1px solid #555;border-radius:4px;color:#e0e0e0;padding:8px}
 .btn{background:#6aa6fd;color:#fff;border:none;padding:9px 16px;border-radius:6px;cursor:pointer;font-weight:600;font-size:.85rem}
+.zkratky{margin-top:14px;border-top:1px solid #383838;padding-top:12px;display:flex;flex-direction:column;gap:8px}
+.skupina{display:flex;align-items:center;gap:6px;flex-wrap:wrap;justify-content:center}
+#obdobiChips,#mesicChips{display:contents}
+.skupina .nazev{font-size:.78rem;color:#888;min-width:92px;text-align:right}
+.chip{background:#333;border:1px solid #4a4a4a;color:#ccc;border-radius:14px;padding:4px 10px;font-size:.78rem;cursor:pointer}
+.chip:hover{background:#3d3d55;border-color:#6aa6fd}
+.chip.aktiv{background:#6aa6fd;border-color:#6aa6fd;color:#fff}
+select{background:#404040;border:1px solid #555;border-radius:4px;color:#e0e0e0;padding:7px;font-size:.82rem}
 canvas{width:100%;border-radius:50%;background:#050510;display:block;margin:0 auto;max-width:760px}
 .legenda{color:#777;font-size:.78rem;text-align:center;margin-top:10px;line-height:1.5}
 </style>
@@ -22,13 +30,20 @@ canvas{width:100%;border-radius:50%;background:#050510;display:block;margin:0 au
 <body>
 <div class="container">
   <h1>🌌 Hvězdná obloha</h1>
-  <p class="pod">Nejjasnější hvězdy a známá souhvězdí nad obzorem pro zadané místo a čas. Okraj kruhu = obzor, střed = zenit (nadhlavník).</p>
+  <p class="pod">Nejjasnější hvězdy a známá souhvězdí nad obzorem pro zadané místo a čas. Okraj kruhu = obzor, střed = zenit (nadhlavník). Zkratky níže nastaví typickou večerní oblohu (15. den měsíce, 22:00) nebo souřadnice vybraného místa na Zemi.</p>
   <div class="card">
     <div class="ovladani">
       <div><label>Datum a čas</label><input type="datetime-local" id="cas"></div>
       <div><label>Zem. šířka (°)</label><input type="number" id="lat" value="50.1" step="0.1" style="width:90px"></div>
       <div><label>Zem. délka (°)</label><input type="number" id="lon" value="14.4" step="0.1" style="width:90px"></div>
       <button class="btn" id="ted">🕐 Teď</button>
+    </div>
+    <div class="zkratky">
+      <div class="skupina"><span class="nazev">Roční období:</span><span id="obdobiChips"></span></div>
+      <div class="skupina"><span class="nazev">Měsíc:</span><span id="mesicChips"></span></div>
+      <div class="skupina"><span class="nazev">Místo na Zemi:</span>
+        <select id="misto"><option value="">— vlastní souřadnice —</option></select>
+      </div>
     </div>
   </div>
   <div class="card">
@@ -137,8 +152,49 @@ function ted(){
   const d=new Date();
   d.setMinutes(d.getMinutes()-d.getTimezoneOffset());
   $('cas').value=d.toISOString().slice(0,16);
+  zrusAktiv();
   kresli();
 }
+// ---- zkratky: roční období, měsíce, místa ----
+const OBDOBI=[['❄️ Zimní',1],['🌱 Jarní',4],['☀️ Letní',7],['🍂 Podzimní',10]];
+const MESICE=['Leden','Únor','Březen','Duben','Květen','Červen','Červenec','Srpen','Září','Říjen','Listopad','Prosinec'];
+const MESICE_ZKR=['Led','Úno','Bře','Dub','Kvě','Čvn','Čvc','Srp','Zář','Říj','Lis','Pro'];
+const MISTA=[
+['Praha',50.1,14.4],['Londýn',51.5,-0.1],['Reykjavík',64.1,-21.9],['New York',40.7,-74.0],
+['Tokio',35.7,139.7],['Káhira',30.0,31.2],['Rovník (Quito)',-0.2,-78.5],['Rio de Janeiro',-22.9,-43.2],
+['Kapské Město',-33.9,18.4],['Sydney',-33.9,151.2],['Severní pól',89.9,0],['Jižní pól',-89.9,0],
+];
+function zrusAktiv(){document.querySelectorAll('.chip.aktiv').forEach(ch=>ch.classList.remove('aktiv'));}
+// nastaví večer 15. dne daného měsíce (22:00) v aktuálním roce
+function nastavMesic(mesic){
+  const d=new Date();
+  d.setFullYear(d.getFullYear(),mesic-1,15);
+  d.setHours(22,0,0,0);
+  d.setMinutes(d.getMinutes()-d.getTimezoneOffset());
+  $('cas').value=d.toISOString().slice(0,16);
+  kresli();
+}
+function chip(text,title,klik,cil){
+  const b=document.createElement('button');
+  b.className='chip';b.textContent=text;b.title=title;
+  b.onclick=()=>{zrusAktiv();b.classList.add('aktiv');klik();};
+  $(cil).appendChild(b);
+}
+OBDOBI.forEach(([n,m])=>chip(n,MESICE[m-1]+' — 15. den, 22:00',()=>nastavMesic(m),'obdobiChips'));
+MESICE.forEach((n,i)=>chip(MESICE_ZKR[i],n+' — 15. den, 22:00',()=>nastavMesic(i+1),'mesicChips'));
+MISTA.forEach(([n,la,lo],i)=>{
+  const o=document.createElement('option');
+  o.value=i;o.textContent=`${n} (${la}°, ${lo}°)`;
+  $('misto').appendChild(o);
+});
+$('misto').addEventListener('change',()=>{
+  const m=MISTA[$('misto').value];
+  if(!m)return;
+  $('lat').value=m[1];$('lon').value=m[2];
+  kresli();
+});
+$('cas').addEventListener('input',zrusAktiv);
+['lat','lon'].forEach(i=>$(i).addEventListener('input',()=>{$('misto').value='';}));
 ['cas','lat','lon'].forEach(i=>$(i).addEventListener('input',kresli));
 $('ted').onclick=ted;
 ted();
