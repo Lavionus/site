@@ -36,6 +36,14 @@ textarea{width:100%;min-height:80px;background:#404040;border:1px solid #555;bor
 .progress b{color:#6aa6fd}
 .tajenka-box{background:#242424;border:1px dashed #4a4a4a;border-radius:6px;padding:10px;margin:10px 0;text-align:center;font-size:.85rem;color:#999}
 .tajenka-box.odhalena{border-color:#ffd54f;color:#ffd54f;font-weight:700;font-size:.95rem}
+.taj-guess{display:flex;gap:6px;margin-bottom:10px}
+.taj-guess input{flex:1;min-width:0;background:#404040;border:1px solid #555;border-radius:6px;color:#e0e0e0;padding:8px 10px;font-size:.85rem;user-select:text}
+.taj-guess input.spatne{border-color:#e74c3c;animation:zatres .3s}
+@keyframes zatres{25%{transform:translateX(-4px)}75%{transform:translateX(4px)}}
+.sbirka{font-size:.8rem;color:#888;margin-top:12px}
+.sbirka summary{cursor:pointer}
+.sbirka ul{list-style:none;margin-top:6px;max-height:160px;overflow-y:auto}
+.sbirka li{padding:1px 0;color:#aaa}
 .pozn{font-size:.72rem;color:#666;margin-top:10px;line-height:1.4}
 </style>
 </head>
@@ -76,9 +84,14 @@ strom</textarea>
       <h2>📋 Hledaná slova</h2>
       <div class="progress" id="progress"></div>
       <div class="tajenka-box" id="tajenkaBox"></div>
+      <div class="taj-guess" id="tajGuess">
+        <input id="tajInput" placeholder="Zkusíš tajenku uhodnout?" autocomplete="off">
+        <button id="tajBtn" title="Ověřit tip">✔</button>
+      </div>
       <ul class="words" id="wordList"></ul>
       <div class="msg" id="msg"></div>
-      <div class="pozn">Slova se kříží a sdílejí písmena – přeškrtnutá políčka klidně použij znovu. Písmena, která po vyškrtání všech slov zbydou, tvoří (čteno po řádcích) tajenku.</div>
+      <div class="sbirka" id="sbirka"></div>
+      <div class="pozn">Slova se kříží a sdílejí písmena – přeškrtnutá políčka klidně použij znovu. Písmena, která po vyškrtání všech slov zbydou, tvoří (čteno po řádcích) tajenku. Tajenku můžeš kdykoli zkusit uhodnout i předem – na diakritice nezáleží.</div>
     </div>
   </div>
 </div>
@@ -92,23 +105,33 @@ const OKRUHY={
  jidlo:{nazev:'🍽️ Jídlo',slova:['KNEDLÍK','GULÁŠ','ŘÍZEK','POLÉVKA','KOLÁČ','BUCHTA','ROHLÍK','TVAROH','SÝR','ŠUNKA','OKURKA','RAJČE','CIBULE','ČESNEK','ŠVESTKA','MALINA','JABLKO','HRUŠKA','MRKEV','ČOČKA','PALAČINKA','BRAMBORÁK','ZELÍ','KMÍN']},
  sport:{nazev:'⚽ Sport',slova:['FOTBAL','HOKEJ','TENIS','VOLEJBAL','FLORBAL','ATLETIKA','MARATON','BIATLON','LYŽE','BRUSLE','BAZÉN','BRANKA','ROZHODČÍ','TRENÉR','DRES','MÍČ','SÍŤ','GÓL','ŠERM','VESLO','PÁDLO','HRAZDA','ŽÍNĚNKA','START']},
  priroda:{nazev:'🌲 Příroda',slova:['POTOK','VODOPÁD','JESKYNĚ','LOUKA','RYBNÍK','SKÁLA','ÚDOLÍ','PRAMEN','MECH','KAPRADÍ','BOROVICE','MODŘÍN','JAVOR','DUB','BŘÍZA','PAŘEZ','HOUBA','MRAVENIŠTĚ','DUHA','ROSA','MLHA','VÍTR','BOUŘKA','KOPEC']},
- doprava:{nazev:'🚗 Doprava',slova:['VLAK','TRAMVAJ','AUTOBUS','LETADLO','METRO','KOLO','MOTORKA','LOĎ','PŘÍSTAV','NÁDRAŽÍ','KOLEJE','SEMAFOR','KŘIŽOVATKA','DÁLNICE','TUNEL','MOST','ŘIDIČ','VOLANT','BENZÍN','GARÁŽ','VAGÓN','PILOT','KUFR','MAPA']}
+ doprava:{nazev:'🚗 Doprava',slova:['VLAK','TRAMVAJ','AUTOBUS','LETADLO','METRO','KOLO','MOTORKA','LOĎ','PŘÍSTAV','NÁDRAŽÍ','KOLEJE','SEMAFOR','KŘIŽOVATKA','DÁLNICE','TUNEL','MOST','ŘIDIČ','VOLANT','BENZÍN','GARÁŽ','VAGÓN','PILOT','KUFR','MAPA']},
+ remesla:{nazev:'🔨 Řemesla a povolání',slova:['KOVÁŘ','TRUHLÁŘ','ZEDNÍK','PEKAŘ','ŘEZNÍK','ŠVADLENA','UČITEL','LÉKAŘ','HASIČ','POLICISTA','KUCHAŘ','ZAHRADNÍK','MALÍŘ','TESAŘ','HORNÍK','RYBÁŘ','MYSLIVEC','VČELAŘ','SOUDCE','HEREC','ZPĚVÁK','NOVINÁŘ','LÉKÁRNÍK','ŠVEC']},
+ vesmir:{nazev:'🚀 Vesmír',slova:['PLANETA','HVĚZDA','MĚSÍC','SLUNCE','RAKETA','KOMETA','GALAXIE','ASTEROID','MARS','VENUŠE','JUPITER','SATURN','MERKUR','NEPTUN','URAN','KOSMONAUT','SKAFANDR','TELESKOP','MLHOVINA','METEOR','SOUHVĚZDÍ','DRUŽICE','VESMÍR','ZATMĚNÍ']},
+ telo:{nazev:'🫀 Lidské tělo',slova:['HLAVA','RAMENO','LOKET','ZÁPĚSTÍ','KOLENO','KOTNÍK','PÁTEŘ','ŽEBRO','LEBKA','SRDCE','PLÍCE','JÁTRA','LEDVINY','ŽALUDEK','MOZEK','SVAL','ŠLACHA','TEPNA','ŽÍLA','KLOUB','PRST','PATA','BRADA','ČELO']},
+ skola:{nazev:'🏫 Ve škole',slova:['TABULE','KŘÍDA','SEŠIT','UČEBNICE','PENÁL','GUMA','PRAVÍTKO','AKTOVKA','TŘÍDA','LAVICE','PŘESTÁVKA','ZVONĚNÍ','DIKTÁT','DĚJEPIS','ZEMĚPIS','TĚLOCVIK','ŘEDITEL','ŽÁK','JÍDELNA','DRUŽINA','ÚKOL','POMŮCKA','VYSVĚDČENÍ','TUŽKA']}
 };
 
 /* obecná zásoba pro dosypání plochy */
 const VYPLN=['OKNO','DVEŘE','STŮL','ŽIDLE','LAMPA','KNIHA','TUŽKA','PAPÍR','HODINY','KLÍČ','TAŠKA','BOTY','KABÁT','ČEPICE','ŠÁLA','HRNEK','TALÍŘ','LŽÍCE','NŮŽ','VIDLIČKA','PONOŽKY','SVETR','KOŠILE','SUKNĚ','KALHOTY','MĚSTO','VESNICE','ULICE','NÁMĚSTÍ','ŠKOLA','KINO','DIVADLO','MUZEUM','ZÁMEK','HRAD','VĚŽ','KOSTEL','KAŠNA','PARK','LAVIČKA','SLUNCE','MĚSÍC','HVĚZDA','MRAK','DÉŠŤ','SNÍH','LED','JARO','LÉTO','PODZIM','ZIMA','RÁNO','VEČER','NOC','DEN','TÝDEN','ROK','HORA','LES','ŘEKA','MOŘE','OSTROV','PLÁŽ','PÍSEK','VLNA','LODIČKA','KOTVA','MAJÁK','RYBA','RAK','ŽÁBA','HAD','JEŠTĚRKA','PTÁK','HNÍZDO','VEJCE','PERO','KŘÍDLO','ZOBÁK','KVĚT','RŮŽE','TULIPÁN','FIALKA','TRÁVA','LIST','VĚTEV','KOŘEN','KŮRA','ŠIŠKA','ŽALUD','KAŠTAN','OŘECH','MED','VČELA','ÚL','ČAJ','KÁVA','MLÉKO','CUKR','SŮL','PEPŘ','MOUKA','TĚSTO','PEC','OHEŇ','KOUŘ','POPEL','UHLÍ','DŘEVO','KÁMEN','CIHLA','ZEĎ','STŘECHA','KOMÍN','PLOT','BRÁNA','DVŮR','SKLEP','PŮDA','SCHODY','ZVON','BUBEN','FLÉTNA','HOUSLE','PÍSEŇ','TANEC','OBRAZ','ŠTĚTEC','BARVA','SOCHA','LOUTKA','DRAK','MÍČEK','KOSTKA','ŠACHY','KARTY'];
 
 /* tajenky – délka (jen písmena) se počítá automaticky */
-const TAJENKY=['PRÁCE ŠLECHTÍ','NENÍ KOUŘE BEZ OHNĚ','TICHÁ VODA BŘEHY MELE','SYTÝ HLADOVÉMU NEVĚŘÍ','V NOUZI POZNÁŠ PŘÍTELE','DVAKRÁT MĚŘ JEDNOU ŘEŽ','I MISTR TESAŘ SE UTNE','ÚČEL SVĚTÍ PROSTŘEDKY','CO NA SRDCI TO NA JAZYKU','HLAD JE NEJLEPŠÍ KUCHAŘ','PES KTERÝ ŠTĚKÁ NEKOUŠE','ODVÁŽNÉMU ŠTĚSTÍ PŘEJE','BEZ PRÁCE NEJSOU KOLÁČE','RANNÍ PTÁČE DÁL DOSKÁČE','ZA MÁLO PENĚZ MÁLO MUZIKY','KUJ ŽELEZO DOKUD JE ŽHAVÉ','VŠUDE DOBŘE DOMA NEJLÉPE','ŽÁDNÝ UČENÝ Z NEBE NESPADL','BEZ PENĚZ DO HOSPODY NELEZ','OPAKOVÁNÍ MATKA MOUDROSTI','KDO SE BOJÍ NESMÍ DO LESA','ŠTĚSTÍ PŘEJE PŘIPRAVENÝM','CO TĚ NEZABIJE TO TĚ POSÍLÍ','S POCTIVOSTÍ NEJDÁL DOJDEŠ','KOMU SE NELENÍ TOMU SE ZELENÍ'];
+const TAJENKY=[
+ // kratší (do ~17 písmen)
+ 'KDO UMÍ UMÍ','SLIBY CHYBY','ČAS JSOU PENÍZE','KDO HLEDÁ NAJDE','PRÁCE ŠLECHTÍ','VÍCE HLAV VÍCE VÍ','CVIK DĚLÁ MISTRA','LEŽ MÁ KRÁTKÉ NOHY','KAM VÍTR TAM PLÁŠŤ','NEHAS CO TĚ NEPÁLÍ','VRÁNA K VRÁNĚ SEDÁ','KDO ŠETŘÍ MÁ ZA TŘI','RYBA SMRDÍ OD HLAVY','MALÉ RYBY TAKY RYBY','POZDĚ BYCHA HONITI','LÁSKA HORY PŘENÁŠÍ','OKO ZA OKO ZUB ZA ZUB','CO ČECH TO MUZIKANT','ŠATY DĚLAJÍ ČLOVĚKA','DOBRÁ RADA NAD ZLATO','ŘEMESLO MÁ ZLATÉ DNO','POD SVÍCNEM BÝVÁ TMA','PTÁKA POZNÁŠ PO PEŘÍ',
+ // střední (18–24)
+ 'CHYBAMI SE ČLOVĚK UČÍ','CO JE DOMA TO SE POČÍTÁ','ZVYK JE ŽELEZNÁ KOŠILE','PRO DOBROTU NA ŽEBROTU','HOST DO DOMU BŮH DO DOMU','HLAVOU ZEĎ NEPRORAZÍŠ','NENÍ KOUŘE BEZ OHNĚ','SEJDE Z OČÍ SEJDE Z MYSLI','MNOHO PSŮ ZAJÍCOVA SMRT','TONOUCÍ SE STÉBLA CHYTÁ','ČAS ZAHOJÍ VŠECHNY RÁNY','TICHÁ VODA BŘEHY MELE','SYTÝ HLADOVÉMU NEVĚŘÍ','V NOUZI POZNÁŠ PŘÍTELE','DVAKRÁT MĚŘ JEDNOU ŘEŽ','I MISTR TESAŘ SE UTNE','ÚČEL SVĚTÍ PROSTŘEDKY','LÁSKA PROCHÁZÍ ŽALUDKEM','KAŽDÝ CHVILKU TAHÁ PILKU','STOKRÁT NIC UMOŘILO OSLA','PO BITVĚ JE KAŽDÝ GENERÁL','TRPĚLIVOST RŮŽE PŘINÁŠÍ','CO NA SRDCI TO NA JAZYKU','HLAD JE NEJLEPŠÍ KUCHAŘ','PES KTERÝ ŠTĚKÁ NEKOUŠE','ODVÁŽNÉMU ŠTĚSTÍ PŘEJE','CO OKO NEVIDÍ SRDCE NEBOLÍ','KDO NIC NEDĚLÁ NIC NEZKAZÍ','PŘÍLEŽITOST DĚLÁ ZLODĚJE','KONEC DOBRÝ VŠECHNO DOBRÉ','POTMĚ JE KAŽDÁ KOČKA ČERNÁ','BEZ PRÁCE NEJSOU KOLÁČE','RANNÍ PTÁČE DÁL DOSKÁČE','JAK SI USTELEŠ TAK SI LEHNEŠ','VŠECHNY CESTY VEDOU DO ŘÍMA','ŽÁDNÝ STROM NEROSTE DO NEBE','KOVÁŘOVA KOBYLA CHODÍ BOSA','MLUVIT STŘÍBRO MLČET ZLATO','DOČKEJ ČASU JAKO HUSA KLASU','ZA MÁLO PENĚZ MÁLO MUZIKY','KUJ ŽELEZO DOKUD JE ŽHAVÉ','VŠUDE DOBŘE DOMA NEJLÉPE','DVAKRÁT DÁVÁ KDO RYCHLE DÁVÁ','VŠECHNO ZLÉ JE K NĚČEMU DOBRÉ','JEDNA VLAŠTOVKA JARO NEDĚLÁ','KDO DŘÍV PŘIJDE TEN DŘÍV MELE','CO SE ŠKÁDLÍVÁ TO SE RÁDO MÍVÁ','ŽÁDNÝ UČENÝ Z NEBE NESPADL','BEZ PENĚZ DO HOSPODY NELEZ','OPAKOVÁNÍ MATKA MOUDROSTI','KDO SE BOJÍ NESMÍ DO LESA','ŠTĚSTÍ PŘEJE PŘIPRAVENÝM','KOMU SE NELENÍ TOMU SE ZELENÍ',
+ // delší (25+, hlavně pro těžkou obtížnost)
+ 'CO TĚ NEZABIJE TO TĚ POSÍLÍ','S POCTIVOSTÍ NEJDÁL DOJDEŠ','KDO POZDĚ CHODÍ SÁM SOBĚ ŠKODÍ','ZAKÁZANÉ OVOCE NEJVÍC CHUTNÁ','KAŽDÝ JE SVÉHO ŠTĚSTÍ STRŮJCEM','JABLKO NEPADÁ DALEKO OD STROMU','NENÍ VŠECHNO ZLATO CO SE TŘPYTÍ','DAROVANÉMU KONI NA ZUBY NEHLEĎ','NOUZE NAUČILA DALIBORA HOUSTI','NEŘÍKEJ HOP DOKUD NEPŘESKOČÍŠ','KDO JINÉMU JÁMU KOPÁ SÁM DO NÍ PADÁ','ODŘÍKANÉHO CHLEBA NEJVĚTŠÍ KRAJÍC','STARÉHO PSA NOVÝM KOUSKŮM NENAUČÍŠ','JAK SE DO LESA VOLÁ TAK SE Z LESA OZÝVÁ','LEPŠÍ VRABEC V HRSTI NEŽ HOLUB NA STŘEŠE','NEŠTĚSTÍ NECHODÍ PO HORÁCH ALE PO LIDECH'];
 const pismena=s=>s.replace(/\s+/g,'');
 
 const CFG={
- lehka:{size:10,seed:7,dirs:[[0,1],[1,0],[1,1]],bias:0.8},
- stredni:{size:12,seed:9,dirs:[[0,1],[1,0],[1,1],[1,-1],[0,-1],[-1,0],[-1,-1],[-1,1]],bias:1.8},
- tezka:{size:15,seed:11,dirs:[[0,1],[1,0],[1,1],[1,-1],[0,-1],[-1,0],[-1,-1],[-1,1]],bias:3}
+ lehka:{size:10,seed:7,dirs:[[0,1],[1,0],[1,1]],bias:0.8,maxTaj:22},
+ stredni:{size:12,seed:9,dirs:[[0,1],[1,0],[1,1],[1,-1],[0,-1],[-1,0],[-1,-1],[-1,1]],bias:1.8,maxTaj:26},
+ tezka:{size:15,seed:11,dirs:[[0,1],[1,0],[1,1],[1,-1],[0,-1],[-1,0],[-1,-1],[-1,1]],bias:3,maxTaj:34}
 };
 
-let grid,size,words,found,foundLines,tajenka,tajCells,cellPx;
+let grid,size,words,found,foundLines,tajenka,tajCells,cellPx,tajOdhalena=false;
 
 function zamichej(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
 
@@ -143,7 +166,7 @@ function najdiUmisteni(g,n,word,dirs,bias,empty,minTaj,cileLens){
 function pokus(seedSlova,pool,cfg){
   const n=Math.max(cfg.size,Math.max(...seedSlova.map(w=>w.length))+1);
   const g=Array.from({length:n},()=>Array(n).fill(''));
-  const cileLens=new Set(TAJENKY.map(t=>pismena(t).length).filter(l=>l<=Math.max(24,n)));
+  const cileLens=new Set(TAJENKY.map(t=>pismena(t).length).filter(l=>l<=(cfg.maxTaj||24)));
   const minTaj=Math.min(...cileLens);
   let empty=n*n;
   const pouzita=[];
@@ -185,8 +208,8 @@ function build(seedSlova){
 
   grid=v.g;size=v.n;words=[...v.pouzita].sort((a,b)=>a.localeCompare(b,'cs'));
   tajenka=v.taj;tajCells=v.tc;
-  found=new Set();foundLines=[];
-  $('msg').textContent='';
+  found=new Set();foundLines=[];tajOdhalena=false;
+  $('tajInput').value='';
   render();
 }
 
@@ -221,19 +244,48 @@ function renderWords(){
   $('wordList').innerHTML=words.map(w=>`<li class="${found.has(w)?'done':''}">${w}</li>`).join('');
   $('progress').innerHTML='<b>'+found.size+'</b> / '+words.length+' nalezeno';
   const hotovo=found.size===words.length&&words.length>0;
-  if(hotovo){
-    $('msg').textContent='🎉 Vyluštěno!';
+  if(hotovo||tajOdhalena){
     $('tajenkaBox').textContent='🔎 Tajenka: '+tajenka;
     $('tajenkaBox').classList.add('odhalena');
-    tajCells.forEach(rc=>{
-      const[r,c]=rc.split(',');
-      $('grid').children[+r*size+ +c].classList.add('taj');
-    });
+    $('tajGuess').style.display='none';
+    ulozDoSbirky(tajenka);
   }else{
     $('tajenkaBox').textContent='🔎 Tajenka má '+pismena(tajenka).length+' písmen – zbyde po vyškrtání všech slov.';
     $('tajenkaBox').classList.remove('odhalena');
+    $('tajGuess').style.display='flex';
+  }
+  $('msg').textContent=hotovo?'🎉 Vyluštěno!':(tajOdhalena?'✅ Tajenka uhodnuta – doškrtej zbylá slova!':'');
+  if(hotovo)tajCells.forEach(rc=>{
+    const[r,c]=rc.split(',');
+    $('grid').children[+r*size+ +c].classList.add('taj');
+  });
+}
+
+/* ---- hádání tajenky + sbírka uhodnutých ---- */
+const norm=s=>s.toUpperCase().normalize('NFD').replace(/[\u0300-\u036f]/g,'').replace(/[^A-Z]/g,'');
+function nactiSbirku(){try{return JSON.parse(localStorage.getItem('osmismerka.sbirka'))||[]}catch(e){return[]}}
+function ulozDoSbirky(t){
+  const s=nactiSbirku();
+  if(!s.includes(t)){s.push(t);localStorage.setItem('osmismerka.sbirka',JSON.stringify(s));}
+  renderSbirka();
+}
+function renderSbirka(){
+  const s=nactiSbirku();
+  $('sbirka').innerHTML=`<details><summary>🏆 Sbírka tajenek: ${s.length} / ${TAJENKY.length}</summary><ul>${s.map(t=>`<li>${t}</li>`).join('')||'<li>Zatím žádná…</li>'}</ul></details>`;
+}
+function zkusTajenku(){
+  const tip=$('tajInput').value;
+  if(!tip.trim()||tajOdhalena)return;
+  if(norm(tip)===norm(tajenka)){
+    tajOdhalena=true;
+    renderWords();
+  }else{
+    $('tajInput').classList.remove('spatne');void $('tajInput').offsetWidth;
+    $('tajInput').classList.add('spatne');
   }
 }
+$('tajBtn').onclick=zkusTajenku;
+$('tajInput').onkeydown=e=>{if(e.key==='Enter')zkusTajenku();};
 
 function attachEvents(){
   const cells=[...$('grid').children];
@@ -319,6 +371,7 @@ $('genCustom').onclick=()=>{
   if(w.length<2)return alert('Zadej alespoň 2 slova.');
   build(w);
 };
+renderSbirka();
 novaHra();
 </script>
 </body>

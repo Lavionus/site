@@ -143,6 +143,26 @@
     }
     #poly-status span { color: #6aa6fd; }
 
+    input[type="file"] {
+      font-size: 0.78rem;
+      color: #ccc;
+      max-width: 100%;
+    }
+    input[type="file"]::file-selector-button {
+      padding: 5px 10px;
+      border: 1px solid #555;
+      border-radius: 4px;
+      background-color: #404040;
+      color: #e0e0e0;
+      cursor: pointer;
+      margin-right: 8px;
+    }
+    #img-status {
+      font-size: 0.75rem;
+      color: #666;
+    }
+    #img-status span { color: #6aa6fd; }
+
     /* ── Canvas area ─────────────────────────────────── */
     #canvas-area {
       flex: 1;
@@ -220,6 +240,20 @@
     </div>
   </div>
 
+  <!-- Image source -->
+  <div class="section">
+    <h3>Vitráž z obrázku</h3>
+    <input type="file" id="imgFile" accept="image/*">
+    <label>
+      Detail podle hran <span class="val" id="edgeWVal">0.60</span>
+      <input type="range" id="edgeW" min="0" max="1" step="0.05" value="0.6">
+    </label>
+    <div class="btn-row">
+      <button class="btn btn-secondary" id="clearImgBtn">✕ Odebrat obrázek</button>
+    </div>
+    <div id="img-status">žádný obrázek</div>
+  </div>
+
   <!-- Pattern type -->
   <div class="section">
     <h3>Typ vzoru</h3>
@@ -277,6 +311,7 @@
     <label>Sklo
       <select id="colorMode">
         <option value="none">Průhledné (jen linie)</option>
+        <option value="image">Z obrázku</option>
         <option value="random">Náhodné pastelové</option>
         <option value="warm">Teplé tóny</option>
         <option value="cool">Studené tóny</option>
@@ -359,11 +394,152 @@ let rng = makePRNG(42);
 let currentPolygons = [];
 let currentW = 600, currentH = 800;
 
+// ── Zdrojový obrázek pro vitráž z fotky ──────────────────
+let srcImage = null;   // {data: Uint8ClampedArray, w, h}
+let edgeMap  = null;   // Float32Array w*h, 0..1 (síla hran)
+
+function loadImageFile(file) {
+  const img = new Image();
+  img.onload = () => {
+    URL.revokeObjectURL(img.src);
+    // pracovní rozlišení pro vzorkování barev (max 1024 px)
+    const sc = Math.min(1, 1024 / Math.max(img.width, img.height));
+    const iw = Math.max(1, Math.round(img.width * sc));
+    const ih = Math.max(1, Math.round(img.height * sc));
+    const cv = document.createElement('canvas');
+    cv.width = iw; cv.height = ih;
+    const ctx = cv.getContext('2d');
+    ctx.drawImage(img, 0, 0, iw, ih);
+    srcImage = { data: ctx.getImageData(0, 0, iw, ih).data, w: iw, h: ih };
+    edgeMap = computeEdgeMap(srcImage.data, iw, ih);
+
+    // plátno na poměr stran obrázku (delší strana 800 px)
+    const cs = 800 / Math.max(img.width, img.height);
+    document.getElementById('canvasW').value = Math.max(100, Math.round(img.width * cs));
+    document.getElementById('canvasH').value = Math.max(100, Math.round(img.height * cs));
+    document.getElementById('colorMode').value = 'image';
+    document.getElementById('img-status').innerHTML = `<span>${file.name}</span> (${img.width}×${img.height})`;
+    generate();
+  };
+  img.onerror = () => {
+    URL.revokeObjectURL(img.src);
+    document.getElementById('img-status').textContent = 'obrázek se nepodařilo načíst';
+  };
+  img.src = URL.createObjectURL(file);
+}
+
+document.getElementById('imgFile').addEventListener('change', e => {
+  if (e.target.files && e.target.files[0]) loadImageFile(e.target.files[0]);
+});
+document.getElementById('clearImgBtn').addEventListener('click', () => {
+  srcImage = null; edgeMap = null;
+  document.getElementById('imgFile').value = '';
+  document.getElementById('img-status').textContent = 'žádný obrázek';
+  if (document.getElementById('colorMode').value === 'image')
+    document.getElementById('colorMode').value = 'random';
+  generate();
+});
+
+// Sobelova mapa hran, normalizovaná 0..1, lehce rozmazaná
+function computeEdgeMap(data, w, h) {
+  const g = new Float32Array(w * h);
+  for (let i = 0; i < w * h; i++) {
+    const o = i * 4;
+    g[i] = 0.299 * data[o] + 0.587 * data[o + 1] + 0.114 * data[o + 2];
+  }
+  const e = new Float32Array(w * h);
+  let max = 0;
+  for (let y = 1; y < h - 1; y++)
+    for (let x = 1; x < w - 1; x++) {
+      const i = y * w + x;
+      const gx = g[i - w + 1] + 2 * g[i + 1] + g[i + w + 1] - g[i - w - 1] - 2 * g[i - 1] - g[i + w - 1];
+      const gy = g[i + w - 1] + 2 * g[i + w] + g[i + w + 1] - g[i - w - 1] - 2 * g[i - w] - g[i - w + 1];
+      const m = Math.sqrt(gx * gx + gy * gy);
+      e[i] = m;
+      if (m > max) max = m;
+    }
+  if (max > 0) for (let i = 0; i < e.length; i++) e[i] = Math.sqrt(e[i] / max);
+  // 3×3 box blur — rozprostře hrany, aby se u nich zahustily dílky
+  const b = new Float32Array(w * h);
+  for (let y = 1; y < h - 1; y++)
+    for (let x = 1; x < w - 1; x++) {
+      const i = y * w + x;
+      b[i] = (e[i-w-1]+e[i-w]+e[i-w+1]+e[i-1]+e[i]+e[i+1]+e[i+w-1]+e[i+w]+e[i+w+1]) / 9;
+    }
+  return b;
+}
+
+// souřadnice plátna → souřadnice obrázku (režim "cover", centrovaný)
+function imgCoords(x, y, w, h) {
+  const s = Math.max(srcImage.w / w, srcImage.h / h);
+  const ox = (srcImage.w - w * s) / 2;
+  const oy = (srcImage.h - h * s) / 2;
+  const ix = Math.min(srcImage.w - 1, Math.max(0, Math.round(x * s + ox)));
+  const iy = Math.min(srcImage.h - 1, Math.max(0, Math.round(y * s + oy)));
+  return [ix, iy];
+}
+
+// Body vzoru: bez obrázku rovnoměrně náhodně, s obrázkem zahuštěné u hran
+function samplePoints(n, w, h, r) {
+  const pts = [];
+  const ew = parseFloat(document.getElementById('edgeW').value);
+  if (!edgeMap || ew <= 0) {
+    for (let i = 0; i < n; i++) pts.push([r() * w, r() * h]);
+    return pts;
+  }
+  let guard = 0;
+  while (pts.length < n && guard < n * 300) {
+    guard++;
+    const x = r() * w, y = r() * h;
+    const [ix, iy] = imgCoords(x, y, w, h);
+    const p = (1 - ew) + ew * edgeMap[iy * srcImage.w + ix];
+    if (r() < p) pts.push([x, y]);
+  }
+  while (pts.length < n) pts.push([r() * w, r() * h]);
+  return pts;
+}
+
+// ── Průměrná barva obrázku uvnitř polygonu ───────────────
+function pointInPoly(x, y, poly) {
+  let inside = false;
+  for (let i = 0, j = poly.length - 1; i < poly.length; j = i++) {
+    const [xi, yi] = poly[i], [xj, yj] = poly[j];
+    if ((yi > y) !== (yj > y) && x < (xj - xi) * (y - yi) / (yj - yi) + xi)
+      inside = !inside;
+  }
+  return inside;
+}
+
+function avgColorInPoly(poly, w, h) {
+  const xs = poly.map(p => p[0]), ys = poly.map(p => p[1]);
+  const x0 = Math.max(0, Math.min(...xs)), x1 = Math.min(w, Math.max(...xs));
+  const y0 = Math.max(0, Math.min(...ys)), y1 = Math.min(h, Math.max(...ys));
+  const step = Math.max(1.5, Math.sqrt(((x1 - x0) * (y1 - y0)) / 250));
+  let rs = 0, gs = 0, bs = 0, cnt = 0;
+  for (let y = y0 + step / 2; y < y1; y += step)
+    for (let x = x0 + step / 2; x < x1; x += step) {
+      if (!pointInPoly(x, y, poly)) continue;
+      const [ix, iy] = imgCoords(x, y, w, h);
+      const o = (iy * srcImage.w + ix) * 4;
+      rs += srcImage.data[o]; gs += srcImage.data[o + 1]; bs += srcImage.data[o + 2];
+      cnt++;
+    }
+  if (cnt === 0) {
+    // drobný polygon — vezmi barvu v těžišti
+    let cx = 0, cy = 0;
+    for (const p of poly) { cx += p[0]; cy += p[1]; }
+    const [ix, iy] = imgCoords(cx / poly.length, cy / poly.length, w, h);
+    const o = (iy * srcImage.w + ix) * 4;
+    return [srcImage.data[o], srcImage.data[o + 1], srcImage.data[o + 2]];
+  }
+  return [Math.round(rs / cnt), Math.round(gs / cnt), Math.round(bs / cnt)];
+}
+
 // ── localStorage persistence ─────────────────────────────
 const LS_KEY = 'sg_settings';
 const LS_FIELDS = [
   'canvasW','canvasH','patternType','cells','jitter','lineW','seed',
-  'borderShape','margin','colorMode','fillAlpha','leadColor'
+  'borderShape','margin','colorMode','fillAlpha','leadColor','edgeW'
 ];
 
 function saveSettings() {
@@ -393,6 +569,7 @@ function bindSlider(id, valId, fmt) {
 }
 bindSlider('cells', 'cellsVal');
 bindSlider('jitter', 'jitterVal', v => parseFloat(v).toFixed(2));
+bindSlider('edgeW', 'edgeWVal', v => parseFloat(v).toFixed(2));
 bindSlider('lineW', 'lineWVal');
 bindSlider('margin', 'marginVal');
 bindSlider('fillAlpha', 'fillAlphaVal', v => parseFloat(v).toFixed(2));
@@ -407,7 +584,7 @@ function debouncedGenerate() {
 }
 ['patternType','borderShape','colorMode','leadColor'].forEach(id =>
   document.getElementById(id).addEventListener('change', debouncedGenerate));
-['cells','jitter','lineW','margin','fillAlpha'].forEach(id =>
+['cells','jitter','lineW','margin','fillAlpha','edgeW'].forEach(id =>
   document.getElementById(id).addEventListener('input', debouncedGenerate));
 document.getElementById('seed').addEventListener('change', generate);
 document.addEventListener('keydown', e => {
@@ -452,9 +629,7 @@ function getBorderStroke(shape, w, h, margin, lw, color) {
 
 // ── Voronoi (pixel-scan + convex hull) ──────────────────
 function voronoiPolygons(w, h, n, jitter, r) {
-  const sites = [];
-  for (let i=0;i<n;i++) sites.push([r()*w, r()*h]);
-  return voronoiFromSeeds(sites, w, h);
+  return voronoiFromSeeds(samplePoints(n, w, h, r), w, h);
 }
 
 function voronoiFromSeeds(sites, w, h) {
@@ -504,8 +679,7 @@ function inCC(a, b, c, p) {
 }
 
 function delaunayPolygons(w, h, n, jitter, r) {
-  const pts=[];
-  for(let i=0;i<n;i++) pts.push([r()*w, r()*h]);
+  const pts=samplePoints(n, w, h, r);
   // boundary seeds for full coverage
   const bx=[0,w/4,w/2,3*w/4,w], by=[0,h/4,h/2,3*h/4,h];
   for(const x of bx) for(const y of by) pts.push([x,y]);
@@ -668,10 +842,18 @@ function generate() {
   const clipAttr=border!=='none'?' clip-path="url(#cp)"':'';
   const borderStroke=border!=='none'?getBorderStroke(border,w,h,margin,lineW,leadColor):'';
 
+  const useImage=colorMode==='image'&&srcImage;
+
   const pathsHtml=polys.map(pts=>{
     const d=polyToPath(pts);
-    const raw=colorFn(crng);
-    const fill=colorMode==='none'?'#ffffff':addAlpha(raw,fillAlpha);
+    let fill;
+    if(useImage) {
+      const [cr,cg,cb]=avgColorInPoly(pts,w,h);
+      fill=`rgba(${cr},${cg},${cb},${fillAlpha})`;
+    } else {
+      const raw=(colorMode==='image'?PALETTES.random:colorFn)(crng);
+      fill=colorMode==='none'?'#ffffff':addAlpha(raw,fillAlpha);
+    }
     return `<path d="${d}" fill="${fill}" stroke="${leadColor}" stroke-width="${lineW}" stroke-linejoin="round"/>`;
   }).join('\n');
 

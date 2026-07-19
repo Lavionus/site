@@ -1574,6 +1574,17 @@ const KATALOG_SEKCE = [
         "nazev": "🚫 Tabu (slovní popis)"
       },
       {
+        "soubor": "obsah/pantomima.html",
+        "nazev": "🎭 Pantomima (databanka)",
+        "tagy": [
+          "šarády",
+          "charades",
+          "předvádění",
+          "zvířata",
+          "povolání"
+        ]
+      },
+      {
         "soubor": "obsah/lights_out.html",
         "nazev": "💡 Lights Out"
       },
