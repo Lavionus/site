@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎣 Rybářský kalendář</title>
+<script src="lib/suncalc.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1a1a1a;color:#e0e0e0;min-height:100vh;padding:20px}
+.container{max-width:840px;margin:0 auto}
+h1{font-size:1.6rem;margin-bottom:6px;font-weight:600;text-align:center}
+.sub{text-align:center;color:#888;font-size:.85rem;margin-bottom:18px}
+.card{background:#2a2a2a;border:1px solid #404040;border-radius:8px;padding:22px;margin-bottom:20px}
+h2{font-size:1.05rem;color:#6aa6fd;margin-bottom:14px}
+.controls{display:flex;gap:10px;flex-wrap:wrap;align-items:end}
+label{display:block;font-size:.78rem;color:#888;margin-bottom:4px}
+input,select{background:#404040;border:1px solid #555;border-radius:4px;color:#e0e0e0;padding:9px}
+.btn{background:#6aa6fd;color:#fff;border:none;padding:9px 16px;border-radius:6px;cursor:pointer;font-weight:600}
+.btn:hover{background:#5694f0}
+.rating{text-align:center}
+.stars{font-size:2.2rem;letter-spacing:4px;margin:6px 0}
+.ratinglabel{color:#888;font-size:.9rem}
+.moonrow{display:flex;align-items:center;justify-content:center;gap:14px;margin-top:10px}
+.moonrow .emoji{font-size:2.5rem}
+.periods{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:600px){.periods{grid-template-columns:1fr}}
+.period-list .row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid #333;font-size:.92rem}
+.period-list .row:last-child{border:none}
+.period-list b{color:#f39c12}
+.tag-major{background:#e0a63f;color:#1a1a1a;font-size:.7rem;font-weight:700;padding:2px 7px;border-radius:8px}
+.tag-minor{background:#404040;color:#ccc;font-size:.7rem;font-weight:700;padding:2px 7px;border-radius:8px}
+.note{font-size:.78rem;color:#666;margin-top:14px;line-height:1.5}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>🎣 Rybářský kalendář</h1>
+  <p class="sub">Odhad hlavních a vedlejších dob pro rybolov podle solunární teorie (poloha měsíce a fáze měsíce)</p>
+  <div class="card">
+    <div class="controls">
+      <div><label>Lokace</label>
+        <select id="loc">
+          <option value="50.0755,14.4378">Praha</option>
+          <option value="49.1951,16.6068">Brno</option>
+          <option value="49.8346,18.2820">Ostrava</option>
+          <option value="49.7437,13.3775">Plzeň</option>
+          <option value="48.9764,14.4747">České Budějovice</option>
+          <option value="custom">Vlastní souřadnice…</option>
+        </select>
+      </div>
+      <div id="customCoords" style="display:none;gap:8px"><label>Lat, Lon</label><input type="text" id="coords" placeholder="50.08, 14.44" style="width:140px"></div>
+      <div><label>Datum</label><input type="date" id="date"></div>
+      <button class="btn" id="todayBtn">Dnes</button>
+    </div>
+  </div>
+
+  <div class="card rating">
+    <h2 style="text-align:center">Hodnocení dne</h2>
+    <div class="stars" id="stars"></div>
+    <div class="ratinglabel" id="ratingLabel"></div>
+    <div class="moonrow">
+      <div class="emoji" id="moonEmoji">🌕</div>
+      <div><div id="moonName" style="font-weight:600"></div><div id="moonPct" style="color:#888;font-size:.85rem"></div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Doby aktivity ryb</h2>
+    <div class="periods">
+      <div>
+        <div style="color:#888;font-size:.78rem;margin-bottom:6px">🌞 Sluneční časy</div>
+        <div class="period-list" id="sunTimes"></div>
+      </div>
+      <div>
+        <div style="color:#888;font-size:.78rem;margin-bottom:6px">🎣 Hlavní / vedlejší doby</div>
+        <div class="period-list" id="solunarTimes"></div>
+      </div>
+    </div>
+  </div>
+  <p class="note">Solunární teorie (J. A. Knight) předpokládá vyšší aktivitu ryb v době, kdy je měsíc v nadhlaví/podhlaví (hlavní doby, ~2 h) a při východu/západu měsíce (vedlejší doby, ~1 h). Skutečná aktivita ryb závisí i na počasí, tlaku vzduchu, teplotě vody a druhu ryby — ber jako orientační pomůcku, ne zaručený předpis.</p>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+$('date').value=new Date().toISOString().slice(0,10);
+$('todayBtn').onclick=()=>{$('date').value=new Date().toISOString().slice(0,10);update();};
+$('loc').onchange=()=>{$('customCoords').style.display=$('loc').value==='custom'?'flex':'none';update();};
+$('coords').oninput=update;
+$('date').onchange=update;
+
+function getCoords(){
+  if($('loc').value==='custom'){
+    const parts=$('coords').value.split(',').map(s=>parseFloat(s.trim()));
+    if(parts.length===2&&!isNaN(parts[0])&&!isNaN(parts[1]))return parts;
+    return [50.0755,14.4378];
+  }
+  return $('loc').value.split(',').map(Number);
+}
+
+function fmtTime(d){
+  if(!d||isNaN(d.getTime()))return '—';
+  return d.toLocaleTimeString('cs-CZ',{hour:'2-digit',minute:'2-digit'});
+}
+
+function moonPhaseInfo(phase){
+  if(phase<0.03||phase>0.97)return ['🌑','Nov'];
+  if(phase<0.22)return ['🌒','Dorůstající srpek'];
+  if(phase<0.28)return ['🌓','První čtvrť'];
+  if(phase<0.47)return ['🌔','Dorůstající měsíc'];
+  if(phase<0.53)return ['🌕','Úplněk'];
+  if(phase<0.72)return ['🌖','Couvající měsíc'];
+  if(phase<0.78)return ['🌗','Poslední čtvrť'];
+  return ['🌘','Couvající srpek'];
+}
+
+// Najde vrchol a minimum výšky měsíce nad obzorem během dne (nadhlaví/podhlaví = hlavní doby)
+function findMoonExtremes(date,lat,lon){
+  let maxAlt=-Infinity,maxT=null,minAlt=Infinity,minT=null;
+  const start=new Date(date);start.setHours(0,0,0,0);
+  for(let m=0;m<24*60;m+=5){
+    const t=new Date(start.getTime()+m*60000);
+    const pos=SunCalc.getMoonPosition(t,lat,lon);
+    if(pos.altitude>maxAlt){maxAlt=pos.altitude;maxT=t;}
+    if(pos.altitude<minAlt){minAlt=pos.altitude;minT=t;}
+  }
+  return {overhead:maxT,underfoot:minT};
+}
+
+function addMinutes(d,m){return new Date(d.getTime()+m*60000);}
+
+function update(){
+  const [lat,lon]=getCoords();
+  const date=new Date($('date').value+'T12:00:00');
+  if(isNaN(date.getTime()))return;
+
+  const sunTimes=SunCalc.getTimes(date,lat,lon);
+  const moonTimes=SunCalc.getMoonTimes(date,lat,lon);
+  const illum=SunCalc.getMoonIllumination(date);
+  const [emoji,name]=moonPhaseInfo(illum.phase);
+  $('moonEmoji').textContent=emoji;
+  $('moonName').textContent=name;
+  $('moonPct').textContent='Osvětlení: '+Math.round(illum.fraction*100)+' %';
+
+  $('sunTimes').innerHTML=`
+    <div class="row"><span>🌅 Východ slunce</span><b>${fmtTime(sunTimes.sunrise)}</b></div>
+    <div class="row"><span>🌇 Západ slunce</span><b>${fmtTime(sunTimes.sunset)}</b></div>
+    <div class="row"><span>🌙 Východ měsíce</span><b>${fmtTime(moonTimes.rise)}</b></div>
+    <div class="row"><span>🌘 Západ měsíce</span><b>${fmtTime(moonTimes.set)}</b></div>`;
+
+  const ext=findMoonExtremes(date,lat,lon);
+  const majors=[
+    ext.overhead&&{label:'Nadhlaví měsíce',from:addMinutes(ext.overhead,-60),to:addMinutes(ext.overhead,60)},
+    ext.underfoot&&{label:'Podhlaví měsíce',from:addMinutes(ext.underfoot,-60),to:addMinutes(ext.underfoot,60)},
+  ].filter(Boolean);
+  const minors=[
+    moonTimes.rise&&{label:'Východ měsíce',from:addMinutes(moonTimes.rise,-30),to:addMinutes(moonTimes.rise,30)},
+    moonTimes.set&&{label:'Západ měsíce',from:addMinutes(moonTimes.set,-30),to:addMinutes(moonTimes.set,30)},
+  ].filter(Boolean);
+
+  $('solunarTimes').innerHTML=
+    majors.map(p=>`<div class="row"><span><span class="tag-major">HLAVNÍ</span> ${p.label}</span><b>${fmtTime(p.from)}–${fmtTime(p.to)}</b></div>`).join('')+
+    minors.map(p=>`<div class="row"><span><span class="tag-minor">vedlejší</span> ${p.label}</span><b>${fmtTime(p.from)}–${fmtTime(p.to)}</b></div>`).join('');
+
+  // Hodnocení dne: fáze blízko novu/úplňku = lepší, plus bonus za blízkost hlavní doby k východu/západu slunce
+  let score=1-Math.abs(0.5-illum.phase)*2; // 1 = nov/úplněk, 0 = čtvrť
+  score=Math.max(0,Math.min(1,score));
+  const starsCount=Math.max(1,Math.round(score*4)+1);
+  $('stars').textContent='⭐'.repeat(starsCount)+'☆'.repeat(5-starsCount);
+  const labels=['Slabý den','Podprůměrný den','Průměrný den','Dobrý den','Výborný den'];
+  $('ratingLabel').textContent=labels[starsCount-1];
+}
+
+update();
+</script>
+</body>
+</html>

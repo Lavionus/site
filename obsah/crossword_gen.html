@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🧩 Generátor křížovek</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1a1a1a;color:#e0e0e0;min-height:100vh;padding:20px}
+.container{max-width:1100px;margin:0 auto}
+h1{font-size:1.6rem;margin-bottom:14px;font-weight:600;text-align:center}
+.card{background:#2a2a2a;border:1px solid #404040;border-radius:8px;padding:18px;margin-bottom:20px}
+h2{font-size:1.05rem;color:#6aa6fd;margin-bottom:14px}
+label{display:block;font-size:.82rem;color:#888;margin-bottom:5px}
+textarea{width:100%;min-height:180px;background:#404040;border:1px solid #555;border-radius:4px;color:#e0e0e0;padding:9px;font-family:monospace;font-size:.85rem;resize:vertical}
+.btn{background:#6aa6fd;color:#fff;border:none;padding:10px 18px;border-radius:6px;cursor:pointer;font-weight:600;font-size:.9rem}
+.btn:hover{background:#5591e8}
+.btn-sec{background:#404040}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.layout{display:grid;grid-template-columns:1fr 300px;gap:20px}
+@media(max-width:800px){.layout{grid-template-columns:1fr}}
+.grid-wrap{overflow-x:auto}
+.xgrid{display:inline-grid;gap:2px;background:#000;padding:2px;border-radius:4px}
+.xcell{position:relative;width:32px;height:32px;background:#fff;display:flex;align-items:center;justify-content:center}
+.xcell.black{background:transparent}
+.xcell input{width:100%;height:100%;border:none;text-align:center;text-transform:uppercase;font-weight:700;font-size:.95rem;background:transparent;color:#111}
+.xcell input:focus{outline:2px solid #6aa6fd}
+.xcell .num{position:absolute;top:1px;left:2px;font-size:.55rem;color:#666;font-weight:400}
+.clues{background:#2a2a2a;border:1px solid #404040;border-radius:8px;padding:16px}
+.clues h3{font-size:.85rem;color:#6aa6fd;margin:10px 0 6px}
+.clues h3:first-child{margin-top:0}
+.clues ol{padding-left:20px;font-size:.85rem;line-height:1.7}
+.status{font-size:.85rem;margin-top:10px;color:#e0a63f}
+@media print{
+  .card:not(.printarea){display:none!important}
+  body{background:#fff;color:#000;padding:0}
+  .xcell{background:#fff}
+  .xcell input{color:#fff}
+  .clues{background:#fff;border:1px solid #999}
+  .clues h3{color:#000}
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>🧩 Generátor křížovek</h1>
+
+  <div class="card">
+    <h2>Slova a nápovědy</h2>
+    <label>Jeden řádek = SLOVO;nápověda (bez mezer a diakritiky ve slově doporučeno)</label>
+    <textarea id="wordsInput">PES;Domácí štěkající mazlíček
+KOCKA;Přede a chytá myši
+SLUNCE;Svítí ve dne na obloze
+MESIC;Svítí v noci na obloze
+STROM;Má kmen, větve a listy
+VODA;H2O
+OHEN;Hoří a hřeje
+ZEME;Planeta, na které žijeme
+HORA;Vysoký kopec
+RYBA;Žije ve vodě a má žábry</textarea>
+    <div class="row">
+      <button class="btn" id="btnGenerate">🧩 Vygenerovat křížovku</button>
+      <button class="btn btn-sec" id="btnCheck">✅ Zkontrolovat</button>
+      <button class="btn btn-sec" id="btnSolution">👁️ Zobrazit řešení</button>
+      <button class="btn btn-sec" id="btnPrint">🖨️ Tisk</button>
+    </div>
+    <div class="status" id="status"></div>
+  </div>
+
+  <div class="card printarea">
+    <div class="layout">
+      <div class="grid-wrap">
+        <div class="xgrid" id="xgrid"></div>
+      </div>
+      <div class="clues" id="clues"></div>
+    </div>
+  </div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+let grid=null, cols=0, rows=0, placedWords=[];
+
+function normalizeWord(w){
+  return w.trim().toUpperCase()
+    .replace(/[ÁÀÂÄ]/g,'A').replace(/[ÉÈÊË]/g,'E').replace(/[ÍÌÎÏ]/g,'I')
+    .replace(/[ÓÒÔÖ]/g,'O').replace(/[ÚÙÛÜŮ]/g,'U').replace(/Ý/g,'Y')
+    .replace(/Č/g,'C').replace(/Ď/g,'D').replace(/Ě/g,'E').replace(/Ň/g,'N')
+    .replace(/Ř/g,'R').replace(/Š/g,'S').replace(/Ť/g,'T').replace(/Ž/g,'Z')
+    .replace(/[^A-Z]/g,'');
+}
+
+function parseInput(){
+  return $('wordsInput').value.split('\n').map(l=>l.trim()).filter(Boolean).map(line=>{
+    const [w,...rest]=line.split(';');
+    return {word:normalizeWord(w),clue:(rest.join(';')||'').trim()||'(bez nápovědy)'};
+  }).filter(w=>w.word.length>=2);
+}
+
+function canPlace(map,word,row,col,dir){
+  for(let i=0;i<word.length;i++){
+    const r=dir==='V'?row+i:row, c=dir==='H'?col+i:col;
+    const key=r+','+c;
+    const existing=map.get(key);
+    if(existing&&existing!==word[i])return false;
+  }
+  // buňka před a za slovem musí být volná (aby se slova nelepila)
+  const beforeR=dir==='V'?row-1:row, beforeC=dir==='H'?col-1:col;
+  const afterR=dir==='V'?row+word.length:row, afterC=dir==='H'?col+word.length:col;
+  if(map.has(beforeR+','+beforeC))return false;
+  if(map.has(afterR+','+afterC))return false;
+  return true;
+}
+
+function placeWord(map,entry,row,col,dir){
+  for(let i=0;i<entry.word.length;i++){
+    const r=dir==='V'?row+i:row, c=dir==='H'?col+i:col;
+    map.set(r+','+c,entry.word[i]);
+  }
+  placedWords.push({...entry,row,col,dir});
+}
+
+function tryIntersect(map,entry){
+  for(const p of placedWords){
+    for(let i=0;i<p.word.length;i++){
+      const pr=p.dir==='H'?p.row:p.row+i, pc=p.dir==='H'?p.col+i:p.col;
+      const letter=p.word[i];
+      for(let j=0;j<entry.word.length;j++){
+        if(entry.word[j]!==letter)continue;
+        const newDir=p.dir==='H'?'V':'H';
+        const newRow=newDir==='V'?pr-j:pr;
+        const newCol=newDir==='H'?pc-j:pc;
+        if(canPlace(map,entry.word,newRow,newCol,newDir)){
+          placeWord(map,entry,newRow,newCol,newDir);
+          return true;
+        }
+      }
+    }
+  }
+  return false;
+}
+
+function generate(){
+  const entries=parseInput();
+  if(entries.length<2){$('status').textContent='Zadej alespoň 2 platná slova.';return;}
+  entries.sort((a,b)=>b.word.length-a.word.length);
+
+  const map=new Map();
+  placedWords=[];
+  placeWord(map,entries[0],0,0,'H');
+
+  let fallbackRow=2;
+  for(let i=1;i<entries.length;i++){
+    const ok=tryIntersect(map,entries[i]);
+    if(!ok){
+      placeWord(map,entries[i],fallbackRow,0,'H');
+      fallbackRow+=2;
+    }
+  }
+
+  // normalizace souřadnic
+  let minR=Infinity,minC=Infinity,maxR=-Infinity,maxC=-Infinity;
+  for(const key of map.keys()){
+    const [r,c]=key.split(',').map(Number);
+    minR=Math.min(minR,r);minC=Math.min(minC,c);maxR=Math.max(maxR,r);maxC=Math.max(maxC,c);
+  }
+  const finalMap=new Map();
+  for(const [key,val] of map.entries()){
+    const [r,c]=key.split(',').map(Number);
+    finalMap.set((r-minR)+','+(c-minC),val);
+  }
+  placedWords.forEach(p=>{p.row-=minR;p.col-=minC;});
+  grid=finalMap;
+  rows=maxR-minR+1;
+  cols=maxC-minC+1;
+
+  numberAndRender();
+  const unplaced=entries.length-placedWords.length;
+  $('status').textContent=unplaced>0?`Umístěno ${placedWords.length}/${entries.length} slov (${unplaced} se nepodařilo propojit, umístěna samostatně).`:`Křížovka hotová — ${placedWords.length} slov.`;
+}
+
+function numberAndRender(){
+  // přiřaď čísla políčkům, kde začíná slovo napříč nebo dolů
+  const numberAt=new Map();
+  let counter=1;
+  const sortedCells=[...grid.keys()].map(k=>k.split(',').map(Number)).sort((a,b)=>a[0]-b[0]||a[1]-b[1]);
+  for(const [r,c] of sortedCells){
+    const hasLeft=grid.has(r+','+(c-1));
+    const hasRight=grid.has(r+','+(c+1));
+    const hasUp=grid.has((r-1)+','+c);
+    const hasDown=grid.has((r+1)+','+c);
+    const startsAcross=!hasLeft&&hasRight;
+    const startsDown=!hasUp&&hasDown;
+    if(startsAcross||startsDown){
+      numberAt.set(r+','+c,counter++);
+    }
+  }
+  placedWords.forEach(p=>{p.number=numberAt.get(p.row+','+p.col);});
+
+  let html='';
+  for(let r=0;r<rows;r++){
+    for(let c=0;c<cols;c++){
+      const key=r+','+c;
+      if(grid.has(key)){
+        const num=numberAt.get(key);
+        html+=`<div class="xcell"><input maxlength="1" data-cell="${key}" data-letter="${grid.get(key)}">${num?`<span class="num">${num}</span>`:''}</div>`;
+      }else{
+        html+='<div class="xcell black"></div>';
+      }
+    }
+  }
+  $('xgrid').style.gridTemplateColumns=`repeat(${cols},32px)`;
+  $('xgrid').innerHTML=html;
+
+  const across=placedWords.filter(p=>p.dir==='H').sort((a,b)=>a.number-b.number);
+  const down=placedWords.filter(p=>p.dir==='V').sort((a,b)=>a.number-b.number);
+  $('clues').innerHTML=
+    `<h3>➡️ Vodorovně</h3><ol>${across.map(p=>`<li value="${p.number}">${p.clue} <i style="color:#888">(${p.word.length})</i></li>`).join('')}</ol>`+
+    `<h3>⬇️ Svisle</h3><ol>${down.map(p=>`<li value="${p.number}">${p.clue} <i style="color:#888">(${p.word.length})</i></li>`).join('')}</ol>`;
+}
+
+$('btnGenerate').onclick=generate;
+$('btnCheck').onclick=()=>{
+  document.querySelectorAll('.xcell input').forEach(inp=>{
+    const ok=inp.value.trim().toUpperCase()===inp.dataset.letter;
+    inp.style.color=inp.value?(ok?'#1a7a3a':'#c0392b'):'#111';
+  });
+};
+$('btnSolution').onclick=()=>{
+  document.querySelectorAll('.xcell input').forEach(inp=>{
+    inp.value=inp.dataset.letter;
+    inp.style.color='#1a7a3a';
+  });
+};
+$('btnPrint').onclick=()=>window.print();
+
+generate();
+</script>
+</body>
+</html>

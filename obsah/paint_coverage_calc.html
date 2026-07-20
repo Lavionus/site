@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎨 Kalkulačka spotřeby barvy/tapety</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1a1a1a;color:#e0e0e0;min-height:100vh;padding:20px}
+.container{max-width:780px;margin:0 auto}
+h1{font-size:1.6rem;margin-bottom:18px;font-weight:600;text-align:center}
+.card{background:#2a2a2a;border:1px solid #404040;border-radius:8px;padding:22px;margin-bottom:20px}
+h2{font-size:1.05rem;color:#6aa6fd;margin-bottom:16px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:560px){.grid{grid-template-columns:1fr}}
+label{display:block;font-size:.82rem;color:#888;margin-bottom:5px}
+input,select{width:100%;background:#404040;border:1px solid #555;border-radius:4px;color:#e0e0e0;padding:10px;margin-bottom:12px}
+.tabs{display:flex;gap:8px;margin-bottom:16px}
+.tabs button{flex:1;background:#404040;border:1px solid #555;color:#ccc;padding:10px;border-radius:6px;cursor:pointer}
+.tabs button.active{background:#6aa6fd;color:#fff;border-color:#6aa6fd}
+.big{font-size:2.2rem;font-weight:700;color:#6aa6fd;text-align:center;margin:10px 0}
+.res-row{display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid #333}
+.res-row:last-child{border:none}.res-row b{color:#4caf50}
+.chk{display:flex;align-items:center;gap:8px;margin-bottom:12px;color:#bbb;font-size:.88rem}
+.chk input{width:auto}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>🎨 Kalkulačka spotřeby barvy / tapety</h1>
+  <div class="card">
+    <h2>Místnost</h2>
+    <div class="grid">
+      <div><label>Délka místnosti (m)</label><input type="number" id="roomL" value="4" step="0.1"></div>
+      <div><label>Šířka místnosti (m)</label><input type="number" id="roomW" value="3.5" step="0.1"></div>
+      <div><label>Výška stropu (m)</label><input type="number" id="roomH" value="2.6" step="0.1"></div>
+      <div><label>Plocha dveří a oken (m²)</label><input type="number" id="deductions" value="4" step="0.1"></div>
+    </div>
+    <div class="tabs">
+      <button data-mode="paint" class="active">🖌️ Barva</button>
+      <button data-mode="wallpaper">🧻 Tapeta</button>
+    </div>
+    <div id="paintFields" class="grid">
+      <div><label>Vydatnost barvy (m²/l)</label><input type="number" id="yield" value="8" step="0.1"></div>
+      <div><label>Počet vrstev</label><input type="number" id="coats" value="2" min="1"></div>
+      <div><label>Balení (l)</label><input type="number" id="canSize" value="5" step="0.5"></div>
+    </div>
+    <div id="wallpaperFields" class="grid" style="display:none">
+      <div><label>Šířka role (m)</label><input type="number" id="rollW" value="0.53" step="0.01"></div>
+      <div><label>Délka role (m)</label><input type="number" id="rollL" value="10.05" step="0.05"></div>
+      <div><label>Rezerva na sesazení vzoru (%)</label><input type="number" id="wallpaperWaste" value="10" step="1"></div>
+    </div>
+  </div>
+  <div class="card">
+    <h2>📋 Výsledek</h2>
+    <div class="big" id="mainResult">–</div>
+    <div class="res-row"><span>Plocha stěn (bez oken/dveří)</span><b id="wallArea">–</b></div>
+    <div class="res-row" id="extraRow1"></div>
+    <div class="res-row" id="extraRow2"></div>
+  </div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+let mode='paint';
+document.querySelectorAll('.tabs button').forEach(btn=>{
+  btn.onclick=()=>{
+    document.querySelectorAll('.tabs button').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    mode=btn.dataset.mode;
+    $('paintFields').style.display=mode==='paint'?'grid':'none';
+    $('wallpaperFields').style.display=mode==='wallpaper'?'grid':'none';
+    calc();
+  };
+});
+
+function calc(){
+  const L=+$('roomL').value, W=+$('roomW').value, H=+$('roomH').value, ded=+$('deductions').value||0;
+  const perimeter=2*(L+W);
+  const wallArea=Math.max(0,perimeter*H-ded);
+  $('wallArea').textContent=wallArea.toFixed(2)+' m²';
+
+  if(mode==='paint'){
+    const y=+$('yield').value||1, coats=+$('coats').value||1, can=+$('canSize').value||1;
+    const litres=(wallArea*coats)/y;
+    const cans=Math.ceil(litres/can);
+    $('mainResult').textContent=litres.toFixed(1)+' l barvy';
+    $('extraRow1').innerHTML=`<span>Počet balení (${can} l)</span><b>${cans}×</b>`;
+    $('extraRow2').innerHTML=`<span>Celkem ve vrstvách</span><b>${coats}× nátěr</b>`;
+  }else{
+    const rw=+$('rollW').value||0.53, rl=+$('rollL').value||10, waste=1+(+$('wallpaperWaste').value||0)/100;
+    const rollArea=rw*rl;
+    const stripsPerRoll=Math.floor(rl/H);
+    const stripsNeeded=Math.ceil((perimeter*waste)/rw);
+    const rolls=Math.ceil(stripsNeeded/Math.max(1,stripsPerRoll));
+    $('mainResult').textContent=rolls+' × role tapety';
+    $('extraRow1').innerHTML=`<span>Potřebných pásů (šířka ${rw} m)</span><b>${stripsNeeded}×</b>`;
+    $('extraRow2').innerHTML=`<span>Pásů z jedné role</span><b>${stripsPerRoll}×</b>`;
+  }
+}
+document.querySelectorAll('input').forEach(el=>el.oninput=calc);
+calc();
+</script>
+</body>
+</html>

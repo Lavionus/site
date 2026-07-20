@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>⚙️ Generátor .env souborů</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1a1a1a;color:#e0e0e0;min-height:100vh;padding:20px}
+.container{max-width:900px;margin:0 auto}
+h1{font-size:1.6rem;margin-bottom:18px;font-weight:600;text-align:center}
+.card{background:#2a2a2a;border:1px solid #404040;border-radius:8px;padding:18px;margin-bottom:18px}
+h2{font-size:1.05rem;color:#6aa6fd;margin-bottom:14px}
+table{width:100%;border-collapse:collapse}
+th,td{padding:6px;text-align:left}
+th{color:#888;font-size:.75rem;text-transform:uppercase}
+td input{width:100%;background:#1e1e1e;border:1px solid #555;border-radius:4px;color:#e0e0e0;padding:7px;font-family:monospace;font-size:.86rem}
+.del{background:none;border:none;color:#c0392b;cursor:pointer;font-size:1rem}
+.row{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+.btn{background:#6aa6fd;color:#fff;border:none;padding:9px 16px;border-radius:6px;cursor:pointer;font-weight:600;font-size:.85rem}
+.btn:hover{background:#5591e8}
+.btn-sec{background:#404040}
+.tabs{display:flex;gap:8px;margin-bottom:14px}
+.tabs button{flex:1;background:#404040;border:1px solid #555;color:#ccc;padding:9px;border-radius:6px;cursor:pointer;font-size:.85rem}
+.tabs button.active{background:#6aa6fd;color:#fff;border-color:#6aa6fd}
+textarea{width:100%;min-height:260px;background:#1e1e1e;border:1px solid #555;border-radius:6px;color:#e0e0e0;padding:12px;font-family:monospace;font-size:.86rem;resize:vertical}
+.presets{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.presets button{background:#404040;border:1px solid #555;color:#ccc;padding:6px 12px;border-radius:16px;cursor:pointer;font-size:.78rem}
+.chk{display:flex;align-items:center;gap:8px;margin-bottom:10px;color:#bbb;font-size:.85rem}
+.chk input{width:auto}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>⚙️ Generátor .env / konfiguračních souborů</h1>
+
+  <div class="card">
+    <h2>Proměnné</h2>
+    <div class="presets">
+      <button data-preset="node">Node.js/Express</button>
+      <button data-preset="django">Django</button>
+      <button data-preset="docker">Docker Compose DB</button>
+    </div>
+    <table>
+      <thead><tr><th>Klíč</th><th>Hodnota</th><th></th></tr></thead>
+      <tbody id="varsBody"></tbody>
+    </table>
+    <div class="row">
+      <button class="btn btn-sec" id="btnAddVar">+ Přidat proměnnou</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Výstup</h2>
+    <div class="tabs">
+      <button data-format="env" class="active">.env</button>
+      <button data-format="compose">docker-compose environment:</button>
+      <button data-format="export">shell export</button>
+    </div>
+    <div class="chk"><input type="checkbox" id="quoteValues"><label for="quoteValues" style="margin:0">Obalit hodnoty do uvozovek</label></div>
+    <textarea id="output" readonly></textarea>
+    <div class="row">
+      <button class="btn" id="btnCopy">📋 Kopírovat</button>
+      <button class="btn btn-sec" id="btnDownload">💾 Stáhnout</button>
+    </div>
+  </div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const PRESETS={
+  node:[['NODE_ENV','development'],['PORT','3000'],['DATABASE_URL','postgres://user:pass@localhost:5432/mydb'],['JWT_SECRET','changeme'],['API_KEY','']],
+  django:[['DEBUG','True'],['SECRET_KEY','changeme'],['ALLOWED_HOSTS','localhost,127.0.0.1'],['DATABASE_URL','postgres://user:pass@localhost:5432/mydb']],
+  docker:[['POSTGRES_USER','app'],['POSTGRES_PASSWORD','changeme'],['POSTGRES_DB','appdb'],['POSTGRES_PORT','5432']],
+};
+let vars=[['APP_NAME','moje-aplikace'],['NODE_ENV','development'],['PORT','3000']];
+let format='env';
+
+function renderVars(){
+  $('varsBody').innerHTML=vars.map((v,i)=>`
+    <tr>
+      <td><input data-k="${i}" value="${escAttr(v[0])}"></td>
+      <td><input data-v="${i}" value="${escAttr(v[1])}"></td>
+      <td><button class="del" data-del="${i}">✕</button></td>
+    </tr>`).join('');
+  $('varsBody').querySelectorAll('[data-k]').forEach(el=>el.oninput=()=>{vars[+el.dataset.k][0]=el.value;buildOutput();});
+  $('varsBody').querySelectorAll('[data-v]').forEach(el=>el.oninput=()=>{vars[+el.dataset.v][1]=el.value;buildOutput();});
+  $('varsBody').querySelectorAll('[data-del]').forEach(el=>el.onclick=()=>{vars.splice(+el.dataset.del,1);renderVars();buildOutput();});
+  buildOutput();
+}
+function escAttr(s){return (s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;');}
+
+function fmtValue(v){
+  return $('quoteValues').checked?'"'+v.replace(/"/g,'\\"')+'"':v;
+}
+
+function buildOutput(){
+  let out='';
+  if(format==='env'){
+    out=vars.filter(v=>v[0]).map(([k,v])=>`${k}=${fmtValue(v)}`).join('\n');
+  }else if(format==='compose'){
+    out='    environment:\n'+vars.filter(v=>v[0]).map(([k,v])=>`      ${k}: ${fmtValue(v)}`).join('\n');
+  }else{
+    out=vars.filter(v=>v[0]).map(([k,v])=>`export ${k}=${fmtValue(v)}`).join('\n');
+  }
+  $('output').value=out+'\n';
+}
+
+document.querySelectorAll('.tabs button').forEach(btn=>{
+  btn.onclick=()=>{
+    document.querySelectorAll('.tabs button').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    format=btn.dataset.format;
+    buildOutput();
+  };
+});
+document.querySelectorAll('.presets button').forEach(btn=>{
+  btn.onclick=()=>{vars=PRESETS[btn.dataset.preset].map(x=>[...x]);renderVars();};
+});
+$('quoteValues').onchange=buildOutput;
+$('btnAddVar').onclick=()=>{vars.push(['','']);renderVars();};
+$('btnCopy').onclick=()=>{
+  navigator.clipboard.writeText($('output').value);
+  $('btnCopy').textContent='✅ Zkopírováno';
+  setTimeout(()=>$('btnCopy').textContent='📋 Kopírovat',1200);
+};
+$('btnDownload').onclick=()=>{
+  const names={env:'.env',compose:'docker-compose-env.yml',export:'env.sh'};
+  const blob=new Blob([$('output').value],{type:'text/plain'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download=names[format];a.click();
+  URL.revokeObjectURL(url);
+};
+
+renderVars();
+</script>
+</body>
+</html>

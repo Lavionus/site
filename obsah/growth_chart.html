@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📈 Kalendář růstu dítěte (percentily)</title>
+<link rel="stylesheet" href="../common.css">
+<script>
+  if (localStorage.getItem('webapp_theme') === 'light') document.documentElement.dataset.theme = 'light';
+</script>
+<style>
+body{background:var(--bg-deep);padding:20px clamp(14px,3vw,40px);min-height:100vh}
+.container{max-width:920px;margin:0 auto}
+h1{font-size:1.5rem;margin-bottom:4px}
+.sub{color:var(--text-muted);font-size:.85rem;margin-bottom:14px;line-height:1.5}
+.warn{background:rgba(224,166,63,.15);border:1px solid var(--warn);color:var(--warn);padding:10px 14px;border-radius:8px;font-size:.82rem;margin-bottom:18px;line-height:1.5}
+.form{background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius);padding:16px;display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:18px}
+.form label{display:block;font-size:.75rem;color:var(--text-faint);margin-bottom:4px}
+.form input,.form select{width:100%;background:var(--bg-input);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:8px}
+.results{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-bottom:18px}
+@media(max-width:600px){.results{grid-template-columns:1fr}}
+.card{background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius);padding:18px}
+.card h2{font-size:.85rem;color:var(--accent);margin-bottom:10px}
+.percentile-bar{position:relative;height:10px;background:var(--bg-control);border-radius:5px;margin:14px 0 6px}
+.percentile-bar .marker{position:absolute;top:-5px;width:2px;height:20px;background:var(--accent)}
+.percentile-bar .band{position:absolute;top:0;height:100%;background:var(--accent-soft);border-radius:5px}
+.pval{font-size:1.6rem;font-weight:700;color:var(--accent);text-align:center}
+.plabel{font-size:.78rem;color:var(--text-faint);text-align:center;margin-top:2px}
+.scale{display:flex;justify-content:space-between;font-size:.68rem;color:var(--text-faint);margin-top:2px}
+.note{font-size:.78rem;color:var(--text-faint);margin-top:8px;line-height:1.5}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>📈 Kalendář růstu dítěte (percentily)</h1>
+  <p class="sub">Orientační odhad percentilu výšky a váhy podle věku a pohlaví, na základě zjednodušeného modelu z běžně publikovaných průměrných hodnot WHO.</p>
+  <div class="warn">⚠️ Toto je pouze orientační výpočet pro domácí sledování růstového trendu — <b>není to lékařská diagnostika</b>. Přesné percentilové grafy a posouzení růstu svěř dětskému lékaři.</div>
+
+  <div class="form">
+    <div><label>Pohlaví</label><select id="sex"><option value="b">Chlapec</option><option value="g">Dívka</option></select></div>
+    <div><label>Věk (roky)</label><input type="number" id="ageY" value="5" min="0" max="18"></div>
+    <div><label>Věk (měsíce navíc)</label><input type="number" id="ageM" value="0" min="0" max="11"></div>
+    <div><label>Výška (cm)</label><input type="number" id="height" value="110" step="0.1"></div>
+    <div><label>Váha (kg)</label><input type="number" id="weight" value="18" step="0.1"></div>
+  </div>
+
+  <div class="results">
+    <div class="card">
+      <h2>📏 Výška</h2>
+      <div class="pval" id="heightPct">–</div>
+      <div class="plabel">odhadovaný percentil</div>
+      <div class="percentile-bar"><div class="band" style="left:15%;width:70%"></div><div class="marker" id="heightMarker"></div></div>
+      <div class="scale"><span>0</span><span>50</span><span>100</span></div>
+      <div class="note" id="heightNote"></div>
+    </div>
+    <div class="card">
+      <h2>⚖️ Váha</h2>
+      <div class="pval" id="weightPct">–</div>
+      <div class="plabel">odhadovaný percentil</div>
+      <div class="percentile-bar"><div class="band" style="left:15%;width:70%"></div><div class="marker" id="weightMarker"></div></div>
+      <div class="scale"><span>0</span><span>50</span><span>100</span></div>
+      <div class="note" id="weightNote"></div>
+    </div>
+  </div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+
+// Zjednodušená mediánová data (věk v měsících → výška cm, váha kg), orientační, WHO-like.
+const DATA={
+  b:{ // chlapci
+    ageM:[0,3,6,9,12,18,24,36,48,60,72,84,96,108,120,132,144,156,168,180,192,204,216],
+    h:[50,61,67,71,75,82,87,96,103,110,116,122,128,134,140,147,156,166,172,175,176,177,177],
+    w:[3.5,6.0,7.9,9.2,10.2,11.8,13.0,15.3,17.5,19.9,22.3,24.9,27.9,31.4,35.6,40.6,46.5,52.5,58.0,62.0,65.0,67.0,68.0],
+  },
+  g:{ // dívky
+    ageM:[0,3,6,9,12,18,24,36,48,60,72,84,96,108,120,132,144,156,168,180,192,204,216],
+    h:[49,59,65,70,74,80,86,95,102,109,115,121,127,134,142,151,158,161,163,163,164,164,164],
+    w:[3.4,5.6,7.3,8.6,9.5,11.0,12.2,14.4,16.5,18.9,21.6,24.7,28.5,32.9,38.0,43.5,48.0,52.0,54.5,56.0,57.0,57.5,58.0],
+  }
+};
+
+function interp(xs,ys,x){
+  if(x<=xs[0])return ys[0];
+  if(x>=xs[xs.length-1])return ys[ys.length-1];
+  for(let i=0;i<xs.length-1;i++){
+    if(x>=xs[i]&&x<=xs[i+1]){
+      const t=(x-xs[i])/(xs[i+1]-xs[i]);
+      return ys[i]+t*(ys[i+1]-ys[i]);
+    }
+  }
+  return ys[ys.length-1];
+}
+
+// Standardní normální CDF přes erf aproximaci
+function normCdf(z){
+  const t=1/(1+0.2316419*Math.abs(z));
+  const d=0.3989423*Math.exp(-z*z/2);
+  let p=d*t*(0.3193815+t*(-0.3565638+t*(1.781478+t*(-1.821256+t*1.330274))));
+  if(z>0)p=1-p;
+  return p;
+}
+
+function calc(){
+  const sex=$('sex').value;
+  const ageMonths=Number($('ageY').value)*12+Number($('ageM').value);
+  const d=DATA[sex];
+  const medH=interp(d.ageM,d.h,ageMonths);
+  const medW=interp(d.ageM,d.w,ageMonths);
+  // Zjednodušená směrodatná odchylka jako % mediánu (orientační)
+  const sdH=medH*0.045;
+  const sdW=medW*0.14;
+  const h=Number($('height').value), w=Number($('weight').value);
+  const zH=(h-medH)/sdH, zW=(w-medW)/sdW;
+  const pH=Math.round(normCdf(zH)*100);
+  const pW=Math.round(normCdf(zW)*100);
+
+  $('heightPct').textContent=pH+'. percentil';
+  $('weightPct').textContent=pW+'. percentil';
+  $('heightMarker').style.left=Math.min(98,Math.max(1,pH))+'%';
+  $('weightMarker').style.left=Math.min(98,Math.max(1,pW))+'%';
+  $('heightNote').textContent=`Mediánová výška pro tento věk je přibližně ${medH.toFixed(0)} cm.`;
+  $('weightNote').textContent=`Mediánová váha pro tento věk je přibližně ${medW.toFixed(1)} kg.`;
+}
+
+['sex','ageY','ageM','height','weight'].forEach(id=>$(id).oninput=calc);
+calc();
+</script>
+</body>
+</html>

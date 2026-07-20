@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🩹 Lékárnička – rychlá první pomoc</title>
+<link rel="stylesheet" href="../common.css">
+<script>
+  if (localStorage.getItem('webapp_theme') === 'light') document.documentElement.dataset.theme = 'light';
+</script>
+<style>
+body{background:var(--bg-deep);padding:20px clamp(14px,3vw,40px);min-height:100vh}
+.container{max-width:900px;margin:0 auto}
+h1{font-size:1.5rem;margin-bottom:4px}
+.sub{color:var(--text-muted);font-size:.85rem;margin-bottom:12px}
+.emergency{background:rgba(224,93,93,.15);border:1px solid var(--danger);color:var(--danger);padding:12px 16px;border-radius:8px;font-size:.9rem;margin-bottom:16px;font-weight:600}
+.search{width:100%;background:var(--bg-input);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:12px 14px;font-size:.95rem;margin-bottom:16px}
+.list{display:grid;gap:10px}
+.item{background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+.item summary{padding:14px 16px;cursor:pointer;font-weight:600;display:flex;align-items:center;gap:10px;list-style:none}
+.item summary::-webkit-details-marker{display:none}
+.item summary .ico{font-size:1.2rem}
+.item summary .arrow{margin-left:auto;color:var(--text-faint);transition:transform .15s}
+.item[open] summary .arrow{transform:rotate(90deg)}
+.item .body{padding:0 16px 16px 16px;color:var(--text-muted);font-size:.9rem;line-height:1.7}
+.item .body ol,.item .body ul{padding-left:20px;margin-top:6px}
+.item .body b{color:var(--text)}
+.hidden{display:none!important}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>🩹 Lékárnička – rychlá první pomoc</h1>
+  <p class="sub">Offline referenční příručka pro první pomoc. V ohrožení života vždy volej tísňovou linku.</p>
+  <div class="emergency">🚨 Záchranná služba: 155 &nbsp;|&nbsp; Jednotné evropské číslo tísňového volání: 112 &nbsp;|&nbsp; Hasiči: 150 &nbsp;|&nbsp; Policie: 158</div>
+
+  <input class="search" id="search" placeholder="🔍 Hledat (např. popálenina, zlomenina, alergie…)">
+
+  <div class="list" id="list"></div>
+</div>
+<script>
+const topics=[
+  {ico:'🔥',title:'Popáleniny',tags:'popálenina oheň teplo puchýř',
+   body:`<ol>
+     <li>Postižené místo ihned chlaď <b>čistou tekoucí vodou (15–20 °C) po dobu 10–20 minut</b>. Nepoužívej led ani mraženou vodu.</li>
+     <li>Nesundávej přiškvařené oblečení, pouze volné části okolo.</li>
+     <li>Nepraskej puchýře, ránu nepromazávej mastí, máslem ani zubní pastou.</li>
+     <li>Kryj sterilním nepřilnavým obvazem.</li>
+     <li><b>Volej 155</b> při popálení obličeje, dýchacích cest, kloubů, rozsáhlé ploše (&gt;10 % těla) nebo u dětí a starších osob.</li>
+   </ol>`},
+  {ico:'🦴',title:'Podezření na zlomeninu',tags:'zlomenina úraz kost vymknutí',
+   body:`<ol>
+     <li>Postiženou část znehybni v poloze, ve které je, nezasazuj zpět, netahej.</li>
+     <li>Znehybni i klouby nad a pod poraněním (dlaha, šátek, improvizovaně).</li>
+     <li>Otevřenou ránu kryj sterilním obvazem, nezasunuj vyčnívající kost.</li>
+     <li>Chlaď obalený led (nikdy přímo na kůži), sleduj prokrvení končetiny.</li>
+     <li>Zajisti transport k lékaři / <b>volej 155</b> při otevřené zlomenině, deformaci nebo silné bolesti.</li>
+   </ol>`},
+  {ico:'⚠️',title:'Silné krvácení',tags:'krvácení rána tlak škrtidlo',
+   body:`<ol>
+     <li>Přilož na ránu čistý obvaz nebo látku a <b>vyvíjej pevný přímý tlak</b>.</li>
+     <li>Zvedni poraněnou končetinu nad úroveň srdce, pokud to zranění umožňuje.</li>
+     <li>Pokud krev prosakuje, přidej další vrstvu obvazu, nesundávej tu původní.</li>
+     <li>Škrtidlo použij pouze při nezvladatelném krvácení z končetiny — zaznamenej čas přiložení.</li>
+     <li><b>Volej 155</b> ihned při masivním krvácení nebo známkách šoku (bledost, studený pot, zrychlený tep).</li>
+   </ol>`},
+  {ico:'🐝',title:'Alergická reakce / anafylaxe',tags:'alergie anafylaxe bodnutí hmyz otok epipen',
+   body:`<ol>
+     <li>Odstraň žihadlo (vyškrábnutím, ne pinzetou přes váček s jedem) a chlaď místo.</li>
+     <li>Sleduj příznaky celotělové reakce: otok rtů/jazyka, potíže s dýcháním, kopřivka po celém těle, závrať.</li>
+     <li>Při známkách anafylaxe: <b>ihned volej 155</b>, pokud má postižený autoinjektor (EpiPen), pomoz mu ho použít do zevní strany stehna.</li>
+     <li>Uveď postiženého do polohy vleže se zvednutými dolními končetinami (pokud nezvrací a dýchá).</li>
+     <li>Sleduj dýchání a buď připraven zahájit resuscitaci.</li>
+   </ol>`},
+  {ico:'🫁',title:'Dušení / vdechnutý předmět',tags:'dušení dávení heimlich zaskočení',
+   body:`<ol>
+     <li>Pokud postižený kašle, nechej ho kašlat — nezasahuj.</li>
+     <li>Pokud nemůže dýchat/mluvit: 5 úderů mezi lopatky dlaní, poté 5 stlačení břicha (Heimlichův manévr).</li>
+     <li>Střídej série 5 úderů a 5 stlačení, dokud předmět nevypadne nebo postižený neztratí vědomí.</li>
+     <li>Při ztrátě vědomí ihned zahaj KPR a <b>volej 155</b>.</li>
+     <li>U kojenů: údery mezi lopatky + stlačení hrudníku (ne břicha), hlavou dolů přes předloktí.</li>
+   </ol>`},
+  {ico:'💔',title:'Základy KPR (dospělý)',tags:'kpr resuscitace zástava srdce dech',
+   body:`<ol>
+     <li>Zkontroluj reakci (zatřes, oslov) a dýchání (max 10 s).</li>
+     <li><b>Ihned volej 155</b> nebo pošli někoho zavolat, případně sežeň AED.</li>
+     <li>Zahaj stlačování hrudníku: střed hrudníku, hloubka 5–6 cm, frekvence 100–120/min (rytmus písně „Stayin' Alive").</li>
+     <li>30 stlačení : 2 vdechy, pokud umíš a chceš dýchání provádět. Pokud ne, pokračuj jen ve stlačování.</li>
+     <li>Pokračuj do příjezdu záchranky, návratu reakce nebo dostupnosti AED.</li>
+   </ol>`},
+  {ico:'😵',title:'Mdloba / bezvědomí (dýchá)',tags:'mdloba omdlení bezvědomí stabilizovaná poloha',
+   body:`<ol>
+     <li>Zkontroluj reakci a dýchání.</li>
+     <li>Pokud dýchá, ale nereaguje, ulož do <b>stabilizované polohy na boku</b>.</li>
+     <li>Uvolni těsný oděv kolem krku, zajisti přísun čerstvého vzduchu.</li>
+     <li>Nedávej nic k pití, dokud plně nenabude vědomí.</li>
+     <li>Pokud se do 1 minuty neprobere nebo se stav zhoršuje, <b>volej 155</b>.</li>
+   </ol>`},
+  {ico:'⚡',title:'Epileptický záchvat',tags:'epilepsie záchvat křeče',
+   body:`<ol>
+     <li>Odstraň z okolí ostré a tvrdé předměty, podlož hlavu měkkým materiálem.</li>
+     <li>Nedrž postiženého násilím, nevkládej nic do úst.</li>
+     <li>Po odeznění křečí ulož do stabilizované polohy na boku.</li>
+     <li>Měř čas trvání záchvatu.</li>
+     <li><b>Volej 155</b>, pokud záchvat trvá déle než 5 minut, opakuje se, nebo jde o první záchvat v životě.</li>
+   </ol>`},
+  {ico:'☠️',title:'Otrava / požití jedovaté látky',tags:'otrava jed chemikálie požití',
+   body:`<ol>
+     <li>Zjisti, co, kolik a kdy bylo požito, ulož obal látky pro záchranáře.</li>
+     <li><b>Nevyvolávej zvracení</b>, pokud to výslovně nedoporučí toxikologické centrum nebo lékař.</li>
+     <li>Při potřísnění kůže/očí ihned oplachuj velkým množstvím vody 15–20 minut.</li>
+     <li>Volej Toxikologické informační středisko (TIS) nebo <b>155</b> při zhoršeném vědomí či dýchání.</li>
+   </ol>`},
+  {ico:'🥵',title:'Úpal / úžeh / přehřátí',tags:'úpal úžeh horko přehřátí dehydratace',
+   body:`<ol>
+     <li>Přesuň postiženého do stínu/chladu, uvolni oděv.</li>
+     <li>Chlaď pokožku vlhkými studenými obklady (krk, podpaží, třísla), ventiluj vzduch.</li>
+     <li>Podávej po doušcích studenou vodu, pokud je postižený při vědomí a nezvrací.</li>
+     <li>Při zmatenosti, ztrátě vědomí, teplotě nad 40 °C nebo suché horké kůži: <b>volej 155</b> (podezření na úpal je akutní stav).</li>
+   </ol>`},
+  {ico:'🥶',title:'Podchlazení',tags:'podchlazení hypotermie zima',
+   body:`<ol>
+     <li>Přesuň do tepla a sucha, sundej mokrý oděv.</li>
+     <li>Zahřívej postupně (deky, tělesné teplo) — nikdy prudce (horká sprcha, oheň) ani neteři končetiny.</li>
+     <li>Podávej teplé sladké nápoje, pokud je postižený plně při vědomí. Nikdy ne alkohol.</li>
+     <li>S postiženým zacházej šetrně, prudké pohyby mohou vyvolat srdeční arytmii.</li>
+     <li><b>Volej 155</b> při zástavě chvění, zmatenosti nebo poruše vědomí.</li>
+   </ol>`},
+  {ico:'👃',title:'Krvácení z nosu',tags:'krvácení nos epistaxe',
+   body:`<ol>
+     <li>Posaď postiženého, mírně předkloň hlavu (ne zaklánět dozadu).</li>
+     <li>Stiskni měkkou část nosu palcem a ukazováčkem po dobu 10 minut nepřetržitě.</li>
+     <li>Dýchej ústy, nekloktej ani nešmrkej alespoň hodinu po zastavení.</li>
+     <li>Pokud krvácení po 20 minutách neustává nebo je způsobené úrazem hlavy, vyhledej lékařskou pomoc.</li>
+   </ol>`},
+];
+
+function escHtml(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+function render(filter){
+  const q=(filter||'').toLowerCase().trim();
+  const list=document.getElementById('list');
+  list.innerHTML=topics.map(t=>{
+    const match=!q||t.title.toLowerCase().includes(q)||t.tags.includes(q)||t.body.toLowerCase().includes(q);
+    return `<details class="item ${match?'':'hidden'}"><summary><span class="ico">${t.ico}</span>${t.title}<span class="arrow">▶</span></summary><div class="body">${t.body}</div></details>`;
+  }).join('');
+}
+document.getElementById('search').addEventListener('input',e=>render(e.target.value));
+render('');
+</script>
+</body>
+</html>

@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🛰️ API / webhook tester</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1a1a1a;color:#e0e0e0;min-height:100vh;padding:20px}
+.container{max-width:1000px;margin:0 auto}
+h1{font-size:1.6rem;margin-bottom:8px;font-weight:600;text-align:center}
+.sub{text-align:center;color:#888;font-size:.82rem;margin-bottom:16px}
+.card{background:#2a2a2a;border:1px solid #404040;border-radius:8px;padding:18px;margin-bottom:18px}
+h2{font-size:.95rem;color:#6aa6fd;margin-bottom:12px}
+.requestrow{display:flex;gap:8px;margin-bottom:14px}
+select{background:#404040;border:1px solid #555;border-radius:4px;color:#e0e0e0;padding:9px;font-weight:600}
+input,textarea{background:#1e1e1e;border:1px solid #555;border-radius:4px;color:#e0e0e0;padding:9px;font-family:monospace;font-size:.88rem}
+.requestrow input{flex:1}
+.btn{background:#6aa6fd;color:#fff;border:none;padding:9px 18px;border-radius:6px;cursor:pointer;font-weight:600;font-size:.86rem}
+.btn:hover{background:#5591e8}
+.btn-sec{background:#404040}
+label{display:block;font-size:.78rem;color:#888;margin:10px 0 5px}
+table{width:100%;border-collapse:collapse;margin-top:4px}
+td{padding:4px 4px}
+td input{width:100%}
+.del{background:none;border:none;color:#c0392b;cursor:pointer}
+textarea{width:100%;min-height:100px;resize:vertical}
+.status-line{display:flex;gap:14px;align-items:center;margin-bottom:10px;font-size:.9rem;flex-wrap:wrap}
+.status-badge{padding:4px 10px;border-radius:6px;font-weight:700;font-size:.85rem}
+.status-2{background:rgba(76,175,80,.2);color:#4caf50}
+.status-3{background:rgba(224,166,63,.2);color:#e0a63f}
+.status-4,.status-5{background:rgba(224,93,93,.2);color:#e05d5d}
+.status-err{background:rgba(224,93,93,.2);color:#e05d5d}
+pre{background:#1e1e1e;border:1px solid #555;border-radius:6px;padding:14px;overflow-x:auto;font-size:.85rem;max-height:400px;white-space:pre-wrap;word-break:break-word}
+.note{font-size:.78rem;color:#666;margin-top:14px;line-height:1.5}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>🛰️ API / webhook tester</h1>
+  <p class="sub">Jednoduchý HTTP klient pro testování vlastních API a webhooků přímo v prohlížeči.</p>
+
+  <div class="card">
+    <div class="requestrow">
+      <select id="method">
+        <option>GET</option><option>POST</option><option>PUT</option><option>PATCH</option><option>DELETE</option><option>HEAD</option>
+      </select>
+      <input id="url" value="https://httpbin.org/get" placeholder="https://api.example.com/endpoint">
+      <button class="btn" id="btnSend">▶️ Odeslat</button>
+    </div>
+
+    <label>Hlavičky (headers)</label>
+    <table><tbody id="headersBody"></tbody></table>
+    <button class="btn btn-sec" id="btnAddHeader" style="margin-top:6px">+ Přidat hlavičku</button>
+
+    <label>Tělo požadavku (JSON / text, jen pro POST/PUT/PATCH)</label>
+    <textarea id="body" placeholder='{"klic": "hodnota"}'></textarea>
+  </div>
+
+  <div class="card">
+    <h2>Odpověď</h2>
+    <div class="status-line" id="statusLine">Zatím žádný požadavek.</div>
+    <pre id="responseBody"></pre>
+  </div>
+  <p class="note">Požadavky se odesílají přímo z tvého prohlížeče (žádný proxy server). Pokud cílové API nemá povolené CORS, prohlížeč odpověď zablokuje — to je omezení bezpečnosti prohlížeče, ne chyba této appky. Pro testování vlastního backendu s CORS to funguje bez problémů.</p>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+let headers=[['Content-Type','application/json'],['Accept','application/json']];
+
+function escAttr(s){return (s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;');}
+function renderHeaders(){
+  $('headersBody').innerHTML=headers.map((h,i)=>`
+    <tr>
+      <td><input data-k="${i}" value="${escAttr(h[0])}" placeholder="Klíč"></td>
+      <td><input data-v="${i}" value="${escAttr(h[1])}" placeholder="Hodnota"></td>
+      <td><button class="del" data-del="${i}">✕</button></td>
+    </tr>`).join('');
+  $('headersBody').querySelectorAll('[data-k]').forEach(el=>el.oninput=()=>headers[+el.dataset.k][0]=el.value);
+  $('headersBody').querySelectorAll('[data-v]').forEach(el=>el.oninput=()=>headers[+el.dataset.v][1]=el.value);
+  $('headersBody').querySelectorAll('[data-del]').forEach(el=>el.onclick=()=>{headers.splice(+el.dataset.del,1);renderHeaders();});
+}
+$('btnAddHeader').onclick=()=>{headers.push(['','']);renderHeaders();};
+
+$('btnSend').onclick=async()=>{
+  const method=$('method').value;
+  const url=$('url').value.trim();
+  if(!url)return;
+  $('statusLine').innerHTML='⏳ Odesílám požadavek…';
+  $('responseBody').textContent='';
+  const t0=performance.now();
+  try{
+    const opts={method,headers:{}};
+    headers.forEach(([k,v])=>{if(k)opts.headers[k]=v;});
+    if(['POST','PUT','PATCH'].includes(method)&&$('body').value.trim()){
+      opts.body=$('body').value;
+    }
+    const res=await fetch(url,opts);
+    const ms=Math.round(performance.now()-t0);
+    const statusClass='status-'+Math.floor(res.status/100);
+    let text=await res.text();
+    let pretty=text;
+    try{pretty=JSON.stringify(JSON.parse(text),null,2);}catch(e){}
+    $('statusLine').innerHTML=`<span class="status-badge ${statusClass}">${res.status} ${res.statusText}</span> ⏱️ ${ms} ms · 📦 ${new Blob([text]).size} B`;
+    $('responseBody').textContent=pretty||'(prázdná odpověď)';
+  }catch(e){
+    $('statusLine').innerHTML=`<span class="status-badge status-err">Chyba</span> ${e.message}`;
+    $('responseBody').textContent='Požadavek selhal — pravděpodobně kvůli CORS politice cílového serveru, neplatné URL, nebo síťové chybě.';
+  }
+};
+
+renderHeaders();
+</script>
+</body>
+</html>

@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📇 Generátor vizitky (vCard + QR)</title>
+<script src="lib/qrcode.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1a1a1a;color:#e0e0e0;min-height:100vh;padding:20px}
+.container{max-width:820px;margin:0 auto}
+h1{font-size:1.6rem;margin-bottom:8px;font-weight:600;text-align:center}
+.sub{text-align:center;color:#888;font-size:.85rem;margin-bottom:20px}
+.layout{display:grid;grid-template-columns:1fr 300px;gap:20px}
+@media(max-width:680px){.layout{grid-template-columns:1fr}}
+.card{background:#2a2a2a;border:1px solid #404040;border-radius:8px;padding:20px}
+label{display:block;font-size:.82rem;color:#888;margin:10px 0 4px}
+label:first-child{margin-top:0}
+input{width:100%;background:#404040;border:1px solid #555;border-radius:4px;color:#e0e0e0;padding:9px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.qrcard{text-align:center}
+#qrcode{display:inline-flex;justify-content:center;padding:16px;background:#fff;border-radius:10px;margin-bottom:12px;min-height:60px}
+.btn{background:#6aa6fd;color:#fff;border:none;padding:10px 16px;border-radius:6px;cursor:pointer;font-weight:600;font-size:.85rem;width:100%;margin-top:8px}
+.btn-sec{background:#404040}
+.dispname{font-weight:600;font-size:1.05rem;margin-bottom:2px}
+.disprole{color:#888;font-size:.85rem}
+.note{font-size:.78rem;color:#666;margin-top:14px;line-height:1.5}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>📇 Generátor vizitky (vCard + QR)</h1>
+  <p class="sub">Vyplň údaje, QR kód naskenovaný telefonem uloží kontakt přímo do adresáře</p>
+  <div class="layout">
+    <div class="card">
+      <label>Jméno</label><input id="firstName" placeholder="Jan">
+      <label>Příjmení</label><input id="lastName" placeholder="Novák">
+      <label>Firma</label><input id="org" placeholder="Firma s.r.o.">
+      <label>Pozice</label><input id="title" placeholder="Obchodní zástupce">
+      <div class="row2">
+        <div><label>Telefon</label><input id="phone" placeholder="+420 777 123 456"></div>
+        <div><label>Mobil</label><input id="mobile" placeholder="+420 601 234 567"></div>
+      </div>
+      <label>E-mail</label><input id="email" placeholder="jan.novak@firma.cz">
+      <label>Web</label><input id="url" placeholder="https://firma.cz">
+      <label>Adresa</label><input id="address" placeholder="Ulice 1, 100 00 Praha">
+    </div>
+    <div class="card qrcard">
+      <div id="qrcode"></div>
+      <div class="dispname" id="dispName">Jan Novák</div>
+      <div class="disprole" id="dispRole">—</div>
+      <button class="btn" id="dlBtn">💾 Stáhnout QR</button>
+      <button class="btn btn-sec" id="vcfBtn">📇 Stáhnout .vcf soubor</button>
+    </div>
+  </div>
+  <p class="note">Vše se generuje lokálně v prohlížeči, nikam se neodesílá. QR obsahuje standardní formát vCard 3.0 – funguje s fotoaparátem iOS i Androidu.</p>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+function buildVCard(){
+  const fn=$('firstName').value.trim(), ln=$('lastName').value.trim();
+  const lines=[
+    'BEGIN:VCARD','VERSION:3.0',
+    `N:${ln};${fn};;;`,
+    `FN:${(fn+' '+ln).trim()}`,
+  ];
+  if($('org').value.trim())lines.push(`ORG:${$('org').value.trim()}`);
+  if($('title').value.trim())lines.push(`TITLE:${$('title').value.trim()}`);
+  if($('phone').value.trim())lines.push(`TEL;TYPE=WORK,VOICE:${$('phone').value.trim()}`);
+  if($('mobile').value.trim())lines.push(`TEL;TYPE=CELL:${$('mobile').value.trim()}`);
+  if($('email').value.trim())lines.push(`EMAIL:${$('email').value.trim()}`);
+  if($('url').value.trim())lines.push(`URL:${$('url').value.trim()}`);
+  if($('address').value.trim())lines.push(`ADR;TYPE=WORK:;;${$('address').value.trim()};;;;`);
+  lines.push('END:VCARD');
+  return lines.join('\n');
+}
+function build(){
+  const payload=buildVCard();
+  $('qrcode').innerHTML='';
+  new QRCode($('qrcode'),{text:payload,width:220,height:220,correctLevel:QRCode.CorrectLevel.M});
+  const fullName=($('firstName').value+' '+$('lastName').value).trim();
+  $('dispName').textContent=fullName||'—';
+  $('dispRole').textContent=[$('title').value,$('org').value].filter(Boolean).join(' · ')||'—';
+}
+document.querySelectorAll('input').forEach(el=>el.oninput=build);
+$('dlBtn').onclick=()=>{
+  const img=$('qrcode').querySelector('img')||$('qrcode').querySelector('canvas');
+  if(!img)return;
+  const url=img.tagName==='IMG'?img.src:img.toDataURL();
+  const a=document.createElement('a');a.href=url;a.download='vizitka-qr.png';a.click();
+};
+$('vcfBtn').onclick=()=>{
+  const blob=new Blob([buildVCard()],{type:'text/vcard'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;
+  a.download=(($('firstName').value+'_'+$('lastName').value).trim().replace(/\s+/g,'_')||'vizitka')+'.vcf';
+  a.click();
+  URL.revokeObjectURL(url);
+};
+build();
+</script>
+</body>
+</html>

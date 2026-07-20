@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🧱 Kalkulačka betonové směsi</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1a1a1a;color:#e0e0e0;min-height:100vh;padding:20px}
+.container{max-width:780px;margin:0 auto}
+h1{font-size:1.6rem;margin-bottom:18px;font-weight:600;text-align:center}
+.card{background:#2a2a2a;border:1px solid #404040;border-radius:8px;padding:22px;margin-bottom:20px}
+h2{font-size:1.05rem;color:#6aa6fd;margin-bottom:16px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.grid3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px}
+@media(max-width:560px){.grid,.grid3{grid-template-columns:1fr}}
+label{display:block;font-size:.82rem;color:#888;margin-bottom:5px}
+input,select{width:100%;background:#404040;border:1px solid #555;border-radius:4px;color:#e0e0e0;padding:10px;margin-bottom:12px}
+.big{font-size:2.2rem;font-weight:700;color:#6aa6fd;text-align:center;margin:10px 0}
+.res-row{display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid #333}
+.res-row:last-child{border:none}.res-row b{color:#4caf50}
+.note{font-size:.78rem;color:#666;margin-top:14px;line-height:1.5}
+.shape-tabs{display:flex;gap:8px;margin-bottom:16px}
+.shape-tabs button{flex:1;background:#404040;border:1px solid #555;color:#ccc;padding:10px;border-radius:6px;cursor:pointer}
+.shape-tabs button.active{background:#6aa6fd;color:#fff;border-color:#6aa6fd}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>🧱 Kalkulačka betonové směsi</h1>
+  <div class="card">
+    <h2>Rozměry konstrukce</h2>
+    <div class="shape-tabs">
+      <button data-shape="slab" class="active">Deska/základ</button>
+      <button data-shape="column">Sloup (válec)</button>
+    </div>
+    <div class="grid" id="slabFields">
+      <div><label>Délka (m)</label><input type="number" id="l" value="4" step="0.1"></div>
+      <div><label>Šířka (m)</label><input type="number" id="w" value="3" step="0.1"></div>
+      <div><label>Tloušťka (cm)</label><input type="number" id="t" value="15" step="1"></div>
+    </div>
+    <div class="grid" id="columnFields" style="display:none">
+      <div><label>Průměr (cm)</label><input type="number" id="d" value="30" step="1"></div>
+      <div><label>Výška (m)</label><input type="number" id="h" value="2" step="0.1"></div>
+    </div>
+    <h2 style="margin-top:6px">Směšovací poměr (cement : písek : štěrk)</h2>
+    <div class="grid3">
+      <div><label>Cement (díly)</label><input type="number" id="ratioC" value="1" step="0.1"></div>
+      <div><label>Písek (díly)</label><input type="number" id="ratioS" value="2" step="0.1"></div>
+      <div><label>Štěrk (díly)</label><input type="number" id="ratioG" value="3" step="0.1"></div>
+    </div>
+  </div>
+  <div class="card">
+    <h2>📋 Výsledek</h2>
+    <div class="big" id="volumeResult">–</div>
+    <div class="res-row"><span>🧪 Cement</span><b id="cementOut">–</b></div>
+    <div class="res-row"><span>🏖️ Písek</span><b id="sandOut">–</b></div>
+    <div class="res-row"><span>🪨 Štěrk</span><b id="gravelOut">–</b></div>
+    <div class="res-row"><span>💧 Voda (orientačně, 0,5 hmot. dílu cementu)</span><b id="waterOut">–</b></div>
+    <div class="res-row"><span>🎒 Pytlů cementu (25 kg)</span><b id="bagsOut">–</b></div>
+    <p class="note">Orientační výpočet pro běžný beton (~2400 kg/m³, hustota cementu ~1440 kg/m³). Pro nosné konstrukce vždy konzultuj přesnou recepturu s projektantem/statikem.</p>
+  </div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+let shape='slab';
+document.querySelectorAll('.shape-tabs button').forEach(btn=>{
+  btn.onclick=()=>{
+    document.querySelectorAll('.shape-tabs button').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    shape=btn.dataset.shape;
+    $('slabFields').style.display=shape==='slab'?'grid':'none';
+    $('columnFields').style.display=shape==='column'?'grid':'none';
+    calc();
+  };
+});
+
+function calc(){
+  let volume;
+  if(shape==='slab'){
+    volume=(+$('l').value)*(+$('w').value)*((+$('t').value)/100);
+  }else{
+    const r=(+$('d').value)/100/2;
+    volume=Math.PI*r*r*(+$('h').value);
+  }
+  const rc=+$('ratioC').value||1, rs=+$('ratioS').value||0, rg=+$('ratioG').value||0;
+  const totalParts=rc+rs+rg;
+  // Cca 1.5 m³ suché směsi na 1 m³ hutněného betonu (kompenzace mezer mezi zrny)
+  const dryVolume=volume*1.5;
+  const partVolume=dryVolume/totalParts;
+  const cementVolume=partVolume*rc;
+  const sandVolume=partVolume*rs;
+  const gravelVolume=partVolume*rg;
+  const cementDensity=1440; // kg/m3
+  const cementMass=cementVolume*cementDensity;
+  const waterMass=cementMass*0.5;
+  const bags=Math.ceil(cementMass/25);
+
+  $('volumeResult').textContent=volume.toFixed(3)+' m³ betonu';
+  $('cementOut').textContent=cementVolume.toFixed(3)+' m³ ('+cementMass.toFixed(0)+' kg)';
+  $('sandOut').textContent=sandVolume.toFixed(3)+' m³';
+  $('gravelOut').textContent=gravelVolume.toFixed(3)+' m³';
+  $('waterOut').textContent=waterMass.toFixed(0)+' kg (≈ '+waterMass.toFixed(0)+' l)';
+  $('bagsOut').textContent=bags+'×';
+}
+document.querySelectorAll('input').forEach(el=>el.oninput=calc);
+calc();
+</script>
+</body>
+</html>

@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>☕ Kalkulačka kofeinu za den</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1a1a1a;color:#e0e0e0;min-height:100vh;padding:20px}
+.container{max-width:640px;margin:0 auto}
+h1{font-size:1.6rem;margin-bottom:18px;font-weight:600;text-align:center}
+.card{background:#2a2a2a;border:1px solid #404040;border-radius:8px;padding:22px;margin-bottom:20px}
+h2{font-size:1.05rem;color:#6aa6fd;margin-bottom:16px}
+label{display:block;font-size:.82rem;color:#888;margin-bottom:5px}
+select,input{background:#404040;border:1px solid #555;border-radius:4px;color:#e0e0e0;padding:9px}
+.addrow{display:flex;gap:8px;align-items:end;flex-wrap:wrap}
+.addrow select{flex:1;min-width:180px}
+.addrow input{width:80px}
+.big{font-size:2.2rem;font-weight:700;color:#6aa6fd;text-align:center;margin:10px 0 2px}
+.limit{text-align:center;color:#888;font-size:.9rem;margin-bottom:14px}
+.bar{background:#333;border-radius:6px;height:14px;overflow:hidden;margin:10px 0}
+.bar>div{height:100%;background:linear-gradient(90deg,#6aa6fd,#4caf50)}
+.bar>div.over{background:linear-gradient(90deg,#e0a63f,#c0392b)}
+.btn{background:#6aa6fd;color:#fff;border:none;padding:10px 16px;border-radius:6px;cursor:pointer;font-weight:600;font-size:.9rem}
+.btn-sec{background:#404040}.btn-red{background:#c0392b}
+.warn{background:rgba(224,166,63,.15);border:1px solid #e0a63f;color:#e0a63f;padding:10px 14px;border-radius:6px;font-size:.82rem;margin-top:10px;line-height:1.5}
+table{width:100%;border-collapse:collapse;font-size:.9rem;margin-top:10px}
+td,th{padding:8px;border-bottom:1px solid #333;text-align:left}
+th{color:#6aa6fd;font-size:.8rem;text-transform:uppercase}
+.del{background:none;border:none;color:#c0392b;cursor:pointer;font-size:1rem}
+.note{font-size:.78rem;color:#666;margin-top:14px;line-height:1.5}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>☕ Kalkulačka kofeinu za den</h1>
+  <div class="card">
+    <div class="big" id="totalMg">0 mg</div>
+    <div class="limit">Doporučený denní limit: <span id="limitText">400</span> mg · <span id="pct">0 %</span></div>
+    <div class="bar"><div id="barFill" style="width:0%"></div></div>
+    <div id="warnBox"></div>
+    <div style="margin-top:14px"><label>Denní limit (mg)</label><input type="number" id="limitInput" value="400" step="50" min="0"></div>
+  </div>
+  <div class="card">
+    <h2>Přidat nápoj</h2>
+    <div class="addrow">
+      <div style="flex:1;min-width:180px">
+        <label>Nápoj</label>
+        <select id="drinkSelect"></select>
+      </div>
+      <div>
+        <label>Počet</label>
+        <input type="number" id="drinkCount" value="1" min="1">
+      </div>
+      <button class="btn" id="btnAdd">+ Přidat</button>
+    </div>
+  </div>
+  <div class="card">
+    <h2>Dnešní záznamy</h2>
+    <table><thead><tr><th>Nápoj</th><th>Množství</th><th>Kofein</th><th></th></tr></thead><tbody id="logBody"></tbody></table>
+    <button class="btn btn-red" id="btnClear" style="margin-top:12px">Vymazat dnešek</button>
+  </div>
+  <p class="note">Orientační hodnoty kofeinu podle běžných zdrojů (mg na obvyklou porci). Individuální citlivost na kofein se liší, těhotné a kojící ženy a osoby s kardiovaskulárními problémy by měly limit konzultovat s lékařem.</p>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const DRINKS=[
+  {name:'☕ Espresso (30 ml)', mg:63},
+  {name:'☕ Filtrovaná káva (200 ml)', mg:95},
+  {name:'☕ Instantní káva (200 ml)', mg:60},
+  {name:'🍵 Černý čaj (200 ml)', mg:47},
+  {name:'🍵 Zelený čaj (200 ml)', mg:28},
+  {name:'🥤 Energetický nápoj (250 ml)', mg:80},
+  {name:'🥤 Cola (330 ml)', mg:32},
+  {name:'🍫 Hořká čokoláda (50 g)', mg:25},
+  {name:'💊 Kofeinová tableta', mg:100},
+];
+DRINKS.forEach((d,i)=>{const o=document.createElement('option');o.value=i;o.textContent=`${d.name} — ${d.mg} mg`;$('drinkSelect').appendChild(o);});
+
+const STORE='caffeineTracker.v1';
+let st;
+try{st=JSON.parse(localStorage.getItem(STORE));}catch(e){}
+if(!st)st={limit:400,dny:{}};
+const save=()=>localStorage.setItem(STORE,JSON.stringify(st));
+const dnesKlic=()=>{const d=new Date();return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');};
+
+function todayLog(){
+  const k=dnesKlic();
+  if(!st.dny[k])st.dny[k]=[];
+  return st.dny[k];
+}
+
+function escHtml(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+function render(){
+  const log=todayLog();
+  const total=log.reduce((a,e)=>a+e.mg*e.count,0);
+  $('totalMg').textContent=total+' mg';
+  $('limitText').textContent=st.limit;
+  $('limitInput').value=st.limit;
+  const pct=st.limit?Math.round(total/st.limit*100):0;
+  $('pct').textContent=pct+' %';
+  $('barFill').style.width=Math.min(100,pct)+'%';
+  $('barFill').className=total>st.limit?'over':'';
+  $('warnBox').innerHTML=total>st.limit?'<div class="warn">⚠️ Překročil(a) jsi doporučený denní limit kofeinu.</div>':'';
+  $('logBody').innerHTML=log.map((e,i)=>`<tr><td>${escHtml(e.name)}</td><td>${e.count}×</td><td>${e.mg*e.count} mg</td><td><button class="del" data-i="${i}">✕</button></td></tr>`).join('')||'<tr><td colspan="4" style="color:#666">Zatím žádné záznamy</td></tr>';
+  $('logBody').querySelectorAll('.del').forEach(b=>{
+    b.onclick=()=>{log.splice(+b.dataset.i,1);save();render();};
+  });
+}
+
+$('btnAdd').onclick=()=>{
+  const idx=Number($('drinkSelect').value);
+  const count=Math.max(1,Number($('drinkCount').value)||1);
+  const d=DRINKS[idx];
+  todayLog().push({name:d.name,mg:d.mg,count});
+  save();render();
+};
+$('limitInput').addEventListener('input',()=>{st.limit=Math.max(0,Number($('limitInput').value)||0);save();render();});
+$('btnClear').onclick=()=>{st.dny[dnesKlic()]=[];save();render();};
+
+render();
+</script>
+</body>
+</html>

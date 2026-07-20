@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎱 Generátor bingo kartiček</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1a1a1a;color:#e0e0e0;min-height:100vh;padding:20px}
+.container{max-width:1100px;margin:0 auto}
+h1{font-size:1.6rem;margin-bottom:14px;font-weight:600;text-align:center}
+.card{background:#2a2a2a;border:1px solid #404040;border-radius:8px;padding:18px;margin-bottom:20px}
+h2{font-size:1.05rem;color:#6aa6fd;margin-bottom:14px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:600px){.grid2{grid-template-columns:1fr}}
+label{display:block;font-size:.82rem;color:#888;margin-bottom:5px}
+input,select,textarea{width:100%;background:#404040;border:1px solid #555;border-radius:4px;color:#e0e0e0;padding:9px;margin-bottom:12px;font-family:inherit}
+textarea{min-height:140px;resize:vertical;font-family:monospace}
+.btn{background:#6aa6fd;color:#fff;border:none;padding:10px 18px;border-radius:6px;cursor:pointer;font-weight:600;font-size:.9rem}
+.btn:hover{background:#5591e8}
+.btn-sec{background:#404040}
+.row{display:flex;gap:8px;flex-wrap:wrap}
+.mode-tabs{display:flex;gap:8px;margin-bottom:14px}
+.mode-tabs button{flex:1;background:#404040;border:1px solid #555;color:#ccc;padding:9px;border-radius:6px;cursor:pointer}
+.mode-tabs button.active{background:#6aa6fd;color:#fff;border-color:#6aa6fd}
+.cards{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:20px}
+.bingo-card{background:#fff;color:#000;border-radius:8px;padding:14px;page-break-inside:avoid}
+.bingo-title{text-align:center;font-weight:800;font-size:1.3rem;letter-spacing:3px;margin-bottom:8px;color:#222}
+.bingo-grid{display:grid;gap:4px}
+.bingo-cell{aspect-ratio:1;border:2px solid #333;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:.85rem;text-align:center;padding:2px;word-break:break-word;border-radius:4px}
+.bingo-cell.free{background:#ffe08a}
+@media print{
+  .card:not(.printarea){display:none!important}
+  body{background:#fff;padding:0}
+  .cards{gap:14px}
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>🎱 Generátor bingo kartiček</h1>
+
+  <div class="card">
+    <h2>Nastavení</h2>
+    <div class="mode-tabs">
+      <button data-mode="numbers" class="active">🔢 Čísla 1–75 (klasické bingo)</button>
+      <button data-mode="words">📝 Vlastní slova/pojmy</button>
+    </div>
+    <div class="grid2">
+      <div>
+        <label>Velikost mřížky</label>
+        <select id="size"><option value="3">3×3</option><option value="4">4×4</option><option value="5" selected>5×5</option></select>
+      </div>
+      <div>
+        <label>Počet kartiček</label>
+        <input type="number" id="cardCount" value="4" min="1" max="30">
+      </div>
+    </div>
+    <div id="wordsField" style="display:none">
+      <label>Vlastní seznam (jedna položka na řádek, min. podle velikosti mřížky²)</label>
+      <textarea id="wordsList">jablko
+banán
+hruška
+pomeranč
+citron
+kiwi
+mango
+ananas
+meloun
+hroznové víno
+třešně
+jahoda
+malina
+borůvka
+broskev
+švestka
+grep
+merunka
+fík
+datle
+kokos
+liči
+papája
+guava
+karambola</textarea>
+    </div>
+    <div class="row">
+      <label style="display:flex;align-items:center;gap:6px;font-size:.85rem;color:#bbb;margin:0"><input type="checkbox" id="freeCenter" checked style="width:auto;margin:0"> Volné pole uprostřed (jen liché mřížky)</label>
+    </div>
+    <div class="row" style="margin-top:10px">
+      <button class="btn" id="btnGenerate">🎲 Vygenerovat kartičky</button>
+      <button class="btn btn-sec" id="btnPrint">🖨️ Tisk</button>
+    </div>
+  </div>
+
+  <div class="card printarea">
+    <h2>Kartičky</h2>
+    <div class="cards" id="cards"></div>
+  </div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+let mode='numbers';
+
+document.querySelectorAll('.mode-tabs button').forEach(btn=>{
+  btn.onclick=()=>{
+    document.querySelectorAll('.mode-tabs button').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    mode=btn.dataset.mode;
+    $('wordsField').style.display=mode==='words'?'block':'none';
+  };
+});
+
+function shuffle(arr){
+  const a=[...arr];
+  for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}
+  return a;
+}
+
+function generateCard(pool,size,useFree){
+  const n=size*size;
+  const items=shuffle(pool).slice(0,n);
+  const center=Math.floor(n/2);
+  if(useFree&&size%2===1)items[center]='FREE';
+  return items;
+}
+
+function render(){
+  const size=Number($('size').value);
+  const count=Math.max(1,Number($('cardCount').value)||1);
+  const useFree=$('freeCenter').checked;
+  let pool;
+  if(mode==='numbers'){
+    pool=Array.from({length:75},(_,i)=>i+1);
+  }else{
+    pool=$('wordsList').value.split('\n').map(s=>s.trim()).filter(Boolean);
+  }
+  const needed=size*size;
+  if(pool.length<needed){
+    $('cards').innerHTML=`<p style="color:#e05d5d">Potřebuješ alespoň ${needed} položek (mřížka ${size}×${size}), zatím máš ${pool.length}.</p>`;
+    return;
+  }
+  let html='';
+  for(let c=0;c<count;c++){
+    const items=generateCard(pool,size,useFree);
+    html+=`<div class="bingo-card">
+      <div class="bingo-title">BINGO</div>
+      <div class="bingo-grid" style="grid-template-columns:repeat(${size},1fr)">
+        ${items.map(it=>`<div class="bingo-cell ${it==='FREE'?'free':''}">${it==='FREE'?'★':it}</div>`).join('')}
+      </div>
+    </div>`;
+  }
+  $('cards').innerHTML=html;
+}
+
+$('btnGenerate').onclick=render;
+$('btnPrint').onclick=()=>window.print();
+render();
+</script>
+</body>
+</html>

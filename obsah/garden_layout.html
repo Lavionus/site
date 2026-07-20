@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🌱 Plánovač záhonů</title>
+<link rel="stylesheet" href="../common.css">
+<script>
+  if (localStorage.getItem('webapp_theme') === 'light') document.documentElement.dataset.theme = 'light';
+</script>
+<style>
+body{background:var(--bg-deep);padding:20px clamp(14px,3vw,40px);min-height:100vh}
+.container{max-width:980px;margin:0 auto}
+h1{font-size:1.5rem;margin-bottom:4px}
+.sub{color:var(--text-muted);font-size:.85rem;margin-bottom:16px}
+.palette{display:flex;flex-wrap:wrap;gap:6px;background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius);padding:12px;margin-bottom:16px}
+.crop{display:flex;align-items:center;gap:5px;background:var(--bg-control);border:2px solid transparent;border-radius:16px;padding:5px 10px;cursor:pointer;font-size:.8rem;color:var(--text)}
+.crop.active{border-color:var(--accent);background:var(--accent-soft);color:var(--accent);font-weight:600}
+.crop .sw{width:12px;height:12px;border-radius:3px}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.btn{background:var(--bg-control);color:var(--text);border:1px solid var(--border-strong);padding:8px 14px;border-radius:6px;cursor:pointer;font-size:.85rem}
+.btn:hover{background:var(--bg-hover)}
+.btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.beds{display:flex;flex-direction:column;gap:22px}
+.bed{background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius);padding:16px}
+.bed-head{display:flex;gap:10px;align-items:center;margin-bottom:10px;flex-wrap:wrap}
+.bed-head input.name{font-weight:700;font-size:1rem;background:transparent;border:none;color:var(--text);flex:1;min-width:120px}
+.bed-head input.dim{width:50px;background:var(--bg-input);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:5px;text-align:center}
+.bed-head .del{background:none;border:none;color:var(--danger);cursor:pointer;font-size:1.1rem}
+.grid{display:grid;gap:3px}
+.cell{aspect-ratio:1;border-radius:4px;background:var(--bg-input);border:1px solid var(--border);cursor:pointer;display:flex;align-items:center;justify-content:center;font-size:1rem;user-select:none}
+.cell:hover{outline:2px solid var(--accent)}
+.empty{text-align:center;color:var(--text-faint);padding:30px;background:var(--bg-panel);border:1px dashed var(--border);border-radius:var(--radius)}
+@media print{.toolbar,.palette{display:none!important}}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>🌱 Plánovač záhonů</h1>
+  <p class="sub">Vyber plodinu v paletě a klikáním vybarvi mřížku záhonu. Doplňuje kalkulačky střídání plodin a výsevu.</p>
+
+  <div class="palette" id="palette"></div>
+
+  <div class="toolbar">
+    <button class="btn primary" id="btnAddBed">+ Nový záhon</button>
+    <button class="btn" id="btnPrint">🖨️ Tisk</button>
+    <button class="btn" id="btnClearAll">🗑️ Smazat vše</button>
+  </div>
+
+  <div class="beds" id="beds"></div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const STORAGE_KEY='garden_layout_v1';
+
+const CROPS=[
+  {id:'empty', label:'Prázdné', color:'transparent', emoji:''},
+  {id:'tomato', label:'Rajče', color:'#e05d5d', emoji:'🍅'},
+  {id:'cucumber', label:'Okurka', color:'#4caf7d', emoji:'🥒'},
+  {id:'pepper', label:'Paprika', color:'#e0a63f', emoji:'🫑'},
+  {id:'carrot', label:'Mrkev', color:'#f0883e', emoji:'🥕'},
+  {id:'onion', label:'Cibule', color:'#c49cf9', emoji:'🧅'},
+  {id:'cabbage', label:'Zelí/kapusta', color:'#7ac97a', emoji:'🥬'},
+  {id:'potato', label:'Brambory', color:'#b58862', emoji:'🥔'},
+  {id:'bean', label:'Fazole/hrách', color:'#6aa6fd', emoji:'🫘'},
+  {id:'strawberry', label:'Jahody', color:'#f97575', emoji:'🍓'},
+  {id:'herb', label:'Bylinky', color:'#9ccf6a', emoji:'🌿'},
+  {id:'flower', label:'Květiny', color:'#f9b7e8', emoji:'🌸'},
+];
+const CROP_MAP={};CROPS.forEach(c=>CROP_MAP[c.id]=c);
+
+let activeCrop='tomato';
+let beds=[];
+
+function save(){localStorage.setItem(STORAGE_KEY,JSON.stringify(beds));}
+function load(){
+  try{beds=JSON.parse(localStorage.getItem(STORAGE_KEY))||[];}catch(e){beds=[];}
+  if(!beds.length)beds=[newBed('Záhon 1')];
+}
+function newBed(name){
+  const rows=4, cols=8;
+  return {id:'b'+Date.now()+Math.random().toString(36).slice(2,6), name, rows, cols, cells:Array(rows*cols).fill('empty')};
+}
+
+function renderPalette(){
+  $('palette').innerHTML=CROPS.map(c=>`
+    <div class="crop ${c.id===activeCrop?'active':''}" data-id="${c.id}">
+      <span class="sw" style="background:${c.color==='transparent'?'var(--bg-input)':c.color}"></span>${c.emoji} ${c.label}
+    </div>`).join('');
+  $('palette').querySelectorAll('.crop').forEach(el=>{
+    el.onclick=()=>{activeCrop=el.dataset.id;renderPalette();};
+  });
+}
+
+function renderBeds(){
+  if(!beds.length){$('beds').innerHTML='<div class="empty">Zatím žádný záhon. Klikni na „+ Nový záhon".</div>';return;}
+  $('beds').innerHTML=beds.map(b=>`
+    <div class="bed" data-bed="${b.id}">
+      <div class="bed-head">
+        <input class="name" data-name="${b.id}" value="${escAttr(b.name)}">
+        <label style="font-size:.75rem;color:var(--text-faint)">Řádky <input class="dim" data-rows="${b.id}" type="number" min="1" max="20" value="${b.rows}"></label>
+        <label style="font-size:.75rem;color:var(--text-faint)">Sloupce <input class="dim" data-cols="${b.id}" type="number" min="1" max="20" value="${b.cols}"></label>
+        <button class="del" data-del="${b.id}" title="Smazat záhon">✕</button>
+      </div>
+      <div class="grid" style="grid-template-columns:repeat(${b.cols},1fr)" data-gridfor="${b.id}"></div>
+    </div>`).join('');
+
+  beds.forEach(b=>{
+    const grid=document.querySelector(`[data-gridfor="${b.id}"]`);
+    grid.innerHTML=b.cells.map((cellCrop,i)=>{
+      const c=CROP_MAP[cellCrop]||CROP_MAP.empty;
+      return `<div class="cell" data-bed="${b.id}" data-idx="${i}" style="background:${c.color==='transparent'?'':c.color}" title="${c.label}">${c.emoji}</div>`;
+    }).join('');
+    grid.querySelectorAll('.cell').forEach(cell=>{
+      cell.onclick=()=>{
+        const idx=+cell.dataset.idx;
+        b.cells[idx]=activeCrop;
+        save();
+        renderBeds();
+      };
+    });
+  });
+
+  document.querySelectorAll('[data-name]').forEach(inp=>{
+    inp.oninput=()=>{const b=beds.find(x=>x.id===inp.dataset.name);b.name=inp.value;save();};
+  });
+  document.querySelectorAll('[data-rows]').forEach(inp=>{
+    inp.onchange=()=>{resizeBed(inp.dataset.rows,+inp.value,null);};
+  });
+  document.querySelectorAll('[data-cols]').forEach(inp=>{
+    inp.onchange=()=>{resizeBed(inp.dataset.cols,null,+inp.value);};
+  });
+  document.querySelectorAll('[data-del]').forEach(btn=>{
+    btn.onclick=()=>{
+      if(!confirm('Smazat tento záhon?'))return;
+      beds=beds.filter(x=>x.id!==btn.dataset.del);
+      save();renderBeds();
+    };
+  });
+}
+
+function resizeBed(id,newRows,newCols){
+  const b=beds.find(x=>x.id===id);
+  const rows=newRows||b.rows, cols=newCols||b.cols;
+  const newCells=Array(rows*cols).fill('empty');
+  for(let r=0;r<Math.min(rows,b.rows);r++){
+    for(let c=0;c<Math.min(cols,b.cols);c++){
+      newCells[r*cols+c]=b.cells[r*b.cols+c];
+    }
+  }
+  b.rows=rows;b.cols=cols;b.cells=newCells;
+  save();renderBeds();
+}
+
+function escAttr(s){return (s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;');}
+
+$('btnAddBed').onclick=()=>{
+  beds.push(newBed('Záhon '+(beds.length+1)));
+  save();renderBeds();
+};
+$('btnPrint').onclick=()=>window.print();
+$('btnClearAll').onclick=()=>{
+  if(!confirm('Smazat všechny záhony?'))return;
+  beds=[];save();renderBeds();
+};
+
+renderPalette();
+load();
+renderBeds();
+</script>
+</body>
+</html>

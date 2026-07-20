@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🔗 URL builder / parser</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1a1a1a;color:#e0e0e0;min-height:100vh;padding:20px}
+.container{max-width:900px;margin:0 auto}
+h1{font-size:1.6rem;margin-bottom:18px;font-weight:600;text-align:center}
+.card{background:#2a2a2a;border:1px solid #404040;border-radius:8px;padding:20px;margin-bottom:18px}
+h2{font-size:1.05rem;color:#6aa6fd;margin-bottom:14px}
+label{font-size:.82rem;color:#888;display:block;margin-bottom:5px}
+textarea,input{width:100%;background:#1e1e1e;border:1px solid #555;border-radius:6px;color:#e0e0e0;padding:10px;font-family:monospace;font-size:.9rem}
+textarea{min-height:70px;resize:vertical;word-break:break-all}
+.status{font-size:.82rem;margin-top:8px;min-height:18px}.status.err{color:#e74c3c}.status.ok{color:#27ae60}
+.parts{display:grid;grid-template-columns:140px 1fr;gap:8px 12px;font-size:.88rem;margin-top:6px}
+.parts .k{color:#888}
+.parts .v{font-family:monospace;word-break:break-all}
+table{width:100%;border-collapse:collapse;margin-top:10px}
+th,td{padding:7px 6px;border-bottom:1px solid #333;text-align:left;font-size:.85rem}
+th{color:#888;font-size:.75rem;text-transform:uppercase}
+td input{padding:6px;font-size:.85rem}
+.del{background:none;border:none;color:#c0392b;cursor:pointer;font-size:1rem}
+.btn{background:#6aa6fd;color:#fff;border:none;padding:8px 14px;border-radius:6px;cursor:pointer;font-weight:600;font-size:.85rem}
+.btn-sec{background:#404040}
+.row{display:flex;gap:8px;margin-top:10px;flex-wrap:wrap}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>🔗 URL builder / parser</h1>
+
+  <div class="card">
+    <h2>🔍 Rozklad URL</h2>
+    <label>Vlož URL k rozkladu</label>
+    <input id="parseInput" value="https://www.example.cz:8080/hledat/produkty?q=zluty+kun&sort=asc&page=2#vysledky">
+    <div class="status" id="parseStatus"></div>
+    <div class="parts" id="parts"></div>
+  </div>
+
+  <div class="card">
+    <h2>🛠️ Skládání URL s parametry</h2>
+    <label>Základní URL (bez query stringu)</label>
+    <input id="baseUrl" value="https://www.example.cz/hledat">
+    <table>
+      <thead><tr><th>Klíč</th><th>Hodnota</th><th></th></tr></thead>
+      <tbody id="paramsBody"></tbody>
+    </table>
+    <div class="row">
+      <button class="btn btn-sec" id="btnAddParam">+ Přidat parametr</button>
+    </div>
+    <label style="margin-top:14px">Výsledná URL</label>
+    <textarea id="builtUrl" readonly></textarea>
+    <div class="row">
+      <button class="btn" id="btnCopy">📋 Kopírovat</button>
+    </div>
+  </div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+
+function parseUrl(){
+  const raw=$('parseInput').value.trim();
+  try{
+    const u=new URL(raw);
+    $('parseStatus').className='status ok';
+    $('parseStatus').textContent='✅ Platná URL';
+    const rows=[
+      ['Protokol',u.protocol],
+      ['Host',u.hostname],
+      ['Port',u.port||'(výchozí)'],
+      ['Cesta',u.pathname],
+      ['Query string',u.search||'—'],
+      ['Fragment (#)',u.hash||'—'],
+    ];
+    let html=rows.map(([k,v])=>`<div class="k">${k}</div><div class="v">${escHtml(v)}</div>`).join('');
+    if(u.search){
+      html+=`<div class="k">Parametry</div><div class="v">`+
+        [...u.searchParams.entries()].map(([k,v])=>`${escHtml(k)} = ${escHtml(v)}`).join('<br>')+
+        `</div>`;
+    }
+    $('parts').innerHTML=html;
+  }catch(e){
+    $('parseStatus').className='status err';
+    $('parseStatus').textContent='❌ Neplatná URL: '+e.message;
+    $('parts').innerHTML='';
+  }
+}
+function escHtml(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+$('parseInput').addEventListener('input',parseUrl);
+
+let params=[{k:'q',v:'zluty kun'},{k:'sort',v:'asc'}];
+function renderParams(){
+  $('paramsBody').innerHTML=params.map((p,i)=>`
+    <tr>
+      <td><input data-k="${i}" value="${escHtml(p.k)}"></td>
+      <td><input data-v="${i}" value="${escHtml(p.v)}"></td>
+      <td><button class="del" data-del="${i}">✕</button></td>
+    </tr>`).join('');
+  $('paramsBody').querySelectorAll('[data-k]').forEach(el=>el.oninput=()=>{params[+el.dataset.k].k=el.value;buildUrl();});
+  $('paramsBody').querySelectorAll('[data-v]').forEach(el=>el.oninput=()=>{params[+el.dataset.v].v=el.value;buildUrl();});
+  $('paramsBody').querySelectorAll('[data-del]').forEach(el=>el.onclick=()=>{params.splice(+el.dataset.del,1);renderParams();buildUrl();});
+  buildUrl();
+}
+function buildUrl(){
+  const base=$('baseUrl').value.trim();
+  const qs=params.filter(p=>p.k).map(p=>encodeURIComponent(p.k)+'='+encodeURIComponent(p.v)).join('&');
+  $('builtUrl').value=base+(qs?'?'+qs:'');
+}
+$('baseUrl').addEventListener('input',buildUrl);
+$('btnAddParam').onclick=()=>{params.push({k:'',v:''});renderParams();};
+$('btnCopy').onclick=()=>{
+  navigator.clipboard.writeText($('builtUrl').value);
+  $('btnCopy').textContent='✅ Zkopírováno';
+  setTimeout(()=>$('btnCopy').textContent='📋 Kopírovat',1200);
+};
+
+parseUrl();
+renderParams();
+</script>
+</body>
+</html>

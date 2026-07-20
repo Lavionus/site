@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎬 Storyboard tvůrce</title>
+<link rel="stylesheet" href="../common.css">
+<script>
+  if (localStorage.getItem('webapp_theme') === 'light') document.documentElement.dataset.theme = 'light';
+</script>
+<style>
+body{background:var(--bg-deep);padding:20px clamp(14px,3vw,40px);min-height:100vh}
+.container{max-width:1100px;margin:0 auto}
+h1{font-size:1.5rem;margin-bottom:4px}
+.sub{color:var(--text-muted);font-size:.85rem;margin-bottom:16px}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
+.btn{background:var(--bg-control);color:var(--text);border:1px solid var(--border-strong);padding:8px 14px;border-radius:6px;cursor:pointer;font-size:.85rem}
+.btn:hover{background:var(--bg-hover)}
+.btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.scenes{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
+.scene{background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius);padding:14px}
+.scene-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.scene-num{font-weight:700;color:var(--accent);font-size:.9rem}
+.scene-actions{display:flex;gap:4px}
+.mini{background:none;border:1px solid var(--border-strong);color:var(--text-muted);border-radius:4px;cursor:pointer;font-size:.75rem;padding:3px 6px}
+.canvaswrap{background:#fff;border-radius:6px;overflow:hidden;margin-bottom:8px}
+canvas{display:block;width:100%;touch-action:none;cursor:crosshair}
+.drawtools{display:flex;gap:6px;align-items:center;margin-bottom:8px}
+.drawtools input[type=color]{width:28px;height:28px;padding:0;border:none;background:none}
+.drawtools .mini{padding:4px 8px}
+select,textarea,input{width:100%;background:var(--bg-input);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:6px 8px;font-size:.82rem;font-family:inherit;margin-bottom:6px}
+textarea{resize:vertical;min-height:50px}
+.metarow{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.empty{text-align:center;color:var(--text-faint);padding:40px;background:var(--bg-panel);border:1px dashed var(--border);border-radius:var(--radius)}
+@media print{
+  .toolbar,.drawtools,.scene-actions{display:none!important}
+  body{background:#fff;color:#000}
+  .scene{background:#fff;border:1px solid #999;break-inside:avoid}
+  select,textarea,input{background:#fff;color:#000;border:1px solid #999}
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>🎬 Storyboard tvůrce</h1>
+  <p class="sub">Mřížka scén s náčrtem, popiskem a časováním pro video/film projekty.</p>
+
+  <div class="toolbar">
+    <button class="btn primary" id="btnAdd">+ Přidat scénu</button>
+    <button class="btn" id="btnPrint">🖨️ Tisk / PDF</button>
+    <button class="btn" id="btnClearAll">🗑️ Smazat vše</button>
+  </div>
+
+  <div class="scenes" id="scenes"></div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const STORAGE_KEY='storyboard_v1';
+let scenes=[];
+let penColor='#000000';
+
+function save(){
+  const data=scenes.map(s=>({caption:s.caption,shot:s.shot,duration:s.duration,drawing:s.canvas.toDataURL()}));
+  localStorage.setItem(STORAGE_KEY,JSON.stringify(data));
+}
+
+function load(){
+  let data=[];
+  try{data=JSON.parse(localStorage.getItem(STORAGE_KEY))||[];}catch(e){}
+  if(!data.length)data=[{caption:'',shot:'wide',duration:3,drawing:null}];
+  scenes=[];
+  data.forEach(d=>addScene(d,false));
+  render();
+}
+
+function addScene(data,doSave){
+  data=data||{caption:'',shot:'wide',duration:3,drawing:null};
+  const canvas=document.createElement('canvas');
+  canvas.width=480;canvas.height=280;
+  scenes.push({caption:data.caption,shot:data.shot,duration:data.duration,canvas,pendingDrawing:data.drawing});
+  if(doSave!==false)save();
+}
+
+function escAttr(s){return (s||'').replace(/&/g,'&amp;').replace(/"/g,'&quot;');}
+
+function render(){
+  if(!scenes.length){$('scenes').innerHTML='<div class="empty">Zatím žádné scény.</div>';return;}
+  $('scenes').innerHTML=scenes.map((s,i)=>`
+    <div class="scene" data-i="${i}">
+      <div class="scene-head">
+        <span class="scene-num">🎬 Scéna ${i+1}</span>
+        <div class="scene-actions">
+          <button class="mini" data-up="${i}">↑</button>
+          <button class="mini" data-down="${i}">↓</button>
+          <button class="mini" data-del="${i}">✕</button>
+        </div>
+      </div>
+      <div class="drawtools">
+        <input type="color" data-color="${i}" value="${penColor}">
+        <button class="mini" data-clear="${i}">Vymazat náčrt</button>
+      </div>
+      <div class="canvaswrap" data-canvashost="${i}"></div>
+      <div class="metarow">
+        <select data-shot="${i}">
+          <option value="wide" ${s.shot==='wide'?'selected':''}>Celkový záběr</option>
+          <option value="medium" ${s.shot==='medium'?'selected':''}>Polocelek</option>
+          <option value="close" ${s.shot==='close'?'selected':''}>Detail</option>
+          <option value="pov" ${s.shot==='pov'?'selected':''}>POV / subjektivní</option>
+        </select>
+        <input type="number" data-duration="${i}" value="${s.duration}" min="0" step="0.5" placeholder="Délka (s)">
+      </div>
+      <textarea data-caption="${i}" placeholder="Popis scény, dialog, poznámky…">${s.caption||''}</textarea>
+    </div>`).join('');
+
+  scenes.forEach((s,i)=>{
+    const host=document.querySelector(`[data-canvashost="${i}"]`);
+    host.appendChild(s.canvas);
+    const ctx=s.canvas.getContext('2d');
+    ctx.fillStyle='#fff';ctx.fillRect(0,0,s.canvas.width,s.canvas.height);
+    if(s.pendingDrawing){
+      const img=new Image();
+      img.onload=()=>ctx.drawImage(img,0,0,s.canvas.width,s.canvas.height);
+      img.src=s.pendingDrawing;
+    }
+    setupDraw(s.canvas,ctx,i);
+  });
+
+  document.querySelectorAll('[data-shot]').forEach(el=>el.onchange=()=>{scenes[+el.dataset.shot].shot=el.value;save();});
+  document.querySelectorAll('[data-duration]').forEach(el=>el.oninput=()=>{scenes[+el.dataset.duration].duration=el.value;save();});
+  document.querySelectorAll('[data-caption]').forEach(el=>el.oninput=()=>{scenes[+el.dataset.caption].caption=el.value;save();});
+  document.querySelectorAll('[data-color]').forEach(el=>el.oninput=()=>{penColor=el.value;});
+  document.querySelectorAll('[data-clear]').forEach(el=>el.onclick=()=>{
+    const i=+el.dataset.clear;
+    const ctx=scenes[i].canvas.getContext('2d');
+    ctx.fillStyle='#fff';ctx.fillRect(0,0,scenes[i].canvas.width,scenes[i].canvas.height);
+    save();
+  });
+  document.querySelectorAll('[data-del]').forEach(el=>el.onclick=()=>{
+    if(!confirm('Smazat tuto scénu?'))return;
+    scenes.splice(+el.dataset.del,1);
+    save();render();
+  });
+  document.querySelectorAll('[data-up]').forEach(el=>el.onclick=()=>{
+    const i=+el.dataset.up;
+    if(i===0)return;
+    [scenes[i-1],scenes[i]]=[scenes[i],scenes[i-1]];
+    save();render();
+  });
+  document.querySelectorAll('[data-down]').forEach(el=>el.onclick=()=>{
+    const i=+el.dataset.down;
+    if(i===scenes.length-1)return;
+    [scenes[i+1],scenes[i]]=[scenes[i],scenes[i+1]];
+    save();render();
+  });
+}
+
+function setupDraw(canvas,ctx,i){
+  let drawing=false,last=null;
+  function pos(e){
+    const rect=canvas.getBoundingClientRect();
+    const scaleX=canvas.width/rect.width, scaleY=canvas.height/rect.height;
+    const cx=(e.touches?e.touches[0].clientX:e.clientX)-rect.left;
+    const cy=(e.touches?e.touches[0].clientY:e.clientY)-rect.top;
+    return {x:cx*scaleX,y:cy*scaleY};
+  }
+  function start(e){drawing=true;last=pos(e);e.preventDefault();}
+  function move(e){
+    if(!drawing)return;
+    const p=pos(e);
+    ctx.strokeStyle=document.querySelector(`[data-color="${i}"]`).value;
+    ctx.lineWidth=3;ctx.lineCap='round';
+    ctx.beginPath();ctx.moveTo(last.x,last.y);ctx.lineTo(p.x,p.y);ctx.stroke();
+    last=p;
+    e.preventDefault();
+  }
+  function end(){if(drawing){drawing=false;save();}}
+  canvas.addEventListener('mousedown',start);
+  canvas.addEventListener('mousemove',move);
+  window.addEventListener('mouseup',end);
+  canvas.addEventListener('touchstart',start,{passive:false});
+  canvas.addEventListener('touchmove',move,{passive:false});
+  canvas.addEventListener('touchend',end);
+}
+
+$('btnAdd').onclick=()=>{addScene();render();};
+$('btnPrint').onclick=()=>window.print();
+$('btnClearAll').onclick=()=>{
+  if(!confirm('Smazat celý storyboard?'))return;
+  scenes=[];
+  addScene();
+  save();render();
+};
+
+load();
+</script>
+</body>
+</html>

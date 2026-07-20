@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🌠 Astronomický kalendář úkazů</title>
+<script src="lib/suncalc.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1a1a1a;color:#e0e0e0;min-height:100vh;padding:20px}
+.container{max-width:900px;margin:0 auto}
+h1{font-size:1.6rem;margin-bottom:6px;font-weight:600;text-align:center}
+.sub{text-align:center;color:#888;font-size:.85rem;margin-bottom:18px}
+.controls{display:flex;justify-content:center;gap:10px;align-items:end;margin-bottom:20px}
+label{display:block;font-size:.78rem;color:#888;margin-bottom:4px}
+input,select{background:#404040;border:1px solid #555;border-radius:4px;color:#e0e0e0;padding:9px;width:100px;text-align:center}
+.btn{background:#6aa6fd;color:#fff;border:none;padding:9px 16px;border-radius:6px;cursor:pointer;font-weight:600}
+.btn:hover{background:#5694f0}
+.card{background:#2a2a2a;border:1px solid #404040;border-radius:8px;padding:20px;margin-bottom:18px}
+h2{font-size:1.05rem;color:#6aa6fd;margin-bottom:12px}
+table{width:100%;border-collapse:collapse;font-size:.9rem}
+td,th{padding:8px 6px;border-bottom:1px solid #333;text-align:left}
+th{color:#888;font-size:.75rem;text-transform:uppercase}
+tr:last-child td{border-bottom:none}
+.moon-emoji{font-size:1.1rem;margin-right:4px}
+.note{font-size:.78rem;color:#666;margin-top:10px;line-height:1.5}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>🌠 Astronomický kalendář úkazů</h1>
+  <p class="sub">Meteorické roje, slunovraty/rovnodennosti a fáze měsíce pro zvolený rok</p>
+
+  <div class="controls">
+    <div><label>Rok</label><input type="number" id="year" min="1900" max="2200"></div>
+    <button class="btn" id="btnGo">Zobrazit</button>
+  </div>
+
+  <div class="card">
+    <h2>☄️ Meteorické roje</h2>
+    <table><thead><tr><th>Roj</th><th>Vrchol</th><th>Nejlepší pozorování</th></tr></thead><tbody id="showers"></tbody></table>
+    <p class="note">Data vrcholu jsou přibližná a rok od roku se mohou lišit o 1–2 dny. Pro pozorování hledej co nejtmavší oblohu po půlnoci, ideálně bez měsíčního svitu.</p>
+  </div>
+
+  <div class="card">
+    <h2>🌍 Slunovraty a rovnodennosti</h2>
+    <table><thead><tr><th>Úkaz</th><th>Přibližné datum</th></tr></thead><tbody id="seasons"></tbody></table>
+    <p class="note">Přesný okamžik se rok od roku posouvá o cca ±1 den kvůli délce tropického roku.</p>
+  </div>
+
+  <div class="card">
+    <h2>🌕 Úplňky a novy v roce</h2>
+    <table><thead><tr><th>Fáze</th><th>Datum</th></tr></thead><tbody id="moons"></tbody></table>
+    <p class="note">Vypočteno lokálně z osvětlení měsíčního kotouče (SunCalc), přesnost ±1 den v UTC.</p>
+  </div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+$('year').value=new Date().getFullYear();
+
+const SHOWERS=[
+  {name:'Kvadrantidy', month:1, day:3, best:'noc z 3. na 4. ledna'},
+  {name:'Lyridy', month:4, day:22, best:'noc z 21. na 22. dubna'},
+  {name:'Eta Akvaridy', month:5, day:5, best:'noc z 5. na 6. května'},
+  {name:'Perseidy', month:8, day:12, best:'noc z 12. na 13. srpna'},
+  {name:'Orionidy', month:10, day:21, best:'noc z 21. na 22. října'},
+  {name:'Leonidy', month:11, day:17, best:'noc z 17. na 18. listopadu'},
+  {name:'Geminidy', month:12, day:13, best:'noc z 13. na 14. prosince'},
+  {name:'Ursidy', month:12, day:22, best:'noc z 21. na 22. prosince'},
+];
+
+const SEASONS=[
+  {name:'🌸 Jarní rovnodennost', month:3, day:20},
+  {name:'☀️ Letní slunovrat', month:6, day:21},
+  {name:'🍂 Podzimní rovnodennost', month:9, day:23},
+  {name:'❄️ Zimní slunovrat', month:12, day:21},
+];
+
+function fmtDate(y,m,d){
+  const dt=new Date(y,m-1,d);
+  return dt.toLocaleDateString('cs-CZ',{day:'numeric',month:'long',year:'numeric'});
+}
+
+function findMoonPhases(year){
+  const start=new Date(year,0,1);
+  const end=new Date(year+1,0,3); // pár dní přesah pro detekci hranic
+  const days=[];
+  for(let d=new Date(start); d<end; d.setDate(d.getDate()+1)){
+    days.push({date:new Date(d), fraction:SunCalc.getMoonIllumination(new Date(d)).fraction});
+  }
+  const events=[];
+  for(let i=1;i<days.length-1;i++){
+    const prev=days[i-1].fraction, cur=days[i].fraction, next=days[i+1].fraction;
+    if(days[i].date.getFullYear()!==year)continue;
+    if(cur>=prev&&cur>=next&&cur>0.9)events.push({type:'full',date:days[i].date});
+    if(cur<=prev&&cur<=next&&cur<0.1)events.push({type:'new',date:days[i].date});
+  }
+  return events.sort((a,b)=>a.date-b.date);
+}
+
+function render(){
+  const year=Number($('year').value)||new Date().getFullYear();
+
+  $('showers').innerHTML=SHOWERS.map(s=>`<tr><td>☄️ ${s.name}</td><td>${fmtDate(year,s.month,s.day)}</td><td>${s.best}</td></tr>`).join('');
+  $('seasons').innerHTML=SEASONS.map(s=>`<tr><td>${s.name}</td><td>${fmtDate(year,s.month,s.day)}</td></tr>`).join('');
+
+  const moons=findMoonPhases(year);
+  $('moons').innerHTML=moons.map(e=>`<tr><td><span class="moon-emoji">${e.type==='full'?'🌕':'🌑'}</span>${e.type==='full'?'Úplněk':'Nov'}</td><td>${e.date.toLocaleDateString('cs-CZ',{day:'numeric',month:'long',year:'numeric'})}</td></tr>`).join('');
+}
+
+$('btnGo').onclick=render;
+render();
+</script>
+</body>
+</html>

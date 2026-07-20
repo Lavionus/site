@@ -53,6 +53,16 @@ const KATALOG_SEKCE = [
         ]
       },
       {
+        "soubor": "obsah/notes_graph.html",
+        "nazev": "🕸️ Zettelkasten (propojené poznámky)",
+        "tagy": [
+          "zettelkasten",
+          "wiki",
+          "odkazy",
+          "graf poznámek"
+        ]
+      },
+      {
         "soubor": "obsah/skriptorium.html",
         "nazev": "📖 Skriptorium (tvůrce knih)",
         "tagy": [
@@ -137,6 +147,26 @@ const KATALOG_SEKCE = [
       {
         "soubor": "obsah/time_calc.html",
         "nazev": "⏱️ Kalkulačka času"
+      },
+      {
+        "soubor": "obsah/timesheet.html",
+        "nazev": "⏱️ Docházka / evidence hodin",
+        "tagy": [
+          "docházka",
+          "výkaz",
+          "hodiny",
+          "fakturace"
+        ]
+      },
+      {
+        "soubor": "obsah/meeting_notes.html",
+        "nazev": "🗒️ Zápis z porady",
+        "tagy": [
+          "agenda",
+          "porada",
+          "schůzka",
+          "úkoly"
+        ]
       },
       {
         "soubor": "obsah/calendar_print.html",
@@ -342,6 +372,16 @@ const KATALOG_SEKCE = [
         "nazev": "✉️ E-mailový podpis"
       },
       {
+        "soubor": "obsah/vcard_gen.html",
+        "nazev": "📇 Vizitka (vCard + QR)",
+        "tagy": [
+          "vizitka",
+          "vcard",
+          "kontakt",
+          "qr"
+        ]
+      },
+      {
         "soubor": "obsah/wifi_qr.html",
         "nazev": "📶 Wi-Fi QR kód",
         "tagy": [
@@ -465,6 +505,55 @@ const KATALOG_SEKCE = [
       {
         "soubor": "obsah/color_vision.html",
         "nazev": "👁️ Test barvocitu"
+      },
+      {
+        "soubor": "obsah/sleep_cycle_alarm.html",
+        "nazev": "😴 Budík dle spánkových cyklů",
+        "tagy": [
+          "spánek",
+          "budík",
+          "cykly",
+          "usínání"
+        ]
+      },
+      {
+        "soubor": "obsah/vision_test.html",
+        "nazev": "👁️ Oční tabulka (test zraku)",
+        "tagy": [
+          "zrak",
+          "snellen",
+          "oči"
+        ]
+      },
+      {
+        "soubor": "obsah/growth_chart.html",
+        "nazev": "📈 Kalendář růstu dítěte (percentily)",
+        "tagy": [
+          "dítě",
+          "růst",
+          "percentil",
+          "výška",
+          "váha"
+        ]
+      },
+      {
+        "soubor": "obsah/first_aid_ref.html",
+        "nazev": "🩹 Lékárnička – první pomoc",
+        "tagy": [
+          "první pomoc",
+          "úraz",
+          "kpr",
+          "resuscitace"
+        ]
+      },
+      {
+        "soubor": "obsah/caffeine_tracker.html",
+        "nazev": "☕ Kalkulačka kofeinu",
+        "tagy": [
+          "kofein",
+          "káva",
+          "energy drink"
+        ]
       }
     ]
   },
@@ -521,6 +610,69 @@ const KATALOG_SEKCE = [
       {
         "soubor": "obsah/meteo_units.html",
         "nazev": "🌡️ Převodník meteo jednotek"
+      }
+    ]
+  },
+  {
+    "nazev": "🌱 Zahrada & pěstování",
+    "skupina": "priroda",
+    "polozky": [
+      {
+        "soubor": "obsah/crop_rotation.html",
+        "nazev": "🔄 Plánovač střídání plodin",
+        "tagy": [
+          "zahrada",
+          "osevní postup",
+          "plodiny"
+        ]
+      },
+      {
+        "soubor": "obsah/garden_layout.html",
+        "nazev": "🌱 Plánovač záhonů",
+        "tagy": [
+          "zahrada",
+          "záhon",
+          "rozvržení",
+          "plán"
+        ]
+      },
+      {
+        "soubor": "obsah/seeding_calc.html",
+        "nazev": "🌾 Kalkulačka výsevku",
+        "tagy": [
+          "setí",
+          "osivo",
+          "zahrada"
+        ]
+      },
+      {
+        "soubor": "obsah/fertilizer_calc.html",
+        "nazev": "🌱 Kalkulačka hnojení N-P-K",
+        "tagy": [
+          "hnojivo",
+          "zahrada",
+          "dusík"
+        ]
+      },
+      {
+        "soubor": "obsah/rainfall_gdd.html",
+        "nazev": "🌧️ Srážky & GDD",
+        "tagy": [
+          "srážky",
+          "růstové stupně",
+          "zahrada",
+          "pole"
+        ]
+      },
+      {
+        "soubor": "obsah/fishing_calendar.html",
+        "nazev": "🎣 Rybářský kalendář",
+        "tagy": [
+          "rybaření",
+          "solunární",
+          "měsíc",
+          "ryby"
+        ]
       }
     ]
   },
@@ -719,6 +871,45 @@ const KATALOG_SEKCE = [
       {
         "soubor": "obsah/comic3d_walk.html",
         "nazev": "🚶 Komiksový 3D svět (procházka)"
+      },
+      {
+        "soubor": "obsah/comic_strip.html",
+        "nazev": "💬 Generátor komiksových stripů",
+        "tagy": [
+          "komiks",
+          "bublina",
+          "panely",
+          "strip"
+        ]
+      },
+      {
+        "soubor": "obsah/storyboard.html",
+        "nazev": "🎬 Storyboard tvůrce",
+        "tagy": [
+          "scénář",
+          "video",
+          "film",
+          "scény"
+        ]
+      },
+      {
+        "soubor": "obsah/palette_from_image.html",
+        "nazev": "🎨 Paleta z obrázku",
+        "tagy": [
+          "barvy",
+          "paleta",
+          "extrakce",
+          "hex"
+        ]
+      },
+      {
+        "soubor": "obsah/sticker_maker.html",
+        "nazev": "🏷️ Generátor nálepek",
+        "tagy": [
+          "sticker",
+          "nálepka",
+          "obrys"
+        ]
       },
       {
         "soubor": "obsah/ascii_art.html",
@@ -984,6 +1175,71 @@ const KATALOG_SEKCE = [
       {
         "soubor": "obsah/gear_ratio.html",
         "nazev": "⚙️ Převodové poměry"
+      },
+      {
+        "soubor": "obsah/paint_coverage_calc.html",
+        "nazev": "🎨 Spotřeba barvy/tapety",
+        "tagy": [
+          "malování",
+          "barva",
+          "tapeta",
+          "místnost"
+        ]
+      },
+      {
+        "soubor": "obsah/concrete_mix_calc.html",
+        "nazev": "🧱 Betonová směs",
+        "tagy": [
+          "beton",
+          "cement",
+          "stavba",
+          "základy"
+        ]
+      },
+      {
+        "soubor": "obsah/roof_pitch_calc.html",
+        "nazev": "🏠 Sklon střechy, krokve a plocha",
+        "tagy": [
+          "střecha",
+          "krov",
+          "krokev",
+          "tesařina",
+          "valbová",
+          "pultová",
+          "stanová"
+        ]
+      },
+      {
+        "soubor": "obsah/wooden_shed_3d.html",
+        "nazev": "🪵 Dřevěná stavba – 3D a kusovník",
+        "tagy": [
+          "3d",
+          "přístřešek",
+          "domek",
+          "kůlna",
+          "kusovník",
+          "krov",
+          "dřevostavba"
+        ]
+      },
+      {
+        "soubor": "obsah/cable_sizing_calc.html",
+        "nazev": "🔌 Dimenzování kabelu",
+        "tagy": [
+          "elektro",
+          "kabel",
+          "úbytek napětí",
+          "průřez"
+        ]
+      },
+      {
+        "soubor": "obsah/spring_calc.html",
+        "nazev": "🌀 Kalkulačka pružin",
+        "tagy": [
+          "pružina",
+          "tuhost",
+          "strojírenství"
+        ]
       }
     ]
   },
@@ -1114,6 +1370,34 @@ const KATALOG_SEKCE = [
           "testování",
           "ičo"
         ]
+      },
+      {
+        "soubor": "obsah/git_cheatsheet.html",
+        "nazev": "📚 Git cheatsheet",
+        "tagy": [
+          "git",
+          "příkazy",
+          "verzování"
+        ]
+      },
+      {
+        "soubor": "obsah/env_gen.html",
+        "nazev": "⚙️ Generátor .env souborů",
+        "tagy": [
+          "env",
+          "konfigurace",
+          "docker"
+        ]
+      },
+      {
+        "soubor": "obsah/api_tester.html",
+        "nazev": "🛰️ API / webhook tester",
+        "tagy": [
+          "api",
+          "http",
+          "webhook",
+          "rest"
+        ]
       }
     ]
   },
@@ -1187,6 +1471,24 @@ const KATALOG_SEKCE = [
       {
         "soubor": "obsah/slug_gen.html",
         "nazev": "🔗 Slug generátor"
+      },
+      {
+        "soubor": "obsah/url_builder.html",
+        "nazev": "🔗 URL builder / parser",
+        "tagy": [
+          "url",
+          "query string",
+          "parametry"
+        ]
+      },
+      {
+        "soubor": "obsah/yaml_json.html",
+        "nazev": "🔄 YAML ↔ JSON převodník",
+        "tagy": [
+          "yaml",
+          "json",
+          "konfigurace"
+        ]
       }
     ]
   },
@@ -1347,6 +1649,11 @@ const KATALOG_SEKCE = [
         "tagy": ["gravitace", "fyzika", "kepler", "oběžná dráha", "vesmír", "simulace", "kosmická rychlost"]
       },
       {
+        "soubor": "obsah/physics_playground.html",
+        "nazev": "🔬 Fyzikální hřiště pro děti",
+        "tagy": ["fyzika", "kyvadlo", "nakloněná rovina", "srážky", "simulace"]
+      },
+      {
         "soubor": "obsah/iss.html",
         "nazev": "🛰️ ISS živě",
         "tagy": ["vesmír", "stanice", "družice", "oběžná dráha", "astronomie", "živě"]
@@ -1355,6 +1662,11 @@ const KATALOG_SEKCE = [
         "soubor": "obsah/star_map.html",
         "nazev": "🌌 Hvězdná obloha",
         "tagy": ["hvězdy", "souhvězdí", "astronomie", "obloha", "roční období", "zimní obloha", "letní obloha"]
+      },
+      {
+        "soubor": "obsah/sky_events.html",
+        "nazev": "🌠 Astronomický kalendář úkazů",
+        "tagy": ["meteorický roj", "zatmění", "úplněk", "slunovrat", "rovnodennost", "astronomie"]
       }
     ]
   },
@@ -1395,7 +1707,7 @@ const KATALOG_SEKCE = [
     ]
   },
   {
-    "nazev": "🇬🇧 Cizí jazyky",
+    "nazev": "🇬🇧🇩🇪 Cizí jazyky",
     "skupina": "vzdelavani",
     "polozky": [
       {
@@ -1407,6 +1719,11 @@ const KATALOG_SEKCE = [
         "soubor": "obsah/aj_slovesa.html",
         "nazev": "🇬🇧 Anglická nepravidelná slovesa",
         "tagy": ["angličtina", "english", "2. stupeň", "sš", "irregular verbs", "slovesa"]
+      },
+      {
+        "soubor": "obsah/de_slovicka.html",
+        "nazev": "🇩🇪 Němčina – slovíčka",
+        "tagy": ["němčina", "deutsch", "slovíčka", "členy", "der die das"]
       }
     ]
   },
@@ -1433,6 +1750,11 @@ const KATALOG_SEKCE = [
         "soubor": "obsah/music_theory.html",
         "nazev": "🎼 Hudební nauka",
         "tagy": ["hudba", "noty"]
+      },
+      {
+        "soubor": "obsah/notes_reading.html",
+        "nazev": "🎼 Notová osnova – čtení not",
+        "tagy": ["hudba", "noty", "houslový klíč", "solfeggio"]
       },
       {
         "soubor": "obsah/morse_code.html",
@@ -1570,6 +1892,25 @@ const KATALOG_SEKCE = [
         "nazev": "🔡 Osmisměrka"
       },
       {
+        "soubor": "obsah/crossword_gen.html",
+        "nazev": "🧩 Generátor křížovek",
+        "tagy": [
+          "křížovka",
+          "hádanka",
+          "slova"
+        ]
+      },
+      {
+        "soubor": "obsah/bingo_gen.html",
+        "nazev": "🎱 Generátor bingo kartiček",
+        "tagy": [
+          "bingo",
+          "oslava",
+          "tisk",
+          "party"
+        ]
+      },
+      {
         "soubor": "obsah/tabooGame.html",
         "nazev": "🚫 Tabu (slovní popis)"
       },
@@ -1663,6 +2004,15 @@ const KATALOG_SEKCE = [
       {
         "soubor": "obsah/contact_page.html",
         "nazev": "Kontakt"
+      },
+      {
+        "soubor": "obsah/about.html",
+        "nazev": "ℹ️ O projektu",
+        "tagy": [
+          "changelog",
+          "statistiky",
+          "github"
+        ]
       }
     ]
   }

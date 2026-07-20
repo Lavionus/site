@@ -1,0 +1,855 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🪵 Dřevěná stavba – 3D návrh a kusovník</title>
+<script src="lib/three.0.160.0.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1a1a1a;color:#e0e0e0;min-height:100vh;padding:20px}
+.container{max-width:1200px;margin:0 auto}
+h1{font-size:1.6rem;margin-bottom:6px;font-weight:600;text-align:center}
+.sub{text-align:center;color:#888;font-size:.85rem;margin-bottom:18px}
+.layout{display:grid;grid-template-columns:320px 1fr;gap:20px}
+@media(max-width:900px){.layout{grid-template-columns:1fr}}
+.card{background:#2a2a2a;border:1px solid #404040;border-radius:8px;padding:18px;margin-bottom:20px}
+h2{font-size:1rem;color:#6aa6fd;margin-bottom:14px}
+h3{font-size:.8rem;color:#888;margin:12px 0 8px;text-transform:uppercase;letter-spacing:.4px}
+label{display:block;font-size:.8rem;color:#888;margin-bottom:4px;margin-top:10px}
+label:first-child{margin-top:0}
+input,select{width:100%;background:#404040;border:1px solid #555;border-radius:4px;color:#e0e0e0;padding:8px;font-size:.88rem}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.shape-tabs{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-bottom:6px}
+.shape-tabs button{background:#404040;border:1px solid #555;color:#ccc;padding:8px 4px;border-radius:6px;cursor:pointer;font-size:.78rem}
+.shape-tabs button.active{background:#6aa6fd;color:#fff;border-color:#6aa6fd}
+.btn{background:#6aa6fd;color:#fff;border:none;padding:9px 14px;border-radius:6px;cursor:pointer;font-weight:600;font-size:.85rem}
+.btn:hover{background:#5591e8}
+.btn-sec{background:#404040;color:#e0e0e0}
+.row{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.viewer-wrap{position:relative;background:#111;border-radius:8px;overflow:hidden;border:1px solid #404040}
+canvas.scene{display:block;width:100%;height:480px;cursor:grab}
+canvas.scene:active{cursor:grabbing}
+.viewer-toolbar{position:absolute;top:10px;right:10px;display:flex;gap:6px;flex-wrap:wrap;max-width:calc(100% - 20px);justify-content:flex-end}
+.viewer-toolbar button{background:rgba(42,42,42,.9);border:1px solid #555;color:#ccc;padding:6px 10px;border-radius:6px;cursor:pointer;font-size:.76rem}
+.viewer-toolbar button.active{background:#6aa6fd;color:#fff;border-color:#6aa6fd}
+.viewer-hint{position:absolute;bottom:8px;left:10px;font-size:.7rem;color:#777}
+table{width:100%;border-collapse:collapse;font-size:.86rem}
+th,td{padding:8px 6px;border-bottom:1px solid #333;text-align:left}
+th{color:#888;font-size:.72rem;text-transform:uppercase}
+tr:last-child td{border-bottom:none}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:10px;margin-top:14px}
+.stat{background:#242424;border:1px solid #404040;border-radius:8px;padding:12px;text-align:center}
+.stat .v{font-size:1.3rem;font-weight:700;color:#6aa6fd}
+.stat .l{font-size:.72rem;color:#888;margin-top:2px}
+.checklist{display:flex;flex-direction:column;gap:8px}
+.checklist label{display:flex;align-items:center;gap:10px;font-size:.88rem;color:#ddd;margin:0;cursor:pointer;padding:8px 10px;background:#242424;border-radius:6px;border:1px solid #363636}
+.checklist input{width:auto}
+.checklist label.done{opacity:.55;text-decoration:line-through}
+.note{font-size:.78rem;color:#666;margin-top:14px;line-height:1.5}
+.warn{background:rgba(224,166,63,.15);border:1px solid #e0a63f;color:#e0a63f;padding:10px 14px;border-radius:6px;font-size:.8rem;margin-top:12px;line-height:1.5}
+.opening-card{background:#242424;border:1px solid #3a3a3a;border-radius:8px;padding:12px;margin-bottom:10px}
+.opening-card .head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.opening-card .head b{font-size:.82rem;color:#ddd}
+.opening-card .head button{background:none;border:none;color:#c0392b;cursor:pointer;font-size:1rem;padding:2px 6px}
+.opening-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.opening-grid label{font-size:.72rem;color:#888;margin:0 0 3px}
+.opening-grid .full{grid-column:1/-1}
+.opening-grid input,.opening-grid select{padding:6px;font-size:.82rem}
+@media print{
+  .card:not(.printarea){display:none!important}
+  .viewer-wrap,.checklist input{display:none!important}
+  body{background:#fff;color:#000}
+  table{color:#000}
+  th,td{border-color:#999}
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>🪵 Dřevěná stavba – 3D návrh a kusovník</h1>
+  <p class="sub">Parametrický 3D náhled dřevěné kostry (přístřešek, zahradní domek, kůlna) s automatickým kusovníkem a postupem výstavby.</p>
+
+  <div class="layout">
+    <div>
+      <div class="card">
+        <h2>📐 Rozměry a tvar</h2>
+        <div class="grid2">
+          <div><label>Šířka (m)</label><input type="number" id="width" value="3" step="0.1"></div>
+          <div><label>Délka (m)</label><input type="number" id="length" value="4" step="0.1"></div>
+        </div>
+        <div class="grid2">
+          <div><label>Výška stěny (m)</label><input type="number" id="wallHeight" value="2.1" step="0.05"></div>
+          <div><label>Sklon střechy (°)</label><input type="number" id="roofAngle" value="15" step="1"></div>
+        </div>
+        <label>Tvar střechy</label>
+        <div class="shape-tabs">
+          <button data-shape="pultova" class="active">📐 Pultová</button>
+          <button data-shape="sedlova">🔺 Sedlová</button>
+          <button data-shape="valbova">⛰️ Valbová</button>
+          <button data-shape="stanova">🔷 Stanová</button>
+        </div>
+
+        <h3>Konstrukce</h3>
+        <div class="grid2">
+          <div><label>Rozteč sloupků (cm)</label><input type="number" id="studSpacing" value="80" step="5"></div>
+          <div><label>Rozteč krokví (cm)</label><input type="number" id="rafterSpacing" value="70" step="5"></div>
+        </div>
+        <div class="grid2">
+          <div><label>Profil sloupku</label>
+            <select id="studProfile">
+              <option value="0.06">60×60 mm</option>
+              <option value="0.08" selected>80×80 mm</option>
+              <option value="0.1">100×100 mm</option>
+              <option value="0.12">120×120 mm</option>
+            </select>
+          </div>
+          <div><label>Profil krokve (š×v mm)</label>
+            <select id="rafterProfile">
+              <option value="0.04x0.08">40×80 mm</option>
+              <option value="0.06x0.1" selected>60×100 mm</option>
+              <option value="0.08x0.16">80×160 mm</option>
+            </select>
+          </div>
+        </div>
+        <label>Přesah střechy (cm)</label><input type="number" id="overhang" value="30" step="5" min="0">
+        <div id="warnBox"></div>
+      </div>
+
+      <div class="card">
+        <h2>🚪 Dveře a okna</h2>
+        <div id="openingsList" class="openings-list"></div>
+        <div class="row">
+          <button class="btn btn-sec" id="btnAddOpening">+ Přidat otvor</button>
+        </div>
+        <div id="openingsWarn"></div>
+      </div>
+
+      <div class="card">
+        <h2>📦 Souhrn materiálu</h2>
+        <div class="stats" id="statsBox"></div>
+      </div>
+    </div>
+
+    <div>
+      <div class="card">
+        <h2>🧊 3D náhled</h2>
+        <div class="viewer-wrap">
+          <canvas class="scene" id="scene"></canvas>
+          <div class="viewer-toolbar">
+            <button id="btnWire">🔲 Drátěný model</button>
+            <button id="btnRoofSolid" class="active">🏠 Střecha</button>
+            <button id="btnBracing" class="active">✕ Ztužidla stěn</button>
+            <button id="btnRoofBracing" class="active">🌬️ Zavětrování krovu</button>
+            <button id="btnAutoRotate">🔄 Auto-rotace</button>
+            <button id="btnReset">🎯 Reset pohledu</button>
+          </div>
+          <div class="viewer-hint">Tažením myší otočíš, kolečkem přiblížíš/oddálíš</div>
+        </div>
+      </div>
+
+      <div class="card printarea">
+        <h2>📋 Kusovník (bill of materials)</h2>
+        <table>
+          <thead><tr><th>Prvek</th><th>Profil</th><th>Délka ks</th><th>Počet</th><th>Celková délka</th></tr></thead>
+          <tbody id="bomBody"></tbody>
+        </table>
+        <div class="row">
+          <button class="btn btn-sec" id="btnCsv">⬇️ Export kusovníku (CSV)</button>
+          <button class="btn btn-sec" id="btnPrint">🖨️ Tisk</button>
+        </div>
+        <p class="note">Orientační odhad pro domácí přípravu projektu — nezahrnuje základy, spojovací materiál, ztratné při řezání ani konkrétní statické posouzení. Před nákupem řeziva vždy počítej s rezervou cca 5–10 % a nechej si konstrukci zkontrolovat tesařem/statikem, zejména u větších rozponů.</p>
+      </div>
+
+      <div class="card printarea">
+        <h2>✅ Postup výstavby</h2>
+        <div class="checklist" id="checklist"></div>
+        <div class="row">
+          <button class="btn btn-sec" id="btnResetChecklist">↺ Vynulovat postup</button>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+let shape='pultova';
+
+// ---------- Tvary střechy: přepínání ----------
+document.querySelectorAll('.shape-tabs button').forEach(btn=>{
+  btn.onclick=()=>{
+    document.querySelectorAll('.shape-tabs button').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    shape=btn.dataset.shape;
+    rebuildAll();
+  };
+});
+
+// ---------- Výpočetní jádro (sdílí logiku s roof_pitch_calc.html) ----------
+function computeModel(){
+  const width=Math.max(1,+$('width').value||1);
+  let length=Math.max(1,+$('length').value||1);
+  if(shape==='stanova'){length=width;$('length').value=length;}
+  const wallHeight=Math.max(0.5,+$('wallHeight').value||2);
+  const angleDeg=Math.max(1,Math.min(80,+$('roofAngle').value||15));
+  const studSpacing=Math.max(0.2,(+$('studSpacing').value||80)/100);
+  const rafterSpacing=Math.max(0.2,(+$('rafterSpacing').value||70)/100);
+  const studProfile=+$('studProfile').value;
+  const [rW,rH]=$('rafterProfile').value.split('x').map(Number);
+  const overhang=Math.max(0,(+$('overhang').value||0)/100);
+
+  const halfW=width/2;
+  const isPultova=shape==='pultova';
+  const horizontalRun=isPultova?width:halfW;
+  const roofHeight=horizontalRun*Math.tan(angleDeg*Math.PI/180);
+  const rafterLen=Math.hypot(horizontalRun,roofHeight);
+  // přesah prodlužuje krokev v přímce dál od hřebene o "overhang" metrů (kolineární prodloužení)
+  const rafterLenOverhang=rafterLen+overhang;
+
+  let ridgeLen=0, geometryError='';
+  if(shape==='sedlova')ridgeLen=length;
+  if(shape==='valbova'){
+    ridgeLen=length-width;
+    if(ridgeLen<0)geometryError='Pro valbovou střechu musí být délka ≥ šířka. Uprav rozměry nebo použij stanovou střechu.';
+  }
+  // stanova => ridgeLen 0
+
+  let hipLen=null, hipLenOverhang=null;
+  if(shape==='valbova'||shape==='stanova'){
+    hipLen=Math.hypot(halfW*Math.SQRT2,roofHeight);
+    hipLenOverhang=hipLen+overhang*Math.SQRT2;
+  }
+
+  return {width,length,wallHeight,angleDeg,studSpacing,rafterSpacing,studProfile,rW,rH,halfW,isPultova,roofHeight,overhang,rafterLen,rafterLenOverhang,ridgeLen,hipLen,hipLenOverhang,geometryError};
+}
+
+// ---------- Dveře a okna ----------
+const OPENING_KEY='wooden_shed_openings_v1';
+const WALL_LABELS={z0:'Přední (podél délky)',z1:'Zadní (podél délky)',x0:'Levá (podél šířky)',x1:'Pravá (podél šířky)'};
+let openings=[];
+
+function loadOpenings(){
+  try{openings=JSON.parse(localStorage.getItem(OPENING_KEY));}catch(e){openings=null;}
+  if(!openings||!openings.length){
+    openings=[{id:'o1',wall:'z0',type:'door',pos:1.5,width:0.9,height:2.0,sill:0}];
+  }
+}
+function saveOpenings(){localStorage.setItem(OPENING_KEY,JSON.stringify(openings));}
+
+function renderOpeningsTable(){
+  const host=$('openingsList');
+  if(!openings.length){
+    host.innerHTML='<p class="note" style="margin-top:0">Zatím žádné dveře ani okna.</p>';
+    return;
+  }
+  host.innerHTML=openings.map((o,i)=>`
+    <div class="opening-card" data-id="${o.id}">
+      <div class="head"><b>${o.type==='door'?'🚪':'🪟'} Otvor ${i+1}</b><button class="del" title="Smazat otvor">✕</button></div>
+      <div class="opening-grid">
+        <div class="full"><label>Stěna</label>
+          <select class="f-wall">${Object.entries(WALL_LABELS).map(([id,label])=>`<option value="${id}" ${o.wall===id?'selected':''}>${label}</option>`).join('')}</select>
+        </div>
+        <div><label>Typ</label>
+          <select class="f-type"><option value="door" ${o.type==='door'?'selected':''}>Dveře</option><option value="window" ${o.type==='window'?'selected':''}>Okno</option></select>
+        </div>
+        <div><label>Pozice od rohu (m)</label><input class="f-pos" type="number" step="0.1" min="0" value="${o.pos}"></div>
+        <div><label>Šířka (m)</label><input class="f-width" type="number" step="0.1" min="0.2" value="${o.width}"></div>
+        <div><label>Výška (m)</label><input class="f-height" type="number" step="0.1" min="0.2" value="${o.height}"></div>
+        <div class="${o.type==='door'?'full':''}" style="${o.type==='door'?'display:none':''}"><label>Výška parapetu (m)</label><input class="f-sill" type="number" step="0.1" min="0" value="${o.sill}"></div>
+      </div>
+    </div>`).join('');
+  host.querySelectorAll('.opening-card').forEach(card=>{
+    const id=card.dataset.id;
+    const o=openings.find(x=>x.id===id);
+    card.querySelector('.f-wall').onchange=e=>{o.wall=e.target.value;saveOpenings();rebuildAll(false);};
+    card.querySelector('.f-type').onchange=e=>{
+      o.type=e.target.value;
+      if(o.type==='door')o.sill=0;
+      saveOpenings();renderOpeningsTable();rebuildAll(false);
+    };
+    card.querySelector('.f-pos').oninput=e=>{o.pos=Math.max(0,+e.target.value||0);saveOpenings();rebuildAll(false);};
+    card.querySelector('.f-width').oninput=e=>{o.width=Math.max(0.2,+e.target.value||0.2);saveOpenings();rebuildAll(false);};
+    card.querySelector('.f-height').oninput=e=>{o.height=Math.max(0.2,+e.target.value||0.2);saveOpenings();rebuildAll(false);};
+    const sillEl=card.querySelector('.f-sill');
+    if(sillEl)sillEl.oninput=e=>{o.sill=Math.max(0,+e.target.value||0);saveOpenings();rebuildAll(false);};
+    card.querySelector('.del').onclick=()=>{openings=openings.filter(x=>x.id!==id);saveOpenings();renderOpeningsTable();rebuildAll(false);};
+  });
+}
+$('btnAddOpening').onclick=()=>{
+  openings.push({id:'o'+Date.now()+Math.random().toString(36).slice(2,5),wall:'x0',type:'window',pos:0.5,width:0.8,height:1.0,sill:0.9});
+  saveOpenings();renderOpeningsTable();rebuildAll(false);
+};
+
+function wallEdgeLen(wallId,m){return (wallId==='z0'||wallId==='z1')?m.length:m.width;}
+
+// zvaliduje otvory proti aktuálním rozměrům (přesahy stěny, kolize, výška) a vrátí čistý seznam + varování
+function computeValidOpenings(m){
+  const warnings=[];
+  const byWall={};
+  openings.forEach(o=>{
+    const edgeLen=wallEdgeLen(o.wall,m);
+    const w=Math.max(0.2,o.width);
+    const pos=Math.max(0,o.pos);
+    const height=Math.max(0.2,o.height);
+    const sill=o.type==='window'?Math.max(0,o.sill):0;
+    if(pos+w>edgeLen-0.05){
+      warnings.push(`Otvor na stěně „${WALL_LABELS[o.wall]}“ přesahuje délku stěny (${edgeLen.toFixed(2)} m) — zmenši šířku nebo posuň pozici.`);
+      return;
+    }
+    if(sill+height>m.wallHeight-0.05){
+      warnings.push(`Otvor na stěně „${WALL_LABELS[o.wall]}“ je vyšší než stěna (${m.wallHeight.toFixed(2)} m) — sniž výšku nebo parapet.`);
+      return;
+    }
+    (byWall[o.wall]=byWall[o.wall]||[]).push({...o,width:w,pos,height,sill});
+  });
+  const clean=[];
+  Object.keys(byWall).forEach(wallId=>{
+    const list=byWall[wallId].sort((a,b)=>a.pos-b.pos);
+    let lastEnd=-Infinity;
+    list.forEach(o=>{
+      if(o.pos<lastEnd-0.02){
+        warnings.push(`Otvory na stěně „${WALL_LABELS[wallId]}“ se překrývají — uprav pozice.`);
+      }else{
+        clean.push(o);
+      }
+      lastEnd=Math.max(lastEnd,o.pos+o.width);
+    });
+  });
+  return {clean,warnings};
+}
+
+// ---------- THREE.js scéna ----------
+const canvas=$('scene');
+const renderer=new THREE.WebGLRenderer({canvas,antialias:true});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+const scene=new THREE.Scene();
+scene.background=new THREE.Color('#111318');
+const camera=new THREE.PerspectiveCamera(45,1,0.05,200);
+scene.add(new THREE.AmbientLight(0xffffff,0.65));
+const sun=new THREE.DirectionalLight(0xffffff,1.4);
+sun.position.set(6,10,4);
+scene.add(sun);
+const sun2=new THREE.DirectionalLight(0xaac8ff,0.5);
+sun2.position.set(-5,4,-6);
+scene.add(sun2);
+
+const grid=new THREE.GridHelper(20,20,0x333844,0x22252c);
+scene.add(grid);
+
+let buildGroup=new THREE.Group();
+scene.add(buildGroup);
+
+let wireMode=false, roofSolid=true, autoRotate=false, bracingOn=true, roofBracingOn=true;
+let validOpenings=[]; // aktuálně platné (zvalidované) otvory pro tento render
+
+function resizeRenderer(){
+  const w=canvas.clientWidth, h=canvas.clientHeight;
+  if(canvas.width!==w*devicePixelRatio||canvas.height!==h*devicePixelRatio){
+    renderer.setSize(w,h,false);
+    camera.aspect=w/h;
+    camera.updateProjectionMatrix();
+  }
+}
+
+// jednoduché "orbit" ovládání myší (bez závislosti na OrbitControls addonu)
+let camTarget=new THREE.Vector3(0,1,0);
+let camDist=9, camTheta=0.9, camPhi=1.1;
+function updateCamera(){
+  const x=camTarget.x+camDist*Math.sin(camPhi)*Math.sin(camTheta);
+  const y=camTarget.y+camDist*Math.cos(camPhi);
+  const z=camTarget.z+camDist*Math.sin(camPhi)*Math.cos(camTheta);
+  camera.position.set(x,y,z);
+  camera.lookAt(camTarget);
+}
+let dragging=false, lastX=0, lastY=0;
+canvas.addEventListener('pointerdown',e=>{dragging=true;lastX=e.clientX;lastY=e.clientY;canvas.setPointerCapture(e.pointerId);});
+canvas.addEventListener('pointerup',e=>{dragging=false;});
+canvas.addEventListener('pointermove',e=>{
+  if(!dragging)return;
+  const dx=e.clientX-lastX, dy=e.clientY-lastY;
+  lastX=e.clientX;lastY=e.clientY;
+  camTheta-=dx*0.008;
+  camPhi=Math.max(0.25,Math.min(1.5,camPhi-dy*0.008));
+  updateCamera();
+});
+canvas.addEventListener('wheel',e=>{
+  e.preventDefault();
+  camDist=Math.max(3,Math.min(30,camDist+e.deltaY*0.01));
+  updateCamera();
+},{passive:false});
+
+function resetView(m){
+  camTarget.set(0,m.wallHeight*0.5,0);
+  camDist=Math.max(m.width,m.length)*1.9+3;
+  camTheta=0.9;camPhi=1.05;
+  updateCamera();
+}
+
+// pomocná funkce: trám mezi dvěma body
+function beam(p1,p2,profW,profH,color){
+  const dir=new THREE.Vector3().subVectors(p2,p1);
+  const len=dir.length();
+  if(len<0.001)return null;
+  const geo=new THREE.BoxGeometry(profW,profH,len);
+  const mat=new THREE.MeshStandardMaterial({color,roughness:0.85,metalness:0.02,wireframe:wireMode});
+  const mesh=new THREE.Mesh(geo,mat);
+  const mid=new THREE.Vector3().addVectors(p1,p2).multiplyScalar(0.5);
+  mesh.position.copy(mid);
+  const axis=new THREE.Vector3(0,0,1);
+  mesh.quaternion.setFromUnitVectors(axis,dir.clone().normalize());
+  buildGroup.add(mesh);
+  return mesh;
+}
+
+const WOOD_POST='#b58a5c', WOOD_PLATE='#a07a4e', WOOD_RAFTER='#c79b6a', WOOD_HIP='#d1a877', WOOD_BRACE='#8a6a45', WOOD_ROOFBRACE='#6b8f6b';
+const ROOF_COLOR='#7d5a3c';
+
+// zavětrovací pásky krovu — diagonální latě po rovných (nehrázděných) rovinách střechy u obou štítů,
+// sdíleno mezi 3D vykreslením a kusovníkem, aby se čísla vždy shodovala
+function computeRoofBraces(m){
+  if(!roofBracingOn||m.geometryError)return [];
+  const {width,length,wallHeight,roofHeight,halfW,ridgeLen}=m;
+  const x0=-length/2,x1=length/2,z0=-width/2,z1=width/2;
+  const braces=[];
+  function planeSurf(eaveA,eaveB,ridgeA,ridgeB,t,s){
+    const eave=new THREE.Vector3().lerpVectors(eaveA,eaveB,t);
+    const ridge=new THREE.Vector3().lerpVectors(ridgeA,ridgeB,t);
+    return new THREE.Vector3().lerpVectors(eave,ridge,s);
+  }
+  function addPlaneBraces(eaveA,eaveB,ridgeA,ridgeB){
+    const t1=0.12,t2=0.4;
+    braces.push([planeSurf(eaveA,eaveB,ridgeA,ridgeB,t1,0.08),planeSurf(eaveA,eaveB,ridgeA,ridgeB,t2,0.92)]);
+    braces.push([planeSurf(eaveA,eaveB,ridgeA,ridgeB,1-t1,0.08),planeSurf(eaveA,eaveB,ridgeA,ridgeB,1-t2,0.92)]);
+  }
+  if(m.isPultova){
+    addPlaneBraces(
+      new THREE.Vector3(x0,wallHeight,z0),new THREE.Vector3(x1,wallHeight,z0),
+      new THREE.Vector3(x0,wallHeight+roofHeight,z1),new THREE.Vector3(x1,wallHeight+roofHeight,z1)
+    );
+  }else if(shape==='sedlova'){
+    const ridgeY=wallHeight+roofHeight;
+    addPlaneBraces(new THREE.Vector3(x0,wallHeight,z0),new THREE.Vector3(x1,wallHeight,z0),new THREE.Vector3(x0,ridgeY,0),new THREE.Vector3(x1,ridgeY,0));
+    addPlaneBraces(new THREE.Vector3(x0,wallHeight,z1),new THREE.Vector3(x1,wallHeight,z1),new THREE.Vector3(x0,ridgeY,0),new THREE.Vector3(x1,ridgeY,0));
+  }else if(shape==='valbova'&&ridgeLen>0){
+    const ridgeY=wallHeight+roofHeight;
+    const rx0=x0+halfW, rx1=x1-halfW;
+    addPlaneBraces(new THREE.Vector3(rx0,wallHeight,z0),new THREE.Vector3(rx1,wallHeight,z0),new THREE.Vector3(rx0,ridgeY,0),new THREE.Vector3(rx1,ridgeY,0));
+    addPlaneBraces(new THREE.Vector3(rx0,wallHeight,z1),new THREE.Vector3(rx1,wallHeight,z1),new THREE.Vector3(rx0,ridgeY,0),new THREE.Vector3(rx1,ridgeY,0));
+  }
+  // stanová: vynecháno — jehlanový krov je samonosně ztužený sbíhajícími se nárožními krokvemi
+  return braces;
+}
+
+// rozmístění sloupků podél stěny (0..edgeLen), s vynecháním otvorů a přidáním rámových sloupků po jejich stranách
+function studLayout(edgeLen,spacing,wallOpenings){
+  const n=Math.max(1,Math.floor(edgeLen/spacing));
+  let positions=[];
+  for(let i=0;i<=n;i++)positions.push(edgeLen*i/n);
+  positions=positions.filter(p=>!wallOpenings.some(o=>p>o.pos+0.02&&p<o.pos+o.width-0.02));
+  wallOpenings.forEach(o=>{
+    [o.pos,o.pos+o.width].forEach(jp=>{
+      if(!positions.some(p=>Math.abs(p-jp)<0.05))positions.push(jp);
+    });
+  });
+  return positions.sort((a,b)=>a-b);
+}
+
+// bod na hraně a→b v parametrické vzdálenosti d (0..edgeLen) s vlastní výškou y
+function edgePoint(a,b,edgeLen,d,y){
+  const t=edgeLen>0?d/edgeLen:0;
+  const p=new THREE.Vector3().lerpVectors(a,b,t);
+  return new THREE.Vector3(p.x,y,p.z);
+}
+
+// prodlouží bod "bearing" dál od "far" (hřeben/vrchol) o vzdálenost dist ve stejné přímce (přesah krokve)
+function extendPast(bearing,far,dist){
+  if(dist<=0)return bearing.clone();
+  const dir=new THREE.Vector3().subVectors(bearing,far).normalize();
+  return new THREE.Vector3().addVectors(bearing,dir.multiplyScalar(dist));
+}
+
+function buildScene(m){
+  while(buildGroup.children.length){
+    const child=buildGroup.children[0];
+    buildGroup.remove(child);
+    if(child.geometry)child.geometry.dispose();
+    if(child.material)child.material.dispose();
+  }
+
+  const {width,length,wallHeight,studProfile,rW,rH,halfW,isPultova,roofHeight,overhang,ridgeLen,hipLen,hipLenOverhang,geometryError}=m;
+  const x0=-length/2, x1=length/2, z0=-width/2, z1=width/2;
+
+  // podlaha
+  const floorGeo=new THREE.BoxGeometry(length,0.08,width);
+  const floorMat=new THREE.MeshStandardMaterial({color:'#5b4632',wireframe:wireMode});
+  const floor=new THREE.Mesh(floorGeo,floorMat);
+  floor.position.set(0,-0.04,0);
+  buildGroup.add(floor);
+
+  const c00=new THREE.Vector3(x0,0,z0), c10=new THREE.Vector3(x1,0,z0), c11=new THREE.Vector3(x1,0,z1), c01=new THREE.Vector3(x0,0,z1);
+  const walls=[
+    {id:'z0',a:c00,b:c10,len:length},
+    {id:'z1',a:c01,b:c11,len:length},
+    {id:'x0',a:c00,b:c01,len:width},
+    {id:'x1',a:c10,b:c11,len:width},
+  ];
+  const openingsByWall={};
+  walls.forEach(w=>openingsByWall[w.id]=validOpenings.filter(o=>o.wall===w.id));
+
+  // sloupky po obvodu (s vynecháním otvorů a rámovými sloupky po stranách)
+  walls.forEach(w=>{
+    const ops=openingsByWall[w.id];
+    studLayout(w.len,m.studSpacing,ops).forEach(pos=>{
+      const p0=edgePoint(w.a,w.b,w.len,pos,0);
+      const p1=edgePoint(w.a,w.b,w.len,pos,wallHeight);
+      beam(p0,p1,studProfile,studProfile,WOOD_POST);
+    });
+    // nadpraží a parapety otvorů
+    ops.forEach(o=>{
+      const headerY=o.sill+o.height;
+      const jL=edgePoint(w.a,w.b,w.len,o.pos,headerY);
+      const jR=edgePoint(w.a,w.b,w.len,o.pos+o.width,headerY);
+      beam(jL,jR,studProfile,studProfile,WOOD_PLATE);
+      if(o.sill>0){
+        const sL=edgePoint(w.a,w.b,w.len,o.pos,o.sill);
+        const sR=edgePoint(w.a,w.b,w.len,o.pos+o.width,o.sill);
+        beam(sL,sR,studProfile,studProfile,WOOD_PLATE);
+      }
+    });
+    // diagonální ztužidlo (jen na stěnách bez otvoru, zjednodušeně přes celou úhlopříčku)
+    if(bracingOn&&!ops.length){
+      const braceA=edgePoint(w.a,w.b,w.len,w.len*0.08,0.05);
+      const braceB=edgePoint(w.a,w.b,w.len,Math.min(w.len*0.92,w.len-0.1),wallHeight-0.05);
+      beam(braceA,braceB,0.04,0.02,WOOD_BRACE);
+    }
+  });
+
+  // pozednice (horní rám) + práh (dolní rám)
+  [0,wallHeight].forEach(y=>{
+    const p00=new THREE.Vector3(x0,y,z0), p10=new THREE.Vector3(x1,y,z0), p11=new THREE.Vector3(x1,y,z1), p01=new THREE.Vector3(x0,y,z1);
+    beam(p00,p10,studProfile,studProfile,WOOD_PLATE);
+    beam(p10,p11,studProfile,studProfile,WOOD_PLATE);
+    beam(p11,p01,studProfile,studProfile,WOOD_PLATE);
+    beam(p01,p00,studProfile,studProfile,WOOD_PLATE);
+  });
+
+  if(geometryError){return;}
+
+  // krokve + hřeben podle tvaru (krokve zahrnují přesah — prodloužené za pozednici)
+  if(isPultova){
+    const n=Math.max(1,Math.floor(length/m.rafterSpacing));
+    for(let i=0;i<=n;i++){
+      const x=x0+(length*i/n);
+      const low=new THREE.Vector3(x,wallHeight,z0), high=new THREE.Vector3(x,wallHeight+roofHeight,z1);
+      const lowTail=extendPast(low,high,overhang), highTail=extendPast(high,low,overhang);
+      beam(lowTail,highTail,rW,rH,WOOD_RAFTER);
+    }
+  }else if(shape==='sedlova'){
+    const n=Math.max(1,Math.floor(length/m.rafterSpacing));
+    const ridgeY=wallHeight+roofHeight;
+    for(let i=0;i<=n;i++){
+      const x=x0+(length*i/n);
+      const ridgePt=new THREE.Vector3(x,ridgeY,0);
+      const eaveA=new THREE.Vector3(x,wallHeight,z0), eaveB=new THREE.Vector3(x,wallHeight,z1);
+      beam(extendPast(eaveA,ridgePt,overhang),ridgePt,rW,rH,WOOD_RAFTER);
+      beam(extendPast(eaveB,ridgePt,overhang),ridgePt,rW,rH,WOOD_RAFTER);
+    }
+    beam(new THREE.Vector3(x0,ridgeY,0),new THREE.Vector3(x1,ridgeY,0),rW,rH,WOOD_PLATE);
+  }else if(shape==='valbova'){
+    const ridgeY=wallHeight+roofHeight;
+    const rx0=x0+halfW, rx1=x1-halfW;
+    // hřeben
+    beam(new THREE.Vector3(rx0,ridgeY,0),new THREE.Vector3(rx1,ridgeY,0),rW,rH,WOOD_PLATE);
+    // nárožní krokve (4×, s přesahem)
+    const hipDefs=[
+      [new THREE.Vector3(x0,wallHeight,z0),new THREE.Vector3(rx0,ridgeY,0)],
+      [new THREE.Vector3(x0,wallHeight,z1),new THREE.Vector3(rx0,ridgeY,0)],
+      [new THREE.Vector3(x1,wallHeight,z0),new THREE.Vector3(rx1,ridgeY,0)],
+      [new THREE.Vector3(x1,wallHeight,z1),new THREE.Vector3(rx1,ridgeY,0)],
+    ];
+    hipDefs.forEach(([corner,ridgeEnd])=>beam(extendPast(corner,ridgeEnd,overhang*Math.SQRT2),ridgeEnd,rW,rH,WOOD_HIP));
+    // rovné krokve podél hřebene
+    if(ridgeLen>0){
+      const n=Math.max(1,Math.floor(ridgeLen/m.rafterSpacing));
+      for(let i=0;i<=n;i++){
+        const x=rx0+(ridgeLen*i/n);
+        const ridgePt=new THREE.Vector3(x,ridgeY,0);
+        const eaveA=new THREE.Vector3(x,wallHeight,z0), eaveB=new THREE.Vector3(x,wallHeight,z1);
+        beam(extendPast(eaveA,ridgePt,overhang),ridgePt,rW,rH,WOOD_RAFTER);
+        beam(extendPast(eaveB,ridgePt,overhang),ridgePt,rW,rH,WOOD_RAFTER);
+      }
+    }
+  }else if(shape==='stanova'){
+    const apexY=wallHeight+roofHeight;
+    const apex=new THREE.Vector3(0,apexY,0);
+    [[x0,z0],[x0,z1],[x1,z0],[x1,z1]].forEach(([cx,cz])=>{
+      const corner=new THREE.Vector3(cx,wallHeight,cz);
+      beam(extendPast(corner,apex,overhang*Math.SQRT2),apex,rW,rH,WOOD_HIP);
+    });
+  }
+
+  computeRoofBraces(m).forEach(([p1,p2])=>beam(p1,p2,0.04,0.02,WOOD_ROOFBRACE));
+
+  if(roofSolid)addRoofPlanes(m,x0,x1,z0,z1);
+}
+
+function addRoofPlanes(m,x0,x1,z0,z1){
+  const {wallHeight,roofHeight,halfW,overhang}=m;
+  const mat=new THREE.MeshStandardMaterial({color:ROOF_COLOR,side:THREE.DoubleSide,transparent:true,opacity:0.88,roughness:0.9});
+  function quad(p1,p2,p3,p4){
+    const geo=new THREE.BufferGeometry();
+    const verts=new Float32Array([...p1,...p2,...p3,  ...p1,...p3,...p4]);
+    geo.setAttribute('position',new THREE.BufferAttribute(verts,3));
+    geo.computeVertexNormals();
+    buildGroup.add(new THREE.Mesh(geo,mat));
+  }
+  function tri(p1,p2,p3){
+    const geo=new THREE.BufferGeometry();
+    const verts=new Float32Array([...p1,...p2,...p3]);
+    geo.setAttribute('position',new THREE.BufferAttribute(verts,3));
+    geo.computeVertexNormals();
+    buildGroup.add(new THREE.Mesh(geo,mat));
+  }
+  const ep=(p,far)=>{const v=extendPast(new THREE.Vector3(...p),new THREE.Vector3(...far),overhang);return [v.x,v.y,v.z];};
+  const epH=(p,far)=>{const v=extendPast(new THREE.Vector3(...p),new THREE.Vector3(...far),overhang*Math.SQRT2);return [v.x,v.y,v.z];};
+
+  if(shape==='pultova'){
+    const low0=[x0,wallHeight,z0], low1=[x1,wallHeight,z0];
+    const high0=[x0,wallHeight+roofHeight,z1], high1=[x1,wallHeight+roofHeight,z1];
+    quad(ep(low0,high0),ep(low1,high1),ep(high1,low1),ep(high0,low0));
+  }else if(shape==='sedlova'){
+    const ridgeY=wallHeight+roofHeight;
+    const r0=[x0,ridgeY,0], r1=[x1,ridgeY,0];
+    quad(ep([x0,wallHeight,z0],r0),ep([x1,wallHeight,z0],r1),r1,r0);
+    quad(ep([x0,wallHeight,z1],r0),ep([x1,wallHeight,z1],r1),r1,r0);
+  }else if(shape==='valbova'){
+    const ridgeY=wallHeight+roofHeight;
+    const rx0=x0+halfW, rx1=x1-halfW;
+    const rA=[rx0,ridgeY,0], rB=[rx1,ridgeY,0];
+    quad(ep([x0,wallHeight,z0],rA),ep([x1,wallHeight,z0],rB),rB,rA);
+    quad(ep([x0,wallHeight,z1],rA),ep([x1,wallHeight,z1],rB),rB,rA);
+    tri(epH([x0,wallHeight,z0],rA),epH([x0,wallHeight,z1],rA),rA);
+    tri(epH([x1,wallHeight,z0],rB),epH([x1,wallHeight,z1],rB),rB);
+  }else if(shape==='stanova'){
+    const apex=[0,wallHeight+roofHeight,0];
+    tri(epH([x0,wallHeight,z0],apex),epH([x1,wallHeight,z0],apex),apex);
+    tri(epH([x1,wallHeight,z0],apex),epH([x1,wallHeight,z1],apex),apex);
+    tri(epH([x1,wallHeight,z1],apex),epH([x0,wallHeight,z1],apex),apex);
+    tri(epH([x0,wallHeight,z1],apex),epH([x0,wallHeight,z0],apex),apex);
+  }
+}
+
+function animate(){
+  requestAnimationFrame(animate);
+  resizeRenderer();
+  if(autoRotate){camTheta+=0.004;updateCamera();}
+  renderer.render(scene,camera);
+}
+animate();
+
+// ---------- Toolbar ----------
+$('btnWire').onclick=()=>{wireMode=!wireMode;$('btnWire').classList.toggle('active',wireMode);rebuildAll(false);};
+$('btnRoofSolid').onclick=()=>{roofSolid=!roofSolid;$('btnRoofSolid').classList.toggle('active',roofSolid);rebuildAll(false);};
+$('btnBracing').onclick=()=>{bracingOn=!bracingOn;$('btnBracing').classList.toggle('active',bracingOn);rebuildAll(false);};
+$('btnRoofBracing').onclick=()=>{roofBracingOn=!roofBracingOn;$('btnRoofBracing').classList.toggle('active',roofBracingOn);rebuildAll(false);};
+$('btnAutoRotate').onclick=()=>{autoRotate=!autoRotate;$('btnAutoRotate').classList.toggle('active',autoRotate);};
+$('btnReset').onclick=()=>{const m=computeModel();resetView(m);};
+
+// ---------- Kusovník ----------
+function escHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+function braceLength(edgeLen,wallHeight){
+  const dStart=edgeLen*0.08, dEnd=Math.min(edgeLen*0.92,edgeLen-0.1);
+  return Math.hypot(Math.max(0,dEnd-dStart),Math.max(0,wallHeight-0.1));
+}
+
+function buildBom(m){
+  const rows=[];
+  const {width,length,wallHeight,studSpacing,rafterSpacing,studProfile,rW,rH,halfW,isPultova,rafterLenOverhang,ridgeLen,hipLenOverhang,geometryError}=m;
+  const profStud=`${(studProfile*1000).toFixed(0)}×${(studProfile*1000).toFixed(0)} mm`;
+  const profRafter=`${(rW*1000).toFixed(0)}×${(rH*1000).toFixed(0)} mm`;
+
+  function countAlong(len,spacing){return Math.max(1,Math.floor(len/spacing))+1;}
+
+  const wallsDef=[{id:'z0',len:length},{id:'z1',len:length},{id:'x0',len:width},{id:'x1',len:width}];
+  let totalPositions=0, headerSillLen=0, openingsArea=0, bracingTotalLen=0, bracingCount=0;
+  wallsDef.forEach(w=>{
+    const ops=validOpenings.filter(o=>o.wall===w.id);
+    totalPositions+=studLayout(w.len,studSpacing,ops).length;
+    ops.forEach(o=>{
+      headerSillLen+=o.width;          // nadpraží
+      if(o.sill>0)headerSillLen+=o.width; // + parapet u okna
+      openingsArea+=o.width*o.height;
+    });
+    if(!ops.length){
+      bracingTotalLen+=braceLength(w.len,wallHeight);
+      bracingCount++;
+    }
+  });
+  const distinctStuds=Math.max(0,totalPositions-4); // rohy se v součtu přes 4 stěny počítají 2×
+
+  rows.push(['Rohové sloupky',profStud,wallHeight,4]);
+  rows.push(['Stěnové sloupky (mezilehlé + rámové u otvorů)',profStud,wallHeight,Math.max(0,distinctStuds-4)]);
+  rows.push(['Pozednice + práh (obvodový rám, 2×)',profStud,'různá',null,2*2*(length+width)]);
+  if(validOpenings.length){
+    rows.push(['Nadpraží a parapety otvorů',profStud,'různá',null,headerSillLen]);
+  }
+  if(bracingOn&&bracingCount){
+    rows.push(['Diagonální ztužidla (zjednodušeně)','40×20 mm (lať)','různá',bracingCount,bracingTotalLen]);
+  }
+
+  const wallAreaBase=Math.max(0,2*(length+width)*wallHeight-openingsArea);
+  if(geometryError){
+    return {rows,totalTimberM:null,roofArea:null,wallArea:wallAreaBase,geometryError};
+  }
+
+  let rafterCount=0, rafterTotalLen=0, hipCount=0;
+  if(isPultova){
+    rafterCount=countAlong(length,rafterSpacing);
+    rafterTotalLen=rafterCount*rafterLenOverhang;
+    rows.push(['Krokve (jedna plocha, vč. přesahu)',profRafter,rafterLenOverhang,rafterCount]);
+  }else if(shape==='sedlova'){
+    rafterCount=2*countAlong(length,rafterSpacing);
+    rafterTotalLen=rafterCount*rafterLenOverhang;
+    rows.push(['Krokve (2 strany, vč. přesahu)',profRafter,rafterLenOverhang,rafterCount]);
+    rows.push(['Hřebenová deska/vaznice',profStud,ridgeLen,1]);
+  }else if(shape==='valbova'){
+    const straight=Math.max(0,ridgeLen);
+    rafterCount=straight>0?2*countAlong(straight,rafterSpacing):0;
+    rafterTotalLen=rafterCount*rafterLenOverhang;
+    hipCount=4;
+    rows.push(['Krokve (rovná část, vč. přesahu)',profRafter,rafterLenOverhang,rafterCount]);
+    rows.push(['Nárožní krokve (vč. přesahu)',profRafter,hipLenOverhang,hipCount]);
+    rows.push(['Hřebenová deska/vaznice',profStud,ridgeLen,1]);
+  }else if(shape==='stanova'){
+    hipCount=4;
+    rows.push(['Nárožní krokve (vč. přesahu)',profRafter,hipLenOverhang,hipCount]);
+  }
+
+  // plochy pro bednění a krytinu (počítáno vč. přesahu)
+  let roofArea;
+  if(isPultova)roofArea=rafterLenOverhang*length;
+  else if(shape==='sedlova')roofArea=2*rafterLenOverhang*length;
+  else roofArea=rafterLenOverhang*(length+Math.max(0,ridgeLen))+rafterLenOverhang*width;
+
+  const wallArea=wallAreaBase;
+  const boardArea=3.125; // standardní OSB deska 2,5×1,25 m
+  const roofBoards=Math.ceil(roofArea/boardArea);
+  const wallBoards=Math.ceil(wallArea/boardArea);
+  rows.push(['Bednění střechy (OSB, 2,5×1,25 m)','deska',null,roofBoards]);
+  rows.push(['Opláštění stěn (OSB, 2,5×1,25 m, po odečtení otvorů)','deska',null,wallBoards]);
+
+  const roofBraces=computeRoofBraces(m);
+  const roofBraceLen=roofBraces.reduce((sum,[p1,p2])=>sum+p1.distanceTo(p2),0);
+  if(roofBraces.length){
+    rows.push(['Zavětrovací pásky krovu','40×20 mm (lať)','různá',roofBraces.length,roofBraceLen]);
+  }
+
+  const totalTimberM=(4*wallHeight)+(Math.max(0,distinctStuds-4)*wallHeight)+(2*2*(length+width))
+    +headerSillLen+(bracingOn?bracingTotalLen:0)+roofBraceLen
+    +rafterTotalLen+(hipCount*(hipLenOverhang||0))+(ridgeLen>0?ridgeLen:0);
+
+  return {rows,totalTimberM,roofArea,wallArea,geometryError:null};
+}
+
+function renderBom(m){
+  const {rows,totalTimberM,roofArea,wallArea,geometryError}=buildBom(m);
+  $('bomBody').innerHTML=rows.map(r=>{
+    const [name,profile,lenEach,count,customTotal]=r;
+    const total=customTotal!=null?customTotal:(lenEach!=null&&count!=null?(lenEach*count):null);
+    return `<tr>
+      <td>${escHtml(name)}</td>
+      <td>${escHtml(profile)}</td>
+      <td>${lenEach!=null&&typeof lenEach==='number'?lenEach.toFixed(2)+' m':(lenEach||'–')}</td>
+      <td>${count!=null?count+'×':'–'}</td>
+      <td>${total!=null?total.toFixed(1)+(String(profile).includes('deska')?' ks':' m'):'–'}</td>
+    </tr>`;
+  }).join('');
+
+  $('warnBox').innerHTML=geometryError?`<div class="warn">⚠️ ${escHtml(geometryError)}</div>`:'';
+
+  $('statsBox').innerHTML=`
+    <div class="stat"><div class="v">${geometryError?'–':totalTimberM.toFixed(0)+' m'}</div><div class="l">Řezivo celkem (běžné m)</div></div>
+    <div class="stat"><div class="v">${geometryError?'–':roofArea.toFixed(1)+' m²'}</div><div class="l">Plocha střechy</div></div>
+    <div class="stat"><div class="v">${wallArea!=null?wallArea.toFixed(1)+' m²':'–'}</div><div class="l">Plocha stěn</div></div>
+    <div class="stat"><div class="v">${(m.width*m.length).toFixed(1)} m²</div><div class="l">Zastavěná plocha</div></div>
+  `;
+}
+
+$('btnCsv').onclick=()=>{
+  const m=computeModel();
+  const {rows}=buildBom(m);
+  const csvRows=[['Prvek','Profil','Délka ks (m)','Počet','Celková délka/počet']];
+  rows.forEach(([name,profile,lenEach,count,customTotal])=>{
+    const total=customTotal!=null?customTotal:(lenEach!=null&&count!=null?(lenEach*count):'');
+    csvRows.push([name,profile,typeof lenEach==='number'?lenEach.toFixed(2):(lenEach||''),count||'',typeof total==='number'?total.toFixed(1):'']);
+  });
+  const csv=csvRows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(';')).join('\n');
+  const blob=new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download='kusovnik.csv';a.click();
+  URL.revokeObjectURL(url);
+};
+$('btnPrint').onclick=()=>window.print();
+
+// ---------- Agenda / postup výstavby ----------
+const STEPS=[
+  'Vytyčení stavby a příprava terénu',
+  'Základové patky / betonové bloky',
+  'Podkladní rošt a podlaha',
+  'Sestavení a osazení rohových sloupků',
+  'Osazení mezilehlých sloupků a ztužení stěn',
+  'Pozednice (horní obvodový rám)',
+  'Krokve a hřeben / nárožní krokve',
+  'Laťování a bednění střechy',
+  'Krytina',
+  'Opláštění stěn',
+  'Okna, dveře, impregnace/nátěr',
+  'Okapy a dokončovací práce',
+];
+const CHECK_KEY='wooden_shed_checklist_v1';
+function loadChecklist(){
+  let done={};
+  try{done=JSON.parse(localStorage.getItem(CHECK_KEY))||{};}catch(e){}
+  $('checklist').innerHTML=STEPS.map((s,i)=>`
+    <label class="${done[i]?'done':''}" data-i="${i}">
+      <input type="checkbox" ${done[i]?'checked':''}>
+      ${i+1}. ${escHtml(s)}
+    </label>`).join('');
+  $('checklist').querySelectorAll('input').forEach(inp=>{
+    inp.onchange=()=>{
+      const label=inp.closest('label');
+      const i=label.dataset.i;
+      done[i]=inp.checked;
+      label.classList.toggle('done',inp.checked);
+      localStorage.setItem(CHECK_KEY,JSON.stringify(done));
+    };
+  });
+}
+$('btnResetChecklist').onclick=()=>{
+  if(!confirm('Vynulovat celý postup výstavby?'))return;
+  localStorage.removeItem(CHECK_KEY);
+  loadChecklist();
+};
+
+// ---------- Init / rebuild ----------
+function rebuildAll(refit){
+  const m=computeModel();
+  const {clean,warnings}=computeValidOpenings(m);
+  validOpenings=clean;
+  $('openingsWarn').innerHTML=warnings.length?`<div class="warn">⚠️ ${warnings.map(escHtml).join('<br>')}</div>`:'';
+  buildScene(m);
+  renderBom(m);
+  if(refit!==false)resetView(m);
+}
+document.querySelectorAll('#width,#length,#wallHeight,#roofAngle,#studSpacing,#rafterSpacing,#studProfile,#rafterProfile,#overhang').forEach(el=>{
+  el.addEventListener('input',()=>rebuildAll(false));
+});
+
+loadOpenings();
+renderOpeningsTable();
+loadChecklist();
+rebuildAll(true);
+</script>
+</body>
+</html>

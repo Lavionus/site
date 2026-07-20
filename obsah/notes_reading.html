@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎼 Notová osnova – čtení not</title>
+<link rel="stylesheet" href="../common.css">
+<script>
+  if (localStorage.getItem('webapp_theme') === 'light') document.documentElement.dataset.theme = 'light';
+</script>
+<style>
+body{background:var(--bg-deep);padding:24px clamp(14px,3vw,40px);min-height:100vh}
+.container{max-width:640px;margin:0 auto;text-align:center}
+h1{font-size:1.4rem;margin-bottom:4px}
+.sub{color:var(--text-muted);font-size:.88rem;margin-bottom:16px}
+.range-select{display:flex;gap:6px;justify-content:center;margin-bottom:16px;flex-wrap:wrap}
+.range-select button{background:var(--bg-control);border:1px solid var(--border-strong);color:var(--text-muted);border-radius:6px;padding:7px 13px;font-size:.84rem;cursor:pointer}
+.range-select button.active{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+.staffcard{background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px}
+svg{width:100%;max-width:500px;height:auto}
+.moznosti{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-top:10px}
+.moznosti button{background:var(--bg-elevated);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:14px 6px;font-size:1.1rem;font-weight:700;cursor:pointer}
+.moznosti button:hover{border-color:var(--accent)}
+.moznosti button.ok{background:rgba(76,175,125,.2);border-color:var(--ok)}
+.moznosti button.spatne{background:rgba(224,93,93,.18);border-color:var(--danger)}
+.moznosti button:disabled{cursor:default}
+.stav{display:flex;justify-content:space-between;color:var(--text-muted);font-size:.9rem;margin-top:12px}
+.serie{color:var(--warn)}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>🎼 Notová osnova – čtení not</h1>
+  <p class="sub">Trénink rychlého rozpoznávání not v houslovém klíči.</p>
+
+  <div class="range-select" id="rangeSelect">
+    <button data-r="easy" class="active">🟢 Ve žlábku (c1–c2)</button>
+    <button data-r="full">🔵 Celý rozsah (c1–g2)</button>
+  </div>
+
+  <div class="staffcard">
+    <svg id="svg" viewBox="0 0 500 180"></svg>
+  </div>
+
+  <div class="moznosti" id="moznosti"></div>
+  <div class="stav">
+    <span class="serie" id="serie"></span>
+    <span id="skore">0 / 0</span>
+  </div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+
+// step: 0 = c1 (ledger line below staff), each +1 = jedna nota výš. Osnova: řádky na krocích 2,4,6,8,10 (e1,g1,h1,d2,f2)
+const NOTES=[
+  {step:0,name:'c1'},{step:1,name:'d1'},{step:2,name:'e1'},{step:3,name:'f1'},
+  {step:4,name:'g1'},{step:5,name:'a1'},{step:6,name:'h1'},{step:7,name:'c2'},
+  {step:8,name:'d2'},{step:9,name:'e2'},{step:10,name:'f2'},{step:11,name:'g2'},
+];
+const NAMES=['c','d','e','f','g','a','h'];
+
+let range='easy';
+let current=null;
+let spravne=0, celkem=0, serie=0;
+
+function poolForRange(){
+  if(range==='easy')return NOTES.filter(n=>n.step>=2&&n.step<=8); // e1..d2, běžný rozsah bez ledger
+  return NOTES;
+}
+
+function drawStaff(note){
+  const svg=$('svg');
+  const lineSpacing=16;
+  const baseY=130; // y bottom line (e1, step2)
+  const stepToY=s=>baseY-(s-2)*(lineSpacing/2);
+  let html='';
+  // 5 linek osnovy
+  for(let i=0;i<5;i++){
+    const y=baseY-i*lineSpacing;
+    html+=`<line x1="60" y1="${y}" x2="460" y2="${y}" stroke="var(--border-strong)" stroke-width="1.5"/>`;
+  }
+  // houslový klíč (přibližně)
+  html+=`<text x="65" y="${baseY+6}" font-size="80" fill="var(--text)">𝄞</text>`;
+
+  const noteY=stepToY(note.step);
+  const noteX=280;
+  // pomocné linky (ledger)
+  for(let s=0;s<=note.step;s+=2){
+    if(s<2){ // pod osnovou
+      html+=`<line x1="${noteX-18}" y1="${stepToY(s)}" x2="${noteX+18}" y2="${stepToY(s)}" stroke="var(--text-muted)" stroke-width="1.5"/>`;
+    }
+  }
+  for(let s=12;s>=note.step;s-=2){
+    if(s>10){ // nad osnovou
+      html+=`<line x1="${noteX-18}" y1="${stepToY(s)}" x2="${noteX+18}" y2="${stepToY(s)}" stroke="var(--text-muted)" stroke-width="1.5"/>`;
+    }
+  }
+  // nota (elipsa) + nožička
+  html+=`<ellipse cx="${noteX}" cy="${noteY}" rx="11" ry="8" fill="var(--accent)" transform="rotate(-18 ${noteX} ${noteY})"/>`;
+  const stemUp=note.step<6;
+  const stemX=stemUp?noteX+10:noteX-10;
+  const stemY2=stemUp?noteY-55:noteY+55;
+  html+=`<line x1="${stemX}" y1="${noteY}" x2="${stemX}" y2="${stemY2}" stroke="var(--accent)" stroke-width="2"/>`;
+
+  svg.innerHTML=html;
+}
+
+function novaUloha(){
+  const pool=poolForRange();
+  current=pool[Math.floor(Math.random()*pool.length)];
+  drawStaff(current);
+  const letter=current.name[0];
+  let options=new Set([letter]);
+  while(options.size<4)options.add(NAMES[Math.floor(Math.random()*NAMES.length)]);
+  const opts=[...options].sort(()=>Math.random()-0.5);
+  $('moznosti').innerHTML=opts.map(o=>`<button data-o="${o}">${o}</button>`).join('');
+  $('moznosti').querySelectorAll('button').forEach(b=>b.onclick=()=>vyhodnot(b,letter));
+}
+
+function vyhodnot(tlacitko,spravnaOdp){
+  $('moznosti').querySelectorAll('button').forEach(b=>{
+    b.disabled=true;
+    if(b.dataset.o===spravnaOdp)b.classList.add('ok');
+  });
+  celkem++;
+  if(tlacitko.dataset.o===spravnaOdp){spravne++;serie++;}
+  else{tlacitko.classList.add('spatne');serie=0;}
+  $('serie').textContent=serie>=3?'🔥 série '+serie:'';
+  $('skore').textContent=spravne+' / '+celkem;
+  setTimeout(novaUloha,900);
+}
+
+document.querySelectorAll('#rangeSelect button').forEach(b=>{
+  b.onclick=()=>{
+    document.querySelectorAll('#rangeSelect button').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    range=b.dataset.r;
+    novaUloha();
+  };
+});
+
+novaUloha();
+</script>
+</body>
+</html>

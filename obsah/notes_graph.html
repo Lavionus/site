@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🕸️ Zettelkasten – propojené poznámky</title>
+<link rel="stylesheet" href="../common.css">
+<script>
+  if (localStorage.getItem('webapp_theme') === 'light') document.documentElement.dataset.theme = 'light';
+</script>
+<style>
+body{height:100vh;overflow:hidden;display:flex;flex-direction:column}
+.toolbar{background:var(--bg-elevated);border-bottom:1px solid var(--border);padding:8px 14px;display:flex;align-items:center;gap:10px;flex-shrink:0}
+.toolbar h1{font-size:.95rem;color:var(--accent);font-weight:700;margin-right:8px;white-space:nowrap}
+.btn{background:var(--bg-control);color:var(--text);border:1px solid var(--border-strong);padding:6px 12px;border-radius:6px;cursor:pointer;font-size:.82rem}
+.btn:hover{background:var(--bg-hover)}
+.btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.search{background:var(--bg-input);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:6px 10px;font-size:.82rem;width:180px}
+.tabs{margin-left:auto;display:flex;gap:4px}
+.tab{padding:6px 12px;border-radius:6px;font-size:.82rem;cursor:pointer;background:transparent;border:1px solid transparent;color:var(--text-muted)}
+.tab.active{background:var(--accent-soft);color:var(--accent);border-color:var(--accent)}
+.main{flex:1;display:flex;overflow:hidden}
+.sidebar{width:260px;border-right:1px solid var(--border);overflow-y:auto;background:var(--bg-panel);flex-shrink:0}
+.note-item{padding:10px 14px;border-bottom:1px solid var(--border);cursor:pointer}
+.note-item:hover{background:var(--bg-hover)}
+.note-item.active{background:var(--accent-soft);border-left:3px solid var(--accent)}
+.note-item .t{font-weight:600;font-size:.88rem;margin-bottom:3px}
+.note-item .tags{font-size:.72rem;color:var(--text-faint)}
+.empty{padding:20px;color:var(--text-faint);font-size:.85rem;text-align:center}
+.editor{flex:1;padding:20px;overflow-y:auto;display:none}
+.editor.active{display:block}
+.editor input.title{width:100%;font-size:1.3rem;font-weight:700;background:transparent;border:none;color:var(--text);margin-bottom:8px;outline:none}
+.editor input.tags{width:100%;background:var(--bg-input);border:1px solid var(--border);color:var(--text-muted);border-radius:6px;padding:6px 10px;font-size:.8rem;margin-bottom:12px}
+.editor textarea{width:100%;min-height:280px;background:var(--bg-input);border:1px solid var(--border);border-radius:8px;color:var(--text);padding:14px;font-size:.95rem;resize:vertical;line-height:1.6;font-family:inherit}
+.hint{font-size:.76rem;color:var(--text-faint);margin-top:6px}
+.preview{margin-top:16px;background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;padding:14px}
+.preview h2{font-size:.8rem;color:var(--accent);margin-bottom:8px}
+.preview .body{white-space:pre-wrap;line-height:1.6;font-size:.92rem}
+.wikilink{color:var(--accent);cursor:pointer;text-decoration:underline}
+.wikilink.missing{color:var(--warn);text-decoration:underline dashed}
+.backlinks{margin-top:14px}
+.backlinks a{display:block;color:var(--accent);font-size:.85rem;padding:4px 0;cursor:pointer}
+.graph-wrap{flex:1;display:none;overflow:hidden;position:relative}
+.graph-wrap.active{display:block}
+svg{width:100%;height:100%;cursor:grab}
+svg:active{cursor:grabbing}
+.gnode circle{fill:var(--bg-elevated);stroke:var(--accent);stroke-width:2px;cursor:pointer}
+.gnode circle:hover{fill:var(--accent-soft)}
+.gnode text{fill:var(--text);font-size:11px;font-family:var(--font);pointer-events:none}
+.gedge{stroke:var(--border-strong);stroke-width:1.5px}
+</style>
+</head>
+<body>
+<div class="toolbar">
+  <h1>🕸️ Zettelkasten</h1>
+  <button class="btn primary" id="btnNew">+ Nová poznámka</button>
+  <input class="search" id="search" placeholder="🔍 Hledat…">
+  <button class="btn" id="btnDelete">🗑️ Smazat</button>
+  <div class="tabs">
+    <button class="tab active" data-tab="editor">📝 Editor</button>
+    <button class="tab" data-tab="graph">🕸️ Graf</button>
+  </div>
+</div>
+<div class="main">
+  <div class="sidebar" id="sidebar"></div>
+  <div class="editor" id="editor">
+    <input class="title" id="title" placeholder="Název poznámky…">
+    <input class="tags" id="tags" placeholder="Štítky (oddělené čárkou)…">
+    <textarea id="body" placeholder="Piš text. Odkaz na jinou poznámku vytvoříš pomocí [[Název poznámky]]…"></textarea>
+    <div class="hint">Tip: napiš <code>[[Název]]</code> pro odkaz na jinou poznámku – pokud neexistuje, vytvoří se sama.</div>
+    <div class="preview">
+      <h2>Náhled s odkazy</h2>
+      <div class="body" id="previewBody"></div>
+    </div>
+    <div class="backlinks" id="backlinks"></div>
+  </div>
+  <div class="graph-wrap" id="graphWrap">
+    <svg id="svg"></svg>
+  </div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const STORAGE_KEY='zettel_notes_v1';
+let notes=JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]');
+let activeId=null;
+
+function save(){localStorage.setItem(STORAGE_KEY,JSON.stringify(notes));}
+function escHtml(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function slug(s){return (s||'').trim().toLowerCase();}
+
+function findByTitle(title){return notes.find(n=>slug(n.title)===slug(title));}
+
+function newNote(title){
+  const n={id:'n'+Date.now()+Math.random().toString(36).slice(2,6),title:title||'Nová poznámka',tags:'',body:''};
+  notes.push(n);
+  save();
+  return n;
+}
+
+function renderSidebar(){
+  const q=slug($('search').value);
+  const list=notes.filter(n=>!q||slug(n.title).includes(q)||slug(n.tags).includes(q)||slug(n.body).includes(q))
+    .sort((a,b)=>a.title.localeCompare(b.title,'cs'));
+  $('sidebar').innerHTML=list.length?list.map(n=>`
+    <div class="note-item ${n.id===activeId?'active':''}" data-id="${n.id}">
+      <div class="t">${escHtml(n.title)||'(bez názvu)'}</div>
+      <div class="tags">${escHtml(n.tags)}</div>
+    </div>`).join(''):'<div class="empty">Zatím žádné poznámky.<br>Klikni na „+ Nová poznámka".</div>';
+  $('sidebar').querySelectorAll('.note-item').forEach(el=>{
+    el.onclick=()=>openNote(el.dataset.id);
+  });
+}
+
+function parseLinks(body){
+  const m=(body||'').match(/\[\[([^\]]+)\]\]/g)||[];
+  return [...new Set(m.map(x=>x.slice(2,-2).trim()))];
+}
+
+function renderPreview(n){
+  const html=escHtml(n.body).replace(/\[\[([^\]]+)\]\]/g,(m,t)=>{
+    const exists=findByTitle(t);
+    return `<span class="wikilink ${exists?'':'missing'}" data-title="${escHtml(t)}">${escHtml(t)}</span>`;
+  });
+  $('previewBody').innerHTML=html||'<span style="color:var(--text-faint)">Prázdné.</span>';
+  $('previewBody').querySelectorAll('.wikilink').forEach(el=>{
+    el.onclick=()=>{
+      const t=el.dataset.title;
+      let target=findByTitle(t);
+      if(!target){target=newNote(t);renderSidebar();}
+      openNote(target.id);
+    };
+  });
+  const backs=notes.filter(o=>o.id!==n.id&&parseLinks(o.body).some(t=>slug(t)===slug(n.title)));
+  $('backlinks').innerHTML=backs.length?`<h2 style="font-size:.8rem;color:var(--accent);margin-bottom:6px">🔗 Odkazuje sem (${backs.length})</h2>`+
+    backs.map(b=>`<a data-id="${b.id}">${escHtml(b.title)}</a>`).join(''):'';
+  $('backlinks').querySelectorAll('a').forEach(a=>a.onclick=()=>openNote(a.dataset.id));
+}
+
+function openNote(id){
+  activeId=id;
+  const n=notes.find(x=>x.id===id);
+  if(!n)return;
+  $('title').value=n.title;
+  $('tags').value=n.tags;
+  $('body').value=n.body;
+  renderPreview(n);
+  renderSidebar();
+}
+
+['title','tags','body'].forEach(f=>{
+  $(f).addEventListener('input',()=>{
+    const n=notes.find(x=>x.id===activeId);
+    if(!n)return;
+    n.title=$('title').value;
+    n.tags=$('tags').value;
+    n.body=$('body').value;
+    save();
+    renderPreview(n);
+    if(f==='title')renderSidebar();
+  });
+});
+
+$('btnNew').onclick=()=>{
+  const n=newNote('Nová poznámka');
+  renderSidebar();
+  openNote(n.id);
+  $('title').focus();
+  $('title').select();
+};
+
+$('btnDelete').onclick=()=>{
+  if(!activeId)return;
+  const n=notes.find(x=>x.id===activeId);
+  if(!n)return;
+  if(!confirm(`Smazat poznámku „${n.title}"?`))return;
+  notes=notes.filter(x=>x.id!==activeId);
+  activeId=null;
+  save();
+  renderSidebar();
+  $('title').value='';$('tags').value='';$('body').value='';
+  $('previewBody').innerHTML='';$('backlinks').innerHTML='';
+};
+
+$('search').addEventListener('input',renderSidebar);
+
+// --- Tabs ---
+document.querySelectorAll('.tab').forEach(tab=>{
+  tab.onclick=()=>{
+    document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+    tab.classList.add('active');
+    const which=tab.dataset.tab;
+    $('editor').classList.toggle('active',which==='editor');
+    $('graphWrap').classList.toggle('active',which==='graph');
+    if(which==='graph')renderGraph();
+  };
+});
+
+// --- Graph view ---
+function renderGraph(){
+  const svg=$('svg');
+  svg.innerHTML='';
+  const w=svg.clientWidth||800, h=svg.clientHeight||600;
+  const nodes=notes.map((n,i)=>({id:n.id,title:n.title,x:w/2+Math.cos(i/notes.length*6.28)*Math.min(w,h)*0.35,y:h/2+Math.sin(i/notes.length*6.28)*Math.min(w,h)*0.35}));
+  const idx={};nodes.forEach(n=>idx[n.id]=n);
+  const edges=[];
+  notes.forEach(n=>{
+    parseLinks(n.body).forEach(t=>{
+      const target=findByTitle(t);
+      if(target&&target.id!==n.id)edges.push({from:n.id,to:target.id});
+    });
+  });
+  const nsEdges=document.createElementNS('http://www.w3.org/2000/svg','g');
+  edges.forEach(e=>{
+    const a=idx[e.from],b=idx[e.to];
+    if(!a||!b)return;
+    const line=document.createElementNS('http://www.w3.org/2000/svg','line');
+    line.setAttribute('class','gedge');
+    line.setAttribute('x1',a.x);line.setAttribute('y1',a.y);
+    line.setAttribute('x2',b.x);line.setAttribute('y2',b.y);
+    nsEdges.appendChild(line);
+  });
+  svg.appendChild(nsEdges);
+  nodes.forEach(n=>{
+    const g=document.createElementNS('http://www.w3.org/2000/svg','g');
+    g.setAttribute('class','gnode');
+    g.setAttribute('transform',`translate(${n.x},${n.y})`);
+    const c=document.createElementNS('http://www.w3.org/2000/svg','circle');
+    c.setAttribute('r','7');
+    g.appendChild(c);
+    const t=document.createElementNS('http://www.w3.org/2000/svg','text');
+    t.setAttribute('x','11');t.setAttribute('y','4');
+    t.textContent=n.title||'(bez názvu)';
+    g.appendChild(t);
+    g.onclick=()=>{
+      document.querySelector('.tab[data-tab="editor"]').click();
+      openNote(n.id);
+    };
+    svg.appendChild(g);
+  });
+  if(!nodes.length){
+    const t=document.createElementNS('http://www.w3.org/2000/svg','text');
+    t.setAttribute('x',w/2);t.setAttribute('y',h/2);t.setAttribute('text-anchor','middle');
+    t.setAttribute('fill','var(--text-faint)');
+    t.textContent='Zatím žádné poznámky k zobrazení.';
+    svg.appendChild(t);
+  }
+}
+window.addEventListener('resize',()=>{if($('graphWrap').classList.contains('active'))renderGraph();});
+
+// --- Init ---
+renderSidebar();
+if(notes.length){openNote(notes[0].id);}
+</script>
+</body>
+</html>

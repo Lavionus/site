@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📚 Git cheatsheet</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1a1a1a;color:#e0e0e0;min-height:100vh;padding:20px}
+.container{max-width:880px;margin:0 auto}
+h1{font-size:1.6rem;margin-bottom:14px;font-weight:600;text-align:center}
+.search{width:100%;background:#404040;border:1px solid #555;border-radius:8px;color:#e0e0e0;padding:12px;font-size:1rem;margin-bottom:14px}
+.cats{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;justify-content:center}
+.cat{padding:7px 14px;background:#2a2a2a;border:1px solid #404040;border-radius:20px;cursor:pointer;font-size:.84rem}
+.cat.active{background:#6aa6fd;border-color:#6aa6fd;color:#fff}
+.item{background:#2a2a2a;border:1px solid #404040;border-radius:8px;padding:14px 18px;margin-bottom:8px}
+.item .cmd{font-family:monospace;font-size:1rem;color:#6aa6fd;font-weight:600;cursor:pointer}
+.item .cmd:hover{text-decoration:underline}
+.item .desc{font-size:.85rem;color:#888;margin-top:5px}
+.empty{text-align:center;color:#666;padding:30px}
+.copied{color:#4caf50!important}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>📚 Git cheatsheet</h1>
+  <input class="search" id="search" placeholder="🔍 Hledat (commit, branch, revert, rebase…)">
+  <div class="cats" id="cats">
+    <div class="cat active" data-c="">Vše</div>
+    <div class="cat" data-c="zaklady">Základy</div>
+    <div class="cat" data-c="vetve">Větve</div>
+    <div class="cat" data-c="historie">Historie</div>
+    <div class="cat" data-c="vzdaleny">Vzdálený repozitář</div>
+    <div class="cat" data-c="oprava">Oprava chyb</div>
+    <div class="cat" data-c="stash">Stash & clean</div>
+  </div>
+  <div id="list"></div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const CMDS=[
+  ['zaklady','git init','Založí nový git repozitář v aktuální složce.'],
+  ['zaklady','git clone <url>','Naklonuje vzdálený repozitář lokálně.'],
+  ['zaklady','git status','Zobrazí stav pracovního adresáře a stage.'],
+  ['zaklady','git add <soubor>','Přidá soubor do stage (připraví ke commitu).'],
+  ['zaklady','git add -p','Interaktivně vybere jen části změn (hunky) ke commitu.'],
+  ['zaklady','git commit -m "zpráva"','Vytvoří commit se změnami ve stage.'],
+  ['zaklady','git commit --amend','Upraví poslední commit (zprávu i obsah).'],
+  ['zaklady','git diff','Zobrazí nestagované změny.'],
+  ['zaklady','git diff --staged','Zobrazí stagované změny, které budou v dalším commitu.'],
+  ['vetve','git branch','Vypíše lokální větve.'],
+  ['vetve','git branch <jmeno>','Vytvoří novou větev.'],
+  ['vetve','git checkout <vetev>','Přepne se na existující větev.'],
+  ['vetve','git switch <vetev>','Přepne se na existující větev (novější příkaz).'],
+  ['vetve','git checkout -b <vetev>','Vytvoří novou větev a rovnou na ni přepne.'],
+  ['vetve','git merge <vetev>','Sloučí zadanou větev do aktuální.'],
+  ['vetve','git branch -d <vetev>','Smaže lokální větev (jen pokud je sloučená).'],
+  ['vetve','git branch -D <vetev>','Vynuceně smaže lokální větev.'],
+  ['historie','git log','Zobrazí historii commitů.'],
+  ['historie','git log --oneline --graph','Kompaktní graf historie s větvemi.'],
+  ['historie','git log -p <soubor>','Historie změn konkrétního souboru včetně diffů.'],
+  ['historie','git blame <soubor>','Ukáže, kdo a kdy naposledy změnil každý řádek.'],
+  ['historie','git show <commit>','Zobrazí detail konkrétního commitu.'],
+  ['vzdaleny','git remote -v','Vypíše nakonfigurované vzdálené repozitáře.'],
+  ['vzdaleny','git remote add origin <url>','Přidá vzdálený repozitář pod názvem origin.'],
+  ['vzdaleny','git fetch','Stáhne nové commity ze vzdáleného repa bez slučování.'],
+  ['vzdaleny','git pull','Stáhne a rovnou sloučí (fetch + merge).'],
+  ['vzdaleny','git pull --rebase','Stáhne změny a přeskládá lokální commity nad ně.'],
+  ['vzdaleny','git push','Odešle lokální commity do vzdáleného repozitáře.'],
+  ['vzdaleny','git push -u origin <vetev>','Odešle větev a nastaví ji jako sledovanou (upstream).'],
+  ['vzdaleny','git push --force-with-lease','Vynucený push, který selže, pokud mezitím někdo jiný pushnul.'],
+  ['oprava','git reset --soft HEAD~1','Zruší poslední commit, změny zůstanou stagované.'],
+  ['oprava','git reset --mixed HEAD~1','Zruší poslední commit i stage, změny zůstanou v pracovním adresáři.'],
+  ['oprava','git reset --hard HEAD~1','Zruší poslední commit a zahodí i změny v pracovním adresáři (nevratné!).'],
+  ['oprava','git revert <commit>','Vytvoří nový commit, který ruší efekt zadaného commitu.'],
+  ['oprava','git checkout -- <soubor>','Zahodí lokální změny v souboru (vrátí k poslednímu commitu).'],
+  ['oprava','git restore <soubor>','Zahodí lokální změny v souboru (novější příkaz).'],
+  ['oprava','git rebase -i HEAD~n','Interaktivní rebase posledních n commitů (squash, reorder, edit).'],
+  ['oprava','git cherry-pick <commit>','Aplikuje konkrétní commit z jiné větve na aktuální.'],
+  ['stash','git stash','Dočasně odloží rozdělané změny stranou.'],
+  ['stash','git stash pop','Vrátí naposledy odložené změny a smaže je ze stashe.'],
+  ['stash','git stash list','Vypíše seznam odložených stashů.'],
+  ['stash','git stash apply','Vrátí změny ze stashe, ale ponechá je i ve stashi.'],
+  ['stash','git clean -fd','Smaže needitované (untracked) soubory a složky.'],
+  ['stash','git tag <jmeno>','Vytvoří tag (např. pro verzi vydání) na aktuálním commitu.'],
+];
+
+function escHtml(s){return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+let activeCat='';
+function render(filter){
+  const q=(filter||'').toLowerCase().trim();
+  const list=CMDS.filter(([cat,cmd,desc])=>
+    (!activeCat||cat===activeCat)&&
+    (!q||cmd.toLowerCase().includes(q)||desc.toLowerCase().includes(q))
+  );
+  $('list').innerHTML=list.length?list.map(([cat,cmd,desc])=>`
+    <div class="item">
+      <div class="cmd" data-cmd="${escHtml(cmd)}">${escHtml(cmd)}</div>
+      <div class="desc">${escHtml(desc)}</div>
+    </div>`).join(''):'<div class="empty">Nic nenalezeno.</div>';
+  $('list').querySelectorAll('.cmd').forEach(el=>{
+    el.onclick=()=>{
+      navigator.clipboard.writeText(el.dataset.cmd);
+      const orig=el.textContent;
+      el.textContent='✅ Zkopírováno';
+      el.classList.add('copied');
+      setTimeout(()=>{el.textContent=orig;el.classList.remove('copied');},1000);
+    };
+  });
+}
+$('search').addEventListener('input',e=>render(e.target.value));
+document.querySelectorAll('.cat').forEach(el=>{
+  el.onclick=()=>{
+    document.querySelectorAll('.cat').forEach(c=>c.classList.remove('active'));
+    el.classList.add('active');
+    activeCat=el.dataset.c;
+    render($('search').value);
+  };
+});
+render('');
+</script>
+</body>
+</html>

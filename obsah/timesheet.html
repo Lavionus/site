@@ -1,0 +1,159 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>⏱️ Docházka / evidence hodin</title>
+<link rel="stylesheet" href="../common.css">
+<script>
+  if (localStorage.getItem('webapp_theme') === 'light') document.documentElement.dataset.theme = 'light';
+</script>
+<style>
+body{background:var(--bg-deep);padding:20px clamp(14px,3vw,40px);min-height:100vh}
+.container{max-width:1000px;margin:0 auto}
+h1{font-size:1.5rem;margin-bottom:4px}
+.sub{color:var(--text-muted);font-size:.85rem;margin-bottom:18px}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:16px}
+.btn{background:var(--bg-control);color:var(--text);border:1px solid var(--border-strong);padding:8px 14px;border-radius:6px;cursor:pointer;font-size:.85rem}
+.btn:hover{background:var(--bg-hover)}
+.btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+select.period{background:var(--bg-input);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:7px 10px}
+.form{background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius);padding:16px;display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:10px;margin-bottom:18px;align-items:end}
+.form label{font-size:.75rem;color:var(--text-faint);display:block;margin-bottom:4px}
+.form input{width:100%;background:var(--bg-input);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:8px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:18px}
+.stat{background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;padding:14px;text-align:center}
+.stat .v{font-size:1.6rem;font-weight:700;color:var(--accent)}
+.stat .l{font-size:.75rem;color:var(--text-faint);margin-top:2px}
+table{width:100%;border-collapse:collapse;background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;overflow:hidden}
+th,td{padding:9px 10px;text-align:left;font-size:.85rem;border-bottom:1px solid var(--border)}
+th{color:var(--text-faint);font-weight:600;font-size:.75rem;text-transform:uppercase}
+tr:last-child td{border-bottom:none}
+tr.weekhead td{background:var(--bg-elevated);font-weight:700;color:var(--accent)}
+.del{cursor:pointer;color:var(--danger);background:none;border:none;font-size:.9rem}
+.empty{padding:24px;text-align:center;color:var(--text-faint)}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>⏱️ Docházka / evidence odpracovaných hodin</h1>
+  <p class="sub">Týdenní výkaz odpracovaných hodin se součty, export do CSV pro fakturaci.</p>
+
+  <div class="form">
+    <div><label>Datum</label><input type="date" id="date"></div>
+    <div><label>Od</label><input type="time" id="from" value="08:00"></div>
+    <div><label>Do</label><input type="time" id="to" value="16:30"></div>
+    <div><label>Projekt / klient</label><input type="text" id="project" placeholder="Projekt A"></div>
+    <div><label>Poznámka</label><input type="text" id="note" placeholder="Volitelné…"></div>
+    <div><button class="btn primary" id="btnAdd" style="width:100%">+ Přidat záznam</button></div>
+  </div>
+
+  <div class="stats">
+    <div class="stat"><div class="v" id="totalHours">0 h</div><div class="l">Celkem hodin</div></div>
+    <div class="stat"><div class="v" id="weekCount">0</div><div class="l">Počet týdnů</div></div>
+    <div class="stat"><div class="v" id="dayCount">0</div><div class="l">Odpracovaných dnů</div></div>
+    <div class="stat"><div class="v" id="avgDay">0 h</div><div class="l">Průměr / den</div></div>
+  </div>
+
+  <div class="toolbar">
+    <button class="btn" id="btnExport">⬇️ Export CSV</button>
+    <button class="btn" id="btnClear">🗑️ Vymazat vše</button>
+  </div>
+
+  <div id="tableWrap"></div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const STORAGE_KEY='timesheet_entries_v1';
+let entries=JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]');
+
+function save(){localStorage.setItem(STORAGE_KEY,JSON.stringify(entries));}
+
+function isoWeek(dateStr){
+  const d=new Date(dateStr+'T00:00:00');
+  const target=new Date(d.valueOf());
+  const dayNr=(d.getDay()+6)%7;
+  target.setDate(target.getDate()-dayNr+3);
+  const firstThursday=new Date(target.getFullYear(),0,4);
+  const diff=target-firstThursday;
+  const week=1+Math.round(diff/(7*864e5));
+  return `${target.getFullYear()}-T${String(week).padStart(2,'0')}`;
+}
+
+function hoursBetween(from,to){
+  const [fh,fm]=from.split(':').map(Number);
+  const [th,tm]=to.split(':').map(Number);
+  let mins=(th*60+tm)-(fh*60+fm);
+  if(mins<0)mins+=24*60;
+  return mins/60;
+}
+
+function escHtml(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+
+function render(){
+  if(!entries.length){
+    $('tableWrap').innerHTML='<div class="empty">Zatím žádné záznamy. Přidej první výše.</div>';
+  } else {
+    const sorted=[...entries].sort((a,b)=>b.date.localeCompare(a.date));
+    const groups={};
+    sorted.forEach(e=>{
+      const w=isoWeek(e.date);
+      (groups[w]=groups[w]||[]).push(e);
+    });
+    let html='<table><thead><tr><th>Datum</th><th>Od</th><th>Do</th><th>Hodin</th><th>Projekt</th><th>Poznámka</th><th></th></tr></thead><tbody>';
+    Object.keys(groups).sort().reverse().forEach(w=>{
+      const list=groups[w];
+      const sum=list.reduce((a,e)=>a+hoursBetween(e.from,e.to),0);
+      html+=`<tr class="weekhead"><td colspan="7">${w} — celkem ${sum.toFixed(2)} h</td></tr>`;
+      list.forEach(e=>{
+        html+=`<tr><td>${e.date}</td><td>${e.from}</td><td>${e.to}</td><td>${hoursBetween(e.from,e.to).toFixed(2)}</td><td>${escHtml(e.project)}</td><td>${escHtml(e.note)}</td><td><button class="del" data-id="${e.id}">✕</button></td></tr>`;
+      });
+    });
+    html+='</tbody></table>';
+    $('tableWrap').innerHTML=html;
+    $('tableWrap').querySelectorAll('.del').forEach(b=>{
+      b.onclick=()=>{entries=entries.filter(e=>e.id!==b.dataset.id);save();render();};
+    });
+  }
+  const total=entries.reduce((a,e)=>a+hoursBetween(e.from,e.to),0);
+  const weeks=new Set(entries.map(e=>isoWeek(e.date)));
+  const days=new Set(entries.map(e=>e.date));
+  $('totalHours').textContent=total.toFixed(1)+' h';
+  $('weekCount').textContent=weeks.size;
+  $('dayCount').textContent=days.size;
+  $('avgDay').textContent=(days.size?total/days.size:0).toFixed(1)+' h';
+}
+
+$('btnAdd').onclick=()=>{
+  const date=$('date').value, from=$('from').value, to=$('to').value;
+  if(!date||!from||!to){alert('Vyplň datum a čas od–do.');return;}
+  entries.push({id:'e'+Date.now()+Math.random().toString(36).slice(2,6),date,from,to,project:$('project').value.trim(),note:$('note').value.trim()});
+  save();
+  $('project').value='';$('note').value='';
+  render();
+};
+
+$('btnClear').onclick=()=>{
+  if(!entries.length)return;
+  if(!confirm('Opravdu smazat všechny záznamy?'))return;
+  entries=[];save();render();
+};
+
+$('btnExport').onclick=()=>{
+  if(!entries.length)return;
+  const rows=[['Datum','Od','Do','Hodin','Projekt','Poznámka']];
+  [...entries].sort((a,b)=>a.date.localeCompare(b.date)).forEach(e=>{
+    rows.push([e.date,e.from,e.to,hoursBetween(e.from,e.to).toFixed(2),e.project,e.note]);
+  });
+  const csv=rows.map(r=>r.map(c=>`"${String(c).replace(/"/g,'""')}"`).join(';')).join('\n');
+  const blob=new Blob(['﻿'+csv],{type:'text/csv;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download='dochazka.csv';a.click();
+  URL.revokeObjectURL(url);
+};
+
+$('date').valueAsDate=new Date();
+render();
+</script>
+</body>
+</html>

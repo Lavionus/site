@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🔄 YAML ↔ JSON převodník</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1a1a1a;color:#e0e0e0;min-height:100vh;padding:20px}
+.container{max-width:1000px;margin:0 auto}
+h1{font-size:1.6rem;margin-bottom:18px;font-weight:600;text-align:center}
+.layout{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:760px){.layout{grid-template-columns:1fr}}
+.card{background:#2a2a2a;border:1px solid #404040;border-radius:8px;padding:16px}
+h2{font-size:.95rem;color:#6aa6fd;margin-bottom:10px}
+textarea{width:100%;min-height:400px;background:#1e1e1e;border:1px solid #555;border-radius:6px;color:#e0e0e0;padding:12px;font-family:monospace;font-size:.85rem;resize:vertical;line-height:1.5}
+.arrows{display:flex;gap:8px;justify-content:center;margin:14px 0;flex-wrap:wrap}
+.btn{background:#6aa6fd;color:#fff;border:none;padding:9px 18px;border-radius:6px;cursor:pointer;font-weight:600;font-size:.86rem}
+.btn:hover{background:#5694f0}
+.status{text-align:center;font-size:.86rem;margin-bottom:10px;min-height:20px}.status.err{color:#e74c3c}.status.ok{color:#27ae60}
+.note{font-size:.78rem;color:#666;margin-top:14px;line-height:1.5;text-align:center}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>🔄 YAML ↔ JSON převodník</h1>
+  <div class="status" id="status"></div>
+  <div class="arrows">
+    <button class="btn" id="toJson">⬇️ YAML → JSON</button>
+    <button class="btn" id="toYaml">⬆️ JSON → YAML</button>
+  </div>
+  <div class="layout">
+    <div class="card">
+      <h2>YAML</h2>
+      <textarea id="yamlBox">osoba:
+  jmeno: Jan Novák
+  vek: 34
+  aktivni: true
+  adresa:
+    mesto: Praha
+    psc: "100 00"
+  koníčky:
+    - kolo
+    - programování
+    - hory
+</textarea>
+    </div>
+    <div class="card">
+      <h2>JSON</h2>
+      <textarea id="jsonBox"></textarea>
+    </div>
+  </div>
+  <p class="note">Podporuje běžnou podmnožinu YAML (bloky, seznamy, mapy, čísla, řetězce, boolean, null). Nepodporuje kotvy (&amp;/*), víceřádkové bloky (|, &gt;) ani flow styl mimo jednoduché [a, b] / {a: b}.</p>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+function setStatus(msg,ok){$('status').className='status '+(ok?'ok':'err');$('status').textContent=msg;}
+
+function parseScalar(s){
+  s=s.trim();
+  if(s==='')return '';
+  if(s==='null'||s==='~')return null;
+  if(s==='true')return true;
+  if(s==='false')return false;
+  if(/^-?\d+$/.test(s))return parseInt(s,10);
+  if(/^-?\d+\.\d+$/.test(s))return parseFloat(s);
+  if((s[0]==='"'&&s[s.length-1]==='"')||(s[0]==="'"&&s[s.length-1]==="'"))return s.slice(1,-1);
+  if(s[0]==='['||s[0]==='{')return JSON.parse(s.replace(/'/g,'"'));
+  return s;
+}
+
+function indentOf(line){
+  const m=line.match(/^ */);
+  return m[0].length;
+}
+
+function stripComment(line){
+  let inQ=null;
+  for(let i=0;i<line.length;i++){
+    const ch=line[i];
+    if(inQ){if(ch===inQ)inQ=null;}
+    else if(ch==='"'||ch==="'")inQ=ch;
+    else if(ch==='#'&&(i===0||line[i-1]===' '))return line.slice(0,i);
+  }
+  return line;
+}
+
+function yamlToJs(text){
+  const rawLines=text.split('\n');
+  const lines=[];
+  rawLines.forEach(l=>{
+    const stripped=stripComment(l).replace(/\s+$/,'');
+    if(stripped.trim()!=='')lines.push(stripped);
+  });
+  let pos=0;
+  function peekIndent(){return pos<lines.length?indentOf(lines[pos]):-1;}
+
+  function parseBlock(indent){
+    if(pos>=lines.length)return null;
+    if(peekIndent()<indent)return null;
+    const firstContent=lines[pos].trim();
+    if(firstContent.startsWith('- ')||firstContent==='-'){
+      const arr=[];
+      while(pos<lines.length&&indentOf(lines[pos])===indent&&(lines[pos].trim().startsWith('- ')||lines[pos].trim()==='-')){
+        const line=lines[pos];
+        const dashIndent=indentOf(line);
+        let rest=line.trim().slice(1).trim();
+        if(rest===''){
+          pos++;
+          arr.push(parseBlock(dashIndent+2));
+        }else if(/^[^:]+:(\s|$)/.test(rest)){
+          // list item that is a mapping; treat as nested map starting at dash content column
+          const fakeIndent=dashIndent+2;
+          lines[pos]=' '.repeat(fakeIndent)+rest;
+          arr.push(parseBlock(fakeIndent));
+        }else{
+          pos++;
+          arr.push(parseScalar(rest));
+        }
+      }
+      return arr;
+    }else{
+      const obj={};
+      while(pos<lines.length&&indentOf(lines[pos])===indent){
+        const line=lines[pos].trim();
+        const m=line.match(/^([^:]+):\s*(.*)$/);
+        if(!m){pos++;continue;}
+        let key=m[1].trim();
+        if((key[0]==='"'&&key[key.length-1]==='"')||(key[0]==="'"&&key[key.length-1]==="'"))key=key.slice(1,-1);
+        const valStr=m[2];
+        pos++;
+        if(valStr===''){
+          const nextIndent=peekIndent();
+          if(nextIndent>indent)obj[key]=parseBlock(nextIndent);
+          else obj[key]=null;
+        }else{
+          obj[key]=parseScalar(valStr);
+        }
+      }
+      return obj;
+    }
+  }
+  return parseBlock(0);
+}
+
+function jsToYaml(val,indent){
+  indent=indent||0;
+  const pad='  '.repeat(indent);
+  if(val===null||val===undefined)return 'null';
+  if(typeof val==='string')return needsQuote(val)?JSON.stringify(val):val;
+  if(typeof val==='number'||typeof val==='boolean')return String(val);
+  if(Array.isArray(val)){
+    if(!val.length)return '[]';
+    return val.map(v=>{
+      if(v&&typeof v==='object'){
+        const inner=jsToYaml(v,indent+1);
+        return pad+'- '+inner.trimStart().replace(new RegExp('\\n'+'  '.repeat(indent+1),'g'),'\n'+'  '.repeat(indent+1));
+      }
+      return pad+'- '+jsToYaml(v,indent+1);
+    }).join('\n');
+  }
+  if(typeof val==='object'){
+    const keys=Object.keys(val);
+    if(!keys.length)return '{}';
+    return keys.map(k=>{
+      const v=val[k];
+      if(v&&typeof v==='object'&&Object.keys(v).length){
+        return pad+k+':\n'+jsToYaml(v,indent+1);
+      }
+      if(Array.isArray(v)&&v.length){
+        return pad+k+':\n'+jsToYaml(v,indent+1);
+      }
+      return pad+k+': '+jsToYaml(v,indent+1);
+    }).join('\n');
+  }
+  return String(val);
+}
+function needsQuote(s){
+  return s===''||/^[\s]|[\s]$/.test(s)||/^[-?:,\[\]{}#&*!|>'"%@`]/.test(s)||/:\s|\s#/.test(s)||['true','false','null','~'].includes(s)||/^-?\d+(\.\d+)?$/.test(s);
+}
+
+$('toJson').onclick=()=>{
+  try{
+    const obj=yamlToJs($('yamlBox').value);
+    $('jsonBox').value=JSON.stringify(obj,null,2);
+    setStatus('✅ Převedeno YAML → JSON',true);
+  }catch(e){
+    setStatus('❌ Chyba: '+e.message,false);
+  }
+};
+$('toYaml').onclick=()=>{
+  try{
+    const obj=JSON.parse($('jsonBox').value);
+    $('yamlBox').value=jsToYaml(obj,0)+'\n';
+    setStatus('✅ Převedeno JSON → YAML',true);
+  }catch(e){
+    setStatus('❌ Neplatný JSON: '+e.message,false);
+  }
+};
+$('toJson').click();
+</script>
+</body>
+</html>

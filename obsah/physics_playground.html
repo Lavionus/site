@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🔬 Fyzikální hřiště pro děti</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#0a0a14;color:#e0e0e0;height:100vh;overflow:hidden;display:flex;flex-direction:column}
+.horni{display:flex;gap:10px;align-items:center;padding:10px 16px;background:#16161f;border-bottom:1px solid #2a2a3a;flex-wrap:wrap}
+.horni h1{font-size:1.05rem;font-weight:600;margin-right:auto}
+.tabs{display:flex;gap:6px}
+.tabs button{background:#2a2a3a;border:1px solid #3a3a4d;color:#ccc;border-radius:6px;padding:7px 14px;font-size:.84rem;cursor:pointer}
+.tabs button.active{background:#6aa6fd;color:#fff;border-color:#6aa6fd}
+.controls{display:flex;gap:14px;align-items:center;padding:10px 16px;background:#12121b;border-bottom:1px solid #2a2a3a;flex-wrap:wrap}
+.controls label{font-size:.78rem;color:#888;display:flex;align-items:center;gap:7px}
+input[type=range]{width:120px;accent-color:#6aa6fd}
+.controls button{background:#2a2a3a;border:1px solid #3a3a4d;color:#ccc;border-radius:6px;padding:7px 14px;font-size:.82rem;cursor:pointer}
+.controls button:hover{background:#6aa6fd;color:#fff}
+.plocha{flex:1;position:relative;overflow:hidden}
+canvas{display:block;width:100%;height:100%}
+.info{position:absolute;top:14px;right:14px;width:260px;max-width:calc(100% - 28px);background:rgba(22,22,31,.94);border:1px solid #3a3a4d;border-radius:10px;padding:12px 15px;font-size:.8rem;line-height:1.6;color:#aab}
+.info b{color:#e0e0e0}
+@media(max-width:700px){.info{display:none}}
+</style>
+</head>
+<body>
+<div class="horni">
+  <h1>🔬 Fyzikální hřiště pro děti</h1>
+  <div class="tabs">
+    <button data-sim="pendulum" class="active">🪀 Kyvadlo</button>
+    <button data-sim="incline">📐 Nakloněná rovina</button>
+    <button data-sim="collision">💥 Srážky</button>
+  </div>
+</div>
+<div class="controls" id="controls"></div>
+<div class="plocha">
+  <canvas id="c"></canvas>
+  <div class="info" id="infoBox"></div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const canvas=$('c'), ctx=canvas.getContext('2d');
+function resize(){canvas.width=canvas.clientWidth*devicePixelRatio;canvas.height=canvas.clientHeight*devicePixelRatio;ctx.setTransform(devicePixelRatio,0,0,devicePixelRatio,0,0);}
+window.addEventListener('resize',resize);
+
+let sim='pendulum';
+let raf=null;
+let lastT=null;
+
+// ---------- KYVADLO ----------
+const pendulum={
+  L:220, angle:Math.PI/3, omega:0, g:9.81, damping:0.15,
+  reset(){this.angle=Number($('pAngle').value)*Math.PI/180;this.omega=0;},
+  step(dt){
+    const alpha=-(this.g/(this.L/100))*Math.sin(this.angle)-this.damping*this.omega;
+    this.omega+=alpha*dt;
+    this.angle+=this.omega*dt;
+  },
+  draw(){
+    const w=canvas.clientWidth,h=canvas.clientHeight;
+    ctx.clearRect(0,0,w,h);
+    const pivotX=w/2,pivotY=80;
+    const bobX=pivotX+this.L*Math.sin(this.angle);
+    const bobY=pivotY+this.L*Math.cos(this.angle);
+    ctx.strokeStyle='#555';ctx.lineWidth=2;
+    ctx.beginPath();ctx.moveTo(pivotX-30,pivotY);ctx.lineTo(pivotX+30,pivotY);ctx.stroke();
+    ctx.strokeStyle='#6aa6fd';ctx.lineWidth=3;
+    ctx.beginPath();ctx.moveTo(pivotX,pivotY);ctx.lineTo(bobX,bobY);ctx.stroke();
+    ctx.fillStyle='#e0a63f';
+    ctx.beginPath();ctx.arc(bobX,bobY,22,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#444';ctx.beginPath();ctx.arc(pivotX,pivotY,5,0,Math.PI*2);ctx.fill();
+  }
+};
+
+// ---------- NAKLONĚNÁ ROVINA ----------
+const incline={
+  angleDeg:30, mu:0.2, pos:0, vel:0, running:false, maxDist:300,
+  reset(){this.pos=0;this.vel=0;this.running=false;},
+  step(dt){
+    if(!this.running)return;
+    const g=9.81, th=this.angleDeg*Math.PI/180;
+    const a=g*(Math.sin(th)-this.mu*Math.cos(th));
+    if(a<=0&&this.vel<=0){this.vel=0;return;}
+    this.vel+=a*dt;
+    this.pos+=this.vel*dt*40; // px scale
+    if(this.pos>this.maxDist){this.pos=this.maxDist;this.running=false;}
+  },
+  draw(){
+    const w=canvas.clientWidth,h=canvas.clientHeight;
+    ctx.clearRect(0,0,w,h);
+    const th=this.angleDeg*Math.PI/180;
+    const baseX=80, baseY=h-80;
+    const inclineLen=420;
+    const topPX=baseX+inclineLen*Math.cos(th);
+    const topPY=baseY-inclineLen*Math.sin(th);
+    ctx.strokeStyle='#555';ctx.lineWidth=3;
+    ctx.beginPath();ctx.moveTo(baseX,baseY);ctx.lineTo(topPX,topPY);ctx.lineTo(baseX,topPY);ctx.closePath();ctx.stroke();
+    ctx.fillStyle='rgba(106,166,253,.08)';ctx.fill();
+    // krychle klouzající po rovině (vzdálenost od vrcholu podle ujeté dráhy)
+    const distFromTop=Math.max(0,Math.min(inclineLen-30,this.pos/this.maxDist*(inclineLen-30)));
+    const px=topPX-distFromTop*Math.cos(th);
+    const py=topPY+distFromTop*Math.sin(th);
+    ctx.save();
+    ctx.translate(px,py);
+    ctx.rotate(-th);
+    ctx.fillStyle='#e0a63f';
+    ctx.fillRect(-16,-32,32,32);
+    ctx.restore();
+    $('inclineVel').textContent=this.vel.toFixed(2)+' m/s';
+  }
+};
+
+// ---------- SRÁŽKY ----------
+const collision={
+  m1:2,m2:1,v1:2,v2:-1,x1:150,x2:450,r1:26,r2:20,running:false,
+  reset(){
+    this.m1=Number($('m1').value);this.m2=Number($('m2').value);
+    this.v1=Number($('v1').value);this.v2=Number($('v2').value);
+    this.x1=150;this.x2=450;
+    this.r1=16+this.m1*5;this.r2=16+this.m2*5;
+    this.running=true;
+  },
+  step(dt){
+    if(!this.running)return;
+    this.x1+=this.v1*dt*60;
+    this.x2+=this.v2*dt*60;
+    const w=canvas.clientWidth,h=canvas.clientHeight;
+    const floorY=h-100;
+    if(this.x1-this.r1<20){this.x1=20+this.r1;this.v1*=-1;}
+    if(this.x2+this.r2>w-20){this.x2=w-20-this.r2;this.v2*=-1;}
+    const dist=this.x2-this.x1;
+    if(dist<this.r1+this.r2&&this.v1>this.v2){
+      const m1=this.m1,m2=this.m2,u1=this.v1,u2=this.v2;
+      this.v1=((m1-m2)*u1+2*m2*u2)/(m1+m2);
+      this.v2=((m2-m1)*u2+2*m1*u1)/(m1+m2);
+      const overlap=(this.r1+this.r2)-dist;
+      this.x1-=overlap/2;this.x2+=overlap/2;
+    }
+  },
+  draw(){
+    const w=canvas.clientWidth,h=canvas.clientHeight;
+    ctx.clearRect(0,0,w,h);
+    const floorY=h-100;
+    ctx.strokeStyle='#444';ctx.lineWidth=2;
+    ctx.beginPath();ctx.moveTo(0,floorY+30);ctx.lineTo(w,floorY+30);ctx.stroke();
+    ctx.fillStyle='#6aa6fd';
+    ctx.beginPath();ctx.arc(this.x1,floorY,this.r1,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#e05d5d';
+    ctx.beginPath();ctx.arc(this.x2,floorY,this.r2,0,Math.PI*2);ctx.fill();
+    ctx.fillStyle='#fff';ctx.font='12px sans-serif';ctx.textAlign='center';
+    ctx.fillText('m₁='+this.m1+'kg',this.x1,floorY-this.r1-10);
+    ctx.fillText('m₂='+this.m2+'kg',this.x2,floorY-this.r2-10);
+    $('collisionInfo').textContent=`v₁=${this.v1.toFixed(2)} m/s, v₂=${this.v2.toFixed(2)} m/s | Hybnost p=${(this.m1*this.v1+this.m2*this.v2).toFixed(2)} kg·m/s`;
+  }
+};
+
+function buildControls(){
+  if(sim==='pendulum'){
+    $('controls').innerHTML=`
+      <label>Počáteční úhel <input type="range" id="pAngle" min="5" max="85" value="60"></label>
+      <button id="btnReset">🔄 Reset</button>`;
+    $('pAngle').oninput=()=>pendulum.reset();
+    $('btnReset').onclick=()=>pendulum.reset();
+    $('infoBox').innerHTML='<b>Matematické kyvadlo</b><br>Perioda kmitu závisí na délce závěsu a gravitačním zrychlení, ne na hmotnosti závaží. S tlumením se amplituda postupně zmenšuje.';
+    pendulum.reset();
+  }else if(sim==='incline'){
+    $('controls').innerHTML=`
+      <label>Sklon <input type="range" id="iAngle" min="5" max="60" value="30"></label>
+      <label>Tření μ <input type="range" id="iMu" min="0" max="80" value="20"></label>
+      <button id="btnStart">▶️ Spustit</button>
+      <button id="btnReset">🔄 Reset</button>
+      <span style="color:#888;font-size:.8rem">Rychlost: <b id="inclineVel" style="color:#e0e0e0">0 m/s</b></span>`;
+    $('iAngle').oninput=()=>{incline.angleDeg=Number($('iAngle').value);};
+    $('iMu').oninput=()=>{incline.mu=Number($('iMu').value)/100;};
+    $('btnStart').onclick=()=>{incline.running=true;};
+    $('btnReset').onclick=()=>incline.reset();
+    $('infoBox').innerHTML='<b>Nakloněná rovina s třením</b><br>Těleso zrychluje, pokud gravitační složka podél roviny (g·sinθ) překoná třecí sílu (μ·g·cosθ). Zvyš tření a uvidíš, kdy se těleso vůbec nehne.';
+    incline.reset();
+  }else{
+    $('controls').innerHTML=`
+      <label>m₁ (kg) <input type="range" id="m1" min="0.5" max="5" step="0.5" value="2"></label>
+      <label>v₁ (m/s) <input type="range" id="v1" min="-4" max="4" step="0.5" value="2"></label>
+      <label>m₂ (kg) <input type="range" id="m2" min="0.5" max="5" step="0.5" value="1"></label>
+      <label>v₂ (m/s) <input type="range" id="v2" min="-4" max="4" step="0.5" value="-1"></label>
+      <button id="btnReset">🔄 Reset</button>
+      <span style="color:#888;font-size:.8rem" id="collisionInfo"></span>`;
+    ['m1','v1','m2','v2'].forEach(id=>$(id).oninput=()=>collision.reset());
+    $('btnReset').onclick=()=>collision.reset();
+    $('infoBox').innerHTML='<b>Pružná srážka</b><br>Při pružné srážce se zachovává celková hybnost i kinetická energie soustavy. Vyzkoušej stejné hmotnosti — koule si vymění rychlosti.';
+    collision.reset();
+  }
+}
+
+document.querySelectorAll('.tabs button').forEach(btn=>{
+  btn.onclick=()=>{
+    document.querySelectorAll('.tabs button').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    sim=btn.dataset.sim;
+    buildControls();
+  };
+});
+
+function loop(t){
+  if(lastT===null)lastT=t;
+  const dt=Math.min(0.033,(t-lastT)/1000);
+  lastT=t;
+  if(sim==='pendulum'){pendulum.step(dt);pendulum.draw();}
+  else if(sim==='incline'){incline.step(dt);incline.draw();}
+  else{collision.step(dt);collision.draw();}
+  raf=requestAnimationFrame(loop);
+}
+
+resize();
+buildControls();
+raf=requestAnimationFrame(loop);
+</script>
+</body>
+</html>

@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🔌 Dimenzování kabelu (úbytek napětí)</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1a1a1a;color:#e0e0e0;min-height:100vh;padding:20px}
+.container{max-width:780px;margin:0 auto}
+h1{font-size:1.6rem;margin-bottom:18px;font-weight:600;text-align:center}
+.card{background:#2a2a2a;border:1px solid #404040;border-radius:8px;padding:22px;margin-bottom:20px}
+h2{font-size:1.05rem;color:#6aa6fd;margin-bottom:16px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media(max-width:560px){.grid{grid-template-columns:1fr}}
+label{display:block;font-size:.82rem;color:#888;margin-bottom:5px}
+input,select{width:100%;background:#404040;border:1px solid #555;border-radius:4px;color:#e0e0e0;padding:10px;margin-bottom:12px}
+.big{font-size:2.2rem;font-weight:700;color:#6aa6fd;text-align:center;margin:10px 0}
+.big.warn{color:#e0a63f}
+.res-row{display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid #333}
+.res-row:last-child{border:none}.res-row b{color:#4caf50}
+.note{font-size:.78rem;color:#666;margin-top:14px;line-height:1.5}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>🔌 Dimenzování kabelu (úbytek napětí)</h1>
+  <div class="card">
+    <h2>Parametry vedení</h2>
+    <div class="grid">
+      <div><label>Typ sítě</label><select id="phase"><option value="1">Jednofázová (230 V)</option><option value="3">Třífázová (400 V)</option></select></div>
+      <div><label>Materiál vodiče</label><select id="material"><option value="0.0175">Měď (Cu)</option><option value="0.0282">Hliník (Al)</option></select></div>
+      <div><label>Proud I (A)</label><input type="number" id="current" value="16" step="0.5"></div>
+      <div><label>Délka vedení (m, jednosměrně)</label><input type="number" id="length" value="25" step="1"></div>
+      <div><label>Průřez vodiče (mm²)</label><input type="number" id="area" value="2.5" step="0.5"></div>
+      <div><label>Max. povolený úbytek (%)</label><input type="number" id="maxDrop" value="3" step="0.5"></div>
+    </div>
+  </div>
+  <div class="card">
+    <h2>📋 Výsledek při zadaném průřezu</h2>
+    <div class="big" id="dropResult">–</div>
+    <div class="res-row"><span>Úbytek napětí</span><b id="dropVolts">–</b></div>
+    <div class="res-row"><span>Úbytek v procentech</span><b id="dropPercent">–</b></div>
+    <div class="res-row"><span>Vyhovuje limitu?</span><b id="dropOk">–</b></div>
+  </div>
+  <div class="card">
+    <h2>💡 Doporučený minimální průřez</h2>
+    <div class="big" id="suggestResult">–</div>
+    <p class="note">Standardní řady průřezů (mm²): 1.5, 2.5, 4, 6, 10, 16, 25, 35, 50, 70, 95, 120. Výpočet řeší pouze úbytek napětí — vždy zkontroluj i dovolenou proudovou zatížitelnost kabelu (dle způsobu uložení) a jištění dle ČSN 33 2000.</p>
+  </div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const STANDARD_SIZES=[1.5,2.5,4,6,10,16,25,35,50,70,95,120,150,185,240];
+
+function dropVoltage(I,L,rho,A,phases){
+  const k=phases===3?Math.sqrt(3):2;
+  return (k*I*L*rho)/A;
+}
+
+function calc(){
+  const phases=+$('phase').value;
+  const rho=+$('material').value;
+  const I=+$('current').value||0;
+  const L=+$('length').value||0;
+  const A=+$('area').value||1;
+  const maxDropPct=+$('maxDrop').value||3;
+  const nominalV=phases===3?400:230;
+
+  const dU=dropVoltage(I,L,rho,A,phases);
+  const dPct=(dU/nominalV)*100;
+  $('dropResult').textContent=dPct.toFixed(2)+' %';
+  $('dropResult').className='big'+(dPct>maxDropPct?' warn':'');
+  $('dropVolts').textContent=dU.toFixed(2)+' V';
+  $('dropPercent').textContent=dPct.toFixed(2)+' % (limit '+maxDropPct+' %)';
+  $('dropOk').textContent=dPct<=maxDropPct?'✅ Ano':'⚠️ Ne — zvětši průřez';
+
+  // najdi minimální standardní průřez splňující limit
+  const requiredA=(phases===3?Math.sqrt(3):2)*I*L*rho/(nominalV*maxDropPct/100);
+  const suggestion=STANDARD_SIZES.find(s=>s>=requiredA)||STANDARD_SIZES[STANDARD_SIZES.length-1];
+  $('suggestResult').textContent=suggestion+' mm² (min. teoreticky '+requiredA.toFixed(2)+' mm²)';
+}
+document.querySelectorAll('input,select').forEach(el=>el.addEventListener('input',calc));
+calc();
+</script>
+</body>
+</html>

@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>😴 Budík dle spánkových cyklů</title>
+<link rel="stylesheet" href="../common.css">
+<script>
+  if (localStorage.getItem('webapp_theme') === 'light') document.documentElement.dataset.theme = 'light';
+</script>
+<style>
+body{background:var(--bg-deep);padding:20px clamp(14px,3vw,40px);min-height:100vh}
+.container{max-width:680px;margin:0 auto}
+h1{font-size:1.5rem;margin-bottom:4px;text-align:center}
+.sub{color:var(--text-muted);font-size:.85rem;margin-bottom:20px;text-align:center}
+.mode-toggle{display:flex;justify-content:center;gap:6px;margin-bottom:20px}
+.mode-toggle button{background:var(--bg-control);border:1px solid var(--border-strong);color:var(--text);padding:8px 18px;border-radius:20px;cursor:pointer;font-size:.85rem}
+.mode-toggle button.active{background:var(--accent);color:#fff;border-color:var(--accent)}
+.card{background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius);padding:22px;text-align:center}
+.timerow{display:flex;justify-content:center;align-items:center;gap:12px;margin-bottom:8px}
+.timerow label{font-size:.85rem;color:var(--text-faint)}
+input[type=time]{background:var(--bg-input);border:1px solid var(--border);color:var(--text);border-radius:8px;padding:10px 14px;font-size:1.3rem;text-align:center}
+.falltime{margin-top:6px}
+.falltime label{font-size:.78rem;color:var(--text-faint)}
+.falltime input{width:70px;background:var(--bg-input);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:4px 8px;text-align:center;margin-left:6px}
+.results{margin-top:22px;display:grid;gap:10px}
+.result{background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;padding:12px 16px;display:flex;justify-content:space-between;align-items:center}
+.result .time{font-size:1.4rem;font-weight:700;color:var(--accent)}
+.result .cycles{font-size:.8rem;color:var(--text-faint)}
+.result.best{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.result.best .badge{background:var(--accent);color:#fff;font-size:.68rem;padding:2px 8px;border-radius:10px;margin-left:8px}
+.note{font-size:.78rem;color:var(--text-faint);margin-top:18px;line-height:1.5;text-align:center}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>😴 Budík dle spánkových cyklů</h1>
+  <p class="sub">Spánek probíhá v cyklech ~90 minut. Probuzení na konci cyklu (v lehkém spánku) bývá snazší než uprostřed hlubokého spánku.</p>
+
+  <div class="mode-toggle">
+    <button class="active" data-mode="wake">🌅 Chci vstát v…</button>
+    <button data-mode="sleep">🛌 Jdu spát teď</button>
+  </div>
+
+  <div class="card">
+    <div id="wakeMode">
+      <div class="timerow">
+        <label>Kdy chceš vstát:</label>
+        <input type="time" id="wakeTime" value="07:00">
+      </div>
+      <div class="falltime"><label>Čas na usnutí (min)</label><input type="number" id="fallAsleep1" value="14" min="0" max="60"></div>
+      <div class="results" id="wakeResults"></div>
+    </div>
+    <div id="sleepMode" style="display:none">
+      <div class="timerow">
+        <label>Teď je:</label>
+        <input type="time" id="nowTime">
+      </div>
+      <div class="falltime"><label>Čas na usnutí (min)</label><input type="number" id="fallAsleep2" value="14" min="0" max="60"></div>
+      <div class="results" id="sleepResults"></div>
+    </div>
+  </div>
+  <p class="note">Doporučeno 5–6 cyklů (7,5–9 h) spánku pro dospělého. Výpočet je orientační, individuální potřeba spánku se liší.</p>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const CYCLE=90; // min
+
+function fmt(mins){
+  mins=((mins%1440)+1440)%1440;
+  const h=Math.floor(mins/60), m=mins%60;
+  return String(h).padStart(2,'0')+':'+String(m).padStart(2,'0');
+}
+function toMinutes(t){const [h,m]=t.split(':').map(Number);return h*60+m;}
+
+function renderWake(){
+  const wake=toMinutes($('wakeTime').value||'07:00');
+  const fall=Number($('fallAsleep1').value)||0;
+  const cyclesList=[6,5,4,3];
+  $('wakeResults').innerHTML=cyclesList.map((c,i)=>{
+    const bedtime=wake-c*CYCLE-fall;
+    return `<div class="result ${i===0?'best':''}"><div><div class="time">${fmt(bedtime)}</div><div class="cycles">jít spát — ${c} cyklů (${(c*90/60).toFixed(1)} h)</div></div>${i===0?'<span class="badge">doporučeno</span>':''}</div>`;
+  }).join('');
+}
+
+function renderSleep(){
+  const now=toMinutes($('nowTime').value||'23:00');
+  const fall=Number($('fallAsleep2').value)||0;
+  const asleepAt=now+fall;
+  const cyclesList=[4,5,6];
+  $('sleepResults').innerHTML=cyclesList.map((c,i)=>{
+    const wake=asleepAt+c*CYCLE;
+    return `<div class="result ${i===1?'best':''}"><div><div class="time">${fmt(wake)}</div><div class="cycles">vstávání — ${c} cyklů (${(c*90/60).toFixed(1)} h)</div></div>${i===1?'<span class="badge">doporučeno</span>':''}</div>`;
+  }).join('');
+}
+
+document.querySelectorAll('.mode-toggle button').forEach(btn=>{
+  btn.onclick=()=>{
+    document.querySelectorAll('.mode-toggle button').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    const isWake=btn.dataset.mode==='wake';
+    $('wakeMode').style.display=isWake?'block':'none';
+    $('sleepMode').style.display=isWake?'none':'block';
+  };
+});
+
+['wakeTime','fallAsleep1'].forEach(id=>$(id).oninput=renderWake);
+['nowTime','fallAsleep2'].forEach(id=>$(id).oninput=renderSleep);
+
+const now=new Date();
+$('nowTime').value=String(now.getHours()).padStart(2,'0')+':'+String(now.getMinutes()).padStart(2,'0');
+
+renderWake();
+renderSleep();
+</script>
+</body>
+</html>

@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🏷️ Generátor nálepek (sticker)</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1a1a1a;color:#e0e0e0;min-height:100vh;padding:20px}
+.container{max-width:1000px;margin:0 auto;display:grid;grid-template-columns:300px 1fr;gap:20px}
+@media(max-width:800px){.container{grid-template-columns:1fr}}
+h1{font-size:1.6rem;margin-bottom:8px;font-weight:600;text-align:center;grid-column:1/-1}
+.sub{grid-column:1/-1;text-align:center;color:#888;font-size:.85rem;margin-bottom:10px;margin-top:-14px}
+.card{background:#2a2a2a;border:1px solid #404040;border-radius:8px;padding:20px;align-self:start}
+label{display:block;font-size:.82rem;color:#888;margin-bottom:5px}
+input,select{width:100%;background:#404040;border:1px solid #555;border-radius:4px;color:#e0e0e0;padding:9px;margin-bottom:12px}
+input[type=file]{background:none;border:none;padding:0;color:#b0b0b0}
+input[type=range]{padding:0}
+input[type=color]{height:42px;padding:2px}
+.btn{background:#6aa6fd;color:#fff;border:none;padding:10px 16px;border-radius:6px;cursor:pointer;font-weight:600;font-size:.9rem;width:100%}
+.btn:hover{background:#5591e8}
+.chk{display:flex;align-items:center;gap:8px;margin:10px 0;color:#bbb;font-size:.85rem}
+.chk input{width:auto;margin:0}
+.zprava{color:#888;padding:40px 10px;text-align:center}
+.canvaswrap{background:repeating-conic-gradient(#333 0% 25%,#222 0% 50%) 50%/16px 16px;border-radius:8px;text-align:center;padding:16px}
+canvas{max-width:100%;border-radius:6px;display:block;margin:0 auto}
+.note{font-size:.78rem;color:#666;margin-top:14px;line-height:1.5}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>🏷️ Generátor nálepek (sticker)</h1>
+  <p class="sub">Nahraj obrázek s <b>průhledným pozadím</b> (PNG) — vytvoří se barevný obrys jako u nálepek.</p>
+  <div class="card">
+    <label>Obrázek (PNG s průhledností)</label><input type="file" id="soubor" accept="image/png">
+    <label>Barva obrysu</label><input type="color" id="barva" value="#ffffff">
+    <label>Tloušťka obrysu: <span id="tlT">10</span> px</label>
+    <input type="range" id="tl" min="2" max="30" value="10">
+    <div class="chk"><input type="checkbox" id="stin" checked><label for="stin" style="margin:0">Přidat jemný stín</label></div>
+    <button class="btn" id="stahnout">💾 Stáhnout nálepku (PNG)</button>
+  </div>
+  <div class="card">
+    <div class="zprava" id="zprava">Vyberte PNG obrázek s průhledným pozadím…</div>
+    <div class="canvaswrap" style="display:none" id="canvaswrap">
+      <canvas id="c"></canvas>
+    </div>
+    <p class="note">Obrys se generuje z alfa kanálu obrázku (vyžaduje průhledné pozadí). Pro vyříznutí objektu z fotky použij aplikaci „Ořez obrázku" nebo externí nástroj pro odstranění pozadí, poté sem nahraj výsledné PNG.</p>
+  </div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const c=$('c'),ctx=c.getContext('2d');
+let img=null,nazev='nalepka';
+
+$('tl').oninput=()=>{$('tlT').textContent=$('tl').value;kresli();};
+$('barva').oninput=kresli;
+$('stin').onchange=kresli;
+
+$('soubor').addEventListener('change',e=>{
+  const f=e.target.files[0];
+  if(!f)return;
+  nazev=f.name.replace(/\.[^.]+$/,'');
+  const i=new Image();
+  i.onload=()=>{
+    img=i;
+    $('zprava').style.display='none';
+    $('canvaswrap').style.display='block';
+    kresli();
+  };
+  i.src=URL.createObjectURL(f);
+});
+
+function kresli(){
+  if(!img)return;
+  const pad=Number($('tl').value)+12;
+  c.width=img.width+pad*2;
+  c.height=img.height+pad*2;
+  ctx.clearRect(0,0,c.width,c.height);
+
+  const thickness=Number($('tl').value);
+  const color=$('barva').value;
+  const steps=24;
+
+  if($('stin').checked){
+    ctx.save();
+    ctx.filter='blur(8px)';
+    ctx.globalAlpha=0.45;
+    ctx.drawImage(img,pad+4,pad+8);
+    ctx.restore();
+  }
+
+  // Vytvoř obrys posunutím obrázku (jako maska) v kruhu kolem, vybarveno barvou obrysu
+  const tmp=document.createElement('canvas');
+  tmp.width=c.width;tmp.height=c.height;
+  const tctx=tmp.getContext('2d');
+  tctx.drawImage(img,pad,pad);
+  tctx.globalCompositeOperation='source-in';
+  tctx.fillStyle=color;
+  tctx.fillRect(0,0,tmp.width,tmp.height);
+
+  for(let i=0;i<steps;i++){
+    const angle=(i/steps)*Math.PI*2;
+    const dx=Math.cos(angle)*thickness;
+    const dy=Math.sin(angle)*thickness;
+    ctx.drawImage(tmp,dx,dy);
+  }
+
+  ctx.drawImage(img,pad,pad);
+}
+
+$('stahnout').onclick=()=>{
+  if(!img)return;
+  c.toBlob(b=>{
+    const a=document.createElement('a');
+    a.href=URL.createObjectURL(b);
+    a.download=nazev+'_nalepka.png';
+    a.click();
+  },'image/png');
+};
+</script>
+</body>
+</html>
