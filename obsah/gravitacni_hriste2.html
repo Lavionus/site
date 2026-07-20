@@ -36,6 +36,7 @@ canvas{display:block;width:100%;height:100%;cursor:crosshair;touch-action:none}
   <button id="pauza">⏸️ Pauza</button>
   <button id="stopy" class="on">〰️ Stopy</button>
   <button id="pole" title="Šipky ukazují směr a sílu gravitace v daném místě, spočtené ze všech těles najednou">🧲 Pole</button>
+  <button id="mrizka" title="Mřížka se prohýbá směrem ke každému tělesu — čím blíž a čím těžší, tím větší prohnutí">🕸️ Mřížka</button>
   <button id="smazat">🗑 Smazat vše</button>
   <a class="odkaz" href="gravitacni_hriste.html">🎯 Jen kolem Slunce</a>
   <a class="odkaz" href="pohyb_vesmirem.html">🌌 Pohyb vesmírem</a>
@@ -60,6 +61,7 @@ canvas{display:block;width:100%;height:100%;cursor:crosshair;touch-action:none}
     <div class="radek">💥 Srazí-li se dvě planetky, splynou v jednu — hmotnost se sečte (zachování hybnosti).</div>
     <div class="radek">Posuň jezdec <b>Hmotnost dalšího tělesa</b> než vystřelíš z praku novou planetku.</div>
     <div class="radek">🧲 <b>Pole</b> zobrazí šipky směru a síly gravitace — spočtené ze všech těles zároveň, ne jen ze Slunce.</div>
+    <div class="radek">🕸️ <b>Mřížka</b> — klasická demonstrace prohnutí prostoru: síť se prohýbá směrem ke každému tělesu.</div>
     <div class="radek">🎲 <b>Náhodná soustava</b> rozmístí 2–4 planetky podle seedu — stejné číslo v políčku seed = stejné rozmístění.</div>
   </div>
   <div class="vysvetleni" id="vysvetleni">
@@ -76,7 +78,7 @@ const G=36000;                 // gravitační konstanta simulace (px³/s²/hmot
 const HMOTNOST_SLUNCE=1000;    // hmotnost Slunce -> G*M = 36e6, stejné jako v základní verzi
 const R_SLUNCE=16;             // poloměr Slunce (px) — pod ~22 px těleso shoří
 let telesa=[],vybuchy=[],hvezdy=[];
-let bezi=true,ukazStopy=true,ukazPole=false,simCas=0;
+let bezi=true,ukazStopy=true,ukazPole=false,ukazMrizka=false,simCas=0;
 let pocitadla={shorelo:0,uniklo:0,splynulo:0};
 const BARVY=['#6aa6fd','#e06666','#7fd48f','#e6c87a','#c98bd4','#7fd4d4','#f0975a'];
 let dalsiBarva=0;
@@ -274,12 +276,45 @@ function kresliPole(){
     }
   }
 }
+/* Mřížka jako "prohnutá tkanina prostoru": vrcholy pravidelné mřížky se
+   posunou směrem ke každému tělesu (přesně ve směru gravitačního zrychlení),
+   o to víc, čím silnější je tam gravitace — a mezi posunutými vrcholy se
+   pak jen vedou rovné čáry. Stejný princip jako klasické demonstrace
+   "prohnutí prostoročasu", jen ve 2D pohledu shora. */
+function posunutyBod(x,y){
+  const a=zrychleniNa({x,y});
+  const mag=Math.hypot(a.ax,a.ay);
+  if(mag<0.5)return {x,y};
+  const posun=Math.min(30,6.5*Math.log10(1+mag/30));
+  return {x:x+a.ax/mag*posun,y:y+a.ay/mag*posun};
+}
+function kresliMrizku(){
+  const {w,h}=rozmer(),mezera=40;
+  const sloupce=Math.ceil(w/mezera)+1,radky=Math.ceil(h/mezera)+1;
+  const body=[];
+  for(let j=0;j<radky;j++){
+    body.push([]);
+    for(let i=0;i<sloupce;i++)body[j].push(posunutyBod(i*mezera,j*mezera));
+  }
+  ctx.strokeStyle='rgba(120,170,255,.4)';ctx.lineWidth=1;
+  for(let j=0;j<radky;j++){
+    ctx.beginPath();
+    body[j].forEach((p,i)=>i===0?ctx.moveTo(p.x,p.y):ctx.lineTo(p.x,p.y));
+    ctx.stroke();
+  }
+  for(let i=0;i<sloupce;i++){
+    ctx.beginPath();
+    for(let j=0;j<radky;j++){const p=body[j][i];j===0?ctx.moveTo(p.x,p.y):ctx.lineTo(p.x,p.y);}
+    ctx.stroke();
+  }
+}
 function kresli(){
   const {w,h}=rozmer(),s=stred();
   ctx.clearRect(0,0,w,h);
   hvezdy.forEach(hv=>{ctx.globalAlpha=hv.a;ctx.fillStyle='#fff';ctx.fillRect(hv.x,hv.y,hv.v,hv.v);});
   ctx.globalAlpha=1;
-  // gravitační pole (pod vším ostatním)
+  // gravitační pole a mřížka (pod vším ostatním)
+  if(ukazMrizka)kresliMrizku();
   if(ukazPole)kresliPole();
   // Slunce
   const zar=ctx.createRadialGradient(s.x,s.y,4,s.x,s.y,42);
@@ -361,6 +396,7 @@ requestAnimationFrame(smycka);
 $('pauza').onclick=function(){bezi=!bezi;this.textContent=bezi?'⏸️ Pauza':'▶️ Spustit';};
 $('stopy').onclick=function(){ukazStopy=!ukazStopy;this.classList.toggle('on',ukazStopy);};
 $('pole').onclick=function(){ukazPole=!ukazPole;this.classList.toggle('on',ukazPole);};
+$('mrizka').onclick=function(){ukazMrizka=!ukazMrizka;this.classList.toggle('on',ukazMrizka);};
 $('smazat').onclick=()=>{telesa=[];vybuchy=[];pocitadla={shorelo:0,uniklo:0,splynulo:0};};
 </script>
 </body>
