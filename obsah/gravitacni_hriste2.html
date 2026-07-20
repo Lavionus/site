@@ -35,6 +35,7 @@ canvas{display:block;width:100%;height:100%;cursor:crosshair;touch-action:none}
   <label>Hmotnost dalšího tělesa <input type="range" id="hmotnost" min="1" max="60" value="8"></label>
   <button id="pauza">⏸️ Pauza</button>
   <button id="stopy" class="on">〰️ Stopy</button>
+  <button id="pole" title="Šipky ukazují směr a sílu gravitace v daném místě, spočtené ze všech těles najednou">🧲 Pole</button>
   <button id="smazat">🗑 Smazat vše</button>
   <a class="odkaz" href="gravitacni_hriste.html">🎯 Jen kolem Slunce</a>
   <a class="odkaz" href="pohyb_vesmirem.html">🌌 Pohyb vesmírem</a>
@@ -55,6 +56,7 @@ canvas{display:block;width:100%;height:100%;cursor:crosshair;touch-action:none}
     <div class="radek">Těžká planetka umí "ukrást" dráhu lehčí sousedce, nebo ji vychýlit do jiné elipsy.</div>
     <div class="radek">💥 Srazí-li se dvě planetky, splynou v jednu — hmotnost se sečte (zachování hybnosti).</div>
     <div class="radek">Posuň jezdec <b>Hmotnost dalšího tělesa</b> než vystřelíš z praku novou planetku.</div>
+    <div class="radek">🧲 <b>Pole</b> zobrazí šipky směru a síly gravitace — spočtené ze všech těles zároveň, ne jen ze Slunce.</div>
   </div>
   <div class="vysvetleni" id="vysvetleni">
     <b>Natáhni prak:</b> stiskni tlačítko myši (planetka se objeví), táhni — čárkovaná čára ukazuje směr — a pusť.
@@ -70,7 +72,7 @@ const G=36000;                 // gravitační konstanta simulace (px³/s²/hmot
 const HMOTNOST_SLUNCE=1000;    // hmotnost Slunce -> G*M = 36e6, stejné jako v základní verzi
 const R_SLUNCE=16;             // poloměr Slunce (px) — pod ~22 px těleso shoří
 let telesa=[],vybuchy=[],hvezdy=[];
-let bezi=true,ukazStopy=true,simCas=0;
+let bezi=true,ukazStopy=true,ukazPole=false,simCas=0;
 let pocitadla={shorelo:0,uniklo:0,splynulo:0};
 const BARVY=['#6aa6fd','#e06666','#7fd48f','#e6c87a','#c98bd4','#7fd4d4','#f0975a'];
 let dalsiBarva=0;
@@ -204,11 +206,39 @@ function typDrahy(t){
   const r=Math.hypot(dx,dy),v2=t.vx*t.vx+t.vy*t.vy;
   return v2/2-G*HMOTNOST_SLUNCE/r;   // měrná energie vůči Slunci: <0 elipsa, >0 hyperbola (únik)
 }
+function nakresliSipku(x,y,smerX,smerY,delka,barva){
+  const ex=x+smerX*delka,ey=y+smerY*delka;
+  ctx.strokeStyle=barva;ctx.fillStyle=barva;ctx.lineWidth=1.1;
+  ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(ex,ey);ctx.stroke();
+  const uhel=Math.atan2(smerY,smerX),hlava=3.4;
+  ctx.beginPath();ctx.moveTo(ex,ey);
+  ctx.lineTo(ex-Math.cos(uhel-0.45)*hlava,ey-Math.sin(uhel-0.45)*hlava);
+  ctx.lineTo(ex-Math.cos(uhel+0.45)*hlava,ey-Math.sin(uhel+0.45)*hlava);
+  ctx.closePath();ctx.fill();
+}
+/* Mřížka šipek: v každém bodě sečteme gravitační zrychlení od Slunce i všech
+   planetek (stejná funkce jako pro pohyb těles) — délka a jas šipky rostou
+   logaritmicky se silou pole, aby blízko těžkých těles nebyly šipky obrovské. */
+function kresliPole(){
+  const {w,h}=rozmer(),mezera=48;
+  for(let y=mezera/2;y<h;y+=mezera){
+    for(let x=mezera/2;x<w;x+=mezera){
+      const a=zrychleniNa({x,y});
+      const mag=Math.hypot(a.ax,a.ay);
+      if(mag<0.5)continue;
+      const delka=Math.min(20,4+6*Math.log10(1+mag/40));
+      const svit=Math.min(0.9,0.15+0.22*Math.log10(1+mag/40));
+      nakresliSipku(x,y,a.ax/mag,a.ay/mag,delka,`rgba(150,190,255,${svit.toFixed(3)})`);
+    }
+  }
+}
 function kresli(){
   const {w,h}=rozmer(),s=stred();
   ctx.clearRect(0,0,w,h);
   hvezdy.forEach(hv=>{ctx.globalAlpha=hv.a;ctx.fillStyle='#fff';ctx.fillRect(hv.x,hv.y,hv.v,hv.v);});
   ctx.globalAlpha=1;
+  // gravitační pole (pod vším ostatním)
+  if(ukazPole)kresliPole();
   // Slunce
   const zar=ctx.createRadialGradient(s.x,s.y,4,s.x,s.y,42);
   zar.addColorStop(0,'#fff3b0');zar.addColorStop(.4,'#ffd54f');zar.addColorStop(1,'rgba(255,180,60,0)');
@@ -288,6 +318,7 @@ requestAnimationFrame(smycka);
 /* ================= OVLÁDÁNÍ ================= */
 $('pauza').onclick=function(){bezi=!bezi;this.textContent=bezi?'⏸️ Pauza':'▶️ Spustit';};
 $('stopy').onclick=function(){ukazStopy=!ukazStopy;this.classList.toggle('on',ukazStopy);};
+$('pole').onclick=function(){ukazPole=!ukazPole;this.classList.toggle('on',ukazPole);};
 $('smazat').onclick=()=>{telesa=[];vybuchy=[];pocitadla={shorelo:0,uniklo:0,splynulo:0};};
 </script>
 </body>
