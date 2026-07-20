@@ -1219,7 +1219,10 @@ const KATALOG_SEKCE = [
           "kůlna",
           "kusovník",
           "krov",
-          "dřevostavba"
+          "dřevostavba",
+          "kozy",
+          "přístřešek na auta",
+          "carport"
         ]
       },
       {
@@ -1647,6 +1650,11 @@ const KATALOG_SEKCE = [
         "soubor": "obsah/gravitacni_hriste.html",
         "nazev": "🎯 Gravitační hřiště",
         "tagy": ["gravitace", "fyzika", "kepler", "oběžná dráha", "vesmír", "simulace", "kosmická rychlost"]
+      },
+      {
+        "soubor": "obsah/gravitacni_hriste2.html",
+        "nazev": "🌀 Gravitační hřiště: Vzájemná přitažlivost",
+        "tagy": ["gravitace", "fyzika", "n-těles", "hmotnost", "vesmír", "simulace", "srážky planet"]
       },
       {
         "soubor": "obsah/physics_playground.html",

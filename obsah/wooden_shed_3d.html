@@ -74,29 +74,37 @@ tr:last-child td{border-bottom:none}
     <div>
       <div class="card">
         <h2>📐 Rozměry a tvar</h2>
+        <label>Typ konstrukce</label>
+        <div class="shape-tabs" id="constructionTabs">
+          <button data-construction="ram" class="active">🧱 Rámové stěny</button>
+          <button data-construction="kozy">🪜 Kozy (otevřený přístřešek)</button>
+        </div>
         <div class="grid2">
           <div><label>Šířka (m)</label><input type="number" id="width" value="3" step="0.1"></div>
           <div><label>Délka (m)</label><input type="number" id="length" value="4" step="0.1"></div>
         </div>
         <div class="grid2">
-          <div><label>Výška stěny (m)</label><input type="number" id="wallHeight" value="2.1" step="0.05"></div>
+          <div><label id="wallHeightLabel">Výška stěny (m)</label><input type="number" id="wallHeight" value="2.1" step="0.05"></div>
           <div><label>Sklon střechy (°)</label><input type="number" id="roofAngle" value="15" step="1"></div>
         </div>
-        <label>Tvar střechy</label>
-        <div class="shape-tabs">
-          <button data-shape="pultova" class="active">📐 Pultová</button>
-          <button data-shape="sedlova">🔺 Sedlová</button>
-          <button data-shape="valbova">⛰️ Valbová</button>
-          <button data-shape="stanova">🔷 Stanová</button>
+        <div id="shapeTabsWrap">
+          <label>Tvar střechy</label>
+          <div class="shape-tabs">
+            <button data-shape="pultova" class="active">📐 Pultová</button>
+            <button data-shape="sedlova">🔺 Sedlová</button>
+            <button data-shape="valbova">⛰️ Valbová</button>
+            <button data-shape="stanova">🔷 Stanová</button>
+          </div>
         </div>
+        <div id="kozyNote" class="note" style="display:none;margin-top:0">Kozy podpírají jednosklonnou (pultovou) střechu — nízká pozednice na straně A, vysoká na straně B. Ostatní tvary střech vyžadují rámovou konstrukci.</div>
 
-        <h3>Konstrukce</h3>
+        <h3 id="constructionH3">Konstrukce</h3>
         <div class="grid2">
-          <div><label>Rozteč sloupků (cm)</label><input type="number" id="studSpacing" value="80" step="5"></div>
+          <div><label id="studSpacingLabel">Rozteč sloupků (cm)</label><input type="number" id="studSpacing" value="80" step="5"></div>
           <div><label>Rozteč krokví (cm)</label><input type="number" id="rafterSpacing" value="70" step="5"></div>
         </div>
         <div class="grid2">
-          <div><label>Profil sloupku</label>
+          <div><label id="studProfileLabel">Profil sloupku</label>
             <select id="studProfile">
               <option value="0.06">60×60 mm</option>
               <option value="0.08" selected>80×80 mm</option>
@@ -116,7 +124,7 @@ tr:last-child td{border-bottom:none}
         <div id="warnBox"></div>
       </div>
 
-      <div class="card">
+      <div class="card" id="openingsCard">
         <h2>🚪 Dveře a okna</h2>
         <div id="openingsList" class="openings-list"></div>
         <div class="row">
@@ -139,7 +147,7 @@ tr:last-child td{border-bottom:none}
           <div class="viewer-toolbar">
             <button id="btnWire">🔲 Drátěný model</button>
             <button id="btnRoofSolid" class="active">🏠 Střecha</button>
-            <button id="btnBracing" class="active">✕ Ztužidla stěn</button>
+            <button id="btnBracing" class="active">📐 Rohové vzpěry</button>
             <button id="btnRoofBracing" class="active">🌬️ Zavětrování krovu</button>
             <button id="btnAutoRotate">🔄 Auto-rotace</button>
             <button id="btnReset">🎯 Reset pohledu</button>
@@ -174,11 +182,32 @@ tr:last-child td{border-bottom:none}
 <script>
 const $=id=>document.getElementById(id);
 let shape='pultova';
+let constructionType='ram'; // 'ram' = rámové stěny, 'kozy' = otevřený přístřešek na kozách
+
+// ---------- Typ konstrukce: rámové stěny vs. kozy ----------
+document.querySelectorAll('#constructionTabs button').forEach(btn=>{
+  btn.onclick=()=>{
+    document.querySelectorAll('#constructionTabs button').forEach(b=>b.classList.remove('active'));
+    btn.classList.add('active');
+    constructionType=btn.dataset.construction;
+    const isKozy=constructionType==='kozy';
+    if(isKozy){shape='pultova';document.querySelectorAll('.shape-tabs button[data-shape]').forEach(b=>b.classList.toggle('active',b.dataset.shape==='pultova'));}
+    $('shapeTabsWrap').style.display=isKozy?'none':'block';
+    $('kozyNote').style.display=isKozy?'block':'none';
+    $('openingsCard').style.display=isKozy?'none':'block';
+    $('constructionH3').textContent=isKozy?'Kozy':'Konstrukce';
+    $('wallHeightLabel').textContent=isKozy?'Výška nízké nohy / strany A (m)':'Výška stěny (m)';
+    $('studSpacingLabel').textContent=isKozy?'Rozteč koz (cm)':'Rozteč sloupků (cm)';
+    $('studProfileLabel').textContent=isKozy?'Profil nohy koz':'Profil sloupku';
+    rebuildAll();
+  };
+});
 
 // ---------- Tvary střechy: přepínání ----------
-document.querySelectorAll('.shape-tabs button').forEach(btn=>{
+document.querySelectorAll('.shape-tabs button[data-shape]').forEach(btn=>{
   btn.onclick=()=>{
-    document.querySelectorAll('.shape-tabs button').forEach(b=>b.classList.remove('active'));
+    if(constructionType==='kozy')return; // kozy podporují jen pultovou
+    document.querySelectorAll('.shape-tabs button[data-shape]').forEach(b=>b.classList.remove('active'));
     btn.classList.add('active');
     shape=btn.dataset.shape;
     rebuildAll();
@@ -468,6 +497,98 @@ function extendPast(bearing,far,dist){
   return new THREE.Vector3().addVectors(bearing,dir.multiplyScalar(dist));
 }
 
+// krátké rohové vzpěry (pásky/kolena) v evropském stylu (hrázděná stavba/Fachwerk) —
+// místo jedné táhlé diagonály přes celou stěnu jde o dvě krátké šikmé vzpěry u horních rohů,
+// vracené jako parametrické úseky {t1,y1,t2,y2} podél stěny (t = vzdálenost od počátku, y = výška)
+function computeWallBraceSegments(edgeLen,wallHeight,hasOpening){
+  if(!bracingOn||hasOpening)return [];
+  const vRun=Math.min(wallHeight*0.45,0.9);
+  const hRun=Math.min(edgeLen*0.28,0.9);
+  if(edgeLen<2*hRun+0.3)return [];
+  return [
+    {t1:0,y1:wallHeight-vRun,t2:hRun,y2:wallHeight},
+    {t1:edgeLen,y1:wallHeight-vRun,t2:edgeLen-hRun,y2:wallHeight},
+  ];
+}
+
+function countAlong(len,spacing){return Math.max(1,Math.floor(len/spacing))+1;}
+
+// pozice koz (v ose X) podél délky přístřešku, sdíleno mezi 3D vykreslením a kusovníkem
+function computeKozyPositions(m){
+  const x0=-m.length/2;
+  const n=Math.max(1,Math.floor(m.length/m.studSpacing));
+  const positions=[];
+  for(let i=0;i<=n;i++)positions.push(x0+m.length*i/n);
+  return positions;
+}
+
+// velikost hlavicového pásku (odsazení po trámu = svislý pokles, tedy sklon 45°)
+function kozaBraceReach(m,topY){
+  return Math.min(0.6,m.studSpacing*0.45,topY*0.4);
+}
+
+// Zavětrovací pásky jedné kozy: u KAŽDÉ nohy vějíř dvou šikmých pásků od nohy nahoru
+// k pozednici (vlevo i vpravo). U krajních noh jde jen jeden pásek dovnitř řady.
+// Vrací úsečky [[x,y,z],[x,y,z]] — sdíleno mezi 3D vykreslením a kusovníkem.
+function computeKozaRowBraces(m,z,topY){
+  if(!bracingOn)return [];
+  const x0=-m.length/2, x1=m.length/2;
+  const r=kozaBraceReach(m,topY);
+  const segs=[];
+  computeKozyPositions(m).forEach(x=>{
+    const foot=[x,topY-r,z];
+    if(x-r>=x0-1e-3)segs.push([foot,[x-r,topY,z]]);
+    if(x+r<=x1+1e-3)segs.push([foot,[x+r,topY,z]]);
+  });
+  return segs;
+}
+
+// Zavětrovací pásky vodorovných trámů: u každého trámu jeden pásek na každém konci,
+// od nohy kozy nahoru k trámu (v příčné rovině).
+function computeKozaCrossBraces(m){
+  if(!bracingOn)return [];
+  const z0=-m.width/2, z1=m.width/2;
+  const y=m.wallHeight;
+  const r=Math.min(0.6,m.width*0.3,y*0.4);
+  const segs=[];
+  computeKozyPositions(m).forEach(x=>{
+    segs.push([[x,y-r,z0],[x,y,z0+r]]);
+    segs.push([[x,y-r,z1],[x,y,z1-r]]);
+  });
+  return segs;
+}
+
+const segLen=([a,b])=>Math.hypot(b[0]-a[0],b[1]-a[1],b[2]-a[2]);
+const drawSegs=(segs,prof,color)=>segs.forEach(([a,b])=>
+  beam(new THREE.Vector3(...a),new THREE.Vector3(...b),prof,prof,color));
+
+// jedna "koza" = celá řada noh v jedné ose (A nebo B) + jejich společná pozednice nahoře,
+// nohy a pozednice provázané hlavicovými zavětrovacími pásky u každé nohy
+function buildKozaRow(m,x0,x1,z,topY){
+  const {studProfile}=m;
+  computeKozyPositions(m).forEach(x=>{
+    beam(new THREE.Vector3(x,0,z),new THREE.Vector3(x,topY,z),studProfile,studProfile,WOOD_POST);
+  });
+  beam(new THREE.Vector3(x0,topY,z),new THREE.Vector3(x1,topY,z),studProfile,studProfile,WOOD_PLATE);
+  drawSegs(computeKozaRowBraces(m,z,topY),studProfile,WOOD_BRACE);
+}
+
+// dvě kozy (nízká strana A při z0, vysoká strana B při z1) spojené vodorovnými trámy
+// v úrovni nízké pozednice — každý trám je zavětrován pásky k nohám obou koz.
+// Nahoře pak leží šikmé vaznice/krokve (řeší společná část kódu pro pultovou střechu).
+function buildKozyFrame(m,x0,x1,z0,z1){
+  const {wallHeight,roofHeight,studProfile}=m;
+
+  buildKozaRow(m,x0,x1,z0,wallHeight);              // koza A — nízká strana
+  buildKozaRow(m,x0,x1,z1,wallHeight+roofHeight);   // koza B — vysoká strana
+
+  // vodorovné trámy spojující obě kozy
+  computeKozyPositions(m).forEach(x=>{
+    beam(new THREE.Vector3(x,wallHeight,z0),new THREE.Vector3(x,wallHeight,z1),studProfile,studProfile,WOOD_PLATE);
+  });
+  drawSegs(computeKozaCrossBraces(m),studProfile,WOOD_BRACE);
+}
+
 function buildScene(m){
   while(buildGroup.children.length){
     const child=buildGroup.children[0];
@@ -486,52 +607,56 @@ function buildScene(m){
   floor.position.set(0,-0.04,0);
   buildGroup.add(floor);
 
-  const c00=new THREE.Vector3(x0,0,z0), c10=new THREE.Vector3(x1,0,z0), c11=new THREE.Vector3(x1,0,z1), c01=new THREE.Vector3(x0,0,z1);
-  const walls=[
-    {id:'z0',a:c00,b:c10,len:length},
-    {id:'z1',a:c01,b:c11,len:length},
-    {id:'x0',a:c00,b:c01,len:width},
-    {id:'x1',a:c10,b:c11,len:width},
-  ];
-  const openingsByWall={};
-  walls.forEach(w=>openingsByWall[w.id]=validOpenings.filter(o=>o.wall===w.id));
+  if(constructionType==='kozy'){
+    buildKozyFrame(m,x0,x1,z0,z1);
+  }else{
+    const c00=new THREE.Vector3(x0,0,z0), c10=new THREE.Vector3(x1,0,z0), c11=new THREE.Vector3(x1,0,z1), c01=new THREE.Vector3(x0,0,z1);
+    const walls=[
+      {id:'z0',a:c00,b:c10,len:length},
+      {id:'z1',a:c01,b:c11,len:length},
+      {id:'x0',a:c00,b:c01,len:width},
+      {id:'x1',a:c10,b:c11,len:width},
+    ];
+    const openingsByWall={};
+    walls.forEach(w=>openingsByWall[w.id]=validOpenings.filter(o=>o.wall===w.id));
 
-  // sloupky po obvodu (s vynecháním otvorů a rámovými sloupky po stranách)
-  walls.forEach(w=>{
-    const ops=openingsByWall[w.id];
-    studLayout(w.len,m.studSpacing,ops).forEach(pos=>{
-      const p0=edgePoint(w.a,w.b,w.len,pos,0);
-      const p1=edgePoint(w.a,w.b,w.len,pos,wallHeight);
-      beam(p0,p1,studProfile,studProfile,WOOD_POST);
+    // sloupky po obvodu (s vynecháním otvorů a rámovými sloupky po stranách)
+    walls.forEach(w=>{
+      const ops=openingsByWall[w.id];
+      studLayout(w.len,m.studSpacing,ops).forEach(pos=>{
+        const p0=edgePoint(w.a,w.b,w.len,pos,0);
+        const p1=edgePoint(w.a,w.b,w.len,pos,wallHeight);
+        beam(p0,p1,studProfile,studProfile,WOOD_POST);
+      });
+      // nadpraží a parapety otvorů
+      ops.forEach(o=>{
+        const headerY=o.sill+o.height;
+        const jL=edgePoint(w.a,w.b,w.len,o.pos,headerY);
+        const jR=edgePoint(w.a,w.b,w.len,o.pos+o.width,headerY);
+        beam(jL,jR,studProfile,studProfile,WOOD_PLATE);
+        if(o.sill>0){
+          const sL=edgePoint(w.a,w.b,w.len,o.pos,o.sill);
+          const sR=edgePoint(w.a,w.b,w.len,o.pos+o.width,o.sill);
+          beam(sL,sR,studProfile,studProfile,WOOD_PLATE);
+        }
+      });
+      // rohové vzpěry (pásky/kolena) v evropském stylu — jen na stěnách bez otvoru
+      computeWallBraceSegments(w.len,wallHeight,!!ops.length).forEach(seg=>{
+        const p1=edgePoint(w.a,w.b,w.len,seg.t1,seg.y1);
+        const p2=edgePoint(w.a,w.b,w.len,seg.t2,seg.y2);
+        beam(p1,p2,0.06,0.06,WOOD_BRACE);
+      });
     });
-    // nadpraží a parapety otvorů
-    ops.forEach(o=>{
-      const headerY=o.sill+o.height;
-      const jL=edgePoint(w.a,w.b,w.len,o.pos,headerY);
-      const jR=edgePoint(w.a,w.b,w.len,o.pos+o.width,headerY);
-      beam(jL,jR,studProfile,studProfile,WOOD_PLATE);
-      if(o.sill>0){
-        const sL=edgePoint(w.a,w.b,w.len,o.pos,o.sill);
-        const sR=edgePoint(w.a,w.b,w.len,o.pos+o.width,o.sill);
-        beam(sL,sR,studProfile,studProfile,WOOD_PLATE);
-      }
-    });
-    // diagonální ztužidlo (jen na stěnách bez otvoru, zjednodušeně přes celou úhlopříčku)
-    if(bracingOn&&!ops.length){
-      const braceA=edgePoint(w.a,w.b,w.len,w.len*0.08,0.05);
-      const braceB=edgePoint(w.a,w.b,w.len,Math.min(w.len*0.92,w.len-0.1),wallHeight-0.05);
-      beam(braceA,braceB,0.04,0.02,WOOD_BRACE);
-    }
-  });
 
-  // pozednice (horní rám) + práh (dolní rám)
-  [0,wallHeight].forEach(y=>{
-    const p00=new THREE.Vector3(x0,y,z0), p10=new THREE.Vector3(x1,y,z0), p11=new THREE.Vector3(x1,y,z1), p01=new THREE.Vector3(x0,y,z1);
-    beam(p00,p10,studProfile,studProfile,WOOD_PLATE);
-    beam(p10,p11,studProfile,studProfile,WOOD_PLATE);
-    beam(p11,p01,studProfile,studProfile,WOOD_PLATE);
-    beam(p01,p00,studProfile,studProfile,WOOD_PLATE);
-  });
+    // pozednice (horní rám) + práh (dolní rám)
+    [0,wallHeight].forEach(y=>{
+      const p00=new THREE.Vector3(x0,y,z0), p10=new THREE.Vector3(x1,y,z0), p11=new THREE.Vector3(x1,y,z1), p01=new THREE.Vector3(x0,y,z1);
+      beam(p00,p10,studProfile,studProfile,WOOD_PLATE);
+      beam(p10,p11,studProfile,studProfile,WOOD_PLATE);
+      beam(p11,p01,studProfile,studProfile,WOOD_PLATE);
+      beam(p01,p00,studProfile,studProfile,WOOD_PLATE);
+    });
+  }
 
   if(geometryError){return;}
 
@@ -658,18 +783,67 @@ $('btnReset').onclick=()=>{const m=computeModel();resetView(m);};
 // ---------- Kusovník ----------
 function escHtml(s){return String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
 
-function braceLength(edgeLen,wallHeight){
-  const dStart=edgeLen*0.08, dEnd=Math.min(edgeLen*0.92,edgeLen-0.1);
-  return Math.hypot(Math.max(0,dEnd-dStart),Math.max(0,wallHeight-0.1));
+// otevřený přístřešek na kozách — bez plných stěn, jen nohy + vodorovné trámy + diagonální vzpěry
+function buildKozyBom(m){
+  const rows=[];
+  const {width,length,wallHeight,roofHeight,rafterSpacing,studProfile,rW,rH,rafterLenOverhang}=m;
+  const profStud=`${(studProfile*1000).toFixed(0)}×${(studProfile*1000).toFixed(0)} mm`;
+  const profRafter=`${(rW*1000).toFixed(0)}×${(rH*1000).toFixed(0)} mm`;
+  const profBrace=profStud; // pásky ze stejného hranolu jako nohy (jako na reálné stavbě)
+
+  const count=computeKozyPositions(m).length;
+  const highY=wallHeight+roofHeight;
+  const z0=-width/2, z1=width/2;
+
+  // koza A (nízká) a koza B (vysoká) — nohy, pozednice, hlavicové pásky u každé nohy
+  const bracesA=computeKozaRowBraces(m,z0,wallHeight);
+  const bracesB=computeKozaRowBraces(m,z1,highY);
+  const braceLenA=bracesA.reduce((s,seg)=>s+segLen(seg),0);
+  const braceLenB=bracesB.reduce((s,seg)=>s+segLen(seg),0);
+
+  rows.push(['Nohy — koza A (nízká strana)',profStud,wallHeight,count]);
+  rows.push(['Pozednice — koza A',profStud,length,1]);
+  if(bracesA.length)rows.push(['Hlavicové pásky — koza A',profBrace,segLen(bracesA[0]),bracesA.length]);
+
+  rows.push(['Nohy — koza B (vysoká strana)',profStud,highY,count]);
+  rows.push(['Pozednice — koza B',profStud,length,1]);
+  if(bracesB.length)rows.push(['Hlavicové pásky — koza B',profBrace,segLen(bracesB[0]),bracesB.length]);
+
+  // vodorovné trámy spojující obě kozy + jejich zavětrovací pásky k nohám
+  const tieBraces=computeKozaCrossBraces(m);
+  const tieBraceLen=tieBraces.reduce((s,seg)=>s+segLen(seg),0);
+  rows.push(['Vodorovné trámy mezi kozami',profStud,width,count]);
+  if(tieBraces.length)rows.push(['Zavětrovací pásky trámů ke kozám',profBrace,segLen(tieBraces[0]),tieBraces.length]);
+
+  const rafterCount=countAlong(length,rafterSpacing);
+  const rafterTotalLen=rafterCount*rafterLenOverhang;
+  rows.push(['Krokve/vaznice (vč. přesahu)',profRafter,rafterLenOverhang,rafterCount]);
+
+  const roofArea=rafterLenOverhang*length;
+  const boardArea=3.125;
+  const roofBoards=Math.ceil(roofArea/boardArea);
+  rows.push(['Bednění střechy (OSB, 2,5×1,25 m)','deska',null,roofBoards]);
+
+  const roofBraces=computeRoofBraces(m);
+  const roofBraceLen=roofBraces.reduce((sum,[p1,p2])=>sum+p1.distanceTo(p2),0);
+  if(roofBraces.length){
+    rows.push(['Zavětrovací pásky krovu','40×20 mm (lať)','různá',roofBraces.length,roofBraceLen]);
+  }
+
+  const totalTimberM=count*(wallHeight+highY+width)+2*length
+    +braceLenA+braceLenB+tieBraceLen
+    +rafterTotalLen+roofBraceLen;
+
+  return {rows,totalTimberM,roofArea,wallArea:null,geometryError:null};
 }
 
 function buildBom(m){
+  if(constructionType==='kozy')return buildKozyBom(m);
+
   const rows=[];
   const {width,length,wallHeight,studSpacing,rafterSpacing,studProfile,rW,rH,halfW,isPultova,rafterLenOverhang,ridgeLen,hipLenOverhang,geometryError}=m;
   const profStud=`${(studProfile*1000).toFixed(0)}×${(studProfile*1000).toFixed(0)} mm`;
   const profRafter=`${(rW*1000).toFixed(0)}×${(rH*1000).toFixed(0)} mm`;
-
-  function countAlong(len,spacing){return Math.max(1,Math.floor(len/spacing))+1;}
 
   const wallsDef=[{id:'z0',len:length},{id:'z1',len:length},{id:'x0',len:width},{id:'x1',len:width}];
   let totalPositions=0, headerSillLen=0, openingsArea=0, bracingTotalLen=0, bracingCount=0;
@@ -681,10 +855,10 @@ function buildBom(m){
       if(o.sill>0)headerSillLen+=o.width; // + parapet u okna
       openingsArea+=o.width*o.height;
     });
-    if(!ops.length){
-      bracingTotalLen+=braceLength(w.len,wallHeight);
+    computeWallBraceSegments(w.len,wallHeight,!!ops.length).forEach(seg=>{
+      bracingTotalLen+=Math.hypot(seg.t2-seg.t1,seg.y2-seg.y1);
       bracingCount++;
-    }
+    });
   });
   const distinctStuds=Math.max(0,totalPositions-4); // rohy se v součtu přes 4 stěny počítají 2×
 
@@ -695,7 +869,7 @@ function buildBom(m){
     rows.push(['Nadpraží a parapety otvorů',profStud,'různá',null,headerSillLen]);
   }
   if(bracingOn&&bracingCount){
-    rows.push(['Diagonální ztužidla (zjednodušeně)','40×20 mm (lať)','různá',bracingCount,bracingTotalLen]);
+    rows.push(['Rohové vzpěry (pásky/kolena)','60×60 mm','různá',bracingCount,bracingTotalLen]);
   }
 
   const wallAreaBase=Math.max(0,2*(length+width)*wallHeight-openingsArea);
