@@ -4,7 +4,7 @@
    takže jednou navštívená aplikace funguje i offline. */
 /* Při větší aktualizaci webu zvyš číslo verze — stará cache se u návštěvníků
    smaže a vše se stáhne čerstvé (jinak SWR ukáže novou verzi až na druhé načtení). */
-const CACHE = 'webapp-v31';
+const CACHE = 'webapp-v32';
 const JADRO = [
   './',
   './index.html',
