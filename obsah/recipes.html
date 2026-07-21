@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🍳 Kniha receptů</title>
+<link rel="stylesheet" href="../common.css">
+<script>
+  if (localStorage.getItem('webapp_theme') === 'light') document.documentElement.dataset.theme = 'light';
+</script>
+<style>
+body{background:var(--bg-deep);padding:20px clamp(14px,3vw,40px);min-height:100vh}
+.container{max-width:1100px;margin:0 auto}
+h1{font-size:1.5rem;margin-bottom:4px}
+.sub{color:var(--text-muted);font-size:.85rem;margin-bottom:18px}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:16px}
+.toolbar input[type=search]{flex:1;min-width:180px;background:var(--bg-input);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:8px 12px;font-size:.85rem}
+.toolbar select{background:var(--bg-input);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:8px 10px;font-size:.85rem}
+.btn{background:var(--bg-control);color:var(--text);border:1px solid var(--border-strong);padding:8px 14px;border-radius:6px;cursor:pointer;font-size:.85rem}
+.btn:hover{background:var(--bg-hover)}
+.btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px}
+.card{background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius);padding:14px;cursor:pointer;transition:border-color .15s}
+.card:hover{border-color:var(--accent)}
+.card h3{font-size:1rem;margin-bottom:6px}
+.card .meta{display:flex;gap:10px;flex-wrap:wrap;font-size:.75rem;color:var(--text-faint)}
+.card .tag{background:var(--bg-elevated);border:1px solid var(--border);border-radius:10px;padding:1px 8px;font-size:.7rem;color:var(--text-muted);margin-top:8px;display:inline-block}
+.empty{padding:40px;text-align:center;color:var(--text-faint)}
+
+/* modal */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:100;align-items:flex-start;justify-content:center;overflow-y:auto;padding:30px 14px}
+.overlay.show{display:flex}
+.modal{background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius);width:100%;max-width:640px;padding:22px;margin-bottom:30px}
+.modal h2{font-size:1.1rem;margin-bottom:14px}
+.field{margin-bottom:12px}
+.field label{display:block;font-size:.75rem;color:var(--text-faint);margin-bottom:4px}
+.field input,.field select,.field textarea{width:100%;background:var(--bg-input);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:8px 10px;font-size:.88rem;font-family:inherit}
+.field textarea{resize:vertical;min-height:90px}
+.row2{display:flex;gap:10px}
+.row2 .field{flex:1}
+.ingRow{display:flex;gap:6px;margin-bottom:6px}
+.ingRow input:nth-child(1){width:70px;flex:none}
+.ingRow input:nth-child(2){width:80px;flex:none}
+.ingRow input:nth-child(3){flex:1}
+.ingRow button{background:none;border:none;color:var(--danger);cursor:pointer;font-size:.9rem;flex:none}
+.modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}
+
+/* detail */
+.detailHead{display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.scaleBox{display:flex;align-items:center;gap:8px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;padding:8px 12px;margin:14px 0}
+.scaleBox input{width:60px;background:var(--bg-input);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:4px 8px;text-align:center}
+.ingList{list-style:none;margin-bottom:14px}
+.ingList li{padding:6px 0;border-bottom:1px dashed var(--border);font-size:.9rem;display:flex;gap:8px}
+.ingList li b{color:var(--accent);min-width:70px;text-align:right}
+.postup{white-space:pre-wrap;font-size:.9rem;line-height:1.6;color:var(--text-muted)}
+.detailActions{display:flex;gap:8px;margin-top:16px;flex-wrap:wrap}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>🍳 Kniha receptů</h1>
+  <p class="sub">Vlastní recepty s přepočtem množství podle počtu porcí. Vše se ukládá jen v tomto prohlížeči.</p>
+
+  <div class="toolbar">
+    <input type="search" id="search" placeholder="🔍 Hledat recept nebo ingredienci…">
+    <select id="filterKat"><option value="">Všechny kategorie</option></select>
+    <button class="btn primary" id="btnNew">+ Nový recept</button>
+    <button class="btn" id="btnExport">⬇️ Export</button>
+    <button class="btn" id="btnImport">⬆️ Import</button>
+    <input type="file" id="fileImport" accept="application/json" style="display:none">
+  </div>
+
+  <div id="list"></div>
+</div>
+
+<!-- editační modal -->
+<div class="overlay" id="editOverlay">
+  <div class="modal">
+    <h2 id="editTitle">Nový recept</h2>
+    <input type="hidden" id="fId">
+    <div class="field"><label>Název</label><input id="fNazev" placeholder="Bramborový guláš"></div>
+    <div class="row2">
+      <div class="field"><label>Kategorie</label><input id="fKat" list="katList" placeholder="Hlavní jídlo"><datalist id="katList"></datalist></div>
+      <div class="field"><label>Porce</label><input id="fPorce" type="number" min="1" value="4"></div>
+      <div class="field"><label>Čas (min)</label><input id="fCas" type="number" min="0" placeholder="45"></div>
+    </div>
+    <div class="field"><label>Štítky (oddělené čárkou)</label><input id="fTagy" placeholder="polévka, zimní, bez lepku"></div>
+
+    <div class="field">
+      <label>Ingredience</label>
+      <div id="ingRows"></div>
+      <button class="btn" id="btnAddIng" type="button">+ Přidat ingredienci</button>
+    </div>
+
+    <div class="field"><label>Postup přípravy</label><textarea id="fPostup" placeholder="Popiš postup krok za krokem…"></textarea></div>
+
+    <div class="modal-actions">
+      <button class="btn" id="btnCancelEdit">Zrušit</button>
+      <button class="btn primary" id="btnSaveRecipe">Uložit recept</button>
+    </div>
+  </div>
+</div>
+
+<!-- detail modal -->
+<div class="overlay" id="detailOverlay">
+  <div class="modal">
+    <div class="detailHead">
+      <h2 id="dNazev"></h2>
+    </div>
+    <div class="meta" id="dMeta" style="color:var(--text-faint);font-size:.8rem;margin-top:4px"></div>
+    <div class="scaleBox">
+      🍽️ Přepočítat na porce: <input type="number" id="scalePorce" min="1">
+      <button class="btn" id="btnResetScale">↺ Původní</button>
+    </div>
+    <ul class="ingList" id="dIng"></ul>
+    <div class="postup" id="dPostup"></div>
+    <div class="detailActions">
+      <button class="btn" id="btnEditThis">✏️ Upravit</button>
+      <button class="btn" id="btnDeleteThis" style="color:var(--danger)">🗑️ Smazat</button>
+      <button class="btn" id="btnPrintThis">🖨️ Tisk</button>
+      <button class="btn" id="btnCloseDetail">Zavřít</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const STORAGE_KEY='recipes_v1';
+let recipes=JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]');
+let openId=null;
+
+function save(){localStorage.setItem(STORAGE_KEY,JSON.stringify(recipes));}
+function escHtml(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function norm(s){return (s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');}
+
+function fmtNum(n){
+  if(!isFinite(n))return '';
+  const r=Math.round(n*100)/100;
+  return r % 1 === 0 ? String(r) : r.toFixed(2).replace(/0+$/,'').replace(/\.$/,'');
+}
+
+function renderKatOptions(){
+  const kats=[...new Set(recipes.map(r=>r.kategorie).filter(Boolean))].sort();
+  $('filterKat').innerHTML='<option value="">Všechny kategorie</option>'+kats.map(k=>`<option value="${escHtml(k)}">${escHtml(k)}</option>`).join('');
+  $('katList').innerHTML=kats.map(k=>`<option value="${escHtml(k)}">`).join('');
+}
+
+function renderList(){
+  const q=norm($('search').value.trim());
+  const kat=$('filterKat').value;
+  const filtered=recipes.filter(r=>{
+    if(kat && r.kategorie!==kat) return false;
+    if(!q) return true;
+    const hay=norm(r.nazev+' '+(r.tagy||[]).join(' ')+' '+(r.ingredience||[]).map(i=>i.nazev).join(' '));
+    return hay.includes(q);
+  }).sort((a,b)=>a.nazev.localeCompare(b.nazev,'cs'));
+
+  if(!filtered.length){
+    $('list').innerHTML='<div class="empty">Žádné recepty. Přidej první tlačítkem „+ Nový recept“.</div>';
+    return;
+  }
+  $('list').innerHTML='<div class="grid">'+filtered.map(r=>`
+    <div class="card" data-id="${r.id}">
+      <h3>${escHtml(r.nazev)}</h3>
+      <div class="meta">
+        ${r.porce?`<span>🍽️ ${r.porce} porcí</span>`:''}
+        ${r.cas?`<span>⏱️ ${r.cas} min</span>`:''}
+        ${r.kategorie?`<span>🏷️ ${escHtml(r.kategorie)}</span>`:''}
+      </div>
+      ${(r.tagy||[]).map(t=>`<span class="tag">${escHtml(t)}</span>`).join(' ')}
+    </div>`).join('')+'</div>';
+  $('list').querySelectorAll('.card').forEach(c=>c.onclick=()=>openDetail(c.dataset.id));
+}
+
+/* ---- Editace ---- */
+function ingRowHtml(ing){
+  ing=ing||{mnozstvi:'',jednotka:'',nazev:''};
+  return `<div class="ingRow">
+    <input class="ingMnoz" type="text" placeholder="200" value="${escHtml(ing.mnozstvi)}">
+    <input class="ingJedn" type="text" placeholder="g" value="${escHtml(ing.jednotka)}">
+    <input class="ingNazev" type="text" placeholder="hladká mouka" value="${escHtml(ing.nazev)}">
+    <button type="button" title="Odebrat">✕</button>
+  </div>`;
+}
+function addIngRow(ing){
+  const div=document.createElement('div');
+  div.innerHTML=ingRowHtml(ing);
+  const row=div.firstElementChild;
+  row.querySelector('button').onclick=()=>row.remove();
+  $('ingRows').appendChild(row);
+}
+$('btnAddIng').onclick=()=>addIngRow();
+
+function openEdit(recipe){
+  $('editTitle').textContent=recipe?'Upravit recept':'Nový recept';
+  $('fId').value=recipe?recipe.id:'';
+  $('fNazev').value=recipe?recipe.nazev:'';
+  $('fKat').value=recipe?recipe.kategorie||'':'';
+  $('fPorce').value=recipe?recipe.porce||4:4;
+  $('fCas').value=recipe?recipe.cas||'':'';
+  $('fTagy').value=recipe?(recipe.tagy||[]).join(', '):'';
+  $('fPostup').value=recipe?recipe.postup||'':'';
+  $('ingRows').innerHTML='';
+  (recipe?recipe.ingredience:[{}]).forEach(i=>addIngRow(i));
+  $('editOverlay').classList.add('show');
+}
+$('btnNew').onclick=()=>openEdit(null);
+$('btnCancelEdit').onclick=()=>$('editOverlay').classList.remove('show');
+
+$('btnSaveRecipe').onclick=()=>{
+  const nazev=$('fNazev').value.trim();
+  if(!nazev){alert('Vyplň název receptu.');return;}
+  const ingredience=[...$('ingRows').querySelectorAll('.ingRow')].map(row=>({
+    mnozstvi:row.querySelector('.ingMnoz').value.trim(),
+    jednotka:row.querySelector('.ingJedn').value.trim(),
+    nazev:row.querySelector('.ingNazev').value.trim()
+  })).filter(i=>i.nazev);
+  const id=$('fId').value || 'r'+Date.now()+Math.random().toString(36).slice(2,6);
+  const data={
+    id,
+    nazev,
+    kategorie:$('fKat').value.trim(),
+    porce:Math.max(1,parseInt($('fPorce').value)||4),
+    cas:parseInt($('fCas').value)||null,
+    tagy:$('fTagy').value.split(',').map(t=>t.trim()).filter(Boolean),
+    ingredience,
+    postup:$('fPostup').value.trim()
+  };
+  const idx=recipes.findIndex(r=>r.id===id);
+  if(idx>=0) recipes[idx]=data; else recipes.push(data);
+  save();
+  $('editOverlay').classList.remove('show');
+  renderKatOptions();
+  renderList();
+  if(idx>=0 && openId===id) openDetail(id);
+};
+
+/* ---- Detail + přepočet porcí ---- */
+function openDetail(id){
+  const r=recipes.find(x=>x.id===id);
+  if(!r)return;
+  openId=id;
+  $('dNazev').textContent=r.nazev;
+  $('dMeta').textContent=[r.kategorie,r.cas?`⏱️ ${r.cas} min`:'',(r.tagy||[]).join(', ')].filter(Boolean).join(' · ');
+  $('scalePorce').value=r.porce;
+  $('scalePorce').dataset.base=r.porce;
+  renderIngredients(r, r.porce);
+  $('dPostup').textContent=r.postup||'Postup nebyl vyplněn.';
+  $('detailOverlay').classList.add('show');
+}
+function renderIngredients(r, porce){
+  const base=r.porce||1;
+  const factor=porce/base;
+  $('dIng').innerHTML=(r.ingredience||[]).map(i=>{
+    const num=parseFloat(String(i.mnozstvi).replace(',','.'));
+    const mnoz=isFinite(num) ? fmtNum(num*factor) : i.mnozstvi;
+    return `<li><b>${escHtml(mnoz)} ${escHtml(i.jednotka)}</b> <span>${escHtml(i.nazev)}</span></li>`;
+  }).join('') || '<li style="color:var(--text-faint)">Žádné ingredience.</li>';
+}
+$('scalePorce').addEventListener('input',()=>{
+  const r=recipes.find(x=>x.id===openId);
+  if(!r)return;
+  const v=Math.max(1,parseFloat($('scalePorce').value)||r.porce);
+  renderIngredients(r, v);
+});
+$('btnResetScale').onclick=()=>{
+  const r=recipes.find(x=>x.id===openId);
+  if(!r)return;
+  $('scalePorce').value=r.porce;
+  renderIngredients(r, r.porce);
+};
+$('btnCloseDetail').onclick=()=>{$('detailOverlay').classList.remove('show');openId=null;};
+$('btnEditThis').onclick=()=>{
+  const r=recipes.find(x=>x.id===openId);
+  $('detailOverlay').classList.remove('show');
+  openEdit(r);
+};
+$('btnDeleteThis').onclick=()=>{
+  if(!confirm('Opravdu smazat tento recept?'))return;
+  recipes=recipes.filter(r=>r.id!==openId);
+  save();
+  $('detailOverlay').classList.remove('show');
+  renderKatOptions();
+  renderList();
+};
+$('btnPrintThis').onclick=()=>window.print();
+
+/* ---- Export / import ---- */
+$('btnExport').onclick=()=>{
+  if(!recipes.length)return;
+  const blob=new Blob([JSON.stringify(recipes,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download='recepty.json';a.click();
+  URL.revokeObjectURL(url);
+};
+$('btnImport').onclick=()=>$('fileImport').click();
+$('fileImport').addEventListener('change', e=>{
+  const file=e.target.files[0];
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=()=>{
+    try{
+      const data=JSON.parse(reader.result);
+      if(!Array.isArray(data))throw new Error('bad format');
+      const existing=new Set(recipes.map(r=>r.id));
+      data.forEach(r=>{ if(r && r.id && !existing.has(r.id)) recipes.push(r); });
+      save();
+      renderKatOptions();
+      renderList();
+    }catch{ alert('Soubor se nepodařilo načíst — očekává se export z této aplikace.'); }
+  };
+  reader.readAsText(file);
+  e.target.value='';
+});
+
+['search'].forEach(id=>$(id).addEventListener('input',renderList));
+$('filterKat').addEventListener('change',renderList);
+[$('editOverlay'),$('detailOverlay')].forEach(ov=>{
+  ov.addEventListener('click', e=>{ if(e.target===ov) ov.classList.remove('show'); });
+});
+
+renderKatOptions();
+renderList();
+</script>
+</body>
+</html>

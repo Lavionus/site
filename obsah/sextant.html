@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🧭 Sextant – poloha podle hvězd</title>
+<link rel="stylesheet" href="../common.css">
+<script>
+  if (localStorage.getItem('webapp_theme') === 'light') document.documentElement.dataset.theme = 'light';
+</script>
+<style>
+body{background:var(--bg-deep);padding:20px clamp(14px,3vw,40px);min-height:100vh}
+.container{max-width:900px;margin:0 auto}
+h1{font-size:1.5rem;margin-bottom:4px}
+.sub{color:var(--text-muted);font-size:.85rem;margin-bottom:16px}
+.note{background:var(--bg-elevated);border:1px solid var(--border);color:var(--text-muted);padding:10px 14px;border-radius:8px;font-size:.8rem;margin-bottom:18px}
+.tabs{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap}
+.tab{background:var(--bg-elevated);border:1px solid var(--border);color:var(--text-muted);border-radius:14px;padding:6px 14px;font-size:.82rem;cursor:pointer}
+.tab.active{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+.card{background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px}
+.card h2{font-size:.95rem;color:var(--accent);margin-bottom:12px}
+label{display:block;font-size:.75rem;color:var(--text-faint);margin-bottom:4px;margin-top:10px}
+label:first-child{margin-top:0}
+input,select{width:100%;background:var(--bg-input);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:8px 10px;font-size:.88rem;font-family:inherit}
+.row{display:flex;gap:10px;flex-wrap:wrap}
+.row>div{flex:1;min-width:120px}
+.results{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:12px;margin-top:16px}
+.stat{background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;padding:12px;text-align:center}
+.stat .v{font-size:1.3rem;font-weight:700;color:var(--accent)}
+.stat .l{font-size:.72rem;color:var(--text-faint);margin-top:2px}
+.big{font-size:2.1rem;font-weight:700;color:var(--accent);text-align:center;margin:10px 0}
+.hidden{display:none!important}
+.radios{display:flex;gap:14px;font-size:.85rem;color:var(--text-muted);margin-top:8px}
+.radios label{display:flex;align-items:center;gap:6px;font-size:.85rem;color:var(--text-muted);margin:0}
+.radios input{width:auto}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>🧭 Sextant – určení zeměpisné šířky podle hvězd</h1>
+  <p class="sub">Klasické metody astronavigace: korekce naměřeného úhlu a výpočet zeměpisné šířky podle Polárky nebo poledníkové výšky Slunce.</p>
+  <div class="note">Zjednodušený hobby výpočet pro popularizaci astronavigace (skauting, výuka, vlastní pokusy). Přesnost je řádově ±0,5–1°, pro skutečnou navigaci nepoužívej.</div>
+
+  <div class="tabs">
+    <div class="tab active" data-tab="korekce">1. Korekce úhlu</div>
+    <div class="tab" data-tab="polarka">2a. Podle Polárky</div>
+    <div class="tab" data-tab="slunce">2b. Podle Slunce v poledne</div>
+  </div>
+
+  <div class="card" id="panel-korekce">
+    <h2>Korekce naměřeného úhlu sextantem</h2>
+    <div class="row">
+      <div><label>Naměřená výška (°)</label><input type="number" id="hDeg" value="45"></div>
+      <div><label>Naměřená výška (′)</label><input type="number" id="hMin" value="0" min="0" max="59"></div>
+    </div>
+    <div class="row">
+      <div><label>Chyba indexu sextantu (′, + nebo −)</label><input type="number" id="ie" value="0"></div>
+      <div><label>Výška oka nad hladinou/zemí (m)</label><input type="number" id="eyeH" value="1.7" step="0.1"></div>
+    </div>
+    <div class="results">
+      <div class="stat"><div class="v" id="rDip">–</div><div class="l">Korekce na dip (′)</div></div>
+      <div class="stat"><div class="v" id="rRef">–</div><div class="l">Korekce na refrakci (′)</div></div>
+      <div class="stat"><div class="v" id="rTrue">–</div><div class="l">Opravená (pravá) výška</div></div>
+    </div>
+    <p class="note" style="margin-top:16px;margin-bottom:0">Opravená výška se použije v dalších dvou krocích (2a nebo 2b) místo naměřené hodnoty.</p>
+  </div>
+
+  <div class="card hidden" id="panel-polarka">
+    <h2>Zeměpisná šířka podle Polárky (jen severní polokoule)</h2>
+    <p class="note">Na severní polokouli je výška Polárky nad obzorem přibližně rovna zeměpisné šířce (odchylka do ±1° kvůli tomu, že Polárka není přesně v nebeském pólu).</p>
+    <label>Opravená výška Polárky (°)</label>
+    <input type="number" id="polAlt" value="50">
+    <button class="tab" id="btnUseCorrPolarka" style="margin-top:10px;cursor:pointer">↺ Použít opravenou výšku z kroku 1</button>
+    <div class="big" id="polLat">–</div>
+    <p class="note" style="margin-bottom:0">Odhadovaná zeměpisná šířka</p>
+  </div>
+
+  <div class="card hidden" id="panel-slunce">
+    <h2>Zeměpisná šířka podle poledníkové výšky Slunce</h2>
+    <p class="note">Naměř nejvyšší výšku Slunce nad obzorem (okamžik pravého místního poledne — Slunce dosahuje maxima). Deklinace Slunce se dopočítá z data, lze ji ale i ručně upravit.</p>
+    <div class="row">
+      <div><label>Datum měření</label><input type="date" id="sunDate"></div>
+      <div><label>Deklinace Slunce (°, dopočtena)</label><input type="number" id="sunDecl" step="0.01"></div>
+    </div>
+    <label>Opravená poledníková výška Slunce (°)</label>
+    <input type="number" id="sunAlt" value="45">
+    <button class="tab" id="btnUseCorrSlunce" style="margin-top:10px;cursor:pointer">↺ Použít opravenou výšku z kroku 1</button>
+    <div class="radios">
+      <label><input type="radio" name="strana" value="jih" checked> Slunce bylo v poledne jižně ode mě</label>
+      <label><input type="radio" name="strana" value="sever"> Slunce bylo v poledne severně ode mě</label>
+    </div>
+    <div class="big" id="sunLat">–</div>
+    <p class="note" style="margin-bottom:0">Odhadovaná zeměpisná šířka</p>
+  </div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const clampMin=(v,min)=>Math.max(min,v);
+
+function fmtDeg(deg){
+  const sign=deg<0?'−':'';
+  const a=Math.abs(deg);
+  const d=Math.floor(a);
+  const m=(a-d)*60;
+  return `${sign}${d}° ${m.toFixed(1)}′`;
+}
+
+/* ---- Krok 1: korekce ---- */
+let correctedAltitude=null;
+
+function computeCorrection(){
+  const hDeg=parseFloat($('hDeg').value)||0;
+  const hMin=parseFloat($('hMin').value)||0;
+  const ie=parseFloat($('ie').value)||0;
+  const eyeH=Math.max(0,parseFloat($('eyeH').value)||0);
+
+  const apparent=hDeg+hMin/60-ie/60;
+  const dip=1.76*Math.sqrt(eyeH); // arcmin
+  let afterDip=apparent-dip/60;
+  let refraction=0;
+  if(afterDip>1){
+    refraction=1/Math.tan(afterDip*Math.PI/180); // arcmin, hrubá aproximace
+    refraction=Math.min(refraction,34); // na obzoru refrakce nepřesáhne cca 34'
+  }
+  const trueAlt=afterDip-refraction/60;
+
+  $('rDip').textContent='−'+dip.toFixed(1)+'′';
+  $('rRef').textContent='−'+refraction.toFixed(1)+'′';
+  $('rTrue').textContent=fmtDeg(trueAlt);
+
+  correctedAltitude=trueAlt;
+}
+['hDeg','hMin','ie','eyeH'].forEach(id=>$(id).addEventListener('input',computeCorrection));
+
+/* ---- Krok 2a: Polárka ---- */
+function computePolarka(){
+  const alt=parseFloat($('polAlt').value);
+  if(!isFinite(alt)){ $('polLat').textContent='–'; return; }
+  $('polLat').textContent=fmtDeg(clampMin(alt,-90))+' s. š.';
+}
+$('polAlt').addEventListener('input',computePolarka);
+$('btnUseCorrPolarka').addEventListener('click',()=>{
+  if(correctedAltitude===null){alert('Nejdřív vyplň krok 1 (korekce úhlu).');return;}
+  $('polAlt').value=correctedAltitude.toFixed(2);
+  computePolarka();
+});
+
+/* ---- Krok 2b: Slunce v poledne ---- */
+function dayOfYear(dateStr){
+  const d=new Date(dateStr+'T00:00:00');
+  const start=new Date(d.getFullYear(),0,0);
+  return Math.floor((d-start)/864e5);
+}
+function solarDeclination(dateStr){
+  if(!dateStr) return 0;
+  const n=dayOfYear(dateStr);
+  return -23.44*Math.cos((360/365)*(n+10)*Math.PI/180);
+}
+function updateDeclFromDate(){
+  if(!$('sunDate').value) return;
+  $('sunDecl').value=solarDeclination($('sunDate').value).toFixed(2);
+  computeSlunce();
+}
+function computeSlunce(){
+  const alt=parseFloat($('sunAlt').value);
+  const decl=parseFloat($('sunDecl').value)||0;
+  if(!isFinite(alt)){ $('sunLat').textContent='–'; return; }
+  const zenith=90-alt;
+  const strana=document.querySelector('input[name=strana]:checked').value;
+  const lat = strana==='jih' ? zenith+decl : -(zenith-decl);
+  const hemis = lat>=0 ? 's. š.' : 'j. š.';
+  $('sunLat').textContent=fmtDeg(Math.abs(lat))+' '+hemis;
+}
+$('sunDate').addEventListener('change',updateDeclFromDate);
+$('sunDecl').addEventListener('input',computeSlunce);
+$('sunAlt').addEventListener('input',computeSlunce);
+document.querySelectorAll('input[name=strana]').forEach(r=>r.addEventListener('change',computeSlunce));
+$('btnUseCorrSlunce').addEventListener('click',()=>{
+  if(correctedAltitude===null){alert('Nejdřív vyplň krok 1 (korekce úhlu).');return;}
+  $('sunAlt').value=correctedAltitude.toFixed(2);
+  computeSlunce();
+});
+
+/* ---- Přepínání záložek ---- */
+document.querySelectorAll('.tab[data-tab]').forEach(tab=>{
+  tab.addEventListener('click',()=>{
+    document.querySelectorAll('.tab[data-tab]').forEach(t=>t.classList.remove('active'));
+    tab.classList.add('active');
+    document.querySelectorAll('[id^="panel-"]').forEach(p=>p.classList.add('hidden'));
+    $('panel-'+tab.dataset.tab).classList.remove('hidden');
+  });
+});
+
+/* ---- Start ---- */
+const today=new Date().toISOString().slice(0,10);
+$('sunDate').value=today;
+computeCorrection();
+computePolarka();
+updateDeclFromDate();
+</script>
+</body>
+</html>

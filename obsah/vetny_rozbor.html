@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>✏️ Rozbor věty</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1a1a1a;color:#e0e0e0;min-height:100vh;padding:20px}
+.container{max-width:620px;margin:0 auto}
+h1{font-size:1.6rem;margin-bottom:18px;font-weight:600;text-align:center}
+.card{background:#2a2a2a;border:1px solid #404040;border-radius:8px;padding:24px;margin-bottom:16px}
+.scorebar{display:flex;justify-content:space-around;margin-bottom:18px}
+.scorebar .v{font-size:1.5rem;font-weight:700;color:#6aa6fd}.scorebar .l{font-size:.72rem;color:#888}
+.sentence{font-size:1.4rem;line-height:2;text-align:center;margin:20px 0}
+.sentence .hl{color:#f5c542;font-weight:700;border-bottom:2px solid #f5c542}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
+.opt{background:#333;border:1px solid #555;border-radius:6px;padding:12px;color:#e0e0e0;cursor:pointer;font-size:.95rem;text-align:center}
+.opt:hover{border-color:#6aa6fd}
+.opt.correct{border-color:#27ae60;background:#1f3a2a}
+.opt.wrong{border-color:#e74c3c;background:#3a1f1f}
+.btn{background:#6aa6fd;color:#fff;border:none;padding:12px 28px;border-radius:6px;cursor:pointer;font-weight:600;display:block;margin:0 auto}
+.btn:hover{background:#5694f0}
+.results{text-align:center;display:none}
+.big{font-size:2.4rem;font-weight:700;color:#6aa6fd}
+.hint{text-align:center;color:#888;font-size:.8rem;margin-top:14px}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>✏️ Rozbor věty – větné členy</h1>
+  <div class="card" id="gameCard">
+    <div class="scorebar">
+      <div><div class="v" id="score">0</div><div class="l">Správně</div></div>
+      <div><div class="v" id="idx">0/0</div><div class="l">Otázka</div></div>
+    </div>
+    <div class="sentence" id="sentence"></div>
+    <div style="text-align:center;color:#888;font-size:.85rem;margin-bottom:10px">Jaký větný člen je zvýrazněné slovo?</div>
+    <div class="opts" id="opts"></div>
+  </div>
+  <div class="card results" id="resultsCard">
+    <div class="big" id="finalScore"></div>
+    <p style="color:#888;margin-top:8px" id="finalDetail"></p>
+    <button class="btn" id="againBtn" style="margin-top:16px">🔄 Znovu</button>
+  </div>
+  <div class="hint">Základní větné členy: podmět, přísudek, předmět, příslovečné určení, přívlastek.</div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const CLENY=['podmět','přísudek','předmět','přívlastek','příslovečné určení'];
+const VETY=[
+{s:['Malý','chlapec','běžel','rychle','k','domu.'],hl:1,c:'podmět'},
+{s:['Malý','chlapec','běžel','rychle','k','domu.'],hl:2,c:'přísudek'},
+{s:['Malý','chlapec','běžel','rychle','k','domu.'],hl:3,c:'příslovečné určení'},
+{s:['Malý','chlapec','běžel','rychle','k','domu.'],hl:0,c:'přívlastek'},
+{s:['Babička','pekla','voňavý','koláč.'],hl:0,c:'podmět'},
+{s:['Babička','pekla','voňavý','koláč.'],hl:1,c:'přísudek'},
+{s:['Babička','pekla','voňavý','koláč.'],hl:3,c:'předmět'},
+{s:['Babička','pekla','voňavý','koláč.'],hl:2,c:'přívlastek'},
+{s:['Žáci','psali','test','ve','třídě.'],hl:0,c:'podmět'},
+{s:['Žáci','psali','test','ve','třídě.'],hl:1,c:'přísudek'},
+{s:['Žáci','psali','test','ve','třídě.'],hl:2,c:'předmět'},
+{s:['Žáci','psali','test','ve','třídě.'],hl:4,c:'příslovečné určení'},
+{s:['Nový','učitel','vysvětloval','látku','trpělivě.'],hl:1,c:'podmět'},
+{s:['Nový','učitel','vysvětloval','látku','trpělivě.'],hl:2,c:'přísudek'},
+{s:['Nový','učitel','vysvětloval','látku','trpělivě.'],hl:3,c:'předmět'},
+{s:['Nový','učitel','vysvětloval','látku','trpělivě.'],hl:4,c:'příslovečné určení'},
+{s:['Rychlý','vlak','dorazil','včera','na','nádraží.'],hl:1,c:'podmět'},
+{s:['Rychlý','vlak','dorazil','včera','na','nádraží.'],hl:2,c:'přísudek'},
+{s:['Rychlý','vlak','dorazil','včera','na','nádraží.'],hl:3,c:'příslovečné určení'},
+{s:['Sousedova','kočka','chytila','myš','na','zahradě.'],hl:1,c:'podmět'},
+{s:['Sousedova','kočka','chytila','myš','na','zahradě.'],hl:3,c:'předmět'},
+{s:['Sousedova','kočka','chytila','myš','na','zahradě.'],hl:0,c:'přívlastek'},
+];
+let order,idx,score;
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function start(){
+  order=shuffle([...VETY]);idx=0;score=0;
+  $('resultsCard').style.display='none';$('gameCard').style.display='block';
+  $('score').textContent=0;
+  next();
+}
+function next(){
+  if(idx>=order.length){finish();return;}
+  const item=order[idx];
+  $('idx').textContent=`${idx+1}/${order.length}`;
+  $('sentence').innerHTML=item.s.map((w,i)=>i===item.hl?`<span class="hl">${w}</span>`:w).join(' ');
+  const opts=shuffle([item.c,...shuffle(CLENY.filter(c=>c!==item.c)).slice(0,3)]);
+  const box=$('opts');box.innerHTML='';
+  opts.forEach(o=>{
+    const b=document.createElement('button');
+    b.className='opt';b.textContent=o;
+    b.onclick=()=>answer(o,item.c,b,box);
+    box.appendChild(b);
+  });
+}
+function answer(chosen,correct,btn,box){
+  [...box.children].forEach(b=>b.disabled=true);
+  if(chosen===correct){btn.classList.add('correct');score++;$('score').textContent=score;}
+  else{btn.classList.add('wrong');[...box.children].find(b=>b.textContent===correct).classList.add('correct');}
+  setTimeout(()=>{idx++;next();},800);
+}
+function finish(){
+  $('gameCard').style.display='none';$('resultsCard').style.display='block';
+  $('finalScore').textContent=`${score} / ${order.length}`;
+  const pct=Math.round(score/order.length*100);
+  $('finalDetail').textContent=pct>=80?'🏆 Skvělá znalost větných členů!':pct>=50?'👍 Dobré, ale zkus to ještě jednou.':'💪 Zopakuj si podmět, přísudek, předmět, přívlastek a příslovečné určení.';
+}
+$('againBtn').onclick=start;
+start();
+</script>
+</body>
+</html>

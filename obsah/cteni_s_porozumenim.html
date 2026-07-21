@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📖 Čtení s porozuměním</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1a1a1a;color:#e0e0e0;min-height:100vh;padding:20px}
+.container{max-width:680px;margin:0 auto}
+h1{font-size:1.6rem;margin-bottom:18px;font-weight:600;text-align:center}
+.card{background:#2a2a2a;border:1px solid #404040;border-radius:8px;padding:22px;margin-bottom:16px}
+.setup{display:flex;gap:12px;flex-wrap:wrap;align-items:end;justify-content:center}
+label{display:block;font-size:.78rem;color:#888;margin-bottom:4px}
+select{background:#404040;border:1px solid #555;border-radius:4px;color:#e0e0e0;padding:9px}
+.btn{background:#6aa6fd;color:#fff;border:none;padding:12px 28px;border-radius:6px;cursor:pointer;font-weight:600;font-size:.95rem}
+.btn:hover{background:#5694f0}
+.game,.results{display:none}
+.text{line-height:1.7;font-size:1.05rem;white-space:pre-line}
+.qtitle{font-weight:600;margin:16px 0 10px;font-size:1.02rem}
+.opt{display:block;width:100%;text-align:left;background:#333;border:1px solid #555;border-radius:6px;padding:10px 14px;margin-bottom:8px;color:#e0e0e0;cursor:pointer;font-size:.95rem}
+.opt:hover{border-color:#6aa6fd}
+.opt.correct{border-color:#27ae60;background:#1f3a2a}
+.opt.wrong{border-color:#e74c3c;background:#3a1f1f}
+.opt[disabled]{cursor:default}
+.progress{font-size:.8rem;color:#888;margin-bottom:6px;text-align:center}
+.results{text-align:center}
+.big{font-size:2.4rem;font-weight:700;color:#6aa6fd}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>📖 Čtení s porozuměním</h1>
+  <div class="card" id="setupCard">
+    <div class="setup">
+      <div><label>Náročnost</label><select id="level">
+        <option value="1">1. stupeň</option>
+        <option value="2" selected>2. stupeň</option>
+        <option value="3">Střední škola</option>
+      </select></div>
+      <button class="btn" id="startBtn">▶️ Začít</button>
+    </div>
+  </div>
+
+  <div class="card game" id="gameCard">
+    <div class="progress" id="progress"></div>
+    <div class="text" id="text"></div>
+    <div class="qtitle" id="qtitle"></div>
+    <div id="opts"></div>
+  </div>
+
+  <div class="card results" id="resultsCard">
+    <div class="big" id="finalScore"></div>
+    <p style="color:#888;margin-top:8px" id="finalDetail"></p>
+    <button class="btn" id="againBtn" style="margin-top:16px">🔄 Znovu</button>
+  </div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const TEXTY={
+1:[
+{t:`Kočka Micka žila na statku u pana Nováka. Každé ráno chodila na dvůr chytat myši. Jednoho dne se jí podařilo chytit hned tři myši za sebou. Pan Novák ji za to odměnil miskou mléka. Micka byla moc spokojená a od té doby chytala myši ještě raději.`,
+qs:[
+{q:"Kde žila kočka Micka?",o:["Ve městě","Na statku","V lese","V bytě"],a:1},
+{q:"Kolik myší chytila Micka za sebou?",o:["Jednu","Dvě","Tři","Pět"],a:2},
+{q:"Čím ji odměnil pan Novák?",o:["Rybou","Miskou mléka","Hračkou","Piškotem"],a:1}
+]},
+{t:`Petr a Jana jeli o prázdninách k babičce na venkov. Babička měla velkou zahradu plnou jablek a hrušek. Děti pomáhaly sbírat ovoce do košíků. Večer si s babičkou upekly jablečný koláč a snědly ho celý ještě teplý.`,
+qs:[
+{q:"Kam jeli Petr a Jana?",o:["K babičce","K moři","Do zoo","Do školy"],a:0},
+{q:"Co rostlo na babiččině zahradě?",o:["Jen květiny","Jablka a hrušky","Zelenina","Nic"],a:1},
+{q:"Co si upekly večer?",o:["Chleba","Koláč","Buchty","Housku"],a:1}
+]}
+],
+2:[
+{t:`Vodní koloběh je proces, při kterém voda neustále obíhá mezi oceány, atmosférou a pevninou. Slunce zahřívá vodní plochy, voda se odpařuje a stoupá vzhůru jako vodní pára. Ve vyšších vrstvách atmosféry pára kondenzuje a vytváří mraky. Když se kapičky vody spojí a zvětší, spadnou zpět na zem jako déšť nebo sníh. Část vody se vsákne do půdy a doplní podzemní vodu, zbytek steče do řek a zpět do moří.`,
+qs:[
+{q:"Co způsobuje odpařování vody?",o:["Vítr","Slunce","Mraky","Zemská přitažlivost"],a:1},
+{q:"Co vzniká kondenzací vodní páry?",o:["Řeky","Mraky","Podzemní voda","Led"],a:1},
+{q:"Kam se vsákne část vody po dešti?",o:["Do moře","Do atmosféry","Do půdy","Do mraků"],a:2}
+]},
+{t:`Karel IV. je považován za jednoho z nejvýznamnějších českých panovníků. Za jeho vlády byla založena Univerzita Karlova, nejstarší univerzita ve střední Evropě. Nechal také postavit Karlův most přes Vltavu a rozšířit Pražský hrad. Praha se za jeho vlády stala jedním z nejvýznamnějších měst v Evropě.`,
+qs:[
+{q:"Co Karel IV. založil?",o:["Univerzitu Karlovu","Národní divadlo","Vyšehrad","Staroměstskou radnici"],a:0},
+{q:"Přes jakou řeku vede Karlův most?",o:["Labe","Moravu","Vltavu","Odru"],a:2},
+{q:"Čím se stala Praha za jeho vlády?",o:["Vesnicí","Významným městem Evropy","Přístavem","Pevností"],a:1}
+]}
+],
+3:[
+{t:`Fotosyntéza je biochemický proces, při kterém rostliny, řasy a některé bakterie přeměňují sluneční energii na energii chemickou. V zelených částech rostlin, obsahujících chlorofyl, dochází za přítomnosti oxidu uhličitého a vody k tvorbě glukózy a kyslíku. Kyslík je vedlejším produktem, který se uvolňuje do atmosféry a je nezbytný pro dýchání většiny živých organismů. Fotosyntéza je tak základem potravních řetězců i produkce kyslíku na Zemi.`,
+qs:[
+{q:"Co je hlavním pigmentem umožňujícím fotosyntézu?",o:["Karoten","Chlorofyl","Melanin","Hemoglobin"],a:1},
+{q:"Co vzniká jako vedlejší produkt fotosyntézy?",o:["Oxid uhličitý","Dusík","Kyslík","Metan"],a:2},
+{q:"Jaké dvě látky rostlina k fotosyntéze potřebuje?",o:["Sůl a cukr","Oxid uhličitý a vodu","Kyslík a dusík","Železo a vápník"],a:1}
+]},
+{t:`Inflace označuje trvalý růst všeobecné cenové hladiny v ekonomice, který vede ke snížení kupní síly peněz. Mírná inflace je považována za přirozenou součást zdravé ekonomiky a centrální banky se ji obvykle snaží udržet na nízké, stabilní úrovni, často kolem dvou procent ročně. Naopak vysoká nebo nekontrolovaná inflace znehodnocuje úspory a komplikuje dlouhodobé plánování jak domácnostem, tak firmám.`,
+qs:[
+{q:"Co inflace způsobuje?",o:["Růst kupní síly peněz","Pokles kupní síly peněz","Snížení cen","Nezaměstnanost"],a:1},
+{q:"Kdo se snaží inflaci regulovat?",o:["Vláda školství","Centrální banka","Soudy","Odbory"],a:1},
+{q:"Jaká úroveň inflace je obvykle považována za zdravou?",o:["Kolem 0 %","Kolem 2 %","Kolem 20 %","Kolem 50 %"],a:1}
+]}
+]
+};
+let pool,idx,qi,score;
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function start(){
+  const lvl=$('level').value;
+  pool=shuffle([...TEXTY[lvl]]);
+  idx=0;score=0;
+  $('setupCard').style.display='none';$('resultsCard').style.display='none';$('gameCard').style.display='block';
+  loadText();
+}
+function loadText(){
+  qi=0;
+  const item=pool[idx];
+  $('text').textContent=item.t;
+  $('progress').textContent=`Text ${idx+1} / ${pool.length}`;
+  showQ();
+}
+function showQ(){
+  const item=pool[idx];
+  if(qi>=item.qs.length){
+    idx++;
+    if(idx>=pool.length){finish();return;}
+    loadText();return;
+  }
+  const q=item.qs[qi];
+  $('qtitle').textContent=`Otázka ${qi+1}/${item.qs.length}: ${q.q}`;
+  const box=$('opts');box.innerHTML='';
+  q.o.forEach((opt,i)=>{
+    const b=document.createElement('button');
+    b.className='opt';b.textContent=opt;
+    b.onclick=()=>answer(i,q.a,b,box);
+    box.appendChild(b);
+  });
+}
+function answer(i,correct,btn,box){
+  [...box.children].forEach(b=>b.disabled=true);
+  if(i===correct){btn.classList.add('correct');score++;}
+  else{btn.classList.add('wrong');box.children[correct].classList.add('correct');}
+  setTimeout(()=>{qi++;showQ();},900);
+}
+function finish(){
+  $('gameCard').style.display='none';$('resultsCard').style.display='block';
+  const total=pool.reduce((s,i)=>s+i.qs.length,0);
+  $('finalScore').textContent=`${score} / ${total}`;
+  const pct=Math.round(score/total*100);
+  $('finalDetail').textContent=pct>=80?'🏆 Výborné porozumění textu!':pct>=50?'👍 Dobrá práce, zkus to znovu pro lepší výsledek.':'💪 Zkus text číst pomaleji a pozorněji.';
+}
+$('startBtn').onclick=start;
+$('againBtn').onclick=()=>{$('setupCard').style.display='block';$('resultsCard').style.display='none';};
+</script>
+</body>
+</html>

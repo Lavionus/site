@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🔊 Výslovnost a poslech</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1a1a1a;color:#e0e0e0;min-height:100vh;padding:20px}
+.container{max-width:560px;margin:0 auto}
+h1{font-size:1.6rem;margin-bottom:18px;font-weight:600;text-align:center}
+.card{background:#2a2a2a;border:1px solid #404040;border-radius:8px;padding:24px;margin-bottom:16px}
+.setup{display:flex;gap:12px;flex-wrap:wrap;align-items:end;justify-content:center}
+label{display:block;font-size:.78rem;color:#888;margin-bottom:4px}
+select{background:#404040;border:1px solid #555;border-radius:4px;color:#e0e0e0;padding:9px}
+.btn{background:#6aa6fd;color:#fff;border:none;padding:12px 28px;border-radius:6px;cursor:pointer;font-weight:600}
+.btn:hover{background:#5694f0}
+.btn.sec{background:#404040}
+.game,.results{display:none;text-align:center}
+.scorebar{display:flex;justify-content:space-around;margin-bottom:18px}
+.scorebar .v{font-size:1.5rem;font-weight:700;color:#6aa6fd}.scorebar .l{font-size:.72rem;color:#888}
+.speaker{font-size:3rem;cursor:pointer;margin:16px 0}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.opt{background:#333;border:1px solid #555;border-radius:6px;padding:14px;color:#e0e0e0;cursor:pointer;font-size:1.1rem}
+.opt:hover{border-color:#6aa6fd}
+.opt.correct{border-color:#27ae60;background:#1f3a2a}
+.opt.wrong{border-color:#e74c3c;background:#3a1f1f}
+.results .big{font-size:2.4rem;font-weight:700;color:#6aa6fd}
+.warn{color:#f39c12;font-size:.8rem;text-align:center;margin-top:8px}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>🔊 Výslovnost a poslech</h1>
+  <div class="card" id="setupCard">
+    <div class="setup">
+      <div><label>Jazyk</label><select id="lang">
+        <option value="en-US">🇬🇧 Angličtina</option>
+        <option value="de-DE">🇩🇪 Němčina</option>
+        <option value="fr-FR">🇫🇷 Francouzština</option>
+      </select></div>
+      <button class="btn" id="startBtn">▶️ Start</button>
+    </div>
+    <div class="warn">Používá hlasový syntetizér prohlížeče (Web Speech API) — kvalita a dostupnost hlasů se liší podle zařízení.</div>
+  </div>
+
+  <div class="card game" id="gameCard">
+    <div class="scorebar">
+      <div><div class="v" id="score">0</div><div class="l">Správně</div></div>
+      <div><div class="v" id="idx">0/10</div><div class="l">Otázka</div></div>
+    </div>
+    <div style="color:#888;font-size:.85rem">Poslechni si slovo a vyber jeho český význam:</div>
+    <div class="speaker" id="speaker">🔊</div>
+    <button class="btn sec" id="replayBtn">🔁 Přehrát znovu</button>
+    <div class="opts" id="opts" style="margin-top:16px"></div>
+  </div>
+
+  <div class="card results" id="resultsCard">
+    <div class="big" id="finalScore"></div>
+    <p style="color:#888" id="finalDetail"></p>
+    <button class="btn" id="againBtn" style="margin-top:16px">🔄 Znovu</button>
+  </div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const SLOVA={
+'en-US':[['apple','jablko'],['house','dům'],['water','voda'],['friend','přítel'],['school','škola'],['book','kniha'],['dog','pes'],['cat','kočka'],['sun','slunce'],['tree','strom'],['mountain','hora'],['river','řeka']],
+'de-DE':[['Apfel','jablko'],['Haus','dům'],['Wasser','voda'],['Freund','přítel'],['Schule','škola'],['Buch','kniha'],['Hund','pes'],['Katze','kočka'],['Sonne','slunce'],['Baum','strom'],['Berg','hora'],['Fluss','řeka']],
+'fr-FR':[['pomme','jablko'],['maison','dům'],['eau','voda'],['ami','přítel'],['école','škola'],['livre','kniha'],['chien','pes'],['chat','kočka'],['soleil','slunce'],['arbre','strom'],['montagne','hora'],['rivière','řeka']]
+};
+let lang,deck,idx,score,total=10,current;
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function speak(word){
+  if(!('speechSynthesis' in window))return;
+  const u=new SpeechSynthesisUtterance(word);u.lang=lang;u.rate=0.9;
+  speechSynthesis.cancel();speechSynthesis.speak(u);
+}
+function start(){
+  lang=$('lang').value;
+  deck=shuffle([...SLOVA[lang]]).slice(0,total);idx=0;score=0;
+  $('setupCard').style.display='none';$('resultsCard').style.display='none';$('gameCard').style.display='block';
+  $('score').textContent=0;
+  next();
+}
+function next(){
+  if(idx>=deck.length){finish();return;}
+  current=deck[idx];
+  $('idx').textContent=`${idx+1}/${deck.length}`;
+  setTimeout(()=>speak(current[0]),200);
+  const allTrans=[].concat(...Object.values(SLOVA)).map(x=>x[1]);
+  const wrong=shuffle(allTrans.filter(t=>t!==current[1])).slice(0,3);
+  const opts=shuffle([current[1],...wrong]);
+  const box=$('opts');box.innerHTML='';
+  opts.forEach(o=>{
+    const b=document.createElement('button');b.className='opt';b.textContent=o;
+    b.onclick=()=>{
+      [...box.children].forEach(x=>x.disabled=true);
+      if(o===current[1]){b.classList.add('correct');score++;$('score').textContent=score;}
+      else{b.classList.add('wrong');[...box.children].find(x=>x.textContent===current[1]).classList.add('correct');}
+      setTimeout(()=>{idx++;next();},900);
+    };
+    box.appendChild(b);
+  });
+}
+$('replayBtn').onclick=()=>speak(current[0]);
+$('speaker').onclick=()=>speak(current[0]);
+function finish(){
+  $('gameCard').style.display='none';$('resultsCard').style.display='block';
+  $('finalScore').textContent=`${score} / ${deck.length}`;
+  const pct=Math.round(score/deck.length*100);
+  $('finalDetail').textContent=`Úspěšnost ${pct}%`;
+}
+$('startBtn').onclick=start;
+$('againBtn').onclick=()=>{$('setupCard').style.display='block';$('resultsCard').style.display='none';};
+</script>
+</body>
+</html>

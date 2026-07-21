@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📏 Geometrické konstrukce</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1a1a1a;color:#e0e0e0;min-height:100vh;padding:20px}
+.container{max-width:640px;margin:0 auto}
+h1{font-size:1.5rem;margin-bottom:14px;font-weight:600;text-align:center}
+.card{background:#2a2a2a;border:1px solid #404040;border-radius:8px;padding:18px;margin-bottom:16px}
+label{display:block;font-size:.78rem;color:#888;margin-bottom:4px}
+select{background:#404040;border:1px solid #555;border-radius:4px;color:#e0e0e0;padding:8px;width:100%}
+.task{font-size:.88rem;color:#ccc;background:#1e1e1e;border-radius:6px;padding:10px 12px;margin-top:10px;line-height:1.5}
+.tools{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0}
+.tool{background:#333;border:1px solid #555;border-radius:6px;padding:8px 14px;cursor:pointer;font-size:.85rem}
+.tool.active{background:#6aa6fd;border-color:#6aa6fd;color:#fff}
+.tool:hover{border-color:#6aa6fd}
+canvas{background:#111;border:1px solid #404040;border-radius:6px;display:block;margin:0 auto;touch-action:none}
+.hint{color:#888;font-size:.78rem;text-align:center;margin-top:8px}
+.actions{display:flex;gap:8px;justify-content:center;margin-top:10px}
+.btn{background:#404040;border:1px solid #555;color:#e0e0e0;padding:8px 16px;border-radius:6px;cursor:pointer;font-size:.85rem}
+.btn:hover{border-color:#6aa6fd}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>📏 Geometrické konstrukce kružítkem a pravítkem</h1>
+  <div class="card">
+    <label>Úloha</label>
+    <select id="taskSel">
+      <option value="free">Volná plocha (jen procvičuj nástroje)</option>
+      <option value="osaus">Osa úsečky (střed a kolmice)</option>
+      <option value="osauhel">Osa úhlu</option>
+      <option value="kolmice">Kolmice v bodě na přímce</option>
+      <option value="rovnobezka">Rovnoběžka daným bodem</option>
+      <option value="uhel60">Úhel 60°</option>
+    </select>
+    <div class="task" id="taskText"></div>
+    <div class="tools">
+      <div class="tool active" data-tool="bod">📍 Bod</div>
+      <div class="tool" data-tool="primka">📏 Přímka/úsečka</div>
+      <div class="tool" data-tool="kruznice">⭕ Kružítko</div>
+    </div>
+    <canvas id="cv" width="580" height="420"></canvas>
+    <div class="hint">Klikáním umísťuj body. Pravítko: klikni na 2 body → nakreslí přímku. Kružítko: klikni na střed, pak na bod určující poloměr.</div>
+    <div class="actions">
+      <button class="btn" id="undoBtn">↩️ Zpět</button>
+      <button class="btn" id="clearBtn">🗑️ Vymazat vše</button>
+    </div>
+  </div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const cv=$('cv'),ctx=cv.getContext('2d');
+let points=[],shapes=[],tool='bod',pending=[];
+const TASKS={
+free:'Volný nácvik — vyzkoušej si všechny nástroje bez konkrétního zadání.',
+osaus:'1) Nástrojem Bod umísti dva body A a B (úsečka).\n2) Nástrojem Kružítko sestroj kružnici se středem A procházející B, pak kružnici se středem B procházející A (poloměr > polovina AB).\n3) Kružnice se protnou ve dvou bodech — nástrojem Přímka je spoj. Tato přímka je osa úsečky AB a prochází jejím středem kolmo.',
+osauhel:'1) Umísti vrchol úhlu V a dva body na jeho ramenech.\n2) Kružítkem opiš z V oblouk protínající obě ramena ve stejné vzdálenosti.\n3) Z těchto dvou průsečíků opiš kružítkem dva stejné oblouky, které se protnou.\n4) Přímkou spoj V s průsečíkem — to je osa úhlu.',
+kolmice:'1) Nakresli přímku a bod P na ní.\n2) Kružítkem se středem P opiš kružnici protínající přímku ve dvou bodech.\n3) Z těchto dvou bodů opiš stejným poloměrem (větším než polovina) dva oblouky nad přímkou — jejich průsečík spoj přímkou s P. Vznikne kolmice.',
+rovnobezka:'1) Nakresli přímku p a bod M mimo ni.\n2) Zvol bod A na přímce, kružítkem přenes vzdálenost a sestroj shodné úhly (metoda shodných úhlů) — nebo použij dvojici kružnic stejného poloměru se středy A a M k přenesení směru.\n3) Výsledná přímka bodem M je rovnoběžná s p.',
+uhel60:'1) Nakresli polopřímku z bodu V.\n2) Kružítkem opiš oblouk se středem V protínající polopřímku v bodě A.\n3) Stejným poloměrem opiš oblouk se středem A protínající první oblouk.\n4) Spoj V s průsečíkem přímkou — svírá s polopřímkou úhel 60°, protože trojúhelník VA-průsečík je rovnostranný.'
+};
+$('taskSel').onchange=()=>{$('taskText').textContent=TASKS[$('taskSel').value];};
+$('taskText').textContent=TASKS.free;
+
+document.querySelectorAll('.tool').forEach(t=>t.onclick=()=>{
+  document.querySelectorAll('.tool').forEach(x=>x.classList.remove('active'));
+  t.classList.add('active');tool=t.dataset.tool;pending=[];
+});
+
+function findNear(x,y){
+  return points.find(p=>Math.hypot(p.x-x,p.y-y)<10);
+}
+function addState(){shapes.push({points:[...points],lines:shapes.length?null:null});}
+
+cv.addEventListener('click',e=>{
+  const rect=cv.getBoundingClientRect();
+  const x=(e.clientX-rect.left)*(cv.width/rect.width),y=(e.clientY-rect.top)*(cv.height/rect.height);
+  let pt=findNear(x,y);
+  if(!pt){pt={x,y,id:points.length};points.push(pt);history.push({type:'point',pt});}
+  if(tool==='bod'){render();return;}
+  pending.push(pt);
+  if(tool==='primka'&&pending.length===2){
+    history.push({type:'line',a:pending[0],b:pending[1]});
+    pending=[];
+  }
+  if(tool==='kruznice'&&pending.length===2){
+    const r=Math.hypot(pending[1].x-pending[0].x,pending[1].y-pending[0].y);
+    history.push({type:'circle',c:pending[0],r});
+    pending=[];
+  }
+  render();
+});
+let history=[];
+$('undoBtn').onclick=()=>{history.pop();points=[];history.forEach(h=>{if(h.type==='point'&&!points.includes(h.pt))points.push(h.pt);});render();};
+$('clearBtn').onclick=()=>{history=[];points=[];pending=[];render();};
+
+function render(){
+  ctx.clearRect(0,0,cv.width,cv.height);
+  ctx.strokeStyle='#6aa6fd';ctx.lineWidth=1.5;
+  history.forEach(h=>{
+    if(h.type==='line'){
+      const dx=h.b.x-h.a.x,dy=h.b.y-h.a.y;const len=Math.hypot(dx,dy)||1;
+      const ext=1000;
+      ctx.beginPath();
+      ctx.moveTo(h.a.x-dx/len*ext,h.a.y-dy/len*ext);
+      ctx.lineTo(h.b.x+dx/len*ext,h.b.y+dy/len*ext);
+      ctx.stroke();
+    } else if(h.type==='circle'){
+      ctx.beginPath();ctx.arc(h.c.x,h.c.y,h.r,0,Math.PI*2);ctx.strokeStyle='#f5c542';ctx.stroke();ctx.strokeStyle='#6aa6fd';
+    }
+  });
+  points.forEach(p=>{
+    ctx.beginPath();ctx.arc(p.x,p.y,4,0,Math.PI*2);ctx.fillStyle='#e74c3c';ctx.fill();
+  });
+}
+</script>
+</body>
+</html>

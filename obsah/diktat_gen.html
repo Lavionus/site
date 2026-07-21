@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>✍️ Generátor diktátů</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1a1a1a;color:#e0e0e0;min-height:100vh;padding:20px}
+.container{max-width:640px;margin:0 auto}
+h1{font-size:1.6rem;margin-bottom:18px;font-weight:600;text-align:center}
+.card{background:#2a2a2a;border:1px solid #404040;border-radius:8px;padding:24px;margin-bottom:16px}
+.setup{display:flex;gap:12px;flex-wrap:wrap;align-items:end;justify-content:center}
+label{display:block;font-size:.78rem;color:#888;margin-bottom:4px}
+select{background:#404040;border:1px solid #555;border-radius:4px;color:#e0e0e0;padding:9px}
+.btn{background:#6aa6fd;color:#fff;border:none;padding:11px 22px;border-radius:6px;cursor:pointer;font-weight:600;font-size:.9rem}
+.btn:hover{background:#5694f0}
+.btn.sec{background:#404040}
+.btn.sec:hover{background:#4d4d4d}
+.game,.result{display:none}
+.controls{display:flex;gap:10px;justify-content:center;margin-bottom:16px;flex-wrap:wrap}
+.progress{text-align:center;color:#888;font-size:.8rem;margin-bottom:10px}
+textarea{width:100%;min-height:100px;background:#1e1e1e;border:2px solid #555;border-radius:8px;color:#fff;padding:12px;font-size:1.05rem;font-family:inherit;resize:vertical}
+.diff{line-height:1.8;font-size:1.05rem;margin-top:14px}
+.diff .ok{color:#27ae60}
+.diff .bad{color:#e74c3c;text-decoration:underline}
+.correcttext{margin-top:10px;color:#888;font-size:.9rem}
+.big{font-size:2.2rem;font-weight:700;color:#6aa6fd;text-align:center}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>✍️ Generátor diktátů</h1>
+  <div class="card" id="setupCard">
+    <p style="color:#888;font-size:.85rem;text-align:center;margin-bottom:14px">Aplikace přečte věty nahlas (Web Speech API) — napiš, co jsi slyšel/a.</p>
+    <div class="setup">
+      <div><label>Zaměření</label><select id="cat">
+        <option value="vyjm">Vyjmenovaná slova</option>
+        <option value="velka">Velká písmena</option>
+        <option value="shoda">Shoda podmětu s přísudkem</option>
+        <option value="mix" selected>Mix</option>
+      </select></div>
+      <button class="btn" id="startBtn">▶️ Spustit diktát</button>
+    </div>
+  </div>
+
+  <div class="card game" id="gameCard">
+    <div class="progress" id="progress"></div>
+    <div class="controls">
+      <button class="btn sec" id="replayBtn">🔊 Přehrát znovu</button>
+    </div>
+    <textarea id="input" placeholder="Napiš sem větu, kterou jsi slyšel/a…"></textarea>
+    <div class="controls" style="margin-top:14px">
+      <button class="btn" id="checkBtn">✅ Zkontrolovat</button>
+    </div>
+    <div class="diff" id="diffBox"></div>
+    <div class="correcttext" id="correctBox"></div>
+  </div>
+
+  <div class="card result" id="resultCard">
+    <div class="big" id="finalScore"></div>
+    <p style="color:#888;margin-top:8px;text-align:center" id="finalDetail"></p>
+    <div class="controls" style="margin-top:16px"><button class="btn" id="againBtn">🔄 Znovu</button></div>
+  </div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const VETY={
+vyjm:[
+"Vydra si vyla pelíšek u rybníka.","Slyšeli jsme, jak myslivec troubí na lesní roh.",
+"Bylinky voní po celé zahradě.","Výr usedl na starý dub a zpytoval okolí.",
+"Byt byl plný knih a starých obrazů."],
+velka:[
+"O prázdninách jsme jeli do Prahy a navštívili Karlův most.",
+"Moje kamarádka Petra bydlí v Brně na Moravě.",
+"V pondělí pojedeme na výlet k řece Vltavě.",
+"Pan Novák pracuje v nemocnici jako lékař."],
+shoda:[
+"Chlapci běželi rychle přes hřiště.","Dívky zpívaly krásnou píseň.",
+"Děti si hrály celé odpoledne na zahradě.","Ptáci odlétali na jih před zimou."]
+};
+VETY.mix=[...VETY.vyjm,...VETY.velka,...VETY.shoda];
+let queue,idx,scores=[];
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function speak(t){
+  if(!('speechSynthesis' in window)){$('progress').textContent+=' (hlas není podporován, čti si větu vizuálně nelze – zkus jiný prohlížeč)';return;}
+  const u=new SpeechSynthesisUtterance(t);
+  u.lang='cs-CZ';u.rate=0.85;
+  speechSynthesis.cancel();speechSynthesis.speak(u);
+}
+function start(){
+  const cat=$('cat').value;
+  queue=shuffle([...VETY[cat]]).slice(0,5);
+  idx=0;scores=[];
+  $('setupCard').style.display='none';$('resultCard').style.display='none';$('gameCard').style.display='block';
+  loadSentence();
+}
+function loadSentence(){
+  $('input').value='';$('diffBox').innerHTML='';$('correctBox').textContent='';
+  $('progress').textContent=`Věta ${idx+1} / ${queue.length}`;
+  setTimeout(()=>speak(queue[idx]),300);
+}
+function normalize(s){return s.trim().replace(/\s+/g,' ');}
+function diffWords(user,correct){
+  const u=normalize(user).split(' ');
+  const c=normalize(correct).split(' ');
+  let html='';let ok=0;
+  const len=Math.max(u.length,c.length);
+  for(let i=0;i<len;i++){
+    const uw=(u[i]||'').replace(/[.,!?]/g,'').toLowerCase();
+    const cw=(c[i]||'').replace(/[.,!?]/g,'').toLowerCase();
+    if(uw===cw&&uw!==''){html+=`<span class="ok">${u[i]||''}</span> `;ok++;}
+    else{html+=`<span class="bad">${u[i]||'—'}</span> `;}
+  }
+  return {html,ok,total:c.length};
+}
+$('checkBtn').onclick=()=>{
+  const d=diffWords($('input').value,queue[idx]);
+  $('diffBox').innerHTML=d.html;
+  $('correctBox').textContent='Správně: '+queue[idx];
+  scores.push(d.ok/d.total);
+};
+$('replayBtn').onclick=()=>speak(queue[idx]);
+$('input').addEventListener('keydown',e=>{
+  if(e.key==='Enter'&&e.ctrlKey){$('checkBtn').click();}
+});
+document.addEventListener('keydown',e=>{
+  if(e.key==='Enter'&&e.shiftKey&&$('gameCard').style.display==='block'){
+    idx++;
+    if(idx>=queue.length){finish();}else{loadSentence();}
+  }
+});
+$('gameCard').insertAdjacentHTML('beforeend','<div class="controls" style="margin-top:14px"><button class="btn sec" id="nextBtn">➡️ Další věta (Shift+Enter)</button></div>');
+$('nextBtn').onclick=()=>{idx++;if(idx>=queue.length){finish();}else{loadSentence();}};
+function finish(){
+  $('gameCard').style.display='none';$('resultCard').style.display='block';
+  const avg=scores.length?scores.reduce((a,b)=>a+b,0)/scores.length:0;
+  $('finalScore').textContent=Math.round(avg*100)+' %';
+  $('finalDetail').textContent=avg>=0.85?'🏆 Skvělý diktát!':avg>=0.6?'👍 Dobré, zkontroluj si zvýrazněná slova.':'💪 Zkus to znovu, poslouchej pozorněji.';
+}
+$('startBtn').onclick=start;
+$('againBtn').onclick=()=>{$('setupCard').style.display='block';$('resultCard').style.display='none';};
+</script>
+</body>
+</html>

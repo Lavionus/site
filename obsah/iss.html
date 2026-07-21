@@ -243,9 +243,17 @@
       return String.fromCodePoint(...[...cc.toUpperCase()].map(c => 0x1F1A5 + c.charCodeAt(0))) + ' ';
     }
 
+    // fetch s timeoutem — bez něj na některých sítích/tabletech požadavek jen "visí"
+    // (žádná odpověď ani chyba) a stránka by zůstala navždy za loading spinnerem
+    function fetchS(url, timeoutMs = 8000) {
+      const ctrl = new AbortController();
+      const t = setTimeout(() => ctrl.abort(), timeoutMs);
+      return fetch(url, { signal: ctrl.signal }).finally(() => clearTimeout(t));
+    }
+
     async function aktualizujPolohu() {
       try {
-        const res = await fetch(API + '?units=kilometers');
+        const res = await fetchS(API + '?units=kilometers');
         if (!res.ok) throw new Error(res.status);
         const d = await res.json();
         chybaEl.style.display = 'none';
@@ -273,7 +281,7 @@
     let posledniLat = null, posledniLon = null;
     async function nactiZemi(lat, lon) {
       try {
-        const res = await fetch(`https://api.wheretheiss.at/v1/coordinates/${lat.toFixed(4)},${lon.toFixed(4)}`);
+        const res = await fetchS(`https://api.wheretheiss.at/v1/coordinates/${lat.toFixed(4)},${lon.toFixed(4)}`);
         if (!res.ok) throw 0;
         const d = await res.json();
         document.getElementById('nad').textContent =
@@ -290,7 +298,7 @@
         for (let t = now - 46 * 60; t <= now + 46 * 60; t += krok) casy.push(t);
         const body = [];
         for (let i = 0; i < casy.length; i += 10) {
-          const res = await fetch(API + '/positions?timestamps=' + casy.slice(i, i + 10).join(',') + '&units=kilometers');
+          const res = await fetchS(API + '/positions?timestamps=' + casy.slice(i, i + 10).join(',') + '&units=kilometers');
           if (!res.ok) throw 0;
           (await res.json()).forEach(p => body.push({ t: p.timestamp, b: [p.latitude, p.longitude, p.altitude / R_ZEME] }));
           await new Promise(r => setTimeout(r, 600)); // ohleduplnost k rate-limitu API

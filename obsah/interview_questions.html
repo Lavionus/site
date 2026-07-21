@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎙️ Generátor otázek k výslechu</title>
+<link rel="stylesheet" href="../common.css">
+<script>
+  if (localStorage.getItem('webapp_theme') === 'light') document.documentElement.dataset.theme = 'light';
+</script>
+<style>
+body{background:var(--bg-deep);padding:20px clamp(14px,3vw,40px);min-height:100vh}
+.container{max-width:900px;margin:0 auto}
+h1{font-size:1.5rem;margin-bottom:4px}
+.sub{color:var(--text-muted);font-size:.85rem;margin-bottom:16px}
+.note{font-size:.78rem;color:var(--text-faint);margin-bottom:16px}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:16px}
+.toolbar select,.toolbar input{background:var(--bg-input);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:8px 10px;font-size:.85rem}
+.toolbar input[type=text]{flex:1;min-width:180px}
+.btn{background:var(--bg-control);color:var(--text);border:1px solid var(--border-strong);padding:8px 14px;border-radius:6px;cursor:pointer;font-size:.85rem}
+.btn:hover{background:var(--bg-hover)}
+.btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.cats{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
+.cat-pill{background:var(--bg-elevated);border:1px solid var(--border);color:var(--text-muted);border-radius:14px;padding:5px 12px;font-size:.78rem;cursor:pointer;user-select:none}
+.cat-pill.active{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+.list{display:grid;gap:0;background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+.qitem{display:flex;align-items:flex-start;gap:10px;padding:12px 14px;border-bottom:1px solid var(--border)}
+.qitem:last-child{border-bottom:none}
+.qitem input[type=checkbox]{margin-top:3px;flex:none}
+.qitem .txt{flex:1;font-size:.9rem;line-height:1.5}
+.qitem .tag{font-size:.68rem;color:var(--text-faint);margin-top:3px}
+.empty{padding:30px;text-align:center;color:var(--text-faint)}
+@media print{
+  .toolbar,.cats,.note,h1,.sub{display:none}
+  .qitem input[type=checkbox]{transform:scale(1.2)}
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>🎙️ Generátor otázek k výslechu</h1>
+  <p class="sub">Vygeneruje sadu okruhů a otázek pro strukturovaný výslech / pohovor se svědkem, poškozeným nebo podezřelým. Otázky lze zaškrtnout, filtrovat podle kategorie a vytisknout jako přípravu.</p>
+  <div class="note">Obecná organizační pomůcka pro přípravu na výslech — nenahrazuje procesní poučení a postup dle trestního řádu.</div>
+
+  <div class="toolbar">
+    <select id="role">
+      <option value="svedek">Svědek</option>
+      <option value="poskozeny">Poškozený</option>
+      <option value="podezrely">Podezřelý</option>
+    </select>
+    <input type="text" id="search" placeholder="🔍 Hledat v otázkách…">
+    <button class="btn" id="btnCheckAll">☑️ Vybrat vše</button>
+    <button class="btn" id="btnUncheckAll">☐ Zrušit výběr</button>
+    <button class="btn primary" id="btnPrint">🖨️ Tisk přípravy</button>
+  </div>
+
+  <div class="cats" id="cats"></div>
+  <div class="list" id="list"></div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+function norm(s){return (s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');}
+
+const BANK={
+  svedek:[
+    {cat:'Úvod',q:'Uveďte prosím jméno, datum narození, adresu a vztah k účastníkům případu.'},
+    {cat:'Úvod',q:'Byl/a jste již v minulosti vyslýchán/a v této nebo související věci?'},
+    {cat:'Okolnosti',q:'Kde jste se nacházel/a v době, kdy k události došlo?'},
+    {cat:'Okolnosti',q:'Popište vlastními slovy, co jste viděl/a nebo slyšel/a.'},
+    {cat:'Okolnosti',q:'V jakou přesně dobu k události došlo? Jak jste čas určil/a?'},
+    {cat:'Okolnosti',q:'Byl jste na místě sám/sama, nebo s dalšími osobami?'},
+    {cat:'Vnímání',q:'Jaké byly světelné a povětrnostní podmínky v danou dobu?'},
+    {cat:'Vnímání',q:'Z jaké vzdálenosti jste událost pozoroval/a?'},
+    {cat:'Vnímání',q:'Měl/a jste v tu chvíli nějaké omezení vnímání (zrak, sluch, rozptýlení)?'},
+    {cat:'Popis osob',q:'Dokážete popsat vzhled, oblečení a jednání zúčastněných osob?'},
+    {cat:'Popis osob',q:'Poznal/a byste danou osobu, kdybyste ji znovu viděl/a?'},
+    {cat:'Vztahy',q:'Znáte některého z účastníků osobně? Jaký je váš vztah k němu/k ní?'},
+    {cat:'Zdroj informací',q:'Je vše, co uvádíte, z vlastního pozorování, nebo jste se to od někoho dozvěděl/a?'},
+    {cat:'Závěr',q:'Existuje ještě něco, co považujete za důležité a na co jsme se neptali?'},
+    {cat:'Závěr',q:'Souhlasíte se zněním protokolu tak, jak bylo sepsáno?'}
+  ],
+  poskozeny:[
+    {cat:'Úvod',q:'Uveďte jméno, datum narození, adresu a kontakt pro další komunikaci.'},
+    {cat:'Škoda',q:'Popište, jaká škoda vám vznikla (majetková, zdravotní, jiná).'},
+    {cat:'Škoda',q:'Máte doklady prokazující výši škody (účtenky, znalecký posudek, lékařská zpráva)?'},
+    {cat:'Okolnosti',q:'Popište průběh události od začátku do konce vlastními slovy.'},
+    {cat:'Okolnosti',q:'Kdy a jak jste zjistil/a, že se stala tato událost?'},
+    {cat:'Pachatel',q:'Znáte totožnost osoby, která vám škodu způsobila?'},
+    {cat:'Pachatel',q:'Měl/a jste s touto osobou předchozí kontakt nebo spor?'},
+    {cat:'Náhrada',q:'Uplatňujete nárok na náhradu škody? V jaké výši?'},
+    {cat:'Svědci',q:'Byl u události přítomen někdo další, kdo by mohl vypovídat?'},
+    {cat:'Zdraví',q:'Vyhledal/a jste po události lékařské ošetření? Kde a kdy?'},
+    {cat:'Závěr',q:'Chcete k věci doplnit ještě něco, co jsme se neptali?'}
+  ],
+  podezrely:[
+    {cat:'Úvod',q:'Poučení o právu nevypovídat a právu na obhájce — bylo poučení podezřelému sděleno a porozuměl mu?'},
+    {cat:'Úvod',q:'Uveďte jméno, datum narození, adresu a zaměstnání.'},
+    {cat:'Alibi',q:'Kde jste se nacházel/a v době, kdy k události došlo?'},
+    {cat:'Alibi',q:'Může někdo vaši přítomnost na uvedeném místě potvrdit?'},
+    {cat:'Vztah k věci',q:'Znáte poškozeného / ostatní zúčastněné osoby? Jaký je váš vztah k nim?'},
+    {cat:'Vztah k věci',q:'Byl jste v době před událostí na místě činu nebo v jeho blízkosti?'},
+    {cat:'Vyjádření',q:'Chcete se k dané věci vyjádřit? Co k ní můžete uvést?'},
+    {cat:'Vyjádření',q:'Popíráte, nebo doznáváte jednání, které je vám kladeno za vinu?'},
+    {cat:'Motiv',q:'Měl byste důvod nebo pohnutku k jednání, které je předmětem šetření?'},
+    {cat:'Věci',q:'Vlastníte nebo jste měl/a v držení předměty související s věcí (nástroj, vozidlo, oblečení)?'},
+    {cat:'Závěr',q:'Chcete k výpovědi ještě něco doplnit nebo upravit?'}
+  ]
+};
+
+let checked=new Set();
+
+function renderCats(){
+  const data=BANK[$('role').value];
+  const cats=['Vše',...new Set(data.map(q=>q.cat))];
+  $('cats').innerHTML=cats.map((c,i)=>`<span class="cat-pill${i===0?' active':''}" data-cat="${c==='Vše'?'':c}">${c}</span>`).join('');
+  $('cats').querySelectorAll('.cat-pill').forEach(p=>{
+    p.onclick=()=>{
+      $('cats').querySelectorAll('.cat-pill').forEach(x=>x.classList.remove('active'));
+      p.classList.add('active');
+      renderList();
+    };
+  });
+}
+
+function activeCat(){
+  const el=$('cats').querySelector('.cat-pill.active');
+  return el?el.dataset.cat:'';
+}
+
+function renderList(){
+  const data=BANK[$('role').value];
+  const cat=activeCat();
+  const q=norm($('search').value.trim());
+  const filtered=data.filter(item=>(!cat||item.cat===cat)&&(!q||norm(item.q).includes(q)));
+  if(!filtered.length){
+    $('list').innerHTML='<div class="empty">Žádné otázky neodpovídají filtru.</div>';
+    return;
+  }
+  $('list').innerHTML=filtered.map((item,i)=>{
+    const key=$('role').value+'|'+item.q;
+    return `<label class="qitem"><input type="checkbox" data-key="${encodeURIComponent(key)}" ${checked.has(key)?'checked':''}><span><span class="txt">${item.q}</span><div class="tag">${item.cat}</div></span></label>`;
+  }).join('');
+  $('list').querySelectorAll('input[type=checkbox]').forEach(cb=>{
+    cb.onchange=()=>{
+      const key=decodeURIComponent(cb.dataset.key);
+      if(cb.checked) checked.add(key); else checked.delete(key);
+    };
+  });
+}
+
+$('role').addEventListener('change',()=>{renderCats();renderList();});
+$('search').addEventListener('input',renderList);
+$('btnCheckAll').onclick=()=>{
+  $('list').querySelectorAll('input[type=checkbox]').forEach(cb=>{cb.checked=true;checked.add(decodeURIComponent(cb.dataset.key));});
+};
+$('btnUncheckAll').onclick=()=>{
+  $('list').querySelectorAll('input[type=checkbox]').forEach(cb=>{cb.checked=false;checked.delete(decodeURIComponent(cb.dataset.key));});
+};
+$('btnPrint').onclick=()=>window.print();
+
+renderCats();
+renderList();
+</script>
+</body>
+</html>

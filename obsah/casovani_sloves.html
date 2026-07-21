@@ -1,0 +1,137 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🔤 Časování sloves</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1a1a1a;color:#e0e0e0;min-height:100vh;padding:20px}
+.container{max-width:560px;margin:0 auto}
+h1{font-size:1.6rem;margin-bottom:18px;font-weight:600;text-align:center}
+.card{background:#2a2a2a;border:1px solid #404040;border-radius:8px;padding:24px;margin-bottom:16px}
+.setup{display:flex;gap:12px;flex-wrap:wrap;align-items:end;justify-content:center}
+label{display:block;font-size:.78rem;color:#888;margin-bottom:4px}
+select{background:#404040;border:1px solid #555;border-radius:4px;color:#e0e0e0;padding:9px}
+.btn{background:#6aa6fd;color:#fff;border:none;padding:12px 28px;border-radius:6px;cursor:pointer;font-weight:600}
+.btn:hover{background:#5694f0}
+.scorebar{display:flex;justify-content:space-around;margin-bottom:18px}
+.scorebar .v{font-size:1.5rem;font-weight:700;color:#6aa6fd}.scorebar .l{font-size:.72rem;color:#888}
+.game,.results{display:none;text-align:center}
+.verb{font-size:1.1rem;color:#888;margin-bottom:6px}
+.question{font-size:1.5rem;font-weight:700;margin:14px 0}
+.answer{font-size:1.6rem;width:200px;text-align:center;background:#1e1e1e;border:2px solid #555;border-radius:10px;color:#fff;padding:10px}
+.answer.correct{border-color:#27ae60}.answer.wrong{border-color:#e74c3c}
+.feedback{font-size:1.1rem;margin:14px 0;min-height:32px;font-weight:600}
+.results .big{font-size:2.4rem;font-weight:700;color:#6aa6fd}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>🔤 Trenažér časování sloves</h1>
+  <div class="card" id="setupCard">
+    <div class="setup">
+      <div><label>Jazyk</label><select id="lang">
+        <option value="aj">🇬🇧 Angličtina (přítomný čas)</option>
+        <option value="nj">🇩🇪 Němčina (přítomný čas)</option>
+        <option value="fr">🇫🇷 Francouzština (přítomný čas)</option>
+      </select></div>
+      <button class="btn" id="startBtn">▶️ Start</button>
+    </div>
+  </div>
+
+  <div class="card game" id="gameCard">
+    <div class="scorebar">
+      <div><div class="v" id="score">0</div><div class="l">Správně</div></div>
+      <div><div class="v" id="idx">0/12</div><div class="l">Otázka</div></div>
+    </div>
+    <div class="verb" id="verb"></div>
+    <div class="question" id="question"></div>
+    <input class="answer" id="answer" type="text" autocomplete="off">
+    <div class="feedback" id="feedback"></div>
+  </div>
+
+  <div class="card results" id="resultsCard">
+    <div class="big" id="finalScore"></div>
+    <p style="color:#888" id="finalDetail"></p>
+    <button class="btn" id="againBtn" style="margin-top:16px">🔄 Znovu</button>
+  </div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const SLOVESA={
+aj:{
+  pron:['I','you','he/she/it','we','you (pl.)','they'],
+  verbs:[
+    {inf:'to be',forms:['am','are','is','are','are','are']},
+    {inf:'to have',forms:['have','have','has','have','have','have']},
+    {inf:'to go',forms:['go','go','goes','go','go','go']},
+    {inf:'to do',forms:['do','do','does','do','do','do']},
+    {inf:'to play',forms:['play','play','plays','play','play','play']},
+    {inf:'to watch',forms:['watch','watch','watches','watch','watch','watch']}
+  ]
+},
+nj:{
+  pron:['ich','du','er/sie/es','wir','ihr','sie/Sie'],
+  verbs:[
+    {inf:'sein',forms:['bin','bist','ist','sind','seid','sind']},
+    {inf:'haben',forms:['habe','hast','hat','haben','habt','haben']},
+    {inf:'gehen',forms:['gehe','gehst','geht','gehen','geht','gehen']},
+    {inf:'spielen',forms:['spiele','spielst','spielt','spielen','spielt','spielen']},
+    {inf:'machen',forms:['mache','machst','macht','machen','macht','machen']},
+    {inf:'lernen',forms:['lerne','lernst','lernt','lernen','lernt','lernen']}
+  ]
+},
+fr:{
+  pron:['je','tu','il/elle','nous','vous','ils/elles'],
+  verbs:[
+    {inf:'être',forms:['suis','es','est','sommes','êtes','sont']},
+    {inf:'avoir',forms:['ai','as','a','avons','avez','ont']},
+    {inf:'parler',forms:['parle','parles','parle','parlons','parlez','parlent']},
+    {inf:'aller',forms:['vais','vas','va','allons','allez','vont']},
+    {inf:'faire',forms:['fais','fais','fait','faisons','faites','font']},
+    {inf:'aimer',forms:['aime','aimes','aime','aimons','aimez','aiment']}
+  ]
+}
+};
+let lang,score,idx,total=12,answer;
+function gen(){
+  const set=SLOVESA[lang];
+  const verb=set.verbs[Math.floor(Math.random()*set.verbs.length)];
+  const p=Math.floor(Math.random()*set.pron.length);
+  answer=verb.forms[p];
+  $('verb').textContent=`Infinitiv: ${verb.inf}`;
+  $('question').textContent=`${set.pron[p]} ___`;
+  $('answer').value='';$('answer').className='answer';$('answer').focus();
+}
+function check(){
+  const v=($('answer').value||'').trim().toLowerCase();
+  if(v===answer.toLowerCase()){$('answer').className='answer correct';score++;$('feedback').textContent='✅';$('feedback').style.color='#27ae60';}
+  else{$('answer').className='answer wrong';$('feedback').textContent='❌ Správně: '+answer;$('feedback').style.color='#e74c3c';}
+  $('score').textContent=score;
+  setTimeout(()=>{$('feedback').textContent='';next();},1000);
+}
+function next(){
+  idx++;
+  if(idx>=total){finish();return;}
+  $('idx').textContent=`${idx+1}/${total}`;
+  gen();
+}
+$('answer').addEventListener('keydown',e=>{if(e.key==='Enter'&&$('answer').value!=='')check();});
+function start(){
+  lang=$('lang').value;score=0;idx=0;
+  $('setupCard').style.display='none';$('resultsCard').style.display='none';$('gameCard').style.display='block';
+  $('score').textContent=0;$('idx').textContent=`1/${total}`;
+  gen();
+}
+function finish(){
+  $('gameCard').style.display='none';$('resultsCard').style.display='block';
+  $('finalScore').textContent=`${score} / ${total}`;
+  const pct=Math.round(score/total*100);
+  $('finalDetail').textContent=`Úspěšnost ${pct}%`;
+}
+$('startBtn').onclick=start;
+$('againBtn').onclick=()=>{$('setupCard').style.display='block';$('resultsCard').style.display='none';};
+</script>
+</body>
+</html>

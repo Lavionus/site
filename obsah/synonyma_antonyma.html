@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🔁 Synonyma a antonyma</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1a1a1a;color:#e0e0e0;min-height:100vh;padding:20px}
+.container{max-width:600px;margin:0 auto}
+h1{font-size:1.6rem;margin-bottom:18px;font-weight:600;text-align:center}
+.card{background:#2a2a2a;border:1px solid #404040;border-radius:8px;padding:24px;margin-bottom:16px}
+.setup{display:flex;gap:12px;flex-wrap:wrap;align-items:end;justify-content:center}
+label{display:block;font-size:.78rem;color:#888;margin-bottom:4px}
+select{background:#404040;border:1px solid #555;border-radius:4px;color:#e0e0e0;padding:9px}
+.btn{background:#6aa6fd;color:#fff;border:none;padding:12px 28px;border-radius:6px;cursor:pointer;font-weight:600}
+.btn:hover{background:#5694f0}
+.scorebar{display:flex;justify-content:space-around;margin-bottom:18px}
+.scorebar .v{font-size:1.5rem;font-weight:700;color:#6aa6fd}.scorebar .l{font-size:.72rem;color:#888}
+.game,.results{display:none}
+.word{font-size:2rem;font-weight:700;text-align:center;margin:16px 0}
+.tag{text-align:center;color:#888;font-size:.85rem;margin-bottom:16px}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.opt{background:#333;border:1px solid #555;border-radius:6px;padding:14px;color:#e0e0e0;cursor:pointer;font-size:1rem;text-align:center}
+.opt:hover{border-color:#6aa6fd}
+.opt.correct{border-color:#27ae60;background:#1f3a2a}
+.opt.wrong{border-color:#e74c3c;background:#3a1f1f}
+.results{text-align:center}
+.big{font-size:2.4rem;font-weight:700;color:#6aa6fd}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>🔁 Synonyma a antonyma</h1>
+  <div class="card" id="setupCard">
+    <div class="setup">
+      <div><label>Typ</label><select id="mode">
+        <option value="syn">Synonyma (najdi slovo stejného významu)</option>
+        <option value="ant">Antonyma (najdi opak)</option>
+        <option value="mix" selected>Mix</option>
+      </select></div>
+      <button class="btn" id="startBtn">▶️ Start</button>
+    </div>
+  </div>
+
+  <div class="card game" id="gameCard">
+    <div class="scorebar">
+      <div><div class="v" id="score">0</div><div class="l">Správně</div></div>
+      <div><div class="v" id="idx">0/0</div><div class="l">Otázka</div></div>
+    </div>
+    <div class="tag" id="tag"></div>
+    <div class="word" id="word"></div>
+    <div class="opts" id="opts"></div>
+  </div>
+
+  <div class="card results" id="resultsCard">
+    <div class="big" id="finalScore"></div>
+    <p style="color:#888;margin-top:8px" id="finalDetail"></p>
+    <button class="btn" id="againBtn" style="margin-top:16px">🔄 Znovu</button>
+  </div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const SYN=[
+['radost','veselí'],['smutek','žal'],['rychlý','svižný'],['statečný','odvážný'],
+['krásný','nádherný'],['chytrý','inteligentní'],['velký','obrovský'],['malý','drobný'],
+['silný','mohutný'],['klidný','tichý'],['veselý','rozjařený'],['unavený','vyčerpaný'],
+['bohatý','zámožný'],['chudý','nemajetný'],['starý','letitý'],['nový','moderní']
+];
+const ANT=[
+['velký','malý'],['dobrý','špatný'],['rychlý','pomalý'],['silný','slabý'],
+['světlý','tmavý'],['teplý','studený'],['plný','prázdný'],['nahoře','dole'],
+['veselý','smutný'],['bohatý','chudý'],['starý','mladý'],['čistý','špinavý'],
+['těžký','lehký'],['dlouhý','krátký'],['otevřený','zavřený'],['den','noc']
+];
+const ALLWORDS=[...new Set([...SYN.flat(),...ANT.flat()])];
+let deck,idx,score;
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function buildDeck(mode){
+  let d=[];
+  if(mode==='syn'||mode==='mix')d.push(...SYN.map(p=>({q:p[0],a:p[1],type:'synonymum'})));
+  if(mode==='ant'||mode==='mix')d.push(...ANT.map(p=>({q:p[0],a:p[1],type:'antonymum'})));
+  return shuffle(d).slice(0,12);
+}
+function start(){
+  deck=buildDeck($('mode').value);idx=0;score=0;
+  $('setupCard').style.display='none';$('resultsCard').style.display='none';$('gameCard').style.display='block';
+  $('score').textContent=0;
+  next();
+}
+function next(){
+  if(idx>=deck.length){finish();return;}
+  const item=deck[idx];
+  $('idx').textContent=`${idx+1}/${deck.length}`;
+  $('tag').textContent=`Najdi ${item.type} ke slovu:`;
+  $('word').textContent=item.q;
+  const wrong=shuffle(ALLWORDS.filter(w=>w!==item.a&&w!==item.q)).slice(0,3);
+  const opts=shuffle([item.a,...wrong]);
+  const box=$('opts');box.innerHTML='';
+  opts.forEach(o=>{
+    const b=document.createElement('button');
+    b.className='opt';b.textContent=o;
+    b.onclick=()=>answer(o,item.a,b,box);
+    box.appendChild(b);
+  });
+}
+function answer(chosen,correct,btn,box){
+  [...box.children].forEach(b=>b.disabled=true);
+  if(chosen===correct){btn.classList.add('correct');score++;$('score').textContent=score;}
+  else{btn.classList.add('wrong');[...box.children].find(b=>b.textContent===correct).classList.add('correct');}
+  setTimeout(()=>{idx++;next();},700);
+}
+function finish(){
+  $('gameCard').style.display='none';$('resultsCard').style.display='block';
+  $('finalScore').textContent=`${score} / ${deck.length}`;
+  const pct=Math.round(score/deck.length*100);
+  $('finalDetail').textContent=pct>=80?'🏆 Skvělá slovní zásoba!':pct>=50?'👍 Dobré, zkus to znovu.':'💪 Zopakuj si synonyma a antonyma.';
+}
+$('startBtn').onclick=start;
+$('againBtn').onclick=()=>{$('setupCard').style.display='block';$('resultsCard').style.display='none';};
+</script>
+</body>
+</html>

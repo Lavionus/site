@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🏔️ Řeky a pohoří ČR</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1a1a1a;color:#e0e0e0;min-height:100vh;padding:20px}
+.container{max-width:600px;margin:0 auto}
+h1{font-size:1.6rem;margin-bottom:18px;font-weight:600;text-align:center}
+.card{background:#2a2a2a;border:1px solid #404040;border-radius:8px;padding:24px;margin-bottom:16px}
+.tabs{display:flex;gap:8px;justify-content:center;margin-bottom:14px}
+.tab{background:#333;border:1px solid #555;border-radius:6px;padding:8px 16px;cursor:pointer;font-size:.85rem}
+.tab.active{background:#6aa6fd;border-color:#6aa6fd;color:#fff}
+.btn{background:#6aa6fd;color:#fff;border:none;padding:12px 28px;border-radius:6px;cursor:pointer;font-weight:600;display:block;margin:0 auto}
+.btn:hover{background:#5694f0}
+.scorebar{display:flex;justify-content:space-around;margin-bottom:18px}
+.scorebar .v{font-size:1.5rem;font-weight:700;color:#6aa6fd}.scorebar .l{font-size:.72rem;color:#888}
+.game,.results{display:none;text-align:center}
+.tag{color:#888;font-size:.8rem;margin-bottom:6px}
+.qtext{font-size:1.1rem;margin-bottom:16px;line-height:1.5}
+.opts{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.opt{background:#333;border:1px solid #555;border-radius:6px;padding:12px;color:#e0e0e0;cursor:pointer;font-size:.95rem}
+.opt:hover{border-color:#6aa6fd}
+.opt.correct{border-color:#27ae60;background:#1f3a2a}
+.opt.wrong{border-color:#e74c3c;background:#3a1f1f}
+.results .big{font-size:2.4rem;font-weight:700;color:#6aa6fd}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>🏔️ Řeky a pohoří ČR</h1>
+  <div class="card" id="setupCard">
+    <div class="tabs">
+      <div class="tab active" data-c="reky">🌊 Řeky</div>
+      <div class="tab" data-c="pohori">⛰️ Pohoří</div>
+      <div class="tab" data-c="mix">Mix</div>
+    </div>
+    <button class="btn" id="startBtn">▶️ Start</button>
+  </div>
+
+  <div class="card game" id="gameCard">
+    <div class="scorebar">
+      <div><div class="v" id="score">0</div><div class="l">Správně</div></div>
+      <div><div class="v" id="idx">0/12</div><div class="l">Otázka</div></div>
+    </div>
+    <div class="tag" id="tag"></div>
+    <div class="qtext" id="qtext"></div>
+    <div class="opts" id="opts"></div>
+  </div>
+
+  <div class="card results" id="resultsCard">
+    <div class="big" id="finalScore"></div>
+    <p style="color:#888" id="finalDetail"></p>
+    <button class="btn" id="againBtn" style="margin-top:16px">🔄 Znovu</button>
+  </div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const REKY=[
+{n:'Vltava',fact:'Nejdelší česká řeka, protéká Prahou, vlévá se do Labe.'},
+{n:'Labe',fact:'Odvádí vodu z většiny Čech do Severního moře, pramení v Krkonoších.'},
+{n:'Morava',fact:'Hlavní řeka Moravy, dala jí jméno, vlévá se do Dunaje.'},
+{n:'Odra',fact:'Pramení na Moravě, teče na sever do Baltského moře.'},
+{n:'Ohře',fact:'Protéká severozápadními Čechami, vlévá se do Labe u Litoměřic.'},
+{n:'Sázava',fact:'Přítok Vltavy, oblíbená řeka vodáků.'},
+{n:'Dyje',fact:'Řeka na jižní Moravě, přítok Moravy.'},
+{n:'Berounka',fact:'Vzniká soutokem Mže, Radbuzy a dalších řek u Plzně.'}
+];
+const POHORI=[
+{n:'Krkonoše',fact:'Nejvyšší pohoří ČR, leží zde Sněžka (1603 m).'},
+{n:'Šumava',fact:'Rozsáhlé pohoří na jihozápadě, hraničí s Rakouskem a Německem.'},
+{n:'Jeseníky',fact:'Pohoří na severní Moravě, nejvyšší vrchol Praděd.'},
+{n:'Beskydy',fact:'Pohoří na východní Moravě u hranic se Slovenskem.'},
+{n:'Orlické hory',fact:'Pohoří ve východních Čechách při hranici s Polskem.'},
+{n:'Krušné hory',fact:'Pohoří na severozápadě, hranice s Německem, bohaté na nerosty.'},
+{n:'Českomoravská vrchovina',fact:'Vrchovina mezi Čechami a Moravou, mírně zvlněný terén.'},
+{n:'Jizerské hory',fact:'Pohoří sousedící s Krkonošemi, zdroj řeky Jizery.'}
+];
+let cat,deck,idx,score,total=12;
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));t.classList.add('active');cat=t.dataset.c;});
+cat='reky';
+function pool(){
+  if(cat==='reky')return REKY.map(x=>({...x,type:'řeka'}));
+  if(cat==='pohori')return POHORI.map(x=>({...x,type:'pohoří'}));
+  return [...REKY.map(x=>({...x,type:'řeka'})),...POHORI.map(x=>({...x,type:'pohoří'}))];
+}
+function start(){
+  const all=pool();
+  deck=shuffle([...all]).slice(0,Math.min(total,all.length));total=deck.length;idx=0;score=0;
+  $('setupCard').style.display='none';$('resultsCard').style.display='none';$('gameCard').style.display='block';
+  $('score').textContent=0;
+  next();
+}
+function next(){
+  if(idx>=deck.length){finish();return;}
+  const item=deck[idx];
+  $('idx').textContent=`${idx+1}/${total}`;
+  $('tag').textContent=item.type==='řeka'?'Která řeka:':'Které pohoří:';
+  $('qtext').textContent=item.fact;
+  const allNames=(item.type==='řeka'?REKY:POHORI).map(x=>x.n);
+  const wrong=shuffle(allNames.filter(n=>n!==item.n)).slice(0,3);
+  const opts=shuffle([item.n,...wrong]);
+  const box=$('opts');box.innerHTML='';
+  opts.forEach(o=>{
+    const b=document.createElement('button');b.className='opt';b.textContent=o;
+    b.onclick=()=>{
+      [...box.children].forEach(x=>x.disabled=true);
+      if(o===item.n){b.classList.add('correct');score++;$('score').textContent=score;}
+      else{b.classList.add('wrong');[...box.children].find(x=>x.textContent===item.n).classList.add('correct');}
+      setTimeout(()=>{idx++;next();},900);
+    };
+    box.appendChild(b);
+  });
+}
+function finish(){
+  $('gameCard').style.display='none';$('resultsCard').style.display='block';
+  $('finalScore').textContent=`${score} / ${total}`;
+  const pct=Math.round(score/total*100);
+  $('finalDetail').textContent=pct>=80?'🏆 Skvělá znalost geografie ČR!':pct>=50?'👍 Dobré, zkus to znovu.':'💪 Zopakuj si mapu ČR.';
+}
+$('startBtn').onclick=start;
+$('againBtn').onclick=()=>{$('setupCard').style.display='block';$('resultsCard').style.display='none';};
+</script>
+</body>
+</html>

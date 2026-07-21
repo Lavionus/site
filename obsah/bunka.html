@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🔬 Stavba buňky</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1a1a1a;color:#e0e0e0;min-height:100vh;padding:20px}
+.container{max-width:760px;margin:0 auto}
+h1{font-size:1.6rem;margin-bottom:14px;font-weight:600;text-align:center}
+.tabs{display:flex;gap:8px;margin-bottom:14px;justify-content:center;flex-wrap:wrap}
+.tab{background:#333;border:1px solid #555;border-radius:6px;padding:8px 16px;cursor:pointer;font-size:.85rem}
+.tab.active{background:#6aa6fd;border-color:#6aa6fd;color:#fff}
+.layout{display:flex;gap:20px;flex-wrap:wrap;justify-content:center}
+.card{background:#2a2a2a;border:1px solid #404040;border-radius:8px;padding:20px}
+.bodybox{flex:0 0 320px}
+.infobox{flex:1;min-width:260px}
+.organ{cursor:pointer}
+.organ:hover{opacity:.8}
+.organ.active{stroke:#f5c542;stroke-width:3}
+.oname{font-size:1.15rem;font-weight:700;color:#6aa6fd;margin-bottom:8px}
+.odesc{font-size:.9rem;line-height:1.6}
+.quiz{display:none;text-align:center}
+.scorebar{display:flex;justify-content:space-around;margin-bottom:14px}
+.scorebar .v{font-size:1.4rem;font-weight:700;color:#6aa6fd}.scorebar .l{font-size:.72rem;color:#888}
+.qtext{font-size:1rem;margin-bottom:12px}
+.opt{display:block;width:100%;max-width:320px;margin:6px auto;background:#333;border:1px solid #555;border-radius:6px;padding:10px;color:#e0e0e0;cursor:pointer}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>🔬 Stavba buňky</h1>
+  <div class="tabs">
+    <div class="tab" data-t="zivocisna">Živočišná buňka</div>
+    <div class="tab" data-t="rostlinna">Rostlinná buňka</div>
+    <div class="tab" data-t="quiz">❓ Kvíz</div>
+  </div>
+
+  <div id="explore" class="layout">
+    <div class="card bodybox"><svg id="cellSvg" width="300" height="300" viewBox="0 0 300 300"></svg></div>
+    <div class="card infobox" id="infobox"><div class="oname">Klikni na organelu</div><div class="odesc">Vyber si část buňky a zjisti její funkci.</div></div>
+  </div>
+
+  <div id="quiz" class="quiz card">
+    <div class="scorebar"><div><div class="v" id="score">0</div><div class="l">Správně</div></div><div><div class="v" id="idx">0/10</div><div class="l">Otázka</div></div></div>
+    <div class="qtext" id="qtext"></div>
+    <div id="qopts"></div>
+  </div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const ORGANELY={
+jadro:{n:'🔵 Jádro',d:'Obsahuje DNA (genetickou informaci) a řídí veškerou činnost buňky.'},
+mitochondrie:{n:'🟠 Mitochondrie',d:'„Elektrárna buňky" — buněčné dýchání, výroba energie (ATP).'},
+er:{n:'🌀 Endoplazmatické retikulum',d:'Síť kanálků pro výrobu a transport bílkovin a tuků.'},
+golgi:{n:'📦 Golgiho aparát',d:'Balí, upravuje a exportuje látky vyrobené v buňce.'},
+ribozom:{n:'⚫ Ribozomy',d:'Malé částice, na kterých se syntetizují bílkoviny.'},
+cytoplazma:{n:'💧 Cytoplazma',d:'Gelovité prostředí uvnitř buňky, ve kterém probíhá většina buněčných dějů.'},
+membrana:{n:'🟢 Buněčná membrána',d:'Obaluje buňku, řídí, co do ní vstupuje a co z ní vystupuje.'},
+stena:{n:'🟩 Buněčná stěna',d:'Pevný obal z celulózy — jen u rostlin, dává buňce tvar a ochranu.'},
+vakuola:{n:'🔷 Vakuola',d:'Velký váček s buněčnou šťávou — jen u rostlin, udržuje tlak (turgor) a skladuje látky.'},
+chloroplast:{n:'🟢 Chloroplast',d:'Obsahuje chlorofyl — jen u rostlin, probíhá v něm fotosyntéza.'}
+};
+function svgFor(type){
+  let s=`<circle class="organ" data-o="cytoplazma" cx="150" cy="150" r="130" fill="#2d3a2d" stroke="#3d4d3d" stroke-width="3"/>`;
+  if(type==='zivocisna'){
+    s+=`<circle class="organ" data-o="membrana" cx="150" cy="150" r="130" fill="none" stroke="#6aa6fd" stroke-width="4"/>`;
+    s=s.replace('stroke="#3d4d3d"','stroke="#3d4d3d"');
+  } else {
+    s+=`<rect class="organ" data-o="stena" x="15" y="15" width="270" height="270" rx="30" fill="none" stroke="#8bc34a" stroke-width="8"/>
+        <circle class="organ" data-o="membrana" cx="150" cy="150" r="126" fill="none" stroke="#6aa6fd" stroke-width="3"/>`;
+  }
+  s+=`<ellipse class="organ" data-o="jadro" cx="150" cy="150" rx="42" ry="38" fill="#4a6fa5" stroke="#222" stroke-width="2"/>`;
+  s+=`<ellipse class="organ" data-o="mitochondrie" cx="90" cy="90" rx="20" ry="12" fill="#e07a5f" stroke="#222" transform="rotate(-20 90 90)"/>`;
+  s+=`<ellipse class="organ" data-o="mitochondrie" cx="220" cy="200" rx="20" ry="12" fill="#e07a5f" stroke="#222" transform="rotate(30 220 200)"/>`;
+  s+=`<path class="organ" data-o="er" d="M210,90 q20,10 5,20 q20,10 5,20 q20,10 5,20" fill="none" stroke="#a78bfa" stroke-width="6"/>`;
+  s+=`<ellipse class="organ" data-o="golgi" cx="90" cy="215" rx="26" ry="14" fill="#f4a261" stroke="#222"/>`;
+  s+=`<circle class="organ" data-o="ribozom" cx="180" cy="70" r="4" fill="#fff"/><circle class="organ" data-o="ribozom" cx="195" cy="80" r="4" fill="#fff"/><circle class="organ" data-o="ribozom" cx="70" cy="150" r="4" fill="#fff"/>`;
+  if(type==='rostlinna'){
+    s+=`<ellipse class="organ" data-o="vakuola" cx="220" cy="110" rx="34" ry="30" fill="#5ec8d8" stroke="#222" opacity=".8"/>`;
+    s+=`<circle class="organ" data-o="chloroplast" cx="100" cy="230" r="16" fill="#3aa655" stroke="#222"/>`;
+    s+=`<circle class="organ" data-o="chloroplast" cx="230" cy="230" r="16" fill="#3aa655" stroke="#222"/>`;
+  }
+  return s;
+}
+function loadCell(type){
+  $('cellSvg').innerHTML=svgFor(type);
+  document.querySelectorAll('.organ').forEach(el=>el.onclick=()=>{
+    document.querySelectorAll('.organ').forEach(o=>o.classList.remove('active'));
+    el.classList.add('active');
+    const o=ORGANELY[el.dataset.o];
+    $('infobox').innerHTML=`<div class="oname">${o.n}</div><div class="odesc">${o.d}</div>`;
+  });
+}
+document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));t.classList.add('active');
+  const m=t.dataset.t;
+  if(m==='quiz'){$('explore').style.display='none';$('quiz').style.display='block';startQuiz();}
+  else{$('explore').style.display='flex';$('quiz').style.display='none';loadCell(m);}
+});
+document.querySelector('.tab[data-t="zivocisna"]').classList.add('active');
+loadCell('zivocisna');
+
+let score,idx,total=10;
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
+function startQuiz(){score=0;idx=0;$('score').textContent=0;next();}
+function next(){
+  if(idx>=total){$('qtext').textContent=`Výsledek: ${score} / ${total}`;$('qopts').innerHTML='';return;}
+  $('idx').textContent=`${idx+1}/${total}`;
+  const keys=Object.keys(ORGANELY);
+  const key=shuffle([...keys])[0];
+  $('qtext').textContent=`Co dělá: ${ORGANELY[key].n.replace(/^\S+\s/,'')}?`;
+  const correct=ORGANELY[key].d;
+  const opts=shuffle([correct,...shuffle(Object.values(ORGANELY).map(o=>o.d).filter(d=>d!==correct)).slice(0,3)]);
+  const box=$('qopts');box.innerHTML='';
+  opts.forEach(o=>{
+    const b=document.createElement('button');b.className='opt';b.textContent=o;
+    b.onclick=()=>{
+      [...box.children].forEach(x=>x.disabled=true);
+      if(o===correct){b.style.borderColor='#27ae60';score++;}
+      else{b.style.borderColor='#e74c3c';[...box.children].find(x=>x.textContent===correct).style.borderColor='#27ae60';}
+      $('score').textContent=score;
+      setTimeout(()=>{idx++;next();},900);
+    };
+    box.appendChild(b);
+  });
+}
+</script>
+</body>
+</html>

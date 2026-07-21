@@ -11,6 +11,8 @@ const KATALOG_SKUPINY = [
   { id: 'vzdelavani',   label: '🎓 Vzdělávání' },
   { id: 'hry',          label: '🎮 Hry' },
   { id: 'vysetrovani',  label: '🕵️ Vyšetřování' },
+  { id: 'vareni',       label: '🍳 Vaření & recepty' },
+  { id: 'dokumenty',    label: '📜 Právo & dokumenty' },
   { id: 'ostatni',      label: '✉️ Ostatní' },
 ];
 
@@ -820,6 +822,11 @@ const KATALOG_SEKCE = [
           "čas",
           "hodiny"
         ]
+      },
+      {
+        "soubor": "obsah/sextant.html",
+        "nazev": "🧭 Sextant – poloha podle hvězd",
+        "tagy": ["astronavigace", "polárka", "zeměpisná šířka", "slunce v poledne"]
       }
     ]
   },
@@ -2134,6 +2141,11 @@ const KATALOG_SEKCE = [
         "soubor": "obsah/protocol_gen.html",
         "nazev": "📝 Generátor protokolů",
         "tagy": ["vyšetřování", "protokol", "ohledání", "výslech", "zajištění věci"]
+      },
+      {
+        "soubor": "obsah/interview_questions.html",
+        "nazev": "🎙️ Generátor otázek k výslechu",
+        "tagy": ["vyšetřování", "výslech", "svědek", "poškozený", "podezřelý", "pohovor"]
       }
     ]
   },
@@ -2171,6 +2183,28 @@ const KATALOG_SEKCE = [
         "soubor": "obsah/scene_sketch.html",
         "nazev": "📐 Náčrt místa činu",
         "tagy": ["místo činu", "plánek", "skica", "měřítko", "značky důkazů"]
+      }
+    ]
+  },
+  {
+    "nazev": "🍳 Recepty",
+    "skupina": "vareni",
+    "polozky": [
+      {
+        "soubor": "obsah/recipes.html",
+        "nazev": "🍳 Kniha receptů",
+        "tagy": ["vaření", "recept", "porce", "přepočet množství", "ingredience"]
+      }
+    ]
+  },
+  {
+    "nazev": "📜 Vzory dokumentů",
+    "skupina": "dokumenty",
+    "polozky": [
+      {
+        "soubor": "obsah/household_docs.html",
+        "nazev": "📜 Vzory dokumentů pro domácnost",
+        "tagy": ["plná moc", "výpověď z nájmu", "půjčka", "reklamace", "smlouva"]
       }
     ]
   },
