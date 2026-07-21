@@ -10,6 +10,7 @@ const KATALOG_SKUPINY = [
   { id: 'vyvoj',        label: '💻 Vývoj & data' },
   { id: 'vzdelavani',   label: '🎓 Vzdělávání' },
   { id: 'hry',          label: '🎮 Hry' },
+  { id: 'vysetrovani',  label: '🕵️ Vyšetřování' },
   { id: 'ostatni',      label: '✉️ Ostatní' },
 ];
 
@@ -1533,6 +1534,26 @@ const KATALOG_SEKCE = [
         "soubor": "obsah/reading_log.html",
         "nazev": "📚 Čtenářský deník",
         "tagy": ["knihy", "četba", "hodnocení", "literatura"]
+      },
+      {
+        "soubor": "obsah/cteni_s_porozumenim.html",
+        "nazev": "📖 Čtení s porozuměním",
+        "tagy": ["čtení", "porozumění", "text", "otázky", "1. stupeň", "2. stupeň", "sš"]
+      },
+      {
+        "soubor": "obsah/vetny_rozbor.html",
+        "nazev": "✏️ Rozbor věty – větné členy",
+        "tagy": ["mluvnice", "podmět", "přísudek", "předmět", "přívlastek", "2. stupeň"]
+      },
+      {
+        "soubor": "obsah/diktat_gen.html",
+        "nazev": "✍️ Generátor diktátů",
+        "tagy": ["diktát", "pravopis", "poslech", "vyjmenovaná slova", "velká písmena"]
+      },
+      {
+        "soubor": "obsah/synonyma_antonyma.html",
+        "nazev": "🔁 Synonyma a antonyma",
+        "tagy": ["slovní zásoba", "synonyma", "antonyma", "opozita"]
       }
     ]
   },
@@ -1599,6 +1620,31 @@ const KATALOG_SEKCE = [
         "soubor": "obsah/mental_math.html",
         "nazev": "🧠 Mentální matematika",
         "tagy": ["počítání zpaměti", "trénink"]
+      },
+      {
+        "soubor": "obsah/desetinna_cisla.html",
+        "nazev": "🔢 Desetinná čísla",
+        "tagy": ["desetinná čísla", "sčítání", "porovnávání", "zaokrouhlování", "2. stupeň"]
+      },
+      {
+        "soubor": "obsah/mocniny_odmocniny.html",
+        "nazev": "√ Mocniny a odmocniny",
+        "tagy": ["mocniny", "odmocniny", "2. stupeň"]
+      },
+      {
+        "soubor": "obsah/kombinatorika.html",
+        "nazev": "🎲 Kombinatorika a pravděpodobnost",
+        "tagy": ["kombinatorika", "pravděpodobnost", "variace", "kombinace", "permutace", "sš"]
+      },
+      {
+        "soubor": "obsah/trigonometrie.html",
+        "nazev": "📐 Trigonometrie pravoúhlého trojúhelníku",
+        "tagy": ["trigonometrie", "sinus", "kosinus", "tangens", "sš"]
+      },
+      {
+        "soubor": "obsah/geometricke_konstrukce.html",
+        "nazev": "📏 Geometrické konstrukce kružítkem",
+        "tagy": ["geometrie", "kružítko", "pravítko", "konstrukce", "2. stupeň"]
       }
     ]
   },
@@ -1675,6 +1721,21 @@ const KATALOG_SEKCE = [
         "soubor": "obsah/sky_events.html",
         "nazev": "🌠 Astronomický kalendář úkazů",
         "tagy": ["meteorický roj", "zatmění", "úplněk", "slunovrat", "rovnodennost", "astronomie"]
+      },
+      {
+        "soubor": "obsah/anatomie.html",
+        "nazev": "🫀 Biologie člověka",
+        "tagy": ["biologie", "anatomie", "orgány", "soustavy", "2. stupeň"]
+      },
+      {
+        "soubor": "obsah/bunka.html",
+        "nazev": "🔬 Stavba buňky",
+        "tagy": ["biologie", "buňka", "organely", "jádro", "mitochondrie", "2. stupeň"]
+      },
+      {
+        "soubor": "obsah/potravni_retezec.html",
+        "nazev": "🌾 Potravní řetězce",
+        "tagy": ["biologie", "ekosystém", "producent", "konzument", "1. stupeň", "2. stupeň"]
       }
     ]
   },
@@ -1711,11 +1772,31 @@ const KATALOG_SEKCE = [
         "soubor": "obsah/historicke_mapy_odkazy.html",
         "nazev": "📜 Kde najít historické mapy",
         "tagy": ["dějepis", "mapy", "archiv"]
+      },
+      {
+        "soubor": "obsah/svetova_hlavni_mesta.html",
+        "nazev": "🌍 Kvíz světových hlavních měst",
+        "tagy": ["zeměpis", "hlavní města", "svět", "státy"]
+      },
+      {
+        "soubor": "obsah/reky_pohori.html",
+        "nazev": "🏔️ Řeky a pohoří ČR",
+        "tagy": ["zeměpis", "česko", "řeky", "pohoří", "2. stupeň"]
+      },
+      {
+        "soubor": "obsah/svetove_dejiny.html",
+        "nazev": "📜 Časová osa světových dějin",
+        "tagy": ["dějepis", "historie", "svět", "letopočty", "2. stupeň", "sš"]
+      },
+      {
+        "soubor": "obsah/eu_instituce.html",
+        "nazev": "🇪🇺 Instituce Evropské unie",
+        "tagy": ["eu", "evropská unie", "instituce", "politika", "sš"]
       }
     ]
   },
   {
-    "nazev": "🇬🇧🇩🇪 Cizí jazyky",
+    "nazev": "🇬🇧🇩🇪🇫🇷 Cizí jazyky",
     "skupina": "vzdelavani",
     "polozky": [
       {
@@ -1732,6 +1813,21 @@ const KATALOG_SEKCE = [
         "soubor": "obsah/de_slovicka.html",
         "nazev": "🇩🇪 Němčina – slovíčka",
         "tagy": ["němčina", "deutsch", "slovíčka", "členy", "der die das"]
+      },
+      {
+        "soubor": "obsah/fr_slovicka.html",
+        "nazev": "🇫🇷 Francouzština – slovíčka",
+        "tagy": ["francouzština", "français", "slovíčka", "členy", "le la les"]
+      },
+      {
+        "soubor": "obsah/casovani_sloves.html",
+        "nazev": "🔤 Trenažér časování sloves",
+        "tagy": ["gramatika", "slovesa", "časování", "angličtina", "němčina", "francouzština"]
+      },
+      {
+        "soubor": "obsah/vyslovnost.html",
+        "nazev": "🔊 Výslovnost a poslech",
+        "tagy": ["poslech", "výslovnost", "angličtina", "němčina", "francouzština"]
       }
     ]
   },
@@ -1778,6 +1874,16 @@ const KATALOG_SEKCE = [
         "soubor": "obsah/AI_prednaska.html",
         "nazev": "🤖 AI přednáška",
         "tagy": ["umělá inteligence", "informatika", "prezentace", "chatgpt", "prompt"]
+      },
+      {
+        "soubor": "obsah/pracovni_listy.html",
+        "nazev": "🖨️ Generátor pracovních listů",
+        "tagy": ["tisk", "pdf", "pracovní list", "násobilka", "sčítání", "vyjmenovaná slova", "učitel"]
+      },
+      {
+        "soubor": "obsah/edu_progress.html",
+        "nazev": "🏅 Studijní deník a odznaky",
+        "tagy": ["pokrok", "gamifikace", "streak", "odznaky", "návyk"]
       }
     ]
   },
@@ -2002,6 +2108,69 @@ const KATALOG_SEKCE = [
       {
         "soubor": "obsah/trivia.html",
         "nazev": "❓ Vědomostní kvíz"
+      }
+    ]
+  },
+  {
+    "nazev": "🕵️ Organizace případu",
+    "skupina": "vysetrovani",
+    "polozky": [
+      {
+        "soubor": "obsah/case_timeline.html",
+        "nazev": "🕵️ Časová osa případu",
+        "tagy": ["vyšetřování", "timeline", "případ", "chronologie"]
+      },
+      {
+        "soubor": "obsah/evidence_log.html",
+        "nazev": "📦 Evidenční deník důkazů",
+        "tagy": ["vyšetřování", "chain of custody", "důkazy", "evidence"]
+      },
+      {
+        "soubor": "obsah/investigation_checklist.html",
+        "nazev": "✅ Kontrolní seznamy vyšetřování",
+        "tagy": ["vyšetřování", "checklist", "ohledání", "výslech", "nehoda"]
+      },
+      {
+        "soubor": "obsah/protocol_gen.html",
+        "nazev": "📝 Generátor protokolů",
+        "tagy": ["vyšetřování", "protokol", "ohledání", "výslech", "zajištění věci"]
+      }
+    ]
+  },
+  {
+    "nazev": "🔍 Digitální forenzní pomůcky",
+    "skupina": "vysetrovani",
+    "polozky": [
+      {
+        "soubor": "obsah/hash_compare.html",
+        "nazev": "🔐 Porovnání otisků souborů",
+        "tagy": ["forenzní", "hash", "sha256", "otisk", "integrita"]
+      },
+      {
+        "soubor": "obsah/file_signature.html",
+        "nazev": "🔎 Identifikace typu souboru",
+        "tagy": ["forenzní", "magic bytes", "hlavička souboru", "falešná přípona"]
+      },
+      {
+        "soubor": "obsah/vin_decoder.html",
+        "nazev": "🚗 Dekodér VIN",
+        "tagy": ["vozidlo", "vin", "identifikační číslo", "wmi"]
+      }
+    ]
+  },
+  {
+    "nazev": "⚖️ Právní a mapové pomůcky",
+    "skupina": "vysetrovani",
+    "polozky": [
+      {
+        "soubor": "obsah/trestni_zakonik_ref.html",
+        "nazev": "⚖️ Rychlá reference trestního zákoníku",
+        "tagy": ["zákon", "paragraf", "trestní zákoník", "skutková podstata"]
+      },
+      {
+        "soubor": "obsah/scene_sketch.html",
+        "nazev": "📐 Náčrt místa činu",
+        "tagy": ["místo činu", "plánek", "skica", "měřítko", "značky důkazů"]
       }
     ]
   },

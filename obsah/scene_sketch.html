@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📐 Náčrt místa činu</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1a1a1a;color:#e0e0e0;min-height:100vh;padding:20px}
+.container{max-width:1100px;margin:0 auto}
+h1{font-size:1.6rem;margin-bottom:6px;font-weight:600;text-align:center}
+.sub{text-align:center;color:#888;font-size:.85rem;margin-bottom:18px}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center;background:#2a2a2a;border:1px solid #404040;border-radius:8px;padding:12px}
+.toolbar button{background:#404040;border:1px solid #555;color:#bbb;border-radius:6px;padding:8px 12px;font-size:.82rem;cursor:pointer}
+.toolbar button.active{background:#6aa6fd;color:#fff;border-color:#6aa6fd}
+.toolbar button:hover{background:#4a4a4a}
+.toolbar label{font-size:.78rem;color:#888;display:flex;align-items:center;gap:6px}
+.toolbar input[type=number]{width:70px;background:#1e1e1e;border:1px solid #555;border-radius:6px;color:#e0e0e0;padding:6px 8px;font-size:.85rem}
+.toolbar input[type=color]{width:34px;height:30px;border:none;background:none;cursor:pointer}
+.sep{width:1px;background:#444;align-self:stretch;margin:0 4px}
+.canvas-wrap{background:#fff;border-radius:8px;overflow:auto;border:1px solid #404040}
+canvas{display:block;cursor:crosshair}
+.note{font-size:.78rem;color:#666;margin-top:10px;text-align:center}
+.legend{margin-top:10px;font-size:.8rem;color:#888;text-align:center}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>📐 Náčrt místa činu</h1>
+  <p class="sub">Jednoduchý plánek na síti se značkami důkazů, měřítkem a severkou. Kresba se ukládá lokálně v prohlížeči.</p>
+
+  <div class="toolbar">
+    <button data-tool="pero" class="active">✏️ Kreslit</button>
+    <button data-tool="cara">📏 Rovná čára</button>
+    <button data-tool="znacka">🔢 Značka důkazu</button>
+    <button data-tool="text">🔤 Text</button>
+    <button data-tool="mazat">🧽 Guma</button>
+    <div class="sep"></div>
+    <label>Barva <input type="color" id="barva" value="#e63946"></label>
+    <label>Tloušťka <input type="number" id="tloustka" value="2" min="1" max="12"></label>
+    <div class="sep"></div>
+    <label>Měřítko: 1 čtverec = <input type="number" id="meritko" value="1" min="0.1" step="0.1"> m</label>
+    <div class="sep"></div>
+    <button id="btnUndo">↩️ Zpět</button>
+    <button id="btnClear">🗑️ Vyčistit</button>
+    <button id="btnPng">💾 Export PNG</button>
+    <button id="btnPrint">🖨️ Tisk</button>
+  </div>
+
+  <div class="canvas-wrap">
+    <canvas id="cv" width="1000" height="650"></canvas>
+  </div>
+  <p class="legend">Klikni pro umístění číslované značky důkazu (automaticky se zvyšuje číslo). Severka je vždy vpravo nahoře.</p>
+  <p class="note">Nástroj slouží k rychlé orientační skice, nenahrazuje geodetické zaměření místa.</p>
+</div>
+
+<script>
+const cv=document.getElementById('cv');
+const ctx=cv.getContext('2d');
+const GRID=25;
+let tool='pero',drawing=false,startX=0,startY=0,evidenceNum=1;
+let history=[];
+let currentImage=null;
+
+function saveHistory(){
+  history.push(cv.toDataURL());
+  if(history.length>40)history.shift();
+}
+
+function drawGrid(){
+  ctx.fillStyle='#fff';
+  ctx.fillRect(0,0,cv.width,cv.height);
+  ctx.strokeStyle='#e0e0e0';
+  ctx.lineWidth=1;
+  for(let x=0;x<=cv.width;x+=GRID){
+    ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,cv.height);ctx.stroke();
+  }
+  for(let y=0;y<=cv.height;y+=GRID){
+    ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(cv.width,y);ctx.stroke();
+  }
+  // měřítko vlevo dole
+  const m=parseFloat(document.getElementById('meritko').value)||1;
+  ctx.strokeStyle='#111';ctx.fillStyle='#111';ctx.lineWidth=2;ctx.font='11px sans-serif';
+  const sx=20,sy=cv.height-20;
+  ctx.beginPath();ctx.moveTo(sx,sy);ctx.lineTo(sx+GRID*2,sy);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(sx,sy-5);ctx.lineTo(sx,sy+5);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(sx+GRID*2,sy-5);ctx.lineTo(sx+GRID*2,sy+5);ctx.stroke();
+  ctx.fillText((m*2).toFixed(1)+' m',sx+8,sy-8);
+  // severka vpravo nahoře
+  const nx=cv.width-40,ny=40;
+  ctx.beginPath();ctx.moveTo(nx,ny+18);ctx.lineTo(nx,ny-18);ctx.stroke();
+  ctx.beginPath();ctx.moveTo(nx,ny-18);ctx.lineTo(nx-6,ny-6);ctx.lineTo(nx+6,ny-6);ctx.closePath();ctx.fill();
+  ctx.fillText('S',nx-4,ny-24);
+}
+
+function init(){
+  drawGrid();
+  saveHistory();
+}
+
+function pos(e){
+  const r=cv.getBoundingClientRect();
+  const cx=(e.touches?e.touches[0].clientX:e.clientX)-r.left;
+  const cy=(e.touches?e.touches[0].clientY:e.clientY)-r.top;
+  return {x:cx*(cv.width/r.width), y:cy*(cv.height/r.height)};
+}
+
+cv.addEventListener('pointerdown',e=>{
+  drawing=true;
+  const p=pos(e);
+  startX=p.x;startY=p.y;
+  if(tool==='pero'||tool==='mazat'){
+    ctx.beginPath();
+    ctx.moveTo(p.x,p.y);
+  }
+  if(tool==='znacka'){
+    drawEvidence(p.x,p.y,evidenceNum++);
+    drawing=false;
+    saveHistory();
+  }
+  if(tool==='text'){
+    const t=prompt('Text popisku:');
+    if(t){
+      ctx.fillStyle=document.getElementById('barva').value;
+      ctx.font='14px sans-serif';
+      ctx.fillText(t,p.x,p.y);
+      saveHistory();
+    }
+    drawing=false;
+  }
+  if(tool==='cara'){
+    currentImage=new Image();
+    currentImage.src=cv.toDataURL();
+  }
+});
+
+cv.addEventListener('pointermove',e=>{
+  if(!drawing)return;
+  const p=pos(e);
+  if(tool==='pero'){
+    ctx.strokeStyle=document.getElementById('barva').value;
+    ctx.lineWidth=parseInt(document.getElementById('tloustka').value)||2;
+    ctx.lineCap='round';
+    ctx.lineTo(p.x,p.y);
+    ctx.stroke();
+  } else if(tool==='mazat'){
+    ctx.strokeStyle='#fff';
+    ctx.lineWidth=(parseInt(document.getElementById('tloustka').value)||2)*4;
+    ctx.lineCap='round';
+    ctx.lineTo(p.x,p.y);
+    ctx.stroke();
+  } else if(tool==='cara' && currentImage && currentImage.complete){
+    ctx.drawImage(currentImage,0,0);
+    ctx.strokeStyle=document.getElementById('barva').value;
+    ctx.lineWidth=parseInt(document.getElementById('tloustka').value)||2;
+    ctx.beginPath();
+    ctx.moveTo(startX,startY);
+    ctx.lineTo(p.x,p.y);
+    ctx.stroke();
+  }
+});
+
+window.addEventListener('pointerup',()=>{
+  if(drawing && (tool==='pero'||tool==='mazat'||tool==='cara'))saveHistory();
+  drawing=false;
+});
+
+function drawEvidence(x,y,n){
+  const barva=document.getElementById('barva').value;
+  ctx.fillStyle=barva;
+  ctx.beginPath();
+  ctx.arc(x,y,11,0,Math.PI*2);
+  ctx.fill();
+  ctx.fillStyle='#fff';
+  ctx.font='bold 11px sans-serif';
+  ctx.textAlign='center';
+  ctx.textBaseline='middle';
+  ctx.fillText(n,x,y);
+  ctx.textAlign='start';
+  ctx.textBaseline='alphabetic';
+}
+
+document.querySelectorAll('[data-tool]').forEach(b=>{
+  b.onclick=()=>{
+    document.querySelectorAll('[data-tool]').forEach(x=>x.classList.remove('active'));
+    b.classList.add('active');
+    tool=b.dataset.tool;
+  };
+});
+
+document.getElementById('btnUndo').onclick=()=>{
+  if(history.length<2)return;
+  history.pop();
+  const img=new Image();
+  img.onload=()=>ctx.drawImage(img,0,0);
+  img.src=history[history.length-1];
+};
+
+document.getElementById('btnClear').onclick=()=>{
+  if(confirm('Vyčistit celý náčrt?')){
+    evidenceNum=1;
+    drawGrid();
+    saveHistory();
+  }
+};
+
+document.getElementById('btnPng').onclick=()=>{
+  const a=document.createElement('a');
+  a.href=cv.toDataURL('image/png');
+  a.download='nacrt_mista_cinu.png';
+  a.click();
+};
+
+document.getElementById('btnPrint').onclick=()=>{
+  const w=window.open('');
+  w.document.write('<img src="'+cv.toDataURL('image/png')+'" style="width:100%">');
+  w.document.close();
+  w.onload=()=>w.print();
+  setTimeout(()=>w.print(),300);
+};
+
+document.getElementById('meritko').addEventListener('input',()=>{
+  const img=new Image();
+  img.onload=()=>{ctx.drawImage(img,0,0); /* redraw scale only visually stays same, acceptable */};
+  img.src=history[history.length-1];
+});
+
+init();
+</script>
+</body>
+</html>

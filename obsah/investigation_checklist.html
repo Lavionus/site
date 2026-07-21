@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>✅ Kontrolní seznamy vyšetřování</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1a1a1a;color:#e0e0e0;min-height:100vh;padding:20px}
+.container{max-width:840px;margin:0 auto}
+h1{font-size:1.6rem;margin-bottom:6px;font-weight:600;text-align:center}
+.sub{text-align:center;color:#888;font-size:.85rem;margin-bottom:18px}
+.tabs{display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap;justify-content:center}
+.tabs button{padding:8px 14px;background:#2a2a2a;border:1px solid #404040;border-radius:6px;color:#bbb;cursor:pointer;font-size:.82rem}
+.tabs button.active{background:#6aa6fd;color:#fff;border-color:#6aa6fd}
+.card{background:#2a2a2a;border:1px solid #404040;border-radius:8px;padding:22px;margin-bottom:20px}
+h2{font-size:1.05rem;color:#6aa6fd;margin-bottom:4px}
+.progress-wrap{background:#1e1e1e;border-radius:6px;height:8px;overflow:hidden;margin:10px 0 16px}
+.progress-bar{height:100%;background:#4caf7d;width:0%;transition:width .2s}
+.item{display:flex;align-items:flex-start;gap:10px;padding:8px 4px;border-bottom:1px solid #333}
+.item:last-child{border-bottom:none}
+.item input[type=checkbox]{margin-top:3px;width:18px;height:18px;accent-color:#6aa6fd;flex-shrink:0}
+.item label{flex:1;font-size:.9rem;cursor:pointer}
+.item.done label{color:#666;text-decoration:line-through}
+.item button.del{background:none;border:none;color:#666;cursor:pointer;font-size:.85rem}
+.item button.del:hover{color:#e05d5d}
+.addrow{display:flex;gap:8px;margin-top:14px}
+.addrow input{flex:1;background:#1e1e1e;border:1px solid #555;border-radius:6px;color:#e0e0e0;padding:9px 12px;font-size:.88rem}
+.btn{padding:9px 16px;background:#6aa6fd;border:none;border-radius:6px;color:#fff;font-weight:600;cursor:pointer;font-size:.85rem}
+.btn:hover{background:#5a92e6}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;justify-content:center}
+.btn.sec{background:#404040;color:#bbb}
+.btn.sec:hover{background:#4a4a4a}
+.note{font-size:.78rem;color:#666;margin-top:10px;text-align:center}
+@media print{
+  body{background:#fff;color:#000;padding:0}
+  .tabs,.toolbar,.addrow,button.del{display:none}
+  .card{border:1px solid #999}
+  .item.done label{color:#333}
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>✅ Kontrolní seznamy vyšetřování</h1>
+  <p class="sub">Předpřipravené checklisty pro běžné vyšetřovací úkony. Stav zaškrtnutí se ukládá lokálně v tomto prohlížeči.</p>
+
+  <div class="tabs" id="tabs"></div>
+
+  <div class="card">
+    <h2 id="listTitle"></h2>
+    <div class="progress-wrap"><div class="progress-bar" id="bar"></div></div>
+    <div id="items"></div>
+    <div class="addrow">
+      <input id="newItem" placeholder="Přidat vlastní bod…">
+      <button class="btn" id="btnAddItem">Přidat</button>
+    </div>
+  </div>
+
+  <div class="toolbar">
+    <button class="btn sec" id="btnPrint">🖨️ Tisk</button>
+    <button class="btn sec" id="btnReset">↺ Odškrtnout vše</button>
+  </div>
+  <p class="note">Jde o obecnou organizační pomůcku, nenahrazuje závazné metodické postupy.</p>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+
+const PRESETS={
+  ohledani:{
+    label:'🏠 Ohledání místa činu',
+    items:[
+      'Zajistit a vymezit místo činu páskou / kordonem',
+      'Zaznamenat přesný čas příjezdu a osoby přítomné na místě',
+      'Pořídit celkovou fotodokumentaci (orientační snímky)',
+      'Pořídit detailní fotodokumentaci se srovnávacím měřítkem',
+      'Zaznamenat GPS souřadnice / adresu místa',
+      'Vytvořit náčrt místa s rozměry a značkami',
+      'Označit a očíslovat jednotlivé stopy/důkazy',
+      'Zajistit stopy dle typu (biologické, daktyloskopické, mechanoskopické…)',
+      'Zapsat každou zajištěnou věc do evidenčního deníku',
+      'Zdokumentovat osvětlení a povětrnostní podmínky',
+      'Pořídit výslech prvních svědků na místě',
+      'Zajistit záznam z kamerových systémů v okolí',
+      'Sepsat protokol o ohledání místa činu'
+    ]
+  },
+  vyslech:{
+    label:'🗣️ Výslech svědka',
+    items:[
+      'Ověřit totožnost vyslýchané osoby',
+      'Poučit o právech a povinnostech svědka',
+      'Zaznamenat datum, čas a místo výslechu',
+      'Nechat volně vypovědět bez přerušování',
+      'Doplňující otázky až po volné výpovědi',
+      'Ověřit časovou osu událostí z pohledu svědka',
+      'Zjistit kontakt na další možné svědky',
+      'Nechat podepsat protokol o výslechu',
+      'Zvážit pořízení audio/video záznamu se souhlasem'
+    ]
+  },
+  digitalni:{
+    label:'💻 Digitální stopy',
+    items:[
+      'Zařízení nevypínat, pokud je zapnuté (riziko šifrování/mazání)',
+      'Zdokumentovat stav obrazovky před manipulací',
+      'Zajistit zařízení do vhodného obalu (Faradayův sáček u mobilů)',
+      'Vytvořit forenzní kopii (bitovou) nosiče dat',
+      'Ověřit a zapsat hash originálu i kopie (SHA-256)',
+      'Zdokumentovat metadata souborů (čas vytvoření/úpravy)',
+      'Zaznamenat sériová čísla a identifikátory zařízení',
+      'Zapsat řetězec dokazování (kdo, kdy, proč manipuloval)',
+      'Zálohovat relevantní komunikaci a logy',
+      'Uložit originál odděleně, pracovat jen s kopií'
+    ]
+  },
+  nehoda:{
+    label:'🚗 Dopravní nehoda',
+    items:[
+      'Zajistit místo nehody a bezpečnost účastníků',
+      'Zaznamenat polohu vozidel před přesunutím (foto/měření)',
+      'Zaznamenat SPZ, VIN a poškození jednotlivých vozidel',
+      'Zdokumentovat brzdné stopy a stopy na vozovce',
+      'Zjistit a zapsat údaje o všech účastnících a svědcích',
+      'Zaznamenat povětrnostní a dopravní podmínky',
+      'Provést dechovou zkoušku / test na návykové látky',
+      'Zajistit záznam z palubních kamer a kamer v okolí',
+      'Vyhotovit náčrt nehodového děje s měřítkem'
+    ]
+  }
+};
+
+const KEY_STATE='vysetrovani_checklist_state_';
+const KEY_CUSTOM='vysetrovani_checklist_custom_';
+let active=localStorage.getItem('vysetrovani_checklist_active')||'ohledani';
+
+function getState(id){
+  return JSON.parse(localStorage.getItem(KEY_STATE+id)||'{}');
+}
+function setState(id,state){
+  localStorage.setItem(KEY_STATE+id,JSON.stringify(state));
+}
+function getCustom(id){
+  return JSON.parse(localStorage.getItem(KEY_CUSTOM+id)||'[]');
+}
+function setCustom(id,arr){
+  localStorage.setItem(KEY_CUSTOM+id,JSON.stringify(arr));
+}
+function allItems(id){
+  return [...(PRESETS[id]?.items||[]), ...getCustom(id)];
+}
+
+function renderTabs(){
+  const wrap=$('tabs');
+  wrap.innerHTML='';
+  Object.keys(PRESETS).forEach(id=>{
+    const b=document.createElement('button');
+    b.textContent=PRESETS[id].label;
+    b.className=id===active?'active':'';
+    b.onclick=()=>{active=id;localStorage.setItem('vysetrovani_checklist_active',id);renderTabs();renderList();};
+    wrap.appendChild(b);
+  });
+}
+
+function renderList(){
+  $('listTitle').textContent=PRESETS[active].label;
+  const state=getState(active);
+  const items=allItems(active);
+  const wrap=$('items');
+  wrap.innerHTML='';
+  let done=0;
+  items.forEach((text,i)=>{
+    const isDone=!!state[i];
+    if(isDone)done++;
+    const div=document.createElement('div');
+    div.className='item'+(isDone?' done':'');
+    const custom=i>=(PRESETS[active].items.length);
+    div.innerHTML=`<input type="checkbox" ${isDone?'checked':''} id="chk${i}"><label for="chk${i}"></label>${custom?'<button class="del" title="Odebrat">✕</button>':''}`;
+    div.querySelector('label').textContent=text;
+    div.querySelector('input').onchange=e=>{
+      state[i]=e.target.checked;
+      setState(active,state);
+      renderList();
+    };
+    if(custom){
+      div.querySelector('.del').onclick=()=>{
+        const cust=getCustom(active);
+        cust.splice(i-PRESETS[active].items.length,1);
+        setCustom(active,cust);
+        renderList();
+      };
+    }
+    wrap.appendChild(div);
+  });
+  $('bar').style.width=items.length?Math.round(done/items.length*100)+'%':'0%';
+}
+
+$('btnAddItem').onclick=()=>{
+  const v=$('newItem').value.trim();
+  if(!v)return;
+  const cust=getCustom(active);
+  cust.push(v);
+  setCustom(active,cust);
+  $('newItem').value='';
+  renderList();
+};
+$('newItem').addEventListener('keydown',e=>{if(e.key==='Enter')$('btnAddItem').click();});
+
+$('btnPrint').onclick=()=>window.print();
+$('btnReset').onclick=()=>{
+  if(confirm('Odškrtnout všechny body v tomto seznamu?')){
+    setState(active,{});
+    renderList();
+  }
+};
+
+renderTabs();
+renderList();
+</script>
+</body>
+</html>

@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📦 Evidenční deník důkazů</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1a1a1a;color:#e0e0e0;min-height:100vh;padding:20px}
+.container{max-width:1100px;margin:0 auto}
+h1{font-size:1.6rem;margin-bottom:6px;font-weight:600;text-align:center}
+.sub{text-align:center;color:#888;font-size:.85rem;margin-bottom:18px}
+.card{background:#2a2a2a;border:1px solid #404040;border-radius:8px;padding:22px;margin-bottom:20px;overflow-x:auto}
+h2{font-size:1rem;color:#6aa6fd;margin-bottom:12px}
+label{display:block;font-size:.78rem;color:#888;margin-bottom:4px;margin-top:10px}
+label:first-child{margin-top:0}
+input,textarea,select{width:100%;background:#1e1e1e;border:1px solid #555;border-radius:6px;color:#e0e0e0;padding:9px 12px;font-size:.9rem;font-family:inherit}
+textarea{resize:vertical;min-height:50px}
+.row{display:flex;gap:12px;flex-wrap:wrap}
+.row>div{flex:1;min-width:160px}
+.btn{margin-top:16px;padding:10px 18px;background:#6aa6fd;border:none;border-radius:6px;color:#fff;font-weight:600;cursor:pointer;font-size:.9rem}
+.btn:hover{background:#5a92e6}
+.btn.sec{background:#404040;color:#bbb}
+.btn.sec:hover{background:#4a4a4a}
+.btn.danger{background:#7a3030;color:#fdd}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px}
+table{width:100%;border-collapse:collapse;font-size:.85rem}
+th,td{border:1px solid #3a3a3a;padding:8px 10px;text-align:left;vertical-align:top}
+th{background:#242424;color:#6aa6fd;font-size:.75rem;text-transform:uppercase;letter-spacing:.3px}
+tr:nth-child(even) td{background:#222}
+td.num{font-family:monospace;color:#e0a63f;font-weight:600}
+button.rowbtn{background:none;border:1px solid #444;color:#888;border-radius:5px;padding:3px 8px;font-size:.75rem;cursor:pointer}
+button.rowbtn:hover{border-color:#e05d5d;color:#e05d5d}
+.empty{text-align:center;color:#666;padding:20px;font-size:.9rem}
+.note{font-size:.78rem;color:#666;margin-top:8px}
+@media print{
+  body{background:#fff;color:#000;padding:0}
+  .card.form,.toolbar{display:none}
+  th{background:#eee!important;color:#000!important}
+  tr:nth-child(even) td{background:#fafafa!important}
+  td,th{border-color:#999}
+  td.num{color:#000}
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>📦 Evidenční deník důkazů</h1>
+  <p class="sub">Evidence zajištěných věcí s údaji pro řetězec dokazování (chain of custody). Data zůstávají jen lokálně v tomto prohlížeči.</p>
+
+  <div class="card form">
+    <h2>Přidat záznam</h2>
+    <label>Označení případu</label>
+    <input id="caseName" placeholder="např. ČVS: KRPA-1234/TČ-2026">
+    <div class="row">
+      <div><label>Datum a čas zajištění</label><input id="fTime" type="datetime-local"></div>
+      <div><label>Pořadové číslo důkazu</label><input id="fNum" placeholder="D-01"></div>
+    </div>
+    <label>Popis věci</label>
+    <textarea id="fDesc" placeholder="Co bylo zajištěno…"></textarea>
+    <div class="row">
+      <div><label>Místo nálezu</label><input id="fPlace" placeholder="např. obývací pokoj, stůl"></div>
+      <div><label>Zajistil (jméno, služ. č.)</label><input id="fBy"></div>
+    </div>
+    <div class="row">
+      <div><label>Předáno / uloženo (kým, kam)</label><input id="fHandover" placeholder="např. depozit OO PČR"></div>
+      <div><label>Hash / otisk souboru (je-li digitální stopa)</label><input id="fHash" placeholder="volitelné, SHA-256…"></div>
+    </div>
+    <label>Poznámka</label>
+    <textarea id="fNote"></textarea>
+    <button class="btn" id="btnAdd">➕ Přidat do deníku</button>
+  </div>
+
+  <div class="toolbar">
+    <button class="btn sec" id="btnPrint">🖨️ Tisk / export PDF</button>
+    <button class="btn sec" id="btnCsv">💾 Export CSV</button>
+    <button class="btn sec" id="btnExport">💾 Export JSON</button>
+    <button class="btn sec" id="btnImport">📂 Import JSON</button>
+    <input type="file" id="fileImport" accept=".json" hidden>
+    <button class="btn danger" id="btnClear">🗑️ Smazat vše</button>
+  </div>
+
+  <div class="card" style="padding:0">
+    <table id="tbl">
+      <thead><tr>
+        <th>Č.</th><th>Datum/čas</th><th>Popis</th><th>Místo nálezu</th><th>Zajistil</th><th>Předáno / uloženo</th><th>Hash</th><th>Poznámka</th><th></th>
+      </tr></thead>
+      <tbody id="tbody"></tbody>
+    </table>
+    <div id="empty" class="empty">Zatím žádné záznamy.</div>
+  </div>
+  <p class="note">Nástroj slouží k organizaci vlastní evidence, nenahrazuje oficiální systém vedení spisu.</p>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const KEY='vysetrovani_evidence';
+const KEY_CASE='vysetrovani_evidence_case';
+let items=JSON.parse(localStorage.getItem(KEY)||'[]');
+$('caseName').value=localStorage.getItem(KEY_CASE)||'';
+$('caseName').addEventListener('input',()=>localStorage.setItem(KEY_CASE,$('caseName').value));
+
+function save(){localStorage.setItem(KEY,JSON.stringify(items));render();}
+
+function esc(s){return (s||'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));}
+
+function render(){
+  const tbody=$('tbody');
+  tbody.innerHTML='';
+  const sorted=[...items].sort((a,b)=>(a.time||'').localeCompare(b.time||''));
+  $('empty').style.display=sorted.length?'none':'block';
+  sorted.forEach(it=>{
+    const tr=document.createElement('tr');
+    const dt=it.time?new Date(it.time).toLocaleString('cs-CZ'):'';
+    tr.innerHTML=`<td class="num">${esc(it.num)}</td><td>${dt}</td><td>${esc(it.desc)}</td><td>${esc(it.place)}</td><td>${esc(it.by)}</td><td>${esc(it.handover)}</td><td style="font-family:monospace;font-size:.75rem;word-break:break-all">${esc(it.hash)}</td><td>${esc(it.note)}</td><td><button class="rowbtn" data-id="${it.id}">🗑️</button></td>`;
+    tbody.appendChild(tr);
+  });
+  tbody.querySelectorAll('button[data-id]').forEach(b=>b.onclick=()=>{
+    items=items.filter(i=>i.id!==b.dataset.id);
+    save();
+  });
+}
+
+$('btnAdd').onclick=()=>{
+  const desc=$('fDesc').value.trim();
+  if(!desc){$('fDesc').focus();return;}
+  items.push({
+    id:Date.now().toString(36)+Math.random().toString(36).slice(2,6),
+    time:$('fTime').value, num:$('fNum').value, desc,
+    place:$('fPlace').value, by:$('fBy').value,
+    handover:$('fHandover').value, hash:$('fHash').value, note:$('fNote').value
+  });
+  ['fNum','fDesc','fPlace','fBy','fHandover','fHash','fNote'].forEach(id=>$(id).value='');
+  save();
+};
+
+$('btnPrint').onclick=()=>window.print();
+
+$('btnExport').onclick=()=>{
+  const blob=new Blob([JSON.stringify({case:$('caseName').value,items},null,2)],{type:'application/json'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=(($('caseName').value||'evidencni_denik').replace(/[^\w\-]+/g,'_'))+'.json';
+  a.click();
+};
+
+$('btnCsv').onclick=()=>{
+  const cols=['num','time','desc','place','by','handover','hash','note'];
+  const head=['Č.','Datum/čas','Popis','Místo nálezu','Zajistil','Předáno/uloženo','Hash','Poznámka'];
+  const csvEsc=v=>'"'+String(v||'').replace(/"/g,'""')+'"';
+  const lines=[head.map(csvEsc).join(';')];
+  [...items].sort((a,b)=>(a.time||'').localeCompare(b.time||'')).forEach(it=>{
+    lines.push(cols.map(c=>csvEsc(it[c])).join(';'));
+  });
+  const blob=new Blob(['﻿'+lines.join('\r\n')],{type:'text/csv'});
+  const a=document.createElement('a');
+  a.href=URL.createObjectURL(blob);
+  a.download=(($('caseName').value||'evidencni_denik').replace(/[^\w\-]+/g,'_'))+'.csv';
+  a.click();
+};
+
+$('btnImport').onclick=()=>$('fileImport').click();
+$('fileImport').onchange=()=>{
+  const f=$('fileImport').files[0];
+  if(!f)return;
+  const r=new FileReader();
+  r.onload=()=>{
+    try{
+      const data=JSON.parse(r.result);
+      if(data.case)$('caseName').value=data.case, localStorage.setItem(KEY_CASE,data.case);
+      if(Array.isArray(data.items)){items=data.items;save();}
+    }catch(e){alert('Neplatný soubor JSON.');}
+  };
+  r.readAsText(f);
+};
+
+$('btnClear').onclick=()=>{
+  if(confirm('Opravdu smazat všechny záznamy evidenčního deníku?')){items=[];save();}
+};
+
+render();
+</script>
+</body>
+</html>

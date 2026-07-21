@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🔐 Porovnání otisků souborů</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1a1a1a;color:#e0e0e0;min-height:100vh;padding:20px}
+.container{max-width:900px;margin:0 auto}
+h1{font-size:1.6rem;margin-bottom:6px;font-weight:600;text-align:center}
+.sub{text-align:center;color:#888;font-size:.85rem;margin-bottom:18px}
+.cols{display:flex;gap:16px;flex-wrap:wrap}
+.card{background:#2a2a2a;border:1px solid #404040;border-radius:8px;padding:22px;margin-bottom:20px;flex:1;min-width:300px}
+h2{font-size:1rem;color:#6aa6fd;margin-bottom:12px}
+.drop{border:2px dashed #555;border-radius:8px;padding:24px;text-align:center;cursor:pointer}
+.drop:hover{border-color:#6aa6fd}
+.fileName{margin-top:8px;color:#888;font-size:.85rem}
+select{width:100%;background:#1e1e1e;border:1px solid #555;border-radius:6px;color:#e0e0e0;padding:8px 10px;font-size:.85rem;margin-bottom:10px}
+.hashval{background:#1e1e1e;border:1px solid #555;border-radius:6px;color:#e0e0e0;padding:10px;font-family:monospace;font-size:.8rem;word-break:break-all;min-height:20px}
+.result{text-align:center;padding:20px;border-radius:8px;font-size:1.1rem;font-weight:700;margin-bottom:20px}
+.result.match{background:#1e3a2a;color:#4caf7d;border:1px solid #2a5a3a}
+.result.nomatch{background:#3a1e1e;color:#e05d5d;border:1px solid #5a2a2a}
+.result.pending{background:#2a2a2a;color:#888;border:1px solid #404040}
+.note{font-size:.78rem;color:#666;margin-top:8px;text-align:center}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>🔐 Porovnání otisků souborů</h1>
+  <p class="sub">Spočítá hash dvou souborů lokálně v prohlížeči (soubory nikam neopouští toto zařízení) a porovná, zda jsou identické.</p>
+
+  <div class="card" style="margin-bottom:16px">
+    <label style="font-size:.8rem;color:#888">Algoritmus</label>
+    <select id="algo">
+      <option value="SHA-256" selected>SHA-256</option>
+      <option value="SHA-1">SHA-1</option>
+      <option value="SHA-384">SHA-384</option>
+      <option value="SHA-512">SHA-512</option>
+    </select>
+  </div>
+
+  <div id="result" class="result pending">Nahraj oba soubory pro porovnání</div>
+
+  <div class="cols">
+    <div class="card">
+      <h2>Soubor A</h2>
+      <div class="drop" id="dropA">📁 Přetáhni soubor nebo klikni<input type="file" id="fileA" hidden></div>
+      <div class="fileName" id="nameA"></div>
+      <div class="hashval" id="hashA"></div>
+    </div>
+    <div class="card">
+      <h2>Soubor B</h2>
+      <div class="drop" id="dropB">📁 Přetáhni soubor nebo klikni<input type="file" id="fileB" hidden></div>
+      <div class="fileName" id="nameB"></div>
+      <div class="hashval" id="hashB"></div>
+    </div>
+  </div>
+  <p class="note">Vhodné pro ověření, zda dvě kopie souboru (např. forenzní obraz a originál) jsou bit po bitu totožné.</p>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+let bufA=null,bufB=null;
+
+async function hashBuffer(algo,buffer){
+  const h=await crypto.subtle.digest(algo,buffer);
+  return [...new Uint8Array(h)].map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+async function recompute(){
+  const algo=$('algo').value;
+  if(bufA)$('hashA').textContent=await hashBuffer(algo,bufA);
+  if(bufB)$('hashB').textContent=await hashBuffer(algo,bufB);
+  updateResult();
+}
+
+function updateResult(){
+  const res=$('result');
+  const a=$('hashA').textContent,b=$('hashB').textContent;
+  if(!a||!b){res.className='result pending';res.textContent='Nahraj oba soubory pro porovnání';return;}
+  if(a===b){res.className='result match';res.textContent='✅ Otisky souhlasí — soubory jsou identické';}
+  else{res.className='result nomatch';res.textContent='❌ Otisky se liší — soubory nejsou identické';}
+}
+
+function setupDrop(dropId,fileId,nameId,which){
+  const drop=$(dropId),file=$(fileId),name=$(nameId);
+  drop.onclick=()=>file.click();
+  drop.ondragover=e=>{e.preventDefault();drop.style.borderColor='#6aa6fd';};
+  drop.ondragleave=()=>{drop.style.borderColor='#555';};
+  drop.ondrop=e=>{e.preventDefault();drop.style.borderColor='#555';if(e.dataTransfer.files[0])load(e.dataTransfer.files[0]);};
+  file.onchange=()=>{if(file.files[0])load(file.files[0]);};
+  function load(f){
+    name.textContent='📄 '+f.name+' ('+(f.size/1024).toFixed(1)+' KB)';
+    const r=new FileReader();
+    r.onload=async()=>{
+      if(which==='A')bufA=r.result; else bufB=r.result;
+      const algo=$('algo').value;
+      $(which==='A'?'hashA':'hashB').textContent=await hashBuffer(algo,r.result);
+      updateResult();
+    };
+    r.readAsArrayBuffer(f);
+  }
+}
+
+setupDrop('dropA','fileA','nameA','A');
+setupDrop('dropB','fileB','nameB','B');
+$('algo').addEventListener('change',recompute);
+</script>
+</body>
+</html>

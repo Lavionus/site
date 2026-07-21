@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🔎 Identifikace typu souboru</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1a1a1a;color:#e0e0e0;min-height:100vh;padding:20px}
+.container{max-width:820px;margin:0 auto}
+h1{font-size:1.6rem;margin-bottom:6px;font-weight:600;text-align:center}
+.sub{text-align:center;color:#888;font-size:.85rem;margin-bottom:18px}
+.card{background:#2a2a2a;border:1px solid #404040;border-radius:8px;padding:22px;margin-bottom:20px}
+h2{font-size:1rem;color:#6aa6fd;margin-bottom:12px}
+.drop{border:2px dashed #555;border-radius:8px;padding:28px;text-align:center;cursor:pointer}
+.drop:hover{border-color:#6aa6fd}
+.fileName{margin-top:8px;color:#888;font-size:.85rem;text-align:center}
+.result{padding:16px;border-radius:8px;margin-bottom:16px;font-size:.95rem}
+.result.match{background:#1e3a2a;color:#4caf7d;border:1px solid #2a5a3a}
+.result.mismatch{background:#3a331e;color:#e0a63f;border:1px solid #5a4a2a}
+.result.unknown{background:#2a2a2a;color:#888;border:1px solid #404040}
+.hexdump{background:#1e1e1e;border:1px solid #555;border-radius:6px;padding:12px;font-family:monospace;font-size:.78rem;overflow-x:auto;white-space:pre}
+.byte{color:#6aa6fd}
+.ascii{color:#4caf7d}
+.note{font-size:.78rem;color:#666;margin-top:8px}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>🔎 Identifikace typu souboru podle hlavičky</h1>
+  <p class="sub">Přečte první bajty souboru (magic number) a porovná je se známými formáty — odhalí soubor s pozměněnou / falešnou příponou. Vše se zpracovává lokálně v prohlížeči.</p>
+
+  <div class="card">
+    <div class="drop" id="drop">📁 Přetáhni soubor nebo klikni pro výběr<input type="file" id="file" hidden></div>
+    <div class="fileName" id="fileName"></div>
+  </div>
+
+  <div id="resultBox"></div>
+
+  <div class="card" id="hexCard" style="display:none">
+    <h2>Prvních 32 bajtů</h2>
+    <div class="hexdump" id="hexdump"></div>
+  </div>
+  <p class="note">Databáze podpisů je jen výběr nejběžnějších formátů — chybějící shoda neznamená, že soubor je nutně podezřelý.</p>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+
+// [hex signature (bez mezer, prefix), extension name] — offset vždy od začátku souboru
+const SIGNATURES=[
+  ['ffd8ff','JPEG obrázek (.jpg)'],
+  ['89504e470d0a1a0a','PNG obrázek (.png)'],
+  ['474946383761','GIF obrázek (.gif, GIF87a)'],
+  ['474946383961','GIF obrázek (.gif, GIF89a)'],
+  ['25504446','PDF dokument (.pdf)'],
+  ['504b0304','ZIP archiv / DOCX / XLSX / PPTX / APK (.zip a odvozené)'],
+  ['504b0506','ZIP archiv (prázdný, .zip)'],
+  ['526172211a0700','RAR archiv (.rar, v1.5-4.0)'],
+  ['526172211a070100','RAR archiv (.rar, v5+)'],
+  ['377abcaf271c','7-Zip archiv (.7z)'],
+  ['1f8b','GZIP archiv (.gz)'],
+  ['4d5a','Spustitelný soubor Windows (.exe/.dll)'],
+  ['7f454c46','Spustitelný soubor Linux (ELF)'],
+  ['d0cf11e0a1b11ae1','MS Office starší formát (.doc/.xls/.ppt)'],
+  ['494433','MP3 audio (ID3, .mp3)'],
+  ['fffb','MP3 audio (bez ID3, .mp3)'],
+  ['52494646','RIFF kontejner (.wav / .avi)'],
+  ['000000186674797069736f6d','MP4 video (.mp4)'],
+  ['000000206674797069736f6d','MP4 video (.mp4)'],
+  ['1a45dfa3','Matroska video (.mkv/.webm)'],
+  ['53514c69746520666f726d6174203300','SQLite databáze (.sqlite/.db)'],
+  ['7b5c72746631','RTF dokument (.rtf)'],
+  ['3c3f786d6c','XML dokument (.xml)'],
+  ['4c000000011402','Windows LNK zástupce (.lnk)'],
+  ['425a68','BZIP2 archiv (.bz2)'],
+  ['fd377a585a00','XZ archiv (.xz)'],
+  ['424d','Bitmapa (.bmp)'],
+  ['00000100','Ikona Windows (.ico)'],
+  ['6674797068656963','HEIC obrázek (Apple, offset 4)'],
+];
+
+function bufToHex(buf){
+  return [...new Uint8Array(buf)].map(b=>b.toString(16).padStart(2,'0')).join('');
+}
+
+function guessExt(name){
+  const m=name.match(/\.([a-z0-9]+)$/i);
+  return m?m[1].toLowerCase():'';
+}
+
+function analyze(hex,name){
+  const matches=SIGNATURES.filter(([sig])=>hex.startsWith(sig));
+  const box=$('resultBox');
+  const ext=guessExt(name);
+  if(!matches.length){
+    box.innerHTML='<div class="result unknown">❔ Hlavička souboru neodpovídá žádnému běžnému formátu v databázi (nebo jde o čistý text / neznámý formát).</div>';
+    return;
+  }
+  const labels=matches.map(m=>m[1]).join(', ');
+  const looksMismatched=ext && !matches.some(([,label])=>label.toLowerCase().includes('.'+ext));
+  if(looksMismatched){
+    box.innerHTML=`<div class="result mismatch">⚠️ Přípona souboru (.${ext}) neodpovídá rozpoznanému obsahu:<br><b>${labels}</b><br>Soubor může mít úmyslně pozměněnou příponu.</div>`;
+  } else {
+    box.innerHTML=`<div class="result match">✅ Obsah odpovídá: <b>${labels}</b></div>`;
+  }
+}
+
+function renderHex(buf){
+  const bytes=new Uint8Array(buf).slice(0,32);
+  let hexLine='',asciiLine='';
+  bytes.forEach(b=>{
+    hexLine+='<span class="byte">'+b.toString(16).padStart(2,'0')+'</span> ';
+    asciiLine+=(b>=32&&b<127)?String.fromCharCode(b):'.';
+  });
+  $('hexdump').innerHTML=hexLine+'\n<span class="ascii">'+asciiLine+'</span>';
+  $('hexCard').style.display='block';
+}
+
+function loadFile(f){
+  $('fileName').textContent='📄 '+f.name+' ('+(f.size/1024).toFixed(1)+' KB)';
+  const r=new FileReader();
+  r.onload=()=>{
+    const hex=bufToHex(r.result.slice(0,32));
+    analyze(hex,f.name);
+    renderHex(r.result);
+  };
+  r.readAsArrayBuffer(f.slice(0,32));
+}
+
+const drop=$('drop'),file=$('file');
+drop.onclick=()=>file.click();
+drop.ondragover=e=>{e.preventDefault();drop.style.borderColor='#6aa6fd';};
+drop.ondragleave=()=>{drop.style.borderColor='#555';};
+drop.ondrop=e=>{e.preventDefault();drop.style.borderColor='#555';if(e.dataTransfer.files[0])loadFile(e.dataTransfer.files[0]);};
+file.onchange=()=>{if(file.files[0])loadFile(file.files[0]);};
+</script>
+</body>
+</html>
