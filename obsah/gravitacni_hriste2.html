@@ -46,6 +46,8 @@ canvas{display:block;width:100%;height:100%;cursor:crosshair;touch-action:none}
   <button id="stopy" class="on">〰️ Stopy</button>
   <button id="pole" title="Šipky ukazují směr a sílu gravitace v daném místě, spočtené ze všech těles najednou">🧲 Pole</button>
   <button id="mrizka" title="Mřížka se prohýbá směrem ke každému tělesu — čím blíž a čím těžší, tím větší prohnutí">🕸️ Mřížka</button>
+  <button id="lupy" title="Experiment: stejná pravidelná mřížka, ale zakřivení je jen v kruhu pod každou planetou — jako lupa. Čím těžší planeta, tím větší kruh a zakřivení.">🔍 Lupy</button>
+  <label title="Jen pro režim Lupy — jak hustá je mřížka"><span id="hustotaLupyPopisek">Hustota lup</span> <input type="range" id="hustotaLupy" min="18" max="80" value="40"></label>
   <button id="smazat">🗑 Smazat vše</button>
   <a class="odkaz" href="gravitacni_hriste.html">🎯 Jen kolem Slunce</a>
   <a class="odkaz" href="pohyb_vesmirem.html">🌌 Pohyb vesmírem</a>
@@ -58,8 +60,9 @@ canvas{display:block;width:100%;height:100%;cursor:crosshair;touch-action:none}
   <button data-p="trojteles" title="Skoro dokonalý rovnostranný trojúhelník tří těles — jedno je nepatrně vychýlené">🌀 Problém tří těles</button>
   <button data-p="pruletka">☄️ Vetřelec skrz soustavu</button>
   <span style="margin-left:10px">Nebo náhodně:</span>
-  <input type="text" id="seed" placeholder="seed (prázdné = náhodný)" style="width:150px;background:#1c1c28;border:1px solid #3a3a4d;color:#ccc;border-radius:6px;padding:5px 8px;font-size:.78rem">
-  <button id="nahodnaSoustava" title="Vygeneruje náhodnou soustavu planetek. Stejný seed = úplně stejné rozmístění.">🎲 Náhodná soustava</button>
+  <input type="text" id="seed" placeholder="seed" style="width:150px;background:#1c1c28;border:1px solid #3a3a4d;color:#ccc;border-radius:6px;padding:5px 8px;font-size:.78rem">
+  <button id="nacistSeed" title="Vygeneruje soustavu podle seedu napsaného v políčku vlevo.">📥 Načíst seed</button>
+  <button id="nahodnaSoustava" title="Vygeneruje novou náhodnou soustavu s novým seedem při každém stisku.">🎲 Náhodná soustava</button>
 </div>
 <div class="plocha">
   <canvas id="platno"></canvas>
@@ -74,7 +77,8 @@ canvas{display:block;width:100%;height:100%;cursor:crosshair;touch-action:none}
     <div class="radek">Posuň jezdec <b>Hmotnost dalšího tělesa</b> než vystřelíš z praku novou planetku.</div>
     <div class="radek">🧲 <b>Pole</b> zobrazí šipky směru a síly gravitace — spočtené ze všech těles zároveň, ne jen ze Slunce.</div>
     <div class="radek">🕸️ <b>Mřížka</b> — klasická demonstrace prohnutí prostoru: síť se prohýbá směrem ke každému tělesu.</div>
-    <div class="radek">🎲 <b>Náhodná soustava</b> rozmístí 2–4 planetky podle seedu — stejné číslo v políčku seed = stejné rozmístění.</div>
+    <div class="radek">🔍 <b>Lupy</b> (experiment) — stejná mřížka, ale zakřivení je jen v kruhu pod každou planetou, jako lupa. Větší hmotnost = větší lupa. Jezdec <b>Hustota lup</b> mění hustotu mřížky jen v tomto režimu.</div>
+    <div class="radek">🎲 <b>Náhodná soustava</b> vytvoří novou soustavu s novým seedem. 📥 <b>Načíst seed</b> vytvoří soustavu podle čísla napsaného v políčku — stejný seed = stejné rozmístění.</div>
   </div>
   <button id="faktaOtevrit" class="fakta-otevrit" title="Zobrazit fakta o gravitaci">ℹ️ Fakta</button>
   <div class="vysvetleni" id="vysvetleni">
@@ -92,7 +96,7 @@ const G=36000;                 // gravitační konstanta simulace (px³/s²/hmot
 const HMOTNOST_SLUNCE=1000;    // hmotnost Slunce -> G*M = 36e6, stejné jako v základní verzi
 const R_SLUNCE=16;             // poloměr Slunce (px) — pod ~22 px těleso shoří
 let telesa=[],vybuchy=[],hvezdy=[];
-let bezi=true,ukazStopy=true,ukazPole=false,ukazMrizka=false,simCas=0;
+let bezi=true,ukazStopy=true,ukazPole=false,ukazMrizka=false,ukazLupy=false,simCas=0;
 let pocitadla={shorelo:0,uniklo:0,splynulo:0};
 const BARVY=['#6aa6fd','#e06666','#7fd48f','#e6c87a','#c98bd4','#7fd4d4','#f0975a'];
 let dalsiBarva=0;
@@ -162,7 +166,8 @@ function slucSrazky(){
   }
 }
 function novaPlanetka(x,y,vx,vy,hmotnost){
-  const t={x,y,vx,vy,hmotnost,barva:BARVY[dalsiBarva++%BARVY.length],stopa:[],zivy:true};
+  const t={x,y,vx,vy,hmotnost,barva:BARVY[dalsiBarva++%BARVY.length],stopa:[],zivy:true,
+    prstenec:Math.random()<0.1,natoceniPrstence:Math.random()*Math.PI};   // 10 % planetek má prstenec
   telesa.push(t);
   if(telesa.length>14)telesa.shift();   // ať to nezahltí obrazovku ani procesor
   return t;
@@ -190,38 +195,45 @@ canvas.addEventListener('pointercancel',()=>{mireni=null;});
 
 /* ================= PŘÍKLADY ================= */
 const vKruh=r=>Math.sqrt(G*HMOTNOST_SLUNCE/r);
+// každé kliknutí na ukázku má náhodný směr otáčení (po/proti směru hodinových ručiček)
+// a náhodnou rychlost v rozumném rozmezí kolem "ideální" hodnoty -> pokaždé trochu jiná ukázka
+const nahodnySmer=()=>Math.random()<0.5?1:-1;
+const nahodnyFaktor=(min,max)=>min+Math.random()*(max-min);
 const PRIKLADY={
   dvojhvezda(){const s=stred();
     // R = vzdálenost těžiště páru od Slunce, d = vzdálenost hvězd od sebe, m = hmotnost každé z nich
     const R=205,d=50,m=40;
-    const vCom=vKruh(R);                       // oběžná rychlost těžiště kolem Slunce
-    const vRel=Math.sqrt(G*(m+m)/d)/2;         // vzájemná rychlost hvězd kolem společného těžiště
-    novaPlanetka(s.x+R-d/2,s.y,0,-vCom-vRel,m);
-    novaPlanetka(s.x+R+d/2,s.y,0,-vCom+vRel,m);},
+    const vCom=nahodnySmer()*vKruh(R)*nahodnyFaktor(0.85,1.15);        // oběžná rychlost těžiště kolem Slunce
+    const vRel=nahodnySmer()*Math.sqrt(G*(m+m)/d)/2*nahodnyFaktor(0.85,1.2); // vzájemná rychlost hvězd kolem těžiště
+    novaPlanetka(s.x+R-d/2,s.y,0,vCom-vRel,m);
+    novaPlanetka(s.x+R+d/2,s.y,0,vCom+vRel,m);},
   mesic(){const s=stred();
-    const planeta=novaPlanetka(s.x+260,s.y,0,-vKruh(260),30);
-    const rMesic=34,vMesic=Math.sqrt(G*planeta.hmotnost/rMesic);
+    const vPlaneta=nahodnySmer()*vKruh(260)*nahodnyFaktor(0.9,1.1);
+    const planeta=novaPlanetka(s.x+260,s.y,0,vPlaneta,30);
+    const rMesic=34;
+    const vMesic=nahodnySmer()*Math.sqrt(G*planeta.hmotnost/rMesic)*nahodnyFaktor(0.9,1.15);
     novaPlanetka(planeta.x,planeta.y-rMesic,planeta.vx+vMesic,planeta.vy,3);},
   chaos(){const s=stred();
-    novaPlanetka(s.x+140,s.y,0,-vKruh(140)*0.95,18);
-    novaPlanetka(s.x-210,s.y,0,vKruh(210)*1.05,18);
-    novaPlanetka(s.x,s.y+300,-vKruh(300)*0.8,0,18);},
+    novaPlanetka(s.x+140,s.y,0,nahodnySmer()*vKruh(140)*nahodnyFaktor(0.85,1.1),18);
+    novaPlanetka(s.x-210,s.y,0,nahodnySmer()*vKruh(210)*nahodnyFaktor(0.85,1.1),18);
+    novaPlanetka(s.x,s.y+300,nahodnySmer()*vKruh(300)*nahodnyFaktor(0.7,0.9),0,18);},
   trojteles(){const s=stred();
     // Lagrangeovo řešení rovnostranného trojúhelníku: pro STEJNĚ vzdálená tělesa ve
     // vrcholech trojúhelníku o straně L existuje přesná rychlost, při které se
     // trojúhelník donekonečna otáčí jako tuhé těleso (viz ω²=G·(m1+m2+m3)/L³).
-    // Schválně to ale mírně porušíme u jednoho tělesa — a přesně tahle citlivost
-    // na nepatrnou odchylku od "dokonalých" počátečních podmínek je jádro
-    // slavného problému tří těles: dráhy se stanou nepředvídatelně chaotické.
+    // Schválně to ale mírně porušíme u jednoho (náhodně vybraného) tělesa — a přesně
+    // tahle citlivost na nepatrnou odchylku od "dokonalých" počátečních podmínek
+    // je jádro slavného problému tří těles: dráhy se stanou nepředvídatelně chaotické.
     const Rc=260,L=100,r=L/Math.sqrt(3),hmoty=[42,50,58];
     const Mtot=hmoty[0]+hmoty[1]+hmoty[2];
-    const omega=Math.sqrt(G*Mtot/(L*L*L));
-    const vCom=-vKruh(Rc),stredX=s.x+Rc,stredY=s.y;
+    const omega=Math.sqrt(G*Mtot/(L*L*L))*nahodnySmer();
+    const vCom=nahodnySmer()*vKruh(Rc)*nahodnyFaktor(0.9,1.1),stredX=s.x+Rc,stredY=s.y;
+    const vychylene=Math.floor(Math.random()*3);
     for(let k=0;k<3;k++){
       const uhel=k*(2*Math.PI/3);
       const x=stredX+Math.cos(uhel)*r,y=stredY+Math.sin(uhel)*r;
       let vx=-omega*r*Math.sin(uhel),vy=omega*r*Math.cos(uhel)+vCom;
-      if(k===1){vx*=1.18;vy*=0.9;}   // malá odchylka od přesného řešení -> chaos
+      if(k===vychylene){vx*=nahodnyFaktor(1.1,1.25);vy*=nahodnyFaktor(0.8,0.95);}
       novaPlanetka(x,y,vx,vy,hmoty[k]);
     }},
   pruletka(){const s=stred();
@@ -252,9 +264,10 @@ function mulberry32(a){
     return ((t^t>>>14)>>>0)/4294967296;
   };
 }
+function novyNahodnySeed(){return Math.floor(Math.random()*1e9);}
 function seedNaCislo(text){
   text=String(text).trim();
-  if(text==='')return Math.floor(Math.random()*1e9);
+  if(text==='')return novyNahodnySeed();
   if(/^-?\d+$/.test(text))return parseInt(text,10)>>>0;
   let h=0;
   for(let i=0;i<text.length;i++)h=(Math.imul(h,31)+text.charCodeAt(i))|0;
@@ -275,6 +288,11 @@ function vytvorNahodnouSoustavu(seed){
   }
 }
 $('nahodnaSoustava').onclick=()=>{
+  const seed=novyNahodnySeed();     // pokaždé nový seed, bez ohledu na obsah políčka
+  $('seed').value=seed;
+  vytvorNahodnouSoustavu(seed);
+};
+$('nacistSeed').onclick=()=>{
   const seed=seedNaCislo($('seed').value);
   $('seed').value=seed;
   vytvorNahodnouSoustavu(seed);
@@ -324,22 +342,61 @@ function posunutyBod(x,y){
   const posun=Math.min(30,6.5*Math.log10(1+mag/30));
   return {x:x+a.ax/mag*posun,y:y+a.ay/mag*posun};
 }
-function kresliCaru(pevna,od,do_,vodorovna){
+function kresliCaru(pevna,od,do_,vodorovna,funkcePosunu,krok=10){
   // hustě navzorkovaná čára -> plynulá křivka místo pár rovných úseků mezi vzdálenými vrcholy
   ctx.beginPath();
-  for(let t=od,prvni=true;t<=do_+1e-6;t+=10){
-    const p=vodorovna?posunutyBod(t,pevna):posunutyBod(pevna,t);
+  for(let t=od,prvni=true;t<=do_+1e-6;t+=krok){
+    const p=vodorovna?funkcePosunu(t,pevna):funkcePosunu(pevna,t);
     if(prvni){ctx.moveTo(p.x,p.y);prvni=false;}else ctx.lineTo(p.x,p.y);
   }
-  const p=vodorovna?posunutyBod(do_,pevna):posunutyBod(pevna,do_);
+  const p=vodorovna?funkcePosunu(do_,pevna):funkcePosunu(pevna,do_);
   ctx.lineTo(p.x,p.y);
   ctx.stroke();
 }
 function kresliMrizku(){
   const {w,h}=rozmer(),mezera=40;
   ctx.strokeStyle='rgba(120,170,255,.4)';ctx.lineWidth=1;
-  for(let y=0;y<=h+1e-6;y+=mezera)kresliCaru(y,0,w,true);
-  for(let x=0;x<=w+1e-6;x+=mezera)kresliCaru(x,0,h,false);
+  for(let y=0;y<=h+1e-6;y+=mezera)kresliCaru(y,0,w,true,posunutyBod);
+  for(let x=0;x<=w+1e-6;x+=mezera)kresliCaru(x,0,h,false,posunutyBod);
+}
+/* EXPERIMENTÁLNÍ REŽIM — "lupy": stejná pravidelná mřížka, ale zakřivení
+   se neschová do celoplošného gravitačního pole (jako u kresliMrizku), nýbrž
+   je omezené na kruh přímo pod každým tělesem — jako by tam leželo skleněné
+   těžítko. Poloměr i síla lupy rostou s hmotností tělesa; mimo kruh je
+   mřížka dokonale pravidelná (posun=0), takže "stejná mřížka" zůstává vidět
+   všude jinde. Nezávislé na kresliMrizku/posunutyBod — ten zůstává beze změny.
+   Zapíná se tlačítkem 🔍 Lupy, vzájemně se vylučuje s 🕸️ Mřížka. */
+function posunutyBodLupou(x,y){
+  const s=stred();
+  let dx=0,dy=0;
+  // POZOR: schválně bez dělení vzdáleností d (žádné ddx/d). Normalizovaný směr
+  // je numericky nestabilní těsně u středu čočky — dva sousední vzorky čáry,
+  // jeden těsně na jedné straně středu a druhý na druhé, by dostaly skoro
+  // opačný směr při skoro stejné síle, což při průletu tělesa přes čáru
+  // vytvářelo trhavé "duchy" (zákmity). Škálování rovnou surového vektoru
+  // (ddx,ddy) hladkou funkcí d je spojité všude, i přesně nad středem.
+  const pripocti=(bx,by,polomerLupy,silaLupy)=>{
+    const ddx=bx-x,ddy=by-y,d=Math.hypot(ddx,ddy);
+    if(d>=polomerLupy)return;
+    const u=d/polomerLupy,t=1-u;
+    const faktor=(silaLupy*27/(4*polomerLupy))*t*t;   // vrchol síly ~silaLupy, hladce k 0 na obou koncích
+    dx+=ddx*faktor;dy+=ddy*faktor;
+  };
+  pripocti(s.x,s.y,100,34);
+  telesa.forEach(t=>pripocti(t.x,t.y,26+Math.sqrt(t.hmotnost)*7,8+Math.sqrt(t.hmotnost)*2.6));
+  // když se dvě lupy překryjí (planety blízko sebe), jejich součet by mohl mezi
+  // nimi vytvořit ostrý "hrot" — měkce omezíme celkovou výchylku bodu
+  const posun=Math.hypot(dx,dy),max=36;
+  if(posun>max){const m=max/posun;dx*=m;dy*=m;}
+  return {x:x+dx,y:y+dy};
+}
+function kresliLupy(){
+  const {w,h}=rozmer(),mezera=+$('hustotaLupy').value;   // volitelná hustota mřížky, jen pro tento režim
+  ctx.strokeStyle='rgba(120,170,255,.4)';ctx.lineWidth=1;
+  // jemnější vzorkování (4px) než u kresliMrizku — když se dvě lupy překryjí,
+  // křivka se ohýbá na krátkém úseku a hrubší krok by ji vykreslil zubatě
+  for(let y=0;y<=h+1e-6;y+=mezera)kresliCaru(y,0,w,true,posunutyBodLupou,4);
+  for(let x=0;x<=w+1e-6;x+=mezera)kresliCaru(x,0,h,false,posunutyBodLupou,4);
 }
 function kresli(){
   const {w,h}=rozmer(),s=stred();
@@ -348,6 +405,7 @@ function kresli(){
   ctx.globalAlpha=1;
   // gravitační pole a mřížka (pod vším ostatním)
   if(ukazMrizka)kresliMrizku();
+  if(ukazLupy)kresliLupy();
   if(ukazPole)kresliPole();
   // Slunce
   const zar=ctx.createRadialGradient(s.x,s.y,4,s.x,s.y,42);
@@ -362,6 +420,14 @@ function kresli(){
         ctx.strokeStyle=t.barva+Math.round(30+120*i/t.stopa.length).toString(16).padStart(2,'0');
         ctx.beginPath();ctx.moveTo(t.stopa[i-1].x,t.stopa[i-1].y);ctx.lineTo(t.stopa[i].x,t.stopa[i].y);ctx.stroke();
       }
+    }
+    if(t.prstenec){
+      // prstenec nakreslený jako nakloněná elipsa pod tělesem — koule ho pak
+      // překryje uprostřed, takže vznikne dojem, že jde vzadu za planetkou
+      const polR=polomer(t.hmotnost),rx=polR*2,ry=polR*0.36;
+      ctx.strokeStyle='rgba(223,201,158,.85)';
+      ctx.lineWidth=Math.max(1.4,polR*0.16);
+      ctx.beginPath();ctx.ellipse(t.x,t.y,rx,ry,t.natoceniPrstence,0,Math.PI*2);ctx.stroke();
     }
     ctx.fillStyle=t.barva;ctx.beginPath();ctx.arc(t.x,t.y,polomer(t.hmotnost),0,7);ctx.fill();
     const eps=typDrahy(t);
@@ -429,7 +495,16 @@ requestAnimationFrame(smycka);
 $('pauza').onclick=function(){bezi=!bezi;this.textContent=bezi?'⏸️ Pauza':'▶️ Spustit';};
 $('stopy').onclick=function(){ukazStopy=!ukazStopy;this.classList.toggle('on',ukazStopy);};
 $('pole').onclick=function(){ukazPole=!ukazPole;this.classList.toggle('on',ukazPole);};
-$('mrizka').onclick=function(){ukazMrizka=!ukazMrizka;this.classList.toggle('on',ukazMrizka);};
+$('mrizka').onclick=function(){
+  ukazMrizka=!ukazMrizka;this.classList.toggle('on',ukazMrizka);
+  if(ukazMrizka){ukazLupy=false;$('lupy').classList.remove('on');}
+};
+$('lupy').onclick=function(){
+  ukazLupy=!ukazLupy;this.classList.toggle('on',ukazLupy);
+  if(ukazLupy){ukazMrizka=false;$('mrizka').classList.remove('on');}
+};
+$('hustotaLupy').oninput=function(){$('hustotaLupyPopisek').textContent='Hustota lup ('+this.value+'px)';};
+$('hustotaLupy').oninput();
 $('smazat').onclick=()=>{telesa=[];vybuchy=[];pocitadla={shorelo:0,uniklo:0,splynulo:0};};
 function nastavNapovedu(sbaleno){
   $('vysvetleni').classList.toggle('sbaleno',sbaleno);
