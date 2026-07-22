@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🌿 Pohanské svátky a rituály</title>
+<link rel="stylesheet" href="../common.css">
+<script>
+  if (localStorage.getItem('webapp_theme') === 'light') document.documentElement.dataset.theme = 'light';
+</script>
+<style>
+body{background:var(--bg-deep);padding:20px clamp(14px,3vw,40px);min-height:100vh}
+.container{max-width:960px;margin:0 auto}
+h1{font-size:1.5rem;margin-bottom:4px}
+.sub{color:var(--text-muted);font-size:.85rem;margin-bottom:14px}
+.note{background:var(--bg-elevated);border:1px solid var(--border);color:var(--text-muted);padding:10px 14px;border-radius:8px;font-size:.8rem;margin-bottom:18px;line-height:1.5}
+.tabs{display:flex;gap:6px;margin-bottom:16px;flex-wrap:wrap}
+.tab{background:var(--bg-elevated);border:1px solid var(--border);color:var(--text-muted);border-radius:14px;padding:7px 15px;font-size:.85rem;cursor:pointer}
+.tab.active{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+.card{background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px}
+.card h2{font-size:.95rem;color:var(--accent);margin-bottom:12px}
+.hidden{display:none!important}
+
+/* countdown */
+.nextBox{display:flex;align-items:center;gap:18px;flex-wrap:wrap}
+.nextBox .days{font-size:2.4rem;font-weight:700;color:var(--accent);min-width:90px;text-align:center}
+.nextBox .info h3{font-size:1.05rem;margin-bottom:2px}
+.nextBox .info .meta{font-size:.8rem;color:var(--text-faint)}
+
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
+.search{flex:1;min-width:180px;background:var(--bg-input);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:10px 12px;font-size:.9rem}
+.filterPills{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.filterPills button{background:var(--bg-elevated);border:1px solid var(--border);color:var(--text-muted);border-radius:14px;padding:6px 13px;font-size:.78rem;cursor:pointer}
+.filterPills button.active{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+
+.list{display:grid;gap:8px}
+.item{background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;overflow:hidden}
+.item summary{padding:14px 16px;cursor:pointer;font-weight:600;list-style:none;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.item summary::-webkit-details-marker{display:none}
+.item summary .tradice{font-size:.68rem;color:var(--text-faint);font-weight:400;background:var(--bg-elevated);border:1px solid var(--border);border-radius:10px;padding:1px 8px}
+.item summary .date{margin-left:auto;font-size:.75rem;color:var(--text-faint);font-weight:400;white-space:nowrap}
+.item .body{padding:0 16px 16px 16px;color:var(--text-muted);font-size:.87rem;line-height:1.65}
+.item .body b{color:var(--text)}
+.empty{padding:30px;text-align:center;color:var(--text-faint)}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>🌿 Pohanské svátky a rituály</h1>
+  <p class="sub">Svátkové kalendáře pohanských a polyteistických tradic z celého světa — významy, zvyky a odpočet do dalšího svátku.</p>
+  <div class="note">Kulturně-vzdělávací přehled. U starých evropských tradic (Keltové, Seveřané, Slované, Baltové, Řekové a Římané, Egypťané, Aztékové) se historická podoba obřadů dochovala jen zlomkovitě a mnohé zvyky vycházejí z novodobé rekonstrukce (moderní pohanství), která se mezi skupinami liší. Šintoismus a jorubská/západoafrická tradice (Ifá/Orisha) jsou naproti tomu živá náboženství praktikovaná dodnes miliony lidí — jejich svátky jsou popsány s ohledem na současnou praxi. Data slunovratů, rovnodenností a svátků vázaných na lunární nebo lokální kalendáře jsou orientační.</div>
+
+  <div class="tabs">
+    <div class="tab active" data-tab="next">🗓️ Nejbližší svátek</div>
+    <div class="tab" data-tab="ref">📖 Přehled podle tradice</div>
+  </div>
+
+  <div id="panel-next">
+    <div class="card">
+      <h2>Odpočet</h2>
+      <div class="nextBox" id="nextBox"></div>
+    </div>
+    <div class="card">
+      <h2>Pořadí nadcházejících svátků</h2>
+      <div class="list" id="upcomingList"></div>
+    </div>
+  </div>
+
+  <div id="panel-ref" class="hidden">
+    <div class="toolbar"><input class="search" id="searchRef" placeholder="🔍 Hledat svátek…"></div>
+    <div class="filterPills" id="filterPills"></div>
+    <div class="list" id="refList"></div>
+  </div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+function escHtml(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function norm(s){return (s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');}
+
+/* ============ Data podle tradic ============ */
+const TRADITIONS=[
+  {id:'celtic', label:'🍂 Keltové', events:[
+    {name:'Samhain', month:10, day:31, datum:'31. října – 1. listopadu',
+      vyznam:'Konec sklizňového roku a keltský Nový rok. Doba, kdy je závoj mezi světem živých a světem předků nejtenčí — svátek vzpomínky na zesnulé.',
+      zvyky:'Zapalování ohňů, hostina s prostřeným místem pro předky, věštění do nového roku, vyřezávané lampiony z tuřínu (předchůdce dýní). Předloha pro dnešní Halloween.'},
+    {name:'Yule (zimní slunovrat)', month:12, day:21, datum:'kolem 21. prosince',
+      vyznam:'Nejdelší noc v roce a symbolické znovuzrození slunce — od tohoto bodu dny opět prodlužují.',
+      zvyky:'Pálení vánočního (julového) špalku, zdobení stálezelenými větvemi (jmelí, cesmína), noční bdění a hostina při čekání na návrat světla.'},
+    {name:'Imbolc', month:2, day:1, datum:'1.–2. února',
+      vyznam:'Svátek bohyně (později svaté) Brigid, první náznaky jara — jehňata, mléko, prodlužující se den.',
+      zvyky:'Zapalování svící a ohňů na počest světla, úklid a očista domova, pletení Brigidiných křížů ze slámy.'},
+    {name:'Ostara (jarní rovnodennost)', month:3, day:20, datum:'kolem 20. března',
+      vyznam:'Rovnováha dne a noci, probuzení přírody a plodnosti. Kořen mnoha velikonočních symbolů.',
+      zvyky:'Barvení vajec, sázení semínek, jarní úklid a otevírání oken po zimě.'},
+    {name:'Beltane', month:5, day:1, datum:'30. dubna – 1. května',
+      vyznam:'Vrchol jara a svátek plodnosti — spojení mužského a ženského principu, počátek pastevního období.',
+      zvyky:'Tanec kolem májky, přeskakování ohňů pro štěstí a ochranu dobytka. V českých zemích dodnes žije jako pálení čarodějnic.'},
+    {name:'Litha (letní slunovrat)', month:6, day:21, datum:'kolem 21. června',
+      vyznam:'Nejdelší den v roce, vrchol slunce a síly přírody.',
+      zvyky:'Noční bdění a oheň, sbírání léčivých bylin (svatojánských), oslava světla a hojnosti.'},
+    {name:'Lughnasadh (Lammas)', month:8, day:1, datum:'1. srpna',
+      vyznam:'Svátek boha Lugha a první sklizně — dík za obilí a první chléb nového roku.',
+      zvyky:'Pečení chleba z čerstvě sklizeného obilí, slavnosti, hry a soutěže, obětiny za úrodu.'},
+    {name:'Mabon (podzimní rovnodennost)', month:9, day:22, datum:'kolem 22. září',
+      vyznam:'Druhá sklizeň a rovnováha dne a noci — díkůvzdání za úrodu před příchodem zimy.',
+      zvyky:'Hostina z podzimních plodů, sdílení přebytků úrody s potřebnými, příprava zásob na zimu.'}
+  ]},
+  {id:'norse', label:'❄️ Vikingové / Seveřané', events:[
+    {name:'Vetrnætr (Zimní noci)', month:10, day:14, datum:'kolem poloviny října',
+      vyznam:'Konec léta a začátek zimní poloviny roku podle staroseverského kalendáře. Čas dísablótu — uctění ženských ochranných duchů (dís) a předků.',
+      zvyky:'Rodinná obětina (blót), poděkování za sklizeň, hostina na počest předků a strážných duchů rodu.'},
+    {name:'Jól (Yule)', month:12, day:21, datum:'kolem zimního slunovratu, historicky až 12denní oslava',
+      vyznam:'Střed zimy a oslava návratu slunce. V ságách spojováno i s Ódinem jako „Jólnirem“, vůdcem divokého honu.',
+      zvyky:'Pálení jólového špalku, bohatá hostina, přípitky (sumbl) na počest bohů, předků a vlastních závazků do nadcházejícího roku.'},
+    {name:'Þorrablót', month:1, day:19, datum:'konec ledna – únor (měsíc Þorri)',
+      vyznam:'Oslava přežití nejtěžší, nejchladnější části zimy. Dodnes populární zejména na Islandu.',
+      zvyky:'Tradiční zimní pokrmy, hodování s přáteli a rodinou, přípitky a veselí navzdory chladu.'},
+    {name:'Sigrblót (Sumarmál)', month:4, day:14, datum:'kolem poloviny dubna',
+      vyznam:'Začátek letní poloviny roku — obětiny bohům (zejména Freyrovi a Ódinovi) pro vítězství, dobrou úrodu a úspěšnou plavební sezónu.',
+      zvyky:'Obětina (blót) a přípitky bohům, symbolické zahájení nového hospodářského a válečnického roku.'},
+    {name:'Miðsumarblót (letní slunovrat)', month:6, day:21, datum:'kolem 21. června',
+      vyznam:'Vrchol léta a síly slunce, oslava plodnosti a hojnosti.',
+      zvyky:'Ohně pod širým nebem, hostiny trvající do pozdní noci využívající nejdelší den v roce.'},
+    {name:'Álfablót', month:11, day:1, datum:'konec října – listopad (lokálně proměnlivé)',
+      vyznam:'Soukromý rodinný svátek uctívající elfy (álfar) — duchy předků a plodnosti půdy. Podle pramenů probíhal bez přítomnosti cizinců.',
+      zvyky:'Uzavřený rodinný obřad a obětina v domácnosti, bez hostů zvenčí — na rozdíl od většiny ostatních veřejných blótů.'}
+  ]},
+  {id:'slavic', label:'🔥 Slované', events:[
+    {name:'Koleda (zimní slunovrat)', month:12, day:22, datum:'kolem 21.–25. prosince',
+      vyznam:'Oslava návratu slunce a počátku nového ročního cyklu, ochrana domácnosti v nejtemnější části roku.',
+      zvyky:'Koledování dům od domu, věštění do budoucna, štědrovečerní hostina, ochranné obřady proti zlým silám.'},
+    {name:'Maslenice (vynášení Morany)', month:2, day:20, datum:'konec února – březen, týden před jarní rovnodenností',
+      vyznam:'Rozloučení se zimou a symbolické vyhnání smrti/zimy (Morana), přivítání blížícího se jara.',
+      zvyky:'Topení nebo pálení slaměné figuríny Morany, pečení placek připomínajících slunce, veselí a hry.'},
+    {name:'Jarilo (jarní rovnodennost)', month:3, day:20, datum:'kolem 20.–21. března',
+      vyznam:'Probuzení přírody a plodnosti, svátek boha jara a mužné životní síly.',
+      zvyky:'Obchůzky s ozdobenými větvičkami, zpěvy vítající jaro, symbolické „zasnoubení“ jara se zemí.'},
+    {name:'Kupalská noc (letní slunovrat)', month:6, day:23, datum:'23.–24. června',
+      vyznam:'Jedna z nejvýznamnějších slovanských nocí — oslava slunce, ohně a vody, spojená s láskou a plodností.',
+      zvyky:'Skákání přes ohně, pouštění věnců po vodě, hledání kouzelného kapradí, koupání v řekách.'},
+    {name:'Dožínky (podzimní rovnodennost)', month:9, day:22, datum:'kolem 22.–23. září',
+      vyznam:'Dík za sklizeň a hojnost před příchodem zimy.',
+      zvyky:'Sváteční hostina z nové úrody, pletení dožínkových věnců z posledního obilí, poděkování zemi.'},
+    {name:'Dziady (svátek předků)', month:11, day:1, datum:'konec října – listopad',
+      vyznam:'Uctění předků a duší zesnulých, obdoba keltského Samhainu.',
+      zvyky:'Prostírání jídla pro zesnulé, návštěvy hrobů, zapalování svíček a ohňů na jejich památku.'}
+  ]},
+  {id:'baltic', label:'🌾 Baltové', events:[
+    {name:'Užgavėnės', month:2, day:15, datum:'únor (pohyblivý svátek před postní dobou)',
+      vyznam:'Vyhánění zimy a symbolická bitva jara se zimou.',
+      zvyky:'Maškarní průvody, pálení slaměné figuríny zimy (Morė), hodování tučnými zimními pokrmy.'},
+    {name:'Velykos (jarní rovnodennost)', month:3, day:20, datum:'kolem 20.–21. března',
+      vyznam:'Probuzení přírody a uctění bohyně jara.',
+      zvyky:'Zdobení vajec tradičními vzory, jarní obřady plodnosti a očisty.'},
+    {name:'Rasos / Kupolė (letní slunovrat)', month:6, day:23, datum:'23.–24. června',
+      vyznam:'Nejvýznamnější baltský svátek — oslava slunce na vrcholu síly, plodnosti a lásky.',
+      zvyky:'Pletení věnců z bylin, skákání přes oheň, hledání kouzelného kapradí, celonoční zpěv obřadních písní (dainos).'},
+    {name:'Podzimní dožínky (Rudens lygiadienis)', month:9, day:22, datum:'kolem 22.–23. září',
+      vyznam:'Poděkování zemi za úrodu a rovnováha dne a noci.',
+      zvyky:'Sklizňové obřady, hostina z nové úrody, obětiny duchům polí.'},
+    {name:'Ilgės (svátek předků)', month:11, day:2, datum:'podzim, kolem konce října – listopadu',
+      vyznam:'Vzpomínka na předky a duše zemřelých.',
+      zvyky:'Hostina s prostřeným místem pro duše předků, zapalování ohňů a svíček na hřbitovech.'}
+  ]},
+  {id:'greco', label:'🏛️ Řekové a Římané', events:[
+    {name:'Anthesteria', month:2, day:11, datum:'únor (řecký měsíc Anthesterión)',
+      vyznam:'Athénský svátek Dionýsa a nového vína, spojený s uctěním zesnulých duší, jež se prý na tři dny vracely mezi živé.',
+      zvyky:'Ochutnávka nového vína, obětiny zemřelým, obřady spojené s dospíváním dětí.'},
+    {name:'Anna Perenna (jarní rovnodennost)', month:3, day:15, datum:'15. března',
+      vyznam:'Římský svátek bohyně jara a plynutí roku, oslava obnovy přírody.',
+      zvyky:'Piknik pod širým nebem, přípitky s přáním tolika let života, kolik pohárů vína se vypije.'},
+    {name:'Panathénaje', month:7, day:28, datum:'léto (červenec/srpen), velká slavnost jednou za 4 roky',
+      vyznam:'Athénský svátek na počest bohyně Athény, patronky města.',
+      zvyky:'Slavnostní průvod s novým rouchem (peplos) pro sochu bohyně, sportovní a hudební soutěže.'},
+    {name:'Thesmoforie', month:10, day:11, datum:'podzim (říjen)',
+      vyznam:'Ženský svátek na počest bohyně Démétér a plodnosti země, vyhrazený vdaným ženám.',
+      zvyky:'Třídenní obřady plodnosti, půst, obětiny zemi.'},
+    {name:'Eleusinská mystéria', month:9, day:15, datum:'podzim (září), poblíž Eleusíny',
+      vyznam:'Tajná zasvěcovací obřady na počest Démétér a Persefony, jedny z nejvýznamnějších náboženských obřadů starověkého Řecka.',
+      zvyky:'Procesí z Athén do Eleusíny, půst, symbolické procítění příběhu o Persefoně — obsah zasvěcení byl přísně tajný.'},
+    {name:'Saturnálie (Saturnalia)', month:12, day:17, datum:'17.–23. prosince',
+      vyznam:'Římský svátek boha Saturna, dočasné obrácení společenského řádu uprostřed zimy.',
+      zvyky:'Hostiny, výměna dárků, dočasné zrušení rozdílů mezi pány a otroky, hry a všeobecné veselí.'}
+  ]},
+  {id:'egypt', label:'🏺 Egypťané', events:[
+    {name:'Wep Ronpet (egyptský Nový rok)', month:7, day:19, datum:'kolem poloviny července, spojeno s heliakickým východem Síria',
+      vyznam:'Oslava obnovy světa a začátku nového ročního cyklu spojená s životodárnou záplavou Nilu.',
+      zvyky:'Obětiny bohům, oslavné hostiny, očistné obřady na počest nového začátku.'},
+    {name:'Svátek Opet', month:9, day:1, datum:'období záplav, přibližně srpen–září',
+      vyznam:'Velký thébský svátek na počest boha Amona, jeho manželky Mut a syna Chonsua — obnovení božské a královské moci.',
+      zvyky:'Slavnostní procesí posvátných člunů z chrámu v Karnaku do Luxoru.'},
+    {name:'Svátek Údolí (Krásný svátek pouště)', month:8, day:15, datum:'období záplav',
+      vyznam:'Svátek uctění zesnulých, návštěva hrobek předků na západním břehu Nilu.',
+      zvyky:'Rodinné hostiny přímo u hrobek, obětiny zanechané pro zesnulé.'},
+    {name:'Mystéria Isis a Osirida', month:11, day:1, datum:'období setby (podzim)',
+      vyznam:'Dramatické obřady připomínající smrt a znovuzrození boha Osirida — symbol koloběhu přírody a naděje na posmrtný život.',
+      zvyky:'Rituální truchlení nad smrtí Osirida a následná oslava jeho znovuzrození.'}
+  ]},
+  {id:'shinto', label:'⛩️ Šintoismus (Japonsko)', events:[
+    {name:'Šógacu (japonský Nový rok)', month:1, day:1, datum:'1.–3. ledna',
+      vyznam:'Nejvýznamnější svátek japonského roku, první návštěva svatyně (hatsumóde) pro požehnání do nového roku.',
+      zvyky:'První návštěva svatyně v roce, očistné obřady, věštění (omikudži), tradiční novoroční pokrmy (osečči).'},
+    {name:'Setsubun', month:2, day:3, datum:'3.–4. února',
+      vyznam:'Svátek na rozhraní zimy a jara, vyhánění zlých duchů a neštěstí.',
+      zvyky:'Házení pražených sójových bobů se zvoláním „Démoni ven, štěstí dovnitř!“ (Oni wa soto, fuku wa uči).'},
+    {name:'Hina macuri (Svátek panenek)', month:3, day:3, datum:'3. března',
+      vyznam:'Oslava zdraví, štěstí a šťastného vdání dívek.',
+      zvyky:'Vystavování slavnostních panenek v dvorských kostýmech na stupňovité oltáře.'},
+    {name:'Tanabata (Svátek hvězd)', month:7, day:7, datum:'7. července',
+      vyznam:'Připomínka legendy o zamilovaných hvězdách Vegě a Altairu, které se podle příběhu mohou setkat jen jednou v roce.',
+      zvyky:'Psaní přání na barevné papírky (tanzaku) a jejich zavěšování na bambusové větve.'},
+    {name:'Šičigosan', month:11, day:15, datum:'15. listopadu',
+      vyznam:'Svátek dětí ve věku 3, 5 a 7 let — poděkování kami za jejich zdravý růst.',
+      zvyky:'Návštěva svatyně v slavnostním oblečení (kimono), obřadné požehnání dětem.'}
+  ]},
+  {id:'yoruba', label:'🥁 Jorubové (Západní Afrika)', events:[
+    {name:'Svátek Ošun (Osun-Osogbo)', month:8, day:15, datum:'srpen, Nigérie (týdenní festival)',
+      vyznam:'Oslava bohyně řeky Ošun, patronky plodnosti, lásky a sladké vody — jeden z největších tradičních náboženských festivalů v Africe, zapsaný na seznamu UNESCO.',
+      zvyky:'Procesí k posvátné řece Ošun, obětiny, modlitby za plodnost a hojnost.'},
+    {name:'Svátek Ogun', month:9, day:1, datum:'proměnlivé podle regionu (často září)',
+      vyznam:'Uctění boha železa, války a řemesel Oguna, patrona kovářů, řidičů a válečníků.',
+      zvyky:'Obětiny, žehnání nástrojům, nářadí a vozidlům, modlitby za ochranu.'},
+    {name:'Ifá festival (svátek věštby)', month:6, day:1, datum:'proměnlivé, obvykle první polovina roku',
+      vyznam:'Uctění Orunmily, božstva moudrosti a věštby, patrona věšteckého systému Ifá.',
+      zvyky:'Konzultace s věštci (babalawo), obřady zasvěcení, veřejné obřadné výklady.'},
+    {name:'Odun Ifa (jorubský Nový rok)', month:1, day:1, datum:'leden (proměnlivé)',
+      vyznam:'Roční obřad díkůvzdání a věštby o osudu celé komunity v nadcházejícím roce.',
+      zvyky:'Veřejná věštba budoucnosti komunity, obětiny, společná hostina.'}
+  ]},
+  {id:'aztec', label:'🌞 Aztékové', events:[
+    {name:'Tlacaxipehualiztli', month:3, day:20, datum:'březen (aztécký kalendář posunuje datum oproti Gregoriánskému)',
+      vyznam:'Oslava boha Xipe Totec a obnovy přírody na jaře — symbolika „svlékání staré kůže“ jako nový růst rostlin.',
+      zvyky:'Rituální tance a obřady na počest boha jara a zemědělství.'},
+    {name:'Toxcatl', month:5, day:20, datum:'květen',
+      vyznam:'Svátek boha Tezcatlipoca, vrchol slavnostního cyklu věnovaného mocnému a nevyzpytatelnému božstvu.',
+      zvyky:'Slavnostní obřady a oslavy u hlavního chrámu Tenochtitlánu.'},
+    {name:'Ochpaniztli (svátek zametání)', month:9, day:1, datum:'září',
+      vyznam:'Rituální očista a příprava na sklizeň, uctění matky bohyně Toci („naše babička“).',
+      zvyky:'Symbolické zametání domů a chrámů, tance bojovnic, sklizňové obřady.'},
+    {name:'Panquetzaliztli', month:12, day:7, datum:'prosinec',
+      vyznam:'Svátek zrození boha slunce a války Huitzilopochtliho, jeden z nejvýznamnějších svátků aztéckého kalendáře.',
+      zvyky:'Slavnostní procesí, sportovní klání, hostiny na počest boha slunce.'},
+    {name:'Miccailhuitl (svátek zesnulých)', month:8, day:1, datum:'srpen (po conquistě posunuto a spojeno s dnešním Día de los Muertos)',
+      vyznam:'Uctění zesnulých předků, předchůdce dnešního mexického Svátku mrtvých.',
+      zvyky:'Stavění oltářů s oblíbenými pokrmy zemřelých, rodinné hostiny na jejich počest.'}
+  ]}
+];
+const ALL=TRADITIONS.flatMap(t=>t.events.map(e=>({...e, tradiceId:t.id, tradiceLabel:t.label})));
+
+/* ============ Tabs ============ */
+document.querySelectorAll('.tab[data-tab]').forEach(tab=>{
+  tab.addEventListener('click',()=>{
+    document.querySelectorAll('.tab[data-tab]').forEach(t=>t.classList.remove('active'));
+    tab.classList.add('active');
+    ['next','ref'].forEach(p=>$('panel-'+p).classList.add('hidden'));
+    $('panel-'+tab.dataset.tab).classList.remove('hidden');
+  });
+});
+
+/* ============ Výpočet nejbližšího data ============ */
+function nextOccurrence(month, day, from){
+  const y=from.getFullYear();
+  let d=new Date(y, month-1, day);
+  d.setHours(0,0,0,0);
+  const today=new Date(from); today.setHours(0,0,0,0);
+  if(d < today) d=new Date(y+1, month-1, day);
+  return d;
+}
+function daysBetween(a,b){ return Math.round((b-a)/86400000); }
+
+function renderNext(){
+  const today=new Date();
+  const withDates=ALL.map(e=>({...e, next: nextOccurrence(e.month, e.day, today)}))
+    .sort((a,b)=>a.next-b.next);
+  const soonest=withDates[0];
+  const days=daysBetween(new Date(today.getFullYear(),today.getMonth(),today.getDate()), soonest.next);
+  $('nextBox').innerHTML=`
+    <div class="days">${days===0?'Dnes':days}</div>
+    <div class="info">
+      <h3>${escHtml(soonest.name)}</h3>
+      <div class="meta">${escHtml(soonest.tradiceLabel)} · ${soonest.next.toLocaleDateString('cs-CZ')} ${days===0?'':'(za '+days+' '+(days===1?'den':(days<5?'dny':'dní'))+')'}</div>
+    </div>`;
+  $('upcomingList').innerHTML=withDates.slice(0,12).map(e=>`
+    <details class="item">
+      <summary>${escHtml(e.name)}<span class="tradice">${escHtml(e.tradiceLabel)}</span><span class="date">${e.next.toLocaleDateString('cs-CZ')}</span></summary>
+      <div class="body">
+        <p><b>Význam:</b> ${escHtml(e.vyznam)}</p>
+        <p><b>Zvyky:</b> ${escHtml(e.zvyky)}</p>
+      </div>
+    </details>`).join('');
+}
+renderNext();
+
+/* ============ Referenční přehled podle tradice ============ */
+let refFilter='';
+function renderFilterPills(){
+  const pills=[['','Vše'], ...TRADITIONS.map(t=>[t.id, t.label])];
+  $('filterPills').innerHTML=pills.map(([id,label])=>
+    `<button data-f="${id}" class="${refFilter===id?'active':''}">${label}</button>`).join('');
+  $('filterPills').querySelectorAll('button').forEach(b=>{
+    b.onclick=()=>{ refFilter=b.dataset.f; renderFilterPills(); renderRefList(); };
+  });
+}
+function renderRefList(){
+  const q=norm($('searchRef').value.trim());
+  const filtered=ALL.filter(e=>{
+    const matchesFilter = !refFilter || e.tradiceId===refFilter;
+    const matchesQuery = !q || norm(e.name+' '+e.vyznam).includes(q);
+    return matchesFilter && matchesQuery;
+  });
+  if(!filtered.length){ $('refList').innerHTML='<div class="empty">Nic nenalezeno.</div>'; return; }
+  $('refList').innerHTML=filtered.map(e=>`
+    <details class="item">
+      <summary>${escHtml(e.name)}<span class="tradice">${escHtml(e.tradiceLabel)}</span><span class="date">${escHtml(e.datum)}</span></summary>
+      <div class="body">
+        <p><b>Význam:</b> ${escHtml(e.vyznam)}</p>
+        <p><b>Zvyky:</b> ${escHtml(e.zvyky)}</p>
+      </div>
+    </details>`).join('');
+}
+$('searchRef').addEventListener('input', renderRefList);
+renderFilterPills();
+renderRefList();
+</script>
+</body>
+</html>

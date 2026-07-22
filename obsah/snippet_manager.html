@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📋 Snippet manager</title>
+<link rel="stylesheet" href="../common.css">
+<script>
+  if (localStorage.getItem('webapp_theme') === 'light') document.documentElement.dataset.theme = 'light';
+</script>
+<style>
+body{background:var(--bg-deep);padding:20px clamp(14px,3vw,40px);min-height:100vh}
+.container{max-width:1100px;margin:0 auto}
+h1{font-size:1.5rem;margin-bottom:4px}
+.sub{color:var(--text-muted);font-size:.85rem;margin-bottom:18px}
+.toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:14px}
+.toolbar input[type=search]{flex:1;min-width:180px;background:var(--bg-input);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:8px 12px;font-size:.85rem}
+.toolbar select{background:var(--bg-input);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:8px 10px;font-size:.85rem}
+.btn{background:var(--bg-control);color:var(--text);border:1px solid var(--border-strong);padding:8px 14px;border-radius:6px;cursor:pointer;font-size:.85rem}
+.btn:hover{background:var(--bg-hover)}
+.btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.cats{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px}
+.cat-pill{background:var(--bg-elevated);border:1px solid var(--border);color:var(--text-muted);border-radius:14px;padding:5px 12px;font-size:.78rem;cursor:pointer;user-select:none}
+.cat-pill.active{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:14px}
+.card{background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius);padding:14px;display:flex;flex-direction:column;gap:8px}
+.card h3{font-size:.95rem}
+.card .preview{font-size:.8rem;color:var(--text-muted);line-height:1.5;max-height:4.5em;overflow:hidden;white-space:pre-wrap}
+.card .meta{display:flex;gap:8px;flex-wrap:wrap;font-size:.72rem;color:var(--text-faint)}
+.card .tag{background:var(--bg-elevated);border:1px solid var(--border);border-radius:10px;padding:1px 8px}
+.card .actions{display:flex;gap:6px;margin-top:auto}
+.card .actions button{flex:1;font-size:.78rem;padding:6px 8px}
+.empty{padding:40px;text-align:center;color:var(--text-faint)}
+
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:100;align-items:flex-start;justify-content:center;overflow-y:auto;padding:30px 14px}
+.overlay.show{display:flex}
+.modal{background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius);width:100%;max-width:580px;padding:22px;margin-bottom:30px}
+.modal h2{font-size:1.1rem;margin-bottom:14px}
+.field{margin-bottom:12px}
+.field label{display:block;font-size:.75rem;color:var(--text-faint);margin-bottom:4px}
+.field input,.field textarea{width:100%;background:var(--bg-input);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:8px 10px;font-size:.88rem;font-family:inherit}
+.field textarea{resize:vertical;min-height:160px;font-family:ui-monospace,Consolas,monospace;font-size:.85rem}
+.modal-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:16px}
+.hint{font-size:.75rem;color:var(--text-faint);margin-top:6px}
+
+.varForm{display:flex;flex-direction:column;gap:10px;margin:14px 0}
+.varForm .field label{color:var(--accent)}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>📋 Snippet manager</h1>
+  <p class="sub">Uložené odpovědi, e-maily a textové šablony na jedno kliknutí. Podpora proměnných <code>{{jméno}}</code> — při kopírování se doplní.</p>
+
+  <div class="toolbar">
+    <input type="search" id="search" placeholder="🔍 Hledat šablonu…">
+    <select id="filterKat"><option value="">Všechny kategorie</option></select>
+    <button class="btn primary" id="btnNew">+ Nová šablona</button>
+    <button class="btn" id="btnExport">⬇️ Export</button>
+    <button class="btn" id="btnImport">⬆️ Import</button>
+    <input type="file" id="fileImport" accept="application/json" style="display:none">
+  </div>
+
+  <div id="list"></div>
+</div>
+
+<!-- editační modal -->
+<div class="overlay" id="editOverlay">
+  <div class="modal">
+    <h2 id="editTitle">Nová šablona</h2>
+    <input type="hidden" id="fId">
+    <div class="field"><label>Název</label><input id="fNazev" placeholder="Odpověď – potvrzení objednávky"></div>
+    <div class="field"><label>Kategorie</label><input id="fKat" list="katList" placeholder="E-maily"><datalist id="katList"></datalist></div>
+    <div class="field"><label>Štítky (oddělené čárkou)</label><input id="fTagy" placeholder="objednávka, potvrzení"></div>
+    <div class="field">
+      <label>Text šablony</label>
+      <textarea id="fObsah" placeholder="Dobrý den {{jméno}},&#10;&#10;potvrzujeme přijetí objednávky č. {{cislo}}…"></textarea>
+      <div class="hint">Proměnnou zapiš jako <code>{{nazev_promenne}}</code> — při kopírování se zeptáme na hodnotu.</div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn" id="btnCancelEdit">Zrušit</button>
+      <button class="btn primary" id="btnSaveSnippet">Uložit</button>
+    </div>
+  </div>
+</div>
+
+<!-- kopírovací modal s proměnnými -->
+<div class="overlay" id="varOverlay">
+  <div class="modal">
+    <h2>Doplň proměnné</h2>
+    <div class="varForm" id="varForm"></div>
+    <div class="modal-actions">
+      <button class="btn" id="btnCancelVar">Zrušit</button>
+      <button class="btn primary" id="btnCopyVar">📋 Zkopírovat</button>
+    </div>
+  </div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const STORAGE_KEY='snippets_v1';
+let snippets=JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]');
+let varSnippetId=null;
+
+function save(){localStorage.setItem(STORAGE_KEY,JSON.stringify(snippets));}
+function escHtml(s){return (s||'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');}
+function norm(s){return (s||'').toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'');}
+
+function renderKatOptions(){
+  const kats=[...new Set(snippets.map(s=>s.kategorie).filter(Boolean))].sort();
+  $('filterKat').innerHTML='<option value="">Všechny kategorie</option>'+kats.map(k=>`<option value="${escHtml(k)}">${escHtml(k)}</option>`).join('');
+  $('katList').innerHTML=kats.map(k=>`<option value="${escHtml(k)}">`).join('');
+}
+
+function extractVars(text){
+  const re=/\{\{\s*([a-zA-Z0-9_\-áčďéěíňóřšťúůýž]+)\s*\}\}/gi;
+  const set=[];
+  let m;
+  while((m=re.exec(text))){ if(!set.includes(m[1])) set.push(m[1]); }
+  return set;
+}
+
+function renderList(){
+  const q=norm($('search').value.trim());
+  const kat=$('filterKat').value;
+  const filtered=snippets.filter(s=>{
+    if(kat && s.kategorie!==kat) return false;
+    if(!q) return true;
+    const hay=norm(s.nazev+' '+(s.tagy||[]).join(' ')+' '+s.obsah);
+    return hay.includes(q);
+  }).sort((a,b)=>a.nazev.localeCompare(b.nazev,'cs'));
+
+  if(!filtered.length){
+    $('list').innerHTML='<div class="empty">Žádné šablony. Přidej první tlačítkem „+ Nová šablona“.</div>';
+    return;
+  }
+  $('list').innerHTML='<div class="grid">'+filtered.map(s=>`
+    <div class="card" data-id="${s.id}">
+      <h3>${escHtml(s.nazev)}</h3>
+      <div class="preview">${escHtml(s.obsah)}</div>
+      <div class="meta">
+        ${s.kategorie?`<span class="tag">🏷️ ${escHtml(s.kategorie)}</span>`:''}
+        ${(s.tagy||[]).map(t=>`<span class="tag">${escHtml(t)}</span>`).join('')}
+      </div>
+      <div class="actions">
+        <button class="btn copyBtn" data-id="${s.id}">📋 Kopírovat</button>
+        <button class="btn editBtn" data-id="${s.id}">✏️</button>
+        <button class="btn delBtn" data-id="${s.id}" style="color:var(--danger)">🗑️</button>
+      </div>
+    </div>`).join('')+'</div>';
+
+  $('list').querySelectorAll('.copyBtn').forEach(b=>b.onclick=()=>copySnippet(b.dataset.id, b));
+  $('list').querySelectorAll('.editBtn').forEach(b=>b.onclick=()=>openEdit(snippets.find(s=>s.id===b.dataset.id)));
+  $('list').querySelectorAll('.delBtn').forEach(b=>b.onclick=()=>{
+    if(!confirm('Opravdu smazat tuto šablonu?'))return;
+    snippets=snippets.filter(s=>s.id!==b.dataset.id);
+    save();renderKatOptions();renderList();
+  });
+}
+
+/* ---- Kopírování s proměnnými ---- */
+function copySnippet(id, btnEl){
+  const s=snippets.find(x=>x.id===id);
+  if(!s)return;
+  const vars=extractVars(s.obsah);
+  if(!vars.length){
+    doCopy(s.obsah, btnEl);
+    return;
+  }
+  varSnippetId=id;
+  $('varForm').innerHTML=vars.map(v=>`
+    <div class="field"><label>${escHtml(v)}</label><input class="varInput" data-var="${escHtml(v)}"></div>
+  `).join('');
+  $('varOverlay').classList.add('show');
+  const first=$('varForm').querySelector('input');
+  if(first) first.focus();
+}
+function doCopy(text, btnEl){
+  navigator.clipboard.writeText(text).then(()=>{
+    if(btnEl){
+      const orig=btnEl.textContent;
+      btnEl.textContent='✅ Zkopírováno';
+      setTimeout(()=>{btnEl.textContent=orig;},1200);
+    }
+  });
+}
+$('btnCancelVar').onclick=()=>{$('varOverlay').classList.remove('show');varSnippetId=null;};
+$('btnCopyVar').onclick=()=>{
+  const s=snippets.find(x=>x.id===varSnippetId);
+  if(!s)return;
+  let text=s.obsah;
+  $('varForm').querySelectorAll('.varInput').forEach(inp=>{
+    const re=new RegExp('\\{\\{\\s*'+inp.dataset.var.replace(/[.*+?^${}()|[\]\\]/g,'\\$&')+'\\s*\\}\\}','gi');
+    text=text.replace(re, inp.value);
+  });
+  navigator.clipboard.writeText(text);
+  $('varOverlay').classList.remove('show');
+  varSnippetId=null;
+};
+$('varOverlay').addEventListener('keydown', e=>{ if(e.key==='Enter' && e.target.classList.contains('varInput')) $('btnCopyVar').click(); });
+
+/* ---- Editace ---- */
+function openEdit(s){
+  $('editTitle').textContent=s?'Upravit šablonu':'Nová šablona';
+  $('fId').value=s?s.id:'';
+  $('fNazev').value=s?s.nazev:'';
+  $('fKat').value=s?s.kategorie||'':'';
+  $('fTagy').value=s?(s.tagy||[]).join(', '):'';
+  $('fObsah').value=s?s.obsah:'';
+  $('editOverlay').classList.add('show');
+}
+$('btnNew').onclick=()=>openEdit(null);
+$('btnCancelEdit').onclick=()=>$('editOverlay').classList.remove('show');
+$('btnSaveSnippet').onclick=()=>{
+  const nazev=$('fNazev').value.trim();
+  const obsah=$('fObsah').value.trim();
+  if(!nazev || !obsah){alert('Vyplň název i text šablony.');return;}
+  const id=$('fId').value || 'sn'+Date.now()+Math.random().toString(36).slice(2,6);
+  const data={
+    id, nazev,
+    kategorie:$('fKat').value.trim(),
+    tagy:$('fTagy').value.split(',').map(t=>t.trim()).filter(Boolean),
+    obsah
+  };
+  const idx=snippets.findIndex(s=>s.id===id);
+  if(idx>=0) snippets[idx]=data; else snippets.push(data);
+  save();
+  $('editOverlay').classList.remove('show');
+  renderKatOptions();
+  renderList();
+};
+
+/* ---- Export / import ---- */
+$('btnExport').onclick=()=>{
+  if(!snippets.length)return;
+  const blob=new Blob([JSON.stringify(snippets,null,2)],{type:'application/json'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');a.href=url;a.download='snippety.json';a.click();
+  URL.revokeObjectURL(url);
+};
+$('btnImport').onclick=()=>$('fileImport').click();
+$('fileImport').addEventListener('change', e=>{
+  const file=e.target.files[0];
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=()=>{
+    try{
+      const data=JSON.parse(reader.result);
+      if(!Array.isArray(data))throw new Error('bad format');
+      const existing=new Set(snippets.map(s=>s.id));
+      data.forEach(s=>{ if(s && s.id && !existing.has(s.id)) snippets.push(s); });
+      save();renderKatOptions();renderList();
+    }catch{ alert('Soubor se nepodařilo načíst — očekává se export z této aplikace.'); }
+  };
+  reader.readAsText(file);
+  e.target.value='';
+});
+
+$('search').addEventListener('input',renderList);
+$('filterKat').addEventListener('change',renderList);
+[$('editOverlay'),$('varOverlay')].forEach(ov=>{
+  ov.addEventListener('click', e=>{ if(e.target===ov) ov.classList.remove('show'); });
+});
+
+renderKatOptions();
+renderList();
+</script>
+</body>
+</html>

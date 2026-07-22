@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🖨️ Editor pro tisk a export</title>
+<link rel="stylesheet" href="../common.css">
+<script>
+  if (localStorage.getItem('webapp_theme') === 'light') document.documentElement.dataset.theme = 'light';
+</script>
+<style>
+body{background:var(--bg-deep);padding:20px clamp(14px,3vw,40px);min-height:100vh}
+.container{max-width:1000px;margin:0 auto}
+h1{font-size:1.5rem;margin-bottom:4px}
+.sub{color:var(--text-muted);font-size:.85rem;margin-bottom:16px}
+.note{background:var(--bg-elevated);border:1px solid var(--border);color:var(--text-muted);padding:10px 14px;border-radius:8px;font-size:.8rem;margin-bottom:16px}
+
+.importBar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center}
+.importBar input[type=file]{display:none}
+
+.toolbar{position:sticky;top:0;z-index:5;background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius) var(--radius) 0 0;padding:8px;display:flex;gap:4px;flex-wrap:wrap;align-items:center}
+.toolbar button{background:var(--bg-control);border:1px solid var(--border-strong);color:var(--text);border-radius:6px;padding:6px 10px;cursor:pointer;font-size:.85rem;min-width:32px}
+.toolbar button:hover{background:var(--bg-hover)}
+.toolbar button.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.toolbar select{background:var(--bg-input);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:6px 8px;font-size:.82rem}
+.toolbar .sep{width:1px;align-self:stretch;background:var(--border);margin:2px 4px}
+
+.pageWrap{background:#ddd;border:1px solid var(--border);border-radius:0 0 var(--radius) var(--radius);padding:24px;overflow:auto;max-height:70vh}
+#editor{
+  background:#fff;color:#111;
+  max-width:800px;margin:0 auto;padding:40px;min-height:500px;
+  box-shadow:0 2px 14px rgba(0,0,0,.3);
+  font-family:Georgia, 'Times New Roman', serif; font-size:16px; line-height:1.7;
+  outline:none;
+}
+#editor h1,#editor h2,#editor h3{margin:.6em 0 .3em}
+#editor p{margin:0 0 .8em}
+#editor ul,#editor ol{margin:0 0 .8em 1.4em}
+#editor a{color:#2f6fce}
+#editor:empty:before{content:attr(data-placeholder);color:#999}
+
+.printSettings{display:flex;gap:16px;flex-wrap:wrap;margin-top:14px;background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius);padding:14px}
+.printSettings > div{display:flex;flex-direction:column;gap:4px;min-width:140px}
+.printSettings label{font-size:.72rem;color:var(--text-faint)}
+.printSettings select,.printSettings input{background:var(--bg-input);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:6px 8px;font-size:.85rem}
+
+.exportBar{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.btn{background:var(--bg-control);color:var(--text);border:1px solid var(--border-strong);padding:9px 16px;border-radius:6px;cursor:pointer;font-size:.85rem;font-weight:600}
+.btn:hover{background:var(--bg-hover)}
+.btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+
+@media print{
+  body *{visibility:hidden}
+  #editor, #editor *{visibility:visible}
+  #editor{position:absolute;left:0;top:0;box-shadow:none;max-width:100%;padding:0;margin:0}
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>🖨️ Editor pro tisk a export</h1>
+  <p class="sub">Vlož text zkopírovaný z webové stránky (Ctrl+V), uprav ho a vytiskni nebo exportuj do Markdownu, HTML či prostého textu.</p>
+  <div class="note">Formátování se do editoru přenese při vložení přímo z prohlížeče. Tlačítko „Vyčistit formátování“ odstraní cizí styly a ponechá jen čistou strukturu (nadpisy, odstavce, seznamy).</div>
+
+  <div class="importBar">
+    <button class="btn" id="btnLoadFile">📂 Načíst HTML soubor</button>
+    <input type="file" id="fileInput" accept=".html,.htm,text/html">
+    <button class="btn" id="btnClean">🧹 Vyčistit formátování</button>
+    <button class="btn" id="btnClear" style="color:var(--danger)">🗑️ Vymazat obsah</button>
+  </div>
+
+  <div class="toolbar" id="toolbar">
+    <button data-cmd="undo" title="Zpět">↺</button>
+    <button data-cmd="redo" title="Znovu">↻</button>
+    <div class="sep"></div>
+    <select id="tBlock">
+      <option value="p">Odstavec</option>
+      <option value="h1">Nadpis 1</option>
+      <option value="h2">Nadpis 2</option>
+      <option value="h3">Nadpis 3</option>
+      <option value="blockquote">Citace</option>
+      <option value="pre">Kód</option>
+    </select>
+    <div class="sep"></div>
+    <button data-cmd="bold" title="Tučné"><b>B</b></button>
+    <button data-cmd="italic" title="Kurzíva"><i>I</i></button>
+    <button data-cmd="underline" title="Podtržené"><u>U</u></button>
+    <button data-cmd="strikeThrough" title="Přeškrtnuté"><s>S</s></button>
+    <div class="sep"></div>
+    <button data-cmd="insertUnorderedList" title="Odrážky">• ⋮</button>
+    <button data-cmd="insertOrderedList" title="Číslovaný seznam">1. ⋮</button>
+    <div class="sep"></div>
+    <button data-cmd="justifyLeft" title="Vlevo">⯇</button>
+    <button data-cmd="justifyCenter" title="Na střed">☰</button>
+    <button data-cmd="justifyRight" title="Vpravo">⯈</button>
+    <div class="sep"></div>
+    <button id="tLink" title="Vložit odkaz">🔗</button>
+    <button data-cmd="unlink" title="Odebrat odkaz">🔗✕</button>
+    <div class="sep"></div>
+    <button data-cmd="removeFormat" title="Odstranit přímé formátování">Aa✕</button>
+  </div>
+  <div class="pageWrap"><div id="editor" contenteditable="true" data-placeholder="Sem vlož text (Ctrl+V) nebo začni psát…"></div></div>
+
+  <div class="printSettings">
+    <div><label>Velikost písma tisku</label>
+      <select id="pFontSize"><option value="13px">Malé</option><option value="16px" selected>Střední</option><option value="19px">Velké</option></select>
+    </div>
+    <div><label>Řádkování</label>
+      <select id="pLineHeight"><option value="1.4">Sevřené</option><option value="1.7" selected>Normální</option><option value="2.1">Volné</option></select>
+    </div>
+    <div><label>Šířka stránky</label>
+      <select id="pWidth"><option value="700px">Užší</option><option value="800px" selected>Normální (A4)</option><option value="960px">Širší</option></select>
+    </div>
+  </div>
+
+  <div class="exportBar">
+    <button class="btn primary" id="btnPrint">🖨️ Tisk / uložit jako PDF</button>
+    <button class="btn" id="btnExportMd">⬇️ Export do Markdown</button>
+    <button class="btn" id="btnExportTxt">⬇️ Export do TXT</button>
+    <button class="btn" id="btnExportHtml">⬇️ Export do HTML</button>
+  </div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const ed=$('editor');
+try{document.execCommand('styleWithCSS',false,false);}catch(e){}
+
+/* ---- Toolbar ---- */
+document.querySelectorAll('#toolbar button[data-cmd]').forEach(b=>{
+  b.addEventListener('mousedown', e=>e.preventDefault());
+  b.addEventListener('click', ()=>{ document.execCommand(b.dataset.cmd,false,null); ed.focus(); updateToolbar(); });
+});
+$('tBlock').addEventListener('change', ()=>{
+  document.execCommand('formatBlock', false, $('tBlock').value);
+  ed.focus();
+});
+$('tLink').addEventListener('mousedown', e=>e.preventDefault());
+$('tLink').addEventListener('click', ()=>{
+  const u=prompt('Adresa odkazu:','https://');
+  if(u===null || !u.trim()) return;
+  document.execCommand('createLink', false, u.trim());
+  ed.focus();
+});
+document.addEventListener('selectionchange', ()=>{
+  const s=getSelection();
+  if(s.rangeCount && ed.contains(s.anchorNode)) updateToolbar();
+});
+function updateToolbar(){
+  ['bold','italic','underline','strikeThrough'].forEach(c=>{
+    const btn=document.querySelector(`#toolbar button[data-cmd="${c}"]`);
+    try{ btn.classList.toggle('on', document.queryCommandState(c)); }catch(e){}
+  });
+}
+
+/* ---- Import ---- */
+$('btnLoadFile').addEventListener('click', ()=>$('fileInput').click());
+$('fileInput').addEventListener('change', e=>{
+  const file=e.target.files[0];
+  if(!file)return;
+  const reader=new FileReader();
+  reader.onload=()=>{
+    const html=reader.result;
+    const doc=new DOMParser().parseFromString(html,'text/html');
+    ed.innerHTML = doc.body ? doc.body.innerHTML : html;
+  };
+  reader.readAsText(file);
+  e.target.value='';
+});
+
+/* ---- Vyčištění formátování: ponechá jen sémantickou strukturu ---- */
+const KEEP_TAGS=new Set(['P','DIV','BR','H1','H2','H3','H4','H5','H6','UL','OL','LI','A','STRONG','B','EM','I','U','BLOCKQUOTE','PRE','CODE','HR','TABLE','THEAD','TBODY','TR','TD','TH']);
+function cleanNode(node){
+  [...node.childNodes].forEach(child=>{
+    if(child.nodeType===3) return; // text – ponechat
+    if(child.nodeType!==1){ child.remove(); return; }
+    if(!KEEP_TAGS.has(child.tagName)){
+      // nahradit obsahem (rozbalit span/font/div se styly apod.)
+      while(child.firstChild) child.parentNode.insertBefore(child.firstChild, child);
+      child.remove();
+      return;
+    }
+    // odstranit atributy kromě href u odkazů
+    [...child.attributes].forEach(attr=>{
+      if(!(child.tagName==='A' && attr.name==='href')) child.removeAttribute(attr.name);
+    });
+    cleanNode(child);
+  });
+}
+$('btnClean').addEventListener('click', ()=>{
+  cleanNode(ed);
+  ed.innerHTML = ed.innerHTML.replace(/ /g,' ').replace(/(<br>\s*){2,}/g,'<br>');
+});
+$('btnClear').addEventListener('click', ()=>{
+  if(!ed.textContent.trim() && !ed.innerHTML.trim()) return;
+  if(!confirm('Opravdu vymazat celý obsah editoru?')) return;
+  ed.innerHTML='';
+});
+
+/* ---- Nastavení tisku / náhledu ---- */
+function applyPageStyle(){
+  ed.style.fontSize=$('pFontSize').value;
+  ed.style.lineHeight=$('pLineHeight').value;
+  ed.style.maxWidth=$('pWidth').value;
+}
+['pFontSize','pLineHeight','pWidth'].forEach(id=>$(id).addEventListener('change', applyPageStyle));
+applyPageStyle();
+
+/* ---- Export ---- */
+function download(filename, content, mime){
+  const blob=new Blob([content], {type:mime+';charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a'); a.href=url; a.download=filename; a.click();
+  URL.revokeObjectURL(url);
+}
+$('btnPrint').addEventListener('click', ()=>window.print());
+
+$('btnExportTxt').addEventListener('click', ()=>{
+  download('dokument.txt', ed.innerText, 'text/plain');
+});
+$('btnExportHtml').addEventListener('click', ()=>{
+  const html=`<!DOCTYPE html>\n<html lang="cs"><head><meta charset="UTF-8"><title>Dokument</title></head><body>\n${ed.innerHTML}\n</body></html>`;
+  download('dokument.html', html, 'text/html');
+});
+
+/* ---- HTML → Markdown ---- */
+function mdEscape(s){ return s.replace(/([\\`*_{}\[\]()#+.!-])/g, '\\$1'); }
+function inlineToMd(node){
+  let out='';
+  node.childNodes.forEach(child=>{
+    if(child.nodeType===3){ out+=child.textContent; return; }
+    if(child.nodeType!==1) return;
+    const tag=child.tagName.toLowerCase();
+    const inner=inlineToMd(child);
+    if(tag==='strong'||tag==='b') out+='**'+inner+'**';
+    else if(tag==='em'||tag==='i') out+='*'+inner+'*';
+    else if(tag==='u') out+='<u>'+inner+'</u>';
+    else if(tag==='s'||tag==='strike'||tag==='del') out+='~~'+inner+'~~';
+    else if(tag==='a') out+='['+inner+']('+(child.getAttribute('href')||'')+')';
+    else if(tag==='code') out+='`'+inner+'`';
+    else if(tag==='br') out+='\n';
+    else out+=inner;
+  });
+  return out;
+}
+function listToMd(node, ordered, depth){
+  let out='';
+  let i=1;
+  [...node.children].forEach(li=>{
+    if(li.tagName!=='LI') return;
+    const prefix='  '.repeat(depth) + (ordered ? (i++)+'. ' : '- ');
+    out += prefix + inlineToMd(li).trim() + '\n';
+    li.querySelectorAll(':scope > ul, :scope > ol').forEach(sub=>{
+      out += listToMd(sub, sub.tagName==='OL', depth+1);
+    });
+  });
+  return out;
+}
+function blockToMd(node){
+  let out='';
+  node.childNodes.forEach(child=>{
+    if(child.nodeType===3){ const t=child.textContent.trim(); if(t) out+=t+'\n\n'; return; }
+    if(child.nodeType!==1) return;
+    const tag=child.tagName.toLowerCase();
+    if(tag==='h1') out+='# '+inlineToMd(child).trim()+'\n\n';
+    else if(tag==='h2') out+='## '+inlineToMd(child).trim()+'\n\n';
+    else if(tag==='h3') out+='### '+inlineToMd(child).trim()+'\n\n';
+    else if(tag==='h4') out+='#### '+inlineToMd(child).trim()+'\n\n';
+    else if(tag==='p'||tag==='div'){ const t=inlineToMd(child).trim(); if(t) out+=t+'\n\n'; }
+    else if(tag==='ul') out+=listToMd(child,false,0)+'\n';
+    else if(tag==='ol') out+=listToMd(child,true,0)+'\n';
+    else if(tag==='blockquote') out+= inlineToMd(child).trim().split('\n').map(l=>'> '+l).join('\n')+'\n\n';
+    else if(tag==='pre') out+='```\n'+child.textContent+'\n```\n\n';
+    else if(tag==='hr') out+='---\n\n';
+    else out+=blockToMd(child);
+  });
+  return out;
+}
+$('btnExportMd').addEventListener('click', ()=>{
+  const md=blockToMd(ed).replace(/\n{3,}/g,'\n\n').trim()+'\n';
+  download('dokument.md', md, 'text/markdown');
+});
+</script>
+</body>
+</html>

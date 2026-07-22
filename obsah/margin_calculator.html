@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>🧾 Kalkulačka marže a cenotvorby</title>
+  <link rel="stylesheet" href="../common.css">
+  <script>
+    if (localStorage.getItem('webapp_theme') === 'light') document.documentElement.dataset.theme = 'light';
+  </script>
+  <style>
+    body { background-color: var(--bg-deep); padding: 24px clamp(14px, 3vw, 40px); min-height: 100vh; }
+    .container{max-width:700px}
+    h1 { font-size: 1.4rem; margin-bottom: 4px; }
+    .podtitul { color: var(--text-muted); font-size: 0.88rem; margin-bottom: 22px; }
+    .karta {
+      background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 20px; margin-bottom: 18px;
+    }
+    label { display: block; font-size: 0.8rem; color: var(--text-muted); margin: 12px 0 5px; }
+    label:first-child{margin-top:0}
+    input[type="number"] {
+      width: 100%; background: var(--bg-input); border: 1px solid var(--border); border-radius: 6px;
+      color: var(--text); padding: 10px 12px; font-size: 1.05rem;
+    }
+    input:focus { outline: none; border-color: var(--accent); }
+    .prepinace { display: flex; flex-wrap: wrap; gap: 8px; }
+    .prepinace button {
+      background: var(--bg-control); border: 1px solid var(--border-strong); color: var(--text-muted);
+      border-radius: 6px; padding: 8px 14px; font-size: 0.85rem; cursor: pointer; text-align:left;
+    }
+    .prepinace button.active { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+    .row2{display:flex;gap:12px;flex-wrap:wrap}
+    .row2>div{flex:1;min-width:180px}
+    .vysledky { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-top: 18px; }
+    .box { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px; }
+    .box .popis { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-faint); margin-bottom: 6px; }
+    .box .cislo { font-size: 1.35rem; font-weight: 700; }
+    .box.hlavni .cislo { color: var(--accent); }
+    .pozn { color: var(--text-faint); font-size: 0.78rem; max-width: 700px; line-height: 1.5; }
+    .rozdil{font-size:.78rem;color:var(--text-faint);margin-top:6px}
+    .rozdil b{color:var(--text-muted)}
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>🧾 Kalkulačka marže a cenotvorby</h1>
+  <p class="podtitul">Marže (podíl zisku z prodejní ceny) a přirážka (navýšení nad nákupní cenu) jsou dvě různá čísla — snadno se pletou. Kalkulačka spočítá jedno z druhého.</p>
+
+  <div class="karta">
+    <label>Co chceš spočítat</label>
+    <div class="prepinace" id="mod">
+      <button data-mod="zMarze" class="active">Znám nákupní cenu a chci nastavit marži</button>
+      <button data-mod="zPrirazky">Znám nákupní cenu a chci nastavit přirážku</button>
+      <button data-mod="zObou">Znám nákupní i prodejní cenu</button>
+    </div>
+
+    <div class="row2">
+      <div>
+        <label>Nákupní cena (bez DPH)</label>
+        <input type="number" id="cena_nakup" placeholder="např. 500" step="0.01" min="0">
+      </div>
+      <div id="wrapMarze">
+        <label>Požadovaná marže (%)</label>
+        <input type="number" id="marze_in" placeholder="např. 30" step="0.1">
+      </div>
+      <div id="wrapPrirazka" style="display:none">
+        <label>Požadovaná přirážka (%)</label>
+        <input type="number" id="prirazka_in" placeholder="např. 40" step="0.1">
+      </div>
+      <div id="wrapProdej" style="display:none">
+        <label>Prodejní cena (bez DPH)</label>
+        <input type="number" id="cena_prodej" placeholder="např. 700" step="0.01" min="0">
+      </div>
+    </div>
+
+    <label>DPH pro přepočet ceny s DPH (nepovinné)</label>
+    <div class="prepinace" id="sazby">
+      <button data-sazba="0" class="active">bez DPH</button>
+      <button data-sazba="21">21 %</button>
+      <button data-sazba="12">12 %</button>
+      <button data-sazba="vlastni">Vlastní</button>
+      <input type="number" id="vlastniSazba" value="10" min="0" max="100" step="0.1" style="width:90px;display:none">
+    </div>
+
+    <div class="vysledky">
+      <div class="box"><div class="popis">Nákupní cena</div><div class="cislo" id="vNakup">–</div></div>
+      <div class="box hlavni"><div class="popis">Prodejní cena (bez DPH)</div><div class="cislo" id="vProdej">–</div></div>
+      <div class="box"><div class="popis">Prodejní cena (s DPH)</div><div class="cislo" id="vProdejDph">–</div></div>
+      <div class="box"><div class="popis">Zisk na kus</div><div class="cislo" id="vZisk">–</div></div>
+      <div class="box"><div class="popis">Marže</div><div class="cislo" id="vMarze">–</div></div>
+      <div class="box"><div class="popis">Přirážka (markup)</div><div class="cislo" id="vPrirazka">–</div></div>
+    </div>
+    <p class="rozdil"><b>Marže</b> = zisk / prodejní cena (kolik % z tržby je zisk). <b>Přirážka</b> = zisk / nákupní cena (o kolik % navyšuješ nákupní cenu). Při stejném zisku je přirážka vždy vyšší číslo než marže.</p>
+  </div>
+
+  <p class="pozn">Orientační výpočet. Cena s DPH je pouze informativní přepočet zadanou sazbou, nenahrazuje účetní evidenci.</p>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const fmt = n => isFinite(n) ? n.toLocaleString('cs-CZ', { minimumFractionDigits: 2, maximumFractionDigits: 2 }) + ' Kč' : '–';
+const fmtPct = n => isFinite(n) ? n.toLocaleString('cs-CZ', { minimumFractionDigits: 1, maximumFractionDigits: 1 }) + ' %' : '–';
+
+let mod='zMarze';
+let sazba=0;
+
+function aktivuj(kontejner, btn){
+  kontejner.querySelectorAll('button').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+}
+
+$('mod').addEventListener('click', e=>{
+  const btn=e.target.closest('button'); if(!btn)return;
+  aktivuj($('mod'), btn);
+  mod=btn.dataset.mod;
+  $('wrapMarze').style.display = mod==='zMarze' ? '' : 'none';
+  $('wrapPrirazka').style.display = mod==='zPrirazky' ? '' : 'none';
+  $('wrapProdej').style.display = mod==='zObou' ? '' : 'none';
+  vypocitej();
+});
+
+$('sazby').addEventListener('click', e=>{
+  const btn=e.target.closest('button'); if(!btn)return;
+  aktivuj($('sazby'), btn);
+  $('vlastniSazba').style.display = btn.dataset.sazba==='vlastni' ? '' : 'none';
+  sazba = btn.dataset.sazba==='vlastni' ? (parseFloat($('vlastniSazba').value)||0) : parseFloat(btn.dataset.sazba);
+  vypocitej();
+});
+$('vlastniSazba').addEventListener('input', ()=>{ sazba=parseFloat($('vlastniSazba').value)||0; vypocitej(); });
+
+function vypocitej(){
+  const nakup=parseFloat($('cena_nakup').value);
+  let prodej, marzePct, prirazkaPct;
+
+  if(mod==='zMarze'){
+    marzePct=parseFloat($('marze_in').value);
+    if(!isFinite(nakup) || !isFinite(marzePct) || marzePct>=100){ zobraz(nakup,null,null,null); return; }
+    prodej = nakup / (1 - marzePct/100);
+    prirazkaPct = nakup>0 ? (prodej-nakup)/nakup*100 : NaN;
+  } else if(mod==='zPrirazky'){
+    prirazkaPct=parseFloat($('prirazka_in').value);
+    if(!isFinite(nakup) || !isFinite(prirazkaPct)){ zobraz(nakup,null,null,null); return; }
+    prodej = nakup * (1 + prirazkaPct/100);
+    marzePct = prodej>0 ? (prodej-nakup)/prodej*100 : NaN;
+  } else {
+    prodej=parseFloat($('cena_prodej').value);
+    if(!isFinite(nakup) || !isFinite(prodej)){ zobraz(nakup,prodej,null,null); return; }
+    marzePct = prodej>0 ? (prodej-nakup)/prodej*100 : NaN;
+    prirazkaPct = nakup>0 ? (prodej-nakup)/nakup*100 : NaN;
+  }
+  zobraz(nakup, prodej, marzePct, prirazkaPct);
+}
+
+function zobraz(nakup, prodej, marzePct, prirazkaPct){
+  $('vNakup').textContent = isFinite(nakup) ? fmt(nakup) : '–';
+  $('vProdej').textContent = isFinite(prodej) ? fmt(prodej) : '–';
+  $('vProdejDph').textContent = isFinite(prodej) ? fmt(prodej*(1+sazba/100)) : '–';
+  $('vZisk').textContent = (isFinite(nakup)&&isFinite(prodej)) ? fmt(prodej-nakup) : '–';
+  $('vMarze').textContent = isFinite(marzePct) ? fmtPct(marzePct) : '–';
+  $('vPrirazka').textContent = isFinite(prirazkaPct) ? fmtPct(prirazkaPct) : '–';
+}
+
+['cena_nakup','marze_in','prirazka_in','cena_prodej'].forEach(id=>$(id).addEventListener('input', vypocitej));
+vypocitej();
+</script>
+</body>
+</html>

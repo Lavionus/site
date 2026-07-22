@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📚 Generátor citací</title>
+<link rel="stylesheet" href="../common.css">
+<script>
+  if (localStorage.getItem('webapp_theme') === 'light') document.documentElement.dataset.theme = 'light';
+</script>
+<style>
+body{background:var(--bg-deep);padding:20px clamp(14px,3vw,40px);min-height:100vh}
+.container{max-width:900px;margin:0 auto}
+h1{font-size:1.5rem;margin-bottom:4px}
+.sub{color:var(--text-muted);font-size:.85rem;margin-bottom:16px}
+.note{background:var(--bg-elevated);border:1px solid var(--border);color:var(--text-muted);padding:10px 14px;border-radius:8px;font-size:.8rem;margin-bottom:18px}
+.card{background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius);padding:20px;margin-bottom:16px}
+.card h2{font-size:.85rem;color:var(--accent);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px}
+label{display:block;font-size:.75rem;color:var(--text-faint);margin-bottom:4px;margin-top:10px}
+label:first-child{margin-top:0}
+input,select,textarea{width:100%;background:var(--bg-input);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:8px 10px;font-size:.88rem;font-family:inherit}
+textarea{resize:vertical;min-height:60px}
+.row{display:flex;gap:12px;flex-wrap:wrap}
+.row>div{flex:1;min-width:150px}
+.btn{background:var(--bg-control);color:var(--text);border:1px solid var(--border-strong);padding:9px 16px;border-radius:6px;cursor:pointer;font-size:.85rem;font-weight:600}
+.btn:hover{background:var(--bg-hover)}
+.btn.primary{background:var(--accent);color:#fff;border-color:var(--accent)}
+.hint{font-size:.74rem;color:var(--text-faint);margin-top:4px}
+
+.toolbar{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:10px}
+.styleToggle{display:flex;gap:6px}
+.styleToggle button{background:var(--bg-elevated);border:1px solid var(--border);color:var(--text-muted);border-radius:14px;padding:5px 14px;font-size:.8rem;cursor:pointer}
+.styleToggle button.active{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+.list{display:flex;flex-direction:column;gap:8px}
+.citItem{background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius);padding:12px 14px;display:flex;justify-content:space-between;align-items:flex-start;gap:10px}
+.citItem .txt{font-size:.88rem;line-height:1.55}
+.citItem .txt i{font-style:italic}
+.citItem .actions{display:flex;gap:6px;flex-shrink:0}
+.citItem .actions button{font-size:.78rem;padding:5px 9px}
+.empty{padding:30px;text-align:center;color:var(--text-faint)}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>📚 Generátor citací</h1>
+  <p class="sub">Vyplň zdroj, přidej do seznamu a spravuj bibliografii ve stylu ISO 690 nebo APA 7. Vše zůstává jen v tomto prohlížeči.</p>
+  <div class="note">Generátor pokrývá nejběžnější případy. U specifických typů zdrojů (normy, patenty, audiovizuální díla…) ověř formát podle aktuální normy nebo pokynů školy/redakce.</div>
+
+  <div class="card">
+    <h2>Nový zdroj</h2>
+    <select id="fTyp">
+      <option value="kniha">Kniha</option>
+      <option value="clanek">Časopisecký / vědecký článek</option>
+      <option value="web">Webová stránka</option>
+      <option value="prace">Kvalifikační práce</option>
+    </select>
+
+    <label>Autoři (jeden na řádek, ve tvaru „Příjmení, Jméno“)</label>
+    <textarea id="fAutori" placeholder="Novák, Jan&#10;Svobodová, Petra"></textarea>
+
+    <label id="lblNazev">Název</label>
+    <input id="fNazev" placeholder="Název knihy / článku / stránky">
+
+    <div id="dynFields"></div>
+
+    <label>Rok vydání / publikace</label>
+    <input id="fRok" placeholder="2024">
+
+    <div class="row" style="margin-top:14px">
+      <button class="btn primary" id="btnAdd" type="button" style="flex:1">+ Přidat do seznamu</button>
+    </div>
+  </div>
+
+  <div class="toolbar">
+    <div class="styleToggle" id="styleToggle">
+      <button data-style="iso" class="active">ISO 690</button>
+      <button data-style="apa">APA 7</button>
+    </div>
+    <div style="display:flex;gap:8px">
+      <button class="btn" id="btnCopyAll">📋 Kopírovat celý seznam</button>
+      <button class="btn" id="btnClearAll">🗑️ Vymazat vše</button>
+    </div>
+  </div>
+
+  <div id="list"></div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const STORAGE_KEY='citations_v1';
+let items=JSON.parse(localStorage.getItem(STORAGE_KEY)||'[]');
+let style='iso';
+
+function save(){localStorage.setItem(STORAGE_KEY,JSON.stringify(items));}
+function esc(s){return (s||'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));}
+
+const FIELDS_BY_TYPE={
+  kniha:[
+    {id:'vydani',label:'Vydání (nepovinné)',ph:'2., přeprac. vyd.'},
+    {id:'misto',label:'Místo vydání',ph:'Praha'},
+    {id:'nakladatel',label:'Nakladatel',ph:'Grada'},
+    {id:'isbn',label:'ISBN (nepovinné)',ph:'978-80-...'}
+  ],
+  clanek:[
+    {id:'casopis',label:'Název časopisu',ph:'Journal of…'},
+    {id:'rocnik',label:'Ročník'},
+    {id:'cislo',label:'Číslo'},
+    {id:'strany',label:'Strany',ph:'15–28'},
+    {id:'doi',label:'DOI (nepovinné)'}
+  ],
+  web:[
+    {id:'nazevWebu',label:'Název webu (nepovinné)',ph:'Wikipedia'},
+    {id:'url',label:'URL'},
+    {id:'datumCitace',label:'Datum citace',type:'date'}
+  ],
+  prace:[
+    {id:'typPrace',label:'Typ práce',ph:'diplomová práce'},
+    {id:'instituce',label:'Instituce',ph:'Univerzita Karlova'},
+    {id:'misto2',label:'Místo'},
+    {id:'vedouci',label:'Vedoucí práce (nepovinné)'}
+  ]
+};
+
+function renderDynFields(){
+  const typ=$('fTyp').value;
+  $('lblNazev').textContent = typ==='clanek' ? 'Název článku' : 'Název';
+  const wrap=$('dynFields');
+  wrap.innerHTML='';
+  (FIELDS_BY_TYPE[typ]||[]).forEach(f=>{
+    const lab=document.createElement('label');
+    lab.textContent=f.label;
+    const inp=document.createElement('input');
+    inp.id='f_'+f.id;
+    if(f.type) inp.type=f.type;
+    if(f.ph) inp.placeholder=f.ph;
+    wrap.appendChild(lab);
+    wrap.appendChild(inp);
+  });
+  if(typ==='web' && !document.getElementById('f_datumCitace').value){
+    document.getElementById('f_datumCitace').value=new Date().toISOString().slice(0,10);
+  }
+}
+$('fTyp').addEventListener('change', renderDynFields);
+
+function parseAuthors(text){
+  return (text||'').split('\n').map(l=>l.trim()).filter(Boolean).map(l=>{
+    const [prijmeni, jmeno]=l.split(',').map(s=>(s||'').trim());
+    return {prijmeni: prijmeni||l, jmeno: jmeno||''};
+  });
+}
+
+function authorsIso(authors){
+  const names=authors.map(a=>`${a.prijmeni.toUpperCase()}${a.jmeno?', '+a.jmeno:''}`);
+  if(names.length===0) return '';
+  if(names.length===1) return names[0];
+  if(names.length===2) return names[0]+' a '+names[1];
+  return names.slice(0,-1).join(', ')+' a '+names[names.length-1];
+}
+function authorsApa(authors){
+  const names=authors.map(a=>`${a.prijmeni}${a.jmeno? ', '+a.jmeno.charAt(0).toUpperCase()+'.':''}`);
+  if(names.length===0) return '';
+  if(names.length===1) return names[0];
+  if(names.length===2) return names[0]+' & '+names[1];
+  return names.slice(0,-1).join(', ')+', & '+names[names.length-1];
+}
+
+function fmtCitation(item, sty){
+  const a=parseAuthors(item.autoriRaw);
+  const auIso=authorsIso(a), auApa=authorsApa(a);
+  const d=item.data, rok=item.rok||'n.d.';
+  if(item.typ==='kniha'){
+    if(sty==='iso') return `${auIso}. <i>${esc(item.nazev)}</i>. ${d.vydani?esc(d.vydani)+'. ':''}${d.misto?esc(d.misto)+': ':''}${d.nakladatel?esc(d.nakladatel)+', ':''}${esc(rok)}.${d.isbn?' ISBN '+esc(d.isbn)+'.':''}`;
+    return `${auApa} (${esc(rok)}). <i>${esc(item.nazev)}</i>. ${esc(d.nakladatel||'')}.`;
+  }
+  if(item.typ==='clanek'){
+    if(sty==='iso') return `${auIso}. ${esc(item.nazev)}. <i>${esc(d.casopis||'')}</i>, ${esc(rok)}, roč. ${esc(d.rocnik||'')}, č. ${esc(d.cislo||'')}, s. ${esc(d.strany||'')}.${d.doi?' DOI: '+esc(d.doi)+'.':''}`;
+    return `${auApa} (${esc(rok)}). ${esc(item.nazev)}. <i>${esc(d.casopis||'')}</i>, ${esc(d.rocnik||'')}(${esc(d.cislo||'')}), ${esc(d.strany||'')}.${d.doi?' https://doi.org/'+esc(d.doi):''}`;
+  }
+  if(item.typ==='web'){
+    if(sty==='iso') return `${auIso}. <i>${esc(item.nazev)}</i> [online]. ${esc(rok)}${rok!=='n.d.'?'. ':''}[cit. ${esc(d.datumCitace||'')}]. Dostupné z: ${esc(d.url||'')}`;
+    return `${auApa} (${esc(rok)}). ${esc(item.nazev)}. ${d.nazevWebu?esc(d.nazevWebu)+'. ':''}${esc(d.url||'')}`;
+  }
+  if(item.typ==='prace'){
+    if(sty==='iso') return `${auIso}. <i>${esc(item.nazev)}</i>. ${esc(d.typPrace||'Kvalifikační práce')}. ${esc(d.misto2||'')}: ${esc(d.instituce||'')}, ${esc(rok)}.${d.vedouci?' Vedoucí práce '+esc(d.vedouci)+'.':''}`;
+    return `${auApa} (${esc(rok)}). <i>${esc(item.nazev)}</i> [${esc(d.typPrace||'kvalifikační práce')}, ${esc(d.instituce||'')}].`;
+  }
+  return '';
+}
+
+$('btnAdd').addEventListener('click', ()=>{
+  const typ=$('fTyp').value;
+  const nazev=$('fNazev').value.trim();
+  const autoriRaw=$('fAutori').value.trim();
+  if(!nazev){ alert('Vyplň název zdroje.'); return; }
+  const d={};
+  (FIELDS_BY_TYPE[typ]||[]).forEach(f=>{ const el=document.getElementById('f_'+f.id); d[f.id]=el?el.value.trim():''; });
+  items.push({id:'c'+Date.now()+Math.random().toString(36).slice(2,6), typ, nazev, autoriRaw, rok:$('fRok').value.trim(), data:d});
+  save();
+  $('fNazev').value=''; $('fAutori').value=''; $('fRok').value='';
+  renderDynFields();
+  renderList();
+});
+
+function renderList(){
+  if(!items.length){
+    $('list').innerHTML='<div class="empty">Zatím žádné citace. Vyplň formulář výše a přidej první zdroj.</div>';
+    return;
+  }
+  const sorted=[...items].sort((a,b)=>{
+    const an=parseAuthors(a.autoriRaw)[0]?.prijmeni||a.nazev;
+    const bn=parseAuthors(b.autoriRaw)[0]?.prijmeni||b.nazev;
+    return an.localeCompare(bn,'cs');
+  });
+  $('list').innerHTML='<div class="list">'+sorted.map(it=>`
+    <div class="citItem" data-id="${it.id}">
+      <div class="txt">${fmtCitation(it, style)}</div>
+      <div class="actions">
+        <button class="btn copyOne">📋</button>
+        <button class="btn delOne" style="color:var(--danger)">🗑️</button>
+      </div>
+    </div>`).join('')+'</div>';
+
+  $('list').querySelectorAll('.citItem').forEach(card=>{
+    const id=card.dataset.id;
+    card.querySelector('.copyOne').onclick=(e)=>{
+      const it=items.find(x=>x.id===id);
+      const plain=card.querySelector('.txt').textContent;
+      navigator.clipboard.writeText(plain);
+      e.target.textContent='✅';
+      setTimeout(()=>{e.target.textContent='📋';},1000);
+    };
+    card.querySelector('.delOne').onclick=()=>{
+      items=items.filter(x=>x.id!==id);
+      save(); renderList();
+    };
+  });
+}
+
+$('styleToggle').addEventListener('click', e=>{
+  const btn=e.target.closest('button'); if(!btn)return;
+  $('styleToggle').querySelectorAll('button').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  style=btn.dataset.style;
+  renderList();
+});
+
+$('btnCopyAll').addEventListener('click', ()=>{
+  if(!items.length)return;
+  const sorted=[...items].sort((a,b)=>{
+    const an=parseAuthors(a.autoriRaw)[0]?.prijmeni||a.nazev;
+    const bn=parseAuthors(b.autoriRaw)[0]?.prijmeni||b.nazev;
+    return an.localeCompare(bn,'cs');
+  });
+  const text=sorted.map(it=>fmtCitation(it, style).replace(/<\/?i>/g,'')).join('\n\n');
+  navigator.clipboard.writeText(text);
+  const btn=$('btnCopyAll'); const orig=btn.textContent;
+  btn.textContent='✅ Zkopírováno'; setTimeout(()=>{btn.textContent=orig;},1200);
+});
+$('btnClearAll').addEventListener('click', ()=>{
+  if(!items.length)return;
+  if(!confirm('Opravdu smazat celý seznam citací?'))return;
+  items=[]; save(); renderList();
+});
+
+renderDynFields();
+renderList();
+</script>
+</body>
+</html>

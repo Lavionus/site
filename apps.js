@@ -13,6 +13,7 @@ const KATALOG_SKUPINY = [
   { id: 'vysetrovani',  label: '🕵️ Vyšetřování' },
   { id: 'vareni',       label: '🍳 Vaření & recepty' },
   { id: 'dokumenty',    label: '📜 Právo & dokumenty' },
+  { id: 'duchovno',     label: '📖 Duchovní život' },
   { id: 'ostatni',      label: '✉️ Ostatní' },
 ];
 
@@ -56,6 +57,11 @@ const KATALOG_SEKCE = [
         ]
       },
       {
+        "soubor": "obsah/password_vault.html",
+        "nazev": "🔐 Trezor hesel",
+        "tagy": ["heslo", "šifrování", "přihlašovací údaje", "login", "správce hesel"]
+      },
+      {
         "soubor": "obsah/notes_graph.html",
         "nazev": "🕸️ Zettelkasten (propojené poznámky)",
         "tagy": [
@@ -87,6 +93,11 @@ const KATALOG_SEKCE = [
       {
         "soubor": "obsah/name_gen.html",
         "nazev": "🎲 Generátor jmen"
+      },
+      {
+        "soubor": "obsah/print_editor.html",
+        "nazev": "🖨️ Editor pro tisk a export",
+        "tagy": ["tisk", "markdown", "export", "html editor", "wysiwyg", "formátování"]
       }
     ]
   },
@@ -295,6 +306,11 @@ const KATALOG_SEKCE = [
         ]
       },
       {
+        "soubor": "obsah/margin_calculator.html",
+        "nazev": "🧾 Kalkulačka marže a cenotvorby",
+        "tagy": ["marže", "přirážka", "markup", "cenotvorba", "prodejní cena"]
+      },
+      {
         "soubor": "obsah/net_salary.html",
         "nazev": "💵 Čistá mzda ČR",
         "tagy": [
@@ -392,6 +408,11 @@ const KATALOG_SEKCE = [
           "připojení",
           "qr"
         ]
+      },
+      {
+        "soubor": "obsah/snippet_manager.html",
+        "nazev": "📋 Snippet manager",
+        "tagy": ["šablony", "textové bloky", "e-mail", "rychlé odpovědi", "clipboard"]
       }
     ]
   },
@@ -1392,6 +1413,11 @@ const KATALOG_SEKCE = [
         ]
       },
       {
+        "soubor": "obsah/shortcuts_reference.html",
+        "nazev": "⌨️ Přehled klávesových zkratek",
+        "tagy": ["excel", "vs code", "photoshop", "prohlížeč", "hotkeys", "kombinace kláves"]
+      },
+      {
         "soubor": "obsah/env_gen.html",
         "nazev": "⚙️ Generátor .env souborů",
         "tagy": [
@@ -1891,6 +1917,11 @@ const KATALOG_SEKCE = [
         "soubor": "obsah/edu_progress.html",
         "nazev": "🏅 Studijní deník a odznaky",
         "tagy": ["pokrok", "gamifikace", "streak", "odznaky", "návyk"]
+      },
+      {
+        "soubor": "obsah/citation_generator.html",
+        "nazev": "📚 Generátor citací",
+        "tagy": ["citace", "bibliografie", "iso 690", "apa", "seminární práce", "zdroje"]
       }
     ]
   },
@@ -2205,6 +2236,39 @@ const KATALOG_SEKCE = [
         "soubor": "obsah/household_docs.html",
         "nazev": "📜 Vzory dokumentů pro domácnost",
         "tagy": ["plná moc", "výpověď z nájmu", "půjčka", "reklamace", "smlouva"]
+      }
+    ]
+  },
+  {
+    "nazev": "📖 Studium Bible",
+    "skupina": "duchovno",
+    "polozky": [
+      {
+        "soubor": "obsah/bible_study.html",
+        "nazev": "📖 Studium Bible",
+        "tagy": ["bible", "plán čtení", "verše", "zapamatování", "studijní deník", "víra"]
+      }
+    ]
+  },
+  {
+    "nazev": "🔮 Výklad karet",
+    "skupina": "duchovno",
+    "polozky": [
+      {
+        "soubor": "obsah/tarot_reading.html",
+        "nazev": "🔮 Výklad karet",
+        "tagy": ["tarot", "karty", "výklad", "arkána", "věštění", "deník výkladů"]
+      }
+    ]
+  },
+  {
+    "nazev": "🌿 Pohanské svátky",
+    "skupina": "duchovno",
+    "polozky": [
+      {
+        "soubor": "obsah/pagan_rituals.html",
+        "nazev": "🌿 Pohanské svátky a rituály",
+        "tagy": ["keltové", "vikingové", "slované", "baltové", "řekové", "římané", "egypťané", "šintoismus", "jorubové", "aztékové", "kolo roku", "samhain", "yule", "blót", "svátky", "rituály"]
       }
     ]
   },

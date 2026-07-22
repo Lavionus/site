@@ -138,12 +138,47 @@
       box-shadow: 0 0 0 2px var(--accent-soft);
     }
 
+    /* Sbalovací hlavička nad pilulkami kategorií */
+    .skupiny-toggle {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      width: 100%;
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 0.78rem;
+      font-weight: 600;
+      padding: 6px 10px;
+      cursor: pointer;
+      font-family: inherit;
+    }
+
+    .skupiny-toggle:hover {
+      color: var(--text);
+    }
+
+    .skupiny-toggle .sipka {
+      margin-left: auto;
+      font-size: 0.7rem;
+      color: var(--text-faint);
+      transition: transform 0.2s ease;
+    }
+
+    .skupiny-toggle[aria-expanded="true"] .sipka {
+      transform: rotate(180deg);
+    }
+
     /* Filtrovací pilulky nadřazených témat */
     .skupiny {
-      display: flex;
+      display: none;
       flex-wrap: wrap;
       gap: 6px;
       padding: 4px 10px 10px 10px;
+    }
+
+    .skupiny.show {
+      display: flex;
     }
 
     .skupina-pill {
@@ -317,21 +352,6 @@
       flex-wrap: wrap;
     }
 
-    .ovladani #hledat {
-      background-color: var(--bg-input);
-      border: 1px solid var(--border);
-      border-radius: 6px;
-      color: var(--text);
-      padding: 6px 12px;
-      font-size: 0.85rem;
-      width: 200px;
-    }
-
-    .ovladani #hledat:focus {
-      outline: none;
-      border-color: var(--accent);
-    }
-
     .ovladani button {
       background-color: var(--bg-control);
       border: 1px solid var(--border-strong);
@@ -360,7 +380,6 @@
     .sekce li.skryto { display: none; }
 
     @media (max-width: 768px) {
-      .ovladani #hledat { display: none; }
       .ovladani .jen-desktop { display: none; }
     }
 
@@ -413,7 +432,6 @@
         <h1>Webový systém</h1>
       </div>
       <div class="ovladani">
-        <input type="search" id="hledat" placeholder="🔍 Hledat nástroj… (Ctrl+K)" autocomplete="off" />
         <button id="btnDomu" title="Úvodní přehled">🏠</button>
         <button id="btnNoveOkno" title="Otevřít aktuální aplikaci v novém okně">🗗</button>
         <button id="btnTema" title="Přepnout světlý / tmavý režim">🌓</button>
@@ -428,8 +446,12 @@
       <nav class="menu" id="hlavniMenu">
         <div class="menu-top">
           <div class="menu-search-wrap">
-            <input type="search" id="hledatMenu" class="menu-search" placeholder="🔍 Hledat aplikaci…" autocomplete="off" />
+            <input type="search" id="hledatMenu" class="menu-search" placeholder="🔍 Hledat aplikaci… (Ctrl+K)" autocomplete="off" />
           </div>
+          <button class="skupiny-toggle" id="skupinyToggle" aria-expanded="false" aria-controls="skupiny">
+            <span id="skupinyToggleLabel">📂 Kategorie: Vše</span>
+            <span class="sipka">▾</span>
+          </button>
           <div class="skupiny" id="skupiny"></div>
         </div>
         <div id="menuSekce"></div>
@@ -457,19 +479,37 @@
     const KEY_OBLIBENE = 'webapp_oblibene';
     const KEY_NEDAVNE = 'webapp_nedavne';
     const KEY_TEMA = 'webapp_theme';
+    const KEY_SKUPINY_OPEN = 'webapp_skupiny_open';
 
     const iframe = document.querySelector('iframe[name="okno"]');
     const menuEl = document.getElementById('hlavniMenu');
     const menuSekceEl = document.getElementById('menuSekce');
     const skupinyEl = document.getElementById('skupiny');
+    const skupinyToggle = document.getElementById('skupinyToggle');
+    const skupinyToggleLabel = document.getElementById('skupinyToggleLabel');
     const bezVysledku = document.getElementById('bezVysledku');
+
+    // Pilulky kategorií jsou defaultně sbalené — zabíraly moc místa nahoře v menu.
+    function setSkupinyOpen(open) {
+      skupinyEl.classList.toggle('show', open);
+      skupinyToggle.setAttribute('aria-expanded', String(open));
+      localStorage.setItem(KEY_SKUPINY_OPEN, open ? '1' : '0');
+    }
+    setSkupinyOpen(localStorage.getItem(KEY_SKUPINY_OPEN) === '1');
+    skupinyToggle.addEventListener('click', () => {
+      setSkupinyOpen(!skupinyEl.classList.contains('show'));
+    });
 
     const nactiJson = (key, def) => {
       try { return JSON.parse(localStorage.getItem(key)) ?? def; }
       catch { return def; }
     };
 
-    let collapsedSet = new Set(nactiJson(KEY_COLLAPSE, []));
+    // Při první návštěvě (žádné uložené preference) start se všemi sekcemi
+    // sbalenými — jinak by uvítal dlouhý sloupec stovek rozbalených položek.
+    let collapsedSet = localStorage.getItem(KEY_COLLAPSE) === null
+      ? new Set(KATALOG_SEKCE.map(s => s.nazev))
+      : new Set(nactiJson(KEY_COLLAPSE, []));
     let aktivniSkupina = localStorage.getItem(KEY_SKUPINA) || 'vse';
     let oblibene = nactiJson(KEY_OBLIBENE, []);
     let nedavne = nactiJson(KEY_NEDAVNE, []);
@@ -671,6 +711,8 @@
     }
     function updatePillState() {
       pills.forEach(p => p.classList.toggle('active', p.dataset.skupina === aktivniSkupina));
+      const aktivni = pills.find(p => p.dataset.skupina === aktivniSkupina);
+      if (aktivni) skupinyToggleLabel.textContent = '📂 Kategorie: ' + aktivni.querySelector('span').textContent;
     }
     function makePill(id, label) {
       const b = document.createElement('button');
@@ -695,9 +737,8 @@
     updatePillState();
 
     /* ---- Hledání (hlavička + menu) + filtr skupin ---- */
-    const hledat = document.getElementById('hledat');
     const hledatMenu = document.getElementById('hledatMenu');
-    const searchInputs = [hledat, hledatMenu];
+    const searchInputs = [hledatMenu];
 
     function nastavDotaz(val) {
       searchInputs.forEach(i => { i.value = val; });
