@@ -1239,6 +1239,18 @@ const KATALOG_SEKCE = [
         ]
       },
       {
+        "soubor": "obsah/rafter_spacing_calc.html",
+        "nazev": "📐 Rozteč krokví / trámků",
+        "tagy": [
+          "krokev",
+          "rozteč",
+          "pozednice",
+          "krov",
+          "tesařina",
+          "rozestup"
+        ]
+      },
+      {
         "soubor": "obsah/wooden_shed_3d.html",
         "nazev": "🪵 Dřevěná stavba – 3D a kusovník",
         "tagy": [

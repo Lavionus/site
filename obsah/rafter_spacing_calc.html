@@ -1,0 +1,411 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📐 Rozteč krokví / trámků</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1a1a1a;color:#e0e0e0;min-height:100vh;padding:20px}
+.container{max-width:900px;margin:0 auto}
+h1{font-size:1.6rem;margin-bottom:18px;font-weight:600;text-align:center}
+.card{background:#2a2a2a;border:1px solid #404040;border-radius:8px;padding:22px;margin-bottom:20px}
+h2{font-size:1.05rem;color:#6aa6fd;margin-bottom:14px}
+label{display:block;font-size:.8rem;color:#888;margin-bottom:4px}
+.grid{display:grid;grid-template-columns:1fr 1fr 1fr 1fr;gap:16px}
+@media(max-width:700px){.grid{grid-template-columns:1fr 1fr}}
+.field label{display:flex;align-items:center;gap:6px;font-size:.78rem;color:#9aa0a6;margin-bottom:7px;font-weight:600;letter-spacing:.2px;text-transform:uppercase}
+.field label .ic{font-size:.95rem}
+.input-unit{position:relative}
+.input-unit input{width:100%;background:#333;border:1.5px solid #4a4a4a;border-radius:8px;color:#f2f2f2;padding:12px 46px 12px 13px;font-size:1.05rem;font-variant-numeric:tabular-nums;transition:border-color .15s,box-shadow .15s,background .15s}
+.input-unit input:hover{border-color:#666}
+.input-unit input:focus{outline:none;border-color:#6aa6fd;background:#363636;box-shadow:0 0 0 3px rgba(106,166,253,.18)}
+.input-unit .unit{position:absolute;right:13px;top:50%;transform:translateY(-50%);color:#8a8a8a;font-size:.75rem;font-weight:600;pointer-events:none;user-select:none}
+input[type=number]{color-scheme:dark}
+.res-row{display:flex;justify-content:space-between;padding:10px 0;border-bottom:1px solid #333;font-size:.95rem}
+.res-row:last-child{border:none}
+.res-row b{color:#4caf50;font-size:1.05rem}
+.note{font-size:.78rem;color:#666;margin-top:10px;line-height:1.5}
+.error{background:#3a2323;border:1px solid #a34;color:#f5a3a3;border-radius:6px;padding:12px 14px;font-size:.88rem;line-height:1.5}
+.warn{background:#3a3323;border:1px solid #a93;color:#f5d9a3;border-radius:6px;padding:10px 14px;font-size:.85rem;line-height:1.5;margin-top:10px}
+.diagram-wrap{overflow-x:auto}
+svg{display:block;min-width:640px}
+table{width:100%;border-collapse:collapse;font-size:.88rem;margin-top:6px}
+th{text-align:left;color:#888;padding:8px;font-size:.75rem;text-transform:uppercase;border-bottom:2px solid #404040}
+td{padding:7px 8px;border-bottom:1px solid #333}
+td.num{text-align:right;font-variant-numeric:tabular-nums}
+.modes{display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap}
+.modeBtn{padding:9px 16px;background:#2a2a2a;border:1px solid #404040;border-radius:6px;color:#bbb;cursor:pointer;font-size:.85rem}
+.modeBtn.active{background:#6aa6fd;color:#fff;border-color:#6aa6fd}
+.toolbar{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:4px}
+.btn{padding:9px 14px;background:#404040;border:1px solid #555;border-radius:6px;color:#e0e0e0;cursor:pointer;font-size:.85rem}
+.btn:hover{background:#4a4a4a}
+.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%);background:#4caf50;color:#fff;padding:10px 18px;border-radius:6px;font-size:.85rem;opacity:0;pointer-events:none;transition:opacity .2s}
+.toast.show{opacity:1}
+@media print{.modes,.toolbar,.no-print{display:none!important}body{background:#fff;color:#000;padding:0}.card{background:#fff;border:1px solid #ccc}}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>📐 Rozteč krokví / trámků na pozednici</h1>
+
+  <div class="toolbar no-print">
+    <button type="button" class="btn" id="shareBtn">🔗 Kopírovat odkaz</button>
+    <button type="button" class="btn" id="csvBtn">📋 Export CSV</button>
+    <button type="button" class="btn" id="printBtn">🖨️ Tisk</button>
+  </div>
+
+  <div class="card">
+    <h2>Zadání</h2>
+    <div class="modes" id="calcModeToggle">
+      <button type="button" class="modeBtn active" data-mode="count">Podle počtu krokví</button>
+      <button type="button" class="modeBtn" data-mode="pitch">Podle max. rozteče</button>
+    </div>
+    <div class="grid">
+      <div class="field">
+        <label><span class="ic">📏</span>Délka pozednice</label>
+        <div class="input-unit"><input type="number" id="length" value="6000" min="1" step="1"><span class="unit">mm</span></div>
+      </div>
+      <div class="field">
+        <label><span class="ic">⬅️</span>Okraj vlevo</label>
+        <div class="input-unit"><input type="number" id="marginL" value="50" min="0" step="1"><span class="unit">mm</span></div>
+      </div>
+      <div class="field">
+        <label><span class="ic">➡️</span>Okraj vpravo</label>
+        <div class="input-unit"><input type="number" id="marginR" value="50" min="0" step="1"><span class="unit">mm</span></div>
+      </div>
+      <div class="field">
+        <label><span class="ic">🪵</span>Tloušťka krokve</label>
+        <div class="input-unit"><input type="number" id="thickness" value="80" min="1" step="1"><span class="unit">mm</span></div>
+      </div>
+      <div class="field" id="countWrap">
+        <label><span class="ic">🔢</span>Počet krokví</label>
+        <div class="input-unit"><input type="number" id="count" value="9" min="1" step="1"><span class="unit">ks</span></div>
+      </div>
+      <div class="field" id="maxPitchWrap" style="display:none">
+        <label><span class="ic">↔️</span>Max. rozteč osa–osa</label>
+        <div class="input-unit"><input type="number" id="maxPitch" value="900" min="1" step="1"><span class="unit">mm</span></div>
+      </div>
+    </div>
+    <label style="display:flex;align-items:center;gap:8px;font-size:.85rem;color:#ccc;margin-top:6px;cursor:pointer">
+      <input type="checkbox" id="roundMm" style="width:16px;height:16px;margin:0;accent-color:#6aa6fd;cursor:pointer">
+      Zaokrouhlit výsledné rozteče na celé mm
+    </label>
+    <p class="note">Okraj = odsazení první, resp. poslední krokve od kraje pozednice (osazení pozednice, přesah, technologická mezera apod.). V režimu „Podle počtu krokví" program rovnoměrně rozmístí zadaný počet krokví. V režimu „Podle max. rozteče" sám dopočítá nejmenší počet krokví, aby rozteč nepřekročila zadanou hodnotu. Při zaokrouhlení na celé mm se jednotlivé rozteče mohou lišit o ±1 mm — krajní krokve zůstávají přesně u okrajů.</p>
+  </div>
+
+  <div class="card" id="resultCard">
+    <h2>Výsledek</h2>
+    <div id="resultBody"></div>
+  </div>
+
+  <div class="card" id="diagramCard">
+    <h2>Grafické znázornění</h2>
+    <div class="diagram-wrap"><svg id="diagram" viewBox="0 0 1000 265" preserveAspectRatio="xMinYMin meet"></svg></div>
+  </div>
+
+  <div class="card">
+    <div style="display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:10px;margin-bottom:14px">
+      <h2 id="posHeading" style="margin-bottom:0">Poloha jednotlivých krokví od levého okraje pozednice</h2>
+      <div class="modes" id="edgeToggle" style="margin-bottom:0">
+        <button type="button" class="modeBtn active" data-edge="left">Od levého okraje</button>
+        <button type="button" class="modeBtn" data-edge="right">Od pravého okraje</button>
+      </div>
+    </div>
+    <table id="posTable"></table>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+const $=id=>document.getElementById(id);
+const fmt=n=>(Math.round(n*100)/100).toLocaleString('cs-CZ');
+const round2=n=>Math.round(n*100)/100;
+const TYPICAL_MAX_PITCH=900;
+
+let mode='count';
+let edge='left';
+
+function showToast(msg){
+  const t=$('toast');
+  t.textContent=msg;
+  t.classList.add('show');
+  clearTimeout(showToast._h);
+  showToast._h=setTimeout(()=>t.classList.remove('show'),2000);
+}
+
+// Spočte rozmístění pro daný pevný počet krokví n. Vrací {error} nebo výsledek.
+// roundMm: zaokrouhlí polohu (start) každé krokve na celé mm nezávisle — chyba se
+// nekumuluje, krajní krokve zůstávají přesně u okrajů, jednotlivé rozteče se pak
+// mohou lišit max o ±1 mm.
+function layoutForN(L,mL,mR,t,n,roundMm){
+  if(!(L>0)||mL<0||mR<0||!(t>0)||!(n>=1)) return {error:'Zadejte platné kladné hodnoty.'};
+  const available=L-mL-mR;
+  if(available<=0) return {error:`Okraje (${fmt(mL)} + ${fmt(mR)} mm) jsou větší nebo rovny celkové délce (${fmt(L)} mm). Není kde rozmístit krokve.`};
+  const usedByBeams=n*t;
+  if(usedByBeams>available){
+    const missing=usedByBeams-available;
+    return {error:`${n}× krokev o tloušťce ${fmt(t)} mm (celkem ${fmt(usedByBeams)} mm) se mezi okraje (volná plocha ${fmt(available)} mm) nevejde. Chybí ${fmt(missing)} mm — snižte počet krokví, jejich tloušťku, nebo zvětšete délku pozednice.`};
+  }
+  const positions=[];
+  let pitch=null, gap=null;
+  if(n===1){
+    let start=mL+(available-t)/2;
+    if(roundMm) start=Math.round(start);
+    positions.push({start,center:start+t/2,end:start+t});
+  } else {
+    gap=(available-usedByBeams)/(n-1);
+    pitch=gap+t;
+    for(let i=0;i<n;i++){
+      let start=mL+i*pitch;
+      if(roundMm) start=Math.round(start);
+      positions.push({start,center:start+t/2,end:start+t});
+    }
+  }
+  // skutečné rozteče/mezery mezi sousedy (po zaokrouhlení se mohou lišit o 1 mm)
+  let pitchMin=null,pitchMax=null,gapMin=null,gapMax=null;
+  if(n>1){
+    const pitches=[];
+    for(let i=0;i<positions.length-1;i++) pitches.push(positions[i+1].start-positions[i].start);
+    pitchMin=Math.min(...pitches);pitchMax=Math.max(...pitches);
+    gapMin=pitchMin-t;gapMax=pitchMax-t;
+  }
+  return {L,mL,mR,t,n,available,usedByBeams,positions,pitch,gap,pitchMin,pitchMax,gapMin,gapMax};
+}
+
+// Najde nejmenší počet krokví n tak, aby rozteč osa–osa nepřekročila maxPitch.
+function minCountForPitch(L,mL,mR,t,maxPitch){
+  if(!(L>0)||mL<0||mR<0||!(t>0)) return {error:'Zadejte platné kladné hodnoty.'};
+  if(!(maxPitch>0)) return {error:'Zadejte kladnou hodnotu max. rozteče.'};
+  const available=L-mL-mR;
+  if(available<=0) return {error:`Okraje (${fmt(mL)} + ${fmt(mR)} mm) jsou větší nebo rovny celkové délce (${fmt(L)} mm). Není kde rozmístit krokve.`};
+  if(t>available) return {error:`Tloušťka krokve (${fmt(t)} mm) je větší než volná plocha mezi okraji (${fmt(available)} mm).`};
+  const nMaxFit=Math.floor(available/t);
+  if(nMaxFit<2) return {error:'Do volné plochy se vejde nanejvýš 1 krokev — rozteč nelze počítat.'};
+  // pitch(n) = (available - t) / (n - 1), monotónně klesá s rostoucím n
+  let n=Math.max(2,Math.ceil((available-t)/maxPitch - 1e-9)+1);
+  if(n>nMaxFit){
+    const minPitch=(available-t)/(nMaxFit-1);
+    return {error:`Požadovanou rozteč (≤ ${fmt(maxPitch)} mm) nelze splnit — do plochy se vejde maximálně ${nMaxFit} krokví (na dotyk) s roztečí ${fmt(minPitch)} mm. Zmenšete tloušťku krokve, nebo zvětšete délku pozednice.`};
+  }
+  return {n};
+}
+
+let lastResult=null;
+
+function compute(){
+  const L=+$('length').value, mL=+$('marginL').value, mR=+$('marginR').value, t=+$('thickness').value;
+  const roundMm=$('roundMm').checked;
+  const resBody=$('resultBody'), posTable=$('posTable'), svg=$('diagram');
+  lastResult=null;
+
+  let n, extraNote='';
+  if(mode==='pitch'){
+    const maxPitch=+$('maxPitch').value;
+    const found=minCountForPitch(L,mL,mR,t,maxPitch);
+    if(found.error){resBody.innerHTML=`<div class="error">${found.error}</div>`;posTable.innerHTML='';svg.innerHTML='';return;}
+    n=found.n;
+    extraNote=`<div class="res-row"><span>Potřebný počet krokví (rozteč ≤ ${fmt(maxPitch)} mm)</span><b>${n}</b></div>`;
+  } else {
+    n=Math.round(+$('count').value);
+  }
+
+  const r=layoutForN(L,mL,mR,t,n,roundMm);
+  if(r.error){
+    resBody.innerHTML=`<div class="error">${r.error}</div>`;
+    posTable.innerHTML='';svg.innerHTML='';return;
+  }
+  lastResult=r;
+
+  const pitchTxt=r.pitchMin===r.pitchMax?fmt(r.pitchMin)+' mm':fmt(r.pitchMin)+'–'+fmt(r.pitchMax)+' mm';
+  const gapTxt=r.gapMin===r.gapMax?fmt(r.gapMin)+' mm':fmt(r.gapMin)+'–'+fmt(r.gapMax)+' mm';
+
+  let html=extraNote;
+  html+=`<div class="res-row"><span>Volná plocha mezi okraji</span><b>${fmt(r.available)} mm</b></div>`;
+  html+=`<div class="res-row"><span>Součet tloušťek krokví (${r.n}×${fmt(t)} mm)</span><b>${fmt(r.usedByBeams)} mm</b></div>`;
+  if(r.n>1){
+    html+=`<div class="res-row"><span>Rozteč (osa – osa sousedních krokví)</span><b>${pitchTxt}</b></div>`;
+    html+=`<div class="res-row"><span>Světlá mezera mezi krokvemi</span><b>${gapTxt}</b></div>`;
+  } else {
+    html+=`<div class="res-row"><span>Rozteč</span><b>— (pouze 1 krokev, vycentrována)</b></div>`;
+  }
+  if(r.pitchMax && r.pitchMax>TYPICAL_MAX_PITCH){
+    html+=`<div class="warn">⚠️ Rozteč ${pitchTxt} překračuje běžně používanou mez cca ${TYPICAL_MAX_PITCH} mm pro krokve — ověřte dle statiky / průřezu krokví, zda vyhoví.</div>`;
+  }
+  resBody.innerHTML=html;
+
+  $('posHeading').textContent='Poloha jednotlivých krokví od '+(edge==='right'?'pravého':'levého')+' okraje pozednice';
+  posTable.innerHTML=`<tr><th>#</th><th>Začátek (mm)</th><th>Střed / osa (mm)</th><th>Konec (mm)</th></tr>`+
+    r.positions.map((p,i)=>{
+      const s=edge==='right'?L-p.end:p.start;
+      const c=edge==='right'?L-p.center:p.center;
+      const e=edge==='right'?L-p.start:p.end;
+      return `<tr><td>${i+1}</td><td class="num">${fmt(s)}</td><td class="num">${fmt(c)}</td><td class="num">${fmt(e)}</td></tr>`;
+    }).join('');
+
+  drawDiagram(L,mL,mR,t,r.positions);
+}
+
+function drawDiagram(L,mL,mR,t,positions){
+  const svg=$('diagram');
+  const W=1000, padX=20, barY=110, barH=50;
+  const scale=(W-2*padX)/L;
+  const x=v=>padX+v*scale;
+  let parts=[];
+
+  // generic dimension line with end ticks and centered label above it
+  function dim(x1,x2,y,label,color){
+    parts.push(`<line x1="${x1}" y1="${y}" x2="${x2}" y2="${y}" stroke="${color}" stroke-width="1"/>`);
+    parts.push(`<line x1="${x1}" y1="${y-4}" x2="${x1}" y2="${y+4}" stroke="${color}" stroke-width="1"/>`);
+    parts.push(`<line x1="${x2}" y1="${y-4}" x2="${x2}" y2="${y+4}" stroke="${color}" stroke-width="1"/>`);
+    if(label) parts.push(`<text x="${(x1+x2)/2}" y="${y-6}" font-size="10" fill="${color}" text-anchor="middle">${label}</text>`);
+  }
+
+  parts.push(`<rect x="${padX}" y="${barY}" width="${L*scale}" height="${barH}" fill="#333" stroke="#555"/>`);
+  if(mL>0) parts.push(`<rect x="${x(0)}" y="${barY}" width="${mL*scale}" height="${barH}" fill="#4a3a2a" stroke="#6a5a3a"/>`);
+  if(mR>0) parts.push(`<rect x="${x(L-mR)}" y="${barY}" width="${mR*scale}" height="${barH}" fill="#4a3a2a" stroke="#6a5a3a"/>`);
+
+  positions.forEach((p,i)=>{
+    parts.push(`<rect x="${x(p.start)}" y="${barY}" width="${(p.end-p.start)*scale}" height="${barH}" fill="#6aa6fd" stroke="#8fc0ff"/>`);
+    parts.push(`<line x1="${x(p.center)}" y1="${barY-8}" x2="${x(p.center)}" y2="${barY+barH+8}" stroke="#4caf50" stroke-width="1" stroke-dasharray="3,3"/>`);
+    parts.push(`<text x="${x(p.center)}" y="${barY+barH+42}" font-size="11" fill="#999" text-anchor="middle">${i+1}</text>`);
+  });
+
+  // okraje (margins) — nejvyšší řada kót
+  if(mL>0) dim(x(0),x(mL),barY-46,fmt(mL),'#c9a06a');
+  if(mR>0) dim(x(L-mR),x(L),barY-46,fmt(mR),'#c9a06a');
+
+  // rozteč (osa–osa) — kóta pro každý úsek (skutečná hodnota, po zaokrouhlení se může lišit o segment)
+  if(positions.length>1){
+    const y=barY-24;
+    for(let i=0;i<positions.length-1;i++){
+      dim(x(positions[i].center),x(positions[i+1].center),y,fmt(positions[i+1].center-positions[i].center),'#aaa');
+    }
+  }
+
+  // tloušťka krokve — kóta pod prvním prvkem
+  if(positions.length>=1){
+    const p0=positions[0];
+    dim(x(p0.start),x(p0.end),barY+barH+26,fmt(t),'#8fc0ff');
+  }
+  // světlá mezera — kóta mezi 1. a 2. krokví
+  if(positions.length>1){
+    const p0=positions[0], p1=positions[1];
+    dim(x(p0.end),x(p1.start),barY+barH+26,fmt(p1.start-p0.end),'#4caf50');
+  }
+
+  const totalY=barY+barH+66;
+  dim(x(0),x(L),totalY,fmt(L)+' mm','#ccc');
+
+  svg.innerHTML=parts.join('');
+}
+
+const FIELDS=['length','marginL','marginR','thickness','count','maxPitch'];
+const STORAGE_KEY='rafter_spacing_calc';
+
+function updateModeUI(){
+  document.querySelectorAll('#calcModeToggle .modeBtn').forEach(b=>b.classList.toggle('active',b.dataset.mode===mode));
+  $('countWrap').style.display=mode==='count'?'':'none';
+  $('maxPitchWrap').style.display=mode==='pitch'?'':'none';
+}
+
+function updateEdgeUI(){
+  document.querySelectorAll('#edgeToggle .modeBtn').forEach(b=>b.classList.toggle('active',b.dataset.edge===edge));
+}
+
+function save(){
+  const fields={};
+  FIELDS.forEach(id=>fields[id]=$(id).value);
+  fields.roundMm=$('roundMm').checked?'1':'0';
+  try{localStorage.setItem(STORAGE_KEY,JSON.stringify({mode,edge,fields}));}catch(e){}
+}
+
+function restore(){
+  const params=new URLSearchParams(location.search);
+  let fields=null;
+  if([...params.keys()].length){
+    fields={};
+    FIELDS.forEach(id=>{if(params.has(id))fields[id]=params.get(id);});
+    if(params.has('roundMm')) fields.roundMm=params.get('roundMm');
+    if(params.has('mode')) mode=params.get('mode')==='pitch'?'pitch':'count';
+    if(params.has('edge')) edge=params.get('edge')==='right'?'right':'left';
+  } else {
+    try{
+      const raw=localStorage.getItem(STORAGE_KEY);
+      if(raw){
+        const parsed=JSON.parse(raw);
+        fields=parsed.fields||null;
+        if(parsed.mode) mode=parsed.mode==='pitch'?'pitch':'count';
+        if(parsed.edge) edge=parsed.edge==='right'?'right':'left';
+      }
+    }catch(e){}
+  }
+  if(fields){
+    FIELDS.forEach(id=>{if(fields[id]!==undefined&&fields[id]!=='')$(id).value=fields[id];});
+    if(fields.roundMm!==undefined) $('roundMm').checked=fields.roundMm==='1';
+  }
+}
+
+function buildShareURL(){
+  const params=new URLSearchParams();
+  params.set('mode',mode);
+  params.set('edge',edge);
+  params.set('roundMm',$('roundMm').checked?'1':'0');
+  FIELDS.forEach(id=>params.set(id,$(id).value));
+  return location.origin+location.pathname+'?'+params.toString();
+}
+
+$('shareBtn').addEventListener('click',()=>{
+  const url=buildShareURL();
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(url).then(()=>showToast('Odkaz zkopírován do schránky')).catch(()=>prompt('Zkopírujte odkaz:',url));
+  } else {
+    prompt('Zkopírujte odkaz:',url);
+  }
+});
+
+$('csvBtn').addEventListener('click',()=>{
+  if(!lastResult){showToast('Nejsou žádná platná data k exportu');return;}
+  const L=lastResult.L;
+  let csv='#,Zacatek (mm),Stred (mm),Konec (mm)\n'+
+    lastResult.positions.map((p,i)=>{
+      const s=edge==='right'?L-p.end:p.start;
+      const c=edge==='right'?L-p.center:p.center;
+      const e=edge==='right'?L-p.start:p.end;
+      return `${i+1},${round2(s)},${round2(c)},${round2(e)}`;
+    }).join('\n');
+  const blob=new Blob([csv],{type:'text/csv;charset=utf-8'});
+  const url=URL.createObjectURL(blob);
+  const a=document.createElement('a');
+  a.href=url;a.download='krokve_pozice.csv';
+  document.body.appendChild(a);a.click();a.remove();
+  URL.revokeObjectURL(url);
+});
+
+$('printBtn').addEventListener('click',()=>window.print());
+
+document.querySelectorAll('#calcModeToggle .modeBtn').forEach(btn=>btn.addEventListener('click',()=>{
+  mode=btn.dataset.mode;
+  updateModeUI();
+  save();
+  compute();
+}));
+
+document.querySelectorAll('#edgeToggle .modeBtn').forEach(btn=>btn.addEventListener('click',()=>{
+  edge=btn.dataset.edge;
+  updateEdgeUI();
+  save();
+  compute();
+}));
+
+$('roundMm').addEventListener('change',()=>{save();compute();});
+
+restore();
+updateModeUI();
+updateEdgeUI();
+FIELDS.forEach(id=>$(id).addEventListener('input',()=>{save();compute();}));
+compute();
+</script>
+</body>
+</html>
