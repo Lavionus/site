@@ -1678,6 +1678,14 @@
             <div class="condition-detail" id="snowRiskDetail"></div>
           </div>
         </div>
+        <div class="condition-card" id="iceRiskCard" style="display: none;">
+          <div class="condition-icon">🧊</div>
+          <div class="condition-body">
+            <div class="condition-label">Riziko náledí (24 h)</div>
+            <div class="condition-value" id="iceRiskValue">--</div>
+            <div class="condition-detail" id="iceRiskDetail"></div>
+          </div>
+        </div>
         <div class="condition-card" id="uvCard">
           <div class="condition-icon">☀️</div>
           <div class="condition-body">
@@ -1839,6 +1847,10 @@
         <div class="radar-controls">
           <div class="radar-title">📡 Radarové odrazy</div>
           <div class="radar-controls-right">
+            <div class="radar-speed-control">
+              <label for="radarZoom">Zoom: <span id="radarZoomValue">--</span></label>
+              <input type="range" id="radarZoom" min="4" max="19" step="1" value="7">
+            </div>
             <div class="radar-speed-control">
               <label for="radarSpeed">Rychlost: <span id="radarSpeedValue">500</span>ms</label>
               <input type="range" id="radarSpeed" min="100" max="1000" step="50" value="500">
@@ -4087,7 +4099,7 @@
         radarMap.remove();
       }
       
-      radarMap = L.map('radar-map');
+      radarMap = L.map('radar-map', { minZoom: 4 });
 
       radarMap.fitBounds(czechRepublicBounds, {
           padding: [20, 20]
@@ -4103,7 +4115,8 @@
       radarBaseLayers = {
         'Topografická mapa': L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
           attribution: '© OpenTopoMap contributors, SRTM | Map style: © OpenTopoMap (CC-BY-SA)',
-          maxZoom: 17
+          maxZoom: 19,
+          maxNativeZoom: 17 // server nad z17 vrací obrázek "zoom level not supported" – nad touto úrovní jen zvětšíme poslední dostupné dlaždice
         }),
         'OpenStreetMap': L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
           attribution: '© OpenStreetMap contributors',
@@ -4118,11 +4131,28 @@
       radarBaseLayers[getSavedRadarBaseLayer()].addTo(radarMap);
       L.control.layers(radarBaseLayers).addTo(radarMap);
 
+      // Slider pro zoom – zrcadlí a ovládá zoom mapy vedle vestavěných +/- tlačítek
+      const zoomSlider = document.getElementById('radarZoom');
+      const zoomValueEl = document.getElementById('radarZoomValue');
+      const syncZoomSlider = () => {
+        if (!zoomSlider || !zoomValueEl) return;
+        zoomSlider.min = radarMap.getMinZoom();
+        zoomSlider.max = radarMap.getMaxZoom();
+        zoomSlider.value = radarMap.getZoom();
+        zoomValueEl.textContent = radarMap.getZoom();
+      };
+      if (zoomSlider) {
+        syncZoomSlider();
+        zoomSlider.oninput = () => radarMap.setZoom(+zoomSlider.value);
+        radarMap.on('zoomend', syncZoomSlider);
+      }
+
       // Přepnutí podkladu přímo v mapě si zapamatuj (a promítni do nastavení)
       radarMap.on('baselayerchange', e => {
         try { localStorage.setItem('radarBaseLayer', e.name); } catch (err) {}
         const sel = document.getElementById('radarBaseLayerSelect');
         if (sel) sel.value = e.name;
+        syncZoomSlider(); // maxZoom se liší podklad od podkladu
       });
 
       loadRadarData();
@@ -4141,6 +4171,14 @@
         if (radarMap.hasLayer(l)) radarMap.removeLayer(l);
       });
       radarBaseLayers[name].addTo(radarMap);
+      const zoomSlider = document.getElementById('radarZoom');
+      if (zoomSlider) {
+        zoomSlider.min = radarMap.getMinZoom();
+        zoomSlider.max = radarMap.getMaxZoom();
+        zoomSlider.value = radarMap.getZoom();
+        const zoomValueEl = document.getElementById('radarZoomValue');
+        if (zoomValueEl) zoomValueEl.textContent = radarMap.getZoom();
+      }
     }
 
     // Dvě vrstvy pro crossfade animaci (ping-pong A/B)
@@ -4660,7 +4698,7 @@
       const snow = hourly.snowfall;
       const endIdx = Math.min(startIdx + 24, time.length);
 
-      let totalSnow = 0, firstSnowIdx = -1, maxGustDuringSnow = 0, freezingRain = false;
+      let totalSnow = 0, firstSnowIdx = -1, maxGustDuringSnow = 0;
       for (let i = startIdx; i < endIdx; i++) {
         const sf = snow ? (snow[i] || 0) : 0;
         if (sf > 0.05) {
@@ -4669,11 +4707,9 @@
           const g = hourly.gusts ? hourly.gusts[i] : null;
           if (g != null && g > maxGustDuringSnow) maxGustDuringSnow = g;
         }
-        const wc = hourly.weatherCode ? hourly.weatherCode[i] : null;
-        if (wc === 66 || wc === 67 || wc === 56 || wc === 57) freezingRain = true; // mrznoucí déšť/mrholení
       }
 
-      if (totalSnow < 0.1 && !freezingRain) { card.style.display = 'none'; return; }
+      if (totalSnow < 0.1) { card.style.display = 'none'; return; }
       card.style.display = 'flex';
 
       const iconEl = document.getElementById('snowRiskIcon');
@@ -4692,18 +4728,13 @@
       } else if (totalSnow >= 3) {
         level = 'Mírné'; color = '#ff9800';
         details.push(`Očekává se ~${totalSnow.toFixed(1)} cm sněhu za 24 h.`);
-      } else if (totalSnow >= 0.1) {
+      } else {
         level = 'Nízké'; color = '#8bc34a';
         details.push(`Slabé sněžení (~${totalSnow.toFixed(1)} cm).`);
-      } else {
-        level = 'Ledovka'; color = '#f44336'; icon = '🧊';
       }
 
       if (firstSnowIdx >= 0) {
         details.push(`Začátek ${new Date(time[firstSnowIdx]).toLocaleString('cs-CZ', { weekday: 'short', hour: '2-digit', minute: '2-digit' })}.`);
-      }
-      if (freezingRain) {
-        details.push('⚠️ Mrznoucí srážky – riziko ledovky na silnicích a chodnících.');
       }
 
       iconEl.textContent = icon;
@@ -4712,8 +4743,72 @@
       card.style.borderLeftColor = color;
       detEl.textContent = details.join(' ');
 
-      if (blizzard || totalSnow >= 10 || freezingRain) {
-        sendWeatherNotification('snow', `${icon} ${level === 'Ledovka' ? 'Riziko ledovky' : level + ' riziko sněžení'}`, details.join(' '));
+      if (blizzard || totalSnow >= 10) {
+        sendWeatherNotification('snow', `${icon} ${level} riziko sněžení`, details.join(' '));
+      }
+    }
+
+    /** Karta rizika náledí – mrznoucí srážky, zámrz mokré vozovky nebo ranní jinovatka. */
+    function updateIceRiskCard(hourly, time, startIdx) {
+      const card = document.getElementById('iceRiskCard');
+      if (!card) return;
+      const endIdx = Math.min(startIdx + 24, time.length);
+
+      let freezingPrecip = false, freezingIdx = -1;
+      let refreeze = false, refreezeIdx = -1;
+      let frostDew = false, frostIdx = -1;
+
+      for (let i = startIdx; i < endIdx; i++) {
+        const wc = hourly.weatherCode ? hourly.weatherCode[i] : null;
+        if (!freezingPrecip && (wc === 56 || wc === 57 || wc === 66 || wc === 67)) {
+          freezingPrecip = true; freezingIdx = i;
+        }
+
+        const t = hourly.temp ? hourly.temp[i] : null;
+        const precip = hourly.precip ? hourly.precip[i] : null;
+        if (!refreeze && t != null && t > 0.5 && precip != null && precip >= 0.2) {
+          // Mokro na vozovce, které v následujících hodinách zamrzne
+          for (let j = i + 1; j < Math.min(i + 7, endIdx); j++) {
+            const tj = hourly.temp ? hourly.temp[j] : null;
+            if (tj != null && tj <= 0) { refreeze = true; refreezeIdx = j; break; }
+          }
+        }
+
+        const rh = hourly.humidity ? hourly.humidity[i] : null;
+        const wind = hourly.wind ? hourly.wind[i] : null;
+        if (!frostDew && t != null && t <= 0 && rh != null && rh >= 85 && (wind == null || wind < 3)) {
+          frostDew = true; frostIdx = i;
+        }
+      }
+
+      if (!freezingPrecip && !refreeze && !frostDew) { card.style.display = 'none'; return; }
+      card.style.display = 'flex';
+
+      let level, color, desc, idx;
+      if (freezingPrecip) {
+        level = 'Vysoké'; color = '#f44336';
+        desc = 'Mrznoucí srážky – náledí na silnicích a chodnících.';
+        idx = freezingIdx;
+      } else if (refreeze) {
+        level = 'Zvýšené'; color = '#ff9800';
+        desc = 'Mokro na vozovkách s poklesem teploty pod bod mrazu – riziko zámrazu.';
+        idx = refreezeIdx;
+      } else {
+        level = 'Mírné'; color = '#8bc34a';
+        desc = 'Ranní jinovatka a náledí možné na mostech, stinných a vlhkých místech.';
+        idx = frostIdx;
+      }
+
+      const valEl = document.getElementById('iceRiskValue');
+      const detEl = document.getElementById('iceRiskDetail');
+      valEl.textContent = level;
+      valEl.style.color = color;
+      card.style.borderLeftColor = color;
+      const timeStr = new Date(time[idx]).toLocaleString('cs-CZ', { weekday: 'short', hour: '2-digit', minute: '2-digit' });
+      detEl.textContent = `${desc} Kolem ${timeStr}.`;
+
+      if (freezingPrecip || refreeze) {
+        sendWeatherNotification('ice', `🧊 ${level} riziko náledí`, `${desc} Kolem ${timeStr}.`);
       }
     }
 
@@ -4952,6 +5047,7 @@
       // --- Riziko silného větru + sněžení/blizzard/ledovka ---
       updateWindRiskCard(hourly, time, startIdx);
       updateSnowRiskCard(hourly, time, startIdx);
+      updateIceRiskCard(hourly, time, startIdx);
 
       // --- Biometeo zátěž + srovnání s dlouhodobým průměrem ---
       updateBiometCard(hourly, time, startIdx);
