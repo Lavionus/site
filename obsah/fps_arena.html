@@ -1,0 +1,955 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>🔫 FPS Aréna – WebGL prototyp</title>
+<style>
+  :root { color-scheme: dark; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { height: 100%; overflow: hidden; background: #0a0d12; }
+  body { font-family: system-ui, "Segoe UI", Roboto, sans-serif; color: #e8eef7; }
+
+  #app { position: fixed; inset: 0; }
+  canvas { display: block; width: 100%; height: 100%; }
+
+  /* ---- HUD ---- */
+  #hud { position: fixed; inset: 0; pointer-events: none; user-select: none; }
+
+  /* Zaměřovač */
+  #crosshair {
+    position: absolute; top: 50%; left: 50%;
+    width: 22px; height: 22px; transform: translate(-50%, -50%);
+  }
+  #crosshair::before, #crosshair::after {
+    content: ""; position: absolute; background: #7dffb0;
+    box-shadow: 0 0 4px rgba(125,255,176,.8);
+  }
+  #crosshair::before { top: 50%; left: 0; width: 100%; height: 2px; transform: translateY(-50%); }
+  #crosshair::after  { left: 50%; top: 0; height: 100%; width: 2px; transform: translateX(-50%); }
+  #crosshair.hit { --c: #ff5d5d; }
+  #crosshair.hit::before, #crosshair.hit.after { background: var(--c); }
+
+  #hitmarker {
+    position: absolute; top: 50%; left: 50%; width: 26px; height: 26px;
+    transform: translate(-50%,-50%) rotate(45deg); opacity: 0;
+  }
+  #hitmarker span { position: absolute; background: #fff; }
+  #hitmarker .h { top: 50%; left: 0; width: 100%; height: 2px; transform: translateY(-50%); }
+  #hitmarker .v { left: 50%; top: 0; height: 100%; width: 2px; transform: translateX(-50%); }
+
+  /* Spodní stavové panely */
+  .panel {
+    position: absolute; bottom: 22px;
+    background: rgba(14,20,28,.62); border: 1px solid rgba(125,255,176,.25);
+    border-radius: 10px; padding: 10px 16px; backdrop-filter: blur(6px);
+  }
+  #vitals { left: 22px; display: flex; gap: 22px; align-items: center; }
+  #vitals .big { font-size: 30px; font-weight: 800; line-height: 1; }
+  #vitals .lbl { font-size: 11px; letter-spacing: 1.5px; text-transform: uppercase; color: #8fa3b8; }
+  #hpVal { color: #7dffb0; }
+  #hpVal.low { color: #ff5d5d; }
+  #ammoVal { color: #ffd166; }
+  #stats { right: 22px; text-align: right; }
+  #score { font-size: 30px; font-weight: 800; color: #6cc6ff; line-height: 1; }
+  #wave { font-size: 12px; color: #8fa3b8; letter-spacing: 1px; }
+
+  /* Výkonový monitor – role „kritického agenta" */
+  #perf {
+    position: absolute; top: 14px; left: 14px;
+    font: 12px/1.5 ui-monospace, "SF Mono", Menlo, monospace;
+    background: rgba(10,14,20,.7); border: 1px solid rgba(255,255,255,.12);
+    border-radius: 8px; padding: 8px 12px; min-width: 172px;
+  }
+  #perf .row { display: flex; justify-content: space-between; gap: 14px; }
+  #perf .k { color: #8fa3b8; }
+  #perf .good { color: #7dffb0; }
+  #perf .warn { color: #ffd166; }
+  #perf .bad  { color: #ff5d5d; }
+  #perfBudget { margin-top: 6px; height: 5px; border-radius: 3px; background: #223; overflow: hidden; }
+  #perfBudget i { display: block; height: 100%; width: 0%; background: #7dffb0; transition: width .1s linear, background .2s; }
+
+  /* Úvodní / pauza overlay */
+  #overlay {
+    position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
+    background: radial-gradient(ellipse at center, rgba(20,28,40,.82), rgba(6,9,13,.94));
+    pointer-events: auto; z-index: 20; text-align: center; padding: 24px;
+  }
+  #overlay.hidden { display: none; }
+  .card {
+    max-width: 560px; background: rgba(16,22,31,.9);
+    border: 1px solid rgba(125,255,176,.28); border-radius: 16px;
+    padding: 34px 40px; box-shadow: 0 24px 70px rgba(0,0,0,.6);
+  }
+  .card h1 { font-size: 30px; margin-bottom: 6px; background: linear-gradient(90deg,#7dffb0,#6cc6ff);
+    -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .card p.sub { color: #9fb0c3; font-size: 14px; margin-bottom: 20px; }
+  .keys { display: grid; grid-template-columns: auto 1fr; gap: 8px 16px; text-align: left;
+    font-size: 14px; margin: 0 auto 22px; max-width: 340px; }
+  .keys kbd {
+    font-family: ui-monospace, monospace; background: #0e141c; border: 1px solid #2a3a4d;
+    border-bottom-width: 2px; border-radius: 6px; padding: 2px 9px; color: #cfe3f7; font-size: 12px;
+  }
+  .keys .d { color: #9fb0c3; align-self: center; }
+  #startBtn, #overlay button.again {
+    pointer-events: auto; cursor: pointer; font-size: 16px; font-weight: 700;
+    color: #06210f; background: linear-gradient(90deg,#7dffb0,#5ce39a);
+    border: none; border-radius: 10px; padding: 13px 30px; letter-spacing: .3px;
+    box-shadow: 0 8px 22px rgba(125,255,176,.28); transition: transform .08s ease;
+  }
+  #startBtn:active { transform: translateY(1px) scale(.99); }
+  .hint { margin-top: 14px; font-size: 12px; color: #6f8298; }
+  .end-stats { font-size: 15px; color: #cfe3f7; margin: 10px 0 20px; }
+  .end-stats b { color: #6cc6ff; font-size: 20px; }
+
+  #dmgFlash {
+    position: fixed; inset: 0; pointer-events: none; z-index: 15; opacity: 0;
+    background: radial-gradient(ellipse at center, transparent 45%, rgba(255,0,0,.55) 100%);
+    transition: opacity .12s ease;
+  }
+
+  /* Cinematic vignette + jemný barevný nádech (levné „post" bez WebGL passů) */
+  #vignette {
+    position: fixed; inset: 0; pointer-events: none; z-index: 12;
+    background:
+      radial-gradient(ellipse at center, transparent 52%, rgba(4,8,14,.55) 100%),
+      linear-gradient(rgba(90,140,200,.05), rgba(255,180,120,.05));
+    mix-blend-mode: multiply;
+  }
+</style>
+</head>
+<body>
+<div id="app"></div>
+
+<div id="hud">
+  <div id="crosshair"></div>
+  <div id="hitmarker"><span class="h"></span><span class="v"></span></div>
+
+  <div id="perf">
+    <div class="row"><span class="k">FPS</span><span id="pFps" class="good">–</span></div>
+    <div class="row"><span class="k">frame</span><span id="pMs" class="good">– ms</span></div>
+    <div class="row"><span class="k">draw calls</span><span id="pCalls">–</span></div>
+    <div class="row"><span class="k">triangles</span><span id="pTris">–</span></div>
+    <div id="perfBudget"><i id="perfBar"></i></div>
+  </div>
+
+  <div id="vitals" class="panel">
+    <div><div id="hpVal" class="big">100</div><div class="lbl">Zdraví</div></div>
+    <div><div id="ammoVal" class="big">30</div><div class="lbl">Náboje</div></div>
+  </div>
+  <div id="stats" class="panel">
+    <div id="score">0</div>
+    <div id="wave">Vlna 1</div>
+  </div>
+</div>
+
+<div id="vignette"></div>
+<div id="dmgFlash"></div>
+
+<div id="overlay">
+  <div class="card" id="startCard">
+    <h1>FPS Aréna</h1>
+    <p class="sub">WebGL prototyp · Three.js r160 · stylizovaná low-poly estetika</p>
+    <div class="keys">
+      <span><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd></span><span class="d">Pohyb</span>
+      <span><kbd>myš</kbd></span><span class="d">Rozhlížení / míření</span>
+      <span><kbd>levé tl.</kbd></span><span class="d">Střelba</span>
+      <span><kbd>Shift</kbd></span><span class="d">Sprint</span>
+      <span><kbd>mezerník</kbd></span><span class="d">Skok</span>
+      <span><kbd>R</kbd></span><span class="d">Přebít</span>
+      <span><kbd>Esc</kbd></span><span class="d">Pauza</span>
+    </div>
+    <button id="startBtn">▶ Zamknout myš a hrát</button>
+    <div class="hint">Cílem je udržet plynulých 60+ FPS — monitor vlevo nahoře hlídá rozpočet 16,6 ms/snímek.</div>
+  </div>
+</div>
+
+<script src="lib/three.0.160.0.min.js"></script>
+<script>
+/* =============================================================================
+   FPS ARÉNA — modulární WebGL prototyp
+   -----------------------------------------------------------------------------
+   Architektura je rozdělena podle rolí (jeden soubor, žádné externí závislosti
+   mimo lokální Three.js r160 – web běží offline z GitHub Pages):
+
+     • GFX   – grafika, materiály, osvětlení, stíny, stylizovaný „AAA-web" look
+     • WORLD – statická geometrie arény (instancing → nízký počet draw calls)
+     • PHYS  – lehká vlastní fyzika: gravitace, skok, AABB kolize, hitscan
+     • CTRL  – pointer-lock myš + WASD, fixní krok simulace
+     • AI    – instancovaní nepřátelé (jeden draw call na celou vlnu)
+     • CRITIC– výkonový monitor: měří frametime a varuje při překročení 16,6 ms
+   ============================================================================= */
+(() => {
+'use strict';
+const T = THREE;
+
+/* ---------------------------------------------------------------------------
+   GFX — renderer, scéna, kamera, světla
+   --------------------------------------------------------------------------- */
+const appEl = document.getElementById('app');
+const renderer = new T.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2)); // strop 2× kvůli výkonu na retina/mobilu
+renderer.setSize(window.innerWidth, window.innerHeight);
+renderer.outputColorSpace = T.SRGBColorSpace;
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = T.PCFSoftShadowMap;
+renderer.toneMapping = T.ACESFilmicToneMapping; // filmové tónování → čitelnější kontrast bez post-processingu
+renderer.toneMappingExposure = 1.18;
+appEl.appendChild(renderer.domElement);
+
+const scene = new T.Scene();
+const SKY_TOP = new T.Color(0x2b6dc4), SKY_HORIZON = new T.Color(0xd7c9a8);
+const SUN_DIR = new T.Vector3(24, 40, 16).normalize();
+const SUN_COL = new T.Color(0xfff0cf);
+scene.fog = new T.FogExp2(0x9fb0c0, 0.0092); // exponenciální mlha = jemnější splynutí s oblohou
+
+const camera = new T.PerspectiveCamera(78, window.innerWidth / window.innerHeight, 0.05, 260);
+
+// Stylizované osvětlení: teplé slunce + chladné oblohové doplnění (hemisphere) + studené protisvětlo.
+const hemi = new T.HemisphereLight(0xcfe6ff, 0x3a3020, 1.05);
+scene.add(hemi);
+
+const sun = new T.DirectionalLight(0xfff2d6, 2.7);
+sun.position.copy(SUN_DIR).multiplyScalar(50);
+sun.castShadow = true;
+sun.shadow.mapSize.set(2048, 2048);
+sun.shadow.camera.near = 1; sun.shadow.camera.far = 140;
+sun.shadow.camera.left = -46; sun.shadow.camera.right = 46;
+sun.shadow.camera.top = 46; sun.shadow.camera.bottom = -46;
+sun.shadow.bias = -0.0004;
+sun.shadow.normalBias = 0.03;
+sun.shadow.radius = 3;
+scene.add(sun);
+// chladné protisvětlo (rim) z opačné strany pro oddělení objektů od pozadí
+const rim = new T.DirectionalLight(0x6ea8ff, 0.6);
+rim.position.set(-30, 18, -24);
+scene.add(rim);
+scene.add(new T.AmbientLight(0x2a3a4d, 0.25));
+
+// Obloha s gradientem + kotoučem slunce a měkkou září. Stejný materiál použijeme
+// i pro vygenerování IBL environment mapy (reálné PBR odlesky na materiálech).
+const skyMat = new T.ShaderMaterial({
+  side: T.BackSide, depthWrite: false, fog: false,
+  uniforms: {
+    top: { value: SKY_TOP }, bottom: { value: SKY_HORIZON },
+    sunDir: { value: SUN_DIR }, sunCol: { value: SUN_COL },
+  },
+  vertexShader: `varying vec3 vP; void main(){ vP = position; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0);} `,
+  fragmentShader: `
+    varying vec3 vP; uniform vec3 top; uniform vec3 bottom; uniform vec3 sunDir; uniform vec3 sunCol;
+    void main(){
+      vec3 dir = normalize(vP);
+      float h = clamp(dir.y*0.5+0.5, 0.0, 1.0);
+      vec3 col = mix(bottom, top, pow(h, 0.55));
+      float sd = max(dot(dir, normalize(sunDir)), 0.0);
+      col += sunCol * pow(sd, 350.0) * 3.0;   // ostrý kotouč slunce
+      col += sunCol * pow(sd, 9.0)  * 0.35;   // měkká záře kolem
+      gl_FragColor = vec4(col, 1.0);
+    }`
+});
+const skyMesh = new T.Mesh(new T.SphereGeometry(160, 32, 16), skyMat);
+
+// --- IBL: vygeneruj environment mapu z oblohy (PMREM) ---
+{
+  const pmrem = new T.PMREMGenerator(renderer);
+  pmrem.compileEquirectangularShader();
+  const envScene = new T.Scene();
+  envScene.add(skyMesh);                       // dočasně do env-scény
+  const envRT = pmrem.fromScene(envScene, 0, 0.1, 200);
+  scene.environment = envRT.texture;           // IBL pro všechny Standard materiály
+  scene.background = envRT.texture;            // a zároveň pozadí
+  scene.add(skyMesh);                          // vrať oblohu do hlavní scény (kvůli ostrému slunci)
+  pmrem.dispose();
+}
+
+/* ---------------------------------------------------------------------------
+   WORLD — statická geometrie arény
+   Kolizní tělesa = seznam AABB (osově zarovnaných kvádrů). Vizuál stavíme
+   z instancí, takže desítky kvádrů = jednotky draw calls.
+   --------------------------------------------------------------------------- */
+const ARENA = 44;               // poloviční rozměr podlahy
+const colliders = [];           // { min:Vector3, max:Vector3 }
+function addBox(cx, cy, cz, sx, sy, sz) {
+  colliders.push({
+    min: new T.Vector3(cx - sx/2, cy - sy/2, cz - sz/2),
+    max: new T.Vector3(cx + sx/2, cy + sy/2, cz + sz/2),
+  });
+  return { cx, cy, cz, sx, sy, sz };
+}
+
+// --- Procedurální textury (CanvasTexture) — detail bez externích souborů ---
+function makeTileTexture() {
+  const S = 512, c = document.createElement('canvas'); c.width = c.height = S;
+  const g = c.getContext('2d');
+  g.fillStyle = '#2f3d4c'; g.fillRect(0, 0, S, S);
+  // jemný šum pro rozbití plochy
+  for (let i = 0; i < 2600; i++) {
+    const v = 40 + Math.random() * 40;
+    g.fillStyle = `rgba(${v},${v+10},${v+22},0.05)`;
+    g.fillRect(Math.random()*S, Math.random()*S, 2, 2);
+  }
+  // panelové linky
+  g.strokeStyle = 'rgba(15,22,30,0.9)'; g.lineWidth = 4;
+  const n = 4, step = S / n;
+  for (let i = 0; i <= n; i++) {
+    g.beginPath(); g.moveTo(i*step, 0); g.lineTo(i*step, S); g.stroke();
+    g.beginPath(); g.moveTo(0, i*step); g.lineTo(S, i*step); g.stroke();
+  }
+  const t = new T.CanvasTexture(c);
+  t.wrapS = t.wrapT = T.RepeatWrapping; t.anisotropy = 4;
+  t.colorSpace = T.SRGBColorSpace;
+  return t;
+}
+// Emissive maska — jen zářící linky (Tron-like), zbytek černý (nesvítí).
+function makeGlowLinesTexture() {
+  const S = 512, c = document.createElement('canvas'); c.width = c.height = S;
+  const g = c.getContext('2d');
+  g.fillStyle = '#000'; g.fillRect(0, 0, S, S);
+  g.strokeStyle = '#39d7ff'; g.lineWidth = 3; g.shadowColor = '#39d7ff'; g.shadowBlur = 8;
+  const n = 4, step = S / n;
+  for (let i = 0; i <= n; i++) {
+    g.beginPath(); g.moveTo(i*step, 0); g.lineTo(i*step, S); g.stroke();
+    g.beginPath(); g.moveTo(0, i*step); g.lineTo(S, i*step); g.stroke();
+  }
+  const t = new T.CanvasTexture(c);
+  t.wrapS = t.wrapT = T.RepeatWrapping;
+  return t;
+}
+const floorMap = makeTileTexture();       floorMap.repeat.set(11, 11);
+const floorGlow = makeGlowLinesTexture(); floorGlow.repeat.set(11, 11);
+
+const MAT = {
+  floor: new T.MeshStandardMaterial({
+    map: floorMap, roughness: 0.55, metalness: 0.35, envMapIntensity: 0.9,
+    emissive: 0x39d7ff, emissiveMap: floorGlow, emissiveIntensity: 1.6 }),
+  wall:  new T.MeshStandardMaterial({ color: 0x51637a, roughness: 0.7,  metalness: 0.25, envMapIntensity: 1.0 }),
+  crate: new T.MeshStandardMaterial({ color: 0xd8933f, roughness: 0.55, metalness: 0.2,  envMapIntensity: 1.0 }),
+  pillar:new T.MeshStandardMaterial({ color: 0x8492a4, roughness: 0.35, metalness: 0.55, envMapIntensity: 1.3 }),
+  ramp:  new T.MeshStandardMaterial({ color: 0x5f7488, roughness: 0.6,  metalness: 0.2,  envMapIntensity: 1.0 }),
+  accent:new T.MeshStandardMaterial({ color: 0x1c2733, roughness: 0.4,  metalness: 0.4,
+                                      emissive: 0x2fd8ff, emissiveIntensity: 1.9, envMapIntensity: 1.0 }),
+};
+
+// Podlaha
+{
+  const floor = new T.Mesh(new T.BoxGeometry(ARENA*2, 1, ARENA*2), MAT.floor);
+  floor.position.y = -0.5; floor.receiveShadow = true;
+  scene.add(floor);
+  addBox(0, -0.5, 0, ARENA*2, 1, ARENA*2);
+}
+
+// Obvodové zdi (4 kvádry)
+{
+  const H = 7, tk = 1.5, L = ARENA*2;
+  const defs = [
+    [0, H/2,  ARENA, L, H, tk], [0, H/2, -ARENA, L, H, tk],
+    [ ARENA, H/2, 0, tk, H, L], [-ARENA, H/2, 0, tk, H, L],
+  ];
+  for (const [x,y,z,sx,sy,sz] of defs) {
+    const m = new T.Mesh(new T.BoxGeometry(sx,sy,sz), MAT.wall);
+    m.position.set(x,y,z); m.castShadow = true; m.receiveShadow = true;
+    scene.add(m); addBox(x,y,z,sx,sy,sz);
+    // svítící pruh na vršku zdi
+    const strip = new T.Mesh(new T.BoxGeometry(sx*0.99, 0.25, sz*0.99), MAT.accent);
+    strip.position.set(x, H, z); scene.add(strip);
+  }
+}
+
+// Bedny (cover) — jeden InstancedMesh, jeden draw call pro všechny
+const crateBoxes = [
+  [-14, 1.5, -8, 3], [-10, 1.5, -8, 3], [-12, 4.0, -8, 2.6],
+  [16, 1.5, 12, 3], [12, 1.5, 14, 3], [14, 4.0, 13, 2.6],
+  [0, 1.5, 20, 3], [4, 1.5, 22, 3],
+  [-20, 1.5, 18, 3], [22, 1.5, -18, 3], [-24, 1.5, -14, 3],
+  [8, 1.5, -20, 3], [-6, 1.5, -22, 3],
+];
+{
+  const geo = new T.BoxGeometry(1,1,1);
+  const inst = new T.InstancedMesh(geo, MAT.crate, crateBoxes.length);
+  inst.castShadow = true; inst.receiveShadow = true;
+  const m4 = new T.Matrix4();
+  crateBoxes.forEach(([x,y,z,s], i) => {
+    m4.makeScale(s,s,s); m4.setPosition(x,y,z); inst.setMatrixAt(i, m4);
+    addBox(x,y,z,s,s,s);
+  });
+  scene.add(inst);
+}
+
+// Sloupy — InstancedMesh
+const pillars = [[-26,0,26],[26,0,26],[26,0,-26],[-26,0,-26],[0,0,0]];
+{
+  const H = 6;
+  const geo = new T.CylinderGeometry(1.1,1.3,H,10);
+  const inst = new T.InstancedMesh(geo, MAT.pillar, pillars.length);
+  inst.castShadow = true; inst.receiveShadow = true;
+  const m4 = new T.Matrix4();
+  pillars.forEach(([x,,z], i) => { m4.identity(); m4.setPosition(x, H/2, z); inst.setMatrixAt(i, m4);
+    addBox(x, H/2, z, 2.4, H, 2.4); });
+  scene.add(inst);
+}
+
+// Rampy (naklopené kvádry) — vizuál je nakloněný, kolize aproximujeme schody z AABB
+function addRamp(x, z, len, rot) {
+  const w = 6, th = 0.6, rise = 3.2;
+  const mesh = new T.Mesh(new T.BoxGeometry(w, th, len), MAT.ramp);
+  const angle = Math.atan2(rise, len);
+  mesh.position.set(x, rise/2, z);
+  mesh.rotation.y = rot;
+  mesh.rotateX(-angle);
+  mesh.castShadow = true; mesh.receiveShadow = true;
+  scene.add(mesh);
+  // kolizní schody
+  const steps = 6;
+  for (let i=0;i<steps;i++){
+    const t = (i+0.5)/steps;
+    const yy = t*rise;
+    const along = (t-0.5)*len;
+    const px = x + Math.sin(rot)*along, pz = z + Math.cos(rot)*along;
+    addBox(px, yy/2, pz, w, yy+0.3, len/steps);
+  }
+}
+addRamp(-30, 0, 12, Math.PI/2);
+addRamp(30, 4, 12, -Math.PI/2);
+
+/* Elevated platforma uprostřed dosažitelná rampami */
+{
+  const p = new T.Mesh(new T.BoxGeometry(14, 1, 14), MAT.wall);
+  p.position.set(0, 3.2, 34); p.castShadow = true; p.receiveShadow = true;
+  scene.add(p); addBox(0, 3.2, 34, 14, 1, 14);
+}
+
+/* ---------------------------------------------------------------------------
+   AI — nepřátelé (instancovaní low-poly boti)
+   Celá vlna = jeden InstancedMesh → jeden draw call. Kolize střely řešíme
+   proti koulím (bounding sphere), pohyb je jednoduché „seek" k hráči.
+   --------------------------------------------------------------------------- */
+const ENEMY_MAX = 32;
+const enemyGeo = new T.IcosahedronGeometry(0.9, 0);
+const enemyMat = new T.MeshStandardMaterial({ color: 0xff6b6b, roughness: 0.35, metalness: 0.35,
+                                              emissive: 0xff2222, emissiveIntensity: 1.25,
+                                              envMapIntensity: 1.2, flatShading: true });
+const enemyMesh = new T.InstancedMesh(enemyGeo, enemyMat, ENEMY_MAX);
+enemyMesh.castShadow = true;
+enemyMesh.instanceMatrix.setUsage(T.DynamicDrawUsage);
+enemyMesh.count = 0;
+scene.add(enemyMesh);
+
+// Zářící „glow shell" — o něco větší additivní skořápka (rim glow bez post-processingu).
+const enemyGlowMat = new T.MeshBasicMaterial({ color: 0xff3b3b, transparent: true, opacity: 0.35,
+  side: T.BackSide, blending: T.AdditiveBlending, depthWrite: false, fog: false });
+const enemyGlow = new T.InstancedMesh(new T.IcosahedronGeometry(1.28, 0), enemyGlowMat, ENEMY_MAX);
+enemyGlow.instanceMatrix.setUsage(T.DynamicDrawUsage);
+enemyGlow.count = 0; enemyGlow.frustumCulled = false;
+scene.add(enemyGlow);
+
+const enemies = []; // { pos, hp, alive, hop }
+function spawnEnemy() {
+  if (enemies.length >= ENEMY_MAX) return;
+  const ang = Math.random() * Math.PI * 2;
+  const r = 26 + Math.random()*12;
+  const e = {
+    pos: new T.Vector3(Math.cos(ang)*r, 0.95, Math.sin(ang)*r),
+    hp: 30, alive: true, hop: Math.random()*Math.PI*2,
+  };
+  enemies.push(e);
+}
+
+/* ---------------------------------------------------------------------------
+   PHYS — kolize a hitscan
+   --------------------------------------------------------------------------- */
+const PLAYER = { r: 0.42, h: 1.7, eye: 1.55 }; // poloměr, výška, výška očí
+// Vyřeší pohyb kapsle (aprox. AABB) proti statickým colliderům po jedné ose.
+function collideAxis(pos, vel, axis, dt) {
+  pos[axis] += vel[axis] * dt;
+  const half = { x: PLAYER.r, y: PLAYER.h/2, z: PLAYER.r };
+  const cy = pos.y - PLAYER.eye + PLAYER.h/2; // střed kapsle
+  const pmin = { x: pos.x - half.x, y: cy - half.y, z: pos.z - half.z };
+  const pmax = { x: pos.x + half.x, y: cy + half.y, z: pos.z + half.z };
+  for (const c of colliders) {
+    if (pmax.x <= c.min.x || pmin.x >= c.max.x) continue;
+    if (pmax.y <= c.min.y || pmin.y >= c.max.y) continue;
+    if (pmax.z <= c.min.z || pmin.z >= c.max.z) continue;
+    // překryv → zatlač zpět po dané ose
+    if (axis === 'y') {
+      if (vel.y <= 0) { pos.y = c.max.y + PLAYER.eye; player.onGround = true; }
+      else            { pos.y = c.min.y - (PLAYER.h - PLAYER.eye); }
+      vel.y = 0;
+    } else if (axis === 'x') {
+      pos.x = vel.x > 0 ? c.min.x - half.x : c.max.x + half.x; vel.x = 0;
+    } else {
+      pos.z = vel.z > 0 ? c.min.z - half.z : c.max.z + half.z; vel.z = 0;
+    }
+  }
+}
+
+// Ray vs AABB (slab). Vrací vzdálenost nebo Infinity.
+const _inv = new T.Vector3();
+function rayAabb(ro, rd, c) {
+  _inv.set(1/rd.x, 1/rd.y, 1/rd.z);
+  let t1 = (c.min.x - ro.x)*_inv.x, t2 = (c.max.x - ro.x)*_inv.x;
+  let tmin = Math.min(t1,t2), tmax = Math.max(t1,t2);
+  t1 = (c.min.y - ro.y)*_inv.y; t2 = (c.max.y - ro.y)*_inv.y;
+  tmin = Math.max(tmin, Math.min(t1,t2)); tmax = Math.min(tmax, Math.max(t1,t2));
+  t1 = (c.min.z - ro.z)*_inv.z; t2 = (c.max.z - ro.z)*_inv.z;
+  tmin = Math.max(tmin, Math.min(t1,t2)); tmax = Math.min(tmax, Math.max(t1,t2));
+  if (tmax < 0 || tmin > tmax) return Infinity;
+  return tmin > 0 ? tmin : Infinity;
+}
+// Ray vs koule.
+function raySphere(ro, rd, center, radius) {
+  const ox = ro.x-center.x, oy = ro.y-center.y, oz = ro.z-center.z;
+  const b = ox*rd.x + oy*rd.y + oz*rd.z;
+  const c = ox*ox+oy*oy+oz*oz - radius*radius;
+  const disc = b*b - c;
+  if (disc < 0) return Infinity;
+  const t = -b - Math.sqrt(disc);
+  return t > 0 ? t : Infinity;
+}
+
+/* ---------------------------------------------------------------------------
+   Efekty střelby — muzzle flash (světlo), impakty (instancované), zbraň (viewmodel)
+   --------------------------------------------------------------------------- */
+const muzzle = new T.PointLight(0xffd27d, 0, 10, 2);
+camera.add(muzzle); muzzle.position.set(0.28, -0.2, -1.0);
+
+// Viewmodel zbraně parentovaný ke kameře (kovové PBR díly s odlesky z IBL).
+const weapon = new T.Group();
+const MUZZLE_LOCAL = new T.Vector3(0.28, -0.2, -1.15); // ústí hlavně (lokálně ke kameře)
+{
+  const steel = new T.MeshStandardMaterial({ color: 0x30363f, roughness: 0.35, metalness: 0.85, envMapIntensity: 1.4 });
+  const dark  = new T.MeshStandardMaterial({ color: 0x14181f, roughness: 0.3,  metalness: 0.9,  envMapIntensity: 1.2 });
+  const accent= new T.MeshStandardMaterial({ color: 0x0e1116, roughness: 0.5,  metalness: 0.6,
+                                             emissive: 0x2fd8ff, emissiveIntensity: 1.4 });
+  const body = new T.Mesh(new T.BoxGeometry(0.17,0.17,0.72), steel);      body.position.set(0.28,-0.26,-0.6);
+  const top  = new T.Mesh(new T.BoxGeometry(0.12,0.07,0.5), dark);        top.position.set(0.28,-0.15,-0.62);
+  const barrel = new T.Mesh(new T.CylinderGeometry(0.05,0.05,0.55,12), dark);
+  barrel.rotation.x = Math.PI/2; barrel.position.set(0.28,-0.24,-1.0);
+  const mag  = new T.Mesh(new T.BoxGeometry(0.1,0.28,0.14), steel);       mag.position.set(0.28,-0.44,-0.5); mag.rotation.x = 0.2;
+  const grip = new T.Mesh(new T.BoxGeometry(0.09,0.22,0.12), steel);      grip.position.set(0.28,-0.42,-0.32); grip.rotation.x = 0.35;
+  const strip= new T.Mesh(new T.BoxGeometry(0.02,0.03,0.4), accent);      strip.position.set(0.355,-0.22,-0.62);
+  const sight= new T.Mesh(new T.BoxGeometry(0.03,0.05,0.03), accent);     sight.position.set(0.28,-0.12,-0.44);
+  weapon.add(body, top, barrel, mag, grip, strip, sight);
+  weapon.traverse(o => { if (o.isMesh) o.renderOrder = 2; }); // zbraň kreslit navrch, ať se neořízne o geometrii
+}
+camera.add(weapon);
+scene.add(camera);
+
+// Muzzle flash — additivní sprite u ústí hlavně (krátký záblesk).
+const flashTex = (() => {
+  const S=64,c=document.createElement('canvas'); c.width=c.height=S; const g=c.getContext('2d');
+  const grd=g.createRadialGradient(S/2,S/2,0,S/2,S/2,S/2);
+  grd.addColorStop(0,'rgba(255,240,200,1)'); grd.addColorStop(0.35,'rgba(255,190,90,0.8)');
+  grd.addColorStop(1,'rgba(255,120,40,0)'); g.fillStyle=grd; g.fillRect(0,0,S,S);
+  return new T.CanvasTexture(c);
+})();
+const muzzleFlash = new T.Sprite(new T.SpriteMaterial({ map: flashTex, blending: T.AdditiveBlending,
+  depthTest: false, transparent: true, opacity: 0 }));
+muzzleFlash.scale.set(0.6,0.6,0.6); muzzleFlash.position.copy(MUZZLE_LOCAL); muzzleFlash.renderOrder = 3;
+camera.add(muzzleFlash);
+
+// Tracer — světelná stopa střely (additivní úsečka, krátká životnost).
+const tracerMat = new T.LineBasicMaterial({ color: 0xfff0b0, transparent: true, opacity: 0,
+  blending: T.AdditiveBlending, depthWrite: false });
+const tracerGeo = new T.BufferGeometry().setFromPoints([new T.Vector3(), new T.Vector3()]);
+const tracer = new T.Line(tracerGeo, tracerMat); tracer.frustumCulled = false; scene.add(tracer);
+let tracerLife = 0;
+function fireTracer(from, to) {
+  const pos = tracerGeo.attributes.position;
+  pos.setXYZ(0, from.x, from.y, from.z); pos.setXYZ(1, to.x, to.y, to.z); pos.needsUpdate = true;
+  tracerLife = 0.06; tracerMat.opacity = 0.9;
+}
+
+// Instancované impaktní jiskry (krátká životnost)
+const SPARK_MAX = 40;
+const sparkMesh = new T.InstancedMesh(
+  new T.IcosahedronGeometry(0.09, 0),
+  new T.MeshBasicMaterial({ color: 0xffe08a, blending: T.AdditiveBlending, transparent: true, depthWrite: false }),
+  SPARK_MAX);
+sparkMesh.count = 0; sparkMesh.frustumCulled = false; scene.add(sparkMesh);
+const sparks = [];
+function addSpark(p) {
+  sparks.push({ p: p.clone(), life: 0.18 });
+}
+
+/* ---------------------------------------------------------------------------
+   CTRL — pointer lock, klávesy, stav hráče
+   --------------------------------------------------------------------------- */
+const player = {
+  pos: new T.Vector3(0, PLAYER.eye, -30),
+  vel: new T.Vector3(),
+  yaw: 0, pitch: 0,
+  onGround: true,
+  hp: 100, maxHp: 100,
+  ammo: 30, mag: 30, reloading: 0,
+  score: 0, wave: 1,
+  alive: true,
+};
+const keys = Object.create(null);
+let running = false, paused = false;
+
+const overlay = document.getElementById('overlay');
+const startCard = document.getElementById('startCard');
+const startBtn = document.getElementById('startBtn');
+
+startBtn.addEventListener('click', () => {
+  if (!player.alive) resetGame();
+  renderer.domElement.requestPointerLock();
+});
+
+document.addEventListener('pointerlockchange', () => {
+  const locked = document.pointerLockElement === renderer.domElement;
+  running = locked;
+  paused = !locked && player.alive;
+  if (locked) { overlay.classList.add('hidden'); }
+  else if (player.alive) { showPause(); }
+});
+
+function showPause() {
+  startCard.querySelector('h1').textContent = '⏸ Pauza';
+  startCard.querySelector('.sub').textContent = 'Myš odemčena. Pokračuj kliknutím.';
+  startBtn.textContent = '▶ Pokračovat';
+  overlay.classList.remove('hidden');
+}
+
+document.addEventListener('mousemove', (e) => {
+  if (!running) return;
+  const s = 0.0022;
+  player.yaw   -= e.movementX * s;
+  player.pitch -= e.movementY * s;
+  const lim = Math.PI/2 - 0.02;
+  player.pitch = Math.max(-lim, Math.min(lim, player.pitch));
+});
+
+addEventListener('keydown', (e) => {
+  keys[e.code] = true;
+  if (e.code === 'KeyR') reload();
+  if (e.code === 'Space') e.preventDefault();
+});
+addEventListener('keyup', (e) => { keys[e.code] = false; });
+
+let firing = false, fireCooldown = 0;
+renderer.domElement.addEventListener('mousedown', (e) => { if (e.button === 0) firing = true; });
+addEventListener('mouseup', (e) => { if (e.button === 0) firing = false; });
+
+function reload() {
+  if (player.reloading > 0 || player.mag === 30) return;
+  player.reloading = 1.1;
+}
+
+/* ---------------------------------------------------------------------------
+   Střelba (hitscan)
+   --------------------------------------------------------------------------- */
+const _ro = new T.Vector3(), _rd = new T.Vector3(), _tmp = new T.Vector3();
+const crosshair = document.getElementById('crosshair');
+const hitmarker = document.getElementById('hitmarker');
+let recoil = 0, hitFlash = 0;
+
+const _muzzleWorld = new T.Vector3();
+function shoot() {
+  if (player.mag <= 0) { reload(); return; }
+  player.mag--;
+  recoil = 1;
+  muzzle.intensity = 8;
+  muzzleFlash.material.opacity = 1;
+  muzzleFlash.material.rotation = Math.random() * Math.PI;
+  // paprsek ze středu kamery
+  camera.getWorldPosition(_ro);
+  camera.getWorldDirection(_rd);
+  _muzzleWorld.copy(MUZZLE_LOCAL).applyMatrix4(camera.matrixWorld); // ústí hlavně ve světě (start traceru)
+
+  // nejbližší zeď
+  let wallDist = Infinity;
+  for (const c of colliders) { const d = rayAabb(_ro, _rd, c); if (d < wallDist) wallDist = d; }
+
+  // nejbližší nepřítel před zdí
+  let best = null, bestDist = wallDist;
+  for (const e of enemies) {
+    if (!e.alive) continue;
+    const d = raySphere(_ro, _rd, e.pos, 1.0);
+    if (d < bestDist) { bestDist = d; best = e; }
+  }
+
+  const hitDist = Number.isFinite(bestDist) ? bestDist : 120;
+  _tmp.copy(_rd).multiplyScalar(hitDist).add(_ro);
+  fireTracer(_muzzleWorld, _tmp);
+
+  if (best) {
+    best.hp -= 15;
+    addSpark(_tmp);
+    hitFlash = 0.09;
+    hitmarker.style.transition = 'none'; hitmarker.style.opacity = '1';
+    requestAnimationFrame(() => { hitmarker.style.transition = 'opacity .25s'; hitmarker.style.opacity = '0'; });
+    if (best.hp <= 0) { best.alive = false; player.score += 100; }
+  } else if (Number.isFinite(bestDist)) {
+    addSpark(_tmp);
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   Vlny nepřátel
+   --------------------------------------------------------------------------- */
+let waveTimer = 0, toSpawn = 0, spawnGap = 0;
+function startWave(n) {
+  player.wave = n;
+  toSpawn = 3 + n * 2;
+  spawnGap = 0;
+}
+function updateWaves(dt) {
+  const aliveCount = enemies.filter(e => e.alive).length;
+  if (toSpawn > 0) {
+    spawnGap -= dt;
+    if (spawnGap <= 0 && aliveCount < 12) { spawnEnemy(); toSpawn--; spawnGap = 0.8; }
+  } else if (aliveCount === 0) {
+    waveTimer -= dt;
+    if (waveTimer <= 0) { startWave(player.wave + 1); }
+  } else {
+    waveTimer = 1.5;
+  }
+}
+
+/* ---------------------------------------------------------------------------
+   PHYS/CTRL update — fixní krok simulace (deterministická fyzika)
+   --------------------------------------------------------------------------- */
+const GRAV = 22, MOVE = 6.2, SPRINT = 9.4, JUMP = 8.2, AIR = 0.35;
+const dmgFlashEl = document.getElementById('dmgFlash');
+
+function fixedStep(dt) {
+  if (!player.alive) return;
+
+  // --- pohyb dle vstupu (v rovině yaw) ---
+  const wish = new T.Vector3();
+  if (keys['KeyW']) wish.z -= 1;
+  if (keys['KeyS']) wish.z += 1;
+  if (keys['KeyA']) wish.x -= 1;
+  if (keys['KeyD']) wish.x += 1;
+  const speed = keys['ShiftLeft'] || keys['ShiftRight'] ? SPRINT : MOVE;
+  if (wish.lengthSq() > 0) {
+    wish.normalize();
+    const cos = Math.cos(player.yaw), sin = Math.sin(player.yaw);
+    const wx = wish.x * cos - wish.z * sin;
+    const wz = wish.x * sin + wish.z * cos;
+    const ctrl = player.onGround ? 1 : AIR;
+    player.vel.x += (wx * speed - player.vel.x) * Math.min(1, 12*dt) * ctrl;
+    player.vel.z += (wz * speed - player.vel.z) * Math.min(1, 12*dt) * ctrl;
+  } else if (player.onGround) {
+    player.vel.x -= player.vel.x * Math.min(1, 12*dt);
+    player.vel.z -= player.vel.z * Math.min(1, 12*dt);
+  }
+
+  // --- skok ---
+  if (keys['Space'] && player.onGround) { player.vel.y = JUMP; player.onGround = false; }
+
+  // --- gravitace ---
+  player.vel.y -= GRAV * dt;
+  player.onGround = false;
+
+  // --- kolize po osách ---
+  collideAxis(player.pos, player.vel, 'x', dt);
+  collideAxis(player.pos, player.vel, 'z', dt);
+  collideAxis(player.pos, player.vel, 'y', dt);
+
+  // pojistka proti propadnutí pod arénu
+  if (player.pos.y < -8) { player.pos.set(0, PLAYER.eye, -30); player.vel.set(0,0,0); }
+
+  // --- přebíjení ---
+  if (player.reloading > 0) {
+    player.reloading -= dt;
+    if (player.reloading <= 0) { player.mag = 30; }
+  }
+
+  // --- střelba (kadence) ---
+  fireCooldown -= dt;
+  if (firing && fireCooldown <= 0 && player.reloading <= 0) { shoot(); fireCooldown = 0.11; }
+
+  // --- nepřátelé: seek k hráči + zásah zblízka ---
+  let dmgThisStep = 0;
+  for (const e of enemies) {
+    if (!e.alive) continue;
+    e.hop += dt * 6;
+    _tmp.copy(player.pos); _tmp.y = e.pos.y;
+    const dir = _tmp.sub(e.pos);
+    const dist = dir.length();
+    if (dist > 1.6) {
+      dir.normalize();
+      const sp = 3.2 + player.wave * 0.15;
+      e.pos.x += dir.x * sp * dt;
+      e.pos.z += dir.z * sp * dt;
+    } else {
+      dmgThisStep += 16 * dt; // útok kontaktem
+    }
+    e.pos.y = 0.95 + Math.abs(Math.sin(e.hop)) * 0.25; // poskakování
+  }
+  if (dmgThisStep > 0) {
+    player.hp -= dmgThisStep;
+    dmgFlashEl.style.opacity = Math.min(0.9, dmgThisStep * 0.9);
+    if (player.hp <= 0) { player.hp = 0; gameOver(); }
+  } else {
+    dmgFlashEl.style.opacity = Math.max(0, parseFloat(dmgFlashEl.style.opacity||0) - dt*3);
+  }
+
+  updateWaves(dt);
+}
+
+/* ---------------------------------------------------------------------------
+   Vizuální aktualizace odvozené od stavu (běží každý snímek)
+   --------------------------------------------------------------------------- */
+function syncVisuals(dt, alpha) {
+  // kamera
+  camera.position.copy(player.pos);
+  camera.rotation.set(0,0,0,'YXZ');
+  camera.rotation.order = 'YXZ';
+  camera.rotation.y = player.yaw;
+  camera.rotation.x = player.pitch;
+
+  // recoil zbraně + tlumení
+  recoil = Math.max(0, recoil - dt*7);
+  weapon.position.z = recoil * 0.06;
+  weapon.rotation.x = recoil * 0.12;
+  muzzle.intensity = Math.max(0, muzzle.intensity - dt*60);
+  // muzzle flash útlum
+  if (muzzleFlash.material.opacity > 0) {
+    muzzleFlash.material.opacity = Math.max(0, muzzleFlash.material.opacity - dt*22);
+    const sc = 0.45 + muzzleFlash.material.opacity * 0.35;
+    muzzleFlash.scale.set(sc, sc, sc);
+  }
+  // tracer útlum
+  if (tracerLife > 0) { tracerLife -= dt; tracerMat.opacity = Math.max(0, tracerLife/0.06) * 0.9; }
+
+  // nepřátelé → instance matice (tělo i zářící skořápka)
+  let n = 0;
+  const m4 = new T.Matrix4(), q = new T.Quaternion(), one = new T.Vector3(1,1,1);
+  const yAxis = new T.Vector3(0,1,0);
+  for (const e of enemies) {
+    if (!e.alive) continue;
+    q.setFromAxisAngle(yAxis, e.hop*0.5);
+    m4.compose(e.pos, q, one);
+    enemyMesh.setMatrixAt(n, m4);
+    enemyGlow.setMatrixAt(n, m4);
+    n++;
+  }
+  enemyMesh.count = n; enemyMesh.instanceMatrix.needsUpdate = true;
+  enemyGlow.count = n; enemyGlow.instanceMatrix.needsUpdate = true;
+
+  // jiskry
+  let s = 0; const sm = new T.Matrix4();
+  for (let i = sparks.length-1; i>=0; i--) {
+    const sp = sparks[i]; sp.life -= dt;
+    if (sp.life <= 0) { sparks.splice(i,1); continue; }
+    const sc = sp.life * 5;
+    sm.makeScale(sc,sc,sc); sm.setPosition(sp.p);
+    if (s < SPARK_MAX) sparkMesh.setMatrixAt(s++, sm);
+  }
+  sparkMesh.count = s;
+  sparkMesh.instanceMatrix.needsUpdate = true;
+
+  // crosshair hit tint
+  if (hitFlash > 0) { hitFlash -= dt; crosshair.classList.add('hit'); }
+  else crosshair.classList.remove('hit');
+}
+
+/* ---------------------------------------------------------------------------
+   HUD
+   --------------------------------------------------------------------------- */
+const hpEl = document.getElementById('hpVal');
+const ammoEl = document.getElementById('ammoVal');
+const scoreEl = document.getElementById('score');
+const waveEl = document.getElementById('wave');
+function updateHud() {
+  const hp = Math.ceil(player.hp);
+  hpEl.textContent = hp;
+  hpEl.classList.toggle('low', hp <= 30);
+  ammoEl.textContent = player.reloading > 0 ? '···' : player.mag;
+  scoreEl.textContent = player.score;
+  waveEl.textContent = 'Vlna ' + player.wave + (toSpawn>0 ? ' · nálet' : '');
+}
+
+/* ---------------------------------------------------------------------------
+   CRITIC — výkonový monitor. Hlídá rozpočet 16,6 ms / snímek (60 FPS).
+   --------------------------------------------------------------------------- */
+const pFps = document.getElementById('pFps'), pMs = document.getElementById('pMs');
+const pCalls = document.getElementById('pCalls'), pTris = document.getElementById('pTris');
+const perfBar = document.getElementById('perfBar');
+let msAvg = 16, fpsAcc = 0, fpsFrames = 0, fpsTime = 0, fpsShown = 60;
+
+function updatePerf(frameMs) {
+  msAvg += (frameMs - msAvg) * 0.1; // exponenciální klouzavý průměr
+  fpsAcc += frameMs; fpsFrames++; fpsTime += frameMs;
+  if (fpsTime >= 250) { fpsShown = Math.round(1000 / (fpsAcc/fpsFrames)); fpsAcc = 0; fpsFrames = 0; fpsTime = 0; }
+
+  pMs.textContent = msAvg.toFixed(1) + ' ms';
+  pFps.textContent = fpsShown;
+  const info = renderer.info.render;
+  pCalls.textContent = info.calls;
+  pTris.textContent = info.triangles.toLocaleString('cs');
+
+  // barevné hodnocení vůči rozpočtu 16,6 ms
+  const cls = msAvg <= 16.6 ? 'good' : (msAvg <= 22 ? 'warn' : 'bad');
+  pMs.className = cls; pFps.className = cls;
+  const pct = Math.min(100, (msAvg / 33.2) * 100); // 33,2 ms = 30 FPS = plná lišta
+  perfBar.style.width = pct + '%';
+  perfBar.style.background = cls === 'good' ? '#7dffb0' : cls === 'warn' ? '#ffd166' : '#ff5d5d';
+}
+
+/* ---------------------------------------------------------------------------
+   Konec hry / reset
+   --------------------------------------------------------------------------- */
+function gameOver() {
+  player.alive = false;
+  document.exitPointerLock();
+  startCard.querySelector('h1').textContent = '💀 Konec';
+  startCard.querySelector('.sub').innerHTML =
+    `Skóre <b style="color:#6cc6ff;font-size:20px">${player.score}</b> · dosažená vlna <b style="color:#7dffb0">${player.wave}</b>`;
+  startBtn.textContent = '↻ Hrát znovu';
+  overlay.classList.remove('hidden');
+}
+function resetGame() {
+  player.pos.set(0, PLAYER.eye, -30); player.vel.set(0,0,0);
+  player.yaw = 0; player.pitch = 0;
+  player.hp = 100; player.mag = 30; player.reloading = 0;
+  player.score = 0; player.alive = true;
+  enemies.length = 0; sparks.length = 0;
+  startWave(1);
+  startCard.querySelector('h1').textContent = 'FPS Aréna';
+  startCard.querySelector('.sub').textContent = 'WebGL prototyp · Three.js r160 · stylizovaná low-poly estetika';
+}
+
+/* ---------------------------------------------------------------------------
+   Hlavní smyčka — fixní krok fyziky + volný render (player loop)
+   --------------------------------------------------------------------------- */
+const FIXED = 1/120;          // 120 Hz fyzika = stabilní kolize i při vyšším FPS
+let acc = 0, last = performance.now();
+startWave(1);
+
+function loop(now) {
+  requestAnimationFrame(loop);
+  const frameMs = now - last;
+  last = now;
+  let dt = frameMs / 1000;
+  if (dt > 0.1) dt = 0.1;      // ochrana proti „spirále smrti" po přepnutí tabu
+
+  if (running && !paused) {
+    acc += dt;
+    let steps = 0;
+    while (acc >= FIXED && steps < 8) { fixedStep(FIXED); acc -= FIXED; steps++; }
+  }
+
+  syncVisuals(dt, acc / FIXED);
+  updateHud();
+  renderer.render(scene, camera);
+  updatePerf(frameMs);
+}
+requestAnimationFrame(loop);
+
+/* ---------------------------------------------------------------------------
+   Resize
+   --------------------------------------------------------------------------- */
+addEventListener('resize', () => {
+  camera.aspect = window.innerWidth / window.innerHeight;
+  camera.updateProjectionMatrix();
+  renderer.setSize(window.innerWidth, window.innerHeight);
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+});
+})();
+</script>
+</body>
+</html>

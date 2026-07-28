@@ -1992,6 +1992,36 @@ const KATALOG_SEKCE = [
       {
         "soubor": "obsah/asteroids.html",
         "nazev": "🚀 Asteroids"
+      },
+      {
+        "soubor": "obsah/fps_arena.html",
+        "nazev": "🔫 FPS Aréna (3D)",
+        "tagy": [
+          "fps",
+          "střílečka",
+          "shooter",
+          "3d",
+          "webgl",
+          "three.js",
+          "first person",
+          "krunker",
+          "venge",
+          "aréna"
+        ]
+      },
+      {
+        "soubor": "obsah/dwarf_colony.html",
+        "nazev": "⛏️ Trpasličí kolonie",
+        "tagy": [
+          "kolonie",
+          "simulace",
+          "těžba",
+          "voxel",
+          "3d",
+          "strategie",
+          "rimworld",
+          "dwarf fortress"
+        ]
       }
     ]
   },

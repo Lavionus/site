@@ -1,0 +1,1161 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>⛏️ Trpasličí kolonie – 2.5D simulátor</title>
+<script src="lib/three.0.160.0.min.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1a1a1a;color:#e0e0e0;min-height:100vh;padding:16px;overflow-x:hidden}
+.container{max-width:1320px;margin:0 auto}
+h1{font-size:1.5rem;margin-bottom:4px;font-weight:600;text-align:center}
+.sub{text-align:center;color:#888;font-size:.82rem;margin-bottom:14px}
+.layout{display:grid;grid-template-columns:290px 1fr;gap:16px;align-items:start}
+@media(max-width:960px){.layout{grid-template-columns:1fr}}
+.card{background:#2a2a2a;border:1px solid #404040;border-radius:8px;padding:14px;margin-bottom:14px}
+h2{font-size:.92rem;color:#6aa6fd;margin-bottom:10px}
+.side .card h2{cursor:pointer;user-select:none;display:flex;align-items:center;justify-content:space-between}
+.side .card h2::after{content:'▾';font-size:.7em;color:#6aa6fd;opacity:.7;transition:transform .15s}
+.side .card.collapsed h2{margin-bottom:0}
+.side .card.collapsed h2::after{content:'▸'}
+.side .card.collapsed > *:not(h2){display:none}
+h3{font-size:.72rem;color:#888;margin:12px 0 6px;text-transform:uppercase;letter-spacing:.4px}
+.tools{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.tool{background:#3a3a3a;border:1px solid #555;color:#ccc;padding:8px 6px;border-radius:6px;cursor:pointer;font-size:.76rem;text-align:center;transition:.12s}
+.tool:hover{background:#464646}
+.tool.active{background:#6aa6fd;color:#fff;border-color:#6aa6fd}
+.tool small{display:block;color:#999;font-size:.62rem;margin-top:2px}
+.tool.active small{color:#dbe9ff}
+.row{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
+.btn{background:#3a3a3a;color:#e0e0e0;border:1px solid #555;padding:8px 10px;border-radius:6px;cursor:pointer;font-weight:600;font-size:.8rem;flex:1}
+.btn:hover{background:#464646}
+.btn.primary{background:#6aa6fd;color:#fff;border-color:#6aa6fd}
+.btn.primary:hover{background:#5591e8}
+.viewer-wrap{position:relative;background:#0d1117;border-radius:8px;overflow:hidden;border:1px solid #404040}
+canvas.scene{display:block;width:100%;height:620px;cursor:crosshair;touch-action:none}
+@media(max-width:960px){canvas.scene{height:460px}}
+.hud{position:absolute;top:10px;left:10px;display:flex;gap:8px;flex-wrap:wrap;pointer-events:none;max-width:calc(100% - 150px)}
+.chip{background:rgba(20,24,31,.86);border:1px solid #333;border-radius:6px;padding:5px 9px;font-size:.78rem;display:flex;align-items:center;gap:5px;backdrop-filter:blur(4px)}
+.chip b{color:#fff;font-variant-numeric:tabular-nums}
+.hint{position:absolute;bottom:8px;left:10px;font-size:.68rem;color:#8a93a0;max-width:calc(100% - 20px);line-height:1.5;pointer-events:none}
+.viewer-toolbar{position:absolute;top:10px;right:10px;display:flex;gap:6px}
+.viewer-toolbar button{background:rgba(42,42,42,.9);border:1px solid #555;color:#ccc;width:32px;height:32px;border-radius:6px;cursor:pointer;font-size:.9rem}
+.viewer-toolbar button:hover{background:#4a4a4a}
+.crit{position:absolute;bottom:10px;right:10px;background:rgba(12,15,20,.92);border:1px solid #2b3340;border-radius:7px;padding:8px 10px;font-size:.68rem;line-height:1.55;color:#9fb0c3;font-variant-numeric:tabular-nums;min-width:184px;display:none}
+.crit.on{display:block}
+.crit b{color:#e0e0e0}
+.crit .ok{color:#4fd07a}.crit .warn{color:#f0a848}.crit .bad{color:#f06868}
+.crit hr{border:0;border-top:1px solid #2b3340;margin:5px 0}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.stat{background:#242424;border:1px solid #383838;border-radius:7px;padding:9px;text-align:center}
+.stat .v{font-size:1.15rem;font-weight:700;color:#6aa6fd;font-variant-numeric:tabular-nums}
+.stat .l{font-size:.66rem;color:#888;margin-top:1px}
+.legend{font-size:.72rem;color:#aaa;line-height:1.9}
+.legend .sw{display:inline-block;width:11px;height:11px;border-radius:2px;margin-right:6px;vertical-align:middle;border:1px solid rgba(255,255,255,.15)}
+.note{font-size:.72rem;color:#666;margin-top:10px;line-height:1.5}
+.dwarflist{font-size:.74rem;color:#bbb;max-height:170px;overflow-y:auto}
+.dwarflist .d{display:flex;justify-content:space-between;align-items:center;padding:3px 2px;border-bottom:1px solid #303030;cursor:pointer;gap:6px}
+.dwarflist .d:hover{color:#fff;background:#242424}
+.dwarflist .d.sel{color:#6aa6fd}
+.dwarflist .d .nm{flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dwarflist .d .st{color:#888;font-size:.68rem}
+.bars{display:flex;gap:3px}
+.bar{height:5px;border-radius:2px;background:#333;overflow:hidden;width:26px;display:inline-block;vertical-align:middle}
+.bar i{display:block;height:100%}
+kbd{background:#333;border:1px solid #555;border-radius:3px;padding:0 4px;font-size:.72rem}
+.prio{font-size:.72rem;color:#bbb;display:flex;align-items:center;gap:6px;padding:2px 0}
+.prio input{flex:1}
+.log{font-size:.72rem;color:#bbb;max-height:150px;overflow-y:auto;line-height:1.6}
+.log .e{padding:2px 0;border-bottom:1px solid #2e2e2e}
+.log .e time{color:#666;margin-right:6px;font-variant-numeric:tabular-nums}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>⛏️ Trpasličí kolonie</h1>
+  <div class="sub">2.5D datově orientovaná kolonijní simulace v Three.js — těžba, kácení, farmaření, logistika, stavba, cyklus den/noc. Neblokující A* &amp; InstancedMesh rendering.</div>
+
+  <div class="layout">
+    <!-- ── OVLÁDACÍ PANEL ── -->
+    <div class="side">
+      <div class="card">
+        <h2>🛠️ Nástroje</h2>
+        <div class="tools" id="tools">
+          <div class="tool active" data-tool="mine">⛏️ Těžit<small>označ skálu</small></div>
+          <div class="tool" data-tool="chop">🪓 Kácet<small>označ strom</small></div>
+          <div class="tool" data-tool="farm">🌾 Farma<small>na hlíně</small></div>
+          <div class="tool" data-tool="build">🧱 Zeď<small>−5 🪨</small></div>
+          <div class="tool" data-tool="store">📦 Sklad<small>označ zónu</small></div>
+          <div class="tool" data-tool="select">🔍 Info<small>vyber jednotku</small></div>
+          <div class="tool" data-tool="erase">🚫 Zrušit<small>smaž značku</small></div>
+          <div class="tool" data-tool="pan">✋ Posun<small>táhni mapu</small></div>
+        </div>
+        <div class="row">
+          <button class="btn" id="btnPause">⏸️ Pauza</button>
+          <button class="btn" id="btnSpeed">⏩ 1×</button>
+        </div>
+        <div class="row">
+          <button class="btn primary" id="btnDwarf">＋ Trpaslík</button>
+          <button class="btn" id="btnReset">🔄 Nová mapa</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>📊 Zdroje &amp; kolonie</h2>
+        <div class="stats">
+          <div class="stat"><div class="v" id="sStone">0</div><div class="l">🪨 Kámen</div></div>
+          <div class="stat"><div class="v" id="sWood">0</div><div class="l">🪵 Dřevo</div></div>
+          <div class="stat"><div class="v" id="sFood">0</div><div class="l">🍎 Jídlo</div></div>
+          <div class="stat"><div class="v" id="sPop">0</div><div class="l">🧔 Trpaslíci</div></div>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>🎯 Priority prací</h2>
+        <div class="note" style="margin-top:0">Nižší číslo = vyšší priorita. Jednotky berou nejbližší práci z nejvýše prioritní kategorie.</div>
+        <div id="prios"></div>
+      </div>
+
+      <div class="card">
+        <h2>🧔 Osadníci</h2>
+        <div class="dwarflist" id="dwarflist"></div>
+        <div class="note">Bílá lišta = sytost, modrá = odpočatost. Klikni na řádek nebo použij 🔍 Info.</div>
+      </div>
+
+      <div class="card">
+        <h2>📜 Kronika</h2>
+        <div class="log" id="log"></div>
+      </div>
+    </div>
+
+    <!-- ── VÝŘEZ SCÉNY ── -->
+    <div>
+      <div class="viewer-wrap">
+        <canvas class="scene" id="cv"></canvas>
+        <div class="hud">
+          <div class="chip">🕑 <b id="hClock">06:00</b> <span id="hPhase">Ráno</span></div>
+          <div class="chip">💼 <b id="hJobs">0</b> práce</div>
+          <div class="chip">🧭 <b id="hIdle">0</b> volných</div>
+        </div>
+        <div class="viewer-toolbar">
+          <button id="btnRotL" title="Otočit vlevo (Q)">⟲</button>
+          <button id="btnRotR" title="Otočit vpravo (E)">⟳</button>
+          <button id="btnZoomIn" title="Přiblížit (+)">＋</button>
+          <button id="btnZoomOut" title="Oddálit (−)">－</button>
+          <button id="btnCrit" title="Kritik výkonu (C)">📈</button>
+        </div>
+        <div class="crit" id="crit"></div>
+        <div class="hint">🖱️ Levý = nástroj (táhni pro plochu) · Pravé táhni / mezerník = posun · Kolečko = zoom · <kbd>Q</kbd>/<kbd>E</kbd> rotace · <kbd>C</kbd> kritik</div>
+      </div>
+
+      <div class="card">
+        <h2>🎨 Legenda &amp; architektura</h2>
+        <div class="legend">
+          <span class="sw" style="background:#6b6f76"></span>Skála (těžitelná) &nbsp;
+          <span class="sw" style="background:#8a6a44"></span>Ruda &nbsp;
+          <span class="sw" style="background:#3a3226"></span>Vytěženo (podlaha) &nbsp;
+          <span class="sw" style="background:#4a7a3a"></span>Tráva/hlína &nbsp;
+          <span class="sw" style="background:#9a9aa2"></span>Zeď &nbsp;
+          <span class="sw" style="background:#e0c060"></span>Značka těžby &nbsp;
+          <span class="sw" style="background:#3fa34d"></span>Sklad
+        </div>
+        <div class="note" id="selInfo"></div>
+        <div class="note">
+          <b style="color:#8aa">Architektura (odděleno data ⇢ vykreslování):</b><br>
+          • <b>A — Prostředí:</b> mřížka (typované pole), destrukce bloků, dynamický walkable graf.<br>
+          • <b>B — Jednotky:</b> FSM + potřeby (hlad, únava), krokový task-executor.<br>
+          • <b>C — Ekonomika:</b> předměty na zemi, sklady, hauling, řetězce zdrojů.<br>
+          • <b>Kritik:</b> živý panel FPS / draw-calls / dávek A* (klávesa <kbd>C</kbd>).<br>
+          Veškerý terén, stromy, předměty i trpaslíci jedou přes <b>InstancedMesh</b> (≈ tucet draw-callů). A* běží <b>po časových dávkách</b> a nikdy neblokuje hlavní vlákno.
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+/* =====================================================================
+   TRPASLIČÍ KOLONIE — modularizovaný 2.5D kolonijní simulátor
+   ---------------------------------------------------------------------
+   Striktně datově orientovaný návrh: stav světa žije v typovaných polích
+   a prostých objektech; systémy nad daty operují; Renderer je čistá
+   projekce dat do InstancedMesh. Žádný systém logiky nesahá do THREE.
+
+   Sub-agent A  (World)      — mřížka, terén, destrukce, walkable graf
+   Sub-agent A  (Pathfinder) — neblokující dávkový A* (resumable)
+   Sub-agent B  (Agents)     — FSM osadníků, potřeby, task-executor
+   Sub-agent C  (Economy)    — předměty, sklady, hauling, zdroje
+   JobBoard                  — generování a přidělování práce dle priorit
+   Renderer                  — InstancedMesh projekce (view-only)
+   Critic                    — runtime audit výkonu a invariantů
+   ===================================================================== */
+(function () {
+'use strict';
+const THREE = window.THREE;
+
+/* ---------------------------------------------------------------- CONFIG */
+const CFG = {
+  SX: 56, SZ: 56,            // rozměr mřížky
+  SPAWN_R: 6,                // poloměr počáteční mýtiny
+  MINE_T: 2.6, CHOP_T: 2.0, BUILD_T: 2.2, PLANT_T: 1.2, HARVEST_T: 1.4,
+  PICK_T: 0.3, DROP_T: 0.3, EAT_T: 0.8,
+  WALL_COST: 5,
+  ROCK_HP: 3, TREE_HP: 3,
+  SPEED: 2.6,                // dlaždic za sekundu
+  HUNGER_RATE: 1.4, FATIGUE_RATE: 1.05, // za herní sekundu
+  HUNGER_EAT: 68, FATIGUE_SLEEP: 88, SLEEP_RECOVER: 14,
+  DAY_LEN: 120,              // reálných sekund na herní den
+  PF_BUDGET: 3500,           // expanzí A* za snímek (napříč frontou)
+  PF_MAX: 9000,              // strop expanzí na jednu cestu
+  SIM_HZ: 20,
+};
+const SX = CFG.SX, SZ = CFG.SZ, N = SX * SZ;
+const idx = (x, z) => x + z * SX;
+const inb = (x, z) => x >= 0 && z >= 0 && x < SX && z < SZ;
+const cx = (x) => x - SX / 2 + 0.5;   // cell -> world
+const cz = (z) => z - SZ / 2 + 0.5;
+const wcx = (wx) => Math.floor(wx + SX / 2); // world -> cell
+const wcz = (wz) => Math.floor(wz + SZ / 2);
+
+/* Tile kind: 0 = otevřeno (podlaha/tráva, průchozí), 1 = skála, 2 = zeď */
+const K_OPEN = 0, K_ROCK = 1, K_WALL = 2;
+/* mat: vizuál povrchu — pro skálu druh horniny, pro open tráva/hlína */
+const M_STONE = 0, M_ORE = 1, M_DIRT = 2, M_GRASS = 3, M_WALL = 4;
+
+/* ============================================================ SUB-AGENT A
+   WORLD — mřížka + terén + destrukce. Vše v typovaných polích. */
+const World = {
+  kind: new Uint8Array(N),
+  mat:  new Uint8Array(N),
+  hp:   new Uint8Array(N),   // zbývající údery při těžbě/stavbě
+  desig:new Uint8Array(N),   // 0 nic,1 mine,2 farm,3 build,4 store
+  growth:new Float32Array(N),// 0..1 růst plodiny (jen farm dlaždice)
+  farmed:new Uint8Array(N),  // farma zasazena?
+  reserved:new Uint8Array(N),// dlaždice zamluvená jednotkou
+  block:new Float32Array(N), // sim-čas, do kdy je cíl přeskočen (nedosažitelný)
+  terrainDirty: true,
+  overlayDirty: true,
+
+  generate() {
+    // hodnotový šum (value noise) přes bilineární interpolaci mřížky náhod
+    const seed = Math.random() * 1e6;
+    const rand = (ix, iz) => {
+      let h = (ix * 374761393 + iz * 668265263 + seed) | 0;
+      h = (h ^ (h >> 13)) * 1274126177; h ^= h >> 16;
+      return (h >>> 0) / 4294967295;
+    };
+    const F = 7.5;
+    const noise = (x, z) => {
+      const gx = x / F, gz = z / F;
+      const x0 = Math.floor(gx), z0 = Math.floor(gz), u = gx - x0, v = gz - z0;
+      const s = t => t * t * (3 - 2 * t);
+      const a = rand(x0, z0), b = rand(x0 + 1, z0), c = rand(x0, z0 + 1), d = rand(x0 + 1, z0 + 1);
+      const su = s(u), sv = s(v);
+      return (a * (1 - su) + b * su) * (1 - sv) + (c * (1 - su) + d * su) * sv;
+    };
+    const cxi = SX / 2, czi = SZ / 2;
+    for (let z = 0; z < SZ; z++) for (let x = 0; x < SX; x++) {
+      const i = idx(x, z);
+      this.hp[i] = 0; this.desig[i] = 0; this.growth[i] = 0; this.farmed[i] = 0; this.reserved[i] = 0; this.block[i] = 0;
+      const border = x === 0 || z === 0 || x === SX - 1 || z === SZ - 1;
+      const dist = Math.hypot(x - cxi, z - czi);
+      // zvýšený kontrast šumu — jinak se hodnoty tlačí k 0.5 a skály je málo
+      let n = noise(x, z); n = Math.max(0, Math.min(1, (n - 0.5) * 2.6 + 0.5));
+      if (border || (dist > CFG.SPAWN_R && n > 0.36)) {
+        this.kind[i] = K_ROCK;
+        this.mat[i] = (rand(x + 7, z + 3) > 0.86) ? M_ORE : M_STONE;
+        this.hp[i] = CFG.ROCK_HP;
+      } else {
+        this.kind[i] = K_OPEN;
+        // povrch: mýtina a řídká místa = tráva/hlína
+        this.mat[i] = (n < 0.42) ? M_GRASS : M_DIRT;
+      }
+    }
+    this.terrainDirty = this.overlayDirty = true;
+  },
+  walkable(x, z) { return inb(x, z) && this.kind[idx(x, z)] === K_OPEN; },
+  // nejbližší průchozí sousední dlaždice k cíli (kam se má jednotka postavit)
+  standNear(tx, tz, fromX, fromZ) {
+    const off = [[1,0],[-1,0],[0,1],[0,-1],[1,1],[1,-1],[-1,1],[-1,-1]];
+    let best = null, bd = 1e9;
+    for (const [dx, dz] of off) {
+      const nx = tx + dx, nz = tz + dz;
+      if (!this.walkable(nx, nz)) continue;
+      const d = Math.abs(nx - fromX) + Math.abs(nz - fromZ);
+      if (d < bd) { bd = d; best = [nx, nz]; }
+    }
+    return best;
+  },
+};
+
+/* ====================================================== SUB-AGENT A (PF)
+   PATHFINDER — dávkový, neblokující A*. Jedna cesta se počítá napříč
+   snímky s rozpočtem expanzí; sdílené scratch pole se stampem generace. */
+class MinHeap {
+  constructor() { this.a = []; }
+  get size() { return this.a.length; }
+  push(n) { const a = this.a; a.push(n); let i = a.length - 1;
+    while (i > 0) { const p = (i - 1) >> 1; if (a[p].f <= a[i].f) break; const t = a[p]; a[p] = a[i]; a[i] = t; i = p; } }
+  pop() { const a = this.a, top = a[0], last = a.pop();
+    if (a.length) { a[0] = last; let i = 0; const n = a.length;
+      for (;;) { let l = 2*i+1, r = l+1, s = i;
+        if (l < n && a[l].f < a[s].f) s = l; if (r < n && a[r].f < a[s].f) s = r;
+        if (s === i) break; const t = a[s]; a[s] = a[i]; a[i] = t; i = s; } }
+    return top; }
+}
+const PF = {
+  queue: [], active: null, stamp: 0,
+  g: new Float32Array(N), gs: new Uint32Array(N), from: new Int32Array(N),
+  expandsThisFrame: 0, lastQueueLen: 0,
+  NB: [[1,0,1],[-1,0,1],[0,1,1],[0,-1,1],[1,1,Math.SQRT2],[1,-1,Math.SQRT2],[-1,1,Math.SQRT2],[-1,-1,Math.SQRT2]],
+
+  request(sx, sz, tx, tz, cb) {
+    const job = { sx, sz, tx, tz, cb, cancelled: false, heap: null, expanded: 0, stampV: 0 };
+    this.queue.push(job);
+    return job;
+  },
+  _begin(job) {
+    this.stamp++;
+    job.stampV = this.stamp;
+    job.heap = new MinHeap();
+    job.expanded = 0;
+    const s = idx(job.sx, job.sz);
+    this.g[s] = 0; this.gs[s] = this.stamp; this.from[s] = -1;
+    job.heap.push({ i: s, g: 0, f: this._h(job.sx, job.sz, job.tx, job.tz) });
+  },
+  _h(x, z, tx, tz) { const dx = Math.abs(x - tx), dz = Math.abs(z - tz);
+    return (dx + dz) + (Math.SQRT2 - 2) * Math.min(dx, dz); }, // oktilní
+  _reconstruct(goal) {
+    const out = []; let c = goal;
+    while (c !== -1 && this.from[c] !== -1) { out.push({ x: cx(c % SX), z: cz((c / SX) | 0) }); c = this.from[c]; }
+    out.reverse(); return out;
+  },
+  update(budget) {
+    this.expandsThisFrame = 0;
+    let b = budget;
+    while (b > 0) {
+      if (!this.active) {
+        while (this.queue.length && this.queue[0].cancelled) this.queue.shift();
+        if (!this.queue.length) break;
+        this.active = this.queue.shift();
+        this._begin(this.active);
+      }
+      const job = this.active;
+      if (job.cancelled) { this.active = null; continue; }
+      const goal = idx(job.tx, job.tz), stamp = job.stampV;
+      let done = false;
+      while (job.heap.size && b > 0) {
+        const cur = job.heap.pop(); b--; this.expandsThisFrame++;
+        if (this.gs[cur.i] === stamp && cur.g > this.g[cur.i]) continue; // zastaralý
+        if (cur.i === goal) { this._finish(job, this._reconstruct(goal)); done = true; break; }
+        if (++job.expanded > CFG.PF_MAX) { this._finish(job, null); done = true; break; }
+        const px = cur.i % SX, pz = (cur.i / SX) | 0;
+        for (const nb of this.NB) {
+          const dx = nb[0], dz = nb[1], w = nb[2];
+          const nx = px + dx, nz = pz + dz;
+          if (!World.walkable(nx, nz)) continue;
+          if (dx && dz && (!World.walkable(px + dx, pz) || !World.walkable(px, pz + dz))) continue; // proti řezání rohů
+          const ni = idx(nx, nz), tg = cur.g + w;
+          if (this.gs[ni] !== stamp || tg < this.g[ni]) {
+            this.g[ni] = tg; this.gs[ni] = stamp; this.from[ni] = cur.i;
+            job.heap.push({ i: ni, g: tg, f: tg + this._h(nx, nz, job.tx, job.tz) });
+          }
+        }
+      }
+      if (done) { this.active = null; continue; }
+      if (job.heap.size === 0) { this._finish(job, null); this.active = null; continue; }
+      break; // rozpočet vyčerpán — pokračujeme příští snímek
+    }
+    this.lastQueueLen = this.queue.length + (this.active ? 1 : 0);
+  },
+  _finish(job, path) { if (!job.cancelled && job.cb) job.cb(path); },
+};
+
+/* ============================================================ SUB-AGENT C
+   ECONOMY — uskladněné zdroje + fyzické předměty na zemi (nutno haulovat). */
+const Econ = {
+  stored: { stone: 0, wood: 0, food: 0 },
+  items: [], // {id,x,z,type,reserved}
+  _iid: 1,
+  storeTiles: [],
+  drop(x, z, type) { this.items.push({ id: this._iid++, x, z, type, reserved: false }); Renderer.itemsDirty = true; },
+  removeItem(it) { const k = this.items.indexOf(it); if (k >= 0) this.items.splice(k, 1); Renderer.itemsDirty = true; },
+  hasStore() { return this.storeTiles.length > 0; },
+  nearestStore(fx, fz) {
+    let best = null, bd = 1e9;
+    for (const i of this.storeTiles) {
+      const x = i % SX, z = (i / SX) | 0, d = Math.abs(x - fx) + Math.abs(z - fz);
+      if (d < bd) { bd = d; best = [x, z]; }
+    }
+    return best;
+  },
+  rebuildStoreTiles() {
+    this.storeTiles.length = 0;
+    for (let i = 0; i < N; i++) if (World.desig[i] === 4) this.storeTiles.push(i);
+  },
+};
+
+/* ================================================================ JOBBOARD
+   Generuje seznamy práce z dat světa a přiděluje dle konfigurovatelných
+   priorit. Zamluvení přes World.reserved / item.reserved (bez soupeření). */
+const JOBS = [
+  { key: 'mine',  label: '⛏️ Těžba',   prio: 2 },
+  { key: 'chop',  label: '🪓 Kácení',  prio: 3 },
+  { key: 'build', label: '🧱 Stavba',  prio: 1 },
+  { key: 'farm',  label: '🌾 Farma',   prio: 4 },
+  { key: 'haul',  label: '📦 Nošení',  prio: 5 },
+];
+const JobBoard = {
+  trees: [], // {x,z,hp,chop,reserved}
+  claim(ag) {
+    const order = JOBS.slice().sort((a, b) => a.prio - b.prio);
+    for (const j of order) {
+      const t = this['_find_' + j.key](ag);
+      if (t) return t;
+    }
+    return null;
+  },
+  _nearestTile(ag, pred) {
+    let best = -1, bd = 1e9;
+    for (let i = 0; i < N; i++) {
+      if (World.reserved[i] || World.block[i] > Sim.time) continue;
+      if (!pred(i)) continue;
+      const x = i % SX, z = (i / SX) | 0, d = Math.abs(x - ag.cx) + Math.abs(z - ag.cz);
+      if (d < bd) { bd = d; best = i; }
+    }
+    return best;
+  },
+  _find_mine(ag) {
+    const i = this._nearestTile(ag, k => World.desig[k] === 1 && World.kind[k] === K_ROCK);
+    if (i < 0) return null;
+    const tx = i % SX, tz = (i / SX) | 0;
+    const st = World.standNear(tx, tz, ag.cx, ag.cz);
+    if (!st) return null;
+    World.reserved[i] = 1;
+    return { type: 'mine', steps: [{ x: st[0], z: st[1], act: 'mine', tile: i }], onAbort: () => World.reserved[i] = 0 };
+  },
+  _find_build(ag) {
+    if (Econ.stored.stone < CFG.WALL_COST) return null;
+    const i = this._nearestTile(ag, k => World.desig[k] === 3 && World.kind[k] === K_OPEN);
+    if (i < 0) return null;
+    const tx = i % SX, tz = (i / SX) | 0;
+    const st = World.standNear(tx, tz, ag.cx, ag.cz);
+    if (!st) return null;
+    World.reserved[i] = 1;
+    return { type: 'build', steps: [{ x: st[0], z: st[1], act: 'build', tile: i }], onAbort: () => World.reserved[i] = 0 };
+  },
+  _find_farm(ag) {
+    const i = this._nearestTile(ag, k => {
+      if (World.desig[k] !== 2 || World.kind[k] !== K_OPEN) return false;
+      return World.farmed[k] === 0 || World.growth[k] >= 1;
+    });
+    if (i < 0) return null;
+    const tx = i % SX, tz = (i / SX) | 0;
+    const st = World.walkable(tx, tz) ? [tx, tz] : World.standNear(tx, tz, ag.cx, ag.cz);
+    if (!st) return null;
+    World.reserved[i] = 1;
+    const harvest = World.farmed[i] === 1 && World.growth[i] >= 1;
+    return { type: 'farm', steps: [{ x: st[0], z: st[1], act: harvest ? 'harvest' : 'plant', tile: i }], onAbort: () => World.reserved[i] = 0 };
+  },
+  _find_chop(ag) {
+    let best = null, bd = 1e9;
+    for (const t of this.trees) {
+      if (!t.chop || t.reserved || t.blockUntil > Sim.time) continue;
+      const d = Math.abs(t.x - ag.cx) + Math.abs(t.z - ag.cz);
+      if (d < bd) { bd = d; best = t; }
+    }
+    if (!best) return null;
+    const st = World.standNear(best.x, best.z, ag.cx, ag.cz) || (World.walkable(best.x, best.z) ? [best.x, best.z] : null);
+    if (!st) return null;
+    best.reserved = true;
+    return { type: 'chop', steps: [{ x: st[0], z: st[1], act: 'chop', tree: best }], onAbort: () => best.reserved = false };
+  },
+  _find_haul(ag) {
+    if (!Econ.hasStore()) return null;
+    let best = null, bd = 1e9;
+    for (const it of Econ.items) {
+      if (it.reserved || it.blockUntil > Sim.time) continue;
+      if (!World.walkable(it.x, it.z)) continue;
+      const d = Math.abs(it.x - ag.cx) + Math.abs(it.z - ag.cz);
+      if (d < bd) { bd = d; best = it; }
+    }
+    if (!best) return null;
+    const store = Econ.nearestStore(best.x, best.z);
+    if (!store) return null;
+    best.reserved = true;
+    return { type: 'haul', item: best,
+      steps: [ { x: best.x, z: best.z, act: 'pick', item: best },
+               { x: store[0], z: store[1], act: 'drop' } ],
+      onAbort: () => best.reserved = false };
+  },
+  treeAt(x, z) { return this.trees.find(t => t.x === x && t.z === z); },
+};
+
+/* ============================================================ SUB-AGENT B
+   AGENTS — FSM osadníků + potřeby + krokový task-executor.
+   Stav: 'idle','move','work','sleep'. Task = pole kroků {x,z,act}. */
+const NAMES = ['Balin','Dvalin','Thorin','Gimli','Bofur','Bombur','Nori','Dori','Óin','Glóin','Fíli','Kíli','Durin','Náin','Frár','Lóni','Farin','Borin','Gróin','Telchar'];
+const STATE_COLORS = {
+  idle: 0x8a8f98, move: 0x5aa9f0, mine: 0xf0a848, chop: 0x9ad06a,
+  build: 0x5ad0d0, plant: 0x9ad06a, harvest: 0xf0d060, pick: 0xf0d060,
+  drop: 0xf0d060, eat: 0xf06868, sleep: 0xb080e0,
+};
+const Agents = {
+  list: [], _aid: 1, selected: null,
+  spawn(x, z) {
+    const a = {
+      id: this._aid++, name: NAMES[this._aid % NAMES.length] + ' ' + this._aid,
+      x: cx(x), z: cz(z), cx: x, cz: z,
+      state: 'idle', act: 'idle',
+      task: null, stepI: 0, path: null, pathReq: null, pi: 0, workT: 0, taskT: 0, taskTotalT: 0,
+      carry: null, hunger: 15 + Math.random() * 15, fatigue: 5 + Math.random() * 15,
+      anim: Math.random() * 6.28, yaw: 0, noEatUntil: 0, waitT: 0,
+    };
+    this.list.push(a); return a;
+  },
+  _abortTask(a) {
+    if (a.task && a.task.onAbort) a.task.onAbort();
+    if (a.pathReq) a.pathReq.cancelled = true;
+    // upusť náklad na zem, ať se „nepřilepí" k jednotce a znovu se dá odnést
+    if (a.carry) { Econ.drop(a.cx, a.cz, a.carry); const it = Econ.items[Econ.items.length - 1]; if (it) it.blockUntil = Sim.time + 6; a.carry = null; }
+    a.task = null; a.path = null; a.pathReq = null; a.state = 'idle'; a.act = 'idle';
+  },
+  _startStep(a) {
+    const step = a.task.steps[a.stepI];
+    if (a.pathReq) a.pathReq.cancelled = true; // zruš starou žádost, ať zastaralá odpověď nepřepíše novou cestu
+    a.path = null; a.pi = 0; a.pathReq = null; a.waitT = 0;
+    a.state = 'move'; a.act = 'move';           // vždy přejdi do pohybu (i při čekání na cestu), ať se pracovní větev nepřetáčí
+    if (a.cx === step.x && a.cz === step.z) { a.path = []; return; }
+    a.pathReq = PF.request(a.cx, a.cz, step.x, step.z, (path) => {
+      a.pathReq = null;
+      if (!a.task) return;
+      if (!path) {
+        // cíl je nedosažitelný — dočasně ho zablokuj, ať ho jednotky hned nezkoušejí znovu (konec spamu)
+        const s0 = a.task.steps[0];
+        if (s0.tile != null) World.block[s0.tile] = Sim.time + 6;
+        else if (s0.tree) s0.tree.blockUntil = Sim.time + 6;
+        else if (s0.item) s0.item.blockUntil = Sim.time + 6;
+        else if (a.task.type === 'eat') a.noEatUntil = Sim.time + 5;
+        this._abortTask(a); return;
+      }
+      a.path = path; a.pi = 0; a.state = 'move'; a.act = 'move';
+    });
+  },
+  assign(a, task) { a.task = task; a.stepI = 0; a.taskT = 0; a.taskTotalT = 0; a.state = 'move'; a.act = 'move'; this._startStep(a); },
+  update(dt) { for (const a of this.list) this._agent(a, dt); },
+  _agent(a, dt) {
+    if (a.state !== 'sleep') { a.hunger += CFG.HUNGER_RATE * dt; a.fatigue += CFG.FATIGUE_RATE * dt; }
+    a.hunger = Math.min(120, a.hunger);
+    a.anim += dt * (a.state === 'move' ? 9 : (a.act === 'mine' || a.act === 'chop' || a.act === 'build') ? 12 : 2.5);
+
+    // absolutní pojistka proti livelocku: žádný úkol nesmí trvat věčně
+    if (a.task) { a.taskTotalT += dt; if (a.taskTotalT > 45) { this._abortTask(a); return; } }
+
+    if (a.state === 'sleep') {
+      a.fatigue -= CFG.SLEEP_RECOVER * dt;
+      if (a.fatigue <= 4) { a.fatigue = 0; a.state = 'idle'; a.act = 'idle'; }
+      return;
+    }
+    if (!a.task && (a.fatigue >= CFG.FATIGUE_SLEEP || (Clock.isNight() && a.fatigue >= 45))) {
+      a.state = 'sleep'; a.act = 'sleep'; Log.add(`😴 ${a.name} usnul`); return;
+    }
+    if (!a.task && a.hunger >= CFG.HUNGER_EAT && Econ.stored.food > 0 && Sim.time > a.noEatUntil) {
+      const st = Econ.nearestStore(a.cx, a.cz);
+      if (st) { this.assign(a, { type: 'eat', steps: [{ x: st[0], z: st[1], act: 'eat' }], onAbort: null }); return; }
+    }
+    // kritický hlad přeruší i rozdělaný úkol, aby se stihl najíst dřív, než vyhladoví
+    if (a.task && a.act !== 'eat' && a.hunger >= 108 && Econ.stored.food > 0 && Sim.time > a.noEatUntil) {
+      const st = Econ.nearestStore(a.cx, a.cz);
+      if (st) { this._abortTask(a); this.assign(a, { type: 'eat', steps: [{ x: st[0], z: st[1], act: 'eat' }], onAbort: null }); return; }
+    }
+    if (a.state === 'idle') { const task = JobBoard.claim(a); if (task) this.assign(a, task); return; }
+
+    if (a.state === 'move') {
+      a.taskT += dt;
+      if (a.taskT > 18) { this._abortTask(a); return; }          // watchdog: uvízl bez pokroku → zruš úkol
+      if (a.path === null) {
+        // čeká na cestu z dávkového A*; když nedorazí do 3 s (ztracená/uvázlá žádost), znovu vyžádej — bez zahození úkolu
+        a.waitT += dt;
+        if (!a.pathReq || a.waitT > 3) { this._startStep(a); }
+        return;
+      }
+      a.waitT = 0;
+      if (a.pi >= a.path.length) { this._arrive(a); return; }
+      const wp = a.path[a.pi];
+      const dx = wp.x - a.x, dz = wp.z - a.z, d = Math.hypot(dx, dz);
+      const stepd = CFG.SPEED * dt;
+      if (d <= stepd) {
+        a.x = wp.x; a.z = wp.z; a.cx = wcx(a.x); a.cz = wcz(a.z); a.pi++; a.taskT = 0; // pokrok resetuje watchdog
+        if (a.pi < a.path.length) { const nc = a.path[a.pi]; if (!World.walkable(wcx(nc.x), wcz(nc.z))) this._startStep(a); }
+      } else { a.x += dx / d * stepd; a.z += dz / d * stepd; a.yaw = Math.atan2(dx, dz); a.cx = wcx(a.x); a.cz = wcz(a.z); }
+      return;
+    }
+    if (a.state === 'work') { a.workT -= dt; if (a.workT <= 0) this._completeStep(a); return; }
+  },
+  _arrive(a) {
+    const step = a.task.steps[a.stepI];
+    const dur = { mine: CFG.MINE_T, chop: CFG.CHOP_T, build: CFG.BUILD_T, plant: CFG.PLANT_T,
+      harvest: CFG.HARVEST_T, pick: CFG.PICK_T, drop: CFG.DROP_T, eat: CFG.EAT_T }[step.act] || 0.3;
+    a.state = 'work'; a.act = step.act; a.workT = dur;
+  },
+  _completeStep(a) {
+    Effects.apply(a, a.task.steps[a.stepI]);
+    a.stepI++;
+    if (a.stepI >= a.task.steps.length) { a.task = null; a.state = 'idle'; a.act = 'idle'; }
+    else { a.taskT = 0; this._startStep(a); }
+  },
+};
+
+/* Efekty kroků — mění DATA světa/ekonomiky (ne render). */
+const Effects = {
+  apply(a, step) {
+    switch (step.act) {
+      case 'mine': {
+        const i = step.tile;
+        if (World.kind[i] !== K_ROCK) { World.reserved[i] = 0; break; } // už vytěženo někým jiným
+        World.hp[i]--;
+        if (World.hp[i] <= 0) {
+          const ore = World.mat[i] === M_ORE;
+          World.kind[i] = K_OPEN; World.mat[i] = M_DIRT; World.desig[i] = 0; World.reserved[i] = 0;
+          World.terrainDirty = World.overlayDirty = true;
+          Econ.drop(i % SX, (i / SX) | 0, 'stone');
+          if (ore) Econ.drop(i % SX, (i / SX) | 0, 'stone');
+          Log.add(`⛏️ ${a.name} vytěžil ${ore ? 'rudu' : 'kámen'}`);
+        } else { World.reserved[i] = 0; }
+        break;
+      }
+      case 'chop': {
+        const t = step.tree;
+        if (!JobBoard.trees.includes(t)) break; // strom už padl jinému
+        t.hp--;
+        if (t.hp <= 0) {
+          Econ.drop(t.x, t.z, 'wood'); Econ.drop(t.x, t.z, 'wood');
+          const k = JobBoard.trees.indexOf(t); if (k >= 0) JobBoard.trees.splice(k, 1);
+          Renderer.treesDirty = true; Log.add(`🪓 ${a.name} porazil strom`);
+        } else { t.reserved = false; }
+        break;
+      }
+      case 'build': {
+        const i = step.tile;
+        if (World.kind[i] !== K_OPEN) { World.reserved[i] = 0; break; } // pole už není volné
+        if (Econ.stored.stone >= CFG.WALL_COST) {
+          Econ.stored.stone -= CFG.WALL_COST;
+          World.kind[i] = K_WALL; World.mat[i] = M_WALL; World.desig[i] = 0; World.reserved[i] = 0;
+          World.terrainDirty = World.overlayDirty = true; Log.add(`🧱 ${a.name} postavil zeď`);
+        } else { World.reserved[i] = 0; }
+        break;
+      }
+      case 'plant': { const i = step.tile; World.farmed[i] = 1; World.growth[i] = 0; World.reserved[i] = 0; World.overlayDirty = true; Log.add(`🌱 ${a.name} zasadil`); break; }
+      case 'harvest': { const i = step.tile; Econ.drop(i % SX, (i / SX) | 0, 'food'); World.growth[i] = 0; World.farmed[i] = 1; World.reserved[i] = 0; World.overlayDirty = true; Log.add(`🌾 ${a.name} sklidil jídlo`); break; }
+      case 'pick': { const it = step.item; if (Econ.items.includes(it)) { a.carry = it.type; Econ.removeItem(it); } break; }
+      case 'drop': { if (a.carry) { Econ.stored[a.carry] = (Econ.stored[a.carry] || 0) + 1; a.carry = null; } break; }
+      case 'eat': { if (Econ.stored.food > 0) { Econ.stored.food--; a.hunger = Math.max(0, a.hunger - 70); Log.add(`🍎 ${a.name} se najedl`); } break; }
+    }
+  },
+};
+
+/* ================================================================== CLOCK */
+const Clock = {
+  t: 0.28,
+  advance(dt) { this.t = (this.t + dt / CFG.DAY_LEN) % 1; },
+  isNight() { return this.t < 0.22 || this.t > 0.80; },
+  hhmm() { const m = Math.floor(this.t * 1440); return String((m/60|0)).padStart(2,'0') + ':' + String(m%60).padStart(2,'0'); },
+  phase() { const t=this.t; return t<0.22?'Noc':t<0.32?'Ráno':t<0.5?'Dopoledne':t<0.7?'Odpoledne':t<0.8?'Večer':'Noc'; },
+  daylight() { return Math.max(0, Math.sin((this.t - 0.22) / 0.58 * Math.PI)); },
+};
+
+/* ==================================================================== LOG */
+const Log = {
+  el: null, lines: [],
+  add(msg) {
+    this.lines.unshift({ t: Clock.hhmm(), m: msg });
+    if (this.lines.length > 40) this.lines.pop();
+    if (this.el) this.el.innerHTML = this.lines.map(l => `<div class="e"><time>${l.t}</time>${l.m}</div>`).join('');
+  },
+};
+
+/* =============================================================== RENDERER
+   Čistá projekce dat -> InstancedMesh. Nezná logiku, jen čte stav. */
+const Renderer = {
+  scene: null, camera: null, renderer: null, cv: null, ray: null,
+  dummy: new THREE.Object3D(), color: new THREE.Color(), _c2: new THREE.Color(),
+  terrain: null, ground: null, grass: null, farm: null,
+  markMine: null, markBuild: null, markStore: null, treeTrunk: null, treeFoli: null,
+  items: {}, dwarves: null, status: null, pickPlane: null, preview: null,
+  _pcPlane: null, _pcHit: new THREE.Vector3(),
+  camAngle: Math.PI * 0.25, camZoom: 15, camPitch: 0.95, camTarget: new THREE.Vector3(0, 0, 0),
+  treesDirty: true, itemsDirty: true,
+  MATCOLORS: { 0: 0x6b6f76, 1: 0x8a6a44, 2: 0x3a3226, 3: 0x4a7a3a, 4: 0x9a9aa2 },
+
+  init(cv) {
+    this.cv = cv;
+    this.renderer = new THREE.WebGLRenderer({ canvas: cv, antialias: true });
+    this.renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+    this.scene = new THREE.Scene();
+    this.scene.background = new THREE.Color(0x0d1117);
+    this.scene.fog = new THREE.Fog(0x0d1117, 42, 95);
+
+    this.camera = new THREE.OrthographicCamera(-1, 1, 1, -1, 0.1, 400);
+    this.hemi = new THREE.HemisphereLight(0xbfd8ff, 0x30251a, 0.9); this.scene.add(this.hemi);
+    this.sun = new THREE.DirectionalLight(0xfff2d8, 1.0); this.sun.position.set(18, 30, 12); this.scene.add(this.sun);
+
+    const gmat = new THREE.MeshLambertMaterial({ color: 0x2a2420 });
+    this.ground = new THREE.Mesh(new THREE.PlaneGeometry(SX, SZ), gmat);
+    this.ground.rotation.x = -Math.PI / 2; this.ground.position.y = -0.001; this.scene.add(this.ground);
+
+    const box = new THREE.BoxGeometry(1, 1, 1);
+    const tile = new THREE.PlaneGeometry(0.94, 0.94); tile.rotateX(-Math.PI / 2);
+
+    this.terrain = new THREE.InstancedMesh(box, new THREE.MeshLambertMaterial(), N);
+    this.terrain.instanceMatrix.setUsage(THREE.DynamicDrawUsage); this.scene.add(this.terrain);
+    this.grass = new THREE.InstancedMesh(tile.clone(), new THREE.MeshLambertMaterial(), N); this.scene.add(this.grass);
+    this.farm = new THREE.InstancedMesh(tile.clone(), new THREE.MeshLambertMaterial(), N); this.scene.add(this.farm);
+
+    this.markMine = new THREE.InstancedMesh(new THREE.BoxGeometry(1.02, 1.02, 1.02), new THREE.MeshBasicMaterial({ color: 0xe0c060, wireframe: true }), N); this.scene.add(this.markMine);
+    this.markBuild = new THREE.InstancedMesh(new THREE.BoxGeometry(1, 1, 1), new THREE.MeshBasicMaterial({ color: 0x5ad0d0, wireframe: true }), N); this.scene.add(this.markBuild);
+    this.markStore = new THREE.InstancedMesh(tile.clone(), new THREE.MeshBasicMaterial({ color: 0x3fa34d, transparent: true, opacity: 0.5 }), N); this.scene.add(this.markStore);
+
+    this.treeTrunk = new THREE.InstancedMesh(new THREE.CylinderGeometry(0.09, 0.13, 0.7, 6), new THREE.MeshLambertMaterial({ color: 0x5b3d22 }), 900); this.scene.add(this.treeTrunk);
+    this.treeFoli = new THREE.InstancedMesh(new THREE.ConeGeometry(0.42, 1.0, 7), new THREE.MeshLambertMaterial(), 900); this.scene.add(this.treeFoli);
+
+    this.items.stone = new THREE.InstancedMesh(new THREE.IcosahedronGeometry(0.14, 0), new THREE.MeshLambertMaterial({ color: 0x9aa0a8 }), 600); this.scene.add(this.items.stone);
+    this.items.wood = new THREE.InstancedMesh(new THREE.BoxGeometry(0.32, 0.14, 0.14), new THREE.MeshLambertMaterial({ color: 0x8a5a2c }), 600); this.scene.add(this.items.wood);
+    this.items.food = new THREE.InstancedMesh(new THREE.SphereGeometry(0.13, 7, 5), new THREE.MeshLambertMaterial({ color: 0xd04848 }), 600); this.scene.add(this.items.food);
+
+    this.dwarves = new THREE.InstancedMesh(new THREE.CapsuleGeometry(0.2, 0.34, 3, 7), new THREE.MeshLambertMaterial(), 256); this.scene.add(this.dwarves);
+    this.status = new THREE.InstancedMesh(new THREE.SphereGeometry(0.1, 8, 6), new THREE.MeshBasicMaterial(), 256); this.scene.add(this.status);
+
+    this.pickPlane = new THREE.Mesh(new THREE.PlaneGeometry(SX, SZ), new THREE.MeshBasicMaterial({ visible: false }));
+    this.pickPlane.rotation.x = -Math.PI / 2; this.scene.add(this.pickPlane);
+
+    // náhled obdélníkového výběru (plochá poloprůhledná dlaždice, škáluje se dle tažení)
+    this.preview = new THREE.Mesh(new THREE.PlaneGeometry(1, 1),
+      new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.24, depthWrite: false }));
+    this.preview.rotation.x = -Math.PI / 2; this.preview.position.y = 0.09; this.preview.visible = false; this.scene.add(this.preview);
+
+    this._pcPlane = new THREE.Plane(new THREE.Vector3(0, 1, 0), -0.4); // rovina v půli výšky skály
+    this.ray = new THREE.Raycaster();
+    this.resize();
+  },
+  resize() { this.renderer.setSize(this.cv.clientWidth, this.cv.clientHeight, false); this.updateCamera(); },
+  updateCamera() {
+    const w = this.cv.clientWidth, h = this.cv.clientHeight, asp = w / h, z = this.camZoom;
+    this.camera.left = -z * asp; this.camera.right = z * asp; this.camera.top = z; this.camera.bottom = -z;
+    const D = 60, ph = this.camPitch;
+    const off = new THREE.Vector3(Math.cos(this.camAngle) * Math.cos(ph) * D, Math.sin(ph) * D, Math.sin(this.camAngle) * Math.cos(ph) * D);
+    this.camera.position.copy(this.camTarget).add(off);
+    this.camera.up.set(0, 1, 0); this.camera.lookAt(this.camTarget); this.camera.updateProjectionMatrix();
+  },
+  _shade(mat, x, z) {
+    const c = this._c2.setHex(this.MATCOLORS[mat] != null ? this.MATCOLORS[mat] : 0x808080);
+    c.offsetHSL(0, 0, (((x * 13 + z * 7) % 5 - 2) * 3) / 255);
+    return c;
+  },
+  syncTerrain() {
+    const d = this.dummy; let n = 0, g = 0;
+    for (let i = 0; i < N; i++) {
+      const x = i % SX, z = (i / SX) | 0;
+      if (World.kind[i] !== K_OPEN) {
+        d.position.set(cx(x), 0.5, cz(z)); d.scale.set(1, 1, 1); d.rotation.set(0, 0, 0); d.updateMatrix();
+        this.terrain.setMatrixAt(n, d.matrix); this.terrain.setColorAt(n, this._shade(World.mat[i], x, z)); n++;
+      } else {
+        d.position.set(cx(x), 0.02, cz(z)); d.scale.set(1, 1, 1); d.rotation.set(0, 0, 0); d.updateMatrix();
+        this.grass.setMatrixAt(g, d.matrix); this.grass.setColorAt(g, this._shade(World.mat[i], x, z)); g++;
+      }
+    }
+    this.terrain.count = n; this.grass.count = g;
+    this.terrain.instanceMatrix.needsUpdate = true; this.grass.instanceMatrix.needsUpdate = true;
+    if (this.terrain.instanceColor) this.terrain.instanceColor.needsUpdate = true;
+    if (this.grass.instanceColor) this.grass.instanceColor.needsUpdate = true;
+    this.terrain.computeBoundingSphere();
+  },
+  syncOverlay() {
+    const d = this.dummy; let m = 0, b = 0, s = 0, f = 0;
+    for (let i = 0; i < N; i++) {
+      const de = World.desig[i], x = i % SX, z = (i / SX) | 0;
+      if (de === 1 && World.kind[i] === K_ROCK) { d.position.set(cx(x), 0.5, cz(z)); d.scale.set(1,1,1); d.rotation.set(0,0,0); d.updateMatrix(); this.markMine.setMatrixAt(m++, d.matrix); }
+      else if (de === 3 && World.kind[i] === K_OPEN) { d.position.set(cx(x), 0.5, cz(z)); d.scale.set(1,1,1); d.rotation.set(0,0,0); d.updateMatrix(); this.markBuild.setMatrixAt(b++, d.matrix); }
+      else if (de === 4) { d.position.set(cx(x), 0.03, cz(z)); d.scale.set(1,1,1); d.rotation.set(0,0,0); d.updateMatrix(); this.markStore.setMatrixAt(s++, d.matrix); }
+      if (de === 2) {
+        d.position.set(cx(x), 0.04, cz(z)); d.scale.set(1,1,1); d.rotation.set(0,0,0); d.updateMatrix(); this.farm.setMatrixAt(f, d.matrix);
+        const col = World.farmed[i] ? this._c2.setHex(0x6b4a24).lerp(this._c2.clone().setHex(0xd8c048), Math.min(1, World.growth[i])) : this._c2.setHex(0x5a3a1c);
+        this.farm.setColorAt(f, col); f++;
+      }
+    }
+    this.markMine.count = m; this.markBuild.count = b; this.markStore.count = s; this.farm.count = f;
+    this.markMine.instanceMatrix.needsUpdate = true; this.markBuild.instanceMatrix.needsUpdate = true;
+    this.markStore.instanceMatrix.needsUpdate = true; this.farm.instanceMatrix.needsUpdate = true;
+    if (this.farm.instanceColor) this.farm.instanceColor.needsUpdate = true;
+    Econ.rebuildStoreTiles();
+  },
+  syncTrees() {
+    const d = this.dummy; let n = 0;
+    for (const t of JobBoard.trees) {
+      d.position.set(cx(t.x), 0.35, cz(t.z)); d.scale.set(1,1,1); d.rotation.set(0,0,0); d.updateMatrix(); this.treeTrunk.setMatrixAt(n, d.matrix);
+      d.position.set(cx(t.x), 0.95, cz(t.z)); d.updateMatrix(); this.treeFoli.setMatrixAt(n, d.matrix);
+      this.treeFoli.setColorAt(n, this._c2.setHex(t.chop ? 0xe08a3c : 0x2f6b34)); n++;
+    }
+    this.treeTrunk.count = n; this.treeFoli.count = n;
+    this.treeTrunk.instanceMatrix.needsUpdate = true; this.treeFoli.instanceMatrix.needsUpdate = true;
+    if (this.treeFoli.instanceColor) this.treeFoli.instanceColor.needsUpdate = true;
+  },
+  syncItems() {
+    const d = this.dummy; const cnt = { stone: 0, wood: 0, food: 0 };
+    for (const it of Econ.items) {
+      const mesh = this.items[it.type]; if (!mesh) continue;
+      const k = cnt[it.type]++; if (k >= mesh.instanceMatrix.count) continue;
+      const jx = ((it.id * 7) % 5 - 2) * 0.09, jz = ((it.id * 3) % 5 - 2) * 0.09;
+      d.position.set(cx(it.x) + jx, 0.14, cz(it.z) + jz); d.rotation.set(0, it.id, 0); d.scale.set(1,1,1); d.updateMatrix();
+      mesh.setMatrixAt(k, d.matrix);
+    }
+    for (const key of ['stone', 'wood', 'food']) { const mm = this.items[key]; mm.count = cnt[key]; mm.instanceMatrix.needsUpdate = true; }
+  },
+  syncDwarves() {
+    const d = this.dummy; let n = 0;
+    for (const a of Agents.list) {
+      const working = a.act === 'mine' || a.act === 'chop' || a.act === 'build';
+      const bob = a.state === 'move' ? Math.abs(Math.sin(a.anim)) * 0.06 : working ? Math.abs(Math.sin(a.anim)) * 0.13 : 0;
+      const lie = a.state === 'sleep';
+      d.position.set(a.x, (lie ? 0.2 : 0.37) + bob, a.z);
+      d.rotation.set(lie ? Math.PI / 2 : (working ? Math.sin(a.anim) * 0.25 : 0), a.yaw, 0);
+      d.scale.set(1, 1, 1); d.updateMatrix(); this.dwarves.setMatrixAt(n, d.matrix);
+      this.dwarves.setColorAt(n, this._c2.setHex(a === Agents.selected ? 0xffffff : 0xcaa878));
+      d.position.set(a.x, 0.95 + bob, a.z); d.rotation.set(0,0,0); d.scale.setScalar(a === Agents.selected ? 1.3 : 1); d.updateMatrix();
+      this.status.setMatrixAt(n, d.matrix); this.status.setColorAt(n, this._c2.setHex(STATE_COLORS[a.act] || 0x8a8f98));
+      n++;
+    }
+    this.dwarves.count = n; this.status.count = n;
+    this.dwarves.instanceMatrix.needsUpdate = true; this.status.instanceMatrix.needsUpdate = true;
+    if (this.dwarves.instanceColor) this.dwarves.instanceColor.needsUpdate = true;
+    if (this.status.instanceColor) this.status.instanceColor.needsUpdate = true;
+  },
+  syncLight() {
+    const dl = Clock.daylight();
+    this.hemi.intensity = 0.28 + dl * 0.75; this.sun.intensity = 0.15 + dl * 1.05;
+    const sky = this._c2.setHex(0x0d1117).lerp(this.color.setHex(0x3a5f8a), dl * 0.55);
+    this.scene.background.copy(sky); this.scene.fog.color.copy(sky);
+    this.sun.color.setHSL(0.09, 0.5, 0.55 + dl * 0.25);
+    const ang = this.camAngle;
+    this.sun.position.set(this.camTarget.x + Math.cos(ang + 1) * 20, 8 + dl * 26, this.camTarget.z + Math.sin(ang + 1) * 20);
+  },
+  render() {
+    if (World.terrainDirty) { this.syncTerrain(); World.terrainDirty = false; }
+    if (World.overlayDirty) { this.syncOverlay(); World.overlayDirty = false; }
+    if (this.treesDirty) { this.syncTrees(); this.treesDirty = false; }
+    if (this.itemsDirty) { this.syncItems(); this.itemsDirty = false; }
+    this.syncDwarves(); this.syncLight();
+    this.renderer.render(this.scene, this.camera);
+  },
+  _ndc(clientX, clientY) {
+    const r = this.cv.getBoundingClientRect();
+    return new THREE.Vector2(((clientX - r.left) / r.width) * 2 - 1, -((clientY - r.top) / r.height) * 2 + 1);
+  },
+  pick(clientX, clientY) {
+    this.ray.setFromCamera(this._ndc(clientX, clientY), this.camera);
+    const hitT = this.ray.intersectObject(this.terrain);
+    const hitG = this.ray.intersectObject(this.pickPlane);
+    let solidCell = null, groundCell = null;
+    if (hitT.length) { const p = hitT[0].point; solidCell = [wcx(p.x), wcz(p.z)]; }
+    if (hitG.length) { const p = hitG[0].point; groundCell = [wcx(p.x), wcz(p.z)]; }
+    const useSolid = hitT.length && (!hitG.length || hitT[0].distance <= hitG[0].distance + 0.01);
+    return { solidCell, groundCell, useSolid };
+  },
+  // buňka mřížky pod kurzorem (rovina v půli výšky → menší parallax přes skály)
+  pickCell(clientX, clientY) {
+    this.ray.setFromCamera(this._ndc(clientX, clientY), this.camera);
+    const p = this.ray.ray.intersectPlane(this._pcPlane, this._pcHit);
+    if (!p) return null;
+    const x = wcx(p.x), z = wcz(p.z);
+    return inb(x, z) ? [x, z] : null;
+  },
+  showPreview(a, b, colorHex) {
+    const x0 = Math.min(a[0], b[0]), x1 = Math.max(a[0], b[0]), z0 = Math.min(a[1], b[1]), z1 = Math.max(a[1], b[1]);
+    this.preview.position.set((cx(x0) + cx(x1)) / 2, 0.09, (cz(z0) + cz(z1)) / 2);
+    this.preview.scale.set(x1 - x0 + 1, z1 - z0 + 1, 1);
+    this.preview.material.color.setHex(colorHex);
+    this.preview.visible = true;
+  },
+  hidePreview() { this.preview.visible = false; },
+  pickDwarf(clientX, clientY) {
+    this.ray.setFromCamera(this._ndc(clientX, clientY), this.camera);
+    // 1) přesný zásah instance kapsle
+    const hit = this.ray.intersectObject(this.dwarves);
+    if (hit.length && hit[0].instanceId != null && Agents.list[hit[0].instanceId]) return Agents.list[hit[0].instanceId];
+    // 2) fallback: nejbližší jednotka k bodu kliknutí na zemi (spolehlivější)
+    const hg = this.ray.intersectObject(this.pickPlane);
+    if (hg.length) {
+      const p = hg[0].point; let best = null, bd = 1.1;
+      for (const a of Agents.list) { const d = Math.hypot(a.x - p.x, a.z - p.z); if (d < bd) { bd = d; best = a; } }
+      return best;
+    }
+    return null;
+  },
+};
+
+/* ================================================================= CRITIC
+   Runtime audit: FPS, draw-cally, dávky A*, kontrola invariantů. */
+const Critic = {
+  el: null, on: false, frames: 0, acc: 0, fps: 60, ms: 16, peakCalls: 0,
+  tick(dtReal) {
+    this.frames++; this.acc += dtReal;
+    if (this.acc >= 0.5) { this.fps = this.frames / this.acc; this.ms = 1000 * this.acc / this.frames; this.frames = 0; this.acc = 0; if (this.on) this.paint(); }
+  },
+  paint() {
+    if (!this.el) return;
+    const info = Renderer.renderer.info.render;
+    this.peakCalls = Math.max(this.peakCalls, info.calls);
+    const cls = v => v >= 58 ? 'ok' : v >= 45 ? 'warn' : 'bad';
+    const callCls = info.calls <= 30 ? 'ok' : info.calls <= 60 ? 'warn' : 'bad';
+    this.el.innerHTML =
+      `<b>📈 Kritik výkonu</b><hr>` +
+      `FPS: <span class="${cls(this.fps)}">${this.fps.toFixed(0)}</span> · ${this.ms.toFixed(1)} ms<br>` +
+      `Draw-cally: <span class="${callCls}">${info.calls}</span> (max ${this.peakCalls})<br>` +
+      `Trojúhelníky: ${(info.triangles/1000).toFixed(1)}k<br>` +
+      `A* fronta: ${PF.lastQueueLen} · exp/f: ${PF.expandsThisFrame}<br>` +
+      `Jednotky: ${Agents.list.length} · předměty: ${Econ.items.length}<hr>` +
+      `<span class="ok">✓</span> data ⇢ render odděleny<br>` +
+      `<span class="${PF.expandsThisFrame <= CFG.PF_BUDGET ? 'ok' : 'bad'}">✓</span> A* neblokuje (dávky)<br>` +
+      `<span class="${info.calls <= 40 ? 'ok' : 'warn'}">✓</span> InstancedMesh batching`;
+  },
+};
+
+/* ==================================================================== SIM */
+const Sim = {
+  acc: 0, time: 0, speed: 1, paused: false, DT: 1 / CFG.SIM_HZ,
+  step(dtReal) {
+    if (this.paused) return;
+    this.acc += dtReal * this.speed;
+    let guard = 0;
+    while (this.acc >= this.DT && guard++ < 8) { this.tick(this.DT); this.acc -= this.DT; }
+  },
+  tick(dt) {
+    this.time += dt;
+    Clock.advance(dt);
+    for (let i = 0; i < N; i++) if (World.desig[i] === 2 && World.farmed[i] && World.growth[i] < 1) {
+      World.growth[i] = Math.min(1, World.growth[i] + dt / 22);
+      if (World.growth[i] >= 1) World.overlayDirty = true;
+    }
+    Agents.update(dt);
+  },
+};
+
+/* ================================================================= INPUT */
+const Input = {
+  tool: 'mine', painting: false, panning: false, lastX: 0, lastY: 0, spaceDown: false,
+  startCell: null, curCell: null,
+  toolColor() { return { mine: 0xe0c060, chop: 0xe08a3c, farm: 0x8bd06a, build: 0x5ad0d0, store: 0x3fa34d, erase: 0xf06868 }[this.tool] || 0xffffff; },
+  init() {
+    const cv = Renderer.cv;
+    cv.addEventListener('pointerdown', e => this.down(e));
+    window.addEventListener('pointermove', e => this.move(e));
+    window.addEventListener('pointerup', () => this.up());
+    cv.addEventListener('wheel', e => { e.preventDefault(); Renderer.camZoom = Math.max(8, Math.min(40, Renderer.camZoom * (e.deltaY > 0 ? 1.1 : 0.9))); Renderer.updateCamera(); }, { passive: false });
+    cv.addEventListener('contextmenu', e => e.preventDefault());
+    window.addEventListener('keydown', e => this.key(e, true));
+    window.addEventListener('keyup', e => this.key(e, false));
+  },
+  key(e, dn) {
+    if (e.code === 'Space') { this.spaceDown = dn; if (dn && e.target === document.body) { e.preventDefault(); UI.togglePause(); } return; }
+    if (!dn) return;
+    if (e.key === 'q' || e.key === 'Q') { Renderer.camAngle -= Math.PI / 8; Renderer.updateCamera(); }
+    else if (e.key === 'e' || e.key === 'E') { Renderer.camAngle += Math.PI / 8; Renderer.updateCamera(); }
+    else if (e.key === '+' || e.key === '=') { Renderer.camZoom = Math.max(8, Renderer.camZoom * 0.9); Renderer.updateCamera(); }
+    else if (e.key === '-') { Renderer.camZoom = Math.min(40, Renderer.camZoom * 1.1); Renderer.updateCamera(); }
+    else if (e.key === 'c' || e.key === 'C') UI.toggleCrit();
+  },
+  down(e) {
+    this.lastX = e.clientX; this.lastY = e.clientY;
+    if (e.button === 2 || e.button === 1 || this.spaceDown || this.tool === 'pan') { this.panning = true; return; }
+    if (e.button !== 0) return;
+    if (this.tool === 'select') { const dw = Renderer.pickDwarf(e.clientX, e.clientY); if (dw) { Agents.selected = dw; UI.renderDwarfList(); } return; }
+    const c = Renderer.pickCell(e.clientX, e.clientY); if (!c) return;
+    this.painting = true; this.startCell = c; this.curCell = c;
+    Renderer.showPreview(c, c, this.toolColor());
+  },
+  move(e) {
+    if (this.panning) {
+      const dx = e.clientX - this.lastX, dy = e.clientY - this.lastY;
+      this.lastX = e.clientX; this.lastY = e.clientY;
+      const s = Renderer.camZoom / 260, a = Renderer.camAngle;
+      const rx = Math.cos(a + Math.PI / 2), rz = Math.sin(a + Math.PI / 2), fx = Math.cos(a), fz = Math.sin(a);
+      Renderer.camTarget.x += (dx * rx - dy * fx) * s;
+      Renderer.camTarget.z += (dx * rz - dy * fz) * s;
+      const lim = SX / 2 + 4;
+      Renderer.camTarget.x = Math.max(-lim, Math.min(lim, Renderer.camTarget.x));
+      Renderer.camTarget.z = Math.max(-lim, Math.min(lim, Renderer.camTarget.z));
+      Renderer.updateCamera(); return;
+    }
+    if (this.painting) {
+      const c = Renderer.pickCell(e.clientX, e.clientY); if (!c) return;
+      this.curCell = c; Renderer.showPreview(this.startCell, this.curCell, this.toolColor());
+    }
+  },
+  up() {
+    if (this.painting && this.startCell && this.curCell) { this.applyRect(this.startCell, this.curCell, this.tool); Renderer.hidePreview(); }
+    this.painting = false; this.panning = false; this.startCell = this.curCell = null;
+  },
+  // aplikuj nástroj na celý obdélník mezi dvěma rohy (jeden klik = 1×1)
+  applyRect(a, b, t) {
+    const x0 = Math.min(a[0], b[0]), x1 = Math.max(a[0], b[0]), z0 = Math.min(a[1], b[1]), z1 = Math.max(a[1], b[1]);
+    for (let z = z0; z <= z1; z++) for (let x = x0; x <= x1; x++) this.applyCell(x, z, t);
+  },
+  applyCell(x, z, t) {
+    if (!inb(x, z)) return;
+    const i = idx(x, z);
+    if (t === 'mine') { if (World.kind[i] === K_ROCK) { World.desig[i] = 1; World.block[i] = 0; World.overlayDirty = true; } }
+    else if (t === 'chop') { const tr = JobBoard.treeAt(x, z); if (tr) { tr.chop = true; tr.blockUntil = 0; Renderer.treesDirty = true; } }
+    else if (t === 'farm') { if (World.kind[i] === K_OPEN && !JobBoard.treeAt(x, z)) { World.desig[i] = 2; World.block[i] = 0; World.overlayDirty = true; } }
+    else if (t === 'build') { if (World.kind[i] === K_OPEN && !JobBoard.treeAt(x, z)) { World.desig[i] = 3; World.block[i] = 0; World.overlayDirty = true; } }
+    else if (t === 'store') { if (World.kind[i] === K_OPEN) { World.desig[i] = 4; World.overlayDirty = true; } }
+    else if (t === 'erase') {
+      if (World.desig[i]) { World.desig[i] = 0; World.reserved[i] = 0; World.farmed[i] = 0; World.growth[i] = 0; World.overlayDirty = true; }
+      const tr = JobBoard.treeAt(x, z); if (tr && tr.chop) { tr.chop = false; tr.reserved = false; Renderer.treesDirty = true; }
+    }
+  },
+};
+
+/* ===================================================================== UI */
+const UI = {
+  init() {
+    document.querySelectorAll('#tools .tool').forEach(el => el.addEventListener('click', () => {
+      document.querySelectorAll('#tools .tool').forEach(t => t.classList.remove('active'));
+      el.classList.add('active'); Input.tool = el.dataset.tool;
+      Renderer.cv.style.cursor = el.dataset.tool === 'pan' ? 'grab' : (el.dataset.tool === 'select' ? 'pointer' : 'crosshair');
+    }));
+    document.getElementById('btnPause').addEventListener('click', () => this.togglePause());
+    document.getElementById('btnSpeed').addEventListener('click', () => this.cycleSpeed());
+    document.getElementById('btnDwarf').addEventListener('click', () => this.addDwarf());
+    document.getElementById('btnReset').addEventListener('click', () => this.reset());
+    document.getElementById('btnRotL').addEventListener('click', () => { Renderer.camAngle -= Math.PI / 8; Renderer.updateCamera(); });
+    document.getElementById('btnRotR').addEventListener('click', () => { Renderer.camAngle += Math.PI / 8; Renderer.updateCamera(); });
+    document.getElementById('btnZoomIn').addEventListener('click', () => { Renderer.camZoom = Math.max(8, Renderer.camZoom * 0.9); Renderer.updateCamera(); });
+    document.getElementById('btnZoomOut').addEventListener('click', () => { Renderer.camZoom = Math.min(40, Renderer.camZoom * 1.1); Renderer.updateCamera(); });
+    document.getElementById('btnCrit').addEventListener('click', () => this.toggleCrit());
+    Log.el = document.getElementById('log'); Critic.el = document.getElementById('crit');
+    // levé karty: klik na nadpis sbalí/rozbalí
+    document.querySelectorAll('.side .card h2').forEach(h => h.addEventListener('click', () => h.parentElement.classList.toggle('collapsed')));
+    this.buildPrios();
+    window.addEventListener('resize', () => Renderer.resize());
+  },
+  buildPrios() {
+    const c = document.getElementById('prios'); c.innerHTML = '';
+    JOBS.forEach(j => {
+      const row = document.createElement('div'); row.className = 'prio';
+      row.innerHTML = `<span style="width:78px">${j.label}</span><input type="range" min="1" max="9" value="${j.prio}"><b style="width:14px;text-align:right">${j.prio}</b>`;
+      const inp = row.querySelector('input'), b = row.querySelector('b');
+      inp.addEventListener('input', () => { j.prio = +inp.value; b.textContent = inp.value; });
+      c.appendChild(row);
+    });
+  },
+  togglePause() { Sim.paused = !Sim.paused; document.getElementById('btnPause').textContent = Sim.paused ? '▶️ Běží' : '⏸️ Pauza'; },
+  cycleSpeed() { const s = [1, 2, 4]; Sim.speed = s[(s.indexOf(Sim.speed) + 1) % s.length]; document.getElementById('btnSpeed').textContent = '⏩ ' + Sim.speed + '×'; },
+  toggleCrit() { Critic.on = !Critic.on; Critic.el.classList.toggle('on', Critic.on); if (Critic.on) Critic.paint(); },
+  addDwarf() {
+    for (let r = 0; r < 22; r++) for (let a = 0; a < 16; a++) {
+      const x = Math.round(SX / 2 + Math.cos(a) * r), z = Math.round(SZ / 2 + Math.sin(a) * r);
+      if (World.walkable(x, z)) { const d = Agents.spawn(x, z); Log.add(`✨ Přišel ${d.name}`); return; }
+    }
+  },
+  reset() { boot(); },
+  renderStats() {
+    document.getElementById('sStone').textContent = Econ.stored.stone;
+    document.getElementById('sWood').textContent = Econ.stored.wood;
+    document.getElementById('sFood').textContent = Econ.stored.food;
+    document.getElementById('sPop').textContent = Agents.list.length;
+    document.getElementById('hClock').textContent = Clock.hhmm();
+    document.getElementById('hPhase').textContent = Clock.phase();
+    let jobs = 0, idlec = 0;
+    for (let i = 0; i < N; i++) if (World.desig[i] === 1 || World.desig[i] === 3) jobs++;
+    jobs += JobBoard.trees.filter(t => t.chop).length + Econ.items.length;
+    for (const a of Agents.list) if (a.state === 'idle') idlec++;
+    document.getElementById('hJobs').textContent = jobs;
+    document.getElementById('hIdle').textContent = idlec;
+  },
+  renderDwarfList() {
+    const c = document.getElementById('dwarflist');
+    c.innerHTML = Agents.list.map((a, i) => {
+      const hb = Math.max(0, 100 - a.hunger), fb = Math.max(0, 100 - a.fatigue);
+      const hc = hb > 50 ? '#4fd07a' : hb > 25 ? '#f0a848' : '#f06868';
+      const fc = fb > 40 ? '#5aa9f0' : '#f0a848';
+      return `<div class="d ${a === Agents.selected ? 'sel' : ''}" data-i="${i}">
+        <span class="nm">${a === Agents.selected ? '▸ ' : ''}${a.name}</span>
+        <span class="st">${labelAct(a.act)}</span>
+        <span class="bars"><span class="bar"><i style="width:${hb}%;background:${hc}"></i></span><span class="bar"><i style="width:${fb}%;background:${fc}"></i></span></span>
+      </div>`;
+    }).join('');
+    c.querySelectorAll('.d').forEach(el => el.addEventListener('click', () => { Agents.selected = Agents.list[+el.dataset.i]; this.renderDwarfList(); }));
+    const info = document.getElementById('selInfo'), a = Agents.selected;
+    info.innerHTML = a ? `<b style="color:#8aa">${a.name}</b> — ${labelAct(a.act)} · hlad ${a.hunger.toFixed(0)} · únava ${a.fatigue.toFixed(0)}${a.carry ? ' · nese ' + itemName(a.carry) : ''}` : '';
+  },
+};
+function labelAct(a) { return { idle: 'nečinný', move: 'jde', mine: 'těží', chop: 'kácí', build: 'staví', plant: 'sází', harvest: 'sklízí', pick: 'bere', drop: 'ukládá', eat: 'jí', sleep: 'spí' }[a] || a; }
+function itemName(t) { return { stone: 'kámen', wood: 'dřevo', food: 'jídlo' }[t] || t; }
+
+/* ================================================================ SCATTER */
+function scatterTrees() {
+  JobBoard.trees.length = 0;
+  const cxi = SX / 2, czi = SZ / 2;
+  for (let z = 0; z < SZ; z++) for (let x = 0; x < SX; x++) {
+    const i = idx(x, z);
+    if (World.kind[i] !== K_OPEN || World.mat[i] !== M_GRASS) continue;
+    if (Math.hypot(x - cxi, z - czi) < CFG.SPAWN_R * 0.6) continue;
+    if (Math.random() < 0.055 && JobBoard.trees.length < 850) JobBoard.trees.push({ x, z, hp: CFG.TREE_HP, chop: false, reserved: false });
+  }
+  Renderer.treesDirty = true;
+}
+
+/* =================================================================== BOOT */
+function boot() {
+  World.generate();
+  scatterTrees();
+  Econ.items.length = 0; Econ.stored = { stone: 0, wood: 0, food: 0 }; Econ._iid = 1;
+  PF.queue.length = 0; PF.active = null;
+  Agents.list.length = 0; Agents._aid = 1; Agents.selected = null;
+  Renderer.itemsDirty = true; Renderer.treesDirty = true; World.terrainDirty = World.overlayDirty = true;
+  Log.lines.length = 0;
+  for (let k = 0; k < 5; k++) UI.addDwarf();
+  Econ.stored.stone = 10; Econ.stored.food = 8;
+  Log.add('🏔️ Kolonie založena. Do práce!');
+  if (location.hash === '#demo') demoSetup();
+}
+
+// Demo režim (#demo): automaticky označí těžbu a sklad — pro ukázku/ověření.
+function demoSetup() {
+  const c = SX / 2 | 0;
+  for (let z = c - 10; z < c + 10; z++) for (let x = c - 10; x < c + 10; x++) {
+    if (!inb(x, z)) continue; const i = idx(x, z);
+    if (World.kind[i] === K_ROCK) World.desig[i] = 1;               // těžba
+    else if (Math.hypot(x - c, z - c) < 2.2) World.desig[i] = 4;    // sklad ve středu
+  }
+  for (const t of JobBoard.trees) if (Math.hypot(t.x - c, t.z - c) < 12) t.chop = true;
+  World.overlayDirty = true; Renderer.treesDirty = true;
+  Renderer.camZoom = 26; Renderer.updateCamera(); // přehled celé mapy pro demo/ověření
+  Log.add('🧪 Demo: označena těžba, kácení a sklad.');
+}
+
+/* ============================================================== MAIN LOOP */
+let lastT = performance.now(), uiAcc = 0;
+function loop(now) {
+  const dtReal = Math.min(0.05, (now - lastT) / 1000); lastT = now;
+  PF.update(CFG.PF_BUDGET);   // neblokující dávka A*
+  Sim.step(dtReal);           // herní logika (pevný krok)
+  Renderer.render();          // projekce dat
+  Critic.tick(dtReal);
+  uiAcc += dtReal;
+  if (uiAcc >= 0.25) { UI.renderStats(); UI.renderDwarfList(); uiAcc = 0; }
+  requestAnimationFrame(loop);
+}
+
+/* ================================================================== START */
+window.addEventListener('DOMContentLoaded', () => {
+  Renderer.init(document.getElementById('cv'));
+  Input.init();
+  UI.init();
+  boot();
+  requestAnimationFrame(loop);
+});
+})();
+</script>
+</body>
+</html>

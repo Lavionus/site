@@ -12,7 +12,9 @@ h1{font-size:1.5rem;margin-bottom:10px;font-weight:600}
 .hud{display:flex;gap:8px;flex-wrap:wrap;align-items:center;background:#2a2a2a;border:1px solid #404040;border-radius:8px;padding:8px 12px;margin-bottom:10px}
 .hud .stat{display:flex;align-items:center;gap:5px;font-size:.95rem;font-weight:600}
 .hud .stat b{font-variant-numeric:tabular-nums}
-.gold{color:#f1c40f}.lives{color:#e74c3c}.wave{color:#6aa6fd}.score{color:#27ae60}.lvl{color:#e67e22}
+.gold{color:#f1c40f}.lives{color:#e74c3c}.wave{color:#6aa6fd}.score{color:#27ae60}.lvl{color:#e67e22}.record{color:#f1c40f;opacity:.85}
+.record.new{animation:recPulse .5s ease 2}
+@keyframes recPulse{0%{transform:scale(1)}40%{transform:scale(1.28);opacity:1}100%{transform:scale(1)}}
 .hud .spacer{flex:1}
 .hud button{background:#383838;border:1px solid #4a4a4a;color:#ddd;border-radius:6px;padding:6px 10px;cursor:pointer;font-size:.82rem;font-weight:600}
 .hud button:hover{background:#4a4a4a}
@@ -93,6 +95,7 @@ canvas{width:100%;background:#141b14;border-radius:8px;border:1px solid #404040;
     <span class="stat lvl">🗺️ <b id="level">1</b></span>
     <span class="stat wave">🌊 <b id="wave">0</b><span style="color:#888;font-weight:400" id="waveDenom">/8</span><span class="wavemod" id="waveModBadge"></span></span>
     <span class="stat score">⭐ <b id="score">0</b></span>
+    <span class="stat record" id="recordStat" title="Tvůj dosavadní rekord (nejvíc přežitých vln v tomto módu)">🏆 <b id="record">0</b></span>
     <span class="spacer"></span>
     <button id="speedBtn" title="Rychlost (mezerník = vlna, P = pauza)">⏩ 1×</button>
     <button id="muteBtn" title="Zvuk (M)">🔊</button>
@@ -1133,16 +1136,22 @@ function update(dt){
       waveModifier=null; $('waveModBadge').textContent=''; $('waveModBadge').title='';
       const D=totalWave();
       gold+=15+D*2; score+=D*5;
-      if(mode==='endless'){ if(D>bestEndless){bestEndless=D;localStorage.setItem('td_bestEndless',bestEndless);} }
-      else if(D>best){best=D;localStorage.setItem('td_best',best);}
+      let novyRekord=false;
+      if(mode==='endless'){ if(D>bestEndless){ novyRekord=bestEndless>0; bestEndless=D; localStorage.setItem('td_bestEndless',bestEndless);} }
+      else if(D>best){ novyRekord=best>0; best=D; localStorage.setItem('td_best',best); }
       snd(660,.15,'sine',.12);
+      if(novyRekord){
+        snd(880,.1,'sine',.1); setTimeout(()=>snd(1180,.15,'sine',.1),90);
+        const rs=$('recordStat'); rs.classList.remove('new'); void rs.offsetWidth; rs.classList.add('new');
+      }
+      const rekordTxt=novyRekord?' · 🏆 Nový rekord!':'';
       if(mode==='campaign' && wave>=WPL){ levelDone(); }
       else {
         computeNext();
         if(mode==='endless' && isBossWave(wave)){ // po bossovi se v Endless přepne biom (jen vzhled, mapa zůstává)
           biomeShift++; renderBG();
-          banner('🗺️ Boss padl — nový biom: '+biome().name+'! +'+(15+D*2)+' 💰');
-        } else banner('✅ Vlna '+wave+' zničena! +'+(15+D*2)+' 💰');
+          banner('🗺️ Boss padl — nový biom: '+biome().name+'! +'+(15+D*2)+' 💰'+rekordTxt);
+        } else banner('✅ Vlna '+wave+' zničena! +'+(15+D*2)+' 💰'+rekordTxt);
         if(auto && !gameOver) setTimeout(()=>startWave(),900);
       }
       updateHUD();
@@ -1526,6 +1535,7 @@ function showStart(){
 }
 function renderModeRow(){
   document.querySelectorAll('#modeRow button').forEach(b=>b.classList.toggle('on',b.dataset.m===mode));
+  $('record').textContent=mode==='endless'?bestEndless:best;
 }
 
 /* ---------- Vykreslení ---------- */
@@ -1891,6 +1901,7 @@ function banner(t){ $('banner').textContent=t; }
 function updateHUD(){
   $('gold').textContent=gold; $('lives').textContent=lives;
   $('wave').textContent=wave; $('score').textContent=score;
+  $('record').textContent=mode==='endless'?bestEndless:best;
   $('level').textContent=mode==='endless'?'♾️':level;
   $('waveDenom').textContent=mode==='endless'?'':'/'+WPL;
   $('startBtn').disabled=inWave||wave>=effWPL();
