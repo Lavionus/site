@@ -11,7 +11,7 @@
  *
  * Při vydání nové verze zvyšte VERSION – stará cache se při aktivaci smaže.
  */
-const VERSION = 'v1';
+const VERSION = 'v2';
 const CACHE_NAME = 'forecast-cache-' + VERSION;
 
 self.addEventListener('install', (event) => {

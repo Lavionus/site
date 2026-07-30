@@ -7,6 +7,11 @@
   <style>
     :root {
       --editor-font-size: 0.8rem;
+      /* Zakladni vysky boxu a posun casove osy (tahnutim mysi).
+         Kladny posun = osa nize = vetsi denni boxy, mensi nocni. */
+      --day-base-height: 300px;
+      --night-base-height: 220px;
+      --axis-offset: 0px;
     }
 
     * {
@@ -93,6 +98,19 @@
 
     .action-btn.secondary:hover {
       background-color: #606060;
+    }
+
+    .action-btn.icon-only {
+      padding: 10px 13px;
+      font-size: 1.1rem;
+    }
+
+    .action-btn.share {
+      background-color: #9c6afd;
+    }
+
+    .action-btn.share:hover {
+      background-color: #8a52f5;
     }
 
     .action-btn.print {
@@ -320,7 +338,8 @@
       border-radius: 6px;
       padding: 6px;
       width: calc(100% - 4px);
-      min-height: 300px;
+      height: calc(var(--day-base-height) + var(--axis-offset));
+      min-height: 0;
       margin-bottom: 6px;
       display: flex;
       flex-direction: column;
@@ -360,7 +379,7 @@
     .day-card textarea {
       width: 100%;
       flex: 1;
-      min-height: 216px;
+      min-height: 0;
       background-color: #404040;
       border: 1px solid #555;
       border-radius: 3px;
@@ -397,6 +416,51 @@
       display: flex;
       position: relative;
       width: 100%;
+      cursor: ns-resize;
+      touch-action: none;
+      padding: 6px 0;
+    }
+
+    .day-points-container:hover .axis-background,
+    .day-points-container.dragging .axis-background {
+      height: 5px;
+      box-shadow: 0 0 8px rgba(106, 166, 253, 0.6);
+    }
+
+    /* Uchyt pro posun osy nahoru/dolu */
+    .axis-grip {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 3;
+      background-color: #2a2a2a;
+      border: 1px solid #6aa6fd;
+      border-radius: 10px;
+      color: #6aa6fd;
+      font-size: 0.65rem;
+      line-height: 1;
+      padding: 2px 8px;
+      opacity: 0;
+      transition: opacity 0.2s ease;
+      pointer-events: none;
+      white-space: nowrap;
+    }
+
+    .day-points-container:hover .axis-grip,
+    .day-points-container.dragging .axis-grip {
+      opacity: 1;
+    }
+
+    body.axis-dragging {
+      user-select: none;
+      cursor: ns-resize;
+    }
+
+    /* Pri tahani zadne animace vysky, aby boxy sledovaly mys presne */
+    body.axis-dragging .day-card,
+    body.axis-dragging .night-card {
+      transition: none !important;
     }
 
     .day-point-wrapper {
@@ -482,7 +546,8 @@
       border-radius: 6px;
       padding: 6px;
       width: calc(100% - 4px);
-      min-height: 220px;
+      height: calc(var(--night-base-height) - var(--axis-offset));
+      min-height: 0;
       margin-top: 6px;
       display: flex;
       flex-direction: column;
@@ -551,7 +616,7 @@
     .night-card textarea {
       width: 100%;
       flex: 1;
-      min-height: 120px;
+      min-height: 0;
       background-color: #3a3a4a;
       border: 1px solid #5a5a6a;
       border-radius: 3px;
@@ -756,7 +821,7 @@
     /* Print styles - svetle tema, optimalizovano pro landscape A4 */
     @media print {
       @page {
-        size: landscape;
+        size: A4 landscape;
         margin: 10mm;
       }
 
@@ -765,13 +830,24 @@
         print-color-adjust: exact !important;
       }
 
-      textarea, input {
-        overflow: visible !important;
-        resize: none !important;
+      /* WYSIWYG: rozlozeni ani velikosti pisma se pri tisku nemeni.
+         Cely plan se pouze zmensi (transform scale) tak, aby se vesel na stranku.
+         Hodnoty --print-* pocita preparePrint() v JS. */
+      .timeline-wrapper {
+        width: var(--print-content-width, auto) !important;
+        zoom: var(--print-scale, 1);
       }
 
-      textarea::-webkit-scrollbar {
-        display: none !important;
+      .timeline-section {
+        width: var(--print-section-width, auto) !important;
+        height: var(--print-section-height, auto) !important;
+        overflow: hidden !important;
+        background-color: white !important;
+        border: 1px solid #ccc !important;
+      }
+
+      .container {
+        padding: 0 !important;
       }
 
       body {
@@ -779,52 +855,44 @@
         color: #333 !important;
       }
 
-      .container {
-        max-width: 100%;
-        padding: 5px;
-      }
-
-      .controls-section {
+      .controls-section,
+      .header-subtitle,
+      .axis-grip {
         display: none !important;
       }
 
       .header {
-        margin-bottom: 10px;
+        margin-bottom: 8px !important;
       }
 
       .header h1 {
         color: #333 !important;
-        font-size: 1.2rem;
-        margin-bottom: 3px;
-      }
-
-      .header-subtitle {
-        display: none;
       }
 
       .print-header {
         display: block !important;
         text-align: center;
-        margin-bottom: 8px;
-        font-size: 0.9rem;
         color: #666 !important;
       }
 
-      .timeline-section {
-        background-color: white !important;
-        border: 1px solid #ccc !important;
-        padding: 8px;
-        overflow: visible;
+      /* Tlacitka slouceni zmizi, ale drzi si misto - jinak by se zmenilo rozlozeni */
+      .merge-btn {
+        visibility: hidden !important;
       }
 
-      .timeline-wrapper {
-        padding: 3px 0;
+      textarea, input {
+        resize: none !important;
+        overflow: hidden !important;
       }
 
+      textarea::-webkit-scrollbar {
+        display: none !important;
+      }
+
+      /* Dale uz jen barvy pro tisk na bily papir - zadne rozmery */
       .day-card {
         background-color: #f8f8f8 !important;
         border: 1px solid #ccc !important;
-        min-height: 300px !important;
       }
 
       .day-card.weekend {
@@ -835,28 +903,22 @@
       .day-card-header {
         color: #2563eb !important;
         border-bottom: 1px solid #ddd !important;
-        font-size: 0.75rem;
-        padding-bottom: 3px;
-        margin-bottom: 3px;
       }
 
       .day-card.weekend .day-card-header {
         color: #dc2626 !important;
       }
 
-      .day-card textarea {
+      .day-card textarea,
+      .night-card textarea,
+      .night-card input[type="text"] {
         background-color: white !important;
         border: 1px solid #ddd !important;
         color: #333 !important;
-        min-height: 216px !important;
-        overflow: visible !important;
-        height: auto !important;
-        font-size: var(--editor-font-size) !important;
       }
 
       .day-line {
         background-color: #2563eb !important;
-        height: 15px !important;
       }
 
       .day-column.weekend .day-line {
@@ -880,48 +942,19 @@
         background: linear-gradient(90deg, #ccc, #2563eb, #ccc) !important;
       }
 
-      .nights-container {
-        margin-top: 12px !important;
-        align-items: stretch !important;
-      }
-
-      .night-column {
-        display: flex !important;
-        flex-direction: column !important;
-      }
-
-      .night-lines-container {
-        flex-shrink: 0 !important;
-      }
-
       .night-card {
         background-color: #f5f5fa !important;
         border: 1px solid #bbb !important;
-        min-height: 220px !important;
-        flex: 1 !important;
       }
 
-      .night-card-header {
+      .night-card-header,
+      .night-card-title {
         color: #7c3aed !important;
-        border-bottom: 1px solid #ccc !important;
-        font-size: 0.7rem;
+        border-bottom-color: #ccc !important;
       }
 
       .night-card-header-row {
         border-bottom: 1px solid #ccc !important;
-      }
-
-      .night-card-title {
-        color: #7c3aed !important;
-        font-size: 0.7rem;
-      }
-
-      .merge-btn {
-        display: none !important;
-      }
-
-      .night-separator {
-        display: none !important;
       }
 
       .nights-count {
@@ -931,34 +964,10 @@
 
       .night-card .field-label {
         color: #666 !important;
-        font-size: 0.6rem;
-      }
-
-      .night-card input[type="text"] {
-        background-color: white !important;
-        border: 1px solid #ddd !important;
-        color: #333 !important;
-        font-size: var(--editor-font-size) !important;
-      }
-
-      .night-card textarea {
-        background-color: white !important;
-        border: 1px solid #ddd !important;
-        color: #333 !important;
-        min-height: 120px !important;
-        overflow: visible !important;
-        height: auto !important;
-        font-size: var(--editor-font-size) !important;
-      }
-
-      .night-lines-container {
-        display: flex !important;
-        justify-content: space-around !important;
       }
 
       .night-line {
         background-color: #7c3aed !important;
-        height: 15px !important;
       }
     }
 
@@ -971,7 +980,7 @@
   <div class="container">
     <div class="header">
       <h1>Planovac dovolene</h1>
-      <div class="header-subtitle">Ctrl+P = tisk | Ctrl+S = ulozit | Ctrl+E = export</div>
+      <div class="header-subtitle">Ctrl+P = tisk | Ctrl+S = ulozit | Ctrl+E = export | osu lze tahnout mysi nahoru a dolu</div>
       <div class="print-header" id="printHeader"></div>
     </div>
 
@@ -1018,6 +1027,10 @@
         <button class="action-btn export" onclick="exportData()"><span class="btn-icon">📤</span> Export</button>
         <button class="action-btn secondary" onclick="document.getElementById('importInput').click()"><span class="btn-icon">📥</span> Import</button>
         <input type="file" id="importInput" class="hidden-input" accept=".json" onchange="importData(event)">
+        <button class="action-btn share icon-only" id="shareImageBtn" onclick="sharePlanImage()"
+                title="Ulozit / sdilet plan jako obrazek" aria-label="Ulozit plan jako obrazek"><span class="btn-icon">🖼</span></button>
+        <button class="action-btn share icon-only" id="copyImageBtn" onclick="copyPlanImage()"
+                title="Kopirovat obrazek do schranky" aria-label="Kopirovat obrazek do schranky"><span class="btn-icon">📋</span></button>
         <button class="action-btn print" onclick="printPlan()"><span class="btn-icon">🖨</span> Tisknout</button>
         <span class="save-indicator" id="saveIndicator"><span class="btn-icon">✓</span> Ulozeno</span>
       </div>
@@ -1050,6 +1063,58 @@
       if (savedSize) {
         setFontSize(savedSize);
       }
+    }
+
+    // Posun casove osy - meni pomer vysky dennich a nocnich boxu
+    const AXIS_OFFSET_KEY = 'vacation_planner_axis_offset';
+    const AXIS_OFFSET_MIN = -160;  // osa nahoru: denni box min. 140px, nocni max. 380px
+    const AXIS_OFFSET_MAX = 20;    // osa dolu: nocni box min. 200px, denni max. 320px
+    let axisOffset = 0;
+
+    function setAxisOffset(px, persist = true) {
+      const value = Math.round(Math.min(AXIS_OFFSET_MAX, Math.max(AXIS_OFFSET_MIN, px)));
+      axisOffset = value;
+      document.documentElement.style.setProperty('--axis-offset', value + 'px');
+      if (persist) {
+        localStorage.setItem(AXIS_OFFSET_KEY, String(value));
+      }
+    }
+
+    function loadAxisOffset() {
+      const saved = parseInt(localStorage.getItem(AXIS_OFFSET_KEY), 10);
+      setAxisOffset(Number.isFinite(saved) ? saved : 0, false);
+    }
+
+    // Osa je uchyt - tahnutim nahoru/dolu se prelevaji vysky mezi dny a nocmi
+    function setupAxisDrag() {
+      const axis = document.getElementById('axisContainer');
+      if (!axis) return;
+
+      axis.addEventListener('pointerdown', (e) => {
+        if (e.pointerType === 'mouse' && e.button !== 0) return;
+        e.preventDefault();
+
+        const startY = e.clientY;
+        const startOffset = axisOffset;
+        axis.classList.add('dragging');
+        document.body.classList.add('axis-dragging');
+        axis.setPointerCapture(e.pointerId);
+
+        const onMove = (ev) => setAxisOffset(startOffset + (ev.clientY - startY), false);
+        const onUp = () => {
+          axis.removeEventListener('pointermove', onMove);
+          axis.removeEventListener('pointerup', onUp);
+          axis.removeEventListener('pointercancel', onUp);
+          axis.classList.remove('dragging');
+          document.body.classList.remove('axis-dragging');
+          setAxisOffset(axisOffset);  // ulozit vyslednou pozici
+          showSaveIndicator();
+        };
+
+        axis.addEventListener('pointermove', onMove);
+        axis.addEventListener('pointerup', onUp);
+        axis.addEventListener('pointercancel', onUp);
+      });
     }
 
     // Merge state - tracks which nights are merged
@@ -1228,7 +1293,8 @@
         endDate: selectedEndDate ? formatDateISO(selectedEndDate) : null,
         days,
         nights,
-        mergedNights: { ...mergedNights }
+        mergedNights: { ...mergedNights },
+        axisOffset
       };
 
       const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -1252,6 +1318,9 @@
           const data = JSON.parse(e.target.result);
           if (data.startDate && data.endDate) {
             localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+            if (Number.isFinite(data.axisOffset)) {
+              localStorage.setItem(AXIS_OFFSET_KEY, String(data.axisOffset));
+            }
             location.reload();
           } else {
             alert('Neplatny format souboru');
@@ -1264,6 +1333,236 @@
       event.target.value = '';
     }
 
+    // ---- Sdileni planu jako obrazek (PNG) ----
+    // Plan se vykresli pres SVG foreignObject do canvasu - bez externich knihoven,
+    // takze to funguje i offline. Vysledek vypada stejne jako plan na obrazovce.
+    const IMAGE_SCALE = 2;  // 2x kvuli ostrosti na mobilech a pri zvetseni
+
+    function planImageFilename() {
+      if (selectedStartDate && selectedEndDate) {
+        return `dovolena_${formatDateISO(selectedStartDate)}_${formatDateISO(selectedEndDate)}.png`;
+      }
+      return 'dovolena.png';
+    }
+
+    // Hodnoty poli nejsou soucasti HTML - do klonu je musime zapsat rucne.
+    // Same prvky (input/textarea) zustavaji, aby zalamovani textu i rozmery
+    // byly presne stejne jako na strance.
+    function copyFieldValues(source, clone) {
+      const srcFields = source.querySelectorAll('input, textarea');
+      const cloneFields = clone.querySelectorAll('input, textarea');
+
+      cloneFields.forEach((field, i) => {
+        const src = srcFields[i];
+        if (!src) return;
+        if (field.tagName === 'TEXTAREA') {
+          field.textContent = src.value;
+          field.scrollTop = src.scrollTop;
+        } else {
+          field.setAttribute('value', src.value);
+        }
+      });
+    }
+
+    async function renderPlanImage() {
+      // Snimame cely box s planem tak, jak je videt na strance
+      const source = document.querySelector('.timeline-section');
+      if (!source) return null;
+
+      const width = source.scrollWidth;
+      const height = source.scrollHeight;
+      if (!width || !height) return null;
+
+      const clone = source.cloneNode(true);
+      copyFieldValues(source, clone);
+      // Sirka na celou delku planu, i kdyz je na strance vodorovny posuvnik
+      clone.style.width = width + 'px';
+      clone.style.overflow = 'visible';
+      // Tlacitka pro slucovani noci se nekresli, ale musi si nechat sve misto,
+      // jinak by se sloupce posunuly a text by se zalomil jinak
+      clone.querySelectorAll('.merge-btn').forEach(el => { el.style.visibility = 'hidden'; });
+
+      // Obal se stavi pres DOM, aby XMLSerializer korektne osetril uvozovky a entity
+      const bodyStyle = getComputedStyle(document.body);
+      const holder = document.createElement('div');
+      holder.style.width = width + 'px';
+      holder.style.backgroundColor = bodyStyle.backgroundColor;
+      holder.style.color = bodyStyle.color;
+      holder.style.fontFamily = bodyStyle.fontFamily;
+
+      // Prenest aktualni nastaveni (posun osy, velikost pisma) - v SVG neplati :root dokumentu
+      const rootStyle = document.documentElement.style;
+      for (const prop of rootStyle) {
+        if (prop.startsWith('--') && !prop.startsWith('--print-')) {
+          holder.style.setProperty(prop, rootStyle.getPropertyValue(prop));
+        }
+      }
+
+      const styleEl = document.createElement('style');
+      styleEl.textContent = document.querySelector('style').textContent;
+      holder.appendChild(styleEl);
+
+      // Hlavicka s rozsahem dovolene - v obrazku se hodi, kdyz se sdili samostatne
+      let captionHeight = 0;
+      if (selectedStartDate && selectedEndDate) {
+        captionHeight = 44;
+        const nightsCount = getDaysBetween(selectedStartDate, selectedEndDate).length - 1;
+        const caption = document.createElement('div');
+        caption.style.cssText = 'text-align:center;padding:14px 0 6px;font-size:1.1rem;font-weight:600';
+        caption.textContent = `Planovac dovolene: ${formatDateWithYear(selectedStartDate)} - ` +
+                              `${formatDateWithYear(selectedEndDate)} (${nightsCount} noci)`;
+        holder.appendChild(caption);
+      }
+
+      holder.appendChild(clone);
+
+      const totalHeight = height + captionHeight;
+      const svg =
+        `<svg xmlns="http://www.w3.org/2000/svg" width="${width}" height="${totalHeight}">` +
+          `<foreignObject x="0" y="0" width="100%" height="100%">` +
+            new XMLSerializer().serializeToString(holder) +
+          `</foreignObject>` +
+        `</svg>`;
+
+      // Data URL (ne blob) - jinak Chrome oznaci canvas za "tainted" a PNG nelze exportovat
+      const svgUrl = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(svg);
+
+      const img = new Image();
+      await new Promise((resolve, reject) => {
+        img.onload = resolve;
+        img.onerror = () => reject(new Error('obrazek se nepodarilo vykreslit'));
+        img.src = svgUrl;
+      });
+
+      const canvas = document.createElement('canvas');
+      canvas.width = width * IMAGE_SCALE;
+      canvas.height = totalHeight * IMAGE_SCALE;
+      const ctx = canvas.getContext('2d');
+      ctx.fillStyle = bodyStyle.backgroundColor;
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+      ctx.scale(IMAGE_SCALE, IMAGE_SCALE);
+      ctx.drawImage(img, 0, 0);
+
+      return await new Promise(resolve => canvas.toBlob(resolve, 'image/png'));
+    }
+
+    // Behem prace tlacitko zesedne a ukaze presypaci hodiny, po dokonceni kratce fajfku
+    async function withButtonFeedback(btnId, action) {
+      const btn = document.getElementById(btnId);
+      const original = btn ? btn.innerHTML : null;
+      if (btn) {
+        btn.disabled = true;
+        btn.innerHTML = '<span class="btn-icon">⏳</span>';
+      }
+
+      try {
+        const done = await action();
+        if (btn && done) {
+          btn.innerHTML = '<span class="btn-icon">✅</span>';
+          setTimeout(() => { btn.innerHTML = original; }, 1500);
+          return;
+        }
+      } catch (err) {
+        if (err.name !== 'AbortError') {  // uzivatel sdileni sam zrusil
+          alert('Obrazek se nepodarilo vytvorit: ' + err.message);
+        }
+      } finally {
+        if (btn) {
+          btn.disabled = false;
+          if (btn.innerHTML.includes('⏳')) btn.innerHTML = original;
+        }
+      }
+    }
+
+    // Ulozeni obrazku - na mobilu nativni sdileni, na pocitaci stazeni souboru
+    function sharePlanImage() {
+      return withButtonFeedback('shareImageBtn', async () => {
+        const blob = await renderPlanImage();
+        if (!blob) {
+          alert('Nejprve vyberte rozsah dovolene');
+          return false;
+        }
+
+        const file = new File([blob], planImageFilename(), { type: 'image/png' });
+        const title = selectedStartDate && selectedEndDate
+          ? `Dovolena ${formatDateWithYear(selectedStartDate)} - ${formatDateWithYear(selectedEndDate)}`
+          : 'Plan dovolene';
+
+        if (navigator.canShare && navigator.canShare({ files: [file] })) {
+          await navigator.share({ files: [file], title });
+        } else {
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = file.name;
+          a.click();
+          URL.revokeObjectURL(url);
+        }
+        return true;
+      });
+    }
+
+    // Kopirovani obrazku do schranky (vyzaduje https nebo localhost)
+    function copyPlanImage() {
+      return withButtonFeedback('copyImageBtn', async () => {
+        if (!navigator.clipboard || !window.ClipboardItem) {
+          alert('Prohlizec neumi kopirovat obrazky do schranky, pouzijte ulozeni do souboru');
+          return false;
+        }
+
+        const blobPromise = renderPlanImage().then(blob => {
+          if (!blob) throw new Error('plan neni k dispozici');
+          return blob;
+        });
+
+        try {
+          // Prima varianta se slibem - nektere prohlizece vyzaduji zapis
+          // do schranky jeste behem kliknuti, tedy pred dokoncenim vykresleni
+          await navigator.clipboard.write([new ClipboardItem({ 'image/png': blobPromise })]);
+        } catch (err) {
+          const blob = await blobPromise;
+          await navigator.clipboard.write([new ClipboardItem({ 'image/png': blob })]);
+        }
+        return true;
+      });
+    }
+
+    // Priprava tisku - plan se vytiskne presne tak, jak vypada na obrazovce,
+    // jen zmenseny tak, aby se vesel na stranku A4 na sirku.
+    const MM_TO_PX = 96 / 25.4;
+    const PAGE_W_MM = 297 - 2 * 10;   // A4 na sirku minus okraje @page
+    const PAGE_H_MM = 210 - 2 * 10;
+
+    function preparePrint() {
+      const wrapper = document.querySelector('.timeline-wrapper');
+      const section = document.querySelector('.timeline-section');
+      if (!wrapper || !section) return;
+
+      // Rozmery obsahu tak, jak je vidi uzivatel na obrazovce
+      const contentW = wrapper.scrollWidth;
+      const contentH = wrapper.scrollHeight;
+      if (!contentW || !contentH) return;
+
+      // Ramecek sekce a misto pro hlavicku planu
+      const cs = getComputedStyle(section);
+      const padW = parseFloat(cs.paddingLeft) + parseFloat(cs.paddingRight) + 2;
+      const padH = parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom) + 2;
+      const headerReserve = 70;  // nadpis + radek s datumy dovolene
+
+      const availW = PAGE_W_MM * MM_TO_PX - padW;
+      const availH = PAGE_H_MM * MM_TO_PX - padH - headerReserve;
+      const scale = Math.min(availW / contentW, availH / contentH, 1);
+
+      const root = document.documentElement.style;
+      root.setProperty('--print-scale', String(scale));
+      root.setProperty('--print-content-width', contentW + 'px');
+      root.setProperty('--print-section-width', Math.ceil(contentW * scale + padW) + 'px');
+      root.setProperty('--print-section-height', Math.ceil(contentH * scale + padH) + 'px');
+    }
+
+    window.addEventListener('beforeprint', preparePrint);
+    window.addEventListener('resize', preparePrint);
+
     // Tisk planu
     function printPlan() {
       if (selectedStartDate && selectedEndDate) {
@@ -1271,6 +1570,7 @@
         document.getElementById('printHeader').textContent =
           `${formatDateWithYear(selectedStartDate)} - ${formatDateWithYear(selectedEndDate)} (${nights} noci)`;
       }
+      preparePrint();
       window.print();
     }
 
@@ -1506,8 +1806,9 @@
       html += '</div>';
 
       // Casova osa s body
-      html += '<div class="day-points-container">';
+      html += '<div class="day-points-container" id="axisContainer" title="Tahnutim nahoru/dolu zmenite pomer vysky dennich a nocnich boxu">';
       html += '<div class="axis-background"></div>';
+      html += '<div class="axis-grip">↕ posun osy</div>';
       days.forEach((day, index) => {
         const weekendClass = isWeekend(day) ? 'weekend' : '';
         html += `
@@ -1534,6 +1835,7 @@
           const endDay = days[i + mergeSize];
           const nightLabel = `${formatDate(startDay)} - ${formatDate(endDay)}`;
           const savedName = savedData?.nights?.[`night-name-${i}`] || '';
+          const savedStreet = savedData?.nights?.[`night-street-${i}`] || '';
           const savedCity = savedData?.nights?.[`night-city-${i}`] || '';
           const savedNotes = savedData?.nights?.[`night-notes-${i}`] || '';
 
@@ -1577,6 +1879,10 @@
                   <input type="text" id="night-name-${i}" value="${savedName}" oninput="scheduleSave()">
                 </div>
                 <div class="field-group">
+                  <div class="field-label"><span class="field-icon">🛣️</span> Ulice</div>
+                  <input type="text" id="night-street-${i}" value="${savedStreet}" oninput="scheduleSave()">
+                </div>
+                <div class="field-group">
                   <div class="field-label"><span class="field-icon">📍</span> Obec</div>
                   <input type="text" id="night-city-${i}" value="${savedCity}" oninput="scheduleSave()">
                 </div>
@@ -1593,6 +1899,8 @@
 
       html += '</div>';
       container.innerHTML = html;
+      setupAxisDrag();
+      preparePrint();
 
       // Ulozit datumy
       if (!preserveData) {
@@ -1627,6 +1935,7 @@
     // Inicializace
     function init() {
       loadFontSize();
+      loadAxisOffset();
       const saved = loadFromStorage();
 
       if (saved && saved.startDate && saved.endDate) {

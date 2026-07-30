@@ -165,6 +165,9 @@
 </div>
 
 <script src="lib/three.0.160.0.min.js"></script>
+<script src="fps_mat.js"></script>
+<script src="fps_props.js"></script>
+<script src="fps_sky.js"></script>
 <script>
 /* =============================================================================
    FPS ARÉNA — modulární WebGL prototyp
@@ -193,79 +196,21 @@ renderer.setSize(window.innerWidth, window.innerHeight);
 renderer.outputColorSpace = T.SRGBColorSpace;
 renderer.shadowMap.enabled = true;
 renderer.shadowMap.type = T.PCFSoftShadowMap;
-renderer.toneMapping = T.ACESFilmicToneMapping; // filmové tónování → čitelnější kontrast bez post-processingu
-renderer.toneMappingExposure = 1.18;
+renderer.toneMapping = T.ACESFilmicToneMapping; // filmové tónování → realistický kontrast
+renderer.toneMappingExposure = 1.28;
 appEl.appendChild(renderer.domElement);
 
 const scene = new T.Scene();
-const SKY_TOP = new T.Color(0x2b6dc4), SKY_HORIZON = new T.Color(0xd7c9a8);
-const SUN_DIR = new T.Vector3(24, 40, 16).normalize();
-const SUN_COL = new T.Color(0xfff0cf);
-scene.fog = new T.FogExp2(0x9fb0c0, 0.0092); // exponenciální mlha = jemnější splynutí s oblohou
+const camera = new T.PerspectiveCamera(78, window.innerWidth / window.innerHeight, 0.05, 500);
 
-const camera = new T.PerspectiveCamera(78, window.innerWidth / window.innerHeight, 0.05, 260);
-
-// Stylizované osvětlení: teplé slunce + chladné oblohové doplnění (hemisphere) + studené protisvětlo.
-const hemi = new T.HemisphereLight(0xcfe6ff, 0x3a3020, 1.05);
-scene.add(hemi);
-
-const sun = new T.DirectionalLight(0xfff2d6, 2.7);
-sun.position.copy(SUN_DIR).multiplyScalar(50);
-sun.castShadow = true;
-sun.shadow.mapSize.set(2048, 2048);
-sun.shadow.camera.near = 1; sun.shadow.camera.far = 140;
-sun.shadow.camera.left = -46; sun.shadow.camera.right = 46;
-sun.shadow.camera.top = 46; sun.shadow.camera.bottom = -46;
-sun.shadow.bias = -0.0004;
-sun.shadow.normalBias = 0.03;
-sun.shadow.radius = 3;
-scene.add(sun);
-// chladné protisvětlo (rim) z opačné strany pro oddělení objektů od pozadí
-const rim = new T.DirectionalLight(0x6ea8ff, 0.6);
-rim.position.set(-30, 18, -24);
-scene.add(rim);
-scene.add(new T.AmbientLight(0x2a3a4d, 0.25));
-
-// Obloha s gradientem + kotoučem slunce a měkkou září. Stejný materiál použijeme
-// i pro vygenerování IBL environment mapy (reálné PBR odlesky na materiálech).
-const skyMat = new T.ShaderMaterial({
-  side: T.BackSide, depthWrite: false, fog: false,
-  uniforms: {
-    top: { value: SKY_TOP }, bottom: { value: SKY_HORIZON },
-    sunDir: { value: SUN_DIR }, sunCol: { value: SUN_COL },
-  },
-  vertexShader: `varying vec3 vP; void main(){ vP = position; gl_Position = projectionMatrix * modelViewMatrix * vec4(position,1.0);} `,
-  fragmentShader: `
-    varying vec3 vP; uniform vec3 top; uniform vec3 bottom; uniform vec3 sunDir; uniform vec3 sunCol;
-    void main(){
-      vec3 dir = normalize(vP);
-      float h = clamp(dir.y*0.5+0.5, 0.0, 1.0);
-      vec3 col = mix(bottom, top, pow(h, 0.55));
-      float sd = max(dot(dir, normalize(sunDir)), 0.0);
-      col += sunCol * pow(sd, 350.0) * 3.0;   // ostrý kotouč slunce
-      col += sunCol * pow(sd, 9.0)  * 0.35;   // měkká záře kolem
-      gl_FragColor = vec4(col, 1.0);
-    }`
-});
-const skyMesh = new T.Mesh(new T.SphereGeometry(160, 32, 16), skyMat);
-
-// --- IBL: vygeneruj environment mapu z oblohy (PMREM) ---
-{
-  const pmrem = new T.PMREMGenerator(renderer);
-  pmrem.compileEquirectangularShader();
-  const envScene = new T.Scene();
-  envScene.add(skyMesh);                       // dočasně do env-scény
-  const envRT = pmrem.fromScene(envScene, 0, 0.1, 200);
-  scene.environment = envRT.texture;           // IBL pro všechny Standard materiály
-  scene.background = envRT.texture;            // a zároveň pozadí
-  scene.add(skyMesh);                          // vrať oblohu do hlavní scény (kvůli ostrému slunci)
-  pmrem.dispose();
-}
+// Obloha (atmosférický rozptyl) + IBL + 3-bodové osvětlení + letecká mlha — modul fps_sky.js
+const skyRig = setupSkyAndLighting(T, scene, renderer, { sunElevationDeg: 52, sunAzimuthDeg: 130 });
+const sun = skyRig.sun;
 
 /* ---------------------------------------------------------------------------
    WORLD — statická geometrie arény
-   Kolizní tělesa = seznam AABB (osově zarovnaných kvádrů). Vizuál stavíme
-   z instancí, takže desítky kvádrů = jednotky draw calls.
+   Kolizní tělesa = seznam AABB. Materiály jsou procedurální PBR (fps_mat.js),
+   detailní props (bedny, barely, sloupy, panely…) staví fps_props.js.
    --------------------------------------------------------------------------- */
 const ARENA = 44;               // poloviční rozměr podlahy
 const colliders = [];           // { min:Vector3, max:Vector3 }
@@ -274,65 +219,15 @@ function addBox(cx, cy, cz, sx, sy, sz) {
     min: new T.Vector3(cx - sx/2, cy - sy/2, cz - sz/2),
     max: new T.Vector3(cx + sx/2, cy + sy/2, cz + sz/2),
   });
-  return { cx, cy, cz, sx, sy, sz };
 }
 
-// --- Procedurální textury (CanvasTexture) — detail bez externích souborů ---
-function makeTileTexture() {
-  const S = 512, c = document.createElement('canvas'); c.width = c.height = S;
-  const g = c.getContext('2d');
-  g.fillStyle = '#2f3d4c'; g.fillRect(0, 0, S, S);
-  // jemný šum pro rozbití plochy
-  for (let i = 0; i < 2600; i++) {
-    const v = 40 + Math.random() * 40;
-    g.fillStyle = `rgba(${v},${v+10},${v+22},0.05)`;
-    g.fillRect(Math.random()*S, Math.random()*S, 2, 2);
-  }
-  // panelové linky
-  g.strokeStyle = 'rgba(15,22,30,0.9)'; g.lineWidth = 4;
-  const n = 4, step = S / n;
-  for (let i = 0; i <= n; i++) {
-    g.beginPath(); g.moveTo(i*step, 0); g.lineTo(i*step, S); g.stroke();
-    g.beginPath(); g.moveTo(0, i*step); g.lineTo(S, i*step); g.stroke();
-  }
-  const t = new T.CanvasTexture(c);
-  t.wrapS = t.wrapT = T.RepeatWrapping; t.anisotropy = 4;
-  t.colorSpace = T.SRGBColorSpace;
-  return t;
-}
-// Emissive maska — jen zářící linky (Tron-like), zbytek černý (nesvítí).
-function makeGlowLinesTexture() {
-  const S = 512, c = document.createElement('canvas'); c.width = c.height = S;
-  const g = c.getContext('2d');
-  g.fillStyle = '#000'; g.fillRect(0, 0, S, S);
-  g.strokeStyle = '#39d7ff'; g.lineWidth = 3; g.shadowColor = '#39d7ff'; g.shadowBlur = 8;
-  const n = 4, step = S / n;
-  for (let i = 0; i <= n; i++) {
-    g.beginPath(); g.moveTo(i*step, 0); g.lineTo(i*step, S); g.stroke();
-    g.beginPath(); g.moveTo(0, i*step); g.lineTo(S, i*step); g.stroke();
-  }
-  const t = new T.CanvasTexture(c);
-  t.wrapS = t.wrapT = T.RepeatWrapping;
-  return t;
-}
-const floorMap = makeTileTexture();       floorMap.repeat.set(11, 11);
-const floorGlow = makeGlowLinesTexture(); floorGlow.repeat.set(11, 11);
-
-const MAT = {
-  floor: new T.MeshStandardMaterial({
-    map: floorMap, roughness: 0.55, metalness: 0.35, envMapIntensity: 0.9,
-    emissive: 0x39d7ff, emissiveMap: floorGlow, emissiveIntensity: 1.6 }),
-  wall:  new T.MeshStandardMaterial({ color: 0x51637a, roughness: 0.7,  metalness: 0.25, envMapIntensity: 1.0 }),
-  crate: new T.MeshStandardMaterial({ color: 0xd8933f, roughness: 0.55, metalness: 0.2,  envMapIntensity: 1.0 }),
-  pillar:new T.MeshStandardMaterial({ color: 0x8492a4, roughness: 0.35, metalness: 0.55, envMapIntensity: 1.3 }),
-  ramp:  new T.MeshStandardMaterial({ color: 0x5f7488, roughness: 0.6,  metalness: 0.2,  envMapIntensity: 1.0 }),
-  accent:new T.MeshStandardMaterial({ color: 0x1c2733, roughness: 0.4,  metalness: 0.4,
-                                      emissive: 0x2fd8ff, emissiveIntensity: 1.9, envMapIntensity: 1.0 }),
-};
+// Procedurální PBR materiály (albedo + normal + roughness + AO na uv2)
+const MAT = makePBRMaterials(T);
+const withUV2 = (geo) => { if (geo.attributes.uv) geo.setAttribute('uv2', geo.attributes.uv); return geo; };
 
 // Podlaha
 {
-  const floor = new T.Mesh(new T.BoxGeometry(ARENA*2, 1, ARENA*2), MAT.floor);
+  const floor = new T.Mesh(withUV2(new T.BoxGeometry(ARENA*2, 1, ARENA*2)), MAT.floor);
   floor.position.y = -0.5; floor.receiveShadow = true;
   scene.add(floor);
   addBox(0, -0.5, 0, ARENA*2, 1, ARENA*2);
@@ -340,82 +235,23 @@ const MAT = {
 
 // Obvodové zdi (4 kvádry)
 {
-  const H = 7, tk = 1.5, L = ARENA*2;
+  const H = 8, tk = 1.5, L = ARENA*2;
   const defs = [
     [0, H/2,  ARENA, L, H, tk], [0, H/2, -ARENA, L, H, tk],
     [ ARENA, H/2, 0, tk, H, L], [-ARENA, H/2, 0, tk, H, L],
   ];
   for (const [x,y,z,sx,sy,sz] of defs) {
-    const m = new T.Mesh(new T.BoxGeometry(sx,sy,sz), MAT.wall);
+    const m = new T.Mesh(withUV2(new T.BoxGeometry(sx,sy,sz)), MAT.wall);
     m.position.set(x,y,z); m.castShadow = true; m.receiveShadow = true;
     scene.add(m); addBox(x,y,z,sx,sy,sz);
-    // svítící pruh na vršku zdi
-    const strip = new T.Mesh(new T.BoxGeometry(sx*0.99, 0.25, sz*0.99), MAT.accent);
-    strip.position.set(x, H, z); scene.add(strip);
   }
 }
 
-// Bedny (cover) — jeden InstancedMesh, jeden draw call pro všechny
-const crateBoxes = [
-  [-14, 1.5, -8, 3], [-10, 1.5, -8, 3], [-12, 4.0, -8, 2.6],
-  [16, 1.5, 12, 3], [12, 1.5, 14, 3], [14, 4.0, 13, 2.6],
-  [0, 1.5, 20, 3], [4, 1.5, 22, 3],
-  [-20, 1.5, 18, 3], [22, 1.5, -18, 3], [-24, 1.5, -14, 3],
-  [8, 1.5, -20, 3], [-6, 1.5, -22, 3],
-];
+// Detailní props (instancované) + jejich kolize
 {
-  const geo = new T.BoxGeometry(1,1,1);
-  const inst = new T.InstancedMesh(geo, MAT.crate, crateBoxes.length);
-  inst.castShadow = true; inst.receiveShadow = true;
-  const m4 = new T.Matrix4();
-  crateBoxes.forEach(([x,y,z,s], i) => {
-    m4.makeScale(s,s,s); m4.setPosition(x,y,z); inst.setMatrixAt(i, m4);
-    addBox(x,y,z,s,s,s);
-  });
-  scene.add(inst);
-}
-
-// Sloupy — InstancedMesh
-const pillars = [[-26,0,26],[26,0,26],[26,0,-26],[-26,0,-26],[0,0,0]];
-{
-  const H = 6;
-  const geo = new T.CylinderGeometry(1.1,1.3,H,10);
-  const inst = new T.InstancedMesh(geo, MAT.pillar, pillars.length);
-  inst.castShadow = true; inst.receiveShadow = true;
-  const m4 = new T.Matrix4();
-  pillars.forEach(([x,,z], i) => { m4.identity(); m4.setPosition(x, H/2, z); inst.setMatrixAt(i, m4);
-    addBox(x, H/2, z, 2.4, H, 2.4); });
-  scene.add(inst);
-}
-
-// Rampy (naklopené kvádry) — vizuál je nakloněný, kolize aproximujeme schody z AABB
-function addRamp(x, z, len, rot) {
-  const w = 6, th = 0.6, rise = 3.2;
-  const mesh = new T.Mesh(new T.BoxGeometry(w, th, len), MAT.ramp);
-  const angle = Math.atan2(rise, len);
-  mesh.position.set(x, rise/2, z);
-  mesh.rotation.y = rot;
-  mesh.rotateX(-angle);
-  mesh.castShadow = true; mesh.receiveShadow = true;
-  scene.add(mesh);
-  // kolizní schody
-  const steps = 6;
-  for (let i=0;i<steps;i++){
-    const t = (i+0.5)/steps;
-    const yy = t*rise;
-    const along = (t-0.5)*len;
-    const px = x + Math.sin(rot)*along, pz = z + Math.cos(rot)*along;
-    addBox(px, yy/2, pz, w, yy+0.3, len/steps);
-  }
-}
-addRamp(-30, 0, 12, Math.PI/2);
-addRamp(30, 4, 12, -Math.PI/2);
-
-/* Elevated platforma uprostřed dosažitelná rampami */
-{
-  const p = new T.Mesh(new T.BoxGeometry(14, 1, 14), MAT.wall);
-  p.position.set(0, 3.2, 34); p.castShadow = true; p.receiveShadow = true;
-  scene.add(p); addBox(0, 3.2, 34, 14, 1, 14);
+  const { group, colliders: propColliders } = buildProps(T, MAT);
+  scene.add(group);
+  for (const c of propColliders) colliders.push(c);
 }
 
 /* ---------------------------------------------------------------------------
@@ -516,10 +352,10 @@ camera.add(muzzle); muzzle.position.set(0.28, -0.2, -1.0);
 const weapon = new T.Group();
 const MUZZLE_LOCAL = new T.Vector3(0.28, -0.2, -1.15); // ústí hlavně (lokálně ke kameře)
 {
-  const steel = new T.MeshStandardMaterial({ color: 0x30363f, roughness: 0.35, metalness: 0.85, envMapIntensity: 1.4 });
-  const dark  = new T.MeshStandardMaterial({ color: 0x14181f, roughness: 0.3,  metalness: 0.9,  envMapIntensity: 1.2 });
-  const accent= new T.MeshStandardMaterial({ color: 0x0e1116, roughness: 0.5,  metalness: 0.6,
-                                             emissive: 0x2fd8ff, emissiveIntensity: 1.4 });
+  const steel = new T.MeshStandardMaterial({ color: 0x5a616b, roughness: 0.62, metalness: 0.5, envMapIntensity: 1.2 });
+  const dark  = new T.MeshStandardMaterial({ color: 0x373d45, roughness: 0.55, metalness: 0.6, envMapIntensity: 1.2 });
+  const accent= new T.MeshStandardMaterial({ color: 0x141821, roughness: 0.5,  metalness: 0.6,
+                                             emissive: 0x2fd8ff, emissiveIntensity: 1.2 });
   const body = new T.Mesh(new T.BoxGeometry(0.17,0.17,0.72), steel);      body.position.set(0.28,-0.26,-0.6);
   const top  = new T.Mesh(new T.BoxGeometry(0.12,0.07,0.5), dark);        top.position.set(0.28,-0.15,-0.62);
   const barrel = new T.Mesh(new T.CylinderGeometry(0.05,0.05,0.55,12), dark);
@@ -531,6 +367,8 @@ const MUZZLE_LOCAL = new T.Vector3(0.28, -0.2, -1.15); // ústí hlavně (lokál
   weapon.add(body, top, barrel, mag, grip, strip, sight);
   weapon.traverse(o => { if (o.isMesh) o.renderOrder = 2; }); // zbraň kreslit navrch, ať se neořízne o geometrii
 }
+weapon.scale.set(0.82, 0.82, 0.82);
+weapon.position.set(-0.05, -0.02, 0.02);
 camera.add(weapon);
 scene.add(camera);
 
@@ -919,6 +757,16 @@ function resetGame() {
 const FIXED = 1/120;          // 120 Hz fyzika = stabilní kolize i při vyšším FPS
 let acc = 0, last = performance.now();
 startWave(1);
+
+// Debug náhled (jen pro testovací screenshoty): ?shot rozběhne scénu bez pointer-locku.
+if (location.search.includes('shot')) {
+  overlay.classList.add('hidden');
+  running = true;
+  const m = new URLSearchParams(location.search);
+  player.yaw = parseFloat(m.get('yaw') || '0');
+  player.pitch = parseFloat(m.get('pitch') || '-0.05');
+  for (let i = 0; i < 6; i++) spawnEnemy();
+}
 
 function loop(now) {
   requestAnimationFrame(loop);
