@@ -961,6 +961,22 @@ const KATALOG_SEKCE = [
         "nazev": "🎨 Pixel art editor"
       },
       {
+        "soubor": "obsah/pixel_studio.html",
+        "nazev": "🧩 Pixel studio (PNG assety)",
+        "tagy": [
+          "pixel art",
+          "sprite",
+          "herní asset",
+          "tileset",
+          "dlaždice",
+          "průhlednost",
+          "vyklíčovat",
+          "přeškálovat",
+          "paleta",
+          "png"
+        ]
+      },
+      {
         "soubor": "obsah/meme_gen.html",
         "nazev": "🖼️ Generátor meme"
       },
