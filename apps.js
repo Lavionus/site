@@ -2006,6 +2006,18 @@ const KATALOG_SEKCE = [
         "nazev": "🧱 Breakout"
       },
       {
+        "soubor": "obsah/pirateers/index.html",
+        "nazev": "🏴‍☠️ Pirateers",
+        "tagy": [
+          "piráti",
+          "lodě",
+          "plachetnice",
+          "námořní bitva",
+          "ostrovy",
+          "hra"
+        ]
+      },
+      {
         "soubor": "obsah/tower_defense.html",
         "nazev": "🏰 Tower Defense"
       },
