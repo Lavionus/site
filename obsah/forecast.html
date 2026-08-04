@@ -2095,6 +2095,8 @@
     let selectedSuggestionIndex = -1;
     let currentSuggestions = [];
     let currentLocationData = null;
+    // Datum(y) pokryté 24h grafem – doplňuje se do popisku exportovaného obrázku
+    let twentyFourHourDateLabel = '';
 
     // Uložená data pro překreslení po otočení obrazovky
     let lastChartData = null;
@@ -3507,6 +3509,8 @@
         pressureData.push(pressure ? pressure[i] : null);
         capeData.push(cape ? cape[i] : null);
       }
+
+      twentyFourHourDateLabel = formatDateRangeLabel(time[0], time[time.length - 1]);
 
       const dayBoundaryPlugin24 = {
         id: 'dayBoundary24',
@@ -5572,15 +5576,53 @@
       return '#2a2a2a';
     }
 
+    /** "4. 8. 2026" nebo "4. 8. – 5. 8. 2026" podle rozsahu dat. */
+    function formatDateRangeLabel(fromIso, toIso) {
+      const from = new Date(fromIso);
+      const to = new Date(toIso);
+      if (isNaN(from) || isNaN(to)) return '';
+      const full = d => d.toLocaleDateString('cs-CZ', { day: 'numeric', month: 'numeric', year: 'numeric' });
+      const short = d => d.toLocaleDateString('cs-CZ', { day: 'numeric', month: 'numeric' });
+      return full(from) === full(to) ? full(from) : `${short(from)} – ${full(to)}`;
+    }
+
+    /**
+     * Popisek do exportovaného obrázku – kde (a u 24h grafu i kdy) data platí,
+     * aby sdílený obrázek nesl kontext sám o sobě.
+     */
+    function chartExportCaption(canvasId) {
+      // Porovnání dvou lokací má obě místa v legendě, jediná pozice by mátla.
+      if (canvasId === 'compareChart' || !currentLocationData) return '';
+      const parts = [];
+      if (canvasId === 'twentyFourHourChart' && twentyFourHourDateLabel) parts.push(twentyFourHourDateLabel);
+      const place = currentLocationData.displayName || currentLocationData.name;
+      if (place) parts.push(place);
+      const { lat, lon } = currentLocationData;
+      if (isFinite(lat) && isFinite(lon)) parts.push(`${Number(lat).toFixed(3)}°, ${Number(lon).toFixed(3)}°`);
+      return parts.join(' • ');
+    }
+
     /** Vykreslí graf na neprůhledné pozadí shodné s webem a vrátí nový canvas. */
     function chartWithBackground(canvas) {
+      const caption = chartExportCaption(canvas.id);
+      // Canvas je kvůli HiDPI větší než CSS rozměr – popisek škálujeme stejně.
+      const scale = canvas.clientWidth ? canvas.width / canvas.clientWidth : 1;
+      const fontSize = Math.round(14 * scale);
+      const band = caption ? Math.round(30 * scale) : 0;
       const out = document.createElement('canvas');
       out.width = canvas.width;
-      out.height = canvas.height;
+      out.height = canvas.height + band;
       const ctx = out.getContext('2d');
       ctx.fillStyle = effectiveBackgroundColor(canvas);
       ctx.fillRect(0, 0, out.width, out.height);
-      ctx.drawImage(canvas, 0, 0);
+      if (caption) {
+        ctx.fillStyle = '#e8e8e8';
+        ctx.font = `${fontSize}px sans-serif`;
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(caption, out.width / 2, band / 2, out.width - 16 * scale);
+      }
+      ctx.drawImage(canvas, 0, band);
       return out;
     }
 

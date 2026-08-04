@@ -499,6 +499,18 @@ const KATALOG_SEKCE = [
         ]
       },
       {
+        "soubor": "obsah/menstrual_calendar.html",
+        "nazev": "🌸 Menstruační kalendář",
+        "tagy": [
+          "cyklus",
+          "menstruace",
+          "ovulace",
+          "plodné dny",
+          "perioda",
+          "PMS"
+        ]
+      },
+      {
         "soubor": "obsah/mood_tracker.html",
         "nazev": "😊 Tracker nálady"
       },

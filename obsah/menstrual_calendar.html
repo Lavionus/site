@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🌸 Menstruační kalendář</title>
+<link rel="stylesheet" href="../common.css">
+<script>
+  if (localStorage.getItem('webapp_theme') === 'light') document.documentElement.dataset.theme = 'light';
+</script>
+<style>
+body{background:var(--bg-deep);padding:20px clamp(12px,3vw,40px);min-height:100vh}
+.container{max-width:1080px;margin:0 auto}
+h1{font-size:1.5rem;margin-bottom:4px}
+.sub{color:var(--text-muted);font-size:.85rem;margin-bottom:14px;line-height:1.5}
+.warn{background:rgba(224,166,63,.15);border:1px solid var(--warn);color:var(--warn);padding:10px 14px;border-radius:8px;font-size:.82rem;margin-bottom:18px;line-height:1.5}
+.card{background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:18px}
+.card h2{font-size:.85rem;color:var(--accent);margin-bottom:12px;text-transform:uppercase;letter-spacing:.04em}
+.cols{display:grid;grid-template-columns:minmax(0,1.35fr) minmax(0,1fr);gap:18px;align-items:start}
+@media(max-width:820px){.cols{grid-template-columns:1fr}}
+
+/* ---- stav cyklu ---- */
+.stav{display:flex;flex-wrap:wrap;gap:16px;align-items:center;justify-content:space-between}
+.stav .den{font-size:2.2rem;font-weight:700;color:var(--accent);line-height:1}
+.stav .popis{font-size:.85rem;color:var(--text-muted);line-height:1.6}
+.faze{display:inline-block;padding:3px 12px;border-radius:12px;font-size:.78rem;font-weight:600;color:#fff}
+
+/* ---- kalendář ---- */
+.navbar{display:flex;align-items:center;justify-content:space-between;gap:10px;margin-bottom:12px}
+.navbar .mesic{font-size:1.05rem;font-weight:600}
+.dny-hlavicka,.mrizka{display:grid;grid-template-columns:repeat(7,1fr);gap:4px}
+.dny-hlavicka div{text-align:center;font-size:.7rem;color:var(--text-faint);text-transform:uppercase;padding-bottom:4px}
+.den-bunka{position:relative;aspect-ratio:1;border:1px solid var(--border);border-radius:6px;background:var(--bg-elevated);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;cursor:pointer;font-size:.85rem;transition:transform .08s}
+.den-bunka:hover{transform:scale(1.06);border-color:var(--accent)}
+.den-bunka.mimo{opacity:.3}
+.den-bunka.dnes{outline:2px solid var(--accent);outline-offset:-2px}
+.den-bunka.vybrany{box-shadow:0 0 0 2px var(--accent-hover)}
+.den-bunka.mens{background:#c2405a;color:#fff;border-color:#c2405a}
+.den-bunka.mens-pred{background:repeating-linear-gradient(45deg,rgba(194,64,90,.35),rgba(194,64,90,.35) 5px,transparent 5px,transparent 10px);border-color:#c2405a}
+.den-bunka.plodne{background:rgba(76,175,125,.25);border-color:#4caf7d}
+.den-bunka.ovulace{background:rgba(76,175,125,.55);border-color:#4caf7d;font-weight:700}
+.znacky{display:flex;gap:2px;height:6px}
+.znacky i{width:5px;height:5px;border-radius:50%;display:block}
+.legenda{display:flex;flex-wrap:wrap;gap:12px;font-size:.74rem;color:var(--text-muted);margin-top:12px}
+.legenda span{display:flex;align-items:center;gap:5px}
+.legenda .vzorek{width:14px;height:14px;border-radius:4px;border:1px solid var(--border);display:inline-block}
+
+/* ---- formuláře ---- */
+label{display:block;font-size:.75rem;color:var(--text-faint);margin-bottom:4px}
+input,select,textarea{width:100%;background:var(--bg-input);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:8px;font-family:inherit;font-size:.88rem}
+textarea{resize:vertical;min-height:56px}
+.radek{display:grid;grid-template-columns:repeat(auto-fit,minmax(120px,1fr));gap:12px;margin-bottom:12px}
+.btn{background:var(--bg-control);color:var(--text);border:1px solid var(--border);padding:8px 14px;border-radius:6px;cursor:pointer;font-size:.85rem;font-family:inherit}
+.btn:hover{background:var(--bg-hover)}
+.btn.hlavni{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+.btn.hlavni:hover{background:var(--accent-hover)}
+.btn.nebezpeci{color:var(--danger);border-color:var(--danger)}
+.btn-radek{display:flex;flex-wrap:wrap;gap:8px}
+.prepinace{display:flex;flex-wrap:wrap;gap:6px}
+.prepinac{padding:6px 11px;border:1px solid var(--border);border-radius:14px;background:var(--bg-elevated);cursor:pointer;font-size:.8rem;user-select:none}
+.prepinac.on{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+.prepinac.tok.on{background:rgba(194,64,90,.25);border-color:#c2405a;color:#e8879b}
+
+/* ---- statistika a předpovědi ---- */
+.staty{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px}
+.stat{background:var(--bg-elevated);border:1px solid var(--border);border-radius:6px;padding:10px;text-align:center}
+.stat b{display:block;font-size:1.25rem;color:var(--accent)}
+.stat span{font-size:.7rem;color:var(--text-faint)}
+table{width:100%;border-collapse:collapse;font-size:.85rem}
+th{text-align:left;color:var(--text-faint);font-size:.7rem;text-transform:uppercase;padding:6px 4px;font-weight:600}
+td{padding:7px 4px;border-bottom:1px solid var(--border)}
+tr:last-child td{border-bottom:none}
+.pruh{height:8px;border-radius:4px;background:var(--bg-control);overflow:hidden}
+.pruh i{display:block;height:100%;background:var(--accent)}
+.prazdno{color:var(--text-faint);font-size:.82rem;text-align:center;padding:16px}
+.pozn{font-size:.75rem;color:var(--text-faint);line-height:1.5;margin-top:10px}
+@media print{
+  body{background:#fff;color:#000}
+  .card{break-inside:avoid}
+  .btn-radek,.navbar button{display:none}
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>🌸 Menstruační kalendář</h1>
+  <p class="sub">Sledování cyklu, příznaků a nálady s odhadem dalšího krvácení, ovulace a plodných dnů. Vše zůstává jen v tomto prohlížeči (localStorage) — nic se nikam neodesílá.</p>
+  <div class="warn">⚠️ Předpovědi jsou <b>statistický odhad</b> z délky předchozích cyklů. Nejsou antikoncepční metodou a nenahrazují lékařskou péči. Při nepravidelném cyklu, silném krvácení nebo bolestech se obrať na gynekologa.</div>
+
+  <!-- stav cyklu -->
+  <div class="card">
+    <div class="stav" id="stav"></div>
+  </div>
+
+  <div class="cols">
+    <!-- kalendář -->
+    <div>
+      <div class="card">
+        <div class="navbar">
+          <button class="btn" id="predMesic">◀</button>
+          <div class="mesic" id="popisMesice"></div>
+          <div style="display:flex;gap:6px">
+            <button class="btn" id="dnesBtn">Dnes</button>
+            <button class="btn" id="dalsiMesic">▶</button>
+          </div>
+        </div>
+        <div class="dny-hlavicka"><div>Po</div><div>Út</div><div>St</div><div>Čt</div><div>Pá</div><div>So</div><div>Ne</div></div>
+        <div class="mrizka" id="mrizka"></div>
+        <div class="legenda">
+          <span><i class="vzorek" style="background:#c2405a"></i>Menstruace</span>
+          <span><i class="vzorek" style="background:repeating-linear-gradient(45deg,rgba(194,64,90,.5),rgba(194,64,90,.5) 4px,transparent 4px,transparent 8px)"></i>Odhad menstruace</span>
+          <span><i class="vzorek" style="background:rgba(76,175,125,.3)"></i>Plodné dny</span>
+          <span><i class="vzorek" style="background:rgba(76,175,125,.6)"></i>Ovulace</span>
+          <span><i class="vzorek" style="background:var(--accent)"></i>Poznámka / příznaky</span>
+        </div>
+      </div>
+
+      <!-- detail vybraného dne -->
+      <div class="card" id="detailKarta">
+        <h2 id="detailNadpis">Záznam dne</h2>
+        <div style="margin-bottom:12px">
+          <label>Krvácení</label>
+          <div class="prepinace" id="tokVolby"></div>
+        </div>
+        <div style="margin-bottom:12px">
+          <label>Příznaky</label>
+          <div class="prepinace" id="priznakyVolby"></div>
+        </div>
+        <div class="radek">
+          <div>
+            <label>Nálada</label>
+            <select id="nalada">
+              <option value="">—</option>
+              <option value="😄">😄 skvělá</option>
+              <option value="🙂">🙂 dobrá</option>
+              <option value="😐">😐 neutrální</option>
+              <option value="😕">😕 podrážděná</option>
+              <option value="😢">😢 smutná</option>
+            </select>
+          </div>
+          <div><label>Bazální teplota (°C)</label><input type="number" id="teplota" step="0.01" min="34" max="40" placeholder="např. 36,55"></div>
+          <div><label>Hmotnost (kg)</label><input type="number" id="hmotnost" step="0.1" min="20" max="250" placeholder="volitelné"></div>
+        </div>
+        <div style="margin-bottom:12px"><label>Poznámka</label><textarea id="poznamka" placeholder="cokoliv k tomuto dni…"></textarea></div>
+        <div class="btn-radek">
+          <button class="btn hlavni" id="ulozitBtn">💾 Uložit den</button>
+          <button class="btn" id="smazatDenBtn">🗑️ Vymazat den</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- pravý sloupec -->
+    <div>
+      <div class="card">
+        <h2>Statistika cyklu</h2>
+        <div class="staty" id="staty"></div>
+        <p class="pozn" id="pravidelnost"></p>
+      </div>
+
+      <div class="card">
+        <h2>Předpověď</h2>
+        <table id="predpoved"></table>
+        <p class="pozn">Odhad vychází z průměru posledních cyklů (min. 2 zaznamenané začátky menstruace), jinak z nastavení níže.</p>
+      </div>
+
+      <div class="card">
+        <h2>Historie cyklů</h2>
+        <div id="historie"></div>
+      </div>
+
+      <div class="card">
+        <h2>Nejčastější příznaky</h2>
+        <div id="priznakyStat"></div>
+      </div>
+
+      <div class="card">
+        <h2>Nastavení</h2>
+        <div class="radek">
+          <div><label>Obvyklá délka cyklu (dny)</label><input type="number" id="setCyklus" min="18" max="60"></div>
+          <div><label>Obvyklá délka menstruace</label><input type="number" id="setMens" min="1" max="14"></div>
+          <div><label>Luteální fáze (dny)</label><input type="number" id="setLuteal" min="8" max="18"></div>
+        </div>
+        <div class="btn-radek">
+          <button class="btn" id="exportBtn">⬇️ Export JSON</button>
+          <button class="btn" id="importBtn">⬆️ Import JSON</button>
+          <button class="btn" id="tiskBtn">🖨️ Tisk</button>
+          <button class="btn nebezpeci" id="vymazatBtn">Vymazat vše</button>
+        </div>
+        <input type="file" id="importFile" accept="application/json" hidden>
+        <p class="pozn">Luteální fáze (od ovulace do menstruace) je u většiny žen 12–14 dní a je stabilnější než první polovina cyklu — proto se ovulace počítá zpětně od očekávaného krvácení.</p>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const KLIC = 'mens_kalendar_v1';
+
+/* ---------- data ----------
+   dny: { 'YYYY-MM-DD': { tok:0..4, priznaky:[], nalada:'', teplota:null, hmotnost:null, poznamka:'' } }
+   tok: 0 = žádné krvácení, 1 = špinění, 2 = slabé, 3 = střední, 4 = silné            */
+const VYCHOZI = { dny:{}, nastaveni:{ delkaCyklu:28, delkaMenstruace:5, luteal:14 } };
+let data = nacti();
+let vybranyDen = dnesISO();
+let zobrazenyMesic = new Date();
+
+function nacti(){
+  try {
+    const ulozeno = JSON.parse(localStorage.getItem(KLIC));
+    if (ulozeno && ulozeno.dny) return { dny:ulozeno.dny, nastaveni:{ ...VYCHOZI.nastaveni, ...(ulozeno.nastaveni||{}) } };
+  } catch(e){}
+  return structuredClone(VYCHOZI);
+}
+const uloz = () => localStorage.setItem(KLIC, JSON.stringify(data));
+
+/* ---------- práce s daty ---------- */
+const TOKY = ['žádné','špinění','slabé','střední','silné'];
+const PRIZNAKY = ['křeče','bolest hlavy','bolest zad','citlivá prsa','nadýmání','únava','akné','chuť k jídlu','nevolnost','nespavost','výtok'];
+
+function iso(d){ return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`; }
+function dnesISO(){ return iso(new Date()); }
+function zIso(s){ const [r,m,d] = s.split('-').map(Number); return new Date(r, m-1, d); }
+function posun(datum, oDni){ const d = new Date(datum); d.setDate(d.getDate()+oDni); return d; }
+function rozdilDni(a, b){ return Math.round((zIso(b) - zIso(a)) / 86400000); }
+function formatCZ(s){ return zIso(s).toLocaleDateString('cs', { day:'numeric', month:'numeric', year:'numeric' }); }
+
+/* Seskupí dny s krvácením do jednotlivých menstruací.
+   Jednodenní mezeru uvnitř krvácení toleruje (běžné vynechání záznamu). */
+function menstruace(){
+  const dnyKrvaceni = Object.keys(data.dny).filter(k => (data.dny[k].tok||0) > 0).sort();
+  const skupiny = [];
+  for (const den of dnyKrvaceni){
+    const posledni = skupiny[skupiny.length-1];
+    if (posledni && rozdilDni(posledni[posledni.length-1], den) <= 2) posledni.push(den);
+    else skupiny.push([den]);
+  }
+  return skupiny.map(g => ({ zacatek:g[0], konec:g[g.length-1], delka: rozdilDni(g[0], g[g.length-1]) + 1 }));
+}
+
+/* Délky cyklů = rozestupy mezi začátky po sobě jdoucích menstruací. */
+function delkyCyklu(){
+  const m = menstruace();
+  const delky = [];
+  for (let i=1; i<m.length; i++) delky.push(rozdilDni(m[i-1].zacatek, m[i].zacatek));
+  return delky.filter(d => d >= 15 && d <= 70); // zjevné odlehlé hodnoty do průměru nepatří
+}
+
+const prumer = pole => pole.length ? pole.reduce((a,b)=>a+b,0)/pole.length : null;
+
+function statistika(){
+  const m = menstruace();
+  const delky = delkyCyklu();
+  const prumCyklus = prumer(delky);
+  const prumMens = prumer(m.slice(-6).map(x => x.delka));
+  return {
+    menstruace: m,
+    delky,
+    pocetCyklu: delky.length,
+    prumCyklus: prumCyklus ? Math.round(prumCyklus) : data.nastaveni.delkaCyklu,
+    presnyPrumer: prumCyklus,
+    min: delky.length ? Math.min(...delky) : null,
+    max: delky.length ? Math.max(...delky) : null,
+    prumMens: prumMens ? Math.round(prumMens*10)/10 : data.nastaveni.delkaMenstruace,
+    odhadovany: !prumCyklus,
+  };
+}
+
+/* Předpověď dalších cyklů: začátek, ovulace a plodné okno. */
+function predpovedi(pocet = 4){
+  const s = statistika();
+  const posledni = s.menstruace[s.menstruace.length-1];
+  if (!posledni) return [];
+  const delka = s.prumCyklus;
+  const out = [];
+  let zacatek = zIso(posledni.zacatek);
+  for (let i=0; i<pocet; i++){
+    zacatek = posun(zacatek, delka);
+    const ovulace = posun(zacatek, -data.nastaveni.luteal);
+    out.push({
+      zacatek: iso(zacatek),
+      konec: iso(posun(zacatek, Math.round(s.prumMens)-1)),
+      ovulace: iso(ovulace),
+      plodneOd: iso(posun(ovulace, -5)),
+      plodneDo: iso(posun(ovulace, 1)),
+    });
+  }
+  return out;
+}
+
+/* Ovulace a plodné okno u již proběhlých cyklů (počítáno zpět od dalšího krvácení). */
+function minulaOkna(){
+  const m = statistika().menstruace;
+  const okna = [];
+  for (let i=1; i<m.length; i++){
+    const ovulace = posun(zIso(m[i].zacatek), -data.nastaveni.luteal);
+    okna.push({ ovulace: iso(ovulace), plodneOd: iso(posun(ovulace,-5)), plodneDo: iso(posun(ovulace,1)) });
+  }
+  return okna;
+}
+
+/* Aktuální den cyklu a fáze. */
+function aktualniStav(){
+  const s = statistika();
+  const posledni = s.menstruace[s.menstruace.length-1];
+  if (!posledni) return null;
+  const dnesStr = dnesISO();
+  const denCyklu = rozdilDni(posledni.zacatek, dnesStr) + 1;
+  if (denCyklu < 1) return null;
+  const p = predpovedi(1)[0];
+  const doMens = rozdilDni(dnesStr, p.zacatek);
+  let faze = { nazev:'Folikulární fáze', barva:'#6aa6fd' };
+  if (dnesStr >= posledni.zacatek && dnesStr <= posledni.konec) faze = { nazev:'Menstruace', barva:'#c2405a' };
+  else if (dnesStr >= p.plodneOd && dnesStr <= p.plodneDo) faze = { nazev: dnesStr === p.ovulace ? 'Ovulace' : 'Plodné dny', barva:'#4caf7d' };
+  else if (dnesStr > p.plodneDo) faze = { nazev:'Luteální fáze', barva:'#b07fd4' };
+  return { denCyklu, faze, doMens, predpoved:p, prumCyklus:s.prumCyklus };
+}
+
+/* ---------- vykreslení ---------- */
+function vykresliStav(){
+  const st = aktualniStav();
+  if (!st){
+    $('stav').innerHTML = '<div class="popis">Zatím žádný záznam. Klikni v kalendáři na první den poslední menstruace a ulož u něj sílu krvácení — od toho se odvíjí všechny výpočty.</div>';
+    return;
+  }
+  const zbyva = st.doMens;
+  const text = zbyva === 0 ? 'menstruace očekávána dnes'
+    : zbyva > 0 ? `do očekávané menstruace zbývá <b>${zbyva}</b> ${sklonujDny(zbyva)}`
+    : `menstruace se opožďuje o <b>${-zbyva}</b> ${sklonujDny(-zbyva)}`;
+  $('stav').innerHTML = `
+    <div style="display:flex;align-items:center;gap:16px">
+      <div><div class="den">${st.denCyklu}.</div><div style="font-size:.72rem;color:var(--text-faint)">den cyklu</div></div>
+      <div class="popis"><span class="faze" style="background:${st.faze.barva}">${st.faze.nazev}</span><br>${text}</div>
+    </div>
+    <div class="popis" style="text-align:right">
+      Odhad další menstruace<br><b style="color:var(--text)">${formatCZ(st.predpoved.zacatek)}</b><br>
+      Ovulace ${formatCZ(st.predpoved.ovulace)}
+    </div>`;
+}
+function sklonujDny(n){ return n === 1 ? 'den' : (n >= 2 && n <= 4 ? 'dny' : 'dní'); }
+
+function vykresliKalendar(){
+  const rok = zobrazenyMesic.getFullYear(), mesic = zobrazenyMesic.getMonth();
+  $('popisMesice').textContent = zobrazenyMesic.toLocaleDateString('cs', { month:'long', year:'numeric' });
+
+  const prvni = new Date(rok, mesic, 1);
+  const posunPrvniho = (prvni.getDay() + 6) % 7;           // pondělí = 0
+  const start = posun(prvni, -posunPrvniho);
+
+  const mens = statistika().menstruace;
+  const budouci = predpovedi(6);
+  const okna = minulaOkna();
+  const dnes = dnesISO();
+
+  let html = '';
+  for (let i=0; i<42; i++){
+    const d = posun(start, i);
+    const klic = iso(d);
+    const zaznam = data.dny[klic];
+    const tridy = ['den-bunka'];
+    if (d.getMonth() !== mesic) tridy.push('mimo');
+    if (klic === dnes) tridy.push('dnes');
+    if (klic === vybranyDen) tridy.push('vybrany');
+
+    if (zaznam && zaznam.tok > 0) tridy.push('mens');
+    else if (budouci.some(p => klic >= p.zacatek && klic <= p.konec)) tridy.push('mens-pred');
+
+    const vsechnaOkna = [...okna, ...budouci];
+    if (!tridy.includes('mens')){
+      if (vsechnaOkna.some(o => klic === o.ovulace)) tridy.push('ovulace');
+      else if (vsechnaOkna.some(o => klic >= o.plodneOd && klic <= o.plodneDo)) tridy.push('plodne');
+    }
+
+    let znacky = '';
+    if (zaznam){
+      if (zaznam.poznamka) znacky += '<i style="background:var(--accent)"></i>';
+      if (zaznam.priznaky && zaznam.priznaky.length) znacky += '<i style="background:var(--warn)"></i>';
+      if (zaznam.teplota) znacky += '<i style="background:#b07fd4"></i>';
+    }
+    const denCyklu = cisloDneCyklu(klic, mens);
+    html += `<div class="${tridy.join(' ')}" data-den="${klic}" title="${popisDne(klic, denCyklu)}">
+      <div>${d.getDate()}${zaznam && zaznam.nalada ? ' ' + zaznam.nalada : ''}</div>
+      <div class="znacky">${znacky}</div></div>`;
+  }
+  $('mrizka').innerHTML = html;
+  $('mrizka').querySelectorAll('.den-bunka').forEach(b => b.onclick = () => { vybranyDen = b.dataset.den; vykresliDetail(); vykresliKalendar(); });
+}
+
+function cisloDneCyklu(klic, mens){
+  const zacatky = mens.map(m => m.zacatek).filter(z => z <= klic);
+  if (!zacatky.length) return null;
+  return rozdilDni(zacatky[zacatky.length-1], klic) + 1;
+}
+function popisDne(klic, denCyklu){
+  const z = data.dny[klic];
+  const casti = [formatCZ(klic)];
+  if (denCyklu) casti.push(`${denCyklu}. den cyklu`);
+  if (z && z.tok) casti.push('krvácení: ' + TOKY[z.tok]);
+  if (z && z.priznaky && z.priznaky.length) casti.push(z.priznaky.join(', '));
+  if (z && z.teplota) casti.push(z.teplota + ' °C');
+  if (z && z.poznamka) casti.push(z.poznamka);
+  return casti.join(' • ');
+}
+
+function vykresliDetail(){
+  const z = data.dny[vybranyDen] || {};
+  const mens = statistika().menstruace;
+  const dc = cisloDneCyklu(vybranyDen, mens);
+  $('detailNadpis').textContent = `Záznam — ${formatCZ(vybranyDen)}${dc ? ` (${dc}. den cyklu)` : ''}`;
+  $('tokVolby').innerHTML = TOKY.map((t,i) =>
+    `<div class="prepinac tok ${(z.tok||0) === i ? 'on' : ''}" data-tok="${i}">${i === 0 ? '—' : '●'.repeat(i)} ${t}</div>`).join('');
+  $('tokVolby').querySelectorAll('.prepinac').forEach(el => el.onclick = () => {
+    $('tokVolby').querySelectorAll('.prepinac').forEach(x => x.classList.remove('on'));
+    el.classList.add('on');
+  });
+  $('priznakyVolby').innerHTML = PRIZNAKY.map(p =>
+    `<div class="prepinac ${(z.priznaky||[]).includes(p) ? 'on' : ''}" data-priznak="${p}">${p}</div>`).join('');
+  $('priznakyVolby').querySelectorAll('.prepinac').forEach(el => el.onclick = () => el.classList.toggle('on'));
+  $('nalada').value = z.nalada || '';
+  $('teplota').value = z.teplota ?? '';
+  $('hmotnost').value = z.hmotnost ?? '';
+  $('poznamka').value = z.poznamka || '';
+}
+
+function vykresliStaty(){
+  const s = statistika();
+  const odchylka = s.delky.length > 1
+    ? Math.round(Math.sqrt(prumer(s.delky.map(d => (d - s.presnyPrumer) ** 2))) * 10) / 10
+    : null;
+  $('staty').innerHTML = `
+    <div class="stat"><b>${s.prumCyklus}</b><span>průměrný cyklus${s.odhadovany ? ' (nastavení)' : ''}</span></div>
+    <div class="stat"><b>${s.prumMens}</b><span>délka menstruace</span></div>
+    <div class="stat"><b>${s.min ?? '–'}–${s.max ?? '–'}</b><span>rozsah cyklu</span></div>
+    <div class="stat"><b>${s.menstruace.length}</b><span>zaznamenaných menstruací</span></div>`;
+  if (odchylka === null){
+    $('pravidelnost').textContent = 'Pro posouzení pravidelnosti zaznamenej alespoň tři menstruace.';
+  } else if (odchylka <= 2){
+    $('pravidelnost').textContent = `Cyklus je pravidelný (rozptyl ±${odchylka} dne). Předpověď bývá spolehlivá.`;
+  } else if (odchylka <= 4){
+    $('pravidelnost').textContent = `Mírně kolísavý cyklus (rozptyl ±${odchylka} dne) — ber předpověď s rezervou.`;
+  } else {
+    $('pravidelnost').textContent = `Nepravidelný cyklus (rozptyl ±${odchylka} dne). Pokud se délky liší o víc než 8 dní, stojí za zmínku u gynekologa.`;
+  }
+}
+
+function vykresliPredpoved(){
+  const p = predpovedi(4);
+  if (!p.length){ $('predpoved').innerHTML = '<tr><td class="prazdno">Nejprve zaznamenej menstruaci.</td></tr>'; return; }
+  $('predpoved').innerHTML =
+    '<tr><th>Menstruace</th><th>Plodné dny</th><th>Ovulace</th></tr>' +
+    p.map(x => `<tr>
+      <td><b>${formatCZ(x.zacatek)}</b><br><span style="color:var(--text-faint);font-size:.76rem">do ${formatCZ(x.konec)}</span></td>
+      <td>${zIso(x.plodneOd).toLocaleDateString('cs',{day:'numeric',month:'numeric'})} – ${zIso(x.plodneDo).toLocaleDateString('cs',{day:'numeric',month:'numeric'})}</td>
+      <td>${zIso(x.ovulace).toLocaleDateString('cs',{day:'numeric',month:'numeric'})}</td></tr>`).join('');
+}
+
+function vykresliHistorii(){
+  const s = statistika();
+  const m = s.menstruace.slice().reverse();
+  if (!m.length){ $('historie').innerHTML = '<div class="prazdno">Zatím žádné záznamy.</div>'; return; }
+  const maxDelka = Math.max(...s.delky, s.prumCyklus);
+  let html = '<table><tr><th>Začátek</th><th>Krvácení</th><th>Délka cyklu</th></tr>';
+  m.forEach((x, i) => {
+    const delka = i < m.length-1 ? rozdilDni(m[i+1].zacatek, x.zacatek) : null;
+    html += `<tr><td>${formatCZ(x.zacatek)}</td><td>${x.delka} ${sklonujDny(x.delka)}</td>
+      <td>${delka ? `${delka} dní<div class="pruh"><i style="width:${Math.round(delka/maxDelka*100)}%"></i></div>` : '<span style="color:var(--text-faint)">probíhá</span>'}</td></tr>`;
+  });
+  $('historie').innerHTML = html + '</table>';
+}
+
+function vykresliPriznaky(){
+  const pocty = {};
+  Object.values(data.dny).forEach(z => (z.priznaky||[]).forEach(p => pocty[p] = (pocty[p]||0)+1));
+  const serazene = Object.entries(pocty).sort((a,b) => b[1]-a[1]).slice(0,8);
+  if (!serazene.length){ $('priznakyStat').innerHTML = '<div class="prazdno">Zatím žádné zaznamenané příznaky.</div>'; return; }
+  const max = serazene[0][1];
+  $('priznakyStat').innerHTML = serazene.map(([p,n]) =>
+    `<div style="margin-bottom:8px"><div style="display:flex;justify-content:space-between;font-size:.82rem"><span>${p}</span><span style="color:var(--text-faint)">${n}×</span></div>
+     <div class="pruh"><i style="width:${Math.round(n/max*100)}%;background:var(--warn)"></i></div></div>`).join('');
+}
+
+function vykresliVse(){
+  vykresliStav(); vykresliKalendar(); vykresliDetail();
+  vykresliStaty(); vykresliPredpoved(); vykresliHistorii(); vykresliPriznaky();
+}
+
+/* ---------- ovládání ---------- */
+$('predMesic').onclick = () => { zobrazenyMesic = new Date(zobrazenyMesic.getFullYear(), zobrazenyMesic.getMonth()-1, 1); vykresliKalendar(); };
+$('dalsiMesic').onclick = () => { zobrazenyMesic = new Date(zobrazenyMesic.getFullYear(), zobrazenyMesic.getMonth()+1, 1); vykresliKalendar(); };
+$('dnesBtn').onclick = () => { zobrazenyMesic = new Date(); vybranyDen = dnesISO(); vykresliVse(); };
+
+$('ulozitBtn').onclick = () => {
+  const tok = +($('tokVolby').querySelector('.prepinac.on')?.dataset.tok || 0);
+  const priznaky = [...$('priznakyVolby').querySelectorAll('.prepinac.on')].map(el => el.dataset.priznak);
+  const zaznam = {
+    tok,
+    priznaky,
+    nalada: $('nalada').value,
+    teplota: $('teplota').value ? +$('teplota').value : null,
+    hmotnost: $('hmotnost').value ? +$('hmotnost').value : null,
+    poznamka: $('poznamka').value.trim(),
+  };
+  // prázdný záznam neukládáme, ať kalendář nezaplevelí
+  if (!tok && !priznaky.length && !zaznam.nalada && !zaznam.teplota && !zaznam.hmotnost && !zaznam.poznamka) delete data.dny[vybranyDen];
+  else data.dny[vybranyDen] = zaznam;
+  uloz(); vykresliVse();
+};
+$('smazatDenBtn').onclick = () => { delete data.dny[vybranyDen]; uloz(); vykresliVse(); };
+
+['setCyklus','setMens','setLuteal'].forEach(id => $(id).onchange = () => {
+  data.nastaveni = {
+    delkaCyklu: +$('setCyklus').value || 28,
+    delkaMenstruace: +$('setMens').value || 5,
+    luteal: +$('setLuteal').value || 14,
+  };
+  uloz(); vykresliVse();
+});
+
+$('exportBtn').onclick = () => {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([JSON.stringify(data, null, 2)], { type:'application/json' }));
+  a.download = `menstruacni-kalendar-${dnesISO()}.json`;
+  a.click(); URL.revokeObjectURL(a.href);
+};
+$('importBtn').onclick = () => $('importFile').click();
+$('importFile').onchange = e => {
+  const f = e.target.files[0]; if (!f) return;
+  const r = new FileReader();
+  r.onload = () => {
+    try {
+      const nova = JSON.parse(r.result);
+      if (!nova || typeof nova.dny !== 'object') throw new Error('neplatný soubor');
+      if (!confirm('Nahradit současné záznamy daty ze souboru?')) return;
+      data = { dny: nova.dny, nastaveni: { ...VYCHOZI.nastaveni, ...(nova.nastaveni||{}) } };
+      uloz(); nactiNastaveniDoFormulare(); vykresliVse();
+    } catch(err){ alert('Soubor se nepodařilo načíst: ' + err.message); }
+  };
+  r.readAsText(f);
+  e.target.value = '';
+};
+$('tiskBtn').onclick = () => window.print();
+$('vymazatBtn').onclick = () => {
+  if (!confirm('Opravdu smazat všechny záznamy? Akci nelze vrátit — zvaž nejprve export.')) return;
+  data = structuredClone(VYCHOZI);
+  uloz(); nactiNastaveniDoFormulare(); vykresliVse();
+};
+
+function nactiNastaveniDoFormulare(){
+  $('setCyklus').value = data.nastaveni.delkaCyklu;
+  $('setMens').value = data.nastaveni.delkaMenstruace;
+  $('setLuteal').value = data.nastaveni.luteal;
+}
+
+nactiNastaveniDoFormulare();
+vykresliVse();
+</script>
+</body>
+</html>
