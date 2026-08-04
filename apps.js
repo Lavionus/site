@@ -1951,7 +1951,7 @@ const KATALOG_SEKCE = [
       {
         "soubor": "obsah/pracovni_listy.html",
         "nazev": "🖨️ Generátor pracovních listů",
-        "tagy": ["tisk", "pdf", "pracovní list", "násobilka", "sčítání", "vyjmenovaná slova", "učitel"]
+        "tagy": ["tisk", "pdf", "pracovní list", "učitel", "škola", "násobilka", "sčítání", "zlomky", "rovnice", "pythagorova věta", "vyjmenovaná slova", "i/y", "bě pě vě mě", "shoda přísudku", "slovní druhy", "angličtina", "němčina", "slovíčka", "klíč řešení", "varianty A/B"]
       },
       {
         "soubor": "obsah/edu_progress.html",
