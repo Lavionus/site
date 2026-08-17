@@ -121,7 +121,11 @@ canvas#editCanvas{max-width:100%;touch-action:none;cursor:crosshair;border-radiu
         <div class="hint">Tip: tvary kreslíš tažením. Nástrojem ↖ objekt vybereš, táhnutím posuneš, kroužkem nad ním otočíš a rohy změníš velikost. Guma maže tah pod kurzorem.</div>
       </div>
 
-      <button class="btn btn-lg" id="dlBtn">💾 Stáhnout meme</button>
+      <div class="row" style="margin-top:16px">
+        <button class="btn btn-lg" id="dlBtn" style="margin-top:0">💾 Uložit</button>
+        <button class="btn btn-lg btn-sec" id="shareBtn" style="margin-top:0;display:none">📤 Sdílet</button>
+      </div>
+      <div class="hint" id="saveHint">Meme se uloží jako PNG do složky stažených souborů.</div>
     </div>
     <div class="card canvaswrap"><canvas id="canvas" width="500" height="400"></canvas></div>
   </div>
@@ -145,9 +149,20 @@ canvas#editCanvas{max-width:100%;touch-action:none;cursor:crosshair;border-radiu
   </div>
 </div>
 
+<!-- ===== Záložní uložení (mobil: podržet prst na obrázku) ===== -->
+<div class="modal" id="saveModal">
+  <div class="modal-box">
+    <h2>💾 Uložit meme</h2>
+    <div class="editcanvas-wrap"><img id="saveImg" alt="Hotový meme" style="max-width:100%;border-radius:4px;box-shadow:0 4px 18px rgba(0,0,0,.5)"></div>
+    <div class="editmeta">Podrž prst na obrázku a zvol <b>Uložit obrázek</b> (na počítači pravé tlačítko → Uložit obrázek jako…).</div>
+    <div class="editbar"><button class="btn" id="saveClose">Hotovo</button></div>
+  </div>
+</div>
+
 <script>
 const $=id=>document.getElementById(id);
-const canvas=$('canvas'),ctx=canvas.getContext('2d');
+const canvas=$('canvas');
+let ctx=canvas.getContext('2d');   // při exportu dočasně míří na offscreen plátno
 let img=null;               // base image OR canvas drawn behind everything
 let bgColor=null;           // solid background when no image
 let shapes=[];              // committed annotations
@@ -216,7 +231,9 @@ function renderShapeRaw(s){
 }
 
 /* ---------- main redraw: base -> annotations -> meme text ---------- */
-function draw(){
+function draw(){drawScene();drawSelection();invalidateExport();}
+/* samotný obsah meme, bez pomocného výběrového rámečku – tohle jde i do exportu */
+function drawScene(){
   if(img)ctx.drawImage(img,0,0,canvas.width,canvas.height);
   else if(bgColor){ctx.fillStyle=bgColor;ctx.fillRect(0,0,canvas.width,canvas.height);}
   else placeholder();
@@ -229,7 +246,6 @@ function draw(){
   const text=(str,y)=>{str=str.toUpperCase();ctx.strokeText(str,canvas.width/2,y);ctx.fillText(str,canvas.width/2,y);};
   ctx.textBaseline='top';if($('top').value)text($('top').value,12);
   ctx.textBaseline='bottom';if($('bottom').value)text($('bottom').value,canvas.height-12);
-  drawSelection();
 }
 
 /* selection overlay (only with the select tool) */
@@ -475,6 +491,7 @@ $('redoBtn').onclick=()=>{if(redoStack.length){selected=null;shapes.push(redoSta
 $('clearBtn').onclick=()=>{if(shapes.length&&confirm('Smazat všechny kresby?')){redoStack=[];shapes=[];selected=null;draw();}};
 document.addEventListener('keydown',e=>{
   if($('editor').classList.contains('show')){if(e.key==='Escape')closeEditor();return;}
+  if($('saveModal').classList.contains('show')){if(e.key==='Escape')closeSaveFallback();return;}
   if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'){e.preventDefault();e.shiftKey?$('redoBtn').click():$('undoBtn').click();}
   else if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='y'){e.preventDefault();$('redoBtn').click();}
   else if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='d'&&selected&&tool==='select'){e.preventDefault();duplicateSelected();}
@@ -483,7 +500,84 @@ document.addEventListener('keydown',e=>{
 
 ['top','bottom','size','fill','stroke'].forEach(id=>$(id).oninput=()=>{$('sizeVal').textContent=$('size').value;draw();});
 $('penWidth').oninput=()=>$('penWVal').textContent=$('penWidth').value;
-$('dlBtn').onclick=()=>{const a=document.createElement('a');a.href=canvas.toDataURL('image/png');a.download='meme.png';a.click();};
+/* ---------- export: uložení a sdílení ---------- */
+/* Na mobilu (hlavně iOS) stažení přes data: URL nefunguje, proto:
+   - export běží přes Blob, ne toDataURL,
+   - blob se drží předpřipravený, aby share() proběhl ještě v rámci kliknutí
+     (Safari jinak sdílení po `await` odmítne),
+   - když se stažení nepovede, ukáže se obrázek k podržení prstem. */
+const IOS=/iP(hone|od|ad)/.test(navigator.platform||'')||(/Mac/.test(navigator.userAgent)&&navigator.maxTouchPoints>1);
+let exportBlob=null,exportTimer=null,fallbackUrl=null;
+
+function invalidateExport(){exportBlob=null;clearTimeout(exportTimer);exportTimer=setTimeout(()=>buildExport(),500);}
+function renderExportCanvas(){
+  const out=document.createElement('canvas');out.width=canvas.width;out.height=canvas.height;
+  const real=ctx;ctx=out.getContext('2d');
+  try{drawScene();}finally{ctx=real;}
+  return out;
+}
+function buildExport(){
+  return new Promise(res=>{
+    try{renderExportCanvas().toBlob(b=>{exportBlob=b;res(b);},'image/png');}
+    catch(e){res(null);}
+  });
+}
+function memeFile(blob){
+  const d=new Date(),p=n=>String(n).padStart(2,'0');
+  const name=`meme-${d.getFullYear()}${p(d.getMonth()+1)}${p(d.getDate())}-${p(d.getHours())}${p(d.getMinutes())}.png`;
+  return new File([blob],name,{type:'image/png'});
+}
+function showSaveFallback(blob){
+  if(fallbackUrl)URL.revokeObjectURL(fallbackUrl);
+  fallbackUrl=URL.createObjectURL(blob);
+  $('saveImg').src=fallbackUrl;
+  $('saveModal').classList.add('show');
+}
+function closeSaveFallback(){
+  $('saveModal').classList.remove('show');
+  if(fallbackUrl){URL.revokeObjectURL(fallbackUrl);fallbackUrl=null;$('saveImg').removeAttribute('src');}
+}
+$('saveClose').onclick=closeSaveFallback;
+$('saveModal').onclick=e=>{if(e.target===$('saveModal'))closeSaveFallback();};
+
+async function shareFile(file){
+  if(!navigator.canShare||!navigator.canShare({files:[file]}))return false;
+  try{await navigator.share({files:[file],title:'Meme'});return true;}
+  catch(e){return e&&e.name==='AbortError';}   // zrušeno uživatelem – nic dalšího neotvírat
+}
+async function saveMeme(){
+  const blob=exportBlob||await buildExport();
+  if(!blob){alert('Obrázek se nepodařilo vytvořit.');return;}
+  const file=memeFile(blob);
+  if(IOS){                                     // sdílecí panel nabídne „Uložit obrázek“
+    if(await shareFile(file))return;
+    showSaveFallback(blob);return;
+  }
+  try{
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;a.download=file.name;a.rel='noopener';
+    document.body.appendChild(a);a.click();a.remove();
+    setTimeout(()=>URL.revokeObjectURL(url),60000);
+  }catch(e){showSaveFallback(blob);}
+}
+async function shareMeme(){
+  const blob=exportBlob||await buildExport();
+  if(!blob){alert('Obrázek se nepodařilo vytvořit.');return;}
+  if(!await shareFile(memeFile(blob)))showSaveFallback(blob);
+}
+$('dlBtn').onclick=saveMeme;
+$('shareBtn').onclick=shareMeme;
+/* tlačítko Sdílet jen tam, kde prohlížeč umí sdílet soubory */
+try{
+  const probe=new File([new Blob([''],{type:'image/png'})],'meme.png',{type:'image/png'});
+  if(navigator.canShare&&navigator.canShare({files:[probe]})){
+    $('shareBtn').style.display='';
+    $('saveHint').textContent=IOS
+      ?'Uložit otevře sdílecí panel – vyber „Uložit obrázek“. Sdílet pošle meme rovnou do aplikace.'
+      :'Uložit stáhne PNG, Sdílet ho pošle do jiné aplikace.';
+  }
+}catch(e){}
 
 /* preset backgrounds */
 const PRESETS=[['Modrá','#3a4a6a'],['Černá','#111'],['Bílá','#eeeeee'],['Zelená','#1e3a26'],['Fialová','#3a2a5a']];
