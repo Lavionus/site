@@ -4,12 +4,13 @@
    takže jednou navštívená aplikace funguje i offline. */
 /* Při větší aktualizaci webu zvyš číslo verze — stará cache se u návštěvníků
    smaže a vše se stáhne čerstvé (jinak SWR ukáže novou verzi až na druhé načtení). */
-const CACHE = 'webapp-v57';
+const CACHE = 'webapp-v63';
 const JADRO = [
   './',
   './index.html',
   './apps.js',
   './common.css',
+  './theme.js',
   './manifest.webmanifest',
   './icon-192.png',
   './icon-512.png',

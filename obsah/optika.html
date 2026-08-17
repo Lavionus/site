@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🔦 Optika – odraz, lom a čočky</title>
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<style>
+body{height:100vh;overflow:hidden;display:flex;flex-direction:column}
+.horni{display:flex;gap:10px;align-items:center;padding:10px 16px;background:var(--bg-elevated);border-bottom:1px solid var(--border);flex-wrap:wrap}
+.horni h1{font-size:1.05rem;font-weight:600;margin-right:auto}
+.zalozky{display:flex;gap:6px}
+.panel{display:flex;gap:14px;align-items:center;padding:9px 16px;background:var(--bg-panel);border-bottom:1px solid var(--border);flex-wrap:wrap}
+.panel label{font-size:.78rem;color:var(--text-muted);display:flex;align-items:center;gap:7px}
+.panel .hodnota{color:var(--text-faint);min-width:3.4em;font-variant-numeric:tabular-nums}
+input[type=range]{width:110px;accent-color:var(--accent)}
+input[type=checkbox]{accent-color:var(--accent);width:15px;height:15px;cursor:pointer}
+select{background:var(--bg-input);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:5px 8px;font-size:.8rem}
+button{background:var(--bg-control);border:1px solid var(--border-strong);color:var(--text);border-radius:6px;padding:7px 13px;font-size:.82rem;cursor:pointer}
+button:hover{background:var(--accent);color:#fff;border-color:var(--accent)}
+button.zap{background:var(--accent);color:#fff;border-color:var(--accent)}
+.plocha{flex:1;position:relative;overflow:hidden;background:var(--bg-deep);min-height:0}
+canvas{display:block;width:100%;height:100%;touch-action:none;cursor:crosshair}
+.stav{background:var(--bg-panel);border-top:1px solid var(--border);padding:8px 16px;font-size:.8rem;color:var(--text-muted);display:flex;gap:8px 18px;flex-wrap:wrap;align-items:center}
+.stav b{color:var(--text);font-variant-numeric:tabular-nums}
+.stav .znak{font-size:1rem}
+.info{position:absolute;top:12px;right:12px;width:275px;max-width:calc(100% - 24px);background:var(--bg-elevated);border:1px solid var(--border-strong);border-radius:10px;padding:11px 14px;font-size:.78rem;line-height:1.6;color:var(--text-muted);box-shadow:var(--shadow)}
+.info b{color:var(--text)}
+.info .zavri{position:absolute;top:5px;right:7px;background:none;border:none;color:var(--text-faint);font-size:1rem;padding:0 4px;cursor:pointer}
+.info .zavri:hover{background:none;color:var(--accent)}
+.napoveda{position:absolute;left:12px;bottom:10px;font-size:.74rem;color:var(--text-faint);pointer-events:none}
+.skryto{display:none !important}
+@media(max-width:760px){.info{display:none}.panel{gap:10px;padding:8px 10px}input[type=range]{width:86px}}
+</style>
+</head>
+<body>
+<div class="horni">
+  <h1>🔦 Optika</h1>
+  <div class="zalozky">
+    <button id="tabLom" class="zap">🪞 Odraz a lom</button>
+    <button id="tabCocka">🔍 Čočky a zrcadla</button>
+    <button id="tabHranol">🌈 Hranol</button>
+  </div>
+  <button id="btnInfo">❓ Nápověda</button>
+</div>
+
+<div class="panel" id="panelLom">
+  <label>☁️ Nahoře <select id="n1">
+      <option value="1.0003" selected>vzduch (n = 1,00)</option>
+      <option value="1.333">voda (n = 1,33)</option>
+      <option value="1.52">sklo (n = 1,52)</option>
+      <option value="2.417">diamant (n = 2,42)</option>
+    </select></label>
+  <label>💧 Dole <select id="n2">
+      <option value="1.0003">vzduch (n = 1,00)</option>
+      <option value="1.333" selected>voda (n = 1,33)</option>
+      <option value="1.52">sklo (n = 1,52)</option>
+      <option value="2.417">diamant (n = 2,42)</option>
+    </select></label>
+  <label>📐 Úhel dopadu <input type="range" id="uhel" min="0" max="89" step="1" value="40"><span class="hodnota" id="uhelV">40°</span></label>
+  <label><input type="checkbox" id="zdola"> ⤴️ Paprsek zdola</label>
+  <label><input type="checkbox" id="ukazOdraz" checked> ✨ Odražený paprsek</label>
+</div>
+
+<div class="panel skryto" id="panelCocka">
+  <label>🔍 <select id="typ">
+      <option value="spojka" selected>Spojka (spojná čočka)</option>
+      <option value="rozptylka">Rozptylka (rozptylná čočka)</option>
+      <option value="dute">Duté zrcadlo</option>
+      <option value="vypukle">Vypuklé zrcadlo</option>
+    </select></label>
+  <label>🎯 Ohnisko f <input type="range" id="f" min="4" max="30" step="1" value="12"><span class="hodnota" id="fV">12 cm</span></label>
+  <label>📏 Vzdálenost předmětu <input type="range" id="a" min="3" max="55" step="1" value="30"><span class="hodnota" id="aV">30 cm</span></label>
+  <label>🕯️ Výška předmětu <input type="range" id="vys" min="2" max="12" step="1" value="6"><span class="hodnota" id="vysV">6 cm</span></label>
+  <label><input type="checkbox" id="ukazVse"> 🔦 Více paprsků</label>
+</div>
+
+<div class="panel skryto" id="panelHranol">
+  <label>📐 Úhel dopadu <input type="range" id="hUhel" min="10" max="80" step="1" value="45"><span class="hodnota" id="hUhelV">45°</span></label>
+  <label>⬆️ Místo dopadu <input type="range" id="hPos" min="20" max="80" step="1" value="50"><span class="hodnota" id="hPosV">50 %</span></label>
+  <label>🔷 Index lomu <input type="range" id="hN" min="130" max="200" step="1" value="152"><span class="hodnota" id="hNV">1,52</span></label>
+  <label>🌈 Disperze <input type="range" id="hDisp" min="0" max="60" step="1" value="14"><span class="hodnota" id="hDispV">14</span></label>
+  <label>🔄 Otočení hranolu <input type="range" id="hOtoc" min="-90" max="90" step="1" value="0"><span class="hodnota" id="hOtocV">0°</span></label>
+</div>
+
+<div class="plocha">
+  <canvas id="c"></canvas>
+  <div class="info skryto" id="infoBox">
+    <button class="zavri" id="zavriInfo" title="Zavřít">✕</button>
+    <div id="infoText"></div>
+  </div>
+  <div class="napoveda" id="napoveda"></div>
+</div>
+
+<div class="stav" id="stav"></div>
+
+<script>
+const $=id=>document.getElementById(id);
+const canvas=$('c'), ctx=canvas.getContext('2d');
+const cz=(x,d=1)=>(Math.abs(x)<1e-9?0:x).toFixed(d).replace('.',',');
+const DEG=180/Math.PI;
+
+let C={};
+function nactiBarvy(){
+  const s=getComputedStyle(document.documentElement), g=n=>s.getPropertyValue(n).trim();
+  C={text:g('--text'),muted:g('--text-muted'),faint:g('--text-faint'),border:g('--border'),
+     silny:g('--border-strong'),akcent:g('--accent'),ok:g('--ok'),warn:g('--warn'),
+     danger:g('--danger'),panel:g('--bg-panel'),elev:g('--bg-elevated')};
+}
+nactiBarvy();
+
+// plátno musí sledovat i změnu výšky panelu při přepnutí záložky,
+// jinak zůstane starý obsah pod nově kreslenou plochou
+function resize(){
+  const r=devicePixelRatio||1;
+  const w=Math.round(canvas.clientWidth*r), h=Math.round(canvas.clientHeight*r);
+  if(canvas.width!==w||canvas.height!==h){ canvas.width=w; canvas.height=h; }
+  ctx.setTransform(r,0,0,r,0,0);
+}
+
+/* ---------- uchopovací body: kreslení je registruje, myš je hledá ---------- */
+let uchopy=[], tahne=null;
+function uchop(x,y,r,typ,bezObrysu){
+  uchopy.push({x,y,r,typ});
+  if(bezObrysu) return;
+  ctx.save();
+  ctx.strokeStyle=(tahne&&tahne.typ===typ)?C.akcent:C.border;
+  ctx.setLineDash([3,4]); ctx.lineWidth=1;
+  ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.stroke();
+  ctx.restore();
+}
+function najdiUchop(x,y){
+  let nej=null, nd=1e9;
+  for(const u of uchopy){
+    if(u.obdelnik){
+      const [rx,ry,rw,rh]=u.obdelnik;
+      if(x>=rx&&x<=rx+rw&&y>=ry&&y<=ry+rh) return u;
+      continue;
+    }
+    const d=Math.hypot(x-u.x,y-u.y);
+    if(d<u.r&&d<nd){ nd=d; nej=u; }
+  }
+  return nej;
+}
+
+function cara(x1,y1,x2,y2,barva,sirka=2,carkovane=false){
+  ctx.save();
+  if(carkovane) ctx.setLineDash([6,5]);
+  ctx.strokeStyle=barva; ctx.lineWidth=sirka;
+  ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+  ctx.restore();
+}
+function hrot(x,y,uhel,barva,vel=8){
+  ctx.fillStyle=barva;
+  ctx.beginPath();
+  ctx.moveTo(x,y);
+  ctx.lineTo(x-vel*Math.cos(uhel-0.42),y-vel*Math.sin(uhel-0.42));
+  ctx.lineTo(x-vel*Math.cos(uhel+0.42),y-vel*Math.sin(uhel+0.42));
+  ctx.closePath(); ctx.fill();
+}
+function popis(text,x,y,barva=C.muted,font='12px sans-serif',zar='center'){
+  ctx.fillStyle=barva; ctx.font=font; ctx.textAlign=zar; ctx.textBaseline='middle';
+  ctx.fillText(text,x,y);
+}
+
+/* ================= 1) ODRAZ A LOM ================= */
+const lom={
+  n1:1.0003, n2:1.333, uhel:40, zdola:false, odraz:true, P:[0,0],
+  nacti(){
+    this.n1=+$('n1').value; this.n2=+$('n2').value; this.uhel=+$('uhel').value;
+    this.zdola=$('zdola').checked; this.odraz=$('ukazOdraz').checked;
+    $('uhelV').textContent=this.uhel+'°';
+  },
+  vysledek(){
+    const nIn=this.zdola?this.n2:this.n1, nOut=this.zdola?this.n1:this.n2;
+    const th1=this.uhel/DEG;
+    const s=nIn*Math.sin(th1)/nOut;
+    const uplny=s>1;
+    return {nIn,nOut,th1,th2:uplny?null:Math.asin(s),uplny,
+            mezni:nIn>nOut?Math.asin(nOut/nIn)*DEG:null};
+  },
+  kresli(w,h){
+    const y0=h*0.5, px=w*0.46, v=this.vysledek();
+    // prostředí
+    ctx.fillStyle=this.n1>1.05?'rgba(106,166,253,.10)':'transparent';
+    ctx.fillRect(0,0,w,y0);
+    ctx.fillStyle=this.n2>1.05?'rgba(106,166,253,'+(0.05+Math.min(0.18,(this.n2-1)*0.14))+')':'transparent';
+    ctx.fillRect(0,y0,w,h-y0);
+    ctx.strokeStyle=C.silny; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(0,y0); ctx.lineTo(w,y0); ctx.stroke();
+    // popisky prostředí fungují jako tlačítka – kliknutím se materiál přepne
+    for(const [id,yy,typ] of [['n1',y0-20,'prostredi1'],['n2',y0+20,'prostredi2']]){
+      const text=cz(+$(id).value,2)+'  '+$(id).selectedOptions[0].text.split(' (')[0];
+      const popisek=(id==='n1'?'n₁ = ':'n₂ = ')+text;
+      ctx.font='12px sans-serif';
+      const sirka=ctx.measureText(popisek).width+22;
+      ctx.fillStyle=C.elev; ctx.strokeStyle=C.border; ctx.lineWidth=1;
+      ctx.beginPath(); ctx.roundRect(12,yy-13,sirka,26,7); ctx.fill(); ctx.stroke();
+      popis(popisek,23,yy,C.muted,'12px sans-serif','left');
+      popis('↻',12+sirka-11,yy,C.akcent,'12px sans-serif');
+      uchopy.push({x:12+sirka/2,y:yy,r:Math.max(sirka,26)/2,typ,obdelnik:[12,yy-13,sirka,26]});
+    }
+
+    // kolmice
+    cara(px,20,px,h-20,C.faint,1,true);
+    popis('kolmice',px+46,26,C.faint,'11px sans-serif');
+
+    const L=Math.min(w,h)*0.42;
+    const zn=this.zdola?-1:1;          // +1 = paprsek přichází shora
+    // dopadající paprsek
+    const qx=px-L*Math.sin(v.th1), qy=y0-zn*L*Math.cos(v.th1);
+    cara(qx,qy,px,y0,C.warn,2.5);
+    uchop(qx,qy,20,'zdroj');
+    popis('🔦',qx,qy,C.text,'17px sans-serif');
+    hrot((qx+px)/2+ (px-qx)*0.1,(qy+y0)/2+(y0-qy)*0.1,Math.atan2(y0-qy,px-qx),C.warn);
+    popis('dopadající',qx- (this.zdola?0:0),qy-(this.zdola?-16:16),C.warn,'11px sans-serif');
+
+    // odražený
+    if(this.odraz){
+      const rx=px+L*Math.sin(v.th1), ry=y0-zn*L*Math.cos(v.th1);
+      cara(px,y0,rx,ry,v.uplny?C.danger:C.faint,v.uplny?2.5:1.8,false);
+      hrot(rx,ry,Math.atan2(ry-y0,rx-px),v.uplny?C.danger:C.faint);
+      popis(v.uplny?'úplný odraz':'odražený',rx,ry+(this.zdola?18:-16),v.uplny?C.danger:C.faint,'11px sans-serif');
+    }
+    // lomený
+    if(!v.uplny){
+      const lx=px+L*Math.sin(v.th2), ly=y0+zn*L*Math.cos(v.th2);
+      cara(px,y0,lx,ly,C.ok,2.5);
+      hrot(lx,ly,Math.atan2(ly-y0,lx-px),C.ok);
+      popis('lomený',lx+30,ly,C.ok,'11px sans-serif');
+      // oblouk úhlu lomu
+      ctx.strokeStyle=C.ok; ctx.lineWidth=1;
+      ctx.beginPath();
+      if(this.zdola) ctx.arc(px,y0,46,-Math.PI/2,-Math.PI/2+v.th2);
+      else ctx.arc(px,y0,46,Math.PI/2-v.th2,Math.PI/2);
+      ctx.stroke();
+      popis(cz(v.th2*DEG,1)+'°',px+42,y0+zn*74,C.ok,'12px sans-serif');
+    }
+    // oblouk úhlu dopadu
+    ctx.strokeStyle=C.warn; ctx.lineWidth=1;
+    ctx.beginPath();
+    if(this.zdola) ctx.arc(px,y0,60,Math.PI/2,Math.PI/2+v.th1);
+    else ctx.arc(px,y0,60,-Math.PI/2-v.th1,-Math.PI/2);
+    ctx.stroke();
+    popis(this.uhel+'°',px-34,y0-zn*74,C.warn,'12px sans-serif');
+
+    ctx.fillStyle=C.text;
+    ctx.beginPath(); ctx.arc(px,y0,4,0,Math.PI*2); ctx.fill();
+  },
+  stav(){
+    const v=this.vysledek();
+    let s=`Úhel dopadu <b>${this.uhel}°</b> `+
+      `<span class="znak">•</span> ${v.uplny?'<b>úplný odraz</b> – světlo se do druhého prostředí vůbec nedostane'
+        :'Úhel lomu <b>'+cz(v.th2*DEG,1)+'°</b>'} `+
+      `<span class="znak">•</span> Snellův zákon: ${cz(v.nIn,2)}·sin ${this.uhel}° = ${cz(v.nOut,2)}·sin ${v.uplny?'?':cz(v.th2*DEG,1)+'°'}`;
+    if(v.mezni!==null) s+=` <span class="znak">•</span> Mezní úhel <b>${cz(v.mezni,1)}°</b>`;
+    s+=` <span class="znak">•</span> ${v.uplny?'':(v.nOut>v.nIn?'do hustšího prostředí → láme se <b>ke</b> kolmici':'do řidšího prostředí → láme se <b>od</b> kolmice')}`;
+    return s;
+  }
+};
+
+/* ================= 2) ČOČKY A ZRCADLA ================= */
+const cocka={
+  typ:'spojka', f:12, a:30, y:6, vice:false,
+  nacti(){
+    this.typ=$('typ').value; this.a=+$('a').value; this.y=+$('vys').value; this.vice=$('ukazVse').checked;
+    const f=+$('f').value;
+    this.f=(this.typ==='rozptylka'||this.typ==='vypukle')?-f:f;
+    $('fV').textContent=(this.f<0?'−':'')+f+' cm';
+    $('aV').textContent=this.a+' cm'; $('vysV').textContent=this.y+' cm';
+  },
+  zrcadlo(){ return this.typ==='dute'||this.typ==='vypukle'; },
+  obraz(){
+    const {a,f}=this;
+    if(Math.abs(a-f)<1e-6) return {a2:Infinity,y2:Infinity,z:Infinity};
+    const a2=a*f/(a-f);
+    return {a2,y2:-this.y*a2/a,z:-a2/a};
+  },
+  kresli(w,h){
+    const cx=w*0.52, osaY=h*0.52;
+    const mer=Math.min(w*0.9/120,h*0.9/40,7.5);   // px na cm
+    const sm=this.zrcadlo()?-1:1;                 // kam pokračují paprsky
+    const {a,f,y}=this, ob=this.obraz();
+    const X=cm=>cx+cm*mer, Y=cm=>osaY-cm*mer;
+
+    // optická osa
+    cara(0,osaY,w,osaY,C.border,1.5);
+    // ohniska (u zrcadla leží obě význačné body na téže straně)
+    const znacky=this.zrcadlo()
+      ? [[-f,'F'],[-2*f,'C']]
+      : [[-Math.abs(f),'F'],[Math.abs(f),"F'"],[-2*Math.abs(f),'2F'],[2*Math.abs(f),"2F'"]];
+    for(const [d,jm] of znacky){
+      const x=X(d);
+      if(x<4||x>w-4) continue;
+      ctx.fillStyle=C.faint;
+      ctx.beginPath(); ctx.arc(x,osaY,3,0,Math.PI*2); ctx.fill();
+      popis(jm,x,osaY+16,C.faint,'11px sans-serif');
+      if(jm==='F') uchop(x,osaY,15,'ohnisko');
+    }
+
+    // optický prvek
+    const ap=Math.min(h*0.30,Math.max(58,this.y*mer*1.6+30));
+    ctx.lineWidth=2.5; ctx.strokeStyle=C.akcent;
+    if(!this.zrcadlo()){
+      const vyd=this.f>0?12:-12;
+      ctx.fillStyle='rgba(106,166,253,.13)';
+      ctx.beginPath();
+      ctx.moveTo(cx,osaY-ap);
+      ctx.quadraticCurveTo(cx+vyd,osaY,cx,osaY+ap);
+      ctx.quadraticCurveTo(cx-vyd,osaY,cx,osaY-ap);
+      ctx.closePath(); ctx.fill(); ctx.stroke();
+      if(this.f<0){ // u rozptylky naznač okraje
+        cara(cx-13,osaY-ap,cx+13,osaY-ap,C.akcent,2.5);
+        cara(cx-13,osaY+ap,cx+13,osaY+ap,C.akcent,2.5);
+      }
+    }else{
+      const vyd=this.f>0?26:-26;      // duté zrcadlo je vyduté směrem k předmětu
+      ctx.beginPath();
+      ctx.moveTo(cx,osaY-ap);
+      ctx.quadraticCurveTo(cx+vyd,osaY,cx,osaY+ap);
+      ctx.stroke();
+      ctx.strokeStyle=C.faint; ctx.lineWidth=1;
+      for(let t=-ap;t<=ap;t+=9){
+        const px=cx+vyd*(1-(t/ap)**2)*0.5;
+        ctx.beginPath(); ctx.moveTo(px,osaY+t); ctx.lineTo(px+9,osaY+t-5); ctx.stroke();
+      }
+    }
+
+    // předmět
+    const ox=X(-a);
+    ctx.strokeStyle=C.warn; ctx.lineWidth=3;
+    ctx.beginPath(); ctx.moveTo(ox,osaY); ctx.lineTo(ox,Y(y)); ctx.stroke();
+    hrot(ox,Y(y),-Math.PI/2,C.warn,10);
+    popis('předmět',ox,Y(y)-18,C.warn,'11px sans-serif');
+    uchop(ox,Y(y),18,'predmet');
+    this.geo={cx,osaY,mer};
+
+    // paprsky – lomový/odrazový vztah: výstupní směrnice u' = u − h/f
+    const vysky=this.vice
+      ? [y,0,-y*f/(a-f),y*0.5,-y*0.3]
+      : [y,0,-y*f/(a-f)];
+    for(const hcm of vysky){
+      if(!isFinite(hcm)) continue;
+      const hp=Math.max(-ap/mer,Math.min(ap/mer,hcm));
+      const u=(hp-y)/a;                 // směrnice dopadajícího paprsku (dy/dx v cm)
+      const u2=u-hp/f;                  // po průchodu / odrazu
+      // dopadající část
+      cara(ox,Y(y),cx,Y(hp),C.ok,1.8);
+      // vystupující část
+      const dl=(sm>0?(w-cx):cx)/mer;
+      cara(cx,Y(hp),cx+sm*dl*mer,Y(hp+u2*dl),C.ok,1.8);
+      // zdánlivé prodloužení dozadu, když je obraz neskutečný
+      if(ob.a2<0){
+        const zl=(sm>0?cx:(w-cx))/mer;
+        cara(cx,Y(hp),cx-sm*zl*mer,Y(hp-u2*zl),C.ok,1,true);
+      }
+    }
+
+    // obraz
+    if(isFinite(ob.a2)){
+      const ix=X(sm*ob.a2), iy=Y(ob.y2);
+      if(ix>2&&ix<w-2){
+        const skutecny=ob.a2>0;
+        ctx.save();
+        if(!skutecny) ctx.setLineDash([6,5]);
+        ctx.strokeStyle=skutecny?C.danger:C.akcent; ctx.lineWidth=3;
+        ctx.beginPath(); ctx.moveTo(ix,osaY); ctx.lineTo(ix,iy); ctx.stroke();
+        ctx.restore();
+        hrot(ix,iy,ob.y2>0?-Math.PI/2:Math.PI/2,skutecny?C.danger:C.akcent,10);
+        popis(skutecny?'skutečný obraz':'zdánlivý obraz',ix,iy+(ob.y2>0?-18:18),skutecny?C.danger:C.akcent,'11px sans-serif');
+      }
+    }else{
+      popis('Předmět je přesně v ohnisku – paprsky vycházejí rovnoběžně, obraz nevznikne.',w/2,26,C.warn,'13px sans-serif');
+    }
+  },
+  stav(){
+    const ob=this.obraz();
+    if(!isFinite(ob.a2))
+      return `a = <b>${this.a} cm</b> = f <span class="znak">•</span> <b>Obraz nevzniká</b> – paprsky vycházejí rovnoběžně (obraz „v nekonečnu").`;
+    const z=Math.abs(ob.z);
+    const popisObrazu=[
+      ob.a2>0?'skutečný':'zdánlivý',
+      ob.z<0?'převrácený':'přímý',
+      z>1.02?'zvětšený':(z<0.98?'zmenšený':'stejně velký')
+    ].join(', ');
+    return `Vzdálenost předmětu <b>a = ${this.a} cm</b> `+
+      `<span class="znak">•</span> Ohnisko <b>f = ${cz(this.f,0)} cm</b> `+
+      `<span class="znak">•</span> Obraz <b>a′ = ${cz(ob.a2,1)} cm</b> `+
+      `<span class="znak">•</span> Zvětšení <b>Z = ${cz(ob.z,2)}</b> `+
+      `<span class="znak">•</span> Obraz je <b>${popisObrazu}</b> `+
+      `<span class="znak">•</span> 1/a + 1/a′ = 1/f`;
+  }
+};
+
+/* ================= 3) HRANOL ================= */
+function barvaVlny(l,alfa=1){
+  let r=0,g=0,b=0;
+  if(l<440){r=(440-l)/60;b=1;}
+  else if(l<490){g=(l-440)/50;b=1;}
+  else if(l<510){g=1;b=(510-l)/20;}
+  else if(l<580){r=(l-510)/70;g=1;}
+  else if(l<645){r=1;g=(645-l)/65;}
+  else {r=1;}
+  const f=l<420?0.35+0.65*(l-380)/40:(l>700?0.35+0.65*(780-l)/80:1);
+  const q=x=>Math.round(255*Math.min(1,Math.max(0,x*f))**0.85);
+  return `rgba(${q(r)},${q(g)},${q(b)},${alfa})`;
+}
+const hranol={
+  uhel:45, pos:50, n0:1.52, disp:14, otoc:0,
+  nacti(){
+    this.uhel=+$('hUhel').value; this.pos=+$('hPos').value;
+    this.n0=+$('hN').value/100; this.disp=+$('hDisp').value; this.otoc=+$('hOtoc').value;
+    $('hUhelV').textContent=this.uhel+'°'; $('hPosV').textContent=this.pos+' %';
+    $('hNV').textContent=cz(this.n0,2); $('hDispV').textContent=this.disp;
+    $('hOtocV').textContent=this.otoc+'°';
+  },
+  index(l){ // Cauchy: n = n₀ + B/λ²  (λ v nm), n₀ dopočteno na 589 nm
+    const B=this.disp*300;
+    return this.n0-B/(589*589)+B/(l*l);
+  },
+  geometrie(w,h){
+    const L=Math.min(w*0.34,h*0.62);
+    const vy=L*Math.sqrt(3)/2, cx=w*0.55, cy=h*0.54;
+    const fi=(this.otoc||0)/DEG, cf=Math.cos(fi), sf=Math.sin(fi);
+    const otoc=p=>{ const dx=p[0]-cx, dy=p[1]-cy; return [cx+dx*cf-dy*sf, cy+dx*sf+dy*cf]; };
+    const A=otoc([cx,cy-vy*2/3]), B=otoc([cx-L/2,cy+vy/3]), Cc=otoc([cx+L/2,cy+vy/3]);
+    // vnitřní kolmice levé stěny A–B (otočení hrany o −90°)
+    const normalaAB=Math.atan2(-(B[0]-A[0]),B[1]-A[1]);
+    return {A,B,C:Cc,hrany:[[A,B],[B,Cc],[Cc,A]],L,normalaAB,stred:[cx,cy]};
+  },
+  // průsečík polopřímky s úsečkou
+  prusecik(o,d,p,q){
+    const ex=q[0]-p[0], ey=q[1]-p[1];
+    const den=d[0]*ey-d[1]*ex;
+    if(Math.abs(den)<1e-9) return null;
+    const t=((p[0]-o[0])*ey-(p[1]-o[1])*ex)/den;
+    const s=(d[0]*(p[1]-o[1])-d[1]*(p[0]-o[0]))/(-den);
+    if(t>1e-6&&s>=-1e-6&&s<=1+1e-6) return {t,s,bod:[o[0]+d[0]*t,o[1]+d[1]*t],hrana:[p,q]};
+    return null;
+  },
+  trasuj(o,d,n,g){
+    const body=[o.slice()];
+    let uvnitr=false, pos=o.slice(), dir=d.slice();
+    for(let krok=0;krok<8;krok++){
+      let nej=null;
+      for(const [p,q] of g.hrany){
+        const h=this.prusecik(pos,dir,p,q);
+        if(h&&(!nej||h.t<nej.t)) nej=h;
+      }
+      if(!nej) break;
+      body.push(nej.bod);
+      // normála hrany
+      const [p,q]=nej.hrana;
+      let nx=-(q[1]-p[1]), ny=q[0]-p[0];
+      const dl=Math.hypot(nx,ny); nx/=dl; ny/=dl;
+      let cosi=-(dir[0]*nx+dir[1]*ny);
+      if(cosi<0){ nx=-nx; ny=-ny; cosi=-cosi; }      // normála proti paprsku
+      const eta=uvnitr?n/1:1/n;
+      const k=1-eta*eta*(1-cosi*cosi);
+      if(k<0){                                        // úplný odraz uvnitř
+        dir=[dir[0]+2*cosi*nx,dir[1]+2*cosi*ny];
+        pos=nej.bod.slice();
+        continue;
+      }
+      dir=[eta*dir[0]+(eta*cosi-Math.sqrt(k))*nx, eta*dir[1]+(eta*cosi-Math.sqrt(k))*ny];
+      const dn=Math.hypot(dir[0],dir[1]); dir=[dir[0]/dn,dir[1]/dn];
+      pos=nej.bod.slice();
+      uvnitr=!uvnitr;
+      if(!uvnitr) break;                              // vystoupil ven
+    }
+    // dokreslit výstup mimo hranol
+    body.push([pos[0]+dir[0]*3000,pos[1]+dir[1]*3000]);
+    return body;
+  },
+  kresli(w,h){
+    const g=this.geometrie(w,h);
+    // těleso hranolu
+    ctx.beginPath();
+    ctx.moveTo(g.A[0],g.A[1]); ctx.lineTo(g.B[0],g.B[1]); ctx.lineTo(g.C[0],g.C[1]); ctx.closePath();
+    ctx.fillStyle='rgba(106,166,253,.10)'; ctx.fill();
+    ctx.strokeStyle=C.akcent; ctx.lineWidth=2; ctx.stroke();
+
+    // vstupní bod na levé stěně A–B, úhel dopadu se měří od kolmice ke stěně
+    const t=this.pos/100;
+    const vx=g.A[0]+(g.B[0]-g.A[0])*t, vy=g.A[1]+(g.B[1]-g.A[1])*t;
+    const fi0=g.normalaAB;                           // směr vnitřní kolmice levé stěny
+    const smerU=fi0-this.uhel/DEG;
+    const dir=[Math.cos(smerU),Math.sin(smerU)];     // směr dopadajícího paprsku
+    const start=[vx-dir[0]*Math.min(w,h)*0.55, vy-dir[1]*Math.min(w,h)*0.55];
+
+    // kolmice ke vstupní stěně
+    cara(vx-Math.cos(fi0)*54,vy-Math.sin(fi0)*54,vx+Math.cos(fi0)*40,vy+Math.sin(fi0)*40,C.faint,1,true);
+
+    // bílý dopadající paprsek
+    cara(start[0],start[1],vx,vy,C.text,3);
+    uchop(start[0],start[1],20,'zdroj');
+    popis('🔦',start[0],start[1],C.text,'17px sans-serif');
+    uchop(vx,vy,15,'vstup');
+    uchop(g.stred[0],g.stred[1],Math.min(46,g.L*0.28),'hranol');
+    popis('🔄',g.stred[0],g.stred[1],C.faint,'14px sans-serif');
+    hrot(vx-dir[0]*3,vy-dir[1]*3,Math.atan2(dir[1],dir[0]),C.text,9);
+    popis('bílé světlo',start[0]+34,start[1]-32,C.text,'12px sans-serif','left');
+
+    // spektrum
+    ctx.save();
+    ctx.beginPath(); ctx.rect(0,0,w,h); ctx.clip();
+    for(let l=400;l<=700;l+=6){
+      const body=this.trasuj(start,dir,this.index(l),g);
+      ctx.strokeStyle=barvaVlny(l,0.85); ctx.lineWidth=2;
+      ctx.beginPath();
+      ctx.moveTo(body[1][0],body[1][1]);
+      for(let i=2;i<body.length;i++) ctx.lineTo(body[i][0],body[i][1]);
+      ctx.stroke();
+    }
+    ctx.restore();
+    popis('🌈 spektrum',w-16,h*0.10,C.muted,'12px sans-serif','right');
+  },
+  stav(){
+    const nf=this.index(400), nc=this.index(700);
+    return `Index lomu pro <span style="color:#8a4bff">fialovou 400 nm</span> <b>${cz(nf,3)}</b> `+
+      `<span class="znak">•</span> pro <span style="color:#e05d5d">červenou 700 nm</span> <b>${cz(nc,3)}</b> `+
+      `<span class="znak">•</span> Rozdíl <b>${cz(nf-nc,3)}</b> `+
+      `<span class="znak">•</span> Čím větší index, tím větší lom → fialová se odchýlí nejvíc, červená nejméně`;
+  }
+};
+
+/* ================= přepínání ================= */
+const NAPOVEDA={
+  lom:`<b>Odraz a lom světla</b><br>Na rozhraní dvou prostředí se část světla odrazí (úhel odrazu = úhel dopadu)
+    a část projde a láme se podle <b>Snellova zákona</b>: n₁·sin α = n₂·sin β.<br><br>
+    <b>Zkus si</b><br>• Táhni za <b>🔦 zdroj</b> – měníš úhel dopadu (šipky ←/→ po jednom stupni).<br>
+    • <b>Klikni na popisek prostředí</b> vlevo a přepni materiál (vzduch → voda → sklo → diamant).<br>
+    • Zapni <b>paprsek zdola</b> a pošli světlo z vody do vzduchu. Nad <b>mezním úhlem</b> už světlo ven neprojde – nastane <b>úplný odraz</b> (tak funguje optické vlákno).<br>
+    • Diamant má obrovský index lomu, proto se v něm světlo tolik „chytá" a jiskří.`,
+  cocka:`<b>Čočky a zrcadla</b><br>Obraz najdeš třemi význačnými paprsky: rovnoběžný s osou jde po lomu ohniskem,
+    paprsek středem se nelomí a paprsek ohniskem vychází rovnoběžně.<br><br>
+    <b>Zkus si</b><br>• <b>Chyť hrot předmětu</b> a posunuj ho – doleva a doprava měníš vzdálenost, nahoru a dolů výšku.<br>
+    • <b>Táhni za bod F</b> na ose a měň ohniskovou vzdálenost.<br>
+    • Posunuj předmět: dál než 2F → obraz zmenšený a převrácený; mezi F a 2F → zvětšený a převrácený; blíž než F → <b>zdánlivý</b>, přímý a zvětšený (lupa).<br>
+    • Rozptylka a vypuklé zrcadlo dávají vždy zdánlivý zmenšený obraz (zpětné zrcátko).<br>
+    • Platí <b>1/a + 1/a′ = 1/f</b> a zvětšení Z = −a′/a.`,
+  hranol:`<b>Rozklad světla hranolem</b><br>Index lomu skla není pro všechny barvy stejný – modrá a fialová se lámou
+    víc než červená. Bílé světlo se proto v hranolu rozloží na <b>spektrum</b> (disperze).<br><br>
+    <b>Zkus si</b><br>• Táhni za <b>🔦 zdroj</b> – měníš úhel dopadu; za <b>🔄 uprostřed</b> hranolem otáčíš.<br>
+    • Otáčej hranolem a hledej polohu, kde je odchýlení paprsku <b>nejmenší</b> (minimum deviace) – tak se měří index lomu skla.<br>
+    • Zvyš <b>disperzi</b> a spektrum se roztáhne (skla se opravdu liší, proto se u objektivů kombinují).<br>
+    • Při velkém úhlu může na výstupní stěně nastat úplný odraz a paprsek se v hranolu „zalomí".<br>
+    • Stejný jev vytváří na obloze <b>duhu</b>, jen roli hranolu hrají kapky vody.`
+};
+const NAPOVEDY_DOLE={
+  lom:'Táhni za 🔦 (nebo kamkoli nad rozhraní) – měníš úhel dopadu. Klikni na popisek prostředí a přepneš materiál. Šipky ←/→ ladí po stupních.',
+  cocka:'Táhni za hrot předmětu – měníš vzdálenost i výšku. Táhni za bod F – měníš ohniskovou vzdálenost.',
+  hranol:'Táhni za 🔦 (úhel dopadu), za 🔄 uprostřed hranolu (otáčení) nebo za místo dopadu na stěně.'};
+let rezim='lom';
+
+function prepni(r){
+  rezim=r;
+  for(const [id,t] of [['tabLom','lom'],['tabCocka','cocka'],['tabHranol','hranol']])
+    $(id).classList.toggle('zap',t===r);
+  $('panelLom').classList.toggle('skryto',r!=='lom');
+  $('panelCocka').classList.toggle('skryto',r!=='cocka');
+  $('panelHranol').classList.toggle('skryto',r!=='hranol');
+  $('infoText').innerHTML=NAPOVEDA[r];
+  $('napoveda').textContent=NAPOVEDY_DOLE[r];
+  kresli();
+}
+$('tabLom').onclick=()=>prepni('lom');
+$('tabCocka').onclick=()=>prepni('cocka');
+$('tabHranol').onclick=()=>prepni('hranol');
+$('btnInfo').onclick=()=>$('infoBox').classList.toggle('skryto');
+$('zavriInfo').onclick=()=>$('infoBox').classList.add('skryto');
+
+['n1','n2','uhel','zdola','ukazOdraz'].forEach(id=>$(id).oninput=$(id).onchange=()=>{lom.nacti();kresli();});
+['typ','f','a','vys','ukazVse'].forEach(id=>$(id).oninput=$(id).onchange=()=>{cocka.nacti();kresli();});
+['hUhel','hPos','hN','hDisp','hOtoc'].forEach(id=>$(id).oninput=()=>{hranol.nacti();kresli();});
+
+/* ---------- tažení a klikání přímo v obrázku ---------- */
+const MATERIALY=['1.0003','1.333','1.52','2.417'];
+function poloha(e){
+  const r=canvas.getBoundingClientRect();
+  return [e.clientX-r.left,e.clientY-r.top];
+}
+function tahni(x,y,typ){
+  const w=canvas.clientWidth, h=canvas.clientHeight;
+  if(rezim==='lom'){
+    const px=w*0.46, y0=h*0.5;
+    const dy=lom.zdola?(y-y0):(y0-y);
+    if(dy<=0) return;
+    $('uhel').value=Math.max(0,Math.min(89,Math.round(Math.atan2(Math.abs(px-x),dy)*DEG)));
+    lom.nacti();
+  }else if(rezim==='cocka'){
+    const {cx,osaY,mer}=cocka.geo;
+    if(typ==='ohnisko'){
+      $('f').value=Math.max(4,Math.min(30,Math.round(Math.abs(cx-x)/mer)));
+    }else{
+      $('a').value=Math.max(3,Math.min(55,Math.round((cx-x)/mer)));
+      $('vys').value=Math.max(2,Math.min(12,Math.round((osaY-y)/mer)));
+    }
+    cocka.nacti();
+  }else{
+    const g=hranol.geometrie(w,h);
+    if(typ==='hranol'){
+      // otáčení kolem středu, relativně k místu uchopení (jinak by hranol poskočil)
+      const u=Math.atan2(y-g.stred[1],x-g.stred[0])*DEG;
+      if(Math.hypot(x-g.stred[0],y-g.stred[1])<14){   // u samotného středu není úhel určený
+        tahne.uhel0=u; tahne.otoc0=hranol.otoc; return;
+      }
+      $('hOtoc').value=Math.max(-90,Math.min(90,Math.round(tahne.otoc0+u-tahne.uhel0)));
+    }else if(typ==='vstup'){
+      // posun místa dopadu po levé stěně
+      const ex=g.B[0]-g.A[0], ey=g.B[1]-g.A[1];
+      const t=((x-g.A[0])*ex+(y-g.A[1])*ey)/(ex*ex+ey*ey);
+      $('hPos').value=Math.max(20,Math.min(80,Math.round(t*100)));
+    }else{
+      const t=hranol.pos/100;
+      const vx=g.A[0]+(g.B[0]-g.A[0])*t, vy=g.A[1]+(g.B[1]-g.A[1])*t;
+      $('hUhel').value=Math.max(10,Math.min(80,Math.round((g.normalaAB-Math.atan2(vy-y,vx-x))*DEG)));
+    }
+    hranol.nacti();
+  }
+  kresli();
+}
+canvas.addEventListener('pointerdown',e=>{
+  const [x,y]=poloha(e);
+  const u=najdiUchop(x,y);
+  // popisky prostředí se chovají jako tlačítka, ne jako táhlo
+  if(u&&(u.typ==='prostredi1'||u.typ==='prostredi2')){
+    const sel=$(u.typ==='prostredi1'?'n1':'n2');
+    sel.value=MATERIALY[(MATERIALY.indexOf(sel.value)+1)%MATERIALY.length];
+    lom.nacti(); kresli();
+    return;
+  }
+  tahne={typ:u?u.typ:'plocha',otoc0:hranol.otoc,uhel0:0};
+  if(tahne.typ==='hranol'){
+    const g=hranol.geometrie(canvas.clientWidth,canvas.clientHeight);
+    tahne.uhel0=Math.atan2(y-g.stred[1],x-g.stred[0])*DEG;
+  }
+  try{ canvas.setPointerCapture(e.pointerId); }catch(_){}
+  tahni(x,y,tahne.typ);
+});
+canvas.addEventListener('pointermove',e=>{
+  const [x,y]=poloha(e);
+  if(tahne) tahni(x,y,tahne.typ);
+  else canvas.style.cursor=najdiUchop(x,y)?'grab':'crosshair';
+});
+canvas.addEventListener('pointerup',()=>{tahne=null;});
+canvas.addEventListener('pointercancel',()=>{tahne=null;});
+// klávesnice: šipky doladí hlavní veličinu záložky
+addEventListener('keydown',e=>{
+  if(e.target.tagName==='INPUT'||e.target.tagName==='SELECT') return;
+  const posuvnik={lom:'uhel',cocka:'a',hranol:'hUhel'}[rezim];
+  const krok=e.key==='ArrowLeft'?-1:e.key==='ArrowRight'?1:0;
+  if(!krok) return;
+  const el=$(posuvnik);
+  el.value=Math.max(+el.min,Math.min(+el.max,+el.value+krok*(e.shiftKey?5:1)));
+  el.dispatchEvent(new Event('input',{bubbles:true}));
+  e.preventDefault();
+});
+
+function kresli(){
+  resize();
+  const w=canvas.clientWidth, h=canvas.clientHeight;
+  ctx.clearRect(0,0,w,h);
+  uchopy=[];   // uchopovací body registruje kreslení znovu při každém překreslení
+  if(rezim==='lom'){ lom.kresli(w,h); $('stav').innerHTML=lom.stav(); }
+  else if(rezim==='cocka'){ cocka.kresli(w,h); $('stav').innerHTML=cocka.stav(); }
+  else { hranol.kresli(w,h); $('stav').innerHTML=hranol.stav(); }
+}
+new ResizeObserver(()=>{resize();kresli();}).observe(canvas);
+new MutationObserver(()=>{nactiBarvy();kresli();}).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+
+resize(); lom.nacti(); cocka.nacti(); hranol.nacti(); prepni('lom');
+</script>
+</body>
+</html>

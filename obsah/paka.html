@@ -1,0 +1,595 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>⚖️ Páka a jednoduché stroje</title>
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<style>
+body{height:100vh;overflow:hidden;display:flex;flex-direction:column}
+.horni{display:flex;gap:10px;align-items:center;padding:10px 16px;background:var(--bg-elevated);border-bottom:1px solid var(--border);flex-wrap:wrap}
+.horni h1{font-size:1.05rem;font-weight:600;margin-right:auto}
+.zalozky{display:flex;gap:6px}
+.panel{display:flex;gap:14px;align-items:center;padding:9px 16px;background:var(--bg-panel);border-bottom:1px solid var(--border);flex-wrap:wrap}
+.panel label{font-size:.78rem;color:var(--text-muted);display:flex;align-items:center;gap:7px}
+.panel .hodnota{color:var(--text-faint);min-width:3.2em;font-variant-numeric:tabular-nums}
+input[type=range]{width:110px;accent-color:var(--accent)}
+select{background:var(--bg-input);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:5px 8px;font-size:.8rem}
+button{background:var(--bg-control);border:1px solid var(--border-strong);color:var(--text);border-radius:6px;padding:7px 13px;font-size:.82rem;cursor:pointer}
+button:hover{background:var(--accent);color:#fff;border-color:var(--accent)}
+button.zap{background:var(--accent);color:#fff;border-color:var(--accent)}
+.plocha{flex:1;position:relative;overflow:hidden;background:var(--bg-deep);min-height:0}
+canvas{display:block;width:100%;height:100%;touch-action:none}
+.stav{background:var(--bg-panel);border-top:1px solid var(--border);padding:8px 16px;font-size:.8rem;color:var(--text-muted);display:flex;gap:8px 18px;flex-wrap:wrap;align-items:center}
+.stav b{color:var(--text);font-variant-numeric:tabular-nums}
+.stav .znak{font-size:1rem}
+.info{position:absolute;top:12px;right:12px;width:270px;max-width:calc(100% - 24px);background:var(--bg-elevated);border:1px solid var(--border-strong);border-radius:10px;padding:11px 14px;font-size:.78rem;line-height:1.6;color:var(--text-muted);box-shadow:var(--shadow)}
+.info b{color:var(--text)}
+.info .zavri{position:absolute;top:5px;right:7px;background:none;border:none;color:var(--text-faint);font-size:1rem;padding:0 4px;cursor:pointer}
+.info .zavri:hover{background:none;color:var(--accent)}
+.napoveda{position:absolute;left:12px;bottom:10px;font-size:.74rem;color:var(--text-faint);pointer-events:none}
+.skryto{display:none !important}
+@media(max-width:760px){.info{display:none}.panel{gap:10px;padding:8px 10px}input[type=range]{width:88px}}
+</style>
+</head>
+<body>
+<div class="horni">
+  <h1>⚖️ Páka a jednoduché stroje</h1>
+  <div class="zalozky">
+    <button id="tabPaka" class="zap">⚖️ Páka</button>
+    <button id="tabKladka">🏗️ Kladky</button>
+    <button id="tabKola">⚙️ Ozubená kola</button>
+  </div>
+  <button id="btnInfo">❓ Nápověda</button>
+</div>
+
+<div class="panel" id="panelPaka">
+  <label>🔧 <select id="druhPaky">
+      <option value="dvoj">Dvojzvratná (houpačka, nůžky)</option>
+      <option value="jedno">Jednozvratná (kolečko, otvírák)</option>
+    </select></label>
+  <label>🧱 Břemeno F₁ <input type="range" id="f1" min="1" max="60" step="1" value="30"><span class="hodnota" id="f1V">30 N</span></label>
+  <label>📏 Rameno r₁ <input type="range" id="r1" min="5" max="60" step="1" value="20"><span class="hodnota" id="r1V">20 cm</span></label>
+  <label>💪 Síla F₂ <input type="range" id="f2" min="1" max="60" step="1" value="15"><span class="hodnota" id="f2V">15 N</span></label>
+  <label>📏 Rameno r₂ <input type="range" id="r2" min="5" max="60" step="1" value="40"><span class="hodnota" id="r2V">40 cm</span></label>
+  <button id="btnDopocti">⚖️ Dopočítat rovnováhu</button>
+  <button id="btnUkol">🎯 Nový úkol</button>
+</div>
+
+<div class="panel skryto" id="panelKladka">
+  <label>🔧 <select id="druhKladky">
+      <option value="pevna">Pevná kladka</option>
+      <option value="kladkostroj" selected>Kladkostroj (volné kladky)</option>
+    </select></label>
+  <label id="lblPocet">🎡 Volné kladky <input type="range" id="pocetKladek" min="1" max="4" step="1" value="1"><span class="hodnota" id="pocetKladekV">1</span></label>
+  <label>🧱 Břemeno <input type="range" id="brem" min="20" max="400" step="10" value="200"><span class="hodnota" id="bremV">200 N</span></label>
+  <label>⬆️ Zvednutí <input type="range" id="zvednuti" min="0" max="50" step="1" value="0"><span class="hodnota" id="zvednutiV">0 cm</span></label>
+  <button id="btnTahni">▶️ Táhnout</button>
+  <button id="btnDolu">🔄 Spustit dolů</button>
+</div>
+
+<div class="panel skryto" id="panelKola">
+  <label>⚙️ Zubů hnací z₁ <input type="range" id="z1" min="8" max="40" step="1" value="12"><span class="hodnota" id="z1V">12</span></label>
+  <label>⚙️ Zubů hnané z₂ <input type="range" id="z2" min="8" max="40" step="1" value="30"><span class="hodnota" id="z2V">30</span></label>
+  <label>🔁 Otáčky hnacího <input type="range" id="otacky" min="0" max="120" step="5" value="60"><span class="hodnota" id="otackyV">60/min</span></label>
+  <label>💪 Moment hnacího <input type="range" id="mom" min="1" max="30" step="1" value="10"><span class="hodnota" id="momV">10 N·m</span></label>
+  <label><input type="checkbox" id="mezikolo"> ➕ Vložit mezikolo</label>
+</div>
+
+<div class="plocha">
+  <canvas id="c"></canvas>
+  <div class="info skryto" id="infoBox">
+    <button class="zavri" id="zavriInfo" title="Zavřít">✕</button>
+    <div id="infoText"></div>
+  </div>
+  <div class="napoveda" id="napoveda"></div>
+</div>
+
+<div class="stav" id="stav"></div>
+
+<script>
+const $=id=>document.getElementById(id);
+const canvas=$('c'), ctx=canvas.getContext('2d');
+const cz=(x,d=1)=>(Math.abs(x)<1e-9?0:x).toFixed(d).replace('.',',');
+
+/* ---------- barvy podle aktuálního tématu ---------- */
+let C={};
+function nactiBarvy(){
+  const s=getComputedStyle(document.documentElement), g=n=>s.getPropertyValue(n).trim();
+  C={text:g('--text'),muted:g('--text-muted'),faint:g('--text-faint'),border:g('--border'),
+     silny:g('--border-strong'),akcent:g('--accent'),ok:g('--ok'),warn:g('--warn'),
+     danger:g('--danger'),panel:g('--bg-panel'),elev:g('--bg-elevated')};
+}
+nactiBarvy();
+new MutationObserver(nactiBarvy).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+
+// plátno musí sledovat i změnu výšky panelu při přepnutí záložky,
+// jinak zůstane starý obsah pod nově kreslenou plochou
+function resize(){
+  const r=devicePixelRatio||1;
+  const w=Math.round(canvas.clientWidth*r), h=Math.round(canvas.clientHeight*r);
+  if(canvas.width!==w||canvas.height!==h){ canvas.width=w; canvas.height=h; }
+  ctx.setTransform(r,0,0,r,0,0);
+}
+new ResizeObserver(resize).observe(canvas);
+
+/* ---------- uchopovací body: kreslení je registruje, myš je hledá ---------- */
+let uchopy=[], tahne=null;
+function uchop(x,y,r,typ,bezObrysu){
+  uchopy.push({x,y,r,typ});
+  if(bezObrysu) return;
+  // jemný obrys, aby bylo poznat, za co se dá vzít
+  ctx.save();
+  ctx.strokeStyle=(tahne&&tahne.typ===typ)?C.akcent:C.border;
+  ctx.setLineDash([3,4]); ctx.lineWidth=1;
+  ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.stroke();
+  ctx.restore();
+}
+function najdiUchop(x,y){
+  let nej=null, nd=1e9;
+  for(const u of uchopy){
+    const d=Math.hypot(x-u.x,y-u.y);
+    if(d<u.r&&d<nd){ nd=d; nej=u; }
+  }
+  return nej;
+}
+
+/* ---------- kreslicí pomůcky ---------- */
+function sipka(x1,y1,x2,y2,barva,sirka=3){
+  ctx.strokeStyle=barva; ctx.fillStyle=barva; ctx.lineWidth=sirka;
+  ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+  const a=Math.atan2(y2-y1,x2-x1), d=9+sirka;
+  ctx.beginPath();
+  ctx.moveTo(x2,y2);
+  ctx.lineTo(x2-d*Math.cos(a-0.4),y2-d*Math.sin(a-0.4));
+  ctx.lineTo(x2-d*Math.cos(a+0.4),y2-d*Math.sin(a+0.4));
+  ctx.closePath(); ctx.fill();
+}
+function popis(text,x,y,barva=C.muted,font='12px sans-serif',zarovnani='center'){
+  ctx.fillStyle=barva; ctx.font=font; ctx.textAlign=zarovnani; ctx.textBaseline='middle';
+  ctx.fillText(text,x,y);
+}
+function kotoucKladky(x,y,r,barva){
+  ctx.fillStyle=C.elev; ctx.strokeStyle=barva; ctx.lineWidth=3;
+  ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill(); ctx.stroke();
+  ctx.strokeStyle=C.faint; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.arc(x,y,r*0.25,0,Math.PI*2); ctx.stroke();
+}
+function strop(y,x1,x2){
+  ctx.fillStyle=C.panel; ctx.fillRect(x1,y-14,x2-x1,14);
+  ctx.strokeStyle=C.silny; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.moveTo(x1,y); ctx.lineTo(x2,y); ctx.stroke();
+  ctx.strokeStyle=C.border; ctx.lineWidth=1;
+  for(let x=x1;x<x2;x+=12){ ctx.beginPath(); ctx.moveTo(x,y); ctx.lineTo(x-9,y-13); ctx.stroke(); }
+}
+
+/* ================= 1) PÁKA ================= */
+const paka={
+  druh:'dvoj', F1:30, r1:20, F2:15, r2:40, uhel:0,
+  nacti(){
+    this.druh=$('druhPaky').value;
+    this.F1=+$('f1').value; this.r1=+$('r1').value;
+    this.F2=+$('f2').value; this.r2=+$('r2').value;
+    $('f1V').textContent=this.F1+' N'; $('r1V').textContent=this.r1+' cm';
+    $('f2V').textContent=this.F2+' N'; $('r2V').textContent=this.r2+' cm';
+  },
+  momenty(){ return [this.F1*this.r1/100, this.F2*this.r2/100]; },
+  krok(dt){
+    const [M1,M2]=this.momenty();
+    const max=(this.druh==='dvoj'?21:16)*Math.PI/180;
+    const cil=max*Math.tanh(3*(M1-M2)/(1+(M1+M2)/2));   // kladné = břemeno klesá
+    this.uhel+=(cil-this.uhel)*Math.min(1,dt*3.2);
+  },
+  kresli(w,h){
+    const dvoj=this.druh==='dvoj';
+    const mer=Math.max(2.2,Math.min((w*(dvoj?0.40:0.78))/74,7));   // px na cm
+    const ox=dvoj?w/2:Math.max(80,w*0.11), oy=h*0.42;
+    // kladný úhel = břemeno klesá; břemeno je u dvojzvratné vlevo, u jednozvratné vpravo
+    const a=dvoj?-this.uhel:this.uhel;
+    const zemY=Math.min(h-26,oy+Math.max(70,h*0.34));
+    // bod na trámu: znamenko -1 = vlevo od osy, +1 = vpravo
+    const bod=(r,zn)=>[ox+zn*r*mer*Math.cos(a), oy+zn*r*mer*Math.sin(a)];
+
+    // podlaha
+    ctx.strokeStyle=C.border; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(0,zemY); ctx.lineTo(w,zemY); ctx.stroke();
+
+    // trám se stupnicí
+    const odCm=dvoj?-68:-7, doCm=dvoj?68:74;
+    ctx.save(); ctx.translate(ox,oy); ctx.rotate(a);
+    ctx.fillStyle=C.silny;
+    ctx.fillRect(odCm*mer,-6,(doCm-odCm)*mer,12);
+    ctx.strokeStyle=C.faint; ctx.lineWidth=1;
+    ctx.strokeRect(odCm*mer,-6,(doCm-odCm)*mer,12);
+    ctx.fillStyle=C.faint; ctx.font='9px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    for(let r=10;r<=(dvoj?60:70);r+=10){
+      for(const zn of (dvoj?[-1,1]:[1])){
+        ctx.fillRect(zn*r*mer-0.5,-6,1,4);
+        ctx.fillText(r,zn*r*mer,-14);
+      }
+    }
+    ctx.restore();
+
+    // podpěra (osa otáčení)
+    const zaklad=Math.max(24,(zemY-oy)*0.26);
+    ctx.fillStyle=C.akcent;
+    ctx.beginPath(); ctx.moveTo(ox,oy+3); ctx.lineTo(ox-zaklad,zemY); ctx.lineTo(ox+zaklad,zemY); ctx.closePath(); ctx.fill();
+    popis('osa otáčení',ox,zemY+16,C.faint,'11px sans-serif');
+
+    // údaje pro tažení myší
+    this.geo={mer,ox,oy,dvoj};
+
+    // břemeno F₁ (vlevo u dvojzvratné, vpravo u jednozvratné)
+    const [bx,by]=bod(this.r1,dvoj?-1:1);
+    const s1=Math.max(22,Math.min(58,16+this.F1*0.7));
+    uchop(bx,by+16+s1*0.35,Math.max(24,s1*0.62),'bremeno');
+    ctx.strokeStyle=C.faint; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(bx,by); ctx.lineTo(bx,by+16); ctx.stroke();
+    ctx.fillStyle=C.warn; ctx.fillRect(bx-s1/2,by+16,s1,s1*0.7);
+    popis('F₁ = '+this.F1+' N',bx,by+16+s1*0.7+13,C.warn,'bold 12px sans-serif');
+    popis('r₁ = '+this.r1+' cm',bx,by-34,C.faint,'11px sans-serif');
+
+    // působící síla F₂ – u dvojzvratné tlačí dolů, u jednozvratné táhne nahoru
+    const [sx,sy]=bod(this.r2,1);
+    const delka=Math.max(38,Math.min(104,this.F2*2));
+    const konecY=dvoj?sy-8-delka:sy+8+delka;
+    sipka(sx,konecY,sx,dvoj?sy-8:sy+8,C.akcent,3);
+    popis('F₂ = '+this.F2+' N',sx,konecY+(dvoj?-16:16),C.akcent,'bold 12px sans-serif');
+    popis('r₂ = '+this.r2+' cm',sx,dvoj?sy+24:sy-28,C.faint,'11px sans-serif');
+    uchop(sx,konecY,22,'sila');
+
+    // rovnováha se zvýrazní, ať je zpětná vazba okamžitá
+    const [M1,M2]=this.momenty();
+    if(Math.abs(M1-M2)<0.005*Math.max(M1,M2,1)){
+      popis('⚖️ rovnováha',ox,oy-Math.max(96,h*0.22),C.ok,'bold 15px sans-serif');
+      if(this.ukol){ this.ukol=false; this.splneno++; }
+    }
+    if(this.ukol) popis('🎯 Úkol: vyvaž páku – táhni za modrou šipku',ox,oy-Math.max(96,h*0.22),C.warn,'bold 14px sans-serif');
+  },
+  zadejUkol(){
+    const nahodne=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
+    // zadání volíme tak, aby vycházela celá hodnota F₂ v rozsahu posuvníku
+    let F1,r1,r2,F2;
+    do{ F1=nahodne(2,12)*5; r1=nahodne(1,6)*5; r2=nahodne(2,12)*5; F2=F1*r1/r2; }
+    while(!Number.isInteger(F2)||F2<1||F2>60||F2===this.F2);
+    $('f1').value=F1; $('r1').value=r1; $('r2').value=r2;
+    $('f2').value=Math.max(1,Math.min(60,F2>30?F2-nahodne(5,15):F2+nahodne(5,15)));
+    this.ukol=true; this.nacti();
+  },
+  ukol:false, splneno:0,
+  tahni(typ,x,y,vych){
+    const {mer,ox,oy,dvoj}=this.geo;
+    const a=dvoj?-this.uhel:this.uhel;
+    if(typ==='bremeno'){
+      $('r1').value=Math.max(5,Math.min(60,Math.round(Math.abs(x-ox)/mer)));
+      $('f1').value=Math.max(1,Math.min(60,Math.round(vych.F1+(y-vych.y)*0.35)));
+    }else{
+      const r=Math.max(5,Math.min(60,Math.round((dvoj?Math.abs(x-ox):Math.max(0,x-ox))/mer)));
+      $('r2').value=r;
+      // délka šipky přímo odpovídá velikosti síly, takže se dá „vytáhnout"
+      const sy=oy+r*mer*Math.sin(a);
+      $('f2').value=Math.max(1,Math.min(60,Math.round(((dvoj?sy-y:y-sy)-8)/2)));
+    }
+    this.nacti();
+  },
+  stav(){
+    const [M1,M2]=this.momenty();
+    const rovnovaha=Math.abs(M1-M2)<0.005*Math.max(M1,M2,1);
+    const zisk=this.r2/this.r1;
+    if(this.splneno) return `🎯 Splněných úkolů: <b>${this.splneno}</b> `+
+      `<span class="znak">•</span> M₁ = <b>${cz(M1,2)} N·m</b>, M₂ = <b>${cz(M2,2)} N·m</b> `+
+      `<span class="znak">•</span> ${rovnovaha?'⚖️ <b>Rovnováha!</b>':(M1>M2?'⬇️ klesá břemeno':'⬆️ břemeno stoupá')} `+
+      `<span class="znak">•</span> Poměr ramen <b>${cz(zisk,2)}×</b> `+
+      `<span class="znak">•</span> Na rovnováhu stačí síla <b>${cz(this.F1*this.r1/this.r2,1)} N</b>`;
+    return `Moment břemene <b>M₁ = ${cz(M1,2)} N·m</b> `+
+      `<span class="znak">•</span> Moment síly <b>M₂ = ${cz(M2,2)} N·m</b> `+
+      `<span class="znak">•</span> ${rovnovaha?'⚖️ <b>Rovnováha</b>':(M1>M2?'⬇️ klesá břemeno':'⬆️ břemeno stoupá')} `+
+      `<span class="znak">•</span> Poměr ramen <b>${cz(zisk,2)}×</b> `+
+      `<span class="znak">•</span> Na rovnováhu stačí síla <b>${cz(this.F1*this.r1/this.r2,1)} N</b>`;
+  }
+};
+
+/* ================= 2) KLADKY ================= */
+const kladka={
+  druh:'kladkostroj', n:1, G:200, h:0, cil:0,
+  nacti(){
+    this.druh=$('druhKladky').value;
+    this.n=+$('pocetKladek').value; this.G=+$('brem').value; this.h=+$('zvednuti').value;
+    $('pocetKladekV').textContent=this.n===1?'1 (volná kladka)':this.n;
+    $('bremV').textContent=this.G+' N'; $('zvednutiV').textContent=this.h+' cm';
+    $('lblPocet').classList.toggle('skryto',this.druh==='pevna');
+  },
+  prevod(){ return this.druh==='pevna'?1:2*this.n; },
+  kresli(w,h){
+    const k=this.prevod(), mer=2.4;
+    const stropY=Math.max(46,h*0.10), cx=w/2, R=22;
+    strop(stropY,0,w);
+    const zdvih=this.h*mer;
+    const zakladBlok=stropY+Math.max(170,Math.min(290,h*0.58));
+    const blokY=zakladBlok-zdvih;
+
+    ctx.lineWidth=2.5; ctx.strokeStyle=C.ok;    // lano
+    const lano=(x1,y1,x2,y2)=>{ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();};
+    const oblouk=(x,y,r,a1,a2,proti)=>{ctx.beginPath();ctx.arc(x,y,r,a1,a2,proti);ctx.stroke();};
+
+    let rukaX,rukaY0;
+    if(this.druh==='pevna'){
+      const py=stropY+40;
+      lano(cx,stropY,cx,py-R);                        // závěs kladky
+      kotoucKladky(cx,py,R,C.akcent);
+      // vlevo ruka, vpravo břemeno
+      oblouk(cx,py,R,Math.PI,0,false);
+      lano(cx+R,py,cx+R,blokY);
+      rukaX=cx-R; rukaY0=py;
+      this.bremeno(cx+R,blokY,w);
+      // ruka: táhne dolů o k*h
+      const rukaY=Math.min(h-30,rukaY0+this.h*k*mer+90);
+      lano(cx-R,py,cx-R,rukaY);
+      popis('🤚',cx-R,rukaY+8,C.text,'22px sans-serif');
+      popis('táhni dolů',cx-R-52,rukaY+8,C.faint,'11px sans-serif');
+      uchop(cx-R,rukaY+4,22,'lano');
+    }else{
+      const n=this.n, L=cx-2*R*n;
+      const topY=stropY+34;
+      const xB=i=>L+R+4*R*i, xT=i=>xB(i)+2*R;
+      // horní blok (pevné kladky)
+      ctx.strokeStyle=C.silny; ctx.lineWidth=3;
+      for(let i=0;i<n;i++) lano(xT(i),stropY,xT(i),topY-R);
+      for(let i=0;i<n;i++) kotoucKladky(xT(i),topY,R,C.akcent);
+      // dolní blok (volné kladky)
+      for(let i=0;i<n;i++) kotoucKladky(xB(i),blokY,R,C.warn);
+      // spojnice dolního bloku
+      ctx.strokeStyle=C.warn; ctx.lineWidth=3;
+      lano(xB(0)-R,blokY+R+4,xB(n-1)+R,blokY+R+4);
+      ctx.strokeStyle=C.ok; ctx.lineWidth=2.5;
+      // lano: kotva -> B0 -> T0 -> B1 -> T1 ... -> ruka
+      lano(L,stropY,L,blokY);                                  // kotva → B0 (levá strana)
+      ctx.fillStyle=C.silny; ctx.fillRect(L-5,stropY-2,10,8);  // úchyt kotvy
+      for(let i=0;i<n;i++){
+        oblouk(xB(i),blokY,R,0,Math.PI,false);                 // pod volnou kladkou
+        lano(xB(i)+R,blokY,xB(i)+R,topY);                      // B_i → T_i
+        oblouk(xT(i),topY,R,Math.PI,0,false);                  // přes pevnou kladku
+        if(i<n-1) lano(xT(i)+R,topY,xT(i)+R,blokY);            // T_i → B_{i+1}
+      }
+      rukaX=xT(n-1)+R;
+      const rukaY=Math.min(h-30,topY+110+this.h*k*mer);
+      lano(rukaX,topY,rukaX,rukaY);
+      popis('🤚',rukaX,rukaY+8,C.text,'22px sans-serif');
+      popis('táhni dolů',rukaX+56,rukaY+8,C.faint,'11px sans-serif');
+      uchop(rukaX,rukaY+4,22,'lano');
+      this.bremeno((xB(0)+xB(n-1))/2,blokY+R+4,w);
+      popis('kotva lana',L-8,stropY+16,C.faint,'10px sans-serif','right');
+    }
+
+    // čára výchozí polohy – pod spodní hranou břemene v nezvednutém stavu
+    const cara0=zakladBlok+(this.druh==='pevna'?0:R+4)+18+this.vyskaBremene()+16;
+    ctx.strokeStyle=C.faint; ctx.setLineDash([4,4]); ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(20,cara0); ctx.lineTo(w-20,cara0); ctx.stroke();
+    ctx.setLineDash([]);
+    popis('výchozí poloha břemene',w-24,cara0-10,C.faint,'10px sans-serif','right');
+  },
+  vyskaBremene(){ return Math.max(34,Math.min(78,26+this.G*0.12))*0.72; },
+  tahni(typ,x,y,vych){
+    const k=this.prevod(), mer=2.4;
+    // lano táhneš k·h, břemeno stoupá h – oba směry vedou na stejný posuvník
+    const h=typ==='lano' ? vych.h+(y-vych.y)/(k*mer) : vych.h-(y-vych.y)/mer;
+    $('zvednuti').value=Math.max(0,Math.min(50,Math.round(h)));
+    this.nacti();
+  },
+  bremeno(x,y,w){
+    const s=Math.max(34,Math.min(78,26+this.G*0.12));
+    uchop(x,y+18+s*0.36,Math.max(26,s*0.55),'bremeno2');
+    ctx.strokeStyle=C.faint; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(x,y); ctx.lineTo(x,y+18); ctx.stroke();
+    ctx.fillStyle=C.warn; ctx.fillRect(x-s/2,y+18,s,s*0.72);
+    ctx.fillStyle=C.text; ctx.font='bold 12px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(this.G+' N',x,y+18+s*0.36);
+  },
+  stav(){
+    const k=this.prevod(), F=this.G/k, s=this.h*k;
+    return `Potřebná síla <b>F = ${cz(F,1)} N</b> (místo ${this.G} N) `+
+      `<span class="znak">•</span> Ušetříš <b>${k}×</b> na síle `+
+      `<span class="znak">•</span> Vytažené lano <b>${cz(s,0)} cm</b> na zvednutí o <b>${this.h} cm</b> `+
+      `<span class="znak">•</span> Práce <b>${cz(F*s/100,2)} J = ${cz(this.G*this.h/100,2)} J</b> — na práci neušetříš nic`;
+  }
+};
+
+/* ================= 3) OZUBENÁ KOLA ================= */
+const kola={
+  z1:12, z2:30, otacky:60, moment:10, mezi:false, faze:0,
+  nacti(){
+    this.z1=+$('z1').value; this.z2=+$('z2').value;
+    this.otacky=+$('otacky').value; this.moment=+$('mom').value; this.mezi=$('mezikolo').checked;
+    $('z1V').textContent=this.z1; $('z2V').textContent=this.z2;
+    $('otackyV').textContent=this.otacky+'/min'; $('momV').textContent=this.moment+' N·m';
+  },
+  rucne:false, geo:[],
+  krok(dt){ if(!this.rucne) this.faze+=dt*this.otacky/60*Math.PI*2; },
+  tahni(typ,x,y,vych){
+    const kolo=this.geo[+typ.slice(4)];
+    if(!kolo) return;
+    const uhel=Math.atan2(y-kolo.y,x-kolo.x);
+    let d=uhel-vych.uhel;
+    while(d>Math.PI) d-=2*Math.PI;
+    while(d<-Math.PI) d+=2*Math.PI;
+    // otočení libovolného kola přepočítáme na fázi hnacího kola
+    this.faze=vych.faze+d*kolo.prevod;
+    vych.uhel=uhel; vych.faze=this.faze;
+  },
+  kresliKolo(x,y,r,zuby,faze,barva,popisek){
+    const vyska=Math.max(6,r*0.16);
+    ctx.beginPath();
+    for(let i=0;i<zuby;i++){
+      const a0=faze+i*2*Math.PI/zuby, kr=2*Math.PI/zuby;
+      const b=[a0-kr*0.30,a0-kr*0.16,a0+kr*0.16,a0+kr*0.30];
+      const rr=[r,r+vyska,r+vyska,r];
+      for(let j=0;j<4;j++){
+        const px=x+rr[j]*Math.cos(b[j]), py=y+rr[j]*Math.sin(b[j]);
+        j===0&&i===0?ctx.moveTo(px,py):ctx.lineTo(px,py);
+      }
+      ctx.arc(x,y,r,a0+kr*0.30,a0+kr*0.70);
+    }
+    ctx.closePath();
+    ctx.fillStyle=C.elev; ctx.fill();
+    ctx.strokeStyle=barva; ctx.lineWidth=2.5; ctx.stroke();
+    // náboj a značka pro sledování otáčení
+    ctx.strokeStyle=C.faint; ctx.lineWidth=1.5;
+    ctx.beginPath(); ctx.arc(x,y,r*0.22,0,Math.PI*2); ctx.stroke();
+    ctx.strokeStyle=barva; ctx.lineWidth=3;
+    ctx.beginPath(); ctx.moveTo(x,y); ctx.lineTo(x+r*0.8*Math.cos(faze),y+r*0.8*Math.sin(faze)); ctx.stroke();
+    popis(popisek,x,y+r+vyska+18,barva,'bold 12px sans-serif');
+  },
+  kresli(w,h){
+    const cy=h*0.48;
+    const seznam=this.mezi?[this.z1,18,this.z2]:[this.z1,this.z2];
+    const soucet=seznam.reduce((a,b)=>a+b,0);
+    const modul=Math.min(6.5,(w*0.80)/soucet,(h*0.62)/Math.max(...seznam));
+    let x=(w-soucet*modul)/2;
+    const barvy=this.mezi?[C.akcent,C.faint,C.ok]:[C.akcent,C.ok];
+    const jmena=this.mezi?['hnací z₁='+this.z1,'mezikolo z=18','hnané z₂='+this.z2]
+                         :['hnací z₁='+this.z1,'hnané z₂='+this.z2];
+    let faze=this.faze, smer=1;
+    this.geo=[];
+    seznam.forEach((z,i)=>{
+      const r=z*modul/2;
+      x+=r;
+      if(i>0){
+        // opačný smysl otáčení a fázový posun tak, aby zub padl do mezery
+        faze=-faze*seznam[i-1]/z+Math.PI/z;
+        smer=-smer;
+      }
+      // převod otočení tohoto kola na fázi hnacího: (−1)^i · zᵢ/z₀
+      this.geo.push({x,y:cy,prevod:(i%2?-1:1)*z/seznam[0]});
+      uchop(x,cy,r,'kolo'+i,true);
+      this.kresliKolo(x,cy,r,z,faze,barvy[i]||C.ok,jmena[i]);
+      if(i>0) popis(smer>0?'↻':'↺',x,cy-r-modul-16,C.muted,'16px sans-serif');
+      else popis('↻',x,cy-r-modul-16,C.muted,'16px sans-serif');
+      x+=r;
+    });
+  },
+  stav(){
+    const i=this.z2/this.z1, n2=this.otacky/i, M2=this.moment*i;
+    const smer=this.mezi?'stejný':'opačný';
+    return `Převodový poměr <b>i = z₂/z₁ = ${cz(i,2)}</b> `+
+      `<span class="znak">•</span> Otáčky hnaného kola <b>${cz(n2,1)} /min</b> `+
+      `<span class="znak">•</span> Moment na hnaném <b>${cz(M2,1)} N·m</b> `+
+      `<span class="znak">•</span> Smysl otáčení <b>${smer}</b> `+
+      `<span class="znak">•</span> ${i>1?'převod do pomala – větší síla':i<1?'převod do rychla – menší síla':'stejné otáčky i moment'}`;
+  }
+};
+
+/* ================= přepínání a smyčka ================= */
+const NAPOVEDA={
+  paka:`<b>Páka</b><br>Páka je v rovnováze, když se rovnají <b>momenty sil</b>: F₁·r₁ = F₂·r₂.
+    Moment je součin síly a jejího ramene (kolmé vzdálenosti od osy otáčení).<br><br>
+    <b>Zkus si</b><br>• Nastav krátké rameno břemenu a dlouhé rameno síle – zvedneš těžké břemeno malou silou.<br>
+    • <b>Táhni myší</b> za závaží – do stran měníš rameno, nahoru a dolů jeho tíhu. Za modrou šipku vytáhneš velikost síly.<br>
+    • Klikni na <b>Nový úkol</b> a zkus páku vyvážit sám; při rovnováze se úkol započítá.<br>
+    • Přepni na <b>jednozvratnou</b> páku – osa je na kraji, břemeno i síla působí na stejné straně (kolečko, otvírák).`,
+  kladka:`<b>Kladky</b><br><b>Pevná kladka</b> jen mění směr síly – táhneš stejnou silou, jako je tíha břemene.
+    Každá <b>volná kladka</b> sílu půlí, protože břemeno visí na dvou pramenech lana.<br><br>
+    <b>Zkus si</b><br>• <b>Zatáhni myší za lano</b> (nebo rovnou za břemeno) a zvedej náklad.<br>
+    • Přidávej volné kladky a sleduj, jak potřebná síla klesá na G/2, G/4, G/8…<br>
+    • Podívej se na délku vytaženého lana: kolikrát ušetříš na síle, tolikrát delší lano musíš vytáhnout.<br>
+    • <b>Zlaté pravidlo mechaniky:</b> práce zůstává stejná, žádný stroj ji neušetří.`,
+  kola:`<b>Ozubená kola</b><br>Kola se zabírají zuby, takže obvodová rychlost je stejná.
+    Menší kolo se proto točí rychleji: n₁·z₁ = n₂·z₂.<br><br>
+    <b>Zkus si</b><br>• <b>Chyť kolo myší a otoč jím</b> – uvidíš, o kolik se pootočí to druhé.<br>
+    • Malé hnací a velké hnané kolo = <b>převod do pomala</b>: pomalejší otáčky, ale větší moment (jako lehký převod na kole do kopce).<br>
+    • Obráceně vznikne <b>převod do rychla</b>.<br>
+    • Zapni <b>mezikolo</b> – převodový poměr se nezmění, ale obrátí se smysl otáčení.`
+};
+const DOLE={
+  paka:'Táhni myší za závaží (poloha i váha) nebo za modrou šipku síly.',
+  kladka:'Táhni za lano nebo přímo za břemeno.',
+  kola:'Chyť kolo myší a otoč jím – druhé se roztočí s ním.'
+};
+let rezim='paka', lastT=null;
+
+function prepni(r){
+  rezim=r; tahne=null; kola.rucne=false; uchopy=[]; canvas.style.cursor='default';
+  for(const [id,tab] of [['tabPaka','paka'],['tabKladka','kladka'],['tabKola','kola']])
+    $(id).classList.toggle('zap',tab===r);
+  $('panelPaka').classList.toggle('skryto',r!=='paka');
+  $('panelKladka').classList.toggle('skryto',r!=='kladka');
+  $('panelKola').classList.toggle('skryto',r!=='kola');
+  $('infoText').innerHTML=NAPOVEDA[r];
+  $('napoveda').textContent=DOLE[r];
+  if(r==='paka') paka.uhel=0;
+}
+$('tabPaka').onclick=()=>prepni('paka');
+$('tabKladka').onclick=()=>prepni('kladka');
+$('tabKola').onclick=()=>prepni('kola');
+$('btnInfo').onclick=()=>$('infoBox').classList.toggle('skryto');
+$('zavriInfo').onclick=()=>$('infoBox').classList.add('skryto');
+
+['druhPaky','f1','r1','f2','r2'].forEach(id=>$(id).oninput=()=>paka.nacti());
+$('btnDopocti').onclick=()=>{
+  const f=Math.round(paka.F1*paka.r1/paka.r2);
+  $('f2').value=Math.max(1,Math.min(60,f));
+  paka.nacti();
+};
+['druhKladky','pocetKladek','brem','zvednuti'].forEach(id=>$(id).oninput=()=>kladka.nacti());
+$('btnTahni').onclick=()=>animujKladku(50);
+$('btnDolu').onclick=()=>animujKladku(0);
+let animId=null;
+function animujKladku(cil){
+  cancelAnimationFrame(animId);
+  const krok=()=>{
+    const h=+$('zvednuti').value;
+    if(Math.abs(h-cil)<1){ $('zvednuti').value=cil; kladka.nacti(); return; }
+    $('zvednuti').value=h+(cil>h?1:-1);
+    kladka.nacti();
+    animId=requestAnimationFrame(krok);
+  };
+  krok();
+}
+['z1','z2','otacky','mom','mezikolo'].forEach(id=>$(id).oninput=$(id).onchange=()=>kola.nacti());
+$('btnUkol').onclick=()=>{ prepni('paka'); paka.zadejUkol(); };
+
+/* ---------- tažení přímo v obrázku ---------- */
+function poloha(e){
+  const r=canvas.getBoundingClientRect();
+  return [e.clientX-r.left,e.clientY-r.top];
+}
+canvas.addEventListener('pointerdown',e=>{
+  const [x,y]=poloha(e);
+  const u=najdiUchop(x,y);
+  if(!u) return;
+  e.preventDefault();
+  try{ canvas.setPointerCapture(e.pointerId); }catch(_){}
+  tahne={typ:u.typ,x,y,F1:paka.F1,F2:paka.F2,h:kladka.h,
+         faze:kola.faze,uhel:Math.atan2(y-u.y,x-u.x)};
+  if(u.typ.startsWith('kolo')) kola.rucne=true;
+  canvas.style.cursor='grabbing';
+});
+canvas.addEventListener('pointermove',e=>{
+  const [x,y]=poloha(e);
+  if(!tahne){ canvas.style.cursor=najdiUchop(x,y)?'grab':'default'; return; }
+  if(rezim==='paka') paka.tahni(tahne.typ,x,y,tahne);
+  else if(rezim==='kladka') kladka.tahni(tahne.typ,x,y,tahne);
+  else kola.tahni(tahne.typ,x,y,tahne);
+});
+function pusti(){ tahne=null; kola.rucne=false; canvas.style.cursor='default'; }
+canvas.addEventListener('pointerup',pusti);
+canvas.addEventListener('pointercancel',pusti);
+
+function smycka(t){
+  if(lastT===null) lastT=t;
+  const dt=Math.min(0.05,(t-lastT)/1000); lastT=t;
+  resize();
+  const w=canvas.clientWidth, h=canvas.clientHeight;
+  ctx.clearRect(0,0,w,h);
+  uchopy=[];   // uchopovací body registruje kreslení znovu v každém snímku
+  if(rezim==='paka'){ paka.krok(dt); paka.kresli(w,h); $('stav').innerHTML=paka.stav(); }
+  else if(rezim==='kladka'){ kladka.kresli(w,h); $('stav').innerHTML=kladka.stav(); }
+  else { kola.krok(dt); kola.kresli(w,h); $('stav').innerHTML=kola.stav(); }
+  requestAnimationFrame(smycka);
+}
+
+resize(); paka.nacti(); kladka.nacti(); kola.nacti(); prepni('paka');
+requestAnimationFrame(smycka);
+</script>
+</body>
+</html>

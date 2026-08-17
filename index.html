@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Webová Aplikace | Dashboard</title>
   <link rel="stylesheet" href="common.css" />
+  <script src="theme.js"></script>
   <link rel="manifest" href="manifest.webmanifest" />
   <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🧰</text></svg>" />
   <meta name="theme-color" content="#2d2d2d" />
@@ -286,6 +287,20 @@
       list-style: none;
     }
 
+    /* Sekce s jedinou aplikací: hlavička by jen zdvojovala název položky,
+       proto se zobrazí rovnou odkaz a sekce se nedá sbalit. */
+    .sekce.jedina {
+      padding: 4px 0;
+    }
+
+    .sekce.jedina h2 {
+      display: none;
+    }
+
+    .sekce.jedina ul {
+      display: block;
+    }
+
     .sekce li {
       position: relative;
     }
@@ -426,6 +441,7 @@
       </div>
       <div class="ovladani">
         <button id="btnDomu" title="Úvodní přehled">🏠</button>
+        <button id="btnTema" title="Přepnout světlý / tmavý režim">🌙</button>
         <button id="btnNoveOkno" title="Otevřít aktuální aplikaci v novém okně">🗗</button>
         <button id="rozbalitVse" class="jen-desktop" title="Rozbalit vše">⊞ Rozbalit</button>
         <button id="sbalitVse" class="jen-desktop" title="Sbalit vše">⊟ Sbalit</button>
@@ -471,6 +487,7 @@
     const KEY_OBLIBENE = 'webapp_oblibene';
     const KEY_NEDAVNE = 'webapp_nedavne';
     const KEY_SKUPINY_OPEN = 'webapp_skupiny_open';
+    const KEY_TEMA = 'webapp_theme';
 
     const iframe = document.querySelector('iframe[name="okno"]');
     const menuEl = document.getElementById('hlavniMenu');
@@ -553,7 +570,8 @@
       const ul = document.createElement('ul');
       polozky.forEach(p => ul.appendChild(vytvorPolozku(p)));
       div.append(h2, ul);
-      if (collapsedSet.has(nazev)) div.classList.add('collapsed');
+      if (polozky.length === 1 && !special) div.classList.add('jedina');
+      else if (collapsedSet.has(nazev)) div.classList.add('collapsed');
       h2.addEventListener('click', () => {
         setCollapsed(div, !div.classList.contains('collapsed'));
         saveCollapsed();
@@ -580,6 +598,7 @@
       localStorage.setItem(KEY_COLLAPSE, JSON.stringify([...collapsedSet]));
     }
     function setCollapsed(s, collapsed) {
+      if (s.classList.contains('jedina')) return;   // jednopoložkovou sekci není co sbalovat
       s.classList.toggle('collapsed', collapsed);
       if (collapsed) collapsedSet.add(s.dataset.nazev);
       else collapsedSet.delete(s.dataset.nazev);
@@ -682,6 +701,29 @@
       window.open(aktualni || DOMOVSKA, '_blank');
     });
 
+    /* ---- Přepínání tématu ---- */
+    // theme.js už téma použil při načtení; tady se jen přepíná a rozesílá.
+    const btnTema = document.getElementById('btnTema');
+    const themeColor = document.querySelector('meta[name="theme-color"]');
+
+    function zobrazTema() {
+      const light = document.documentElement.dataset.theme === 'light';
+      btnTema.textContent = light ? '☀️' : '🌙';
+      btnTema.title = light ? 'Přepnout na tmavý režim' : 'Přepnout na světlý režim';
+      if (themeColor) themeColor.content = light ? '#ffffff' : '#2d2d2d';
+    }
+    zobrazTema();
+
+    btnTema.addEventListener('click', () => {
+      const light = document.documentElement.dataset.theme !== 'light';
+      if (light) document.documentElement.dataset.theme = 'light';
+      else delete document.documentElement.dataset.theme;
+      localStorage.setItem(KEY_TEMA, light ? 'light' : 'dark');
+      // storage událost se ve stejné záložce nespouští -> iframu to řekneme přímo
+      iframe.contentWindow?.postMessage({ tema: light ? 'light' : 'dark' }, '*');
+      zobrazTema();
+    });
+
     /* ---- Skupinové pilulky ---- */
     const pills = [];
     function skupinaPocet(id) {
@@ -753,7 +795,8 @@
       vsechnySekce().forEach(s => {
         const patri = s.dataset.special || aktivniSkupina === 'vse' || s.dataset.skupina === aktivniSkupina;
         s.classList.toggle('skryto', !patri);
-        s.classList.toggle('collapsed', collapsedSet.has(s.dataset.nazev));
+        s.classList.toggle('collapsed',
+          !s.classList.contains('jedina') && collapsedSet.has(s.dataset.nazev));
         s.querySelectorAll('li').forEach(li => li.classList.remove('skryto'));
         s.querySelectorAll('a[data-page]').forEach(a => a.classList.remove('zvyrazneno'));
       });

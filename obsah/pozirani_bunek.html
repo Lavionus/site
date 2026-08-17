@@ -1,0 +1,890 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>🦠 Požírání buněk</title>
+<!-- Stránka má vlastní podvodní paletu a záměrně nepoužívá theme.js
+     (světlé téma by hru pod vodou rozbilo) – stejně jako iss, planet_globe ad. -->
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%;overflow:hidden;background:#03121c;
+  font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  color:#dff3ff;-webkit-user-select:none;user-select:none;touch-action:none}
+canvas{display:block;position:fixed;inset:0;width:100%;height:100%}
+
+/* ---------- HUD ---------- */
+.hud{position:fixed;top:0;left:0;right:0;padding:10px 12px;display:flex;gap:10px;
+  align-items:flex-start;justify-content:space-between;pointer-events:none}
+.panel{background:rgba(4,26,40,.62);border:1px solid rgba(120,220,255,.22);
+  border-radius:12px;padding:8px 12px;backdrop-filter:blur(6px);box-shadow:0 4px 18px rgba(0,0,0,.4)}
+.stat{display:flex;gap:14px;flex-wrap:wrap;align-items:baseline}
+.stat b{font-size:1.15rem;font-weight:700;color:#8ef0d4}
+.stat span{font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;color:#7fb5cd;display:block}
+.stadium{margin-top:5px;font-size:.8rem;color:#c9e9ff}
+.stadium i{color:#7fb5cd;font-style:normal}
+.tlacitka{display:flex;gap:6px;pointer-events:auto}
+.ik{background:rgba(4,26,40,.62);border:1px solid rgba(120,220,255,.22);color:#dff3ff;
+  border-radius:10px;width:38px;height:38px;font-size:1rem;cursor:pointer}
+.ik:hover{background:rgba(20,60,84,.8)}
+
+/* pruh energie (metabolismus) */
+.pruh{margin-top:7px;width:170px;height:6px;border-radius:3px;background:rgba(255,255,255,.12);overflow:hidden}
+.pruh i{display:block;height:100%;width:100%;background:linear-gradient(90deg,#3fd6a0,#8ef0d4);transition:width .12s linear}
+.pruh.malo i{background:linear-gradient(90deg,#e05d5d,#f39b6d)}
+
+/* ---------- překryvy ---------- */
+.prekryv{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;
+  padding:20px;background:radial-gradient(ellipse at center,rgba(3,26,42,.72),rgba(2,10,16,.94))}
+.prekryv.skryto{display:none}
+.karta{max-width:520px;width:100%;text-align:center;
+  background:rgba(6,30,46,.86);border:1px solid rgba(120,220,255,.24);border-radius:18px;
+  padding:26px 24px;box-shadow:0 18px 50px rgba(0,0,0,.6)}
+.karta h1{font-size:1.7rem;margin-bottom:6px;font-weight:700}
+.karta h2{font-size:1.4rem;margin-bottom:8px;font-weight:700}
+.karta p{color:#a9cfe2;font-size:.9rem;line-height:1.55}
+.pravidla{text-align:left;margin:16px 0;display:grid;gap:7px}
+.pravidla div{font-size:.85rem;color:#c9e9ff;line-height:1.4}
+.pravidla em{font-style:normal;color:#7fb5cd}
+kbd{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);border-bottom-width:2px;
+  border-radius:5px;padding:1px 6px;font-size:.78rem;font-family:inherit}
+.btn{background:linear-gradient(180deg,#3fd6a0,#22a97c);border:none;color:#02251a;font-weight:700;
+  border-radius:10px;padding:12px 26px;cursor:pointer;font-size:1rem;margin-top:6px;
+  box-shadow:0 6px 18px rgba(63,214,160,.28)}
+.btn:hover{filter:brightness(1.08)}
+.vysledky{display:flex;gap:18px;justify-content:center;margin:14px 0 4px}
+.vysledky div{min-width:88px}
+.vysledky b{display:block;font-size:1.3rem;color:#8ef0d4}
+.vysledky span{font-size:.7rem;text-transform:uppercase;letter-spacing:.06em;color:#7fb5cd}
+.zprava{margin-top:10px;font-size:.85rem;color:#f39b6d}
+
+/* dotykové ovládání */
+#boost{position:fixed;right:18px;bottom:18px;width:82px;height:82px;border-radius:50%;
+  background:rgba(63,214,160,.16);border:2px solid rgba(63,214,160,.55);color:#8ef0d4;
+  font-size:.78rem;font-weight:700;display:none;align-items:center;justify-content:center;cursor:pointer}
+body.dotyk #boost{display:flex}
+#boost.aktivni{background:rgba(63,214,160,.4)}
+@media(max-width:560px){.stat b{font-size:1rem}.pruh{width:120px}}
+</style>
+</head>
+<body>
+<canvas id="c"></canvas>
+
+<div class="hud">
+  <div class="panel">
+    <div class="stat">
+      <div><span>Hmotnost</span><b id="hHmotnost">20</b></div>
+      <div><span>Přežito</span><b id="hCas">0 s</b></div>
+      <div><span>Rekord</span><b id="hRekord">0</b></div>
+    </div>
+    <div class="stadium">Stádium: <i id="hStadium">Améba</i></div>
+    <div class="pruh" id="hPruh"><i></i></div>
+  </div>
+  <div class="tlacitka">
+    <button class="ik" id="bPauza" title="Pauza (P)">⏸</button>
+    <button class="ik" id="bZvuk" title="Zvuk">🔊</button>
+  </div>
+</div>
+
+<div class="prekryv" id="uvod">
+  <div class="karta">
+    <h1>🦠 Požírání buněk</h1>
+    <p>Jsi jedna jediná buňka v kapce vody. Požírej menší, utíkej před většími a nenech se strávit.</p>
+    <div class="pravidla">
+      <div>🖱️ <em>Ovládání:</em> buňka plave za kurzorem (nebo prstem), případně <kbd>WASD</kbd> / šipky.</div>
+      <div>⚡ <em>Trysk:</em> <kbd>mezerník</kbd> nebo pravé tlačítko – rychlý únik, ale odhodíš část hmoty.</div>
+      <div>🍥 <em>Plankton</em> tě drobně živí, <em>menší buňky</em> vydatně. Sníst jde jen to, co je znatelně menší.</div>
+      <div>🫧 <em>Bubliny kyslíku</em> na pár sekund zrychlí a doplní energii.</div>
+      <div>🧬 <em>Viry</em> (zelené ostny) roztrhají jen velké buňky – malá jimi proplave.</div>
+      <div>🔥 <em>Metabolismus:</em> hmota se pořád spaluje, čím jsi větší, tím rychleji. Kdo nejí, zajde.</div>
+    </div>
+    <button class="btn" id="bStart">▶ Ponořit se</button>
+  </div>
+</div>
+
+<div class="prekryv skryto" id="konec">
+  <div class="karta">
+    <h2 id="kNadpis">Konec</h2>
+    <p id="kDuvod"></p>
+    <div class="vysledky">
+      <div><span>Hmotnost</span><b id="kHmotnost">0</b></div>
+      <div><span>Přežito</span><b id="kCas">0 s</b></div>
+      <div><span>Snědeno</span><b id="kSnezeno">0</b></div>
+    </div>
+    <div class="zprava" id="kRekord"></div>
+    <button class="btn" id="bZnovu">↻ Znovu</button>
+  </div>
+</div>
+
+<div class="prekryv skryto" id="pauza">
+  <div class="karta">
+    <h2>⏸ Pauza</h2>
+    <p>Voda se na chvíli zastavila.</p>
+    <button class="btn" id="bPokracovat">▶ Pokračovat</button>
+  </div>
+</div>
+
+<button id="boost">TRYSK</button>
+
+<script>
+/* ============================================================
+   Požírání buněk – arkáda ve stylu „sněz menší, uteč většímu".
+   Svět je větší než obrazovka, kamera sleduje hráče a odzoomovává
+   podle jeho velikosti. Vše (buňky, plankton, nečistoty) unáší
+   společné proudění vody, aby scéna působila jako živá kapka.
+   ============================================================ */
+const c = document.getElementById('c'), ctx = c.getContext('2d');
+let W = 0, H = 0, dpr = 1;
+
+const SVET = 3000;               // čtvercová „kapka vody"
+const START_HMOTA = 20;
+const MIN_HMOTA = 6;             // pod tímto prahem buňka zajde hlady
+const POCET_BUNEK = 22;
+const POCET_PLANKTONU = 520;
+const POCET_VIRU = 7;
+const MILOST = 6;                // sekundy klidu na začátku, než začnou dravci lovit
+
+const R = e => Math.sqrt(e.m) * 4;                      // poloměr buňky z její hmotnosti
+const rnd = (a, b) => a + Math.random() * (b - a);
+const clamp = (v, a, b) => v < a ? a : v > b ? b : v;
+const lerp = (a, b, t) => a + (b - a) * t;
+
+/* ---- stádia vývoje: mění barvu, počet brv a jméno v HUD ---- */
+const STADIA = [
+  { od: 0,    nazev: 'Améba',            barva: [175, 78, 60] },
+  { od: 60,   nazev: 'Bičíkovec',        barva: [155, 72, 58] },
+  { od: 160,  nazev: 'Nálevník',         barva: [125, 70, 60] },
+  { od: 340,  nazev: 'Měňavka obrovská', barva: [95,  68, 62] },
+  { od: 650,  nazev: 'Predátor kapky',   barva: [45,  80, 62] },
+  // fialová, ne červená – červená patří nepřátelům, co tě můžou sežrat
+  { od: 1100, nazev: 'Apex mikrosvěta',  barva: [285, 78, 64] },
+];
+const stadium = m => { let s = STADIA[0]; for (const x of STADIA) if (m >= x.od) s = x; return s; };
+
+/* ---- stav hry ---- */
+let hrac, bunky, plankton, viry, bubliny, spory, efekty, necistoty;
+let cas, snezeno, bezi = false, pauza = false, konecHry = false;
+let mys = { x: 0, y: 0, aktivni: false }, klavesy = {}, trysk = false;
+let kamera = { x: 0, y: 0, zoom: 1 }, kyslikDo = 0, otreseni = 0, zvuk = true;
+let rekord = +localStorage.getItem('pozirani_bunek_rekord') || 0;
+let posledni = 0, tGlob = 0;
+
+/* ============================================================
+   Zakládání objektů
+   ============================================================ */
+function novaBunka(hmota, x, y) {
+  const h = clamp(hmota, 4, 4000);
+  return {
+    x, y, vx: 0, vy: 0, m: h,
+    odstin: rnd(0, 360), faze: rnd(0, 100),
+    cil: { x: rnd(0, SVET), y: rnd(0, SVET) }, zmenaCile: 0,
+    vakuoly: Array.from({ length: 3 }, () => ({ a: rnd(0, 6.28), d: rnd(.25, .6), r: rnd(.08, .16) })),
+    jx: x, jy: y,
+  };
+}
+/* Plankton neroste rovnoměrně – drží se v hejnech (shlucích), takže se
+   vyplatí je hledat a mezi nimi hrozí hlad. */
+let shluky = [];
+function novyPlankton(x, y) {
+  if (x == null) {
+    const s = shluky[Math.floor(Math.random() * shluky.length)];
+    x = clamp(s.x + rnd(-s.r, s.r), 6, SVET - 6);
+    y = clamp(s.y + rnd(-s.r, s.r), 6, SVET - 6);
+  }
+  return { x, y, m: rnd(1.1, 2.4), odstin: rnd(60, 200), faze: rnd(0, 100), vx: 0, vy: 0 };
+}
+function novyVirus() {
+  return { x: rnd(120, SVET - 120), y: rnd(120, SVET - 120), r: rnd(34, 46), faze: rnd(0, 100), rot: rnd(-.3, .3) };
+}
+function novaBublina() {
+  return { x: rnd(0, SVET), y: rnd(0, SVET), r: rnd(9, 15), faze: rnd(0, 100), stoupani: rnd(28, 48) };
+}
+
+function novaHra() {
+  hrac = novaBunka(START_HMOTA, SVET / 2, SVET / 2);
+  hrac.odstin = 168; hrac.hrac = true;
+  bunky = []; plankton = []; viry = []; bubliny = []; spory = []; efekty = [];
+  shluky = Array.from({ length: 14 }, () => ({ x: rnd(150, SVET - 150), y: rnd(150, SVET - 150), r: rnd(180, 340) }));
+  shluky.push({ x: hrac.x, y: hrac.y, r: 320 });   // hráč začíná v úživné vodě
+  for (let i = 0; i < POCET_PLANKTONU; i++) plankton.push(novyPlankton());
+  for (let i = 0; i < POCET_VIRU; i++) viry.push(novyVirus());
+  for (let i = 0; i < 16; i++) bubliny.push(novaBublina());
+  for (let i = 0; i < POCET_BUNEK; i++) bunky.push(zrodBunky(true));
+  // nečistoty = tři paralaxní vrstvy poletujícího detritu (jen kulisa)
+  necistoty = [];
+  for (let i = 0; i < 220; i++)
+    necistoty.push({ x: rnd(0, SVET), y: rnd(0, SVET), r: rnd(.6, 2.6), vrstva: Math.floor(rnd(0, 3)), a: rnd(.05, .35) });
+  cas = 0; snezeno = 0; konecHry = false; pauza = false; kyslikDo = 0; otreseni = 0;
+  kamera.x = hrac.x; kamera.y = hrac.y; kamera.zoom = cilovyZoom();
+  mys.aktivni = false;
+}
+
+/* Nová AI buňka – daleko od hráče, hmotnost kolem hráčovy úrovně,
+   aby hra zůstala napínavá (část kořist, část hrozba). */
+function zrodBunky(start) {
+  let x, y, pokus = 0;
+  do { x = rnd(60, SVET - 60); y = rnd(60, SVET - 60); pokus++; }
+  while (pokus < 60 && Math.hypot(x - hrac.x, y - hrac.y) < (start ? 900 : 1200));
+  const zaklad = Math.max(START_HMOTA, hrac.m);
+  const m = Math.random() < .62 ? rnd(zaklad * .18, zaklad * .8)   // kořist
+                                : rnd(zaklad * 1.06, zaklad * 1.9); // hrozba
+  return novaBunka(clamp(m, 5, 3000), x, y);
+}
+
+/* ============================================================
+   Proudění vody – jedno vektorové pole pro celou scénu
+   ============================================================ */
+function proud(x, y, t, out) {
+  out.x = Math.sin(y * 0.0016 + t * 0.22) * 14 + Math.sin((x + y) * 0.0009 - t * 0.15) * 8;
+  out.y = Math.cos(x * 0.0014 - t * 0.19) * 12 + Math.cos((x - y) * 0.0011 + t * 0.13) * 7;
+}
+const _p = { x: 0, y: 0 };
+
+/* ============================================================
+   Herní krok
+   ============================================================ */
+function krok(dt) {
+  cas += dt; tGlob += dt;
+
+  /* --- pohyb hráče --- */
+  let sx = 0, sy = 0;
+  if (klavesy['a'] || klavesy['arrowleft'])  sx -= 1;
+  if (klavesy['d'] || klavesy['arrowright']) sx += 1;
+  if (klavesy['w'] || klavesy['arrowup'])    sy -= 1;
+  if (klavesy['s'] || klavesy['arrowdown'])  sy += 1;
+  if (sx || sy) { const d = Math.hypot(sx, sy); sx /= d; sy /= d; mys.aktivni = false; }
+  else if (mys.aktivni) {
+    const sv = naSvet(mys.x, mys.y);
+    const dx = sv.x - hrac.x, dy = sv.y - hrac.y, d = Math.hypot(dx, dy);
+    if (d > 6) { sx = dx / d; sy = dy / d; }
+  }
+
+  // velká buňka je líná, malá mrštná
+  let rychlost = 235 * Math.pow(START_HMOTA / hrac.m, 0.30);
+  rychlost = clamp(rychlost, 72, 285);
+  if (cas < kyslikDo) rychlost *= 1.28;
+  const tryskAktivni = trysk && hrac.m > MIN_HMOTA * 2.2;
+  if (tryskAktivni) {
+    rychlost *= 1.85;
+    const ubran = hrac.m * 0.55 * dt;
+    hrac.m -= ubran;
+    if (Math.random() < dt * 22) odhodSporu(hrac, sx, sy, ubran * 6);
+  }
+
+  hrac.vx = lerp(hrac.vx, sx * rychlost, 1 - Math.pow(0.0015, dt));
+  hrac.vy = lerp(hrac.vy, sy * rychlost, 1 - Math.pow(0.0015, dt));
+  posunTelo(hrac, dt);
+
+  /* --- metabolismus: hmota se pořád spaluje, velcí rychleji --- */
+  hrac.m -= Math.pow(hrac.m, 1.25) * 0.008 * dt * (cas < kyslikDo ? 0.45 : 1);
+  if (hrac.m <= MIN_HMOTA) return konec('Vyhladověl jsi', 'Metabolismus spálil víc, než jsi stihl sníst.');
+
+  /* --- AI buňky --- */
+  for (const b of bunky) {
+    const dx = hrac.x - b.x, dy = hrac.y - b.y, d = Math.hypot(dx, dy) || 1;
+    let cx, cy;
+    if (d < 620 && hrac.m > b.m * 1.12) { cx = -dx / d; cy = -dy / d; }          // utíká
+    // prvních pár sekund hráče nikdo neloví – je čas se rozkoukat
+    else if (d < 700 && b.m > hrac.m * 1.12 && cas > MILOST) { cx = dx / d; cy = dy / d; }
+    else {
+      // jinak si hledá nejbližší plankton, případně bloudí
+      let nej = null, nejD = 460;
+      for (let i = 0; i < plankton.length; i += 3) {
+        const p = plankton[i], pd = Math.hypot(p.x - b.x, p.y - b.y);
+        if (pd < nejD) { nejD = pd; nej = p; }
+      }
+      b.zmenaCile -= dt;
+      if (b.zmenaCile <= 0) { b.cil = { x: rnd(0, SVET), y: rnd(0, SVET) }; b.zmenaCile = rnd(3, 7); }
+      const t = nej || b.cil, tdx = t.x - b.x, tdy = t.y - b.y, td = Math.hypot(tdx, tdy) || 1;
+      cx = tdx / td; cy = tdy / td;
+    }
+    // dravec je vždy o kus pomalejší než hráč stejné velikosti – útěk musí mít smysl
+    const v = clamp(178 * Math.pow(START_HMOTA / b.m, 0.30), 52, 215);
+    b.vx = lerp(b.vx, cx * v, 1 - Math.pow(0.02, dt));
+    b.vy = lerp(b.vy, cy * v, 1 - Math.pow(0.02, dt));
+    posunTelo(b, dt);
+    b.m -= Math.pow(b.m, 1.25) * 0.005 * dt;
+  }
+
+  /* --- plankton, spory, bubliny: nese je proud --- */
+  for (const p of plankton) unasej(p, dt, 1);
+  for (const s of spory) { unasej(s, dt, 1); s.vx *= Math.pow(0.25, dt); s.vy *= Math.pow(0.25, dt); s.vek += dt; }
+  for (const b of bubliny) {
+    unasej(b, dt, .6);
+    b.y -= b.stoupani * dt;
+    if (b.y < -20) { b.y = SVET + 20; b.x = rnd(0, SVET); }
+  }
+  for (const n of necistoty) unasej(n, dt, .5 + n.vrstva * .35);
+  for (const v of viry) { v.faze += dt; }
+
+  /* --- žraní --- */
+  jezPlankton(hrac);
+  for (const b of bunky) jezPlankton(b);
+
+  // buňka vs. buňka (i hráč)
+  const vsechny = [hrac, ...bunky];
+  for (let i = 0; i < vsechny.length; i++) {
+    for (let j = i + 1; j < vsechny.length; j++) {
+      const a = vsechny[i], b = vsechny[j];
+      if (a.mrtva || b.mrtva) continue;
+      const d = Math.hypot(a.x - b.x, a.y - b.y);
+      const vetsi = a.m > b.m ? a : b, mensi = a.m > b.m ? b : a;
+      if (vetsi.m < mensi.m * 1.12) continue;
+      if (mensi === hrac && cas < MILOST) continue;   // úvodní milost
+      if (d < R(vetsi) - R(mensi) * 0.45) {
+        vetsi.m += mensi.m * 0.85;
+        mensi.mrtva = true;
+        vybuch(mensi.x, mensi.y, R(mensi), mensi.odstin);
+        if (vetsi === hrac) { snezeno++; otreseni = Math.min(10, R(mensi) * .15); pip(180 + Math.min(300, mensi.m), .07); }
+        if (mensi === hrac) return konec('Sežrala tě větší buňka', 'V kapce vody je vždycky někdo hladovější.');
+      }
+    }
+  }
+  bunky = bunky.filter(b => !b.mrtva && b.m > 3);
+  while (bunky.length < POCET_BUNEK) bunky.push(zrodBunky(false));
+
+  // bubliny kyslíku
+  for (const b of bubliny) {
+    if (Math.hypot(b.x - hrac.x, b.y - hrac.y) < R(hrac) + b.r) {
+      kyslikDo = cas + 4; hrac.m += 2;
+      vybuch(b.x, b.y, b.r * 1.6, 190);
+      pip(680, .05);
+      b.y = SVET + 20; b.x = rnd(0, SVET);
+    }
+  }
+
+  // viry – nebezpečné až pro velké buňky
+  for (const v of viry) {
+    if (R(hrac) > v.r * 1.05 && Math.hypot(v.x - hrac.x, v.y - hrac.y) < R(hrac) + v.r * .5) {
+      const ztrata = hrac.m * 0.28;
+      hrac.m -= ztrata;
+      for (let i = 0; i < 7; i++) odhodSporu(hrac, Math.cos(i), Math.sin(i), ztrata / 7 * 4);
+      vybuch(v.x, v.y, v.r * 2, 110);
+      otreseni = 16; pip(90, .18);
+      Object.assign(v, novyVirus());
+      if (hrac.m <= MIN_HMOTA) return konec('Rozbil tě virus', 'Velká buňka je pro viry snadný terč.');
+    }
+    for (const b of bunky) {
+      if (R(b) > v.r * 1.05 && Math.hypot(v.x - b.x, v.y - b.y) < R(b) + v.r * .5) {
+        const z = b.m * 0.3; b.m -= z;
+        for (let i = 0; i < 5; i++) odhodSporu(b, Math.cos(i * 1.3), Math.sin(i * 1.3), z / 5 * 4);
+        vybuch(v.x, v.y, v.r * 1.6, 110);
+        Object.assign(v, novyVirus());
+      }
+    }
+  }
+
+  /* --- efekty a doplňování --- */
+  for (const e of efekty) { e.zivot -= dt; e.x += e.vx * dt; e.y += e.vy * dt; e.vx *= Math.pow(.2, dt); e.vy *= Math.pow(.2, dt); }
+  efekty = efekty.filter(e => e.zivot > 0);
+  while (plankton.length < POCET_PLANKTONU) plankton.push(novyPlankton());
+  otreseni *= Math.pow(0.02, dt);
+
+  /* --- kamera --- */
+  kamera.x = lerp(kamera.x, hrac.x, 1 - Math.pow(0.002, dt));
+  kamera.y = lerp(kamera.y, hrac.y, 1 - Math.pow(0.002, dt));
+  kamera.zoom = lerp(kamera.zoom, cilovyZoom(), 1 - Math.pow(0.15, dt));
+
+  if (hrac.m > rekord) { rekord = Math.round(hrac.m); localStorage.setItem('pozirani_bunek_rekord', rekord); }
+  hud();
+}
+
+function cilovyZoom() {
+  const cil = Math.min(W, H) * 0.5 / (R(hrac) * 6.5);
+  return clamp(cil, 0.34, 1.25);
+}
+
+function posunTelo(e, dt) {
+  proud(e.x, e.y, tGlob, _p);
+  e.x += (e.vx + _p.x) * dt;
+  e.y += (e.vy + _p.y) * dt;
+  const r = R(e);
+  // okraje kapky pruží – buňka se od blány odrazí
+  if (e.x < r) { e.x = r; e.vx = Math.abs(e.vx) * .4; }
+  if (e.x > SVET - r) { e.x = SVET - r; e.vx = -Math.abs(e.vx) * .4; }
+  if (e.y < r) { e.y = r; e.vy = Math.abs(e.vy) * .4; }
+  if (e.y > SVET - r) { e.y = SVET - r; e.vy = -Math.abs(e.vy) * .4; }
+  // jádro se za pohybem opožďuje – buňka pak působí rosolovitě
+  e.jx = lerp(e.jx, e.x - e.vx * 0.04, 1 - Math.pow(0.001, dt));
+  e.jy = lerp(e.jy, e.y - e.vy * 0.04, 1 - Math.pow(0.001, dt));
+}
+
+function unasej(e, dt, sila) {
+  proud(e.x, e.y, tGlob, _p);
+  e.x += ((e.vx || 0) + _p.x * sila) * dt;
+  e.y += ((e.vy || 0) + _p.y * sila) * dt;
+  if (e.x < 0) e.x += SVET; if (e.x > SVET) e.x -= SVET;
+  if (e.y < 0) e.y += SVET; if (e.y > SVET) e.y -= SVET;
+}
+
+function jezPlankton(e) {
+  const r = R(e);
+  for (let i = plankton.length - 1; i >= 0; i--) {
+    const p = plankton[i];
+    if (Math.abs(p.x - e.x) > r + 6 || Math.abs(p.y - e.y) > r + 6) continue;
+    if (Math.hypot(p.x - e.x, p.y - e.y) < r) {
+      e.m += p.m;
+      if (e === hrac) { efekty.push(jiskra(p.x, p.y, p.odstin)); if (Math.random() < .3) pip(520, .03); }
+      plankton.splice(i, 1);
+    }
+  }
+  // spory (odhozená hmota) jsou vydatnější
+  for (let i = spory.length - 1; i >= 0; i--) {
+    const s = spory[i];
+    if (Math.hypot(s.x - e.x, s.y - e.y) < r && s.vek > .4) { e.m += s.m; spory.splice(i, 1); }
+  }
+}
+
+function odhodSporu(e, sx, sy, m) {
+  const d = Math.hypot(sx, sy) || 1, r = R(e);
+  spory.push({ x: e.x - sx / d * r, y: e.y - sy / d * r, m: Math.max(.6, m / 6),
+               vx: -sx / d * 90 + rnd(-30, 30), vy: -sy / d * 90 + rnd(-30, 30),
+               odstin: e.odstin, faze: rnd(0, 100), vek: 0 });
+  if (spory.length > 90) spory.shift();
+}
+
+function jiskra(x, y, odstin) {
+  return { x, y, vx: rnd(-40, 40), vy: rnd(-40, 40), zivot: rnd(.3, .6), max: .6, r: rnd(1.5, 3.5), odstin, prstenec: false };
+}
+function vybuch(x, y, r, odstin) {
+  efekty.push({ x, y, vx: 0, vy: 0, zivot: .55, max: .55, r, odstin, prstenec: true });
+  for (let i = 0; i < 16; i++) {
+    const a = rnd(0, 6.28), s = rnd(40, 190);
+    efekty.push({ x, y, vx: Math.cos(a) * s, vy: Math.sin(a) * s, zivot: rnd(.35, .8), max: .8, r: rnd(1.5, 4), odstin, prstenec: false });
+  }
+}
+
+/* ============================================================
+   Vykreslování
+   ============================================================ */
+function naSvet(px, py) {
+  return { x: (px - W / 2) / kamera.zoom + kamera.x, y: (py - H / 2) / kamera.zoom + kamera.y };
+}
+
+/* Viditelný výřez světa – co je mimo, vůbec nekreslíme. */
+let vyrez = { x1: 0, y1: 0, x2: 0, y2: 0 };
+function spocitejVyrez() {
+  const pw = W / 2 / kamera.zoom, ph = H / 2 / kamera.zoom;
+  vyrez.x1 = kamera.x - pw - 60; vyrez.x2 = kamera.x + pw + 60;
+  vyrez.y1 = kamera.y - ph - 60; vyrez.y2 = kamera.y + ph + 60;
+}
+const vidno = (x, y, r = 0) => x + r > vyrez.x1 && x - r < vyrez.x2 && y + r > vyrez.y1 && y - r < vyrez.y2;
+
+/* Glow částic je předrenderovaný do sprite (shadowBlur u stovek
+   objektů by hru na slabším stroji položil). 12 odstínů stačí. */
+const SPRITY = (() => {
+  const pole = [];
+  for (let i = 0; i < 12; i++) {
+    const p = document.createElement('canvas');
+    p.width = p.height = 48;
+    const x = p.getContext('2d'), h = i * 30;
+    const g = x.createRadialGradient(24, 24, 0, 24, 24, 24);
+    g.addColorStop(0, `hsla(${h},100%,92%,1)`);
+    g.addColorStop(.13, `hsla(${h},95%,74%,.95)`);
+    g.addColorStop(.34, `hsla(${h},92%,62%,.42)`);
+    g.addColorStop(1, `hsla(${h},92%,58%,0)`);
+    x.fillStyle = g; x.fillRect(0, 0, 48, 48);
+    pole.push(p);
+  }
+  return pole;
+})();
+const sprite = odstin => SPRITY[Math.floor(((odstin % 360) + 360) % 360 / 30) % 12];
+
+function kresli() {
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  pozadi();
+
+  ctx.save();
+  const ot = otreseni;
+  ctx.translate(W / 2 + rnd(-ot, ot), H / 2 + rnd(-ot, ot));
+  ctx.scale(kamera.zoom, kamera.zoom);
+  ctx.translate(-kamera.x, -kamera.y);
+
+  spocitejVyrez();
+  kresliDetritus();
+  kresliOkrajSveta();
+  ctx.globalCompositeOperation = 'lighter';
+  for (const p of plankton) if (vidno(p.x, p.y, 12)) kresliPlankton(p);
+  for (const s of spory) if (vidno(s.x, s.y, 20)) kresliPlankton(s, true);
+  ctx.globalCompositeOperation = 'source-over';
+  for (const b of bubliny) if (vidno(b.x, b.y, b.r)) kresliBublinu(b);
+  for (const v of viry) if (vidno(v.x, v.y, v.r * 1.5)) kresliVirus(v);
+  for (const b of bunky) if (vidno(b.x, b.y, R(b) * 1.4)) kresliBunku(b, false);
+  if (!konecHry) kresliBunku(hrac, true);
+  kresliEfekty();
+
+  ctx.restore();
+  kresliMinimapu();
+  if (bezi && !pauza && !konecHry) kresliSipkyHrozeb();
+}
+
+/* Pozadí: hloubkový přechod + prosvítající paprsky + vinětace. */
+function pozadi() {
+  const g = ctx.createLinearGradient(0, 0, 0, H);
+  g.addColorStop(0, '#0e4a62');
+  g.addColorStop(.45, '#083247');
+  g.addColorStop(1, '#02141f');
+  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
+
+  // světelné paprsky shora – posouvají se s kamerou (parallax)
+  ctx.save();
+  ctx.globalCompositeOperation = 'lighter';
+  ctx.filter = 'blur(26px)';                 // ostré hrany klínů by vypadaly jako pruhy
+  for (let i = 0; i < 6; i++) {
+    const zaklad = (i * 260 - kamera.x * 0.25) % (W + 520) - 160;
+    const sirka = 90 + Math.sin(tGlob * .3 + i) * 34;
+    const alfa = 0.06 + Math.sin(tGlob * .45 + i * 1.7) * 0.03;
+    const gg = ctx.createLinearGradient(0, 0, 0, H);
+    gg.addColorStop(0, `rgba(150,235,255,${Math.max(0, alfa)})`);
+    gg.addColorStop(1, 'rgba(150,235,255,0)');
+    ctx.fillStyle = gg;
+    ctx.beginPath();
+    ctx.moveTo(zaklad, -10); ctx.lineTo(zaklad + sirka, -10);
+    ctx.lineTo(zaklad + sirka + 190, H); ctx.lineTo(zaklad + 120, H);
+    ctx.closePath(); ctx.fill();
+  }
+  ctx.restore();
+
+  const v = ctx.createRadialGradient(W / 2, H / 2, Math.min(W, H) * .35, W / 2, H / 2, Math.max(W, H) * .78);
+  v.addColorStop(0, 'rgba(0,0,0,0)');
+  v.addColorStop(1, 'rgba(0,8,14,.6)');
+  ctx.fillStyle = v; ctx.fillRect(0, 0, W, H);
+}
+
+function kresliDetritus() {
+  ctx.save();
+  for (const n of necistoty) {
+    if (!vidno(n.x, n.y, 8)) continue;
+    ctx.globalAlpha = n.a;
+    ctx.fillStyle = n.vrstva === 2 ? '#bfe9ff' : '#8fd4ee';
+    ctx.beginPath(); ctx.arc(n.x, n.y, n.r * (1 + n.vrstva * .5), 0, 6.283); ctx.fill();
+  }
+  ctx.restore();
+}
+
+function kresliOkrajSveta() {
+  ctx.save();
+  ctx.strokeStyle = 'rgba(140,225,255,.25)';
+  ctx.lineWidth = 6 / kamera.zoom;
+  ctx.setLineDash([26 / kamera.zoom, 18 / kamera.zoom]);
+  ctx.strokeRect(0, 0, SVET, SVET);
+  ctx.restore();
+}
+
+function kresliPlankton(p, spora) {
+  const r = (spora ? R(p) : 2.2 + p.m) * (1 + Math.sin(tGlob * 3 + p.faze) * .18);
+  const s = r * 2.6;
+  ctx.globalAlpha = spora ? 1 : .92;
+  ctx.drawImage(sprite(p.odstin), p.x - s, p.y - s, s * 2, s * 2);
+  ctx.globalAlpha = 1;
+}
+
+function kresliBublinu(b) {
+  const w = Math.sin(tGlob * 2 + b.faze) * 2;
+  ctx.save();
+  ctx.strokeStyle = 'rgba(190,240,255,.55)';
+  ctx.lineWidth = 1.4;
+  ctx.fillStyle = 'rgba(160,225,255,.12)';
+  ctx.beginPath(); ctx.arc(b.x + w, b.y, b.r, 0, 6.283); ctx.fill(); ctx.stroke();
+  ctx.fillStyle = 'rgba(255,255,255,.6)';
+  ctx.beginPath(); ctx.arc(b.x + w - b.r * .3, b.y - b.r * .35, b.r * .22, 0, 6.283); ctx.fill();
+  ctx.restore();
+}
+
+function kresliVirus(v) {
+  ctx.save();
+  ctx.translate(v.x, v.y);
+  ctx.rotate(v.faze * v.rot);
+  ctx.shadowColor = 'rgba(120,255,140,.8)'; ctx.shadowBlur = 18;
+  ctx.beginPath();
+  const hroty = 16;
+  for (let i = 0; i <= hroty * 2; i++) {
+    const a = i / (hroty * 2) * 6.283;
+    const rr = v.r * (i % 2 ? 1.34 + Math.sin(tGlob * 4 + i) * .05 : .92);
+    ctx[i ? 'lineTo' : 'moveTo'](Math.cos(a) * rr, Math.sin(a) * rr);
+  }
+  ctx.closePath();
+  const g = ctx.createRadialGradient(0, 0, v.r * .2, 0, 0, v.r * 1.4);
+  g.addColorStop(0, 'rgba(190,255,190,.95)');
+  g.addColorStop(.6, 'rgba(90,220,110,.75)');
+  g.addColorStop(1, 'rgba(40,150,70,.5)');
+  ctx.fillStyle = g; ctx.fill();
+  ctx.strokeStyle = 'rgba(220,255,220,.8)'; ctx.lineWidth = 1.6; ctx.stroke();
+  ctx.restore();
+}
+
+/* Membrána: součet dvou sinusovek (vlnění) + protažení ve směru pohybu. */
+function kresliBunku(e, jeHrac) {
+  const r = R(e), t = tGlob;
+  const rychlost = Math.hypot(e.vx, e.vy);
+  const smer = Math.atan2(e.vy, e.vx);
+  const protazeni = clamp(rychlost / 900, 0, .16);
+  // barva cizí buňky nese informaci: červená = sežere tě, tyrkysová = kořist,
+  // žlutá = vyrovnaný soupeř (odstín z `faze` drží drobnou variabilitu)
+  let odstin, sat = 70, svet = 58;
+  if (jeHrac) { const s = stadium(e.m); odstin = s.barva[0]; sat = s.barva[1]; svet = s.barva[2]; }
+  else if (e.m > hrac.m * 1.12) { odstin = 350 + e.faze % 22; sat = 76; svet = 56; }
+  else if (e.m * 1.12 < hrac.m) { odstin = 162 + e.faze % 42; sat = 68; svet = 58; }
+  else { odstin = 42 + e.faze % 14; sat = 78; svet = 58; }
+
+  const N = 44, body = [];
+  for (let i = 0; i < N; i++) {
+    const a = i / N * 6.283;
+    let rr = r * (1 + Math.sin(a * 3 + t * 2.1 + e.faze) * .05 + Math.sin(a * 5 - t * 1.5 + e.faze * 2) * .032);
+    rr *= 1 + protazeni * Math.cos(a - smer);
+    body.push([Math.cos(a) * rr, Math.sin(a) * rr, a, rr]);
+  }
+
+  ctx.save();
+  ctx.translate(e.x, e.y);
+
+  // brvy (řasinky) po obvodu – vlní se proti směru plavání
+  ctx.strokeStyle = `hsla(${odstin},${sat}%,${svet + 18}%,.55)`;
+  ctx.lineWidth = Math.max(.8, r * .045);
+  ctx.lineCap = 'round';
+  ctx.beginPath();
+  for (let i = 0; i < N; i += 2) {
+    const [x, y, a] = body[i];
+    const dl = r * (.14 + Math.sin(t * 7 + i * .9 + e.faze) * .06);
+    ctx.moveTo(x, y);
+    ctx.lineTo(x + Math.cos(a + .6) * dl, y + Math.sin(a + .6) * dl);
+  }
+  ctx.stroke();
+
+  // tělo
+  ctx.beginPath();
+  ctx.moveTo(body[0][0], body[0][1]);
+  for (let i = 1; i <= N; i++) {
+    const p = body[i % N], q = body[(i + 1) % N];
+    ctx.quadraticCurveTo(p[0], p[1], (p[0] + q[0]) / 2, (p[1] + q[1]) / 2);
+  }
+  ctx.closePath();
+
+  const g = ctx.createRadialGradient(-r * .3, -r * .35, r * .1, 0, 0, r * 1.15);
+  g.addColorStop(0, `hsla(${odstin},${sat}%,${svet + 24}%,.82)`);
+  g.addColorStop(.55, `hsla(${odstin},${sat}%,${svet}%,.58)`);
+  g.addColorStop(1, `hsla(${odstin},${sat}%,${svet - 16}%,.4)`);
+  ctx.fillStyle = g;
+  ctx.shadowColor = `hsla(${odstin},90%,60%,.7)`;
+  ctx.shadowBlur = jeHrac ? 26 : 16;
+  ctx.fill();
+  ctx.shadowBlur = 0;
+  ctx.strokeStyle = `hsla(${odstin},90%,${svet + 26}%,.9)`;
+  ctx.lineWidth = Math.max(1.2, r * .035);
+  ctx.stroke();
+
+  // vnitřek: vakuoly a jádro (jádro se opožďuje za tělem)
+  ctx.clip();
+  ctx.fillStyle = `hsla(${odstin},70%,${svet + 18}%,.26)`;
+  for (const v of e.vakuoly) {
+    const vx = Math.cos(v.a + t * .4) * r * v.d, vy = Math.sin(v.a + t * .4) * r * v.d;
+    ctx.beginPath(); ctx.arc(vx, vy, r * v.r, 0, 6.283); ctx.fill();
+  }
+  const jx = clamp(e.jx - e.x, -r * .3, r * .3), jy = clamp(e.jy - e.y, -r * .3, r * .3);
+  const jg = ctx.createRadialGradient(jx, jy, 0, jx, jy, r * .34);
+  jg.addColorStop(0, `hsla(${odstin},95%,${svet + 30}%,.95)`);
+  jg.addColorStop(1, `hsla(${odstin},85%,${svet - 6}%,.15)`);
+  ctx.fillStyle = jg;
+  ctx.beginPath(); ctx.arc(jx, jy, r * .3 * (1 + Math.sin(t * 2 + e.faze) * .06), 0, 6.283); ctx.fill();
+  ctx.restore();
+
+  // úvodní milost – ochranný obal, dokud se dravci nerozjedou
+  if (jeHrac && cas < MILOST) {
+    ctx.save();
+    ctx.strokeStyle = `rgba(200,240,255,${.28 * (1 - cas / MILOST) + .08})`;
+    ctx.setLineDash([6, 6]);
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(e.x, e.y, r * 1.45, 0, 6.283); ctx.stroke();
+    ctx.restore();
+  }
+
+  // aura kyslíkového zrychlení
+  if (jeHrac && cas < kyslikDo) {
+    ctx.save();
+    ctx.strokeStyle = `rgba(140,240,255,${.35 + Math.sin(t * 9) * .2})`;
+    ctx.lineWidth = 2.5;
+    ctx.beginPath(); ctx.arc(e.x, e.y, r * 1.25, 0, 6.283); ctx.stroke();
+    ctx.restore();
+  }
+}
+
+function kresliEfekty() {
+  ctx.save();
+  ctx.globalCompositeOperation = 'lighter';
+  for (const e of efekty) {
+    const t = clamp(e.zivot / e.max, 0, 1);
+    if (e.prstenec) {
+      ctx.strokeStyle = `hsla(${e.odstin},90%,75%,${t * .55})`;
+      ctx.lineWidth = 3 * t + 1;
+      ctx.beginPath(); ctx.arc(e.x, e.y, e.r * (1 + (1 - t) * 1.8), 0, 6.283); ctx.stroke();
+    } else {
+      ctx.fillStyle = `hsla(${e.odstin},92%,72%,${t})`;
+      ctx.beginPath(); ctx.arc(e.x, e.y, e.r * t + .5, 0, 6.283); ctx.fill();
+    }
+  }
+  ctx.restore();
+}
+
+/* Šipky u okraje obrazovky: kdo mě zrovna loví. */
+function kresliSipkyHrozeb() {
+  const rh = R(hrac);
+  ctx.save();
+  for (const b of bunky) {
+    if (b.m < hrac.m * 1.12) continue;
+    const dx = b.x - hrac.x, dy = b.y - hrac.y, d = Math.hypot(dx, dy);
+    if (d < 40) continue;
+    const naObrazovce = Math.abs(dx) * kamera.zoom < W / 2 && Math.abs(dy) * kamera.zoom < H / 2;
+    if (naObrazovce || d > 1300) continue;
+    const a = Math.atan2(dy, dx), rad = Math.min(W, H) * .38;
+    const x = W / 2 + Math.cos(a) * rad, y = H / 2 + Math.sin(a) * rad;
+    const sila = clamp(1 - (d - 400) / 900, .25, 1);
+    ctx.translate(x, y); ctx.rotate(a);
+    ctx.fillStyle = `rgba(240,110,110,${sila})`;
+    ctx.beginPath(); ctx.moveTo(11, 0); ctx.lineTo(-7, 7); ctx.lineTo(-7, -7); ctx.closePath(); ctx.fill();
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+  ctx.restore();
+  void rh;
+}
+
+function kresliMinimapu() {
+  const S = Math.min(132, Math.max(90, Math.min(W, H) * .17)), x0 = W - S - 12, y0 = H - S - 12, k = S / SVET;
+  ctx.save();
+  ctx.globalAlpha = .9;
+  ctx.fillStyle = 'rgba(3,22,34,.62)';
+  ctx.strokeStyle = 'rgba(120,220,255,.25)';
+  ctx.lineWidth = 1;
+  ctx.beginPath(); ctx.roundRect(x0, y0, S, S, 10); ctx.fill(); ctx.stroke();
+  ctx.beginPath(); ctx.roundRect(x0, y0, S, S, 10); ctx.clip();
+  for (const b of bunky) {
+    ctx.fillStyle = b.m > hrac.m * 1.12 ? 'rgba(240,110,110,.85)' : 'rgba(140,220,255,.6)';
+    ctx.beginPath(); ctx.arc(x0 + b.x * k, y0 + b.y * k, clamp(R(b) * k, 1.2, 6), 0, 6.283); ctx.fill();
+  }
+  for (const v of viry) {
+    ctx.fillStyle = 'rgba(120,240,140,.8)';
+    ctx.beginPath(); ctx.arc(x0 + v.x * k, y0 + v.y * k, 2, 0, 6.283); ctx.fill();
+  }
+  ctx.fillStyle = '#8ef0d4';
+  ctx.beginPath(); ctx.arc(x0 + hrac.x * k, y0 + hrac.y * k, clamp(R(hrac) * k, 2.5, 8), 0, 6.283); ctx.fill();
+  ctx.restore();
+}
+
+/* ============================================================
+   HUD, zvuk, běh smyčky
+   ============================================================ */
+const el = id => document.getElementById(id);
+function hud() {
+  el('hHmotnost').textContent = Math.round(hrac.m);
+  el('hCas').textContent = Math.floor(cas) + ' s';
+  el('hRekord').textContent = rekord;
+  const s = stadium(hrac.m);
+  el('hStadium').textContent = s.nazev;
+  // pruh = jak daleko jsi od vyhladovění (podíl rezervy nad minimem)
+  const rezerva = clamp((hrac.m - MIN_HMOTA) / (START_HMOTA * 1.5), 0, 1);
+  el('hPruh').firstElementChild.style.width = (rezerva * 100).toFixed(1) + '%';
+  el('hPruh').classList.toggle('malo', rezerva < .3);
+}
+
+let ac = null;
+function pip(f, dl) {
+  if (!zvuk) return;
+  try {
+    ac = ac || new (window.AudioContext || window.webkitAudioContext)();
+    const o = ac.createOscillator(), g = ac.createGain();
+    o.type = 'sine'; o.frequency.value = f;
+    g.gain.setValueAtTime(.05, ac.currentTime);
+    g.gain.exponentialRampToValueAtTime(.0001, ac.currentTime + dl);
+    o.connect(g); g.connect(ac.destination);
+    o.start(); o.stop(ac.currentTime + dl);
+  } catch (e) { /* zvuk je nadstandard, chyba hru nesmí zastavit */ }
+}
+
+function konec(nadpis, duvod) {
+  konecHry = true; bezi = false;
+  vybuch(hrac.x, hrac.y, R(hrac), stadium(hrac.m).barva[0]);
+  el('kNadpis').textContent = '💀 ' + nadpis;
+  el('kDuvod').textContent = duvod;
+  el('kHmotnost').textContent = Math.round(hrac.m);
+  el('kCas').textContent = Math.floor(cas) + ' s';
+  el('kSnezeno').textContent = snezeno;
+  el('kRekord').textContent = Math.round(hrac.m) >= rekord ? '🏆 Nový rekord!' : 'Rekord: ' + rekord;
+  el('konec').classList.remove('skryto');
+}
+
+function smycka(ts) {
+  const dt = Math.min(.05, (ts - posledni) / 1000 || 0);
+  posledni = ts;
+  if (bezi && !pauza && !konecHry) krok(dt);
+  else tGlob += dt * .3;                       // voda se hýbe i v menu
+  kresli();
+  requestAnimationFrame(smycka);
+}
+
+function zmenaVelikosti() {
+  dpr = Math.min(2, window.devicePixelRatio || 1);
+  W = window.innerWidth; H = window.innerHeight;
+  c.width = Math.round(W * dpr); c.height = Math.round(H * dpr);
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+window.addEventListener('resize', zmenaVelikosti);
+
+/* ---- vstupy ---- */
+addEventListener('mousemove', e => { mys.x = e.clientX; mys.y = e.clientY; mys.aktivni = true; });
+addEventListener('mousedown', e => { if (e.button === 2) trysk = true; });
+addEventListener('mouseup', e => { if (e.button === 2) trysk = false; });
+addEventListener('contextmenu', e => e.preventDefault());
+addEventListener('keydown', e => {
+  const k = e.key.toLowerCase();
+  klavesy[k] = true;
+  if (k === ' ') { trysk = true; e.preventDefault(); }
+  if (k === 'p' || k === 'escape') prepniPauzu();
+  if (k === 'enter' && (konecHry || !bezi)) start();
+});
+addEventListener('keyup', e => {
+  const k = e.key.toLowerCase();
+  klavesy[k] = false;
+  if (k === ' ') trysk = false;
+});
+addEventListener('touchstart', e => {
+  document.body.classList.add('dotyk');
+  const t = e.touches[0];
+  if (t && t.target === c) { mys.x = t.clientX; mys.y = t.clientY; mys.aktivni = true; }
+}, { passive: true });
+addEventListener('touchmove', e => {
+  const t = e.touches[0];
+  if (t) { mys.x = t.clientX; mys.y = t.clientY; mys.aktivni = true; }
+}, { passive: true });
+el('boost').addEventListener('touchstart', e => { e.preventDefault(); trysk = true; e.target.classList.add('aktivni'); });
+el('boost').addEventListener('touchend', e => { e.preventDefault(); trysk = false; e.target.classList.remove('aktivni'); });
+
+function prepniPauzu() {
+  if (!bezi || konecHry) return;
+  pauza = !pauza;
+  el('pauza').classList.toggle('skryto', !pauza);
+  el('bPauza').textContent = pauza ? '▶' : '⏸';
+}
+addEventListener('blur', () => { if (bezi && !konecHry && !pauza) prepniPauzu(); });
+
+function start() {
+  novaHra();
+  el('uvod').classList.add('skryto');
+  el('konec').classList.add('skryto');
+  el('pauza').classList.add('skryto');
+  el('bPauza').textContent = '⏸';
+  bezi = true; hud();
+}
+
+el('bStart').onclick = start;
+el('bZnovu').onclick = start;
+el('bPokracovat').onclick = prepniPauzu;
+el('bPauza').onclick = prepniPauzu;
+el('bZvuk').onclick = () => { zvuk = !zvuk; el('bZvuk').textContent = zvuk ? '🔊' : '🔇'; };
+
+/* start bez hry: v pozadí se hýbe voda, dokud hráč neklikne */
+zmenaVelikosti();
+novaHra();
+hud();
+requestAnimationFrame(smycka);
+</script>
+</body>
+</html>

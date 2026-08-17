@@ -1,0 +1,349 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>⛽ Ceny paliv a bitcoinu</title>
+<script src="lib/chart.min.js"></script>
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<style>
+body { background: var(--bg-deep); padding: 24px clamp(14px, 3vw, 40px); min-height: 100vh; }
+.obal { max-width: 900px; margin: 0 auto; }
+h1 { font-size: 1.5rem; margin-bottom: 4px; }
+.podtitul { color: var(--text-muted); font-size: .88rem; margin-bottom: 20px; }
+.karta { background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 20px; }
+h2 { font-size: 1.1rem; color: var(--accent); margin-bottom: 4px; }
+.zdroj { color: var(--text-faint); font-size: .78rem; margin-bottom: 14px; }
+.stav { font-size: .82rem; margin-bottom: 12px; color: var(--text-muted); }
+.stav.chyba { color: var(--danger); }
+.dlazdice { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-bottom: 18px; }
+.dlazdice > div { background: var(--bg-input); border: 1px solid var(--border); border-radius: 6px; padding: 12px 14px; }
+.dlazdice .popis { font-size: .76rem; color: var(--text-faint); text-transform: uppercase; letter-spacing: .5px; }
+.dlazdice .cena { font-size: 1.5rem; font-weight: 700; margin-top: 4px; font-variant-numeric: tabular-nums; }
+.dlazdice .zmena { font-size: .8rem; margin-top: 2px; font-variant-numeric: tabular-nums; }
+.up { color: var(--danger); }
+.down { color: var(--ok); }
+.flat { color: var(--text-faint); }
+.prepinac { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
+.prepinac button {
+  background: var(--bg-control); border: 1px solid var(--border-strong); color: var(--text-muted);
+  border-radius: 6px; padding: 6px 12px; cursor: pointer; font-size: .82rem;
+}
+.prepinac button:hover { background: var(--bg-hover); color: var(--text); }
+.prepinac button.aktivni { background: var(--accent); border-color: var(--accent); color: #fff; }
+.graf { position: relative; height: 300px; }
+@media (max-width: 560px) { .graf { height: 240px; } }
+.pozn { color: var(--text-faint); font-size: .78rem; margin-top: 12px; line-height: 1.5; }
+/* světlý režim: dorovnání kontrastu */
+:root[data-theme="light"] .down { color: #2f7d55; }
+</style>
+</head>
+<body>
+<div class="obal">
+  <h1>⛽ Ceny paliv a bitcoinu</h1>
+  <p class="podtitul">Průměrné ceny pohonných hmot v ČR a aktuální kurz bitcoinu. Poslední stažená data fungují i offline.</p>
+
+  <!-- ================= PHM ================= -->
+  <div class="karta">
+    <h2>⛽ Pohonné hmoty v ČR</h2>
+    <div class="zdroj">Průměrné spotřebitelské ceny, týdenní šetření ČSÚ (otevřená data).</div>
+    <div class="stav" id="phmStav">Načítám ceny paliv…</div>
+    <div class="dlazdice" id="phmDlazdice"></div>
+    <div class="prepinac" id="phmRozsah">
+      <button data-tydnu="13">3 měsíce</button>
+      <button data-tydnu="52" class="aktivni">1 rok</button>
+      <button data-tydnu="260">5 let</button>
+      <button data-tydnu="0">Vše</button>
+    </div>
+    <div class="graf"><canvas id="phmPlatno"></canvas></div>
+    <p class="pozn">Ceny jsou celorepublikové průměry za daný týden, ne ceny konkrétní čerpací stanice. ČSÚ je zveřejňuje jednou týdně, obvykle ve středu.</p>
+  </div>
+
+  <!-- ================= BTC ================= -->
+  <div class="karta">
+    <h2>₿ Bitcoin</h2>
+    <div class="zdroj">Kurz z CoinGecko (záložně Binance přepočtený kurzem USD/CZK od ECB).</div>
+    <div class="stav" id="btcStav">Načítám kurz bitcoinu…</div>
+    <div class="dlazdice" id="btcDlazdice"></div>
+    <div class="prepinac" id="btcRozsah">
+      <button data-dnu="1">24 h</button>
+      <button data-dnu="7">7 dní</button>
+      <button data-dnu="30" class="aktivni">30 dní</button>
+      <button data-dnu="90">3 měsíce</button>
+      <button data-dnu="365">1 rok</button>
+    </div>
+    <div class="graf"><canvas id="btcPlatno"></canvas></div>
+    <p class="pozn">Kurz je orientační, burzy se mezi sebou liší. Stránka neslouží jako investiční doporučení.</p>
+  </div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const cssBarva = jmeno => getComputedStyle(document.documentElement).getPropertyValue(jmeno).trim();
+const cislo = (n, d = 2) => n.toLocaleString('cs-CZ', { minimumFractionDigits: d, maximumFractionDigits: d });
+
+/* Společné nastavení grafů – barvy se berou z proměnných common.css,
+   aby graf seděl do světlého i tmavého tématu. */
+function volbyGrafu(popisekY) {
+  const mrizka = cssBarva('--border');
+  const text = cssBarva('--text-faint');
+  return {
+    responsive: true, maintainAspectRatio: false,
+    interaction: { mode: 'index', intersect: false },
+    plugins: {
+      legend: { labels: { color: cssBarva('--text-muted'), boxWidth: 12 } },
+      tooltip: {
+        callbacks: { label: c => `${c.dataset.label}: ${cislo(c.parsed.y, c.parsed.y > 1000 ? 0 : 2)} ${popisekY}` }
+      }
+    },
+    scales: {
+      x: { ticks: { color: text, maxRotation: 0, autoSkipPadding: 20 }, grid: { color: mrizka } },
+      y: { ticks: { color: text, callback: v => cislo(v, v > 1000 ? 0 : 2) }, grid: { color: mrizka } }
+    }
+  };
+}
+
+function zmenaHtml(rozdil, procenta, jednotka) {
+  if (!isFinite(rozdil)) return '';
+  const trida = rozdil > 0.0001 ? 'up' : rozdil < -0.0001 ? 'down' : 'flat';
+  const sipka = rozdil > 0.0001 ? '▲' : rozdil < -0.0001 ? '▼' : '▬';
+  const zn = rozdil > 0 ? '+' : '';
+  return `<div class="zmena ${trida}">${sipka} ${zn}${cislo(rozdil, 2)} ${jednotka} (${zn}${cislo(procenta, 2)} %)</div>`;
+}
+
+/* ============================================================
+   Pohonné hmoty – ČSÚ, týdenní CSV (celá řada od roku 2016).
+   Stahuje se nejvýš jednou za 6 hodin, jinak se bere localStorage.
+   ============================================================ */
+const PHM_URL = 'https://vdb.czso.cz/pll/eweb/cenyphm.data';
+const PHM_CACHE = 'ceny_trhy_phm';
+const PHM_PALIVA = [
+  { kod: '0722201', nazev: 'Natural 95', barva: '#e0a63f' },
+  { kod: '0722101', nazev: 'Nafta',      barva: '#6aa6fd' },
+  { kod: '0722301', nazev: 'LPG',        barva: '#4caf7d' },
+];
+let phmRada = [];      // [{ obdobi, '0722201': 41.6, ... }]
+let phmGraf = null;
+let phmTydnu = 52;
+
+// "2026-W31" -> datum čtvrtka daného ISO týdne (pro popisky osy)
+function tydenNaDatum(obdobi) {
+  const [rok, t] = obdobi.split('-W').map(Number);
+  const d = new Date(Date.UTC(rok, 0, 4));
+  d.setUTCDate(d.getUTCDate() - ((d.getUTCDay() + 6) % 7) + (t - 1) * 7 + 3);
+  return d;
+}
+
+function parsujPhm(csv) {
+  const radky = csv.split('\n').slice(1);
+  const dle = new Map();
+  for (const r of radky) {
+    const s = r.trim();
+    if (!s) continue;
+    const p = s.replace(/^"|"$/g, '').split('","');
+    const hodnota = parseFloat(p[1]), kod = p[4], obdobi = p[5];
+    if (!isFinite(hodnota) || !obdobi) continue;
+    if (!dle.has(obdobi)) dle.set(obdobi, { obdobi });
+    dle.get(obdobi)[kod] = hodnota;
+  }
+  return [...dle.values()].sort((a, b) => a.obdobi.localeCompare(b.obdobi));
+}
+
+function vykresliPhm() {
+  if (!phmRada.length) return;
+  const rada = phmTydnu > 0 ? phmRada.slice(-phmTydnu) : phmRada;
+  const posledni = phmRada[phmRada.length - 1];
+  const predchozi = phmRada[phmRada.length - 2] || {};
+
+  $('phmDlazdice').innerHTML = PHM_PALIVA.map(p => {
+    const c = posledni[p.kod];
+    if (!isFinite(c)) return '';
+    const d = predchozi[p.kod];
+    const rozdil = isFinite(d) ? c - d : NaN;
+    return `<div>
+      <div class="popis">${p.nazev}</div>
+      <div class="cena" style="color:${p.barva}">${cislo(c)} Kč/l</div>
+      ${zmenaHtml(rozdil, (rozdil / d) * 100, 'Kč')}
+    </div>`;
+  }).join('');
+
+  const popisky = rada.map(r => tydenNaDatum(r.obdobi).toLocaleDateString('cs-CZ', { day: 'numeric', month: 'numeric', year: '2-digit' }));
+  if (phmGraf) phmGraf.destroy();
+  phmGraf = new Chart($('phmPlatno'), {
+    type: 'line',
+    data: {
+      labels: popisky,
+      datasets: PHM_PALIVA.map(p => ({
+        label: p.nazev,
+        data: rada.map(r => r[p.kod] ?? null),
+        borderColor: p.barva, backgroundColor: p.barva,
+        borderWidth: 2, pointRadius: 0, tension: .25, spanGaps: true,
+      })),
+    },
+    options: volbyGrafu('Kč/l'),
+  });
+
+  const [rok, t] = posledni.obdobi.split('-W');
+  $('phmStav').textContent = `Poslední data: ${t}. týden ${rok} (do ${tydenNaDatum(posledni.obdobi).toLocaleDateString('cs-CZ')}).`;
+  $('phmStav').className = 'stav';
+}
+
+async function nactiPhm() {
+  const ulozene = JSON.parse(localStorage.getItem(PHM_CACHE) || 'null');
+  if (ulozene?.rada?.length) { phmRada = ulozene.rada; vykresliPhm(); }
+  const cerstve = ulozene && Date.now() - ulozene.kdy < 6 * 3600e3;
+  if (cerstve) return;
+  try {
+    const r = await fetch(PHM_URL);
+    if (!r.ok) throw new Error('ČSÚ ' + r.status);
+    const rada = parsujPhm(await r.text());
+    if (!rada.length) throw new Error('prázdná data');
+    phmRada = rada;
+    localStorage.setItem(PHM_CACHE, JSON.stringify({ kdy: Date.now(), rada }));
+    vykresliPhm();
+  } catch (e) {
+    if (phmRada.length) {
+      $('phmStav').textContent += ' (uložená data, aktualizace se nezdařila)';
+    } else {
+      $('phmStav').textContent = 'Ceny paliv se nepodařilo načíst a žádné nejsou uložené. Připojte se k internetu.';
+      $('phmStav').className = 'stav chyba';
+    }
+  }
+}
+
+$('phmRozsah').addEventListener('click', e => {
+  const b = e.target.closest('button');
+  if (!b) return;
+  phmTydnu = +b.dataset.tydnu;
+  [...$('phmRozsah').children].forEach(x => x.classList.toggle('aktivni', x === b));
+  vykresliPhm();
+});
+
+/* ============================================================
+   Bitcoin – CoinGecko (ceny rovnou v CZK), záloha Binance v USD
+   přepočtená kurzem ČNB. Poslední stažený rozsah se ukládá.
+   ============================================================ */
+const BTC_CACHE = 'ceny_trhy_btc';
+let btcGraf = null;
+let btcDnu = 30;
+let btcData = null;   // { dnu, body:[[ms, czk]], zdroj }
+
+function vykresliBtc() {
+  if (!btcData) return;
+  const body = btcData.body;
+  const posledni = body[body.length - 1][1];
+  const prvni = body[0][1];
+  const rozdil = posledni - prvni;
+  const nazvyRozsahu = { 1: 'za 24 h', 7: 'za 7 dní', 30: 'za 30 dní', 90: 'za 3 měsíce', 365: 'za rok' };
+
+  $('btcDlazdice').innerHTML = `
+    <div>
+      <div class="popis">Bitcoin</div>
+      <div class="cena" style="color:#e0a63f">${cislo(posledni, 0)} Kč</div>
+      ${zmenaHtml(rozdil, (rozdil / prvni) * 100, 'Kč').replace('</div>', ` ${nazvyRozsahu[btcData.dnu] || ''}</div>`)}
+    </div>
+    <div>
+      <div class="popis">Minimum v období</div>
+      <div class="cena">${cislo(Math.min(...body.map(b => b[1])), 0)} Kč</div>
+    </div>
+    <div>
+      <div class="popis">Maximum v období</div>
+      <div class="cena">${cislo(Math.max(...body.map(b => b[1])), 0)} Kč</div>
+    </div>`;
+
+  const kratky = btcData.dnu <= 1;
+  const popisky = body.map(b => new Date(b[0]).toLocaleString('cs-CZ',
+    kratky ? { hour: '2-digit', minute: '2-digit' }
+           : { day: 'numeric', month: 'numeric', ...(btcData.dnu >= 365 ? { year: '2-digit' } : {}) }));
+
+  if (btcGraf) btcGraf.destroy();
+  btcGraf = new Chart($('btcPlatno'), {
+    type: 'line',
+    data: {
+      labels: popisky,
+      datasets: [{
+        label: 'BTC/CZK',
+        data: body.map(b => b[1]),
+        borderColor: '#e0a63f', backgroundColor: 'rgba(224,166,63,.12)',
+        borderWidth: 2, pointRadius: 0, tension: .2, fill: true,
+      }],
+    },
+    options: { ...volbyGrafu('Kč'), plugins: { ...volbyGrafu('Kč').plugins, legend: { display: false } } },
+  });
+
+  const kdy = new Date(btcData.kdy || body[body.length - 1][0]);
+  $('btcStav').textContent = `Zdroj ${btcData.zdroj}, staženo ${kdy.toLocaleString('cs-CZ')}.`;
+  $('btcStav').className = 'stav';
+}
+
+async function nactiCoinGecko(dnu) {
+  const r = await fetch(`https://api.coingecko.com/api/v3/coins/bitcoin/market_chart?vs_currency=czk&days=${dnu}`);
+  if (!r.ok) throw new Error('CoinGecko ' + r.status);
+  const d = await r.json();
+  if (!d.prices?.length) throw new Error('CoinGecko: prázdná data');
+  return { dnu, body: d.prices, zdroj: 'CoinGecko', kdy: Date.now() };
+}
+
+async function nactiBinance(dnu) {
+  // interval a počet svíček tak, aby vyšel zhruba požadovaný rozsah
+  const [interval, limit] = dnu <= 1 ? ['15m', 96]
+    : dnu <= 7 ? ['1h', 168]
+    : dnu <= 30 ? ['4h', 180]
+    : dnu <= 90 ? ['12h', 180]
+    : ['1d', 365];
+  // kurz USD/CZK z ECB (frankfurter) – API ČNB neposílá hlavičku CORS,
+  // takže z prohlížeče volat nejde
+  const [rk, rc] = await Promise.all([
+    fetch(`https://api.binance.com/api/v3/klines?symbol=BTCUSDT&interval=${interval}&limit=${limit}`),
+    fetch('https://api.frankfurter.dev/v1/latest?base=USD&symbols=CZK'),
+  ]);
+  if (!rk.ok) throw new Error('Binance ' + rk.status);
+  if (!rc.ok) throw new Error('ECB ' + rc.status);
+  const svicky = await rk.json();
+  const naCzk = (await rc.json()).rates?.CZK;
+  if (!naCzk) throw new Error('ECB: chybí kurz CZK');
+  return {
+    dnu, zdroj: 'Binance + ECB', kdy: Date.now(),
+    body: svicky.map(s => [s[0], parseFloat(s[4]) * naCzk]),
+  };
+}
+
+async function nactiBtc(dnu) {
+  const ulozene = JSON.parse(localStorage.getItem(BTC_CACHE) || 'null');
+  if (ulozene?.dnu === dnu && ulozene.body?.length) { btcData = ulozene; vykresliBtc(); }
+  $('btcStav').textContent = 'Načítám kurz bitcoinu…';
+  try {
+    btcData = await nactiCoinGecko(dnu).catch(() => nactiBinance(dnu));
+    localStorage.setItem(BTC_CACHE, JSON.stringify(btcData));
+    vykresliBtc();
+  } catch (e) {
+    if (!btcData && ulozene?.body?.length) { btcData = ulozene; }
+    if (btcData) {
+      vykresliBtc();
+      const stejny = btcData.dnu === dnu ? '' : ` – jiný rozsah (${btcData.dnu} d)`;
+      $('btcStav').textContent += ` — aktualizace se nezdařila, ukazuji uložená data${stejny}.`;
+    } else {
+      $('btcStav').textContent = 'Kurz bitcoinu se nepodařilo načíst a žádný není uložený. Připojte se k internetu.';
+      $('btcStav').className = 'stav chyba';
+    }
+  }
+}
+
+$('btcRozsah').addEventListener('click', e => {
+  const b = e.target.closest('button');
+  if (!b) return;
+  btcDnu = +b.dataset.dnu;
+  [...$('btcRozsah').children].forEach(x => x.classList.toggle('aktivni', x === b));
+  nactiBtc(btcDnu);
+});
+
+// přepnutí tématu (theme.js mění data-theme) – grafy se překreslí novými barvami
+new MutationObserver(() => { vykresliPhm(); vykresliBtc(); })
+  .observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+nactiPhm();
+nactiBtc(btcDnu);
+</script>
+</body>
+</html>
