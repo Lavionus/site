@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Slovní úlohy a úsudek</title>
+  <link rel="stylesheet" href="../common.css">
+  <link rel="stylesheet" href="../vyuka.css">
+  <script src="../theme.js"></script>
+  <script src="../rec.js"></script>
+  <script src="../uloha.js"></script>
+  <style>
+    .zadani-ulohy { max-width: 580px; font-size: 1.1rem; line-height: 1.6; }
+    .zadani-ulohy b { color: var(--accent); }
+    .napovedy { color: var(--text-faint); font-size: 0.85rem; max-width: 520px; }
+  </style>
+</head>
+<body>
+  <h1>🧠 Slovní úlohy a úsudek</h1>
+  <p class="podtitul">Pro 5.–6. ročník: úlohy o více krocích, odhad a hledání správného postupu.</p>
+
+  <div class="rezimy" id="rezimy">
+    <button data-rezim="vyres" class="active">🧮 Vyřeš úlohu</button>
+    <button data-rezim="prvniKrok">1️⃣ Co spočítat nejdřív</button>
+    <button data-rezim="odhad">🎯 Odhadni výsledek</button>
+  </div>
+
+  <div class="plocha" id="plocha"></div>
+
+  <div class="ovladani">
+    <button class="hlavni" id="btnDalsi">Přeskočit →</button>
+    <span class="skore" id="skore"></span>
+  </div>
+
+  <p class="napoveda">
+    Postup u slovní úlohy: <b>přečti</b> zadání, <b>zapiš</b> si údaje, <b>rozmysli</b> co počítat
+    jako první, <b>spočítej</b> a nakonec <b>ověř</b>, jestli výsledek dává smysl.
+  </p>
+
+<script>
+const $ = id => document.getElementById(id);
+const skore = Uloha.skore('nodus_m5_slovni', $('skore'));
+let rezim = 'vyres';
+
+/* Šablony úloh generují vlastní čísla, aby se úlohy neopakovaly.
+   Každá vrací: text, výsledek, jednotku, popis prvního kroku a jeho alternativy. */
+const SABLONY = [
+  () => {
+    const cena = Uloha.nahodneCislo(12, 45), kusu = Uloha.nahodneCislo(3, 9);
+    const platil = Math.ceil((cena * kusu + Uloha.nahodneCislo(10, 90)) / 50) * 50;
+    return {
+      text: `Sešit stojí <b>${cena} Kč</b>. Maminka koupila <b>${kusu}</b> sešitů a platila
+             bankovkou <b>${platil} Kč</b>. Kolik korun dostane nazpátek?`,
+      vysledek: platil - cena * kusu, jednotka: 'Kč',
+      prvni: `${cena} × ${kusu}`,
+      spatnePrvni: [`${platil} − ${cena}`, `${platil} : ${kusu}`, `${platil} + ${cena}`],
+    };
+  },
+  () => {
+    const celkem = Uloha.nahodneCislo(4, 9) * Uloha.nahodneCislo(6, 12);
+    const skupin = [2, 3, 4, 5, 6].filter(d => celkem % d === 0);
+    const d = Uloha.nahodne(skupin);
+    return {
+      text: `Do školy přijelo <b>${celkem}</b> žáků. Rozdělili se rovnoměrně do <b>${d}</b> skupin.
+             Kolik žáků je v jedné skupině?`,
+      vysledek: celkem / d, jednotka: 'žáků',
+      prvni: `${celkem} : ${d}`,
+      spatnePrvni: [`${celkem} × ${d}`, `${celkem} − ${d}`, `${celkem} + ${d}`],
+    };
+  },
+  () => {
+    const rychlost = Uloha.nahodne([40, 50, 60, 80]), hodin = Uloha.nahodneCislo(2, 5);
+    return {
+      text: `Auto jede rychlostí <b>${rychlost} km/h</b>. Kolik kilometrů ujede za <b>${hodin} hodiny</b>?`,
+      vysledek: rychlost * hodin, jednotka: 'km',
+      prvni: `${rychlost} × ${hodin}`,
+      spatnePrvni: [`${rychlost} : ${hodin}`, `${rychlost} + ${hodin}`, `${rychlost} − ${hodin}`],
+    };
+  },
+  () => {
+    const den = Uloha.nahodneCislo(15, 40), dni = Uloha.nahodneCislo(5, 14);
+    return {
+      text: `Petr šetří <b>${den} Kč</b> každý den. Kolik korun našetří za <b>${dni} dní</b>?`,
+      vysledek: den * dni, jednotka: 'Kč',
+      prvni: `${den} × ${dni}`,
+      spatnePrvni: [`${den} + ${dni}`, `${dni} : ${den}`, `${den} − ${dni}`],
+    };
+  },
+  () => {
+    const zaku = Uloha.nahodneCislo(18, 30), chlapcu = Uloha.nahodneCislo(8, 14);
+    return {
+      text: `Ve třídě je <b>${zaku}</b> žáků, z toho <b>${chlapcu}</b> chlapců.
+             O kolik je dívek méně než chlapců?`,
+      vysledek: Math.abs(chlapcu - (zaku - chlapcu)), jednotka: 'dívek',
+      prvni: `${zaku} − ${chlapcu}`,
+      spatnePrvni: [`${zaku} + ${chlapcu}`, `${zaku} : ${chlapcu}`, `${chlapcu} × 2`],
+    };
+  },
+  () => {
+    const stran = Uloha.nahodneCislo(120, 260), precetl = Uloha.nahodneCislo(30, 90);
+    const denne = Uloha.nahodne([10, 15, 20]);
+    const zbyva = stran - precetl;
+    return {
+      text: `Kniha má <b>${stran}</b> stran, Eva přečetla <b>${precetl}</b>.
+             Když bude číst <b>${denne}</b> stran denně, kolik dní jí zbývá? (zaokrouhli nahoru)`,
+      vysledek: Math.ceil(zbyva / denne), jednotka: 'dní',
+      prvni: `${stran} − ${precetl}`,
+      spatnePrvni: [`${stran} : ${denne}`, `${precetl} × ${denne}`, `${stran} + ${precetl}`],
+    };
+  },
+  () => {
+    const litru = Uloha.nahodneCislo(3, 8), cena = Uloha.nahodneCislo(22, 39);
+    return {
+      text: `Litr mléka stojí <b>${cena} Kč</b>. Kolik zaplatíme za <b>${litru} litrů</b>?`,
+      vysledek: litru * cena, jednotka: 'Kč',
+      prvni: `${cena} × ${litru}`,
+      spatnePrvni: [`${cena} : ${litru}`, `${cena} + ${litru}`, `${litru} − ${cena}`],
+    };
+  },
+];
+
+const novaUlohaData = () => Uloha.nahodne(SABLONY)();
+
+function moznostiKolem(spravny, jednotka) {
+  const jine = new Set();
+  let pojistka = 0;
+  while (jine.size < 3 && pojistka++ < 60) {
+    const k = spravny + Uloha.nahodne([-100, -10, -5, -2, -1, 1, 2, 5, 10, 100]);
+    if (k !== spravny && k > 0) jine.add(k);
+  }
+  return Uloha.zamichej([spravny, ...jine]).map(v => ({ klic: String(v), popis: v + ' ' + jednotka }));
+}
+
+/* ---- Vyřeš úlohu ---------------------------------------------------------------- */
+function vyres() {
+  const p = $('plocha');
+  const u = novaUlohaData();
+  p.innerHTML = `<div class="zadani">Vyřeš slovní úlohu:</div>
+    <div class="karta"><div class="zadani-ulohy">${u.text}</div></div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: moznostiKolem(u.vysledek, u.jednotka),
+    spravnyKlic: String(u.vysledek),
+    zpravaOk: `✅ Správně – ${u.vysledek} ${u.jednotka}. První krok byl ${u.prvni}.`,
+    zpravaChyba: `Zkus si zapsat údaje a začni výpočtem ${u.prvni}.`,
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Co spočítat nejdřív -------------------------------------------------------- */
+function prvniKrok() {
+  const p = $('plocha');
+  const u = novaUlohaData();
+  p.innerHTML = `<div class="zadani">Který výpočet uděláš jako <b>první</b>?</div>
+    <div class="karta"><div class="zadani-ulohy">${u.text}</div></div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([u.prvni, ...u.spatnePrvni]).map(t => ({ klic: t, popis: t })),
+    spravnyKlic: u.prvni,
+    zpravaOk: `✅ Ano, začneme výpočtem ${u.prvni}. Výsledek celé úlohy je ${u.vysledek} ${u.jednotka}.`,
+    zpravaChyba: 'Rozmysli si, co potřebuješ vědět dřív, než dopočítáš odpověď.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Odhadni výsledek ------------------------------------------------------------ */
+function odhad() {
+  const p = $('plocha');
+  const u = novaUlohaData();
+  const rad = u.vysledek < 100 ? 10 : u.vysledek < 1000 ? 100 : 1000;
+  const spravny = Math.round(u.vysledek / rad) * rad;
+  const jine = [spravny + rad, spravny - rad, spravny + 2 * rad]
+    .filter(x => x > 0 && x !== spravny);
+
+  p.innerHTML = `<div class="zadani">Odhadni, kolik zhruba vyjde – bez přesného počítání.</div>
+    <div class="karta"><div class="zadani-ulohy">${u.text}</div></div>
+    <div class="napovedy">Zaokrouhli si čísla a počítej zpaměti.</div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([spravny, ...jine.slice(0, 3)])
+      .map(v => ({ klic: String(v), popis: 'asi ' + v + ' ' + u.jednotka })),
+    spravnyKlic: String(spravny),
+    zpravaOk: `✅ Přesný výsledek je ${u.vysledek} ${u.jednotka}, takže odhad ${spravny} sedí.`,
+    zpravaChyba: 'Zaokrouhli čísla v zadání a zkus to znovu.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+const REZIMY = { vyres, prvniKrok, odhad };
+function novaUloha() { REZIMY[rezim](); }
+
+document.querySelectorAll('#rezimy button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#rezimy button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  rezim = b.dataset.rezim;
+  novaUloha();
+}));
+$('btnDalsi').addEventListener('click', novaUloha);
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === 'Enter') { e.preventDefault(); novaUloha(); }
+});
+novaUloha();
+</script>
+</body>
+</html>

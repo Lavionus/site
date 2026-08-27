@@ -3,201 +3,241 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Stack Attack Reborn</title>
+  <title>📦 Stack Attack</title>
+  <link rel="stylesheet" href="../common.css">
+  <script src="../theme.js"></script>
+  <script src="../rekord.js" defer></script>
   <style>
-    body {
-      margin: 0;
-      background-color: #121212;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      height: 100vh;
-      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-      overflow: hidden;
-      color: #ddd;
-    }
+    *{margin:0;padding:0;box-sizing:border-box}
+    body{background:var(--bg);color:var(--text);font-family:var(--font);
+      min-height:100vh;padding:16px 12px;display:flex;flex-direction:column;align-items:center;user-select:none}
+    h1{font-size:1.6rem;margin-bottom:6px;font-weight:600}
+    .sub{color:var(--text-faint);font-size:.85rem;margin-bottom:14px;text-align:center;max-width:460px}
+    .lista{display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:center;margin-bottom:14px}
+    .info{background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;
+      padding:7px 14px;font-weight:700;font-variant-numeric:tabular-nums}
+    .btn{background:var(--accent);color:#fff;border:none;padding:8px 16px;border-radius:6px;
+      cursor:pointer;font-weight:600;font-family:inherit}
+    .btn-sec{background:var(--bg-control);color:var(--text);border:1px solid var(--border-strong)}
 
-    h1 {
-      color: #ff9900;
-      margin: 20px 0 10px;
-      font-size: 28px;
-      letter-spacing: 1px;
-    }
+    .plocha{position:relative}
+    #game{display:grid;grid-template-columns:repeat(10,var(--bunka));grid-template-rows:repeat(15,var(--bunka));
+      gap:1px;background:var(--bg-panel);border:2px solid var(--border);border-radius:6px;padding:2px;
+      /* buňka se přizpůsobí šířce displeje, aby se hra vešla i na telefon */
+      --bunka:min(32px, calc((100vw - 40px) / 10))}
+    .cell{width:var(--bunka);height:var(--bunka);background:var(--bg-input);border-radius:2px}
+    .box-red{background:#e53935}.box-blue{background:#1e88e5}
+    .box-green{background:#2e7d32}.box-yellow{background:#f9a825}
+    .player{background:radial-gradient(circle,#bbb 20%,#fff 60%);border:1px solid #fff}
+    .carrying{box-shadow:0 0 6px 3px #ff9900 inset}
 
-    #score {
-      color: #ccc;
-      margin-bottom: 15px;
-      font-size: 16px;
-    }
+    .prekryv{position:absolute;inset:0;display:none;flex-direction:column;align-items:center;justify-content:center;
+      gap:12px;background:rgba(0,0,0,.78);border-radius:6px;text-align:center;padding:16px;color:#f0f0f0}
+    .prekryv.zobraz{display:flex}
+    .prekryv .nadpis{font-size:1.4rem;font-weight:700}
+    .prekryv .body{font-size:1.05rem}
 
-    #game {
-      display: grid;
-      grid-template-columns: repeat(10, 32px);
-      grid-template-rows: repeat(15, 32px);
-      gap: 1px;
-      background-color: #1e1e1e;
-      border: 2px solid #333;
-      box-shadow: 0 0 10px #000;
-    }
-
-    .cell {
-      width: 32px;
-      height: 32px;
-      background-color: #222;
-      box-sizing: border-box;
-    }
-
-    .box-red    { background-color: #e53935; }
-    .box-blue   { background-color: #1e88e5; }
-    .box-green  { background-color: #43a047; }
-    .box-yellow { background-color: #fdd835; }
-
-    .player {
-      background: radial-gradient(circle, #ccc 20%, #fff 60%);
-      border: 1px solid #fff;
-    }
-
-    .carrying {
-      box-shadow: 0 0 6px 3px #ff9900 inset;
-    }
+    .dpad{display:grid;grid-template-columns:repeat(3,56px);gap:8px;margin-top:16px;justify-content:center}
+    .dpad button{background:var(--bg-control);color:var(--text);border:1px solid var(--border-strong);
+      border-radius:10px;height:52px;font-size:1.2rem;cursor:pointer;font-family:inherit}
+    .dpad button:active{background:var(--accent);color:#fff}
+    .dpad .sebrat{grid-column:2;font-size:.85rem;font-weight:600}
+    .hint{color:var(--text-faint);font-size:.85rem;margin-top:14px;text-align:center;max-width:480px;line-height:1.5}
   </style>
 </head>
 <body>
+  <h1>📦 Stack Attack</h1>
+  <p class="sub">Padající bedny přenášej tak, aby ti ve sloupci vznikly tři stejné barvy nad sebou — ty zmizí a přinesou body. Když se sloupec dostane až nahoru, hra končí.</p>
 
-  <h1>Stack Attack Reborn</h1>
-  <div id="score">Skóre: 0</div>
-  <div id="game"></div>
+  <div class="lista">
+    <div class="info">Skóre: <span id="score">0</span></div>
+    <div class="info">Úroveň: <span id="uroven">1</span></div>
+    <span id="rekordBox"></span>
+    <button class="btn btn-sec" id="pauzaBtn">⏸️ Pauza</button>
+    <button class="btn" id="novaBtn">🔄 Nová hra</button>
+  </div>
 
-  <script>
-    const rows = 15;
-    const cols = 10;
-    const game = document.getElementById("game");
-    const scoreDisplay = document.getElementById("score");
-    const colors = ["box-red", "box-blue", "box-green", "box-yellow"];
-    const grid = [];
+  <div class="plocha">
+    <div id="game"></div>
+    <div class="prekryv" id="prekryv">
+      <div class="nadpis" id="prekryvNadpis"></div>
+      <div class="body" id="prekryvBody"></div>
+      <button class="btn" id="prekryvBtn">▶️ Hrát znovu</button>
+    </div>
+  </div>
 
-    let score = 0;
-    let player = { x: 4, y: 14, carrying: null };
+  <div class="dpad">
+    <span></span><button data-a="up" aria-label="Nahoru">⬆️</button><span></span>
+    <button data-a="left" aria-label="Doleva">⬅️</button>
+    <button data-a="down" aria-label="Dolů">⬇️</button>
+    <button data-a="right" aria-label="Doprava">➡️</button>
+    <button class="sebrat" data-a="take" aria-label="Sebrat nebo položit">📦 Sebrat / položit</button>
+  </div>
 
-    for (let y = 0; y < rows; y++) {
-      const row = [];
-      for (let x = 0; x < cols; x++) {
-        const div = document.createElement("div");
-        div.className = "cell";
-        game.appendChild(div);
-        row.push(null);
-      }
-      grid.push(row);
-    }
+  <p class="hint">Šipky = pohyb · <b>mezerník</b> = sebrat/položit bednu · <b>P</b> = pauza.
+  Na dotykové obrazovce použij tlačítka pod hrací plochou. Čím vyšší úroveň, tím rychleji bedny padají.</p>
 
-    function draw() {
-      const cells = game.children;
-      let index = 0;
-      for (let y = 0; y < rows; y++) {
-        for (let x = 0; x < cols; x++) {
-          const cell = cells[index];
-          cell.className = "cell";
-          if (grid[y][x]) cell.classList.add(grid[y][x]);
-          if (x === player.x && y === player.y) {
-            cell.classList.add("player");
-            if (player.carrying) cell.classList.add("carrying");
-          }
-          index++;
-        }
-      }
-      scoreDisplay.textContent = `Skóre: ${score}`;
-    }
+<script>
+const $=id=>document.getElementById(id);
+const rows=15, cols=10;
+const BARVY=['box-red','box-blue','box-green','box-yellow'];
 
-    function dropBox() {
-      const x = Math.floor(Math.random() * cols);
-      const color = colors[Math.floor(Math.random() * colors.length)];
-      for (let y = 0; y < rows; y++) {
-        if (grid[y][x] !== null) {
-          if (y === 0) return gameOver();
-          grid[y - 1][x] = color;
-          checkMatches(y - 1, x);
-          return;
-        }
-      }
-      grid[rows - 1][x] = color;
-      checkMatches(rows - 1, x);
-    }
+let grid, player, score, uroven, bezi, pauza, casovac, rek=null;
 
-    function gameOver() {
-      alert("Konec hry! Skóre: " + score);
-      location.reload();
-    }
+function prazdnaMrizka(){return Array.from({length:rows},()=>Array(cols).fill(null));}
 
-    function movePlayer(dx, dy = 0) {
-      const newX = player.x + dx;
-      const newY = player.y + dy;
-      if (newX >= 0 && newX < cols && newY >= 0 && newY < rows) {
-        player.x = newX;
-        player.y = newY;
-      }
-    }
+function postavPlochu(){
+  const g=$('game'); g.innerHTML='';
+  for(let i=0;i<rows*cols;i++){
+    const d=document.createElement('div'); d.className='cell'; g.appendChild(d);
+  }
+}
 
-    function pickOrDrop() {
-      const box = grid[player.y][player.x];
-      if (player.carrying === null && box !== null) {
-        player.carrying = box;
-        grid[player.y][player.x] = null;
-      } else if (player.carrying !== null && box === null) {
-        grid[player.y][player.x] = player.carrying;
-        player.carrying = null;
-        checkMatches(player.y, player.x);
-      }
-    }
+function novaHra(){
+  grid=prazdnaMrizka();
+  player={x:4,y:rows-1,carrying:null};
+  score=0; uroven=1; bezi=true; pauza=false;
+  $('prekryv').classList.remove('zobraz');
+  $('pauzaBtn').textContent='⏸️ Pauza';
+  naplanuj();
+  draw();
+}
 
-    function checkMatches(y, x) {
-      const color = grid[y][x];
-      if (!color) return;
-      let count = 1;
-      for (let i = y - 1; i >= 0; i--) {
-        if (grid[i][x] === color) count++;
-        else break;
-      }
-      if (count >= 3) {
-        for (let i = y; i > y - count; i--) {
-          grid[i][x] = null;
-        }
-        score += count * 10;
-        collapseColumn(x);
-      }
-    }
-
-    function collapseColumn(x) {
-      for (let y = rows - 1; y >= 0; y--) {
-        if (grid[y][x] === null) {
-          for (let k = y - 1; k >= 0; k--) {
-            if (grid[k][x] !== null) {
-              grid[y][x] = grid[k][x];
-              grid[k][x] = null;
-              break;
-            }
-          }
-        }
-      }
-    }
-
-    document.addEventListener("keydown", e => {
-      switch (e.key) {
-        case "ArrowLeft": movePlayer(-1); break;
-        case "ArrowRight": movePlayer(1); break;
-        case "ArrowUp": movePlayer(0, -1); break;
-        case "ArrowDown": movePlayer(0, 1); break;
-        case " ": pickOrDrop(); break;
-      }
-      draw();
-    });
-
-    setInterval(() => {
-      dropBox();
-      draw();
-    }, 1500);
-
+/* Interval se zkracuje s úrovní – bez toho byla hra pořád stejně snadná. */
+function intervalMs(){return Math.max(450, 1500 - (uroven-1)*120);}
+function naplanuj(){
+  clearInterval(casovac);
+  casovac=setInterval(()=>{
+    if(!bezi||pauza)return;
+    dropBox();
     draw();
-  </script>
+  }, intervalMs());
+}
+
+function draw(){
+  const cells=$('game').children;
+  let i=0;
+  for(let y=0;y<rows;y++)for(let x=0;x<cols;x++){
+    const c=cells[i++];
+    c.className='cell';
+    if(grid[y][x])c.classList.add(grid[y][x]);
+    if(x===player.x&&y===player.y){
+      c.classList.add('player');
+      if(player.carrying)c.classList.add('carrying');
+    }
+  }
+  $('score').textContent=score;
+  $('uroven').textContent=uroven;
+}
+
+function dropBox(){
+  const x=Math.floor(Math.random()*cols);
+  const barva=BARVY[Math.floor(Math.random()*BARVY.length)];
+  for(let y=0;y<rows;y++){
+    if(grid[y][x]!==null){
+      if(y===0){konecHry();return;}
+      grid[y-1][x]=barva;
+      checkMatches(y-1,x);
+      return;
+    }
+  }
+  grid[rows-1][x]=barva;
+  checkMatches(rows-1,x);
+}
+
+function konecHry(){
+  bezi=false;
+  clearInterval(casovac);
+  const novy=rek&&rek.zapis(score);
+  $('prekryvNadpis').textContent=novy?'🏆 Nový rekord!':'💥 Konec hry';
+  $('prekryvBody').textContent='Skóre: '+score+(novy?'':'');
+  $('prekryvBtn').textContent='▶️ Hrát znovu';
+  $('prekryv').classList.add('zobraz');
+}
+
+function movePlayer(dx,dy){
+  if(!bezi||pauza)return;
+  const nx=player.x+dx, ny=player.y+dy;
+  if(nx>=0&&nx<cols&&ny>=0&&ny<rows){player.x=nx;player.y=ny;}
+}
+
+function pickOrDrop(){
+  if(!bezi||pauza)return;
+  const box=grid[player.y][player.x];
+  if(player.carrying===null&&box!==null){
+    player.carrying=box;
+    grid[player.y][player.x]=null;
+  }else if(player.carrying!==null&&box===null){
+    grid[player.y][player.x]=player.carrying;
+    player.carrying=null;
+    checkMatches(player.y,player.x);
+  }
+}
+
+function checkMatches(y,x){
+  const barva=grid[y][x];
+  if(!barva)return;
+  let pocet=1;
+  for(let i=y-1;i>=0;i--){ if(grid[i][x]===barva)pocet++; else break; }
+  if(pocet>=3){
+    for(let i=y;i>y-pocet;i--)grid[i][x]=null;
+    score+=pocet*10;
+    // každých 100 bodů zrychlí hru o jednu úroveň
+    const novaUroven=Math.floor(score/100)+1;
+    if(novaUroven!==uroven){uroven=novaUroven;naplanuj();}
+    collapseColumn(x);
+  }
+}
+
+function collapseColumn(x){
+  for(let y=rows-1;y>=0;y--){
+    if(grid[y][x]===null){
+      for(let k=y-1;k>=0;k--){
+        if(grid[k][x]!==null){grid[y][x]=grid[k][x];grid[k][x]=null;break;}
+      }
+    }
+  }
+}
+
+function prepniPauzu(){
+  if(!bezi)return;
+  pauza=!pauza;
+  $('pauzaBtn').textContent=pauza?'▶️ Pokračovat':'⏸️ Pauza';
+  if(pauza){
+    $('prekryvNadpis').textContent='⏸️ Pauza';
+    $('prekryvBody').textContent='Skóre: '+score;
+    $('prekryvBtn').textContent='▶️ Pokračovat';
+    $('prekryv').classList.add('zobraz');
+  }else $('prekryv').classList.remove('zobraz');
+}
+
+const AKCE={left:()=>movePlayer(-1,0),right:()=>movePlayer(1,0),
+            up:()=>movePlayer(0,-1),down:()=>movePlayer(0,1),take:pickOrDrop};
+
+document.addEventListener('keydown',e=>{
+  const mapa={ArrowLeft:'left',ArrowRight:'right',ArrowUp:'up',ArrowDown:'down',' ':'take'};
+  if(e.key==='p'||e.key==='P'){e.preventDefault();prepniPauzu();return;}
+  const a=mapa[e.key];
+  if(!a)return;
+  e.preventDefault();   // jinak šipky a mezerník rolují stránkou
+  AKCE[a]();
+  draw();
+});
+document.querySelectorAll('.dpad button').forEach(b=>b.addEventListener('click',()=>{
+  AKCE[b.dataset.a](); draw();
+}));
+$('novaBtn').onclick=novaHra;
+$('pauzaBtn').onclick=prepniPauzu;
+$('prekryvBtn').onclick=()=>{ if(bezi&&pauza)prepniPauzu(); else novaHra(); };
+
+window.addEventListener('DOMContentLoaded',()=>{
+  if(typeof Rekord!=='undefined'){
+    rek=Rekord.sleduj('webapp_hra_stackattack',{vyssiLepsi:true,popisek:'Nejvyšší skóre',format:v=>v+' b'});
+    rek.prvek($('rekordBox'));
+  }
+  postavPlochu();
+  novaHra();
+});
+</script>
 </body>
 </html>
-

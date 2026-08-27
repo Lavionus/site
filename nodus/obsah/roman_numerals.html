@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🏛️ Římské číslice</title>
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:20px}
+.container{max-width:680px;margin:0 auto}
+h1{font-size:1.6rem;margin-bottom:18px;font-weight:600;text-align:center}
+.card{background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;padding:24px;margin-bottom:20px}
+.row{display:flex;align-items:center;gap:12px;margin-bottom:14px}
+.row label{width:120px;font-size:.9rem;color:var(--text-muted)}
+.row input{flex:1;min-width:0;background:var(--bg-input);border:1px solid var(--border-strong);border-radius:6px;color:var(--accent);padding:14px;font-size:1.4rem;text-align:center;font-weight:700}
+.swap{text-align:center;color:var(--text-faint);margin:6px 0}
+.breakdown{background:var(--bg-input);border-radius:8px;padding:14px;margin-top:14px;display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.part{text-align:center;padding:8px 12px;background:#2a3548;border-radius:6px}
+.part .r{font-size:1.4rem;font-weight:700;color:var(--accent)}.part .v{font-size:.75rem;color:var(--text-faint)}
+.err{color:#e74c3c;text-align:center;font-size:.85rem;margin-top:8px}
+.ref{display:grid;grid-template-columns:repeat(auto-fill,minmax(80px,1fr));gap:6px;margin-top:8px}
+.ref div{background:var(--bg-input);border-radius:4px;padding:6px 8px;text-align:center;font-size:.85rem}
+.ref b{color:var(--accent)}
+h2{font-size:1rem;color:var(--accent);margin-bottom:10px}
+
+/* světlý režim: dorovnání kontrastu textu */
+:root[data-theme="light"] .r { color: #749fde; }
+/* Vinculum – nadtržení znamená tisíckrát víc. Vnořením vznikne dvojité
+   nadtržení pro miliony, proto se kreslí rámečkem, ne text-decoration. */
+.vinc{border-top:2px solid currentColor;padding-top:1px;margin-top:2px;display:inline-block;line-height:1.1}
+.vysvetlivka{font-size:.78rem;color:#888;margin-top:8px;line-height:1.5}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>🏛️ Převodník římských číslic</h1>
+  <div class="card">
+    <div class="row"><label>Arabské číslo</label><input type="number" id="arabic" value="2026" min="1" max="3999999999"></div>
+    <div class="swap">⇅</div>
+    <div class="row"><label>Římské číslo</label><input type="text" id="roman" value="MMXXVI"></div>
+    <div class="err" id="err"></div>
+    <div id="nahled" style="text-align:center;font-size:1.6rem;font-weight:700;margin-top:6px"></div>
+    <div class="breakdown" id="breakdown"></div>
+  </div>
+  <div class="card">
+    <h2>📖 Základní hodnoty</h2>
+    <div class="ref">
+      <div><b>I</b> = 1</div><div><b>V</b> = 5</div><div><b>X</b> = 10</div><div><b>L</b> = 50</div>
+      <div><b>C</b> = 100</div><div><b>D</b> = 500</div><div><b>M</b> = 1000</div>
+    </div>
+    <p style="font-size:.78rem;color:#666;margin-top:10px">Pravidlo odčítání: IV=4, IX=9, XL=40, XC=90, CD=400, CM=900.</p>
+    <p class="vysvetlivka">Klasický zápis končí u 3999. Větší čísla se zapisují s <b>nadtržením
+      (vinculum)</b> – nadtržená část znamená tisíckrát víc: <span class="vinc">V</span> = 5000,
+      <span class="vinc">X</span>LII = 10 042. Dvojité nadtržení znamená milionkrát víc.
+      Při psaní můžete nadtržení zapsat závorkami: (V) = 5000, ((V)) = 5 000 000.</p>
+  </div>
+</div>
+<script>
+const $=id=>document.getElementById(id);
+const MAP=[[1000,'M'],[900,'CM'],[500,'D'],[400,'CD'],[100,'C'],[90,'XC'],[50,'L'],[40,'XL'],[10,'X'],[9,'IX'],[5,'V'],[4,'IV'],[1,'I']];
+/* základní (klasický) zápis do 3999 */
+function zakladni(n){let r='';for(const[v,s]of MAP)while(n>=v){r+=s;n-=v;}return r;}
+
+/* Nad 3999 se používá nadtržení: nadtržená skupina platí tisíckrát.
+   Rekurze zvládne i miliony (dvojité nadtržení). */
+function toRomanHtml(n){
+  if(n<4000)return zakladni(n);
+  const tisice=Math.floor(n/1000),zbytek=n%1000;
+  return `<span class="vinc">${toRomanHtml(tisice)}</span>${zbytek?zakladni(zbytek):''}`;
+}
+/* textová podoba se závorkami, aby se dala zkopírovat i napsat */
+function toRomanText(n){
+  if(n<4000)return zakladni(n);
+  const tisice=Math.floor(n/1000),zbytek=n%1000;
+  return `(${toRomanText(tisice)})${zbytek?zakladni(zbytek):''}`;
+}
+
+function fromRoman(vstup){
+  let s=vstup.toUpperCase().replace(/\s+/g,'');
+  if(!s)return null;
+  // závorky = nadtržení: obsah závorky se násobí tisícem
+  const zavorka=s.match(/^\((.+)\)([IVXLCDM]*)$/);
+  if(zavorka){
+    const uvnitr=fromRoman(zavorka[1]);
+    if(uvnitr===null)return null;
+    const zbytek=zavorka[2]?fromRoman(zavorka[2]):0;
+    if(zbytek===null||zbytek>=1000)return null;
+    return uvnitr*1000+zbytek;
+  }
+  const vals={I:1,V:5,X:10,L:50,C:100,D:500,M:1000};
+  if(!/^[IVXLCDM]+$/.test(s))return null;
+  let total=0;
+  for(let i=0;i<s.length;i++){const cur=vals[s[i]],next=vals[s[i+1]]||0;if(cur<next)total-=cur;else total+=cur;}
+  if(zakladni(total)!==s)return null; // hlídá kanonický tvar (např. IIII neprojde)
+  return total;
+}
+function breakdown(n){
+  const parts=[];
+  let nasobek=1,zbyva=n;
+  /* pro velká čísla rozpis po tisícových skupinách, ať je vidět význam nadtržení */
+  const skupiny=[];
+  while(zbyva>0){skupiny.unshift({cast:zbyva%1000,nasobek});zbyva=Math.floor(zbyva/1000);nasobek*=1000;}
+  for(const {cast,nasobek:m} of skupiny){
+    let x=cast;
+    for(const[v,sym]of MAP)while(x>=v){
+      const zapis=m>1?`<span class="vinc">${sym}</span>`:sym;
+      parts.push([zapis,v*m]);x-=v;
+    }
+  }
+  $('breakdown').innerHTML=parts.map(([r,v])=>
+    `<div class="part"><div class="r">${r}</div><div class="v">${v.toLocaleString('cs-CZ')}</div></div>`).join('');
+}
+
+/* římské číslo se zobrazuje s nadtržením, ale do pole se píše textová podoba */
+function zobrazRimske(n){
+  $('roman').value=toRomanText(n);
+  const nahled=$('nahled');
+  if(nahled)nahled.innerHTML=n>=4000?toRomanHtml(n):'';
+}
+const MAX=3999999999;
+$('arabic').oninput=()=>{
+  $('err').textContent='';
+  const n=parseInt($('arabic').value);
+  if(isNaN(n)||n<1||n>MAX){
+    $('err').textContent=`Zadej celé číslo 1–${MAX.toLocaleString('cs-CZ')}.`;
+    $('roman').value='';$('breakdown').innerHTML='';
+    const nahled=$('nahled');if(nahled)nahled.innerHTML='';
+    return;
+  }
+  zobrazRimske(n);breakdown(n);
+};
+$('roman').oninput=()=>{
+  $('err').textContent='';
+  const v=fromRoman($('roman').value.trim());
+  if(v===null){$('err').textContent='Neplatné římské číslo. Nadtržení zapiš závorkami, například (V)M = 6000.';$('breakdown').innerHTML='';return;}
+  $('arabic').value=v;breakdown(v);
+  const nahled=$('nahled');if(nahled)nahled.innerHTML=v>=4000?toRomanHtml(v):'';
+};
+zobrazRimske(2026);breakdown(2026);
+</script>
+</body>
+</html>

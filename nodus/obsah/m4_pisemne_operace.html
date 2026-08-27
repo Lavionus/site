@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Písemné sčítání, odčítání a násobení</title>
+  <link rel="stylesheet" href="../common.css">
+  <link rel="stylesheet" href="../vyuka.css">
+  <script src="../theme.js"></script>
+  <script src="../rec.js"></script>
+  <script src="../uloha.js"></script>
+  <script src="../pisemne.js"></script>
+  <style>
+    .pod-sebou {
+      font-family: 'Courier New', monospace; font-size: clamp(1.6rem, 6vw, 2.4rem);
+      font-weight: 700; line-height: 1.35; text-align: right; letter-spacing: 0.12em;
+      display: inline-block; min-width: 190px;
+    }
+    .pod-sebou .cara { border-top: 3px solid var(--text-muted); margin-top: 4px; padding-top: 4px; }
+    .pod-sebou .znak { float: left; color: var(--accent); }
+    .pod-sebou .vysledek { color: var(--accent); }
+  </style>
+</head>
+<body>
+  <h1>✏️ Písemné sčítání, odčítání a násobení</h1>
+  <p class="podtitul">Pro 4. ročník: počítání pod sebou v oboru do milionu.</p>
+
+  <div class="rezimy" id="rezimy">
+    <button data-rezim="scitani" class="active">➕ Sčítání a odčítání</button>
+    <button data-rezim="nasobeni">✖️ Násobení</button>
+    <button data-rezim="chyba">🔍 Najdi chybu</button>
+  </div>
+
+  <div class="plocha" id="plocha"></div>
+
+  <div class="ovladani">
+    <button class="hlavni" id="btnDalsi">Přeskočit →</button>
+    <span class="skore" id="skore"></span>
+  </div>
+
+  <p class="napoveda">
+    Při písemném počítání piš číslice <b>pod sebe podle řádů</b> – jednotky pod jednotky,
+    desítky pod desítky. Počítá se zprava doleva a přenáší se do vyššího řádu.
+  </p>
+
+<script>
+const $ = id => document.getElementById(id);
+const skore = Uloha.skore('nodus_m4_pisemne', $('skore'));
+let rezim = 'scitani';
+
+/* statický zápis – používá ho režim „Najdi chybu", kde se výsledek ukazuje */
+function zapisPodSebou(a, b, znak, vysledek) {
+  const sirka = Math.max(String(a).length, String(b).length, String(vysledek ?? '').length) + 1;
+  const pad = t => String(t).padStart(sirka, ' ').replace(/ /g, '&nbsp;');
+  return `<div class="pod-sebou">${pad(a)}<br>
+    <span class="znak">${znak}</span>${pad(b)}
+    <div class="cara">${vysledek === null ? pad('?') : `<span class="vysledek">${pad(vysledek)}</span>`}</div>
+  </div>`;
+}
+
+/* rozumné blízké chybné výsledky – typické chyby při přenosu */
+function blizkeVysledky(spravny, pocet, krok) {
+  const jine = new Set();
+  let pojistka = 0;
+  while (jine.size < pocet && pojistka++ < 60) {
+    const posun = Uloha.nahodne([-100, -10, -1, 1, 10, 100, krok, -krok]);
+    const k = spravny + posun;
+    if (k !== spravny && k > 0) jine.add(k);
+  }
+  return [...jine].slice(0, pocet);
+}
+
+/* ---- Sčítání a odčítání ---------------------------------------------------- */
+function scitani() {
+  const p = $('plocha');
+  const scitame = Math.random() < 0.5;
+  const a = Uloha.nahodneCislo(1200, 98000);
+  const b = scitame ? Uloha.nahodneCislo(1200, 98000) : Uloha.nahodneCislo(200, a - 100);
+  const vysledek = scitame ? a + b : a - b;
+
+  p.innerHTML = `<div class="zadani">Vypočítej – můžeš si počítat přímo do mřížky:</div>`;
+  const karta = document.createElement('div');
+  karta.className = 'karta';
+  karta.appendChild(Pisemne.podSebou(a, b, scitame ? '+' : '−'));
+  p.appendChild(karta);
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva, trida: 'velke',
+    moznosti: Uloha.zamichej([vysledek, ...blizkeVysledky(vysledek, 3, 1000)])
+      .map(v => ({ klic: String(v), popis: String(v) })),
+    spravnyKlic: String(vysledek),
+    zpravaOk: `✅ ${a} ${scitame ? '+' : '−'} ${b} = ${vysledek}`,
+    zpravaChyba: 'Přepočítej to po řádech zprava – nezapomeň na přenos.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Násobení --------------------------------------------------------------- */
+function nasobeni() {
+  const p = $('plocha');
+  const a = Uloha.nahodneCislo(112, 9800);
+  const b = Uloha.nahodneCislo(2, 9);
+  const vysledek = a * b;
+
+  p.innerHTML = `<div class="zadani">Vypočítej – můžeš si počítat přímo do mřížky:</div>`;
+  const karta = document.createElement('div');
+  karta.className = 'karta';
+  karta.appendChild(Pisemne.podSebou(a, b, '×'));
+  p.appendChild(karta);
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva, trida: 'velke',
+    moznosti: Uloha.zamichej([vysledek, ...blizkeVysledky(vysledek, 3, a)])
+      .map(v => ({ klic: String(v), popis: String(v) })),
+    spravnyKlic: String(vysledek),
+    zpravaOk: `✅ ${a} × ${b} = ${vysledek}`,
+    zpravaChyba: `Násob postupně jednotky, desítky, stovky – a přičti přenosy.`,
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Najdi chybu ------------------------------------------------------------ */
+function chyba() {
+  const p = $('plocha');
+  const typ = Uloha.nahodne(['+', '−', '×']);
+  let a, b, spravny;
+  if (typ === '×') { a = Uloha.nahodneCislo(112, 980); b = Uloha.nahodneCislo(2, 9); spravny = a * b; }
+  else if (typ === '+') { a = Uloha.nahodneCislo(1200, 9800); b = Uloha.nahodneCislo(1200, 9800); spravny = a + b; }
+  else { a = Uloha.nahodneCislo(2200, 9800); b = Uloha.nahodneCislo(200, 2000); spravny = a - b; }
+
+  const jeSpravne = Math.random() < 0.5;
+  const zobrazeny = jeSpravne ? spravny : spravny + Uloha.nahodne([-100, -10, 10, 100, 1000]);
+
+  p.innerHTML = `<div class="zadani">Je výsledek správný?</div>
+    <div class="karta">${zapisPodSebou(a, b, typ, zobrazeny)}</div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva, trida: 'dve',
+    moznosti: [
+      { klic: 'ano', ikona: '✅', popis: 'Ano, souhlasí' },
+      { klic: 'ne', ikona: '❌', popis: 'Ne, je špatně' },
+    ],
+    spravnyKlic: jeSpravne ? 'ano' : 'ne',
+    zpravaOk: `✅ Správný výsledek je ${spravny}.`,
+    zpravaChyba: 'Přepočítej příklad po řádech a porovnej.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+const REZIMY = { scitani, nasobeni, chyba };
+function novaUloha() { REZIMY[rezim](); }
+
+document.querySelectorAll('#rezimy button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#rezimy button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  rezim = b.dataset.rezim;
+  novaUloha();
+}));
+$('btnDalsi').addEventListener('click', novaUloha);
+document.addEventListener('keydown', e => {
+  // v mřížce pro vlastní zápis mají šipky i Enter jiný význam
+  if (e.target && e.target.tagName === 'INPUT') return;
+  if (e.key === 'ArrowRight' || e.key === 'Enter') { e.preventDefault(); novaUloha(); }
+});
+novaUloha();
+</script>
+</body>
+</html>

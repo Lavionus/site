@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Angličtina – přítomný čas prostý</title>
+  <link rel="stylesheet" href="../common.css">
+  <link rel="stylesheet" href="../vyuka.css">
+  <script src="../theme.js"></script>
+  <script src="../rec.js"></script>
+  <script src="../uloha.js"></script>
+  <style>
+    .veta-en { font-size: clamp(1.2rem, 4.5vw, 1.9rem); font-weight: 700; line-height: 1.45; max-width: 620px; }
+    .veta-en .mezera { color: var(--accent); border-bottom: 3px solid var(--accent); padding: 0 12px; }
+    .preklad { color: var(--text-faint); font-size: 0.95rem; font-style: italic; }
+    .tabulka { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; max-width: 900px; margin-top: 12px; }
+    .tabulka span {
+      background: var(--bg-panel); border: 1px solid var(--border); border-radius: 8px;
+      padding: 6px 12px; font-size: 0.8rem; color: var(--text-muted);
+    }
+    .tabulka b { color: var(--text); }
+  </style>
+</head>
+<body>
+  <h1>⏰ Přítomný čas prostý</h1>
+  <p class="podtitul">Pro 4.–5. ročník: koncovka -s ve 3. osobě, otázky s do/does a zápor.</p>
+
+  <div class="rezimy" id="rezimy">
+    <button data-rezim="tvar" class="active">✏️ Doplň sloveso</button>
+    <button data-rezim="otazka">❓ Do, nebo does?</button>
+    <button data-rezim="zapor">🚫 Zápor</button>
+    <button data-rezim="spravne">🔍 Je to správně?</button>
+  </div>
+
+  <div class="plocha" id="plocha"></div>
+
+  <div class="ovladani">
+    <button class="hlavni" id="btnDalsi">Přeskočit →</button>
+    <span class="skore" id="skore"></span>
+  </div>
+
+  <div class="tabulka">
+    <span><b>I, you, we, they</b> → play, do, don't</span>
+    <span><b>he, she, it</b> → play<b>s</b>, does, doesn't</span>
+    <span>V otázce a záporu sloveso <b>zůstává bez -s</b></span>
+  </div>
+
+  <p class="napoveda">
+    Ve 3. osobě jednotného čísla (he, she, it) přidáváme <b>-s</b>: <i>he plays</i>.
+    Po slovesech končících na -o, -ss, -sh, -ch, -x přidáváme <b>-es</b>: <i>she goes, he watches</i>.
+  </p>
+
+<script>
+const $ = id => document.getElementById(id);
+const skore = Uloha.skore('nodus_aj4_present', $('skore'));
+let rezim = 'tvar';
+
+/* Podmět, sloveso i doplnění se nelosují nezávisle – jinak vznikají nesmysly
+   typu „The cat lives TV“. Každé sloveso má vlastní zásobu doplnění, zvlášť
+   pro člověka a zvlášť pro zvíře. */
+const PODMETY = [
+  { t: 'I', treti: false, druh: 'osoba', vlastni: true },
+  { t: 'You', treti: false, druh: 'osoba' },
+  { t: 'We', treti: false, druh: 'osoba' },
+  { t: 'They', treti: false, druh: 'osoba' },
+  { t: 'My parents', treti: false, druh: 'osoba' },
+  { t: 'The children', treti: false, druh: 'osoba' },
+  { t: 'My dogs', treti: false, druh: 'zvire' },
+  { t: 'He', treti: true, druh: 'osoba' },
+  { t: 'She', treti: true, druh: 'osoba' },
+  { t: 'My brother', treti: true, druh: 'osoba' },
+  { t: 'My sister', treti: true, druh: 'osoba' },
+  { t: 'Tom', treti: true, druh: 'osoba', vlastni: true },
+  { t: 'My teacher', treti: true, druh: 'osoba' },
+  { t: 'The cat', treti: true, druh: 'zvire' },
+  { t: 'The dog', treti: true, druh: 'zvire' },
+];
+
+/* sloveso: základní tvar, tvar ve 3. osobě, český význam, doplnění věty */
+const SLOVESA = [
+  { z: 'play', t: 'plays', cz: 'hrát (si)',
+    p: { osoba: ['football', 'tennis', 'the guitar', 'computer games'], zvire: ['in the garden', 'with a ball'] } },
+  { z: 'like', t: 'likes', cz: 'mít rád',
+    p: { osoba: ['ice cream', 'English', 'dogs', 'our new school'], zvire: ['milk', 'warm places'] } },
+  { z: 'read', t: 'reads', cz: 'číst',
+    p: { osoba: ['books', 'comics', 'a newspaper', 'in the evening'] } },
+  { z: 'run', t: 'runs', cz: 'běhat',
+    p: { osoba: ['every morning', 'in the park', 'very fast'], zvire: ['very fast', 'in the garden'] } },
+  { z: 'live', t: 'lives', cz: 'bydlet',
+    p: { osoba: ['in Prague', 'in a small house', 'near the school'], zvire: ['in our garden', 'with us'] } },
+  { z: 'work', t: 'works', cz: 'pracovat',
+    p: { osoba: ['in a hospital', 'on a farm', 'every day'] } },
+  { z: 'go', t: 'goes', cz: 'chodit, jezdit',
+    p: { osoba: ['to school', 'home at four', 'to the park on Sunday'] } },
+  { z: 'watch', t: 'watches', cz: 'dívat se na',
+    p: { osoba: ['TV', 'films', 'a football match'] } },
+  { z: 'wash', t: 'washes', cz: 'mýt',
+    p: { osoba: ['the dishes', 'the car', 'the windows'] } },
+  { z: 'do', t: 'does', cz: 'dělat',
+    p: { osoba: ['homework every day', 'the shopping on Friday', 'sport after school'] } },
+  { z: 'eat', t: 'eats', cz: 'jíst',
+    p: { osoba: ['breakfast at seven', 'apples', 'pizza on Fridays'], zvire: ['fish', 'meat'] } },
+  { z: 'drink', t: 'drinks', cz: 'pít',
+    p: { osoba: ['tea', 'water', 'orange juice'], zvire: ['milk', 'water'] } },
+  { z: 'sing', t: 'sings', cz: 'zpívat',
+    p: { osoba: ['English songs', 'in the school choir'] } },
+  { z: 'help', t: 'helps', cz: 'pomáhat',
+    p: { osoba: ['at home', 'in the garden', 'with the housework'] } },
+  { z: 'sleep', t: 'sleeps', cz: 'spát',
+    p: { osoba: ['eight hours a day'], zvire: ['all day', 'on the sofa'] } },
+  { z: 'speak', t: 'speaks', cz: 'mluvit',
+    p: { osoba: ['English', 'two languages', 'very quietly'] } },
+];
+
+/* Vylosuje smysluplnou dvojici podmět + sloveso a k ní pasující doplnění. */
+function vetaData(chceTreti) {
+  const podmety = PODMETY.filter(x => x.treti === chceTreti);
+  let podmet, moznaSlovesa, pokusu = 0;
+  do {
+    podmet = Uloha.nahodne(podmety);
+    moznaSlovesa = SLOVESA.filter(sl => (sl.p[podmet.druh] || []).length);
+  } while (!moznaSlovesa.length && pokusu++ < 50);
+  const sloveso = Uloha.nahodne(moznaSlovesa);
+  return { podmet, sloveso, predmet: Uloha.nahodne(sloveso.p[podmet.druh]) };
+}
+/* Uprostřed otázky se podmět píše malým písmenem (kromě jmen a „I“). */
+const maly = podmet => podmet.vlastni ? podmet.t : podmet.t.charAt(0).toLowerCase() + podmet.t.slice(1);
+
+/* ---- Doplň sloveso ---------------------------------------------------------- */
+function tvar() {
+  const p = $('plocha');
+  const treti = Math.random() < 0.5;
+  const { podmet, sloveso, predmet } = vetaData(treti);
+  const osoba = podmet.t;
+  const spravny = treti ? sloveso.t : sloveso.z;
+  const chybny = treti ? sloveso.z : sloveso.t;
+  const dalsiChybny = sloveso.z + (sloveso.t.endsWith('es') ? 's' : 'es');
+
+  p.innerHTML = `<div class="zadani">Doplň správný tvar slovesa <b>${sloveso.z}</b> (${sloveso.cz}):</div>
+    <div class="karta"><div class="veta-en">${osoba} <span class="mezera">?</span> ${predmet}.</div></div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([spravny, chybny, dalsiChybny])
+      .filter((x, i, a) => a.indexOf(x) === i)
+      .map(t => ({ klic: t, popis: t })),
+    spravnyKlic: spravny,
+    zpravaOk: `✅ ${osoba} ${spravny} ${predmet}.` + (treti ? ' – 3. osoba má -s.' : ' – bez koncovky.'),
+    zpravaChyba: treti
+      ? 'He, she, it – tam patří koncovka -s (nebo -es).'
+      : 'U I, you, we, they zůstává sloveso beze změny.',
+    poSpravne: napoprve => {
+      skore.vyhodnot(napoprve);
+      p.querySelector('.mezera').textContent = spravny;
+    },
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Do, nebo does? --------------------------------------------------------- */
+function otazka() {
+  const p = $('plocha');
+  const treti = Math.random() < 0.5;
+  const { podmet, sloveso, predmet } = vetaData(treti);
+  const osoba = maly(podmet);
+
+  p.innerHTML = `<div class="zadani">Doplň do, nebo does:</div>
+    <div class="karta"><div class="veta-en"><span class="mezera">?</span> ${osoba} ${sloveso.z} ${predmet}?</div>
+    <div class="preklad">otázka v přítomném čase prostém</div></div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva, trida: 'dve',
+    moznosti: Uloha.zamichej([{ klic: 'Do', popis: 'Do' }, { klic: 'Does', popis: 'Does' }]),
+    spravnyKlic: treti ? 'Does' : 'Do',
+    zpravaOk: treti
+      ? `✅ Does ${osoba} ${sloveso.z}…? – u he, she, it je does a sloveso zůstává bez -s.`
+      : `✅ Do ${osoba} ${sloveso.z}…? – u I, you, we, they je do.`,
+    zpravaChyba: 'Podívej se, o koho jde – he/she/it, nebo I/you/we/they?',
+    poSpravne: napoprve => {
+      skore.vyhodnot(napoprve);
+      p.querySelector('.mezera').textContent = treti ? 'Does' : 'Do';
+    },
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Zápor ------------------------------------------------------------------ */
+function zapor() {
+  const p = $('plocha');
+  const treti = Math.random() < 0.5;
+  const { podmet, sloveso, predmet } = vetaData(treti);
+  const osoba = podmet.t;
+
+  p.innerHTML = `<div class="zadani">Doplň zápor:</div>
+    <div class="karta"><div class="veta-en">${osoba} <span class="mezera">?</span> ${sloveso.z} ${predmet}.</div>
+    <div class="preklad">věta v záporu</div></div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([
+      { klic: "don't", popis: "don't" },
+      { klic: "doesn't", popis: "doesn't" },
+      { klic: 'not', popis: 'not' },
+    ]),
+    spravnyKlic: treti ? "doesn't" : "don't",
+    zpravaOk: `✅ ${osoba} ${treti ? "doesn't" : "don't"} ${sloveso.z}… – sloveso zůstává v základním tvaru.`,
+    zpravaChyba: 'Zápor tvoříme pomocí don\'t / doesn\'t podle osoby.',
+    poSpravne: napoprve => {
+      skore.vyhodnot(napoprve);
+      p.querySelector('.mezera').textContent = treti ? "doesn't" : "don't";
+    },
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Je to správně? --------------------------------------------------------- */
+function spravne() {
+  const p = $('plocha');
+  const treti = Math.random() < 0.5;
+  const { podmet, sloveso, predmet } = vetaData(treti);
+  const osoba = podmet.t;
+  const spravnyTvar = treti ? sloveso.t : sloveso.z;
+  const jeSpravne = Math.random() < 0.5;
+  const pouzity = jeSpravne ? spravnyTvar : (treti ? sloveso.z : sloveso.t);
+
+  p.innerHTML = `<div class="zadani">Je věta správně?</div>
+    <div class="karta"><div class="veta-en">${osoba} ${pouzity} ${predmet}.</div></div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva, trida: 'dve',
+    moznosti: [
+      { klic: 'ano', ikona: '✅', popis: 'Ano, správně' },
+      { klic: 'ne', ikona: '❌', popis: 'Ne, je tam chyba' },
+    ],
+    spravnyKlic: jeSpravne ? 'ano' : 'ne',
+    zpravaOk: `✅ Správně je: ${osoba} ${spravnyTvar} ${predmet}.`,
+    zpravaChyba: 'Zkontroluj koncovku -s u he, she, it.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+const REZIMY = { tvar, otazka, zapor, spravne };
+function novaUloha() { REZIMY[rezim](); }
+
+document.querySelectorAll('#rezimy button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#rezimy button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  rezim = b.dataset.rezim;
+  novaUloha();
+}));
+$('btnDalsi').addEventListener('click', novaUloha);
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === 'Enter') { e.preventDefault(); novaUloha(); }
+});
+novaUloha();
+</script>
+</body>
+</html>

@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Vlastnosti látek a těles</title>
+  <link rel="stylesheet" href="../common.css">
+  <link rel="stylesheet" href="../vyuka.css">
+  <script src="../theme.js"></script>
+  <script src="../rec.js"></script>
+  <script src="../uloha.js"></script>
+  <style>
+    .nazev-l { font-size: 1.25rem; font-weight: 700; }
+    .popis-l { color: var(--text-muted); max-width: 540px; line-height: 1.5; }
+    .castice { width: min(300px, 76vw); }
+    .castice circle { fill: var(--accent); }
+    .castice rect { fill: none; stroke: var(--border-strong); stroke-width: 2.5; }
+
+    /* Archimédův zákon – živá ukázka */
+    .arch { display: flex; flex-direction: column; align-items: center; gap: 12px; width: 100%; }
+    .arch canvas {
+      width: min(560px, 100%); aspect-ratio: 5 / 3; border-radius: 10px;
+      background: var(--bg-input); border: 1px solid var(--border);
+      touch-action: none; cursor: grab;
+    }
+    .arch canvas.tahne { cursor: grabbing; }
+    .arch-ovladani { display: flex; flex-wrap: wrap; gap: 10px 14px; justify-content: center; align-items: center; }
+    .arch-ovladani label { display: flex; align-items: center; gap: 6px; font-size: .82rem; color: var(--text-muted); }
+    .arch-ovladani label b { color: var(--text); font-variant-numeric: tabular-nums; min-width: 3.4em; }
+    .arch-ovladani select, .arch-ovladani input[type=range] {
+      background: var(--bg-control); color: var(--text); border: 1px solid var(--border-strong);
+      border-radius: 6px; padding: 5px 7px; font-family: inherit; font-size: .82rem; accent-color: var(--accent);
+    }
+    .arch-ovladani input[type=range] { width: 110px; padding: 0; }
+    .arch-ovladani button {
+      background: var(--bg-control); border: 1px solid var(--border-strong); color: var(--text);
+      border-radius: 6px; padding: 7px 13px; font-size: .82rem; font-family: inherit; cursor: pointer;
+    }
+    .arch-ovladani button:hover { border-color: var(--accent); }
+    .arch-verdikt {
+      font-size: .95rem; font-weight: 600; padding: 9px 14px; border-radius: 8px; text-align: center;
+      max-width: 560px; line-height: 1.45; min-height: var(--vyska-verdiktu, auto);
+      display: flex; align-items: center; justify-content: center;
+    }
+    /* Barvu nese rámeček a pozadí; text zůstává v --text, protože barevné písmo
+       na tónovaném podkladu spadlo pod čitelnou hranici (4,18:1 ve světlém režimu). */
+    .arch-verdikt.plave { background: var(--accent-soft); border: 1px solid var(--accent); color: var(--text); }
+    .arch-verdikt.klesa { background: rgba(224,166,63,.15); border: 1px solid var(--warn); color: var(--text); }
+    .arch-verdikt.vznasi { background: rgba(76,175,125,.15); border: 1px solid var(--ok); color: var(--text); }
+    .arch-cisla {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 6px; width: 100%; max-width: 560px;
+    }
+    .arch-cisla div {
+      display: flex; justify-content: space-between; gap: 8px; background: var(--bg-elevated);
+      border-radius: 6px; padding: 5px 9px; font-size: .8rem; color: var(--text-muted);
+    }
+    .arch-cisla b { color: var(--text); font-variant-numeric: tabular-nums; }
+    .arch-cisla div.klic { border-left: 3px solid var(--accent); }
+    .arch-tip { font-size: .78rem; color: var(--text-faint); max-width: 560px; text-align: center; line-height: 1.55; }
+    .arch-tip b { color: var(--text-muted); }
+  </style>
+</head>
+<body>
+  <h1>🧊 Vlastnosti látek a těles</h1>
+  <p class="podtitul">Pro 6. ročník: látka a těleso, skupenství, částicová stavba a vlastnosti látek.</p>
+
+  <div class="rezimy" id="rezimy">
+    <button data-rezim="latkaTeleso" class="active">🔤 Látka, či těleso?</button>
+    <button data-rezim="skupenstvi">🧊 Skupenství</button>
+    <button data-rezim="castice">⚛️ Částicová stavba</button>
+    <button data-rezim="vlastnosti">🔍 Vlastnosti látek</button>
+    <button data-rezim="archimedes">🛟 Archimédův zákon</button>
+  </div>
+
+  <div class="plocha" id="plocha"></div>
+
+  <div class="ovladani">
+    <button class="hlavni" id="btnDalsi">Přeskočit →</button>
+    <span class="skore" id="skore"></span>
+  </div>
+
+  <p class="napoveda">
+    <b>Těleso</b> je konkrétní předmět (sklenice), <b>látka</b> je materiál, ze kterého je (sklo).
+    Všechny látky jsou složené z <b>částic</b>, které se neustále pohybují – čím vyšší teplota,
+    tím rychleji. V ukázce <b>Archimédova zákona</b> můžeš tělesem táhnout myší nebo prstem.
+  </p>
+
+<script>
+const $ = id => document.getElementById(id);
+const skore = Uloha.skore('nodus_f6_latky', $('skore'));
+let rezim = 'latkaTeleso';
+
+const DVOJICE = [
+  { teleso: 'sklenice', latka: 'sklo' }, { teleso: 'hřebík', latka: 'železo' },
+  { teleso: 'stůl', latka: 'dřevo' }, { teleso: 'pravítko', latka: 'plast' },
+  { teleso: 'prsten', latka: 'zlato' }, { teleso: 'okno', latka: 'sklo' },
+  { teleso: 'svetr', latka: 'vlna' }, { teleso: 'socha', latka: 'kámen' },
+  { teleso: 'trubka', latka: 'měď' }, { teleso: 'sešit', latka: 'papír' },
+];
+
+const SKUPENSTVI = {
+  pevne: { nazev: 'pevné', popis: 'má stálý tvar i objem, částice kmitají na místě' },
+  kapalne: { nazev: 'kapalné', popis: 'nemá stálý tvar, ale má stálý objem – přizpůsobí se nádobě' },
+  plynne: { nazev: 'plynné', popis: 'nemá stálý tvar ani objem, vyplní celý prostor' },
+};
+
+const LATKY_SKUPENSTVI = [
+  { n: 'led', e: '🧊', s: 'pevne' }, { n: 'železo', e: '⛓️', s: 'pevne' },
+  { n: 'dřevo', e: '🪵', s: 'pevne' }, { n: 'kámen', e: '🪨', s: 'pevne' },
+  { n: 'voda', e: '💧', s: 'kapalne' }, { n: 'olej', e: '🫒', s: 'kapalne' },
+  { n: 'mléko', e: '🥛', s: 'kapalne' }, { n: 'rtuť', e: '🌡️', s: 'kapalne' },
+  { n: 'vzduch', e: '💨', s: 'plynne' }, { n: 'vodní pára', e: '♨️', s: 'plynne' },
+  { n: 'kyslík', e: '🫧', s: 'plynne' }, { n: 'zemní plyn', e: '🔥', s: 'plynne' },
+];
+
+const VLASTNOSTI = [
+  { t: 'Látky se skládají z částic, mezi nimiž jsou mezery.', pravda: true,
+    proc: 'proto lze kapalinu stlačit jen velmi málo a plyn hodně' },
+  { t: 'Částice látek jsou v klidu, dokud látku nezahřejeme.', pravda: false,
+    proc: 'částice se pohybují neustále, teplota jen mění rychlost' },
+  { t: 'Difuze je samovolné pronikání částic mezi sebe.', pravda: true,
+    proc: 'proto ucítíš parfém i z druhé strany místnosti' },
+  { t: 'Plyn má stálý objem stejně jako kapalina.', pravda: false,
+    proc: 'plyn vyplní celou nádobu, objem stálý nemá' },
+  { t: 'Při zahřívání většina látek zvětšuje svůj objem.', pravda: true,
+    proc: 'částice se pohybují rychleji a potřebují víc místa' },
+  { t: 'Vzájemné silové působení částic drží pevné látky pohromadě.', pravda: true,
+    proc: 'v pevných látkách jsou přitažlivé síly nejsilnější' },
+  { t: 'Voda se dá stlačit stejně snadno jako vzduch.', pravda: false,
+    proc: 'kapaliny jsou téměř nestlačitelné, plyny stlačitelné dobře' },
+  { t: 'Kapalina zaujme tvar nádoby, ve které je.', pravda: true,
+    proc: 'částice se mohou vůči sobě volně posouvat' },
+];
+
+/* ---- Látka, či těleso? --------------------------------------------------------------- */
+function latkaTeleso() {
+  const p = $('plocha');
+  const u = Uloha.nahodne(DVOJICE);
+  const jeTeleso = Math.random() < 0.5;
+  const slovo = jeTeleso ? u.teleso : u.latka;
+
+  p.innerHTML = `<div class="zadani">Je to látka, nebo těleso?</div>
+    <div class="karta"><div class="obrazek">🔍</div><div class="nazev-l">${slovo}</div></div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva, trida: 'dve',
+    moznosti: [
+      { klic: 'teleso', ikona: '📦', popis: 'těleso (konkrétní předmět)' },
+      { klic: 'latka', ikona: '🧪', popis: 'látka (materiál)' },
+    ],
+    spravnyKlic: jeTeleso ? 'teleso' : 'latka',
+    zpravaOk: jeTeleso
+      ? `✅ ${u.teleso} je těleso vyrobené z látky, kterou je ${u.latka}.`
+      : `✅ ${u.latka} je látka – například ${u.teleso} je z ní vyrobená.`,
+    zpravaChyba: 'Dá se toho dotknout jako jednoho předmětu (těleso), nebo je to materiál (látka)?',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Skupenství ------------------------------------------------------------------------ */
+function skupenstvi() {
+  const p = $('plocha');
+  const u = Uloha.nahodne(LATKY_SKUPENSTVI);
+  p.innerHTML = `<div class="zadani">Jaké má tato látka za běžných podmínek skupenství?</div>
+    <div class="karta"><div class="obrazek">${u.e}</div><div class="nazev-l">${u.n}</div></div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej(Object.entries(SKUPENSTVI))
+      .map(([klic, s]) => ({ klic, popis: s.nazev })),
+    spravnyKlic: u.s,
+    zpravaOk: `✅ ${u.n} je látka ${SKUPENSTVI[u.s].nazev} – ${SKUPENSTVI[u.s].popis}.`,
+    zpravaChyba: 'Má látka stálý tvar? Má stálý objem?',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Částicová stavba ------------------------------------------------------------------- */
+function castice() {
+  const p = $('plocha');
+  const typ = Uloha.nahodne(['pevne', 'kapalne', 'plynne']);
+  let body = '';
+  if (typ === 'pevne') {
+    for (let r = 0; r < 4; r++) for (let s = 0; s < 5; s++)
+      body += `<circle cx="${45 + s * 42}" cy="${40 + r * 34}" r="11"/>`;
+  } else if (typ === 'kapalne') {
+    for (let i = 0; i < 18; i++)
+      body += `<circle cx="${40 + Math.random() * 190}" cy="${75 + Math.random() * 95}" r="11"/>`;
+  } else {
+    for (let i = 0; i < 9; i++)
+      body += `<circle cx="${35 + Math.random() * 200}" cy="${30 + Math.random() * 145}" r="11"/>`;
+  }
+
+  p.innerHTML = `<div class="zadani">Jaké skupenství ukazuje uspořádání částic?</div>
+    <svg class="castice" viewBox="0 0 270 190">
+      <rect x="20" y="20" width="230" height="160" rx="6"/>${body}</svg>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej(Object.entries(SKUPENSTVI))
+      .map(([klic, s]) => ({ klic, popis: s.nazev })),
+    spravnyKlic: typ,
+    zpravaOk: `✅ ${SKUPENSTVI[typ].nazev} skupenství – ${SKUPENSTVI[typ].popis}.`,
+    zpravaChyba: 'Pevné = pravidelná mřížka, kapalné = těsně u sebe bez řádu, plynné = daleko od sebe.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Vlastnosti látek --------------------------------------------------------------------- */
+function vlastnosti() {
+  const p = $('plocha');
+  const u = Uloha.nahodne(VLASTNOSTI);
+  p.innerHTML = `<div class="zadani">Je toto tvrzení pravdivé?</div>
+    <div class="karta"><div class="obrazek">⚛️</div><div class="popis-l">${u.t}</div></div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva, trida: 'dve',
+    moznosti: [
+      { klic: 'ano', ikona: '✅', popis: 'Pravda' },
+      { klic: 'ne', ikona: '❌', popis: 'Nepravda' },
+    ],
+    spravnyKlic: u.pravda ? 'ano' : 'ne',
+    zpravaOk: `✅ ${u.proc}.`,
+    zpravaChyba: 'Zkus druhou možnost a přečti si vysvětlení.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Archimédův zákon (živá ukázka, ne kvíz) ------------------------------------------- */
+const ARCH_LATKY = [
+  { n: 'korek', h: 240 }, { n: 'smrkové dřevo', h: 450 }, { n: 'dubové dřevo', h: 750 },
+  { n: 'led', h: 917 }, { n: 'plast (PE)', h: 950 }, { n: 'sklo', h: 2500 },
+  { n: 'hliník', h: 2700 }, { n: 'železo', h: 7870 }, { n: 'olovo', h: 11340 },
+];
+const ARCH_KAPALINY = [
+  { n: 'voda', h: 1000, b: '#3d7ea6' }, { n: 'mořská voda', h: 1030, b: '#2f7f7a' },
+  { n: 'olej', h: 920, b: '#b08a1e' }, { n: 'líh', h: 789, b: '#7f8fa6' },
+  { n: 'med', h: 1420, b: '#a86b14' }, { n: 'rtuť', h: 13546, b: '#8a8f96' },
+];
+const G_TIHOVE = 9.81;
+const HLOUBKA_NADRZE = 3.0;   // dm – kolik se vejde pod hladinu
+
+const arch = {
+  latka: 3, kapalina: 0, objem: 2,   // objem v litrech (dm³)
+  hloubka: 0,                        // dm, spodek tělesa pod hladinou (záporné = nad ní)
+  v: 0, tazeno: false, anim: null,
+  strana() { return Math.cbrt(this.objem); },                    // dm
+  hustotaT() { return ARCH_LATKY[this.latka].h; },
+  hustotaK() { return ARCH_KAPALINY[this.kapalina].h; },
+  hmotnost() { return this.hustotaT() * this.objem / 1000; },    // kg
+  ponorenaVyska() { return Math.max(0, Math.min(this.hloubka, this.strana())); },
+  ponorenyObjem() { const a = this.strana(); return a * a * this.ponorenaVyska(); },   // litry
+  vztlak() { return this.hustotaK() * this.ponorenyObjem() / 1000 * G_TIHOVE; },
+  tiha() { return this.hmotnost() * G_TIHOVE; },
+  /* Rovnovážná hloubka: ponoří se přesně tolik, aby vztlak vyrovnal tíhu. */
+  rovnovaha() { return this.strana() * Math.min(1, this.hustotaT() / this.hustotaK()); },
+  klesa() { return this.hustotaT() > this.hustotaK() * 1.005; },
+  vznasiSe() { return Math.abs(this.hustotaT() - this.hustotaK()) <= this.hustotaK() * 0.005; },
+};
+
+function archKrok(dt) {
+  if (arch.tazeno) { arch.v = 0; return; }
+  const m = arch.hmotnost();
+  const zrychleni = (arch.vztlak() - arch.tiha()) / m;   // kladné = nahoru
+  arch.v += zrychleni * dt;
+  // odpor prostředí: v kapalině znatelný, ve vzduchu jen malý
+  const odpor = arch.ponorenaVyska() > 0 ? 4.5 : 0.5;
+  arch.v -= arch.v * odpor * dt;
+  arch.hloubka -= arch.v * dt;
+  const dno = HLOUBKA_NADRZE;
+  if (arch.hloubka > dno) { arch.hloubka = dno; if (arch.v < 0) arch.v = 0; }
+  // těleso může vyskočit nad hladinu, ale ne mimo scénu
+  if (arch.hloubka < -arch.strana() - 1.2) { arch.hloubka = -arch.strana() - 1.2; arch.v = 0; }
+}
+
+/* Měřítko šipek je společné pro obě síly (aby šly porovnat), ale omezené tak,
+   aby delší z nich nevylezla mimo plátno – u tělesa na dně je dolů málo místa. */
+function archMeritko(stredY, H, Fmax) {
+  const misto = Math.min(62, Math.max(26, H - 22 - stredY), Math.max(26, stredY - 22));
+  return misto / Math.max(Fmax, 0.001);
+}
+/* Velmi malou sílu kreslíme na minimální délku, ať je vidět, že vůbec působí. */
+function archDelkaSipky(F, mer) { return F < 0.01 ? 0 : Math.max(11, F * mer); }
+
+function archKresli() {
+  const cv = $('archPlatno');
+  if (!cv) return;
+  const dpr = window.devicePixelRatio || 1;
+  if (cv.width !== Math.round(cv.clientWidth * dpr)) {
+    cv.width = Math.round(cv.clientWidth * dpr);
+    cv.height = Math.round(cv.clientHeight * dpr);
+  }
+  const ctx = cv.getContext('2d');
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  const W = cv.clientWidth, H = cv.clientHeight;
+  const st = getComputedStyle(document.documentElement);
+  const tok = n => st.getPropertyValue(n).trim();
+  ctx.clearRect(0, 0, W, H);
+
+  const kap = ARCH_KAPALINY[arch.kapalina];
+  const nadrzL = 26, nadrzP = W * 0.56, dnoY = H - 26, hladinaY = H * 0.38;
+  const pxdm = (dnoY - hladinaY) / HLOUBKA_NADRZE;
+
+  // kapalina v nádobě – hladina drží na přepadu, přebytek odteče do odměrky
+  ctx.fillStyle = kap.b;
+  ctx.globalAlpha = 0.55;
+  ctx.fillRect(nadrzL, hladinaY, nadrzP - nadrzL, dnoY - hladinaY);
+  ctx.globalAlpha = 1;
+  ctx.strokeStyle = tok('--border-strong'); ctx.lineWidth = 3;
+  ctx.beginPath();
+  ctx.moveTo(nadrzL, H * 0.10); ctx.lineTo(nadrzL, dnoY);
+  ctx.lineTo(nadrzP, dnoY); ctx.lineTo(nadrzP, hladinaY);
+  ctx.stroke();
+  // přepad do odměrky
+  const odmL = W * 0.72, odmP = Math.min(W - 20, odmL + 66), odmH = H * 0.52;
+  ctx.beginPath();
+  ctx.moveTo(nadrzP, hladinaY); ctx.lineTo(odmL + 8, odmH - 6);
+  ctx.stroke();
+  ctx.beginPath();
+  ctx.moveTo(odmL, odmH); ctx.lineTo(odmL, dnoY); ctx.lineTo(odmP, dnoY); ctx.lineTo(odmP, odmH);
+  ctx.stroke();
+
+  // vytlačená kapalina v odměrce
+  const vytlaceno = arch.ponorenyObjem();
+  const podilOdm = Math.min(1, vytlaceno / 5);
+  const vyskaOdm = (dnoY - odmH) * podilOdm;
+  ctx.fillStyle = kap.b; ctx.globalAlpha = 0.55;
+  ctx.fillRect(odmL + 1.5, dnoY - vyskaOdm, odmP - odmL - 3, vyskaOdm);
+  ctx.globalAlpha = 1;
+  // stupnice odměrky – bez ní to není odměrka, ale jen sloupec barvy
+  ctx.strokeStyle = tok('--border-strong'); ctx.lineWidth = 1;
+  ctx.fillStyle = tok('--text-faint');
+  ctx.font = '9px system-ui, sans-serif'; ctx.textAlign = 'left';
+  for (let l = 1; l <= 5; l++) {
+    const y = dnoY - (dnoY - odmH) * (l / 5);
+    ctx.beginPath(); ctx.moveTo(odmP - 9, y); ctx.lineTo(odmP, y); ctx.stroke();
+    ctx.fillText(l + ' l', odmP + 4, y + 3);
+  }
+
+  // popisek patří nad přepad, jinak se s trubicí překrývá
+  const stredOdm = (odmL + odmP) / 2;
+  ctx.textAlign = 'center';
+  ctx.fillStyle = tok('--text-muted');
+  ctx.font = '11px system-ui, sans-serif';
+  ctx.fillText('vytlačená kapalina', stredOdm, H * 0.14);
+  ctx.fillStyle = tok('--text');
+  ctx.font = '600 13px system-ui, sans-serif';
+  ctx.fillText(vytlaceno.toFixed(2).replace('.', ',') + ' l = ' +
+    (arch.hustotaK() * vytlaceno / 1000).toFixed(2).replace('.', ',') + ' kg',
+    stredOdm, H * 0.14 + 17);
+
+  // hladina
+  ctx.strokeStyle = tok('--text-faint'); ctx.lineWidth = 1; ctx.setLineDash([4, 5]);
+  ctx.beginPath(); ctx.moveTo(nadrzL, hladinaY); ctx.lineTo(nadrzP, hladinaY); ctx.stroke();
+  ctx.setLineDash([]);
+
+  // těleso
+  const a = arch.strana() * pxdm;
+  const spodek = hladinaY + arch.hloubka * pxdm;
+  const stred = { x: (nadrzL + nadrzP) / 2, y: spodek - a / 2 };
+  ctx.fillStyle = '#e0a63f';
+  ctx.fillRect(stred.x - a / 2, spodek - a, a, a);
+  ctx.strokeStyle = tok('--accent'); ctx.lineWidth = 2;
+  ctx.strokeRect(stred.x - a / 2, spodek - a, a, a);
+  ctx.fillStyle = '#3b2f16';
+  ctx.font = '600 11px system-ui, sans-serif'; ctx.textAlign = 'center';
+  if (a > 34) ctx.fillText(ARCH_LATKY[arch.latka].n, stred.x, stred.y + 4);
+
+  // síly – obě stejným měřítkem, aby šlo porovnat, která je větší
+  const Fg = arch.tiha(), Fvz = arch.vztlak();
+  const mer = archMeritko(stred.y, H, Math.max(Fg, Fvz));
+  const delka = F => archDelkaSipky(F, mer);
+  /* Obě síly kreslíme svisle (tak taky působí) a odsadíme je od sebe vodorovně,
+     ať se dá porovnat jejich délka. Měřítko mají společné. */
+  const sipka = (posun, dy, barva, popis) => {
+    const d = Math.abs(dy);
+    if (d < 1) return;
+    const x = stred.x + posun, y2 = stred.y + dy, znak = Math.sign(dy);
+    const hrot = Math.min(11, d * 0.3);
+    ctx.strokeStyle = barva; ctx.fillStyle = barva; ctx.lineWidth = 3;
+    ctx.beginPath(); ctx.moveTo(x, stred.y); ctx.lineTo(x, y2); ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(x, y2);
+    ctx.lineTo(x - hrot * 0.5, y2 - znak * hrot);
+    ctx.lineTo(x + hrot * 0.5, y2 - znak * hrot);
+    ctx.closePath(); ctx.fill();
+    ctx.font = '600 12px system-ui, sans-serif';
+    ctx.textAlign = posun >= 0 ? 'left' : 'right';
+    ctx.fillText(popis, x + (posun >= 0 ? 10 : -10), y2 + znak * 5);
+  };
+  sipka(-15, delka(Fg), '#ef5350', 'Fg ' + Fg.toFixed(1).replace('.', ',') + ' N');
+  sipka(15, -delka(Fvz), '#42a5f5', 'Fvz ' + Fvz.toFixed(1).replace('.', ',') + ' N');
+}
+
+function archPrepis() {
+  const Fg = arch.tiha(), Fvz = arch.vztlak();
+  const vytlaceno = arch.ponorenyObjem();
+  const hmVytlacene = arch.hustotaK() * vytlaceno / 1000;
+  const podil = arch.strana() > 0 ? arch.ponorenaVyska() / arch.strana() : 0;
+  const naDne = arch.hloubka >= HLOUBKA_NADRZE - 1e-6;
+  const c = (x, d) => x.toFixed(d).replace('.', ',');
+
+  const v = $('archVerdikt');
+  if (arch.klesa()) {
+    v.className = 'arch-verdikt klesa';
+    v.innerHTML = `⬇️ <span>Těleso <b>klesá ke dnu</b> — je hustší než kapalina, takže vztlak tíhu nevyrovná.</span>`;
+  } else if (arch.vznasiSe()) {
+    v.className = 'arch-verdikt vznasi';
+    v.innerHTML = `⚖️ <span>Těleso se <b>vznáší</b> — hustoty jsou stejné, obě síly se přesně ruší.</span>`;
+  } else {
+    v.className = 'arch-verdikt plave';
+    v.innerHTML = `🛟 <span>Těleso <b>plave</b> a ponořeno je <b>${Math.round(podil * 100)} %</b> jeho objemu — přesně poměr hustot ${arch.hustotaT()} : ${arch.hustotaK()}.</span>`;
+  }
+
+  $('archCisla').innerHTML = [
+    ['Hustota tělesa', arch.hustotaT() + ' kg/m³'],
+    ['Hustota kapaliny', arch.hustotaK() + ' kg/m³'],
+    ['Objem tělesa', c(arch.objem, 2) + ' l'],
+    ['Hmotnost tělesa', c(arch.hmotnost(), 2) + ' kg'],
+    ['Tíhová síla Fg', c(Fg, 1) + ' N', true],
+    ['Vztlaková síla Fvz', c(Fvz, 1) + ' N', true],
+    ['Vytlačená kapalina', c(vytlaceno, 2) + ' l'],
+    ['Tíha vytlačené kapaliny', c(hmVytlacene * G_TIHOVE, 1) + ' N', true],
+  ].concat(naDne ? [['Dno tlačí silou', c(Math.max(0, Fg - Fvz), 1) + ' N']] : [])
+   .map(([k, val, klic]) => `<div class="${klic ? 'klic' : ''}"><span>${k}</span><b>${val}</b></div>`).join('');
+}
+
+function archSmycka() {
+  archKrok(1 / 60);
+  archKresli();
+  archPrepis();
+  arch.anim = requestAnimationFrame(archSmycka);
+}
+
+function archStop() {
+  if (arch.anim) { cancelAnimationFrame(arch.anim); arch.anim = null; }
+}
+
+function archimedes() {
+  const p = $('plocha');
+  p.innerHTML = `
+    <div class="arch">
+      <div class="zadani">Kapalina nadlehčuje těleso silou, která se rovná <b>tíze kapaliny, kterou těleso vytlačí</b>.</div>
+      <canvas id="archPlatno"></canvas>
+      <div class="arch-ovladani">
+        <label>Těleso <select id="archLatka">${ARCH_LATKY.map((l, i) =>
+          `<option value="${i}">${l.n} (${l.h} kg/m³)</option>`).join('')}</select></label>
+        <label>Kapalina <select id="archKapalina">${ARCH_KAPALINY.map((k, i) =>
+          `<option value="${i}">${k.n} (${k.h} kg/m³)</option>`).join('')}</select></label>
+        <label>Objem <input type="range" id="archObjem" min="0.5" max="5" step="0.1" value="2"><b id="archObjemV">2,00 l</b></label>
+        <button id="archPonorit">⬇️ Zatlač a pusť</button>
+        <button id="archReset">🔄 Znovu</button>
+      </div>
+      <div class="arch-verdikt" id="archVerdikt"></div>
+      <div class="arch-cisla" id="archCisla"></div>
+      <p class="arch-tip">💡 Táhni tělesem myší nebo prstem a pusť ho — uvidíš, jak ho kapalina vytlačí zpátky.
+        Vyzkoušej <b>led ve vodě</b> (pod hladinou zmizí 92 % — proto je ledovec tak zrádný),
+        <b>led v líhu</b> (klesne ke dnu!) nebo <b>železo ve rtuti</b> (plave).</p>
+    </div>`;
+
+  $('archLatka').value = String(arch.latka);
+  $('archKapalina').value = String(arch.kapalina);
+  $('archObjem').value = String(arch.objem);
+
+  const nastav = () => {
+    arch.latka = Number($('archLatka').value);
+    arch.kapalina = Number($('archKapalina').value);
+    arch.objem = Number($('archObjem').value);
+    $('archObjemV').textContent = arch.objem.toFixed(2).replace('.', ',') + ' l';
+    // po změně začneme z rovnovážné polohy, ať se scéna zbytečně nerozhoupe
+    arch.hloubka = arch.klesa() ? HLOUBKA_NADRZE : arch.rovnovaha();
+    arch.v = 0;
+  };
+  ['archLatka', 'archKapalina', 'archObjem'].forEach(id => $(id).oninput = nastav);
+  $('archPonorit').onclick = () => {
+    arch.hloubka = Math.min(HLOUBKA_NADRZE, arch.strana() + 1.4);
+    arch.v = 0;
+  };
+  $('archReset').onclick = nastav;
+
+  /* Tažení tělesa – nejnázornější ovládání: dítě samo cítí, že to „tlačí zpátky". */
+  const cv = $('archPlatno');
+  const dmZBodu = e => {
+    const r = cv.getBoundingClientRect();
+    const H = cv.clientHeight, dnoY = H - 26, hladinaY = H * 0.38;
+    const pxdm = (dnoY - hladinaY) / HLOUBKA_NADRZE;
+    return ((e.clientY - r.top) * (H / r.height) - hladinaY) / pxdm;
+  };
+  cv.addEventListener('pointerdown', e => {
+    arch.tazeno = true;
+    cv.classList.add('tahne');
+    // u nedůvěryhodné události vyhodí výjimku a shodilo by to celý handler
+    try { cv.setPointerCapture(e.pointerId); } catch (err) { /* nevadí */ }
+    arch.hloubka = Math.max(-arch.strana(), Math.min(HLOUBKA_NADRZE, dmZBodu(e) + arch.strana() / 2));
+  });
+  cv.addEventListener('pointermove', e => {
+    if (!arch.tazeno) return;
+    arch.hloubka = Math.max(-arch.strana(), Math.min(HLOUBKA_NADRZE, dmZBodu(e) + arch.strana() / 2));
+  });
+  const pusť = () => { arch.tazeno = false; cv.classList.remove('tahne'); };
+  cv.addEventListener('pointerup', pusť);
+  cv.addEventListener('pointercancel', pusť);
+  cv.addEventListener('pointerleave', pusť);
+
+  nastav();
+  archStop();
+  archSmycka();
+}
+
+const REZIMY = { latkaTeleso, skupenstvi, castice, vlastnosti, archimedes };
+function novaUloha() {
+  archStop();
+  $('btnDalsi').style.display = rezim === 'archimedes' ? 'none' : '';
+  REZIMY[rezim]();
+}
+
+document.querySelectorAll('#rezimy button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#rezimy button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  rezim = b.dataset.rezim;
+  novaUloha();
+}));
+$('btnDalsi').addEventListener('click', novaUloha);
+document.addEventListener('keydown', e => {
+  if (rezim === 'archimedes') return;   // v ukázce by klávesa jen restartovala scénu
+  if (e.key === 'ArrowRight' || e.key === 'Enter') { e.preventDefault(); novaUloha(); }
+});
+novaUloha();
+</script>
+</body>
+</html>

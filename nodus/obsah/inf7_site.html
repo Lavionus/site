@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Počítačové sítě a internet</title>
+  <link rel="stylesheet" href="../common.css">
+  <link rel="stylesheet" href="../vyuka.css">
+  <script src="../theme.js"></script>
+  <script src="../uloha.js"></script>
+  <style>
+    .schema { width: min(560px, 96%); }
+    .schema .spoj { stroke: var(--border-strong); stroke-width: 2.5; }
+    .schema .uzel { cursor: pointer; }
+    .schema .uzel rect { fill: var(--bg-control); stroke: var(--border-strong); stroke-width: 2; rx: 10; }
+    .schema .uzel:hover rect { stroke: var(--accent); }
+    .schema .uzel.spravne rect { fill: var(--ok); stroke: var(--ok); }
+    .schema .uzel.spatne rect { fill: var(--danger); stroke: var(--danger); }
+    .schema .uzel.hotovy rect { fill: var(--accent-soft); stroke: var(--accent); }
+    .schema .ikona { font-size: 22px; text-anchor: middle; }
+    .schema .nazev { fill: var(--text-muted); font-size: 11px; text-anchor: middle; }
+    .schema .paket { fill: var(--warn); }
+    .uloha-text { max-width: 640px; font-size: 1.02rem; line-height: 1.6; }
+    .uloha-text b { color: var(--accent); }
+    .cesta { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; color: var(--text-faint);
+      font-size: 0.8rem; }
+    .cesta span { background: var(--bg-control); border: 1px solid var(--border); border-radius: 6px; padding: 3px 8px; }
+  </style>
+</head>
+<body>
+  <h1>🌐 Počítačové sítě a internet</h1>
+  <p class="podtitul">Pro 7. ročník: jak putují data od tvého zařízení k serveru a zpět.</p>
+
+  <div class="rezimy" id="rezimy">
+    <button data-rezim="cestaDat" class="active">📦 Cesta dat</button>
+    <button data-rezim="pojmy">📖 Pojmy</button>
+    <button data-rezim="prvky">🔌 Prvky sítě</button>
+    <button data-rezim="bezpecnost">🔒 Bezpečně na síti</button>
+  </div>
+
+  <div class="plocha" id="plocha"></div>
+
+  <div class="ovladani">
+    <button class="hlavni" id="btnDalsi">Přeskočit →</button>
+    <span class="skore" id="skore"></span>
+  </div>
+
+  <p class="napoveda">
+    Data se posílají po malých kouscích – <b>paketech</b>. Cestu jim hledají <b>směrovače (routery)</b>,
+    adresu cíle udává <b>IP adresa</b> a doménové jméno na ni překládá <b>DNS</b>.
+    Pravidla komunikace popisují <b>protokoly</b> (HTTP, HTTPS).
+  </p>
+
+<script>
+const $ = id => document.getElementById(id);
+const skore = Uloha.skore('nodus_inf7_site', $('skore'));
+let rezim = 'cestaDat';
+function odezvaEl() { const d = document.createElement('div'); d.className = 'odezva'; return d; }
+
+/* Uzly na cestě dat, v pořadí od uživatele k serveru */
+const CESTA = [
+  { klic: 'pocitac', ikona: '💻', nazev: 'tvůj počítač', info: 'napíšeš adresu do prohlížeče' },
+  { klic: 'router', ikona: '📶', nazev: 'domácí router', info: 'spojuje domácí síť s internetem' },
+  { klic: 'poskytovatel', ikona: '🏢', nazev: 'poskytovatel (ISP)', info: 'předá data do páteřní sítě' },
+  { klic: 'dns', ikona: '📇', nazev: 'DNS server', info: 'přeloží doménové jméno na IP adresu' },
+  { klic: 'server', ikona: '🖥️', nazev: 'webový server', info: 'pošle zpět stránku, kterou jsi chtěl' },
+];
+
+function svgSchema(poradi, hotove) {
+  const sirkaUzlu = 96, mezera = 16;
+  const uzly = poradi.map((u, i) => {
+    const x = 10 + i * (sirkaUzlu + mezera);
+    const trida = 'uzel' + (hotove.includes(u.klic) ? ' hotovy' : '');
+    return `<g class="${trida}" data-klic="${u.klic}">
+      <rect x="${x}" y="30" width="${sirkaUzlu}" height="64"/>
+      <text class="ikona" x="${x + sirkaUzlu / 2}" y="62">${u.ikona}</text>
+      <text class="nazev" x="${x + sirkaUzlu / 2}" y="84">${u.nazev}</text>
+    </g>`;
+  }).join('');
+  const spoje = poradi.slice(1).map((_, i) => {
+    const x1 = 10 + i * (sirkaUzlu + mezera) + sirkaUzlu;
+    return `<line class="spoj" x1="${x1}" y1="62" x2="${x1 + mezera}" y2="62"/>`;
+  }).join('');
+  return `<svg class="schema" viewBox="0 0 ${10 + poradi.length * (sirkaUzlu + mezera)} 110">
+    ${spoje}${uzly}</svg>`;
+}
+
+/* ---- Cesta dat: klikej uzly ve správném pořadí -------------------------------------------- */
+function cestaDat() {
+  const p = $('plocha');
+  const poradi = Uloha.zamichej([...CESTA]);
+  const hotove = [];
+  let chyboval = false;
+  const stav = { chyboval: false, hotovo: false };
+
+  p.innerHTML = `<div class="zadani uloha-text">Klepej na prvky <b>v pořadí, jak jimi projdou data</b>
+    od tvého počítače k webovému serveru.</div>`;
+  const obal = document.createElement('div');
+  obal.innerHTML = svgSchema(poradi, hotove);
+  p.appendChild(obal);
+  const odezva = odezvaEl();
+  p.appendChild(odezva);
+
+  function prekresli() {
+    obal.innerHTML = svgSchema(poradi, hotove);
+    napoj();
+  }
+  function napoj() {
+    obal.querySelectorAll('.uzel').forEach(g => g.addEventListener('click', () => {
+      if (stav.hotovo) return;
+      const ocekavany = CESTA[hotove.length].klic;
+      if (g.dataset.klic !== ocekavany) {
+        chyboval = true;
+        Uloha.trhni(g);
+        g.classList.add('spatne');
+        setTimeout(() => g.classList.remove('spatne'), 420);
+        odezva.className = 'odezva chyba';
+        odezva.textContent = `Ještě ne – teď je na řadě jiný prvek. (Krok ${hotove.length + 1} z ${CESTA.length}.)`;
+        return;
+      }
+      hotove.push(g.dataset.klic);
+      const uzel = CESTA.find(u => u.klic === g.dataset.klic);
+      odezva.className = 'odezva ok';
+      odezva.textContent = `${hotove.length}. ${uzel.nazev} – ${uzel.info}`;
+      if (hotove.length === CESTA.length) {
+        stav.hotovo = true;
+        odezva.textContent = '✅ Data došla až na server a stránka se vrací zpět!';
+        skore.vyhodnot(!chyboval);
+        setTimeout(novaUloha, Uloha.PRODLEVA + 500);
+      }
+      prekresli();
+    }));
+  }
+  napoj();
+}
+
+/* ---- Pojmy ------------------------------------------------------------------------------------ */
+const POJMY = [
+  { q: 'Co je IP adresa?', a: 'číselná adresa zařízení v síti', b: ['jméno stránky', 'heslo k wi-fi', 'druh kabelu'] },
+  { q: 'K čemu slouží DNS?', a: 'překládá doménové jméno na IP adresu', b: ['šifruje data', 'zrychluje připojení', 'blokuje reklamy'] },
+  { q: 'Co dělá router (směrovač)?', a: 'posílá pakety správným směrem mezi sítěmi', b: ['ukládá webové stránky', 'vyrábí IP adresy', 'tiskne dokumenty'] },
+  { q: 'Co je paket?', a: 'malá část dat s adresou odesílatele i příjemce', b: ['program v počítači', 'druh kabelu', 'jméno serveru'] },
+  { q: 'Co je server?', a: 'počítač, který poskytuje služby ostatním', b: ['každý mobil', 'program na kreslení', 'jiné slovo pro router'] },
+  { q: 'Co znamená protokol HTTP?', a: 'pravidla pro přenos webových stránek', b: ['název prohlížeče', 'druh počítače', 'typ souboru'] },
+  { q: 'Čím se liší HTTPS od HTTP?', a: 'komunikace je šifrovaná', b: ['je zdarma', 'je rychlejší', 'funguje bez internetu'] },
+  { q: 'Co je LAN?', a: 'místní síť, například doma nebo ve škole', b: ['celosvětová síť', 'jméno serveru', 'druh prohlížeče'] },
+  { q: 'Co je Wi-Fi?', a: 'bezdrátové připojení do místní sítě', b: ['jiné slovo pro internet', 'značka počítače', 'protokol pro e-mail'] },
+  { q: 'Kdo vlastní internet?', a: 'nikdo – je to propojení mnoha nezávislých sítí', b: ['jedna firma', 'OSN', 'stát, ve kterém žijeme'] },
+];
+function pojmy() {
+  const p = $('plocha');
+  const u = Uloha.nahodne(POJMY);
+  p.innerHTML = `<div class="zadani uloha-text">${u.q}</div>`;
+  const odezva = odezvaEl();
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([u.a, ...u.b]).map(t => ({ klic: t, popis: t })),
+    spravnyKlic: u.a,
+    zpravaOk: `✅ ${u.a}`,
+    zpravaChyba: 'Vrať se k pojmům v liště pod úlohou.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Prvky sítě -------------------------------------------------------------------------------- */
+const PRVKY = [
+  { q: 'Čím propojíš několik počítačů v jedné učebně?', a: 'přepínačem (switchem)', b: ['DNS serverem', 'tiskárnou', 'modemem do mobilu'] },
+  { q: 'Co potřebuješ, aby se domácí síť dostala do internetu?', a: 'router s připojením od poskytovatele', b: ['jen delší kabel', 'druhý počítač', 'novou IP adresu od školy'] },
+  { q: 'Jaký kabel se běžně používá v místních sítích?', a: 'kroucená dvojlinka s koncovkou RJ-45', b: ['HDMI', 'napájecí kabel', 'audio kabel'] },
+  { q: 'Co umožňuje připojení bez kabelu?', a: 'bezdrátový přístupový bod (Wi-Fi)', b: ['switch', 'tiskový server', 'čtečka karet'] },
+  { q: 'K čemu slouží firewall?', a: 'hlídá a filtruje síťový provoz', b: ['chladí počítač', 'zálohuje data', 'zrychluje wi-fi'] },
+  { q: 'Co je NAS nebo souborový server ve škole?', a: 'úložiště, ke kterému se dostane víc uživatelů', b: ['druh routeru', 'program na kreslení', 'typ kabelu'] },
+  { q: 'Proč mají zařízení v síti různé IP adresy?', a: 'aby se daly navzájem rozlišit a doručit jim data', b: ['aby byla dražší', 'kvůli barvě kabelu', 'kvůli rychlosti disku'] },
+];
+function prvky() {
+  const p = $('plocha');
+  const u = Uloha.nahodne(PRVKY);
+  p.innerHTML = `<div class="zadani uloha-text">${u.q}</div>`;
+  const odezva = odezvaEl();
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([u.a, ...u.b]).map(t => ({ klic: t, popis: t })),
+    spravnyKlic: u.a,
+    zpravaOk: `✅ ${u.a}`,
+    zpravaChyba: 'Rozmysli si, co který prvek sítě dělá.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Bezpečně na síti ----------------------------------------------------------------------------- */
+const BEZPECNOST = [
+  { q: 'Podle čeho poznáš, že je spojení se stránkou šifrované?', a: 'adresa začíná https:// a v prohlížeči je zámek', b: ['stránka je barevná', 'načte se rychle', 'má hodně reklam'] },
+  { q: 'Co je phishing?', a: 'podvodná zpráva, která láká přihlašovací údaje', b: ['druh viru v obrázku', 'rychlé připojení', 'druh zálohy'] },
+  { q: 'Jaké heslo je bezpečné?', a: 'dlouhé, jedinečné pro každou službu', b: ['jméno a rok narození', 'stejné všude, ať se pamatuje', '12345678'] },
+  { q: 'Co je dvoufaktorové ověření?', a: 'k heslu se přidá druhý důkaz, například kód z mobilu', b: ['dvě hesla za sebou', 'dva e-maily', 'přihlášení na dvou počítačích'] },
+  { q: 'Proč nepřipojovat citlivé služby přes neznámou veřejnou Wi-Fi?', a: 'provoz může někdo odposlouchávat', b: ['je to pomalé', 'je to drahé', 'nefunguje tam prohlížeč'] },
+  { q: 'Co udělat, když ti přijde e-mail „vyhrál jsi telefon, klikni sem“?', a: 'nereagovat a zprávu smazat', b: ['kliknout a vyplnit údaje', 'přeposlat kamarádům', 'odpovědět svou adresou'] },
+  { q: 'Proč aktualizovat systém a aplikace?', a: 'opravují se bezpečnostní chyby', b: ['mění se barvy ikon', 'zrychlí se internet', 'ušetří se místo'] },
+  { q: 'Co je digitální stopa?', a: 'záznam o tom, co jsi na internetu dělal a sdílel', b: ['soubor s heslem', 'druh viru', 'jméno domény'] },
+];
+function bezpecnost() {
+  const p = $('plocha');
+  const u = Uloha.nahodne(BEZPECNOST);
+  p.innerHTML = `<div class="zadani uloha-text">${u.q}</div>`;
+  const odezva = odezvaEl();
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([u.a, ...u.b]).map(t => ({ klic: t, popis: t })),
+    spravnyKlic: u.a,
+    zpravaOk: `✅ ${u.a}`,
+    zpravaChyba: 'Zamysli se, co by udělal opatrný uživatel.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+const REZIMY = { cestaDat, pojmy, prvky, bezpecnost };
+function novaUloha() { REZIMY[rezim](); }
+
+document.querySelectorAll('#rezimy button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#rezimy button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  rezim = b.dataset.rezim;
+  novaUloha();
+}));
+$('btnDalsi').addEventListener('click', novaUloha);
+novaUloha();
+</script>
+</body>
+</html>

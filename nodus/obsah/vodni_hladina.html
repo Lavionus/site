@@ -1,0 +1,1404 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>💧 Vodní hladina – vlny a slapy</title>
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<style>
+body{height:100vh;overflow:hidden;display:flex;flex-direction:column}
+.horni{display:flex;gap:10px;align-items:center;padding:10px 16px;background:var(--bg-elevated);border-bottom:1px solid var(--border);flex-wrap:wrap}
+.horni h1{font-size:1.05rem;font-weight:600;margin-right:auto}
+.panel{display:flex;gap:14px;align-items:center;padding:9px 16px;background:var(--bg-panel);border-bottom:1px solid var(--border);flex-wrap:wrap}
+.panel label{font-size:.78rem;color:var(--text-muted);display:flex;align-items:center;gap:7px}
+.panel .hodnota{color:var(--text-faint);min-width:2.6em;font-variant-numeric:tabular-nums}
+input[type=range]{width:110px;accent-color:var(--accent)}
+input[type=number]{width:5.4em;background:var(--bg-input);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:5px 8px;font-size:.8rem;font-variant-numeric:tabular-nums}
+select{background:var(--bg-input);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:5px 8px;font-size:.8rem}
+button{background:var(--bg-control);border:1px solid var(--border-strong);color:var(--text);border-radius:6px;padding:7px 13px;font-size:.82rem;cursor:pointer}
+button:hover{background:var(--accent);color:#fff;border-color:var(--accent)}
+button.zap{background:var(--accent);color:#fff;border-color:var(--accent)}
+.prep{display:flex;align-items:center;gap:7px;font-size:.78rem;color:var(--text-muted);cursor:pointer;user-select:none}
+.prep input{accent-color:var(--accent);width:16px;height:16px;cursor:pointer}
+.plocha{flex:1;position:relative;overflow:hidden;background:#08131f}
+canvas{display:block;width:100%;height:100%;touch-action:none;cursor:crosshair}
+.zalozky{display:flex;gap:6px}
+.zalozky button{padding:7px 14px}
+
+/* ---- modul slapových vln ---- */
+.slapy{flex:1;display:grid;grid-template-columns:1.35fr 1fr;grid-template-rows:1fr auto auto;gap:1px;background:var(--border);overflow:hidden}
+.slapy .box{position:relative;background:#050a14;overflow:hidden;min-height:0}
+.slapy #boxZeme{grid-row:1 / span 2}
+.slapy #boxPristav{background:#0a1826}
+.slapy #boxGraf{background:var(--bg-panel)}
+.slapy .box canvas{cursor:default}
+.popisek{position:absolute;left:10px;top:8px;font-size:.72rem;color:rgba(200,220,240,.72);pointer-events:none}
+/* u Země může Slunce obíhat i horním okrajem – popisek proto patří dolů */
+#boxZeme .popisek{top:auto;bottom:8px;line-height:1.5}
+#boxGraf .popisek{color:var(--text-faint)}
+:root[data-theme="light"] #boxPristav .popisek{color:#33455a}
+.stav{grid-column:1 / -1;background:var(--bg-panel);padding:8px 16px;font-size:.8rem;color:var(--text-muted);display:flex;gap:8px 18px;flex-wrap:wrap;align-items:center}
+.stav b{color:var(--text)}
+.stav .znak{font-size:1.15rem;line-height:1}
+.skryto{display:none !important}
+@media(max-width:860px){
+  .slapy{grid-template-columns:1fr;grid-template-rows:minmax(260px,46vh) minmax(150px,24vh) minmax(140px,22vh) auto;overflow:auto}
+  .slapy #boxZeme{grid-row:auto}
+}
+.info{position:absolute;top:12px;right:12px;width:250px;max-width:calc(100% - 24px);background:rgba(10,22,34,.92);border:1px solid rgba(120,170,220,.35);border-radius:10px;padding:11px 14px;font-size:.78rem;line-height:1.6;color:#b6c8da}
+.info b{color:#e8f2fb}
+.info .zavri{position:absolute;top:6px;right:8px;background:none;border:none;color:#8fa6bb;font-size:1rem;padding:0;cursor:pointer}
+.info .zavri:hover{background:none;color:#fff}
+/* nápověda leží na vodě, která je jednou tmavá a jednou světlá – proto vlastní podklad */
+.napoveda{position:absolute;left:12px;bottom:12px;font-size:.74rem;color:#cfe1f2;background:rgba(8,20,32,.6);padding:4px 9px;border-radius:6px;pointer-events:none}
+@media(max-width:760px){.info{display:none}.panel{gap:10px;padding:8px 10px}input[type=range]{width:88px}}
+</style>
+</head>
+<body>
+<div class="horni">
+  <h1>💧 Vodní hladina</h1>
+  <div class="zalozky">
+    <button id="tabVlny" class="zap">🌊 Vlny na hladině</button>
+    <button id="tabSlapy">🌕 Slapové vlny</button>
+  </div>
+  <button id="btnPauza">⏸️ Pauza</button>
+  <button id="btnClear">🧹 Uklidnit</button>
+  <button id="btnInfo">❓ Nápověda</button>
+</div>
+
+<div class="panel" id="panelVlny">
+  <label>🧰 <select id="nastroj">
+      <option value="kaminek">🪨 Házet kamínky</option>
+      <option value="zabka">🥏 Házet žabky</option>
+      <option value="kamen">🗿 Položit kámen</option>
+      <option value="klada">🪵 Spustit kládu</option>
+      <option value="rakosi">🌾 Zasadit rákosí</option>
+      <option value="guma">🧽 Odebrat těleso</option>
+    </select></label>
+  <label>💧 Vlnka <input type="range" id="velikost" min="1" max="8" step="1" value="4"><span class="hodnota" id="velikostV">4</span></label>
+  <label>💨 Rychlost vln <input type="range" id="rychlost" min="10" max="45" step="1" value="30"><span class="hodnota" id="rychlostV">30</span></label>
+  <label>🫧 Tlumení <input type="range" id="tlumeni" min="0" max="60" step="1" value="22"><span class="hodnota" id="tlumeniV">22</span></label>
+  <label class="prep"><input type="checkbox" id="melcina" checked> 🌾 Mělčina tlumí</label>
+  <label>🎨 <select id="zobrazeni">
+      <option value="voda">Voda</option>
+      <option value="vyska">Výška (barevně)</option>
+      <option value="vrstevnice">Vrstevnice</option>
+    </select></label>
+  <label>🧱 <select id="prekazka">
+      <option value="zadna">Bez přehrady</option>
+      <option value="stena">Přehrada</option>
+      <option value="stena1">Jedna štěrbina</option>
+      <option value="stena2">Dvě štěrbiny</option>
+    </select></label>
+  <label>💧 <select id="kapac">
+      <option value="0">Bez kapání</option>
+      <option value="1">1 kapátko</option>
+      <option value="2">2 kapátka</option>
+    </select></label>
+  <label>⏱️ Frekvence <input type="range" id="frekvence" min="2" max="30" step="1" value="12"><span class="hodnota" id="frekvenceV">12</span></label>
+  <label class="prep"><input type="checkbox" id="dest"> 🌧️ Déšť</label>
+  <button id="btnRybnik">🌱 Nový rybník</button>
+  <label>🎲 <input type="number" id="seed" min="1" max="99999" step="1" value="1" title="Semínko generátoru – stejné číslo dá vždycky stejný rybník"></label>
+</div>
+
+<div class="panel skryto" id="panelSlapy">
+  <label>⏱️ Rychlost času <input type="range" id="slRychlost" min="1" max="60" step="1" value="12"><span class="hodnota" id="slRychlostV">1,2</span> h/s</label>
+  <label class="prep"><input type="checkbox" id="slSlunce" checked> ☀️ Přidat vliv Slunce</label>
+  <label>🏙️ Poloha města <input type="range" id="slMesto" min="0" max="359" step="1" value="0"></label>
+  <label class="prep"><input type="checkbox" id="slSipky"> ➡️ Šipky slapových sil</label>
+  <label>📈 <select id="slOkno">
+      <option value="48">Graf: 2 dny</option>
+      <option value="168">Graf: týden</option>
+      <option value="720" selected>Graf: měsíc</option>
+    </select></label>
+  <button id="slNov">🌑 Novoluní</button>
+  <button id="slCtvrt">🌓 První čtvrť</button>
+  <button id="slUplnek">🌕 Úplněk</button>
+</div>
+
+<div class="plocha" id="plochaVlny">
+  <canvas id="c"></canvas>
+  <div class="info" id="infoBox">
+    <button class="zavri" id="zavriInfo" title="Zavřít">✕</button>
+    <b>Jak to funguje</b><br>
+    Hladina je síť pružně spojených bodů – rozruch se od místa dopadu šíří dál
+    jako <b>kruhová vlna</b>. U břehu je mělko a mělká voda vlnu zpomaluje
+    (rychlost je <b>√(g·h)</b>), takže se vlna k břehu stáčí. Tření ve vodě jí
+    přitom ubírá energii, a tak každé rozvlnění <b>postupně zanikne</b>.<br><br>
+    <b>Zkus si</b><br>
+    • Klikni (nebo táhni) do vody – hodíš kamínek.<br>
+    • Nástrojem <b>🥏 Házet žabky</b> se dá házet naplocho: namáčkni místo,
+    odkud házíš, táhni myší <b>dozadu</b> (napřáhneš se – žlutá čára ukáže,
+    kam kamínek doskáče) a pusť. Každý odraz ubere rychlost, skoky se zkracují
+    a nakonec se žabka utopí.<br>
+    • Vlož do rybníka <b>kámen</b> (vlny se od něj odrážejí), <b>kládu</b>
+    (houpe se a sama vlny vysílá) nebo <b>rákosí</b> (vlny v něm dohasnou).<br>
+    • <b>🌱 Nový rybník</b> vygeneruje jiné břehy. Stejné semínko = stejný rybník.<br>
+    • Zapni <b>dvě kapátka</b> – v místech, kde se hřeben potká s hřebenem,
+    vzniká <b>interference</b>.<br>
+    • <b>Dvě štěrbiny</b> + jedno kapátko = školní pokus s ohybem vlnění.<br>
+    • Zvyš <b>tlumení</b> – voda je „hustší“ a vlny utichnou dřív.
+  </div>
+  <div class="napoveda" id="napoveda">Klikni nebo táhni do hladiny 🪨</div>
+</div>
+
+<div class="slapy skryto" id="plochaSlapy">
+  <div class="box" id="boxZeme">
+    <canvas id="cZeme"></canvas>
+    <div class="popisek">Pohled na Zemi od severního pólu · výška vodní vlny je hodně zveličená<br>Proč jsou boule dvě? → ❓ Nápověda</div>
+    <div class="info" id="infoSlapy" style="display:none">
+      <button class="zavri" id="zavriInfoSlapy" title="Zavřít">✕</button>
+      <b>Proč jsou boule dvě?</b><br>
+      Měsíc přitahuje bližší stranu Země silněji než její střed a střed silněji
+      než odvrácenou stranu. Voda vpředu je tedy <b>přitažena k Měsíci</b>,
+      voda vzadu naopak <b>zaostává</b> – a vznikají dvě vodní boule.<br><br>
+      Země se pod nimi otáčí, takže každé místo projde oběma bulami:
+      <b>dva přílivy a dva odlivy za lunární den</b> (24 h 50 min).<br><br>
+      <b>Zkus si</b><br>
+      • Zapni <b>šipky sil</b> – uvidíš, jak voda „stéká“ k bouli.<br>
+      • Vypni <b>vliv Slunce</b>: rozkyv přestane kolísat, zůstane jen Měsíc.<br>
+      • <b>Novoluní / úplněk</b> = Slunce i Měsíc táhnou v jedné přímce →
+      <b>skočný příliv</b>. <b>První čtvrť</b> → <b>hluchý příliv</b>.<br>
+      • Přetáhni <b>polohu města</b> – přílivy přijdou v jiný čas.
+    </div>
+  </div>
+  <div class="box" id="boxPristav">
+    <canvas id="cPristav"></canvas>
+    <div class="popisek">Přístav – jak to vidí člověk na břehu</div>
+  </div>
+  <div class="box" id="boxGraf">
+    <canvas id="cGraf"></canvas>
+    <div class="popisek">Výška hladiny v čase</div>
+  </div>
+  <div class="stav" id="stavSlapy"></div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const canvas = $('c'), ctx = canvas.getContext('2d');
+
+/* ============================================================
+   RYBNÍK – vlny na hladině
+
+   Hladina je mřížka výšek. V každém kroku se počítá vlnová rovnice
+       u(t+1) = 2·u(t) − u(t−1) + k·(součet čtyř sousedů − 4·u)
+   Číslo k je druhá mocnina místní rychlosti vlny a není všude stejné:
+   u břehu je mělko a mělká voda vlny zpomaluje (c = √(g·h)). Vlna se
+   proto k břehu stáčí, na mělčině se zpomalí a v rákosí dohasne.
+   Každý krok se navíc výška násobí číslem těsně pod jedničkou – to je
+   tření ve vodě, díky němu každý rozruch po chvíli zanikne sám.
+
+   Břeh, kameny i stébla rákosí jsou pevné buňky: soused ve zdi vrací
+   vlastní hodnotu, což se chová jako odraz. Kláda naopak plave –
+   voda pod ní ji nadnáší a ona zpětně tlačí do vody, takže se houpe
+   a sama vlny vysílá.
+   ============================================================ */
+
+/* Simulace běží na vlastní mřížce a teprve výsledek se roztáhne přes plátno. */
+const pom = document.createElement('canvas');
+const pctx = pom.getContext('2d');
+let cols = 0, rady = 0, bunek = 0, img = null;
+let ted, pred, novy;                       // výšky hladiny: teď, minulý krok, nový krok
+let zed, kmap, tlum, hloub, tlumEx, sum;   // prostředí rybníka
+let sirkaPx = 0, vyskaPx = 0;
+
+const PAS = 0.19;              // šířka mělčiny u břehu (podíl poloměru rybníka)
+let bezi = true, cas = 0;
+const dopady = [];             // krátké kroužky v místě dopadu kamínku
+const telesa = [];             // kameny, klády a rákosí v rybníku
+
+/* Tělesa se drží v podílech plátna (x, y ∈ 0–1, rozměry v podílu šířky),
+   aby po změně velikosti okna zůstala tam, kde byla. */
+const naBunkyX = n => n * cols;
+const naBunkyY = n => n * rady;
+
+/* ---------- náhodná čísla se semínkem ---------- */
+function nahoda(s) {
+  let x = (s >>> 0) || 12345;
+  return () => {
+    x ^= x << 13; x >>>= 0;
+    x ^= x >>> 17;
+    x ^= x << 5; x >>>= 0;
+    return x / 4294967296;
+  };
+}
+
+/* ---------- tvar rybníka ---------- */
+const OBRYSU = 720;
+let seed = 1;
+const obrys = new Float32Array(OBRYSU).fill(1);   // poloměr břehu pro každý úhel
+
+function polomer(uhel) {
+  let i = uhel * OBRYSU / (2 * Math.PI);
+  i = ((i % OBRYSU) + OBRYSU) % OBRYSU;
+  const a = i | 0, f = i - a;
+  return obrys[a] * (1 - f) + obrys[(a + 1) % OBRYSU] * f;
+}
+
+/* Obrys je součet několika vln kolem dokola – rybník má díky tomu zátoky
+   i výběžky, ale nikdy se nerozpadne na dvě jezírka. */
+function novyRybnik(s) {
+  seed = ((s >>> 0) % 100000) || 1;
+  $('seed').value = seed;
+  const r = nahoda(Math.imul(seed, 2654435761));
+  const slozky = [];
+  for (let n = 2; n <= 7; n++) slozky.push({ n, a: (0.06 + r() * 0.12) / (n - 1), f: r() * 2 * Math.PI });
+
+  let mn = 9, mx = 0;
+  for (let i = 0; i < OBRYSU; i++) {
+    let v = 1;
+    for (const c of slozky) v += c.a * Math.cos(c.n * i * 2 * Math.PI / OBRYSU + c.f);
+    obrys[i] = v;
+    if (v < mn) mn = v;
+    if (v > mx) mx = v;
+  }
+  // pojistka: nejužší místo nesmí klesnout pod 55 % nejširšího
+  let f = 1;
+  if (mn / mx < 0.55) f = Math.min(1, 0.45 / (0.55 * (mx - 1) + (1 - mn)));
+  const norma = 1 + f * (mx - 1);
+  for (let i = 0; i < OBRYSU; i++) obrys[i] = (1 + f * (obrys[i] - 1)) / norma;
+
+  // rákosí vyroste samo v mělčinách u břehu
+  telesa.length = 0;
+  const trsu = 3 + Math.floor(r() * 4);
+  for (let k = 0; k < trsu; k++) {
+    const th = (k + 0.15 + r() * 0.7) / trsu * 2 * Math.PI;
+    const rad = polomer(th) - (0.2 + r() * 0.25) * PAS;
+    telesa.push(noveRakosi(0.5 + rad * Math.cos(th) * 0.455,
+      0.5 + rad * Math.sin(th) * 0.455,
+      0.018 + r() * 0.016, (r() * 1e9) | 0));
+  }
+  if (ted) { postavRybnik(); prestavMasky(); uklid(); }
+}
+
+/* Hloubka: kladná ve vodě (1 = nejhlubší), záporná na souši. */
+function postavRybnik() {
+  const cx = (cols - 1) / 2, cy = (rady - 1) / 2;
+  const rx = cols * 0.455, ry = rady * 0.455;
+  const r = nahoda(Math.imul(seed, 22695477) ^ 0x9e37);
+  const f1 = r() * 6.283, f2 = r() * 6.283;      // fáze mírného zvlnění dna
+  for (let y = 0; y < rady; y++) {
+    for (let x = 0; x < cols; x++) {
+      const i = y * cols + x;
+      const dx = (x - cx) / rx, dy = (y - cy) / ry;
+      const d = Math.sqrt(dx * dx + dy * dy);
+      const t = (polomer(Math.atan2(dy, dx)) - d) / PAS;
+      if (t <= 0) hloub[i] = Math.max(-1.5, t);
+      else {
+        const u = t < 1 ? t : 1;
+        hloub[i] = u * u * (3 - 2 * u) * (0.88 + 0.12 * Math.sin(dx * 6.4 + f1) * Math.cos(dy * 5.7 + f2));
+      }
+      let h = Math.imul(x + 1, 374761393) ^ Math.imul(y + 1, 668265263) ^ Math.imul(seed, 1274126177);
+      h = Math.imul(h ^ (h >>> 13), 1274126177);
+      sum[i] = (h >>> 24) & 255;
+    }
+  }
+}
+
+/* ---------- překážky (břeh, kameny, rákosí, přehrada) ---------- */
+function prestavMasky() {
+  if (!zed) return;
+  for (let i = 0; i < bunek; i++) { zed[i] = hloub[i] <= 0 ? 1 : 0; tlumEx[i] = 0; }
+  postavPrehradu();
+
+  for (const o of telesa) {
+    const gx = naBunkyX(o.x), gy = naBunkyY(o.y);
+    if (o.typ === 'kamen') {
+      const r = o.r * cols, rr = r * r;
+      for (let y = Math.max(0, Math.floor(gy - r)); y <= Math.min(rady - 1, Math.ceil(gy + r)); y++)
+        for (let x = Math.max(0, Math.floor(gx - r)); x <= Math.min(cols - 1, Math.ceil(gx + r)); x++) {
+          const dx = x - gx, dy = y - gy;
+          if (dx * dx + dy * dy <= rr) zed[y * cols + x] = 1;
+        }
+    } else if (o.typ === 'rakosi') {
+      // každé stéblo je drobná překážka – houština vlnu rozbije
+      for (const st of o.stebla) {
+        if (!st.pevne) continue;
+        const x = Math.round(gx + st.dx * cols), y = Math.round(gy + st.dy * cols);
+        if (x < 1 || y < 1 || x > cols - 2 || y > rady - 2) continue;
+        zed[y * cols + x] = 1;
+      }
+      // a k tomu vlnu tlumí i voda mezi stébly
+      const r = o.r * cols * 1.3;
+      for (let y = Math.max(0, Math.floor(gy - r)); y <= Math.min(rady - 1, Math.ceil(gy + r)); y++)
+        for (let x = Math.max(0, Math.floor(gx - r)); x <= Math.min(cols - 1, Math.ceil(gx + r)); x++) {
+          const dx = x - gx, dy = y - gy, d = Math.sqrt(dx * dx + dy * dy);
+          if (d >= r) continue;
+          const i = y * cols + x, v = 0.05 * (1 - d / r);
+          if (v > tlumEx[i]) tlumEx[i] = v;
+        }
+    }
+  }
+  obnovProstredi();
+}
+
+function postavPrehradu() {
+  const typ = $('prekazka').value;
+  if (typ === 'zadna') return;
+  const x0 = Math.round(cols * 0.5), tl = Math.max(2, Math.round(cols * 0.008));
+  const stred = rady / 2;
+  const sterbina = Math.max(3, Math.round(rady * 0.035)), rozestup = Math.round(rady * 0.15);
+  for (let y = 0; y < rady; y++) {
+    let volno = false;
+    if (typ === 'stena1') volno = Math.abs(y - stred) < sterbina / 2;
+    else if (typ === 'stena2') volno = Math.abs(Math.abs(y - stred) - rozestup / 2) < sterbina / 2;
+    if (volno) continue;
+    for (let x = x0; x < x0 + tl; x++) zed[y * cols + x] = 1;
+  }
+}
+
+/* Rychlost a tlumení pro každou buňku – mění se s posuvníky i s hloubkou. */
+function obnovProstredi() {
+  if (!kmap) return;
+  const kMax = Number($('rychlost').value) / 100;        // stabilní jen pod 0,5
+  const zaklad = Number($('tlumeni').value) / 10000;
+  const melcina = $('melcina').checked ? 0.010 : 0;
+  for (let i = 0; i < bunek; i++) {
+    const h = hloub[i] > 0 ? hloub[i] : 0;
+    kmap[i] = kMax * (0.2 + 0.8 * h);                    // mělká voda = pomalejší vlna
+    const d = zaklad + tlumEx[i] + melcina * (1 - h) * (1 - h);
+    tlum[i] = 1 - (d < 0.3 ? d : 0.3);
+  }
+}
+
+/* ---------- rákosí ---------- */
+function noveRakosi(x, y, r, s) {
+  const n = nahoda(s || 1);
+  const pocet = 22 + Math.round(n() * 18);
+  const stebla = [];
+  for (let i = 0; i < pocet; i++) {
+    const th = n() * 2 * Math.PI, d = Math.sqrt(n()) * r;
+    stebla.push({
+      dx: Math.cos(th) * d, dy: Math.sin(th) * d,
+      v: 0.018 + n() * 0.026,                  // výška stébla (podíl šířky plátna)
+      s: 1 + n() * 1.2,                        // tloušťka čáry
+      n: (n() - 0.5) * 0.5,                    // vlastní naklonění
+      f: n() * 6.283,                          // fáze pohupování ve větru
+      klas: n() < 0.35,
+      pevne: n() < 0.55,
+      b: `hsl(${92 + Math.round(n() * 30)} 34% ${24 + Math.round(n() * 16)}%)`
+    });
+  }
+  stebla.sort((a, b) => a.dy - b.dy);
+  return { typ: 'rakosi', x, y, r, stebla };
+}
+
+/* ---------- obrys kamene ---------- */
+function obrysKamene() {
+  const n = nahoda((Math.random() * 1e9) | 0);
+  const a = [], f = [];
+  for (let k = 0; k < 3; k++) { a.push(0.06 + n() * 0.12); f.push(n() * 6.283); }
+  const body = [];
+  for (let i = 0; i < 22; i++) {
+    const th = i / 22 * 2 * Math.PI;
+    let r = 1;
+    for (let k = 0; k < 3; k++) r += a[k] * Math.cos((k + 2) * th + f[k]);
+    body.push([Math.cos(th) * r * 0.82, Math.sin(th) * r * 0.82]);
+  }
+  return body;
+}
+
+/* ---------- rozvlnění hladiny ---------- */
+/* Kapka vodu uprostřed promáčkne a kolem vytlačí val – proto „mexický
+   klobouk“. Objem se zachová, takže rybník nepřeteče ani nevyschne. */
+function rozvlni(gx, gy, r, sila) {
+  const rr = r * r, dosah = Math.ceil(r * 2);
+  for (let y = Math.max(1, gy - dosah); y <= Math.min(rady - 2, gy + dosah); y++) {
+    for (let x = Math.max(1, gx - dosah); x <= Math.min(cols - 2, gx + dosah); x++) {
+      const q = ((x - gx) * (x - gx) + (y - gy) * (y - gy)) / rr;
+      if (q > 4) continue;
+      const i = y * cols + x;
+      if (zed[i] || hloub[i] <= 0) continue;
+      const v = -sila * (1 - q) * Math.exp(-q);
+      ted[i] += v; pred[i] += v;      // nulová počáteční rychlost -> čistá kruhová vlna
+    }
+  }
+  dopady.push({ x: gx / cols, y: gy / rady, r, t: 0 });
+}
+
+/* ---------- jeden krok fyziky ---------- */
+function krok() {
+  for (let y = 1; y < rady - 1; y++) {
+    const rz = y * cols;
+    for (let x = 1; x < cols - 1; x++) {
+      const i = rz + x;
+      if (zed[i]) { novy[i] = 0; continue; }
+      const c = ted[i];
+      // soused ve zdi se chová jako pevná stěna: vrací vlastní hodnotu
+      const l = zed[i - 1] ? c : ted[i - 1];
+      const p = zed[i + 1] ? c : ted[i + 1];
+      const n = zed[i - cols] ? c : ted[i - cols];
+      const d = zed[i + cols] ? c : ted[i + cols];
+      novy[i] = (2 * c - pred[i] + kmap[i] * (l + p + n + d - 4 * c)) * tlum[i];
+    }
+  }
+  const t = pred; pred = ted; ted = novy; novy = t;
+  for (const o of telesa) if (o.typ === 'klada') krokKlady(o);
+}
+
+/* ---------- plovoucí kláda ---------- */
+/* Kláda a voda jsou spojené pružinou: kláda tlačí vodu pod sebou k sobě
+   a voda ji úplně stejnou silou tlačí zpátky (akce a reakce). Díky tomu
+   se soustava nemůže sama rozhoupat – energii si jen předávají, takže
+   kláda vlny vysílá, houpe se na nich a zase je utlumí. */
+const KL_VAZBA = 0.16;      // tuhost pružiny mezi kládou a vodou
+const KL_MASA = 10;         // kláda je těžší než voda, kterou vytlačí -> houpe se zvolna
+const KL_TREN = 0.02;       // odpor při svislém houpání
+const KL_TREN_SK = 0.03;    // odpor při naklánění podél osy
+
+function krokKlady(k) {
+  const cos = Math.cos(k.uhel), sin = Math.sin(k.uhel);
+  const gx = naBunkyX(k.x), gy = naBunkyY(k.y);
+  const dl = k.dl * cols, sir = k.sir * cols;
+  const dosah = Math.ceil(dl) + 2;
+  const x0 = Math.max(1, Math.round(gx - dosah)), x1 = Math.min(cols - 2, Math.round(gx + dosah));
+  const y0 = Math.max(1, Math.round(gy - dosah)), y1 = Math.min(rady - 2, Math.round(gy + dosah));
+
+  let sila = 0, moment = 0, ramena = 0, pocet = 0;
+  for (let y = y0; y <= y1; y++) {
+    for (let x = x0; x <= x1; x++) {
+      const dx = x - gx, dy = y - gy;
+      const u = dx * cos + dy * sin, v = -dx * sin + dy * cos;
+      if (Math.abs(u) > dl || Math.abs(v) > sir) continue;
+      const i = y * cols + x;
+      if (zed[i]) continue;
+      const s = u / dl;
+      const f = (k.h + k.sk * s - ted[i]) * KL_VAZBA;
+      ted[i] += f;                  // voda pod kládou uhne
+      sila -= f; moment -= f * s;   // a stejnou silou tlačí kládu zpět
+      ramena += s * s; pocet++;
+    }
+  }
+  if (pocet < 3) return;
+
+  k.v += sila / (pocet * KL_MASA) - k.v * KL_TREN;
+  k.sv += moment / (ramena * KL_MASA + 0.001) - k.sv * KL_TREN_SK;
+  k.h += k.v; k.sk += k.sv;
+  // pojistka proti numerickému ujetí (rákosí a mělčina jinak kládu nepustí)
+  k.h = Math.max(-0.5, Math.min(0.5, k.h));
+  k.sk = Math.max(-0.5, Math.min(0.5, k.sk));
+}
+
+/* ---------- kapátka a déšť ---------- */
+let kapCas = 0;
+function kapni(x, y, r, sila) {
+  if (x < 1 || y < 1 || x > cols - 2 || y > rady - 2) return;
+  const i = y * cols + x;
+  if (zed[i] || hloub[i] <= 0) return;
+  rozvlni(x, y, r, sila);
+}
+function zdroje(dt) {
+  const pocet = Number($('kapac').value);
+  if (pocet > 0) {
+    const f = Number($('frekvence').value) / 10;   // Hz
+    kapCas += dt;
+    if (kapCas >= 1 / f) {
+      kapCas = 0;
+      const r = Math.max(1, Number($('velikost').value) * 0.7);
+      const x = Math.round(cols * 0.28), stred = Math.round(rady * 0.5);
+      if (pocet === 1) kapni(x, stred, r, 0.3);
+      else {
+        const dy = Math.round(rady * 0.13);
+        kapni(x, stred - dy, r, 0.3); kapni(x, stred + dy, r, 0.3);
+      }
+    }
+  } else kapCas = 0;
+
+  if ($('dest').checked && Math.random() < dt * 14) {
+    for (let k = 0; k < 8; k++) {
+      const x = 2 + ((Math.random() * (cols - 4)) | 0), y = 2 + ((Math.random() * (rady - 4)) | 0);
+      const i = y * cols + x;
+      if (zed[i] || hloub[i] <= 0) continue;
+      rozvlni(x, y, 1 + Math.random() * 1.5, 0.1 + Math.random() * 0.12);
+      break;
+    }
+  }
+}
+
+/* ---------- házení žabek ---------- */
+/* Žabka je kamínek hozený hodně naplocho: od hladiny se odrazí, ale pokaždé
+   ztratí kus rychlosti, takže se skoky zkracují – nakonec už jen zacinká
+   a utopí se. Každý dopad rozvlní hladinu, proto za žabkou zůstane řada
+   kroužků. Myší se hráč napřáhne (táhne proti směru hodu) a puštěním hodí. */
+const zabky = [];          // kamínky právě letící nad hladinou
+let mireni = null;         // rozmach: odkud a kam se zrovna táhne
+
+const ZAB_DOSAH = 0.16;    // délka prvního skoku při plné síle (podíl šířky mřížky)
+const ZAB_UBER = 0.76;     // kolik z délky skoku zbude pro ten další
+const ZAB_TAH = 0.22;      // o kolik šířky plátna se táhne k plné síle
+
+function drahaZabky(x0, y0, ux, uy, sila) {
+  const body = [];
+  let x = x0, y = y0, L = sila * cols * ZAB_DOSAH;
+  const nejkratsi = cols * 0.012;
+  for (let i = 0; i < 12 && L > nejkratsi; i++) {
+    x += ux * L; y += uy * L;
+    const gx = Math.round(x), gy = Math.round(y);
+    const mimo = gx < 1 || gy < 1 || gx > cols - 2 || gy > rady - 2;
+    const naSuchu = !mimo && (hloub[gy * cols + gx] <= 0 || zed[gy * cols + gx]);
+    body.push({ x, y, L, voda: !mimo && !naSuchu, konec: mimo || naSuchu });
+    if (mimo || naSuchu) return body;      // doletěla na břeh nebo na kámen
+    L *= ZAB_UBER;
+  }
+  if (body.length) body[body.length - 1].konec = true;   // poslední skok = utopení
+  return body;
+}
+
+/* Rozmach na dráhu: táhne se proti směru hodu, delší tah = silnější hod. */
+function rozmach() {
+  if (!mireni) return null;
+  const dx = (mireni.x0 - mireni.x) * sirkaPx, dy = (mireni.y0 - mireni.y) * vyskaPx;
+  const delka = Math.sqrt(dx * dx + dy * dy);
+  if (delka < 6) return null;
+  const sila = Math.min(1, delka / (ZAB_TAH * sirkaPx));
+  const ux = dx / delka, uy = dy / delka;
+  return { ux, uy, sila, draha: drahaZabky(mireni.x0 * cols, mireni.y0 * rady, ux, uy, sila) };
+}
+
+function pustZabku() {
+  const r = rozmach();
+  if (!r || !r.draha.length) return;
+  zabky.push({ x: mireni.x0 * cols, y: mireni.y0 * rady, draha: r.draha, i: 0, t: 0,
+               delka: r.sila * cols * ZAB_DOSAH });
+}
+
+function krokZabek(dt) {
+  for (let k = zabky.length - 1; k >= 0; k--) {
+    const z = zabky[k];
+    const cil = z.draha[z.i];
+    z.t += dt / Math.max(0.045, cil.L / (cols * 0.9));
+    if (z.t < 1) continue;
+
+    z.t = 0; z.x = cil.x; z.y = cil.y;      // dopad na hladinu
+    if (cil.voda) {
+      const podil = cil.L / z.delka;
+      rozvlni(Math.round(cil.x), Math.round(cil.y),
+        cil.konec ? 3 : 2, cil.konec ? 0.45 : 0.1 + 0.25 * podil);
+    }
+    z.i++;
+    if (cil.konec || z.i >= z.draha.length) zabky.splice(k, 1);
+  }
+}
+
+function kresliZabky() {
+  const px = sirkaPx / cols, py = vyskaPx / rady;
+  for (const z of zabky) {
+    const cil = z.draha[z.i], f = z.t;
+    const x = (z.x + (cil.x - z.x) * f) * px, y = (z.y + (cil.y - z.y) * f) * py;
+    const vyska = Math.sin(Math.PI * f) * cil.L * 0.18 * px;   // oblouk skoku
+    ctx.fillStyle = 'rgba(3,10,16,.3)';
+    ctx.beginPath(); ctx.ellipse(x, y, 3.4, 2.4, 0, 0, 6.283); ctx.fill();
+    const r = 3 + vyska * 0.02;
+    const g = ctx.createLinearGradient(x - r, y - vyska - r, x + r, y - vyska + r);
+    g.addColorStop(0, '#d3d8dd'); g.addColorStop(1, '#6e747a');
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.ellipse(x, y - vyska, r, r * 0.78, 0, 0, 6.283); ctx.fill();
+  }
+}
+
+function kresliMireni() {
+  const r = rozmach();
+  if (!mireni) return;
+  const x0 = mireni.x0 * sirkaPx, y0 = mireni.y0 * vyskaPx;
+  const px = sirkaPx / cols, py = vyskaPx / rady;
+
+  ctx.save();
+  ctx.setLineDash([4, 4]);                                   // napnutá „guma“
+  ctx.strokeStyle = 'rgba(255,255,255,.3)'; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(x0, y0);
+  ctx.lineTo(mireni.x * sirkaPx, mireni.y * vyskaPx); ctx.stroke();
+  ctx.setLineDash([]);
+
+  if (r && r.draha.length) {
+    const zluta = `rgba(255,214,102,${0.35 + 0.45 * r.sila})`;
+    ctx.strokeStyle = zluta; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.moveTo(x0, y0);
+    for (const b of r.draha) ctx.lineTo(b.x * px, b.y * py);
+    ctx.stroke();
+    for (const b of r.draha) {                               // kam žabka dopadne
+      ctx.fillStyle = b.voda ? zluta : 'rgba(255,120,90,.85)';
+      ctx.beginPath(); ctx.arc(b.x * px, b.y * py, b.voda ? 3 : 4, 0, 6.283); ctx.fill();
+    }
+  }
+  ctx.strokeStyle = 'rgba(255,255,255,.5)'; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.arc(x0, y0, 5, 0, 6.283); ctx.stroke();
+  ctx.restore();
+}
+
+/* ---------- vykreslení hladiny ---------- */
+function vykresli() {
+  const rezim = $('zobrazeni').value;
+  const d = img.data;
+  const svetlo = document.documentElement.dataset.theme === 'light';
+  const ZISK = 13;                       // jak silně se sklon hladiny projeví na světle
+
+  for (let y = 0; y < rady; y++) {
+    for (let x = 0; x < cols; x++) {
+      const i = y * cols + x, p = i * 4;
+      const hl = hloub[i];
+      d[p + 3] = 255;
+
+      if (hl <= 0) {                     // břeh: u vody mokrá hlína, dál tráva
+        const m = Math.min(1, -hl * 0.9), s = (sum[i] - 128) / 128;
+        if (svetlo) {
+          d[p] = 206 - 68 * m + 9 * s; d[p + 1] = 188 - 26 * m + 9 * s; d[p + 2] = 148 - 46 * m + 7 * s;
+        } else {
+          d[p] = 66 - 28 * m + 7 * s; d[p + 1] = 60 - 6 * m + 7 * s; d[p + 2] = 46 - 12 * m + 5 * s;
+        }
+        continue;
+      }
+      if (zed[i]) {                      // kámen, stéblo, přehrada
+        const s = (sum[i] - 128) / 128;
+        if (svetlo) { d[p] = 138 + 8 * s; d[p + 1] = 140 + 8 * s; d[p + 2] = 144 + 8 * s; }
+        else { d[p] = 86 + 7 * s; d[p + 1] = 92 + 7 * s; d[p + 2] = 100 + 7 * s; }
+        continue;
+      }
+
+      const h = ted[i];
+
+      if (rezim !== 'voda') {
+        let v = Math.max(-1, Math.min(1, h * 5));
+        if (rezim === 'vrstevnice') {
+          // pruhy po konstantní výšce – jako vrstevnice na mapě
+          const pruh = Math.abs((v * 6) % 1);
+          v = (pruh < 0.12 ? 1 : 0.15) * Math.sign(v || 1) * Math.min(1, Math.abs(v) * 3 + 0.2);
+        }
+        if (v >= 0) { d[p] = 30 + 210 * v; d[p + 1] = 60 + 60 * (1 - v); d[p + 2] = 70 + 40 * (1 - v); }
+        else { const a = -v; d[p] = 25; d[p + 1] = 70 + 60 * (1 - a); d[p + 2] = 90 + 160 * a; }
+        continue;
+      }
+
+      // režim „Voda“: barva podle hloubky, jas podle sklonu hladiny
+      const l = zed[i - 1] ? h : ted[i - 1], pr = zed[i + 1] ? h : ted[i + 1];
+      const n = zed[i - cols] ? h : ted[i - cols], dn = zed[i + cols] ? h : ted[i + cols];
+      let s = ((pr - l) * 0.62 + (dn - n) * 0.38) * ZISK + h * 1.5;
+      s = s > 1 ? 1 : s < -1 ? -1 : s;
+      const sv = s > 0 ? s : 0, tm = s < 0 ? -s : 0, sv2 = sv * sv;
+      if (svetlo) {
+        d[p] = 124 - 66 * hl + 148 * sv2 + 38 * sv - 44 * tm;
+        d[p + 1] = 172 - 62 * hl + 144 * sv2 + 42 * sv - 48 * tm;
+        d[p + 2] = 168 - 26 * hl + 128 * sv2 + 46 * sv - 42 * tm;
+      } else {
+        d[p] = 30 - 18 * hl + 150 * sv2 + 34 * sv - 22 * tm;
+        d[p + 1] = 62 - 28 * hl + 145 * sv2 + 40 * sv - 26 * tm;
+        d[p + 2] = 66 - 12 * hl + 130 * sv2 + 46 * sv - 28 * tm;
+      }
+    }
+  }
+
+  pctx.putImageData(img, 0, 0);
+  ctx.imageSmoothingEnabled = true;
+  ctx.drawImage(pom, 0, 0, sirkaPx, vyskaPx);
+
+  kresliTelesa();
+  kresliZabky();
+  kresliMireni();
+
+  // slabý kroužek v místě dopadu kamínku
+  const px = sirkaPx / cols;
+  for (let i = dopady.length - 1; i >= 0; i--) {
+    const o = dopady[i];
+    o.t += 1 / 60;
+    if (o.t > 0.5) { dopady.splice(i, 1); continue; }
+    ctx.strokeStyle = `rgba(255,255,255,${(1 - o.t / 0.5) * 0.28})`;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.arc(o.x * sirkaPx, o.y * vyskaPx, o.r * px * (1 + o.t * 6), 0, 6.283);
+    ctx.stroke();
+  }
+}
+
+/* ---------- vykreslení těles ---------- */
+function kresliTelesa() {
+  for (const o of telesa) if (o.typ === 'kamen') kresliKamen(o);
+  for (const o of telesa) if (o.typ === 'klada') kresliKladu(o);
+  for (const o of telesa) if (o.typ === 'rakosi') kresliRakosiTrs(o);
+}
+
+function kresliKamen(o) {
+  const x = o.x * sirkaPx, y = o.y * vyskaPx, r = o.r * sirkaPx;
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.fillStyle = 'rgba(3,10,16,.35)';
+  ctx.beginPath(); ctx.ellipse(r * 0.12, r * 0.22, r * 1.06, r * 0.98, 0, 0, 6.283); ctx.fill();
+  ctx.beginPath();
+  for (let k = 0; k < o.body.length; k++) {
+    const b = o.body[k];
+    if (k) ctx.lineTo(b[0] * r, b[1] * r); else ctx.moveTo(b[0] * r, b[1] * r);
+  }
+  ctx.closePath();
+  const g = ctx.createLinearGradient(-r * 0.7, -r * 0.8, r * 0.6, r);
+  g.addColorStop(0, '#9299a0'); g.addColorStop(0.5, '#6b7178'); g.addColorStop(1, '#3c4248');
+  ctx.fillStyle = g; ctx.fill();
+  ctx.strokeStyle = 'rgba(10,18,24,.65)'; ctx.lineWidth = 1.4; ctx.stroke();
+  ctx.save(); ctx.clip();                       // mokrý lem u hladiny
+  ctx.strokeStyle = 'rgba(12,22,30,.5)'; ctx.lineWidth = r * 0.34;
+  ctx.beginPath(); ctx.ellipse(0, r * 0.16, r * 1.02, r * 0.94, 0, 0, 6.283); ctx.stroke();
+  ctx.restore();
+  ctx.restore();
+}
+
+function zaobleny(x, y, s, v, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + s - r, y);
+  ctx.arcTo(x + s, y, x + s, y + r, r);
+  ctx.lineTo(x + s, y + v - r);
+  ctx.arcTo(x + s, y + v, x + s - r, y + v, r);
+  ctx.lineTo(x + r, y + v);
+  ctx.arcTo(x, y + v, x, y + v - r, r);
+  ctx.lineTo(x, y + r);
+  ctx.arcTo(x, y, x + r, y, r);
+  ctx.closePath();
+}
+
+const zvyraz = (v, k) => Math.sign(v) * Math.min(1, Math.sqrt(Math.abs(v) * k));
+
+function kresliKladu(o) {
+  const x = o.x * sirkaPx, y = o.y * vyskaPx;
+  const dl = o.dl * sirkaPx, sir = o.sir * sirkaPx;
+  // z takové dálky by byl skutečný zdvih menší než pixel – houpání proto
+  // zvětšujeme (odmocnina: i drobné pohupování je vidět, velké nepřeteče)
+  const zdvih = zvyraz(o.h, 70), naklon = zvyraz(o.sk, 120);
+  ctx.save();
+  ctx.translate(x, y);
+  ctx.rotate(o.uhel);
+
+  ctx.fillStyle = 'rgba(3,10,16,.32)';                    // stín se se zdvihem odsouvá
+  zaobleny(-dl, -sir + 3 + zdvih * 4, 2 * dl, 2 * sir, sir);
+  ctx.fill();
+
+  ctx.scale(1 + zdvih * 0.04, 1 + zdvih * 0.04);          // vynořená kláda je blíž oku
+  zaobleny(-dl, -sir, 2 * dl, 2 * sir, sir);
+  const g = ctx.createLinearGradient(0, -sir, 0, sir);    // válcové stínování napříč
+  g.addColorStop(0, '#6a4a2d'); g.addColorStop(0.4, '#9c7247'); g.addColorStop(1, '#48311f');
+  ctx.fillStyle = g; ctx.fill();
+
+  const gs = ctx.createLinearGradient(-dl, 0, dl, 0);     // zvednutý konec chytá víc světla
+  gs.addColorStop(0, `rgba(255,238,206,${Math.max(0, -naklon) * 0.3})`);
+  gs.addColorStop(0.5, 'rgba(0,0,0,0)');
+  gs.addColorStop(1, `rgba(255,238,206,${Math.max(0, naklon) * 0.3})`);
+  ctx.fillStyle = gs; ctx.fill();
+  ctx.fillStyle = `rgba(255,240,210,${Math.max(0, zdvih) * 0.12})`; ctx.fill();
+
+  ctx.strokeStyle = 'rgba(40,26,14,.5)'; ctx.lineWidth = 1;
+  for (let k = -1; k <= 1; k++) {
+    ctx.beginPath();
+    ctx.moveTo(-dl * 0.85, k * sir * 0.42);
+    ctx.lineTo(dl * 0.85, k * sir * 0.42 + sir * 0.12);
+    ctx.stroke();
+  }
+  for (const konec of [-1, 1]) {                          // čelo klády s letokruhy
+    ctx.beginPath(); ctx.ellipse(konec * dl, 0, sir * 0.34, sir, 0, 0, 6.283);
+    ctx.fillStyle = '#a8814f'; ctx.fill();
+    ctx.strokeStyle = 'rgba(70,46,24,.6)'; ctx.stroke();
+    ctx.beginPath(); ctx.ellipse(konec * dl, 0, sir * 0.16, sir * 0.5, 0, 0, 6.283); ctx.stroke();
+  }
+  ctx.restore();
+}
+
+function kresliRakosiTrs(o) {
+  const gx = naBunkyX(o.x), gy = naBunkyY(o.y);
+  ctx.lineCap = 'round';
+  for (const st of o.stebla) {
+    const bx = (o.x + st.dx) * sirkaPx, by = o.y * vyskaPx + st.dy * sirkaPx;
+    const cx = Math.round(gx + st.dx * cols), cy = Math.round(gy + st.dy * cols);
+    let sklon = 0;
+    if (cx > 0 && cy > 0 && cx < cols - 1 && cy < rady - 1) {
+      const i = cy * cols + cx;
+      if (!zed[i]) sklon = Math.max(-0.4, Math.min(0.4, (ted[i + 1] - ted[i - 1]) * 6));
+    }
+    const uhel = st.n + Math.sin(cas * 1.3 + st.f) * 0.05 + sklon;
+    const dl = st.v * sirkaPx;
+    const tx = bx + Math.sin(uhel) * dl, ty = by - Math.cos(uhel) * dl;
+    ctx.strokeStyle = st.b; ctx.lineWidth = st.s;
+    ctx.beginPath();
+    ctx.moveTo(bx, by);
+    ctx.quadraticCurveTo(bx + Math.sin(uhel) * dl * 0.35, by - dl * 0.55, tx, ty);
+    ctx.stroke();
+    if (st.klas) {
+      ctx.fillStyle = '#5b4527';
+      ctx.beginPath(); ctx.ellipse(tx, ty, st.s * 0.85, dl * 0.13, uhel, 0, 6.283); ctx.fill();
+    }
+  }
+}
+
+/* ---------- ovládání myší / prstem ---------- */
+let tahne = false, poslední = 0;
+function souradnice(e) {
+  const r = canvas.getBoundingClientRect();
+  const nx = (e.clientX - r.left) / r.width, ny = (e.clientY - r.top) / r.height;
+  return { nx, ny, x: Math.round(nx * cols), y: Math.round(ny * rady) };
+}
+function hod(s, tazeni) {
+  if (s.x < 1 || s.y < 1 || s.x > cols - 2 || s.y > rady - 2) return;
+  const i = s.y * cols + s.x;
+  if (zed[i] || hloub[i] <= 0) return;
+  const r = Number($('velikost').value);
+  rozvlni(s.x, s.y, tazeni ? Math.max(1, r * 0.6) : r, tazeni ? 0.22 : 0.5);
+}
+function poloz(nastroj, s) {
+  if (nastroj === 'guma') { odeber(s); return; }
+  if (s.x < 2 || s.y < 2 || s.x > cols - 3 || s.y > rady - 3) return;
+  if (hloub[s.y * cols + s.x] <= 0) return;
+  const n = Math.random;
+  if (nastroj === 'kamen') {
+    const r = 0.013 + n() * 0.012;
+    telesa.push({ typ: 'kamen', x: s.nx, y: s.ny, r, body: obrysKamene() });
+    rozvlni(s.x, s.y, r * cols, 0.6);                 // žbluňk při dopadu kamene
+  } else if (nastroj === 'klada') {
+    const dl = 0.028 + n() * 0.016;
+    telesa.push({
+      typ: 'klada', x: s.nx, y: s.ny, dl, sir: dl * (0.17 + n() * 0.06),
+      uhel: n() * Math.PI, h: -0.06, v: 0, sk: 0, sv: 0
+    });
+    rozvlni(s.x, s.y, dl * cols * 0.6, 0.5);          // žbluňk při spuštění na vodu
+  } else if (nastroj === 'rakosi') {
+    telesa.push(noveRakosi(s.nx, s.ny, 0.018 + n() * 0.016, (n() * 1e9) | 0));
+  }
+  prestavMasky();
+}
+function odeber(s) {
+  let nej = -1, nejD = 1e9;
+  for (let i = 0; i < telesa.length; i++) {
+    const o = telesa[i];
+    const dx = (s.nx - o.x) * sirkaPx, dy = (s.ny - o.y) * vyskaPx;
+    const d = Math.sqrt(dx * dx + dy * dy);
+    const dosah = (o.typ === 'klada' ? o.dl : o.r * 1.4) * sirkaPx + 6;
+    if (d < dosah && d < nejD) { nej = i; nejD = d; }
+  }
+  if (nej >= 0) { telesa.splice(nej, 1); prestavMasky(); }
+}
+
+canvas.addEventListener('pointerdown', e => {
+  try { canvas.setPointerCapture(e.pointerId); } catch (_) { /* syntetická událost */ }
+  const s = souradnice(e), nastroj = $('nastroj').value;
+  if (nastroj === 'zabka') mireni = { x0: s.nx, y0: s.ny, x: s.nx, y: s.ny };
+  else if (nastroj === 'kaminek') { tahne = true; poslední = performance.now(); hod(s, false); }
+  else poloz(nastroj, s);
+});
+canvas.addEventListener('pointermove', e => {
+  if (mireni) { const s = souradnice(e); mireni.x = s.nx; mireni.y = s.ny; return; }
+  if (!tahne) return;
+  const t = performance.now();
+  if (t - poslední < 45) return;      // ať tažení nezaplaví hladinu
+  poslední = t; hod(souradnice(e), true);
+});
+addEventListener('pointerup', () => {
+  tahne = false;
+  if (mireni) { pustZabku(); mireni = null; }
+});
+addEventListener('pointercancel', () => { tahne = false; mireni = null; });
+
+/* ---------- mřížka a panel ---------- */
+function prepocitejMrizku() {
+  sirkaPx = canvas.clientWidth || 800;
+  vyskaPx = canvas.clientHeight || 500;
+  canvas.width = sirkaPx * devicePixelRatio;
+  canvas.height = vyskaPx * devicePixelRatio;
+  ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
+
+  // jemná mřížka: vlnky mají být drobné, jako když se na rybník díváš z dálky
+  cols = Math.max(120, Math.min(360, Math.round(sirkaPx / 2.6)));
+  rady = Math.max(90, Math.round(cols * vyskaPx / sirkaPx));
+  bunek = cols * rady;
+  pom.width = cols; pom.height = rady;
+  img = pctx.createImageData(cols, rady);
+
+  ted = new Float32Array(bunek); pred = new Float32Array(bunek); novy = new Float32Array(bunek);
+  zed = new Uint8Array(bunek); sum = new Uint8Array(bunek);
+  kmap = new Float32Array(bunek); tlum = new Float32Array(bunek);
+  hloub = new Float32Array(bunek); tlumEx = new Float32Array(bunek);
+
+  postavRybnik();
+  prestavMasky();
+}
+
+[['velikost', 'velikostV'], ['rychlost', 'rychlostV'], ['tlumeni', 'tlumeniV'], ['frekvence', 'frekvenceV']]
+  .forEach(([id, out]) => {
+    const el = $(id);
+    const uprav = () => $(out).textContent = id === 'frekvence'
+      ? (Number(el.value) / 10).toFixed(1) : el.value;
+    el.addEventListener('input', uprav); uprav();
+  });
+
+$('rychlost').addEventListener('input', obnovProstredi);
+$('tlumeni').addEventListener('input', obnovProstredi);
+$('melcina').addEventListener('change', obnovProstredi);
+$('prekazka').addEventListener('change', () => { prestavMasky(); uklid(); });
+$('btnClear').addEventListener('click', uklid);
+$('btnRybnik').addEventListener('click', () => novyRybnik((Math.random() * 99999) | 0));
+$('seed').addEventListener('change', () => novyRybnik(Number($('seed').value) | 0));
+$('nastroj').addEventListener('change', napovedaNastroje);
+
+const NAPOVEDY = {
+  kaminek: 'Klikni nebo táhni do hladiny 🪨',
+  zabka: 'Namáčkni, kde stojíš, táhni dozadu a pusť 🥏',
+  kamen: 'Klikni do vody – položíš kámen 🗿',
+  klada: 'Klikni do vody – spustíš kládu 🪵',
+  rakosi: 'Klikni k břehu – zasadíš rákosí 🌾',
+  guma: 'Klikni na těleso – odstraníš ho 🧽'
+};
+function napovedaNastroje() { $('napoveda').textContent = NAPOVEDY[$('nastroj').value]; }
+
+function uklid() {
+  ted.fill(0); pred.fill(0); novy.fill(0);
+  dopady.length = 0;
+  for (const o of telesa) if (o.typ === 'klada') { o.h = o.v = o.sk = o.sv = 0; }
+}
+
+
+/* ============================================================
+   MODUL SLAPOVÝCH VLN (příliv a odliv)
+
+   Výška hladiny se nepočítá krok za krokem – je to čistá funkce času,
+   takže se dá stejným vzorcem nakreslit i graf na měsíc dopředu.
+
+   Slapová (rovnovážná) výška v místě vzdáleném o úhel ψ od směru
+   k Měsíci:  h = A · (3cos²ψ − 1)/2   … Legendreův polynom P₂.
+   Dává dvě boule: jednu pod Měsícem, druhou na odvrácené straně.
+   ============================================================ */
+const SL = { t: 0, lon: 0, mesic0: 0, slunce0: -Math.PI / 2 };
+const HOD_MESIC = 27.32 * 24;        // oběh Měsíce v hodinách
+const HOD_SLUNCE = 365.25 * 24;      // oběh Země kolem Slunce
+const AM = 1.00, AS = 0.46;          // metry – Měsíc táhne asi 2,2× silněji než Slunce
+
+const uhelZeme = t => 2 * Math.PI * t / 24;
+const uhelMesic = t => SL.mesic0 + 2 * Math.PI * t / HOD_MESIC;
+const uhelSlunce = t => SL.slunce0 + 2 * Math.PI * t / HOD_SLUNCE;
+const P2 = c => (3 * c * c - 1) / 2;
+
+function hladinaSmer(t, uhel) {       // výška hladiny v daném směru od středu Země
+  let h = AM * P2(Math.cos(uhel - uhelMesic(t)));
+  if (slunceZap) h += AS * P2(Math.cos(uhel - uhelSlunce(t)));
+  return h;
+}
+const hladinaMesta = t => hladinaSmer(t, uhelZeme(t) + SL.lon);
+let slunceZap = true;
+
+const cZeme = $('cZeme'), cPristav = $('cPristav'), cGraf = $('cGraf');
+const ctxZ = cZeme.getContext('2d'), ctxP = cPristav.getContext('2d'), ctxG = cGraf.getContext('2d');
+let hvezdy = [], pevniny = [];
+
+function platno(cv, c) {
+  const r = devicePixelRatio;
+  cv.width = Math.max(1, cv.clientWidth * r);
+  cv.height = Math.max(1, cv.clientHeight * r);
+  c.setTransform(r, 0, 0, r, 0, 0);
+}
+function prepocitejSlapy() {
+  platno(cZeme, ctxZ); platno(cPristav, ctxP); platno(cGraf, ctxG);
+  if (!hvezdy.length) {
+    for (let i = 0; i < 90; i++)
+      hvezdy.push({ x: Math.random(), y: Math.random(), r: Math.random() * 1.2 + 0.3, a: Math.random() * .6 + .2 });
+    // hrubé „kontinenty“, aby bylo vidět, že se Země otáčí
+    for (let i = 0; i < 7; i++)
+      pevniny.push({ a: Math.random() * Math.PI * 2, s: 0.25 + Math.random() * 0.45, d: 0.3 + Math.random() * 0.5 });
+  }
+}
+const svetlo = () => document.documentElement.dataset.theme === 'light';
+
+/* ---------- Země, Měsíc a dvě vodní boule ---------- */
+function kresliZemi() {
+  const c = ctxZ, w = cZeme.clientWidth, h = cZeme.clientHeight;
+  if (!w || !h) return;
+  const t = SL.t;
+  c.fillStyle = '#050a14'; c.fillRect(0, 0, w, h);
+  c.fillStyle = '#fff';
+  hvezdy.forEach(s => { c.globalAlpha = s.a; c.beginPath(); c.arc(s.x * w, s.y * h, s.r, 0, 7); c.fill(); });
+  c.globalAlpha = 1;
+
+  const cx = w * 0.46, cy = h * 0.52, R = Math.min(w, h) * 0.21, Ro = Math.min(w, h) * 0.40;
+  const az = uhelZeme(t), am = uhelMesic(t), as = uhelSlunce(t);
+  const naR = lvl => R + 5 + 30 * lvl;     // zveličení: 1 m vlny ≈ 30 px
+
+  // dráha Měsíce
+  c.strokeStyle = 'rgba(150,180,220,.22)'; c.setLineDash([4, 6]); c.lineWidth = 1;
+  c.beginPath(); c.arc(cx, cy, Ro, 0, 7); c.stroke(); c.setLineDash([]);
+
+  // vodní obal se dvěma bulemi
+  c.beginPath();
+  for (let a = 0; a <= 360; a += 2) {
+    const u = a * Math.PI / 180, r = naR(hladinaSmer(t, u));
+    const x = cx + r * Math.cos(u), y = cy + r * Math.sin(u);
+    a ? c.lineTo(x, y) : c.moveTo(x, y);
+  }
+  c.closePath();
+  const gr = c.createRadialGradient(cx, cy, R * 0.9, cx, cy, R * 1.6);
+  gr.addColorStop(0, 'rgba(50,130,205,.95)'); gr.addColorStop(1, 'rgba(90,190,255,.75)');
+  c.fillStyle = gr; c.fill();
+  c.strokeStyle = '#a8e0ff'; c.lineWidth = 1.6; c.stroke();
+
+  // pevná Země (otáčí se, aby byl vidět běh dne)
+  c.save(); c.beginPath(); c.arc(cx, cy, R, 0, 7); c.clip();
+  const gz = c.createRadialGradient(cx - R * .3, cy - R * .3, R * .1, cx, cy, R);
+  gz.addColorStop(0, '#3f6b8f'); gz.addColorStop(1, '#1d3a55');
+  c.fillStyle = gz; c.fillRect(cx - R, cy - R, R * 2, R * 2);
+  c.fillStyle = '#4d7a52';
+  pevniny.forEach(p => {
+    const u = p.a + az;
+    c.beginPath();
+    c.ellipse(cx + Math.cos(u) * R * p.d, cy + Math.sin(u) * R * p.d, R * p.s * .5, R * p.s * .35, u, 0, 7);
+    c.fill();
+  });
+  c.restore();
+  c.strokeStyle = 'rgba(255,255,255,.3)'; c.lineWidth = 1; c.beginPath(); c.arc(cx, cy, R, 0, 7); c.stroke();
+
+  // šipky slapových sil
+  if ($('slSipky').checked) {
+    for (let k = 0; k < 28; k++) {
+      const u = k / 28 * Math.PI * 2;
+      let vr = 3 * Math.cos(u - am) ** 2 - 1, vt = -1.5 * Math.sin(2 * (u - am));
+      if (slunceZap) {
+        vr += (3 * Math.cos(u - as) ** 2 - 1) * (AS / AM);
+        vt += -1.5 * Math.sin(2 * (u - as)) * (AS / AM);
+      }
+      const S = 11, x = cx + (R + 14) * Math.cos(u), y = cy + (R + 14) * Math.sin(u);
+      sipka(c, x, y,
+        (vr * Math.cos(u) - vt * Math.sin(u)) * S,
+        (vr * Math.sin(u) + vt * Math.cos(u)) * S, 'rgba(255,214,120,.9)');
+    }
+  }
+
+  // Měsíc
+  const mx = cx + Ro * Math.cos(am), my = cy + Ro * Math.sin(am);
+  const gm = c.createRadialGradient(mx - 4, my - 4, 1, mx, my, 13);
+  gm.addColorStop(0, '#f2f2ee'); gm.addColorStop(1, '#9a9a94');
+  c.fillStyle = gm; c.beginPath(); c.arc(mx, my, 13, 0, 7); c.fill();
+  c.fillStyle = 'rgba(120,120,115,.55)';
+  [[-4, -2, 3], [3, 3, 2.2], [1, -5, 1.6]].forEach(([dx, dy, r]) => { c.beginPath(); c.arc(mx + dx, my + dy, r, 0, 7); c.fill(); });
+  popis(c, 'Měsíc', mx, my - 20, '#dfe7ef');
+
+  // směr ke Slunci (Slunce je ve skutečnosti nesrovnatelně dál)
+  const sx = cx + Math.min(w, h) * 0.465 * Math.cos(as), sy = cy + Math.min(w, h) * 0.465 * Math.sin(as);
+  const gs = c.createRadialGradient(sx, sy, 2, sx, sy, 26);
+  gs.addColorStop(0, slunceZap ? 'rgba(255,225,120,1)' : 'rgba(150,145,120,.75)');
+  gs.addColorStop(1, 'rgba(255,200,60,0)');
+  c.fillStyle = gs; c.beginPath(); c.arc(sx, sy, 26, 0, 7); c.fill();
+  c.fillStyle = slunceZap ? '#ffd34d' : '#6f6a58';
+  c.beginPath(); c.arc(sx, sy, 11, 0, 7); c.fill();
+  popis(c, slunceZap ? 'Slunce' : 'Slunce (vypnuto)', sx, sy - 18, slunceZap ? '#ffe9a3' : '#8d876f');
+
+  // město na pobřeží
+  const au = az + SL.lon, lvl = hladinaMesta(t), rr = naR(lvl);
+  const px = cx + rr * Math.cos(au), py = cy + rr * Math.sin(au);
+  c.strokeStyle = 'rgba(255,255,255,.55)'; c.lineWidth = 1;
+  c.beginPath(); c.moveTo(cx + R * Math.cos(au), cy + R * Math.sin(au)); c.lineTo(px, py); c.stroke();
+  c.fillStyle = '#fff'; c.beginPath(); c.arc(px, py, 4, 0, 7); c.fill();
+  popis(c, '🏙️ město', px + 12 * Math.cos(au), py + 12 * Math.sin(au) - 6, '#ffffff');
+
+  // popisky boulí
+  const bx = cx + naR(hladinaSmer(t, am) ) * Math.cos(am), by = cy + naR(hladinaSmer(t, am)) * Math.sin(am);
+  popis(c, 'příliv', bx + 26 * Math.cos(am), by + 26 * Math.sin(am), '#bfe6ff');
+  const o = am + Math.PI;
+  popis(c, 'příliv', cx + (naR(hladinaSmer(t, o)) + 26) * Math.cos(o), cy + (naR(hladinaSmer(t, o)) + 26) * Math.sin(o), '#bfe6ff');
+  const q = am + Math.PI / 2;
+  popis(c, 'odliv', cx + (naR(hladinaSmer(t, q)) + 22) * Math.cos(q), cy + (naR(hladinaSmer(t, q)) + 22) * Math.sin(q), '#8fb2cc');
+}
+
+function popis(c, text, x, y, barva) {
+  c.font = '12px system-ui, sans-serif';
+  c.textAlign = 'center'; c.textBaseline = 'middle';
+  c.lineWidth = 3; c.strokeStyle = 'rgba(5,10,20,.85)';
+  c.strokeText(text, x, y); c.fillStyle = barva; c.fillText(text, x, y);
+  c.textAlign = 'left'; c.textBaseline = 'alphabetic';
+}
+function sipka(c, x, y, dx, dy, barva) {
+  const L = Math.hypot(dx, dy);
+  c.strokeStyle = barva; c.lineWidth = 1.5;
+  c.beginPath(); c.moveTo(x, y); c.lineTo(x + dx, y + dy); c.stroke();
+  if (L < 4) return;
+  const ux = dx / L, uy = dy / L;
+  c.fillStyle = barva; c.beginPath();
+  c.moveTo(x + dx, y + dy);
+  c.lineTo(x + dx - ux * 6 - uy * 3.2, y + dy - uy * 6 + ux * 3.2);
+  c.lineTo(x + dx - ux * 6 + uy * 3.2, y + dy - uy * 6 - ux * 3.2);
+  c.closePath(); c.fill();
+}
+
+/* ---------- rozkyv v okolí daného času ---------- */
+function rozsahDne(t) {
+  let mn = 9, mx = -9;
+  for (let d = -12.5; d <= 12.5; d += 0.25) {
+    const v = hladinaMesta(t + d);
+    if (v < mn) mn = v; if (v > mx) mx = v;
+  }
+  return { mn, mx };
+}
+/* nejbližší vrchol (příliv) nebo důlek (odliv) po čase t */
+function nejblizsi(t, vrchol) {
+  let p = hladinaMesta(t), stoupa = hladinaMesta(t + 0.05) > p;
+  for (let d = 0.05; d < 26; d += 0.05) {
+    const v = hladinaMesta(t + d), s = hladinaMesta(t + d + 0.05) > v;
+    if (stoupa !== s && stoupa === vrchol) return d;
+    stoupa = s;
+  }
+  return null;
+}
+
+/* ---------- pohled na přístav ---------- */
+function kresliPristav() {
+  const c = ctxP, w = cPristav.clientWidth, h = cPristav.clientHeight;
+  if (!w || !h) return;
+  const t = SL.t, lvl = hladinaMesta(t), sv = svetlo();
+  const { mn, mx } = rozsahDne(t);
+  const stred = h * 0.60, mpx = Math.min(h * 0.16, 34);   // pixelů na metr
+  const yH = stred - lvl * mpx, yMax = stred - mx * mpx, yMin = stred - mn * mpx;
+
+  const obl = c.createLinearGradient(0, 0, 0, h);
+  if (sv) { obl.addColorStop(0, '#b9dcf6'); obl.addColorStop(1, '#e6f2fb'); }
+  else { obl.addColorStop(0, '#0d2033'); obl.addColorStop(1, '#1d3f5c'); }
+  c.fillStyle = obl; c.fillRect(0, 0, w, h);
+
+  // moře
+  c.fillStyle = sv ? '#2f86c6' : '#11466e';
+  c.beginPath(); c.moveTo(0, yH);
+  for (let x = 0; x <= w; x += 6) c.lineTo(x, yH + Math.sin(x * 0.05 + t * 3) * 2.2 + Math.sin(x * 0.11 - t * 5) * 1.2);
+  c.lineTo(w, h); c.lineTo(0, h); c.closePath(); c.fill();
+  c.strokeStyle = sv ? 'rgba(255,255,255,.7)' : 'rgba(160,220,255,.6)'; c.lineWidth = 1.4;
+  c.beginPath(); c.moveTo(0, yH);
+  for (let x = 0; x <= w; x += 6) c.lineTo(x, yH + Math.sin(x * 0.05 + t * 3) * 2.2 + Math.sin(x * 0.11 - t * 5) * 1.2);
+  c.stroke();
+
+  // molo s mokrým pruhem mezi odlivem a přílivem
+  const mw = w * 0.30;
+  c.fillStyle = sv ? '#9c9384' : '#4a4a52';
+  c.fillRect(0, h * 0.22, mw, h);
+  c.fillStyle = sv ? 'rgba(60,50,40,.35)' : 'rgba(20,30,40,.55)';
+  c.fillRect(0, yMax, mw, Math.max(0, yMin - yMax));
+  c.fillStyle = sv ? '#8a8172' : '#3c3c45';
+  c.fillRect(mw - 10, h * 0.22, 10, h);
+
+  // vodočet – lať s metrovými ryskami
+  const vx = mw + 26;
+  c.fillStyle = sv ? '#d9d2c4' : '#cbd3dc'; c.fillRect(vx - 4, stred - 2.2 * mpx, 8, 3.6 * mpx);
+  c.font = '10px system-ui, sans-serif'; c.textBaseline = 'middle';
+  for (let m = -1; m <= 2; m++) {
+    const y = stred - m * mpx;
+    c.fillStyle = sv ? '#3a3a3a' : '#2b3440'; c.fillRect(vx - 4, y - 1, 8, 2);
+    c.fillStyle = sv ? '#33455a' : '#9fb4c8'; c.fillText(m + ' m', vx + 9, y);
+  }
+  // značka aktuální hladiny
+  c.fillStyle = '#ffd34d';
+  c.beginPath(); c.moveTo(vx - 6, yH); c.lineTo(vx - 15, yH - 5); c.lineTo(vx - 15, yH + 5); c.closePath(); c.fill();
+
+  // čáry maxima a minima dne
+  c.setLineDash([5, 5]); c.lineWidth = 1;
+  const cerv = sv ? '#b3261e' : 'rgba(255,140,140,1)', modr = sv ? '#14507f' : 'rgba(140,205,255,1)';
+  c.strokeStyle = cerv; c.beginPath(); c.moveTo(mw, yMax); c.lineTo(w, yMax); c.stroke();
+  c.strokeStyle = modr; c.beginPath(); c.moveTo(mw, yMin); c.lineTo(w, yMin); c.stroke();
+  c.setLineDash([]);
+  c.font = '11px system-ui, sans-serif'; c.textAlign = 'right';
+  c.fillStyle = cerv; c.fillText('nejvyšší příliv', w - 6, yMax - 6);
+  c.fillStyle = modr; c.fillText('nejnižší odliv', w - 6, yMin + 12);
+  c.textAlign = 'left';
+
+  // loďka, která stoupá s vodou
+  const bx = w * 0.66, by = yH + Math.sin(t * 4) * 2 - 3;
+  c.fillStyle = sv ? '#8d5a3b' : '#a4653f';
+  c.beginPath(); c.moveTo(bx - 26, by); c.lineTo(bx + 26, by); c.lineTo(bx + 17, by + 11); c.lineTo(bx - 17, by + 11); c.closePath(); c.fill();
+  c.strokeStyle = sv ? '#5d3a24' : '#d8c0a8'; c.lineWidth = 1.5;
+  c.beginPath(); c.moveTo(bx, by); c.lineTo(bx, by - 22); c.stroke();
+  c.beginPath(); c.moveTo(bx + 1, by - 21); c.lineTo(bx + 16, by - 4); c.lineTo(bx + 1, by - 4); c.closePath();
+  c.fillStyle = sv ? '#fbfbfb' : '#e8e8e8'; c.fill();
+  c.strokeStyle = sv ? '#5d6b78' : 'rgba(0,0,0,.35)'; c.lineWidth = 1; c.stroke();
+
+  // výška hladiny číslem
+  c.font = '600 13px system-ui, sans-serif';
+  c.fillStyle = sv ? '#14314d' : '#dff0ff';
+  c.fillText(cislo(lvl, true) + ' m', w * 0.42, h * 0.16);
+  c.textBaseline = 'alphabetic';
+}
+
+/* ---------- graf výšky hladiny ---------- */
+function kresliGraf() {
+  const c = ctxG, w = cGraf.clientWidth, h = cGraf.clientHeight;
+  if (!w || !h) return;
+  const sv = svetlo();
+  const L = 44, R = 12, T = 24, B = 22, gw = w - L - R, gh = h - T - B;
+  const okno = Number($('slOkno').value), t1 = SL.t, t0 = t1 - okno;
+  const HMAX = 1.7, HMIN = -1.0;
+  const yy = v => T + gh * (HMAX - v) / (HMAX - HMIN);
+  const xx = t => L + gw * (t - t0) / okno;
+
+  c.clearRect(0, 0, w, h);
+  c.strokeStyle = sv ? '#d0d7de' : '#3a3a3a'; c.lineWidth = 1;
+  c.font = '10px system-ui, sans-serif'; c.textBaseline = 'middle';
+  for (let m = -1; m <= 1.5; m += 0.5) {
+    const y = yy(m);
+    c.strokeStyle = m === 0 ? (sv ? '#9aa4ae' : '#5a6470') : (sv ? '#e2e6ea' : '#2c2c2c');
+    c.beginPath(); c.moveTo(L, y); c.lineTo(w - R, y); c.stroke();
+    c.fillStyle = sv ? '#4b535b' : '#8a8a8a';
+    c.fillText((m > 0 ? '+' : '') + cislo(m, false), 6, y);
+  }
+
+  // svislé dělení: dny nebo týdny
+  // popisky jsou vztažené k „teď“ na pravém okraji – graf je vždy záznam do minulosti
+  const krokD = okno <= 72 ? 12 : okno <= 200 ? 24 : 24 * 7;
+  c.strokeStyle = sv ? '#e2e6ea' : '#2c2c2c';
+  for (let k = 0; k * krokD <= okno; k++) {
+    const cas = t1 - k * krokD, x = xx(cas);
+    if (x < L) break;
+    c.beginPath(); c.moveTo(x, T); c.lineTo(x, T + gh); c.stroke();
+    c.fillStyle = sv ? '#7a828a' : '#777';
+    c.textAlign = k === 0 ? 'right' : 'center';
+    const mn = (n, j, dva, vic) => '−' + n + ' ' + (n === 1 ? j : n < 5 ? dva : vic);
+    const popis = k === 0 ? 'teď'
+      : okno <= 72 ? '−' + k * krokD + ' h'
+        : okno <= 200 ? mn(k, 'den', 'dny', 'dní')
+          : mn(k, 'týden', 'týdny', 'týdnů');
+    c.fillText(popis, k === 0 ? x + 2 : x, h - 9);
+    c.textAlign = 'left';
+  }
+
+  // křivka; u širokého okna se vykresluje pásmo min–max (jinak by se
+  // půldenní vlny do pixelů nevešly a graf by lhal)
+  const pasmo = okno > 72;
+  c.strokeStyle = '#4aa3ff'; c.lineWidth = pasmo ? 1 : 1.8;
+  c.fillStyle = 'rgba(74,163,255,.30)';
+  if (pasmo) {
+    c.beginPath();
+    for (let px = 0; px <= gw; px++) {
+      let mn = 9, mx = -9;
+      for (let s = 0; s < 14; s++) {
+        const v = hladinaMesta(t0 + (px + s / 14) * okno / gw);
+        if (v < mn) mn = v; if (v > mx) mx = v;
+      }
+      c.moveTo(L + px + .5, yy(mx)); c.lineTo(L + px + .5, yy(mn));
+    }
+    c.strokeStyle = 'rgba(74,163,255,.75)'; c.stroke();
+  } else {
+    c.beginPath();
+    for (let px = 0; px <= gw; px++) c.lineTo(L + px, yy(hladinaMesta(t0 + px * okno / gw)));
+    c.stroke();
+    c.lineTo(L + gw, yy(0)); c.lineTo(L, yy(0)); c.closePath(); c.fill();
+  }
+
+  // dnešní bod
+  c.fillStyle = '#ffd34d';
+  c.beginPath(); c.arc(L + gw, yy(hladinaMesta(t1)), 4, 0, 7); c.fill();
+
+  c.fillStyle = sv ? '#4b535b' : '#9a9a9a'; c.font = '11px system-ui, sans-serif';
+  c.textAlign = 'right';
+  c.fillText(pasmo ? 'rozkyv (skočný ↔ hluchý příliv)' : 'dva přílivy za 24 h 50 min', w - R, T - 9);
+  c.textAlign = 'left'; c.textBaseline = 'alphabetic';
+}
+
+/* ---------- stavový řádek ---------- */
+const FAZE = [
+  ['🌑', 'novoluní'], ['🌒', 'dorůstající srpek'], ['🌓', 'první čtvrť'], ['🌔', 'dorůstající měsíc'],
+  ['🌕', 'úplněk'], ['🌖', 'couvající měsíc'], ['🌗', 'poslední čtvrť'], ['🌘', 'couvající srpek']
+];
+const cislo = (v, znam) => (znam && v > 0 ? '+' : '') + v.toFixed(2).replace('.', ',');
+function trvani(hod) {
+  if (hod === null) return '—';
+  const H = Math.floor(hod), M = Math.round((hod - H) * 60);
+  return (H ? H + ' h ' : '') + M + ' min';
+}
+function kresliStav() {
+  const t = SL.t, lvl = hladinaMesta(t), stoupa = hladinaMesta(t + 0.05) > lvl;
+  const den = Math.floor(t / 24) + 1, hod = t % 24;
+  const hh = String(Math.floor(hod)).padStart(2, '0') + ':' + String(Math.floor((hod % 1) * 60)).padStart(2, '0');
+  let d = (uhelMesic(t) - uhelSlunce(t)) % (2 * Math.PI); if (d < 0) d += 2 * Math.PI;
+  const [ikona, nazev] = FAZE[Math.round(d / (2 * Math.PI) * 8) % 8];
+  const sync = Math.abs(Math.cos(d));
+  const typ = !slunceZap ? 'jen vliv Měsíce'
+    : sync > 0.75 ? '🔴 skočný příliv – Slunce i Měsíc táhnou v jedné přímce'
+      : sync < 0.35 ? '🔵 hluchý příliv – Slunce táhne napříč a vlnu zeslabuje'
+        : '⚪ přechod mezi skočným a hluchým přílivem';
+  const { mn, mx } = rozsahDne(t);
+  $('stavSlapy').innerHTML =
+    `<span><b>${den}. den ${hh}</b></span>` +
+    `<span><span class="znak">${ikona}</span> ${nazev}</span>` +
+    `<span>${typ}</span>` +
+    `<span>hladina <b>${cislo(lvl, true)} m</b> ${stoupa ? '↑ stoupá' : '↓ klesá'}</span>` +
+    `<span>příliv za <b>${trvani(nejblizsi(t, true))}</b> · odliv za <b>${trvani(nejblizsi(t, false))}</b></span>` +
+    `<span>dnešní rozkyv <b>${(mx - mn).toFixed(2).replace('.', ',')} m</b></span>`;
+}
+
+/* ---------- ovládání modulu slapů ---------- */
+$('slRychlost').addEventListener('input', e => $('slRychlostV').textContent = (e.target.value / 10).toFixed(1).replace('.', ','));
+$('slSlunce').addEventListener('change', e => slunceZap = e.target.checked);
+$('slMesto').addEventListener('input', e => SL.lon = e.target.value * Math.PI / 180);
+$('zavriInfoSlapy').addEventListener('click', () => $('infoSlapy').style.display = 'none');
+function nastavFazi(delta) {          // úhel Měsíc−Slunce v okamžiku SL.t
+  SL.mesic0 = uhelSlunce(SL.t) + delta - 2 * Math.PI * SL.t / HOD_MESIC;
+}
+$('slNov').addEventListener('click', () => nastavFazi(0));
+$('slCtvrt').addEventListener('click', () => nastavFazi(Math.PI / 2));
+$('slUplnek').addEventListener('click', () => nastavFazi(Math.PI));
+
+/* ============================================================
+   PŘEPÍNÁNÍ MODULŮ A SPOLEČNÉ OVLÁDÁNÍ
+   ============================================================ */
+let rezimStr = 'vlny';
+function prepni(r) {
+  rezimStr = r;
+  const slapy = r === 'slapy';
+  $('plochaVlny').classList.toggle('skryto', slapy);
+  $('panelVlny').classList.toggle('skryto', slapy);
+  $('plochaSlapy').classList.toggle('skryto', !slapy);
+  $('panelSlapy').classList.toggle('skryto', !slapy);
+  $('btnClear').classList.toggle('skryto', slapy);
+  $('tabVlny').classList.toggle('zap', !slapy);
+  $('tabSlapy').classList.toggle('zap', slapy);
+  // plátna měla při skrytí nulovou velikost – po zobrazení je potřeba přeměřit
+  if (slapy) prepocitejSlapy();
+  else if (canvas.clientWidth !== sirkaPx || canvas.clientHeight !== vyskaPx) prepocitejMrizku();
+}
+$('tabVlny').addEventListener('click', () => prepni('vlny'));
+$('tabSlapy').addEventListener('click', () => prepni('slapy'));
+
+$('btnPauza').addEventListener('click', () => {
+  bezi = !bezi;
+  $('btnPauza').textContent = bezi ? '⏸️ Pauza' : '▶️ Spustit';
+  $('btnPauza').classList.toggle('zap', !bezi);
+});
+$('btnInfo').addEventListener('click', () => {
+  const b = $(rezimStr === 'slapy' ? 'infoSlapy' : 'infoBox');
+  b.style.display = b.style.display === 'none' ? 'block' : 'none';
+});
+$('zavriInfo').addEventListener('click', () => $('infoBox').style.display = 'none');
+
+addEventListener('keydown', e => {
+  if (e.key === ' ') { e.preventDefault(); $('btnPauza').click(); }
+  else if (e.key.toLowerCase() === 'c' && rezimStr === 'vlny') uklid();
+  else if (e.key.toLowerCase() === 'm' && rezimStr === 'vlny') { $('melcina').checked = !$('melcina').checked; obnovProstredi(); }
+  else if (e.key.toLowerCase() === 'n' && rezimStr === 'vlny') $('btnRybnik').click();
+});
+
+let zmena = null;
+addEventListener('resize', () => {
+  clearTimeout(zmena);
+  zmena = setTimeout(() => rezimStr === 'slapy' ? prepocitejSlapy() : prepocitejMrizku(), 150);
+});
+
+/* ---------- hlavní smyčka ---------- */
+let posledniT = null, snimek = 0;
+function smycka(t) {
+  if (posledniT === null) posledniT = t;
+  const dt = Math.min(0.05, (t - posledniT) / 1000);
+  posledniT = t;
+
+  if (rezimStr === 'vlny') {
+    if (bezi) { cas += dt; zdroje(dt); krokZabek(dt); krok(); krok(); }
+    vykresli();
+  } else {
+    if (bezi) SL.t += dt * Number($('slRychlost').value) / 10;
+    kresliZemi(); kresliPristav(); kresliGraf();
+    if (snimek % 5 === 0) kresliStav();
+  }
+  snimek++;
+  requestAnimationFrame(smycka);
+}
+
+novyRybnik((Math.random() * 99999) | 0);
+prepocitejMrizku();
+napovedaNastroje();
+// úvodní kapka, ať je hned vidět, o co jde
+rozvlni(Math.round(cols * 0.5), Math.round(rady * 0.5), Number($('velikost').value), 0.5);
+requestAnimationFrame(smycka);
+</script>
+</body>
+</html>

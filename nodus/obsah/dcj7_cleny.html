@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Členy a rod podstatných jmen</title>
+  <link rel="stylesheet" href="../common.css">
+  <link rel="stylesheet" href="../vyuka.css">
+  <script src="../theme.js"></script>
+  <script src="../uloha.js"></script>
+  <style>
+    .slovo-ciz { font-size: clamp(1.6rem, 6vw, 2.4rem); font-weight: 700; }
+    .preklad { color: var(--text-faint); font-size: 0.92rem; }
+    .vlajka { font-size: 2rem; }
+    .pravidlo { color: var(--text-muted); font-size: 0.86rem; max-width: 520px; line-height: 1.55; }
+    .tabulka { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; max-width: 740px;
+      margin-top: 10px; color: var(--text-faint); font-size: 0.8rem; }
+    .tabulka span { background: var(--bg-control); border: 1px solid var(--border); border-radius: 8px; padding: 6px 12px; }
+  </style>
+</head>
+<body>
+  <h1>📗 Členy a rod podstatných jmen</h1>
+  <p class="podtitul">Pro 7. ročník: der/die/das v němčině, le/la a un/une ve francouzštině.</p>
+
+  <div class="rezimy" id="rezimy">
+    <button data-rezim="nemcinaClen" class="active">🇩🇪 der / die / das</button>
+    <button data-rezim="nemcinaPravidlo">🇩🇪 Rod podle koncovky</button>
+    <button data-rezim="francouzstinaClen">🇫🇷 le / la</button>
+    <button data-rezim="francouzstinaNeurcity">🇫🇷 un / une</button>
+  </div>
+
+  <div class="plocha" id="plocha"></div>
+
+  <div class="ovladani">
+    <button class="hlavni" id="btnDalsi">Přeskočit →</button>
+    <span class="skore" id="skore"></span>
+  </div>
+
+  <div class="tabulka">
+    <span>🇩🇪 der = mužský · die = ženský · das = střední</span>
+    <span>🇫🇷 le = mužský · la = ženský (střední rod tam není)</span>
+    <span>Člen se učíme <b>spolu se slovem</b>, ne zvlášť.</span>
+  </div>
+
+  <p class="napoveda">
+    Rod v cizím jazyce často <b>neodpovídá</b> češtině: das Mädchen (dívka) je středního rodu,
+    la table (stůl) je ženského. Pomáhají koncovky: -ung, -heit, -keit, -schaft → die;
+    -chen, -lein, -ment → das; ve francouzštině -tion, -té, -ette → la.
+  </p>
+
+<script>
+const $ = id => document.getElementById(id);
+const skore = Uloha.skore('nodus_dcj7_cleny', $('skore'));
+let rezim = 'nemcinaClen';
+
+function odezvaEl() { const d = document.createElement('div'); d.className = 'odezva'; return d; }
+
+const NEMCINA = [
+  { s: 'Tisch', clen: 'der', cz: 'stůl' }, { s: 'Stuhl', clen: 'der', cz: 'židle' },
+  { s: 'Hund', clen: 'der', cz: 'pes' }, { s: 'Lehrer', clen: 'der', cz: 'učitel' },
+  { s: 'Apfel', clen: 'der', cz: 'jablko' }, { s: 'Garten', clen: 'der', cz: 'zahrada' },
+  { s: 'Schule', clen: 'die', cz: 'škola' }, { s: 'Katze', clen: 'die', cz: 'kočka' },
+  { s: 'Zeitung', clen: 'die', cz: 'noviny' }, { s: 'Freiheit', clen: 'die', cz: 'svoboda' },
+  { s: 'Freundschaft', clen: 'die', cz: 'přátelství' }, { s: 'Blume', clen: 'die', cz: 'květina' },
+  { s: 'Haus', clen: 'das', cz: 'dům' }, { s: 'Buch', clen: 'das', cz: 'kniha' },
+  { s: 'Mädchen', clen: 'das', cz: 'dívka' }, { s: 'Auto', clen: 'das', cz: 'auto' },
+  { s: 'Fenster', clen: 'das', cz: 'okno' }, { s: 'Brot', clen: 'das', cz: 'chléb' },
+  { s: 'Kind', clen: 'das', cz: 'dítě' }, { s: 'Wasser', clen: 'das', cz: 'voda' },
+];
+
+/* Koncovky, podle kterých se rod v němčině pozná spolehlivě */
+const KONCOVKY = [
+  { koncovka: '-ung', clen: 'die', priklady: 'die Zeitung, die Wohnung, die Übung' },
+  { koncovka: '-heit', clen: 'die', priklady: 'die Freiheit, die Gesundheit' },
+  { koncovka: '-keit', clen: 'die', priklady: 'die Möglichkeit, die Sauberkeit' },
+  { koncovka: '-schaft', clen: 'die', priklady: 'die Freundschaft, die Mannschaft' },
+  { koncovka: '-chen', clen: 'das', priklady: 'das Mädchen, das Häuschen' },
+  { koncovka: '-lein', clen: 'das', priklady: 'das Fräulein, das Büchlein' },
+  { koncovka: '-ment', clen: 'das', priklady: 'das Instrument, das Dokument' },
+  { koncovka: '-er (u osob)', clen: 'der', priklady: 'der Lehrer, der Fahrer' },
+  { koncovka: '-ling', clen: 'der', priklady: 'der Frühling, der Lehrling' },
+  { koncovka: '-ismus', clen: 'der', priklady: 'der Tourismus, der Realismus' },
+];
+
+const FRANCOUZSTINA = [
+  { s: 'table', clen: 'la', cz: 'stůl' }, { s: 'maison', clen: 'la', cz: 'dům' },
+  { s: 'voiture', clen: 'la', cz: 'auto' }, { s: 'école', clen: 'la', cz: 'škola' },
+  { s: 'question', clen: 'la', cz: 'otázka' }, { s: 'liberté', clen: 'la', cz: 'svoboda' },
+  { s: 'fille', clen: 'la', cz: 'dívka' }, { s: 'fenêtre', clen: 'la', cz: 'okno' },
+  { s: 'livre', clen: 'le', cz: 'kniha' }, { s: 'chien', clen: 'le', cz: 'pes' },
+  { s: 'garçon', clen: 'le', cz: 'chlapec' }, { s: 'pain', clen: 'le', cz: 'chléb' },
+  { s: 'jardin', clen: 'le', cz: 'zahrada' }, { s: 'professeur', clen: 'le', cz: 'učitel' },
+  { s: 'stylo', clen: 'le', cz: 'pero' }, { s: 'cahier', clen: 'le', cz: 'sešit' },
+];
+
+/* ---- Německý člen ------------------------------------------------------------------------ */
+function nemcinaClen() {
+  const p = $('plocha');
+  const u = Uloha.nahodne(NEMCINA);
+  p.innerHTML = `<div class="zadani"><span class="vlajka">🇩🇪</span> Který člen patří ke slovu?</div>
+    <div class="karta"><div class="slovo-ciz">${u.s}</div><div class="preklad">${u.cz}</div></div>`;
+  const odezva = odezvaEl();
+  Uloha.vyber({
+    kam: p, odezva, trida: 'velke',
+    moznosti: [
+      { klic: 'der', popis: 'der' }, { klic: 'die', popis: 'die' }, { klic: 'das', popis: 'das' },
+    ],
+    spravnyKlic: u.clen,
+    zpravaOk: `✅ ${u.clen} ${u.s} = ${u.cz}` + (u.clen === 'das' && u.cz === 'dívka'
+      ? ' – slova na -chen jsou vždy středního rodu, i když jde o osobu.' : ''),
+    zpravaChyba: 'Rod v němčině neodpovídá češtině – uč se člen vždy se slovem.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Rod podle koncovky -------------------------------------------------------------------- */
+function nemcinaPravidlo() {
+  const p = $('plocha');
+  const u = Uloha.nahodne(KONCOVKY);
+  p.innerHTML = `<div class="zadani"><span class="vlajka">🇩🇪</span>
+      Jaký člen mají německá podstatná jména zakončená na</div>
+    <div class="karta"><div class="slovo-ciz">${u.koncovka}</div></div>`;
+  const odezva = odezvaEl();
+  Uloha.vyber({
+    kam: p, odezva, trida: 'velke',
+    moznosti: [
+      { klic: 'der', popis: 'der' }, { klic: 'die', popis: 'die' }, { klic: 'das', popis: 'das' },
+    ],
+    spravnyKlic: u.clen,
+    zpravaOk: `✅ ${u.koncovka} → ${u.clen}: ${u.priklady}`,
+    zpravaChyba: 'Zkus si vybavit slovo s touto koncovkou, které už znáš.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Francouzský určitý člen ------------------------------------------------------------------ */
+function francouzstinaClen() {
+  const p = $('plocha');
+  const u = Uloha.nahodne(FRANCOUZSTINA);
+  p.innerHTML = `<div class="zadani"><span class="vlajka">🇫🇷</span> Který určitý člen patří ke slovu?</div>
+    <div class="karta"><div class="slovo-ciz">${u.s}</div><div class="preklad">${u.cz}</div></div>`;
+  const odezva = odezvaEl();
+  Uloha.vyber({
+    kam: p, odezva, trida: 'dve',
+    moznosti: [{ klic: 'le', popis: 'le (mužský)' }, { klic: 'la', popis: 'la (ženský)' }],
+    spravnyKlic: u.clen,
+    zpravaOk: `✅ ${u.clen} ${u.s} = ${u.cz}`
+      + (u.s.startsWith('é') || u.s.startsWith('e') ? ' (před samohláskou se píše l’: l’école)' : ''),
+    zpravaChyba: 'Francouzština nemá střední rod – slovo je buď mužské, nebo ženské.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Francouzský neurčitý člen ------------------------------------------------------------------ */
+function francouzstinaNeurcity() {
+  const p = $('plocha');
+  const u = Uloha.nahodne(FRANCOUZSTINA);
+  const spravny = u.clen === 'le' ? 'un' : 'une';
+  p.innerHTML = `<div class="zadani"><span class="vlajka">🇫🇷</span> Doplň neurčitý člen:</div>
+    <div class="karta"><div class="slovo-ciz">… ${u.s}</div><div class="preklad">${u.cz}</div></div>`;
+  const odezva = odezvaEl();
+  Uloha.vyber({
+    kam: p, odezva, trida: 'dve',
+    moznosti: [{ klic: 'un', popis: 'un (mužský)' }, { klic: 'une', popis: 'une (ženský)' }],
+    spravnyKlic: spravny,
+    zpravaOk: `✅ ${spravny} ${u.s} – určitý člen je ${u.clen} ${u.s}.`,
+    zpravaChyba: 'Neurčitý člen se řídí stejným rodem jako určitý: le → un, la → une.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+const REZIMY = { nemcinaClen, nemcinaPravidlo, francouzstinaClen, francouzstinaNeurcity };
+function novaUloha() { REZIMY[rezim](); }
+
+document.querySelectorAll('#rezimy button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#rezimy button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  rezim = b.dataset.rezim;
+  novaUloha();
+}));
+$('btnDalsi').addEventListener('click', novaUloha);
+novaUloha();
+</script>
+</body>
+</html>

@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Budoucí čas – will a going to</title>
+  <link rel="stylesheet" href="../common.css">
+  <link rel="stylesheet" href="../vyuka.css">
+  <script src="../theme.js"></script>
+  <script src="../uloha.js"></script>
+  <style>
+    .veta-en { font-size: clamp(1.1rem, 4.2vw, 1.6rem); font-weight: 600; max-width: 620px; line-height: 1.5; }
+    .veta-en .mezera { color: var(--accent); border-bottom: 2px dashed var(--accent); padding: 0 10px; }
+    .situace { color: var(--text-muted); font-size: 0.95rem; max-width: 560px; line-height: 1.55; }
+    .tabulka { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; max-width: 720px;
+      margin-top: 10px; color: var(--text-faint); font-size: 0.8rem; }
+    .tabulka span { background: var(--bg-control); border: 1px solid var(--border); border-radius: 8px;
+      padding: 6px 12px; }
+  </style>
+</head>
+<body>
+  <h1>⏩ Budoucí čas – will a going to</h1>
+  <p class="podtitul">Pro 7. ročník: rozhodnutí, plány a předpovědi v angličtině.</p>
+
+  <div class="rezimy" id="rezimy">
+    <button data-rezim="volba" class="active">🤔 Will, nebo going to?</button>
+    <button data-rezim="tvar">✏️ Správný tvar</button>
+    <button data-rezim="zaporOtazka">❓ Otázka a zápor</button>
+    <button data-rezim="funkce">🎯 K čemu to slouží</button>
+  </div>
+
+  <div class="plocha" id="plocha"></div>
+
+  <div class="ovladani">
+    <button class="hlavni" id="btnDalsi">Přeskočit →</button>
+    <span class="skore" id="skore"></span>
+  </div>
+
+  <div class="tabulka">
+    <span><b>will</b> – rozhodnutí právě teď, slib, předpověď bez důkazu</span>
+    <span><b>going to</b> – plán domluvený předem, předpověď podle toho, co vidíme</span>
+    <span>zápor: won't · isn't going to</span>
+  </div>
+
+  <p class="napoveda">
+    Po <b>will</b> následuje sloveso v základním tvaru (<i>I will help</i>).
+    <b>Going to</b> se pojí s tvarem slovesa <i>be</i>: am / is / are going to + sloveso.
+  </p>
+
+<script>
+const $ = id => document.getElementById(id);
+const skore = Uloha.skore('nodus_aj7_budouci', $('skore'));
+let rezim = 'volba';
+
+function odezvaEl() { const d = document.createElement('div'); d.className = 'odezva'; return d; }
+
+/* funkce: rozhodnuti | slib | predpoved | plan | dukaz */
+const SITUACE = [
+  { cz: 'Telefon zvoní a ty se právě teď rozhodneš ho zvednout.',
+    en: 'I <span class="mezera">?</span> answer it.', spravne: 'will', funkce: 'rozhodnuti' },
+  { cz: 'Už minulý týden jste koupili lístky do kina.',
+    en: 'We <span class="mezera">?</span> see a film tonight.', spravne: 'going to', funkce: 'plan' },
+  { cz: 'Na obloze jsou těžké černé mraky.',
+    en: 'It <span class="mezera">?</span> rain.', spravne: 'going to', funkce: 'dukaz' },
+  { cz: 'Myslíš si, že v roce 2100 budou lidé žít na Marsu.',
+    en: 'People <span class="mezera">?</span> live on Mars.', spravne: 'will', funkce: 'predpoved' },
+  { cz: 'Slibuješ mamince, že umyješ nádobí.',
+    en: 'I <span class="mezera">?</span> wash the dishes, I promise.', spravne: 'will', funkce: 'slib' },
+  { cz: 'Máš připravený batoh, zítra vyrážíš na výlet.',
+    en: 'I <span class="mezera">?</span> go hiking tomorrow.', spravne: 'going to', funkce: 'plan' },
+  { cz: 'Kamarád nese plný podnos a zakopl.',
+    en: 'He <span class="mezera">?</span> drop it!', spravne: 'going to', funkce: 'dukaz' },
+  { cz: 'Nabídneš se, že pomůžeš s taškami – rozhoduješ se právě teď.',
+    en: 'I <span class="mezera">?</span> carry your bags.', spravne: 'will', funkce: 'rozhodnuti' },
+  { cz: 'Sestra se přihlásila na kurz, začíná v září.',
+    en: 'She <span class="mezera">?</span> study Spanish.', spravne: 'going to', funkce: 'plan' },
+  { cz: 'Odhaduješ, že zítra bude hezky – jen tak, bez důkazu.',
+    en: 'I think it <span class="mezera">?</span> be sunny.', spravne: 'will', funkce: 'predpoved' },
+  { cz: 'Auto jede příliš rychle k zatáčce.',
+    en: 'It <span class="mezera">?</span> crash!', spravne: 'going to', funkce: 'dukaz' },
+  { cz: 'Slibuješ, že už nikdy nezapomeneš domácí úkol.',
+    en: 'I <span class="mezera">?</span> never forget my homework again.', spravne: 'will', funkce: 'slib' },
+];
+
+const FUNKCE = {
+  rozhodnuti: 'rozhodnutí v okamžiku mluvení (will)',
+  slib: 'slib nebo nabídka (will)',
+  predpoved: 'předpověď, názor bez důkazu (will)',
+  plan: 'plán domluvený předem (going to)',
+  dukaz: 'předpověď podle toho, co právě vidíme (going to)',
+};
+
+const OSOBY = [
+  { podmet: 'I', be: 'am', kratke: "I'm" },
+  { podmet: 'He', be: 'is', kratke: "He's" },
+  { podmet: 'She', be: 'is', kratke: "She's" },
+  { podmet: 'We', be: 'are', kratke: "We're" },
+  { podmet: 'They', be: 'are', kratke: "They're" },
+  { podmet: 'My sister', be: 'is', kratke: "My sister's" },
+];
+const SLOVESA = ['play tennis', 'visit London', 'buy a new phone', 'help you', 'watch a film',
+  'travel by train', 'cook dinner', 'study German'];
+
+/* ---- Will, nebo going to? -------------------------------------------------------------- */
+function volba() {
+  const p = $('plocha');
+  const s = Uloha.nahodne(SITUACE);
+  p.innerHTML = `<div class="situace">${s.cz}</div>
+    <div class="karta"><div class="veta-en">${s.en}</div></div>`;
+  const odezva = odezvaEl();
+  Uloha.vyber({
+    kam: p, odezva, trida: 'dve',
+    moznosti: Uloha.zamichej([
+      { klic: 'will', popis: 'will' },
+      { klic: 'going to', popis: 'am / is / are going to' },
+    ]),
+    spravnyKlic: s.spravne,
+    zpravaOk: `✅ ${FUNKCE[s.funkce]}`,
+    zpravaChyba: 'Rozhoduješ se právě teď (will), nebo je to domluvený plán či viditelný důkaz (going to)?',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Správný tvar ------------------------------------------------------------------------ */
+function tvar() {
+  const p = $('plocha');
+  const o = Uloha.nahodne(OSOBY);
+  const sloveso = Uloha.nahodne(SLOVESA);
+  const sWill = Math.random() < 0.5;
+  const spravny = sWill ? `${o.podmet} will ${sloveso}.` : `${o.podmet} ${o.be} going to ${sloveso}.`;
+  const chybne = sWill
+    ? [`${o.podmet} will to ${sloveso}.`, `${o.podmet} ${o.be} will ${sloveso}.`, `${o.podmet} wills ${sloveso}.`]
+    : [`${o.podmet} going to ${sloveso}.`, `${o.podmet} ${o.be} going ${sloveso}.`, `${o.podmet} ${o.be} go to ${sloveso}.`];
+
+  p.innerHTML = `<div class="zadani">Která věta je správně?
+    <br><span class="situace">${sWill ? 'budoucnost s will' : 'budoucnost s going to'}</span></div>`;
+  const odezva = odezvaEl();
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([spravny, ...chybne]).map(t => ({ klic: t, popis: t })),
+    spravnyKlic: spravny,
+    zpravaOk: `✅ ${spravny}`,
+    zpravaChyba: sWill
+      ? 'Po will následuje holé sloveso – bez to a bez koncovky.'
+      : 'Going to potřebuje sloveso be: am / is / are going to + sloveso.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Otázka a zápor ---------------------------------------------------------------------- */
+function zaporOtazka() {
+  const p = $('plocha');
+  const o = Uloha.nahodne(OSOBY);
+  const sloveso = Uloha.nahodne(SLOVESA);
+  const sWill = Math.random() < 0.5;
+  const otazka = Math.random() < 0.5;
+
+  let zadani, spravny, chybne;
+  if (sWill && otazka) {
+    zadani = `Vytvoř otázku: ${o.podmet} will ${sloveso}.`;
+    spravny = `Will ${o.podmet.toLowerCase() === 'i' ? 'I' : o.podmet.toLowerCase()} ${sloveso}?`;
+    chybne = [`Do ${o.podmet.toLowerCase()} will ${sloveso}?`, `${o.podmet} will ${sloveso}?`, `Will ${o.podmet.toLowerCase()} to ${sloveso}?`];
+  } else if (sWill) {
+    zadani = `Vytvoř zápor: ${o.podmet} will ${sloveso}.`;
+    spravny = `${o.podmet} won't ${sloveso}.`;
+    chybne = [`${o.podmet} don't will ${sloveso}.`, `${o.podmet} will not to ${sloveso}.`, `${o.podmet} doesn't will ${sloveso}.`];
+  } else if (otazka) {
+    zadani = `Vytvoř otázku: ${o.podmet} ${o.be} going to ${sloveso}.`;
+    spravny = `${o.be.charAt(0).toUpperCase() + o.be.slice(1)} ${o.podmet.toLowerCase() === 'i' ? 'I' : o.podmet.toLowerCase()} going to ${sloveso}?`;
+    chybne = [`Do ${o.podmet.toLowerCase()} going to ${sloveso}?`, `${o.podmet} ${o.be} going to ${sloveso}?`, `Will ${o.podmet.toLowerCase()} going to ${sloveso}?`];
+  } else {
+    zadani = `Vytvoř zápor: ${o.podmet} ${o.be} going to ${sloveso}.`;
+    spravny = `${o.podmet} ${o.be} not going to ${sloveso}.`;
+    chybne = [`${o.podmet} don't going to ${sloveso}.`, `${o.podmet} not ${o.be} going to ${sloveso}.`, `${o.podmet} ${o.be}n't go to ${sloveso}.`];
+  }
+
+  p.innerHTML = `<div class="zadani">${zadani}</div>`;
+  const odezva = odezvaEl();
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([spravny, ...chybne]).map(t => ({ klic: t, popis: t })),
+    spravnyKlic: spravny,
+    zpravaOk: `✅ ${spravny}`,
+    zpravaChyba: 'V otázce jde will (nebo am/is/are) na začátek, zápor tvoří won\'t nebo not.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* Tvar slovesa be podle podmětu, který stojí před mezerou ve větě. */
+function beTvar(veta) {
+  const pred = veta.split('<span')[0].trim().split(/\s+/);
+  const podmet = (pred[pred.length - 1] || '').toLowerCase();
+  if (podmet === 'i') return 'am';
+  if (['he', 'she', 'it'].includes(podmet)) return 'is';
+  return 'are';
+}
+
+/* ---- K čemu to slouží ---------------------------------------------------------------------- */
+function funkce() {
+  const p = $('plocha');
+  const s = Uloha.nahodne(SITUACE);
+  const veta = s.en.replace('<span class="mezera">?</span>',
+    s.spravne === 'will' ? 'will' : beTvar(s.en) + ' going to');
+  p.innerHTML = `<div class="zadani">K čemu je budoucí čas v této větě použit?</div>
+    <div class="karta"><div class="veta-en">${veta}</div>
+      <div class="situace">${s.cz}</div></div>`;
+  const odezva = odezvaEl();
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([s.funkce, ...Uloha.zamichej(Object.keys(FUNKCE).filter(k => k !== s.funkce)).slice(0, 2)])
+      .map(k => ({ klic: k, popis: FUNKCE[k] })),
+    spravnyKlic: s.funkce,
+    zpravaOk: `✅ ${FUNKCE[s.funkce]}`,
+    zpravaChyba: 'Čti českou situaci – jde o plán, rozhodnutí, slib, nebo o to, co je vidět?',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+const REZIMY = { volba, tvar, zaporOtazka, funkce };
+function novaUloha() { REZIMY[rezim](); }
+
+document.querySelectorAll('#rezimy button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#rezimy button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  rezim = b.dataset.rezim;
+  novaUloha();
+}));
+$('btnDalsi').addEventListener('click', novaUloha);
+novaUloha();
+</script>
+</body>
+</html>

@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Houby a lišejníky</title>
+  <link rel="stylesheet" href="../common.css">
+  <link rel="stylesheet" href="../vyuka.css">
+  <script src="../theme.js"></script>
+  <script src="../rec.js"></script>
+  <script src="../uloha.js"></script>
+  <style>
+    .nazev-h { font-size: 1.25rem; font-weight: 700; }
+    .popis-h { color: var(--text-muted); max-width: 560px; line-height: 1.55; }
+    .znaky { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+    .znaky span {
+      background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 20px;
+      padding: 5px 12px; font-size: 0.82rem; color: var(--text-muted);
+    }
+    .houba-svg { width: min(200px, 52vw); }
+    .houba-svg .klobouk { stroke: var(--text); stroke-width: 2; }
+    .houba-svg .trén { fill: #e8e0cc; stroke: var(--text); stroke-width: 2; }
+  </style>
+</head>
+<body>
+  <h1>🍄 Houby a lišejníky</h1>
+  <p class="podtitul">Pro 6. ročník: stavba houby, jedlé a jedovaté druhy, lišejníky a symbióza.</p>
+
+  <div class="rezimy" id="rezimy">
+    <button data-rezim="jedla" class="active">☠️ Jedlá, či jedovatá</button>
+    <button data-rezim="poznejHoubu">🔍 Poznej houbu</button>
+    <button data-rezim="stavba">🧩 Stavba a rozmnožování</button>
+    <button data-rezim="lisejniky">🌿 Lišejníky</button>
+  </div>
+
+  <div class="plocha" id="plocha"></div>
+
+  <div class="ovladani">
+    <button class="hlavni" id="btnDalsi">Přeskočit →</button>
+    <span class="skore" id="skore"></span>
+  </div>
+
+  <p class="napoveda">
+    Houby nejsou rostliny – nemají chlorofyl a živiny přijímají z okolí. Tělo tvoří
+    <b>podhoubí (mycelium)</b>, houba na povrchu je jen plodnice. <b>Lišejník</b> je soužití
+    houby a řasy – příklad symbiózy a ukazatel čistoty ovzduší.
+  </p>
+
+<script>
+const $ = id => document.getElementById(id);
+const skore = Uloha.skore('nodus_pr6_houby', $('skore'));
+let rezim = 'jedla';
+
+const HOUBY = [
+  { n: 'hřib smrkový', e: '🍄‍🟫', jedla: true, znaky: ['hnědý klobouk', 'houbovitý rourkatý', 'tlustý třeň'],
+    popis: 'oblíbená jedlá houba s rourkami pod kloboukem a síťkou na třeni' },
+  { n: 'muchomůrka červená', e: '🍄', jedla: false, znaky: ['červený klobouk', 'bílé tečky', 'prsten'],
+    popis: 'nápadná jedovatá houba s červeným kloboukem a bílými bradavkami' },
+  { n: 'muchomůrka zelená', e: '🟢', jedla: false, znaky: ['zelenavý klobouk', 'pochva u báze', 'prsten'],
+    popis: 'nejjedovatější houba u nás, otrava bývá smrtelná' },
+  { n: 'liška obecná', e: '🟡', jedla: true, znaky: ['žlutá barva', 'lišty místo lupenů', 'roste v trsech'],
+    popis: 'žlutá jedlá houba, která má místo lupenů lišty sbíhající po třeni' },
+  { n: 'žampion', e: '🤍', jedla: true, znaky: ['bílý klobouk', 'růžové lupeny', 'pěstuje se'],
+    popis: 'běžná jedlá houba, kterou lze pěstovat i uměle' },
+  { n: 'hnojník inkoustový', e: '⚫', jedla: false, znaky: ['rozplývá se', 'černý inkoust', 'na hnojišti'],
+    popis: 'houba, jejíž plodnice se rozplývá v černou tekutinu' },
+  { n: 'václavka obecná', e: '🟤', jedla: true, znaky: ['roste v trsech', 'na pařezech', 'nutná tepelná úprava'],
+    popis: 'jedlá houba rostoucí v trsech na dřevě, syrová je nestravitelná' },
+  { n: 'ucho Jidášovo', e: '👂', jedla: true, znaky: ['rosolovité', 'na bezu', 'ušní tvar'],
+    popis: 'rosolovitá houba rostoucí na bezu, používá se v asijské kuchyni' },
+];
+
+const STAVBA = [
+  { o: 'Jak se jmenuje vlastní tělo houby, které roste v půdě nebo dřevě?',
+    spr: 'podhoubí (mycelium)', jine: ['klobouk', 'třeň', 'výtrus'] },
+  { o: 'Čím se houby rozmnožují?', spr: 'výtrusy', jine: ['semeny', 'listy', 'kořeny'] },
+  { o: 'Proč houby nemohou fotosyntetizovat?', spr: 'nemají chlorofyl',
+    jine: ['nemají kořeny', 'rostou ve tmě', 'jsou moc malé'] },
+  { o: 'Jak se nazývá část houby pod kloboukem u hřibů?', spr: 'rourky',
+    jine: ['lupeny', 'lišty', 'ostny'] },
+  { o: 'Co je plodnice?', spr: 'část houby nad zemí, která tvoří výtrusy',
+    jine: ['kořen houby', 'vlákna v půdě', 'jedovatá látka'] },
+  { o: 'Jak houby přijímají živiny?', spr: 'vstřebávají je z okolního prostředí',
+    jine: ['fotosyntézou', 'kořeny z hloubky', 'z výtrusů'] },
+];
+
+const LISEJNIKY = [
+  { t: 'Lišejník vzniká soužitím houby a řasy (nebo sinice).', pravda: true,
+    proc: 'houba dodává vodu a minerály, řasa vyrábí fotosyntézou cukry' },
+  { t: 'Lišejníky rostou velmi rychle, i několik centimetrů za měsíc.', pravda: false,
+    proc: 'rostou velice pomalu, často jen milimetry za rok' },
+  { t: 'Lišejníky jsou citlivé na znečištěné ovzduší.', pravda: true,
+    proc: 'proto slouží jako ukazatel čistoty vzduchu' },
+  { t: 'Lišejníky najdeme i na holé skále a v tundře.', pravda: true,
+    proc: 'jsou průkopníky – osidlují místa, kde nic jiného neroste' },
+  { t: 'Soužití, ze kterého mají prospěch oba partneři, se nazývá parazitismus.', pravda: false,
+    proc: 'takové soužití se nazývá symbióza' },
+  { t: 'Sobi se v tundře živí mimo jiné lišejníky.', pravda: true,
+    proc: 'lišejník zvaný dutohlávka sobí je jejich důležitou potravou' },
+];
+
+/* ---- Jedlá, či jedovatá ------------------------------------------------------------------ */
+function jedla() {
+  const p = $('plocha');
+  const u = Uloha.nahodne(HOUBY);
+  p.innerHTML = `<div class="zadani">Je tato houba jedlá, nebo jedovatá?</div>
+    <div class="karta"><div class="obrazek">${u.e}</div><div class="nazev-h">${u.n}</div></div>`;
+  const znaky = document.createElement('div');
+  znaky.className = 'znaky';
+  znaky.innerHTML = u.znaky.map(z => `<span>${z}</span>`).join('');
+  p.appendChild(znaky);
+
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva, trida: 'dve',
+    moznosti: [
+      { klic: 'jedla', ikona: '🍲', popis: 'jedlá' },
+      { klic: 'jedovata', ikona: '☠️', popis: 'jedovatá' },
+    ],
+    spravnyKlic: u.jedla ? 'jedla' : 'jedovata',
+    zpravaOk: `✅ ${u.n} – ${u.popis}.`,
+    zpravaChyba: 'Houbu, kterou si nejsi jistý, nikdy nesbírej ani neochutnávej.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Poznej houbu -------------------------------------------------------------------------- */
+function poznejHoubu() {
+  const p = $('plocha');
+  const u = Uloha.nahodne(HOUBY);
+  const jine = Uloha.zamichej(HOUBY.filter(x => x.n !== u.n)).slice(0, 3);
+  p.innerHTML = `<div class="zadani">O kterou houbu jde?</div>
+    <div class="karta"><div class="obrazek">🔎</div><div class="popis-h">${u.popis}</div></div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([u, ...jine]).map(x => ({ klic: x.n, ikona: x.e, popis: x.n })),
+    spravnyKlic: u.n,
+    zpravaOk: `✅ ${u.n} – ${u.znaky.join(', ')}.`,
+    zpravaChyba: 'Přečti popis znovu a porovnej s typickými znaky.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Stavba a rozmnožování ------------------------------------------------------------------ */
+function stavba() {
+  const p = $('plocha');
+  const u = Uloha.nahodne(STAVBA);
+  p.innerHTML = `<div class="zadani">${u.o}</div>
+    <div class="karta"><div class="obrazek">🍄</div></div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([u.spr, ...u.jine]).map(t => ({ klic: t, popis: t })),
+    spravnyKlic: u.spr,
+    zpravaOk: `✅ ${u.spr}.`,
+    zpravaChyba: 'Zkus jinou možnost.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Lišejníky ------------------------------------------------------------------------------- */
+function lisejniky() {
+  const p = $('plocha');
+  const u = Uloha.nahodne(LISEJNIKY);
+  p.innerHTML = `<div class="zadani">Je toto tvrzení pravdivé?</div>
+    <div class="karta"><div class="obrazek">🌿</div><div class="popis-h">${u.t}</div></div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva, trida: 'dve',
+    moznosti: [
+      { klic: 'ano', ikona: '✅', popis: 'Pravda' },
+      { klic: 'ne', ikona: '❌', popis: 'Nepravda' },
+    ],
+    spravnyKlic: u.pravda ? 'ano' : 'ne',
+    zpravaOk: `✅ ${u.proc}.`,
+    zpravaChyba: 'Zkus druhou možnost a přečti si vysvětlení.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+const REZIMY = { jedla, poznejHoubu, stavba, lisejniky };
+function novaUloha() { REZIMY[rezim](); }
+
+document.querySelectorAll('#rezimy button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#rezimy button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  rezim = b.dataset.rezim;
+  novaUloha();
+}));
+$('btnDalsi').addEventListener('click', novaUloha);
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === 'Enter') { e.preventDefault(); novaUloha(); }
+});
+novaUloha();
+</script>
+</body>
+</html>

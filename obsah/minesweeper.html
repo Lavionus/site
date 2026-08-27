@@ -6,6 +6,7 @@
 <title>💣 Hledání min</title>
 <link rel="stylesheet" href="../common.css">
 <script src="../theme.js"></script>
+<script src="../rekord.js" defer></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;user-select:none}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:20px;display:flex;flex-direction:column;align-items:center}
@@ -15,15 +16,17 @@ h1{font-size:1.6rem;margin-bottom:14px;font-weight:600}
 .btn:hover{background:var(--accent)}
 select{background:var(--border);border:1px solid var(--border-strong);border-radius:4px;color:var(--text);padding:9px}
 .info{background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;padding:8px 16px;font-size:1.1rem;font-weight:700;min-width:90px;text-align:center}
-.board{display:grid;gap:2px;background:var(--border);padding:6px;border-radius:8px;touch-action:manipulation}
-.cell{width:32px;height:32px;background:#3a3a3a;border:1px solid var(--border-strong);border-radius:3px;display:flex;align-items:center;justify-content:center;font-weight:700;cursor:pointer;font-size:1rem}
+.board{display:grid;gap:2px;background:var(--border);padding:6px;border-radius:8px;touch-action:manipulation;
+  /* --sl = počet sloupců; buňka se zmenší, aby se deska vešla i na telefon */
+  --bunka:min(32px, calc((100vw - 34px - (var(--sl) - 1) * 2px) / var(--sl)))}
+.cell{width:var(--bunka);height:var(--bunka);font-size:clamp(.6rem,calc(var(--bunka) * .55),1rem);background:var(--bg-control);border:1px solid var(--border-strong);border-radius:3px;display:flex;align-items:center;justify-content:center;font-weight:700;cursor:pointer}
 .cell.open{background:var(--bg-input);border-color:var(--bg-elevated);cursor:default}
 .cell.mine{background:#c0392b}
 .cell.flag{background:#2a3a4a}
-.c1{color:var(--accent)}.c2{color:#27ae60}.c3{color:#e74c3c}.c4{color:#9b59b6}.c5{color:#e67e22}.c6{color:#1abc9c}.c7{color:#ecf0f1}.c8{color:#95a5a6}
+.c1{color:var(--accent)}.c2{color:var(--ok)}.c3{color:var(--danger)}.c4{color:#9b59b6}.c5{color:#e67e22}.c6{color:#1abc9c}.c7{color:#ecf0f1}.c8{color:#95a5a6}
 .hint{color:var(--text-faint);font-size:.85rem;margin-top:16px;text-align:center;max-width:480px}
 .msg{margin-top:12px;font-size:1.2rem;font-weight:700;min-height:28px}
-.msg.win{color:#27ae60}.msg.lose{color:#e74c3c}
+.msg.win{color:var(--ok)}.msg.lose{color:var(--danger)}
 </style>
 </head>
 <body>
@@ -37,6 +40,7 @@ select{background:var(--border);border:1px solid var(--border-strong);border-rad
     <option value="24,16,70">Těžká (24×16, 70 min)</option>
   </select>
   <button class="btn" id="newBtn">🙂 Nová hra</button>
+  <span id="rekordBox"></span>
 </div>
 <div class="board" id="board"></div>
 <div class="msg" id="msg"></div>
@@ -44,14 +48,26 @@ select{background:var(--border);border:1px solid var(--border-strong);border-rad
 <script>
 const $=id=>document.getElementById(id);
 let cols,rows,mineCount,grid,revealed,flagged,gameDone,first,timer,seconds;
+let rek=null;const rekordy={};   // nejlepší čas se drží zvlášť pro každou obtížnost
+function nastavRekord(){
+  if(typeof Rekord==='undefined')return;
+  const uroven=$('level').value;
+  if(!rekordy[uroven]){
+    const popis=$('level').options[$('level').selectedIndex].text.split(' (')[0];
+    rekordy[uroven]=Rekord.sleduj('webapp_hra_minesweeper_'+uroven.replace(/,/g,'x'),
+      {vyssiLepsi:false,popisek:'Nejlepší čas ('+popis.toLowerCase()+')',format:v=>v+' s'});
+  }
+  rek=rekordy[uroven];rek.prvek($('rekordBox'));
+}
 function init(){
   [cols,rows,mineCount]=$('level').value.split(',').map(Number);
   grid=Array.from({length:rows},()=>Array(cols).fill(0));
   revealed=Array.from({length:rows},()=>Array(cols).fill(false));
   flagged=Array.from({length:rows},()=>Array(cols).fill(false));
   gameDone=false;first=true;seconds=0;clearInterval(timer);$('time').textContent=0;
+  nastavRekord();
   $('mines').textContent=mineCount;$('msg').textContent='';$('msg').className='msg';$('newBtn').textContent='🙂 Nová hra';
-  const b=$('board');b.style.gridTemplateColumns=`repeat(${cols},32px)`;
+  const b=$('board');b.style.setProperty('--sl',cols);b.style.gridTemplateColumns=`repeat(${cols},var(--bunka))`;
   b.innerHTML='';
   for(let y=0;y<rows;y++)for(let x=0;x<cols;x++){
     const c=document.createElement('div');c.className='cell';c.dataset.x=x;c.dataset.y=y;
@@ -92,7 +108,9 @@ function checkWin(){
     if(grid[y][x]!==-1&&!revealed[y][x])return;
   }
   gameDone=true;clearInterval(timer);
-  $('msg').textContent='🎉 Vyhráls! Čas: '+seconds+' s';$('msg').className='msg win';$('newBtn').textContent='😎 Nová hra';
+  let zprava='🎉 Vyhráls! Čas: '+seconds+' s';
+  if(rek&&rek.zapis(seconds))zprava='🏆 Nový rekord: '+seconds+' s!';
+  $('msg').textContent=zprava;$('msg').className='msg win';$('newBtn').textContent='😎 Nová hra';
 }
 function flagsUsed(){let n=0;flagged.forEach(r=>r.forEach(f=>{if(f)n++;}));return n;}
 $('board').addEventListener('click',e=>{
@@ -127,7 +145,7 @@ $('board').addEventListener('touchend',e=>{
   else{e.preventDefault();} // dlouhý tap už vlajku přepnul — zablokuj následný click/contextmenu
 },{passive:false});
 $('newBtn').onclick=init;$('level').onchange=init;
-init();
+window.addEventListener('DOMContentLoaded',init);
 </script>
 </body>
 </html>

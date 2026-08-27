@@ -6,6 +6,8 @@
 <title>🎨 Nonogramy</title>
 <link rel="stylesheet" href="../common.css">
 <script src="../theme.js"></script>
+<script src="../dialog.js" defer></script>
+<script src="../rekord.js" defer></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:20px}
@@ -50,6 +52,7 @@ td.rohova{background:var(--bg);border-color:var(--bg-elevated)}
   <div class="info">Čísla udávají délky souvislých bloků v řádku/sloupci (v tomto pořadí, s mezerou aspoň 1 pole). ⏱️ <b id="cas">0:00</b></div>
   <div class="deska-wrap" id="deska"></div>
   <div class="vyhra" id="vyhra"></div>
+  <div style="margin-top:10px"><span id="rekordBox"></span></div>
   <div class="napoveda">Levé tlačítko = vybarvit · pravé tlačítko (nebo režim ✕) = křížek</div>
 </div>
 <script>
@@ -90,6 +93,16 @@ function voditka(grid){
   return {radky,sloupce};
 }
 
+let rek=null;const rekordy={};
+function nastavRekord(){
+  if(typeof Rekord==='undefined')return;
+  const p=PUZZLES[+$('puzzle').value];
+  if(p.random){rek=null;$('rekordBox').innerHTML='';return;}   // náhodné zadání rekord nemá
+  const id=$('puzzle').value;
+  if(!rekordy[id])rekordy[id]=Rekord.sleduj('webapp_hra_nonogram_'+id,
+    {vyssiLepsi:false,popisek:'Nejlepší čas',format:v=>Math.floor(v/60)+':'+String(v%60).padStart(2,'0')});
+  rek=rekordy[id];rek.prvek($('rekordBox'));
+}
 function novaHra(){
   const p=PUZZLES[+$('puzzle').value];
   let cil;
@@ -104,7 +117,7 @@ function novaHra(){
   }
   cile=voditka(cil);
   mrizka=Array.from({length:M},()=>Array(N).fill(0)); // 0 prázdné, 1 plné, 2 křížek
-  vyhrano=false;$('vyhra').textContent='';
+  vyhrano=false;$('vyhra').textContent='';nastavRekord();
   start=Date.now();
   if(timer)clearInterval(timer);
   timer=setInterval(()=>{
@@ -164,7 +177,10 @@ function zkontroluj(){
   for(let c=0;c<N;c++)if(!sloupecHotov(c))return;
   vyhrano=true;
   const s=Math.floor((Date.now()-start)/1000);
-  $('vyhra').textContent=`🎉 Vyřešeno za ${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}!`;
+  const cas=`${Math.floor(s/60)}:${String(s%60).padStart(2,'0')}`;
+  let zprava=`🎉 Vyřešeno za ${cas}!`;
+  if(rek&&rek.zapis(s))zprava=`🏆 Nový rekord: ${cas}!`;
+  $('vyhra').textContent=zprava;
   // křížky pryč pro čistý obrázek
   mrizka=mrizka.map(row=>row.map(x=>x===2?0:x));
   vykresli();
@@ -178,14 +194,15 @@ $('rezim').onclick=()=>{
   $('rezim').textContent=rezimKrizek?'✕ Křížky':'✏️ Vybarvit';
   $('rezim').classList.toggle('aktivni',rezimKrizek);
 };
-$('smazat').onclick=()=>{
-  if(vyhrano||confirm('Smazat rozdělanou hru?')){
+$('smazat').onclick=async ()=>{
+  if(vyhrano||await Dialog.potvrd('Smazat rozdělanou hru?')){
     mrizka=Array.from({length:M},()=>Array(N).fill(0));
-    vyhrano=false;$('vyhra').textContent='';start=Date.now();
+    vyhrano=false;$('vyhra').textContent='';nastavRekord();start=Date.now();
     vykresli();
   }
 };
-novaHra();
+// rekord.js se načítá s `defer`, proto první hru spouštíme až po DOMContentLoaded
+window.addEventListener('DOMContentLoaded',novaHra);
 </script>
 </body>
 </html>

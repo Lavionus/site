@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Soustavy rovnic</title>
+  <link rel="stylesheet" href="../common.css">
+  <link rel="stylesheet" href="../vyuka.css">
+  <script src="../theme.js"></script>
+  <script src="../uloha.js"></script>
+  <style>
+    .soustava { font-family: 'Courier New', monospace; font-size: clamp(1.1rem, 4.2vw, 1.6rem);
+      font-weight: 700; line-height: 1.7; text-align: left; display: inline-block;
+      border-left: 3px solid var(--accent); padding-left: 14px; }
+    .graf { width: min(300px, 78%); }
+    .graf .osy { stroke: var(--text-muted); stroke-width: 2; }
+    .graf .mrizka { stroke: var(--border); stroke-width: 1; }
+    .graf .primka1 { stroke: var(--accent); stroke-width: 3; fill: none; }
+    .graf .primka2 { stroke: var(--warn); stroke-width: 3; fill: none; }
+    .graf .prusecik { fill: var(--ok); }
+    .graf .popis { fill: var(--text-faint); font-size: 10px; text-anchor: middle; }
+    .uloha-text { max-width: 640px; font-size: 1.02rem; line-height: 1.6; }
+    .uloha-text b { color: var(--accent); }
+
+    /* ---- živý průsečík ---- */
+    .scena { width: min(420px, 100%); }
+    .scena .mrizka { stroke: var(--border); stroke-width: 0.9; }
+    .scena .osy { stroke: var(--text-muted); stroke-width: 1.7; }
+    .scena .primka1 { stroke: var(--accent); stroke-width: 3; }
+    .scena .primka2 { stroke: var(--warn); stroke-width: 3; }
+    .scena .prusecik { fill: var(--ok); stroke: var(--bg-panel); stroke-width: 2.5; }
+    .scena .popis { fill: var(--text-faint); font-size: 11px; text-anchor: middle; }
+
+    .ovladace { display: flex; flex-wrap: wrap; gap: 8px 12px; justify-content: center; max-width: 520px; }
+    .ovladace label {
+      display: flex; align-items: center; gap: 7px;
+      background: var(--bg-input); border: 1px solid var(--border);
+      border-radius: 8px; padding: 5px 10px; font-size: 0.8rem; color: var(--text-muted);
+    }
+    .ovladace label.p1 { border-color: var(--accent); }
+    .ovladace label.p2 { border-color: var(--warn); }
+    .ovladace input[type=range] { width: 92px; accent-color: var(--accent); }
+    .ovladace .hodnota { color: var(--text); font-weight: 600; min-width: 2.2em; text-align: right;
+      font-variant-numeric: tabular-nums; }
+
+    .stav-reseni {
+      background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 12px;
+      padding: 12px 18px; max-width: 520px; font-variant-numeric: tabular-nums;
+    }
+    .stav-reseni .rovnice1 { color: var(--accent); font-weight: 700; }
+    .stav-reseni .rovnice2 { color: var(--warn); font-weight: 700; }
+    .stav-reseni .vysledek { font-size: 1.2rem; font-weight: 700; margin-top: 6px; }
+    .stav-reseni.jedno .vysledek { color: var(--ok); }
+    .stav-reseni.zadne .vysledek { color: var(--danger); }
+    .stav-reseni.nekonecno .vysledek { color: var(--warn); }
+    .vysvetlivka { color: var(--text-faint); font-size: 0.8rem; max-width: 520px; line-height: 1.5; }
+    .vysvetlivka b { color: var(--text-muted); }
+  </style>
+</head>
+<body>
+  <h1>🧮 Soustavy rovnic</h1>
+  <p class="podtitul">Pro 9. ročník: dosazovací a sčítací metoda, grafické řešení a slovní úlohy.</p>
+
+  <div class="rezimy" id="rezimy">
+    <button data-rezim="prusecik" class="active">📈 Průsečík naživo</button>
+    <button data-rezim="reseni">🔑 Vyřeš soustavu</button>
+    <button data-rezim="postup">🪜 Postup řešení</button>
+    <button data-rezim="graf">📈 Grafické řešení</button>
+    <button data-rezim="slovni">📝 Slovní úlohy</button>
+  </div>
+
+  <div class="plocha" id="plocha"></div>
+
+  <div class="ovladani">
+    <button class="hlavni" id="btnDalsi">Přeskočit →</button>
+    <span class="skore" id="skore"></span>
+  </div>
+
+  <p class="napoveda">
+    Soustava dvou rovnic o dvou neznámých má obvykle <b>jedno řešení</b> – dvojici [x, y].
+    Graficky odpovídá <b>průsečíku dvou přímek</b>. Řešíme dosazovací nebo sčítací metodou
+    a výsledek vždy ověříme zkouškou.
+  </p>
+
+<script>
+const $ = id => document.getElementById(id);
+const skore = Uloha.skore('nodus_m9_soustavy', $('skore'));
+let rezim = 'prusecik';
+function odezvaEl() { const d = document.createElement('div'); d.className = 'odezva'; return d; }
+const clen = (k, p) => (k === 1 ? '' : k === -1 ? '−' : k) + p;
+const zapisRovnice = (a, b, c) =>
+  `${clen(a, 'x')} ${b >= 0 ? '+' : '−'} ${clen(Math.abs(b), 'y')} = ${c}`;
+
+/* ---- Průsečík naživo --------------------------------------------------------------------
+   Dvě přímky y = kx + q na posuvnících. Kromě běžného jednoho řešení se dají
+   nastavit i oba zvláštní případy: rovnoběžky (žádné řešení) a totožné přímky
+   (nekonečně mnoho) – ty se ze zadání úloh jinak nepoznají. */
+const PR = { k1: 1, q1: 2, k2: -2, q2: -1 };
+
+function prusecik() {
+  const p = $('plocha');
+  p.innerHTML = `
+    <div class="zadani uloha-text">Každá rovnice soustavy je jedna přímka. Posuvníky s nimi
+      hýbej a sleduj, kde se protnou — <b>průsečík je řešení soustavy</b>.</div>
+    <svg class="scena" id="scenaPR" viewBox="0 0 320 320" role="img"
+         aria-label="Dve primky a jejich prusecik"></svg>
+    <div class="ovladace">
+      <label class="p1">🔵 sklon k₁
+        <input type="range" id="posK1" min="-3" max="3" step="0.5" value="${PR.k1}">
+        <span class="hodnota" id="hodK1"></span></label>
+      <label class="p1">🔵 posun q₁
+        <input type="range" id="posQ1" min="-5" max="5" step="0.5" value="${PR.q1}">
+        <span class="hodnota" id="hodQ1"></span></label>
+      <label class="p2">🟠 sklon k₂
+        <input type="range" id="posK2" min="-3" max="3" step="0.5" value="${PR.k2}">
+        <span class="hodnota" id="hodK2"></span></label>
+      <label class="p2">🟠 posun q₂
+        <input type="range" id="posQ2" min="-5" max="5" step="0.5" value="${PR.q2}">
+        <span class="hodnota" id="hodQ2"></span></label>
+    </div>
+    <div class="stav-reseni" id="stavPR"></div>
+    <p class="vysvetlivka" id="poznamkaPR"></p>`;
+
+  ['K1', 'Q1', 'K2', 'Q2'].forEach(id => {
+    $('pos' + id).addEventListener('input', e => {
+      PR[id.toLowerCase()] = +e.target.value;
+      kresliPrusecik();
+    });
+  });
+  kresliPrusecik();
+}
+
+function kresliPrusecik() {
+  const { k1, q1, k2, q2 } = PR;
+  const M = 26, S = 160;
+  const X = v => S + v * M, Y = v => S - v * M;
+  const fmtC = v => Number(Number(v).toFixed(2)).toLocaleString('cs-CZ').replace('-', '−');
+
+  let mrizka = '';
+  for (let i = -6; i <= 6; i++) {
+    mrizka += `<line class="mrizka" x1="${X(i)}" y1="6" x2="${X(i)}" y2="314"/>
+               <line class="mrizka" x1="6" y1="${Y(i)}" x2="314" y2="${Y(i)}"/>`;
+  }
+  const primka = (k, q, trida) =>
+    `<line class="${trida}" x1="${X(-6)}" y1="${Y(k * -6 + q)}" x2="${X(6)}" y2="${Y(k * 6 + q)}"/>`;
+
+  const rovnobezne = k1 === k2;
+  const totozne = rovnobezne && q1 === q2;
+  let bod = '';
+  let stav, trida, poznamka;
+
+  if (totozne) {
+    trida = 'nekonecno';
+    stav = '<div class="vysledek">∞ nekonečně mnoho řešení</div>';
+    poznamka = 'Obě rovnice popisují <b>tutéž přímku</b>. Řešením je každý její bod — '
+      + 'soustava je závislá.';
+  } else if (rovnobezne) {
+    trida = 'zadne';
+    stav = '<div class="vysledek">✖ žádné řešení</div>';
+    poznamka = `Přímky mají stejný sklon (k = ${fmtC(k1)}), takže jsou <b>rovnoběžné</b> `
+      + 'a nikdy se neprotnou. Soustava nemá řešení.';
+  } else {
+    const x = (q2 - q1) / (k1 - k2);
+    const y = k1 * x + q1;
+    trida = 'jedno';
+    bod = `<circle class="prusecik" cx="${X(x)}" cy="${Y(y)}" r="6.5"/>`;
+    stav = `<div class="vysledek">[x; y] = [${fmtC(x)}; ${fmtC(y)}]</div>`;
+    poznamka = 'Průsečík je jediná dvojice čísel, která vyhovuje <b>oběma</b> rovnicím zároveň. '
+      + 'Zkus nastavit oběma přímkám stejné k — uvidíš, kdy řešení zmizí.';
+  }
+
+  $('scenaPR').innerHTML = mrizka +
+    `<line class="osy" x1="6" y1="${Y(0)}" x2="314" y2="${Y(0)}"/>
+     <line class="osy" x1="${X(0)}" y1="6" x2="${X(0)}" y2="314"/>
+     ${primka(k1, q1, 'primka1')}${primka(k2, q2, 'primka2')}
+     ${bod}
+     <text class="popis" x="310" y="${Y(0) - 6}">x</text>
+     <text class="popis" x="${X(0) + 11}" y="14">y</text>
+     <text class="popis" x="${X(1)}" y="${Y(0) + 13}">1</text>`;
+
+  const zapis = (k, q) => `y = ${fmtC(k)}x ${q >= 0 ? '+' : '−'} ${fmtC(Math.abs(q))}`;
+  $('stavPR').className = 'stav-reseni ' + trida;
+  $('stavPR').innerHTML =
+    `<div class="rovnice1">${zapis(k1, q1)}</div>
+     <div class="rovnice2">${zapis(k2, q2)}</div>` + stav;
+  $('poznamkaPR').innerHTML = poznamka;
+
+  $('hodK1').textContent = fmtC(k1);
+  $('hodQ1').textContent = fmtC(q1);
+  $('hodK2').textContent = fmtC(k2);
+  $('hodQ2').textContent = fmtC(q2);
+}
+
+/* Vygeneruje soustavu s celočíselným řešením. */
+function novaSoustava(maleKoeficienty) {
+  const x = Uloha.nahodneCislo(-5, 6), y = Uloha.nahodneCislo(-5, 6);
+  const rozsah = maleKoeficienty ? 3 : 5;
+  let a1, b1, a2, b2, pojistka = 0;
+  do {
+    a1 = Uloha.nahodneCislo(1, rozsah); b1 = Uloha.nahodneCislo(-rozsah, rozsah) || 1;
+    a2 = Uloha.nahodneCislo(1, rozsah); b2 = Uloha.nahodneCislo(-rozsah, rozsah) || -1;
+  } while (a1 * b2 - a2 * b1 === 0 && pojistka++ < 100);
+  return { a1, b1, c1: a1 * x + b1 * y, a2, b2, c2: a2 * x + b2 * y, x, y };
+}
+
+function reseni() {
+  const p = $('plocha');
+  const s = novaSoustava(true);
+  const spravny = `x = ${s.x}, y = ${s.y}`;
+  const jine = new Set([`x = ${s.y}, y = ${s.x}`, `x = ${s.x + 1}, y = ${s.y - 1}`,
+    `x = ${-s.x}, y = ${-s.y}`, `x = ${s.x}, y = ${s.y + 2}`]);
+  jine.delete(spravny);
+
+  p.innerHTML = `<div class="zadani uloha-text">Vyřeš soustavu rovnic:</div>
+    <div class="karta"><div class="soustava">${zapisRovnice(s.a1, s.b1, s.c1)}<br>${zapisRovnice(s.a2, s.b2, s.c2)}</div></div>`;
+  const odezva = odezvaEl();
+  Uloha.vyber({
+    kam: p, odezva, trida: 'velke',
+    moznosti: Uloha.zamichej([spravny, ...[...jine].slice(0, 3)]).map(t => ({ klic: t, popis: t })),
+    spravnyKlic: spravny,
+    zpravaOk: `✅ ${spravny} – zkouška: ${s.a1}·${s.x} ${s.b1 >= 0 ? '+' : '−'} ${Math.abs(s.b1)}·${s.y} = ${s.c1}`,
+    zpravaChyba: 'Dosaď nabízené dvojice do obou rovnic – správná musí vyhovět oběma.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+const POSTUPY = [
+  { q: 'Co udělá dosazovací metoda jako první krok?', a: 'z jedné rovnice vyjádří jednu neznámou',
+    b: ['sečte obě rovnice', 'vynásobí rovnice mezi sebou', 'nakreslí graf'] },
+  { q: 'K čemu slouží sčítací metoda?', a: 'úpravou rovnic se jedna neznámá při sečtení vyruší',
+    b: ['ke zkoušce výsledku', 'k zjednodušení zlomků', 'k výpočtu obsahu'] },
+  { q: 'Soustava: x + y = 10 a x − y = 2. Co vyjde po sečtení rovnic?', a: '2x = 12, tedy x = 6',
+    b: ['2y = 12', 'x = 10', '2x = 8'] },
+  { q: 'Proč děláme zkoušku?', a: 'ověříme, že dvojice vyhovuje oběma rovnicím', b: ['je to povinné', 'zkrátí to výpočet', 'určí to jednotky'] },
+  { q: 'Co znamená, když při řešení vyjde 0 = 5?', a: 'soustava nemá řešení – přímky jsou rovnoběžné',
+    b: ['řešením je nula', 'soustava má nekonečně mnoho řešení', 'je to správný výsledek'] },
+  { q: 'Co znamená, když vyjde 0 = 0?', a: 'soustava má nekonečně mnoho řešení – přímky splývají',
+    b: ['nemá řešení', 'x = 0 a y = 0', 'je v zadání chyba'] },
+  { q: 'Jak upravíme rovnice, aby se při sčítání vyrušilo y?', a: 'vynásobíme je tak, aby koeficienty u y byly opačné',
+    b: ['sečteme je rovnou vždy', 'vydělíme je x', 'vyjádříme z nich obsah'] },
+  { q: 'Kdy se hodí dosazovací metoda nejvíc?', a: 'když je v některé rovnici neznámá s koeficientem 1',
+    b: ['když jsou koeficienty velké', 'nikdy', 'jen u tří neznámých'] },
+];
+function postup() {
+  const p = $('plocha');
+  const u = Uloha.nahodne(POSTUPY);
+  p.innerHTML = `<div class="zadani uloha-text">${u.q}</div>`;
+  const odezva = odezvaEl();
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([u.a, ...u.b]).map(t => ({ klic: t, popis: t })),
+    spravnyKlic: u.a,
+    zpravaOk: `✅ ${u.a}`,
+    zpravaChyba: 'Cílem obou metod je zbavit se jedné neznámé.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+function graf() {
+  const p = $('plocha');
+  const x = Uloha.nahodneCislo(-3, 4), y = Uloha.nahodneCislo(-3, 4);
+  const k1 = Uloha.nahodne([-2, -1, 1, 2]);
+  let k2 = Uloha.nahodne([-2, -1, 1, 2]);
+  if (k2 === k1) k2 = k1 === 2 ? -1 : 2;
+  const q1 = y - k1 * x, q2 = y - k2 * x;
+  const M = 22, S = 150;      // střed a měřítko
+  const X = v => S + v * M, Y = v => S - v * M;
+  let mrizka = '';
+  for (let i = -6; i <= 6; i++) {
+    mrizka += `<line class="mrizka" x1="${X(i)}" y1="10" x2="${X(i)}" y2="290"/>
+      <line class="mrizka" x1="10" y1="${Y(i)}" x2="290" y2="${Y(i)}"/>`;
+  }
+  const primka = (k, q, trida) =>
+    `<line class="${trida}" x1="${X(-6)}" y1="${Y(k * -6 + q)}" x2="${X(6)}" y2="${Y(k * 6 + q)}"/>`;
+
+  const spravny = `[${x}; ${y}]`;
+  const jine = new Set([`[${y}; ${x}]`, `[${x + 1}; ${y}]`, `[${-x}; ${-y}]`, `[${x}; ${y - 2}]`]);
+  jine.delete(spravny);
+
+  p.innerHTML = `<div class="zadani uloha-text">Přímky jsou grafy dvou rovnic soustavy.
+      Jaké je řešení – souřadnice jejich průsečíku?</div>
+    <div class="karta"><svg class="graf" viewBox="0 0 300 300">
+      ${mrizka}
+      <line class="osy" x1="10" y1="${Y(0)}" x2="290" y2="${Y(0)}"/>
+      <line class="osy" x1="${X(0)}" y1="10" x2="${X(0)}" y2="290"/>
+      ${primka(k1, q1, 'primka1')}${primka(k2, q2, 'primka2')}
+      <circle class="prusecik" cx="${X(x)}" cy="${Y(y)}" r="6"/>
+      <text class="popis" x="286" y="${Y(0) - 6}">x</text>
+      <text class="popis" x="${X(0) + 12}" y="18">y</text>
+      <text class="popis" x="${X(1)}" y="${Y(0) + 14}">1</text>
+      <text class="popis" x="${X(0) - 10}" y="${Y(1) + 4}">1</text>
+    </svg></div>`;
+  const odezva = odezvaEl();
+  Uloha.vyber({
+    kam: p, odezva, trida: 'velke',
+    moznosti: Uloha.zamichej([spravny, ...[...jine].slice(0, 3)]).map(t => ({ klic: t, popis: t })),
+    spravnyKlic: spravny,
+    zpravaOk: `✅ Průsečík má souřadnice ${spravny}, což je řešení soustavy.`,
+    zpravaChyba: 'Odečti souřadnice průsečíku: nejdřív x na vodorovné ose, pak y na svislé.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+const SLOVNI = [
+  { text: 'V hospodářství je celkem {celkem} zvířat, slepic a králíků. Dohromady mají {nohy} nohou. Kolik je slepic?',
+    gen: () => {
+      const slepice = Uloha.nahodneCislo(4, 20), kralici = Uloha.nahodneCislo(4, 20);
+      return { hodnoty: { celkem: slepice + kralici, nohy: 2 * slepice + 4 * kralici }, vysledek: slepice,
+        jednotka: 'slepic', vysvetleni: `s + k = ${slepice + kralici}, 2s + 4k = ${2 * slepice + 4 * kralici} → s = ${slepice}` };
+    } },
+  { text: 'Za {a} rohlíků a {b} croissantů jsme zaplatili {cena1} Kč. Za {c} rohlíků a {d} croissantů {cena2} Kč. Kolik korun stojí jeden croissant?',
+    gen: () => {
+      const rohlik = Uloha.nahodneCislo(2, 6), croissant = Uloha.nahodneCislo(15, 40);
+      const a = Uloha.nahodneCislo(2, 6), b = Uloha.nahodneCislo(1, 4);
+      const c = Uloha.nahodneCislo(2, 6), d = Uloha.nahodneCislo(1, 4) + 1;
+      return { hodnoty: { a, b, c, d, cena1: a * rohlik + b * croissant, cena2: c * rohlik + d * croissant },
+        vysledek: croissant, jednotka: 'Kč', vysvetleni: `rohlík stojí ${rohlik} Kč, croissant ${croissant} Kč` };
+    } },
+  { text: 'Otci je {otec} let a synovi {syn}. Za kolik let bude otec právě dvakrát starší než syn?',
+    gen: () => {
+      const syn = Uloha.nahodneCislo(6, 14), rozdil = Uloha.nahodneCislo(20, 34);
+      const otec = syn + rozdil;
+      const zaKolik = rozdil - syn;
+      return { hodnoty: { otec, syn }, vysledek: zaKolik, jednotka: 'let',
+        vysvetleni: `otec + x = 2·(syn + x) → x = ${zaKolik}` };
+    } },
+  { text: 'Smícháme {a} litrů {p1}% roztoku a {b} litrů {p2}% roztoku. Kolik procent má výsledná směs?',
+    gen: () => {
+      const a = Uloha.nahodneCislo(1, 6), b = Uloha.nahodneCislo(1, 6);
+      const p1 = Uloha.nahodne([10, 20, 30]), p2 = Uloha.nahodne([40, 50, 60]);
+      const vysledek = Math.round((a * p1 + b * p2) / (a + b) * 10) / 10;
+      return { hodnoty: { a, b, p1, p2 }, vysledek, jednotka: '%',
+        vysvetleni: `(${a}·${p1} + ${b}·${p2}) : ${a + b} = ${vysledek} %` };
+    } },
+];
+function slovni() {
+  const p = $('plocha');
+  const u = Uloha.nahodne(SLOVNI);
+  const d = u.gen();
+  let text = u.text;
+  for (const [k, v] of Object.entries(d.hodnoty)) text = text.replaceAll('{' + k + '}', v);
+  const jine = new Set([String(d.vysledek + 2), String(d.vysledek - 1), String(Math.round(d.vysledek * 2)),
+    String(Math.max(1, Math.round(d.vysledek / 2)))]);
+  jine.delete(String(d.vysledek));
+
+  p.innerHTML = `<div class="zadani uloha-text">${text}</div>`;
+  const odezva = odezvaEl();
+  Uloha.vyber({
+    kam: p, odezva, trida: 'velke',
+    moznosti: Uloha.zamichej([String(d.vysledek), ...[...jine].slice(0, 3)])
+      .map(t => ({ klic: t, popis: t.replace('.', ',') + ' ' + d.jednotka })),
+    spravnyKlic: String(d.vysledek),
+    zpravaOk: `✅ ${String(d.vysledek).replace('.', ',')} ${d.jednotka} – ${d.vysvetleni}`,
+    zpravaChyba: 'Označ neznámé písmeny, sestav dvě rovnice a vyřeš soustavu.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+const REZIMY = { prusecik, reseni, postup, graf, slovni };
+function novaUloha() {
+  if (rezim === 'prusecik') {
+    PR.k1 = Uloha.nahodneCislo(-3, 3); PR.q1 = Uloha.nahodneCislo(-4, 4);
+    PR.k2 = Uloha.nahodneCislo(-3, 3); PR.q2 = Uloha.nahodneCislo(-4, 4);
+    prusecik();
+    return;
+  }
+  REZIMY[rezim]();
+}
+
+document.querySelectorAll('#rezimy button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#rezimy button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  rezim = b.dataset.rezim;
+  $('btnDalsi').textContent = rezim === 'prusecik' ? '🎲 Jiné přímky' : 'Přeskočit →';
+  REZIMY[rezim]();
+}));
+$('btnDalsi').textContent = rezim === 'prusecik' ? '🎲 Jiné přímky' : 'Přeskočit →';
+$('btnDalsi').addEventListener('click', novaUloha);
+novaUloha();
+</script>
+</body>
+</html>

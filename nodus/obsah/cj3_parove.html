@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Párové souhlásky</title>
+  <link rel="stylesheet" href="../common.css">
+  <link rel="stylesheet" href="../vyuka.css">
+  <script src="../theme.js"></script>
+  <script src="../rec.js"></script>
+  <script src="../uloha.js"></script>
+  <style>
+    .slovo-mezera { font-size: clamp(2rem, 8vw, 3.4rem); font-weight: 700; letter-spacing: 0.03em; }
+    .slovo-mezera .mezera {
+      color: var(--accent); border-bottom: 4px solid var(--accent); padding: 0 10px; margin: 0 2px;
+    }
+    .pary { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; max-width: 900px; margin-top: 12px; }
+    .pary span {
+      background: var(--bg-panel); border: 1px solid var(--border); border-radius: 8px;
+      padding: 6px 12px; font-size: 0.85rem; color: var(--text-muted); font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <h1>✍️ Párové souhlásky</h1>
+  <p class="podtitul">Pro 3. ročník: na konci i uvnitř slova slyšíme něco jiného, než píšeme.</p>
+
+  <div class="rezimy" id="rezimy">
+    <button data-rezim="doplnovani" class="active">✏️ Doplň souhlásku</button>
+    <button data-rezim="overeni">🔎 Čím to ověříš?</button>
+    <button data-rezim="kontrola">🔍 Je to správně?</button>
+  </div>
+
+  <div class="plocha" id="plocha"></div>
+
+  <div class="ovladani">
+    <button class="hlavni" id="btnDalsi">Přeskočit →</button>
+    <span class="skore" id="skore"></span>
+  </div>
+
+  <div class="pary">
+    <span>b – p</span><span>d – t</span><span>ď – ť</span><span>z – s</span>
+    <span>ž – š</span><span>v – f</span><span>h – ch</span>
+  </div>
+
+  <p class="napoveda">
+    Když si nejsi jistý, <b>prodluž slovo</b> nebo si ho dej do jiného tvaru:
+    du<b>b</b> – du<b>b</b>y, le<b>d</b> – na le<b>d</b>ě, ry<b>b</b>ka – ry<b>b</b>a.
+  </p>
+
+<script>
+const $ = id => document.getElementById(id);
+const skore = Uloha.skore('nodus_cj3_parove', $('skore'));
+let rezim = 'doplnovani';
+
+/* slovo s mezerou, správná souhláska, druhá z páru, ověřovací tvar */
+const SLOVA = [
+  { s: 'du_', spr: 'b', par: 'p', over: 'duby' },
+  { s: 'le_', spr: 'd', par: 't', over: 'na ledě' },
+  { s: 'sní_', spr: 'h', par: 'ch', over: 'sněhu' },
+  { s: 'ry_ka', spr: 'b', par: 'p', over: 'ryba' },
+  { s: 'ha_', spr: 'd', par: 't', over: 'hadi' },
+  { s: 'obra_', spr: 'z', par: 's', over: 'obrazy' },
+  { s: 'sa_', spr: 'd', par: 't', over: 'sady' },
+  { s: 'mrá_', spr: 'z', par: 's', over: 'mrazy' },
+  { s: 'hou_ka', spr: 'b', par: 'p', over: 'houby' },
+  { s: 'chlé_', spr: 'b', par: 'p', over: 'chleba' },
+  { s: 'ple_', spr: 't', par: 'd', over: 'plety' },
+  { s: 'ku_ka', spr: 'ch', par: 'h', over: 'kuchyně' },
+  { s: 'lo_ka', spr: 'ď', par: 'ť', over: 'lodě' },
+  { s: 'tu_ka', spr: 'ž', par: 'š', over: 'tužek' },
+  { s: 'kní_ka', spr: 'ž', par: 'š', over: 'kniha' },
+  { s: 'ná_ep', spr: 'd', par: 't', over: 'nádepsat' },
+  { s: 'vo_', spr: 'z', par: 's', over: 'vozy' },
+  { s: 'rozka_', spr: 'z', par: 's', over: 'rozkazy' },
+  { s: 'ro_', spr: 'h', par: 'ch', over: 'rohy' },
+  { s: 'tvaro_', spr: 'h', par: 'ch', over: 'tvarohu' },
+];
+
+const PARY = { b: 'p', p: 'b', d: 't', t: 'd', 'ď': 'ť', 'ť': 'ď', z: 's', s: 'z',
+               'ž': 'š', 'š': 'ž', v: 'f', f: 'v', h: 'ch', ch: 'h' };
+
+/* použijeme jen slova, kde je souhláska opravdu párová */
+const PLATNA = SLOVA.filter(u => PARY[u.spr]);
+
+/* ---- Doplň souhlásku ------------------------------------------------------ */
+function doplnovani() {
+  const p = $('plocha');
+  const u = Uloha.nahodne(PLATNA);
+  p.innerHTML = `<div class="zadani">Doplň chybějící souhlásku.</div>
+    <div class="karta"><div class="slovo-mezera">${u.s.replace('_', '<span class="mezera">?</span>')}</div></div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva, trida: 'velke',
+    moznosti: Uloha.zamichej([u.spr, PARY[u.spr]]).map(z => ({ klic: z, popis: z })),
+    spravnyKlic: u.spr,
+    zpravaOk: `✅ ${u.s.replace('_', u.spr)} – ověříš si to slovem „${u.over}“.`,
+    zpravaChyba: `Zkus si slovo prodloužit: ${u.over}`,
+    poSpravne: napoprve => {
+      skore.vyhodnot(napoprve);
+      p.querySelector('.mezera').textContent = u.spr;
+    },
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Čím to ověříš? -------------------------------------------------------- */
+function overeni() {
+  const p = $('plocha');
+  const u = Uloha.nahodne(PLATNA);
+  const jina = Uloha.zamichej(PLATNA.filter(x => x.over !== u.over)).slice(0, 3);
+  p.innerHTML = `<div class="zadani">Kterým slovem si ověříš pravopis?</div>
+    <div class="karta"><div class="slovo-mezera">${u.s.replace('_', u.spr)}</div></div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([u, ...jina]).map(x => ({ klic: x.over, popis: x.over })),
+    spravnyKlic: u.over,
+    zpravaOk: `✅ Ano – v „${u.over}“ je souhlásku jasně slyšet.`,
+    zpravaChyba: 'To je tvar úplně jiného slova. Hledej příbuzné slovo.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Je to správně? -------------------------------------------------------- */
+function kontrola() {
+  const p = $('plocha');
+  const u = Uloha.nahodne(PLATNA);
+  const spravneNapsano = Math.random() < 0.5;
+  const zobrazene = u.s.replace('_', spravneNapsano ? u.spr : PARY[u.spr]);
+  p.innerHTML = `<div class="zadani">Je slovo napsané správně?</div>
+    <div class="karta"><div class="slovo-mezera">${zobrazene}</div></div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva, trida: 'dve',
+    moznosti: [
+      { klic: 'ano', ikona: '✅', popis: 'Ano, je' },
+      { klic: 'ne', ikona: '❌', popis: 'Ne, je tam chyba' },
+    ],
+    spravnyKlic: spravneNapsano ? 'ano' : 'ne',
+    zpravaOk: `✅ Správně se píše ${u.s.replace('_', u.spr)} (${u.over}).`,
+    zpravaChyba: `Zkus si slovo prodloužit: ${u.over}`,
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+const REZIMY = { doplnovani, overeni, kontrola };
+function novaUloha() { REZIMY[rezim](); }
+
+document.querySelectorAll('#rezimy button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#rezimy button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  rezim = b.dataset.rezim;
+  novaUloha();
+}));
+$('btnDalsi').addEventListener('click', novaUloha);
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === 'Enter') { e.preventDefault(); novaUloha(); }
+});
+novaUloha();
+</script>
+</body>
+</html>

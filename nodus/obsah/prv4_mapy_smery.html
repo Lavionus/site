@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mapa, plán a světové strany</title>
+  <link rel="stylesheet" href="../common.css">
+  <link rel="stylesheet" href="../vyuka.css">
+  <script src="../theme.js"></script>
+  <script src="../rec.js"></script>
+  <script src="../uloha.js"></script>
+  <style>
+    .mapa { width: min(430px, 94%); border-radius: 10px; }
+    .mapa .pozadi { fill: #2f4636; }
+    .mapa .objekt { cursor: pointer; }
+    .mapa .objekt text { font-size: 26px; text-anchor: middle; }
+    .mapa .objekt .kruh { fill: var(--bg-panel); stroke: var(--border-strong); stroke-width: 2; }
+    .mapa .objekt:hover .kruh { stroke: var(--accent); }
+    .mapa .objekt.spravne .kruh { stroke: var(--ok); stroke-width: 4; }
+    .mapa .ruzice { fill: var(--text-muted); font-size: 15px; font-weight: 700; text-anchor: middle; }
+    .znacka-velka { font-size: clamp(2.6rem, 10vw, 4rem); }
+    .meritko-text { font-size: 1.05rem; color: var(--text-muted); max-width: 520px; line-height: 1.5; }
+  </style>
+</head>
+<body>
+  <h1>🧭 Mapa, plán a světové strany</h1>
+  <p class="podtitul">Pro 4.–5. ročník: mapové značky, měřítko a orientace podle světových stran.</p>
+
+  <div class="rezimy" id="rezimy">
+    <button data-rezim="znacky" class="active">🗺️ Mapové značky</button>
+    <button data-rezim="smerNaMape">🧭 Kde to leží?</button>
+    <button data-rezim="meritko">📏 Měřítko mapy</button>
+  </div>
+
+  <div class="plocha" id="plocha"></div>
+
+  <div class="ovladani">
+    <button class="hlavni" id="btnDalsi">Přeskočit →</button>
+    <span class="skore" id="skore"></span>
+  </div>
+
+  <p class="napoveda">
+    Na mapě je <b>sever nahoře</b>. Měřítko 1 : 100 000 znamená, že 1 cm na mapě
+    je 100 000 cm ve skutečnosti, tedy <b>1 km</b>.
+  </p>
+
+<script>
+const $ = id => document.getElementById(id);
+const skore = Uloha.skore('nodus_prv4_mapy', $('skore'));
+let rezim = 'znacky';
+
+const ZNACKY = [
+  { e: '⛪', n: 'kostel' }, { e: '🏰', n: 'hrad nebo zámek' }, { e: '🚉', n: 'železniční stanice' },
+  { e: '⛰️', n: 'vrchol kopce' }, { e: '🏥', n: 'nemocnice' }, { e: '🅿️', n: 'parkoviště' },
+  { e: '⛺', n: 'kemp' }, { e: '🏫', n: 'škola' }, { e: '🌉', n: 'most' }, { e: '💧', n: 'pramen' },
+];
+
+/* objekty na mapě: pozice v mřížce 3×3 (sloupec, řádek) */
+const OBJEKTY = [
+  { e: '⛪', n: 'kostel' }, { e: '🏰', n: 'hrad' }, { e: '🏫', n: 'škola' },
+  { e: '⛰️', n: 'kopec' }, { e: '🌉', n: 'most' }, { e: '⛺', n: 'kemp' },
+];
+
+const SMERY = [
+  { klic: 'S', nazev: 'na sever', ds: 0, dr: -1 },
+  { klic: 'J', nazev: 'na jih', ds: 0, dr: 1 },
+  { klic: 'V', nazev: 'na východ', ds: 1, dr: 0 },
+  { klic: 'Z', nazev: 'na západ', ds: -1, dr: 0 },
+];
+
+/* ---- Mapové značky ------------------------------------------------------------ */
+function znacky() {
+  const p = $('plocha');
+  const z = Uloha.nahodne(ZNACKY);
+  const jine = Uloha.zamichej(ZNACKY.filter(x => x.n !== z.n)).slice(0, 3);
+  p.innerHTML = `<div class="zadani">Co znamená tato mapová značka?</div>
+    <div class="karta"><div class="znacka-velka">${z.e}</div></div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([z, ...jine]).map(x => ({ klic: x.n, popis: x.n })),
+    spravnyKlic: z.n,
+    zpravaOk: `✅ Tahle značka označuje ${z.n}.`,
+    zpravaChyba: 'To je značka pro něco jiného.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Kde to leží? ------------------------------------------------------------- */
+function smerNaMape() {
+  const p = $('plocha');
+  const smer = Uloha.nahodne(SMERY);
+  const a = Uloha.nahodne(OBJEKTY);
+  const b = Uloha.nahodne(OBJEKTY.filter(x => x.n !== a.n));
+
+  /* umístíme A doprostřed a B ve zvoleném směru */
+  const stred = { s: 1, r: 1 };
+  const cil = { s: stred.s + smer.ds, r: stred.r + smer.dr };
+  const KROK = 110, OKRAJ = 60;
+  const pozice = (o, poz, tridy = '') => `
+    <g class="objekt ${tridy}" data-n="${o.n}">
+      <circle class="kruh" cx="${OKRAJ + poz.s * KROK}" cy="${OKRAJ + poz.r * KROK}" r="30"/>
+      <text x="${OKRAJ + poz.s * KROK}" y="${OKRAJ + poz.r * KROK + 9}">${o.e}</text>
+      <text x="${OKRAJ + poz.s * KROK}" y="${OKRAJ + poz.r * KROK + 45}"
+        font-size="12" fill="var(--text-muted)">${o.n}</text>
+    </g>`;
+
+  p.innerHTML = `<div class="zadani">Kterým směrem od objektu <b>${a.n}</b> leží <b>${b.n}</b>?</div>
+    <svg class="mapa" viewBox="0 0 340 300">
+      <rect class="pozadi" x="0" y="0" width="340" height="300" rx="10"/>
+      <text class="ruzice" x="170" y="22">S ↑</text>
+      <text class="ruzice" x="170" y="292">J ↓</text>
+      <text class="ruzice" x="18" y="155">Z</text>
+      <text class="ruzice" x="322" y="155">V</text>
+      ${pozice(a, stred)}${pozice(b, cil)}
+    </svg>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej(SMERY).map(x => ({ klic: x.klic, popis: x.nazev })),
+    spravnyKlic: smer.klic,
+    zpravaOk: `✅ ${b.n} leží ${smer.nazev} od objektu ${a.n}. Na mapě je sever nahoře.`,
+    zpravaChyba: 'Nahoře je sever, dole jih, vpravo východ, vlevo západ.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Měřítko ------------------------------------------------------------------ */
+function meritko() {
+  const p = $('plocha');
+  const varianty = [
+    { m: '1 : 100 000', cmNaKm: 1 },
+    { m: '1 : 50 000', cmNaKm: 0.5 },
+    { m: '1 : 200 000', cmNaKm: 2 },
+  ];
+  const v = Uloha.nahodne(varianty);
+  const cm = Uloha.nahodneCislo(2, 9);
+  const km = +(cm * v.cmNaKm).toFixed(1);
+
+  p.innerHTML = `<div class="zadani">Kolik kilometrů je to ve skutečnosti?</div>
+    <div class="karta"><div class="obrazek">🗺️</div>
+    <div class="meritko-text">Mapa má měřítko <b>${v.m}</b>.<br>
+      Na mapě jsi naměřil <b>${cm} cm</b>.</div></div>`;
+
+  const jine = new Set();
+  let pokusu1 = 0;
+  while (jine.size < 3 && pokusu1++ < 200) {
+    const k = +(km * Uloha.nahodne([0.5, 2, 4]) + Uloha.nahodne([0, 1, -1])).toFixed(1);
+    if (k !== km && k > 0) jine.add(k);
+  }
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva, trida: 'velke',
+    moznosti: Uloha.zamichej([km, ...jine]).map(x => ({ klic: String(x), popis: x + ' km' })),
+    spravnyKlic: String(km),
+    zpravaOk: `✅ Při měřítku ${v.m} je 1 cm na mapě ${v.cmNaKm} km, takže ${cm} × ${v.cmNaKm} = ${km} km.`,
+    zpravaChyba: `Spočítej, kolik kilometrů je 1 cm při měřítku ${v.m}, a vynásob počtem centimetrů.`,
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+const REZIMY = { znacky, smerNaMape, meritko };
+function novaUloha() { REZIMY[rezim](); }
+
+document.querySelectorAll('#rezimy button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#rezimy button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  rezim = b.dataset.rezim;
+  novaUloha();
+}));
+$('btnDalsi').addEventListener('click', novaUloha);
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === 'Enter') { e.preventDefault(); novaUloha(); }
+});
+novaUloha();
+</script>
+</body>
+</html>

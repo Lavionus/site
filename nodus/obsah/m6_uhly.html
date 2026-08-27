@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Úhel a jeho velikost</title>
+  <link rel="stylesheet" href="../common.css">
+  <link rel="stylesheet" href="../vyuka.css">
+  <script src="../theme.js"></script>
+  <script src="../rec.js"></script>
+  <script src="../uloha.js"></script>
+  <style>
+    .uhlomer { width: min(360px, 90vw); }
+    .uhlomer .oblouk { fill: var(--accent); fill-opacity: 0.22; }
+    .uhlomer .rameno { stroke: var(--accent); stroke-width: 4; stroke-linecap: round; }
+    .uhlomer .ryska { stroke: var(--border-strong); stroke-width: 1.5; }
+    .uhlomer .popisek { fill: var(--text-faint); font-size: 11px; text-anchor: middle; }
+    .uhlomer .vrchol { fill: var(--accent); }
+    .uhlomer .tazna { cursor: pointer; }
+    .vypocet { font-size: clamp(1.4rem, 5vw, 2.2rem); font-weight: 700; font-variant-numeric: tabular-nums; }
+  </style>
+</head>
+<body>
+  <h1>📐 Úhel a jeho velikost</h1>
+  <p class="podtitul">Pro 6. ročník: druhy úhlů, měření úhloměrem a počítání s úhly.</p>
+
+  <div class="rezimy" id="rezimy">
+    <button data-rezim="druh" class="active">🔺 Jaký je to úhel?</button>
+    <button data-rezim="odhad">📏 Kolik má stupňů?</button>
+    <button data-rezim="nastav">🎯 Nastav úhel</button>
+    <button data-rezim="pocitani">🧮 Počítání s úhly</button>
+  </div>
+
+  <div class="plocha" id="plocha"></div>
+
+  <div class="ovladani">
+    <button class="hlavni" id="btnDalsi">Přeskočit →</button>
+    <span class="skore" id="skore"></span>
+  </div>
+
+  <p class="napoveda">
+    <b>Ostrý</b> úhel je menší než 90°, <b>pravý</b> má přesně 90°, <b>tupý</b> je mezi 90° a 180°,
+    <b>přímý</b> má 180°. Součet úhlů v trojúhelníku je vždy 180°.
+  </p>
+
+<script>
+const $ = id => document.getElementById(id);
+const skore = Uloha.skore('nodus_m6_uhly', $('skore'));
+let rezim = 'druh';
+
+const STRED = { x: 180, y: 150 }, DELKA = 120;
+
+function druhUhlu(st) {
+  if (st < 90) return 'ostry';
+  if (st === 90) return 'pravy';
+  if (st < 180) return 'tupy';
+  if (st === 180) return 'primy';
+  return 'nekonvexni';
+}
+const NAZVY = {
+  ostry: 'ostrý (< 90°)', pravy: 'pravý (= 90°)',
+  tupy: 'tupý (90°–180°)', primy: 'přímý (= 180°)',
+};
+
+function svgUhel(stupne, sPopisky) {
+  const rad = (180 - stupne) * Math.PI / 180;
+  const x2 = STRED.x + DELKA * Math.cos(rad), y2 = STRED.y - DELKA * Math.sin(rad);
+  const r = 46;
+  const ox = STRED.x + r, oy = STRED.y;
+  const oxk = STRED.x + r * Math.cos(rad), oyk = STRED.y - r * Math.sin(rad);
+  const velky = stupne > 180 ? 1 : 0;
+
+  let rysky = '';
+  if (sPopisky) {
+    for (let a = 0; a <= 180; a += 30) {
+      const ar = a * Math.PI / 180;
+      const x1 = STRED.x + 132 * Math.cos(ar), y1 = STRED.y - 132 * Math.sin(ar);
+      const x0 = STRED.x + 142 * Math.cos(ar), y0 = STRED.y - 142 * Math.sin(ar);
+      rysky += `<line class="ryska" x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}"
+                 x2="${x0.toFixed(1)}" y2="${y0.toFixed(1)}"/>
+                <text class="popisek" x="${(STRED.x + 155 * Math.cos(ar)).toFixed(1)}"
+                 y="${(STRED.y - 155 * Math.sin(ar) + 4).toFixed(1)}">${180 - a}</text>`;
+    }
+  }
+  return `<svg class="uhlomer" viewBox="0 0 360 190">
+    ${rysky}
+    <path class="oblouk" d="M${STRED.x} ${STRED.y} L${ox} ${oy} A${r} ${r} 0 ${velky} 0 ${oxk.toFixed(1)} ${oyk.toFixed(1)} Z"/>
+    <line class="rameno" x1="${STRED.x}" y1="${STRED.y}" x2="${STRED.x + DELKA}" y2="${STRED.y}"/>
+    <line class="rameno" x1="${STRED.x}" y1="${STRED.y}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}"/>
+    <circle class="vrchol" cx="${STRED.x}" cy="${STRED.y}" r="5"/>
+  </svg>`;
+}
+
+/* ---- Jaký je to úhel? ------------------------------------------------------------- */
+function druh() {
+  const p = $('plocha');
+  const typ = Uloha.nahodne(['ostry', 'pravy', 'tupy', 'primy']);
+  const stupne = typ === 'pravy' ? 90 : typ === 'primy' ? 180
+    : typ === 'ostry' ? Uloha.nahodneCislo(15, 85) : Uloha.nahodneCislo(95, 170);
+
+  p.innerHTML = `<div class="zadani">Jaký druh úhlu je na obrázku?</div>${svgUhel(stupne, false)}`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej(Object.entries(NAZVY)).map(([klic, popis]) => ({ klic, popis })),
+    spravnyKlic: typ,
+    zpravaOk: `✅ Úhel má ${stupne}°, je to úhel ${NAZVY[typ].split(' (')[0]}.`,
+    zpravaChyba: 'Porovnej úhel s pravým úhlem (90°) – je menší, nebo větší?',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Kolik má stupňů? -------------------------------------------------------------- */
+function odhad() {
+  const p = $('plocha');
+  const stupne = Uloha.nahodneCislo(2, 34) * 5;
+  p.innerHTML = `<div class="zadani">Kolik stupňů má tento úhel?</div>${svgUhel(stupne, true)}`;
+
+  const jine = new Set();
+  let pokusu1 = 0;
+  while (jine.size < 3 && pokusu1++ < 200) {
+    const k = stupne + Uloha.nahodne([-40, -30, -20, -15, 15, 20, 30, 40]);
+    if (k !== stupne && k > 0 && k <= 180) jine.add(k);
+  }
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva, trida: 'velke',
+    moznosti: Uloha.zamichej([stupne, ...jine]).map(v => ({ klic: String(v), popis: v + '°' })),
+    spravnyKlic: String(stupne),
+    zpravaOk: `✅ Úhel měří ${stupne}° – je to úhel ${NAZVY[druhUhlu(stupne)].split(' (')[0]}.`,
+    zpravaChyba: 'Porovnej rameno se stupnicí úhloměru na obrázku.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Nastav úhel (tažením) ---------------------------------------------------------- */
+function nastav() {
+  const p = $('plocha');
+  const cil = Uloha.nahodneCislo(2, 34) * 5;
+  let aktualni = 90;
+
+  p.innerHTML = `<div class="zadani">Nastav rameno na úhel <b>${cil}°</b> – táhni myší.</div>
+    <div id="obalUhlu">${svgUhel(aktualni, true)}</div>
+    <div class="vypocet" id="aktualniUhel">${aktualni}°</div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  p.appendChild(odezva);
+
+  let hotovo = false, chyboval = false, tahne = false;
+  const svg = p.querySelector('svg');
+
+  function prekresli(st) {
+    aktualni = st;
+    $('obalUhlu').innerHTML = svgUhel(st, true);
+    $('aktualniUhel').textContent = st + '°';
+    napojTazeni();
+    if (st === cil && !hotovo) {
+      hotovo = true;
+      odezva.className = 'odezva ok';
+      odezva.textContent = `✅ Přesně ${cil}° – úhel ${NAZVY[druhUhlu(cil)].split(' (')[0]}.`;
+      skore.vyhodnot(!chyboval);
+      setTimeout(novaUloha, Uloha.PRODLEVA + 400);
+    } else if (!hotovo) {
+      odezva.className = 'odezva';
+      odezva.textContent = st < cil ? 'Ještě víc otoč nahoru.' : 'Trochu zpátky dolů.';
+      if (Math.abs(st - cil) > 25) chyboval = true;
+    }
+  }
+
+  function uhelZBodu(ev, prvek) {
+    const r = prvek.getBoundingClientRect();
+    const mx = (ev.clientX - r.left) / r.width * 360;
+    const my = (ev.clientY - r.top) / r.height * 190;
+    const a = Math.atan2(STRED.y - my, mx - STRED.x) * 180 / Math.PI;
+    return Math.max(0, Math.min(180, Math.round(a / 5) * 5));
+  }
+
+  function napojTazeni() {
+    const s = p.querySelector('svg');
+    const pohyb = ev => { if (tahne && !hotovo) { ev.preventDefault(); prekresli(uhelZBodu(ev, s)); } };
+    s.addEventListener('pointerdown', ev => {
+      if (hotovo) return;
+      tahne = true;
+      try { s.setPointerCapture(ev.pointerId); } catch { /* u syntetických událostí nevadí */ }
+      prekresli(uhelZBodu(ev, s));
+    });
+    s.addEventListener('pointermove', pohyb);
+    s.addEventListener('pointerup', () => { tahne = false; });
+  }
+  napojTazeni();
+}
+
+/* ---- Počítání s úhly ----------------------------------------------------------------- */
+function pocitani() {
+  const p = $('plocha');
+  const typ = Uloha.nahodne(['doplnek', 'vedlejsi', 'trojuhelnik']);
+  let zadani, spravny, vysvetleni;
+
+  if (typ === 'doplnek') {
+    const a = Uloha.nahodneCislo(5, 17) * 5;
+    zadani = `Kolik stupňů chybí do pravého úhlu, když jeden úhel měří <b>${a}°</b>?`;
+    spravny = 90 - a;
+    vysvetleni = `90° − ${a}° = ${spravny}°`;
+  } else if (typ === 'vedlejsi') {
+    const a = Uloha.nahodneCislo(5, 34) * 5;
+    zadani = `Úhel má <b>${a}°</b>. Kolik stupňů má jeho vedlejší úhel (doplněk do přímého)?`;
+    spravny = 180 - a;
+    vysvetleni = `180° − ${a}° = ${spravny}°`;
+  } else {
+    const a = Uloha.nahodneCislo(6, 20) * 5, b = Uloha.nahodneCislo(6, 20) * 5;
+    zadani = `V trojúhelníku jsou úhly <b>${a}°</b> a <b>${b}°</b>. Kolik má třetí?`;
+    spravny = 180 - a - b;
+    vysvetleni = `180° − ${a}° − ${b}° = ${spravny}°`;
+  }
+  if (spravny <= 0) return pocitani();
+
+  const jine = new Set();
+  let pokusu2 = 0;
+  while (jine.size < 3 && pokusu2++ < 200) {
+    const k = spravny + Uloha.nahodne([-30, -20, -10, 10, 20, 30]);
+    if (k !== spravny && k > 0 && k < 180) jine.add(k);
+  }
+  p.innerHTML = `<div class="zadani">${zadani}</div>
+    <div class="karta"><div class="obrazek">📐</div></div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva, trida: 'velke',
+    moznosti: Uloha.zamichej([spravny, ...jine]).map(v => ({ klic: String(v), popis: v + '°' })),
+    spravnyKlic: String(spravny),
+    zpravaOk: `✅ ${vysvetleni}`,
+    zpravaChyba: typ === 'trojuhelnik'
+      ? 'Součet úhlů v trojúhelníku je 180°.'
+      : 'Odečti daný úhel od 90° nebo 180°.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+const REZIMY = { druh, odhad, nastav, pocitani };
+function novaUloha() { REZIMY[rezim](); }
+
+document.querySelectorAll('#rezimy button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#rezimy button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  rezim = b.dataset.rezim;
+  novaUloha();
+}));
+$('btnDalsi').addEventListener('click', novaUloha);
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === 'Enter') { e.preventDefault(); novaUloha(); }
+});
+novaUloha();
+</script>
+</body>
+</html>

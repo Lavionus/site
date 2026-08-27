@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Bezpečnost práce a výstražné značky</title>
+  <link rel="stylesheet" href="../common.css">
+  <link rel="stylesheet" href="../vyuka.css">
+  <script src="../theme.js"></script>
+  <script src="../uloha.js"></script>
+  <style>
+    .znacka { width: min(170px, 46%); }
+    .znacka .kosoctverec { fill: #fff; stroke: #d43a2f; stroke-width: 7; }
+    .znacka .symbol { font-size: 46px; text-anchor: middle; dominant-baseline: central; }
+    .znacky-rada { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+    .znacky-rada button {
+      background: transparent; border: 2px solid var(--border-strong); border-radius: 12px;
+      padding: 6px; cursor: pointer; width: 120px;
+    }
+    .znacky-rada button:hover { border-color: var(--accent); }
+    .znacky-rada button.spravne { border-color: var(--ok); background: rgba(76,175,125,0.15); }
+    .znacky-rada button.spatne { border-color: var(--danger); background: rgba(212,58,47,0.15); }
+    .znacky-rada svg { width: 100%; }
+    .uloha-text { max-width: 640px; font-size: 1.02rem; line-height: 1.6; }
+    .uloha-text b { color: var(--accent); }
+  </style>
+</head>
+<body>
+  <h1>☣️ Bezpečnost práce a výstražné značky</h1>
+  <p class="podtitul">Pro 8. ročník: výstražné symboly GHS, pravidla laboratoře a první pomoc.</p>
+
+  <div class="rezimy" id="rezimy">
+    <button data-rezim="poznej" class="active">🔍 Poznej značku</button>
+    <button data-rezim="kLatce">🧪 Značka k látce</button>
+    <button data-rezim="prvniPomoc">🚑 První pomoc</button>
+    <button data-rezim="pravidla">📋 Pravidla laboratoře</button>
+  </div>
+
+  <div class="plocha" id="plocha"></div>
+
+  <div class="ovladani">
+    <button class="hlavni" id="btnDalsi">Přeskočit →</button>
+    <span class="skore" id="skore"></span>
+  </div>
+
+  <p class="napoveda">
+    Výstražné symboly GHS jsou <b>červeně orámované kosočtverce</b> s černým znakem na bílém poli.
+    V laboratoři nikdy nejíme a nepijeme, chemikálie nezkoušíme čichem přímo z nádoby
+    a <b>kyselinu vždy líjeme do vody</b>, nikdy naopak.
+  </p>
+
+<script>
+const $ = id => document.getElementById(id);
+const skore = Uloha.skore('nodus_ch8_bezpecnost', $('skore'));
+let rezim = 'poznej';
+function odezvaEl() { const d = document.createElement('div'); d.className = 'odezva'; return d; }
+
+const ZNACKY = [
+  { klic: 'toxicky', symbol: '☠️', nazev: 'toxická látka', popis: 'může způsobit otravu i v malém množství',
+    latky: ['methanol', 'kyanid draselný', 'rtuť'] },
+  { klic: 'horlavy', symbol: '🔥', nazev: 'hořlavá látka', popis: 'snadno se vznítí, drž ji dál od otevřeného ohně',
+    latky: ['benzin', 'líh (ethanol)', 'aceton'] },
+  { klic: 'zirava', symbol: '🧫', nazev: 'žíravá látka', popis: 'poleptá kůži, oči i materiály',
+    latky: ['kyselina sírová', 'hydroxid sodný', 'čistič odpadů'] },
+  { klic: 'drazdiva', symbol: '❗', nazev: 'dráždivá / zdraví škodlivá látka', popis: 'dráždí kůži, oči nebo dýchací cesty',
+    latky: ['saponát v koncentraci', 'peroxid vodíku 3 %', 'chlornan v úklidu'] },
+  { klic: 'oxidujici', symbol: '⭕', nazev: 'oxidující látka', popis: 'podporuje hoření jiných látek',
+    latky: ['dusičnan draselný', 'peroxid vodíku (koncentrovaný)', 'chlorečnan'] },
+  { klic: 'vybusny', symbol: '💥', nazev: 'výbušná látka', popis: 'může explodovat při nárazu nebo zahřátí',
+    latky: ['nitroglycerin', 'černý střelný prach', 'třaskavina'] },
+  { klic: 'plyn', symbol: '🎈', nazev: 'plyn pod tlakem', popis: 'tlaková nádoba může při zahřátí prasknout',
+    latky: ['propan-butan v lahvi', 'stlačený kyslík', 'oxid uhličitý v bombě'] },
+  { klic: 'prostredi', symbol: '🐟', nazev: 'nebezpečná pro životní prostředí', popis: 'poškozuje vodní organismy',
+    latky: ['pesticid', 'motorový olej', 'rtuťové sloučeniny'] },
+];
+
+function svgZnacka(symbol, velikost = 170) {
+  return `<svg class="znacka" viewBox="0 0 140 140" style="width:${velikost}px;max-width:46vw">
+    <polygon class="kosoctverec" points="70,8 132,70 70,132 8,70"/>
+    <text class="symbol" x="70" y="72">${symbol}</text>
+  </svg>`;
+}
+
+function poznej() {
+  const p = $('plocha');
+  const z = Uloha.nahodne(ZNACKY);
+  p.innerHTML = `<div class="zadani">Co znamená tento výstražný symbol?</div>
+    <div class="karta">${svgZnacka(z.symbol)}</div>`;
+  const odezva = odezvaEl();
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([z.klic, ...Uloha.zamichej(ZNACKY.filter(x => x.klic !== z.klic)).slice(0, 3).map(x => x.klic)])
+      .map(k => ({ klic: k, popis: ZNACKY.find(x => x.klic === k).nazev })),
+    spravnyKlic: z.klic,
+    zpravaOk: `✅ ${z.nazev} – ${z.popis}`,
+    zpravaChyba: 'Symbol napovídá: plamen = hořlavina, lebka = jed, ryba = nebezpečí pro přírodu.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+function kLatce() {
+  const p = $('plocha');
+  const z = Uloha.nahodne(ZNACKY);
+  const latka = Uloha.nahodne(z.latky);
+  const nabidka = Uloha.zamichej([z, ...Uloha.zamichej(ZNACKY.filter(x => x.klic !== z.klic)).slice(0, 3)]);
+  const stav = { chyboval: false, hotovo: false };
+
+  p.innerHTML = `<div class="zadani uloha-text">Která značka patří na obal látky <b>${latka}</b>?</div>`;
+  const rada = document.createElement('div');
+  rada.className = 'znacky-rada';
+  const odezva = odezvaEl();
+  nabidka.forEach(x => {
+    const b = document.createElement('button');
+    b.innerHTML = svgZnacka(x.symbol, 100);
+    b.addEventListener('click', () => Uloha.odpoved({
+      prvek: b, spravne: x.klic === z.klic, stav, odezva,
+      zpravaOk: `✅ ${z.nazev} – ${z.popis}`,
+      zpravaChyba: `Tahle značka znamená „${x.nazev}“. Zkus jinou.`,
+      poSpravne: skore.vyhodnot,
+      dalsi: novaUloha,
+    }));
+    rada.appendChild(b);
+  });
+  p.appendChild(rada);
+  p.appendChild(odezva);
+}
+
+const POMOC = [
+  { s: 'Na ruku ti stříkla kyselina.', a: 'ihned oplachovat velkým množstvím vody a říct to vyučujícímu',
+    b: ['potřít ruku mastí a pokračovat', 'utřít hadrem', 'neutralizovat hydroxidem'] },
+  { s: 'Chemikálie ti vnikla do oka.', a: 'vyplachovat oko proudem vlažné vody aspoň 10 minut a vyhledat lékaře',
+    b: ['mnout si oko', 'zavřít oko a počkat', 'kápnout do oka líh'] },
+  { s: 'V laboratoři se rozlil hořlavý líh a začal hořet.', a: 'zakřičet, uhasit vhodným hasivem a nehasit vodou',
+    b: ['nalít na plamen vodu', 'utéct a zavřít dveře bez varování', 'foukat do plamene'] },
+  { s: 'Rozbila se zkumavka a máš na prstu řeznou ranku.', a: 'ránu opláchnout, přelepit náplastí a nahlásit to',
+    b: ['pokračovat v práci', 'omýt ranku chemikálií', 'zalepit ranku izolepou z lavice'] },
+  { s: 'Spolužák se nadýchal dráždivých par.', a: 'vyvést ho na čerstvý vzduch a přivolat pomoc',
+    b: ['dát mu napít chemikálie', 'nechat ho sedět u digestoře', 'otevřít další lahve'] },
+  { s: 'Máš zjistit, jak látka voní.', a: 'mávnutím ruky přihnat páry k nosu, nikdy nečichat přímo',
+    b: ['přiblížit nos ke hrdlu lahve', 'ochutnat trochu', 'zahřát látku a čichat nad ní'] },
+  { s: 'Připravuješ zředěnou kyselinu sírovou.', a: 'kyselinu opatrně lít do vody za stálého míchání',
+    b: ['vodu lít do kyseliny', 'smíchat obojí najednou', 'zahřát kyselinu před smícháním'] },
+  { s: 'Nevíš, co je v neoznačené láhvi.', a: 'nepracovat s ní a nahlásit to vyučujícímu',
+    b: ['přičichnout a ochutnat', 'smíchat s vodou a zkusit reakci', 'vylít do dřezu'] },
+];
+function prvniPomoc() {
+  const p = $('plocha');
+  const u = Uloha.nahodne(POMOC);
+  p.innerHTML = `<div class="zadani uloha-text">${u.s}<br>Co uděláš?</div>`;
+  const odezva = odezvaEl();
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([u.a, ...u.b]).map(t => ({ klic: t, popis: t })),
+    spravnyKlic: u.a,
+    zpravaOk: `✅ ${u.a}`,
+    zpravaChyba: 'Nejdřív zabraň dalšímu poškození a vždy informuj dospělého.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+const PRAVIDLA = [
+  { q: 'Co si musíš v laboratoři obléknout?', a: 'plášť a podle potřeby ochranné brýle a rukavice', b: ['nic zvláštního', 'jen rukavice', 'jen zástěru z domova'] },
+  { q: 'Smí se v laboratoři jíst a pít?', a: 'ne, nikdy', b: ['ano, pokud jsi opatrný', 'jen svačina', 'jen voda z kádinky'] },
+  { q: 'Jak zahříváš zkumavku?', a: 'ústím od sebe i od spolužáků, plamenem plynule pohybuješ', b: ['ústím k sobě, ať vidíš dovnitř', 'držíš ji nehybně u dna', 'zacpeš ji a zahříváš'] },
+  { q: 'Co uděláš se zbytkem chemikálie?', a: 'nikdy ji nevracíš do původní lahve, odložíš ji podle pokynů', b: ['vrátíš zpět do lahve', 'vyliješ do umyvadla', 'necháš ji na stole'] },
+  { q: 'Kde se pracuje s látkami uvolňujícími dráždivé páry?', a: 'v digestoři', b: ['u okna', 'na chodbě', 'kdekoli v učebně'] },
+  { q: 'Co musíš vědět, než začneš pokus?', a: 'jaké látky používáš, jaká rizika mají a kde je hasicí přístroj', b: ['jen výsledek pokusu', 'nic, stačí následovat souseda', 'kolik to bude trvat'] },
+  { q: 'Jak pipetuješ roztok?', a: 'balonkem nebo pipetovacím nástavcem, nikdy ústy', b: ['ústy, ale opatrně', 'nalitím z lahve', 'brčkem'] },
+  { q: 'Co znamená písmeno v označení „nebezpečné látky“ na obalu?', a: 'H-věty popisují nebezpečí, P-věty pokyny pro bezpečné zacházení', b: ['jde o cenu', 'značí datum výroby', 'určuje hmotnost'] },
+];
+function pravidla() {
+  const p = $('plocha');
+  const u = Uloha.nahodne(PRAVIDLA);
+  p.innerHTML = `<div class="zadani uloha-text">${u.q}</div>`;
+  const odezva = odezvaEl();
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([u.a, ...u.b]).map(t => ({ klic: t, popis: t })),
+    spravnyKlic: u.a,
+    zpravaOk: `✅ ${u.a}`,
+    zpravaChyba: 'V laboratoři platí: nejdřív bezpečnost, potom pokus.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+const REZIMY = { poznej, kLatce, prvniPomoc, pravidla };
+function novaUloha() { REZIMY[rezim](); }
+
+document.querySelectorAll('#rezimy button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#rezimy button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  rezim = b.dataset.rezim;
+  novaUloha();
+}));
+$('btnDalsi').addEventListener('click', novaUloha);
+novaUloha();
+</script>
+</body>
+</html>

@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Roční období a čas</title>
+  <link rel="stylesheet" href="../common.css">
+  <script src="../theme.js"></script>
+  <script src="../rec.js"></script>
+  <script src="../uloha.js"></script>
+  <style>
+    body { background-color: var(--bg-deep); padding: 20px clamp(12px, 3vw, 36px); min-height: 100vh; }
+    h1 { font-size: 1.35rem; margin-bottom: 3px; }
+    .podtitul { color: var(--text-muted); font-size: 0.86rem; margin-bottom: 14px; }
+
+    .rezimy { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+    .rezimy button {
+      background: var(--bg-control); border: 1px solid var(--border-strong); color: var(--text-muted);
+      border-radius: 6px; padding: 8px 14px; font-size: 0.86rem; font-family: inherit; cursor: pointer;
+    }
+    .rezimy button.active { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+
+    /* Barvy ročních období – používají se na pozadí plochy i na tlačítka */
+    :root {
+      --jaro: #58b368; --jaro-svetla: rgba(88, 179, 104, 0.16);
+      --leto: #e8b33d; --leto-svetla: rgba(232, 179, 61, 0.16);
+      --podzim: #d2703a; --podzim-svetla: rgba(210, 112, 58, 0.16);
+      --zima: #5aa9e6; --zima-svetla: rgba(90, 169, 230, 0.16);
+    }
+
+    .plocha {
+      position: relative; overflow: hidden;
+      background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius);
+      max-width: 900px; padding: 26px 22px; text-align: center; min-height: 360px;
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px;
+      transition: background 0.35s ease, border-color 0.35s ease;
+    }
+    .plocha.jaro   { background: linear-gradient(160deg, var(--jaro-svetla), transparent 65%), var(--bg-panel); border-color: var(--jaro); }
+    .plocha.leto   { background: linear-gradient(160deg, var(--leto-svetla), transparent 65%), var(--bg-panel); border-color: var(--leto); }
+    .plocha.podzim { background: linear-gradient(160deg, var(--podzim-svetla), transparent 65%), var(--bg-panel); border-color: var(--podzim); }
+    .plocha.zima   { background: linear-gradient(160deg, var(--zima-svetla), transparent 65%), var(--bg-panel); border-color: var(--zima); }
+
+    /* Pás se čtyřmi obdobími nad úlohou */
+    .pas {
+      display: flex; gap: 6px; max-width: 900px; margin-bottom: 12px;
+      border-radius: 10px; overflow: hidden;
+    }
+    .pas span {
+      flex: 1; text-align: center; padding: 7px 4px; font-size: 0.82rem; font-weight: 600;
+      color: #1c1c1c; opacity: 0.55; transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+    .pas .jaro { background: var(--jaro); }
+    .pas .leto { background: var(--leto); }
+    .pas .podzim { background: var(--podzim); }
+    .pas .zima { background: var(--zima); }
+    .pas span.aktivni { opacity: 1; transform: scale(1.04); }
+
+    /* Karta s obrázkem úlohy */
+    .karta-jev {
+      display: flex; flex-direction: column; align-items: center; gap: 10px;
+      background: var(--bg-elevated); border: 1px solid var(--border);
+      border-radius: 18px; padding: 20px 30px; box-shadow: var(--shadow);
+      animation: prilet 0.35s ease;
+    }
+    @keyframes prilet { from { opacity: 0; transform: translateY(10px) scale(0.97); } to { opacity: 1; transform: none; } }
+    .zadani { color: var(--text-muted); font-size: 1rem; }
+    .zadani b { color: var(--text); font-size: 1.2rem; }
+    .obrazek { font-size: clamp(3.4rem, 12vw, 5.2rem); line-height: 1; filter: drop-shadow(0 4px 10px rgba(0,0,0,0.28)); }
+    .popis { color: var(--text); font-size: 1.05rem; font-weight: 600; }
+
+    /* Řazení do pořadí */
+    .porada { display: flex; flex-wrap: wrap; gap: 7px; justify-content: center; min-height: 46px; }
+    .porada .polozka {
+      background: var(--accent-soft); border: 2px solid var(--accent); color: var(--text);
+      border-radius: 8px; padding: 8px 12px; font-size: 0.88rem; font-weight: 600;
+    }
+    .porada .cislo { color: var(--accent); font-size: 0.72rem; margin-right: 5px; }
+    .nabidka { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+    .nabidka button {
+      background: var(--bg-control); border: 2px solid var(--border-strong); color: var(--text);
+      border-radius: 8px; padding: 10px 14px; font-size: 0.92rem; font-family: inherit; cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .nabidka button:hover:not(:disabled) { border-color: var(--accent); transform: translateY(-2px); }
+    .nabidka button[data-obdobi="jaro"]   { border-color: var(--jaro); }
+    .nabidka button[data-obdobi="leto"]   { border-color: var(--leto); }
+    .nabidka button[data-obdobi="podzim"] { border-color: var(--podzim); }
+    .nabidka button[data-obdobi="zima"]   { border-color: var(--zima); }
+    .nabidka button:disabled { opacity: 0.22; cursor: default; }
+    .nabidka button.chyba { border-color: var(--danger); animation: trhni 0.3s; }
+    @keyframes trhni { 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+
+    /* Možnosti */
+    .moznosti { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+    .moznosti button {
+      min-width: 112px; padding: 14px 16px; border-radius: 12px;
+      background: var(--bg-elevated); border: 2px solid var(--border); color: var(--text);
+      font-size: 0.95rem; font-family: inherit; cursor: pointer; transition: all 0.15s ease;
+      display: flex; flex-direction: column; align-items: center; gap: 6px;
+    }
+    .moznosti button .ikona { font-size: 2rem; line-height: 1; }
+    .moznosti button:hover:not(:disabled) { border-color: var(--accent); transform: translateY(-3px); }
+    .moznosti button[data-klic="jaro"]   { border-color: var(--jaro); }
+    .moznosti button[data-klic="leto"]   { border-color: var(--leto); }
+    .moznosti button[data-klic="podzim"] { border-color: var(--podzim); }
+    .moznosti button[data-klic="zima"]   { border-color: var(--zima); }
+    .moznosti button[data-klic="jaro"]:hover:not(:disabled)   { background: var(--jaro-svetla); }
+    .moznosti button[data-klic="leto"]:hover:not(:disabled)   { background: var(--leto-svetla); }
+    .moznosti button[data-klic="podzim"]:hover:not(:disabled) { background: var(--podzim-svetla); }
+    .moznosti button[data-klic="zima"]:hover:not(:disabled)   { background: var(--zima-svetla); }
+    .moznosti button.spravne { background: var(--ok); border-color: var(--ok); color: #fff; }
+    .moznosti button.spatne { background: var(--danger); border-color: var(--danger); color: #fff; }
+    .moznosti button:disabled { cursor: default; }
+
+    .odezva { font-size: 1.02rem; font-weight: 600; min-height: 28px; }
+    .odezva.ok { color: var(--ok); }
+    .odezva.chyba { color: var(--danger); }
+
+    .ovladani { display: flex; gap: 10px; align-items: center; margin-top: 14px; max-width: 900px; flex-wrap: wrap; }
+    .ovladani button {
+      background: var(--bg-control); border: 1px solid var(--border-strong); color: var(--text);
+      border-radius: 6px; padding: 10px 18px; font-size: 0.92rem; font-family: inherit; cursor: pointer;
+    }
+    .ovladani button.hlavni { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+    .ovladani button.hlavni:hover { background: var(--accent-hover); }
+    .skore { margin-left: auto; color: var(--text-muted); font-size: 0.9rem; font-variant-numeric: tabular-nums; }
+    .skore b { color: var(--ok); }
+    .napoveda { max-width: 900px; margin-top: 12px; color: var(--text-faint); font-size: 0.8rem; line-height: 1.5; }
+  </style>
+</head>
+<body>
+  <h1>🍂 Roční období a čas</h1>
+  <p class="podtitul">Pro 1.–2. ročník: čtvero ročních období, dvanáct měsíců a sedm dní v týdnu.</p>
+
+  <div class="rezimy" id="rezimy">
+    <button data-rezim="jevy" class="active">🌦️ Které období?</button>
+    <button data-rezim="mesice">📅 Seřaď měsíce</button>
+    <button data-rezim="mesicObdobi">🗓️ Měsíc a období</button>
+    <button data-rezim="tyden">📆 Dny v týdnu</button>
+  </div>
+
+  <div class="pas" id="pas">
+    <span class="jaro">🌷 jaro</span><span class="leto">☀️ léto</span>
+    <span class="podzim">🍂 podzim</span><span class="zima">❄️ zima</span>
+  </div>
+
+  <div class="plocha" id="plocha"></div>
+
+  <div class="ovladani">
+    <button class="hlavni" id="btnDalsi">Další →</button>
+    <button id="btnCist" title="Přečíst zadání nahlas">🔊 Přečti</button>
+    <span class="skore" id="skore"></span>
+  </div>
+
+  <p class="napoveda">
+    Rok má <b>4 roční období</b> a <b>12 měsíců</b>. Zima začíná v prosinci, jaro v březnu,
+    léto v červnu a podzim v září. Týden má <b>7 dní</b> – od pondělí do neděle.
+  </p>
+
+<script>
+const $ = id => document.getElementById(id);
+const KLIC = 'nodus_prv1_rocni_obdobi';
+
+/* ---- Data ----------------------------------------------------------------- */
+const OBDOBI = {
+  jaro: { em: '🌷', nazev: 'jaro' },
+  leto: { em: '☀️', nazev: 'léto' },
+  podzim: { em: '🍂', nazev: 'podzim' },
+  zima: { em: '❄️', nazev: 'zima' },
+};
+
+const JEVY = [
+  { e: '🌷', t: 'kvetou tulipány', o: 'jaro' },
+  { e: '🐣', t: 'líhnou se kuřátka', o: 'jaro' },
+  { e: '🌱', t: 'raší první lístky', o: 'jaro' },
+  { e: '🐦', t: 'ptáci se vracejí z teplých krajin', o: 'jaro' },
+  { e: '☔', t: 'aprílové přeháňky', o: 'jaro' },
+  { e: '🏖️', t: 'koupeme se v rybníce', o: 'leto' },
+  { e: '🍦', t: 'jíme zmrzlinu', o: 'leto' },
+  { e: '🌻', t: 'kvetou slunečnice', o: 'leto' },
+  { e: '🐝', t: 'včely sbírají pyl', o: 'leto' },
+  { e: '⛈️', t: 'přijde bouřka s krupobitím', o: 'leto' },
+  { e: '🍂', t: 'padá barevné listí', o: 'podzim' },
+  { e: '🎃', t: 'zrají dýně', o: 'podzim' },
+  { e: '🍄', t: 'rostou houby v lese', o: 'podzim' },
+  { e: '🪁', t: 'pouštíme draka', o: 'podzim' },
+  { e: '🌰', t: 'padají kaštany', o: 'podzim' },
+  { e: '⛄', t: 'stavíme sněhuláka', o: 'zima' },
+  { e: '🎄', t: 'jsou Vánoce', o: 'zima' },
+  { e: '⛸️', t: 'bruslíme na ledu', o: 'zima' },
+  { e: '🧤', t: 'nosíme čepici a rukavice', o: 'zima' },
+  { e: '❄️', t: 'sněží a mrzne', o: 'zima' },
+  { e: '🐸', t: 'kuňkají žáby u rybníka', o: 'jaro' },
+  { e: '🥚', t: 'malujeme velikonoční vajíčka', o: 'jaro' },
+  { e: '🌳', t: 'stromy začínají kvést', o: 'jaro' },
+  { e: '🐝', t: 'na zahradě bzučí první včely', o: 'jaro' },
+  { e: '🧹', t: 'uklízíme zahradu po zimě', o: 'jaro' },
+  { e: '🍒', t: 'zrají třešně', o: 'leto' },
+  { e: '⛺', t: 'jedeme na tábor', o: 'leto' },
+  { e: '🌡️', t: 'je největší horko v roce', o: 'leto' },
+  { e: '🚴', t: 'jezdíme na kole až do večera', o: 'leto' },
+  { e: '🏊', t: 'chodíme se koupat', o: 'leto' },
+  { e: '🎒', t: 'začíná školní rok', o: 'podzim' },
+  { e: '🌫️', t: 'ráno bývá mlha', o: 'podzim' },
+  { e: '🍏', t: 'sklízí se jablka', o: 'podzim' },
+  { e: '🦆', t: 'ptáci odlétají do teplých krajin', o: 'podzim' },
+  { e: '🕯️', t: 'stmívá se dřív než v létě', o: 'podzim' },
+  { e: '🛷', t: 'jezdíme na sáňkách', o: 'zima' },
+  { e: '🎿', t: 'lyžujeme na horách', o: 'zima' },
+  { e: '🧣', t: 'oblékáme si šálu a čepici', o: 'zima' },
+  { e: '🐦', t: 'sypeme ptáčkům do krmítka', o: 'zima' },
+  { e: '🏒', t: 'na rybníku je led', o: 'zima' },
+];
+
+const MESICE = [
+  { nazev: 'leden', o: 'zima' }, { nazev: 'únor', o: 'zima' },
+  { nazev: 'březen', o: 'jaro' }, { nazev: 'duben', o: 'jaro' }, { nazev: 'květen', o: 'jaro' },
+  { nazev: 'červen', o: 'leto' }, { nazev: 'červenec', o: 'leto' }, { nazev: 'srpen', o: 'leto' },
+  { nazev: 'září', o: 'podzim' }, { nazev: 'říjen', o: 'podzim' }, { nazev: 'listopad', o: 'podzim' },
+  { nazev: 'prosinec', o: 'zima' },
+];
+
+const DNY = ['pondělí', 'úterý', 'středa', 'čtvrtek', 'pátek', 'sobota', 'neděle'];
+
+/* ---- Pomocné -------------------------------------------------------------- */
+const nahodne = pole => pole[Math.floor(Math.random() * pole.length)];
+function zamichej(pole) {
+  const p = [...pole];
+  for (let i = p.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [p[i], p[j]] = [p[j], p[i]];
+  }
+  return p;
+}
+// čtení nahlas řeší sdílený rec.js – pozná i chybějící hlas v systému
+const precti = (text, rychlost = 0.85) => Rec.mluv(text, { rychlost });
+
+let spravne = 0, pokusy = 0, cteniZadani = '';
+try {
+  const s = JSON.parse(localStorage.getItem(KLIC));
+  if (s) { spravne = s.spravne; pokusy = s.pokusy; }
+} catch { /* bez trvalé paměti */ }
+function ulozSkore() {
+  try { localStorage.setItem(KLIC, JSON.stringify({ spravne, pokusy })); } catch { /* bez paměti */ }
+}
+function zobrazSkore() { $('skore').innerHTML = `Správně: <b>${spravne}</b> z ${pokusy}`; }
+function vyhodnot(napoprve) { pokusy++; if (napoprve) spravne++; ulozSkore(); zobrazSkore(); }
+
+/* ---- Společné tlačítkové úlohy -------------------------------------------- */
+function obarviPlochu(obdobi) {
+  const p = $('plocha');
+  p.classList.remove('jaro', 'leto', 'podzim', 'zima');
+  document.querySelectorAll('#pas span').forEach(x => x.classList.remove('aktivni'));
+  if (obdobi) {
+    p.classList.add(obdobi);
+    const pas = document.querySelector('#pas .' + obdobi);
+    if (pas) pas.classList.add('aktivni');
+  }
+}
+
+function tlacitkovaUloha(zadaniHtml, volby, spravnyKlic, popisSpravne) {
+  const p = $('plocha');
+  p.innerHTML = zadaniHtml;
+  const m = document.createElement('div');
+  m.className = 'moznosti';
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  const stav = { chyboval: false, hotovo: false };
+  volby.forEach(v => {
+    const b = document.createElement('button');
+    b.innerHTML = `<span class="ikona">${v.em}</span><span>${v.nazev}</span>`;
+    b.dataset.klic = v.klic;
+    b.addEventListener('click', () => Uloha.odpoved({
+      prvek: b,
+      spravne: v.klic === spravnyKlic,
+      stav, odezva,
+      zpravaOk: '✅ Správně – ' + popisSpravne + '!',
+      poSpravne: napoprve => {
+        vyhodnot(napoprve);
+        obarviPlochu(spravnyKlic);   // plocha se obarví až po uhodnutí
+        precti(popisSpravne, 0.85);
+      },
+      dalsi: novaUloha,
+    }));
+    m.appendChild(b);
+  });
+  p.append(m, odezva);
+}
+
+/* ---- Režim: přírodní jev nebo činnost -> období --------------------------- */
+function jevy() {
+  const j = nahodne(JEVY);
+  cteniZadani = 'Ve kterém ročním období ' + j.t + '?';
+  const volby = Object.keys(OBDOBI).map(k => ({ klic: k, ...OBDOBI[k] }));
+  obarviPlochu(null);
+  tlacitkovaUloha(
+    `<div class="zadani">Ve kterém ročním období se to děje?</div>
+     <div class="karta-jev"><div class="obrazek">${j.e}</div><div class="popis">${j.t}</div></div>`,
+    volby, j.o, OBDOBI[j.o].nazev);
+}
+
+/* ---- Režim: měsíc -> období ------------------------------------------------ */
+function mesicObdobi() {
+  const m = nahodne(MESICE);
+  cteniZadani = 'Do kterého období patří ' + m.nazev + '?';
+  const volby = Object.keys(OBDOBI).map(k => ({ klic: k, ...OBDOBI[k] }));
+  obarviPlochu(null);
+  tlacitkovaUloha(
+    `<div class="zadani">Do kterého ročního období patří měsíc</div>
+     <div class="karta-jev"><div class="popis" style="font-size:1.9rem">${m.nazev}</div></div>`,
+    volby, m.o, OBDOBI[m.o].nazev);
+}
+
+/* ---- Řazení do správného pořadí (měsíce, dny) ------------------------------ */
+function razeniUloha(nadpis, spravnePoradi, hlaskaHotovo, obdobiPodleNazvu) {
+  const p = $('plocha');
+  obarviPlochu(null);
+  cteniZadani = nadpis;
+  p.innerHTML = `<div class="zadani">${nadpis}</div>`;
+  const porada = document.createElement('div');
+  porada.className = 'porada';
+  const nabidka = document.createElement('div');
+  nabidka.className = 'nabidka';
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+
+  let dalsi = 0;
+  let chyboval = false;
+
+  zamichej(spravnePoradi).forEach(nazev => {
+    const b = document.createElement('button');
+    b.textContent = nazev;
+    b.dataset.nazev = nazev;
+    if (obdobiPodleNazvu && obdobiPodleNazvu[nazev]) b.dataset.obdobi = obdobiPodleNazvu[nazev];
+    b.addEventListener('click', () => {
+      if (b.disabled) return;
+      if (nazev === spravnePoradi[dalsi]) {
+        const el = document.createElement('span');
+        el.className = 'polozka';
+        el.innerHTML = `<span class="cislo">${dalsi + 1}.</span>${nazev}`;
+        porada.appendChild(el);
+        b.disabled = true;
+        dalsi++;
+        odezva.className = 'odezva ok';
+        odezva.textContent = '✅ Správně!';
+        precti(nazev, 0.9);
+        if (dalsi === spravnePoradi.length) {
+          odezva.textContent = '🎉 ' + hlaskaHotovo;
+          vyhodnot(!chyboval);
+          setTimeout(novaUloha, Uloha.PRODLEVA + 600);
+        }
+      } else {
+        chyboval = true;
+        Uloha.trhni(b);
+        b.classList.add('chyba');
+        setTimeout(() => b.classList.remove('chyba'), 420);
+        odezva.className = 'odezva chyba';
+        odezva.textContent = dalsi === 0
+          ? 'Začni tím, co je v pořadí první.'
+          : `Po „${spravnePoradi[dalsi - 1]}“ následuje něco jiného.`;
+      }
+    });
+    nabidka.appendChild(b);
+  });
+
+  p.append(porada, nabidka, odezva);
+}
+
+const mesice = () => razeniUloha('Seřaď měsíce od ledna do prosince – klepej popořadě.',
+  MESICE.map(m => m.nazev), 'Celý rok je seřazený!',
+  Object.fromEntries(MESICE.map(m => [m.nazev, m.o])));
+const tyden = () => razeniUloha('Seřaď dny v týdnu od pondělí do neděle.',
+  DNY, 'Celý týden je seřazený!');
+
+/* ---- Ovládání ------------------------------------------------------------- */
+const REZIMY = { jevy, mesice, mesicObdobi, tyden };
+let rezim = 'jevy';
+function novaUloha() { REZIMY[rezim](); }
+
+document.querySelectorAll('#rezimy button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#rezimy button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  rezim = b.dataset.rezim;
+  novaUloha();
+}));
+$('btnDalsi').addEventListener('click', novaUloha);
+$('btnCist').addEventListener('click', () => precti(cteniZadani));
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === 'Enter') { e.preventDefault(); novaUloha(); }
+});
+
+Rec.hlidejTlacitko($('btnCist'));
+Rec.poznamkaOHlasu(document.querySelector('.napoveda').parentNode);
+
+zobrazSkore();
+novaUloha();
+</script>
+</body>
+</html>

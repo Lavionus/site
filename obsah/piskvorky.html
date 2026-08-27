@@ -1,200 +1,310 @@
 <!DOCTYPE html>
 <html lang="cs">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>Piškvorky (Chytrá AI)</title>
-  <style>
-    body {
-      margin: 0;
-      font-family: sans-serif;
-      background-color: #121212;
-      color: #eee;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      padding: 20px;
-    }
-    h1 {
-      color: #ff9900;
-      margin: 10px 0;
-    }
-    #status {
-      margin: 10px 0;
-      font-size: 18px;
-    }
-    #board {
-      display: grid;
-      grid-template-columns: repeat(3, 100px);
-      grid-template-rows: repeat(3, 100px);
-      gap: 5px;
-      margin-bottom: 20px;
-    }
-    .cell {
-      width: 100px;
-      height: 100px;
-      background-color: #1e1e1e;
-      border: 2px solid #ff9900;
-      font-size: 48px;
-      font-weight: bold;
-      color: #eee;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      cursor: pointer;
-      user-select: none;
-    }
-    .cell:hover {
-      background-color: #222;
-    }
-    button {
-      background-color: #1e1e1e;
-      color: #eee;
-      border: 1px solid #444;
-      padding: 6px 12px;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-    button:hover {
-      background-color: #333;
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>⭕ Piškvorky</title>
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../rekord.js" defer></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{background:var(--bg);color:var(--text);font-family:var(--font);
+  min-height:100vh;padding:16px 12px;display:flex;flex-direction:column;align-items:center;user-select:none}
+h1{font-size:1.6rem;margin-bottom:6px;font-weight:600}
+.sub{color:var(--text-faint);font-size:.85rem;margin-bottom:14px;text-align:center;max-width:480px}
+.lista{display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:center;margin-bottom:12px}
+.lista label{display:flex;gap:6px;align-items:center;font-size:.85rem;color:var(--text-faint)}
+select{background:var(--bg-control);color:var(--text);border:1px solid var(--border-strong);
+  border-radius:6px;padding:7px 9px;font-family:inherit}
+.btn{background:var(--accent);color:#fff;border:none;padding:8px 16px;border-radius:6px;
+  cursor:pointer;font-weight:600;font-family:inherit}
+.btn-sec{background:var(--bg-control);color:var(--text);border:1px solid var(--border-strong)}
+.skore{display:flex;gap:22px;margin-bottom:12px;text-align:center}
+.skore .v{font-size:1.5rem;font-weight:700}
+.skore .l{font-size:.72rem;color:var(--text-faint)}
+.skore .vyhry{color:var(--ok)}.skore .prohry{color:var(--danger)}
+#status{margin-bottom:12px;font-size:1rem;font-weight:600;min-height:1.5em;text-align:center}
+#board{display:grid;gap:var(--mezera);background:var(--border);padding:var(--mezera);border-radius:8px;
+  grid-template-columns:repeat(var(--sl),var(--bunka))}
+.cell{width:var(--bunka);height:var(--bunka);background:var(--bg-elevated);border-radius:4px;
+  display:flex;align-items:center;justify-content:center;font-weight:700;cursor:pointer;
+  font-size:calc(var(--bunka) * .62);line-height:1}
+.cell:hover:not(.plno){background:var(--bg-hover)}
+.cell.x{color:var(--accent)}
+.cell.o{color:var(--warn)}
+.cell.plno{cursor:default}
+.cell.vyherni{background:var(--ok);color:#fff}
+.cell.posledni{outline:2px solid var(--accent);outline-offset:-2px}
+.hint{color:var(--text-faint);font-size:.85rem;margin-top:14px;text-align:center;max-width:520px;line-height:1.5}
+</style>
 </head>
 <body>
-  <h1>Piškvorky (vs Chytrá AI)</h1>
-  <div id="status">Na tahu: Hráč X (ty)</div>
-  <div id="board"></div>
-  <button onclick="restartGame()">Restart</button>
+<h1>⭕ Piškvorky</h1>
+<p class="sub">Klasické 3×3, nebo české „pětky“ na velké desce. Vyber si, jak chytrého soupeře chceš — na nejtěžší obtížnost se s ním na 3×3 dá jen remizovat.</p>
 
-  <script>
-    const boardEl = document.getElementById("board");
-    const statusEl = document.getElementById("status");
-    let board = Array(9).fill("");
-    let currentPlayer = "X";
-    let gameActive = true;
+<div class="lista">
+  <label>Deska:
+    <select id="rezim">
+      <option value="3">3×3 (tři v řadě)</option>
+      <option value="15" selected>15×15 (pět v řadě)</option>
+    </select>
+  </label>
+  <label>Obtížnost:
+    <select id="obtiznost">
+      <option value="lehka">Lehká</option>
+      <option value="stredni" selected>Střední</option>
+      <option value="tezka">Těžká</option>
+    </select>
+  </label>
+  <label>Začíná:
+    <select id="zacina">
+      <option value="X" selected>Ty (✕)</option>
+      <option value="O">Počítač (○)</option>
+    </select>
+  </label>
+  <button class="btn" id="novaBtn">🔄 Nová hra</button>
+</div>
 
-    function renderBoard() {
-      boardEl.innerHTML = "";
-      board.forEach((cell, index) => {
-        const cellEl = document.createElement("div");
-        cellEl.className = "cell";
-        cellEl.textContent = cell;
-        cellEl.addEventListener("click", () => handleCellClick(index));
-        boardEl.appendChild(cellEl);
-      });
-    }
+<div class="skore">
+  <div><div class="v vyhry" id="sV">0</div><div class="l">Výhry</div></div>
+  <div><div class="v" id="sR">0</div><div class="l">Remízy</div></div>
+  <div><div class="v prohry" id="sP">0</div><div class="l">Prohry</div></div>
+</div>
+<div class="lista"><span id="rekordBox"></span>
+  <button class="btn btn-sec" id="skoreResetBtn" style="font-size:.78rem;padding:5px 10px">↺ Vynulovat skóre</button></div>
 
-    function handleCellClick(index) {
-      if (!gameActive || board[index] !== "" || currentPlayer !== "X") return;
+<div id="status"></div>
+<div id="board"></div>
+<p class="hint">Na velké desce vyhrává pět kamenů v řadě (vodorovně, svisle nebo šikmo).
+Poslední tah počítače je zvýrazněný rámečkem.</p>
 
-      board[index] = "X";
-      updateGameState();
+<script>
+const $=id=>document.getElementById(id);
 
-      if (gameActive) {
-        currentPlayer = "O";
-        statusEl.textContent = "Na tahu: Hráč O (AI)";
-        setTimeout(aiMove, 400); // mírné zpoždění
+let N,DELKA,deska,naTahu,konec,posledni,rek=null;
+let skore={v:0,r:0,p:0}, serie=0;
+const KLIC_SKORE='webapp_hra_piskvorky_skore';
+
+/* ---------- skóre ---------- */
+function nactiSkore(){
+  try{
+    const s=JSON.parse(localStorage.getItem(KLIC_SKORE));
+    if(s&&typeof s.v==='number')return s;
+  }catch{/* poškozený záznam – začneme od nuly */}
+  return {v:0,r:0,p:0};
+}
+function ulozSkore(){
+  try{localStorage.setItem(KLIC_SKORE,JSON.stringify(skore));}catch{/* nevadí */}
+}
+function vykresliSkore(){
+  $('sV').textContent=skore.v;$('sR').textContent=skore.r;$('sP').textContent=skore.p;
+}
+
+/* ---------- deska ---------- */
+function novaHra(){
+  N=+$('rezim').value;
+  DELKA=N===3?3:5;
+  deska=Array.from({length:N},()=>Array(N).fill(''));
+  konec=false;posledni=null;
+  naTahu=$('zacina').value;
+  const b=$('board');
+  b.style.setProperty('--sl',N);
+  b.style.setProperty('--mezera',N===3?'5px':'2px');
+  // šířka desky = N buněk + (N+1) mezer (mezi buňkami i po okrajích)
+  // + 24px na vnitřní okraje stránky, ať se vejde i na úzký telefon
+  b.style.setProperty('--bunka',
+    N===3?'min(100px, calc((100vw - 24px - 20px) / 3))'
+         :'min(34px, calc((100vw - 24px - 32px) / 15))');
+  b.innerHTML='';
+  for(let r=0;r<N;r++)for(let c=0;c<N;c++){
+    const d=document.createElement('div');
+    d.className='cell';d.dataset.r=r;d.dataset.c=c;
+    b.appendChild(d);
+  }
+  vykresli();
+  if(naTahu==='O')setTimeout(tahPocitace,300);
+}
+
+function bunka(r,c){return $('board').children[r*N+c];}
+
+function vykresli(vyherniPolicka){
+  for(let r=0;r<N;r++)for(let c=0;c<N;c++){
+    const el=bunka(r,c),v=deska[r][c];
+    el.textContent=v==='X'?'✕':v==='O'?'○':'';
+    el.className='cell'+(v?' plno '+v.toLowerCase():'');
+    if(posledni&&posledni[0]===r&&posledni[1]===c)el.classList.add('posledni');
+  }
+  if(vyherniPolicka)vyherniPolicka.forEach(([r,c])=>bunka(r,c).classList.add('vyherni'));
+  if(!konec)$('status').textContent=naTahu==='X'?'Na tahu: ty (✕)':'Na tahu: počítač (○)…';
+}
+
+/* ---------- vyhodnocení ---------- */
+const SMERY=[[0,1],[1,0],[1,1],[1,-1]];
+function vyhernaRada(r,c,hrac,d=deska){
+  for(const [dr,dc] of SMERY){
+    const rada=[[r,c]];
+    for(const zn of [1,-1]){
+      let i=1;
+      while(true){
+        const nr=r+dr*i*zn, nc=c+dc*i*zn;
+        if(nr<0||nr>=N||nc<0||nc>=N||d[nr][nc]!==hrac)break;
+        rada.push([nr,nc]);i++;
       }
     }
+    if(rada.length>=DELKA)return rada;
+  }
+  return null;
+}
+function plno(d=deska){return d.every(r=>r.every(x=>x));}
 
-    function aiMove() {
-      if (!gameActive) return;
+function ukonci(vysledek,vyherniPolicka){
+  konec=true;
+  if(vysledek==='X'){skore.v++;serie++;$('status').textContent='🎉 Vyhráls!';
+    if(rek&&rek.zapis(serie))$('status').textContent='🏆 Vyhráls — nejdelší série: '+serie+'!';}
+  else if(vysledek==='O'){skore.p++;serie=0;$('status').textContent='😢 Vyhrál počítač.';}
+  else{skore.r++;serie=0;$('status').textContent='🤝 Remíza.';}
+  ulozSkore();vykresliSkore();vykresli(vyherniPolicka);
+}
 
-      const best = findBestMove(board);
-      if (best !== -1) {
-        board[best] = "O";
-        updateGameState();
-        if (gameActive) {
-          currentPlayer = "X";
-          statusEl.textContent = "Na tahu: Hráč X (ty)";
-        }
+function polozKamen(r,c,hrac){
+  deska[r][c]=hrac;posledni=[r,c];
+  const rada=vyhernaRada(r,c,hrac);
+  if(rada){ukonci(hrac,rada);return true;}
+  if(plno()){ukonci('remiza');return true;}
+  return false;
+}
+
+/* ---------- soupeř ---------- */
+/* Na 3×3 je prostor tak malý, že se dá projít úplně (minimax).
+   Na 15×15 by to nešlo, proto se tahy hodnotí podle vzorů v řadě. */
+function minimax(d,hloubka,maximalizuje,alfa,beta){
+  for(let r=0;r<3;r++)for(let c=0;c<3;c++){
+    if(!d[r][c])continue;
+    if(vyhernaRada(r,c,d[r][c],d)){
+      return d[r][c]==='O' ? 10-hloubka : hloubka-10;
+    }
+  }
+  if(plno(d))return 0;
+  if(maximalizuje){
+    let nej=-Infinity;
+    for(let r=0;r<3;r++)for(let c=0;c<3;c++){
+      if(d[r][c])continue;
+      d[r][c]='O';nej=Math.max(nej,minimax(d,hloubka+1,false,alfa,beta));d[r][c]='';
+      alfa=Math.max(alfa,nej); if(beta<=alfa)return nej;
+    }
+    return nej;
+  }
+  let nej=Infinity;
+  for(let r=0;r<3;r++)for(let c=0;c<3;c++){
+    if(d[r][c])continue;
+    d[r][c]='X';nej=Math.min(nej,minimax(d,hloubka+1,true,alfa,beta));d[r][c]='';
+    beta=Math.min(beta,nej); if(beta<=alfa)return nej;
+  }
+  return nej;
+}
+function nejlepsiMinimax(){
+  let nejSkore=-Infinity,tah=null;
+  for(let r=0;r<3;r++)for(let c=0;c<3;c++){
+    if(deska[r][c])continue;
+    deska[r][c]='O';
+    const s=minimax(deska,0,false,-Infinity,Infinity);
+    deska[r][c]='';
+    if(s>nejSkore){nejSkore=s;tah=[r,c];}
+  }
+  return tah;
+}
+
+/* Ohodnocení jednoho pole pro daného hráče: sečte sílu vzniklých řad
+   ve všech čtyřech směrech (delší a otevřenější řada = víc bodů). */
+function hodnotaPole(r,c,hrac){
+  let celkem=0;
+  for(const [dr,dc] of SMERY){
+    let pocet=1, otevrene=0;
+    for(const zn of [1,-1]){
+      let i=1;
+      while(true){
+        const nr=r+dr*i*zn,nc=c+dc*i*zn;
+        if(nr<0||nr>=N||nc<0||nc>=N)break;
+        if(deska[nr][nc]===hrac){pocet++;i++;continue;}
+        if(deska[nr][nc]==='')otevrene++;
+        break;
       }
     }
-
-    function updateGameState() {
-      renderBoard();
-      const winner = checkWinner(board);
-      if (winner) {
-        statusEl.textContent = `Vyhrál hráč ${winner}!`;
-        gameActive = false;
-      } else if (board.every(cell => cell !== "")) {
-        statusEl.textContent = "Remíza!";
-        gameActive = false;
-      }
+    if(pocet>=DELKA)celkem+=1000000;
+    else if(pocet===4)celkem+=otevrene===2?200000:otevrene===1?12000:0;
+    else if(pocet===3)celkem+=otevrene===2?9000:otevrene===1?800:0;
+    else if(pocet===2)celkem+=otevrene===2?600:otevrene===1?90:0;
+    else celkem+=otevrene*8;
+  }
+  return celkem;
+}
+function kandidati(){
+  const out=[];
+  for(let r=0;r<N;r++)for(let c=0;c<N;c++){
+    if(deska[r][c])continue;
+    let blizko=false;
+    for(let dr=-2;dr<=2&&!blizko;dr++)for(let dc=-2;dc<=2;dc++){
+      const nr=r+dr,nc=c+dc;
+      if(nr>=0&&nr<N&&nc>=0&&nc<N&&deska[nr][nc]){blizko=true;break;}
     }
+    if(blizko)out.push([r,c]);
+  }
+  if(!out.length){const s=Math.floor(N/2);return [[s,s]];}   // prázdná deska → střed
+  return out;
+}
+function nejlepsiHeuristika(){
+  const k=kandidati();
+  let nej=-Infinity,tah=k[0];
+  for(const [r,c] of k){
+    // vlastní útok i zablokování soupeře; obrana má o něco nižší váhu,
+    // aby při rovnosti vyhrál vlastní útok
+    const s=hodnotaPole(r,c,'O')+hodnotaPole(r,c,'X')*0.95;
+    if(s>nej){nej=s;tah=[r,c];}
+  }
+  return tah;
+}
 
-    function restartGame() {
-      board = Array(9).fill("");
-      currentPlayer = "X";
-      gameActive = true;
-      statusEl.textContent = "Na tahu: Hráč X (ty)";
-      renderBoard();
-    }
+function tahPocitace(){
+  if(konec)return;
+  const obt=$('obtiznost').value;
+  const volne=kandidati();
+  let tah;
+  if(obt==='lehka'){
+    tah=volne[Math.floor(Math.random()*volne.length)];
+  }else if(obt==='stredni'&&Math.random()<0.3){
+    tah=volne[Math.floor(Math.random()*volne.length)];   // občas chybuje, aby se dal porazit
+  }else{
+    tah=(N===3)?nejlepsiMinimax():nejlepsiHeuristika();
+  }
+  if(!tah)return;
+  if(!polozKamen(tah[0],tah[1],'O')){naTahu='X';vykresli();}
+}
 
-    function checkWinner(b) {
-      const lines = [
-        [0,1,2], [3,4,5], [6,7,8],
-        [0,3,6], [1,4,7], [2,5,8],
-        [0,4,8], [2,4,6]
-      ];
-      for (const [a,b1,c] of lines) {
-        if (b[a] && b[a] === b[b1] && b[a] === b[c]) {
-          return b[a];
-        }
-      }
-      return null;
-    }
+$('board').addEventListener('click',e=>{
+  const el=e.target.closest('.cell');
+  if(!el||konec||naTahu!=='X')return;
+  const r=+el.dataset.r,c=+el.dataset.c;
+  if(deska[r][c])return;
+  if(polozKamen(r,c,'X'))return;
+  naTahu='O';vykresli();
+  setTimeout(tahPocitace,220);
+});
 
-    function findBestMove(newBoard) {
-      let bestScore = -Infinity;
-      let move = -1;
-      for (let i = 0; i < newBoard.length; i++) {
-        if (newBoard[i] === "") {
-          newBoard[i] = "O";
-          const score = minimax(newBoard, 0, false);
-          newBoard[i] = "";
-          if (score > bestScore) {
-            bestScore = score;
-            move = i;
-          }
-        }
-      }
-      return move;
-    }
+$('novaBtn').onclick=novaHra;
+$('rezim').onchange=novaHra;
+$('obtiznost').onchange=novaHra;
+$('zacina').onchange=novaHra;
+$('skoreResetBtn').onclick=()=>{skore={v:0,r:0,p:0};serie=0;ulozSkore();vykresliSkore();};
 
-    function minimax(b, depth, isMaximizing) {
-      const winner = checkWinner(b);
-      if (winner === "O") return 10 - depth;
-      if (winner === "X") return depth - 10;
-      if (b.every(cell => cell !== "")) return 0;
-
-      if (isMaximizing) {
-        let best = -Infinity;
-        for (let i = 0; i < b.length; i++) {
-          if (b[i] === "") {
-            b[i] = "O";
-            const score = minimax(b, depth + 1, false);
-            b[i] = "";
-            best = Math.max(score, best);
-          }
-        }
-        return best;
-      } else {
-        let best = Infinity;
-        for (let i = 0; i < b.length; i++) {
-          if (b[i] === "") {
-            b[i] = "X";
-            const score = minimax(b, depth + 1, true);
-            b[i] = "";
-            best = Math.min(score, best);
-          }
-        }
-        return best;
-      }
-    }
-
-    renderBoard();
-  </script>
+window.addEventListener('DOMContentLoaded',()=>{
+  if(typeof Rekord!=='undefined'){
+    rek=Rekord.sleduj('webapp_hra_piskvorky_serie',{vyssiLepsi:true,popisek:'Nejdelší série výher',format:v=>v+'×'});
+    rek.prvek($('rekordBox'));
+  }
+  skore=nactiSkore();vykresliSkore();
+  novaHra();
+});
+</script>
 </body>
 </html>
-

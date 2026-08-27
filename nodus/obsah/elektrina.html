@@ -1,0 +1,990 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>⚡ Elektřina – obvody, Ohmův zákon a magnetismus</title>
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<style>
+body{height:100vh;overflow:hidden;display:flex;flex-direction:column}
+.horni{display:flex;gap:10px;align-items:center;padding:10px 16px;background:var(--bg-elevated);border-bottom:1px solid var(--border);flex-wrap:wrap}
+.horni h1{font-size:1.05rem;font-weight:600;margin-right:auto}
+/* pět záložek se na mobilu do jedné řádky nevejde – musí se zalomit */
+.zalozky{display:flex;gap:6px;flex-wrap:wrap}
+.panel{display:flex;gap:14px;align-items:center;padding:9px 16px;background:var(--bg-panel);border-bottom:1px solid var(--border);flex-wrap:wrap}
+.panel label{font-size:.78rem;color:var(--text-muted);display:flex;align-items:center;gap:7px}
+.panel .hodnota{color:var(--text-faint);min-width:3.2em;font-variant-numeric:tabular-nums}
+input[type=range]{width:105px;accent-color:var(--accent)}
+input[type=checkbox]{accent-color:var(--accent);width:15px;height:15px;cursor:pointer}
+select{background:var(--bg-input);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:5px 8px;font-size:.8rem}
+button{background:var(--bg-control);border:1px solid var(--border-strong);color:var(--text);border-radius:6px;padding:7px 13px;font-size:.82rem;cursor:pointer}
+button:hover{background:var(--accent);color:#fff;border-color:var(--accent)}
+button.zap{background:var(--accent);color:#fff;border-color:var(--accent)}
+.plocha{flex:1;position:relative;overflow:hidden;background:var(--bg-deep);min-height:0}
+canvas{display:block;width:100%;height:100%;touch-action:none}
+.stav{background:var(--bg-panel);border-top:1px solid var(--border);padding:8px 16px;font-size:.8rem;color:var(--text-muted);display:flex;gap:8px 18px;flex-wrap:wrap;align-items:center}
+.stav b{color:var(--text);font-variant-numeric:tabular-nums}
+.stav .znak{font-size:1rem}
+.info{position:absolute;top:12px;right:12px;width:275px;max-width:calc(100% - 24px);background:var(--bg-elevated);border:1px solid var(--border-strong);border-radius:10px;padding:11px 14px;font-size:.78rem;line-height:1.6;color:var(--text-muted);box-shadow:var(--shadow)}
+.info b{color:var(--text)}
+.info .zavri{position:absolute;top:5px;right:7px;background:none;border:none;color:var(--text-faint);font-size:1rem;padding:0 4px;cursor:pointer}
+.info .zavri:hover{background:none;color:var(--accent)}
+.napoveda{position:absolute;left:12px;bottom:10px;font-size:.74rem;color:var(--text-faint);pointer-events:none}
+.skryto{display:none !important}
+@media(max-width:760px){.info{display:none}.panel{gap:10px;padding:8px 10px}input[type=range]{width:84px}}
+
+/* ovládací prvky jako přehledné dlaždice v panelu */
+.panel{gap:8px}
+.panel label{background:var(--bg-input);border:1px solid var(--border);border-radius:8px;padding:4px 9px;gap:6px}
+.panel input[type=range]{width:88px}
+.panel label:has(input[type=checkbox]){background:var(--bg-control);border-color:var(--border-strong);cursor:pointer;color:var(--text-muted)}
+.panel label:has(input[type=checkbox]:checked){background:var(--accent-soft);border-color:var(--accent);color:var(--text)}
+.panel .hodnota{color:var(--text);font-weight:600}
+.panel label:has(.prepinac){background:none;border:none;padding:0;gap:8px}
+.prepinac{display:inline-flex;border:1px solid var(--border-strong);border-radius:8px;overflow:hidden}
+.prepinac button{border:none;border-radius:0;padding:6px 12px;font-size:.8rem;background:var(--bg-control);color:var(--text-muted)}
+.prepinac button+button{border-left:1px solid var(--border)}
+.prepinac button:hover{background:var(--bg-hover);color:var(--text)}
+.prepinac button.zap,.prepinac button.zap:hover{background:var(--accent);color:#fff}
+</style>
+</head>
+<body>
+<div class="horni">
+  <h1>⚡ Elektřina</h1>
+  <div class="zalozky">
+    <button id="tabOhm" class="zap">🔌 Ohmův zákon</button>
+    <button id="tabZapoj">🔗 Sériově / paralelně</button>
+    <button id="tabMag">🧲 Magnetické pole</button>
+    <button id="tabInd">🔄 Indukce</button>
+    <button id="tabSpot">💡 Spotřeba a cena</button>
+  </div>
+  <button id="btnInfo">❓ Nápověda</button>
+</div>
+
+<div class="panel" id="panelOhm">
+  <label>🔋 Napětí U <input type="range" id="u" min="1" max="24" step="0.5" value="9"><span class="hodnota" id="uV">9 V</span></label>
+  <label>🌡️ Odpor R <input type="range" id="r" min="1" max="100" step="1" value="18"><span class="hodnota" id="rV">18 Ω</span></label>
+  <label><input type="checkbox" id="spinac" checked> 🔘 Sepnutý spínač</label>
+  <label><input type="checkbox" id="pojistka"> 🛡️ Pojistka 5 A</label>
+</div>
+
+<div class="panel skryto" id="panelZapoj">
+  <label>🔧 <select id="zapojeni" class="jakoTlacitka">
+      <option value="seriove" selected data-krat="Sériové">Sériové zapojení</option>
+      <option value="paralelni" data-krat="Paralelní">Paralelní zapojení</option>
+    </select></label>
+  <label>🔋 Napětí <input type="range" id="uz" min="1" max="24" step="0.5" value="12"><span class="hodnota" id="uzV">12 V</span></label>
+  <label>💡 R₁ <input type="range" id="r1" min="2" max="60" step="1" value="10"><span class="hodnota" id="r1V">10 Ω</span></label>
+  <label>💡 R₂ <input type="range" id="r2" min="2" max="60" step="1" value="20"><span class="hodnota" id="r2V">20 Ω</span></label>
+  <label>💡 R₃ <input type="range" id="r3" min="2" max="60" step="1" value="30"><span class="hodnota" id="r3V">30 Ω</span></label>
+  <button id="btnVsechny">💡 Zašroubovat všechny</button>
+</div>
+
+<div class="panel skryto" id="panelMag">
+  <label>🔧 <select id="usporadani" class="jakoTlacitka">
+      <option value="vodic" selected data-krat="Jeden vodič">Jeden přímý vodič</option>
+      <option value="dva" data-krat="Dva vodiče">Dva vodiče</option>
+      <option value="civka" data-krat="Cívka">Cívka (řez závity)</option>
+    </select></label>
+  <label>⚡ Proud I <input type="range" id="im" min="-10" max="10" step="0.5" value="5"><span class="hodnota" id="imV">5 A</span></label>
+  <label id="lblZavity">🌀 Závitů <input type="range" id="zavity" min="2" max="6" step="1" value="4"><span class="hodnota" id="zavityV">4</span></label>
+  <label id="lblOpacne"><input type="checkbox" id="opacne"> ↔️ Opačný směr v druhém vodiči</label>
+  <label><input type="checkbox" id="kompasy" checked> 🧭 Střelky kompasu</label>
+</div>
+
+<div class="panel skryto" id="panelInd">
+  <label>🌀 Závitů <input type="range" id="zavityI" min="2" max="20" step="1" value="8"><span class="hodnota" id="zavityIV">8</span></label>
+  <label>🧲 Síla magnetu <input type="range" id="silaM" min="1" max="10" step="1" value="6"><span class="hodnota" id="silaMV">6</span></label>
+  <label><input type="checkbox" id="autoPohyb"> 🔁 Automatický pohyb</label>
+  <label id="lblRychlostI">🏃 Rychlost <input type="range" id="rychlostI" min="0.2" max="2" step="0.1" value="0.8"><span class="hodnota" id="rychlostIV">0,8 Hz</span></label>
+  <button id="btnOtocMagnet">🔄 Otočit póly</button>
+</div>
+
+<div class="panel skryto" id="panelSpot">
+  <label>⏱️ Provoz <input type="range" id="hodiny" min="0.1" max="24" step="0.1" value="2"><span class="hodnota" id="hodinyV">2 h/den</span></label>
+  <label>💰 Cena <input type="range" id="cenaKwh" min="2" max="10" step="0.5" value="5"><span class="hodnota" id="cenaKwhV">5 Kč/kWh</span></label>
+  <label><input type="checkbox" id="vseSpotrebice" checked> 📊 Porovnat všechny spotřebiče</label>
+</div>
+
+<div class="plocha">
+  <canvas id="c"></canvas>
+  <div class="info skryto" id="infoBox">
+    <button class="zavri" id="zavriInfo" title="Zavřít">✕</button>
+    <div id="infoText"></div>
+  </div>
+  <div class="napoveda" id="napoveda"></div>
+</div>
+
+<div class="stav" id="stav"></div>
+
+<script>
+const $=id=>document.getElementById(id);
+const canvas=$('c'), ctx=canvas.getContext('2d');
+const cz=(x,d=1)=>(Math.abs(x)<1e-9?0:x).toFixed(d).replace('.',',');
+
+let C={};
+function nactiBarvy(){
+  const s=getComputedStyle(document.documentElement), g=n=>s.getPropertyValue(n).trim();
+  C={text:g('--text'),muted:g('--text-muted'),faint:g('--text-faint'),border:g('--border'),
+     silny:g('--border-strong'),akcent:g('--accent'),ok:g('--ok'),warn:g('--warn'),
+     danger:g('--danger'),panel:g('--bg-panel'),elev:g('--bg-elevated'),deep:g('--bg-deep')};
+}
+nactiBarvy();
+new MutationObserver(()=>{nactiBarvy();magPrekresli=true;}).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+
+// plátno musí sledovat i změnu výšky panelu při přepnutí záložky,
+// jinak zůstane starý obsah pod nově kreslenou plochou
+function resize(){
+  const r=devicePixelRatio||1;
+  const w=Math.round(canvas.clientWidth*r), h=Math.round(canvas.clientHeight*r);
+  if(canvas.width!==w||canvas.height!==h){ canvas.width=w; canvas.height=h; magPrekresli=true; }
+  ctx.setTransform(r,0,0,r,0,0);
+}
+new ResizeObserver(resize).observe(canvas);
+
+/* ---------- uchopovací body: kreslení je registruje, myš je hledá ---------- */
+let uchopy=[], tahne=null, podKurzorem=null;
+function uchop(x,y,r,typ,bezObrysu){
+  uchopy.push({x,y,r,typ});
+  if(bezObrysu) return;
+  // obrys ukazuje, za co se dá vzít; pod kurzorem a při tažení zesílí
+  const akt=(tahne&&tahne.typ===typ)||podKurzorem===typ;
+  ctx.save();
+  ctx.strokeStyle=akt?C.akcent:C.faint;
+  ctx.setLineDash(akt?[]:[3,4]);
+  ctx.lineWidth=akt?2:1;
+  ctx.beginPath(); ctx.arc(x,y,akt?r+3:r,0,Math.PI*2);
+  if(akt){ ctx.fillStyle='rgba(106,166,253,.13)'; ctx.fill(); }
+  ctx.stroke();
+  ctx.restore();
+}
+function najdiUchop(x,y){
+  let nej=null, nd=1e9;
+  for(const u of uchopy){
+    const d=Math.hypot(x-u.x,y-u.y);
+    if(d<u.r&&d<nd){ nd=d; nej=u; }
+  }
+  return nej;
+}
+
+function popis(text,x,y,barva=C.muted,font='12px sans-serif',zar='center'){
+  ctx.fillStyle=barva; ctx.font=font; ctx.textAlign=zar; ctx.textBaseline='middle';
+  ctx.fillText(text,x,y);
+}
+function cara(x1,y1,x2,y2,barva,sirka=3){
+  ctx.strokeStyle=barva; ctx.lineWidth=sirka; ctx.lineCap='round';
+  ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+}
+
+/* ---------- společné prvky schématu ---------- */
+function baterie(x,y,svisle,U){
+  ctx.strokeStyle=C.text; ctx.lineWidth=3;
+  const kresliClanek=(d)=>{
+    if(svisle){
+      ctx.beginPath(); ctx.moveTo(x-16,y+d); ctx.lineTo(x+16,y+d); ctx.stroke();   // dlouhá (+)
+      ctx.beginPath(); ctx.moveTo(x-8,y+d+9); ctx.lineTo(x+8,y+d+9); ctx.stroke(); // krátká (−)
+    }else{
+      ctx.beginPath(); ctx.moveTo(x+d,y-16); ctx.lineTo(x+d,y+16); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(x+d+9,y-8); ctx.lineTo(x+d+9,y+8); ctx.stroke();
+    }
+  };
+  kresliClanek(-12); kresliClanek(6);
+  if(svisle){
+    popis('+',x+28,y-16,C.danger,'bold 14px sans-serif');
+    popis('−',x+28,y+18,C.akcent,'bold 15px sans-serif');
+    popis(cz(U,1)+' V',x-40,y+2,C.text,'bold 12px sans-serif');
+  }else{
+    popis(cz(U,1)+' V',x,y-30,C.text,'bold 12px sans-serif');
+  }
+}
+function zarovka(x,y,jas,r=24,popisek=''){
+  if(jas>0.01){
+    const g=ctx.createRadialGradient(x,y,2,x,y,r*3.4);
+    g.addColorStop(0,`rgba(255,230,140,${0.85*jas})`);
+    g.addColorStop(0.35,`rgba(255,200,70,${0.35*jas})`);
+    g.addColorStop(1,'rgba(255,200,70,0)');
+    ctx.fillStyle=g;
+    ctx.beginPath(); ctx.arc(x,y,r*3.4,0,Math.PI*2); ctx.fill();
+  }
+  ctx.fillStyle=jas>0.01?`rgba(255,214,110,${0.25+0.6*jas})`:C.elev;
+  ctx.strokeStyle=C.text; ctx.lineWidth=2.5;
+  ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill(); ctx.stroke();
+  // vlákno
+  ctx.strokeStyle=jas>0.01?'#ffcf5c':C.faint; ctx.lineWidth=2;
+  ctx.beginPath();
+  ctx.moveTo(x-r*0.62,y+r*0.62); ctx.lineTo(x+r*0.62,y-r*0.62);
+  ctx.moveTo(x-r*0.62,y-r*0.62); ctx.lineTo(x+r*0.62,y+r*0.62);
+  ctx.stroke();
+  if(popisek) popis(popisek,x,y+r+16,C.muted,'12px sans-serif');
+}
+function pristroj(x,y,znak,hodnota,barva){
+  ctx.fillStyle=C.elev; ctx.strokeStyle=barva; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.arc(x,y,19,0,Math.PI*2); ctx.fill(); ctx.stroke();
+  popis(znak,x,y-4,barva,'bold 14px sans-serif');
+  popis(hodnota,x,y+9,C.text,'10px sans-serif');
+}
+
+/* ================= 1) OHMŮV ZÁKON ================= */
+const ohm={
+  U:9, R:18, sepnuto:true, pojistka:false, faze:0, drahy:null,
+  nacti(){
+    this.U=+$('u').value; this.R=+$('r').value;
+    this.sepnuto=$('spinac').checked; this.pojistka=$('pojistka').checked;
+    $('uV').textContent=cz(this.U,1)+' V'; $('rV').textContent=this.R+' Ω';
+  },
+  proud(){
+    if(!this.sepnuto) return {I:0,duvod:'rozepnuto'};
+    const I=this.U/this.R;
+    if(this.pojistka&&I>5) return {I:0,duvod:'pojistka'};
+    return {I,duvod:null};
+  },
+  kresli(w,h){
+    const L=w*0.16, P=w*0.84, T=h*0.22, D=h*0.80;
+    const {I,duvod}=this.proud();
+    const jas=Math.min(1,Math.sqrt(this.U*I/8));   // odmocnina: i malé výkony jsou vidět
+
+    // vodiče
+    const barvaDratu=I>0?C.ok:C.faint;
+    cara(L,T,P,T,barvaDratu,3);            // horní
+    cara(P,T,P,D,barvaDratu,3);            // pravá
+    cara(L,D,P,D,barvaDratu,3);            // dolní
+    cara(L,T,L,(T+D)/2-22,barvaDratu,3);   // levá horní část
+    cara(L,(T+D)/2+22,L,D,barvaDratu,3);   // levá dolní část
+
+    // baterie vlevo
+    baterie(L,(T+D)/2,true,this.U);
+    uchop(L,(T+D)/2,30,'baterie');
+
+    // žárovka (spotřebič) vpravo
+    const zx=P, zy=(T+D)/2;
+    ctx.fillStyle=C.deep; ctx.fillRect(zx-26,zy-26,52,52);
+    zarovka(zx,zy,jas,24);
+    uchop(zx,zy,28,'zarovka');
+    popis('R = '+this.R+' Ω',zx+44,zy,C.muted,'12px sans-serif','left');
+
+    // spínač dole
+    const sx=(L+P)/2, sy=D;
+    ctx.fillStyle=C.deep; ctx.fillRect(sx-34,sy-22,68,30);
+    ctx.fillStyle=C.text;
+    ctx.beginPath(); ctx.arc(sx-24,sy,4,0,Math.PI*2); ctx.fill();
+    ctx.beginPath(); ctx.arc(sx+24,sy,4,0,Math.PI*2); ctx.fill();
+    ctx.strokeStyle=this.sepnuto?C.ok:C.danger; ctx.lineWidth=3;
+    ctx.beginPath(); ctx.moveTo(sx-24,sy);
+    if(this.sepnuto) ctx.lineTo(sx+24,sy); else ctx.lineTo(sx+18,sy-20);
+    ctx.stroke();
+    uchop(sx,sy,30,'spinac');
+    popis(this.sepnuto?'spínač sepnutý (klikni)':'spínač rozepnutý (klikni)',sx,sy+26,C.faint,'11px sans-serif');
+
+    // ampérmetr nahoře, voltmetr u žárovky
+    ctx.fillStyle=C.deep; ctx.fillRect((L+P)/2-20,T-20,40,40);
+    pristroj((L+P)/2,T,'A',cz(I,2)+' A',C.warn);
+    const vx=P-64;
+    ctx.strokeStyle=C.faint; ctx.lineWidth=1.5;
+    ctx.beginPath(); ctx.moveTo(P,zy-40); ctx.lineTo(vx,zy-40); ctx.lineTo(vx,zy+40); ctx.lineTo(P,zy+40); ctx.stroke();
+    pristroj(vx,zy,'V',cz(I*this.R,1)+' V',C.akcent);
+
+    // pojistka
+    if(this.pojistka){
+      const px=(L+P)/2+90;
+      ctx.fillStyle=C.deep; ctx.fillRect(px-22,D-14,44,26);
+      ctx.strokeStyle=duvod==='pojistka'?C.danger:C.text; ctx.lineWidth=2;
+      ctx.strokeRect(px-18,D-9,36,16);
+      if(duvod==='pojistka'){ popis('✕',px,D-1,C.danger,'bold 14px sans-serif'); }
+      else cara(px-18,D-1,px+18,D-1,C.text,2);
+      popis('pojistka 5 A',px,D+22,duvod==='pojistka'?C.danger:C.faint,'11px sans-serif');
+    }
+
+    // elektrony
+    if(I>0){
+      // elektrony vystupují ze záporného pólu (dole) a vracejí se ke kladnému (nahoře)
+      const draha=[[L,(T+D)/2],[L,D],[P,D],[P,T],[L,T],[L,(T+D)/2]];
+      const delky=[]; let celkem=0;
+      for(let i=0;i<draha.length-1;i++){
+        const d=Math.hypot(draha[i+1][0]-draha[i][0],draha[i+1][1]-draha[i][1]);
+        delky.push(d); celkem+=d;
+      }
+      const pocet=26;
+      for(let k=0;k<pocet;k++){
+        let s=(this.faze+k/pocet*celkem)%celkem;
+        let i=0; while(s>delky[i]){ s-=delky[i]; i++; }
+        const t=s/delky[i];
+        const x=draha[i][0]+(draha[i+1][0]-draha[i][0])*t;
+        const y=draha[i][1]+(draha[i+1][1]-draha[i][1])*t;
+        ctx.fillStyle=C.akcent;
+        ctx.beginPath(); ctx.arc(x,y,3.6,0,Math.PI*2); ctx.fill();
+      }
+      popis('elektrony jdou od − k +',w/2,h-16,C.faint,'11px sans-serif');
+    }
+    if(duvod==='pojistka') popis('⚠️ Proud překročil 5 A – pojistka obvod rozpojila',w/2,26,C.danger,'13px sans-serif');
+  },
+  krok(dt){
+    const {I}=this.proud();
+    this.faze+=dt*Math.min(260,I*70);
+  },
+  tahni(typ,x,y,vych){
+    // svisle taženo = víc napětí / větší odpor
+    if(typ==='baterie'){
+      $('u').value=Math.max(1,Math.min(24,(Math.round((vych.U+(vych.y-y)*0.06)*2)/2)));
+    }else if(typ==='zarovka'){
+      $('r').value=Math.max(1,Math.min(100,Math.round(vych.R+(y-vych.y)*0.35)));
+    }
+    this.nacti();
+  },
+  stav(){
+    const {I,duvod}=this.proud();
+    const P=this.U*I;
+    let s=`Napětí <b>U = ${cz(this.U,1)} V</b> `+
+      `<span class="znak">•</span> Odpor <b>R = ${this.R} Ω</b> `+
+      `<span class="znak">•</span> Proud <b>I = ${cz(I,2)} A</b>${duvod?'':' (I = U/R)'} `+
+      `<span class="znak">•</span> Příkon <b>P = U·I = ${cz(P,1)} W</b>`;
+    if(duvod==='rozepnuto') s+=` <span class="znak">•</span> <b>obvod je rozpojený</b> – proud neteče`;
+    if(duvod==='pojistka') s+=` <span class="znak">•</span> <b>pojistka vypnula</b> (${cz(this.U/this.R,1)} A > 5 A)`;
+    else if(this.U/this.R>8) s+=` <span class="znak">•</span> ⚠️ malý odpor = velký proud (blíží se zkratu)`;
+    return s;
+  }
+};
+
+/* ================= 2) SÉRIOVĚ / PARALELNĚ ================= */
+const zapoj={
+  typ:'seriove', U:12, R:[10,20,30], zapnuto:[true,true,true],
+  nacti(){
+    this.typ=$('zapojeni').value; this.U=+$('uz').value;
+    this.R=[+$('r1').value,+$('r2').value,+$('r3').value];
+    $('uzV').textContent=cz(this.U,1)+' V';
+    [1,2,3].forEach(i=>$('r'+i+'V').textContent=$('r'+i).value+' Ω');
+  },
+  vypocet(){
+    const zap=this.zapnuto, R=this.R;
+    if(this.typ==='seriove'){
+      if(zap.some(z=>!z)) return {Rc:Infinity,Ic:0,U:[0,0,0],I:[0,0,0]};
+      const Rc=R.reduce((a,b)=>a+b,0), Ic=this.U/Rc;
+      return {Rc,Ic,U:R.map(r=>Ic*r),I:[Ic,Ic,Ic]};
+    }
+    const g=R.reduce((a,r,i)=>a+(zap[i]?1/r:0),0);
+    const Rc=g>0?1/g:Infinity;
+    const I=R.map((r,i)=>zap[i]?this.U/r:0);
+    return {Rc,Ic:I.reduce((a,b)=>a+b,0),U:R.map((_,i)=>zap[i]?this.U:0),I};
+  },
+  kresli(w,h){
+    const v=this.vypocet();
+    const L=w*0.16, P=w*0.86, T=h*0.28, D=h*0.78;
+    const barvaDratu=v.Ic>0?C.ok:C.faint;
+    if(this.typ==='seriove'){
+      const xs=[0,1,2].map(i=>L+(P-L)*(0.22+i*0.28));
+      // obvod
+      cara(L,T,P,T,barvaDratu,3);
+      cara(P,T,P,D,barvaDratu,3);
+      cara(L,D,P,D,barvaDratu,3);
+      cara(L,T,L,(T+D)/2-22,barvaDratu,3);
+      cara(L,(T+D)/2+22,L,D,barvaDratu,3);
+      baterie(L,(T+D)/2,true,this.U);
+      xs.forEach((x,i)=>{
+        ctx.fillStyle=C.deep; ctx.fillRect(x-24,T-24,48,48);
+        const jas=this.zapnuto[i]?Math.min(1,Math.sqrt(v.U[i]*v.I[i]/8)):0;
+        zarovka(x,T,jas,22);
+        uchop(x,T,26,'zarovka'+i);
+        if(!this.zapnuto[i]) popis('vyšroubovaná',x,T-36,C.danger,'11px sans-serif');
+        popis(`R${'₁₂₃'[i]} = ${this.R[i]} Ω`,x,T+38,C.muted,'11px sans-serif');
+        popis(`U = ${cz(v.U[i],1)} V`,x,T+54,C.akcent,'11px sans-serif');
+        popis(`I = ${cz(v.I[i],2)} A`,x,T+70,C.warn,'11px sans-serif');
+      });
+    }else{
+      const xs=[0,1,2].map(i=>L+(P-L)*(0.30+i*0.26));
+      cara(L,T,P,T,barvaDratu,3);
+      cara(L,D,P,D,barvaDratu,3);
+      cara(L,T,L,(T+D)/2-22,barvaDratu,3);
+      cara(L,(T+D)/2+22,L,D,barvaDratu,3);
+      baterie(L,(T+D)/2,true,this.U);
+      xs.forEach((x,i)=>{
+        const y=(T+D)/2;
+        const barva=this.zapnuto[i]&&v.I[i]>0?C.ok:C.faint;
+        cara(x,T,x,y-24,barva,3);
+        cara(x,y+24,x,D,barva,3);
+        const jas=this.zapnuto[i]?Math.min(1,Math.sqrt(v.U[i]*v.I[i]/8)):0;
+        zarovka(x,y,jas,22);
+        uchop(x,y,26,'zarovka'+i);
+        if(!this.zapnuto[i]) popis('vyšroubovaná',x,y-40,C.danger,'11px sans-serif');
+        popis(`R${'₁₂₃'[i]} = ${this.R[i]} Ω`,x+34,y-14,C.muted,'11px sans-serif','left');
+        popis(`U = ${cz(v.U[i],1)} V`,x+34,y+2,C.akcent,'11px sans-serif','left');
+        popis(`I = ${cz(v.I[i],2)} A`,x+34,y+18,C.warn,'11px sans-serif','left');
+      });
+    }
+  },
+  tahni(typ,x,y,vych){
+    const i=+typ.slice(7);
+    $('r'+(i+1)).value=Math.max(2,Math.min(60,Math.round(vych.R[i]+(y-vych.y)*0.25)));
+    this.nacti();
+  },
+  stav(){
+    const v=this.vypocet();
+    const zhasle=this.zapnuto.filter(z=>!z).length;
+    let s=`Zapojení <b>${this.typ==='seriove'?'sériové':'paralelní'}</b> `+
+      `<span class="znak">•</span> Celkový odpor <b>R = ${isFinite(v.Rc)?cz(v.Rc,1)+' Ω':'∞ (přerušeno)'}</b> `+
+      `<span class="znak">•</span> Proud ze zdroje <b>${cz(v.Ic,2)} A</b> `+
+      `<span class="znak">•</span> ${this.typ==='seriove'
+        ? 'R = R₁+R₂+R₃, proud je všude stejný, napětí se dělí'
+        : '1/R = 1/R₁+1/R₂+1/R₃, napětí je na všech stejné, proudy se sčítají'}`;
+    if(zhasle) s+=` <span class="znak">•</span> ${this.typ==='seriove'
+      ? '<b>Vyšroubovaná žárovka rozpojí celý obvod</b> – zhasnou všechny'
+      : '<b>Ostatní svítí dál</b> – každá větev má vlastní cestu'}`;
+    return s;
+  }
+};
+
+/* ================= 3) MAGNETICKÉ POLE ================= */
+const mag={
+  usporadani:'vodic', I:5, zavity:4, opacne:false, kompasy:true, vodice:[], posun:{},
+  nacti(){
+    this.usporadani=$('usporadani').value; this.I=+$('im').value;
+    this.zavity=+$('zavity').value; this.opacne=$('opacne').checked; this.kompasy=$('kompasy').checked;
+    $('imV').textContent=cz(this.I,1)+' A'; $('zavityV').textContent=this.zavity;
+    $('lblZavity').classList.toggle('skryto',this.usporadani!=='civka');
+    $('lblOpacne').classList.toggle('skryto',this.usporadani!=='dva');
+  },
+  priprav(w,h){
+    const cx=w/2, cy=h*0.5;
+    this.vodice=[];
+    const p=this.posun[this.usporadani]||{dx:0,dy:0,roztah:0};
+    if(this.usporadani==='vodic'){
+      this.vodice.push({x:cx+p.dx,y:cy+p.dy,I:this.I,idx:0});
+    }else if(this.usporadani==='dva'){
+      const d=Math.max(40,Math.min(w*0.42,90+p.roztah));
+      this.vodice.push({x:cx-d,y:cy+p.dy,I:this.I,idx:0});
+      this.vodice.push({x:cx+d,y:cy+p.dy,I:this.opacne?-this.I:this.I,idx:1});
+    }else{
+      const n=this.zavity, rozteC=Math.min(64,(w*0.5)/n), pul=Math.min(70,h*0.16);
+      for(let i=0;i<n;i++){
+        const x=cx+(i-(n-1)/2)*rozteC;
+        this.vodice.push({x,y:cy-pul,I:this.I,idx:2*i});      // horní část závitu – proud ven
+        this.vodice.push({x,y:cy+pul,I:-this.I,idx:2*i+1});   // dolní část závitu – proud dovnitř
+      }
+    }
+  },
+  pole(p){
+    let bx=0,by=0;
+    for(const v of this.vodice){
+      const dx=p[0]-v.x, dy=p[1]-v.y;
+      const r2=dx*dx+dy*dy;
+      if(r2<1) continue;
+      // proud "ven z obrazovky" (kladný I) točí pole proti směru hodinových ručiček
+      bx+=v.I*dy/r2; by+=-v.I*dx/r2;
+    }
+    return [bx,by];
+  },
+  siloCara(p,znak,w,h){
+    const body=[p.slice()];
+    let q=p.slice();
+    for(let i=0;i<900;i++){
+      const b=this.pole(q); const m=Math.hypot(b[0],b[1]);
+      if(m<1e-12) break;
+      const k=2.2*znak;
+      const q1=[q[0]+b[0]/m*k/2, q[1]+b[1]/m*k/2];
+      const b1=this.pole(q1); const m1=Math.hypot(b1[0],b1[1]);
+      if(m1<1e-12) break;
+      q=[q[0]+b1[0]/m1*k, q[1]+b1[1]/m1*k];
+      if(q[0]<-40||q[0]>w+40||q[1]<-40||q[1]>h+40) break;
+      if(this.vodice.some(v=>Math.hypot(q[0]-v.x,q[1]-v.y)<7)) break;
+      body.push(q.slice());
+      if(i>30&&Math.hypot(q[0]-p[0],q[1]-p[1])<3) break;   // uzavřená smyčka
+    }
+    return body;
+  },
+  kresli(w,h){
+    this.priprav(w,h);
+    const cx=w/2, cy=h*0.5;
+    // siločáry
+    if(Math.abs(this.I)>0.01){
+      const seminka=[];
+      if(this.usporadani==='civka'){
+        const pul=Math.min(70,h*0.16);
+        for(let d=14;d<=pul-6;d+=Math.max(12,(pul-20)/4)) seminka.push([cx,cy-d],[cx,cy+d]);
+        for(let d=pul+26;d<Math.min(w,h)*0.62;d+=34) seminka.push([cx,cy-d],[cx,cy+d]);
+      }else{
+        for(const v of this.vodice)
+          for(let d=22;d<Math.min(w,h)*0.55;d+=Math.max(24,Math.min(w,h)*0.055)) seminka.push([v.x+d,v.y]);
+      }
+      ctx.strokeStyle=C.akcent; ctx.lineWidth=1.4; ctx.globalAlpha=0.75;
+      for(const s of seminka){
+        for(const znak of [1,-1]){
+          const b=this.siloCara(s,znak,w,h);
+          if(b.length<3) continue;
+          ctx.beginPath(); ctx.moveTo(b[0][0],b[0][1]);
+          for(let i=1;i<b.length;i++) ctx.lineTo(b[i][0],b[i][1]);
+          ctx.stroke();
+          // šipka směru uprostřed čáry
+          if(znak===1&&b.length>26){
+            const i=Math.min(b.length-2,24);
+            const a=Math.atan2(b[i+1][1]-b[i][1],b[i+1][0]-b[i][0]);
+            ctx.save(); ctx.fillStyle=C.akcent;
+            ctx.beginPath();
+            ctx.moveTo(b[i][0],b[i][1]);
+            ctx.lineTo(b[i][0]-8*Math.cos(a-0.4),b[i][1]-8*Math.sin(a-0.4));
+            ctx.lineTo(b[i][0]-8*Math.cos(a+0.4),b[i][1]-8*Math.sin(a+0.4));
+            ctx.closePath(); ctx.fill(); ctx.restore();
+          }
+        }
+      }
+      ctx.globalAlpha=1;
+    }
+
+    // střelky kompasu
+    if(this.kompasy){
+      const krok=Math.max(52,Math.min(w,h)/9);
+      for(let x=krok/2;x<w;x+=krok) for(let y=krok/2;y<h;y+=krok){
+        const b=this.pole([x,y]); const m=Math.hypot(b[0],b[1]);
+        if(m<1e-6) continue;
+        if(this.vodice.some(v=>Math.hypot(x-v.x,y-v.y)<26)) continue;
+        const a=Math.atan2(b[1],b[0]), dl=13;
+        const ex=x+Math.cos(a)*dl, ey=y+Math.sin(a)*dl;
+        const zx=x-Math.cos(a)*dl, zy=y-Math.sin(a)*dl;
+        ctx.strokeStyle=C.danger; ctx.lineWidth=3; ctx.lineCap='round';
+        ctx.beginPath(); ctx.moveTo(x,y); ctx.lineTo(ex,ey); ctx.stroke();
+        ctx.strokeStyle=C.faint;
+        ctx.beginPath(); ctx.moveTo(x,y); ctx.lineTo(zx,zy); ctx.stroke();
+        ctx.fillStyle=C.silny;
+        ctx.beginPath(); ctx.arc(x,y,2.5,0,Math.PI*2); ctx.fill();
+      }
+    }
+
+    // vodiče
+    for(const v of this.vodice) uchop(v.x,v.y,15,'vodic'+v.idx,true);
+    for(const v of this.vodice){
+      ctx.fillStyle=C.elev; ctx.strokeStyle=v.I>=0?C.warn:C.ok; ctx.lineWidth=2.5;
+      ctx.beginPath(); ctx.arc(v.x,v.y,11,0,Math.PI*2); ctx.fill(); ctx.stroke();
+      ctx.strokeStyle=v.I>=0?C.warn:C.ok; ctx.lineWidth=2.5;
+      if(v.I>=0){ ctx.fillStyle=v.I>=0?C.warn:C.ok; ctx.beginPath(); ctx.arc(v.x,v.y,3.5,0,Math.PI*2); ctx.fill(); }
+      else{
+        ctx.beginPath();
+        ctx.moveTo(v.x-6,v.y-6); ctx.lineTo(v.x+6,v.y+6);
+        ctx.moveTo(v.x+6,v.y-6); ctx.lineTo(v.x-6,v.y+6);
+        ctx.stroke();
+      }
+    }
+    if(this.usporadani==='civka'){
+      const pul=Math.min(70,h*0.16);
+      popis('⊙ proud teče k tobě',w-16,cy-pul-26,C.warn,'11px sans-serif','right');
+      popis('⊗ proud teče od tebe',w-16,cy+pul+26,C.ok,'11px sans-serif','right');
+      popis('uvnitř cívky je pole skoro rovnoměrné',cx,cy+pul+46,C.faint,'11px sans-serif');
+    }else{
+      popis('⊙ proud teče k tobě     ⊗ proud teče od tebe',16,h*0.06,C.faint,'11px sans-serif','left');
+    }
+    if(Math.abs(this.I)<0.01) popis('Bez proudu není magnetické pole.',cx,h*0.18,C.faint,'13px sans-serif');
+  },
+  tahni(typ,x,y,vych){
+    const i=+typ.slice(5);
+    const p=this.posun[this.usporadani]||(this.posun[this.usporadani]={dx:0,dy:0,roztah:0});
+    if(this.usporadani==='dva'){
+      // tažením se mění rozestup vodičů, svisle se posouvá dvojice
+      p.roztah=vych.roztah+(i===0?(vych.x-x):(x-vych.x));
+      p.dy=vych.dy+(y-vych.y);
+    }else if(this.usporadani==='vodic'){
+      p.dx=vych.dx+(x-vych.x); p.dy=vych.dy+(y-vych.y);
+    }
+    magPrekresli=true;
+  },
+  klikVodic(typ){
+    // kliknutí na vodič obrátí směr proudu
+    if(this.usporadani==='dva'&&+typ.slice(5)===1) $('opacne').checked=!$('opacne').checked;
+    else $('im').value=-this.I;
+    this.nacti(); magPrekresli=true;
+  },
+  stav(){
+    const B=2e-7*Math.abs(this.I)/0.05*1e6;   // µT ve vzdálenosti 5 cm
+    let s=`Proud <b>${cz(this.I,1)} A</b> `+
+      `<span class="znak">•</span> B = μ₀·I / (2π·r) → ve vzdálenosti 5 cm <b>${cz(B,1)} µT</b> `+
+      `<span class="znak">•</span> pro srovnání: magnetické pole Země ≈ 50 µT `+
+      `<span class="znak">•</span> <b>Pravidlo pravé ruky:</b> palec ve směru proudu, prsty ukazují smysl pole`;
+    if(this.usporadani==='dva') s+=` <span class="znak">•</span> ${this.opacne?'opačné proudy se <b>odpuzují</b>':'souhlasné proudy se <b>přitahují</b>'}`;
+    if(this.usporadani==='civka') s+=` <span class="znak">•</span> Cívka se ${this.zavity} závity se chová jako <b>tyčový magnet</b>`;
+    return s;
+  }
+};
+
+/* ================= přepínání a smyčka ================= */
+/* ================= 4) ELEKTROMAGNETICKÁ INDUKCE =================
+   Opačný jev než v předchozí záložce: pohyb magnetu u cívky vyrobí napětí.
+   Model: tok Φ(d) klesá se vzdáleností magnetu od středu cívky, indukované
+   napětí je Ui = −N · ΔΦ/Δt. Klíčové je, že rozhoduje ZMĚNA, ne poloha. */
+const indukce={
+  N:8, sila:6, poloha:-150, rychlost:0, polarita:1,
+  auto:false, f:0.8, cas:0, tokMinuly:null, Ui:0, ukazatel:0, historie:[],
+  nacti(){
+    this.N=+$('zavityI').value; this.sila=+$('silaM').value;
+    this.auto=$('autoPohyb').checked; this.f=+$('rychlostI').value;
+    $('zavityIV').textContent=this.N;
+    $('silaMV').textContent=this.sila;
+    $('rychlostIV').textContent=cz(this.f,1)+' Hz';
+    $('lblRychlostI').classList.toggle('skryto',!this.auto);
+  },
+  /* Magnetický tok cívkou podle vzdálenosti od jejího středu. */
+  tok(d){
+    const s=70;
+    return this.polarita*this.sila*Math.pow(1+(d/s)*(d/s),-1.5);
+  },
+  krok(dt){
+    if(!dt) return;
+    if(this.auto){
+      this.cas+=dt;
+      const nova=Math.sin(this.cas*2*Math.PI*this.f)*150;
+      this.rychlost=(nova-this.poloha)/dt;
+      this.poloha=nova;
+    }else{
+      // po puštění magnet zůstane stát – napětí musí spadnout na nulu
+      this.rychlost*=Math.max(0,1-dt*12);
+    }
+    const t=this.tok(this.poloha);
+    if(this.tokMinuly!==null){
+      const cil=-this.N*(t-this.tokMinuly)/dt*0.06;
+      this.Ui+=(cil-this.Ui)*Math.min(1,dt*14);   // vyhlazení, ať ručka neskáče
+    }
+    this.tokMinuly=t;
+    this.ukazatel+=(this.Ui-this.ukazatel)*Math.min(1,dt*10);
+    this.historie.push(this.ukazatel);
+    if(this.historie.length>220) this.historie.shift();
+  },
+  kresli(w,h){
+    const cx=w*0.52, cy=h*0.46;
+    const rozestup=Math.min(15,Math.max(7,120/this.N));
+    const sirkaCivky=this.N*rozestup;
+
+    // cívka – závity v řezu
+    ctx.strokeStyle=C.text; ctx.lineWidth=3;
+    for(let i=0;i<this.N;i++){
+      const x=cx-sirkaCivky/2+i*rozestup;
+      ctx.beginPath(); ctx.ellipse(x,cy,rozestup*0.42,44,0,0,Math.PI*2); ctx.stroke();
+    }
+    popis(this.N+' závitů',cx,cy+66,C.muted,'12px sans-serif');
+
+    // přívody k měřidlu
+    const gx=w*0.84, gy=cy;
+    cara(cx+sirkaCivky/2,cy-44,gx,cy-44,C.silny,3);
+    cara(cx-sirkaCivky/2,cy+44,cx-sirkaCivky/2,cy+80,C.silny,3);
+    cara(cx-sirkaCivky/2,cy+80,gx,cy+80,C.silny,3);
+    cara(gx,cy+80,gx,gy+26,C.silny,3);
+    cara(gx,cy-44,gx,gy-26,C.silny,3);
+
+    // magnet (tažitelný)
+    const mx=cx+this.poloha, my=cy;
+    const dl=64, sir=26;
+    const cerveny=this.polarita>0;
+    ctx.fillStyle=cerveny?'#d94f4f':'#4f7fd9';
+    ctx.fillRect(mx-dl/2,my-sir/2,dl/2,sir);
+    ctx.fillStyle=cerveny?'#4f7fd9':'#d94f4f';
+    ctx.fillRect(mx,my-sir/2,dl/2,sir);
+    ctx.strokeStyle=C.text; ctx.lineWidth=2; ctx.strokeRect(mx-dl/2,my-sir/2,dl,sir);
+    popis(cerveny?'N':'S',mx-dl/4,my,'#fff','bold 14px sans-serif');
+    popis(cerveny?'S':'N',mx+dl/4,my,'#fff','bold 14px sans-serif');
+    uchop(mx,my,38,'magnet');
+
+    // měřidlo s ručkou
+    const vych=Math.max(-1,Math.min(1,this.ukazatel/6));
+    ctx.fillStyle=C.elev; ctx.strokeStyle=C.silny; ctx.lineWidth=2.5;
+    ctx.beginPath(); ctx.arc(gx,gy,34,0,Math.PI*2); ctx.fill(); ctx.stroke();
+    ctx.strokeStyle=C.border; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(gx,gy); ctx.lineTo(gx,gy-28); ctx.stroke();
+    const uhel=vych*1.1;
+    ctx.strokeStyle=Math.abs(vych)>0.02?C.warn:C.faint; ctx.lineWidth=3;
+    ctx.beginPath(); ctx.moveTo(gx,gy+8);
+    ctx.lineTo(gx+Math.sin(uhel)*30,gy+8-Math.cos(uhel)*34); ctx.stroke();
+    ctx.fillStyle=C.text; ctx.beginPath(); ctx.arc(gx,gy+8,3.5,0,Math.PI*2); ctx.fill();
+    popis('−',gx-26,gy-18,C.faint,'11px sans-serif');
+    popis('+',gx+26,gy-18,C.faint,'11px sans-serif');
+    popis(cz(this.Ui,2)+' V',gx,gy+52,C.text,'bold 12px sans-serif');
+
+    // graf průběhu napětí
+    const gw=Math.min(230,w*0.28), gh=64, gx0=w*0.05, gy0=34;
+    ctx.strokeStyle=C.border; ctx.lineWidth=1;
+    ctx.strokeRect(gx0,gy0,gw,gh);
+    cara(gx0,gy0+gh/2,gx0+gw,gy0+gh/2,C.border,1);
+    ctx.strokeStyle=C.warn; ctx.lineWidth=2; ctx.beginPath();
+    this.historie.forEach((v,i)=>{
+      const x=gx0+i/220*gw, y=gy0+gh/2-Math.max(-1,Math.min(1,v/6))*(gh/2-4);
+      i?ctx.lineTo(x,y):ctx.moveTo(x,y);
+    });
+    ctx.stroke();
+    popis('průběh napětí',gx0+gw/2,gy0+gh+14,C.faint,'11px sans-serif');
+
+    if(Math.abs(this.Ui)<0.05)
+      popis('magnet stojí → žádné napětí',cx,h-18,C.faint,'12px sans-serif');
+    else
+      popis(this.Ui>0?'magnet se přibližuje / vzdaluje – ručka vlevo':'opačný pohyb – ručka vpravo',
+        cx,h-18,C.faint,'12px sans-serif');
+  },
+  tahni(typ,x,y,vych){
+    const cx=canvas.clientWidth*0.52;
+    const nova=Math.max(-190,Math.min(190,x-cx));
+    // rychlost počítáme z posunu, protože právě ona vyrábí napětí
+    this.rychlost=(nova-this.poloha)*60;
+    this.poloha=nova;
+    $('autoPohyb').checked=false; this.auto=false;
+    $('lblRychlostI').classList.add('skryto');
+  },
+  stav(){
+    const t=this.tok(this.poloha);
+    return `Závitů <b>N = ${this.N}</b> `+
+      `<span class="znak">•</span> Tok cívkou <b>Φ ≈ ${cz(t,2)}</b> `+
+      `<span class="znak">•</span> Indukované napětí <b>U<sub>i</sub> = ${cz(this.Ui,2)} V</b> `+
+      `<span class="znak">•</span> ${Math.abs(this.Ui)<0.05
+        ? '<b>magnet se nehýbe</b> – tok se nemění, napětí je nulové'
+        : 'napětí vzniká jen <b>při změně</b> toku (U<sub>i</sub> = −N · ΔΦ/Δt)'}`;
+  }
+};
+
+/* ================= 5) SPOTŘEBA A CENA ================= */
+const SPOTREBICE=[
+  {n:'LED žárovka',   P:8,    h:5,   ikona:'💡'},
+  {n:'Žárovka 60 W',  P:60,   h:5,   ikona:'🔆'},
+  {n:'Notebook',      P:60,   h:6,   ikona:'💻'},
+  {n:'Televize',      P:100,  h:4,   ikona:'📺'},
+  {n:'Lednička',      P:150,  h:8,   ikona:'🧊'},
+  {n:'Vysavač',       P:800,  h:0.3, ikona:'🧹'},
+  {n:'Mikrovlnka',    P:900,  h:0.3, ikona:'🍲'},
+  {n:'Konvice',       P:2000, h:0.3, ikona:'☕'},
+  {n:'Pračka',        P:2200, h:1,   ikona:'🧺'},
+];
+const spotreba={
+  vybrany:4, hodiny:2, cena:5, vse:true,
+  nacti(){
+    this.hodiny=+$('hodiny').value; this.cena=+$('cenaKwh').value; this.vse=$('vseSpotrebice').checked;
+    $('hodinyV').textContent=cz(this.hodiny,1)+' h/den';
+    $('cenaKwhV').textContent=cz(this.cena,1)+' Kč/kWh';
+  },
+  mesicne(P,h){ return P/1000*h*30; },        // kWh za 30 dní
+  kresli(w,h){
+    const okraj=Math.max(70,w*0.13);
+    const sirka=w-okraj-150;      // vpravo musí zbýt místo na popisek kWh a Kč
+    const n=SPOTREBICE.length;
+    const vyska=Math.min(30,(h-140)/n);
+    const y0=64;
+
+    const rada=SPOTREBICE.map((s,i)=>({
+      ...s, i,
+      kwh:this.mesicne(s.P, i===this.vybrany?this.hodiny:s.h),
+    }));
+    const max=Math.max(...rada.map(r=>r.kwh));
+
+    popis('Kolik stojí měsíc provozu (30 dní)',w/2,30,C.text,'bold 14px sans-serif');
+    popis(`cena ${cz(this.cena,1)} Kč/kWh`,w/2,48,C.faint,'11px sans-serif');
+
+    rada.forEach(r=>{
+      const y=y0+r.i*(vyska+6);
+      const vybrano=r.i===this.vybrany;
+      if(!this.vse&&!vybrano) return;
+      const d=Math.max(2,r.kwh/max*sirka);
+      ctx.fillStyle=vybrano?C.akcent:C.border;
+      ctx.fillRect(okraj,y,d,vyska-4);
+      popis(r.ikona+' '+r.n,okraj-8,y+vyska/2-2,vybrano?C.text:C.muted,
+        (vybrano?'bold ':'')+'12px sans-serif','right');
+      popis(`${cz(r.kwh,1)} kWh · ${Math.round(r.kwh*this.cena)} Kč`,
+        okraj+d+8,y+vyska/2-2,vybrano?C.text:C.faint,'11px sans-serif','left');
+      uchop(okraj+d/2,y+vyska/2,Math.max(14,vyska/2),'spotrebic'+r.i,true);
+    });
+
+    const v=rada[this.vybrany];
+    popis(`${v.ikona} ${v.n}: ${v.P} W · ${cz(this.hodiny,1)} h denně`,
+      w/2,h-42,C.text,'bold 13px sans-serif');
+    popis('klikni na řádek a přepni spotřebič · posuvníkem měň dobu provozu',
+      w/2,h-20,C.faint,'11px sans-serif');
+  },
+  stav(){
+    const v=SPOTREBICE[this.vybrany];
+    const kwhDen=v.P/1000*this.hodiny;
+    const kwhMes=kwhDen*30;
+    return `Příkon <b>P = ${v.P} W</b> `+
+      `<span class="znak">•</span> Za den <b>${cz(kwhDen,2)} kWh</b> `+
+      `<span class="znak">•</span> Za měsíc <b>${cz(kwhMes,1)} kWh</b> `+
+      `<span class="znak">•</span> Cena <b>${Math.round(kwhMes*this.cena)} Kč/měsíc</b> `+
+      `<span class="znak">•</span> W = P · t, 1 kWh = 1000 W po dobu 1 hodiny`;
+  }
+};
+
+const NAPOVEDA={
+  ohm:`<b>Ohmův zákon</b><br>Proud v obvodu spočítáš jako <b>I = U / R</b>. Čím větší napětí, tím větší proud;
+    čím větší odpor, tím menší proud. Výkon (příkon) je <b>P = U · I</b>.<br><br>
+    <b>Zkus si</b><br>• Zvyšuj napětí – žárovka svítí víc a elektrony se pohybují rychleji.<br>
+    • Zmenši odpor na minimum: proud prudce vzroste. To je <b>zkrat</b> – proto zapni <b>pojistku</b>.<br>
+    • Rozepni spínač: obvod se přeruší a proud okamžitě přestane téct všude, ne jen za spínačem.`,
+  zapoj:`<b>Sériové a paralelní zapojení</b><br>V <b>sérii</b> teče všemi spotřebiči stejný proud a napětí zdroje se mezi ně rozdělí (R = R₁+R₂+R₃).
+    V <b>paralelním</b> zapojení má každá větev celé napětí zdroje a proudy se sčítají.<br><br>
+    <b>Zkus si</b><br>• Klikni na žárovku a „vyšroubuj" ji. V sérii zhasnou všechny (staré vánoční řetězy), paralelně svítí ostatní dál (zásuvky v bytě).<br>
+    • Změň jeden odpor a sleduj, co se stane s ostatními žárovkami.<br>
+    • Všimni si, že paralelní zapojení má menší celkový odpor než nejmenší z odporů.`,
+  mag:`<b>Magnetické pole elektrického proudu</b><br>Kolem každého vodiče, kterým teče proud, vzniká magnetické pole.
+    Siločáry tvoří <b>soustředné kružnice</b> a jejich smysl určí <b>pravidlo pravé ruky</b>.<br><br>
+    <b>Zkus si</b><br>• Změň znaménko proudu – celé pole se obrátí a střelky kompasu se otočí.<br>
+    • U dvou vodičů: stejný směr proudu = vodiče se přitahují, opačný = odpuzují.<br>
+    • U <b>cívky</b> se pole jednotlivých závitů uvnitř sčítá do skoro rovnoměrného pole a cívka se chová jako tyčový magnet – tak funguje elektromagnet.`,
+  indukce:`<b>Elektromagnetická indukce</b><br>Předchozí záložka ukazovala, že proud vyrobí magnetické pole.
+    Tady to platí obráceně: <b>pohyb magnetu u cívky vyrobí napětí</b>. Rozhoduje ale
+    <b>změna</b> magnetického toku, ne jeho velikost – proto stojící magnet napětí nevyrobí,
+    i když je hodně silný. Platí <b>U<sub>i</sub> = −N · ΔΦ/Δt</b>.<br><br>
+    <b>Zkus si</b><br>• Táhni magnetem k cívce a od ní – ručka se vychýlí na opačné strany.<br>
+    • Zastav magnet uvnitř cívky: napětí spadne na nulu, i když je tok největší.<br>
+    • Přidej závity nebo pohybuj rychleji – napětí roste.<br>
+    • Zapni <b>automatický pohyb</b>: vznikne pravidelně se střídající napětí. Přesně tak
+    vyrábí elektřinu generátor v elektrárně.`,
+  spotreba:`<b>Spotřeba a cena elektřiny</b><br>Elektroměr neměří výkon, ale <b>elektrickou práci</b>:
+    <b>W = P · t</b>. Jednotka <b>1 kWh</b> znamená spotřebič o příkonu 1000 W běžící jednu hodinu.<br><br>
+    <b>Zkus si</b><br>• Porovnej žárovku 60 W a LED 8 W při stejné době svícení.<br>
+    • Konvice má obrovský příkon, ale běží pár minut denně – lednička má malý příkon,
+    zato běží pořád. Kdo nakonec spotřebuje víc?<br>
+    • Posuň cenu za kWh a uvidíš, jak se to promítne do měsíčních nákladů.`
+};
+const DOLE={
+  ohm:'Klikni na spínač, táhni za baterii (napětí) nebo za žárovku (odpor) · kolečkem myši ladíš hodnotu pod kurzorem.',
+  zapoj:'Klikni na žárovku – vyšroubuješ ji; tažením nebo kolečkem myši měníš její odpor.',
+  mag:'Táhni za vodič a posuň ho, kliknutím obrátíš směr proudu · kolečkem myši měníš proud.',
+  indukce:'Táhni magnetem k cívce a od ní – napětí vzniká jen během pohybu · kliknutím na magnet otočíš póly.',
+  spotreba:'Klikni na řádek a vyber spotřebič · posuvníky měň dobu provozu a cenu za kWh.'};
+let rezim='ohm', lastT=null, magPrekresli=true;
+
+function prepni(r){
+  rezim=r; magPrekresli=true; tahne=null; uchopy=[]; canvas.style.cursor='default';
+  for(const [id,t] of [['tabOhm','ohm'],['tabZapoj','zapoj'],['tabMag','mag'],
+                      ['tabInd','indukce'],['tabSpot','spotreba']])
+    $(id).classList.toggle('zap',t===r);
+  $('panelOhm').classList.toggle('skryto',r!=='ohm');
+  $('panelZapoj').classList.toggle('skryto',r!=='zapoj');
+  $('panelMag').classList.toggle('skryto',r!=='mag');
+  $('panelInd').classList.toggle('skryto',r!=='indukce');
+  $('panelSpot').classList.toggle('skryto',r!=='spotreba');
+  if(r==='indukce'){ indukce.historie=[]; indukce.tokMinuly=null; }
+  $('infoText').innerHTML=NAPOVEDA[r];
+  $('napoveda').textContent=DOLE[r];
+}
+$('tabOhm').onclick=()=>prepni('ohm');
+$('tabZapoj').onclick=()=>prepni('zapoj');
+$('tabMag').onclick=()=>prepni('mag');
+$('tabInd').onclick=()=>prepni('indukce');
+$('tabSpot').onclick=()=>prepni('spotreba');
+$('btnInfo').onclick=()=>$('infoBox').classList.toggle('skryto');
+$('zavriInfo').onclick=()=>$('infoBox').classList.add('skryto');
+
+['u','r','spinac','pojistka'].forEach(id=>$(id).oninput=$(id).onchange=()=>ohm.nacti());
+['zapojeni','uz','r1','r2','r3'].forEach(id=>$(id).oninput=$(id).onchange=()=>zapoj.nacti());
+$('btnVsechny').onclick=()=>{zapoj.zapnuto=[true,true,true];};
+['usporadani','im','zavity','opacne','kompasy'].forEach(id=>$(id).oninput=$(id).onchange=()=>{mag.nacti();magPrekresli=true;});
+['zavityI','silaM','autoPohyb','rychlostI'].forEach(id=>$(id).oninput=$(id).onchange=()=>indukce.nacti());
+$('btnOtocMagnet').onclick=()=>{indukce.polarita*=-1;indukce.tokMinuly=null;};
+['hodiny','cenaKwh','vseSpotrebice'].forEach(id=>$(id).oninput=$(id).onchange=()=>spotreba.nacti());
+
+/* ---------- tažení a klikání přímo ve schématu ---------- */
+function poloha(e){
+  const r=canvas.getBoundingClientRect();
+  return [e.clientX-r.left,e.clientY-r.top];
+}
+canvas.addEventListener('pointerdown',e=>{
+  const [x,y]=poloha(e);
+  const u=najdiUchop(x,y);
+  if(!u) return;
+  try{ canvas.setPointerCapture(e.pointerId); }catch(_){}
+  const p=mag.posun[mag.usporadani]||{dx:0,dy:0,roztah:0};
+  tahne={typ:u.typ,x,y,posunuto:false,U:ohm.U,R:ohm.R,
+         Rz:[...zapoj.R],dx:p.dx,dy:p.dy,roztah:p.roztah};
+});
+canvas.addEventListener('pointermove',e=>{
+  const [x,y]=poloha(e);
+  if(!tahne){
+    const u=najdiUchop(x,y);
+    if((u?u.typ:null)!==podKurzorem){ podKurzorem=u?u.typ:null; magPrekresli=true; }
+    canvas.style.cursor=u?'grab':'default';
+    return;
+  }
+  if(Math.hypot(x-tahne.x,y-tahne.y)>4) tahne.posunuto=true;
+  if(!tahne.posunuto) return;
+  canvas.style.cursor='grabbing';
+  if(rezim==='ohm') ohm.tahni(tahne.typ,x,y,tahne);
+  else if(rezim==='zapoj'&&tahne.typ.startsWith('zarovka')) zapoj.tahni(tahne.typ,x,y,{...tahne,R:tahne.Rz});
+  else if(rezim==='mag'&&tahne.typ.startsWith('vodic')) mag.tahni(tahne.typ,x,y,tahne);
+  else if(rezim==='indukce'&&tahne.typ==='magnet') indukce.tahni(tahne.typ,x,y,tahne);
+});
+canvas.addEventListener('pointerup',e=>{
+  if(!tahne) return;
+  if(!tahne.posunuto){          // krátké klepnutí = přepnutí, ne tažení
+    if(rezim==='ohm'&&tahne.typ==='spinac'){ $('spinac').checked=!$('spinac').checked; ohm.nacti(); }
+    else if(rezim==='zapoj'&&tahne.typ.startsWith('zarovka')) {const i=+tahne.typ.slice(7); zapoj.zapnuto[i]=!zapoj.zapnuto[i];}
+    else if(rezim==='mag'&&tahne.typ.startsWith('vodic')) mag.klikVodic(tahne.typ);
+    else if(rezim==='indukce'&&tahne.typ==='magnet'){ indukce.polarita*=-1; indukce.tokMinuly=null; }
+    else if(rezim==='spotreba'&&tahne.typ.startsWith('spotrebic')){
+      spotreba.vybrany=+tahne.typ.slice(9);
+      $('hodiny').value=SPOTREBICE[spotreba.vybrany].h;
+      spotreba.nacti();
+    }
+  }
+  tahne=null; canvas.style.cursor='default';
+});
+canvas.addEventListener('pointercancel',()=>{tahne=null;canvas.style.cursor='default';});
+
+// kolečko myši mění veličinu prvku pod kurzorem
+canvas.addEventListener('wheel',e=>{
+  const [x,y]=poloha(e);
+  const u=najdiUchop(x,y);
+  let id=null;
+  if(u){
+    if(u.typ==='baterie') id='u';
+    else if(u.typ==='zarovka') id='r';
+    else if(u.typ.startsWith('zarovka')) id='r'+(+u.typ.slice(7)+1);
+    else if(u.typ.startsWith('vodic')) id='im';
+  }
+  if(!id) id={ohm:'u',zapoj:'uz',mag:'im',indukce:'zavityI',spotreba:'hodiny'}[rezim];
+  const el=$(id), krok=(+el.step||1)*(e.deltaY<0?1:-1)*(e.shiftKey?5:1);
+  el.value=Math.max(+el.min,Math.min(+el.max,+el.value+krok));
+  el.dispatchEvent(new Event('input',{bubbles:true}));
+  e.preventDefault();
+},{passive:false});
+
+// šipky ←/→ ladí hlavní veličinu záložky
+addEventListener('keydown',e=>{
+  if(e.target.tagName==='INPUT'||e.target.tagName==='SELECT') return;
+  const krok=e.key==='ArrowLeft'?-1:e.key==='ArrowRight'?1:0;
+  if(!krok) return;
+  const el=$({ohm:'u',zapoj:'uz',mag:'im',indukce:'zavityI',spotreba:'hodiny'}[rezim]);
+  el.value=Math.max(+el.min,Math.min(+el.max,+el.value+krok*(+el.step||1)*(e.shiftKey?5:1)));
+  el.dispatchEvent(new Event('input',{bubbles:true}));
+  e.preventDefault();
+});
+
+function smycka(t){
+  if(lastT===null) lastT=t;
+  const dt=Math.min(0.05,(t-lastT)/1000); lastT=t;
+  resize();
+  const w=canvas.clientWidth, h=canvas.clientHeight;
+  if(rezim==='ohm'){ ctx.clearRect(0,0,w,h); uchopy=[]; ohm.krok(dt); ohm.kresli(w,h); $('stav').innerHTML=ohm.stav(); }
+  else if(rezim==='zapoj'){ ctx.clearRect(0,0,w,h); uchopy=[]; zapoj.kresli(w,h); $('stav').innerHTML=zapoj.stav(); }
+  else if(rezim==='indukce'){ ctx.clearRect(0,0,w,h); uchopy=[]; indukce.krok(dt); indukce.kresli(w,h); $('stav').innerHTML=indukce.stav(); }
+  else if(rezim==='spotreba'){ ctx.clearRect(0,0,w,h); uchopy=[]; spotreba.kresli(w,h); $('stav').innerHTML=spotreba.stav(); }
+  else if(magPrekresli){
+    // siločáry se počítají integrací – scéna je statická, stačí překreslit při změně
+    ctx.clearRect(0,0,w,h); uchopy=[]; mag.kresli(w,h); $('stav').innerHTML=mag.stav(); magPrekresli=false;
+  }
+  requestAnimationFrame(smycka);
+}
+
+resize(); ohm.nacti(); zapoj.nacti(); mag.nacti(); indukce.nacti(); spotreba.nacti(); prepni('ohm');
+requestAnimationFrame(smycka);
+/* rozbalovací seznamy nahrazujeme řadou tlačítek – míň klikání, všechny volby na očích */
+function prepinace(){
+  document.querySelectorAll('select.jakoTlacitka').forEach(sel=>{
+    const box=document.createElement('div');
+    box.className='prepinac';
+    const obnov=()=>[...sel.options].forEach(o=>o.tlacitko.classList.toggle('zap',o.value===sel.value));
+    [...sel.options].forEach(o=>{
+      const b=document.createElement('button');
+      b.textContent=o.dataset.krat||o.text;
+      b.onclick=()=>{
+        sel.value=o.value;
+        sel.dispatchEvent(new Event('input',{bubbles:true}));
+        sel.dispatchEvent(new Event('change',{bubbles:true}));
+        obnov();
+      };
+      o.tlacitko=b; box.appendChild(b);
+    });
+    sel.after(box); sel.classList.add('skryto'); sel.obnovPrepinac=obnov; obnov();
+    sel.addEventListener('change',obnov);
+  });
+}
+prepinace();
+</script>
+</body>
+</html>

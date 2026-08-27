@@ -1,0 +1,404 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Písmena a hlásky</title>
+  <link rel="stylesheet" href="../common.css">
+  <script src="../theme.js"></script>
+  <script src="../rec.js"></script>
+  <script src="../uloha.js"></script>
+  <style>
+    body { background-color: var(--bg-deep); padding: 20px clamp(12px, 3vw, 36px); min-height: 100vh; }
+    h1 { font-size: 1.35rem; margin-bottom: 3px; }
+    .podtitul { color: var(--text-muted); font-size: 0.86rem; margin-bottom: 14px; }
+
+    .rezimy { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+    .rezimy button {
+      background: var(--bg-control); border: 1px solid var(--border-strong); color: var(--text-muted);
+      border-radius: 6px; padding: 8px 14px; font-size: 0.86rem; font-family: inherit; cursor: pointer;
+    }
+    .rezimy button.active { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+
+    .plocha {
+      background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius);
+      max-width: 860px; padding: 22px; text-align: center; min-height: 330px;
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px;
+    }
+    .zadani { color: var(--text-muted); font-size: 0.95rem; }
+    .obrazek { font-size: clamp(3.5rem, 14vw, 6rem); line-height: 1; user-select: none; }
+
+    /* Hlásky / písmena ve slově */
+    .hlasky { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; }
+    .hlaska {
+      min-width: 62px; padding: 12px 8px; border-radius: 10px;
+      background: var(--bg-elevated); border: 2px solid var(--border);
+      font-size: clamp(1.6rem, 6vw, 2.4rem); font-weight: 700; letter-spacing: 0.02em;
+      font-family: inherit; color: var(--text); cursor: pointer; transition: all 0.15s ease;
+    }
+    .hlaska.tichá { color: var(--text-faint); }
+    .hlaska.aktivni { background: var(--accent); border-color: var(--accent); color: #fff; transform: translateY(-4px); }
+    .hlaska.dvojznak { border-color: var(--warn); }
+
+    /* Skládání slova */
+    .stavba {
+      display: flex; gap: 8px; justify-content: center; flex-wrap: wrap;
+      min-height: 74px; align-items: center;
+    }
+    .misto {
+      width: 58px; height: 68px; border-radius: 10px; border: 2px dashed var(--border-strong);
+      display: flex; align-items: center; justify-content: center;
+      font-size: clamp(1.5rem, 5vw, 2.2rem); font-weight: 700; color: var(--text);
+    }
+    .misto.plne { border-style: solid; background: var(--bg-elevated); }
+    .nabidka { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+    .nabidka button {
+      min-width: 56px; padding: 12px 6px; border-radius: 10px;
+      background: var(--bg-control); border: 2px solid var(--border-strong); color: var(--text);
+      font-size: clamp(1.4rem, 5vw, 2rem); font-weight: 700; font-family: inherit; cursor: pointer;
+    }
+    .nabidka button:hover:not(:disabled) { border-color: var(--accent); }
+    .nabidka button:disabled { opacity: 0.25; cursor: default; }
+
+    /* Výběr z možností */
+    .moznosti { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+    .moznosti button {
+      min-width: 84px; padding: 16px 12px; border-radius: 12px;
+      background: var(--bg-elevated); border: 2px solid var(--border); color: var(--text);
+      font-size: clamp(1.6rem, 6vw, 2.3rem); font-weight: 700; font-family: inherit; cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    .moznosti button:hover:not(:disabled) { border-color: var(--accent); transform: translateY(-3px); }
+    .moznosti button.spravne { background: var(--ok); border-color: var(--ok); color: #fff; }
+    .moznosti button.spatne { background: var(--danger); border-color: var(--danger); color: #fff; }
+    .moznosti button:disabled { cursor: default; }
+    .moznosti button.mala { font-size: clamp(1.3rem, 4vw, 1.8rem); min-width: 74px; }
+
+    .odezva { font-size: 1.05rem; font-weight: 600; min-height: 28px; }
+    .odezva.ok { color: var(--ok); }
+    .odezva.chyba { color: var(--danger); }
+
+    .ovladani {
+      display: flex; gap: 10px; align-items: center; margin-top: 14px; max-width: 860px; flex-wrap: wrap;
+    }
+    .ovladani button {
+      background: var(--bg-control); border: 1px solid var(--border-strong); color: var(--text);
+      border-radius: 6px; padding: 10px 18px; font-size: 0.92rem; font-family: inherit; cursor: pointer;
+    }
+    .ovladani button.hlavni { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+    .ovladani button.hlavni:hover { background: var(--accent-hover); }
+    .skore { margin-left: auto; color: var(--text-muted); font-size: 0.9rem; font-variant-numeric: tabular-nums; }
+    .skore b { color: var(--ok); }
+    .napoveda { max-width: 860px; margin-top: 12px; color: var(--text-faint); font-size: 0.8rem; line-height: 1.5; }
+  </style>
+</head>
+<body>
+  <h1>🔤 Písmena a hlásky</h1>
+  <p class="podtitul">Pro 1. ročník: rozlož slovo na hlásky, slož ho zpátky a poznej první i poslední hlásku.</p>
+
+  <div class="rezimy" id="rezimy">
+    <button data-rezim="rozklad" class="active">🔊 Rozlož slovo</button>
+    <button data-rezim="skladani">🧩 Slož slovo</button>
+    <button data-rezim="prvni">🅰️ První hláska</button>
+    <button data-rezim="posledni">🆉 Poslední hláska</button>
+    <button data-rezim="velikost">Aa Velké a malé</button>
+  </div>
+
+  <div class="plocha" id="plocha"></div>
+
+  <div class="ovladani">
+    <button class="hlavni" id="btnDalsi">Další →</button>
+    <button id="btnCist" title="Přečíst nahlas">🔊 Přečti</button>
+    <span class="skore" id="skore"></span>
+  </div>
+
+  <p class="napoveda">
+    <b>Hláska</b> je to, co slyšíme. Písmena <b>CH</b> se čtou jako jedna hláska a
+    <b>OU</b>, <b>AU</b> jsou dvojhlásky – v rozkladu jsou proto pohromadě a mají žlutý rámeček.
+  </p>
+
+<script>
+const $ = id => document.getElementById(id);
+const KLIC = 'nodus_cj1_pismena';
+
+/* ---- Slovní zásoba: obrázek + slovo velkými písmeny ---------------------- */
+const SLOVA = [
+  { e: '🐶', s: 'PES' },   { e: '🐱', s: 'KOČKA' }, { e: '🏠', s: 'DŮM' },
+  { e: '🌳', s: 'STROM' }, { e: '🚗', s: 'AUTO' },  { e: '🍎', s: 'JABLKO' },
+  { e: '🐟', s: 'RYBA' },  { e: '🌞', s: 'SLUNCE' },{ e: '🌷', s: 'TULIPÁN' },
+  { e: '🐄', s: 'KRÁVA' }, { e: '🥛', s: 'MLÉKO' }, { e: '🍞', s: 'CHLÉB' },
+  { e: '🚌', s: 'AUTOBUS' },{ e: '✏️', s: 'TUŽKA' },{ e: '📚', s: 'KNIHA' },
+  { e: '🧦', s: 'PONOŽKA' },{ e: '🐭', s: 'MYŠ' },  { e: '🦊', s: 'LIŠKA' },
+  { e: '🦁', s: 'LEV' }    ,{ e: '🌧️', s: 'DÉŠŤ' }, { e: '❄️', s: 'VLOČKA' },
+  { e: '🍄', s: 'HŘIB' },  { e: '🥕', s: 'MRKEV' }, { e: '🌛', s: 'NOC' }  ,
+  { e: '🐝', s: 'VČELA' }, { e: '🦋', s: 'MOTÝL' }, { e: '🐘', s: 'SLON' },
+  { e: '🎈', s: 'BALÓN' }, { e: '🧸', s: 'MEDVÍDEK' }, { e: '🚲', s: 'KOLO' },
+  { e: '🪑', s: 'ŽIDLE' }, { e: '👟', s: 'BOTA' },  { e: '🧀', s: 'SÝR' },
+  { e: '🐔', s: 'SLEPICE' },{ e: '🌊', s: 'VODA' }, { e: '🔥', s: 'OHEŇ' },
+  { e: '🐸', s: 'ŽÁBA' },  { e: '🍐', s: 'HRUŠKA' }, { e: '🥔', s: 'BRAMBORA' },
+  { e: '🧅', s: 'CIBULE' },{ e: '🌽', s: 'KUKUŘICE' },{ e: '🍇', s: 'HROZNY' },
+  { e: '🐑', s: 'OVCE' },  { e: '🐖', s: 'PRASE' },  { e: '🐴', s: 'KŮŇ' },
+  { e: '🐇', s: 'ZAJÍC' }, { e: '🦌', s: 'SRNA' },   { e: '🐺', s: 'VLK' },
+  { e: '🦉', s: 'SOVA' },  { e: '🐢', s: 'ŽELVA' },  { e: '🐍', s: 'HAD' },
+  { e: '🦆', s: 'KACHNA' },{ e: '🐓', s: 'KOHOUT' }, { e: '🐜', s: 'MRAVENEC' },
+  { e: '🐞', s: 'BERUŠKA' },{ e: '🕷️', s: 'PAVOUK' },{ e: '🏫', s: 'ŠKOLA' },
+  { e: '🪟', s: 'OKNO' },  { e: '🚪', s: 'DVEŘE' },  { e: '🛏️', s: 'POSTEL' },
+  { e: '🥄', s: 'LŽÍCE' }, { e: '🍴', s: 'VIDLIČKA' },{ e: '🧢', s: 'ČEPICE' },
+  { e: '🧣', s: 'ŠÁLA' },  { e: '🌂', s: 'DEŠTNÍK' },{ e: '⌚', s: 'HODINY' },
+  { e: '🔔', s: 'ZVONEK' },{ e: '🎸', s: 'KYTARA' }, { e: '🥁', s: 'BUBEN' },
+  { e: '✂️', s: 'NŮŽKY' }, { e: '🖍️', s: 'PASTELKA' },{ e: '🏀', s: 'MÍČ' },
+  { e: '🚀', s: 'RAKETA' },{ e: '⛵', s: 'LOĎ' },    { e: '🚂', s: 'VLAK' },
+  { e: '✈️', s: 'LETADLO' },{ e: '🌉', s: 'MOST' },  { e: '🏰', s: 'HRAD' },
+  { e: '🎂', s: 'DORT' },  { e: '🍬', s: 'BONBON' }, { e: '🌵', s: 'KAKTUS' },
+];
+
+const ABECEDA = [...'AÁBCČDĎEÉĚFGHIÍJKLMNŇOÓPRŘSŠTŤUÚŮVYÝZŽ'];
+
+/* Rozklad na hlásky: CH je jedna hláska, OU a AU jsou dvojhlásky. */
+function naHlasky(slovo) {
+  const h = [];
+  for (let i = 0; i < slovo.length; i++) {
+    const dva = slovo.slice(i, i + 2);
+    if (dva === 'CH' || dva === 'OU' || dva === 'AU') { h.push(dva); i++; }
+    else h.push(slovo[i]);
+  }
+  return h;
+}
+
+function zamichej(pole) {
+  const p = [...pole];
+  for (let i = p.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [p[i], p[j]] = [p[j], p[i]];
+  }
+  return p;
+}
+const nahodne = pole => pole[Math.floor(Math.random() * pole.length)];
+
+// čtení nahlas řeší sdílený rec.js – pozná i chybějící hlas v systému
+const precti = (text, rychlost = 0.8) => Rec.mluv(text, { rychlost });
+
+/* ---- Skóre ---------------------------------------------------------------- */
+let spravne = 0, pokusy = 0;
+function nactiSkore() {
+  try { return JSON.parse(localStorage.getItem(KLIC)) || { spravne: 0, pokusy: 0 }; }
+  catch { return { spravne: 0, pokusy: 0 }; }
+}
+function ulozSkore() {
+  try { localStorage.setItem(KLIC, JSON.stringify({ spravne, pokusy })); } catch { /* bez paměti */ }
+}
+function zobrazSkore() {
+  $('skore').innerHTML = `Správně: <b>${spravne}</b> z ${pokusy}`;
+}
+{ const s = nactiSkore(); spravne = s.spravne; pokusy = s.pokusy; }
+
+function vyhodnot(napoprve) {
+  pokusy++;
+  if (napoprve) spravne++;
+  ulozSkore();
+  zobrazSkore();
+}
+
+/* ---- Režimy --------------------------------------------------------------- */
+let rezim = 'rozklad';
+let aktualni = null;
+
+function novaUloha() {
+  const p = $('plocha');
+  p.innerHTML = '';
+  aktualni = nahodne(SLOVA);
+  ({ rozklad, skladani, prvni, posledni, velikost })[rezim]();
+}
+
+/* Rozlož slovo – klepnutím se hláska přečte, tlačítko projde celé slovo */
+function rozklad() {
+  const p = $('plocha');
+  const hlasky = naHlasky(aktualni.s);
+  p.innerHTML = `<div class="zadani">Klepni na hlásky zleva doprava a přečti si slovo.</div>
+                 <div class="obrazek">${aktualni.e}</div>`;
+  const rada = document.createElement('div');
+  rada.className = 'hlasky';
+  hlasky.forEach((h, i) => {
+    const b = document.createElement('button');
+    b.className = 'hlaska' + (h.length > 1 ? ' dvojznak' : '');
+    b.textContent = h;
+    b.addEventListener('click', () => {
+      rada.querySelectorAll('.hlaska').forEach(x => x.classList.remove('aktivni'));
+      b.classList.add('aktivni');
+      precti(h, 0.6);
+    });
+    rada.appendChild(b);
+  });
+  const info = document.createElement('div');
+  info.className = 'odezva';
+  info.textContent = `Slovo ${aktualni.s} má ${hlasky.length} ${hlasky.length < 5 ? 'hlásky' : 'hlásek'}.`;
+  p.append(rada, info);
+  // přehrávání po hláskách má smysl jen se zapnutým čtením nahlas
+  if (Rec.zapnuto()) {
+    const prehrat = document.createElement('button');
+    prehrat.className = 'hlaska';
+    prehrat.style.minWidth = 'auto';
+    prehrat.style.fontSize = '1rem';
+    prehrat.style.padding = '10px 16px';
+    prehrat.textContent = '▶️ Přehrát po hláskách';
+    prehrat.addEventListener('click', () => prehrajPoHlaskach(rada, hlasky));
+    p.insertBefore(prehrat, info);
+  }
+}
+
+function prehrajPoHlaskach(rada, hlasky) {
+  const prvky = [...rada.querySelectorAll('.hlaska')];
+  prvky.forEach(x => x.classList.remove('aktivni'));
+  let i = 0;
+  const krok = () => {
+    if (i >= prvky.length) {
+      prvky.forEach(x => x.classList.remove('aktivni'));
+      precti(aktualni.s, 0.75);
+      return;
+    }
+    prvky.forEach(x => x.classList.remove('aktivni'));
+    prvky[i].classList.add('aktivni');
+    precti(hlasky[i], 0.6);
+    i++;
+    setTimeout(krok, 900);
+  };
+  krok();
+}
+
+/* Slož slovo – přetahování je pro prvňáka těžké, proto klepání na písmena */
+function skladani() {
+  const p = $('plocha');
+  const hlasky = naHlasky(aktualni.s);
+  p.innerHTML = `<div class="zadani">Slož slovo podle obrázku – klepej na písmena ve správném pořadí.</div>
+                 <div class="obrazek">${aktualni.e}</div>`;
+  const stavba = document.createElement('div');
+  stavba.className = 'stavba';
+  hlasky.forEach(() => {
+    const m = document.createElement('div');
+    m.className = 'misto';
+    stavba.appendChild(m);
+  });
+  const nabidka = document.createElement('div');
+  nabidka.className = 'nabidka';
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  let poziceKam = 0;
+  let chyboval = false;
+
+  zamichej(hlasky).forEach(h => {
+    const b = document.createElement('button');
+    b.textContent = h;
+    b.addEventListener('click', () => {
+      if (poziceKam >= hlasky.length) return;
+      if (h === hlasky[poziceKam]) {
+        const m = stavba.children[poziceKam];
+        m.textContent = h;
+        m.classList.add('plne');
+        b.disabled = true;
+        poziceKam++;
+        precti(h, 0.6);
+        if (poziceKam === hlasky.length) {
+          odezva.className = 'odezva ok';
+          odezva.textContent = '🎉 Výborně! ' + aktualni.s;
+          vyhodnot(!chyboval);
+          setTimeout(() => precti(aktualni.s, 0.75), 250);
+          setTimeout(novaUloha, Uloha.PRODLEVA + 500);
+        }
+      } else {
+        chyboval = true;
+        Uloha.trhni(b);
+        odezva.className = 'odezva chyba';
+        odezva.textContent = 'Zkus jiné písmeno.';
+      }
+    });
+    nabidka.appendChild(b);
+  });
+  p.append(stavba, nabidka, odezva);
+}
+
+/* První / poslední hláska – výběr ze čtyř možností */
+function hlaskaUloha(kdePrvni) {
+  const p = $('plocha');
+  const hlasky = naHlasky(aktualni.s);
+  const spravnaH = kdePrvni ? hlasky[0] : hlasky[hlasky.length - 1];
+  const jine = zamichej(ABECEDA.filter(x => x !== spravnaH)).slice(0, 3);
+  const volby = zamichej([spravnaH, ...jine]);
+  p.innerHTML = `<div class="zadani">Kterou hláskou slovo ${kdePrvni ? 'začíná' : 'končí'}?</div>
+                 <div class="obrazek">${aktualni.e}</div>
+                 <div class="zadani"><b>${aktualni.s}</b></div>`;
+  const m = document.createElement('div');
+  m.className = 'moznosti';
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  const stav = { chyboval: false, hotovo: false };
+  volby.forEach(v => {
+    const b = document.createElement('button');
+    b.textContent = v;
+    b.addEventListener('click', () => Uloha.odpoved({
+      prvek: b,
+      spravne: v === spravnaH,
+      stav, odezva,
+      poSpravne: napoprve => { vyhodnot(napoprve); precti(spravnaH, 0.6); },
+      dalsi: novaUloha,
+    }));
+    m.appendChild(b);
+  });
+  p.append(m, odezva);
+  precti(aktualni.s, 0.75);
+}
+const prvni = () => hlaskaUloha(true);
+const posledni = () => hlaskaUloha(false);
+
+/* Velké a malé písmeno – dvojice tiskacích tvarů */
+function velikost() {
+  const p = $('plocha');
+  const velke = nahodne(ABECEDA);
+  const jina = zamichej(ABECEDA.filter(x => x !== velke)).slice(0, 3);
+  const volby = zamichej([velke, ...jina]).map(x => x.toLowerCase());
+  p.innerHTML = `<div class="zadani">Najdi malé písmeno k velkému:</div>
+                 <div class="obrazek">${velke}</div>`;
+  const m = document.createElement('div');
+  m.className = 'moznosti';
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  const stav = { chyboval: false, hotovo: false };
+  volby.forEach(v => {
+    const b = document.createElement('button');
+    b.className = 'mala';
+    b.textContent = v;
+    b.addEventListener('click', () => Uloha.odpoved({
+      prvek: b,
+      spravne: v === velke.toLowerCase(),
+      stav, odezva,
+      poSpravne: napoprve => { vyhodnot(napoprve); precti(velke, 0.6); },
+      dalsi: novaUloha,
+    }));
+    m.appendChild(b);
+  });
+  p.append(m, odezva);
+}
+
+/* ---- Ovládání ------------------------------------------------------------- */
+document.querySelectorAll('#rezimy button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#rezimy button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  rezim = b.dataset.rezim;
+  novaUloha();
+}));
+$('btnDalsi').addEventListener('click', novaUloha);
+$('btnCist').addEventListener('click', () => {
+  if (rezim === 'velikost') precti($('plocha').querySelector('.obrazek').textContent.trim(), 0.6);
+  else precti(aktualni.s, 0.75);
+});
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === 'Enter') { e.preventDefault(); novaUloha(); }
+});
+
+Rec.hlidejTlacitko($('btnCist'));
+Rec.poznamkaOHlasu(document.querySelector('.napoveda').parentNode);
+
+zobrazSkore();
+novaUloha();
+</script>
+</body>
+</html>

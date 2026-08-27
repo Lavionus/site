@@ -6,6 +6,7 @@
 <title>🃏 Solitaire</title>
 <link rel="stylesheet" href="../common.css">
 <script src="../theme.js"></script>
+<script src="../rekord.js" defer></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1f4e2e;color:var(--text);min-height:100vh;padding:14px}
@@ -31,7 +32,9 @@ h1{font-size:1.4rem;margin-bottom:10px;font-weight:600;text-align:center;color:#
   <h1>🃏 Solitaire (Klondike)</h1>
   <div class="stat">
     <span>Tahů: <b id="tahy">0</b></span>
+    <button class="btn" id="zpet" title="Vrátit poslední tah (Ctrl+Z)">↶ Zpět</button>
     <button class="btn" id="nova">↺ Nová hra</button>
+    <span id="rekordBox"></span>
   </div>
   <div class="horni">
     <div class="slot" id="balicek" title="Klikni pro otočení karty"></div>
@@ -51,6 +54,26 @@ const BARVY=['♠','♥','♦','♣'];
 const HODN=['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
 const jeCervena=b=>b===1||b===2;
 let balicek,odkladaci,zaklady,sloupce,vybrano,tahu;
+let historie=[],rek=null;
+const KLIC_HRA='webapp_hra_solitaire_stav';
+
+/* Stav partie je malý (52 karet), takže si ho můžeme dovolit ukládat celý –
+   jak pro tlačítko Zpět, tak pro obnovení rozehrané hry po zavření záložky. */
+function stav(){return JSON.stringify({balicek,odkladaci,zaklady,sloupce,tahu});}
+function nastav(txt){
+  const o=JSON.parse(txt);
+  balicek=o.balicek;odkladaci=o.odkladaci;zaklady=o.zaklady;sloupce=o.sloupce;tahu=o.tahu;
+  vybrano=null;
+}
+function ulozHru(){
+  try{localStorage.setItem(KLIC_HRA,stav());}catch{/* soukromé okno – nevadí */}
+}
+function aktualizujZpet(){$('zpet').disabled=historie.length===0;}
+function zpet(){
+  if(!historie.length)return;
+  nastav(historie.pop());
+  aktualizujZpet();ulozHru();render();
+}
 
 function novaHra(){
   const karty=[];
@@ -62,7 +85,8 @@ function novaHra(){
     sloupce[s][sloupce[s].length-1].licem=true;
   }
   balicek=karty;odkladaci=[];zaklady=[[],[],[],[]];
-  vybrano=null;tahu=0;
+  vybrano=null;tahu=0;historie=[];
+  aktualizujZpet();ulozHru();
   render();
 }
 function kartaHtml(k,vybr){
@@ -134,7 +158,7 @@ function zkusAutoZaklad(k){
   for(let z=0;z<4;z++)if(muzeNaZaklad(k,z))return z;
   return -1;
 }
-document.addEventListener('click',e=>{
+function obsluhaKliku(e){
   const karta=e.target.closest('.karta');
   // balíček
   if(e.target.closest('#balicek')){
@@ -193,12 +217,49 @@ document.addEventListener('click',e=>{
     }
   }
   vybrano=null;render();
+}
+
+document.addEventListener('click',e=>{
+  if(e.target.closest('#zpet')||e.target.closest('#nova')||e.target.closest('#vyhra'))return;
+  const pred=stav();
+  obsluhaKliku(e);
+  // do historie ukládáme jen skutečnou změnu, ne pouhé přeznačení karty
+  if(stav()!==pred){
+    historie.push(pred);
+    if(historie.length>300)historie.shift();
+    aktualizujZpet();ulozHru();
+  }
 });
+document.addEventListener('keydown',e=>{
+  if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'){e.preventDefault();zpet();}
+});
+$('zpet').onclick=zpet;
+
 function zkontrolujVyhru(){
-  if(zaklady.every(z=>z.length===13))$('vyhra').classList.add('zobraz');
+  if(!zaklady.every(z=>z.length===13))return;
+  $('vyhra').classList.add('zobraz');
+  // rekord = nejmenší počet tahů k výhře
+  if(rek&&rek.zapis(tahu)){
+    $('vyhra').querySelector('h2').textContent='🏆 Výhra a nový rekord: '+tahu+' tahů!';
+  }else{
+    $('vyhra').querySelector('h2').textContent='🎉 Výhra na '+tahu+' tahů!';
+  }
+  try{localStorage.removeItem(KLIC_HRA);}catch{/* nevadí */}
 }
 $('nova').onclick=novaHra;
-novaHra();
+
+window.addEventListener('DOMContentLoaded',()=>{
+  if(typeof Rekord!=='undefined'){
+    rek=Rekord.sleduj('webapp_hra_solitaire',{vyssiLepsi:false,popisek:'Nejméně tahů',format:v=>v+' tahů'});
+    rek.prvek($('rekordBox'));
+  }
+  let obnoveno=false;
+  try{
+    const ulozene=localStorage.getItem(KLIC_HRA);
+    if(ulozene){nastav(ulozene);historie=[];aktualizujZpet();render();obnoveno=true;}
+  }catch{/* poškozený záznam – prostě rozdáme znovu */}
+  if(!obnoveno)novaHra();
+});
 </script>
 </body>
 </html>

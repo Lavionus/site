@@ -1,0 +1,310 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lineární rovnice</title>
+  <link rel="stylesheet" href="../common.css">
+  <script src="../theme.js"></script>
+  <style>
+    body { background-color: var(--bg-deep); padding: 24px clamp(14px, 3vw, 40px); min-height: 100vh; }
+    h1 { font-size: 1.4rem; margin-bottom: 4px; }
+    .podtitul { color: var(--text-muted); font-size: 0.88rem; margin-bottom: 16px; }
+    .rezimy { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+    .rezimy button {
+      background: var(--bg-control); border: 1px solid var(--border-strong); color: var(--text-muted);
+      border-radius: 6px; padding: 7px 13px; font-size: 0.84rem; cursor: pointer;
+    }
+    .rezimy button.active { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+    .karta { background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 26px; max-width: 640px; }
+    .rovnice { font-size: clamp(1.8rem, 7vw, 2.6rem); font-weight: 700; text-align: center; margin-bottom: 22px; font-variant-numeric: tabular-nums; }
+    .odpovedni { display: flex; gap: 10px; align-items: center; justify-content: center; flex-wrap: wrap; }
+    .odpovedni .x { font-size: 1.5rem; font-style: italic; }
+    input[type=number] {
+      background: var(--bg-input); border: 2px solid var(--border-strong); border-radius: 8px;
+      color: var(--text); font-size: 1.3rem; text-align: center; width: 130px; padding: 9px;
+    }
+    input:focus { outline: none; border-color: var(--accent); }
+    .potvrdit {
+      background: var(--accent); border: none; color: #fff; border-radius: 8px;
+      padding: 11px 26px; font-size: 0.95rem; font-weight: 600; cursor: pointer;
+    }
+    .potvrdit:hover { background: var(--accent-hover); }
+    .zprava { margin-top: 14px; min-height: 1.5rem; font-size: 0.98rem; text-align: center; }
+    .zprava.ok { color: var(--ok); } .zprava.spatne { color: var(--danger); }
+    .reseni { margin-top: 12px; padding: 12px 16px; background: var(--bg-elevated); border-left: 3px solid var(--accent); border-radius: 6px; font-size: 1rem; color: var(--text-muted); line-height: 2; display: none; font-variant-numeric: tabular-nums; }
+    .stav { display: flex; justify-content: space-between; max-width: 640px; margin-top: 12px; color: var(--text-muted); font-size: 0.9rem; }
+    .serie { color: var(--warn); }
+    i { font-style: italic; }
+
+    /* ---- model vah ---- */
+    .vahy-obal { max-width: 640px; }
+    .vahy { width: 100%; touch-action: none; }
+    .vahy .stojan { fill: var(--border-strong); }
+    .vahy .rameno { stroke: var(--text-muted); stroke-width: 6; stroke-linecap: round; }
+    .vahy .lanko { stroke: var(--border-strong); stroke-width: 1.6; }
+    .vahy .miska { fill: var(--bg-elevated); stroke: var(--border-strong); stroke-width: 2.5; }
+    .vahy .kostka-x { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 2; }
+    .vahy .kostka-x text { fill: var(--accent); }
+    .vahy .zavazi { fill: rgba(230,170,60,0.3); stroke: var(--warn); stroke-width: 2; }
+    .vahy .stitek { font-size: 13px; font-weight: 700; text-anchor: middle; }
+    .vahy .stitek.x { fill: var(--accent); }
+    .vahy .stitek.j { fill: var(--warn); }
+    .vahy .popis { fill: var(--text-faint); font-size: 12px; text-anchor: middle; }
+
+    .rovnice-zive {
+      font-size: clamp(1.4rem, 5.5vw, 2rem); font-weight: 700; text-align: center;
+      margin: 6px 0 14px; font-variant-numeric: tabular-nums; color: var(--text);
+    }
+    .rovnice-zive .zvyraz { color: var(--accent); }
+    .operace { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+    .operace button {
+      background: var(--bg-control); border: 1px solid var(--border-strong); color: var(--text);
+      border-radius: 8px; padding: 9px 15px; font-size: 0.9rem; font-family: inherit; cursor: pointer;
+    }
+    .operace button:hover:not(:disabled) { border-color: var(--accent); }
+    .operace button:disabled { opacity: 0.32; cursor: default; }
+    .operace button.hotovo { background: var(--ok); border-color: var(--ok); color: #fff; font-weight: 600; }
+    .hlaska { text-align: center; margin-top: 14px; min-height: 1.6rem; font-size: 0.95rem; color: var(--text-muted); }
+    .hlaska.ok { color: var(--ok); font-weight: 600; }
+    .kroky-vahy {
+      margin-top: 12px; padding: 10px 14px; background: var(--bg-elevated);
+      border-left: 3px solid var(--accent); border-radius: 6px;
+      font-size: 0.92rem; color: var(--text-muted); line-height: 1.9;
+      font-variant-numeric: tabular-nums; max-height: 168px; overflow-y: auto;
+    }
+    .skryto { display: none !important; }
+  </style>
+</head>
+<body>
+  <h1>🧮 Lineární rovnice</h1>
+  <p class="podtitul">Řešení rovnic o jedné neznámé (8.–9. ročník ZŠ). Všechny mají celočíselné řešení.</p>
+
+  <div class="rezimy" id="rezimy">
+    <button data-rezim="vahy">⚖️ Váhy</button>
+    <button data-uroven="1" class="active">x + a = b</button>
+    <button data-uroven="2">a·x = b</button>
+    <button data-uroven="3">a·x + b = c</button>
+    <button data-uroven="4">a·x + b = c·x + d</button>
+    <button data-uroven="5">se závorkou</button>
+  </div>
+
+  <div class="karta vahy-obal skryto" id="kartaVahy">
+    <p class="podtitul" style="margin-bottom:10px">
+      Rovnice jsou váhy v rovnováze. Co uděláš s jednou miskou, musíš udělat i s druhou —
+      jinak se váhy převáží. Odebírej a děl tak dlouho, až na levé misce zůstane jedno <i>x</i>.
+    </p>
+    <div class="rovnice-zive" id="rovniceZive"></div>
+    <svg class="vahy" id="svgVahy" viewBox="0 0 620 300" role="img"
+         aria-label="Váhy znázorňující rovnici"></svg>
+    <div class="operace" id="operace"></div>
+    <div class="hlaska" id="hlaskaVahy"></div>
+    <div class="kroky-vahy" id="krokyVahy"></div>
+  </div>
+
+  <div class="karta" id="kartaUloha">
+    <div class="rovnice" id="rovnice"></div>
+    <div class="odpovedni">
+      <span class="x">x =</span>
+      <input type="number" id="odpoved" autocomplete="off">
+      <button class="potvrdit" id="btnPotvrdit">Potvrdit</button>
+    </div>
+    <div class="zprava" id="zprava"></div>
+    <div class="reseni" id="reseni"></div>
+  </div>
+  <div class="stav" id="stavLista">
+    <span class="serie" id="serie"></span>
+    <span id="skore"></span>
+  </div>
+
+<script>
+const $ = id => document.getElementById(id);
+let uroven = 1, x, zapis = '', kroky = [], spravne = 0, celkem = 0, serie = 0, vyhodnoceno = false;
+
+const ni = (od, doC) => od + Math.floor(Math.random() * (doC - od + 1));      // celé číslo v rozsahu
+const neNula = (od, doC) => { let v; do { v = ni(od, doC); } while (!v); return v; };
+const clen = (k, prvni) => {                                                  // k·x hezky zapsaný
+  const abs = Math.abs(k) === 1 ? 'x' : Math.abs(k) + 'x';
+  return (k < 0 ? (prvni ? '−' : '− ') : (prvni ? '' : '+ ')) + abs;
+};
+const cst = (k, prvni) => (k < 0 ? (prvni ? '−' : '− ') : (prvni ? '' : '+ ')) + Math.abs(k);
+/* Samostatné číslo: minus musí být typografické (−), ne spojovník, ať to sedí
+   se zápisem členů výše – jinak vyjde nesourodé „x − 7 = -15“. */
+const cis = n => String(n).replace('-', '−');
+
+function nova() {
+  vyhodnoceno = false;
+  x = ni(-9, 9);
+  if (uroven === 1) {
+    const a = neNula(-15, 15), b = x + a;
+    zapis = `x ${cst(a)} = ${cis(b)}`;
+    kroky = [`x = ${cis(b)} ${cst(-a)}`, `x = ${cis(x)}`];
+  } else if (uroven === 2) {
+    const a = neNula(-9, 9), b = a * x;
+    zapis = `${clen(a, true)} = ${cis(b)}`;
+    kroky = [`x = ${cis(b)} ÷ (${cis(a)})`, `x = ${cis(x)}`];
+  } else if (uroven === 3) {
+    const a = neNula(-9, 9), b = neNula(-12, 12), c = a * x + b;
+    zapis = `${clen(a, true)} ${cst(b)} = ${cis(c)}`;
+    kroky = [`${clen(a, true)} = ${cis(c)} ${cst(-b)}`, `${clen(a, true)} = ${cis(c - b)}`,
+             `x = ${cis(c - b)} ÷ (${cis(a)})`, `x = ${cis(x)}`];
+  } else if (uroven === 4) {
+    let a = neNula(-8, 8), c = neNula(-8, 8);
+    if (a === c) a += (a < 8 ? 1 : -1);
+    const b = neNula(-12, 12), d = (a - c) * x + b;   // a·x + b = c·x + d
+    zapis = `${clen(a, true)} ${cst(b)} = ${clen(c, true)} ${cst(d)}`;
+    kroky = [`${clen(a - c, true)} = ${cis(d - b)}`, `x = ${cis(d - b)} ÷ (${cis(a - c)})`, `x = ${cis(x)}`];
+  } else {
+    const a = neNula(-6, 6), b = neNula(-9, 9), k = neNula(2, 5);   // k·(a·x + b) = c
+    const cc = k * (a * x + b);
+    zapis = `${k}·(${clen(a, true)} ${cst(b)}) = ${cis(cc)}`;
+    kroky = [`${clen(k * a, true)} ${cst(k * b)} = ${cis(cc)}`, `${clen(k * a, true)} = ${cis(cc - k * b)}`,
+             `x = ${cis(cc - k * b)} ÷ (${cis(k * a)})`, `x = ${cis(x)}`];
+  }
+  $('rovnice').textContent = zapis;
+  $('odpoved').value = '';
+  $('zprava').textContent = ''; $('zprava').className = 'zprava';
+  $('reseni').style.display = 'none';
+  $('btnPotvrdit').textContent = 'Potvrdit';
+  $('odpoved').focus();
+}
+function vyhodnot() {
+  if (vyhodnoceno) { nova(); return; }
+  const v = $('odpoved').value.trim();
+  if (v === '') { $('odpoved').focus(); return; }
+  vyhodnoceno = true; celkem++;
+  const ok = Number(v) === x;
+  if (ok) { spravne++; serie++; $('zprava').textContent = '✅ Správně, x = ' + cis(x) + '.'; $('zprava').classList.add('ok'); }
+  else { serie = 0; $('zprava').textContent = '❌ Správné řešení je x = ' + cis(x) + '.'; $('zprava').classList.add('spatne'); }
+  $('reseni').innerHTML = '💡 Postup:<br>' + zapis + '<br>' + kroky.join('<br>');
+  $('reseni').style.display = 'block';
+  $('serie').textContent = serie >= 3 ? '🔥 série ' + serie : '';
+  $('skore').textContent = spravne + ' / ' + celkem;
+  $('btnPotvrdit').textContent = 'Další →';
+}
+/* ============================================================
+   Model vah: a·x + b = c. Všechna čísla držíme kladná, aby šlo
+   obojí opravdu položit na misku – záporné závaží neexistuje.
+   ============================================================ */
+const V = { a: 3, b: 4, c: 13, x: 3, kroky: [], hotovo: false };
+
+function novaVaha() {
+  V.x = ni(2, 6);
+  V.a = ni(2, 4);
+  V.b = ni(1, 8);
+  V.c = V.a * V.x + V.b;
+  V.kroky = [`${zapisVahy()}`];
+  V.hotovo = false;
+  $('hlaskaVahy').textContent = '';
+  $('hlaskaVahy').className = 'hlaska';
+  kresliVahy();
+}
+
+function zapisVahy() {
+  const leva = (V.a === 1 ? 'x' : V.a + 'x') + (V.b ? ' + ' + V.b : '');
+  return `${leva} = ${V.c}`;
+}
+
+function kresliVahy() {
+  const SIR = 620, STRED = 310, RAMENO = 190, YR = 96;
+  const lx = STRED - RAMENO, px = STRED + RAMENO;
+  const YM = 190;                                  // úroveň misek
+
+  // obsah misky: x-kostky a jednotková závaží
+  const kostka = (x, y, i) =>
+    `<g><rect class="kostka-x" x="${x}" y="${y}" width="34" height="30" rx="5"/>
+       <text class="stitek x" x="${x + 17}" y="${y + 20}">x</text></g>`;
+  const zavazi = (x, y) =>
+    `<g><rect class="zavazi" x="${x}" y="${y}" width="20" height="18" rx="3"/>
+       <text class="stitek j" x="${x + 10}" y="${y + 13}" style="font-size:11px">1</text></g>`;
+
+  // x-kostky vedle sebe, jednotky pod nimi do řádků po osmi
+  let leva = '';
+  for (let i = 0; i < V.a; i++) leva += kostka(lx - (V.a * 38) / 2 + i * 38, YM - 34);
+  for (let i = 0; i < V.b; i++) {
+    const r = Math.floor(i / 8), sl = i % 8;
+    const pocetVRadku = Math.min(8, V.b - r * 8);
+    leva += zavazi(lx - (pocetVRadku * 23) / 2 + sl * 23, YM + 2 + r * 21);
+  }
+  let prava = '';
+  for (let i = 0; i < V.c; i++) {
+    const r = Math.floor(i / 8), sl = i % 8;
+    const pocetVRadku = Math.min(8, V.c - r * 8);
+    prava += zavazi(px - (pocetVRadku * 23) / 2 + sl * 23, YM - 34 + r * 21);
+  }
+
+  $('svgVahy').innerHTML = `
+    <line class="rameno" x1="${lx}" y1="${YR}" x2="${px}" y2="${YR}"/>
+    <polygon class="stojan" points="${STRED - 26},280 ${STRED + 26},280 ${STRED + 8},${YR} ${STRED - 8},${YR}"/>
+    <circle class="stojan" cx="${STRED}" cy="${YR}" r="9"/>
+    <line class="lanko" x1="${lx}" y1="${YR}" x2="${lx}" y2="${YM + 46}"/>
+    <line class="lanko" x1="${px}" y1="${YR}" x2="${px}" y2="${YM + 46}"/>
+    <path class="miska" d="M${lx - 92} ${YM + 46} L${lx + 92} ${YM + 46} L${lx + 72} ${YM + 62} L${lx - 72} ${YM + 62} Z"/>
+    <path class="miska" d="M${px - 92} ${YM + 46} L${px + 92} ${YM + 46} L${px + 72} ${YM + 62} L${px - 72} ${YM + 62} Z"/>
+    ${leva}${prava}
+    <text class="popis" x="${lx}" y="${YM + 80}">levá strana</text>
+    <text class="popis" x="${px}" y="${YM + 80}">pravá strana</text>`;
+
+  $('rovniceZive').innerHTML = V.hotovo
+    ? `<span class="zvyraz">x = ${V.c}</span>`
+    : zapisVahy();
+  $('krokyVahy').innerHTML = V.kroky.join('<br>');
+  $('krokyVahy').scrollTop = $('krokyVahy').scrollHeight;
+  postavOperace();
+}
+
+function postavOperace() {
+  const lzeOdebrat = V.b > 0;
+  const lzeDelit = V.b === 0 && V.a > 1 && V.c % V.a === 0;
+  $('operace').innerHTML =
+    `<button id="opMinus"${lzeOdebrat ? '' : ' disabled'}>− 1 z obou misek</button>
+     <button id="opDelit"${lzeDelit ? '' : ' disabled'}>÷ ${V.a > 1 ? V.a : '…'} obě misky</button>
+     <button id="opNova" class="${V.hotovo ? 'hotovo' : ''}">🎲 Nová rovnice</button>`;
+  $('opNova').onclick = novaVaha;
+  if (lzeOdebrat) $('opMinus').onclick = () => {
+    V.b--; V.c--;
+    V.kroky.push(`− 1 &nbsp;&nbsp; → &nbsp;&nbsp; ${zapisVahy()}`);
+    poKroku();
+  };
+  if (lzeDelit) $('opDelit').onclick = () => {
+    const d = V.a;
+    V.c /= d; V.a = 1;
+    V.kroky.push(`÷ ${d} &nbsp;&nbsp; → &nbsp;&nbsp; ${zapisVahy()}`);
+    poKroku();
+  };
+}
+
+function poKroku() {
+  if (V.a === 1 && V.b === 0) {
+    V.hotovo = true;
+    $('hlaskaVahy').textContent = `🎉 Hotovo — na levé misce zůstalo jedno x a na pravé ${V.c}. Řešení je x = ${V.c}.`;
+    $('hlaskaVahy').className = 'hlaska ok';
+  } else if (V.b === 0 && V.a > 1) {
+    $('hlaskaVahy').textContent = `Jednotky jsou pryč. Teď vyděl obě misky ${V.a} — na levé zbyde jedno x.`;
+    $('hlaskaVahy').className = 'hlaska';
+  }
+  kresliVahy();
+}
+
+/* ---- přepínání mezi váhami a procvičováním ---- */
+function zapniVahy(zapnout) {
+  $('kartaVahy').classList.toggle('skryto', !zapnout);
+  $('kartaUloha').classList.toggle('skryto', zapnout);
+  $('stavLista').classList.toggle('skryto', zapnout);
+  if (zapnout && !V.kroky.length) novaVaha();
+}
+
+$('btnPotvrdit').onclick = vyhodnot;
+$('odpoved').addEventListener('keydown', e => { if (e.key === 'Enter') vyhodnot(); });
+document.querySelectorAll('#rezimy button').forEach(b => b.onclick = () => {
+  document.querySelectorAll('#rezimy button').forEach(x2 => x2.classList.remove('active'));
+  b.classList.add('active');
+  if (b.dataset.rezim === 'vahy') { zapniVahy(true); return; }
+  zapniVahy(false);
+  uroven = +b.dataset.uroven;
+  nova();
+});
+nova();
+</script>
+</body>
+</html>

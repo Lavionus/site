@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Bezobratlí</title>
+  <link rel="stylesheet" href="../common.css">
+  <link rel="stylesheet" href="../vyuka.css">
+  <script src="../theme.js"></script>
+  <script src="../rec.js"></script>
+  <script src="../uloha.js"></script>
+  <style>
+    .nazev-z { font-size: 1.25rem; font-weight: 700; }
+    .popis-z { color: var(--text-muted); max-width: 560px; line-height: 1.55; }
+    .znaky { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+    .znaky span {
+      background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 20px;
+      padding: 5px 12px; font-size: 0.82rem; color: var(--text-muted);
+    }
+  </style>
+</head>
+<body>
+  <h1>🐌 Bezobratlí</h1>
+  <p class="podtitul">Pro 6.–7. ročník: žahavci, ploštěnci, hlísti, měkkýši a kroužkovci.</p>
+
+  <div class="rezimy" id="rezimy">
+    <button data-rezim="kmen" class="active">🗂️ Do kterého kmene</button>
+    <button data-rezim="poznej">🔍 Poznej živočicha</button>
+    <button data-rezim="stavba">🧩 Stavba těla</button>
+    <button data-rezim="vyznam">⚖️ Význam pro člověka</button>
+  </div>
+
+  <div class="plocha" id="plocha"></div>
+
+  <div class="ovladani">
+    <button class="hlavni" id="btnDalsi">Přeskočit →</button>
+    <span class="skore" id="skore"></span>
+  </div>
+
+  <p class="napoveda">
+    <b>Bezobratlí</b> nemají vnitřní kostru s páteří. Patří sem žahavci (medúzy),
+    ploštěnci, hlísti, měkkýši (hlemýžď, škeble) a kroužkovci (žížala, pijavka).
+  </p>
+
+<script>
+const $ = id => document.getElementById(id);
+const skore = Uloha.skore('nodus_pr6_bezobratli', $('skore'));
+let rezim = 'kmen';
+
+const KMENY = {
+  zahavci: 'žahavci',
+  plostenci: 'ploštěnci',
+  hlisti: 'hlísti',
+  mekkysi: 'měkkýši',
+  krouzkovci: 'kroužkovci',
+};
+
+const ZIVOCICHOVE = [
+  { n: 'medúza', e: '🪼', kmen: 'zahavci', popis: 'rosolovité tělo se žahavými buňkami na ramenech',
+    znaky: ['žahavé buňky', 'paprsčitá souměrnost', 'žije v moři'] },
+  { n: 'nezmar', e: '🌱', kmen: 'zahavci', popis: 'drobný sladkovodní žahavec přisedlý na rostlinách',
+    znaky: ['žahavé buňky', 'pučení', 'sladká voda'] },
+  { n: 'korál', e: '🪸', kmen: 'zahavci', popis: 'přisedlý mořský živočich tvořící vápenaté útesy',
+    znaky: ['přisedlý', 'kolonie', 'tvoří útesy'] },
+  { n: 'tasemnice', e: '📏', kmen: 'plostenci', popis: 'cizopasník ve střevě, tělo tvoří dlouhá řada článků',
+    znaky: ['cizopasník', 'ploché tělo', 'bez trávicí soustavy'] },
+  { n: 'ploštěnka mléčná', e: '🫓', kmen: 'plostenci', popis: 'ploché tělo, žije pod kameny v potocích',
+    znaky: ['ploché tělo', 'sladká voda', 'velká schopnost regenerace'] },
+  { n: 'škrkavka dětská', e: '🪱', kmen: 'hlisti', popis: 'oblý cizopasník žijící ve střevě člověka',
+    znaky: ['oblé tělo', 'cizopasník', 'nakažení špinavýma rukama'] },
+  { n: 'roup dětský', e: '〰️', kmen: 'hlisti', popis: 'drobný oblý cizopasník způsobující svědění',
+    znaky: ['oblé tělo', 'cizopasník', 'hygiena jako prevence'] },
+  { n: 'hlemýžď zahradní', e: '🐌', kmen: 'mekkysi', popis: 'plž s ulitou, pohybuje se pomocí svalnaté nohy',
+    znaky: ['ulita', 'svalnatá noha', 'strouhací jazýček'] },
+  { n: 'škeble rybničná', e: '🦪', kmen: 'mekkysi', popis: 'mlž se dvěma miskami, filtruje vodu',
+    znaky: ['dvě lastury', 'filtruje vodu', 'bez hlavy'] },
+  { n: 'chobotnice', e: '🐙', kmen: 'mekkysi', popis: 'hlavonožec s osmi rameny a vyspělým mozkem',
+    znaky: ['ramena s přísavkami', 'inteligentní', 'mořský'] },
+  { n: 'žížala obecná', e: '🪱', kmen: 'krouzkovci', popis: 'článkované tělo, prokypřuje a provzdušňuje půdu',
+    znaky: ['článkované tělo', 'žije v půdě', 'prospěšná'] },
+  { n: 'pijavka lékařská', e: '🩸', kmen: 'krouzkovci', popis: 'kroužkovec s přísavkami, saje krev',
+    znaky: ['přísavky', 'saje krev', 'využití v medicíně'] },
+];
+
+const STAVBA_OTAZKY = [
+  { o: 'Čím se žahavci brání a loví kořist?', spr: 'žahavými buňkami',
+    jine: ['zuby', 'jedovatými drápy', 'lepkavou sítí'] },
+  { o: 'Jak se pohybuje hlemýžď?', spr: 'svalnatou nohou',
+    jine: ['ploutvemi', 'nožkami s drápky', 'reaktivním pohonem'] },
+  { o: 'Jak dýchá žížala?', spr: 'celým povrchem vlhkého těla',
+    jine: ['plicními vaky', 'žábrami', 'průduchy na hlavě'] },
+  { o: 'Co je typické pro tělo kroužkovců?', spr: 'je článkované',
+    jine: ['je pokryté krunýřem', 'má vnitřní kostru', 'nemá svaly'] },
+  { o: 'Čím filtruje škeble potravu z vody?', spr: 'žábrami',
+    jine: ['ústním otvorem s zuby', 'chapadly', 'kožními póry'] },
+  { o: 'Proč mají cizopasníci často zakrnělou trávicí soustavu?', spr: 'živiny vstřebávají povrchem těla',
+    jine: ['nepotřebují potravu', 'tráví v ústech hostitele', 'mají jen jeden orgán'] },
+];
+
+const VYZNAM = [
+  { t: 'žížala v zahradní půdě', dobre: true, proc: 'provzdušňuje půdu a rozkládá organické zbytky' },
+  { t: 'tasemnice ve střevě', dobre: false, proc: 'odebírá živiny a způsobuje vážné potíže' },
+  { t: 'škeble ve vodní nádrži', dobre: true, proc: 'filtruje vodu a čistí ji od drobných částic' },
+  { t: 'roupi u dětí', dobre: false, proc: 'způsobují svědění a nespavost, šíří se špinavýma rukama' },
+  { t: 'korálové útesy v moři', dobre: true, proc: 'poskytují útočiště tisícům druhů mořských organismů' },
+  { t: 'slimák v zelenině', dobre: false, proc: 'okusuje listy a poškozuje úrodu' },
+  { t: 'pijavka v lékařství', dobre: true, proc: 'používá se k odsávání krve po operacích' },
+  { t: 'škrkavka v tenkém střevě', dobre: false, proc: 'cizopasí a odebírá tělu živiny' },
+];
+
+/* ---- Do kterého kmene ------------------------------------------------------------------- */
+function kmen() {
+  const p = $('plocha');
+  const u = Uloha.nahodne(ZIVOCICHOVE);
+  p.innerHTML = `<div class="zadani">Do kterého kmene tento živočich patří?</div>
+    <div class="karta"><div class="obrazek">${u.e}</div><div class="nazev-z">${u.n}</div></div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([u.kmen,
+      ...Uloha.zamichej(Object.keys(KMENY).filter(k => k !== u.kmen)).slice(0, 3)])
+      .map(klic => ({ klic, popis: KMENY[klic] })),
+    spravnyKlic: u.kmen,
+    zpravaOk: `✅ ${u.n} patří mezi ${KMENY[u.kmen]} – ${u.popis}.`,
+    zpravaChyba: 'Podívej se na stavbu těla: má ulitu, článkované tělo, nebo žahavé buňky?',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Poznej živočicha --------------------------------------------------------------------- */
+function poznej() {
+  const p = $('plocha');
+  const u = Uloha.nahodne(ZIVOCICHOVE);
+  const jine = Uloha.zamichej(ZIVOCICHOVE.filter(x => x.n !== u.n)).slice(0, 3);
+  p.innerHTML = `<div class="zadani">O kterého živočicha jde?</div>
+    <div class="karta"><div class="obrazek">🔎</div><div class="popis-z">${u.popis}</div></div>`;
+  const znaky = document.createElement('div');
+  znaky.className = 'znaky';
+  znaky.innerHTML = u.znaky.map(z => `<span>${z}</span>`).join('');
+  p.appendChild(znaky);
+
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([u, ...jine]).map(x => ({ klic: x.n, ikona: x.e, popis: x.n })),
+    spravnyKlic: u.n,
+    zpravaOk: `✅ ${u.n} – ${u.popis}.`,
+    zpravaChyba: 'Porovnej popis se znaky pod úlohou.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Stavba těla ----------------------------------------------------------------------------- */
+function stavba() {
+  const p = $('plocha');
+  const u = Uloha.nahodne(STAVBA_OTAZKY);
+  p.innerHTML = `<div class="zadani">${u.o}</div>
+    <div class="karta"><div class="obrazek">🔬</div></div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([u.spr, ...u.jine]).map(t => ({ klic: t, popis: t })),
+    spravnyKlic: u.spr,
+    zpravaOk: `✅ ${u.spr}.`,
+    zpravaChyba: 'Zkus jinou možnost.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Význam pro člověka -------------------------------------------------------------------- */
+function vyznam() {
+  const p = $('plocha');
+  const u = Uloha.nahodne(VYZNAM);
+  p.innerHTML = `<div class="zadani">Je to pro člověka prospěšné, nebo škodlivé?</div>
+    <div class="karta"><div class="obrazek">⚖️</div><div class="popis-z">${u.t}</div></div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva, trida: 'dve',
+    moznosti: [
+      { klic: 'ano', ikona: '💚', popis: 'prospěšné' },
+      { klic: 'ne', ikona: '⚠️', popis: 'škodlivé' },
+    ],
+    spravnyKlic: u.dobre ? 'ano' : 'ne',
+    zpravaOk: `✅ ${u.proc}.`,
+    zpravaChyba: 'Zkus druhou možnost a přečti si vysvětlení.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+const REZIMY = { kmen, poznej, stavba, vyznam };
+function novaUloha() { REZIMY[rezim](); }
+
+document.querySelectorAll('#rezimy button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#rezimy button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  rezim = b.dataset.rezim;
+  novaUloha();
+}));
+$('btnDalsi').addEventListener('click', novaUloha);
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === 'Enter') { e.preventDefault(); novaUloha(); }
+});
+novaUloha();
+</script>
+</body>
+</html>

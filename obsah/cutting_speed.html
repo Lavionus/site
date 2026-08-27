@@ -20,6 +20,7 @@ input,select{width:100%;background:var(--border);border:1px solid var(--border-s
 .big{font-size:2.4rem;font-weight:700;color:var(--accent);text-align:center;margin:8px 0}
 .res-row{display:flex;justify-content:space-between;padding:11px 0;border-bottom:1px solid var(--bg-hover)}
 .res-row:last-child{border:none}.res-row b{color:#4caf50}
+.warn{color:var(--warn)}
 .note{font-size:.78rem;color:var(--text-faint);margin-top:10px;line-height:1.5}
 
 /* světlý režim: dorovnání kontrastu textu */
@@ -41,32 +42,77 @@ input,select{width:100%;background:var(--border);border:1px solid var(--border-s
       <div><label>Průměr nástroje/obrobku D (mm)</label><input type="number" id="dia" value="10" step="any"></div>
       <div><label>Počet zubů (fréza, 0 = soustružení)</label><input type="number" id="teeth" value="2" min="0"></div>
       <div><label>Posuv na zub fz (mm) / na otáčku</label><input type="number" id="fz" value="0.05" step="any"></div>
+      <div><label>Hloubka řezu ap (mm)</label><input type="number" id="ap" value="2" step="any" min="0"></div>
+      <div><label>Šířka záběru ae (mm)</label><input type="number" id="ae" value="5" step="any" min="0"></div>
+      <div><label>Max. otáčky vřetena (ot/min)</label><input type="number" id="maxRpm" value="3000" step="100" min="0"></div>
     </div>
   </div>
   <div class="card">
     <h2>📋 Výsledek</h2>
     <div class="big" id="rpm">–</div>
-    <p style="text-align:center;color:#888;margin-bottom:14px">otáčky vřetena</p>
+    <p style="text-align:center;color:var(--text-faint);margin-bottom:14px">otáčky vřetena</p>
     <div class="res-row"><span>Posuv (vf)</span><b id="feed">–</b></div>
-    <div class="res-row"><span>Řezná rychlost (zadáno)</span><b id="vcOut">–</b></div>
-    <div class="res-row"><span>Obvodová rychlost</span><b id="periph">–</b></div>
-    <p class="note">n = (vc × 1000) / (π × D). Posuv vf = n × fz × z (fréza) nebo n × f (soustružení, z=0). Hodnoty orientační – řiďte se doporučením výrobce nástroje.</p>
+    <div class="res-row"><span>Úběr materiálu (Q)</span><b id="mrr">–</b></div>
+    <div class="res-row"><span>Doporučený posuv na zub fz</span><b id="fzDop">–</b></div>
+    <div class="res-row"><span>Otáčky vs. stroj</span><b id="rpmStav">–</b></div>
+    <p class="note">n = (vc × 1000) / (π × D). Posuv vf = n × fz × z (fréza) nebo n × f (soustružení, z = 0).
+      Úběr Q = ap × ae × vf / 1000 (cm³/min) platí pro frézování. Doporučené fz je orientační rozmezí podle
+      průměru nástroje — vždy dej přednost údaji výrobce nástroje.</p>
   </div>
 </div>
 <script>
 const $=id=>document.getElementById(id);
 $('material').onchange=()=>{if($('material').value){$('vc').value=$('material').value;calc();}};
+/* Orientační rozmezí posuvu na zub podle průměru frézy (mm). */
+function doporuceneFz(D){
+  if(D<=3)  return [0.01,0.03];
+  if(D<=6)  return [0.02,0.05];
+  if(D<=10) return [0.04,0.09];
+  if(D<=16) return [0.06,0.14];
+  if(D<=25) return [0.09,0.20];
+  return [0.12,0.28];
+}
+
 function calc(){
   const vc=+$('vc').value,D=+$('dia').value,z=+$('teeth').value,fz=+$('fz').value;
+  const ap=+$('ap').value,ae=+$('ae').value,maxRpm=+$('maxRpm').value;
   if(!D){return;}
   const n=vc*1000/(Math.PI*D);
   $('rpm').textContent=Math.round(n)+' ot/min';
   const vf=z>0?n*fz*z:n*fz;
   $('feed').textContent=Math.round(vf)+' mm/min'+(z>0?` (${z} zubů)`:' (na otáčku)');
-  $('vcOut').textContent=vc+' m/min';
-  $('periph').textContent=(Math.PI*D*n/1000).toFixed(1)+' m/min';
+
+  // Dřív tu byla „obvodová rychlost“ π·D·n/1000, což se po dosazení n vždycky
+  // rovnalo zadanému vc – řádek jen podruhé opisoval vstup. Užitečnější je úběr.
+  if(z>0&&ap>0&&ae>0){
+    const Q=ap*ae*vf/1000;
+    $('mrr').textContent=Q.toFixed(2)+' cm³/min';
+  } else {
+    $('mrr').textContent=z>0?'– (zadej ap a ae)':'– (jen pro frézování)';
+  }
+
+  if(z>0){
+    const [lo,hi]=doporuceneFz(D);
+    const mimo=fz<lo||fz>hi;
+    $('fzDop').textContent=`${lo}–${hi} mm`+(mimo?` ⚠️ zadáno ${fz}`:' ✅');
+    $('fzDop').className=mimo?'warn':'';
+  } else {
+    $('fzDop').textContent='– (soustružení)';
+    $('fzDop').className='';
+  }
+
+  if(maxRpm>0){
+    const prekroceno=n>maxRpm;
+    $('rpmStav').textContent=prekroceno
+      ? `⚠️ o ${Math.round(n-maxRpm)} ot/min nad limit — sniž vc nebo zvětši D`
+      : `✅ vejde se (limit ${maxRpm} ot/min)`;
+    $('rpmStav').className=prekroceno?'warn':'';
+  } else {
+    $('rpmStav').textContent='– (zadej limit stroje)';
+    $('rpmStav').className='';
+  }
 }
-['vc','dia','teeth','fz'].forEach(id=>$(id).oninput=calc);
+['vc','dia','teeth','fz','ap','ae','maxRpm'].forEach(id=>$(id).oninput=calc);
 calc();
 </script>
 </body>

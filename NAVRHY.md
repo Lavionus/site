@@ -85,6 +85,9 @@ položky krátký popis a proč by mohla mít smysl vedle existujících appek.
 
 ## 🎓 Vzdělávání
 
+> Vzdělávací aplikace mají od srpna 2026 samostatný web ve složce `nodus/`
+> (vlastní katalog `nodus/apps.js`). Nové návrhy z této sekce patří tam.
+
 - **Němčina – slovíčka a časování** (`de_slovicka.html`) – katalog má jen angličtinu
   (`aj_slovicka`, `aj_slovesa`), němčina/další jazyk chybí úplně.
 - **Fyzikální pokusy pro děti (simulace)** (`physics_playground.html`) – navazuje na

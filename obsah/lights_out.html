@@ -6,6 +6,7 @@
 <title>💡 Lights Out</title>
 <link rel="stylesheet" href="../common.css">
 <script src="../theme.js"></script>
+<script src="../rekord.js" defer></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;user-select:none}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:20px;display:flex;flex-direction:column;align-items:center}
@@ -20,44 +21,126 @@ select{background:var(--border);border:1px solid var(--border-strong);border-rad
 .cell{width:58px;height:58px;border-radius:8px;background:var(--bg-input);cursor:pointer;transition:.15s;border:1px solid var(--bg-hover)}
 @media(max-width:480px){.cell{width:48px;height:48px}}
 .cell.on{background:radial-gradient(circle at 40% 40%,#ffe98a,#f1c40f);box-shadow:0 0 16px rgba(241,196,15,.6);border-color:#f1c40f}
-.msg{margin-top:16px;font-size:1.3rem;font-weight:700;color:#27ae60;min-height:32px}
+.msg{margin-top:16px;font-size:1.3rem;font-weight:700;color:var(--ok);min-height:32px}
+.cell.napoveda{outline:3px solid var(--accent);outline-offset:-3px}
 </style>
 </head>
 <body>
 <h1>💡 Lights Out</h1>
 <p class="sub">Cíl: zhasnout všechna světla. Klik přepne políčko i jeho 4 sousedy.</p>
 <div class="top">
-  <select id="size"><option value="3">3×3</option><option value="5" selected>5×5</option></select>
+  <select id="size"><option value="3">3×3</option><option value="4">4×4</option><option value="5" selected>5×5</option><option value="6">6×6</option></select>
   <button class="btn" id="newBtn">🔄 Nová hra</button>
+  <button class="btn btn-sec" id="hintBtn" title="Ukáže jedno políčko z řešení">💡 Napovědět</button>
   <span class="info">Tahy: <b id="moves">0</b></span>
+  <span id="rekordBox"></span>
 </div>
 <div class="board" id="board"></div>
 <div class="msg" id="msg"></div>
 <script>
 const $=id=>document.getElementById(id);
-let N,grid,moves;
+let N,grid,moves,rek=null;
+const rekordy={};   // jeden rekord na velikost desky
+
+function klicRekordu(n){return 'webapp_hra_lightsout_'+n;}
+
 function init(){
-  N=+$('size').value;grid=Array.from({length:N},()=>Array(N).fill(false));moves=0;$('msg').textContent='';
-  // random solvable: apply random clicks
-  for(let i=0;i<N*N*2;i++)toggle(Math.floor(Math.random()*N),Math.floor(Math.random()*N),false);
-  moves=0;render();
+  N=+$('size').value;
+  moves=0;$('msg').textContent='';
+  // Náhodné kliky z prázdné desky zaručí řešitelnost. Můžou se ale vyrušit
+  // a vrátit desku do zhasnutého stavu – to by hráč dostal hru už hotovou.
+  let pokus=0;
+  do{
+    grid=Array.from({length:N},()=>Array(N).fill(false));
+    for(let i=0;i<N*N*2;i++)toggle(Math.floor(Math.random()*N),Math.floor(Math.random()*N),false);
+  }while(vyreseno()&&++pokus<50);
+  moves=0;
+  nastavRekord();
+  render();
 }
+
+function nastavRekord(){
+  if(typeof Rekord==='undefined')return;
+  if(!rekordy[N]){
+    rekordy[N]=Rekord.sleduj(klicRekordu(N),
+      {vyssiLepsi:false,popisek:'Nejméně tahů ('+N+'×'+N+')',format:v=>v+' tahů'});
+  }
+  rek=rekordy[N];
+  rek.prvek($('rekordBox'));
+}
+
 function toggle(r,c,count=true){
   [[0,0],[0,1],[0,-1],[1,0],[-1,0]].forEach(([dr,dc])=>{const nr=r+dr,nc=c+dc;if(nr>=0&&nr<N&&nc>=0&&nc<N)grid[nr][nc]=!grid[nr][nc];});
   if(count)moves++;
 }
+
+function vyreseno(){return grid.every(row=>row.every(x=>!x));}
+
 function render(){
   const b=$('board');b.style.gridTemplateColumns=`repeat(${N},1fr)`;b.innerHTML='';
   for(let r=0;r<N;r++)for(let c=0;c<N;c++){
     const d=document.createElement('div');d.className='cell'+(grid[r][c]?' on':'');
-    d.onclick=()=>{toggle(r,c);render();$('moves').textContent=moves;checkWin();};
+    d.onclick=()=>{if(vyreseno())return;toggle(r,c);render();checkWin();};
     b.appendChild(d);
   }
   $('moves').textContent=moves;
 }
-function checkWin(){if(grid.every(row=>row.every(x=>!x)))$('msg').textContent='🎉 Vyřešeno na '+moves+' tahů!';}
+
+function checkWin(){
+  if(!vyreseno())return;
+  let zprava='🎉 Vyřešeno na '+moves+' tahů!';
+  if(rek&&rek.zapis(moves))zprava='🏆 Nový rekord: '+moves+' tahů!';
+  $('msg').textContent=zprava;
+}
+
+/* Řešení soustavy nad GF(2): hledáme, která políčka stisknout, aby vše zhaslo.
+   Sloupec j = efekt stisku políčka j, pravá strana = aktuálně svítící políčka. */
+function reseni(){
+  const n=N*N;
+  const M=[];
+  for(let i=0;i<n;i++){
+    const radek=new Uint8Array(n+1);
+    const r=Math.floor(i/N),c=i%N;
+    [[0,0],[0,1],[0,-1],[1,0],[-1,0]].forEach(([dr,dc])=>{
+      const nr=r+dr,nc=c+dc;
+      if(nr>=0&&nr<N&&nc>=0&&nc<N)radek[nr*N+nc]=1;   // stisk (nr,nc) ovlivní i
+    });
+    radek[n]=grid[r][c]?1:0;
+    M.push(radek);
+  }
+  const pivoty=[];
+  let radek=0;
+  for(let sl=0;sl<n&&radek<n;sl++){
+    let p=-1;
+    for(let i=radek;i<n;i++)if(M[i][sl]){p=i;break;}
+    if(p<0)continue;
+    [M[radek],M[p]]=[M[p],M[radek]];
+    for(let i=0;i<n;i++){
+      if(i!==radek&&M[i][sl])for(let j=sl;j<=n;j++)M[i][j]^=M[radek][j];
+    }
+    pivoty.push([radek,sl]);
+    radek++;
+  }
+  // nekonzistentní soustava (nemělo by nastat, deska vzniká z prázdné)
+  for(let i=radek;i<n;i++)if(M[i][n])return null;
+  const x=new Uint8Array(n);          // volné proměnné necháváme na 0
+  pivoty.forEach(([r,sl])=>{x[sl]=M[r][n];});
+  return x;
+}
+
+$('hintBtn').onclick=()=>{
+  if(vyreseno()){$('msg').textContent='Už je zhasnuto 🙂';return;}
+  const x=reseni();
+  if(!x){$('msg').textContent='Tuhle desku neumím vyřešit.';return;}
+  const idx=[...x].findIndex(v=>v===1);
+  if(idx<0){$('msg').textContent='Už je zhasnuto 🙂';return;}
+  const bunky=$('board').children;
+  bunky[idx].classList.add('napoveda');
+  setTimeout(()=>bunky[idx].classList.remove('napoveda'),1400);
+};
+
 $('newBtn').onclick=init;$('size').onchange=init;
-init();
+window.addEventListener('DOMContentLoaded',init);
 </script>
 </body>
 </html>

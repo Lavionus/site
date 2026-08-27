@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Válec</title>
+  <link rel="stylesheet" href="../common.css">
+  <link rel="stylesheet" href="../vyuka.css">
+  <script src="../theme.js"></script>
+  <script src="../uloha.js"></script>
+  <style>
+    .kresba { width: min(300px, 78%); }
+    .kresba .telo { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 3; }
+    .kresba .podstava { fill: var(--bg-elevated); stroke: var(--accent); stroke-width: 3; }
+    .kresba .plast { fill: rgba(230,170,60,0.25); stroke: var(--warn); stroke-width: 2.5; }
+    .kresba .kota { stroke: var(--text-muted); stroke-width: 2; stroke-dasharray: 5 4; }
+    .kresba .popis { fill: var(--text-muted); font-size: 13px; text-anchor: middle; }
+    .uloha-text { max-width: 620px; font-size: 1.02rem; line-height: 1.6; }
+    .uloha-text b { color: var(--accent); }
+    .vzorec { font-family: 'Courier New', monospace; color: var(--text-muted); font-size: 0.95rem; }
+  </style>
+</head>
+<body>
+  <h1>🥫 Válec</h1>
+  <p class="podtitul">Pro 8. ročník: síť válce, obsah pláště, povrch a objem.</p>
+
+  <div class="rezimy" id="rezimy">
+    <button data-rezim="sit" class="active">📄 Síť válce</button>
+    <button data-rezim="objem">🧊 Objem</button>
+    <button data-rezim="povrch">🎁 Povrch</button>
+    <button data-rezim="slovni">🥤 Slovní úlohy</button>
+  </div>
+
+  <div class="plocha" id="plocha"></div>
+
+  <div class="ovladani">
+    <button class="hlavni" id="btnDalsi">Přeskočit →</button>
+    <span class="skore" id="skore"></span>
+  </div>
+
+  <p class="napoveda">
+    Síť válce tvoří <b>dvě kruhové podstavy</b> a <b>obdélníkový plášť</b>, jehož delší strana je
+    rovna obvodu podstavy. Objem <b>V = πr²·v</b>, povrch <b>S = 2πr² + 2πr·v</b>.
+    Pozor: 1 litr = 1 dm³ = 1000 cm³.
+  </p>
+
+<script>
+const $ = id => document.getElementById(id);
+const skore = Uloha.skore('nodus_m8_valec', $('skore'));
+let rezim = 'sit';
+const PI = 3.14;
+const fmt = x => Number(Number(x).toFixed(2)).toLocaleString('cs-CZ');
+function odezvaEl() { const d = document.createElement('div'); d.className = 'odezva'; return d; }
+
+function svgValec(r, v) {
+  return `<svg class="kresba" viewBox="0 0 220 210">
+    <ellipse class="podstava" cx="110" cy="45" rx="60" ry="20"/>
+    <path class="telo" d="M50 45 L50 155 A60 20 0 0 0 170 155 L170 45"/>
+    <ellipse class="podstava" cx="110" cy="45" rx="60" ry="20"/>
+    <line class="kota" x1="110" y1="45" x2="170" y2="45"/>
+    <text class="popis" x="140" y="38">r = ${r}</text>
+    <line class="kota" x1="186" y1="45" x2="186" y2="155"/>
+    <text class="popis" x="203" y="105">v = ${v}</text>
+  </svg>`;
+}
+function svgSit(r, v) {
+  const obvod = 2 * PI * r;
+  return `<svg class="kresba" viewBox="0 0 260 210" style="width:min(340px,88%)">
+    <circle class="podstava" cx="40" cy="40" r="28"/>
+    <rect class="plast" x="76" y="12" width="160" height="120"/>
+    <circle class="podstava" cx="40" cy="170" r="28"/>
+    <text class="popis" x="156" y="150">obvod podstavy = ${fmt(obvod)}</text>
+    <text class="popis" x="156" y="76">plášť</text>
+    <text class="popis" x="40" y="76">podstava</text>
+  </svg>`;
+}
+
+const SIT = [
+  { q: 'Z čeho se skládá síť válce?', a: 'ze dvou kruhů a jednoho obdélníku',
+    b: ['ze tří kruhů', 'ze dvou obdélníků a kruhu', 'ze čtyř trojúhelníků'] },
+  { q: 'Čemu se rovná delší strana pláště po rozvinutí?', a: 'obvodu podstavy (2πr)',
+    b: ['průměru podstavy', 'výšce válce', 'obsahu podstavy'] },
+  { q: 'Čemu se rovná kratší strana pláště?', a: 'výšce válce',
+    b: ['poloměru podstavy', 'obvodu podstavy', 'polovině obvodu'] },
+  { q: 'Jak spočítáš obsah pláště?', a: 'S = 2πr · v', b: ['S = πr²', 'S = 2πr²', 'S = πr² · v'] },
+  { q: 'Kolik podstav má válec?', a: 'dvě', b: ['jednu', 'tři', 'žádnou'] },
+  { q: 'Co platí o podstavách válce?', a: 'jsou to shodné kruhy nad sebou', b: ['jsou to různě velké kruhy', 'je to kruh a obdélník', 'jsou to elipsy'] },
+];
+function sit() {
+  const p = $('plocha');
+  const u = Uloha.nahodne(SIT);
+  const r = Uloha.nahodneCislo(2, 6), v = Uloha.nahodneCislo(5, 12);
+  p.innerHTML = `<div class="zadani uloha-text">${u.q}</div>
+    <div class="karta">${svgSit(r, v)}</div>`;
+  const odezva = odezvaEl();
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([u.a, ...u.b]).map(t => ({ klic: t, popis: t })),
+    spravnyKlic: u.a,
+    zpravaOk: `✅ ${u.a}`,
+    zpravaChyba: 'Představ si, jak se plášť rozvine – z válce se stane obdélník.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+function objem() {
+  const p = $('plocha');
+  const r = Uloha.nahodneCislo(2, 10), v = Uloha.nahodneCislo(4, 20);
+  const Sp = PI * r * r, V = Sp * v;
+  const jine = new Set([fmt(Sp), fmt(2 * PI * r * v), fmt(V * 2), fmt(PI * r * v)]);
+  jine.delete(fmt(V));
+
+  p.innerHTML = `<div class="zadani uloha-text">Válec má poloměr podstavy <b>r = ${r} cm</b>
+      a výšku <b>v = ${v} cm</b>. Jaký má objem? (π = 3,14)</div>
+    <div class="karta">${svgValec(r, v)}<div class="vzorec">V = πr² · v</div></div>`;
+  const odezva = odezvaEl();
+  Uloha.vyber({
+    kam: p, odezva, trida: 'velke',
+    moznosti: Uloha.zamichej([fmt(V), ...[...jine].slice(0, 3)]).map(t => ({ klic: t, popis: t + ' cm³' })),
+    spravnyKlic: fmt(V),
+    zpravaOk: `✅ V = 3,14 · ${r}² · ${v} = ${fmt(V)} cm³`,
+    zpravaChyba: 'Nejdřív spočítej obsah podstavy πr², pak vynásob výškou.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+function povrch() {
+  const p = $('plocha');
+  const r = Uloha.nahodneCislo(2, 10), v = Uloha.nahodneCislo(4, 20);
+  const Sp = PI * r * r, plast = 2 * PI * r * v, S = 2 * Sp + plast;
+  const hledamePlast = Math.random() < 0.4;
+  const vysledek = hledamePlast ? plast : S;
+  const jine = new Set([fmt(hledamePlast ? S : plast), fmt(Sp), fmt(Sp + plast), fmt(PI * r * r * v)]);
+  jine.delete(fmt(vysledek));
+
+  p.innerHTML = `<div class="zadani uloha-text">Válec má poloměr podstavy <b>r = ${r} cm</b>
+      a výšku <b>v = ${v} cm</b>. Jaký je ${hledamePlast ? 'obsah jeho pláště' : 'jeho povrch'}? (π = 3,14)</div>
+    <div class="karta">${svgValec(r, v)}
+      <div class="vzorec">S = 2πr² + 2πr·v</div></div>`;
+  const odezva = odezvaEl();
+  Uloha.vyber({
+    kam: p, odezva, trida: 'velke',
+    moznosti: Uloha.zamichej([fmt(vysledek), ...[...jine].slice(0, 3)]).map(t => ({ klic: t, popis: t + ' cm²' })),
+    spravnyKlic: fmt(vysledek),
+    zpravaOk: hledamePlast
+      ? `✅ plášť = 2 · 3,14 · ${r} · ${v} = ${fmt(plast)} cm²`
+      : `✅ S = 2 · ${fmt(Sp)} + ${fmt(plast)} = ${fmt(S)} cm²`,
+    zpravaChyba: 'Povrch = dvě podstavy + plášť. Plášť je obdélník o rozměrech 2πr a v.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+const PRIBEHY = [
+  { text: 'Plechovka má poloměr dna {r} cm a výšku {v} cm. Kolik mililitrů se do ní vejde?',
+    typ: 'objem', jednotka: 'ml', prevod: 1 },
+  { text: 'Válcová nádrž má poloměr {r} dm a výšku {v} dm. Kolik litrů pojme?',
+    typ: 'objem', jednotka: 'l', prevod: 1 },
+  { text: 'Kolik cm² papíru je potřeba na etiketu, která obepne celý plášť konzervy s poloměrem {r} cm a výškou {v} cm?',
+    typ: 'plast', jednotka: 'cm²', prevod: 1 },
+  { text: 'Válcový sud o poloměru {r} dm a výšce {v} dm chceme natřít zvenku celý včetně dna i víka. Kolik dm² natřeme?',
+    typ: 'povrch', jednotka: 'dm²', prevod: 1 },
+];
+function slovni() {
+  const p = $('plocha');
+  const u = Uloha.nahodne(PRIBEHY);
+  const r = Uloha.nahodneCislo(2, 8), v = Uloha.nahodneCislo(5, 20);
+  const Sp = PI * r * r, plast = 2 * PI * r * v;
+  const vysledek = u.typ === 'objem' ? Sp * v : u.typ === 'plast' ? plast : 2 * Sp + plast;
+  const jine = new Set([fmt(Sp * v), fmt(plast), fmt(2 * Sp + plast), fmt(Sp)]);
+  jine.delete(fmt(vysledek));
+
+  p.innerHTML = `<div class="zadani uloha-text">${u.text.replace('{r}', r).replace('{v}', v)} (π = 3,14)</div>
+    <div class="karta">${svgValec(r, v)}</div>`;
+  const odezva = odezvaEl();
+  Uloha.vyber({
+    kam: p, odezva, trida: 'velke',
+    moznosti: Uloha.zamichej([fmt(vysledek), ...[...jine].slice(0, 3)]).map(t => ({ klic: t, popis: t + ' ' + u.jednotka })),
+    spravnyKlic: fmt(vysledek),
+    zpravaOk: u.typ === 'objem'
+      ? `✅ V = 3,14 · ${r}² · ${v} = ${fmt(vysledek)} ${u.jednotka} (1 cm³ = 1 ml, 1 dm³ = 1 l)`
+      : `✅ ${fmt(vysledek)} ${u.jednotka}`,
+    zpravaChyba: 'Rozmysli si, jestli úloha chce objem (kolik se vejde), nebo obsah (kolik materiálu).',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+const REZIMY = { sit, objem, povrch, slovni };
+function novaUloha() { REZIMY[rezim](); }
+
+document.querySelectorAll('#rezimy button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#rezimy button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  rezim = b.dataset.rezim;
+  novaUloha();
+}));
+$('btnDalsi').addEventListener('click', novaUloha);
+novaUloha();
+</script>
+</body>
+</html>

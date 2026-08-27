@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Čas, prameny a práce historika</title>
+  <link rel="stylesheet" href="../common.css">
+  <link rel="stylesheet" href="../vyuka.css">
+  <script src="../theme.js"></script>
+  <script src="../rec.js"></script>
+  <script src="../uloha.js"></script>
+  <style>
+    .polozka { font-size: 1.15rem; font-weight: 700; max-width: 540px; }
+    .popis-p { color: var(--text-muted); max-width: 560px; line-height: 1.55; }
+    .osa-cas { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; align-items: center; min-height: 44px; }
+    .osa-cas .bod {
+      background: var(--accent-soft); border: 2px solid var(--accent); border-radius: 8px;
+      padding: 7px 11px; font-size: 0.85rem; font-weight: 600;
+    }
+    .osa-cas .sipka { color: var(--text-faint); }
+  </style>
+</head>
+<body>
+  <h1>🔎 Čas, prameny a práce historika</h1>
+  <p class="podtitul">Pro 6. ročník: dějepisné prameny, počítání letopočtů a historická období.</p>
+
+  <div class="rezimy" id="rezimy">
+    <button data-rezim="pramen" class="active">📜 Hmotný, či písemný</button>
+    <button data-rezim="letopocty">🔢 Počítání s letopočty</button>
+    <button data-rezim="obdobi">🕰️ Historická období</button>
+    <button data-rezim="vedy">🔬 Pomocné vědy</button>
+  </div>
+
+  <div class="plocha" id="plocha"></div>
+
+  <div class="ovladani">
+    <button class="hlavni" id="btnDalsi">Přeskočit →</button>
+    <span class="skore" id="skore"></span>
+  </div>
+
+  <p class="napoveda">
+    <b>Hmotné prameny</b> jsou předměty (nádoby, zbraně, stavby), <b>písemné</b> jsou texty
+    (kroniky, listiny, dopisy). Letopočty <b>před naším letopočtem</b> jdou pozpátku –
+    rok 500 př. n. l. je starší než rok 200 př. n. l.
+  </p>
+
+<script>
+const $ = id => document.getElementById(id);
+const skore = Uloha.skore('nodus_d6_prameny', $('skore'));
+let rezim = 'pramen';
+
+const PRAMENY = [
+  { t: 'hliněná nádoba z pravěkého hrobu', typ: 'hmotny' },
+  { t: 'kostel postavený v roce 1350', typ: 'hmotny' },
+  { t: 'bronzový meč nalezený v řece', typ: 'hmotny' },
+  { t: 'zbytky hradeb keltského oppida', typ: 'hmotny' },
+  { t: 'mince s portrétem panovníka', typ: 'hmotny' },
+  { t: 'Kosmova kronika česká', typ: 'pisemny' },
+  { t: 'zakládací listina kláštera', typ: 'pisemny' },
+  { t: 'dopis vojáka z první světové války', typ: 'pisemny' },
+  { t: 'nápis na náhrobním kameni', typ: 'pisemny' },
+  { t: 'školní vysvědčení z roku 1900', typ: 'pisemny' },
+];
+
+const OBDOBI = [
+  { n: 'pravěk', o: 'od objevení se člověka do vynálezu písma', poradi: 1 },
+  { n: 'starověk', o: 'od vynálezu písma do zániku západořímské říše (476)', poradi: 2 },
+  { n: 'středověk', o: 'od roku 476 do objevení Ameriky (1492)', poradi: 3 },
+  { n: 'novověk', o: 'od roku 1492 do konce první světové války', poradi: 4 },
+  { n: 'moderní dějiny', o: 'od roku 1918 do současnosti', poradi: 5 },
+];
+
+const VEDY = [
+  { n: 'archeologie', o: 'zkoumá hmotné pozůstatky vykopané ze země' },
+  { n: 'numismatika', o: 'zabývá se mincemi a platidly' },
+  { n: 'heraldika', o: 'zkoumá erby a znaky' },
+  { n: 'genealogie', o: 'sestavuje rodokmeny a zkoumá příbuzenské vztahy' },
+  { n: 'paleografie', o: 'učí číst staré typy písma' },
+  { n: 'chronologie', o: 'zabývá se měřením času a letopočty' },
+];
+
+/* ---- Hmotný, či písemný --------------------------------------------------------------- */
+function pramen() {
+  const p = $('plocha');
+  const u = Uloha.nahodne(PRAMENY);
+  p.innerHTML = `<div class="zadani">Jaký je to historický pramen?</div>
+    <div class="karta"><div class="obrazek">${u.typ === 'hmotny' ? '🏺' : '📜'}</div>
+    <div class="polozka">${u.t}</div></div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva, trida: 'dve',
+    moznosti: [
+      { klic: 'hmotny', ikona: '🏺', popis: 'hmotný pramen' },
+      { klic: 'pisemny', ikona: '📜', popis: 'písemný pramen' },
+    ],
+    spravnyKlic: u.typ,
+    zpravaOk: u.typ === 'hmotny'
+      ? '✅ Hmotný pramen – je to předmět nebo stavba, kterou zkoumá archeologie.'
+      : '✅ Písemný pramen – nese text, který se dá přečíst.',
+    zpravaChyba: 'Je to předmět, nebo něco psaného?',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Počítání s letopočty ------------------------------------------------------------- */
+function letopocty() {
+  const p = $('plocha');
+  const typ = Uloha.nahodne(['rozdil', 'stoleti', 'starsi']);
+  let zadani, spravny, jine, vysvetleni;
+
+  if (typ === 'rozdil') {
+    const pred = Uloha.nahodneCislo(2, 8) * 100;
+    const po = Uloha.nahodneCislo(1, 12) * 100;
+    zadani = `Kolik let uplynulo mezi rokem ${pred} př. n. l. a rokem ${po} n. l.?`;
+    spravny = pred + po;
+    jine = [Math.abs(po - pred), spravny + 100, spravny - 100];
+    vysvetleni = `${pred} + ${po} = ${spravny} let (přes přelom letopočtu se roky sčítají)`;
+  } else if (typ === 'stoleti') {
+    const rok = Uloha.nahodneCislo(1, 20) * 100 - Uloha.nahodneCislo(1, 99);
+    const stol = Math.ceil(rok / 100);
+    zadani = `Do kterého století patří rok ${rok}?`;
+    spravny = stol;
+    jine = [stol - 1, stol + 1, stol + 2];
+    vysvetleni = `rok ${rok} patří do ${stol}. století (století končí rokem ${stol * 100})`;
+  } else {
+    const a = Uloha.nahodneCislo(2, 9) * 100;
+    const b = Uloha.nahodneCislo(2, 9) * 100;
+    if (a === b) return letopocty();
+    zadani = `Který rok je starší: ${a} př. n. l., nebo ${b} př. n. l.?`;
+    spravny = Math.max(a, b);
+    jine = [Math.min(a, b)];
+    vysvetleni = `před naším letopočtem platí, že větší číslo je starší – proto ${Math.max(a, b)} př. n. l.`;
+  }
+
+  p.innerHTML = `<div class="zadani">${zadani}</div>
+    <div class="karta"><div class="obrazek">🕰️</div></div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  const popisky = typ === 'stoleti' ? v => v + '. století'
+    : typ === 'starsi' ? v => v + ' př. n. l.' : v => v + ' let';
+  Uloha.vyber({
+    kam: p, odezva, trida: 'velke',
+    moznosti: Uloha.zamichej([spravny, ...jine.filter(x => x !== spravny && x > 0)])
+      .map(v => ({ klic: String(v), popis: popisky(v) })),
+    spravnyKlic: String(spravny),
+    zpravaOk: `✅ ${vysvetleni}.`,
+    zpravaChyba: 'Nezapomeň, že roky před naším letopočtem jdou pozpátku.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Historická období ------------------------------------------------------------------ */
+function obdobi() {
+  const p = $('plocha');
+  const razeni = Math.random() < 0.5;
+
+  if (razeni) {
+    p.innerHTML = '<div class="zadani">Seřaď historická období od nejstaršího.</div>';
+    const osa = document.createElement('div');
+    osa.className = 'osa-cas';
+    const nabidka = document.createElement('div');
+    nabidka.className = 'nabidka';
+    const odezva = document.createElement('div');
+    odezva.className = 'odezva';
+    let dalsiIndex = 0, chyboval = false;
+    const serazene = [...OBDOBI].sort((a, b) => a.poradi - b.poradi);
+
+    Uloha.zamichej(OBDOBI).forEach(o => {
+      const b = document.createElement('button');
+      b.textContent = o.n;
+      b.dataset.n = o.n;
+      b.addEventListener('click', () => {
+        if (b.disabled) return;
+        if (o.n === serazene[dalsiIndex].n) {
+          if (dalsiIndex > 0) {
+            const s = document.createElement('span');
+            s.className = 'sipka';
+            s.textContent = '→';
+            osa.appendChild(s);
+          }
+          const el = document.createElement('span');
+          el.className = 'bod';
+          el.textContent = o.n;
+          osa.appendChild(el);
+          b.disabled = true;
+          dalsiIndex++;
+          odezva.className = 'odezva ok';
+          odezva.textContent = '✅ Správně!';
+          if (dalsiIndex === serazene.length) {
+            odezva.textContent = '🎉 Celá časová osa je hotová!';
+            skore.vyhodnot(!chyboval);
+            setTimeout(novaUloha, Uloha.PRODLEVA + 600);
+          }
+        } else {
+          chyboval = true;
+          Uloha.trhni(b);
+          odezva.className = 'odezva chyba';
+          odezva.textContent = 'Tohle období přijde na řadu později.';
+        }
+      });
+      nabidka.appendChild(b);
+    });
+    p.append(osa, nabidka, odezva);
+    return;
+  }
+
+  const u = Uloha.nahodne(OBDOBI);
+  const jine = Uloha.zamichej(OBDOBI.filter(x => x.n !== u.n)).slice(0, 3);
+  p.innerHTML = `<div class="zadani">O které období jde?</div>
+    <div class="karta"><div class="obrazek">📚</div><div class="popis-p">${u.o}</div></div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([u, ...jine]).map(x => ({ klic: x.n, popis: x.n })),
+    spravnyKlic: u.n,
+    zpravaOk: `✅ ${u.n} – ${u.o}.`,
+    zpravaChyba: 'Zkus jiné období.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Pomocné vědy ------------------------------------------------------------------------ */
+function vedy() {
+  const p = $('plocha');
+  const u = Uloha.nahodne(VEDY);
+  const jine = Uloha.zamichej(VEDY.filter(x => x.n !== u.n)).slice(0, 3);
+  p.innerHTML = `<div class="zadani">Která pomocná věda historická to je?</div>
+    <div class="karta"><div class="obrazek">🔬</div><div class="popis-p">${u.o}</div></div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([u, ...jine]).map(x => ({ klic: x.n, popis: x.n })),
+    spravnyKlic: u.n,
+    zpravaOk: `✅ ${u.n} – ${u.o}.`,
+    zpravaChyba: 'Zkus jinou vědu.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+const REZIMY = { pramen, letopocty, obdobi, vedy };
+function novaUloha() { REZIMY[rezim](); }
+
+document.querySelectorAll('#rezimy button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#rezimy button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  rezim = b.dataset.rezim;
+  novaUloha();
+}));
+$('btnDalsi').addEventListener('click', novaUloha);
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === 'Enter') { e.preventDefault(); novaUloha(); }
+});
+novaUloha();
+</script>
+</body>
+</html>

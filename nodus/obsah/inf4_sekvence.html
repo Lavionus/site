@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Programování – sekvence příkazů</title>
+  <link rel="stylesheet" href="../common.css">
+  <link rel="stylesheet" href="../vyuka.css">
+  <script src="../theme.js"></script>
+  <script src="../rec.js"></script>
+  <script src="../uloha.js"></script>
+  <style>
+    .hriste { width: min(460px, 94%); display: block; margin: 0 auto 10px; }
+    .hriste .policko { fill: var(--bg-control); stroke: var(--border); stroke-width: 1; }
+    .hriste .policko.svetle { fill: var(--bg-panel); }
+    .hriste .prekazka { fill: var(--bg-deep); stroke: var(--border-strong); }
+    .hriste .cil { fill: rgba(76, 175, 125, 0.18); stroke: var(--ok); stroke-width: 2; }
+    .hriste .cil-zar { fill: none; stroke: var(--ok); stroke-width: 3; animation: cilPuls 1.8s ease-in-out infinite; }
+    @keyframes cilPuls { 0%, 100% { opacity: 0.15; } 50% { opacity: 0.75; } }
+    .hriste .znak { font-size: 32px; text-anchor: middle; dominant-baseline: central; pointer-events: none; }
+    .hriste .stopa { fill: none; stroke: var(--accent); stroke-width: 5; stroke-linecap: round;
+      stroke-linejoin: round; opacity: 0.45; stroke-dasharray: 2 10; }
+    .hriste #robot { transition: transform 0.26s ease; }
+    .hriste.hotovo #robot { animation: skok 0.5s ease 2; }
+    @keyframes skok { 0%, 100% { translate: 0 0; } 50% { translate: 0 -8px; } }
+
+    /* Program – řádky příkazů, kliknutím se příkaz smaže */
+    .program {
+      display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; align-items: center;
+      min-height: 52px; background: var(--bg-deep); border: 1px dashed var(--border-strong);
+      border-radius: 10px; padding: 9px; width: min(460px, 94%); margin: 0 auto;
+    }
+    .program .prikaz {
+      display: inline-flex; align-items: center; gap: 5px; background: var(--accent-soft);
+      border: 2px solid var(--accent); border-radius: 8px; padding: 4px 9px 4px 6px;
+      font-size: 1.15rem; font-weight: 700; cursor: pointer; transition: transform 0.12s ease;
+    }
+    .program .prikaz .poradi { font-size: 0.7rem; font-weight: 600; color: var(--text-faint); }
+    .program .prikaz:hover { transform: translateY(-2px); border-color: var(--danger); }
+    .program .prikaz.bezi { background: var(--accent); color: #fff; transform: scale(1.12); }
+    .program .prikaz.hotovy { opacity: 0.45; }
+    .program .prazdno { color: var(--text-faint); font-size: 0.85rem; padding: 6px; }
+    .program.zamceno .prikaz { cursor: default; }
+    .program.zamceno .prikaz:hover { transform: none; border-color: var(--accent); }
+
+    .ovladace { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin-top: 10px; }
+    .ovladace button {
+      background: var(--bg-control); border: 2px solid var(--border-strong); color: var(--text);
+      border-radius: 10px; padding: 9px 15px; font-size: 1.3rem; font-family: inherit; cursor: pointer;
+      transition: transform 0.1s ease, border-color 0.12s ease;
+    }
+    .ovladace button:hover:not(:disabled) { border-color: var(--accent); transform: translateY(-2px); }
+    .ovladace button:disabled { opacity: 0.35; cursor: default; }
+    .ovladace button.akce { font-size: 0.9rem; font-weight: 600; padding: 10px 14px; }
+    .ovladace button.spustit { background: var(--ok); border-color: var(--ok); color: #fff; }
+    .ovladace .oddel { width: 1px; background: var(--border); margin: 4px 4px; }
+
+    .info { text-align: center; color: var(--text-muted); font-size: 0.85rem; margin-top: 8px; }
+    .info b { color: var(--text); }
+    .klavesy { text-align: center; color: var(--text-faint); font-size: 0.76rem; margin-top: 6px; }
+    .klavesy kbd {
+      background: var(--bg-control); border: 1px solid var(--border-strong); border-bottom-width: 2px;
+      border-radius: 4px; padding: 1px 5px; font-family: inherit; font-size: 0.72rem;
+    }
+  </style>
+</head>
+<body>
+  <h1>🧭 Programování – sekvence příkazů</h1>
+  <p class="podtitul">Pro 4. ročník: sestav robotovi cestu k cíli a pak program spusť.</p>
+
+  <div class="rezimy" id="rezimy">
+    <button data-rezim="bludiste" class="active">🤖 Naveď robota</button>
+    <button data-rezim="najdiChybu">🐞 Najdi chybu v programu</button>
+  </div>
+
+  <div class="plocha" id="plocha"></div>
+
+  <div class="ovladani">
+    <button class="hlavni" id="btnDalsi">Nová úloha →</button>
+    <span class="skore" id="skore"></span>
+  </div>
+
+  <p class="napoveda">
+    <b>Sekvence</b> je posloupnost příkazů, které se provedou <b>jeden po druhém</b> odshora dolů.
+    Robot udělá přesně to, co mu napíšeš – ani o krok víc.
+  </p>
+
+<script>
+const $ = id => document.getElementById(id);
+const skore = Uloha.skore('nodus_inf4_sekvence', $('skore'));
+let rezim = 'bludiste';
+let klavesnice = null;      // aktuální obsluha kláves, aby se nehromadila
+
+const SLOUPCU = 6, RADKU = 5, KROK = 60, OKRAJ = 12;
+const SMERY = { '⬆️': [0, -1], '⬇️': [0, 1], '⬅️': [-1, 0], '➡️': [1, 0] };
+const KLAVESY = { ArrowUp: '⬆️', ArrowDown: '⬇️', ArrowLeft: '⬅️', ArrowRight: '➡️' };
+const PREKAZKY_ZNAKY = ['🌳', '🪨', '🌵'];
+
+const stredX = s => OKRAJ + s * KROK + KROK / 2;
+const stredY = r => OKRAJ + r * KROK + KROK / 2;
+
+function vykresliHriste(stav) {
+  let policka = '';
+  for (let r = 0; r < RADKU; r++) {
+    for (let s = 0; s < SLOUPCU; s++) {
+      const jeCil = stav.cil.s === s && stav.cil.r === r;
+      const prekazka = stav.prekazky.find(x => x.s === s && x.r === r);
+      const tridy = ['policko'];
+      if ((r + s) % 2 === 0) tridy.push('svetle');
+      if (jeCil) tridy.push('cil');
+      if (prekazka) tridy.push('prekazka');
+      policka += `<rect class="${tridy.join(' ')}" rx="8"
+        x="${OKRAJ + s * KROK + 2}" y="${OKRAJ + r * KROK + 2}" width="${KROK - 4}" height="${KROK - 4}"/>`;
+      if (prekazka) policka += `<text class="znak" x="${stredX(s)}" y="${stredY(r)}">${prekazka.znak || '🌳'}</text>`;
+    }
+  }
+  return `<svg class="hriste" viewBox="0 0 ${OKRAJ * 2 + SLOUPCU * KROK} ${OKRAJ * 2 + RADKU * KROK}">
+    ${policka}
+    <rect class="cil-zar" rx="10" x="${OKRAJ + stav.cil.s * KROK - 2}" y="${OKRAJ + stav.cil.r * KROK - 2}"
+      width="${KROK + 4}" height="${KROK + 4}"/>
+    <text class="znak" x="${stredX(stav.cil.s)}" y="${stredY(stav.cil.r)}">🏁</text>
+    <path class="stopa" id="stopa" d=""/>
+    <g id="robot" transform="translate(${stredX(stav.robot.s)}, ${stredY(stav.robot.r)})">
+      <text class="znak" x="0" y="0">🤖</text>
+    </g>
+  </svg>`;
+}
+
+function novyStav() {
+  const start = { s: 0, r: RADKU - 1 };
+  const cil = { s: Uloha.nahodneCislo(3, SLOUPCU - 1), r: Uloha.nahodneCislo(0, RADKU - 3) };
+  const prekazky = [];
+  let pojistka = 0;
+  while (prekazky.length < 3 && pojistka++ < 200) {
+    const p = { s: Uloha.nahodneCislo(1, SLOUPCU - 1), r: Uloha.nahodneCislo(0, RADKU - 1) };
+    const obsazeno = (p.s === start.s && p.r === start.r) || (p.s === cil.s && p.r === cil.r)
+      || prekazky.some(x => x.s === p.s && x.r === p.r);
+    // spodní řadu a cílový sloupec necháme volné, ať vede aspoň jedna cesta
+    if (!obsazeno && p.r !== start.r && p.s !== cil.s) {
+      p.znak = Uloha.nahodne(PREKAZKY_ZNAKY);
+      prekazky.push(p);
+    }
+  }
+  return { start, robot: { ...start }, cil, prekazky };
+}
+
+/* ---- Naveď robota ------------------------------------------------------------- */
+function bludiste() {
+  const p = $('plocha');
+  const stav = novyStav();
+  const program = [];
+  const nejkratsi = Math.abs(stav.cil.s - stav.start.s) + Math.abs(stav.cil.r - stav.start.r);
+  let chyboval = false, bezi = false, hotovo = false;
+  let beh = null;                 // { i, poz } při krokování
+
+  p.innerHTML = `<div class="zadani">Sestav program, který dovede robota do cíle 🏁</div>`;
+  const hriste = document.createElement('div');
+  hriste.innerHTML = vykresliHriste(stav);
+  const programEl = document.createElement('div');
+  programEl.className = 'program';
+  const info = document.createElement('div');
+  info.className = 'info';
+  const ovladace = document.createElement('div');
+  ovladace.className = 'ovladace';
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  const klavesy = document.createElement('div');
+  klavesy.className = 'klavesy';
+  klavesy.innerHTML = 'Klávesy: <kbd>← ↑ ↓ →</kbd> přidají příkaz · <kbd>Backspace</kbd> smaže poslední · '
+    + '<kbd>Enter</kbd> spustí · <kbd>.</kbd> krokuje · <kbd>Esc</kbd> vrátí robota na start';
+
+  function prekresliInfo() {
+    info.innerHTML = `Příkazů v programu: <b>${program.length}</b> · `
+      + `nejkratší cesta má <b>${nejkratsi}</b> kroků · kliknutím na příkaz ho smažeš`;
+  }
+
+  function prekresliProgram(indexBezi = -1) {
+    programEl.classList.toggle('zamceno', bezi || hotovo);
+    if (!program.length) {
+      programEl.innerHTML = '<span class="prazdno">Program je zatím prázdný – přidej příkazy šipkami níže.</span>';
+      prekresliInfo();
+      return;
+    }
+    programEl.innerHTML = program.map((x, i) => {
+      const tridy = 'prikaz' + (i === indexBezi ? ' bezi' : '') + (indexBezi >= 0 && i < indexBezi ? ' hotovy' : '');
+      return `<span class="${tridy}" data-i="${i}" title="Klepnutím příkaz smažeš"><span class="poradi">${i + 1}</span>${x}</span>`;
+    }).join('');
+    prekresliInfo();
+  }
+
+  function posunRobota(poz) {
+    const g = p.querySelector('#robot');
+    if (g) g.setAttribute('transform', `translate(${stredX(poz.s)}, ${stredY(poz.r)})`);
+  }
+  function kresliStopu(body) {
+    const stopa = p.querySelector('#stopa');
+    if (stopa) stopa.setAttribute('d', body.map((b, i) => `${i ? 'L' : 'M'}${stredX(b.s)} ${stredY(b.r)}`).join(' '));
+  }
+
+  function pridej(sipka) {
+    if (bezi || hotovo) return;
+    if (beh) resetBeh();
+    program.push(sipka);
+    odezva.className = 'odezva';
+    odezva.textContent = '';
+    prekresliProgram();
+  }
+  function smaz(index) {
+    if (bezi || hotovo) return;
+    if (beh) resetBeh();
+    program.splice(index, 1);
+    prekresliProgram();
+  }
+  function resetBeh() {
+    beh = null;
+    posunRobota(stav.start);
+    kresliStopu([]);
+    prekresliProgram();
+  }
+
+  /* Jeden krok programu. Vrací 'ok' | 'naraz' | 'konec'. */
+  function provedKrok() {
+    if (!beh) beh = { i: 0, poz: { ...stav.start }, body: [{ ...stav.start }] };
+    if (beh.i >= program.length) return 'konec';
+    const [ds, dr] = SMERY[program[beh.i]];
+    const novy = { s: beh.poz.s + ds, r: beh.poz.r + dr };
+    const mimo = novy.s < 0 || novy.s >= SLOUPCU || novy.r < 0 || novy.r >= RADKU;
+    const naPrekazce = stav.prekazky.some(x => x.s === novy.s && x.r === novy.r);
+    if (mimo || naPrekazce) {
+      chyboval = true;
+      odezva.className = 'odezva chyba';
+      odezva.textContent = mimo
+        ? `Krok ${beh.i + 1}: robot by spadl z hřiště. Uprav program.`
+        : `Krok ${beh.i + 1}: v cestě je ${naPrekazce ? 'překážka' : 'zeď'}. Uprav program.`;
+      Uloha.trhni(programEl);
+      return 'naraz';
+    }
+    beh.poz = novy;
+    beh.body.push({ ...novy });
+    beh.i++;
+    posunRobota(beh.poz);
+    kresliStopu(beh.body);
+    prekresliProgram(beh.i - 1);
+    return 'ok';
+  }
+
+  function dosel() {
+    return beh && beh.poz.s === stav.cil.s && beh.poz.r === stav.cil.r;
+  }
+  function vyhodnotKonec() {
+    if (dosel()) {
+      hotovo = true;
+      hriste.querySelector('.hriste').classList.add('hotovo');
+      odezva.className = 'odezva ok';
+      odezva.textContent = program.length === nejkratsi
+        ? `✅ V cíli, a nejkratší možnou cestou – ${program.length} kroků!`
+        : `✅ Robot došel do cíle na ${program.length} kroků. (Nejkratší cesta má ${nejkratsi}.)`;
+      skore.vyhodnot(!chyboval);
+      prekresliProgram();
+      zamkni();
+      setTimeout(novaUloha, Uloha.PRODLEVA + 700);
+    } else {
+      chyboval = true;
+      odezva.className = 'odezva chyba';
+      odezva.textContent = 'Program skončil, ale robot není v cíli. Uprav příkazy a spusť znovu.';
+      Uloha.trhni(programEl);
+      prekresliProgram();
+    }
+  }
+  function zamkni() {
+    ovladace.querySelectorAll('button').forEach(b => { b.disabled = true; });
+  }
+
+  function spust() {
+    if (bezi || hotovo || !program.length) return;
+    bezi = true;
+    beh = null;
+    kresliStopu([]);
+    posunRobota(stav.start);
+    prekresliProgram(0);
+    const dalsi = () => {
+      const vysledek = provedKrok();
+      if (vysledek === 'ok') { setTimeout(dalsi, 340); return; }
+      bezi = false;
+      if (vysledek === 'konec') vyhodnotKonec();
+      else prekresliProgram();
+    };
+    setTimeout(dalsi, 200);
+  }
+
+  function krokuj() {
+    if (bezi || hotovo || !program.length) return;
+    const vysledek = provedKrok();
+    if (vysledek === 'konec') vyhodnotKonec();
+  }
+
+  /* --- tlačítka --- */
+  Object.keys(SMERY).forEach(sipka => {
+    const b = document.createElement('button');
+    b.textContent = sipka;
+    b.title = 'Přidat příkaz ' + sipka;
+    b.addEventListener('click', () => pridej(sipka));
+    ovladace.appendChild(b);
+  });
+  const oddel = document.createElement('div');
+  oddel.className = 'oddel';
+  ovladace.appendChild(oddel);
+
+  const zpet = document.createElement('button');
+  zpet.className = 'akce';
+  zpet.textContent = '↩️ Zpět';
+  zpet.title = 'Smazat poslední příkaz (Backspace)';
+  zpet.addEventListener('click', () => { if (!bezi && !hotovo && program.length) smaz(program.length - 1); });
+
+  const vymaz = document.createElement('button');
+  vymaz.className = 'akce';
+  vymaz.textContent = '🧹 Vymazat';
+  vymaz.title = 'Smazat celý program';
+  vymaz.addEventListener('click', () => {
+    if (bezi || hotovo) return;
+    program.length = 0;
+    resetBeh();
+    odezva.className = 'odezva';
+    odezva.textContent = '';
+  });
+
+  const krok = document.createElement('button');
+  krok.className = 'akce';
+  krok.textContent = '⏭️ Krok';
+  krok.title = 'Provést jeden příkaz (klávesa .)';
+  krok.addEventListener('click', krokuj);
+
+  const spustit = document.createElement('button');
+  spustit.className = 'akce spustit';
+  spustit.textContent = '▶️ Spustit';
+  spustit.title = 'Spustit celý program (Enter)';
+  spustit.addEventListener('click', spust);
+
+  ovladace.append(zpet, vymaz, krok, spustit);
+
+  programEl.addEventListener('click', e => {
+    const chip = e.target.closest('.prikaz');
+    if (chip) smaz(Number(chip.dataset.i));
+  });
+
+  klavesnice = e => {
+    if (KLAVESY[e.key]) { e.preventDefault(); pridej(KLAVESY[e.key]); }
+    else if (e.key === 'Backspace') { e.preventDefault(); if (program.length) smaz(program.length - 1); }
+    else if (e.key === 'Enter') { e.preventDefault(); spust(); }
+    else if (e.key === '.') { e.preventDefault(); krokuj(); }
+    else if (e.key === 'Escape') { e.preventDefault(); if (!bezi && !hotovo) resetBeh(); }
+  };
+  document.addEventListener('keydown', klavesnice);
+
+  prekresliProgram();
+  p.append(hriste, programEl, info, ovladace, odezva, klavesy);
+}
+
+/* ---- Najdi chybu v programu --------------------------------------------------- */
+function najdiChybu() {
+  const p = $('plocha');
+  /* jednoduchá trasa bez překážek: robot má dojít z levého dolního rohu do cíle */
+  const cil = { s: Uloha.nahodneCislo(2, 4), r: Uloha.nahodneCislo(1, 3) };
+  const spravny = [];
+  for (let i = 0; i < cil.s; i++) spravny.push('➡️');
+  for (let i = 0; i < (RADKU - 1 - cil.r); i++) spravny.push('⬆️');
+
+  const chybny = [...spravny];
+  const kde = Uloha.nahodneCislo(0, chybny.length - 1);
+  chybny[kde] = chybny[kde] === '➡️' ? '⬅️' : '⬇️';
+
+  const stav = { start: { s: 0, r: RADKU - 1 }, robot: { s: 0, r: RADKU - 1 }, cil, prekazky: [] };
+  p.innerHTML = `<div class="zadani">Robot má dojít do cíle. Ve kterém kroku je chyba?</div>
+    ${vykresliHriste(stav)}`;
+
+  const programEl = document.createElement('div');
+  programEl.className = 'program zamceno';
+  programEl.innerHTML = chybny
+    .map((x, i) => `<span class="prikaz"><span class="poradi">${i + 1}</span>${x}</span>`).join('');
+  p.appendChild(programEl);
+
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  const moznosti = Uloha.zamichej([...Array(chybny.length).keys()])
+    .slice(0, Math.min(4, chybny.length));
+  if (!moznosti.includes(kde)) { moznosti[0] = kde; }
+
+  /* Po správné odpovědi projde robot opravený program, ať je vidět, jak to mělo být. */
+  function ukazSpravnouCestu() {
+    const body = [{ ...stav.start }];
+    const poz = { ...stav.start };
+    spravny.forEach(sipka => {
+      const [ds, dr] = SMERY[sipka];
+      poz.s += ds; poz.r += dr;
+      body.push({ ...poz });
+    });
+    const stopa = p.querySelector('#stopa');
+    if (stopa) stopa.setAttribute('d', body.map((b, i) => `${i ? 'L' : 'M'}${stredX(b.s)} ${stredY(b.r)}`).join(' '));
+    const g = p.querySelector('#robot');
+    if (g) g.setAttribute('transform', `translate(${stredX(cil.s)}, ${stredY(cil.r)})`);
+    programEl.querySelectorAll('.prikaz')[kde].innerHTML =
+      `<span class="poradi">${kde + 1}</span>${spravny[kde]}`;
+  }
+
+  Uloha.vyber({
+    kam: p, odezva, trida: 'velke',
+    moznosti: Uloha.zamichej(moznosti).map(i => ({ klic: String(i), popis: 'krok ' + (i + 1) })),
+    spravnyKlic: String(kde),
+    zpravaOk: `✅ Krok ${kde + 1} má být ${spravny[kde]}. Správný program: ${spravny.join(' ')}`,
+    zpravaChyba: 'Projdi program krok za krokem a sleduj, kam robot dojde.',
+    poSpravne: napoprve => { skore.vyhodnot(napoprve); ukazSpravnouCestu(); },
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+const REZIMY = { bludiste, najdiChybu };
+function novaUloha() {
+  if (klavesnice) { document.removeEventListener('keydown', klavesnice); klavesnice = null; }
+  REZIMY[rezim]();
+}
+
+document.querySelectorAll('#rezimy button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#rezimy button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  rezim = b.dataset.rezim;
+  novaUloha();
+}));
+$('btnDalsi').addEventListener('click', novaUloha);
+novaUloha();
+</script>
+</body>
+</html>

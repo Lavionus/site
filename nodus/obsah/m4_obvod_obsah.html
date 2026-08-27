@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Obvod a obsah čtverce a obdélníku</title>
+  <link rel="stylesheet" href="../common.css">
+  <link rel="stylesheet" href="../vyuka.css">
+  <script src="../theme.js"></script>
+  <script src="../rec.js"></script>
+  <script src="../uloha.js"></script>
+  <style>
+    .sit { width: min(420px, 92%); }
+    .sit .bunka { fill: var(--bg-control); stroke: var(--border); stroke-width: 1; }
+    .sit .bunka.uvnitr { fill: var(--accent); fill-opacity: 0.55; }
+    .sit .bunka.klikaci { cursor: pointer; }
+    .sit .bunka.klikaci:hover { fill: var(--accent); fill-opacity: 0.3; }
+    .sit .bunka.spravne { fill: var(--ok); fill-opacity: 0.75; }
+    .sit .ramecek { fill: none; stroke: var(--accent); stroke-width: 3; }
+    .sit .kota { fill: var(--text-muted); font-size: 12px; font-weight: 700; text-anchor: middle; }
+    .rozmery { font-size: clamp(1.3rem, 5vw, 2rem); font-weight: 700; }
+    .vzorec { color: var(--text-faint); font-size: 0.85rem; }
+  </style>
+</head>
+<body>
+  <h1>🟦 Obvod a obsah čtverce a obdélníku</h1>
+  <p class="podtitul">Pro 4.–5. ročník: počítání ve čtvercové síti i podle vzorců.</p>
+
+  <div class="rezimy" id="rezimy">
+    <button data-rezim="obsahSit" class="active">▦ Obsah ve čtvercové síti</button>
+    <button data-rezim="obvodVypocet">📏 Vypočítej obvod</button>
+    <button data-rezim="obsahVypocet">🟩 Vypočítej obsah</button>
+    <button data-rezim="narysuj">✏️ Narýsuj obdélník</button>
+  </div>
+
+  <div class="plocha" id="plocha"></div>
+
+  <div class="ovladani">
+    <button class="hlavni" id="btnDalsi">Přeskočit →</button>
+    <span class="skore" id="skore"></span>
+  </div>
+
+  <p class="napoveda">
+    <b>Obvod</b> je délka celého okraje: o = 2 × (a + b), u čtverce o = 4 × a.
+    <b>Obsah</b> je plocha uvnitř: S = a × b, u čtverce S = a × a.
+    Obvod měříme v cm, obsah v cm².
+  </p>
+
+<script>
+const $ = id => document.getElementById(id);
+const skore = Uloha.skore('nodus_m4_obvod', $('skore'));
+let rezim = 'obsahSit';
+
+const KROK = 30, OKRAJ = 24, SLOUPCU = 10, RADKU = 7;
+
+function mrizka(obsahBunky, klikaci) {
+  let bunky = '';
+  for (let r = 0; r < RADKU; r++) {
+    for (let s = 0; s < SLOUPCU; s++) {
+      const tridy = ['bunka'];
+      if (obsahBunky && obsahBunky(s, r)) tridy.push('uvnitr');
+      if (klikaci) tridy.push('klikaci');
+      bunky += `<rect class="${tridy.join(' ')}" data-s="${s}" data-r="${r}" `
+        + `x="${OKRAJ + s * KROK}" y="${OKRAJ + r * KROK}" width="${KROK}" height="${KROK}"/>`;
+    }
+  }
+  return bunky;
+}
+
+const svgSit = (vnitrek, klikaci, navic = '') =>
+  `<svg class="sit" viewBox="0 0 ${OKRAJ * 2 + SLOUPCU * KROK} ${OKRAJ * 2 + RADKU * KROK}">
+     ${mrizka(vnitrek, klikaci)}${navic}
+   </svg>`;
+
+/* ---- Obsah ve čtvercové síti ------------------------------------------------ */
+function obsahSit() {
+  const p = $('plocha');
+  const a = Uloha.nahodneCislo(2, 7), b = Uloha.nahodneCislo(2, 5);
+  const x = Uloha.nahodneCislo(0, SLOUPCU - a), y = Uloha.nahodneCislo(0, RADKU - b);
+  const obsah = a * b;
+
+  const ramecek = `<rect class="ramecek" x="${OKRAJ + x * KROK}" y="${OKRAJ + y * KROK}"
+    width="${a * KROK}" height="${b * KROK}"/>`;
+  p.innerHTML = `<div class="zadani">Kolik čtverečků má obdélník uvnitř? (obsah v cm²)</div>
+    ${svgSit((s, r) => s >= x && s < x + a && r >= y && r < y + b, false, ramecek)}`;
+
+  const jine = new Set();
+  let pokusu1 = 0;
+  while (jine.size < 3 && pokusu1++ < 200) {
+    const k = Uloha.nahodne([obsah + a, obsah - b, 2 * (a + b), a + b, obsah + 1, obsah - 1]);
+    if (k !== obsah && k > 0) jine.add(k);
+  }
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva, trida: 'velke',
+    moznosti: Uloha.zamichej([obsah, ...jine]).map(v => ({ klic: String(v), popis: v + ' cm²' })),
+    spravnyKlic: String(obsah),
+    zpravaOk: `✅ ${a} × ${b} = ${obsah} čtverečků, tedy ${obsah} cm².`,
+    zpravaChyba: 'Spočítej, kolik čtverečků je v jedné řadě, a vynásob počtem řad.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Vypočítej obvod / obsah ------------------------------------------------ */
+function ulohaVypoctem(obvodem) {
+  const p = $('plocha');
+  const ctverec = Math.random() < 0.35;
+  const a = Uloha.nahodneCislo(2, 12);
+  const b = ctverec ? a : Uloha.nahodneCislo(2, 12);
+  const obvod = 2 * (a + b), obsah = a * b;
+  const spravny = obvodem ? obvod : obsah;
+  const jednotka = obvodem ? 'cm' : 'cm²';
+  const nazev = ctverec ? 'čtverec' : 'obdélník';
+
+  p.innerHTML = `<div class="zadani">Vypočítej ${obvodem ? 'obvod' : 'obsah'} útvaru:</div>
+    <div class="karta">
+      <div class="obrazek">${ctverec ? '🟦' : '▭'}</div>
+      <div class="rozmery">${nazev}: a = ${a} cm${ctverec ? '' : ', b = ' + b + ' cm'}</div>
+      <div class="vzorec">${obvodem
+        ? (ctverec ? 'o = 4 × a' : 'o = 2 × (a + b)')
+        : (ctverec ? 'S = a × a' : 'S = a × b')}</div>
+    </div>`;
+
+  const jine = new Set([obvodem ? obsah : obvod, spravny + a, Math.abs(spravny - b)]);
+  jine.delete(spravny);
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva, trida: 'velke',
+    moznosti: Uloha.zamichej([spravny, ...[...jine].slice(0, 3)])
+      .map(v => ({ klic: String(v), popis: v + ' ' + jednotka })),
+    spravnyKlic: String(spravny),
+    zpravaOk: obvodem
+      ? `✅ o = 2 × (${a} + ${b}) = ${obvod} cm`
+      : `✅ S = ${a} × ${b} = ${obsah} cm²`,
+    zpravaChyba: obvodem
+      ? 'Obvod je součet všech čtyř stran.'
+      : 'Obsah spočítáš vynásobením obou stran.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+const obvodVypocet = () => ulohaVypoctem(true);
+const obsahVypocet = () => ulohaVypoctem(false);
+
+/* ---- Narýsuj obdélník ------------------------------------------------------- */
+function narysuj() {
+  const p = $('plocha');
+  const a = Uloha.nahodneCislo(2, 6), b = Uloha.nahodneCislo(2, 5);
+  const cilovyObsah = a * b;
+
+  p.innerHTML = `<div class="zadani">Klepni na levý horní a pak pravý dolní roh tak,
+      aby obdélník měl obsah <b>${cilovyObsah} cm²</b>.</div>${svgSit(null, true)}`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  p.appendChild(odezva);
+
+  const svg = p.querySelector('svg');
+  let prvni = null, chyboval = false, hotovo = false;
+
+  svg.querySelectorAll('.bunka').forEach(bunka => {
+    bunka.addEventListener('click', () => {
+      if (hotovo) return;
+      const s = +bunka.dataset.s, r = +bunka.dataset.r;
+      if (!prvni) {
+        prvni = { s, r };
+        svg.querySelectorAll('.bunka').forEach(x => x.classList.remove('uvnitr'));
+        bunka.classList.add('uvnitr');
+        odezva.className = 'odezva';
+        odezva.textContent = 'Teď klepni na protější roh obdélníku.';
+        return;
+      }
+      const sirka = Math.abs(s - prvni.s) + 1, vyska = Math.abs(r - prvni.r) + 1;
+      const obsah = sirka * vyska;
+      const odS = Math.min(s, prvni.s), doS = Math.max(s, prvni.s);
+      const odR = Math.min(r, prvni.r), doR = Math.max(r, prvni.r);
+      svg.querySelectorAll('.bunka').forEach(x => {
+        const xs = +x.dataset.s, xr = +x.dataset.r;
+        x.classList.toggle('uvnitr', xs >= odS && xs <= doS && xr >= odR && xr <= doR);
+      });
+      if (obsah === cilovyObsah) {
+        hotovo = true;
+        svg.querySelectorAll('.bunka.uvnitr').forEach(x => x.classList.add('spravne'));
+        odezva.className = 'odezva ok';
+        odezva.textContent = `✅ ${sirka} × ${vyska} = ${obsah} cm² – přesně podle zadání.`;
+        skore.vyhodnot(!chyboval);
+        setTimeout(novaUloha, Uloha.PRODLEVA + 400);
+      } else {
+        chyboval = true;
+        Uloha.trhni(svg);
+        odezva.className = 'odezva chyba';
+        odezva.textContent = `Tenhle obdélník má ${sirka} × ${vyska} = ${obsah} cm². `
+          + `Potřebujeme ${cilovyObsah} cm² – zkus jiné rohy.`;
+        prvni = null;
+      }
+    });
+  });
+}
+
+const REZIMY = { obsahSit, obvodVypocet, obsahVypocet, narysuj };
+function novaUloha() { REZIMY[rezim](); }
+
+document.querySelectorAll('#rezimy button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#rezimy button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  rezim = b.dataset.rezim;
+  novaUloha();
+}));
+$('btnDalsi').addEventListener('click', novaUloha);
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === 'Enter') { e.preventDefault(); novaUloha(); }
+});
+novaUloha();
+</script>
+</body>
+</html>

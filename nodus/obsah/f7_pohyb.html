@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pohyb tělesa – dráha a rychlost</title>
+  <link rel="stylesheet" href="../common.css">
+  <link rel="stylesheet" href="../vyuka.css">
+  <script src="../theme.js"></script>
+  <script src="../uloha.js"></script>
+  <style>
+    .uloha-text { max-width: 620px; font-size: 1.04rem; line-height: 1.6; }
+    .uloha-text b { color: var(--accent); }
+    .vzorec { font-family: 'Courier New', monospace; color: var(--text-muted); font-size: 1rem; }
+    .graf { width: min(340px, 84%); }
+    .graf .osy { stroke: var(--text-muted); stroke-width: 2; }
+    .graf .mrizka { stroke: var(--border); stroke-width: 1; }
+    .graf .krivka { fill: none; stroke: var(--accent); stroke-width: 3; stroke-linejoin: round; }
+    .graf .popis { fill: var(--text-faint); font-size: 11px; }
+    .graf .osaText { fill: var(--text-muted); font-size: 12px; font-weight: 600; }
+  </style>
+</head>
+<body>
+  <h1>🏃 Pohyb tělesa – dráha a rychlost</h1>
+  <p class="podtitul">Pro 7. ročník: s = v · t, převody jednotek rychlosti a graf dráhy.</p>
+
+  <div class="rezimy" id="rezimy">
+    <button data-rezim="vypocet" class="active">🧮 Dráha, rychlost, čas</button>
+    <button data-rezim="jednotky">🔁 m/s ↔ km/h</button>
+    <button data-rezim="graf">📈 Čtení grafu</button>
+    <button data-rezim="druh">🚦 Rovnoměrný, či ne</button>
+  </div>
+
+  <div class="plocha" id="plocha"></div>
+
+  <div class="ovladani">
+    <button class="hlavni" id="btnDalsi">Přeskočit →</button>
+    <span class="skore" id="skore"></span>
+  </div>
+
+  <p class="napoveda">
+    <b>v = s / t</b>, <b>s = v · t</b>, <b>t = s / v</b>. Rychlost 1 m/s = 3,6 km/h.
+    U <b>rovnoměrného</b> pohybu je rychlost stálá a graf dráhy je přímka; u nerovnoměrného
+    počítáme <b>průměrnou rychlost</b> jako celkovou dráhu dělenou celkovým časem.
+  </p>
+
+<script>
+const $ = id => document.getElementById(id);
+const skore = Uloha.skore('nodus_f7_pohyb', $('skore'));
+let rezim = 'vypocet';
+
+const fmt = x => Number(Number(x).toFixed(2)).toLocaleString('cs-CZ');
+function odezvaEl() { const d = document.createElement('div'); d.className = 'odezva'; return d; }
+
+const DOPRAVA = [
+  { co: 'cyklista', ikona: '🚴', v: 18 }, { co: 'chodec', ikona: '🚶', v: 5 },
+  { co: 'auto', ikona: '🚗', v: 90 }, { co: 'vlak', ikona: '🚆', v: 120 },
+  { co: 'traktor', ikona: '🚜', v: 25 }, { co: 'běžec', ikona: '🏃', v: 12 },
+];
+
+/* ---- Dráha, rychlost, čas ---------------------------------------------------------------- */
+function vypocet() {
+  const p = $('plocha');
+  const d = Uloha.nahodne(DOPRAVA);
+  const t = Uloha.nahodneCislo(2, 6);          // hodiny
+  const s = d.v * t;
+  const hledame = Uloha.nahodne(['s', 'v', 't']);
+
+  let zadani, vysledek, jednotka, vzorec;
+  if (hledame === 's') {
+    zadani = `${d.ikona} ${d.co.charAt(0).toUpperCase() + d.co.slice(1)} jede stálou rychlostí
+      <b>${d.v} km/h</b> po dobu <b>${t} h</b>. Jakou dráhu urazí?`;
+    vysledek = s; jednotka = 'km'; vzorec = `s = v · t = ${d.v} · ${t} = ${s} km`;
+  } else if (hledame === 'v') {
+    zadani = `${d.ikona} ${d.co.charAt(0).toUpperCase() + d.co.slice(1)} ujel <b>${s} km</b>
+      za <b>${t} h</b>. Jaká byla jeho průměrná rychlost?`;
+    vysledek = d.v; jednotka = 'km/h'; vzorec = `v = s / t = ${s} / ${t} = ${d.v} km/h`;
+  } else {
+    zadani = `${d.ikona} ${d.co.charAt(0).toUpperCase() + d.co.slice(1)} musí urazit <b>${s} km</b>
+      rychlostí <b>${d.v} km/h</b>. Jak dlouho pojede?`;
+    vysledek = t; jednotka = 'h'; vzorec = `t = s / v = ${s} / ${d.v} = ${t} h`;
+  }
+
+  const jine = new Set();
+  let pojistka = 0;
+  while (jine.size < 3 && pojistka++ < 200) {
+    const x = Uloha.nahodne([vysledek * 2, vysledek / 2, vysledek + 10, vysledek - 5, Math.round(vysledek * 1.5)]);
+    if (x > 0 && Math.abs(x - vysledek) > 0.001) jine.add(fmt(x) + ' ' + jednotka);
+  }
+
+  p.innerHTML = `<div class="zadani uloha-text">${zadani}</div>
+    <div class="karta"><div class="vzorec">v = s / t &nbsp;·&nbsp; s = v · t &nbsp;·&nbsp; t = s / v</div></div>`;
+  const odezva = odezvaEl();
+  Uloha.vyber({
+    kam: p, odezva, trida: 'velke',
+    moznosti: Uloha.zamichej([fmt(vysledek) + ' ' + jednotka, ...jine]).map(x => ({ klic: x, popis: x })),
+    spravnyKlic: fmt(vysledek) + ' ' + jednotka,
+    zpravaOk: `✅ ${vzorec}`,
+    zpravaChyba: 'Vyber správný tvar vzorce a hlídej jednotky.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Převody rychlosti --------------------------------------------------------------------- */
+function jednotky() {
+  const p = $('plocha');
+  const naMS = Math.random() < 0.5;
+  const zaklad = Uloha.nahodneCislo(1, 30);
+  const kmh = naMS ? zaklad * 3.6 : zaklad;
+  const ms = naMS ? zaklad : zaklad / 3.6;
+  const vysledek = naMS ? kmh : ms;
+  const jednotka = naMS ? 'km/h' : 'm/s';
+
+  const jine = new Set();
+  let pojistka = 0;
+  while (jine.size < 3 && pojistka++ < 200) {
+    const x = Uloha.nahodne([vysledek * 3.6, vysledek / 3.6, vysledek * 10, vysledek / 10, vysledek + 3.6]);
+    if (x > 0 && Math.abs(x - vysledek) > 0.01) jine.add(fmt(x) + ' ' + jednotka);
+  }
+
+  p.innerHTML = `<div class="zadani">Převeď rychlost:</div>
+    <div class="karta"><div class="vzorec" style="font-size:1.6rem;font-weight:700;color:var(--text)">
+      ${fmt(naMS ? ms : kmh)} ${naMS ? 'm/s' : 'km/h'} = ? ${jednotka}</div>
+      <div class="vzorec">1 m/s = 3,6 km/h</div></div>`;
+  const odezva = odezvaEl();
+  Uloha.vyber({
+    kam: p, odezva, trida: 'velke',
+    moznosti: Uloha.zamichej([fmt(vysledek) + ' ' + jednotka, ...jine]).map(x => ({ klic: x, popis: x })),
+    spravnyKlic: fmt(vysledek) + ' ' + jednotka,
+    zpravaOk: naMS
+      ? `✅ ${fmt(ms)} · 3,6 = ${fmt(kmh)} km/h`
+      : `✅ ${fmt(kmh)} : 3,6 = ${fmt(ms)} m/s`,
+    zpravaChyba: 'Z m/s na km/h se násobí 3,6, opačným směrem se dělí.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Čtení grafu ----------------------------------------------------------------------------- */
+function svgGraf(body, popisX, popisY) {
+  const X = t => 40 + t * 26, Y = s => 160 - s * 1.1;
+  let mrizka = '';
+  for (let t = 0; t <= 5; t++) {
+    mrizka += `<line class="mrizka" x1="${X(t)}" y1="20" x2="${X(t)}" y2="160"/>
+      <text class="popis" x="${X(t)}" y="176" text-anchor="middle">${t}</text>`;
+  }
+  for (let s = 0; s <= 100; s += 25) {
+    mrizka += `<line class="mrizka" x1="40" y1="${Y(s)}" x2="180" y2="${Y(s)}"/>
+      <text class="popis" x="34" y="${Y(s) + 4}" text-anchor="end">${s}</text>`;
+  }
+  const d = 'M' + body.map(([t, s]) => `${X(t)} ${Y(s)}`).join(' L');
+  return `<svg class="graf" viewBox="0 0 200 200">
+    ${mrizka}
+    <line class="osy" x1="40" y1="10" x2="40" y2="160"/>
+    <line class="osy" x1="40" y1="160" x2="190" y2="160"/>
+    <path class="krivka" d="${d}"/>
+    <text class="osaText" x="6" y="16">${popisY}</text>
+    <text class="osaText" x="150" y="194">${popisX}</text>
+  </svg>`;
+}
+function graf() {
+  const p = $('plocha');
+  const rychlost = Uloha.nahodne([10, 15, 20]);          // km/h, ať se graf vejde do os
+  const stoji = Math.random() < 0.4;
+  const body = stoji
+    ? [[0, 0], [2, 2 * rychlost], [3, 2 * rychlost], [5, 2 * rychlost + 2 * rychlost]]
+    : [[0, 0], [5, 5 * rychlost]];
+  const cas = Uloha.nahodneCislo(1, 2);
+  const draha = cas * rychlost;
+
+  const jine = new Set();
+  let pojistka = 0;
+  while (jine.size < 3 && pojistka++ < 200) {
+    const x = Uloha.nahodne([draha * 2, draha / 2, draha + 10, draha - 10, draha + rychlost]);
+    if (x > 0 && x !== draha) jine.add(fmt(x) + ' km');
+  }
+
+  p.innerHTML = `<div class="zadani uloha-text">Graf ukazuje závislost dráhy na čase.
+      Jakou dráhu mělo těleso ujeto v čase <b>${cas} h</b>?</div>
+    <div class="karta">${svgGraf(body, 't [h]', 's [km]')}</div>`;
+  const odezva = odezvaEl();
+  Uloha.vyber({
+    kam: p, odezva, trida: 'velke',
+    moznosti: Uloha.zamichej([fmt(draha) + ' km', ...jine]).map(x => ({ klic: x, popis: x })),
+    spravnyKlic: fmt(draha) + ' km',
+    zpravaOk: `✅ V čase ${cas} h je na svislé ose ${fmt(draha)} km – rychlost je ${rychlost} km/h.`
+      + (stoji ? ' Vodorovná část grafu znamená, že těleso stálo.' : ''),
+    zpravaChyba: 'Najdi na vodorovné ose zadaný čas a odečti hodnotu na svislé ose.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Rovnoměrný, či ne -------------------------------------------------------------------------- */
+const SITUACE = [
+  { text: 'Eskalátor v obchodním domě jede stále stejně rychle.', rovno: true },
+  { text: 'Auto se rozjíždí na semaforu.', rovno: false },
+  { text: 'Jablko padá ze stromu.', rovno: false },
+  { text: 'Ručička sekundovky obíhá ciferník.', rovno: true },
+  { text: 'Vlak brzdí před stanicí.', rovno: false },
+  { text: 'Výtah jede prostřední částí své cesty stálou rychlostí.', rovno: true },
+  { text: 'Cyklista šlape do kopce a zpomaluje.', rovno: false },
+  { text: 'Pás dopravníku v továrně se pohybuje stálou rychlostí.', rovno: true },
+  { text: 'Míč vyhozený svisle vzhůru stoupá.', rovno: false },
+  { text: 'Družice obíhá Zemi po kruhové dráze stálou velikostí rychlosti.', rovno: true },
+];
+function druh() {
+  const p = $('plocha');
+  const u = Uloha.nahodne(SITUACE);
+  p.innerHTML = `<div class="zadani uloha-text">${u.text}<br>O jaký pohyb jde?</div>`;
+  const odezva = odezvaEl();
+  Uloha.vyber({
+    kam: p, odezva, trida: 'dve',
+    moznosti: [
+      { klic: 'rovno', ikona: '➡️', popis: 'rovnoměrný (stálá rychlost)' },
+      { klic: 'nerovno', ikona: '📈', popis: 'nerovnoměrný (rychlost se mění)' },
+    ],
+    spravnyKlic: u.rovno ? 'rovno' : 'nerovno',
+    zpravaOk: u.rovno
+      ? '✅ Velikost rychlosti se nemění – pohyb je rovnoměrný.'
+      : '✅ Rychlost se během pohybu mění – pohyb je nerovnoměrný.',
+    zpravaChyba: 'Zeptej se, zda se velikost rychlosti během pohybu mění.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+const REZIMY = { vypocet, jednotky, graf, druh };
+function novaUloha() { REZIMY[rezim](); }
+
+document.querySelectorAll('#rezimy button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#rezimy button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  rezim = b.dataset.rezim;
+  novaUloha();
+}));
+$('btnDalsi').addEventListener('click', novaUloha);
+novaUloha();
+</script>
+</body>
+</html>

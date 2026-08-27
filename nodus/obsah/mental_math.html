@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🧠 Trénink mentální matematiky</title>
+<link rel="stylesheet" href="../common.css">
+<link rel="stylesheet" href="../vyuka.css">
+<script src="../theme.js"></script>
+<script src="../uloha.js" defer></script>
+<script src="../rekord.js" defer></script>
+<style>
+.operace { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+.operace button {
+  background: var(--bg-control); border: 2px solid var(--border-strong); color: var(--text);
+  border-radius: 10px; padding: 10px 16px; font-size: 1.3rem; cursor: pointer; font-family: inherit;
+}
+.operace button.zapnuto { background: var(--accent); border-color: var(--accent); color: #fff; }
+</style>
+</head>
+<body>
+  <h1>🧠 Trénink mentální matematiky</h1>
+  <p class="podtitul">Rychlostní dril z hlavy. Počítá se, kolik stihneš — na konci uvidíš, které příklady ti dělaly problém.</p>
+
+  <div class="rezimy" id="nastaveni">
+    <div class="operace" id="operace">
+      <button data-op="+" class="zapnuto" aria-pressed="true">➕</button>
+      <button data-op="-" class="zapnuto" aria-pressed="true">➖</button>
+      <button data-op="*" aria-pressed="false">✖️</button>
+      <button data-op="/" aria-pressed="false">➗</button>
+    </div>
+    <label>Obtížnost
+      <select id="uroven">
+        <option value="1">Lehká (do 20)</option>
+        <option value="2" selected>Střední (do 100)</option>
+        <option value="3">Těžká (do 1000)</option>
+      </select>
+    </label>
+    <label>Délka
+      <select id="delka">
+        <option value="60" selected>60 sekund</option>
+        <option value="120">2 minuty</option>
+        <option value="0">20 příkladů</option>
+      </select>
+    </label>
+    <button class="hlavni" id="btnStart">▶️ Start</button>
+  </div>
+
+  <div class="plocha" id="plocha"></div>
+
+  <div class="ovladani">
+    <span id="rekordBox"></span>
+    <span class="pokrok" id="pokrok"></span>
+    <span class="skore" id="skore"></span>
+  </div>
+
+  <p class="napoveda">
+    Odpověď potvrď <b>Enterem</b>. Tipy do hlavy: sčítej po řádech (47 + 38 = 40 + 30 + 7 + 8),
+    odčítej doplňkem do celé desítky, násob rozkladem (14 × 6 = 10 × 6 + 4 × 6).
+  </p>
+
+<script>
+const $ = id => document.getElementById(id);
+
+let operace = ['+', '-'];
+let spravne = 0, pokusy = 0, serie = 0, nejdelsiSerie = 0;
+let chyby = [], aktualni = null, casovac = null, zbyva = 0, celkovaDelka = 0;
+let naPocet = false, limitPrikladu = 20, zodpovezeno = 0;
+let rek = null, skore = null, bezi = false;
+
+function generuj() {
+  const uroven = +$('uroven').value;
+  const max = uroven === 1 ? 20 : uroven === 2 ? 100 : 1000;
+  const op = operace[Math.floor(Math.random() * operace.length)];
+  let a, b, vysledek;
+  if (op === '+') { a = 1 + Math.floor(Math.random() * max); b = 1 + Math.floor(Math.random() * max); vysledek = a + b; }
+  else if (op === '-') { a = 1 + Math.floor(Math.random() * max); b = 1 + Math.floor(Math.random() * a); vysledek = a - b; }
+  else if (op === '*') {
+    const m = uroven === 1 ? 9 : uroven === 2 ? 15 : 25;
+    a = 2 + Math.floor(Math.random() * m); b = 2 + Math.floor(Math.random() * m); vysledek = a * b;
+  } else {
+    b = 2 + Math.floor(Math.random() * (uroven === 1 ? 9 : 12));
+    vysledek = 1 + Math.floor(Math.random() * (uroven === 1 ? 9 : 12));
+    a = b * vysledek;
+  }
+  const znak = op === '*' ? '×' : op === '/' ? '÷' : op;
+  return { zadani: `${a} ${znak} ${b}`, odpoved: vysledek };
+}
+
+function start() {
+  spravne = 0; pokusy = 0; serie = 0; nejdelsiSerie = 0; chyby = []; zodpovezeno = 0;
+  const delka = +$('delka').value;
+  naPocet = delka === 0;
+  celkovaDelka = delka * 1000;
+  zbyva = celkovaDelka;
+  bezi = true;
+  clearInterval(casovac);
+  if (!naPocet) {
+    casovac = setInterval(() => {
+      zbyva -= 100;
+      const pruh = $('ubytek');
+      if (pruh) {
+        pruh.style.width = Math.max(0, zbyva / celkovaDelka * 100) + '%';
+        pruh.parentElement.classList.toggle('dochazi', zbyva <= 10000);
+      }
+      const cas = $('zbyvaCas');
+      if (cas) cas.textContent = Math.max(0, Math.ceil(zbyva / 1000));
+      if (zbyva <= 0) konec();
+    }, 100);
+  }
+  dalsi();
+}
+
+function dalsi() {
+  if (!bezi) return;
+  if (naPocet && zodpovezeno >= limitPrikladu) { konec(); return; }
+  aktualni = generuj();
+  $('pokrok').textContent = naPocet ? `${zodpovezeno + 1} / ${limitPrikladu}` : '';
+
+  $('plocha').innerHTML = '';
+  const karta = document.createElement('div');
+  karta.className = 'karta';
+  karta.innerHTML =
+    `<div class="dril-stav"><span>Správně <b>${spravne}</b></span><span>Série <b>${serie}</b> 🔥</span>` +
+    (naPocet ? '' : `<span>Zbývá <b id="zbyvaCas">${Math.ceil(zbyva / 1000)}</b> s</span>`) + '</div>' +
+    (naPocet ? '' : `<div class="casomira"><i id="ubytek" style="width:${zbyva / celkovaDelka * 100}%"></i></div>`) +
+    `<div class="velky-text">${aktualni.zadani} = ?</div>`;
+  const pole = document.createElement('input');
+  pole.className = 'odpoved-pole';
+  pole.type = 'number'; pole.inputMode = 'numeric'; pole.autocomplete = 'off';
+  pole.setAttribute('aria-label', 'Tvoje odpověď');
+  karta.appendChild(pole);
+  $('plocha').appendChild(karta);
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  $('plocha').appendChild(odezva);
+  pole.focus();
+
+  pole.addEventListener('keydown', e => {
+    if (e.key !== 'Enter' || pole.value === '') return;
+    e.preventDefault();
+    vyhodnot(pole, odezva);
+  });
+}
+
+function vyhodnot(pole, odezva) {
+  const ok = Number(pole.value) === aktualni.odpoved;
+  pokusy++; zodpovezeno++;
+  pole.disabled = true;
+  if (ok) {
+    spravne++; serie++;
+    if (serie > nejdelsiSerie) nejdelsiSerie = serie;
+    pole.classList.add('spravne');
+    odezva.className = 'odezva ok'; odezva.textContent = '✅';
+  } else {
+    serie = 0;
+    chyby.push(aktualni);
+    pole.classList.add('spatne');
+    odezva.className = 'odezva chyba';
+    odezva.textContent = `❌ Správně je ${aktualni.odpoved}.`;
+  }
+  if (skore) skore.vyhodnot(ok);
+  setTimeout(dalsi, ok ? 260 : 1200);
+}
+
+function konec() {
+  bezi = false;
+  clearInterval(casovac);
+  $('pokrok').textContent = '';
+  const presnost = pokusy ? Math.round(spravne / pokusy * 100) : 0;
+  const novyRekord = rek && rek.zapis(spravne);
+  $('plocha').innerHTML = '';
+  const karta = document.createElement('div');
+  karta.className = 'karta vysledky';
+  karta.innerHTML =
+    `<div class="emoji">${spravne >= 20 ? '🏆' : spravne >= 12 ? '🎉' : spravne >= 6 ? '👍' : '💪'}</div>` +
+    `<div class="velky-text">${spravne} správně</div>` +
+    `<div class="popis">Přesnost ${presnost} % z ${pokusy} pokusů · nejdelší série ${nejdelsiSerie}` +
+    (novyRekord ? ' 🏆 nový rekord!' : '') + '</div>';
+
+  if (chyby.length) {
+    const seznam = document.createElement('div');
+    seznam.className = 'prehled-chyb';
+    seznam.innerHTML = '<h2>Co nesedělo</h2>' + chyby.map(ch =>
+      `<div class="chyba-radek"><span class="zadani-chyby">${ch.zadani} =</span><b>${ch.odpoved}</b></div>`).join('');
+    karta.appendChild(seznam);
+  }
+
+  const tlacitka = document.createElement('div');
+  tlacitka.className = 'konec-tlacitka';
+  const znovu = document.createElement('button');
+  znovu.className = 'hlavni';
+  znovu.textContent = '🔄 Znovu';
+  znovu.onclick = start;
+  tlacitka.appendChild(znovu);
+  karta.appendChild(tlacitka);
+  $('plocha').appendChild(karta);
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  skore = Uloha.skore('nodus_mental_math', $('skore'));
+  if (typeof Rekord !== 'undefined') {
+    // dřívější klíč mentalmath_best držel totéž číslo, přeneseme ho
+    rek = Rekord.sleduj('nodus_mental_math_rekord',
+      { vyssiLepsi: true, popisek: 'Nejlepší výsledek', format: v => v + ' správně' });
+    try {
+      const stary = localStorage.getItem('mentalmath_best');
+      if (stary !== null) { rek.zapis(Number(stary)); localStorage.removeItem('mentalmath_best'); }
+    } catch { /* nedostupné úložiště – nevadí */ }
+    rek.prvek($('rekordBox'));
+  }
+  $('operace').addEventListener('click', e => {
+    const b = e.target.closest('button[data-op]');
+    if (!b) return;
+    b.classList.toggle('zapnuto');
+    let vybrane = [...$('operace').querySelectorAll('button.zapnuto')].map(x => x.dataset.op);
+    if (!vybrane.length) { b.classList.add('zapnuto'); vybrane = [b.dataset.op]; }
+    $('operace').querySelectorAll('button').forEach(x =>
+      x.setAttribute('aria-pressed', x.classList.contains('zapnuto') ? 'true' : 'false'));
+    operace = vybrane;
+  });
+  $('btnStart').onclick = start;
+  start();
+});
+</script>
+</body>
+</html>

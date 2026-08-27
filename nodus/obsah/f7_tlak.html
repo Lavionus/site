@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tlak v kapalinách a plynech</title>
+  <link rel="stylesheet" href="../common.css">
+  <link rel="stylesheet" href="../vyuka.css">
+  <script src="../theme.js"></script>
+  <script src="../uloha.js"></script>
+  <style>
+    .uloha-text { max-width: 620px; font-size: 1.04rem; line-height: 1.6; }
+    .uloha-text b { color: var(--accent); }
+    .vzorec { font-family: 'Courier New', monospace; color: var(--text-muted); font-size: 0.98rem; }
+    .scena { width: min(360px, 88%); }
+    .scena .voda { fill: rgba(80,150,220,0.35); stroke: #4a90d9; stroke-width: 2; }
+    .scena .nadoba { fill: none; stroke: var(--border-strong); stroke-width: 3; }
+    .scena .teleso { stroke: var(--accent); stroke-width: 2.5; }
+    .scena .kota { stroke: var(--warn); stroke-width: 2; stroke-dasharray: 5 4; }
+    .scena .popis { fill: var(--text-muted); font-size: 13px; text-anchor: middle; }
+    .scena .pist { fill: var(--bg-control); stroke: var(--text-muted); stroke-width: 2.5; }
+  </style>
+</head>
+<body>
+  <h1>🎈 Tlak v kapalinách a plynech</h1>
+  <p class="podtitul">Pro 7. ročník: hydrostatický tlak, Pascalův zákon, hydraulika a plavání těles.</p>
+
+  <div class="rezimy" id="rezimy">
+    <button data-rezim="hydrostaticky" class="active">🌊 Hydrostatický tlak</button>
+    <button data-rezim="plavani">🛟 Plave, či se potopí</button>
+    <button data-rezim="hydraulika">🔧 Hydraulický lis</button>
+    <button data-rezim="tlakPevne">📌 Tlak pevného tělesa</button>
+  </div>
+
+  <div class="plocha" id="plocha"></div>
+
+  <div class="ovladani">
+    <button class="hlavni" id="btnDalsi">Přeskočit →</button>
+    <span class="skore" id="skore"></span>
+  </div>
+
+  <p class="napoveda">
+    Hydrostatický tlak <b>p = h · ρ · g</b> závisí jen na hloubce a hustotě kapaliny, ne na tvaru nádoby.
+    Těleso <b>plave</b>, je-li jeho hustota menší než hustota kapaliny.
+    V hydraulickém zařízení platí <b>F₁ / S₁ = F₂ / S₂</b>.
+  </p>
+
+<script>
+const $ = id => document.getElementById(id);
+const skore = Uloha.skore('nodus_f7_tlak', $('skore'));
+let rezim = 'hydrostaticky';
+
+const fmt = x => Number(Number(x).toFixed(2)).toLocaleString('cs-CZ');
+function odezvaEl() { const d = document.createElement('div'); d.className = 'odezva'; return d; }
+
+const KAPALINY = [
+  { nazev: 'voda', ro: 1000 }, { nazev: 'nafta', ro: 850 },
+  { nazev: 'olej', ro: 900 }, { nazev: 'mořská voda', ro: 1030 },
+];
+const LATKY = [
+  { co: 'korek', ikona: '🪵', ro: 240 }, { co: 'led', ikona: '🧊', ro: 917 },
+  { co: 'suché dřevo', ikona: '🪵', ro: 600 }, { co: 'polystyren', ikona: '⬜', ro: 30 },
+  { co: 'železo', ikona: '🔩', ro: 7800 }, { co: 'sklo', ikona: '🫙', ro: 2500 },
+  { co: 'hliník', ikona: '🥫', ro: 2700 }, { co: 'olej v kapce', ikona: '🛢️', ro: 900 },
+];
+
+/* ---- Hydrostatický tlak -------------------------------------------------------------------- */
+function hydrostaticky() {
+  const p = $('plocha');
+  const k = Uloha.nahodne(KAPALINY);
+  const h = Uloha.nahodneCislo(1, 12);
+  const tlak = h * k.ro * 10;                    // Pa, g = 10 N/kg
+  const vKPa = tlak / 1000;
+
+  const jine = new Set([fmt(vKPa * 10), fmt(vKPa / 10), fmt(vKPa + h), fmt(vKPa * 2)]);
+  jine.delete(fmt(vKPa));
+
+  p.innerHTML = `<div class="zadani uloha-text">Jak velký je hydrostatický tlak v hloubce
+      <b>${h} m</b> pod hladinou (${k.nazev}, ρ = ${k.ro} kg/m³)?</div>
+    <div class="karta"><svg class="scena" viewBox="0 0 360 170">
+      <path class="nadoba" d="M60 20 L60 150 L300 150 L300 20"/>
+      <rect class="voda" x="60" y="40" width="240" height="110"/>
+      <line class="kota" x1="180" y1="40" x2="180" y2="140"/>
+      <text class="popis" x="205" y="95">h = ${h} m</text>
+      <circle cx="180" cy="140" r="5" fill="var(--warn)"/>
+    </svg><div class="vzorec">p = h · ρ · g, g = 10 N/kg</div></div>`;
+  const odezva = odezvaEl();
+  Uloha.vyber({
+    kam: p, odezva, trida: 'velke',
+    moznosti: Uloha.zamichej([fmt(vKPa), ...[...jine].slice(0, 3)]).map(x => ({ klic: x, popis: x + ' kPa' })),
+    spravnyKlic: fmt(vKPa),
+    zpravaOk: `✅ p = ${h} · ${k.ro} · 10 = ${tlak.toLocaleString('cs-CZ')} Pa = ${fmt(vKPa)} kPa`,
+    zpravaChyba: 'Vynásob hloubku, hustotu a g. Výsledek v pascalech vyděl 1000, dostaneš kPa.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Plave, či se potopí ---------------------------------------------------------------------- */
+function plavani() {
+  const p = $('plocha');
+  const k = Uloha.nahodne(KAPALINY);
+  const l = Uloha.nahodne(LATKY);
+  const spravny = l.ro < k.ro ? 'plave' : (l.ro > k.ro ? 'potopi' : 'vznasi');
+  const vyska = spravny === 'plave' ? 62 : spravny === 'vznasi' ? 85 : 115;
+
+  p.innerHTML = `<div class="zadani uloha-text">Těleso z materiálu <b>${l.co}</b> (ρ = ${l.ro} kg/m³)
+      vhodíme do kapaliny <b>${k.nazev}</b> (ρ = ${k.ro} kg/m³). Co se stane?</div>
+    <div class="karta"><svg class="scena" viewBox="0 0 360 170">
+      <path class="nadoba" d="M60 20 L60 150 L300 150 L300 20"/>
+      <rect class="voda" x="60" y="45" width="240" height="105"/>
+      <rect class="teleso" x="155" y="${vyska}" width="50" height="30" rx="5" fill="var(--accent-soft)"/>
+      <text class="popis" x="180" y="${vyska - 8}">${l.ikona}</text>
+    </svg></div>`;
+  const odezva = odezvaEl();
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([
+      { klic: 'plave', ikona: '🛟', popis: 'bude plavat u hladiny' },
+      { klic: 'vznasi', ikona: '⚖️', popis: 'bude se vznášet uvnitř' },
+      { klic: 'potopi', ikona: '⬇️', popis: 'klesne ke dnu' },
+    ]),
+    spravnyKlic: spravny,
+    zpravaOk: spravny === 'plave'
+      ? `✅ ${l.ro} < ${k.ro} kg/m³ – hustota tělesa je menší, těleso plave.`
+      : spravny === 'potopi'
+        ? `✅ ${l.ro} > ${k.ro} kg/m³ – hustota tělesa je větší, těleso klesne ke dnu.`
+        : `✅ Hustoty jsou stejné, těleso se vznáší.`,
+    zpravaChyba: 'Porovnej hustotu tělesa s hustotou kapaliny.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Hydraulický lis --------------------------------------------------------------------------- */
+function hydraulika() {
+  const p = $('plocha');
+  const S1 = Uloha.nahodneCislo(2, 10) * 5;        // cm²
+  const nasobek = Uloha.nahodneCislo(2, 8);
+  const S2 = S1 * nasobek;
+  const F1 = Uloha.nahodneCislo(2, 30) * 10;       // N
+  const F2 = F1 * nasobek;
+
+  const jine = new Set([fmt(F1), fmt(F1 / nasobek), fmt(F2 * 2), fmt(F1 + S2)]);
+  jine.delete(fmt(F2));
+
+  p.innerHTML = `<div class="zadani uloha-text">Na malý píst o obsahu <b>${S1} cm²</b> působíme silou
+      <b>${F1} N</b>. Jak velkou silou působí kapalina na velký píst o obsahu <b>${S2} cm²</b>?</div>
+    <div class="karta"><svg class="scena" viewBox="0 0 360 170">
+      <path class="nadoba" d="M50 60 L50 140 L310 140 L310 45"/>
+      <rect class="voda" x="50" y="80" width="260" height="60"/>
+      <rect class="pist" x="60" y="70" width="46" height="14"/>
+      <rect class="pist" x="230" y="55" width="72" height="14"/>
+      <text class="popis" x="83" y="60">F₁</text>
+      <text class="popis" x="266" y="45">F₂</text>
+      <text class="popis" x="83" y="106">S₁</text>
+      <text class="popis" x="266" y="106">S₂</text>
+    </svg><div class="vzorec">F₁ / S₁ = F₂ / S₂</div></div>`;
+  const odezva = odezvaEl();
+  Uloha.vyber({
+    kam: p, odezva, trida: 'velke',
+    moznosti: Uloha.zamichej([fmt(F2), ...[...jine].slice(0, 3)]).map(x => ({ klic: x, popis: x + ' N' })),
+    spravnyKlic: fmt(F2),
+    zpravaOk: `✅ Obsah je ${nasobek}× větší, proto i síla: ${F1} · ${nasobek} = ${F2} N`,
+    zpravaChyba: 'Kolikrát je větší píst, tolikrát je větší síla – tlak je v celé kapalině stejný.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Tlak pevného tělesa ------------------------------------------------------------------------ */
+function tlakPevne() {
+  const p = $('plocha');
+  const F = Uloha.nahodneCislo(2, 40) * 10;        // N
+  const S = Uloha.nahodne([0.01, 0.02, 0.05, 0.1, 0.2]);   // m²
+  const tlak = F / S;
+  const vKPa = tlak / 1000;
+
+  const jine = new Set([fmt(vKPa * 10), fmt(vKPa / 10), fmt(F * S), fmt(vKPa * 2)]);
+  jine.delete(fmt(vKPa));
+
+  p.innerHTML = `<div class="zadani uloha-text">Těleso působí na podložku silou <b>${F} N</b>
+      a dotýká se jí plochou <b>${fmt(S)} m²</b>. Jak velký je tlak?</div>
+    <div class="karta"><div class="vzorec">p = F / S &nbsp; [Pa = N/m²]</div></div>`;
+  const odezva = odezvaEl();
+  Uloha.vyber({
+    kam: p, odezva, trida: 'velke',
+    moznosti: Uloha.zamichej([fmt(vKPa), ...[...jine].slice(0, 3)]).map(x => ({ klic: x, popis: x + ' kPa' })),
+    spravnyKlic: fmt(vKPa),
+    zpravaOk: `✅ p = ${F} / ${fmt(S)} = ${tlak.toLocaleString('cs-CZ')} Pa = ${fmt(vKPa)} kPa`,
+    zpravaChyba: 'Menší plocha znamená větší tlak – proto ostrý hřebík proniká snáz než tupý.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+const REZIMY = { hydrostaticky, plavani, hydraulika, tlakPevne };
+function novaUloha() { REZIMY[rezim](); }
+
+document.querySelectorAll('#rezimy button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#rezimy button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  rezim = b.dataset.rezim;
+  novaUloha();
+}));
+$('btnDalsi').addEventListener('click', novaUloha);
+novaUloha();
+</script>
+</body>
+</html>

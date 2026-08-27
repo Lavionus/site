@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Finanční matematika</title>
+  <link rel="stylesheet" href="../common.css">
+  <link rel="stylesheet" href="../vyuka.css">
+  <script src="../theme.js"></script>
+  <script src="../uloha.js"></script>
+  <style>
+    .uloha-text { max-width: 650px; font-size: 1.02rem; line-height: 1.62; }
+    .uloha-text b { color: var(--accent); }
+    .vzorec { font-family: 'Courier New', monospace; color: var(--text-muted); font-size: 0.93rem; line-height: 1.7; }
+    table.nabidky { border-collapse: collapse; font-size: 0.92rem; }
+    table.nabidky th, table.nabidky td { border: 1px solid var(--border-strong); padding: 7px 12px; text-align: left; }
+    table.nabidky th { background: var(--bg-control); color: var(--text-muted); }
+    .rozpocet { display: flex; flex-direction: column; gap: 4px; max-width: 420px; text-align: left; font-size: 0.95rem; }
+    .rozpocet div { display: flex; justify-content: space-between; border-bottom: 1px dotted var(--border); padding: 3px 0; }
+    .rozpocet .celkem { font-weight: 700; color: var(--accent); border-bottom: none; }
+
+    /* ---- kalkulačka spoření a půjčky ---- */
+    .scena { width: min(540px, 100%); }
+    .scena .sloup-slozeny { fill: var(--accent); }
+    .scena .sloup-jednoduchy { fill: var(--warn); opacity: 0.85; }
+    .scena .jistina { fill: var(--text-faint); opacity: 0.55; }
+    .scena .osa { stroke: var(--text-muted); stroke-width: 1.7; }
+    .scena .popis { fill: var(--text-faint); font-size: 10px; text-anchor: middle; }
+    .legenda { display: flex; gap: 16px; flex-wrap: wrap; justify-content: center;
+      font-size: 0.78rem; color: var(--text-muted); }
+    .legenda span { display: inline-flex; align-items: center; gap: 6px; }
+    .legenda i { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+
+    .ovladace { display: flex; flex-wrap: wrap; gap: 8px 12px; justify-content: center; max-width: 560px; }
+    .ovladace label {
+      display: flex; align-items: center; gap: 8px;
+      background: var(--bg-input); border: 1px solid var(--border);
+      border-radius: 8px; padding: 5px 10px; font-size: 0.8rem; color: var(--text-muted);
+    }
+    .ovladace input[type=range] { width: 120px; accent-color: var(--accent); }
+    .ovladace .hodnota { color: var(--text); font-weight: 600; min-width: 4.6em; text-align: right;
+      font-variant-numeric: tabular-nums; }
+    .prepinac-druh { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+    .prepinac-druh button {
+      background: var(--bg-control); border: 1px solid var(--border-strong); color: var(--text-muted);
+      border-radius: 6px; padding: 5px 12px; font-size: 0.82rem; font-family: inherit; cursor: pointer;
+    }
+    .prepinac-druh button:hover { border-color: var(--accent); color: var(--text); }
+    .prepinac-druh button.zap { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+    .souhrn {
+      display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px; width: min(540px, 100%);
+    }
+    .souhrn .bunka { background: var(--bg-elevated); border: 1px solid var(--border);
+      border-radius: 12px; padding: 10px 8px; }
+    .souhrn .nadpis { color: var(--text-faint); font-size: 0.7rem; text-transform: uppercase;
+      letter-spacing: 0.5px; }
+    .souhrn .cislo { font-size: 1.25rem; font-weight: 700; margin-top: 3px;
+      font-variant-numeric: tabular-nums; }
+    .souhrn .a .cislo { color: var(--accent); }
+    .souhrn .b .cislo { color: var(--warn); }
+    .souhrn .c .cislo { color: var(--ok); }
+    @media (max-width: 520px) {
+      .souhrn { grid-template-columns: 1fr; gap: 7px; }
+      .souhrn .bunka { display: flex; align-items: baseline; gap: 10px; text-align: left; padding: 7px 12px; }
+      .souhrn .cislo { font-size: 1.05rem; margin: 0 0 0 auto; }
+    }
+    .vysvetlivka { color: var(--text-faint); font-size: 0.82rem; max-width: 540px; line-height: 1.55; }
+    .vysvetlivka b { color: var(--text-muted); }
+  </style>
+</head>
+<body>
+  <h1>💰 Finanční matematika</h1>
+  <p class="podtitul">Pro 9. ročník: úroky, spoření, půjčky a rodinný rozpočet.</p>
+
+  <div class="rezimy" id="rezimy">
+    <button data-rezim="kalkulacka" class="active">💹 Kalkulačka</button>
+    <button data-rezim="urok">📈 Jednoduchý úrok</button>
+    <button data-rezim="slozeny">🔁 Složené úročení</button>
+    <button data-rezim="pujcky">🏦 Porovnej půjčky</button>
+    <button data-rezim="rozpocet">🧾 Rodinný rozpočet</button>
+  </div>
+
+  <div class="plocha" id="plocha"></div>
+
+  <div class="ovladani">
+    <button class="hlavni" id="btnDalsi">Přeskočit →</button>
+    <span class="skore" id="skore"></span>
+  </div>
+
+  <p class="napoveda">
+    Jednoduchý úrok: <b>ú = jistina · p / 100 · t</b> (t v letech). U <b>složeného úročení</b>
+    se úroky přičítají k jistině a dál se úročí. U půjčky rozhoduje <b>celková zaplacená částka</b>,
+    ne jen výše splátky.
+  </p>
+
+<script>
+const $ = id => document.getElementById(id);
+const skore = Uloha.skore('nodus_m9_financni', $('skore'));
+let rezim = 'kalkulacka';
+const kc = x => Math.round(x).toLocaleString('cs-CZ') + ' Kč';
+const fmt = x => Number(Number(x).toFixed(2)).toLocaleString('cs-CZ');
+function odezvaEl() { const d = document.createElement('div'); d.className = 'odezva'; return d; }
+
+/* ---- Kalkulačka -----------------------------------------------------------------------
+   Spoření: srovnání jednoduchého a složeného úročení rok po roce – rozdíl mezi nimi
+   je ta „síla úroků z úroků“, kterou z jednoho příkladu nikdy nevidíš.
+   Půjčka: měsíční splátka a hlavně kolik se celkem přeplatí. */
+const KAL = { druh: 'sporeni', jistina: 50000, sazba: 5, roky: 15 };
+
+function kalkulacka() {
+  const p = $('plocha');
+  const sporeni = KAL.druh === 'sporeni';
+  p.innerHTML = `
+    <div class="zadani uloha-text" style="max-width:560px">Posuvníky měň částku, úrok a dobu.
+      ${sporeni
+        ? 'Modré sloupce jsou <b>složené</b> úročení, oranžové <b>jednoduché</b> — rozdíl mezi nimi jsou úroky z úroků.'
+        : 'Uvidíš měsíční splátku a hlavně to, <b>kolik celkem přeplatíš</b>.'}</div>
+    <div class="prepinac-druh" id="druhyKal">
+      <button data-druh="sporeni"${sporeni ? ' class="zap"' : ''}>🏦 Spoření</button>
+      <button data-druh="pujcka"${sporeni ? '' : ' class="zap"'}>💳 Půjčka</button>
+    </div>
+    <svg class="scena" id="scenaKal" viewBox="0 0 540 240" role="img"
+         aria-label="Vyvoj castky v case"></svg>
+    <div class="legenda" id="legendaKal"></div>
+    <div class="ovladace">
+      <label>💰 Částka
+        <input type="range" id="posJistina" min="5000" max="200000" step="5000" value="${KAL.jistina}">
+        <span class="hodnota" id="hodJistina"></span></label>
+      <label>📈 Úrok
+        <input type="range" id="posSazba" min="1" max="15" step="0.5" value="${KAL.sazba}">
+        <span class="hodnota" id="hodSazba"></span></label>
+      <label>📅 Doba
+        <input type="range" id="posRoky" min="1" max="30" step="1" value="${KAL.roky}">
+        <span class="hodnota" id="hodRoky"></span></label>
+    </div>
+    <div class="souhrn" id="souhrnKal"></div>
+    <p class="vysvetlivka" id="poznamkaKal"></p>`;
+
+  $('druhyKal').addEventListener('click', e => {
+    const b = e.target.closest('button[data-druh]');
+    if (!b) return;
+    KAL.druh = b.dataset.druh;
+    kalkulacka();
+  });
+  [['posJistina', 'jistina'], ['posSazba', 'sazba'], ['posRoky', 'roky']].forEach(([id, klic]) => {
+    $(id).addEventListener('input', e => { KAL[klic] = +e.target.value; kresliKalkulacku(); });
+  });
+  kresliKalkulacku();
+}
+
+function kresliKalkulacku() {
+  if (!$('scenaKal')) return;
+  const { jistina: J, sazba: u, roky: n } = KAL;
+  const sporeni = KAL.druh === 'sporeni';
+
+  // hodnoty po jednotlivých letech
+  const slozene = [], jednoduche = [];
+  for (let r = 0; r <= n; r++) {
+    slozene.push(J * Math.pow(1 + u / 100, r));
+    jednoduche.push(J * (1 + u / 100 * r));
+  }
+  const maxV = Math.max(...slozene);
+
+  const ZEM = 200, X0 = 34, SIR = 480;
+  const sirka = Math.max(2, Math.min(22, SIR / (n + 1) - 3));
+  const rozestup = SIR / (n + 1);
+  const V = v => (v / maxV) * 160;
+
+  let sloupce = '';
+  for (let r = 0; r <= n; r++) {
+    const x = X0 + r * rozestup;
+    if (sporeni) {
+      sloupce += `<rect class="sloup-slozeny" x="${x}" y="${ZEM - V(slozene[r])}"
+                    width="${sirka}" height="${V(slozene[r])}" rx="2"/>
+                  <rect class="sloup-jednoduchy" x="${x}" y="${ZEM - V(jednoduche[r])}"
+                    width="${sirka * 0.5}" height="${V(jednoduche[r])}" rx="2"/>`;
+    } else {
+      sloupce += `<rect class="sloup-slozeny" x="${x}" y="${ZEM - V(slozene[r])}"
+                    width="${sirka}" height="${V(slozene[r])}" rx="2"/>`;
+    }
+    sloupce += `<rect class="jistina" x="${x}" y="${ZEM - V(J)}" width="${sirka}" height="${V(J)}" rx="2"/>`;
+  }
+
+  const popisky = [0, Math.round(n / 2), n].filter((v, i, a) => a.indexOf(v) === i)
+    .map(r => `<text class="popis" x="${X0 + r * rozestup + sirka / 2}" y="${ZEM + 16}">${r}. rok</text>`).join('');
+
+  $('scenaKal').innerHTML = sloupce +
+    `<line class="osa" x1="${X0 - 8}" y1="${ZEM}" x2="${X0 + SIR}" y2="${ZEM}"/>${popisky}
+     <text class="popis" x="${X0 + SIR / 2}" y="${ZEM + 34}">roky</text>`;
+
+  $('legendaKal').innerHTML = sporeni
+    ? `<span><i style="background:var(--accent)"></i>složené úročení</span>
+       <span><i style="background:var(--warn)"></i>jednoduché úročení</span>
+       <span><i style="background:var(--text-faint)"></i>vložená částka</span>`
+    : `<span><i style="background:var(--accent)"></i>dluh s úroky</span>
+       <span><i style="background:var(--text-faint)"></i>půjčená částka</span>`;
+
+  const konecne = slozene[n], jednoduchyKonec = jednoduche[n];
+  if (sporeni) {
+    $('souhrnKal').innerHTML =
+      `<div class="bunka a"><div class="nadpis">Naspořeno</div><div class="cislo">${kc(konecne)}</div></div>
+       <div class="bunka b"><div class="nadpis">Úroky celkem</div><div class="cislo">${kc(konecne - J)}</div></div>
+       <div class="bunka c"><div class="nadpis">Navíc oproti jednoduchému</div>
+         <div class="cislo">${kc(konecne - jednoduchyKonec)}</div></div>`;
+    $('poznamkaKal').innerHTML = konecne >= 2 * J
+      ? `Za ${n} let se částka <b>více než zdvojnásobila</b>. Úroky se totiž počítají `
+        + 'i z dříve připsaných úroků — proto modré sloupce rostou stále rychleji.'
+      : `Úroky z úroků přidaly navíc <b>${kc(konecne - jednoduchyKonec)}</b>. `
+        + 'Zkus prodloužit dobu — rozdíl poroste mnohem rychleji než lineárně.';
+  } else {
+    // anuitní splátka: m = J·i / (1 − (1+i)^−N), i je měsíční úrok
+    const i = u / 100 / 12, N = n * 12;
+    const splatka = i > 0 ? J * i / (1 - Math.pow(1 + i, -N)) : J / N;
+    const celkem = splatka * N;
+    $('souhrnKal').innerHTML =
+      `<div class="bunka a"><div class="nadpis">Měsíční splátka</div><div class="cislo">${kc(splatka)}</div></div>
+       <div class="bunka b"><div class="nadpis">Zaplatíš celkem</div><div class="cislo">${kc(celkem)}</div></div>
+       <div class="bunka c"><div class="nadpis">Přeplatíš</div><div class="cislo">${kc(celkem - J)}</div></div>`;
+    $('poznamkaKal').innerHTML = `Na ${kc(J)} zaplatíš navíc <b>${kc(celkem - J)}</b>, `
+      + `tedy ${Math.round((celkem - J) / J * 100)} % z půjčené částky. `
+      + 'Zkus dobu zkrátit — splátka vyroste, ale přeplatek výrazně klesne.';
+  }
+
+  $('hodJistina').textContent = kc(J);
+  $('hodSazba').textContent = String(u).replace('.', ',') + ' %';
+  $('hodRoky').textContent = n + ' let';
+}
+
+function urok() {
+  const p = $('plocha');
+  const jistina = Uloha.nahodneCislo(10, 90) * 1000;
+  const sazba = Uloha.nahodne([1, 1.5, 2, 2.5, 3, 4, 5]);
+  const roky = Uloha.nahodneCislo(1, 5);
+  const u = jistina * sazba / 100 * roky;
+  const celkem = jistina + u;
+  const naCelkem = Math.random() < 0.4;
+  const vysledek = naCelkem ? celkem : u;
+  const jine = new Set([kc(naCelkem ? u : celkem), kc(jistina * sazba / 100), kc(vysledek * 2), kc(jistina * roky / 100)]);
+  jine.delete(kc(vysledek));
+
+  p.innerHTML = `<div class="zadani uloha-text">Uložíme <b>${kc(jistina)}</b> na účet s úrokem
+      <b>${fmt(sazba)} % ročně</b> na <b>${roky} ${roky === 1 ? 'rok' : roky < 5 ? 'roky' : 'let'}</b>.
+      ${naCelkem ? 'Kolik budeme mít na účtu celkem?' : 'Kolik korun činí úrok?'}
+      (počítej jednoduchým úrokem, daň neuvažuj)</div>
+    <div class="karta"><div class="vzorec">ú = jistina · p / 100 · t</div></div>`;
+  const odezva = odezvaEl();
+  Uloha.vyber({
+    kam: p, odezva, trida: 'velke',
+    moznosti: Uloha.zamichej([kc(vysledek), ...[...jine].slice(0, 3)]).map(t => ({ klic: t, popis: t })),
+    spravnyKlic: kc(vysledek),
+    zpravaOk: `✅ Úrok = ${kc(jistina)} · ${fmt(sazba)} / 100 · ${roky} = ${kc(u)}`
+      + (naCelkem ? `, celkem tedy ${kc(celkem)}.` : '.'),
+    zpravaChyba: 'Nejdřív spočítej úrok za jeden rok a pak jej vynásob počtem let.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+function slozeny() {
+  const p = $('plocha');
+  const jistina = Uloha.nahodne([10000, 20000, 50000, 100000]);
+  const sazba = Uloha.nahodne([2, 3, 4, 5]);
+  const roky = Uloha.nahodneCislo(2, 4);
+  const slozene = jistina * Math.pow(1 + sazba / 100, roky);
+  const jednoduche = jistina + jistina * sazba / 100 * roky;
+  const typ = Uloha.nahodne(['kolik', 'rozdil', 'proc']);
+  let zadani, spravny, jine;
+
+  if (typ === 'kolik') {
+    zadani = `Uložíme <b>${kc(jistina)}</b> se složeným úročením <b>${sazba} % ročně</b>.
+      Kolik budeme mít po <b>${roky} letech</b>?`;
+    spravny = kc(slozene);
+    jine = [kc(jednoduche), kc(jistina), kc(slozene * 1.1)];
+  } else if (typ === 'rozdil') {
+    zadani = `Kolik korun navíc přinese složené úročení oproti jednoduchému?
+      Jistina <b>${kc(jistina)}</b>, sazba <b>${sazba} %</b>, doba <b>${roky} let</b>.`;
+    spravny = kc(slozene - jednoduche);
+    jine = [kc(slozene), kc(jednoduche - jistina), kc(jistina * sazba / 100)];
+  } else {
+    zadani = `Čím se liší složené úročení od jednoduchého?`;
+    spravny = 'úroky se přičítají k jistině a v dalších letech se také úročí';
+    jine = ['úroková sazba každý rok klesá', 'úrok se platí jen jednou na konci', 'jistina se každý rok snižuje'];
+  }
+
+  p.innerHTML = `<div class="zadani uloha-text">${zadani}</div>
+    <div class="karta"><div class="vzorec">složené úročení: K = jistina · (1 + p/100)<sup>t</sup></div></div>`;
+  const odezva = odezvaEl();
+  Uloha.vyber({
+    kam: p, odezva, trida: typ === 'proc' ? '' : 'velke',
+    moznosti: Uloha.zamichej([spravny, ...jine.filter(x => x !== spravny)]).map(t => ({ klic: t, popis: t })),
+    spravnyKlic: spravny,
+    zpravaOk: typ === 'proc' ? `✅ ${spravny}`
+      : `✅ ${kc(jistina)} · (1 + ${sazba}/100)^${roky} = ${kc(slozene)}; jednoduchý úrok by dal ${kc(jednoduche)}.`,
+    zpravaChyba: 'U složeného úročení se úrok počítá pokaždé z vyšší částky.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+function pujcky() {
+  const p = $('plocha');
+  const castka = Uloha.nahodne([20000, 30000, 50000, 80000]);
+  const nabidky = [
+    { n: 'Banka A', splatka: 0, mesicu: Uloha.nahodne([12, 24]), poplatek: Uloha.nahodne([0, 500]) },
+    { n: 'Banka B', splatka: 0, mesicu: Uloha.nahodne([24, 36]), poplatek: Uloha.nahodne([0, 1000]) },
+    { n: 'Půjčka C', splatka: 0, mesicu: Uloha.nahodne([12, 18]), poplatek: Uloha.nahodne([1500, 2500]) },
+  ];
+  nabidky.forEach(x => {
+    const navyseni = Uloha.nahodne([1.06, 1.1, 1.15, 1.22, 1.3]);
+    x.splatka = Math.round(castka * navyseni / x.mesicu / 10) * 10;
+    x.celkem = x.splatka * x.mesicu + x.poplatek;
+  });
+  const nejlevnejsi = nabidky.reduce((a, b) => (a.celkem <= b.celkem ? a : b));
+  const radky = nabidky.map(x => `<tr><td>${x.n}</td><td>${kc(x.splatka)}</td><td>${x.mesicu}</td>
+      <td>${kc(x.poplatek)}</td></tr>`).join('');
+
+  p.innerHTML = `<div class="zadani uloha-text">Potřebujeme si půjčit <b>${kc(castka)}</b>.
+      Která nabídka nás vyjde <b>celkem nejlevněji</b>?</div>
+    <div class="karta"><table class="nabidky">
+      <tr><th>nabídka</th><th>měsíční splátka</th><th>počet měsíců</th><th>poplatek</th></tr>${radky}
+    </table><div class="vzorec">celkem = splátka · počet měsíců + poplatek</div></div>`;
+  const odezva = odezvaEl();
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej(nabidky.map(x => ({ klic: x.n, popis: x.n }))),
+    spravnyKlic: nejlevnejsi.n,
+    zpravaOk: `✅ ${nejlevnejsi.n} – celkem zaplatíme ${kc(nejlevnejsi.celkem)}. `
+      + nabidky.filter(x => x !== nejlevnejsi).map(x => `${x.n}: ${kc(x.celkem)}`).join(', ') + '.',
+    zpravaChyba: 'Nízká splátka může znamenat delší dobu splácení – porovnávej celkovou částku.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+function rozpocet() {
+  const p = $('plocha');
+  const prijem = Uloha.nahodneCislo(45, 75) * 1000;
+  const bydleni = Math.round(prijem * Uloha.nahodne([0.25, 0.3, 0.35]) / 100) * 100;
+  const jidlo = Math.round(prijem * Uloha.nahodne([0.15, 0.2]) / 100) * 100;
+  const doprava = Math.round(prijem * 0.08 / 100) * 100;
+  const ostatni = Math.round(prijem * Uloha.nahodne([0.1, 0.15]) / 100) * 100;
+  const vydaje = bydleni + jidlo + doprava + ostatni;
+  const zbytek = prijem - vydaje;
+  const typ = Uloha.nahodne(['zbytek', 'podil', 'rada']);
+  let zadani, spravny, jine;
+
+  if (typ === 'zbytek') {
+    zadani = 'Kolik korun rodině měsíčně zbyde na spoření a rezervu?';
+    spravny = kc(zbytek);
+    jine = [kc(vydaje), kc(prijem), kc(zbytek + jidlo)];
+  } else if (typ === 'podil') {
+    zadani = 'Kolik procent příjmu padne na bydlení? (zaokrouhli na celá procenta)';
+    spravny = Math.round(bydleni / prijem * 100) + ' %';
+    jine = [Math.round(jidlo / prijem * 100) + ' %', Math.round(vydaje / prijem * 100) + ' %',
+      Math.round(zbytek / prijem * 100) + ' %'];
+  } else {
+    zadani = 'Rodina chce začít spořit. Co je nejrozumnější první krok?';
+    spravny = 'vytvořit si rezervu na 3–6 měsíců výdajů';
+    jine = ['vzít si půjčku a investovat ji', 'zrušit pojištění', 'utratit rezervu za dovolenou'];
+  }
+
+  p.innerHTML = `<div class="zadani uloha-text">${zadani}</div>
+    <div class="karta"><div class="rozpocet">
+      <div><span>čistý příjem</span><span>${kc(prijem)}</span></div>
+      <div><span>bydlení</span><span>−${kc(bydleni)}</span></div>
+      <div><span>jídlo</span><span>−${kc(jidlo)}</span></div>
+      <div><span>doprava</span><span>−${kc(doprava)}</span></div>
+      <div><span>ostatní</span><span>−${kc(ostatni)}</span></div>
+      <div class="celkem"><span>výdaje celkem</span><span>${kc(vydaje)}</span></div>
+    </div></div>`;
+  const odezva = odezvaEl();
+  Uloha.vyber({
+    kam: p, odezva, trida: typ === 'rada' ? '' : 'velke',
+    moznosti: Uloha.zamichej([spravny, ...jine.filter(x => x !== spravny)]).map(t => ({ klic: t, popis: t })),
+    spravnyKlic: spravny,
+    zpravaOk: typ === 'zbytek' ? `✅ ${kc(prijem)} − ${kc(vydaje)} = ${kc(zbytek)}`
+      : typ === 'podil' ? `✅ ${kc(bydleni)} : ${kc(prijem)} = ${spravny}`
+      : `✅ ${spravny} – rezerva chrání před nečekanými výdaji.`,
+    zpravaChyba: 'Nejdřív sečti všechny výdaje a teprve pak je porovnej s příjmem.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+const REZIMY = { kalkulacka, urok, slozeny, pujcky, rozpocet };
+function novaUloha() {
+  if (rezim === 'kalkulacka') {
+    KAL.jistina = Uloha.nahodneCislo(2, 40) * 5000;
+    KAL.sazba = Uloha.nahodneCislo(2, 24) / 2;
+    KAL.roky = Uloha.nahodneCislo(3, 25);
+    kalkulacka();
+    return;
+  }
+  REZIMY[rezim]();
+}
+
+document.querySelectorAll('#rezimy button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#rezimy button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  rezim = b.dataset.rezim;
+  $('btnDalsi').textContent = rezim === 'kalkulacka' ? '🎲 Jiné zadání' : 'Přeskočit →';
+  novaUloha();
+}));
+$('btnDalsi').textContent = rezim === 'kalkulacka' ? '🎲 Jiné zadání' : 'Přeskočit →';
+$('btnDalsi').addEventListener('click', novaUloha);
+novaUloha();
+</script>
+</body>
+</html>

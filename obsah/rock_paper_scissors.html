@@ -6,6 +6,7 @@
 <title>✊ Kámen, nůžky, papír</title>
 <link rel="stylesheet" href="../common.css">
 <script src="../theme.js"></script>
+<script src="../rekord.js" defer></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;user-select:none}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:20px;display:flex;flex-direction:column;align-items:center}
@@ -20,9 +21,14 @@ h1{font-size:1.6rem;margin-bottom:16px;font-weight:600}
 .vs{font-size:1.5rem;color:var(--text-faint)}
 .result{font-size:1.6rem;font-weight:700;min-height:40px;margin-bottom:16px}
 .choices{display:flex;gap:14px}
-.choice{width:90px;height:90px;background:var(--bg-elevated);border:2px solid var(--border);border-radius:16px;font-size:2.6rem;cursor:pointer;transition:all .15s}
+.choice{width:90px;height:90px;background:var(--bg-elevated);border:2px solid var(--border);border-radius:16px;font-size:2.6rem;cursor:pointer;transition:all .15s;color:var(--text);font-family:inherit;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;padding:0}
 .choice:hover{border-color:var(--accent);transform:translateY(-4px)}
-.hint{color:var(--text-faint);font-size:.85rem;margin-top:16px;text-align:center}
+.hint{color:var(--text-faint);font-size:.85rem;margin-top:16px;text-align:center;max-width:460px}
+.choice:focus-visible{outline:3px solid var(--accent);outline-offset:3px}
+.choice kbd{display:block;font-size:.7rem;color:var(--text-faint);margin-top:-6px}
+.lista{display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:center;margin-top:14px}
+.souper{display:flex;gap:6px;align-items:center;font-size:.85rem;color:var(--text-faint)}
+.souper select{background:var(--bg-control);color:var(--text);border:1px solid var(--border-strong);border-radius:6px;padding:6px 8px;font-family:inherit}
 .btn{background:var(--border);color:var(--text);border:1px solid var(--border-strong);padding:8px 16px;border-radius:6px;cursor:pointer;margin-top:14px}
 
 /* světlý režim: dorovnání kontrastu textu */
@@ -33,7 +39,7 @@ h1{font-size:1.6rem;margin-bottom:16px;font-weight:600}
 <h1>✊ Kámen, nůžky, papír</h1>
 <div class="score">
   <div><div class="v you" id="youScore">0</div><div class="l">Ty</div></div>
-  <div><div class="v" id="tieScore" style="color:#888">0</div><div class="l">Remízy</div></div>
+  <div><div class="v" id="tieScore" style="color:var(--text-faint)">0</div><div class="l">Remízy</div></div>
   <div><div class="v cpu" id="cpuScore">0</div><div class="l">Počítač</div></div>
 </div>
 <div class="arena">
@@ -43,38 +49,89 @@ h1{font-size:1.6rem;margin-bottom:16px;font-weight:600}
 </div>
 <div class="result" id="result">Vyber svůj tah!</div>
 <div class="choices">
-  <div class="choice" data-c="rock">✊</div>
-  <div class="choice" data-c="paper">✋</div>
-  <div class="choice" data-c="scissors">✌️</div>
+  <button class="choice" data-c="rock" aria-label="Kámen (klávesa K)">✊<kbd>K</kbd></button>
+  <button class="choice" data-c="paper" aria-label="Papír (klávesa P)">✋<kbd>P</kbd></button>
+  <button class="choice" data-c="scissors" aria-label="Nůžky (klávesa N)">✌️<kbd>N</kbd></button>
 </div>
-<button class="btn" id="resetBtn">🔄 Reset skóre</button>
-<p class="hint">Kámen ✊ poráží nůžky ✌️ · Nůžky ✌️ porážejí papír ✋ · Papír ✋ poráží kámen ✊<br>Hraje se na neomezený počet kol.</p>
+<div class="lista">
+  <label class="souper">Soupeř:
+    <select id="souper">
+      <option value="nahoda">Náhodný</option>
+      <option value="cte" selected>Čte tvé zvyky</option>
+    </select>
+  </label>
+  <span id="rekordBox"></span>
+  <button class="btn" id="resetBtn">🔄 Reset skóre</button>
+</div>
+<p class="hint">Kámen ✊ poráží nůžky ✌️ · Nůžky ✌️ porážejí papír ✋ · Papír ✋ poráží kámen ✊<br>
+Ovládání z klávesnice: <b>K</b> / <b>P</b> / <b>N</b>. Soupeř „čte tvé zvyky“ si pamatuje, jak často
+který tah hraješ, a sází na ten nejčastější — lidé totiž náhodně hrát neumí.</p>
 <script>
 const $=id=>document.getElementById(id);
 const EMOJI={rock:'✊',paper:'✋',scissors:'✌️'};
-const BEATS={rock:'scissors',paper:'rock',scissors:'paper'};
+const BEATS={rock:'scissors',paper:'rock',scissors:'paper'};      // klíč poráží hodnotu
+const PORAZI={scissors:'rock',rock:'paper',paper:'scissors'};      // co porazí klíč
 const NAME={rock:'Kámen',paper:'Papír',scissors:'Nůžky'};
+const KLAVESY={k:'rock',p:'paper',n:'scissors'};
+const TAHY=['rock','paper','scissors'];
+
 let you=0,cpu=0,tie=0,busy=false;
+let serie=0;                       // aktuální série výher
+let zvyky={rock:0,paper:0,scissors:0};
+let rek=null;
+
+/* Soupeř: buď čistá náhoda, nebo protitah k nejčastějšímu tahu hráče.
+   Dokud nemáme aspoň pár kol, hrajeme náhodně — jinak by byl první tah
+   předvídatelný. */
+function tahSoupere(){
+  if($('souper').value==='nahoda') return TAHY[Math.floor(Math.random()*3)];
+  const celkem=zvyky.rock+zvyky.paper+zvyky.scissors;
+  if(celkem<3||Math.random()<0.25) return TAHY[Math.floor(Math.random()*3)];
+  let nej='rock';
+  TAHY.forEach(t=>{if(zvyky[t]>zvyky[nej])nej=t;});
+  return PORAZI[nej];
+}
+
 function play(choice){
   if(busy)return;busy=true;
   $('youHand').classList.add('shake');$('cpuHand').classList.add('shake');
-  $('result').textContent='...';$('result').style.color='#888';
+  $('result').textContent='...';$('result').style.color='var(--text-faint)';
   $('youHand').textContent='✊';$('cpuHand').textContent='✊';
   setTimeout(()=>{
     $('youHand').classList.remove('shake');$('cpuHand').classList.remove('shake');
-    const cpuChoice=['rock','paper','scissors'][Math.floor(Math.random()*3)];
+    const cpuChoice=tahSoupere();
+    zvyky[choice]++;
     $('youHand').textContent=EMOJI[choice];$('cpuHand').textContent=EMOJI[cpuChoice];
     let msg,col;
-    if(choice===cpuChoice){tie++;msg='🤝 Remíza!';col='#888';}
-    else if(BEATS[choice]===cpuChoice){you++;msg='🎉 Vyhráváš! '+NAME[choice]+' poráží '+NAME[cpuChoice].toLowerCase();col='#27ae60';}
-    else{cpu++;msg='😢 Prohráváš! '+NAME[cpuChoice]+' poráží '+NAME[choice].toLowerCase();col='#e74c3c';}
+    if(choice===cpuChoice){tie++;serie=0;msg='🤝 Remíza!';col='var(--text-faint)';}
+    else if(BEATS[choice]===cpuChoice){
+      you++;serie++;
+      msg='🎉 Vyhráváš! '+NAME[choice]+' poráží '+NAME[cpuChoice].toLowerCase();
+      col='var(--ok)';
+      if(rek&&rek.zapis(serie))msg='🏆 Nová nejdelší série: '+serie+'!';
+    }
+    else{cpu++;serie=0;msg='😢 Prohráváš! '+NAME[cpuChoice]+' poráží '+NAME[choice].toLowerCase();col='var(--danger)';}
     $('result').textContent=msg;$('result').style.color=col;
     $('youScore').textContent=you;$('cpuScore').textContent=cpu;$('tieScore').textContent=tie;
     busy=false;
   },550);
 }
+
 document.querySelectorAll('.choice').forEach(c=>c.onclick=()=>play(c.dataset.c));
-$('resetBtn').onclick=()=>{you=cpu=tie=0;$('youScore').textContent=0;$('cpuScore').textContent=0;$('tieScore').textContent=0;$('result').textContent='Vyber svůj tah!';$('result').style.color='#e0e0e0';};
+document.addEventListener('keydown',e=>{
+  if(e.ctrlKey||e.altKey||e.metaKey)return;
+  const t=KLAVESY[e.key.toLowerCase()];
+  if(t){e.preventDefault();play(t);}
+});
+$('resetBtn').onclick=()=>{
+  you=cpu=tie=0;serie=0;zvyky={rock:0,paper:0,scissors:0};
+  $('youScore').textContent=0;$('cpuScore').textContent=0;$('tieScore').textContent=0;
+  $('result').textContent='Vyber svůj tah!';$('result').style.color='var(--text)';
+};
+window.addEventListener('DOMContentLoaded',()=>{
+  rek=Rekord.sleduj('webapp_hra_kns_serie',{vyssiLepsi:true,popisek:'Nejdelší série',format:v=>v+'×'});
+  rek.prvek($('rekordBox'));
+});
 </script>
 </body>
 </html>

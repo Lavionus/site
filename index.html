@@ -15,6 +15,44 @@
       overflow: hidden;
     }
 
+    /* Odkaz na samostatný web Nodus */
+    .odkaz-nodus {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin: 0 10px 10px 10px;
+      padding: 9px 11px;
+      background: linear-gradient(120deg, var(--accent-soft), transparent 75%);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      color: var(--text);
+      text-decoration: none;
+      transition: border-color 0.15s ease, background-color 0.15s ease;
+    }
+
+    .odkaz-nodus:hover {
+      border-color: var(--accent);
+      background-color: var(--bg-elevated);
+    }
+
+    .odkaz-nodus .znak {
+      font-size: 1.2rem;
+      color: var(--accent);
+      flex-shrink: 0;
+    }
+
+    .odkaz-nodus b {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 600;
+    }
+
+    .odkaz-nodus span.popis {
+      display: block;
+      color: var(--text-muted);
+      font-size: 0.72rem;
+    }
+
     /* Layout */
     .layout {
       display: flex;
@@ -456,6 +494,13 @@
           <div class="menu-search-wrap">
             <input type="search" id="hledatMenu" class="menu-search" placeholder="🔍 Hledat aplikaci… (Ctrl+K)" autocomplete="off" />
           </div>
+          <a class="odkaz-nodus" href="nodus/index.html" title="Samostatný web s výukovými aplikacemi">
+            <span class="znak" aria-hidden="true">◈</span>
+            <span>
+              <b>Nodus – výuka</b>
+              <span class="popis">77 aplikací pro školu ↗</span>
+            </span>
+          </a>
           <button class="skupiny-toggle" id="skupinyToggle" aria-expanded="false" aria-controls="skupiny">
             <span id="skupinyToggleLabel">📂 Kategorie: Vše</span>
             <span class="sipka">▾</span>
@@ -480,6 +525,24 @@
        nedávné, sbalené sekce, skupina), sessionStorage (poslední
        otevřená stránka).
        ============================================================ */
+    /* Zápis do úložiště: přes file:// (a v přísném režimu soukromí) je kvóta
+       nulová a setItem vyhodí výjimku — nesmí shodit zbytek skriptu, web pak
+       funguje dál, jen si nic nezapamatuje. */
+    function uloz(uloziste, klic, hodnota) {
+      try { uloziste.setItem(klic, hodnota); }
+      catch { /* bez trvalé paměti */ }
+    }
+
+    function precti(uloziste, klic) {
+      try { return uloziste.getItem(klic); }
+      catch { return null; }
+    }
+
+    if (location.protocol === 'file:') {
+      console.warn('Web je otevřený přes file:// — nastavení se neuloží a část '
+        + 'aplikací nenačte data. Spusť ./test_local.sh a otevři http://localhost:8000/');
+    }
+
     const DOMOVSKA = 'obsah/aplikace.html';
     const KEY_PAGE = 'webapp_current_page';
     const KEY_COLLAPSE = 'webapp_collapsed_sections';
@@ -501,24 +564,24 @@
     function setSkupinyOpen(open) {
       skupinyEl.classList.toggle('show', open);
       skupinyToggle.setAttribute('aria-expanded', String(open));
-      localStorage.setItem(KEY_SKUPINY_OPEN, open ? '1' : '0');
+      uloz(localStorage, KEY_SKUPINY_OPEN, open ? '1' : '0');
     }
-    setSkupinyOpen(localStorage.getItem(KEY_SKUPINY_OPEN) === '1');
+    setSkupinyOpen(precti(localStorage, KEY_SKUPINY_OPEN) === '1');
     skupinyToggle.addEventListener('click', () => {
       setSkupinyOpen(!skupinyEl.classList.contains('show'));
     });
 
     const nactiJson = (key, def) => {
-      try { return JSON.parse(localStorage.getItem(key)) ?? def; }
+      try { return JSON.parse(precti(localStorage, key)) ?? def; }
       catch { return def; }
     };
 
     // Při první návštěvě (žádné uložené preference) start se všemi sekcemi
     // sbalenými — jinak by uvítal dlouhý sloupec stovek rozbalených položek.
-    let collapsedSet = localStorage.getItem(KEY_COLLAPSE) === null
+    let collapsedSet = precti(localStorage, KEY_COLLAPSE) === null
       ? new Set(KATALOG_SEKCE.map(s => s.nazev))
       : new Set(nactiJson(KEY_COLLAPSE, []));
-    let aktivniSkupina = localStorage.getItem(KEY_SKUPINA) || 'vse';
+    let aktivniSkupina = precti(localStorage, KEY_SKUPINA) || 'vse';
     let oblibene = nactiJson(KEY_OBLIBENE, []);
     let nedavne = nactiJson(KEY_NEDAVNE, []);
 
@@ -595,7 +658,7 @@
 
     /* ---- Sbalování sekcí ---- */
     function saveCollapsed() {
-      localStorage.setItem(KEY_COLLAPSE, JSON.stringify([...collapsedSet]));
+      uloz(localStorage, KEY_COLLAPSE, JSON.stringify([...collapsedSet]));
     }
     function setCollapsed(s, collapsed) {
       if (s.classList.contains('jedina')) return;   // jednopoložkovou sekci není co sbalovat
@@ -619,7 +682,7 @@
       const i = oblibene.indexOf(soubor);
       if (i >= 0) oblibene.splice(i, 1);
       else oblibene.push(soubor);
-      localStorage.setItem(KEY_OBLIBENE, JSON.stringify(oblibene));
+      uloz(localStorage, KEY_OBLIBENE, JSON.stringify(oblibene));
       renderMenu();
     }
     function obnovHvezdy() {
@@ -632,7 +695,7 @@
     function pridejNedavnou(soubor) {
       if (soubor === DOMOVSKA) return;
       nedavne = [soubor, ...nedavne.filter(f => f !== soubor)].slice(0, 8);
-      localStorage.setItem(KEY_NEDAVNE, JSON.stringify(nedavne));
+      uloz(localStorage, KEY_NEDAVNE, JSON.stringify(nedavne));
     }
 
     /* ---- Otevírání aplikací (hash = deep-link) ---- */
@@ -647,12 +710,17 @@
     function otevri(page) {
       if (!page || page === aktualni) return;
       if (!podleSouboru.has(page) && page !== DOMOVSKA) {
+        // starý odkaz na aplikaci přesunutou na Nodus -> pošli ho tam
+        if (typeof PRESUNUTO_NODUS !== 'undefined' && PRESUNUTO_NODUS.includes(page)) {
+          location.replace('nodus/index.html#' + page);
+          return;
+        }
         // neznámý hash – nechodit mimo katalog
         page = DOMOVSKA;
       }
       aktualni = page;
       iframe.src = page;
-      sessionStorage.setItem(KEY_PAGE, page);
+      uloz(sessionStorage, KEY_PAGE, page);
       pridejNedavnou(page);
       updateActiveLink(page);
       // sekci s aktivní aplikací rozbalit
@@ -718,7 +786,7 @@
       const light = document.documentElement.dataset.theme !== 'light';
       if (light) document.documentElement.dataset.theme = 'light';
       else delete document.documentElement.dataset.theme;
-      localStorage.setItem(KEY_TEMA, light ? 'light' : 'dark');
+      uloz(localStorage, KEY_TEMA, light ? 'light' : 'dark');
       // storage událost se ve stejné záložce nespouští -> iframu to řekneme přímo
       iframe.contentWindow?.postMessage({ tema: light ? 'light' : 'dark' }, '*');
       zobrazTema();
@@ -742,7 +810,7 @@
       b.innerHTML = `<span>${label}</span><span class="pill-pocet">${skupinaPocet(id)}</span>`;
       b.addEventListener('click', () => {
         aktivniSkupina = id;
-        localStorage.setItem(KEY_SKUPINA, id);
+        uloz(localStorage, KEY_SKUPINA, id);
         nastavDotaz('');
         updatePillState();
         aplikujFiltr();
@@ -884,7 +952,7 @@
     /* ---- Start ---- */
     renderMenu();
     const zHashe = decodeURIComponent(location.hash.slice(1));
-    otevri(zHashe || sessionStorage.getItem(KEY_PAGE) || DOMOVSKA);
+    otevri(zHashe || precti(sessionStorage, KEY_PAGE) || DOMOVSKA);
 
     /* ---- PWA ---- */
     if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {

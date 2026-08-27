@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Starověký Řím</title>
+  <link rel="stylesheet" href="../common.css">
+  <link rel="stylesheet" href="../vyuka.css">
+  <script src="../theme.js"></script>
+  <script src="../rec.js"></script>
+  <script src="../uloha.js"></script>
+  <style>
+    .popis-d { color: var(--text-muted); max-width: 560px; line-height: 1.55; }
+    .nazev-d { font-size: 1.2rem; font-weight: 700; }
+    .osa-cas { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; align-items: center; min-height: 44px; }
+    .osa-cas .bod {
+      background: var(--accent-soft); border: 2px solid var(--accent); border-radius: 8px;
+      padding: 7px 11px; font-size: 0.85rem; font-weight: 600;
+    }
+    .osa-cas .sipka { color: var(--text-faint); }
+  </style>
+</head>
+<body>
+  <h1>🏟️ Starověký Řím</h1>
+  <p class="podtitul">Pro 6.–7. ročník: od království přes republiku k císařství, stavitelství a vznik křesťanství.</p>
+
+  <div class="rezimy" id="rezimy">
+    <button data-rezim="osobnosti" class="active">👤 Kdo to byl</button>
+    <button data-rezim="pojmy">📖 Pojmy a stavby</button>
+    <button data-rezim="udalosti">📜 Události a letopočty</button>
+    <button data-rezim="poradi">↕️ Seřaď události</button>
+  </div>
+
+  <div class="plocha" id="plocha"></div>
+
+  <div class="ovladani">
+    <button class="hlavni" id="btnDalsi">Přeskočit →</button>
+    <span class="skore" id="skore"></span>
+  </div>
+
+  <p class="napoveda">Řím prošel třemi obdobími: <b>království</b>, <b>republika</b> (v čele dva konzulové a senát) a <b>císařství</b>. Římané byli skvělí stavitelé – akvadukty, silnice a beton používáme dodnes.</p>
+
+<script>
+const $ = id => document.getElementById(id);
+const skore = Uloha.skore('nodus_d6_rim', $('skore'));
+let rezim = 'osobnosti';
+
+const OSOBNOSTI = [
+  {
+    n: "Gaius Iulius Caesar",
+    e: "⚔️",
+    o: "vojevůdce, který dobyl Galii a byl zavražděn v senátu roku 44 př. n. l."
+  },
+  {
+    n: "Octavianus Augustus",
+    e: "👑",
+    o: "první římský císař, za jeho vlády nastal dlouhý mír"
+  },
+  {
+    n: "Spartakus",
+    e: "⛓️",
+    o: "gladiátor, který vedl největší povstání otroků"
+  },
+  {
+    n: "Nero",
+    e: "🔥",
+    o: "císař, kterému se přisuzuje požár Říma a pronásledování křesťanů"
+  },
+  {
+    n: "Konstantin Veliký",
+    e: "✝️",
+    o: "císař, který povolil křesťanství milánským ediktem"
+  },
+  {
+    n: "Romulus a Remus",
+    e: "🐺",
+    o: "bájní bratři odkojení vlčicí, zakladatelé Říma"
+  }
+];
+const POJMY = [
+  {
+    n: "republika",
+    e: "🏛️",
+    o: "zřízení, kde v čele stáli dva volení konzulové a senát"
+  },
+  {
+    n: "legie",
+    e: "🛡️",
+    o: "základní jednotka římského vojska o několika tisících mužů"
+  },
+  {
+    n: "akvadukt",
+    e: "🌉",
+    o: "stavba přivádějící vodu do měst na kamenných obloucích"
+  },
+  {
+    n: "Koloseum",
+    e: "🏟️",
+    o: "obrovský amfiteátr v Římě pro gladiátorské zápasy"
+  },
+  {
+    n: "forum",
+    e: "🏙️",
+    o: "hlavní náměstí, středisko obchodu a politiky"
+  },
+  {
+    n: "limes romanus",
+    e: "🧱",
+    o: "opevněná hranice římské říše proti barbarům"
+  },
+  {
+    n: "gladiátor",
+    e: "⚔️",
+    o: "zápasník, který bojoval pro pobavení diváků v aréně"
+  },
+  {
+    n: "latina",
+    e: "🔤",
+    o: "jazyk Římanů, ze kterého vycházejí románské jazyky"
+  }
+];
+const UDALOSTI = [
+  {
+    rok: "753 př. n. l.",
+    t: "podle pověsti byl založen Řím",
+    poradi: 1
+  },
+  {
+    rok: "509 př. n. l.",
+    t: "v Římě vznikla republika",
+    poradi: 2
+  },
+  {
+    rok: "44 př. n. l.",
+    t: "byl zavražděn Gaius Iulius Caesar",
+    poradi: 3
+  },
+  {
+    rok: "27 př. n. l.",
+    t: "Octavianus se stal prvním císařem a začalo císařství",
+    poradi: 4
+  },
+  {
+    rok: "313 n. l.",
+    t: "milánský edikt povolil křesťanství",
+    poradi: 5
+  },
+  {
+    rok: "476 n. l.",
+    t: "zanikla západořímská říše a skončil starověk",
+    poradi: 6
+  }
+];
+
+/* ---- společná kvízová úloha nad dvojicí název + popis ---------------------- */
+function kvizNadPopisem(data, zadaniText, ikona) {
+  const p = $('plocha');
+  const u = Uloha.nahodne(data);
+  const jine = Uloha.zamichej(data.filter(x => x.n !== u.n)).slice(0, 3);
+  p.innerHTML = `<div class="zadani">${zadaniText}</div>
+    <div class="karta"><div class="obrazek">${u.e || ikona}</div>
+    <div class="popis-d">${u.o}</div></div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([u, ...jine]).map(x => ({ klic: x.n, popis: x.n })),
+    spravnyKlic: u.n,
+    zpravaOk: `✅ ${u.n} – ${u.o}.`,
+    zpravaChyba: 'Zkus jinou možnost.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+const osobnosti = () => kvizNadPopisem(OSOBNOSTI, 'O koho jde?', '👤');
+const pojmy = () => kvizNadPopisem(POJMY, 'Který pojem odpovídá popisu?', '🏛️');
+
+/* ---- Události a letopočty --------------------------------------------------- */
+function udalosti() {
+  const p = $('plocha');
+  const u = Uloha.nahodne(UDALOSTI);
+  const jine = Uloha.zamichej(UDALOSTI.filter(x => x.rok !== u.rok)).slice(0, 3);
+  const podleUdalosti = Math.random() < 0.5;
+
+  p.innerHTML = podleUdalosti
+    ? `<div class="zadani">Kdy se to stalo?</div>
+       <div class="karta"><div class="obrazek">📜</div><div class="popis-d">${u.t}</div></div>`
+    : `<div class="zadani">Co se stalo v tomto roce?</div>
+       <div class="karta"><div class="obrazek">🗓️</div><div class="nazev-d">${u.rok}</div></div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([u, ...jine]).map(x => ({ klic: x.rok, popis: podleUdalosti ? x.rok : x.t })),
+    spravnyKlic: u.rok,
+    zpravaOk: `✅ ${u.rok} – ${u.t}.`,
+    zpravaChyba: 'Zkus jinou možnost.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Seřaď události --------------------------------------------------------- */
+function poradi() {
+  const p = $('plocha');
+  const vyber = Uloha.zamichej(UDALOSTI).slice(0, 4).sort((a, b) => a.poradi - b.poradi);
+  p.innerHTML = '<div class="zadani">Seřaď události od nejstarší po nejnovější.</div>';
+  const osa = document.createElement('div');
+  osa.className = 'osa-cas';
+  const nabidka = document.createElement('div');
+  nabidka.className = 'nabidka';
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  let dalsiIndex = 0, chyboval = false;
+
+  Uloha.zamichej(vyber).forEach(u => {
+    const b = document.createElement('button');
+    b.textContent = u.t;
+    b.dataset.t = u.t;
+    b.addEventListener('click', () => {
+      if (b.disabled) return;
+      if (u.t === vyber[dalsiIndex].t) {
+        if (dalsiIndex > 0) {
+          const s = document.createElement('span');
+          s.className = 'sipka';
+          s.textContent = '→';
+          osa.appendChild(s);
+        }
+        const el = document.createElement('span');
+        el.className = 'bod';
+        el.textContent = `${u.rok}: ${u.t}`;
+        osa.appendChild(el);
+        b.disabled = true;
+        dalsiIndex++;
+        odezva.className = 'odezva ok';
+        odezva.textContent = '✅ Správně!';
+        if (dalsiIndex === vyber.length) {
+          odezva.textContent = '🎉 Časová osa je hotová!';
+          skore.vyhodnot(!chyboval);
+          setTimeout(novaUloha, Uloha.PRODLEVA + 600);
+        }
+      } else {
+        chyboval = true;
+        Uloha.trhni(b);
+        odezva.className = 'odezva chyba';
+        odezva.textContent = 'Tahle událost je pozdější – hledej starší.';
+      }
+    });
+    nabidka.appendChild(b);
+  });
+  p.append(osa, nabidka, odezva);
+}
+
+const REZIMY = { osobnosti, pojmy, udalosti, poradi };
+function novaUloha() { REZIMY[rezim](); }
+
+document.querySelectorAll('#rezimy button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#rezimy button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  rezim = b.dataset.rezim;
+  novaUloha();
+}));
+$('btnDalsi').addEventListener('click', novaUloha);
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === 'Enter') { e.preventDefault(); novaUloha(); }
+});
+novaUloha();
+</script>
+</body>
+</html>

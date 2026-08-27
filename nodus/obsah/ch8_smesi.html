@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Směsi a jejich oddělování</title>
+  <link rel="stylesheet" href="../common.css">
+  <link rel="stylesheet" href="../vyuka.css">
+  <script src="../theme.js"></script>
+  <script src="../uloha.js"></script>
+  <style>
+    .aparatura { width: min(300px, 76%); }
+    .aparatura .sklo { fill: none; stroke: var(--text-muted); stroke-width: 3; }
+    .aparatura .kapalina { fill: rgba(80,150,220,0.4); }
+    .aparatura .usazenina { fill: #a9772f; }
+    .aparatura .plamen { fill: var(--warn); }
+    .aparatura .popis { fill: var(--text-faint); font-size: 12px; text-anchor: middle; }
+    .uloha-text { max-width: 640px; font-size: 1.02rem; line-height: 1.6; }
+    .uloha-text b { color: var(--accent); }
+    .vzorec { font-family: 'Courier New', monospace; color: var(--text-muted); font-size: 0.95rem; }
+    .smes { font-size: 1.2rem; font-weight: 700; }
+  </style>
+</head>
+<body>
+  <h1>🧪 Směsi a jejich oddělování</h1>
+  <p class="podtitul">Pro 8. ročník: druhy směsí, dělicí metody a složení roztoku.</p>
+
+  <div class="rezimy" id="rezimy">
+    <button data-rezim="metoda" class="active">🔧 Jak směs oddělit</button>
+    <button data-rezim="druh">🗂️ Druh směsi</button>
+    <button data-rezim="zlomek">📐 Hmotnostní zlomek</button>
+    <button data-rezim="pojmy">📖 Pojmy</button>
+  </div>
+
+  <div class="plocha" id="plocha"></div>
+
+  <div class="ovladani">
+    <button class="hlavni" id="btnDalsi">Přeskočit →</button>
+    <span class="skore" id="skore"></span>
+  </div>
+
+  <p class="napoveda">
+    <b>Stejnorodá</b> směs (roztok) vypadá všude stejně, ve <b>různorodé</b> složky rozeznáme.
+    Hmotnostní zlomek <b>w = m<sub>složky</sub> / m<sub>roztoku</sub></b>, často se udává v procentech.
+  </p>
+
+<script>
+const $ = id => document.getElementById(id);
+const skore = Uloha.skore('nodus_ch8_smesi', $('skore'));
+let rezim = 'metoda';
+const fmt = x => Number(Number(x).toFixed(2)).toLocaleString('cs-CZ');
+function odezvaEl() { const d = document.createElement('div'); d.className = 'odezva'; return d; }
+
+const METODY = {
+  filtrace: 'filtrace – nerozpuštěnou pevnou látku zachytí filtr',
+  usazovani: 'usazování (sedimentace) – těžší částice klesnou ke dnu',
+  odparovani: 'odpařování – rozpouštědlo se odpaří, zůstane rozpuštěná látka',
+  destilace: 'destilace – kapaliny oddělíme podle bodu varu',
+  krystalizace: 'krystalizace – z nasyceného roztoku vyrostou krystaly',
+  magnet: 'oddělení magnetem – přitáhne železné částice',
+  odstredovani: 'odstřeďování – rychlá rotace oddělí složky podle hustoty',
+};
+const SMESI = [
+  { s: 'písek ve vodě', m: 'filtrace' },
+  { s: 'kalná voda z potoka (necháme stát)', m: 'usazovani' },
+  { s: 'sůl rozpuštěná ve vodě', m: 'odparovani' },
+  { s: 'líh a voda', m: 'destilace' },
+  { s: 'železné piliny a piliny dřevěné', m: 'magnet' },
+  { s: 'modrá skalice rozpuštěná ve vodě, chceme velké krystaly', m: 'krystalizace' },
+  { s: 'smetana v mléce (v mlékárně)', m: 'odstredovani' },
+  { s: 'čajové lístky v uvařeném čaji', m: 'filtrace' },
+  { s: 'mořská voda, chceme získat pitnou vodu', m: 'destilace' },
+  { s: 'jíl ve vodě po dešti', m: 'usazovani' },
+];
+function svgAparatura(metoda) {
+  if (metoda === 'filtrace') {
+    return `<svg class="aparatura" viewBox="0 0 220 200">
+      <polygon class="sklo" points="70,20 150,20 110,90"/>
+      <path class="kapalina" d="M78 28 L142 28 L110 84 Z"/>
+      <path class="sklo" d="M80 110 L80 175 A30 12 0 0 0 140 175 L140 110"/>
+      <ellipse class="kapalina" cx="110" cy="168" rx="29" ry="10"/>
+      <text class="popis" x="110" y="196">filtrace</text></svg>`;
+  }
+  if (metoda === 'destilace') {
+    return `<svg class="aparatura" viewBox="0 0 240 200">
+      <path class="sklo" d="M40 60 L40 140 A28 12 0 0 0 96 140 L96 60"/>
+      <ellipse class="kapalina" cx="68" cy="130" rx="27" ry="10"/>
+      <path class="sklo" d="M96 70 L170 70 L170 120"/>
+      <path class="sklo" d="M150 130 L150 170 A22 10 0 0 0 194 170 L194 130"/>
+      <ellipse class="kapalina" cx="172" cy="166" rx="21" ry="8"/>
+      <ellipse class="plamen" cx="68" cy="158" rx="14" ry="8"/>
+      <text class="popis" x="120" y="196">destilace</text></svg>`;
+  }
+  return `<svg class="aparatura" viewBox="0 0 220 200">
+    <path class="sklo" d="M60 40 L60 150 A50 16 0 0 0 160 150 L160 40"/>
+    <ellipse class="kapalina" cx="110" cy="120" rx="49" ry="14"/>
+    <ellipse class="usazenina" cx="110" cy="150" rx="46" ry="10"/>
+    <text class="popis" x="110" y="192">usazování</text></svg>`;
+}
+function metoda() {
+  const p = $('plocha');
+  const u = Uloha.nahodne(SMESI);
+  p.innerHTML = `<div class="zadani uloha-text">Jak oddělíš složky této směsi?<br>
+      <b class="smes">${u.s}</b></div>
+    <div class="karta">${svgAparatura(u.m === 'filtrace' ? 'filtrace' : u.m === 'destilace' ? 'destilace' : 'usazovani')}</div>`;
+  const odezva = odezvaEl();
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([u.m, ...Uloha.zamichej(Object.keys(METODY).filter(k => k !== u.m)).slice(0, 3)])
+      .map(k => ({ klic: k, popis: METODY[k].split(' – ')[0] })),
+    spravnyKlic: u.m,
+    zpravaOk: `✅ ${METODY[u.m]}`,
+    zpravaChyba: 'Zeptej se: je látka rozpuštěná, nebo jen promíchaná? A liší se body varu?',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+const DRUHY = {
+  roztok: 'roztok (stejnorodá směs)',
+  suspenze: 'suspenze (pevná látka v kapalině)',
+  emulze: 'emulze (dvě nemísitelné kapaliny)',
+  pena: 'pěna (plyn v kapalině)',
+  dym: 'dým (pevné částice v plynu)',
+  mlha: 'mlha (kapalné kapičky v plynu)',
+};
+const PRIKLADY = [
+  { s: 'slaná voda', d: 'roztok' }, { s: 'ocet ve vodě', d: 'roztok' },
+  { s: 'vzduch', d: 'roztok' }, { s: 'křída rozmíchaná ve vodě', d: 'suspenze' },
+  { s: 'bahnitá voda', d: 'suspenze' }, { s: 'olej ve vodě po zatřepání', d: 'emulze' },
+  { s: 'mléko', d: 'emulze' }, { s: 'šlehačka', d: 'pena' },
+  { s: 'mýdlová pěna', d: 'pena' }, { s: 'kouř z komína', d: 'dym' },
+  { s: 'ranní mlha nad loukou', d: 'mlha' }, { s: 'mrak', d: 'mlha' },
+];
+function druh() {
+  const p = $('plocha');
+  const u = Uloha.nahodne(PRIKLADY);
+  p.innerHTML = `<div class="zadani">O jaký druh směsi jde?</div>
+    <div class="karta"><div class="smes" style="font-size:1.5rem">${u.s}</div></div>`;
+  const odezva = odezvaEl();
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([u.d, ...Uloha.zamichej(Object.keys(DRUHY).filter(k => k !== u.d)).slice(0, 3)])
+      .map(k => ({ klic: k, popis: DRUHY[k] })),
+    spravnyKlic: u.d,
+    zpravaOk: `✅ ${DRUHY[u.d]}`,
+    zpravaChyba: 'Urči skupenství obou složek – podle toho se druh směsi pozná.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+function zlomek() {
+  const p = $('plocha');
+  const mLatky = Uloha.nahodneCislo(1, 12) * 5;
+  const mVody = Uloha.nahodneCislo(10, 40) * 10;
+  const mRoztoku = mLatky + mVody;
+  const w = mLatky / mRoztoku * 100;
+  const typ = Uloha.nahodne(['procenta', 'hmotnostLatky', 'hmotnostRoztoku']);
+  let zadani, spravny, jednotka;
+
+  if (typ === 'procenta') {
+    zadani = `V <b>${mVody} g</b> vody rozpustíme <b>${mLatky} g</b> soli.
+      Kolikaprocentní roztok vznikl?`;
+    spravny = fmt(w); jednotka = '%';
+  } else if (typ === 'hmotnostLatky') {
+    zadani = `Máme <b>${mRoztoku} g</b> ${fmt(w)}% roztoku. Kolik gramů rozpuštěné látky obsahuje?`;
+    spravny = fmt(mLatky); jednotka = 'g';
+  } else {
+    zadani = `Kolik gramů roztoku vznikne rozpuštěním <b>${mLatky} g</b> látky
+      v <b>${mVody} g</b> vody?`;
+    spravny = fmt(mRoztoku); jednotka = 'g';
+  }
+  const jine = new Set([fmt(mLatky), fmt(mVody), fmt(mRoztoku), fmt(w), fmt(mLatky / mVody * 100)]);
+  jine.delete(spravny);
+
+  p.innerHTML = `<div class="zadani uloha-text">${zadani}</div>
+    <div class="karta"><div class="vzorec">w = m(látky) / m(roztoku) · 100 %<br>
+      m(roztoku) = m(látky) + m(rozpouštědla)</div></div>`;
+  const odezva = odezvaEl();
+  Uloha.vyber({
+    kam: p, odezva, trida: 'velke',
+    moznosti: Uloha.zamichej([spravny, ...[...jine].slice(0, 3)]).map(t => ({ klic: t, popis: t + ' ' + jednotka })),
+    spravnyKlic: spravny,
+    zpravaOk: `✅ Roztok váží ${mRoztoku} g, z toho ${mLatky} g je látka → w = ${fmt(w)} %.`,
+    zpravaChyba: 'Pozor: ve jmenovateli je hmotnost celého roztoku, ne jen rozpouštědla.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+const POJMY = [
+  { q: 'Co je rozpouštědlo?', a: 'látka, které je v roztoku nejvíc a rozpouští ostatní', b: ['pevná látka na dně', 'plyn nad hladinou', 'filtr'] },
+  { q: 'Co je nasycený roztok?', a: 'roztok, ve kterém se za dané teploty už další látka nerozpustí', b: ['roztok bez rozpouštědla', 'roztok o teplotě 100 °C', 'roztok s pevnými částicemi'] },
+  { q: 'Jak se změní rozpustnost většiny pevných látek s rostoucí teplotou?', a: 'zvýší se', b: ['sníží se', 'nezmění se', 'látka se rozloží'] },
+  { q: 'Co je filtrát?', a: 'kapalina, která prošla filtrem', b: ['zbytek na filtru', 'filtrační papír', 'usazenina'] },
+  { q: 'Podle čeho odděluje destilace?', a: 'podle různých teplot varu', b: ['podle barvy', 'podle hustoty', 'podle magnetismu'] },
+  { q: 'Je vzduch chemická látka, nebo směs?', a: 'směs plynů', b: ['chemická sloučenina', 'prvek', 'roztok pevných látek'] },
+  { q: 'Jak poznáš různorodou směs?', a: 'jednotlivé složky jsou rozeznatelné okem nebo mikroskopem', b: ['je vždy kapalná', 'nedá se oddělit', 'je průhledná'] },
+  { q: 'Co se stane, když necháme kalnou vodu delší dobu stát?', a: 'pevné částice se usadí u dna', b: ['voda se odpaří', 'vznikne roztok', 'částice zmizí'] },
+];
+function pojmy() {
+  const p = $('plocha');
+  const u = Uloha.nahodne(POJMY);
+  p.innerHTML = `<div class="zadani uloha-text">${u.q}</div>`;
+  const odezva = odezvaEl();
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([u.a, ...u.b]).map(t => ({ klic: t, popis: t })),
+    spravnyKlic: u.a,
+    zpravaOk: `✅ ${u.a}`,
+    zpravaChyba: 'Vrať se k tomu, co je rozpouštědlo, roztok a jak fungují dělicí metody.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+const REZIMY = { metoda, druh, zlomek, pojmy };
+function novaUloha() { REZIMY[rezim](); }
+
+document.querySelectorAll('#rezimy button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#rezimy button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  rezim = b.dataset.rezim;
+  novaUloha();
+}));
+$('btnDalsi').addEventListener('click', novaUloha);
+novaUloha();
+</script>
+</body>
+</html>

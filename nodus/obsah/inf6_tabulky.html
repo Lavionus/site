@@ -1,0 +1,255 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Tabulkový procesor – vzorce</title>
+  <link rel="stylesheet" href="../common.css">
+  <link rel="stylesheet" href="../vyuka.css">
+  <script src="../theme.js"></script>
+  <script src="../rec.js"></script>
+  <script src="../uloha.js"></script>
+  <style>
+    .tabulka-obal { overflow-x: auto; max-width: 100%; }
+    table.list { border-collapse: collapse; font-variant-numeric: tabular-nums; }
+    table.list th, table.list td {
+      border: 1px solid var(--border); padding: 7px 13px; font-size: 0.95rem; text-align: center;
+    }
+    table.list th { background: var(--bg-elevated); color: var(--text-muted); font-size: 0.82rem; }
+    table.list td.hlavicka { background: var(--bg-elevated); color: var(--text-muted); font-weight: 700; }
+    table.list td.zvyrazneno { background: var(--accent-soft); font-weight: 700; }
+    .vzorec-kod {
+      font-family: 'Courier New', monospace; font-size: clamp(1.05rem, 4vw, 1.5rem);
+      font-weight: 700; color: var(--accent);
+    }
+    .popis-t { color: var(--text-muted); max-width: 540px; line-height: 1.5; }
+  </style>
+</head>
+<body>
+  <h1>📊 Tabulkový procesor – vzorce</h1>
+  <p class="podtitul">Pro 6.–7. ročník: adresy buněk, vzorce, funkce a čtení dat z tabulky.</p>
+
+  <div class="rezimy" id="rezimy">
+    <button data-rezim="adresa" class="active">📍 Adresa buňky</button>
+    <button data-rezim="vysledek">🧮 Výsledek vzorce</button>
+    <button data-rezim="funkce">🔧 Která funkce</button>
+    <button data-rezim="cteni">👀 Čtení z tabulky</button>
+  </div>
+
+  <div class="plocha" id="plocha"></div>
+
+  <div class="ovladani">
+    <button class="hlavni" id="btnDalsi">Přeskočit →</button>
+    <span class="skore" id="skore"></span>
+  </div>
+
+  <p class="napoveda">
+    Adresa buňky se skládá z <b>písmene sloupce</b> a <b>čísla řádku</b> (například B3).
+    Každý vzorec začíná znakem <b>=</b>. Funkce <b>SUMA</b> sečte oblast,
+    <b>PRŮMĚR</b> spočítá průměr, <b>MAX</b> a <b>MIN</b> najdou největší a nejmenší hodnotu.
+  </p>
+
+<script>
+const $ = id => document.getElementById(id);
+const skore = Uloha.skore('nodus_inf6_tabulky', $('skore'));
+let rezim = 'adresa';
+
+const SLOUPCE = ['A', 'B', 'C', 'D'];
+const PREDMETY = ['Matematika', 'Čeština', 'Angličtina', 'Přírodopis', 'Dějepis'];
+
+/* vytvoří tabulku známek: sloupec A = předmět, B–D = hodnoty */
+function novaTabulka(radku = 4) {
+  const radky = [];
+  for (let i = 0; i < radku; i++) {
+    radky.push({
+      nazev: PREDMETY[i % PREDMETY.length],
+      hodnoty: [Uloha.nahodneCislo(1, 25), Uloha.nahodneCislo(1, 25), Uloha.nahodneCislo(1, 25)],
+    });
+  }
+  return radky;
+}
+
+function svgTabulka(radky, zvyrazni) {
+  let html = '<div class="tabulka-obal"><table class="list"><tr><th></th>'
+    + SLOUPCE.map(s => `<th>${s}</th>`).join('') + '</tr>';
+  radky.forEach((r, i) => {
+    html += `<tr><td class="hlavicka">${i + 2}</td><td>${r.nazev}</td>`;
+    r.hodnoty.forEach((h, j) => {
+      const adresa = SLOUPCE[j + 1] + (i + 2);
+      html += `<td class="${zvyrazni === adresa ? 'zvyrazneno' : ''}">${h}</td>`;
+    });
+    html += '</tr>';
+  });
+  return html + '</table></div>';
+}
+
+/* ---- Adresa buňky ------------------------------------------------------------------- */
+function adresa() {
+  const p = $('plocha');
+  const radky = novaTabulka();
+  const r = Uloha.nahodneCislo(0, radky.length - 1);
+  const s = Uloha.nahodneCislo(0, 2);
+  const spravna = SLOUPCE[s + 1] + (r + 2);
+  const hodnota = radky[r].hodnoty[s];
+
+  p.innerHTML = `<div class="zadani">Jakou adresu má zvýrazněná buňka s hodnotou <b>${hodnota}</b>?</div>
+    ${svgTabulka(radky, spravna)}`;
+
+  const jine = new Set();
+  let pokusu1 = 0;
+  while (jine.size < 3 && pokusu1++ < 200) {
+    const k = SLOUPCE[Uloha.nahodneCislo(0, 3)] + Uloha.nahodneCislo(2, radky.length + 1);
+    if (k !== spravna) jine.add(k);
+  }
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva, trida: 'velke',
+    moznosti: Uloha.zamichej([spravna, ...jine]).map(t => ({ klic: t, popis: t })),
+    spravnyKlic: spravna,
+    zpravaOk: `✅ Buňka ${spravna} – nejdřív sloupec, pak řádek.`,
+    zpravaChyba: 'Adresa je písmeno sloupce a číslo řádku, například B3.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Výsledek vzorce ------------------------------------------------------------------ */
+function vysledek() {
+  const p = $('plocha');
+  const radky = novaTabulka(3);
+  const r = Uloha.nahodneCislo(0, radky.length - 1);
+  const h = radky[r].hodnoty;
+  const typ = Uloha.nahodne(['suma', 'prumer', 'max', 'rozdil']);
+
+  let vzorec, spravny;
+  if (typ === 'suma') {
+    vzorec = `=SUMA(B${r + 2}:D${r + 2})`;
+    spravny = h[0] + h[1] + h[2];
+  } else if (typ === 'prumer') {
+    const soucet = h[0] + h[1] + h[2];
+    if (soucet % 3 !== 0) return vysledek();
+    vzorec = `=PRŮMĚR(B${r + 2}:D${r + 2})`;
+    spravny = soucet / 3;
+  } else if (typ === 'max') {
+    vzorec = `=MAX(B${r + 2}:D${r + 2})`;
+    spravny = Math.max(...h);
+  } else {
+    vzorec = `=B${r + 2}-C${r + 2}`;
+    spravny = h[0] - h[1];
+  }
+
+  p.innerHTML = `<div class="zadani">Jaký bude výsledek vzorce?</div>
+    ${svgTabulka(radky, null)}
+    <div class="vzorec-kod">${vzorec}</div>`;
+
+  const jine = new Set();
+  let pokusu2 = 0;
+  while (jine.size < 3 && pokusu2++ < 200) {
+    const k = spravny + Uloha.nahodne([-10, -5, -2, -1, 1, 2, 5, 10]);
+    if (k !== spravny) jine.add(k);
+  }
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva, trida: 'velke',
+    moznosti: Uloha.zamichej([spravny, ...jine]).map(v => ({ klic: String(v), popis: String(v) })),
+    spravnyKlic: String(spravny),
+    zpravaOk: `✅ Vzorec pracuje s hodnotami ${h.join(', ')} a vrátí ${spravny}.`,
+    zpravaChyba: 'Podívej se, které buňky vzorec používá, a spočítej to.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Která funkce ---------------------------------------------------------------------- */
+const FUNKCE = [
+  { n: 'SUMA', o: 'sečte všechny hodnoty ve vybrané oblasti' },
+  { n: 'PRŮMĚR', o: 'spočítá aritmetický průměr hodnot' },
+  { n: 'MAX', o: 'najde největší hodnotu v oblasti' },
+  { n: 'MIN', o: 'najde nejmenší hodnotu v oblasti' },
+  { n: 'POČET', o: 'spočítá, kolik buněk obsahuje čísla' },
+  { n: 'KDYŽ', o: 'podle podmínky vrátí jednu ze dvou hodnot' },
+];
+
+function funkce() {
+  const p = $('plocha');
+  const u = Uloha.nahodne(FUNKCE);
+  const jine = Uloha.zamichej(FUNKCE.filter(x => x.n !== u.n)).slice(0, 3);
+  p.innerHTML = `<div class="zadani">Kterou funkci k tomu použiješ?</div>
+    <div class="karta"><div class="obrazek">🔧</div><div class="popis-t">${u.o}</div></div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva, trida: 'velke',
+    moznosti: Uloha.zamichej([u, ...jine]).map(x => ({ klic: x.n, popis: x.n })),
+    spravnyKlic: u.n,
+    zpravaOk: `✅ ${u.n} – ${u.o}.`,
+    zpravaChyba: 'Zkus jinou funkci.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Čtení z tabulky --------------------------------------------------------------------- */
+function cteni() {
+  const p = $('plocha');
+  const radky = novaTabulka(4);
+  const typ = Uloha.nahodne(['nejvic', 'nejmene', 'soucetRadku']);
+  const soucty = radky.map(r => r.hodnoty.reduce((a, b) => a + b, 0));
+
+  let zadani, spravny, moznosti;
+  if (typ === 'nejvic') {
+    const idx = soucty.indexOf(Math.max(...soucty));
+    zadani = 'Ve kterém řádku je největší součet hodnot?';
+    spravny = radky[idx].nazev;
+    moznosti = radky.map(r => r.nazev);
+  } else if (typ === 'nejmene') {
+    const idx = soucty.indexOf(Math.min(...soucty));
+    zadani = 'Ve kterém řádku je nejmenší součet hodnot?';
+    spravny = radky[idx].nazev;
+    moznosti = radky.map(r => r.nazev);
+  } else {
+    const idx = Uloha.nahodneCislo(0, radky.length - 1);
+    zadani = `Jaký je součet hodnot v řádku „${radky[idx].nazev}“?`;
+    spravny = String(soucty[idx]);
+    const jine = new Set(soucty.map(String).filter(x => x !== spravny));
+    while (jine.size < 3) jine.add(String(soucty[idx] + Uloha.nahodne([-7, -3, 3, 7])));
+    moznosti = [spravny, ...[...jine].slice(0, 3)];
+  }
+
+  p.innerHTML = `<div class="zadani">${zadani}</div>${svgTabulka(radky, null)}`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([...new Set(moznosti)]).map(t => ({ klic: t, popis: t })),
+    spravnyKlic: spravny,
+    zpravaOk: `✅ Součty řádků: ${radky.map((r, i) => r.nazev + ' ' + soucty[i]).join(', ')}.`,
+    zpravaChyba: 'Sečti hodnoty v jednotlivých řádcích a porovnej je.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+const REZIMY = { adresa, vysledek, funkce, cteni };
+function novaUloha() { REZIMY[rezim](); }
+
+document.querySelectorAll('#rezimy button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#rezimy button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  rezim = b.dataset.rezim;
+  novaUloha();
+}));
+$('btnDalsi').addEventListener('click', novaUloha);
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === 'Enter') { e.preventDefault(); novaUloha(); }
+});
+novaUloha();
+</script>
+</body>
+</html>

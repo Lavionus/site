@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Domácí a volně žijící zvířata</title>
+  <link rel="stylesheet" href="../common.css">
+  <link rel="stylesheet" href="../vyuka.css">
+  <script src="../theme.js"></script>
+  <script src="../rec.js"></script>
+  <script src="../uloha.js"></script>
+  <style>
+    .zvire-nazev { font-size: 1.3rem; font-weight: 700; }
+    .dvojice { display: flex; align-items: center; gap: 16px; justify-content: center; }
+    .dvojice .sipka { font-size: 1.6rem; color: var(--text-faint); }
+  </style>
+</head>
+<body>
+  <h1>🐄 Domácí a volně žijící zvířata</h1>
+  <p class="podtitul">Pro 2.–3. ročník: kdo žije u lidí, kdo ve volné přírodě, jejich mláďata a příbytky.</p>
+
+  <div class="rezimy" id="rezimy">
+    <button data-rezim="kdeZije" class="active">🏡 Domácí, nebo volně žijící?</button>
+    <button data-rezim="mladata">🐣 Mláďata</button>
+    <button data-rezim="pribytky">🏠 Kde bydlí</button>
+    <button data-rezim="uzitek">🥚 K čemu je chováme</button>
+  </div>
+
+  <div class="plocha" id="plocha"></div>
+
+  <div class="ovladani">
+    <button class="hlavni" id="btnDalsi">Přeskočit →</button>
+    <span class="skore" id="skore"></span>
+  </div>
+
+  <p class="napoveda">
+    <b>Domácí zvířata</b> chová člověk – dává jim krmení a přístřeší, ona mu dávají užitek nebo
+    společnost. <b>Volně žijící zvířata</b> se o sebe starají sama a potravu si hledají v přírodě.
+  </p>
+
+<script>
+const $ = id => document.getElementById(id);
+const skore = Uloha.skore('nodus_prv2_zvirata', $('skore'));
+let rezim = 'kdeZije';
+
+/* zvíře, emoji, domácí?, mládě, příbytek, užitek (jen u domácích) */
+const ZVIRATA = [
+  { n: 'kráva', e: '🐄', domaci: true, mlade: 'tele', dum: 'chlév', uzitek: 'mléko' },
+  { n: 'prase', e: '🐖', domaci: true, mlade: 'sele', dum: 'chlívek', uzitek: 'maso' },
+  { n: 'ovce', e: '🐑', domaci: true, mlade: 'jehně', dum: 'ovčín', uzitek: 'vlna' },
+  { n: 'koza', e: '🐐', domaci: true, mlade: 'kůzle', dum: 'chlév', uzitek: 'mléko' },
+  { n: 'kůň', e: '🐴', domaci: true, mlade: 'hříbě', dum: 'stáj', uzitek: 'práce a jízda' },
+  { n: 'slepice', e: '🐔', domaci: true, mlade: 'kuře', dum: 'kurník', uzitek: 'vejce' },
+  { n: 'husa', e: '🦢', domaci: true, mlade: 'house', dum: 'husník', uzitek: 'peří' },
+  { n: 'kachna', e: '🦆', domaci: true, mlade: 'káče', dum: 'kachní výběh', uzitek: 'maso' },
+  { n: 'králík', e: '🐇', domaci: true, mlade: 'králíče', dum: 'klec', uzitek: 'maso' },
+  { n: 'pes', e: '🐕', domaci: true, mlade: 'štěně', dum: 'bouda', uzitek: 'hlídání' },
+  { n: 'kočka', e: '🐈', domaci: true, mlade: 'kotě', dum: 'dům', uzitek: 'chytání myší' },
+  { n: 'včela', e: '🐝', domaci: true, mlade: 'larva', dum: 'úl', uzitek: 'med' },
+  { n: 'liška', e: '🦊', domaci: false, mlade: 'lišče', dum: 'nora' },
+  { n: 'medvěd', e: '🐻', domaci: false, mlade: 'medvídě', dum: 'brloh' },
+  { n: 'srna', e: '🦌', domaci: false, mlade: 'srnče', dum: 'les' },
+  { n: 'zajíc', e: '🐰', domaci: false, mlade: 'zajíček', dum: 'pole' },
+  { n: 'veverka', e: '🐿️', domaci: false, mlade: 'veverče', dum: 'dutina stromu' },
+  { n: 'sova', e: '🦉', domaci: false, mlade: 'sůvě', dum: 'dutina stromu' },
+  { n: 'vlk', e: '🐺', domaci: false, mlade: 'vlče', dum: 'doupě' },
+  { n: 'ježek', e: '🦔', domaci: false, mlade: 'ježče', dum: 'hnízdo z listí' },
+  { n: 'divoké prase', e: '🐗', domaci: false, mlade: 'sele', dum: 'les' },
+  { n: 'krtek', e: '🐀', domaci: false, mlade: 'krtče', dum: 'podzemní chodby' },
+  { n: 'čáp', e: '🦩', domaci: false, mlade: 'čápě', dum: 'hnízdo na komíně' },
+  { n: 'žába', e: '🐸', domaci: false, mlade: 'pulec', dum: 'rybník' },
+];
+
+const DOMACI = ZVIRATA.filter(z => z.domaci);
+
+/* ---- Domácí, nebo volně žijící? ------------------------------------------ */
+function kdeZije() {
+  const p = $('plocha');
+  const z = Uloha.nahodne(ZVIRATA);
+  p.innerHTML = `<div class="zadani">Je to zvíře domácí, nebo volně žijící?</div>
+    <div class="karta"><div class="obrazek">${z.e}</div><div class="zvire-nazev">${z.n}</div></div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva, trida: 'dve',
+    moznosti: [
+      { klic: 'domaci', ikona: '🏡', popis: 'domácí' },
+      { klic: 'volne', ikona: '🌲', popis: 'volně žijící' },
+    ],
+    spravnyKlic: z.domaci ? 'domaci' : 'volne',
+    zpravaOk: z.domaci
+      ? `✅ Ano, ${z.n} chová člověk – bydlí v místě zvaném ${z.dum}.`
+      : `✅ Ano, ${z.n} žije volně v přírodě – najdeš ji tam, kde je ${z.dum}.`,
+    zpravaChyba: 'Zkus druhou možnost – stará se o toto zvíře člověk?',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Mláďata --------------------------------------------------------------- */
+function mladata() {
+  const p = $('plocha');
+  const z = Uloha.nahodne(ZVIRATA);
+  const jina = Uloha.zamichej(ZVIRATA.filter(x => x.mlade !== z.mlade)).slice(0, 3);
+  p.innerHTML = `<div class="zadani">Jak se jmenuje mládě?</div>
+    <div class="karta"><div class="obrazek">${z.e}</div><div class="zvire-nazev">${z.n}</div></div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([z, ...jina]).map(x => ({ klic: x.mlade, popis: x.mlade })),
+    spravnyKlic: z.mlade,
+    zpravaOk: `✅ Mládě zvířete ${z.n} je ${z.mlade}.`,
+    zpravaChyba: 'To je mládě jiného zvířete – zkus to znovu.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Kde bydlí ------------------------------------------------------------ */
+function pribytky() {
+  const p = $('plocha');
+  const z = Uloha.nahodne(ZVIRATA);
+  const jina = Uloha.zamichej(ZVIRATA.filter(x => x.dum !== z.dum)).slice(0, 3);
+  p.innerHTML = `<div class="zadani">Kde toto zvíře bydlí?</div>
+    <div class="karta"><div class="obrazek">${z.e}</div><div class="zvire-nazev">${z.n}</div></div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([z, ...jina]).map(x => ({ klic: x.dum, popis: x.dum })),
+    spravnyKlic: z.dum,
+    zpravaOk: `✅ ${z.n[0].toUpperCase() + z.n.slice(1)} bydlí tam, kde je ${z.dum}.`,
+    zpravaChyba: 'Tam bydlí jiné zvíře – zkus to znovu.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- K čemu je chováme ---------------------------------------------------- */
+function uzitek() {
+  const p = $('plocha');
+  const z = Uloha.nahodne(DOMACI);
+  const jina = Uloha.zamichej(DOMACI.filter(x => x.uzitek !== z.uzitek)).slice(0, 3);
+  p.innerHTML = `<div class="zadani">Proč lidé toto zvíře chovají?</div>
+    <div class="karta"><div class="obrazek">${z.e}</div><div class="zvire-nazev">${z.n}</div></div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([z, ...jina]).map(x => ({ klic: x.uzitek, popis: x.uzitek })),
+    spravnyKlic: z.uzitek,
+    zpravaOk: `✅ Od zvířete ${z.n} máme ${z.uzitek}.`,
+    zpravaChyba: 'To dává jiné zvíře – zkus to znovu.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+const REZIMY = { kdeZije, mladata, pribytky, uzitek };
+function novaUloha() { REZIMY[rezim](); }
+
+document.querySelectorAll('#rezimy button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#rezimy button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  rezim = b.dataset.rezim;
+  novaUloha();
+}));
+$('btnDalsi').addEventListener('click', novaUloha);
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === 'Enter') { e.preventDefault(); novaUloha(); }
+});
+novaUloha();
+</script>
+</body>
+</html>

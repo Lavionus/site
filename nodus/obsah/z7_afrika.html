@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Afrika</title>
+  <link rel="stylesheet" href="../common.css">
+  <link rel="stylesheet" href="../vyuka.css">
+  <script src="../theme.js"></script>
+  <script src="../uloha.js"></script>
+  <script src="../mapy.js"></script>
+  <style>
+    .uloha-text { max-width: 620px; font-size: 1.02rem; line-height: 1.6; }
+    .uloha-text b { color: var(--accent); }
+  </style>
+</head>
+<body>
+  <h1>🌍 Afrika</h1>
+  <p class="podtitul">Pro 7. ročník: poloha států, přírodní poměry, obyvatelstvo a hospodářství.</p>
+
+  <div class="rezimy" id="rezimy">
+    <button data-rezim="staty" class="active">🗺️ Slepá mapa – státy</button>
+    <button data-rezim="priroda">🏜️ Slepá mapa – příroda</button>
+    <button data-rezim="kvizPriroda">🌦️ Přírodní poměry</button>
+    <button data-rezim="kvizHospodarstvi">🏭 Lidé a hospodářství</button>
+  </div>
+
+  <div class="plocha" id="plocha"></div>
+
+  <div class="ovladani">
+    <button class="hlavni" id="btnDalsi">Přeskočit →</button>
+    <span class="skore" id="skore"></span>
+  </div>
+
+  <p class="napoveda">
+    Afrika je druhý největší světadíl. Rovník ji dělí zhruba na polovinu, proto se podnebné pásy
+    <b>zrcadlově opakují</b> na sever i na jih od rovníku: tropické deštné lesy – savany – pouště –
+    subtropy u Středozemního moře.
+  </p>
+
+<script>
+const $ = id => document.getElementById(id);
+const skore = Uloha.skore('nodus_z7_afrika', $('skore'));
+let rezim = 'staty';
+function odezvaEl() { const d = document.createElement('div'); d.className = 'odezva'; return d; }
+
+const STATY = [
+  { klic: 'egypt', popis: 'Egypt', lon: 30, lat: 26, info: 'leží na dolním toku Nilu, hlavní město Káhira' },
+  { klic: 'alzirsko', popis: 'Alžírsko', lon: 2, lat: 28, info: 'rozlohou největší stát Afriky, převážně Sahara' },
+  { klic: 'nigerie', popis: 'Nigérie', lon: 8, lat: 9, info: 'nejlidnatější stát Afriky, těžba ropy v deltě Nigeru' },
+  { klic: 'etiopie', popis: 'Etiopie', lon: 39, lat: 9, info: 'vysočina ve východní Africe, pramen Modrého Nilu' },
+  { klic: 'kena', popis: 'Keňa', lon: 37, lat: 0, info: 'leží na rovníku, národní parky a safari' },
+  { klic: 'jar', popis: 'Jihoafrická republika', lon: 25, lat: -29, info: 'hospodářsky nejsilnější stát, těžba zlata a platiny' },
+  { klic: 'maroko', popis: 'Maroko', lon: -6, lat: 32, info: 'severozápad Afriky, pohoří Atlas' },
+  { klic: 'kongo', popis: 'Demokratická republika Kongo', lon: 23, lat: -2, info: 'povodí Konga, deštné lesy' },
+  { klic: 'madagaskar', popis: 'Madagaskar', lon: 47, lat: -19, info: 'velký ostrov v Indickém oceánu s jedinečnou přírodou' },
+  { klic: 'libye', popis: 'Libye', lon: 17, lat: 27, info: 'saharský stát s velkými zásobami ropy' },
+];
+
+const PRIRODA = [
+  { klic: 'sahara', popis: 'Sahara', lon: 10, lat: 23, info: 'největší horká poušť světa' },
+  { klic: 'nil', popis: 'Nil', lon: 31, lat: 20, info: 'nejdelší řeka Afriky, ústí do Středozemního moře' },
+  { klic: 'kongoR', popis: 'řeka Kongo', lon: 18, lat: -1, info: 'druhá nejvodnatější řeka světa' },
+  { klic: 'viktorie', popis: 'Viktoriino jezero', lon: 33, lat: -1, info: 'největší africké jezero, pramen Bílého Nilu' },
+  { klic: 'kilimandzaro', popis: 'Kilimandžáro', lon: 37, lat: -3, info: 'nejvyšší hora Afriky, 5 895 m n. m.' },
+  { klic: 'atlas', popis: 'pohoří Atlas', lon: -5, lat: 32, info: 'pohoří na severozápadě Afriky' },
+  { klic: 'kalahari', popis: 'Kalahari', lon: 23, lat: -23, info: 'polopoušť v jižní Africe' },
+  { klic: 'namib', popis: 'poušť Namib', lon: 13, lat: -24, info: 'pobřežní poušť u Atlantiku' },
+  { klic: 'suez', popis: 'Suezský průplav', lon: 32, lat: 30, info: 'spojuje Středozemní a Rudé moře' },
+  { klic: 'mysDobreNadeje', popis: 'Mys Dobré naděje', lon: 18, lat: -34, info: 'jihozápadní cíp Afriky' },
+];
+
+/* Společná úloha se slepou mapou. */
+function mapaUloha(sada, zadaniText) {
+  const p = $('plocha');
+  const body = Uloha.zamichej([...sada]).slice(0, 6);
+  const cil = Uloha.nahodne(body);
+  const stav = { chyboval: false, hotovo: false };
+
+  p.innerHTML = `<div class="zadani">${zadaniText} <b>${cil.popis}</b></div>` + Mapy.svg('afrika', body);
+  const odezva = odezvaEl();
+  p.querySelectorAll('.znacka').forEach(g => g.addEventListener('click', () => {
+    const trefa = sada.find(x => x.klic === g.dataset.klic);
+    Uloha.odpoved({
+      prvek: g, spravne: g.dataset.klic === cil.klic, stav, odezva,
+      zpravaOk: `✅ ${cil.popis} – ${cil.info}`,
+      zpravaChyba: `Tady je ${trefa.popis}. Hledáme ${cil.popis}.`,
+      poSpravne: skore.vyhodnot,
+      dalsi: novaUloha,
+    });
+  }));
+  p.appendChild(odezva);
+}
+const staty = () => mapaUloha(STATY, 'Klepni na mapě na stát');
+const priroda = () => mapaUloha(PRIRODA, 'Najdi na mapě');
+
+/* ---- Kvízy ------------------------------------------------------------------------------- */
+const KVIZ_PRIRODA = [
+  { q: 'Která poušť zabírá velkou část severní Afriky?', a: 'Sahara', b: ['Kalahari', 'Namib', 'Gobi'] },
+  { q: 'Která řeka je nejdelší v Africe?', a: 'Nil', b: ['Kongo', 'Niger', 'Zambezi'] },
+  { q: 'Jak se nazývá travnatá krajina s rozptýlenými stromy v tropech?', a: 'savana',
+    b: ['tajga', 'step', 'tundra'] },
+  { q: 'Co je nejvyšší hora Afriky?', a: 'Kilimandžáro', b: ['Mount Kenya', 'Atlas', 'Ras Dašan'] },
+  { q: 'Proč se podnebné pásy v Africe opakují na sever i na jih?', a: 'protože rovník prochází středem světadílu',
+    b: ['protože je Afrika ostrov', 'kvůli mořským proudům', 'kvůli pohořím na okrajích'] },
+  { q: 'Které jezero je největší v Africe?', a: 'Viktoriino jezero', b: ['Tanganika', 'Čadské jezero', 'Malawi'] },
+  { q: 'Jaké podnebí je v okolí Středozemního moře na severu Afriky?', a: 'subtropické s deštivou zimou',
+    b: ['tropické deštné', 'polární', 'mírné oceánské'] },
+  { q: 'Jak se nazývá přechodné pásmo mezi Saharou a savanou?', a: 'Sahel',
+    b: ['Sudan', 'Serengeti', 'Namib'] },
+];
+const KVIZ_HOSPODARSTVI = [
+  { q: 'Který stát Afriky má nejvíce obyvatel?', a: 'Nigérie', b: ['Egypt', 'JAR', 'Keňa'] },
+  { q: 'Který africký stát je rozlohou největší?', a: 'Alžírsko', b: ['Súdán', 'Kongo', 'Libye'] },
+  { q: 'Čím je pro Egypt životně důležitý Nil?', a: 'zavlažuje úrodnou půdu v poušti',
+    b: ['je zdrojem ropy', 'chrání hranici', 'slouží k rybolovu v moři'] },
+  { q: 'Které nerostné bohatství se hodně těží v Jihoafrické republice?', a: 'zlato a platina',
+    b: ['ropa a plyn', 'uran a rtuť', 'jantar'] },
+  { q: 'Co se pěstuje v Ghaně a na Pobřeží slonoviny pro světový trh?', a: 'kakao',
+    b: ['pšenice', 'brambory', 'čaj'] },
+  { q: 'Proč je Suezský průplav tak významný?', a: 'zkracuje lodní cestu z Evropy do Asie',
+    b: ['vyrábí elektřinu', 'zavlažuje Saharu', 'spojuje dvě jezera'] },
+  { q: 'Co je pro velkou část afrických států hospodářský problém?', a: 'závislost na vývozu jedné suroviny',
+    b: ['nedostatek pracovních sil', 'příliš mnoho průmyslu', 'nedostatek slunečního svitu'] },
+  { q: 'Jak se nazývá rychlý růst měst v Africe?', a: 'urbanizace', b: ['migrace', 'industrializace', 'globalizace'] },
+];
+
+function kviz(sada) {
+  const p = $('plocha');
+  const u = Uloha.nahodne(sada);
+  p.innerHTML = `<div class="zadani uloha-text">${u.q}</div>`;
+  const odezva = odezvaEl();
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([u.a, ...u.b]).map(t => ({ klic: t, popis: t })),
+    spravnyKlic: u.a,
+    zpravaOk: `✅ ${u.a}`,
+    zpravaChyba: 'Zkus si vybavit mapu Afriky a její podnebné pásy.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+const kvizPriroda = () => kviz(KVIZ_PRIRODA);
+const kvizHospodarstvi = () => kviz(KVIZ_HOSPODARSTVI);
+
+const REZIMY = { staty, priroda, kvizPriroda, kvizHospodarstvi };
+function novaUloha() { REZIMY[rezim](); }
+
+document.querySelectorAll('#rezimy button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#rezimy button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  rezim = b.dataset.rezim;
+  novaUloha();
+}));
+$('btnDalsi').addEventListener('click', novaUloha);
+novaUloha();
+</script>
+</body>
+</html>

@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Slovesa – osoba, číslo, čas</title>
+  <link rel="stylesheet" href="../common.css">
+  <link rel="stylesheet" href="../vyuka.css">
+  <script src="../theme.js"></script>
+  <script src="../rec.js"></script>
+  <script src="../uloha.js"></script>
+  <style>
+    .tvar { font-size: clamp(1.6rem, 6vw, 2.6rem); font-weight: 700; }
+    .infinitiv { color: var(--text-faint); font-size: 0.9rem; margin-top: 4px; }
+  </style>
+</head>
+<body>
+  <h1>🏃 Slovesa – osoba, číslo, čas</h1>
+  <p class="podtitul">Pro 3.–4. ročník: u sloves určujeme osobu, číslo a čas.</p>
+
+  <div class="rezimy" id="rezimy">
+    <button data-rezim="cas" class="active">⏰ Určit čas</button>
+    <button data-rezim="osoba">👤 Určit osobu</button>
+    <button data-rezim="cislo">🔢 Určit číslo</button>
+    <button data-rezim="prevod">🔄 Převeď do času</button>
+  </div>
+
+  <div class="plocha" id="plocha"></div>
+
+  <div class="ovladani">
+    <button class="hlavni" id="btnDalsi">Přeskočit →</button>
+    <span class="skore" id="skore"></span>
+  </div>
+
+  <p class="napoveda">
+    <b>Osoba:</b> 1. já / my, 2. ty / vy, 3. on, ona, ono / oni.
+    <b>Číslo:</b> jednotné (jeden) a množné (víc). <b>Čas:</b> minulý (bylo),
+    přítomný (je teď) a budoucí (bude).
+  </p>
+
+<script>
+const $ = id => document.getElementById(id);
+const skore = Uloha.skore('nodus_cj3_slovesa', $('skore'));
+let rezim = 'cas';
+
+/* Z několika sloves se vygenerují všechny tvary: 3 časy × 3 osoby × 2 čísla. */
+const SLOVESA = [
+  { inf: 'psát', pritomny: ['píšu', 'píšeš', 'píše', 'píšeme', 'píšete', 'píšou'], minuly: ['psal', 'psali'] },
+  { inf: 'číst', pritomny: ['čtu', 'čteš', 'čte', 'čteme', 'čtete', 'čtou'], minuly: ['četl', 'četli'] },
+  { inf: 'zpívat', pritomny: ['zpívám', 'zpíváš', 'zpívá', 'zpíváme', 'zpíváte', 'zpívají'], minuly: ['zpíval', 'zpívali'] },
+  { inf: 'běžet', pritomny: ['běžím', 'běžíš', 'běží', 'běžíme', 'běžíte', 'běží'], minuly: ['běžel', 'běželi'] },
+  { inf: 'malovat', pritomny: ['maluju', 'maluješ', 'maluje', 'malujeme', 'malujete', 'malují'], minuly: ['maloval', 'malovali'] },
+  { inf: 'skákat', pritomny: ['skáču', 'skáčeš', 'skáče', 'skáčeme', 'skáčete', 'skáčou'], minuly: ['skákal', 'skákali'] },
+  { inf: 'vařit', pritomny: ['vařím', 'vaříš', 'vaří', 'vaříme', 'vaříte', 'vaří'], minuly: ['vařil', 'vařili'] },
+  { inf: 'kreslit', pritomny: ['kreslím', 'kreslíš', 'kreslí', 'kreslíme', 'kreslíte', 'kreslí'], minuly: ['kreslil', 'kreslili'] },
+];
+
+const OSOBY = ['1. osoba', '2. osoba', '3. osoba'];
+const POMOCNE_MINULE = [['jsem', 'jsi', ''], ['jsme', 'jste', '']];
+const BUDOUCI = [['budu', 'budeš', 'bude'], ['budeme', 'budete', 'budou']];
+
+/* vytvoří jeden konkrétní tvar */
+function tvar(sloveso, cas, osoba, mnozne) {
+  const i = (mnozne ? 3 : 0) + osoba;
+  if (cas === 'pritomny') return sloveso.pritomny[i];
+  if (cas === 'minuly') {
+    const zaklad = sloveso.minuly[mnozne ? 1 : 0];
+    const pom = POMOCNE_MINULE[mnozne ? 1 : 0][osoba];
+    return pom ? `${zaklad} ${pom}` : zaklad;
+  }
+  return `${BUDOUCI[mnozne ? 1 : 0][osoba]} ${sloveso.inf}`;
+}
+
+function nahodnyTvar() {
+  const s = Uloha.nahodne(SLOVESA);
+  const cas = Uloha.nahodne(['minuly', 'pritomny', 'budouci']);
+  const osoba = Uloha.nahodneCislo(0, 2);
+  const mnozne = Math.random() < 0.5;
+  return { s, cas, osoba, mnozne, text: tvar(s, cas, osoba, mnozne) };
+}
+
+const NAZEV_CASU = { minuly: 'minulý čas', pritomny: 'přítomný čas', budouci: 'budoucí čas' };
+/* 2. pád zvlášť – strojové odvozování by dávalo tvary jako „minulýého času“ */
+const NAZEV_CASU_2P = { minuly: 'minulého času', pritomny: 'přítomného času', budouci: 'budoucího času' };
+
+function kartaTvaru(u) {
+  return `<div class="karta"><div class="tvar">${u.text}</div>
+    <div class="infinitiv">sloveso ${u.s.inf}</div></div>`;
+}
+
+/* ---- Určit čas ------------------------------------------------------------ */
+function cas() {
+  const p = $('plocha');
+  const u = nahodnyTvar();
+  p.innerHTML = `<div class="zadani">V jakém čase je sloveso?</div>${kartaTvaru(u)}`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: [
+      { klic: 'minuly', ikona: '⏪', popis: 'minulý' },
+      { klic: 'pritomny', ikona: '⏺️', popis: 'přítomný' },
+      { klic: 'budouci', ikona: '⏩', popis: 'budoucí' },
+    ],
+    spravnyKlic: u.cas,
+    zpravaOk: '✅ Je to ' + NAZEV_CASU[u.cas] + '.',
+    zpravaChyba: 'Ještě ne – stalo se to, děje se to, nebo se to teprve stane?',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Určit osobu ---------------------------------------------------------- */
+function osoba() {
+  const p = $('plocha');
+  const u = nahodnyTvar();
+  const zajmena = u.mnozne ? ['my', 'vy', 'oni'] : ['já', 'ty', 'on'];
+  p.innerHTML = `<div class="zadani">Kolikátá osoba to je?</div>${kartaTvaru(u)}`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: OSOBY.map((o, i) => ({ klic: String(i), popis: o + ' (' + zajmena[i] + ')' })),
+    spravnyKlic: String(u.osoba),
+    zpravaOk: `✅ ${OSOBY[u.osoba]} – ${zajmena[u.osoba]} ${u.text}.`,
+    zpravaChyba: 'Zkus si před sloveso dosadit já / ty / on nebo my / vy / oni.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Určit číslo ---------------------------------------------------------- */
+function cislo() {
+  const p = $('plocha');
+  const u = nahodnyTvar();
+  p.innerHTML = `<div class="zadani">Je sloveso v jednotném, nebo množném čísle?</div>${kartaTvaru(u)}`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva, trida: 'dve',
+    moznosti: [
+      { klic: 'j', ikona: '1️⃣', popis: 'jednotné' },
+      { klic: 'mn', ikona: '👥', popis: 'množné' },
+    ],
+    spravnyKlic: u.mnozne ? 'mn' : 'j',
+    zpravaOk: u.mnozne ? '✅ Množné číslo – dělá to víc lidí.' : '✅ Jednotné číslo – dělá to jeden.',
+    zpravaChyba: 'Zkus druhou možnost – dělá to jeden, nebo víc lidí?',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Převeď do jiného času ------------------------------------------------ */
+function prevod() {
+  const p = $('plocha');
+  const u = nahodnyTvar();
+  const cilovy = Uloha.nahodne(['minuly', 'pritomny', 'budouci'].filter(c => c !== u.cas));
+  const spravnyTvar = tvar(u.s, cilovy, u.osoba, u.mnozne);
+  const jine = ['minuly', 'pritomny', 'budouci']
+    .filter(c => c !== cilovy)
+    .map(c => tvar(u.s, c, u.osoba, u.mnozne));
+  const navic = tvar(u.s, cilovy, (u.osoba + 1) % 3, u.mnozne);
+
+  p.innerHTML = `<div class="zadani">Převeď sloveso do <b>${NAZEV_CASU_2P[cilovy]}</b>:</div>${kartaTvaru(u)}`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  const moznosti = [...new Set([spravnyTvar, ...jine, navic])].slice(0, 4);
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej(moznosti).map(t => ({ klic: t, popis: t })),
+    spravnyKlic: spravnyTvar,
+    zpravaOk: `✅ ${u.text} → ${spravnyTvar}`,
+    zpravaChyba: 'Osoba a číslo musí zůstat stejné, mění se jen čas.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+const REZIMY = { cas, osoba, cislo, prevod };
+function novaUloha() { REZIMY[rezim](); }
+
+document.querySelectorAll('#rezimy button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#rezimy button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  rezim = b.dataset.rezim;
+  novaUloha();
+}));
+$('btnDalsi').addEventListener('click', novaUloha);
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === 'Enter') { e.preventDefault(); novaUloha(); }
+});
+novaUloha();
+</script>
+</body>
+</html>

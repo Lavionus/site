@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Základní skladební dvojice</title>
+  <link rel="stylesheet" href="../common.css">
+  <link rel="stylesheet" href="../vyuka.css">
+  <script src="../theme.js"></script>
+  <script src="../rec.js"></script>
+  <script src="../uloha.js"></script>
+  <style>
+    .veta-slova { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; max-width: 660px; }
+    .veta-slova button {
+      background: var(--bg-elevated); border: 2px solid var(--border); color: var(--text);
+      border-radius: 8px; padding: 9px 13px; font-size: 1.05rem; font-family: inherit; cursor: pointer;
+    }
+    .veta-slova button:hover:not(:disabled) { border-color: var(--accent); }
+    .veta-slova button.spravne { background: var(--ok); border-color: var(--ok); color: #fff; }
+    .veta-slova button.spatne { background: var(--danger); border-color: var(--danger); color: #fff; }
+    .veta-slova button.hotovo { background: var(--accent-soft); border-color: var(--accent); }
+    .veta-cela { font-size: clamp(1.1rem, 4vw, 1.6rem); font-weight: 600; max-width: 640px; line-height: 1.45; }
+    .veta-cela .podmet { color: var(--accent); text-decoration: underline; }
+    .veta-cela .prisudek { color: var(--warn); text-decoration: underline; }
+  </style>
+</head>
+<body>
+  <h1>🔗 Základní skladební dvojice</h1>
+  <p class="podtitul">Pro 5.–6. ročník: podmět a přísudek, shoda a nevyjádřený podmět.</p>
+
+  <div class="rezimy" id="rezimy">
+    <button data-rezim="najdiPodmet" class="active">🔵 Najdi podmět</button>
+    <button data-rezim="najdiPrisudek">🟡 Najdi přísudek</button>
+    <button data-rezim="druhPodmetu">🗂️ Jaký je podmět</button>
+    <button data-rezim="dvojice">🔗 Patří k sobě?</button>
+  </div>
+
+  <div class="plocha" id="plocha"></div>
+
+  <div class="ovladani">
+    <button class="hlavni" id="btnDalsi">Přeskočit →</button>
+    <span class="skore" id="skore"></span>
+  </div>
+
+  <p class="napoveda">
+    <b>Podmět</b> je ten, kdo něco dělá – ptáme se <i>kdo? co?</i>
+    <b>Přísudek</b> říká, co podmět dělá – ptáme se <i>co dělá?</i>
+    Když podmět ve větě není vyjádřený, poznáme ho z koncovky slovesa (<i>Píšeme úkol.</i> → my).
+  </p>
+
+<script>
+const $ = id => document.getElementById(id);
+const skore = Uloha.skore('nodus_cj5_dvojice', $('skore'));
+let rezim = 'najdiPodmet';
+
+/* slova věty, index podmětu (-1 = nevyjádřený), index přísudku, případně podmět doplněný */
+const VETY = [
+  { s: ['Malý', 'chlapec', 'kreslí', 'obrázek'], podmet: 1, prisudek: 2, druh: 'podstatne' },
+  { s: ['Naše', 'kočka', 'spí', 'na', 'gauči'], podmet: 1, prisudek: 2, druh: 'podstatne' },
+  { s: ['Vlak', 'přijel', 'na', 'nádraží'], podmet: 0, prisudek: 1, druh: 'podstatne' },
+  { s: ['Děti', 'si', 'hrají', 'na', 'zahradě'], podmet: 0, prisudek: 2, druh: 'podstatne' },
+  { s: ['Zítra', 'pojedeme', 'na', 'výlet'], podmet: -1, prisudek: 1, druh: 'nevyjadreny', kdo: 'my' },
+  { s: ['Napsal', 'jsem', 'dlouhý', 'dopis'], podmet: -1, prisudek: 0, druh: 'nevyjadreny', kdo: 'já' },
+  { s: ['Sluníčko', 'krásně', 'svítí'], podmet: 0, prisudek: 2, druh: 'podstatne' },
+  { s: ['Moji', 'kamarádi', 'přišli', 'včas'], podmet: 1, prisudek: 2, druh: 'podstatne' },
+  { s: ['Venku', 'prší'], podmet: -1, prisudek: 1, druh: 'nevyjadreny', kdo: 'nikdo – je to bezpodmětá věta' },
+  { s: ['Ona', 'zpívá', 'krásně'], podmet: 0, prisudek: 1, druh: 'zajmeno' },
+  { s: ['Pět', 'žáků', 'chybělo'], podmet: 1, prisudek: 2, druh: 'podstatne' },
+  { s: ['My', 'čteme', 'knihu'], podmet: 0, prisudek: 1, druh: 'zajmeno' },
+];
+
+const DRUHY_PODMETU = {
+  podstatne: { nazev: 'podstatné jméno', ikona: '📗' },
+  zajmeno: { nazev: 'zájmeno', ikona: '🙋' },
+  nevyjadreny: { nazev: 'nevyjádřený podmět', ikona: '👻' },
+};
+
+/* ---- Klikací hledání ve větě --------------------------------------------------- */
+function klikaciUloha(hledanyIndex, popis, zpravaOk, zpravaNeni) {
+  const p = $('plocha');
+  const v = Uloha.nahodne(VETY.filter(x => (hledanyIndex === 'podmet' ? x.podmet : x.prisudek) >= 0));
+  const cil = hledanyIndex === 'podmet' ? v.podmet : v.prisudek;
+
+  p.innerHTML = `<div class="zadani">${popis}</div>`;
+  const radek = document.createElement('div');
+  radek.className = 'veta-slova';
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  const stav = { chyboval: false, hotovo: false };
+
+  v.s.forEach((slovo, i) => {
+    const b = document.createElement('button');
+    b.textContent = slovo;
+    b.addEventListener('click', () => Uloha.odpoved({
+      prvek: b,
+      spravne: i === cil,
+      stav, odezva,
+      zpravaOk: zpravaOk(v.s[cil]),
+      zpravaChyba: zpravaNeni,
+      poSpravne: skore.vyhodnot,
+      dalsi: novaUloha,
+    }));
+    radek.appendChild(b);
+  });
+  p.append(radek, odezva);
+}
+
+const najdiPodmet = () => klikaciUloha('podmet',
+  'Klepni na <b>podmět</b> ve větě (kdo? co?).',
+  s => `✅ Podmět je „${s}“ – ten děj vykonává.`,
+  'To není podmět. Zeptej se: kdo nebo co to dělá?');
+
+const najdiPrisudek = () => klikaciUloha('prisudek',
+  'Klepni na <b>přísudek</b> ve větě (co dělá?).',
+  s => `✅ Přísudek je „${s}“ – říká, co podmět dělá.`,
+  'To není přísudek. Hledej sloveso – co se ve větě děje?');
+
+/* ---- Jaký je podmět ------------------------------------------------------------ */
+function druhPodmetu() {
+  const p = $('plocha');
+  const v = Uloha.nahodne(VETY);
+  const veta = v.s.map((s, i) =>
+    i === v.prisudek ? `<span class="prisudek">${s}</span>` : s).join(' ');
+
+  p.innerHTML = `<div class="zadani">Jaký podmět má tato věta?</div>
+    <div class="karta"><div class="veta-cela">${veta}.</div></div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej(Object.entries(DRUHY_PODMETU))
+      .map(([klic, d]) => ({ klic, ikona: d.ikona, popis: d.nazev })),
+    spravnyKlic: v.druh,
+    zpravaOk: v.druh === 'nevyjadreny'
+      ? `✅ Podmět není vyjádřený – z přísudku poznáme, že jde o „${v.kdo}“.`
+      : `✅ Podmět „${v.s[v.podmet]}“ je ${DRUHY_PODMETU[v.druh].nazev}.`,
+    zpravaChyba: 'Je podmět ve větě napsaný slovem, nebo ho poznáš jen z koncovky slovesa?',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Patří k sobě? ------------------------------------------------------------- */
+function dvojice() {
+  const p = $('plocha');
+  const v = Uloha.nahodne(VETY.filter(x => x.podmet >= 0));
+  const spravna = `${v.s[v.podmet]} – ${v.s[v.prisudek]}`;
+
+  /* nesprávné dvojice: podmět z jiné věty nebo náhodné slovo z téhle */
+  const jina = Uloha.nahodne(VETY.filter(x => x !== v && x.podmet >= 0));
+  const nahodneSlovo = Uloha.nahodne(v.s.filter((_, i) => i !== v.podmet && i !== v.prisudek));
+  const moznosti = [
+    spravna,
+    `${jina.s[jina.podmet]} – ${v.s[v.prisudek]}`,
+    `${nahodneSlovo} – ${v.s[v.prisudek]}`,
+    `${v.s[v.podmet]} – ${nahodneSlovo}`,
+  ].filter((x, i, a) => a.indexOf(x) === i);
+
+  p.innerHTML = `<div class="zadani">Která dvojice tvoří základní skladební dvojici?</div>
+    <div class="karta"><div class="veta-cela">${v.s.join(' ')}.</div></div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej(moznosti).map(t => ({ klic: t, popis: t })),
+    spravnyKlic: spravna,
+    zpravaOk: `✅ ${spravna} – podmět a přísudek k sobě patří.`,
+    zpravaChyba: 'Základní skladební dvojici tvoří podmět a přísudek – nic jiného.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+const REZIMY = { najdiPodmet, najdiPrisudek, druhPodmetu, dvojice };
+function novaUloha() { REZIMY[rezim](); }
+
+document.querySelectorAll('#rezimy button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#rezimy button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  rezim = b.dataset.rezim;
+  novaUloha();
+}));
+$('btnDalsi').addEventListener('click', novaUloha);
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === 'Enter') { e.preventDefault(); novaUloha(); }
+});
+novaUloha();
+</script>
+</body>
+</html>

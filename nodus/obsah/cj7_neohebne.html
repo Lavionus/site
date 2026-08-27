@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Neohebné slovní druhy</title>
+  <link rel="stylesheet" href="../common.css">
+  <link rel="stylesheet" href="../vyuka.css">
+  <script src="../theme.js"></script>
+  <script src="../uloha.js"></script>
+  <style>
+    .veta-slova { display: flex; flex-wrap: wrap; gap: 7px; justify-content: center; max-width: 680px; }
+    .veta-slova .cast {
+      background: var(--bg-elevated); border: 2px solid var(--border); color: var(--text);
+      border-radius: 8px; padding: 8px 12px; font-size: 1.05rem; font-family: inherit;
+    }
+    .veta-slova button.cast { cursor: pointer; }
+    .veta-slova button.cast:hover:not(:disabled) { border-color: var(--accent); }
+    .veta-slova .cast.zvyraz { border-color: var(--accent); background: var(--accent-soft); font-weight: 700; }
+    .veta-slova .cast.spravne { background: var(--ok); border-color: var(--ok); color: #fff; }
+    .veta-slova .cast.spatne { background: var(--danger); border-color: var(--danger); color: #fff; }
+    .dve-vety { display: flex; flex-direction: column; gap: 10px; max-width: 620px; }
+    .dve-vety .veta { font-size: 1.1rem; }
+    .dve-vety .veta b { color: var(--accent); }
+  </style>
+</head>
+<body>
+  <h1>🔤 Neohebné slovní druhy</h1>
+  <p class="podtitul">Pro 7. ročník: příslovce, předložky, spojky, částice a citoslovce.</p>
+
+  <div class="rezimy" id="rezimy">
+    <button data-rezim="urceni" class="active">🏷️ Urči slovní druh</button>
+    <button data-rezim="prislovcePredlozka">⚖️ Příslovce, nebo předložka?</button>
+    <button data-rezim="najdi">🔎 Najdi ve větě</button>
+    <button data-rezim="spojky">🔗 Souřadicí, či podřadicí spojka</button>
+  </div>
+
+  <div class="plocha" id="plocha"></div>
+
+  <div class="ovladani">
+    <button class="hlavni" id="btnDalsi">Přeskočit →</button>
+    <span class="skore" id="skore"></span>
+  </div>
+
+  <p class="napoveda">
+    Neohebná slova se <b>neskloňují ani nečasují</b>. <b>Příslovce</b> stojí samostatně (běžel <i>rychle</i>),
+    <b>předložka</b> se pojí s podstatným jménem (<i>kolem</i> domu), <b>spojka</b> spojuje věty nebo členy,
+    <b>částice</b> uvozuje větu a vyjadřuje postoj (<i>kéž</i>, <i>ano</i>), <b>citoslovce</b> napodobuje zvuk.
+  </p>
+
+<script>
+const $ = id => document.getElementById(id);
+const skore = Uloha.skore('nodus_cj7_neohebne', $('skore'));
+let rezim = 'urceni';
+
+/* pri = příslovce, pre = předložka, spo = spojka, cas = částice, cit = citoslovce,
+   x = ohebné slovo (na to se neptáme) */
+const VETY = [
+  [['Pes', 'x'], ['spí', 'x'], ['pod', 'pre'], ['stolem', 'x']],
+  [['Vrátíme se', 'x'], ['brzy', 'pri'], ['domů', 'pri']],
+  [['Petr', 'x'], ['a', 'spo'], ['Jana', 'x'], ['jdou', 'x'], ['do kina', 'x']],
+  [['Kéž', 'cas'], ['už', 'cas'], ['jsou', 'x'], ['prázdniny', 'x']],
+  [['Bum', 'cit'], ['ozvalo se', 'x'], ['za', 'pre'], ['plotem', 'x']],
+  [['Zůstali jsme', 'x'], ['doma', 'pri'], ['protože', 'spo'], ['pršelo', 'x']],
+  [['Kniha', 'x'], ['leží', 'x'], ['na', 'pre'], ['stole', 'x']],
+  [['Mluv', 'x'], ['prosím', 'cas'], ['tišeji', 'pri']],
+  [['Šli jsme', 'x'], ['pomalu', 'pri'], ['ale', 'spo'], ['jistě', 'pri']],
+  [['Haf', 'cit'], ['štěkl', 'x'], ['pes', 'x']],
+  [['Sedni si', 'x'], ['vedle', 'pre'], ['mě', 'x']],
+  [['Ano', 'cas'], ['souhlasím', 'x'], ['s tebou', 'x']],
+  [['Vlak', 'x'], ['přijel', 'x'], ['včas', 'pri']],
+  [['Zavolej mi', 'x'], ['až', 'spo'], ['přijdeš', 'x'], ['domů', 'pri']],
+  [['Auto', 'x'], ['zastavilo', 'x'], ['před', 'pre'], ['školou', 'x']],
+  [['Snad', 'cas'], ['to', 'x'], ['zvládneme', 'x'], ['dnes', 'pri']],
+  [['Běžel', 'x'], ['velmi', 'pri'], ['rychle', 'pri']],
+  [['Nepřišel', 'x'], ['protože', 'spo'], ['byl', 'x'], ['nemocný', 'x']],
+];
+
+const NAZEV = {
+  pri: 'příslovce', pre: 'předložka', spo: 'spojka', cas: 'částice', cit: 'citoslovce',
+};
+const CISLO = { pri: 6, pre: 7, spo: 8, cas: 9, cit: 10 };
+
+/* Dvojice vět: stejné slovo jednou jako příslovce, jednou jako předložka. */
+const DVOJZNACNA = [
+  { slovo: 'kolem', pri: 'Auto projelo <b>kolem</b>.', pre: 'Auto projelo <b>kolem</b> školy.' },
+  { slovo: 'vedle', pri: 'Bydlí hned <b>vedle</b>.', pre: 'Bydlí <b>vedle</b> pekárny.' },
+  { slovo: 'okolo', pri: 'Rozhlédl se <b>okolo</b>.', pre: 'Obešel <b>okolo</b> rybníka.' },
+  { slovo: 'blízko', pri: 'Škola je <b>blízko</b>.', pre: 'Stojí <b>blízko</b> hřiště.' },
+  { slovo: 'uvnitř', pri: 'Počkej <b>uvnitř</b>.', pre: '<b>Uvnitř</b> domu bylo teplo.' },
+  { slovo: 'podél', pri: 'Šli jsme <b>podél</b> a povídali si.', pre: 'Šli jsme <b>podél</b> řeky.' },
+  { slovo: 'mimo', pri: 'Střelil <b>mimo</b>.', pre: 'Bydlí <b>mimo</b> město.' },
+  { slovo: 'nahoře', pri: 'Kufr je <b>nahoře</b>.', pre: null },
+];
+
+const SPOJKY = [
+  { s: 'a', druh: 'sourad', veta: 'Petr <b>a</b> Jana se učí.' },
+  { s: 'ale', druh: 'sourad', veta: 'Chtěl jít ven, <b>ale</b> pršelo.' },
+  { s: 'nebo', druh: 'sourad', veta: 'Dáš si čaj, <b>nebo</b> kakao?' },
+  { s: 'i', druh: 'sourad', veta: 'Umí německy <b>i</b> anglicky.' },
+  { s: 'proto', druh: 'sourad', veta: 'Zaspal, <b>proto</b> přišel pozdě.' },
+  { s: 'však', druh: 'sourad', veta: 'Snažil se, <b>však</b> nestačilo to.' },
+  { s: 'protože', druh: 'podrad', veta: 'Nepřišel, <b>protože</b> byl nemocný.' },
+  { s: 'že', druh: 'podrad', veta: 'Věděl, <b>že</b> má pravdu.' },
+  { s: 'když', druh: 'podrad', veta: '<b>Když</b> zazvonilo, vyběhli ven.' },
+  { s: 'aby', druh: 'podrad', veta: 'Učil se, <b>aby</b> uspěl.' },
+  { s: 'kdyby', druh: 'podrad', veta: '<b>Kdyby</b> pršelo, zůstaneme doma.' },
+  { s: 'jakmile', druh: 'podrad', veta: 'Zavolej, <b>jakmile</b> dorazíš.' },
+  { s: 'ačkoli', druh: 'podrad', veta: '<b>Ačkoli</b> byl unavený, dočetl knihu.' },
+];
+
+function vykresliVetu(v, volby = {}) {
+  const box = document.createElement('div');
+  box.className = 'veta-slova';
+  v.forEach((cast, i) => {
+    const el = document.createElement(volby.klikaci ? 'button' : 'span');
+    el.className = 'cast' + (volby.zvyraz === i ? ' zvyraz' : '');
+    el.textContent = cast[0];
+    if (volby.klikaci) el.addEventListener('click', () => volby.klikaci(i, el));
+    box.appendChild(el);
+  });
+  return box;
+}
+const neohebna = v => v.map((x, i) => [x, i]).filter(([x]) => x[1] !== 'x');
+
+/* ---- Urči slovní druh ------------------------------------------------------------- */
+function urceni() {
+  const p = $('plocha');
+  let v, i, pojistka = 0;
+  do {
+    v = Uloha.nahodne(VETY);
+    const kand = neohebna(v);
+    i = kand.length ? Uloha.nahodne(kand)[1] : -1;
+  } while (i < 0 && pojistka++ < 100);
+  const tag = v[i][1];
+
+  p.innerHTML = `<div class="zadani">Jaký slovní druh je <b>${v[i][0]}</b>?</div>`;
+  p.appendChild(vykresliVetu(v, { zvyraz: i }));
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej(Object.keys(NAZEV).map(k => ({ klic: k, popis: `${CISLO[k]}. ${NAZEV[k]}` }))),
+    spravnyKlic: tag,
+    zpravaOk: `✅ ${v[i][0]} – ${NAZEV[tag]} (${CISLO[tag]}. slovní druh)`,
+    zpravaChyba: 'Zkus slovo vypustit z věty – předložka nemůže stát sama, příslovce ano.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Příslovce, nebo předložka? --------------------------------------------------- */
+function prislovcePredlozka() {
+  const p = $('plocha');
+  let dvojice, jePredlozka, pojistka = 0;
+  do {
+    dvojice = Uloha.nahodne(DVOJZNACNA);
+    jePredlozka = Math.random() < 0.5;
+  } while (jePredlozka && !dvojice.pre && pojistka++ < 50);
+  const veta = jePredlozka ? dvojice.pre : dvojice.pri;
+
+  p.innerHTML = `<div class="zadani">Jakým slovním druhem je slovo <b>${dvojice.slovo}</b> v této větě?</div>
+    <div class="karta"><div class="dve-vety"><div class="veta">${veta}</div></div></div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva, trida: 'dve',
+    moznosti: [
+      { klic: 'pri', ikona: '🏃', popis: 'příslovce' },
+      { klic: 'pre', ikona: '🔗', popis: 'předložka' },
+    ],
+    spravnyKlic: jePredlozka ? 'pre' : 'pri',
+    zpravaOk: jePredlozka
+      ? `✅ Je tu předložka – pojí se s podstatným jménem a ptáme se na celý výraz.`
+      : `✅ Je tu příslovce – stojí samostatně, nic za ním neřídí.`,
+    zpravaChyba: 'Podívej se, jestli za slovem následuje podstatné jméno, které řídí.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Najdi ve větě ---------------------------------------------------------------- */
+function najdi() {
+  const p = $('plocha');
+  let v, hledany, pojistka = 0;
+  do {
+    v = Uloha.nahodne(VETY);
+    hledany = Uloha.nahodne(['pri', 'pre', 'spo', 'cas', 'cit']);
+  } while (!v.some(x => x[1] === hledany) && pojistka++ < 200);
+  const stav = { chyboval: false, hotovo: false };
+
+  p.innerHTML = `<div class="zadani">Klepni ve větě na <b>${NAZEV[hledany]}</b>.</div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  p.appendChild(vykresliVetu(v, {
+    klikaci: (i, el) => Uloha.odpoved({
+      prvek: el, spravne: v[i][1] === hledany, stav, odezva,
+      zpravaOk: `✅ ${v[i][0]} je ${NAZEV[hledany]}.`,
+      zpravaChyba: v[i][1] === 'x'
+        ? `${v[i][0]} je ohebné slovo – hledáme ${NAZEV[hledany]}.`
+        : `${v[i][0]} je ${NAZEV[v[i][1]]} – hledáme ${NAZEV[hledany]}.`,
+      poSpravne: skore.vyhodnot,
+      dalsi: novaUloha,
+    }),
+  }));
+  p.appendChild(odezva);
+}
+
+/* ---- Souřadicí, či podřadicí spojka ------------------------------------------------ */
+function spojky() {
+  const p = $('plocha');
+  const s = Uloha.nahodne(SPOJKY);
+  p.innerHTML = `<div class="zadani">Je spojka <b>${s.s}</b> souřadicí, nebo podřadicí?</div>
+    <div class="karta"><div class="dve-vety"><div class="veta">${s.veta}</div></div></div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva, trida: 'dve',
+    moznosti: [
+      { klic: 'sourad', ikona: '↔️', popis: 'souřadicí (spojuje rovnocenné)' },
+      { klic: 'podrad', ikona: '↘️', popis: 'podřadicí (připojuje vedlejší větu)' },
+    ],
+    spravnyKlic: s.druh,
+    zpravaOk: s.druh === 'sourad'
+      ? `✅ „${s.s}“ spojuje dvě rovnocenné části – je souřadicí.`
+      : `✅ „${s.s}“ připojuje vedlejší větu k větě hlavní – je podřadicí.`,
+    zpravaChyba: 'Zeptej se, zda jsou obě části rovnocenné, nebo jedna závisí na druhé.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+const REZIMY = { urceni, prislovcePredlozka, najdi, spojky };
+function novaUloha() { REZIMY[rezim](); }
+
+document.querySelectorAll('#rezimy button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#rezimy button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  rezim = b.dataset.rezim;
+  novaUloha();
+}));
+$('btnDalsi').addEventListener('click', novaUloha);
+novaUloha();
+</script>
+</body>
+</html>

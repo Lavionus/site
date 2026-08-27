@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Příprava na přijímací zkoušky – ČJ</title>
+  <link rel="stylesheet" href="../common.css">
+  <link rel="stylesheet" href="../vyuka.css">
+  <script src="../theme.js"></script>
+  <script src="../uloha.js"></script>
+  <style>
+    .uloha-text { max-width: 660px; font-size: 1.05rem; line-height: 1.62; }
+    .uloha-text b { color: var(--accent); }
+    .ukazka { max-width: 640px; text-align: left; line-height: 1.6; background: var(--bg-elevated);
+      border-left: 4px solid var(--accent); border-radius: 8px; padding: 12px 16px; font-style: italic; }
+    .lista-testu { display: flex; gap: 14px; align-items: center; justify-content: center;
+      flex-wrap: wrap; font-size: 0.9rem; color: var(--text-muted); }
+    .cas { font-variant-numeric: tabular-nums; font-weight: 700; font-size: 1.15rem; color: var(--accent); }
+    .cas.malo { color: var(--danger); }
+    .vysledky { max-width: 560px; text-align: left; }
+    .vysledky h3 { font-size: 1.05rem; margin-bottom: 8px; }
+    .vysledky table { border-collapse: collapse; width: 100%; font-size: 0.92rem; }
+    .vysledky td, .vysledky th { border: 1px solid var(--border-strong); padding: 6px 10px; text-align: left; }
+    .vysledky th { background: var(--bg-control); color: var(--text-muted); }
+    .vysledky .spatne { color: var(--danger); }
+    .vysledky .dobre { color: var(--ok); }
+    .velke-cislo { font-size: 2.6rem; font-weight: 700; color: var(--accent); }
+  </style>
+</head>
+<body>
+  <h1>🎯 Příprava na přijímací zkoušky – ČJ</h1>
+  <p class="podtitul">Pro 9. ročník: úlohy podle jednotné přijímací zkoušky, test na čas a rozbor chyb.</p>
+
+  <div class="rezimy" id="rezimy">
+    <button data-rezim="test" class="active">⏱️ Test na čas</button>
+    <button data-rezim="pravopis">✍️ Pravopis</button>
+    <button data-rezim="tvaroslovi">📗 Tvarosloví</button>
+    <button data-rezim="skladba">🔗 Skladba</button>
+    <button data-rezim="porozumeni">📖 Práce s textem</button>
+  </div>
+
+  <div class="plocha" id="plocha"></div>
+
+  <div class="ovladani">
+    <button class="hlavni" id="btnDalsi">Přeskočit →</button>
+    <span class="skore" id="skore"></span>
+  </div>
+
+  <p class="napoveda">
+    Jednotná přijímací zkouška z češtiny trvá <b>70 minut</b> a obsahuje úlohy na pravopis,
+    tvarosloví, skladbu, slovní zásobu a práci s textem. Tady si můžeš zkusit zkrácenou verzi:
+    <b>10 úloh za 8 minut</b>.
+  </p>
+
+<script>
+const $ = id => document.getElementById(id);
+const skore = Uloha.skore('nodus_cj9_prijimacky', $('skore'));
+let rezim = 'test';
+function odezvaEl() { const d = document.createElement('div'); d.className = 'odezva'; return d; }
+
+const TYPY = { pravopis: 'pravopis', tvaroslovi: 'tvarosloví', skladba: 'skladba', porozumeni: 'práce s textem' };
+
+/* Banka úloh – každá má typ, zadání, správnou odpověď a nesprávné možnosti. */
+const ULOHY = [
+  { typ: 'pravopis', q: 'Ve které možnosti je pravopisná chyba?', a: 'Chlapci běželi a dívky je dobýhaly.',
+    b: ['Byli jsme na výletě v horách.', 'Rodiče mi koupili nové boty.', 'Vlaštovky se slétly na drátech.'] },
+  { typ: 'pravopis', q: 'Doplň správně: Pes s kočkou se s__žili.', a: 'sblížili', b: ['zblížili', 'sblýžili', 'zblýžili'] },
+  { typ: 'pravopis', q: 'Ve které větě je vše správně?', a: 'Bez bratrových rad bych to nezvládl.',
+    b: ['Bez bratrovích rad bych to nezvládl.', 'Bez bratrovych rad bych to nezvládl.', 'Bez bratrovích rád bych to nezvládl.'] },
+  { typ: 'pravopis', q: 'Vyber správné doplnění: Zajíci se rozb__hli do polí.', a: 'rozběhli', b: ['rozběhly', 'rozbjehli', 'rozběchli'] },
+  { typ: 'pravopis', q: 'Které slovo je napsáno správně?', a: 'výjimka', b: ['vyjímka', 'víjimka', 'vijímka'] },
+  { typ: 'pravopis', q: 'Doplň i/y: Ps__ štěkali celou noc.', a: 'Psi štěkali', b: ['Psy štěkali', 'Psi štěkaly', 'Psy štěkaly'] },
+  { typ: 'tvaroslovi', q: 'Určete slovní druh slova „kolem“ ve větě: Šli jsme kolem školy.', a: 'předložka',
+    b: ['příslovce', 'spojka', 'částice'] },
+  { typ: 'tvaroslovi', q: 'V jakém pádě je podtržené slovo: Bál se <b>tmy</b>.', a: '2. pád (genitiv)',
+    b: ['1. pád', '4. pád', '6. pád'] },
+  { typ: 'tvaroslovi', q: 'Který tvar je spisovný?', a: 's dvěma bratry', b: ['se dvouma bratry', 'se dvěmi bratry', 'se dvouma bratrama'] },
+  { typ: 'tvaroslovi', q: 'Určete slovesný způsob: Kéž by už přišel.', a: 'podmiňovací', b: ['oznamovací', 'rozkazovací', 'trpný'] },
+  { typ: 'tvaroslovi', q: 'Který výraz je přídavné jméno přivlastňovací?', a: 'otcův', b: ['otcovský', 'otecký', 'otcovsky'] },
+  { typ: 'skladba', q: 'Urči druh vedlejší věty: Věděl, že přijdeme.', a: 'předmětná', b: ['podmětná', 'přívlastková', 'příslovečná časová'] },
+  { typ: 'skladba', q: 'Ve které možnosti je souvětí souřadné?', a: 'Zaspal, proto přišel pozdě.',
+    b: ['Zůstal doma, protože pršelo.', 'Věděl, že má pravdu.', 'Přišel dřív, než jsme čekali.'] },
+  { typ: 'skladba', q: 'Kolik vět obsahuje souvětí: Když zazvonilo, žáci vyběhli ven a učitel zavřel okno.',
+    a: 'tři', b: ['dvě', 'čtyři', 'jednu'] },
+  { typ: 'skladba', q: 'Jaký větný člen je podtržené slovo: Malý chlapec čte <b>knihu</b>.', a: 'předmět',
+    b: ['podmět', 'přívlastek', 'příslovečné určení'] },
+  { typ: 'skladba', q: 'Ve které větě je čárka umístěna správně?', a: 'Nepřišel, protože byl nemocný.',
+    b: ['Nepřišel protože, byl nemocný.', 'Nepřišel, protože, byl nemocný.', 'Nepřišel protože byl, nemocný.'] },
+  { typ: 'porozumeni', text: 'Vodní elektrárny využívají energii proudící vody. Přehradní nádrž zadrží vodu, '
+      + 'která pak roztáčí turbínu spojenou s generátorem. Výhodou je, že při provozu nevznikají emise. '
+      + 'Stavba přehrady však znamená zásah do krajiny a života řeky.',
+    q: 'Co je podle textu nevýhodou vodních elektráren?', a: 'zásah do krajiny a života řeky',
+    b: ['vysoké emise při provozu', 'nutnost dovážet palivo', 'nemožnost regulovat výkon'] },
+  { typ: 'porozumeni', text: 'Vodní elektrárny využívají energii proudící vody. Přehradní nádrž zadrží vodu, '
+      + 'která pak roztáčí turbínu spojenou s generátorem.',
+    q: 'Co roztáčí turbínu?', a: 'proudící voda', b: ['pára', 'vítr', 'generátor'] },
+  { typ: 'porozumeni', text: 'Knihovna bude od pondělí 3. dubna otevřena v novém provozu: v pracovní dny '
+      + 'od 9 do 18 hodin, v sobotu od 9 do 12 hodin. V neděli zůstává zavřeno. Registrace nových čtenářů '
+      + 'do 15 let je zdarma.',
+    q: 'Kdy si může přijít nový čtenář zaregistrovat průkaz?', a: 'v sobotu dopoledne i ve všední den odpoledne',
+    b: ['v neděli odpoledne', 'jen v pondělí', 'kdykoli, knihovna je nonstop'] },
+  { typ: 'porozumeni', text: 'Knihovna bude od pondělí 3. dubna otevřena v novém provozu: v pracovní dny '
+      + 'od 9 do 18 hodin, v sobotu od 9 do 12 hodin. Registrace nových čtenářů do 15 let je zdarma.',
+    q: 'Které tvrzení z textu vyplývá?', a: 'Čtrnáctiletý čtenář za registraci nezaplatí.',
+    b: ['Registrace je zdarma pro všechny.', 'V sobotu je otevřeno déle než ve všední den.', 'Knihovna je v pondělí zavřená.'] },
+];
+
+/* ---- Procvičování jednoho typu -------------------------------------------------------------- */
+function uloha(typ) {
+  const p = $('plocha');
+  const u = Uloha.nahodne(ULOHY.filter(x => x.typ === typ));
+  p.innerHTML = `<div class="zadani uloha-text">${u.q}</div>`
+    + (u.text ? `<div class="ukazka">${u.text}</div>` : '');
+  const odezva = odezvaEl();
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([u.a, ...u.b]).map(t => ({ klic: t, popis: t })),
+    spravnyKlic: u.a,
+    zpravaOk: `✅ ${u.a}`,
+    zpravaChyba: 'Přečti si zadání ještě jednou a vyluč možnosti, které jistě neplatí.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+const pravopis = () => uloha('pravopis');
+const tvaroslovi = () => uloha('tvaroslovi');
+const skladba = () => uloha('skladba');
+const porozumeni = () => uloha('porozumeni');
+
+/* ---- Test na čas ------------------------------------------------------------------------------ */
+const POCET_ULOH = 10, LIMIT = 8 * 60;   // sekund
+let testStav = null;
+
+function test() {
+  const p = $('plocha');
+  testStav = {
+    ulohy: Uloha.zamichej([...ULOHY]).slice(0, POCET_ULOH),
+    i: 0, spravne: 0, zbyva: LIMIT, chyby: [], bezi: true,
+  };
+  tikej();
+  dalsiTestovaUloha();
+}
+function tikej() {
+  clearInterval(window.__odpocet);
+  window.__odpocet = setInterval(() => {
+    if (!testStav || !testStav.bezi) { clearInterval(window.__odpocet); return; }
+    testStav.zbyva--;
+    const el = $('cas');
+    if (el) {
+      const m = Math.floor(testStav.zbyva / 60), s = testStav.zbyva % 60;
+      el.textContent = `${m}:${String(s).padStart(2, '0')}`;
+      el.classList.toggle('malo', testStav.zbyva <= 60);
+    }
+    if (testStav.zbyva <= 0) { testStav.bezi = false; clearInterval(window.__odpocet); vysledkyTestu(true); }
+  }, 1000);
+}
+function dalsiTestovaUloha() {
+  const p = $('plocha');
+  if (testStav.i >= testStav.ulohy.length) { testStav.bezi = false; vysledkyTestu(false); return; }
+  const u = testStav.ulohy[testStav.i];
+  const m = Math.floor(testStav.zbyva / 60), s = testStav.zbyva % 60;
+
+  p.innerHTML = `<div class="lista-testu">
+      <span>Úloha <b>${testStav.i + 1}</b> z ${testStav.ulohy.length}</span>
+      <span>typ: ${TYPY[u.typ]}</span>
+      <span>zbývá <span class="cas" id="cas">${m}:${String(s).padStart(2, '0')}</span></span>
+    </div>
+    <div class="zadani uloha-text">${u.q}</div>`
+    + (u.text ? `<div class="ukazka">${u.text}</div>` : '');
+  const odezva = odezvaEl();
+  const stav = { chyboval: false, hotovo: false };
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([u.a, ...u.b]).map(t => ({ klic: t, popis: t })),
+    spravnyKlic: u.a,
+    zpravaOk: `✅ ${u.a}`,
+    zpravaChyba: 'Zkus to znovu – v testu se počítá jen odpověď napoprvé.',
+    poSpravne: napoprve => {
+      if (napoprve) testStav.spravne++;
+      else testStav.chyby.push(u);
+      skore.vyhodnot(napoprve);
+    },
+    dalsi: () => { testStav.i++; dalsiTestovaUloha(); },
+  });
+  p.appendChild(odezva);
+}
+function vysledkyTestu(vyprselCas) {
+  clearInterval(window.__odpocet);
+  const p = $('plocha');
+  const podleTypu = {};
+  for (const t of Object.keys(TYPY)) {
+    const celkem = testStav.ulohy.filter(x => x.typ === t).length;
+    const chybne = testStav.chyby.filter(x => x.typ === t).length;
+    if (celkem) podleTypu[t] = { celkem, chybne };
+  }
+  const radky = Object.entries(podleTypu).map(([t, v]) =>
+    `<tr><td>${TYPY[t]}</td><td>${v.celkem - v.chybne} / ${v.celkem}</td>
+      <td class="${v.chybne ? 'spatne' : 'dobre'}">${v.chybne ? v.chybne + ' chyb' : 'bez chyby'}</td></tr>`).join('');
+
+  p.innerHTML = `<div class="zadani">${vyprselCas ? '⏰ Čas vypršel!' : '🏁 Test dokončen'}</div>
+    <div class="velke-cislo">${testStav.spravne} / ${testStav.ulohy.length}</div>
+    <div class="vysledky">
+      <h3>Úspěšnost podle typu úlohy</h3>
+      <table><tr><th>typ úlohy</th><th>napoprvé správně</th><th>chyby</th></tr>${radky}</table>
+      ${testStav.chyby.length
+        ? `<h3 style="margin-top:14px">Na co se zaměřit</h3>
+           <ul style="padding-left:20px;line-height:1.6">${[...new Set(testStav.chyby.map(x => TYPY[x.typ]))]
+             .map(t => `<li>${t}</li>`).join('')}</ul>`
+        : '<p style="margin-top:12px;color:var(--ok)">Všechno napoprvé správně – výborně!</p>'}
+    </div>`;
+  const znovu = document.createElement('button');
+  znovu.className = 'hlavni';
+  znovu.textContent = '🔄 Spustit nový test';
+  znovu.style.cssText = 'background:var(--accent);border:none;color:#fff;border-radius:8px;padding:11px 22px;'
+    + 'font-size:0.95rem;font-weight:600;cursor:pointer;margin-top:8px';
+  znovu.addEventListener('click', test);
+  p.appendChild(znovu);
+}
+
+const REZIMY = { test, pravopis, tvaroslovi, skladba, porozumeni };
+function novaUloha() {
+  if (rezim !== 'test' && testStav) { testStav.bezi = false; clearInterval(window.__odpocet); }
+  REZIMY[rezim]();
+}
+
+document.querySelectorAll('#rezimy button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#rezimy button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  rezim = b.dataset.rezim;
+  novaUloha();
+}));
+$('btnDalsi').addEventListener('click', () => {
+  if (rezim === 'test' && testStav && testStav.bezi) { testStav.i++; dalsiTestovaUloha(); return; }
+  novaUloha();
+});
+novaUloha();
+</script>
+</body>
+</html>

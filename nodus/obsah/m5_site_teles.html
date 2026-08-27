@@ -1,0 +1,193 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Sítě těles</title>
+  <link rel="stylesheet" href="../common.css">
+  <link rel="stylesheet" href="../vyuka.css">
+  <script src="../theme.js"></script>
+  <script src="../rec.js"></script>
+  <script src="../uloha.js"></script>
+  <style>
+    .site { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center; }
+    .site-volba {
+      background: var(--bg-elevated); border: 2px solid var(--border); border-radius: 12px;
+      padding: 10px; cursor: pointer; transition: transform 0.12s ease, border-color 0.12s ease;
+    }
+    .site-volba:hover:not(.hotovo) { border-color: var(--accent); transform: translateY(-3px); }
+    .site-volba.spravne { border-color: var(--ok); background: rgba(76,175,125,0.16); }
+    .site-volba.spatne { border-color: var(--danger); background: rgba(214,88,88,0.16); }
+    .site-volba svg { display: block; }
+    .site-volba .ctverec { fill: var(--accent); fill-opacity: 0.6; stroke: var(--accent); stroke-width: 2; }
+    .teleso { font-size: clamp(3rem, 11vw, 4.6rem); }
+    .nazev-tel { font-size: 1.2rem; font-weight: 700; }
+  </style>
+</head>
+<body>
+  <h1>📦 Sítě těles</h1>
+  <p class="podtitul">Pro 5.–6. ročník: která síť složí krychli, počet stěn, hran a vrcholů.</p>
+
+  <div class="rezimy" id="rezimy">
+    <button data-rezim="ktereSit" class="active">🧩 Která síť složí krychli?</button>
+    <button data-rezim="pocty">🔢 Stěny, hrany, vrcholy</button>
+    <button data-rezim="poznejTeleso">📐 Poznej těleso</button>
+  </div>
+
+  <div class="plocha" id="plocha"></div>
+
+  <div class="ovladani">
+    <button class="hlavni" id="btnDalsi">Přeskočit →</button>
+    <span class="skore" id="skore"></span>
+  </div>
+
+  <p class="napoveda">
+    Síť krychle má vždy <b>6 čtverců</b>, ale ne každé rozložení jde složit –
+    žádné dva čtverce se při skládání nesmí překrýt. Platných sítí krychle je právě <b>11</b>.
+  </p>
+
+<script>
+const $ = id => document.getElementById(id);
+const skore = Uloha.skore('nodus_m5_site', $('skore'));
+let rezim = 'ktereSit';
+
+/* Sítě zapsané jako souřadnice [sloupec, řádek]. */
+const PLATNE_SITE = [
+  [[1,0],[1,1],[1,2],[1,3],[0,2],[2,2]],
+  [[1,0],[1,1],[1,2],[1,3],[0,1],[2,1]],
+  [[0,0],[1,0],[1,1],[1,2],[1,3],[2,3]],
+  [[0,1],[1,1],[2,1],[3,1],[1,0],[2,2]],
+  [[0,0],[0,1],[1,1],[1,2],[2,2],[2,3]],
+  [[1,0],[0,1],[1,1],[2,1],[1,2],[1,3]],
+];
+const NEPLATNE_SITE = [
+  [[0,0],[1,0],[2,0],[0,1],[1,1],[2,1]],
+  [[0,0],[1,0],[1,1],[2,1],[2,0],[3,0]],
+  [[1,0],[1,1],[1,2],[0,0],[2,0],[0,2]],
+  [[0,0],[0,1],[0,2],[0,3],[1,0],[1,3]],
+  [[0,0],[1,0],[2,0],[3,0],[1,1],[2,1]],
+  [[0,0],[1,0],[2,0],[3,0],[0,1],[3,1]],
+];
+
+const TELESA = [
+  { n: 'krychle', e: '🧊', steny: 6, hrany: 12, vrcholy: 8, popis: 'všech 6 stěn jsou stejné čtverce' },
+  { n: 'kvádr', e: '📦', steny: 6, hrany: 12, vrcholy: 8, popis: 'stěny jsou obdélníky, protější jsou stejné' },
+  { n: 'jehlan se čtvercovou podstavou', e: '🔺', steny: 5, hrany: 8, vrcholy: 5, popis: 'podstava je čtverec, boční stěny jsou trojúhelníky' },
+  { n: 'trojboký hranol', e: '📐', steny: 5, hrany: 9, vrcholy: 6, popis: 'dvě trojúhelníkové podstavy a tři obdélníkové stěny' },
+  { n: 'válec', e: '🥫', steny: 3, hrany: 2, vrcholy: 0, popis: 'dvě kruhové podstavy a zakřivený plášť' },
+  { n: 'koule', e: '⚽', steny: 1, hrany: 0, vrcholy: 0, popis: 'zakřivený povrch bez hran a vrcholů' },
+];
+
+const KROK = 26;
+function svgSite(bunky) {
+  const maxS = Math.max(...bunky.map(b => b[0])) + 1;
+  const maxR = Math.max(...bunky.map(b => b[1])) + 1;
+  const ctverce = bunky.map(([s, r]) =>
+    `<rect class="ctverec" x="${s * KROK + 2}" y="${r * KROK + 2}" width="${KROK - 4}" height="${KROK - 4}"/>`).join('');
+  return `<svg viewBox="0 0 ${maxS * KROK} ${maxR * KROK}" width="${maxS * KROK * 1.6}" height="${maxR * KROK * 1.6}">${ctverce}</svg>`;
+}
+
+/* ---- Která síť složí krychli? ---------------------------------------------------- */
+function ktereSit() {
+  const p = $('plocha');
+  const platna = Uloha.nahodne(PLATNE_SITE);
+  const neplatne = Uloha.zamichej(NEPLATNE_SITE).slice(0, 3);
+  const volby = Uloha.zamichej([
+    { s: platna, ok: true },
+    ...neplatne.map(s => ({ s, ok: false })),
+  ]);
+
+  p.innerHTML = '<div class="zadani">Která z těchto sítí se dá složit do krychle?</div>';
+  const rada = document.createElement('div');
+  rada.className = 'site';
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  const stav = { chyboval: false, hotovo: false };
+
+  volby.forEach(v => {
+    const el = document.createElement('div');
+    el.className = 'site-volba';
+    el.innerHTML = svgSite(v.s);
+    el.addEventListener('click', () => Uloha.odpoved({
+      prvek: el,
+      spravne: v.ok,
+      stav, odezva,
+      zpravaOk: '✅ Tahle síť se poskládá do krychle – žádné dvě stěny se nepřekryjí.',
+      zpravaChyba: 'Tuhle síť složit nejde – při skládání by se některé stěny překryly. Zkus jinou.',
+      poSpravne: skore.vyhodnot,
+      dalsi: novaUloha,
+    }));
+    rada.appendChild(el);
+  });
+  p.append(rada, odezva);
+}
+
+/* ---- Stěny, hrany, vrcholy -------------------------------------------------------- */
+function pocty() {
+  const p = $('plocha');
+  const t = Uloha.nahodne(TELESA);
+  const co = Uloha.nahodne(['steny', 'hrany', 'vrcholy']);
+  const nazvy = { steny: 'stěn', hrany: 'hran', vrcholy: 'vrcholů' };
+  const spravny = t[co];
+
+  p.innerHTML = `<div class="zadani">Kolik má toto těleso <b>${nazvy[co]}</b>?</div>
+    <div class="karta"><div class="teleso">${t.e}</div><div class="nazev-tel">${t.n}</div></div>`;
+
+  const jine = new Set();
+  let pokusu1 = 0;
+  while (jine.size < 3 && pokusu1++ < 200) {
+    const k = spravny + Uloha.nahodneCislo(-4, 4);
+    if (k !== spravny && k >= 0) jine.add(k);
+  }
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva, trida: 'velke',
+    moznosti: Uloha.zamichej([spravny, ...jine]).map(v => ({ klic: String(v), popis: String(v) })),
+    spravnyKlic: String(spravny),
+    zpravaOk: `✅ ${t.n} má ${t.steny} stěn, ${t.hrany} hran a ${t.vrcholy} vrcholů.`,
+    zpravaChyba: 'Představ si těleso a počítej postupně – nezapomeň na spodní stěnu.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Poznej těleso ---------------------------------------------------------------- */
+function poznejTeleso() {
+  const p = $('plocha');
+  const t = Uloha.nahodne(TELESA);
+  const jine = Uloha.zamichej(TELESA.filter(x => x.n !== t.n)).slice(0, 3);
+  p.innerHTML = `<div class="zadani">O které těleso jde?</div>
+    <div class="karta"><div class="teleso">🔎</div><div class="nazev-tel">${t.popis}</div></div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([t, ...jine]).map(x => ({ klic: x.n, ikona: x.e, popis: x.n })),
+    spravnyKlic: t.n,
+    zpravaOk: `✅ ${t.n} – ${t.popis}.`,
+    zpravaChyba: 'Přečti popis znovu – kolik má podstav a jaké mají tvary?',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+const REZIMY = { ktereSit, pocty, poznejTeleso };
+function novaUloha() { REZIMY[rezim](); }
+
+document.querySelectorAll('#rezimy button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#rezimy button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  rezim = b.dataset.rezim;
+  novaUloha();
+}));
+$('btnDalsi').addEventListener('click', novaUloha);
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === 'Enter') { e.preventDefault(); novaUloha(); }
+});
+novaUloha();
+</script>
+</body>
+</html>

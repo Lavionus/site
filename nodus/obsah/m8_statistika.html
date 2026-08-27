@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Statistika – průměr, medián, modus</title>
+  <link rel="stylesheet" href="../common.css">
+  <link rel="stylesheet" href="../vyuka.css">
+  <script src="../theme.js"></script>
+  <script src="../uloha.js"></script>
+  <style>
+    .soubor { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; max-width: 620px; }
+    .soubor span { background: var(--bg-elevated); border: 2px solid var(--border);
+      border-radius: 8px; padding: 7px 12px; font-size: 1.1rem; font-weight: 700;
+      font-variant-numeric: tabular-nums; }
+    .soubor span.odlehla { border-color: var(--warn); color: var(--warn); }
+    .graf { width: min(420px, 94%); }
+    .graf .sloupec { fill: var(--accent); }
+    .graf .osa { stroke: var(--text-muted); stroke-width: 2; }
+    .graf .popis { fill: var(--text-faint); font-size: 11px; text-anchor: middle; }
+    .graf .hodnota { fill: var(--text-muted); font-size: 11px; text-anchor: middle; }
+    .uloha-text { max-width: 620px; font-size: 1.02rem; line-height: 1.6; }
+    .uloha-text b { color: var(--accent); }
+
+    /* ---- dílna dat ---- */
+    .scena { width: min(540px, 100%); touch-action: none; user-select: none; }
+    .scena .osa { stroke: var(--text-muted); stroke-width: 2; }
+    .scena .ticka { stroke: var(--border-strong); stroke-width: 1.4; }
+    .scena .cislo { fill: var(--text-faint); font-size: 11px; text-anchor: middle; }
+    .scena .bod { fill: var(--accent); stroke: var(--bg-panel); stroke-width: 2; cursor: grab; }
+    .scena .bod:hover { fill: var(--accent-hover); }
+    .scena .bod.taham { cursor: grabbing; fill: var(--warn); }
+    .scena .znacka { stroke-width: 2.5; }
+    .scena .znacka.prumer { stroke: var(--warn); stroke-dasharray: 7 4; }
+    .scena .znacka.median { stroke: var(--ok); }
+    .scena .stitek { font-size: 12px; font-weight: 700; text-anchor: middle; }
+    .scena .stitek.prumer { fill: var(--warn); }
+    .scena .stitek.median { fill: var(--ok); }
+
+    .ovladace { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+    .ovladace button {
+      background: var(--bg-control); border: 1px solid var(--border-strong); color: var(--text);
+      border-radius: 8px; padding: 8px 14px; font-size: 0.84rem; font-family: inherit; cursor: pointer;
+    }
+    .ovladace button:hover:not(:disabled) { border-color: var(--accent); }
+    .ovladace button:disabled { opacity: 0.35; cursor: default; }
+
+    .charakteristiky {
+      display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px; width: min(540px, 100%);
+    }
+    .charakteristiky .bunka {
+      background: var(--bg-elevated); border: 1px solid var(--border);
+      border-radius: 12px; padding: 10px 8px;
+    }
+    .charakteristiky .nadpis { color: var(--text-faint); font-size: 0.72rem;
+      text-transform: uppercase; letter-spacing: 0.5px; }
+    .charakteristiky .cislo { font-size: 1.5rem; font-weight: 700; margin-top: 3px;
+      font-variant-numeric: tabular-nums; }
+    .charakteristiky .prumer .cislo { color: var(--warn); }
+    .charakteristiky .median .cislo { color: var(--ok); }
+    .charakteristiky .modus .cislo { color: var(--accent); }
+    @media (max-width: 520px) {
+      .charakteristiky { grid-template-columns: 1fr; gap: 7px; }
+      .charakteristiky .bunka { display: flex; align-items: baseline; gap: 10px; text-align: left; padding: 7px 12px; }
+      .charakteristiky .cislo { font-size: 1.15rem; margin: 0 0 0 auto; }
+    }
+    .vysvetlivka { color: var(--text-faint); font-size: 0.82rem; max-width: 540px; line-height: 1.55; }
+    .vysvetlivka b { color: var(--text-muted); }
+  </style>
+</head>
+<body>
+  <h1>📊 Statistika – průměr, medián, modus</h1>
+  <p class="podtitul">Pro 8. ročník: charakteristiky souboru dat a čtení diagramů.</p>
+
+  <div class="rezimy" id="rezimy">
+    <button data-rezim="dilna" class="active">🔬 Dílna dat</button>
+    <button data-rezim="charakteristiky">🔢 Spočítej charakteristiku</button>
+    <button data-rezim="diagram">📊 Čtení diagramu</button>
+    <button data-rezim="odlehla">⚠️ Odlehlá hodnota</button>
+    <button data-rezim="pojmy">📖 Pojmy</button>
+  </div>
+
+  <div class="plocha" id="plocha"></div>
+
+  <div class="ovladani">
+    <button class="hlavni" id="btnDalsi">Přeskočit →</button>
+    <span class="skore" id="skore"></span>
+  </div>
+
+  <p class="napoveda">
+    <b>Aritmetický průměr</b> = součet hodnot dělený jejich počtem. <b>Medián</b> = prostřední hodnota
+    seřazeného souboru. <b>Modus</b> = hodnota, která se vyskytuje nejčastěji.
+    Jedna velmi odlišná hodnota průměrem výrazně pohne, mediánem skoro ne.
+  </p>
+
+<script>
+const $ = id => document.getElementById(id);
+const skore = Uloha.skore('nodus_m8_statistika', $('skore'));
+let rezim = 'dilna';
+const fmt = x => Number(Number(x).toFixed(2)).toLocaleString('cs-CZ');
+function odezvaEl() { const d = document.createElement('div'); d.className = 'odezva'; return d; }
+
+const prumer = a => a.reduce((s, x) => s + x, 0) / a.length;
+function median(a) {
+  const s = [...a].sort((x, y) => x - y);
+  const i = Math.floor(s.length / 2);
+  return s.length % 2 ? s[i] : (s[i - 1] + s[i]) / 2;
+}
+function modus(a) {
+  const pocty = {};
+  a.forEach(x => { pocty[x] = (pocty[x] || 0) + 1; });
+  let nej = null, nejPocet = 0;
+  for (const [h, c] of Object.entries(pocty)) if (c > nejPocet) { nej = Number(h); nejPocet = c; }
+  return nej;
+}
+
+/* Soubor s jednoznačným modem – ať má úloha jediné správné řešení. */
+function novySoubor(pocet, od, doC) {
+  let pojistka = 0;
+  while (pojistka++ < 200) {
+    const a = [...Array(pocet)].map(() => Uloha.nahodneCislo(od, doC));
+    const pocty = {};
+    a.forEach(x => { pocty[x] = (pocty[x] || 0) + 1; });
+    const setrizene = Object.values(pocty).sort((x, y) => y - x);
+    if (setrizene[0] >= 2 && setrizene[0] !== setrizene[1]) return a;
+  }
+  return [3, 5, 5, 7, 9];
+}
+
+function zobrazSoubor(a, zvyrazni) {
+  return `<div class="soubor">${a.map(x =>
+    `<span class="${zvyrazni === x ? 'odlehla' : ''}">${x}</span>`).join('')}</div>`;
+}
+
+/* ---- Dílna dat ---------------------------------------------------------------------
+   Body na číselné ose jdou tahat, přidávat a ubírat. Průměr i medián se počítají
+   průběžně — pointa je vidět, že odlehlá hodnota utrhne průměr, ale medián ne. */
+const DL = { data: [4, 5, 5, 6, 7, 8] };
+const DL_MIN = 0, DL_MAX = 20;
+
+function novaDilna() {
+  // schválně sevřený shluk – aby pak bylo poznat, co s ním udělá jediná odlehlá hodnota
+  const n = Uloha.nahodneCislo(5, 7);
+  const stred = Uloha.nahodneCislo(5, 9);
+  DL.data = Array.from({ length: n }, () => stred + Uloha.nahodneCislo(-2, 2))
+    .map(v => Math.max(DL_MIN, Math.min(DL_MAX, v)))
+    .sort((a, b) => a - b);
+}
+
+function bodVeSvgSt(svg, ev) {
+  const p = svg.createSVGPoint();
+  p.x = ev.clientX; p.y = ev.clientY;
+  const m = svg.getScreenCTM();
+  return m ? p.matrixTransform(m.inverse()) : { x: 0, y: 0 };
+}
+
+function dilna() {
+  const p = $('plocha');
+  p.innerHTML = `
+    <div class="zadani uloha-text" style="max-width:540px">Tahej body po ose, přidávej je
+      a ubírej. Sleduj, co to udělá s <b>průměrem</b> a s <b>mediánem</b> — a hlavně
+      zkus jeden bod odtáhnout hodně daleko doprava.</div>
+    <svg class="scena" id="scenaDl" viewBox="0 0 540 220" role="img"
+         aria-label="Body na ciselne ose, prumer a median"></svg>
+    <div class="ovladace">
+      <button id="btnPridejBod">➕ Přidat bod</button>
+      <button id="btnUberBod">➖ Ubrat bod</button>
+      <button id="btnOdlehly">⚠️ Udělej z jednoho odlehlou hodnotu</button>
+    </div>
+    <div class="charakteristiky">
+      <div class="bunka prumer"><div class="nadpis">Průměr</div><div class="cislo" id="hPrumer"></div></div>
+      <div class="bunka median"><div class="nadpis">Medián</div><div class="cislo" id="hMedian"></div></div>
+      <div class="bunka modus"><div class="nadpis">Modus</div><div class="cislo" id="hModus"></div></div>
+    </div>
+    <p class="vysvetlivka" id="poznamkaDl"></p>`;
+
+  $('btnPridejBod').addEventListener('click', () => {
+    if (DL.data.length >= 12) return;
+    DL.data.push(Uloha.nahodneCislo(3, 12));
+    kresliDilnu();
+  });
+  $('btnUberBod').addEventListener('click', () => {
+    if (DL.data.length <= 3) return;
+    DL.data.pop();
+    kresliDilnu();
+  });
+  $('btnOdlehly').addEventListener('click', () => {
+    // posuneme tu největší hodnotu, ne prostě poslední v pořadí zadání
+    let i = 0;
+    DL.data.forEach((v, j) => { if (v > DL.data[i]) i = j; });
+    DL.data[i] = DL_MAX;
+    kresliDilnu();
+  });
+  kresliDilnu();
+}
+
+function kresliDilnu() {
+  if (!$('scenaDl')) return;
+  const OSA = 168, X0 = 30, SIR = 480;
+  const X = v => X0 + (v - DL_MIN) / (DL_MAX - DL_MIN) * SIR;
+
+  let osa = '';
+  for (let i = DL_MIN; i <= DL_MAX; i += 2) {
+    osa += `<line class="ticka" x1="${X(i)}" y1="${OSA - 5}" x2="${X(i)}" y2="${OSA + 5}"/>
+            <text class="cislo" x="${X(i)}" y="${OSA + 20}">${i}</text>`;
+  }
+
+  // body se stejnou hodnotou skládáme nad sebe, ať se nepřekrývají
+  const pocty = {};
+  const body = DL.data.map((v, i) => {
+    pocty[v] = (pocty[v] || 0) + 1;
+    const y = OSA - 14 - (pocty[v] - 1) * 19;
+    return `<circle class="bod" data-i="${i}" cx="${X(v)}" cy="${y}" r="8"/>`;
+  }).join('');
+
+  const pr = prumer(DL.data), md = median(DL.data), mo = modus(DL.data);
+  const znacka = (v, trida, popis, dy) =>
+    `<line class="znacka ${trida}" x1="${X(v)}" y1="${OSA - 132}" x2="${X(v)}" y2="${OSA + 8}"/>
+     <text class="stitek ${trida}" x="${X(v)}" y="${dy}">${popis} ${fmt(v)}</text>`;
+
+  $('scenaDl').innerHTML =
+    `<line class="osa" x1="${X0 - 10}" y1="${OSA}" x2="${X0 + SIR + 10}" y2="${OSA}"/>
+     ${osa}
+     ${znacka(pr, 'prumer', 'průměr', 16)}
+     ${znacka(md, 'median', 'medián', 34)}
+     ${body}`;
+
+  $('scenaDl').querySelectorAll('.bod').forEach(el => {
+    el.addEventListener('pointerdown', ev => {
+      ev.preventDefault();
+      const i = +el.dataset.i;
+      const svg = $('scenaDl');
+      el.classList.add('taham');
+      try { el.setPointerCapture(ev.pointerId); } catch { /* nevadí */ }
+      const posun = e => {
+        const b = bodVeSvgSt(svg, e);
+        const v = Math.round((b.x - X0) / SIR * (DL_MAX - DL_MIN) + DL_MIN);
+        DL.data[i] = Math.max(DL_MIN, Math.min(DL_MAX, v));
+        kresliDilnu();
+      };
+      const konec = () => {
+        svg.removeEventListener('pointermove', posun);
+        svg.removeEventListener('pointerup', konec);
+        svg.removeEventListener('pointercancel', konec);
+      };
+      svg.addEventListener('pointermove', posun);
+      svg.addEventListener('pointerup', konec);
+      svg.addEventListener('pointercancel', konec);
+    });
+  });
+
+  $('hPrumer').textContent = fmt(pr);
+  $('hMedian').textContent = fmt(md);
+  const pocetModu = DL.data.filter(x => x === mo).length;
+  $('hModus').textContent = pocetModu >= 2 ? fmt(mo) : '—';
+
+  const rozdil = Math.abs(pr - md);
+  $('poznamkaDl').innerHTML = rozdil > 0.5
+    ? `Průměr a medián se rozešly o <b>${fmt(rozdil)}</b>. Za to může krajní hodnota: `
+      + 'do průměru se počítá celou svou velikostí, zatímco medián jen „posune o jedno místo“ '
+      + 'uprostřed seřazené řady.'
+    : 'Zatím jsou průměr i medián skoro stejné — data jsou rozložená souměrně. '
+      + 'Zkus některý bod odtáhnout na kraj osy.';
+}
+
+function charakteristiky() {
+  const p = $('plocha');
+  const a = novySoubor(Uloha.nahodne([5, 7, 7, 9]), 1, 12);
+  const co = Uloha.nahodne(['prumer', 'median', 'modus']);
+  const hodnoty = { prumer: prumer(a), median: median(a), modus: modus(a) };
+  const nazvy = { prumer: 'aritmetický průměr', median: 'medián', modus: 'modus' };
+  const vysledek = hodnoty[co];
+  const jine = new Set([fmt(hodnoty.prumer), fmt(hodnoty.median), fmt(hodnoty.modus),
+    fmt(Math.max(...a)), fmt(Math.min(...a))]);
+  jine.delete(fmt(vysledek));
+
+  p.innerHTML = `<div class="zadani uloha-text">Urči <b>${nazvy[co]}</b> tohoto souboru:</div>
+    ${zobrazSoubor(a)}`;
+  const odezva = odezvaEl();
+  Uloha.vyber({
+    kam: p, odezva, trida: 'velke',
+    moznosti: Uloha.zamichej([fmt(vysledek), ...[...jine].slice(0, 3)]).map(t => ({ klic: t, popis: t })),
+    spravnyKlic: fmt(vysledek),
+    zpravaOk: co === 'prumer'
+      ? `✅ (${a.join(' + ')}) : ${a.length} = ${fmt(vysledek)}`
+      : co === 'median'
+        ? `✅ Seřazeno: ${[...a].sort((x, y) => x - y).join(', ')} → prostřední hodnota je ${fmt(vysledek)}.`
+        : `✅ Hodnota ${vysledek} se v souboru vyskytuje nejčastěji.`,
+    zpravaChyba: co === 'median' ? 'Nejdřív hodnoty seřaď od nejmenší po největší.'
+      : co === 'modus' ? 'Hledej hodnotu, která se opakuje nejvíckrát.'
+      : 'Sečti všechny hodnoty a vyděl jejich počtem.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+const POPISKY = ['1', '2', '3', '4', '5'];
+function diagram() {
+  const p = $('plocha');
+  const cetnosti = [...Array(5)].map(() => Uloha.nahodneCislo(1, 9));
+  const celkem = cetnosti.reduce((s, x) => s + x, 0);
+  const hodnoty = [];
+  cetnosti.forEach((c, i) => { for (let k = 0; k < c; k++) hodnoty.push(i + 1); });
+
+  const sirka = 60, maxV = Math.max(...cetnosti);
+  const sloupce = cetnosti.map((c, i) => {
+    const v = c / maxV * 120;
+    return `<rect class="sloupec" x="${30 + i * sirka}" y="${150 - v}" width="${sirka - 16}" height="${v}" rx="4"/>
+      <text class="hodnota" x="${30 + i * sirka + (sirka - 16) / 2}" y="${144 - v}">${c}</text>
+      <text class="popis" x="${30 + i * sirka + (sirka - 16) / 2}" y="168">${POPISKY[i]}</text>`;
+  }).join('');
+
+  const co = Uloha.nahodne(['modus', 'celkem', 'prumer', 'nejmene']);
+  let zadani, spravny;
+  if (co === 'modus') {
+    zadani = 'Která známka padla nejčastěji?';
+    spravny = String(modus(hodnoty));
+  } else if (co === 'celkem') {
+    zadani = 'Kolik žáků bylo hodnoceno celkem?';
+    spravny = String(celkem);
+  } else if (co === 'nejmene') {
+    zadani = 'Která známka padla nejméně často?';
+    const min = Math.min(...cetnosti);
+    spravny = String(cetnosti.indexOf(min) + 1);
+  } else {
+    zadani = 'Jaký je průměr známek? (zaokrouhli na dvě desetinná místa)';
+    spravny = fmt(prumer(hodnoty));
+  }
+  const jine = new Set([String(celkem), String(modus(hodnoty)), fmt(prumer(hodnoty)),
+    String(Math.max(...cetnosti)), String(cetnosti.indexOf(Math.min(...cetnosti)) + 1)]);
+  jine.delete(spravny);
+
+  p.innerHTML = `<div class="zadani uloha-text">Diagram ukazuje známky z písemné práce. ${zadani}</div>
+    <div class="karta"><svg class="graf" viewBox="0 0 340 180">
+      <line class="osa" x1="20" y1="150" x2="330" y2="150"/>
+      <line class="osa" x1="20" y1="14" x2="20" y2="150"/>
+      ${sloupce}</svg></div>`;
+  const odezva = odezvaEl();
+  Uloha.vyber({
+    kam: p, odezva, trida: 'velke',
+    moznosti: Uloha.zamichej([spravny, ...[...jine].slice(0, 3)]).map(t => ({ klic: t, popis: t })),
+    spravnyKlic: spravny,
+    zpravaOk: `✅ ${spravny}` + (co === 'celkem' ? ` – sečteme výšky všech sloupců (${cetnosti.join(' + ')}).` : ''),
+    zpravaChyba: 'Čti výšky sloupců – každý ukazuje, kolikrát se známka objevila.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+function odlehla() {
+  const p = $('plocha');
+  const zaklad = [...Array(6)].map(() => Uloha.nahodneCislo(10, 20));
+  const odlehlaHodnota = Uloha.nahodneCislo(90, 140);
+  const soubor = [...zaklad, odlehlaHodnota];
+  const prumerBez = prumer(zaklad), prumerS = prumer(soubor);
+  const medianS = median(soubor), medianBez = median(zaklad);
+  const otazka = Uloha.nahodne(['kteraJeLepsi', 'oKolik', 'proc']);
+  let zadani, spravny, jine;
+
+  if (otazka === 'kteraJeLepsi') {
+    zadani = 'Která charakteristika lépe popisuje „typickou“ hodnotu tohoto souboru?';
+    spravny = 'medián – odlehlá hodnota ho téměř neovlivní';
+    jine = ['průměr – počítá se všemi hodnotami', 'největší hodnota', 'rozdíl největší a nejmenší hodnoty'];
+  } else if (otazka === 'oKolik') {
+    zadani = `Jaký je průměr celého souboru? (zaokrouhli na dvě desetinná místa)`;
+    spravny = fmt(prumerS);
+    jine = [fmt(prumerBez), fmt(medianS), fmt(odlehlaHodnota)];
+  } else {
+    zadani = 'Co se stane s průměrem, když ze souboru odstraníme nejvyšší hodnotu?';
+    spravny = 'výrazně klesne';
+    jine = ['nezmění se', 'výrazně vzroste', 'změní se jen medián'];
+  }
+
+  p.innerHTML = `<div class="zadani uloha-text">${zadani}</div>
+    ${zobrazSoubor(soubor, odlehlaHodnota)}
+    <div class="uloha-text" style="color:var(--text-faint);font-size:0.85rem">
+      průměr se všemi hodnotami: ${fmt(prumerS)} · medián: ${fmt(medianS)}</div>`;
+  const odezva = odezvaEl();
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([spravny, ...jine.filter(x => x !== spravny)]).map(t => ({ klic: t, popis: t })),
+    spravnyKlic: spravny,
+    zpravaOk: `✅ ${spravny} (bez odlehlé hodnoty je průměr ${fmt(prumerBez)}, medián ${fmt(medianBez)}).`,
+    zpravaChyba: 'Porovnej, jak se změní průměr a jak medián, když jedna hodnota vybočuje.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+const POJMY = [
+  { q: 'Co je statistický soubor?', a: 'skupina zkoumaných objektů či hodnot', b: ['jeden údaj', 'graf', 'výpočet průměru'] },
+  { q: 'Co udává četnost hodnoty?', a: 'kolikrát se hodnota v souboru vyskytla', b: ['jak je hodnota velká', 'pořadí hodnoty', 'součet všech hodnot'] },
+  { q: 'Kdy se medián počítá jako průměr dvou prostředních hodnot?', a: 'když je počet hodnot sudý', b: ['vždy', 'když je počet lichý', 'když je modus dvojí'] },
+  { q: 'Může mít soubor víc modů?', a: 'ano, když se několik hodnot vyskytuje stejně často', b: ['ne, nikdy', 'jen u sudého počtu hodnot', 'jen když jsou hodnoty záporné'] },
+  { q: 'Co je relativní četnost?', a: 'podíl četnosti a celkového počtu, často v procentech', b: ['počet hodnot', 'největší hodnota', 'rozdíl mezi hodnotami'] },
+  { q: 'K čemu slouží sloupcový diagram?', a: 'názorně ukazuje četnosti jednotlivých hodnot', b: ['počítá průměr', 'řadí hodnoty', 'nahrazuje medián'] },
+  { q: 'Co je variační rozpětí?', a: 'rozdíl mezi největší a nejmenší hodnotou', b: ['součet hodnot', 'nejčastější hodnota', 'prostřední hodnota'] },
+  { q: 'Proč se u platů častěji uvádí medián než průměr?', a: 'několik velmi vysokých platů by průměr zkreslilo', b: ['medián je vždy vyšší', 'průměr se špatně počítá', 'medián je přesnější číslo'] },
+];
+function pojmy() {
+  const p = $('plocha');
+  const u = Uloha.nahodne(POJMY);
+  p.innerHTML = `<div class="zadani uloha-text">${u.q}</div>`;
+  const odezva = odezvaEl();
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([u.a, ...u.b]).map(t => ({ klic: t, popis: t })),
+    spravnyKlic: u.a,
+    zpravaOk: `✅ ${u.a}`,
+    zpravaChyba: 'Vrať se k významu pojmů v nápovědě pod úlohou.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+const REZIMY = { dilna, charakteristiky, diagram, odlehla, pojmy };
+function novaUloha() {
+  if (rezim === 'dilna') { novaDilna(); dilna(); return; }
+  REZIMY[rezim]();
+}
+
+document.querySelectorAll('#rezimy button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#rezimy button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  rezim = b.dataset.rezim;
+  $('btnDalsi').textContent = rezim === 'dilna' ? '🎲 Jiná data' : 'Přeskočit →';
+  novaUloha();
+}));
+$('btnDalsi').textContent = rezim === 'dilna' ? '🎲 Jiná data' : 'Přeskočit →';
+$('btnDalsi').addEventListener('click', novaUloha);
+novaUloha();
+</script>
+</body>
+</html>

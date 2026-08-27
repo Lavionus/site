@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Měření fyzikálních veličin</title>
+  <link rel="stylesheet" href="../common.css">
+  <link rel="stylesheet" href="../vyuka.css">
+  <script src="../theme.js"></script>
+  <script src="../rec.js"></script>
+  <script src="../uloha.js"></script>
+  <style>
+    .pristroj { width: min(300px, 76vw); }
+    .pristroj .telo { fill: var(--bg-control); stroke: var(--border-strong); stroke-width: 2.5; }
+    .pristroj .kapalina { fill: var(--danger); }
+    .pristroj .ryska { stroke: var(--text-faint); stroke-width: 1.5; }
+    .pristroj .cislo { fill: var(--text-faint); font-size: 11px; text-anchor: end; }
+    .pristroj .voda { fill: var(--accent); fill-opacity: 0.5; }
+    .velicina-nazev { font-size: 1.3rem; font-weight: 700; }
+    .prevod { font-size: clamp(1.2rem, 4.5vw, 1.8rem); font-weight: 700; font-variant-numeric: tabular-nums; }
+  </style>
+</head>
+<body>
+  <h1>📏 Měření fyzikálních veličin</h1>
+  <p class="podtitul">Pro 6. ročník: délka, objem, hmotnost, čas a teplota – jednotky, měřidla a převody.</p>
+
+  <div class="rezimy" id="rezimy">
+    <button data-rezim="jednotka" class="active">📐 Jaká je jednotka</button>
+    <button data-rezim="meridlo">🔧 Čím se to měří</button>
+    <button data-rezim="prevody">🔄 Převody jednotek</button>
+    <button data-rezim="odectiTeplomer">🌡️ Odečti hodnotu</button>
+  </div>
+
+  <div class="plocha" id="plocha"></div>
+
+  <div class="ovladani">
+    <button class="hlavni" id="btnDalsi">Přeskočit →</button>
+    <span class="skore" id="skore"></span>
+  </div>
+
+  <p class="napoveda">
+    Základní jednotky: délka <b>metr (m)</b>, hmotnost <b>kilogram (kg)</b>, čas <b>sekunda (s)</b>,
+    teplota <b>stupeň Celsia (°C)</b>, objem <b>metr krychlový (m³)</b> nebo litr.
+    Objem tělesa nepravidelného tvaru zjistíš ponořením do odměrného válce.
+  </p>
+
+<script>
+const $ = id => document.getElementById(id);
+const skore = Uloha.skore('nodus_f6_mereni', $('skore'));
+let rezim = 'jednotka';
+
+const VELICINY = [
+  { n: 'délka', zn: 'l', j: 'metr (m)', meridlo: 'pravítko, metr, posuvné měřítko', e: '📏' },
+  { n: 'hmotnost', zn: 'm', j: 'kilogram (kg)', meridlo: 'váhy', e: '⚖️' },
+  { n: 'čas', zn: 't', j: 'sekunda (s)', meridlo: 'stopky, hodiny', e: '⏱️' },
+  { n: 'teplota', zn: 't', j: 'stupeň Celsia (°C)', meridlo: 'teploměr', e: '🌡️' },
+  { n: 'objem', zn: 'V', j: 'metr krychlový (m³), litr', meridlo: 'odměrný válec', e: '🧪' },
+  { n: 'síla', zn: 'F', j: 'newton (N)', meridlo: 'siloměr', e: '💪' },
+];
+
+const PREVODY = [
+  { z: '1 m', na: 'cm', v: 100 }, { z: '1 km', na: 'm', v: 1000 },
+  { z: '1 kg', na: 'g', v: 1000 }, { z: '1 t', na: 'kg', v: 1000 },
+  { z: '1 hodina', na: 'minut', v: 60 }, { z: '1 minuta', na: 'sekund', v: 60 },
+  { z: '1 litr', na: 'ml', v: 1000 }, { z: '1 dm³', na: 'cm³', v: 1000 },
+  { z: '250 cm', na: 'm', v: 2.5 }, { z: '1500 g', na: 'kg', v: 1.5 },
+  { z: '2,5 km', na: 'm', v: 2500 }, { z: '90 minut', na: 'hodin', v: 1.5 },
+];
+
+/* ---- Jaká je jednotka ------------------------------------------------------------------ */
+function jednotka() {
+  const p = $('plocha');
+  const u = Uloha.nahodne(VELICINY);
+  const jine = Uloha.zamichej(VELICINY.filter(x => x.j !== u.j)).slice(0, 3);
+  p.innerHTML = `<div class="zadani">Jaká je hlavní jednotka této veličiny?</div>
+    <div class="karta"><div class="obrazek">${u.e}</div>
+    <div class="velicina-nazev">${u.n} (${u.zn})</div></div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([u, ...jine]).map(x => ({ klic: x.j, popis: x.j })),
+    spravnyKlic: u.j,
+    zpravaOk: `✅ ${u.n} se měří v jednotce ${u.j}.`,
+    zpravaChyba: 'To je jednotka jiné veličiny.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Čím se to měří --------------------------------------------------------------------- */
+function meridlo() {
+  const p = $('plocha');
+  const u = Uloha.nahodne(VELICINY);
+  const jine = Uloha.zamichej(VELICINY.filter(x => x.meridlo !== u.meridlo)).slice(0, 3);
+  p.innerHTML = `<div class="zadani">Jakým měřidlem tuto veličinu změříš?</div>
+    <div class="karta"><div class="obrazek">${u.e}</div><div class="velicina-nazev">${u.n}</div></div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([u, ...jine]).map(x => ({ klic: x.meridlo, popis: x.meridlo })),
+    spravnyKlic: u.meridlo,
+    zpravaOk: `✅ ${u.n} měříme: ${u.meridlo}.`,
+    zpravaChyba: 'Tímhle se měří jiná veličina.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Převody jednotek --------------------------------------------------------------------- */
+function prevody() {
+  const p = $('plocha');
+  const u = Uloha.nahodne(PREVODY);
+  const jine = new Set([u.v * 10, u.v / 10, u.v * 100].filter(x => x > 0 && x !== u.v));
+  p.innerHTML = `<div class="zadani">Doplň převod:</div>
+    <div class="karta"><div class="prevod">${u.z} = ? ${u.na}</div></div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva, trida: 'velke',
+    moznosti: Uloha.zamichej([u.v, ...[...jine].slice(0, 3)])
+      .map(v => ({ klic: String(v), popis: String(v).replace('.', ',') + ' ' + u.na })),
+    spravnyKlic: String(u.v),
+    zpravaOk: `✅ ${u.z} = ${String(u.v).replace('.', ',')} ${u.na}`,
+    zpravaChyba: 'Rozmysli si, jestli převádíš na větší, nebo menší jednotku.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Odečti hodnotu (teploměr nebo odměrný válec) ------------------------------------------- */
+function odectiTeplomer() {
+  const p = $('plocha');
+  const teplomer = Math.random() < 0.5;
+
+  if (teplomer) {
+    const teplota = Uloha.nahodneCislo(-2, 10) * 5;
+    const y = 165 - (teplota + 20) / 70 * 130;
+    let rysky = '';
+    for (let t = -10; t <= 50; t += 10) {
+      const ry = 165 - (t + 20) / 70 * 130;
+      rysky += `<line class="ryska" x1="88" y1="${ry.toFixed(1)}" x2="104" y2="${ry.toFixed(1)}"/>
+                <text class="cislo" x="84" y="${(ry + 4).toFixed(1)}">${t}</text>`;
+    }
+    p.innerHTML = `<div class="zadani">Jakou teplotu ukazuje teploměr?</div>
+      <svg class="pristroj" viewBox="0 0 220 200">
+        <rect class="telo" x="104" y="25" width="22" height="150" rx="11"/>
+        <circle class="telo" cx="115" cy="180" r="16"/>
+        <circle class="kapalina" cx="115" cy="180" r="11"/>
+        <rect class="kapalina" x="110" y="${y.toFixed(1)}" width="10" height="${(180 - y).toFixed(1)}"/>
+        ${rysky}
+        <text class="cislo" x="160" y="40" style="text-anchor:start">°C</text>
+      </svg>`;
+    const jine = new Set();
+    let pokusu1 = 0;
+    while (jine.size < 3 && pokusu1++ < 200) {
+      const k = teplota + Uloha.nahodne([-15, -10, -5, 5, 10, 15]);
+      if (k !== teplota) jine.add(k);
+    }
+    const odezva = document.createElement('div');
+    odezva.className = 'odezva';
+    Uloha.vyber({
+      kam: p, odezva, trida: 'velke',
+      moznosti: Uloha.zamichej([teplota, ...jine]).map(v => ({ klic: String(v), popis: v + ' °C' })),
+      spravnyKlic: String(teplota),
+      zpravaOk: `✅ Teploměr ukazuje ${teplota} °C.`,
+      zpravaChyba: 'Sleduj, kam sahá sloupec kapaliny, a odečti hodnotu na stupnici.',
+      poSpravne: skore.vyhodnot,
+      dalsi: novaUloha,
+    });
+    p.appendChild(odezva);
+    return;
+  }
+
+  const objem = Uloha.nahodneCislo(2, 9) * 10;
+  const vyska = objem / 100 * 130;
+  let rysky = '';
+  for (let o = 0; o <= 100; o += 20) {
+    const ry = 170 - o / 100 * 130;
+    rysky += `<line class="ryska" x1="72" y1="${ry}" x2="88" y2="${ry}"/>
+              <text class="cislo" x="68" y="${ry + 4}">${o}</text>`;
+  }
+  p.innerHTML = `<div class="zadani">Kolik mililitrů kapaliny je v odměrném válci?</div>
+    <svg class="pristroj" viewBox="0 0 220 200">
+      <rect class="voda" x="90" y="${(170 - vyska).toFixed(1)}" width="60" height="${vyska.toFixed(1)}"/>
+      <rect class="telo" x="90" y="30" width="60" height="140" rx="4"/>
+      ${rysky}
+      <text class="cislo" x="185" y="45" style="text-anchor:start">ml</text>
+    </svg>`;
+  const jine = new Set();
+  let pokusu2 = 0;
+  while (jine.size < 3 && pokusu2++ < 200) {
+    const k = objem + Uloha.nahodne([-30, -20, -10, 10, 20, 30]);
+    if (k !== objem && k > 0) jine.add(k);
+  }
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva, trida: 'velke',
+    moznosti: Uloha.zamichej([objem, ...jine]).map(v => ({ klic: String(v), popis: v + ' ml' })),
+    spravnyKlic: String(objem),
+    zpravaOk: `✅ Ve válci je ${objem} ml, tedy ${objem} cm³.`,
+    zpravaChyba: 'Odečítej v úrovni hladiny, ne shora ani zdola.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+const REZIMY = { jednotka, meridlo, prevody, odectiTeplomer };
+function novaUloha() { REZIMY[rezim](); }
+
+document.querySelectorAll('#rezimy button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#rezimy button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  rezim = b.dataset.rezim;
+  novaUloha();
+}));
+$('btnDalsi').addEventListener('click', novaUloha);
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === 'Enter') { e.preventDefault(); novaUloha(); }
+});
+novaUloha();
+</script>
+</body>
+</html>

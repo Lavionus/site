@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Programování – funkce a parametry</title>
+  <link rel="stylesheet" href="../common.css">
+  <link rel="stylesheet" href="../vyuka.css">
+  <script src="../theme.js"></script>
+  <script src="../uloha.js"></script>
+  <style>
+    .kod {
+      font-family: 'Courier New', monospace; text-align: left; white-space: pre;
+      background: var(--bg-deep); border: 1px solid var(--border-strong); border-radius: 10px;
+      padding: 14px 18px; font-size: clamp(0.85rem, 3.4vw, 1.05rem); line-height: 1.55;
+      overflow-x: auto; max-width: 100%;
+    }
+    .kod .klic { color: var(--accent); font-weight: 700; }
+    .kod .cislo { color: var(--warn); }
+    .kod .komentar { color: var(--text-faint); }
+    .obrazec { width: min(280px, 70%); }
+    .obrazec .mrizka { stroke: var(--border); stroke-width: 1; }
+    .obrazec .tvar { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 3; }
+    .obrazec .popis { fill: var(--text-faint); font-size: 11px; }
+    .uloha-text { max-width: 640px; font-size: 1.02rem; line-height: 1.6; }
+    .uloha-text b { color: var(--accent); }
+  </style>
+</head>
+<body>
+  <h1>🧩 Programování – funkce a parametry</h1>
+  <p class="podtitul">Pro 7. ročník: rozdělení programu na části, které lze používat opakovaně.</p>
+
+  <div class="rezimy" id="rezimy">
+    <button data-rezim="cteni" class="active">🔍 Co program udělá</button>
+    <button data-rezim="volani">🎨 Vyber správné volání</button>
+    <button data-rezim="vytknuti">♻️ Co dát do funkce</button>
+    <button data-rezim="parametry">📥 Parametry a návratová hodnota</button>
+  </div>
+
+  <div class="plocha" id="plocha"></div>
+
+  <div class="ovladani">
+    <button class="hlavni" id="btnDalsi">Přeskočit →</button>
+    <span class="skore" id="skore"></span>
+  </div>
+
+  <p class="napoveda">
+    <b>Funkce</b> je pojmenovaný kus programu, který můžeme spustit kdykoli znovu.
+    <b>Parametr</b> je hodnota, kterou funkci předáme, aby pokaždé udělala něco trochu jiného
+    (například čtverec jiné velikosti). Opakující se části programu patří do funkce.
+  </p>
+
+<script>
+const $ = id => document.getElementById(id);
+const skore = Uloha.skore('nodus_inf7_funkce', $('skore'));
+let rezim = 'cteni';
+function odezvaEl() { const d = document.createElement('div'); d.className = 'odezva'; return d; }
+
+const zvyrazni = kod => kod
+  .replace(/\b(funkce|opakuj|dopředu|vpravo|vlevo|vrať|když|jinak|volej)\b/g, '<span class="klic">$1</span>')
+  .replace(/\b(\d+)\b/g, '<span class="cislo">$1</span>')
+  .replace(/(#[^\n]*)/g, '<span class="komentar">$1</span>');
+
+/* ---- Co program udělá -------------------------------------------------------------------- */
+const CTENI = [
+  {
+    kod: `funkce pozdrav(jmeno):
+    piš "Ahoj, " + jmeno
+
+pozdrav("Anno")
+pozdrav("Petře")`,
+    q: 'Co program vypíše?',
+    a: 'Ahoj, Anno / Ahoj, Petře', b: ['Ahoj, jmeno (dvakrát)', 'jen Ahoj, Anno', 'nic – funkce se nezavolala'],
+  },
+  {
+    kod: `funkce dvojnasobek(x):
+    vrať x * 2
+
+piš dvojnasobek(7)`,
+    q: 'Co se vypíše?', a: '14', b: ['7', '72', 'x * 2'],
+  },
+  {
+    kod: `funkce ctverec(a):
+    opakuj 4×:
+        dopředu a
+        vpravo 90
+
+ctverec(50)
+ctverec(50)`,
+    q: 'Kolik čar celkem robot nakreslí?', a: '8', b: ['4', '2', '16'],
+  },
+  {
+    kod: `funkce trojuhelnik(a):
+    opakuj 3×:
+        dopředu a
+        vpravo 120
+
+opakuj 2×:
+    trojuhelnik(40)`,
+    q: 'Kolikrát se provede příkaz „dopředu“?', a: '6', b: ['3', '2', '12'],
+  },
+  {
+    kod: `funkce soucet(a, b):
+    vrať a + b
+
+piš soucet(3, 4) + soucet(1, 2)`,
+    q: 'Co se vypíše?', a: '10', b: ['7', '3', 'chyba – funkce má dva parametry'],
+  },
+  {
+    kod: `funkce pocitej(n):
+    opakuj n×:
+        piš "*"
+
+pocitej(3)`,
+    q: 'Co program vypíše?', a: 'tři hvězdičky pod sebou', b: ['jednu hvězdičku', 'číslo 3', 'nic'],
+  },
+];
+function cteni() {
+  const p = $('plocha');
+  const u = Uloha.nahodne(CTENI);
+  p.innerHTML = `<div class="zadani uloha-text">${u.q}</div>
+    <div class="kod">${zvyrazni(u.kod)}</div>`;
+  const odezva = odezvaEl();
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([u.a, ...u.b]).map(t => ({ klic: t, popis: t })),
+    spravnyKlic: u.a,
+    zpravaOk: `✅ ${u.a}`,
+    zpravaChyba: 'Projdi program řádek po řádku – a nezapomeň, že tělo funkce se provede při každém volání.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Vyber správné volání ------------------------------------------------------------------ */
+const KROK = 20;   // jeden čtvereček mřížky = 20 kroků robota
+function svgObrazec(tvar, a, b) {
+  let mrizka = '';
+  for (let i = 0; i <= 240; i += KROK) {
+    mrizka += `<line class="mrizka" x1="${i}" y1="0" x2="${i}" y2="200"/>`;
+  }
+  for (let i = 0; i <= 200; i += KROK) {
+    mrizka += `<line class="mrizka" x1="0" y1="${i}" x2="240" y2="${i}"/>`;
+  }
+  let obrys = '';
+  if (tvar === 'ctverec') obrys = `<rect class="tvar" x="40" y="40" width="${a}" height="${a}"/>`;
+  else if (tvar === 'obdelnik') obrys = `<rect class="tvar" x="30" y="50" width="${a}" height="${b}"/>`;
+  else obrys = `<polygon class="tvar" points="40,160 ${40 + a},160 ${40 + a / 2},${160 - a * 0.87}"/>`;
+  return `<svg class="obrazec" viewBox="0 0 240 200">${mrizka}${obrys}
+    <text class="popis" x="4" y="196">1 čtvereček = ${KROK} kroků</text></svg>`;
+}
+function volani() {
+  const p = $('plocha');
+  const tvar = Uloha.nahodne(['ctverec', 'obdelnik', 'trojuhelnik']);
+  const a = Uloha.nahodneCislo(2, 5) * KROK;
+  const b = Uloha.nahodneCislo(2, 4) * KROK;
+  const spravny = tvar === 'ctverec' ? `ctverec(${a})`
+    : tvar === 'obdelnik' ? `obdelnik(${a}, ${b})` : `trojuhelnik(${a})`;
+  const jine = new Set([
+    `ctverec(${a + KROK})`, `obdelnik(${b}, ${a})`, `trojuhelnik(${a + KROK})`,
+    `ctverec(${a - KROK})`, `obdelnik(${a}, ${b + KROK})`,
+  ]);
+  jine.delete(spravny);
+
+  p.innerHTML = `<div class="zadani uloha-text">Které volání funkce nakreslí tento obrazec?</div>
+    <div class="karta">${svgObrazec(tvar, a, b)}</div>
+    <div class="kod">${zvyrazni(`funkce ctverec(a) …   # čtverec o straně a
+funkce obdelnik(a, b) …   # obdélník široký a, vysoký b
+funkce trojuhelnik(a) …   # rovnostranný trojúhelník`)}</div>`;
+  const odezva = odezvaEl();
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([spravny, ...[...jine].slice(0, 3)]).map(t => ({ klic: t, popis: t })),
+    spravnyKlic: spravny,
+    zpravaOk: `✅ ${spravny} – rozměry odečteš z mřížky (jeden čtvereček je ${KROK} kroků).`,
+    zpravaChyba: 'Spočítej čtverečky mřížky a vynásob je dvaceti.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Co dát do funkce ----------------------------------------------------------------------- */
+const VYTKNUTI = [
+  {
+    kod: `dopředu 50
+vpravo 90
+dopředu 50
+vpravo 90
+dopředu 50
+vpravo 90
+dopředu 50
+vpravo 90`,
+    q: 'Jak program nejlépe zkrátíme?',
+    a: 'vytvoříme funkci ctverec(a) s opakováním 4×',
+    b: ['zkopírujeme řádky ještě jednou', 'smažeme polovinu řádků', 'necháme program tak, jak je'],
+  },
+  {
+    kod: `# tři domečky vedle sebe
+ctverec(40)
+trojuhelnik(40)
+posun(50)
+ctverec(40)
+trojuhelnik(40)
+posun(50)
+ctverec(40)
+trojuhelnik(40)`,
+    q: 'Co se vyplatí dát do vlastní funkce?',
+    a: 'dvojici ctverec(40) + trojuhelnik(40), tedy jeden domeček',
+    b: ['jen příkaz posun(50)', 'celý program bez úprav', 'nic, opakování tu není'],
+  },
+  {
+    kod: `funkce ctverec50():
+    opakuj 4×:
+        dopředu 50
+        vpravo 90
+
+funkce ctverec80():
+    opakuj 4×:
+        dopředu 80
+        vpravo 90`,
+    q: 'Jak obě funkce nahradíme jednou?',
+    a: 'uděláme funkci ctverec(a) s parametrem pro délku strany',
+    b: ['smažeme jednu z nich', 'přidáme třetí funkci ctverec100()', 'obě funkce spojíme za sebe'],
+  },
+  {
+    kod: `piš "Ahoj, Jano"
+piš "Ahoj, Petře"
+piš "Ahoj, Evo"`,
+    q: 'Který parametr má mít funkce pozdrav?',
+    a: 'jméno člověka, kterého zdravíme',
+    b: ['počet pozdravů', 'barvu textu', 'žádný, jména se napíšou natvrdo'],
+  },
+  {
+    kod: `funkce obvodCtverce(a):
+    vrať 4 * a
+
+funkce obsahCtverce(a):
+    vrať a * a`,
+    q: 'Proč jsou tu dvě funkce, a ne jedna?',
+    a: 'každá počítá něco jiného – obvod a obsah',
+    b: ['je to chyba, stačila by jedna', 'musí být vždy sudý počet funkcí', 'jedna z nich nic nedělá'],
+  },
+];
+function vytknuti() {
+  const p = $('plocha');
+  const u = Uloha.nahodne(VYTKNUTI);
+  p.innerHTML = `<div class="zadani uloha-text">${u.q}</div>
+    <div class="kod">${zvyrazni(u.kod)}</div>`;
+  const odezva = odezvaEl();
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([u.a, ...u.b]).map(t => ({ klic: t, popis: t })),
+    spravnyKlic: u.a,
+    zpravaOk: `✅ ${u.a}`,
+    zpravaChyba: 'Hledej část, která se opakuje – a to, co se v ní mění, udělej parametrem.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Parametry a návratová hodnota ------------------------------------------------------------ */
+const PARAMETRY = [
+  { q: 'Co je parametr funkce?', a: 'hodnota, kterou funkci předáme při volání', b: ['jméno funkce', 'chybová hláška', 'počet řádků funkce'] },
+  { q: 'Co dělá příkaz „vrať“ ve funkci?', a: 'předá výsledek zpět tomu, kdo funkci zavolal', b: ['ukončí celý program', 'vypíše text na obrazovku', 'vrátí robota na start'] },
+  { q: 'Kolik parametrů může mít funkce?', a: 'žádný, jeden i více – podle potřeby', b: ['právě jeden', 'nejvýše dva', 'vždy tři'] },
+  { q: 'Proč se vyplatí psát funkce?', a: 'program je kratší, přehlednější a snáz se opravuje', b: ['program běží vždy rychleji', 'ušetří se elektřina', 'není třeba testovat'] },
+  { q: 'Co se stane, když funkci zavoláme se špatným počtem parametrů?', a: 'program ohlásí chybu', b: ['doplní se nuly', 'funkce se přeskočí', 'nic, je to jedno'] },
+  { q: 'Jak nazveme funkci, která nic nevrací, jen něco udělá?', a: 'procedura', b: ['proměnná', 'cyklus', 'podmínka'] },
+  { q: 'Co znamená volání funkce uvnitř jiné funkce?', a: 'je to běžné – funkce mohou volat jiné funkce', b: ['není to dovoleno', 'program spadne', 'funkce se sloučí v jednu'] },
+  { q: 'Jak správně pojmenovat funkci, která počítá obsah obdélníku?', a: 'obsahObdelniku – název říká, co funkce dělá', b: ['f1', 'x', 'program'] },
+];
+function parametry() {
+  const p = $('plocha');
+  const u = Uloha.nahodne(PARAMETRY);
+  p.innerHTML = `<div class="zadani uloha-text">${u.q}</div>`;
+  const odezva = odezvaEl();
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([u.a, ...u.b]).map(t => ({ klic: t, popis: t })),
+    spravnyKlic: u.a,
+    zpravaOk: `✅ ${u.a}`,
+    zpravaChyba: 'Funkce = pojmenovaný postup, parametr = jeho vstup, návratová hodnota = výsledek.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+const REZIMY = { cteni, volani, vytknuti, parametry };
+function novaUloha() { REZIMY[rezim](); }
+
+document.querySelectorAll('#rezimy button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#rezimy button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  rezim = b.dataset.rezim;
+  novaUloha();
+}));
+$('btnDalsi').addEventListener('click', novaUloha);
+novaUloha();
+</script>
+</body>
+</html>

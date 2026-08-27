@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Čtyřúhelníky a hranoly</title>
+  <link rel="stylesheet" href="../common.css">
+  <link rel="stylesheet" href="../vyuka.css">
+  <script src="../theme.js"></script>
+  <script src="../uloha.js"></script>
+  <style>
+    .tvar { width: min(280px, 76%); }
+    .tvar .obrys { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 3; }
+    .tvar .vyska { stroke: var(--warn); stroke-width: 2.5; stroke-dasharray: 5 4; }
+    .tvar .kota { fill: var(--text-faint); font-size: 13px; text-anchor: middle; }
+    .tvar .hrana { stroke: var(--border-strong); stroke-width: 2; fill: none; }
+    .tvar .hrana.skryta { stroke-dasharray: 4 4; opacity: 0.6; }
+    .tvar .stena { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 2.5; }
+    .uloha-text { max-width: 600px; font-size: 1.02rem; line-height: 1.6; }
+    .uloha-text b { color: var(--accent); }
+    .vzorec { font-family: 'Courier New', monospace; color: var(--text-muted); font-size: 0.95rem; }
+  </style>
+</head>
+<body>
+  <h1>🔷 Čtyřúhelníky a hranoly</h1>
+  <p class="podtitul">Pro 7. ročník: druhy čtyřúhelníků, obsah rovnoběžníku a lichoběžníku, hranoly.</p>
+
+  <div class="rezimy" id="rezimy">
+    <button data-rezim="poznej" class="active">🔍 Poznej čtyřúhelník</button>
+    <button data-rezim="vlastnosti">📋 Vlastnosti</button>
+    <button data-rezim="obsah">📐 Obsah a obvod</button>
+    <button data-rezim="hranol">🧊 Hranol – povrch a objem</button>
+  </div>
+
+  <div class="plocha" id="plocha"></div>
+
+  <div class="ovladani">
+    <button class="hlavni" id="btnDalsi">Přeskočit →</button>
+    <span class="skore" id="skore"></span>
+  </div>
+
+  <p class="napoveda">
+    Obsah rovnoběžníku <b>S = a · v<sub>a</sub></b>, lichoběžníku <b>S = (a + c)/2 · v</b>.
+    Hranol: objem <b>V = S<sub>p</sub> · v</b>, povrch <b>S = 2·S<sub>p</sub> + S<sub>pl</sub></b>.
+  </p>
+
+<script>
+const $ = id => document.getElementById(id);
+const skore = Uloha.skore('nodus_m7_ctyruhelniky', $('skore'));
+let rezim = 'poznej';
+
+const fmt = x => Number(Number(x).toFixed(2)).toLocaleString('cs-CZ');
+function odezvaEl() { const d = document.createElement('div'); d.className = 'odezva'; return d; }
+
+const TVARY = {
+  ctverec: { nazev: 'čtverec', body: '40,30 200,30 200,190 40,190',
+    popis: 'čtyři stejně dlouhé strany a čtyři pravé úhly' },
+  obdelnik: { nazev: 'obdélník', body: '20,50 220,50 220,170 20,170',
+    popis: 'protější strany stejné, všechny úhly pravé' },
+  kosoctverec: { nazev: 'kosočtverec', body: '120,20 220,110 120,200 20,110',
+    popis: 'čtyři stejně dlouhé strany, úhly nejsou pravé' },
+  kosodelnik: { nazev: 'kosodélník', body: '60,50 230,50 180,170 10,170',
+    popis: 'protější strany rovnoběžné a stejné, úhly nejsou pravé' },
+  lichobeznik: { nazev: 'lichoběžník', body: '70,50 180,50 230,170 20,170',
+    popis: 'jen jedna dvojice rovnoběžných stran (základny)' },
+  deltoid: { nazev: 'deltoid', body: '120,20 210,110 120,200 30,110',
+    popis: 'dvě dvojice sousedních stran stejné délky' },
+};
+
+function svgTvar(klic, kota) {
+  const t = TVARY[klic];
+  return `<svg class="tvar" viewBox="0 0 240 220">
+    <polygon class="obrys" points="${t.body}"/>
+    ${kota || ''}
+  </svg>`;
+}
+
+/* ---- Poznej čtyřúhelník ---------------------------------------------------------------- */
+function poznej() {
+  const p = $('plocha');
+  const klic = Uloha.nahodne(Object.keys(TVARY));
+  p.innerHTML = `<div class="zadani">Jaký čtyřúhelník je na obrázku?</div>
+    <div class="karta">${svgTvar(klic)}</div>`;
+  const odezva = odezvaEl();
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([klic, ...Uloha.zamichej(Object.keys(TVARY).filter(k => k !== klic)).slice(0, 3)])
+      .map(k => ({ klic: k, popis: TVARY[k].nazev })),
+    spravnyKlic: klic,
+    zpravaOk: `✅ ${TVARY[klic].nazev} – ${TVARY[klic].popis}.`,
+    zpravaChyba: 'Sleduj, které strany jsou rovnoběžné a které stejně dlouhé.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Vlastnosti --------------------------------------------------------------------------- */
+const TVRZENI = [
+  { tvar: 'ctverec', pravda: 'Úhlopříčky jsou stejně dlouhé a půlí se v pravém úhlu.',
+    nepravda: ['Sousední strany mají různou délku.', 'Žádný úhel není pravý.', 'Má jen jednu osu souměrnosti.'] },
+  { tvar: 'obdelnik', pravda: 'Úhlopříčky jsou stejně dlouhé, ale nejsou na sebe kolmé.',
+    nepravda: ['Všechny strany jsou stejně dlouhé.', 'Úhlopříčky jsou na sebe kolmé.', 'Nemá žádnou osu souměrnosti.'] },
+  { tvar: 'kosoctverec', pravda: 'Úhlopříčky jsou na sebe kolmé a půlí vnitřní úhly.',
+    nepravda: ['Všechny vnitřní úhly jsou pravé.', 'Úhlopříčky jsou stejně dlouhé.', 'Protější strany nejsou rovnoběžné.'] },
+  { tvar: 'kosodelnik', pravda: 'Protější strany jsou rovnoběžné a stejně dlouhé, úhly nejsou pravé.',
+    nepravda: ['Má čtyři pravé úhly.', 'Všechny strany jsou stejně dlouhé.', 'Má právě jednu dvojici rovnoběžných stran.'] },
+  { tvar: 'lichobeznik', pravda: 'Má právě jednu dvojici rovnoběžných stran – základny.',
+    nepravda: ['Obě dvojice protějších stran jsou rovnoběžné.', 'Všechny strany jsou stejně dlouhé.', 'Úhlopříčky se vždy půlí.'] },
+  { tvar: 'deltoid', pravda: 'Jedna úhlopříčka je osou souměrnosti a půlí tu druhou.',
+    nepravda: ['Protější strany jsou rovnoběžné.', 'Všechny úhly jsou pravé.', 'Obě úhlopříčky jsou stejně dlouhé.'] },
+];
+function vlastnosti() {
+  const p = $('plocha');
+  const u = Uloha.nahodne(TVRZENI);
+  p.innerHTML = `<div class="zadani">Které tvrzení platí pro tvar <b>${TVARY[u.tvar].nazev}</b>?</div>
+    <div class="karta">${svgTvar(u.tvar)}</div>`;
+  const odezva = odezvaEl();
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([u.pravda, ...u.nepravda]).map(t => ({ klic: t, popis: t })),
+    spravnyKlic: u.pravda,
+    zpravaOk: `✅ ${u.pravda}`,
+    zpravaChyba: 'Zkus si tvar nakreslit a ověřit, co platí pro strany a úhlopříčky.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Obsah a obvod -------------------------------------------------------------------------- */
+function obsah() {
+  const p = $('plocha');
+  const typ = Uloha.nahodne(['rovnobeznik', 'lichobeznik', 'obdelnik']);
+  let zadani, vysledek, vzorec, jednotka = 'cm²', kota, tvar;
+
+  if (typ === 'rovnobeznik') {
+    const a = Uloha.nahodneCislo(4, 15), v = Uloha.nahodneCislo(3, 12);
+    vysledek = a * v;
+    vzorec = `S = a · v = ${a} · ${v} = ${vysledek} cm²`;
+    zadani = `Rovnoběžník má stranu <b>a = ${a} cm</b> a výšku k ní <b>v = ${v} cm</b>. Jaký má obsah?`;
+    tvar = 'kosodelnik';
+    kota = `<line class="vyska" x1="120" y1="50" x2="120" y2="170"/>
+      <text class="kota" x="140" y="115">v = ${v}</text>
+      <text class="kota" x="120" y="192">a = ${a}</text>`;
+  } else if (typ === 'lichobeznik') {
+    const a = Uloha.nahodneCislo(6, 16), c = Uloha.nahodneCislo(2, a - 1);
+    const v = Uloha.nahodneCislo(1, 6) * 2;            // sudá výška, ať výsledek vyjde hezky
+    vysledek = (a + c) / 2 * v;
+    vzorec = `S = (a + c)/2 · v = (${a} + ${c})/2 · ${v} = ${fmt(vysledek)} cm²`;
+    zadani = `Lichoběžník má základny <b>a = ${a} cm</b>, <b>c = ${c} cm</b> a výšku <b>v = ${v} cm</b>.
+      Jaký má obsah?`;
+    tvar = 'lichobeznik';
+    kota = `<line class="vyska" x1="125" y1="50" x2="125" y2="170"/>
+      <text class="kota" x="147" y="115">v = ${v}</text>
+      <text class="kota" x="125" y="192">a = ${a}</text>
+      <text class="kota" x="125" y="42">c = ${c}</text>`;
+  } else {
+    const a = Uloha.nahodneCislo(4, 18), b = Uloha.nahodneCislo(3, 12);
+    const ptameSeNaObvod = Math.random() < 0.5;
+    vysledek = ptameSeNaObvod ? 2 * (a + b) : a * b;
+    jednotka = ptameSeNaObvod ? 'cm' : 'cm²';
+    vzorec = ptameSeNaObvod ? `o = 2·(a + b) = 2·(${a} + ${b}) = ${vysledek} cm`
+      : `S = a · b = ${a} · ${b} = ${vysledek} cm²`;
+    zadani = `Obdélník má strany <b>a = ${a} cm</b> a <b>b = ${b} cm</b>.
+      Jaký má ${ptameSeNaObvod ? 'obvod' : 'obsah'}?`;
+    tvar = 'obdelnik';
+    kota = `<text class="kota" x="120" y="190">a = ${a}</text>
+      <text class="kota" x="238" y="115">b</text>`;
+  }
+
+  const jine = new Set();
+  let pojistka = 0;
+  while (jine.size < 3 && pojistka++ < 200) {
+    const x = Uloha.nahodne([vysledek * 2, vysledek / 2, vysledek + 10, vysledek - 6, Math.round(vysledek * 1.5)]);
+    if (x > 0 && Math.abs(x - vysledek) > 0.001) jine.add(fmt(x) + ' ' + jednotka);
+  }
+
+  p.innerHTML = `<div class="zadani uloha-text">${zadani}</div>
+    <div class="karta">${svgTvar(tvar, kota)}</div>`;
+  const odezva = odezvaEl();
+  Uloha.vyber({
+    kam: p, odezva, trida: 'velke',
+    moznosti: Uloha.zamichej([fmt(vysledek) + ' ' + jednotka, ...jine]).map(t => ({ klic: t, popis: t })),
+    spravnyKlic: fmt(vysledek) + ' ' + jednotka,
+    zpravaOk: `✅ ${vzorec}`,
+    zpravaChyba: 'Dosaď do vzorce – pozor, výška je vždy kolmá vzdálenost, ne délka ramene.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Hranol ------------------------------------------------------------------------------------ */
+function svgHranol() {
+  return `<svg class="tvar" viewBox="0 0 240 200">
+    <polygon class="stena" points="30,60 150,60 150,160 30,160"/>
+    <polygon class="hrana" points="30,60 70,25 190,25 150,60" fill="var(--bg-elevated)"/>
+    <polygon class="hrana" points="150,60 190,25 190,125 150,160" fill="var(--bg-elevated)"/>
+    <line class="hrana skryta" x1="30" y1="160" x2="70" y2="125"/>
+    <line class="hrana skryta" x1="70" y1="125" x2="190" y2="125"/>
+    <line class="hrana skryta" x1="70" y1="125" x2="70" y2="25"/>
+  </svg>`;
+}
+function hranol() {
+  const p = $('plocha');
+  const a = Uloha.nahodneCislo(3, 12), b = Uloha.nahodneCislo(2, 9), v = Uloha.nahodneCislo(3, 15);
+  const Sp = a * b, objem = Sp * v;
+  const povrch = 2 * Sp + 2 * (a + b) * v;
+  const ptameSeNaObjem = Math.random() < 0.5;
+  const vysledek = ptameSeNaObjem ? objem : povrch;
+  const jednotka = ptameSeNaObjem ? 'cm³' : 'cm²';
+
+  const jine = new Set();
+  let pojistka = 0;
+  while (jine.size < 3 && pojistka++ < 200) {
+    const x = Uloha.nahodne([ptameSeNaObjem ? povrch : objem, vysledek * 2, vysledek / 2, Sp * v + Sp, vysledek + 2 * Sp]);
+    if (x > 0 && Math.abs(x - vysledek) > 0.001) jine.add(fmt(x) + ' ' + jednotka);
+  }
+
+  p.innerHTML = `<div class="zadani uloha-text">Kolmý hranol má obdélníkovou podstavu
+      <b>${a} cm × ${b} cm</b> a výšku <b>${v} cm</b>.
+      Jaký má ${ptameSeNaObjem ? 'objem' : 'povrch'}?</div>
+    <div class="karta">${svgHranol()}
+      <div class="vzorec">S<sub>p</sub> = ${a} · ${b} = ${Sp} cm²</div></div>`;
+  const odezva = odezvaEl();
+  Uloha.vyber({
+    kam: p, odezva, trida: 'velke',
+    moznosti: Uloha.zamichej([fmt(vysledek) + ' ' + jednotka, ...jine]).map(t => ({ klic: t, popis: t })),
+    spravnyKlic: fmt(vysledek) + ' ' + jednotka,
+    zpravaOk: ptameSeNaObjem
+      ? `✅ V = S_p · v = ${Sp} · ${v} = ${objem} cm³`
+      : `✅ S = 2·S_p + o·v = 2·${Sp} + ${2 * (a + b)}·${v} = ${povrch} cm²`,
+    zpravaChyba: ptameSeNaObjem
+      ? 'Objem = obsah podstavy krát výška hranolu.'
+      : 'Povrch = dvě podstavy + plášť (obvod podstavy krát výška).',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+const REZIMY = { poznej, vlastnosti, obsah, hranol };
+function novaUloha() { REZIMY[rezim](); }
+
+document.querySelectorAll('#rezimy button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#rezimy button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  rezim = b.dataset.rezim;
+  novaUloha();
+}));
+$('btnDalsi').addEventListener('click', novaUloha);
+novaUloha();
+</script>
+</body>
+</html>

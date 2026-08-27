@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Zlomky – části celku</title>
+  <link rel="stylesheet" href="../common.css">
+  <link rel="stylesheet" href="../vyuka.css">
+  <script src="../theme.js"></script>
+  <script src="../rec.js"></script>
+  <script src="../uloha.js"></script>
+  <style>
+    .kolac { width: min(240px, 60vw); }
+    .kolac path { stroke: var(--bg-deep); stroke-width: 2; cursor: pointer; }
+    .kolac path.prazdna { fill: var(--bg-control); }
+    .kolac path.plna { fill: var(--accent); }
+    .kolac path.spravne { fill: var(--ok); }
+    .zlomek {
+      display: inline-flex; flex-direction: column; align-items: center;
+      font-size: clamp(1.6rem, 6vw, 2.4rem); font-weight: 700; line-height: 1.1;
+    }
+    .zlomek .citatel { border-bottom: 3px solid currentColor; padding: 0 10px; }
+    .dva-zlomky { display: flex; gap: 30px; align-items: center; justify-content: center; }
+  </style>
+</head>
+<body>
+  <h1>🍕 Zlomky – části celku</h1>
+  <p class="podtitul">Pro 4.–5. ročník: zápis části celku zlomkem, vybarvování a porovnávání.</p>
+
+  <div class="rezimy" id="rezimy">
+    <button data-rezim="prectiZlomek" class="active">👀 Jaký je to zlomek?</button>
+    <button data-rezim="vybarvi">🖍️ Vybarvi zlomek</button>
+    <button data-rezim="porovnej">⚖️ Co je víc?</button>
+    <button data-rezim="zCelku">🧮 Část z počtu</button>
+  </div>
+
+  <div class="plocha" id="plocha"></div>
+
+  <div class="ovladani">
+    <button class="hlavni" id="btnDalsi">Přeskočit →</button>
+    <span class="skore" id="skore"></span>
+  </div>
+
+  <p class="napoveda">
+    <b>Jmenovatel</b> (dole) říká, na kolik stejných dílů je celek rozdělený.
+    <b>Čitatel</b> (nahoře) říká, kolik dílů bereme. Čím víc dílů celek má, tím je každý menší.
+  </p>
+
+<script>
+const $ = id => document.getElementById(id);
+const skore = Uloha.skore('nodus_m4_zlomky', $('skore'));
+let rezim = 'prectiZlomek';
+
+const zlomekHtml = (c, j) =>
+  `<span class="zlomek"><span class="citatel">${c}</span><span>${j}</span></span>`;
+
+/* jeden díl koláče jako SVG cesta */
+function vysec(i, n, r = 74, cx = 90, cy = 90) {
+  const a1 = (i / n) * 2 * Math.PI - Math.PI / 2;
+  const a2 = ((i + 1) / n) * 2 * Math.PI - Math.PI / 2;
+  const x1 = cx + r * Math.cos(a1), y1 = cy + r * Math.sin(a1);
+  const x2 = cx + r * Math.cos(a2), y2 = cy + r * Math.sin(a2);
+  const velky = (a2 - a1) > Math.PI ? 1 : 0;
+  return `M${cx} ${cy} L${x1.toFixed(1)} ${y1.toFixed(1)} `
+    + `A${r} ${r} 0 ${velky} 1 ${x2.toFixed(1)} ${y2.toFixed(1)} Z`;
+}
+
+function kolac(n, obarvene) {
+  let cesty = '';
+  for (let i = 0; i < n; i++) {
+    cesty += `<path class="${obarvene.includes(i) ? 'plna' : 'prazdna'}" data-i="${i}" d="${vysec(i, n)}"/>`;
+  }
+  return `<svg class="kolac" viewBox="0 0 180 180">${cesty}</svg>`;
+}
+
+/* ---- Jaký je to zlomek? ----------------------------------------------------- */
+function prectiZlomek() {
+  const p = $('plocha');
+  const j = Uloha.nahodne([2, 3, 4, 5, 6, 8]);
+  const c = Uloha.nahodneCislo(1, j - 1);
+  const obarvene = [...Array(c).keys()];
+
+  p.innerHTML = `<div class="zadani">Jaká část koláče je vybarvená?</div>
+    <div class="karta">${kolac(j, obarvene)}</div>`;
+
+  /* Nabídka nesmí obsahovat zlomek se stejnou hodnotou (3/6 = 1/2) – jinak by
+     byly správné dvě možnosti. Klíčem je proto hodnota zlomku, ne jeho zápis,
+     takže i případný krácený tvar se uzná jako správný. */
+  const hodnota = c / j;
+  const jine = new Set();
+  let pokusu1 = 0;
+  while (jine.size < 3 && pokusu1++ < 200) {
+    const jj = Uloha.nahodne([2, 3, 4, 5, 6, 8]);
+    const cc = Uloha.nahodneCislo(1, jj - 1);
+    if (Math.abs(cc / jj - hodnota) > 1e-9) jine.add(`${cc}/${jj}`);
+  }
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([`${c}/${j}`, ...jine]).map(t => {
+      const [cc, jj] = t.split('/');
+      return { klic: String(+(cc / jj).toFixed(6)), popis: zlomekHtml(cc, jj) };
+    }),
+    spravnyKlic: String(+hodnota.toFixed(6)),
+    zpravaOk: `✅ Celek má ${j} dílů a vybarvené jsou ${c} – to je ${c}/${j}.`,
+    zpravaChyba: 'Spočítej nejdřív všechny díly, pak jen ty vybarvené.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Vybarvi zlomek --------------------------------------------------------- */
+function vybarvi() {
+  const p = $('plocha');
+  const j = Uloha.nahodne([3, 4, 5, 6, 8]);
+  const c = Uloha.nahodneCislo(1, j - 1);
+
+  p.innerHTML = `<div class="zadani">Vybarvi ${zlomekHtml(c, j)} koláče – klepej na díly.</div>
+    <div class="karta">${kolac(j, [])}</div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  p.appendChild(odezva);
+
+  const svg = p.querySelector('svg');
+  let chyboval = false, hotovo = false;
+
+  function prekresli() {
+    const vybrane = svg.querySelectorAll('path.plna').length;
+    odezva.className = 'odezva';
+    odezva.textContent = `Vybarveno ${vybrane} z ${c} dílů.`;
+    if (vybrane === c) {
+      hotovo = true;
+      svg.querySelectorAll('path.plna').forEach(x => x.classList.add('spravne'));
+      odezva.className = 'odezva ok';
+      odezva.textContent = `✅ Správně – ${c} z ${j} dílů je ${c}/${j}.`;
+      skore.vyhodnot(!chyboval);
+      setTimeout(novaUloha, Uloha.PRODLEVA + 300);
+    } else if (vybrane > c) {
+      chyboval = true;
+      Uloha.trhni(svg);
+      odezva.className = 'odezva chyba';
+      odezva.textContent = `To je moc – potřebujeme jen ${c} díly. Klepnutím díl zase odbarvíš.`;
+    }
+  }
+
+  svg.querySelectorAll('path').forEach(cast => {
+    cast.addEventListener('click', () => {
+      if (hotovo) return;
+      cast.classList.toggle('plna');
+      cast.classList.toggle('prazdna');
+      prekresli();
+    });
+  });
+}
+
+/* ---- Co je víc? -------------------------------------------------------------- */
+function porovnej() {
+  const p = $('plocha');
+  const stejnyJmenovatel = Math.random() < 0.5;
+  let a, b;
+  if (stejnyJmenovatel) {
+    const j = Uloha.nahodne([4, 5, 6, 8]);
+    const c1 = Uloha.nahodneCislo(1, j - 1);
+    let c2 = Uloha.nahodneCislo(1, j - 1);
+    while (c2 === c1) c2 = Uloha.nahodneCislo(1, j - 1);
+    a = { c: c1, j }; b = { c: c2, j };
+  } else {
+    const c = 1;
+    const j1 = Uloha.nahodne([2, 3, 4]);
+    let j2 = Uloha.nahodne([5, 6, 8]);
+    a = { c, j: j1 }; b = { c, j: j2 };
+  }
+  if (Math.abs(a.c / a.j - b.c / b.j) < 1e-9) return porovnej();   // stejná hodnota nedává smysl
+  const vetsi = (a.c / a.j > b.c / b.j) ? 'a' : 'b';
+
+  p.innerHTML = `<div class="zadani">Který zlomek je větší?</div>
+    <div class="karta"><div class="dva-zlomky">
+      <div>${kolac(a.j, [...Array(a.c).keys()])}${zlomekHtml(a.c, a.j)}</div>
+      <div>${kolac(b.j, [...Array(b.c).keys()])}${zlomekHtml(b.c, b.j)}</div>
+    </div></div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva, trida: 'dve',
+    moznosti: [
+      { klic: 'a', popis: `vlevo ${a.c}/${a.j}` },
+      { klic: 'b', popis: `vpravo ${b.c}/${b.j}` },
+    ],
+    spravnyKlic: vetsi,
+    zpravaOk: stejnyJmenovatel
+      ? '✅ Při stejném jmenovateli je větší ten zlomek, který má větší čitatele.'
+      : '✅ Čím větší jmenovatel, tím menší díly – proto je větší zlomek s menším jmenovatelem.',
+    zpravaChyba: 'Porovnej vybarvené části na obrázku.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Část z počtu ------------------------------------------------------------ */
+function zCelku() {
+  const p = $('plocha');
+  const j = Uloha.nahodne([2, 3, 4, 5]);
+  const dil = Uloha.nahodneCislo(2, 8);
+  const celek = j * dil;
+  const c = Uloha.nahodneCislo(1, j - 1);
+  const vysledek = dil * c;
+
+  p.innerHTML = `<div class="zadani">Kolik je ${zlomekHtml(c, j)} z ${celek}?</div>
+    <div class="karta"><div class="obrazek">🍬</div>
+    <div class="popis">${celek} bonbonů rozdělíme na ${j} stejné části</div></div>`;
+
+  const jine = new Set();
+  let pokusu2 = 0;
+  while (jine.size < 3 && pokusu2++ < 200) {
+    const k = vysledek + Uloha.nahodne([-dil, dil, -1, 1, 2 * dil]);
+    if (k !== vysledek && k > 0) jine.add(k);
+  }
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva, trida: 'velke',
+    moznosti: Uloha.zamichej([vysledek, ...jine]).map(v => ({ klic: String(v), popis: String(v) })),
+    spravnyKlic: String(vysledek),
+    zpravaOk: `✅ ${celek} : ${j} = ${dil}, a ${dil} × ${c} = ${vysledek}`,
+    zpravaChyba: `Nejdřív vyděl ${celek} jmenovatelem ${j}, pak vynásob čitatelem ${c}.`,
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+const REZIMY = { prectiZlomek, vybarvi, porovnej, zCelku };
+function novaUloha() { REZIMY[rezim](); }
+
+document.querySelectorAll('#rezimy button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#rezimy button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  rezim = b.dataset.rezim;
+  novaUloha();
+}));
+$('btnDalsi').addEventListener('click', novaUloha);
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === 'Enter') { e.preventDefault(); novaUloha(); }
+});
+novaUloha();
+</script>
+</body>
+</html>

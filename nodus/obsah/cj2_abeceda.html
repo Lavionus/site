@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Abeceda a řazení slov</title>
+  <link rel="stylesheet" href="../common.css">
+  <link rel="stylesheet" href="../vyuka.css">
+  <script src="../theme.js"></script>
+  <script src="../rec.js"></script>
+  <script src="../uloha.js"></script>
+  <style>
+    .abeceda-pas {
+      display: flex; flex-wrap: wrap; gap: 5px; justify-content: center; max-width: 700px;
+    }
+    .abeceda-pas span {
+      min-width: 34px; padding: 7px 4px; border-radius: 6px;
+      background: var(--bg-elevated); border: 1px solid var(--border);
+      font-size: 1.1rem; font-weight: 700;
+    }
+    .abeceda-pas span.mezera { border-color: var(--accent); color: var(--accent); border-style: dashed; }
+    .abeceda-pas span.doplneno { border-color: var(--ok); color: var(--ok); border-style: solid; }
+    .prehled-abecedy {
+      max-width: 900px; margin-top: 12px; color: var(--text-faint); font-size: 0.78rem;
+      letter-spacing: 0.08em; word-spacing: 0.2em;
+    }
+  </style>
+</head>
+<body>
+  <h1>🔤 Abeceda a řazení slov</h1>
+  <p class="podtitul">Pro 2.–3. ročník: pořadí písmen v abecedě a řazení slov podle abecedy.</p>
+
+  <div class="rezimy" id="rezimy">
+    <button data-rezim="chybejici" class="active">🔡 Chybějící písmeno</button>
+    <button data-rezim="prvni">1️⃣ Které je první?</button>
+    <button data-rezim="serad">↕️ Seřaď slova</button>
+  </div>
+
+  <div class="plocha" id="plocha"></div>
+
+  <div class="ovladani">
+    <button class="hlavni" id="btnDalsi">Přeskočit →</button>
+    <span class="skore" id="skore"></span>
+  </div>
+
+  <p class="napoveda">
+    Slova řadíme podle <b>prvního písmene</b>. Když se shoduje, rozhoduje druhé, pak třetí…
+    Písmena s háčky a čárkami (á, č, ř, š, ž) mají v abecedě své místo hned za základním písmenem.
+  </p>
+  <div class="prehled-abecedy" id="prehledAbecedy"></div>
+
+<script>
+const $ = id => document.getElementById(id);
+
+const ABECEDA = [...'AÁBCČDĎEÉĚFGHIÍJKLMNŇOÓPQRŘSŠTŤUÚŮVWXYÝZŽ'];
+/* pro řazení slov stačí zjednodušená abeceda bez délek – tak se řadí i ve slovníku */
+const ZAKLADNI = [...'ABCČDEFGHIJKLMNOPQRŘSŠTUVWXYZŽ'];
+
+const SLOVA = [
+  'auto', 'balón', 'cesta', 'čáp', 'dům', 'ementál', 'fialka', 'guma', 'hrad', 'chleba',
+  'iglú', 'jablko', 'kolo', 'lampa', 'míč', 'noha', 'okno', 'pes', 'ryba', 'řeka',
+  'sova', 'škola', 'talíř', 'ulice', 'váza', 'zebra', 'žirafa', 'zahrada', 'strom', 'slunce',
+  'motýl', 'medvěd', 'mléko', 'krtek', 'kráva', 'koza', 'liška', 'lopata', 'brambora', 'buk',
+  'pero', 'papír', 'police', 'tráva', 'tužka', 'vlak', 'voda', 'houba', 'hory', 'čokoláda',
+];
+
+const skore = Uloha.skore('nodus_cj2_abeceda', $('skore'));
+let rezim = 'chybejici';
+
+$('prehledAbecedy').textContent = ABECEDA.join(' ');
+
+/* Klíč pro porovnání slov: písmena s háčky/čárkami se řadí za základní písmeno. */
+function klicRazeni(slovo) {
+  const mapa = { 'á': 'a', 'é': 'e', 'ě': 'e', 'í': 'i', 'ó': 'o', 'ú': 'u', 'ů': 'u', 'ý': 'y' };
+  return [...slovo.toLowerCase()].map(z => mapa[z] || z).join('');
+}
+function poradiSlov(pole) {
+  return [...pole].sort((a, b) => klicRazeni(a).localeCompare(klicRazeni(b), 'cs'));
+}
+
+/* ---- Chybějící písmeno ---------------------------------------------------- */
+function chybejici() {
+  const p = $('plocha');
+  const start = Uloha.nahodneCislo(0, ABECEDA.length - 5);
+  const usek = ABECEDA.slice(start, start + 5);
+  const kde = Uloha.nahodneCislo(1, 3);
+  const hledane = usek[kde];
+
+  p.innerHTML = '<div class="zadani">Které písmeno v abecedě chybí?</div>';
+  const pas = document.createElement('div');
+  pas.className = 'abeceda-pas';
+  usek.forEach((z, i) => {
+    const el = document.createElement('span');
+    el.textContent = i === kde ? '?' : z;
+    if (i === kde) el.className = 'mezera';
+    pas.appendChild(el);
+  });
+  p.appendChild(pas);
+
+  const jine = Uloha.zamichej(ABECEDA.filter(z => !usek.includes(z))).slice(0, 3);
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva, trida: 'velke',
+    moznosti: Uloha.zamichej([hledane, ...jine]).map(z => ({ klic: z, popis: z })),
+    spravnyKlic: hledane,
+    zpravaOk: '✅ Správně – ' + usek.join(' ') + '.',
+    zpravaChyba: 'Ještě ne. Zopakuj si abecedu pod úlohou.',
+    poSpravne: napoprve => {
+      skore.vyhodnot(napoprve);
+      const m = pas.querySelector('.mezera');
+      m.textContent = hledane;
+      m.className = 'doplneno';
+    },
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Které slovo je v abecedě první? -------------------------------------- */
+function prvni() {
+  const p = $('plocha');
+  const vyber = Uloha.zamichej(SLOVA).slice(0, 4);
+  const prvniSlovo = poradiSlov(vyber)[0];
+  p.innerHTML = '<div class="zadani">Které slovo by bylo ve slovníku <b>první</b>?</div>';
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: vyber.map(s => ({ klic: s, popis: s })),
+    spravnyKlic: prvniSlovo,
+    zpravaOk: '✅ Správně. Pořadí: ' + poradiSlov(vyber).join(' → '),
+    zpravaChyba: 'Porovnej první písmena slov.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Seřaď slova ---------------------------------------------------------- */
+function serad() {
+  const p = $('plocha');
+  const vyber = Uloha.zamichej(SLOVA).slice(0, 5);
+  const spravnePoradi = poradiSlov(vyber);
+
+  p.innerHTML = '<div class="zadani">Seřaď slova podle abecedy – klepej popořadě.</div>';
+  const porada = document.createElement('div');
+  porada.className = 'porada';
+  const nabidka = document.createElement('div');
+  nabidka.className = 'nabidka';
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+
+  let dalsiIndex = 0, chyboval = false;
+  Uloha.zamichej(vyber).forEach(slovo => {
+    const b = document.createElement('button');
+    b.textContent = slovo;
+    b.dataset.slovo = slovo;
+    b.addEventListener('click', () => {
+      if (b.disabled) return;
+      if (slovo === spravnePoradi[dalsiIndex]) {
+        const el = document.createElement('span');
+        el.className = 'polozka';
+        el.innerHTML = `<span class="cislo">${dalsiIndex + 1}.</span>${slovo}`;
+        porada.appendChild(el);
+        b.disabled = true;
+        dalsiIndex++;
+        odezva.className = 'odezva ok';
+        odezva.textContent = '✅ Správně!';
+        if (dalsiIndex === spravnePoradi.length) {
+          odezva.textContent = '🎉 Seřazeno správně!';
+          skore.vyhodnot(!chyboval);
+          setTimeout(novaUloha, Uloha.PRODLEVA + 500);
+        }
+      } else {
+        chyboval = true;
+        Uloha.trhni(b);
+        odezva.className = 'odezva chyba';
+        odezva.textContent = dalsiIndex === 0
+          ? 'Začni slovem, které je v abecedě nejdřív.'
+          : `Po slově „${spravnePoradi[dalsiIndex - 1]}“ následuje jiné.`;
+      }
+    });
+    nabidka.appendChild(b);
+  });
+  p.append(porada, nabidka, odezva);
+}
+
+const REZIMY = { chybejici, prvni, serad };
+function novaUloha() { REZIMY[rezim](); }
+
+document.querySelectorAll('#rezimy button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#rezimy button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  rezim = b.dataset.rezim;
+  novaUloha();
+}));
+$('btnDalsi').addEventListener('click', novaUloha);
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === 'Enter') { e.preventDefault(); novaUloha(); }
+});
+novaUloha();
+</script>
+</body>
+</html>

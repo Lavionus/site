@@ -1,0 +1,209 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Zájmena a číslovky</title>
+  <link rel="stylesheet" href="../common.css">
+  <link rel="stylesheet" href="../vyuka.css">
+  <script src="../theme.js"></script>
+  <script src="../rec.js"></script>
+  <script src="../uloha.js"></script>
+  <style>
+    .slovo-velke { font-size: clamp(1.7rem, 6vw, 2.6rem); font-weight: 700; }
+    .veta { font-size: clamp(1.1rem, 4vw, 1.6rem); font-weight: 600; max-width: 620px; line-height: 1.45; }
+    .veta .mezera { color: var(--accent); border-bottom: 3px solid var(--accent); padding: 0 10px; }
+    .prehled { display: flex; gap: 7px; flex-wrap: wrap; justify-content: center; max-width: 900px; margin-top: 12px; }
+    .prehled span {
+      background: var(--bg-panel); border: 1px solid var(--border); border-radius: 8px;
+      padding: 5px 10px; font-size: 0.76rem; color: var(--text-muted);
+    }
+    .prehled b { color: var(--text); }
+  </style>
+</head>
+<body>
+  <h1>🔢 Zájmena a číslovky</h1>
+  <p class="podtitul">Pro 5.–6. ročník: druhy zájmen a číslovek, pravopis mě/mně a mně/mě.</p>
+
+  <div class="rezimy" id="rezimy">
+    <button data-rezim="druhZajmena" class="active">🙋 Druh zájmena</button>
+    <button data-rezim="druhCislovky">🔢 Druh číslovky</button>
+    <button data-rezim="meMne">✍️ mě, nebo mně?</button>
+    <button data-rezim="poznej">🔍 Zájmeno, či číslovka?</button>
+  </div>
+
+  <div class="plocha" id="plocha"></div>
+
+  <div class="ovladani">
+    <button class="hlavni" id="btnDalsi">Přeskočit →</button>
+    <span class="skore" id="skore"></span>
+  </div>
+
+  <div class="prehled" id="prehled"></div>
+
+  <p class="napoveda">
+    Pomůcka na <b>mě/mně</b>: dosaď si <i>tebe</i> nebo <i>tobě</i>.
+    Kde se hodí <b>tebe</b>, píšeš <b>mě</b>; kde <b>tobě</b>, píšeš <b>mně</b>.
+  </p>
+
+<script>
+const $ = id => document.getElementById(id);
+const skore = Uloha.skore('nodus_cj5_zajmena', $('skore'));
+let rezim = 'druhZajmena';
+
+const DRUHY_ZAJMEN = {
+  osobni: 'osobní (já, ty, on, se)',
+  privlastnovaci: 'přivlastňovací (můj, tvůj, svůj)',
+  ukazovaci: 'ukazovací (ten, tento, onen)',
+  tazaci: 'tázací (kdo, co, jaký, který)',
+  vztazna: 'vztažná (kdo, co, jenž – uvozují vedlejší větu)',
+  neurcita: 'neurčitá (někdo, něco, každý)',
+  zaporna: 'záporná (nikdo, nic, žádný)',
+};
+
+const ZAJMENA = [
+  { z: 'já', d: 'osobni' }, { z: 'ty', d: 'osobni' }, { z: 'oni', d: 'osobni' }, { z: 'se', d: 'osobni' },
+  { z: 'můj', d: 'privlastnovaci' }, { z: 'tvoje', d: 'privlastnovaci' }, { z: 'svůj', d: 'privlastnovaci' },
+  { z: 'ten', d: 'ukazovaci' }, { z: 'tato', d: 'ukazovaci' }, { z: 'onen', d: 'ukazovaci' },
+  { z: 'kdo', d: 'tazaci' }, { z: 'jaký', d: 'tazaci' }, { z: 'který', d: 'tazaci' },
+  { z: 'někdo', d: 'neurcita' }, { z: 'každý', d: 'neurcita' }, { z: 'několik', d: 'neurcita' },
+  { z: 'nikdo', d: 'zaporna' }, { z: 'nic', d: 'zaporna' }, { z: 'žádný', d: 'zaporna' },
+];
+
+const DRUHY_CISLOVEK = {
+  zakladni: 'základní (kolik? – pět, deset)',
+  radove: 'řadové (kolikátý? – pátý, desátý)',
+  druhove: 'druhové (kolikery? – dvoje, patery)',
+  nasobne: 'násobné (kolikrát? – dvakrát, pětkrát)',
+};
+
+const CISLOVKY = [
+  { c: 'pět', d: 'zakladni' }, { c: 'dvanáct', d: 'zakladni' }, { c: 'sto', d: 'zakladni' },
+  { c: 'druhý', d: 'radove' }, { c: 'pátý', d: 'radove' }, { c: 'dvacátý', d: 'radove' },
+  { c: 'dvoje', d: 'druhove' }, { c: 'troje', d: 'druhove' }, { c: 'patery', d: 'druhove' },
+  { c: 'dvakrát', d: 'nasobne' }, { c: 'pětkrát', d: 'nasobne' }, { c: 'mnohokrát', d: 'nasobne' },
+];
+
+const ME_MNE = [
+  { v: 'Počkej na _.', spr: 'mě', proc: 'počkej na tebe → mě (4. pád)' },
+  { v: 'Dej _ tu knihu.', spr: 'mně', proc: 'dej tobě → mně (3. pád)' },
+  { v: 'Bez _ tam nechoď.', spr: 'mě', proc: 'bez tebe → mě (2. pád)' },
+  { v: 'Řekni _ pravdu.', spr: 'mně', proc: 'řekni tobě → mně (3. pád)' },
+  { v: 'Mluvili o _.', spr: 'mně', proc: 'mluvili o tobě → mně (6. pád)' },
+  { v: 'Viděl _ na hřišti.', spr: 'mě', proc: 'viděl tebe → mě (4. pád)' },
+  { v: 'Pomoz _ prosím.', spr: 'mně', proc: 'pomoz tobě → mně (3. pád)' },
+  { v: 'Ptali se _ na cestu.', spr: 'mě', proc: 'ptali se tebe → mě (2. pád)' },
+];
+
+$('prehled').innerHTML = Object.values(DRUHY_ZAJMEN).map(t => `<span>${t}</span>`).join('');
+
+/* ---- Druh zájmena ------------------------------------------------------------- */
+function druhZajmena() {
+  const p = $('plocha');
+  const u = Uloha.nahodne(ZAJMENA);
+  const jine = Uloha.zamichej(Object.keys(DRUHY_ZAJMEN).filter(d => d !== u.d && d !== 'vztazna')).slice(0, 3);
+  p.innerHTML = `<div class="zadani">Jaký druh zájmena to je?</div>
+    <div class="karta"><div class="slovo-velke">${u.z}</div></div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([u.d, ...jine]).map(d => ({ klic: d, popis: DRUHY_ZAJMEN[d].split(' (')[0] })),
+    spravnyKlic: u.d,
+    zpravaOk: `✅ ${u.z} je zájmeno ${DRUHY_ZAJMEN[u.d]}.`,
+    zpravaChyba: 'Zkontroluj si přehled druhů pod úlohou.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Druh číslovky ------------------------------------------------------------- */
+function druhCislovky() {
+  const p = $('plocha');
+  const u = Uloha.nahodne(CISLOVKY);
+  p.innerHTML = `<div class="zadani">Jaký druh číslovky to je?</div>
+    <div class="karta"><div class="slovo-velke">${u.c}</div></div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej(Object.entries(DRUHY_CISLOVEK))
+      .map(([klic, popis]) => ({ klic, popis: popis.split(' (')[0] })),
+    spravnyKlic: u.d,
+    zpravaOk: `✅ ${u.c} je číslovka ${DRUHY_CISLOVEK[u.d]}.`,
+    zpravaChyba: 'Zeptej se: kolik? kolikátý? kolikery? kolikrát?',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- mě, nebo mně? ------------------------------------------------------------- */
+function meMne() {
+  const p = $('plocha');
+  const u = Uloha.nahodne(ME_MNE);
+  p.innerHTML = `<div class="zadani">Doplň správný tvar:</div>
+    <div class="karta"><div class="veta">${u.v.replace('_', '<span class="mezera">?</span>')}</div></div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva, trida: 'velke',
+    moznosti: Uloha.zamichej([{ klic: 'mě', popis: 'mě' }, { klic: 'mně', popis: 'mně' }]),
+    spravnyKlic: u.spr,
+    zpravaOk: `✅ ${u.v.replace('_', u.spr)} – ${u.proc}`,
+    zpravaChyba: 'Dosaď si tebe / tobě: tebe → mě, tobě → mně.',
+    poSpravne: napoprve => {
+      skore.vyhodnot(napoprve);
+      p.querySelector('.mezera').textContent = u.spr;
+    },
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Zájmeno, či číslovka? ------------------------------------------------------ */
+function poznej() {
+  const p = $('plocha');
+  const jeZajmeno = Math.random() < 0.5;
+  const u = jeZajmeno ? Uloha.nahodne(ZAJMENA) : Uloha.nahodne(CISLOVKY);
+  const slovo = jeZajmeno ? u.z : u.c;
+
+  p.innerHTML = `<div class="zadani">Je to zájmeno, nebo číslovka?</div>
+    <div class="karta"><div class="slovo-velke">${slovo}</div></div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva, trida: 'dve',
+    moznosti: [
+      { klic: 'zajmeno', ikona: '🙋', popis: 'zájmeno' },
+      { klic: 'cislovka', ikona: '🔢', popis: 'číslovka' },
+    ],
+    spravnyKlic: jeZajmeno ? 'zajmeno' : 'cislovka',
+    zpravaOk: jeZajmeno
+      ? `✅ ${slovo} je zájmeno – zastupuje podstatné jméno nebo na ně ukazuje.`
+      : `✅ ${slovo} je číslovka – vyjadřuje počet nebo pořadí.`,
+    zpravaChyba: 'Vyjadřuje to počet či pořadí (číslovka), nebo zastupuje jméno (zájmeno)?',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+const REZIMY = { druhZajmena, druhCislovky, meMne, poznej };
+function novaUloha() { REZIMY[rezim](); }
+
+document.querySelectorAll('#rezimy button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#rezimy button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  rezim = b.dataset.rezim;
+  novaUloha();
+}));
+$('btnDalsi').addEventListener('click', novaUloha);
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === 'Enter') { e.preventDefault(); novaUloha(); }
+});
+novaUloha();
+</script>
+</body>
+</html>

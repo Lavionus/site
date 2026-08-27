@@ -1,0 +1,1357 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>⚖️ Páka a jednoduché stroje</title>
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<style>
+body{height:100vh;overflow:hidden;display:flex;flex-direction:column}
+.horni{display:flex;gap:10px;align-items:center;padding:10px 16px;background:var(--bg-elevated);border-bottom:1px solid var(--border);flex-wrap:wrap}
+.horni h1{font-size:1.05rem;font-weight:600;margin-right:auto}
+.zalozky{display:flex;gap:6px}
+.panel{display:flex;gap:14px;align-items:center;padding:9px 16px;background:var(--bg-panel);border-bottom:1px solid var(--border);flex-wrap:wrap}
+.panel label{font-size:.78rem;color:var(--text-muted);display:flex;align-items:center;gap:7px}
+.panel .hodnota{color:var(--text-faint);min-width:3.2em;font-variant-numeric:tabular-nums}
+input[type=range]{width:110px;accent-color:var(--accent)}
+select{background:var(--bg-input);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:5px 8px;font-size:.8rem}
+button{background:var(--bg-control);border:1px solid var(--border-strong);color:var(--text);border-radius:6px;padding:7px 13px;font-size:.82rem;cursor:pointer}
+button:hover{background:var(--accent);color:#fff;border-color:var(--accent)}
+button.zap{background:var(--accent);color:#fff;border-color:var(--accent)}
+.plocha{flex:1;position:relative;overflow:hidden;background:var(--bg-deep);min-height:0}
+canvas{display:block;width:100%;height:100%;touch-action:none}
+.stav{background:var(--bg-panel);border-top:1px solid var(--border);padding:8px 16px;font-size:.8rem;color:var(--text-muted);display:flex;gap:8px 18px;flex-wrap:wrap;align-items:center}
+.stav b{color:var(--text);font-variant-numeric:tabular-nums}
+.stav .znak{font-size:1rem}
+.info{position:absolute;top:12px;right:12px;width:270px;max-width:calc(100% - 24px);background:var(--bg-elevated);border:1px solid var(--border-strong);border-radius:10px;padding:11px 14px;font-size:.78rem;line-height:1.6;color:var(--text-muted);box-shadow:var(--shadow)}
+.info b{color:var(--text)}
+.info .zavri{position:absolute;top:5px;right:7px;background:none;border:none;color:var(--text-faint);font-size:1rem;padding:0 4px;cursor:pointer}
+.info .zavri:hover{background:none;color:var(--accent)}
+.napoveda{position:absolute;left:12px;bottom:10px;font-size:.74rem;color:var(--text-faint);pointer-events:none}
+.skryto{display:none !important}
+@media(max-width:760px){.info{display:none}.panel{gap:10px;padding:8px 10px}input[type=range]{width:88px}}
+
+/* ovládací prvky jako přehledné dlaždice v panelu */
+.panel{gap:8px}
+.panel label{background:var(--bg-input);border:1px solid var(--border);border-radius:8px;padding:4px 9px;gap:6px}
+.panel input[type=range]{width:88px}
+.panel label:has(input[type=checkbox]){background:var(--bg-control);border-color:var(--border-strong);cursor:pointer;color:var(--text-muted)}
+.panel label:has(input[type=checkbox]:checked){background:var(--accent-soft);border-color:var(--accent);color:var(--text)}
+.panel .hodnota{color:var(--text);font-weight:600}
+.panel label:has(.prepinac){background:none;border:none;padding:0;gap:8px}
+/* Pět režimů se na mobilu do jedné řádky nevejde – musí se zalomit,
+   jinak stránka přetéká do strany. */
+.prepinac{display:inline-flex;flex-wrap:wrap;border:1px solid var(--border-strong);border-radius:8px;overflow:hidden;max-width:100%}
+.prepinac button{border:none;border-radius:0;padding:6px 12px;font-size:.8rem;background:var(--bg-control);color:var(--text-muted)}
+.prepinac button+button{border-left:1px solid var(--border)}
+.prepinac button:hover{background:var(--bg-hover);color:var(--text)}
+.prepinac button.zap,.prepinac button.zap:hover{background:var(--accent);color:#fff}
+</style>
+</head>
+<body>
+<div class="horni">
+  <h1>⚖️ Páka a jednoduché stroje</h1>
+  <div class="zalozky">
+    <button id="tabPaka" class="zap">⚖️ Páka</button>
+    <button id="tabKladka">🏗️ Kladky</button>
+    <button id="tabKola">⚙️ Ozubená kola</button>
+  </div>
+  <button id="btnInfo">❓ Nápověda</button>
+</div>
+
+<div class="panel" id="panelPaka">
+  <label>🔧 <select id="druhPaky" class="jakoTlacitka">
+      <option value="dvoj" data-krat="⚖️ Dvojzvratná">Dvojzvratná (houpačka, nůžky)</option>
+      <option value="jedno" data-krat="🔩 Jednozvratná">Jednozvratná (kolečko, otvírák)</option>
+    </select></label>
+  <label>🧱 Břemeno F₁ <input type="range" id="f1" min="1" max="60" step="1" value="30"><span class="hodnota" id="f1V">30 N</span></label>
+  <label>📏 Rameno r₁ <input type="range" id="r1" min="5" max="60" step="1" value="20"><span class="hodnota" id="r1V">20 cm</span></label>
+  <label>💪 Síla F₂ <input type="range" id="f2" min="1" max="60" step="1" value="15"><span class="hodnota" id="f2V">15 N</span></label>
+  <label>📏 Rameno r₂ <input type="range" id="r2" min="5" max="60" step="1" value="40"><span class="hodnota" id="r2V">40 cm</span></label>
+  <button id="btnDopocti">⚖️ Dopočítat rovnováhu</button>
+  <button id="btnUkol">🎯 Nový úkol</button>
+</div>
+
+<div class="panel skryto" id="panelKladka">
+  <label>🔧 <select id="druhKladky" class="jakoTlacitka">
+      <option value="pevna" data-krat="Pevná kladka">Pevná kladka</option>
+      <option value="kladkostroj" selected data-krat="Kladkostroj">Kladkostroj (volné kladky)</option>
+    </select></label>
+  <label id="lblPocet">🎡 Volné kladky <input type="range" id="pocetKladek" min="1" max="4" step="1" value="1"><span class="hodnota" id="pocetKladekV">1</span></label>
+  <label>🧱 Břemeno <input type="range" id="brem" min="20" max="400" step="10" value="200"><span class="hodnota" id="bremV">200 N</span></label>
+  <label>⬆️ Zvednutí <input type="range" id="zvednuti" min="0" max="50" step="1" value="0"><span class="hodnota" id="zvednutiV">0 cm</span></label>
+  <button id="btnTahni">▶️ Táhnout</button>
+  <button id="btnDolu">🔄 Spustit dolů</button>
+  <button id="btnUkolK">🎯 Nový úkol</button>
+</div>
+
+<div class="panel skryto" id="panelKola">
+  <label>🔧 <select id="rezimKol" class="jakoTlacitka">
+      <option value="dvojice" selected data-krat="⚙️ Dvojice">Dvě kola v záběru</option>
+      <option value="soukoli" data-krat="🔗 Soukolí">Vícestupňové soukolí</option>
+      <option value="hodiny" data-krat="🕐 Hodiny">Hodinový strojek</option>
+      <option value="prevodovka" data-krat="🚗 Převodovka">Převodovka v autě</option>
+      <option value="diferencial" data-krat="🛞 Diferenciál">Diferenciál</option>
+    </select></label>
+  <label data-rezim="dvojice soukoli">⚙️ z₁ <input type="range" id="z1" min="8" max="40" step="1" value="12"><span class="hodnota" id="z1V">12</span></label>
+  <label data-rezim="dvojice soukoli">⚙️ z₂ <input type="range" id="z2" min="8" max="40" step="1" value="30"><span class="hodnota" id="z2V">30</span></label>
+  <label data-rezim="soukoli">⚙️ z₃ <input type="range" id="z3" min="8" max="40" step="1" value="10"><span class="hodnota" id="z3V">10</span></label>
+  <label data-rezim="soukoli">⚙️ z₄ <input type="range" id="z4" min="8" max="40" step="1" value="28"><span class="hodnota" id="z4V">28</span></label>
+  <label data-rezim="dvojice soukoli">🔁 Otáčky <input type="range" id="otacky" min="0" max="120" step="5" value="60"><span class="hodnota" id="otackyV">60/min</span></label>
+  <label data-rezim="dvojice soukoli">💪 Moment <input type="range" id="mom" min="1" max="30" step="1" value="10"><span class="hodnota" id="momV">10 N·m</span></label>
+  <label data-rezim="dvojice"><input type="checkbox" id="mezikolo"> ➕ Mezikolo</label>
+  <label data-rezim="hodiny">⏩ Rychlost času <input type="range" id="hodRychlost" min="1" max="600" step="1" value="60"><span class="hodnota" id="hodRychlostV">60×</span></label>
+  <button data-rezim="hodiny" id="btnHodReset">⏱️ Nastavit na 10:08</button>
+  <label data-rezim="prevodovka">🎚️ <select id="stupen" class="jakoTlacitka">
+      <option value="0" data-krat="N">Neutrál</option>
+      <option value="1" selected data-krat="1">1. stupeň</option>
+      <option value="2" data-krat="2">2. stupeň</option>
+      <option value="3" data-krat="3">3. stupeň</option>
+      <option value="4" data-krat="4">4. stupeň</option>
+      <option value="5" data-krat="5">5. stupeň</option>
+      <option value="6" data-krat="R">Zpátečka</option>
+    </select></label>
+  <label data-rezim="prevodovka">🏎️ Otáčky motoru <input type="range" id="otackyMotor" min="800" max="6000" step="100" value="2500"><span class="hodnota" id="otackyMotorV">2500/min</span></label>
+  <label data-rezim="diferencial">🛞 Otáčky kardanu <input type="range" id="otackyKardan" min="0" max="400" step="10" value="200"><span class="hodnota" id="otackyKardanV">200/min</span></label>
+  <label data-rezim="diferencial">↩️ Zatáčka <input type="range" id="zatacka" min="-100" max="100" step="5" value="0"><span class="hodnota" id="zatackaV">rovně</span></label>
+  <button data-rezim="diferencial" id="btnLed">🧊 Kolo na ledu</button>
+</div>
+
+<div class="plocha">
+  <canvas id="c"></canvas>
+  <div class="info skryto" id="infoBox">
+    <button class="zavri" id="zavriInfo" title="Zavřít">✕</button>
+    <div id="infoText"></div>
+  </div>
+  <div class="napoveda" id="napoveda"></div>
+</div>
+
+<div class="stav" id="stav"></div>
+
+<script>
+const $=id=>document.getElementById(id);
+const canvas=$('c'), ctx=canvas.getContext('2d');
+const cz=(x,d=1)=>(Math.abs(x)<1e-9?0:x).toFixed(d).replace('.',',');
+
+/* ---------- barvy podle aktuálního tématu ---------- */
+let C={};
+function nactiBarvy(){
+  const s=getComputedStyle(document.documentElement), g=n=>s.getPropertyValue(n).trim();
+  C={text:g('--text'),muted:g('--text-muted'),faint:g('--text-faint'),border:g('--border'),
+     silny:g('--border-strong'),akcent:g('--accent'),ok:g('--ok'),warn:g('--warn'),
+     danger:g('--danger'),panel:g('--bg-panel'),elev:g('--bg-elevated'),deep:g('--bg-deep')};
+}
+nactiBarvy();
+new MutationObserver(nactiBarvy).observe(document.documentElement,{attributes:true,attributeFilter:['data-theme']});
+
+// plátno musí sledovat i změnu výšky panelu při přepnutí záložky,
+// jinak zůstane starý obsah pod nově kreslenou plochou
+function resize(){
+  const r=devicePixelRatio||1;
+  const w=Math.round(canvas.clientWidth*r), h=Math.round(canvas.clientHeight*r);
+  if(canvas.width!==w||canvas.height!==h){ canvas.width=w; canvas.height=h; }
+  ctx.setTransform(r,0,0,r,0,0);
+}
+new ResizeObserver(resize).observe(canvas);
+
+/* ---------- uchopovací body: kreslení je registruje, myš je hledá ---------- */
+let uchopy=[], tahne=null, podKurzorem=null;
+function uchop(x,y,r,typ,bezObrysu){
+  uchopy.push({x,y,r,typ});
+  if(bezObrysu) return;
+  // obrys ukazuje, za co se dá vzít; pod kurzorem a při tažení zesílí
+  const akt=(tahne&&tahne.typ===typ)||podKurzorem===typ;
+  ctx.save();
+  ctx.strokeStyle=akt?C.akcent:C.faint;
+  ctx.setLineDash(akt?[]:[3,4]);
+  ctx.lineWidth=akt?2:1;
+  ctx.beginPath(); ctx.arc(x,y,akt?r+3:r,0,Math.PI*2);
+  if(akt){ ctx.fillStyle='rgba(106,166,253,.13)'; ctx.fill(); }
+  ctx.stroke();
+  ctx.restore();
+}
+function najdiUchop(x,y){
+  let nej=null, nd=1e9;
+  for(const u of uchopy){
+    const d=Math.hypot(x-u.x,y-u.y);
+    if(d<u.r&&d<nd){ nd=d; nej=u; }
+  }
+  return nej;
+}
+
+/* ---------- kreslicí pomůcky ---------- */
+function sipka(x1,y1,x2,y2,barva,sirka=3){
+  ctx.strokeStyle=barva; ctx.fillStyle=barva; ctx.lineWidth=sirka;
+  ctx.beginPath(); ctx.moveTo(x1,y1); ctx.lineTo(x2,y2); ctx.stroke();
+  const a=Math.atan2(y2-y1,x2-x1), d=9+sirka;
+  ctx.beginPath();
+  ctx.moveTo(x2,y2);
+  ctx.lineTo(x2-d*Math.cos(a-0.4),y2-d*Math.sin(a-0.4));
+  ctx.lineTo(x2-d*Math.cos(a+0.4),y2-d*Math.sin(a+0.4));
+  ctx.closePath(); ctx.fill();
+}
+function popis(text,x,y,barva=C.muted,font='12px sans-serif',zarovnani='center'){
+  ctx.fillStyle=barva; ctx.font=font; ctx.textAlign=zarovnani; ctx.textBaseline='middle';
+  ctx.fillText(text,x,y);
+}
+function kotoucKladky(x,y,r,barva,faze=0){
+  ctx.fillStyle=C.elev; ctx.strokeStyle=barva; ctx.lineWidth=3;
+  ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.fill(); ctx.stroke();
+  ctx.strokeStyle=C.faint; ctx.lineWidth=1;
+  ctx.beginPath(); ctx.arc(x,y,r*0.25,0,Math.PI*2); ctx.stroke();
+  // paprsky: podle nich je vidět, že lano kladkou probíhá
+  ctx.strokeStyle=barva; ctx.lineWidth=2; ctx.globalAlpha=.65;
+  for(let i=0;i<6;i++){
+    const a=faze+i*Math.PI*2/6;
+    ctx.beginPath();
+    ctx.moveTo(x+r*0.30*Math.cos(a),y+r*0.30*Math.sin(a));
+    ctx.lineTo(x+r*0.82*Math.cos(a),y+r*0.82*Math.sin(a));
+    ctx.stroke();
+  }
+  ctx.globalAlpha=1;
+}
+function strop(y,x1,x2){
+  ctx.fillStyle=C.panel; ctx.fillRect(x1,y-14,x2-x1,14);
+  ctx.strokeStyle=C.silny; ctx.lineWidth=2;
+  ctx.beginPath(); ctx.moveTo(x1,y); ctx.lineTo(x2,y); ctx.stroke();
+  ctx.strokeStyle=C.border; ctx.lineWidth=1;
+  for(let x=x1;x<x2;x+=12){ ctx.beginPath(); ctx.moveTo(x,y); ctx.lineTo(x-9,y-13); ctx.stroke(); }
+}
+
+/* ================= 1) PÁKA ================= */
+const paka={
+  druh:'dvoj', F1:30, r1:20, F2:15, r2:40, uhel:0,
+  nacti(){
+    this.druh=$('druhPaky').value;
+    this.F1=+$('f1').value; this.r1=+$('r1').value;
+    this.F2=+$('f2').value; this.r2=+$('r2').value;
+    $('f1V').textContent=this.F1+' N'; $('r1V').textContent=this.r1+' cm';
+    $('f2V').textContent=this.F2+' N'; $('r2V').textContent=this.r2+' cm';
+  },
+  momenty(){ return [this.F1*this.r1/100, this.F2*this.r2/100]; },
+  krok(dt){
+    const [M1,M2]=this.momenty();
+    const max=(this.druh==='dvoj'?21:16)*Math.PI/180;
+    const cil=max*Math.tanh(3*(M1-M2)/(1+(M1+M2)/2));   // kladné = břemeno klesá
+    this.uhel+=(cil-this.uhel)*Math.min(1,dt*3.2);
+  },
+  kresli(w,h){
+    const dvoj=this.druh==='dvoj';
+    // stupnice se roztáhne přes celou plochu, ať je páka co největší
+    const odCm=dvoj?-68:-7, doCm=dvoj?68:74;
+    const mer=Math.max(2.2,Math.min((w-70)/(doCm-odCm),11));   // px na cm
+    // u jednozvratné je osa na kraji trámu, scénu proto vystředíme podle jeho délky
+    const ox=dvoj?w/2:(w-(doCm-odCm)*mer)/2-odCm*mer;
+    // dvojzvratná má šipku síly nad trámem, jednozvratná pod ním – podle toho se posune výška
+    const oy=h*(dvoj?0.52:0.44);
+    // kladný úhel = břemeno klesá; břemeno je u dvojzvratné vlevo, u jednozvratné vpravo
+    const a=dvoj?-this.uhel:this.uhel;
+    const zemY=Math.min(h-24,oy+Math.min(150,Math.max(90,h*0.28)));
+    // bod na trámu: znamenko -1 = vlevo od osy, +1 = vpravo
+    const bod=(r,zn)=>[ox+zn*r*mer*Math.cos(a), oy+zn*r*mer*Math.sin(a)];
+
+    // podlaha
+    ctx.strokeStyle=C.border; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(0,zemY); ctx.lineTo(w,zemY); ctx.stroke();
+
+    // trám se stupnicí
+    ctx.save(); ctx.translate(ox,oy); ctx.rotate(a);
+    ctx.fillStyle=C.silny;
+    ctx.fillRect(odCm*mer,-6,(doCm-odCm)*mer,12);
+    ctx.strokeStyle=C.faint; ctx.lineWidth=1;
+    ctx.strokeRect(odCm*mer,-6,(doCm-odCm)*mer,12);
+    ctx.fillStyle=C.faint; ctx.font='9px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    for(let r=10;r<=(dvoj?60:70);r+=10){
+      for(const zn of (dvoj?[-1,1]:[1])){
+        ctx.fillRect(zn*r*mer-0.5,-6,1,4);
+        ctx.fillText(r,zn*r*mer,-14);
+      }
+    }
+    ctx.restore();
+
+    // podpěra (osa otáčení)
+    const zaklad=Math.max(24,(zemY-oy)*0.26);
+    ctx.fillStyle=C.akcent;
+    ctx.beginPath(); ctx.moveTo(ox,oy+3); ctx.lineTo(ox-zaklad,zemY); ctx.lineTo(ox+zaklad,zemY); ctx.closePath(); ctx.fill();
+    popis('osa otáčení',ox,zemY+16,C.faint,'11px sans-serif');
+
+    // údaje pro tažení myší
+    this.geo={mer,ox,oy,dvoj};
+
+    // břemeno F₁ (vlevo u dvojzvratné, vpravo u jednozvratné)
+    const [bx,by]=bod(this.r1,dvoj?-1:1);
+    const s1=Math.max(22,Math.min(58,16+this.F1*0.7));
+    uchop(bx,by+16+s1*0.35,Math.max(24,s1*0.62),'bremeno');
+    ctx.strokeStyle=C.faint; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(bx,by); ctx.lineTo(bx,by+16); ctx.stroke();
+    ctx.fillStyle=C.warn; ctx.fillRect(bx-s1/2,by+16,s1,s1*0.7);
+    popis('F₁ = '+this.F1+' N',bx,by+16+s1*0.7+13,C.warn,'bold 12px sans-serif');
+    popis('r₁ = '+this.r1+' cm',bx,by-34,C.faint,'11px sans-serif');
+
+    // působící síla F₂ – u dvojzvratné tlačí dolů, u jednozvratné táhne nahoru
+    const [sx,sy]=bod(this.r2,1);
+    const delka=Math.max(38,Math.min(104,this.F2*2));
+    const konecY=dvoj?sy-8-delka:sy+8+delka;
+    sipka(sx,konecY,sx,dvoj?sy-8:sy+8,C.akcent,3);
+    popis('F₂ = '+this.F2+' N',sx,konecY+(dvoj?-16:16),C.akcent,'bold 12px sans-serif');
+    popis('r₂ = '+this.r2+' cm',sx,dvoj?sy+24:sy-28,C.faint,'11px sans-serif');
+    uchop(sx,konecY,22,'sila');
+
+    // rovnováha se zvýrazní, ať je zpětná vazba okamžitá
+    const [M1,M2]=this.momenty();
+    if(Math.abs(M1-M2)<0.005*Math.max(M1,M2,1)){
+      popis('⚖️ rovnováha',w/2,26,C.ok,'bold 15px sans-serif');
+      if(this.ukol){ this.ukol=false; this.splneno++; }
+    }
+    if(this.ukol) popis('🎯 Úkol: vyvaž páku – táhni za modrou šipku',w/2,26,C.warn,'bold 14px sans-serif');
+  },
+  zadejUkol(){
+    const nahodne=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
+    // zadání volíme tak, aby vycházela celá hodnota F₂ v rozsahu posuvníku
+    let F1,r1,r2,F2;
+    do{ F1=nahodne(2,12)*5; r1=nahodne(1,6)*5; r2=nahodne(2,12)*5; F2=F1*r1/r2; }
+    while(!Number.isInteger(F2)||F2<1||F2>60||F2===this.F2);
+    $('f1').value=F1; $('r1').value=r1; $('r2').value=r2;
+    $('f2').value=Math.max(1,Math.min(60,F2>30?F2-nahodne(5,15):F2+nahodne(5,15)));
+    this.ukol=true; this.nacti();
+  },
+  ukol:false, splneno:0,
+  tahni(typ,x,y,vych){
+    const {mer,ox,oy,dvoj}=this.geo;
+    const a=dvoj?-this.uhel:this.uhel;
+    if(typ==='bremeno'){
+      $('r1').value=Math.max(5,Math.min(60,Math.round(Math.abs(x-ox)/mer)));
+      $('f1').value=Math.max(1,Math.min(60,Math.round(vych.F1+(y-vych.y)*0.35)));
+    }else{
+      const r=Math.max(5,Math.min(60,Math.round((dvoj?Math.abs(x-ox):Math.max(0,x-ox))/mer)));
+      $('r2').value=r;
+      // délka šipky přímo odpovídá velikosti síly, takže se dá „vytáhnout"
+      const sy=oy+r*mer*Math.sin(a);
+      $('f2').value=Math.max(1,Math.min(60,Math.round(((dvoj?sy-y:y-sy)-8)/2)));
+    }
+    this.nacti();
+  },
+  stav(){
+    const [M1,M2]=this.momenty();
+    const rovnovaha=Math.abs(M1-M2)<0.005*Math.max(M1,M2,1);
+    const zisk=this.r2/this.r1;
+    if(this.splneno) return `🎯 Splněných úkolů: <b>${this.splneno}</b> `+
+      `<span class="znak">•</span> M₁ = <b>${cz(M1,2)} N·m</b>, M₂ = <b>${cz(M2,2)} N·m</b> `+
+      `<span class="znak">•</span> ${rovnovaha?'⚖️ <b>Rovnováha!</b>':(M1>M2?'⬇️ klesá břemeno':'⬆️ břemeno stoupá')} `+
+      `<span class="znak">•</span> Poměr ramen <b>${cz(zisk,2)}×</b> `+
+      `<span class="znak">•</span> Na rovnováhu stačí síla <b>${cz(this.F1*this.r1/this.r2,1)} N</b>`;
+    return `Moment břemene <b>M₁ = ${cz(M1,2)} N·m</b> `+
+      `<span class="znak">•</span> Moment síly <b>M₂ = ${cz(M2,2)} N·m</b> `+
+      `<span class="znak">•</span> ${rovnovaha?'⚖️ <b>Rovnováha</b>':(M1>M2?'⬇️ klesá břemeno':'⬆️ břemeno stoupá')} `+
+      `<span class="znak">•</span> Poměr ramen <b>${cz(zisk,2)}×</b> `+
+      `<span class="znak">•</span> Na rovnováhu stačí síla <b>${cz(this.F1*this.r1/this.r2,1)} N</b>`;
+  }
+};
+
+/* ================= 2) KLADKY ================= */
+const kladka={
+  druh:'kladkostroj', n:1, G:200, h:0, geo:{mer:2.4,k:2}, ukol:null, splneno:0,
+  nacti(){
+    this.druh=$('druhKladky').value;
+    this.n=+$('pocetKladek').value; this.G=+$('brem').value; this.h=+$('zvednuti').value;
+    $('pocetKladekV').textContent=this.n===1?'1 (volná kladka)':this.n;
+    $('bremV').textContent=this.G+' N'; $('zvednutiV').textContent=this.h+' cm';
+    $('lblPocet').classList.toggle('skryto',this.druh==='pevna');
+  },
+  prevod(){ return this.druh==='pevna'?1:2*this.n; },
+  sila(){ return this.G/this.prevod(); },
+  zadejUkol(){
+    const nahodne=(a,b)=>a+Math.floor(Math.random()*(b-a+1));
+    const potreba=nahodne(2,4), G=nahodne(8,20)*20;
+    // mez volíme tak, aby o jednu kladku míň už nestačilo
+    this.ukol={G,mez:Math.ceil(G/(2*potreba))};
+    $('brem').value=G; $('pocetKladek').value=1; $('druhKladky').value='kladkostroj';
+    $('druhKladky').dispatchEvent(new Event('change',{bubbles:true}));
+    this.nacti();
+  },
+
+  kresli(w,h){
+    const k=this.prevod();
+    const uzky=w<780;                       // na úzké ploše se panel s přehledem vynechá
+    const mer=Math.max(2.4,Math.min(4.4,(h*0.44)/50));
+    const R=Math.max(20,Math.min(30,w/48));
+    const stropY=Math.max(38,h*0.07);
+    const cx=uzky?w/2:w*0.33;
+    const zdvih=this.h*mer;
+    const zakladBlok=stropY+Math.max(150,Math.min(275,h*0.50));
+    const blokY=zakladBlok-zdvih;
+    // Otáčení kladek. Kladné faze = po směru hodinových ručiček (y roste dolů).
+    // Lano teče od kotvy k ruce, takže:
+    //  – pevné kladky nahoře lano přebíhá zleva doprava PŘES vršek → po směru,
+    //  – volné kladky dole zleva doprava POD spodkem → proti směru.
+    // Kolik lana kterou kladkou proběhne: po řetězci od kotvy přibývá vždy jedno
+    // zvednutí (1·h přes první volnou, 2·h přes první pevnou, 3·h přes druhou volnou …),
+    // až poslední pevná odvine celých k·h do ruky.
+    const obrat=zdvih/R;                    // pootočení na jedno zvednutí břemene
+    this.otoceni={horni:[],dolni:[]};       // ukládáme kvůli kontrole směru
+    this.geo={mer,k};
+
+    strop(stropY,0,uzky?w:w*0.62);
+
+    ctx.lineWidth=2.5; ctx.strokeStyle=C.ok;
+    const lano=(x1,y1,x2,y2)=>{ctx.beginPath();ctx.moveTo(x1,y1);ctx.lineTo(x2,y2);ctx.stroke();};
+    const oblouk=(x,y,r,a1,a2)=>{ctx.beginPath();ctx.arc(x,y,r,a1,a2);ctx.stroke();};
+    const nosne=[];                         // x-ové polohy pramenů, které nesou břemeno
+
+    let rukaX,rukaY;
+    if(this.druh==='pevna'){
+      const py=stropY+42;
+      ctx.strokeStyle=C.silny; ctx.lineWidth=3; lano(cx,stropY,cx,py-R);
+      ctx.strokeStyle=C.ok; ctx.lineWidth=2.5;
+      oblouk(cx,py,R,Math.PI,0);
+      lano(cx+R,py,cx+R,blokY);
+      // u pevné kladky jde lano od břemene vpravo přes vršek k ruce vlevo → proti směru
+      this.otoceni.horni.push(-obrat);
+      kotoucKladky(cx,py,R,C.akcent,-obrat);
+      nosne.push([cx+R,(py+blokY)/2]);
+      this.bremeno(cx+R,blokY,w);
+      rukaX=cx-R; rukaY=Math.min(h-42,py+90+this.h*k*mer);
+      ctx.strokeStyle=C.ok; ctx.lineWidth=2.5;
+      lano(rukaX,py,rukaX,rukaY);
+    }else{
+      const n=this.n, L=cx-2*R*n;
+      const topY=stropY+36;
+      const xB=i=>L+R+4*R*i, xT=i=>xB(i)+2*R;
+      ctx.strokeStyle=C.silny; ctx.lineWidth=3;
+      for(let i=0;i<n;i++) lano(xT(i),stropY,xT(i),topY-R);
+      ctx.strokeStyle=C.warn; ctx.lineWidth=3;
+      lano(xB(0)-R,blokY+R+4,xB(n-1)+R,blokY+R+4);
+      ctx.strokeStyle=C.ok; ctx.lineWidth=2.5;
+      lano(L,stropY,L,blokY);                                  // kotva → první volná kladka
+      ctx.fillStyle=C.silny; ctx.fillRect(L-5,stropY-2,10,8);
+      nosne.push([L,(topY+blokY)/2]);
+      for(let i=0;i<n;i++){
+        ctx.strokeStyle=C.ok; ctx.lineWidth=2.5;
+        oblouk(xB(i),blokY,R,0,Math.PI);
+        lano(xB(i)+R,blokY,xB(i)+R,topY);
+        nosne.push([xB(i)+R,(topY+blokY)/2]);
+        oblouk(xT(i),topY,R,Math.PI,0);
+        if(i<n-1){ lano(xT(i)+R,topY,xT(i)+R,blokY); nosne.push([xT(i)+R,(topY+blokY)/2]); }
+      }
+      for(let i=0;i<n;i++){
+        const f=(2*i+2)*obrat;              // pevná kladka: lano přes vršek doprava
+        this.otoceni.horni.push(f);
+        kotoucKladky(xT(i),topY,R,C.akcent,f);
+      }
+      for(let i=0;i<n;i++){
+        const f=-(2*i+1)*obrat;             // volná kladka: lano spodkem doprava
+        this.otoceni.dolni.push(f);
+        kotoucKladky(xB(i),blokY,R,C.warn,f);
+      }
+      this.bremeno((xB(0)+xB(n-1))/2,blokY+R+4,w);
+      popis('kotva lana',L-8,stropY+16,C.faint,'10px sans-serif','right');
+      rukaX=xT(n-1)+R; rukaY=Math.min(h-42,topY+110+this.h*k*mer);
+      ctx.strokeStyle=C.ok; ctx.lineWidth=2.5;
+      lano(rukaX,topY,rukaX,rukaY);
+    }
+
+    // očíslované prameny – právě ony dělí tíhu mezi sebe
+    nosne.forEach(([px,py],i)=>{
+      ctx.fillStyle=C.bg||C.elev; ctx.strokeStyle=C.ok; ctx.lineWidth=1.5;
+      ctx.beginPath(); ctx.arc(px,py,9,0,Math.PI*2); ctx.fill(); ctx.stroke();
+      popis(String(i+1),px,py,C.ok,'bold 10px sans-serif');
+    });
+    const p=nosne.length;
+    popis(p===1?'① 1 pramen nese celou tíhu – pevná kladka mění jen směr'
+          :'①–'+String.fromCharCode(9311+p)+' '+p+(p<5?' prameny nesou':' pramenů nese')+
+           ' břemeno → na každý připadá '+cz(this.G/p,1)+' N',
+          16, stropY+40, C.ok,'12px sans-serif','left');
+
+    // siloměr s rukou na konci lana
+    this.silomer(rukaX,rukaY);
+    uchop(rukaX,rukaY+6,24,'lano');
+
+    // svislé měřítko zvednutí vlevo
+    this.merítko(24,zakladBlok+(this.druh==='pevna'?0:R+4)+18+this.vyskaBremene()+16,mer,w);
+
+    // přehled sil, drah a práce vpravo
+    if(!uzky) this.prehled(w*0.63,stropY+34,w-24-w*0.63,k);
+
+    // zadání úkolu
+    if(this.ukol){
+      const hotovo=this.sila()<=this.ukol.mez+1e-9;
+      popis(hotovo?'✅ Zvládnuto! Stačí '+this.n+(this.n===1?' volná kladka':' volné kladky')
+                  :'🎯 Úkol: zvedni '+this.ukol.G+' N silou nejvýš '+this.ukol.mez+' N – kolik kladek potřebuješ?',
+            w/2,20,hotovo?C.ok:C.warn,'bold 14px sans-serif');
+      if(hotovo){ this.ukol=null; this.splneno++; }
+    }
+  },
+
+  silomer(x,y){
+    ctx.fillStyle=C.elev; ctx.strokeStyle=C.akcent; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.roundRect(x-30,y-34,60,30,7); ctx.fill(); ctx.stroke();
+    popis(cz(this.sila(),1)+' N',x,y-19,C.akcent,'bold 13px sans-serif');
+    popis('🤚',x,y+8,C.text,'22px sans-serif');
+    popis('siloměr – táhni dolů',x+38,y-19,C.faint,'11px sans-serif','left');
+  },
+
+  merítko(x,nulaY,mer,w){
+    const vyska=50*mer;
+    ctx.strokeStyle=C.border; ctx.lineWidth=1.5;
+    ctx.beginPath(); ctx.moveTo(x,nulaY); ctx.lineTo(x,nulaY-vyska); ctx.stroke();
+    ctx.fillStyle=C.faint; ctx.font='9px sans-serif'; ctx.textAlign='left'; ctx.textBaseline='middle';
+    for(let cm=0;cm<=50;cm+=10){
+      const y=nulaY-cm*mer;
+      ctx.fillRect(x-4,y-0.5,8,1);
+      ctx.fillText(cm,x+8,y);
+    }
+    // nulová hladina a aktuální výška břemene
+    ctx.strokeStyle=C.faint; ctx.setLineDash([4,4]); ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(x,nulaY); ctx.lineTo(w-20,nulaY); ctx.stroke();
+    ctx.setLineDash([]);
+    popis('výchozí poloha břemene',w-24,nulaY-10,C.faint,'10px sans-serif','right');
+    if(this.h>0){
+      const y=nulaY-this.h*mer;
+      ctx.strokeStyle=C.warn; ctx.lineWidth=2;
+      ctx.beginPath(); ctx.moveTo(x-6,y); ctx.lineTo(x+6,y); ctx.stroke();
+      popis('h = '+this.h+' cm',x+26,y-1,C.warn,'bold 11px sans-serif','left');
+    }
+  },
+
+  prehled(x0,y0,sirka,k){
+    const F=this.sila(), s=this.h*k, A=F*s/100;
+    const sirkaPruhu=Math.max(110,sirka-170);
+    popis('📊 Co kladkostroj mění',x0,y0,C.text,'bold 13px sans-serif','left');
+    let y=y0+30;
+    const nadpis=t=>{ popis(t,x0,y,C.faint,'11px sans-serif','left'); y+=17; };
+    const pruh=(podil,barva,text)=>{
+      ctx.fillStyle=C.panel; ctx.fillRect(x0,y-9,sirkaPruhu,18);
+      ctx.fillStyle=barva; ctx.fillRect(x0,y-9,Math.max(1,sirkaPruhu*Math.min(1,podil)),18);
+      ctx.strokeStyle=C.border; ctx.lineWidth=1; ctx.strokeRect(x0,y-9,sirkaPruhu,18);
+      popis(text,x0+sirkaPruhu+10,y,C.text,'12px sans-serif','left');
+      y+=24;
+    };
+    nadpis('SÍLA – kolikrát míň zabereš');
+    pruh(F/this.G,C.akcent,'F = '+cz(F,1)+' N (táhneš ty)');
+    pruh(1,C.warn,'G = '+this.G+' N (břemeno)');
+    y+=8;
+    nadpis('DRÁHA – o kolik víc lana');
+    const maxD=Math.max(s,this.h,1);
+    pruh(s/maxD,C.akcent,'lano s = '+cz(s,0)+' cm');
+    pruh(this.h/maxD,C.warn,'břemeno h = '+this.h+' cm');
+    y+=8;
+    nadpis('PRÁCE – ta zůstává stejná');
+    pruh(A>0?1:0,C.akcent,'F · s = '+cz(A,2)+' J');
+    pruh(A>0?1:0,C.warn,'G · h = '+cz(this.G*this.h/100,2)+' J');
+  },
+
+  vyskaBremene(){ return Math.max(34,Math.min(78,26+this.G*0.12))*0.72; },
+  tahni(typ,x,y,vych){
+    const {mer,k}=this.geo;
+    // lano táhneš k·h, břemeno stoupá h – oba směry vedou na stejný posuvník
+    const h=typ==='lano' ? vych.h+(y-vych.y)/(k*mer) : vych.h-(y-vych.y)/mer;
+    $('zvednuti').value=Math.max(0,Math.min(50,Math.round(h)));
+    this.nacti();
+  },
+  bremeno(x,y,w){
+    const s=Math.max(34,Math.min(78,26+this.G*0.12));
+    uchop(x,y+18+s*0.36,Math.max(26,s*0.55),'bremeno2');
+    ctx.strokeStyle=C.faint; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(x,y); ctx.lineTo(x,y+18); ctx.stroke();
+    ctx.fillStyle=C.warn; ctx.fillRect(x-s/2,y+18,s,s*0.72);
+    ctx.fillStyle=C.text; ctx.font='bold 12px sans-serif'; ctx.textAlign='center'; ctx.textBaseline='middle';
+    ctx.fillText(this.G+' N',x,y+18+s*0.36);
+    // tíha působí dolů
+    sipka(x,y+18+s*0.72+6,x,y+18+s*0.72+30,C.warn,2.5);
+  },
+  stav(){
+    const k=this.prevod(), F=this.sila(), s=this.h*k;
+    const uvod=this.splneno?`🎯 Splněno: <b>${this.splneno}</b> <span class="znak">•</span> `:'';
+    return uvod+`Potřebná síla <b>F = ${cz(F,1)} N</b> (místo ${this.G} N) `+
+      `<span class="znak">•</span> Ušetříš <b>${k}×</b> na síle `+
+      `<span class="znak">•</span> Vytažené lano <b>${cz(s,0)} cm</b> na zvednutí o <b>${this.h} cm</b> `+
+      `<span class="znak">•</span> Práce <b>${cz(F*s/100,2)} J = ${cz(this.G*this.h/100,2)} J</b> — na práci neušetříš nic`;
+  }
+};
+
+/* ================= 3) OZUBENÁ KOLA ================= */
+const kola={
+  rezim:'dvojice',
+  z1:12, z2:30, z3:10, z4:28, otacky:60, moment:10, mezi:false,
+  stupen:1, otackyMotor:2500, otackyKardan:200, zatacka:0, naLedu:false, ujeto:0,
+  faze:0, cas:10*3600+8*60, rychlost:60, rucne:false, geo:[], vsechnaKola:[],
+
+  nacti(){
+    this.rezim=$('rezimKol').value;
+    this.z1=+$('z1').value; this.z2=+$('z2').value; this.z3=+$('z3').value; this.z4=+$('z4').value;
+    this.otacky=+$('otacky').value; this.moment=+$('mom').value; this.mezi=$('mezikolo').checked;
+    this.rychlost=+$('hodRychlost').value; this.stupen=+$('stupen').value;
+    this.otackyMotor=+$('otackyMotor').value; this.otackyKardan=+$('otackyKardan').value;
+    this.zatacka=+$('zatacka').value;
+    $('z1V').textContent=this.z1; $('z2V').textContent=this.z2;
+    $('z3V').textContent=this.z3; $('z4V').textContent=this.z4;
+    $('otackyV').textContent=this.otacky+'/min'; $('momV').textContent=this.moment+' N·m';
+    $('hodRychlostV').textContent=this.rychlost+'×';
+    $('otackyMotorV').textContent=this.otackyMotor+'/min';
+    $('otackyKardanV').textContent=this.otackyKardan+'/min';
+    $('zatackaV').textContent=this.zatacka===0?'rovně'
+      :`${cz(this.polomerZatacky(),1)} m ${this.zatacka<0?'vlevo':'vpravo'}`;
+    document.querySelectorAll('#panelKola [data-rezim]').forEach(el=>
+      el.classList.toggle('skryto',!el.dataset.rezim.split(' ').includes(this.rezim)));
+    if(rezim==='kola') $('infoText').innerHTML=this.napoveda();
+    if(rezim==='kola') $('napoveda').textContent=this.dole();
+  },
+
+  /* ---- evolventní profil zubu (r = m·z/2, hlava +m, pata −1,25m, záběr 20°) ---- */
+  UHEL_ZABERU:20*Math.PI/180,
+  cachePaty:new Map(),
+  tvarKola(z,m){
+    const klic=z+'|'+m.toFixed(2);
+    if(this.cachePaty.has(klic)) return this.cachePaty.get(klic);
+    const alfa=this.UHEL_ZABERU;
+    const r=m*z/2, rb=r*Math.cos(alfa), ra=r+m, rf=Math.max(r*0.3,r-1.25*m);
+    const inv=a=>Math.tan(a)-a;
+    const pul=rho=>{
+      const a=rho<=rb?0:Math.acos(Math.min(1,rb/rho));
+      return Math.max(0,Math.PI/(2*z)+inv(alfa)-inv(a));
+    };
+    const odkud=Math.max(rf,rb), bok=[];
+    for(let i=0;i<=10;i++){ const rho=odkud+(ra-odkud)*i/10; bok.push([rho,pul(rho)]); }
+    const pataUhel=pul(odkud), p=new Path2D();
+    for(let t=0;t<z;t++){
+      const stred=t*2*Math.PI/z;
+      const bod=(rho,a)=>[rho*Math.cos(stred+a),rho*Math.sin(stred+a)];
+      if(rf<odkud){ const [x,y]=bod(rf,-pataUhel); t===0?p.moveTo(x,y):p.lineTo(x,y); }
+      bok.forEach(([rho,a],i)=>{ const [x,y]=bod(rho,-a);
+        (t===0&&i===0&&rf>=odkud)?p.moveTo(x,y):p.lineTo(x,y); });
+      p.arc(0,0,ra,stred-pul(ra),stred+pul(ra));
+      for(let i=bok.length-1;i>=0;i--){ const [x,y]=bod(bok[i][0],bok[i][1]); p.lineTo(x,y); }
+      if(rf<odkud){ const [x,y]=bod(rf,pataUhel); p.lineTo(x,y); }
+      p.arc(0,0,rf,stred+pataUhel,stred+2*Math.PI/z-pataUhel);
+    }
+    p.closePath();
+    const tvar={cesta:p,r,ra,rf};
+    this.cachePaty.set(klic,tvar);
+    return tvar;
+  },
+  /* Natočení zabírajícího souseda. beta = směr od středu A ke středu B.
+     Konstanta β+π−π/z_B postaví sousedovi na spojnici středů mezeru proti zubu. */
+  fazeSouseda(fazeA,zA,zB,beta=0){
+    return beta+Math.PI-Math.PI/zB-(zA/zB)*(fazeA-beta);
+  },
+  kresliKolo(x,y,z,m,faze,barva,popisek,volby={}){
+    const t=this.tvarKola(z,m), r=t.r;
+    this.vsechnaKola.push({x,y,z,modul:m,faze});   // pro kontrolu záběru
+    ctx.save();
+    if(volby.slabe) ctx.globalAlpha=volby.slabe;
+    ctx.save(); ctx.translate(x,y); ctx.rotate(faze);
+    ctx.fillStyle=volby.vypln||C.elev; ctx.fill(t.cesta);
+    ctx.strokeStyle=barva; ctx.lineWidth=volby.tenke?1.2:2; ctx.stroke(t.cesta);
+    if(!volby.bezNaboje){
+      ctx.strokeStyle=C.faint; ctx.lineWidth=1.2;
+      ctx.beginPath(); ctx.arc(0,0,Math.max(4,r*0.18),0,Math.PI*2); ctx.stroke();
+      ctx.strokeStyle=barva; ctx.lineWidth=volby.tenke?2:3;
+      ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(r*0.72,0); ctx.stroke();
+    }
+    ctx.restore();
+    if(volby.roztecna){
+      ctx.strokeStyle=C.faint; ctx.setLineDash([3,4]); ctx.lineWidth=1; ctx.globalAlpha=(volby.slabe||1)*.6;
+      ctx.beginPath(); ctx.arc(x,y,r,0,Math.PI*2); ctx.stroke(); ctx.setLineDash([]);
+    }
+    ctx.restore();
+    if(popisek) popis(popisek,x,volby.nahore?y-t.ra-14:y+t.ra+16,barva,'bold 12px sans-serif');
+    return t;
+  },
+  sipkaOtaceni(x,y,r,kladne,barva){
+    ctx.strokeStyle=barva; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.arc(x,y,r,-2.5,-0.7); ctx.stroke();
+    const a=kladne?-0.7:-2.5, sm=kladne?1:-1;
+    const px=x+r*Math.cos(a), py=y+r*Math.sin(a);
+    ctx.fillStyle=barva;
+    ctx.beginPath();
+    ctx.moveTo(px,py);
+    ctx.lineTo(px-sm*7*Math.cos(a-1.2),py-sm*7*Math.sin(a-1.2));
+    ctx.lineTo(px-sm*7*Math.cos(a-2.2),py-sm*7*Math.sin(a-2.2));
+    ctx.closePath(); ctx.fill();
+  },
+
+  krok(dt){
+    if(this.rezim==='hodiny'){ this.cas+=dt*this.rychlost; return; }
+    if(this.rucne) return;
+    let ot=this.otacky;
+    if(this.rezim==='prevodovka') ot=this.otackyMotor/28;      // zpomaleno, ať jde záběr sledovat
+    if(this.rezim==='diferencial') ot=this.otackyKardan/4;
+    this.faze+=dt*ot/60*Math.PI*2;
+  },
+  kresli(w,h){
+    this.geo=[]; this.vsechnaKola=[];
+    if(this.rezim==='dvojice') this.dvojice(w,h);
+    else if(this.rezim==='soukoli') this.soukoli(w,h);
+    else if(this.rezim==='hodiny') this.hodiny(w,h);
+    else if(this.rezim==='prevodovka') this.prevodovka(w,h);
+    else this.diferencial(w,h);
+  },
+
+  /* ---------- 1) dvě kola v záběru ---------- */
+  dvojice(w,h){
+    const cy=h*0.48;
+    const seznam=this.mezi?[this.z1,18,this.z2]:[this.z1,this.z2];
+    const soucet=seznam.reduce((a,b)=>a+b,0);
+    const modul=Math.min(11,(w*0.88)/(soucet+2*seznam.length),(h*0.74)/(Math.max(...seznam)+2));
+    let x=(w-soucet*modul)/2;
+    const barvy=this.mezi?[C.akcent,C.faint,C.ok]:[C.akcent,C.ok];
+    const jmena=this.mezi?['hnací z₁='+this.z1,'mezikolo z=18','hnané z₂='+this.z2]
+                         :['hnací z₁='+this.z1,'hnané z₂='+this.z2];
+    const posuvniky=this.mezi?['z1',null,'z2']:['z1','z2'];
+    let faze=this.faze, smer=1;
+    seznam.forEach((z,i)=>{
+      const r=z*modul/2;
+      x+=r;
+      if(i>0){ faze=this.fazeSouseda(faze,seznam[i-1],z); smer=-smer; }
+      this.geo.push({x,y:cy,prevod:(i%2?-1:1)*z/seznam[0],z,modul,faze,posuvnik:posuvniky[i]});
+      uchop(x,cy,r,'kolo'+i,true);
+      this.kresliKolo(x,cy,z,modul,faze,barvy[i]||C.ok,jmena[i],{roztecna:true});
+      this.sipkaOtaceni(x,cy,r*0.45,smer>0,C.muted);
+      x+=r;
+    });
+  },
+
+  /* ---------- 2) vícestupňové soukolí ---------- */
+  /* Dva stupně nejdou nakreslit do jedné roviny: kolo z₂ je vždycky větší než pastorek z₃,
+     takže by zasahovalo do kola z₄. Na hřídeli jsou ve skutečnosti za sebou – proto
+     kreslíme každý stupeň do vlastní řady a hřídel mezi nimi svisle. */
+  dveRoviny(w,h,z,mezera){
+    const rada1=Math.max(z[0],z[1])/2+1, rada2=Math.max(z[2],z[3])/2+1;
+    const dx1=(z[0]+z[1])/2, dxK=(z[2]+z[3])/2;
+    // svislý odstup musí odklidit z₁ od z₃, z₂ od z₄ i z₁ od z₄
+    const potreba=(soucet,vodorovne)=>Math.max(0,Math.pow(soucet/2+mezera,2)-vodorovne*vodorovne);
+    // a hlavně kola z₂ a z₃ na společné hřídeli nesmí splynout – ta leží nad sebou
+    const dyK=Math.max((z[1]+z[2])/2+mezera, Math.sqrt(Math.max(4,
+      potreba(z[0]+z[2],dx1), potreba(z[1]+z[3],dxK), potreba(z[0]+z[3],dx1+dxK))));
+    const sirkaK=z[0]/2+(z[0]+z[1])/2+dxK+z[3]/2;
+    const modul=Math.min(7,(w*0.86)/(sirkaK+4),(h*0.76)/(rada1+rada2+dyK));
+    const celkem=modul*(rada1+dyK+rada2);
+    const y1=(h-celkem)/2+modul*rada1, y2=y1+modul*dyK;
+    const xA=(w-modul*sirkaK)/2+modul*z[0]/2;
+    const xB=xA+modul*(z[0]+z[1])/2, xC=xB+modul*dxK;
+    return {modul,xA,xB,xC,y1,y2};
+  },
+  kresliHridel(x,y1,y2){
+    ctx.strokeStyle=C.silny; ctx.lineWidth=7; ctx.lineCap='round';
+    ctx.beginPath(); ctx.moveTo(x,y1); ctx.lineTo(x,y2); ctx.stroke();
+  },
+  soukoli(w,h){
+    const z=[this.z1,this.z2,this.z3,this.z4];
+    const g=this.dveRoviny(w,h,z,6);
+    const f1=this.faze;
+    const f2=this.fazeSouseda(f1,z[0],z[1]);
+    const f4=this.fazeSouseda(f2,z[2],z[3]);
+    const kola=[[g.xA,g.y1,z[0],f1,C.akcent,'hnací z₁='+z[0],'z1',true],
+                [g.xB,g.y1,z[1],f2,C.ok,'z₂='+z[1],'z2',true],
+                [g.xB,g.y2,z[2],f2,C.danger,'z₃='+z[2],'z3',false],
+                [g.xC,g.y2,z[3],f4,C.warn,'hnané z₄='+z[3],'z4',false]];
+    kola.forEach(([x,y,zz,f,barva,jm,pos,nahore],i)=>{
+      this.geo.push({x,y,z:zz,modul:g.modul,faze:f,posuvnik:pos,prevod:1});
+      uchop(x,y,zz*g.modul/2,'kolo'+i,true);
+      this.kresliKolo(x,y,zz,g.modul,f,barva,jm,{roztecna:true,nahore});
+    });
+    this.kresliHridel(g.xB,g.y1,g.y2);
+    popis('⟊ z₂ a z₃ sedí na jedné hřídeli – otáčejí se stejně rychle',16,22,C.faint,'12px sans-serif','left');
+    const i1=z[1]/z[0], i2=z[3]/z[2];
+    popis('1. stupeň  i₁ = '+cz(i1,2),(g.xA+g.xB)/2,g.y1-g.modul*(Math.max(z[0],z[1])/2+1)-34,C.ok,'12px sans-serif');
+    popis('2. stupeň  i₂ = '+cz(i2,2),(g.xB+g.xC)/2,g.y2+g.modul*(Math.max(z[2],z[3])/2+1)+36,C.warn,'12px sans-serif');
+    popis('celkem i = i₁ · i₂ = '+cz(i1*i2,2)+'×',16,44,C.text,'bold 14px sans-serif','left');
+  },
+
+  /* ---------- 3) hodinový strojek ---------- */
+  hodiny(w,h){
+    const Z=[10,60,8,80];                        // 1:6 a 1:10 → dohromady 1:60
+    const g=this.dveRoviny(w*0.56,h,Z,6);
+    const fS=this.cas/60*2*Math.PI;              // sekundová hřídel: 1 otáčka za minutu
+    const f2=this.fazeSouseda(fS,Z[0],Z[1]);
+    const f4=this.fazeSouseda(f2,Z[2],Z[3]);
+    this.kresliKolo(g.xA,g.y1,Z[0],g.modul,fS,C.akcent,'sekundová z='+Z[0],{roztecna:true,nahore:true});
+    this.kresliKolo(g.xB,g.y1,Z[1],g.modul,f2,C.ok,'z='+Z[1],{roztecna:true,nahore:true});
+    this.kresliKolo(g.xB,g.y2,Z[2],g.modul,f2,C.danger,'z='+Z[2],{roztecna:true});
+    this.kresliKolo(g.xC,g.y2,Z[3],g.modul,f4,C.warn,'minutová z='+Z[3],{roztecna:true});
+    this.kresliHridel(g.xB,g.y1,g.y2);
+    popis('⟊ obě kola sedí na jedné hřídeli',16,22,C.faint,'12px sans-serif','left');
+    popis('1 : 6',(g.xA+g.xB)/2,g.y1-g.modul*(Z[1]/2+1)-34,C.ok,'12px sans-serif');
+    popis('1 : 10',(g.xB+g.xC)/2,g.y2+g.modul*(Z[3]/2+1)+36,C.warn,'12px sans-serif');
+    popis('celkem 1 : 60 → z otáčky za minutu je otáčka za hodinu',16,44,C.text,'bold 13px sans-serif','left');
+
+    const cx=w*0.79, cy=h*0.48, R=Math.min(w*0.17,h*0.38);
+    ctx.fillStyle=C.elev; ctx.strokeStyle=C.silny; ctx.lineWidth=3;
+    ctx.beginPath(); ctx.arc(cx,cy,R,0,Math.PI*2); ctx.fill(); ctx.stroke();
+    for(let i=0;i<60;i++){
+      const a=i*Math.PI/30-Math.PI/2, velka=i%5===0;
+      ctx.strokeStyle=velka?C.text:C.faint; ctx.lineWidth=velka?2:1;
+      ctx.beginPath();
+      ctx.moveTo(cx+Math.cos(a)*R*(velka?0.86:0.92),cy+Math.sin(a)*R*(velka?0.86:0.92));
+      ctx.lineTo(cx+Math.cos(a)*R*0.97,cy+Math.sin(a)*R*0.97);
+      ctx.stroke();
+    }
+    for(let i=1;i<=12;i++){
+      const a=i*Math.PI/6-Math.PI/2;
+      popis(String(i),cx+Math.cos(a)*R*0.74,cy+Math.sin(a)*R*0.74,C.muted,'bold 12px sans-serif');
+    }
+    const rucicka=(uhel,delka,sirkaC,barva)=>{
+      ctx.strokeStyle=barva; ctx.lineWidth=sirkaC; ctx.lineCap='round';
+      ctx.beginPath(); ctx.moveTo(cx,cy);
+      ctx.lineTo(cx+Math.cos(uhel-Math.PI/2)*delka,cy+Math.sin(uhel-Math.PI/2)*delka);
+      ctx.stroke();
+    };
+    const s=this.cas%60, mi=(this.cas/60)%60, ho=(this.cas/3600)%12;
+    rucicka(ho*Math.PI/6,R*0.52,5,C.text);
+    rucicka(mi*Math.PI/30,R*0.76,4,C.warn);
+    rucicka(s*Math.PI/30,R*0.86,2,C.danger);
+    ctx.fillStyle=C.text; ctx.beginPath(); ctx.arc(cx,cy,4,0,Math.PI*2); ctx.fill();
+    const dvoj=n=>String(Math.floor(n)).padStart(2,'0');
+    popis(dvoj(ho<1?12:ho)+':'+dvoj(mi)+':'+dvoj(s),cx,cy+R+26,C.text,'bold 15px sans-serif');
+    popis('hodinovou ručičku pohání ještě další soukolí 1 : 12',cx,cy+R+46,C.faint,'11px sans-serif');
+  },
+
+  STUPNE:[{n:'1.',zh:13,zd:47},{n:'2.',zh:19,zd:41},{n:'3.',zh:25,zd:35},
+          {n:'4.',zh:30,zd:30},{n:'5.',zh:36,zd:24},{n:'R',zh:13,zd:42,zpet:true}],
+  ROZVOD:3.9, OBVOD_KOLA:1.95,
+  prevod(){
+    if(this.stupen===0) return 0;
+    const s=this.STUPNE[this.stupen-1];
+    return (s.zpet?-1:1)*s.zd/s.zh;
+  },
+
+  /* ---------- 4) převodovka ---------- */
+  prevodovka(w,h){
+    const S=this.STUPNE;
+    const sirkaZubu=S.reduce((a,s)=>a+Math.max(s.zh,s.zd)+3,0);
+    const modul=Math.min(3.4,(w*0.90)/sirkaZubu,(h*0.62)/64);
+    const rozt=modul*60/2;                       // všechny dvojice mají stejnou osovou vzdálenost
+    const yH=h*0.36, yD=yH+rozt;
+    let x=(w-modul*sirkaZubu)/2;
+    // hřídele
+    ctx.strokeStyle=C.silny; ctx.lineWidth=6; ctx.lineCap='round';
+    ctx.beginPath(); ctx.moveTo(20,yH); ctx.lineTo(w-20,yH); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(20,yD); ctx.lineTo(w-20,yD); ctx.stroke();
+    popis('hřídel od motoru',24,yH-modul*24-14,C.muted,'11px sans-serif','left');
+    popis('hřídel ke kolům',24,yD+modul*24+16,C.muted,'11px sans-serif','left');
+    S.forEach((s,i)=>{
+      const sirka=modul*(Math.max(s.zh,s.zd)+3);
+      const sx=x+sirka/2; x+=sirka;
+      const zarazen=this.stupen===i+1;
+      const slabe=zarazen?1:0.28;
+      const fH=this.faze;
+      let fD;
+      if(s.zpet){
+        // zpátečka: mezikolo mimo osu obou hřídelí, proto se smysl otáčení obrátí
+        const zi=15, d=rozt, a=modul*(s.zh+zi)/2, b=modul*(s.zd+zi)/2;
+        const py=(a*a-b*b+d*d)/(2*d), px=Math.sqrt(Math.max(0,a*a-py*py));
+        const bx=sx+px, by=yH+py;
+        const fI=this.fazeSouseda(fH,s.zh,zi,Math.atan2(by-yH,bx-sx));
+        fD=this.fazeSouseda(fI,zi,s.zd,Math.atan2(yD-by,sx-bx));
+        this.kresliKolo(bx,by,zi,modul,fI,C.danger,'',{slabe,tenke:true});
+        if(zarazen) popis('mezikolo',bx+modul*zi/2+8,by,C.danger,'11px sans-serif','left');
+      }else{
+        fD=this.fazeSouseda(fH,s.zh,s.zd,Math.PI/2);
+      }
+      this.kresliKolo(sx,yH,s.zh,modul,fH,zarazen?C.akcent:C.faint,'',{slabe,tenke:!zarazen});
+      this.kresliKolo(sx,yD,s.zd,modul,fD,zarazen?C.ok:C.faint,'',{slabe,tenke:!zarazen});
+      popis(s.n,sx,yD+modul*s.zd/2+16,zarazen?C.text:C.faint,zarazen?'bold 13px sans-serif':'12px sans-serif');
+      popis(s.zh+'/'+s.zd,sx,yH-modul*s.zh/2-14,zarazen?C.muted:C.faint,'11px sans-serif');
+      if(zarazen){
+        // objímka spojuje kolo napevno s hřídelí – jen tudy jde výkon
+        ctx.fillStyle=C.warn;
+        ctx.fillRect(sx-modul*s.zd/2-14,yD-7,10,14);
+        popis('objímka',sx-modul*s.zd/2-18,yD-18,C.warn,'10px sans-serif','right');
+      }
+    });
+    if(this.stupen===0) popis('Neutrál – soukolí se točí, ale k hřídeli ke kolům není nic připojené',w/2,26,C.warn,'bold 13px sans-serif');
+  },
+
+  /* ---------- 5) diferenciál ----------
+     Diferenciál je v jádru geometrie: v zatáčce opíše vnější kolo delší oblouk
+     než vnitřní, a proto se musí točit rychleji. Hlavní obrázek je tedy pohled
+     shora na auto v zatáčce se stopami obou kol – bez něj je diferenciál jen
+     krabice s koly. Mechanismus je vedle jako výřez, ve stejném pohledu shora. */
+  ROZCHOD: 1.5,        // rozchod kol v metrech
+
+  /* Posuvník neznamená abstraktní podíl, ale skutečný poloměr zatáčky:
+     0 = rovně, krajní poloha = nejostřejší zatáčka, jakou auto svede (4 m). */
+  polomerZatacky(){
+    const z=Math.abs(this.zatacka)/100;
+    return z<0.01?Infinity:4+(1-z)*26;
+  },
+  /* O kolik se kola liší: r = rozchod / (2 · poloměr zatáčky). */
+  podilRozdilu(){
+    if(this.naLedu) return 1;
+    const R=this.polomerZatacky();
+    return R===Infinity?0:this.ROZCHOD/(2*R);
+  },
+
+  diferencial(w,h){
+    const nk=this.otackyKardan, r=this.podilRozdilu(), doprava=this.zatacka>=0;
+    const nVnitrni=nk*(1-r), nVnejsi=nk*(1+r);
+    // na ledu stojí kolo bez přilnavosti a druhé se protáčí dvojnásobnými otáčkami
+    const nL=this.naLedu?0:(doprava?nVnitrni:nVnejsi);
+    const nP=this.naLedu?nk*2:(doprava?nVnejsi:nVnitrni);
+
+    const uzke=w<760;
+    this.kresliZatacku(uzke?w:w*0.60,h*0.72,doprava,nL,nP);
+    if(!uzke) this.kresliMechanismus(w*0.60,0,w*0.40,h*0.72,nL,nP);
+    this.kresliHoupacku(w,h,nL,nP,nk);
+  },
+
+  /* --- pohled shora: auto a stopy obou kol --- */
+  kresliZatacku(w,h,doprava,nL,nP){
+    const Rz=this.polomerZatacky();
+    const textY=h-52;                       // spodní pruh patří popiskům, scéna do něj nesmí
+    const cx=w*0.5, cy=(textY)*0.5;
+    const R=Math.min(w,textY)*0.32;
+
+    if(!this.naLedu) this.ujeto=(this.ujeto+(nL+nP)/2*0.00012)%(Math.PI*0.6);
+    const uhel=this.naLedu?0.0001:this.ujeto;
+
+    if(Rz===Infinity||this.naLedu){
+      /* Jízda rovně (a stání na ledu): žádný oblouk, obě stopy jsou rovnoběžky
+         stejné délky – jinak by obrázek odporoval popisku „rovně“. */
+      const rozchodPx=30, delka=R*1.4;
+      const y0=cy+delka/2, y1=y0-delka*(this.naLedu?0.02:uhel/(Math.PI*0.6));
+      const stopa=(x,barva)=>{
+        ctx.setLineDash([5,6]); ctx.strokeStyle=C.border; ctx.lineWidth=2;
+        ctx.beginPath(); ctx.moveTo(x,y0); ctx.lineTo(x,cy-delka/2); ctx.stroke();
+        ctx.setLineDash([]);
+        ctx.strokeStyle=barva; ctx.lineWidth=6; ctx.lineCap='round';
+        ctx.beginPath(); ctx.moveTo(x,y0); ctx.lineTo(x,y1); ctx.stroke();
+      };
+      stopa(cx-rozchodPx/2,C.warn);
+      stopa(cx+rozchodPx/2,C.ok);
+      this.kresliAuto(cx,y1,-Math.PI/2,rozchodPx,doprava,this.naLedu?'led':'rovne');
+    }else{
+      // v poměru: rozchod na obrazovce odpovídá skutečnému poměru rozchod : poloměr
+      const rozchodPx=Math.max(7,Math.min(44,R*this.ROZCHOD/Rz));
+      const Sx=cx+(doprava?R*0.62:-R*0.62), Sy=cy;
+      const zacU=doprava?Math.PI:0, smer=doprava?-1:1;
+      const oblouk=(polomer,barva,sirka,cely)=>{
+        ctx.strokeStyle=barva; ctx.lineWidth=sirka; ctx.lineCap='round';
+        if(cely) ctx.setLineDash([5,6]);
+        ctx.beginPath();
+        ctx.arc(Sx,Sy,polomer,zacU,zacU+smer*(cely?Math.PI*0.6:uhel),doprava);
+        ctx.stroke(); ctx.setLineDash([]);
+      };
+      oblouk(R-rozchodPx/2,C.border,2,true);
+      oblouk(R+rozchodPx/2,C.border,2,true);
+      oblouk(R-rozchodPx/2,C.warn,6);        // vnitřní stopa
+      oblouk(R+rozchodPx/2,C.ok,6);          // vnější stopa
+
+      ctx.setLineDash([4,5]); ctx.strokeStyle=C.border; ctx.lineWidth=1.5;
+      ctx.beginPath(); ctx.arc(Sx,Sy,4,0,Math.PI*2); ctx.stroke();
+      ctx.setLineDash([]);
+      popis('střed zatáčky',Sx,Sy-13,C.faint,'10px sans-serif');
+
+      const a=zacU+smer*uhel;
+      this.kresliAuto(Sx+Math.cos(a)*R,Sy+Math.sin(a)*R,a+Math.PI/2,rozchodPx,doprava,'zatacka');
+    }
+
+    // popisky dole – délky se počítají ze skutečných poloměrů v metrech
+    if(this.naLedu){
+      popis('🧊 Levé kolo stojí na ledu – protáčí se pravé a auto se nerozjede.',
+        w*0.5,h-34,C.danger,'bold 13px sans-serif');
+      popis('Diferenciál pošle moment tam, kde je menší odpor. Proto se do aut dává uzávěrka.',
+        w*0.5,h-14,C.faint,'11px sans-serif');
+    }else if(Rz===Infinity){
+      popis('Rovně: obě kola opisují stejně dlouhou dráhu, takže se točí stejně rychle.',
+        w*0.5,h-34,C.muted,'12px sans-serif');
+      popis('Posuň jezdcem Zatáčka a sleduj, jak se stopy kol rozejdou.',
+        w*0.5,h-14,C.faint,'11px sans-serif');
+    }else{
+      const dVn=(Rz-this.ROZCHOD/2)*uhel, dVe=(Rz+this.ROZCHOD/2)*uhel;
+      popis(`vnitřní kolo ujelo ${cz(dVn,1)} m`,w*0.5,h-46,C.warn,'bold 12px sans-serif');
+      popis(`vnější kolo ujelo ${cz(dVe,1)} m – o ${cz(dVe-dVn,1)} m víc`,
+        w*0.5,h-28,C.ok,'bold 12px sans-serif');
+      popis(`poloměr zatáčky ${cz(Rz,1)} m · rozchod kol ${cz(this.ROZCHOD,1)} m`,
+        w*0.5,h-10,C.faint,'10px sans-serif');
+    }
+  },
+
+  /* Auto shora: karoserie je vždy čitelně velká, kola sedí na skutečném rozchodu. */
+  kresliAuto(x,y,natoceni,rozchodPx,doprava,stav){
+    ctx.save(); ctx.translate(x,y); ctx.rotate(natoceni);
+    const sir=Math.max(26,rozchodPx), dl=sir*1.7;
+    ctx.fillStyle=C.panel; ctx.strokeStyle=C.text; ctx.lineWidth=2.5;
+    ctx.beginPath(); ctx.rect(-sir/2,-dl/2,sir,dl); ctx.fill(); ctx.stroke();
+    ctx.strokeStyle=C.faint; ctx.lineWidth=1.5;      // čelní sklo napoví, kam auto míří
+    ctx.beginPath(); ctx.moveTo(-sir/2+3,-dl*0.22); ctx.lineTo(sir/2-3,-dl*0.22); ctx.stroke();
+    [[-1,-1],[1,-1],[-1,1],[1,1]].forEach(([kx,ky])=>{
+      const vnitrni = doprava ? kx>0 : kx<0;         // v pravotočivé je vnitřní pravé kolo
+      ctx.fillStyle = stav==='zatacka' ? (vnitrni?C.warn:C.ok)
+        : stav==='led' ? (kx>0?C.danger:C.silny)     // vpravo se protáčí, vlevo stojí na ledu
+        : C.muted;
+      ctx.fillRect(kx*rozchodPx/2-2.5,ky*dl*0.3-6,5,13);
+    });
+    // na ledu odlišíme protáčející se kolo čárkami pohybu
+    if(stav==='led'){
+      ctx.strokeStyle=C.danger; ctx.lineWidth=1.5;
+      for(let i=0;i<3;i++){
+        const yy=dl*0.3-6+i*5;
+        ctx.beginPath(); ctx.moveTo(rozchodPx/2+6,yy); ctx.lineTo(rozchodPx/2+13,yy); ctx.stroke();
+      }
+    }
+    ctx.restore();
+  },
+
+  /* --- výřez: co se přitom děje uvnitř skříně --- */
+  kresliMechanismus(x0,y0,w,h,nL,nP){
+    const cx=x0+w/2, cy=y0+h*0.52;
+    const R=Math.min(w*0.30,h*0.26);
+    ctx.strokeStyle=C.border; ctx.lineWidth=1.5; ctx.setLineDash([5,5]);
+    ctx.strokeRect(x0+10,y0+22,w-20,h-46); ctx.setLineDash([]);
+    popis('uvnitř skříně diferenciálu',cx,y0+38,C.faint,'11px sans-serif');
+
+    ctx.strokeStyle=C.silny; ctx.lineWidth=7; ctx.lineCap='round';
+    ctx.beginPath(); ctx.moveTo(cx-w*0.34,cy); ctx.lineTo(cx+w*0.34,cy); ctx.stroke();
+
+    const modul=Math.min(4,R*2/38);
+    this.kresliKolo(cx,cy,36,modul,this.faze,C.akcent,'',{bezNaboje:true});
+    popis('koš (talířové kolo)',cx,cy-R-14,C.akcent,'11px sans-serif');
+
+    const okno=R*0.7;
+    ctx.fillStyle=C.deep; ctx.strokeStyle=C.border; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.arc(cx,cy,okno,0,Math.PI*2); ctx.fill(); ctx.stroke();
+
+    // satelit obíhá s košem a NAVÍC se točí kolem sebe – o polovinu rozdílu kol
+    const nSat=Math.abs(nP-nL)/2;
+    const rs=okno*0.5;
+    ctx.save(); ctx.translate(cx,cy); ctx.rotate(this.faze);
+    ctx.strokeStyle=C.warn; ctx.lineWidth=3;
+    ctx.beginPath(); ctx.moveTo(-rs,0); ctx.lineTo(rs,0); ctx.stroke();
+    ctx.restore();
+    const sx=cx+Math.cos(this.faze)*rs, sy=cy+Math.sin(this.faze)*rs;
+    const fSat=this.faze*(1+nSat*0.05);
+    this.kresliKolo(sx,sy,11,modul*0.75,fSat,C.warn,'',{tenke:true,vypln:C.panel});
+    // červená ručička ukáže, jestli se satelit točí kolem sebe, nebo jen obíhá
+    ctx.save(); ctx.translate(sx,sy); ctx.rotate(fSat);
+    ctx.strokeStyle=C.danger; ctx.lineWidth=2.5;
+    ctx.beginPath(); ctx.moveTo(0,0); ctx.lineTo(modul*0.75*5,0); ctx.stroke();
+    ctx.restore();
+
+    popis(nSat<0.5?'satelit se netočí, jen obíhá s košem':`satelit se točí ${cz(nSat,0)} /min`,
+      cx,cy+R+20,nSat<0.5?C.faint:C.warn,'bold 11px sans-serif');
+    popis(nSat<0.5?'obě kola mají stejné otáčky':'to je přesně polovina rozdílu kol',
+      cx,cy+R+36,C.faint,'10px sans-serif');
+  },
+
+  /* --- houpačka: proč je průměr otáček pořád stejný --- */
+  kresliHoupacku(w,h,nL,nP,nk){
+    const y=h-52, sirka=Math.min(w*0.6,500), cx=w/2;
+    // Náklon zvětšujeme, aby i desetiprocentní rozdíl byl vidět; čísla u konců
+    // zůstávají přesná, houpačka ukazuje jen to, že se střed nehne.
+    const rozdil=Math.max(Math.abs(nL-nk),Math.abs(nP-nk));
+    const naY=n=>y-(rozdil<0.5?0:(n-nk)/rozdil*34);
+    const xL=cx-sirka/2, xP=cx+sirka/2;
+
+    ctx.setLineDash([4,4]); ctx.strokeStyle=C.border; ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(xL-24,y); ctx.lineTo(xP+24,y); ctx.stroke(); ctx.setLineDash([]);
+    ctx.strokeStyle=C.akcent; ctx.lineWidth=2.5;
+    ctx.beginPath(); ctx.moveTo(cx,y+8); ctx.lineTo(cx-12,y+26); ctx.lineTo(cx+12,y+26); ctx.closePath(); ctx.stroke();
+
+    ctx.strokeStyle=C.text; ctx.lineWidth=5; ctx.lineCap='round';
+    ctx.beginPath(); ctx.moveTo(xL,naY(nL)); ctx.lineTo(xP,naY(nP)); ctx.stroke();
+    const konec=(x,n,barva,jmeno)=>{
+      ctx.fillStyle=barva;
+      ctx.beginPath(); ctx.arc(x,naY(n),8,0,Math.PI*2); ctx.fill();
+      popis(jmeno,x,naY(n)-19,barva,'11px sans-serif');
+      popis(cz(n,0)+' /min',x,naY(n)+24,C.text,'bold 12px sans-serif');
+    };
+    konec(xL,nL,C.warn,'levé kolo');
+    konec(xP,nP,C.ok,'pravé kolo');
+    ctx.fillStyle=C.akcent;
+    ctx.beginPath(); ctx.arc(cx,y,6,0,Math.PI*2); ctx.fill();
+    popis(`koš ${cz(nk,0)} /min`,cx,y+42,C.akcent,'bold 12px sans-serif');
+    popis('Střed houpačky se nehne: o kolik jedno kolo přidá, o tolik druhé ubere.',
+      cx,y-40,C.muted,'12px sans-serif');
+  },
+
+  tahni(typ,x,y,vych){
+    const kolo=this.geo[+typ.slice(4)];
+    if(!kolo) return;
+    const uhel=Math.atan2(y-kolo.y,x-kolo.x);
+    let d=uhel-vych.uhel;
+    while(d>Math.PI) d-=2*Math.PI;
+    while(d<-Math.PI) d+=2*Math.PI;
+    this.faze=vych.faze+d*(kolo.prevod||1);
+    vych.uhel=uhel; vych.faze=this.faze;
+  },
+
+  napoveda(){
+    const spolecne='<br><br><b>Zkus si</b><br>• U kol s tečkovanou <b>roztečnou kružnicí</b> si všimni, že se obě kružnice dotýkají v jednom bodě – po nich se kola odvalují.';
+    return {
+      dvojice:`<b>Dvě kola v záběru</b><br>Zuby zabírají do sebe, takže obvodová rychlost je stejná: n₁·z₁ = n₂·z₂.
+        Malé kolo se točí rychleji.<br><br><b>Zkus si</b><br>• Chyť kolo myší a otoč jím.<br>
+        • Malé hnací + velké hnané = <b>převod do pomala</b>: menší otáčky, větší moment (lehký převod do kopce).<br>
+        • Zapni <b>mezikolo</b> – převod se nezmění, ale obrátí se smysl otáčení.`,
+      soukoli:`<b>Vícestupňové soukolí</b><br>Kola z₂ a z₃ sedí na jedné hřídeli, takže se otáčejí stejně rychle.
+        Převody obou stupňů se proto <b>násobí</b>: i = (z₂/z₁) · (z₄/z₃).<br><br><b>Zkus si</b><br>
+        • Dvakrát převod 5 dá dohromady 25 – tak se dá i malým soukolím dosáhnout obrovského zpomalení.<br>
+        • Takhle se řetězí převodovky v jeřábech, mixérech i v hodinkách.`,
+      hodiny:`<b>Hodinový strojek</b><br>Sekundová hřídel se otočí jednou za minutu. Dvě soukolí (1:6 a 1:10)
+        ji zpomalí na 1:60, takže minutová ručička se otočí jednou za hodinu. Další soukolí 1:12 pohání hodinovou.<br><br>
+        <b>Zkus si</b><br>• Zrychli čas a sleduj, o kolik pomaleji se točí velké kolo.<br>
+        • Proč dvě soukolí a ne jedno? Kolo se 600 zuby by se do hodinek nevešlo.`,
+      prevodovka:`<b>Převodovka v autě</b><br>Všechny dvojice kol jsou trvale v záběru a mají <b>stejnou osovou vzdálenost</b>
+        (součet zubů je vždy 60). Řadicí <b>objímka</b> spojí s hřídelí právě jedno kolo – tudy pak jde výkon.<br><br>
+        <b>Zkus si</b><br>• Zařaď jedničku: velký převod = malá rychlost, ale velký moment na kolech.<br>
+        • Zpátečka má menší kola, aby se přímo nedotýkala – výkon jde přes <b>mezikolo</b> mimo osu obou hřídelí.<br>
+        • Pátý stupěň má převod pod 1 – kola se točí rychleji než motor.<br>
+        • <b>Zpátečka</b> přidává mezikolo, které obrátí smysl otáčení.<br>
+        • V <b>neutrálu</b> se soukolí točí naprázdno.`,
+      diferencial:`<b>Diferenciál</b><br>V zatáčce opíše vnější kolo <b>delší oblouk</b> než vnitřní – proto se
+        musí točit rychleji. Diferenciál to umožní: koš (talířové kolo) se točí průměrnou rychlostí
+        a satelit rozdíl vyrovná. Vždy platí <b>n(levé) + n(pravé) = 2 · n(koš)</b>.<br><br>
+        Na obrázku vlevo jsou <b>stopy obou kol</b> – oranžová vnitřní, zelená vnější; jejich délky
+        se počítají ze skutečného poloměru zatáčky. Vpravo je výřez skříně: <b>satelit</b> se točí
+        kolem sebe jen tehdy, když se kola liší, a to přesně o polovinu jejich rozdílu.
+        Dole je <b>houpačka</b> – její střed (otáčky koše) se nehne, ať kola dělají cokoliv.<br><br><b>Zkus si</b><br>
+        • Jeď rovně – satelit se netočí, koš jede jako jeden kus.<br>
+        • Zatoč – vnitřní kolo zpomalí přesně o tolik, o kolik vnější zrychlí.<br>
+        • Klikni na <b>Kolo na ledu</b>: kolo bez tření se točí dvojnásobně a druhé stojí. Proto se auto na ledu nerozjede.`
+    }[this.rezim]+(this.rezim==='dvojice'||this.rezim==='soukoli'?spolecne:'');
+  },
+  dole(){
+    return {
+      dvojice:'Chyť kolo a otoč jím – druhé se roztočí s ním · kolečkem myši měníš počet zubů.',
+      soukoli:'Chyť kterékoli kolo a otoč jím · kolečkem myši nad kolem měníš jeho počet zubů.',
+      hodiny:'Posuvníkem zrychli čas a sleduj poměr otáček jednotlivých kol.',
+      prevodovka:'Přepínej stupně a sleduj, které kolo objímka spojí s hřídelí.',
+      diferencial:'Posuvníkem zatáčej a sleduj, jak se rozdělí otáčky mezi kola.'
+    }[this.rezim];
+  },
+  stav(){
+    if(this.rezim==='dvojice'){
+      const i=this.z2/this.z1, n2=this.otacky/i, M2=this.moment*i;
+      return `Převodový poměr <b>i = z₂/z₁ = ${cz(i,2)}</b> `+
+        `<span class="znak">•</span> Otáčky hnaného kola <b>${cz(n2,1)} /min</b> `+
+        `<span class="znak">•</span> Moment na hnaném <b>${cz(M2,1)} N·m</b> `+
+        `<span class="znak">•</span> Smysl otáčení <b>${this.mezi?'stejný':'opačný'}</b> `+
+        `<span class="znak">•</span> ${i>1?'převod do pomala – větší síla':i<1?'převod do rychla – menší síla':'stejné otáčky i moment'}`;
+    }
+    if(this.rezim==='soukoli'){
+      const i1=this.z2/this.z1, i2=this.z4/this.z3, i=i1*i2;
+      return `1. stupeň <b>i₁ = ${cz(i1,2)}</b> <span class="znak">•</span> 2. stupeň <b>i₂ = ${cz(i2,2)}</b> `+
+        `<span class="znak">•</span> Celkem <b>i = ${cz(i,2)}×</b> `+
+        `<span class="znak">•</span> Otáčky na výstupu <b>${cz(this.otacky/i,2)} /min</b> `+
+        `<span class="znak">•</span> Moment <b>${cz(this.moment*i,1)} N·m</b> `+
+        `<span class="znak">•</span> převody se násobí, ne sčítají`;
+    }
+    if(this.rezim==='hodiny'){
+      const c=this.cas;
+      return `Čas <b>${String(Math.floor(c/3600)%12||12).padStart(2,'0')}:${String(Math.floor(c/60)%60).padStart(2,'0')}:${String(Math.floor(c%60)).padStart(2,'0')}</b> `+
+        `<span class="znak">•</span> sekundová <b>1 ot/min</b> <span class="znak">•</span> minutová <b>1 ot/hod</b> `+
+        `<span class="znak">•</span> hodinová <b>1 ot/12 hod</b> `+
+        `<span class="znak">•</span> soukolí 1:6 a 1:10 dá dohromady <b>1:60</b>`;
+    }
+    if(this.rezim==='prevodovka'){
+      const i=this.prevod();
+      if(!i) return `Zařazen <b>neutrál</b> <span class="znak">•</span> motor <b>${this.otackyMotor} /min</b> `+
+        `<span class="znak">•</span> kola se netočí – objímka nespojuje žádné kolo s hřídelí`;
+      const celkem=Math.abs(i)*this.ROZVOD;
+      const nKol=this.otackyMotor/celkem;
+      const v=nKol/60*this.OBVOD_KOLA*3.6;
+      const s=this.STUPNE[this.stupen-1];
+      return `Stupeň <b>${s.n}</b> (${s.zh}/${s.zd}) <span class="znak">•</span> převod <b>${cz(Math.abs(i),2)}</b> `+
+        `<span class="znak">•</span> se stálým převodem 3,9 celkem <b>${cz(celkem,2)}</b> `+
+        `<span class="znak">•</span> otáčky kol <b>${cz(nKol,0)} /min</b> `+
+        `<span class="znak">•</span> rychlost <b>${cz(v,0)} km/h</b>${i<0?' vzad':''} `+
+        `<span class="znak">•</span> moment na kolech <b>${cz(celkem,1)}×</b> větší než na motoru`;
+    }
+    const nk=this.otackyKardan, r=this.podilRozdilu(), doprava=this.zatacka>=0;
+    const nL=this.naLedu?0:(doprava?nk*(1-r):nk*(1+r));
+    const nP=this.naLedu?nk*2:(doprava?nk*(1+r):nk*(1-r));
+    const Rz=this.polomerZatacky();
+    return `Koš <b>${cz(nk,0)} /min</b> <span class="znak">•</span> levé kolo <b>${cz(nL,0)} /min</b> `+
+      `<span class="znak">•</span> pravé kolo <b>${cz(nP,0)} /min</b> `+
+      `<span class="znak">•</span> součet <b>${cz(nL+nP,0)} /min</b> = 2 × otáčky koše `+
+      `<span class="znak">•</span> `+
+      (this.naLedu?'🧊 <b>kolo na ledu</b> – veškeré otáčky jdou do protáčejícího se kola'
+        :Rz===Infinity?'rovně – satelit se netočí'
+        :`zatáčka o poloměru <b>${cz(Rz,1)} m</b>, vnější kolo je o <b>${cz(r*200,0)} %</b> rychlejší`);
+  }
+};
+
+/* ================= přepínání a smyčka ================= */
+const NAPOVEDA={
+  paka:`<b>Páka</b><br>Páka je v rovnováze, když se rovnají <b>momenty sil</b>: F₁·r₁ = F₂·r₂.
+    Moment je součin síly a jejího ramene (kolmé vzdálenosti od osy otáčení).<br><br>
+    <b>Zkus si</b><br>• Nastav krátké rameno břemenu a dlouhé rameno síle – zvedneš těžké břemeno malou silou.<br>
+    • <b>Táhni myší</b> za závaží – do stran měníš rameno, nahoru a dolů jeho tíhu. Za modrou šipku vytáhneš velikost síly.<br>
+    • Klikni na <b>Nový úkol</b> a zkus páku vyvážit sám; při rovnováze se úkol započítá.<br>
+    • Přepni na <b>jednozvratnou</b> páku – osa je na kraji, břemeno i síla působí na stejné straně (kolečko, otvírák).`,
+  kladka:`<b>Kladky</b><br><b>Pevná kladka</b> jen mění směr síly – táhneš stejnou silou, jako je tíha břemene.
+    Každá <b>volná kladka</b> sílu půlí, protože břemeno visí na dvou pramenech lana.<br><br>
+    <b>Zkus si</b><br>• <b>Zatáhni za lano</b> (nebo rovnou za břemeno) a zvedej náklad – siloměr ukazuje, jakou silou taháš.<br>
+    • Spočítej <b>očíslované prameny</b> mezi bloky: kolik jich je, tolikrát je síla menší.<br>
+    • V přehledu vpravo porovnej pruhy: síla klesá, dráha lana roste, ale <b>práce zůstává stejná</b>.<br>
+    • Klikni na <b>Nový úkol</b> a zkus zvednout břemeno zadanou silou.<br>
+    • Přidávej volné kladky a sleduj, jak potřebná síla klesá na G/2, G/4, G/8…<br>
+    • Podívej se na délku vytaženého lana: kolikrát ušetříš na síle, tolikrát delší lano musíš vytáhnout.<br>
+    • <b>Zlaté pravidlo mechaniky:</b> práce zůstává stejná, žádný stroj ji neušetří.`,
+  kola:`<b>Ozubená kola</b><br>Kola se zabírají zuby, takže obvodová rychlost je stejná.
+    Menší kolo se proto točí rychleji: n₁·z₁ = n₂·z₂.<br><br>
+    <b>Zkus si</b><br>• <b>Chyť kolo myší a otoč jím</b> – uvidíš, o kolik se pootočí to druhé.<br>
+    • Malé hnací a velké hnané kolo = <b>převod do pomala</b>: pomalejší otáčky, ale větší moment (jako lehký převod na kole do kopce).<br>
+    • Obráceně vznikne <b>převod do rychla</b>.<br>
+    • Zapni <b>mezikolo</b> – převodový poměr se nezmění, ale obrátí se smysl otáčení.`
+};
+const DOLE={
+  paka:'Táhni za závaží (poloha i váha) nebo za modrou šipku síly · kolečkem myši doladíš hodnotu pod kurzorem.',
+  kladka:'Táhni za lano (siloměr ukazuje sílu) nebo přímo za břemeno · kolečkem myši zvedáš po centimetrech.',
+  kola:'Chyť kolo a otoč jím – druhé se roztočí s ním · kolečkem myši nad kolem měníš počet zubů.'
+};
+let rezim='paka', lastT=null;
+
+function prepni(r){
+  rezim=r; tahne=null; kola.rucne=false; uchopy=[]; canvas.style.cursor='default';
+  for(const [id,tab] of [['tabPaka','paka'],['tabKladka','kladka'],['tabKola','kola']])
+    $(id).classList.toggle('zap',tab===r);
+  $('panelPaka').classList.toggle('skryto',r!=='paka');
+  $('panelKladka').classList.toggle('skryto',r!=='kladka');
+  $('panelKola').classList.toggle('skryto',r!=='kola');
+  $('infoText').innerHTML=r==='kola'?kola.napoveda():NAPOVEDA[r];
+  $('napoveda').textContent=r==='kola'?kola.dole():DOLE[r];
+  if(r==='paka') paka.uhel=0;
+}
+$('tabPaka').onclick=()=>prepni('paka');
+$('tabKladka').onclick=()=>prepni('kladka');
+$('tabKola').onclick=()=>prepni('kola');
+$('btnInfo').onclick=()=>$('infoBox').classList.toggle('skryto');
+$('zavriInfo').onclick=()=>$('infoBox').classList.add('skryto');
+
+['druhPaky','f1','r1','f2','r2'].forEach(id=>$(id).oninput=()=>paka.nacti());
+$('btnDopocti').onclick=()=>{
+  const f=Math.round(paka.F1*paka.r1/paka.r2);
+  $('f2').value=Math.max(1,Math.min(60,f));
+  paka.nacti();
+};
+['druhKladky','pocetKladek','brem','zvednuti'].forEach(id=>$(id).oninput=()=>kladka.nacti());
+$('btnTahni').onclick=()=>animujKladku(50);
+$('btnDolu').onclick=()=>animujKladku(0);
+$('btnUkolK').onclick=()=>{ prepni('kladka'); kladka.zadejUkol(); };
+let animId=null;
+function animujKladku(cil){
+  cancelAnimationFrame(animId);
+  const krok=()=>{
+    const h=+$('zvednuti').value;
+    if(Math.abs(h-cil)<1){ $('zvednuti').value=cil; kladka.nacti(); return; }
+    $('zvednuti').value=h+(cil>h?1:-1);
+    kladka.nacti();
+    animId=requestAnimationFrame(krok);
+  };
+  krok();
+}
+['rezimKol','z1','z2','z3','z4','otacky','mom','mezikolo','hodRychlost','stupen','otackyMotor','otackyKardan','zatacka']
+  .forEach(id=>$(id).oninput=$(id).onchange=()=>kola.nacti());
+$('btnHodReset').onclick=()=>{ kola.cas=10*3600+8*60; };
+/* Kolo na ledu není „ostrá zatáčka“ – je to prokluz, při kterém auto stojí.
+   Dřív tlačítko jen přehodilo posuvník zatáčky na maximum, což mátlo. */
+$('btnLed').onclick=()=>{
+  kola.naLedu=!kola.naLedu;
+  kola.ujeto=0;
+  $('btnLed').textContent=kola.naLedu?'🛣️ Zpět na asfalt':'🧊 Kolo na ledu';
+  $('btnLed').classList.toggle('zap',kola.naLedu);
+};
+$('btnUkol').onclick=()=>{ prepni('paka'); paka.zadejUkol(); };
+
+/* ---------- tažení přímo v obrázku ---------- */
+function poloha(e){
+  const r=canvas.getBoundingClientRect();
+  return [e.clientX-r.left,e.clientY-r.top];
+}
+canvas.addEventListener('pointerdown',e=>{
+  const [x,y]=poloha(e);
+  const u=najdiUchop(x,y);
+  if(!u) return;
+  e.preventDefault();
+  try{ canvas.setPointerCapture(e.pointerId); }catch(_){}
+  tahne={typ:u.typ,x,y,F1:paka.F1,F2:paka.F2,h:kladka.h,
+         faze:kola.faze,uhel:Math.atan2(y-u.y,x-u.x)};
+  if(u.typ.startsWith('kolo')) kola.rucne=true;
+  canvas.style.cursor='grabbing';
+});
+canvas.addEventListener('pointermove',e=>{
+  const [x,y]=poloha(e);
+  if(!tahne){
+    const u=najdiUchop(x,y);
+    podKurzorem=u?u.typ:null;
+    canvas.style.cursor=u?'grab':'default';
+    return;
+  }
+  if(rezim==='paka') paka.tahni(tahne.typ,x,y,tahne);
+  else if(rezim==='kladka') kladka.tahni(tahne.typ,x,y,tahne);
+  else kola.tahni(tahne.typ,x,y,tahne);
+});
+function pusti(){ tahne=null; podKurzorem=null; kola.rucne=false; canvas.style.cursor='default'; }
+
+// kolečko myši mění veličinu prvku pod kurzorem
+const KOLECKO={bremeno:'f1',sila:'f2',lano:'zvednuti',bremeno2:'zvednuti'};
+canvas.addEventListener('wheel',e=>{
+  const [x,y]=poloha(e);
+  const u=najdiUchop(x,y);
+  let id=u&&KOLECKO[u.typ];
+  if(!id&&u&&u.typ.startsWith('kolo')) id=(kola.geo[+u.typ.slice(4)]||{}).posuvnik;
+  if(!id) id={paka:'f2',kladka:'zvednuti',
+              kola:{dvojice:'z1',soukoli:'z1',hodiny:'hodRychlost',prevodovka:'otackyMotor',diferencial:'zatacka'}[kola.rezim]}[rezim];
+  if(!id) return;
+  const el=$(id), krok=(+el.step||1)*(e.deltaY<0?1:-1)*(e.shiftKey?5:1);
+  el.value=Math.max(+el.min,Math.min(+el.max,+el.value+krok));
+  el.dispatchEvent(new Event('input',{bubbles:true}));
+  e.preventDefault();
+},{passive:false});
+
+// šipky ←/→ ladí hlavní veličinu záložky
+addEventListener('keydown',e=>{
+  if(e.target.tagName==='INPUT'||e.target.tagName==='SELECT') return;
+  const krok=e.key==='ArrowLeft'?-1:e.key==='ArrowRight'?1:0;
+  if(!krok) return;
+  const el=$({paka:'f2',kladka:'zvednuti',
+              kola:{dvojice:'z1',soukoli:'z1',hodiny:'hodRychlost',prevodovka:'stupen',diferencial:'zatacka'}[kola.rezim]}[rezim]);
+  el.value=Math.max(+el.min,Math.min(+el.max,+el.value+krok*(+el.step||1)*(e.shiftKey?5:1)));
+  el.dispatchEvent(new Event('input',{bubbles:true}));
+  e.preventDefault();
+});
+canvas.addEventListener('pointerup',pusti);
+canvas.addEventListener('pointercancel',pusti);
+
+function smycka(t){
+  if(lastT===null) lastT=t;
+  const dt=Math.min(0.05,(t-lastT)/1000); lastT=t;
+  resize();
+  const w=canvas.clientWidth, h=canvas.clientHeight;
+  ctx.clearRect(0,0,w,h);
+  uchopy=[];   // uchopovací body registruje kreslení znovu v každém snímku
+  if(rezim==='paka'){ paka.krok(dt); paka.kresli(w,h); $('stav').innerHTML=paka.stav(); }
+  else if(rezim==='kladka'){ kladka.kresli(w,h); $('stav').innerHTML=kladka.stav(); }
+  else { kola.krok(dt); kola.kresli(w,h); $('stav').innerHTML=kola.stav(); }
+  requestAnimationFrame(smycka);
+}
+
+resize(); paka.nacti(); kladka.nacti(); kola.nacti(); prepni('paka');
+requestAnimationFrame(smycka);
+/* rozbalovací seznamy nahrazujeme řadou tlačítek – míň klikání, všechny volby na očích */
+function prepinace(){
+  document.querySelectorAll('select.jakoTlacitka').forEach(sel=>{
+    const box=document.createElement('div');
+    box.className='prepinac';
+    const obnov=()=>[...sel.options].forEach(o=>o.tlacitko.classList.toggle('zap',o.value===sel.value));
+    [...sel.options].forEach(o=>{
+      const b=document.createElement('button');
+      b.textContent=o.dataset.krat||o.text;
+      b.onclick=()=>{
+        sel.value=o.value;
+        sel.dispatchEvent(new Event('input',{bubbles:true}));
+        sel.dispatchEvent(new Event('change',{bubbles:true}));
+        obnov();
+      };
+      o.tlacitko=b; box.appendChild(b);
+    });
+    sel.after(box); sel.classList.add('skryto'); sel.obnovPrepinac=obnov; obnov();
+    sel.addEventListener('change',obnov);
+  });
+}
+prepinace();
+</script>
+</body>
+</html>

@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Poměr a měřítko</title>
+  <link rel="stylesheet" href="../common.css">
+  <link rel="stylesheet" href="../vyuka.css">
+  <script src="../theme.js"></script>
+  <script src="../uloha.js"></script>
+  <style>
+    .pomer { font-size: clamp(1.8rem, 7vw, 2.8rem); font-weight: 700; font-variant-numeric: tabular-nums; }
+    .pomer .del { color: var(--accent); }
+    .pruh { display: flex; width: min(420px, 90%); height: 34px; border-radius: 8px; overflow: hidden;
+      border: 1px solid var(--border-strong); }
+    .pruh div { display: flex; align-items: center; justify-content: center; font-size: 0.85rem;
+      font-weight: 700; color: #fff; }
+    .pruh .a { background: var(--accent); }
+    .pruh .b { background: var(--ok); }
+    .uloha-text { max-width: 620px; font-size: 1.05rem; line-height: 1.6; }
+    .uloha-text b { color: var(--accent); }
+  </style>
+</head>
+<body>
+  <h1>⚖️ Poměr a měřítko</h1>
+  <p class="podtitul">Pro 7. ročník: krácení poměru, dělení v poměru, změna v poměru a měřítko mapy.</p>
+
+  <div class="rezimy" id="rezimy">
+    <button data-rezim="kraceni" class="active">➗ Zkrať poměr</button>
+    <button data-rezim="deleni">🍰 Rozděl v poměru</button>
+    <button data-rezim="zmena">📈 Zvětši a zmenši</button>
+    <button data-rezim="meritko">🗺️ Měřítko mapy</button>
+  </div>
+
+  <div class="plocha" id="plocha"></div>
+
+  <div class="ovladani">
+    <button class="hlavni" id="btnDalsi">Přeskočit →</button>
+    <span class="skore" id="skore"></span>
+  </div>
+
+  <p class="napoveda">
+    Poměr <b>a : b</b> krátíme i rozšiřujeme stejně jako zlomek.
+    Dělení v poměru: sečti díly, vypočítej jeden díl a rozděl.
+    Měřítko <b>1 : 50 000</b> znamená, že 1 cm na mapě je 50 000 cm = 500 m ve skutečnosti.
+  </p>
+
+<script>
+const $ = id => document.getElementById(id);
+const skore = Uloha.skore('nodus_m7_pomer', $('skore'));
+let rezim = 'kraceni';
+
+const nsd = (a, b) => b ? nsd(b, a % b) : a;
+const fmt = x => Number(x.toFixed(3)).toLocaleString('cs-CZ');
+/* 1 díl, 2–4 díly, 5 a více dílů */
+const dily = n => n === 1 ? 'díl' : (n >= 2 && n <= 4 ? 'díly' : 'dílů');
+
+function odezvaEl() { const d = document.createElement('div'); d.className = 'odezva'; return d; }
+
+/* ---- Zkrať poměr ------------------------------------------------------------------ */
+function kraceni() {
+  const p = $('plocha');
+  let a, b, k, pojistka = 0;
+  do {
+    a = Uloha.nahodneCislo(1, 9);
+    b = Uloha.nahodneCislo(1, 9);
+    k = Uloha.nahodneCislo(2, 9);
+  } while (nsd(a, b) !== 1 && pojistka++ < 100);
+  const A = a * k, B = b * k;
+  const spravny = `${a} : ${b}`;
+
+  const jine = new Set();
+  let poj2 = 0;
+  while (jine.size < 3 && poj2++ < 200) {
+    const x = a + Uloha.nahodneCislo(-2, 2), y = b + Uloha.nahodneCislo(-2, 2);
+    const t = `${x} : ${y}`;
+    if (x > 0 && y > 0 && t !== spravny) jine.add(t);
+  }
+
+  p.innerHTML = `<div class="zadani">Zkrať poměr na základní tvar:</div>
+    <div class="karta"><div class="pomer">${A} <span class="del">:</span> ${B}</div></div>`;
+  const odezva = odezvaEl();
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([spravny, ...jine]).map(t => ({ klic: t, popis: t })),
+    spravnyKlic: spravny,
+    zpravaOk: `✅ ${A} : ${B} = ${spravny} (obě čísla dělíme ${k})`,
+    zpravaChyba: 'Najdi největší číslo, kterým se dají obě čísla vydělit.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Rozděl v poměru --------------------------------------------------------------- */
+const DELENI_PRIBEHY = [
+  { text: 'Sourozenci si mají rozdělit {C} Kč v poměru {A} : {B}.', jed: 'Kč' },
+  { text: 'Na táboře rozdělili {C} bonbonů v poměru {A} : {B}.', jed: 'bonbonů' },
+  { text: 'Zahradník rozdělil {C} sazenic na dva záhony v poměru {A} : {B}.', jed: 'sazenic' },
+  { text: 'Provaz dlouhý {C} cm rozstřihneme v poměru {A} : {B}.', jed: 'cm' },
+];
+function deleni() {
+  const p = $('plocha');
+  const a = Uloha.nahodneCislo(1, 7), b = Uloha.nahodneCislo(1, 7);
+  const dil = Uloha.nahodneCislo(2, 40) * 5;
+  const celek = (a + b) * dil;
+  const pribeh = Uloha.nahodne(DELENI_PRIBEHY);
+  const spravny = `${fmt(a * dil)} a ${fmt(b * dil)}`;
+
+  const jine = new Set();
+  let pojistka = 0;
+  while (jine.size < 3 && pojistka++ < 200) {
+    const posun = Uloha.nahodne([dil, -dil, 2 * dil, -2 * dil, 5, -5]);
+    const x = a * dil + posun, y = celek - x;
+    const t = `${fmt(x)} a ${fmt(y)}`;
+    if (x > 0 && y > 0 && t !== spravny) jine.add(t);
+  }
+
+  p.innerHTML = `<div class="zadani">${pribeh.text.replace('{C}', fmt(celek)).replace('{A}', a).replace('{B}', b)}
+    <br>Jak velké budou obě části?</div>
+    <div class="karta">
+      <div class="pomer">${a} <span class="del">:</span> ${b}</div>
+      <div class="pruh"><div class="a" style="flex:${a}">${a} ${dily(a)}</div><div class="b" style="flex:${b}">${b} ${dily(b)}</div></div>
+    </div>`;
+  const odezva = odezvaEl();
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([spravny, ...jine]).map(t => ({ klic: t, popis: t + ' ' + pribeh.jed })),
+    spravnyKlic: spravny,
+    zpravaOk: `✅ Celkem ${a + b} ${dily(a + b)}, jeden díl = ${fmt(celek)} : ${a + b} = ${fmt(dil)}. `
+      + `Části: ${fmt(a * dil)} a ${fmt(b * dil)} ${pribeh.jed}.`,
+    zpravaChyba: `Nejprve sečti díly (${a} + ${b}) a spočítej velikost jednoho dílu.`,
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Zvětši a zmenši v poměru ------------------------------------------------------ */
+function zmena() {
+  const p = $('plocha');
+  const a = Uloha.nahodneCislo(2, 7), b = Uloha.nahodneCislo(2, 7);
+  const zaklad = Uloha.nahodneCislo(2, 25) * b;   // ať výsledek vyjde celý
+  const vysledek = zaklad / b * a;
+  const zvetsuje = a > b;
+
+  const jine = new Set();
+  let pojistka = 0;
+  while (jine.size < 3 && pojistka++ < 200) {
+    const x = Uloha.nahodne([zaklad / a * b, zaklad + a, zaklad - b, vysledek + b, vysledek - a, zaklad * a / b + b]);
+    if (x > 0 && Math.abs(x - vysledek) > 0.001) jine.add(fmt(x));
+  }
+
+  p.innerHTML = `<div class="zadani">Změň číslo <b>${fmt(zaklad)}</b> v poměru</div>
+    <div class="karta"><div class="pomer">${a} <span class="del">:</span> ${b}</div>
+      <div style="color:var(--text-faint);font-size:0.85rem">číslo se ${zvetsuje ? 'zvětší' : 'zmenší'}</div></div>`;
+  const odezva = odezvaEl();
+  Uloha.vyber({
+    kam: p, odezva, trida: 'velke',
+    moznosti: Uloha.zamichej([fmt(vysledek), ...jine]).map(t => ({ klic: t, popis: t })),
+    spravnyKlic: fmt(vysledek),
+    zpravaOk: `✅ ${fmt(zaklad)} · ${a}/${b} = ${fmt(vysledek)}`,
+    zpravaChyba: `Vynásob číslo zlomkem ${a}/${b} – čitatel je první člen poměru.`,
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Měřítko mapy ------------------------------------------------------------------ */
+const MERITKA = [10000, 25000, 50000, 100000, 200000];
+function meritko() {
+  const p = $('plocha');
+  const m = Uloha.nahodne(MERITKA);
+  const naMape = Uloha.nahodneCislo(2, 12);          // cm
+  const skutecneCm = naMape * m;
+  const skutecneKm = skutecneCm / 100000;
+  const zMapy = Math.random() < 0.5;
+
+  let zadani, spravny, jine = new Set(), pojistka = 0;
+  if (zMapy) {
+    zadani = `Mapa má měřítko <b>1 : ${m.toLocaleString('cs-CZ')}</b>. Úsečka na mapě měří <b>${naMape} cm</b>.
+      Jaká je skutečná vzdálenost?`;
+    spravny = fmt(skutecneKm) + ' km';
+    while (jine.size < 3 && pojistka++ < 200) {
+      const x = Uloha.nahodne([skutecneKm * 10, skutecneKm / 10, skutecneKm + 1, skutecneKm * 2, skutecneKm / 2]);
+      if (x > 0 && Math.abs(x - skutecneKm) > 0.0001) jine.add(fmt(x) + ' km');
+    }
+  } else {
+    zadani = `Skutečná vzdálenost je <b>${fmt(skutecneKm)} km</b>, mapa má měřítko
+      <b>1 : ${m.toLocaleString('cs-CZ')}</b>. Kolik centimetrů to bude na mapě?`;
+    spravny = fmt(naMape) + ' cm';
+    while (jine.size < 3 && pojistka++ < 200) {
+      const x = Uloha.nahodne([naMape * 10, naMape / 10, naMape + 2, naMape * 2, naMape / 2]);
+      if (x > 0 && Math.abs(x - naMape) > 0.0001) jine.add(fmt(x) + ' cm');
+    }
+  }
+
+  p.innerHTML = `<div class="zadani uloha-text">${zadani}</div>`;
+  const odezva = odezvaEl();
+  Uloha.vyber({
+    kam: p, odezva, trida: 'velke',
+    moznosti: Uloha.zamichej([spravny, ...jine]).map(t => ({ klic: t, popis: t })),
+    spravnyKlic: spravny,
+    zpravaOk: `✅ ${naMape} cm na mapě · ${m.toLocaleString('cs-CZ')} = ${skutecneCm.toLocaleString('cs-CZ')} cm `
+      + `= ${fmt(skutecneKm)} km`,
+    zpravaChyba: 'Pozor na jednotky: 1 km = 100 000 cm.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+const REZIMY = { kraceni, deleni, zmena, meritko };
+function novaUloha() { REZIMY[rezim](); }
+
+document.querySelectorAll('#rezimy button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#rezimy button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  rezim = b.dataset.rezim;
+  novaUloha();
+}));
+$('btnDalsi').addEventListener('click', novaUloha);
+novaUloha();
+</script>
+</body>
+</html>

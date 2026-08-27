@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pády a vzory podstatných jmen</title>
+  <link rel="stylesheet" href="../common.css">
+  <link rel="stylesheet" href="../vyuka.css">
+  <script src="../theme.js"></script>
+  <script src="../rec.js"></script>
+  <script src="../uloha.js"></script>
+  <style>
+    .veta { font-size: clamp(1.2rem, 4.5vw, 1.8rem); font-weight: 600; line-height: 1.4; max-width: 620px; }
+    .veta .zvyraz { color: var(--accent); text-decoration: underline; }
+    .slovo { font-size: clamp(1.6rem, 6vw, 2.4rem); font-weight: 700; }
+    .tabulka-padu { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; max-width: 900px; margin-top: 12px; }
+    .tabulka-padu span {
+      background: var(--bg-panel); border: 1px solid var(--border); border-radius: 7px;
+      padding: 5px 9px; font-size: 0.75rem; color: var(--text-muted);
+    }
+    .tabulka-padu b { color: var(--text); }
+  </style>
+</head>
+<body>
+  <h1>📗 Pády a vzory podstatných jmen</h1>
+  <p class="podtitul">Pro 4.–5. ročník: sedm pádů, pádové otázky a vzory podstatných jmen.</p>
+
+  <div class="rezimy" id="rezimy">
+    <button data-rezim="otazka" class="active">❓ Pád podle otázky</button>
+    <button data-rezim="urciPad">🔍 Urči pád ve větě</button>
+    <button data-rezim="sklonuj">🔄 Doplň tvar</button>
+    <button data-rezim="vzor">📋 Najdi vzor</button>
+  </div>
+
+  <div class="plocha" id="plocha"></div>
+
+  <div class="ovladani">
+    <button class="hlavni" id="btnDalsi">Přeskočit →</button>
+    <span class="skore" id="skore"></span>
+  </div>
+
+  <div class="tabulka-padu" id="tabulkaPadu"></div>
+
+  <p class="napoveda">
+    Pád zjistíš tak, že se na slovo zeptáš pádovou otázkou. Vzor hledáme podle
+    <b>rodu</b> a <b>zakončení v 1. pádě</b> – slovo se pak skloňuje stejně jako jeho vzor.
+  </p>
+
+<script>
+const $ = id => document.getElementById(id);
+const skore = Uloha.skore('nodus_cj4_pady', $('skore'));
+let rezim = 'otazka';
+
+const PADY = [
+  { c: 1, o: 'kdo? co?' }, { c: 2, o: 'koho? čeho?' }, { c: 3, o: 'komu? čemu?' },
+  { c: 4, o: 'koho? co?' }, { c: 5, o: 'oslovujeme, voláme' }, { c: 6, o: 'o kom? o čem?' },
+  { c: 7, o: 'kým? čím?' },
+];
+
+$('tabulkaPadu').innerHTML = PADY.map(p => `<span><b>${p.c}.</b> ${p.o}</span>`).join('');
+
+/* věta, tvar podstatného jména ve větě, pád */
+const VETY = [
+  { v: 'Na zahradě kvete [růže].', s: 'růže', p: 1 },
+  { v: 'Bez [kamaráda] mi bylo smutno.', s: 'kamaráda', p: 2 },
+  { v: 'Dal jsem [psovi] kost.', s: 'psovi', p: 3 },
+  { v: 'Vidím vysoký [strom].', s: 'strom', p: 4 },
+  { v: 'Ahoj, [Petře], pojď sem!', s: 'Petře', p: 5 },
+  { v: 'Mluvili jsme o [škole].', s: 'škole', p: 6 },
+  { v: 'Jel jsem tam s [tátou].', s: 'tátou', p: 7 },
+  { v: 'V lese roste hodně [hub].', s: 'hub', p: 2 },
+  { v: 'Kupujeme dárek [mamince].', s: 'mamince', p: 3 },
+  { v: 'Čtu zajímavou [knihu].', s: 'knihu', p: 4 },
+  { v: 'Přemýšlím o [prázdninách].', s: 'prázdninách', p: 6 },
+  { v: 'Píšu [perem].', s: 'perem', p: 7 },
+  { v: 'Za domem stojí [auto].', s: 'auto', p: 1 },
+  { v: 'Nedostatek [vody] trápí zahradu.', s: 'vody', p: 2 },
+  { v: 'Volali jsme na [Honzu].', s: 'Honzu', p: 4 },
+];
+
+/* slovo v 1. pádě, rod, vzor, tvary 2. a 7. pádu jednotného čísla */
+const SLOVA = [
+  { s: 'pán', rod: 'm', vzor: 'pán', p2: 'pána', p7: 'pánem' },
+  { s: 'hrad', rod: 'm', vzor: 'hrad', p2: 'hradu', p7: 'hradem' },
+  { s: 'muž', rod: 'm', vzor: 'muž', p2: 'muže', p7: 'mužem' },
+  { s: 'stroj', rod: 'm', vzor: 'stroj', p2: 'stroje', p7: 'strojem' },
+  { s: 'les', rod: 'm', vzor: 'hrad', p2: 'lesa', p7: 'lesem' },
+  { s: 'učitel', rod: 'm', vzor: 'muž', p2: 'učitele', p7: 'učitelem' },
+  { s: 'žena', rod: 'z', vzor: 'žena', p2: 'ženy', p7: 'ženou' },
+  { s: 'růže', rod: 'z', vzor: 'růže', p2: 'růže', p7: 'růží' },
+  { s: 'píseň', rod: 'z', vzor: 'píseň', p2: 'písně', p7: 'písní' },
+  { s: 'kost', rod: 'z', vzor: 'kost', p2: 'kosti', p7: 'kostí' },
+  { s: 'škola', rod: 'z', vzor: 'žena', p2: 'školy', p7: 'školou' },
+  { s: 'ulice', rod: 'z', vzor: 'růže', p2: 'ulice', p7: 'ulicí' },
+  { s: 'město', rod: 's', vzor: 'město', p2: 'města', p7: 'městem' },
+  { s: 'moře', rod: 's', vzor: 'moře', p2: 'moře', p7: 'mořem' },
+  { s: 'kuře', rod: 's', vzor: 'kuře', p2: 'kuřete', p7: 'kuřetem' },
+  { s: 'stavení', rod: 's', vzor: 'stavení', p2: 'stavení', p7: 'stavením' },
+  { s: 'okno', rod: 's', vzor: 'město', p2: 'okna', p7: 'oknem' },
+];
+
+const VZORY = { m: ['pán', 'hrad', 'muž', 'stroj'], z: ['žena', 'růže', 'píseň', 'kost'],
+                s: ['město', 'moře', 'kuře', 'stavení'] };
+
+/* ---- Pád podle otázky ------------------------------------------------------ */
+function otazka() {
+  const p = $('plocha');
+  const pad = Uloha.nahodne(PADY);
+  p.innerHTML = `<div class="zadani">Ke kterému pádu patří tato otázka?</div>
+    <div class="karta"><div class="slovo">${pad.o}</div></div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva, trida: 'velke',
+    moznosti: Uloha.zamichej([pad, ...Uloha.zamichej(PADY.filter(x => x.c !== pad.c)).slice(0, 3)])
+      .map(x => ({ klic: String(x.c), popis: x.c + '.' })),
+    spravnyKlic: String(pad.c),
+    zpravaOk: `✅ ${pad.c}. pád – ${pad.o}`,
+    zpravaChyba: 'Ještě ne – zkontroluj si tabulku pádů pod úlohou.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Urči pád ve větě ------------------------------------------------------ */
+function urciPad() {
+  const p = $('plocha');
+  const v = Uloha.nahodne(VETY);
+  const veta = v.v.replace('[' + v.s + ']', `<span class="zvyraz">${v.s}</span>`);
+  p.innerHTML = `<div class="zadani">V jakém pádě je zvýrazněné slovo?</div>
+    <div class="karta"><div class="veta">${veta}</div></div>`;
+  const jine = Uloha.zamichej(PADY.filter(x => x.c !== v.p)).slice(0, 3);
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([PADY.find(x => x.c === v.p), ...jine])
+      .map(x => ({ klic: String(x.c), popis: x.c + '. pád – ' + x.o })),
+    spravnyKlic: String(v.p),
+    zpravaOk: `✅ ${v.p}. pád – zeptáme se „${PADY.find(x => x.c === v.p).o}“`,
+    zpravaChyba: 'Zkus se na slovo zeptat pádovou otázkou.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Doplň tvar ------------------------------------------------------------ */
+function sklonuj() {
+  const p = $('plocha');
+  const u = Uloha.nahodne(SLOVA);
+  const druhy = Math.random() < 0.5;
+  const cilovyPad = druhy ? 7 : 2;
+  const spravnyTvar = druhy ? u.p7 : u.p2;
+  const otazkaPadu = PADY.find(x => x.c === cilovyPad).o;
+  const jine = Uloha.zamichej(SLOVA.filter(x => (druhy ? x.p7 : x.p2) !== spravnyTvar))
+    .slice(0, 3).map(x => druhy ? x.p7 : x.p2);
+
+  p.innerHTML = `<div class="zadani">Dej slovo do <b>${cilovyPad}. pádu</b> (${otazkaPadu}):</div>
+    <div class="karta"><div class="slovo">${u.s}</div></div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([spravnyTvar, ...jine]).map(t => ({ klic: t, popis: t })),
+    spravnyKlic: spravnyTvar,
+    zpravaOk: `✅ ${u.s} → ${spravnyTvar} (${cilovyPad}. pád)`,
+    zpravaChyba: 'To je tvar jiného slova – zkus to znovu.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Najdi vzor ------------------------------------------------------------ */
+function vzor() {
+  const p = $('plocha');
+  const u = Uloha.nahodne(SLOVA.filter(x => x.s !== x.vzor));
+  const nazvyRodu = { m: 'rod mužský', z: 'rod ženský', s: 'rod střední' };
+  p.innerHTML = `<div class="zadani">Podle kterého vzoru se slovo skloňuje?</div>
+    <div class="karta"><div class="slovo">${u.s}</div>
+    <div class="popis">${nazvyRodu[u.rod]}</div></div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej(VZORY[u.rod]).map(v => ({ klic: v, popis: v })),
+    spravnyKlic: u.vzor,
+    zpravaOk: `✅ ${u.s} se skloňuje podle vzoru ${u.vzor} (bez ${u.p2}, s ${u.p7}).`,
+    zpravaChyba: 'Zkus si slovo dát do 2. pádu a porovnat koncovku se vzorem.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+const REZIMY = { otazka, urciPad, sklonuj, vzor };
+function novaUloha() { REZIMY[rezim](); }
+
+document.querySelectorAll('#rezimy button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#rezimy button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  rezim = b.dataset.rezim;
+  novaUloha();
+}));
+$('btnDalsi').addEventListener('click', novaUloha);
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === 'Enter') { e.preventDefault(); novaUloha(); }
+});
+novaUloha();
+</script>
+</body>
+</html>

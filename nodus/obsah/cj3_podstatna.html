@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Podstatná jména – rod a číslo</title>
+  <link rel="stylesheet" href="../common.css">
+  <link rel="stylesheet" href="../vyuka.css">
+  <script src="../theme.js"></script>
+  <script src="../rec.js"></script>
+  <script src="../uloha.js"></script>
+  <style>
+    .slovo { font-size: clamp(1.8rem, 7vw, 2.8rem); font-weight: 700; }
+    .veta-slova { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; max-width: 640px; }
+    .veta-slova button {
+      background: var(--bg-elevated); border: 2px solid var(--border); color: var(--text);
+      border-radius: 8px; padding: 9px 13px; font-size: 1.05rem; font-family: inherit; cursor: pointer;
+    }
+    .veta-slova button:hover:not(:disabled) { border-color: var(--accent); }
+    .veta-slova button.spravne { background: var(--ok); border-color: var(--ok); color: #fff; }
+    .veta-slova button.spatne { background: var(--danger); border-color: var(--danger); color: #fff; }
+  </style>
+</head>
+<body>
+  <h1>📗 Podstatná jména – rod a číslo</h1>
+  <p class="podtitul">Pro 3.–4. ročník: rod mužský, ženský a střední, číslo jednotné a množné.</p>
+
+  <div class="rezimy" id="rezimy">
+    <button data-rezim="rod" class="active">🚻 Určit rod</button>
+    <button data-rezim="cislo">🔢 Určit číslo</button>
+    <button data-rezim="prevod">🔄 Převeď do množného</button>
+    <button data-rezim="najdi">🔎 Najdi podstatné jméno</button>
+  </div>
+
+  <div class="plocha" id="plocha"></div>
+
+  <div class="ovladani">
+    <button class="hlavni" id="btnDalsi">Přeskočit →</button>
+    <span class="skore" id="skore"></span>
+  </div>
+
+  <p class="napoveda">
+    Rod poznáš dosazením: <b>ten</b> pes (mužský), <b>ta</b> kočka (ženský), <b>to</b> okno (střední).
+    Podstatná jména označují osoby, zvířata a věci – ptáme se <i>kdo? co?</i>
+  </p>
+
+<script>
+const $ = id => document.getElementById(id);
+const skore = Uloha.skore('nodus_cj3_podstatna', $('skore'));
+let rezim = 'rod';
+
+/* jednotné číslo, množné číslo, rod */
+const SLOVA = [
+  { j: 'pes', mn: 'psi', r: 'm' },        { j: 'strom', mn: 'stromy', r: 'm' },
+  { j: 'dům', mn: 'domy', r: 'm' },       { j: 'kluk', mn: 'kluci', r: 'm' },
+  { j: 'míč', mn: 'míče', r: 'm' },       { j: 'vlak', mn: 'vlaky', r: 'm' },
+  { j: 'sešit', mn: 'sešity', r: 'm' },   { j: 'učitel', mn: 'učitelé', r: 'm' },
+  { j: 'talíř', mn: 'talíře', r: 'm' },   { j: 'les', mn: 'lesy', r: 'm' },
+  { j: 'kočka', mn: 'kočky', r: 'z' },    { j: 'škola', mn: 'školy', r: 'z' },
+  { j: 'kniha', mn: 'knihy', r: 'z' },    { j: 'růže', mn: 'růže', r: 'z' },
+  { j: 'tužka', mn: 'tužky', r: 'z' },    { j: 'židle', mn: 'židle', r: 'z' },
+  { j: 'holka', mn: 'holky', r: 'z' },    { j: 'voda', mn: 'vody', r: 'z' },
+  { j: 'lampa', mn: 'lampy', r: 'z' },    { j: 'silnice', mn: 'silnice', r: 'z' },
+  { j: 'okno', mn: 'okna', r: 's' },      { j: 'auto', mn: 'auta', r: 's' },
+  { j: 'město', mn: 'města', r: 's' },    { j: 'kolo', mn: 'kola', r: 's' },
+  { j: 'jablko', mn: 'jablka', r: 's' },  { j: 'pero', mn: 'pera', r: 's' },
+  { j: 'zvíře', mn: 'zvířata', r: 's' },  { j: 'kotě', mn: 'koťata', r: 's' },
+  { j: 'slunce', mn: 'slunce', r: 's' },  { j: 'moře', mn: 'moře', r: 's' },
+];
+
+const RODY = {
+  m: { nazev: 'mužský', ukaz: 'ten' },
+  z: { nazev: 'ženský', ukaz: 'ta' },
+  s: { nazev: 'střední', ukaz: 'to' },
+};
+
+/* Věta rozdělená na slova + indexy VŠECH podstatných jmen.
+   Uznává se kterékoli z nich – ve větě jich bývá víc než jedno. */
+const VETY = [
+  { s: ['Na', 'zahradě', 'kvete', 'růže'], i: [1, 3] },
+  { s: ['Petr', 'čte', 'zajímavou', 'knihu'], i: [0, 3] },
+  { s: ['Rychle', 'běží', 'malý', 'pes'], i: [3] },
+  { s: ['Na', 'stole', 'leží', 'sešit'], i: [1, 3] },
+  { s: ['V', 'lese', 'rostou', 'houby'], i: [1, 3] },
+  { s: ['Maminka', 'vaří', 'dobrý', 'oběd'], i: [0, 3] },
+  { s: ['Za', 'oknem', 'sněží'], i: [1] },
+  { s: ['Kluci', 'hrají', 'fotbal'], i: [0, 2] },
+  { s: ['Zítra', 'pojedeme', 'do', 'města'], i: [3] },
+  { s: ['Učitelka', 'píše', 'na', 'tabuli'], i: [0, 3] },
+  { s: ['Sestra', 'dostala', 'nové', 'kolo'], i: [0, 3] },
+  { s: ['Vítr', 'ohýbá', 'větve', 'stromů'], i: [0, 2, 3] },
+  { s: ['Děti', 'si', 'hrají', 'na', 'písku'], i: [0, 4] },
+  { s: ['Táta', 'opravuje', 'staré', 'auto'], i: [0, 3] },
+];
+
+/* ---- Určit rod ------------------------------------------------------------- */
+function rod() {
+  const p = $('plocha');
+  const u = Uloha.nahodne(SLOVA);
+  p.innerHTML = `<div class="zadani">Jaký je rod tohoto podstatného jména?</div>
+    <div class="karta"><div class="slovo">${u.j}</div></div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Object.entries(RODY).map(([klic, r]) => ({ klic, popis: r.nazev + ' (' + r.ukaz + ')' })),
+    spravnyKlic: u.r,
+    zpravaOk: `✅ ${RODY[u.r].ukaz} ${u.j} – rod ${RODY[u.r].nazev}.`,
+    zpravaChyba: 'Zkus si před slovo dosadit ten, ta, to.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Určit číslo ---------------------------------------------------------- */
+function cislo() {
+  const p = $('plocha');
+  const u = Uloha.nahodne(SLOVA.filter(x => x.j !== x.mn));
+  const mnozne = Math.random() < 0.5;
+  const zobrazene = mnozne ? u.mn : u.j;
+  p.innerHTML = `<div class="zadani">Je slovo v jednotném, nebo množném čísle?</div>
+    <div class="karta"><div class="slovo">${zobrazene}</div></div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva, trida: 'dve',
+    moznosti: [
+      { klic: 'j', ikona: '1️⃣', popis: 'jednotné' },
+      { klic: 'mn', ikona: '🔢', popis: 'množné' },
+    ],
+    spravnyKlic: mnozne ? 'mn' : 'j',
+    zpravaOk: mnozne ? `✅ Množné číslo – jeden ${u.j}, více ${u.mn}.`
+                     : `✅ Jednotné číslo – jeden ${u.j}, více ${u.mn}.`,
+    zpravaChyba: 'Zkus si před slovo říct „jeden“ nebo „více“.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Převeď do množného čísla --------------------------------------------- */
+function prevod() {
+  const p = $('plocha');
+  const u = Uloha.nahodne(SLOVA.filter(x => x.j !== x.mn));
+  const jine = Uloha.zamichej(SLOVA.filter(x => x.mn !== u.mn)).slice(0, 3);
+  p.innerHTML = `<div class="zadani">Jak zní slovo v množném čísle?</div>
+    <div class="karta"><div class="slovo">${u.j}</div></div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([u, ...jine]).map(x => ({ klic: x.mn, popis: x.mn })),
+    spravnyKlic: u.mn,
+    zpravaOk: `✅ jeden ${u.j} → více ${u.mn}`,
+    zpravaChyba: 'To je množné číslo jiného slova.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Najdi podstatné jméno ve větě ---------------------------------------- */
+function najdi() {
+  const p = $('plocha');
+  const v = Uloha.nahodne(VETY);
+  p.innerHTML = '<div class="zadani">Klepni na podstatné jméno ve větě.</div>';
+  const radek = document.createElement('div');
+  radek.className = 'veta-slova';
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  const stav = { chyboval: false, hotovo: false };
+
+  const vsechna = v.i.map(idx => v.s[idx]);
+  v.s.forEach((slovo, i) => {
+    const b = document.createElement('button');
+    b.textContent = slovo;
+    b.addEventListener('click', () => Uloha.odpoved({
+      prvek: b,
+      spravne: v.i.includes(i),
+      stav, odezva,
+      zpravaOk: vsechna.length > 1
+        ? `✅ Ano, „${slovo}“ je podstatné jméno. Ve větě jsou i další: ${vsechna.join(', ')}.`
+        : `✅ Ano, „${slovo}“ je podstatné jméno – ptáme se kdo? co?`,
+      zpravaChyba: 'Tohle podstatné jméno není. Hledej osobu, zvíře nebo věc.',
+      poSpravne: skore.vyhodnot,
+      dalsi: novaUloha,
+    }));
+    radek.appendChild(b);
+  });
+  p.append(radek, odezva);
+}
+
+const REZIMY = { rod, cislo, prevod, najdi };
+function novaUloha() { REZIMY[rezim](); }
+
+document.querySelectorAll('#rezimy button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#rezimy button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  rezim = b.dataset.rezim;
+  novaUloha();
+}));
+$('btnDalsi').addEventListener('click', novaUloha);
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === 'Enter') { e.preventDefault(); novaUloha(); }
+});
+novaUloha();
+</script>
+</body>
+</html>

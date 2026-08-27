@@ -1,0 +1,353 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Převody jednotek</title>
+  <link rel="stylesheet" href="../common.css">
+  <script src="../theme.js"></script>
+  <style>
+    body { background-color: var(--bg-deep); padding: 24px clamp(14px, 3vw, 40px); min-height: 100vh; }
+    h1 { font-size: 1.4rem; margin-bottom: 4px; }
+    .podtitul { color: var(--text-muted); font-size: 0.88rem; margin-bottom: 16px; }
+    .volby { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 12px; align-items: center; }
+    .volby .skupina { display: flex; gap: 6px; background: var(--bg-panel); border: 1px solid var(--border); border-radius: 8px; padding: 5px; flex-wrap: wrap; }
+    .volby button { background: transparent; border: 1px solid transparent; color: var(--text-muted); border-radius: 6px; padding: 6px 12px; font-size: 0.86rem; cursor: pointer; }
+    .volby button.active { background: var(--accent); color: #fff; font-weight: 600; }
+
+    details.vyber { max-width: 720px; background: var(--bg-panel); border: 1px solid var(--border); border-radius: 8px; padding: 8px 12px; margin-bottom: 14px; }
+    details.vyber summary { cursor: pointer; font-size: 0.88rem; color: var(--text-muted); }
+    .sada { margin: 10px 0 4px; }
+    .sada h3 { font-size: 0.9rem; margin-bottom: 6px; display: flex; align-items: center; gap: 8px; }
+    .sada h3 label { font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 6px; }
+    .jednotky { display: flex; flex-wrap: wrap; gap: 6px; padding-left: 4px; }
+    .jednotky label { display: flex; align-items: center; gap: 5px; font-size: 0.84rem; background: var(--bg-input); border: 1px solid var(--border); border-radius: 6px; padding: 4px 9px; cursor: pointer; }
+    .jednotky label.vyp { opacity: 0.5; }
+    .vztahy { color: var(--text-faint); font-size: 0.78rem; margin-top: 4px; padding-left: 4px; }
+
+    .karta { background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 28px; max-width: 720px; text-align: center; }
+    .priklad { font-size: clamp(1.6rem, 6vw, 2.6rem); font-weight: 700; margin-bottom: 20px; font-variant-numeric: tabular-nums; }
+    .priklad .j { color: var(--accent); }
+    .odpovedni { display: flex; gap: 10px; align-items: center; justify-content: center; flex-wrap: wrap; }
+    input[type=text] { background: var(--bg-input); border: 2px solid var(--border-strong); border-radius: 8px; color: var(--text); font-size: 1.4rem; text-align: center; width: 190px; padding: 9px; font-variant-numeric: tabular-nums; }
+    input:focus { outline: none; border-color: var(--accent); }
+    input.spravne { border-color: var(--ok); color: var(--ok); }
+    input.spatne { border-color: var(--danger); }
+    .jednotka { font-size: 1.3rem; font-weight: 600; min-width: 3.4em; text-align: left; }
+    .zprava { margin-top: 14px; min-height: 1.5rem; font-size: 0.98rem; }
+    .zprava.ok { color: var(--ok); } .zprava.spatne { color: var(--danger); }
+    .nevim { background: none; border: none; color: var(--text-faint); font-size: 0.82rem; text-decoration: underline; cursor: pointer; margin-top: 10px; }
+    .nevim:hover { color: var(--text-muted); }
+    .napoveda { margin-top: 10px; color: var(--text-faint); font-size: 0.85rem; }
+    .stav { display: flex; justify-content: space-between; max-width: 720px; margin-top: 12px; color: var(--text-muted); font-size: 0.9rem; }
+    .serie { color: var(--warn); }
+    .prazdno { color: var(--danger); font-size: 0.95rem; }
+  </style>
+</head>
+<body>
+  <h1>📏 Převody jednotek</h1>
+  <p class="podtitul">Délka, hmotnost, objem a čas – metricky i v jednotkách, které se používají v USA.
+    Desetinná čísla piš s čárkou i tečkou, jak chceš. Napiš odpověď a stiskni Enter.</p>
+
+  <div class="volby">
+    <div class="skupina" id="obtiznost">
+      <button data-v="1" class="active">Lehké (sousední jednotky)</button>
+      <button data-v="2">Těžší (přeskoky a desetinná čísla)</button>
+    </div>
+  </div>
+
+  <details class="vyber" id="vyber">
+    <summary>⚙️ Co se má procvičovat (klepnutím vyber jednotky)</summary>
+    <div id="sady"></div>
+  </details>
+
+  <div class="karta">
+    <div class="priklad" id="priklad"></div>
+    <div class="odpovedni">
+      <input type="text" inputmode="decimal" id="odpoved" autocomplete="off" spellcheck="false">
+      <span class="jednotka" id="jednotka"></span>
+    </div>
+    <div class="zprava" id="zprava"></div>
+    <div><button class="nevim" id="btnNevim">Nevím, ukaž řešení</button></div>
+    <div class="napoveda" id="napoveda"></div>
+  </div>
+  <div class="stav">
+    <span class="serie" id="serie"></span>
+    <span id="skore"></span>
+  </div>
+
+<script src="../uloha.js"></script>
+<script>
+const $ = id => document.getElementById(id);
+
+/* Každá jednotka zná svou velikost v základní jednotce sady, takže převod je
+   jen podíl dvou čísel – funguje to i pro nedesítkové americké jednotky.
+   `tvary` = [1, 2–4, 5+, desetinné/genitiv] pro jednotky, které se píší slovem. */
+const SADY = [
+  { klic: 'delka', nazev: '📏 Délka (metrické)', jednotky: [
+      { zn: 'mm', vel: 1 }, { zn: 'cm', vel: 10 }, { zn: 'dm', vel: 100 },
+      { zn: 'm', vel: 1000 }, { zn: 'km', vel: 1000000 } ] },
+  { klic: 'hmotnost', nazev: '⚖️ Hmotnost (metrické)', jednotky: [
+      { zn: 'g', vel: 1 }, { zn: 'dkg', vel: 10 }, { zn: 'kg', vel: 1000 }, { zn: 't', vel: 1000000 } ] },
+  { klic: 'objem', nazev: '🧴 Objem (metrické)', jednotky: [
+      { zn: 'ml', vel: 1 }, { zn: 'l', vel: 1000 }, { zn: 'hl', vel: 100000 } ] },
+  { klic: 'cas', nazev: '🕐 Čas', jednotky: [
+      { zn: 's', vel: 1 }, { zn: 'min', vel: 60 }, { zn: 'h', vel: 3600 },
+      { zn: 'den', vel: 86400, tvary: ['den', 'dny', 'dní', 'dne'] },
+      { zn: 'týden', vel: 604800, tvary: ['týden', 'týdny', 'týdnů', 'týdne'] } ] },
+  { klic: 'us_delka', nazev: '🇺🇸 Délka (palce, stopy, míle)', vychozi: false, jednotky: [
+      { zn: 'in', vel: 1, popis: 'palec' }, { zn: 'ft', vel: 12, popis: 'stopa' },
+      { zn: 'yd', vel: 36, popis: 'yard' }, { zn: 'mi', vel: 63360, popis: 'míle' } ] },
+  { klic: 'us_hmotnost', nazev: '🇺🇸 Hmotnost (unce, libry)', vychozi: false, jednotky: [
+      { zn: 'oz', vel: 1, popis: 'unce' }, { zn: 'lb', vel: 16, popis: 'libra' },
+      { zn: 'sh tn', vel: 32000, popis: 'krátká tuna = 2000 liber' } ] },
+  { klic: 'us_objem', nazev: '🇺🇸 Objem (galony, pinty)', vychozi: false, jednotky: [
+      { zn: 'fl oz', vel: 1, popis: 'tekutá unce' }, { zn: 'cup', vel: 8, popis: 'šálek' },
+      { zn: 'pt', vel: 16, popis: 'pinta' }, { zn: 'qt', vel: 32, popis: 'kvart' },
+      { zn: 'gal', vel: 128, popis: 'galon' } ] },
+];
+
+/* Kolik metrických jednotek je jedna americká – jen pro informaci pod úlohou. */
+const PREVODNIK = {
+  in: '2,54 cm', ft: '30,48 cm', yd: '91,44 cm', mi: '1,609 km',
+  oz: '28,35 g', lb: '0,454 kg', 'sh tn': '907 kg',
+  'fl oz': '29,57 ml', cup: '236,6 ml', pt: '473,2 ml', qt: '946,4 ml', gal: '3,785 l',
+};
+
+const KLIC_VYBER = 'nodus_prevody_vyber';
+let obtiznost = 1;
+let uloha = null, serie = 0, chyboval = false, hotovo = false;
+let casovac = null, casovacPsani = null;
+
+/* ---- výběr jednotek ---------------------------------------------------- */
+let zapnute = {};   // klic sady -> pole symbolů
+function nactiVyber() {
+  let ulozene = null;
+  try { ulozene = JSON.parse(localStorage.getItem(KLIC_VYBER)); } catch { /* bez paměti */ }
+  zapnute = {};
+  for (const s of SADY) {
+    const vsechny = s.jednotky.map(j => j.zn);
+    if (ulozene && Array.isArray(ulozene[s.klic])) zapnute[s.klic] = ulozene[s.klic].filter(z => vsechny.includes(z));
+    else zapnute[s.klic] = s.vychozi === false ? [] : vsechny.slice();
+  }
+}
+function ulozVyber() {
+  try { localStorage.setItem(KLIC_VYBER, JSON.stringify(zapnute)); } catch { /* nevadí */ }
+}
+function jeZapnuta(sada, zn) { return zapnute[sada.klic].includes(zn); }
+function prepni(sada, zn, stav) {
+  const pole = zapnute[sada.klic];
+  const i = pole.indexOf(zn);
+  if (stav && i < 0) pole.push(zn);
+  if (!stav && i >= 0) pole.splice(i, 1);
+  ulozVyber();
+}
+
+function vykresliVyber() {
+  const cil = $('sady');
+  cil.innerHTML = '';
+  for (const sada of SADY) {
+    const box = document.createElement('div');
+    box.className = 'sada';
+    const vsechny = sada.jednotky.length === zapnute[sada.klic].length;
+    box.innerHTML = '<h3><label><input type="checkbox" ' + (vsechny ? 'checked' : '') + '> ' + sada.nazev + '</label></h3>';
+    box.querySelector('h3 input').onchange = e => {
+      zapnute[sada.klic] = e.target.checked ? sada.jednotky.map(j => j.zn) : [];
+      ulozVyber(); vykresliVyber(); nova();
+    };
+    const radek = document.createElement('div');
+    radek.className = 'jednotky';
+    for (const j of sada.jednotky) {
+      const l = document.createElement('label');
+      const zap = jeZapnuta(sada, j.zn);
+      if (!zap) l.classList.add('vyp');
+      l.innerHTML = '<input type="checkbox" ' + (zap ? 'checked' : '') + '> ' + j.zn
+        + (j.popis ? ' <span style="color:var(--text-faint)">(' + j.popis + ')</span>' : '');
+      l.querySelector('input').onchange = e => { prepni(sada, j.zn, e.target.checked); vykresliVyber(); nova(); };
+      radek.appendChild(l);
+    }
+    box.appendChild(radek);
+    const vzt = document.createElement('div');
+    vzt.className = 'vztahy';
+    vzt.textContent = vztahy(sada);
+    box.appendChild(vzt);
+    cil.appendChild(box);
+  }
+}
+
+/* ---- čísla a čeština ---------------------------------------------------- */
+const ni = (od, doC) => od + Math.floor(Math.random() * (doC - od + 1));
+const fmt = x => (Math.round(x * 1000000) / 1000000).toLocaleString('cs-CZ', { maximumFractionDigits: 6 });
+
+/* Správný tvar jednotky k číslu: 1 den, 2 dny, 7 dní, 1,5 dne. */
+function tvar(pocet, jednotka) {
+  if (!jednotka.tvary) return jednotka.zn;
+  const t = jednotka.tvary;
+  if (!Number.isInteger(pocet)) return t[3];
+  const n = Math.abs(pocet);
+  if (n === 1) return t[0];
+  if (n >= 2 && n <= 4) return t[1];
+  return t[2];
+}
+const sCislem = (pocet, jednotka) => fmt(pocet) + ' ' + tvar(pocet, jednotka);
+
+function vztahy(sada) {
+  const j = sada.jednotky;
+  const casti = [];
+  for (let i = 1; i < j.length; i++) {
+    const f = j[i].vel / j[i - 1].vel;
+    casti.push('1 ' + tvar(1, j[i]) + ' = ' + sCislem(f, j[i - 1]));
+  }
+  return casti.join(' · ');
+}
+
+/* ---- generování úlohy --------------------------------------------------- */
+function dostupneSady() {
+  return SADY.filter(s => zapnute[s.klic].length >= 2);
+}
+function nova() {
+  clearTimeout(casovac);
+  const moznosti = dostupneSady();
+  if (!moznosti.length) {
+    uloha = null;
+    $('priklad').innerHTML = '<span class="prazdno">Vyber alespoň dvě jednotky v jedné sadě ⚙️</span>';
+    $('jednotka').textContent = ''; $('odpoved').value = ''; $('napoveda').textContent = '';
+    $('zprava').textContent = ''; $('zprava').className = 'zprava';
+    $('vyber').open = true;
+    return;
+  }
+  hotovo = false; chyboval = false;
+  const sada = moznosti[Math.floor(Math.random() * moznosti.length)];
+  const jed = sada.jednotky.filter(j => jeZapnuta(sada, j.zn));   // seřazené od nejmenší
+
+  let a, b;
+  if (obtiznost === 1) {
+    const i = ni(0, jed.length - 2);                              // sousední dvojice
+    [a, b] = Math.random() < 0.5 ? [jed[i + 1], jed[i]] : [jed[i], jed[i + 1]];
+  } else {
+    let pokusu = 0;
+    do {
+      const i = ni(0, jed.length - 1), k = ni(0, jed.length - 1);
+      a = jed[i]; b = jed[k];
+    } while (a === b && pokusu++ < 200);
+    if (a === b) { a = jed[0]; b = jed[1]; }
+  }
+
+  const zVetsi = a.vel > b.vel;
+  const f = zVetsi ? a.vel / b.vel : b.vel / a.vel;
+  let hodnota, vysledek;
+  if (zVetsi) {
+    hodnota = obtiznost === 1 ? ni(1, 9) : ni(1, 50);
+    if (obtiznost === 2 && f >= 10 && Math.random() < 0.4) hodnota += ni(1, 9) / 10;
+    vysledek = hodnota * f;
+  } else {
+    const zaklad = obtiznost === 1 ? ni(1, 9) : ni(1, 50);
+    hodnota = zaklad * f;
+    if (obtiznost === 2 && Math.random() < 0.4) { hodnota += ni(1, 9) * f / 10; }
+    vysledek = hodnota / f;
+  }
+  hodnota = Math.round(hodnota * 1000000) / 1000000;
+  vysledek = Math.round(vysledek * 1000000) / 1000000;
+
+  uloha = { hodnota, z: a, na: b, vysledek, sada };
+  $('priklad').innerHTML = '<span class="j">' + sCislem(hodnota, a) + '</span> = ? <span class="j">' + tvar(0, b) + '</span>';
+  $('jednotka').textContent = tvar(0, b);
+  const odp = $('odpoved');
+  odp.value = ''; odp.className = ''; odp.disabled = false;
+  $('zprava').textContent = ''; $('zprava').className = 'zprava';
+  $('btnNevim').style.visibility = '';
+  napovedaText();
+  odp.focus();
+}
+
+function napovedaText() {
+  if (!uloha) return;
+  const info = [PREVODNIK[uloha.z.zn], PREVODNIK[uloha.na.zn]].filter(Boolean);
+  let t = '💡 ' + vztahy(uloha.sada);
+  if (info.length) {
+    t += '  ·  ' + (PREVODNIK[uloha.z.zn] ? '1 ' + uloha.z.zn + ' ≈ ' + PREVODNIK[uloha.z.zn] : '')
+      + (PREVODNIK[uloha.z.zn] && PREVODNIK[uloha.na.zn] ? ', ' : '')
+      + (PREVODNIK[uloha.na.zn] ? '1 ' + uloha.na.zn + ' ≈ ' + PREVODNIK[uloha.na.zn] : '');
+  }
+  $('napoveda').textContent = t;
+}
+
+/* ---- vyhodnocení -------------------------------------------------------- */
+const bod = Uloha.skore('nodus_prevody_jednotek', $('skore'));
+
+function cislo(text) {
+  const t = text.trim().replace(/\s/g, '').replace(',', '.');
+  if (t === '' || !/^-?\d*\.?\d+$/.test(t)) return null;
+  return Number(t);
+}
+function sedi(hodnota) {
+  return Math.abs(hodnota - uloha.vysledek) < 1e-6 * Math.max(1, Math.abs(uloha.vysledek));
+}
+
+function spravne() {
+  hotovo = true;
+  const odp = $('odpoved');
+  odp.className = 'spravne';
+  odp.disabled = true;
+  $('btnNevim').style.visibility = 'hidden';
+  serie = chyboval ? 0 : serie + 1;
+  $('serie').textContent = serie >= 3 ? '🔥 série ' + serie : '';
+  $('zprava').className = 'zprava ok';
+  $('zprava').textContent = '✅ ' + sCislem(uloha.hodnota, uloha.z) + ' = ' + sCislem(uloha.vysledek, uloha.na);
+  bod.vyhodnot(!chyboval);
+  casovac = setTimeout(nova, Uloha.PRODLEVA);
+}
+function spatne() {
+  chyboval = true;
+  const odp = $('odpoved');
+  Uloha.trhni(odp);
+  odp.classList.add('spatne');
+  setTimeout(() => odp.classList.remove('spatne'), 420);
+  $('zprava').className = 'zprava spatne';
+  $('zprava').textContent = 'Ještě ne – zkus to znovu. Přemýšlej, jestli se má číslo zvětšit, nebo zmenšit.';
+  odp.select();
+}
+function ukazReseni() {
+  if (!uloha || hotovo) return;
+  hotovo = true; chyboval = true;
+  const odp = $('odpoved');
+  odp.value = fmt(uloha.vysledek);
+  odp.disabled = true;
+  $('btnNevim').style.visibility = 'hidden';
+  serie = 0; $('serie').textContent = '';
+  $('zprava').className = 'zprava';
+  $('zprava').textContent = 'Řešení: ' + sCislem(uloha.hodnota, uloha.z) + ' = ' + sCislem(uloha.vysledek, uloha.na);
+  bod.vyhodnot(false);
+  casovac = setTimeout(nova, 2200);
+}
+
+/* Odpověď se přijme sama, jakmile v poli stojí správné číslo a dítě chvilku
+   nepíše – tlačítko „Potvrdit“ tak není potřeba. Enter vyhodnotí hned. */
+$('odpoved').addEventListener('input', () => {
+  if (!uloha || hotovo) return;
+  $('odpoved').classList.remove('spatne');
+  clearTimeout(casovacPsani);
+  const v = cislo($('odpoved').value);
+  if (v === null) return;
+  casovacPsani = setTimeout(() => { if (!hotovo && sedi(v)) spravne(); }, 550);
+});
+$('odpoved').addEventListener('keydown', e => {
+  if (e.key !== 'Enter' || !uloha || hotovo) return;
+  clearTimeout(casovacPsani);
+  const v = cislo($('odpoved').value);
+  if (v === null) { Uloha.trhni($('odpoved')); return; }
+  if (sedi(v)) spravne(); else spatne();
+});
+$('btnNevim').onclick = ukazReseni;
+
+document.querySelectorAll('#obtiznost button').forEach(b => b.onclick = () => {
+  document.querySelectorAll('#obtiznost button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active'); obtiznost = +b.dataset.v; nova();
+});
+
+nactiVyber();
+vykresliVyber();
+nova();
+</script>
+</body>
+</html>

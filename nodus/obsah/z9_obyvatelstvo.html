@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Obyvatelstvo a sídla světa</title>
+  <link rel="stylesheet" href="../common.css">
+  <link rel="stylesheet" href="../vyuka.css">
+  <script src="../theme.js"></script>
+  <script src="../uloha.js"></script>
+  <script src="../mapy.js"></script>
+  <style>
+    .uloha-text { max-width: 640px; font-size: 1.02rem; line-height: 1.6; }
+    .uloha-text b { color: var(--accent); }
+  </style>
+</head>
+<body>
+  <h1>👥 Obyvatelstvo a sídla světa</h1>
+  <p class="podtitul">Pro 9. ročník: rozmístění obyvatel, růst populace, migrace a města.</p>
+
+  <div class="rezimy" id="rezimy">
+    <button data-rezim="mapa1" class="active">🗺️ Oblasti zalidnění</button>
+    <button data-rezim="mapa2">🏙️ Velkoměsta světa</button>
+    <button data-rezim="kviz1">📊 Obyvatelstvo</button>
+    <button data-rezim="kviz2">🚶 Migrace a sídla</button>
+  </div>
+
+  <div class="plocha" id="plocha"></div>
+
+  <div class="ovladani">
+    <button class="hlavni" id="btnDalsi">Přeskočit →</button>
+    <span class="skore" id="skore"></span>
+  </div>
+
+  <p class="napoveda">Na Zemi žije přes <b>8 miliard</b> lidí, ale rozmístěni jsou velmi nerovnoměrně – nejhustěji je osídlena <b>jižní a východní Asie</b>. Roste podíl lidí žijících ve městech (<b>urbanizace</b>) a zvyšuje se počet <b>aglomerací</b> nad 10 milionů obyvatel.</p>
+
+<script>
+const $ = id => document.getElementById(id);
+const skore = Uloha.skore('nodus_z9_obyvatelstvo', $('skore'));
+let rezim = 'mapa1';
+function odezvaEl() { const d = document.createElement('div'); d.className = 'odezva'; return d; }
+
+const SADA1 = [
+  {
+    "klic": "jvAsie",
+    "popis": "jižní a východní Asie",
+    "lon": 100,
+    "lat": 25,
+    "info": "nejlidnatější oblast světa – Čína, Indie, Indonésie"
+  },
+  {
+    "klic": "evropa",
+    "popis": "západní a střední Evropa",
+    "lon": 8,
+    "lat": 50,
+    "info": "hustě osídlená oblast s vysokou urbanizací"
+  },
+  {
+    "klic": "severovychodUSA",
+    "popis": "severovýchod USA",
+    "lon": -75,
+    "lat": 40,
+    "info": "pás velkoměst od Bostonu po Washington"
+  },
+  {
+    "klic": "nil",
+    "popis": "údolí Nilu",
+    "lon": 31,
+    "lat": 27,
+    "info": "úzký pás hustého osídlení uprostřed pouště"
+  },
+  {
+    "klic": "sahara",
+    "popis": "Sahara",
+    "lon": 15,
+    "lat": 23,
+    "info": "téměř neobydlená oblast – extrémní sucho"
+  },
+  {
+    "klic": "sibir",
+    "popis": "Sibiř",
+    "lon": 100,
+    "lat": 65,
+    "info": "řídce osídlená oblast kvůli drsnému podnebí"
+  },
+  {
+    "klic": "amazonie",
+    "popis": "Amazonie",
+    "lon": -62,
+    "lat": -5,
+    "info": "řídké osídlení v deštném pralese"
+  },
+  {
+    "klic": "australskyVnitrozemi",
+    "popis": "australský outback",
+    "lon": 133,
+    "lat": -25,
+    "info": "suché vnitrozemí s minimem obyvatel"
+  }
+];
+
+const SADA2 = [
+  {
+    "klic": "tokio",
+    "popis": "Tokio",
+    "lon": 139.7,
+    "lat": 35.7,
+    "info": "největší aglomerace světa, přes 35 milionů lidí"
+  },
+  {
+    "klic": "dilli",
+    "popis": "Dillí",
+    "lon": 77.2,
+    "lat": 28.6,
+    "info": "rychle rostoucí velkoměsto Indie"
+  },
+  {
+    "klic": "sanghaj",
+    "popis": "Šanghaj",
+    "lon": 121.5,
+    "lat": 31.2,
+    "info": "největší přístav a průmyslové centrum Číny"
+  },
+  {
+    "klic": "saoPaulo",
+    "popis": "São Paulo",
+    "lon": -46.6,
+    "lat": -23.5,
+    "info": "největší město Jižní Ameriky"
+  },
+  {
+    "klic": "mexicoCity",
+    "popis": "Ciudad de México",
+    "lon": -99.1,
+    "lat": 19.4,
+    "info": "velkoměsto ve vysoko položené kotlině"
+  },
+  {
+    "klic": "kahira",
+    "popis": "Káhira",
+    "lon": 31.2,
+    "lat": 30.0,
+    "info": "největší město Afriky a arabského světa"
+  },
+  {
+    "klic": "newYork",
+    "popis": "New York",
+    "lon": -74.0,
+    "lat": 40.7,
+    "info": "finanční centrum a přístav USA"
+  },
+  {
+    "klic": "lagos",
+    "popis": "Lagos",
+    "lon": 3.4,
+    "lat": 6.5,
+    "info": "nejrychleji rostoucí africké velkoměsto"
+  }
+];
+
+function mapaUloha(sada, zadaniText) {
+  const p = $('plocha');
+  const body = Uloha.zamichej([...sada]).slice(0, 6);
+  const cil = Uloha.nahodne(body);
+  const stav = { chyboval: false, hotovo: false };
+
+  p.innerHTML = `<div class="zadani">${zadaniText} <b>${cil.popis}</b></div>` + Mapy.svg('svet', body);
+  const odezva = odezvaEl();
+  p.querySelectorAll('.znacka').forEach(g => g.addEventListener('click', () => {
+    const trefa = sada.find(x => x.klic === g.dataset.klic);
+    Uloha.odpoved({
+      prvek: g, spravne: g.dataset.klic === cil.klic, stav, odezva,
+      zpravaOk: `✅ ${cil.popis} – ${cil.info}`,
+      zpravaChyba: `Tady je ${trefa.popis}. Hledáme ${cil.popis}.`,
+      poSpravne: skore.vyhodnot,
+      dalsi: novaUloha,
+    });
+  }));
+  p.appendChild(odezva);
+}
+const mapa1 = () => mapaUloha(SADA1, 'Najdi na mapě');
+const mapa2 = () => mapaUloha(SADA2, 'Najdi na mapě město');
+
+const KVIZ1 = [
+  {
+    "q": "Kolik lidí přibližně žije na Zemi?",
+    "a": "přes 8 miliard",
+    "b": [
+      "asi 1 miliarda",
+      "asi 3 miliardy",
+      "asi 20 miliard"
+    ]
+  },
+  {
+    "q": "Ve které oblasti žije nejvíc lidí?",
+    "a": "v jižní a východní Asii",
+    "b": [
+      "v Africe",
+      "v Jižní Americe",
+      "v Austrálii"
+    ]
+  },
+  {
+    "q": "Co je hustota zalidnění?",
+    "a": "počet obyvatel na km²",
+    "b": [
+      "počet měst",
+      "podíl městského obyvatelstva",
+      "počet narozených dětí"
+    ]
+  },
+  {
+    "q": "Co ukazuje věková pyramida rozvojové země?",
+    "a": "široký základ – hodně dětí a mladých lidí",
+    "b": [
+      "úzký základ a širokou špičku",
+      "stejné zastoupení všech skupin",
+      "převahu seniorů"
+    ]
+  },
+  {
+    "q": "Co je přirozený přírůstek?",
+    "a": "rozdíl mezi počtem narozených a zemřelých",
+    "b": [
+      "počet přistěhovalců",
+      "počet obyvatel měst",
+      "rozdíl mezi muži a ženami"
+    ]
+  },
+  {
+    "q": "Proč obyvatelstvo Evropy stárne?",
+    "a": "rodí se méně dětí a lidé se dožívají vyššího věku",
+    "b": [
+      "lidé se stěhují do Asie",
+      "roste úmrtnost dětí",
+      "zvyšuje se porodnost"
+    ]
+  },
+  {
+    "q": "Které oblasti jsou téměř neosídlené?",
+    "a": "pouště, polární oblasti a vysokohorské oblasti",
+    "b": [
+      "nížiny u řek",
+      "pobřeží moří",
+      "mírné pásmo"
+    ]
+  },
+  {
+    "q": "Co je gramotnost?",
+    "a": "schopnost číst a psát",
+    "b": [
+      "počet škol",
+      "podíl obyvatel ve městech",
+      "délka života"
+    ]
+  }
+];
+const KVIZ2 = [
+  {
+    "q": "Co je urbanizace?",
+    "a": "růst měst a podílu obyvatel, kteří v nich žijí",
+    "b": [
+      "stěhování na venkov",
+      "pokles počtu obyvatel",
+      "výstavba silnic"
+    ]
+  },
+  {
+    "q": "Co je aglomerace?",
+    "a": "velké město i s propojenými sídly v okolí",
+    "b": [
+      "jedna ulice",
+      "vesnice v horách",
+      "skupina států"
+    ]
+  },
+  {
+    "q": "Co bývá hlavní příčinou pracovní migrace?",
+    "a": "hledání lepší práce a životních podmínek",
+    "b": [
+      "zvědavost",
+      "změna počasí",
+      "sportovní akce"
+    ]
+  },
+  {
+    "q": "Kdo je uprchlík?",
+    "a": "člověk, který opustil zemi kvůli válce nebo pronásledování",
+    "b": [
+      "turista",
+      "student na výměně",
+      "sezónní dělník"
+    ]
+  },
+  {
+    "q": "Co jsou slumy?",
+    "a": "chudinské čtvrti na okrajích velkoměst",
+    "b": [
+      "centrum obchodu",
+      "průmyslová zóna",
+      "rekreační oblast"
+    ]
+  },
+  {
+    "q": "Jaký problém přináší rychlý růst měst?",
+    "a": "nedostatek bydlení, dopravy a hygienického zázemí",
+    "b": [
+      "nedostatek lidí",
+      "pokles cen půdy",
+      "zánik obchodu"
+    ]
+  },
+  {
+    "q": "Co je emigrace?",
+    "a": "vystěhování z vlastní země",
+    "b": [
+      "přistěhování",
+      "cestování na dovolenou",
+      "stěhování v rámci města"
+    ]
+  },
+  {
+    "q": "Které oblasti světa dnes rostou populačně nejrychleji?",
+    "a": "subsaharská Afrika",
+    "b": [
+      "Evropa",
+      "Japonsko",
+      "Kanada"
+    ]
+  }
+];
+
+function kviz(sada, napoveda) {
+  const p = $('plocha');
+  const u = Uloha.nahodne(sada);
+  p.innerHTML = `<div class="zadani uloha-text">${u.q}</div>`;
+  const odezva = odezvaEl();
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([u.a, ...u.b]).map(t => ({ klic: t, popis: t })),
+    spravnyKlic: u.a,
+    zpravaOk: `✅ ${u.a}` + (u.proc ? ` – ${u.proc}` : ''),
+    zpravaChyba: napoveda,
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+const kviz1 = () => kviz(KVIZ1, 'Sleduj, kde jsou úrodné nížiny, mírné podnebí a dostatek vody.');
+const kviz2 = () => kviz(KVIZ2, 'Rozliš příčiny migrace: práce, bezpečí, studium, katastrofy.');
+
+const REZIMY = { mapa1, mapa2, kviz1, kviz2 };
+function novaUloha() { REZIMY[rezim](); }
+
+document.querySelectorAll('#rezimy button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#rezimy button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  rezim = b.dataset.rezim;
+  novaUloha();
+}));
+$('btnDalsi').addEventListener('click', novaUloha);
+novaUloha();
+</script>
+</body>
+</html>

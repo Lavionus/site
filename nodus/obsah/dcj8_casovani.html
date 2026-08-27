@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Časování pravidelných sloves</title>
+  <link rel="stylesheet" href="../common.css">
+  <link rel="stylesheet" href="../vyuka.css">
+  <script src="../theme.js"></script>
+  <script src="../uloha.js"></script>
+  <style>
+    .veta-ciz { font-size: clamp(1.15rem, 4.4vw, 1.7rem); font-weight: 600; max-width: 620px; }
+    .veta-ciz .mezera { color: var(--accent); border-bottom: 2px dashed var(--accent); padding: 0 12px; }
+    .preklad { color: var(--text-faint); font-size: 0.9rem; }
+    .vlajka { font-size: 2rem; }
+    table.casovani { border-collapse: collapse; font-size: 0.95rem; }
+    table.casovani td, table.casovani th {
+      border: 1px solid var(--border-strong); padding: 7px 14px; text-align: left;
+    }
+    table.casovani th { background: var(--bg-control); color: var(--text-muted); font-weight: 600; }
+    table.casovani .hledany { color: var(--accent); font-weight: 700; }
+  </style>
+</head>
+<body>
+  <h1>🏃 Časování pravidelných sloves</h1>
+  <p class="podtitul">Pro 8. ročník: koncovky sloves v němčině (-en) a francouzštině (-er).</p>
+
+  <div class="rezimy" id="rezimy">
+    <button data-rezim="koncovkyNJ" class="active">🇩🇪 Doplň tvar</button>
+    <button data-rezim="koncovkyFJ">🇫🇷 Doplň tvar</button>
+    <button data-rezim="tabulka">📋 Doplň tabulku</button>
+    <button data-rezim="osoba">🔎 Urči osobu</button>
+  </div>
+
+  <div class="plocha" id="plocha"></div>
+
+  <div class="ovladani">
+    <button class="hlavni" id="btnDalsi">Přeskočit →</button>
+    <span class="skore" id="skore"></span>
+  </div>
+
+  <p class="napoveda">
+    Němčina: ich <b>-e</b>, du <b>-st</b>, er/sie/es <b>-t</b>, wir <b>-en</b>, ihr <b>-t</b>, sie/Sie <b>-en</b>.
+    Francouzština: je <b>-e</b>, tu <b>-es</b>, il/elle <b>-e</b>, nous <b>-ons</b>, vous <b>-ez</b>, ils/elles <b>-ent</b>
+    (koncovky -e, -es, -ent se nevyslovují).
+  </p>
+
+<script>
+const $ = id => document.getElementById(id);
+const skore = Uloha.skore('nodus_dcj8_casovani', $('skore'));
+let rezim = 'koncovkyNJ';
+function odezvaEl() { const d = document.createElement('div'); d.className = 'odezva'; return d; }
+
+const NJ_OSOBY = [
+  { osoba: 'ich', konc: 'e' }, { osoba: 'du', konc: 'st' }, { osoba: 'er', konc: 't' },
+  { osoba: 'sie (ona)', konc: 't' }, { osoba: 'wir', konc: 'en' }, { osoba: 'ihr', konc: 't' },
+  { osoba: 'sie (oni)', konc: 'en' },
+];
+const NJ_SLOVESA = [
+  { inf: 'machen', kmen: 'mach', cz: 'dělat' },
+  { inf: 'spielen', kmen: 'spiel', cz: 'hrát' },
+  { inf: 'lernen', kmen: 'lern', cz: 'učit se' },
+  { inf: 'wohnen', kmen: 'wohn', cz: 'bydlet' },
+  { inf: 'kaufen', kmen: 'kauf', cz: 'kupovat' },
+  { inf: 'fragen', kmen: 'frag', cz: 'ptát se' },
+  { inf: 'sagen', kmen: 'sag', cz: 'říkat' },
+  { inf: 'hören', kmen: 'hör', cz: 'poslouchat' },
+];
+const FJ_OSOBY = [
+  { osoba: 'je', konc: 'e' }, { osoba: 'tu', konc: 'es' }, { osoba: 'il', konc: 'e' },
+  { osoba: 'elle', konc: 'e' }, { osoba: 'nous', konc: 'ons' }, { osoba: 'vous', konc: 'ez' },
+  { osoba: 'ils', konc: 'ent' },
+];
+const FJ_SLOVESA = [
+  { inf: 'parler', kmen: 'parl', cz: 'mluvit' },
+  { inf: 'aimer', kmen: 'aim', cz: 'mít rád' },
+  { inf: 'habiter', kmen: 'habit', cz: 'bydlet' },
+  { inf: 'regarder', kmen: 'regard', cz: 'dívat se' },
+  { inf: 'chanter', kmen: 'chant', cz: 'zpívat' },
+  { inf: 'jouer', kmen: 'jou', cz: 'hrát' },
+  { inf: 'travailler', kmen: 'travaill', cz: 'pracovat' },
+];
+
+function koncovky(osoby, slovesa, vlajka, napoveda) {
+  const p = $('plocha');
+  const o = Uloha.nahodne(osoby);
+  const s = Uloha.nahodne(slovesa);
+  const spravny = s.kmen + o.konc;
+  const jine = new Set(Uloha.zamichej(osoby.filter(x => x.konc !== o.konc)).slice(0, 3)
+    .map(x => s.kmen + x.konc));
+  jine.delete(spravny);
+
+  p.innerHTML = `<div class="zadani"><span class="vlajka">${vlajka}</span>
+      Doplň tvar slovesa <b>${s.inf}</b> (${s.cz}):</div>
+    <div class="karta"><div class="veta-ciz">${o.osoba} <span class="mezera">?</span></div></div>`;
+  const odezva = odezvaEl();
+  Uloha.vyber({
+    kam: p, odezva, trida: 'velke',
+    moznosti: Uloha.zamichej([spravny, ...[...jine].slice(0, 3)]).map(t => ({ klic: t, popis: t })),
+    spravnyKlic: spravny,
+    zpravaOk: `✅ ${o.osoba} ${spravny} – kmen ${s.kmen} + koncovka -${o.konc}`,
+    zpravaChyba: napoveda,
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+const koncovkyNJ = () => koncovky(NJ_OSOBY, NJ_SLOVESA, '🇩🇪',
+  'Koncovky v němčině: -e, -st, -t, -en, -t, -en.');
+const koncovkyFJ = () => koncovky(FJ_OSOBY, FJ_SLOVESA, '🇫🇷',
+  'Koncovky ve francouzštině: -e, -es, -e, -ons, -ez, -ent.');
+
+/* ---- Doplň tabulku ---------------------------------------------------------------------- */
+function tabulka() {
+  const p = $('plocha');
+  const nemecky = Math.random() < 0.5;
+  const osoby = nemecky ? NJ_OSOBY : FJ_OSOBY;
+  const s = Uloha.nahodne(nemecky ? NJ_SLOVESA : FJ_SLOVESA);
+  const i = Uloha.nahodneCislo(0, osoby.length - 1);
+  const spravny = s.kmen + osoby[i].konc;
+  const jine = new Set(Uloha.zamichej(osoby.filter(x => x.konc !== osoby[i].konc)).slice(0, 3)
+    .map(x => s.kmen + x.konc));
+  jine.delete(spravny);
+
+  const radky = osoby.map((o, k) => `<tr><th>${o.osoba}</th>
+    <td class="${k === i ? 'hledany' : ''}">${k === i ? '?' : s.kmen + o.konc}</td></tr>`).join('');
+
+  p.innerHTML = `<div class="zadani"><span class="vlajka">${nemecky ? '🇩🇪' : '🇫🇷'}</span>
+      Doplň chybějící tvar slovesa <b>${s.inf}</b> (${s.cz}):</div>
+    <div class="karta"><table class="casovani">${radky}</table></div>`;
+  const odezva = odezvaEl();
+  Uloha.vyber({
+    kam: p, odezva, trida: 'velke',
+    moznosti: Uloha.zamichej([spravny, ...[...jine].slice(0, 3)]).map(t => ({ klic: t, popis: t })),
+    spravnyKlic: spravny,
+    zpravaOk: `✅ ${osoby[i].osoba} ${spravny}`,
+    zpravaChyba: 'Podívej se na ostatní řádky tabulky – kmen zůstává, mění se jen koncovka.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Urči osobu ------------------------------------------------------------------------- */
+function osoba() {
+  const p = $('plocha');
+  const nemecky = Math.random() < 0.5;
+  const osoby = nemecky ? NJ_OSOBY : FJ_OSOBY;
+  const s = Uloha.nahodne(nemecky ? NJ_SLOVESA : FJ_SLOVESA);
+  /* vybíráme koncovku, která patří jen jedné osobě, aby úloha měla jediné řešení */
+  const jednoznacne = osoby.filter(o => osoby.filter(x => x.konc === o.konc).length === 1);
+  const o = Uloha.nahodne(jednoznacne.length ? jednoznacne : osoby);
+  const tvar = s.kmen + o.konc;
+
+  p.innerHTML = `<div class="zadani"><span class="vlajka">${nemecky ? '🇩🇪' : '🇫🇷'}</span>
+      Ke které osobě patří tento tvar?</div>
+    <div class="karta"><div class="veta-ciz">${tvar}</div>
+      <div class="preklad">${s.inf} – ${s.cz}</div></div>`;
+  const odezva = odezvaEl();
+  Uloha.vyber({
+    kam: p, odezva, trida: 'velke',
+    moznosti: Uloha.zamichej([o.osoba, ...Uloha.zamichej(osoby.filter(x => x.konc !== o.konc))
+      .slice(0, 3).map(x => x.osoba)]).map(t => ({ klic: t, popis: t })),
+    spravnyKlic: o.osoba,
+    zpravaOk: `✅ ${o.osoba} ${tvar} – koncovka -${o.konc}`,
+    zpravaChyba: 'Odděl kmen a koncovku, pak koncovku najdi v přehledu pod úlohou.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+const REZIMY = { koncovkyNJ, koncovkyFJ, tabulka, osoba };
+function novaUloha() { REZIMY[rezim](); }
+
+document.querySelectorAll('#rezimy button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#rezimy button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  rezim = b.dataset.rezim;
+  novaUloha();
+}));
+$('btnDalsi').addEventListener('click', novaUloha);
+novaUloha();
+</script>
+</body>
+</html>

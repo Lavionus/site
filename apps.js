@@ -8,7 +8,6 @@ const KATALOG_SKUPINY = [
   { id: 'tvorba',       label: '🎨 Tvorba & média' },
   { id: 'technika',     label: '📐 Technika' },
   { id: 'vyvoj',        label: '💻 Vývoj & data' },
-  { id: 'vzdelavani',   label: '🎓 Vzdělávání' },
   { id: 'hry',          label: '🎮 Hry' },
   { id: 'vysetrovani',  label: '🕵️ Vyšetřování' },
   { id: 'vareni',       label: '🍳 Vaření & recepty' },
@@ -742,6 +741,16 @@ const KATALOG_SEKCE = [
           "měsíc",
           "ryby"
         ]
+      },
+      {
+        "soubor": "obsah/agri_calendar.html",
+        "nazev": "🌱 Zemědělský kalendář",
+        "tagy": [
+          "polní práce",
+          "setí",
+          "sklizeň",
+          "agro"
+        ]
       }
     ]
   },
@@ -1021,6 +1030,28 @@ const KATALOG_SEKCE = [
           "přeškálovat",
           "paleta",
           "png"
+        ]
+      },
+      {
+        "soubor": "obsah/map_maker.html",
+        "nazev": "🗺️ Kreslení map",
+        "tagy": [
+          "mapa",
+          "hexy",
+          "šestiúhelníky",
+          "čtvercová mřížka",
+          "dračí doupě",
+          "d&d",
+          "rpg",
+          "dungeon",
+          "kobka",
+          "battlemap",
+          "herní mapa",
+          "kartograf",
+          "kartografie",
+          "hexová mapa",
+          "pergamen",
+          "fantasy"
         ]
       },
       {
@@ -1370,6 +1401,16 @@ const KATALOG_SEKCE = [
         ]
       },
       {
+        "soubor": "obsah/tinkercad.html",
+        "nazev": "🧊 3D Návrhář",
+        "tagy": [
+          "3d",
+          "modelování",
+          "tinkercad",
+          "tvary"
+        ]
+      },
+      {
         "soubor": "obsah/cable_sizing_calc.html",
         "nazev": "🔌 Dimenzování kabelu",
         "tagy": [
@@ -1662,427 +1703,6 @@ const KATALOG_SEKCE = [
           "json",
           "konfigurace"
         ]
-      }
-    ]
-  },
-  {
-    "nazev": "📖 Čeština",
-    "skupina": "vzdelavani",
-    "polozky": [
-      {
-        "soubor": "obsah/slabiky.html",
-        "nazev": "📖 Slabiky a první čtení",
-        "tagy": ["1. stupeň", "1. ročník", "2. ročník", "čtení", "slabikování"]
-      },
-      {
-        "soubor": "obsah/vyjmenovana_slova.html",
-        "nazev": "✍️ Vyjmenovaná slova",
-        "tagy": ["1. stupeň", "3. ročník", "pravopis", "i/y"]
-      },
-      {
-        "soubor": "obsah/doplnovacky.html",
-        "nazev": "✍️ Doplňovačky i/y",
-        "tagy": ["1. stupeň", "3. ročník", "4. ročník", "5. ročník", "pravopis", "diktát", "vyjmenovaná slova"]
-      },
-      {
-        "soubor": "obsah/slovni_druhy.html",
-        "nazev": "✏️ Slovní druhy",
-        "tagy": ["1. stupeň", "2. stupeň", "mluvnice"]
-      },
-      {
-        "soubor": "obsah/shoda_podmetu.html",
-        "nazev": "✏️ Shoda podmětu s přísudkem",
-        "tagy": ["2. stupeň", "6. ročník", "7. ročník", "pravopis", "koncovky", "příčestí"]
-      },
-      {
-        "soubor": "obsah/literarni_smery.html",
-        "nazev": "📚 Literární směry a autoři",
-        "tagy": ["střední škola", "sš", "maturita", "literatura", "sloh"]
-      },
-      {
-        "soubor": "obsah/reading_log.html",
-        "nazev": "📚 Čtenářský deník",
-        "tagy": ["knihy", "četba", "hodnocení", "literatura"]
-      },
-      {
-        "soubor": "obsah/cteni_s_porozumenim.html",
-        "nazev": "📖 Čtení s porozuměním",
-        "tagy": ["čtení", "porozumění", "text", "otázky", "1. stupeň", "2. stupeň", "sš"]
-      },
-      {
-        "soubor": "obsah/vetny_rozbor.html",
-        "nazev": "✏️ Rozbor věty – větné členy",
-        "tagy": ["mluvnice", "podmět", "přísudek", "předmět", "přívlastek", "2. stupeň"]
-      },
-      {
-        "soubor": "obsah/diktat_gen.html",
-        "nazev": "✍️ Generátor diktátů",
-        "tagy": ["diktát", "pravopis", "poslech", "vyjmenovaná slova", "velká písmena"]
-      },
-      {
-        "soubor": "obsah/synonyma_antonyma.html",
-        "nazev": "🔁 Synonyma a antonyma",
-        "tagy": ["slovní zásoba", "synonyma", "antonyma", "opozita"]
-      }
-    ]
-  },
-  {
-    "nazev": "🔢 Matematika",
-    "skupina": "vzdelavani",
-    "polozky": [
-      {
-        "soubor": "obsah/pocitani.html",
-        "nazev": "🔢 Počítání do 20 a 100",
-        "tagy": ["1. stupeň", "1. ročník", "2. ročník", "3. ročník", "sčítání", "odčítání"]
-      },
-      {
-        "soubor": "obsah/multiplication.html",
-        "nazev": "✖️ Procvičování násobilky",
-        "tagy": ["1. stupeň", "3. ročník", "násobení"]
-      },
-      {
-        "soubor": "obsah/clock_learning.html",
-        "nazev": "🕐 Učení hodin",
-        "tagy": ["1. stupeň", "2. ročník", "čas", "hodiny"]
-      },
-      {
-        "soubor": "obsah/prevody_jednotek.html",
-        "nazev": "📏 Převody jednotek",
-        "tagy": ["1. stupeň", "2. stupeň", "délka", "hmotnost", "objem", "čas", "jednotky"]
-      },
-      {
-        "soubor": "obsah/fraction_calc.html",
-        "nazev": "➗ Kalkulačka zlomků",
-        "tagy": ["2. stupeň", "zlomky"]
-      },
-      {
-        "soubor": "obsah/procenta.html",
-        "nazev": "💯 Procenta a trojčlenka",
-        "tagy": ["2. stupeň", "7. ročník", "8. ročník", "9. ročník", "úměra"]
-      },
-      {
-        "soubor": "obsah/rovnice.html",
-        "nazev": "🧮 Lineární rovnice",
-        "tagy": ["2. stupeň", "8. ročník", "9. ročník", "neznámá", "algebra"]
-      },
-      {
-        "soubor": "obsah/geo_tvary.html",
-        "nazev": "🔺 Geometrické tvary a tělesa",
-        "tagy": ["1. stupeň", "2. stupeň", "geometrie", "útvary"]
-      },
-      {
-        "soubor": "obsah/geometrie_vzorce.html",
-        "nazev": "📐 Obvody, obsahy, objemy",
-        "tagy": ["2. stupeň", "6. ročník", "7. ročník", "8. ročník", "9. ročník", "geometrie", "vzorce"]
-      },
-      {
-        "soubor": "obsah/grafy_funkci.html",
-        "nazev": "📈 Grafy funkcí",
-        "tagy": ["2. stupeň", "9. ročník", "střední škola", "sš", "funkce", "graf", "parabola"]
-      },
-      {
-        "soubor": "obsah/roman_numerals.html",
-        "nazev": "🏛️ Římské číslice",
-        "tagy": ["číslice", "převod"]
-      },
-      {
-        "soubor": "obsah/mental_math.html",
-        "nazev": "🧠 Mentální matematika",
-        "tagy": ["počítání zpaměti", "trénink"]
-      },
-      {
-        "soubor": "obsah/desetinna_cisla.html",
-        "nazev": "🔢 Desetinná čísla",
-        "tagy": ["desetinná čísla", "sčítání", "porovnávání", "zaokrouhlování", "2. stupeň"]
-      },
-      {
-        "soubor": "obsah/mocniny_odmocniny.html",
-        "nazev": "√ Mocniny a odmocniny",
-        "tagy": ["mocniny", "odmocniny", "2. stupeň"]
-      },
-      {
-        "soubor": "obsah/kombinatorika.html",
-        "nazev": "🎲 Kombinatorika a pravděpodobnost",
-        "tagy": ["kombinatorika", "pravděpodobnost", "variace", "kombinace", "permutace", "sš"]
-      },
-      {
-        "soubor": "obsah/trigonometrie.html",
-        "nazev": "📐 Trigonometrie pravoúhlého trojúhelníku",
-        "tagy": ["trigonometrie", "sinus", "kosinus", "tangens", "sš"]
-      },
-      {
-        "soubor": "obsah/geometricke_konstrukce.html",
-        "nazev": "📏 Geometrické konstrukce kružítkem",
-        "tagy": ["geometrie", "kružítko", "pravítko", "konstrukce", "2. stupeň"]
-      }
-    ]
-  },
-  {
-    "nazev": "🔬 Přírodní vědy",
-    "skupina": "vzdelavani",
-    "polozky": [
-      {
-        "soubor": "obsah/periodic_table.html",
-        "nazev": "⚛️ Periodická tabulka",
-        "tagy": ["chemie", "prvky", "mendělejev", "2. stupeň", "sš"]
-      },
-      {
-        "soubor": "obsah/chem_nazvoslovi.html",
-        "nazev": "⚗️ Chemické názvosloví",
-        "tagy": ["chemie", "vzorce", "oxidy", "kyseliny", "soli", "2. stupeň", "sš"]
-      },
-      {
-        "soubor": "obsah/vycislovani_rovnic.html",
-        "nazev": "🧪 Vyčíslování chemických rovnic",
-        "tagy": ["chemie", "2. stupeň", "8. ročník", "9. ročník", "sš", "koeficienty", "stechiometrie"]
-      },
-      {
-        "soubor": "obsah/punnett.html",
-        "nazev": "🧬 Punnettův čtverec",
-        "tagy": ["biologie", "genetika", "2. stupeň", "sš", "křížení", "dědičnost", "alely"]
-      },
-      {
-        "soubor": "obsah/physics_ref.html",
-        "nazev": "⚛️ Fyzikální vzorce",
-        "tagy": ["fyzika", "2. stupeň", "sš"]
-      },
-      {
-        "soubor": "obsah/solar_system.html",
-        "nazev": "🪐 Sluneční soustava",
-        "tagy": ["planety", "vesmír", "astronomie"]
-      },
-      {
-        "soubor": "obsah/planet_globe.html",
-        "nazev": "🌐 Glóbusy planet",
-        "tagy": ["planety", "vesmír", "astronomie", "mars", "měsíc", "3d", "glóbus"]
-      },
-      {
-        "soubor": "obsah/pohyb_vesmirem.html",
-        "nazev": "🌌 Pohyb vesmírem",
-        "tagy": ["vesmír", "galaxie", "měsíc", "slunce", "oběh", "astronomie", "mléčná dráha"]
-      },
-      {
-        "soubor": "obsah/gravitacni_hriste.html",
-        "nazev": "🎯 Gravitační hřiště",
-        "tagy": ["gravitace", "fyzika", "kepler", "oběžná dráha", "vesmír", "simulace", "kosmická rychlost"]
-      },
-      {
-        "soubor": "obsah/gravitacni_hriste2.html",
-        "nazev": "🌀 Gravitační hřiště: Vzájemná přitažlivost",
-        "tagy": ["gravitace", "fyzika", "n-těles", "hmotnost", "vesmír", "simulace", "srážky planet"]
-      },
-      {
-        "soubor": "obsah/physics_playground.html",
-        "nazev": "🔬 Fyzikální hřiště pro děti",
-        "tagy": ["fyzika", "kyvadlo", "nakloněná rovina", "srážky", "simulace"]
-      },
-      {
-        "soubor": "obsah/paka.html",
-        "nazev": "⚖️ Páka a jednoduché stroje",
-        "tagy": ["fyzika", "páka", "moment síly", "rameno", "rovnováha", "kladka", "kladkostroj", "ozubená kola", "převod", "jednoduché stroje", "zlaté pravidlo mechaniky", "simulace", "2. stupeň", "sš"]
-      },
-      {
-        "soubor": "obsah/optika.html",
-        "nazev": "🔦 Optika – odraz, lom a čočky",
-        "tagy": ["fyzika", "optika", "světlo", "odraz", "lom", "snellův zákon", "index lomu", "mezní úhel", "úplný odraz", "čočka", "spojka", "rozptylka", "zrcadlo", "ohnisko", "hranol", "spektrum", "disperze", "duha", "simulace", "2. stupeň", "sš"]
-      },
-      {
-        "soubor": "obsah/elektrina.html",
-        "nazev": "⚡ Elektřina – obvody a magnetismus",
-        "tagy": ["fyzika", "elektřina", "ohmův zákon", "proud", "napětí", "odpor", "elektrický obvod", "sériové zapojení", "paralelní zapojení", "žárovka", "zkrat", "pojistka", "magnetické pole", "elektromagnet", "cívka", "pravidlo pravé ruky", "simulace", "2. stupeň", "sš"]
-      },
-      {
-        "soubor": "obsah/vodni_hladina.html",
-        "nazev": "💧 Vodní hladina – vlny a slapy",
-        "tagy": ["fyzika", "vlnění", "vlny", "voda", "kruhy na vodě", "interference", "ohyb", "difrakce", "odraz", "štěrbina", "simulace", "příliv", "odliv", "slapy", "slapové jevy", "měsíc", "zeměpis", "2. stupeň", "sš"]
-      },
-      {
-        "soubor": "obsah/vitr_tunel.html",
-        "nazev": "💨 Vítr a překážky – aerodynamický tunel",
-        "tagy": ["fyzika", "vítr", "proudění", "aerodynamika", "víry", "turbulence", "odpor vzduchu", "vztlak", "křídlo", "kármánova vírová stezka", "simulace", "2. stupeň", "sš"]
-      },
-      {
-        "soubor": "obsah/iss.html",
-        "nazev": "🛰️ ISS živě",
-        "tagy": ["vesmír", "stanice", "družice", "oběžná dráha", "astronomie", "živě"]
-      },
-      {
-        "soubor": "obsah/star_map.html",
-        "nazev": "🌌 Hvězdná obloha",
-        "tagy": ["hvězdy", "souhvězdí", "astronomie", "obloha", "roční období", "zimní obloha", "letní obloha"]
-      },
-      {
-        "soubor": "obsah/sky_events.html",
-        "nazev": "🌠 Astronomický kalendář úkazů",
-        "tagy": ["meteorický roj", "zatmění", "úplněk", "slunovrat", "rovnodennost", "astronomie"]
-      },
-      {
-        "soubor": "obsah/anatomie.html",
-        "nazev": "🫀 Biologie člověka",
-        "tagy": ["biologie", "anatomie", "orgány", "soustavy", "2. stupeň"]
-      },
-      {
-        "soubor": "obsah/bunka.html",
-        "nazev": "🔬 Stavba buňky",
-        "tagy": ["biologie", "buňka", "organely", "jádro", "mitochondrie", "2. stupeň"]
-      },
-      {
-        "soubor": "obsah/potravni_retezec.html",
-        "nazev": "🌾 Potravní řetězce",
-        "tagy": ["biologie", "ekosystém", "producent", "konzument", "1. stupeň", "2. stupeň"]
-      }
-    ]
-  },
-  {
-    "nazev": "🌍 Zeměpis & dějepis",
-    "skupina": "vzdelavani",
-    "polozky": [
-      {
-        "soubor": "obsah/slepa_mapa.html",
-        "nazev": "🗺️ Slepá mapa ČR",
-        "tagy": ["kraje", "krajská města", "zeměpis", "česko", "2. stupeň"]
-      },
-      {
-        "soubor": "obsah/slepa_mapa_evropa.html",
-        "nazev": "🗺️ Slepá mapa Evropy",
-        "tagy": ["státy", "evropa", "zeměpis", "2. stupeň", "sš"]
-      },
-      {
-        "soubor": "obsah/flags_quiz.html",
-        "nazev": "🏳️ Kvíz vlajky a města",
-        "tagy": ["vlajky", "státy", "hlavní města", "zeměpis"]
-      },
-      {
-        "soubor": "obsah/eduMaps.html",
-        "nazev": "🗺️ Mapy",
-        "tagy": ["zeměpis", "mapy", "výuka"]
-      },
-      {
-        "soubor": "obsah/casova_osa.html",
-        "nazev": "📜 Časová osa českých dějin",
-        "tagy": ["dějepis", "historie", "letopočty", "2. stupeň", "sš"]
-      },
-      {
-        "soubor": "obsah/historicke_mapy_odkazy.html",
-        "nazev": "📜 Kde najít historické mapy",
-        "tagy": ["dějepis", "mapy", "archiv"]
-      },
-      {
-        "soubor": "obsah/svetova_hlavni_mesta.html",
-        "nazev": "🌍 Kvíz světových hlavních měst",
-        "tagy": ["zeměpis", "hlavní města", "svět", "státy"]
-      },
-      {
-        "soubor": "obsah/reky_pohori.html",
-        "nazev": "🏔️ Řeky a pohoří ČR",
-        "tagy": ["zeměpis", "česko", "řeky", "pohoří", "2. stupeň"]
-      },
-      {
-        "soubor": "obsah/svetove_dejiny.html",
-        "nazev": "📜 Časová osa světových dějin",
-        "tagy": ["dějepis", "historie", "svět", "letopočty", "2. stupeň", "sš"]
-      },
-      {
-        "soubor": "obsah/eu_instituce.html",
-        "nazev": "🇪🇺 Instituce Evropské unie",
-        "tagy": ["eu", "evropská unie", "instituce", "politika", "sš"]
-      }
-    ]
-  },
-  {
-    "nazev": "🇬🇧🇩🇪🇫🇷 Cizí jazyky",
-    "skupina": "vzdelavani",
-    "polozky": [
-      {
-        "soubor": "obsah/aj_slovicka.html",
-        "nazev": "🇬🇧 Angličtina – první slovíčka",
-        "tagy": ["angličtina", "english", "1. stupeň", "slovíčka", "obrázky", "začátečník"]
-      },
-      {
-        "soubor": "obsah/aj_slovesa.html",
-        "nazev": "🇬🇧 Anglická nepravidelná slovesa",
-        "tagy": ["angličtina", "english", "2. stupeň", "sš", "irregular verbs", "slovesa"]
-      },
-      {
-        "soubor": "obsah/de_slovicka.html",
-        "nazev": "🇩🇪 Němčina – slovíčka",
-        "tagy": ["němčina", "deutsch", "slovíčka", "členy", "der die das"]
-      },
-      {
-        "soubor": "obsah/fr_slovicka.html",
-        "nazev": "🇫🇷 Francouzština – slovíčka",
-        "tagy": ["francouzština", "français", "slovíčka", "členy", "le la les"]
-      },
-      {
-        "soubor": "obsah/casovani_sloves.html",
-        "nazev": "🔤 Trenažér časování sloves",
-        "tagy": ["gramatika", "slovesa", "časování", "angličtina", "němčina", "francouzština"]
-      },
-      {
-        "soubor": "obsah/vyslovnost.html",
-        "nazev": "🔊 Výslovnost a poslech",
-        "tagy": ["poslech", "výslovnost", "angličtina", "němčina", "francouzština"]
-      }
-    ]
-  },
-  {
-    "nazev": "🎓 Kartičky & další výuka",
-    "skupina": "vzdelavani",
-    "polozky": [
-      {
-        "soubor": "obsah/flashcards.html",
-        "nazev": "🎴 Kartičky (flashcards)",
-        "tagy": ["učení", "opakování", "sady"]
-      },
-      {
-        "soubor": "obsah/knihovna_sad.html",
-        "nazev": "🗂️ Knihovna sad kartiček",
-        "tagy": ["kartičky", "flashcards", "sady", "vyjmenovaná slova", "slovíčka", "letopočty", "ke stažení"]
-      },
-      {
-        "soubor": "obsah/typing_trainer.html",
-        "nazev": "⌨️ Trenažér psaní",
-        "tagy": ["psaní všemi deseti", "klávesnice"]
-      },
-      {
-        "soubor": "obsah/music_theory.html",
-        "nazev": "🎼 Hudební nauka",
-        "tagy": ["hudba", "noty"]
-      },
-      {
-        "soubor": "obsah/notes_reading.html",
-        "nazev": "🎼 Notová osnova – čtení not",
-        "tagy": ["hudba", "noty", "houslový klíč", "solfeggio"]
-      },
-      {
-        "soubor": "obsah/morse_code.html",
-        "nazev": "📡 Morseova abeceda",
-        "tagy": ["morseovka", "kód", "vysílání"]
-      },
-      {
-        "soubor": "obsah/eduSort.html",
-        "nazev": "🔢 Algoritmy řazení",
-        "tagy": ["informatika", "programování", "sorting"]
-      },
-      {
-        "soubor": "obsah/AI_prednaska.html",
-        "nazev": "🤖 AI přednáška",
-        "tagy": ["umělá inteligence", "informatika", "prezentace", "chatgpt", "prompt"]
-      },
-      {
-        "soubor": "obsah/pracovni_listy.html",
-        "nazev": "🖨️ Generátor pracovních listů",
-        "tagy": ["tisk", "pdf", "pracovní list", "učitel", "škola", "násobilka", "sčítání", "zlomky", "rovnice", "pythagorova věta", "vyjmenovaná slova", "i/y", "bě pě vě mě", "shoda přísudku", "slovní druhy", "angličtina", "němčina", "slovíčka", "klíč řešení", "varianty A/B"]
-      },
-      {
-        "soubor": "obsah/edu_progress.html",
-        "nazev": "🏅 Studijní deník a odznaky",
-        "tagy": ["pokrok", "gamifikace", "streak", "odznaky", "návyk"]
-      },
-      {
-        "soubor": "obsah/citation_generator.html",
-        "nazev": "📚 Generátor citací",
-        "tagy": ["citace", "bibliografie", "iso 690", "apa", "seminární práce", "zdroje"]
       }
     ]
   },
@@ -2514,4 +2134,87 @@ const KATALOG_SEKCE = [
       }
     ]
   }
+];
+
+// Aplikace přesunuté na samostatný web Nodus (složka nodus/).
+// Seznam slouží jen k přesměrování starých odkazů `#obsah/...`;
+// katalog výuky je v nodus/apps.js.
+const PRESUNUTO_NODUS = [
+  "obsah/AI_prednaska.html",
+  "obsah/aj_slovesa.html",
+  "obsah/aj_slovicka.html",
+  "obsah/anatomie.html",
+  "obsah/bunka.html",
+  "obsah/casova_osa.html",
+  "obsah/casovani_sloves.html",
+  "obsah/chem_nazvoslovi.html",
+  "obsah/citation_generator.html",
+  "obsah/clock_learning.html",
+  "obsah/cteni_s_porozumenim.html",
+  "obsah/de_slovicka.html",
+  "obsah/desetinna_cisla.html",
+  "obsah/diktat_gen.html",
+  "obsah/doplnovacky.html",
+  "obsah/eduMaps.html",
+  "obsah/eduSort.html",
+  "obsah/edu_progress.html",
+  "obsah/elektrina.html",
+  "obsah/eu_instituce.html",
+  "obsah/flags_quiz.html",
+  "obsah/flashcards.html",
+  "obsah/fr_slovicka.html",
+  "obsah/fraction_calc.html",
+  "obsah/geo_tvary.html",
+  "obsah/geometricke_konstrukce.html",
+  "obsah/geometrie_vzorce.html",
+  "obsah/grafy_funkci.html",
+  "obsah/gravitacni_hriste.html",
+  "obsah/gravitacni_hriste2.html",
+  "obsah/historicke_mapy_odkazy.html",
+  "obsah/iss.html",
+  "obsah/knihovna_sad.html",
+  "obsah/kombinatorika.html",
+  "obsah/literarni_smery.html",
+  "obsah/mental_math.html",
+  "obsah/mocniny_odmocniny.html",
+  "obsah/morse_code.html",
+  "obsah/multiplication.html",
+  "obsah/music_theory.html",
+  "obsah/notes_reading.html",
+  "obsah/optika.html",
+  "obsah/paka.html",
+  "obsah/periodic_table.html",
+  "obsah/physics_playground.html",
+  "obsah/physics_ref.html",
+  "obsah/planet_globe.html",
+  "obsah/pocitani.html",
+  "obsah/pohyb_vesmirem.html",
+  "obsah/potravni_retezec.html",
+  "obsah/pracovni_listy.html",
+  "obsah/prevody_jednotek.html",
+  "obsah/procenta.html",
+  "obsah/punnett.html",
+  "obsah/reading_log.html",
+  "obsah/reky_pohori.html",
+  "obsah/roman_numerals.html",
+  "obsah/rovnice.html",
+  "obsah/shoda_podmetu.html",
+  "obsah/sky_events.html",
+  "obsah/slabiky.html",
+  "obsah/slepa_mapa.html",
+  "obsah/slepa_mapa_evropa.html",
+  "obsah/slovni_druhy.html",
+  "obsah/solar_system.html",
+  "obsah/star_map.html",
+  "obsah/svetova_hlavni_mesta.html",
+  "obsah/svetove_dejiny.html",
+  "obsah/synonyma_antonyma.html",
+  "obsah/trigonometrie.html",
+  "obsah/typing_trainer.html",
+  "obsah/vetny_rozbor.html",
+  "obsah/vitr_tunel.html",
+  "obsah/vodni_hladina.html",
+  "obsah/vycislovani_rovnic.html",
+  "obsah/vyjmenovana_slova.html",
+  "obsah/vyslovnost.html"
 ];

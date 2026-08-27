@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Souvětí souřadné a podřadné</title>
+  <link rel="stylesheet" href="../common.css">
+  <link rel="stylesheet" href="../vyuka.css">
+  <script src="../theme.js"></script>
+  <script src="../uloha.js"></script>
+  <style>
+    .souveti { font-size: clamp(1.02rem, 3.8vw, 1.35rem); font-weight: 600; max-width: 660px; line-height: 1.7; }
+    .souveti .veta1 { color: var(--text); }
+    .souveti .veta2 { color: var(--accent); }
+    .carky { display: flex; flex-wrap: wrap; align-items: center; justify-content: center;
+      gap: 2px; max-width: 680px; font-size: clamp(1rem, 3.6vw, 1.25rem); font-weight: 600; }
+    .carky .slovo { padding: 4px 2px; }
+    .carky button.skulina {
+      background: transparent; border: 2px dashed var(--border-strong); color: var(--text-faint);
+      border-radius: 6px; padding: 2px 6px; font-size: 0.9em; font-family: inherit; cursor: pointer;
+      line-height: 1.1;
+    }
+    .carky button.skulina:hover { border-color: var(--accent); color: var(--accent); }
+    .carky button.skulina.spravne { background: var(--ok); border-color: var(--ok); color: #fff; }
+    .carky button.skulina.spatne { background: var(--danger); border-color: var(--danger); color: #fff; }
+    .uloha-text { max-width: 640px; font-size: 1.02rem; line-height: 1.6; }
+    .uloha-text b { color: var(--accent); }
+  </style>
+</head>
+<body>
+  <h1>🔗 Souvětí souřadné a podřadné</h1>
+  <p class="podtitul">Pro 8. ročník: stavba souvětí, druhy vedlejších vět a psaní čárek.</p>
+
+  <div class="rezimy" id="rezimy">
+    <button data-rezim="druh" class="active">⚖️ Souřadné, či podřadné</button>
+    <button data-rezim="vedlejsi">🏷️ Druh vedlejší věty</button>
+    <button data-rezim="carky">✏️ Kam patří čárka</button>
+    <button data-rezim="pomer">↔️ Poměr mezi větami</button>
+  </div>
+
+  <div class="plocha" id="plocha"></div>
+
+  <div class="ovladani">
+    <button class="hlavni" id="btnDalsi">Přeskočit →</button>
+    <span class="skore" id="skore"></span>
+  </div>
+
+  <p class="napoveda">
+    <b>Souvětí souřadné</b> obsahuje aspoň dvě věty hlavní, <b>souvětí podřadné</b> jednu větu hlavní
+    a alespoň jednu vedlejší. Vedlejší větu poznáš podle spojky (že, aby, když, protože, který…)
+    a podle otázky, na kterou odpovídá.
+  </p>
+
+<script>
+const $ = id => document.getElementById(id);
+const skore = Uloha.skore('nodus_cj8_souveti', $('skore'));
+let rezim = 'druh';
+function odezvaEl() { const d = document.createElement('div'); d.className = 'odezva'; return d; }
+
+/* druh: 'sourad' = dvě věty hlavní, 'podrad' = hlavní + vedlejší */
+const SOUVETI = [
+  { t: 'Petr přišel domů a hned si udělal úkoly.', druh: 'sourad', pomer: 'slucovaci' },
+  { t: 'Chtěl jsem jít ven, ale začalo pršet.', druh: 'sourad', pomer: 'odporovaci' },
+  { t: 'Buď se učíš, nebo jdeš pomáhat na zahradu.', druh: 'sourad', pomer: 'vylucovaci' },
+  { t: 'Zaspal, proto přišel pozdě.', druh: 'sourad', pomer: 'dusledkovy' },
+  { t: 'Nešel do školy, byl totiž nemocný.', druh: 'sourad', pomer: 'pricinny' },
+  { t: 'Nejenže uklidil pokoj, ale také umyl nádobí.', druh: 'sourad', pomer: 'stupnovaci' },
+  { t: 'Věděl, že má pravdu.', druh: 'podrad', vv: 'predmetna' },
+  { t: 'Kdo pozdě chodí, sám sobě škodí.', druh: 'podrad', vv: 'podmetna' },
+  { t: 'Kniha, kterou jsi mi půjčil, se mi líbila.', druh: 'podrad', vv: 'privlastkova' },
+  { t: 'Když zazvonilo, žáci vyběhli na chodbu.', druh: 'podrad', vv: 'casova' },
+  { t: 'Zůstali jsme doma, protože pršelo.', druh: 'podrad', vv: 'pricinna' },
+  { t: 'Učil se, aby uspěl u zkoušky.', druh: 'podrad', vv: 'ucelova' },
+  { t: 'Půjdeme na výlet, jestliže bude hezky.', druh: 'podrad', vv: 'podminkova' },
+  { t: 'Ačkoli byl unavený, dočetl knihu.', druh: 'podrad', vv: 'pripustkova' },
+  { t: 'Šli jsme tam, kde jsme se domluvili.', druh: 'podrad', vv: 'mistni' },
+  { t: 'Pracoval tak, jak ho to naučili.', druh: 'podrad', vv: 'zpusobova' },
+];
+
+const VV = {
+  podmetna: 'podmětná (kdo? co?)',
+  predmetna: 'předmětná (koho? co? o čem?)',
+  privlastkova: 'přívlastková (jaký? který?)',
+  casova: 'příslovečná časová (kdy?)',
+  mistni: 'příslovečná místní (kde? kam?)',
+  zpusobova: 'příslovečná způsobová (jak?)',
+  pricinna: 'příslovečná příčinná (proč?)',
+  ucelova: 'příslovečná účelová (za jakým účelem?)',
+  podminkova: 'příslovečná podmínková (za jaké podmínky?)',
+  pripustkova: 'příslovečná přípustková (i přes co?)',
+};
+const POMERY = {
+  slucovaci: 'slučovací (a, i, ani, nebo)',
+  stupnovaci: 'stupňovací (nejen – ale i, dokonce)',
+  odporovaci: 'odporovací (ale, avšak, však, nýbrž)',
+  vylucovaci: 'vylučovací (nebo, buď – anebo)',
+  pricinny: 'příčinný (neboť, totiž, vždyť)',
+  dusledkovy: 'důsledkový (proto, tedy, tudíž)',
+};
+
+function druh() {
+  const p = $('plocha');
+  const u = Uloha.nahodne(SOUVETI);
+  p.innerHTML = `<div class="zadani">Jaké je to souvětí?</div>
+    <div class="karta"><div class="souveti">${u.t}</div></div>`;
+  const odezva = odezvaEl();
+  Uloha.vyber({
+    kam: p, odezva, trida: 'dve',
+    moznosti: [
+      { klic: 'sourad', ikona: '↔️', popis: 'souřadné (dvě věty hlavní)' },
+      { klic: 'podrad', ikona: '↘️', popis: 'podřadné (hlavní + vedlejší)' },
+    ],
+    spravnyKlic: u.druh,
+    zpravaOk: u.druh === 'sourad'
+      ? `✅ Obě věty jsou hlavní, spojuje je poměr ${POMERY[u.pomer].split(' (')[0]}.`
+      : `✅ Věta „${u.t}“ obsahuje vedlejší větu ${VV[u.vv].split(' (')[0]}.`,
+    zpravaChyba: 'Zeptej se, jestli může každá věta stát samostatně. Když ne, je vedlejší.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+function vedlejsi() {
+  const p = $('plocha');
+  const podradne = SOUVETI.filter(x => x.druh === 'podrad');
+  const u = Uloha.nahodne(podradne);
+  p.innerHTML = `<div class="zadani">Urči druh vedlejší věty:</div>
+    <div class="karta"><div class="souveti">${u.t}</div></div>`;
+  const odezva = odezvaEl();
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([u.vv, ...Uloha.zamichej(Object.keys(VV).filter(k => k !== u.vv)).slice(0, 3)])
+      .map(k => ({ klic: k, popis: VV[k] })),
+    spravnyKlic: u.vv,
+    zpravaOk: `✅ ${VV[u.vv]}`,
+    zpravaChyba: 'Polož si otázku z věty hlavní – odpověď dá vedlejší věta.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* Věty pro doplňování čárky: index určuje, za kterým slovem čárka patří. */
+const CARKY = [
+  { slova: ['Nešel', 'do', 'školy', 'protože', 'byl', 'nemocný.'], kde: 2, proc: 'před spojkou protože' },
+  { slova: ['Věděl', 'že', 'má', 'pravdu.'], kde: 0, proc: 'před spojkou že' },
+  { slova: ['Chtěl', 'jsem', 'jít', 'ven', 'ale', 'začalo', 'pršet.'], kde: 3, proc: 'před spojkou ale' },
+  { slova: ['Když', 'zazvonilo', 'žáci', 'vyběhli', 'ven.'], kde: 1, proc: 'mezi vedlejší a hlavní větou' },
+  { slova: ['Učil', 'se', 'aby', 'uspěl.'], kde: 1, proc: 'před spojkou aby' },
+  { slova: ['Půjdeme', 'ven', 'jestliže', 'nebude', 'pršet.'], kde: 1, proc: 'před spojkou jestliže' },
+  { slova: ['Petr', 'zaspal', 'proto', 'přišel', 'pozdě.'], kde: 1, proc: 'před spojkou proto (důsledek)' },
+  { slova: ['Kdo', 'pozdě', 'chodí', 'sám', 'sobě', 'škodí.'], kde: 2, proc: 'mezi větou vedlejší podmětnou a hlavní' },
+  { slova: ['Ačkoli', 'byl', 'unavený', 'dočetl', 'knihu.'], kde: 2, proc: 'mezi větou přípustkovou a hlavní' },
+  { slova: ['Nešel', 'ven', 'neboť', 'mrzlo.'], kde: 1, proc: 'před spojkou neboť' },
+];
+function carky() {
+  const p = $('plocha');
+  const u = Uloha.nahodne(CARKY);
+  const stav = { chyboval: false, hotovo: false };
+
+  p.innerHTML = `<div class="zadani uloha-text">Klepni na místo, kam patří <b>čárka</b>.</div>`;
+  const box = document.createElement('div');
+  box.className = 'carky';
+  const odezva = odezvaEl();
+  u.slova.forEach((slovo, i) => {
+    const s = document.createElement('span');
+    s.className = 'slovo';
+    s.textContent = slovo;
+    box.appendChild(s);
+    if (i < u.slova.length - 1) {
+      const b = document.createElement('button');
+      b.className = 'skulina';
+      b.textContent = '▾';
+      b.title = 'sem čárku';
+      b.addEventListener('click', () => Uloha.odpoved({
+        prvek: b, spravne: i === u.kde, stav, odezva,
+        zpravaOk: `✅ ${u.slova.slice(0, u.kde + 1).join(' ')}, ${u.slova.slice(u.kde + 1).join(' ')} – ${u.proc}`,
+        zpravaChyba: 'Čárka odděluje věty – hledej, kde jedna věta končí a druhá začíná.',
+        poSpravne: skore.vyhodnot,
+        dalsi: novaUloha,
+      }));
+      box.appendChild(b);
+    }
+  });
+  p.appendChild(box);
+  p.appendChild(odezva);
+}
+
+function pomer() {
+  const p = $('plocha');
+  const souradna = SOUVETI.filter(x => x.druh === 'sourad');
+  const u = Uloha.nahodne(souradna);
+  p.innerHTML = `<div class="zadani">V jakém poměru jsou věty hlavní?</div>
+    <div class="karta"><div class="souveti">${u.t}</div></div>`;
+  const odezva = odezvaEl();
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([u.pomer, ...Uloha.zamichej(Object.keys(POMERY).filter(k => k !== u.pomer)).slice(0, 3)])
+      .map(k => ({ klic: k, popis: POMERY[k] })),
+    spravnyKlic: u.pomer,
+    zpravaOk: `✅ ${POMERY[u.pomer]}`,
+    zpravaChyba: 'Sleduj spojku – ta poměr mezi větami nejčastěji prozradí.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+const REZIMY = { druh, vedlejsi, carky, pomer };
+function novaUloha() { REZIMY[rezim](); }
+
+document.querySelectorAll('#rezimy button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#rezimy button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  rezim = b.dataset.rezim;
+  novaUloha();
+}));
+$('btnDalsi').addEventListener('click', novaUloha);
+novaUloha();
+</script>
+</body>
+</html>

@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Atom, molekula a chemická vazba</title>
+  <link rel="stylesheet" href="../common.css">
+  <link rel="stylesheet" href="../vyuka.css">
+  <script src="../theme.js"></script>
+  <script src="../uloha.js"></script>
+  <style>
+    /* ---- model atomu (kreslí svgAtom) ---- */
+    .atom { width: min(300px, 84%); }
+    .atom.velky { width: min(320px, 92%); }
+    .atom .drah { fill: none; stroke: var(--border-strong); stroke-width: 1.2; }
+    .atom .proton { fill: var(--danger); }
+    .atom .neutron { fill: var(--text-faint); }
+    .atom .elektron { fill: var(--accent); }
+    .atom .elektron.valencni { fill: var(--warn); }
+    .atom .zasah { fill: transparent; }
+    .atom.klikaci .cast { cursor: pointer; }
+    .atom.klikaci .cast:hover .zasah { fill: var(--accent-soft); }
+    .atom .cast.spravne circle { fill: var(--ok); }
+    .atom .cast.spatne circle { fill: var(--danger); }
+    .atom .popis { fill: var(--text-muted); font-size: 12px; text-anchor: middle; }
+    .atom .naboj { font-size: 17px; font-weight: 700; text-anchor: middle; }
+    .atom .naboj.plus { fill: var(--danger); }
+    .atom .naboj.minus { fill: var(--accent); }
+
+    .prvekZnak { font-size: clamp(2.2rem, 8vw, 3.2rem); font-weight: 700; color: var(--accent); line-height: 1.05; }
+    .prvekZnak .cisla {
+      font-size: 0.42em; display: inline-block; text-align: right;
+      line-height: 1.05; vertical-align: middle; margin-right: 3px; color: var(--text-muted);
+    }
+    .uloha-text { max-width: 640px; font-size: 1.02rem; line-height: 1.6; }
+    .uloha-text b { color: var(--accent); }
+    .vzorec { font-family: 'Courier New', monospace; color: var(--text-muted); font-size: 0.95rem; }
+
+    /* ---- ovládací lišty bádacích režimů (stejný jazyk jako u jaderné energie) ---- */
+    .ovladace { display: flex; flex-wrap: wrap; gap: 8px 10px; justify-content: center; max-width: 600px; }
+    .ovladace button {
+      background: var(--bg-control); border: 1px solid var(--border-strong); color: var(--text);
+      border-radius: 8px; padding: 8px 14px; font-size: 0.84rem; font-family: inherit; cursor: pointer;
+    }
+    .ovladace button:hover { border-color: var(--accent); }
+    .ovladace button.hlavniAkce { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+
+    .vysvetlivka { color: var(--text-faint); font-size: 0.86rem; max-width: 600px; line-height: 1.55; min-height: 2.6em; }
+    .vysvetlivka b { color: var(--text-muted); }
+    canvas.scena {
+      width: min(560px, 100%); height: auto; display: block;
+      background: var(--bg-deep); border: 1px solid var(--border); border-radius: 10px;
+    }
+
+    /* ---- stavebnice atomu ---- */
+    .stavba { display: flex; flex-wrap: wrap; gap: 16px 22px; align-items: center; justify-content: center; width: 100%; }
+    .pult { display: flex; flex-direction: column; gap: 10px; width: min(290px, 100%); }
+    .pocitadlo {
+      display: flex; align-items: center; gap: 8px;
+      background: var(--bg-input); border: 1px solid var(--border); border-radius: 10px; padding: 6px 8px;
+    }
+    .pocitadlo .jmeno {
+      flex: 1; text-align: left; font-size: 0.82rem; color: var(--text-muted);
+      display: flex; align-items: center; gap: 7px;
+    }
+    .pocitadlo .tecka { width: 12px; height: 12px; border-radius: 50%; display: inline-block; flex: none; }
+    .pocitadlo b { min-width: 2ch; font-size: 1.1rem; font-variant-numeric: tabular-nums; }
+    .pocitadlo button {
+      width: 34px; height: 34px; flex: none; border-radius: 8px; background: var(--bg-control);
+      border: 1px solid var(--border-strong); color: var(--text); font-size: 1.15rem;
+      font-family: inherit; cursor: pointer; line-height: 1;
+    }
+    .pocitadlo button:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+    .pocitadlo button:disabled { opacity: 0.3; cursor: default; }
+
+    .stavovky { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; width: 100%; }
+    .stavovky .bunka {
+      background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 10px; padding: 7px 5px;
+    }
+    .stavovky .nadpis {
+      color: var(--text-faint); font-size: 0.64rem; text-transform: uppercase; letter-spacing: 0.4px;
+    }
+    .stavovky .cislo { font-size: 1.15rem; font-weight: 700; margin-top: 2px; font-variant-numeric: tabular-nums; }
+    .stavovky .a .cislo { color: var(--danger); }
+    .stavovky .b .cislo { color: var(--text-muted); }
+    .stavovky .c .cislo { color: var(--text); }
+    .stavovky .d .cislo { color: var(--accent); }
+
+    .verdikt { font-size: 0.92rem; line-height: 1.6; max-width: 620px; color: var(--text-muted); min-height: 4.2em; }
+    .verdikt b { color: var(--text); }
+    .verdikt .zvyraz { color: var(--warn); }
+
+    /* ---- molekuly ---- */
+    .molBox { display: flex; flex-wrap: wrap; gap: 14px 24px; align-items: center; justify-content: center; width: 100%; }
+    .molekula { width: min(330px, 92%); }
+    .molekula .vazba { stroke: var(--text-muted); stroke-width: 4; stroke-linecap: round; }
+    .molekula .pritah { stroke: var(--warn); stroke-width: 2.5; stroke-dasharray: 6 5; }
+    .molekula .koule { stroke: var(--border-strong); stroke-width: 1.5; }
+    .molekula .znak { font-size: 17px; font-weight: 700; text-anchor: middle; dominant-baseline: central; }
+    .molekula .par { fill: var(--warn); }
+    .molekula .naboj { font-size: 15px; font-weight: 700; text-anchor: middle; fill: var(--text); }
+    .molInfo { text-align: left; width: min(280px, 100%); font-size: 0.88rem; }
+    .molInfo .hlava { font-size: 1.5rem; font-weight: 700; color: var(--accent); }
+    .molInfo .hlava small { font-size: 0.62rem; color: var(--text-faint); display: block; font-weight: 400; }
+    .molInfo .radek {
+      display: flex; justify-content: space-between; gap: 10px;
+      border-top: 1px solid var(--border); padding: 5px 0; color: var(--text-faint);
+    }
+    .molInfo .radek b { color: var(--text); font-weight: 600; text-align: right; }
+    .molInfo .pozn { color: var(--text-muted); font-size: 0.82rem; line-height: 1.5; margin-top: 8px; }
+
+    /* ---- Lewisovy značky u kvízu o vazbách ---- */
+    .lewisRada { display: flex; gap: 16px; align-items: center; justify-content: center; flex-wrap: wrap; }
+    .lewis { width: 96px; }
+    .lewis .znak { font-size: 26px; font-weight: 700; text-anchor: middle; dominant-baseline: central; fill: var(--text); }
+    .lewis .tecka { fill: var(--warn); }
+    .lewis .stitek { font-size: 11px; text-anchor: middle; fill: var(--text-faint); }
+    .lewis .mrizka { fill: var(--danger); }
+    .lewis .volny { fill: var(--accent); }
+
+    /* ---- legenda částic pod úlohou ---- */
+    .legendaCastic { display: flex; flex-wrap: wrap; gap: 6px 16px; margin-bottom: 6px; }
+    .legendaCastic span { display: inline-flex; align-items: center; gap: 6px; }
+    .legendaCastic i { width: 11px; height: 11px; border-radius: 50%; display: inline-block; }
+  </style>
+</head>
+<body>
+  <h1>⚛️ Atom, molekula a chemická vazba</h1>
+  <p class="podtitul">Pro 8. ročník: stavba atomu, počty částic a vznik chemické vazby.</p>
+
+  <div class="rezimy" id="rezimy">
+    <button data-rezim="stavebnice" class="active">🔬 Stavebnice atomu</button>
+    <button data-rezim="vznik">🔗 Vznik vazby</button>
+    <button data-rezim="molekuly">🧪 Molekuly</button>
+    <button data-rezim="castice">🔢 Počty částic</button>
+    <button data-rezim="model">🎯 Model atomu</button>
+    <button data-rezim="vazby">⚗️ Poznej vazbu</button>
+    <button data-rezim="pojmy">📖 Pojmy</button>
+  </div>
+
+  <div class="plocha" id="plocha"></div>
+
+  <div class="ovladani">
+    <button class="hlavni" id="btnDalsi">Přeskočit →</button>
+    <span class="skore" id="skore"></span>
+  </div>
+
+  <p class="napoveda">
+    <span class="legendaCastic">
+      <span><i style="background:var(--danger)"></i> proton (+, v jádře)</span>
+      <span><i style="background:var(--text-faint)"></i> neutron (bez náboje, v jádře)</span>
+      <span><i style="background:var(--accent)"></i> elektron (−, v obalu)</span>
+      <span><i style="background:var(--warn)"></i> valenční elektron (vnější vrstva, tvoří vazby)</span>
+    </span>
+    <b>Protonové číslo Z</b> udává počet protonů v jádře – a u neutrálního atomu i počet elektronů.
+    <b>Nukleonové číslo A</b> je počet protonů a neutronů dohromady, takže <b>N = A − Z</b>.
+    Do vrstev obalu se vejde postupně 2, 8 a 8 elektronů; atom je stabilní, když má vnější vrstvu
+    zaplněnou jako vzácný plyn – a právě kvůli tomu vznikají chemické vazby.
+  </p>
+
+<script>
+const $ = id => document.getElementById(id);
+const skore = Uloha.skore('nodus_ch8_atom', $('skore'));
+let rezim = 'stavebnice';
+const clamp = (x, a, b) => Math.max(a, Math.min(b, x));
+function odezvaEl() { const d = document.createElement('div'); d.className = 'odezva'; return d; }
+
+/* ============================================================
+   Společná data prvků (vodík až vápník – dál by se vrstvy
+   nedaly zaplňovat jednoduchým pravidlem 2, 8, 8).
+   `a` je nukleonové číslo nejběžnějšího izotopu.
+   ============================================================ */
+const PRVKY = [
+  { z: 1, znak: 'H', nazev: 'vodík', a: 1, druh: 'nekov' },
+  { z: 2, znak: 'He', nazev: 'helium', a: 4, druh: 'vzácný plyn' },
+  { z: 3, znak: 'Li', nazev: 'lithium', a: 7, druh: 'kov' },
+  { z: 4, znak: 'Be', nazev: 'beryllium', a: 9, druh: 'kov' },
+  { z: 5, znak: 'B', nazev: 'bor', a: 11, druh: 'polokov' },
+  { z: 6, znak: 'C', nazev: 'uhlík', a: 12, druh: 'nekov' },
+  { z: 7, znak: 'N', nazev: 'dusík', a: 14, druh: 'nekov' },
+  { z: 8, znak: 'O', nazev: 'kyslík', a: 16, druh: 'nekov' },
+  { z: 9, znak: 'F', nazev: 'fluor', a: 19, druh: 'nekov' },
+  { z: 10, znak: 'Ne', nazev: 'neon', a: 20, druh: 'vzácný plyn' },
+  { z: 11, znak: 'Na', nazev: 'sodík', a: 23, druh: 'kov' },
+  { z: 12, znak: 'Mg', nazev: 'hořčík', a: 24, druh: 'kov' },
+  { z: 13, znak: 'Al', nazev: 'hliník', a: 27, druh: 'kov' },
+  { z: 14, znak: 'Si', nazev: 'křemík', a: 28, druh: 'polokov' },
+  { z: 15, znak: 'P', nazev: 'fosfor', a: 31, druh: 'nekov' },
+  { z: 16, znak: 'S', nazev: 'síra', a: 32, druh: 'nekov' },
+  { z: 17, znak: 'Cl', nazev: 'chlor', a: 35, druh: 'nekov' },
+  { z: 18, znak: 'Ar', nazev: 'argon', a: 40, druh: 'vzácný plyn' },
+  { z: 19, znak: 'K', nazev: 'draslík', a: 39, druh: 'kov' },
+  { z: 20, znak: 'Ca', nazev: 'vápník', a: 40, druh: 'kov' },
+];
+const podleZ = z => PRVKY.find(p => p.z === z);
+
+const HORNI = { 0: '⁰', 1: '¹', 2: '²', 3: '³', 4: '⁴', 5: '⁵', 6: '⁶', 7: '⁷', 8: '⁸', 9: '⁹' };
+const horni = n => String(n).split('').map(c => HORNI[c] || c).join('');
+
+/* Zaplňování vrstev K, L, M, N. Pro prvky do vápníku stačí pravidlo 2, 8, 8, 2. */
+function vrstvy(pocet) {
+  const kapacita = [2, 8, 8, 2];
+  const out = [];
+  let zbyva = pocet;
+  for (const k of kapacita) {
+    if (zbyva <= 0) break;
+    out.push(Math.min(k, zbyva));
+    zbyva -= k;
+  }
+  return out;
+}
+
+/* Protony a neutrony v jádře prokládáme, aby jádro vypadalo promíchaně
+   a ne jako dvě oddělené hromádky. */
+function nukleony(z, n) {
+  const s = [];
+  for (let i = 0; i < z; i++) s.push({ t: 'p', k: (i + 0.5) / z });
+  for (let i = 0; i < n; i++) s.push({ t: 'n', k: (i + 0.5) / n });
+  s.sort((a, b) => a.k - b.k);
+  return s.map(x => x.t);
+}
+
+/* Jádro kreslíme po jednotlivých částicích, aby se daly spočítat.
+   Body rozmisťuje slunečnicová spirála – drží stejné rozestupy
+   při libovolném počtu nukleonů. */
+function svgJadro(z, n) {
+  const celkem = z + n;
+  if (!celkem) return '';
+  const rozestup = 24 / Math.sqrt(celkem);
+  const rTecka = Math.min(8, Math.max(2.3, rozestup * 0.7));
+  const ZLATY = Math.PI * (3 - Math.sqrt(5));
+  return nukleony(z, n).map((t, i) => {
+    const uhel = i * ZLATY, r = rozestup * Math.sqrt(i);
+    const x = (160 + Math.cos(uhel) * r).toFixed(1), y = (160 + Math.sin(uhel) * r).toFixed(1);
+    return `<circle class="${t === 'p' ? 'proton' : 'neutron'}" cx="${x}" cy="${y}" r="${rTecka.toFixed(1)}"/>`;
+  }).join('');
+}
+
+/* Model atomu. spec = { z, n, e }, volby:
+     klikaci – části dostanou zásahové kruhy a kurzor (kvíz „klepni na…“),
+     valence – elektrony vnější vrstvy se odliší barvou (výklad, ne kvíz),
+     otacej  – obal se točí; v kvízu ne, do pohyblivého terče se trefuje mizerně,
+     naboj   – značka náboje v rohu, popis – text pod obrázkem. */
+function svgAtom(spec, volby = {}) {
+  const vr = vrstvy(spec.e);
+  let drahy = '', obal = '';
+  vr.forEach((pocet, i) => {
+    const r = 40 + i * 28;
+    drahy += `<circle class="drah" cx="160" cy="160" r="${r}"/>`;
+    let body = '';
+    for (let k = 0; k < pocet; k++) {
+      const uhel = (k / pocet) * 2 * Math.PI - Math.PI / 2;
+      const x = (160 + r * Math.cos(uhel)).toFixed(1), y = (160 + r * Math.sin(uhel)).toFixed(1);
+      const val = volby.valence && i === vr.length - 1 ? ' valencni' : '';
+      body += `<g class="cast" data-klic="elektron" data-vrstva="${i + 1}">`
+        + (volby.klikaci ? `<circle class="zasah" cx="${x}" cy="${y}" r="12"/>` : '')
+        + `<circle class="elektron${val}" cx="${x}" cy="${y}" r="6"/></g>`;
+    }
+    if (volby.otacej) {
+      const doba = 16 + i * 7, cil = i % 2 ? -360 : 360;
+      body = `<g>${body}<animateTransform attributeName="transform" type="rotate"`
+        + ` from="0 160 160" to="${cil} 160 160" dur="${doba}s" repeatCount="indefinite"/></g>`;
+    }
+    obal += body;
+  });
+  const n = volby.naboj || 0;
+  const naboj = n ? `<text class="naboj ${n > 0 ? 'plus' : 'minus'}" x="290" y="46">`
+    + `${Math.abs(n) > 1 ? Math.abs(n) : ''}${n > 0 ? '+' : '−'}</text>` : '';
+  return `<svg class="atom${volby.velky ? ' velky' : ''}${volby.klikaci ? ' klikaci' : ''}" viewBox="0 0 320 320">
+      ${drahy}
+      <g class="cast" data-klic="jadro">
+        ${volby.klikaci ? '<circle class="zasah" cx="160" cy="160" r="30"/>' : ''}${svgJadro(spec.z, spec.n)}
+      </g>
+      ${obal}${naboj}
+      ${volby.popis ? `<text class="popis" x="160" y="308">${volby.popis}</text>` : ''}
+    </svg>`;
+}
+
+/* ============================================================
+   1) Stavebnice atomu – volné bádání
+   Tři počítadla (protony, neutrony, elektrony) a model, který se
+   hned překreslí. Teprve tady je vidět, že protony určují prvek,
+   neutrony izotop a rozdíl protonů a elektronů náboj iontu.
+   ============================================================ */
+const ST = { z: 6, n: 6, e: 6 };
+const MAX = { z: 20, n: 24, e: 20 };
+const PRESETY = [
+  { popis: 'H', z: 1, n: 0, e: 1 },
+  { popis: 'C', z: 6, n: 6, e: 6 },
+  { popis: 'O', z: 8, n: 8, e: 8 },
+  { popis: 'Ne', z: 10, n: 10, e: 10 },
+  { popis: 'Na⁺', z: 11, n: 12, e: 10 },
+  { popis: 'Cl⁻', z: 17, n: 18, e: 18 },
+  { popis: 'Mg²⁺', z: 12, n: 12, e: 10 },
+  { popis: '¹⁴C', z: 6, n: 8, e: 6 },
+];
+
+function stavebnice() {
+  const p = $('plocha');
+  p.innerHTML = `
+    <div class="zadani uloha-text" style="max-width:620px">Poskládej si vlastní atom.
+      <b>Protony</b> určují, o jaký prvek jde, <b>neutrony</b> rozhodují o izotopu
+      a rozdíl protonů a <b>elektronů</b> dělá z atomu ion.</div>
+    <div class="stavba">
+      <div id="stavbaObraz"></div>
+      <div class="pult">
+        <div class="karta" style="padding:12px 20px"><div class="prvekZnak" id="stavbaZnak"></div></div>
+        <div class="pocitadlo">
+          <span class="jmeno"><i class="tecka" style="background:var(--danger)"></i>protony</span>
+          <button data-cast="z" data-krok="-1">−</button><b id="hodZ"></b><button data-cast="z" data-krok="1">+</button>
+        </div>
+        <div class="pocitadlo">
+          <span class="jmeno"><i class="tecka" style="background:var(--text-faint)"></i>neutrony</span>
+          <button data-cast="n" data-krok="-1">−</button><b id="hodN"></b><button data-cast="n" data-krok="1">+</button>
+        </div>
+        <div class="pocitadlo">
+          <span class="jmeno"><i class="tecka" style="background:var(--accent)"></i>elektrony</span>
+          <button data-cast="e" data-krok="-1">−</button><b id="hodE"></b><button data-cast="e" data-krok="1">+</button>
+        </div>
+        <div class="stavovky">
+          <div class="bunka a"><div class="nadpis">Z</div><div class="cislo" id="statZ"></div></div>
+          <div class="bunka b"><div class="nadpis">N</div><div class="cislo" id="statN"></div></div>
+          <div class="bunka c"><div class="nadpis">A</div><div class="cislo" id="statA"></div></div>
+          <div class="bunka d"><div class="nadpis">náboj</div><div class="cislo" id="statQ"></div></div>
+        </div>
+      </div>
+    </div>
+    <div class="ovladace">
+      ${PRESETY.map((x, i) => `<button data-preset="${i}">${x.popis}</button>`).join('')}
+    </div>
+    <div class="verdikt" id="stavbaVerdikt"></div>`;
+
+  p.querySelectorAll('[data-cast]').forEach(b => b.addEventListener('click', () => {
+    const c = b.dataset.cast;
+    ST[c] = clamp(ST[c] + Number(b.dataset.krok), 0, MAX[c]);
+    stavbaKresli();
+  }));
+  p.querySelectorAll('[data-preset]').forEach(b => b.addEventListener('click', () => {
+    Object.assign(ST, PRESETY[Number(b.dataset.preset)]);
+    stavbaKresli();
+  }));
+  stavbaKresli();
+}
+
+function stavbaNahodny() {
+  const pr = Uloha.nahodne(PRVKY);
+  ST.z = pr.z; ST.n = pr.a - pr.z; ST.e = pr.z;
+  if (rezim === 'stavebnice') stavbaKresli();
+}
+
+function stavbaKresli() {
+  const { z, n, e } = ST;
+  const naboj = z - e;
+  $('stavbaObraz').innerHTML = svgAtom(ST, { velky: true, valence: true, otacej: true, naboj });
+  $('hodZ').textContent = z; $('hodN').textContent = n; $('hodE').textContent = e;
+  $('statZ').textContent = z; $('statN').textContent = n;
+  $('statA').textContent = z + n;
+  $('statQ').textContent = naboj === 0 ? '0' : (naboj > 0 ? '+' + naboj : String(naboj));
+  const pr = podleZ(z);
+  const znacka = naboj === 0 ? '' : (Math.abs(naboj) > 1 ? horni(Math.abs(naboj)) : '') + (naboj > 0 ? '⁺' : '⁻');
+  $('stavbaZnak').innerHTML = pr
+    ? `<span class="cisla">${z + n}<br>${z}</span>${pr.znak}${znacka}`
+    : '<span style="font-size:0.5em;color:var(--text-faint)">?</span>';
+  $('stavbaVerdikt').innerHTML = stavbaText();
+  // u nulového počtu nemá „−“ smysl, stejně jako přidávání nad strop tabulky
+  document.querySelectorAll('[data-cast]').forEach(b => {
+    const c = b.dataset.cast, krok = Number(b.dataset.krok);
+    b.disabled = krok < 0 ? ST[c] === 0 : ST[c] === MAX[c];
+  });
+}
+
+function stavbaText() {
+  const { z, n, e } = ST;
+  if (!z) return 'Bez protonů to není žádný prvek – přidej alespoň jeden proton. '
+    + 'Právě <b>počet protonů</b> rozhoduje, o který prvek jde.';
+  const pr = podleZ(z);
+  const naboj = z - e;
+  const vr = vrstvy(e);
+  const vnejsi = vr[vr.length - 1] || 0;
+  const vety = [];
+
+  if (naboj === 0) vety.push(`Protonů i elektronů je ${z}, atom je navenek neutrální: <b>${pr.nazev} (${pr.znak})</b>.`);
+  else if (naboj > 0) vety.push(`Elektronů je o ${naboj} méně než protonů, kladné náboje převažují – vznikl `
+    + `<b>kation ${pr.znak}${naboj > 1 ? horni(naboj) : ''}⁺</b>. Tak se chovají kovy: elektrony z vnější vrstvy odevzdají.`);
+  else vety.push(`Elektronů je o ${-naboj} více než protonů – vznikl `
+    + `<b>anion ${pr.znak}${-naboj > 1 ? horni(-naboj) : ''}⁻</b>. Tak se chovají nekovy: elektrony přijímají.`);
+
+  const bezne = pr.a - pr.z;
+  vety.push(n === bezne
+    ? `Neutronů je ${n}, takže A = ${z + n} – to je nejběžnější izotop ${pr.nazev}u.`
+    : `Neutronů je ${n}, takže A = ${z + n}. Jde o <b>izotop</b> – prvek zůstává ${pr.nazev}, mění se jen hmotnost jádra.`);
+
+  if (e === 0) vety.push('Bez elektronů zbylo holé jádro – to už není atom.');
+  else if (vnejsi === 8 || (vr.length === 1 && vnejsi === 2)) vety.push('<span class="zvyraz">Vnější vrstva je zaplněná</span> '
+    + '– takové uspořádání je stabilní (mají ho vzácné plyny), a proto se s ním částice nerada váže.');
+  else vety.push(`Ve vnější vrstvě je <span class="zvyraz">${vnejsi} valenčních elektronů</span> (oranžové) – právě ty se účastní vazeb.`);
+
+  return vety.join(' ');
+}
+
+/* ============================================================
+   2) Vznik vazby – animovaná ukázka
+   Tři děje, které se v učebnici kreslí jen šipkou:
+     • iontová  – sodík elektron opravdu odevzdá a odletí k chloru,
+     • kovalentní – dva vodíky splynou do jednoho společného oblaku,
+     • kovová   – elektronový plyn mezi kationty; po připojení napětí
+       se dá do usměrněného pohybu, po „ohnutí“ drží mřížku pohromadě.
+   Barvy se čtou z proměnných motivu při každém snímku, takže přepnutí
+   světlého a tmavého režimu je vidět okamžitě.
+   ============================================================ */
+const VZ_W = 560, VZ_H = 300;
+const VZ = { druh: 'iont', start: 0, posledni: 0, animace: null, ctx: null, faze: '', napeti: false, ohyb: 0, ohybCil: 0, plyn: [] };
+
+function vzBarvy() {
+  const s = getComputedStyle(document.documentElement);
+  const b = k => s.getPropertyValue(k).trim();
+  return {
+    text: b('--text'), muted: b('--text-muted'), faint: b('--text-faint'),
+    border: b('--border'), borderS: b('--border-strong'), accent: b('--accent'),
+    ok: b('--ok'), warn: b('--warn'), danger: b('--danger'), panel: b('--bg-panel'),
+  };
+}
+function vzTecka(c, barva, x, y, r) { c.beginPath(); c.arc(x, y, r, 0, 7); c.fillStyle = barva; c.fill(); }
+
+/* Atom na plátně: obal s elektrony, jádro se značkou prvku, případně náboj iontu. */
+function vzAtom(c, B, o) {
+  const vr = o.vrstvy;
+  vr.forEach((pocet, i) => {
+    const r = 16 + i * 12;
+    c.beginPath(); c.arc(o.x, o.y, r, 0, 7);
+    c.strokeStyle = B.border; c.lineWidth = 1; c.stroke();
+    for (let k = 0; k < pocet; k++) {
+      const u = (k / pocet) * Math.PI * 2 + (o.faze || 0) * (i % 2 ? -1 : 1) + i;
+      const val = o.valence && i === vr.length - 1;
+      vzTecka(c, val ? B.warn : B.accent, o.x + Math.cos(u) * r, o.y + Math.sin(u) * r, 4.2);
+    }
+  });
+  vzTecka(c, B.danger, o.x, o.y, 13);
+  c.fillStyle = '#fff'; c.font = 'bold 12px sans-serif';
+  c.fillText(o.znak, o.x, o.y);
+  if (o.naboj) {
+    const bx = o.x + 44, by = o.y - 44;
+    vzTecka(c, o.naboj > 0 ? B.danger : B.accent, bx, by, 12);
+    c.fillStyle = '#fff'; c.font = 'bold 15px sans-serif';
+    c.fillText(o.naboj > 0 ? '+' : '−', bx, by);
+  }
+}
+
+/* --- iontová vazba: Na + Cl --- */
+function vzIont(c, B, t) {
+  const prib = clamp((t - 1.4) / 1.4, 0, 1);
+  const prenos = clamp((t - 3.2) / 1.3, 0, 1);
+  const pritah = clamp((t - 4.8) / 1.2, 0, 1);
+  const y = 122;
+  const xNa = 150 + prib * 32 + pritah * 46;
+  const xCl = 412 - prib * 32 - pritah * 46;
+  const leti = prenos > 0 && prenos < 1;
+
+  if (leti) {   // dráha přeskakujícího elektronu
+    c.beginPath();
+    c.moveTo(xNa, y - 40); c.quadraticCurveTo((xNa + xCl) / 2, y - 106, xCl, y - 40);
+    c.strokeStyle = B.warn; c.lineWidth = 1.5; c.setLineDash([5, 5]); c.globalAlpha = 0.6;
+    c.stroke(); c.setLineDash([]); c.globalAlpha = 1;
+  }
+  vzAtom(c, B, { x: xNa, y, znak: 'Na', vrstvy: prenos > 0 ? [2, 8] : [2, 8, 1], valence: true, faze: t * 0.3, naboj: prenos >= 1 ? 1 : 0 });
+  vzAtom(c, B, { x: xCl, y, znak: 'Cl', vrstvy: prenos >= 1 ? [2, 8, 8] : [2, 8, 7], valence: true, faze: -t * 0.26, naboj: prenos >= 1 ? -1 : 0 });
+  if (leti) {
+    const s = prenos, m = 1 - s;
+    const ex = m * m * xNa + 2 * m * s * (xNa + xCl) / 2 + s * s * xCl;
+    const ey = m * m * (y - 40) + 2 * m * s * (y - 106) + s * s * (y - 40);
+    vzTecka(c, B.warn, ex, ey, 6);
+  }
+  if (pritah > 0) {   // přitažlivá síla mezi opačnými náboji
+    c.beginPath(); c.moveTo(xNa + 34, y); c.lineTo(xCl - 40, y);
+    c.strokeStyle = B.warn; c.lineWidth = 2; c.setLineDash([6, 5]); c.globalAlpha = pritah;
+    c.stroke(); c.setLineDash([]);
+    c.fillStyle = B.warn; c.font = 'bold 12px sans-serif';
+    c.fillText('přitahují se', (xNa + xCl) / 2, y - 16);
+    c.globalAlpha = 1;
+  }
+  c.fillStyle = B.muted; c.font = '12px sans-serif';
+  c.fillText(prenos >= 1 ? 'Na⁺ – kation' : 'Na – kov, 1 valenční elektron', 148, y + 74);
+  c.fillText(prenos >= 1 ? 'Cl⁻ – anion' : 'Cl – nekov, 7 valenčních elektronů', 414, y + 74);
+
+  const mrizka = clamp((t - 6.6) / 0.8, 0, 1);
+  if (mrizka > 0) {   // pointa: v pevné soli žádné samostatné molekuly nejsou
+    c.globalAlpha = mrizka;
+    for (let r = 0; r < 2; r++) for (let s = 0; s < 6; s++) {
+      const x = 218 + s * 25, yy = 232 + r * 25, plus = (r + s) % 2 === 0;
+      vzTecka(c, plus ? B.danger : B.accent, x, yy, 9);
+      c.fillStyle = '#fff'; c.font = 'bold 11px sans-serif';
+      c.fillText(plus ? '+' : '−', x, yy);
+    }
+    c.fillStyle = B.faint; c.font = '11px sans-serif';
+    c.fillText('krystal NaCl – ionty se pravidelně střídají', 293, 288);
+    c.globalAlpha = 1;
+  }
+
+  if (t < 1.4) return 'Sodík má ve vnější vrstvě <b>1 elektron</b>, chlor <b>7</b>. Oběma chybí málo k zaplněné vrstvě jako u vzácného plynu.';
+  if (t < 3.2) return 'Atomy se přiblíží. Sodíku se vyplatí jeden elektron odevzdat, chloru se vyplatí ho přijmout.';
+  if (t < 4.8) return 'Elektron přeskočil ze sodíku na chlor. Oba mají teď vnější vrstvu zaplněnou (8 elektronů).';
+  if (t < 6.6) return 'Vznikly ionty <b>Na⁺</b> a <b>Cl⁻</b>. Opačné náboje se přitahují – tomu se říká <b>iontová vazba</b>.';
+  return 'V pevné látce nestojí ionty ve dvojicích, ale střídají se v krystalové mřížce. Proto jsou iontové látky pevné, křehké a jejich roztok vede elektrický proud.';
+}
+
+/* --- kovalentní vazba: H + H --- */
+function vzKoval(c, B, t) {
+  const prib = clamp((t - 1.2) / 1.6, 0, 1);
+  const y = 118;
+  const x1 = 200 + prib * 63, x2 = 360 - prib * 63;
+  const stred = (x1 + x2) / 2;
+
+  if (prib < 1) {
+    c.globalAlpha = 1 - prib;
+    [[x1, 1], [x2, -1]].forEach(([x, sm]) => {
+      c.beginPath(); c.arc(x, y, 17, 0, 7); c.strokeStyle = B.border; c.lineWidth = 1; c.stroke();
+      const u = t * 2 * sm;
+      vzTecka(c, B.warn, x + Math.cos(u) * 17, y + Math.sin(u) * 17, 4.4);
+    });
+    c.globalAlpha = 1;
+  }
+  if (prib > 0) {   // společný oblak obou atomů
+    const rx = (x2 - x1) / 2 + 17, ry = 18;
+    c.beginPath(); c.ellipse(stred, y, rx, ry, 0, 0, 7);
+    c.fillStyle = B.accent; c.globalAlpha = prib * 0.16; c.fill();
+    c.globalAlpha = prib; c.strokeStyle = B.accent; c.lineWidth = 1.5;
+    c.setLineDash([5, 4]); c.stroke(); c.setLineDash([]);
+    const u = t * 1.7;
+    [u, u + Math.PI].forEach(a => vzTecka(c, B.warn, stred + Math.cos(a) * rx, y + Math.sin(a) * ry, 4.8));
+    c.globalAlpha = 1;
+  }
+  [x1, x2].forEach(x => {
+    vzTecka(c, B.danger, x, y, 11);
+    c.fillStyle = '#fff'; c.font = 'bold 11px sans-serif'; c.fillText('H', x, y);
+  });
+
+  c.fillStyle = B.muted; c.font = '12px sans-serif';
+  c.fillText(prib >= 1 ? 'sdílený elektronový pár patří oběma atomům' : 'každý vodík má 1 elektron', stred, y + 56);
+  if (t > 5.4) {
+    c.fillStyle = B.text; c.font = 'bold 20px sans-serif';
+    c.fillText('H · + · H  →  H : H  =  H–H', 280, 214);
+    c.fillStyle = B.faint; c.font = '12px sans-serif';
+    c.fillText('jeden sdílený pár = jedna čárka ve vzorci', 280, 242);
+    c.fillText('dva sdílené páry = dvojná vazba (O=O), tři = trojná (N≡N)', 280, 264);
+  }
+  if (t < 1.2) return 'Dva atomy vodíku, každý s jedním elektronem. Do zaplněné vrstvy jim oběma chybí jeden.';
+  if (prib < 1) return 'Atomy se přibližují, jejich obaly se začnou překrývat.';
+  if (t < 5.4) return 'Elektrony teď obíhají kolem obou jader najednou – vznikl <b>sdílený elektronový pár</b>. Každý atom má kolem sebe 2 elektrony jako helium.';
+  return 'Sdílení elektronů je <b>kovalentní vazba</b>. Vzniká mezi nekovy a drží pohromadě molekuly – vodík, kyslík, vodu i methan.';
+}
+
+/* --- kovová vazba: mřížka kationtů a elektronový plyn --- */
+function vzPlyn() {
+  VZ.plyn = [];
+  for (let i = 0; i < 26; i++) VZ.plyn.push({
+    x: 60 + Math.random() * 450, y: 60 + Math.random() * 190,
+    vx: (Math.random() - 0.5) * 120, vy: (Math.random() - 0.5) * 120,
+  });
+}
+function vzKov(c, B, t, dt) {
+  if (!VZ.plyn.length) vzPlyn();
+  VZ.ohyb += (VZ.ohybCil - VZ.ohyb) * Math.min(1, dt * 4);
+
+  if (VZ.napeti) {   // póly zdroje po stranách
+    c.fillStyle = B.accent; c.fillRect(30, 62, 9, 186);
+    c.fillStyle = B.danger; c.fillRect(521, 62, 9, 186);
+    c.font = 'bold 15px sans-serif';
+    c.fillStyle = B.accent; c.fillText('−', 20, 155);
+    c.fillStyle = B.danger; c.fillText('+', 540, 155);
+  }
+  for (let r = 0; r < 3; r++) for (let s = 0; s < 7; s++) {
+    const x = 105 + s * 58 + (r >= 1 ? VZ.ohyb : 0), yy = 92 + r * 58;
+    vzTecka(c, B.borderS, x, yy, 16);
+    c.fillStyle = B.text; c.font = 'bold 11px sans-serif';
+    c.fillText('Cu⁺', x, yy);
+  }
+  VZ.plyn.forEach(e => {
+    e.vx += (Math.random() - 0.5) * 1600 * dt + (VZ.napeti ? 60 * dt : 0);
+    e.vy += (Math.random() - 0.5) * 1600 * dt;
+    const v = Math.hypot(e.vx, e.vy);
+    if (v > 170) { e.vx = e.vx / v * 170; e.vy = e.vy / v * 170; }
+    e.vx *= 0.985; e.vy *= 0.985;
+    e.x += e.vx * dt; e.y += e.vy * dt;
+    if (e.y < 58) { e.y = 58; e.vy = Math.abs(e.vy); }
+    if (e.y > 252) { e.y = 252; e.vy = -Math.abs(e.vy); }
+    if (e.x < 55) { e.x = 55; e.vx = Math.abs(e.vx); }
+    if (e.x > 512) {
+      // pod napětím elektron odteče do + pólu a ze zdroje se vrátí zleva
+      if (VZ.napeti) e.x = 55; else { e.x = 512; e.vx = -Math.abs(e.vx); }
+    }
+    vzTecka(c, B.accent, e.x, e.y, 4.4);
+  });
+  if (VZ.napeti) {
+    c.strokeStyle = B.accent; c.lineWidth = 2; c.beginPath();
+    c.moveTo(215, 278); c.lineTo(345, 278); c.stroke();
+    c.beginPath(); c.moveTo(345, 278); c.lineTo(336, 273); c.lineTo(336, 283); c.closePath();
+    c.fillStyle = B.accent; c.fill();
+    c.fillStyle = B.faint; c.font = '11px sans-serif';
+    c.fillText('pohyb elektronů', 280, 292);
+  }
+  let text = 'Kationty kovu jsou uspořádané v mřížce a mezi nimi se volně pohybuje <b>elektronový plyn</b> – '
+    + 'elektrony, které atomy odevzdaly. Ten drží celý kov pohromadě.';
+  if (VZ.napeti) text += ' Po připojení napětí se elektrony posouvají k <b>+</b> pólu – kovem prochází <b>elektrický proud</b>.';
+  if (VZ.ohybCil !== 0) text += ' Vrstvy kationtů se posunuly, ale elektronový plyn je drží dál pohromadě – proto jsou kovy <b>kujné a tažné</b>.';
+  return text;
+}
+
+function vzSmycka(cas) {
+  if (!VZ.ctx) return;
+  const dt = Math.min(0.05, (cas - (VZ.posledni || cas)) / 1000);
+  VZ.posledni = cas;
+  const c = VZ.ctx, B = vzBarvy(), t = (cas - VZ.start) / 1000;
+  c.clearRect(0, 0, VZ_W, VZ_H);
+  c.textAlign = 'center'; c.textBaseline = 'middle';
+  const text = VZ.druh === 'iont' ? vzIont(c, B, t) : VZ.druh === 'koval' ? vzKoval(c, B, t) : vzKov(c, B, t, dt);
+  if (text !== VZ.faze) { VZ.faze = text; const el = $('vzText'); if (el) el.innerHTML = text; }
+  VZ.animace = requestAnimationFrame(vzSmycka);
+}
+function vzStop() {
+  if (VZ.animace) cancelAnimationFrame(VZ.animace);
+  VZ.animace = null; VZ.ctx = null;
+}
+
+const VZ_DRUHY = [
+  { klic: 'iont', popis: '🧂 Iontová (NaCl)' },
+  { klic: 'koval', popis: '💧 Kovalentní (H₂)' },
+  { klic: 'kov', popis: '🔩 Kovová (Cu)' },
+];
+function vznik() {
+  const p = $('plocha');
+  vzStop();
+  p.innerHTML = `
+    <div class="zadani uloha-text" style="max-width:600px">Vazba vzniká proto, že každý atom chce mít
+      vnější vrstvu zaplněnou. Podívej se, jak to která vazba řeší.</div>
+    <div class="ovladace">
+      ${VZ_DRUHY.map(d => `<button data-druh="${d.klic}"${d.klic === VZ.druh ? ' class="hlavniAkce"' : ''}>${d.popis}</button>`).join('')}
+    </div>
+    <canvas class="scena" id="vzPlatno" width="${VZ_W}" height="${VZ_H}"></canvas>
+    <div class="ovladace">
+      <button id="vzZnovu">↺ Přehrát znovu</button>
+      ${VZ.druh === 'kov' ? `<button id="vzNapeti"${VZ.napeti ? ' class="hlavniAkce"' : ''}>🔌 ${VZ.napeti ? 'Odpoj napětí' : 'Připoj napětí'}</button>
+        <button id="vzOhyb">🔨 Ohni kov</button>` : ''}
+    </div>
+    <div class="vysvetlivka" id="vzText"></div>`;
+
+  p.querySelectorAll('[data-druh]').forEach(b => b.addEventListener('click', () => {
+    VZ.druh = b.dataset.druh; VZ.napeti = false; VZ.ohybCil = 0; VZ.ohyb = 0;
+    vznik();
+  }));
+  $('vzZnovu').addEventListener('click', vzZnovu);
+  if ($('vzNapeti')) $('vzNapeti').addEventListener('click', () => { VZ.napeti = !VZ.napeti; vznik(); });
+  if ($('vzOhyb')) $('vzOhyb').addEventListener('click', () => { VZ.ohybCil = VZ.ohybCil ? 0 : 28; });
+
+  VZ.ctx = $('vzPlatno').getContext('2d');
+  VZ.faze = ''; VZ.start = performance.now(); VZ.posledni = 0;
+  if (VZ.druh === 'kov') vzPlyn();
+  VZ.animace = requestAnimationFrame(vzSmycka);
+}
+function vzZnovu() { VZ.napeti = false; VZ.ohybCil = 0; VZ.ohyb = 0; vznik(); }

@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Informace na internetu a ověřování</title>
+  <link rel="stylesheet" href="../common.css">
+  <link rel="stylesheet" href="../vyuka.css">
+  <script src="../theme.js"></script>
+  <script src="../rec.js"></script>
+  <script src="../uloha.js"></script>
+  <style>
+    .zdroj {
+      background: var(--bg-deep); border: 1px solid var(--border-strong); border-radius: 10px;
+      padding: 14px 18px; max-width: 560px; text-align: left; line-height: 1.55;
+    }
+    .zdroj .adresa { font-family: 'Courier New', monospace; color: var(--accent); font-size: 0.92rem; }
+    .zdroj .titulek { font-weight: 700; font-size: 1.05rem; margin: 6px 0; }
+    .zdroj .meta { color: var(--text-faint); font-size: 0.82rem; }
+    .tvrzeni { max-width: 540px; font-size: 1.05rem; line-height: 1.5; }
+  </style>
+</head>
+<body>
+  <h1>🔍 Informace na internetu a ověřování</h1>
+  <p class="podtitul">Pro 5.–6. ročník: komu věřit, jak si informaci ověřit a jak poznat podvod.</p>
+
+  <div class="rezimy" id="rezimy">
+    <button data-rezim="duveryhodnost" class="active">🧐 Dá se tomu věřit?</button>
+    <button data-rezim="jakOverit">✅ Jak si to ověřím</button>
+    <button data-rezim="reklama">📢 Zpráva, či reklama?</button>
+    <button data-rezim="znaky">🔎 Na čem poznáš kvalitu</button>
+  </div>
+
+  <div class="plocha" id="plocha"></div>
+
+  <div class="ovladani">
+    <button class="hlavni" id="btnDalsi">Přeskočit →</button>
+    <span class="skore" id="skore"></span>
+  </div>
+
+  <p class="napoveda">
+    U každé informace se ptej: <b>kdo</b> to napsal, <b>kdy</b> to vzniklo, <b>odkud</b> to má
+    a jestli to <b>píše i někdo další</b>. Jeden zdroj nestačí – ověřuj aspoň ve dvou.
+  </p>
+
+<script>
+const $ = id => document.getElementById(id);
+const skore = Uloha.skore('nodus_inf5_zdroje', $('skore'));
+let rezim = 'duveryhodnost';
+
+const ZDROJE = [
+  { adresa: 'encyklopedie.priroda.cz', titulek: 'Ježek západní – popis a způsob života',
+    meta: 'autor: Mgr. Jana Nová, zoolog · aktualizováno 3. 5. 2026 · zdroje uvedeny',
+    duveryhodny: true, proc: 'má uvedeného autora, datum i seznam zdrojů' },
+  { adresa: 'super-zpravy-24.blog', titulek: 'ŠOK! Vědci prý tají, co se stane příští týden!!!',
+    meta: 'autor neuveden · bez data · plné vykřičníků',
+    duveryhodny: false, proc: 'chybí autor i datum a titulek jen šokuje' },
+  { adresa: 'skolniatlas.cz', titulek: 'Nejvyšší hory České republiky',
+    meta: 'vydavatel: nakladatelství učebnic · 12. 1. 2026 · odkazy na mapy',
+    duveryhodny: true, proc: 'vydavatel je známý a informace mají zdroje' },
+  { adresa: 'zazracny-caj.cz/objednat', titulek: 'Tento čaj vyléčí úplně všechno za 3 dny',
+    meta: 'stránka prodává vlastní produkt · bez lékařských zdrojů',
+    duveryhodny: false, proc: 'stránka chce něco prodat a slibuje nemožné' },
+  { adresa: 'statistika.gov.cz', titulek: 'Počet obyvatel České republiky v roce 2025',
+    meta: 'státní statistický úřad · tabulky s daty · 8. 2. 2026',
+    duveryhodny: true, proc: 'jde o oficiální statistický úřad s daty' },
+  { adresa: 'nekdo-nekde.forum/prispevek',
+    titulek: 'Můj kamarád říkal, že zítra ruší školu v celé republice',
+    meta: 'diskusní příspěvek · uživatel „Kamil123“ · bez odkazu',
+    duveryhodny: false, proc: 'je to nepotvrzená zvěst z diskuse bez zdroje' },
+];
+
+const OVERENI = [
+  { t: 'Na sociální síti čteš, že zítra nebude vyučování.', spr: 'Podívám se na web školy nebo se zeptám učitele',
+    jine: ['Sdílím to hned dál', 'Uvěřím, protože to psal kamarád', 'Zeptám se spolužáka, který to taky viděl'] },
+  { t: 'Video tvrdí, že Země je placatá.', spr: 'Porovnám s učebnicí a stránkami vědeckých institucí',
+    jine: ['Uvěřím, video mělo hodně zhlédnutí', 'Zeptám se v komentářích pod videem', 'Přepošlu to kamarádům'] },
+  { t: 'Web tvrdí, že Karel IV. zemřel v roce 1400.', spr: 'Ověřím údaj ve dvou nezávislých zdrojích',
+    jine: ['Zapíšu si to do sešitu', 'Uvěřím, stránka vypadá hezky', 'Nepátrám, historie se stejně mění'] },
+  { t: 'Fotka ukazuje neuvěřitelně velkou rybu.', spr: 'Vyzkouším vyhledávání podle obrázku, odkud fotka pochází',
+    jine: ['Uvěřím, fotka je přece důkaz', 'Zvětším si ji', 'Přidám k ní vlastní komentář'] },
+  { t: 'Článek nemá autora ani datum.', spr: 'Hledám tutéž informaci na známém a ověřeném webu',
+    jine: ['Beru to jako pravdu', 'Rozhodne mi barva stránky', 'Uvěřím, když má hodně reklam'] },
+];
+
+const REKLAMY = [
+  { t: 'Nejprodávanější mobil roku! Klikni a kup se slevou 50 %.', reklama: true, proc: 'láká ke koupi a nabízí slevu' },
+  { t: 'Ve středu bude v Praze zataženo a maximálně 12 °C.', reklama: false, proc: 'je to obyčejná informace o počasí' },
+  { t: 'Tento kroužek zázračně zlepší tvé známky – objednej dnes!', reklama: true, proc: 'slibuje zázrak a tlačí k nákupu' },
+  { t: 'Ministerstvo zveřejnilo termín přijímacích zkoušek na 15. dubna.', reklama: false, proc: 'jde o oznámení instituce s konkrétním datem' },
+  { t: 'Sponzorovaný obsah: nejlepší tenisky pro školáky.', reklama: true, proc: 'označení „sponzorovaný obsah“ znamená placenou reklamu' },
+  { t: 'Vědci popsali nový druh brouka na Šumavě, píše odborný časopis.', reklama: false, proc: 'zpráva odkazuje na odborný zdroj a nic neprodává' },
+];
+
+const ZNAKY = [
+  { t: 'Uvedený autor a jeho odbornost', dobre: true, proc: 'víš, kdo za informací stojí' },
+  { t: 'Datum vydání nebo poslední aktualizace', dobre: true, proc: 'poznáš, jestli informace není zastaralá' },
+  { t: 'Odkazy na zdroje, ze kterých text vychází', dobre: true, proc: 'můžeš si údaje ověřit' },
+  { t: 'Hodně vykřičníků a slova jako ŠOKUJÍCÍ', dobre: false, proc: 'snaha vyvolat emoce místo doložení faktů' },
+  { t: 'Stránka hlavně prodává vlastní výrobek', dobre: false, proc: 'informace může být zkreslená ve prospěch prodeje' },
+  { t: 'Text nemá autora ani datum', dobre: false, proc: 'nedá se ověřit, kdo a kdy to napsal' },
+  { t: 'Web patří škole, muzeu nebo úřadu', dobre: true, proc: 'instituce si hlídá správnost údajů' },
+  { t: 'Informace se objevuje jen na jediném webu', dobre: false, proc: 'ověřená zpráva bývá i jinde' },
+];
+
+/* ---- Dá se tomu věřit? -------------------------------------------------------------- */
+function duveryhodnost() {
+  const p = $('plocha');
+  const z = Uloha.nahodne(ZDROJE);
+  p.innerHTML = `<div class="zadani">Je tento zdroj důvěryhodný?</div>
+    <div class="zdroj"><div class="adresa">${z.adresa}</div>
+      <div class="titulek">${z.titulek}</div>
+      <div class="meta">${z.meta}</div></div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva, trida: 'dve',
+    moznosti: [
+      { klic: 'ano', ikona: '👍', popis: 'Dá se mu věřit' },
+      { klic: 'ne', ikona: '👎', popis: 'Buď opatrný' },
+    ],
+    spravnyKlic: z.duveryhodny ? 'ano' : 'ne',
+    zpravaOk: `✅ ${z.proc}.`,
+    zpravaChyba: 'Podívej se na autora, datum, adresu webu a na to, jestli něco neprodává.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Jak si to ověřím ---------------------------------------------------------------- */
+function jakOverit() {
+  const p = $('plocha');
+  const u = Uloha.nahodne(OVERENI);
+  p.innerHTML = `<div class="zadani">Jak si informaci ověříš?</div>
+    <div class="karta"><div class="obrazek">🤔</div><div class="tvrzeni">${u.t}</div></div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([u.spr, ...u.jine]).map(t => ({ klic: t, popis: t })),
+    spravnyKlic: u.spr,
+    zpravaOk: '✅ ' + u.spr + '.',
+    zpravaChyba: 'Ověřovat znamená hledat nezávislé potvrzení, ne ptát se stejného zdroje.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Zpráva, či reklama? ------------------------------------------------------------- */
+function reklama() {
+  const p = $('plocha');
+  const u = Uloha.nahodne(REKLAMY);
+  p.innerHTML = `<div class="zadani">Je to zpráva, nebo reklama?</div>
+    <div class="karta"><div class="obrazek">📰</div><div class="tvrzeni">${u.t}</div></div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva, trida: 'dve',
+    moznosti: [
+      { klic: 'zprava', ikona: '📰', popis: 'zpráva' },
+      { klic: 'reklama', ikona: '📢', popis: 'reklama' },
+    ],
+    spravnyKlic: u.reklama ? 'reklama' : 'zprava',
+    zpravaOk: `✅ ${u.proc}.`,
+    zpravaChyba: 'Ptej se: chce mi to něco prodat, nebo mě jen informuje?',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Na čem poznáš kvalitu ------------------------------------------------------------ */
+function znaky() {
+  const p = $('plocha');
+  const u = Uloha.nahodne(ZNAKY);
+  p.innerHTML = `<div class="zadani">Svědčí tohle o kvalitním zdroji?</div>
+    <div class="karta"><div class="obrazek">🔎</div><div class="tvrzeni">${u.t}</div></div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva, trida: 'dve',
+    moznosti: [
+      { klic: 'ano', ikona: '✅', popis: 'Ano, dobré znamení' },
+      { klic: 'ne', ikona: '⚠️', popis: 'Ne, varovný signál' },
+    ],
+    spravnyKlic: u.dobre ? 'ano' : 'ne',
+    zpravaOk: `✅ ${u.proc}.`,
+    zpravaChyba: 'Zkus druhou možnost – pomáhá ti to informaci ověřit, nebo spíš mate?',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+const REZIMY = { duveryhodnost, jakOverit, reklama, znaky };
+function novaUloha() { REZIMY[rezim](); }
+
+document.querySelectorAll('#rezimy button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#rezimy button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  rezim = b.dataset.rezim;
+  novaUloha();
+}));
+$('btnDalsi').addEventListener('click', novaUloha);
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === 'Enter') { e.preventDefault(); novaUloha(); }
+});
+novaUloha();
+</script>
+</body>
+</html>

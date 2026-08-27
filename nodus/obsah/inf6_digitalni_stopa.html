@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Digitální stopa a bezpečnost</title>
+  <link rel="stylesheet" href="../common.css">
+  <link rel="stylesheet" href="../vyuka.css">
+  <script src="../theme.js"></script>
+  <script src="../rec.js"></script>
+  <script src="../uloha.js"></script>
+  <style>
+    .prispevek {
+      background: var(--bg-deep); border: 1px solid var(--border-strong); border-radius: 12px;
+      padding: 14px 18px; max-width: 560px; text-align: left; line-height: 1.55;
+    }
+    .prispevek .autor { color: var(--text-faint); font-size: 0.82rem; margin-bottom: 6px; }
+    .prispevek .text { font-size: 1.02rem; }
+    .situace-t { max-width: 540px; font-size: 1.02rem; line-height: 1.5; }
+    .stopa-znak { font-size: clamp(2.4rem, 9vw, 3.6rem); }
+  </style>
+</head>
+<body>
+  <h1>👣 Digitální stopa a bezpečnost</h1>
+  <p class="podtitul">Pro 6.–7. ročník: co o tobě prozradí internet, ochrana soukromí a kyberšikana.</p>
+
+  <div class="rezimy" id="rezimy">
+    <button data-rezim="prozradi" class="active">🕵️ Co to prozradí</button>
+    <button data-rezim="sdilet">📤 Sdílet, či nesdílet</button>
+    <button data-rezim="situace">🆘 Jak se zachovám</button>
+    <button data-rezim="pojmy">📖 Pojmy</button>
+  </div>
+
+  <div class="plocha" id="plocha"></div>
+
+  <div class="ovladani">
+    <button class="hlavni" id="btnDalsi">Přeskočit →</button>
+    <span class="skore" id="skore"></span>
+  </div>
+
+  <p class="napoveda">
+    <b>Digitální stopa</b> je vše, co po sobě na internetu zanecháš – příspěvky, fotky, komentáře
+    i to, co jsi jen vyhledával. Smazaný příspěvek může dál existovat ve screenshotech.
+    Pravidlo: <b>nezveřejňuj nic, co bys nechtěl ukázat rodičům i učiteli</b>.
+  </p>
+
+<script>
+const $ = id => document.getElementById(id);
+const skore = Uloha.skore('nodus_inf6_stopa', $('skore'));
+let rezim = 'prozradi';
+
+const PRISPEVKY = [
+  { autor: 'Tvůj profil · dnes 15:20',
+    text: 'Konečně prázdniny! Odlétáme na dva týdny do Chorvatska, byt bude prázdný. 🏖️',
+    prozradi: 'že doma nikdo nebude', proc: 'zloději z takového příspěvku poznají, kdy je byt bez lidí' },
+  { autor: 'Tvůj profil · včera',
+    text: 'Fotka z prvního dne ve škole – před cedulí ZŠ Komenského, třída 6.B 📚',
+    prozradi: 'kde chodíš do školy', proc: 'cizí člověk zjistí, kde tě denně najde' },
+  { autor: 'Tvůj profil · před chvílí',
+    text: 'Novej mobil! (fotka krabice s viditelným výrobním číslem a adresou doručení)',
+    prozradi: 'tvoji domácí adresu', proc: 'na štítku bývá jméno i adresa, kam se balík doručil' },
+  { autor: 'Tvůj profil · sobota',
+    text: 'Každý den v 7:15 čekám na autobus na téhle zastávce ☕',
+    prozradi: 'tvůj denní režim', proc: 'kdokoli tak ví, kde a kdy tě pravidelně potkat' },
+  { autor: 'Tvůj profil · dnes',
+    text: 'Můj pes se jmenuje Bond a narodil jsem se 4. května 2013 🐶',
+    prozradi: 'odpovědi na bezpečnostní otázky', proc: 'jméno mazlíčka a datum narození se často používají v heslech' },
+];
+
+const SDILET = [
+  { t: 'fotka z výletu bez viditelné adresy', ok: true, proc: 'nic osobního neprozrazuje' },
+  { t: 'číslo občanského průkazu', ok: false, proc: 'jde o osobní údaj zneužitelný k podvodu' },
+  { t: 'tvoje heslo ke školnímu účtu', ok: false, proc: 'heslo nesdílíš s nikým, ani s kamarádem' },
+  { t: 'kresba, kterou jsi sám vytvořil', ok: true, proc: 'je to tvoje dílo a nikoho neohrožuje' },
+  { t: 'fotka spolužáka bez jeho svolení', ok: false, proc: 'k zveřejnění fotky potřebuješ souhlas' },
+  { t: 'adresa bydliště a telefon', ok: false, proc: 'osobní kontakt může zneužít cizí člověk' },
+  { t: 'recenze knihy, kterou jsi přečetl', ok: true, proc: 'sdílíš názor, ne osobní údaje' },
+  { t: 'screenshot soukromé konverzace kamaráda', ok: false, proc: 'soukromá zpráva nepatří na veřejnost' },
+];
+
+const SITUACE = [
+  { o: 'Někdo ti v komentářích opakovaně nadává a vyhrožuje. Co uděláš?', e: '💬',
+    spr: 'Neodpovídám, uložím důkazy a řeknu to dospělému',
+    jine: ['Odpovím mu ještě sprostěji', 'Smažu si účet a nikomu nic neřeknu', 'Budu to ignorovat navždy'],
+    proc: 'Screenshoty jsou důkaz a dospělý ti pomůže situaci řešit.' },
+  { o: 'Kamarád tě požádá, ať mu půjčíš heslo do hry. Co uděláš?', e: '🔑',
+    spr: 'Heslo nedám, ani kamarádovi',
+    jine: ['Dám mu ho, je to kamarád', 'Dám mu ho a pak si ho změním', 'Napíšu mu ho do chatu'],
+    proc: 'Heslo je jako klíč od bytu – nesdílí se.' },
+  { o: 'Chceš zveřejnit skupinovou fotku ze třídy. Co je správně?', e: '📸',
+    spr: 'Zeptám se všech na fotce, jestli souhlasí',
+    jine: ['Zveřejním ji hned', 'Rozmažu jen jeden obličej', 'Zveřejním ji, když je hezká'],
+    proc: 'Ke zveřejnění podobizny je potřeba souhlas každého z fotky.' },
+  { o: 'Neznámý člověk ti píše a chce se sejít osobně. Co uděláš?', e: '⚠️',
+    spr: 'Nescházím se a řeknu to rodičům',
+    jine: ['Sejdu se, ale na veřejném místě', 'Pošlu mu svoji fotku', 'Domluvím se a nikomu to neřeknu'],
+    proc: 'S neznámými lidmi z internetu se nescházíš – vždy o tom řekni dospělému.' },
+  { o: 'Chceš si založit účet na sociální síti. Na co si dát pozor?', e: '⚙️',
+    spr: 'Nastavím si soukromý profil a silné heslo',
+    jine: ['Nastavím profil veřejně, ať mě víc lidí najde', 'Použiju stejné heslo jako do školy',
+           'Vyplním všechny osobní údaje'],
+    proc: 'Soukromý profil vidí jen ti, které si sám schválíš.' },
+];
+
+const POJMY = [
+  { n: 'digitální stopa', o: 'vše, co po sobě zanecháš na internetu, včetně vyhledávání' },
+  { n: 'phishing', o: 'podvodná zpráva vydávající se za banku nebo službu, snaží se získat údaje' },
+  { n: 'kyberšikana', o: 'opakované ubližování a ponižování pomocí internetu nebo mobilu' },
+  { n: 'malware', o: 'škodlivý program, který poškozuje počítač nebo krade data' },
+  { n: 'cookies', o: 'malé soubory, kterými si weby pamatují, co jsi na nich dělal' },
+  { n: 'dvoufázové ověření', o: 'druhý krok přihlášení, například kód z mobilu' },
+  { n: 'osobní údaj', o: 'informace, podle které lze konkrétního člověka identifikovat' },
+  { n: 'sexting', o: 'posílání intimních fotek, které se mohou snadno rozšířit dál' },
+];
+
+/* ---- Co to prozradí ------------------------------------------------------------------- */
+function prozradi() {
+  const p = $('plocha');
+  const u = Uloha.nahodne(PRISPEVKY);
+  const jine = Uloha.zamichej(PRISPEVKY.filter(x => x.prozradi !== u.prozradi))
+    .slice(0, 3).map(x => x.prozradi);
+
+  p.innerHTML = `<div class="zadani">Co o tobě tenhle příspěvek prozradí?</div>
+    <div class="prispevek"><div class="autor">${u.autor}</div>
+    <div class="text">${u.text}</div></div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([u.prozradi, ...jine]).map(t => ({ klic: t, popis: t })),
+    spravnyKlic: u.prozradi,
+    zpravaOk: `✅ ${u.proc}.`,
+    zpravaChyba: 'Přečti příspěvek znovu – jaký údaj je z něj odvoditelný?',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Sdílet, či nesdílet ----------------------------------------------------------------- */
+function sdilet() {
+  const p = $('plocha');
+  const u = Uloha.nahodne(SDILET);
+  p.innerHTML = `<div class="zadani">Můžeš to bez obav zveřejnit?</div>
+    <div class="karta"><div class="stopa-znak">${u.ok ? '📤' : '🔒'}</div>
+    <div class="situace-t">${u.t}</div></div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva, trida: 'dve',
+    moznosti: [
+      { klic: 'ano', ikona: '✅', popis: 'Ano, to je v pořádku' },
+      { klic: 'ne', ikona: '⛔', popis: 'Ne, tohle nezveřejňuj' },
+    ],
+    spravnyKlic: u.ok ? 'ano' : 'ne',
+    zpravaOk: `✅ ${u.proc}.`,
+    zpravaChyba: 'Zeptej se: může to někdo zneužít proti mně nebo někomu jinému?',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Jak se zachovám ---------------------------------------------------------------------- */
+function situace() {
+  const p = $('plocha');
+  const u = Uloha.nahodne(SITUACE);
+  p.innerHTML = `<div class="zadani">${u.o}</div>
+    <div class="karta"><div class="stopa-znak">${u.e}</div></div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([u.spr, ...u.jine]).map(t => ({ klic: t, popis: t })),
+    spravnyKlic: u.spr,
+    zpravaOk: `✅ ${u.proc}`,
+    zpravaChyba: 'Tohle by ti mohlo uškodit – zkus jinou možnost.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Pojmy ---------------------------------------------------------------------------------- */
+function pojmy() {
+  const p = $('plocha');
+  const u = Uloha.nahodne(POJMY);
+  const jine = Uloha.zamichej(POJMY.filter(x => x.n !== u.n)).slice(0, 3);
+  p.innerHTML = `<div class="zadani">Který pojem odpovídá popisu?</div>
+    <div class="karta"><div class="stopa-znak">📖</div><div class="situace-t">${u.o}</div></div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([u, ...jine]).map(x => ({ klic: x.n, popis: x.n })),
+    spravnyKlic: u.n,
+    zpravaOk: `✅ ${u.n} – ${u.o}.`,
+    zpravaChyba: 'Zkus jinou možnost.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+const REZIMY = { prozradi, sdilet, situace, pojmy };
+function novaUloha() { REZIMY[rezim](); }
+
+document.querySelectorAll('#rezimy button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#rezimy button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  rezim = b.dataset.rezim;
+  novaUloha();
+}));
+$('btnDalsi').addEventListener('click', novaUloha);
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === 'Enter') { e.preventDefault(); novaUloha(); }
+});
+novaUloha();
+</script>
+</body>
+</html>

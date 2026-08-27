@@ -273,6 +273,7 @@ kbd{background:var(--panel2);border:1px solid var(--line);border-bottom-width:2p
   #editor{padding:26px 20px}
 }
 </style>
+<script src="../dialog.js" defer></script>
 </head>
 <body class="noside-init">
 <div id="app">
@@ -1032,20 +1033,20 @@ function dupBook(id){
   c.chapters.forEach(x=>x.id=uid());c.curCh=c.chapters[0].id;
   S.books.push(c);openBook(c.id);toast("Kniha zduplikována");
 }
-function delBook(id){
+async function delBook(id){
   const b=S.books.find(x=>x.id===id);if(!b)return;
-  if(!confirm(`Přesunout knihu „${b.title}“ do koše?`))return;
+  if(!await Dialog.potvrd(`Přesunout knihu „${b.title}“ do koše?`))return;
   S.books=S.books.filter(x=>x.id!==id);
   S.trash.unshift({t:Date.now(),book:b});S.trash=S.trash.slice(0,15);
   if(S.cur===id)openBook(S.books.length?S.books.sort((a,c)=>c.updated-a.updated)[0].id:null);
   else renderSide();
   save();toast("Kniha je v koši");
 }
-function delCh(id){
+async function delCh(id){
   const b=cur();if(!b)return;
   if(b.chapters.length<=1){toast("Kniha musí mít alespoň jednu kapitolu");return;}
   const c=b.chapters.find(x=>x.id===id);
-  if(!confirm(`Smazat kapitolu „${c.title}“?`))return;
+  if(!await Dialog.potvrd(`Smazat kapitolu „${c.title}“?`))return;
   b.chapters=b.chapters.filter(x=>x.id!==id);
   if(b.curCh===id)b.curCh=b.chapters[0].id;
   openCh(b.curCh);touch();
@@ -1143,8 +1144,8 @@ $$("#toolbar button[data-cmd]").forEach(b=>b.onclick=()=>{
   document.execCommand(b.dataset.cmd,false,null);ed.focus();sync();
 });
 $("#tBlock").onchange=()=>{restoreSel();document.execCommand("formatBlock",false,$("#tBlock").value);sync();};
-$("#tLink").onclick=()=>{
-  const u=prompt("Adresa odkazu (prázdná = odebrat):","https://");
+$("#tLink").onclick=async ()=>{
+  const u=await Dialog.zeptej("Adresa odkazu (prázdná = odebrat):","https://");
   restoreSel();
   if(u===null)return;
   document.execCommand(u.trim()?"createLink":"unlink",false,u.trim()||null);
@@ -1243,8 +1244,8 @@ $("#ceW").oninput=()=>$("#ceWv").textContent=$("#ceW").value;
   wrap.addEventListener("pointercancel",end);
 })();
 $("#ceReset").onclick=()=>{$("#ceBox").style.display="none";if(imgEd)imgEd.crop=null;};
-$("#ceDel").onclick=()=>{
-  if(imgEd&&imgEd.el&&confirm("Smazat tento obrázek z textu?")){
+$("#ceDel").onclick=async ()=>{
+  if(imgEd&&imgEd.el&&await Dialog.potvrd("Smazat tento obrázek z textu?")){
     imgEd.el.remove();$("#dlgImg").close();imgEd=null;sync();toast("Obrázek smazán");
   }
 };
@@ -2282,7 +2283,7 @@ $("#impFile").onchange=e=>{
       });
       openBook(S.books[S.books.length-1].id);
       toast("Importováno knih: "+list.length);
-    }catch(err){alert("Import selhal: "+err.message);}
+    }catch(err){Dialog.info("Import selhal: "+err.message);}
   };
   r.readAsText(f);e.target.value="";
 };
@@ -2303,7 +2304,7 @@ function renderTrash(){
     rb.onclick=()=>{S.trash.splice(i,1);S.books.push(t.book);openBook(t.book.id);save();
       renderTrash();toast("Kniha obnovena");};
     const db=document.createElement("button");db.className="btn danger small";db.textContent="Smazat";
-    db.onclick=()=>{if(confirm("Trvale smazat? Nelze vrátit."))
+    db.onclick=async ()=>{if(await Dialog.potvrd("Trvale smazat? Nelze vrátit."))
       {S.trash.splice(i,1);save();renderTrash();}};
     row.append(rb,db);box.appendChild(row);
   });

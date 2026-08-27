@@ -1,0 +1,439 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Cesta do školy a bezpečnost</title>
+  <link rel="stylesheet" href="../common.css">
+  <script src="../theme.js"></script>
+  <script src="../rec.js"></script>
+  <script src="../uloha.js"></script>
+  <style>
+    body { background-color: var(--bg-deep); padding: 20px clamp(12px, 3vw, 36px); min-height: 100vh; }
+    h1 { font-size: 1.35rem; margin-bottom: 3px; }
+    .podtitul { color: var(--text-muted); font-size: 0.86rem; margin-bottom: 14px; }
+
+    .rezimy { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
+    .rezimy button {
+      background: var(--bg-control); border: 1px solid var(--border-strong); color: var(--text-muted);
+      border-radius: 6px; padding: 8px 14px; font-size: 0.86rem; font-family: inherit; cursor: pointer;
+    }
+    .rezimy button.active { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+
+    .plocha {
+      background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius);
+      max-width: 900px; padding: 20px; text-align: center; min-height: 360px;
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px;
+    }
+    .zadani { color: var(--text-muted); font-size: 1rem; }
+    .zadani b { color: var(--text); font-size: 1.2rem; }
+
+    /* Scéna */
+    .scena { width: 100%; max-width: 620px; border-radius: 10px; }
+    .misto { cursor: pointer; }
+    .misto:hover .plocha-tvar { stroke: var(--accent); stroke-width: 3; }
+    .misto.spravne .plocha-tvar { stroke: var(--ok); stroke-width: 4; }
+    .misto.spatne .plocha-tvar { stroke: var(--danger); stroke-width: 4; }
+    .plocha-tvar { stroke: transparent; stroke-width: 0; }
+
+    /* Semafor */
+    .semafor-obal { display: flex; align-items: center; gap: 26px; flex-wrap: wrap; justify-content: center; }
+    .semafor {
+      background: #2b2b2b; border: 3px solid #111; border-radius: 14px;
+      padding: 12px; display: flex; flex-direction: column; gap: 10px;
+    }
+    .svetlo { width: 54px; height: 54px; border-radius: 50%; background: #3a3a3a; }
+    .svetlo.cervena.sviti { background: #e03b3b; box-shadow: 0 0 22px #e03b3b; }
+    .svetlo.oranzova.sviti { background: #e8a33d; box-shadow: 0 0 22px #e8a33d; }
+    .svetlo.zelena.sviti { background: #45c46a; box-shadow: 0 0 22px #45c46a; }
+    .chodec { font-size: 3.4rem; }
+
+    /* Možnosti */
+    .moznosti { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+    .moznosti button {
+      min-width: 130px; max-width: 260px; padding: 14px 16px; border-radius: 12px;
+      background: var(--bg-elevated); border: 2px solid var(--border); color: var(--text);
+      font-size: 0.92rem; line-height: 1.35; font-family: inherit; cursor: pointer;
+      transition: all 0.15s ease; display: flex; flex-direction: column; align-items: center; gap: 7px;
+    }
+    .moznosti button .ikona { font-size: 2rem; line-height: 1; }
+    .moznosti button:hover:not(:disabled) { border-color: var(--accent); transform: translateY(-3px); }
+    .moznosti button.spravne { background: var(--ok); border-color: var(--ok); color: #fff; }
+    .moznosti button.spatne { background: var(--danger); border-color: var(--danger); color: #fff; }
+    .moznosti button:disabled { cursor: default; }
+    .moznosti.ano-ne button { min-width: 150px; font-size: 1.15rem; font-weight: 600; }
+
+    .odezva { font-size: 1rem; font-weight: 600; min-height: 44px; max-width: 620px; line-height: 1.4; }
+    .odezva.ok { color: var(--ok); }
+    .odezva.chyba { color: var(--danger); }
+
+    .ovladani { display: flex; gap: 10px; align-items: center; margin-top: 14px; max-width: 900px; flex-wrap: wrap; }
+    .ovladani button {
+      background: var(--bg-control); border: 1px solid var(--border-strong); color: var(--text);
+      border-radius: 6px; padding: 10px 18px; font-size: 0.92rem; font-family: inherit; cursor: pointer;
+    }
+    .ovladani button.hlavni { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+    .ovladani button.hlavni:hover { background: var(--accent-hover); }
+    .skore { margin-left: auto; color: var(--text-muted); font-size: 0.9rem; font-variant-numeric: tabular-nums; }
+    .skore b { color: var(--ok); }
+    .napoveda { max-width: 900px; margin-top: 12px; color: var(--text-faint); font-size: 0.8rem; line-height: 1.5; }
+  </style>
+</head>
+<body>
+  <h1>🚸 Cesta do školy a bezpečnost</h1>
+  <p class="podtitul">Pro 1.–2. ročník: co je na cestě do školy, kdy se smí přecházet a jak se chovat bezpečně.</p>
+
+  <div class="rezimy" id="rezimy">
+    <button data-rezim="mapa" class="active">🗺️ Co je na cestě</button>
+    <button data-rezim="semafor">🚦 Smím přejít?</button>
+    <button data-rezim="kviz">❓ Jak se zachovám</button>
+  </div>
+
+  <div class="plocha" id="plocha"></div>
+
+  <div class="ovladani">
+    <button class="hlavni" id="btnDalsi">Další →</button>
+    <button id="btnCist" title="Přečíst zadání nahlas">🔊 Přečti</button>
+    <span class="skore" id="skore"></span>
+  </div>
+
+  <p class="napoveda">
+    Než vkročíš na přechod: <b>zastav se, podívej se vlevo, vpravo a znovu vlevo</b> a poslouchej.
+    Přecházej, až když auta opravdu stojí – řidič tě nemusí vidět.
+  </p>
+
+<script>
+const $ = id => document.getElementById(id);
+const KLIC = 'nodus_prv1_cesta';
+
+/* ---- Data ----------------------------------------------------------------- */
+const MISTA = [
+  { id: 'prechod', nazev: 'přechod pro chodce' },
+  { id: 'semafor', nazev: 'semafor' },
+  { id: 'chodnik', nazev: 'chodník' },
+  { id: 'silnice', nazev: 'silnice' },
+  { id: 'skola', nazev: 'škola' },
+  { id: 'domov', nazev: 'dům, kde bydlíš' },
+  { id: 'auto', nazev: 'auto' },
+  { id: 'strom', nazev: 'strom' },
+];
+
+const KVIZ = [
+  {
+    o: 'Míč ti spadl na silnici. Co uděláš?', e: '⚽',
+    v: [
+      { t: 'Rychle pro něj skočím', ok: false },
+      { t: 'Zavolám dospělého a počkám', ok: true },
+      { t: 'Hodím tam druhý míč', ok: false },
+    ],
+    proc: 'Na silnici se nikdy nevbíhá – auto nestihne zastavit. Vždy poprosíš dospělého.',
+  },
+  {
+    o: 'Chceš přejít silnici. Kde to uděláš?', e: '🚸',
+    v: [
+      { t: 'Na přechodu pro chodce', ok: true },
+      { t: 'Mezi zaparkovanými auty', ok: false },
+      { t: 'Za zatáčkou', ok: false },
+    ],
+    proc: 'Mezi auty tě řidič neuvidí. Na přechodu tě čekají a vidí.',
+  },
+  {
+    o: 'Po které straně chodíš, když není chodník?', e: '🚶',
+    v: [
+      { t: 'Po levé, proti autům', ok: true },
+      { t: 'Po pravé, po směru aut', ok: false },
+      { t: 'Uprostřed silnice', ok: false },
+    ],
+    proc: 'Proti autům na sebe vidíte navzájem a stihneš uhnout.',
+  },
+  {
+    o: 'Je tma a jdeš domů. Co pomůže?', e: '🦺',
+    v: [
+      { t: 'Reflexní pásek nebo vesta', ok: true },
+      { t: 'Tmavá bunda', ok: false },
+      { t: 'Rychlejší běh', ok: false },
+    ],
+    proc: 'Reflexní materiál je vidět už z velké dálky – v tmavém oblečení tě řidič uvidí pozdě.',
+  },
+  {
+    o: 'U přechodu stojí autobus a nevidíš za něj. Co uděláš?', e: '🚌',
+    v: [
+      { t: 'Počkám, až odjede a bude vidět', ok: true },
+      { t: 'Proběhnu těsně kolem něj', ok: false },
+      { t: 'Podlezu ho', ok: false },
+    ],
+    proc: 'Za velkým autem může jet další – musíš mít volný výhled na oba směry.',
+  },
+  {
+    o: 'Jedeš na kole po stezce. Co musíš mít na hlavě?', e: '🚲',
+    v: [
+      { t: 'Přilbu', ok: true },
+      { t: 'Kšiltovku', ok: false },
+      { t: 'Nic, když jedu pomalu', ok: false },
+    ],
+    proc: 'Do 18 let je přilba povinná a chrání hlavu i při pomalé jízdě.',
+  },
+  {
+    o: 'Na přechodu svítí zelená. Co uděláš jako první?', e: '🚦',
+    v: [
+      { t: 'Rozhlédnu se a pak jdu', ok: true },
+      { t: 'Hned vyběhnu', ok: false },
+      { t: 'Zavolám na řidiče', ok: false },
+    ],
+    proc: 'I na zelenou se rozhlédni – řidič mohl zelenou přehlédnout.',
+  },
+  {
+    o: 'Cizí člověk tě zve do auta, že tě sveze. Co uděláš?', e: '🚗',
+    v: [
+      { t: 'Nenasednu a řeknu to doma', ok: true },
+      { t: 'Nasednu, když je hodný', ok: false },
+      { t: 'Nasednu, když prší', ok: false },
+    ],
+    proc: 'S cizím člověkem nikam nechodíš ani nejedeš – vždy to řekni rodičům nebo učiteli.',
+  },
+  {
+    o: 'Kde čekáš na autobus?', e: '🚏',
+    v: [
+      { t: 'Na zastávce, kousek od kraje', ok: true },
+      { t: 'Na kraji obrubníku', ok: false },
+      { t: 'Na silnici', ok: false },
+    ],
+    proc: 'Od kraje si udrž odstup – autobus zatáčí a potřebuje místo.',
+  },
+  {
+    o: 'Jdeš po chodníku a hraješ si s telefonem. Je to v pořádku?', e: '📱',
+    v: [
+      { t: 'Ne, na cestě dávám pozor', ok: true },
+      { t: 'Ano, chodník je bezpečný', ok: false },
+      { t: 'Ano, když mám sluchátka', ok: false },
+    ],
+    proc: 'S telefonem a sluchátky přeslechneš auto i cyklistu a přehlédneš vjezd do garáže.',
+  },
+];
+
+/* ---- Pomocné -------------------------------------------------------------- */
+const nahodne = pole => pole[Math.floor(Math.random() * pole.length)];
+function zamichej(pole) {
+  const p = [...pole];
+  for (let i = p.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [p[i], p[j]] = [p[j], p[i]];
+  }
+  return p;
+}
+// čtení nahlas řeší sdílený rec.js – pozná i chybějící hlas v systému
+const precti = (text, rychlost = 0.85) => Rec.mluv(text, { rychlost });
+
+let spravne = 0, pokusy = 0, cteniZadani = '';
+try {
+  const s = JSON.parse(localStorage.getItem(KLIC));
+  if (s) { spravne = s.spravne; pokusy = s.pokusy; }
+} catch { /* bez trvalé paměti */ }
+function ulozSkore() {
+  try { localStorage.setItem(KLIC, JSON.stringify({ spravne, pokusy })); } catch { /* bez paměti */ }
+}
+function zobrazSkore() { $('skore').innerHTML = `Správně: <b>${spravne}</b> z ${pokusy}`; }
+function vyhodnot(napoprve) { pokusy++; if (napoprve) spravne++; ulozSkore(); zobrazSkore(); }
+
+/* ---- Scéna cesty do školy (SVG) ------------------------------------------- */
+function svgScena() {
+  return `
+  <svg class="scena" viewBox="0 0 400 250" role="img" aria-label="Cesta do školy">
+    <rect x="0" y="0" width="400" height="250" fill="#2c3e33" rx="10"/>
+
+    <g class="misto" data-misto="silnice">
+      <rect class="plocha-tvar" x="0" y="110" width="400" height="70" fill="#3a3a3a"/>
+      <g stroke="#e8e8c0" stroke-width="3" stroke-dasharray="18 14">
+        <line x1="0" y1="145" x2="150" y2="145"/>
+        <line x1="250" y1="145" x2="400" y2="145"/>
+      </g>
+    </g>
+
+    <g class="misto" data-misto="chodnik">
+      <rect class="plocha-tvar" x="0" y="96" width="400" height="14" fill="#8a8a8a"/>
+      <rect x="0" y="180" width="400" height="14" fill="#8a8a8a"/>
+    </g>
+
+    <g class="misto" data-misto="prechod">
+      <rect class="plocha-tvar" x="168" y="110" width="64" height="70" fill="#3a3a3a"/>
+      <g fill="#f2f2f2">
+        <rect x="172" y="112" width="10" height="66"/>
+        <rect x="188" y="112" width="10" height="66"/>
+        <rect x="204" y="112" width="10" height="66"/>
+        <rect x="220" y="112" width="10" height="66"/>
+      </g>
+    </g>
+
+    <g class="misto" data-misto="semafor">
+      <rect class="plocha-tvar" x="140" y="44" width="20" height="54" fill="#333" rx="5"/>
+      <rect x="147" y="70" width="6" height="30" fill="#666"/>
+      <circle cx="150" cy="52" r="5" fill="#e03b3b"/>
+      <circle cx="150" cy="64" r="5" fill="#45c46a"/>
+    </g>
+
+    <g class="misto" data-misto="domov">
+      <rect class="plocha-tvar" x="24" y="34" width="70" height="60" fill="#b06a4a"/>
+      <polygon points="18,36 59,8 100,36" fill="#8a4a34"/>
+      <rect x="50" y="62" width="18" height="32" fill="#5a3a2a"/>
+      <rect x="31" y="46" width="15" height="15" fill="#cfe4f5"/>
+      <rect x="72" y="46" width="15" height="15" fill="#cfe4f5"/>
+    </g>
+
+    <g class="misto" data-misto="skola">
+      <rect class="plocha-tvar" x="286" y="26" width="94" height="68" fill="#d8c07a"/>
+      <polygon points="280,28 333,4 386,28" fill="#9a7f45"/>
+      <rect x="322" y="60" width="22" height="34" fill="#6a552c"/>
+      <rect x="296" y="40" width="16" height="16" fill="#cfe4f5"/>
+      <rect x="354" y="40" width="16" height="16" fill="#cfe4f5"/>
+      <text x="333" y="24" font-size="13" text-anchor="middle" fill="#3a2f14">ŠKOLA</text>
+    </g>
+
+    <g class="misto" data-misto="auto">
+      <rect class="plocha-tvar" x="40" y="118" width="66" height="24" rx="7" fill="#4a7fd0"/>
+      <rect x="54" y="110" width="34" height="12" rx="4" fill="#7ba9e8"/>
+      <circle cx="56" cy="144" r="7" fill="#1a1a1a"/>
+      <circle cx="92" cy="144" r="7" fill="#1a1a1a"/>
+    </g>
+
+    <g class="misto" data-misto="strom">
+      <rect class="plocha-tvar" x="252" y="196" width="14" height="34" fill="#6b4a2a"/>
+      <circle cx="259" cy="196" r="26" fill="#3f8a4a"/>
+      <circle cx="120" cy="206" r="20" fill="#3f8a4a"/>
+      <rect x="115" y="206" width="10" height="26" fill="#6b4a2a"/>
+    </g>
+  </svg>`;
+}
+
+function mapa() {
+  const p = $('plocha');
+  const cil = nahodne(MISTA);
+  cteniZadani = 'Najdi na obrázku: ' + cil.nazev;
+  p.innerHTML = `<div class="zadani">Klepni na obrázku na: <b>${cil.nazev}</b></div>${svgScena()}`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  const svg = p.querySelector('svg');
+  const stav = { chyboval: false, hotovo: false };
+  svg.querySelectorAll('.misto').forEach(g => {
+    g.addEventListener('click', () => {
+      if (stav.hotovo) return;
+      const zvolene = MISTA.find(m => m.id === g.dataset.misto);
+      if (g.dataset.misto !== cil.id) {
+        stav.chyboval = true;
+        Uloha.trhni(svg);
+        g.classList.add('spatne');
+        setTimeout(() => g.classList.remove('spatne'), 420);
+        odezva.className = 'odezva chyba';
+        odezva.textContent = `To je ${zvolene.nazev}. Hledáme ${cil.nazev} – zkus to znovu.`;
+        return;
+      }
+      stav.hotovo = true;
+      g.classList.add('spravne');
+      odezva.className = 'odezva ok';
+      odezva.textContent = '✅ Správně!';
+      vyhodnot(!stav.chyboval);
+      precti(cil.nazev, 0.85);
+      setTimeout(novaUloha, Uloha.PRODLEVA);
+    });
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Semafor -------------------------------------------------------------- */
+function semafor() {
+  const p = $('plocha');
+  const barvy = ['cervena', 'oranzova', 'zelena'];
+  const sviti = nahodne(barvy);
+  const smiPrejit = sviti === 'zelena';
+  cteniZadani = 'Smíš přejít?';
+  const chodec = sviti === 'zelena' ? '🚶' : '🧍';
+  p.innerHTML = `
+    <div class="zadani">Na semaforu svítí tato barva. <b>Smíš přejít?</b></div>
+    <div class="semafor-obal">
+      <div class="semafor">
+        <div class="svetlo cervena ${sviti === 'cervena' ? 'sviti' : ''}"></div>
+        <div class="svetlo oranzova ${sviti === 'oranzova' ? 'sviti' : ''}"></div>
+        <div class="svetlo zelena ${sviti === 'zelena' ? 'sviti' : ''}"></div>
+      </div>
+      <div class="chodec">${chodec}</div>
+    </div>`;
+  const m = document.createElement('div');
+  m.className = 'moznosti ano-ne';
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  const vysvetleni = sviti === 'zelena' ? 'Zelená znamená jdi – ale nejdřív se rozhlédni.'
+    : sviti === 'oranzova' ? 'Oranžová znamená připrav se, ještě nevstupuj do silnice.'
+    : 'Červená znamená stůj a čekej na chodníku.';
+  const stav = { chyboval: false, hotovo: false };
+  [{ t: '✅ Ano, jdu', v: true }, { t: '🛑 Ne, počkám', v: false }].forEach(volba => {
+    const b = document.createElement('button');
+    b.textContent = volba.t;
+    b.dataset.ano = String(volba.v);
+    b.addEventListener('click', () => Uloha.odpoved({
+      prvek: b,
+      spravne: volba.v === smiPrejit,
+      stav, odezva,
+      zpravaOk: '✅ Správně. ' + vysvetleni,
+      zpravaChyba: '❌ Pozor! ' + vysvetleni,
+      poSpravne: vyhodnot,
+      dalsi: novaUloha,
+    }));
+    m.appendChild(b);
+  });
+  p.append(m, odezva);
+}
+
+/* ---- Kvíz ----------------------------------------------------------------- */
+function kviz() {
+  const p = $('plocha');
+  const u = nahodne(KVIZ);
+  cteniZadani = u.o;
+  p.innerHTML = `<div class="zadani">${u.o}</div>
+                 <div style="font-size:clamp(2.8rem,10vw,4.2rem);line-height:1">${u.e}</div>`;
+  const m = document.createElement('div');
+  m.className = 'moznosti';
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  const stav = { chyboval: false, hotovo: false };
+  zamichej(u.v).forEach(volba => {
+    const b = document.createElement('button');
+    b.innerHTML = `<span>${volba.t}</span>`;
+    b.dataset.ok = String(volba.ok);
+    b.addEventListener('click', () => Uloha.odpoved({
+      prvek: b,
+      spravne: volba.ok,
+      stav, odezva,
+      zpravaOk: '✅ Správně. ' + u.proc,
+      zpravaChyba: 'Tohle není bezpečné – zkus jinou možnost.',
+      poSpravne: vyhodnot,
+      dalsi: novaUloha,
+    }));
+    m.appendChild(b);
+  });
+  p.append(m, odezva);
+}
+
+/* ---- Ovládání ------------------------------------------------------------- */
+const REZIMY = { mapa, semafor, kviz };
+let rezim = 'mapa';
+function novaUloha() { REZIMY[rezim](); }
+
+document.querySelectorAll('#rezimy button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#rezimy button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  rezim = b.dataset.rezim;
+  novaUloha();
+}));
+$('btnDalsi').addEventListener('click', novaUloha);
+$('btnCist').addEventListener('click', () => precti(cteniZadani));
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === 'Enter') { e.preventDefault(); novaUloha(); }
+});
+
+Rec.hlidejTlacitko($('btnCist'));
+Rec.poznamkaOHlasu(document.querySelector('.napoveda').parentNode);
+
+zobrazSkore();
+novaUloha();
+</script>
+</body>
+</html>

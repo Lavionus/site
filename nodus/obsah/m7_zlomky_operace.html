@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Počítání se zlomky</title>
+  <link rel="stylesheet" href="../common.css">
+  <link rel="stylesheet" href="../vyuka.css">
+  <script src="../theme.js"></script>
+  <script src="../uloha.js"></script>
+  <style>
+    .zlomek { display: inline-flex; flex-direction: column; align-items: center; vertical-align: middle;
+      font-variant-numeric: tabular-nums; line-height: 1.1; margin: 0 4px; }
+    .zlomek .c { border-bottom: 3px solid currentColor; padding: 0 6px; }
+    .zlomek .j { padding: 0 6px; }
+    .priklad { font-size: clamp(1.5rem, 5vw, 2.3rem); font-weight: 700; display: flex;
+      align-items: center; justify-content: center; gap: 6px; flex-wrap: wrap; }
+    .pas { display: flex; width: min(420px, 92%); height: 30px; border: 1px solid var(--border-strong);
+      border-radius: 6px; overflow: hidden; }
+    .pas div { flex: 1; border-right: 1px solid var(--border); }
+    .pas div:last-child { border-right: none; }
+    .pas div.plny { background: var(--accent); }
+    .pasy { display: flex; flex-direction: column; gap: 8px; align-items: center; }
+    .pasy .popis { color: var(--text-faint); font-size: 0.78rem; }
+  </style>
+</head>
+<body>
+  <h1>🍕 Počítání se zlomky</h1>
+  <p class="podtitul">Pro 7. ročník: krácení, rozšiřování, sčítání, odčítání, násobení a dělení zlomků.</p>
+
+  <div class="rezimy" id="rezimy">
+    <button data-rezim="kraceni" class="active">✂️ Krať a rozšiřuj</button>
+    <button data-rezim="scitani">➕ Sčítání a odčítání</button>
+    <button data-rezim="nasobeni">✖️ Násobení a dělení</button>
+    <button data-rezim="porovnani">⚖️ Porovnávání</button>
+  </div>
+
+  <div class="plocha" id="plocha"></div>
+
+  <div class="ovladani">
+    <button class="hlavni" id="btnDalsi">Přeskočit →</button>
+    <span class="skore" id="skore"></span>
+  </div>
+
+  <p class="napoveda">
+    Zlomek <b>krátíme i rozšiřujeme</b> tak, že čitatele i jmenovatele vynásobíme (vydělíme) stejným číslem.
+    Sčítat a odčítat lze jen zlomky se <b>stejným jmenovatelem</b>.
+    Násobíme <b>čitatel čitatelem</b> a jmenovatel jmenovatelem, dělíme <b>násobením převrácenou hodnotou</b>.
+  </p>
+
+<script>
+const $ = id => document.getElementById(id);
+const skore = Uloha.skore('nodus_m7_zlomky_operace', $('skore'));
+let rezim = 'kraceni';
+
+const nsd = (a, b) => b ? nsd(b, a % b) : Math.abs(a);
+const nsn = (a, b) => a / nsd(a, b) * b;
+function zkrat(c, j) { const d = nsd(c, j) || 1; return [c / d, j / d]; }
+const zl = (c, j) => `<span class="zlomek"><span class="c">${c}</span><span class="j">${j}</span></span>`;
+const klic = (c, j) => `${c}/${j}`;
+function odezvaEl() { const d = document.createElement('div'); d.className = 'odezva'; return d; }
+
+/* Pás rozdělený na `j` dílů, z nichž `c` je vybarveno. */
+function pas(c, j, popis) {
+  if (j > 24) return '';                 // příliš mnoho dílků už nic neukáže
+  const dily = [...Array(j)].map((_, i) => `<div class="${i < c ? 'plny' : ''}"></div>`).join('');
+  return `<div class="pasy"><div class="pas">${dily}</div>${popis ? `<div class="popis">${popis}</div>` : ''}</div>`;
+}
+
+/* Čtyři možnosti: správná plus tři blízké nesprávné zlomky. */
+function moznostiZlomku(c, j) {
+  const spravny = klic(c, j);
+  const jine = new Set();
+  let pojistka = 0;
+  while (jine.size < 3 && pojistka++ < 300) {
+    const kandidat = Uloha.nahodne([
+      [c + 1, j], [c, j + 1], [j, c], [c + 1, j + 1], [Math.max(1, c - 1), j], [c, Math.max(2, j - 1)],
+    ]);
+    const [x, y] = kandidat;
+    if (y > 0 && x > 0 && klic(x, y) !== spravny) jine.add(klic(x, y));
+  }
+  return Uloha.zamichej([spravny, ...jine]).map(t => {
+    const [x, y] = t.split('/');
+    return { klic: t, popis: zl(x, y) };
+  });
+}
+
+/* ---- Krať a rozšiřuj ---------------------------------------------------------------- */
+function kraceni() {
+  const p = $('plocha');
+  const kratime = Math.random() < 0.5;
+  const zj = Uloha.nahodneCislo(3, 10);
+  const zc = Uloha.nahodneCislo(1, zj - 1);      // vlastní zlomek, ať jde nakreslit
+  const [c0, j0] = zkrat(zc, zj);
+  const k = Uloha.nahodneCislo(2, 6);
+
+  const zadaneC = kratime ? c0 * k : c0, zadaneJ = kratime ? j0 * k : j0;
+  const cilC = kratime ? c0 : c0 * k, cilJ = kratime ? j0 : j0 * k;
+
+  p.innerHTML = `<div class="zadani">${kratime
+    ? 'Zkrať zlomek na základní tvar:'
+    : `Rozšiř zlomek číslem <b>${k}</b>:`}</div>
+    <div class="karta"><div class="priklad">${zl(zadaneC, zadaneJ)}</div>
+      ${pas(zadaneC, zadaneJ, `${zadaneC} z ${zadaneJ} dílů`)}</div>`;
+  const odezva = odezvaEl();
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: moznostiZlomku(cilC, cilJ),
+    spravnyKlic: klic(cilC, cilJ),
+    zpravaOk: kratime
+      ? `✅ Čitatele i jmenovatele dělíme ${nsd(zadaneC, zadaneJ)}: ${zadaneC}/${zadaneJ} = ${cilC}/${cilJ}`
+      : `✅ Čitatele i jmenovatele násobíme ${k}: ${zadaneC}/${zadaneJ} = ${cilC}/${cilJ}`,
+    zpravaChyba: 'Se zlomkem musíš pracovat nahoře i dole stejně – hodnota se nesmí změnit.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Sčítání a odčítání --------------------------------------------------------------- */
+function scitani() {
+  const p = $('plocha');
+  const j1 = Uloha.nahodneCislo(2, 9), j2 = Uloha.nahodneCislo(2, 9);
+  const c1 = Uloha.nahodneCislo(1, j1 - 1) || 1;
+  const c2 = Uloha.nahodneCislo(1, j2 - 1) || 1;
+  const scitame = Math.random() < 0.5 || (c1 / j1 <= c2 / j2);   // ať výsledek není záporný ani nula
+  const spolecny = nsn(j1, j2);
+  const cit = scitame
+    ? c1 * (spolecny / j1) + c2 * (spolecny / j2)
+    : c1 * (spolecny / j1) - c2 * (spolecny / j2);
+  const [vc, vj] = zkrat(cit, spolecny);
+
+  p.innerHTML = `<div class="zadani">Vypočítej a výsledek zkrať:</div>
+    <div class="karta"><div class="priklad">${zl(c1, j1)} ${scitame ? '+' : '−'} ${zl(c2, j2)} =</div></div>`;
+  const odezva = odezvaEl();
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: moznostiZlomku(vc, vj),
+    spravnyKlic: klic(vc, vj),
+    zpravaOk: `✅ Společný jmenovatel je ${spolecny}: ${c1 * (spolecny / j1)}/${spolecny} `
+      + `${scitame ? '+' : '−'} ${c2 * (spolecny / j2)}/${spolecny} = ${cit}/${spolecny} = ${vc}/${vj}`,
+    zpravaChyba: `Převeď oba zlomky na společného jmenovatele (nejmenší je ${spolecny}).`,
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Násobení a dělení ---------------------------------------------------------------- */
+function nasobeni() {
+  const p = $('plocha');
+  const nasobime = Math.random() < 0.5;
+  const c1 = Uloha.nahodneCislo(1, 8), j1 = Uloha.nahodneCislo(2, 9);
+  const c2 = Uloha.nahodneCislo(1, 8), j2 = Uloha.nahodneCislo(2, 9);
+  const [vc, vj] = nasobime ? zkrat(c1 * c2, j1 * j2) : zkrat(c1 * j2, j1 * c2);
+
+  p.innerHTML = `<div class="zadani">Vypočítej a výsledek zkrať:</div>
+    <div class="karta"><div class="priklad">${zl(c1, j1)} ${nasobime ? '·' : ':'} ${zl(c2, j2)} =</div></div>`;
+  const odezva = odezvaEl();
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: moznostiZlomku(vc, vj),
+    spravnyKlic: klic(vc, vj),
+    zpravaOk: nasobime
+      ? `✅ ${c1}·${c2} / ${j1}·${j2} = ${c1 * c2}/${j1 * j2} = ${vc}/${vj}`
+      : `✅ Dělení = násobení převrácenou hodnotou: ${c1}/${j1} · ${j2}/${c2} = ${c1 * j2}/${j1 * c2} = ${vc}/${vj}`,
+    zpravaChyba: nasobime
+      ? 'Násob čitatel čitatelem a jmenovatel jmenovatelem.'
+      : 'Druhý zlomek převrať a místo dělení násob.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Porovnávání ----------------------------------------------------------------------- */
+function porovnani() {
+  const p = $('plocha');
+  let c1, j1, c2, j2, pojistka = 0;
+  do {
+    j1 = Uloha.nahodneCislo(2, 12); j2 = Uloha.nahodneCislo(2, 12);
+    c1 = Uloha.nahodneCislo(1, j1); c2 = Uloha.nahodneCislo(1, j2);
+  } while (c1 * j2 === c2 * j1 && pojistka++ < 100);
+  const spravny = c1 * j2 < c2 * j1 ? '<' : c1 * j2 > c2 * j1 ? '>' : '=';
+  const spolecny = nsn(j1, j2);
+
+  p.innerHTML = `<div class="zadani">Doplň znaménko:</div>
+    <div class="karta"><div class="priklad">${zl(c1, j1)} &nbsp;?&nbsp; ${zl(c2, j2)}</div>
+      ${pas(c1, j1, `${c1}/${j1}`)}${pas(c2, j2, `${c2}/${j2}`)}</div>`;
+  const odezva = odezvaEl();
+  Uloha.vyber({
+    kam: p, odezva, trida: 'velke',
+    moznosti: [{ klic: '<', popis: '<' }, { klic: '=', popis: '=' }, { klic: '>', popis: '>' }],
+    spravnyKlic: spravny,
+    zpravaOk: `✅ Po převedení na jmenovatele ${spolecny}: ${c1 * (spolecny / j1)}/${spolecny} `
+      + `${spravny} ${c2 * (spolecny / j2)}/${spolecny}`,
+    zpravaChyba: 'Převeď oba zlomky na společného jmenovatele, nebo porovnej křížovým násobením.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+const REZIMY = { kraceni, scitani, nasobeni, porovnani };
+function novaUloha() { REZIMY[rezim](); }
+
+document.querySelectorAll('#rezimy button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#rezimy button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  rezim = b.dataset.rezim;
+  novaUloha();
+}));
+$('btnDalsi').addEventListener('click', novaUloha);
+novaUloha();
+</script>
+</body>
+</html>

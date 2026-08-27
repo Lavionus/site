@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Druhy vět</title>
+  <link rel="stylesheet" href="../common.css">
+  <link rel="stylesheet" href="../vyuka.css">
+  <script src="../theme.js"></script>
+  <script src="../rec.js"></script>
+  <script src="../uloha.js"></script>
+  <style>
+    .veta {
+      font-size: clamp(1.3rem, 5vw, 2rem); font-weight: 600; line-height: 1.35; max-width: 620px;
+    }
+    .veta .znak { color: var(--accent); }
+    .veta .mezera {
+      color: var(--accent); border-bottom: 3px solid var(--accent); padding: 0 12px; margin-left: 3px;
+    }
+  </style>
+</head>
+<body>
+  <h1>❓ Druhy vět</h1>
+  <p class="podtitul">Pro 2.–3. ročník: věta oznamovací, tázací, rozkazovací a přací – a znaménko na konci.</p>
+
+  <div class="rezimy" id="rezimy">
+    <button data-rezim="druh" class="active">🏷️ Jaká je to věta?</button>
+    <button data-rezim="znamenko">❕ Doplň znaménko</button>
+    <button data-rezim="najdi">🔎 Najdi větu</button>
+  </div>
+
+  <div class="plocha" id="plocha"></div>
+
+  <div class="ovladani">
+    <button class="hlavni" id="btnDalsi">Přeskočit →</button>
+    <span class="skore" id="skore"></span>
+  </div>
+
+  <p class="napoveda">
+    <b>Oznamovací</b> něco oznamuje (tečka). <b>Tázací</b> se ptá (otazník).
+    <b>Rozkazovací</b> přikazuje nebo prosí (vykřičník). <b>Přací</b> vyjadřuje přání –
+    poznáš ji podle slov <i>ať, kéž, nechť</i> (vykřičník).
+  </p>
+
+<script>
+const $ = id => document.getElementById(id);
+
+const DRUHY = {
+  oznamovaci:  { nazev: 'oznamovací', ikona: '💬', znak: '.' },
+  tazaci:      { nazev: 'tázací', ikona: '❓', znak: '?' },
+  rozkazovaci: { nazev: 'rozkazovací', ikona: '❗', znak: '!' },
+  praci:       { nazev: 'přací', ikona: '🌠', znak: '!' },
+};
+
+/* věta bez koncového znaménka + druh */
+const VETY = [
+  { t: 'Venku svítí sluníčko', d: 'oznamovaci' },
+  { t: 'Máme doma malého psa', d: 'oznamovaci' },
+  { t: 'Zítra pojedeme na výlet', d: 'oznamovaci' },
+  { t: 'Na zahradě kvetou růže', d: 'oznamovaci' },
+  { t: 'Bratr chodí do třetí třídy', d: 'oznamovaci' },
+  { t: 'V lese jsme našli houby', d: 'oznamovaci' },
+  { t: 'Kniha leží na stole', d: 'oznamovaci' },
+  { t: 'Dnes je úterý', d: 'oznamovaci' },
+  { t: 'Kolik je hodin', d: 'tazaci' },
+  { t: 'Kdo přinesl ten dopis', d: 'tazaci' },
+  { t: 'Půjdeš se mnou ven', d: 'tazaci' },
+  { t: 'Proč se směješ', d: 'tazaci' },
+  { t: 'Kde bydlí tvoje babička', d: 'tazaci' },
+  { t: 'Máš rád zmrzlinu', d: 'tazaci' },
+  { t: 'Kam jsi dal klíče', d: 'tazaci' },
+  { t: 'Jak se jmenuješ', d: 'tazaci' },
+  { t: 'Zavři okno', d: 'rozkazovaci' },
+  { t: 'Přines mi tu tužku', d: 'rozkazovaci' },
+  { t: 'Nechoď po trávníku', d: 'rozkazovaci' },
+  { t: 'Ukliď si hračky', d: 'rozkazovaci' },
+  { t: 'Poslouchej mě', d: 'rozkazovaci' },
+  { t: 'Buďte prosím zticha', d: 'rozkazovaci' },
+  { t: 'Pojď honem sem', d: 'rozkazovaci' },
+  { t: 'Napiš to do sešitu', d: 'rozkazovaci' },
+  { t: 'Kéž by už bylo léto', d: 'praci' },
+  { t: 'Ať se ti tam líbí', d: 'praci' },
+  { t: 'Kéž bych uměl plavat', d: 'praci' },
+  { t: 'Ať zítra neprší', d: 'praci' },
+  { t: 'Kéž by nám to vyšlo', d: 'praci' },
+  { t: 'Ať máš hezké prázdniny', d: 'praci' },
+  { t: 'Kéž by babička byla brzy zdravá', d: 'praci' },
+  { t: 'Ať už jsme doma', d: 'praci' },
+];
+
+const skore = Uloha.skore('nodus_cj2_druhy_vet', $('skore'));
+let rezim = 'druh';
+
+const volbyDruhu = () => Object.entries(DRUHY).map(([klic, d]) =>
+  ({ klic, ikona: d.ikona, popis: d.nazev }));
+
+/* ---- Jaká je to věta? ----------------------------------------------------- */
+function druh() {
+  const p = $('plocha');
+  const v = Uloha.nahodne(VETY);
+  p.innerHTML = `<div class="zadani">Jaký je to druh věty?</div>
+    <div class="karta"><div class="veta">${v.t}<span class="znak">${DRUHY[v.d].znak}</span></div></div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: volbyDruhu(),
+    spravnyKlic: v.d,
+    zpravaOk: '✅ Věta ' + DRUHY[v.d].nazev + ' – končí znaménkem ' + DRUHY[v.d].znak,
+    zpravaChyba: 'Ještě ne. Přečti si větu nahlas – oznamuje, ptá se, přikazuje, nebo si něco přeje?',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Doplň znaménko ------------------------------------------------------- */
+function znamenko() {
+  const p = $('plocha');
+  const v = Uloha.nahodne(VETY);
+  p.innerHTML = `<div class="zadani">Jaké znaménko patří na konec věty?</div>
+    <div class="karta"><div class="veta">${v.t}<span class="mezera">?</span></div></div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva, trida: 'velke',
+    moznosti: [
+      { klic: '.', popis: '.' },
+      { klic: '?', popis: '?' },
+      { klic: '!', popis: '!' },
+    ],
+    spravnyKlic: DRUHY[v.d].znak,
+    zpravaOk: '✅ Je to věta ' + DRUHY[v.d].nazev + '.',
+    zpravaChyba: 'Zkus jiné znaménko – co ta věta dělá?',
+    poSpravne: napoprve => {
+      skore.vyhodnot(napoprve);
+      const m = p.querySelector('.mezera');
+      m.textContent = DRUHY[v.d].znak;
+    },
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Najdi větu daného druhu ---------------------------------------------- */
+function najdi() {
+  const p = $('plocha');
+  const hledany = Uloha.nahodne(Object.keys(DRUHY));
+  const spravna = Uloha.nahodne(VETY.filter(v => v.d === hledany));
+  const jine = Uloha.zamichej(VETY.filter(v => v.d !== hledany)).slice(0, 3);
+  p.innerHTML = `<div class="zadani">Najdi větu <b>${DRUHY[hledany].nazev}</b>:</div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([spravna, ...jine]).map(v =>
+      ({ klic: v.t, popis: v.t + DRUHY[v.d].znak })),
+    spravnyKlic: spravna.t,
+    zpravaOk: '✅ Správně, to je věta ' + DRUHY[hledany].nazev + '.',
+    zpravaChyba: 'Tahle věta je jiného druhu – hledej ' + DRUHY[hledany].nazev + '.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+const REZIMY = { druh, znamenko, najdi };
+function novaUloha() { REZIMY[rezim](); }
+
+document.querySelectorAll('#rezimy button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#rezimy button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  rezim = b.dataset.rezim;
+  novaUloha();
+}));
+$('btnDalsi').addEventListener('click', novaUloha);
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === 'Enter') { e.preventDefault(); novaUloha(); }
+});
+novaUloha();
+</script>
+</body>
+</html>

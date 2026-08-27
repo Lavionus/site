@@ -1,0 +1,234 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lucemburkové a Karel IV.</title>
+  <link rel="stylesheet" href="../common.css">
+  <link rel="stylesheet" href="../vyuka.css">
+  <script src="../theme.js"></script>
+  <script src="../uloha.js"></script>
+  <style>
+    .uloha-text { max-width: 640px; font-size: 1.02rem; line-height: 1.6; }
+    .uloha-text b { color: var(--accent); }
+    .rok { font-size: clamp(2rem, 8vw, 3.2rem); font-weight: 700; color: var(--accent);
+      font-variant-numeric: tabular-nums; }
+    .planPrahy { width: min(440px, 94%); }
+    .planPrahy .podklad { fill: var(--bg-control); }
+    .planPrahy .reka { fill: none; stroke: #4a90d9; stroke-width: 16; stroke-linecap: round; opacity: 0.55; }
+    .planPrahy .popisReky { fill: #6aa9e0; font-size: 12px; }
+    .planPrahy .misto { cursor: pointer; }
+    .planPrahy .misto .terc { fill: transparent; stroke: var(--accent); stroke-width: 2; }
+    .planPrahy .misto .stred { fill: var(--accent); }
+    .planPrahy .misto:hover .terc { fill: var(--accent-soft); }
+    .planPrahy .misto.spravne .terc { fill: var(--ok); stroke: var(--ok); }
+    .planPrahy .misto.spravne .stred { fill: #fff; }
+    .planPrahy .misto.spatne .terc { fill: var(--danger); stroke: var(--danger); }
+    .osa { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; max-width: 720px;
+      color: var(--text-faint); font-size: 0.78rem; }
+    .osa span { background: var(--bg-control); border: 1px solid var(--border); border-radius: 6px; padding: 4px 9px; }
+  </style>
+</head>
+<body>
+  <h1>🏰 Lucemburkové a Karel IV.</h1>
+  <p class="podtitul">Pro 7. ročník: čeští králové z rodu Lucemburků a proměna Prahy ve 14. století.</p>
+
+  <div class="rezimy" id="rezimy">
+    <button data-rezim="stavby" class="active">🗺️ Stavby v Praze</button>
+    <button data-rezim="ktoBy">🤴 Kdo to byl</button>
+    <button data-rezim="letopocty">📅 Časová osa</button>
+    <button data-rezim="doba">📜 Doba Karla IV.</button>
+  </div>
+
+  <div class="plocha" id="plocha"></div>
+
+  <div class="ovladani">
+    <button class="hlavni" id="btnDalsi">Přeskočit →</button>
+    <span class="skore" id="skore"></span>
+  </div>
+
+  <div class="osa">
+    <span>1310 Jan Lucemburský českým králem</span><span>1344 pražské arcibiskupství</span>
+    <span>1346 Kresčak, nástup Karla IV.</span><span>1348 univerzita a Nové Město</span>
+    <span>1355 císařská korunovace</span><span>1357 základ Karlova mostu</span>
+    <span>1378 smrt Karla IV.</span><span>1419 defenestrace za Václava IV.</span>
+  </div>
+
+  <p class="napoveda">
+    Karel IV. byl českým králem i <b>římským císařem</b>. Praha se za jeho vlády stala císařskou
+    rezidencí: vzniklo <b>Nové Město pražské</b>, <b>univerzita</b>, <b>Karlův most</b>
+    i katedrála svatého Víta.
+  </p>
+
+<script>
+const $ = id => document.getElementById(id);
+const skore = Uloha.skore('nodus_d7_lucemburkove', $('skore'));
+let rezim = 'stavby';
+function odezvaEl() { const d = document.createElement('div'); d.className = 'odezva'; return d; }
+
+/* Schematický plán Prahy – Vltava a významná místa (souřadnice ve výřezu SVG) */
+const MISTA = [
+  { klic: 'hrad', nazev: 'Pražský hrad s katedrálou sv. Víta', x: 150, y: 115,
+    info: 'stavbu gotické katedrály zahájil Karel IV. roku 1344, stavitelé Matyáš z Arrasu a Petr Parléř' },
+  { klic: 'most', nazev: 'Karlův most', x: 196, y: 168,
+    info: 'základní kámen byl položen roku 1357, nahradil zbořený Juditin most' },
+  { klic: 'karolinum', nazev: 'Karolinum (univerzita)', x: 250, y: 178,
+    info: 'univerzita byla založena roku 1348 jako první ve střední Evropě' },
+  { klic: 'noveMesto', nazev: 'Nové Město pražské', x: 262, y: 243,
+    info: 'založeno roku 1348, Karlovo náměstí patřilo k největším v Evropě' },
+  { klic: 'hladova', nazev: 'Hladová zeď na Petříně', x: 112, y: 178,
+    info: 'hradba z let 1360–1362; podle pověsti dal Karel IV. stavět, aby dal chudým práci' },
+  { klic: 'emauzy', nazev: 'klášter Na Slovanech (Emauzy)', x: 240, y: 262,
+    info: 'založen roku 1347 pro mnichy sloužící ve staroslověnštině' },
+  { klic: 'vysehrad', nazev: 'Vyšehrad', x: 258, y: 305,
+    info: 'Karel IV. jej nechal opevnit; odtud vycházel korunovační průvod' },
+  { klic: 'stareMesto', nazev: 'Staroměstské náměstí', x: 258, y: 152,
+    info: 'srdce Starého Města, kupecké centrum středověké Prahy' },
+];
+
+function svgPraha(vybrane) {
+  const znacky = vybrane.map(m => `<g class="misto" data-klic="${m.klic}">
+      <circle class="terc" cx="${m.x}" cy="${m.y}" r="12"/>
+      <circle class="stred" cx="${m.x}" cy="${m.y}" r="4.5"/>
+    </g>`).join('');
+  return `<svg class="planPrahy" viewBox="0 0 400 340">
+    <rect class="podklad" x="0" y="0" width="400" height="340" rx="12"/>
+    <path class="reka" d="M250 335 C240 300 215 275 205 245 C190 210 180 195 190 165
+      C200 135 235 105 250 70 C258 50 262 35 268 12"/>
+    <text class="popisReky" x="286" y="40" transform="rotate(12 286 40)">Vltava</text>
+    ${znacky}
+  </svg>`;
+}
+
+function stavby() {
+  const p = $('plocha');
+  const vybrane = Uloha.zamichej([...MISTA]).slice(0, 5);
+  const cil = Uloha.nahodne(vybrane);
+  const stav = { chyboval: false, hotovo: false };
+
+  p.innerHTML = `<div class="zadani">Najdi na plánu Prahy: <b>${cil.nazev}</b></div>${svgPraha(vybrane)}`;
+  const odezva = odezvaEl();
+  p.querySelectorAll('.misto').forEach(g => {
+    const misto = MISTA.find(m => m.klic === g.dataset.klic);
+    g.addEventListener('click', () => Uloha.odpoved({
+      prvek: g, spravne: g.dataset.klic === cil.klic, stav, odezva,
+      zpravaOk: `✅ ${cil.nazev} – ${cil.info}`,
+      zpravaChyba: `Tady je ${misto.nazev}. Hledáme ${cil.nazev}.`,
+      poSpravne: skore.vyhodnot,
+      dalsi: novaUloha,
+    }));
+  });
+  p.appendChild(odezva);
+}
+
+const PANOVNICI = [
+  { jmeno: 'Jan Lucemburský', popis: '„král cizinec“, mnoho času trávil v cizině, padl roku 1346 v bitvě u Kresčaku' },
+  { jmeno: 'Karel IV.', popis: 'český král a římský císař, „Otec vlasti“, zakladatel univerzity i Nového Města' },
+  { jmeno: 'Václav IV.', popis: 'syn Karla IV., za jeho vlády vypukly spory s církví a působil Jan Hus' },
+  { jmeno: 'Zikmund Lucemburský', popis: 'římský císař, vedl křížové výpravy proti husitům, českým králem uznán až roku 1436' },
+  { jmeno: 'Eliška Přemyslovna', popis: 'poslední přemyslovská princezna, matka Karla IV.' },
+  { jmeno: 'Petr Parléř', popis: 'stavitel katedrály sv. Víta a Karlova mostu (nebyl panovník)' },
+];
+function ktoBy() {
+  const p = $('plocha');
+  const u = Uloha.nahodne(PANOVNICI);
+  p.innerHTML = `<div class="zadani uloha-text">O kom je řeč?<br><b>${u.popis}</b></div>`;
+  const odezva = odezvaEl();
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([u.jmeno, ...Uloha.zamichej(PANOVNICI.filter(x => x.jmeno !== u.jmeno))
+      .slice(0, 3).map(x => x.jmeno)]).map(t => ({ klic: t, popis: t })),
+    spravnyKlic: u.jmeno,
+    zpravaOk: `✅ ${u.jmeno}`,
+    zpravaChyba: 'Pomůže doba a to, čím byl daný člověk známý.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+const UDALOSTI = [
+  { rok: 1310, co: 'Jan Lucemburský se stává českým králem' },
+  { rok: 1344, co: 'povýšení pražského biskupství na arcibiskupství' },
+  { rok: 1346, co: 'bitva u Kresčaku a smrt Jana Lucemburského' },
+  { rok: 1348, co: 'založení pražské univerzity a Nového Města pražského' },
+  { rok: 1355, co: 'Karel IV. je v Římě korunován císařem' },
+  { rok: 1356, co: 'Zlatá bula Karla IV. upravuje volbu římského krále' },
+  { rok: 1357, co: 'položení základního kamene Karlova mostu' },
+  { rok: 1378, co: 'smrt Karla IV., nástup Václava IV.' },
+  { rok: 1419, co: 'první pražská defenestrace' },
+];
+function letopocty() {
+  const p = $('plocha');
+  const u = Uloha.nahodne(UDALOSTI);
+  const zRoku = Math.random() < 0.5;
+  const odezva = odezvaEl();
+  if (zRoku) {
+    p.innerHTML = `<div class="zadani">Co se stalo v roce</div>
+      <div class="karta"><div class="rok">${u.rok}</div></div>`;
+    Uloha.vyber({
+      kam: p, odezva,
+      moznosti: Uloha.zamichej([u.co, ...Uloha.zamichej(UDALOSTI.filter(x => x.rok !== u.rok))
+        .slice(0, 3).map(x => x.co)]).map(t => ({ klic: t, popis: t })),
+      spravnyKlic: u.co,
+      zpravaOk: `✅ ${u.rok} – ${u.co}`,
+      zpravaChyba: 'Časová osa pod úlohou napoví.',
+      poSpravne: skore.vyhodnot, dalsi: novaUloha,
+    });
+  } else {
+    p.innerHTML = `<div class="zadani uloha-text">V kterém roce k tomu došlo?<br><b>${u.co}</b></div>`;
+    Uloha.vyber({
+      kam: p, odezva, trida: 'velke',
+      moznosti: Uloha.zamichej([u.rok, ...Uloha.zamichej(UDALOSTI.filter(x => x.rok !== u.rok))
+        .slice(0, 3).map(x => x.rok)]).map(r => ({ klic: String(r), popis: String(r) })),
+      spravnyKlic: String(u.rok),
+      zpravaOk: `✅ ${u.rok} – ${u.co}`,
+      zpravaChyba: 'Zkus si události seřadit za sebou.',
+      poSpravne: skore.vyhodnot, dalsi: novaUloha,
+    });
+  }
+  p.appendChild(odezva);
+}
+
+const DOBA = [
+  { q: 'Proč se Karlu IV. říká Otec vlasti?', a: 'pozvedl české země hospodářsky i kulturně', b: ['vyhrál mnoho bitev', 'měl nejvíc dětí', 'založil rod Lucemburků'] },
+  { q: 'Který hrad nechal Karel IV. postavit pro uložení korunovačních klenotů?', a: 'Karlštejn', b: ['Křivoklát', 'Bezděz', 'Kost'] },
+  { q: 'Jak se jmenoval zákoník, který Karel IV. připravil, ale šlechta ho odmítla?', a: 'Maiestas Carolina', b: ['Zlatá bula sicilská', 'Kutnohorský dekret', 'Statuta Konráda Oty'] },
+  { q: 'Kdo byl architektem katedrály sv. Víta po Matyáši z Arrasu?', a: 'Petr Parléř', b: ['Benedikt Rejt', 'Kilián Ignác Dientzenhofer', 'Josef Mocker'] },
+  { q: 'Co Karel IV. podporoval kromě staveb?', a: 'vinařství, rybníkářství a obchodní cesty', b: ['výbojné války', 'zákaz univerzit', 'zrušení měst'] },
+  { q: 'Jak Karel IV. získal Braniborsko a Lužici?', a: 'sňatky a diplomacií, ne válkou', b: ['dobyl je', 'koupil je od papeže', 'zdědil po Přemyslovcích'] },
+  { q: 'Co upravovala Zlatá bula z roku 1356?', a: 'volbu římského krále sedmi kurfiřty', b: ['dědičnost českého trůnu', 'práva měšťanů', 'zakládání univerzit'] },
+  { q: 'Kterým jazykem Karel IV. mluvil a psal?', a: 'několika jazyky včetně češtiny, němčiny a latiny', b: ['jen latinsky', 'jen německy', 'jen francouzsky'] },
+  { q: 'Proč je pro Prahu důležitý rok 1348?', a: 'vznikla univerzita a Nové Město pražské', b: ['byla vypálena', 'stala se hlavním městem Uher', 'byl dostavěn Karlův most'] },
+];
+function doba() {
+  const p = $('plocha');
+  const u = Uloha.nahodne(DOBA);
+  p.innerHTML = `<div class="zadani uloha-text">${u.q}</div>`;
+  const odezva = odezvaEl();
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([u.a, ...u.b]).map(t => ({ klic: t, popis: t })),
+    spravnyKlic: u.a,
+    zpravaOk: `✅ ${u.a}`,
+    zpravaChyba: 'Vzpomeň si, čím byla doba Karla IV. výjimečná.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+const REZIMY = { stavby, ktoBy, letopocty, doba };
+function novaUloha() { REZIMY[rezim](); }
+
+document.querySelectorAll('#rezimy button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#rezimy button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  rezim = b.dataset.rezim;
+  novaUloha();
+}));
+$('btnDalsi').addEventListener('click', novaUloha);
+novaUloha();
+</script>
+</body>
+</html>

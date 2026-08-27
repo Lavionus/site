@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Programování – cykly a větvení</title>
+  <link rel="stylesheet" href="../common.css">
+  <link rel="stylesheet" href="../vyuka.css">
+  <script src="../theme.js"></script>
+  <script src="../rec.js"></script>
+  <script src="../uloha.js"></script>
+  <style>
+    .hriste { width: min(400px, 92%); }
+    .hriste .policko { fill: var(--bg-control); stroke: var(--border); stroke-width: 1.5; }
+    .hriste .cil { fill: rgba(76,175,125,0.28); }
+    .hriste text { font-size: 26px; text-anchor: middle; }
+    .program-kod {
+      font-family: 'Courier New', monospace; font-size: clamp(1rem, 3.6vw, 1.3rem);
+      line-height: 1.7; background: var(--bg-deep); border: 1px solid var(--border-strong);
+      border-radius: 10px; padding: 12px 18px; text-align: left; min-width: min(320px, 88vw);
+    }
+    .program-kod .klic { color: var(--accent); font-weight: 700; }
+    .program-kod .odsazeni { padding-left: 22px; display: block; }
+    .situace { max-width: 540px; font-size: 1.02rem; line-height: 1.5; }
+  </style>
+</head>
+<body>
+  <h1>🔁 Programování – cykly a větvení</h1>
+  <p class="podtitul">Pro 5.–6. ročník: opakování příkazů, podmínky a zkracování programů.</p>
+
+  <div class="rezimy" id="rezimy">
+    <button data-rezim="zkrat" class="active">✂️ Zkrať program cyklem</button>
+    <button data-rezim="kdeSkonci">🤖 Kde robot skončí</button>
+    <button data-rezim="podminka">🔀 Doplň podmínku</button>
+    <button data-rezim="kolikrat">🔢 Kolikrát se to provede</button>
+  </div>
+
+  <div class="plocha" id="plocha"></div>
+
+  <div class="ovladani">
+    <button class="hlavni" id="btnDalsi">Přeskočit →</button>
+    <span class="skore" id="skore"></span>
+  </div>
+
+  <p class="napoveda">
+    <b>Cyklus</b> („opakuj N×“) nahradí několik stejných příkazů za sebou.
+    <b>Větvení</b> („když… tak… jinak…“) rozhoduje podle podmínky, co se stane.
+  </p>
+
+<script>
+const $ = id => document.getElementById(id);
+const skore = Uloha.skore('nodus_inf5_cykly', $('skore'));
+let rezim = 'zkrat';
+
+const SLOUPCU = 6, RADKU = 5, KROK = 58, OKRAJ = 8;
+const SMERY = { '⬆️': [0, -1], '⬇️': [0, 1], '⬅️': [-1, 0], '➡️': [1, 0] };
+
+/* ---- Zkrať program cyklem ---------------------------------------------------------- */
+function zkrat() {
+  const p = $('plocha');
+  const sipka = Uloha.nahodne(Object.keys(SMERY));
+  const opakovani = Uloha.nahodneCislo(3, 6);
+  const dlouhy = Array(opakovani).fill(sipka).join(' ');
+  const spravny = `opakuj ${opakovani}× [ ${sipka} ]`;
+  const chybne = [
+    `opakuj ${opakovani + 1}× [ ${sipka} ]`,
+    `opakuj ${opakovani}× [ ${sipka} ${sipka} ]`,
+    `opakuj 2× [ ${sipka} ]`,
+  ].filter(x => x !== spravny);
+
+  p.innerHTML = `<div class="zadani">Který zápis dělá totéž co tento program?</div>
+    <div class="program-kod">${dlouhy}</div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([spravny, ...chybne]).map(t => ({ klic: t, popis: t })),
+    spravnyKlic: spravny,
+    zpravaOk: `✅ ${opakovani} stejných příkazů = opakuj ${opakovani}×.`,
+    zpravaChyba: 'Spočítej, kolikrát se příkaz v původním programu opakuje.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Kde robot skončí --------------------------------------------------------------- */
+function kdeSkonci() {
+  const p = $('plocha');
+  const start = { s: 0, r: RADKU - 1 };
+  const opakovani = Uloha.nahodneCislo(2, 3);
+  const telo = Uloha.zamichej(['➡️', '⬆️']).slice(0, 2);
+
+  /* spočítáme cílovou pozici */
+  const poz = { ...start };
+  for (let i = 0; i < opakovani; i++) {
+    for (const s of telo) {
+      const [ds, dr] = SMERY[s];
+      poz.s = Math.max(0, Math.min(SLOUPCU - 1, poz.s + ds));
+      poz.r = Math.max(0, Math.min(RADKU - 1, poz.r + dr));
+    }
+  }
+
+  let policka = '';
+  for (let r = 0; r < RADKU; r++) {
+    for (let s = 0; s < SLOUPCU; s++) {
+      policka += `<rect class="policko" x="${OKRAJ + s * KROK}" y="${OKRAJ + r * KROK}"
+        width="${KROK}" height="${KROK}"/>`;
+    }
+  }
+  const stred = poz2 => `x="${OKRAJ + poz2.s * KROK + KROK / 2}" y="${OKRAJ + poz2.r * KROK + KROK / 2 + 9}"`;
+
+  p.innerHTML = `<div class="zadani">Kde robot skončí po provedení programu?</div>
+    <div class="program-kod"><span class="klic">opakuj ${opakovani}×</span> [
+      <span class="odsazeni">${telo.join(' ')}</span>]</div>
+    <svg class="hriste" viewBox="0 0 ${OKRAJ * 2 + SLOUPCU * KROK} ${OKRAJ * 2 + RADKU * KROK}">
+      ${policka}<text ${stred(start)}>🤖</text>
+    </svg>`;
+
+  /* možnosti = správná pozice + tři jiné */
+  const pozice = new Set([`${poz.s},${poz.r}`]);
+  let pokusu1 = 0;
+  while (pozice.size < 4 && pokusu1++ < 200) {
+    const s = Uloha.nahodneCislo(0, SLOUPCU - 1), r = Uloha.nahodneCislo(0, RADKU - 1);
+    pozice.add(`${s},${r}`);
+  }
+  const popisPozice = k => {
+    const [s, r] = k.split(',').map(Number);
+    return `${s + 1}. sloupec, ${r + 1}. řádek shora`;
+  };
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([...pozice]).map(k => ({ klic: k, popis: popisPozice(k) })),
+    spravnyKlic: `${poz.s},${poz.r}`,
+    zpravaOk: `✅ Program provede ${telo.join(' ')} celkem ${opakovani}×, robot skončí v poli `
+      + popisPozice(`${poz.s},${poz.r}`) + '.',
+    zpravaChyba: 'Projdi program krok za krokem a počítej políčka.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Doplň podmínku ----------------------------------------------------------------- */
+const PODMINKY = [
+  { situace: 'Robot má sbírat jen červené kostky.', spr: 'když je kostka červená',
+    jine: ['když je kostka modrá', 'když nejsou žádné kostky', 'když je konec programu'] },
+  { situace: 'Program má hlásit „prší“ jen v deštivém počasí.', spr: 'když prší',
+    jine: ['když svítí slunce', 'když je pondělí', 'když je robot doma'] },
+  { situace: 'Semafor pustí chodce jen na zelenou.', spr: 'když svítí zelená',
+    jine: ['když svítí červená', 'když je noc', 'když jede auto'] },
+  { situace: 'Hra má skončit, když hráči dojdou životy.', spr: 'když je počet životů 0',
+    jine: ['když hráč skočí', 'když je počet životů 3', 'když se hráč pohne'] },
+  { situace: 'Robot má zatočit, jen když je před ním zeď.', spr: 'když je před robotem zeď',
+    jine: ['když je za robotem zeď', 'když je cesta volná', 'když robot stojí'] },
+  { situace: 'Aplikace má připomenout úkol jen ve všední den.', spr: 'když není víkend',
+    jine: ['když je víkend', 'když je léto', 'když je noc'] },
+];
+
+function podminka() {
+  const p = $('plocha');
+  const u = Uloha.nahodne(PODMINKY);
+  p.innerHTML = `<div class="zadani">Jaká podmínka patří do programu?</div>
+    <div class="karta"><div class="obrazek">🔀</div><div class="situace">${u.situace}</div></div>
+    <div class="program-kod"><span class="klic">když</span> …………
+      <span class="odsazeni">udělej akci</span><span class="klic">jinak</span>
+      <span class="odsazeni">nedělej nic</span></div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([u.spr, ...u.jine]).map(t => ({ klic: t, popis: t })),
+    spravnyKlic: u.spr,
+    zpravaOk: `✅ když ${u.spr.replace(/^když /, '')} → akce se provede jen v tomto případě.`,
+    zpravaChyba: 'Podmínka musí popisovat právě tu situaci ze zadání.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Kolikrát se to provede ---------------------------------------------------------- */
+function kolikrat() {
+  const p = $('plocha');
+  const vnejsi = Uloha.nahodneCislo(2, 5);
+  const vnitrni = Uloha.nahodneCislo(2, 4);
+  const prikazu = Uloha.nahodneCislo(1, 2);
+  const spravny = vnejsi * vnitrni * prikazu;
+
+  p.innerHTML = `<div class="zadani">Kolikrát se celkem provede příkaz „krok vpřed“?</div>
+    <div class="program-kod"><span class="klic">opakuj ${vnejsi}×</span> [
+      <span class="odsazeni"><span class="klic">opakuj ${vnitrni}×</span> [</span>
+      <span class="odsazeni" style="padding-left:44px">${Array(prikazu).fill('krok vpřed').join('<br>')}</span>
+      <span class="odsazeni">]</span>]</div>`;
+
+  const jine = new Set([vnejsi + vnitrni, vnejsi * vnitrni + prikazu, vnitrni * prikazu, vnejsi * prikazu]);
+  jine.delete(spravny);
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva, trida: 'velke',
+    moznosti: Uloha.zamichej([spravny, ...[...jine].slice(0, 3)])
+      .map(v => ({ klic: String(v), popis: v + '×' })),
+    spravnyKlic: String(spravny),
+    zpravaOk: `✅ ${vnejsi} × ${vnitrni}${prikazu > 1 ? ' × ' + prikazu : ''} = ${spravny}`,
+    zpravaChyba: 'Vnořené cykly se násobí – vnější počet × vnitřní počet.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+const REZIMY = { zkrat, kdeSkonci, podminka, kolikrat };
+function novaUloha() { REZIMY[rezim](); }
+
+document.querySelectorAll('#rezimy button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#rezimy button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  rezim = b.dataset.rezim;
+  novaUloha();
+}));
+$('btnDalsi').addEventListener('click', novaUloha);
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === 'Enter') { e.preventDefault(); novaUloha(); }
+});
+novaUloha();
+</script>
+</body>
+</html>

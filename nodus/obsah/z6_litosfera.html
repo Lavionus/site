@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Litosféra a povrch Země</title>
+  <link rel="stylesheet" href="../common.css">
+  <link rel="stylesheet" href="../vyuka.css">
+  <script src="../theme.js"></script>
+  <script src="../rec.js"></script>
+  <script src="../uloha.js"></script>
+  <style>
+    .rez { width: min(320px, 84vw); }
+    .rez .kura { fill: #7a5c3e; } .rez .plast { fill: #c25b3a; }
+    .rez .jadro-vnejsi { fill: #e8a13d; } .rez .jadro-vnitrni { fill: #f5e08a; }
+    .rez text { fill: var(--text); font-size: 11px; text-anchor: middle; font-weight: 700; }
+    .popis-j { color: var(--text-muted); max-width: 560px; line-height: 1.55; }
+    .nazev-j { font-size: 1.2rem; font-weight: 700; }
+  </style>
+</head>
+<body>
+  <h1>🪨 Litosféra a povrch Země</h1>
+  <p class="podtitul">Pro 6. ročník: stavba Země, pohyb desek, sopky, zemětřesení a tvary povrchu.</p>
+
+  <div class="rezimy" id="rezimy">
+    <button data-rezim="stavba" class="active">🌍 Stavba Země</button>
+    <button data-rezim="deje">🌋 Vnitřní a vnější děje</button>
+    <button data-rezim="tvary">⛰️ Tvary povrchu</button>
+    <button data-rezim="pojmy">📖 Pojmy</button>
+  </div>
+
+  <div class="plocha" id="plocha"></div>
+
+  <div class="ovladani">
+    <button class="hlavni" id="btnDalsi">Přeskočit →</button>
+    <span class="skore" id="skore"></span>
+  </div>
+
+  <p class="napoveda">
+    <b>Vnitřní děje</b> (pohyb desek, sopky, zemětřesení) povrch vyzdvihují,
+    <b>vnější děje</b> (voda, vítr, led, zvětrávání) ho naopak zarovnávají.
+    Litosférické desky se pohybují jen několik centimetrů za rok.
+  </p>
+
+<script>
+const $ = id => document.getElementById(id);
+const skore = Uloha.skore('nodus_z6_litosfera', $('skore'));
+let rezim = 'stavba';
+
+const VRSTVY = [
+  { n: 'zemská kůra', o: 'nejtenčí vnější vrstva, pod oceány jen asi 5–10 km silná' },
+  { n: 'zemský plášť', o: 'nejmohutnější vrstva z žhavých hornin, ve které proudí magma' },
+  { n: 'vnější jádro', o: 'tekutá vrstva ze železa a niklu, vytváří magnetické pole Země' },
+  { n: 'vnitřní jádro', o: 'pevná koule ze železa a niklu s teplotou přes 5000 °C' },
+];
+
+const DEJE = [
+  { t: 'výbuch sopky', vnitrni: true }, { t: 'zemětřesení', vnitrni: true },
+  { t: 'vrásnění pohoří', vnitrni: true }, { t: 'pohyb litosférických desek', vnitrni: true },
+  { t: 'zvětrávání skal mrazem', vnitrni: false }, { t: 'eroze půdy deštěm', vnitrni: false },
+  { t: 'vymílání údolí řekou', vnitrni: false }, { t: 'navátí písečných dun větrem', vnitrni: false },
+  { t: 'sesuv půdy po dešti', vnitrni: false }, { t: 'vznik ledovcového údolí', vnitrni: false },
+];
+
+const TVARY = [
+  { n: 'nížina', o: 'území do 200 metrů nad mořem, rovinatý povrch' },
+  { n: 'vysočina', o: 'území nad 200 metrů nad mořem s členitým povrchem' },
+  { n: 'pohoří', o: 'soubor hor s výraznými vrcholy a údolími' },
+  { n: 'kotlina', o: 'sníženina obklopená ze všech stran vyššími okraji' },
+  { n: 'plošina', o: 'vyvýšené území s plochým povrchem' },
+  { n: 'sopka', o: 'kužel vzniklý výlevem lávy a sopečného popela' },
+  { n: 'ledovcové údolí', o: 'údolí ve tvaru písmene U vyhloubené ledovcem' },
+  { n: 'kaňon', o: 'hluboké údolí se strmými stěnami vyhloubené řekou' },
+];
+
+const POJMY = [
+  { o: 'Jak se nazývá roztavená hornina uvnitř Země?', spr: 'magma', jine: ['láva', 'čedič', 'popel'] },
+  { o: 'Jak se nazývá magma, které vyteklo na povrch?', spr: 'láva', jine: ['magma', 'sopouch', 'kráter'] },
+  { o: 'Co je epicentrum?', spr: 'místo na povrchu přímo nad ohniskem zemětřesení',
+    jine: ['střed Země', 'vrchol sopky', 'okraj desky'] },
+  { o: 'Čím se měří síla zemětřesení?', spr: 'seismografem', jine: ['barometrem', 'teploměrem', 'kompasem'] },
+  { o: 'Co vzniká při srážce dvou litosférických desek?', spr: 'pohoří nebo hluboké příkopy',
+    jine: ['oceány', 'pouště', 'ledovce'] },
+  { o: 'Jak rychle se pohybují litosférické desky?', spr: 'několik centimetrů za rok',
+    jine: ['několik metrů za den', 'vůbec se nepohybují', 'stovky kilometrů za rok'] },
+];
+
+/* ---- Stavba Země ---------------------------------------------------------------------- */
+function stavba() {
+  const p = $('plocha');
+  const u = Uloha.nahodne(VRSTVY);
+  const jine = Uloha.zamichej(VRSTVY.filter(x => x.n !== u.n)).slice(0, 3);
+  p.innerHTML = `<div class="zadani">O kterou vrstvu Země jde?</div>
+    <svg class="rez" viewBox="0 0 200 200">
+      <circle class="kura" cx="100" cy="100" r="95"/>
+      <circle class="plast" cx="100" cy="100" r="82"/>
+      <circle class="jadro-vnejsi" cx="100" cy="100" r="48"/>
+      <circle class="jadro-vnitrni" cx="100" cy="100" r="24"/>
+      <text x="100" y="103" fill="#3a2f14">jádro</text>
+    </svg>
+    <div class="popis-j">${u.o}</div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([u, ...jine]).map(x => ({ klic: x.n, popis: x.n })),
+    spravnyKlic: u.n,
+    zpravaOk: `✅ ${u.n} – ${u.o}.`,
+    zpravaChyba: 'Zkus jinou vrstvu – jde o povrch, střed, nebo něco mezi?',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Vnitřní a vnější děje --------------------------------------------------------------- */
+function deje() {
+  const p = $('plocha');
+  const u = Uloha.nahodne(DEJE);
+  p.innerHTML = `<div class="zadani">Je to vnitřní, nebo vnější geologický děj?</div>
+    <div class="karta"><div class="obrazek">${u.vnitrni ? '🌋' : '🌧️'}</div>
+    <div class="nazev-j">${u.t}</div></div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva, trida: 'dve',
+    moznosti: [
+      { klic: 'vnitrni', ikona: '🌋', popis: 'vnitřní (energie z nitra Země)' },
+      { klic: 'vnejsi', ikona: '💨', popis: 'vnější (voda, vítr, led)' },
+    ],
+    spravnyKlic: u.vnitrni ? 'vnitrni' : 'vnejsi',
+    zpravaOk: u.vnitrni
+      ? '✅ Vnitřní děj – poháněný energií z nitra Země, povrch vyzdvihuje.'
+      : '✅ Vnější děj – působí voda, vítr, led a slunce, povrch zarovnává.',
+    zpravaChyba: 'Pochází energie z nitra Země, nebo zvenčí?',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Tvary povrchu -------------------------------------------------------------------- */
+function tvary() {
+  const p = $('plocha');
+  const u = Uloha.nahodne(TVARY);
+  const jine = Uloha.zamichej(TVARY.filter(x => x.n !== u.n)).slice(0, 3);
+  p.innerHTML = `<div class="zadani">Který tvar povrchu je popsán?</div>
+    <div class="karta"><div class="obrazek">⛰️</div><div class="popis-j">${u.o}</div></div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([u, ...jine]).map(x => ({ klic: x.n, popis: x.n })),
+    spravnyKlic: u.n,
+    zpravaOk: `✅ ${u.n} – ${u.o}.`,
+    zpravaChyba: 'Zkus jinou možnost.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Pojmy ------------------------------------------------------------------------------ */
+function pojmy() {
+  const p = $('plocha');
+  const u = Uloha.nahodne(POJMY);
+  p.innerHTML = `<div class="zadani">${u.o}</div>
+    <div class="karta"><div class="obrazek">🪨</div></div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([u.spr, ...u.jine]).map(t => ({ klic: t, popis: t })),
+    spravnyKlic: u.spr,
+    zpravaOk: `✅ ${u.spr}.`,
+    zpravaChyba: 'Zkus jinou možnost.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+const REZIMY = { stavba, deje, tvary, pojmy };
+function novaUloha() { REZIMY[rezim](); }
+
+document.querySelectorAll('#rezimy button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#rezimy button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  rezim = b.dataset.rezim;
+  novaUloha();
+}));
+$('btnDalsi').addEventListener('click', novaUloha);
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === 'Enter') { e.preventDefault(); novaUloha(); }
+});
+novaUloha();
+</script>
+</body>
+</html>

@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Číslovky a určování času</title>
+  <link rel="stylesheet" href="../common.css">
+  <link rel="stylesheet" href="../vyuka.css">
+  <script src="../theme.js"></script>
+  <script src="../uloha.js"></script>
+  <style>
+    .cislo-velke { font-size: clamp(2.4rem, 10vw, 4rem); font-weight: 700; color: var(--accent);
+      font-variant-numeric: tabular-nums; }
+    .hodiny { width: min(240px, 62%); }
+    .hodiny .cifernik { fill: var(--bg-elevated); stroke: var(--border-strong); stroke-width: 3; }
+    .hodiny .ryska { stroke: var(--text-muted); stroke-width: 2; }
+    .hodiny .cislice { fill: var(--text-muted); font-size: 13px; text-anchor: middle; }
+    .hodiny .mala { stroke: var(--text); stroke-width: 5; stroke-linecap: round; }
+    .hodiny .velka { stroke: var(--accent); stroke-width: 3.5; stroke-linecap: round; }
+    .hodiny .stred { fill: var(--accent); }
+    .vlajka { font-size: 2rem; }
+    .digital { font-family: 'Courier New', monospace; font-size: 1.6rem; font-weight: 700; color: var(--warn); }
+  </style>
+</head>
+<body>
+  <h1>🕐 Číslovky a určování času</h1>
+  <p class="podtitul">Pro 8. ročník: číslovky a hodiny v němčině a francouzštině.</p>
+
+  <div class="rezimy" id="rezimy">
+    <button data-rezim="cislovkyNJ" class="active">🇩🇪 Číslovky</button>
+    <button data-rezim="cislovkyFJ">🇫🇷 Číslovky</button>
+    <button data-rezim="casNJ">🇩🇪 Kolik je hodin</button>
+    <button data-rezim="casFJ">🇫🇷 Kolik je hodin</button>
+  </div>
+
+  <div class="plocha" id="plocha"></div>
+
+  <div class="ovladani">
+    <button class="hlavni" id="btnDalsi">Přeskočit →</button>
+    <span class="skore" id="skore"></span>
+  </div>
+
+  <p class="napoveda">
+    Němčina čte dvojciferná čísla <b>od jednotek</b>: 21 = einundzwanzig (jedna-a-dvacet).
+    Francouzština má zvláštnosti u 70–99: 70 = soixante-dix (60 + 10), 80 = quatre-vingts (4 × 20),
+    90 = quatre-vingt-dix.
+  </p>
+
+<script>
+const $ = id => document.getElementById(id);
+const skore = Uloha.skore('nodus_dcj8_cislovky_cas', $('skore'));
+let rezim = 'cislovkyNJ';
+function odezvaEl() { const d = document.createElement('div'); d.className = 'odezva'; return d; }
+
+const NJ_JEDNOTKY = ['null', 'eins', 'zwei', 'drei', 'vier', 'fünf', 'sechs', 'sieben', 'acht', 'neun'];
+const NJ_TEENS = { 10: 'zehn', 11: 'elf', 12: 'zwölf', 13: 'dreizehn', 14: 'vierzehn', 15: 'fünfzehn',
+  16: 'sechzehn', 17: 'siebzehn', 18: 'achtzehn', 19: 'neunzehn' };
+const NJ_DESITKY = { 20: 'zwanzig', 30: 'dreißig', 40: 'vierzig', 50: 'fünfzig', 60: 'sechzig',
+  70: 'siebzig', 80: 'achtzig', 90: 'neunzig' };
+function nemecky(n) {
+  if (n < 10) return NJ_JEDNOTKY[n];
+  if (n < 20) return NJ_TEENS[n];
+  const d = Math.floor(n / 10) * 10, j = n % 10;
+  if (j === 0) return NJ_DESITKY[d];
+  const jednotka = j === 1 ? 'ein' : NJ_JEDNOTKY[j];
+  return jednotka + 'und' + NJ_DESITKY[d];
+}
+
+const FJ_ZAKLAD = { 0: 'zéro', 1: 'un', 2: 'deux', 3: 'trois', 4: 'quatre', 5: 'cinq', 6: 'six',
+  7: 'sept', 8: 'huit', 9: 'neuf', 10: 'dix', 11: 'onze', 12: 'douze', 13: 'treize', 14: 'quatorze',
+  15: 'quinze', 16: 'seize', 20: 'vingt', 30: 'trente', 40: 'quarante', 50: 'cinquante', 60: 'soixante' };
+function francouzsky(n) {
+  if (FJ_ZAKLAD[n] !== undefined) return FJ_ZAKLAD[n];
+  if (n < 20) return 'dix-' + FJ_ZAKLAD[n - 10];
+  if (n < 70) {
+    const d = Math.floor(n / 10) * 10, j = n % 10;
+    if (j === 0) return FJ_ZAKLAD[d];
+    if (j === 1) return FJ_ZAKLAD[d] + ' et un';
+    return FJ_ZAKLAD[d] + '-' + FJ_ZAKLAD[j];
+  }
+  if (n < 80) return n === 71 ? 'soixante et onze' : 'soixante-' + francouzsky(n - 60);
+  if (n === 80) return 'quatre-vingts';
+  return 'quatre-vingt-' + francouzsky(n - 80);
+}
+
+function cislovky(prevod, vlajka, popisJazyka) {
+  const p = $('plocha');
+  const n = Uloha.nahodneCislo(1, 99);
+  const spravny = prevod(n);
+  const jine = new Set();
+  let pojistka = 0;
+  while (jine.size < 3 && pojistka++ < 200) {
+    const k = Math.min(99, Math.max(0, n + Uloha.nahodne([-20, -10, -3, -1, 1, 3, 10, 20])));
+    const t = prevod(k);
+    if (t && t !== spravny) jine.add(t);
+  }
+  p.innerHTML = `<div class="zadani"><span class="vlajka">${vlajka}</span> Jak se řekne toto číslo?</div>
+    <div class="karta"><div class="cislo-velke">${n}</div></div>`;
+  const odezva = odezvaEl();
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([spravny, ...jine]).map(t => ({ klic: t, popis: t })),
+    spravnyKlic: spravny,
+    zpravaOk: `✅ ${n} = ${spravny}`,
+    zpravaChyba: popisJazyka,
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+const cislovkyNJ = () => cislovky(nemecky, '🇩🇪', 'Němčina čte nejdřív jednotky: 34 = vierunddreißig.');
+const cislovkyFJ = () => cislovky(francouzsky, '🇫🇷', 'Pozor na 70–99: 75 = soixante-quinze, 85 = quatre-vingt-cinq.');
+
+/* ---- Hodiny ------------------------------------------------------------------------------ */
+function svgHodiny(h, m) {
+  let rysky = '', cislice = '';
+  for (let i = 0; i < 12; i++) {
+    const a = i * 30 * Math.PI / 180;
+    const x1 = 100 + 82 * Math.sin(a), y1 = 100 - 82 * Math.cos(a);
+    const x2 = 100 + 90 * Math.sin(a), y2 = 100 - 90 * Math.cos(a);
+    rysky += `<line class="ryska" x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}"/>`;
+    cislice += `<text class="cislice" x="${(100 + 70 * Math.sin(a)).toFixed(1)}"
+      y="${(105 - 70 * Math.cos(a)).toFixed(1)}">${i === 0 ? 12 : i}</text>`;
+  }
+  const uhelH = ((h % 12) + m / 60) * 30 * Math.PI / 180;
+  const uhelM = m * 6 * Math.PI / 180;
+  return `<svg class="hodiny" viewBox="0 0 200 200">
+    <circle class="cifernik" cx="100" cy="100" r="94"/>
+    ${rysky}${cislice}
+    <line class="mala" x1="100" y1="100" x2="${(100 + 46 * Math.sin(uhelH)).toFixed(1)}" y2="${(100 - 46 * Math.cos(uhelH)).toFixed(1)}"/>
+    <line class="velka" x1="100" y1="100" x2="${(100 + 70 * Math.sin(uhelM)).toFixed(1)}" y2="${(100 - 70 * Math.cos(uhelM)).toFixed(1)}"/>
+    <circle class="stred" cx="100" cy="100" r="5"/>
+  </svg>`;
+}
+
+const NJ_HODINY = ['zwölf', 'ein', 'zwei', 'drei', 'vier', 'fünf', 'sechs', 'sieben', 'acht', 'neun', 'zehn', 'elf'];
+function casNemecky(h, m) {
+  const hod = NJ_HODINY[h % 12];
+  const dalsi = NJ_HODINY[(h + 1) % 12];
+  if (m === 0) return `${hod} Uhr`;
+  if (m === 15) return `Viertel nach ${hod}`;
+  if (m === 30) return `halb ${dalsi}`;
+  if (m === 45) return `Viertel vor ${dalsi}`;
+  if (m < 30) return `${nemecky(m)} nach ${hod}`;
+  return `${nemecky(60 - m)} vor ${dalsi}`;
+}
+const FJ_HODINY = ['minuit', 'une heure', 'deux heures', 'trois heures', 'quatre heures', 'cinq heures',
+  'six heures', 'sept heures', 'huit heures', 'neuf heures', 'dix heures', 'onze heures'];
+function casFrancouzsky(h, m) {
+  const hod = FJ_HODINY[h % 12];
+  const dalsi = FJ_HODINY[(h + 1) % 12];
+  if (m === 0) return `Il est ${hod}`;
+  if (m === 15) return `Il est ${hod} et quart`;
+  if (m === 30) return `Il est ${hod} et demie`;
+  if (m === 45) return `Il est ${dalsi} moins le quart`;
+  if (m < 30) return `Il est ${hod} ${francouzsky(m)}`;
+  return `Il est ${dalsi} moins ${francouzsky(60 - m)}`;
+}
+
+function cas(prevod, vlajka, napoveda) {
+  const p = $('plocha');
+  const h = Uloha.nahodneCislo(1, 12);
+  const m = Uloha.nahodne([0, 5, 10, 15, 20, 25, 30, 35, 40, 45, 50, 55]);
+  const spravny = prevod(h, m);
+  const jine = new Set();
+  let pojistka = 0;
+  while (jine.size < 3 && pojistka++ < 200) {
+    const hh = Uloha.nahodne([h, (h % 12) + 1]);
+    const mm = Uloha.nahodne([0, 15, 30, 45, m + 5, m - 5, 60 - m]);
+    if (mm < 0 || mm > 55) continue;
+    const t = prevod(hh, mm - (mm % 5));
+    if (t !== spravny) jine.add(t);
+  }
+  p.innerHTML = `<div class="zadani"><span class="vlajka">${vlajka}</span> Kolik je hodin?</div>
+    <div class="karta">${svgHodiny(h, m)}
+      <div class="digital">${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}</div></div>`;
+  const odezva = odezvaEl();
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([spravny, ...jine]).map(t => ({ klic: t, popis: t })),
+    spravnyKlic: spravny,
+    zpravaOk: `✅ ${spravny}`,
+    zpravaChyba: napoveda,
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+const casNJ = () => cas(casNemecky, '🇩🇪',
+  'Němčina počítá půlhodinu k následující hodině: halb drei = půl třetí (14:30).');
+const casFJ = () => cas(casFrancouzsky, '🇫🇷',
+  'Po půl hodině se francouzsky odečítá od další hodiny: quatre heures moins le quart = 3:45.');
+
+const REZIMY = { cislovkyNJ, cislovkyFJ, casNJ, casFJ };
+function novaUloha() { REZIMY[rezim](); }
+
+document.querySelectorAll('#rezimy button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#rezimy button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  rezim = b.dataset.rezim;
+  novaUloha();
+}));
+$('btnDalsi').addEventListener('click', novaUloha);
+novaUloha();
+</script>
+</body>
+</html>

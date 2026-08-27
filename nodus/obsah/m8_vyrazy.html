@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Výrazy a jejich úpravy</title>
+  <link rel="stylesheet" href="../common.css">
+  <link rel="stylesheet" href="../vyuka.css">
+  <script src="../theme.js"></script>
+  <script src="../uloha.js"></script>
+  <style>
+    .vyraz { font-size: clamp(1.4rem, 5.5vw, 2.2rem); font-weight: 700; font-variant-numeric: tabular-nums; }
+    .vyraz sup { font-size: 0.62em; }
+    .uloha-text { max-width: 620px; font-size: 1.02rem; line-height: 1.6; }
+    .uloha-text b { color: var(--accent); }
+    .vzorec { font-family: 'Courier New', monospace; color: var(--text-muted); font-size: 0.92rem; line-height: 1.7; }
+
+    /* ---- plošný model roznásobení ---- */
+    .scena { width: min(430px, 100%); }
+    .scena .dil { stroke: var(--bg-panel); stroke-width: 2; }
+    .scena .dil.aa { fill: rgba(106,166,253,0.55); }
+    .scena .dil.ab { fill: rgba(230,170,60,0.45); }
+    .scena .dil.bb { fill: rgba(76,175,125,0.5); }
+    .scena .dil.zaporny { fill: rgba(224,93,93,0.4); }
+    .scena .kota { stroke: var(--text-faint); stroke-width: 1.4; }
+    .scena .popis { fill: var(--text-muted); font-size: 12px; text-anchor: middle; }
+    .scena .obsah { fill: var(--text); font-size: 13px; font-weight: 700; text-anchor: middle; }
+    .scena .obsah.mala { font-size: 10px; font-weight: 600; }
+
+    .ovladace { display: flex; flex-wrap: wrap; gap: 8px 12px; justify-content: center; max-width: 480px; }
+    .ovladace label {
+      display: flex; align-items: center; gap: 7px;
+      background: var(--bg-input); border: 1px solid var(--border);
+      border-radius: 8px; padding: 5px 10px; font-size: 0.8rem; color: var(--text-muted);
+    }
+    .ovladace input[type=range] { width: 96px; accent-color: var(--accent); }
+    .ovladace .hodnota { color: var(--text); font-weight: 600; min-width: 1.6em; text-align: right; }
+    .prepinac-vzorce { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+    .prepinac-vzorce button {
+      background: var(--bg-control); border: 1px solid var(--border-strong); color: var(--text-muted);
+      border-radius: 6px; padding: 5px 12px; font-size: 0.82rem; font-family: inherit; cursor: pointer;
+    }
+    .prepinac-vzorce button:hover { border-color: var(--accent); color: var(--text); }
+    .prepinac-vzorce button.zap { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+    .rozklad {
+      background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 12px;
+      padding: 12px 16px; max-width: 480px; font-variant-numeric: tabular-nums;
+    }
+    .rozklad .radek { font-size: 1.05rem; line-height: 1.9; }
+    .rozklad .radek.cisla { color: var(--text-muted); font-size: 0.95rem; }
+    .rozklad .aa { color: var(--accent); font-weight: 700; }
+    .rozklad .ab { color: var(--warn); font-weight: 700; }
+    .rozklad .bb { color: var(--ok); font-weight: 700; }
+    .vysvetlivka { color: var(--text-faint); font-size: 0.8rem; max-width: 480px; line-height: 1.5; }
+    .vysvetlivka b { color: var(--text-muted); }
+  </style>
+</head>
+<body>
+  <h1>🧮 Výrazy a jejich úpravy</h1>
+  <p class="podtitul">Pro 8. ročník: roznásobování, vytýkání, vzorce a dosazování za proměnnou.</p>
+
+  <div class="rezimy" id="rezimy">
+    <button data-rezim="plocha" class="active">🟦 Roznásobení plochou</button>
+    <button data-rezim="roznasob">✖️ Roznásob závorku</button>
+    <button data-rezim="vytkni">📦 Vytkni před závorku</button>
+    <button data-rezim="vzorce">📐 Vzorce</button>
+    <button data-rezim="dosad">🔢 Dosaď za proměnnou</button>
+  </div>
+
+  <div class="plocha" id="plocha"></div>
+
+  <div class="ovladani">
+    <button class="hlavni" id="btnDalsi">Přeskočit →</button>
+    <span class="skore" id="skore"></span>
+  </div>
+
+  <p class="napoveda">
+    <b>(a + b)² = a² + 2ab + b²</b> &nbsp;·&nbsp; <b>(a − b)² = a² − 2ab + b²</b>
+    &nbsp;·&nbsp; <b>a² − b² = (a + b)(a − b)</b>.
+    Při vytýkání hledáme společného dělitele všech členů.
+  </p>
+
+<script>
+const $ = id => document.getElementById(id);
+const skore = Uloha.skore('nodus_m8_vyrazy', $('skore'));
+let rezim = 'plocha';
+function odezvaEl() { const d = document.createElement('div'); d.className = 'odezva'; return d; }
+
+/* Zápis členu s proměnnou: 1x → x, -1x → -x, 0x → nic */
+function clen(koef, promenna, mocnina) {
+  if (koef === 0) return '';
+  const znak = koef > 0 ? '+' : '−';
+  const abs = Math.abs(koef);
+  const cislo = (abs === 1 && promenna) ? '' : abs;
+  const p = promenna ? promenna + (mocnina > 1 ? `<sup>${mocnina}</sup>` : '') : '';
+  return ` ${znak} ${cislo}${p}`;
+}
+function vyraz(cleny) {
+  const t = cleny.map(([k, p, m]) => clen(k, p, m)).filter(Boolean).join('');
+  return t.replace(/^ \+ /, '').replace(/^ − /, '−');
+}
+
+/* ---- Roznásobení plochou -----------------------------------------------------------------
+   Obdélník o stranách (a+b) a (c+d) se rozpadne na čtyři dílky. Jejich obsahy
+   jsou přesně ty členy, které vyjdou roznásobením – a je vidět, proč u (a+b)²
+   nestačí a² + b². */
+const PL = { a: 3, b: 2, c: 3, d: 2, tvar: 'ctverec' };
+
+function plocha() {
+  const p = $('plocha');
+  const ctverec = PL.tvar === 'ctverec';
+  p.innerHTML = `
+    <div class="zadani uloha-text">Posuvníky měň <b>a</b> a <b>b</b>. Obsah celého obdélníku
+      je součin ze zadání, jeho čtyři dílky jsou členy po roznásobení.</div>
+    <div class="prepinac-vzorce" id="tvary">
+      <button data-tvar="ctverec"${ctverec ? ' class="zap"' : ''}>(a + b)²</button>
+      <button data-tvar="obdelnik"${ctverec ? '' : ' class="zap"'}>(a + b)(c + d)</button>
+    </div>
+    <svg class="scena" id="scenaPl" viewBox="0 0 430 330" role="img"
+         aria-label="Obdelnik rozdeleny na ctyri dilky"></svg>
+    <div class="ovladace" id="posuvnikyPl"></div>
+    <div class="rozklad" id="rozklad"></div>
+    <p class="vysvetlivka" id="poznamkaPl"></p>`;
+
+  $('tvary').addEventListener('click', e => {
+    const b = e.target.closest('button[data-tvar]');
+    if (!b) return;
+    PL.tvar = b.dataset.tvar;
+    $('tvary').querySelectorAll('button').forEach(x => x.classList.toggle('zap', x === b));
+    plocha();
+  });
+  postavPosuvnikyPl();
+  kresliPlochu();
+}
+
+function postavPosuvnikyPl() {
+  const ctverec = PL.tvar === 'ctverec';
+  const tahlo = (id, popis, hod) =>
+    `<label>${popis}
+       <input type="range" id="pos${id}" min="1" max="6" step="1" value="${hod}">
+       <span class="hodnota" id="hod${id}">${hod}</span></label>`;
+  $('posuvnikyPl').innerHTML =
+    tahlo('A', 'a', PL.a) + tahlo('B', 'b', PL.b) +
+    (ctverec ? '' : tahlo('C', 'c', PL.c) + tahlo('D', 'd', PL.d));
+  ['A', 'B'].concat(ctverec ? [] : ['C', 'D']).forEach(id => {
+    $('pos' + id).addEventListener('input', e => {
+      PL[id.toLowerCase()] = +e.target.value;
+      kresliPlochu();
+    });
+  });
+}
+
+function kresliPlochu() {
+  const ctverec = PL.tvar === 'ctverec';
+  const a = PL.a, b = PL.b;
+  const c = ctverec ? a : PL.c, d = ctverec ? b : PL.d;
+
+  // měřítko se dopočítá, aby se největší obdélník vešel do plátna
+  const MER = Math.min(250 / (a + b), 230 / (c + d));
+  const Y0 = 34;
+  const X0 = Math.max(74, (430 - (a + b) * MER) / 2);
+  const sa = a * MER, sb = b * MER, sc = c * MER, sd = d * MER;
+
+  const dil = (x, y, w, h, trida, popisek) => {
+    const maly = w < 46 || h < 26;
+    return `<rect class="dil ${trida}" x="${x}" y="${y}" width="${w}" height="${h}"/>
+      <text class="obsah${maly ? ' mala' : ''}" x="${x + w / 2}" y="${y + h / 2 + 4}">${popisek}</text>`;
+  };
+
+  const svg =
+    dil(X0, Y0, sa, sc, 'aa', ctverec ? 'a²' : 'ac') +
+    dil(X0 + sa, Y0, sb, sc, 'ab', ctverec ? 'ab' : 'bc') +
+    dil(X0, Y0 + sc, sa, sd, 'ab', ctverec ? 'ab' : 'ad') +
+    dil(X0 + sa, Y0 + sc, sb, sd, 'bb', ctverec ? 'b²' : 'bd') +
+    // kóty stran
+    `<line class="kota" x1="${X0}" y1="${Y0 - 14}" x2="${X0 + sa}" y2="${Y0 - 14}"/>
+     <line class="kota" x1="${X0 + sa}" y1="${Y0 - 14}" x2="${X0 + sa + sb}" y2="${Y0 - 14}"/>
+     <text class="popis" x="${X0 + sa / 2}" y="${Y0 - 19}">a = ${a}</text>
+     <text class="popis" x="${X0 + sa + sb / 2}" y="${Y0 - 19}">b = ${b}</text>
+     <line class="kota" x1="${X0 - 14}" y1="${Y0}" x2="${X0 - 14}" y2="${Y0 + sc}"/>
+     <line class="kota" x1="${X0 - 14}" y1="${Y0 + sc}" x2="${X0 - 14}" y2="${Y0 + sc + sd}"/>
+     <text class="popis" x="${X0 - 34}" y="${Y0 + sc / 2 + 4}">${ctverec ? 'a' : 'c'} = ${c}</text>
+     <text class="popis" x="${X0 - 34}" y="${Y0 + sc + sd / 2 + 4}">${ctverec ? 'b' : 'd'} = ${d}</text>`;
+  $('scenaPl').innerHTML = svg;
+
+  const celkem = (a + b) * (c + d);
+  if (ctverec) {
+    $('rozklad').innerHTML =
+      `<div class="radek">(a + b)² = <span class="aa">a²</span> + <span class="ab">2ab</span> + <span class="bb">b²</span></div>
+       <div class="radek cisla">(${a} + ${b})² = ${a + b}² = <b>${celkem}</b></div>
+       <div class="radek cisla"><span class="aa">${a * a}</span> + <span class="ab">${2 * a * b}</span>
+         + <span class="bb">${b * b}</span> = <b>${a * a + 2 * a * b + b * b}</b></div>`;
+    $('poznamkaPl').innerHTML = a * a + b * b === celkem
+      ? 'Tady <b>a² + b²</b> náhodou vyjde stejně — zkus posunout druhý posuvník.'
+      : `Kdyby platilo (a + b)² = a² + b², vyšlo by jen <b>${a * a + b * b}</b>. `
+        + `Chybí přesně ty <b>dva oranžové dílky</b>, dohromady 2ab = ${2 * a * b}.`;
+  } else {
+    $('rozklad').innerHTML =
+      `<div class="radek">(a + b)(c + d) = <span class="aa">ac</span> + <span class="ab">bc</span>
+         + <span class="ab">ad</span> + <span class="bb">bd</span></div>
+       <div class="radek cisla">(${a} + ${b})(${c} + ${d}) = ${a + b} · ${c + d} = <b>${celkem}</b></div>
+       <div class="radek cisla"><span class="aa">${a * c}</span> + <span class="ab">${b * c}</span>
+         + <span class="ab">${a * d}</span> + <span class="bb">${b * d}</span>
+         = <b>${a * c + a * d + b * c + b * d}</b></div>`;
+    $('poznamkaPl').innerHTML = 'Každý člen první závorky se násobí s každým členem druhé — '
+      + 'proto <b>čtyři</b> dílky.';
+  }
+  ['A', 'B', 'C', 'D'].forEach(id => {
+    const el = $('hod' + id);
+    if (el) el.textContent = PL[id.toLowerCase()];
+  });
+}
+
+/* ---- Roznásob závorku ------------------------------------------------------------------- */
+function roznasob() {
+  const p = $('plocha');
+  const a = Uloha.nahodneCislo(2, 9) * Uloha.nahodne([1, -1]);
+  const b = Uloha.nahodneCislo(1, 9) * Uloha.nahodne([1, -1]);
+  const c = Uloha.nahodneCislo(2, 9) * Uloha.nahodne([1, -1]);
+  const zadani = `${a === 1 ? '' : a === -1 ? '−' : a}${'x'} · (${vyraz([[b, 'x', 1], [c, '', 0]])})`;
+  const spravny = vyraz([[a * b, 'x', 2], [a * c, 'x', 1]]);
+  const jine = new Set([
+    vyraz([[a * b, 'x', 2], [c, 'x', 1]]),
+    vyraz([[a + b, 'x', 2], [a * c, 'x', 1]]),
+    vyraz([[a * b, 'x', 1], [a * c, '', 0]]),
+  ]);
+  jine.delete(spravny);
+
+  p.innerHTML = `<div class="zadani">Roznásob závorku:</div>
+    <div class="karta"><div class="vyraz">${zadani}</div></div>`;
+  const odezva = odezvaEl();
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([spravny, ...[...jine].slice(0, 3)]).map(t => ({ klic: t, popis: t })),
+    spravnyKlic: spravny,
+    zpravaOk: `✅ ${zadani} = ${spravny} – násobíme každý člen v závorce.`,
+    zpravaChyba: 'Vynásob člen před závorkou postupně s každým členem uvnitř – včetně znamének.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Vytkni před závorku ------------------------------------------------------------------ */
+const nsd = (a, b) => b ? nsd(b, Math.abs(a % b)) : Math.abs(a);
+function vytkni() {
+  const p = $('plocha');
+  const k = Uloha.nahodneCislo(2, 8);
+  const m = Uloha.nahodneCislo(1, 9), n = Uloha.nahodneCislo(1, 9);
+  const sX = Math.random() < 0.5;                    // vytýkáme i proměnnou
+  const zadani = sX
+    ? vyraz([[k * m, 'x', 2], [k * n, 'x', 1]])
+    : vyraz([[k * m, 'x', 1], [k * n, '', 0]]);
+  const spravny = sX
+    ? `${k === 1 ? '' : k}x · (${vyraz([[m, 'x', 1], [n, '', 0]])})`
+    : `${k} · (${vyraz([[m, 'x', 1], [n, '', 0]])})`;
+  const jine = new Set([
+    sX ? `${k}x · (${vyraz([[m, 'x', 2], [n, 'x', 1]])})` : `${k} · (${vyraz([[m, 'x', 2], [n, '', 0]])})`,
+    `${k + 1} · (${vyraz([[m, 'x', 1], [n, '', 0]])})`,
+    sX ? `x · (${vyraz([[k * m, 'x', 1], [k * n, '', 0]])})` : `${k}x · (${vyraz([[m, '', 0], [n, '', 0]])})`,
+  ]);
+  jine.delete(spravny);
+
+  p.innerHTML = `<div class="zadani">Vytkni před závorku co největšího činitele:</div>
+    <div class="karta"><div class="vyraz">${zadani}</div></div>`;
+  const odezva = odezvaEl();
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([spravny, ...[...jine].slice(0, 3)]).map(t => ({ klic: t, popis: t })),
+    spravnyKlic: spravny,
+    zpravaOk: `✅ ${zadani} = ${spravny}`,
+    zpravaChyba: 'Najdi největšího společného dělitele koeficientů – a společnou proměnnou, pokud tam je.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Vzorce ------------------------------------------------------------------------------- */
+function vzorce() {
+  const p = $('plocha');
+  const typ = Uloha.nahodne(['plus', 'minus', 'rozdil']);
+  const b = Uloha.nahodneCislo(1, 9);
+  let zadani, spravny, jine;
+  if (typ === 'plus') {
+    zadani = `(x + ${b})<sup>2</sup>`;
+    spravny = vyraz([[1, 'x', 2], [2 * b, 'x', 1], [b * b, '', 0]]);
+    jine = [vyraz([[1, 'x', 2], [b * b, '', 0]]), vyraz([[1, 'x', 2], [b, 'x', 1], [b * b, '', 0]]),
+      vyraz([[1, 'x', 2], [2 * b, 'x', 1], [2 * b, '', 0]])];
+  } else if (typ === 'minus') {
+    zadani = `(x − ${b})<sup>2</sup>`;
+    spravny = vyraz([[1, 'x', 2], [-2 * b, 'x', 1], [b * b, '', 0]]);
+    jine = [vyraz([[1, 'x', 2], [-b * b, '', 0]]), vyraz([[1, 'x', 2], [-2 * b, 'x', 1], [-b * b, '', 0]]),
+      vyraz([[1, 'x', 2], [2 * b, 'x', 1], [b * b, '', 0]])];
+  } else {
+    zadani = `x<sup>2</sup> − ${b * b}`;
+    spravny = `(x + ${b})(x − ${b})`;
+    jine = [`(x − ${b})<sup>2</sup>`, `(x + ${b})<sup>2</sup>`, `(x + ${b * b})(x − 1)`];
+  }
+
+  p.innerHTML = `<div class="zadani">${typ === 'rozdil' ? 'Rozlož na součin:' : 'Umocni podle vzorce:'}</div>
+    <div class="karta"><div class="vyraz">${zadani}</div></div>
+    <div class="vzorec">(a + b)² = a² + 2ab + b²<br>(a − b)² = a² − 2ab + b²<br>a² − b² = (a + b)(a − b)</div>`;
+  const odezva = odezvaEl();
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([spravny, ...jine.filter(x => x !== spravny)]).map(t => ({ klic: t, popis: t })),
+    spravnyKlic: spravny,
+    zpravaOk: `✅ ${zadani} = ${spravny}`,
+    zpravaChyba: 'Nezapomeň na prostřední člen 2ab – (x + 3)² není x² + 9.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Dosaď za proměnnou --------------------------------------------------------------------- */
+function dosad() {
+  const p = $('plocha');
+  const a = Uloha.nahodneCislo(2, 6), b = Uloha.nahodneCislo(1, 9) * Uloha.nahodne([1, -1]);
+  const x = Uloha.nahodneCislo(-5, 6);
+  const typ = Uloha.nahodne(['linearni', 'kvadraticky', 'zavorka']);
+  let zapis, hodnota;
+  if (typ === 'linearni') { zapis = vyraz([[a, 'x', 1], [b, '', 0]]); hodnota = a * x + b; }
+  else if (typ === 'kvadraticky') { zapis = vyraz([[1, 'x', 2], [b, 'x', 1]]); hodnota = x * x + b * x; }
+  else { zapis = `${a} · (x ${b >= 0 ? '+' : '−'} ${Math.abs(b)})`; hodnota = a * (x + b); }
+
+  const jine = new Set([String(hodnota + a), String(hodnota - b), String(-hodnota), String(hodnota + 2)]);
+  jine.delete(String(hodnota));
+
+  p.innerHTML = `<div class="zadani uloha-text">Jakou hodnotu má výraz pro <b>x = ${x}</b>?</div>
+    <div class="karta"><div class="vyraz">${zapis}</div></div>`;
+  const odezva = odezvaEl();
+  Uloha.vyber({
+    kam: p, odezva, trida: 'velke',
+    moznosti: Uloha.zamichej([String(hodnota), ...[...jine].slice(0, 3)]).map(t => ({ klic: t, popis: t })),
+    spravnyKlic: String(hodnota),
+    zpravaOk: `✅ Po dosazení x = ${x} vyjde ${hodnota}.`,
+    zpravaChyba: 'Dosazuj do závorky celé číslo i se znaménkem a dodrž pořadí operací.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+const REZIMY = { plocha, roznasob, vytkni, vzorce, dosad };
+/* V plošném modelu se neodpovídá – tlačítko v liště tam rozhodí posuvníky. */
+function novaUloha() {
+  if (rezim === 'plocha') {
+    PL.a = Uloha.nahodneCislo(1, 6); PL.b = Uloha.nahodneCislo(1, 6);
+    PL.c = Uloha.nahodneCislo(1, 6); PL.d = Uloha.nahodneCislo(1, 6);
+    plocha();
+    return;
+  }
+  REZIMY[rezim]();
+}
+
+document.querySelectorAll('#rezimy button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#rezimy button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  rezim = b.dataset.rezim;
+  $('btnDalsi').textContent = rezim === 'plocha' ? '🎲 Jiná čísla' : 'Přeskočit →';
+  REZIMY[rezim]();
+}));
+$('btnDalsi').textContent = rezim === 'plocha' ? '🎲 Jiná čísla' : 'Přeskočit →';
+$('btnDalsi').addEventListener('click', novaUloha);
+novaUloha();
+</script>
+</body>
+</html>

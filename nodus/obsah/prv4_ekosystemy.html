@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ekosystémy – les, louka, voda</title>
+  <link rel="stylesheet" href="../common.css">
+  <link rel="stylesheet" href="../vyuka.css">
+  <script src="../theme.js"></script>
+  <script src="../rec.js"></script>
+  <script src="../uloha.js"></script>
+  <style>
+    .nazev-org { font-size: 1.25rem; font-weight: 700; }
+    .retezec { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; align-items: center; min-height: 50px; }
+    .retezec .clen {
+      background: var(--accent-soft); border: 2px solid var(--accent); border-radius: 10px;
+      padding: 8px 12px; font-size: 0.95rem; font-weight: 600;
+    }
+    .retezec .sipka { color: var(--text-faint); font-size: 1.3rem; }
+  </style>
+</head>
+<body>
+  <h1>🌳 Ekosystémy – les, louka, voda</h1>
+  <p class="podtitul">Pro 4.–5. ročník: kdo kde žije, potravní řetězce a role organismů.</p>
+
+  <div class="rezimy" id="rezimy">
+    <button data-rezim="kamPatri" class="active">🏞️ Kam patří?</button>
+    <button data-rezim="retezec">🔗 Potravní řetězec</button>
+    <button data-rezim="role">🎭 Kdo je kdo</button>
+    <button data-rezim="patra">🌲 Lesní patra</button>
+  </div>
+
+  <div class="plocha" id="plocha"></div>
+
+  <div class="ovladani">
+    <button class="hlavni" id="btnDalsi">Přeskočit →</button>
+    <span class="skore" id="skore"></span>
+  </div>
+
+  <p class="napoveda">
+    <b>Producenti</b> (rostliny) si vyrábějí potravu ze slunečního světla.
+    <b>Konzumenti</b> se živí jinými organismy. <b>Rozkladači</b> (houby, bakterie, žížaly)
+    rozkládají odumřelé zbytky zpátky na živiny.
+  </p>
+
+<script>
+const $ = id => document.getElementById(id);
+const skore = Uloha.skore('nodus_prv4_ekosystemy', $('skore'));
+let rezim = 'kamPatri';
+
+const PROSTREDI = {
+  les: { nazev: 'les', ikona: '🌲' },
+  louka: { nazev: 'louka', ikona: '🌼' },
+  voda: { nazev: 'rybník a potok', ikona: '🌊' },
+  pole: { nazev: 'pole', ikona: '🌾' },
+};
+
+const ORGANISMY = [
+  { n: 'srnec', e: '🦌', p: 'les', role: 'konzument' },
+  { n: 'veverka', e: '🐿️', p: 'les', role: 'konzument' },
+  { n: 'smrk', e: '🌲', p: 'les', role: 'producent' },
+  { n: 'muchomůrka', e: '🍄', p: 'les', role: 'rozkladac' },
+  { n: 'datel', e: '🪶', p: 'les', role: 'konzument' },
+  { n: 'borůvka', e: '🫐', p: 'les', role: 'producent' },
+  { n: 'kobylka', e: '🦗', p: 'louka', role: 'konzument' },
+  { n: 'jetel', e: '🍀', p: 'louka', role: 'producent' },
+  { n: 'motýl', e: '🦋', p: 'louka', role: 'konzument' },
+  { n: 'krtek', e: '🐀', p: 'louka', role: 'konzument' },
+  { n: 'sedmikráska', e: '🌼', p: 'louka', role: 'producent' },
+  { n: 'kapr', e: '🐟', p: 'voda', role: 'konzument' },
+  { n: 'rákos', e: '🌾', p: 'voda', role: 'producent' },
+  { n: 'žába', e: '🐸', p: 'voda', role: 'konzument' },
+  { n: 'volavka', e: '🦩', p: 'voda', role: 'konzument' },
+  { n: 'leknín', e: '🪷', p: 'voda', role: 'producent' },
+  { n: 'pšenice', e: '🌾', p: 'pole', role: 'producent' },
+  { n: 'zajíc', e: '🐇', p: 'pole', role: 'konzument' },
+  { n: 'křeček', e: '🐹', p: 'pole', role: 'konzument' },
+  { n: 'žížala', e: '🪱', p: 'pole', role: 'rozkladac' },
+];
+
+const ROLE = {
+  producent: { nazev: 'producent (rostlina)', ikona: '🌱' },
+  konzument: { nazev: 'konzument (živočich)', ikona: '🐾' },
+  rozkladac: { nazev: 'rozkladač', ikona: '🍄' },
+};
+
+const RETEZCE = [
+  ['🌾 tráva', '🦗 kobylka', '🐸 žába', '🦩 volavka'],
+  ['🌲 semínko smrku', '🐿️ veverka', '🦉 sova'],
+  ['🌼 květ', '🦋 motýl', '🕷️ pavouk', '🐦 ptáček'],
+  ['🌾 obilí', '🐹 křeček', '🦊 liška'],
+  ['🪷 řasy', '🐟 malá ryba', '🐠 dravá ryba', '🦦 vydra'],
+  ['🍃 listí', '🪱 žížala', '🦔 ježek', '🦅 dravec'],
+];
+
+const PATRA = [
+  { n: 'mechové patro', e: '🌿', popis: 'mechy, lišejníky a houby při zemi', poradi: 1 },
+  { n: 'bylinné patro', e: '🌱', popis: 'trávy, kapradiny a borůvčí', poradi: 2 },
+  { n: 'keřové patro', e: '🌳', popis: 'maliní, líska a mladé stromky', poradi: 3 },
+  { n: 'stromové patro', e: '🌲', popis: 'koruny vzrostlých stromů', poradi: 4 },
+];
+
+/* ---- Kam patří? -------------------------------------------------------------- */
+function kamPatri() {
+  const p = $('plocha');
+  const o = Uloha.nahodne(ORGANISMY);
+  p.innerHTML = `<div class="zadani">Ve kterém prostředí toto najdeš nejčastěji?</div>
+    <div class="karta"><div class="obrazek">${o.e}</div><div class="nazev-org">${o.n}</div></div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej(Object.entries(PROSTREDI))
+      .map(([klic, x]) => ({ klic, ikona: x.ikona, popis: x.nazev })),
+    spravnyKlic: o.p,
+    zpravaOk: `✅ ${o.n} patří do prostředí, kterým je ${PROSTREDI[o.p].nazev}.`,
+    zpravaChyba: 'Zkus jiné prostředí – kde má dost potravy a úkrytu?',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Potravní řetězec (řazení) ----------------------------------------------- */
+function retezec() {
+  const p = $('plocha');
+  const r = Uloha.nahodne(RETEZCE);
+  p.innerHTML = '<div class="zadani">Seřaď potravní řetězec – začni tím, kdo je na začátku.</div>';
+  const porada = document.createElement('div');
+  porada.className = 'retezec';
+  const nabidka = document.createElement('div');
+  nabidka.className = 'nabidka';
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  let dalsiIndex = 0, chyboval = false;
+
+  Uloha.zamichej(r).forEach(clen => {
+    const b = document.createElement('button');
+    b.textContent = clen;
+    b.dataset.clen = clen;
+    b.addEventListener('click', () => {
+      if (b.disabled) return;
+      if (clen === r[dalsiIndex]) {
+        if (dalsiIndex > 0) {
+          const s = document.createElement('span');
+          s.className = 'sipka';
+          s.textContent = '→';
+          porada.appendChild(s);
+        }
+        const el = document.createElement('span');
+        el.className = 'clen';
+        el.textContent = clen;
+        porada.appendChild(el);
+        b.disabled = true;
+        dalsiIndex++;
+        odezva.className = 'odezva ok';
+        odezva.textContent = '✅ Správně!';
+        if (dalsiIndex === r.length) {
+          odezva.textContent = '🎉 Celý řetězec je hotový!';
+          skore.vyhodnot(!chyboval);
+          setTimeout(novaUloha, Uloha.PRODLEVA + 500);
+        }
+      } else {
+        chyboval = true;
+        Uloha.trhni(b);
+        odezva.className = 'odezva chyba';
+        odezva.textContent = dalsiIndex === 0
+          ? 'Řetězec začíná rostlinou – ta si vyrábí potravu ze slunce.'
+          : 'Tenhle organismus se předchozím neživí – zkus jiný.';
+      }
+    });
+    nabidka.appendChild(b);
+  });
+  p.append(porada, nabidka, odezva);
+}
+
+/* ---- Kdo je kdo -------------------------------------------------------------- */
+function role() {
+  const p = $('plocha');
+  const o = Uloha.nahodne(ORGANISMY);
+  p.innerHTML = `<div class="zadani">Jakou roli má tento organismus v přírodě?</div>
+    <div class="karta"><div class="obrazek">${o.e}</div><div class="nazev-org">${o.n}</div></div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva,
+    // pořadí schválně nemícháme – role mají vždy stejné místo, ať se dají zapamatovat
+    moznosti: Object.entries(ROLE).map(([klic, x]) => ({ klic, ikona: x.ikona, popis: x.nazev })),
+    spravnyKlic: o.role,
+    zpravaOk: `✅ ${o.n} je ${ROLE[o.role].nazev}.`,
+    zpravaChyba: 'Vyrábí si potravu sám ze slunce, žere jiné organismy, nebo rozkládá zbytky?',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Lesní patra --------------------------------------------------------------- */
+function patra() {
+  const p = $('plocha');
+  const u = Uloha.nahodne(PATRA);
+  p.innerHTML = `<div class="zadani">Které patro lesa to je?</div>
+    <div class="karta"><div class="obrazek">${u.e}</div><div class="nazev-org">${u.popis}</div></div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva,
+    // patra zůstávají odspodu nahoru ve stejném pořadí jako v lese
+    moznosti: [...PATRA].sort((a, b) => a.poradi - b.poradi).map(x => ({ klic: x.n, popis: x.n })),
+    spravnyKlic: u.n,
+    zpravaOk: `✅ ${u.n} – ${u.popis}.`,
+    zpravaChyba: 'Patra jdou odspodu: mechové, bylinné, keřové, stromové.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+const REZIMY = { kamPatri, retezec, role, patra };
+function novaUloha() { REZIMY[rezim](); }
+
+document.querySelectorAll('#rezimy button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#rezimy button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  rezim = b.dataset.rezim;
+  novaUloha();
+}));
+$('btnDalsi').addEventListener('click', novaUloha);
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === 'Enter') { e.preventDefault(); novaUloha(); }
+});
+novaUloha();
+</script>
+</body>
+</html>

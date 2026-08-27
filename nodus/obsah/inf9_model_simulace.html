@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Modely a simulace</title>
+  <link rel="stylesheet" href="../common.css">
+  <link rel="stylesheet" href="../vyuka.css">
+  <script src="../theme.js"></script>
+  <script src="../uloha.js"></script>
+  <style>
+    .graf { width: min(440px, 96%); }
+    .graf .osy { stroke: var(--text-muted); stroke-width: 2; }
+    .graf .mrizka { stroke: var(--border); stroke-width: 1; }
+    .graf .krivka { fill: none; stroke: var(--accent); stroke-width: 3; stroke-linejoin: round; }
+    .graf .cil { stroke: var(--ok); stroke-width: 2; stroke-dasharray: 6 5; }
+    .graf .popis { fill: var(--text-faint); font-size: 11px; }
+    .ovladace-modelu { display: flex; flex-direction: column; gap: 10px; width: min(440px, 96%); }
+    .ovladace-modelu label { display: flex; align-items: center; gap: 10px; font-size: 0.9rem;
+      color: var(--text-muted); }
+    .ovladace-modelu input[type=range] { flex: 1; }
+    .ovladace-modelu .hodnota { font-variant-numeric: tabular-nums; font-weight: 700; color: var(--accent);
+      min-width: 3.6em; text-align: right; }
+    .stavModelu { font-size: 0.95rem; color: var(--text-muted); }
+    .stavModelu b { color: var(--text); }
+    .uloha-text { max-width: 660px; font-size: 1.02rem; line-height: 1.62; }
+    .uloha-text b { color: var(--accent); }
+  </style>
+</head>
+<body>
+  <h1>🧪 Modely a simulace</h1>
+  <p class="podtitul">Pro 9. ročník: model populace, vliv parametrů a porovnání modelu se skutečností.</p>
+
+  <div class="rezimy" id="rezimy">
+    <button data-rezim="simulace" class="active">🎛️ Zkoušej model</button>
+    <button data-rezim="predpoved">🔮 Co udělá změna</button>
+    <button data-rezim="realita">🌍 Model a skutečnost</button>
+    <button data-rezim="pojmy">📖 Pojmy</button>
+  </div>
+
+  <div class="plocha" id="plocha"></div>
+
+  <div class="ovladani">
+    <button class="hlavni" id="btnDalsi">Přeskočit →</button>
+    <span class="skore" id="skore"></span>
+  </div>
+
+  <p class="napoveda">
+    Model je <b>zjednodušený obraz skutečnosti</b>. Náš model populace pracuje se dvěma parametry:
+    <b>rychlostí růstu</b> a <b>únosnou kapacitou</b> prostředí. Každý model má hranice platnosti –
+    proto se výsledky vždy porovnávají s reálnými daty.
+  </p>
+
+<script>
+const $ = id => document.getElementById(id);
+const skore = Uloha.skore('nodus_inf9_model_simulace', $('skore'));
+let rezim = 'simulace';
+const fmt = x => Number(Number(x).toFixed(1)).toLocaleString('cs-CZ');
+function odezvaEl() { const d = document.createElement('div'); d.className = 'odezva'; return d; }
+
+/* Jednoduchý model populace s omezenou kapacitou prostředí (logistický růst). */
+function simuluj(rust, kapacita, kroku = 24, start = 5) {
+  const hodnoty = [start];
+  let n = start;
+  for (let i = 1; i <= kroku; i++) {
+    n = n + rust * n * (1 - n / kapacita);
+    n = Math.max(0, Math.min(kapacita * 1.6, n));
+    hodnoty.push(n);
+  }
+  return hodnoty;
+}
+function svgGraf(hodnoty, kapacita, cil) {
+  const X = i => 34 + i / (hodnoty.length - 1) * 380;
+  const maxY = Math.max(kapacita * 1.2, ...hodnoty, cil || 0);
+  const Y = v => 170 - v / maxY * 150;
+  let mrizka = '';
+  for (let i = 0; i <= 4; i++) {
+    const v = maxY / 4 * i;
+    mrizka += `<line class="mrizka" x1="34" y1="${Y(v)}" x2="418" y2="${Y(v)}"/>
+      <text class="popis" x="4" y="${Y(v) + 4}">${Math.round(v)}</text>`;
+  }
+  const d = 'M' + hodnoty.map((v, i) => `${X(i).toFixed(1)} ${Y(v).toFixed(1)}`).join(' L');
+  return `<svg class="graf" viewBox="0 0 430 200">
+    ${mrizka}
+    ${cil ? `<line class="cil" x1="34" y1="${Y(cil)}" x2="418" y2="${Y(cil)}"/>
+      <text class="popis" x="360" y="${Y(cil) - 6}" fill="var(--ok)">cíl ${cil}</text>` : ''}
+    <line class="osy" x1="34" y1="14" x2="34" y2="172"/>
+    <line class="osy" x1="30" y1="172" x2="424" y2="172"/>
+    <path class="krivka" d="${d}"/>
+    <text class="popis" x="370" y="192">čas (kroky)</text>
+    <text class="popis" x="4" y="12">počet jedinců</text>
+  </svg>`;
+}
+
+/* ---- Zkoušej model: úkolem je nastavit parametry tak, aby model splnil zadání ---- */
+function simulace() {
+  const p = $('plocha');
+  const cil = Uloha.nahodne([40, 60, 80, 120]);
+  let rust = 0.3, kapacita = 100;
+  let hotovo = false, chyboval = false;
+
+  p.innerHTML = `<div class="zadani uloha-text">Nastav posuvníky tak, aby se populace
+      <b>ustálila na hodnotě ${cil}</b> (zelená čára).</div>`;
+  const karta = document.createElement('div');
+  karta.className = 'karta';
+  const ovladace = document.createElement('div');
+  ovladace.className = 'ovladace-modelu';
+  ovladace.innerHTML = `
+    <label>rychlost růstu <input type="range" id="rust" min="5" max="90" value="30">
+      <span class="hodnota" id="rustHodnota">0,3</span></label>
+    <label>kapacita prostředí <input type="range" id="kapacita" min="20" max="150" value="100">
+      <span class="hodnota" id="kapacitaHodnota">100</span></label>
+    <div class="stavModelu" id="stavModelu"></div>`;
+  const obalGrafu = document.createElement('div');
+  karta.appendChild(obalGrafu);
+  karta.appendChild(ovladace);
+  p.appendChild(karta);
+  const odezva = odezvaEl();
+  p.appendChild(odezva);
+
+  function prekresli() {
+    const hodnoty = simuluj(rust, kapacita);
+    const konec = hodnoty[hodnoty.length - 1];
+    obalGrafu.innerHTML = svgGraf(hodnoty, kapacita, cil);
+    $('stavModelu').innerHTML = `po 24 krocích: <b>${fmt(konec)}</b> jedinců`;
+    if (!hotovo && Math.abs(konec - cil) < 2) {
+      hotovo = true;
+      odezva.className = 'odezva ok';
+      odezva.textContent = `✅ Populace se ustálila na ${fmt(konec)} – kapacita prostředí určuje, `
+        + 'kde se růst zastaví.';
+      skore.vyhodnot(!chyboval);
+      setTimeout(novaUloha, Uloha.PRODLEVA + 700);
+    } else if (!hotovo) {
+      chyboval = true;
+      odezva.className = 'odezva';
+      odezva.textContent = konec > cil ? 'Populace je zatím vyšší než cíl…' : 'Populace je zatím nižší než cíl…';
+    }
+  }
+  $('rust').addEventListener('input', e => {
+    rust = Number(e.target.value) / 100;
+    $('rustHodnota').textContent = fmt(rust).replace('.', ',');
+    prekresli();
+  });
+  $('kapacita').addEventListener('input', e => {
+    kapacita = Number(e.target.value);
+    $('kapacitaHodnota').textContent = kapacita;
+    prekresli();
+  });
+  prekresli();
+}
+
+const PREDPOVED = [
+  { q: 'Co se v modelu populace stane, když zvýšíš <b>kapacitu prostředí</b>?',
+    a: 'populace se ustálí na vyšší hodnotě', b: ['populace vymře', 'růst se zastaví hned', 'nic se nezmění'] },
+  { q: 'Co se stane, když nastavíš <b>rychlost růstu</b> na velmi malou hodnotu?',
+    a: 'populace poroste pomaleji a kapacity dosáhne později', b: ['populace vymře okamžitě', 'kapacita se zvýší', 'graf bude klesat'] },
+  { q: 'Proč se růst populace v modelu nakonec zastaví?',
+    a: 'prostředí uživí jen omezený počet jedinců', b: ['jedinci zestárnou', 'model se rozbije', 'skončí čas simulace'] },
+  { q: 'Co znamená vodorovná část křivky?',
+    a: 'populace je v rovnováze – přírůstek i úbytek se vyrovnají', b: ['data chybí', 'populace vymřela', 'kapacita klesla na nulu'] },
+  { q: 'Když v modelu epidemie zvýšíš počet očkovaných, co se stane s vrcholem nákazy?',
+    a: 'bude nižší a přijde později', b: ['bude vyšší', 'nezmění se', 'epidemie skončí okamžitě'] },
+  { q: 'Model dopravy: co udělá zvýšení počtu aut při stejné kapacitě silnic?',
+    a: 'zpomalí se průjezd a rostou kolony', b: ['doprava zrychlí', 'nic se nestane', 'sníží se počet nehod vždy'] },
+  { q: 'Co v modelu znamená parametr?',
+    a: 'hodnota, kterou nastavujeme a která ovlivňuje chování modelu', b: ['výsledek simulace', 'chyba výpočtu', 'jednotka času'] },
+  { q: 'Proč se model spouští opakovaně s různým nastavením?',
+    a: 'zjišťujeme, jak citlivý je výsledek na změnu parametrů', b: ['aby se počítač zahřál', 'kvůli náhodě', 'není k tomu důvod'] },
+];
+function predpoved() {
+  const p = $('plocha');
+  const u = Uloha.nahodne(PREDPOVED);
+  p.innerHTML = `<div class="zadani uloha-text">${u.q}</div>`;
+  const odezva = odezvaEl();
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([u.a, ...u.b]).map(t => ({ klic: t, popis: t })),
+    spravnyKlic: u.a,
+    zpravaOk: `✅ ${u.a}`,
+    zpravaChyba: 'Zkus si to v režimu „Zkoušej model“ – posuň jeden parametr a sleduj graf.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+const REALITA = [
+  { q: 'Proč je model vždy jen zjednodušením?', a: 'nemůže zachytit všechny vlivy skutečného světa', b: ['počítače jsou pomalé', 'lidé jsou líní', 'skutečnost je jednoduchá'] },
+  { q: 'Co je validace modelu?', a: 'porovnání výsledků modelu se skutečnými daty', b: ['spuštění na rychlejším počítači', 'změna barev grafu', 'napsání dokumentace'] },
+  { q: 'Model předpověděl jiný výsledek, než se stal. Co uděláš?', a: 'zjistíš, který předpoklad neplatil, a model upravíš', b: ['prohlásíš skutečnost za chybnou', 'model zahodíš bez rozboru', 'nic'] },
+  { q: 'Proč se předpověď počasí na 10 dní liší od té na zítřek?', a: 'malé odchylky ve vstupech se v čase zvětšují', b: ['meteorologové se nesnaží', 'model je vypnutý', 'počasí je náhodné úplně'] },
+  { q: 'K čemu se modely v praxi používají?', a: 'k předpovědi počasí, plánování dopravy, ekonomice i epidemiím', b: ['jen ke hrám', 'jen ve školách', 'k ničemu praktickému'] },
+  { q: 'Co je simulace?', a: 'spuštění modelu v čase a sledování, jak se systém vyvíjí', b: ['fotografie systému', 'ruční výpočet jedné hodnoty', 'grafický návrh'] },
+  { q: 'Proč jsou u modelů důležitá kvalitní data?', a: 'ze špatných vstupů vyjdou špatné výsledky', b: ['data nejsou potřeba', 'stačí odhad', 'rozhoduje jen program'] },
+  { q: 'Co je citlivostní analýza?', a: 'zkoumání, jak moc se výsledek změní při změně vstupu', b: ['test rychlosti počítače', 'kontrola pravopisu', 'měření paměti'] },
+];
+function realita() {
+  const p = $('plocha');
+  const u = Uloha.nahodne(REALITA);
+  p.innerHTML = `<div class="zadani uloha-text">${u.q}</div>`;
+  const odezva = odezvaEl();
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([u.a, ...u.b]).map(t => ({ klic: t, popis: t })),
+    spravnyKlic: u.a,
+    zpravaOk: `✅ ${u.a}`,
+    zpravaChyba: 'Model je nástroj k přemýšlení – jeho hodnotu určuje porovnání se skutečností.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+const POJMY = [
+  { q: 'Co je model?', a: 'zjednodušené zobrazení skutečnosti zachycující podstatné vztahy', b: ['přesná kopie skutečnosti', 'fotografie', 'seznam dat'] },
+  { q: 'Co je vstupní proměnná modelu?', a: 'hodnota, kterou do modelu zadáváme', b: ['výsledek', 'graf', 'jméno autora'] },
+  { q: 'Co je výstup modelu?', a: 'výsledek, který model spočítá', b: ['nastavení', 'zdrojová data', 'chyba'] },
+  { q: 'Který nástroj se hodí pro jednoduché modely ve škole?', a: 'tabulkový procesor se vzorci', b: ['textový editor', 'prohlížeč obrázků', 'přehrávač hudby'] },
+  { q: 'Co je iterace v simulaci?', a: 'jeden krok výpočtu, po kterém se stav aktualizuje', b: ['chyba', 'výstupní graf', 'druh proměnné'] },
+  { q: 'Proč se v modelech používají grafy?', a: 'rychle ukážou trend a změnu v čase', b: ['jsou barevné', 'nahrazují výpočet', 'zmenšují soubor'] },
+  { q: 'Co je deterministický model?', a: 'při stejném vstupu vždy dá stejný výsledek', b: ['pracuje s náhodou', 'nemá parametry', 'nedá se spustit'] },
+  { q: 'K čemu slouží model v digitálním dvojčeti stroje?', a: 'předvídá poruchy a chování bez zásahu do skutečného stroje', b: ['nahrazuje obsluhu úplně', 'slouží jen k reklamě', 'měří teplotu v místnosti'] },
+];
+function pojmy() {
+  const p = $('plocha');
+  const u = Uloha.nahodne(POJMY);
+  p.innerHTML = `<div class="zadani uloha-text">${u.q}</div>`;
+  const odezva = odezvaEl();
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([u.a, ...u.b]).map(t => ({ klic: t, popis: t })),
+    spravnyKlic: u.a,
+    zpravaOk: `✅ ${u.a}`,
+    zpravaChyba: 'Model = zjednodušení, simulace = jeho běh v čase, parametr = nastavitelná hodnota.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+const REZIMY = { simulace, predpoved, realita, pojmy };
+function novaUloha() { REZIMY[rezim](); }
+
+document.querySelectorAll('#rezimy button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#rezimy button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  rezim = b.dataset.rezim;
+  novaUloha();
+}));
+$('btnDalsi').addEventListener('click', novaUloha);
+novaUloha();
+</script>
+</body>
+</html>

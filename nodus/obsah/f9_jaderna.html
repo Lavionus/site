@@ -1,0 +1,934 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Jaderná energie</title>
+  <link rel="stylesheet" href="../common.css">
+  <link rel="stylesheet" href="../vyuka.css">
+  <script src="../theme.js"></script>
+  <script src="../uloha.js"></script>
+  <style>
+    .schema { width: min(360px, 90%); }
+    .schema .jadro { fill: var(--danger); }
+    .schema .neutron { fill: var(--accent); }
+    .schema .sipka { stroke: var(--text-muted); stroke-width: 2; marker-end: url(#hrot2); }
+    .schema .popis { fill: var(--text-muted); font-size: 12px; text-anchor: middle; }
+    .graf { width: min(360px, 90%); }
+    .graf .osy { stroke: var(--text-muted); stroke-width: 2; }
+    .graf .krivka { fill: none; stroke: var(--accent); stroke-width: 3; }
+    .graf .mrizka { stroke: var(--border); stroke-width: 1; }
+    .graf .popis { fill: var(--text-faint); font-size: 11px; text-anchor: middle; }
+    .uloha-text { max-width: 640px; font-size: 1.02rem; line-height: 1.6; }
+    .uloha-text b { color: var(--accent); }
+
+    /* ---- interaktivní režimy ---- */
+    canvas.scena { width: min(560px, 100%); height: auto; display: block;
+      background: var(--bg-deep); border: 1px solid var(--border); border-radius: 10px; }
+    .scena-svg { width: min(600px, 100%); display: block; }
+
+    .ovladace { display: flex; flex-wrap: wrap; gap: 8px 12px; justify-content: center; max-width: 580px; }
+    .ovladace label {
+      display: flex; align-items: center; gap: 8px;
+      background: var(--bg-input); border: 1px solid var(--border);
+      border-radius: 8px; padding: 5px 10px; font-size: 0.8rem; color: var(--text-muted);
+    }
+    .ovladace input[type=range] { width: 120px; accent-color: var(--accent); }
+    .ovladace .hodnota { color: var(--text); font-weight: 600; min-width: 3.2em; text-align: right;
+      font-variant-numeric: tabular-nums; }
+    .ovladace button {
+      background: var(--bg-control); border: 1px solid var(--border-strong); color: var(--text);
+      border-radius: 8px; padding: 8px 14px; font-size: 0.84rem; font-family: inherit; cursor: pointer;
+    }
+    .ovladace button:hover { border-color: var(--accent); }
+    .ovladace button.hlavniAkce { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+
+    .stavovky {
+      display: grid; grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 8px; width: min(560px, 100%);
+    }
+    .stavovky .bunka { background: var(--bg-elevated); border: 1px solid var(--border);
+      border-radius: 10px; padding: 8px 6px; }
+    .stavovky .nadpis { color: var(--text-faint); font-size: 0.66rem; text-transform: uppercase;
+      letter-spacing: 0.4px; }
+    .stavovky .cislo { font-size: 1.2rem; font-weight: 700; margin-top: 2px;
+      font-variant-numeric: tabular-nums; }
+    .stavovky .a .cislo { color: var(--accent); }
+    .stavovky .b .cislo { color: var(--warn); }
+    .stavovky .c .cislo { color: var(--ok); }
+    .stavovky .d .cislo { color: var(--danger); }
+    @media (max-width: 560px) { .stavovky { grid-template-columns: repeat(2, 1fr); } }
+
+    .verdikt { font-size: 0.95rem; font-weight: 600; min-height: 1.5rem; }
+    .verdikt.podkriticka { color: var(--accent); }
+    .verdikt.kriticka { color: var(--ok); }
+    .verdikt.nadkriticka { color: var(--danger); }
+
+    /* pruh osudů neutronů */
+    .osudy { width: min(560px, 100%); }
+    .osudy .pruhy { display: flex; gap: 3px; height: 13px; }
+    .osudy .pruhy div { border-radius: 3px; min-width: 2px; }
+    .osudy .stitky { display: flex; flex-wrap: wrap; gap: 6px 16px; justify-content: center;
+      margin-top: 6px; font-size: 0.76rem; color: var(--text-muted); }
+    .osudy .stitky span { display: inline-flex; align-items: center; gap: 5px; }
+    .osudy .stitky i { width: 10px; height: 10px; border-radius: 2px; display: inline-block; }
+
+    /* schéma elektrárny */
+    .scena-svg .budova { fill: var(--bg-elevated); stroke: var(--border-strong); stroke-width: 2; }
+    .scena-svg .dil { cursor: pointer; }
+    .scena-svg .dil:hover .obrys { stroke: var(--accent); }
+    .scena-svg .dil.zap .obrys { stroke: var(--accent); stroke-width: 3; }
+    .scena-svg .obrys { fill: var(--bg-elevated); stroke: var(--border-strong); stroke-width: 2; }
+    .scena-svg .primar { stroke: #d96a6a; stroke-width: 5; fill: none; stroke-linecap: round; }
+    .scena-svg .sekundar { stroke: #6aa6fd; stroke-width: 5; fill: none; stroke-linecap: round; }
+    .scena-svg .terciar { stroke: #6ad0c0; stroke-width: 5; fill: none; stroke-linecap: round; }
+    .scena-svg .popis { fill: var(--text-muted); font-size: 11px; text-anchor: middle; }
+    .scena-svg .popis.male { font-size: 10px; }
+    .vysvetlivka { color: var(--text-faint); font-size: 0.84rem; max-width: 580px; line-height: 1.55; }
+    .vysvetlivka b { color: var(--text-muted); }
+    .legenda { display: flex; gap: 14px; flex-wrap: wrap; justify-content: center;
+      font-size: 0.76rem; color: var(--text-muted); }
+    .legenda span { display: inline-flex; align-items: center; gap: 5px; }
+    .legenda i { width: 14px; height: 4px; border-radius: 2px; display: inline-block; }
+  </style>
+</head>
+<body>
+  <h1>☢️ Jaderná energie</h1>
+  <p class="podtitul">Pro 9. ročník: štěpení jader, poločas rozpadu, jaderná elektrárna a bezpečnost.</p>
+
+  <div class="rezimy" id="rezimy">
+    <button data-rezim="retezovka" class="active">☢️ Řetězová reakce</button>
+    <button data-rezim="rozpad">⏳ Rozpad naživo</button>
+    <button data-rezim="schema">🏭 Elektrárna zblízka</button>
+    <button data-rezim="stepeni">⚛️ Štěpení</button>
+    <button data-rezim="polocas">📉 Poločas rozpadu</button>
+    <button data-rezim="provoz">⚖️ Provoz a zdroje</button>
+  </div>
+
+  <div class="plocha" id="plocha"></div>
+
+  <div class="ovladani">
+    <button class="hlavni" id="btnDalsi">Přeskočit →</button>
+    <span class="skore" id="skore"></span>
+  </div>
+
+  <p class="napoveda">
+    Při <b>štěpení</b> se těžké jádro (uran 235) po zásahu neutronem rozpadne a uvolní energii
+    i další neutrony – vzniká <b>řetězová reakce</b>. V reaktoru se řídí regulačními tyčemi.
+    <b>Poločas rozpadu</b> je doba, za kterou se rozpadne polovina jader – nikoli odpočet,
+    ale statistika: každé jádro se rozpadá náhodně.
+  </p>
+
+<script>
+const $ = id => document.getElementById(id);
+const skore = Uloha.skore('nodus_f9_jaderna', $('skore'));
+let rezim = 'retezovka';
+const fmt = x => Number(Number(x).toFixed(2)).toLocaleString('cs-CZ');
+function odezvaEl() { const d = document.createElement('div'); d.className = 'odezva'; return d; }
+
+/* ============================================================
+   1) Řetězová reakce
+   Neutron může skončit trojím způsobem a každý je vidět zvlášť:
+     • trefí jádro → štěpení a 2–3 nové neutrony,
+     • pohltí ho regulační tyč,
+     • uteče z aktivní zóny ven (to je ten důvod, proč existuje kritické množství).
+   Z poměru těchto tří osudů se počítá součinitel násobení k = ν · (štěpení / všechny konce).
+   ============================================================ */
+const RR = {
+  jadra: [], neutrony: [], zabliknuti: [],
+  polomer: 105, pohlceni: 30, reflektor: false, tyce: [],
+  stepeni: 0, pohlceno: 0, uniklo: 0,
+  okno: [], populace: [],
+  cas: 0, animace: null, ctx: null,
+};
+const RR_W = 560, RR_H = 320;
+const RR_STRED = { x: RR_W / 2, y: RR_H / 2 };
+const RR_HUSTOTA = 480;        // jedno jádro na 480 px² – řídí střední volnou dráhu
+const RR_NU = 2.5;             // průměrný počet neutronů z jednoho štěpení U-235
+const RR_DOSAH = 13;           // účinný průřez jádra (větší než nakreslená tečka)
+/* Rozštěpené jádro je krátce šedé jen jako záblesk děje. Kdyby chybělo dlouho,
+   palivo by se v místě reakce vyprázdnilo a neutrony by odtud jen prolétly ven —
+   simulace by pak ukazovala únik i tam, kde ve skutečnosti žádný není. */
+const RR_OBNOVA = 0.6;
+const RR_ODRAZ = 0.7;          // reflektor vrátí 70 % neutronů, zbytek stejně unikne
+const RR_TYC_SIRKA = 11;       // polovina šířky regulační tyče v pixelech
+
+/* Tyče kreslíme i vyhodnocujeme ze stejného seznamu – co je vidět, to taky pohlcuje. */
+function rrTyce() {
+  const pocet = Math.round(RR.pohlceni / 90 * 7);
+  const tyce = [];
+  for (let i = 0; i < pocet; i++) {
+    tyce.push(RR_STRED.x - RR.polomer + (i + 0.5) * (2 * RR.polomer / pocet));
+  }
+  return tyce;
+}
+
+function rrRozmisti() {
+  const R = RR.polomer;
+  const kolik = Math.round(Math.PI * R * R / RR_HUSTOTA);
+  RR.jadra = [];
+  for (let i = 0; i < kolik; i++) {
+    // rovnoměrně v kruhu: odmocnina zabrání shluku uprostřed
+    const a = Math.random() * Math.PI * 2, r = Math.sqrt(Math.random()) * (R - 12);
+    RR.jadra.push({ x: RR_STRED.x + Math.cos(a) * r, y: RR_STRED.y + Math.sin(a) * r, obnovaV: 0 });
+  }
+}
+function rrReset() {
+  rrRozmisti();
+  RR.neutrony = []; RR.zabliknuti = [];
+  RR.stepeni = 0; RR.pohlceno = 0; RR.uniklo = 0;
+  RR.okno = []; RR.populace = []; RR.cas = 0;
+}
+
+function retezovka() {
+  const p = $('plocha');
+  p.innerHTML = `
+    <div class="zadani uloha-text" style="max-width:560px">Vystřel neutron do paliva. Každý neutron
+      skončí jedním ze tří způsobů — <b style="color:var(--ok)">rozštěpí jádro</b>,
+      <b style="color:var(--text-faint)">pohltí ho tyč</b>, nebo
+      <b style="color:var(--danger)">uteče ven</b>. Na jejich poměru závisí, jestli se reakce udrží.</div>
+    <canvas class="scena" id="plátnoRR" width="${RR_W}" height="${RR_H}"></canvas>
+    <div class="ovladace" id="scenare">
+      <button data-scenar="pod">🔵 Málo paliva</button>
+      <button data-scenar="krit">🟢 Reaktor</button>
+      <button data-scenar="nad">🔴 Bez tyčí</button>
+    </div>
+    <div class="ovladace">
+      <button id="btnNeutron" class="hlavniAkce">⚛️ Vystřel neutron</button>
+      <label>🧱 Množství paliva
+        <input type="range" id="posPalivo" min="45" max="150" step="5" value="${RR.polomer}">
+        <span class="hodnota" id="hodPalivo"></span></label>
+      <label>🎛️ Regulační tyče
+        <input type="range" id="posTyce" min="0" max="90" step="5" value="${RR.pohlceni}">
+        <span class="hodnota" id="hodTyce"></span></label>
+      <label><input type="checkbox" id="chkReflektor"> 🪞 Reflektor</label>
+      <button id="btnResetRR">↺ Reset</button>
+    </div>
+    <div class="stavovky">
+      <div class="bunka a"><div class="nadpis">Neutrony v letu</div><div class="cislo" id="rrNeutrony"></div></div>
+      <div class="bunka c"><div class="nadpis">Štěpení celkem</div><div class="cislo" id="rrStepeni"></div></div>
+      <div class="bunka d"><div class="nadpis">Uniklo ven</div><div class="cislo" id="rrUniklo"></div></div>
+      <div class="bunka b"><div class="nadpis">Součinitel k</div><div class="cislo" id="rrK"></div></div>
+    </div>
+    <div class="osudy" id="rrOsudy"></div>
+    <p class="verdikt" id="rrVerdikt"></p>
+    <p class="vysvetlivka">Malá hromádka paliva má velký povrch vůči objemu, takže většina neutronů
+      uteče dřív, než něco trefí — proto existuje <b>kritické množství</b>. Zkus palivo zvětšit,
+      nebo zapnout <b>reflektor</b>, který neutrony odráží zpátky.<br>
+      Rozštěpená jádra se tu po chvíli obnovují: ve skutečném reaktoru je jich tolik, že se
+      za tuhle dobu spotřebuje jen nepatrný zlomek.</p>`;
+
+  RR.ctx = $('plátnoRR').getContext('2d');
+  rrReset();
+  $('btnNeutron').addEventListener('click', () => rrVystrel());
+  $('btnResetRR').addEventListener('click', () => { rrReset(); rrKresli(); rrStavovky(); });
+  $('posPalivo').addEventListener('input', e => {
+    RR.polomer = +e.target.value;
+    rrRozmisti();
+    RR.tyce = rrTyce();
+    $('hodPalivo').textContent = RR.jadra.length + ' jader';
+  });
+  $('posTyce').addEventListener('input', e => {
+    RR.pohlceni = +e.target.value;
+    RR.tyce = rrTyce();
+    $('hodTyce').textContent = RR.tyce.length + (RR.tyce.length === 1 ? ' tyč' : RR.tyce.length < 5 ? ' tyče' : ' tyčí');
+  });
+  $('chkReflektor').addEventListener('change', e => { RR.reflektor = e.target.checked; });
+  $('scenare').addEventListener('click', e => {
+    const b = e.target.closest('button[data-scenar]');
+    if (!b) return;
+    // hodnoty odpovídají naměřenému k: 0,9 / 1,0 / 1,3
+    const s = { pod: [45, 0, false], krit: [105, 45, false], nad: [150, 0, false] }[b.dataset.scenar];
+    $('posPalivo').value = s[0]; $('posPalivo').dispatchEvent(new Event('input', { bubbles: true }));
+    $('posTyce').value = s[1]; $('posTyce').dispatchEvent(new Event('input', { bubbles: true }));
+    $('chkReflektor').checked = s[2];
+    $('chkReflektor').dispatchEvent(new Event('change', { bubbles: true }));
+    rrReset();
+    for (let i = 0; i < 4; i++) rrVystrel();
+  });
+  RR.tyce = rrTyce();
+  $('hodPalivo').textContent = RR.jadra.length + ' jader';
+  $('hodTyce').textContent = RR.tyce.length + (RR.tyce.length === 1 ? ' tyč' : RR.tyce.length < 5 ? ' tyče' : ' tyčí');
+  rrKresli(); rrStavovky();
+  rrStart();
+}
+
+function rrVystrel() {
+  const a = Math.random() * Math.PI * 2;
+  RR.neutrony.push({
+    x: RR_STRED.x, y: RR_STRED.y,
+    vx: Math.cos(a) * 150, vy: Math.sin(a) * 150,
+  });
+  if (!RR.animace) rrStart();
+}
+
+function rrStart() {
+  if (RR.animace) cancelAnimationFrame(RR.animace);
+  let posledni = null;
+  const krok = t => {
+    if (!$('plátnoRR')) { RR.animace = null; return; }     // uživatel přepnul režim
+    if (posledni === null) posledni = t;
+    const dt = Math.min(0.05, (t - posledni) / 1000);
+    posledni = t;
+    rrKrok(dt);
+    rrKresli();
+    rrStavovky();
+    RR.animace = requestAnimationFrame(krok);
+  };
+  RR.animace = requestAnimationFrame(krok);
+}
+
+/* Zaznamená osud neutronu do klouzavého okna, ze kterého se počítá k. */
+function rrOsud(druh) {
+  RR.okno.push({ t: RR.cas, druh });
+  if (druh === 'stepeni') RR.stepeni++;
+  else if (druh === 'pohlceno') RR.pohlceno++;
+  else RR.uniklo++;
+}
+
+function rrKrok(dt) {
+  RR.cas += dt;
+
+  // obnova rozštěpených jader
+  for (const j of RR.jadra) if (j.obnovaV && RR.cas > j.obnovaV) j.obnovaV = 0;
+
+  const zbyle = [];
+  for (const n of RR.neutrony) {
+    n.x += n.vx * dt;
+    n.y += n.vy * dt;
+
+    const dx = n.x - RR_STRED.x, dy = n.y - RR_STRED.y;
+    const vzdalenost = Math.hypot(dx, dy);
+
+    // 1) opuštění aktivní zóny
+    if (vzdalenost > RR.polomer) {
+      if (RR.reflektor && Math.random() < RR_ODRAZ) {
+        // odraz od stěny reflektoru: otočíme složku rychlosti kolmou ke stěně
+        const nx = dx / vzdalenost, ny = dy / vzdalenost;
+        const skalar = n.vx * nx + n.vy * ny;
+        n.vx -= 2 * skalar * nx; n.vy -= 2 * skalar * ny;
+        n.x = RR_STRED.x + nx * (RR.polomer - 1);
+        n.y = RR_STRED.y + ny * (RR.polomer - 1);
+      } else {
+        rrOsud('uniklo');
+        continue;
+      }
+    }
+
+    // 2) pohlcení regulační tyčí – jen když neutron právě prolétá tyčí
+    let vTyci = false;
+    for (const tx of RR.tyce) if (Math.abs(n.x - tx) < RR_TYC_SIRKA) { vTyci = true; break; }
+    if (vTyci && Math.random() < dt * 14) { rrOsud('pohlceno'); continue; }
+
+    // 3) zásah jádra
+    let zasah = null;
+    for (const j of RR.jadra) {
+      if (j.obnovaV) continue;
+      if (Math.hypot(n.x - j.x, n.y - j.y) < RR_DOSAH) { zasah = j; break; }
+    }
+    if (zasah) {
+      zasah.obnovaV = RR.cas + RR_OBNOVA;
+      rrOsud('stepeni');
+      if (RR.zabliknuti.length < 25) RR.zabliknuti.push({ x: zasah.x, y: zasah.y, t: 0.18 });
+      const kolik = Math.random() < 0.5 ? 2 : 3;
+      for (let k = 0; k < kolik; k++) {
+        const uhel = Math.random() * Math.PI * 2;
+        zbyle.push({ x: zasah.x, y: zasah.y, vx: Math.cos(uhel) * 150, vy: Math.sin(uhel) * 150 });
+      }
+    } else {
+      zbyle.push(n);
+    }
+  }
+  RR.neutrony = zbyle.slice(0, 500);           // pojistka proti zamrznutí při lavině
+
+  for (const z of RR.zabliknuti) z.t -= dt;
+  RR.zabliknuti = RR.zabliknuti.filter(z => z.t > 0);
+
+  // klouzavé okno 3 s pro výpočet k
+  RR.okno = RR.okno.filter(o => RR.cas - o.t < 3);
+  RR.populace.push(RR.neutrony.length);
+  if (RR.populace.length > 240) RR.populace.shift();
+}
+
+/* k = ν · podíl neutronů, které skončily štěpením */
+function rrSoucinitel() {
+  const celkem = RR.okno.length;
+  if (celkem < 6) return null;
+  const st = RR.okno.filter(o => o.druh === 'stepeni').length;
+  return RR_NU * st / celkem;
+}
+
+function rrKresli() {
+  const c = RR.ctx;
+  if (!c) return;
+  const s = getComputedStyle(document.documentElement);
+  const barva = n => s.getPropertyValue(n).trim();
+  c.clearRect(0, 0, RR_W, RR_H);
+
+  // aktivní zóna a případný reflektor
+  if (RR.reflektor) {
+    c.beginPath();
+    c.arc(RR_STRED.x, RR_STRED.y, RR.polomer + 7, 0, Math.PI * 2);
+    c.strokeStyle = barva('--ok'); c.lineWidth = 5; c.globalAlpha = 0.55; c.stroke();
+    c.globalAlpha = 1;
+  }
+  c.beginPath();
+  c.arc(RR_STRED.x, RR_STRED.y, RR.polomer, 0, Math.PI * 2);
+  c.strokeStyle = barva('--border-strong'); c.lineWidth = 1.5;
+  c.setLineDash([5, 5]); c.stroke(); c.setLineDash([]);
+
+  // jádra
+  for (const j of RR.jadra) {
+    c.beginPath();
+    c.arc(j.x, j.y, j.obnovaV ? 4 : 8, 0, Math.PI * 2);
+    c.fillStyle = j.obnovaV ? barva('--border') : barva('--danger');
+    c.fill();
+  }
+
+  // záblesky štěpení
+  for (const z of RR.zabliknuti) {
+    const f = z.t / 0.18;
+    c.beginPath();
+    c.arc(z.x, z.y, 9 + (1 - f) * 13, 0, Math.PI * 2);
+    c.strokeStyle = barva('--warn'); c.globalAlpha = f * 0.8; c.lineWidth = 2.5;
+    c.stroke(); c.globalAlpha = 1;
+  }
+
+  // regulační tyče – svislé pruhy přes aktivní zónu
+  c.fillStyle = barva('--text-faint'); c.globalAlpha = 0.5;
+  for (const tx of RR.tyce) {
+    const dy = Math.sqrt(Math.max(0, RR.polomer * RR.polomer - (tx - RR_STRED.x) ** 2));
+    c.fillRect(tx - RR_TYC_SIRKA, RR_STRED.y - dy, RR_TYC_SIRKA * 2, 2 * dy);
+  }
+  c.globalAlpha = 1;
+
+  // neutrony
+  for (const n of RR.neutrony) {
+    c.beginPath();
+    c.arc(n.x, n.y, 3.6, 0, Math.PI * 2);
+    c.fillStyle = barva('--accent');
+    c.fill();
+  }
+
+  // graf populace neutronů
+  const GW = 150, GH = 56, GX = RR_W - GW - 12, GY = 12;
+  c.fillStyle = barva('--bg-panel'); c.globalAlpha = 0.85;
+  c.fillRect(GX, GY, GW, GH); c.globalAlpha = 1;
+  c.strokeStyle = barva('--border'); c.lineWidth = 1; c.strokeRect(GX, GY, GW, GH);
+  const max = Math.max(8, ...RR.populace);
+  c.strokeStyle = barva('--accent'); c.lineWidth = 1.8; c.beginPath();
+  RR.populace.forEach((v, i) => {
+    const x = GX + i / 240 * GW, y = GY + GH - v / max * (GH - 6);
+    i ? c.lineTo(x, y) : c.moveTo(x, y);
+  });
+  c.stroke();
+  c.fillStyle = barva('--text-faint'); c.font = '10px sans-serif'; c.textAlign = 'left';
+  c.fillText('neutrony v čase', GX + 4, GY + GH + 12);
+}
+
+function rrStavovky() {
+  if (!$('rrNeutrony')) return;
+  $('rrNeutrony').textContent = RR.neutrony.length;
+  $('rrStepeni').textContent = RR.stepeni;
+  $('rrUniklo').textContent = RR.uniklo;
+
+  const k = rrSoucinitel();
+  $('rrK').textContent = k === null ? '—' : fmt(k);
+
+  // rozpad osudů na tři pruhy
+  const celkem = RR.stepeni + RR.pohlceno + RR.uniklo;
+  const proc = n => celkem ? Math.round(n / celkem * 100) : 0;
+  // popisky jsou pod pruhem v jedné řádce – v úzkém úseku by se ořízly
+  $('rrOsudy').innerHTML = celkem
+    ? `<div class="pruhy">
+         <div style="flex:${Math.max(RR.stepeni, 0.01)};background:var(--ok)"></div>
+         <div style="flex:${Math.max(RR.pohlceno, 0.01)};background:var(--text-faint)"></div>
+         <div style="flex:${Math.max(RR.uniklo, 0.01)};background:var(--danger)"></div>
+       </div>
+       <div class="stitky">
+         <span><i style="background:var(--ok)"></i>štěpení ${proc(RR.stepeni)} %</span>
+         <span><i style="background:var(--text-faint)"></i>pohltily tyče ${proc(RR.pohlceno)} %</span>
+         <span><i style="background:var(--danger)"></i>uniklo ven ${proc(RR.uniklo)} %</span>
+       </div>`
+    : `<div class="pruhy"><div style="flex:1;background:var(--border)"></div></div>
+       <div class="stitky"><span>zatím žádný neutron neskončil</span></div>`;
+
+  const el = $('rrVerdikt');
+  if (k === null) {
+    el.className = 'verdikt';
+    el.textContent = RR.neutrony.length
+      ? '⚪ Neutrony letí — chvíli počkej, než se dá k spolehlivě spočítat.'
+      : 'Zmáčkni „Vystřel neutron“. Zkus nejdřív malé palivo, pak velké.';
+  } else if (k < 0.95) {
+    el.className = 'verdikt podkriticka';
+    el.textContent = `🔵 Podkritická (k = ${fmt(k)}) — každá generace je slabší než ta předchozí, reakce uhasne.`;
+  } else if (k > 1.08) {
+    el.className = 'verdikt nadkriticka';
+    el.textContent = `🔴 Nadkritická (k = ${fmt(k)}) — každá generace je početnější, počet neutronů roste lavinovitě.`;
+  } else {
+    el.className = 'verdikt kriticka';
+    el.textContent = `🟢 Kritická (k = ${fmt(k)}) — každé štěpení vyvolá právě jedno další. Tak běží reaktor.`;
+  }
+}
+
+/* ============================================================
+   2) Rozpad naživo – poločas není odpočet, ale statistika.
+   Každé jádro se rozpadá náhodně, přesto křivka vyjde vždy stejně.
+   ============================================================ */
+const RZ = { jadra: [], t: 0, bezi: false, rychlost: 1, animace: null, mereni: [], izotop: 0 };
+const RZ_POCET = 300, RZ_W = 560, RZ_H = 170;
+
+function rzReset() {
+  RZ.jadra = [];
+  for (let i = 0; i < RZ_POCET; i++) {
+    RZ.jadra.push({
+      x: 12 + (i % 30) * ((RZ_W - 24) / 29),
+      y: 14 + Math.floor(i / 30) * ((RZ_H - 28) / 9),
+      zive: true,
+    });
+  }
+  RZ.t = 0;
+  RZ.mereni = [[0, RZ_POCET]];
+}
+
+function rozpad() {
+  const p = $('plocha');
+  const iz = IZOTOPY[RZ.izotop];
+  p.innerHTML = `
+    <div class="zadani uloha-text" style="max-width:560px">Každé jádro se rozpadá <b>náhodně</b> —
+      nikdo neví které a kdy. Přesto z toho vždycky vyjde stejná křivka. Sleduj, kolik jich zbývá
+      po každém poločasu.</div>
+    <div class="ovladace" id="izotopy">${IZOTOPY.map((z, i) =>
+      `<button data-iz="${i}"${i === RZ.izotop ? ' class="hlavniAkce"' : ''}>${z.n}</button>`).join('')}</div>
+    <canvas class="scena" id="plátnoRZ" width="${RZ_W}" height="${RZ_H}"></canvas>
+    <canvas class="scena" id="plátnoRZG" width="${RZ_W}" height="150"></canvas>
+    <div class="ovladace">
+      <button id="btnRZStart" class="hlavniAkce">▶️ Spustit čas</button>
+      <button id="btnRZReset">↺ Znovu</button>
+      <label>⏩ Rychlost
+        <input type="range" id="posRychlost" min="0.2" max="4" step="0.2" value="${RZ.rychlost}">
+        <span class="hodnota" id="hodRychlost"></span></label>
+    </div>
+    <div class="stavovky">
+      <div class="bunka a"><div class="nadpis">Zbývá jader</div><div class="cislo" id="rzZbyva"></div></div>
+      <div class="bunka b"><div class="nadpis">Uplynulo poločasů</div><div class="cislo" id="rzPolocasy"></div></div>
+      <div class="bunka c"><div class="nadpis">Skutečný čas</div><div class="cislo" id="rzCas"></div></div>
+      <div class="bunka d"><div class="nadpis">Teorie říká</div><div class="cislo" id="rzTeorie"></div></div>
+    </div>
+    <p class="verdikt" id="rzHotovo"></p>
+    <p class="vysvetlivka">Poločas <b>${iz.n}</b> je ${iz.t} ${iz.jednotka}. Modrá je skutečný
+      počet jader v simulaci, oranžová je teoretická křivka. Čím víc jader, tím přesněji se shodnou.</p>`;
+
+  rzReset();
+  $('izotopy').addEventListener('click', e => {
+    const b = e.target.closest('button[data-iz]');
+    if (!b) return;
+    RZ.izotop = +b.dataset.iz;
+    RZ.bezi = false;
+    rozpad();
+  });
+  $('btnRZStart').addEventListener('click', () => {
+    if (!RZ.bezi && RZ.jadra.every(j => !j.zive)) rzReset();   // po dopadu začínáme znovu
+    RZ.bezi = !RZ.bezi;
+    $('btnRZStart').textContent = RZ.bezi ? '⏸️ Pauza' : '▶️ Spustit čas';
+    if ($('rzHotovo')) $('rzHotovo').textContent = '';
+    if (RZ.bezi) rzStart();
+  });
+  $('btnRZReset').addEventListener('click', () => {
+    rzReset();
+    RZ.bezi = false;
+    $('btnRZStart').textContent = '▶️ Spustit čas';
+    $('rzHotovo').textContent = '';
+    rzKresli(); rzStavovky();
+  });
+  $('posRychlost').addEventListener('input', e => {
+    RZ.rychlost = +e.target.value;
+    $('hodRychlost').textContent = fmt(RZ.rychlost) + '×';
+  });
+  $('hodRychlost').textContent = fmt(RZ.rychlost) + '×';
+  rzKresli(); rzStavovky();
+  rzStart();
+}
+
+function rzStart() {
+  if (RZ.animace) cancelAnimationFrame(RZ.animace);
+  let posledni = null;
+  const krok = t => {
+    if (!$('plátnoRZ')) { RZ.animace = null; return; }
+    if (posledni === null) posledni = t;
+    const dt = Math.min(0.05, (t - posledni) / 1000);
+    posledni = t;
+    if (RZ.bezi) {
+      RZ.t += dt * RZ.rychlost * 0.5;              // 1 poločas ≈ 2 s při rychlosti 1×
+      // pravděpodobnost rozpadu za dt odpovídá poločasu 1
+      const p = 1 - Math.pow(0.5, dt * RZ.rychlost * 0.5);
+      for (const j of RZ.jadra) if (j.zive && Math.random() < p) j.zive = false;
+      const zive = RZ.jadra.filter(j => j.zive).length;
+      RZ.mereni.push([RZ.t, zive]);
+      if (RZ.mereni.length > 400) RZ.mereni.shift();
+      // rozpadlo se poslední jádro – čas nemá dál co měřit, jinak by běžel donekonečna
+      if (zive === 0) rzKonec();
+    }
+    rzKresli(); rzStavovky();
+    RZ.animace = requestAnimationFrame(krok);
+  };
+  RZ.animace = requestAnimationFrame(krok);
+}
+
+/* Poslední jádro se rozpadlo: zastavíme čas a řekneme, kdy se to stalo. */
+function rzKonec() {
+  RZ.bezi = false;
+  const iz = IZOTOPY[RZ.izotop];
+  if ($('btnRZStart')) $('btnRZStart').textContent = '▶️ Spustit čas';
+  if ($('rzHotovo')) {
+    $('rzHotovo').className = 'verdikt kriticka';
+    $('rzHotovo').innerHTML = `✅ Rozpadla se všechna jádra — trvalo to `
+      + `<b>${fmt(RZ.t)}</b> poločasů, tedy asi <b>${fmt(RZ.t * iz.t)} ${iz.jednotka}</b>. `
+      + `Teorie čekala poslední jádro kolem ${fmt(Math.log2(RZ_POCET))}T.`;
+  }
+}
+
+function rzKresli() {
+  const pl = $('plátnoRZ'), gr = $('plátnoRZG');
+  if (!pl || !gr) return;
+  const s = getComputedStyle(document.documentElement);
+  const barva = n => s.getPropertyValue(n).trim();
+  const c = pl.getContext('2d');
+  c.clearRect(0, 0, RZ_W, RZ_H);
+  for (const j of RZ.jadra) {
+    c.beginPath();
+    c.arc(j.x, j.y, j.zive ? 5 : 2.5, 0, Math.PI * 2);
+    c.fillStyle = j.zive ? barva('--accent') : barva('--border');
+    c.fill();
+  }
+
+  // graf: naměřeno vs. teorie
+  const g = gr.getContext('2d');
+  const GW = RZ_W, GH = 150, X0 = 34, Y0 = 122, SIR = GW - X0 - 14, VYS = 100;
+  g.clearRect(0, 0, GW, GH);
+  // osa se roztáhne podle skutečně uplynulého času, jinak by se konec grafu
+  // nalepil na pravý okraj a křivka by tam vypadala jako vodorovná čára
+  const maxT = Math.max(5, Math.ceil(RZ.t));
+  const X = t => X0 + Math.min(t, maxT) / maxT * SIR;
+  const Y = n => Y0 - n / RZ_POCET * VYS;
+
+  g.strokeStyle = barva('--border'); g.lineWidth = 1;
+  for (let i = 0; i <= maxT; i++) {
+    g.beginPath(); g.moveTo(X(i), 12); g.lineTo(X(i), Y0); g.stroke();
+    g.fillStyle = barva('--text-faint'); g.font = '10px sans-serif'; g.textAlign = 'center';
+    g.fillText(i + 'T', X(i), Y0 + 14);
+  }
+  g.strokeStyle = barva('--text-muted'); g.lineWidth = 1.5;
+  g.beginPath(); g.moveTo(X0, 12); g.lineTo(X0, Y0); g.lineTo(X0 + SIR, Y0); g.stroke();
+
+  g.strokeStyle = barva('--warn'); g.lineWidth = 2; g.setLineDash([5, 4]);
+  g.beginPath();
+  for (let t = 0; t <= maxT; t += 0.05) {
+    const n = RZ_POCET * Math.pow(0.5, t);
+    t ? g.lineTo(X(t), Y(n)) : g.moveTo(X(t), Y(n));
+  }
+  g.stroke(); g.setLineDash([]);
+
+  g.strokeStyle = barva('--accent'); g.lineWidth = 2.4;
+  g.beginPath();
+  RZ.mereni.forEach(([t, n], i) => { i ? g.lineTo(X(t), Y(n)) : g.moveTo(X(t), Y(n)); });
+  g.stroke();
+
+  g.fillStyle = barva('--text-faint'); g.font = '10px sans-serif'; g.textAlign = 'right';
+  g.fillText(String(RZ_POCET), X0 - 4, Y(RZ_POCET) + 4);
+  g.fillText('0', X0 - 4, Y0 + 4);
+}
+
+function rzStavovky() {
+  if (!$('rzZbyva')) return;
+  const iz = IZOTOPY[RZ.izotop];
+  const zive = RZ.jadra.filter(j => j.zive).length;
+  $('rzZbyva').textContent = zive + ' z ' + RZ_POCET;
+  $('rzPolocasy').textContent = fmt(RZ.t);
+  $('rzCas').textContent = fmt(RZ.t * iz.t) + ' ' + iz.jednotka;
+  $('rzTeorie').textContent = Math.round(RZ_POCET * Math.pow(0.5, RZ.t)) + ' jader';
+}
+
+/* ============================================================
+   3) Elektrárna zblízka – tři okruhy, které se nikdy nemíchají.
+   ============================================================ */
+const CASTI = {
+  reaktor: { nazev: 'Reaktor', text: 'V palivových tyčích probíhá řízené štěpení uranu. Regulační tyče pohlcují neutrony a určují výkon. Vzniklé teplo odvádí voda primárního okruhu.' },
+  parogen: { nazev: 'Parogenerátor', text: 'Tepelný výměník: horká voda z reaktoru předává teplo vodě sekundárního okruhu a mění ji v páru. Obě vody se nikdy nesmíchají — proto pára není radioaktivní.' },
+  turbina: { nazev: 'Turbína', text: 'Pára roztáčí lopatky turbíny. Tady se tepelná energie mění na pohybovou.' },
+  generator: { nazev: 'Generátor', text: 'Otáčející se cívka v magnetickém poli indukuje napětí — stejný jev jako v záložce Indukce u elektřiny. Tady vzniká elektřina.' },
+  kondenzator: { nazev: 'Kondenzátor', text: 'Použitá pára se ochladí zpátky na vodu a putuje znovu do parogenerátoru. Odpadní teplo přebírá terciární okruh.' },
+  vez: { nazev: 'Chladicí věž', text: 'Odvádí odpadní teplo do vzduchu. Bílý oblak nad věží je obyčejná vodní pára, ne kouř ani radioaktivita.' },
+};
+const SCH = { vybrano: 'reaktor', vykon: 70, faze: 0, animace: null };
+
+function schema() {
+  const p = $('plocha');
+  p.innerHTML = `
+    <div class="zadani uloha-text" style="max-width:580px">Klikni na jednotlivé části a projdi si
+      cestu energie od jádra uranu až do zásuvky. Posuvníkem měň zasunutí regulačních tyčí.</div>
+    <svg class="scena-svg" id="scenaSch" viewBox="0 0 600 260" role="img"
+         aria-label="Schema jaderne elektrarny"></svg>
+    <div class="legenda">
+      <span><i style="background:#d96a6a"></i>primární okruh (radioaktivní)</span>
+      <span><i style="background:#6aa6fd"></i>sekundární okruh (pára)</span>
+      <span><i style="background:#6ad0c0"></i>terciární okruh (chlazení)</span>
+    </div>
+    <div class="ovladace">
+      <label>🎛️ Výkon reaktoru
+        <input type="range" id="posVykon" min="0" max="100" step="5" value="${SCH.vykon}">
+        <span class="hodnota" id="hodVykon"></span></label>
+    </div>
+    <div class="vysvetlivka" id="popisCasti" style="min-height:4.6em"></div>`;
+
+  $('posVykon').addEventListener('input', e => { SCH.vykon = +e.target.value; schKresli(); });
+  schKresli();
+  schAnimuj();
+}
+
+function schAnimuj() {
+  if (SCH.animace) cancelAnimationFrame(SCH.animace);
+  const krok = () => {
+    if (!$('scenaSch')) { SCH.animace = null; return; }
+    SCH.faze = (SCH.faze + 0.6 + SCH.vykon / 40) % 24;
+    const el = $('scenaSch');
+    el.querySelectorAll('.tece').forEach(x => x.setAttribute('stroke-dashoffset', -SCH.faze));
+    SCH.animace = requestAnimationFrame(krok);
+  };
+  SCH.animace = requestAnimationFrame(krok);
+}
+
+function schKresli() {
+  const v = SCH.vykon;
+  const dil = (id, x, y, w, h, popisek) =>
+    `<g class="dil${SCH.vybrano === id ? ' zap' : ''}" data-dil="${id}">
+       <rect class="obrys" x="${x}" y="${y}" width="${w}" height="${h}" rx="6"/>
+       <text class="popis" x="${x + w / 2}" y="${y + h / 2 + 4}">${popisek}</text>
+     </g>`;
+
+  const trubka = (d, trida) =>
+    `<path class="${trida} tece" d="${d}" stroke-dasharray="10 14"/>`;
+
+  $('scenaSch').innerHTML = `
+    ${trubka('M96,86 L150,86 L150,150 L96,150 Z', 'primar')}
+    ${trubka('M186,86 L250,86 L250,150 L186,150 Z', 'sekundar')}
+    ${trubka('M300,150 L370,150 L370,200 L470,200', 'terciar')}
+    <line class="sekundar" x1="250" y1="86" x2="300" y2="86"/>
+    <line class="sekundar" x1="300" y1="150" x2="250" y2="150"/>
+    <path d="M360,86 L470,86 L470,64" stroke="var(--warn)" stroke-width="3" fill="none"/>
+    <path d="M452,64 L470,50 L488,64 M456,74 L484,74" stroke="var(--warn)" stroke-width="2.5" fill="none"/>
+    <path d="M488,58 L540,58" stroke="var(--warn)" stroke-width="2.5" fill="none" stroke-dasharray="7 5"/>
+
+    ${dil('reaktor', 40, 96, 56, 60, 'reaktor')}
+    ${dil('parogen', 150, 76, 40, 90, 'PG')}
+    ${dil('turbina', 250, 66, 50, 44, 'turbína')}
+    ${dil('generator', 300, 66, 60, 44, 'generátor')}
+    ${dil('kondenzator', 250, 130, 50, 40, 'kond.')}
+    <g class="dil${SCH.vybrano === 'vez' ? ' zap' : ''}" data-dil="vez">
+      <path class="obrys" d="M466,214 L478,166 Q490,158 502,166 L514,214 Z"/>
+      <ellipse cx="490" cy="150" rx="20" ry="8" fill="var(--text-faint)" opacity="0.35"/>
+      <ellipse cx="482" cy="140" rx="14" ry="7" fill="var(--text-faint)" opacity="0.25"/>
+      <text class="popis male" x="490" y="228">chladicí věž</text>
+    </g>
+
+    <text class="popis male" x="68" y="176">U-235</text>
+    <text class="popis male" x="330" y="128">~ elektřina</text>
+    <text class="popis male" x="520" y="46">do sítě</text>
+
+    <!-- regulační tyče v reaktoru -->
+    ${[0, 1, 2].map(i => `<rect x="${52 + i * 16}" y="96" width="6"
+        height="${8 + (100 - v) / 100 * 52}" fill="var(--text-faint)" opacity="0.75" rx="2"/>`).join('')}
+
+    <text class="popis" x="300" y="248">výkon ${v} % · ${Math.round(v * 10)} MW elektrických</text>`;
+
+  $('scenaSch').querySelectorAll('.dil').forEach(g => {
+    g.addEventListener('click', () => { SCH.vybrano = g.dataset.dil; schKresli(); });
+  });
+  $('hodVykon').textContent = v + ' %';
+  const c = CASTI[SCH.vybrano];
+  $('popisCasti').innerHTML = `<b>${c.nazev}</b> — ${c.text}`;
+}
+
+function svgStepeni() {
+  return `<svg class="schema" viewBox="0 0 360 180">
+    <defs><marker id="hrot2" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="6" markerHeight="6"
+      orient="auto"><path d="M0 0 L10 5 L0 10 z" fill="var(--text-muted)"/></marker></defs>
+    <circle class="neutron" cx="30" cy="90" r="7"/>
+    <line class="sipka" x1="42" y1="90" x2="95" y2="90"/>
+    <circle class="jadro" cx="130" cy="90" r="28"/>
+    <text class="popis" x="130" y="140">jádro U-235</text>
+    <circle class="jadro" cx="250" cy="50" r="18"/>
+    <circle class="jadro" cx="250" cy="130" r="16"/>
+    <line class="sipka" x1="160" y1="80" x2="222" y2="55"/>
+    <line class="sipka" x1="160" y1="100" x2="222" y2="126"/>
+    <circle class="neutron" cx="300" cy="30" r="6"/>
+    <circle class="neutron" cx="315" cy="90" r="6"/>
+    <circle class="neutron" cx="300" cy="150" r="6"/>
+    <text class="popis" x="300" y="172">nové neutrony</text>
+  </svg>`;
+}
+const STEPENI = [
+  { q: 'Co spustí štěpení jádra uranu 235?', a: 'zásah neutronem', b: ['zahřátí na 100 °C', 'elektrický proud', 'sluneční světlo'] },
+  { q: 'Co vzniká při štěpení kromě energie?', a: 'lehčí jádra a další neutrony', b: ['jen teplo', 'kyslík', 'elektrony a světlo'] },
+  { q: 'Co je řetězová reakce?', a: 'uvolněné neutrony štěpí další jádra a děj pokračuje sám', b: ['reakce probíhající v řadě zkumavek', 'spalování uhlí', 'rozpad atomu na elektrony'] },
+  { q: 'Čím se v reaktoru řídí rychlost reakce?', a: 'regulačními tyčemi, které pohlcují neutrony', b: ['přidáváním kyslíku', 'chlazením vzduchem', 'zvyšováním tlaku'] },
+  { q: 'Co je moderátor v reaktoru?', a: 'látka zpomalující neutrony, aby lépe štěpily jádra', b: ['zesilovač reakce', 'druh paliva', 'ochranný obal'] },
+  { q: 'Odkud se v jaderné elektrárně bere teplo?', a: 'z energie uvolněné při štěpení jader', b: ['ze spalování plynu', 'z tření turbíny', 'ze slunečního záření'] },
+  { q: 'Co je jaderná fúze?', a: 'slučování lehkých jader, které pohání Slunce', b: ['štěpení těžkých jader', 'rozpad neutronu', 'chlazení reaktoru'] },
+  { q: 'Proč je uran označovaný jako U-235 zvláštní?', a: 'jde o izotop, který se snadno štěpí pomalými neutrony', b: ['je nejlehčí', 'nevyzařuje energii', 'je to plyn'] },
+];
+function stepeni() {
+  const p = $('plocha');
+  const u = Uloha.nahodne(STEPENI);
+  p.innerHTML = `<div class="zadani uloha-text">${u.q}</div>
+    <div class="karta">${svgStepeni()}</div>`;
+  const odezva = odezvaEl();
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([u.a, ...u.b]).map(t => ({ klic: t, popis: t })),
+    spravnyKlic: u.a,
+    zpravaOk: `✅ ${u.a}`,
+    zpravaChyba: 'Sleduj schéma: neutron zasáhne jádro, to se rozpadne a uvolní další neutrony.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+const IZOTOPY = [
+  { n: 'jod-131', t: 8, jednotka: 'dní' },
+  { n: 'kobalt-60', t: 5, jednotka: 'let' },
+  { n: 'cesium-137', t: 30, jednotka: 'let' },
+  { n: 'uhlík-14', t: 5730, jednotka: 'let' },
+];
+function svgPolocas(pocetPolocasu) {
+  let body = [];
+  for (let i = 0; i <= 4; i += 0.1) body.push(`${30 + i * 70} ${160 - 120 * Math.pow(0.5, i)}`);
+  let mrizka = '';
+  for (let i = 0; i <= 4; i++) {
+    mrizka += `<line class="mrizka" x1="${30 + i * 70}" y1="20" x2="${30 + i * 70}" y2="160"/>
+      <text class="popis" x="${30 + i * 70}" y="176">${i}T</text>`;
+  }
+  return `<svg class="graf" viewBox="0 0 340 190">
+    ${mrizka}
+    <line class="osy" x1="30" y1="12" x2="30" y2="160"/>
+    <line class="osy" x1="24" y1="160" x2="330" y2="160"/>
+    <path class="krivka" d="M${body.join(' L')}"/>
+    <circle cx="${30 + pocetPolocasu * 70}" cy="${160 - 120 * Math.pow(0.5, pocetPolocasu)}" r="6" fill="var(--warn)"/>
+    <text class="popis" x="16" y="30">100 %</text>
+  </svg>`;
+}
+function polocas() {
+  const p = $('plocha');
+  const iz = Uloha.nahodne(IZOTOPY);
+  const n = Uloha.nahodneCislo(1, 4);
+  const zbyva = 100 / Math.pow(2, n);
+  const typ = Uloha.nahodne(['kolikZbude', 'jakDlouho', 'co']);
+  let zadani, spravny, jine;
+
+  if (typ === 'kolikZbude') {
+    zadani = `Poločas rozpadu izotopu <b>${iz.n}</b> je ${iz.t} ${iz.jednotka}.
+      Kolik procent původního množství zbude po <b>${n * iz.t} ${iz.jednotka}</b>?`;
+    spravny = fmt(zbyva) + ' %';
+    jine = [fmt(100 / (n + 1)) + ' %', fmt(100 - n * 25) + ' %', fmt(zbyva * 2) + ' %'];
+  } else if (typ === 'jakDlouho') {
+    zadani = `Za jak dlouho zbude z izotopu <b>${iz.n}</b> jen <b>${fmt(zbyva)} %</b>?
+      (poločas rozpadu je ${iz.t} ${iz.jednotka})`;
+    spravny = fmt(n * iz.t) + ' ' + iz.jednotka;
+    jine = [fmt(iz.t) + ' ' + iz.jednotka, fmt(n * iz.t * 2) + ' ' + iz.jednotka, fmt(iz.t / n) + ' ' + iz.jednotka];
+  } else {
+    zadani = 'Co znamená poločas rozpadu?';
+    spravny = 'doba, za kterou se rozpadne polovina jader';
+    jine = ['doba, za kterou se rozpadnou všechna jádra', 'polovina života reaktoru', 'čas do výbuchu'];
+  }
+
+  p.innerHTML = `<div class="zadani uloha-text">${zadani}</div>
+    <div class="karta">${svgPolocas(n)}</div>`;
+  const odezva = odezvaEl();
+  Uloha.vyber({
+    kam: p, odezva, trida: typ === 'co' ? '' : 'velke',
+    moznosti: Uloha.zamichej([spravny, ...jine.filter(x => x !== spravny)]).map(t => ({ klic: t, popis: t })),
+    spravnyKlic: spravny,
+    zpravaOk: `✅ ${spravny}` + (typ !== 'co' ? ` – po každém poločasu zbude polovina: 100 → 50 → 25 → 12,5 %.` : ''),
+    zpravaChyba: 'Každý poločas znamená vydělit množství dvěma, ne odečíst pevnou část.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+const ELEKTRARNA = [
+  { q: 'Co se v jaderné elektrárně děje s teplem z reaktoru?', a: 'ohřívá vodu na páru, která roztáčí turbínu', b: ['přímo vyrábí elektřinu', 'ohřívá domy v okolí jako jediné využití', 'uniká do vzduchu'] },
+  { q: 'K čemu slouží chladicí věže?', a: 'odvádějí odpadní teplo, uniká z nich vodní pára', b: ['vypouštějí radioaktivní plyn', 'vyrábějí elektřinu', 'chladí palivo v reaktoru přímo'] },
+  { q: 'Co je primární okruh?', a: 'uzavřený okruh vody, která odvádí teplo přímo z reaktoru', b: ['okruh s párou pro turbínu', 'rozvodná síť', 'chladicí věž'] },
+  { q: 'Které jaderné elektrárny má Česká republika?', a: 'Dukovany a Temelín', b: ['Mělník a Chvaletice', 'Orlík a Slapy', 'Počerady a Tušimice'] },
+  { q: 'Jaká je hlavní výhoda jaderné energetiky?', a: 'při provozu nevznikají emise oxidu uhličitého', b: ['nevzniká žádný odpad', 'palivo je zdarma', 'nepotřebuje chlazení'] },
+  { q: 'Jaká je hlavní nevýhoda?', a: 'radioaktivní odpad, který je nutné bezpečně uložit na dlouhou dobu', b: ['nízký výkon', 'nutnost slunečního svitu', 'velké množství popílku'] },
+  { q: 'Co chrání okolí reaktoru?', a: 'silný betonový kontejnment a stínění', b: ['plechový plot', 'les kolem elektrárny', 'nic, není potřeba'] },
+  { q: 'Proč se v okolí elektráren měří radiace?', a: 'aby se včas zjistil jakýkoli únik', b: ['kvůli počasí', 'kvůli hlučnosti', 'kvůli daním'] },
+];
+const ZDROJE = [
+  { q: 'Který zdroj energie produkuje při provozu nejvíc oxidu uhličitého?', a: 'uhelná elektrárna', b: ['jaderná elektrárna', 'vodní elektrárna', 'větrná elektrárna'] },
+  { q: 'Který zdroj je obnovitelný?', a: 'vítr', b: ['uran', 'černé uhlí', 'zemní plyn'] },
+  { q: 'Co je nevýhodou solárních a větrných elektráren?', a: 'výkon kolísá podle počasí a denní doby', b: ['produkují hodně emisí', 'potřebují uran', 'vyrábějí radioaktivní odpad'] },
+  { q: 'Proč se do energetiky zapojují úložiště energie?', a: 'vyrovnávají rozdíl mezi výrobou a spotřebou', b: ['nahrazují elektrárny', 'zvyšují emise', 'snižují napětí v síti na nulu'] },
+  { q: 'Jak dlouho zůstává vyhořelé jaderné palivo nebezpečné?', a: 'stovky až tisíce let, proto se ukládá do hlubinných úložišť', b: ['několik dní', 'asi rok', 'není nebezpečné vůbec'] },
+  { q: 'Který zdroj má nejmenší nároky na plochu při stejné výrobě?', a: 'jaderná elektrárna', b: ['solární park', 'větrný park', 'biomasa'] },
+  { q: 'Co je energetický mix?', a: 'složení zdrojů, ze kterých stát vyrábí elektřinu', b: ['směs paliv v jedné elektrárně', 'druh transformátoru', 'jednotka výkonu'] },
+  { q: 'Co nejvíc sníží spotřebu energie v domácnosti?', a: 'zateplení, úsporné spotřebiče a rozumné chování', b: ['zvýšení teploty v bytě', 'svícení celý den', 'nákup většího mrazáku'] },
+];
+/* Provoz elektrárny a porovnání zdrojů byly dva kvízy bez jediného obrázku;
+   spojené do jednoho dávají větší zásobu otázek a uvolnily místo na simulace. */
+function provoz() {
+  const p = $('plocha');
+  const u = Uloha.nahodne([...ELEKTRARNA, ...ZDROJE]);
+  p.innerHTML = `<div class="zadani uloha-text">${u.q}</div>`;
+  const odezva = odezvaEl();
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([u.a, ...u.b]).map(t => ({ klic: t, popis: t })),
+    spravnyKlic: u.a,
+    zpravaOk: `✅ ${u.a}`,
+    zpravaChyba: 'Reaktor dodává teplo, pára roztáčí turbínu a generátor vyrábí elektřinu. '
+      + 'U zdrojů porovnávej emise, spolehlivost a odpad.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+const REZIMY = { retezovka, rozpad, schema, stepeni, polocas, provoz };
+/* V bádacích režimech se neodpovídá – tlačítko v liště tam znamená „začni znovu“. */
+const POPIS_TLACITKA = {
+  retezovka: '↺ Nové palivo',
+  rozpad: '↺ Nový vzorek',
+  schema: '↺ Zpět na reaktor',
+};
+
+function novaUloha() {
+  if (rezim === 'retezovka') { rrReset(); rrKresli(); rrStavovky(); return; }
+  if (rezim === 'rozpad') { rzReset(); rzKresli(); rzStavovky(); return; }
+  if (rezim === 'schema') { SCH.vybrano = 'reaktor'; schKresli(); return; }
+  REZIMY[rezim]();
+}
+
+/* Běžící animace se musí zastavit, jinak by kreslily do zahozeného plátna. */
+function zastavAnimace() {
+  [RR, RZ, SCH].forEach(o => { if (o.animace) cancelAnimationFrame(o.animace); o.animace = null; });
+  RR.bezi = false; RZ.bezi = false;
+}
+
+document.querySelectorAll('#rezimy button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#rezimy button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  zastavAnimace();
+  rezim = b.dataset.rezim;
+  $('btnDalsi').textContent = POPIS_TLACITKA[rezim] || 'Přeskočit →';
+  REZIMY[rezim]();
+}));
+$('btnDalsi').textContent = POPIS_TLACITKA[rezim] || 'Přeskočit →';
+$('btnDalsi').addEventListener('click', novaUloha);
+novaUloha();
+</script>
+</body>
+</html>

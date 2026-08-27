@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Slovotvorba</title>
+  <link rel="stylesheet" href="../common.css">
+  <link rel="stylesheet" href="../vyuka.css">
+  <script src="../theme.js"></script>
+  <script src="../uloha.js"></script>
+  <style>
+    .slovo-velke { font-size: clamp(1.7rem, 6vw, 2.6rem); font-weight: 700; letter-spacing: 0.02em; }
+    .casti { display: flex; gap: 6px; justify-content: center; flex-wrap: wrap; }
+    .casti button {
+      background: var(--bg-elevated); border: 2px solid var(--border); color: var(--text);
+      border-radius: 8px; padding: 10px 14px; font-size: clamp(1.2rem, 4vw, 1.8rem);
+      font-weight: 700; font-family: inherit; cursor: pointer;
+    }
+    .casti button:hover:not(:disabled) { border-color: var(--accent); }
+    .casti button.spravne { background: var(--ok); border-color: var(--ok); color: #fff; }
+    .casti button.spatne { background: var(--danger); border-color: var(--danger); color: #fff; }
+    .rozbor { color: var(--text-faint); font-size: 0.82rem; }
+    .zkratka { font-size: clamp(1.8rem, 7vw, 3rem); font-weight: 700; letter-spacing: 0.06em; }
+  </style>
+</head>
+<body>
+  <h1>🧩 Slovotvorba</h1>
+  <p class="podtitul">Pro 7. ročník: odvozování, skládání, zkracování a stavba slova.</p>
+
+  <div class="rezimy" id="rezimy">
+    <button data-rezim="zpusob" class="active">🏭 Jak slovo vzniklo</button>
+    <button data-rezim="stavba">🧱 Části slova</button>
+    <button data-rezim="tvor">✏️ Vytvoř slovo</button>
+    <button data-rezim="zkratky">🔠 Zkratky</button>
+  </div>
+
+  <div class="plocha" id="plocha"></div>
+
+  <div class="ovladani">
+    <button class="hlavni" id="btnDalsi">Přeskočit →</button>
+    <span class="skore" id="skore"></span>
+  </div>
+
+  <p class="napoveda">
+    <b>Odvozování</b> = přidání předpony nebo přípony k základu (les → lesník).
+    <b>Skládání</b> = spojení dvou základů (zeměpis).
+    <b>Zkracování</b> = vznik zkratky nebo zkratkového slova (ČR, Čedok).
+    Slovo se skládá z <b>předpony</b>, <b>kořene</b>, <b>přípony</b> a <b>koncovky</b>.
+  </p>
+
+<script>
+const $ = id => document.getElementById(id);
+const skore = Uloha.skore('nodus_cj7_slovotvorba', $('skore'));
+let rezim = 'zpusob';
+
+const ZPUSOBY = { odvoz: 'odvozování', sklad: 'skládání', zkrac: 'zkracování' };
+
+const SLOVA_ZPUSOB = [
+  { s: 'lesník', z: 'odvoz', vysvetleni: 'les + přípona -ník' },
+  { s: 'přeskočit', z: 'odvoz', vysvetleni: 'předpona pře- + skočit' },
+  { s: 'učitelka', z: 'odvoz', vysvetleni: 'učit + přípony -tel-ka' },
+  { s: 'podzemní', z: 'odvoz', vysvetleni: 'předpona pod- + země + -ní' },
+  { s: 'rybářský', z: 'odvoz', vysvetleni: 'ryba → rybář → rybářský' },
+  { s: 'zeměpis', z: 'sklad', vysvetleni: 'země + psát' },
+  { s: 'vodopád', z: 'sklad', vysvetleni: 'voda + padat' },
+  { s: 'velkoměsto', z: 'sklad', vysvetleni: 'velké + město' },
+  { s: 'sebevědomí', z: 'sklad', vysvetleni: 'sebe + vědomí' },
+  { s: 'dvojjazyčný', z: 'sklad', vysvetleni: 'dva + jazyk' },
+  { s: 'životopis', z: 'sklad', vysvetleni: 'život + psát' },
+  { s: 'ČR', z: 'zkrac', vysvetleni: 'Česká republika – zkratka z počátečních písmen' },
+  { s: 'MHD', z: 'zkrac', vysvetleni: 'městská hromadná doprava' },
+  { s: 'Čedok', z: 'zkrac', vysvetleni: 'zkratkové slovo: Česká dopravní kancelář' },
+  { s: 'atd.', z: 'zkrac', vysvetleni: 'a tak dále – grafická zkratka' },
+  { s: 'sněhulák', z: 'odvoz', vysvetleni: 'sníh + přípona -ulák' },
+  { s: 'malíř', z: 'odvoz', vysvetleni: 'malovat + přípona -íř' },
+  { s: 'kinosál', z: 'sklad', vysvetleni: 'kino + sál' },
+];
+
+/* stavba slova: [předpona, kořen, přípona, koncovka] – prázdné části se vynechají */
+const STAVBA = [
+  { casti: ['', 'les', 'ník', ''], slovo: 'lesník' },
+  { casti: ['pře', 'skoč', 'i', 't'], slovo: 'přeskočit' },
+  { casti: ['', 'zahrad', 'k', 'a'], slovo: 'zahrádka' },
+  { casti: ['pod', 'zem', 'n', 'í'], slovo: 'podzemní' },
+  { casti: ['ná', 'kup', '', ''], slovo: 'nákup' },
+  { casti: ['', 'uč', 'itel', ''], slovo: 'učitel' },
+  { casti: ['roz', 'svít', 'i', 't'], slovo: 'rozsvítit' },
+  { casti: ['', 'ryb', 'ář', ''], slovo: 'rybář' },
+  { casti: ['ne', 'moc', 'n', 'ý'], slovo: 'nemocný' },
+  { casti: ['před', 'zahrád', 'k', 'a'], slovo: 'předzahrádka' },
+  { casti: ['', 'květ', 'in', 'a'], slovo: 'květina' },
+  { casti: ['vý', 'let', '', ''], slovo: 'výlet' },
+  { casti: ['', 'sklad', 'ník', ''], slovo: 'skladník' },
+];
+const NAZVY_CASTI = ['předpona', 'kořen', 'přípona', 'koncovka'];
+
+const TVORENI = [
+  { otazka: 'Jak se jmenuje člověk, který pracuje v lese?', spravne: 'lesník', jine: ['lesák', 'lesovník', 'lesař'] },
+  { otazka: 'Jak se jmenuje malá zahrada?', spravne: 'zahrádka', jine: ['zahradička', 'zahradinka', 'zahradnice'] },
+  { otazka: 'Jak se jmenuje člověk, který peče?', spravne: 'pekař', jine: ['pekník', 'pekec', 'pečitel'] },
+  { otazka: 'Jaké podstatné jméno vytvoříš od přídavného jména rychlý?', spravne: 'rychlost', jine: ['rychlota', 'rychlina', 'rychlivost'] },
+  { otazka: 'Jak se jmenuje obyvatel Prahy (spisovně)?', spravne: 'Pražan', jine: ['Prahovec', 'Prahan', 'Pražeňan'] },
+  { otazka: 'Jak se jmenuje přídavné jméno od slova zima?', spravne: 'zimní', jine: ['zimový', 'zimavý', 'zimný'] },
+  { otazka: 'Jak se jmenuje děj od slovesa učit?', spravne: 'učení', jine: ['učba', 'učivost', 'učitost'] },
+  { otazka: 'Jak se jmenuje mládě kočky?', spravne: 'kotě', jine: ['kočátko', 'kočíček', 'kočkoun'] },
+  { otazka: 'Jak se jmenuje provoz, kde se peče pečivo?', spravne: 'pekárna', jine: ['pekářna', 'pekovna', 'pekárnice'] },
+  { otazka: 'Jaké přídavné jméno vytvoříš od slova dřevo?', spravne: 'dřevěný', jine: ['dřevový', 'dřevný', 'dřevitý'] },
+];
+
+const ZKRATKY = [
+  { z: 'atd.', v: 'a tak dále', jine: ['a to dále', 'a tudíž dále', 'a další'] },
+  { z: 'apod.', v: 'a podobně', jine: ['a pod dále', 'a podle', 'a poté'] },
+  { z: 'např.', v: 'například', jine: ['naproti', 'napravo', 'na přání'] },
+  { z: 'tzv.', v: 'takzvaný', jine: ['tak zvolna', 'to zvláště', 'tehdy zvaný'] },
+  { z: 'ZŠ', v: 'základní škola', jine: ['zvláštní škola', 'západní škola', 'zimní škola'] },
+  { z: 'MHD', v: 'městská hromadná doprava', jine: ['místní hromadná doprava', 'mezinárodní hlavní doprava', 'moderní hromadná doprava'] },
+  { z: 'ČR', v: 'Česká republika', jine: ['Český rozhlas', 'České radiokomunikace', 'Česká rada'] },
+  { z: 's. r. o.', v: 'společnost s ručením omezeným', jine: ['spolek ručených organizací', 'správa ručení a obchodu', 'sdružení ručitelů a obchodníků'] },
+  { z: 'PhDr.', v: 'doktor filozofie', jine: ['profesor historie', 'doktor přírodních věd', 'doktor práv'] },
+  { z: 'č. p.', v: 'číslo popisné', jine: ['část pozemku', 'číslo parcely', 'čtvrť a před'] },
+  { z: 'mj.', v: 'mimo jiné', jine: ['mezi jinými', 'místo jiného', 'mnoho jiných'] },
+];
+
+/* ---- Jak slovo vzniklo ------------------------------------------------------------ */
+function zpusob() {
+  const p = $('plocha');
+  const u = Uloha.nahodne(SLOVA_ZPUSOB);
+  p.innerHTML = `<div class="zadani">Jak vzniklo slovo</div>
+    <div class="karta"><div class="slovo-velke">${u.s}</div></div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej(Object.entries(ZPUSOBY).map(([k, v]) => ({ klic: k, popis: v }))),
+    spravnyKlic: u.z,
+    zpravaOk: `✅ ${ZPUSOBY[u.z]} – ${u.vysvetleni}`,
+    zpravaChyba: 'Hledej, zda jsou ve slově dva základy (skládání), nebo jen předpona a přípona.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Části slova ------------------------------------------------------------------- */
+function stavba() {
+  const p = $('plocha');
+  const u = Uloha.nahodne(STAVBA);
+  const indexy = u.casti.map((c, i) => [c, i]).filter(([c]) => c !== '');
+  const hledanyIndex = Uloha.nahodne(indexy.filter(([, i]) => i <= 3))[1];
+  const nazev = NAZVY_CASTI[Math.min(hledanyIndex, 3)];
+  const stav = { chyboval: false, hotovo: false };
+
+  p.innerHTML = `<div class="zadani">Klepni na <b>${nazev}</b> ve slově <b>${u.slovo}</b>.</div>`;
+  const box = document.createElement('div');
+  box.className = 'casti';
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  indexy.forEach(([cast, i]) => {
+    const b = document.createElement('button');
+    b.textContent = cast;
+    b.addEventListener('click', () => Uloha.odpoved({
+      prvek: b, spravne: i === hledanyIndex, stav, odezva,
+      zpravaOk: `✅ „${cast}“ je ${nazev}. Celé slovo: ${indexy.map(([c]) => c).join('-')}`,
+      zpravaChyba: `„${cast}“ je ${NAZVY_CASTI[Math.min(i, 3)]} – hledáme ${nazev}.`,
+      poSpravne: skore.vyhodnot,
+      dalsi: novaUloha,
+    }));
+    box.appendChild(b);
+  });
+  p.appendChild(box);
+  p.appendChild(odezva);
+}
+
+/* ---- Vytvoř slovo ------------------------------------------------------------------ */
+function tvor() {
+  const p = $('plocha');
+  const u = Uloha.nahodne(TVORENI);
+  p.innerHTML = `<div class="zadani">${u.otazka}</div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([u.spravne, ...Uloha.zamichej(u.jine).slice(0, 3)])
+      .map(t => ({ klic: t, popis: t })),
+    spravnyKlic: u.spravne,
+    zpravaOk: `✅ ${u.spravne}`,
+    zpravaChyba: 'Které slovo se opravdu používá? Přípona musí sedět k významu.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Zkratky ------------------------------------------------------------------------ */
+function zkratky() {
+  const p = $('plocha');
+  const u = Uloha.nahodne(ZKRATKY);
+  p.innerHTML = `<div class="zadani">Co znamená zkratka</div>
+    <div class="karta"><div class="zkratka">${u.z}</div></div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([u.v, ...u.jine]).map(t => ({ klic: t, popis: t })),
+    spravnyKlic: u.v,
+    zpravaOk: `✅ ${u.z} = ${u.v}`,
+    zpravaChyba: 'Rozepiš si počáteční písmena – co dávají za smysl?',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+const REZIMY = { zpusob, stavba, tvor, zkratky };
+function novaUloha() { REZIMY[rezim](); }
+
+document.querySelectorAll('#rezimy button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#rezimy button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  rezim = b.dataset.rezim;
+  novaUloha();
+}));
+$('btnDalsi').addEventListener('click', novaUloha);
+novaUloha();
+</script>
+</body>
+</html>

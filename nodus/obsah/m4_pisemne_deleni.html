@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Písemné dělení</title>
+  <link rel="stylesheet" href="../common.css">
+  <link rel="stylesheet" href="../vyuka.css">
+  <script src="../theme.js"></script>
+  <script src="../rec.js"></script>
+  <script src="../uloha.js"></script>
+  <script src="../pisemne.js"></script>
+  <style>
+    .priklad {
+      font-family: 'Courier New', monospace; font-size: clamp(1.6rem, 6vw, 2.4rem);
+      font-weight: 700; letter-spacing: 0.06em;
+    }
+    .priklad .otazka { color: var(--accent); }
+    .kroky { font-size: 0.9rem; color: var(--text-muted); line-height: 1.6; max-width: 460px; text-align: left; }
+    .kroky b { color: var(--text); }
+  </style>
+</head>
+<body>
+  <h1>➗ Písemné dělení</h1>
+  <p class="podtitul">Pro 4.–5. ročník: dělení jednociferným i dvojciferným dělitelem, se zbytkem i bez.</p>
+
+  <div class="rezimy" id="rezimy">
+    <button data-rezim="jednociferne" class="active">1️⃣ Dělitel do 9</button>
+    <button data-rezim="dvojciferne">2️⃣ Dvojciferný dělitel</button>
+    <button data-rezim="prvniCislice">🔎 První číslice podílu</button>
+    <button data-rezim="zkouska">✔️ Zkouška</button>
+  </div>
+
+  <div class="plocha" id="plocha"></div>
+
+  <div class="ovladani">
+    <button class="hlavni" id="btnDalsi">Přeskočit →</button>
+    <span class="skore" id="skore"></span>
+  </div>
+
+  <p class="napoveda">
+    Při písemném dělení postupuješ <b>zleva</b>: vezmeš první číslici (nebo dvě), vydělíš,
+    zbytek snížíš a přibereš další číslici. Výsledek ověříš zkouškou
+    <b>podíl × dělitel + zbytek = dělenec</b>.
+  </p>
+
+<script>
+const $ = id => document.getElementById(id);
+const skore = Uloha.skore('nodus_m4_deleni', $('skore'));
+let rezim = 'jednociferne';
+
+function priklad(delitelOd, delitelDo, podilOd, podilDo, seZbytkem) {
+  const delitel = Uloha.nahodneCislo(delitelOd, delitelDo);
+  const podil = Uloha.nahodneCislo(podilOd, podilDo);
+  const zbytek = seZbytkem ? Uloha.nahodneCislo(0, delitel - 1) : 0;
+  return { delenec: podil * delitel + zbytek, delitel, podil, zbytek };
+}
+const zapis = u => u.zbytek ? `${u.podil} zb. ${u.zbytek}` : String(u.podil);
+
+function moznostiPodilu(u) {
+  const jine = new Set();
+  let pojistka = 0;
+  while (jine.size < 3 && pojistka++ < 60) {
+    const podil = u.podil + Uloha.nahodneCislo(-3, 3) * Uloha.nahodne([1, 1, 10]);
+    const zbytek = u.zbytek ? Uloha.nahodneCislo(0, u.delitel - 1) : 0;
+    const t = zbytek ? `${podil} zb. ${zbytek}` : String(podil);
+    if (podil > 0 && t !== zapis(u)) jine.add(t);
+  }
+  return Uloha.zamichej([zapis(u), ...jine]).map(t => ({ klic: t, popis: t }));
+}
+
+function ulohaDeleni(u, popis) {
+  const p = $('plocha');
+  p.innerHTML = `<div class="zadani">${popis} můžeš si počítat přímo do mřížky:</div>`;
+  const karta = document.createElement('div');
+  karta.className = 'karta';
+  karta.appendChild(Pisemne.deleni(u.delenec, u.delitel));
+  p.appendChild(karta);
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: moznostiPodilu(u),
+    spravnyKlic: zapis(u),
+    zpravaOk: `✅ ${u.podil} × ${u.delitel}${u.zbytek ? ' + ' + u.zbytek : ''} = ${u.delenec}`,
+    zpravaChyba: `Zkontroluj zkouškou: podíl × ${u.delitel}${u.zbytek ? ' + zbytek' : ''} musí dát ${u.delenec}.`,
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+const jednociferne = () => ulohaDeleni(priklad(2, 9, 23, 980, Math.random() < 0.5), 'Vyděl –');
+const dvojciferne = () => ulohaDeleni(priklad(11, 39, 12, 90, Math.random() < 0.5), 'Vyděl dvojciferným dělitelem –');
+
+/* ---- První číslice podílu --------------------------------------------------- */
+function prvniCislice() {
+  const p = $('plocha');
+  const u = priklad(2, 9, 112, 980, false);
+  const prvni = String(u.podil)[0];
+  const pocetCislic = String(u.podil).length;
+
+  p.innerHTML = `<div class="zadani">Jaká bude <b>první číslice</b> podílu?</div>
+    <div class="karta"><div class="priklad">${u.delenec} : ${u.delitel} = ?</div></div>
+    <div class="kroky">Podíl bude mít <b>${pocetCislic}</b> číslice.
+      Vezmi zleva tolik číslic dělence, kolik je potřeba, aby šly vydělit ${u.delitel}.</div>`;
+
+  const jine = Uloha.zamichej('123456789'.split('').filter(c => c !== prvni)).slice(0, 3);
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva, trida: 'velke',
+    moznosti: Uloha.zamichej([prvni, ...jine]).map(c => ({ klic: c, popis: c })),
+    spravnyKlic: prvni,
+    zpravaOk: `✅ Podíl je ${u.podil} – začíná číslicí ${prvni}.`,
+    zpravaChyba: 'Zkus odhadnout, kolikrát se dělitel vejde do prvních číslic dělence.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Zkouška ---------------------------------------------------------------- */
+function zkouska() {
+  const p = $('plocha');
+  const u = priklad(2, 9, 23, 480, Math.random() < 0.5);
+  const spravne = Math.random() < 0.5;
+  const podil = spravne ? u.podil : u.podil + Uloha.nahodne([-10, -1, 1, 10]);
+  const zbytek = spravne ? u.zbytek : Math.min(u.delitel - 1, u.zbytek + 1);
+
+  p.innerHTML = `<div class="zadani">Je výpočet správný?</div>
+    <div class="karta"><div class="priklad">${u.delenec} : ${u.delitel} = ${podil}${zbytek ? ' zb. ' + zbytek : ''}</div></div>
+    <div class="kroky">Zkouška: <b>podíl × dělitel + zbytek</b> se musí rovnat dělenci.</div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva, trida: 'dve',
+    moznosti: [
+      { klic: 'ano', ikona: '✅', popis: 'Ano, souhlasí' },
+      { klic: 'ne', ikona: '❌', popis: 'Ne, je špatně' },
+    ],
+    spravnyKlic: (podil === u.podil && zbytek === u.zbytek) ? 'ano' : 'ne',
+    zpravaOk: `✅ Správně je ${u.delenec} : ${u.delitel} = ${zapis(u)} `
+      + `(${u.podil} × ${u.delitel}${u.zbytek ? ' + ' + u.zbytek : ''} = ${u.delenec}).`,
+    zpravaChyba: 'Udělej zkoušku a porovnej výsledek s dělencem.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+const REZIMY = { jednociferne, dvojciferne, prvniCislice, zkouska };
+function novaUloha() { REZIMY[rezim](); }
+
+document.querySelectorAll('#rezimy button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#rezimy button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  rezim = b.dataset.rezim;
+  novaUloha();
+}));
+$('btnDalsi').addEventListener('click', novaUloha);
+document.addEventListener('keydown', e => {
+  // v mřížce pro vlastní zápis mají šipky i Enter jiný význam
+  if (e.target && e.target.tagName === 'INPUT') return;
+  if (e.key === 'ArrowRight' || e.key === 'Enter') { e.preventDefault(); novaUloha(); }
+});
+novaUloha();
+</script>
+</body>
+</html>

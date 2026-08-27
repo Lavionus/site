@@ -1,0 +1,216 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Přídavná jména</title>
+  <link rel="stylesheet" href="../common.css">
+  <link rel="stylesheet" href="../vyuka.css">
+  <script src="../theme.js"></script>
+  <script src="../rec.js"></script>
+  <script src="../uloha.js"></script>
+  <style>
+    .spojeni { font-size: clamp(1.4rem, 5.5vw, 2.2rem); font-weight: 700; }
+    .spojeni .mezera { color: var(--accent); border-bottom: 3px solid var(--accent); padding: 0 10px; }
+    .vzory { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; max-width: 900px; margin-top: 12px; }
+    .vzory span {
+      background: var(--bg-panel); border: 1px solid var(--border); border-radius: 8px;
+      padding: 6px 12px; font-size: 0.8rem; color: var(--text-muted);
+    }
+    .vzory b { color: var(--text); }
+  </style>
+</head>
+<body>
+  <h1>🎨 Přídavná jména</h1>
+  <p class="podtitul">Pro 5.–6. ročník: druhy přídavných jmen, vzory, koncovky a stupňování.</p>
+
+  <div class="rezimy" id="rezimy">
+    <button data-rezim="druh" class="active">🗂️ Druh přídavného jména</button>
+    <button data-rezim="koncovka">✏️ Doplň koncovku</button>
+    <button data-rezim="stupnovani">📈 Stupňování</button>
+    <button data-rezim="vzor">📋 Tvrdý, či měkký vzor</button>
+  </div>
+
+  <div class="plocha" id="plocha"></div>
+
+  <div class="ovladani">
+    <button class="hlavni" id="btnDalsi">Přeskočit →</button>
+    <span class="skore" id="skore"></span>
+  </div>
+
+  <div class="vzory">
+    <span><b>tvrdá</b> – vzor mladý (mladý, mladá, mladé)</span>
+    <span><b>měkká</b> – vzor jarní (jarní ve všech rodech)</span>
+    <span><b>přivlastňovací</b> – vzory otcův, matčin</span>
+  </div>
+
+  <p class="napoveda">
+    Druh poznáš podle 1. pádu čísla jednotného: končí-li na <b>-ý</b>, je tvrdé (mladý),
+    na <b>-í</b> měkké (jarní), na <b>-ův / -in</b> přivlastňovací (otcův, matčin).
+  </p>
+
+<script>
+const $ = id => document.getElementById(id);
+const skore = Uloha.skore('nodus_cj5_pridavna', $('skore'));
+let rezim = 'druh';
+
+/* přídavné jméno v 1. pádě, druh, podstatné jméno k němu */
+const PRIDAVNA = [
+  { p: 'mladý', d: 'tvrde', s: 'strom' }, { p: 'veselý', d: 'tvrde', s: 'kluk' },
+  { p: 'zelený', d: 'tvrde', s: 'les' }, { p: 'chytrý', d: 'tvrde', s: 'pes' },
+  { p: 'dřevěný', d: 'tvrde', s: 'stůl' }, { p: 'nový', d: 'tvrde', s: 'sešit' },
+  { p: 'jarní', d: 'mekke', s: 'den' }, { p: 'cizí', d: 'mekke', s: 'jazyk' },
+  { p: 'letní', d: 'mekke', s: 'večer' }, { p: 'psí', d: 'mekke', s: 'ocas' },
+  { p: 'dnešní', d: 'mekke', s: 'úkol' }, { p: 'poslední', d: 'mekke', s: 'vlak' },
+  { p: 'otcův', d: 'privlastnovaci', s: 'kabát' }, { p: 'matčin', d: 'privlastnovaci', s: 'šátek' },
+  { p: 'bratrův', d: 'privlastnovaci', s: 'míč' }, { p: 'sestřin', d: 'privlastnovaci', s: 'deník' },
+  { p: 'Petrův', d: 'privlastnovaci', s: 'pes' }, { p: 'učitelčin', d: 'privlastnovaci', s: 'stůl' },
+];
+
+const DRUHY = {
+  tvrde: { nazev: 'tvrdé (mladý)', ikona: '🧱' },
+  mekke: { nazev: 'měkké (jarní)', ikona: '🧸' },
+  privlastnovaci: { nazev: 'přivlastňovací (otcův)', ikona: '👤' },
+};
+
+/* spojení s vynechanou koncovkou: text, správná koncovka, vysvětlení */
+const KONCOVKY = [
+  { t: 'mlad_ stromy', k: 'é', proc: 'vzor mladý, 1. pád množného čísla rodu neživotného' },
+  { t: 'zelen_ louka', k: 'á', proc: 'vzor mladý, rod ženský' },
+  { t: 'jarn_ počasí', k: 'í', proc: 'měkké přídavné jméno má vždy -í' },
+  { t: 'ciz_ lidé', k: 'í', proc: 'měkké přídavné jméno má vždy -í' },
+  { t: 'chytř_ psi', k: 'í', proc: 'vzor mladý, rod mužský životný v množném čísle' },
+  { t: 'nov_ auto', k: 'é', proc: 'vzor mladý, rod střední' },
+  { t: 'otcov_ kabát', k: 'ý', proc: 'přivlastňovací, rod mužský' },
+  { t: 'matčin_ šátek', k: '', proc: 'přivlastňovací v 1. pádě rodu mužského je bez koncovky' },
+  { t: 'vesel_ děti', k: 'é', proc: 'vzor mladý, rod střední v množném čísle' },
+  { t: 'letn_ prázdniny', k: 'í', proc: 'měkké přídavné jméno má vždy -í' },
+];
+
+const STUPNOVANI = [
+  { z: 'velký', druhy: 'větší', treti: 'největší' },
+  { z: 'malý', druhy: 'menší', treti: 'nejmenší' },
+  { z: 'dobrý', druhy: 'lepší', treti: 'nejlepší' },
+  { z: 'špatný', druhy: 'horší', treti: 'nejhorší' },
+  { z: 'dlouhý', druhy: 'delší', treti: 'nejdelší' },
+  { z: 'krátký', druhy: 'kratší', treti: 'nejkratší' },
+  { z: 'rychlý', druhy: 'rychlejší', treti: 'nejrychlejší' },
+  { z: 'teplý', druhy: 'teplejší', treti: 'nejteplejší' },
+  { z: 'chytrý', druhy: 'chytřejší', treti: 'nejchytřejší' },
+  { z: 'silný', druhy: 'silnější', treti: 'nejsilnější' },
+];
+
+/* ---- Druh přídavného jména --------------------------------------------------- */
+function druh() {
+  const p = $('plocha');
+  const u = Uloha.nahodne(PRIDAVNA);
+  p.innerHTML = `<div class="zadani">Jaký druh přídavného jména to je?</div>
+    <div class="karta"><div class="spojeni">${u.p} ${u.s}</div></div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej(Object.entries(DRUHY))
+      .map(([klic, d]) => ({ klic, ikona: d.ikona, popis: d.nazev })),
+    spravnyKlic: u.d,
+    zpravaOk: `✅ ${u.p} je ${DRUHY[u.d].nazev.split(' ')[0]} přídavné jméno.`,
+    zpravaChyba: 'Podívej se na koncovku v 1. pádě: -ý, -í, nebo -ův/-in?',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Doplň koncovku ----------------------------------------------------------- */
+function koncovka() {
+  const p = $('plocha');
+  const u = Uloha.nahodne(KONCOVKY);
+  const moznosti = ['ý', 'í', 'é', 'á', ''].filter((x, i, a) => a.indexOf(x) === i);
+
+  p.innerHTML = `<div class="zadani">Doplň správnou koncovku:</div>
+    <div class="karta"><div class="spojeni">${u.t.replace('_', '<span class="mezera">?</span>')}</div></div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva, trida: 'velke',
+    moznosti: Uloha.zamichej(moznosti).map(k => ({ klic: k, popis: k === '' ? '– (bez koncovky)' : '-' + k })),
+    spravnyKlic: u.k,
+    zpravaOk: `✅ ${u.t.replace('_', u.k)} – ${u.proc}.`,
+    zpravaChyba: 'Urči nejdřív druh přídavného jména a rod podstatného jména.',
+    poSpravne: napoprve => {
+      skore.vyhodnot(napoprve);
+      p.querySelector('.mezera').textContent = u.k || '–';
+    },
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Stupňování ---------------------------------------------------------------- */
+function stupnovani() {
+  const p = $('plocha');
+  const u = Uloha.nahodne(STUPNOVANI);
+  const druhyStupen = Math.random() < 0.5;
+  const spravny = druhyStupen ? u.druhy : u.treti;
+  const jine = Uloha.zamichej(STUPNOVANI.filter(x => x.z !== u.z))
+    .slice(0, 3).map(x => druhyStupen ? x.druhy : x.treti);
+
+  p.innerHTML = `<div class="zadani">Jak zní <b>${druhyStupen ? '2.' : '3.'} stupeň</b>?</div>
+    <div class="karta"><div class="spojeni">${u.z}</div>
+    <div class="popis">1. stupeň</div></div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([spravny, ...jine]).map(t => ({ klic: t, popis: t })),
+    spravnyKlic: spravny,
+    zpravaOk: `✅ ${u.z} – ${u.druhy} – ${u.treti}`,
+    zpravaChyba: '2. stupeň porovnává dvě věci, 3. stupeň vybírá z celé skupiny.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Tvrdý, či měkký vzor ------------------------------------------------------ */
+function vzor() {
+  const p = $('plocha');
+  const u = Uloha.nahodne(PRIDAVNA.filter(x => x.d !== 'privlastnovaci'));
+  p.innerHTML = `<div class="zadani">Podle kterého vzoru se skloňuje?</div>
+    <div class="karta"><div class="spojeni">${u.p}</div></div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva, trida: 'dve',
+    moznosti: Uloha.zamichej([
+      { klic: 'tvrde', ikona: '🧱', popis: 'mladý' },
+      { klic: 'mekke', ikona: '🧸', popis: 'jarní' },
+    ]),
+    spravnyKlic: u.d,
+    zpravaOk: u.d === 'tvrde'
+      ? `✅ ${u.p} se skloňuje podle vzoru mladý (mladý, mladá, mladé).`
+      : `✅ ${u.p} se skloňuje podle vzoru jarní – ve všech rodech stejně.`,
+    zpravaChyba: 'Rozhoduje koncovka -ý (mladý), nebo -í (jarní).',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+const REZIMY = { druh, koncovka, stupnovani, vzor };
+function novaUloha() { REZIMY[rezim](); }
+
+document.querySelectorAll('#rezimy button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#rezimy button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  rezim = b.dataset.rezim;
+  novaUloha();
+}));
+$('btnDalsi').addEventListener('click', novaUloha);
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === 'Enter') { e.preventDefault(); novaUloha(); }
+});
+novaUloha();
+</script>
+</body>
+</html>

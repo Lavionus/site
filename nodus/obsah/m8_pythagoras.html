@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Pythagorova věta</title>
+  <link rel="stylesheet" href="../common.css">
+  <link rel="stylesheet" href="../vyuka.css">
+  <script src="../theme.js"></script>
+  <script src="../uloha.js"></script>
+  <style>
+    .kresba { width: min(320px, 82%); }
+    .kresba .troj { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 3; }
+    .kresba .ctverecA { fill: rgba(80,170,120,0.30); stroke: var(--ok); stroke-width: 2; }
+    .kresba .ctverecB { fill: rgba(230,170,60,0.30); stroke: var(--warn); stroke-width: 2; }
+    .kresba .ctverecC { fill: rgba(90,150,230,0.30); stroke: #4a90d9; stroke-width: 2; }
+    .kresba .popis { fill: var(--text-muted); font-size: 13px; text-anchor: middle; }
+    .kresba .pravy { fill: none; stroke: var(--text-muted); stroke-width: 2; }
+    .uloha-text { max-width: 620px; font-size: 1.02rem; line-height: 1.6; }
+    .uloha-text b { color: var(--accent); }
+    .vzorec { font-family: 'Courier New', monospace; color: var(--text-muted); font-size: 0.95rem; }
+  </style>
+</head>
+<body>
+  <h1>📐 Pythagorova věta</h1>
+  <p class="podtitul">Pro 8. ročník: vztah mezi stranami pravoúhlého trojúhelníku a jeho užití.</p>
+
+  <div class="rezimy" id="rezimy">
+    <button data-rezim="dukaz" class="active">🧠 Jak věta funguje</button>
+    <button data-rezim="prepona">📏 Výpočet přepony</button>
+    <button data-rezim="odvesna">📐 Výpočet odvěsny</button>
+    <button data-rezim="slovni">🪜 Slovní úlohy</button>
+  </div>
+
+  <div class="plocha" id="plocha"></div>
+
+  <div class="ovladani">
+    <button class="hlavni" id="btnDalsi">Přeskočit →</button>
+    <span class="skore" id="skore"></span>
+  </div>
+
+  <p class="napoveda">
+    V pravoúhlém trojúhelníku platí <b>c² = a² + b²</b>, kde <b>c</b> je přepona (nejdelší strana
+    naproti pravému úhlu) a <b>a, b</b> jsou odvěsny. Odvěsnu spočítáme jako <b>a² = c² − b²</b>.
+  </p>
+
+<script>
+const $ = id => document.getElementById(id);
+const skore = Uloha.skore('nodus_m8_pythagoras', $('skore'));
+let rezim = 'dukaz';
+const fmt = x => Number(Number(x).toFixed(2)).toLocaleString('cs-CZ');
+function odezvaEl() { const d = document.createElement('div'); d.className = 'odezva'; return d; }
+
+/* pythagorejské trojice, aby výsledky vycházely celé */
+const TROJICE = [[3, 4, 5], [6, 8, 10], [5, 12, 13], [9, 12, 15], [8, 15, 17], [12, 16, 20],
+  [7, 24, 25], [20, 21, 29], [10, 24, 26], [15, 20, 25], [9, 40, 41], [18, 24, 30]];
+
+function svgTroj(a, b, c, popisky) {
+  const m = 90 / Math.max(a, b);
+  const A = [40, 160], B = [40 + b * m, 160], C = [40, 160 - a * m];
+  return `<svg class="kresba" viewBox="0 0 260 200">
+    <polygon class="troj" points="${A[0]},${A[1]} ${B[0]},${B[1]} ${C[0]},${C[1]}"/>
+    <path class="pravy" d="M${A[0] + 12} ${A[1]} L${A[0] + 12} ${A[1] - 12} L${A[0]} ${A[1] - 12}"/>
+    <text class="popis" x="${(A[0] + B[0]) / 2}" y="180">b = ${popisky.b}</text>
+    <text class="popis" x="${A[0] - 22}" y="${(A[1] + C[1]) / 2}">a = ${popisky.a}</text>
+    <text class="popis" x="${(B[0] + C[0]) / 2 + 22}" y="${(B[1] + C[1]) / 2 - 6}">c = ${popisky.c}</text>
+  </svg>`;
+}
+
+/* ---- Jak věta funguje: čtverce nad stranami ---------------------------------------------- */
+function dukaz() {
+  const p = $('plocha');
+  const [a, b, c] = Uloha.nahodne(TROJICE.slice(0, 6));
+  const otazka = Uloha.nahodne(['soucet', 'ktera', 'plati']);
+  const odezva = odezvaEl();
+
+  const kresba = `<svg class="kresba" viewBox="0 0 300 280" style="width:min(360px,90%)">
+    <polygon class="troj" points="120,180 200,180 120,120"/>
+    <rect class="ctverecB" x="120" y="180" width="80" height="80"/>
+    <rect class="ctverecA" x="60" y="120" width="60" height="60"/>
+    <polygon class="ctverecC" points="120,120 200,180 240,128 160,68"/>
+    <text class="popis" x="160" y="226">b² = ${b * b}</text>
+    <text class="popis" x="90" y="155">a² = ${a * a}</text>
+    <text class="popis" x="186" y="118">c² = ${c * c}</text>
+  </svg>`;
+
+  if (otazka === 'soucet') {
+    p.innerHTML = `<div class="zadani uloha-text">Odvěsny mají délky <b>a = ${a}</b> a <b>b = ${b}</b>.
+        Jaký je obsah čtverce nad přeponou?</div><div class="karta">${kresba}</div>`;
+    Uloha.vyber({
+      kam: p, odezva, trida: 'velke',
+      moznosti: Uloha.zamichej([String(c * c), String(a * a + b * b + 1), String(a * b), String(a + b)])
+        .filter((x, i, arr) => arr.indexOf(x) === i).map(t => ({ klic: t, popis: t })),
+      spravnyKlic: String(c * c),
+      zpravaOk: `✅ ${a * a} + ${b * b} = ${c * c} – obsah čtverce nad přeponou je součtem obsahů obou menších čtverců.`,
+      zpravaChyba: 'Sečti obsahy čtverců nad oběma odvěsnami.',
+      poSpravne: skore.vyhodnot, dalsi: novaUloha,
+    });
+  } else if (otazka === 'ktera') {
+    p.innerHTML = `<div class="zadani uloha-text">Trojúhelník má strany <b>${a}</b>, <b>${b}</b> a <b>${c}</b>.
+        Která z nich je přepona?</div>`;
+    Uloha.vyber({
+      kam: p, odezva, trida: 'velke',
+      moznosti: Uloha.zamichej([String(a), String(b), String(c)]).map(t => ({ klic: t, popis: t })),
+      spravnyKlic: String(c),
+      zpravaOk: `✅ ${c} – přepona je vždy nejdelší strana a leží naproti pravému úhlu.`,
+      zpravaChyba: 'Přepona leží naproti pravému úhlu a je ze všech stran nejdelší.',
+      poSpravne: skore.vyhodnot, dalsi: novaUloha,
+    });
+  } else {
+    const pravouhly = Math.random() < 0.5;
+    const strany = pravouhly ? [a, b, c] : [a, b, c + Uloha.nahodne([1, 2])];
+    p.innerHTML = `<div class="zadani uloha-text">Je trojúhelník se stranami
+        <b>${strany[0]}</b>, <b>${strany[1]}</b>, <b>${strany[2]}</b> pravoúhlý?</div>
+      <div class="karta"><div class="vzorec">${strany[0]}² + ${strany[1]}² = ${strany[0] ** 2 + strany[1] ** 2}
+        &nbsp;|&nbsp; ${strany[2]}² = ${strany[2] ** 2}</div></div>`;
+    Uloha.vyber({
+      kam: p, odezva, trida: 'dve',
+      moznosti: [
+        { klic: 'ano', ikona: '✅', popis: 'Ano, je pravoúhlý' },
+        { klic: 'ne', ikona: '❌', popis: 'Ne, není pravoúhlý' },
+      ],
+      spravnyKlic: pravouhly ? 'ano' : 'ne',
+      zpravaOk: pravouhly
+        ? `✅ ${a}² + ${b}² = ${c}², platí obrácená Pythagorova věta.`
+        : `✅ ${strany[0] ** 2 + strany[1] ** 2} se nerovná ${strany[2] ** 2}, trojúhelník pravoúhlý není.`,
+      zpravaChyba: 'Porovnej součet druhých mocnin kratších stran s druhou mocninou nejdelší strany.',
+      poSpravne: skore.vyhodnot, dalsi: novaUloha,
+    });
+  }
+  p.appendChild(odezva);
+}
+
+function prepona() {
+  const p = $('plocha');
+  const [a, b, c] = Uloha.nahodne(TROJICE);
+  const jine = new Set([String(a + b), String(c + 1), String(Math.round(Math.sqrt(c * c - a * a) * 10) / 10)]);
+  jine.delete(String(c));
+
+  p.innerHTML = `<div class="zadani uloha-text">Pravoúhlý trojúhelník má odvěsny
+      <b>a = ${a} cm</b> a <b>b = ${b} cm</b>. Jak dlouhá je přepona?</div>
+    <div class="karta">${svgTroj(a, b, c, { a, b, c: '?' })}
+      <div class="vzorec">c² = a² + b²</div></div>`;
+  const odezva = odezvaEl();
+  Uloha.vyber({
+    kam: p, odezva, trida: 'velke',
+    moznosti: Uloha.zamichej([String(c), ...jine]).map(t => ({ klic: t, popis: t + ' cm' })),
+    spravnyKlic: String(c),
+    zpravaOk: `✅ c² = ${a}² + ${b}² = ${a * a + b * b}, tedy c = ${c} cm`,
+    zpravaChyba: 'Umocni obě odvěsny, sečti je a výsledek odmocni.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+function odvesna() {
+  const p = $('plocha');
+  const [a, b, c] = Uloha.nahodne(TROJICE);
+  const hledameA = Math.random() < 0.5;
+  const znama = hledameA ? b : a;
+  const vysledek = hledameA ? a : b;
+  const jine = new Set([String(c - znama), String(c + znama), String(vysledek + 2)]);
+  jine.delete(String(vysledek));
+
+  p.innerHTML = `<div class="zadani uloha-text">Pravoúhlý trojúhelník má přeponu <b>c = ${c} cm</b>
+      a jednu odvěsnu <b>${hledameA ? 'b' : 'a'} = ${znama} cm</b>. Jak dlouhá je druhá odvěsna?</div>
+    <div class="karta">${svgTroj(a, b, c, { a: hledameA ? '?' : a, b: hledameA ? b : '?', c })}
+      <div class="vzorec">a² = c² − b²</div></div>`;
+  const odezva = odezvaEl();
+  Uloha.vyber({
+    kam: p, odezva, trida: 'velke',
+    moznosti: Uloha.zamichej([String(vysledek), ...jine]).map(t => ({ klic: t, popis: t + ' cm' })),
+    spravnyKlic: String(vysledek),
+    zpravaOk: `✅ ${vysledek}² = ${c}² − ${znama}² = ${c * c - znama * znama}, odvěsna měří ${vysledek} cm`,
+    zpravaChyba: 'Od druhé mocniny přepony odečti druhou mocninu známé odvěsny a odmocni.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+const SLOVNI = [
+  { text: 'Žebřík dlouhý {c} m je opřený o zeď. Jeho pata je {b} m od zdi. Do jaké výšky dosáhne?',
+    hledame: 'a', jednotka: 'm' },
+  { text: 'Obdélníková zahrada má rozměry {a} m a {b} m. Jak dlouhá je její úhlopříčka?',
+    hledame: 'c', jednotka: 'm' },
+  { text: 'Televize má úhlopříčku {c} palců a výšku {a} palců. Jak je široká?',
+    hledame: 'b', jednotka: 'palců' },
+  { text: 'Stožár vysoký {a} m je ukotven lanem k bodu vzdálenému {b} m od paty. Jak dlouhé je lano?',
+    hledame: 'c', jednotka: 'm' },
+  { text: 'Loď plula {b} km na východ a pak {a} km na sever. Jak daleko je vzdušnou čarou od startu?',
+    hledame: 'c', jednotka: 'km' },
+];
+function slovni() {
+  const p = $('plocha');
+  const [a, b, c] = Uloha.nahodne(TROJICE);
+  const u = Uloha.nahodne(SLOVNI);
+  const hodnoty = { a, b, c };
+  const vysledek = hodnoty[u.hledame];
+  const text = u.text.replace('{a}', a).replace('{b}', b).replace('{c}', c);
+  const jine = new Set([String(a + b), String(c - Math.min(a, b)), String(vysledek + 2), String(Math.abs(a - b))]);
+  jine.delete(String(vysledek));
+
+  p.innerHTML = `<div class="zadani uloha-text">${text}</div>
+    <div class="karta">${svgTroj(a, b, c, {
+      a: u.hledame === 'a' ? '?' : a, b: u.hledame === 'b' ? '?' : b, c: u.hledame === 'c' ? '?' : c,
+    })}</div>`;
+  const odezva = odezvaEl();
+  Uloha.vyber({
+    kam: p, odezva, trida: 'velke',
+    moznosti: Uloha.zamichej([String(vysledek), ...[...jine].slice(0, 3)])
+      .map(t => ({ klic: t, popis: t + ' ' + u.jednotka })),
+    spravnyKlic: String(vysledek),
+    zpravaOk: u.hledame === 'c'
+      ? `✅ c² = ${a}² + ${b}² → c = ${c} ${u.jednotka}`
+      : `✅ ${u.hledame}² = ${c}² − ${u.hledame === 'a' ? b : a}² → ${vysledek} ${u.jednotka}`,
+    zpravaChyba: 'Nakresli si obrázek a rozhodni, co je přepona (leží naproti pravému úhlu).',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+const REZIMY = { dukaz, prepona, odvesna, slovni };
+function novaUloha() { REZIMY[rezim](); }
+
+document.querySelectorAll('#rezimy button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#rezimy button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  rezim = b.dataset.rezim;
+  novaUloha();
+}));
+$('btnDalsi').addEventListener('click', novaUloha);
+novaUloha();
+</script>
+</body>
+</html>

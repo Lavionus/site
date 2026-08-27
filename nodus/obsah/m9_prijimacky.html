@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Příprava na přijímací zkoušky – M</title>
+  <link rel="stylesheet" href="../common.css">
+  <link rel="stylesheet" href="../vyuka.css">
+  <script src="../theme.js"></script>
+  <script src="../uloha.js"></script>
+  <style>
+    .uloha-text { max-width: 660px; font-size: 1.05rem; line-height: 1.62; }
+    .uloha-text b { color: var(--accent); }
+    .priklad { font-size: clamp(1.4rem, 5.5vw, 2.1rem); font-weight: 700; font-variant-numeric: tabular-nums; }
+    .lista-testu { display: flex; gap: 14px; align-items: center; justify-content: center;
+      flex-wrap: wrap; font-size: 0.9rem; color: var(--text-muted); }
+    .cas { font-variant-numeric: tabular-nums; font-weight: 700; font-size: 1.15rem; color: var(--accent); }
+    .cas.malo { color: var(--danger); }
+    .vysledky { max-width: 560px; text-align: left; }
+    .vysledky table { border-collapse: collapse; width: 100%; font-size: 0.92rem; }
+    .vysledky td, .vysledky th { border: 1px solid var(--border-strong); padding: 6px 10px; text-align: left; }
+    .vysledky th { background: var(--bg-control); color: var(--text-muted); }
+    .vysledky .spatne { color: var(--danger); } .vysledky .dobre { color: var(--ok); }
+    .velke-cislo { font-size: 2.6rem; font-weight: 700; color: var(--accent); }
+  </style>
+</head>
+<body>
+  <h1>🎯 Příprava na přijímací zkoušky – M</h1>
+  <p class="podtitul">Pro 9. ročník: typové úlohy, test na čas a přehled, co dotrénovat.</p>
+
+  <div class="rezimy" id="rezimy">
+    <button data-rezim="test" class="active">⏱️ Test na čas</button>
+    <button data-rezim="pocitani">🧮 Počítání</button>
+    <button data-rezim="vyrazy">📐 Výrazy a rovnice</button>
+    <button data-rezim="geometrie">📏 Geometrie</button>
+    <button data-rezim="slovni">📝 Slovní úlohy</button>
+  </div>
+
+  <div class="plocha" id="plocha"></div>
+
+  <div class="ovladani">
+    <button class="hlavni" id="btnDalsi">Přeskočit →</button>
+    <span class="skore" id="skore"></span>
+  </div>
+
+  <p class="napoveda">
+    Jednotná přijímací zkouška z matematiky trvá <b>85 minut</b>. Tady si vyzkoušíš zkrácenou verzi:
+    <b>10 úloh za 12 minut</b>. Po testu uvidíš, které typy úloh ti dělaly problém.
+  </p>
+
+<script>
+const $ = id => document.getElementById(id);
+const skore = Uloha.skore('nodus_m9_prijimacky', $('skore'));
+let rezim = 'test';
+const fmt = x => Number(Number(x).toFixed(2)).toLocaleString('cs-CZ');
+function odezvaEl() { const d = document.createElement('div'); d.className = 'odezva'; return d; }
+
+const TYPY = { pocitani: 'počítání', vyrazy: 'výrazy a rovnice', geometrie: 'geometrie', slovni: 'slovní úlohy' };
+
+/* Generátory úloh – každý vrací { typ, q, a, b } s vypočítanými hodnotami. */
+function jineHodnoty(spravny, kandidati) {
+  const jine = new Set(kandidati.map(x => fmt(x)));
+  jine.delete(fmt(spravny));
+  return [...jine].slice(0, 3);
+}
+
+const GENERATORY = {
+  pocitani: [
+    () => {
+      const a = Uloha.nahodneCislo(2, 9), b = Uloha.nahodneCislo(2, 9), c = Uloha.nahodneCislo(2, 12);
+      const v = a + b * c;
+      return { q: `Vypočítej: ${a} + ${b} · ${c}`, a: fmt(v), b: jineHodnoty(v, [(a + b) * c, a * b + c, v + b]) };
+    },
+    () => {
+      const c = Uloha.nahodneCislo(2, 9) * 10, p = Uloha.nahodne([10, 15, 20, 25, 40, 60]);
+      const v = c * p / 100;
+      return { q: `Kolik je ${p} % z ${c}?`, a: fmt(v), b: jineHodnoty(v, [c * p / 10, c - p, c / p]) };
+    },
+    () => {
+      const j = Uloha.nahodneCislo(2, 9), c1 = Uloha.nahodneCislo(1, j - 1);
+      const j2 = Uloha.nahodneCislo(2, 9), c2 = Uloha.nahodneCislo(1, j2 - 1);
+      const v = c1 / j + c2 / j2;
+      return { q: `Vypočítej a výsledek zaokrouhli na dvě desetinná místa: ${c1}/${j} + ${c2}/${j2}`,
+        a: fmt(v), b: jineHodnoty(v, [(c1 + c2) / (j + j2), c1 / j * (c2 / j2), v + 0.5]) };
+    },
+    () => {
+      const a = Uloha.nahodneCislo(-12, 12), b = Uloha.nahodneCislo(-12, 12);
+      const v = a * b;
+      return { q: `Vypočítej: (${a}) · (${b})`, a: fmt(v), b: jineHodnoty(v, [a + b, -v, a - b]) };
+    },
+  ],
+  vyrazy: [
+    () => {
+      const a = Uloha.nahodneCislo(2, 9), b = Uloha.nahodneCislo(1, 20), x = Uloha.nahodneCislo(2, 12);
+      const prava = a * x + b;
+      return { q: `Vyřeš rovnici: ${a}x + ${b} = ${prava}`, a: fmt(x), b: jineHodnoty(x, [prava - b, prava / a + b, x + 1]) };
+    },
+    () => {
+      const a = Uloha.nahodneCislo(2, 6), x = Uloha.nahodneCislo(2, 9), b = Uloha.nahodneCislo(1, 9);
+      const v = a * (x + b);
+      return { q: `Jakou hodnotu má výraz ${a}·(x + ${b}) pro x = ${x}?`, a: fmt(v),
+        b: jineHodnoty(v, [a * x + b, a + x + b, v + a]) };
+    },
+    () => {
+      const b = Uloha.nahodneCislo(2, 9);
+      const spravny = `x² − ${b * b}`;
+      return { q: `Roznásob: (x + ${b})(x − ${b})`, a: spravny,
+        b: [`x² + ${b * b}`, `x² − ${2 * b}x + ${b * b}`, `x² + ${2 * b}x − ${b * b}`] };
+    },
+    () => {
+      const k = Uloha.nahodneCislo(2, 8), m = Uloha.nahodneCislo(2, 9), n = Uloha.nahodneCislo(1, 9);
+      return { q: `Vytkni před závorku: ${k * m}x + ${k * n}`, a: `${k}·(${m}x + ${n})`,
+        b: [`${k * m}·(x + ${n})`, `${k}·(${m * k}x + ${n})`, `${m}·(${k}x + ${n})`] };
+    },
+  ],
+  geometrie: [
+    () => {
+      const a = Uloha.nahodneCislo(3, 15), b = Uloha.nahodneCislo(3, 15);
+      const v = 2 * (a + b);
+      return { q: `Obdélník má strany ${a} cm a ${b} cm. Jaký má obvod?`, a: fmt(v) + ' cm',
+        b: jineHodnoty(v, [a * b, a + b, v * 2]).map(t => t + ' cm') };
+    },
+    () => {
+      const trojice = Uloha.nahodne([[3, 4, 5], [6, 8, 10], [5, 12, 13], [9, 12, 15], [8, 15, 17]]);
+      const [x, y, z] = trojice;
+      return { q: `Pravoúhlý trojúhelník má odvěsny ${x} cm a ${y} cm. Jak dlouhá je přepona?`,
+        a: fmt(z) + ' cm', b: jineHodnoty(z, [x + y, y - x, z + 2]).map(t => t + ' cm') };
+    },
+    () => {
+      const r = Uloha.nahodneCislo(2, 12);
+      const v = 3.14 * r * r;
+      return { q: `Kruh má poloměr ${r} cm. Jaký má obsah? (π = 3,14)`, a: fmt(v) + ' cm²',
+        b: jineHodnoty(v, [2 * 3.14 * r, 3.14 * r, v * 2]).map(t => t + ' cm²') };
+    },
+    () => {
+      const a = Uloha.nahodneCislo(2, 9), b = Uloha.nahodneCislo(2, 9), c = Uloha.nahodneCislo(2, 9);
+      const v = a * b * c;
+      return { q: `Kvádr má rozměry ${a} cm, ${b} cm a ${c} cm. Jaký má objem?`, a: fmt(v) + ' cm³',
+        b: jineHodnoty(v, [2 * (a * b + b * c + a * c), a + b + c, v / 2]).map(t => t + ' cm³') };
+    },
+  ],
+  slovni: [
+    () => {
+      const cena = Uloha.nahodneCislo(20, 90) * 10, sleva = Uloha.nahodne([10, 15, 20, 25, 30]);
+      const v = cena * (100 - sleva) / 100;
+      return { q: `Zboží stálo ${cena} Kč a bylo zlevněno o ${sleva} %. Kolik stojí nyní?`,
+        a: fmt(v) + ' Kč', b: jineHodnoty(v, [cena * sleva / 100, cena - sleva, cena + cena * sleva / 100]).map(t => t + ' Kč') };
+    },
+    () => {
+      const rychlost = Uloha.nahodne([40, 60, 80, 90]), cas = Uloha.nahodneCislo(2, 5);
+      const v = rychlost * cas;
+      return { q: `Auto jede stálou rychlostí ${rychlost} km/h. Jakou dráhu urazí za ${cas} hodiny?`,
+        a: fmt(v) + ' km', b: jineHodnoty(v, [rychlost / cas, rychlost + cas, v * 2]).map(t => t + ' km') };
+    },
+    () => {
+      const a = Uloha.nahodneCislo(1, 7), b = Uloha.nahodneCislo(1, 7), dil = Uloha.nahodneCislo(3, 20) * 5;
+      const celek = (a + b) * dil;
+      return { q: `Částku ${celek} Kč rozdělíme v poměru ${a} : ${b}. Kolik Kč dostane ten první?`,
+        a: fmt(a * dil) + ' Kč', b: jineHodnoty(a * dil, [b * dil, celek / 2, celek - a * dil]).map(t => t + ' Kč') };
+    },
+    () => {
+      const delnici = Uloha.nahodneCislo(2, 6), dny = Uloha.nahodneCislo(2, 10), nasobek = Uloha.nahodne([2, 3]);
+      const v = dny / nasobek;
+      return { q: `${delnici} dělníci postaví zeď za ${dny} dní. Za jak dlouho ji postaví ${delnici * nasobek} dělníků?`,
+        a: fmt(v) + ' dní', b: jineHodnoty(v, [dny * nasobek, dny + nasobek, dny]).map(t => t + ' dní') };
+    },
+  ],
+};
+
+function novaUlohaTypu(typ) {
+  const g = Uloha.nahodne(GENERATORY[typ]);
+  const u = g();
+  return { typ, ...u };
+}
+
+/* ---- Procvičování jednoho typu -------------------------------------------------------------- */
+function zobrazUlohu(u, poSpravne, dalsi, hlavicka) {
+  const p = $('plocha');
+  p.innerHTML = (hlavicka || '') + `<div class="zadani uloha-text">${u.q}</div>`;
+  const odezva = odezvaEl();
+  Uloha.vyber({
+    kam: p, odezva, trida: 'velke',
+    moznosti: Uloha.zamichej([u.a, ...u.b.filter(x => x !== u.a)]).map(t => ({ klic: String(t), popis: String(t) })),
+    spravnyKlic: String(u.a),
+    zpravaOk: `✅ ${u.a}`,
+    zpravaChyba: 'Zkontroluj pořadí operací a jednotky.',
+    poSpravne, dalsi,
+  });
+  p.appendChild(odezva);
+}
+const pocitani = () => zobrazUlohu(novaUlohaTypu('pocitani'), skore.vyhodnot, novaUloha);
+const vyrazy = () => zobrazUlohu(novaUlohaTypu('vyrazy'), skore.vyhodnot, novaUloha);
+const geometrie = () => zobrazUlohu(novaUlohaTypu('geometrie'), skore.vyhodnot, novaUloha);
+const slovni = () => zobrazUlohu(novaUlohaTypu('slovni'), skore.vyhodnot, novaUloha);
+
+/* ---- Test na čas ------------------------------------------------------------------------------ */
+const POCET_ULOH = 10, LIMIT = 12 * 60;
+let testStav = null;
+
+function test() {
+  const poradiTypu = Uloha.zamichej([...Object.keys(TYPY), ...Object.keys(TYPY), 'pocitani', 'slovni']).slice(0, POCET_ULOH);
+  testStav = {
+    ulohy: poradiTypu.map(t => novaUlohaTypu(t)),
+    i: 0, spravne: 0, zbyva: LIMIT, chyby: [], bezi: true,
+  };
+  tikej();
+  dalsiTestovaUloha();
+}
+function tikej() {
+  clearInterval(window.__odpocet);
+  window.__odpocet = setInterval(() => {
+    if (!testStav || !testStav.bezi) { clearInterval(window.__odpocet); return; }
+    testStav.zbyva--;
+    const el = $('cas');
+    if (el) {
+      const m = Math.floor(testStav.zbyva / 60), s = testStav.zbyva % 60;
+      el.textContent = `${m}:${String(s).padStart(2, '0')}`;
+      el.classList.toggle('malo', testStav.zbyva <= 60);
+    }
+    if (testStav.zbyva <= 0) { testStav.bezi = false; clearInterval(window.__odpocet); vysledkyTestu(true); }
+  }, 1000);
+}
+function dalsiTestovaUloha() {
+  if (testStav.i >= testStav.ulohy.length) { testStav.bezi = false; vysledkyTestu(false); return; }
+  const u = testStav.ulohy[testStav.i];
+  const m = Math.floor(testStav.zbyva / 60), s = testStav.zbyva % 60;
+  const hlavicka = `<div class="lista-testu">
+      <span>Úloha <b>${testStav.i + 1}</b> z ${testStav.ulohy.length}</span>
+      <span>typ: ${TYPY[u.typ]}</span>
+      <span>zbývá <span class="cas" id="cas">${m}:${String(s).padStart(2, '0')}</span></span>
+    </div>`;
+  zobrazUlohu(u, napoprve => {
+    if (napoprve) testStav.spravne++; else testStav.chyby.push(u);
+    skore.vyhodnot(napoprve);
+  }, () => { testStav.i++; dalsiTestovaUloha(); }, hlavicka);
+}
+function vysledkyTestu(vyprselCas) {
+  clearInterval(window.__odpocet);
+  const p = $('plocha');
+  const podleTypu = {};
+  for (const t of Object.keys(TYPY)) {
+    const celkem = testStav.ulohy.filter(x => x.typ === t).length;
+    const chybne = testStav.chyby.filter(x => x.typ === t).length;
+    if (celkem) podleTypu[t] = { celkem, chybne };
+  }
+  const radky = Object.entries(podleTypu).map(([t, v]) =>
+    `<tr><td>${TYPY[t]}</td><td>${v.celkem - v.chybne} / ${v.celkem}</td>
+      <td class="${v.chybne ? 'spatne' : 'dobre'}">${v.chybne ? v.chybne + ' chyb' : 'bez chyby'}</td></tr>`).join('');
+
+  p.innerHTML = `<div class="zadani">${vyprselCas ? '⏰ Čas vypršel!' : '🏁 Test dokončen'}</div>
+    <div class="velke-cislo">${testStav.spravne} / ${testStav.ulohy.length}</div>
+    <div class="vysledky">
+      <table><tr><th>typ úlohy</th><th>napoprvé správně</th><th>chyby</th></tr>${radky}</table>
+      ${testStav.chyby.length
+        ? `<p style="margin-top:12px">Doporučené procvičení: <b>${[...new Set(testStav.chyby.map(x => TYPY[x.typ]))].join(', ')}</b></p>`
+        : '<p style="margin-top:12px;color:var(--ok)">Všechno napoprvé správně – skvělá práce!</p>'}
+    </div>`;
+  const znovu = document.createElement('button');
+  znovu.textContent = '🔄 Spustit nový test';
+  znovu.style.cssText = 'background:var(--accent);border:none;color:#fff;border-radius:8px;padding:11px 22px;'
+    + 'font-size:0.95rem;font-weight:600;cursor:pointer;margin-top:8px';
+  znovu.addEventListener('click', test);
+  p.appendChild(znovu);
+}
+
+const REZIMY = { test, pocitani, vyrazy, geometrie, slovni };
+function novaUloha() {
+  if (rezim !== 'test' && testStav) { testStav.bezi = false; clearInterval(window.__odpocet); }
+  REZIMY[rezim]();
+}
+
+document.querySelectorAll('#rezimy button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#rezimy button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  rezim = b.dataset.rezim;
+  novaUloha();
+}));
+$('btnDalsi').addEventListener('click', () => {
+  if (rezim === 'test' && testStav && testStav.bezi) { testStav.i++; dalsiTestovaUloha(); return; }
+  novaUloha();
+});
+novaUloha();
+</script>
+</body>
+</html>

@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Slovní zásoba a význam slov</title>
+  <link rel="stylesheet" href="../common.css">
+  <link rel="stylesheet" href="../vyuka.css">
+  <script src="../theme.js"></script>
+  <script src="../rec.js"></script>
+  <script src="../uloha.js"></script>
+  <style>
+    .slovo-velke { font-size: clamp(1.7rem, 6vw, 2.6rem); font-weight: 700; }
+    .veta { font-size: clamp(1.05rem, 4vw, 1.5rem); font-weight: 600; max-width: 620px; line-height: 1.5; }
+    .veta .zvyraz { color: var(--accent); }
+    .dvojice-slov { display: flex; gap: 20px; align-items: center; justify-content: center; flex-wrap: wrap; }
+    .dvojice-slov span { font-size: clamp(1.3rem, 5vw, 2rem); font-weight: 700; }
+    .dvojice-slov .sipka { color: var(--text-faint); font-size: 1.4rem; }
+  </style>
+</head>
+<body>
+  <h1>📚 Slovní zásoba a význam slov</h1>
+  <p class="podtitul">Pro 6.–7. ročník: jednoznačná a mnohoznačná slova, synonyma, homonyma a nadřazenost.</p>
+
+  <div class="rezimy" id="rezimy">
+    <button data-rezim="vztah" class="active">🔗 Jaký je to vztah?</button>
+    <button data-rezim="mnohoznacnost">🎭 Kolik významů?</button>
+    <button data-rezim="vyznamVeVete">🔍 Význam v kontextu</button>
+    <button data-rezim="nadrazene">🗂️ Nadřazené slovo</button>
+  </div>
+
+  <div class="plocha" id="plocha"></div>
+
+  <div class="ovladani">
+    <button class="hlavni" id="btnDalsi">Přeskočit →</button>
+    <span class="skore" id="skore"></span>
+  </div>
+
+  <p class="napoveda">
+    <b>Synonyma</b> mají podobný význam (dům – stavení), <b>antonyma</b> opačný (den – noc),
+    <b>homonyma</b> stejnou podobu, ale jiný význam (kolej ve škole × kolej na trati).
+    Slovo <b>nadřazené</b> zahrnuje víc druhů (nábytek → stůl, židle).
+  </p>
+
+<script>
+const $ = id => document.getElementById(id);
+const skore = Uloha.skore('nodus_cj6_zasoba', $('skore'));
+let rezim = 'vztah';
+
+const DVOJICE = [
+  { a: 'dům', b: 'stavení', vztah: 'synonyma' },
+  { a: 'krásný', b: 'nádherný', vztah: 'synonyma' },
+  { a: 'utíkat', b: 'běžet', vztah: 'synonyma' },
+  { a: 'malý', b: 'drobný', vztah: 'synonyma' },
+  { a: 'den', b: 'noc', vztah: 'antonyma' },
+  { a: 'vysoký', b: 'nízký', vztah: 'antonyma' },
+  { a: 'začátek', b: 'konec', vztah: 'antonyma' },
+  { a: 'radost', b: 'smutek', vztah: 'antonyma' },
+  { a: 'kolej (na trati)', b: 'kolej (ubytovna)', vztah: 'homonyma' },
+  { a: 'zámek (na dveřích)', b: 'zámek (budova)', vztah: 'homonyma' },
+  { a: 'oko (na těle)', b: 'oko (na polévce)', vztah: 'homonyma' },
+  { a: 'los (zvíře)', b: 'los (do loterie)', vztah: 'homonyma' },
+  { a: 'strom', b: 'dub', vztah: 'nadrazene' },
+  { a: 'nábytek', b: 'židle', vztah: 'nadrazene' },
+  { a: 'ovoce', b: 'jablko', vztah: 'nadrazene' },
+  { a: 'nástroj', b: 'kladivo', vztah: 'nadrazene' },
+];
+
+const VZTAHY = {
+  synonyma: 'synonyma (podobný význam)',
+  antonyma: 'antonyma (opačný význam)',
+  homonyma: 'homonyma (stejná podoba, jiný význam)',
+  nadrazene: 'nadřazené a podřazené slovo',
+};
+
+const MNOHOZNACNA = [
+  { s: 'jazyk', pocet: 'víc', vyznamy: 'orgán v ústech · řeč · jazýček u boty' },
+  { s: 'koruna', pocet: 'víc', vyznamy: 'koruna stromu · panovnická koruna · měna' },
+  { s: 'zámek', pocet: 'víc', vyznamy: 'stavba · zařízení na dveřích · zip' },
+  { s: 'list', pocet: 'víc', vyznamy: 'list stromu · list papíru · list dopisu' },
+  { s: 'stopka', pocet: 'víc', vyznamy: 'stopka třešně · dopravní značka stop' },
+  { s: 'počítač', pocet: 'jeden', vyznamy: 'zařízení na zpracování dat' },
+  { s: 'trojúhelník', pocet: 'jeden', vyznamy: 'geometrický útvar se třemi stranami' },
+  { s: 'kyslík', pocet: 'jeden', vyznamy: 'chemický prvek' },
+  { s: 'sešit', pocet: 'jeden', vyznamy: 'svázané listy papíru na psaní' },
+  { s: 'kostel', pocet: 'jeden', vyznamy: 'stavba určená k bohoslužbám' },
+];
+
+const KONTEXTY = [
+  { v: 'Ve škole nám postavili novou <span class="zvyraz">kolej</span> pro studenty.',
+    spr: 'ubytovna pro studenty', jine: ['dráha pro vlak', 'část kola', 'skupina zvířat'] },
+  { v: 'Vlak vjel na vedlejší <span class="zvyraz">kolej</span>.',
+    spr: 'dráha pro vlak', jine: ['ubytovna pro studenty', 'silnice', 'most'] },
+  { v: 'V polévce plavala mastná <span class="zvyraz">oka</span>.',
+    spr: 'kapky tuku na hladině', jine: ['orgány zraku', 'otvory v síti', 'kola'] },
+  { v: 'Zavři dveře na <span class="zvyraz">zámek</span>.',
+    spr: 'zařízení na zamykání', jine: ['historickou stavbu', 'zip u bundy', 'klíč'] },
+  { v: 'Na kopci stojí barokní <span class="zvyraz">zámek</span>.',
+    spr: 'historická stavba', jine: ['zařízení na zamykání', 'věž', 'hradba'] },
+  { v: 'Cizí <span class="zvyraz">jazyk</span> se učíme od třetí třídy.',
+    spr: 'řeč, kterou se mluví', jine: ['orgán v ústech', 'jazýček u boty', 'plamen'] },
+  { v: 'Koruna <span class="zvyraz">stromu</span> poskytovala stín.',
+    spr: 'horní olistěná část stromu', jine: ['panovnická ozdoba hlavy', 'měna', 'kořen'] },
+];
+
+const SKUPINY = [
+  { nadrazene: 'nábytek', podrazene: ['židle', 'stůl', 'skříň'] },
+  { nadrazene: 'hudební nástroje', podrazene: ['housle', 'kytara', 'buben'] },
+  { nadrazene: 'savci', podrazene: ['pes', 'kůň', 'velryba'] },
+  { nadrazene: 'ovoce', podrazene: ['jablko', 'hruška', 'švestka'] },
+  { nadrazene: 'dopravní prostředky', podrazene: ['vlak', 'autobus', 'letadlo'] },
+  { nadrazene: 'stromy', podrazene: ['dub', 'smrk', 'bříza'] },
+  { nadrazene: 'sporty', podrazene: ['fotbal', 'plavání', 'lyžování'] },
+];
+
+/* ---- Jaký je to vztah? ---------------------------------------------------------- */
+function vztah() {
+  const p = $('plocha');
+  const u = Uloha.nahodne(DVOJICE);
+  p.innerHTML = `<div class="zadani">Jaký je vztah mezi těmito slovy?</div>
+    <div class="karta"><div class="dvojice-slov">
+      <span>${u.a}</span><span class="sipka">↔</span><span>${u.b}</span>
+    </div></div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej(Object.entries(VZTAHY)).map(([klic, popis]) => ({ klic, popis })),
+    spravnyKlic: u.vztah,
+    zpravaOk: `✅ ${u.a} – ${u.b}: ${VZTAHY[u.vztah]}.`,
+    zpravaChyba: 'Mají slova podobný význam, opačný, nebo jen stejnou podobu?',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Kolik významů? --------------------------------------------------------------- */
+function mnohoznacnost() {
+  const p = $('plocha');
+  const u = Uloha.nahodne(MNOHOZNACNA);
+  p.innerHTML = `<div class="zadani">Je toto slovo jednoznačné, nebo mnohoznačné?</div>
+    <div class="karta"><div class="slovo-velke">${u.s}</div></div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva, trida: 'dve',
+    moznosti: [
+      { klic: 'jeden', ikona: '1️⃣', popis: 'jednoznačné' },
+      { klic: 'víc', ikona: '🎭', popis: 'mnohoznačné' },
+    ],
+    spravnyKlic: u.pocet,
+    zpravaOk: `✅ ${u.s}: ${u.vyznamy}`,
+    zpravaChyba: 'Zkus vymyslet, jestli má slovo víc různých významů.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Význam v kontextu ------------------------------------------------------------ */
+function vyznamVeVete() {
+  const p = $('plocha');
+  const u = Uloha.nahodne(KONTEXTY);
+  p.innerHTML = `<div class="zadani">V jakém významu je zvýrazněné slovo použité?</div>
+    <div class="karta"><div class="veta">${u.v}</div></div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([u.spr, ...u.jine]).map(t => ({ klic: t, popis: t })),
+    spravnyKlic: u.spr,
+    zpravaOk: `✅ Tady znamená: ${u.spr}.`,
+    zpravaChyba: 'Význam poznáš z celé věty – co dává smysl?',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Nadřazené slovo -------------------------------------------------------------- */
+function nadrazene() {
+  const p = $('plocha');
+  const u = Uloha.nahodne(SKUPINY);
+  const jine = Uloha.zamichej(SKUPINY.filter(x => x.nadrazene !== u.nadrazene))
+    .slice(0, 3).map(x => x.nadrazene);
+  p.innerHTML = `<div class="zadani">Které slovo je těmto slovům nadřazené?</div>
+    <div class="karta"><div class="dvojice-slov">
+      ${u.podrazene.map(s => `<span>${s}</span>`).join('<span class="sipka">·</span>')}
+    </div></div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([u.nadrazene, ...jine]).map(t => ({ klic: t, popis: t })),
+    spravnyKlic: u.nadrazene,
+    zpravaOk: `✅ ${u.nadrazene} zahrnuje ${u.podrazene.join(', ')}.`,
+    zpravaChyba: 'Hledej slovo, do kterého se všechna uvedená slova vejdou.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+const REZIMY = { vztah, mnohoznacnost, vyznamVeVete, nadrazene };
+function novaUloha() { REZIMY[rezim](); }
+
+document.querySelectorAll('#rezimy button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#rezimy button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  rezim = b.dataset.rezim;
+  novaUloha();
+}));
+$('btnDalsi').addEventListener('click', novaUloha);
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === 'Enter') { e.preventDefault(); novaUloha(); }
+});
+novaUloha();
+</script>
+</body>
+</html>

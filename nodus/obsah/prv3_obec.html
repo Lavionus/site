@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Naše obec a kraj</title>
+  <link rel="stylesheet" href="../common.css">
+  <link rel="stylesheet" href="../vyuka.css">
+  <script src="../theme.js"></script>
+  <script src="../rec.js"></script>
+  <script src="../uloha.js"></script>
+  <style>
+    .plan { width: min(560px, 94%); border-radius: 10px; }
+    .plan .budova { cursor: pointer; }
+    .plan .budova .telo { stroke: transparent; stroke-width: 0; transition: stroke 0.15s ease; }
+    .plan .budova:hover .telo { stroke: var(--accent); stroke-width: 3; }
+    .plan .budova.spravne .telo { stroke: var(--ok); stroke-width: 4; }
+    .plan .budova.spatne .telo { stroke: var(--danger); stroke-width: 4; }
+    .plan .popisek { fill: #1c1c1c; font-size: 11px; font-weight: 700; text-anchor: middle; }
+    .plan .cesta { fill: #6b6b6b; }
+    .plan .zelen { fill: #3f8a4a; }
+
+    .ruzice { width: min(300px, 70%); }
+    .ruzice .kruh { fill: var(--bg-elevated); stroke: var(--border-strong); stroke-width: 3; }
+    .ruzice .sipka { stroke: var(--danger); stroke-width: 7; stroke-linecap: round; }
+    .ruzice .stred { fill: var(--danger); }
+    .ruzice text { fill: var(--text-muted); font-size: 18px; font-weight: 700; text-anchor: middle; }
+    .situace { max-width: 520px; font-size: 1.05rem; line-height: 1.45; }
+  </style>
+</head>
+<body>
+  <h1>🏘️ Naše obec a kraj</h1>
+  <p class="podtitul">Pro 3.–4. ročník: orientace podle světových stran, plán obce, úřady a kraje ČR.</p>
+
+  <div class="rezimy" id="rezimy">
+    <button data-rezim="strany" class="active">🧭 Světové strany</button>
+    <button data-rezim="plan">🗺️ Plán obce</button>
+    <button data-rezim="kamZajdes">🏢 Kam zajdeš?</button>
+    <button data-rezim="kraje">🇨🇿 Kraje a města</button>
+  </div>
+
+  <div class="plocha" id="plocha"></div>
+
+  <div class="ovladani">
+    <button class="hlavni" id="btnDalsi">Přeskočit →</button>
+    <span class="skore" id="skore"></span>
+  </div>
+
+  <p class="napoveda">
+    Světové strany si zapamatuješ podle věty <b>S</b>everka <b>V</b>ečer <b>J</b>ede <b>Z</b>a mnou
+    – po směru hodinových ručiček sever, východ, jih, západ.
+    Slunce vychází na východě a zapadá na západě.
+  </p>
+
+<script>
+const $ = id => document.getElementById(id);
+const skore = Uloha.skore('nodus_prv3_obec', $('skore'));
+let rezim = 'strany';
+
+const STRANY = [
+  { klic: 'S', nazev: 'sever', uhel: 0 },
+  { klic: 'SV', nazev: 'severovýchod', uhel: 45 },
+  { klic: 'V', nazev: 'východ', uhel: 90 },
+  { klic: 'JV', nazev: 'jihovýchod', uhel: 135 },
+  { klic: 'J', nazev: 'jih', uhel: 180 },
+  { klic: 'JZ', nazev: 'jihozápad', uhel: 225 },
+  { klic: 'Z', nazev: 'západ', uhel: 270 },
+  { klic: 'SZ', nazev: 'severozápad', uhel: 315 },
+];
+
+const BUDOVY = [
+  { id: 'urad', nazev: 'obecní úřad' },
+  { id: 'skola', nazev: 'škola' },
+  { id: 'posta', nazev: 'pošta' },
+  { id: 'obchod', nazev: 'obchod' },
+  { id: 'hasici', nazev: 'hasičská zbrojnice' },
+  { id: 'kostel', nazev: 'kostel' },
+  { id: 'hriste', nazev: 'hřiště' },
+  { id: 'nadrazi', nazev: 'nádraží' },
+];
+
+const SITUACE = [
+  { t: 'Potřebuješ poslat dopis babičce.', c: 'posta', e: '✉️' },
+  { t: 'Rodiče jdou vyřídit nový občanský průkaz.', c: 'urad', e: '📋' },
+  { t: 'Chceš si půjčit knihu.', c: 'knihovna', e: '📚' },
+  { t: 'Bolí tě v krku a máš horečku.', c: 'ordinace', e: '🩺' },
+  { t: 'Hoří kůlna na konci vesnice.', c: 'hasici', e: '🔥' },
+  { t: 'Maminka potřebuje koupit mléko a chleba.', c: 'obchod', e: '🛒' },
+  { t: 'Jedete vlakem na výlet do města.', c: 'nadrazi', e: '🚉' },
+  { t: 'Jdeš si zahrát s kamarády fotbal.', c: 'hriste', e: '⚽' },
+  { t: 'Chcete nahlásit ztracenou peněženku.', c: 'policie', e: '👮' },
+  { t: 'Jdeš se učit do třídy.', c: 'skola', e: '🎒' },
+];
+
+const MISTA = {
+  posta: '✉️ pošta', urad: '🏛️ obecní úřad', knihovna: '📚 knihovna', ordinace: '🩺 ordinace lékaře',
+  hasici: '🚒 hasičská zbrojnice', obchod: '🛒 obchod', nadrazi: '🚉 nádraží',
+  hriste: '⚽ hřiště', policie: '👮 policie', skola: '🏫 škola',
+};
+
+const KRAJE = [
+  { kraj: 'Jihomoravský kraj', mesto: 'Brno' },
+  { kraj: 'Moravskoslezský kraj', mesto: 'Ostrava' },
+  { kraj: 'Plzeňský kraj', mesto: 'Plzeň' },
+  { kraj: 'Jihočeský kraj', mesto: 'České Budějovice' },
+  { kraj: 'Královéhradecký kraj', mesto: 'Hradec Králové' },
+  { kraj: 'Olomoucký kraj', mesto: 'Olomouc' },
+  { kraj: 'Zlínský kraj', mesto: 'Zlín' },
+  { kraj: 'Liberecký kraj', mesto: 'Liberec' },
+  { kraj: 'Pardubický kraj', mesto: 'Pardubice' },
+  { kraj: 'Karlovarský kraj', mesto: 'Karlovy Vary' },
+  { kraj: 'Ústecký kraj', mesto: 'Ústí nad Labem' },
+  { kraj: 'Kraj Vysočina', mesto: 'Jihlava' },
+];
+
+/* ---- Světové strany -------------------------------------------------------- */
+function strany() {
+  const p = $('plocha');
+  const s = Uloha.nahodne(STRANY);
+  const a = (s.uhel - 90) * Math.PI / 180;
+  const x = 100 + Math.cos(a) * 62, y = 100 + Math.sin(a) * 62;
+
+  p.innerHTML = `<div class="zadani">Kam ukazuje šipka?</div>
+    <svg class="ruzice" viewBox="0 0 200 200">
+      <circle class="kruh" cx="100" cy="100" r="80"/>
+      <text x="100" y="26">S</text><text x="176" y="107">V</text>
+      <text x="100" y="188">J</text><text x="24" y="107">Z</text>
+      <line class="sipka" x1="100" y1="100" x2="${x}" y2="${y}"/>
+      <circle class="stred" cx="100" cy="100" r="7"/>
+    </svg>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  const jine = Uloha.zamichej(STRANY.filter(x2 => x2.klic !== s.klic)).slice(0, 3);
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([s, ...jine]).map(x2 => ({ klic: x2.klic, popis: x2.nazev })),
+    spravnyKlic: s.klic,
+    zpravaOk: `✅ Šipka ukazuje na ${s.nazev} (${s.klic}).`,
+    zpravaChyba: 'Nahoře je vždycky sever – odtud počítej po směru hodinových ručiček.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Plán obce ------------------------------------------------------------- */
+function svgPlan() {
+  const dum = (id, x, y, barva, popis) => `
+    <g class="budova" data-budova="${id}">
+      <rect class="telo" x="${x}" y="${y}" width="86" height="52" rx="7" fill="${barva}"/>
+      <text class="popisek" x="${x + 43}" y="${y + 31}">${popis}</text>
+    </g>`;
+  return `<svg class="plan" viewBox="0 0 400 260">
+    <rect x="0" y="0" width="400" height="260" fill="#2c3e33" rx="10"/>
+    <rect class="cesta" x="0" y="120" width="400" height="26"/>
+    <rect class="cesta" x="187" y="0" width="26" height="260"/>
+    <circle class="zelen" cx="60" cy="215" r="22"/><circle class="zelen" cx="340" cy="52" r="20"/>
+    ${dum('urad', 20, 30, '#d8c07a', 'ÚŘAD')}
+    ${dum('skola', 110, 30, '#b06a4a', 'ŠKOLA')}
+    ${dum('posta', 230, 30, '#7ba9e8', 'POŠTA')}
+    ${dum('obchod', 20, 160, '#c9a227', 'OBCHOD')}
+    ${dum('hasici', 110, 160, '#d0563f', 'HASIČI')}
+    ${dum('kostel', 230, 160, '#9c8fb0', 'KOSTEL')}
+    ${dum('hriste', 300, 100, '#4f9d5d', 'HŘIŠTĚ')}
+    ${dum('nadrazi', 300, 210, '#8a8a8a', 'NÁDRAŽÍ')}
+  </svg>`;
+}
+
+function plan() {
+  const p = $('plocha');
+  const cil = Uloha.nahodne(BUDOVY);
+  p.innerHTML = `<div class="zadani">Najdi v plánu obce: <b>${cil.nazev}</b></div>${svgPlan()}`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  p.appendChild(odezva);
+
+  const svg = p.querySelector('svg');
+  const stav = { chyboval: false, hotovo: false };
+  svg.querySelectorAll('.budova').forEach(g => {
+    g.addEventListener('click', () => {
+      if (stav.hotovo) return;
+      const zvolena = BUDOVY.find(b => b.id === g.dataset.budova);
+      if (g.dataset.budova !== cil.id) {
+        stav.chyboval = true;
+        Uloha.trhni(svg);
+        g.classList.add('spatne');
+        setTimeout(() => g.classList.remove('spatne'), 420);
+        odezva.className = 'odezva chyba';
+        odezva.textContent = `To je ${zvolena.nazev}. Hledáme ${cil.nazev} – zkus to znovu.`;
+        return;
+      }
+      stav.hotovo = true;
+      g.classList.add('spravne');
+      odezva.className = 'odezva ok';
+      odezva.textContent = '✅ Správně!';
+      skore.vyhodnot(!stav.chyboval);
+      setTimeout(novaUloha, Uloha.PRODLEVA);
+    });
+  });
+}
+
+/* ---- Kam zajdeš? ----------------------------------------------------------- */
+function kamZajdes() {
+  const p = $('plocha');
+  const s = Uloha.nahodne(SITUACE);
+  const jine = Uloha.zamichej(Object.keys(MISTA).filter(k => k !== s.c)).slice(0, 3);
+  p.innerHTML = `<div class="zadani">Kam v obci zajdeš?</div>
+    <div class="karta"><div class="obrazek">${s.e}</div><div class="situace">${s.t}</div></div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([s.c, ...jine]).map(k => ({ klic: k, popis: MISTA[k] })),
+    spravnyKlic: s.c,
+    zpravaOk: `✅ Ano, tohle vyřídí ${MISTA[s.c].replace(/^\S+\s/, '')}.`,
+    zpravaChyba: 'Tam ti s tímhle nepomůžou – zkus jiné místo.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Kraje a krajská města ------------------------------------------------- */
+function kraje() {
+  const p = $('plocha');
+  const k = Uloha.nahodne(KRAJE);
+  const jine = Uloha.zamichej(KRAJE.filter(x => x.mesto !== k.mesto)).slice(0, 3);
+  p.innerHTML = `<div class="zadani">Které město je krajským městem?</div>
+    <div class="karta"><div class="obrazek">🇨🇿</div><div class="situace">${k.kraj}</div></div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([k, ...jine]).map(x => ({ klic: x.mesto, popis: x.mesto })),
+    spravnyKlic: k.mesto,
+    zpravaOk: `✅ Krajským městem je ${k.mesto}.`,
+    zpravaChyba: 'To je krajské město jiného kraje.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+const REZIMY = { strany, plan, kamZajdes, kraje };
+function novaUloha() { REZIMY[rezim](); }
+
+document.querySelectorAll('#rezimy button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#rezimy button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  rezim = b.dataset.rezim;
+  novaUloha();
+}));
+$('btnDalsi').addEventListener('click', novaUloha);
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === 'Enter') { e.preventDefault(); novaUloha(); }
+});
+novaUloha();
+</script>
+</body>
+</html>

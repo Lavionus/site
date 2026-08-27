@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Atmosféra a počasí</title>
+  <link rel="stylesheet" href="../common.css">
+  <link rel="stylesheet" href="../vyuka.css">
+  <script src="../theme.js"></script>
+  <script src="../rec.js"></script>
+  <script src="../uloha.js"></script>
+  <style>
+    .popis-a { color: var(--text-muted); max-width: 560px; line-height: 1.55; }
+    .nazev-a { font-size: 1.2rem; font-weight: 700; }
+    .pasy { width: min(320px, 84vw); }
+    .pasy rect { stroke: var(--border); stroke-width: 1; }
+    .pasy text { fill: var(--text); font-size: 11px; text-anchor: middle; font-weight: 700; }
+  </style>
+</head>
+<body>
+  <h1>☁️ Atmosféra a počasí</h1>
+  <p class="podtitul">Pro 6.–7. ročník: složení vzduchu, vrstvy atmosféry, počasí a podnebné pásy.</p>
+
+  <div class="rezimy" id="rezimy">
+    <button data-rezim="pasy" class="active">🌡️ Podnebné pásy</button>
+    <button data-rezim="vrstvy">🛰️ Vrstvy atmosféry</button>
+    <button data-rezim="pocasi">🌦️ Počasí a podnebí</button>
+    <button data-rezim="jevy">⛈️ Meteorologické jevy</button>
+  </div>
+
+  <div class="plocha" id="plocha"></div>
+
+  <div class="ovladani">
+    <button class="hlavni" id="btnDalsi">Přeskočit →</button>
+    <span class="skore" id="skore"></span>
+  </div>
+
+  <p class="napoveda">
+    <b>Počasí</b> je okamžitý stav ovzduší na určitém místě, <b>podnebí</b> je dlouhodobý průměr
+    počasí za desítky let. Vzduch tvoří hlavně dusík (78 %) a kyslík (21 %).
+  </p>
+
+<script>
+const $ = id => document.getElementById(id);
+const skore = Uloha.skore('nodus_z6_atmosfera', $('skore'));
+let rezim = 'pasy';
+
+const PASY = [
+  { n: 'tropický pás', o: 'celoročně horko, u rovníku hodně srážek, roste tam deštný prales', b: '#2f7a3f' },
+  { n: 'subtropický pás', o: 'horká suchá léta a mírné zimy, typické pro Středomoří a pouště', b: '#c9a227' },
+  { n: 'mírný pás', o: 'střídají se čtyři roční období, patří sem i Česko', b: '#4f9d5d' },
+  { n: 'subpolární pás', o: 'dlouhé mrazivé zimy a krátká chladná léta, roste tam tundra', b: '#7ba9e8' },
+  { n: 'polární pás', o: 'celoročně mráz, trvale zamrzlá půda a ledovce', b: '#dfefff' },
+];
+
+const VRSTVY = [
+  { n: 'troposféra', o: 'nejnižší vrstva do 11 km, odehrává se v ní veškeré počasí' },
+  { n: 'stratosféra', o: 'obsahuje ozonovou vrstvu chránící před ultrafialovým zářením' },
+  { n: 'mezosféra', o: 'vrstva, ve které shoří většina meteoroidů' },
+  { n: 'termosféra', o: 'velmi řídká vrstva, kde vzniká polární záře a obíhají družice' },
+];
+
+const POCASI_PODNEBI = [
+  { t: 'Dnes odpoledne bude v Brně bouřka.', pocasi: true },
+  { t: 'V Česku jsou průměrné roční teploty kolem 8 °C.', pocasi: false },
+  { t: 'Zítra ráno klesne teplota pod nulu.', pocasi: true },
+  { t: 'V Sahaře prší v průměru méně než 100 mm ročně.', pocasi: false },
+  { t: 'Právě fouká silný vítr od západu.', pocasi: true },
+  { t: 'V tropickém pásu je celoročně horko.', pocasi: false },
+  { t: 'Během noci napadlo pět centimetrů sněhu.', pocasi: true },
+  { t: 'Léta ve Středomoří bývají suchá a horká.', pocasi: false },
+];
+
+const JEVY = [
+  { n: 'tlaková níže', o: 'oblast nízkého tlaku, přináší oblačnost a srážky' },
+  { n: 'tlaková výše', o: 'oblast vysokého tlaku, přináší jasno a stabilní počasí' },
+  { n: 'studená fronta', o: 'rozhraní, kde studený vzduch vytlačuje teplý, bývají přeháňky a bouřky' },
+  { n: 'inverze', o: 'v nížině leží studený vzduch a nad ním teplejší, drží se mlha a smog' },
+  { n: 'srážky', o: 'voda padající z oblaků – déšť, sníh, kroupy' },
+  { n: 'vlhkost vzduchu', o: 'množství vodní páry ve vzduchu, měří se vlhkoměrem' },
+  { n: 'atmosférický tlak', o: 'tlak vzduchového sloupce, měří se barometrem v hektopascalech' },
+];
+
+/* ---- Podnebné pásy ---------------------------------------------------------------------- */
+function pasy() {
+  const p = $('plocha');
+  const u = Uloha.nahodne(PASY);
+  const jine = Uloha.zamichej(PASY.filter(x => x.n !== u.n)).slice(0, 3);
+  let obdelniky = '';
+  PASY.forEach((x, i) => {
+    obdelniky += `<rect x="10" y="${12 + i * 30}" width="300" height="28" fill="${x.b}" fill-opacity="0.65"/>
+      <text x="160" y="${31 + i * 30}" fill="#1c1c1c">${x.n}</text>`;
+  });
+
+  p.innerHTML = `<div class="zadani">Který podnebný pás je popsán?</div>
+    <svg class="pasy" viewBox="0 0 320 165">${obdelniky}</svg>
+    <div class="popis-a">${u.o}</div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([u, ...jine]).map(x => ({ klic: x.n, popis: x.n })),
+    spravnyKlic: u.n,
+    zpravaOk: `✅ ${u.n} – ${u.o}.`,
+    zpravaChyba: 'Zkus jiný pás – je tam horko celý rok, nebo se střídají období?',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Vrstvy atmosféry ------------------------------------------------------------------- */
+function vrstvy() {
+  const p = $('plocha');
+  const u = Uloha.nahodne(VRSTVY);
+  const jine = Uloha.zamichej(VRSTVY.filter(x => x.n !== u.n)).slice(0, 3);
+  p.innerHTML = `<div class="zadani">O kterou vrstvu atmosféry jde?</div>
+    <div class="karta"><div class="obrazek">🛰️</div><div class="popis-a">${u.o}</div></div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([u, ...jine]).map(x => ({ klic: x.n, popis: x.n })),
+    spravnyKlic: u.n,
+    zpravaOk: `✅ ${u.n} – ${u.o}.`,
+    zpravaChyba: 'Zkus jinou vrstvu.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Počasí a podnebí -------------------------------------------------------------------- */
+function pocasi() {
+  const p = $('plocha');
+  const u = Uloha.nahodne(POCASI_PODNEBI);
+  p.innerHTML = `<div class="zadani">Popisuje věta počasí, nebo podnebí?</div>
+    <div class="karta"><div class="obrazek">🌦️</div><div class="popis-a">${u.t}</div></div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva, trida: 'dve',
+    moznosti: [
+      { klic: 'pocasi', ikona: '⛅', popis: 'počasí (okamžitý stav)' },
+      { klic: 'podnebi', ikona: '📊', popis: 'podnebí (dlouhodobý průměr)' },
+    ],
+    spravnyKlic: u.pocasi ? 'pocasi' : 'podnebi',
+    zpravaOk: u.pocasi
+      ? '✅ Popisuje konkrétní chvíli a místo – to je počasí.'
+      : '✅ Popisuje dlouhodobý stav za mnoho let – to je podnebí.',
+    zpravaChyba: 'Mluví věta o dnešku, nebo o dlouhodobém průměru?',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Meteorologické jevy ------------------------------------------------------------------ */
+function jevy() {
+  const p = $('plocha');
+  const u = Uloha.nahodne(JEVY);
+  const jine = Uloha.zamichej(JEVY.filter(x => x.n !== u.n)).slice(0, 3);
+  p.innerHTML = `<div class="zadani">Který pojem odpovídá popisu?</div>
+    <div class="karta"><div class="obrazek">⛈️</div><div class="popis-a">${u.o}</div></div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([u, ...jine]).map(x => ({ klic: x.n, popis: x.n })),
+    spravnyKlic: u.n,
+    zpravaOk: `✅ ${u.n} – ${u.o}.`,
+    zpravaChyba: 'Zkus jinou možnost.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+const REZIMY = { pasy, vrstvy, pocasi, jevy };
+function novaUloha() { REZIMY[rezim](); }
+
+document.querySelectorAll('#rezimy button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#rezimy button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  rezim = b.dataset.rezim;
+  novaUloha();
+}));
+$('btnDalsi').addEventListener('click', novaUloha);
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === 'Enter') { e.preventDefault(); novaUloha(); }
+});
+novaUloha();
+</script>
+</body>
+</html>

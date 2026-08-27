@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>✖️ Procvičování násobilky</title>
+<link rel="stylesheet" href="../common.css">
+<link rel="stylesheet" href="../vyuka.css">
+<script src="../theme.js"></script>
+<script src="../uloha.js" defer></script>
+<script src="../rekord.js" defer></script>
+</head>
+<body>
+  <h1>✖️ Procvičování násobilky</h1>
+  <p class="podtitul">Rychlostní dril: na každý příklad máš deset sekund. Na konci uvidíš, které příklady ti utekly.</p>
+
+  <div class="rezimy" id="nastaveni">
+    <label>Rozsah
+      <select id="rozsah">
+        <option value="5">do 5×5</option>
+        <option value="10" selected>malá násobilka (×10)</option>
+        <option value="20">velká (×20)</option>
+      </select>
+    </label>
+    <label>Počet příkladů
+      <select id="pocet"><option>10</option><option>20</option><option>30</option></select>
+    </label>
+    <label>Operace
+      <select id="operace">
+        <option value="x">Násobení ×</option>
+        <option value="d">Dělení ÷</option>
+        <option value="both" selected>Obojí</option>
+      </select>
+    </label>
+    <button class="hlavni" id="btnStart">▶️ Start</button>
+  </div>
+
+  <div class="plocha" id="plocha"></div>
+
+  <div class="ovladani">
+    <span id="rekordBox"></span>
+    <span class="pokrok" id="pokrok"></span>
+    <span class="skore" id="skore"></span>
+  </div>
+
+  <p class="napoveda">
+    Odpověď potvrď <b>Enterem</b>. Dělení je jen obrácené násobení: <b>56 ÷ 7</b> se ptá „kolikrát se sedmička vejde do 56“.
+    Když si nejsi jistý, pomůže rozklad: 7 × 8 = 7 × 4 + 7 × 4 = 28 + 28.
+  </p>
+
+<script>
+const $ = id => document.getElementById(id);
+const CAS_NA_PRIKLAD = 10000;   // ms
+
+let priklady = [], poradi = 0, spravne = 0, serie = 0, nejdelsiSerie = 0;
+let chyby = [], casovac = null, zbyva = 0, rek = null, skore = null;
+
+function pripravPriklady() {
+  const max = +$('rozsah').value, n = +$('pocet').value, op = $('operace').value;
+  priklady = [];
+  for (let i = 0; i < n; i++) {
+    const a = 1 + Math.floor(Math.random() * max), b = 1 + Math.floor(Math.random() * max);
+    const deleni = op === 'd' || (op === 'both' && Math.random() < 0.5);
+    priklady.push(deleni
+      ? { zadani: `${a * b} ÷ ${a}`, odpoved: b, napoveda: `${a} × ${b} = ${a * b}` }
+      : { zadani: `${a} × ${b}`, odpoved: a * b, napoveda: `${b}× po ${a}` });
+  }
+}
+
+function start() {
+  pripravPriklady();
+  poradi = 0; spravne = 0; serie = 0; nejdelsiSerie = 0; chyby = [];
+  dalsi();
+}
+
+function dalsi() {
+  clearInterval(casovac);
+  if (poradi >= priklady.length) { konec(); return; }
+  const p = priklady[poradi];
+  $('pokrok').textContent = `${poradi + 1} / ${priklady.length}`;
+
+  $('plocha').innerHTML = '';
+  const karta = document.createElement('div');
+  karta.className = 'karta';
+  karta.innerHTML =
+    `<div class="dril-stav"><span>Správně <b>${spravne}</b></span><span>Série <b>${serie}</b> 🔥</span></div>` +
+    `<div class="casomira"><i id="ubytek"></i></div>` +
+    `<div class="velky-text">${p.zadani} = ?</div>`;
+  const pole = document.createElement('input');
+  pole.className = 'odpoved-pole';
+  pole.type = 'number'; pole.inputMode = 'numeric'; pole.autocomplete = 'off';
+  pole.setAttribute('aria-label', 'Tvoje odpověď');
+  karta.appendChild(pole);
+  $('plocha').appendChild(karta);
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  $('plocha').appendChild(odezva);
+  pole.focus();
+
+  zbyva = CAS_NA_PRIKLAD;
+  const pruh = $('ubytek');
+  pruh.style.width = '100%';
+  casovac = setInterval(() => {
+    zbyva -= 100;
+    pruh.style.width = Math.max(0, zbyva / CAS_NA_PRIKLAD * 100) + '%';
+    pruh.parentElement.classList.toggle('dochazi', zbyva <= 3000);
+    if (zbyva <= 0) vyhodnot(pole, odezva, true);
+  }, 100);
+
+  pole.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && pole.value !== '') { e.preventDefault(); vyhodnot(pole, odezva, false); }
+  });
+}
+
+function vyhodnot(pole, odezva, vyprsel) {
+  clearInterval(casovac);
+  const p = priklady[poradi];
+  const ok = !vyprsel && Number(pole.value) === p.odpoved;
+  pole.disabled = true;
+  if (ok) {
+    spravne++; serie++;
+    if (serie > nejdelsiSerie) nejdelsiSerie = serie;
+    pole.classList.add('spravne');
+    odezva.className = 'odezva ok';
+    odezva.textContent = '✅ Správně!';
+  } else {
+    serie = 0;
+    chyby.push(p);
+    pole.classList.add('spatne');
+    odezva.className = 'odezva chyba';
+    odezva.textContent = (vyprsel ? '⏰ Čas vypršel. ' : '❌ ') + `Správně je ${p.odpoved}. (${p.napoveda})`;
+  }
+  if (skore) skore.vyhodnot(ok);
+  poradi++;
+  setTimeout(dalsi, ok ? 700 : 1600);
+}
+
+function konec() {
+  $('pokrok').textContent = '';
+  const pct = Math.round(spravne / priklady.length * 100);
+  const novyRekord = rek && rek.zapis(nejdelsiSerie);
+  $('plocha').innerHTML = '';
+  const karta = document.createElement('div');
+  karta.className = 'karta vysledky';
+  karta.innerHTML =
+    `<div class="emoji">${pct >= 90 ? '⭐⭐⭐' : pct >= 70 ? '⭐⭐' : pct >= 50 ? '⭐' : '💪'}</div>` +
+    `<div class="velky-text">${spravne} / ${priklady.length}</div>` +
+    `<div class="popis">Úspěšnost ${pct} % · nejdelší série ${nejdelsiSerie}` +
+    (novyRekord ? ' 🏆 nový rekord!' : '') + '</div>';
+
+  if (chyby.length) {
+    const seznam = document.createElement('div');
+    seznam.className = 'prehled-chyb';
+    seznam.innerHTML = '<h2>Co nesedělo</h2>' + chyby.map(ch =>
+      `<div class="chyba-radek"><span class="zadani-chyby">${ch.zadani} =</span><b>${ch.odpoved}</b>` +
+      `<span class="napoveda-chyby">${ch.napoveda}</span></div>`).join('');
+    karta.appendChild(seznam);
+  } else {
+    const vse = document.createElement('div');
+    vse.className = 'popis';
+    vse.textContent = 'Všechno správně! 🎉';
+    karta.appendChild(vse);
+  }
+
+  const tlacitka = document.createElement('div');
+  tlacitka.className = 'konec-tlacitka';
+  const znovu = document.createElement('button');
+  znovu.className = 'hlavni';
+  znovu.textContent = '🔄 Nová série';
+  znovu.onclick = start;
+  tlacitka.appendChild(znovu);
+  if (chyby.length) {
+    const opak = document.createElement('button');
+    opak.textContent = '🔁 Zopakovat chyby';
+    opak.onclick = () => {
+      priklady = chyby.slice();
+      poradi = 0; spravne = 0; serie = 0; chyby = [];
+      dalsi();
+    };
+    tlacitka.appendChild(opak);
+  }
+  karta.appendChild(tlacitka);
+  $('plocha').appendChild(karta);
+}
+
+window.addEventListener('DOMContentLoaded', () => {
+  skore = Uloha.skore('nodus_nasobilka', $('skore'));
+  if (typeof Rekord !== 'undefined') {
+    rek = Rekord.sleduj('nodus_nasobilka_serie',
+      { vyssiLepsi: true, popisek: 'Nejdelší série', format: v => v + '×' });
+    rek.prvek($('rekordBox'));
+  }
+  $('btnStart').onclick = start;
+  start();
+});
+</script>
+</body>
+</html>

@@ -1,0 +1,352 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lomené výrazy</title>
+  <link rel="stylesheet" href="../common.css">
+  <link rel="stylesheet" href="../vyuka.css">
+  <script src="../theme.js"></script>
+  <script src="../uloha.js"></script>
+  <style>
+    .zlomek { display: inline-flex; flex-direction: column; align-items: center; vertical-align: middle;
+      line-height: 1.15; margin: 0 6px; }
+    .zlomek .c { border-bottom: 3px solid currentColor; padding: 0 8px; }
+    .zlomek .j { padding: 0 8px; }
+    .vyraz { font-size: clamp(1.2rem, 4.6vw, 1.8rem); font-weight: 700; display: flex;
+      align-items: center; justify-content: center; gap: 6px; flex-wrap: wrap; }
+    .uloha-text { max-width: 640px; font-size: 1.02rem; line-height: 1.6; }
+    .uloha-text b { color: var(--accent); }
+    .vzorec { font-family: 'Courier New', monospace; color: var(--text-muted); font-size: 0.93rem; }
+
+    /* ---- průzkumník zakázané hodnoty ---- */
+    .scena { width: min(520px, 100%); }
+    .scena .mrizka { stroke: var(--border); stroke-width: 0.8; }
+    .scena .osy { stroke: var(--text-muted); stroke-width: 1.6; }
+    .scena .krivka { fill: none; stroke: var(--accent); stroke-width: 2.6; }
+    .scena .asymptota { stroke: var(--danger); stroke-width: 2; stroke-dasharray: 6 4; }
+    .scena .bod { fill: var(--warn); stroke: var(--bg-panel); stroke-width: 2; }
+    .scena .popis { fill: var(--text-faint); font-size: 11px; text-anchor: middle; }
+    .scena .popis.zakaz { fill: var(--danger); font-weight: 700; }
+
+    .ovladace { display: flex; flex-wrap: wrap; gap: 8px 12px; justify-content: center; max-width: 520px; }
+    .ovladace label {
+      display: flex; align-items: center; gap: 7px;
+      background: var(--bg-input); border: 1px solid var(--border);
+      border-radius: 8px; padding: 5px 10px; font-size: 0.8rem; color: var(--text-muted);
+    }
+    .ovladace input[type=range] { width: 180px; accent-color: var(--accent); }
+    .ovladace .hodnota { color: var(--text); font-weight: 600; min-width: 3.4em; text-align: right;
+      font-variant-numeric: tabular-nums; }
+
+    .dosazeni {
+      background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 12px;
+      padding: 12px 18px; max-width: 520px; font-variant-numeric: tabular-nums;
+    }
+    .dosazeni .radek { font-size: 1.05rem; line-height: 1.9; }
+    .dosazeni .vysledek { font-size: 1.3rem; font-weight: 700; color: var(--accent); }
+    .dosazeni.spatne { border-color: var(--danger); }
+    .dosazeni.spatne .vysledek { color: var(--danger); }
+    .vysvetlivka { color: var(--text-faint); font-size: 0.8rem; max-width: 520px; line-height: 1.5; }
+    .vysvetlivka b { color: var(--text-muted); }
+  </style>
+</head>
+<body>
+  <h1>🧮 Lomené výrazy</h1>
+  <p class="podtitul">Pro 9. ročník: podmínky řešitelnosti, krácení, sčítání a násobení lomených výrazů.</p>
+
+  <div class="rezimy" id="rezimy">
+    <button data-rezim="prozkumnik" class="active">🔎 Kde to spadne</button>
+    <button data-rezim="podminky">⚠️ Podmínky</button>
+    <button data-rezim="kraceni">✂️ Krácení</button>
+    <button data-rezim="scitani">➕ Sčítání a odčítání</button>
+    <button data-rezim="nasobeni">✖️ Násobení a dělení</button>
+  </div>
+
+  <div class="plocha" id="plocha"></div>
+
+  <div class="ovladani">
+    <button class="hlavni" id="btnDalsi">Přeskočit →</button>
+    <span class="skore" id="skore"></span>
+  </div>
+
+  <p class="napoveda">
+    Lomený výraz má ve jmenovateli proměnnou. <b>Jmenovatel se nikdy nesmí rovnat nule</b> – proto
+    u každého výrazu určujeme podmínky. Krátíme jen <b>součiny</b>, nikdy jednotlivé sčítance.
+  </p>
+
+<script>
+const $ = id => document.getElementById(id);
+const skore = Uloha.skore('nodus_m9_lomene_vyrazy', $('skore'));
+let rezim = 'prozkumnik';
+function odezvaEl() { const d = document.createElement('div'); d.className = 'odezva'; return d; }
+const zl = (c, j) => `<span class="zlomek"><span class="c">${c}</span><span class="j">${j}</span></span>`;
+const znak = n => n >= 0 ? `+ ${n}` : `− ${Math.abs(n)}`;
+
+/* ---- Kde to spadne ----------------------------------------------------------------------
+   Posuvník s x jde přes celý obor a u zakázané hodnoty výraz „vybuchne“.
+   Cíl: podmínka není formalita, ale místo, kde výraz přestane existovat. */
+const PZ = { p: 2, q: 3, x: 0 };
+
+function novyVyrazProzkumnik() {
+  PZ.p = Uloha.nahodneCislo(1, 6) * Uloha.nahodne([1, -1]);
+  PZ.q = Uloha.nahodneCislo(1, 5) * Uloha.nahodne([1, -1]);
+  PZ.x = 0;
+}
+
+function prozkumnik() {
+  const p = $('plocha');
+  p.innerHTML = `
+    <div class="zadani uloha-text">Táhni posuvníkem a dosazuj za <b>x</b>. Sleduj, co se
+      s hodnotou výrazu děje, když se blížíš k zakázané hodnotě.</div>
+    <div class="vyraz" id="vyrazPZ"></div>
+    <svg class="scena" id="scenaPZ" viewBox="0 0 520 300" role="img"
+         aria-label="Graf lomeneho vyrazu"></svg>
+    <div class="ovladace">
+      <label>x =
+        <input type="range" id="posX" min="-8" max="8" step="0.1" value="${PZ.x}">
+        <span class="hodnota" id="hodX"></span>
+      </label>
+      <button id="btnNaZakaz" style="background:var(--bg-control);border:1px solid var(--border-strong);
+        color:var(--text);border-radius:8px;padding:7px 13px;font-size:0.82rem;
+        font-family:inherit;cursor:pointer">⚠️ Skoč na zakázanou hodnotu</button>
+    </div>
+    <div class="dosazeni" id="dosazeni"></div>
+    <p class="vysvetlivka" id="poznamkaPZ"></p>`;
+
+  $('posX').addEventListener('input', e => { PZ.x = +e.target.value; kresliProzkumnik(); });
+  $('btnNaZakaz').addEventListener('click', () => {
+    PZ.x = -PZ.q;
+    $('posX').value = PZ.x;
+    kresliProzkumnik();
+  });
+  kresliProzkumnik();
+}
+
+const cis = v => String(v).replace('-', '−');
+
+function kresliProzkumnik() {
+  const { p: pp, q, x } = PZ;
+  const zakaz = -q;                                   // jmenovatel x + q = 0
+  const f = t => (t + pp) / (t + q);
+
+  $('vyrazPZ').innerHTML = zl(`x ${znak(pp)}`, `x ${znak(q)}`);
+
+  // graf
+  const M = 30, SX = 260, SY = 150;                   // měřítko a střed
+  const X = v => SX + v * M, Y = v => SY - v * M;
+  let mrizka = '';
+  for (let i = -8; i <= 8; i++) {
+    mrizka += `<line class="mrizka" x1="${X(i)}" y1="8" x2="${X(i)}" y2="292"/>`;
+    if (Math.abs(i) <= 4) mrizka += `<line class="mrizka" x1="8" y1="${Y(i)}" x2="512" y2="${Y(i)}"/>`;
+  }
+  // dvě větve hyperboly, každá zvlášť – přes asymptotu se čára nekreslí
+  const vetev = (od, doo) => {
+    let d = '', prvni = true;
+    for (let t = od; t <= doo; t += 0.02) {
+      const y = f(t);
+      if (!isFinite(y) || Math.abs(y) > 5) { prvni = true; continue; }
+      d += (prvni ? 'M' : 'L') + X(t).toFixed(1) + ',' + Y(y).toFixed(1) + ' ';
+      prvni = false;
+    }
+    return d ? `<path class="krivka" d="${d}"/>` : '';
+  };
+
+  const naZakazu = Math.abs(x - zakaz) < 0.05;
+  const y = f(x);
+  const bod = (!naZakazu && isFinite(y) && Math.abs(y) <= 5)
+    ? `<circle class="bod" cx="${X(x)}" cy="${Y(y)}" r="6"/>` : '';
+
+  $('scenaPZ').innerHTML = mrizka +
+    `<line class="osy" x1="8" y1="${Y(0)}" x2="512" y2="${Y(0)}"/>
+     <line class="osy" x1="${X(0)}" y1="8" x2="${X(0)}" y2="292"/>
+     ${vetev(-8.5, zakaz - 0.02)}${vetev(zakaz + 0.02, 8.5)}
+     <line class="asymptota" x1="${X(zakaz)}" y1="8" x2="${X(zakaz)}" y2="292"/>
+     <text class="popis zakaz" x="${X(zakaz) + 40}" y="286">x ≠ ${cis(zakaz)}</text>
+     ${bod}`;
+
+  // dosazení
+  const cit = x + pp, jm = x + q;
+  // pozor na spojovník: zbytek stránky používá typografické minus (−)
+  const fmtC = v => Number(v.toFixed(2)).toLocaleString('cs-CZ').replace('-', '−');
+  if (naZakazu) {
+    $('dosazeni').className = 'dosazeni spatne';
+    $('dosazeni').innerHTML =
+      `<div class="radek">x = ${cis(zakaz)} → jmenovatel je ${cis(zakaz)} ${znak(q)} = <b>0</b></div>
+       <div class="radek vysledek">✖ nulou dělit nelze — výraz tu neexistuje</div>`;
+    $('poznamkaPZ').innerHTML = `Proto se u tohohle výrazu píše podmínka <b>x ≠ ${cis(zakaz)}</b>. `
+      + 'Není to formalita — pro tuhle jedinou hodnotu výraz nemá žádný výsledek.';
+  } else {
+    $('dosazeni').className = 'dosazeni';
+    $('dosazeni').innerHTML =
+      `<div class="radek">(${fmtC(x)} ${znak(pp)}) ÷ (${fmtC(x)} ${znak(q)})
+        = ${fmtC(cit)} ÷ ${fmtC(jm)}</div>
+       <div class="radek vysledek">= ${fmtC(y)}</div>`;
+    const blizko = Math.abs(x - zakaz);
+    $('poznamkaPZ').innerHTML = blizko < 1
+      ? `Jmenovatel je jen <b>${fmtC(jm)}</b> — skoro nula, a výsledek proto utíká do obrovských čísel.`
+      : `Zakázaná hodnota je <b>x = ${cis(zakaz)}</b>; tam by byl jmenovatel nulový.`;
+  }
+  $('hodX').textContent = Number(x.toFixed(1)).toLocaleString('cs-CZ').replace('-', '−');
+}
+
+function podminky() {
+  const p = $('plocha');
+  const typ = Uloha.nahodne(['linearni', 'soucin', 'rozdilCtvercu', 'cislo']);
+  const a = Uloha.nahodneCislo(1, 9), b = Uloha.nahodneCislo(1, 9);
+  let vyraz, spravny, jine;
+
+  if (typ === 'linearni') {
+    vyraz = zl('5', `x ${znak(-a)}`);
+    spravny = `x ≠ ${a}`;
+    jine = [`x ≠ ${-a}`, `x ≠ 0`, 'bez podmínek'];
+  } else if (typ === 'soucin') {
+    vyraz = zl('x', `(x ${znak(-a)})(x ${znak(b)})`);
+    spravny = `x ≠ ${a} a x ≠ ${-b}`;
+    jine = [`x ≠ ${-a} a x ≠ ${b}`, `x ≠ 0`, `x ≠ ${a}`];
+  } else if (typ === 'rozdilCtvercu') {
+    vyraz = zl('3x', `x² − ${a * a}`);
+    spravny = `x ≠ ${a} a x ≠ ${-a}`;
+    jine = [`x ≠ ${a}`, `x ≠ ${a * a}`, 'bez podmínek'];
+  } else {
+    vyraz = zl(`x ${znak(a)}`, `${b}`);
+    spravny = 'bez podmínek – jmenovatel je číslo';
+    jine = [`x ≠ ${b}`, `x ≠ 0`, `x ≠ ${-a}`];
+  }
+
+  p.innerHTML = `<div class="zadani uloha-text">Urči podmínky, za kterých má výraz smysl:</div>
+    <div class="karta"><div class="vyraz">${vyraz}</div></div>`;
+  const odezva = odezvaEl();
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([spravny, ...jine.filter(x => x !== spravny)]).map(t => ({ klic: t, popis: t })),
+    spravnyKlic: spravny,
+    zpravaOk: `✅ ${spravny} – jmenovatel se nesmí rovnat nule.`,
+    zpravaChyba: 'Polož jmenovatel roven nule a zjisti, které hodnoty x musíme vyloučit.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+function kraceni() {
+  const p = $('plocha');
+  const typ = Uloha.nahodne(['spolecnyClen', 'rozdilCtvercu', 'cislo']);
+  const a = Uloha.nahodneCislo(2, 9), k = Uloha.nahodneCislo(2, 6);
+  let vyraz, spravny, jine, vysvetleni;
+
+  if (typ === 'spolecnyClen') {
+    vyraz = zl(`${k}x(x ${znak(a)})`, `${k}(x ${znak(a)})`);
+    spravny = 'x';
+    jine = [`${k}x`, `x ${znak(a)}`, `${k}`];
+    vysvetleni = `vykrátíme společné činitele ${k} i (x ${znak(a)})`;
+  } else if (typ === 'rozdilCtvercu') {
+    vyraz = zl(`x² − ${a * a}`, `x ${znak(-a)}`);
+    spravny = `x ${znak(a)}`;
+    jine = [`x ${znak(-a)}`, `x² ${znak(a)}`, `${a}`];
+    vysvetleni = `čitatel rozložíme na (x + ${a})(x − ${a}) a vykrátíme`;
+  } else {
+    vyraz = zl(`${k * a}x`, `${k}`);
+    spravny = `${a}x`;
+    jine = [`${k * a}x`, `${a}`, `${k}x`];
+    vysvetleni = `krátíme číslem ${k}`;
+  }
+
+  p.innerHTML = `<div class="zadani uloha-text">Zkrať lomený výraz:</div>
+    <div class="karta"><div class="vyraz">${vyraz}</div></div>`;
+  const odezva = odezvaEl();
+  Uloha.vyber({
+    kam: p, odezva, trida: 'velke',
+    moznosti: Uloha.zamichej([spravny, ...jine.filter(x => x !== spravny)]).map(t => ({ klic: t, popis: t })),
+    spravnyKlic: spravny,
+    zpravaOk: `✅ ${spravny} – ${vysvetleni}.`,
+    zpravaChyba: 'Krátit lze jen činitele celého čitatele a jmenovatele, ne jednotlivé sčítance.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+function scitani() {
+  const p = $('plocha');
+  const a = Uloha.nahodneCislo(1, 9), b = Uloha.nahodneCislo(1, 9);
+  const stejnyJmenovatel = Math.random() < 0.5;
+  let zadani, spravny, jine;
+
+  if (stejnyJmenovatel) {
+    zadani = `${zl(`${a}`, 'x')} + ${zl(`${b}`, 'x')}`;
+    spravny = `${a + b}/x`;
+    jine = [`${a + b}/2x`, `${a * b}/x`, `${a}${b}/x`];
+  } else {
+    zadani = `${zl('1', 'x')} + ${zl('1', `${b}`)}`;
+    spravny = `(${b} + x)/${b}x`;
+    jine = [`2/(x + ${b})`, `1/(x + ${b})`, `(x − ${b})/${b}x`];
+  }
+
+  p.innerHTML = `<div class="zadani uloha-text">Sečti lomené výrazy (x ≠ 0):</div>
+    <div class="karta"><div class="vyraz">${zadani}</div>
+      <div class="vzorec">nejprve společný jmenovatel, pak sečti čitatele</div></div>`;
+  const odezva = odezvaEl();
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([spravny, ...jine.filter(x => x !== spravny)]).map(t => ({ klic: t, popis: t })),
+    spravnyKlic: spravny,
+    zpravaOk: `✅ ${spravny}`,
+    zpravaChyba: 'Sčítat lze jen zlomky se stejným jmenovatelem – nejprve je převeď.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+function nasobeni() {
+  const p = $('plocha');
+  const nasobime = Math.random() < 0.5;
+  const a = Uloha.nahodneCislo(2, 9), b = Uloha.nahodneCislo(2, 9);
+  let zadani, spravny, jine;
+
+  if (nasobime) {
+    zadani = `${zl(`${a}`, 'x')} · ${zl('x', `${b}`)}`;
+    spravny = `${a}/${b}`;
+    jine = [`${a}x/${b}x`, `${a * b}/x`, `${a}x²/${b}`];
+  } else {
+    zadani = `${zl(`${a}`, 'x')} : ${zl(`${b}`, 'x')}`;
+    spravny = `${a}/${b}`;
+    jine = [`${a * b}/x²`, `${a}x/${b}`, `${b}/${a}`];
+  }
+
+  p.innerHTML = `<div class="zadani uloha-text">${nasobime ? 'Vynásob' : 'Vyděl'} lomené výrazy (x ≠ 0):</div>
+    <div class="karta"><div class="vyraz">${zadani}</div>
+      <div class="vzorec">${nasobime ? 'čitatel × čitatel, jmenovatel × jmenovatel'
+        : 'dělení = násobení převrácenou hodnotou'}</div></div>`;
+  const odezva = odezvaEl();
+  Uloha.vyber({
+    kam: p, odezva, trida: 'velke',
+    moznosti: Uloha.zamichej([spravny, ...jine.filter(x => x !== spravny)]).map(t => ({ klic: t, popis: t })),
+    spravnyKlic: spravny,
+    zpravaOk: `✅ ${spravny}` + (nasobime ? ' – x se vykrátí.' : ' – druhý zlomek převrátíme, x se vykrátí.'),
+    zpravaChyba: nasobime ? 'Násob čitatele mezi sebou a jmenovatele mezi sebou, pak krať.'
+      : 'Při dělení druhý zlomek převrať a násob.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+const REZIMY = { prozkumnik, podminky, kraceni, scitani, nasobeni };
+function novaUloha() {
+  if (rezim === 'prozkumnik') { novyVyrazProzkumnik(); prozkumnik(); return; }
+  REZIMY[rezim]();
+}
+
+document.querySelectorAll('#rezimy button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#rezimy button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  rezim = b.dataset.rezim;
+  novaUloha();
+}));
+$('btnDalsi').addEventListener('click', novaUloha);
+novaUloha();
+</script>
+</body>
+</html>

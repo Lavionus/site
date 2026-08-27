@@ -1,0 +1,269 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🏅 Studijní deník</title>
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../apps.js" defer></script>
+<script src="../uloha.js" defer></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:var(--font);background:var(--bg-deep);color:var(--text);min-height:100vh;padding:20px clamp(12px,3vw,36px)}
+.container{max-width:820px;margin:0 auto}
+h1{font-size:1.35rem;margin-bottom:3px}
+.podtitul{color:var(--text-muted);font-size:.86rem;margin-bottom:16px}
+.card{background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius);padding:18px 20px;margin-bottom:14px}
+.sec{font-size:.95rem;margin-bottom:12px;font-weight:600}
+.streakbar{display:flex;justify-content:space-around;text-align:center;flex-wrap:wrap;gap:12px;margin-bottom:8px}
+.streakbar .v{font-size:1.7rem;font-weight:700}
+.streakbar .l{font-size:.72rem;color:var(--text-faint)}
+.subjects{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:14px}
+.subj{background:var(--bg-control);border:1px solid var(--border-strong);border-radius:999px;
+  padding:8px 14px;font-size:.85rem;cursor:pointer;user-select:none}
+.subj.done{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+.subj.auto{background:var(--ok);border-color:var(--ok);color:#fff;font-weight:600;cursor:default}
+.cal{display:grid;grid-template-columns:repeat(14,1fr);gap:4px}
+.cal .d{aspect-ratio:1;border-radius:4px;background:var(--bg-control)}
+.cal .d.on{background:var(--ok)}
+.cal .d.rucne{background:var(--accent)}
+.badges{display:flex;flex-wrap:wrap;gap:10px}
+.badge{background:var(--bg-elevated);border:1px solid var(--border);border-radius:10px;padding:10px 12px;
+  text-align:center;min-width:88px;opacity:.35}
+.badge.earned{opacity:1;border-color:var(--accent)}
+.badge .ic{font-size:1.5rem}
+.badge .n{font-size:.7rem;color:var(--text-muted);margin-top:4px}
+.temata{display:flex;flex-direction:column;gap:6px}
+.tema{display:flex;align-items:center;gap:10px;padding:8px 10px;border-radius:8px;background:var(--bg-elevated);
+  border-left:3px solid var(--border);font-size:.88rem}
+.tema.slabe{border-left-color:var(--warn)}
+.tema.silne{border-left-color:var(--ok)}
+.tema .nazev{flex:1;min-width:0}
+.tema .pomer{color:var(--text-muted);font-variant-numeric:tabular-nums;font-size:.82rem}
+.tema a{color:var(--accent);text-decoration:none;font-size:.8rem;white-space:nowrap}
+.tema a:hover{text-decoration:underline}
+.prazdno{color:var(--text-faint);font-size:.85rem;font-style:italic}
+.btn{background:var(--accent);color:#fff;border:none;padding:9px 16px;border-radius:6px;
+  cursor:pointer;font-weight:600;font-family:inherit}
+.btn.sec{background:var(--bg-control);color:var(--text);border:1px solid var(--border-strong);font-weight:400;font-size:.8rem;padding:6px 12px}
+.vysvetleni{color:var(--text-faint);font-size:.8rem;line-height:1.5;margin-top:10px}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>🏅 Studijní deník</h1>
+  <div class="podtitul">Dny, kdy jsi procvičoval/a, se zapisují samy — stačí otevřít kteroukoli úlohu a odpovědět.</div>
+
+  <div class="card">
+    <div class="streakbar">
+      <div><div class="v" id="streak">0</div><div class="l">Dní v řadě 🔥</div></div>
+      <div><div class="v" id="totalDays">0</div><div class="l">Celkem dní</div></div>
+      <div><div class="v" id="totalOdpovedi">0</div><div class="l">Zodpovězených otázek</div></div>
+      <div><div class="v" id="uspesnost">–</div><div class="l">Úspěšnost napoprvé</div></div>
+    </div>
+    <h2 class="sec">Dnes jsi procvičoval/a</h2>
+    <div class="subjects" id="subjects"></div>
+    <div style="display:flex;gap:8px;flex-wrap:wrap;align-items:center">
+      <button class="btn" id="doneBtn">✅ Zapsat i ručně</button>
+      <button class="btn sec" id="resetBtn">↺ Vymazat deník</button>
+    </div>
+    <p class="vysvetleni">Zeleně jsou předměty, které deník poznal sám z procvičování. Modré si můžeš doklikat ručně
+      (třeba když ses učil/a z papíru).</p>
+  </div>
+
+  <div class="card">
+    <h2 class="sec">Posledních 28 dní</h2>
+    <div class="cal" id="cal"></div>
+  </div>
+
+  <div class="card">
+    <h2 class="sec">Co ti jde a co drhne</h2>
+    <div class="temata" id="temata"></div>
+    <p class="vysvetleni">Počítá se jen odpověď napoprvé, takže poměr ukazuje, jak jistě téma umíš.
+      Témata s nejnižším poměrem stojí za zopakování.</p>
+  </div>
+
+  <div class="card">
+    <h2 class="sec">Odznaky</h2>
+    <div class="badges" id="badges"></div>
+  </div>
+</div>
+
+<script>
+const $=id=>document.getElementById(id);
+const KLIC_RUCNE='edu_diary_v1';   // ruční zápisy si necháváme ve stejném klíči jako dřív
+const PREDMETY=['📖 Čeština','🔢 Matematika','🔬 Přírodní vědy','🌍 Zeměpis/Dějepis','🇬🇧 Jazyky','🎴 Kartičky'];
+
+/* Deník činnosti zapisuje uloha.js pod názvem souboru stránky.
+   Předmět a hezký název si dohledáme v katalogu Nodusu. */
+function katalogIndex(){
+  const podleSouboru=new Map();
+  if(typeof KATALOG_SEKCE==='undefined')return podleSouboru;
+  KATALOG_SEKCE.forEach(sek=>sek.polozky.forEach(p=>{
+    if(p.stav==='plan')return;
+    podleSouboru.set(p.soubor.split('/').pop(),{nazev:p.nazev,predmet:p.predmet,soubor:p.soubor});
+  }));
+  return podleSouboru;
+}
+// ../apps.js se načítá s `defer`, takže index stavíme až po DOMContentLoaded
+let KATALOG=new Map();
+
+/* Předměty katalogu (cj, m, aj…) mapujeme na skupiny, které deník zobrazuje. */
+const PREDMET_NA_SKUPINU={
+  cj:'📖 Čeština', m:'🔢 Matematika',
+  aj:'🇬🇧 Jazyky', dcj:'🇬🇧 Jazyky',
+  prv:'🔬 Přírodní vědy', pr:'🔬 Přírodní vědy', f:'🔬 Přírodní vědy', ch:'🔬 Přírodní vědy',
+  z:'🌍 Zeměpis/Dějepis', d:'🌍 Zeměpis/Dějepis', vo:'🌍 Zeměpis/Dějepis',
+  inf:'🎴 Kartičky',
+};
+
+function nactiJson(klic,vychozi){
+  try{const v=JSON.parse(localStorage.getItem(klic));return v||vychozi;}catch{return vychozi;}
+}
+let rucne=nactiJson(KLIC_RUCNE,{days:{}});
+function ulozRucne(){try{localStorage.setItem(KLIC_RUCNE,JSON.stringify(rucne));}catch{/* nevadí */}}
+
+const DENIK=(typeof Uloha!=='undefined')?Uloha.DENIK:'nodus_aktivita';
+function nactiDenik(){return nactiJson(DENIK,{});}
+
+function dnesniKlic(){
+  const d=new Date();
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+function klicDne(posun){
+  const d=new Date(); d.setDate(d.getDate()-posun);
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+
+function skupinaSouboru(soubor){
+  const zaznam=KATALOG.get(soubor);
+  if(!zaznam||!zaznam.predmet)return '🎴 Kartičky';
+  return PREDMET_NA_SKUPINU[zaznam.predmet]||'🎴 Kartičky';
+}
+
+/* Které předměty deník rozpoznal pro daný den. */
+function automatickePredmety(denik,den){
+  const out=new Set();
+  const zaznam=denik[den];
+  if(!zaznam)return out;
+  Object.keys(zaznam).forEach(soubor=>out.add(skupinaSouboru(soubor)));
+  return out;
+}
+
+let dnesRucne=new Set(rucne.days[dnesniKlic()]||[]);
+
+function render(){
+  const denik=nactiDenik();
+  const dnes=dnesniKlic();
+  const auto=automatickePredmety(denik,dnes);
+
+  $('subjects').innerHTML=PREDMETY.map(p=>{
+    const jeAuto=auto.has(p);
+    const trida=jeAuto?'subj auto':(dnesRucne.has(p)?'subj done':'subj');
+    return `<div class="${trida}" data-p="${p}" title="${jeAuto?'Rozpoznáno z procvičování':'Klepnutím zapíšeš ručně'}">${p}</div>`;
+  }).join('');
+  document.querySelectorAll('.subj:not(.auto)').forEach(el=>el.onclick=()=>{
+    const p=el.dataset.p;
+    if(dnesRucne.has(p))dnesRucne.delete(p);else dnesRucne.add(p);
+    el.classList.toggle('done');
+  });
+
+  // souhrn
+  const vsechnyDny=new Set([...Object.keys(denik),...Object.keys(rucne.days).filter(d=>(rucne.days[d]||[]).length)]);
+  $('totalDays').textContent=vsechnyDny.size;
+  let ok=0,pokusy=0;
+  Object.values(denik).forEach(den=>Object.values(den).forEach(z=>{ok+=z.ok;pokusy+=z.pokusy;}));
+  $('totalOdpovedi').textContent=pokusy;
+  $('uspesnost').textContent=pokusy?Math.round(ok/pokusy*100)+' %':'–';
+  $('streak').textContent=spocitejSerii(vsechnyDny);
+
+  renderKalendar(denik);
+  renderTemata(denik);
+  renderOdznaky(vsechnyDny.size,pokusy,spocitejSerii(vsechnyDny),denik);
+}
+
+function spocitejSerii(vsechnyDny){
+  let serie=0,i=0;
+  while(vsechnyDny.has(klicDne(i))){serie++;i++;}
+  // dnešek ještě nemusí být odpracovaný – série se počítá i od včerejška
+  if(serie===0&&vsechnyDny.has(klicDne(1))){i=1;while(vsechnyDny.has(klicDne(i))){serie++;i++;}}
+  return serie;
+}
+
+function renderKalendar(denik){
+  const box=$('cal');box.innerHTML='';
+  for(let i=27;i>=0;i--){
+    const k=klicDne(i);
+    const el=document.createElement('div');
+    el.className='d';
+    if(denik[k])el.classList.add('on');
+    else if((rucne.days[k]||[]).length)el.classList.add('rucne');
+    el.title=k+(denik[k]?' — procvičováno':'');
+    box.appendChild(el);
+  }
+}
+
+function renderTemata(denik){
+  const soucty=new Map();
+  Object.values(denik).forEach(den=>Object.entries(den).forEach(([soubor,z])=>{
+    const s=soucty.get(soubor)||{ok:0,pokusy:0};
+    s.ok+=z.ok;s.pokusy+=z.pokusy;soucty.set(soubor,s);
+  }));
+  const seznam=[...soucty.entries()]
+    .filter(([,s])=>s.pokusy>=5)          // pár odpovědí ještě nic nevypovídá
+    .map(([soubor,s])=>({soubor,...s,pomer:s.ok/s.pokusy}))
+    .sort((a,b)=>a.pomer-b.pomer);
+  if(!seznam.length){
+    $('temata').innerHTML='<p class="prazdno">Zatím není z čeho vycházet — po pár úlohách se tu objeví, co ti jde a co ne.</p>';
+    return;
+  }
+  const vypis=t=>{
+    const zaznam=KATALOG.get(t.soubor);
+    const nazev=zaznam?zaznam.nazev:t.soubor.replace('.html','');
+    const trida=t.pomer<0.6?'slabe':t.pomer>=0.85?'silne':'';
+    const odkaz=zaznam?`<a href="../index.html#${zaznam.soubor}" target="_top">procvičit →</a>`:'';
+    return `<div class="tema ${trida}"><span class="nazev">${nazev}</span>`+
+           `<span class="pomer">${Math.round(t.pomer*100)} % (${t.ok}/${t.pokusy})</span>${odkaz}</div>`;
+  };
+  const slabe=seznam.slice(0,5);
+  const silne=seznam.slice(-3).reverse().filter(t=>!slabe.includes(t));
+  $('temata').innerHTML=slabe.map(vypis).join('')+
+    (silne.length?'<div class="vysvetleni" style="margin:6px 0 0">Nejlépe zvládnutá témata:</div>'+silne.map(vypis).join(''):'');
+}
+
+const ODZNAKY=[
+  {n:'První krok',ic:'🌱',cond:(dny)=>dny>=1},
+  {n:'3denní série',ic:'🔥',cond:(d,o,st)=>st>=3},
+  {n:'Týdenní série',ic:'⭐',cond:(d,o,st)=>st>=7},
+  {n:'Měsíční série',ic:'🏆',cond:(d,o,st)=>st>=30},
+  {n:'100 odpovědí',ic:'📚',cond:(d,o)=>o>=100},
+  {n:'1000 odpovědí',ic:'🎓',cond:(d,o)=>o>=1000},
+  {n:'Všestrannost',ic:'🌈',cond:(d,o,st,denik)=>{
+    const skupiny=new Set();
+    Object.values(denik).forEach(den=>Object.keys(den).forEach(s=>skupiny.add(skupinaSouboru(s))));
+    return skupiny.size>=5;
+  }},
+];
+function renderOdznaky(dny,odpovedi,serie,denik){
+  $('badges').innerHTML=ODZNAKY.map(b=>{
+    const ziskan=b.cond(dny,odpovedi,serie,denik);
+    return `<div class="badge ${ziskan?'earned':''}"><div class="ic">${b.ic}</div><div class="n">${b.n}</div></div>`;
+  }).join('');
+}
+
+$('doneBtn').onclick=()=>{
+  const dnes=dnesniKlic();
+  if(dnesRucne.size===0){delete rucne.days[dnes];}
+  else rucne.days[dnes]=[...dnesRucne];
+  ulozRucne();render();
+};
+$('resetBtn').onclick=()=>{
+  try{localStorage.removeItem(DENIK);localStorage.removeItem(KLIC_RUCNE);}catch{/* nevadí */}
+  rucne={days:{}};dnesRucne=new Set();render();
+};
+
+window.addEventListener('DOMContentLoaded',()=>{KATALOG=katalogIndex();render();});
+</script>
+</body>
+</html>

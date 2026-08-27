@@ -14,7 +14,9 @@
     else delete document.documentElement.dataset.theme;
   }
 
-  pouzij(localStorage.getItem('webapp_theme'));
+  // přes file:// nebo při zablokovaném úložišti getItem vyhodí výjimku
+  try { pouzij(localStorage.getItem('webapp_theme')); }
+  catch { pouzij(null); }
 
   // jiná záložka nebo samostatně otevřené okno
   window.addEventListener('storage', e => {

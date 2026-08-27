@@ -1,0 +1,996 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>💨 Vítr a překážky – aerodynamický tunel</title>
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<style>
+body{height:100vh;overflow:hidden;display:flex;flex-direction:column}
+.horni{display:flex;gap:10px;align-items:center;padding:10px 16px;background:var(--bg-elevated);border-bottom:1px solid var(--border);flex-wrap:wrap}
+.horni h1{font-size:1.05rem;font-weight:600;margin-right:auto}
+.panel{display:flex;gap:14px;align-items:center;padding:9px 16px;background:var(--bg-panel);border-bottom:1px solid var(--border);flex-wrap:wrap}
+.panel label{font-size:.78rem;color:var(--text-muted);display:flex;align-items:center;gap:7px}
+.panel .hodnota{color:var(--text-faint);min-width:2.8em;font-variant-numeric:tabular-nums}
+input[type=range]{width:110px;accent-color:var(--accent)}
+select{background:var(--bg-input);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:5px 8px;font-size:.8rem}
+button{background:var(--bg-control);border:1px solid var(--border-strong);color:var(--text);border-radius:6px;padding:7px 13px;font-size:.82rem;cursor:pointer}
+button:hover{background:var(--accent);color:#fff;border-color:var(--accent)}
+button.zap{background:var(--accent);color:#fff;border-color:var(--accent)}
+.prep{display:flex;align-items:center;gap:7px;font-size:.78rem;color:var(--text-muted);cursor:pointer;user-select:none}
+.prep input{accent-color:var(--accent);width:16px;height:16px;cursor:pointer}
+.sipka{display:inline-block;width:1.1em;text-align:center}
+.plocha{flex:1;position:relative;overflow:hidden;background:#070d16}
+canvas{display:block;width:100%;height:100%;touch-action:none;cursor:crosshair}
+/* překryvy leží na plátně, které se barevně mění – proto mají vlastní podklad */
+.info{position:absolute;top:12px;right:12px;width:260px;max-width:calc(100% - 24px);max-height:calc(100% - 24px);overflow:auto;background:rgba(9,18,30,.93);border:1px solid rgba(120,170,220,.35);border-radius:10px;padding:11px 14px;font-size:.78rem;line-height:1.6;color:#b6c8da}
+.info b{color:#e8f2fb}
+.info .zavri{position:absolute;top:6px;right:8px;background:none;border:none;color:#8fa6bb;font-size:1rem;padding:0;cursor:pointer}
+.info .zavri:hover{background:none;color:#fff}
+.mereni{position:absolute;top:12px;left:12px;background:rgba(9,18,30,.82);border:1px solid rgba(120,170,220,.28);border-radius:10px;padding:8px 12px;font-size:.76rem;line-height:1.65;color:#cfe1f2;font-variant-numeric:tabular-nums;pointer-events:none}
+.mereni b{color:#fff;font-weight:600}
+.mereni .pruh{display:block;height:4px;border-radius:2px;background:#5aa9ff;margin-top:2px;transition:width .12s linear}
+.mereni .pruh.vztlak{background:#ffb35a}
+.napoveda{position:absolute;left:12px;bottom:12px;font-size:.74rem;color:#cfe1f2;background:rgba(8,20,32,.6);padding:4px 9px;border-radius:6px;pointer-events:none}
+@media(max-width:760px){.info{display:none}.panel{gap:10px;padding:8px 10px}input[type=range]{width:88px}.mereni{font-size:.7rem}}
+</style>
+</head>
+<body>
+<div class="horni">
+  <h1>💨 Vítr a překážky – aerodynamický tunel</h1>
+  <button id="btnPauza">⏸️ Pauza</button>
+  <button id="btnReset">🔄 Restart proudění</button>
+  <button id="btnInfo">❓ Nápověda</button>
+</div>
+
+<div class="panel">
+  <label>🧭 Směr <input type="range" id="smer" min="-180" max="180" step="1" value="0"><span class="hodnota" id="smerV">0°</span><span class="sipka" id="smerS">➡️</span></label>
+  <label>🌬️ Síla <input type="range" id="sila" min="1" max="12" step="1" value="8"><span class="hodnota" id="silaV">8</span></label>
+  <label>🌀 Turbulence <input type="range" id="turbulence" min="0" max="100" step="1" value="70"><span class="hodnota" id="turbulenceV">70</span></label>
+  <label class="prep"><input type="checkbox" id="poryvy"> 💨 Poryvy</label>
+  <label>🏗️ <select id="prekazka">
+      <option value="valec">Válec</option>
+      <option value="deska">Kolmá deska</option>
+      <option value="kridlo">Křídlo (profil)</option>
+      <option value="budova">Budova</option>
+      <option value="dve_budovy">Dvě budovy</option>
+      <option value="sterbina">Stěna se štěrbinou</option>
+      <option value="kopec">Kopec</option>
+      <option value="zadna">Prázdný tunel</option>
+    </select></label>
+  <label>🎨 <select id="zobrazeni">
+      <option value="rychlost">Rychlost</option>
+      <option value="virivost">Vířivost (víry)</option>
+      <option value="tlak">Tlak</option>
+      <option value="kour">Jen kouř</option>
+    </select></label>
+  <label>🖌️ <select id="nastroj">
+      <option value="kresli">Kreslit překážku</option>
+      <option value="mazat">Mazat překážku</option>
+      <option value="kour">Pouštět kouř</option>
+    </select></label>
+  <label>⭕ Štětec <input type="range" id="stetec" min="2" max="20" step="1" value="7"><span class="hodnota" id="stetecV">7</span></label>
+  <label class="prep"><input type="checkbox" id="trysky" checked> 🚬 Kouřové vlečky</label>
+  <label class="prep"><input type="checkbox" id="castice" checked> ✨ Částice</label>
+  <label class="prep"><input type="checkbox" id="praporky"> 🚩 Praporky</label>
+  <label>⏩ <select id="tempo" title="Kolik výpočtu se stihne za snímek – vyšší tempo = svižnější vítr, ale víc práce pro počítač">
+      <option value="klid">Tempo: klidné</option>
+      <option value="normal" selected>Tempo: normální</option>
+      <option value="rychle">Tempo: rychlé</option>
+    </select></label>
+  <label>🔬 <select id="detail" title="Jemnost výpočetní mřížky">
+      <option value="auto" selected>Detail: automaticky</option>
+      <option value="hruby">Detail: hrubý</option>
+      <option value="stredni">Detail: střední</option>
+      <option value="jemny">Detail: jemný</option>
+      <option value="extra">Detail: extra</option>
+    </select></label>
+</div>
+
+<div class="plocha">
+  <canvas id="c"></canvas>
+  <div class="mereni" id="mereni">
+    <div>Odpor <b id="mOdpor">0,00</b><span class="pruh" id="mOdporP" style="width:0"></span></div>
+    <div>Vztlak <b id="mVztlak">0,00</b><span class="pruh vztlak" id="mVztlakP" style="width:0"></span></div>
+    <div>Max. rychlost <b id="mMax">0,0</b>× vítr</div>
+  </div>
+  <div class="info" id="infoBox">
+    <button class="zavri" id="zavriInfo" title="Zavřít">✕</button>
+    <b>Co se tu počítá</b><br>
+    Vzduch je rozdělen na síť buněk a v každé se sleduje, kolik ho kudy proudí
+    (metoda mřížkového Boltzmannova modelu). Za překážkou se proud odtrhne a
+    vznikají <b>víry</b> – přesně jako za mostním pilířem nebo za domem.<br><br>
+    <b>Zkus si</b><br>
+    • <b>Válec</b> + zobrazení <b>Vířivost</b>: vlevo a vpravo se střídavě
+    odtrhávají víry – <b>Kármánova vírová stezka</b>.<br>
+    • <b>Křídlo</b> a pomalu měň <b>směr</b> větru: roste <b>vztlak</b>.
+    Při velkém úhlu se proud odtrhne a vztlak spadne – to je pád letadla.<br>
+    • Porovnej odpor <b>válce</b> a <b>kolmé desky</b> při stejné síle větru.<br>
+    • <b>Dvě budovy</b>: mezi nimi se vítr zrychlí (ulička).<br>
+    • Sniž <b>turbulenci</b> – vzduch je „hustší“ jako med a proudí klidně.<br><br>
+    <b>Ovládání</b><br>
+    Táhni myší = kreslíš/mažeš překážku nebo pouštíš kouř (viz štětec).
+    Mezerník = pauza, C = smazat překážky.<br><br>
+    <b>Výkon</b><br>
+    <b>Tempo</b> říká, kolik se toho spočítá za snímek – vyšší tempo znamená
+    svižnější vítr a víc práce pro počítač. <b>Detail</b> nechte na
+    <b>automaticky</b>; hrubší mřížka počítač šetří a vítr na ní letí rychleji.
+  </div>
+  <div class="napoveda">Táhni myší do tunelu 🖌️</div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+const canvas = $('c'), ctx = canvas.getContext('2d');
+
+/* Simulace běží na hrubší mřížce a výsledek se roztáhne přes plátno. */
+const pom = document.createElement('canvas');
+const pctx = pom.getContext('2d');
+let cols = 0, rady = 0, img = null, sirkaPx = 0, vyskaPx = 0;
+
+/* --- D2Q9: devět směrů, kterými může vzduch z buňky odtékat --- */
+const EX  = [0, 1, 0, -1, 0, 1, -1, -1, 1];
+const EY  = [0, 0, -1, 0, 1, -1, -1, 1, 1];   // +1 = dolů (roste index řádku)
+const W   = [4/9, 1/9, 1/9, 1/9, 1/9, 1/36, 1/36, 1/36, 1/36];
+const OPP = [0, 3, 4, 1, 2, 7, 8, 5, 6];
+
+let f = [], f2 = [];            // rozdělovací funkce (9 polí)
+let rho, ux, uy, pevne, barva, barva2, sponge;
+let bezi = true, cas = 0;
+let uinX = 0, uinY = 0;         // aktuální rychlost větru na vstupu
+let silaX = 0, silaY = 0;       // síla na překážky (relativní jednotky)
+let maxU = 0;
+let omega = 1.6;                // rychlost návratu k rovnováze (viskozita)
+let kroku = 4;                  // kroků fyziky na snímek (na pomalém stroji méně)
+const castice = [];
+
+/* Jak velká je jedna buňka v pixelech: menší číslo = jemnější obraz,
+   ale kvadraticky víc počítání. Volbu si stránka pamatuje.
+   „auto“ se odvodí z krátkého měření výkonu stroje. */
+const DETAIL = { hruby: 6.4, stredni: 5.0, jemny: 3.8, extra: 2.8 };
+let autoBunka = DETAIL.stredni;
+
+/* Strop snímků: displej může mít 120 i 144 Hz, ale simulace vypadá stejně
+   dobře při 40 snímcích – zbytek by jen topil v procesoru. */
+const SNIMEK_MS = 1000 / 40;
+
+/* Rozpočet: kolik milisekund procesoru za vteřinu smí spolknout fyzika.
+   Všechno ostatní se od toho odvíjí. */
+const TEMPO = { klid: 180, normal: 330, rychle: 560 };
+
+/* Jak dlouho (ve vteřinách) má vzduchu trvat přelet celého tunelu.
+   Z rozpočtu a této hodnoty vychází rozumná velikost mřížky: cena za stejně
+   rychlý vítr roste s třetí mocninou rozlišení, takže dvojnásobně jemná
+   mřížka stojí osminásobek času. */
+const CIL_PRELETU = 6;
+
+function prepocitejMrizku() {
+  sirkaPx = canvas.clientWidth || 900;
+  vyskaPx = canvas.clientHeight || 500;
+  canvas.width = sirkaPx * devicePixelRatio;
+  canvas.height = vyskaPx * devicePixelRatio;
+  ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
+
+  // na displeji s vyšší hustotou pixelů se mřížka mírně zjemní (celá by
+  // stála čtyřnásobek času, tak jen kousek)
+  const volba = $('detail').value;
+  const bunka = volba === 'auto' ? autoBunka : (DETAIL[volba] || DETAIL.stredni);
+  const hustota = Math.min(1.35, devicePixelRatio || 1);
+  cols = Math.max(80, Math.min(640, Math.round(sirkaPx * hustota / bunka)));
+  rady = Math.max(50, Math.round(cols * vyskaPx / sirkaPx));
+  pom.width = cols; pom.height = rady;
+  img = pctx.createImageData(cols, rady);
+  maska.width = tvar.width = canvas.width;
+  maska.height = tvar.height = canvas.height;
+
+  const n = cols * rady;
+  f = []; f2 = [];
+  for (let k = 0; k < 9; k++) { f.push(new Float32Array(n)); f2.push(new Float32Array(n)); }
+  rho = new Float32Array(n);
+  ux = new Float32Array(n);
+  uy = new Float32Array(n);
+  barva = new Float32Array(n);      // kouř (barvivo) unášený proudem
+  barva2 = new Float32Array(n);
+  pevne = new Uint8Array(n);
+
+  sponge = new Float32Array(n);
+
+  postavPrekazku();
+  restart();
+  nasypCastice();
+}
+
+/* ---------- překážky ---------- */
+/* Zemina je značená dvojkou: proudění ji bere jako stěnu, ale nezapočítává
+   se do síly na překážku (jinak by tíha celé země přebila odpor domu). */
+function zem(vyska) {
+  for (let y = rady - vyska; y < rady; y++)
+    for (let x = 0; x < cols; x++) pevne[y * cols + x] = 2;
+}
+function obdelnik(x0, y0, x1, y1) {
+  for (let y = Math.max(0, y0); y <= Math.min(rady - 1, y1); y++)
+    for (let x = Math.max(0, x0); x <= Math.min(cols - 1, x1); x++) pevne[y * cols + x] = 1;
+}
+
+/* Tlumicí pásmo u okrajů: síla roste kvadraticky k okraji tunelu.
+   U scén se zemí se spodní okraj netlumí, jinak by se rozpustila
+   mezní vrstva u země. */
+function spocitejTlumeni(sezemi) {
+  sponge.fill(0);
+  const pasmo = Math.max(6, Math.round(Math.min(cols, rady) * 0.11));
+  for (let y = 0; y < rady; y++) for (let x = 0; x < cols; x++) {
+    const okraj = sezemi
+      ? Math.min(x, y, cols - 1 - x)
+      : Math.min(x, y, cols - 1 - x, rady - 1 - y);
+    if (okraj >= pasmo) continue;
+    const t = (pasmo - okraj) / pasmo;
+    sponge[y * cols + x] = 0.55 * t * t;
+  }
+}
+
+/* Rozměry překážky (v buňkách) na jednom místě – stejná čísla použije
+   rastr pro fyziku i vektorová kresba, takže se tvary nerozejdou. */
+function rozmery() {
+  const typ = $('prekazka').value;
+  return {
+    typ,
+    cx: Math.round(cols * 0.34),
+    cy: Math.round(rady * 0.5),
+    r: Math.max(4, Math.round(rady * 0.13)),
+    tl: Math.max(2, Math.round(cols * 0.012)),
+    tetiva: Math.round(cols * 0.34),
+    x0: Math.round(cols * 0.22),
+    dum: Math.max(3, Math.round(cols * 0.045)),
+    dum2: Math.max(3, Math.round(cols * 0.04)),
+    mezera: Math.max(4, Math.round(cols * 0.05)),
+    sterbina: Math.max(3, Math.round(rady * 0.12)),
+    kopecH: rady * 0.30,
+    kopecS: cols * 0.16,
+    zemVyska: Math.max(2, Math.round(rady * 0.06)),
+    zemNizka: Math.max(2, Math.round(rady * 0.05)),
+  };
+}
+
+/* poloviční tloušťka profilu NACA 0012 v buňkách */
+function profil(t, tetiva) {
+  return 5 * 0.12 * tetiva * (0.2969 * Math.sqrt(t) - 0.126 * t
+    - 0.3516 * t * t + 0.2843 * t ** 3 - 0.1015 * t ** 4);
+}
+
+function postavPrekazku() {
+  if (!pevne) return;
+  pevne.fill(0);
+  const g = rozmery();
+  const typ = g.typ, cx = g.cx, cy = g.cy, r = g.r;
+
+  if (typ === 'valec') {
+    for (let y = cy - r; y <= cy + r; y++) for (let x = cx - r; x <= cx + r; x++) {
+      if ((x - cx) ** 2 + (y - cy) ** 2 <= r * r && y >= 0 && y < rady && x >= 0 && x < cols)
+        pevne[y * cols + x] = 1;
+    }
+  } else if (typ === 'deska') {
+    obdelnik(cx, cy - Math.round(rady * 0.2), cx + g.tl, cy + Math.round(rady * 0.2));
+  } else if (typ === 'kridlo') {
+    // symetrický profil NACA 0012 – úhel náběhu se nastavuje směrem větru
+    for (let i = 0; i <= g.tetiva; i++) {
+      const tl = profil(i / g.tetiva, g.tetiva), x = g.x0 + i;
+      for (let y = Math.round(cy - tl); y <= Math.round(cy + tl); y++)
+        if (y >= 0 && y < rady && x < cols) pevne[y * cols + x] = 1;
+    }
+  } else if (typ === 'budova') {
+    zem(g.zemVyska);
+    obdelnik(cx, Math.round(rady * 0.62), cx + g.dum, rady - 1);
+  } else if (typ === 'dve_budovy') {
+    zem(g.zemVyska);
+    obdelnik(cx, Math.round(rady * 0.60), cx + g.dum2, rady - 1);
+    obdelnik(cx + g.dum2 + g.mezera, Math.round(rady * 0.72), cx + 2 * g.dum2 + g.mezera, rady - 1);
+  } else if (typ === 'sterbina') {
+    for (let y = 0; y < rady; y++) {
+      if (Math.abs(y - cy) < g.sterbina / 2) continue;
+      for (let x = cx; x < cx + g.tl; x++) pevne[y * cols + x] = 1;
+    }
+  } else if (typ === 'kopec') {
+    zem(g.zemNizka);
+    for (let x = 0; x < cols; x++) {
+      const v = g.kopecH * Math.exp(-(((x - cx) / g.kopecS) ** 2));
+      for (let y = Math.round(rady - v); y < rady; y++) if (y >= 0) pevne[y * cols + x] = 1;
+    }
+  }
+
+  spocitejTlumeni(typ === 'budova' || typ === 'dve_budovy' || typ === 'kopec');
+  kresliMasku();
+}
+
+/* ---------- vzhled překážek ----------
+   Fyzika musí pracovat s mřížkou, ale kreslit tvar po buňkách znamená schody
+   (válec z 20 buněk je dvacetiúhelník). Tvary se proto kreslí zvlášť do
+   vlastního plátna v plném rozlišení obrazovky – kružnice jako kružnice,
+   profil křídla jako křivka – a s mřížkou nemají nic společného.
+   Štětec do stejného plátna přidává (nebo odebírá) kulaté stopy. */
+const maska = document.createElement('canvas'), mctx = maska.getContext('2d');
+const tvar = document.createElement('canvas'), tctx = tvar.getContext('2d');
+let tvarNeplatny = true, temaTvaru = null;
+/* Obarvuje se jen ta část plátna, která se opravdu změnila – při kreslení
+   štětcem je to jedna stopa místo celé obrazovky. */
+let zmenaX0 = 0, zmenaY0 = 0, zmenaX1 = 0, zmenaY1 = 0;
+function oznacZmenu(x0, y0, x1, y1) {
+  if (!tvarNeplatny) { zmenaX0 = x0; zmenaY0 = y0; zmenaX1 = x1; zmenaY1 = y1; }
+  else {
+    zmenaX0 = Math.min(zmenaX0, x0); zmenaY0 = Math.min(zmenaY0, y0);
+    zmenaX1 = Math.max(zmenaX1, x1); zmenaY1 = Math.max(zmenaY1, y1);
+  }
+  tvarNeplatny = true;
+}
+function oznacVse() { oznacZmenu(0, 0, maska.width, maska.height); }
+
+function kresliMasku() {
+  if (!maska.width) return;
+  const g = rozmery(), mx = sirkaPx / cols, my = vyskaPx / rady;
+  const bod = (x, y) => [(x + 0.5) * mx, (y + 0.5) * my];   // střed buňky v pixelech
+  const dpr = devicePixelRatio || 1;
+  mctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  mctx.clearRect(0, 0, sirkaPx, vyskaPx);
+  mctx.fillStyle = mctx.strokeStyle = '#fff';
+  mctx.lineJoin = mctx.lineCap = 'round';
+  // obtah v šířce jedné buňky: kreslený tvar tak spolehlivě překryje
+  // buňky, které fyzika považuje za pevné
+  mctx.lineWidth = mx;
+  mctx.beginPath();
+
+  const zemPas = v => mctx.rect(0, vyskaPx - v * my, sirkaPx, v * my);
+  const dum = (x0, sirka, y0) => mctx.rect(x0 * mx, (y0 + 0.5) * my, (sirka + 1) * mx, vyskaPx);
+
+  if (g.typ === 'valec') {
+    const [sx, sy] = bod(g.cx, g.cy);
+    mctx.arc(sx, sy, (g.r + 0.5) * mx, 0, Math.PI * 2);
+  } else if (g.typ === 'deska') {
+    const v = Math.round(rady * 0.2);
+    mctx.rect(g.cx * mx, (g.cy - v) * my, (g.tl + 1) * mx, (2 * v + 1) * my);
+  } else if (g.typ === 'kridlo') {
+    const kroku_ = 60;
+    for (let i = 0; i <= kroku_; i++) {           // horní strana profilu
+      const t = i / kroku_, x = (g.x0 + t * g.tetiva + 0.5) * mx;
+      const y = (g.cy + 0.5 - profil(t, g.tetiva)) * my;
+      i ? mctx.lineTo(x, y) : mctx.moveTo(x, y);
+    }
+    for (let i = kroku_; i >= 0; i--) {           // a zpět po spodní
+      const t = i / kroku_, x = (g.x0 + t * g.tetiva + 0.5) * mx;
+      mctx.lineTo(x, (g.cy + 0.5 + profil(t, g.tetiva)) * my);
+    }
+    mctx.closePath();
+  } else if (g.typ === 'budova') {
+    zemPas(g.zemVyska);
+    dum(g.cx, g.dum, Math.round(rady * 0.62) - 0.5);
+  } else if (g.typ === 'dve_budovy') {
+    zemPas(g.zemVyska);
+    dum(g.cx, g.dum2, Math.round(rady * 0.60) - 0.5);
+    dum(g.cx + g.dum2 + g.mezera, g.dum2, Math.round(rady * 0.72) - 0.5);
+  } else if (g.typ === 'sterbina') {
+    const horni = (g.cy + 0.5 - g.sterbina / 2) * my;
+    const dolni = (g.cy + 0.5 + g.sterbina / 2) * my;
+    mctx.rect(g.cx * mx, 0, (g.tl + 1) * mx, horni);
+    mctx.rect(g.cx * mx, dolni, (g.tl + 1) * mx, vyskaPx - dolni);
+  } else if (g.typ === 'kopec') {
+    mctx.moveTo(0, vyskaPx);
+    for (let x = 0; x <= cols; x++) {
+      const v = g.kopecH * Math.exp(-(((x - g.cx) / g.kopecS) ** 2));
+      mctx.lineTo((x + 0.5) * mx, (rady - v - g.zemNizka + 0.5) * my);
+    }
+    mctx.lineTo(sirkaPx, vyskaPx);
+    mctx.closePath();
+    zemPas(g.zemNizka);
+  }
+  mctx.fill();
+  if (g.typ !== 'zadna') {
+    mctx.stroke();                       // rozšíření o půl buňky
+    mctx.strokeStyle = '#a9b1c0';        // jemný lem (po obarvení bude tmavší)
+    mctx.lineWidth = 2;
+    mctx.stroke();
+  }
+  oznacVse();
+}
+
+/* Obarvení masky – přepočítá se jen při změně tvaru nebo motivu.
+   Násobení zachová tmavší lem z masky; rozostřený stín by na plátně přes
+   celou plochu stál v softwarovém vykreslování násobně víc času. */
+function prekresliTvar(svetly) {
+  const x0 = Math.max(0, Math.floor(zmenaX0)), y0 = Math.max(0, Math.floor(zmenaY0));
+  const x1 = Math.min(maska.width, Math.ceil(zmenaX1)), y1 = Math.min(maska.height, Math.ceil(zmenaY1));
+  const w = x1 - x0, h = y1 - y0;
+  tvarNeplatny = false;
+  if (w <= 0 || h <= 0) return;
+  tctx.setTransform(1, 0, 0, 1, 0, 0);
+  tctx.save();
+  tctx.beginPath(); tctx.rect(x0, y0, w, h); tctx.clip();
+  tctx.clearRect(x0, y0, w, h);
+  tctx.globalCompositeOperation = 'source-over';
+  tctx.drawImage(maska, x0, y0, w, h, x0, y0, w, h);
+  tctx.globalCompositeOperation = 'multiply';
+  tctx.fillStyle = svetly ? '#8d94a3' : '#646b7a';
+  tctx.fillRect(x0, y0, w, h);
+  tctx.globalCompositeOperation = 'destination-in';
+  tctx.drawImage(maska, x0, y0, w, h, x0, y0, w, h);
+  tctx.globalCompositeOperation = 'source-over';
+  tctx.restore();
+}
+
+/* Volné kreslení štětcem: 1 = přidat, 0 = ubrat. */
+function stetec(gx, gy, pridat) {
+  const r = Number($('stetec').value);
+  for (let y = Math.max(1, gy - r); y <= Math.min(rady - 2, gy + r); y++)
+    for (let x = Math.max(1, gx - r); x <= Math.min(cols - 2, gx + r); x++)
+      if ((x - gx) ** 2 + (y - gy) ** 2 <= r * r) {
+        const i = y * cols + x;
+        if (pevne[i] === (pridat ? 1 : 0)) continue;
+        pevne[i] = pridat;
+        barva[i] = 0;
+        // nová buňka (ať už zeď, nebo uvolněné místo) startuje v klidu
+        nastavRovnovahu(i, 1, pridat ? 0 : uinX, pridat ? 0 : uinY);
+      }
+  // stejná stopa i do kreslené masky – kulatá, ne po buňkách
+  const mx = sirkaPx / cols, my = vyskaPx / rady, dpr = devicePixelRatio || 1;
+  mctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  mctx.globalCompositeOperation = pridat ? 'source-over' : 'destination-out';
+  mctx.fillStyle = '#fff';
+  mctx.beginPath();
+  const sx = (gx + 0.5) * mx, sy = (gy + 0.5) * my, sr = (r + 0.5) * mx;
+  mctx.arc(sx, sy, sr, 0, Math.PI * 2);
+  mctx.fill();
+  mctx.globalCompositeOperation = 'source-over';
+  oznacZmenu((sx - sr - 2) * dpr, (sy - sr - 2) * dpr, (sx + sr + 2) * dpr, (sy + sr + 2) * dpr);
+}
+function kouř(gx, gy) {
+  const r = Number($('stetec').value);
+  for (let y = Math.max(0, gy - r); y <= Math.min(rady - 1, gy + r); y++)
+    for (let x = Math.max(0, gx - r); x <= Math.min(cols - 1, gx + r); x++) {
+      const d = ((x - gx) ** 2 + (y - gy) ** 2) / (r * r);
+      const i = y * cols + x;
+      if (d <= 1 && !pevne[i]) { barva[i] = Math.min(1, barva[i] + (1 - d)); kourJe = true; }
+    }
+}
+
+/* ---------- vítr ---------- */
+function vetrNaVstupu() {
+  const a = Number($('smer').value) * Math.PI / 180;
+  let u = 0.02 + Number($('sila').value) * 0.01;         // 0,03–0,14 mřížkových jednotek
+  if ($('poryvy').checked) u *= 1 + 0.45 * Math.sin(cas * 1.1) * Math.sin(cas * 0.37 + 1.3);
+  uinX = u * Math.cos(a);
+  uinY = u * Math.sin(a);
+  // omega: blízko 2 = skoro bez tření (bouřlivé víry), níž = vazký, klidný vzduch
+  omega = 1.05 + 0.83 * Number($('turbulence').value) / 100;
+}
+
+function nastavRovnovahu(i, r, vx, vy) {
+  const u2 = 1.5 * (vx * vx + vy * vy);
+  for (let k = 0; k < 9; k++) {
+    const eu = 3 * (EX[k] * vx + EY[k] * vy);
+    f[k][i] = W[k] * r * (1 + eu + 0.5 * eu * eu - u2);
+  }
+}
+
+function restart() {
+  vetrNaVstupu();
+  for (let i = 0; i < cols * rady; i++) {
+    nastavRovnovahu(i, 1, uinX, uinY);
+    barva[i] = 0;
+  }
+  silaX = silaY = 0;
+  vlecky.length = 0;
+}
+
+/* ---------- jeden krok fyziky ----------
+   Smyčky jsou psané „ručně rozepsané“ přes všech devět směrů. Se zanořeným
+   cyklem přes k a přístupem f[k][i] je totéž zhruba dvakrát pomalejší, a to
+   je rozdíl mezi hrubou a jemnou mřížkou. */
+function krok() {
+  let fx = 0, fy = 0, mx2 = 0;
+  const f0 = f[0], f1 = f[1], f2_ = f[2], f3 = f[3], f4 = f[4],
+        f5 = f[5], f6 = f[6], f7 = f[7], f8 = f[8];
+  const g0 = f2[0], g1 = f2[1], g2 = f2[2], g3 = f2[3], g4 = f2[4],
+        g5 = f2[5], g6 = f2[6], g7 = f2[7], g8 = f2[8];
+  const W1 = 1 / 9, W5 = 1 / 36;
+
+  // rovnovážný stav nerušeného větru – k němu táhne tlumicí pásmo u okrajů
+  const uv2 = 1.5 * (uinX * uinX + uinY * uinY);
+  const q = [];
+  for (let k = 0; k < 9; k++) {
+    const eu = 3 * (EX[k] * uinX + EY[k] * uinY);
+    q.push(W[k] * (1 + eu + 0.5 * eu * eu - uv2));
+  }
+  const q0 = q[0], q1 = q[1], q2 = q[2], q3 = q[3], q4 = q[4],
+        q5 = q[5], q6 = q[6], q7 = q[7], q8 = q[8];
+
+  // 1) srážky: v každé buňce se rozdělení posune k rovnováze
+  for (let i = 0, n = cols * rady; i < n; i++) {
+    if (pevne[i]) { rho[i] = 1; ux[i] = uy[i] = 0; continue; }
+    let a0 = f0[i], a1 = f1[i], a2 = f2_[i], a3 = f3[i], a4 = f4[i],
+        a5 = f5[i], a6 = f6[i], a7 = f7[i], a8 = f8[i];
+    let r = a0 + a1 + a2 + a3 + a4 + a5 + a6 + a7 + a8;
+    let vx, vy;
+    if (r > 0.2) {
+      vx = (a1 + a5 + a8 - a3 - a6 - a7) / r;
+      vy = (a4 + a7 + a8 - a2 - a5 - a6) / r;
+    } else {                                  // pojistka proti rozpadu výpočtu
+      r = 1; vx = uinX; vy = uinY;
+      a0 = q0; a1 = q1; a2 = q2; a3 = q3; a4 = q4; a5 = q5; a6 = q6; a7 = q7; a8 = q8;
+    }
+    let v2 = vx * vx + vy * vy;
+    if (v2 > 0.09) { const s = 0.3 / Math.sqrt(v2); vx *= s; vy *= s; v2 = 0.09; }
+    rho[i] = r; ux[i] = vx; uy[i] = vy;
+    if (v2 > mx2) mx2 = v2;
+
+    const u2 = 1.5 * v2, r1 = r * W1, r5 = r * W5, o = omega;
+    let eu;
+    a0 += o * (r * (4 / 9) * (1 - u2) - a0);
+    eu = 3 * vx;         a1 += o * (r1 * (1 + eu + 0.5 * eu * eu - u2) - a1);
+    eu = -3 * vy;        a2 += o * (r1 * (1 + eu + 0.5 * eu * eu - u2) - a2);
+    eu = -3 * vx;        a3 += o * (r1 * (1 + eu + 0.5 * eu * eu - u2) - a3);
+    eu = 3 * vy;         a4 += o * (r1 * (1 + eu + 0.5 * eu * eu - u2) - a4);
+    eu = 3 * (vx - vy);  a5 += o * (r5 * (1 + eu + 0.5 * eu * eu - u2) - a5);
+    eu = -3 * (vx + vy); a6 += o * (r5 * (1 + eu + 0.5 * eu * eu - u2) - a6);
+    eu = 3 * (vy - vx);  a7 += o * (r5 * (1 + eu + 0.5 * eu * eu - u2) - a7);
+    eu = 3 * (vx + vy);  a8 += o * (r5 * (1 + eu + 0.5 * eu * eu - u2) - a8);
+
+    // tlumicí pásmo: u okrajů se proudění vrací k nerušenému větru,
+    // takže víry i tlakové vlny z tunelu odejdou a neodrážejí se zpět
+    const s = sponge[i];
+    if (s > 0) {
+      a0 += s * (q0 - a0); a1 += s * (q1 - a1); a2 += s * (q2 - a2);
+      a3 += s * (q3 - a3); a4 += s * (q4 - a4); a5 += s * (q5 - a5);
+      a6 += s * (q6 - a6); a7 += s * (q7 - a7); a8 += s * (q8 - a8);
+    }
+    f0[i] = a0; f1[i] = a1; f2_[i] = a2; f3[i] = a3; f4[i] = a4;
+    f5[i] = a5; f6[i] = a6; f7[i] = a7; f8[i] = a8;
+  }
+  maxU = Math.sqrt(mx2);
+
+  // 2) proudění do sousedů; od překážky se tok odrazí zpět (bounce-back).
+  //    Okrajové buňky se přeskakují – ty se hned nastaví na rovnováhu větru.
+  for (let y = 1; y < rady - 1; y++) {
+    const rz = y * cols;
+    for (let x = 1; x < cols - 1; x++) {
+      const i = rz + x;
+      if (pevne[i]) continue;
+      g0[i] = f0[i];
+      let s, p, v;
+      // směr 1 (→), zdroj vlevo
+      s = i - 1;        p = pevne[s]; if (!p) g1[i] = f1[s];
+      else { v = f3[i]; g1[i] = v; if (p === 1) fx += 2 * (v - W1); }
+      // směr 3 (←), zdroj vpravo
+      s = i + 1;        p = pevne[s]; if (!p) g3[i] = f3[s];
+      else { v = f1[i]; g3[i] = v; if (p === 1) fx -= 2 * (v - W1); }
+      // směr 2 (↑), zdroj dole
+      s = i + cols;     p = pevne[s]; if (!p) g2[i] = f2_[s];
+      else { v = f4[i]; g2[i] = v; if (p === 1) fy -= 2 * (v - W1); }
+      // směr 4 (↓), zdroj nahoře
+      s = i - cols;     p = pevne[s]; if (!p) g4[i] = f4[s];
+      else { v = f2_[i]; g4[i] = v; if (p === 1) fy += 2 * (v - W1); }
+      // směr 5 (↗), zdroj vlevo dole
+      s = i - 1 + cols; p = pevne[s]; if (!p) g5[i] = f5[s];
+      else { v = f7[i]; g5[i] = v; if (p === 1) { fx += 2 * (v - W5); fy -= 2 * (v - W5); } }
+      // směr 7 (↙), zdroj vpravo nahoře
+      s = i + 1 - cols; p = pevne[s]; if (!p) g7[i] = f7[s];
+      else { v = f5[i]; g7[i] = v; if (p === 1) { fx -= 2 * (v - W5); fy += 2 * (v - W5); } }
+      // směr 6 (↖), zdroj vpravo dole
+      s = i + 1 + cols; p = pevne[s]; if (!p) g6[i] = f6[s];
+      else { v = f8[i]; g6[i] = v; if (p === 1) { fx -= 2 * (v - W5); fy -= 2 * (v - W5); } }
+      // směr 8 (↘), zdroj vlevo nahoře
+      s = i - 1 - cols; p = pevne[s]; if (!p) g8[i] = f8[s];
+      else { v = f6[i]; g8[i] = v; if (p === 1) { fx += 2 * (v - W5); fy += 2 * (v - W5); } }
+    }
+  }
+  const t = f; f = f2; f2 = t;
+
+  // 3) okraje tunelu drží nastavený vítr
+  for (let x = 0; x < cols; x++) {
+    nastavRovnovahu(x, 1, uinX, uinY);
+    nastavRovnovahu((rady - 1) * cols + x, 1, uinX, uinY);
+  }
+  for (let y = 0; y < rady; y++) {
+    nastavRovnovahu(y * cols, 1, uinX, uinY);
+    nastavRovnovahu(y * cols + cols - 1, 1, uinX, uinY);
+  }
+
+  // klidový průměr sil, ať číslo neposkakuje
+  silaX = silaX * 0.92 + fx * 0.08;
+  silaY = silaY * 0.92 + fy * 0.08;
+}
+
+/* ---------- kouř: unášení proudem (semi-Lagrange) ---------- */
+let kourJe = false;
+function posunKour(dt) {
+  if (!kourJe) return;              // bez kouře nemá smysl přepočítávat celé pole
+  // při hodně krocích na snímek by jeden velký skok kouř rozmazal
+  const davek = Math.max(1, Math.ceil(kroku / 4));
+  for (let davka = 0; davka < davek; davka++) posunKourJednou(kroku / davek);
+}
+function posunKourJednou(posun) {
+  let zbylo = 0;
+  for (let y = 0; y < rady; y++) {
+    for (let x = 0; x < cols; x++) {
+      const i = y * cols + x;
+      if (pevne[i]) { barva2[i] = 0; continue; }
+      const px = x - ux[i] * posun, py = y - uy[i] * posun;
+      // zvenčí přitéká čistý vzduch – jinak by se kouř u výstupu držel donekonečna
+      if (px < 0 || py < 0 || px > cols - 1.001 || py > rady - 1.001) { barva2[i] = 0; continue; }
+      const x0 = px | 0, y0 = py | 0, tx = px - x0, ty = py - y0;
+      const i0 = y0 * cols + x0, i1 = i0 + (x0 < cols - 1 ? 1 : 0), i2 = i0 + (y0 < rady - 1 ? cols : 0);
+      const i3 = i2 + (x0 < cols - 1 ? 1 : 0);
+      const h = (barva[i0] * (1 - tx) + barva[i1] * tx) * (1 - ty)
+              + (barva[i2] * (1 - tx) + barva[i3] * tx) * ty;
+      const nova = h * 0.9992;
+      barva2[i] = nova;
+      zbylo += nova;
+    }
+  }
+  const t = barva; barva = barva2; barva2 = t;
+  if (zbylo < 0.4) { kourJe = false; barva.fill(0); }    // dokouřeno, pole se uspí
+}
+
+/* ---------- kouřové vlečky (proudnice) ----------
+   Z návětrné strany se pouští řetízky bodů, které se nechají unášet.
+   Oproti rozmazanému barvivu zůstanou ostré i po dlouhé cestě tunelem. */
+const vlecky = [];
+const VLECKA_DELKA = 260;
+let vleckaStrana = '';
+
+function nastavVlecky() {
+  const svisle = Math.abs(uinY) > Math.abs(uinX);
+  const strana = svisle ? (uinY > 0 ? 'nahore' : 'dole') : (uinX > 0 ? 'vlevo' : 'vpravo');
+  if (strana === vleckaStrana && vlecky.length) return;
+  vleckaStrana = strana;
+  vlecky.length = 0;
+  const pocet = 11, delka = svisle ? cols : rady;
+  for (let j = 1; j <= pocet; j++) {
+    const p = delka * j / (pocet + 1);
+    const zdroj = svisle
+      ? { x: p, y: strana === 'nahore' ? 1.5 : rady - 2.5 }
+      : { x: strana === 'vlevo' ? 1.5 : cols - 2.5, y: p };
+    vlecky.push({ zdroj, body: [] });
+  }
+}
+
+function posunVlecky() {
+  nastavVlecky();
+  const davek = Math.max(1, Math.ceil(kroku / 3));
+  const krokV = kroku * 1.4 / davek;
+  for (const v of vlecky) {
+    for (const b of v.body) {
+      if (!b.zije) continue;
+      for (let d = 0; d < davek; d++) {
+        const i = (b.y | 0) * cols + (b.x | 0);
+        const nx = b.x + ux[i] * krokV, ny = b.y + uy[i] * krokV;
+        if (nx < 0.5 || ny < 0.5 || nx > cols - 1.5 || ny > rady - 1.5
+            || pevne[(ny | 0) * cols + (nx | 0)]) { b.zije = false; break; }
+        b.x = nx; b.y = ny;
+      }
+    }
+    // nový bod až když se ten předchozí dost vzdálil – vlečka pak sahá
+    // přes celý tunel a nestojí zbytečně moc bodů
+    const h = v.body[0];
+    if (!h || (h.x - v.zdroj.x) ** 2 + (h.y - v.zdroj.y) ** 2 > 1.4)
+      v.body.unshift({ x: v.zdroj.x, y: v.zdroj.y, zije: true });
+    if (v.body.length > VLECKA_DELKA) v.body.length = VLECKA_DELKA;
+  }
+}
+
+function vykresliVlecky(mx, my, barvaCary) {
+  ctx.lineWidth = 1.6;
+  ctx.lineJoin = 'round';
+  for (const v of vlecky) {
+    ctx.beginPath();
+    let navazuje = false;
+    for (const b of v.body) {
+      if (!b.zije) { navazuje = false; continue; }
+      if (navazuje) ctx.lineTo(b.x * mx, b.y * my);
+      else { ctx.moveTo(b.x * mx, b.y * my); navazuje = true; }
+    }
+    ctx.strokeStyle = barvaCary;
+    ctx.stroke();
+  }
+}
+
+/* ---------- částice ---------- */
+function nasypCastice() {
+  castice.length = 0;
+  const pocet = Math.round(Math.min(1400, cols * rady / 40));
+  for (let i = 0; i < pocet; i++)
+    castice.push({ x: Math.random() * cols, y: Math.random() * rady, px: 0, py: 0, zivot: Math.random() * 200 });
+}
+function znovuzrod(c) {
+  // částice se rodí na návětrné straně tunelu
+  if (Math.abs(uinX) >= Math.abs(uinY)) {
+    c.x = uinX >= 0 ? Math.random() * 2 : cols - 1 - Math.random() * 2;
+    c.y = Math.random() * rady;
+  } else {
+    c.y = uinY >= 0 ? Math.random() * 2 : rady - 1 - Math.random() * 2;
+    c.x = Math.random() * cols;
+  }
+  if (Math.random() < 0.25) { c.x = Math.random() * cols; c.y = Math.random() * rady; }
+  c.px = c.x; c.py = c.y;
+  c.zivot = 60 + Math.random() * 220;
+}
+function posunCastice() {
+  // jeden velký skok by částici protáhl skrz překážku – proto po kouscích
+  const davek = Math.max(1, Math.ceil(kroku / 3));
+  const krokC = kroku * 1.6 / davek;
+  for (const c of castice) {
+    c.px = c.x; c.py = c.y;
+    c.zivot--;
+    let konec = c.zivot < 0;
+    for (let d = 0; d < davek && !konec; d++) {
+      const i = (c.y | 0) * cols + (c.x | 0);
+      const nx = c.x + ux[i] * krokC, ny = c.y + uy[i] * krokC;
+      if (nx < 0.5 || ny < 0.5 || nx > cols - 1.5 || ny > rady - 1.5
+          || pevne[(ny | 0) * cols + (nx | 0)]) { konec = true; break; }
+      c.x = nx; c.y = ny;
+    }
+    if (konec) znovuzrod(c);
+  }
+}
+
+/* ---------- vykreslení ---------- */
+function vykresli() {
+  const rezim = $('zobrazeni').value;
+  const svetly = document.documentElement.dataset.theme === 'light';
+  const d = img.data;
+  const uref = Math.max(0.02, Math.hypot(uinX, uinY));
+
+  // Překážky se do rastru nekreslí – zůstane pod nimi barva klidného vzduchu
+  // a samotný tvar se pak dokreslí vektorově (ostře, bez schodů).
+  // vířivost se počítá z rozdílu sousedních buněk – na jemnější mřížce je
+  // rozdíl menší, takže měřítko musí růst s rozlišením
+  const virMerítko = cols / (uref * 0.8 * 240);
+  let pR, pG, pB;
+  if (rezim === 'rychlost') { pR = 12; pG = 30; pB = 212; }
+  else if (rezim === 'virivost') { pR = 22; pG = 32; pB = 46; }
+  else if (rezim === 'tlak') { pR = 24; pG = 34; pB = 48; }
+  else { pR = svetly ? 232 : 10; pG = svetly ? 238 : 16; pB = svetly ? 246 : 26; }
+
+  for (let y = 0; y < rady; y++) {
+    for (let x = 0; x < cols; x++) {
+      const i = y * cols + x, p = i * 4;
+      if (pevne[i]) { d[p] = pR; d[p + 1] = pG; d[p + 2] = pB; d[p + 3] = 255; continue; }
+
+      let R, G, B;
+      if (rezim === 'rychlost') {
+        const v = Math.min(1, Math.hypot(ux[i], uy[i]) / (uref * 2));
+        R = 12 + 250 * Math.max(0, v - 0.45) * 1.8;
+        G = 30 + 200 * Math.min(1, v * 1.35);
+        B = 60 + 190 * Math.max(0, 0.8 - v);
+      } else if (rezim === 'virivost') {
+        const l = x > 0 ? i - 1 : i, pr = x < cols - 1 ? i + 1 : i;
+        const n = y > 0 ? i - cols : i, dn = y < rady - 1 ? i + cols : i;
+        const w = ((uy[pr] - uy[l]) - (ux[dn] - ux[n])) * virMerítko;
+        // otáčení vpravo červeně, vlevo modře; klid = tmavý podklad
+        const a = Math.min(1, Math.abs(w) ** 0.7);
+        const R2 = w >= 0 ? 240 : 60, G2 = w >= 0 ? 76 : 132, B2 = w >= 0 ? 62 : 245;
+        R = 22 + (R2 - 22) * a; G = 32 + (G2 - 32) * a; B = 46 + (B2 - 46) * a;
+      } else if (rezim === 'tlak') {
+        const t = Math.max(-1, Math.min(1, (rho[i] - 1) * 16));
+        // přetlak červeně, podtlak modře
+        const a = Math.min(1, Math.abs(t) ** 0.7);
+        const R2 = t >= 0 ? 248 : 60, G2 = t >= 0 ? 96 : 150, B2 = t >= 0 ? 60 : 248;
+        R = 24 + (R2 - 24) * a; G = 34 + (G2 - 34) * a; B = 48 + (B2 - 48) * a;
+      } else { R = svetly ? 232 : 10; G = svetly ? 238 : 16; B = svetly ? 246 : 26; }
+
+      const b = barva[i];
+      if (b > 0.005) {
+        const a = Math.min(1, b * 1.5);
+        R += (245 - R) * a; G += (248 - G) * a; B += (255 - B) * a;
+      }
+      d[p] = R; d[p + 1] = G; d[p + 2] = B; d[p + 3] = 255;
+    }
+  }
+  pctx.putImageData(img, 0, 0);
+  ctx.imageSmoothingEnabled = true;
+  ctx.drawImage(pom, 0, 0, sirkaPx, vyskaPx);
+
+  const mx = sirkaPx / cols, my = vyskaPx / rady;
+
+  // překážky: hotová vektorová maska v rozlišení obrazovky
+  const tema = svetly ? 'l' : 'd';
+  if (tema !== temaTvaru) { temaTvaru = tema; oznacVse(); }
+  if (tvarNeplatny) prekresliTvar(svetly);
+  ctx.drawImage(tvar, 0, 0, sirkaPx, vyskaPx);
+
+  // na světlém pozadí režimu „Jen kouř“ by bílé čáry zmizely
+  const cary = svetly && rezim === 'kour' ? 'rgba(22,44,72,' : 'rgba(255,255,255,';
+
+  if ($('trysky').checked) vykresliVlecky(mx, my, cary + '.62)');
+
+  if ($('castice').checked) {
+    ctx.lineWidth = 1.4;
+    ctx.strokeStyle = cary + '.45)';
+    ctx.beginPath();
+    const stopa = 26 * 3.4 / mx;
+    for (const c of castice) {
+      const i = (c.y | 0) * cols + (c.x | 0);
+      ctx.moveTo((c.x - ux[i] * stopa) * mx, (c.y - uy[i] * stopa) * my);
+      ctx.lineTo(c.x * mx, c.y * my);
+    }
+    ctx.stroke();
+  }
+
+  if ($('praporky').checked) {
+    // krátké šipky ukazují, kudy vzduch v daném místě právě táhne
+    const rozestup = Math.max(8, Math.round(cols / 26));
+    ctx.strokeStyle = cary + '.4)';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    for (let y = rozestup; y < rady; y += rozestup) {
+      for (let x = rozestup; x < cols; x += rozestup) {
+        const i = y * cols + x;
+        if (pevne[i]) continue;
+        const s = Math.min(1, Math.hypot(ux[i], uy[i]) / (uref * 1.6));
+        const dl = rozestup * 0.9 * s;
+        const uh = Math.atan2(uy[i], ux[i]);
+        const x0 = x * mx, y0 = y * my;
+        const x1 = x0 + Math.cos(uh) * dl * mx, y1 = y0 + Math.sin(uh) * dl * my;
+        ctx.moveTo(x0, y0); ctx.lineTo(x1, y1);
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x1 - Math.cos(uh - 0.5) * dl * mx * 0.35, y1 - Math.sin(uh - 0.5) * dl * my * 0.35);
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x1 - Math.cos(uh + 0.5) * dl * mx * 0.35, y1 - Math.sin(uh + 0.5) * dl * my * 0.35);
+      }
+    }
+    ctx.stroke();
+  }
+}
+
+/* ---------- naměřené hodnoty ---------- */
+function ukazMereni() {
+  // podél / napříč směrem větru: odpor a vztlak (relativní jednotky)
+  // silaX/Y je hybnost, kterou překážka vrátila vzduchu – na překážku tlačí opačně
+  const uh = Math.atan2(uinY, uinX), c = Math.cos(uh), s = Math.sin(uh);
+  const odpor = -(silaX * c + silaY * s) * 20;
+  const vztlak = -(-silaX * s + silaY * c) * 20;
+  const uref = Math.max(0.01, Math.hypot(uinX, uinY));
+  $('mOdpor').textContent = odpor.toFixed(2).replace('.', ',');
+  $('mVztlak').textContent = vztlak.toFixed(2).replace('.', ',');
+  $('mMax').textContent = (maxU / uref).toFixed(1).replace('.', ',');
+  $('mOdporP').style.width = Math.min(100, Math.abs(odpor) * 9) + 'px';
+  $('mVztlakP').style.width = Math.min(100, Math.abs(vztlak) * 9) + 'px';
+}
+
+/* ---------- ovládání myší / prstem ---------- */
+let tahne = false;
+function souradnice(e) {
+  const r = canvas.getBoundingClientRect();
+  return {
+    x: Math.round((e.clientX - r.left) / r.width * cols),
+    y: Math.round((e.clientY - r.top) / r.height * rady)
+  };
+}
+function pouzijNastroj(e) {
+  const { x, y } = souradnice(e);
+  if (x < 0 || y < 0 || x >= cols || y >= rady) return;
+  const n = e.shiftKey ? 'mazat' : $('nastroj').value;
+  if (n === 'kresli') stetec(x, y, 1);
+  else if (n === 'mazat') stetec(x, y, 0);
+  else kouř(x, y);
+}
+canvas.addEventListener('pointerdown', e => {
+  canvas.setPointerCapture(e.pointerId);
+  tahne = true; pouzijNastroj(e);
+});
+canvas.addEventListener('pointermove', e => { if (tahne) pouzijNastroj(e); });
+addEventListener('pointerup', () => tahne = false);
+addEventListener('pointercancel', () => tahne = false);
+
+/* ---------- panel ---------- */
+[['sila', 'silaV'], ['turbulence', 'turbulenceV'], ['stetec', 'stetecV']].forEach(([id, out]) => {
+  const el = $(id), uprav = () => $(out).textContent = el.value;
+  el.addEventListener('input', uprav); uprav();
+});
+const upravSmer = () => {
+  const v = Number($('smer').value);
+  $('smerV').textContent = v + '°';
+  $('smerS').style.transform = `rotate(${v}deg)`;
+};
+$('smer').addEventListener('input', upravSmer); upravSmer();
+
+$('prekazka').addEventListener('change', () => { postavPrekazku(); restart(); });
+$('detail').addEventListener('change', () => {
+  localStorage.setItem('vitr_detail', $('detail').value);
+  prepocitejMrizku();
+});
+$('tempo').addEventListener('change', () => {
+  localStorage.setItem('vitr_tempo', $('tempo').value);
+  if ($('detail').value === 'auto') zkalibruj();
+});
+const ulozeneTempo = localStorage.getItem('vitr_tempo');
+if (ulozeneTempo && TEMPO[ulozeneTempo]) $('tempo').value = ulozeneTempo;
+const ulozenyDetail = localStorage.getItem('vitr_detail');
+if (ulozenyDetail && (ulozenyDetail === 'auto' || DETAIL[ulozenyDetail])) $('detail').value = ulozenyDetail;
+$('btnPauza').addEventListener('click', () => {
+  bezi = !bezi;
+  $('btnPauza').textContent = bezi ? '⏸️ Pauza' : '▶️ Spustit';
+  $('btnPauza').classList.toggle('zap', !bezi);
+});
+$('btnReset').addEventListener('click', restart);
+$('btnInfo').addEventListener('click', () => {
+  const b = $('infoBox');
+  b.style.display = b.style.display === 'none' ? 'block' : 'none';
+});
+$('zavriInfo').addEventListener('click', () => $('infoBox').style.display = 'none');
+
+addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+  if (e.key === ' ') { e.preventDefault(); $('btnPauza').click(); }
+  else if (e.key.toLowerCase() === 'c') { $('prekazka').value = 'zadna'; postavPrekazku(); }
+  else if (e.key.toLowerCase() === 'r') restart();
+});
+
+let zmena = null;
+addEventListener('resize', () => { clearTimeout(zmena); zmena = setTimeout(prepocitejMrizku, 150); });
+
+/* ---------- kalibrace podle výkonu stroje ----------
+   Změří, jak dlouho trvá jeden krok na jedné buňce, a podle toho zvolí
+   velikost mřížky pro „Detail: automaticky“. Na slabším stroji vyjde hrubší
+   mřížka – ta je nejen levnější, ale vítr na ní i rychleji přeletí tunel. */
+let msNaBunku = 0.00006;          // naměřená cena jednoho kroku na jedné buňce
+
+function zkalibruj() {
+  const bunek = cols * rady;
+  for (let i = 0; i < 3; i++) krok();                     // rozehřátí JIT
+  // měří se, dokud neuplyne pár milisekund – jinak by hrubé rozlišení
+  // časovače (nebo jeho záměrné zpřesnění v prohlížeči) měření rozhodilo
+  const t0 = performance.now();
+  let kroku_ = 0, uplynulo = 0;
+  while (uplynulo < 5 && kroku_ < 80) { krok(); kroku_++; uplynulo = performance.now() - t0; }
+  if (uplynulo < 0.5) return;                             // časovači se nedá věřit
+  msNaBunku = uplynulo / kroku_ / bunek;
+
+  // Přelet tunelu trvá cols/u kroků, jeden krok stojí msNaBunku·cols²·poměr.
+  // Z rovnice „to celé se musí vejít do rozpočtu“ vypadne třetí odmocnina.
+  const rozpocet = TEMPO[$('tempo').value] || TEMPO.normal;
+  const pomer = vyskaPx / sirkaPx;
+  const u = Math.max(0.05, Math.hypot(uinX, uinY));        // podle nastavené síly větru
+  const cilCols = Math.cbrt(rozpocet * u * CIL_PRELETU / (msNaBunku * pomer));
+  const hustota = Math.min(1.35, devicePixelRatio || 1);
+  autoBunka = Math.max(2.4, Math.min(8, sirkaPx * hustota / cilCols));
+  if ($('detail').value === 'auto') prepocitejMrizku();
+}
+
+/* ---------- hlavní smyčka ---------- */
+let posledniT = null, tikMereni = 0, posledniKresba = -1e9, fyzikaMs = 8;
+function smycka(t) {
+  requestAnimationFrame(smycka);
+  // skrytá karta nebo okno na pozadí: nic nepočítat
+  if (document.hidden) { posledniT = null; return; }
+  // strop snímků – na 144Hz displeji by se jinak zbytečně spálilo 3× víc času
+  const limit = bezi ? SNIMEK_MS : 120;
+  if (t - posledniKresba < limit - 1) return;
+  posledniKresba = t;
+
+  if (posledniT === null) posledniT = t;
+  const dt = Math.min(0.05, (t - posledniT) / 1000);
+  posledniT = t;
+
+  if (bezi) {
+    cas += dt;
+    vetrNaVstupu();
+    const t0 = performance.now();
+    for (let i = 0; i < kroku; i++) krok();
+    fyzikaMs = fyzikaMs * 0.8 + (performance.now() - t0) * 0.2;
+    // kolik kroků se vejde do rozpočtu na jeden snímek; víc kroků = svižnější vítr
+    const rozpocet = (TEMPO[$('tempo').value] || TEMPO.normal) / 40;
+    const naKrok = Math.max(0.02, fyzikaMs / kroku);
+    kroku = Math.max(1, Math.min(14, Math.round(rozpocet / naKrok)));
+    posunKour(dt);
+    posunVlecky();
+    posunCastice();
+  }
+  vykresli();
+  if ((tikMereni += dt) > 0.25) { tikMereni = 0; ukazMereni(); }
+}
+
+prepocitejMrizku();
+requestAnimationFrame(smycka);
+// kalibrace až po prvním vykreslení, ať se stránka objeví hned
+setTimeout(zkalibruj, 400);
+</script>
+</body>
+</html>

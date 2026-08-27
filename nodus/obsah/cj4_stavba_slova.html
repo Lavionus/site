@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Stavba slova</title>
+  <link rel="stylesheet" href="../common.css">
+  <link rel="stylesheet" href="../vyuka.css">
+  <script src="../theme.js"></script>
+  <script src="../rec.js"></script>
+  <script src="../uloha.js"></script>
+  <style>
+    .rozbor { display: flex; gap: 4px; justify-content: center; flex-wrap: wrap; }
+    .rozbor .cast {
+      font-size: clamp(1.6rem, 6vw, 2.6rem); font-weight: 700; padding: 8px 10px;
+      border-radius: 10px; border: 2px solid var(--border); background: var(--bg-elevated);
+      font-family: inherit; color: var(--text); cursor: pointer;
+    }
+    .rozbor .cast:hover:not(:disabled) { border-color: var(--accent); }
+    .rozbor .cast.spravne { background: var(--ok); border-color: var(--ok); color: #fff; }
+    .rozbor .cast.spatne { background: var(--danger); border-color: var(--danger); color: #fff; }
+    .legenda-castí { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; font-size: 0.8rem; color: var(--text-faint); }
+    .slovo-velke { font-size: clamp(1.7rem, 6vw, 2.6rem); font-weight: 700; }
+  </style>
+</head>
+<body>
+  <h1>🧩 Stavba slova</h1>
+  <p class="podtitul">Pro 4.–5. ročník: kořen, předpona a přípona, slova příbuzná a předpona versus předložka.</p>
+
+  <div class="rezimy" id="rezimy">
+    <button data-rezim="koren" class="active">🌱 Najdi kořen</button>
+    <button data-rezim="cast">🔍 Co je to za část?</button>
+    <button data-rezim="pribuzna">👨‍👩‍👦 Slovo příbuzné</button>
+    <button data-rezim="predpona">📎 Předpona, či předložka?</button>
+  </div>
+
+  <div class="plocha" id="plocha"></div>
+
+  <div class="ovladani">
+    <button class="hlavni" id="btnDalsi">Přeskočit →</button>
+    <span class="skore" id="skore"></span>
+  </div>
+
+  <p class="napoveda">
+    <b>Kořen</b> je společná část slov příbuzných (les – lesník – lesní). <b>Předpona</b> stojí
+    před kořenem a píše se se slovem dohromady, <b>předložka</b> je samostatné slovo (<i>přišel</i> ×
+    <i>při domě</i>).
+  </p>
+
+<script>
+const $ = id => document.getElementById(id);
+const skore = Uloha.skore('nodus_cj4_stavba', $('skore'));
+let rezim = 'koren';
+
+/* slovo rozdělené na části: p = předpona, k = kořen, s = přípona/koncovka */
+const SLOVA = [
+  { p: '', k: 'les', s: 'ník', pribuzna: ['lesní', 'lesík', 'zalesnit'] },
+  { p: 'za', k: 'hrad', s: 'a', pribuzna: ['hradní', 'ohrada', 'hrádek'] },
+  { p: 'roz', k: 'kvet', s: 'lý', pribuzna: ['květina', 'rozkvést', 'květ'] },
+  { p: 'ná', k: 'moř', s: 'ní', pribuzna: ['moře', 'mořský', 'přímoří'] },
+  { p: 'pod', k: 'chod', s: '', pribuzna: ['chodit', 'chodník', 'průchod'] },
+  { p: '', k: 'uč', s: 'itel', pribuzna: ['učit', 'učebnice', 'naučný'] },
+  { p: 'vý', k: 'let', s: '', pribuzna: ['letět', 'letadlo', 'přelet'] },
+  { p: '', k: 'zahrad', s: 'ník', pribuzna: ['zahrada', 'zahradní', 'zahrádka'] },
+  { p: 'pře', k: 'stav', s: 'ba', pribuzna: ['stavět', 'stavba', 'stavitel'] },
+  { p: '', k: 'ryb', s: 'ník', pribuzna: ['ryba', 'rybář', 'rybí'] },
+  { p: 'ú', k: 'kol', s: '', pribuzna: ['úkolovat', 'zaúkolovat', 'úkolník'] },
+  { p: 'od', k: 'chod', s: '', pribuzna: ['chodit', 'příchod', 'chodec'] },
+  { p: '', k: 'kniž', s: 'ní', pribuzna: ['kniha', 'knihovna', 'knížka'] },
+  { p: 'na', k: 'kres', s: 'lit', pribuzna: ['kreslit', 'kresba', 'kreslíř'] },
+  { p: '', k: 'zim', s: 'ní', pribuzna: ['zima', 'zimní', 'přezimovat'] },
+];
+
+const NEPRIBUZNA = ['stůl', 'mléko', 'auto', 'kolo', 'okno', 'míč', 'pero', 'talíř', 'kámen', 'vítr'];
+
+const PREDPONY = [
+  { v: 'přišel domů', predpona: true, slovo: 'přišel' },
+  { v: 'při domě je zahrada', predpona: false, slovo: 'při domě' },
+  { v: 'nadchod nad silnicí', predpona: true, slovo: 'nadchod' },
+  { v: 'nad stolem visí lampa', predpona: false, slovo: 'nad stolem' },
+  { v: 'podepsat dopis', predpona: true, slovo: 'podepsat' },
+  { v: 'pod postelí je bota', predpona: false, slovo: 'pod postelí' },
+  { v: 'zaběhnout do lesa', predpona: true, slovo: 'zaběhnout' },
+  { v: 'za domem stojí kůlna', predpona: false, slovo: 'za domem' },
+  { v: 'předložit sešit', predpona: true, slovo: 'předložit' },
+  { v: 'před školou čekáme', predpona: false, slovo: 'před školou' },
+  { v: 'odjet na výlet', predpona: true, slovo: 'odjet' },
+  { v: 'od rána prší', predpona: false, slovo: 'od rána' },
+];
+
+const NAZVY_CASTI = { p: 'předpona', k: 'kořen', s: 'přípona a koncovka' };
+
+function castiSlova(u) {
+  return [['p', u.p], ['k', u.k], ['s', u.s]].filter(([, t]) => t);
+}
+
+/* ---- Najdi kořen ----------------------------------------------------------- */
+function koren() {
+  const p = $('plocha');
+  const u = Uloha.nahodne(SLOVA.filter(x => castiSlova(x).length > 1));
+  p.innerHTML = '<div class="zadani">Klepni na <b>kořen</b> slova.</div>';
+  const radek = document.createElement('div');
+  radek.className = 'rozbor';
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  const stav = { chyboval: false, hotovo: false };
+
+  castiSlova(u).forEach(([typ, text]) => {
+    const b = document.createElement('button');
+    b.className = 'cast';
+    b.textContent = text;
+    b.dataset.typ = typ;
+    b.addEventListener('click', () => Uloha.odpoved({
+      prvek: b,
+      spravne: typ === 'k',
+      stav, odezva,
+      zpravaOk: `✅ Kořen je „${u.k}“ – najdeš ho i ve slovech ${u.pribuzna.join(', ')}.`,
+      zpravaChyba: `To je ${NAZVY_CASTI[typ]}. Kořen je společný pro slova příbuzná.`,
+      poSpravne: skore.vyhodnot,
+      dalsi: novaUloha,
+    }));
+    radek.appendChild(b);
+  });
+
+  const legenda = document.createElement('div');
+  legenda.className = 'legenda-castí';
+  legenda.textContent = 'Slovo je rozdělené na části – vyber tu, která nese význam.';
+  p.append(radek, legenda, odezva);
+}
+
+/* ---- Co je to za část? ------------------------------------------------------ */
+function cast() {
+  const p = $('plocha');
+  const u = Uloha.nahodne(SLOVA.filter(x => castiSlova(x).length > 1));
+  const [typ, text] = Uloha.nahodne(castiSlova(u));
+  const cele = castiSlova(u).map(([t, x]) =>
+    t === typ ? `<span style="color:var(--accent)">${x}</span>` : x).join('');
+
+  p.innerHTML = `<div class="zadani">Jaká část slova je zvýrazněná?</div>
+    <div class="karta"><div class="slovo-velke">${cele}</div></div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej(Object.entries(NAZVY_CASTI))
+      .map(([klic, nazev]) => ({ klic, popis: nazev })),
+    spravnyKlic: typ,
+    zpravaOk: `✅ „${text}“ je ${NAZVY_CASTI[typ]}.`,
+    zpravaChyba: 'Ještě ne. Kořen je uprostřed, předpona před ním, přípona za ním.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Slovo příbuzné --------------------------------------------------------- */
+function pribuzna() {
+  const p = $('plocha');
+  const u = Uloha.nahodne(SLOVA);
+  const spravne = Uloha.nahodne(u.pribuzna);
+  const jine = Uloha.zamichej(NEPRIBUZNA).slice(0, 3);
+  p.innerHTML = `<div class="zadani">Které slovo je příbuzné se slovem</div>
+    <div class="karta"><div class="slovo-velke">${u.p + u.k + u.s}</div></div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([spravne, ...jine]).map(t => ({ klic: t, popis: t })),
+    spravnyKlic: spravne,
+    zpravaOk: `✅ Obě slova mají kořen „${u.k}“.`,
+    zpravaChyba: 'Hledej slovo se stejným kořenem, ne jen podobně znějící.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Předpona, či předložka? ------------------------------------------------ */
+function predpona() {
+  const p = $('plocha');
+  const u = Uloha.nahodne(PREDPONY);
+  p.innerHTML = `<div class="zadani">Je zvýrazněná část předpona (píše se dohromady),
+      nebo předložka (píše se zvlášť)?</div>
+    <div class="karta"><div class="slovo-velke">${u.slovo}</div>
+    <div class="popis">${u.v}</div></div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva, trida: 'dve',
+    moznosti: [
+      { klic: 'predpona', ikona: '🔗', popis: 'předpona (dohromady)' },
+      { klic: 'predlozka', ikona: '✂️', popis: 'předložka (zvlášť)' },
+    ],
+    spravnyKlic: u.predpona ? 'predpona' : 'predlozka',
+    zpravaOk: u.predpona
+      ? `✅ „${u.slovo}“ je jedno slovo s předponou.`
+      : `✅ „${u.slovo}“ jsou dvě slova – předložka a podstatné jméno.`,
+    zpravaChyba: 'Zkus mezi obě části vložit jiné slovo – u předložky to jde, u předpony ne.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+const REZIMY = { koren, cast, pribuzna, predpona };
+function novaUloha() { REZIMY[rezim](); }
+
+document.querySelectorAll('#rezimy button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#rezimy button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  rezim = b.dataset.rezim;
+  novaUloha();
+}));
+$('btnDalsi').addEventListener('click', novaUloha);
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === 'Enter') { e.preventDefault(); novaUloha(); }
+});
+novaUloha();
+</script>
+</body>
+</html>

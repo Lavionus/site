@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Šifrování a kódování dat</title>
+  <link rel="stylesheet" href="../common.css">
+  <link rel="stylesheet" href="../vyuka.css">
+  <script src="../theme.js"></script>
+  <script src="../uloha.js"></script>
+  <style>
+    .text-sifra {
+      font-family: 'Courier New', monospace; font-size: clamp(1.2rem, 5vw, 2rem);
+      font-weight: 700; letter-spacing: 0.14em; word-break: break-word; max-width: 640px;
+    }
+    .text-sifra.tajny { color: var(--warn); }
+    .posuvnik { display: flex; flex-direction: column; gap: 6px; align-items: center; width: min(420px, 92%); }
+    .posuvnik input { width: 100%; }
+    .posuvnik .stav { color: var(--text-faint); font-size: 0.82rem; }
+    .abeceda { font-family: 'Courier New', monospace; font-size: 0.78rem; color: var(--text-faint);
+      letter-spacing: 0.08em; }
+    .uloha-text { max-width: 640px; font-size: 1.02rem; line-height: 1.6; }
+    .uloha-text b { color: var(--accent); }
+  </style>
+</head>
+<body>
+  <h1>🔐 Šifrování a kódování dat</h1>
+  <p class="podtitul">Pro 7. ročník: Caesarova šifra, luštění, komprese a kódování znaků.</p>
+
+  <div class="rezimy" id="rezimy">
+    <button data-rezim="zasifruj" class="active">🔒 Zašifruj</button>
+    <button data-rezim="rozlusti">🔎 Rozluštit</button>
+    <button data-rezim="komprese">🗜️ Komprese</button>
+    <button data-rezim="kodovani">🔢 Kódování</button>
+  </div>
+
+  <div class="plocha" id="plocha"></div>
+
+  <div class="ovladani">
+    <button class="hlavni" id="btnDalsi">Přeskočit →</button>
+    <span class="skore" id="skore"></span>
+  </div>
+
+  <p class="napoveda">
+    <b>Šifrování</b> mění text tak, aby ho nepovolaný nepřečetl – potřebuje klíč.
+    <b>Kódování</b> jen převádí zápis do jiné podoby (třeba písmeno na číslo) a klíč nepotřebuje.
+    <b>Komprese</b> zmenšuje objem dat tím, že vynechává opakování.
+  </p>
+
+<script>
+const $ = id => document.getElementById(id);
+const skore = Uloha.skore('nodus_inf7_sifrovani', $('skore'));
+let rezim = 'zasifruj';
+function odezvaEl() { const d = document.createElement('div'); d.className = 'odezva'; return d; }
+
+const ABECEDA = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+/* Caesarova šifra pracuje s abecedou bez diakritiky, proto slova volíme bez háčků a čárek. */
+function caesar(text, posun) {
+  return text.toUpperCase().split('').map(z => {
+    const i = ABECEDA.indexOf(z);
+    return i < 0 ? z : ABECEDA[(i + posun + 26) % 26];
+  }).join('');
+}
+
+const SLOVA = ['POCITAC', 'SIFRA', 'KLAVESNICE', 'INTERNET', 'PROGRAM', 'DATA', 'MYSLENKA',
+  'ROBOT', 'SOUBOR', 'TABULKA', 'SERVER', 'PAMET', 'OBRAZEK', 'NAPOVEDA'];
+const VETY = ['TAJNA ZPRAVA', 'PRIJDU V PET', 'HESLO JE ZMENENO', 'SETKAME SE U SKOLY',
+  'POZOR NA PHISHING', 'ZALOHUJ SI DATA'];
+
+/* ---- Zašifruj ------------------------------------------------------------------------------ */
+function zasifruj() {
+  const p = $('plocha');
+  const slovo = Uloha.nahodne(SLOVA);
+  const posun = Uloha.nahodneCislo(1, 8);
+  const spravny = caesar(slovo, posun);
+  const jine = new Set([caesar(slovo, posun + 1), caesar(slovo, posun - 1), caesar(slovo, posun + 2)]);
+  jine.delete(spravny);
+
+  p.innerHTML = `<div class="zadani uloha-text">Zašifruj slovo Caesarovou šifrou s posunem
+      <b>+${posun}</b> (A → ${ABECEDA[posun]}).</div>
+    <div class="karta"><div class="text-sifra">${slovo}</div></div>
+    <div class="abeceda">${ABECEDA}<br>${caesar(ABECEDA, posun)}</div>`;
+  const odezva = odezvaEl();
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([spravny, ...jine]).map(t => ({ klic: t, popis: t })),
+    spravnyKlic: spravny,
+    zpravaOk: `✅ ${slovo} → ${spravny} (každé písmeno o ${posun} dál)`,
+    zpravaChyba: 'Posouvej po abecedě pod sebou – pomůže tabulka pod úlohou.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Rozluštit s posuvníkem ------------------------------------------------------------------ */
+function rozlusti() {
+  const p = $('plocha');
+  const veta = Uloha.nahodne(VETY);
+  const posun = Uloha.nahodneCislo(3, 20);
+  const sifra = caesar(veta, posun);
+  const jine = new Set([caesar(sifra, -(posun + 1)), caesar(sifra, -(posun - 2)), caesar(sifra, -(posun + 3))]);
+  jine.delete(veta);
+
+  p.innerHTML = `<div class="zadani uloha-text">Rozluštit zprávu. Posuvníkem zkoušej posun,
+      dokud text nedává smysl.</div>
+    <div class="karta"><div class="text-sifra tajny">${sifra}</div>
+      <div class="posuvnik">
+        <input type="range" id="posuv" min="0" max="25" value="0">
+        <div class="stav" id="stavPosuv">posun 0</div>
+        <div class="text-sifra" id="nahled" style="font-size:1.1rem">${sifra}</div>
+      </div></div>`;
+  const odezva = odezvaEl();
+  $('posuv').addEventListener('input', e => {
+    const k = Number(e.target.value);
+    $('stavPosuv').textContent = 'posun ' + k;
+    $('nahled').textContent = caesar(sifra, -k);
+  });
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([veta, ...jine]).map(t => ({ klic: t, popis: t })),
+    spravnyKlic: veta,
+    zpravaOk: `✅ ${veta} – zpráva byla posunutá o ${posun}.`,
+    zpravaChyba: 'Zkoušej posuvník dál – správný posun odhalí česká slova.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Komprese (RLE) ---------------------------------------------------------------------------- */
+function rle(text) {
+  let out = '', i = 0;
+  while (i < text.length) {
+    let j = i;
+    while (j < text.length && text[j] === text[i]) j++;
+    out += (j - i) + text[i];
+    i = j;
+  }
+  return out;
+}
+function nahodnyRetezec() {
+  const znaky = ['A', 'B', 'C', 'X'];
+  let s = '', poslední = '';
+  for (let i = 0; i < Uloha.nahodneCislo(3, 4); i++) {
+    let z = Uloha.nahodne(znaky.filter(x => x !== poslední));
+    poslední = z;
+    s += z.repeat(Uloha.nahodneCislo(1, 5));
+  }
+  return s;
+}
+function komprese() {
+  const p = $('plocha');
+  const zpetne = Math.random() < 0.5;
+  const puvodni = nahodnyRetezec();
+  const zabaleno = rle(puvodni);
+
+  const zadani = zpetne
+    ? `Rozbal zápis <b>${zabaleno}</b> (číslo říká, kolikrát se znak opakuje).`
+    : `Zabal řetězec metodou RLE – zapiš počet opakování a znak.`;
+  const spravny = zpetne ? puvodni : zabaleno;
+  const jine = new Set();
+  let pojistka = 0;
+  while (jine.size < 3 && pojistka++ < 100) {
+    const jiny = nahodnyRetezec();
+    const kandidat = zpetne ? jiny : rle(jiny);
+    if (kandidat !== spravny) jine.add(kandidat);
+  }
+
+  p.innerHTML = `<div class="zadani uloha-text">${zadani}</div>
+    ${zpetne ? '' : `<div class="karta"><div class="text-sifra">${puvodni}</div></div>`}`;
+  const odezva = odezvaEl();
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([spravny, ...jine]).map(t => ({ klic: t, popis: t })),
+    spravnyKlic: spravny,
+    zpravaOk: `✅ ${puvodni} ⇄ ${zabaleno} – z ${puvodni.length} znaků je ${zabaleno.length}.`,
+    zpravaChyba: 'Počítej stejné znaky za sebou a zapisuj je jako „početZnak“.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Kódování ------------------------------------------------------------------------------------ */
+const KODOVANI = [
+  { q: 'Jaký je rozdíl mezi kódováním a šifrováním?', a: 'kódování nechrání obsah, šifrování ano (potřebuje klíč)',
+    b: ['není žádný rozdíl', 'kódování je vždy tajné', 'šifrování zmenšuje soubor'] },
+  { q: 'Kolik bitů má jeden bajt?', a: '8', b: ['4', '16', '1024'] },
+  { q: 'Co je binární zápis čísla 5?', a: '101', b: ['110', '011', '5'] },
+  { q: 'Jaké číslo je binárně 1010?', a: '10', b: ['8', '12', '1010'] },
+  { q: 'K čemu slouží kódování UTF-8?', a: 'umožňuje zapsat znaky všech jazyků včetně háčků', b: ['zmenšuje obrázky', 'šifruje e-maily', 'zrychluje síť'] },
+  { q: 'Co znamená v Morseově abecedě ··· (tři tečky)?', a: 'písmeno S', b: ['písmeno O', 'písmeno E', 'číslici 3'] },
+  { q: 'Proč je ztrátová komprese vhodná pro fotky, ale ne pro text?', a: 'u fotky drobná ztráta detailů nevadí, ve slově chybějící písmeno ano',
+    b: ['fotky jsou menší', 'text nejde komprimovat', 'je to jen zvyk'] },
+  { q: 'Co je hash (otisk) souboru?', a: 'krátký kontrolní údaj, podle kterého poznáš změnu souboru', b: ['heslo k souboru', 'druh komprese', 'jméno autora'] },
+  { q: 'Proč se dnes Caesarova šifra nepoužívá k ochraně dat?', a: 'má jen 25 možných klíčů, počítač ji prolomí okamžitě',
+    b: ['nejde ji naprogramovat', 'nefunguje s číslicemi', 'je příliš pomalá'] },
+];
+function kodovani() {
+  const p = $('plocha');
+  const u = Uloha.nahodne(KODOVANI);
+  p.innerHTML = `<div class="zadani uloha-text">${u.q}</div>`;
+  const odezva = odezvaEl();
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([u.a, ...u.b]).map(t => ({ klic: t, popis: t })),
+    spravnyKlic: u.a,
+    zpravaOk: `✅ ${u.a}`,
+    zpravaChyba: 'Rozliš: kódování = jiný zápis, šifrování = utajení, komprese = zmenšení.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+const REZIMY = { zasifruj, rozlusti, komprese, kodovani };
+function novaUloha() { REZIMY[rezim](); }
+
+document.querySelectorAll('#rezimy button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#rezimy button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  rezim = b.dataset.rezim;
+  novaUloha();
+}));
+$('btnDalsi').addEventListener('click', novaUloha);
+novaUloha();
+</script>
+</body>
+</html>

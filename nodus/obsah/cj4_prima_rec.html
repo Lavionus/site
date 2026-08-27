@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Přímá řeč</title>
+  <link rel="stylesheet" href="../common.css">
+  <link rel="stylesheet" href="../vyuka.css">
+  <script src="../theme.js"></script>
+  <script src="../rec.js"></script>
+  <script src="../uloha.js"></script>
+  <style>
+    .veta { font-size: clamp(1.1rem, 4vw, 1.6rem); font-weight: 600; line-height: 1.5; max-width: 640px; }
+    .veta .uvozovaci { color: var(--accent); }
+    .moznosti.vety button { max-width: 100%; font-size: 1rem; text-align: left; align-items: flex-start; }
+  </style>
+</head>
+<body>
+  <h1>💬 Přímá řeč</h1>
+  <p class="podtitul">Pro 4.–5. ročník: uvozovky, interpunkce a uvozovací věta.</p>
+
+  <div class="rezimy" id="rezimy">
+    <button data-rezim="zapis" class="active">✍️ Správný zápis</button>
+    <button data-rezim="uvozovaci">🔍 Kde je uvozovací věta</button>
+    <button data-rezim="prevod">🔄 Přímá, či nepřímá řeč</button>
+  </div>
+
+  <div class="plocha" id="plocha"></div>
+
+  <div class="ovladani">
+    <button class="hlavni" id="btnDalsi">Přeskočit →</button>
+    <span class="skore" id="skore"></span>
+  </div>
+
+  <p class="napoveda">
+    Přímá řeč se píše do <b>uvozovek</b>. Když je uvozovací věta na začátku, odděluje se
+    <b>dvojtečkou</b>: Petr řekl: „Už jdu.“ Když je za přímou řečí, odděluje se <b>čárkou</b>
+    a přímá řeč končí čárkou uvnitř uvozovek: „Už jdu,“ řekl Petr.
+  </p>
+
+<script>
+const $ = id => document.getElementById(id);
+const skore = Uloha.skore('nodus_cj4_prima_rec', $('skore'));
+let rezim = 'zapis';
+
+/* věta se správným zápisem + tři chybné varianty */
+const ZAPISY = [
+  {
+    spravne: 'Petr řekl: „Už jdu.“',
+    chybne: ['Petr řekl, „Už jdu.“', 'Petr řekl: „Už jdu“.', 'Petr řekl „Už jdu.“'],
+  },
+  {
+    spravne: '„Zítra pojedeme na výlet,“ oznámila maminka.',
+    chybne: ['„Zítra pojedeme na výlet.“ oznámila maminka.', '„Zítra pojedeme na výlet“, oznámila maminka.',
+             '„Zítra pojedeme na výlet,“ Oznámila maminka.'],
+  },
+  {
+    spravne: 'Učitelka se zeptala: „Kdo chybí?“',
+    chybne: ['Učitelka se zeptala: „Kdo chybí.“', 'Učitelka se zeptala, „Kdo chybí?“',
+             'Učitelka se zeptala: Kdo chybí?'],
+  },
+  {
+    spravne: '„Pospěš si!“ volal táta z auta.',
+    chybne: ['„Pospěš si!“, volal táta z auta.', '„Pospěš si,“! volal táta z auta.',
+             '„Pospěš si!“ Volal táta z auta.'],
+  },
+  {
+    spravne: 'Adam se divil: „To snad není možné!“',
+    chybne: ['Adam se divil: „To snad není možné.“!', 'Adam se divil „To snad není možné!“',
+             'Adam se divil: to snad není možné!'],
+  },
+  {
+    spravne: '„Mám hlad,“ postěžoval si Honza.',
+    chybne: ['„Mám hlad.“ postěžoval si Honza.', '„Mám hlad“, postěžoval si Honza.',
+             '„Mám hlad,“ Postěžoval si Honza.'],
+  },
+];
+
+/* věty s vyznačenou uvozovací větou (u = pozice: 'pred' | 'za') */
+const UVOZOVACI = [
+  { v: 'Babička zavolala: „Oběd je hotový!“', uv: 'Babička zavolala', u: 'pred' },
+  { v: '„Už tam budeme?“ ptaly se děti.', uv: 'ptaly se děti', u: 'za' },
+  { v: 'Pan učitel oznámil: „Zítra píšeme test.“', uv: 'Pan učitel oznámil', u: 'pred' },
+  { v: '„Nezapomeň na klíče,“ připomněla sestra.', uv: 'připomněla sestra', u: 'za' },
+  { v: 'Kamarád se zeptal: „Půjdeš ven?“', uv: 'Kamarád se zeptal', u: 'pred' },
+  { v: '„To je krása!“ vydechla Eva.', uv: 'vydechla Eva', u: 'za' },
+];
+
+const PRIMA_NEPRIMA = [
+  { v: 'Máma řekla: „Ukliď si pokoj.“', prima: true },
+  { v: 'Máma řekla, ať si uklidím pokoj.', prima: false },
+  { v: '„Bolí mě noha,“ stěžoval si Tomáš.', prima: true },
+  { v: 'Tomáš si stěžoval, že ho bolí noha.', prima: false },
+  { v: 'Petr se zeptal: „Kolik je hodin?“', prima: true },
+  { v: 'Petr se zeptal, kolik je hodin.', prima: false },
+  { v: 'Učitelka nám slíbila, že půjdeme na výlet.', prima: false },
+  { v: 'Učitelka slíbila: „Půjdeme na výlet.“', prima: true },
+];
+
+/* ---- Správný zápis --------------------------------------------------------- */
+function zapis() {
+  const p = $('plocha');
+  const u = Uloha.nahodne(ZAPISY);
+  p.innerHTML = '<div class="zadani">Který zápis přímé řeči je správný?</div>';
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva, trida: 'vety',
+    moznosti: Uloha.zamichej([u.spravne, ...u.chybne]).map(t => ({ klic: t, popis: t })),
+    spravnyKlic: u.spravne,
+    zpravaOk: '✅ ' + u.spravne,
+    zpravaChyba: 'Zkontroluj uvozovky, dvojtečku či čárku a velké písmeno za uvozovkami.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Kde je uvozovací věta -------------------------------------------------- */
+function uvozovaci() {
+  const p = $('plocha');
+  const u = Uloha.nahodne(UVOZOVACI);
+  p.innerHTML = `<div class="zadani">Kde stojí uvozovací věta?</div>
+    <div class="karta"><div class="veta">${u.v.replace(u.uv, `<span class="uvozovaci">${u.uv}</span>`)}</div></div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva, trida: 'dve',
+    moznosti: [
+      { klic: 'pred', ikona: '⬅️', popis: 'před přímou řečí' },
+      { klic: 'za', ikona: '➡️', popis: 'za přímou řečí' },
+    ],
+    spravnyKlic: u.u,
+    zpravaOk: u.u === 'pred'
+      ? '✅ Uvozovací věta je vpředu – odděluje se dvojtečkou.'
+      : '✅ Uvozovací věta je vzadu – před ní je čárka uvnitř uvozovek.',
+    zpravaChyba: 'Uvozovací věta je ta, která říká, kdo mluví.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Přímá, či nepřímá řeč --------------------------------------------------- */
+function prevod() {
+  const p = $('plocha');
+  const u = Uloha.nahodne(PRIMA_NEPRIMA);
+  p.innerHTML = `<div class="zadani">Je to přímá, nebo nepřímá řeč?</div>
+    <div class="karta"><div class="veta">${u.v}</div></div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva, trida: 'dve',
+    moznosti: [
+      { klic: 'prima', ikona: '💬', popis: 'přímá řeč' },
+      { klic: 'neprima', ikona: '📝', popis: 'nepřímá řeč' },
+    ],
+    spravnyKlic: u.prima ? 'prima' : 'neprima',
+    zpravaOk: u.prima
+      ? '✅ Přímá řeč – slova jsou v uvozovkách přesně tak, jak zazněla.'
+      : '✅ Nepřímá řeč – obsah je převyprávěný, uvozovky nejsou.',
+    zpravaChyba: 'Podívej se, jestli jsou ve větě uvozovky.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+const REZIMY = { zapis, uvozovaci, prevod };
+function novaUloha() { REZIMY[rezim](); }
+
+document.querySelectorAll('#rezimy button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#rezimy button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  rezim = b.dataset.rezim;
+  novaUloha();
+}));
+$('btnDalsi').addEventListener('click', novaUloha);
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === 'Enter') { e.preventDefault(); novaUloha(); }
+});
+novaUloha();
+</script>
+</body>
+</html>

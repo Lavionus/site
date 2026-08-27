@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Angličtina – předložky místa a času</title>
+  <link rel="stylesheet" href="../common.css">
+  <link rel="stylesheet" href="../vyuka.css">
+  <script src="../theme.js"></script>
+  <script src="../rec.js"></script>
+  <script src="../uloha.js"></script>
+  <style>
+    .veta-en { font-size: clamp(1.2rem, 4.5vw, 1.9rem); font-weight: 700; line-height: 1.45; max-width: 620px; }
+    .veta-en .mezera { color: var(--accent); border-bottom: 3px solid var(--accent); padding: 0 12px; }
+    .preklad { color: var(--text-faint); font-size: 0.95rem; font-style: italic; }
+    .scenka { width: min(280px, 70vw); }
+    .scenka .krabice { fill: none; stroke: var(--text-muted); stroke-width: 4; }
+    .scenka .kocka { font-size: 34px; }
+    .tabulka { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; max-width: 900px; margin-top: 12px; }
+    .tabulka span {
+      background: var(--bg-panel); border: 1px solid var(--border); border-radius: 8px;
+      padding: 6px 12px; font-size: 0.8rem; color: var(--text-muted);
+    }
+    .tabulka b { color: var(--text); }
+  </style>
+</head>
+<body>
+  <h1>📍 Předložky místa a času</h1>
+  <p class="podtitul">Pro 4.–5. ročník: in, on, at, under, next to a předložky u času.</p>
+
+  <div class="rezimy" id="rezimy">
+    <button data-rezim="misto" class="active">🐈 Kde je kočka?</button>
+    <button data-rezim="cas">🕐 Předložky času</button>
+    <button data-rezim="vyznam">🇨🇿 Co to znamená?</button>
+  </div>
+
+  <div class="plocha" id="plocha"></div>
+
+  <div class="ovladani">
+    <button class="hlavni" id="btnDalsi">Přeskočit →</button>
+    <span class="skore" id="skore"></span>
+  </div>
+
+  <div class="tabulka">
+    <span><b>in</b> – měsíce, roky, roční období: in July, in 2026</span>
+    <span><b>on</b> – dny a data: on Monday, on 5th May</span>
+    <span><b>at</b> – hodiny a části dne: at 7 o'clock, at night</span>
+  </div>
+
+  <p class="napoveda">
+    U místa: <b>in</b> = uvnitř, <b>on</b> = na povrchu, <b>under</b> = pod,
+    <b>next to</b> = vedle, <b>behind</b> = za, <b>in front of</b> = před.
+  </p>
+
+<script>
+const $ = id => document.getElementById(id);
+const skore = Uloha.skore('nodus_aj4_predlozky', $('skore'));
+let rezim = 'misto';
+
+/* poloha kočky vůči krabici: [x, y] v souřadnicích obrázku */
+const POLOHY = [
+  { klic: 'in', cz: 'v (uvnitř)', x: 140, y: 105 },
+  { klic: 'on', cz: 'na', x: 140, y: 48 },
+  { klic: 'under', cz: 'pod', x: 140, y: 168 },
+  { klic: 'next to', cz: 'vedle', x: 228, y: 105 },
+  { klic: 'behind', cz: 'za', x: 175, y: 62 },
+  { klic: 'in front of', cz: 'před', x: 105, y: 150 },
+];
+
+const CASY = [
+  { v: '___ Monday', spr: 'on', proc: 'Dny v týdnu mají on.' },
+  { v: '___ July', spr: 'in', proc: 'Měsíce mají in.' },
+  { v: "___ 7 o'clock", spr: 'at', proc: 'Hodiny mají at.' },
+  { v: '___ the morning', spr: 'in', proc: 'in the morning / afternoon / evening – ale at night!' },
+  { v: '___ night', spr: 'at', proc: 'at night je výjimka – v noci.' },
+  { v: '___ Christmas', spr: 'at', proc: 'Svátky jako Christmas a Easter mají at.' },
+  { v: '___ 2026', spr: 'in', proc: 'Roky mají in.' },
+  { v: '___ my birthday', spr: 'on', proc: 'Konkrétní den má on.' },
+  { v: '___ winter', spr: 'in', proc: 'Roční období mají in.' },
+  { v: '___ the weekend', spr: 'at', proc: 'V britské angličtině at the weekend.' },
+  { v: '___ Friday evening', spr: 'on', proc: 'Konkrétní den + část dne má on.' },
+  { v: '___ half past six', spr: 'at', proc: 'Přesný čas má at.' },
+];
+
+const VYZNAMY = [
+  { en: 'in', cz: 'uvnitř, v' }, { en: 'on', cz: 'na (povrchu)' },
+  { en: 'under', cz: 'pod' }, { en: 'next to', cz: 'vedle' },
+  { en: 'behind', cz: 'za' }, { en: 'in front of', cz: 'před' },
+  { en: 'between', cz: 'mezi' }, { en: 'above', cz: 'nad' },
+  { en: 'near', cz: 'blízko' }, { en: 'opposite', cz: 'naproti' },
+];
+
+/* ---- Kde je kočka? ---------------------------------------------------------- */
+function misto() {
+  const p = $('plocha');
+  const poloha = Uloha.nahodne(POLOHY);
+  p.innerHTML = `<div class="zadani">Where is the cat?</div>
+    <div class="karta">
+      <svg class="scenka" viewBox="0 0 280 200">
+        <rect class="krabice" x="100" y="80" width="80" height="55" rx="4"/>
+        <text class="kocka" x="${poloha.x}" y="${poloha.y}" text-anchor="middle">🐈</text>
+        <text x="140" y="192" text-anchor="middle" fill="var(--text-faint)" font-size="13">box</text>
+      </svg>
+      <div class="veta-en">The cat is <span class="mezera">?</span> the box.</div>
+    </div>`;
+  const jine = Uloha.zamichej(POLOHY.filter(x => x.klic !== poloha.klic)).slice(0, 3);
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([poloha, ...jine]).map(x => ({ klic: x.klic, popis: x.klic })),
+    spravnyKlic: poloha.klic,
+    zpravaOk: `✅ The cat is ${poloha.klic} the box. – ${poloha.cz} krabice`,
+    zpravaChyba: 'Podívej se pozorně, kde kočka na obrázku je.',
+    poSpravne: napoprve => {
+      skore.vyhodnot(napoprve);
+      p.querySelector('.mezera').textContent = poloha.klic;
+    },
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Předložky času ---------------------------------------------------------- */
+function cas() {
+  const p = $('plocha');
+  const u = Uloha.nahodne(CASY);
+  p.innerHTML = `<div class="zadani">Doplň in, on, nebo at:</div>
+    <div class="karta"><div class="obrazek">🕐</div>
+    <div class="veta-en">${u.v.replace('___', '<span class="mezera">?</span>')}</div></div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva, trida: 'velke',
+    moznosti: Uloha.zamichej(['in', 'on', 'at']).map(t => ({ klic: t, popis: t })),
+    spravnyKlic: u.spr,
+    zpravaOk: `✅ ${u.v.replace('___', u.spr)} – ${u.proc}`,
+    zpravaChyba: 'Zkontroluj si pravidlo v tabulce pod úlohou.',
+    poSpravne: napoprve => {
+      skore.vyhodnot(napoprve);
+      p.querySelector('.mezera').textContent = u.spr;
+    },
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Co to znamená? ---------------------------------------------------------- */
+function vyznam() {
+  const p = $('plocha');
+  const u = Uloha.nahodne(VYZNAMY);
+  const jine = Uloha.zamichej(VYZNAMY.filter(x => x.cz !== u.cz)).slice(0, 3);
+  p.innerHTML = `<div class="zadani">Co znamená tato předložka?</div>
+    <div class="karta"><div class="veta-en">${u.en}</div></div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([u, ...jine]).map(x => ({ klic: x.cz, popis: x.cz })),
+    spravnyKlic: u.cz,
+    zpravaOk: `✅ ${u.en} = ${u.cz}`,
+    zpravaChyba: 'To znamená jiná předložka – zkus to znovu.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+const REZIMY = { misto, cas, vyznam };
+function novaUloha() { REZIMY[rezim](); }
+
+document.querySelectorAll('#rezimy button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#rezimy button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  rezim = b.dataset.rezim;
+  novaUloha();
+}));
+$('btnDalsi').addEventListener('click', novaUloha);
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === 'Enter') { e.preventDefault(); novaUloha(); }
+});
+novaUloha();
+</script>
+</body>
+</html>

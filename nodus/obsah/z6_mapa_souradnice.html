@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Mapa, měřítko a souřadnice</title>
+  <link rel="stylesheet" href="../common.css">
+  <link rel="stylesheet" href="../vyuka.css">
+  <script src="../theme.js"></script>
+  <script src="../rec.js"></script>
+  <script src="../uloha.js"></script>
+  <style>
+    .globus { width: min(340px, 88vw); }
+    .globus .mrizka { stroke: var(--border-strong); stroke-width: 1; fill: none; }
+    .globus .rovnik { stroke: var(--danger); stroke-width: 2.5; }
+    .globus .polednik { stroke: var(--warn); stroke-width: 2.5; }
+    .globus .pozadi { fill: rgba(74,144,217,0.18); stroke: var(--border-strong); stroke-width: 2; }
+    .globus .bod { fill: var(--accent); cursor: pointer; }
+    .globus .bod.spravne { fill: var(--ok); }
+    .globus .popisek { fill: var(--text-faint); font-size: 10px; text-anchor: middle; }
+    .zadani-t { font-size: clamp(1.05rem, 4vw, 1.5rem); font-weight: 700; }
+  </style>
+</head>
+<body>
+  <h1>🗺️ Mapa, měřítko a souřadnice</h1>
+  <p class="podtitul">Pro 6. ročník: zeměpisná síť, souřadnice, měřítko a mapové značky.</p>
+
+  <div class="rezimy" id="rezimy">
+    <button data-rezim="pojmy" class="active">🌐 Zeměpisná síť</button>
+    <button data-rezim="souradnice">📍 Urči souřadnice</button>
+    <button data-rezim="meritko">📏 Měřítko mapy</button>
+    <button data-rezim="druhyMap">🗂️ Druhy map</button>
+  </div>
+
+  <div class="plocha" id="plocha"></div>
+
+  <div class="ovladani">
+    <button class="hlavni" id="btnDalsi">Přeskočit →</button>
+    <span class="skore" id="skore"></span>
+  </div>
+
+  <p class="napoveda">
+    <b>Rovnoběžky</b> jsou vodorovné kružnice (nejdelší je rovník, 0°), <b>poledníky</b> vedou
+    od pólu k pólu (nultý prochází Greenwichem). Zeměpisná <b>šířka</b> se měří od rovníku
+    na sever a na jih, zeměpisná <b>délka</b> od nultého poledníku na východ a na západ.
+  </p>
+
+<script>
+const $ = id => document.getElementById(id);
+const skore = Uloha.skore('nodus_z6_mapa', $('skore'));
+let rezim = 'pojmy';
+
+const POJMY = [
+  { n: 'rovník', o: 'nejdelší rovnoběžka, zeměpisná šířka 0°, dělí Zemi na severní a jižní polokouli' },
+  { n: 'nultý poledník', o: 'poledník procházející Greenwichem, zeměpisná délka 0°' },
+  { n: 'rovnoběžky', o: 'kružnice rovnoběžné s rovníkem, směrem k pólům se zkracují' },
+  { n: 'poledníky', o: 'polokružnice spojující severní a jižní pól, všechny stejně dlouhé' },
+  { n: 'zeměpisná šířka', o: 'vzdálenost od rovníku ve stupních, na sever nebo na jih' },
+  { n: 'zeměpisná délka', o: 'vzdálenost od nultého poledníku, na východ nebo na západ' },
+  { n: 'obratník Raka', o: 'rovnoběžka 23,5° severní šířky, nejsevernější místo se sluncem v nadhlavníku' },
+  { n: 'polární kruh', o: 'rovnoběžka 66,5°, za níž nastává polární den a noc' },
+];
+
+const MESTA = [
+  { n: 'Praha', s: 50, d: 14, smerS: 's', smerD: 'v' },
+  { n: 'Káhira', s: 30, d: 31, smerS: 's', smerD: 'v' },
+  { n: 'New York', s: 41, d: 74, smerS: 's', smerD: 'z' },
+  { n: 'Sydney', s: 34, d: 151, smerS: 'j', smerD: 'v' },
+  { n: 'Rio de Janeiro', s: 23, d: 43, smerS: 'j', smerD: 'z' },
+  { n: 'Tokio', s: 36, d: 140, smerS: 's', smerD: 'v' },
+  { n: 'Kapské Město', s: 34, d: 18, smerS: 'j', smerD: 'v' },
+];
+
+const MERITKA = [
+  { m: '1 : 100 000', cm: 1, popis: '1 cm na mapě = 1 km ve skutečnosti' },
+  { m: '1 : 50 000', cm: 0.5, popis: '1 cm na mapě = 0,5 km ve skutečnosti' },
+  { m: '1 : 200 000', cm: 2, popis: '1 cm na mapě = 2 km ve skutečnosti' },
+  { m: '1 : 1 000 000', cm: 10, popis: '1 cm na mapě = 10 km ve skutečnosti' },
+];
+
+const DRUHY_MAP = [
+  { n: 'obecně zeměpisná mapa', o: 'ukazuje povrch, vodstvo, sídla a hranice zároveň' },
+  { n: 'tematická mapa', o: 'zaměřuje se na jeden jev, například podnebí nebo hustotu zalidnění' },
+  { n: 'turistická mapa', o: 'obsahuje značené trasy, rozhledny a chaty' },
+  { n: 'automapa', o: 'zdůrazňuje silnice, dálnice a čerpací stanice' },
+  { n: 'plán města', o: 'velmi podrobné zobrazení ulic v malém území' },
+  { n: 'vrstevnicová mapa', o: 'nadmořskou výšku znázorňuje čárami spojujícími stejně vysoká místa' },
+];
+
+/* ---- Zeměpisná síť ------------------------------------------------------------------- */
+function pojmy() {
+  const p = $('plocha');
+  const u = Uloha.nahodne(POJMY);
+  const jine = Uloha.zamichej(POJMY.filter(x => x.n !== u.n)).slice(0, 3);
+  p.innerHTML = `<div class="zadani">O který pojem jde?</div>
+    <svg class="globus" viewBox="0 0 300 170">
+      <ellipse class="pozadi" cx="150" cy="85" rx="130" ry="72"/>
+      <line class="rovnik" x1="20" y1="85" x2="280" y2="85"/>
+      <line class="polednik" x1="150" y1="13" x2="150" y2="157"/>
+      <path class="mrizka" d="M35 50 H265 M35 120 H265"/>
+      <path class="mrizka" d="M85 20 V150 M215 20 V150"/>
+      <text class="popisek" x="150" y="80">rovník</text>
+      <text class="popisek" x="192" y="24">nultý poledník</text>
+    </svg>
+    <div class="popis">${u.o}</div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([u, ...jine]).map(x => ({ klic: x.n, popis: x.n })),
+    spravnyKlic: u.n,
+    zpravaOk: `✅ ${u.n} – ${u.o}.`,
+    zpravaChyba: 'Je to čára vodorovná (rovnoběžka), nebo svislá (poledník)?',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Urči souřadnice ----------------------------------------------------------------- */
+function souradnice() {
+  const p = $('plocha');
+  const m = Uloha.nahodne(MESTA);
+  const zapis = x => `${x.s}° ${x.smerS === 's' ? 's. š.' : 'j. š.'}, ${x.d}° ${x.smerD === 'v' ? 'v. d.' : 'z. d.'}`;
+  const jine = Uloha.zamichej(MESTA.filter(x => x.n !== m.n)).slice(0, 3);
+
+  p.innerHTML = `<div class="zadani">Které souřadnice patří tomuto městu?</div>
+    <div class="karta"><div class="obrazek">📍</div><div class="zadani-t">${m.n}</div></div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([m, ...jine]).map(x => ({ klic: x.n, popis: zapis(x) })),
+    spravnyKlic: m.n,
+    zpravaOk: `✅ ${m.n}: ${zapis(m)}`,
+    zpravaChyba: 'Nejdřív se určuje zeměpisná šířka (od rovníku), pak délka (od nultého poledníku).',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Měřítko mapy -------------------------------------------------------------------- */
+function meritko() {
+  const p = $('plocha');
+  const u = Uloha.nahodne(MERITKA);
+  const cm = Uloha.nahodneCislo(2, 12);
+  const km = +(cm * u.cm).toFixed(1);
+
+  p.innerHTML = `<div class="zadani">Kolik kilometrů je to ve skutečnosti?</div>
+    <div class="karta"><div class="obrazek">🗺️</div>
+    <div class="zadani-t">měřítko ${u.m}, na mapě ${cm} cm</div></div>`;
+  const jine = new Set([+(km * 2).toFixed(1), +(km / 2).toFixed(1), +(km + 10).toFixed(1)]
+    .filter(x => x !== km && x > 0));
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva, trida: 'velke',
+    moznosti: Uloha.zamichej([km, ...[...jine].slice(0, 3)])
+      .map(v => ({ klic: String(v), popis: String(v).replace('.', ',') + ' km' })),
+    spravnyKlic: String(km),
+    zpravaOk: `✅ ${u.popis}, takže ${cm} × ${String(u.cm).replace('.', ',')} = ${String(km).replace('.', ',')} km.`,
+    zpravaChyba: 'Zjisti nejdřív, kolik kilometrů odpovídá jednomu centimetru.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Druhy map ------------------------------------------------------------------------ */
+function druhyMap() {
+  const p = $('plocha');
+  const u = Uloha.nahodne(DRUHY_MAP);
+  const jine = Uloha.zamichej(DRUHY_MAP.filter(x => x.n !== u.n)).slice(0, 3);
+  p.innerHTML = `<div class="zadani">O jaký druh mapy jde?</div>
+    <div class="karta"><div class="obrazek">🧭</div><div class="popis">${u.o}</div></div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([u, ...jine]).map(x => ({ klic: x.n, popis: x.n })),
+    spravnyKlic: u.n,
+    zpravaOk: `✅ ${u.n} – ${u.o}.`,
+    zpravaChyba: 'Zkus jinou možnost.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+const REZIMY = { pojmy, souradnice, meritko, druhyMap };
+function novaUloha() { REZIMY[rezim](); }
+
+document.querySelectorAll('#rezimy button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#rezimy button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  rezim = b.dataset.rezim;
+  novaUloha();
+}));
+$('btnDalsi').addEventListener('click', novaUloha);
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === 'Enter') { e.preventDefault(); novaUloha(); }
+});
+novaUloha();
+</script>
+</body>
+</html>

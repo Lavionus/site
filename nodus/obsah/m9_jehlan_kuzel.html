@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Jehlan, kužel a koule</title>
+  <link rel="stylesheet" href="../common.css">
+  <link rel="stylesheet" href="../vyuka.css">
+  <script src="../theme.js"></script>
+  <script src="../uloha.js"></script>
+  <style>
+    .teleso { width: min(280px, 74%); }
+    .teleso .plocha3d { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 2.5; }
+    .teleso .zadni { fill: none; stroke: var(--border-strong); stroke-width: 2; stroke-dasharray: 5 4; }
+    .teleso .vyska { stroke: var(--warn); stroke-width: 2.5; stroke-dasharray: 6 4; }
+    .teleso .popis { fill: var(--text-muted); font-size: 13px; text-anchor: middle; }
+    .uloha-text { max-width: 640px; font-size: 1.02rem; line-height: 1.6; }
+    .uloha-text b { color: var(--accent); }
+    .vzorec { font-family: 'Courier New', monospace; color: var(--text-muted); font-size: 0.93rem; line-height: 1.7; }
+
+    /* ---- interaktivní režimy ---- */
+    .scena { width: min(520px, 100%); touch-action: none; }
+    .scena .plast { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 2.5; }
+    .scena .podstava { fill: rgba(230,170,60,0.28); stroke: var(--warn); stroke-width: 2.5; }
+    .scena .zadni { fill: none; stroke: var(--border-strong); stroke-width: 2; stroke-dasharray: 5 4; }
+    .scena .vyska { stroke: var(--warn); stroke-width: 2.5; stroke-dasharray: 6 4; }
+    .scena .strana { stroke: var(--ok); stroke-width: 2.5; }
+    .scena .obal { fill: none; stroke: var(--border-strong); stroke-width: 2; stroke-dasharray: 4 4; }
+    .scena .naplnene { fill: rgba(106,166,253,0.55); }
+    .scena .popis { fill: var(--text-muted); font-size: 12px; text-anchor: middle; }
+    .scena .popis.v { fill: var(--warn); }
+    .scena .popis.s { fill: var(--ok); }
+
+    .ovladace {
+      display: flex; flex-wrap: wrap; gap: 8px 14px;
+      align-items: center; justify-content: center; max-width: 560px;
+    }
+    .ovladace label {
+      display: flex; align-items: center; gap: 8px;
+      background: var(--bg-input); border: 1px solid var(--border);
+      border-radius: 8px; padding: 5px 10px; font-size: 0.8rem; color: var(--text-muted);
+    }
+    .ovladace input[type=range] { width: 120px; accent-color: var(--accent); }
+    .ovladace .hodnota {
+      color: var(--text); font-weight: 600; min-width: 3.2em;
+      font-variant-numeric: tabular-nums; text-align: right;
+    }
+    .ovladace button {
+      background: var(--bg-control); border: 1px solid var(--border-strong); color: var(--text);
+      border-radius: 8px; padding: 7px 14px; font-size: 0.82rem; font-family: inherit; cursor: pointer;
+    }
+    .ovladace button:hover { border-color: var(--accent); }
+
+    .prepinac-tvar { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+    .prepinac-tvar button {
+      background: var(--bg-control); border: 1px solid var(--border-strong); color: var(--text-muted);
+      border-radius: 6px; padding: 5px 12px; font-size: 0.8rem; font-family: inherit; cursor: pointer;
+    }
+    .prepinac-tvar button:hover { border-color: var(--accent); color: var(--text); }
+    .prepinac-tvar button.zap { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+    /* Živý výpočet – dosazení do vzorce krok za krokem */
+    .vypocet {
+      display: grid; grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px; width: min(520px, 100%);
+    }
+    .vypocet .karticka {
+      background: var(--bg-elevated); border: 1px solid var(--border);
+      border-radius: 12px; padding: 10px 12px; text-align: left;
+    }
+    .vypocet .nadpis { color: var(--text-faint); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; }
+    .vypocet .radek {
+      font-family: 'Courier New', monospace; font-size: 0.85rem;
+      color: var(--text-muted); margin-top: 3px; word-break: break-word;
+    }
+    .vypocet .vysledek { color: var(--text); font-weight: 700; font-size: 1.05rem; }
+    .vypocet .objem .vysledek { color: var(--accent); }
+    .vypocet .povrch .vysledek { color: var(--ok); }
+    @media (max-width: 520px) { .vypocet { grid-template-columns: 1fr; } }
+
+    .vysvetlivka { color: var(--text-faint); font-size: 0.8rem; max-width: 520px; line-height: 1.5; }
+    .vysvetlivka b { color: var(--text-muted); }
+  </style>
+</head>
+<body>
+  <h1>🔻 Jehlan, kužel a koule</h1>
+  <p class="podtitul">Pro 9. ročník: objem a povrch prostorových těles.</p>
+
+  <div class="rezimy" id="rezimy">
+    <button data-rezim="modelarna" class="active">🔬 Modelárna</button>
+    <button data-rezim="site">📐 Rozbal síť</button>
+    <button data-rezim="tretina">💧 Proč třetina</button>
+    <button data-rezim="jehlan">🔻 Jehlan</button>
+    <button data-rezim="kuzel">🍦 Kužel</button>
+    <button data-rezim="koule">⚽ Koule</button>
+    <button data-rezim="vzorce">📋 Poznej vzorec</button>
+  </div>
+
+  <div class="plocha" id="plocha"></div>
+
+  <div class="ovladani">
+    <button class="hlavni" id="btnDalsi">Přeskočit →</button>
+    <span class="skore" id="skore"></span>
+  </div>
+
+  <p class="napoveda">
+    Jehlan: <b>V = ⅓ · S<sub>p</sub> · v</b> &nbsp;·&nbsp; kužel: <b>V = ⅓ · πr² · v</b>,
+    <b>S = πr² + πrs</b> &nbsp;·&nbsp; koule: <b>V = 4/3 · πr³</b>, <b>S = 4πr²</b>.
+    Písmeno <b>s</b> značí stranu (výšku pláště) kužele, <b>v</b> je kolmá výška tělesa.
+  </p>
+
+<script>
+const $ = id => document.getElementById(id);
+const skore = Uloha.skore('nodus_m9_jehlan_kuzel', $('skore'));
+let rezim = 'modelarna';
+const PI = 3.14;
+const fmt = x => Number(Number(x).toFixed(2)).toLocaleString('cs-CZ');
+const fmt1 = x => Number(Number(x).toFixed(1)).toLocaleString('cs-CZ');
+function odezvaEl() { const d = document.createElement('div'); d.className = 'odezva'; return d; }
+
+/* ============================================================
+   Režim 1: Modelárna – posuvníky mění těleso i dosazení do vzorce.
+   ============================================================ */
+const model = { tvar: 'kuzel', r: 5, v: 9 };
+
+function modelarna() {
+  const p = $('plocha');
+  p.innerHTML = `
+    <div class="zadani uloha-text">Posuvníky měň rozměry tělesa. Obrázek i dosazení
+      do vzorce se přepočítají <b>okamžitě</b> — zkus najít, kdy vyjde objem větší než povrch.</div>
+    <div class="prepinac-tvar" id="tvary">
+      <button data-tvar="jehlan">🔻 Jehlan</button>
+      <button data-tvar="kuzel" class="zap">🍦 Kužel</button>
+      <button data-tvar="koule">⚽ Koule</button>
+    </div>
+    <svg class="scena" id="scena" viewBox="0 0 420 260" role="img" aria-label="Model telesa"></svg>
+    <div class="ovladace" id="posuvniky"></div>
+    <div class="vypocet">
+      <div class="karticka objem"><div class="nadpis">Objem V</div>
+        <div class="radek" id="vzorecV"></div>
+        <div class="radek" id="dosazeniV"></div>
+        <div class="radek vysledek" id="vysledekV"></div></div>
+      <div class="karticka povrch"><div class="nadpis">Povrch S</div>
+        <div class="radek" id="vzorecS"></div>
+        <div class="radek" id="dosazeniS"></div>
+        <div class="radek vysledek" id="vysledekS"></div></div>
+    </div>
+    <p class="vysvetlivka">Počítáme s <b>π = 3,14</b>. Výška <b>v</b> je oranžová,
+      strana kužele <b>s</b> zelená — a dopočítá se Pythagorovou větou z r a v.</p>`;
+
+  $('tvary').addEventListener('click', e => {
+    const b = e.target.closest('button[data-tvar]');
+    if (!b) return;
+    model.tvar = b.dataset.tvar;
+    $('tvary').querySelectorAll('button').forEach(x => x.classList.toggle('zap', x === b));
+    postavPosuvniky();
+    prekresliModel();
+  });
+  postavPosuvniky();
+  prekresliModel();
+}
+
+function postavPosuvniky() {
+  const jeKoule = model.tvar === 'koule';
+  const popisR = model.tvar === 'jehlan' ? '📏 Hrana a' : '📏 Poloměr r';
+  // koule se kreslí celá, takže se do plátna vejde menší poloměr než u ostatních těles
+  const maxR = jeKoule ? 10 : 12;
+  if (model.r > maxR) model.r = maxR;
+  $('posuvniky').innerHTML =
+    `<label>${popisR}
+       <input type="range" id="posR" min="2" max="${maxR}" step="0.5" value="${model.r}">
+       <span class="hodnota" id="hodR"></span></label>` +
+    (jeKoule ? '' :
+    `<label>📐 Výška v
+       <input type="range" id="posV" min="2" max="16" step="0.5" value="${model.v}">
+       <span class="hodnota" id="hodV"></span></label>`);
+  $('posR').addEventListener('input', e => { model.r = +e.target.value; prekresliModel(); });
+  if (!jeKoule) $('posV').addEventListener('input', e => { model.v = +e.target.value; prekresliModel(); });
+}
+
+/* Kreslení drží stálé měřítko, aby bylo poznat, že se těleso opravdu zvětšuje. */
+const MER = 11, ZEM = 214, STRED = 200;
+
+function prekresliModel() {
+  const { tvar, r, v } = model;
+  const rp = r * MER, vp = v * MER;
+  let svg = '', vzorecV, dosazeniV, hodnotaV, vzorecS, dosazeniS, hodnotaS;
+
+  if (tvar === 'jehlan') {
+    const a = r, ap = rp;                       // u jehlanu je „r“ hrana podstavy a
+    const hs = Math.sqrt((a / 2) * (a / 2) + v * v);   // výška stěny (apotéma)
+    const V = a * a * v / 3, S = a * a + 2 * a * hs;
+    const x1 = STRED - ap / 2, x2 = STRED + ap / 2;
+    const hloubka = ap * 0.42;
+    svg = `<polygon class="podstava" points="${x1},${ZEM} ${x2},${ZEM}
+             ${x2 + hloubka},${ZEM - hloubka * 0.55} ${x1 + hloubka},${ZEM - hloubka * 0.55}"/>
+      <polygon class="plast" points="${STRED + hloubka / 2},${ZEM - vp - hloubka * 0.28}
+             ${x1},${ZEM} ${x2},${ZEM}"/>
+      <line class="zadni" x1="${STRED + hloubka / 2}" y1="${ZEM - vp - hloubka * 0.28}"
+            x2="${x2 + hloubka}" y2="${ZEM - hloubka * 0.55}"/>
+      <line class="zadni" x1="${STRED + hloubka / 2}" y1="${ZEM - vp - hloubka * 0.28}"
+            x2="${x1 + hloubka}" y2="${ZEM - hloubka * 0.55}"/>
+      <line class="vyska" x1="${STRED + hloubka / 2}" y1="${ZEM - vp - hloubka * 0.28}"
+            x2="${STRED + hloubka / 2}" y2="${ZEM - hloubka * 0.28}"/>
+      <text class="popis v" x="${STRED + hloubka / 2 + 22}" y="${ZEM - vp / 2}">v = ${fmt1(v)}</text>
+      <text class="popis" x="${STRED}" y="${ZEM + 20}">a = ${fmt1(a)}</text>`;
+    vzorecV = 'V = ⅓ · a² · v';
+    dosazeniV = `= ⅓ · ${fmt1(a)}² · ${fmt1(v)}`;
+    hodnotaV = `V = ${fmt(V)} cm³`;
+    vzorecS = 'S = a² + 2 · a · v_s';
+    dosazeniS = `= ${fmt1(a)}² + 2 · ${fmt1(a)} · ${fmt(hs)}`;
+    hodnotaS = `S = ${fmt(S)} cm²`;
+  } else if (tvar === 'kuzel') {
+    const s = Math.sqrt(r * r + v * v);
+    const V = PI * r * r * v / 3, S = PI * r * r + PI * r * s;
+    const ry = rp * 0.3;
+    svg = `<path class="plast" d="M${STRED} ${ZEM - vp} L${STRED - rp} ${ZEM}
+             A${rp} ${ry} 0 0 0 ${STRED + rp} ${ZEM} Z"/>
+      <ellipse class="zadni" cx="${STRED}" cy="${ZEM}" rx="${rp}" ry="${ry}"/>
+      <line class="vyska" x1="${STRED}" y1="${ZEM - vp}" x2="${STRED}" y2="${ZEM}"/>
+      <line class="strana" x1="${STRED}" y1="${ZEM - vp}" x2="${STRED + rp}" y2="${ZEM}"/>
+      <line class="podstava" x1="${STRED}" y1="${ZEM}" x2="${STRED + rp}" y2="${ZEM}"/>
+      <text class="popis v" x="${STRED - 42}" y="${ZEM - vp / 2}">v = ${fmt1(v)}</text>
+      <text class="popis s" x="${STRED + rp / 2 + 30}" y="${ZEM - vp / 2 - 4}">s = ${fmt(s)}</text>
+      <text class="popis" x="${STRED + rp / 2}" y="${ZEM + 32}">r = ${fmt1(r)}</text>`;
+    vzorecV = 'V = ⅓ · π · r² · v';
+    dosazeniV = `= ⅓ · 3,14 · ${fmt1(r)}² · ${fmt1(v)}`;
+    hodnotaV = `V = ${fmt(V)} cm³`;
+    vzorecS = 'S = πr² + πrs';
+    dosazeniS = `= 3,14·${fmt1(r)}² + 3,14·${fmt1(r)}·${fmt(s)}`;
+    hodnotaS = `S = ${fmt(S)} cm²`;
+  } else {
+    const V = 4 / 3 * PI * r * r * r, S = 4 * PI * r * r;
+    const cy = ZEM - rp;
+    svg = `<circle class="plast" cx="${STRED}" cy="${cy}" r="${rp}"/>
+      <ellipse class="zadni" cx="${STRED}" cy="${cy}" rx="${rp}" ry="${rp * 0.3}"/>
+      <line class="strana" x1="${STRED}" y1="${cy}" x2="${STRED + rp}" y2="${cy}"/>
+      <text class="popis s" x="${STRED + rp / 2}" y="${cy - 8}">r = ${fmt1(r)}</text>`;
+    vzorecV = 'V = 4/3 · π · r³';
+    dosazeniV = `= 4/3 · 3,14 · ${fmt1(r)}³`;
+    hodnotaV = `V = ${fmt(V)} cm³`;
+    vzorecS = 'S = 4 · π · r²';
+    dosazeniS = `= 4 · 3,14 · ${fmt1(r)}²`;
+    hodnotaS = `S = ${fmt(S)} cm²`;
+  }
+
+  $('scena').innerHTML = svg;
+  $('vzorecV').textContent = vzorecV;
+  $('dosazeniV').textContent = dosazeniV;
+  $('vysledekV').textContent = hodnotaV;
+  $('vzorecS').textContent = vzorecS;
+  $('dosazeniS').textContent = dosazeniS;
+  $('vysledekS').textContent = hodnotaS;
+  $('hodR').textContent = fmt1(model.r) + ' cm';
+  if ($('hodV')) $('hodV').textContent = fmt1(model.v) + ' cm';
+}
+
+/* ============================================================
+   Režim 2: Rozbal síť – plášť se posuvníkem odklopí do roviny.
+   ============================================================ */
+const sit = { tvar: 'kuzel', rozbaleni: 0 };
+
+function site() {
+  const p = $('plocha');
+  p.innerHTML = `
+    <div class="zadani uloha-text">Posuvníkem těleso <b>rozbal do sítě</b> a podívej se,
+      z čeho je vlastně složený jeho povrch.</div>
+    <div class="prepinac-tvar" id="tvarySite">
+      <button data-tvar="jehlan">🔻 Jehlan</button>
+      <button data-tvar="kuzel" class="zap">🍦 Kužel</button>
+    </div>
+    <svg class="scena" id="scenaSit" viewBox="0 0 420 300" role="img" aria-label="Sit telesa"></svg>
+    <div class="ovladace">
+      <label>📐 Rozbalení
+        <input type="range" id="posSit" min="0" max="100" step="1" value="${sit.rozbaleni}">
+        <span class="hodnota" id="hodSit"></span>
+      </label>
+      <button id="btnAnimace">▶️ Rozbalit</button>
+    </div>
+    <p class="vysvetlivka" id="popisSite"></p>`;
+
+  $('tvarySite').addEventListener('click', e => {
+    const b = e.target.closest('button[data-tvar]');
+    if (!b) return;
+    sit.tvar = b.dataset.tvar;
+    $('tvarySite').querySelectorAll('button').forEach(x => x.classList.toggle('zap', x === b));
+    prekresliSit();
+  });
+  $('posSit').addEventListener('input', e => { sit.rozbaleni = +e.target.value; prekresliSit(); });
+  $('btnAnimace').addEventListener('click', animujSit);
+  prekresliSit();
+}
+
+let animaceId = null;
+function animujSit() {
+  if (animaceId) { cancelAnimationFrame(animaceId); animaceId = null; }
+  const zpet = sit.rozbaleni > 50;
+  const cil = zpet ? 0 : 100;
+  const krok = () => {
+    if (!$('posSit')) { animaceId = null; return; }        // uživatel mezitím přepnul režim
+    sit.rozbaleni += (cil - sit.rozbaleni) * 0.12;
+    if (Math.abs(cil - sit.rozbaleni) < 0.6) { sit.rozbaleni = cil; animaceId = null; }
+    $('posSit').value = sit.rozbaleni;
+    prekresliSit();
+    if (animaceId !== null) animaceId = requestAnimationFrame(krok);
+  };
+  animaceId = requestAnimationFrame(krok);
+}
+
+function prekresliSit() {
+  if (!$('scenaSit')) return;
+  const t = sit.rozbaleni / 100;
+  let svg = '', popis = '';
+
+  if (sit.tvar === 'kuzel') {
+    const vrchol = { x: 150, y: 92 };
+    const r = 46, v = 108;
+    const s = Math.sqrt(r * r + v * v);
+    const stred = vrchol.y + v;
+
+    // složený kužel (vidíme ho z boku) – slábne, jak se rozbaluje
+    const kuzelObrys = `M${vrchol.x},${vrchol.y} L${vrchol.x - r},${stred} `
+      + `A${r},${r * 0.3} 0 0 0 ${vrchol.x + r},${stred} Z`;
+
+    // rozbalený plášť = kruhová výseč o poloměru s a úhlu 2π·r/s
+    const uhel = 2 * Math.PI * r / s;
+    const uhelT = uhel * (0.18 + 0.82 * t);
+    const zac = Math.PI / 2 - uhelT / 2;
+    const bod = a => `${vrchol.x + Math.cos(a) * s},${vrchol.y + Math.sin(a) * s}`;
+    const vysec = `M${vrchol.x},${vrchol.y} L${bod(zac)} `
+      + `A${s},${s} 0 0 1 ${bod(zac + uhelT)} Z`;
+
+    // podstava se odsune stranou a „otevře“ z elipsy do kruhu
+    // podstava odjíždí doprava a zároveň se zvedne, aby se popisek vešel do plátna
+    const px = 150 + t * 185, py = stred + 34 - t * 24;
+    const pry = r * (0.3 + 0.7 * t);
+
+    svg = `<path class="plast" d="${kuzelObrys}" opacity="${Math.max(0, 1 - t * 1.7).toFixed(3)}"/>
+      <ellipse class="zadni" cx="${vrchol.x}" cy="${stred}" rx="${r}" ry="${r * 0.3}"
+               opacity="${Math.max(0, 1 - t * 1.7).toFixed(3)}"/>
+      <path class="plast" d="${vysec}" opacity="${Math.min(1, Math.max(0, (t - 0.12) / 0.5)).toFixed(3)}"/>
+      <line class="strana" x1="${vrchol.x}" y1="${vrchol.y}" x2="${bod(zac).split(',')[0]}"
+            y2="${bod(zac).split(',')[1]}"
+            opacity="${Math.min(1, Math.max(0, (t - 0.12) / 0.5)).toFixed(3)}"/>
+      <ellipse class="podstava" cx="${px}" cy="${py}" rx="${r}" ry="${pry}"/>
+      <text class="popis" x="${px}" y="${py + pry + 17}">podstava πr²</text>
+      <text class="popis s" x="${vrchol.x}" y="${vrchol.y - 14}">${
+        t > 0.55 ? 'plášť = výseč o poloměru s' : 'plášť kužele'}</text>`;
+    popis = t > 0.55
+      ? 'Plášť je <b>kruhová výseč</b> o poloměru s (ne v!). Celý povrch je '
+        + '<b>πr² + πrs</b>.'
+      : 'Posuň posuvník a uvidíš, do jakého tvaru se plášť rozvine.';
+  } else {
+    const cx = 210, cy = 148;
+    const a = 76, hs = 96, p2 = a / 2;
+    // Stěna se odklápí kolem hrany podstavy. Ve složeném stavu (t = 0) míří
+    // vrchol do středu čtverce, v rozvinutém leží ve vzdálenosti p2 + hs.
+    const fi0 = Math.acos(Math.max(-1, -p2 / hs));
+    const fi = fi0 * (1 - t);
+    const d = p2 + hs * Math.cos(fi);
+
+    const steny = [[0, -1], [1, 0], [0, 1], [-1, 0]].map(([dx, dy]) => {
+      const x1 = cx + dx * p2 - dy * p2, y1 = cy + dy * p2 + dx * p2;
+      const x2 = cx + dx * p2 + dy * p2, y2 = cy + dy * p2 - dx * p2;
+      const vx = cx + dx * d, vy = cy + dy * d;
+      return `<polygon class="plast" points="${x1},${y1} ${x2},${y2} ${vx},${vy}"/>`;
+    }).join('');
+
+    svg = steny
+      + `<rect class="podstava" x="${cx - p2}" y="${cy - p2}" width="${a}" height="${a}"/>
+         <text class="popis" x="${cx}" y="${cy + 5}">podstava a²</text>`
+      // výška stěny vede od STŘEDU hrany podstavy k vrcholu, ne od rohu
+      + (t > 0.6 ? `<line class="strana" x1="${cx + p2}" y1="${cy}"
+                          x2="${cx + d}" y2="${cy}"/>
+                    <text class="popis s" x="${cx + (p2 + d) / 2}" y="${cy - 10}">výška stěny</text>` : '');
+    popis = t > 0.6
+      ? 'Síť je <b>čtverec a čtyři trojúhelníky</b>. Pozor: výška trojúhelníku '
+        + 'je <b>výška stěny</b>, ne výška jehlanu.'
+      : 'Při 0 % se díváš na jehlan shora — stěny míří do jednoho vrcholu. Rozbal ho.';
+  }
+
+  $('scenaSit').innerHTML = svg;
+  $('hodSit').textContent = Math.round(sit.rozbaleni) + ' %';
+  $('popisSite').innerHTML = popis;
+}
+
+/* ============================================================
+   Režim 3: Proč třetina – kužel se třikrát vylije do válce.
+   ============================================================ */
+const tretina = { tvar: 'kuzel', naplneno: 0, bezi: false };
+
+function tretinaRezim() {
+  const p = $('plocha');
+  tretina.naplneno = 0;
+  p.innerHTML = `
+    <div class="zadani uloha-text">Kolikrát se musí kužel vylít do válce se
+      <b>stejnou podstavou i výškou</b>, než ho naplní? Vyzkoušej si to.</div>
+    <div class="prepinac-tvar" id="tvaryTretina">
+      <button data-tvar="kuzel" class="zap">🍦 Kužel → válec</button>
+      <button data-tvar="jehlan">🔻 Jehlan → hranol</button>
+    </div>
+    <svg class="scena" id="scenaTretina" viewBox="0 0 420 260" role="img" aria-label="Prelevani"></svg>
+    <div class="ovladace">
+      <button id="btnNalij">💧 Nalij jednu dávku</button>
+      <button id="btnReset2">↺ Vylij</button>
+      <label>Naplněno <span class="hodnota" id="hodNaplneno"></span></label>
+    </div>
+    <p class="vysvetlivka" id="popisTretina"></p>`;
+
+  $('tvaryTretina').addEventListener('click', e => {
+    const b = e.target.closest('button[data-tvar]');
+    if (!b) return;
+    tretina.tvar = b.dataset.tvar;
+    tretina.naplneno = 0;
+    $('tvaryTretina').querySelectorAll('button').forEach(x => x.classList.toggle('zap', x === b));
+    prekresliTretinu();
+  });
+  $('btnNalij').addEventListener('click', nalij);
+  $('btnReset2').addEventListener('click', () => { tretina.naplneno = 0; prekresliTretinu(); });
+  prekresliTretinu();
+}
+
+function nalij() {
+  if (tretina.bezi || tretina.naplneno >= 0.999) return;
+  tretina.bezi = true;
+  const cil = Math.min(1, tretina.naplneno + 1 / 3);
+  const krok = () => {
+    if (!$('scenaTretina')) { tretina.bezi = false; return; }
+    tretina.naplneno = Math.min(cil, tretina.naplneno + 0.012);
+    prekresliTretinu();
+    if (tretina.naplneno < cil - 0.0001) requestAnimationFrame(krok);
+    else { tretina.naplneno = cil; tretina.bezi = false; prekresliTretinu(); }
+  };
+  requestAnimationFrame(krok);
+}
+
+function prekresliTretinu() {
+  if (!$('scenaTretina')) return;
+  const ZEM2 = 210, V = 150, R = 46;
+  const xK = 110, xN = 290;
+  const jeKuzel = tretina.tvar === 'kuzel';
+  const f = tretina.naplneno;
+
+  // vlevo zdrojové těleso, vpravo nádoba s hladinou
+  let zdroj;
+  if (jeKuzel) {
+    zdroj = `<path class="plast" d="M${xK} ${ZEM2 - V} L${xK - R} ${ZEM2}
+               A${R} ${R * 0.3} 0 0 0 ${xK + R} ${ZEM2} Z"/>
+             <ellipse class="zadni" cx="${xK}" cy="${ZEM2}" rx="${R}" ry="${R * 0.3}"/>`;
+  } else {
+    const h = R * 0.42;
+    zdroj = `<polygon class="plast" points="${xK},${ZEM2 - V} ${xK - R},${ZEM2} ${xK + R},${ZEM2}"/>
+             <polygon class="podstava" points="${xK - R},${ZEM2} ${xK + R},${ZEM2}
+               ${xK + R + h},${ZEM2 - h * 0.55} ${xK - R + h},${ZEM2 - h * 0.55}"/>`;
+  }
+
+  const hladina = ZEM2 - V * f;
+  let nadoba;
+  if (jeKuzel) {
+    nadoba = (f > 0.001
+      ? `<rect class="naplnene" x="${xN - R}" y="${hladina}" width="${R * 2}" height="${V * f}"/>
+         <ellipse class="naplnene" cx="${xN}" cy="${hladina}" rx="${R}" ry="${R * 0.3}"/>`
+      : '') +
+      `<ellipse class="obal" cx="${xN}" cy="${ZEM2 - V}" rx="${R}" ry="${R * 0.3}"/>
+      <line class="obal" x1="${xN - R}" y1="${ZEM2 - V}" x2="${xN - R}" y2="${ZEM2}"/>
+      <line class="obal" x1="${xN + R}" y1="${ZEM2 - V}" x2="${xN + R}" y2="${ZEM2}"/>
+      <ellipse class="obal" cx="${xN}" cy="${ZEM2}" rx="${R}" ry="${R * 0.3}"/>`;
+  } else {
+    nadoba = (f > 0.001
+      ? `<rect class="naplnene" x="${xN - R}" y="${hladina}" width="${R * 2}" height="${V * f}"/>` : '')
+      + `<rect class="obal" x="${xN - R}" y="${ZEM2 - V}" width="${R * 2}" height="${V}"/>`;
+  }
+
+  const davky = Math.round(f * 3);
+  $('scenaTretina').innerHTML = zdroj + nadoba +
+    `<text class="popis" x="${xK}" y="${ZEM2 + 24}">${jeKuzel ? 'kužel' : 'jehlan'}</text>
+     <text class="popis" x="${xN}" y="${ZEM2 + 24}">${jeKuzel ? 'válec' : 'hranol'} — nalito ${davky}×</text>
+     <text class="popis v" x="${xN + R + 30}" y="${ZEM2 - V / 2}">stejné v</text>`;
+
+  $('hodNaplneno').textContent = Math.round(f * 100) + ' %';
+  $('popisTretina').innerHTML = f >= 0.999
+    ? 'Přesně <b>třikrát</b> — proto je ve vzorci ta <b>jedna třetina</b>: '
+      + `V<sub>${jeKuzel ? 'kužele' : 'jehlanu'}</sub> = ⅓ · S<sub>p</sub> · v.`
+    : `Nalito ${davky}× ze 3. ${davky ? 'Zkus další dávku.' : 'Zmáčkni „Nalij jednu dávku“.'}`;
+}
+
+/* ============================================================
+   Procvičovací režimy
+   ============================================================ */
+function svgJehlan(a, v) {
+  return `<svg class="teleso" viewBox="0 0 220 200">
+    <polygon class="plocha3d" points="110,20 30,150 150,150"/>
+    <polygon class="zadni" points="30,150 150,150 190,120 70,120"/>
+    <line class="zadni" x1="110" y1="20" x2="190" y2="120"/>
+    <line class="vyska" x1="110" y1="20" x2="110" y2="135"/>
+    <text class="popis" x="128" y="86">v = ${v}</text>
+    <text class="popis" x="90" y="168">a = ${a}</text>
+  </svg>`;
+}
+function svgKuzel(r, v) {
+  return `<svg class="teleso" viewBox="0 0 220 200">
+    <path class="plocha3d" d="M110 20 L40 150 A70 20 0 0 0 180 150 Z"/>
+    <ellipse class="zadni" cx="110" cy="150" rx="70" ry="20"/>
+    <line class="vyska" x1="110" y1="20" x2="110" y2="150"/>
+    <line class="zadni" x1="110" y1="150" x2="180" y2="150"/>
+    <text class="popis" x="128" y="92">v = ${v}</text>
+    <text class="popis" x="148" y="143">r = ${r}</text>
+  </svg>`;
+}
+function svgKoule(r) {
+  return `<svg class="teleso" viewBox="0 0 220 200">
+    <circle class="plocha3d" cx="110" cy="100" r="72"/>
+    <ellipse class="zadni" cx="110" cy="100" rx="72" ry="22"/>
+    <line class="vyska" x1="110" y1="100" x2="182" y2="100"/>
+    <text class="popis" x="146" y="92">r = ${r}</text>
+  </svg>`;
+}
+
+function jehlan() {
+  const p = $('plocha');
+  const a = Uloha.nahodneCislo(3, 12), v = Uloha.nahodneCislo(3, 15);
+  const Sp = a * a, V = Sp * v / 3;
+  const jine = new Set([fmt(Sp * v), fmt(V * 3), fmt(Sp), fmt(a * v / 3)]);
+  jine.delete(fmt(V));
+
+  p.innerHTML = `<div class="zadani uloha-text">Jehlan má čtvercovou podstavu se stranou
+      <b>a = ${a} cm</b> a výšku <b>v = ${v} cm</b>. Jaký má objem?</div>
+    <div class="karta">${svgJehlan(a, v)}<div class="vzorec">V = ⅓ · S<sub>p</sub> · v</div></div>`;
+  const odezva = odezvaEl();
+  Uloha.vyber({
+    kam: p, odezva, trida: 'velke',
+    moznosti: Uloha.zamichej([fmt(V), ...[...jine].slice(0, 3)]).map(t => ({ klic: t, popis: t + ' cm³' })),
+    spravnyKlic: fmt(V),
+    zpravaOk: `✅ V = ⅓ · ${Sp} · ${v} = ${fmt(V)} cm³`,
+    zpravaChyba: 'Nezapomeň na jednu třetinu – jehlan má třetinový objem oproti hranolu.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+function kuzel() {
+  const p = $('plocha');
+  const r = Uloha.nahodneCislo(2, 10), v = Uloha.nahodneCislo(3, 15);
+  const s = Math.sqrt(r * r + v * v);
+  const V = PI * r * r * v / 3, S = PI * r * r + PI * r * s;
+  const naObjem = Math.random() < 0.6;
+  const vysledek = naObjem ? V : S;
+  const jine = new Set([fmt(naObjem ? S : V), fmt(vysledek * 3), fmt(PI * r * r), fmt(vysledek / 2)]);
+  jine.delete(fmt(vysledek));
+
+  p.innerHTML = `<div class="zadani uloha-text">Kužel má poloměr podstavy <b>r = ${r} cm</b>
+      a výšku <b>v = ${v} cm</b>. ${naObjem ? 'Jaký má objem?' :
+      `Strana kužele měří <b>s = ${fmt(s)} cm</b>. Jaký má povrch?`} (π = 3,14)</div>
+    <div class="karta">${svgKuzel(r, v)}
+      <div class="vzorec">V = ⅓ · πr² · v<br>S = πr² + πrs</div></div>`;
+  const odezva = odezvaEl();
+  Uloha.vyber({
+    kam: p, odezva, trida: 'velke',
+    moznosti: Uloha.zamichej([fmt(vysledek), ...[...jine].slice(0, 3)])
+      .map(t => ({ klic: t, popis: t + (naObjem ? ' cm³' : ' cm²') })),
+    spravnyKlic: fmt(vysledek),
+    zpravaOk: naObjem
+      ? `✅ V = ⅓ · 3,14 · ${r}² · ${v} = ${fmt(V)} cm³`
+      : `✅ S = 3,14 · ${r}² + 3,14 · ${r} · ${fmt(s)} = ${fmt(S)} cm²`,
+    zpravaChyba: naObjem ? 'Objem kužele je třetina objemu válce se stejnou podstavou a výškou.'
+      : 'Povrch = podstava + plášť; plášť počítáme se stranou s, ne s výškou.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+function koule() {
+  const p = $('plocha');
+  const r = Uloha.nahodneCislo(2, 12);
+  const V = 4 / 3 * PI * r * r * r, S = 4 * PI * r * r;
+  const naObjem = Math.random() < 0.5;
+  const vysledek = naObjem ? V : S;
+  const jine = new Set([fmt(naObjem ? S : V), fmt(PI * r * r), fmt(vysledek / 2), fmt(vysledek * 2)]);
+  jine.delete(fmt(vysledek));
+
+  p.innerHTML = `<div class="zadani uloha-text">Koule má poloměr <b>r = ${r} cm</b>.
+      Jaký má ${naObjem ? 'objem' : 'povrch'}? (π = 3,14)</div>
+    <div class="karta">${svgKoule(r)}<div class="vzorec">V = 4/3 · πr³ &nbsp;·&nbsp; S = 4πr²</div></div>`;
+  const odezva = odezvaEl();
+  Uloha.vyber({
+    kam: p, odezva, trida: 'velke',
+    moznosti: Uloha.zamichej([fmt(vysledek), ...[...jine].slice(0, 3)])
+      .map(t => ({ klic: t, popis: t + (naObjem ? ' cm³' : ' cm²') })),
+    spravnyKlic: fmt(vysledek),
+    zpravaOk: naObjem
+      ? `✅ V = 4/3 · 3,14 · ${r}³ = ${fmt(V)} cm³`
+      : `✅ S = 4 · 3,14 · ${r}² = ${fmt(S)} cm²`,
+    zpravaChyba: 'U objemu je poloměr na třetí, u povrchu na druhou.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+const VZORCE = [
+  { q: 'Který vzorec počítá objem jehlanu?', a: 'V = ⅓ · S_p · v', b: ['V = S_p · v', 'V = 4/3 · πr³', 'S = 4πr²'] },
+  { q: 'Který vzorec počítá povrch koule?', a: 'S = 4πr²', b: ['S = πr² + πrs', 'V = 4/3 · πr³', 'S = 2πr² + 2πrv'] },
+  { q: 'Který vzorec počítá objem kužele?', a: 'V = ⅓ · πr² · v', b: ['V = πr² · v', 'V = ⅓ · a² · v', 'S = πrs'] },
+  { q: 'Co znamená ve vzorcích písmeno s u kužele?', a: 'strana kužele – vzdálenost od vrcholu k okraji podstavy', b: ['výška kužele', 'poloměr podstavy', 'obsah podstavy'] },
+  { q: 'Jak souvisí objem kužele a válce se stejnou podstavou i výškou?', a: 'kužel má třetinový objem', b: ['mají stejný objem', 'kužel má dvojnásobný', 'kužel má poloviční'] },
+  { q: 'Jak spočítáš stranu kužele, když znáš r a v?', a: 'Pythagorovou větou: s² = r² + v²', b: ['s = r + v', 's = r · v', 's = v − r'] },
+  { q: 'Kolikrát vzroste objem koule, když zdvojnásobíme poloměr?', a: 'osmkrát', b: ['dvakrát', 'čtyřikrát', 'šestnáctkrát'] },
+  { q: 'Co tvoří síť jehlanu se čtvercovou podstavou?', a: 'čtverec a čtyři trojúhelníky', b: ['dva čtverce a obdélník', 'kruh a výseč', 'čtyři obdélníky'] },
+  { q: 'Jaký tvar má rozbalený plášť kužele?', a: 'kruhová výseč', b: ['obdélník', 'trojúhelník', 'mezikruží'] },
+];
+function vzorce() {
+  const p = $('plocha');
+  const u = Uloha.nahodne(VZORCE);
+  p.innerHTML = `<div class="zadani uloha-text">${u.q}</div>`;
+  const odezva = odezvaEl();
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([u.a, ...u.b]).map(t => ({ klic: t, popis: t })),
+    spravnyKlic: u.a,
+    zpravaOk: `✅ ${u.a}`,
+    zpravaChyba: 'Jehlan a kužel mají třetinu, koule pracuje s r³ (objem) a r² (povrch).',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ============================================================ */
+const REZIMY = { modelarna, site, tretina: tretinaRezim, jehlan, kuzel, koule, vzorce };
+/* V bádacích režimech se neodpovídá, tlačítko v liště tam dělá něco jiného. */
+const POPIS_TLACITKA = {
+  modelarna: '🎲 Náhodné rozměry',
+  site: '🔄 Přepnout těleso',
+  tretina: '↺ Vylít a začít znovu',
+};
+
+function novaUloha() {
+  if (rezim === 'modelarna') {
+    model.r = Uloha.nahodneCislo(4, 22) / 2;
+    model.v = Uloha.nahodneCislo(6, 30) / 2;
+    if ($('posR')) $('posR').value = model.r;
+    if ($('posV')) $('posV').value = model.v;
+    prekresliModel();
+    return;
+  }
+  if (rezim === 'site') {
+    sit.tvar = sit.tvar === 'kuzel' ? 'jehlan' : 'kuzel';
+    $('tvarySite').querySelectorAll('button')
+      .forEach(x => x.classList.toggle('zap', x.dataset.tvar === sit.tvar));
+    prekresliSit();
+    return;
+  }
+  if (rezim === 'tretina') { tretina.naplneno = 0; prekresliTretinu(); return; }
+  REZIMY[rezim]();
+}
+
+document.querySelectorAll('#rezimy button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#rezimy button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  rezim = b.dataset.rezim;
+  $('btnDalsi').textContent = POPIS_TLACITKA[rezim] || 'Přeskočit →';
+  REZIMY[rezim]();
+}));
+$('btnDalsi').addEventListener('click', novaUloha);
+$('btnDalsi').textContent = POPIS_TLACITKA[rezim] || 'Přeskočit →';
+REZIMY[rezim]();
+</script>
+</body>
+</html>

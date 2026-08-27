@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Energie a její zdroje</title>
+  <link rel="stylesheet" href="../common.css">
+  <link rel="stylesheet" href="../vyuka.css">
+  <script src="../theme.js"></script>
+  <script src="../rec.js"></script>
+  <script src="../uloha.js"></script>
+  <style>
+    .nazev-z { font-size: 1.25rem; font-weight: 700; }
+    .popis-z { color: var(--text-muted); max-width: 540px; font-size: 1rem; line-height: 1.5; }
+    .retez { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; align-items: center; min-height: 48px; }
+    .retez .clen {
+      background: var(--accent-soft); border: 2px solid var(--accent); border-radius: 10px;
+      padding: 8px 12px; font-size: 0.92rem; font-weight: 600;
+    }
+    .retez .sipka { color: var(--text-faint); font-size: 1.3rem; }
+  </style>
+</head>
+<body>
+  <h1>⚡ Energie a její zdroje</h1>
+  <p class="podtitul">Pro 5. ročník: odkud bereme energii, co je obnovitelné a jak šetřit.</p>
+
+  <div class="rezimy" id="rezimy">
+    <button data-rezim="obnovitelne" class="active">♻️ Obnovitelný zdroj?</button>
+    <button data-rezim="elektrarny">🏭 Poznej elektrárnu</button>
+    <button data-rezim="cesta">🔗 Cesta elektřiny</button>
+    <button data-rezim="setreni">💡 Jak ušetřit</button>
+  </div>
+
+  <div class="plocha" id="plocha"></div>
+
+  <div class="ovladani">
+    <button class="hlavni" id="btnDalsi">Přeskočit →</button>
+    <span class="skore" id="skore"></span>
+  </div>
+
+  <p class="napoveda">
+    <b>Obnovitelné zdroje</b> se přirozeně doplňují (slunce, vítr, voda, biomasa).
+    <b>Neobnovitelné</b> jednou dojdou (uhlí, ropa, zemní plyn, uran).
+    Nejlevnější energie je ta, kterou vůbec nespotřebujeme.
+  </p>
+
+<script>
+const $ = id => document.getElementById(id);
+const skore = Uloha.skore('nodus_prv5_energie', $('skore'));
+let rezim = 'obnovitelne';
+
+const ZDROJE = [
+  { n: 'sluneční záření', e: '☀️', obnovitelny: true, proc: 'slunce svítí dál a nespotřebuje se' },
+  { n: 'vítr', e: '💨', obnovitelny: true, proc: 'vítr vzniká stále znovu díky slunci' },
+  { n: 'tekoucí voda', e: '🌊', obnovitelny: true, proc: 'vodu doplňuje koloběh vody v přírodě' },
+  { n: 'biomasa (dřevo, štěpka)', e: '🪵', obnovitelny: true, proc: 'stromy a rostliny dorostou' },
+  { n: 'zemské teplo', e: '🌋', obnovitelny: true, proc: 'teplo z hlubin Země se stále doplňuje' },
+  { n: 'černé uhlí', e: '🪨', obnovitelny: false, proc: 'vznikalo miliony let, zásoby dojdou' },
+  { n: 'ropa', e: '🛢️', obnovitelny: false, proc: 'vznikala miliony let z pravěkých organismů' },
+  { n: 'zemní plyn', e: '🔥', obnovitelny: false, proc: 'jeho zásoby jsou omezené' },
+  { n: 'uran', e: '☢️', obnovitelny: false, proc: 'ruda se vytěží a nedoplní se' },
+];
+
+const ELEKTRARNY = [
+  { n: 'vodní elektrárna', e: '💧', popis: 'využívá sílu tekoucí vody, která roztáčí turbínu' },
+  { n: 'větrná elektrárna', e: '🌬️', popis: 'vrtule se točí ve větru a pohání generátor' },
+  { n: 'solární elektrárna', e: '🔆', popis: 'panely mění sluneční světlo přímo na elektřinu' },
+  { n: 'tepelná (uhelná) elektrárna', e: '🏭', popis: 'spaluje uhlí, voda se mění v páru a ta roztáčí turbínu' },
+  { n: 'jaderná elektrárna', e: '⚛️', popis: 'teplo vzniká štěpením jader uranu, ohřívá vodu na páru' },
+];
+
+const CESTA = [
+  '⚡ elektrárna vyrobí elektřinu',
+  '🗼 transformátor zvýší napětí',
+  '🔌 vedení vysokého napětí ji přenese',
+  '🏘️ transformátor u obce napětí sníží',
+  '🏠 elektroměr v domě měří spotřebu',
+  '💡 zásuvka napájí spotřebiče',
+];
+
+const SETRENI = [
+  { t: 'Zhasínat světlo, když odcházíš z místnosti', dobre: true, proc: 'světlo v prázdné místnosti je čistá ztráta' },
+  { t: 'Nechávat nabíječku v zásuvce bez telefonu', dobre: false, proc: 'i prázdná nabíječka odebírá malý proud' },
+  { t: 'Větrat krátce a naplno místo pootevřeného okna', dobre: true, proc: 'krátké intenzivní vyvětrání ochladí zdi méně' },
+  { t: 'Nechávat televizi v pohotovostním režimu', dobre: false, proc: 'režim stand-by spotřebuje energii i v noci' },
+  { t: 'Prát na nižší teplotu', dobre: true, proc: 'ohřev vody spotřebuje nejvíc energie z celého praní' },
+  { t: 'Topit s otevřeným oknem', dobre: false, proc: 'teplo uniká ven a kotel musí topit naplno' },
+  { t: 'Vařit v hrnci s pokličkou', dobre: true, proc: 's pokličkou se voda ohřeje mnohem rychleji' },
+  { t: 'Nechávat počítač zapnutý přes noc', dobre: false, proc: 'zbytečně odebírá energii, když ho nikdo nepoužívá' },
+];
+
+/* ---- Obnovitelný zdroj? ---------------------------------------------------------- */
+function obnovitelne() {
+  const p = $('plocha');
+  const z = Uloha.nahodne(ZDROJE);
+  p.innerHTML = `<div class="zadani">Je to obnovitelný zdroj energie?</div>
+    <div class="karta"><div class="obrazek">${z.e}</div><div class="nazev-z">${z.n}</div></div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva, trida: 'dve',
+    moznosti: [
+      { klic: 'ano', ikona: '♻️', popis: 'obnovitelný' },
+      { klic: 'ne', ikona: '⛏️', popis: 'neobnovitelný' },
+    ],
+    spravnyKlic: z.obnovitelny ? 'ano' : 'ne',
+    zpravaOk: `✅ ${z.n} – ${z.proc}.`,
+    zpravaChyba: 'Zeptej se: doplní se ten zdroj sám, nebo jednou dojde?',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Poznej elektrárnu ------------------------------------------------------------ */
+function elektrarny() {
+  const p = $('plocha');
+  const u = Uloha.nahodne(ELEKTRARNY);
+  const jine = Uloha.zamichej(ELEKTRARNY.filter(x => x.n !== u.n)).slice(0, 3);
+  p.innerHTML = `<div class="zadani">O kterou elektrárnu jde?</div>
+    <div class="karta"><div class="obrazek">🔎</div><div class="popis-z">${u.popis}</div></div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([u, ...jine]).map(x => ({ klic: x.n, ikona: x.e, popis: x.n })),
+    spravnyKlic: u.n,
+    zpravaOk: `✅ ${u.n} – ${u.popis}.`,
+    zpravaChyba: 'Přečti popis znovu – co roztáčí turbínu?',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Cesta elektřiny (řazení) ------------------------------------------------------ */
+function cesta() {
+  const p = $('plocha');
+  p.innerHTML = '<div class="zadani">Seřaď cestu elektřiny od elektrárny až do zásuvky.</div>';
+  const porada = document.createElement('div');
+  porada.className = 'retez';
+  const nabidka = document.createElement('div');
+  nabidka.className = 'nabidka';
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  let dalsiIndex = 0, chyboval = false;
+
+  Uloha.zamichej(CESTA).forEach(krok => {
+    const b = document.createElement('button');
+    b.textContent = krok;
+    b.dataset.krok = krok;
+    b.addEventListener('click', () => {
+      if (b.disabled) return;
+      if (krok === CESTA[dalsiIndex]) {
+        if (dalsiIndex > 0) {
+          const s = document.createElement('span');
+          s.className = 'sipka';
+          s.textContent = '→';
+          porada.appendChild(s);
+        }
+        const el = document.createElement('span');
+        el.className = 'clen';
+        el.textContent = krok;
+        porada.appendChild(el);
+        b.disabled = true;
+        dalsiIndex++;
+        odezva.className = 'odezva ok';
+        odezva.textContent = '✅ Správně!';
+        if (dalsiIndex === CESTA.length) {
+          odezva.textContent = '🎉 Cesta elektřiny je kompletní!';
+          skore.vyhodnot(!chyboval);
+          setTimeout(novaUloha, Uloha.PRODLEVA + 600);
+        }
+      } else {
+        chyboval = true;
+        Uloha.trhni(b);
+        odezva.className = 'odezva chyba';
+        odezva.textContent = dalsiIndex === 0
+          ? 'Začni tam, kde elektřina vzniká.'
+          : 'Tenhle krok přijde na řadu jindy.';
+      }
+    });
+    nabidka.appendChild(b);
+  });
+  p.append(porada, nabidka, odezva);
+}
+
+/* ---- Jak ušetřit -------------------------------------------------------------------- */
+function setreni() {
+  const p = $('plocha');
+  const u = Uloha.nahodne(SETRENI);
+  p.innerHTML = `<div class="zadani">Šetří to energii?</div>
+    <div class="karta"><div class="obrazek">💡</div><div class="popis-z">${u.t}</div></div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva, trida: 'dve',
+    moznosti: [
+      { klic: 'ano', ikona: '💚', popis: 'Ano, šetří' },
+      { klic: 'ne', ikona: '⚠️', popis: 'Ne, plýtvá' },
+    ],
+    spravnyKlic: u.dobre ? 'ano' : 'ne',
+    zpravaOk: `✅ ${u.proc}.`,
+    zpravaChyba: 'Zamysli se, jestli se tím energie ušetří, nebo naopak spotřebuje.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+const REZIMY = { obnovitelne, elektrarny, cesta, setreni };
+function novaUloha() { REZIMY[rezim](); }
+
+document.querySelectorAll('#rezimy button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#rezimy button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  rezim = b.dataset.rezim;
+  novaUloha();
+}));
+$('btnDalsi').addEventListener('click', novaUloha);
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === 'Enter') { e.preventDefault(); novaUloha(); }
+});
+novaUloha();
+</script>
+</body>
+</html>

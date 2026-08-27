@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Aritmetický průměr</title>
+  <link rel="stylesheet" href="../common.css">
+  <link rel="stylesheet" href="../vyuka.css">
+  <script src="../theme.js"></script>
+  <script src="../rec.js"></script>
+  <script src="../uloha.js"></script>
+  <style>
+    .cisla { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+    .cisla span {
+      background: var(--bg-elevated); border: 2px solid var(--border); border-radius: 10px;
+      padding: 10px 15px; font-size: clamp(1.2rem, 4.5vw, 1.8rem); font-weight: 700;
+      font-variant-numeric: tabular-nums;
+    }
+    .cisla span.chybi { border-color: var(--accent); color: var(--accent); border-style: dashed; }
+    .kontext { color: var(--text-muted); font-size: 1rem; max-width: 520px; }
+    .sloupce { display: flex; gap: 14px; align-items: flex-end; height: 130px; }
+    .sloupce div {
+      width: 34px; background: var(--accent); opacity: 0.75; border-radius: 5px 5px 0 0;
+      display: flex; align-items: flex-start; justify-content: center; color: #fff;
+      font-size: 0.78rem; font-weight: 700; padding-top: 3px;
+    }
+
+    /* ---- srovnávání sloupečků ---- */
+    .scena { width: min(520px, 100%); touch-action: none; user-select: none; }
+    .scena .sloup { fill: var(--accent); opacity: 0.8; cursor: ns-resize; }
+    .scena .sloup:hover { opacity: 1; }
+    .scena .sloup.nad { fill: var(--warn); }
+    .scena .zem { stroke: var(--border-strong); stroke-width: 2; }
+    .scena .carka { stroke: var(--ok); stroke-width: 2.5; stroke-dasharray: 7 5; }
+    .scena .hodnota { fill: #fff; font-size: 13px; font-weight: 700; text-anchor: middle; }
+    .scena .popis { fill: var(--text-muted); font-size: 12px; text-anchor: middle; }
+    .scena .popis.prumer { fill: var(--ok); font-weight: 700; }
+    .scena .uchyt { fill: var(--bg-panel); stroke: var(--accent); stroke-width: 2; cursor: ns-resize; }
+
+    .ovladace { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+    .ovladace button {
+      background: var(--bg-control); border: 1px solid var(--border-strong); color: var(--text);
+      border-radius: 8px; padding: 8px 14px; font-size: 0.84rem; font-family: inherit; cursor: pointer;
+    }
+    .ovladace button:hover:not(:disabled) { border-color: var(--accent); }
+    .ovladace button:disabled { opacity: 0.35; cursor: default; }
+
+    .vypocet-prumer {
+      background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 12px;
+      padding: 12px 18px; max-width: 520px; font-variant-numeric: tabular-nums;
+    }
+    .vypocet-prumer .radek { font-size: 1rem; line-height: 1.9; color: var(--text-muted); }
+    .vypocet-prumer .vysledek { font-size: 1.35rem; font-weight: 700; color: var(--ok); }
+    .vysvetlivka { color: var(--text-faint); font-size: 0.82rem; max-width: 520px; line-height: 1.55; }
+    .vysvetlivka b { color: var(--text-muted); }
+  </style>
+</head>
+<body>
+  <h1>📈 Aritmetický průměr</h1>
+  <p class="podtitul">Pro 5.–6. ročník: výpočet průměru, doplnění chybějící hodnoty a porovnání.</p>
+
+  <div class="rezimy" id="rezimy">
+    <button data-rezim="srovnej" class="active">⚖️ Srovnej sloupečky</button>
+    <button data-rezim="spocitej">🧮 Spočítej průměr</button>
+    <button data-rezim="chybejici">❓ Doplň chybějící číslo</button>
+    <button data-rezim="porovnej">⚖️ Kdo má lepší průměr</button>
+  </div>
+
+  <div class="plocha" id="plocha"></div>
+
+  <div class="ovladani">
+    <button class="hlavni" id="btnDalsi">Přeskočit →</button>
+    <span class="skore" id="skore"></span>
+  </div>
+
+  <p class="napoveda">
+    Aritmetický průměr spočítáš tak, že <b>sečteš všechny hodnoty</b> a <b>vydělíš jejich počtem</b>.
+    Průměr leží vždy mezi nejmenší a největší hodnotou.
+  </p>
+
+<script>
+const $ = id => document.getElementById(id);
+const skore = Uloha.skore('nodus_m5_prumer', $('skore'));
+let rezim = 'srovnej';
+
+const KONTEXTY = [
+  { t: 'známky z matematiky', j: '' },
+  { t: 'body z pěti testů', j: ' bodů' },
+  { t: 'naměřené teploty ve stupních Celsia', j: ' °C' },
+  { t: 'délky skoků v centimetrech', j: ' cm' },
+  { t: 'počty přečtených stran za den', j: ' stran' },
+];
+
+/* vygeneruje sadu čísel, jejíž průměr je celé číslo */
+function sadaSCelymPrumerem(pocet, od, do_) {
+  for (let pokus = 0; pokus < 200; pokus++) {
+    const cisla = Array.from({ length: pocet }, () => Uloha.nahodneCislo(od, do_));
+    const soucet = cisla.reduce((a, b) => a + b, 0);
+    if (soucet % pocet === 0) return { cisla, prumer: soucet / pocet, soucet };
+  }
+  const cisla = Array(pocet).fill(od);
+  return { cisla, prumer: od, soucet: od * pocet };
+}
+
+/* ---- Srovnej sloupečky -------------------------------------------------------------
+   Průměr jako „srovnání do roviny“: co je nad čárou, přesně zaplní díry pod ní.
+   Sloupečky jdou tahat, průměr se přepočítává průběžně. */
+const SL = { hodnoty: [3, 8, 5, 10, 4], animuje: false };
+const SL_MAX = 12;
+
+function novaSadaSloupcu() {
+  const pocet = Uloha.nahodneCislo(4, 6);
+  SL.hodnoty = Array.from({ length: pocet }, () => Uloha.nahodneCislo(1, SL_MAX));
+  SL.animuje = false;
+}
+
+function bodVeSvg(svg, ev) {
+  const p = svg.createSVGPoint();
+  p.x = ev.clientX; p.y = ev.clientY;
+  const m = svg.getScreenCTM();
+  return m ? p.matrixTransform(m.inverse()) : { x: 0, y: 0 };
+}
+
+function srovnej() {
+  const p = $('plocha');
+  p.innerHTML = `
+    <div class="zadani uloha-text" style="max-width:520px">Tahej sloupečky nahoru a dolů.
+      Zelená čára je <b>průměr</b> — a když zmáčkneš „Srovnej“, uvidíš, proč se mu taky
+      říká vyrovnání: co přečnívá, přesně zaplní díry.</div>
+    <svg class="scena" id="scenaSl" viewBox="0 0 520 260" role="img"
+         aria-label="Sloupce dat a jejich prumer"></svg>
+    <div class="ovladace">
+      <button id="btnSrovnej">⚖️ Srovnej do roviny</button>
+      <button id="btnPridej">➕ Přidat sloupec</button>
+      <button id="btnUber">➖ Ubrat sloupec</button>
+    </div>
+    <div class="vypocet-prumer" id="vypocetSl"></div>
+    <p class="vysvetlivka" id="poznamkaSl"></p>`;
+
+  $('btnSrovnej').addEventListener('click', srovnejDoRoviny);
+  $('btnPridej').addEventListener('click', () => {
+    if (SL.hodnoty.length >= 8) return;
+    SL.hodnoty.push(Uloha.nahodneCislo(1, SL_MAX));
+    kresliSloupce();
+  });
+  $('btnUber').addEventListener('click', () => {
+    if (SL.hodnoty.length <= 2) return;
+    SL.hodnoty.pop();
+    kresliSloupce();
+  });
+  kresliSloupce();
+}
+
+function srovnejDoRoviny() {
+  if (SL.animuje) return;
+  const cil = SL.hodnoty.reduce((a, b) => a + b, 0) / SL.hodnoty.length;
+  SL.animuje = true;
+  const krok = () => {
+    if (!$('scenaSl')) { SL.animuje = false; return; }
+    let hotovo = true;
+    SL.hodnoty = SL.hodnoty.map(v => {
+      const novy = v + (cil - v) * 0.14;
+      if (Math.abs(cil - novy) > 0.02) hotovo = false;
+      return novy;
+    });
+    if (hotovo) { SL.hodnoty = SL.hodnoty.map(() => cil); SL.animuje = false; }
+    kresliSloupce();
+    if (SL.animuje) requestAnimationFrame(krok);
+  };
+  requestAnimationFrame(krok);
+}
+
+function kresliSloupce() {
+  if (!$('scenaSl')) return;
+  const n = SL.hodnoty.length;
+  const ZEM = 214, MER = 15, X0 = 46;
+  const sirka = Math.min(56, (440 / n) - 10);
+  const rozestup = (440 - sirka) / Math.max(1, n - 1);
+  const soucet = SL.hodnoty.reduce((a, b) => a + b, 0);
+  const prumer = soucet / n;
+  const yPrumer = ZEM - prumer * MER;
+
+  const svg = SL.hodnoty.map((v, i) => {
+    const x = X0 + (n === 1 ? 220 : i * rozestup);
+    const h = Math.max(2, v * MER);
+    const nad = v > prumer + 0.02;
+    return `<rect class="sloup${nad ? ' nad' : ''}" data-i="${i}"
+              x="${x}" y="${ZEM - h}" width="${sirka}" height="${h}" rx="4"/>
+            <rect class="uchyt" data-i="${i}" x="${x + sirka / 2 - 13}" y="${ZEM - h - 5}"
+              width="26" height="9" rx="4"/>
+            <text class="hodnota" x="${x + sirka / 2}" y="${ZEM - h + 17}">${
+              Math.abs(v - Math.round(v)) < 0.05 ? Math.round(v) : v.toFixed(1).replace('.', ',')}</text>`;
+  }).join('');
+
+  $('scenaSl').innerHTML = svg +
+    `<line class="zem" x1="20" y1="${ZEM}" x2="500" y2="${ZEM}"/>
+     <line class="carka" x1="20" y1="${yPrumer}" x2="500" y2="${yPrumer}"/>
+     <text class="popis prumer" x="${prumer > 10 ? 60 : 470}" y="${yPrumer - 8}">
+       průměr ${Number(prumer.toFixed(2)).toLocaleString('cs-CZ')}</text>`;
+
+  // tažení za sloupec i za úchyt
+  $('scenaSl').querySelectorAll('.sloup, .uchyt').forEach(el => {
+    el.addEventListener('pointerdown', ev => {
+      if (SL.animuje) return;
+      ev.preventDefault();
+      const i = +el.dataset.i;
+      const svg = $('scenaSl');
+      try { el.setPointerCapture(ev.pointerId); } catch { /* nevadí */ }
+      const posun = e => {
+        const b = bodVeSvg(svg, e);
+        SL.hodnoty[i] = Math.max(1, Math.min(SL_MAX, Math.round((ZEM - b.y) / MER)));
+        kresliSloupce();
+      };
+      const konec = () => {
+        svg.removeEventListener('pointermove', posun);
+        svg.removeEventListener('pointerup', konec);
+        svg.removeEventListener('pointercancel', konec);
+      };
+      svg.addEventListener('pointermove', posun);
+      svg.addEventListener('pointerup', konec);
+      svg.addEventListener('pointercancel', konec);
+    });
+  });
+
+  const cele = v => Number(v.toFixed(2)).toLocaleString('cs-CZ');
+  $('vypocetSl').innerHTML =
+    `<div class="radek">součet: ${SL.hodnoty.map(v => cele(v)).join(' + ')} = <b>${cele(soucet)}</b></div>
+     <div class="radek">počet hodnot: <b>${n}</b></div>
+     <div class="radek vysledek">průměr = ${cele(soucet)} ÷ ${n} = ${cele(prumer)}</div>`;
+
+  const nad = SL.hodnoty.filter(v => v > prumer + 0.02).length;
+  const vsechnyStejne = SL.hodnoty.every(v => Math.abs(v - prumer) < 0.05);
+  $('poznamkaSl').innerHTML = vsechnyStejne
+    ? 'Teď mají všechny sloupečky stejnou výšku — a ta výška <b>je</b> průměr. '
+      + 'Součet se přerozdělil rovným dílem.'
+    : `Nad čárou je <b>${nad}</b> ${nad === 1 ? 'sloupeček' : 'sloupečky'}. `
+      + 'To, co přečnívá nad průměrem, je přesně tolik, kolik chybí pod ním.';
+}
+
+/* ---- Spočítej průměr -------------------------------------------------------------- */
+function spocitej() {
+  const p = $('plocha');
+  const k = Uloha.nahodne(KONTEXTY);
+  const pocet = Uloha.nahodneCislo(3, 5);
+  const { cisla, prumer, soucet } = sadaSCelymPrumerem(pocet, 1, 20);
+
+  p.innerHTML = `<div class="zadani">Jaký je aritmetický průměr?</div>
+    <div class="karta"><div class="kontext">${k.t}</div>
+    <div class="cisla">${cisla.map(c => `<span>${c}</span>`).join('')}</div></div>`;
+
+  const jine = new Set();
+  let pokusu1 = 0;
+  while (jine.size < 3 && pokusu1++ < 200) {
+    const kand = prumer + Uloha.nahodne([-3, -2, -1, 1, 2, 3]);
+    if (kand !== prumer && kand > 0) jine.add(kand);
+  }
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva, trida: 'velke',
+    moznosti: Uloha.zamichej([prumer, ...jine]).map(v => ({ klic: String(v), popis: v + k.j })),
+    spravnyKlic: String(prumer),
+    zpravaOk: `✅ ${cisla.join(' + ')} = ${soucet}, a ${soucet} : ${pocet} = ${prumer}`,
+    zpravaChyba: `Sečti všechna čísla a vyděl je počtem (${pocet}).`,
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Doplň chybějící číslo -------------------------------------------------------- */
+function chybejici() {
+  const p = $('plocha');
+  const k = Uloha.nahodne(KONTEXTY);
+  const pocet = Uloha.nahodneCislo(3, 5);
+  const { cisla, prumer } = sadaSCelymPrumerem(pocet, 2, 20);
+  const kde = Uloha.nahodneCislo(0, pocet - 1);
+  const hledane = cisla[kde];
+
+  p.innerHTML = `<div class="zadani">Průměr má být <b>${prumer}${k.j}</b>. Které číslo chybí?</div>
+    <div class="karta"><div class="kontext">${k.t}</div>
+    <div class="cisla">${cisla.map((c, i) =>
+      i === kde ? '<span class="chybi">?</span>' : `<span>${c}</span>`).join('')}</div></div>`;
+
+  const jine = new Set();
+  let pokusu2 = 0;
+  while (jine.size < 3 && pokusu2++ < 200) {
+    const kand = hledane + Uloha.nahodne([-4, -3, -2, -1, 1, 2, 3, 4]);
+    if (kand !== hledane && kand > 0) jine.add(kand);
+  }
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva, trida: 'velke',
+    moznosti: Uloha.zamichej([hledane, ...jine]).map(v => ({ klic: String(v), popis: String(v) })),
+    spravnyKlic: String(hledane),
+    zpravaOk: `✅ Celkový součet musí být ${prumer} × ${pocet} = ${prumer * pocet}, takže chybí ${hledane}.`,
+    zpravaChyba: `Spočítej, jaký musí být celkový součet (${prumer} × ${pocet}), a odečti známá čísla.`,
+    poSpravne: napoprve => {
+      skore.vyhodnot(napoprve);
+      const el = p.querySelector('.chybi');
+      el.textContent = hledane;
+    },
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Kdo má lepší průměr ---------------------------------------------------------- */
+function porovnej() {
+  const p = $('plocha');
+  const jmena = Uloha.zamichej(['Eva', 'Petr', 'Klára', 'Honza', 'Tereza', 'Adam']).slice(0, 2);
+  const a = sadaSCelymPrumerem(4, 1, 20);
+  let b = sadaSCelymPrumerem(4, 1, 20);
+  let pojistka = 0;
+  while (b.prumer === a.prumer && pojistka++ < 50) b = sadaSCelymPrumerem(4, 1, 20);
+
+  const vetsi = a.prumer > b.prumer ? 0 : 1;
+  const sloupce = data => `<div class="sloupce">${data.cisla
+    .map(c => `<div style="height:${c / 20 * 120}px">${c}</div>`).join('')}</div>`;
+
+  p.innerHTML = `<div class="zadani">Kdo má vyšší průměr?</div>
+    <div class="karta" style="flex-direction:row;gap:34px;align-items:flex-end">
+      <div><div class="kontext">${jmena[0]}</div>${sloupce(a)}</div>
+      <div><div class="kontext">${jmena[1]}</div>${sloupce(b)}</div>
+    </div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva, trida: 'dve',
+    moznosti: jmena.map((j, i) => ({ klic: String(i), popis: j })),
+    spravnyKlic: String(vetsi),
+    zpravaOk: `✅ ${jmena[0]} má průměr ${a.prumer}, ${jmena[1]} má ${b.prumer}.`,
+    zpravaChyba: 'Spočítej oba průměry – součet vyděl počtem hodnot.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+const REZIMY = { srovnej, spocitej, chybejici, porovnej };
+function novaUloha() {
+  if (rezim === 'srovnej') { novaSadaSloupcu(); srovnej(); return; }
+  REZIMY[rezim]();
+}
+
+document.querySelectorAll('#rezimy button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#rezimy button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  rezim = b.dataset.rezim;
+  $('btnDalsi').textContent = rezim === 'srovnej' ? '🎲 Jiná data' : 'Přeskočit →';
+  novaUloha();
+}));
+$('btnDalsi').textContent = rezim === 'srovnej' ? '🎲 Jiná data' : 'Přeskočit →';
+$('btnDalsi').addEventListener('click', novaUloha);
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === 'Enter') { e.preventDefault(); novaUloha(); }
+});
+novaUloha();
+</script>
+</body>
+</html>

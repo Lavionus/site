@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Shodnost trojúhelníků</title>
+  <link rel="stylesheet" href="../common.css">
+  <link rel="stylesheet" href="../vyuka.css">
+  <script src="../theme.js"></script>
+  <script src="../uloha.js"></script>
+  <style>
+    .troj { width: min(300px, 78%); }
+    .troj .strana { stroke: var(--border-strong); stroke-width: 3; fill: none; }
+    .troj .strana.dana { stroke: var(--accent); stroke-width: 5; }
+    .troj .oblouk { fill: none; stroke: var(--warn); stroke-width: 3; }
+    .troj .vrchol { fill: var(--text); font-size: 15px; font-weight: 700; }
+    .troj .popisek { fill: var(--text-faint); font-size: 12px; }
+    .zadani-udaje { display: flex; flex-direction: column; gap: 4px; font-size: 1.05rem; }
+    .zadani-udaje b { color: var(--accent); }
+    .kroky { text-align: left; max-width: 520px; color: var(--text-muted); font-size: 0.92rem; line-height: 1.6; }
+    .kroky b { color: var(--text); }
+  </style>
+</head>
+<body>
+  <h1>📐 Shodnost trojúhelníků</h1>
+  <p class="podtitul">Pro 7. ročník: věty sss, sus, usu a jejich užití při konstrukci.</p>
+
+  <div class="rezimy" id="rezimy">
+    <button data-rezim="veta" class="active">📏 Podle které věty</button>
+    <button data-rezim="staci">❓ Stačí to k určení?</button>
+    <button data-rezim="odpovidajici">🔁 Odpovídající prvky</button>
+    <button data-rezim="postup">🛠️ Postup konstrukce</button>
+  </div>
+
+  <div class="plocha" id="plocha"></div>
+
+  <div class="ovladani">
+    <button class="hlavni" id="btnDalsi">Přeskočit →</button>
+    <span class="skore" id="skore"></span>
+  </div>
+
+  <p class="napoveda">
+    <b>sss</b> – shodují se ve všech třech stranách. <b>sus</b> – dvě strany a úhel <i>jimi sevřený</i>.
+    <b>usu</b> – strana a oba úhly k ní přilehlé. Samotné tři úhly (uuu) shodnost nezaručují – vznikne
+    jen podobný trojúhelník.
+  </p>
+
+<script>
+const $ = id => document.getElementById(id);
+const skore = Uloha.skore('nodus_m7_shodnost', $('skore'));
+let rezim = 'veta';
+
+function odezvaEl() { const d = document.createElement('div'); d.className = 'odezva'; return d; }
+
+/* Schematický trojúhelník ABC; dane = pole prvků ('a','b','c' strany, 'A','B','C' úhly). */
+function svgTrojuhelnik(dane) {
+  const A = [40, 150], B = [250, 150], C = [160, 40];
+  const cara = (p1, p2, jmeno) =>
+    `<line class="strana${dane.includes(jmeno) ? ' dana' : ''}" x1="${p1[0]}" y1="${p1[1]}" x2="${p2[0]}" y2="${p2[1]}"/>`;
+  const oblouk = (vrchol, s1, s2, jmeno) => {
+    if (!dane.includes(jmeno)) return '';
+    const smer = (p) => {
+      const dx = p[0] - vrchol[0], dy = p[1] - vrchol[1];
+      const d = Math.hypot(dx, dy);
+      return [vrchol[0] + dx / d * 26, vrchol[1] + dy / d * 26];
+    };
+    const p1 = smer(s1), p2 = smer(s2);
+    return `<path class="oblouk" d="M${p1[0].toFixed(1)} ${p1[1].toFixed(1)} A26 26 0 0 1 ${p2[0].toFixed(1)} ${p2[1].toFixed(1)}"/>`;
+  };
+  return `<svg class="troj" viewBox="0 0 290 180">
+    ${cara(A, B, 'c')}${cara(B, C, 'a')}${cara(C, A, 'b')}
+    ${oblouk(A, B, C, 'A')}${oblouk(B, C, A, 'B')}${oblouk(C, A, B, 'C')}
+    <text class="vrchol" x="${A[0] - 16}" y="${A[1] + 14}">A</text>
+    <text class="vrchol" x="${B[0] + 6}" y="${B[1] + 14}">B</text>
+    <text class="vrchol" x="${C[0] - 4}" y="${C[1] - 8}">C</text>
+    <text class="popisek" x="140" y="168">c</text>
+    <text class="popisek" x="212" y="92">a</text>
+    <text class="popisek" x="86" y="92">b</text>
+  </svg>`;
+}
+
+/* Zadání shodnosti: co je dáno a která věta z toho plyne. */
+const ZADANI = [
+  { dane: ['a', 'b', 'c'], veta: 'sss', popis: '|AB| = |KL|, |BC| = |LM|, |AC| = |KM|' },
+  { dane: ['a', 'c', 'B'], veta: 'sus', popis: '|AB| = |KL|, |BC| = |LM|, úhel β = úhel λ (mezi nimi)' },
+  { dane: ['b', 'c', 'A'], veta: 'sus', popis: '|AB| = |KL|, |AC| = |KM|, úhel α = úhel κ (mezi nimi)' },
+  { dane: ['c', 'A', 'B'], veta: 'usu', popis: '|AB| = |KL| a oba přilehlé úhly α = κ, β = λ' },
+  { dane: ['a', 'B', 'C'], veta: 'usu', popis: '|BC| = |LM| a oba přilehlé úhly β = λ, γ = μ' },
+  { dane: ['b', 'A', 'C'], veta: 'usu', popis: '|AC| = |KM| a oba přilehlé úhly α = κ, γ = μ' },
+];
+const VETY = {
+  sss: 'sss – tři strany',
+  sus: 'sus – dvě strany a úhel jimi sevřený',
+  usu: 'usu – strana a oba přilehlé úhly',
+};
+
+/* ---- Podle které věty ------------------------------------------------------------------ */
+function veta() {
+  const p = $('plocha');
+  const z = Uloha.nahodne(ZADANI);
+  p.innerHTML = `<div class="zadani">Trojúhelníky ABC a KLM se shodují v těchto prvcích.
+      Podle které věty jsou shodné?</div>
+    <div class="karta">${svgTrojuhelnik(z.dane)}
+      <div class="zadani-udaje">${z.popis}</div></div>`;
+  const odezva = odezvaEl();
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej(Object.entries(VETY).map(([k, v]) => ({ klic: k, popis: v }))),
+    spravnyKlic: z.veta,
+    zpravaOk: `✅ Věta ${z.veta} – ${VETY[z.veta].split(' – ')[1]}.`,
+    zpravaChyba: 'Spočítej, kolik je daných stran a kolik úhlů – a jestli úhel leží mezi stranami.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Stačí to k určení? ----------------------------------------------------------------- */
+const SADY = [
+  { popis: 'tři strany (a, b, c)', staci: true, proc: 'věta sss – trojúhelník je určen jednoznačně' },
+  { popis: 'dvě strany a úhel mezi nimi', staci: true, proc: 'věta sus' },
+  { popis: 'strana a oba úhly k ní přilehlé', staci: true, proc: 'věta usu' },
+  { popis: 'tři úhly (α, β, γ)', staci: false, proc: 'vznikne nekonečně mnoho podobných, ale různě velkých trojúhelníků' },
+  { popis: 'dvě strany a úhel proti kratší z nich', staci: false, proc: 'takové zadání může mít dvě různá řešení' },
+  { popis: 'jen dvě strany', staci: false, proc: 'chybí třetí údaj, úhel mezi nimi může být jakýkoli' },
+  { popis: 'jen jedna strana a jeden úhel', staci: false, proc: 'údajů je málo, řešení je nekonečně mnoho' },
+  { popis: 'dva úhly a strana mezi nimi', staci: true, proc: 'věta usu' },
+];
+function staci() {
+  const p = $('plocha');
+  const s = Uloha.nahodne(SADY);
+  p.innerHTML = `<div class="zadani">Je trojúhelník tímto zadáním určen jednoznačně?</div>
+    <div class="karta"><div class="zadani-udaje"><b>${s.popis}</b></div></div>`;
+  const odezva = odezvaEl();
+  Uloha.vyber({
+    kam: p, odezva, trida: 'dve',
+    moznosti: [
+      { klic: 'ano', ikona: '✅', popis: 'Ano, je určen jednoznačně' },
+      { klic: 'ne', ikona: '❌', popis: 'Ne, to nestačí' },
+    ],
+    spravnyKlic: s.staci ? 'ano' : 'ne',
+    zpravaOk: `✅ ${s.proc}`,
+    zpravaChyba: 'Vzpomeň si na věty sss, sus, usu – jiné kombinace jednoznačnost nezaručují.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Odpovídající prvky ------------------------------------------------------------------ */
+function odpovidajici() {
+  const p = $('plocha');
+  const strany = { AB: 'KL', BC: 'LM', AC: 'KM' };
+  const uhly = { α: 'κ', β: 'λ', γ: 'μ' };
+  const ptameSeNaStranu = Math.random() < 0.5;
+  const delky = { AB: Uloha.nahodneCislo(3, 9), BC: Uloha.nahodneCislo(3, 9), AC: Uloha.nahodneCislo(3, 9) };
+  const alfa = Uloha.nahodneCislo(30, 80), beta = Uloha.nahodneCislo(30, 80);
+  const stupne = { α: alfa, β: beta, γ: 180 - alfa - beta };
+
+  let zadani, spravny, moznosti;
+  if (ptameSeNaStranu) {
+    const s = Uloha.nahodne(Object.keys(strany));
+    zadani = `Trojúhelník ABC je shodný s trojúhelníkem KLM. Platí |AB| = ${delky.AB} cm,
+      |BC| = ${delky.BC} cm, |AC| = ${delky.AC} cm. Jak dlouhá je strana <b>${strany[s]}</b>?`;
+    spravny = delky[s] + ' cm';
+    moznosti = [...new Set([delky.AB, delky.BC, delky.AC, delky[s] + 1])].map(d => d + ' cm');
+  } else {
+    const u = Uloha.nahodne(Object.keys(uhly));
+    zadani = `Trojúhelník ABC je shodný s trojúhelníkem KLM. Platí α = ${stupne.α}°, β = ${stupne.β}°.
+      Jak velký je úhel <b>${uhly[u]}</b>?`;
+    spravny = stupne[u] + '°';
+    moznosti = [...new Set([stupne.α, stupne.β, stupne.γ, stupne[u] + 10])].map(d => d + '°');
+  }
+
+  p.innerHTML = `<div class="zadani kroky">${zadani}</div>`;
+  const odezva = odezvaEl();
+  Uloha.vyber({
+    kam: p, odezva, trida: 'velke',
+    moznosti: Uloha.zamichej(moznosti).map(t => ({ klic: t, popis: t })),
+    spravnyKlic: spravny,
+    zpravaOk: `✅ ${spravny} – v shodných trojúhelnících si odpovídají prvky ve stejném pořadí vrcholů
+      (A↔K, B↔L, C↔M).`,
+    zpravaChyba: 'Přiřaď vrcholy podle pořadí: A↔K, B↔L, C↔M.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Postup konstrukce -------------------------------------------------------------------- */
+const POSTUPY = [
+  { veta: 'sss', zadani: 'a = 5 cm, b = 4 cm, c = 6 cm',
+    prvni: 'Narýsuji úsečku AB délky 6 cm (strana c).',
+    dalsi: 'Sestrojím kružnici k(A; 4 cm) a l(B; 5 cm); jejich průsečík je vrchol C.',
+    jine: ['Narýsuji úhel 60° u vrcholu A.', 'Narýsuji kolmici ke straně c.', 'Sestrojím osu úsečky AB.'] },
+  { veta: 'sus', zadani: 'b = 5 cm, c = 7 cm, α = 60°',
+    prvni: 'Narýsuji úsečku AB délky 7 cm (strana c).',
+    dalsi: 'U vrcholu A nanesu úhel 60° a na jeho rameno bod C ve vzdálenosti 5 cm.',
+    jine: ['Sestrojím kružnici k(B; 5 cm).', 'Narýsuji těžnici z vrcholu A.', 'Nanesu úhel 60° u vrcholu C.'] },
+  { veta: 'usu', zadani: 'c = 6 cm, α = 45°, β = 70°',
+    prvni: 'Narýsuji úsečku AB délky 6 cm (strana c).',
+    dalsi: 'U bodu A nanesu úhel 45°, u bodu B úhel 70°; průsečík ramen je vrchol C.',
+    jine: ['Sestrojím kružnici k(A; 6 cm).', 'Nanesu úhel 45° u vrcholu C.', 'Narýsuji výšku na stranu c.'] },
+];
+function postup() {
+  const p = $('plocha');
+  const u = Uloha.nahodne(POSTUPY);
+  const ptameSeNaPrvni = Math.random() < 0.5;
+  const spravny = ptameSeNaPrvni ? u.prvni : u.dalsi;
+
+  p.innerHTML = `<div class="zadani kroky">Sestroj trojúhelník ABC: <b>${u.zadani}</b> (věta ${u.veta}).<br>
+    ${ptameSeNaPrvni ? 'Který krok je první?' : `Po narýsování strany c: <b>co následuje?</b>`}</div>`;
+  const odezva = odezvaEl();
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([spravny, ...Uloha.zamichej(u.jine).slice(0, 2), ptameSeNaPrvni ? u.dalsi : u.prvni])
+      .map(t => ({ klic: t, popis: t })),
+    spravnyKlic: spravny,
+    zpravaOk: `✅ ${spravny}`,
+    zpravaChyba: 'Konstrukci vždy začínáme známou stranou a teprve pak přenášíme úhly nebo kružnice.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+const REZIMY = { veta, staci, odpovidajici, postup };
+function novaUloha() { REZIMY[rezim](); }
+
+document.querySelectorAll('#rezimy button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#rezimy button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  rezim = b.dataset.rezim;
+  novaUloha();
+}));
+$('btnDalsi').addEventListener('click', novaUloha);
+novaUloha();
+</script>
+</body>
+</html>

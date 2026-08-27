@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Dělení se zbytkem</title>
+  <link rel="stylesheet" href="../common.css">
+  <link rel="stylesheet" href="../vyuka.css">
+  <script src="../theme.js"></script>
+  <script src="../rec.js"></script>
+  <script src="../uloha.js"></script>
+  <style>
+    .priklad { font-size: clamp(1.8rem, 7vw, 3rem); font-weight: 700; font-variant-numeric: tabular-nums; }
+    .priklad .otazka { color: var(--accent); }
+    .hromada {
+      display: flex; flex-wrap: wrap; gap: 7px; justify-content: center; max-width: 400px;
+      padding: 14px; border: 2px dashed var(--border-strong); border-radius: 12px;
+    }
+    .hromada i { width: 18px; height: 18px; border-radius: 50%; background: var(--accent); display: block; }
+    .skupiny { display: flex; flex-wrap: wrap; gap: 14px; justify-content: center; max-width: 640px; }
+    .skupina {
+      display: flex; flex-wrap: wrap; gap: 5px; padding: 9px; border-radius: 10px;
+      border: 2px solid var(--ok); background: rgba(76, 175, 125, 0.12); max-width: 148px;
+    }
+    .skupina.zbytek { border-color: var(--warn); background: rgba(224, 166, 63, 0.14); border-style: dashed; }
+    .skupina i { width: 16px; height: 16px; border-radius: 50%; background: var(--accent); display: block; }
+    .skupina.zbytek i { background: var(--warn); }
+    .legenda { color: var(--text-faint); font-size: 0.82rem; }
+  </style>
+</head>
+<body>
+  <h1>➗ Dělení se zbytkem</h1>
+  <p class="podtitul">Pro 3.–4. ročník: kolik celých skupin vznikne a kolik zbude.</p>
+
+  <div class="rezimy" id="rezimy">
+    <button data-rezim="vypocet" class="active">🧮 Vypočítej</button>
+    <button data-rezim="obrazek">🔵 Kolik zbude?</button>
+    <button data-rezim="zkouska">✔️ Zkouška</button>
+  </div>
+
+  <div class="plocha" id="plocha"></div>
+
+  <div class="ovladani">
+    <button class="hlavni" id="btnDalsi">Přeskočit →</button>
+    <span class="skore" id="skore"></span>
+  </div>
+
+  <p class="napoveda">
+    Zbytek je vždy <b>menší než dělitel</b>. Výsledek si ověříš zkouškou:
+    podíl × dělitel + zbytek = dělenec. Například 17 : 5 = 3 zb. 2, protože 3 × 5 + 2 = 17.
+  </p>
+
+<script>
+const $ = id => document.getElementById(id);
+const skore = Uloha.skore('nodus_m3_deleni', $('skore'));
+let rezim = 'vypocet';
+
+function novyPriklad(minDelitel = 2, maxDelitel = 9) {
+  const delitel = Uloha.nahodneCislo(minDelitel, maxDelitel);
+  const podil = Uloha.nahodneCislo(2, 9);
+  const zbytek = Uloha.nahodneCislo(1, delitel - 1);
+  return { delenec: podil * delitel + zbytek, delitel, podil, zbytek };
+}
+const zapis = u => `${u.podil} zb. ${u.zbytek}`;
+
+/* ---- Vypočítej ------------------------------------------------------------ */
+function vypocet() {
+  const p = $('plocha');
+  const u = novyPriklad(2, 9);
+  p.innerHTML = `<div class="zadani">Vyděl se zbytkem:</div>
+    <div class="karta"><div class="priklad">${u.delenec} : ${u.delitel} = <span class="otazka">?</span></div></div>`;
+
+  const jine = new Set();
+  let pokusu1 = 0;
+  while (jine.size < 3 && pokusu1++ < 200) {
+    const podil = u.podil + Uloha.nahodneCislo(-2, 2);
+    const zbytek = Uloha.nahodneCislo(0, u.delitel - 1);
+    const kandidat = `${podil} zb. ${zbytek}`;
+    if (podil > 0 && kandidat !== zapis(u)) jine.add(kandidat);
+  }
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([zapis(u), ...jine]).map(t => ({ klic: t, popis: t })),
+    spravnyKlic: zapis(u),
+    zpravaOk: `✅ ${u.podil} × ${u.delitel} + ${u.zbytek} = ${u.delenec}`,
+    zpravaChyba: `Zbytek musí být menší než ${u.delitel}. Kolikrát se ${u.delitel} vejde do ${u.delenec}?`,
+    poSpravne: napoprve => {
+      skore.vyhodnot(napoprve);
+      p.querySelector('.otazka').textContent = zapis(u);
+    },
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Kolik zbude? (názorně) ----------------------------------------------- */
+function obrazek() {
+  const p = $('plocha');
+  // dělitel aspoň 4, aby existovaly nejméně tři různé špatné zbytky
+  const u = novyPriklad(4, 8);
+  p.innerHTML = `<div class="zadani">Máš <b>${u.delenec}</b> kuliček a rozdělíš je do skupin
+     po <b>${u.delitel}</b>. Kolik kuliček zbude?</div>`;
+
+  // kuličky schválně nejsou předrozdělené – rozdělení si musí žák udělat sám
+  const hromada = document.createElement('div');
+  hromada.className = 'hromada';
+  hromada.innerHTML = '<i></i>'.repeat(u.delenec);
+  const legenda = document.createElement('div');
+  legenda.className = 'legenda';
+  legenda.textContent = 'Spočítej, kolik celých skupin vznikne a kolik kuliček přebude.';
+  p.append(hromada, legenda);
+
+  /* po správné odpovědi kuličky přeskládáme do skupin, ať je vidět proč */
+  function ukazRozdeleni() {
+    hromada.remove();
+    const box = document.createElement('div');
+    box.className = 'skupiny';
+    for (let i = 0; i < u.podil; i++) {
+      const sk = document.createElement('div');
+      sk.className = 'skupina';
+      sk.innerHTML = '<i></i>'.repeat(u.delitel);
+      box.appendChild(sk);
+    }
+    if (u.zbytek) {
+      const zb = document.createElement('div');
+      zb.className = 'skupina zbytek';
+      zb.innerHTML = '<i></i>'.repeat(u.zbytek);
+      box.appendChild(zb);
+    }
+    legenda.textContent = `${u.podil} plných skupin po ${u.delitel} kuličkách`
+      + (u.zbytek ? ` a ${u.zbytek} zbývající` : ' beze zbytku');
+    p.insertBefore(box, legenda);
+  }
+
+  const jine = new Set();
+  let pokusu2 = 0;
+  while (jine.size < 3 && pokusu2++ < 200) {
+    const k = Uloha.nahodneCislo(0, u.delitel - 1);
+    if (k !== u.zbytek) jine.add(k);
+  }
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva, trida: 'velke',
+    moznosti: Uloha.zamichej([u.zbytek, ...jine]).map(z => ({ klic: String(z), popis: String(z) })),
+    spravnyKlic: String(u.zbytek),
+    zpravaOk: `✅ ${u.delenec} : ${u.delitel} = ${u.podil} zb. ${u.zbytek}`,
+    zpravaChyba: 'Odečítej po skupinách – kolikrát se dělitel do počtu vejde?',
+    poSpravne: napoprve => { skore.vyhodnot(napoprve); ukazRozdeleni(); },
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Zkouška --------------------------------------------------------------- */
+function zkouska() {
+  const p = $('plocha');
+  const u = novyPriklad(2, 9);
+  const spravne = Math.random() < 0.5;
+  let podil = u.podil, zbytek = u.zbytek;
+  if (!spravne) {
+    // typická chyba: zbytek větší než dělitel, nebo posunutý podíl
+    if (Math.random() < 0.5) zbytek = u.delitel + Uloha.nahodneCislo(0, 2);
+    else podil = u.podil + (Math.random() < 0.5 ? 1 : -1);
+  }
+  p.innerHTML = `<div class="zadani">Je výpočet správný?</div>
+    <div class="karta"><div class="priklad">${u.delenec} : ${u.delitel} = ${podil} zb. ${zbytek}</div></div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva, trida: 'dve',
+    moznosti: [
+      { klic: 'ano', ikona: '✅', popis: 'Ano, souhlasí' },
+      { klic: 'ne', ikona: '❌', popis: 'Ne, je to špatně' },
+    ],
+    spravnyKlic: spravne ? 'ano' : 'ne',
+    zpravaOk: `✅ Správně je ${u.delenec} : ${u.delitel} = ${u.podil} zb. ${u.zbytek}, `
+      + `protože ${u.podil} × ${u.delitel} + ${u.zbytek} = ${u.delenec}.`,
+    zpravaChyba: `Udělej zkoušku: podíl × ${u.delitel} + zbytek se musí rovnat ${u.delenec}, `
+      + `a zbytek musí být menší než ${u.delitel}.`,
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+const REZIMY = { vypocet, obrazek, zkouska };
+function novaUloha() { REZIMY[rezim](); }
+
+document.querySelectorAll('#rezimy button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#rezimy button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  rezim = b.dataset.rezim;
+  novaUloha();
+}));
+$('btnDalsi').addEventListener('click', novaUloha);
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === 'Enter') { e.preventDefault(); novaUloha(); }
+});
+novaUloha();
+</script>
+</body>
+</html>

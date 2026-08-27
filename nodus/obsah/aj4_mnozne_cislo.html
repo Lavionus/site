@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Angličtina – množné číslo a členy</title>
+  <link rel="stylesheet" href="../common.css">
+  <link rel="stylesheet" href="../vyuka.css">
+  <script src="../theme.js"></script>
+  <script src="../rec.js"></script>
+  <script src="../uloha.js"></script>
+  <style>
+    .slovo-en { font-size: clamp(1.5rem, 6vw, 2.3rem); font-weight: 700; }
+    .preklad { color: var(--text-faint); font-size: 0.95rem; font-style: italic; }
+    .veta-en { font-size: clamp(1.2rem, 4.5vw, 1.8rem); font-weight: 700; }
+    .veta-en .mezera { color: var(--accent); border-bottom: 3px solid var(--accent); padding: 0 12px; }
+  </style>
+</head>
+<body>
+  <h1>🔢 Množné číslo a členy</h1>
+  <p class="podtitul">Pro 4. ročník: tvoření množného čísla a členy a / an / the.</p>
+
+  <div class="rezimy" id="rezimy">
+    <button data-rezim="mnozne" class="active">➕ Množné číslo</button>
+    <button data-rezim="nepravidelne">⭐ Nepravidelná</button>
+    <button data-rezim="clen">🅰️ A, nebo an?</button>
+  </div>
+
+  <div class="plocha" id="plocha"></div>
+
+  <div class="ovladani">
+    <button class="hlavni" id="btnDalsi">Přeskočit →</button>
+    <span class="skore" id="skore"></span>
+  </div>
+
+  <p class="napoveda">
+    Množné číslo tvoříme <b>-s</b>: books. Po -s, -ss, -sh, -ch, -x přidáváme <b>-es</b>: boxes.
+    Slova končící na souhlásku + y mění y na <b>-ies</b>: baby → babies.
+    Člen <b>an</b> stojí před samohláskou: an apple, jinak <b>a</b>: a dog.
+  </p>
+
+<script>
+const $ = id => document.getElementById(id);
+const skore = Uloha.skore('nodus_aj4_plural', $('skore'));
+let rezim = 'mnozne';
+
+/* jednotné, množné, český význam, pravidlo */
+const SLOVA = [
+  { j: 'book', m: 'books', cz: 'kniha', pravidlo: 'běžné slovo → -s' },
+  { j: 'dog', m: 'dogs', cz: 'pes', pravidlo: 'běžné slovo → -s' },
+  { j: 'table', m: 'tables', cz: 'stůl', pravidlo: 'běžné slovo → -s' },
+  { j: 'pen', m: 'pens', cz: 'pero', pravidlo: 'běžné slovo → -s' },
+  { j: 'box', m: 'boxes', cz: 'krabice', pravidlo: 'končí na -x → -es' },
+  { j: 'bus', m: 'buses', cz: 'autobus', pravidlo: 'končí na -s → -es' },
+  { j: 'watch', m: 'watches', cz: 'hodinky', pravidlo: 'končí na -ch → -es' },
+  { j: 'brush', m: 'brushes', cz: 'kartáč', pravidlo: 'končí na -sh → -es' },
+  { j: 'glass', m: 'glasses', cz: 'sklenice', pravidlo: 'končí na -ss → -es' },
+  { j: 'baby', m: 'babies', cz: 'miminko', pravidlo: 'souhláska + y → -ies' },
+  { j: 'city', m: 'cities', cz: 'město', pravidlo: 'souhláska + y → -ies' },
+  { j: 'country', m: 'countries', cz: 'země', pravidlo: 'souhláska + y → -ies' },
+  { j: 'boy', m: 'boys', cz: 'chlapec', pravidlo: 'samohláska + y → jen -s' },
+  { j: 'day', m: 'days', cz: 'den', pravidlo: 'samohláska + y → jen -s' },
+];
+
+const NEPRAVIDELNA = [
+  { j: 'child', m: 'children', cz: 'dítě' },
+  { j: 'man', m: 'men', cz: 'muž' },
+  { j: 'woman', m: 'women', cz: 'žena' },
+  { j: 'foot', m: 'feet', cz: 'chodidlo' },
+  { j: 'tooth', m: 'teeth', cz: 'zub' },
+  { j: 'mouse', m: 'mice', cz: 'myš' },
+  { j: 'person', m: 'people', cz: 'osoba' },
+  { j: 'fish', m: 'fish', cz: 'ryba' },
+  { j: 'sheep', m: 'sheep', cz: 'ovce' },
+  { j: 'goose', m: 'geese', cz: 'husa' },
+];
+
+const CLENY = [
+  { s: 'apple', cz: 'jablko', c: 'an' }, { s: 'dog', cz: 'pes', c: 'a' },
+  { s: 'orange', cz: 'pomeranč', c: 'an' }, { s: 'car', cz: 'auto', c: 'a' },
+  { s: 'egg', cz: 'vejce', c: 'an' }, { s: 'book', cz: 'kniha', c: 'a' },
+  { s: 'umbrella', cz: 'deštník', c: 'an' }, { s: 'house', cz: 'dům', c: 'a' },
+  { s: 'ice cream', cz: 'zmrzlina', c: 'an' }, { s: 'table', cz: 'stůl', c: 'a' },
+  { s: 'elephant', cz: 'slon', c: 'an' }, { s: 'pencil', cz: 'tužka', c: 'a' },
+];
+
+/* ---- Množné číslo ------------------------------------------------------------ */
+function mnozne() {
+  const p = $('plocha');
+  const u = Uloha.nahodne(SLOVA);
+  const chybne = [u.j + 's', u.j + 'es', u.j.replace(/y$/, 'ies'), u.j + 'ies']
+    .filter(t => t !== u.m).filter((x, i, a) => a.indexOf(x) === i);
+
+  p.innerHTML = `<div class="zadani">Jak zní množné číslo?</div>
+    <div class="karta"><div class="slovo-en">one ${u.j}</div>
+    <div class="preklad">${u.cz}</div></div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([u.m, ...chybne.slice(0, 3)]).map(t => ({ klic: t, popis: t })),
+    spravnyKlic: u.m,
+    zpravaOk: `✅ one ${u.j} → two ${u.m} (${u.pravidlo})`,
+    zpravaChyba: 'Podívej se, na co slovo končí – podle toho se řídí koncovka.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Nepravidelná ------------------------------------------------------------ */
+function nepravidelne() {
+  const p = $('plocha');
+  const u = Uloha.nahodne(NEPRAVIDELNA);
+  const jine = Uloha.zamichej(NEPRAVIDELNA.filter(x => x.m !== u.m)).slice(0, 2).map(x => x.m);
+  const chybny = u.j + 's';
+
+  p.innerHTML = `<div class="zadani">Jak zní množné číslo?</div>
+    <div class="karta"><div class="slovo-en">one ${u.j}</div>
+    <div class="preklad">${u.cz}</div></div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([u.m, chybny, ...jine])
+      .filter((x, i, a) => a.indexOf(x) === i)
+      .map(t => ({ klic: t, popis: t })),
+    spravnyKlic: u.m,
+    zpravaOk: `✅ one ${u.j} → two ${u.m}` + (u.j === u.m ? ' – tvar se nemění!' : ' – nepravidelné množné číslo.'),
+    zpravaChyba: 'Tohle slovo se v množném čísle mění nepravidelně – koncovka -s tu neplatí.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- A, nebo an? ------------------------------------------------------------- */
+function clen() {
+  const p = $('plocha');
+  const u = Uloha.nahodne(CLENY);
+  p.innerHTML = `<div class="zadani">Doplň člen a, nebo an:</div>
+    <div class="karta"><div class="veta-en"><span class="mezera">?</span> ${u.s}</div>
+    <div class="preklad">${u.cz}</div></div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva, trida: 'velke',
+    moznosti: Uloha.zamichej([{ klic: 'a', popis: 'a' }, { klic: 'an', popis: 'an' }]),
+    spravnyKlic: u.c,
+    zpravaOk: u.c === 'an'
+      ? `✅ an ${u.s} – slovo začíná samohláskou.`
+      : `✅ a ${u.s} – slovo začíná souhláskou.`,
+    zpravaChyba: 'Poslouchej první hlásku slova – samohláska, nebo souhláska?',
+    poSpravne: napoprve => {
+      skore.vyhodnot(napoprve);
+      p.querySelector('.mezera').textContent = u.c;
+    },
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+const REZIMY = { mnozne, nepravidelne, clen };
+function novaUloha() { REZIMY[rezim](); }
+
+document.querySelectorAll('#rezimy button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#rezimy button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  rezim = b.dataset.rezim;
+  novaUloha();
+}));
+$('btnDalsi').addEventListener('click', novaUloha);
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === 'Enter') { e.preventDefault(); novaUloha(); }
+});
+novaUloha();
+</script>
+</body>
+</html>

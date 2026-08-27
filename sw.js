@@ -4,13 +4,16 @@
    takže jednou navštívená aplikace funguje i offline. */
 /* Při větší aktualizaci webu zvyš číslo verze — stará cache se u návštěvníků
    smaže a vše se stáhne čerstvé (jinak SWR ukáže novou verzi až na druhé načtení). */
-const CACHE = 'webapp-v64';
+const PREFIX = 'webapp-';
+const CACHE = PREFIX + 'v71';
 const JADRO = [
   './',
   './index.html',
   './apps.js',
   './common.css',
   './theme.js',
+  './rekord.js',
+  './dialog.js',
   './manifest.webmanifest',
   './icon-192.png',
   './icon-512.png',
@@ -24,7 +27,12 @@ self.addEventListener('install', e => {
 self.addEventListener('activate', e => {
   e.waitUntil(
     caches.keys()
-      .then(keys => Promise.all(keys.filter(k => k !== CACHE).map(k => caches.delete(k))))
+      // Mazat jen VLASTNÍ staré cache. Na stejném originu běží i service worker
+      // Nodusu (nodus-*) a stránky Předpověď počasí (forecast-*); bez filtru na
+      // prefix by si weby navzájem mazaly offline cache při každé aktualizaci.
+      .then(keys => Promise.all(
+        keys.filter(k => k.startsWith(PREFIX) && k !== CACHE).map(k => caches.delete(k))
+      ))
       .then(() => self.clients.claim())
   );
 });

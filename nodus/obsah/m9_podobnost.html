@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Podobnost</title>
+  <link rel="stylesheet" href="../common.css">
+  <link rel="stylesheet" href="../vyuka.css">
+  <script src="../theme.js"></script>
+  <script src="../uloha.js"></script>
+  <style>
+    .kresba { width: min(340px, 88%); }
+    .kresba .maly { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 2.5; }
+    .kresba .velky { fill: rgba(230,170,60,0.25); stroke: var(--warn); stroke-width: 2.5; }
+    .kresba .popis { fill: var(--text-muted); font-size: 12px; text-anchor: middle; }
+    .uloha-text { max-width: 640px; font-size: 1.02rem; line-height: 1.6; }
+    .uloha-text b { color: var(--accent); }
+    .vzorec { font-family: 'Courier New', monospace; color: var(--text-muted); font-size: 0.95rem; }
+
+    /* ---- interaktivní režimy ---- */
+    .scena { width: min(560px, 100%); touch-action: none; user-select: none; }
+    .scena .zem { stroke: var(--border-strong); stroke-width: 2; }
+    .scena .maly { fill: var(--accent-soft); stroke: var(--accent); stroke-width: 2.5; }
+    .scena .velky { fill: rgba(230,170,60,0.22); stroke: var(--warn); stroke-width: 2.5; }
+    .scena .stin { fill: rgba(0,0,0,0.35); }
+    .scena .paprsek { stroke: var(--warn); stroke-width: 1.8; stroke-dasharray: 6 4; fill: none; }
+    .scena .trojuhelnik { stroke: none; }
+    .scena .trojuhelnik.maly { fill: var(--accent-soft); }
+    .scena .trojuhelnik.velky { fill: rgba(230,170,60,0.14); }
+    .scena .kota { stroke: var(--accent); stroke-width: 1.6; }
+    .scena .popis { fill: var(--text-muted); font-size: 12px; text-anchor: middle; }
+    .scena .popis.zvyraz { fill: var(--accent); font-weight: 600; }
+    .scena .uchyt { fill: var(--accent); stroke: var(--bg-panel); stroke-width: 2; cursor: grab; }
+    .scena .uchyt:hover { fill: var(--accent-hover); }
+    .scena .uchyt.taham { cursor: grabbing; fill: var(--warn); }
+
+    .ovladace {
+      display: flex; flex-wrap: wrap; gap: 8px 14px;
+      align-items: center; justify-content: center; max-width: 560px;
+    }
+    .ovladace label {
+      display: flex; align-items: center; gap: 8px;
+      background: var(--bg-input); border: 1px solid var(--border);
+      border-radius: 8px; padding: 5px 10px;
+      font-size: 0.8rem; color: var(--text-muted);
+    }
+    .ovladace input[type=range] { width: 130px; accent-color: var(--accent); }
+    .ovladace .hodnota {
+      color: var(--text); font-weight: 600; min-width: 3.4em;
+      font-variant-numeric: tabular-nums; text-align: right;
+    }
+    .tvary { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+    .tvary button {
+      background: var(--bg-control); border: 1px solid var(--border-strong); color: var(--text-muted);
+      border-radius: 6px; padding: 5px 11px; font-size: 0.78rem; font-family: inherit; cursor: pointer;
+    }
+    .tvary button:hover { border-color: var(--accent); color: var(--text); }
+    .tvary button.zap { background: var(--accent); border-color: var(--accent); color: #fff; }
+
+    /* Tabulka „co se s čím děje“ */
+    .pomery {
+      display: grid; grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px; width: min(560px, 100%);
+    }
+    .pomery .bunka {
+      background: var(--bg-elevated); border: 1px solid var(--border);
+      border-radius: 12px; padding: 10px 8px;
+    }
+    .pomery .nadpis { color: var(--text-faint); font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.5px; }
+    .pomery .nasobek { font-size: 1.5rem; font-weight: 700; font-variant-numeric: tabular-nums; margin: 3px 0 2px; }
+    .pomery .delka .nasobek { color: var(--accent); }
+    .pomery .obsah .nasobek { color: var(--warn); }
+    .pomery .objem .nasobek { color: var(--ok); }
+    .pomery .detail { color: var(--text-muted); font-size: 0.76rem; font-variant-numeric: tabular-nums; }
+    @media (max-width: 520px) {
+      .pomery { grid-template-columns: 1fr; gap: 7px; }
+      .pomery .bunka { display: flex; align-items: baseline; gap: 9px; text-align: left; padding: 7px 12px; }
+      .pomery .nasobek { font-size: 1.15rem; margin: 0; }
+      .pomery .detail { margin-left: auto; }
+    }
+
+    .vysvetlivka { color: var(--text-faint); font-size: 0.8rem; max-width: 560px; line-height: 1.5; }
+    .vysvetlivka b { color: var(--text-muted); }
+  </style>
+</head>
+<body>
+  <h1>🔍 Podobnost</h1>
+  <p class="podtitul">Pro 9. ročník: poměr podobnosti, dopočet stran, měřítko plánů a modelů.</p>
+
+  <div class="rezimy" id="rezimy">
+    <button data-rezim="zvetsovadlo" class="active">🔬 Zvětšovadlo</button>
+    <button data-rezim="stin">🌳 Měření stínem</button>
+    <button data-rezim="pomer">📐 Poměr podobnosti</button>
+    <button data-rezim="dopocet">🔢 Dopočítej stranu</button>
+    <button data-rezim="meritko">🗺️ Plány a modely</button>
+    <button data-rezim="vlastnosti">📋 Kdy jsou útvary podobné</button>
+  </div>
+
+  <div class="plocha" id="plocha"></div>
+
+  <div class="ovladani">
+    <button class="hlavni" id="btnDalsi">Přeskočit →</button>
+    <span class="skore" id="skore"></span>
+  </div>
+
+  <p class="napoveda">
+    Podobné útvary mají <b>shodné úhly</b> a <b>strany ve stejném poměru</b>.
+    Poměr podobnosti <b>k</b> říká, kolikrát je druhý útvar větší.
+    Pozor: obsah se mění <b>k²</b>krát a objem <b>k³</b>krát.
+  </p>
+
+<script>
+const $ = id => document.getElementById(id);
+const skore = Uloha.skore('nodus_m9_podobnost', $('skore'));
+let rezim = 'zvetsovadlo';
+const fmt = x => Number(Number(x).toFixed(2)).toLocaleString('cs-CZ');
+const fmt1 = x => Number(Number(x).toFixed(1)).toLocaleString('cs-CZ');
+function odezvaEl() { const d = document.createElement('div'); d.className = 'odezva'; return d; }
+
+/* Bod myši/prstu přepočítaný do souřadnic SVG (funguje i po zvětšení stránky). */
+function bodVeSvg(svg, ev) {
+  const p = svg.createSVGPoint();
+  p.x = ev.clientX; p.y = ev.clientY;
+  const m = svg.getScreenCTM();
+  return m ? p.matrixTransform(m.inverse()) : { x: 0, y: 0 };
+}
+
+/* Tažení úchytu. setPointerCapture je v try/catch schválně: u nedůvěryhodné
+   (synteticky vyrobené) události vyhodí NotFoundError a shodilo by to handler. */
+function tahatelny(prvek, svg, priTazeni) {
+  prvek.addEventListener('pointerdown', ev => {
+    ev.preventDefault();
+    prvek.classList.add('taham');
+    try { prvek.setPointerCapture(ev.pointerId); } catch { /* nevadí */ }
+    const pohyb = e => priTazeni(bodVeSvg(svg, e));
+    const konec = () => {
+      prvek.classList.remove('taham');
+      svg.removeEventListener('pointermove', pohyb);
+      svg.removeEventListener('pointerup', konec);
+      svg.removeEventListener('pointercancel', konec);
+    };
+    svg.addEventListener('pointermove', pohyb);
+    svg.addEventListener('pointerup', konec);
+    svg.addEventListener('pointercancel', konec);
+    priTazeni(bodVeSvg(svg, ev));
+  });
+}
+
+/* ============================================================
+   Režim 1: Zvětšovadlo – živá ukázka, že délky rostou k-krát,
+   obsah k²-krát a objem k³-krát, ať má útvar jakýkoliv tvar.
+   ============================================================ */
+
+/* Tvary v „dílkách“ (10 dílků = 1 cm), počátek vlevo dole, osa y nahoru. */
+const TVARY = {
+  trojuhelnik: { nazev: '△ Trojúhelník', body: [[0, 0], [60, 0], [18, 52]] },
+  domecek:     { nazev: '⌂ Domeček',     body: [[0, 0], [56, 0], [56, 38], [28, 62], [0, 38]] },
+  ctverec:     { nazev: '□ Čtverec',     body: [[0, 0], [50, 0], [50, 50], [0, 50]] },
+  lecko:       { nazev: '⌐ Lomený tvar', body: [[0, 0], [58, 0], [58, 24], [26, 24], [26, 60], [0, 60]] },
+};
+let tvarId = 'domecek';
+let body = TVARY[tvarId].body.map(b => b.slice());
+let k = 2;
+
+const ZEM = 268, X0 = 34, X1 = 178, MAX = 84;
+
+function obvodPolygonu(b) {
+  let o = 0;
+  for (let i = 0; i < b.length; i++) {
+    const [x1, y1] = b[i], [x2, y2] = b[(i + 1) % b.length];
+    o += Math.hypot(x2 - x1, y2 - y1);
+  }
+  return o;
+}
+function obsahPolygonu(b) {          // Gaussova („šněrovadlová“) formule
+  let s = 0;
+  for (let i = 0; i < b.length; i++) {
+    const [x1, y1] = b[i], [x2, y2] = b[(i + 1) % b.length];
+    s += x1 * y2 - x2 * y1;
+  }
+  return Math.abs(s) / 2;
+}
+const naSvg = (b, ax, mer) => b.map(([x, y]) => `${ax + x * mer},${ZEM - y * mer}`).join(' ');
+
+function zvetsovadlo() {
+  const p = $('plocha');
+  p.innerHTML = `
+    <div class="zadani uloha-text">Tahej za modré body a měň tvar. Posuvníkem nastav
+      poměr podobnosti <b>k</b> a sleduj, co to udělá s obvodem, obsahem a objemem.</div>
+    <svg class="scena" id="scena" viewBox="0 0 560 300" role="img"
+         aria-label="Původní útvar a jeho zvětšená podoba">
+      <defs>
+        <pattern id="mrizka" width="10" height="10" patternUnits="userSpaceOnUse">
+          <path d="M10 0 L0 0 0 10" fill="none" stroke="var(--border-strong)" stroke-width="0.8"/>
+        </pattern>
+      </defs>
+      <rect x="14" y="${ZEM - 250}" width="532" height="250" fill="url(#mrizka)" opacity="0.85"/>
+      <line class="zem" x1="14" y1="${ZEM}" x2="546" y2="${ZEM}"/>
+      <polygon class="maly" id="polyMaly"/>
+      <polygon class="velky" id="polyVelky"/>
+      <g id="uchyty"></g>
+      <text class="popis" id="popisMaly" x="0" y="${ZEM + 20}">původní</text>
+      <text class="popis zvyraz" id="popisVelky" x="0" y="${ZEM + 20}">obraz</text>
+    </svg>
+    <div class="ovladace">
+      <label>📏 Poměr k
+        <input type="range" id="posK" min="0.3" max="3" step="0.05" value="${k}">
+        <span class="hodnota" id="hodK"></span>
+      </label>
+    </div>
+    <div class="tvary" id="tvary">${Object.entries(TVARY)
+      .map(([id, t]) => `<button data-tvar="${id}"${id === tvarId ? ' class="zap"' : ''}>${t.nazev}</button>`)
+      .join('')}</div>
+    <div class="pomery">
+      <div class="bunka delka"><div class="nadpis">Délky ×k</div>
+        <div class="nasobek" id="nDelka"></div><div class="detail" id="dDelka"></div></div>
+      <div class="bunka obsah"><div class="nadpis">Obsah ×k²</div>
+        <div class="nasobek" id="nObsah"></div><div class="detail" id="dObsah"></div></div>
+      <div class="bunka objem"><div class="nadpis">Objem ×k³</div>
+        <div class="nasobek" id="nObjem"></div><div class="detail" id="dObjem"></div></div>
+    </div>
+    <p class="vysvetlivka">Jeden čtvereček mřížky je <b>1 cm²</b> — můžeš si je přepočítat.
+      Zkus <b>k = 2</b>: útvar je dvakrát tak dlouhý, ale vejdou se do něj <b>čtyři</b> původní.
+      A kdyby to bylo těleso, vešlo by se do něj <b>osm</b> původních.</p>`;
+
+  const svg = $('scena');
+  const uchyty = $('uchyty');
+  body.forEach((_, i) => {
+    const c = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
+    c.setAttribute('r', 7);
+    c.setAttribute('class', 'uchyt');
+    uchyty.appendChild(c);
+    tahatelny(c, svg, bod => {
+      // zpět do souřadnic tvaru (osa y vzhůru) a omezit, ať útvar nevyleze ze scény
+      const x = Math.max(0, Math.min(MAX, bod.x - X0));
+      const y = Math.max(0, Math.min(MAX, ZEM - bod.y));
+      body[i] = [x, y];
+      prekresli();
+    });
+  });
+
+  $('posK').addEventListener('input', e => { k = +e.target.value; prekresli(); });
+  $('tvary').addEventListener('click', e => {
+    const b = e.target.closest('button[data-tvar]');
+    if (!b) return;
+    tvarId = b.dataset.tvar;
+    body = TVARY[tvarId].body.map(x => x.slice());
+    $('tvary').querySelectorAll('button').forEach(x => x.classList.toggle('zap', x === b));
+    prekresli();
+  });
+  prekresli();
+}
+
+function prekresli() {
+  if (!$('scena')) return;
+  const o = obvodPolygonu(body), S = obsahPolygonu(body);
+  $('polyMaly').setAttribute('points', naSvg(body, X0, 1));
+  $('polyVelky').setAttribute('points', naSvg(body, X1, k));
+
+  $('uchyty').querySelectorAll('circle').forEach((c, i) => {
+    c.setAttribute('cx', X0 + body[i][0]);
+    c.setAttribute('cy', ZEM - body[i][1]);
+  });
+
+  // popisky doprostřed základny každého útvaru
+  const stred = (ax, mer) => ax + mer * (Math.min(...body.map(b => b[0])) + Math.max(...body.map(b => b[0]))) / 2;
+  $('popisMaly').setAttribute('x', stred(X0, 1));
+  $('popisVelky').setAttribute('x', stred(X1, k));
+  $('popisVelky').textContent = `obraz (k = ${fmt(k)})`;
+
+  $('hodK').textContent = fmt(k) + '×';
+  $('nDelka').textContent = fmt(k) + '×';
+  $('nObsah').textContent = fmt(k * k) + '×';
+  $('nObjem').textContent = fmt(k * k * k) + '×';
+  // 10 dílků = 1 cm, obsah tedy dělíme 100
+  $('dDelka').textContent = `obvod ${fmt1(o / 10)} → ${fmt1(o * k / 10)} cm`;
+  $('dObsah').textContent = `obsah ${fmt1(S / 100)} → ${fmt1(S * k * k / 100)} cm²`;
+  $('dObjem').textContent = 'kdyby to bylo těleso';
+}
+
+/* ============================================================
+   Režim 2: Měření stínem – klasické užití podobnosti.
+   Sluncem se dá hýbat, poměr výška : stín ale zůstává stejný.
+   ============================================================ */
+let stinData = null;
+
+function novyStin() {
+  const vyskaTyce = Uloha.nahodne([1, 1.2, 1.5, 1.8, 2]);
+  const nasobek = Uloha.nahodneCislo(3, 6);            // strom je celistvý násobek tyče
+  stinData = { vyskaTyce, vyskaStromu: +(vyskaTyce * nasobek).toFixed(1), uhel: 45 };
+}
+
+function stin() {
+  const p = $('plocha');
+  if (!stinData) novyStin();
+  const d = stinData;
+
+  p.innerHTML = `
+    <div class="zadani uloha-text">Tyč vysoká <b>${fmt1(d.vyskaTyce)} m</b> i strom vrhají stín.
+      Posuvníkem hýbej sluncem — všimni si, že <b>oba stíny se mění</b>, ale jejich
+      poměr k výšce zůstává stejný. Jak vysoký je strom?</div>
+    <svg class="scena" id="scena" viewBox="0 0 560 300" role="img"
+         aria-label="Tyc a strom vrhajici stin ve slunci">
+      <polygon class="trojuhelnik maly" id="troj1"/>
+      <polygon class="trojuhelnik velky" id="troj2"/>
+      <g id="slunce">
+        <circle r="16" fill="var(--warn)"/>
+        <g id="slunceParsky"></g>
+      </g>
+      <line class="zem" x1="14" y1="245" x2="546" y2="245"/>
+      <g id="stiny"></g>
+      <line class="paprsek" id="paprsek1"/>
+      <line class="paprsek" id="paprsek2"/>
+      <line class="kota" id="tyc" stroke-width="6" stroke-linecap="round"/>
+      <g id="strom"></g>
+      <text class="popis zvyraz" id="popisTyc"></text>
+      <text class="popis" id="popisStinTyce"></text>
+      <text class="popis" id="popisStinStromu"></text>
+      <text class="popis zvyraz" id="popisStrom"></text>
+    </svg>
+    <div class="ovladace">
+      <label>☀️ Výška slunce
+        <input type="range" id="posUhel" min="30" max="72" step="1" value="${d.uhel}">
+        <span class="hodnota" id="hodUhel"></span>
+      </label>
+      <label>📐 Poměr <span class="hodnota" id="hodPomer"></span></label>
+    </div>`;
+
+  const odezva = odezvaEl();
+  const spravny = fmt1(d.vyskaStromu);
+  const jine = new Set([
+    fmt1(d.vyskaTyce + d.vyskaStromu / 2),
+    fmt1(d.vyskaStromu / 2),
+    fmt1(d.vyskaStromu + d.vyskaTyce),
+    fmt1(d.vyskaStromu - 1),
+  ]);
+  jine.delete(spravny);
+
+  Uloha.vyber({
+    kam: p, odezva, trida: 'velke',
+    moznosti: Uloha.zamichej([spravny, ...[...jine].slice(0, 3)]).map(t => ({ klic: t, popis: t + ' m' })),
+    spravnyKlic: spravny,
+    zpravaOk: `✅ Stín stromu je ${fmt(d.vyskaStromu / d.vyskaTyce)}× delší než stín tyče, `
+      + `takže strom je ${fmt(d.vyskaStromu / d.vyskaTyce)}× vyšší: ${spravny} m.`,
+    zpravaChyba: 'Kolikrát je delší stín stromu než stín tyče? Tolikrát je vyšší i strom.',
+    poSpravne: skore.vyhodnot,
+    dalsi: () => { novyStin(); stin(); },
+  });
+  p.appendChild(odezva);
+
+  $('posUhel').addEventListener('input', e => { d.uhel = +e.target.value; prekresliStin(); });
+  prekresliStin();
+}
+
+function prekresliStin() {
+  if (!$('scena') || !stinData) return;
+  const d = stinData;
+  const ZEM = 245, VYSKA_PX = 165;
+  // měřítko se dopočítá ze stromu, aby scéna vypadala stejně velká u každého zadání
+  const MER = VYSKA_PX / d.vyskaStromu;
+  const tg = Math.tan(d.uhel * Math.PI / 180);
+  const stinT = d.vyskaTyce / tg, stinS = d.vyskaStromu / tg;
+
+  const xT = 110, xS = 285;
+  const vT = d.vyskaTyce * MER, vS = VYSKA_PX;
+  const sT = stinT * MER, sS = stinS * MER;
+
+  $('tyc').setAttribute('x1', xT); $('tyc').setAttribute('y1', ZEM);
+  $('tyc').setAttribute('x2', xT); $('tyc').setAttribute('y2', ZEM - vT);
+
+  $('strom').innerHTML =
+    `<line x1="${xS}" y1="${ZEM}" x2="${xS}" y2="${ZEM - vS * 0.55}" stroke="#8a5a3b" stroke-width="9"/>
+     <ellipse cx="${xS}" cy="${ZEM - vS * 0.72}" rx="${vS * 0.26}" ry="${vS * 0.28}"
+              fill="var(--ok)" opacity="0.9"/>`;
+
+  // podobné pravoúhlé trojúhelníky: výška + stín + paprsek
+  $('troj1').setAttribute('points', `${xT},${ZEM} ${xT},${ZEM - vT} ${xT + sT},${ZEM}`);
+  $('troj2').setAttribute('points', `${xS},${ZEM} ${xS},${ZEM - vS} ${xS + sS},${ZEM}`);
+
+  $('stiny').innerHTML =
+    `<ellipse class="stin" cx="${xT + sT / 2}" cy="${ZEM + 4}" rx="${sT / 2}" ry="4"/>
+     <ellipse class="stin" cx="${xS + sS / 2}" cy="${ZEM + 4}" rx="${sS / 2}" ry="6"/>`;
+
+  const paprsek = (el, x, v, sl) => {
+    const e = $(el);
+    e.setAttribute('x1', x); e.setAttribute('y1', ZEM - v);
+    e.setAttribute('x2', x + sl); e.setAttribute('y2', ZEM);
+  };
+  paprsek('paprsek1', xT, vT, sT);
+  paprsek('paprsek2', xS, vS, sS);
+
+  // slunce leží na paprsku kousek za vrcholem tyče
+  const dl = Math.hypot(sT, vT) || 1;
+  const sx = xT - 85 * (sT / dl), sy = (ZEM - vT) - 85 * (vT / dl);
+  $('slunce').setAttribute('transform', `translate(${sx} ${sy})`);
+  $('slunceParsky').innerHTML = Array.from({ length: 8 }, (_, i) => {
+    const a = i * Math.PI / 4;
+    return `<line x1="${Math.cos(a) * 20}" y1="${Math.sin(a) * 20}" ` +
+           `x2="${Math.cos(a) * 26}" y2="${Math.sin(a) * 26}" ` +
+           `stroke="var(--warn)" stroke-width="2.5" stroke-linecap="round"/>`;
+  }).join('');
+
+  const popis = (el, x, y, text) => {
+    const e = $(el);
+    e.setAttribute('x', x); e.setAttribute('y', y); e.textContent = text;
+  };
+  popis('popisTyc', xT - 32, ZEM - vT / 2 + 4, `${fmt1(d.vyskaTyce)} m`);
+  popis('popisStinTyce', xT + sT / 2, ZEM + 24, `stín ${fmt1(stinT)} m`);
+  popis('popisStinStromu', xS + sS / 2, ZEM + 24, `stín ${fmt1(stinS)} m`);
+  popis('popisStrom', xS, ZEM - vS - 14, '? m');
+
+  $('hodUhel').textContent = d.uhel + '°';
+  $('hodPomer').textContent = `stín stromu je ${fmt(stinS / stinT)}× delší`;
+}
+
+/* ============================================================
+   Procvičovací režimy
+   ============================================================ */
+
+function svgTrojuhelniky(a1, b1, a2, b2) {
+  const m = 60 / Math.max(a1, b1, 1);
+  const M = 60 / Math.max(a2, b2, 1);
+  return `<svg class="kresba" viewBox="0 0 340 170">
+    <polygon class="maly" points="30,140 ${30 + a1 * m},140 30,${140 - b1 * m}"/>
+    <text class="popis" x="${30 + a1 * m / 2}" y="158">a = ${fmt(a1)}</text>
+    <text class="popis" x="12" y="${140 - b1 * m / 2}">b = ${fmt(b1)}</text>
+    <polygon class="velky" points="180,140 ${180 + a2 * M},140 180,${140 - b2 * M}"/>
+    <text class="popis" x="${180 + a2 * M / 2}" y="158">a' = ${fmt(a2)}</text>
+    <text class="popis" x="164" y="${140 - b2 * M / 2}">b' = ${fmt(b2)}</text>
+  </svg>`;
+}
+
+function pomer() {
+  const p = $('plocha');
+  const a = Uloha.nahodneCislo(2, 9), b = Uloha.nahodneCislo(2, 9);
+  const kk = Uloha.nahodne([1.5, 2, 2.5, 3]);
+  const zvetsujeme = Math.random() < 0.5;
+  const a2 = zvetsujeme ? a * kk : a / kk, b2 = zvetsujeme ? b * kk : b / kk;
+  const spravny = zvetsujeme ? kk : 1 / kk;
+  const jine = new Set([fmt(zvetsujeme ? 1 / kk : kk), fmt(kk * 2), fmt(a2 - a), fmt(a + a2)]);
+  jine.delete(fmt(spravny));
+
+  p.innerHTML = `<div class="zadani uloha-text">Jaký je poměr podobnosti <b>k</b>, kterým přejdeme
+      od modrého trojúhelníku k oranžovému?</div>
+    <div class="karta">${svgTrojuhelniky(a, b, a2, b2)}
+      <div class="vzorec">k = a' / a</div></div>`;
+  const odezva = odezvaEl();
+  Uloha.vyber({
+    kam: p, odezva, trida: 'velke',
+    moznosti: Uloha.zamichej([fmt(spravny), ...[...jine].slice(0, 3)]).map(t => ({ klic: t, popis: t })),
+    spravnyKlic: fmt(spravny),
+    zpravaOk: `✅ k = ${fmt(a2)} : ${fmt(a)} = ${fmt(spravny)}` + (spravny < 1 ? ' (zmenšení)' : ' (zvětšení)'),
+    zpravaChyba: 'Poměr podobnosti získáš vydělením odpovídajících si stran.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+function dopocet() {
+  const p = $('plocha');
+  const a = Uloha.nahodneCislo(2, 12), b = Uloha.nahodneCislo(2, 12);
+  const kk = Uloha.nahodne([1.5, 2, 2.5, 3, 4]);
+  const a2 = a * kk, b2 = b * kk;
+  const ptameSeNaVetsi = Math.random() < 0.5;
+  const vysledek = ptameSeNaVetsi ? b2 : b;
+  const jine = new Set([fmt(ptameSeNaVetsi ? b : b2), fmt(b * a2 / b2), fmt(vysledek + kk), fmt(a2 - a + b)]);
+  jine.delete(fmt(vysledek));
+
+  p.innerHTML = `<div class="zadani uloha-text">Trojúhelníky jsou podobné.
+      ${ptameSeNaVetsi
+        ? `Menší má strany <b>${fmt(a)}</b> a <b>${fmt(b)}</b>, větší má stranu <b>${fmt(a2)}</b>.
+           Jak dlouhá je druhá strana většího?`
+        : `Větší má strany <b>${fmt(a2)}</b> a <b>${fmt(b2)}</b>, menší má stranu <b>${fmt(a)}</b>.
+           Jak dlouhá je druhá strana menšího?`}</div>
+    <div class="karta">${svgTrojuhelniky(a, b, a2, b2)}
+      <div class="vzorec">a : a' = b : b'</div></div>`;
+  const odezva = odezvaEl();
+  Uloha.vyber({
+    kam: p, odezva, trida: 'velke',
+    moznosti: Uloha.zamichej([fmt(vysledek), ...[...jine].slice(0, 3)]).map(t => ({ klic: t, popis: t })),
+    spravnyKlic: fmt(vysledek),
+    zpravaOk: `✅ Poměr podobnosti je ${fmt(kk)}, proto ${fmt(vysledek)}.`,
+    zpravaChyba: 'Sestav úměru: strana ku odpovídající straně se rovná poměru podobnosti.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+function meritko() {
+  const p = $('plocha');
+  const typ = Uloha.nahodne(['plan', 'model', 'obsah']);
+  let zadani, spravny, jine, jednotka = '';
+  if (typ === 'plan') {
+    const m = Uloha.nahodne([50, 100, 200, 500]);
+    const naPlanu = Uloha.nahodneCislo(2, 14);
+    const skutecne = naPlanu * m / 100;
+    zadani = `Plán domu má měřítko 1 : ${m}. Úsečka na plánu měří <b>${naPlanu} cm</b>.
+      Kolik metrů to je ve skutečnosti?`;
+    spravny = fmt(skutecne); jednotka = ' m';
+    jine = [fmt(skutecne * 10), fmt(skutecne / 10), fmt(naPlanu * m)];
+  } else if (typ === 'model') {
+    const m = Uloha.nahodne([10, 20, 25, 50]);
+    const skutecne = Uloha.nahodneCislo(2, 12);
+    const model = skutecne * 100 / m;
+    zadani = `Model auta je v měřítku 1 : ${m}. Skutečné auto je dlouhé <b>${skutecne} m</b>.
+      Jak dlouhý je model v centimetrech?`;
+    spravny = fmt(model); jednotka = ' cm';
+    jine = [fmt(model * 10), fmt(model / 10), fmt(skutecne * m)];
+  } else {
+    const kk = Uloha.nahodne([2, 3, 4]);
+    const obsah = Uloha.nahodneCislo(3, 20);
+    zadani = `Zvětšíme obrazec v poměru <b>${kk} : 1</b>. Jeho obsah byl ${obsah} cm².
+      Jaký bude obsah zvětšeného obrazce?`;
+    spravny = fmt(obsah * kk * kk); jednotka = ' cm²';
+    jine = [fmt(obsah * kk), fmt(obsah * kk * kk * kk), fmt(obsah + kk)];
+  }
+
+  p.innerHTML = `<div class="zadani uloha-text">${zadani}</div>
+    <div class="karta"><div class="vzorec">délky se mění k-krát · obsah k²-krát · objem k³-krát</div></div>`;
+  const odezva = odezvaEl();
+  Uloha.vyber({
+    kam: p, odezva, trida: 'velke',
+    moznosti: Uloha.zamichej([spravny, ...jine.filter(x => x !== spravny)]).map(t => ({ klic: t, popis: t + jednotka })),
+    spravnyKlic: spravny,
+    zpravaOk: `✅ ${spravny}${jednotka}`,
+    zpravaChyba: 'Hlídej jednotky a nezaměň změnu délky se změnou obsahu.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+const VLASTNOSTI = [
+  { q: 'Kdy jsou dva trojúhelníky podobné?', a: 'když se shodují ve dvou úhlech', b: ['když mají stejný obvod', 'když mají stejný obsah', 'když mají jednu stejnou stranu'] },
+  { q: 'Co platí pro podobné útvary?', a: 'mají shodné úhly a strany ve stejném poměru', b: ['mají stejné strany', 'mají stejný obsah', 'liší se úhly'] },
+  { q: 'Jak se změní obsah, když útvar zvětšíme dvakrát?', a: 'zvětší se čtyřikrát', b: ['zvětší se dvakrát', 'zvětší se osmkrát', 'nezmění se'] },
+  { q: 'Jak se změní objem tělesa při zvětšení v poměru 3 : 1?', a: 'zvětší se 27krát', b: ['zvětší se 3krát', 'zvětší se 9krát', 'zvětší se 6krát'] },
+  { q: 'Jsou všechny čtverce navzájem podobné?', a: 'ano, mají stejné úhly a poměr stran', b: ['ne, nikdy', 'jen když mají stejnou stranu', 'jen ty s celočíselnou stranou'] },
+  { q: 'Jsou všechny obdélníky navzájem podobné?', a: 'ne, poměr stran se může lišit', b: ['ano, vždy', 'jen ty s pravým úhlem', 'jen ty se stejným obvodem'] },
+  { q: 'Co znamená poměr podobnosti menší než 1?', a: 'útvar se zmenšuje', b: ['útvar se zvětšuje', 'útvary jsou shodné', 'útvary nejsou podobné'] },
+  { q: 'K čemu se podobnost využívá v praxi?', a: 'k plánům, mapám, modelům a měření nepřístupných výšek', b: ['jen k rýsování kružnic', 'k počítání procent', 'k převodu jednotek času'] },
+  { q: 'Tyč a strom stojí vedle sebe. Co u nich platí?', a: 'poměr výšky ke stínu je u obou stejný', b: ['mají stejně dlouhý stín', 'mají stejnou výšku', 'stín nezávisí na výšce'] },
+];
+function vlastnosti() {
+  const p = $('plocha');
+  const u = Uloha.nahodne(VLASTNOSTI);
+  p.innerHTML = `<div class="zadani uloha-text">${u.q}</div>`;
+  const odezva = odezvaEl();
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([u.a, ...u.b]).map(t => ({ klic: t, popis: t })),
+    spravnyKlic: u.a,
+    zpravaOk: `✅ ${u.a}`,
+    zpravaChyba: 'Podobnost mění velikost, ne tvar – úhly zůstávají stejné.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ============================================================ */
+const REZIMY = { zvetsovadlo, stin, pomer, dopocet, meritko, vlastnosti };
+/* Bádací režimy se neodpovídají, tlačítko v liště tam znamená „něco jiného“. */
+const POPIS_TLACITKA = {
+  zvetsovadlo: '🎲 Jiný tvar',
+  stin: '🎲 Jiné zadání',
+};
+
+function novaUloha() {
+  if (rezim === 'zvetsovadlo') {
+    // náhodný tvar: zamíchat výběr a trochu rozházet vrcholy
+    const idy = Object.keys(TVARY);
+    tvarId = Uloha.nahodne(idy.filter(x => x !== tvarId));
+    body = TVARY[tvarId].body.map(([x, y]) => [
+      Math.max(0, Math.min(MAX, x + Uloha.nahodneCislo(-8, 8))),
+      Math.max(0, Math.min(MAX, y + Uloha.nahodneCislo(-8, 8))),
+    ]);
+  }
+  if (rezim === 'stin') novyStin();
+  REZIMY[rezim]();
+}
+
+document.querySelectorAll('#rezimy button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#rezimy button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  rezim = b.dataset.rezim;
+  $('btnDalsi').textContent = POPIS_TLACITKA[rezim] || 'Přeskočit →';
+  REZIMY[rezim]();
+}));
+$('btnDalsi').addEventListener('click', novaUloha);
+$('btnDalsi').textContent = POPIS_TLACITKA[rezim] || 'Přeskočit →';
+REZIMY[rezim]();
+</script>
+</body>
+</html>

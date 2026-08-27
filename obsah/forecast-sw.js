@@ -12,7 +12,8 @@
  * Při vydání nové verze zvyšte VERSION – stará cache se při aktivaci smaže.
  */
 const VERSION = 'v2';
-const CACHE_NAME = 'forecast-cache-' + VERSION;
+const PREFIX = 'forecast-cache-';
+const CACHE_NAME = PREFIX + VERSION;
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -25,8 +26,11 @@ self.addEventListener('install', (event) => {
 self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys()
+      // Mazat jen VLASTNÍ staré cache. Na stejném originu běží i service worker
+      // rozcestníku (webapp-*) a Nodusu (nodus-*); bez filtru na prefix by si
+      // weby navzájem mazaly offline cache při každé aktualizaci verze.
       .then((keys) => Promise.all(
-        keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k))
+        keys.filter((k) => k.startsWith(PREFIX) && k !== CACHE_NAME).map((k) => caches.delete(k))
       ))
       .then(() => self.clients.claim())
   );

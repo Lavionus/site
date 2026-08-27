@@ -6,6 +6,7 @@
 <title>📦 Sokoban</title>
 <link rel="stylesheet" href="../common.css">
 <script src="../theme.js"></script>
+<script src="../rekord.js" defer></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;user-select:none}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:20px;display:flex;flex-direction:column;align-items:center}
@@ -15,8 +16,8 @@ h1{font-size:1.6rem;margin-bottom:14px;font-weight:600}
 .btn:hover{background:var(--accent)}.btn-sec{background:var(--border)}
 select{background:var(--border);border:1px solid var(--border-strong);border-radius:4px;color:var(--text);padding:9px}
 .info{color:var(--text-faint)}
-.board{display:grid;gap:0;background:#222;padding:8px;border-radius:8px}
-.cell{width:46px;height:46px;display:flex;align-items:center;justify-content:center;font-size:1.8rem}
+.board{--bunka:min(46px, calc((100vw - 40px) / var(--sl,8)));display:grid;gap:0;background:#222;padding:8px;border-radius:8px}
+.cell{width:var(--bunka);height:var(--bunka);display:flex;align-items:center;justify-content:center;font-size:1.8rem}
 .wall{background:var(--border-strong);border-radius:3px}
 .floor{background:var(--bg-elevated)}
 .target{background:#2a3a2a}
@@ -40,7 +41,8 @@ select{background:var(--border);border:1px solid var(--border-strong);border-rad
   <select id="level"></select>
   <button class="btn btn-sec" id="undoBtn">↩️ Zpět</button>
   <button class="btn" id="resetBtn">🔄 Restart</button>
-  <span class="info">Tahy: <b id="moves">0</b></span>
+  <span class="info">Tahy: <b id="moves">0</b> / optimum <b id="opt">–</b></span>
+  <span id="rekordBox"></span>
 </div>
 <div class="board" id="board"></div>
 <div class="dpad">
@@ -52,26 +54,63 @@ select{background:var(--border);border:1px solid var(--border-strong);border-rad
 <p class="hint">Tlač bedny 📦 na cíle 🎯. Šipky / WASD nebo tlačítka. Bedny nelze táhnout, jen tlačit.</p>
 <script>
 const $=id=>document.getElementById(id);
-// # wall, space floor, . target, $ box, * box on target, @ player, + player on target
+// # zeď, mezera podlaha, . cíl, $ bedna, * bedna na cíli, @ hráč, + hráč na cíli
+// Každá úroveň je ověřená prohledáváním stavového prostoru; `opt` je délka
+// nejkratšího řešení v tazích hráče. Řazeno od nejsnazší po nejtěžší.
 const LEVELS=[
-['#####','#@  #','# $ #','#  .#','#####'],
-['######','#    #','# #$ #','# .  #','#  @ #','######'],
-['#######','#  .  #','# #$# #','# $@$ #','# #.# #','#  .  #','#######'],
-['########','#  .   #','# $$ # #','# @ .  #','####  ##','   #  # ','   #### '],
+  {opt:5,mapa:['#####','#@  #','# $ #','#  .#','#####']},
+  {opt:5,mapa:['#######','#     #','# $ . #','#  @  #','#######']},
+  {opt:5,mapa:['######','#@   #','# $  #','#  . #','#    #','######']},
+  {opt:5,mapa:['######','#  . #','# $  #','#  @ #','#    #','######']},
+  {opt:5,mapa:['#########','#       #','# ##### #','# #   # #','# # $ # #','# # . # #','# #@  # #','# ##### #','#       #','#########']},
+  {opt:8,mapa:['######','#. $@#','#    #','#. $ #','#    #','######']},
+  {opt:8,mapa:['########','#      #','# .$.$ #','#   @  #','#      #','########']},
+  {opt:8,mapa:['#######','#  @  #','# $$$ #','# ... #','#     #','#######']},
+  {opt:9,mapa:['######','#    #','# #$ #','# .  #','#  @ #','######']},
+  {opt:9,mapa:['#######','#     #','# $$  #','# ..  #','#  @  #','#######']},
+  {opt:9,mapa:['########','#  .   #','#  $   #','#  .   #','#  $   #','#  @   #','########']},
+  {opt:10,mapa:['########','#  .   #','# $$ # #','# @ .  #','####  ##','   #  # ','   #### ']},
+  {opt:10,mapa:['########','#@ #   #','#  $ . #','#  #   #','#  $ . #','#      #','########']},
+  {opt:11,mapa:['#######','#     #','#.$.$@#','#     #','#######']},
+  {opt:12,mapa:['########','#      #','# $$$  #','# ...  #','#   @  #','########']},
+  {opt:12,mapa:['########','##     #','#  $ $ #','#  ..  #','#  @   #','########']},
+  {opt:13,mapa:['########','#      #','# $  . #','# $  . #','#  @   #','########']},
+  {opt:13,mapa:['#######','#.   @#','#  $  #','#     #','#. $  #','#######']},
+  {opt:14,mapa:['#########','#       #','# $ $ $ #','# . . . #','#   @   #','#########']},
+  {opt:15,mapa:['##########','#        #','# $$$$   #','# ....   #','#    @   #','##########']},
+  {opt:15,mapa:['##########','#        #','# $.$.$. #','#        #','#    @   #','##########']},
+  {opt:16,mapa:['#######','#  #  #','# $.$ #','#  @  #','#  .  #','#######']},
+  {opt:18,mapa:['##########','#   ##   #','# $    $ #','#  .  .  #','##  @   ##','##########']},
+  {opt:18,mapa:['########','#   #  #','# $ $  #','# . .  #','#   @  #','#      #','########']},
+  {opt:18,mapa:['#########','#  ###  #','# $   $ #','# . # . #','#   @   #','#  ###  #','#########']},
+  {opt:19,mapa:['#########','#@      #','# $#$#$ #','#  . .  #','#   .   #','#########']},
+  {opt:19,mapa:['##########','#  ....  #','# $$$$   #','#        #','#    @   #','##########']},
+  {opt:27,mapa:['#########','#   #   #','# $ $ $ #','#  ...  #','#   @   #','#########']},
+  {opt:27,mapa:['##########','#   #    #','# $ # $  #','# . # .  #','#   #    #','## ###  ##','#    @   #','##########']},
+  {opt:36,mapa:['##########','#   .    #','# #### # #','# $      #','# #### # #','#   .  $ #','#   @    #','##########']},
+  {opt:45,mapa:['#######','#  .  #','# #$# #','# $@$ #','# #.# #','#  .  #','#######']},
 ];
 let grid,player,moves,history,levelIdx;
-$('level').innerHTML=LEVELS.map((_,i)=>`<option value="${i}">Úroveň ${i+1}</option>`).join('');
+$('level').innerHTML=LEVELS.map((l,i)=>`<option value="${i}">Úroveň ${i+1} · ${l.opt} tahů</option>`).join('');
+let rek=null;const rekordy={};
+function nastavRekord(idx){
+  if(typeof Rekord==='undefined')return;
+  if(!rekordy[idx])rekordy[idx]=Rekord.sleduj('webapp_hra_sokoban_'+idx,
+    {vyssiLepsi:false,popisek:'Nejméně tahů',format:v=>v+' tahů'});
+  rek=rekordy[idx];rek.prvek($('rekordBox'));
+}
 function load(idx){
   levelIdx=idx;
-  grid=LEVELS[idx].map(r=>[...r]);moves=0;history=[];
+  grid=LEVELS[idx].mapa.map(r=>[...r]);moves=0;history=[];
+  $('opt').textContent=LEVELS[idx].opt;nastavRekord(idx);
   for(let y=0;y<grid.length;y++)for(let x=0;x<grid[y].length;x++){
     if(grid[y][x]==='@'||grid[y][x]==='+'){player={x,y};grid[y][x]=grid[y][x]==='+'?'.':' ';}
   }
-  $('msg').textContent='';render();
+  hotovo=false;$('msg').textContent='';render();
 }
 function render(){
   const b=$('board');const w=Math.max(...grid.map(r=>r.length));
-  b.style.gridTemplateColumns=`repeat(${w},46px)`;b.innerHTML='';
+  b.style.setProperty('--sl',w);b.style.gridTemplateColumns=`repeat(${w},var(--bunka))`;b.innerHTML='';
   for(let y=0;y<grid.length;y++)for(let x=0;x<w;x++){
     const ch=grid[y][x]||' ';const d=document.createElement('div');
     let cls='cell ',content='';
@@ -88,6 +127,7 @@ function render(){
 function isWall(x,y){return (grid[y]?.[x]||'#')==='#';}
 function isBox(x,y){const c=grid[y]?.[x];return c==='$'||c==='*';}
 function move(dx,dy){
+  if(hotovo)return;
   const nx=player.x+dx,ny=player.y+dy;
   if(isWall(nx,ny))return;
   if(isBox(nx,ny)){
@@ -100,16 +140,29 @@ function move(dx,dy){
   }else{history.push(JSON.stringify({grid,player}));}
   player={x:nx,y:ny};moves++;render();checkWin();
 }
+let hotovo=false;
 function checkWin(){
   const hasBox=grid.some(r=>r.includes('$'));
-  if(!hasBox){$('msg').textContent='🎉 Úroveň vyřešena na '+moves+' tahů!';}
+  if(hasBox){hotovo=false;return;}
+  hotovo=true;
+  const opt=LEVELS[levelIdx].opt;
+  let zprava='🎉 Úroveň vyřešena na '+moves+' tahů!';
+  if(moves===opt)zprava+=' Optimálně! 🏆';
+  if(rek&&rek.zapis(moves))zprava='🏆 Nový rekord: '+moves+' tahů!'+(moves===opt?' A rovnou optimum!':'');
+  if(levelIdx+1<LEVELS.length)zprava+=' → další úroveň za chvíli';
+  $('msg').textContent=zprava;
+  // po vyřešení sama nabídne další úroveň, ať se nemusí hledat v seznamu
+  if(levelIdx+1<LEVELS.length)setTimeout(()=>{
+    if(!hotovo)return;
+    $('level').value=levelIdx+1;load(levelIdx+1);
+  },1600);
 }
 $('undoBtn').onclick=()=>{if(history.length){const s=JSON.parse(history.pop());grid=s.grid;player=s.player;moves=Math.max(0,moves-1);$('msg').textContent='';render();}};
 $('resetBtn').onclick=()=>load(levelIdx);
 $('level').onchange=()=>load(+$('level').value);
 document.querySelectorAll('.dpad button').forEach(b=>b.onclick=()=>{const m={up:[0,-1],down:[0,1],left:[-1,0],right:[1,0]}[b.dataset.d];move(m[0],m[1]);});
 document.addEventListener('keydown',e=>{const m={ArrowUp:[0,-1],w:[0,-1],ArrowDown:[0,1],s:[0,1],ArrowLeft:[-1,0],a:[-1,0],ArrowRight:[1,0],d:[1,0]}[e.key];if(m){e.preventDefault();move(m[0],m[1]);}});
-load(0);
+window.addEventListener('DOMContentLoaded',()=>load(0));
 </script>
 </body>
 </html>

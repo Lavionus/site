@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Střídavý proud a rozvod elektřiny</title>
+  <link rel="stylesheet" href="../common.css">
+  <link rel="stylesheet" href="../vyuka.css">
+  <script src="../theme.js"></script>
+  <script src="../uloha.js"></script>
+  <style>
+    .schema { width: min(580px, 96%); }
+    .schema .spoj { stroke: var(--border-strong); stroke-width: 2.5; }
+    .schema .uzel { cursor: pointer; }
+    .schema .uzel rect { fill: var(--bg-control); stroke: var(--border-strong); stroke-width: 2; rx: 10; }
+    .schema .uzel:hover rect { stroke: var(--accent); }
+    .schema .uzel.spravne rect { fill: var(--ok); stroke: var(--ok); }
+    .schema .uzel.spatne rect { fill: var(--danger); stroke: var(--danger); }
+    .schema .uzel.hotovy rect { fill: var(--accent-soft); stroke: var(--accent); }
+    .schema .ikona { font-size: 20px; text-anchor: middle; }
+    .schema .nazev { fill: var(--text-muted); font-size: 10px; text-anchor: middle; }
+    .uloha-text { max-width: 640px; font-size: 1.02rem; line-height: 1.6; }
+    .uloha-text b { color: var(--accent); }
+    .vzorec { font-family: 'Courier New', monospace; color: var(--text-muted); font-size: 0.95rem; }
+    .vlna { width: min(360px, 90%); }
+    .vlna .osa { stroke: var(--text-muted); stroke-width: 2; }
+    .vlna .krivka { fill: none; stroke: var(--accent); stroke-width: 3; }
+  </style>
+</head>
+<body>
+  <h1>🔌 Střídavý proud a rozvod elektřiny</h1>
+  <p class="podtitul">Pro 9. ročník: vlastnosti střídavého proudu, transformátor a cesta elektřiny k zásuvce.</p>
+
+  <div class="rezimy" id="rezimy">
+    <button data-rezim="cesta" class="active">🔁 Cesta elektřiny</button>
+    <button data-rezim="transformator">🌀 Transformátor</button>
+    <button data-rezim="vlastnosti">〰️ Vlastnosti proudu</button>
+    <button data-rezim="bezpecnost">⚠️ Bezpečnost</button>
+  </div>
+
+  <div class="plocha" id="plocha"></div>
+
+  <div class="ovladani">
+    <button class="hlavni" id="btnDalsi">Přeskočit →</button>
+    <span class="skore" id="skore"></span>
+  </div>
+
+  <p class="napoveda">
+    V síti máme <b>střídavý proud</b> o frekvenci <b>50 Hz</b> a napětí <b>230 V</b>.
+    Na velké vzdálenosti se přenáší <b>velmi vysokým napětím</b>, aby byly menší ztráty.
+    Transformátor mění napětí v poměru závitů: <b>U₁ / U₂ = N₁ / N₂</b>.
+  </p>
+
+<script>
+const $ = id => document.getElementById(id);
+const skore = Uloha.skore('nodus_f9_stridavy_proud', $('skore'));
+let rezim = 'cesta';
+const fmt = x => Number(Number(x).toFixed(2)).toLocaleString('cs-CZ');
+function odezvaEl() { const d = document.createElement('div'); d.className = 'odezva'; return d; }
+
+const CESTA = [
+  { klic: 'elektrarna', ikona: '🏭', nazev: 'elektrárna', info: 'generátor vyrábí střídavý proud' },
+  { klic: 'transformatorNa', ikona: '🌀', nazev: 'transformovna', info: 'napětí se zvýší na stovky kilovoltů' },
+  { klic: 'vedeni', ikona: '🗼', nazev: 'vedení', info: 'vysoké napětí znamená menší ztráty na dlouhé trase' },
+  { klic: 'transformatorDolu', ikona: '🔻', nazev: 'trafostanice', info: 'napětí se sníží pro rozvod v obci' },
+  { klic: 'zasuvka', ikona: '🔌', nazev: 'zásuvka', info: 'do domácnosti přichází 230 V, 50 Hz' },
+];
+function svgSchema(poradi, hotove) {
+  const s = 104, mezera = 12;
+  const uzly = poradi.map((u, i) => {
+    const x = 8 + i * (s + mezera);
+    return `<g class="uzel${hotove.includes(u.klic) ? ' hotovy' : ''}" data-klic="${u.klic}">
+      <rect x="${x}" y="24" width="${s}" height="62"/>
+      <text class="ikona" x="${x + s / 2}" y="56">${u.ikona}</text>
+      <text class="nazev" x="${x + s / 2}" y="76">${u.nazev}</text></g>`;
+  }).join('');
+  const spoje = poradi.slice(1).map((_, i) => {
+    const x1 = 8 + i * (s + mezera) + s;
+    return `<line class="spoj" x1="${x1}" y1="55" x2="${x1 + mezera}" y2="55"/>`;
+  }).join('');
+  return `<svg class="schema" viewBox="0 0 ${8 + poradi.length * (s + mezera)} 100">${spoje}${uzly}</svg>`;
+}
+function cesta() {
+  const p = $('plocha');
+  const poradi = Uloha.zamichej([...CESTA]);
+  const hotove = [];
+  let chyboval = false, hotovo = false;
+
+  p.innerHTML = `<div class="zadani uloha-text">Klepej na prvky <b>v pořadí, kterým elektřina putuje</b>
+    od výroby k zásuvce.</div>`;
+  const obal = document.createElement('div');
+  obal.innerHTML = svgSchema(poradi, hotove);
+  p.appendChild(obal);
+  const odezva = odezvaEl();
+  p.appendChild(odezva);
+
+  function napoj() {
+    obal.querySelectorAll('.uzel').forEach(g => g.addEventListener('click', () => {
+      if (hotovo) return;
+      if (g.dataset.klic !== CESTA[hotove.length].klic) {
+        chyboval = true;
+        Uloha.trhni(g);
+        g.classList.add('spatne');
+        setTimeout(() => g.classList.remove('spatne'), 420);
+        odezva.className = 'odezva chyba';
+        odezva.textContent = `Ještě ne – teď je na řadě jiný prvek (${hotove.length + 1}. z ${CESTA.length}).`;
+        return;
+      }
+      hotove.push(g.dataset.klic);
+      const uzel = CESTA.find(u => u.klic === g.dataset.klic);
+      odezva.className = 'odezva ok';
+      odezva.textContent = `${hotove.length}. ${uzel.nazev} – ${uzel.info}`;
+      if (hotove.length === CESTA.length) {
+        hotovo = true;
+        odezva.textContent = '✅ Elektřina došla až do zásuvky!';
+        skore.vyhodnot(!chyboval);
+        setTimeout(novaUloha, Uloha.PRODLEVA + 500);
+      }
+      obal.innerHTML = svgSchema(poradi, hotove);
+      napoj();
+    }));
+  }
+  napoj();
+}
+
+function transformator() {
+  const p = $('plocha');
+  const N1 = Uloha.nahodne([100, 200, 500, 1000]);
+  const k = Uloha.nahodne([2, 4, 5, 10]);
+  const zvysuje = Math.random() < 0.5;
+  const N2 = zvysuje ? N1 * k : N1 / k;
+  const U1 = Uloha.nahodne([230, 400, 500]);
+  const U2 = U1 * N2 / N1;
+  const naNapeti = Math.random() < 0.6;
+  const vysledek = naNapeti ? U2 : N2;
+  const jednotka = naNapeti ? ' V' : ' závitů';
+  const jine = new Set([fmt(naNapeti ? U1 : N1), fmt(vysledek * 2), fmt(vysledek / 2), fmt(U1 * N1 / N2)]);
+  jine.delete(fmt(vysledek));
+
+  p.innerHTML = `<div class="zadani uloha-text">Transformátor má na primární cívce <b>${N1} závitů</b>
+      a je připojen na napětí <b>${U1} V</b>. ${naNapeti
+        ? `Sekundární cívka má <b>${fmt(N2)} závitů</b>. Jaké je napětí na výstupu?`
+        : `Na výstupu naměříme <b>${fmt(U2)} V</b>. Kolik závitů má sekundární cívka?`}</div>
+    <div class="karta"><div class="vzorec">U₁ / U₂ = N₁ / N₂</div></div>`;
+  const odezva = odezvaEl();
+  Uloha.vyber({
+    kam: p, odezva, trida: 'velke',
+    moznosti: Uloha.zamichej([fmt(vysledek), ...[...jine].slice(0, 3)]).map(t => ({ klic: t, popis: t + jednotka })),
+    spravnyKlic: fmt(vysledek),
+    zpravaOk: `✅ Poměr závitů je ${fmt(N2 / N1)}, proto ${fmt(vysledek)}${jednotka} `
+      + `– transformátor napětí ${zvysuje ? 'zvyšuje' : 'snižuje'}.`,
+    zpravaChyba: 'Napětí a počet závitů jsou ve stejném poměru: kolikrát víc závitů, tolikrát vyšší napětí.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+function svgSinus() {
+  const body = [];
+  for (let x = 0; x <= 320; x += 4) body.push(`${x + 20} ${(70 - 45 * Math.sin(x / 320 * 4 * Math.PI)).toFixed(1)}`);
+  return `<svg class="vlna" viewBox="0 0 360 140">
+    <line class="osa" x1="20" y1="70" x2="350" y2="70"/>
+    <path class="krivka" d="M${body.join(' L')}"/>
+  </svg>`;
+}
+const VLASTNOSTI = [
+  { q: 'Čím se střídavý proud liší od stejnosměrného?', a: 'periodicky mění směr i velikost', b: ['teče jen jedním směrem', 'nemá napětí', 'nepotřebuje vodič'] },
+  { q: 'Jakou frekvenci má síť v Evropě?', a: '50 Hz', b: ['10 Hz', '230 Hz', '1 000 Hz'] },
+  { q: 'Jaké napětí je v domácí zásuvce?', a: '230 V', b: ['12 V', '400 V', '1 000 V'] },
+  { q: 'Co znamená, že proud má frekvenci 50 Hz?', a: 'padesátkrát za sekundu proběhne celá perioda', b: ['napětí je 50 V', 'teče 50 sekund', 'má 50 vodičů'] },
+  { q: 'Proč se na dálku přenáší elektřina vysokým napětím?', a: 'při vyšším napětí teče menší proud a jsou menší ztráty ve vedení', b: ['aby svítily izolátory', 'kvůli rychlosti přenosu', 'aby se zahřálo vedení'] },
+  { q: 'Co vyrábí střídavý proud v elektrárně?', a: 'generátor (alternátor) roztáčený turbínou', b: ['transformátor', 'baterie', 'usměrňovač'] },
+  { q: 'K čemu slouží usměrňovač?', a: 'mění střídavý proud na stejnosměrný, například v nabíječce', b: ['zvyšuje napětí', 'měří proud', 'chladí vedení'] },
+  { q: 'Proč transformátor nefunguje na stejnosměrný proud?', a: 'potřebuje měnící se magnetické pole, které vzniká jen u střídavého proudu', b: ['nemá dost závitů', 'je příliš studený', 'stejnosměrný proud neexistuje'] },
+];
+function vlastnosti() {
+  const p = $('plocha');
+  const u = Uloha.nahodne(VLASTNOSTI);
+  p.innerHTML = `<div class="zadani uloha-text">${u.q}</div>
+    <div class="karta">${svgSinus()}</div>`;
+  const odezva = odezvaEl();
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([u.a, ...u.b]).map(t => ({ klic: t, popis: t })),
+    spravnyKlic: u.a,
+    zpravaOk: `✅ ${u.a}`,
+    zpravaChyba: 'Střídavý proud má tvar sinusovky – mění směr padesátkrát za sekundu.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+const BEZPECNOST = [
+  { q: 'Co uděláš, když najdeš poškozený kabel spotřebiče?', a: 'spotřebič nepoužiješ a řekneš to dospělému', b: ['přelepíš izolepou a používáš dál', 'jen se nedotýkáš prasklého místa', 'zapojíš přes prodlužku'] },
+  { q: 'Proč se nesmí do zásuvky strkat kovové předměty?', a: 'hrozí úraz elektrickým proudem a zkrat', b: ['zásuvka se ušpiní', 'sníží se napětí', 'nic se neděje'] },
+  { q: 'K čemu slouží jistič?', a: 'odpojí obvod při zkratu nebo přetížení', b: ['zvyšuje napětí', 'měří spotřebu', 'chladí vodiče'] },
+  { q: 'K čemu slouží proudový chránič?', a: 'vypne obvod, když proud uniká mimo obvod, například přes člověka', b: ['zvyšuje výkon', 'nahrazuje uzemnění', 'chrání jen spotřebič'] },
+  { q: 'Co je uzemnění?', a: 'vodivé spojení kostry spotřebiče se zemí kvůli bezpečnosti', b: ['zakopání kabelu', 'druh pojistky', 'snížení frekvence'] },
+  { q: 'Jak se chováš při bouřce venku?', a: 'nezdržuješ se pod osamělým stromem a jdeš do budovy nebo auta', b: ['schováš se pod nejvyšší strom', 'zůstaneš na kopci', 'zvedneš deštník výš'] },
+  { q: 'Co znamená vypnutí hlavního vypínače před opravou?', a: 'obvod je bez napětí a práce je bezpečnější', b: ['spotřebiče poběží dál', 'zvýší se napětí', 'nic to nemění'] },
+  { q: 'Kdo smí zasahovat do elektroinstalace v bytě?', a: 'jen osoba s odpovídající elektrotechnickou kvalifikací', b: ['kdokoli s šroubovákem', 'jen majitel bytu', 'nikdo, ani elektrikář'] },
+];
+function bezpecnost() {
+  const p = $('plocha');
+  const u = Uloha.nahodne(BEZPECNOST);
+  p.innerHTML = `<div class="zadani uloha-text">${u.q}</div>`;
+  const odezva = odezvaEl();
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([u.a, ...u.b]).map(t => ({ klic: t, popis: t })),
+    spravnyKlic: u.a,
+    zpravaOk: `✅ ${u.a}`,
+    zpravaChyba: 'U elektřiny platí: při pochybnostech nejdřív vypnout a přivolat odborníka.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+const REZIMY = { cesta, transformator, vlastnosti, bezpecnost };
+function novaUloha() { REZIMY[rezim](); }
+
+document.querySelectorAll('#rezimy button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#rezimy button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  rezim = b.dataset.rezim;
+  novaUloha();
+}));
+$('btnDalsi').addEventListener('click', novaUloha);
+novaUloha();
+</script>
+</body>
+</html>

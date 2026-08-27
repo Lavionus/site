@@ -6,6 +6,7 @@
 <title>🗼 Hanojské věže</title>
 <link rel="stylesheet" href="../common.css">
 <script src="../theme.js"></script>
+<script src="../rekord.js" defer></script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box;user-select:none}
 body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:20px;display:flex;flex-direction:column;align-items:center}
@@ -37,6 +38,7 @@ select{background:var(--border);border:1px solid var(--border-strong);border-rad
   <button class="btn" id="newBtn">🔄 Nová hra</button>
   <button class="btn btn-sec" id="solveBtn">🤖 Vyřešit</button>
   <span class="info">Tahy: <b id="moves">0</b> / min <b id="minMoves">0</b></span>
+  <span id="rekordBox"></span>
 </div>
 <div class="towers" id="towers"></div>
 <div class="msg" id="msg"></div>
@@ -44,9 +46,16 @@ select{background:var(--border);border:1px solid var(--border-strong);border-rad
 const $=id=>document.getElementById(id);
 const COLORS=['#e74c3c','#e67e22','#f1c40f','#27ae60','#1abc9c','#3498db','#9b59b6'];
 let towers,n,selected,moves,solving;
+let rek=null;const rekordy={};   // rekord se drží zvlášť pro každý počet disků
+function nastavRekord(){
+  if(typeof Rekord==='undefined')return;
+  if(!rekordy[n])rekordy[n]=Rekord.sleduj('webapp_hra_hanoi_'+n,
+    {vyssiLepsi:false,popisek:'Nejméně tahů ('+n+' disků)',format:v=>v+' tahů'});
+  rek=rekordy[n];rek.prvek($('rekordBox'));
+}
 function init(){
   n=+$('count').value;towers=[[],[],[]];for(let i=n;i>=1;i--)towers[0].push(i);
-  selected=null;moves=0;solving=false;$('msg').textContent='';
+  selected=null;moves=0;solving=false;$('msg').textContent='';nastavRekord();
   $('minMoves').textContent=Math.pow(2,n)-1;render();
 }
 function render(){
@@ -70,7 +79,14 @@ function click(ti){
   }
   render();
 }
-function checkWin(){if(towers[2].length===n)$('msg').textContent=`🎉 Hotovo na ${moves} tahů!`+(moves===Math.pow(2,n)-1?' (optimální! 🏆)':'');}
+function checkWin(){
+  if(towers[2].length!==n)return;
+  const opt=Math.pow(2,n)-1;
+  let zprava=`🎉 Hotovo na ${moves} tahů!`+(moves===opt?' (optimální! 🏆)':` (optimum je ${opt})`);
+  // řešení puštěné tlačítkem není hráčův výkon, do rekordu se nepočítá
+  if(!solving&&rek&&rek.zapis(moves))zprava=`🏆 Nový rekord: ${moves} tahů!`+(moves===opt?' A rovnou optimum!':'');
+  $('msg').textContent=zprava;
+}
 $('solveBtn').onclick=async()=>{
   init();solving=true;const seq=[];
   (function solve(k,from,to,via){if(k===0)return;solve(k-1,from,via,to);seq.push([from,to]);solve(k-1,via,to,from);})(n,0,2,1);
@@ -78,7 +94,7 @@ $('solveBtn').onclick=async()=>{
   solving=false;checkWin();
 };
 $('newBtn').onclick=init;$('count').onchange=init;
-init();
+window.addEventListener('DOMContentLoaded',init);
 </script>
 </body>
 </html>

@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Data, informace a kódování</title>
+  <link rel="stylesheet" href="../common.css">
+  <link rel="stylesheet" href="../vyuka.css">
+  <script src="../theme.js"></script>
+  <script src="../rec.js"></script>
+  <script src="../uloha.js"></script>
+  <style>
+    .obrazek-sit { width: min(280px, 70vw); }
+    .obrazek-sit .pixel { fill: var(--bg-control); stroke: var(--border); stroke-width: 1; }
+    .obrazek-sit .pixel.plny { fill: var(--accent); }
+    .obrazek-sit .pixel.klikaci { cursor: pointer; }
+    .obrazek-sit .pixel.spravne { fill: var(--ok); }
+    .kod { font-family: 'Courier New', monospace; font-size: 1.05rem; line-height: 1.7; letter-spacing: 0.1em; }
+    .kod b { color: var(--accent); }
+    .cislo-velke { font-size: clamp(2rem, 8vw, 3rem); font-weight: 700; font-variant-numeric: tabular-nums; }
+    .binarne { font-family: 'Courier New', monospace; font-size: clamp(1.6rem, 6vw, 2.4rem); font-weight: 700; letter-spacing: 0.2em; }
+    .tabulka-radu { display: flex; gap: 10px; justify-content: center; color: var(--text-faint); font-size: 0.82rem; }
+  </style>
+</head>
+<body>
+  <h1>🔣 Data, informace a kódování</h1>
+  <p class="podtitul">Pro 4.–5. ročník: obrázek zapsaný čísly, dvojkové zapisování a tajné zprávy.</p>
+
+  <div class="rezimy" id="rezimy">
+    <button data-rezim="obrazekKod" class="active">🖼️ Obrázek podle kódu</button>
+    <button data-rezim="binarne">1️⃣ Dvojkově</button>
+    <button data-rezim="sifra">🔐 Tajná zpráva</button>
+  </div>
+
+  <div class="plocha" id="plocha"></div>
+
+  <div class="ovladani">
+    <button class="hlavni" id="btnDalsi">Přeskočit →</button>
+    <span class="skore" id="skore"></span>
+  </div>
+
+  <p class="napoveda">
+    Počítač si všechno pamatuje jako <b>čísla</b> – obrázek jako mřížku bodů,
+    text jako čísla písmen. Ve dvojkové soustavě má každá pozice hodnotu 8, 4, 2, 1.
+  </p>
+
+<script>
+const $ = id => document.getElementById(id);
+const skore = Uloha.skore('nodus_inf4_data', $('skore'));
+let rezim = 'obrazekKod';
+
+const MRIZKA = 5, PIXEL = 44, OKRAJ = 6;
+
+function svgObrazek(plne, klikaci) {
+  let body = '';
+  for (let r = 0; r < MRIZKA; r++) {
+    for (let s = 0; s < MRIZKA; s++) {
+      const tridy = ['pixel'];
+      if (plne.has(`${s},${r}`)) tridy.push('plny');
+      if (klikaci) tridy.push('klikaci');
+      body += `<rect class="${tridy.join(' ')}" data-k="${s},${r}"
+        x="${OKRAJ + s * PIXEL}" y="${OKRAJ + r * PIXEL}" width="${PIXEL - 2}" height="${PIXEL - 2}"/>`;
+    }
+  }
+  return `<svg class="obrazek-sit" viewBox="0 0 ${OKRAJ * 2 + MRIZKA * PIXEL} ${OKRAJ * 2 + MRIZKA * PIXEL}">${body}</svg>`;
+}
+
+/* náhodný obrázek jako množina souřadnic + jeho zápis po řádcích (1 = plné) */
+function nahodnyObrazek() {
+  const plne = new Set();
+  for (let r = 0; r < MRIZKA; r++) {
+    for (let s = 0; s < MRIZKA; s++) {
+      if (Math.random() < 0.45) plne.add(`${s},${r}`);
+    }
+  }
+  return plne;
+}
+function kodObrazku(plne) {
+  const radky = [];
+  for (let r = 0; r < MRIZKA; r++) {
+    let radek = '';
+    for (let s = 0; s < MRIZKA; s++) radek += plne.has(`${s},${r}`) ? '1' : '0';
+    radky.push(radek);
+  }
+  return radky;
+}
+
+/* ---- Obrázek podle kódu ------------------------------------------------------ */
+function obrazekKod() {
+  const p = $('plocha');
+  const plne = nahodnyObrazek();
+  const kod = kodObrazku(plne);
+
+  p.innerHTML = `<div class="zadani">Nakresli obrázek podle kódu – <b>1</b> znamená vybarvit,
+      <b>0</b> nechat prázdné.</div>
+    <div class="kod">${kod.map(r => r.split('').map(z => z === '1' ? '<b>1</b>' : '0').join(' ')).join('<br>')}</div>
+    ${svgObrazek(new Set(), true)}`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  p.appendChild(odezva);
+
+  const svg = p.querySelector('svg');
+  const vybrane = new Set();
+  let chyboval = false, hotovo = false;
+
+  svg.querySelectorAll('.pixel').forEach(px => {
+    px.addEventListener('click', () => {
+      if (hotovo) return;
+      const k = px.dataset.k;
+      if (!plne.has(k)) {
+        chyboval = true;
+        Uloha.trhni(svg);
+        odezva.className = 'odezva chyba';
+        odezva.textContent = 'Tenhle bod má podle kódu zůstat prázdný.';
+        return;
+      }
+      px.classList.add('plny');
+      vybrane.add(k);
+      odezva.className = 'odezva';
+      odezva.textContent = `Vybarveno ${vybrane.size} z ${plne.size} bodů.`;
+      if (vybrane.size === plne.size) {
+        hotovo = true;
+        svg.querySelectorAll('.pixel.plny').forEach(x => x.classList.add('spravne'));
+        odezva.className = 'odezva ok';
+        odezva.textContent = '✅ Obrázek podle kódu je hotový!';
+        skore.vyhodnot(!chyboval);
+        setTimeout(novaUloha, Uloha.PRODLEVA + 400);
+      }
+    });
+  });
+}
+
+/* ---- Dvojkově ----------------------------------------------------------------- */
+function binarne() {
+  const p = $('plocha');
+  const zDvojkove = Math.random() < 0.5;
+  const cislo = Uloha.nahodneCislo(1, 15);
+  const bin = cislo.toString(2).padStart(4, '0');
+
+  if (zDvojkove) {
+    p.innerHTML = `<div class="zadani">Jaké číslo je zapsané dvojkově?</div>
+      <div class="karta"><div class="binarne">${bin}</div></div>
+      <div class="tabulka-radu"><span>8</span><span>4</span><span>2</span><span>1</span></div>`;
+  } else {
+    p.innerHTML = `<div class="zadani">Jak se toto číslo zapíše dvojkově?</div>
+      <div class="karta"><div class="cislo-velke">${cislo}</div></div>
+      <div class="tabulka-radu"><span>8</span><span>4</span><span>2</span><span>1</span></div>`;
+  }
+
+  const jine = new Set();
+  let pokusu1 = 0;
+  while (jine.size < 3 && pokusu1++ < 200) {
+    const k = Uloha.nahodneCislo(1, 15);
+    if (k !== cislo) jine.add(k);
+  }
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva, trida: 'velke',
+    moznosti: Uloha.zamichej([cislo, ...jine]).map(v => ({
+      klic: String(v),
+      popis: zDvojkove ? String(v) : v.toString(2).padStart(4, '0'),
+    })),
+    spravnyKlic: String(cislo),
+    zpravaOk: `✅ ${bin} = ${bin.split('').map((z, i) => z === '1' ? [8, 4, 2, 1][i] : 0)
+      .filter(Boolean).join(' + ')} = ${cislo}`,
+    zpravaChyba: 'Sečti hodnoty pozic, kde je jednička: 8, 4, 2, 1.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- Tajná zpráva -------------------------------------------------------------- */
+const SLOVA = ['KOLO', 'PES', 'DUM', 'RYBA', 'SKOLA', 'MAPA', 'LES', 'KNIHA', 'AUTO', 'VODA'];
+
+function sifra() {
+  const p = $('plocha');
+  const slovo = Uloha.nahodne(SLOVA);
+  const abeceda = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+  const kod = [...slovo].map(z => abeceda.indexOf(z) + 1).join(' – ');
+  const jine = Uloha.zamichej(SLOVA.filter(x => x !== slovo)).slice(0, 3);
+
+  p.innerHTML = `<div class="zadani">Písmena jsou zapsaná čísly podle pořadí v abecedě
+      (A = 1, B = 2, C = 3 …). Jaké slovo je zakódované?</div>
+    <div class="karta"><div class="binarne">${kod}</div></div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([slovo, ...jine]).map(t => ({ klic: t, popis: t })),
+    spravnyKlic: slovo,
+    zpravaOk: `✅ ${kod} = ${slovo}`,
+    zpravaChyba: 'Spočítej si písmena v abecedě od A – první číslo je první písmeno.',
+    poSpravne: skore.vyhodnot,
+    dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+const REZIMY = { obrazekKod, binarne, sifra };
+function novaUloha() { REZIMY[rezim](); }
+
+document.querySelectorAll('#rezimy button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#rezimy button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  rezim = b.dataset.rezim;
+  novaUloha();
+}));
+$('btnDalsi').addEventListener('click', novaUloha);
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === 'Enter') { e.preventDefault(); novaUloha(); }
+});
+novaUloha();
+</script>
+</body>
+</html>

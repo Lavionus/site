@@ -1,0 +1,416 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Porovnávání a řady čísel</title>
+  <link rel="stylesheet" href="../common.css">
+  <script src="../theme.js"></script>
+  <script src="../rec.js"></script>
+  <script src="../uloha.js"></script>
+  <style>
+    body { background-color: var(--bg-deep); padding: 20px clamp(12px, 3vw, 36px); min-height: 100vh; }
+    h1 { font-size: 1.35rem; margin-bottom: 3px; }
+    .podtitul { color: var(--text-muted); font-size: 0.86rem; margin-bottom: 14px; }
+
+    .lista { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 10px; align-items: center; }
+    .lista button {
+      background: var(--bg-control); border: 1px solid var(--border-strong); color: var(--text-muted);
+      border-radius: 6px; padding: 8px 14px; font-size: 0.86rem; font-family: inherit; cursor: pointer;
+    }
+    .lista button.active { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+    .lista .oddelovac { color: var(--text-faint); font-size: 0.8rem; margin: 0 4px; }
+
+    .plocha {
+      background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius);
+      max-width: 900px; padding: 26px 22px; text-align: center; min-height: 330px;
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 20px;
+    }
+    .zadani { color: var(--text-muted); font-size: 1rem; }
+
+    /* Porovnávání */
+    .dvojice { display: flex; align-items: center; justify-content: center; gap: clamp(14px, 5vw, 40px); }
+    .cislo {
+      font-size: clamp(3rem, 12vw, 5.5rem); font-weight: 700; line-height: 1;
+      font-variant-numeric: tabular-nums; min-width: 1.6em;
+    }
+    .cislo .tecky {
+      display: flex; flex-wrap: wrap; gap: 3px; justify-content: center;
+      max-width: 170px; margin: 10px auto 0 auto;
+    }
+    .cislo .tecky i {
+      width: 13px; height: 13px; border-radius: 50%; background: var(--accent); opacity: 0.85;
+    }
+    .znamenko {
+      font-size: clamp(2.4rem, 9vw, 4rem); font-weight: 700; color: var(--text-faint);
+      min-width: 1.4em;
+    }
+    .znamenko.doplneno { color: var(--accent); }
+
+    /* Číselná řada */
+    .rada { display: flex; flex-wrap: wrap; gap: 10px; justify-content: center; align-items: center; }
+    .clen {
+      min-width: 74px; padding: 14px 10px; border-radius: 10px;
+      background: var(--bg-elevated); border: 2px solid var(--border);
+      font-size: clamp(1.5rem, 5vw, 2.2rem); font-weight: 700; font-variant-numeric: tabular-nums;
+    }
+    .clen.mezera { border-style: dashed; border-color: var(--accent); color: var(--accent); }
+    .clen.mezera.vyplneno { border-style: solid; background: var(--accent-soft); }
+
+    /* Číselná osa */
+    .osa-obal { width: 100%; max-width: 760px; overflow-x: auto; padding-bottom: 6px; }
+    .osa { display: flex; align-items: flex-start; justify-content: space-between; min-width: 420px; position: relative; }
+    .osa::before {
+      content: ''; position: absolute; left: 0; right: 0; top: 10px; height: 3px;
+      background: var(--border-strong); border-radius: 2px;
+    }
+    .bod {
+      position: relative; display: flex; flex-direction: column; align-items: center; gap: 5px;
+      background: none; border: none; font-family: inherit; cursor: pointer; padding: 0 2px;
+    }
+    .bod .znacka {
+      width: 3px; height: 22px; background: var(--border-strong); border-radius: 2px; transition: all 0.12s ease;
+    }
+    .bod .popisek { font-size: 0.8rem; color: var(--text-muted); font-variant-numeric: tabular-nums; }
+    .bod:hover .znacka { background: var(--accent); height: 28px; }
+    .bod.sipka .znacka { background: var(--accent); height: 30px; width: 5px; }
+    .bod.sipka .popisek { color: var(--accent); font-weight: 700; }
+    .bod.spravne .znacka { background: var(--ok); height: 30px; width: 5px; }
+    .bod.spravne .popisek { color: var(--ok); font-weight: 700; }
+    .bod.spatne .znacka { background: var(--danger); height: 30px; width: 5px; }
+    .sipka-nahoru { font-size: 1.6rem; color: var(--accent); line-height: 1; }
+
+    /* Odpovědi */
+    .moznosti { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+    .moznosti button {
+      min-width: 92px; padding: 16px 14px; border-radius: 12px;
+      background: var(--bg-elevated); border: 2px solid var(--border); color: var(--text);
+      font-size: clamp(1.6rem, 6vw, 2.3rem); font-weight: 700; font-family: inherit;
+      font-variant-numeric: tabular-nums; cursor: pointer; transition: all 0.15s ease;
+    }
+    .moznosti button:hover:not(:disabled) { border-color: var(--accent); transform: translateY(-3px); }
+    .moznosti button.spravne { background: var(--ok); border-color: var(--ok); color: #fff; }
+    .moznosti button.spatne { background: var(--danger); border-color: var(--danger); color: #fff; }
+    .moznosti button:disabled { cursor: default; }
+
+    .odezva { font-size: 1.05rem; font-weight: 600; min-height: 28px; }
+    .odezva.ok { color: var(--ok); }
+    .odezva.chyba { color: var(--danger); }
+
+    .ovladani { display: flex; gap: 10px; align-items: center; margin-top: 14px; max-width: 900px; flex-wrap: wrap; }
+    .ovladani button {
+      background: var(--bg-control); border: 1px solid var(--border-strong); color: var(--text);
+      border-radius: 6px; padding: 10px 18px; font-size: 0.92rem; font-family: inherit; cursor: pointer;
+    }
+    .ovladani button.hlavni { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+    .ovladani button.hlavni:hover { background: var(--accent-hover); }
+    .skore { margin-left: auto; color: var(--text-muted); font-size: 0.9rem; font-variant-numeric: tabular-nums; }
+    .skore b { color: var(--ok); }
+    .napoveda { max-width: 900px; margin-top: 12px; color: var(--text-faint); font-size: 0.8rem; line-height: 1.5; }
+  </style>
+</head>
+<body>
+  <h1>⚖️ Porovnávání a řady čísel</h1>
+  <p class="podtitul">Pro 1.–2. ročník: co je větší, co menší, jak čísla pokračují a kde leží na číselné ose.</p>
+
+  <div class="lista" id="rezimy">
+    <button data-rezim="porovnani" class="active">⚖️ Porovnej</button>
+    <button data-rezim="rada">🔢 Doplň řadu</button>
+    <button data-rezim="osaCti">📍 Které číslo?</button>
+    <button data-rezim="osaUkaz">🎯 Ukaž číslo</button>
+  </div>
+
+  <div class="lista" id="rozsahy">
+    <span class="oddelovac">Rozsah:</span>
+    <button data-rozsah="10" class="active">do 10</button>
+    <button data-rozsah="20">do 20</button>
+    <button data-rozsah="100">do 100</button>
+  </div>
+
+  <div class="plocha" id="plocha"></div>
+
+  <div class="ovladani">
+    <button class="hlavni" id="btnDalsi">Další →</button>
+    <button id="btnCist" title="Přečíst zadání nahlas">🔊 Přečti</button>
+    <span class="skore" id="skore"></span>
+  </div>
+
+  <p class="napoveda">
+    Znaménko <b>&lt;</b> i <b>&gt;</b> se otevírá k většímu číslu – „hladová pusa“ se vždy natočí k tomu, kde je víc.
+    U malých čísel pomáhají tečky pod číslem: stačí je spočítat.
+  </p>
+
+<script>
+const $ = id => document.getElementById(id);
+const KLIC = 'nodus_m1_porovnavani';
+
+let rezim = 'porovnani';
+let rozsah = 10;
+let spravne = 0, pokusy = 0;
+let cteniZadani = '';
+
+const nahodneCislo = (od, do_) => od + Math.floor(Math.random() * (do_ - od + 1));
+function zamichej(pole) {
+  const p = [...pole];
+  for (let i = p.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [p[i], p[j]] = [p[j], p[i]];
+  }
+  return p;
+}
+
+// čtení nahlas řeší sdílený rec.js – pozná i chybějící hlas v systému
+const precti = (text, rychlost = 0.85) => Rec.mluv(text, { rychlost });
+
+/* ---- Skóre ---------------------------------------------------------------- */
+function nactiSkore() {
+  try { return JSON.parse(localStorage.getItem(KLIC)) || { spravne: 0, pokusy: 0 }; }
+  catch { return { spravne: 0, pokusy: 0 }; }
+}
+function ulozSkore() {
+  try { localStorage.setItem(KLIC, JSON.stringify({ spravne, pokusy })); } catch { /* bez paměti */ }
+}
+function zobrazSkore() { $('skore').innerHTML = `Správně: <b>${spravne}</b> z ${pokusy}`; }
+{ const s = nactiSkore(); spravne = s.spravne; pokusy = s.pokusy; }
+
+function vyhodnot(napoprve) { pokusy++; if (napoprve) spravne++; ulozSkore(); zobrazSkore(); }
+
+/* Tečky pod číslem – názorná opora do 20 */
+function tecky(n) {
+  if (n > 20) return '';
+  return '<div class="tecky">' + '<i></i>'.repeat(n) + '</div>';
+}
+
+/* Společné vyhodnocení: chyba zaklepe a nechá zkoušet dál,
+   správná odpověď zezelená a po chvilce se sama načte další úloha. */
+function odpoved(stav, tlacitko, jeSpravne, odezvaEl, volby = {}) {
+  return Uloha.odpoved({
+    prvek: tlacitko,
+    spravne: jeSpravne,
+    stav,
+    odezva: odezvaEl,
+    zpravaOk: volby.zpravaOk,
+    poSpravne: napoprve => {
+      vyhodnot(napoprve);
+      if (volby.doplnit) volby.doplnit();
+      if (volby.hlaska) precti(volby.hlaska);
+    },
+    dalsi: novaUloha,
+  });
+}
+
+/* ---- Režim: porovnávání --------------------------------------------------- */
+function porovnani() {
+  const p = $('plocha');
+  const a = nahodneCislo(0, rozsah);
+  // ve čtvrtině úloh záměrně stejná čísla, aby mělo smysl i znaménko =
+  const b = Math.random() < 0.25 ? a : nahodneCislo(0, rozsah);
+  const spravnyZnak = a < b ? '<' : a > b ? '>' : '=';
+  cteniZadani = `Co je větší? ${a} nebo ${b}?`;
+
+  p.innerHTML = `<div class="zadani">Doplň znaménko mezi čísla.</div>
+    <div class="dvojice">
+      <div class="cislo">${a}${tecky(a)}</div>
+      <div class="znamenko" id="znamenko">?</div>
+      <div class="cislo">${b}${tecky(b)}</div>
+    </div>`;
+
+  const m = document.createElement('div');
+  m.className = 'moznosti';
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  const stav = { chyboval: false, hotovo: false };
+  const slovy = spravnyZnak === '=' ? `${a} se rovná ${b}`
+    : spravnyZnak === '<' ? `${a} je menší než ${b}` : `${a} je větší než ${b}`;
+  ['<', '=', '>'].forEach(znak => {
+    const btn = document.createElement('button');
+    btn.textContent = znak;
+    btn.addEventListener('click', () => odpoved(stav, btn, znak === spravnyZnak, odezva, {
+      zpravaOk: '✅ ' + slovy,
+      hlaska: slovy,
+      doplnit: () => {
+        const zn = $('znamenko');
+        zn.textContent = spravnyZnak;
+        zn.classList.add('doplneno');
+      },
+    }));
+    m.appendChild(btn);
+  });
+  p.append(m, odezva);
+}
+
+/* ---- Režim: číselná řada -------------------------------------------------- */
+function rada() {
+  const p = $('plocha');
+  const kroky = rozsah === 10 ? [1, 1, 2] : rozsah === 20 ? [1, 2, 2, 5] : [5, 10, 10, 2];
+  const krok = kroky[Math.floor(Math.random() * kroky.length)];
+  const dolu = Math.random() < 0.3;
+  const delka = 5;
+  const rozpeti = krok * (delka - 1);
+  const start = dolu
+    ? nahodneCislo(rozpeti, rozsah)
+    : nahodneCislo(0, Math.max(0, rozsah - rozpeti));
+  const cleny = [];
+  for (let i = 0; i < delka; i++) cleny.push(dolu ? start - i * krok : start + i * krok);
+  const mezera = nahodneCislo(1, delka - 1);
+  const hledane = cleny[mezera];
+  cteniZadani = 'Které číslo chybí v řadě?';
+
+  p.innerHTML = `<div class="zadani">Které číslo v řadě chybí?</div>`;
+  const r = document.createElement('div');
+  r.className = 'rada';
+  cleny.forEach((c, i) => {
+    const d = document.createElement('div');
+    d.className = 'clen' + (i === mezera ? ' mezera' : '');
+    d.textContent = i === mezera ? '?' : c;
+    r.appendChild(d);
+  });
+
+  const jine = new Set();
+  let pokusu1 = 0;
+  while (jine.size < 3 && pokusu1++ < 200) {
+    const kandidat = hledane + (Math.random() < 0.5 ? -1 : 1) * nahodneCislo(1, Math.max(2, krok + 1));
+    if (kandidat !== hledane && kandidat >= 0) jine.add(kandidat);
+  }
+  const m = document.createElement('div');
+  m.className = 'moznosti';
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  const stav = { chyboval: false, hotovo: false };
+  zamichej([hledane, ...jine]).forEach(v => {
+    const btn = document.createElement('button');
+    btn.textContent = v;
+    btn.addEventListener('click', () => odpoved(stav, btn, v === hledane, odezva, {
+      zpravaOk: `✅ Správně – řada jde ${dolu ? 'dolů' : 'nahoru'} po ${krok}.`,
+      doplnit: () => {
+        const cil = r.children[mezera];
+        cil.textContent = hledane;
+        cil.classList.add('vyplneno');
+      },
+    }));
+    m.appendChild(btn);
+  });
+  p.append(r, m, odezva);
+}
+
+/* ---- Číselná osa ---------------------------------------------------------- */
+function osaKrok() { return rozsah === 100 ? 10 : 1; }
+
+function postavOsu(naKlik) {
+  const krok = osaKrok();
+  const obal = document.createElement('div');
+  obal.className = 'osa-obal';
+  const osa = document.createElement('div');
+  osa.className = 'osa';
+  for (let v = 0; v <= rozsah; v += krok) {
+    const b = document.createElement('button');
+    b.className = 'bod';
+    b.dataset.hodnota = v;
+    b.innerHTML = `<span class="znacka"></span><span class="popisek">${v}</span>`;
+    if (naKlik) b.addEventListener('click', () => naKlik(v, b, osa));
+    else b.disabled = true;
+    osa.appendChild(b);
+  }
+  obal.appendChild(osa);
+  return { obal, osa };
+}
+
+/* Které číslo ukazuje šipka */
+function osaCti() {
+  const p = $('plocha');
+  const krok = osaKrok();
+  const hledane = nahodneCislo(0, rozsah / krok) * krok;
+  cteniZadani = 'Které číslo ukazuje šipka?';
+  p.innerHTML = `<div class="zadani">Které číslo ukazuje šipka?</div>`;
+  const { obal, osa } = postavOsu(null);
+  const cil = [...osa.children].find(b => Number(b.dataset.hodnota) === hledane);
+  cil.classList.add('sipka');
+  cil.insertAdjacentHTML('afterbegin', '<span class="sipka-nahoru">▼</span>');
+  cil.querySelector('.popisek').textContent = '?';
+
+  const jine = new Set();
+  let pokusu2 = 0;
+  while (jine.size < 3 && pokusu2++ < 200) {
+    const k = hledane + (Math.random() < 0.5 ? -1 : 1) * nahodneCislo(1, 3) * krok;
+    if (k !== hledane && k >= 0 && k <= rozsah) jine.add(k);
+  }
+  const m = document.createElement('div');
+  m.className = 'moznosti';
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  const stav = { chyboval: false, hotovo: false };
+  zamichej([hledane, ...jine]).forEach(v => {
+    const btn = document.createElement('button');
+    btn.textContent = v;
+    btn.addEventListener('click', () => odpoved(stav, btn, v === hledane, odezva, {
+      doplnit: () => { cil.querySelector('.popisek').textContent = hledane; },
+    }));
+    m.appendChild(btn);
+  });
+  p.append(obal, m, odezva);
+}
+
+/* Ukaž zadané číslo na ose */
+function osaUkaz() {
+  const p = $('plocha');
+  const krok = osaKrok();
+  const hledane = nahodneCislo(0, rozsah / krok) * krok;
+  cteniZadani = `Ukaž na ose číslo ${hledane}.`;
+  p.innerHTML = `<div class="zadani">Klepni na ose na číslo:</div>
+                 <div class="cislo">${hledane}</div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  const stav = { chyboval: false, hotovo: false };
+  const { obal, osa } = postavOsu((v, b) => {
+    if (stav.hotovo) return;
+    if (v !== hledane) {
+      stav.chyboval = true;
+      Uloha.trhni(b);
+      b.classList.add('spatne');
+      setTimeout(() => b.classList.remove('spatne'), 420);
+      odezva.className = 'odezva chyba';
+      odezva.textContent = v < hledane
+        ? `Tady je ${v} – hledané číslo je víc doprava.`
+        : `Tady je ${v} – hledané číslo je víc doleva.`;
+      return;
+    }
+    stav.hotovo = true;
+    b.classList.add('spravne');
+    odezva.className = 'odezva ok';
+    odezva.textContent = '✅ Správně!';
+    vyhodnot(!stav.chyboval);
+    setTimeout(novaUloha, Uloha.PRODLEVA);
+  });
+  p.append(obal, odezva);
+}
+
+/* ---- Ovládání ------------------------------------------------------------- */
+const REZIMY = { porovnani, rada, osaCti, osaUkaz };
+function novaUloha() { REZIMY[rezim](); }
+
+document.querySelectorAll('#rezimy button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#rezimy button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  rezim = b.dataset.rezim;
+  novaUloha();
+}));
+document.querySelectorAll('#rozsahy button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#rozsahy button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  rozsah = Number(b.dataset.rozsah);
+  novaUloha();
+}));
+$('btnDalsi').addEventListener('click', novaUloha);
+$('btnCist').addEventListener('click', () => precti(cteniZadani));
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === 'Enter') { e.preventDefault(); novaUloha(); }
+});
+
+Rec.hlidejTlacitko($('btnCist'));
+Rec.poznamkaOHlasu(document.querySelector('.napoveda').parentNode);
+
+zobrazSkore();
+novaUloha();
+</script>
+</body>
+</html>
