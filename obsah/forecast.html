@@ -809,6 +809,22 @@
       will-change: opacity;
     }
 
+    /* Tmavý podklad bez API klíče: běžné OSM dlaždice ztmavené filtrem.
+       Filtr sedí na kontejneru vrstvy, radarových odrazů nad ním se nedotkne. */
+    .dark-tiles {
+      /* Neutrálně šedý podklad (jako bývalá CARTO dark) – barevný zůstane jen radar */
+      filter: invert(1) grayscale(1) brightness(0.9) contrast(1.15);
+    }
+
+    /* Pod tmavým podkladem ať neprosvítá světlé pozadí mapy, než dojedou dlaždice */
+    .radar-map.dark-base,
+    .kiosk-radar { background: #10141a; }
+
+    /* Tlačítko Obnovit v režimu „probíhá stahování" – kliknutím se načítání zruší */
+    .load-btn.cancel {
+      background-color: #c62828;
+    }
+
     .opacity-slider {
       width: 100px;
       height: 4px;
@@ -4187,6 +4203,7 @@
       activeRadarLayer = 'A';
       radarLayerUrls.A = radarLayerUrls.B = null;
       radarViewKey = '';
+      radarCancelRequested = false;
 
       radarMap = L.map('radar-map', { minZoom: 4 });
 
@@ -4211,14 +4228,18 @@
           attribution: '© OpenStreetMap contributors',
           maxZoom: 18
         }),
-        'Tmavá mapa': L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', {
-          attribution: '© OpenStreetMap contributors, © CARTO',
-          maxZoom: 19
+        // Tmavý podklad bez API klíče (CARTO dark_all už klíč vyžaduje):
+        // standardní OSM dlaždice ztmavené CSS filtrem vrstvy – viz .dark-tiles
+        'Tmavá mapa': L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          attribution: '© OpenStreetMap contributors',
+          maxZoom: 18,
+          className: 'dark-tiles'
         })
       };
 
       radarBaseLayers[getSavedRadarBaseLayer()].addTo(radarMap);
       L.control.layers(radarBaseLayers).addTo(radarMap);
+      syncRadarMapBackground(getSavedRadarBaseLayer());
 
       // Slider pro zoom – zrcadlí a ovládá zoom mapy vedle vestavěných +/- tlačítek
       const zoomSlider = document.getElementById('radarZoom');
@@ -4241,6 +4262,7 @@
         try { localStorage.setItem('radarBaseLayer', e.name); } catch (err) {}
         const sel = document.getElementById('radarBaseLayerSelect');
         if (sel) sel.value = e.name;
+        syncRadarMapBackground(e.name);
         syncZoomSlider(); // maxZoom se liší podklad od podkladu
       });
 
@@ -4260,10 +4282,20 @@
       const refreshBtn = document.getElementById('radarRefresh');
       if (refreshBtn && !refreshBtn.dataset.bound) {
         refreshBtn.dataset.bound = '1';
-        refreshBtn.addEventListener('click', refreshRadarNow);
+        // Jedno tlačítko dvojí role: během stahování ruší, jinak spouští nový pokus
+        refreshBtn.addEventListener('click', () => {
+          if (radarIndexLoading || radarPreloading) cancelRadarLoading();
+          else refreshRadarNow();
+        });
       }
 
       loadRadarData();
+    }
+
+    /** Pod tmavým podkladem ať mapa nesvítí bílou, dokud se dlaždice nenačtou. */
+    function syncRadarMapBackground(name) {
+      const el = document.getElementById('radar-map');
+      if (el) el.classList.toggle('dark-base', name === 'Tmavá mapa');
     }
 
     /** Uložená výchozí podkladová mapa radaru (s pojistkou na neznámou hodnotu). */
@@ -4279,6 +4311,7 @@
         if (radarMap.hasLayer(l)) radarMap.removeLayer(l);
       });
       radarBaseLayers[name].addTo(radarMap);
+      syncRadarMapBackground(name);
       const zoomSlider = document.getElementById('radarZoom');
       if (zoomSlider) {
         zoomSlider.min = radarMap.getMinZoom();
@@ -4327,6 +4360,10 @@
     let radarAutoRetryTimer = null;
     let radarIndexRetryTimer = null;
     let radarIndexLoading = false;   // právě se stahuje seznam snímků
+    let radarCancelRequested = false;        // uživatel načítání zrušil – sám se už nic nespouští
+    let radarCancelEpoch = 0;                // každé zrušení utne běžící smyčky, které si epochu pamatují
+    let radarIndexController = null;         // AbortController právě běžícího fetche seznamu
+    const radarActiveTileLoads = new Set();  // přerušovače rozpracovaných dlaždic
 
     const radarSleep = ms => new Promise(r => setTimeout(r, ms));
 
@@ -4383,19 +4420,25 @@
         if (radarTileCache.has(url)) { resolve(true); return; }
         const img = new Image();
         let done = false;
+        let timer = null;
         const finish = ok => {
           if (done) return;
           done = true;
           clearTimeout(timer);
+          radarActiveTileLoads.delete(abort);
           img.onload = img.onerror = null;
           if (ok) radarTileCache.set(url, img);
           resolve(ok);
         };
-        const timer = setTimeout(() => {
+        // Přerušení – po timeoutu i na povel (tlačítko Zrušit); ať dlaždice nedrží spojení
+        const abort = () => {
+          if (done) return;
           img.onload = img.onerror = null;
-          img.src = '';              // přeruš stahování, ať nedrží spojení
+          img.src = '';
           finish(false);
-        }, RADAR_TILE_TIMEOUT_MS);
+        };
+        radarActiveTileLoads.add(abort);
+        timer = setTimeout(abort, RADAR_TILE_TIMEOUT_MS);
         img.onload = () => finish(true);
         img.onerror = () => finish(false);
         img.src = url;
@@ -4404,6 +4447,7 @@
 
     async function loadRadarTileWithRetry(url, token) {
       for (let attempt = 1; attempt <= RADAR_TILE_TRIES; attempt++) {
+        if (token !== radarPreloadRun) return false;   // zrušeno / nahrazeno novým průchodem
         if (await loadRadarTile(url)) return true;
         if (token !== radarPreloadRun) return false;
         if (attempt < RADAR_TILE_TRIES) await radarSleep(400 * attempt);
@@ -4451,7 +4495,7 @@
 
     /** Dotáhne chybějící snímky. Běží vždy jen jeden průchod. */
     async function ensureRadarPreload() {
-      if (radarPreloading || !radarMap || !radarData.length || document.hidden) return;
+      if (radarPreloading || radarCancelRequested || !radarMap || !radarData.length || document.hidden) return;
       radarPreloading = true;
       radarPreloadPending = false;
       updateRadarProgress();   // hned hlas „stahuji", ne až po prvním snímku
@@ -4473,7 +4517,8 @@
       } finally {
         radarPreloading = false;
         updateRadarProgress();
-        if (radarPreloadPending) { radarPreloadPending = false; ensureRadarPreload(); }
+        if (radarCancelRequested) radarPreloadPending = false;   // zrušeno – další pokus jen na povel
+        else if (radarPreloadPending) { radarPreloadPending = false; ensureRadarPreload(); }
         else scheduleRadarAutoRetry();
       }
     }
@@ -4481,8 +4526,30 @@
     /** Zruší běžící průchod a spustí nový (po změně výřezu nebo seznamu snímků). */
     function restartRadarPreload() {
       radarPreloadRun++;
+      if (radarCancelRequested) return;   // po zrušení se nerozjede ani při posunu mapy
       if (radarPreloading) { radarPreloadPending = true; return; }
       ensureRadarPreload();
+    }
+
+    /** Zruší vše rozpracované (seznam snímků i dlaždice) – typicky když se stahování zasekne.
+        Nic se pak nespouští samo; nový pokus začne až kliknutím na tlačítko. */
+    function cancelRadarLoading() {
+      if (!radarIndexLoading && !radarPreloading) return;
+      radarCancelRequested = true;
+      radarCancelEpoch++;              // utne opakování ve fetchRadarIndex
+      radarPreloadRun++;               // běžící průchod už nic nezapíše
+      radarPreloadPending = false;
+      clearTimeout(radarAutoRetryTimer);
+      clearTimeout(radarIndexRetryTimer);
+      if (radarIndexController) { try { radarIndexController.abort(); } catch (e) {} }
+      // Rozpracované dlaždice utni hned – jinak by se čekalo až na jejich timeout
+      Array.from(radarActiveTileLoads).forEach(abort => abort());
+      radarActiveTileLoads.clear();
+      radarFrameStatus.forEach((status, path) => {
+        if (status === 'loading') radarFrameStatus.set(path, 'idle');
+      });
+      refreshRadarTimelineStatuses();
+      updateRadarProgress();
     }
 
     /** Znovu zkusí snímky, které se nepodařilo stáhnout. */
@@ -4559,6 +4626,7 @@
         Co je už v cache, se znovu nestahuje – jen nové a dřív neúspěšné snímky. */
     async function refreshRadarNow() {
       if (radarIndexLoading || radarPreloading) return;
+      radarCancelRequested = false;   // čerstvý pokus na výslovný povel uživatele
       clearTimeout(radarAutoRetryTimer);
       clearTimeout(radarIndexRetryTimer);
       radarAutoRetries = 0;
@@ -4569,15 +4637,22 @@
       await loadRadarData();
     }
 
-    /** Popisek a dostupnost tlačítka Obnovit podle toho, co se zrovna děje. */
+    /** Popisek tlačítka podle toho, co se zrovna děje. Během stahování slouží jako „Zrušit". */
     function updateRadarRefreshButton(ready, total, failed) {
       const btn = document.getElementById('radarRefresh');
       if (!btn) return;
       const busy = radarIndexLoading || radarPreloading;
-      btn.disabled = busy;
-      btn.textContent = busy ? `⏳ Stahuji… ${ready}/${total || '?'}`
-                        : failed ? `🔄 Dotáhnout chybějící (${failed})`
+      btn.disabled = false;
+      btn.classList.toggle('cancel', busy);
+      if (busy) {
+        btn.textContent = `⛔ Zrušit načítání (${ready}/${total || '?'})`;
+        btn.title = 'Přeruší stahování snímků – dalším kliknutím se spustí čerstvý pokus';
+      } else {
+        btn.textContent = failed ? `🔄 Dotáhnout chybějící (${failed})`
+                        : radarCancelRequested ? '🔄 Zkusit znovu'
                         : '🔄 Obnovit snímky';
+        btn.title = 'Načte nejnovější seznam snímků a dotáhne, co chybí';
+      }
     }
 
     /** Stavový řádek pod mapou – vždy je vidět, co se zrovna děje. */
@@ -4588,9 +4663,16 @@
 
       updateRadarRefreshButton(ready, total, failed);
 
-      if (!total) return;
+      if (!total) {
+        if (radarCancelRequested && !radarIndexLoading) {
+          updateRadarStatus('error', 'Načítání zrušeno – nový pokus spustíte tlačítkem');
+        }
+        return;
+      }
       if (radarAnimation) {
         updateRadarStatus('loading', `Přehrávám smyčku… ${ready}/${total} snímků`);
+      } else if (radarCancelRequested) {
+        updateRadarStatus('error', `Načítání zrušeno · načteno ${ready}/${total} snímků`);
       } else if (radarPreloading) {
         updateRadarStatus('loading', `Stahuji snímky… ${ready}/${total}`);
       } else if (failed) {
@@ -4605,8 +4687,11 @@
     /** Seznam snímků z API – s timeoutem a opakováním, ať se nezasekne na slabé lince. */
     async function fetchRadarIndex() {
       let lastError = null;
+      const epoch = radarCancelEpoch;   // zrušení během čekání pozná podle změny epochy
       for (let attempt = 1; attempt <= RADAR_INDEX_TRIES; attempt++) {
+        if (epoch !== radarCancelEpoch) break;
         const controller = new AbortController();
+        radarIndexController = controller;   // ať jde fetch přerušit tlačítkem Zrušit
         const timer = setTimeout(() => controller.abort(), RADAR_INDEX_TIMEOUT_MS);
         try {
           const response = await fetch('https://api.rainviewer.com/public/weather-maps.json', {
@@ -4617,12 +4702,14 @@
           return await response.json();
         } catch (error) {
           lastError = error;
+          if (epoch !== radarCancelEpoch) break;   // zrušil uživatel – neopakuj
           if (attempt < RADAR_INDEX_TRIES) {
             updateRadarStatus('loading', `Načítám seznam snímků… (pokus ${attempt + 1}/${RADAR_INDEX_TRIES})`);
             await radarSleep(800 * attempt);
           }
         } finally {
           clearTimeout(timer);
+          if (radarIndexController === controller) radarIndexController = null;
         }
       }
       throw lastError || new Error('Nedostupné API');
@@ -4637,6 +4724,7 @@
 
     async function loadRadarData({ silent = false } = {}) {
       if (radarIndexLoading) return;
+      if (silent && radarCancelRequested) return;   // po zrušení jen na výslovný povel
       radarIndexLoading = true;
       updateRadarRefreshButton(radarReadyIndexes().length, radarData.length, 0);
       if (!silent || !radarData.length) updateRadarStatus('loading', 'Načítám seznam snímků…');
@@ -4648,6 +4736,11 @@
           throw new Error('Neplatná odpověď z API');
         }
       } catch (error) {
+        if (radarCancelRequested) {   // zrušil uživatel – žádná chybová hláška ani auto-opakování
+          radarIndexLoading = false;
+          updateRadarProgress();
+          return;
+        }
         console.error('Chyba při načítání radarových dat:', error);
         if (radarData.length) {
           // Starý seznam pořád platí – necháme uživatele koukat na to, co už má
@@ -4817,6 +4910,7 @@
       const ready = radarReadyIndexes();
       if (ready.length < 2) {
         showNotification(`Snímky se ještě stahují (${ready.length}/${radarData.length})…`, 'info');
+        radarCancelRequested = false;   // výslovný pokyn uživatele – pokračuj ve stahování
         ensureRadarPreload();
         return;
       }
@@ -6499,7 +6593,10 @@
           scrollWheelZoom: false, doubleClickZoom: false, boxZoom: false,
           keyboard: false, touchZoom: false
         });
-        L.tileLayer('https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png', { maxZoom: 12 }).addTo(kioskMap);
+        // Tmavý podklad bez API klíče – ztmavené OSM dlaždice (viz .dark-tiles)
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+          maxZoom: 12, className: 'dark-tiles'
+        }).addTo(kioskMap);
       }
       const center = currentLocationData ? [currentLocationData.lat, currentLocationData.lon] : [49.8, 15.5];
       kioskMap.setView(center, 7);

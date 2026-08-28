@@ -1,119 +1,407 @@
 <!DOCTYPE html>
 <html lang="cs">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>✏️ Rozbor věty</title>
-<link rel="stylesheet" href="../common.css">
-<script src="../theme.js"></script>
-<script src="../podpis.js" defer></script>
-<style>
-*{margin:0;padding:0;box-sizing:border-box}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:20px}
-.container{max-width:620px;margin:0 auto}
-h1{font-size:1.6rem;margin-bottom:18px;font-weight:600;text-align:center}
-.card{background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;padding:24px;margin-bottom:16px}
-.scorebar{display:flex;justify-content:space-around;margin-bottom:18px}
-.scorebar .v{font-size:1.5rem;font-weight:700;color:var(--accent)}.scorebar .l{font-size:.72rem;color:var(--text-faint)}
-.sentence{font-size:1.4rem;line-height:2;text-align:center;margin:20px 0}
-.sentence .hl{color:#f5c542;font-weight:700;border-bottom:2px solid #f5c542}
-.opts{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
-.opt{background:var(--bg-hover);border:1px solid var(--border-strong);border-radius:6px;padding:12px;color:var(--text);cursor:pointer;font-size:.95rem;text-align:center}
-.opt:hover{border-color:var(--accent)}
-.opt.correct{border-color:#27ae60;background:#1f3a2a}
-.opt.wrong{border-color:#e74c3c;background:#3a1f1f}
-.btn{background:var(--accent);color:#fff;border:none;padding:12px 28px;border-radius:6px;cursor:pointer;font-weight:600;display:block;margin:0 auto}
-.btn:hover{background:var(--accent)}
-.results{text-align:center;display:none}
-.big{font-size:2.4rem;font-weight:700;color:var(--accent)}
-.hint{text-align:center;color:var(--text-faint);font-size:.8rem;margin-top:14px}
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Rozbor věty – větné členy</title>
+  <link rel="stylesheet" href="../common.css">
+  <link rel="stylesheet" href="../vyuka.css">
+  <script src="../theme.js"></script>
+  <script src="../podpis.js" defer></script>
+  <script src="../uloha.js"></script>
+  <style>
+    /* Každý větný člen má vlastní barvu – v rozboru celé věty je pak vidět
+       stavba věty na první pohled, ne jako seznam pojmů. */
+    :root {
+      --cl-podmet: #4c9be8;
+      --cl-prisudek: #e0765d;
+      --cl-predmet: #5cb98b;
+      --cl-privlastek: #c084e0;
+      --cl-purceni: #d9a441;
+    }
+    /* Na bílém papíři mají barvy nahoře kontrast jen kolem 2,5 : 1 – barevný
+       rozbor věty by se v něm nedal přečíst, proto tmavší sada. */
+    :root[data-theme="light"] {
+      --cl-podmet: #1f6bb5;
+      --cl-prisudek: #b23c22;
+      --cl-predmet: #1f7a52;
+      --cl-privlastek: #7b3fa0;
+      --cl-purceni: #8a6209;
+    }
+    .veta-uloha .hl { color: var(--zvyraz-text); border-bottom: 3px solid var(--zvyraz-text); }
+    .veta-uloha .urceno {
+      border-bottom: 3px solid currentColor; border-radius: 4px; padding: 0 2px;
+    }
+    .cl-podmet { color: var(--cl-podmet); }
+    .cl-prisudek { color: var(--cl-prisudek); }
+    .cl-predmet { color: var(--cl-predmet); }
+    .cl-privlastek { color: var(--cl-privlastek); }
+    .cl-purceni { color: var(--cl-purceni); }
 
-/* světlý režim: dorovnání kontrastu textu */
-:root[data-theme="light"] .hl { color: #8e7226; }
-</style>
+    .pomucka .skupina { flex: 1 1 165px; }
+    .pomucka .skupina .hlava { display: flex; align-items: center; gap: 7px; margin-bottom: 4px; }
+    .pomucka .skupina .ikona { font-size: 1.3rem; line-height: 1; }
+    .pomucka .skupina .nazev { font-size: 0.88rem; font-weight: 700; }
+    .pomucka .skupina .otazka { color: var(--text-muted); font-size: 0.8rem; }
+    .pomucka .skupina.sviti { box-shadow: 0 0 0 2px var(--accent-soft); }
+    .odznak-clenu {
+      display: inline-flex; align-items: center; gap: 5px; border-radius: 999px;
+      border: 1px solid currentColor; padding: 1px 10px; font-size: 0.8rem; font-weight: 600;
+    }
+  </style>
 </head>
 <body>
-<div class="container">
   <h1>✏️ Rozbor věty – větné členy</h1>
-  <div class="card" id="gameCard">
-    <div class="scorebar">
-      <div><div class="v" id="score">0</div><div class="l">Správně</div></div>
-      <div><div class="v" id="idx">0/0</div><div class="l">Otázka</div></div>
-    </div>
-    <div class="sentence" id="sentence"></div>
-    <div style="text-align:center;color:var(--text-faint);font-size:.85rem;margin-bottom:10px">Jaký větný člen je zvýrazněné slovo?</div>
-    <div class="opts" id="opts"></div>
+  <p class="podtitul">Pro 6.–8. ročník: každý větný člen se pozná podle otázky, kterou se na něj ptáme.</p>
+
+  <div class="rezimy" id="rezimy">
+    <button data-rezim="urci" class="active">🔎 Urči větný člen</button>
+    <button data-rezim="najdi">🖱️ Najdi ve větě</button>
+    <button data-rezim="rozbor">🧩 Rozbor celé věty</button>
   </div>
-  <div class="card results" id="resultsCard">
-    <div class="big" id="finalScore"></div>
-    <p style="color:var(--text-faint);margin-top:8px" id="finalDetail"></p>
-    <button class="btn" id="againBtn" style="margin-top:16px">🔄 Znovu</button>
+
+  <div class="plocha" id="plocha"></div>
+
+  <div class="ovladani">
+    <button class="hlavni" id="btnDalsi">Přeskočit →</button>
+    <button id="btnNapoveda">💡 Nápověda</button>
+    <span class="serie" id="serie"></span>
+    <span class="skore" id="skore"></span>
   </div>
-  <div class="hint">Základní větné členy: podmět, přísudek, předmět, příslovečné určení, přívlastek.</div>
-</div>
+
+  <div class="pomucka" id="pomucka"></div>
+
+  <p class="napoveda">
+    Postup: nejdřív najdi <b>přísudek</b> (co se děje), pak se ho zeptej <i>kdo, co?</i> a máš
+    <b>podmět</b>. Na ostatní členy se ptáš od slova, ke kterému patří – <b>předmět</b> pádovou
+    otázkou od slovesa, <b>přívlastek</b> otázkou <i>jaký, který, čí</i> od podstatného jména.
+    Klávesy: <kbd>H</kbd> nápověda · <kbd>Enter</kbd> další.
+  </p>
+
 <script>
-const $=id=>document.getElementById(id);
-const CLENY=['podmět','přísudek','předmět','přívlastek','příslovečné určení'];
-const VETY=[
-{s:['Malý','chlapec','běžel','rychle','k','domu.'],hl:1,c:'podmět'},
-{s:['Malý','chlapec','běžel','rychle','k','domu.'],hl:2,c:'přísudek'},
-{s:['Malý','chlapec','běžel','rychle','k','domu.'],hl:3,c:'příslovečné určení'},
-{s:['Malý','chlapec','běžel','rychle','k','domu.'],hl:0,c:'přívlastek'},
-{s:['Babička','pekla','voňavý','koláč.'],hl:0,c:'podmět'},
-{s:['Babička','pekla','voňavý','koláč.'],hl:1,c:'přísudek'},
-{s:['Babička','pekla','voňavý','koláč.'],hl:3,c:'předmět'},
-{s:['Babička','pekla','voňavý','koláč.'],hl:2,c:'přívlastek'},
-{s:['Žáci','psali','test','ve','třídě.'],hl:0,c:'podmět'},
-{s:['Žáci','psali','test','ve','třídě.'],hl:1,c:'přísudek'},
-{s:['Žáci','psali','test','ve','třídě.'],hl:2,c:'předmět'},
-{s:['Žáci','psali','test','ve','třídě.'],hl:4,c:'příslovečné určení'},
-{s:['Nový','učitel','vysvětloval','látku','trpělivě.'],hl:1,c:'podmět'},
-{s:['Nový','učitel','vysvětloval','látku','trpělivě.'],hl:2,c:'přísudek'},
-{s:['Nový','učitel','vysvětloval','látku','trpělivě.'],hl:3,c:'předmět'},
-{s:['Nový','učitel','vysvětloval','látku','trpělivě.'],hl:4,c:'příslovečné určení'},
-{s:['Rychlý','vlak','dorazil','včera','na','nádraží.'],hl:1,c:'podmět'},
-{s:['Rychlý','vlak','dorazil','včera','na','nádraží.'],hl:2,c:'přísudek'},
-{s:['Rychlý','vlak','dorazil','včera','na','nádraží.'],hl:3,c:'příslovečné určení'},
-{s:['Sousedova','kočka','chytila','myš','na','zahradě.'],hl:1,c:'podmět'},
-{s:['Sousedova','kočka','chytila','myš','na','zahradě.'],hl:3,c:'předmět'},
-{s:['Sousedova','kočka','chytila','myš','na','zahradě.'],hl:0,c:'přívlastek'},
+const $ = id => document.getElementById(id);
+
+const CLENY = {
+  podmet:     { n: 'podmět', o: 'kdo? co?', ikona: '🙋', popis: 'o kom nebo o čem se mluví' },
+  prisudek:   { n: 'přísudek', o: 'co dělá? co se děje?', ikona: '🏃', popis: 'co podmět dělá' },
+  predmet:    { n: 'předmět', o: 'pádové otázky mimo 1. a 5.', ikona: '🎯', popis: 'doplňuje sloveso' },
+  privlastek: { n: 'přívlastek', o: 'jaký? který? čí?', ikona: '🎨', popis: 'blíže určuje jméno' },
+  purceni:    { n: 'příslovečné určení', o: 'kde? kdy? jak? proč?', ikona: '📍', popis: 'okolnosti děje' },
+};
+const KLICE = Object.keys(CLENY);
+
+/* Věta a role jejích slov: index slova → [větný člen, otázka, kterou se na něj ptáme].
+   Slova bez role (předložky, zvratná se) se neurčují. */
+const VETY = [
+  { s: ['Malý', 'chlapec', 'běžel', 'rychle', 'k', 'domu.'], role: {
+    0: ['privlastek', 'jaký chlapec?'], 1: ['podmet', 'kdo běžel?'],
+    2: ['prisudek', 'co chlapec dělal?'], 3: ['purceni', 'běžel jak?'] } },
+  { s: ['Babička', 'pekla', 'voňavý', 'koláč.'], role: {
+    0: ['podmet', 'kdo pekl?'], 1: ['prisudek', 'co babička dělala?'],
+    2: ['privlastek', 'jaký koláč?'], 3: ['predmet', 'pekla co?'] } },
+  { s: ['Žáci', 'psali', 'test', 've', 'třídě.'], role: {
+    0: ['podmet', 'kdo psal?'], 1: ['prisudek', 'co žáci dělali?'],
+    2: ['predmet', 'psali co?'], 4: ['purceni', 'psali kde?'] } },
+  { s: ['Nový', 'učitel', 'vysvětloval', 'látku', 'trpělivě.'], role: {
+    0: ['privlastek', 'jaký učitel?'], 1: ['podmet', 'kdo vysvětloval?'],
+    2: ['prisudek', 'co učitel dělal?'], 3: ['predmet', 'vysvětloval co?'],
+    4: ['purceni', 'vysvětloval jak?'] } },
+  { s: ['Rychlý', 'vlak', 'dorazil', 'včera', 'na', 'nádraží.'], role: {
+    0: ['privlastek', 'jaký vlak?'], 1: ['podmet', 'co dorazilo?'],
+    2: ['prisudek', 'co vlak dělal?'], 3: ['purceni', 'dorazil kdy?'] } },
+  { s: ['Sousedova', 'kočka', 'chytila', 'myš', 'na', 'zahradě.'], role: {
+    0: ['privlastek', 'čí kočka?'], 1: ['podmet', 'kdo chytil?'],
+    2: ['prisudek', 'co kočka dělala?'], 3: ['predmet', 'chytila koho, co?'] } },
+  { s: ['Moje', 'sestra', 'čte', 'zajímavou', 'knihu.'], role: {
+    0: ['privlastek', 'čí sestra?'], 1: ['podmet', 'kdo čte?'],
+    2: ['prisudek', 'co sestra dělá?'], 3: ['privlastek', 'jakou knihu?'],
+    4: ['predmet', 'čte co?'] } },
+  { s: ['Zítra', 'napíšeme', 'důležitý', 'test.'], role: {
+    0: ['purceni', 'napíšeme kdy?'], 1: ['prisudek', 'co uděláme?'],
+    2: ['privlastek', 'jaký test?'], 3: ['predmet', 'napíšeme co?'] } },
+  { s: ['Děti', 'stavěly', 'venku', 'sněhuláka.'], role: {
+    0: ['podmet', 'kdo stavěl?'], 1: ['prisudek', 'co děti dělaly?'],
+    2: ['purceni', 'stavěly kde?'], 3: ['predmet', 'stavěly co?'] } },
 ];
-let order,idx,score;
-function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
-function start(){
-  order=shuffle([...VETY]);idx=0;score=0;
-  $('resultsCard').style.display='none';$('gameCard').style.display='block';
-  $('score').textContent=0;
-  next();
+
+/* Rozbalené na jednotlivé otázky – pro režimy, které řeší jedno slovo. */
+const ULOHY = VETY.flatMap(v => Object.entries(v.role)
+  .map(([i, [klic, otazka]]) => ({ veta: v, i: +i, klic, otazka })));
+
+const skore = Uloha.skore('nodus_vetny_rozbor', $('skore'));
+let rezim = 'urci';
+let uloha = null, posledni = null, serie = 0, napovedaVidet = false;
+
+/* ---- přehled větných členů pod úlohou -------------------------------------- */
+const pomuckaDiv = $('pomucka');
+KLICE.forEach(k => {
+  const c = CLENY[k];
+  const el = document.createElement('div');
+  el.className = 'skupina';
+  el.dataset.clen = k;
+  el.innerHTML = `<div class="hlava"><span class="ikona">${c.ikona}</span>
+      <span class="nazev cl-${k}">${c.n}</span></div>
+    <div class="otazka">${c.o}</div>
+    <p class="popis">${c.popis}</p>`;
+  pomuckaDiv.appendChild(el);
+});
+function rozsvitClen(k) {
+  pomuckaDiv.querySelectorAll('.skupina').forEach(el => el.classList.toggle('sviti', el.dataset.clen === k));
 }
-function next(){
-  if(idx>=order.length){finish();return;}
-  const item=order[idx];
-  $('idx').textContent=`${idx+1}/${order.length}`;
-  $('sentence').innerHTML=item.s.map((w,i)=>i===item.hl?`<span class="hl">${w}</span>`:w).join(' ');
-  const opts=shuffle([item.c,...shuffle(CLENY.filter(c=>c!==item.c)).slice(0,3)]);
-  const box=$('opts');box.innerHTML='';
-  opts.forEach(o=>{
-    const b=document.createElement('button');
-    b.className='opt';b.textContent=o;
-    b.onclick=()=>answer(o,item.c,b,box);
-    box.appendChild(b);
+
+/* ---- společné díly --------------------------------------------------------- */
+function odezvaEl() { const d = document.createElement('div'); d.className = 'odezva'; return d; }
+
+function pravidloEl(u) {
+  const c = CLENY[u.klic];
+  const el = document.createElement('div');
+  el.className = 'pravidlo ok';
+  el.innerHTML = `<span class="znak">${c.ikona}</span><div>
+      Ptáme se <b>${u.otazka}</b> →
+      <span class="odznak-clenu cl-${u.klic}">${u.veta.s[u.i].replace(/[.,]$/, '')}</span>
+      je <span class="vysledek">${c.n}</span>.
+      <div style="margin-top:4px;font-size:0.86rem">${c.n[0].toUpperCase() + c.n.slice(1)}
+        se ptáme otázkou <b>${c.o}</b> – ${c.popis}.</div>
+    </div>`;
+  return el;
+}
+
+function hotovo(p, klic, napoprve) {
+  skore.vyhodnot(napoprve);
+  serie = napoprve ? serie + 1 : 0;
+  $('serie').textContent = serie >= 3 ? '🔥 série ' + serie : '';
+  rozsvitClen(klic);
+  const tip = p.querySelector('.pravidlo.tip');
+  if (tip) tip.remove();
+}
+
+const PRODLEVA = napoprve => (napoprve ? 2200 : 3400);
+
+function vyberUlohu() {
+  let u;
+  do { u = Uloha.nahodne(ULOHY); } while (u === posledni);
+  posledni = u;
+  return u;
+}
+
+/* Věta jako řada prvků; `zvyrazni` podtrhne jedno slovo, `barvy` obarví určená. */
+function postavVetu(veta, volby = {}) {
+  const box = document.createElement('div');
+  box.className = 'veta-uloha';
+  veta.s.forEach((slovo, i) => {
+    if (i) box.appendChild(document.createTextNode(' '));
+    const el = document.createElement('span');
+    el.textContent = slovo;
+    el.dataset.i = i;
+    if (i === volby.zvyrazni) el.className = 'hl';
+    box.appendChild(el);
   });
+  return box;
 }
-function answer(chosen,correct,btn,box){
-  [...box.children].forEach(b=>b.disabled=true);
-  if(chosen===correct){btn.classList.add('correct');score++;$('score').textContent=score;}
-  else{btn.classList.add('wrong');[...box.children].find(b=>b.textContent===correct).classList.add('correct');}
-  setTimeout(()=>{idx++;next();},800);
+
+/* ---- Urči větný člen ------------------------------------------------------- */
+function urci() {
+  const p = $('plocha');
+  const u = uloha = vyberUlohu();
+  p.innerHTML = '<div class="zadani">Jaký větný člen je zvýrazněné slovo?</div>';
+  const karta = document.createElement('div');
+  karta.className = 'karta';
+  karta.appendChild(postavVetu(u.veta, { zvyrazni: u.i }));
+  p.appendChild(karta);
+
+  const odezva = odezvaEl();
+  const jine = Uloha.zamichej(KLICE.filter(k => k !== u.klic)).slice(0, 3);
+  Uloha.vyber({
+    kam: p, odezva,
+    moznosti: Uloha.zamichej([u.klic, ...jine])
+      .map(k => ({ klic: k, ikona: CLENY[k].ikona, popis: CLENY[k].n })),
+    spravnyKlic: u.klic,
+    zpravaOk: '✅ Správně!',
+    zpravaChyba: 'Zkus si na slovo položit otázku od přísudku – která sedí?',
+    poSpravne: napoprve => {
+      hotovo(p, u.klic, napoprve);
+      p.appendChild(pravidloEl(u));
+    },
+    prodleva: PRODLEVA, dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
 }
-function finish(){
-  $('gameCard').style.display='none';$('resultsCard').style.display='block';
-  $('finalScore').textContent=`${score} / ${order.length}`;
-  const pct=Math.round(score/order.length*100);
-  $('finalDetail').textContent=pct>=80?'🏆 Skvělá znalost větných členů!':pct>=50?'👍 Dobré, ale zkus to ještě jednou.':'💪 Zopakuj si podmět, přísudek, předmět, přívlastek a příslovečné určení.';
+
+/* ---- Najdi ve větě --------------------------------------------------------- */
+/* Opačný směr než „urči“: dítě musí člen ve větě samo vyhledat. */
+function najdi() {
+  const p = $('plocha');
+  const u = uloha = vyberUlohu();
+  const c = CLENY[u.klic];
+  p.innerHTML = `<div class="zadani">Klepni ve větě na <b class="cl-${u.klic}">${c.n}</b>
+      <span style="color:var(--text-faint)">(${c.o})</span></div>`;
+  const karta = document.createElement('div');
+  karta.className = 'karta';
+  const veta = postavVetu(u.veta);
+  karta.appendChild(veta);
+  p.appendChild(karta);
+
+  const odezva = odezvaEl();
+  const stav = { chyboval: false, hotovo: false };
+  /* Stejný člen může být ve větě víckrát (dva přívlastky) – uznáme kterýkoli. */
+  const cile = Object.entries(u.veta.role).filter(([, r]) => r[0] === u.klic).map(([i]) => +i);
+
+  veta.querySelectorAll('span').forEach(el => {
+    el.classList.add('slovo-klik');
+    el.addEventListener('click', () => {
+      if (stav.hotovo) return;
+      const i = +el.dataset.i;
+      if (!cile.includes(i)) {
+        stav.chyboval = true;
+        Uloha.trhni(el);
+        const je = u.veta.role[i];
+        odezva.className = 'odezva chyba';
+        odezva.textContent = je
+          ? `To je ${CLENY[je[0]].n} – ptáme se ${je[1]}`
+          : 'Tohle slovo samo o sobě větným členem není.';
+        return;
+      }
+      stav.hotovo = true;
+      el.classList.add('spravne');
+      odezva.className = 'odezva ok';
+      odezva.textContent = '✅ Správně!';
+      hotovo(p, u.klic, !stav.chyboval);
+      p.appendChild(pravidloEl({ ...u, i }));
+      setTimeout(novaUloha, PRODLEVA(!stav.chyboval));
+    });
+  });
+  p.appendChild(odezva);
 }
-$('againBtn').onclick=start;
-start();
+
+/* ---- Rozbor celé věty ------------------------------------------------------ */
+/* Jedna věta se rozebere celá – teprve tady je vidět, jak do sebe členy zapadají. */
+function rozbor() {
+  const p = $('plocha');
+  let v;
+  do { v = Uloha.nahodne(VETY); } while (v === posledni);
+  posledni = v;
+  const poradi = Object.keys(v.role).map(Number);
+  let na = 0, chyboval = false;
+  uloha = null;
+
+  p.innerHTML = '<div class="zadani" id="zadaniRozbor"></div>';
+  const karta = document.createElement('div');
+  karta.className = 'karta';
+  const veta = postavVetu(v);
+  karta.appendChild(veta);
+  p.appendChild(karta);
+  const odezva = odezvaEl();
+
+  const mrizka = document.createElement('div');
+  mrizka.className = 'moznosti';
+  KLICE.forEach(k => {
+    const b = document.createElement('button');
+    b.dataset.klic = k;
+    b.innerHTML = `<span class="ikona">${CLENY[k].ikona}</span><span>${CLENY[k].n}</span>`;
+    b.addEventListener('click', () => odpovez(k, b));
+    mrizka.appendChild(b);
+  });
+  p.append(mrizka, odezva);
+  zeptejSe();
+
+  function zeptejSe() {
+    if (na >= poradi.length) return dokonceno();
+    const i = poradi[na];
+    veta.querySelectorAll('span').forEach(el => el.classList.toggle('hl',
+      +el.dataset.i === i && !el.classList.contains('urceno')));
+    $('zadaniRozbor').innerHTML = `Slovo <b>${na + 1}</b> z ${poradi.length}:
+      jaký větný člen je zvýrazněné slovo?`;
+  }
+
+  function odpovez(k, b) {
+    const i = poradi[na];
+    const [spravny, otazka] = v.role[i];
+    if (k !== spravny) {
+      chyboval = true;
+      Uloha.trhni(b);
+      b.classList.add('spatne');
+      setTimeout(() => b.classList.remove('spatne'), 420);
+      odezva.className = 'odezva chyba';
+      odezva.textContent = 'Ještě ne – zkus jinou otázku.';
+      return;
+    }
+    const el = veta.querySelector(`span[data-i="${i}"]`);
+    el.classList.remove('hl');
+    el.classList.add('urceno', 'cl-' + spravny);
+    el.title = CLENY[spravny].n + ' – ' + otazka;
+    odezva.className = 'odezva ok';
+    odezva.textContent = `✅ ${otazka} → ${CLENY[spravny].n}`;
+    rozsvitClen(spravny);
+    na++;
+    zeptejSe();
+  }
+
+  function dokonceno() {
+    skore.vyhodnot(!chyboval);
+    serie = chyboval ? 0 : serie + 1;
+    $('serie').textContent = serie >= 3 ? '🔥 série ' + serie : '';
+    $('zadaniRozbor').textContent = '🎉 Věta je rozebraná!';
+    mrizka.querySelectorAll('button').forEach(b => { b.disabled = true; });
+    const shrnuti = document.createElement('div');
+    shrnuti.className = 'pravidlo ok';
+    shrnuti.innerHTML = '<span class="znak">🧩</span><div>'
+      + poradi.map(i => {
+        const [k, o] = v.role[i];
+        return `<div style="margin-bottom:3px"><span class="odznak-clenu cl-${k}">${
+          v.s[i].replace(/[.,]$/, '')}</span> — ${CLENY[k].n}, ptáme se <i>${o}</i></div>`;
+      }).join('') + '</div>';
+    p.appendChild(shrnuti);
+    setTimeout(novaUloha, 4500);
+  }
+}
+
+/* ---- nápověda -------------------------------------------------------------- */
+function napoveda() {
+  if (napovedaVidet) return;
+  const p = $('plocha');
+  let html;
+  if (rezim === 'rozbor') {
+    html = 'Začni od <b>přísudku</b> – to je slovo, které říká, co se děje. '
+      + 'Od něj se pak ptáš na všechny ostatní členy.';
+  } else if (!uloha) {
+    return;
+  } else if (rezim === 'najdi') {
+    html = `Hledáš <b>${CLENY[uloha.klic].n}</b> – projdi větu slovo po slovu a na každé si zkus
+      položit otázku <b>${CLENY[uloha.klic].o}</b>`;
+  } else {
+    html = `Na tohle slovo se ve větě ptáme otázkou <b>${uloha.otazka}</b>
+      Který větný člen na takovou otázku odpovídá?`;
+  }
+  const el = document.createElement('div');
+  el.className = 'pravidlo tip';
+  el.innerHTML = `<span class="znak">🔎</span><div>${html}</div>`;
+  p.appendChild(el);
+  napovedaVidet = true;
+}
+
+/* ---- ovládání -------------------------------------------------------------- */
+const REZIMY = { urci, najdi, rozbor };
+function novaUloha() {
+  napovedaVidet = false;
+  rozsvitClen(null);
+  REZIMY[rezim]();
+}
+
+document.querySelectorAll('#rezimy button').forEach(b => b.addEventListener('click', () => {
+  document.querySelectorAll('#rezimy button').forEach(x => x.classList.remove('active'));
+  b.classList.add('active');
+  rezim = b.dataset.rezim;
+  posledni = null;
+  novaUloha();
+}));
+$('btnDalsi').addEventListener('click', novaUloha);
+$('btnNapoveda').addEventListener('click', napoveda);
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' || e.key === 'ArrowRight') { e.preventDefault(); novaUloha(); return; }
+  if (e.key === 'h' || e.key === 'H') napoveda();
+});
+
+novaUloha();
 </script>
 </body>
 </html>

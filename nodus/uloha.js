@@ -13,6 +13,11 @@ const Uloha = (function () {
   const PRODLEVA = 900;      // ms mezi správnou odpovědí a další otázkou
   const BLIK = 420;          // ms, po které svítí červená u chybné odpovědi
 
+  function pauza(prodleva, napoprve) {
+    if (typeof prodleva === 'function') return prodleva(napoprve);
+    return prodleva || PRODLEVA;
+  }
+
   function trhni(prvek) {
     if (!prvek) return;
     prvek.classList.remove('trhni');
@@ -31,6 +36,7 @@ const Uloha = (function () {
        zpravaChyba  – text při chybě
        poSpravne(napoprve) – zavolá se při správné odpovědi
        dalsi        – funkce, která připraví další otázku
+       prodleva     – ms do další otázky, nebo funkce (napoprve) => ms
      }
      Vrací true, když byla odpověď správná. */
   function odpoved(volby) {
@@ -56,7 +62,9 @@ const Uloha = (function () {
       odezva.textContent = volby.zpravaOk || '✅ Správně!';
     }
     if (volby.poSpravne) volby.poSpravne(!stav.chyboval);
-    if (volby.dalsi) setTimeout(volby.dalsi, PRODLEVA);
+    // Stránky s kartičkou „proč“ potřebují delší pauzu než holé ✅ – prodleva
+    // proto smí být i funkce, která ji spočítá podle toho, zda žák chyboval.
+    if (volby.dalsi) setTimeout(volby.dalsi, pauza(volby.prodleva, !stav.chyboval));
     return true;
   }
 
@@ -91,6 +99,7 @@ const Uloha = (function () {
         zpravaChyba: volby.zpravaChyba,
         poSpravne: volby.poSpravne,
         dalsi: volby.dalsi,
+        prodleva: volby.prodleva,
       }));
       m.appendChild(b);
     });

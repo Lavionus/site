@@ -20,11 +20,10 @@
       font-size: 1.1rem; font-weight: 700;
     }
     .abeceda-pas span.mezera { border-color: var(--accent); color: var(--accent); border-style: dashed; }
-    .abeceda-pas span.doplneno { border-color: var(--ok); color: var(--ok); border-style: solid; }
-    .prehled-abecedy {
-      max-width: 900px; margin-top: 12px; color: var(--text-faint); font-size: 0.78rem;
-      letter-spacing: 0.08em; word-spacing: 0.2em;
-    }
+    .abeceda-pas span.doplneno { border-color: var(--ok-text); color: var(--ok-text); border-style: solid; }
+    .pomucka .znaky { gap: 4px; }
+    .pomucka .znak { min-width: 28px; padding: 4px 5px; font-size: 0.86rem; }
+    .pomucka .znak.hledane { background: var(--warn); border-color: var(--warn); color: #1a1a1a; }
   </style>
 </head>
 <body>
@@ -41,14 +40,22 @@
 
   <div class="ovladani">
     <button class="hlavni" id="btnDalsi">Přeskočit →</button>
+    <button id="btnNapoveda">💡 Nápověda</button>
     <span class="skore" id="skore"></span>
+  </div>
+
+  <div class="pomucka">
+    <div class="skupina">
+      <h2>Celá abeceda – při úloze se v ní rozsvítí, kde zrovna jsi</h2>
+      <div class="znaky" id="prehledAbecedy"></div>
+    </div>
   </div>
 
   <p class="napoveda">
     Slova řadíme podle <b>prvního písmene</b>. Když se shoduje, rozhoduje druhé, pak třetí…
     Písmena s háčky a čárkami (á, č, ř, š, ž) mají v abecedě své místo hned za základním písmenem.
+    Klávesy: <kbd>H</kbd> nápověda · <kbd>Enter</kbd> další.
   </p>
-  <div class="prehled-abecedy" id="prehledAbecedy"></div>
 
 <script>
 const $ = id => document.getElementById(id);
@@ -68,7 +75,36 @@ const SLOVA = [
 const skore = Uloha.skore('nodus_cj2_abeceda', $('skore'));
 let rezim = 'chybejici';
 
-$('prehledAbecedy').textContent = ABECEDA.join(' ');
+/* Abeceda jako pás prvků – jednotlivá písmena se dají v úloze rozsvítit,
+   takže dítě vidí, kde v abecedě se právě pohybuje. */
+const pasAbecedy = $('prehledAbecedy');
+ABECEDA.forEach(z => {
+  const el = document.createElement('span');
+  el.className = 'znak';
+  el.dataset.znak = z;
+  el.textContent = z;
+  pasAbecedy.appendChild(el);
+});
+function rozsvitPismena(usek, hledane) {
+  pasAbecedy.querySelectorAll('.znak').forEach(el => {
+    const z = el.dataset.znak;
+    el.classList.toggle('sviti', usek.includes(z) && z !== hledane);
+    el.classList.toggle('hledane', z === hledane);
+  });
+}
+function zhasniAbecedu() {
+  pasAbecedy.querySelectorAll('.znak').forEach(el => el.classList.remove('sviti', 'hledane'));
+}
+
+let napoveda = null;          // co má ukázat tlačítko nápovědy v aktuální úloze
+let napovedaVidet = false;
+
+function tipEl(html) {
+  const el = document.createElement('div');
+  el.className = 'pravidlo tip';
+  el.innerHTML = `<span class="znak">🔎</span><div>${html}</div>`;
+  return el;
+}
 
 /* Klíč pro porovnání slov: písmena s háčky/čárkami se řadí za základní písmeno. */
 function klicRazeni(slovo) {
@@ -101,6 +137,11 @@ function chybejici() {
   const jine = Uloha.zamichej(ABECEDA.filter(z => !usek.includes(z))).slice(0, 3);
   const odezva = document.createElement('div');
   odezva.className = 'odezva';
+  napoveda = () => {
+    rozsvitPismena(usek.filter(z => z !== hledane));
+    return tipEl('V pásu abecedy dole svítí písmena, která v úseku už jsou. '
+      + 'Chybějící písmeno stojí přesně mezi nimi.');
+  };
   Uloha.vyber({
     kam: p, odezva, trida: 'velke',
     moznosti: Uloha.zamichej([hledane, ...jine]).map(z => ({ klic: z, popis: z })),
@@ -112,7 +153,9 @@ function chybejici() {
       const m = pas.querySelector('.mezera');
       m.textContent = hledane;
       m.className = 'doplneno';
+      rozsvitPismena(usek, hledane);
     },
+    prodleva: napoprve => (napoprve ? 1400 : 2400),
     dalsi: novaUloha,
   });
   p.appendChild(odezva);
@@ -126,13 +169,24 @@ function prvni() {
   p.innerHTML = '<div class="zadani">Které slovo by bylo ve slovníku <b>první</b>?</div>';
   const odezva = document.createElement('div');
   odezva.className = 'odezva';
+  const prvniPismena = [...new Set(vyber.map(s => s[0].toUpperCase()))];
+  napoveda = () => {
+    rozsvitPismena(prvniPismena);
+    return tipEl('Stačí porovnat <b>první písmena</b>: '
+      + vyber.map(s => `<b>${s[0]}</b>${s.slice(1)}`).join(', ')
+      + '. V pásu dole svítí, kde v abecedě leží.');
+  };
   Uloha.vyber({
     kam: p, odezva,
     moznosti: vyber.map(s => ({ klic: s, popis: s })),
     spravnyKlic: prvniSlovo,
     zpravaOk: '✅ Správně. Pořadí: ' + poradiSlov(vyber).join(' → '),
     zpravaChyba: 'Porovnej první písmena slov.',
-    poSpravne: skore.vyhodnot,
+    poSpravne: napoprve => {
+      skore.vyhodnot(napoprve);
+      rozsvitPismena(prvniPismena, prvniSlovo[0].toUpperCase());
+    },
+    prodleva: napoprve => (napoprve ? 1600 : 2600),
     dalsi: novaUloha,
   });
   p.appendChild(odezva);
@@ -153,6 +207,12 @@ function serad() {
   odezva.className = 'odezva';
 
   let dalsiIndex = 0, chyboval = false;
+  napoveda = () => {
+    const naRade = spravnePoradi[dalsiIndex];
+    rozsvitPismena([...new Set(vyber.map(x => x[0].toUpperCase()))], naRade[0].toUpperCase());
+    return tipEl(`Další na řadě je slovo od písmene <b>${naRade[0].toUpperCase()}</b> – `
+      + 'v pásu abecedy dole svítí žlutě.');
+  };
   Uloha.zamichej(vyber).forEach(slovo => {
     const b = document.createElement('button');
     b.textContent = slovo;
@@ -188,7 +248,18 @@ function serad() {
 }
 
 const REZIMY = { chybejici, prvni, serad };
-function novaUloha() { REZIMY[rezim](); }
+function novaUloha() {
+  napoveda = null;
+  napovedaVidet = false;
+  zhasniAbecedu();
+  REZIMY[rezim]();
+}
+
+function ukazNapovedu() {
+  if (!napoveda || napovedaVidet) return;
+  $('plocha').appendChild(napoveda());
+  napovedaVidet = true;
+}
 
 document.querySelectorAll('#rezimy button').forEach(b => b.addEventListener('click', () => {
   document.querySelectorAll('#rezimy button').forEach(x => x.classList.remove('active'));
@@ -197,8 +268,10 @@ document.querySelectorAll('#rezimy button').forEach(b => b.addEventListener('cli
   novaUloha();
 }));
 $('btnDalsi').addEventListener('click', novaUloha);
+$('btnNapoveda').addEventListener('click', ukazNapovedu);
 document.addEventListener('keydown', e => {
   if (e.key === 'ArrowRight' || e.key === 'Enter') { e.preventDefault(); novaUloha(); }
+  if (e.key === 'h' || e.key === 'H') ukazNapovedu();
 });
 novaUloha();
 </script>

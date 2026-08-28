@@ -5,7 +5,7 @@
 /* Při větší aktualizaci webu zvyš číslo verze — stará cache se u návštěvníků
    smaže a vše se stáhne čerstvé (jinak SWR ukáže novou verzi až na druhé načtení). */
 const PREFIX = 'nodus-';
-const CACHE = PREFIX + 'v46';
+const CACHE = PREFIX + 'v51';
 const JADRO = [
   './',
   './index.html',
@@ -16,6 +16,7 @@ const JADRO = [
   './dialog.js',
   './rec.js',
   './uloha.js',
+  './vyjmenovana.js',
   './procvic.js',
   './rekord.js',
   './pisemne.js',
@@ -25,6 +26,11 @@ const JADRO = [
   './manifest.webmanifest',
   './icon-192.png',
   './icon-512.png',
+  './icon-maskable-512.png',
+  './apple-touch-icon.png',
+  './favicon.svg',
+  './favicon.ico',
+  './logo.svg',        // značka v hlavičce (CSS maska)
   './obsah/prehled.html',
   './obsah/osnova.html',
 ];

@@ -96,7 +96,9 @@ const KATALOG_SEKCE = [
           "5. ročník",
           "pravopis",
           "diktát",
-          "vyjmenovaná slova"
+          "vyjmenovaná slova",
+          "obojetné souhlásky",
+          "příbuzná slova"
         ],
         "predmet": "cj",
         "rocniky": [
@@ -113,7 +115,9 @@ const KATALOG_SEKCE = [
           "pravopis",
           "poslech",
           "vyjmenovaná slova",
-          "velká písmena"
+          "velká písmena",
+          "doplňování písmen",
+          "přepis věty"
         ],
         "predmet": "cj",
         "rocniky": [
@@ -136,7 +140,8 @@ const KATALOG_SEKCE = [
           "pravopis",
           "b/p",
           "d/t",
-          "z/s"
+          "z/s",
+          "spodoba znělosti"
         ],
         "predmet": "cj",
         "rocniky": [
@@ -150,7 +155,9 @@ const KATALOG_SEKCE = [
           "1. stupeň",
           "3. ročník",
           "pravopis",
-          "i/y"
+          "i/y",
+          "řady vyjmenovaných slov",
+          "přehled"
         ],
         "predmet": "cj",
         "rocniky": [
@@ -168,7 +175,10 @@ const KATALOG_SEKCE = [
           "7. ročník",
           "pravopis",
           "koncovky",
-          "příčestí"
+          "příčestí",
+          "podmět",
+          "rod podmětu",
+          "-li -ly -la"
         ],
         "predmet": "cj",
         "rocniky": [
@@ -235,7 +245,10 @@ const KATALOG_SEKCE = [
         "tagy": [
           "1. stupeň",
           "2. stupeň",
-          "mluvnice"
+          "mluvnice",
+          "ohebné",
+          "neohebné",
+          "slovní druhy"
         ],
         "predmet": "cj",
         "rocniky": [
@@ -386,7 +399,9 @@ const KATALOG_SEKCE = [
           "přísudek",
           "předmět",
           "přívlastek",
-          "2. stupeň"
+          "2. stupeň",
+          "rozbor věty",
+          "větné členy"
         ],
         "predmet": "cj",
         "rocniky": [
@@ -4433,11 +4448,22 @@ const KATALOG_SEKCE = [
           "němčina",
           "slovíčka",
           "klíč řešení",
+          "kód listu",
           "varianty A/B",
-          "šablony",
-          "uložené sady",
           "živý náhled",
-          "obtížnost po tématech"
+          "obtížnost po tématech",
+          "filtr podle ročníku",
+          "filtr podle předmětu",
+          "prvouka",
+          "hodiny",
+          "kalendář",
+          "slabiky",
+          "tvrdé a měkké souhlásky",
+          "přírodopis",
+          "lidské tělo",
+          "fyzikální veličiny",
+          "rychlost dráha čas",
+          "dvojková soustava"
         ]
       }
     ]

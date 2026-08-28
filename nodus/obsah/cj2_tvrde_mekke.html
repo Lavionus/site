@@ -11,24 +11,14 @@
   <script src="../rec.js"></script>
   <script src="../uloha.js"></script>
   <style>
-    .slovo-mezera {
-      font-size: clamp(2.2rem, 9vw, 3.6rem); font-weight: 700; letter-spacing: 0.04em;
+    .slovo-uloha { font-size: clamp(2.2rem, 9vw, 3.6rem); letter-spacing: 0.04em; }
+    .souhlaska { font-size: clamp(3rem, 12vw, 5rem); font-weight: 700; color: var(--accent); }
+    .pomucka .skupina.tvrde .znak.sviti { background: var(--warn); border-color: var(--warn); color: #1a1a1a; }
+    .pomucka .skupina .cil {
+      font-size: 1.1rem; font-weight: 700; color: var(--accent);
+      background: var(--accent-soft); border-radius: 6px; padding: 1px 9px; margin-left: 8px;
     }
-    .slovo-mezera .mezera {
-      color: var(--accent); border-bottom: 4px solid var(--accent); padding: 0 10px; margin: 0 2px;
-    }
-    .souhlaska {
-      font-size: clamp(3rem, 12vw, 5rem); font-weight: 700; color: var(--accent);
-    }
-    .prehled {
-      display: flex; gap: 18px; flex-wrap: wrap; justify-content: center;
-      max-width: 900px; margin-top: 12px;
-    }
-    .prehled div {
-      background: var(--bg-panel); border: 1px solid var(--border); border-radius: 10px;
-      padding: 10px 16px; font-size: 0.84rem; color: var(--text-muted);
-    }
-    .prehled b { color: var(--text); }
+    .pomucka h2 { display: flex; align-items: center; }
   </style>
 </head>
 <body>
@@ -45,17 +35,27 @@
 
   <div class="ovladani">
     <button class="hlavni" id="btnDalsi">Přeskočit →</button>
+    <button id="btnNapoveda">💡 Nápověda</button>
+    <span class="serie" id="serie"></span>
     <span class="skore" id="skore"></span>
   </div>
 
-  <div class="prehled">
-    <div><b>Tvrdé souhlásky:</b> h, ch, k, r, d, t, n → píšeme <b>y, ý</b></div>
-    <div><b>Měkké souhlásky:</b> ž, š, č, ř, c, j, ď, ť, ň → píšeme <b>i, í</b></div>
+  <div class="pomucka" id="pomucka">
+    <div class="skupina tvrde" data-druh="tvrde">
+      <h2>🧱 Tvrdé souhlásky <span class="cil">y, ý</span></h2>
+      <div class="znaky" id="znakyTvrde"></div>
+    </div>
+    <div class="skupina" data-druh="mekke">
+      <h2>🧸 Měkké souhlásky <span class="cil">i, í</span></h2>
+      <div class="znaky" id="znakyMekke"></div>
+    </div>
   </div>
 
   <p class="napoveda">
-    Pomůcka: řekni si slovo nahlas a najdi souhlásku <b>před</b> doplňovaným písmenem.
-    Je-li tvrdá, patří za ni tvrdé y; je-li měkká, patří za ni měkké i.
+    Pomůcka: řekni si slovo nahlas a najdi souhlásku <b>před</b> doplňovaným písmenem – v úloze
+    svítí žlutě. Je-li tvrdá, patří za ni tvrdé y; je-li měkká, patří za ni měkké i.
+    Po odpovědi se souhláska rozsvítí i v přehledu dole, ať víš, kam patří.
+    Klávesy: <kbd>I</kbd> · <kbd>Y</kbd> · <kbd>H</kbd> nápověda · <kbd>Enter</kbd> další.
   </p>
 
 <script>
@@ -88,36 +88,104 @@ const SLOVA = [
 
 const skore = Uloha.skore('nodus_cj2_tvrde_mekke', $('skore'));
 let rezim = 'doplnovani';
+let uloha = null, posledni = null, serie = 0, napovedaVidet = false;
 
-function pravidlo(souhlaska) {
-  return TVRDE.includes(souhlaska)
-    ? `${souhlaska} je tvrdá souhláska – píše se po ní tvrdé y.`
-    : `${souhlaska} je měkká souhláska – píše se po ní měkké i.`;
+/* ---- přehled souhlásek pod úlohou ----------------------------------------- */
+/* Souhláska z úlohy se v přehledu rozsvítí – dítě tak vidí, do které skupiny
+   patří, místo aby si ji hledalo v řádku textu. */
+function postavPrehled(kam, souhlasky) {
+  souhlasky.forEach(z => {
+    const el = document.createElement('span');
+    el.className = 'znak';
+    el.dataset.znak = z;
+    el.textContent = z;
+    kam.appendChild(el);
+  });
+}
+postavPrehled($('znakyTvrde'), TVRDE);
+postavPrehled($('znakyMekke'), MEKKE);
+
+function rozsvitSouhlasku(c) {
+  document.querySelectorAll('#pomucka .znak').forEach(el => {
+    el.classList.toggle('sviti', el.dataset.znak === c);
+  });
+  document.querySelectorAll('#pomucka .skupina').forEach(el => {
+    el.classList.toggle('sviti', !!c && el.querySelector('.znak.sviti'));
+  });
+}
+
+function jeTvrda(c) { return TVRDE.includes(c); }
+
+function pravidlo(c) {
+  return jeTvrda(c)
+    ? `<b>${c}</b> je tvrdá souhláska – píše se po ní tvrdé <b>y</b>.`
+    : `<b>${c}</b> je měkká souhláska – píše se po ní měkké <b>i</b>.`;
+}
+
+/* Slovo s vynechaným písmenem; rozhodující souhláska svítí žlutě. */
+function slovoHTML(u, doplneno) {
+  const i = u.s.indexOf('_');
+  const pred = u.s.slice(0, i);
+  const mezera = doplneno
+    ? `<span class="mezera doplneno">${doplneno}</span>`
+    : '<span class="mezera prazdna">?</span>';
+  return pred.slice(0, -u.c.length)
+    + `<span class="spoust">${pred.slice(-u.c.length)}</span>`
+    + mezera + u.s.slice(i + 1);
+}
+
+function odezvaEl() { const d = document.createElement('div'); d.className = 'odezva'; return d; }
+
+function pravidloEl(u) {
+  const el = document.createElement('div');
+  el.className = 'pravidlo ok';
+  el.innerHTML = `<span class="znak">${jeTvrda(u.c) ? '🧱' : '🧸'}</span><div>
+      <span class="vysledek">${u.s.replace('_', u.p)}</span> — ${pravidlo(u.c)}</div>`;
+  return el;
+}
+
+function hotovo(u, p, napoprve) {
+  skore.vyhodnot(napoprve);
+  serie = napoprve ? serie + 1 : 0;
+  $('serie').textContent = serie >= 3 ? '🔥 série ' + serie : '';
+  rozsvitSouhlasku(u.c);
+  const tip = p.querySelector('.pravidlo.tip');
+  if (tip) tip.remove();
+  p.appendChild(pravidloEl(u));
+}
+
+const PRODLEVA = napoprve => (napoprve ? 1600 : 2600);
+
+function vyberSlovo() {
+  let u;
+  do { u = Uloha.nahodne(SLOVA); } while (u === posledni);
+  posledni = u;
+  return u;
 }
 
 /* ---- Doplň i/y ------------------------------------------------------------ */
 function doplnovani() {
   const p = $('plocha');
-  const u = Uloha.nahodne(SLOVA);
+  const u = uloha = vyberSlovo();
   const dlouhe = u.p === 'í' || u.p === 'ý';
-  const volby = dlouhe
-    ? [{ klic: 'í', popis: 'í' }, { klic: 'ý', popis: 'ý' }]
-    : [{ klic: 'i', popis: 'i' }, { klic: 'y', popis: 'y' }];
 
   p.innerHTML = `<div class="zadani">Doplň správné písmeno.</div>
-    <div class="karta"><div class="slovo-mezera">${u.s.replace('_', '<span class="mezera">?</span>')}</div></div>`;
-  const odezva = document.createElement('div');
-  odezva.className = 'odezva';
-
+    <div class="karta"><div class="veta-uloha slovo-uloha" id="slovo">${slovoHTML(u)}</div></div>`;
+  const odezva = odezvaEl();
   Uloha.vyber({
-    kam: p, moznosti: Uloha.zamichej(volby), spravnyKlic: u.p, odezva, trida: 'velke',
-    zpravaOk: '✅ ' + u.s.replace('_', u.p) + ' – ' + pravidlo(u.c),
+    kam: p, odezva, trida: 'velke',
+    moznosti: [
+      { klic: 'i', popis: (dlouhe ? 'í' : 'i') + '<span class="podpisek">🧸 měkké</span>' },
+      { klic: 'y', popis: (dlouhe ? 'ý' : 'y') + '<span class="podpisek">🧱 tvrdé</span>' },
+    ],
+    spravnyKlic: jeTvrda(u.c) ? 'y' : 'i',
+    zpravaOk: '✅ Správně!',
     zpravaChyba: 'Ještě ne. Podívej se na souhlásku před mezerou: ' + u.c,
     poSpravne: napoprve => {
-      skore.vyhodnot(napoprve);
-      p.querySelector('.mezera').textContent = u.p;
+      $('slovo').innerHTML = slovoHTML(u, u.p);
+      hotovo(u, p, napoprve);
     },
-    dalsi: novaUloha,
+    prodleva: PRODLEVA, dalsi: novaUloha,
   });
   p.appendChild(odezva);
 }
@@ -127,10 +195,10 @@ function trideni() {
   const p = $('plocha');
   const tvrda = Math.random() < 0.5;
   const c = Uloha.nahodne(tvrda ? TVRDE : MEKKE);
+  uloha = { c, s: c + '_', p: tvrda ? 'y' : 'i' };
   p.innerHTML = `<div class="zadani">Je tato souhláska tvrdá, nebo měkká?</div>
     <div class="karta"><div class="souhlaska">${c}</div></div>`;
-  const odezva = document.createElement('div');
-  odezva.className = 'odezva';
+  const odezva = odezvaEl();
   Uloha.vyber({
     kam: p, odezva, trida: 'dve',
     moznosti: [
@@ -138,26 +206,27 @@ function trideni() {
       { klic: 'mekka', ikona: '🧸', popis: 'měkká → i' },
     ],
     spravnyKlic: tvrda ? 'tvrda' : 'mekka',
-    zpravaOk: '✅ ' + pravidlo(c),
-    zpravaChyba: 'Zkus druhou možnost – zopakuj si řadu souhlásek pod úlohou.',
-    poSpravne: skore.vyhodnot,
-    dalsi: novaUloha,
+    zpravaOk: '✅ Správně!',
+    zpravaChyba: 'Zkus druhou možnost – zopakuj si řady souhlásek pod úlohou.',
+    poSpravne: napoprve => hotovo(uloha, p, napoprve),
+    prodleva: PRODLEVA, dalsi: novaUloha,
   });
   p.appendChild(odezva);
 }
 
 /* ---- Je to správně? ------------------------------------------------------- */
+const OPACNE = { i: 'y', 'í': 'ý', y: 'i', 'ý': 'í' };
+
 function kontrola() {
   const p = $('plocha');
-  const u = Uloha.nahodne(SLOVA);
+  const u = uloha = vyberSlovo();
   const spravneNapsano = Math.random() < 0.5;
-  const chybne = { i: 'y', 'í': 'ý', y: 'i', 'ý': 'í' }[u.p];
-  const zobrazene = u.s.replace('_', spravneNapsano ? u.p : chybne);
+  const zobrazene = spravneNapsano ? u.p : OPACNE[u.p];
 
   p.innerHTML = `<div class="zadani">Je slovo napsané správně?</div>
-    <div class="karta"><div class="slovo-mezera">${zobrazene}</div></div>`;
-  const odezva = document.createElement('div');
-  odezva.className = 'odezva';
+    <div class="karta"><div class="veta-uloha slovo-uloha" id="slovo">${slovoHTML(u, zobrazene)}</div></div>`;
+  $('slovo').querySelector('.mezera').classList.remove('doplneno');
+  const odezva = odezvaEl();
   Uloha.vyber({
     kam: p, odezva, trida: 'dve',
     moznosti: [
@@ -165,17 +234,36 @@ function kontrola() {
       { klic: 'ne', ikona: '❌', popis: 'Ne, je tam chyba' },
     ],
     spravnyKlic: spravneNapsano ? 'ano' : 'ne',
-    zpravaOk: '✅ Správně se píše ' + u.s.replace('_', u.p) + ' – ' + pravidlo(u.c),
+    zpravaOk: '✅ Správně!',
     zpravaChyba: 'Podívej se pozorně na souhlásku ' + u.c + ' a písmeno za ní.',
-    poSpravne: skore.vyhodnot,
-    dalsi: novaUloha,
+    poSpravne: napoprve => {
+      $('slovo').innerHTML = slovoHTML(u, u.p);
+      hotovo(u, p, napoprve);
+    },
+    prodleva: PRODLEVA, dalsi: novaUloha,
   });
   p.appendChild(odezva);
 }
 
+/* ---- nápověda: rozsvítí souhlásku v přehledu, ale neřekne písmeno --------- */
+function napoveda() {
+  if (!uloha || napovedaVidet) return;
+  rozsvitSouhlasku(uloha.c);
+  const el = document.createElement('div');
+  el.className = 'pravidlo tip';
+  el.innerHTML = `<span class="znak">🔎</span><div>Rozhoduje souhláska <b>${uloha.c}</b> –
+      najdi ji v přehledu pod úlohou, teď v něm svítí. V které je řadě?</div>`;
+  $('plocha').appendChild(el);
+  napovedaVidet = true;
+}
+
 /* ---- ovládání ------------------------------------------------------------- */
 const REZIMY = { doplnovani, trideni, kontrola };
-function novaUloha() { REZIMY[rezim](); }
+function novaUloha() {
+  napovedaVidet = false;
+  rozsvitSouhlasku(null);
+  REZIMY[rezim]();
+}
 
 document.querySelectorAll('#rezimy button').forEach(b => b.addEventListener('click', () => {
   document.querySelectorAll('#rezimy button').forEach(x => x.classList.remove('active'));
@@ -184,9 +272,17 @@ document.querySelectorAll('#rezimy button').forEach(b => b.addEventListener('cli
   novaUloha();
 }));
 $('btnDalsi').addEventListener('click', novaUloha);
+$('btnNapoveda').addEventListener('click', napoveda);
 document.addEventListener('keydown', e => {
-  if (e.key === 'ArrowRight' || e.key === 'Enter') { e.preventDefault(); novaUloha(); }
+  if (e.key === 'ArrowRight' || e.key === 'Enter') { e.preventDefault(); novaUloha(); return; }
+  if (e.key === 'h' || e.key === 'H') { napoveda(); return; }
+  if (rezim !== 'doplnovani') return;
+  const klic = 'ií'.includes(e.key) ? 'i' : 'yý'.includes(e.key) ? 'y' : null;
+  if (!klic) return;
+  const b = $('plocha').querySelector(`.moznosti button[data-klic="${klic}"]`);
+  if (b && !b.disabled) b.click();
 });
+
 novaUloha();
 </script>
 </body>

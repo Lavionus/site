@@ -23,13 +23,17 @@ pokrytá celá, žádné téma nezůstalo jen jako zástupce (🚧). Přehled je
 | `obsah/*.html` | jednotlivé výukové aplikace |
 | `obsah/lib/`, `obsah/textures/`, `obsah/Anatomy/` | knihovny a data aplikací |
 | `common.css`, `theme.js` | sdílený vzhled a přepínání světlého/tmavého režimu |
-| `podpis.js` | autorský podpis ve vlastním pruhu dole – patří do `<head>` **každé** stránky |
+| `podpis.js` | autorský podpis (`Nodus © Radovan Valenta · hdm@seznam.cz`) ve vlastním pruhu dole – patří do `<head>` **každé** stránky; název díla drží konstanta `DILO` |
 | `rec.js` | čtení nahlas – systémový hlas, jinak vestavěný ze složky `hlas/` |
 | `uloha.js` | společné chování úloh: zaklepání u chyby, zelená a automatický posun u správné odpovědi, skóre |
-| `vyuka.css` | společný vzhled procvičovacích aplikací (plocha, možnosti, odezva, řazení) |
+| `vyjmenovana.js` | řady vyjmenovaných slov (jediný zdroj pro doplňovačky, vyjmenovaná slova i diktáty) |
+| `vyuka.css` | společný vzhled procvičovacích aplikací (plocha, možnosti, odezva, řazení, pravopisné díly) |
 | `hlas/` | vestavěný syntetizér řeči (meSpeak/eSpeak, GPL) – viz `hlas/LICENCE.md` |
 | `fonty/` | školní psací písmo Playwrite CZ (OFL) – viz `fonty/LICENCE.md` |
-| `sw.js`, `manifest.webmanifest`, `icon-*.png` | PWA (cache `nodus-vN`) |
+| `sw.js`, `manifest.webmanifest`, `icon-*.png`, `apple-touch-icon.png` | PWA (cache `nodus-vN`) |
+| `logo.svg` | značka (uzel) pro manifest a další použití; v hlavičkách je stejná cesta vložená inline (bere barvu z motivu a nezávisí na načtení souboru) |
+| `favicon.svg`, `favicon.ico` | ikona v záložce prohlížeče |
+| `Logo/` | zdrojové obrázky značky + `build_ikon.sh`, který z nich generuje celou sadu |
 
 ## Katalog a osnova
 
@@ -50,6 +54,36 @@ Rozdělení témat do ročníků odpovídá obvyklé praxi českých ŠVP. RVP Z
 stanovuje očekávané výstupy po obdobích (1.–3. a 4.–5. ročník, 2. stupeň),
 ne po jednotlivých ročnících. Revidované RVP ZV bylo schváleno v lednu 2025
 a povinné bude od září 2027 pro 1. a 6. ročník.
+
+## Generátor pracovních listů
+
+`obsah/pracovni_listy.html` skládá tisknutelné listy z vlastního katalogu
+generátorů úloh (konstanta `G` uvnitř stránky). Každé téma má stejná metadata
+jako katalog Nodusu, takže se výběr filtruje ve dvou osách jako menu:
+
+| Pole | Význam |
+|---|---|
+| `p` | hlavní předmět — id z `PREDMETY` (shodné s `KATALOG_PREDMETY` v `apps.js`) |
+| `p2` | vedlejší předměty; krajská města patří do vlastivědy i zeměpisu a filtr je najde v obou |
+| `r` | ročníky, kterých se téma týká — podle nich filtruje nabídka |
+| `t`, `instr` | název tématu a pokyn nad úlohami na listu |
+| `gen(d, R)` | vrátí `{q, a}` pro obtížnost `d` a generátor náhody `R` |
+| `sig` | podpis tvaru úlohy — úlohy se pak rozprostřou mezi všechny tvary, aby se na listu neopakovala stejná věta |
+
+Volba ročníku zúží seznam témat a předvyplní obtížnost (1.–3. lehká,
+4.–6. střední, 7.–9. těžká). Jakmile si ji učitel přenastaví ručně, ročník
+už do ní nesahá.
+
+Řešení se výchozím nastavením tiskne **na zvláštní stránce** a **kód listu**
+(podle něj se dá tentýž list vyrobit znovu) jde jen na ni — na listy pro žáky
+se tiskne, jen když si to učitel přepne volbou *Tisknout kód listu*. Celé
+nastavení včetně textů v hlavičce, vybraných témat a kódu listu se průběžně
+ukládá do `localStorage` (`worksheet_gen_v2`), takže se stránka otevře tam,
+kde ji učitel opustil.
+
+Arch v náhledu je vždy bílý papír, proto uvnitř `.sheet-page` **nesmí být
+proměnné motivu** — ve světlém režimu vycházelo `--bg-hover` na bílém papíře
+jako neviditelná čísla úloh a linka na jméno, a to i v tisku.
 
 ## Psaní nové procvičovací aplikace
 
@@ -73,6 +107,40 @@ Uloha.vyber({
 
 K dispozici jsou i `Uloha.zamichej`, `Uloha.nahodne`, `Uloha.nahodneCislo` a `Uloha.trhni`
 (pro vlastní úlohy typu klikání do obrázku nebo řazení do pořadí).
+
+Volitelné pole `prodleva` říká, za jak dlouho se nabídne další otázka. Smí to být
+i funkce `(napoprve) => ms` — stránky, které po odpovědi ukazují kartičku
+s vysvětlením, potřebují delší pauzu, a po chybě ještě delší, protože právě
+tehdy si má žák vysvětlení přečíst. Bez pole platí `Uloha.PRODLEVA` (900 ms).
+
+## Pravopisné stránky
+
+Stránky o pravopisu (`doplnovacky`, `vyjmenovana_slova`, `shoda_podmetu`,
+`diktat_gen`, `cj2_tvrde_mekke`, `cj3_parove`, `cj2_abeceda`) drží stejný postup,
+aby se dítě neučilo pokaždé nové ovládání. Díly na to jsou ve `vyuka.css`:
+
+| Třída | K čemu je |
+|---|---|
+| `.veta-uloha` | věta nebo slovo s vynechaným písmenem; `.mezera.prazdna` je prázdné místo, `.mezera.doplneno` už doplněné |
+| `.spoust` | písmeno, **podle kterého se pravopis rozhoduje** (obojetná souhláska, souhláska před i/y) – svítí žlutě už v zadání |
+| `.podmet`, `.slovo-klik` | podtržený podmět a klikací slova ve větě (tečkovaná linka je vidět i na dotykovém displeji, kde není hover) |
+| `.pravidlo` | kartička **proč** – ukáže se až po odpovědi (`.ok`), nebo na vyžádání jako nápověda (`.tip`) |
+| `.rada` | pás vyjmenovaných slov; `span.sviti` rozsvítí to, o které v úloze šlo |
+| `.pomucka` | trvalý přehled pod úlohou (souhlásky, páry, rody, abeceda); `.znak.sviti` rozsvítí právě probírané místo |
+| `.klavesy`, `kbd` | klávesové zkratky vypsané u úlohy, ne až v patičce |
+| `.pruh` | ukazatel postupu série |
+
+Pravidla, která z toho plynou:
+
+1. **Kde se rozhoduje, musí být vidět předem** (`.spoust`, podtržený podmět),
+   **proč to tak je, až potom** (`.pravidlo.ok`). Kartička s pravidlem se nikdy
+   neukazuje dřív než odpověď – jinak není co procvičovat.
+2. **Nápověda zužuje, neprozrazuje.** Ukáže řadu, ve které se má hledat, rozsvítí
+   souhlásku v přehledu, ztlumí polovinu možností — správnou odpověď neřekne.
+3. **Chyba nezavírá úlohu.** Špatná možnost zaklepe a zčervená, otázka běží dál
+   (řeší `uloha.js`); do skóre se počítá jen odpověď napoprvé.
+4. **Přehled pod úlohou žije.** Souhláska, pár nebo rod se v něm po odpovědi
+   rozsvítí — přehled tak není jen text, ale ukazuje, kam probíraný jev patří.
 
 ## Zpracování připravovaného tématu
 

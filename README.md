@@ -18,9 +18,10 @@ Hlavní web na něj odkazuje z menu a z úvodní stránky; staré odkazy
 ./upload.sh "zpráva"     # commit + pull --rebase + push
 ```
 
-Podpis autora (`© Radovan Valenta · hdm@seznam.cz`) vykresluje `podpis.js`
-ve vlastním pruhu u spodní hrany okna (22 px, text vpravo) – `nodus/` má vlastní
-kopii, aby zůstal soběstačný. Každá nová stránka ho musí mít v `<head>`:
+Podpis autora (`Webové stránky © Radovan Valenta · hdm@seznam.cz`) vykresluje
+`podpis.js` ve vlastním pruhu u spodní hrany okna (22 px, text vpravo) – `nodus/`
+má vlastní kopii, aby zůstal soběstačný, a v ní je název díla `Nodus`
+(konstanta `DILO` na začátku souboru). Každá nová stránka ho musí mít v `<head>`:
 `<script src="../podpis.js" defer></script>`. Pruh obsah nepřekrývá: tělu se
 přidá spodní odsazení, `100vh` v CSS stránky se zmenší o výšku pruhu a prvky
 ukotvené napevno u spodní hrany se nad něj posunou. Uvnitř rozcestníku se

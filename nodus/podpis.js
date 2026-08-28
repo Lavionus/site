@@ -20,6 +20,7 @@
 (function () {
   const AUTOR = 'Radovan Valenta';
   const MAIL = 'hdm@seznam.cz';
+  const DILO = 'Nodus';   // název díla – každý web má v kopii ten svůj
   const ID = 'autor-podpis';
   const VYSKA = 22;            // px – výška pruhu
 
@@ -142,7 +143,7 @@
 
     const podpis = document.createElement('div');
     podpis.id = ID;
-    podpis.textContent = '© ' + AUTOR + ' · ' + MAIL;
+    podpis.textContent = DILO + ' © ' + AUTOR + ' · ' + MAIL;
     telo.appendChild(podpis);
 
     zmensCeloobrazovkove();
