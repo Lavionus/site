@@ -5,8 +5,8 @@ Samostatný web s interaktivními výukovými aplikacemi pro základní školu �
 dějepis a informatika. Vše běží v prohlížeči, bez serveru a bez registrace,
 po prvním otevření i offline (PWA + service worker).
 
-Katalog je zároveň **kostrou osnov ZŠ**: 242 témat v 11 předmětech a 9 ročnících
-plus 8 nástrojů bez vazby na předmět — dohromady 250 položek. Osnova je momentálně
+Katalog je zároveň **kostrou osnov ZŠ**: 243 témat v 11 předmětech a 9 ročnících
+plus 8 nástrojů bez vazby na předmět — dohromady 251 položek. Osnova je momentálně
 pokrytá celá, žádné téma nezůstalo jen jako zástupce (🚧). Přehled je na stránce
 [Osnova](obsah/osnova.html).
 
@@ -23,10 +23,12 @@ pokrytá celá, žádné téma nezůstalo jen jako zástupce (🚧). Přehled je
 | `obsah/*.html` | jednotlivé výukové aplikace |
 | `obsah/lib/`, `obsah/textures/`, `obsah/Anatomy/` | knihovny a data aplikací |
 | `common.css`, `theme.js` | sdílený vzhled a přepínání světlého/tmavého režimu |
+| `podpis.js` | autorský podpis ve vlastním pruhu dole – patří do `<head>` **každé** stránky |
 | `rec.js` | čtení nahlas – systémový hlas, jinak vestavěný ze složky `hlas/` |
 | `uloha.js` | společné chování úloh: zaklepání u chyby, zelená a automatický posun u správné odpovědi, skóre |
 | `vyuka.css` | společný vzhled procvičovacích aplikací (plocha, možnosti, odezva, řazení) |
 | `hlas/` | vestavěný syntetizér řeči (meSpeak/eSpeak, GPL) – viz `hlas/LICENCE.md` |
+| `fonty/` | školní psací písmo Playwrite CZ (OFL) – viz `fonty/LICENCE.md` |
 | `sw.js`, `manifest.webmanifest`, `icon-*.png` | PWA (cache `nodus-vN`) |
 
 ## Katalog a osnova
@@ -57,6 +59,7 @@ Stránka vystačí s krátkou kostrou – styly řeší `vyuka.css`, chování o
 <link rel="stylesheet" href="../common.css">
 <link rel="stylesheet" href="../vyuka.css">
 <script src="../theme.js"></script>
+<script src="../podpis.js" defer></script>
 <script src="../rec.js"></script>
 <script src="../uloha.js"></script>
 ```
@@ -78,7 +81,7 @@ další rozšiřování osnovy. Placeholder stránka popisuje, co má aplikace u
 a cituje očekávaný výstup RVP. Až téma zpracuješ:
 
 1. Přepiš `obsah/<slug>.html` na skutečnou aplikaci
-   (v `<head>` nalinkovat `../common.css` a `../theme.js`).
+   (v `<head>` nalinkovat `../common.css`, `../theme.js` a `../podpis.js`).
 2. V `apps.js` u položky **smaž pole `stav`** — tím zmizí značka 🚧 z menu
    a téma se v osnově přepne na hotové.
 3. Zvyš verzi cache v `sw.js` (`nodus-vN`), jinak návštěvníci uvidí novinku
@@ -88,6 +91,23 @@ a cituje očekávaný výstup RVP. Až téma zpracuješ:
 
 Záznam do příslušné sekce v `apps.js` (`soubor`, `nazev`, `tagy`, `predmet`,
 `rocniky`, případně `stav: 'plan'`) a odpovídající stránka v `obsah/`.
+
+## Psací písmo
+
+Ve složce `fonty/` je **Playwrite CZ** – česká varianta školní psací abecedy
+(OFL, plná diakritika, 68 kB). `common.css` ho deklaruje jako `--font-psaci`,
+takže stránka jen napíše:
+
+```css
+.pismenko { font-family: var(--font-psaci); line-height: 1.9; }
+```
+
+Soubor se stáhne až ve chvíli, kdy ho stránka opravdu použije; v `sw.js` je
+v `JADRO`, takže funguje i offline. Vysoký řádek není zbytečnost – psací tvary
+mají nahoře kličku a dole smyčku a při `line-height: 1` lezou z rámce ven.
+
+Zatím ho používá `obsah/cj1_pismena.html` (úloha *Velké a malé*), kde si dítě
+přepne mezi tiskacím a psacím písmem; volba se pamatuje v `localStorage`.
 
 ## Čtení nahlas
 

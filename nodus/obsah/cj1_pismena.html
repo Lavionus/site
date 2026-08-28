@@ -6,6 +6,7 @@
   <title>Písmena a hlásky</title>
   <link rel="stylesheet" href="../common.css">
   <script src="../theme.js"></script>
+  <script src="../podpis.js" defer></script>
   <script src="../rec.js"></script>
   <script src="../uloha.js"></script>
   <style>
@@ -74,6 +75,23 @@
     .moznosti button:disabled { cursor: default; }
     .moznosti button.mala { font-size: clamp(1.3rem, 4vw, 1.8rem); min-width: 74px; }
 
+    /* Přepínač tiskacího a psacího písma (režim Velké a malé) */
+    .pismo { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+    .pismo button {
+      background: var(--bg-control); border: 1px solid var(--border-strong); color: var(--text-muted);
+      border-radius: 999px; padding: 6px 14px; font-size: 0.84rem; font-family: inherit; cursor: pointer;
+    }
+    .pismo button.active { background: var(--accent-soft); border-color: var(--accent); color: var(--text); font-weight: 600; }
+    .pismo button[data-pismo="psaci"] .ukazka { font-family: var(--font-psaci); font-size: 1.05rem; }
+
+    /* Psací tvary mají vysoké dotažnice (nahoře klička, dole smyčka), takže
+       potřebují vyšší řádek než tiskací písmo – jinak přetečou z vlastního rámce. */
+    .plocha.psaci .obrazek { font-family: var(--font-psaci); line-height: 1.9; padding: 0 0.12em; }
+    .plocha.psaci .moznosti button {
+      font-family: var(--font-psaci); line-height: 1.3;
+      padding: 18px 14px; font-size: clamp(1.7rem, 5.5vw, 2.4rem);
+    }
+
     .odezva { font-size: 1.05rem; font-weight: 600; min-height: 28px; }
     .odezva.ok { color: var(--ok); }
     .odezva.chyba { color: var(--danger); }
@@ -115,6 +133,8 @@
   <p class="napoveda">
     <b>Hláska</b> je to, co slyšíme. Písmena <b>CH</b> se čtou jako jedna hláska a
     <b>OU</b>, <b>AU</b> jsou dvojhlásky – v rozkladu jsou proto pohromadě a mají žlutý rámeček.
+    V úloze <b>Velké a malé</b> jde přepnout mezi tiskacím a psacím písmem – psací tvary
+    odpovídají tomu, jak se písmenka píší ve škole.
   </p>
 
 <script>
@@ -199,6 +219,37 @@ function vyhodnot(napoprve) {
   zobrazSkore();
 }
 
+/* ---- Tiskací / psací písmo (jen režim Velké a malé) ----------------------- */
+const KLIC_PISMO = KLIC + '_pismo';
+let pismo = 'tiskaci';
+try { if (localStorage.getItem(KLIC_PISMO) === 'psaci') pismo = 'psaci'; } catch { /* bez paměti */ }
+
+function pouzijPismo() {
+  $('plocha').classList.toggle('psaci', pismo === 'psaci');
+  document.querySelectorAll('#plocha .pismo button')
+    .forEach(b => b.classList.toggle('active', b.dataset.pismo === pismo));
+}
+
+/* Řádek s přepínačem; psací font se předem načte, ať přepnutí neproblikne. */
+function prepinacPisma() {
+  if (document.fonts) document.fonts.load('400 1em "Playwrite CZ"').catch(() => {});
+  const rada = document.createElement('div');
+  rada.className = 'pismo';
+  [['tiskaci', 'Aa', 'Tiskací'], ['psaci', 'Aa', 'Psací']].forEach(([klic, ukazka, popis]) => {
+    const b = document.createElement('button');
+    b.dataset.pismo = klic;
+    b.innerHTML = `<span class="ukazka">${ukazka}</span> ${popis}`;
+    b.title = klic === 'psaci' ? 'Písmena jako psaná rukou ve škole' : 'Tiskací písmena jako v knížce';
+    b.addEventListener('click', () => {
+      pismo = klic;
+      try { localStorage.setItem(KLIC_PISMO, pismo); } catch { /* bez paměti */ }
+      pouzijPismo();
+    });
+    rada.appendChild(b);
+  });
+  return rada;
+}
+
 /* ---- Režimy --------------------------------------------------------------- */
 let rezim = 'rozklad';
 let aktualni = null;
@@ -206,6 +257,7 @@ let aktualni = null;
 function novaUloha() {
   const p = $('plocha');
   p.innerHTML = '';
+  p.className = 'plocha';   // třídu písma nastavuje jen režim Velké a malé
   aktualni = nahodne(SLOVA);
   ({ rozklad, skladani, prvni, posledni, velikost })[rezim]();
 }
@@ -355,8 +407,11 @@ function velikost() {
   const velke = nahodne(ABECEDA);
   const jina = zamichej(ABECEDA.filter(x => x !== velke)).slice(0, 3);
   const volby = zamichej([velke, ...jina]).map(x => x.toLowerCase());
-  p.innerHTML = `<div class="zadani">Najdi malé písmeno k velkému:</div>
-                 <div class="obrazek">${velke}</div>`;
+  p.innerHTML = `<div class="zadani">Najdi malé písmeno k velkému:</div>`;
+  const velkeEl = document.createElement('div');
+  velkeEl.className = 'obrazek';
+  velkeEl.textContent = velke;
+  p.append(prepinacPisma(), velkeEl);
   const m = document.createElement('div');
   m.className = 'moznosti';
   const odezva = document.createElement('div');
@@ -376,6 +431,7 @@ function velikost() {
     m.appendChild(b);
   });
   p.append(m, odezva);
+  pouzijPismo();
 }
 
 /* ---- Ovládání ------------------------------------------------------------- */

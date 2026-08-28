@@ -2575,6 +2575,37 @@ const KATALOG_SEKCE = [
         ]
       },
       {
+        "soubor": "obsah/optika_soustava.html",
+        "nazev": "\ud83e\udde9 Stavba optick\u00e9 soustavy",
+        "tagy": [
+          "fyzika",
+          "optika",
+          "optick\u00e1 soustava",
+          "\u010do\u010dka",
+          "spojka",
+          "rozptylka",
+          "zrcadlo",
+          "clona",
+          "ohnisko",
+          "obraz",
+          "zv\u011bt\u0161en\u00ed",
+          "dalekohled",
+          "zrcadlov\u00fd dalekohled",
+          "mikroskop",
+          "lupa",
+          "promita\u010dka",
+          "simulace",
+          "stavebnice",
+          "2. stupe\u0148",
+          "\u0161\u0161"
+        ],
+        "predmet": "f",
+        "rocniky": [
+          8,
+          9
+        ]
+      },
+      {
         "soubor": "obsah/f8_prace_energie.html",
         "nazev": "🔧 Práce, výkon a energie",
         "tagy": [
@@ -2701,7 +2732,9 @@ const KATALOG_SEKCE = [
           "elektron",
           "proton",
           "vazba",
-          "ionty"
+          "ionty",
+          "molekula",
+          "izotop"
         ],
         "predmet": "ch",
         "rocniky": [

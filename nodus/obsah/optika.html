@@ -6,6 +6,7 @@
 <title>🔦 Optika – odraz, lom a čočky</title>
 <link rel="stylesheet" href="../common.css">
 <script src="../theme.js"></script>
+<script src="../podpis.js" defer></script>
 <style>
 body{height:100vh;overflow:hidden;display:flex;flex-direction:column}
 .horni{display:flex;gap:10px;align-items:center;padding:10px 16px;background:var(--bg-elevated);border-bottom:1px solid var(--border);flex-wrap:wrap}
@@ -25,9 +26,9 @@ canvas{display:block;width:100%;height:100%;touch-action:none;cursor:crosshair}
 .stav{background:var(--bg-panel);border-top:1px solid var(--border);padding:8px 16px;font-size:.8rem;color:var(--text-muted);display:flex;gap:8px 18px;flex-wrap:wrap;align-items:center}
 .stav b{color:var(--text);font-variant-numeric:tabular-nums}
 .stav .znak{font-size:1rem}
-.info{position:absolute;top:12px;right:12px;width:275px;max-width:calc(100% - 24px);background:var(--bg-elevated);border:1px solid var(--border-strong);border-radius:10px;padding:11px 14px;font-size:.78rem;line-height:1.6;color:var(--text-muted);box-shadow:var(--shadow)}
+.info{position:absolute;top:12px;right:12px;width:275px;max-width:calc(100% - 24px);max-height:calc(100% - 24px);overflow-y:auto;overscroll-behavior:contain;background:var(--bg-elevated);border:1px solid var(--border-strong);border-radius:10px;padding:11px 14px;font-size:.78rem;line-height:1.6;color:var(--text-muted);box-shadow:var(--shadow)}
 .info b{color:var(--text)}
-.info .zavri{position:absolute;top:5px;right:7px;background:none;border:none;color:var(--text-faint);font-size:1rem;padding:0 4px;cursor:pointer}
+.info .zavri{position:sticky;float:right;top:0;margin:-4px -6px 0 6px;background:none;border:none;color:var(--text-faint);font-size:1rem;padding:0 4px;cursor:pointer}
 .info .zavri:hover{background:none;color:var(--accent)}
 .napoveda{position:absolute;left:12px;bottom:10px;font-size:.74rem;color:var(--text-faint);pointer-events:none}
 .skryto{display:none !important}
@@ -100,7 +101,18 @@ canvas{display:block;width:100%;height:100%;touch-action:none;cursor:crosshair}
 </div>
 
 <div class="panel skryto" id="panelDalekohled">
-  <label>🔭 Objektiv f₁ <input type="range" id="dF1" min="20" max="100" step="1" value="60"><span class="hodnota" id="dF1V">60 cm</span></label>
+  <label>🔭 <select id="dTyp" class="jakoTlacitka">
+      <option value="kepler" selected data-krat="🔭 Keplerův">Keplerův (hvězdářský)</option>
+      <option value="galileo" data-krat="🎭 Galileův">Galileův (divadelní kukátko)</option>
+    </select></label>
+  <label>🎬 Ukázka <select id="dPreset">
+      <option value="" selected>vlastní</option>
+      <option value="kukatko">divadelní kukátko 3×</option>
+      <option value="galileo1609">Galileo 1609 · 20×</option>
+      <option value="skolni">školní hvězdářský 28×</option>
+      <option value="velky">velký amatérský 50×</option>
+    </select></label>
+  <label>🎯 Objektiv f₁ <input type="range" id="dF1" min="20" max="100" step="1" value="60"><span class="hodnota" id="dF1V">60 cm</span></label>
   <label>👁️ Okulár f₂ <input type="range" id="dF2" min="2" max="20" step="0.5" value="6"><span class="hodnota" id="dF2V">6 cm</span></label>
   <label>⭕ Průměr objektivu <input type="range" id="dD" min="2" max="20" step="1" value="8"><span class="hodnota" id="dDV">8 cm</span></label>
   <label>⭐ Úhel hvězdy <input type="range" id="dAlfa" min="0" max="30" step="1" value="12"><span class="hodnota" id="dAlfaV">1,2°</span></label>
@@ -191,6 +203,32 @@ function hrot(x,y,uhel,barva,vel=8){
 function popis(text,x,y,barva=C.muted,font='12px sans-serif',zar='center'){
   ctx.fillStyle=barva; ctx.font=font; ctx.textAlign=zar; ctx.textBaseline='middle';
   ctx.fillText(text,x,y);
+}
+/* popisek s podkladem – čitelný i přes paprsky; k okraji plátna uhne dovnitř */
+function chip(text,x,y,barva=C.muted,font='11px sans-serif'){
+  ctx.font=font;
+  const s=ctx.measureText(text).width, w=canvas.clientWidth;
+  const cx=Math.max(s/2+6,Math.min(w-s/2-6,x));
+  ctx.save();
+  ctx.globalAlpha=.9; ctx.fillStyle=C.panel;
+  ctx.beginPath(); ctx.roundRect(cx-s/2-5,y-9,s+10,18,5); ctx.fill();
+  ctx.restore();
+  popis(text,cx,y,barva,font);
+}
+/* kóta (rozměrová čára) se šipkami na obou koncích; u krátké kóty popisek uhne pod ni */
+function kota(x1,x2,y,text,barva=C.muted){
+  const xa=Math.min(x1,x2), xb=Math.max(x1,x2);
+  if(xb-xa<4) return;
+  ctx.save();
+  ctx.strokeStyle=barva; ctx.lineWidth=1;
+  ctx.beginPath();
+  ctx.moveTo(xa,y-5); ctx.lineTo(xa,y+5);
+  ctx.moveTo(xb,y-5); ctx.lineTo(xb,y+5);
+  ctx.moveTo(xa,y);   ctx.lineTo(xb,y);
+  ctx.stroke();
+  ctx.restore();
+  hrot(xa+1,y,Math.PI,barva,6); hrot(xb-1,y,0,barva,6);
+  chip(text,(xa+xb)/2,xb-xa<58?y+16:y,barva,'10px sans-serif');
 }
 
 /* ================= 1) ODRAZ A LOM ================= */
@@ -554,153 +592,403 @@ const hranol={
   }
 };
 
-/* ================= přepínání ================= */
-/* ================= 4) HVĚZDÁŘSKÝ (KEPLERŮV) DALEKOHLED =================
-   Objektiv s dlouhou ohniskovou vzdáleností vytvoří v ohniskové rovině
-   skutečný převrácený obraz, okulár se na něj dívá jako lupa. Ohniska obou
-   čoček splývají, takže dovnitř i ven jde rovnoběžný svazek – mění se jen
-   jeho úhel. Odtud úhlové zvětšení Z = f₁ / f₂. */
+/* ================= 4) DALEKOHLED =================
+   Keplerův (hvězdářský): objektiv s dlouhým ohniskem vytvoří ve své ohniskové
+   rovině malý skutečný převrácený obraz a okulár (spojka) se na něj dívá jako
+   lupa. Ohniska obou čoček splývají, takže dovnitř i ven letí rovnoběžný
+   svazek – mění se jen jeho úhel. Odtud úhlové zvětšení Z = f₁ / f₂.
+   Galileův (holandský – divadelní kukátko): v okuláru je rozptylka postavená
+   o f₂ *před* ohniskovou rovinu. Ohniska zase splývají a zvětšení vyjde
+   stejně, ale obraz se nestihne vytvořit, tubus měří jen f₁ − f₂ a výsledek
+   je přímý.
+
+   Schéma se kreslí anamorfně – podél osy a napříč osou platí jiné měřítko.
+   Paraxiální optika je v příčné souřadnici lineární (vynásobí-li se všechny
+   výšky i sklony stejným číslem, obrázek dál platí), takže svislé roztažení
+   nic nerozbije. Bez něj by se svazek pod úhlem kolem jednoho stupně slil
+   s osou a nebylo by vidět to hlavní: ven letí pod mnohem větším úhlem. */
+
+/* Obloha pro srovnávací kroužky: posun od středu pole ve stupních a hvězdná
+   velikost. Slabší než 6 mag pouhé oko nevidí – ty se objeví, až když je
+   objektiv dost velký. */
+const NEBE=[
+  // jasné hvězdy blízko středu – ty uvidíš okem i okulárem, a je na nich vidět otočení
+  {x: 0.90,y: 0.70,m:3.0,b:'#ffbe73'},
+  {x:-1.50,y: 0.60,m:4.6},
+  {x: 1.10,y:-1.60,m:5.2},
+  // jasné hvězdy po celé obloze – ty se vejdou jen do pohledu pouhým okem
+  {x: -9.0,y:  6.0,m:2.4},
+  {x: 12.0,y: -4.0,m:3.4},
+  {x:-14.0,y: -8.0,m:3.9},
+  {x:  6.0,y: 13.0,m:4.5},
+  {x: 17.0,y:  9.0,m:5.0},
+  {x: -5.0,y:-15.0,m:4.2},
+  {x:  9.0,y:-12.0,m:5.4},
+  // slabé hvězdy – objeví se, teprve když je objektiv dost velký
+  {x: 0.55,y:-0.90,m:7.2},
+  {x:-0.75,y: 0.50,m:8.1,b:'#a8c8ff'},
+  {x: 1.35,y: 0.35,m:9.0},
+  {x:-0.50,y:-1.25,m:9.7},
+  {x:-1.40,y:-0.40,m:10.5},
+  {x: 0.35,y: 1.30,m:11.4},
+  {x: 1.20,y:-0.50,m:12.3},
+  {x:-1.10,y: 1.10,m:13.0}];
+const MESIC_SKVRNY=[[-0.40,0.32,0.26],[0.30,0.10,0.34],[-0.08,-0.48,0.17],[0.48,-0.40,0.12]];
+
+/* Ukázková nastavení skutečných přístrojů – aby bylo poznat, co jsou reálné
+   hodnoty. Galileo v roce 1609 brousil objektiv s ohniskem kolem metru a clonil
+   ho na pár centimetrů, aby obraz nerozmazaly vady čočky. */
+const PRESETY={
+  kukatko:    {typ:'galileo',f1:20, f2:6.5,D:3, alfa:20},
+  galileo1609:{typ:'galileo',f1:100,f2:5,  D:3, alfa:4},
+  skolni:     {typ:'kepler', f1:70, f2:2.5,D:7, alfa:6},
+  velky:      {typ:'kepler', f1:100,f2:2,  D:20,alfa:3}};
+
 const dalekohled={
-  f1:60, f2:6, D:8, alfa:1.2, osovy:true, pohled:true,
+  typ:'kepler', f1:60, f2:6, D:8, alfa:1.2, osovy:true, pohled:true,
   nacti(){
-    this.f1=+$('dF1').value; this.f2=+$('dF2').value; this.D=+$('dD').value;
+    this.typ=$('dTyp').value;
+    this.f1=+$('dF1').value;
+    // u Galileova musí okulár zůstat kratší než objektiv, jinak by tubus zmizel
+    const el=$('dF2'), max=this.galileo()?Math.max(2,Math.min(20,Math.round(this.f1*0.4*2)/2)):20;
+    el.max=max;
+    if(+el.value>max) el.value=max;
+    this.f2=+el.value;
+    this.D=+$('dD').value;
     this.alfa=+$('dAlfa').value/10;
     this.osovy=$('dOsovy').checked; this.pohled=$('dPohled').checked;
     $('dF1V').textContent=this.f1+' cm';
     $('dF2V').textContent=cz(this.f2,this.f2%1?1:0)+' cm';
     $('dDV').textContent=this.D+' cm';
     $('dAlfaV').textContent=cz(this.alfa)+'°';
+    // jakmile se hodnoty rozejdou s ukázkou, vrátí se výběr na „vlastní"
+    const pr=$('dPreset'), uk=PRESETY[pr.value];
+    if(uk&&(uk.typ!==this.typ||uk.f1!==this.f1||uk.f2!==this.f2||uk.D!==this.D
+            ||uk.alfa!==+$('dAlfa').value)) pr.value='';
   },
+  galileo(){ return this.typ==='galileo'; },
   zvetseni(){ return this.f1/this.f2; },
-  tubus(){ return this.f1+this.f2; },
+  tubus(){ return this.galileo()?this.f1-this.f2:this.f1+this.f2; },
   beta(){ return Math.atan(this.zvetseni()*Math.tan(this.alfa/DEG))*DEG; },
-  svetelnost(){ return (this.D*10/7)**2; },   // proti zornici oka ≈ 7 mm
+  svetelnost(){ return (this.D*10/7)**2; },          // proti zornici oka ≈ 7 mm
+  vystupni(){ return this.D*10/this.zvetseni(); },   // výstupní pupila v mm
+  mezniMag(){ return 6+5*Math.log10(this.D*10/7); }, // nejslabší viditelná hvězda
+  // zdánlivé pole okuláru dělené zvětšením; Galileův má pole citelně menší
+  zornePole(){ return (this.galileo()?24:50)/this.zvetseni(); },
+  mimoPole(){ return this.alfa>this.zornePole()/2; },
 
   kresli(w,h){
-    const osaY=h*0.44, objX=w*0.07;
-    const mer=Math.min((w*0.70)/this.tubus(), h*0.30/Math.max(1,this.D/2));
-    const okX=objX+this.tubus()*mer, fx=objX+this.f1*mer;
-    const ap=Math.max(14,Math.min(this.D/2*mer, h*0.30));      // polovina objektivu
-    const apOk=Math.max(9,Math.min(ap*0.42,30));               // polovina okuláru
-    const tg=Math.tan(this.alfa/DEG);
-    const yF=osaY+this.f1*tg*mer;                              // obraz v ohniskové rovině
-    const sVen=(osaY-yF)/(this.f2*mer);                        // sklon svazku za okulárem
+    const G=this.galileo(), Z=this.zvetseni(), L=this.tubus();
+    const a=this.D/2, tg=Math.tan(this.alfa/DEG);
+    // dole na ploše leží nápověda – kolik místa ukousne, tolik si musíme nechat
+    const rezerva=($('napoveda').offsetHeight||0)+12;
+    const pohled=this.pohled&&h-rezerva>250;
+    const bandH=pohled?Math.max(140,Math.min(232,(h-rezerva)*0.4)):0;
+    const H=h-bandH-(pohled?rezerva:0);                // pásmo pro schéma
+    const osaY=Math.round(H*0.46);
+    const objX=Math.round(w*0.17), tubW=w*0.54;
+    const merX=tubW/(G?this.f1:this.f1+this.f2);       // px na cm podél osy
+    const okX=objX+L*merX, fx=objX+this.f1*merX;
 
-    cara(0,osaY,w,osaY,C.border,1.5);                          // optická osa
+    /* paraxiální průchod: y je výška nad osou v cm, u sklon (dy/dz).
+       Rozptylka se od spojky liší jenom znaménkem ohniskové vzdálenosti. */
+    const f2e=G?-this.f2:this.f2;
+    const paprsek=(y0,uIn)=>{
+      const u1=uIn-y0/this.f1, yE=y0+u1*L;
+      return {y0,uIn,u1,yE,u2:u1-yE/f2e};
+    };
+    const svazek=[a,0,-a].map(y0=>paprsek(y0,-tg));    // od hvězdy mimo osu
+    const osovy=[a,0,-a].map(y0=>paprsek(y0,0));       // ze středu zorného pole
+
+    // okulár kreslíme tak velký, jak ho dělá clona zorného pole
+    const okAp=Math.max(a*0.15,Math.min(a*0.95,this.f1*Math.tan(this.zornePole()/2/DEG)+a/Z));
+    // svislé měřítko smíme roztáhnout – příčný směr je v paraxiální optice lineární
+    const volno=Math.min(H*0.25,145);
+    const merY=Math.min(merX*3.4,volno/Math.max(a,okAp,L*tg+a/Z,this.f1*tg));
+    const k=merY/merX;                                 // svislé převýšení
+    const X=z=>objX+z*merX, Y=y=>osaY-y*merY;
+    const ap=a*merY, apOk=Math.max(9,okAp*merY);
+    const tubR=Math.max(ap,apOk)+9;
+
+    ctx.save();
+    ctx.beginPath(); ctx.rect(0,0,w,H); ctx.clip();
+
+    cara(0,osaY,w,osaY,C.border,1.2,true);             // optická osa
 
     // tubus
     ctx.save();
-    ctx.fillStyle='rgba(106,166,253,.05)';
-    ctx.strokeStyle=C.border; ctx.lineWidth=1; ctx.setLineDash([5,5]);
-    ctx.beginPath(); ctx.rect(objX,osaY-ap-8,okX-objX,2*ap+16); ctx.fill(); ctx.stroke();
+    ctx.globalAlpha=.5; ctx.fillStyle=C.elev;
+    ctx.beginPath(); ctx.roundRect(objX,osaY-tubR,okX-objX,2*tubR,8); ctx.fill();
+    ctx.globalAlpha=1; ctx.strokeStyle=C.silny; ctx.lineWidth=2;
+    ctx.beginPath();
+    ctx.moveTo(objX,osaY-tubR); ctx.lineTo(okX,osaY-tubR);
+    ctx.moveTo(objX,osaY+tubR); ctx.lineTo(okX,osaY+tubR);
+    ctx.stroke();
     ctx.restore();
 
-    // ohnisková rovina, kde se obraz tvoří
-    cara(fx,osaY-ap-6,fx,osaY+ap+6,C.faint,1,true);
-    popis('ohnisková rovina',fx,osaY-ap-18,C.faint,'10px sans-serif');
-
-    const cocka=(x,polovina,silna)=>{
-      ctx.lineWidth=silna?3:2.2; ctx.strokeStyle=C.akcent;
-      ctx.fillStyle='rgba(106,166,253,.16)';
-      const vyd=silna?13:8;
-      ctx.beginPath();
-      ctx.moveTo(x,osaY-polovina);
-      ctx.quadraticCurveTo(x+vyd,osaY,x,osaY+polovina);
-      ctx.quadraticCurveTo(x-vyd,osaY,x,osaY-polovina);
-      ctx.closePath(); ctx.fill(); ctx.stroke();
+    // svazky paprsků: vně dalekohledu, uvnitř a za okulárem
+    const zL=-objX/merX, zR=(w+40-okX)/merX;
+    const kresliSvazek=(pole,barva,sirka,carkovane)=>{
+      for(const p of pole){
+        cara(0,Y(p.y0+p.uIn*zL),objX,Y(p.y0),barva,sirka,carkovane);
+        cara(objX,Y(p.y0),okX,Y(p.yE),barva,sirka,carkovane);
+        cara(okX,Y(p.yE),w+40,Y(p.yE+p.u2*zR),barva,sirka,carkovane);
+      }
     };
-    cocka(objX,ap,true);
-    cocka(okX,apOk,false);
-    popis('objektiv',objX,osaY+ap+24,C.akcent,'11px sans-serif');
-    popis('okulár',okX,osaY+ap+24,C.akcent,'11px sans-serif');
-
-    // svazek od hvězdy mimo osu
-    const vysky=[ap*0.92,0,-ap*0.92];
-    for(const yk of vysky){
-      const yObj=osaY-yk;
-      cara(0,yObj-tg*objX,objX,yObj,C.warn,1.6);              // vně dalekohledu
-      cara(objX,yObj,fx,yF,C.warn,1.6);                       // k obrazu
-      const sklon=(yF-yObj)/(fx-objX);
-      const yOk=yF+sklon*(okX-fx);
-      cara(fx,yF,okX,yOk,C.warn,1.6);                         // dál k okuláru
-      cara(okX,yOk,w,yOk+sVen*(w-okX),C.warn,1.6);            // ven rovnoběžně
-    }
-    hrot(w-4,osaY-tg*0+ (function(){const yOk=yF+((yF-osaY)/(fx-objX))*(okX-fx);return yOk+sVen*(w-4-okX)-osaY;})(),
-         Math.atan2(sVen,1),C.warn,9);
-
-    // osový svazek pro srovnání
     if(this.osovy){
-      for(const yk of vysky){
-        const yObj=osaY-yk;
-        cara(0,yObj,objX,yObj,C.faint,1.1);
-        cara(objX,yObj,fx,osaY,C.faint,1.1);
-        const sklon=(osaY-yObj)/(fx-objX);
-        const yOk=osaY+sklon*(okX-fx);
-        cara(fx,osaY,okX,yOk,C.faint,1.1);
-        cara(okX,yOk,w,yOk,C.faint,1.1);
+      ctx.save(); ctx.globalAlpha=.5;
+      kresliSvazek(osovy,C.faint,1,true);
+      ctx.restore();
+    }
+    kresliSvazek(svazek,C.warn,1.8,false);
+
+    // šipky do svazku od hvězdy, ať je poznat, kudy světlo letí
+    const stred=svazek[1];
+    const yInL=Y(stred.uIn*zL);
+    hrot(objX*0.66,yInL+(osaY-yInL)*0.66,Math.atan2(osaY-yInL,objX),C.warn,8);
+    const sklonVen=-stred.u2*merY/merX, dxo=(w-okX)*0.62;
+    hrot(okX+dxo,Y(stred.yE)+sklonVen*dxo,Math.atan2(sklonVen,1),C.warn,8);
+
+    // ohnisková rovina – ohniska objektivu a okuláru splývají
+    cara(fx,osaY-tubR-5,fx,osaY+tubR+5,C.faint,1,true);
+    ctx.fillStyle=C.faint;
+    ctx.beginPath(); ctx.arc(fx,osaY,3,0,Math.PI*2); ctx.fill();
+
+    // obraz v ohniskové rovině (u Galilea se ho okulár nedočká)
+    const yImg=Y(-this.f1*tg);
+    if(Math.abs(yImg-osaY)>2){
+      ctx.save();
+      ctx.strokeStyle=C.ok; ctx.lineWidth=G?2:3.2;
+      if(G){ ctx.setLineDash([4,4]); ctx.globalAlpha=.6; }
+      ctx.beginPath(); ctx.moveTo(fx,osaY); ctx.lineTo(fx,yImg); ctx.stroke();
+      ctx.restore();
+      if(!G) hrot(fx,yImg,Math.PI/2,C.ok,9);
+      chip(G?'sem už obraz nedojde':'skutečný obraz – vzhůru nohama',fx,osaY+tubR+14,C.ok,'10px sans-serif');
+    }
+
+    // čočky
+    const cockaTvar=(x,pol,rozptylka)=>{
+      ctx.save();
+      ctx.lineWidth=2.4; ctx.strokeStyle=C.akcent; ctx.fillStyle='rgba(106,166,253,.18)';
+      ctx.beginPath();
+      if(rozptylka){
+        const v=Math.max(3,pol*0.20), s=Math.max(3,pol*0.09);
+        ctx.moveTo(x-s-v,osaY-pol); ctx.lineTo(x+s+v,osaY-pol);
+        ctx.quadraticCurveTo(x+s-v,osaY,x+s+v,osaY+pol);
+        ctx.lineTo(x-s-v,osaY+pol);
+        ctx.quadraticCurveTo(x-s+v,osaY,x-s-v,osaY-pol);
+      }else{
+        const v=Math.max(5,pol*0.24);
+        ctx.moveTo(x,osaY-pol);
+        ctx.quadraticCurveTo(x+v,osaY,x,osaY+pol);
+        ctx.quadraticCurveTo(x-v,osaY,x,osaY-pol);
+      }
+      ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.restore();
+    };
+    cockaTvar(objX,ap,false);
+    cockaTvar(okX,apOk,G);
+
+    // popisky nad tubusem; když ohnisková rovina leží u okuláru, uhne o řádek výš
+    // zornice oka nakreslená týmž měřítkem jako objektiv: tenhle rozdíl v ploše
+    // je celý rozdíl v tom, kolik světla přístroj nasbírá
+    const rzO=0.35*merY, tesno=H<250, uzke=w<720;
+    if(ap>rzO*2+18&&!tesno){
+      const zx=objX-30, zy=osaY+ap*0.62;
+      ctx.save();
+      ctx.globalAlpha=.45; ctx.fillStyle=C.warn;
+      ctx.beginPath(); ctx.arc(zx,zy,rzO,0,Math.PI*2); ctx.fill();
+      ctx.globalAlpha=1; ctx.strokeStyle=C.text; ctx.lineWidth=1.2;
+      ctx.beginPath(); ctx.arc(zx,zy,rzO,0,Math.PI*2); ctx.stroke();
+      ctx.restore();
+      chip('zornice oka 7 mm · objektiv nasbírá '+Math.round(this.svetelnost())+'× víc světla',
+           zx+16,zy+rzO+13,C.muted,'10px sans-serif');
+    }
+
+    const yPop=Math.max(12,osaY-tubR-15);
+    const f2Txt=cz(this.f2,this.f2%1?1:0);
+    chip(uzke?'objektiv f₁ '+this.f1+' cm':'objektiv · f₁ = '+this.f1+' cm · Ø '+this.D+' cm',objX,yPop,C.akcent);
+    chip(uzke?'okulár f₂ '+f2Txt+' cm':'okulár · f₂ = '+f2Txt+' cm'+(G?' (rozptylka)':''),okX,yPop,C.akcent);
+    if(!tesno)
+      chip('ohniska splývají: F₁ = F₂',fx,Math.abs(okX-fx)<150?Math.max(12,yPop-21):yPop,C.faint,'10px sans-serif');
+
+    // hvězda a úhel α
+    const hvX=Math.max(26,objX*0.17), hvY=Y(-tg*((hvX-objX)/merX));
+    uchop(hvX,hvY,17,'hvezda');
+    popis('⭐',hvX,hvY,C.text,'19px sans-serif');
+    const thA=Math.atan(tg*k);
+    if(thA>0.02){
+      ctx.save(); ctx.strokeStyle=C.warn; ctx.lineWidth=1.3;
+      ctx.beginPath(); ctx.arc(objX,osaY,54,Math.PI,Math.PI+thA); ctx.stroke(); ctx.restore();
+    }
+    chip('α = '+cz(this.alfa)+'°',objX+74*Math.cos(Math.PI+thA/2),osaY+74*Math.sin(Math.PI+thA/2),C.warn);
+
+    // oko, výstupní pupila a úhel β
+    const eyeX=Math.max(okX+apOk+16,Math.min(w-40,X(G?L+this.f2*0.5:L+L/Z)));
+    const u2=stred.u2, thB=Math.atan(Math.abs(u2)*k);
+    if(thB>0.02){
+      ctx.save(); ctx.strokeStyle=C.warn; ctx.lineWidth=1.3;
+      ctx.beginPath();
+      if(u2>0) ctx.arc(eyeX,osaY,50,Math.PI-thB,Math.PI); else ctx.arc(eyeX,osaY,50,Math.PI,Math.PI+thB);
+      ctx.stroke(); ctx.restore();
+      cara(eyeX,osaY,eyeX-64,osaY+64*u2*k,C.warn,1.1,true);
+    }
+    // popisek β patří na vycházející svazek, u oka už je těsno
+    const dxB=(w-okX)*0.72;
+    chip('β = '+cz(this.beta())+'°',okX+dxB,Y(stred.yE)+sklonVen*dxB-15,C.warn);
+
+    if(G){
+      popis('👁️',Math.min(w-16,okX+apOk+22),osaY,C.text,'18px sans-serif');
+    }else{
+      // výstupní pupila proti zornici oka: co se do zornice nevejde, propadne vedle
+      const rz=0.35*merY, rp=Math.max(1.5,Math.min(a/Z*merY,tubR));
+      ctx.save();
+      ctx.globalAlpha=.45; ctx.fillStyle=C.warn;
+      ctx.beginPath(); ctx.arc(eyeX,osaY,rp,0,Math.PI*2); ctx.fill();
+      ctx.globalAlpha=1; ctx.strokeStyle=C.text; ctx.lineWidth=1.4;
+      ctx.beginPath(); ctx.arc(eyeX,osaY,rz,0,Math.PI*2); ctx.stroke();
+      ctx.restore();
+      popis('👁️',Math.min(w-16,eyeX+Math.max(rz,rp)+18),osaY,C.text,'18px sans-serif');
+      chip('výstupní pupila '+cz(this.vystupni(),1)+' mm',
+           eyeX,osaY+Math.max(rz,rp)+15,C.muted,'10px sans-serif');
+    }
+
+    // kóty pod tubusem: A + B = C (jen když na ně dole zbylo místo)
+    const yk1=osaY+tubR+36, yk2=yk1+32;
+    if(yk2+12<H){
+      if(G){
+        kota(objX,okX,yk1,'tubus '+cz(L,L%1?1:0)+' cm = f₁ − f₂',C.muted);
+        kota(okX,fx,yk1,'f₂',C.akcent);
+        kota(objX,fx,yk2,'f₁ = '+this.f1+' cm',C.akcent);
+      }else{
+        kota(objX,fx,yk1,'f₁ = '+this.f1+' cm',C.akcent);
+        kota(fx,okX,yk1,'f₂',C.akcent);
+        kota(objX,okX,yk2,'tubus '+cz(L,L%1?1:0)+' cm = f₁ + f₂',C.muted);
       }
     }
 
-    // převrácený obraz v ohniskové rovině
-    if(Math.abs(yF-osaY)>3){
-      ctx.strokeStyle=C.ok; ctx.lineWidth=3;
-      ctx.beginPath(); ctx.moveTo(fx,osaY); ctx.lineTo(fx,yF); ctx.stroke();
-      hrot(fx,yF,yF>osaY?Math.PI/2:-Math.PI/2,C.ok,9);
-      // popisek dáme na opačnou stranu osy, než kam míří obraz
-      popis('obraz',fx,yF>osaY?osaY-16:osaY+16,C.ok,'11px sans-serif');
-    }
+    if(this.mimoPole())
+      chip('⚠ hvězda je až za okrajem zorného pole (±'+cz(this.zornePole()/2,1)+'°) – dalekohledem by ji vidět nebylo',
+           w/2,17,C.danger,'11px sans-serif');
 
-    // úhly α a β
-    popis('α = '+cz(this.alfa)+'°',objX*0.5+14,osaY-tg*objX*0.5-26,C.warn,'11px sans-serif');
-    popis('β = '+cz(this.beta())+'°',(okX+w)/2,osaY+sVen*((okX+w)/2-okX)-16,C.warn,'11px sans-serif');
+    const uzko=w<720;
+    let pozn=uzko?'':'hvězda je nekonečně daleko, proto k objektivu letí rovnoběžný svazek';
+    if(k>1.15) pozn+=(pozn?' · ':'')+'svisle zvětšeno '+cz(k,1)+'×';
+    if(G&&!uzko) pozn+=' · výstupní pupila leží uvnitř tubusu, proto má kukátko úzké zorné pole';
+    popis(pozn,10,Math.min(bandH?H-10:h-rezerva-6,yk2+30),C.faint,'10px sans-serif','left');
 
-    // oko
-    popis('👁️',Math.min(w-18,okX+apOk+26),osaY,C.text,'18px sans-serif');
-
-    // uchopovací body pro tažení přímo v obrázku
     uchop(okX,osaY,20,'okular');
-    uchop(objX*0.4,osaY-tg*objX*0.4,18,'hvezda');
-    this.geo={objX,osaY,mer,okX,fx};
+    uchop(objX,osaY-ap,15,'objektiv');
+    this.geo={objX,osaY,merX,merY,okX,fx,hvX};
 
-    if(this.pohled) this.kresliPohled(w,h);
+    ctx.restore();
+    if(pohled) this.kresliPohled(w,H,bandH,G);
   },
 
-  /* Kroužek „co uvidíš" – vedle sebe pohled okem a okulárem.
-     Teprve tady je vidět, že obraz je nejen větší, ale i vzhůru nohama. */
-  kresliPohled(w,h){
-    const r=Math.min(52,h*0.15), y=h-r-20;
-    const x2=w-r-24, x1=x2-2*r-16;   // kroužky se nesmí překrývat
-    const scena=(cx,rm,prevraceno,titulek)=>{
+  /* Dva kroužky vedle sebe: co uvidíš okem a co okulárem. Oba mají stejné
+     *zdánlivé* zorné pole – tedy stejně velký výsek toho, co oko vnímá – takže
+     se dají poctivě srovnat. Vlevo je za tím pole oblohy Z× větší, proto je
+     Měsíc jen tečka a hvězd je plno; vpravo je z oblohy vidět jen čárkovaný
+     výřez, zato Z× zvětšený, vzhůru nohama a s hvězdami, na které oko nestačí. */
+  kresliPohled(w,bandTop,bandH,G){
+    cara(0,bandTop,w,bandTop,C.border,1);
+    const r=Math.max(28,Math.min((bandH-40)/2,w*0.15,92));
+    const cy=bandTop+r+6;
+    const mez=Math.max(108,Math.min(w*0.2,180));
+    const cx1=w/2-r-mez/2, cx2=w/2+r+mez/2;
+    const Z=this.zvetseni(), FOVt=this.zornePole(), W=FOVt*Z;   // zdánlivé pole okuláru
+    const limD=this.mezniMag();
+
+    const hvezdicka=(x,y,rad,barva)=>{
       ctx.save();
-      ctx.beginPath(); ctx.arc(cx,y,r,0,Math.PI*2);
-      ctx.fillStyle=C.panel; ctx.fill();
-      ctx.strokeStyle=C.silny; ctx.lineWidth=1.5; ctx.stroke();
-      ctx.clip();
-      const smer=prevraceno?-1:1;
-      rm=Math.min(rm,r*0.78);       // Měsíc nesmí přerůst zorné pole, jinak zmizí hvězda
-      ctx.fillStyle='#d8d2c0';
-      ctx.beginPath(); ctx.arc(cx,y+smer*r*0.22,rm,0,Math.PI*2); ctx.fill();
-      ctx.fillStyle='rgba(120,112,96,.55)';
-      for(const [dx,dy,dr] of [[-0.35,-0.25,0.20],[0.30,0.10,0.26],[-0.05,0.40,0.14]]){
-        ctx.beginPath();
-        ctx.arc(cx+dx*rm,y+smer*r*0.22+smer*dy*rm,dr*rm,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle=barva; ctx.strokeStyle='#0c1018'; ctx.lineWidth=1.6;
+      ctx.beginPath();
+      for(let i=0;i<8;i++){
+        const t=i*Math.PI/4-Math.PI/2, rr=i%2?rad*0.36:rad;
+        const px=x+rr*Math.cos(t), py=y+rr*Math.sin(t);
+        i?ctx.lineTo(px,py):ctx.moveTo(px,py);
       }
-      ctx.fillStyle=C.text;                            // hvězda pro poznání otočení
-      ctx.beginPath(); ctx.arc(cx,y-smer*r*0.62,2.2,0,Math.PI*2); ctx.fill();
-      ctx.restore();
-      popis(titulek,cx,y+r+13,C.muted,'10px sans-serif');
+      ctx.closePath(); ctx.stroke(); ctx.fill(); ctx.restore();
     };
-    scena(x1,5,false,'okem');
-    scena(x2,5*this.zvetseni(),true,cz(this.zvetseni(),this.zvetseni()%1?1:0)+'× · převráceně');
+
+    // sc = kolik pixelů zabere jeden stupeň oblohy; okulár ji zvětší Z×
+    const scena=(cx,sc,s,limit)=>{
+      ctx.save();
+      ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2);
+      ctx.fillStyle='#0c1018'; ctx.fill();
+      ctx.save(); ctx.clip();
+      const rm=Math.max(2.4,0.25*sc);                  // Měsíc má v průměru 0,5°
+      ctx.save();
+      ctx.globalAlpha=.16; ctx.fillStyle='#e9e3d2';
+      ctx.beginPath(); ctx.arc(cx,cy,rm*2.2,0,Math.PI*2); ctx.fill();
+      ctx.restore();
+      ctx.fillStyle='#e9e3d2';
+      ctx.beginPath(); ctx.arc(cx,cy,rm,0,Math.PI*2); ctx.fill();
+      if(rm>3.5){
+        ctx.fillStyle='rgba(96,90,76,.5)';
+        for(const [dx,dy,dr] of MESIC_SKVRNY){
+          ctx.beginPath(); ctx.arc(cx+s*dx*rm,cy-s*dy*rm,dr*rm,0,Math.PI*2); ctx.fill();
+        }
+      }
+      for(const hv of NEBE){
+        if(hv.m>limit) continue;
+        const slaba=hv.m>6, rad=slaba?1.15:Math.max(1.2,2.9-0.3*hv.m);
+        const hx=cx+s*hv.x*sc, hy=cy-s*hv.y*sc;
+        ctx.fillStyle=hv.b||(slaba?'#b9c6e0':'#ffffff');
+        ctx.globalAlpha=slaba?.85:1;
+        ctx.beginPath(); ctx.arc(hx,hy,rad,0,Math.PI*2); ctx.fill();
+        if(!slaba){ ctx.globalAlpha=.22; ctx.beginPath(); ctx.arc(hx,hy,rad*2.6,0,Math.PI*2); ctx.fill(); }
+        ctx.globalAlpha=1;
+      }
+      // hvězda ze schématu stojí α nad středem pole; okulárem se překlopí
+      hvezdicka(cx,cy-s*this.alfa*sc,4.2,C.warn);
+      ctx.restore();
+      ctx.strokeStyle=C.silny; ctx.lineWidth=1.6;
+      ctx.beginPath(); ctx.arc(cx,cy,r,0,Math.PI*2); ctx.stroke();
+      ctx.restore();
+    };
+    scena(cx1,2*r/W,1,6);
+    scena(cx2,2*r/W*Z,G?1:-1,limD);
+
+    // pouhým okem je Měsíc jen puntík, bez odkazu by ho nikdo nenašel
+    const rM=Math.max(2.4,0.25*2*r/W), od=Math.max(rM,r/Z)+7;
+    cara(cx1+od*0.72,cy-od*0.72,cx1+od+10,cy-od-10,C.faint,1);
+    popis('Měsíc',cx1+od+13,cy-od-13,C.faint,'9px sans-serif','left');
+
+    // kousek oblohy, který dalekohled ukáže = jeho skutečné zorné pole
+    const rc=Math.max(3,r/Z);
+    ctx.save();
+    ctx.strokeStyle=C.akcent; ctx.lineWidth=1.5; ctx.setLineDash([4,3]);
+    if(rc<r*0.96){ ctx.beginPath(); ctx.arc(cx1,cy,rc,0,Math.PI*2); ctx.stroke(); }
+    // lupová výseč: z čárkovaného výřezu vlevo se stane celý kroužek vpravo
+    for(const zn of [-1,1]){
+      const x1=cx1, y1=cy+zn*rc, x2=cx2, y2=cy+zn*r;
+      const t=xx=>y1+(y2-y1)*(xx-x1)/(x2-x1);
+      const xa=cx1+r*0.75, xb=cx2-r*0.75;
+      ctx.beginPath(); ctx.moveTo(xa,t(xa)); ctx.lineTo(xb,t(xb)); ctx.stroke();
+    }
+    ctx.restore();
+
+    popis(cz(Z,1)+'×',w/2,cy-13,C.akcent,'bold 15px sans-serif');
+    popis('zorné pole '+cz(FOVt,1)+'°',w/2,cy+15,C.muted,'10px sans-serif');
+
+    popis('🌙 pouhým okem',cx1,cy+r+15,C.muted,'11px sans-serif');
+    popis((G?'🎭':'🔭')+' okulárem · '+(G?'přímo':'vzhůru nohama'),cx2,cy+r+15,C.muted,'11px sans-serif');
+    const navic=NEBE.filter(hv=>hv.m>6&&hv.m<=limD&&Math.hypot(hv.x,hv.y)<FOVt/2).length;
+    if(navic&&cy+r+32<bandTop+bandH)
+      popis('+ '+navic+' slabých hvězd, které okem nevidíš',cx2,cy+r+30,C.ok,'10px sans-serif');
   },
 
   stav(){
-    const Z=this.zvetseni();
-    return `<span class="znak">🔭</span> Zvětšení <b>${cz(Z,1)}×</b>
-      · Délka tubusu <b>${cz(this.tubus(),this.tubus()%1?1:0)} cm</b> = f₁ + f₂
-      · Úhel do dalekohledu <b>${cz(this.alfa)}°</b> → z okuláru <b>${cz(this.beta())}°</b>
-      · Objektiv nasbírá <b>${Math.round(this.svetelnost())}×</b> víc světla než oko
-      · Obraz je <b>převrácený</b>`;
+    const Z=this.zvetseni(), G=this.galileo(), L=this.tubus();
+    return `<span class="znak">🔭</span> ${G?'Galileův':'Keplerův'}
+      · Zvětšení <b>${cz(Z,1)}×</b> = f₁/f₂
+      · Tubus <b>${cz(L,L%1?1:0)} cm</b> = f₁ ${G?'−':'+'} f₂
+      · Zorné pole <b>${cz(this.zornePole(),1)}°</b>
+      · Úhel <b>${cz(this.alfa)}°</b> → <b>${cz(this.beta())}°</b>
+      · Světla <b>${Math.round(this.svetelnost())}×</b> víc než oko → hvězdy do <b>${cz(this.mezniMag(),1)} mag</b>
+      · Výstupní pupila <b>${cz(this.vystupni(),1)} mm</b>
+      · Obraz <b>${G?'přímý':'převrácený'}</b>`;
   }
 };
 
@@ -725,22 +1013,34 @@ const NAPOVEDA={
     • Zvyš <b>disperzi</b> a spektrum se roztáhne (skla se opravdu liší, proto se u objektivů kombinují).<br>
     • Při velkém úhlu může na výstupní stěně nastat úplný odraz a paprsek se v hranolu „zalomí".<br>
     • Stejný jev vytváří na obloze <b>duhu</b>, jen roli hranolu hrají kapky vody.`,
-  dalekohled:`<b>Hvězdářský (Keplerův) dalekohled</b><br>Objektiv s dlouhým ohniskem vytvoří v ohniskové rovině
-    malý <b>skutečný převrácený obraz</b> a okulár se na něj dívá jako lupa. Ohniska obou čoček splývají,
-    takže dovnitř i ven letí <b>rovnoběžný svazek</b> – mění se jen jeho úhel.<br><br>
-    <b>Zkus si</b><br>• <b>Táhni za okulár</b> a měň jeho ohnisko, nebo <b>za paprsek vlevo</b> a naklápěj hvězdu.<br>
-    • Zvětšení je <b>Z = f₁ / f₂</b>. Kratší okulár = větší zvětšení, ale menší a tmavší zorné pole.<br>
+  dalekohled:`<b>Dalekohled</b><br>Objektiv s dlouhým ohniskem vytvoří ve své ohniskové rovině malý
+    <b>skutečný převrácený obraz</b> a okulár se na něj dívá jako lupa. Ohniska obou čoček splývají,
+    takže dovnitř i ven letí <b>rovnoběžný svazek</b> – mění se jen jeho úhel. Odtud
+    <b>úhlové zvětšení Z = f₁ / f₂</b>.<br><br>
+    <b>Zkus si</b><br>• Táhni za <b>⭐ hvězdu</b> (úhel α), za <b>okulár</b> (ohnisko f₂) nebo za
+    <b>okraj objektivu</b> (průměr D).<br>
+    • V nabídce <b>🎬 Ukázka</b> jsou čísla skutečných přístrojů – od divadelního kukátka
+    přes dalekohled, kterým Galileo v roce 1609 poprvé uviděl měsíce Jupiteru, až po velký
+    amatérský přístroj.<br>
+    • Zkrať okulár: zvětšení roste, ale <b>zorné pole se úží</b> – čárkovaný výřez v levém
+    kroužku se viditelně zmenší.<br>
     • Délka tubusu je <b>f₁ + f₂</b> – proto jsou hvězdářské dalekohledy tak dlouhé.<br>
-    • V kroužku vpravo dole vidíš, že obraz je nejen větší, ale i <b>vzhůru nohama</b>. Astronomům to nevadí,
-    do pozemního dalekohledu se proto přidává převracecí hranol.<br>
-    • Průměr objektivu zvětšení nemění – rozhoduje o tom, <b>kolik světla</b> dalekohled nasbírá,
-    a tedy jak slabé hvězdy uvidíš.`
+    • Průměr objektivu zvětšení <b>nemění</b>, rozhoduje o tom, kolik světla dalekohled nasbírá.
+    Zvětši D a v pravém kroužku přibudou slabé hvězdy.<br>
+    • <b>Výstupní pupila</b> je Z× užší než objektiv. Menší než zornice oka (≈ 7 mm) → obraz
+    tmavne; větší → část světla vedle oka propadne.<br>
+    • Přepni na <b>🎭 Galileův</b>: okulár je rozptylka postavená ještě <i>před</i> ohniskovou rovinu.
+    Obraz se nestihne vytvořit, tubus je jen <b>f₁ − f₂</b> a výsledek je <b>přímý</b> – tak fungují
+    divadelní kukátka. Zorné pole je za to hodně úzké.<br>
+    • Schéma je svisle roztažené, jinak by svazek pod úhlem kolem jednoho stupně splynul s osou.<br>
+    • Kroužky dole srovnávají pohled okem a okulárem: <b>čárkovaný výřez</b> vlevo ukazuje, jak malý
+    kousek oblohy dalekohled zabírá.`
 };
 const NAPOVEDY_DOLE={
   lom:'Táhni za 🔦 (nebo kamkoli nad rozhraní), klikni na popisek prostředí a přepneš materiál · šipky ←/→ a kolečko myši ladí po stupních.',
   cocka:'Táhni za hrot předmětu (vzdálenost i výška) nebo za bod F (ohnisko) · kolečkem myši ladíš hodnotu pod kurzorem.',
   hranol:'Táhni za 🔦 (úhel dopadu), za 🔄 uprostřed hranolu (otáčení) nebo za místo dopadu na stěně · kolečkem myši ladíš hodnotu pod kurzorem.',
-  dalekohled:'Táhni za okulár (jeho ohnisko f₂) nebo za paprsek vlevo (úhel hvězdy) · kolečkem myši ladíš hodnotu pod kurzorem.'};
+  dalekohled:'Táhni za ⭐ hvězdu (úhel α), za okulár (ohnisko f₂) nebo za okraj objektivu (průměr D) · kolečkem myši ladíš hodnotu pod kurzorem.'};
 let rezim='lom';
 
 function prepni(r){
@@ -765,7 +1065,18 @@ $('zavriInfo').onclick=()=>$('infoBox').classList.add('skryto');
 ['n1','n2','uhel','zdola','ukazOdraz'].forEach(id=>$(id).oninput=$(id).onchange=()=>{lom.nacti();kresli();});
 ['typ','f','a','vys','ukazVse'].forEach(id=>$(id).oninput=$(id).onchange=()=>{cocka.nacti();kresli();});
 ['hUhel','hPos','hN','hDisp','hOtoc'].forEach(id=>$(id).oninput=()=>{hranol.nacti();kresli();});
-['dF1','dF2','dD','dAlfa','dOsovy','dPohled'].forEach(id=>$(id).oninput=$(id).onchange=()=>{dalekohled.nacti();kresli();});
+['dTyp','dF1','dF2','dD','dAlfa','dOsovy','dPohled'].forEach(id=>$(id).oninput=$(id).onchange=()=>{dalekohled.nacti();kresli();});
+$('dPreset').onchange=()=>{
+  const klic=$('dPreset').value, uk=PRESETY[klic];
+  if(!uk) return;
+  $('dTyp').value=uk.typ; $('dF1').value=uk.f1; $('dD').value=uk.D; $('dAlfa').value=uk.alfa;
+  dalekohled.nacti();               // ohlídá strop f₂ podle typu a délky objektivu
+  $('dF2').value=uk.f2;
+  dalekohled.nacti();
+  $('dPreset').value=klic;          // mezikrok výběr shodil, teď už hodnoty sedí
+  kresli();
+  if($('dTyp').obnovPrepinac) $('dTyp').obnovPrepinac();
+};
 
 /* ---------- tažení a klikání přímo v obrázku ---------- */
 const MATERIALY=['1.0003','1.333','1.52','2.417'];
@@ -791,14 +1102,18 @@ function tahni(x,y,typ){
     }
     cocka.nacti();
   }else if(rezim==='dalekohled'){
-    const {objX,osaY,mer}=dalekohled.geo;
+    const {objX,osaY,merX,merY,hvX}=dalekohled.geo;
     if(typ==='okular'){
-      // posun okuláru mění jeho ohnisko: tubus je vždycky f₁ + f₂
-      const f2=(x-objX)/mer-dalekohled.f1;
-      $('dF2').value=Math.max(2,Math.min(20,Math.round(f2*2)/2));
+      // posun okuláru mění jeho ohnisko: tubus je vždycky f₁ ± f₂
+      const z=(x-objX)/merX;
+      const f2=dalekohled.galileo()?dalekohled.f1-z:z-dalekohled.f1;
+      const el=$('dF2');
+      el.value=Math.max(2,Math.min(+el.max,Math.round(f2*2)/2));
+    }else if(typ==='objektiv'){
+      $('dD').value=Math.max(2,Math.min(20,Math.round((osaY-y)/merY*2)));
     }else{
-      const dx=Math.max(20,objX*0.4);
-      $('dAlfa').value=Math.max(0,Math.min(30,Math.round((osaY-y)/dx*DEG*10)));
+      const dz=Math.max(10,(objX-hvX)/merX);
+      $('dAlfa').value=Math.max(0,Math.min(30,Math.round(Math.atan((osaY-y)/merY/dz)*DEG*10)));
     }
     dalekohled.nacti();
   }else{
@@ -852,7 +1167,7 @@ canvas.addEventListener('pointermove',e=>{
 canvas.addEventListener('pointerup',()=>{tahne=null;kresli();});
 canvas.addEventListener('pointercancel',()=>{tahne=null;});
 // kolečko myši ladí to, nad čím zrovna jsi (jinak hlavní veličinu záložky)
-const KOLECKO={zdroj:'uhel',predmet:'a',ohnisko:'f',vstup:'hPos',hranol:'hOtoc',okular:'dF2',hvezda:'dAlfa'};
+const KOLECKO={zdroj:'uhel',predmet:'a',ohnisko:'f',vstup:'hPos',hranol:'hOtoc',okular:'dF2',hvezda:'dAlfa',objektiv:'dD'};
 canvas.addEventListener('wheel',e=>{
   const [x,y]=poloha(e);
   const u=najdiUchop(x,y);
