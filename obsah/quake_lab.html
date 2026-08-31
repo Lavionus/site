@@ -1,0 +1,1747 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🏚️ Zemětřesná laboratoř</title>
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../podpis.js" defer></script>
+<script src="../dialog.js" defer></script>
+<script src="../rekord.js" defer></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:var(--font);background:var(--bg-deep);color:var(--text);
+  display:flex;flex-direction:column;height:100dvh;overflow:hidden}
+
+/* ---------- hlavička a přepínač režimu ---------- */
+.horni{display:flex;gap:10px;align-items:center;padding:9px 14px;background:var(--bg-panel);
+  border-bottom:1px solid var(--border);flex-wrap:wrap;flex:0 0 auto}
+.horni h1{font-size:1.02rem;font-weight:600;margin-right:auto;white-space:nowrap}
+.tabs{display:flex;gap:6px}
+.tabs button{background:var(--bg-control);border:1px solid var(--border-strong);color:var(--text-muted);
+  border-radius:6px;padding:7px 14px;font-size:.84rem;cursor:pointer;font-family:inherit}
+.tabs button.zap{background:var(--accent);color:#fff;border-color:var(--accent);font-weight:600}
+
+/* ---------- lišta nástrojů ---------- */
+.lista{display:flex;gap:10px;align-items:center;padding:8px 14px;background:var(--bg-elevated);
+  border-bottom:1px solid var(--border);flex-wrap:wrap;flex:0 0 auto}
+.lista.skryta{display:none}
+.skupina{display:flex;gap:4px;align-items:center;flex-wrap:wrap}
+.oddel{width:1px;align-self:stretch;min-height:26px;background:var(--border)}
+button,select,input[type=number]{font-family:inherit}
+.nastroj{background:var(--bg-control);border:1px solid var(--border-strong);color:var(--text);
+  border-radius:6px;padding:6px 10px;font-size:.82rem;cursor:pointer;line-height:1.2;white-space:nowrap}
+.nastroj:hover{border-color:var(--accent)}
+.nastroj.zap{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+.nastroj.hlavni{background:var(--ok);border-color:var(--ok);color:#fff;font-weight:600}
+.nastroj.stop{background:var(--danger);border-color:var(--danger);color:#fff;font-weight:600}
+.nastroj:disabled{opacity:.45;cursor:default}
+.lista label{font-size:.78rem;color:var(--text-muted);display:flex;align-items:center;gap:6px}
+.lista label b{color:var(--text);font-variant-numeric:tabular-nums;min-width:3.4em;text-align:right}
+input[type=range]{width:104px;accent-color:var(--accent)}
+select{background:var(--bg-control);border:1px solid var(--border-strong);color:var(--text);
+  border-radius:6px;padding:6px 8px;font-size:.82rem}
+
+/* ---------- scéna ---------- */
+.scena{flex:1;display:grid;grid-template-columns:minmax(0,1fr) 300px;min-height:0}
+.platno-obal{position:relative;background:var(--bg);min-width:0;min-height:0;touch-action:none}
+canvas{display:block;width:100%;height:100%;cursor:crosshair}
+.hud{position:absolute;left:10px;top:10px;display:flex;flex-direction:column;gap:5px;
+  pointer-events:none;font-size:.76rem;font-variant-numeric:tabular-nums}
+.hud span{background:color-mix(in srgb,var(--bg-panel) 86%,transparent);border:1px solid var(--border);
+  border-radius:6px;padding:3px 8px;align-self:flex-start;color:var(--text-muted)}
+.hud span b{color:var(--text)}
+.lupa{position:absolute;right:10px;bottom:10px;display:flex;gap:5px}
+.lupa button{width:30px;height:30px;padding:0;font-size:.95rem}
+.napoveda-plocha{position:absolute;left:50%;bottom:12px;transform:translateX(-50%);font-size:.76rem;
+  color:var(--text-faint);background:color-mix(in srgb,var(--bg-panel) 86%,transparent);
+  border:1px solid var(--border);border-radius:6px;padding:4px 10px;pointer-events:none;
+  max-width:92%;text-align:center}
+
+/* ---------- boční panel ---------- */
+.panel{background:var(--bg-panel);border-left:1px solid var(--border);padding:13px 14px;
+  overflow-y:auto;display:flex;flex-direction:column;gap:14px;min-width:0;min-height:0}
+.blok h2{font-size:.74rem;color:var(--text-faint);text-transform:uppercase;letter-spacing:.05em;
+  margin-bottom:8px;font-weight:600}
+.materialy{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+.mat{display:flex;align-items:center;gap:6px;background:var(--bg-elevated);border:1px solid var(--border);
+  border-radius:6px;padding:6px 7px;font-size:.78rem;cursor:pointer;color:var(--text-muted);text-align:left}
+.mat:hover{border-color:var(--border-strong)}
+.mat.zap{border-color:var(--accent);background:var(--accent-soft);color:var(--text);font-weight:600}
+.chip{width:12px;height:12px;border-radius:3px;flex:0 0 auto;border:1px solid rgba(0,0,0,.35)}
+.radky{display:flex;flex-direction:column;gap:4px}
+.radek{display:flex;justify-content:space-between;align-items:baseline;gap:8px;font-size:.8rem;
+  padding:4px 8px;background:var(--bg-elevated);border-radius:6px}
+.radek span{color:var(--text-muted)}
+.radek b{font-variant-numeric:tabular-nums;text-align:right}
+.radek.duraz{border-left:3px solid var(--accent)}
+.pozn{font-size:.74rem;color:var(--text-faint);line-height:1.5}
+.tlacitka{display:flex;gap:5px;flex-wrap:wrap}
+.tlacitka .nastroj{flex:1;text-align:center;min-width:74px}
+.verdikt{border-radius:8px;padding:10px 12px;font-size:.86rem;line-height:1.5;
+  border:1px solid var(--border);background:var(--bg-elevated)}
+.verdikt b{display:block;font-size:1rem;margin-bottom:3px}
+.verdikt.ok{border-color:var(--ok);background:color-mix(in srgb,var(--ok) 14%,var(--bg-elevated))}
+.verdikt.warn{border-color:var(--warn);background:color-mix(in srgb,var(--warn) 14%,var(--bg-elevated))}
+.verdikt.bad{border-color:var(--danger);background:color-mix(in srgb,var(--danger) 14%,var(--bg-elevated))}
+.skala{display:flex;align-items:center;gap:6px;font-size:.72rem;color:var(--text-faint)}
+.skala .pruh{flex:1;height:9px;border-radius:5px;
+  background:linear-gradient(90deg,#3d8f5f,#c9b03c,#d06a2c,#c23b3b)}
+
+/* ---------- nápověda ---------- */
+.prekryv{position:fixed;inset:0;background:rgba(0,0,0,.62);display:none;z-index:80;
+  align-items:center;justify-content:center;padding:16px}
+.prekryv.zap{display:flex}
+.modal{background:var(--bg-panel);border:1px solid var(--border);border-radius:10px;
+  max-width:640px;width:100%;max-height:86dvh;overflow-y:auto;padding:20px 22px;box-shadow:var(--shadow)}
+.modal h2{font-size:1.1rem;margin-bottom:12px}
+.modal h3{font-size:.88rem;color:var(--accent);margin:16px 0 6px}
+.modal p,.modal li{font-size:.84rem;line-height:1.6;color:var(--text-muted)}
+.modal ul{padding-left:20px;display:flex;flex-direction:column;gap:3px}
+.modal table{width:100%;border-collapse:collapse;font-size:.78rem;margin-top:6px}
+.modal th,.modal td{padding:4px 6px;border-bottom:1px solid var(--border);text-align:right}
+.modal th:first-child,.modal td:first-child{text-align:left}
+.modal th{color:var(--text-faint);font-weight:600}
+.modal td{font-variant-numeric:tabular-nums;color:var(--text-muted)}
+
+@media(max-width:620px){
+  /* na úzkém plátně by vystředěná nápověda zakryla i tlačítka lupy */
+  .napoveda-plocha{left:8px;right:104px;bottom:8px;transform:none;max-width:none;
+    text-align:left;font-size:.7rem;line-height:1.35}
+}
+@media(max-width:900px){
+  /* na telefonu se svislé oddělovače v zalomené liště jen pletou */
+  .oddel{display:none}
+  .lista{gap:8px 10px}
+  input[type=range]{width:88px}
+  /* minmax(0,…) i min-height:0 jsou nutné – bez nich se aspect-ratio plátna
+     propíše do minimální šířky sloupce a rozhodí layout */
+  body{height:auto;min-height:100dvh;overflow:auto}
+  .scena{grid-template-columns:minmax(0,1fr)}
+  .platno-obal{aspect-ratio:4/3}
+  .panel{border-left:none;border-top:1px solid var(--border);overflow:visible}
+  .horni h1{font-size:.94rem}
+}
+</style>
+</head>
+<body>
+
+<header class="horni">
+  <h1>🏚️ Zemětřesná laboratoř</h1>
+  <div class="tabs">
+    <button id="tabStavba" class="zap">🔨 Stavba</button>
+    <button id="tabSim">🌊 Simulace</button>
+  </div>
+  <button class="nastroj" id="btnNapoveda" title="Jak to funguje">❓</button>
+</header>
+
+<!-- lišta režimu STAVBA -->
+<div class="lista" id="listaStavba">
+  <div class="skupina" id="nastroje">
+    <button class="nastroj zap" data-n="prvek" title="Kreslit prvek (1)">╱ Prvek</button>
+    <button class="nastroj" data-n="vypln" title="Výplňová plocha ze 3–4 uzlů (2)">▦ Výplň</button>
+    <button class="nastroj" data-n="kotva" title="Ukotvit uzel do základu (3)">⚓ Kotva</button>
+    <button class="nastroj" data-n="spoj"  title="Přepnout čep / tuhý spoj (4)">🔗 Spoj</button>
+    <button class="nastroj" data-n="zatez" title="Přidat závaží do uzlu (5)">🧱 Zátěž</button>
+    <button class="nastroj" data-n="posun" title="Posunout uzel (6)">✥ Posun</button>
+    <button class="nastroj" data-n="guma"  title="Smazat prvek, výplň nebo uzel (7)">✂ Guma</button>
+  </div>
+  <div class="oddel"></div>
+  <label title="Strana čtvercového průřezu prvku">Profil <input type="range" id="profil" min="4" max="60" step="2" value="14"><b id="profilTxt">14 cm</b></label>
+  <label title="Hmotnost přidaná do uzlu nástrojem Zátěž">Závaží <input type="range" id="zatez" min="0" max="5000" step="250" value="1000"><b id="zatezTxt">1000 kg</b></label>
+  <div class="oddel"></div>
+  <select id="predlohy" title="Načíst hotový návrh">
+    <option value="">📐 Předlohy…</option>
+    <option value="ram">Ocelový rám, 3 patra</option>
+    <option value="chata">Dřevěná chata s vzpěrami</option>
+    <option value="zed">Cihlová zeď bez ztužení</option>
+    <option value="vez">Příhradová věž</option>
+    <option value="most">Příhradový most</option>
+    <option value="panelak">Panelový dům</option>
+    <option value="pyramida">Kamenná pyramida</option>
+  </select>
+  <button class="nastroj" id="btnZpet" title="Zpět (Ctrl+Z)">↶ Zpět</button>
+  <button class="nastroj" id="btnVycisti" title="Smazat celý návrh">🗑 Vyčistit</button>
+</div>
+
+<!-- lišta režimu SIMULACE -->
+<div class="lista skryta" id="listaSim">
+  <button class="nastroj hlavni" id="btnStart">▶ Spustit zemětřesení</button>
+  <button class="nastroj" id="btnPauza">⏸ Pauza</button>
+  <button class="nastroj" id="btnReset" title="Vrátit konstrukci do původního stavu (R)">↺ Obnovit</button>
+  <div class="oddel"></div>
+  <label title="Richterovo magnitudo – určuje špičkové zrychlení půdy">Magnitudo <input type="range" id="mag" min="3" max="9" step="0.1" value="6"><b id="magTxt">6,0</b></label>
+  <label title="Převládající frekvence otřesů. Nízká = pomalé houpání, vysoké budovy trpí víc.">Frekvence <input type="range" id="frek" min="0.3" max="8" step="0.1" value="2"><b id="frekTxt">2,0 Hz</b></label>
+  <label title="Jak dlouho otřesy trvají">Trvání <input type="range" id="trvani" min="4" max="60" step="1" value="16"><b id="trvaniTxt">16 s</b></label>
+  <div class="oddel"></div>
+  <label title="Přidá svislou složku otřesů (zhruba poloviční)"><input type="checkbox" id="svisle"> Svislá složka</label>
+  <label title="Tlumiče a izolace pohlcují energii kmitů">Tlumení <input type="range" id="tlum" min="0" max="12" step="0.5" value="2"><b id="tlumTxt">2,0</b></label>
+  <label title="Obarví prvky podle využití pevnosti"><input type="checkbox" id="napeti" checked> Barvy napětí</label>
+</div>
+
+<div class="scena">
+  <div class="platno-obal" id="platnoObal">
+    <canvas id="platno"></canvas>
+    <div class="hud" id="hud"></div>
+    <div class="lupa">
+      <button class="nastroj" id="btnZoomIn">＋</button>
+      <button class="nastroj" id="btnZoomOut">－</button>
+      <button class="nastroj" id="btnFit" title="Vystředit pohled">⛶</button>
+    </div>
+    <div class="napoveda-plocha" id="napovedaPlocha"></div>
+  </div>
+
+  <aside class="panel">
+    <!-- panel režimu STAVBA -->
+    <div id="panelStavba" style="display:flex;flex-direction:column;gap:14px">
+      <div class="blok">
+        <h2>Materiál prvku</h2>
+        <div class="materialy" id="materialy"></div>
+        <p class="pozn" id="matPopis" style="margin-top:8px"></p>
+      </div>
+      <div class="blok">
+        <h2>Vlastnosti materiálu</h2>
+        <div class="radky" id="matVlastnosti"></div>
+      </div>
+      <div class="blok">
+        <h2>Konstrukce</h2>
+        <div class="radky" id="statistika"></div>
+      </div>
+      <div class="blok">
+        <h2>Návrh</h2>
+        <div class="tlacitka">
+          <button class="nastroj" id="btnExport">⬇ Export</button>
+          <button class="nastroj" id="btnImport">⬆ Import</button>
+        </div>
+        <p class="pozn" style="margin-top:8px">Rozestavěný návrh se sám ukládá do prohlížeče.
+          Export uloží soubor <code>.json</code>, který jde poslat dál.</p>
+      </div>
+    </div>
+
+    <!-- panel režimu SIMULACE -->
+    <div id="panelSim" style="display:none;flex-direction:column;gap:14px">
+      <div class="blok">
+        <h2>Otřesy</h2>
+        <div class="radky" id="otresy"></div>
+      </div>
+      <div class="blok">
+        <h2>Odezva konstrukce</h2>
+        <div class="radky" id="odezva"></div>
+        <div class="skala" style="margin-top:8px"><span>0 %</span><div class="pruh"></div><span>mez</span></div>
+        <p class="pozn">Barva prvku ukazuje, jak je vyčerpaná jeho pevnost.</p>
+      </div>
+      <div class="blok">
+        <h2>Výsledek</h2>
+        <div class="verdikt" id="verdikt"><b>Připraveno</b>Spusť otřesy a sleduj, co konstrukce vydrží.</div>
+        <div id="rekordBox" style="margin-top:8px"></div>
+      </div>
+    </div>
+  </aside>
+</div>
+
+<input type="file" id="souborImport" accept="application/json,.json" hidden>
+
+<div class="prekryv" id="prekryv">
+  <div class="modal">
+    <h2>🏚️ Jak zemětřesná laboratoř funguje</h2>
+    <p>Postav konstrukci z prutů a ploch, ukotvi ji do základu a pusť na ni otřesy.
+      Simulace počítá skutečné napětí v každém prvku a porovnává ho s pevností materiálu.</p>
+
+    <h3>Stavba</h3>
+    <ul>
+      <li><b>╱ Prvek</b> – tažením nakreslíš prut. Konce se přichytí k mřížce nebo k existujícímu uzlu.</li>
+      <li><b>▦ Výplň</b> – klikni postupně na 3 nebo 4 uzly a vznikne <b>spojovací plocha</b>
+        (stěna, panel, výplňové zdivo). Plocha brání zkosení rámu – bez ní se čtvercový rám z čepů složí.</li>
+      <li><b>⚓ Kotva</b> – uzel se sváže se základem a při zemětřesení se hýbe se zemí.</li>
+      <li><b>🔗 Spoj</b> – přepíná uzel mezi <b>čepem</b> (přenáší jen tah a tlak) a
+        <b>tuhým spojem</b> (přenáší i ohyb, ale sám má omezenou pevnost a může prasknout).</li>
+      <li><b>🧱 Zátěž</b> – přidá do uzlu hmotnost (strop, nádrž, sníh). Těžší dům se hůř brzdí.</li>
+    </ul>
+
+    <h3>Spoje mezi prvky</h3>
+    <p>Prvky se nikdy nedotýkají „jen tak“. Ocel, dřevo, bambus i lano se musí <b>spojit v uzlu</b>
+      (svar, šroub, tesařský spoj, úvazek) a takový spoj přenese jen část pevnosti prutu – u dřeva
+      zhruba polovinu. Zdivo drží <b>maltou</b>, která v tahu prakticky nedrží (5 %), zato v tlaku
+      výborně; proto zděné domy při zemětřesení praskají v rozích a monolitický železobeton ne.
+      Tuhý spoj se navíc může „ukroutit“ – pak se změní v čep a rám ztratí ztužení.</p>
+
+    <h3>Co simulace počítá</h3>
+    <ul>
+      <li>Poloha půdy se skládá z několika sinusovek kolem zvolené frekvence, obálka je nechá
+        nabíhat a doznívat. Magnitudo určuje <b>špičkové zrychlení půdy (PGA)</b>.</li>
+      <li>Pohyb prutů řeší polohová dynamika s reálnou poddajností <code>L / (E·A)</code>,
+        takže napětí <code>σ = E·ε</code> odpovídá skutečné tuhosti materiálu.</li>
+      <li><b>Tah</b> je omezený pevností spoje, <b>tlak</b> navíc <b>vzpěrnou stabilitou</b>
+        (Eulerův vzorec) – dlouhý štíhlý sloup se vyboulí dřív, než se rozdrtí.</li>
+      <li><b>Houževnaté</b> materiály (ocel, dřevo) se nejdřív trvale protáhnou a prasknou až
+        po vyčerpání tvárnosti. <b>Křehké</b> (beton, zdivo, sklo) prasknou rovnou.</li>
+    </ul>
+
+    <h3>Tipy, co vyzkoušet</h3>
+    <ul>
+      <li>Nakresli čtvercový rám z čepů – složí se. Přidej jednu <b>úhlopříčnou vzpěru</b> a vydrží.</li>
+      <li>Porovnej cihlovou zeď a ocelový rám při magnitudu 6.</li>
+      <li>Zvyš tlumení na 10 – to dělají moderní tlumiče a seizmická izolace.</li>
+      <li>Zkus rezonanci: nízká frekvence bourá vysoké domy, vysoká ty tuhé a nízké.</li>
+    </ul>
+    <div class="tlacitka" style="margin-top:16px"><button class="nastroj hlavni" id="btnZavri">Rozumím</button></div>
+  </div>
+</div>
+
+<script>
+'use strict';
+const $ = id => document.getElementById(id);
+
+/* ============================================================
+   MATERIÁLY
+   E, ft, fc, fy jsou v pascalech, hustota v kg/m³.
+   kSpoj = jakou část pevnosti v tahu přenese spoj s dalším prvkem
+           (svar, šroub, tesařský spoj, malta). V tlaku se prvky
+           opírají čelem, tam se spojem neomezují.
+   tvarny = zásoba trvalé deformace, než prut praskne (0 = křehký).
+   ============================================================ */
+const MAT = {
+  ocel:    {nazev:'Ocel',         barva:'#8fa6bf', E:2.10e11, ft:360e6, fc:300e6, fy:250e6, hust:7850, kSpoj:0.85, tvarny:0.030, cena:45,  pojivo:'svar nebo šroubový spoj'},
+  drevo:   {nazev:'Dřevo',        barva:'#c08a4e', E:1.10e10, ft:80e6,  fc:38e6,  fy:55e6,  hust:600,  kSpoj:0.55, tvarny:0.008, cena:30,  pojivo:'tesařský spoj, svorník'},
+  bambus:  {nazev:'Bambus',       barva:'#93b055', E:2.00e10, ft:200e6, fc:55e6,  fy:150e6, hust:700,  kSpoj:0.50, tvarny:0.012, cena:25,  pojivo:'vazba provazem'},
+  zbeton:  {nazev:'Železobeton',  barva:'#8b98a5', E:3.20e10, ft:28e6,  fc:35e6,  fy:22e6,  hust:2500, kSpoj:0.90, tvarny:0.006, cena:15,  pojivo:'monolit, provázaná výztuž'},
+  beton:   {nazev:'Beton',        barva:'#a9a9a1', E:3.00e10, ft:2.5e6, fc:30e6,  fy:2.5e6, hust:2400, kSpoj:0.35, tvarny:0,     cena:8,   pojivo:'monolit bez výztuže'},
+  zdivo:   {nazev:'Zdivo',        barva:'#b0644a', E:6.00e9,  ft:0.4e6, fc:9e6,   fy:0.4e6, hust:1800, kSpoj:0.05, tvarny:0,     cena:12,  pojivo:'maltová spára'},
+  sklo:    {nazev:'Sklo',         barva:'#79bccd', E:7.00e10, ft:35e6,  fc:300e6, fy:35e6,  hust:2500, kSpoj:0.20, tvarny:0,     cena:90,  pojivo:'tmelený rám'},
+  lano:    {nazev:'Lano',         barva:'#d3bb63', E:1.00e11, ft:1200e6,fc:0,     fy:900e6, hust:950,  kSpoj:0.70, tvarny:0.020, cena:120, pojivo:'oko a úvazek', jenTah:true},
+};
+const MAT_PORADI = ['ocel','drevo','bambus','zbeton','beton','zdivo','sklo','lano'];
+
+const G = 9.81;              // tíhové zrychlení [m/s²]
+const MRIZKA = 0.5;          // krok mřížky [m]
+const PODSTEPY = 12;         // dílčí kroky fyziky na jeden snímek
+
+/* ============================================================
+   NÁVRH – zdroj pravdy pro editor.
+   uzel:  {x, y, kotva, tuhy, zatez}
+   prvek: {a, b, mat, prof}        prof = strana čtvercového průřezu [cm]
+   výplň: {u:[3 nebo 4 indexy], mat, prof}
+   ============================================================ */
+let navrh = { uzly: [], prvky: [], vyplne: [] };
+let nastroj = 'prvek';
+let material = 'ocel';
+let profil = 14;
+let zatezHodnota = 1000;
+let rezim = 'stavba';
+let historie = [];
+
+const KLIC_NAVRH = 'webapp_quake_navrh';
+
+function kopie(o) { return JSON.parse(JSON.stringify(o)); }
+
+function ulozHistorii() {
+  historie.push(kopie(navrh));
+  if (historie.length > 40) historie.shift();
+}
+function zpet() {
+  if (!historie.length) { Dialog.info('Není co vrátit'); return; }
+  navrh = historie.pop();
+  poZmene(false);
+}
+
+/* Uzel se hledá i podle polohy – kreslení prvku má konce spojovat,
+   ne vytvářet dva uzly na sobě, které by se rozpadly. */
+function najdiUzel(x, y, tol) {
+  tol = tol || 0.001;
+  for (let i = 0; i < navrh.uzly.length; i++) {
+    if (Math.hypot(navrh.uzly[i].x - x, navrh.uzly[i].y - y) <= tol) return i;
+  }
+  return -1;
+}
+function pridejUzel(x, y, vlast) {
+  const i = najdiUzel(x, y, 0.06);
+  if (i >= 0) { if (vlast) Object.assign(navrh.uzly[i], vlast); return i; }
+  navrh.uzly.push(Object.assign({ x: x, y: y, kotva: false, tuhy: false, zatez: 0 }, vlast));
+  return navrh.uzly.length - 1;
+}
+function pridejPrvek(a, b, mat, prof) {
+  if (a === b) return;
+  if (navrh.prvky.some(p => (p.a === a && p.b === b) || (p.a === b && p.b === a))) return;
+  navrh.prvky.push({ a: a, b: b, mat: mat || material, prof: prof || profil });
+}
+function smazUzel(i) {
+  navrh.prvky = navrh.prvky.filter(p => p.a !== i && p.b !== i);
+  navrh.vyplne = navrh.vyplne.filter(v => !v.u.includes(i));
+  const pos = k => k > i ? k - 1 : k;
+  navrh.prvky.forEach(p => { p.a = pos(p.a); p.b = pos(p.b); });
+  navrh.vyplne.forEach(v => { v.u = v.u.map(pos); });
+  navrh.uzly.splice(i, 1);
+}
+/* Uzel bez jediného prutu i výplně nemá co držet – po mazání se uklidí sám. */
+function uklidOsamele() {
+  for (let i = navrh.uzly.length - 1; i >= 0; i--) {
+    const uz = navrh.uzly[i];
+    if (uz.kotva || uz.zatez) continue;
+    const drzi = navrh.prvky.some(p => p.a === i || p.b === i) || navrh.vyplne.some(v => v.u.includes(i));
+    if (!drzi) smazUzel(i);
+  }
+}
+
+/* plocha průřezu prutu [m²] a objem */
+function prurez(prof) { const a = prof / 100; return a * a; }
+function delkaPrvku(p, u) { u = u || navrh.uzly; return Math.hypot(u[p.b].x - u[p.a].x, u[p.b].y - u[p.a].y); }
+/* plocha mnohoúhelníku (shoelace) – pro hmotnost a cenu výplní */
+function plochaVyplne(v, u) {
+  u = u || navrh.uzly;
+  let s = 0;
+  for (let i = 0; i < v.u.length; i++) {
+    const A = u[v.u[i]], B = u[v.u[(i + 1) % v.u.length]];
+    s += A.x * B.y - B.x * A.y;
+  }
+  return Math.abs(s) / 2;
+}
+
+/* ============================================================
+   PŘEDLOHY
+   ============================================================ */
+function novyNavrh() { navrh = { uzly: [], prvky: [], vyplne: [] }; }
+
+const PREDLOHY = {
+  ram: function () {                                   // ocelový rám s tuhými rohy
+    novyNavrh();
+    const x = [-3, 3], pat = [0, 3, 6, 9];
+    const id = {};
+    pat.forEach(h => x.forEach(sx => { id[sx + '|' + h] = pridejUzel(sx, h, { kotva: h === 0, tuhy: true }); }));
+    for (let i = 0; i < pat.length - 1; i++) {
+      x.forEach(sx => pridejPrvek(id[sx + '|' + pat[i]], id[sx + '|' + pat[i + 1]], 'ocel', 15));
+      pridejPrvek(id[x[0] + '|' + pat[i + 1]], id[x[1] + '|' + pat[i + 1]], 'ocel', 13);
+    }
+    pat.slice(1).forEach(h => x.forEach(sx => { navrh.uzly[id[sx + '|' + h]].zatez = 3000; }));
+  },
+  chata: function () {                                 // dřevěný rám se vzpěrami a sedlovou střechou
+    novyNavrh();
+    const a = pridejUzel(-3, 0, { kotva: true, tuhy: true }), b = pridejUzel(3, 0, { kotva: true, tuhy: true });
+    const c = pridejUzel(-3, 3), d = pridejUzel(3, 3), e = pridejUzel(0, 4.8);
+    pridejPrvek(a, c, 'drevo', 14); pridejPrvek(b, d, 'drevo', 14);
+    pridejPrvek(c, d, 'drevo', 14); pridejPrvek(c, e, 'drevo', 11); pridejPrvek(d, e, 'drevo', 11);
+    pridejPrvek(a, d, 'drevo', 8); pridejPrvek(b, c, 'drevo', 8);     // ztužující kříž
+    navrh.uzly[e].zatez = 800;
+  },
+  zed: function () {                                   // zděná stěna – učebnicový příklad, co se sype
+    novyNavrh();
+    const sl = 5, ra = 7, sx = 0.8, sy = 0.55, id = [];
+    for (let j = 0; j <= ra; j++) { id[j] = []; for (let i = 0; i <= sl; i++) id[j][i] = pridejUzel((i - sl / 2) * sx, j * sy, { kotva: j === 0 }); }
+    for (let j = 0; j < ra; j++) for (let i = 0; i < sl; i++)
+      navrh.vyplne.push({ u: [id[j][i], id[j][i + 1], id[j + 1][i + 1], id[j + 1][i]], mat: 'zdivo', prof: 30 });
+  },
+  vez: function () {                                   // příhradová věž z ocele, čepové spoje
+    novyNavrh();
+    const pat = 6, h = 2, id = [];
+    for (let j = 0; j <= pat; j++) {
+      const w = 2.4 - j * 0.22;
+      id[j] = [pridejUzel(-w, j * h, { kotva: j === 0 }), pridejUzel(w, j * h, { kotva: j === 0 })];
+    }
+    for (let j = 0; j < pat; j++) {
+      pridejPrvek(id[j][0], id[j + 1][0], 'ocel', 10); pridejPrvek(id[j][1], id[j + 1][1], 'ocel', 10);
+      pridejPrvek(id[j + 1][0], id[j + 1][1], 'ocel', 7);
+      pridejPrvek(id[j][0], id[j + 1][1], 'ocel', 5); pridejPrvek(id[j][1], id[j + 1][0], 'ocel', 5);
+    }
+  },
+  most: function () {                                  // příhradový most mezi dvěma opěrami
+    novyNavrh();
+    const n = 8, d = 1.6, y0 = 5, dol = [], hor = [];
+    for (let i = 0; i <= n; i++) dol.push(pridejUzel((i - n / 2) * d, y0, {}));
+    for (let i = 1; i < n; i++) hor.push(pridejUzel((i - n / 2) * d, y0 + 2, {}));
+    for (let i = 0; i < n; i++) pridejPrvek(dol[i], dol[i + 1], 'ocel', 14);
+    for (let i = 0; i < hor.length - 1; i++) pridejPrvek(hor[i], hor[i + 1], 'ocel', 12);
+    for (let i = 1; i < n; i++) {
+      pridejPrvek(dol[i], hor[i - 1], 'ocel', 8);
+      pridejPrvek(dol[i - 1], hor[i - 1], 'ocel', 7);
+      pridejPrvek(dol[i + 1], hor[i - 1], 'ocel', 7);
+    }
+    for (let i = 1; i < n; i++) navrh.uzly[dol[i]].zatez = 1200;
+    // Rozkročený pilíř drží tvarem, ne momentem ve spoji. Jednonohý pilíř
+    // s tuhými spoji stál a padal na únosnosti spoje s tenkým pásem mostovky.
+    const noha = (stred, konec) => {
+      pridejPrvek(pridejUzel(stred - 1.2, 0, { kotva: true }), konec, 'zbeton', 26);
+      pridejPrvek(pridejUzel(stred + 1.2, 0, { kotva: true }), konec, 'zbeton', 26);
+    };
+    noha(-n / 2 * d, dol[0]); noha(n / 2 * d, dol[n]);
+  },
+  panelak: function () {                               // železobetonové panely + ztužující jádro
+    novyNavrh();
+    const sl = 4, pat = 5, sx = 2.2, sy = 2.6, id = [];
+    for (let j = 0; j <= pat; j++) { id[j] = []; for (let i = 0; i <= sl; i++) id[j][i] = pridejUzel((i - sl / 2) * sx, j * sy, { kotva: j === 0, tuhy: true }); }
+    for (let j = 0; j < pat; j++) for (let i = 0; i < sl; i++) {
+      pridejPrvek(id[j][i], id[j + 1][i], 'zbeton', 22);
+      pridejPrvek(id[j + 1][i], id[j + 1][i + 1], 'zbeton', 18);
+      if (i === Math.floor(sl / 2) - 1) navrh.vyplne.push({ u: [id[j][i], id[j][i + 1], id[j + 1][i + 1], id[j + 1][i]], mat: 'zbeton', prof: 16 });
+    }
+    for (let j = 0; j < pat; j++) pridejPrvek(id[j][sl], id[j + 1][sl], 'zbeton', 22);
+    for (let j = 1; j <= pat; j++) for (let i = 0; i <= sl; i++) navrh.uzly[id[j][i]].zatez = 2500;
+  },
+  pyramida: function () {                              // kamenná hmota – nízké těžiště, drží tlakem
+    novyNavrh();
+    const ra = 6, sy = 0.7, id = [];
+    for (let j = 0; j <= ra; j++) {
+      id[j] = [];
+      const n = ra - j + 1, w = 0.75;
+      for (let i = 0; i <= n; i++) id[j][i] = pridejUzel((i - n / 2) * w, j * sy, { kotva: j === 0 });
+    }
+    for (let j = 0; j < ra; j++) for (let i = 0; i < id[j + 1].length - 1; i++)
+      navrh.vyplne.push({ u: [id[j][i], id[j][i + 1], id[j + 1][i + 1], id[j + 1][i]], mat: 'zdivo', prof: 60 });
+  },
+};
+
+/* ============================================================
+   PŘÍPRAVA SIMULACE
+   Fyzika běží nad kopií návrhu (`sim`), aby se rozbitá konstrukce
+   dala kdykoli vrátit do původního stavu. Kopie má stejný tvar jako
+   návrh, takže ji umí vykreslit stejná funkce.
+   ============================================================ */
+let sim = null;
+
+/* Vzpěrná (Eulerova) pevnost štíhlého prutu: čtvercový průřez a,
+   i = a/√12, σ_cr = π²E/(L/i)² = π²·E·a² / (12·L²). */
+function tlakovaMez(E, fc, a, L) {
+  const kritick = (Math.PI * Math.PI * E * a * a) / (12 * L * L);
+  return Math.min(fc, kritick);
+}
+
+function pripravSimulaci() {
+  const s = kopie(navrh);
+  s.vazby = []; s.uhly = []; s.udalosti = [];
+  s.cas = 0; s.bezi = false; s.hotovo = false; s.pgaMer = 0; s.driftMax = 0;
+  s.zStare = { x: 0, y: 0 }; s.zPred = { x: 0, y: 0 }; s.zrychleni = 0; s.tazeny = null;
+  s.zivot = 0; s.vyuzitiMax = 0;
+
+  s.uzly.forEach(u => {
+    u.px = u.x; u.py = u.y;             // Verletova předchozí poloha
+    u.zx = u.x; u.zy = u.y;             // klidová poloha vůči základu (kotvy)
+    u.vyska0 = u.y; u.x0 = u.x;
+    u.m = Math.max(u.zatez || 0, 0); u.w = 0; u.prasklySpoj = false;
+  });
+
+  s.prvky.forEach(p => {
+    const A = prurez(p.prof), m = MAT[p.mat];
+    p.L0 = delkaPrvku(p, s.uzly); p.stav = 0; p.sigma = 0; p.vyuziti = 0; p.plast = 0;
+    const hm = m.hust * A * p.L0;
+    s.uzly[p.a].m += hm / 2; s.uzly[p.b].m += hm / 2;
+  });
+
+  s.vyplne.forEach(v => {
+    const t = v.prof / 100, m = MAT[v.mat];
+    v.stav = 0; v.vyuziti = 0;
+    const hm = m.hust * t * plochaVyplne(v, s.uzly);
+    v.u.forEach(i => { s.uzly[i].m += hm / v.u.length; });
+  });
+
+  // hmotnost -> převrácená hmotnost; kotva má w = 0, tedy se nehne
+  s.uzly.forEach(u => { u.w = u.kotva ? 0 : 1 / Math.max(u.m, 25); });
+
+  /* --- osové vazby prutů --- */
+  s.prvky.forEach((p, i) => {
+    const m = MAT[p.mat], A = prurez(p.prof);
+    s.vazby.push({
+      a: p.a, b: p.b, L0: p.L0, A: A, E: m.E, lam: 0, mrtva: false,
+      alfa: p.L0 / (m.E * A), jenTah: !!m.jenTah,
+      kapT: m.ft * m.kSpoj, kapC: tlakovaMez(m.E, m.fc, p.prof / 100, p.L0),
+      fy: m.fy, tvarny: m.tvarny, zdroj: 'prvek', idx: i,
+    });
+  });
+
+  /* --- výplně: uvnitř plochy se natáhnou vzpěry mezi všemi dvojicemi uzlů.
+         Průřez vzpěry A = t·L/2 dává tuhost E·A/L = E·t/2 nezávislou na
+         velikosti pole, takže se stejná stěna chová stejně v malém i velkém rámu. --- */
+  s.vyplne.forEach((v, i) => {
+    const m = MAT[v.mat], t = v.prof / 100;
+    const n = v.u.length;
+    for (let a = 0; a < n; a++) for (let b = a + 1; b < n; b++) {
+      const ua = s.uzly[v.u[a]], ub = s.uzly[v.u[b]];
+      const L = Math.hypot(ub.x - ua.x, ub.y - ua.y);
+      if (L < 1e-4) continue;
+      const A = t * L / 2;
+      s.vazby.push({
+        a: v.u[a], b: v.u[b], L0: L, A: A, E: m.E, lam: 0, mrtva: false,
+        alfa: L / (m.E * A), jenTah: false, jenTlak: false,
+        obvod: (b - a === 1) || (a === 0 && b === n - 1),
+        kapT: m.ft, kapC: m.fc, fy: m.fy, tvarny: m.tvarny,
+        zdroj: 'vypln', idx: i,
+      });
+    }
+  });
+
+  /* --- tuhé spoje: úhlová vazba mezi rameny, která se v uzlu potkávají.
+         Stačí sousední dvojice po seřazení podle směru (k ramen -> k−1 vazeb).
+         Ukotvený tuhý spoj (vetknutí) dostane pomocné rameno do základu,
+         jinak by neměl vůči čemu držet směr. --- */
+  s.uzly.forEach((u, ui) => {
+    if (!u.tuhy) return;
+    const ramena = [];
+    s.prvky.forEach((p, pi) => {
+      const druhy = p.a === ui ? p.b : (p.b === ui ? p.a : -1);
+      if (druhy < 0) return;
+      ramena.push({ uzel: druhy, prvek: pi, prof: p.prof, mat: p.mat });
+    });
+    if (!ramena.length) return;
+    if (u.kotva) {
+      const pom = s.uzly.length;
+      s.uzly.push({ x: u.x + 0.8, y: u.y, px: u.x + 0.8, py: u.y, zx: u.x + 0.8, zy: u.y,
+        kotva: true, tuhy: false, zatez: 0, m: 0, w: 0, pomocny: true, vyska0: u.y, x0: u.x + 0.8 });
+      ramena.push({ uzel: pom, prvek: -1, prof: ramena[0].prof, mat: ramena[0].mat });
+    }
+    if (ramena.length < 2) return;
+    ramena.forEach(r => { const t = s.uzly[r.uzel]; r.uhel = Math.atan2(t.y - u.y, t.x - u.x); });
+    ramena.sort((A, B) => A.uhel - B.uhel);
+    for (let k = 0; k < ramena.length - 1; k++) {
+      const r1 = ramena[k], r2 = ramena[k + 1];
+      const m1 = MAT[r1.mat], m2 = MAT[r2.mat];
+      const a = Math.min(r1.prof, r2.prof) / 100;
+      const E = Math.min(m1.E, m2.E), I = a * a * a * a / 12, W = a * a * a / 6;
+      const L = (Math.hypot(s.uzly[r1.uzel].x - u.x, s.uzly[r1.uzel].y - u.y)
+               + Math.hypot(s.uzly[r2.uzel].x - u.x, s.uzly[r2.uzel].y - u.y)) / 2;
+      s.uhly.push({
+        n: ui, p: r1.uzel, q: r2.uzel, prvky: [r1.prvek, r2.prvek],
+        uhel0: r2.uhel - r1.uhel, lam: 0, mrtva: false,
+        alfa: L / (3 * E * I),                                   // M = 3EI/L · φ
+        Mmax: Math.min(m1.ft * m1.kSpoj, m2.ft * m2.kSpoj) * W,  // únosnost spoje v ohybu
+        moment: 0,
+      });
+    }
+  });
+
+  s.vrchol = null;
+  s.uzly.forEach(u => { if (!u.pomocny && !u.kotva && (!s.vrchol || u.vyska0 > s.vrchol.vyska0)) s.vrchol = u; });
+  s.celkemPrvku = s.prvky.length + s.vyplne.length;
+  return s;
+}
+
+/* ============================================================
+   ZEMĚTŘESENÍ – pohyb půdy
+   Součet několika sinusovek kolem převládající frekvence, obálka je
+   nechá nabíhat a doznívat. Amplitudy se přeškálují tak, aby špičkové
+   zrychlení odpovídalo zvolenému magnitudu.
+   ============================================================ */
+let otres = null;
+
+function pgaZMagnituda(mag) { return 0.02 * Math.pow(10, 0.34 * (mag - 3)) * G; }   // [m/s²]
+
+function novyOtres(mag, f0, T, svisle) {
+  const slozky = [], slozkyY = [];
+  for (let i = 0; i < 7; i++) {
+    const f = f0 * (0.45 + 1.35 * i / 6) * (0.85 + Math.random() * 0.3);
+    const d = Math.pow(f0 / f, 1.2) * (0.6 + Math.random() * 0.8);
+    slozky.push({ w: 2 * Math.PI * f, d: d, ph: Math.random() * Math.PI * 2 });
+    slozkyY.push({ w: 2 * Math.PI * f * 1.7, d: d * 0.55, ph: Math.random() * Math.PI * 2 });
+  }
+  const o = { slozky: slozky, slozkyY: slozkyY, T: T, mer: 1, svisle: !!svisle, pga: pgaZMagnituda(mag), mag: mag };
+
+  /* Špičkové zrychlení se měří na skutečném průběhu stejnou konečnou diferencí,
+     jakou pak použije simulace – analytický odhad z amplitud sinusovek nepočítá
+     s obálkou a u pomalých otřesů se mýlil několikanásobně. */
+  const h = 1 / (60 * PODSTEPY);
+  const poloha = t => {
+    const e = obalka(t, T);
+    if (!e) return [0, 0];
+    let x = 0, y = 0;
+    for (const k of slozky) x += k.d * Math.sin(k.w * t + k.ph);
+    if (svisle) for (const k of slozkyY) y += k.d * Math.sin(k.w * t + k.ph);
+    return [x * e, y * e];
+  };
+  let max = 0, p0 = poloha(0), p1 = poloha(h);
+  for (let t = 2 * h; t <= T + h; t += h) {
+    const p2 = poloha(t);
+    max = Math.max(max, Math.hypot((p2[0] - 2 * p1[0] + p0[0]) / (h * h),
+                                   (p2[1] - 2 * p1[1] + p0[1]) / (h * h)));
+    p0 = p1; p1 = p2;
+  }
+  o.mer = max > 1e-9 ? o.pga / max : 0;
+  o.amplituda = o.mer * slozky.reduce((s, k) => s + k.d, 0);   // horní odhad výchylky [m]
+  return o;
+}
+
+/* Obálka musí být hladká včetně první i druhé derivace. Zlom v průběhu
+   (skok rychlosti nebo zrychlení půdy) se v konečné diferenci projeví jako
+   obrovská falešná špička – u pomalých otřesů převyšovala vlastní signál
+   i čtyřicetkrát. Proto náběh i doznění přes 6u⁵−15u⁴+10u³. */
+function hladce(u) {
+  if (u <= 0) return 0;
+  if (u >= 1) return 1;
+  return u * u * u * (u * (u * 6 - 15) + 10);
+}
+function obalka(t, T) {
+  const t1 = 0.18 * T, t2 = 0.55 * T;
+  if (t <= 0 || t >= T) return 0;
+  if (t < t1) return hladce(t / t1);
+  if (t < t2) return 1;
+  return 1 - hladce((t - t2) / (T - t2));
+}
+
+function zemPoloha(t) {
+  if (!otres) return { x: 0, y: 0 };
+  const e = obalka(t, otres.T);
+  if (e === 0) return { x: 0, y: 0 };
+  let x = 0, y = 0;
+  otres.slozky.forEach(s => { x += s.d * Math.sin(s.w * t + s.ph); });
+  if (otres.svisle) otres.slozkyY.forEach(s => { y += s.d * Math.sin(s.w * t + s.ph); });
+  return { x: x * otres.mer * e, y: y * otres.mer * e };
+}
+
+/* ============================================================
+   FYZIKA – substepped XPBD nad Verletovou integrací.
+   Poddajnost vazby je skutečná: alfa = L / (E·A), takže napětí
+   σ = E·ε vychází ze stejné tuhosti jako u opravdového prutu.
+   ============================================================ */
+let tlumeni = 2;
+
+function krokFyziky(dtSnimku) {
+  const dt = dtSnimku / PODSTEPY;
+  for (let i = 0; i < PODSTEPY; i++) podkrok(dt);
+  promitniDoPrvku();
+}
+
+function podkrok(dt) {
+  const s = sim, a2 = dt * dt;
+  const zStare = s.zStare, zPred = s.zPred;
+  s.zivot += dt;
+  if (s.bezi) s.cas += dt;
+  const zNyni = s.bezi ? zemPoloha(s.cas) : { x: 0, y: 0 };
+  s.zStare = zPred; s.zPred = zNyni;
+  if (s.bezi) {
+    const ax = (zNyni.x - 2 * zPred.x + zStare.x) / a2;
+    const ay = (zNyni.y - 2 * zPred.y + zStare.y) / a2;
+    s.zrychleni = Math.hypot(ax, ay);
+    if (s.zrychleni > s.pgaMer) s.pgaMer = s.zrychleni;
+  } else { s.zrychleni = 0; }
+
+  const tlum = Math.exp(-tlumeni * dt);
+  const tiha = G * Math.min(1, s.zivot / 0.8);
+  for (const u of s.uzly) {
+    if (u.kotva) {                       // kotva se hýbe přesně se zemí
+      u.px = u.zx + zPred.x; u.py = u.zy + zPred.y;
+      u.x = u.zx + zNyni.x;  u.y = u.zy + zNyni.y;
+      continue;
+    }
+    const vx = (u.x - u.px) * tlum, vy = (u.y - u.py) * tlum;
+    u.px = u.x; u.py = u.y;
+    u.x += vx; u.y += vy - tiha * a2;
+  }
+
+  for (const v of s.vazby) v.lam = 0;
+  for (const q of s.uhly) q.lam = 0;
+  resVazby(a2);
+  resUhly(a2);
+  vyhodnotVazby(dt);
+  vyhodnotUhly();
+  kontaktSeZemi(zNyni, zPred);
+}
+
+function resVazby(a2) {
+  const uz = sim.uzly;
+  for (const v of sim.vazby) {
+    if (v.mrtva) continue;
+    const A = uz[v.a], B = uz[v.b];
+    const dx = B.x - A.x, dy = B.y - A.y;
+    const d = Math.hypot(dx, dy);
+    if (d < 1e-9) continue;
+    const C = d - v.L0;
+    if (v.jenTah && C <= 0) continue;      // lano se v tlaku jen prověsí
+    if (v.jenTlak && C >= 0) continue;     // rozpadlé zdivo drží jen opřením
+    const ws = A.w + B.w;
+    if (ws <= 0) continue;
+    const at = v.alfa / a2;
+    const dl = (-C - at * v.lam) / (ws + at);
+    v.lam += dl;
+    const nx = dx / d * dl, ny = dy / d * dl;
+    A.x -= nx * A.w; A.y -= ny * A.w;
+    B.x += nx * B.w; B.y += ny * B.w;
+  }
+}
+
+/* Úhlová vazba tuhého spoje. Gradient je otočení konce ramene kolmo
+   na rameno – funguje i pro dvě ramena v jedné přímce, kde by tětiva
+   mezi konci žádný ohyb neudržela. */
+function resUhly(a2) {
+  const uz = sim.uzly;
+  for (const q of sim.uhly) {
+    if (q.mrtva) continue;
+    const N = uz[q.n], P = uz[q.p], Q = uz[q.q];
+    const p1x = P.x - N.x, p1y = P.y - N.y, p2x = Q.x - N.x, p2y = Q.y - N.y;
+    const l1s = p1x * p1x + p1y * p1y, l2s = p2x * p2x + p2y * p2y;
+    if (l1s < 1e-8 || l2s < 1e-8) continue;
+    let C = Math.atan2(p1x * p2y - p1y * p2x, p1x * p2x + p1y * p2y) - q.uhel0;
+    while (C > Math.PI) C -= 2 * Math.PI;
+    while (C < -Math.PI) C += 2 * Math.PI;
+    const gpx = p1y / l1s, gpy = -p1x / l1s;
+    const gqx = -p2y / l2s, gqy = p2x / l2s;
+    const gnx = -(gpx + gqx), gny = -(gpy + gqy);
+    const w = P.w / l1s + Q.w / l2s + N.w * (gnx * gnx + gny * gny);
+    if (w <= 0) continue;
+    const at = q.alfa / a2;
+    const dl = (-C - at * q.lam) / (w + at);
+    q.lam += dl;
+    P.x += P.w * gpx * dl; P.y += P.w * gpy * dl;
+    Q.x += Q.w * gqx * dl; Q.y += Q.w * gqy * dl;
+    N.x += N.w * gnx * dl; N.y += N.w * gny * dl;
+    q.moment = Math.abs(C) / q.alfa;
+    q.vyuziti = q.Mmax > 0 ? q.moment / q.Mmax : 0;
+  }
+}
+
+/* Napětí v prutu a jeho porušení. Houževnatý materiál se nejdřív
+   trvale deformuje (mění se klidová délka) a praskne až po vyčerpání
+   tvárnosti; křehký praskne rovnou. */
+function vyhodnotVazby(dt) {
+  const uz = sim.uzly;
+  const k = dt / (dt + 0.025);        // vyhlazení ~25 ms
+  for (const v of sim.vazby) {
+    if (v.mrtva) continue;
+    const A = uz[v.a], B = uz[v.b];
+    const d = Math.hypot(B.x - A.x, B.y - A.y);
+    let sig = v.E * (d - v.L0) / v.L0;
+    if (v.jenTah && sig < 0) sig = 0;
+    if (v.jenTlak && sig > 0) sig = 0;
+    v.sigma = sig = (v.sigma || 0) + (sig - (v.sigma || 0)) * k;
+    const kap = sig >= 0 ? v.kapT : v.kapC;
+    const vel = Math.abs(sig);
+    v.vyuziti = kap > 1 ? vel / kap : (vel > 1 ? 3 : 0);
+    let zlom = false;
+    if (v.tvarny > 0 && vel > v.fy && v.fy < kap) {
+      const dEps = (vel - v.fy) / v.E * 0.5;
+      v.L0 *= sig > 0 ? (1 + dEps) : (1 - dEps);
+      v.plast = (v.plast || 0) + dEps;
+      if (v.plast > v.tvarny) zlom = true;
+    } else if (vel > kap) {
+      zlom = true;
+    }
+    if (zlom) zlomVazbu(v, (A.x + B.x) / 2, (A.y + B.y) / 2);
+  }
+}
+
+function zlomVazbu(v, x, y) {
+  v.mrtva = true;
+  sim.udalosti.push({ x: x, y: y, t: sim.zivot });
+  if (v.zdroj === 'prvek') {
+    sim.prvky[v.idx].stav = 2;
+    for (const q of sim.uhly) if (q.prvky.includes(v.idx)) q.mrtva = true;
+  } else {
+    const vy = sim.vyplne[v.idx];
+    if (vy.stav !== 2) {
+      vy.stav = 2;
+      for (const w of sim.vazby) {
+        if (w.zdroj !== 'vypln' || w.idx !== v.idx) continue;
+        if (w.obvod) { w.jenTlak = true; w.kapT = 0; w.lam = 0; }   // zbyl kontakt v tlaku
+        else w.mrtva = true;                                        // smyková úhlopříčka je pryč
+      }
+    }
+  }
+}
+
+function vyhodnotUhly() {
+  for (const q of sim.uhly) {
+    if (q.mrtva) continue;
+    if (q.moment > q.Mmax) {                         // spoj se „ukroutil“ a zbyl z něj čep
+      q.mrtva = true;
+      sim.uzly[q.n].prasklySpoj = true;
+      sim.udalosti.push({ x: sim.uzly[q.n].x, y: sim.uzly[q.n].y, t: sim.zivot });
+    }
+  }
+}
+
+/* Kontakt se zemí: uzel se nepropadne pod terén a tře se o něj.
+   Tření se počítá vůči rychlosti půdy, aby při otřesech nekloužal
+   sloup, který na zemi jen stojí. */
+function kontaktSeZemi(zNyni, zPred) {
+  const vzx = zNyni.x - zPred.x;
+  for (const u of sim.uzly) {
+    if (u.kotva) continue;
+    if (!Number.isFinite(u.x) || !Number.isFinite(u.y)) {   // pojistka proti rozpadu výpočtu
+      u.x = u.x0; u.y = Math.max(u.vyska0, 0); u.px = u.x; u.py = u.y; continue;
+    }
+    if (u.y < 0) {
+      u.y = 0;
+      const rel = (u.x - u.px) - vzx;
+      u.px = u.x - (vzx + rel * 0.35);                       // tření
+      u.py = u.y;                                            // dopad bez odrazu
+    }
+    if (Math.abs(u.x) > 400) u.x = Math.sign(u.x) * 400;
+  }
+}
+
+/* Přepis stavu vazeb do prvků a výplní kvůli vykreslení a statistikám. */
+function promitniDoPrvku() {
+  sim.prvky.forEach(p => { p.vyuziti = 0; p.sigma = 0; });
+  sim.vyplne.forEach(v => { v.vyuziti = 0; });
+  for (const v of sim.vazby) {
+    if (v.mrtva) continue;
+    if (v.zdroj === 'prvek') {
+      const p = sim.prvky[v.idx];
+      p.vyuziti = v.vyuziti; p.sigma = v.sigma;
+      if (p.stav === 0 && v.plast > 0) p.stav = 1;
+    } else {
+      const vy = sim.vyplne[v.idx];
+      if (v.vyuziti > vy.vyuziti) vy.vyuziti = v.vyuziti;
+    }
+    if (v.vyuziti > sim.vyuzitiMax) sim.vyuzitiMax = v.vyuziti;
+  }
+  const vrchol = sim.vrchol;
+  if (vrchol) {
+    const drift = vrchol.x - vrchol.x0 - sim.zPred.x;
+    if (Math.abs(drift) > Math.abs(sim.driftMax)) sim.driftMax = drift;
+    sim.drift = drift;
+  }
+}
+
+/* ============================================================
+   POHLED A VYKRESLENÍ
+   ============================================================ */
+const platno = $('platno'), ctx = platno.getContext('2d');
+const pohled = { x: 0, y: 5, m: 34 };          // střed [m] a měřítko [px/m]
+let B = {}, svetlo = false;
+
+function nactiBarvy() {
+  const s = getComputedStyle(document.documentElement);
+  const v = n => s.getPropertyValue(n).trim();
+  svetlo = document.documentElement.getAttribute('data-theme') === 'light';
+  B = {
+    bg: v('--bg'), panel: v('--bg-panel'), elev: v('--bg-elevated'),
+    text: v('--text'), slabe: v('--text-faint'), ram: v('--border'),
+    akcent: v('--accent'), ok: v('--ok'), warn: v('--warn'), spatne: v('--danger'),
+    zem: svetlo ? '#c3b191' : '#4a3d2e', zemLinka: svetlo ? '#9c8a6b' : '#6b5a44',
+    mrizka: svetlo ? 'rgba(0,0,0,.09)' : 'rgba(255,255,255,.085)',
+    zlom: svetlo ? '#8a8a8a' : '#6a6a6a',
+  };
+}
+nactiBarvy();
+new MutationObserver(() => { nactiBarvy(); kresli(); })
+  .observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+function rozmer() {
+  const dpr = window.devicePixelRatio || 1;
+  const w = platno.clientWidth, h = platno.clientHeight;
+  if (!w || !h) return;
+  if (platno.width === Math.round(w * dpr) && platno.height === Math.round(h * dpr)) return;
+  platno.width = Math.round(w * dpr); platno.height = Math.round(h * dpr);
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+/* Změna rozměru plátna vymaže jeho obsah. V režimu simulace ho hned překreslí
+   smyčka, ve stavbě se ale kreslí jen při zásahu uživatele – bez tohohle
+   překreslení zůstala po každém přeskládání lišty prázdná plocha. */
+function prekresli() { rozmer(); if (rezim !== 'simulace') kresli(); }
+window.addEventListener('resize', prekresli);
+if (window.ResizeObserver) new ResizeObserver(prekresli).observe($('platnoObal'));
+
+const W = () => platno.clientWidth, H = () => platno.clientHeight;
+const sx = wx => (wx - pohled.x) * pohled.m + W() / 2;
+const sy = wy => H() * 0.62 - (wy - pohled.y) * pohled.m;
+const wx = px => (px - W() / 2) / pohled.m + pohled.x;
+const wy = py => (H() * 0.62 - py) / pohled.m + pohled.y;
+
+function vystred() {
+  const u = navrh.uzly.filter(n => !n.pomocny);
+  if (!u.length) { pohled.x = 0; pohled.y = 4; pohled.m = 34; rozmer(); return; }
+  let x1 = Infinity, x2 = -Infinity, y1 = 0, y2 = -Infinity;
+  u.forEach(n => { x1 = Math.min(x1, n.x); x2 = Math.max(x2, n.x); y1 = Math.min(y1, n.y, 0); y2 = Math.max(y2, n.y); });
+  const sirka = Math.max(x2 - x1, 4) * 1.25, vyska = Math.max(y2 - y1, 4) * 1.6;
+  pohled.m = Math.max(6, Math.min(W() / sirka, H() / vyska));
+  pohled.x = (x1 + x2) / 2;
+  /* Vodorovná osa pohledu leží v 62 % výšky (nad terénem má být víc místa
+     než pod ním), takže se střed konstrukce musí o ten rozdíl posunout –
+     jinak základ i s terénem vyjede pod dolní hranu plátna. */
+  pohled.y = (y1 + y2) / 2 - 0.12 * H() / pohled.m;
+}
+
+/* zelená → žlutá → červená podle využití pevnosti */
+function barvaNapeti(v) {
+  if (v >= 1) return '#d0392f';
+  const t = Math.max(0, Math.min(1, v));
+  const st = [[62, 143, 95], [201, 176, 60], [208, 106, 44], [194, 59, 59]];
+  const p = t * (st.length - 1), i = Math.min(st.length - 2, Math.floor(p)), f = p - i;
+  const c = k => Math.round(st[i][k] + (st[i + 1][k] - st[i][k]) * f);
+  return 'rgb(' + c(0) + ',' + c(1) + ',' + c(2) + ')';
+}
+
+function scena() { return (rezim === 'simulace' && sim) ? sim : navrh; }
+
+function kresli() {
+  rozmer();
+  const w = W(), h = H();
+  ctx.clearRect(0, 0, w, h);
+
+  const nebe = ctx.createLinearGradient(0, 0, 0, h);
+  nebe.addColorStop(0, svetlo ? '#dfe6ee' : '#191d24');
+  nebe.addColorStop(1, B.bg);
+  ctx.fillStyle = nebe; ctx.fillRect(0, 0, w, h);
+
+  const posunZeme = (rezim === 'simulace' && sim && sim.zPred) ? sim.zPred : { x: 0, y: 0 };
+  if (rezim === 'stavba') kresliMrizku();
+  kresliZem(posunZeme);
+
+  const s = scena();
+  kresliVyplne(s);
+  kresliPrvky(s);
+  kresliUzly(s);
+  if (rezim === 'simulace' && sim) kresliUdalosti();
+  if (rezim === 'stavba') kresliNahled();
+  kresliMeritko();
+}
+
+function kresliMrizku() {
+  const k = MRIZKA * pohled.m;
+  if (k < 7) return;
+  ctx.strokeStyle = B.mrizka; ctx.lineWidth = 1;
+  ctx.beginPath();
+  const x0 = Math.floor(wx(0) / MRIZKA) * MRIZKA, x1 = wx(W());
+  for (let x = x0; x <= x1; x += MRIZKA) { const p = Math.round(sx(x)) + .5; ctx.moveTo(p, 0); ctx.lineTo(p, H()); }
+  const y0 = Math.floor(wy(H()) / MRIZKA) * MRIZKA, y1 = wy(0);
+  for (let y = y0; y <= y1; y += MRIZKA) { const p = Math.round(sy(y)) + .5; ctx.moveTo(0, p); ctx.lineTo(W(), p); }
+  ctx.stroke();
+}
+
+function kresliZem(posun) {
+  const y = sy(0), w = W(), h = H();
+  if (y < h) {
+    ctx.fillStyle = B.zem; ctx.fillRect(0, y, w, h - y);
+    ctx.strokeStyle = B.zemLinka; ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(w, y); ctx.stroke();
+    // šrafování se posouvá s půdou, aby byl otřes vidět i mimo konstrukci
+    ctx.lineWidth = 1; ctx.beginPath();
+    const krok = Math.max(14, pohled.m * 0.5);
+    const off = ((posun.x * pohled.m) % krok + krok) % krok;
+    for (let x = -krok + off; x < w + krok; x += krok) {
+      ctx.moveTo(x, y); ctx.lineTo(x - 10, Math.min(h, y + 12));
+    }
+    ctx.stroke();
+  }
+}
+
+function kresliVyplne(s) {
+  s.vyplne.forEach(v => {
+    const body = v.u.map(i => s.uzly[i]);
+    if (body.some(b => !b)) return;
+    ctx.beginPath();
+    body.forEach((b, i) => { const X = sx(b.x), Y = sy(b.y); i ? ctx.lineTo(X, Y) : ctx.moveTo(X, Y); });
+    ctx.closePath();
+    const m = MAT[v.mat];
+    const rozbita = v.stav === 2;
+    let barva = m.barva;
+    if (rezim === 'simulace' && $('napeti').checked && !rozbita) barva = barvaNapeti(v.vyuziti || 0);
+    ctx.fillStyle = ovrstvi(barva, rozbita ? 0.16 : (svetlo ? 0.42 : 0.34));
+    ctx.fill();
+    ctx.strokeStyle = rozbita ? B.zlom : ovrstvi(barva, 0.8); ctx.lineWidth = 1.4;
+    ctx.stroke();
+    if (rozbita) kresliPrasklinu(body);
+  });
+}
+
+/* prasklina napříč rozbitou plochou – čitelnější než jen změna barvy */
+function kresliPrasklinu(body) {
+  const cx = body.reduce((a, b) => a + b.x, 0) / body.length;
+  const cy = body.reduce((a, b) => a + b.y, 0) / body.length;
+  ctx.strokeStyle = B.zlom; ctx.lineWidth = 1.6; ctx.beginPath();
+  for (let i = 0; i < body.length; i += 2) {
+    const b = body[i];
+    ctx.moveTo(sx(cx), sy(cy));
+    ctx.lineTo(sx(cx + (b.x - cx) * 0.9), sy(cy + (b.y - cy) * 0.9));
+  }
+  ctx.stroke();
+}
+
+function ovrstvi(hex, alfa) {
+  const c = hex.replace('#', '');
+  const n = parseInt(c.length === 3 ? c.split('').map(z => z + z).join('') : c, 16);
+  if (!Number.isFinite(n)) return hex;
+  return 'rgba(' + ((n >> 16) & 255) + ',' + ((n >> 8) & 255) + ',' + (n & 255) + ',' + alfa + ')';
+}
+
+function kresliPrvky(s) {
+  const napeti = rezim === 'simulace' && $('napeti').checked;
+  s.prvky.forEach(p => {
+    const A = s.uzly[p.a], Bu = s.uzly[p.b];
+    if (!A || !Bu) return;
+    const m = MAT[p.mat];
+    const tl = Math.max(1.6, (p.prof / 100) * pohled.m);
+    ctx.lineCap = 'round';
+    if (p.stav === 2) {
+      // zlomený prut zůstane jen jako dva pahýly u uzlů
+      ctx.strokeStyle = B.zlom; ctx.lineWidth = tl * 0.8;
+      const dx = Bu.x - A.x, dy = Bu.y - A.y;
+      ctx.beginPath();
+      ctx.moveTo(sx(A.x), sy(A.y)); ctx.lineTo(sx(A.x + dx * 0.3), sy(A.y + dy * 0.3));
+      ctx.moveTo(sx(Bu.x), sy(Bu.y)); ctx.lineTo(sx(Bu.x - dx * 0.3), sy(Bu.y - dy * 0.3));
+      ctx.stroke();
+      return;
+    }
+    ctx.strokeStyle = napeti ? barvaNapeti(p.vyuziti || 0) : m.barva;
+    ctx.lineWidth = tl;
+    ctx.beginPath(); ctx.moveTo(sx(A.x), sy(A.y)); ctx.lineTo(sx(Bu.x), sy(Bu.y)); ctx.stroke();
+    if (p.stav === 1) {                                  // trvale deformovaný prut
+      ctx.strokeStyle = B.warn; ctx.lineWidth = Math.max(1, tl * 0.34);
+      ctx.setLineDash([5, 5]);
+      ctx.beginPath(); ctx.moveTo(sx(A.x), sy(A.y)); ctx.lineTo(sx(Bu.x), sy(Bu.y)); ctx.stroke();
+      ctx.setLineDash([]);
+    }
+  });
+}
+
+function kresliUzly(s) {
+  const r = Math.max(3, Math.min(7, pohled.m * 0.11));
+  s.uzly.forEach(u => {
+    if (u.pomocny) return;
+    const X = sx(u.x), Y = sy(u.y);
+    if (u.kotva) {
+      ctx.fillStyle = B.zemLinka; ctx.strokeStyle = B.text; ctx.lineWidth = 1.4;
+      ctx.beginPath(); ctx.moveTo(X, Y); ctx.lineTo(X - r * 1.5, Y + r * 2.1); ctx.lineTo(X + r * 1.5, Y + r * 2.1);
+      ctx.closePath(); ctx.fill(); ctx.stroke();
+    }
+    if (u.tuhy) {                                        // tuhý spoj = styčníkový plech
+      ctx.fillStyle = u.prasklySpoj ? B.spatne : B.akcent;
+      ctx.strokeStyle = B.bg; ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.rect(X - r, Y - r, r * 2, r * 2); ctx.fill(); ctx.stroke();
+      if (u.prasklySpoj) {
+        ctx.strokeStyle = B.bg; ctx.lineWidth = 1.6; ctx.beginPath();
+        ctx.moveTo(X - r * .6, Y - r * .6); ctx.lineTo(X + r * .6, Y + r * .6);
+        ctx.moveTo(X + r * .6, Y - r * .6); ctx.lineTo(X - r * .6, Y + r * .6); ctx.stroke();
+      }
+    } else {
+      ctx.fillStyle = B.bg; ctx.strokeStyle = B.text; ctx.lineWidth = 1.3;
+      ctx.beginPath(); ctx.arc(X, Y, r * 0.72, 0, 7); ctx.fill(); ctx.stroke();
+    }
+    if (u.zatez > 0) {                                   // závaží nad uzlem
+      const s2 = r * 1.5;
+      ctx.fillStyle = B.slabe;
+      ctx.fillRect(X - s2, Y - r - s2 * 1.5, s2 * 2, s2 * 1.2);
+      if (pohled.m > 16) {
+        ctx.fillStyle = B.text; ctx.font = '10px ' + getComputedStyle(document.body).fontFamily;
+        ctx.textAlign = 'center';
+        ctx.fillText(Math.round(u.zatez) + ' kg', X, Y - r - s2 * 1.9);
+      }
+    }
+  });
+}
+
+/* jiskry v místě prasklin – rychle mizí */
+function kresliUdalosti() {
+  const t = sim.zivot;
+  sim.udalosti = sim.udalosti.filter(u => t - u.t < 0.7);
+  sim.udalosti.forEach(u => {
+    const a = 1 - (t - u.t) / 0.7;
+    ctx.strokeStyle = 'rgba(224,93,93,' + a.toFixed(2) + ')';
+    ctx.lineWidth = 2;
+    const r = 6 + (1 - a) * 22;
+    ctx.beginPath(); ctx.arc(sx(u.x), sy(u.y), r, 0, 7); ctx.stroke();
+  });
+}
+
+function kresliMeritko() {
+  const delka = pohled.m >= 26 ? 1 : (pohled.m >= 10 ? 5 : 10);
+  const px = delka * pohled.m;
+  const x = 14, y = H() - 16;
+  ctx.strokeStyle = B.slabe; ctx.lineWidth = 1.5;
+  ctx.beginPath(); ctx.moveTo(x, y - 5); ctx.lineTo(x, y); ctx.lineTo(x + px, y); ctx.lineTo(x + px, y - 5); ctx.stroke();
+  ctx.fillStyle = B.slabe; ctx.font = '11px ' + getComputedStyle(document.body).fontFamily;
+  ctx.textAlign = 'left'; ctx.fillText(delka + ' m', x + px + 6, y);
+}
+
+/* ============================================================
+   OVLÁDÁNÍ PLÁTNA
+   ============================================================ */
+let tazeni = null;            // rozkreslený prvek
+let vyberVyplne = [];         // uzly vybírané pro plochu
+let hover = null;             // přichycený bod pod kurzorem
+let posunUzlu = null;         // tažený uzel v režimu stavby
+let panPocatek = null;
+const ukazatele = new Map();  // aktivní dotyky kvůli pinch zoomu
+let pinch0 = null;
+
+function prichyt(mx, my) {
+  const x = wx(mx), y = wy(my);
+  const tol = Math.max(0.12, 16 / pohled.m);
+  let nej = -1, nd = tol;
+  navrh.uzly.forEach((u, i) => { const d = Math.hypot(u.x - x, u.y - y); if (d < nd) { nd = d; nej = i; } });
+  if (nej >= 0) return { x: navrh.uzly[nej].x, y: navrh.uzly[nej].y, uzel: nej };
+  return { x: Math.round(x / MRIZKA) * MRIZKA, y: Math.max(0, Math.round(y / MRIZKA) * MRIZKA), uzel: -1 };
+}
+
+function prvekPod(mx, my) {
+  const x = wx(mx), y = wy(my), tol = Math.max(0.15, 12 / pohled.m);
+  let nej = -1, nd = tol;
+  navrh.prvky.forEach((p, i) => {
+    const A = navrh.uzly[p.a], Bu = navrh.uzly[p.b];
+    const dx = Bu.x - A.x, dy = Bu.y - A.y, dd = dx * dx + dy * dy;
+    let t = dd ? ((x - A.x) * dx + (y - A.y) * dy) / dd : 0;
+    t = Math.max(0, Math.min(1, t));
+    const d = Math.hypot(x - (A.x + dx * t), y - (A.y + dy * t));
+    if (d < nd) { nd = d; nej = i; }
+  });
+  return nej;
+}
+
+function vyplnPod(mx, my) {
+  const x = wx(mx), y = wy(my);
+  for (let i = navrh.vyplne.length - 1; i >= 0; i--) {
+    const b = navrh.vyplne[i].u.map(k => navrh.uzly[k]);
+    let uvnitr = false;
+    for (let j = 0, k = b.length - 1; j < b.length; k = j++) {
+      if ((b[j].y > y) !== (b[k].y > y) &&
+          x < (b[k].x - b[j].x) * (y - b[j].y) / (b[k].y - b[j].y) + b[j].x) uvnitr = !uvnitr;
+    }
+    if (uvnitr) return i;
+  }
+  return -1;
+}
+
+/* Uzly plochy se seřadí kolem těžiště, aby čtyřúhelník nevyšel přeložený. */
+function seradKolem(idx) {
+  const cx = idx.reduce((s, i) => s + navrh.uzly[i].x, 0) / idx.length;
+  const cy = idx.reduce((s, i) => s + navrh.uzly[i].y, 0) / idx.length;
+  return idx.slice().sort((a, b) =>
+    Math.atan2(navrh.uzly[a].y - cy, navrh.uzly[a].x - cx) -
+    Math.atan2(navrh.uzly[b].y - cy, navrh.uzly[b].x - cx));
+}
+
+function dokoncVypln() {
+  if (vyberVyplne.length < 3) { vyberVyplne = []; kresli(); return; }
+  ulozHistorii();
+  navrh.vyplne.push({ u: seradKolem(vyberVyplne), mat: material, prof: profil });
+  vyberVyplne = [];
+  poZmene(true);
+}
+
+function mistoUdalosti(e) {
+  const r = platno.getBoundingClientRect();
+  return { x: e.clientX - r.left, y: e.clientY - r.top };
+}
+
+platno.addEventListener('contextmenu', e => e.preventDefault());
+
+platno.addEventListener('pointerdown', e => {
+  try { platno.setPointerCapture(e.pointerId); } catch (err) { /* nedůvěryhodná událost */ }
+  const m = mistoUdalosti(e);
+  ukazatele.set(e.pointerId, m);
+  if (ukazatele.size === 2) {                       // začátek pinch zoomu
+    const [a, b] = [...ukazatele.values()];
+    pinch0 = { d: Math.hypot(a.x - b.x, a.y - b.y), m: pohled.m,
+               x: pohled.x, y: pohled.y, sx: (a.x + b.x) / 2, sy: (a.y + b.y) / 2 };
+    tazeni = null; posunUzlu = null; panPocatek = null;
+    return;
+  }
+  const posouvat = e.button === 1 || e.button === 2 || e.shiftKey;
+  if (posouvat) { panPocatek = { m: m, x: pohled.x, y: pohled.y }; return; }
+
+  if (rezim === 'simulace') {
+    if (!sim) return;
+    const x = wx(m.x), y = wy(m.y);
+    let nej = -1, nd = Math.max(0.3, 22 / pohled.m);
+    sim.uzly.forEach((u, i) => {
+      if (u.kotva || u.pomocny) return;
+      const d = Math.hypot(u.x - x, u.y - y); if (d < nd) { nd = d; nej = i; }
+    });
+    if (nej >= 0) sim.tazeny = { i: nej, x: x, y: y };
+    else panPocatek = { m: m, x: pohled.x, y: pohled.y };
+    return;
+  }
+
+  const p = prichyt(m.x, m.y);
+  if (nastroj === 'prvek') { tazeni = { od: p, do: p }; }
+  else if (nastroj === 'posun') { if (p.uzel >= 0) { ulozHistorii(); posunUzlu = p.uzel; } else panPocatek = { m: m, x: pohled.x, y: pohled.y }; }
+  else if (nastroj === 'vypln') {
+    if (p.uzel < 0) { Dialog.info('Klikni na existující uzel'); return; }
+    if (vyberVyplne.includes(p.uzel)) { dokoncVypln(); return; }
+    vyberVyplne.push(p.uzel);
+    if (vyberVyplne.length === 4) dokoncVypln();
+  }
+  else if (nastroj === 'kotva') {
+    if (p.uzel < 0) return;
+    ulozHistorii();
+    const u = navrh.uzly[p.uzel]; u.kotva = !u.kotva;
+    poZmene(true);
+  }
+  else if (nastroj === 'spoj') {
+    if (p.uzel < 0) return;
+    ulozHistorii();
+    const u = navrh.uzly[p.uzel]; u.tuhy = !u.tuhy;
+    poZmene(true);
+  }
+  else if (nastroj === 'zatez') {
+    if (p.uzel < 0) return;
+    ulozHistorii();
+    const u = navrh.uzly[p.uzel];
+    u.zatez = u.zatez === zatezHodnota ? 0 : zatezHodnota;
+    poZmene(true);
+  }
+  else if (nastroj === 'guma') {
+    const iv = vyplnPod(m.x, m.y), ip = prvekPod(m.x, m.y);
+    if (ip >= 0) { ulozHistorii(); navrh.prvky.splice(ip, 1); uklidOsamele(); poZmene(true); }
+    else if (iv >= 0) { ulozHistorii(); navrh.vyplne.splice(iv, 1); uklidOsamele(); poZmene(true); }
+    else if (p.uzel >= 0) { ulozHistorii(); smazUzel(p.uzel); poZmene(true); }
+  }
+  kresli();
+});
+
+platno.addEventListener('pointermove', e => {
+  const m = mistoUdalosti(e);
+  if (ukazatele.has(e.pointerId)) ukazatele.set(e.pointerId, m);
+
+  if (pinch0 && ukazatele.size === 2) {
+    const [a, b] = [...ukazatele.values()];
+    const d = Math.hypot(a.x - b.x, a.y - b.y);
+    if (pinch0.d > 8) {
+      pohled.m = Math.max(4, Math.min(260, pinch0.m * d / pinch0.d));
+      pohled.x = pinch0.x - ((a.x + b.x) / 2 - pinch0.sx) / pohled.m;
+      pohled.y = pinch0.y + ((a.y + b.y) / 2 - pinch0.sy) / pohled.m;
+    }
+    kresli(); return;
+  }
+  if (panPocatek) {
+    pohled.x = panPocatek.x - (m.x - panPocatek.m.x) / pohled.m;
+    pohled.y = panPocatek.y + (m.y - panPocatek.m.y) / pohled.m;
+    kresli(); return;
+  }
+  if (rezim === 'simulace') {
+    if (sim && sim.tazeny) { sim.tazeny.x = wx(m.x); sim.tazeny.y = wy(m.y); }
+    return;
+  }
+  hover = prichyt(m.x, m.y);
+  if (tazeni) tazeni.do = hover;
+  if (posunUzlu !== null) {
+    const u = navrh.uzly[posunUzlu];
+    u.x = Math.round(wx(m.x) / MRIZKA) * MRIZKA;
+    u.y = Math.max(0, Math.round(wy(m.y) / MRIZKA) * MRIZKA);
+  }
+  kresli();
+});
+
+function konecTazeni(e) {
+  ukazatele.delete(e.pointerId);
+  if (ukazatele.size < 2) pinch0 = null;
+  panPocatek = null;
+  if (rezim === 'simulace') { if (sim) sim.tazeny = null; return; }
+  if (posunUzlu !== null) { posunUzlu = null; poZmene(true); }
+  if (tazeni) {
+    const t = tazeni; tazeni = null;
+    if (Math.hypot(t.do.x - t.od.x, t.do.y - t.od.y) >= MRIZKA * 0.6) {
+      ulozHistorii();
+      const a = pridejUzel(t.od.x, t.od.y), b = pridejUzel(t.do.x, t.do.y);
+      pridejPrvek(a, b, material, profil);
+      poZmene(true);
+    }
+  }
+  kresli();
+}
+platno.addEventListener('pointerup', konecTazeni);
+platno.addEventListener('pointercancel', konecTazeni);
+platno.addEventListener('pointerleave', e => { if (!ukazatele.has(e.pointerId)) hover = null; });
+
+platno.addEventListener('wheel', e => {
+  e.preventDefault();
+  const m = mistoUdalosti(e);
+  const px = wx(m.x), py = wy(m.y);
+  pohled.m = Math.max(4, Math.min(260, pohled.m * (e.deltaY < 0 ? 1.14 : 1 / 1.14)));
+  pohled.x = px - (m.x - W() / 2) / pohled.m;
+  pohled.y = py + (m.y - H() * 0.62) / pohled.m;
+  kresli();
+}, { passive: false });
+
+/* náhled rozkresleného prvku, vybraných uzlů plochy a přichycení */
+function kresliNahled() {
+  if (hover) {
+    ctx.strokeStyle = B.akcent; ctx.lineWidth = 1.4;
+    ctx.beginPath(); ctx.arc(sx(hover.x), sy(hover.y), 8, 0, 7); ctx.stroke();
+  }
+  vyberVyplne.forEach(i => {
+    const u = navrh.uzly[i]; if (!u) return;
+    ctx.fillStyle = ovrstvi(MAT[material].barva, 0.9);
+    ctx.beginPath(); ctx.arc(sx(u.x), sy(u.y), 6, 0, 7); ctx.fill();
+  });
+  if (vyberVyplne.length >= 2) {
+    ctx.strokeStyle = ovrstvi(MAT[material].barva, 0.8); ctx.lineWidth = 1.4;
+    ctx.setLineDash([6, 4]); ctx.beginPath();
+    seradKolem(vyberVyplne).forEach((i, k) => {
+      const u = navrh.uzly[i]; k ? ctx.lineTo(sx(u.x), sy(u.y)) : ctx.moveTo(sx(u.x), sy(u.y));
+    });
+    ctx.closePath(); ctx.stroke(); ctx.setLineDash([]);
+  }
+  if (tazeni) {
+    const d = Math.hypot(tazeni.do.x - tazeni.od.x, tazeni.do.y - tazeni.od.y);
+    ctx.strokeStyle = MAT[material].barva;
+    ctx.lineWidth = Math.max(1.6, (profil / 100) * pohled.m);
+    ctx.globalAlpha = 0.65; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(sx(tazeni.od.x), sy(tazeni.od.y)); ctx.lineTo(sx(tazeni.do.x), sy(tazeni.do.y));
+    ctx.stroke(); ctx.globalAlpha = 1;
+    if (d > 0.05) {
+      ctx.fillStyle = B.text; ctx.font = '12px ' + getComputedStyle(document.body).fontFamily;
+      ctx.textAlign = 'center';
+      ctx.fillText(cis(d, 2) + ' m', (sx(tazeni.od.x) + sx(tazeni.do.x)) / 2, (sy(tazeni.od.y) + sy(tazeni.do.y)) / 2 - 10);
+    }
+  }
+}
+
+/* ============================================================
+   PANELY, STATISTIKY A VÝSLEDEK
+   ============================================================ */
+function cis(v, d) {
+  if (!Number.isFinite(v)) return '–';
+  return v.toFixed(d === undefined ? 1 : d).replace('.', ',');
+}
+function radek(popis, hodnota, duraz) {
+  return '<div class="radek' + (duraz ? ' duraz' : '') + '"><span>' + popis + '</span><b>' + hodnota + '</b></div>';
+}
+
+function statistiky() {
+  let hm = 0, cena = 0, vyska = 0, zatez = 0;
+  navrh.prvky.forEach(p => {
+    const m = MAT[p.mat], ob = prurez(p.prof) * delkaPrvku(p);
+    hm += m.hust * ob; cena += m.hust * ob * m.cena;
+  });
+  navrh.vyplne.forEach(v => {
+    const m = MAT[v.mat], ob = (v.prof / 100) * plochaVyplne(v);
+    hm += m.hust * ob; cena += m.hust * ob * m.cena;
+  });
+  navrh.uzly.forEach(u => { zatez += u.zatez || 0; vyska = Math.max(vyska, u.y); });
+  return { hm: hm, cena: cena, vyska: vyska, zatez: zatez,
+           kotev: navrh.uzly.filter(u => u.kotva).length,
+           tuhych: navrh.uzly.filter(u => u.tuhy).length };
+}
+
+function vykresliStatistiky() {
+  const s = statistiky();
+  $('statistika').innerHTML =
+    radek('Prvky / plochy', navrh.prvky.length + ' / ' + navrh.vyplne.length) +
+    radek('Uzly (kotvy / tuhé)', navrh.uzly.length + ' (' + s.kotev + ' / ' + s.tuhych + ')') +
+    radek('Výška', cis(s.vyska, 1) + ' m') +
+    radek('Hmotnost konstrukce', cis(s.hm / 1000, 2) + ' t') +
+    radek('Užitné zatížení', cis(s.zatez / 1000, 2) + ' t') +
+    radek('Odhad ceny', Math.round(s.cena / 1000).toLocaleString('cs-CZ') + ' tis. Kč', true);
+}
+
+function vykresliMaterialy() {
+  $('materialy').innerHTML = MAT_PORADI.map(k =>
+    '<button class="mat' + (k === material ? ' zap' : '') + '" data-m="' + k + '">' +
+    '<span class="chip" style="background:' + MAT[k].barva + '"></span>' + MAT[k].nazev + '</button>').join('');
+  const m = MAT[material];
+  $('matPopis').textContent = 'Spojuje se: ' + m.pojivo + '. Spoj přenese ' +
+    Math.round(m.kSpoj * 100) + ' % tahové pevnosti prutu.';
+  $('matVlastnosti').innerHTML =
+    radek('Modul pružnosti E', cis(m.E / 1e9, 0) + ' GPa') +
+    radek('Pevnost v tahu', cis(m.ft / 1e6, m.ft < 1e7 ? 1 : 0) + ' MPa') +
+    radek('Pevnost v tlaku', cis(m.fc / 1e6, 0) + ' MPa') +
+    radek('Objemová hmotnost', Math.round(m.hust) + ' kg/m³') +
+    radek('Tvárnost', m.tvarny > 0 ? 'houževnatý' : 'křehký') +
+    radek('Cena', m.cena + ' Kč/kg');
+}
+
+const HINTY = {
+  prvek: 'Táhni myší nebo prstem – vznikne prut. Konce se přichytí k mřížce nebo k sousednímu uzlu.',
+  vypln: 'Klikej na uzly (3 nebo 4). Znovu na první uzel nebo Enter plochu uzavře.',
+  kotva: 'Klikni na uzel – ukotví se do základu a bude se hýbat se zemí.',
+  spoj:  'Klikni na uzel – přepne se mezi čepem (kroužek) a tuhým spojem (čtvereček).',
+  zatez: 'Klikni na uzel – přidá se nastavené závaží. Druhé kliknutí ho odebere.',
+  posun: 'Táhni uzel na nové místo.',
+  guma:  'Klikni na prut, plochu nebo uzel – zmizí.',
+};
+function vykresliHint() {
+  $('napovedaPlocha').textContent = rezim === 'stavba'
+    ? HINTY[nastroj]
+    : 'Táhnutím za uzel do konstrukce strčíš. Shift + tažení posune pohled.';
+}
+
+function poZmene(uloz) {
+  vykresliStatistiky();
+  if (uloz !== false) ulozNavrh();
+  if (rezim === 'simulace') { sim = pripravSimulaci(); }
+  kresli();
+}
+
+/* ---------- panel simulace ---------- */
+function aktualizujSim() {
+  if (!sim) return;
+  const zem = sim.zPred || { x: 0, y: 0 };
+  $('otresy').innerHTML =
+    radek('Čas', cis(sim.cas, 1) + ' s') +
+    radek('Špičkové zrychlení', cis(sim.pgaMer / G, 2) + ' g', true) +
+    radek('Okamžité zrychlení', cis((sim.zrychleni || 0) / G, 2) + ' g') +
+    radek('Výchylka půdy', cis(zem.x * 100, 1) + ' cm');
+
+  const zlomenePrvky = sim.prvky.filter(p => p.stav === 2).length;
+  const zlomeneVypln = sim.vyplne.filter(v => v.stav === 2).length;
+  const poskozene = sim.prvky.filter(p => p.stav === 1).length;
+  const spoje = sim.uzly.filter(u => u.prasklySpoj).length;
+  let maxVyuziti = 0;
+  sim.prvky.forEach(p => { if (p.stav !== 2) maxVyuziti = Math.max(maxVyuziti, p.vyuziti || 0); });
+  sim.vyplne.forEach(v => { if (v.stav !== 2) maxVyuziti = Math.max(maxVyuziti, v.vyuziti || 0); });
+
+  $('odezva').innerHTML =
+    radek('Posun vrcholu', cis((sim.drift || 0) * 100, 1) + ' cm') +
+    radek('Největší posun', cis(sim.driftMax * 100, 1) + ' cm') +
+    radek('Poměrný posun', cis(pomernyPosun() * 100, 2) + ' % výšky', pomernyPosun() > 0.025) +
+    radek('Využití pevnosti', Math.round(maxVyuziti * 100) + ' %', maxVyuziti > 0.8) +
+    radek('Špička využití', Math.round(sim.vyuzitiMax * 100) + ' %', sim.vyuzitiMax > 1) +
+    radek('Zlomené pruty', zlomenePrvky + ' / ' + sim.prvky.length) +
+    radek('Prasklé plochy', zlomeneVypln + ' / ' + sim.vyplne.length) +
+    radek('Poškozené / spoje', poskozene + ' / ' + spoje);
+
+  $('hud').innerHTML =
+    '<span>⏱ <b>' + cis(sim.cas, 1) + ' s</b></span>' +
+    '<span>PGA <b>' + cis(sim.pgaMer / G, 2) + ' g</b></span>' +
+    (sim.bezi ? '<span style="color:' + B.warn + '">🌊 <b>otřesy</b></span>'
+              : '<span>' + (sim.hotovo ? '✅ <b>doznělo</b>' : '⏸ <b>klid</b>') + '</span>');
+}
+
+/* Poměrný posun (drift) vrcholu vůči jeho výšce – v seizmickém návrhu
+   je to hlavní měřítko poškození: nad ~2,5 % praskají příčky, nad ~12 %
+   se konstrukce už neudrží ani bez jediného zlomeného prutu. */
+function pomernyPosun() {
+  if (!sim || !sim.vrchol || sim.vrchol.vyska0 < 0.6) return 0;
+  return Math.abs(sim.driftMax) / sim.vrchol.vyska0;
+}
+
+function vyhodnotVysledek() {
+  const celkem = sim.prvky.length + sim.vyplne.length;
+  const zlomene = sim.prvky.filter(p => p.stav === 2).length + sim.vyplne.filter(v => v.stav === 2).length;
+  const poskozene = sim.prvky.filter(p => p.stav === 1).length + sim.uzly.filter(u => u.prasklySpoj).length;
+  let pokles = 0;
+  sim.uzly.forEach(u => {
+    if (u.pomocny || u.kotva || u.vyska0 < 0.6) return;
+    pokles = Math.max(pokles, (u.vyska0 - u.y) / u.vyska0);
+  });
+  const vyskaVrcholu = sim.vrchol ? sim.vrchol.vyska0 : 0;
+  const driftPomer = vyskaVrcholu > 0.6 ? Math.abs(sim.driftMax) / vyskaVrcholu : 0;
+  const zriceno = pokles > 0.45 || driftPomer > 0.12 || (celkem > 0 && zlomene / celkem > 0.5);
+  const el = $('verdikt');
+  el.classList.remove('ok', 'warn', 'bad');
+  const spoje = sim.uzly.filter(u => u.prasklySpoj).length;
+  const detail = 'Zlomeno ' + zlomene + ' z ' + celkem + ' prvků' +
+    (spoje ? ', povolilo ' + spoje + ' tuhých spojů' : '') +
+    ', největší pokles ' + Math.round(pokles * 100) +
+    ' %, posun vrcholu ' + cis(Math.abs(sim.driftMax) * 100, 1) +
+    ' cm (' + cis(driftPomer * 100, 1) + ' % výšky).';
+  if (zriceno) {
+    el.classList.add('bad');
+    el.innerHTML = '<b>💥 Zřícení</b>Konstrukce magnitudo ' + cis(otres.mag, 1) + ' nevydržela. ' + detail;
+  } else if (zlomene > 0 || poskozene > 0 || driftPomer > 0.025) {
+    el.classList.add('warn');
+    el.innerHTML = '<b>⚠️ Poškozeno, ale stojí</b>Magnitudo ' + cis(otres.mag, 1) +
+      ' konstrukci narušilo, nespadla. ' + detail;
+    zapisRekord(otres.mag);
+  } else {
+    el.classList.add('ok');
+    el.innerHTML = '<b>✅ Bez poškození</b>Magnitudo ' + cis(otres.mag, 1) +
+      ' konstrukce ustála beze škod. ' + detail;
+    zapisRekord(otres.mag);
+  }
+  sim.hotovo = true;
+}
+
+let rek = null;
+function zapisRekord(mag) {
+  if (rek && rek.zapis(Math.round(mag * 10) / 10)) Dialog.info('🏅 Nový rekord: magnitudo ' + cis(mag, 1));
+}
+
+/* ============================================================
+   UKLÁDÁNÍ NÁVRHU
+   ============================================================ */
+function ulozNavrh() {
+  try { localStorage.setItem(KLIC_NAVRH, JSON.stringify(navrh)); }
+  catch (e) { /* soukromé okno – návrh se prostě nezapamatuje */ }
+}
+function nactiNavrh() {
+  try {
+    const d = JSON.parse(localStorage.getItem(KLIC_NAVRH) || 'null');
+    if (d && Array.isArray(d.uzly) && Array.isArray(d.prvky)) {
+      d.vyplne = d.vyplne || [];
+      return platnyNavrh(d) ? d : null;
+    }
+  } catch (e) { /* poškozený zápis přeskočíme */ }
+  return null;
+}
+/* Import je cizí soubor – bez kontroly by rozbitý index shodil vykreslení. */
+function platnyNavrh(d) {
+  if (!d || !Array.isArray(d.uzly) || !Array.isArray(d.prvky) || !Array.isArray(d.vyplne)) return false;
+  if (d.uzly.some(u => !Number.isFinite(u.x) || !Number.isFinite(u.y))) return false;
+  const n = d.uzly.length;
+  if (d.prvky.some(p => !(p.a >= 0 && p.a < n && p.b >= 0 && p.b < n) || !MAT[p.mat])) return false;
+  if (d.vyplne.some(v => !Array.isArray(v.u) || v.u.length < 3 || v.u.length > 4
+        || v.u.some(i => !(i >= 0 && i < n)) || !MAT[v.mat])) return false;
+  return true;
+}
+
+/* ============================================================
+   OVLÁDACÍ PRVKY
+   ============================================================ */
+$('nastroje').addEventListener('click', e => {
+  const b = e.target.closest('button[data-n]'); if (!b) return;
+  nastroj = b.dataset.n;
+  vyberVyplne = [];
+  [...$('nastroje').children].forEach(x => x.classList.toggle('zap', x === b));
+  vykresliHint(); kresli();
+});
+$('materialy').addEventListener('click', e => {
+  const b = e.target.closest('button[data-m]'); if (!b) return;
+  material = b.dataset.m;
+  vykresliMaterialy(); kresli();
+});
+$('profil').addEventListener('input', e => {
+  profil = +e.target.value; $('profilTxt').textContent = profil + ' cm';
+});
+$('zatez').addEventListener('input', e => {
+  zatezHodnota = +e.target.value; $('zatezTxt').textContent = zatezHodnota + ' kg';
+});
+$('predlohy').addEventListener('change', async e => {
+  const k = e.target.value; e.target.value = '';
+  if (!k || !PREDLOHY[k]) return;
+  if (navrh.prvky.length + navrh.vyplne.length > 0 && !await Dialog.potvrd('Nahradit současný návrh předlohou?')) return;
+  ulozHistorii(); PREDLOHY[k](); vystred(); poZmene(true);
+});
+$('btnZpet').addEventListener('click', zpet);
+$('btnVycisti').addEventListener('click', async () => {
+  if (!navrh.uzly.length || await Dialog.potvrd('Smazat celý návrh?')) { ulozHistorii(); novyNavrh(); poZmene(true); }
+});
+$('btnExport').addEventListener('click', () => {
+  const blob = new Blob([JSON.stringify(navrh, null, 1)], { type: 'application/json' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'konstrukce.json';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 1000);
+});
+$('btnImport').addEventListener('click', () => $('souborImport').click());
+$('souborImport').addEventListener('change', e => {
+  const f = e.target.files && e.target.files[0]; if (!f) return;
+  const ct = new FileReader();
+  ct.onload = () => {
+    try {
+      const d = JSON.parse(ct.result);
+      d.vyplne = d.vyplne || [];
+      if (!platnyNavrh(d)) throw new Error('nesedí struktura');
+      ulozHistorii(); navrh = d; vystred(); poZmene(true);
+      Dialog.info('Návrh načten');
+    } catch (err) { Dialog.chyba('Soubor se nepodařilo načíst: ' + err.message); }
+  };
+  ct.readAsText(f);
+  e.target.value = '';
+});
+
+$('btnZoomIn').addEventListener('click', () => { pohled.m = Math.min(260, pohled.m * 1.25); kresli(); });
+$('btnZoomOut').addEventListener('click', () => { pohled.m = Math.max(4, pohled.m / 1.25); kresli(); });
+$('btnFit').addEventListener('click', () => { vystred(); kresli(); });
+
+/* ---------- přepínání režimů ---------- */
+function nastavRezim(r) {
+  rezim = r;
+  const stavba = r === 'stavba';
+  $('tabStavba').classList.toggle('zap', stavba);
+  $('tabSim').classList.toggle('zap', !stavba);
+  $('listaStavba').classList.toggle('skryta', !stavba);
+  $('listaSim').classList.toggle('skryta', stavba);
+  $('panelStavba').style.display = stavba ? 'flex' : 'none';
+  $('panelSim').style.display = stavba ? 'none' : 'flex';
+  $('hud').style.display = stavba ? 'none' : 'flex';
+  platno.style.cursor = stavba ? 'crosshair' : 'grab';
+  tazeni = null; vyberVyplne = []; hover = null;
+  if (!stavba) {
+    sim = pripravSimulaci();
+    if (!navrh.uzly.some(u => u.kotva)) Dialog.info('Konstrukce nemá žádnou kotvu – spadne i bez zemětřesení.');
+  } else { sim = null; otres = null; }
+  vykresliHint(); aktualizujSim(); kresli();
+}
+$('tabStavba').addEventListener('click', () => nastavRezim('stavba'));
+$('tabSim').addEventListener('click', () => nastavRezim('simulace'));
+
+/* ---------- ovládání otřesů ---------- */
+let pauza = false;
+function spustOtresy() {
+  sim = pripravSimulaci();
+  // konstrukce se nejdřív usadí vlastní tíhou, ať otřesy nezačnou do rozkmitané stavby
+  for (let i = 0; i < 100; i++) krokFyziky(1 / 60);
+  otres = novyOtres(+$('mag').value, +$('frek').value, +$('trvani').value, $('svisle').checked);
+  sim.cas = 0; sim.bezi = true; sim.pgaMer = 0; sim.driftMax = 0; sim.vyuzitiMax = 0; sim.hotovo = false;
+  pauza = false; $('btnPauza').textContent = '⏸ Pauza';
+  const el = $('verdikt');
+  el.classList.remove('ok', 'warn', 'bad');
+  el.innerHTML = '<b>🌊 Otřesy běží</b>Sleduj barvy prvků – červená znamená vyčerpanou pevnost.';
+}
+$('btnStart').addEventListener('click', spustOtresy);
+$('btnPauza').addEventListener('click', () => {
+  pauza = !pauza; $('btnPauza').textContent = pauza ? '▶ Pokračovat' : '⏸ Pauza';
+});
+$('btnReset').addEventListener('click', () => {
+  sim = pripravSimulaci(); otres = null; pauza = false;
+  $('btnPauza').textContent = '⏸ Pauza';
+  const el = $('verdikt'); el.classList.remove('ok', 'warn', 'bad');
+  el.innerHTML = '<b>Připraveno</b>Konstrukce je zpátky v původním stavu.';
+  aktualizujSim(); kresli();
+});
+$('mag').addEventListener('input', e => $('magTxt').textContent = cis(+e.target.value, 1));
+$('frek').addEventListener('input', e => $('frekTxt').textContent = cis(+e.target.value, 1) + ' Hz');
+$('trvani').addEventListener('input', e => $('trvaniTxt').textContent = e.target.value + ' s');
+$('tlum').addEventListener('input', e => { tlumeni = +e.target.value; $('tlumTxt').textContent = cis(tlumeni, 1); });
+$('napeti').addEventListener('change', kresli);
+
+/* ---------- nápověda ---------- */
+$('btnNapoveda').addEventListener('click', () => $('prekryv').classList.add('zap'));
+$('btnZavri').addEventListener('click', () => $('prekryv').classList.remove('zap'));
+$('prekryv').addEventListener('click', e => { if (e.target === $('prekryv')) $('prekryv').classList.remove('zap'); });
+
+/* ---------- klávesy ---------- */
+const KLAVESY = { '1': 'prvek', '2': 'vypln', '3': 'kotva', '4': 'spoj', '5': 'zatez', '6': 'posun', '7': 'guma' };
+document.addEventListener('keydown', e => {
+  if (e.target.matches('input, select, textarea')) return;
+  if ($('prekryv').classList.contains('zap')) { if (e.key === 'Escape') $('prekryv').classList.remove('zap'); return; }
+  if (e.ctrlKey && e.key.toLowerCase() === 'z') { e.preventDefault(); if (rezim === 'stavba') zpet(); return; }
+  if (rezim === 'stavba') {
+    if (KLAVESY[e.key]) {
+      const b = $('nastroje').querySelector('button[data-n="' + KLAVESY[e.key] + '"]');
+      if (b) b.click();
+      return;
+    }
+    if (e.key === 'Enter') { dokoncVypln(); return; }
+    if (e.key === 'Escape') { vyberVyplne = []; tazeni = null; kresli(); return; }
+  } else {
+    if (e.code === 'Space') { e.preventDefault(); if (sim && sim.bezi) $('btnPauza').click(); else spustOtresy(); return; }
+    if (e.key.toLowerCase() === 'r') { $('btnReset').click(); return; }
+  }
+});
+
+/* ============================================================
+   SMYČKA
+   ============================================================ */
+let posledni = 0, tikPanelu = 0;
+function smycka(t) {
+  requestAnimationFrame(smycka);
+  const dt = Math.min(0.04, posledni ? (t - posledni) / 1000 : 0.016);
+  posledni = t;
+  if (rezim !== 'simulace' || !sim || pauza) return;
+
+  if (sim.tazeny) {                            // tažení uzlu myší = síla do konstrukce
+    const u = sim.uzly[sim.tazeny.i];
+    if (u) { u.x += (sim.tazeny.x - u.x) * 0.4; u.y += (sim.tazeny.y - u.y) * 0.4; }
+  }
+  krokFyziky(dt);
+  if (sim.bezi && otres && sim.cas > otres.T + 4) { sim.bezi = false; vyhodnotVysledek(); }
+  tikPanelu += dt;
+  if (tikPanelu > 0.12) { tikPanelu = 0; aktualizujSim(); }
+  kresli();
+}
+
+/* ============================================================
+   START
+   ============================================================ */
+window.addEventListener('DOMContentLoaded', () => {
+  if (window.Rekord) {
+    rek = Rekord.sleduj('webapp_hra_quake_lab', {
+      vyssiLepsi: true, popisek: 'Nejsilnější přežité zemětřesení',
+      format: v => 'magnitudo ' + cis(v, 1),
+    });
+    rek.prvek($('rekordBox'));
+  }
+});
+
+const ulozeny = nactiNavrh();
+if (ulozeny) navrh = ulozeny; else PREDLOHY.ram();
+tlumeni = +$('tlum').value;
+vykresliMaterialy();
+vykresliStatistiky();
+vykresliHint();
+nastavRezim('stavba');
+requestAnimationFrame(() => { rozmer(); vystred(); kresli(); });
+requestAnimationFrame(smycka);
+</script>
+</body>
+</html>

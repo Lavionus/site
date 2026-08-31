@@ -5,7 +5,7 @@ Statický web se sbírkou malých HTML aplikací, hostovaný na GitHub Pages
 
 | Cesta | Web | Katalog | Stránky |
 |---|---|---|---|
-| `/` | hlavní rozcestník – 262 aplikací | `apps.js` | `obsah/` |
+| `/` | hlavní rozcestník – 266 aplikací | `apps.js` | `obsah/` |
 | `/nodus/` | ◈ **Nodus** – výukový web: 77 aplikací + 174 připravovaných témat podle osnov ZŠ | `nodus/apps.js` | `nodus/obsah/` |
 
 Nodus má vlastní rozcestník, úvodní přehled, ikony, manifest i service worker,
@@ -26,6 +26,13 @@ má vlastní kopii, aby zůstal soběstačný, a v ní je název díla `Nodus`
 přidá spodní odsazení, `100vh` v CSS stránky se zmenší o výšku pruhu a prvky
 ukotvené napevno u spodní hrany se nad něj posunou. Uvnitř rozcestníku se
 v iframu nekreslí, podpis tam patří nadřazené stránce.
+
+Větší datové soubory leží vedle své stránky v `obsah/` a načítají se jako
+klasický `<script>`, ne přes `fetch` – tím fungují i z `file://` a service worker
+si je uloží při prvním otevření stránky. Slovník ke Scrabblu
+(`obsah/scrabbleSlovnik.js`, 41 tis. tvarů, 366 kB) vznikl tak, že frekvenční
+seznam českých slov z titulků (hermitdave/FrequencyWords) prošel pravopisným
+slovníkem cs_CZ (LibreOffice/hunspell); postup je popsaný v hlavičce souboru.
 
 Po větší změně zvyš verzi cache v `sw.js` (`webapp-vN`), resp. v `nodus/sw.js`
 (`nodus-vN`) – jinak návštěvník uvidí novou verzi až při druhém načtení.

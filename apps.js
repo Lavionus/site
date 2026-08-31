@@ -1411,6 +1411,22 @@ const KATALOG_SEKCE = [
         ]
       },
       {
+        "soubor": "obsah/quake_lab.html",
+        "nazev": "🏚️ Zemětřesná laboratoř",
+        "tagy": [
+          "zemětřesení",
+          "simulátor",
+          "konstrukce",
+          "statika",
+          "seizmicita",
+          "pevnost",
+          "nosník",
+          "vzpěra",
+          "spoje",
+          "materiály"
+        ]
+      },
+      {
         "soubor": "obsah/cable_sizing_calc.html",
         "nazev": "🔌 Dimenzování kabelu",
         "tagy": [
@@ -1884,6 +1900,11 @@ const KATALOG_SEKCE = [
         "soubor": "obsah/osmismerka.html",
         "nazev": "🔡 Osmisměrka",
         "tagy": ["osmisměrka", "hledání slov", "mřížka", "slovní hra"]
+      },
+      {
+        "soubor": "obsah/scrabble.html",
+        "nazev": "🔤 Scrabble",
+        "tagy": ["scrabble", "slovní hra", "desková hra", "písmena", "kameny", "skládání slov"]
       },
       {
         "soubor": "obsah/crossword_gen.html",
