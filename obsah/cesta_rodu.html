@@ -1,0 +1,1390 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>⚜️ Cesta rodu</title>
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../podpis.js" defer></script>
+<script src="../dialog.js"></script>
+<script src="../rekord.js"></script>
+<style>
+body{padding:14px;max-width:1100px;margin:0 auto}
+h1{font-size:1.5rem;font-weight:600;margin-bottom:10px}
+h1 small{font-size:.8rem;color:var(--text-faint);font-weight:400;margin-left:8px}
+kbd{background:var(--bg-control);border:1px solid var(--border);border-bottom-width:2px;
+  border-radius:4px;padding:0 5px;font-family:inherit;font-size:.8em}
+
+/* ---- hlavička se stavem ---- */
+.stav{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;margin-bottom:10px}
+.box{background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius);padding:8px 10px}
+.box .l{font-size:.68rem;text-transform:uppercase;letter-spacing:.04em;color:var(--text-faint)}
+.box .v{font-size:1.1rem;font-weight:700;margin-top:2px}
+.box .p{font-size:.72rem;color:var(--text-muted)}
+.mericka{height:5px;background:var(--bg-input);border-radius:3px;margin-top:6px;overflow:hidden}
+.mericka i{display:block;height:100%;background:var(--ok);transition:width .25s,background .25s}
+.mericka i.stredni{background:var(--warn)}
+.mericka i.spatne{background:var(--danger)}
+.kladne{color:var(--ok)}.zaporne{color:var(--danger)}
+
+/* mince: denár – groš – kopa – hřivna */
+.m-denar{color:#b5763c}.m-gros{color:#9aa4ad}.m-kopa{color:#d4a017}.m-hrivna{color:#63c3c8}
+:root[data-theme="light"] .m-gros{color:#6b7681}
+
+/* ---- scéna a kronika ---- */
+.panel{display:grid;grid-template-columns:1fr 210px;gap:10px;margin-bottom:10px;align-items:start}
+.scena{position:relative;background:var(--bg-elevated);border:1px solid var(--border);
+  border-radius:var(--radius);overflow:hidden;line-height:0;cursor:zoom-in}
+.panel.zvetseno{grid-template-columns:1fr}
+.panel.zvetseno .scena{order:-1;cursor:zoom-out}
+.scena svg{display:block;width:100%;height:auto}
+.scena .stitek{position:absolute;font-size:.62rem;color:#fff;text-shadow:0 1px 3px rgba(0,0,0,.9);line-height:1.25}
+.panel.zvetseno .stitek{font-size:.76rem}
+.scena .vlevo{left:6px;bottom:5px}
+.scena .vpravo{right:6px;top:5px;text-align:right}
+.kronika{background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius);
+  padding:9px 11px;overflow-y:auto;max-height:150px}
+.panel.zvetseno .kronika{max-height:210px}
+.kronika h3{font-size:.7rem;text-transform:uppercase;letter-spacing:.05em;color:var(--text-faint);
+  margin-bottom:6px;font-weight:600}
+.kronika p{font-size:.79rem;color:var(--text-muted);padding:3px 0;border-bottom:1px dashed var(--border)}
+.kronika p:last-child{border-bottom:none}
+.kronika p b{color:var(--text);font-weight:600}
+.kronika p i{font-style:normal;color:var(--text-faint);margin-right:5px}
+.kronika .prazdno{color:var(--text-faint);font-size:.79rem}
+
+/* ---- ovládání ---- */
+.radek{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-bottom:10px}
+button{font-family:inherit;font-size:.85rem;background:var(--bg-control);color:var(--text);
+  border:1px solid var(--border);border-radius:6px;padding:7px 12px;cursor:pointer}
+button:hover{background:var(--bg-hover)}
+button.hlavni{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+button.hlavni:hover{background:var(--accent-hover)}
+button.nebezpecne{border-color:var(--danger);color:var(--danger)}
+button:disabled{opacity:.45;cursor:not-allowed}
+.prep{display:inline-flex;align-items:center;gap:5px;font-size:.82rem;color:var(--text-muted);
+  background:var(--bg-elevated);border:1px solid var(--border);border-radius:6px;padding:6px 10px;cursor:pointer}
+.prep input{accent-color:var(--accent);cursor:pointer}
+.prep[hidden]{display:none}
+.hledani{flex:1;min-width:150px;max-width:260px;background:var(--bg-input);color:var(--text);
+  border:1px solid var(--border);border-radius:6px;padding:7px 10px;font-family:inherit;font-size:.85rem}
+.hledani:focus{outline:none;border-color:var(--accent)}
+.ulozeno{font-size:.78rem;color:var(--text-faint);white-space:nowrap}
+.ulozeno.spatne{color:var(--danger);font-weight:600}
+
+/* ---- záložky ---- */
+.zalozky{display:flex;gap:4px;flex-wrap:wrap;border-bottom:1px solid var(--border);margin-bottom:12px}
+.zalozky button{border:none;border-bottom:2px solid transparent;border-radius:6px 6px 0 0;background:none;padding:9px 14px}
+.zalozky button.akt{color:var(--accent);border-bottom-color:var(--accent);background:var(--accent-soft);font-weight:600}
+.list{display:none}.list.akt{display:block}
+
+/* ---- řádky ---- */
+.kat{margin-bottom:16px}
+.kat>h2{font-size:.95rem;font-weight:600;margin-bottom:6px;color:var(--text-muted);
+  display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.kat>h2 em{font-style:normal;font-size:.75rem;color:var(--text-faint)}
+.ukol{display:grid;grid-template-columns:minmax(150px,1.1fr) minmax(150px,2fr) minmax(125px,1fr);
+  gap:10px;align-items:center;background:var(--bg-elevated);border:1px solid var(--border);
+  border-left:3px solid transparent;border-radius:var(--radius);padding:8px 10px;margin-bottom:5px;
+  cursor:pointer;transition:border-color .15s,background .15s}
+.ukol:hover{background:var(--bg-hover)}
+.ukol.akt{border-left-color:var(--accent);background:var(--accent-soft)}
+.ukol.zamceno{cursor:not-allowed;opacity:.5}
+.ukol.zamceno:hover{background:var(--bg-elevated)}
+.ukol.koupeno{border-left-color:var(--ok);background:rgba(76,175,125,.1)}
+.ukol.drahe{opacity:.6}
+.ukol.drahe .pravo b{color:var(--danger)}
+.ukol.postup{animation:postup .7s ease-out}
+@keyframes postup{
+  0%{box-shadow:0 0 0 0 rgba(76,175,125,.55);border-color:var(--ok)}
+  100%{box-shadow:0 0 0 10px rgba(76,175,125,0);border-color:var(--border)}
+}
+.jmeno{font-weight:600;font-size:.9rem;display:flex;align-items:center;gap:6px}
+.ik{font-size:1.05rem;line-height:1}
+.uroven{font-size:.75rem;color:var(--text-faint)}
+.pruh{position:relative;height:22px;background:var(--bg-input);border:1px solid var(--border);
+  border-radius:5px;overflow:hidden}
+.pruh i{position:absolute;inset:0;width:0;background:linear-gradient(90deg,transparent,var(--accent-soft));
+  border-right:2px solid var(--accent);transition:width .12s linear}
+.pruh span{position:relative;display:block;text-align:center;line-height:20px;font-size:.72rem;
+  color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:0 6px}
+.pravo{text-align:right;font-size:.82rem}
+.pravo b{font-weight:700}
+.pravo .p{display:block;font-size:.72rem;color:var(--text-faint)}
+.zamek{font-size:.75rem;color:var(--warn)}
+.znacka{font-size:.68rem;font-weight:600;color:var(--warn);border:1px solid var(--warn);
+  border-radius:4px;padding:0 4px;margin-left:6px;white-space:nowrap}
+.odhad{color:var(--text-faint)}
+.drina{font-size:.7rem;color:var(--text-faint)}
+
+.info{background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius);
+  padding:12px 14px;font-size:.87rem;line-height:1.55;color:var(--text-muted);margin-bottom:12px}
+.info b{color:var(--text)}
+.info ul{margin:6px 0 0 18px}
+.info li{margin-bottom:3px}
+.tabulka{width:100%;border-collapse:collapse;font-size:.86rem}
+.tabulka td{padding:6px 4px;border-bottom:1px solid var(--border)}
+.tabulka td:last-child{text-align:right;font-weight:600;color:var(--text)}
+.tabulka td:first-child{color:var(--text-muted)}
+
+/* ---- konec života ---- */
+.prekryv{position:fixed;inset:0;background:rgba(0,0,0,.78);display:none;z-index:50;
+  align-items:center;justify-content:center;padding:16px}
+.prekryv.zobraz{display:flex}
+.prekryv .okno{background:var(--bg-elevated);border:1px solid var(--border-strong);
+  border-radius:12px;padding:24px;max-width:460px;text-align:center;box-shadow:var(--shadow)}
+.prekryv h2{font-size:1.5rem;margin-bottom:8px}
+.prekryv p{color:var(--text-muted);font-size:.9rem;line-height:1.6;margin-bottom:16px}
+
+@media (max-width:760px){ .panel{grid-template-columns:1fr} .scena{max-width:240px} }
+@media (max-width:640px){
+  .ukol{grid-template-columns:1fr 1fr;gap:6px}
+  .pruh{grid-column:1/-1;order:3}
+}
+</style>
+</head>
+<body>
+
+<h1>⚜️ Cesta rodu <small>od podruha k erbu, přes několik generací</small></h1>
+
+<div class="stav">
+  <div class="box"><div class="l">Věk a zdraví</div><div class="v" id="vek">14</div>
+    <div class="p" id="den">den 1</div><div class="mericka"><i id="zdraviPruh"></i></div></div>
+  <div class="box"><div class="l">Jmění</div><div class="v" id="mince">0</div>
+    <div class="p" id="cistyPrijem">0 / den</div></div>
+  <div class="box"><div class="l">Příjem / náklady</div><div class="v" id="prijem">0</div>
+    <div class="p" id="vydaje">náklady 0</div></div>
+  <div class="box"><div class="l">Pověst</div><div class="v" id="povest">0</div>
+    <div class="p" id="povestP">otvírá lepší místa</div><div class="mericka"><i id="povestPruh"></i></div></div>
+  <div class="box"><div class="l">Rod</div><div class="v" id="rodBox">1. generace</div>
+    <div class="p" id="rodP">rodová paměť ×1,00</div></div>
+</div>
+
+<div class="panel">
+  <div class="kronika" id="kronika"><h3>📜 Kronika rodu</h3><div id="kronikaTelo"></div></div>
+  <div class="scena" id="scena" title="Klikni pro zvětšení"></div>
+</div>
+
+<div class="radek">
+  <button id="btnPauza" class="hlavni">⏸️ Pauza</button>
+  <label class="prep" id="autoPraceBox" title="Přepne na nejvýnosnější místo, vždy až po dokončení rozdělané úrovně"><input type="checkbox" id="autoPrace"> 🤖 Nejvýnosnější místo samo</label>
+  <label class="prep" id="autoDovBox" title="Učí dovednost s největším přírůstkem účinku, vždy až po dokončení rozdělané úrovně"><input type="checkbox" id="autoDov"> 📈 Nejúčinnější dovednost sama</label>
+  <label class="prep"><input type="checkbox" id="autoObchod"> 🛍️ Hospodařit automaticky</label>
+  <button id="btnRychlost" title="Rychlost plynutí času">⏩ 1×</button>
+  <input type="search" id="filtr" class="hledani" placeholder="🔎 Hledat místo nebo dovednost (F)">
+  <span class="ulozeno" id="ulozeno" title="Stav ukládání">💾 uloženo</span>
+  <span id="rekordBox"></span>
+  <span style="flex:1"></span>
+  <button id="btnReset" class="nebezpecne">🗑️ Smazat postup</button>
+</div>
+
+<div class="zalozky">
+  <button data-zal="mista" class="akt">🧰 Místa</button>
+  <button data-zal="dovednosti">📚 Dovednosti</button>
+  <button data-zal="statek">🏠 Statek</button>
+  <button data-zal="rod">⚜️ Rod</button>
+  <button data-zal="prehled">📊 Přehled</button>
+  <button data-zal="napoveda">❓ Jak se hraje</button>
+</div>
+
+<div class="list akt" id="l-mista"></div>
+<div class="list" id="l-dovednosti"></div>
+<div class="list" id="l-statek"></div>
+<div class="list" id="l-rod"></div>
+<div class="list" id="l-prehled"></div>
+<div class="list" id="l-napoveda">
+  <div class="info">
+    <b>O čem to je.</b> Vedeš jeden rod několik generací. Začínáš ve čtrnácti jako podruh bez
+    krejcaru, sloužíš, učíš se a spravuješ statek. Až tvůj člověk zemře, ujme se toho potomek –
+    zdědí část jmění, jméno rodu a všechno, co se rod kdy naučil. Po dost dlouhé cestě může rod
+    dosáhnout na <b>erb</b> a s ním na úřady, které jsou prostému člověku zavřené.
+    <ul>
+      <li><b>Místo</b> zastáváš jedno. Nese peníze i vlastní zkušenost, a stojí zdraví –
+        u pluhu a v družině mnohem víc než u pergamenu.</li>
+      <li><b>Dovednost</b> se učíš jednu. Zdravý člověk se učí líp, nemocný sotva.</li>
+      <li><b>Statek</b> – kde bydlíš a co máš. Platí se každý den; lepší střecha nad hlavou
+        drží zdraví i pověst.</li>
+      <li><b>Pověst</b> roste službou a otvírá lepší místa; při dluzích a ostudě padá.</li>
+      <li><b>Účinnost dovedností</b> – u každé je vidět, o kolik procent povyroste její účinek
+        za rok učení; nejlepší volba má značku <em>nejúčinnější</em>. Přepínače v liště umí
+        vybírat nejvýnosnější místo a nejúčinnější dovednost samy – a přepnou vždy až po
+        dokončení rozdělané úrovně, aby zkušenost nepřišla vniveč.</li>
+      <li><b>Roční období</b> hýbou hrou: v žních se na poli vydělá nejvíc, v zimě rostou
+        náklady na otop a ubývá zdraví, na jaře se nejlíp učí, dlouhé zimní večery svědčí písařům.</li>
+      <li><b>Příhody</b> – jednou za čas do života zasáhne mor, požár, jarmark nebo zakázka
+        od pána. Zapisují se do kroniky.</li>
+    </ul>
+  </div>
+  <div class="info">
+    <b>Peníze.</b> 12 denárů = 1 groš, 60 grošů = 1 kopa, 50 kop = 1 hřivna.<br>
+    <b>Klávesové zkratky.</b> <kbd>mezerník</kbd> pauza · <kbd>1</kbd>–<kbd>6</kbd> záložky ·
+    <kbd>F</kbd> hledání · <kbd>Esc</kbd> zruší hledání.<br>
+    <b>Rychlost.</b> Tlačítko <b>⏩</b> přepíná 1× / 2× / 3× / 5×.<br>
+    <b>Ukládání.</b> Hra se ukládá po každé změně do tohoto prohlížeče; v přehledu je záloha
+    do souboru. Zavřená hra běží dál – po návratu se dopočítá <b>celá doba</b>, co jsi byl pryč,
+    i s příhodami. Když ti přitom člověk zemře, počítání skončí a čeká potomek.<br>
+    <b>Původ.</b> Vlastní hra – pravidla, čísla i texty jsou psané pro tenhle web.
+  </div>
+</div>
+
+<div class="prekryv" id="prekryv"><div class="okno">
+  <h2>🕯️ Konec životní pouti</h2>
+  <p id="smrtText"></p>
+  <div class="radek" style="justify-content:center">
+    <button class="hlavni" id="btnDedic">👶 Ujme se potomek</button>
+  </div>
+</div></div>
+
+<script>
+/* ============================================================
+   Cesta rodu – inkrementální hra o jednom rodu napříč generacemi.
+   Vlastní pravidla i vyvážení; vše je v tomhle souboru.
+
+   Herní den trvá 1/4 sekundy (základ), rok má 365 dní a čtyři
+   roční období, která mění příjem, výdaje, učení i zdraví.
+   ============================================================ */
+
+const $ = id => document.getElementById(id);
+const KLIC = 'webapp_hra_cesta_rodu';
+const TPS = 20;               // tiků za sekundu
+const DNU_ZA_SEKUNDU = 4;
+const VEK_START = 14;
+const VEK_STROP = 80;         // dál už nikdo nedojde
+const ZDRAVI_MAX = 100;
+const POVEST_MAX = 100;       // erb strop zvedá
+
+/* ---------- katalog míst ----------
+   maxXp  – zkušenost na první úroveň, dál roste podle (úroveň+1)^1,25
+   prijem – denárů za den na nulté úrovni
+   drina  – kolik zdraví denně ubere těžká služba
+   req    – co je potřeba: {u:'úkol', h:úroveň} | {povest:n} | {erb:n} | {jmeni:n}   */
+const MISTA_KAT = [
+  { kat: 'Grunt a pole', ik: '🌾', drina: 0.009, polozky: [
+    { n: 'Podruh',            maxXp: 40,     prijem: 6 },
+    { n: 'Čeledín',           maxXp: 130,    prijem: 13,   req: [{ u: 'Podruh', h: 8 }] },
+    { n: 'Chalupník',         maxXp: 480,    prijem: 27,   req: [{ u: 'Čeledín', h: 10 }, { u: 'Vytrvalost', h: 8 }] },
+    { n: 'Sedlák',            maxXp: 1900,   prijem: 62,   req: [{ u: 'Chalupník', h: 12 }, { povest: 15 }] },
+    { n: 'Rychtář',           maxXp: 8000,  prijem: 155,  req: [{ u: 'Sedlák', h: 15 }, { povest: 35 }] },
+    { n: 'Purkrabí panství',  maxXp: 40000,  prijem: 430,  req: [{ u: 'Rychtář', h: 18 }, { erb: 1 }] },
+  ]},
+  { kat: 'Cech a dílna', ik: '🔨', drina: 0.006, xpBonus: 'remesloXp', polozky: [
+    { n: 'Učedník',    maxXp: 60,     prijem: 8,    req: [{ u: 'Zručnost', h: 3 }] },
+    { n: 'Tovaryš',    maxXp: 260,    prijem: 21,   req: [{ u: 'Učedník', h: 10 }] },
+    { n: 'Mistr',      maxXp: 1100,   prijem: 57,   req: [{ u: 'Tovaryš', h: 12 }, { u: 'Zručnost', h: 20 }] },
+    { n: 'Cechmistr',  maxXp: 5000,   prijem: 150,  req: [{ u: 'Mistr', h: 15 }, { povest: 30 }] },
+    { n: 'Konšel',     maxXp: 30000,  prijem: 410,  req: [{ u: 'Cechmistr', h: 15 }, { povest: 50 }] },
+    { n: 'Purkmistr',  maxXp: 200000, prijem: 1150, req: [{ u: 'Konšel', h: 18 }, { erb: 1 }] },
+  ]},
+  { kat: 'Družina a hradby', ik: '🛡️', drina: 0.014, xpBonus: 'druzinaXp', polozky: [
+    { n: 'Zbrojnoš',        maxXp: 95,     prijem: 15,   req: [{ u: 'Síla', h: 5 }] },
+    { n: 'Halapartník',     maxXp: 420,    prijem: 36,   req: [{ u: 'Zbrojnoš', h: 10 }, { u: 'Síla', h: 12 }] },
+    { n: 'Jezdec',          maxXp: 1700,   prijem: 88,   req: [{ u: 'Halapartník', h: 12 }, { u: 'Síla', h: 25 }] },
+    { n: 'Velitel hlídky',  maxXp: 7000,  prijem: 215,  req: [{ u: 'Jezdec', h: 15 }, { povest: 25 }] },
+    { n: 'Zeman ve zbrani', maxXp: 36000,  prijem: 570,  req: [{ u: 'Velitel hlídky', h: 16 }, { povest: 45 }] },
+    { n: 'Hejtman',         maxXp: 240000, prijem: 1500, req: [{ u: 'Zeman ve zbrani', h: 18 }, { erb: 1 }] },
+  ]},
+  { kat: 'Pero a pečeť', ik: '🖋️', drina: 0.004, xpBonus: 'peroXp', polozky: [
+    { n: 'Novic v klášteře',   maxXp: 150,    prijem: 10,   req: [{ u: 'Gramotnost', h: 5 }] },
+    { n: 'Písař',              maxXp: 700,    prijem: 31,   req: [{ u: 'Novic v klášteře', h: 10 }, { u: 'Gramotnost', h: 12 }] },
+    { n: 'Notář',              maxXp: 3000,   prijem: 92,   req: [{ u: 'Písař', h: 12 }, { u: 'Gramotnost', h: 25 }] },
+    { n: 'Správce urbáře',     maxXp: 14000,  prijem: 245,  req: [{ u: 'Notář', h: 15 }, { u: 'Rozvaha', h: 25 }] },
+    { n: 'Kancléřův úředník',  maxXp: 70000, prijem: 660,  req: [{ u: 'Správce urbáře', h: 16 }, { povest: 40 }] },
+    { n: 'Kancléř',            maxXp: 400000, prijem: 1850, req: [{ u: 'Kancléřův úředník', h: 18 }, { erb: 1 }] },
+  ]},
+];
+
+/* ---------- katalog dovedností ----------
+   Účinek roste odmocninově (1 + sila × úroveň^0,85), takže se nikdy
+   nezastaví, ale ani nevystřelí do nesmyslných čísel.                */
+const DOVEDNOSTI_KAT = [
+  { kat: 'Tělo', ik: '💪', polozky: [
+    { n: 'Vytrvalost', maxXp: 90,   sila: .010, ucinek: 'zdravi', popis: 'zdraví denně' },
+    { n: 'Síla',       maxXp: 110,  sila: .012, ucinek: 'druzinaPlat', popis: 'žold v družině' },
+    { n: 'Otužilost',  maxXp: 450,  sila: .014, ucinek: 'zima',   popis: 'mírnější zima', req: [{ u: 'Vytrvalost', h: 10 }] },
+  ]},
+  { kat: 'Um', ik: '🧰', polozky: [
+    { n: 'Zručnost',     maxXp: 110,  sila: .012, ucinek: 'remesloXp', popis: 'učení v dílně' },
+    { n: 'Hospodárnost', maxXp: 380,  sila: .011, ucinek: 'vydaje',    popis: 'denní náklady', req: [{ u: 'Zručnost', h: 8 }] },
+    { n: 'Vyjednávání',  maxXp: 900,  sila: .009, ucinek: 'plat',      popis: 'plat na všech místech', req: [{ povest: 10 }] },
+    { n: 'Gramotnost',   maxXp: 260,  sila: .012, ucinek: 'peroXp',    popis: 'učení u pergamenu' },
+  ]},
+  { kat: 'Duch', ik: '🕯️', polozky: [
+    { n: 'Rozvaha',    maxXp: 120,   sila: .009, ucinek: 'vseXp',  popis: 'veškeré učení' },
+    { n: 'Píle',       maxXp: 300,   sila: .011, ucinek: 'praceXp', popis: 'zkušenost z místa', req: [{ u: 'Rozvaha', h: 6 }] },
+    { n: 'Vystupování', maxXp: 1600, sila: .013, ucinek: 'povest', popis: 'růst pověsti', req: [{ u: 'Rozvaha', h: 20 }] },
+  ]},
+  { kat: 'Rodové umění', ik: '⚜️', req: [{ erb: 1 }], polozky: [
+    { n: 'Rodinné styky', maxXp: 40000,  sila: .020, ucinek: 'povest', popis: 'růst pověsti' },
+    { n: 'Správa statků', maxXp: 60000,  sila: .018, ucinek: 'plat',   popis: 'plat na všech místech' },
+    { n: 'Rodová paměť',  maxXp: 120000, sila: .016, ucinek: 'vseXp',  popis: 'veškeré učení' },
+  ]},
+];
+
+/* ---------- statek: bydlení a majetek ---------- */
+const BYDLENI = [
+  { n: 'Kůlna u cesty',      vydaj: 0,     zdravi: -.010, povest: 0.8, popis: 'zdraví −, pověst ×0,8' },
+  { n: 'Podnájem v podsíni', vydaj: 18,    zdravi: -.003, povest: 1.0, popis: 'skoro nic, ale střecha' },
+  { n: 'Chalupa za městem',  vydaj: 90,    zdravi: .002,  povest: 1.1, popis: 'zdraví +, pověst ×1,1' },
+  { n: 'Domek ve městě',     vydaj: 380,   zdravi: .006,  povest: 1.25, popis: 'zdraví ++, pověst ×1,25' },
+  { n: 'Měšťanský dům',      vydaj: 1600,  zdravi: .010,  povest: 1.45, popis: 'zdraví +++, pověst ×1,45' },
+  { n: 'Dvorec se dvorem',   vydaj: 7000,  zdravi: .014,  povest: 1.7,  popis: 'zdraví ++++, pověst ×1,7' },
+  { n: 'Tvrz',               vydaj: 30000, zdravi: .018,  povest: 2.0,  popis: 'zdraví +++++, pověst ×2,0' },
+];
+
+const MAJETEK = [
+  { n: 'Dobré boty',       vydaj: 12,    ucinek: 'praceXp',    hodnota: 1.2,  popis: 'zkušenost z místa ×1,2' },
+  { n: 'Teplá houně',      vydaj: 30,    ucinek: 'zdravi',     hodnota: .006, popis: 'zdraví denně +' },
+  { n: 'Kožich',           vydaj: 140,   ucinek: 'zima',       hodnota: 1.6,  popis: 'zima ubližuje méně' },
+  { n: 'Truhla s knihami', vydaj: 400,   ucinek: 'dovednostXp', hodnota: 1.4, popis: 'učení dovedností ×1,4' },
+  { n: 'Kůň',              vydaj: 900,   ucinek: 'plat',       hodnota: 1.15, popis: 'plat ×1,15' },
+  { n: 'Psací pult',       vydaj: 2500,  ucinek: 'peroXp',     hodnota: 1.5,  popis: 'učení u pergamenu ×1,5' },
+  { n: 'Výpomoc do hospodářství', vydaj: 9000, ucinek: 'drina', hodnota: 0.6, popis: 'dřina jen ze 60 %' },
+  { n: 'Rodové pečetidlo', vydaj: 25000, ucinek: 'povest',     hodnota: 1.5,  popis: 'růst pověsti ×1,5' },
+];
+
+/* ---------- roční období: hlavní vlastní mechanika ---------- */
+const OBDOBI = [
+  { do: 90,  n: 'jaro',   ik: '🌱', nebe: ['#8ec9f0', '#d9eefb'], zem: '#6aa04a', pas: '#568040',
+    xp: 1.12, plat: { 'Grunt a pole': 0.85 }, zdravi: .004, popis: 'na jaře se nejlíp učí, pole ještě nedává' },
+  { do: 181, n: 'léto',   ik: '☀️', nebe: ['#6fb6ea', '#cbe9fa'], zem: '#4f9038', pas: '#3f7530',
+    xp: 1.0, plat: { 'Grunt a pole': 1.3 }, zdravi: .006, popis: 'léto na poli vynáší' },
+  { do: 273, n: 'podzim', ik: '🍂', nebe: ['#e9b878', '#f7ddb4'], zem: '#9a7433', pas: '#7d5d27',
+    xp: 0.95, plat: { 'Grunt a pole': 1.6, 'Cech a dílna': 1.1 }, zdravi: 0, popis: 'žně a jarmarky' },
+  { do: 366, n: 'zima',   ik: '❄️', nebe: ['#a9bfd2', '#e2ecf3'], zem: '#e6eef4', pas: '#cfdae3',
+    xp: 1.0, xpPero: 1.2, plat: { 'Grunt a pole': 0.45, 'Družina a hradby': 1.15 },
+    zdravi: -.022, vydaje: 1.3, popis: 'otop stojí, na poli se nedělá, písařům svědčí dlouhé večery' },
+];
+
+/* ---------- příhody ---------- */
+const PRIHODY = [
+  { n: 'Dobrá úroda',      vaha: 3, kdy: s => s.obdobi !== 'zima' && s.vetev === 'Grunt a pole',
+    ucin: () => { const z = prijemZaDen(S.misto) * 25; S.mince += z; povestPridej(2); return `Dobrá úroda – utržil jsi ${mince(z, true)} navíc.`; } },
+  { n: 'Zakázka od pána',  vaha: 3, kdy: s => s.vetev === 'Cech a dílna',
+    ucin: () => { const z = prijemZaDen(S.misto) * 20; S.mince += z; povestPridej(3); return `Zakázka od pána – ${mince(z, true)} a dobré slovo.`; } },
+  { n: 'Šarvátka u brodu', vaha: 3, kdy: s => s.vetev === 'Družina a hradby',
+    ucin: () => { S.zdravi -= 7; povestPridej(4); return 'Šarvátka u brodu – rány se hojí, ale pověst stoupla.'; } },
+  { n: 'Opis kroniky',     vaha: 3, kdy: s => s.vetev === 'Pero a pečeť',
+    ucin: () => { pridejXp(S.dovednost, 40); povestPridej(2); return 'Opis kroniky pro kapitulu – kus učení navíc.'; } },
+  { n: 'Jarmark',          vaha: 2, kdy: s => s.obdobi === 'podzim',
+    ucin: () => { const z = prijemZaDen(S.misto) * 12; S.mince += z; return `Na jarmarku ses neztratil – ${mince(z, true)}.`; } },
+  { n: 'Mor v kraji',      vaha: 2, kdy: s => s.vek > 18,
+    ucin: () => { S.zdravi -= 14; return 'Mor v kraji – přežil jsi, ale sebralo ti to síly.'; } },
+  { n: 'Nemoc',            vaha: 3, kdy: () => true,
+    ucin: () => { S.zdravi -= 7; return 'Zimnice tě položila na několik týdnů.'; } },
+  { n: 'Mírná zima',       vaha: 2, kdy: s => s.obdobi === 'zima',
+    ucin: () => { S.zdravi += 6; return 'Mírná zima – přezimovalo se dobře.'; } },
+  { n: 'Požár v ulici',    vaha: 2, kdy: () => S.majetek.length > 0,
+    ucin: () => { const n = S.majetek[S.majetek.length - 1]; S.majetek.pop(); return `Požár v ulici – přišel jsi o ${n}.`; } },
+  { n: 'Zloději',          vaha: 2, kdy: () => S.mince > 100,
+    ucin: () => { const z = S.mince * 0.25; S.mince -= z; return `Zloději ti odnesli ${mince(z, true)}.`; } },
+  { n: 'Krupobití',        vaha: 2, kdy: s => s.vetev === 'Grunt a pole' && s.obdobi !== 'zima' && S.mince > 200,
+    ucin: () => { const z = S.mince * 0.2; S.mince -= z; return `Krupobití potlouklo, co bylo na poli – ${mince(z, true)} pryč.`; } },
+  { n: 'Dědictví po strýci', vaha: 1, kdy: s => s.vek > 25,
+    ucin: () => { const z = 200 + prijemZaDen(S.misto) * 60; S.mince += z; return `Dědictví po strýci – ${mince(z, true)}.`; } },
+  { n: 'Svatba',           vaha: 2, kdy: s => s.vek >= 20 && s.vek <= 40 && !S.svatba,
+    ucin: () => { S.svatba = true; povestPridej(5); S.mince = Math.max(0, S.mince - prijemZaDen(S.misto) * 15); return 'Svatba – veselka stála své, ale rod má pokračování.'; } },
+  { n: 'Dobré slovo u pána', vaha: 2, kdy: s => s.povest >= 20,
+    ucin: () => { povestPridej(6); return 'U pána o tobě padlo dobré slovo.'; } },
+  { n: 'Pomluva',          vaha: 2, kdy: s => s.povest >= 15,
+    ucin: () => { povestPridej(-7); return 'Po městě se o tobě šíří pomluva.'; } },
+];
+
+/* rychlé mapy */
+const DEF = {}, KAT_UKOLU = {}, KAT_DEF = {};
+MISTA_KAT.forEach(k => { KAT_DEF[k.kat] = k; k.polozky.forEach(p => { DEF[p.n] = p; KAT_UKOLU[p.n] = k.kat; p.jeMisto = true; }); });
+DOVEDNOSTI_KAT.forEach(k => { KAT_DEF[k.kat] = k; k.polozky.forEach(p => { DEF[p.n] = p; KAT_UKOLU[p.n] = k.kat; }); });
+const ZBOZI = {};
+BYDLENI.forEach(z => { ZBOZI[z.n] = z; z.jeBydleni = true; });
+MAJETEK.forEach(z => { ZBOZI[z.n] = z; });
+
+const IKONY = {
+  'Podruh': '🧺', 'Čeledín': '🐄', 'Chalupník': '🌾', 'Sedlák': '🚜', 'Rychtář': '📯', 'Purkrabí panství': '🏰',
+  'Učedník': '🪵', 'Tovaryš': '🔨', 'Mistr': '⚒️', 'Cechmistr': '🏵️', 'Konšel': '⚖️', 'Purkmistr': '🗝️',
+  'Zbrojnoš': '🪖', 'Halapartník': '🔱', 'Jezdec': '🐎', 'Velitel hlídky': '🚨', 'Zeman ve zbrani': '🛡️', 'Hejtman': '🎖️',
+  'Novic v klášteře': '📿', 'Písař': '🖋️', 'Notář': '📜', 'Správce urbáře': '📚', 'Kancléřův úředník': '🗂️', 'Kancléř': '👑',
+  'Vytrvalost': '🫀', 'Síla': '💪', 'Otužilost': '🧊', 'Zručnost': '🧰', 'Hospodárnost': '🪙',
+  'Vyjednávání': '🤝', 'Gramotnost': '🔤', 'Rozvaha': '🧠', 'Píle': '⏱️', 'Vystupování': '🎭',
+  'Rodinné styky': '🕊️', 'Správa statků': '🗺️', 'Rodová paměť': '⚜️',
+  'Kůlna u cesty': '🛖', 'Podnájem v podsíni': '🚪', 'Chalupa za městem': '🏡', 'Domek ve městě': '🏠',
+  'Měšťanský dům': '🏘️', 'Dvorec se dvorem': '🏛️', 'Tvrz': '🏰',
+  'Dobré boty': '🥾', 'Teplá houně': '🧶', 'Kožich': '🧥', 'Truhla s knihami': '📚', 'Kůň': '🐴',
+  'Psací pult': '🪑', 'Výpomoc do hospodářství': '🧑‍🌾', 'Rodové pečetidlo': '🔏',
+};
+const ik = n => IKONY[n] || (ZBOZI[n] ? '📦' : '•');
+
+/* ============================================================
+   Stav
+   ============================================================ */
+let S, pauza = false;
+
+function novyStav(rod) {
+  const ukoly = {};
+  for (const n in DEF) ukoly[n] = { u: 0, xp: 0, rodU: (rod && rod.ukoly && rod.ukoly[n]) || 0 };
+  return {
+    dny: 365 * VEK_START, mince: (rod && rod.mince) || 0, maxMince: (rod && rod.mince) || 0,
+    zdravi: ZDRAVI_MAX, povest: (rod && rod.povest) || 0, svatba: false,
+    generace: (rod && rod.generace) || 1, erb: (rod && rod.erb) || 0,
+    ukoly, misto: 'Podruh', dovednost: 'Rozvaha',
+    bydleni: 'Kůlna u cesty', majetek: [], mrtvy: false,
+    autoPrace: false, autoDov: false, autoObchod: false,
+    rychlost: 1, odehrano: 0, log: (rod && rod.log) || [], cas: Date.now(),
+  };
+}
+
+/* ============================================================
+   Výpočty
+   ============================================================ */
+const uk = n => S.ukoly[n] || { u: 0, xp: 0, rodU: 0 };
+
+// účinek dovednosti roste odmocninově – nikdy se nezastaví, ale ani nevystřelí
+function ucinek(n) { const d = DEF[n]; return d ? 1 + d.sila * Math.pow(uk(n).u, 0.85) : 1; }
+function maxXp(n) { const d = DEF[n]; return Math.round(d.maxXp * Math.pow(uk(n).u + 1, 1.18)); }
+
+// rodová paměť: společný bonus ze všech úrovní, kterých rod kdy dosáhl
+function soucetRodu() { let s = 0; for (const n in S.ukoly) s += S.ukoly[n].rodU; return s; }
+function rodovyBonus() { return 1 + Math.log2(1 + soucetRodu() / 40); }
+function erbovyBonus() { return 1 + S.erb * 0.25; }
+
+function obdobi() { const d = S.dny % 365; return OBDOBI.find(o => d < o.do) || OBDOBI[3]; }
+function vek() { return Math.floor(S.dny / 365); }
+function povestStrop() { return POVEST_MAX + S.erb * 25; }
+
+function zboziUcinek(typ) {
+  let v = 1;
+  for (const n of S.majetek) { const z = ZBOZI[n]; if (z && z.ucinek === typ) v *= z.hodnota; }
+  return v;
+}
+function zboziSoucet(typ) {
+  let v = 0;
+  for (const n of S.majetek) { const z = ZBOZI[n]; if (z && z.ucinek === typ) v += z.hodnota; }
+  return v;
+}
+
+function xpZaDen(n) {
+  const d = DEF[n], katN = KAT_UKOLU[n], kat = KAT_DEF[katN], ob = obdobi();
+  let m = 12 * rodovyBonus() * erbovyBonus() * ucinek('Rozvaha') * ucinek('Rodová paměť') * ob.xp;
+  if (d.jeMisto) {
+    m *= ucinek('Píle') * zboziUcinek('praceXp');
+    if (kat.xpBonus === 'remesloXp') m *= ucinek('Zručnost');
+    if (kat.xpBonus === 'peroXp') m *= ucinek('Gramotnost') * zboziUcinek('peroXp') * (ob.xpPero || 1);
+    if (kat.xpBonus === 'druzinaXp') m *= ucinek('Síla');
+  } else {
+    // zdravý člověk se učí líp než nemocný
+    m *= (0.4 + 0.6 * S.zdravi / ZDRAVI_MAX) * zboziUcinek('dovednostXp');
+    if (n === 'Gramotnost') m *= zboziUcinek('peroXp');
+  }
+  return Math.max(0.1, m);
+}
+
+function prijemZaDen(n) {
+  const d = DEF[n]; if (!d || !d.jeMisto) return 0;
+  const katN = KAT_UKOLU[n], ob = obdobi();
+  let m = (1 + uk(n).u / 12) * (1 + S.povest / 200) * erbovyBonus()
+        * ucinek('Vyjednávání') * ucinek('Správa statků') * zboziUcinek('plat');
+  if (katN === 'Družina a hradby') m *= ucinek('Síla');
+  m *= (ob.plat && ob.plat[katN]) || 1;
+  return d.prijem * m;
+}
+
+function vydajeZaDen() {
+  let v = ZBOZI[S.bydleni] ? ZBOZI[S.bydleni].vydaj : 0;
+  for (const n of S.majetek) if (ZBOZI[n]) v += ZBOZI[n].vydaj;
+  const ob = obdobi();
+  return v / ucinek('Hospodárnost') * (ob.vydaje || 1);
+}
+
+// denní změna zdraví: mládí a bydlení proti dřině, zimě a stáří
+function zdraviZaDen() {
+  const kat = KAT_DEF[KAT_UKOLU[S.misto]] || { drina: 0.01 };
+  const ob = obdobi();
+  let z = 0.020;                                             // základní regenerace
+  z += ZBOZI[S.bydleni] ? ZBOZI[S.bydleni].zdravi : 0;
+  z += zboziSoucet('zdravi');
+  z += 0.010 * (ucinek('Vytrvalost') - 1);
+  z -= kat.drina * zboziUcinek('drina');
+  if (ob.zdravi < 0) z += ob.zdravi / (ucinek('Otužilost') * zboziUcinek('zima'));
+  else z += ob.zdravi;
+  if (vek() > 45) z -= (vek() - 45) * 0.0016;
+  return z;
+}
+
+function povestZaDen() {
+  const kat = KAT_DEF[KAT_UKOLU[S.misto]];
+  const poradi = kat ? kat.polozky.findIndex(x => x.n === S.misto) : 0;
+  const zaklad = 0.003 * (1 + uk(S.misto).u / 40) * (1 + poradi * 0.6);
+  const bydl = ZBOZI[S.bydleni] ? ZBOZI[S.bydleni].povest : 1;
+  return zaklad * bydl * ucinek('Vystupování') * ucinek('Rodinné styky') * zboziUcinek('povest');
+}
+function povestPridej(o) { S.povest = Math.max(0, Math.min(povestStrop(), S.povest + o)); }
+
+function hernRychlost() { return DNU_ZA_SEKUNDU * (S.rychlost || 1); }
+
+// Kolik ze svého účinku dovednost přidá za jeden herní den – tím se dají
+// dovednosti porovnat mezi sebou, i když každá dělá něco jiného.
+function ucinnost(n) {
+  const d = DEF[n];
+  if (!d || d.jeMisto) return 0;
+  const t = uk(n);
+  const ted = 1 + d.sila * Math.pow(t.u, 0.85);
+  const po = 1 + d.sila * Math.pow(t.u + 1, 0.85);
+  return (po - ted) / ted * (xpZaDen(n) / maxXp(n));
+}
+function nejucinnejsiDovednost() {
+  let nej = null, nejU = -1;
+  DOVEDNOSTI_KAT.forEach(k => { if (splneno(k.req)) k.polozky.forEach(d => {
+    if (!splneno(d.req)) return;
+    const u = ucinnost(d.n);
+    if (u > nejU) { nejU = u; nej = d.n; }
+  }); });
+  return nej;
+}
+
+/* ---------- podmínky ---------- */
+function splneno(req) {
+  if (!req) return true;
+  return req.every(r => {
+    if (r.erb !== undefined) return S.erb >= r.erb;
+    if (r.povest !== undefined) return S.povest >= r.povest;
+    if (r.jmeni !== undefined) return S.maxMince >= r.jmeni;
+    return uk(r.u).u >= r.h;
+  });
+}
+function popisReq(req) {
+  return req.map(r => {
+    if (r.erb !== undefined) return 'erb rodu';
+    if (r.povest !== undefined) return 'pověst ' + r.povest;
+    if (r.jmeni !== undefined) return 'jmění ' + mince(r.jmeni, true);
+    return r.u + ' ' + r.h;
+  }).join(', ');
+}
+
+/* ---------- odhady ---------- */
+function dobaText(dny) {
+  if (!isFinite(dny) || dny < 0) return '?';
+  if (dny < 1) return 'dnes';
+  if (dny < 90) return Math.ceil(dny) + (Math.ceil(dny) === 1 ? ' den' : Math.ceil(dny) < 5 ? ' dny' : ' dní');
+  const roky = dny / 365;
+  return roky < 10 ? roky.toFixed(1).replace('.', ',') + ' roku' : Math.round(roky) + ' let';
+}
+function dobaNaUroven(n, cil) {
+  const t = uk(n), d = DEF[n], rychlost = xpZaDen(n);
+  if (t.u >= cil) return 0;
+  if (!(rychlost > 0)) return Infinity;
+  let dny = (maxXp(n) - t.xp) / rychlost;
+  for (let u = t.u + 1; u < cil; u++) {
+    dny += Math.round(d.maxXp * Math.pow(u + 1, 1.18)) / rychlost;
+    if (dny > 1e7) return Infinity;
+  }
+  return dny;
+}
+function dobaDoOdemceni(req) {
+  if (!req) return null;
+  let nej = 0;
+  for (const r of req) {
+    if (r.povest !== undefined) {
+      const chybi = r.povest - S.povest;
+      if (chybi <= 0) continue;
+      const rust = povestZaDen();
+      if (!(rust > 0)) return null;
+      nej = Math.max(nej, chybi / rust);
+      continue;
+    }
+    if (r.erb !== undefined || r.jmeni !== undefined) return null;
+    if (r.u !== S.misto && r.u !== S.dovednost) return null;
+    nej = Math.max(nej, dobaNaUroven(r.u, r.h));
+  }
+  return nej;
+}
+
+/* ---------- formátování ---------- */
+const RADY = ['', ' tis.', ' mil.', ' mld.', ' bil.'];
+function fmt(x) {
+  if (!isFinite(x)) return '∞';
+  if (x < 1000) return (x < 10 && x % 1 !== 0) ? x.toFixed(1) : Math.floor(x).toString();
+  const t = Math.min(Math.floor(Math.log10(x) / 3), 4);
+  const v = x / Math.pow(1000, t);
+  return v.toFixed(v < 10 ? 2 : v < 100 ? 1 : 0) + RADY[t];
+}
+// 12 denárů = groš, 60 grošů = kopa, 50 kop = hřivna
+const MENA = [
+  { d: 36000, t: 'hř', c: 'm-hrivna' },
+  { d: 720,   t: 'k',  c: 'm-kopa' },
+  { d: 12,    t: 'g',  c: 'm-gros' },
+  { d: 1,     t: 'd',  c: 'm-denar' },
+];
+function mince(x, prosty) {
+  if (!isFinite(x)) return '∞';
+  if (x >= 36000 * 1000) return fmt(x / 36000) + ' hř';
+  let zbyt = Math.floor(Math.max(0, x)), out = [];
+  for (const m of MENA) {
+    const kolik = Math.floor(zbyt / m.d);
+    if (kolik > 0 || out.length) {
+      out.push(prosty ? kolik + m.t : `<span class="${m.c}">${kolik}${m.t}</span>`);
+      zbyt -= kolik * m.d;
+    }
+    if (out.length >= 2) break;
+  }
+  if (!out.length) return prosty ? '0d' : '<span class="m-denar">0d</span>';
+  return out.join(' ');
+}
+
+/* ============================================================
+   Kronika a příhody
+   ============================================================ */
+function zapis(text) {
+  S.log = S.log || [];
+  const posl = S.log[0];
+  if (posl && posl.t === text && posl.v === vek()) return;
+  S.log.unshift({ v: vek(), t: text });
+  if (S.log.length > 40) S.log.length = 40;
+  kresliKroniku();
+}
+function kresliKroniku() {
+  const c = $('kronikaTelo');
+  if (!S.log || !S.log.length) { c.innerHTML = '<div class="prazdno">Zatím prázdná stránka. Vyber si místo a dej se do práce.</div>'; return; }
+  c.innerHTML = S.log.map(z => `<p><i>${z.v} let</i>${z.t}</p>`).join('');
+}
+
+let posledniPrihoda = -1;
+function zkusPrihodu() {
+  const rok = Math.floor(S.dny / 365);
+  if (rok === posledniPrihoda) return;
+  posledniPrihoda = rok;
+  if (Math.random() > 0.45) return;
+  const stav = { obdobi: obdobi().n, vetev: KAT_UKOLU[S.misto], vek: vek(), povest: S.povest };
+  const moznosti = PRIHODY.filter(p => { try { return p.kdy(stav); } catch { return false; } });
+  if (!moznosti.length) return;
+  const celkem = moznosti.reduce((a, p) => a + p.vaha, 0);
+  let los = Math.random() * celkem;
+  const p = moznosti.find(m => (los -= m.vaha) <= 0) || moznosti[0];
+  const text = p.ucin();
+  S.zdravi = Math.min(ZDRAVI_MAX, S.zdravi);
+  S.mince = Math.max(0, S.mince);
+  podpisSeznamu = '';
+  zapis(`✳️ <b>${p.n}</b> – ${text.replace(/^[^–]*– ?/, '')}`);
+}
+
+/* ============================================================
+   Scéna
+   ============================================================ */
+const OBYDLI = [
+  `<rect x="46" y="88" width="62" height="28" fill="#8a6a45"/><path d="M38 88 L77 66 L116 88z" fill="#6b4c30"/>
+   <rect x="68" y="100" width="16" height="16" fill="#4a3423"/>`,
+  `<rect x="30" y="76" width="96" height="40" fill="#b9ab90"/><path d="M24 76 h108 v-6 h-108z" fill="#7d6a4c"/>
+   <rect x="72" y="96" width="18" height="20" fill="#4a3423"/><rect x="42" y="84" width="14" height="12" fill="#8fb3cc"/>
+   <rect x="100" y="84" width="14" height="12" fill="#8fb3cc"/>`,
+  `<rect x="44" y="82" width="70" height="34" fill="#d8cbb4"/><path d="M36 82 L79 56 L122 82z" fill="#8d4a3a"/>
+   <rect x="70" y="96" width="18" height="20" fill="#5c4026"/><rect x="50" y="90" width="12" height="12" fill="#9fc3dc"/>
+   <rect x="96" y="90" width="12" height="12" fill="#9fc3dc"/><rect x="100" y="60" width="9" height="16" fill="#8d6c46"/>`,
+  `<rect x="38" y="74" width="84" height="42" fill="#e2d8c4"/><path d="M30 74 L80 48 L130 74z" fill="#7b4034"/>
+   <rect x="72" y="94" width="18" height="22" fill="#5c4026"/><rect x="46" y="82" width="13" height="13" fill="#9fc3dc"/>
+   <rect x="101" y="82" width="13" height="13" fill="#9fc3dc"/><rect x="46" y="100" width="13" height="13" fill="#9fc3dc"/>
+   <rect x="101" y="100" width="13" height="13" fill="#9fc3dc"/><rect x="106" y="52" width="10" height="18" fill="#8d6c46"/>`,
+  `<rect x="24" y="68" width="112" height="48" fill="#e6dccb"/><path d="M16 68 L80 40 L144 68z" fill="#6f3a30"/>
+   <rect x="70" y="92" width="20" height="24" fill="#5c4026"/>
+   ${[32, 54, 100, 122].map(x => `<rect x="${x}" y="76" width="13" height="13" fill="#9fc3dc"/><rect x="${x}" y="96" width="13" height="13" fill="#9fc3dc"/>`).join('')}
+   <rect x="118" y="44" width="10" height="20" fill="#8d6c46"/>`,
+  `<rect x="18" y="64" width="124" height="52" fill="#efe7d8"/><path d="M10 64 L80 36 L150 64z" fill="#5f6b74"/>
+   ${[28, 48, 112, 132].map(x => `<rect x="${x}" y="72" width="10" height="44" fill="#dcd2c0"/>`).join('')}
+   <rect x="68" y="88" width="24" height="28" rx="12" fill="#4a3826"/>
+   <rect x="64" y="72" width="12" height="12" fill="#9fc3dc"/><rect x="86" y="72" width="12" height="12" fill="#9fc3dc"/>`,
+  `<rect x="18" y="66" width="126" height="50" fill="#9aa4ad"/>
+   ${[14, 122].map(x => `<rect x="${x}" y="44" width="26" height="72" fill="#8b959e"/>
+     <path d="M${x} 44 h26 v-8 h-6 v5 h-7 v-5 h-7 v5 h-6z" fill="#7b858e"/>`).join('')}
+   <path d="M18 66 h126 v-7 h-8 v4 h-9 v-4 h-9 v4 h-9 v-4 h-9 v4 h-9 v-4 h-9 v4 h-9 v-4 h-9 v4 h-9 v-4 h-9 v4 h-9z" fill="#89939c"/>
+   <path d="M68 116 v-24 a13 13 0 0 1 26 0 v24z" fill="#4a3826"/>
+   <path d="M27 36 v-16 h18 l-5 5 5 5 h-18" fill="#8c3b3b"/><rect x="26" y="20" width="2" height="24" fill="#6b6b6b"/>`,
+];
+
+function postavaSvg() {
+  const katN = KAT_UKOLU[S.misto] || 'Grunt a pole';
+  const seznam = KAT_DEF[katN].polozky;
+  const st = Math.max(0, seznam.findIndex(x => x.n === S.misto));
+  const saty = katN === 'Družina a hradby' ? '#6d7f92'
+    : katN === 'Pero a pečeť' ? '#4c4257'
+    : katN === 'Cech a dílna' ? '#7a5a3f' : '#7e7048';
+  const tmave = katN === 'Družina a hradby' ? '#546373'
+    : katN === 'Pero a pečeť' ? '#3a3244'
+    : katN === 'Cech a dílna' ? '#5e452f' : '#5f5636';
+  let vzadu = '', extra = '';
+  if (st >= 3) vzadu += `<path d="M-12 -34 q-10 17 -5 32 h34 q5 -15 -5 -32z" fill="${katN === 'Družina a hradby' ? '#8d3f3f' : katN === 'Pero a pečeť' ? '#33304a' : '#4f6b3f'}"/>`;
+  if (katN === 'Družina a hradby') {
+    extra += `<path d="M-8 -41 a8 8 0 0 1 16 0 v4 h-16z" fill="#b9c4ce"/><rect x="-1.5" y="-41" width="3" height="8" fill="#8c98a3"/>`;
+    extra += `<rect x="12" y="-46" width="3" height="38" rx="1.5" fill="#7a5a3a"/><path d="M13.5 -50 l4 6 h-8z" fill="#cdd6de"/>`;
+  } else if (katN === 'Pero a pečeť') {
+    extra += `<path d="M-9 -45 q9 -5 18 0 q-3 5 -9 5 q-6 0 -9 -5z" fill="#3a3244"/>`;
+    extra += `<path d="M13 -30 l6 -14" stroke="#e6e0cf" stroke-width="2" stroke-linecap="round" fill="none"/>`;
+    extra += `<rect x="-20" y="-28" width="10" height="13" rx="1" fill="#e6dcc2"/>`;
+  } else if (katN === 'Cech a dílna') {
+    extra += `<path d="M-9 -30 h18 v20 h-18z" fill="#5e452f" opacity=".8"/>`;
+    extra += `<rect x="12" y="-30" width="3" height="22" rx="1.5" fill="#7a5a3a"/><rect x="8" y="-34" width="11" height="7" rx="2" fill="#9aa4ad"/>`;
+  } else {
+    extra += `<path d="M-11 -41 q11 -7 22 0 q-11 4 -22 0z" fill="#c9a86a"/>`;
+    extra += `<rect x="12" y="-42" width="3" height="34" rx="1.5" fill="#7a5a3a"/><path d="M11 -42 q7 3 8 9" stroke="#9aa4ad" stroke-width="2.5" fill="none"/>`;
+  }
+  if (S.erb >= 1) extra += `<path d="M-7 -47 l3 -6 l4 4 l4 -4 l3 6z" fill="#e0c04a"/>`;
+  return `<g transform="translate(236,116) scale(.9)">
+    <ellipse cx="0" cy="2" rx="15" ry="3.5" fill="rgba(0,0,0,.28)"/>
+    ${vzadu}
+    <rect x="-7" y="-14" width="5" height="14" rx="2" fill="${tmave}"/><rect x="2" y="-14" width="5" height="14" rx="2" fill="${tmave}"/>
+    <path d="M-9 -34 h18 l4 21 h-26z" fill="${saty}"/>
+    <rect x="-14" y="-33" width="5" height="18" rx="2.5" fill="${saty}"/><rect x="9" y="-33" width="5" height="18" rx="2.5" fill="${saty}"/>
+    <circle cx="0" cy="-40" r="7.5" fill="#e8b98c"/>
+    ${extra}
+  </g>`;
+}
+
+function scenaSvg() {
+  const o = obdobi(), iB = Math.max(0, BYDLENI.findIndex(m => m.n === S.bydleni));
+  const t = (S.dny % 365) / 365;
+  const sx = 18 + 284 * t, sy = 96 - 74 * Math.sin(Math.PI * t);
+  const zima = o.n === 'zima';
+  return `<svg viewBox="0 0 320 150" role="img" aria-label="Scéna: ${S.bydleni}, ${S.misto}">
+    <defs><linearGradient id="nebe" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="${o.nebe[0]}"/><stop offset="1" stop-color="${o.nebe[1]}"/></linearGradient></defs>
+    <rect width="320" height="150" fill="url(#nebe)"/>
+    <circle cx="${sx.toFixed(1)}" cy="${sy.toFixed(1)}" r="11" fill="${zima ? '#f4f7fa' : '#ffd76b'}" opacity=".95"/>
+    <path d="M0 104 l46 -30 l40 30z" fill="#7d8fa0" opacity=".5"/>
+    <path d="M60 104 l52 -38 l50 38z" fill="#6a7d8e" opacity=".45"/>
+    <path d="M200 104 l44 -26 l40 26z" fill="#7d8fa0" opacity=".4"/>
+    <rect y="116" width="320" height="34" fill="${o.zem}"/>
+    <rect y="114" width="320" height="4" fill="${o.pas}"/>
+    ${OBYDLI[iB]}
+    ${postavaSvg()}
+    <g opacity=".5">${[168, 186, 300].map(x => `<path d="M${x} 116 l-6 -12 l6 -4 l6 4z" fill="${zima ? '#dfe8ee' : '#3f6b34'}"/>
+      <rect x="${x - 1}" y="112" width="2" height="5" fill="#5a4630"/>`).join('')}</g>
+  </svg>
+  <div class="stitek vlevo"><b>${ik(S.misto)} ${S.misto}</b> · ${ik(S.bydleni)} ${S.bydleni}</div>
+  <div class="stitek vpravo">${o.n} ${o.ik}<br>${vek()} let</div>`;
+}
+
+let scenaKlic = '';
+function kresliScenu() {
+  const klic = S.bydleni + '|' + S.misto + '|' + obdobi().n + '|' + Math.floor(S.dny / 4) + '|' + S.erb;
+  if (klic === scenaKlic) return;
+  scenaKlic = klic;
+  $('scena').innerHTML = scenaSvg();
+}
+
+/* ============================================================
+   Vykreslení seznamů
+   ============================================================ */
+let radky = {}, radkyZbozi = {}, podpisSeznamu = '', filtrText = '';
+const bezDia = t => t.normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+
+function viditelne(polozky) {
+  if (filtrText) return polozky.filter(p => bezDia(p.n).includes(filtrText)).map(p => ({ p, ok: splneno(p.req) }));
+  const out = [];
+  for (const p of polozky) {
+    const ok = splneno(p.req);
+    out.push({ p, ok });
+    if (!ok) break;
+  }
+  return out;
+}
+
+let znameOdemcene = null;
+function hlidejOdemcene() {
+  const ted = new Set();
+  [MISTA_KAT, DOVEDNOSTI_KAT].forEach(kats => kats.forEach(k => {
+    if (!splneno(k.req)) return;
+    k.polozky.forEach(p => { if (splneno(p.req)) ted.add(p.n); });
+  }));
+  if (znameOdemcene) for (const n of ted) if (!znameOdemcene.has(n)) zapis(`Otevřela se ti cesta k <b>${ik(n)} ${n}</b>`);
+  znameOdemcene = ted;
+}
+
+function postavSeznamy() {
+  const podpis = [MISTA_KAT, DOVEDNOSTI_KAT].map(kats => kats.map(k =>
+    (splneno(k.req) ? viditelne(k.polozky).map(v => v.p.n + (v.ok ? '' : '!')).join(',') : '')).join('|')).join('||')
+    + '#' + S.majetek.join(',') + '#' + S.bydleni + '#' + filtrText;
+  if (podpis === podpisSeznamu) return;
+  podpisSeznamu = podpis;
+  radky = {};
+  $('l-mista').innerHTML = '';
+  $('l-dovednosti').innerHTML = '';
+  MISTA_KAT.forEach(k => { const b = katBlok(k, true); if (b) $('l-mista').appendChild(b); });
+  DOVEDNOSTI_KAT.forEach(k => { const b = katBlok(k, false); if (b) $('l-dovednosti').appendChild(b); });
+  if (filtrText) ['l-mista', 'l-dovednosti'].forEach(id => {
+    if (!$(id).children.length) $(id).innerHTML = '<div class="info">Hledání „' + filtrText + '“ tu nic nenašlo.</div>';
+  });
+  postavStatek();
+  hlidejOdemcene();
+}
+
+function katBlok(k, jeMisto) {
+  if (!splneno(k.req)) return null;
+  const vid = viditelne(k.polozky);
+  if (!vid.length) return null;
+  const box = document.createElement('div');
+  box.className = 'kat';
+  const h = document.createElement('h2');
+  h.innerHTML = `<span>${k.ik} ${k.kat}${jeMisto ? ` <span class="drina">dřina ${(k.drina * 365).toFixed(1)} zdraví za rok</span>` : ''}</span>`
+    + `<em>${jeMisto ? 'plat za den' : 'účinek'}</em>`;
+  box.appendChild(h);
+  vid.forEach(({ p, ok }) => {
+    const r = document.createElement('div');
+    r.className = 'ukol' + (ok ? '' : ' zamceno');
+    r.innerHTML = `<div><div class="jmeno"><span class="ik">${ik(p.n)}</span>${p.n}</div><div class="uroven" data-u></div></div>
+      <div class="pruh"><i data-i></i><span data-s></span></div>
+      <div class="pravo" data-v></div>`;
+    if (ok) {
+      r.onclick = () => {
+        if (jeMisto) { if (S.misto !== p.n) prepniMisto(p.n); cekaMisto = null; }
+        else { if (S.dovednost !== p.n) prepniDovednost(p.n); cekaDovednost = null; }
+        kresliHodnoty(); uloz();
+      };
+      radky[p.n] = {
+        el: r, u: r.querySelector('[data-u]'), i: r.querySelector('[data-i]'),
+        s: r.querySelector('[data-s]'), v: r.querySelector('[data-v]'), jeMisto,
+      };
+    } else {
+      r.querySelector('[data-v]').innerHTML = `<span class="zamek">🔒 ${popisReq(p.req)}</span><span class="p" data-o></span>`;
+      radky[p.n] = { el: r, zamceno: true, o: r.querySelector('[data-o]'), req: p.req };
+    }
+    box.appendChild(r);
+  });
+  return box;
+}
+
+function dnyVydrze(vydaje) {
+  const ztrata = vydaje - prijemZaDen(S.misto);
+  return ztrata <= 0 ? Infinity : S.mince / ztrata;
+}
+async function unesuTo(z, jeBydleni) {
+  const stary = jeBydleni ? (ZBOZI[S.bydleni] ? ZBOZI[S.bydleni].vydaj : 0) : 0;
+  const nove = vydajeZaDen() + (z.vydaj - stary) / ucinek('Hospodárnost');
+  const dny = dnyVydrze(nove);
+  if (dny > 10) return true;
+  return Dialog.potvrd(`${z.n} stojí ${mince(z.vydaj, true)} denně, ale vyděláváš ${mince(prijemZaDen(S.misto), true)}. `
+    + (dny < 1 ? 'Přijdeš o to, hned jak dojdou peníze.' : `Úspory to utáhnou asi ${dobaText(dny)}.`)
+    + '\nOpravdu do toho jít?');
+}
+
+function postavStatek() {
+  const c = $('l-statek');
+  radkyZbozi = {};
+  c.innerHTML = '<div class="info">Bydlení i majetek se platí <b>každý den</b>. Majetku můžeš mít víc, '
+    + 'bydlení jedno. Když dojdou peníze, hospodářství se samo zmenší – prodá se nejdřív to nejdražší.</div>';
+  [['🏠 Bydlení', BYDLENI, true], ['🎒 Majetek', MAJETEK, false]].forEach(([nadpis, pole, jeBydleni]) => {
+    const box = document.createElement('div');
+    box.className = 'kat';
+    box.innerHTML = `<h2><span>${nadpis}</span><em>denně</em></h2>`;
+    pole.forEach(z => {
+      const mam = jeBydleni ? S.bydleni === z.n : S.majetek.includes(z.n);
+      const r = document.createElement('div');
+      r.className = 'ukol' + (mam ? ' koupeno' : '');
+      r.innerHTML = `<div><div class="jmeno"><span class="ik">${ik(z.n)}</span>${z.n}</div>
+          <div class="uroven">${mam ? '✔️ máš' : ' '}</div></div>
+        <div class="pruh" style="border:none;background:none"><span style="text-align:left">${z.popis}</span></div>
+        <div class="pravo"><b>${mince(z.vydaj)}</b><span class="p">za den</span></div>`;
+      r.onclick = async () => {
+        const beru = jeBydleni ? S.bydleni !== z.n : !S.majetek.includes(z.n);
+        if (beru && !await unesuTo(z, jeBydleni)) return;
+        if (jeBydleni) {
+          if (S.bydleni !== z.n) zapis(`Stěhuješ se: <b>${ik(z.n)} ${z.n}</b>`);
+          S.bydleni = z.n;
+        } else {
+          const i = S.majetek.indexOf(z.n);
+          if (i >= 0) { S.majetek.splice(i, 1); zapis(`Prodáno: ${z.n}`); }
+          else { S.majetek.push(z.n); zapis(`Pořízeno: <b>${ik(z.n)} ${z.n}</b>`); }
+        }
+        podpisSeznamu = ''; postavSeznamy(); kresliHodnoty(); uloz();
+      };
+      box.appendChild(r);
+      radkyZbozi[z.n] = r;
+    });
+    c.appendChild(box);
+  });
+}
+
+/* ---------- záložka Rod ---------- */
+const ERB_POVEST = 80, ERB_JMENI = 600000;
+function dedicPodil() { return Math.min(0.6, 0.15 + S.povest / 250); }
+
+function postavRod() {
+  const lzeDedic = vek() >= 25;
+  const lzeErb = S.povest >= ERB_POVEST && S.maxMince >= ERB_JMENI;
+  $('l-rod').innerHTML = `
+  <div class="info">
+    <b>Potomek.</b> Když se rodu ujme další generace, začíná zase ve čtrnácti – ale
+    <b>zdědí ${Math.round(dedicPodil() * 100)} % jmění</b> (podíl roste s pověstí),
+    třetinu tvé pověsti a <b>rodovou paměť</b>: každou úroveň, které kdy někdo z rodu dosáhl.
+    Rodová paměť teď zrychluje veškeré učení <b>×${rodovyBonus().toFixed(2).replace('.', ',')}</b>
+    (z ${fmt(soucetRodu())} úrovní). Po smrti se potomek ujme sám.
+  </div>
+  <div class="radek">
+    <button class="hlavni" id="btnDedic2" ${lzeDedic ? '' : 'disabled'}>👶 Předat rod potomkovi${lzeDedic ? '' : ' (od 25 let)'}</button>
+  </div>
+  <div class="info">
+    <b>Erb.</b> Rod s pověstí <b>${ERB_POVEST}</b> a jměním <b>${mince(ERB_JMENI, true)}</b> může být povýšen
+    do šlechtického stavu. Rodová paměť se tím ztrácí (kromě rodového umění), zato erb
+    <b>trvale přidá 25 % k učení i platu</b>, zvedne strop pověsti a otevře úřady –
+    purkrabího, purkmistra, hejtmana a kancléře.<br>
+    Teď máš pověst <b>${Math.floor(S.povest)}</b> a nejvyšší jmění <b>${mince(S.maxMince)}</b>.
+  </div>
+  <div class="radek">
+    <button id="btnErb" ${lzeErb ? '' : 'disabled'}>⚜️ Povýšit rod do šlechtického stavu</button>
+  </div>
+  <div class="info">Generací: <b>${S.generace}</b> · erbů: <b>${S.erb}</b> ·
+    rodová paměť: <b>${fmt(soucetRodu())}</b> úrovní</div>`;
+  $('btnDedic2').onclick = async () => {
+    if (await Dialog.potvrd('Předat rod potomkovi? Tenhle život tím končí.')) dalsiGenerace(false);
+  };
+  $('btnErb').onclick = async () => {
+    if (await Dialog.potvrd('Povýšení do šlechtického stavu smaže rodovou paměť (kromě rodového umění). Pokračovat?')) dalsiGenerace(true);
+  };
+}
+
+/* ---------- přehled ---------- */
+function postavPrehled() {
+  let nejMisto = null, nejDov = null;
+  for (const n in S.ukoly) {
+    if (!DEF[n] || !S.ukoly[n].rodU) continue;
+    if (DEF[n].jeMisto && (!nejMisto || DEF[n].prijem > DEF[nejMisto].prijem)) nejMisto = n;
+    if (!DEF[n].jeMisto && (!nejDov || S.ukoly[n].rodU > S.ukoly[nejDov].rodU)) nejDov = n;
+  }
+  const h = Math.floor((S.odehrano || 0) / 3600000), m = Math.floor((S.odehrano || 0) / 60000) % 60;
+  const ob = obdobi();
+  const rady = [
+    ['Věk', vek() + ' let (strop ' + VEK_STROP + ')'],
+    ['Zdraví', Math.round(S.zdravi) + ' / ' + ZDRAVI_MAX + ' (' + (zdraviZaDen() * 365).toFixed(1) + ' za rok)'],
+    ['Pověst', Math.floor(S.povest) + ' / ' + povestStrop()],
+    ['Generace rodu', S.generace + (S.erb ? ' · erbů ' + S.erb : '')],
+    ['Rodová paměť', fmt(soucetRodu()) + ' úrovní → učení ×' + rodovyBonus().toFixed(2).replace('.', ',')],
+    ['Nejdál v službě', nejMisto ? ik(nejMisto) + ' ' + nejMisto : '—'],
+    ['Nejsilnější dovednost', nejDov ? ik(nejDov) + ' ' + nejDov + ' (rod ' + S.ukoly[nejDov].rodU + ')' : '—'],
+    ['Nejvyšší jmění rodu', mince(S.maxMince)],
+    ['Příjem / náklady', mince(prijemZaDen(S.misto)) + ' / ' + mince(vydajeZaDen())],
+    ['Roční období', ob.n + ' ' + ob.ik + ' – ' + ob.popis],
+    ['Rychlost hry', hernRychlost().toFixed(1).replace('.', ',') + ' dne za sekundu'],
+    ['Odehraný čas', h + ' h ' + m + ' min'],
+  ];
+  $('l-prehled').innerHTML = `<table class="tabulka">${rady.map(r => `<tr><td>${r[0]}</td><td>${r[1]}</td></tr>`).join('')}</table>
+    <div class="info" style="margin-top:12px"><b>Záloha.</b> Hra žije jen v tomhle prohlížeči –
+      souborem si ji přeneseš jinam.</div>
+    <div class="radek">
+      <button class="hlavni" id="btnExport">💾 Uložit do souboru</button>
+      <button id="btnImport">📂 Načíst ze souboru</button>
+      <input type="file" id="souborVstup" accept="application/json,.json" hidden>
+    </div>`;
+  $('btnExport').onclick = exportuj;
+  $('btnImport').onclick = () => $('souborVstup').click();
+  $('souborVstup').onchange = e => { if (e.target.files[0]) importuj(e.target.files[0]); e.target.value = ''; };
+}
+
+function exportuj() {
+  uloz();
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([JSON.stringify(S)], { type: 'application/json' }));
+  a.download = `cesta-rodu-${S.generace}gen-${new Date().toISOString().slice(0, 10)}.json`;
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  Dialog.info('Postup uložen do souboru.');
+}
+async function importuj(soubor) {
+  let d;
+  try { d = JSON.parse(await soubor.text()); } catch { return Dialog.chyba('Tohle není soubor s postupem.'); }
+  if (!d || !d.ukoly || typeof d.dny !== 'number') return Dialog.chyba('Soubor nevypadá jako postup z téhle hry.');
+  if (!await Dialog.potvrd('Načtením souboru přepíšeš současný postup. Pokračovat?')) return;
+  S = normalizuj(d);
+  pauza = false; $('btnPauza').click();
+  podpisSeznamu = ''; scenaKlic = ''; znameOdemcene = null;
+  $('prekryv').classList.toggle('zobraz', !!S.mrtvy);
+  postavSeznamy(); zobrazAuto(); kresliKroniku(); kresliHodnoty(); postavPrehled();
+  Dialog.info(`Načteno: ${S.generace}. generace, ${vek()} let.`);
+}
+
+/* ---------- průběžné hodnoty ---------- */
+function kresliHodnoty() {
+  const v = vek();
+  $('vek').textContent = v + ' let';
+  $('den').textContent = 'den ' + (Math.floor(S.dny % 365) + 1) + ' · zdraví ' + Math.round(S.zdravi);
+  const zp = $('zdraviPruh');
+  zp.style.width = Math.max(0, Math.min(100, S.zdravi)) + '%';
+  zp.className = S.zdravi > 60 ? '' : S.zdravi > 30 ? 'stredni' : 'spatne';
+  $('mince').innerHTML = mince(S.mince);
+  const p = prijemZaDen(S.misto), vy = vydajeZaDen(), cisty = p - vy;
+  $('prijem').innerHTML = mince(p);
+  $('vydaje').innerHTML = 'náklady ' + mince(vy);
+  $('cistyPrijem').innerHTML = `<span class="${cisty >= 0 ? 'kladne' : 'zaporne'}">${cisty >= 0 ? '+' : '−'}${mince(Math.abs(cisty))} / den</span>`
+    + (cisty < 0 ? ` <span class="zaporne">· vydrží ${dobaText(dnyVydrze(vy))}</span>` : '');
+  $('povest').textContent = Math.floor(S.povest);
+  $('povestP').textContent = '+' + (povestZaDen() * 365).toFixed(1) + ' za rok';
+  $('povestPruh').style.width = (S.povest / povestStrop() * 100) + '%';
+  $('rodBox').textContent = S.generace + '. generace';
+  $('rodP').textContent = (S.erb ? 'erb ⚜️ · ' : '') + 'rodová paměť ×' + rodovyBonus().toFixed(2).replace('.', ',');
+
+  kresliScenu();
+  let odemcenych = 0;
+  MISTA_KAT.forEach(k => k.polozky.forEach(x => { if (splneno(x.req)) odemcenych++; }));
+  const nejlepsi = odemcenych >= 3 ? nejlepsiMisto() : null;
+  const nejucinnejsi = nejucinnejsiDovednost();
+  for (const n in radky) {
+    const r = radky[n];
+    if (r.zamceno) {
+      const doba = dobaDoOdemceni(r.req);
+      r.o.textContent = doba === null || !isFinite(doba) ? '' : 'tímhle tempem za ' + dobaText(doba);
+      continue;
+    }
+    const t = uk(n), mx = maxXp(n), d = DEF[n];
+    const vybrany = n === (r.jeMisto ? S.misto : S.dovednost);
+    const ceka = r.jeMisto ? cekaMisto : cekaDovednost;
+    r.el.classList.toggle('akt', vybrany);
+    r.u.innerHTML = 'úroveň ' + t.u + (t.rodU > t.u ? ' (rod ' + t.rodU + ')' : '')
+      + (vybrany && ceka ? ` <span class="odhad">→ pak ${ik(ceka)} ${ceka}</span>` : '');
+    r.i.style.width = (t.xp / mx * 100) + '%';
+    r.s.innerHTML = `${fmt(t.xp)} / ${fmt(mx)} · ${fmt(xpZaDen(n))} zk./den`
+      + (vybrany ? ` <span class="odhad">· další úroveň za ${dobaText(dobaNaUroven(n, t.u + 1))}</span>` : '');
+    if (r.jeMisto) {
+      r.v.innerHTML = `<b>${mince(prijemZaDen(n))}</b><span class="p">za den${n === nejlepsi ? ' <span class="znacka">nejvíc</span>' : ''}</span>`;
+    } else {
+      const u = ucinnost(n) * 365 * 100;      // o kolik % povyroste účinek za rok učení
+      r.v.innerHTML = `<b>×${ucinek(n).toFixed(2).replace('.', ',')}</b>`
+        + `<span class="p">+${(u < 10 ? u.toFixed(1) : Math.round(u)).toString().replace('.', ',')} % za rok učení`
+        + `${n === nejucinnejsi ? ' <span class="znacka">nejúčinnější</span>' : ''}</span>`;
+    }
+  }
+  const prijem = prijemZaDen(S.misto);
+  for (const n in radkyZbozi) {
+    const z = ZBOZI[n], mam = z.jeBydleni ? S.bydleni === n : S.majetek.includes(n);
+    radkyZbozi[n].classList.toggle('drahe', !mam && z.vydaj > prijem);
+  }
+}
+
+/* ============================================================
+   Herní smyčka
+   ============================================================ */
+const MEZNIKY = [10, 25, 50, 100, 200, 500, 1000];
+function pridejXp(n, dny) {
+  const t = S.ukoly[n]; if (!t) return;
+  t.xp += xpZaDen(n) * dny;
+  let mx = maxXp(n), stoupl = false;
+  while (t.xp >= mx) {
+    t.xp -= mx; t.u++; stoupl = true;
+    if (t.u > t.rodU) t.rodU = t.u;
+    if (MEZNIKY.includes(t.u)) zapis(`${ik(n)} <b>${n}</b> – úroveň ${t.u}`);
+    mx = maxXp(n);
+  }
+  if (stoupl) {
+    if (n === S.misto && cekaMisto) { prepniMisto(cekaMisto); cekaMisto = null; }
+    if (n === S.dovednost && cekaDovednost) { prepniDovednost(cekaDovednost); cekaDovednost = null; }
+    if (radky[n] && radky[n].el) blikni(radky[n].el);
+  }
+}
+function blikni(el) { el.classList.remove('postup'); void el.offsetWidth; el.classList.add('postup'); }
+
+let pocitadloTiku = 0;
+function tik() {
+  if (pauza || S.mrtvy) return;
+  S.odehrano = (S.odehrano || 0) + 1000 / TPS;
+  if (++pocitadloTiku % TPS === 0) automatika();
+  const dny = hernRychlost() / TPS;
+  S.dny += dny;
+  pridejXp(S.misto, dny);
+  pridejXp(S.dovednost, dny);
+  S.mince += (prijemZaDen(S.misto) - vydajeZaDen()) * dny;
+  S.zdravi = Math.min(ZDRAVI_MAX, S.zdravi + zdraviZaDen() * dny);
+  S.povest = Math.min(povestStrop(), S.povest + povestZaDen() * dny);
+  if (S.mince < 0) { S.mince = 0; povestPridej(-4); uskrovniSe(); }
+  if (S.mince > S.maxMince) S.maxMince = S.mince;
+  zkusPrihodu();
+  if (S.zdravi <= 0 || vek() >= VEK_STROP) smrt();
+}
+
+function nejlepsiMisto() {
+  let nej = null, nejP = -1;
+  MISTA_KAT.forEach(k => k.polozky.forEach(p => {
+    if (splneno(p.req) && prijemZaDen(p.n) > nejP) { nejP = prijemZaDen(p.n); nej = p.n; }
+  }));
+  return nej;
+}
+
+// Došly peníze: hospodářství se zmenší jen tolik, aby se výdaje vešly do příjmu.
+function uskrovniSe() {
+  const prijem = prijemZaDen(S.misto);
+  while (S.majetek.length && vydajeZaDen() > prijem) {
+    const nej = S.majetek.reduce((a, b) => ZBOZI[a].vydaj >= ZBOZI[b].vydaj ? a : b);
+    S.majetek.splice(S.majetek.indexOf(nej), 1);
+    zapis(`💸 Musel jsi prodat: <b>${ik(nej)} ${nej}</b>`);
+  }
+  while (vydajeZaDen() > prijem && S.bydleni !== BYDLENI[0].n) {
+    const i = BYDLENI.findIndex(m => m.n === S.bydleni);
+    S.bydleni = BYDLENI[Math.max(0, i - 1)].n;
+    zapis(`💸 Stěhuješ se níž: <b>${ik(S.bydleni)} ${S.bydleni}</b>`);
+  }
+  podpisSeznamu = '';
+}
+
+function hospodar() {
+  const prijem = prijemZaDen(S.misto), strop = prijem * 0.8;
+  const usp = ucinek('Hospodárnost');
+  let nejlepsi = BYDLENI[0];
+  BYDLENI.forEach(m => { if (m.vydaj / usp <= prijem * 0.55) nejlepsi = m; });
+  if (S.bydleni !== nejlepsi.n) {
+    zapis(`Stěhuješ se: <b>${ik(nejlepsi.n)} ${nejlepsi.n}</b>`);
+    S.bydleni = nejlepsi.n;
+    podpisSeznamu = '';
+  }
+  let zbyva = strop - nejlepsi.vydaj / usp;
+  const chci = [];
+  MAJETEK.forEach(z => { if (z.vydaj / usp <= zbyva) { chci.push(z.n); zbyva -= z.vydaj / usp; } });
+  if (chci.join() !== S.majetek.join()) {
+    chci.filter(n => !S.majetek.includes(n)).forEach(n => zapis(`Pořízeno: <b>${ik(n)} ${n}</b>`));
+    S.majetek = chci;
+    podpisSeznamu = '';
+  }
+}
+
+/* Automatika nepřepíná uprostřed rozdělané úrovně – rozpracovaná zkušenost
+   by přišla vniveč. Nová volba počká ve `cekaMisto` / `cekaDovednost`
+   a nastoupí ve chvíli, kdy současná úroveň doběhne.                      */
+let cekaMisto = null, cekaDovednost = null;
+
+function navrhni(co, komu) {
+  if (co === 'misto') {
+    if (komu === S.misto) { cekaMisto = null; return; }
+    if (uk(S.misto).xp === 0) { prepniMisto(komu); cekaMisto = null; }
+    else cekaMisto = komu;
+  } else {
+    if (komu === S.dovednost) { cekaDovednost = null; return; }
+    if (uk(S.dovednost).xp === 0) { prepniDovednost(komu); cekaDovednost = null; }
+    else cekaDovednost = komu;
+  }
+}
+function prepniMisto(n) { zapis(`Nastoupil jsi jako <b>${ik(n)} ${n}</b>`); S.misto = n; }
+function prepniDovednost(n) { zapis(`Učíš se <b>${ik(n)} ${n}</b>`); S.dovednost = n; }
+
+function automatika() {
+  if (S.autoPrace) {
+    const nej = nejlepsiMisto();
+    if (nej) navrhni('misto', nej);
+  }
+  if (S.autoDov) {
+    const nej = nejucinnejsiDovednost();
+    if (nej) navrhni('dovednost', nej);
+  }
+  if (S.autoObchod) hospodar();
+}
+
+function smrt() {
+  S.mrtvy = true;
+  const duvod = S.zdravi <= 0 ? 'Síly došly' : 'Sešel věkem';
+  zapis(`🕯️ <b>${duvod}</b> ve ${vek()} letech, ${S.misto}`);
+  $('smrtText').innerHTML = `${duvod} ve věku ${vek()} let – ${S.misto}, pověst ${Math.floor(S.povest)}.<br>`
+    + `Potomek zdědí <b>${Math.round(dedicPodil() * 100)} % jmění</b> (${mince(S.mince * dedicPodil())}), `
+    + `třetinu pověsti a celou rodovou paměť (${fmt(soucetRodu())} úrovní).`;
+  $('prekryv').classList.add('zobraz');
+  uloz();
+}
+
+function dalsiGenerace(erb) {
+  const rodUrovne = {};
+  for (const n in S.ukoly) {
+    const rodoveUmeni = KAT_UKOLU[n] === 'Rodové umění';
+    rodUrovne[n] = (erb && !rodoveUmeni) ? 0 : S.ukoly[n].rodU;
+  }
+  const novy = novyStav({
+    ukoly: rodUrovne,
+    mince: Math.floor(S.mince * dedicPodil()),
+    povest: erb ? 25 : Math.floor(S.povest / 3),
+    generace: S.generace + 1,
+    erb: S.erb + (erb ? 1 : 0),
+    log: S.log || [],
+  });
+  novy.autoPrace = S.autoPrace; novy.autoDov = S.autoDov; novy.autoObchod = S.autoObchod;
+  novy.rychlost = S.rychlost; novy.odehrano = S.odehrano;
+  S = novy;
+  posledniPrihoda = -1;
+  cekaMisto = null; cekaDovednost = null;
+  znameOdemcene = null;
+  $('prekryv').classList.remove('zobraz');
+  podpisSeznamu = ''; scenaKlic = '';
+  zapis(erb ? `⚜️ <b>Rod povýšen do šlechtického stavu</b> – ${S.generace}. generace začíná s erbem`
+            : `👶 <b>Rodu se ujal potomek</b> – ${S.generace}. generace, dědictví ${mince(S.mince)}`);
+  postavSeznamy(); postavRod(); zobrazAuto(); kresliKroniku(); kresliHodnoty(); uloz();
+}
+
+/* ============================================================
+   Ukládání
+   ============================================================ */
+let ulozeniFunguje = true, ulozenoV = 0;
+function uloz() {
+  S.cas = Date.now();
+  try {
+    localStorage.setItem(KLIC, JSON.stringify(S));
+    ulozenoV = Date.now();
+    if (!ulozeniFunguje) { ulozeniFunguje = true; $('ulozeno').classList.remove('spatne'); }
+  } catch {
+    if (ulozeniFunguje) {
+      ulozeniFunguje = false;
+      $('ulozeno').classList.add('spatne');
+      Dialog.chyba('Postup se nedá uložit – prohlížeč tady zakazuje úložiště. '
+        + 'Otevři stránku přes web (http/https), ne jako soubor z disku.');
+    }
+  }
+  kresliUlozeno();
+}
+function kresliUlozeno() {
+  const e = $('ulozeno');
+  if (!ulozeniFunguje) { e.textContent = '⚠️ neukládá se'; return; }
+  const s = Math.round((Date.now() - ulozenoV) / 1000);
+  e.textContent = '💾 ' + (s < 3 ? 'uloženo' : 'uloženo před ' + s + ' s');
+}
+
+function normalizuj(d) {
+  const v = novyStav();
+  Object.assign(v, d);
+  v.ukoly = {};
+  for (const n in DEF) {
+    const t = (d.ukoly || {})[n];
+    v.ukoly[n] = t && typeof t.u === 'number'
+      ? { u: Math.max(0, t.u | 0), xp: Math.max(0, +t.xp || 0), rodU: Math.max(0, t.rodU | 0) }
+      : { u: 0, xp: 0, rodU: 0 };
+  }
+  if (!DEF[v.misto] || !DEF[v.misto].jeMisto) v.misto = 'Podruh';
+  if (!DEF[v.dovednost] || DEF[v.dovednost].jeMisto) v.dovednost = 'Rozvaha';
+  v.majetek = (v.majetek || []).filter(n => ZBOZI[n] && !ZBOZI[n].jeBydleni);
+  if (!ZBOZI[v.bydleni]) v.bydleni = BYDLENI[0].n;
+  v.rychlost = [1, 2, 3, 5].includes(v.rychlost) ? v.rychlost : 1;
+  v.dny = Math.max(365 * VEK_START, +v.dny || 0);
+  v.mince = Math.max(0, +v.mince || 0);
+  v.maxMince = Math.max(v.mince, +v.maxMince || 0);
+  v.zdravi = Math.max(0, Math.min(ZDRAVI_MAX, +v.zdravi || 0));
+  v.generace = Math.max(1, v.generace | 0);
+  v.erb = Math.max(0, v.erb | 0);
+  v.povest = Math.max(0, Math.min(POVEST_MAX + v.erb * 25, +v.povest || 0));
+  v.log = Array.isArray(v.log) ? v.log.slice(0, 40) : [];
+  return v;
+}
+function nacti() {
+  try {
+    const d = JSON.parse(localStorage.getItem(KLIC) || 'null');
+    if (!d || !d.ukoly) return false;
+    S = normalizuj(d);
+    return true;
+  } catch { return false; }
+}
+
+/* Hra běží dál, i když je zavřená – dopočítá se celá doba nepřítomnosti.
+   Počítá se po dnech, včetně příhod a automatiky, a končí buď vyčerpáním
+   zameškaného času, nebo smrtí (dál čeká potomek na tvoje kliknutí).      */
+function doberOffline() {
+  if (!S.cas || S.mrtvy) return;
+  const ms = Date.now() - S.cas;
+  if (ms < 60000) return;
+  let zbyva = (ms / 1000) * hernRychlost();          // herních dnů k dopočtu
+  const vekPred = vek(), mincePred = S.mince;
+  let dnu = 0;
+  while (zbyva > 0 && !S.mrtvy && dnu < 200000) {
+    const krok = Math.min(1, zbyva);
+    zbyva -= krok; dnu += krok;
+    S.dny += krok;
+    pridejXp(S.misto, krok);
+    pridejXp(S.dovednost, krok);
+    S.mince += (prijemZaDen(S.misto) - vydajeZaDen()) * krok;
+    S.zdravi = Math.min(ZDRAVI_MAX, S.zdravi + zdraviZaDen() * krok);
+    S.povest = Math.min(povestStrop(), S.povest + povestZaDen() * krok);
+    if (S.mince < 0) { S.mince = 0; povestPridej(-4); uskrovniSe(); }
+    if (S.mince > S.maxMince) S.maxMince = S.mince;
+    zkusPrihodu();
+    if (Math.floor(dnu) % 20 === 0) automatika();
+    if (S.zdravi <= 0 || vek() >= VEK_STROP) { smrt(); break; }
+  }
+  const roky = vek() - vekPred, vydelal = S.mince - mincePred;
+  zapis(`⏳ Zatímco jsi byl pryč, uběhlo ${dobaText(dnu)}`);
+  Dialog.info(`Než ses vrátil, uběhlo ${dobaText(dnu)} života`
+    + (roky ? ` (${roky} let)` : '')
+    + (vydelal > 0 ? `, přibylo ${mince(vydelal, true)}` : '')
+    + (S.mrtvy ? ' – a tvůj člověk to nepřežil.' : '.'));
+}
+
+/* ---------- rekord ---------- */
+const rek = Rekord.sleduj('webapp_hra_cesta_rodu_rekord', {
+  vyssiLepsi: true,
+  format: v => fmt(v) + ' úrovní rodu',
+  popisek: 'Rekord rodové paměti',
+});
+function zapisRekord() { rek.zapis(soucetRodu()); }
+
+/* ============================================================
+   Ovládání
+   ============================================================ */
+document.querySelectorAll('.zalozky button').forEach(b => {
+  b.onclick = () => {
+    document.querySelectorAll('.zalozky button').forEach(x => x.classList.toggle('akt', x === b));
+    document.querySelectorAll('.list').forEach(l => l.classList.toggle('akt', l.id === 'l-' + b.dataset.zal));
+    if (b.dataset.zal === 'rod') postavRod();
+    if (b.dataset.zal === 'prehled') postavPrehled();
+  };
+});
+$('btnPauza').onclick = () => {
+  pauza = !pauza;
+  uloz();
+  $('btnPauza').textContent = pauza ? '▶️ Pokračovat' : '⏸️ Pauza';
+  $('btnPauza').classList.toggle('hlavni', !pauza);
+};
+const RYCHLOSTI = [1, 2, 3, 5];
+function kresliRychlost() { $('btnRychlost').textContent = '⏩ ' + (S.rychlost || 1) + '×'; }
+$('btnRychlost').onclick = () => {
+  S.rychlost = RYCHLOSTI[(RYCHLOSTI.indexOf(S.rychlost || 1) + 1) % RYCHLOSTI.length];
+  kresliRychlost(); uloz();
+};
+function zobrazAuto() {
+  $('autoPrace').checked = !!S.autoPrace;
+  $('autoDov').checked = !!S.autoDov;
+  $('autoObchod').checked = !!S.autoObchod;
+  kresliRychlost();
+}
+$('autoPrace').onchange = e => { S.autoPrace = e.target.checked; if (S.autoPrace) automatika(); uloz(); };
+$('autoDov').onchange = e => { S.autoDov = e.target.checked; if (S.autoDov) automatika(); uloz(); };
+$('autoObchod').onchange = e => { S.autoObchod = e.target.checked; if (S.autoObchod) { hospodar(); postavSeznamy(); kresliHodnoty(); } uloz(); };
+$('filtr').oninput = e => { filtrText = bezDia(e.target.value.trim()); postavSeznamy(); kresliHodnoty(); };
+$('btnReset').onclick = async () => {
+  if (!await Dialog.potvrd('Smazat celou kroniku rodu a začít od nuly? Tohle se nedá vrátit.')) return;
+  try { localStorage.removeItem(KLIC); } catch {}
+  S = novyStav(); podpisSeznamu = ''; scenaKlic = ''; znameOdemcene = null; posledniPrihoda = -1;
+  $('filtr').value = ''; filtrText = '';
+  postavSeznamy(); zobrazAuto(); kresliKroniku(); kresliHodnoty();
+  Dialog.info('Postup smazán, začínáš znovu.');
+};
+$('scena').onclick = () => {
+  const zvetseno = document.querySelector('.panel').classList.toggle('zvetseno');
+  $('scena').title = zvetseno ? 'Klikni pro zmenšení' : 'Klikni pro zvětšení';
+};
+$('btnDedic').onclick = () => dalsiGenerace(false);
+document.addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT') {
+    if (e.key === 'Escape') { e.target.value = ''; e.target.blur(); filtrText = ''; postavSeznamy(); kresliHodnoty(); }
+    return;
+  }
+  if (e.ctrlKey || e.altKey || e.metaKey) return;
+  const zal = document.querySelectorAll('.zalozky button');
+  if (e.key === ' ') { e.preventDefault(); $('btnPauza').click(); }
+  else if (e.key.toLowerCase() === 'f') { e.preventDefault(); $('filtr').focus(); }
+  else if (e.key >= '1' && e.key <= String(zal.length)) zal[+e.key - 1].click();
+});
+window.addEventListener('pagehide', uloz);
+window.addEventListener('beforeunload', uloz);
+window.addEventListener('blur', uloz);
+document.addEventListener('visibilitychange', () => { if (document.hidden) uloz(); });
+
+/* ---------- start ---------- */
+if (!nacti()) S = novyStav();
+rek.prvek($('rekordBox'));
+postavSeznamy();
+doberOffline();
+zobrazAuto();
+kresliKroniku();
+kresliHodnoty();
+if (S.mrtvy) smrt();
+uloz();
+
+setInterval(tik, 1000 / TPS);
+setInterval(() => { postavSeznamy(); kresliHodnoty(); }, 100);
+setInterval(kresliUlozeno, 1000);
+setInterval(() => { zapisRekord(); uloz(); }, 2000);
+</script>
+</body>
+</html>

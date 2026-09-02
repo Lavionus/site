@@ -1,0 +1,1143 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🔡 Scrabble anglicky</title>
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../podpis.js" defer></script>
+<script src="../rekord.js" defer></script>
+<script src="../dialog.js" defer></script>
+<script src="scrabbleSlovnikEn.js" defer></script>
+<style>
+body{padding:14px 12px 4px}
+.obal{max-width:700px;margin:0 auto}
+h1{font-size:1.45rem;font-weight:600;margin-bottom:2px}
+h1 .pod{font-size:.78rem;color:var(--text-faint);font-weight:400;margin-left:6px}
+h2{font-size:1rem;font-weight:600;margin-bottom:10px}
+.karta{background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin:12px 0}
+.rada{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.rada+.rada{margin-top:9px}
+.btn{background:var(--bg-control);color:var(--text);border:1px solid var(--border-strong);
+  padding:8px 13px;border-radius:6px;cursor:pointer;font:inherit;font-size:.86rem}
+.btn:hover:not(:disabled){background:var(--bg-hover)}
+.btn:disabled{opacity:.4;cursor:default}
+.btn.hlavni{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+.btn.hlavni:hover:not(:disabled){background:var(--accent-hover);border-color:var(--accent-hover)}
+input[type=text],select{background:var(--bg-input);color:var(--text);border:1px solid var(--border-strong);
+  border-radius:6px;padding:7px 9px;font:inherit;font-size:.88rem}
+label{font-size:.85rem;color:var(--text-muted);display:flex;align-items:center;gap:6px}
+.pozn{font-size:.8rem;color:var(--text-faint);line-height:1.5;margin-top:10px}
+
+/* --- nastavení hráčů --- */
+.radaHrace{display:flex;gap:8px;align-items:center;margin-bottom:8px}
+.radaHrace input[type=text]{flex:1 1 90px;min-width:0}
+.radaHrace .zrus{background:none;border:none;color:var(--text-faint);cursor:pointer;font-size:1.05rem;padding:2px 5px}
+.radaHrace .zrus:hover{color:var(--danger)}
+
+/* --- lišta skóre --- */
+#skoreLista{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:9px}
+.hracKarta{flex:1 1 120px;background:var(--bg-elevated);border:1px solid var(--border);
+  border-left:3px solid var(--border);border-radius:6px;padding:6px 9px}
+.hracKarta.aktivni{border-left-color:var(--accent);background:var(--accent-soft)}
+.hracKarta .jm{font-size:.78rem;color:var(--text-muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hracKarta .sk{font-size:1.2rem;font-weight:700;font-variant-numeric:tabular-nums}
+
+/* --- deska --- */
+#deskaObal{display:flex;justify-content:center}
+#deska{width:min(100%,600px);container-type:inline-size;display:grid;
+  grid-template-columns:repeat(15,1fr);gap:2px;background:#39404d;
+  border:3px solid #39404d;border-radius:6px;touch-action:manipulation}
+.pole{aspect-ratio:1;position:relative;display:flex;align-items:center;justify-content:center;
+  background:#4d5666;color:#dde3ec;font-size:1.75cqw;line-height:1.05;text-align:center;
+  cursor:pointer;user-select:none;border-radius:2px}
+.pole.dl{background:#88b8d8;color:#0f202c}
+.pole.tl{background:#2f6fa8;color:#eef5fb}
+.pole.ds{background:#dda0a0;color:#2a1010}
+.pole.ts{background:#b4443c;color:#fff3f1}
+.pole.stred{background:#dda0a0;color:#2a1010;font-size:3.4cqw}
+.kamen{position:absolute;inset:0;border-radius:2px;display:flex;align-items:center;justify-content:center;
+  background:linear-gradient(158deg,#f2e5c6,#dcc79c);color:#2c2318;font-weight:700;font-size:4.3cqw;
+  box-shadow:inset 0 -2px 0 rgba(0,0,0,.22)}
+.kamen .b{position:absolute;right:5%;bottom:1%;font-size:2.3cqw;font-weight:600;opacity:.7}
+.kamen.nova{box-shadow:inset 0 0 0 2px var(--accent),inset 0 -2px 0 rgba(0,0,0,.22)}
+.kamen.zolik{color:#8a3c10}
+.pole.kurzor::after{content:'';position:absolute;inset:0;border:2px solid var(--accent);
+  border-radius:2px;pointer-events:none}
+.pole .sipka{position:absolute;right:4%;top:2%;font-size:2.6cqw;color:var(--accent);
+  text-shadow:0 0 3px rgba(0,0,0,.6)}
+.pole.tip{animation:tipPuls 1.1s ease-in-out infinite}
+.pole.tip::before{content:'';position:absolute;inset:0;border:2px solid var(--warn);
+  border-radius:2px;pointer-events:none}
+@keyframes tipPuls{50%{filter:brightness(1.35)}}
+@media (prefers-reduced-motion: reduce){.pole.tip{animation:none}}
+
+/* --- stojan --- */
+#stojan{display:flex;gap:6px;justify-content:center;flex-wrap:wrap;background:var(--bg-elevated);
+  border:1px solid var(--border);border-radius:8px;padding:8px;min-height:60px;align-items:center}
+.rk{width:42px;height:42px;position:relative;border-radius:4px;display:flex;align-items:center;
+  justify-content:center;background:linear-gradient(158deg,#f2e5c6,#dcc79c);color:#2c2318;
+  font-weight:700;font-size:1.15rem;cursor:pointer;border:2px solid transparent;
+  box-shadow:inset 0 -2px 0 rgba(0,0,0,.22);user-select:none}
+.rk .b{position:absolute;right:3px;bottom:0;font-size:.6rem;opacity:.7}
+.rk.vybran{border-color:var(--accent);transform:translateY(-4px)}
+.rk.mena{border-color:var(--danger);border-style:dashed}
+.rk.zolik{color:#8a3c10}
+.prazdnyStojan{color:var(--text-faint);font-size:.85rem}
+
+.zprava{min-height:1.45em;text-align:center;font-size:.9rem;font-weight:600;margin:9px 0;line-height:1.4}
+.zprava.chyba{color:var(--danger)}
+.zprava.ok{color:var(--ok)}
+.spodek{display:flex;gap:10px;align-items:center;justify-content:center;flex-wrap:wrap;margin-top:10px}
+.pytelInfo{font-size:.82rem;color:var(--text-faint)}
+.historie{margin-top:12px;font-size:.82rem;color:var(--text-muted);max-height:130px;overflow:auto;
+  border-top:1px solid var(--border);padding-top:8px;line-height:1.7}
+.historie b{color:var(--text)}
+.historie .body{color:var(--ok);font-variant-numeric:tabular-nums}
+.historie .vyznam{color:var(--text-faint);font-size:.95em}
+
+/* --- předání zařízení --- */
+#predani{position:fixed;inset:0;background:var(--bg);display:flex;align-items:center;
+  justify-content:center;flex-direction:column;gap:16px;z-index:50;text-align:center;padding:20px}
+#predani .kdo{font-size:1.5rem;font-weight:700}
+
+.pravidla{font-size:.85rem;line-height:1.6;color:var(--text-muted)}
+.pravidla summary{cursor:pointer;color:var(--text);font-weight:600;font-size:.9rem}
+.pravidla ul{margin:10px 0 0 18px}
+.pravidla li{margin-bottom:5px}
+.pravidla table{border-collapse:collapse;margin-top:8px;font-size:.8rem}
+.pravidla td{padding:2px 8px 2px 0}
+
+@media(max-width:420px){
+  .rk{width:36px;height:36px;font-size:1rem}
+  .btn{padding:7px 10px;font-size:.8rem}
+}
+</style>
+</head>
+<body>
+<div class="obal">
+  <h1>🔡 Scrabble anglicky<span class="pod">anglická sada, 100 kamenů</span></h1>
+  <p class="pozn" style="margin:0 0 4px">Slovní hra na procvičení anglické slovní zásoby.
+    U každého zahraného slova se ukáže, co znamená.</p>
+
+  <!-- ======== nastavení ======== -->
+  <section id="nastaveni" class="karta">
+    <h2>Nová hra</h2>
+    <div id="hraciNastaveni"></div>
+    <div class="rada">
+      <button class="btn" id="pridatHrace">+ Přidat hráče</button>
+      <label>Síla počítače
+        <select id="obtiznost">
+          <option value="1">🙂 Začátečník</option>
+          <option value="2" selected>🧐 Pokročilý</option>
+          <option value="3">🤖 Mistr</option>
+        </select>
+      </label>
+    </div>
+    <div class="rada"><button class="btn hlavni" id="start">▶ Začít hru</button></div>
+    <p class="pozn" id="stavSlovniku">Načítám slovník…</p>
+  </section>
+
+  <!-- ======== hra ======== -->
+  <section id="hra" hidden>
+    <div id="skoreLista"></div>
+    <div id="deskaObal"><div id="deska"></div></div>
+    <div class="zprava" id="zprava"></div>
+    <div id="stojan"></div>
+    <div class="rada" style="justify-content:center;margin-top:10px" id="ovladani">
+      <button class="btn hlavni" id="bPotvrd">✓ Potvrdit tah</button>
+      <button class="btn" id="bVrat">↩ Vrátit</button>
+      <button class="btn" id="bMichat">🔀 Zamíchat</button>
+      <button class="btn" id="bNapoveda">💡 Nápověda</button>
+      <button class="btn" id="bVymen">♻ Vyměnit</button>
+      <button class="btn" id="bPas">⏭ Pas</button>
+      <button class="btn" id="bKonec">✖ Ukončit hru</button>
+    </div>
+    <div class="spodek">
+      <span id="rekordBox"></span>
+      <span class="pytelInfo" id="pytelInfo"></span>
+    </div>
+    <div class="historie" id="historie"></div>
+  </section>
+
+  <details class="karta pravidla">
+    <summary>📖 Pravidla, sada kamenů a poznámky ke slovníku</summary>
+    <ul>
+      <li><b>Cíl:</b> skládat na desku 15×15 navazující slova a získat co nejvíc bodů. První slovo musí
+        procházet <b>středovým polem ★</b>, každé další musí navazovat na už položené kameny.</li>
+      <li><b>Prémiová pole</b> se počítají jen v tahu, kdy se poprvé zakryjí. Světle modrá zdvojnásobí,
+        tmavě modrá ztrojnásobí hodnotu <i>písmene</i>; růžová zdvojnásobí, červená ztrojnásobí hodnotu
+        celého <i>slova</i>. Středové pole se počítá jako růžové.</li>
+      <li><b>Bingo:</b> položení všech sedmi kamenů v jednom tahu je +50 bodů.</li>
+      <li><b>Žolík</b> (prázdný kámen) zastoupí libovolné písmeno, ale má vždy hodnotu 0.</li>
+      <li><b>Konec hry:</b> když se vyčerpá pytlík a někdo vyloží poslední kámen, nebo po šesti tazích
+        bez bodů za sebou. Každý si odečte hodnotu zbylých kamenů, hráč, který došel, si jejich součet
+        navíc připočte.</li>
+      <li><b>Slova se hrají anglicky</b> — bez diakritiky a bez vlastních jmen.</li>
+      <li>Anglická sada má proti české dvanáct <b>E</b> a jen jedno Q, J, K, X a Z —
+        za Q a Z je ale 10 bodů.</li>
+    </ul>
+    <p style="margin-top:12px"><b>Rozložení kamenů</b> (100 ks):</p>
+    <table><tbody id="tabSada"></tbody></table>
+    <p style="margin-top:12px"><b>Slovník.</b> Hra zná zhruba tři tisíce anglických tvarů — školní
+      slovní zásobu základní školy včetně odvozených tvarů (množné číslo, <i>-ing</i>, <i>-ed</i>,
+      stupňování) a nepravidelných sloves. Je tedy mnohem menší než turnajové slovníky: to je
+      záměr, aby počítač hrál slova, která dítě může znát, a aby se u každého zahraného slova dal
+      ukázat <b>český význam</b>. Nejsou v něm vlastní jména ani zkratky. Když hra nějaké slovo
+      nezná, nabídne tlačítko <b>Uznat slovo</b> a hráči si ho mohou odsouhlasit sami; prohlížeč si
+      takto uznaná slova zapamatuje i do dalších her. Počítač hraje jen ze slovníku.</p>
+  </details>
+</div>
+
+<script>
+(function () {
+'use strict';
+const $ = id => document.getElementById(id);
+
+/* ============================================================
+   Sada kamenů — oficiální anglická distribuce (100 kamenů).
+   [písmeno, body, počet]; '?' je žolík.
+   ============================================================ */
+const SADA = [
+  ['a',1,9], ['b',3,2], ['c',3,2], ['d',2,4], ['e',1,12], ['f',4,2], ['g',2,3],
+  ['h',4,2], ['i',1,9], ['j',8,1], ['k',5,1], ['l',1,4], ['m',3,2], ['n',1,6],
+  ['o',1,8], ['p',3,2], ['q',10,1], ['r',1,6], ['s',1,4], ['t',1,6], ['u',1,4],
+  ['v',4,2], ['w',4,2], ['x',8,1], ['y',4,2], ['z',10,1], ['?',0,2],
+];
+const HODNOTA = {};
+SADA.forEach(([p, b]) => { HODNOTA[p] = b; });
+const PISMENA = SADA.filter(s => s[0] !== '?').map(s => s[0]);
+
+/* Prémiová pole. d/t = písmeno ×2/×3, D/T = slovo ×2/×3, * = střed. */
+const ROZLOZENI = (
+  'T..d...T...d..T' +
+  '.D...t...t...D.' +
+  '..D...d.d...D..' +
+  'd..D...d...D..d' +
+  '....D.....D....' +
+  '.t...t...t...t.' +
+  '..d...d.d...d..' +
+  'T..d...*...d..T' +
+  '..d...d.d...d..' +
+  '.t...t...t...t.' +
+  '....D.....D....' +
+  'd..D...d...D..d' +
+  '..D...d.d...D..' +
+  '.D...t...t...D.' +
+  'T..d...T...d..T'
+);
+const TRIDA_POLE = { d: 'dl', t: 'tl', D: 'ds', T: 'ts', '*': 'stred' };
+const POPIS_POLE = { d: '2×<br>P', t: '3×<br>P', D: '2×<br>S', T: '3×<br>S', '*': '★' };
+const STRED = 7 * 15 + 7;
+
+const I = (r, c) => r * 15 + c;
+const R = i => (i / 15) | 0;
+const C = i => i % 15;
+
+/* ============================================================
+   Slovník
+   ============================================================ */
+let SLOVNIK = new Set();
+let PODLE_DELKY = [];           // PODLE_DELKY[délka] = pole slov
+const KLIC_UZNANA = 'webapp_hra_scrabble_en_uznana';
+let uznana = new Set();
+
+function nactiUznana() {
+  try {
+    const v = JSON.parse(localStorage.getItem(KLIC_UZNANA));
+    if (Array.isArray(v)) uznana = new Set(v);
+  } catch { /* soukromé okno – nevadí */ }
+}
+function ulozUznana() {
+  try { localStorage.setItem(KLIC_UZNANA, JSON.stringify([...uznana])); } catch { /* nevadí */ }
+}
+function znaSlovo(w) { return SLOVNIK.has(w) || uznana.has(w); }
+
+function pripravSlovnik() {
+  if (typeof SCRABBLE_SLOVNIK === 'undefined') return false;
+  const pole = SCRABBLE_SLOVNIK.split(' ');
+  SLOVNIK = new Set(pole);
+  PODLE_DELKY = [];
+  for (const w of pole) (PODLE_DELKY[w.length] || (PODLE_DELKY[w.length] = [])).push(w);
+  return true;
+}
+/* Slovo uznané hráči musí umět zahrát i počítač. */
+function pridejDoSlovniku(w) {
+  if (SLOVNIK.has(w) || uznana.has(w)) return;
+  uznana.add(w);
+  if (w.length <= 15) (PODLE_DELKY[w.length] || (PODLE_DELKY[w.length] = [])).push(w);
+  ulozUznana();
+}
+
+/* ============================================================
+   Stav hry
+   ============================================================ */
+let deska = new Array(225).fill(null);   // null | {p:'a', z:boolean}
+let pytel = [];
+let hraci = [];
+let naTahu = 0;
+let polozene = [];    // kameny položené v tomto tahu: {i, p, z}
+let kurzor = null;    // {i, smer:'h'|'v'}
+let tipPole = new Set();  // pole zvýrazněná nápovědou
+let vybrany = -1;     // index vybraného kamene ve stojanu
+let menene = new Set();   // indexy stojanu označené k výměně
+let rezimVymeny = false;
+let bezSkore = 0;
+let hraBezi = false;
+let pocitaPocitac = false;
+let rek = null;
+
+/* ============================================================
+   Nastavení hráčů
+   ============================================================ */
+const VYCHOZI = [
+  { jmeno: 'Hráč 1', pc: false },
+  { jmeno: 'Počítač', pc: true },
+];
+let navrh = VYCHOZI.map(h => ({ ...h }));
+
+function vykresliNastaveni() {
+  const box = $('hraciNastaveni');
+  box.innerHTML = '';
+  navrh.forEach((h, k) => {
+    const r = document.createElement('div');
+    r.className = 'radaHrace';
+    r.innerHTML =
+      '<input type="text" maxlength="16" value="" aria-label="Jméno hráče">' +
+      '<select aria-label="Typ hráče"><option value="0">👤 Člověk</option><option value="1">🤖 Počítač</option></select>' +
+      '<button type="button" class="zrus" title="Odebrat hráče">✕</button>';
+    const jm = r.querySelector('input'), typ = r.querySelector('select');
+    jm.value = h.jmeno;
+    typ.value = h.pc ? '1' : '0';
+    jm.addEventListener('input', () => { h.jmeno = jm.value; });
+    typ.addEventListener('change', () => {
+      h.pc = typ.value === '1';
+      if (h.jmeno === 'Hráč ' + (k + 1) || h.jmeno === 'Počítač') {
+        h.jmeno = h.pc ? 'Počítač' : 'Hráč ' + (k + 1);
+        jm.value = h.jmeno;
+      }
+    });
+    r.querySelector('.zrus').addEventListener('click', () => {
+      if (navrh.length <= 2) { Dialog.chyba('Hru hrají nejméně dva hráči.'); return; }
+      navrh.splice(k, 1);
+      vykresliNastaveni();
+    });
+    r.querySelector('.zrus').disabled = navrh.length <= 2;
+    box.appendChild(r);
+  });
+  $('pridatHrace').disabled = navrh.length >= 4;
+}
+
+/* ============================================================
+   Pytlík a stojany
+   ============================================================ */
+function zamichej(a) {
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = (Math.random() * (i + 1)) | 0;
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+function naplnPytel() {
+  pytel = [];
+  SADA.forEach(([p, , n]) => { for (let i = 0; i < n; i++) pytel.push(p); });
+  zamichej(pytel);
+}
+function doplnStojan(h) {
+  while (h.stojan.length < 7 && pytel.length) h.stojan.push(pytel.pop());
+}
+
+/* ============================================================
+   Vykreslení
+   ============================================================ */
+function kamenNa(i) {
+  return deska[i] || polozene.find(x => x.i === i) || null;
+}
+function htmlKamene(k, nova) {
+  return '<span class="kamen' + (nova ? ' nova' : '') + (k.z ? ' zolik' : '') + '">' +
+    k.p.toUpperCase() +
+    (k.z ? '' : '<span class="b">' + HODNOTA[k.p] + '</span>') + '</span>';
+}
+
+function vykresliDesku() {
+  const d = $('deska');
+  const casti = [];
+  for (let i = 0; i < 225; i++) {
+    const pr = ROZLOZENI[i];
+    const k = kamenNa(i);
+    const nova = !deska[i] && !!k;
+    let tridy = 'pole';
+    if (!k && TRIDA_POLE[pr]) tridy += ' ' + TRIDA_POLE[pr];
+    if (kurzor && kurzor.i === i) tridy += ' kurzor';
+    if (tipPole.has(i)) tridy += ' tip';
+    let vnitrek = '';
+    if (k) vnitrek = htmlKamene(k, nova);
+    else if (POPIS_POLE[pr]) vnitrek = POPIS_POLE[pr];
+    if (kurzor && kurzor.i === i && !k) {
+      vnitrek += '<span class="sipka">' + (kurzor.smer === 'h' ? '▸' : '▾') + '</span>';
+    }
+    casti.push('<div class="' + tridy + '" data-i="' + i + '">' + vnitrek + '</div>');
+  }
+  d.innerHTML = casti.join('');
+}
+
+function vykresliStojan() {
+  const s = $('stojan');
+  const h = hraci[naTahu];
+  s.innerHTML = '';
+  if (!h) return;
+  if (h.pc) {
+    s.innerHTML = '<span class="prazdnyStojan">🤖 ' + esc(h.jmeno) + ' přemýšlí…</span>';
+    return;
+  }
+  if (!h.stojan.length) { s.innerHTML = '<span class="prazdnyStojan">Stojan je prázdný.</span>'; return; }
+  h.stojan.forEach((p, k) => {
+    const el = document.createElement('div');
+    el.className = 'rk' + (k === vybrany ? ' vybran' : '') + (menene.has(k) ? ' mena' : '') +
+      (p === '?' ? ' zolik' : '');
+    el.innerHTML = (p === '?' ? '★' : p.toUpperCase()) +
+      (p === '?' ? '' : '<span class="b">' + HODNOTA[p] + '</span>');
+    el.addEventListener('click', () => klikStojan(k));
+    s.appendChild(el);
+  });
+}
+
+function vykresliSkore() {
+  $('skoreLista').innerHTML = hraci.map((h, k) =>
+    '<div class="hracKarta' + (k === naTahu ? ' aktivni' : '') + '">' +
+    '<div class="jm">' + (h.pc ? '🤖 ' : '👤 ') + esc(h.jmeno) + '</div>' +
+    '<div class="sk">' + h.skore + '</div></div>').join('');
+  $('pytelInfo').textContent = 'V pytlíku: ' + pytel.length + ' kamenů';
+}
+
+function vykresli() {
+  vykresliDesku();
+  vykresliStojan();
+  vykresliSkore();
+  aktualizujTlacitka();
+}
+
+function esc(s) {
+  return String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+}
+function zprava(text, druh) {
+  const z = $('zprava');
+  z.textContent = text || '';
+  z.className = 'zprava' + (druh ? ' ' + druh : '');
+}
+/* Český význam zahraných slov — kvůli tomu tahle verze hry existuje.
+   Slovník ho zná jen u základní školní zásoby, ne u všech odvozených tvarů. */
+function vyznamySlov(slova) {
+  const vyznamy = typeof SCRABBLE_VYZNAMY === 'undefined' ? {} : SCRABBLE_VYZNAMY;
+  const popisy = [];
+  for (const s of slova) {
+    const v = vyznamy[s.text];
+    if (v && !popisy.some(p => p.startsWith(s.text.toUpperCase() + ' '))) {
+      popisy.push(s.text.toUpperCase() + ' = ' + v);
+    }
+  }
+  return popisy.join(' · ');
+}
+
+function zapisDoHistorie(html) {
+  const h = $('historie');
+  const r = document.createElement('div');
+  r.innerHTML = html;
+  h.appendChild(r);
+  h.scrollTop = h.scrollHeight;
+}
+
+function aktualizujTlacitka() {
+  const clovekNaTahu = hraBezi && hraci[naTahu] && !hraci[naTahu].pc && !pocitaPocitac;
+  $('bPotvrd').disabled = !clovekNaTahu || rezimVymeny || !polozene.length;
+  $('bVrat').disabled = !clovekNaTahu || rezimVymeny || !polozene.length;
+  $('bMichat').disabled = !clovekNaTahu || rezimVymeny;
+  $('bNapoveda').disabled = !clovekNaTahu || rezimVymeny || !!polozene.length;
+  $('bVymen').disabled = !clovekNaTahu || (!rezimVymeny && (pytel.length < 7 || polozene.length > 0));
+  $('bPas').disabled = !clovekNaTahu || rezimVymeny;
+  $('bVymen').textContent = rezimVymeny ? '✓ Potvrdit výměnu' : '♻ Vyměnit';
+}
+
+/* ============================================================
+   Ovládání – myš a klávesnice
+   ============================================================ */
+function klikStojan(k) {
+  if (!hraBezi || hraci[naTahu].pc || pocitaPocitac) return;
+  if (rezimVymeny) {
+    if (menene.has(k)) menene.delete(k); else menene.add(k);
+    vykresliStojan();
+    return;
+  }
+  vybrany = (vybrany === k) ? -1 : k;
+  vykresliStojan();
+}
+
+async function klikPole(i) {
+  if (!hraBezi || hraci[naTahu].pc || pocitaPocitac || rezimVymeny) return;
+
+  const vlastni = polozene.find(x => x.i === i);
+  if (vlastni) { vratKamen(i); return; }
+  if (deska[i]) { zprava('Na tomhle poli už kámen leží.', 'chyba'); return; }
+
+  if (tipPole.size) tipPole = new Set();
+  if (vybrany >= 0) {
+    await polozKamen(i, vybrany);
+    return;
+  }
+  /* bez vybraného kamene jen přesuneme kurzor (opakovaný klik otočí směr) */
+  if (kurzor && kurzor.i === i) kurzor.smer = kurzor.smer === 'h' ? 'v' : 'h';
+  else kurzor = { i, smer: 'h' };
+  vykresliDesku();
+}
+
+async function polozKamen(i, k) {
+  const h = hraci[naTahu];
+  let p = h.stojan[k];
+  let zolik = false;
+  if (p === '?') {
+    const vybr = await vyberPismeno();
+    if (!vybr) return;
+    p = vybr; zolik = true;
+  }
+  h.stojan.splice(k, 1);
+  polozene.push({ i, p, z: zolik });
+  vybrany = -1;
+  posunKurzor(i);
+  zprava('');
+  vykresli();
+}
+
+function posunKurzor(i) {
+  const smer = kurzor && kurzor.smer === 'v' ? 'v' : 'h';
+  let r = R(i), c = C(i);
+  do {
+    if (smer === 'h') c++; else r++;
+  } while (r < 15 && c < 15 && kamenNa(I(r, c)));
+  kurzor = (r < 15 && c < 15) ? { i: I(r, c), smer } : null;
+}
+
+function vratKamen(i) {
+  const k = polozene.findIndex(x => x.i === i);
+  if (k < 0) return;
+  const [x] = polozene.splice(k, 1);
+  hraci[naTahu].stojan.push(x.z ? '?' : x.p);
+  kurzor = { i, smer: kurzor ? kurzor.smer : 'h' };
+  zprava('');
+  vykresli();
+}
+
+function vratVse() {
+  const h = hraci[naTahu];
+  polozene.forEach(x => h.stojan.push(x.z ? '?' : x.p));
+  polozene = [];
+  zprava('');
+  vykresli();
+}
+
+/* Psaní na klávesnici: písmeno položí odpovídající kámen ze stojanu. */
+async function klavesa(e) {
+  if (!hraBezi || rezimVymeny || !hraci[naTahu] || hraci[naTahu].pc || pocitaPocitac) return;
+  if (e.ctrlKey || e.altKey || e.metaKey) return;
+  const t = e.target;
+  if (t && (t.tagName === 'INPUT' || t.tagName === 'SELECT' || t.tagName === 'TEXTAREA')) return;
+
+  if (e.key === 'Backspace') {
+    e.preventDefault();
+    if (!polozene.length) return;
+    vratKamen(polozene[polozene.length - 1].i);
+    return;
+  }
+  if (e.key === 'Escape') { e.preventDefault(); kurzor = null; vybrany = -1; vykresli(); return; }
+  if (e.key === 'Enter') { e.preventDefault(); if (polozene.length) potvrdTah(); return; }
+  if (e.key === 'ArrowLeft' || e.key === 'ArrowRight' || e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+    if (!kurzor) return;
+    e.preventDefault();
+    const dr = e.key === 'ArrowUp' ? -1 : e.key === 'ArrowDown' ? 1 : 0;
+    const dc = e.key === 'ArrowLeft' ? -1 : e.key === 'ArrowRight' ? 1 : 0;
+    const r = R(kurzor.i) + dr, c = C(kurzor.i) + dc;
+    if (r >= 0 && r < 15 && c >= 0 && c < 15) { kurzor.i = I(r, c); vykresliDesku(); }
+    return;
+  }
+  if (e.key.length !== 1) return;
+  const p = e.key.toLowerCase();
+  if (!PISMENA.includes(p)) return;
+  if (!kurzor) return;
+  e.preventDefault();
+  const h = hraci[naTahu];
+  let k = h.stojan.indexOf(p);
+  if (k < 0) k = h.stojan.indexOf('?');           // není písmeno? zkusíme žolíka
+  if (k < 0) { zprava('Písmeno „' + p.toUpperCase() + '“ na stojanu nemáš.', 'chyba'); return; }
+  const cil = kurzor.i;
+  if (kamenNa(cil)) { posunKurzor(cil); vykresliDesku(); return; }
+  if (h.stojan[k] === '?') {
+    h.stojan.splice(k, 1);
+    polozene.push({ i: cil, p, z: true });
+  } else {
+    h.stojan.splice(k, 1);
+    polozene.push({ i: cil, p, z: false });
+  }
+  posunKurzor(cil);
+  zprava('');
+  vykresli();
+}
+
+/* Výběr písmene pro žolíka. */
+function vyberPismeno() {
+  return new Promise(resolve => {
+    const d = document.createElement('dialog');
+    d.style.cssText = 'border:1px solid var(--border);border-radius:10px;background:var(--bg-elevated);' +
+      'color:var(--text);padding:16px;max-width:min(94vw,380px)';
+    const mrizka = PISMENA.map(p =>
+      '<button type="button" data-p="' + p + '" style="width:38px;height:38px;margin:2px;border-radius:5px;' +
+      'border:1px solid var(--border-strong);background:var(--bg-control);color:var(--text);' +
+      'font:inherit;font-weight:700;cursor:pointer">' + p.toUpperCase() + '</button>').join('');
+    d.innerHTML = '<div style="font-size:.92rem;margin-bottom:10px">Jaké písmeno žolík zastoupí?</div>' +
+      '<div style="display:flex;flex-wrap:wrap;justify-content:center">' + mrizka + '</div>' +
+      '<div style="text-align:right;margin-top:12px"><button type="button" id="zolikZrus" ' +
+      'style="padding:7px 14px;border-radius:6px;border:1px solid var(--border-strong);' +
+      'background:var(--bg-control);color:var(--text);font:inherit;cursor:pointer">Zrušit</button></div>';
+    document.body.appendChild(d);
+    let hotovo = false;
+    const konec = v => { if (hotovo) return; hotovo = true; d.close(); d.remove(); resolve(v); };
+    d.addEventListener('click', e => {
+      const b = e.target.closest('button[data-p]');
+      if (b) konec(b.dataset.p);
+      else if (e.target.id === 'zolikZrus' || e.target === d) konec(null);
+    });
+    d.addEventListener('cancel', e => { e.preventDefault(); konec(null); });
+    if (d.showModal) d.showModal(); else d.setAttribute('open', '');
+  });
+}
+
+/* ============================================================
+   Vyhodnocení tahu
+   ============================================================ */
+/* Projde slovo od pozice `i` směrem (dr,dc) tam i zpět a vrátí jeho buňky. */
+function slovoZ(i, dr, dc) {
+  let r = R(i), c = C(i);
+  while (true) {
+    const pr = r - dr, pc = c - dc;
+    if (pr < 0 || pr > 14 || pc < 0 || pc > 14 || !kamenNa(I(pr, pc))) break;
+    r = pr; c = pc;
+  }
+  const bunky = [];
+  while (r >= 0 && r < 15 && c >= 0 && c < 15 && kamenNa(I(r, c))) {
+    bunky.push(I(r, c));
+    r += dr; c += dc;
+  }
+  return bunky;
+}
+
+function skoreSlova(bunky) {
+  let soucet = 0, nasobek = 1;
+  for (const i of bunky) {
+    const k = kamenNa(i);
+    let v = k.z ? 0 : HODNOTA[k.p];
+    if (!deska[i]) {                    // prémie platí jen u nově položených kamenů
+      const pr = ROZLOZENI[i];
+      if (pr === 'd') v *= 2;
+      else if (pr === 't') v *= 3;
+      else if (pr === 'D' || pr === '*') nasobek *= 2;
+      else if (pr === 'T') nasobek *= 3;
+    }
+    soucet += v;
+  }
+  return soucet * nasobek;
+}
+
+function textSlova(bunky) { return bunky.map(i => kamenNa(i).p).join(''); }
+
+/* Vrací {chyba} nebo {slova:[{text,body}], skore} */
+function vyhodnotTah() {
+  if (!polozene.length) return { chyba: 'Nejdřív polož nějaké kameny.' };
+  const idx = polozene.map(x => x.i).sort((a, b) => a - b);
+  const rady = new Set(idx.map(R)), sloupce = new Set(idx.map(C));
+  if (rady.size > 1 && sloupce.size > 1) return { chyba: 'Kameny musí ležet v jedné řadě nebo v jednom sloupci.' };
+
+  const prvniTah = deska.every(x => !x);
+  if (prvniTah && !idx.includes(STRED)) return { chyba: 'První slovo musí procházet středovým polem ★.' };
+
+  /* směr: u jediného kamene rozhodne, kde má souseda */
+  let smer;
+  if (idx.length > 1) smer = rady.size === 1 ? 'h' : 'v';
+  else {
+    const i = idx[0], r = R(i), c = C(i);
+    const vodo = (c > 0 && kamenNa(i - 1)) || (c < 14 && kamenNa(i + 1));
+    smer = vodo ? 'h' : 'v';
+  }
+  const [dr, dc] = smer === 'h' ? [0, 1] : [1, 0];
+
+  /* souvislost: mezi krajními kameny nesmí být díra */
+  const hlavni = slovoZ(idx[0], dr, dc);
+  for (const i of idx) if (!hlavni.includes(i)) return { chyba: 'Položené kameny musí tvořit souvislé slovo.' };
+
+  /* napojení na už ležící kameny */
+  if (!prvniTah) {
+    const dotyk = idx.some(i => {
+      const r = R(i), c = C(i);
+      return (r > 0 && deska[I(r - 1, c)]) || (r < 14 && deska[I(r + 1, c)]) ||
+             (c > 0 && deska[I(r, c - 1)]) || (c < 14 && deska[I(r, c + 1)]);
+    });
+    if (!dotyk) return { chyba: 'Nové slovo musí navazovat na kameny už na desce.' };
+  }
+
+  /* posbírat všechna vzniklá slova */
+  const slova = [];
+  if (hlavni.length > 1) slova.push(hlavni);
+  for (const i of idx) {
+    const kolme = slovoZ(i, dc, dr);
+    if (kolme.length > 1) slova.push(kolme);
+  }
+  if (!slova.length) return { chyba: 'Jediný kámen slovo netvoří.' };
+
+  const vysledek = slova.map(b => ({ bunky: b, text: textSlova(b), body: skoreSlova(b) }));
+  let skore = vysledek.reduce((s, x) => s + x.body, 0);
+  const bingo = polozene.length === 7;
+  if (bingo) skore += 50;
+  return { slova: vysledek, skore, bingo };
+}
+
+async function potvrdTah() {
+  const v = vyhodnotTah();
+  if (v.chyba) { zprava(v.chyba, 'chyba'); return; }
+
+  const nezname = v.slova.filter(s => !znaSlovo(s.text));
+  if (nezname.length) {
+    const seznam = nezname.map(s => s.text.toUpperCase()).join(', ');
+    const ok = await Dialog.potvrd(
+      (nezname.length === 1 ? 'Slovo ' : 'Slova ') + seznam + ' slovník nezná.' +
+      '\n\nPokud se hráči shodnou, že jde o platné anglické slovo, můžete ho uznat — hra si ho zapamatuje.',
+      { ok: 'Uznat slovo', zrus: 'Vrátit tah' });
+    if (!ok) { zprava('Tah vrácen — neplatné slovo.', 'chyba'); return; }
+    nezname.forEach(s => pridejDoSlovniku(s.text));
+  }
+
+  const h = hraci[naTahu];
+  polozene.forEach(x => { deska[x.i] = { p: x.p, z: x.z }; });
+  h.skore += v.skore;
+  const popis = v.slova.map(s => s.text.toUpperCase()).join(' + ');
+  const vyznamy = vyznamySlov(v.slova);
+  zapisDoHistorie('<b>' + esc(h.jmeno) + ':</b> ' + esc(popis) +
+    (v.bingo ? ' <i>(bingo +50)</i>' : '') + ' <span class="body">+' + v.skore + '</span>' +
+    (vyznamy ? '<div class="vyznam">' + esc(vyznamy) + '</div>' : ''));
+  zprava(h.jmeno + ' hraje ' + popis.toUpperCase() + ' za ' + v.skore + ' bodů' +
+    (v.bingo ? ' (bingo!)' : '') + (vyznamy ? ' — ' + vyznamy : '') + '.', 'ok');
+
+  const vylozilVse = h.stojan.length === 0;
+  polozene = [];
+  kurzor = null; vybrany = -1;
+  doplnStojan(h);
+  bezSkore = v.skore > 0 ? 0 : bezSkore + 1;
+  poTahu(vylozilVse && pytel.length === 0);
+}
+
+/* ============================================================
+   Pas a výměna
+   ============================================================ */
+function pas() {
+  const h = hraci[naTahu];
+  vratVse();
+  zapisDoHistorie('<b>' + esc(h.jmeno) + ':</b> pas');
+  bezSkore++;
+  poTahu(false);
+}
+
+function vymenaTlacitko() {
+  if (!rezimVymeny) {
+    vratVse();
+    rezimVymeny = true;
+    menene = new Set();
+    zprava('Klepni na kameny, které chceš vyměnit, a potvrď.', '');
+    vykresli();
+    return;
+  }
+  if (!menene.size) { rezimVymeny = false; zprava(''); vykresli(); return; }
+  const h = hraci[naTahu];
+  const ven = [...menene].sort((a, b) => b - a).map(k => h.stojan.splice(k, 1)[0]);
+  doplnStojan(h);
+  ven.forEach(p => pytel.push(p));
+  zamichej(pytel);
+  rezimVymeny = false;
+  menene = new Set();
+  zapisDoHistorie('<b>' + esc(h.jmeno) + ':</b> výměna ' + ven.length + ' kamenů');
+  bezSkore++;
+  poTahu(false);
+}
+
+/* ============================================================
+   Střídání hráčů a konec hry
+   ============================================================ */
+function poTahu(vylozilVse) {
+  tipPole = new Set();
+  vykresli();
+  if (vylozilVse) { setTimeout(() => konecHry(hraci[naTahu]), 700); return; }
+  if (bezSkore >= 6) { setTimeout(() => konecHry(null), 700); return; }
+  naTahu = (naTahu + 1) % hraci.length;
+  polozene = []; kurzor = null; vybrany = -1;
+  vykresli();
+  dalsiNaTahu();
+}
+
+function dalsiNaTahu() {
+  const h = hraci[naTahu];
+  if (h.pc) {
+    pocitaPocitac = true;
+    vykresli();
+    setTimeout(tahPocitace, 420);
+    return;
+  }
+  if (hraci.filter(x => !x.pc).length > 1) ukazPredani(h);
+  else if (!$('zprava').textContent) zprava('Na tahu: ' + h.jmeno, '');
+}
+
+function ukazPredani(h) {
+  const o = document.createElement('div');
+  o.id = 'predani';
+  o.innerHTML = '<div style="font-size:2.4rem">🔄</div>' +
+    '<div class="kdo">Na tahu: ' + esc(h.jmeno) + '</div>' +
+    '<div style="color:var(--text-muted);font-size:.9rem;max-width:320px">' +
+    'Předej zařízení dalšímu hráči, aby nikdo neviděl cizí kameny.</div>' +
+    '<button class="btn hlavni" type="button">Jsem připraven</button>';
+  o.querySelector('button').addEventListener('click', () => o.remove());
+  document.body.appendChild(o);
+  o.querySelector('button').focus();
+}
+
+function konecHry(kdoVylozil) {
+  hraBezi = false;
+  let bonus = 0;
+  hraci.forEach(h => {
+    const zbytek = h.stojan.reduce((s, p) => s + HODNOTA[p], 0);
+    h.skore -= zbytek;
+    bonus += zbytek;
+    if (zbytek) zapisDoHistorie('<b>' + esc(h.jmeno) + ':</b> zbylé kameny −' + zbytek);
+  });
+  if (kdoVylozil) {
+    kdoVylozil.skore += bonus;
+    zapisDoHistorie('<b>' + esc(kdoVylozil.jmeno) + ':</b> vyložil vše <span class="body">+' + bonus + '</span>');
+  }
+  const poradi = hraci.slice().sort((a, b) => b.skore - a.skore);
+  const nej = poradi[0].skore;
+  const vitezove = poradi.filter(h => h.skore === nej);
+  zprava(vitezove.length > 1
+    ? 'Remíza: ' + vitezove.map(h => h.jmeno).join(' a ') + ' — ' + nej + ' bodů.'
+    : '🏆 Vyhrává ' + poradi[0].jmeno + ' s ' + nej + ' body.', 'ok');
+  zapisDoHistorie('<b>Konec hry.</b> ' + poradi.map(h => esc(h.jmeno) + ' ' + h.skore).join(' · '));
+
+  /* rekord vedeme jen za lidského hráče */
+  const nejlepsiClovek = hraci.filter(h => !h.pc).reduce((a, h) => Math.max(a, h.skore), -Infinity);
+  if (rek && Number.isFinite(nejlepsiClovek)) rek.zapis(nejlepsiClovek);
+
+  vykresli();
+  $('nastaveni').hidden = false;
+}
+
+/* ============================================================
+   Počítačový protihráč
+   ============================================================ */
+/* Pro každé prázdné pole spočítáme, která písmena tam smí přijít, aby
+   kolmé slovo bylo platné, a kolik už kolmé slovo nese bodů. */
+function krizovaKontrola(i, dr, dc) {
+  const r = R(i), c = C(i);
+  let pred = '', za = '', soucet = 0;
+  let rr = r - dr, cc = c - dc;
+  while (rr >= 0 && rr < 15 && cc >= 0 && cc < 15 && deska[I(rr, cc)]) {
+    const k = deska[I(rr, cc)];
+    pred = k.p + pred; soucet += k.z ? 0 : HODNOTA[k.p];
+    rr -= dr; cc -= dc;
+  }
+  rr = r + dr; cc = c + dc;
+  while (rr >= 0 && rr < 15 && cc >= 0 && cc < 15 && deska[I(rr, cc)]) {
+    const k = deska[I(rr, cc)];
+    za += k.p; soucet += k.z ? 0 : HODNOTA[k.p];
+    rr += dr; cc += dc;
+  }
+  if (!pred && !za) return { zadne: true };
+  const ok = new Set();
+  for (const p of PISMENA) if (znaSlovo(pred + p + za)) ok.add(p);
+  return { zadne: false, ok, soucet };
+}
+
+function stojanPocty(stojan) {
+  const c = {}; let zoliku = 0;
+  for (const p of stojan) { if (p === '?') zoliku++; else c[p] = (c[p] || 0) + 1; }
+  return { c, zoliku };
+}
+function sloziZeStojanu(w, c, zoliku) {
+  const t = Object.assign({}, c); let z = zoliku;
+  for (const ch of w) {
+    if (t[ch] > 0) t[ch]--;
+    else if (z > 0) z--;
+    else return false;
+  }
+  return true;
+}
+
+/* Najde všechny legální tahy pro daný stojan. Vrací pole
+   {skore, slovo, kameny:[{i,p,z}]} seřazené od nejlepšího. */
+function najdiTahy(stojan) {
+  const { c, zoliku } = stojanPocty(stojan);
+  const volnych = stojan.length;
+  const prvniTah = deska.every(x => !x);
+
+  /* slova složitelná čistě ze stojanu (pro okna bez pevných písmen) */
+  const zeStojanu = [];
+  for (let L = 2; L <= Math.min(7, volnych); L++) {
+    zeStojanu[L] = (PODLE_DELKY[L] || []).filter(w => sloziZeStojanu(w, c, zoliku));
+  }
+
+  /* kolmé kontroly pro oba směry */
+  const krizProVodorovne = new Array(225).fill(null);   // svislá kolmá slova
+  const krizProSvisle = new Array(225).fill(null);      // vodorovná kolmá slova
+  for (let i = 0; i < 225; i++) {
+    if (deska[i]) continue;
+    krizProVodorovne[i] = krizovaKontrola(i, 1, 0);
+    krizProSvisle[i] = krizovaKontrola(i, 0, 1);
+  }
+
+  const tahy = [];
+  for (const smer of ['h', 'v']) {
+    const [dr, dc] = smer === 'h' ? [0, 1] : [1, 0];
+    const kriz = smer === 'h' ? krizProVodorovne : krizProSvisle;
+    for (let lin = 0; lin < 15; lin++) {
+      const pole = [];
+      for (let k = 0; k < 15; k++) pole.push(smer === 'h' ? I(lin, k) : I(k, lin));
+
+      for (let s = 0; s < 15; s++) {
+        if (s > 0 && deska[pole[s - 1]]) continue;         // okno musí začínat na okraji slova
+        const pevna = [];      // {o, p}
+        const volna = [];      // offsety k zaplnění
+        for (let e = s; e < 15; e++) {
+          const i = pole[e];
+          if (deska[i]) pevna.push({ o: e - s, p: deska[i].p });
+          else volna.push(e - s);
+          if (e < 14 && deska[pole[e + 1]]) continue;      // slovo pokračuje, okno ještě nekončí
+          const L = e - s + 1;
+          if (L < 2 || !volna.length || volna.length > volnych) continue;
+          if (!pevna.length && L > 7) continue;
+
+          /* dotyk s deskou / středem */
+          let dotyk = pevna.length > 0;
+          if (!dotyk) dotyk = volna.some(o => !kriz[pole[s + o]].zadne);
+          if (prvniTah) dotyk = lin === 7 && s <= 7 && e >= 7;   // musí projít středem
+          if (!dotyk) continue;
+
+          const kandidati = pevna.length ? (PODLE_DELKY[L] || []) : (zeStojanu[L] || []);
+          for (let q = 0; q < kandidati.length; q++) {
+            const w = kandidati[q];
+            let sedi = true;
+            for (let x = 0; x < pevna.length; x++) {
+              if (w[pevna[x].o] !== pevna[x].p) { sedi = false; break; }
+            }
+            if (!sedi) continue;
+            /* kolmá slova a dostupnost kamenů */
+            const zbyva = Object.assign({}, c); let zb = zoliku;
+            const kameny = [];
+            let bodySlova = 0, nasobek = 1, bodyKolmych = 0, ok = true;
+            for (let o = 0; o < L; o++) {
+              const i = pole[s + o];
+              const ch = w[o];
+              if (deska[i]) { bodySlova += deska[i].z ? 0 : HODNOTA[deska[i].p]; continue; }
+              const kk = kriz[i];
+              if (!kk.zadne && !kk.ok.has(ch)) { ok = false; break; }
+              let zolik = false;
+              if (zbyva[ch] > 0) zbyva[ch]--;
+              else if (zb > 0) { zb--; zolik = true; }
+              else { ok = false; break; }
+              const pr = ROZLOZENI[i];
+              let hod = zolik ? 0 : HODNOTA[ch];
+              let nasobicSlova = 1;
+              if (pr === 'd') hod *= 2;
+              else if (pr === 't') hod *= 3;
+              else if (pr === 'D' || pr === '*') nasobicSlova = 2;
+              else if (pr === 'T') nasobicSlova = 3;
+              nasobek *= nasobicSlova;
+              bodySlova += hod;
+              if (!kk.zadne) bodyKolmych += (kk.soucet + hod) * nasobicSlova;
+              kameny.push({ i, p: ch, z: zolik });
+            }
+            if (!ok || !kameny.length) continue;
+            let skore = bodySlova * nasobek + bodyKolmych;
+            if (kameny.length === 7) skore += 50;
+            tahy.push({ skore, slovo: w, kameny });
+          }
+        }
+      }
+    }
+  }
+  tahy.sort((a, b) => b.skore - a.skore);
+  return tahy;
+}
+
+function tahPocitace() {
+  const h = hraci[naTahu];
+  let tahy = [];
+  try { tahy = najdiTahy(h.stojan); } catch (err) { console.error(err); }
+
+  if (!tahy.length) {
+    /* nic nenašel: raději vymění kameny, než by jen pasoval */
+    if (pytel.length >= 7) {
+      const pocet = Math.min(h.stojan.length, 1 + ((Math.random() * 4) | 0));
+      const ven = h.stojan.splice(0, pocet);
+      doplnStojan(h);
+      ven.forEach(p => pytel.push(p));
+      zamichej(pytel);
+      zapisDoHistorie('<b>' + esc(h.jmeno) + ':</b> výměna ' + ven.length + ' kamenů');
+      zprava(h.jmeno + ' nenašel slovo a měnil kameny.', '');
+    } else {
+      zapisDoHistorie('<b>' + esc(h.jmeno) + ':</b> pas');
+      zprava(h.jmeno + ' nenašel slovo a dává pas.', '');
+    }
+    bezSkore++;
+    pocitaPocitac = false;
+    poTahu(false);
+    return;
+  }
+
+  const uroven = Number($('obtiznost').value);
+  let vyber;
+  if (uroven >= 3) vyber = tahy[0];
+  else if (uroven === 2) {
+    const n = Math.min(tahy.length, 12);
+    vyber = tahy[Math.floor(Math.pow(Math.random(), 2) * n)];
+  } else {
+    const slabe = tahy.filter(t => t.skore <= 18);
+    const zdroj = slabe.length ? slabe : tahy.slice(-Math.min(tahy.length, 10));
+    vyber = zdroj[(Math.random() * zdroj.length) | 0];
+  }
+
+  /* provedeme tah */
+  vyber.kameny.forEach(k => {
+    const idx = k.z ? h.stojan.indexOf('?') : h.stojan.indexOf(k.p);
+    if (idx >= 0) h.stojan.splice(idx, 1);
+    deska[k.i] = { p: k.p, z: k.z };
+  });
+  h.skore += vyber.skore;
+  const vylozilVse = h.stojan.length === 0;
+  doplnStojan(h);
+  bezSkore = vyber.skore > 0 ? 0 : bezSkore + 1;
+  const vyznamPc = vyznamySlov([{ text: vyber.slovo }]);
+  zapisDoHistorie('<b>' + esc(h.jmeno) + ':</b> ' + esc(vyber.slovo.toUpperCase()) +
+    (vyber.kameny.length === 7 ? ' <i>(bingo +50)</i>' : '') +
+    ' <span class="body">+' + vyber.skore + '</span>' +
+    (vyznamPc ? '<div class="vyznam">' + esc(vyznamPc) + '</div>' : ''));
+  zprava(h.jmeno + ' hraje ' + vyber.slovo.toUpperCase() + ' za ' + vyber.skore + ' bodů' +
+    (vyznamPc ? ' — ' + vyznamPc : '') + '.', 'ok');
+  pocitaPocitac = false;
+  poTahu(vylozilVse && pytel.length === 0);
+}
+
+function napoveda() {
+  const h = hraci[naTahu];
+  zprava('Hledám…', '');
+  setTimeout(() => {
+    const tahy = najdiTahy(h.stojan);
+    if (!tahy.length) { zprava('Ze stojanu se teď nedá složit žádné slovo ze slovníku.', 'chyba'); return; }
+    const t = tahy[0];
+    /* Souřadnice by na desce bez popisků nikdo nenašel — rovnou blikneme poli. */
+    tipPole = new Set(t.kameny.map(k => k.i));
+    const vyznam = (typeof SCRABBLE_VYZNAMY === 'undefined' ? {} : SCRABBLE_VYZNAMY)[t.slovo];
+    zprava('Nejlepší nalezené slovo: ' + t.slovo.toUpperCase() +
+      (vyznam ? ' (' + vyznam + ')' : '') + ' za ' + t.skore +
+      ' bodů — zvýrazněná pole ukazují kam.', 'ok');
+    vykresliDesku();
+    setTimeout(() => { tipPole = new Set(); vykresliDesku(); }, 6000);
+  }, 30);
+}
+
+/* ============================================================
+   Start hry
+   ============================================================ */
+function zacni() {
+  if (!SLOVNIK.size) { Dialog.chyba('Slovník se nenačetl, hra by nemohla kontrolovat slova.'); return; }
+  deska = new Array(225).fill(null);
+  naplnPytel();
+  hraci = navrh.map((h, k) => ({
+    jmeno: (h.jmeno || '').trim() || (h.pc ? 'Počítač ' + (k + 1) : 'Hráč ' + (k + 1)),
+    pc: h.pc, skore: 0, stojan: [],
+  }));
+  hraci.forEach(doplnStojan);
+  naTahu = 0; polozene = []; kurzor = null; vybrany = -1;
+  menene = new Set(); rezimVymeny = false; bezSkore = 0;
+  hraBezi = true; pocitaPocitac = false;
+  $('historie').innerHTML = '';
+  $('nastaveni').hidden = true;
+  $('hra').hidden = false;
+  zprava('');
+  vykresli();
+  dalsiNaTahu();
+}
+
+async function ukonci() {
+  if (!(await Dialog.potvrd('Opravdu ukončit rozehranou hru?', { ok: 'Ukončit', zrus: 'Hrát dál' }))) return;
+  hraBezi = false;
+  $('nastaveni').hidden = false;
+  zprava('Hra ukončena.', '');
+  vykresli();
+}
+
+/* ============================================================
+   Tabulka sady v nápovědě
+   ============================================================ */
+function vypisSadu() {
+  const podleBodu = {};
+  SADA.forEach(([p, b, n]) => {
+    if (p === '?') return;
+    (podleBodu[b] || (podleBodu[b] = [])).push(p.toUpperCase() + '×' + n);
+  });
+  const radky = Object.keys(podleBodu).map(Number).sort((a, b) => a - b)
+    .map(b => '<tr><td><b>' + b + ' b.</b></td><td>' + podleBodu[b].join(', ') + '</td></tr>');
+  radky.unshift('<tr><td><b>0 b.</b></td><td>žolík ×2</td></tr>');
+  $('tabSada').innerHTML = radky.join('');
+}
+
+/* ============================================================
+   Nastartování stránky
+   ============================================================ */
+window.addEventListener('DOMContentLoaded', () => {
+  nactiUznana();
+  vypisSadu();
+  vykresliNastaveni();
+
+  const nacteno = pripravSlovnik();
+  $('stavSlovniku').textContent = nacteno
+    ? 'Slovník: ' + SLOVNIK.size.toLocaleString('cs-CZ') + ' anglických tvarů' +
+      (uznana.size ? ' + ' + uznana.size + ' vlastních uznaných' : '') + '.'
+    : '⚠️ Slovník se nepodařilo načíst — hra nemůže kontrolovat slova.';
+  $('start').disabled = !nacteno;
+
+  if (typeof Rekord !== 'undefined') {
+    rek = Rekord.sleduj('webapp_hra_scrabble_en', {
+      vyssiLepsi: true, popisek: 'Nejlepší skóre', format: v => v + ' b.',
+    });
+    rek.prvek($('rekordBox'));
+  }
+
+  $('pridatHrace').addEventListener('click', () => {
+    if (navrh.length >= 4) return;
+    navrh.push({ jmeno: 'Hráč ' + (navrh.length + 1), pc: false });
+    vykresliNastaveni();
+  });
+  $('start').addEventListener('click', zacni);
+  $('deska').addEventListener('click', e => {
+    const p = e.target.closest('.pole');
+    if (p) klikPole(Number(p.dataset.i));
+  });
+  $('bPotvrd').addEventListener('click', potvrdTah);
+  $('bVrat').addEventListener('click', vratVse);
+  $('bMichat').addEventListener('click', () => {
+    zamichej(hraci[naTahu].stojan); vybrany = -1; vykresliStojan();
+  });
+  $('bNapoveda').addEventListener('click', napoveda);
+  $('bVymen').addEventListener('click', vymenaTlacitko);
+  $('bPas').addEventListener('click', pas);
+  $('bKonec').addEventListener('click', ukonci);
+  document.addEventListener('keydown', klavesa);
+
+  vykresliDesku();
+});
+})();
+</script>
+</body>
+</html>

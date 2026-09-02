@@ -5,7 +5,7 @@ Statický web se sbírkou malých HTML aplikací, hostovaný na GitHub Pages
 
 | Cesta | Web | Katalog | Stránky |
 |---|---|---|---|
-| `/` | hlavní rozcestník – 266 aplikací | `apps.js` | `obsah/` |
+| `/` | hlavní rozcestník – 267 aplikací | `apps.js` | `obsah/` |
 | `/nodus/` | ◈ **Nodus** – výukový web: 77 aplikací + 174 připravovaných témat podle osnov ZŠ | `nodus/apps.js` | `nodus/obsah/` |
 
 Nodus má vlastní rozcestník, úvodní přehled, ikony, manifest i service worker,
@@ -33,6 +33,16 @@ si je uloží při prvním otevření stránky. Slovník ke Scrabblu
 (`obsah/scrabbleSlovnik.js`, 41 tis. tvarů, 366 kB) vznikl tak, že frekvenční
 seznam českých slov z titulků (hermitdave/FrequencyWords) prošel pravopisným
 slovníkem cs_CZ (LibreOffice/hunspell); postup je popsaný v hlavičce souboru.
+
+**Scrabble anglicky** (`obsah/scrabble_en.html`) je stejná hra s anglickou sadou
+kamenů a slovníkem `obsah/scrabbleSlovnikEn.js` (28 kB). Herní logika je kopie
+`obsah/scrabble.html` – liší se jen sada, slovník, klíče v `localStorage`
+(`webapp_hra_scrabble_en*`) a texty; **opravy v pravidlech nebo v generátoru tahů
+je proto potřeba udělat v obou souborech**. Slovník je záměrně malý (~3 000
+tvarů): je to školní slovní zásoba ZŠ, u které se dá u každého zahraného slova
+ukázat český význam a počítač nehraje slova, která dítě nemůže znát. V souboru
+se udržuje jen základ (`ZAKLAD` s významy, `NAVIC` bez nich) a odvozené tvary
+(množné číslo, `-ing`, `-ed`, stupňování) se dopočítají při načtení.
 
 Po větší změně zvyš verzi cache v `sw.js` (`webapp-vN`), resp. v `nodus/sw.js`
 (`nodus-vN`) – jinak návštěvník uvidí novou verzi až při druhém načtení.

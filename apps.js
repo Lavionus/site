@@ -1835,6 +1835,22 @@ const KATALOG_SEKCE = [
           "rimworld",
           "dwarf fortress"
         ]
+      },
+      {
+        "soubor": "obsah/cesta_rodu.html",
+        "nazev": "⚜️ Cesta rodu",
+        "tagy": [
+          "idle",
+          "inkrementální",
+          "středověk",
+          "rod",
+          "generace",
+          "dědictví",
+          "erb",
+          "hospodaření",
+          "simulace života",
+          "hra"
+        ]
       }
     ]
   },
@@ -1905,6 +1921,11 @@ const KATALOG_SEKCE = [
         "soubor": "obsah/scrabble.html",
         "nazev": "🔤 Scrabble",
         "tagy": ["scrabble", "slovní hra", "desková hra", "písmena", "kameny", "skládání slov"]
+      },
+      {
+        "soubor": "obsah/scrabble_en.html",
+        "nazev": "🔡 Scrabble anglicky",
+        "tagy": ["scrabble", "angličtina", "english", "slovní hra", "slovíčka", "skládání slov", "výuka"]
       },
       {
         "soubor": "obsah/crossword_gen.html",
