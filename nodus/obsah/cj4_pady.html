@@ -18,8 +18,14 @@
     .tabulka-padu span {
       background: var(--bg-panel); border: 1px solid var(--border); border-radius: 7px;
       padding: 5px 9px; font-size: 0.75rem; color: var(--text-muted);
+      transition: border-color 0.2s, color 0.2s;
     }
     .tabulka-padu b { color: var(--text); }
+    /* přehled žije: po odpovědi se rozsvítí pád nebo vzor, o který v úloze šlo */
+    .tabulka-padu span.sviti { border-color: var(--accent); color: var(--text); background: var(--accent-soft); }
+    .pomucka .skupina { flex: 1 1 200px; }
+    .pomucka .skupina.sviti { box-shadow: 0 0 0 2px var(--accent-soft); }
+    .pomucka .znak.sviti { border-color: var(--accent); }
   </style>
 </head>
 <body>
@@ -37,20 +43,54 @@
 
   <div class="ovladani">
     <button class="hlavni" id="btnDalsi">Přeskočit →</button>
+    <button id="btnNapoveda">💡 Nápověda</button>
+    <span class="serie" id="serie"></span>
     <span class="skore" id="skore"></span>
   </div>
 
   <div class="tabulka-padu" id="tabulkaPadu"></div>
 
+  <div class="pomucka" id="pomucka">
+    <div class="skupina" data-rod="m">
+      <h2>🚹 Vzory rodu mužského</h2>
+      <div class="znaky">
+        <span class="znak" data-vzor="pán">pán</span><span class="znak" data-vzor="hrad">hrad</span>
+        <span class="znak" data-vzor="muž">muž</span><span class="znak" data-vzor="stroj">stroj</span>
+      </div>
+      <p class="popis">Rozhoduje životnost a tvrdá/měkká koncovka: <i>pán, muž</i> jsou životné,
+        <i>hrad, stroj</i> neživotné.</p>
+    </div>
+    <div class="skupina" data-rod="z">
+      <h2>🚺 Vzory rodu ženského</h2>
+      <div class="znaky">
+        <span class="znak" data-vzor="žena">žena</span><span class="znak" data-vzor="růže">růže</span>
+        <span class="znak" data-vzor="píseň">píseň</span><span class="znak" data-vzor="kost">kost</span>
+      </div>
+      <p class="popis">Podle zakončení v 1. pádě: <i>-a, -e</i>, nebo souhláska
+        (pak rozhodne 2. pád: <i>písně</i> × <i>kosti</i>).</p>
+    </div>
+    <div class="skupina" data-rod="s">
+      <h2>⚪ Vzory rodu středního</h2>
+      <div class="znaky">
+        <span class="znak" data-vzor="město">město</span><span class="znak" data-vzor="moře">moře</span>
+        <span class="znak" data-vzor="kuře">kuře</span><span class="znak" data-vzor="stavení">stavení</span>
+      </div>
+      <p class="popis">Podle zakončení: <i>-o, -e, -í</i>. Mláďata jdou podle
+        <i>kuře</i> (v 2. pádě přibude <i>-et-</i>).</p>
+    </div>
+  </div>
+
   <p class="napoveda">
     Pád zjistíš tak, že se na slovo zeptáš pádovou otázkou. Vzor hledáme podle
     <b>rodu</b> a <b>zakončení v 1. pádě</b> – slovo se pak skloňuje stejně jako jeho vzor.
+    Klávesy: <kbd>H</kbd> nápověda · <kbd>Enter</kbd> další.
   </p>
 
 <script>
 const $ = id => document.getElementById(id);
 const skore = Uloha.skore('nodus_cj4_pady', $('skore'));
 let rezim = 'otazka';
+let uloha = null, posledni = null, serie = 0, napovedaVidet = false;
 
 const PADY = [
   { c: 1, o: 'kdo? co?' }, { c: 2, o: 'koho? čeho?' }, { c: 3, o: 'komu? čemu?' },
@@ -58,7 +98,8 @@ const PADY = [
   { c: 7, o: 'kým? čím?' },
 ];
 
-$('tabulkaPadu').innerHTML = PADY.map(p => `<span><b>${p.c}.</b> ${p.o}</span>`).join('');
+$('tabulkaPadu').innerHTML = PADY.map(p =>
+  `<span data-pad="${p.c}"><b>${p.c}.</b> ${p.o}</span>`).join('');
 
 /* věta, tvar podstatného jména ve větě, pád */
 const VETY = [
@@ -103,14 +144,61 @@ const SLOVA = [
 const VZORY = { m: ['pán', 'hrad', 'muž', 'stroj'], z: ['žena', 'růže', 'píseň', 'kost'],
                 s: ['město', 'moře', 'kuře', 'stavení'] };
 
+const NAZVY_RODU = { m: 'rod mužský', z: 'rod ženský', s: 'rod střední' };
+const otazkaPadu = c => PADY.find(x => x.c === c).o;
+
+/* ---- společné díly --------------------------------------------------------- */
+function odezvaEl() { const d = document.createElement('div'); d.className = 'odezva'; return d; }
+
+/* Kartička s pravidlem se musí stihnout přečíst; po chybě je na ni času víc. */
+const PRODLEVA = napoprve => (napoprve ? 2000 : 3000);
+
+/* Přehledy pod úlohou žijí – po odpovědi se rozsvítí probíraný pád a vzor. */
+const pomuckaDiv = $('pomucka');
+function rozsvit({ pad, rod, vzor }) {
+  $('tabulkaPadu').querySelectorAll('span').forEach(el =>
+    el.classList.toggle('sviti', Number(el.dataset.pad) === pad));
+  pomuckaDiv.querySelectorAll('.skupina').forEach(el =>
+    el.classList.toggle('sviti', el.dataset.rod === rod));
+  pomuckaDiv.querySelectorAll('.znak').forEach(el =>
+    el.classList.toggle('sviti', el.dataset.vzor === vzor));
+}
+
+function hotovo(p, napoprve, co) {
+  skore.vyhodnot(napoprve);
+  serie = napoprve ? serie + 1 : 0;
+  $('serie').textContent = serie >= 3 ? '🔥 série ' + serie : '';
+  rozsvit(co);
+  const tip = p.querySelector('.pravidlo.tip');
+  if (tip) tip.remove();
+}
+
+/* Kartička „proč“ – ukáže se až po správné odpovědi. */
+function pravidloEl(znak, html) {
+  const el = document.createElement('div');
+  el.className = 'pravidlo ok';
+  el.innerHTML = `<span class="znak">${znak}</span><div>${html}</div>`;
+  return el;
+}
+
+/* Nápověda zužuje, neprozrazuje: ztlumí polovinu špatných možností. */
+function ztlum(p, spravnyKlic) {
+  const spatne = [...p.querySelectorAll('.moznosti button')]
+    .filter(b => b.dataset.klic !== String(spravnyKlic) && !b.disabled);
+  Uloha.zamichej(spatne).slice(0, Math.ceil(spatne.length / 2))
+    .forEach(b => { b.disabled = true; b.style.opacity = '0.25'; });
+}
+
 /* ---- Pád podle otázky ------------------------------------------------------ */
 function otazka() {
   const p = $('plocha');
-  const pad = Uloha.nahodne(PADY);
+  let pad;
+  do { pad = Uloha.nahodne(PADY); } while (pad === posledni);
+  posledni = pad;
+  uloha = { rezim: 'otazka', pad };
   p.innerHTML = `<div class="zadani">Ke kterému pádu patří tato otázka?</div>
     <div class="karta"><div class="slovo">${pad.o}</div></div>`;
-  const odezva = document.createElement('div');
-  odezva.className = 'odezva';
+  const odezva = odezvaEl();
   Uloha.vyber({
     kam: p, odezva, trida: 'velke',
     moznosti: Uloha.zamichej([pad, ...Uloha.zamichej(PADY.filter(x => x.c !== pad.c)).slice(0, 3)])
@@ -118,8 +206,13 @@ function otazka() {
     spravnyKlic: String(pad.c),
     zpravaOk: `✅ ${pad.c}. pád – ${pad.o}`,
     zpravaChyba: 'Ještě ne – zkontroluj si tabulku pádů pod úlohou.',
-    poSpravne: skore.vyhodnot,
-    dalsi: novaUloha,
+    poSpravne: napoprve => {
+      hotovo(p, napoprve, { pad: pad.c });
+      p.appendChild(pravidloEl('❓', `Otázka <b>${pad.o}</b> patří k
+        <span class="vysledek">${pad.c}. pádu</span>. Pádové otázky jdou po pořadí
+        1.–7. a nejlíp se pamatují vyjmenované za sebou.`));
+    },
+    prodleva: PRODLEVA, dalsi: novaUloha,
   });
   p.appendChild(odezva);
 }
@@ -127,13 +220,15 @@ function otazka() {
 /* ---- Urči pád ve větě ------------------------------------------------------ */
 function urciPad() {
   const p = $('plocha');
-  const v = Uloha.nahodne(VETY);
+  let v;
+  do { v = Uloha.nahodne(VETY); } while (v === posledni);
+  posledni = v;
+  uloha = { rezim: 'urciPad', v };
   const veta = v.v.replace('[' + v.s + ']', `<span class="zvyraz">${v.s}</span>`);
   p.innerHTML = `<div class="zadani">V jakém pádě je zvýrazněné slovo?</div>
     <div class="karta"><div class="veta">${veta}</div></div>`;
   const jine = Uloha.zamichej(PADY.filter(x => x.c !== v.p)).slice(0, 3);
-  const odezva = document.createElement('div');
-  odezva.className = 'odezva';
+  const odezva = odezvaEl();
   Uloha.vyber({
     kam: p, odezva,
     moznosti: Uloha.zamichej([PADY.find(x => x.c === v.p), ...jine])
@@ -141,8 +236,15 @@ function urciPad() {
     spravnyKlic: String(v.p),
     zpravaOk: `✅ ${v.p}. pád – zeptáme se „${PADY.find(x => x.c === v.p).o}“`,
     zpravaChyba: 'Zkus se na slovo zeptat pádovou otázkou.',
-    poSpravne: skore.vyhodnot,
-    dalsi: novaUloha,
+    poSpravne: napoprve => {
+      hotovo(p, napoprve, { pad: v.p });
+      p.appendChild(pravidloEl('🔍', `Zeptáme se otázkou <b>${otazkaPadu(v.p)}</b> —
+        odpověď zní <b>${v.s}</b>, takže je slovo v
+        <span class="vysledek">${v.p}. pádě</span>.
+        <div style="margin-top:6px">Pád se vždycky určuje otázkou, ne podle koncovky:
+        stejná koncovka může patřit několika pádům.</div>`));
+    },
+    prodleva: PRODLEVA, dalsi: novaUloha,
   });
   p.appendChild(odezva);
 }
@@ -154,22 +256,28 @@ function sklonuj() {
   const druhy = Math.random() < 0.5;
   const cilovyPad = druhy ? 7 : 2;
   const spravnyTvar = druhy ? u.p7 : u.p2;
-  const otazkaPadu = PADY.find(x => x.c === cilovyPad).o;
+  uloha = { rezim: 'sklonuj', u, cilovyPad, spravnyTvar };
   const jine = Uloha.zamichej(SLOVA.filter(x => (druhy ? x.p7 : x.p2) !== spravnyTvar))
     .slice(0, 3).map(x => druhy ? x.p7 : x.p2);
 
-  p.innerHTML = `<div class="zadani">Dej slovo do <b>${cilovyPad}. pádu</b> (${otazkaPadu}):</div>
+  p.innerHTML = `<div class="zadani">Dej slovo do <b>${cilovyPad}. pádu</b> (${otazkaPadu(cilovyPad)}):</div>
     <div class="karta"><div class="slovo">${u.s}</div></div>`;
-  const odezva = document.createElement('div');
-  odezva.className = 'odezva';
+  const odezva = odezvaEl();
   Uloha.vyber({
     kam: p, odezva,
     moznosti: Uloha.zamichej([spravnyTvar, ...jine]).map(t => ({ klic: t, popis: t })),
     spravnyKlic: spravnyTvar,
     zpravaOk: `✅ ${u.s} → ${spravnyTvar} (${cilovyPad}. pád)`,
     zpravaChyba: 'To je tvar jiného slova – zkus to znovu.',
-    poSpravne: skore.vyhodnot,
-    dalsi: novaUloha,
+    poSpravne: napoprve => {
+      hotovo(p, napoprve, { pad: cilovyPad, rod: u.rod, vzor: u.vzor });
+      p.appendChild(pravidloEl('🔄', `${cilovyPad === 2 ? 'Bez' : 'S'} <b>${spravnyTvar}</b> —
+        <span class="vysledek">${cilovyPad}. pád</span> (${otazkaPadu(cilovyPad)}).
+        Slovo <i>${u.s}</i> se skloňuje podle vzoru <b>${u.vzor}</b>, takže má stejnou
+        koncovku jako ${cilovyPad === 2 ? 'bez ' : 's '}<i>${
+          cilovyPad === 2 ? SLOVA.find(x => x.s === u.vzor).p2 : SLOVA.find(x => x.s === u.vzor).p7}</i>.`));
+    },
+    prodleva: PRODLEVA, dalsi: novaUloha,
   });
   p.appendChild(odezva);
 }
@@ -177,27 +285,72 @@ function sklonuj() {
 /* ---- Najdi vzor ------------------------------------------------------------ */
 function vzor() {
   const p = $('plocha');
-  const u = Uloha.nahodne(SLOVA.filter(x => x.s !== x.vzor));
-  const nazvyRodu = { m: 'rod mužský', z: 'rod ženský', s: 'rod střední' };
+  let u;
+  do { u = Uloha.nahodne(SLOVA.filter(x => x.s !== x.vzor)); } while (u === posledni);
+  posledni = u;
+  uloha = { rezim: 'vzor', u };
   p.innerHTML = `<div class="zadani">Podle kterého vzoru se slovo skloňuje?</div>
     <div class="karta"><div class="slovo">${u.s}</div>
-    <div class="popis">${nazvyRodu[u.rod]}</div></div>`;
-  const odezva = document.createElement('div');
-  odezva.className = 'odezva';
+    <div class="popis">${NAZVY_RODU[u.rod]}</div></div>`;
+  const odezva = odezvaEl();
   Uloha.vyber({
     kam: p, odezva,
     moznosti: Uloha.zamichej(VZORY[u.rod]).map(v => ({ klic: v, popis: v })),
     spravnyKlic: u.vzor,
     zpravaOk: `✅ ${u.s} se skloňuje podle vzoru ${u.vzor} (bez ${u.p2}, s ${u.p7}).`,
     zpravaChyba: 'Zkus si slovo dát do 2. pádu a porovnat koncovku se vzorem.',
-    poSpravne: skore.vyhodnot,
-    dalsi: novaUloha,
+    poSpravne: napoprve => {
+      hotovo(p, napoprve, { rod: u.rod, vzor: u.vzor });
+      const vz = SLOVA.find(x => x.s === u.vzor);
+      p.appendChild(pravidloEl('📋', `<i>${u.s}</i> je <b>${NAZVY_RODU[u.rod]}</b> a v 2. pádě má
+        <b>${u.p2}</b> — stejně jako vzor <span class="vysledek">${u.vzor}</span>
+        (bez ${vz.p2}, s ${vz.p7}).
+        <div style="margin-top:6px">Vzor se hledá vždycky ve dvou krocích: nejdřív rod,
+        pak zakončení. Podle vzoru se pak řídí koncovky ve všech pádech.</div>`));
+    },
+    prodleva: PRODLEVA, dalsi: novaUloha,
   });
   p.appendChild(odezva);
 }
 
+/* ---- nápověda -------------------------------------------------------------- */
+/* Zužuje: ukáže postup nebo rod, správnou odpověď neřekne. */
+function napoveda() {
+  if (!uloha || napovedaVidet) return;
+  const p = $('plocha');
+  const el = document.createElement('div');
+  el.className = 'pravidlo tip';
+  let text, klic;
+
+  if (uloha.rezim === 'otazka') {
+    text = `Odříkej si pádové otázky od začátku: <b>kdo? co? — koho? čeho? — komu? čemu?</b> …
+      a počítej, kolikátá v pořadí je ta v zadání. Celá řada je v tabulce pod úlohou.`;
+    klic = uloha.pad.c;
+  } else if (uloha.rezim === 'urciPad') {
+    text = `Zeptej se na zvýrazněné slovo celou větou: „${uloha.v.v.replace(/\[|\]/g, '')}“ —
+      <b>na co se ptám, abych dostal odpověď „${uloha.v.s}“?</b>
+      Tu otázku pak najdi v tabulce pádů.`;
+    klic = uloha.v.p;
+  } else if (uloha.rezim === 'sklonuj') {
+    text = `Dosaď slovo do věty: „${uloha.cilovyPad === 2 ? 'Bojím se' : 'Jdu s'}
+      <b>…</b>“ Musí to být tvar <b>toho samého slova</b> (${uloha.u.s}) —
+      ostatní možnosti patří jiným podstatným jménům.`;
+    klic = uloha.spravnyTvar;
+  } else {
+    text = `Slovo je <b>${NAZVY_RODU[uloha.u.rod]}</b>, takže hledej mezi jeho vzory
+      (v přehledu dole svítí). Rozhodni podle 2. pádu: <b>bez ${uloha.u.p2}</b>.`;
+    klic = uloha.u.vzor;
+    rozsvit({ rod: uloha.u.rod });
+  }
+  el.innerHTML = `<span class="znak">🔎</span><div>${text}</div>`;
+  p.appendChild(el);
+  ztlum(p, klic);
+  napovedaVidet = true;
+}
+
+/* ---- ovládání -------------------------------------------------------------- */
 const REZIMY = { otazka, urciPad, sklonuj, vzor };
-function novaUloha() { REZIMY[rezim](); }
+function novaUloha() { napovedaVidet = false; REZIMY[rezim](); }
 
 document.querySelectorAll('#rezimy button').forEach(b => b.addEventListener('click', () => {
   document.querySelectorAll('#rezimy button').forEach(x => x.classList.remove('active'));
@@ -206,8 +359,10 @@ document.querySelectorAll('#rezimy button').forEach(b => b.addEventListener('cli
   novaUloha();
 }));
 $('btnDalsi').addEventListener('click', novaUloha);
+$('btnNapoveda').addEventListener('click', napoveda);
 document.addEventListener('keydown', e => {
   if (e.key === 'ArrowRight' || e.key === 'Enter') { e.preventDefault(); novaUloha(); }
+  if (e.key === 'h' || e.key === 'H') napoveda();
 });
 novaUloha();
 </script>

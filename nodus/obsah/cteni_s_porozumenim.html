@@ -5,31 +5,35 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>📖 Čtení s porozuměním</title>
 <link rel="stylesheet" href="../common.css">
+<link rel="stylesheet" href="../vyuka.css">
 <script src="../theme.js"></script>
 <script src="../podpis.js" defer></script>
+<script src="../rec.js"></script>
 <script src="../uloha.js"></script>
 <style>
-*{margin:0;padding:0;box-sizing:border-box}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:20px}
-.container{max-width:680px;margin:0 auto}
-h1{font-size:1.6rem;margin-bottom:18px;font-weight:600;text-align:center}
-.card{background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;padding:22px;margin-bottom:16px}
+/* Barvy odpovedi bere stranka z motivu (vyuka.css) - driv tu byly napevno
+   tmave odstiny, ktere ve svetlem rezimu vychazely jako cerne bloky. */
+.container{max-width:720px;margin:0 auto}
+.card{background:var(--bg-elevated);border:1px solid var(--border);border-radius:10px;padding:22px;margin-bottom:16px}
 .setup{display:flex;gap:12px;flex-wrap:wrap;align-items:end;justify-content:center}
-label{display:block;font-size:.78rem;color:var(--text-faint);margin-bottom:4px}
-select{background:var(--border);border:1px solid var(--border-strong);border-radius:4px;color:var(--text);padding:9px}
+.setup label{display:block;font-size:.78rem;color:var(--text-faint);margin-bottom:4px}
+.setup select{background:var(--bg-control);border:1px solid var(--border-strong);border-radius:6px;color:var(--text);padding:9px}
 .btn{background:var(--accent);color:#fff;border:none;padding:12px 28px;border-radius:6px;cursor:pointer;font-weight:600;font-size:.95rem}
-.btn:hover{background:var(--accent)}
+.btn:hover{background:var(--accent-hover)}
 .game,.results{display:none}
-.text{line-height:1.7;font-size:1.05rem;white-space:pre-line}
-.qtitle{font-weight:600;margin:16px 0 10px;font-size:1.02rem}
-.opt{display:block;width:100%;text-align:left;background:var(--bg-hover);border:1px solid var(--border-strong);border-radius:6px;padding:10px 14px;margin-bottom:8px;color:var(--text);cursor:pointer;font-size:.95rem}
-.opt:hover{border-color:var(--accent)}
-.opt.correct{border-color:#27ae60;background:#1f3a2a}
-.opt.wrong{border-color:#e74c3c;background:#3a1f1f}
-.opt[disabled]{cursor:default}
+.text{line-height:1.75;font-size:1.05rem;white-space:pre-line}
+.qtitle{font-weight:600;margin:16px 0 4px;font-size:1.02rem}
+.qtyp{font-size:.76rem;color:var(--text-faint);margin-bottom:10px}
+.opt{display:block;width:100%;text-align:left;background:var(--bg-hover);border:1px solid var(--border-strong);border-radius:6px;padding:10px 14px;margin-bottom:8px;color:var(--text);cursor:pointer;font-size:.95rem;font-family:inherit}
+.opt:hover:not(:disabled){border-color:var(--accent)}
+.opt.correct{background:var(--ok);border-color:var(--ok);color:#fff}
+.opt.wrong{background:var(--danger);border-color:var(--danger);color:#fff}
+.opt:disabled{cursor:default}
 .progress{font-size:.8rem;color:var(--text-faint);margin-bottom:6px;text-align:center}
 .results{text-align:center}
 .big{font-size:2.4rem;font-weight:700;color:var(--accent)}
+.lista{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:12px}
+.lista .skore{margin-left:auto}
 </style>
 </head>
 <body>
@@ -48,14 +52,28 @@ select{background:var(--border);border:1px solid var(--border-strong);border-rad
 
   <div class="card game" id="gameCard">
     <div class="progress" id="progress"></div>
+    <div class="pruh"><i id="pruh"></i></div>
     <div class="text" id="text"></div>
     <div class="qtitle" id="qtitle"></div>
+    <div class="qtyp" id="qtyp"></div>
     <div id="opts"></div>
+    <div class="odezva" id="odezva"></div>
+    <div class="lista">
+      <button id="btnNapoveda">💡 Nápověda</button>
+      <button id="btnCist" title="Přečíst text nahlas">🔊 Přečíst text</button>
+      <span class="serie" id="serie"></span>
+      <span class="skore" id="skore"></span>
+    </div>
+    <p class="napoveda" id="poznamka">
+      Odpověď je vždycky <b>v textu</b> – buď přímo napsaná, nebo se z něj dá vyvodit.
+      Klávesa <kbd>H</kbd> napoví.
+    </p>
   </div>
 
   <div class="card results" id="resultsCard">
     <div class="big" id="finalScore"></div>
     <p style="color:var(--text-faint);margin-top:8px" id="finalDetail"></p>
+    <div class="prehled-chyb" id="prehledChyb"></div>
     <button class="btn" id="againBtn" style="margin-top:16px">🔄 Znovu</button>
   </div>
 </div>
@@ -223,67 +241,197 @@ qs:[
 ]
 };
 const TEXTU_V_KOLE=3;   // z celé zásoby se náhodně vyberou tři texty
-let pool,idx,qi,score,stav={chyboval:false,hotovo:false};
-function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]];}return a;}
-function start(){
-  const lvl=$('level').value;
-  pool=shuffle([...TEXTY[lvl]]).slice(0,TEXTU_V_KOLE);
-  idx=0;score=0;
-  $('setupCard').style.display='none';$('resultsCard').style.display='none';$('gameCard').style.display='block';
+let pool, idx, qi, score, chyby = [], serie = 0, napovedaVidet = false;
+let stav = { chyboval: false, hotovo: false };
+
+/* Skóre se drží mezi návštěvami a zapisuje se do studijního deníku –
+   stejně jako u ostatních procvičovacích stránek Nodusu. */
+const skore = Uloha.skore('nodus_cteni_porozumeni', $('skore'));
+
+function shuffle(a) {
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+/* Otázky v textech jsou trojího druhu a ke každému se hodí jiný postup čtení.
+   Druh se pozná ze znění otázky: „Co znamená…“ míří na význam slova, otázky
+   na proč / co vyplývá / co by se stalo vyžadují úsudek, zbytek se dá v textu
+   přímo najít. Druh nerozhoduje o správné odpovědi – jen vybírá radu, kterou
+   stránka ukáže, takže případné hraniční zařazení nikomu neuškodí. */
+const DRUHY = {
+  slovo: {
+    nazev: 'význam slova',
+    rada: 'Slovo si <b>dosaď zpátky do věty</b>, ve které v textu stojí, a zkus místo něj '
+        + 'postupně dosazovat nabízené významy. Sedí jen jeden.',
+  },
+  usudek: {
+    nazev: 'úsudek – odpověď v textu přímo nestojí',
+    rada: 'Tahle odpověď v textu <b>není napsaná</b>. Najdi větu, která k ní vede, '
+        + 'a domysli, co z ní plyne. Ostatní možnosti bývají v rozporu s textem.',
+  },
+  doslovna: {
+    nazev: 'odpověď stojí přímo v textu',
+    rada: 'Najdi v textu <b>slovo z otázky</b> a přečti si větu kolem něj – odpověď '
+        + 'je přímo v ní. Nespoléhej na paměť, vrať se do textu.',
+  },
+};
+function druhOtazky(q) {
+  if (/^co znamen|co to znamen/i.test(q)) return 'slovo';
+  if (/^proč|vyplýv|co by se stalo|co se stane|nejspíš|pomohlo|cítil/i.test(q)) return 'usudek';
+  return 'doslovna';
+}
+
+function start() {
+  const lvl = $('level').value;
+  pool = shuffle([...TEXTY[lvl]]).slice(0, TEXTU_V_KOLE);
+  idx = 0; score = 0; chyby = []; serie = 0;
+  $('serie').textContent = '';
+  $('setupCard').style.display = 'none';
+  $('resultsCard').style.display = 'none';
+  $('gameCard').style.display = 'block';
   loadText();
 }
-function loadText(){
-  qi=0;
-  const item=pool[idx];
-  $('text').textContent=item.t;
-  $('progress').textContent=`Text ${idx+1} / ${pool.length}`;
+
+function loadText() {
+  qi = 0;
+  const item = pool[idx];
+  $('text').textContent = item.t;
+  $('progress').textContent = `Text ${idx + 1} / ${pool.length}`;
   showQ();
 }
-function showQ(){
-  const item=pool[idx];
-  if(qi>=item.qs.length){
+
+function showQ() {
+  napovedaVidet = false;
+  const item = pool[idx];
+  if (qi >= item.qs.length) {
     idx++;
-    if(idx>=pool.length){finish();return;}
-    loadText();return;
+    if (idx >= pool.length) { finish(); return; }
+    loadText(); return;
   }
-  const q=item.qs[qi];
-  $('qtitle').textContent=`Otázka ${qi+1}/${item.qs.length}: ${q.q}`;
-  const box=$('opts');box.innerHTML='';
-  stav={chyboval:false,hotovo:false};
-  q.o.forEach((opt,i)=>{
-    const b=document.createElement('button');
-    b.className='opt';b.textContent=opt;
-    b.onclick=()=>answer(i,q.a,b,box);
+  const q = item.qs[qi];
+  q.druh = q.druh || druhOtazky(q.q);
+  $('qtitle').textContent = `Otázka ${qi + 1}/${item.qs.length}: ${q.q}`;
+  $('qtyp').textContent = '❓ ' + DRUHY[q.druh].nazev;
+  $('odezva').textContent = '';
+  $('odezva').className = 'odezva';
+  const hotovoOtazek = pool.slice(0, idx).reduce((s, i) => s + i.qs.length, 0) + qi;
+  const celkemOtazek = pool.reduce((s, i) => s + i.qs.length, 0);
+  $('pruh').style.width = (hotovoOtazek / celkemOtazek * 100) + '%';
+
+  const box = $('opts');
+  box.innerHTML = '';
+  stav = { chyboval: false, hotovo: false };
+  q.o.forEach((opt, i) => {
+    const b = document.createElement('button');
+    b.className = 'opt';
+    b.textContent = opt;
+    b.dataset.i = i;
+    b.onclick = () => answer(i, q.a, b, box, q);
     box.appendChild(b);
   });
 }
+
 /* Špatná odpověď se zaklepe a nechá žáka hledat dál, správná zezelená
    a stránka sama pokračuje – stejně jako na ostatních stránkách. */
-function answer(i,correct,btn,box){
-  if(stav.hotovo)return;
-  if(i!==correct){
-    stav.chyboval=true;
+function answer(i, correct, btn, box, q) {
+  if (stav.hotovo) return;
+  if (i !== correct) {
+    stav.chyboval = true;
     Uloha.trhni(btn);
     btn.classList.add('wrong');
-    setTimeout(()=>btn.classList.remove('wrong'),420);
+    setTimeout(() => btn.classList.remove('wrong'), 420);
+    $('odezva').className = 'odezva chyba';
+    $('odezva').textContent = 'Ještě ne – vrať se do textu a přečti si ho znovu.';
     return;
   }
-  stav.hotovo=true;
+  stav.hotovo = true;
   btn.classList.add('correct');
-  [...box.children].forEach(b=>b.disabled=true);
-  if(!stav.chyboval)score++;
-  setTimeout(()=>{qi++;showQ();},Uloha.PRODLEVA);
+  [...box.children].forEach(b => b.disabled = true);
+  if (!stav.chyboval) { score++; serie++; } else { serie = 0; chyby.push({ q, text: pool[idx].t }); }
+  skore.vyhodnot(!stav.chyboval);
+  $('serie').textContent = serie >= 3 ? '🔥 série ' + serie : '';
+  $('odezva').className = 'odezva ok';
+  $('odezva').textContent = '✅ ' + q.o[correct];
+
+  /* Kartička „proč“ – po odpovědi připomene, jak se k takové otázce dostat. */
+  const tip = $('opts').parentElement.querySelector('.pravidlo');
+  if (tip) tip.remove();
+  const el = document.createElement('div');
+  el.className = 'pravidlo ok';
+  el.innerHTML = `<span class="znak">📖</span><div>Byla to otázka na
+      <b>${DRUHY[q.druh].nazev}</b>. ${DRUHY[q.druh].rada}</div>`;
+  $('odezva').after(el);
+
+  /* Posun na další otázku řídí společné nastavení (auto s prodlevou / ručně) –
+     u čtení s porozuměním se hodí obzvlášť, protože si žák čte radu ke druhu otázky. */
+  const dalsiOtazka = () => {
+    const t = $('gameCard').querySelector('.pravidlo');
+    if (t) t.remove();
+    const p = $('gameCard').querySelector('.pokracovat');
+    if (p) p.remove();
+    qi++;
+    showQ();
+  };
+  Uloha.posun(dalsiOtazka, stav.chyboval ? 3400 : 2400, !stav.chyboval, el);
 }
-function finish(){
-  $('gameCard').style.display='none';$('resultsCard').style.display='block';
-  const total=pool.reduce((s,i)=>s+i.qs.length,0);
-  $('finalScore').textContent=`${score} / ${total}`;
-  $('finalScore').title='Počítají se jen odpovědi napoprvé.';
-  const pct=Math.round(score/total*100);
-  $('finalDetail').textContent=pct>=80?'🏆 Výborné porozumění textu!':pct>=50?'👍 Dobrá práce, zkus to znovu pro lepší výsledek.':'💪 Zkus text číst pomaleji a pozorněji.';
+
+/* ---- nápověda ---------------------------------------------------------------
+   Zužuje: řekne, jakým postupem odpověď v textu hledat, a ztlumí polovinu
+   špatných možností. Správnou odpověď neprozradí. */
+function napoveda() {
+  if (napovedaVidet || stav.hotovo || !pool) return;
+  const q = pool[idx].qs[qi];
+  const el = document.createElement('div');
+  el.className = 'pravidlo tip';
+  el.innerHTML = `<span class="znak">🔎</span><div>${DRUHY[q.druh].rada}</div>`;
+  $('odezva').after(el);
+  const spatne = [...$('opts').children].filter(b => Number(b.dataset.i) !== q.a && !b.disabled);
+  shuffle(spatne).slice(0, Math.ceil(spatne.length / 2))
+    .forEach(b => { b.disabled = true; b.style.opacity = '0.25'; });
+  napovedaVidet = true;
 }
-$('startBtn').onclick=start;
-$('againBtn').onclick=()=>{$('setupCard').style.display='block';$('resultsCard').style.display='none';};
+
+function finish() {
+  $('gameCard').style.display = 'none';
+  $('resultsCard').style.display = 'block';
+  const total = pool.reduce((s, i) => s + i.qs.length, 0);
+  $('finalScore').textContent = `${score} / ${total}`;
+  $('finalScore').title = 'Počítají se jen odpovědi napoprvé.';
+  const pct = Math.round(score / total * 100);
+  $('finalDetail').textContent = pct >= 80 ? '🏆 Výborné porozumění textu!'
+    : pct >= 50 ? '👍 Dobrá práce, zkus to znovu pro lepší výsledek.'
+    : '💪 Zkus text číst pomaleji a pozorněji.';
+
+  /* Přehled chyb: u čeho se žák spletl a jakého druhu ta otázka byla –
+     z toho je vidět, jestli chybuje ve vyhledávání, nebo v úsudku. */
+  $('prehledChyb').innerHTML = chyby.length
+    ? '<h2>Kde jsi tápal</h2>' + chyby.map(({ q }) => `
+        <div class="chyba-radek">
+          <span class="zadani-chyby">${q.q}</span>
+          <b>${q.o[q.a]}</b>
+          <span class="napoveda-chyby">${DRUHY[q.druh].nazev}</span>
+        </div>`).join('')
+    : '';
+}
+
+$('startBtn').onclick = start;
+$('againBtn').onclick = () => {
+  $('setupCard').style.display = 'block';
+  $('resultsCard').style.display = 'none';
+};
+$('btnNapoveda').onclick = napoveda;
+$('btnCist').onclick = () => Rec.mluv($('text').textContent, { rychlost: 0.9 });
+document.addEventListener('keydown', e => {
+  if (e.key === 'h' || e.key === 'H') napoveda();
+});
+
+/* Bez nainstalovaného hlasu by se čtení „přehrálo“ do ticha – tlačítko se proto
+   schová a pod úlohou se objeví vysvětlivka, jak hlas doplnit. */
+Rec.hlidejTlacitko($('btnCist'));
+Rec.poznamkaOHlasu($('poznamka'));
 </script>
 </body>
 </html>

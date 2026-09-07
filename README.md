@@ -34,6 +34,16 @@ si je uloží při prvním otevření stránky. Slovník ke Scrabblu
 seznam českých slov z titulků (hermitdave/FrequencyWords) prošel pravopisným
 slovníkem cs_CZ (LibreOffice/hunspell); postup je popsaný v hlavičce souboru.
 
+**Kulturní akce v krajích** (`obsah/kulturni_akce.html`) staví na katalogu
+`obsah/kulturniAkceData.js` – 100 tradičních každoročních akcí (hody, poutě,
+výstavy, festivaly, vinobraní, adventní trhy) rozdělených podle krajů a druhu.
+Celostátní akce mají kraj `CR` a zobrazují se vždy. Akce se opakují každý rok,
+proto se neukládá rok, ale měsíc, volitelně den a slovní termín; stránka
+dopočítá nejbližší budoucí výskyt. Vybrané kraje, filtry i vlastní akce
+uživatele si stránka pamatuje v `localStorage` (`kulturni_akce_*`).
+Volné celostátní API s kulturními akcemi neexistuje, katalog se proto rozšiřuje
+ručně v datovém souboru.
+
 **Scrabble anglicky** (`obsah/scrabble_en.html`) je stejná hra s anglickou sadou
 kamenů a slovníkem `obsah/scrabbleSlovnikEn.js` (28 kB). Herní logika je kopie
 `obsah/scrabble.html` – liší se jen sada, slovník, klíče v `localStorage`

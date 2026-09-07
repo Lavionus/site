@@ -18,6 +18,9 @@
     }
     .postava { font-size: 1.3rem; font-weight: 700; }
     .popis-p { color: var(--text-muted); max-width: 540px; line-height: 1.5; }
+    .pomucka .skupina { flex: 1 1 195px; }
+    .pomucka .skupina.sviti { box-shadow: 0 0 0 2px var(--accent-soft); }
+    .pomucka .klic { color: var(--accent); font-weight: 700; }
   </style>
 </head>
 <body>
@@ -35,19 +38,49 @@
 
   <div class="ovladani">
     <button class="hlavni" id="btnDalsi">Přeskočit →</button>
+    <button id="btnNapoveda">💡 Nápověda</button>
+    <span class="serie" id="serie"></span>
     <span class="skore" id="skore"></span>
   </div>
 
+  <div class="pomucka" id="pomucka">
+    <div class="skupina" data-h="pohadka">
+      <h2>🏰 Pohádka</h2>
+      <div class="znaky"><span class="znak"><span class="klic">Kdy? Nikde a nikdy.</span></span></div>
+      <p class="popis">Vymyšlený příběh s <b>kouzly</b>, neurčitým místem a časem
+        („Byl jednou jeden…“). Dobro vítězí nad zlem.</p>
+    </div>
+    <div class="skupina" data-h="povest">
+      <h2>🏛️ Pověst</h2>
+      <div class="znaky"><span class="znak"><span class="klic">Kde? Tady u nás.</span></span></div>
+      <p class="popis">Váže se ke <b>skutečnému místu nebo osobě</b> (Říp, Praha, rabi Löw).
+        Tváří se, že se to opravdu stalo.</p>
+    </div>
+    <div class="skupina" data-h="baje">
+      <h2>⚡ Báje (mýtus)</h2>
+      <div class="znaky"><span class="znak"><span class="klic">Proč to tak je?</span></span></div>
+      <p class="popis">Vypráví o <b>bozích a hrdinech</b> a vysvětluje jimi vznik světa
+        a přírodní jevy (blesk, oheň, roční období).</p>
+    </div>
+    <div class="skupina" data-h="bajka">
+      <h2>🦊 Bajka</h2>
+      <div class="znaky"><span class="znak"><span class="klic">Co si z toho vezmu?</span></span></div>
+      <p class="popis"><b>Zvířata jednají jako lidé</b> (personifikace) a příběh končí
+        ponaučením. Bývá krátká.</p>
+    </div>
+  </div>
+
   <p class="napoveda">
-    <b>Mýtus</b> vysvětluje vznik světa a jevů, <b>báje</b> vypráví o bozích a hrdinech,
-    <b>pověst</b> se váže ke skutečnému místu či osobě a <b>pohádka</b> je vymyšlený příběh
-    s dobrým koncem, kde vítězí dobro.
+    Nejsnazší rozlišení: <b>zvířata s lidskou povahou</b> → bajka · <b>bohové</b> → báje ·
+    <b>skutečné místo</b> → pověst · <b>kouzla a „byl jednou jeden“</b> → pohádka.
+    Klávesy: <kbd>H</kbd> nápověda · <kbd>Enter</kbd> další.
   </p>
 
 <script>
 const $ = id => document.getElementById(id);
 const skore = Uloha.skore('nodus_cj6_baje', $('skore'));
 let rezim = 'zanr';
+let uloha = null, posledni = null, serie = 0, napovedaVidet = false;
 
 const ZANRY = {
   pohadka: 'pohádka',
@@ -75,57 +108,138 @@ const UKAZKY = [
     z: 'pohadka', proc: 'typický pohádkový úvod a neurčité místo' },
 ];
 
+/* Ke každému bohu patří jeho odznak – podle něj se pozná na obrazech a sochách. */
 const BOHOVE = [
-  { n: 'Zeus', e: '⚡', o: 'nejvyšší bůh, vládce blesků a hromů' },
-  { n: 'Poseidon', e: '🔱', o: 'bůh moří, zemětřesení a koní' },
-  { n: 'Hádes', e: '💀', o: 'vládce podsvětí a říše mrtvých' },
-  { n: 'Athéna', e: '🦉', o: 'bohyně moudrosti, řemesel a spravedlivé války' },
-  { n: 'Apollón', e: '🎵', o: 'bůh slunce, hudby a věštění' },
-  { n: 'Artemis', e: '🏹', o: 'bohyně lovu a divoké přírody' },
-  { n: 'Áres', e: '⚔️', o: 'bůh krvavé války a bitevní vřavy' },
-  { n: 'Afrodita', e: '🌹', o: 'bohyně lásky a krásy' },
-  { n: 'Hermes', e: '👟', o: 'posel bohů, ochránce obchodníků a cestovatelů' },
-  { n: 'Héfaistos', e: '🔨', o: 'kovář bohů, bůh ohně a řemesel' },
+  { n: 'Zeus', e: '⚡', o: 'nejvyšší bůh, vládce blesků a hromů',
+    atribut: 'blesk a orel', rim: 'Jupiter' },
+  { n: 'Poseidon', e: '🔱', o: 'bůh moří, zemětřesení a koní',
+    atribut: 'trojzubec', rim: 'Neptun' },
+  { n: 'Hádes', e: '💀', o: 'vládce podsvětí a říše mrtvých',
+    atribut: 'trojhlavý pes Kerberos', rim: 'Pluto' },
+  { n: 'Athéna', e: '🦉', o: 'bohyně moudrosti, řemesel a spravedlivé války',
+    atribut: 'sova a štít', rim: 'Minerva' },
+  { n: 'Apollón', e: '🎵', o: 'bůh slunce, hudby a věštění',
+    atribut: 'lyra a vavřínový věnec', rim: 'Apollo' },
+  { n: 'Artemis', e: '🏹', o: 'bohyně lovu a divoké přírody',
+    atribut: 'luk a laň', rim: 'Diana' },
+  { n: 'Áres', e: '⚔️', o: 'bůh krvavé války a bitevní vřavy',
+    atribut: 'kopí a přilba', rim: 'Mars' },
+  { n: 'Afrodita', e: '🌹', o: 'bohyně lásky a krásy',
+    atribut: 'růže a mušle', rim: 'Venuše' },
+  { n: 'Hermes', e: '👟', o: 'posel bohů, ochránce obchodníků a cestovatelů',
+    atribut: 'okřídlené sandály a hůl', rim: 'Merkur' },
+  { n: 'Héfaistos', e: '🔨', o: 'kovář bohů, bůh ohně a řemesel',
+    atribut: 'kladivo a kovadlina', rim: 'Vulkán' },
 ];
 
+/* U hrdinů se dnes nejvíc cení to, co po nich zbylo v jazyce – rčení a pojmy. */
 const HRDINOVE = [
-  { n: 'Héraklés', e: '💪', o: 'vykonal dvanáct nadlidských úkolů, například zabil lernskou hydru' },
-  { n: 'Théseus', e: '🧵', o: 'zabil Mínotaura v labyrintu a našel cestu ven podle nitě' },
-  { n: 'Ikaros', e: '🪶', o: 'letěl na křídlech z vosku, ale přiblížil se ke slunci a zřítil se' },
-  { n: 'Odysseus', e: '⛵', o: 'deset let bloudil po moři cestou domů z trojské války' },
-  { n: 'Achilles', e: '🛡️', o: 'nejlepší řecký bojovník, zranitelný jen na patě' },
-  { n: 'Prométheus', e: '🔥', o: 'přinesl lidem oheň a byl za to přikován ke skále' },
-  { n: 'Orfeus', e: '🎻', o: 'svou hrou obměkčil vládce podsvětí, ale ohlédl se po Eurydice' },
-  { n: 'Daidalos', e: '🏛️', o: 'stavitel labyrintu, který vyrobil křídla pro sebe a syna' },
+  { n: 'Héraklés', e: '💪', o: 'vykonal dvanáct nadlidských úkolů, například zabil lernskou hydru',
+    odkaz: 'odtud <b>„herkulovský výkon“</b> a <b>„augiášův chlév“</b> pro obrovský nepořádek' },
+  { n: 'Théseus', e: '🧵', o: 'zabil Mínotaura v labyrintu a našel cestu ven podle nitě',
+    odkaz: 'odtud <b>„Ariadnina nit“</b> – vodítko, které pomůže se vymotat ze složité situace' },
+  { n: 'Ikaros', e: '🪶', o: 'letěl na křídlech z vosku, ale přiblížil se ke slunci a zřítil se',
+    odkaz: 'varování před <b>zpupností</b> – kdo nedbá rady a přecení se, doplatí na to' },
+  { n: 'Odysseus', e: '⛵', o: 'deset let bloudil po moři cestou domů z trojské války',
+    odkaz: 'odtud <b>„odysea“</b> pro dlouhou strastiplnou cestu' },
+  { n: 'Achilles', e: '🛡️', o: 'nejlepší řecký bojovník, zranitelný jen na patě',
+    odkaz: 'odtud <b>„Achillova pata“</b> – jediné slabé místo' },
+  { n: 'Prométheus', e: '🔥', o: 'přinesl lidem oheň a byl za to přikován ke skále',
+    odkaz: 'mýtus vysvětluje <b>původ ohně</b> a zároveň cenu za vzdor bohům' },
+  { n: 'Orfeus', e: '🎻', o: 'svou hrou obměkčil vládce podsvětí, ale ohlédl se po Eurydice',
+    odkaz: 'o <b>síle umění</b> – a o tom, že jediné porušení podmínky stačí' },
+  { n: 'Daidalos', e: '🏛️', o: 'stavitel labyrintu, který vyrobil křídla pro sebe a syna',
+    odkaz: 'obraz <b>vynálezce</b>, jehož dílo je požehnáním i nebezpečím' },
 ];
 
 const POJMY = [
-  { n: 'mýtus', o: 'příběh vysvětlující vznik světa a přírodních jevů' },
-  { n: 'bajka', o: 'krátký příběh se zvířaty, který končí ponaučením' },
-  { n: 'pověst', o: 'vyprávění vázané ke konkrétnímu místu nebo osobě' },
-  { n: 'pohádka', o: 'vymyšlený příběh s kouzly, kde dobro vítězí nad zlem' },
-  { n: 'personifikace', o: 'zvíře nebo věc jedná a mluví jako člověk' },
-  { n: 'ponaučení', o: 'myšlenka, kterou si má čtenář z příběhu odnést' },
-  { n: 'hrdina', o: 'hlavní postava, která překonává překážky' },
-  { n: 'labyrint', o: 'bludiště, ze kterého je těžké najít cestu ven' },
+  { n: 'mýtus', o: 'příběh vysvětlující vznik světa a přírodních jevů',
+    priklad: 'Prométheus přináší lidem oheň' },
+  { n: 'bajka', o: 'krátký příběh se zvířaty, který končí ponaučením',
+    priklad: 'Liška a havran se sýrem' },
+  { n: 'pověst', o: 'vyprávění vázané ke konkrétnímu místu nebo osobě',
+    priklad: 'praotec Čech na hoře Říp' },
+  { n: 'pohádka', o: 'vymyšlený příběh s kouzly, kde dobro vítězí nad zlem',
+    priklad: 'Byl jednou jeden král a ten měl tři syny…' },
+  { n: 'personifikace', o: 'zvíře nebo věc jedná a mluví jako člověk',
+    priklad: 'liška lichotí havranovi, aby pustil sýr' },
+  { n: 'ponaučení', o: 'myšlenka, kterou si má čtenář z příběhu odnést',
+    priklad: 'nevěř tomu, kdo ti lichotí' },
+  { n: 'hrdina', o: 'hlavní postava, která překonává překážky',
+    priklad: 'Héraklés a jeho dvanáct úkolů' },
+  { n: 'labyrint', o: 'bludiště, ze kterého je těžké najít cestu ven',
+    priklad: 'Daidalova stavba, ve které žil Mínotaurus' },
 ];
+
+/* ---- společné díly --------------------------------------------------------- */
+function odezvaEl() { const d = document.createElement('div'); d.className = 'odezva'; return d; }
+
+/* Kartička s vysvětlením potřebuje čas na přečtení; po chybě ještě delší. */
+const PRODLEVA = napoprve => (napoprve ? 2300 : 3300);
+
+/* Přehled žánrů pod úlohou žije – po odpovědi se rozsvítí ten probíraný. */
+const pomuckaDiv = $('pomucka');
+function rozsvit(klic) {
+  pomuckaDiv.querySelectorAll('.skupina').forEach(el =>
+    el.classList.toggle('sviti', el.dataset.h === klic));
+}
+
+function hotovo(p, napoprve, klic) {
+  skore.vyhodnot(napoprve);
+  serie = napoprve ? serie + 1 : 0;
+  $('serie').textContent = serie >= 3 ? '🔥 série ' + serie : '';
+  rozsvit(klic);
+  const tip = p.querySelector('.pravidlo.tip');
+  if (tip) tip.remove();
+}
+
+function pravidloEl(znak, html) {
+  const el = document.createElement('div');
+  el.className = 'pravidlo ok';
+  el.innerHTML = `<span class="znak">${znak}</span><div>${html}</div>`;
+  return el;
+}
+
+/* Nápověda zužuje, neprozrazuje: ztlumí polovinu špatných možností. */
+function ztlum(p, spravnyKlic) {
+  const spatne = [...p.querySelectorAll('.moznosti button')]
+    .filter(b => b.dataset.klic !== spravnyKlic && !b.disabled);
+  Uloha.zamichej(spatne).slice(0, Math.ceil(spatne.length / 2))
+    .forEach(b => { b.disabled = true; b.style.opacity = '0.25'; });
+}
+
+/* Otázka, kterou si žánr klade – nápověda i kartička z toho čerpají. */
+const OTAZKA_ZANRU = {
+  pohadka: 'nikde a nikdy, zato s kouzly',
+  povest: 'na skutečném místě, o skutečné osobě',
+  baje: 'o bozích – a vysvětluje, proč je něco tak, jak to je',
+  bajka: 'o zvířatech s lidskou povahou, a končí ponaučením',
+};
 
 /* ---- Jaký je to žánr? ------------------------------------------------------------ */
 function zanr() {
   const p = $('plocha');
-  const u = Uloha.nahodne(UKAZKY);
+  let u;
+  do { u = Uloha.nahodne(UKAZKY); } while (u === posledni);
+  posledni = u;
+  uloha = { rezim: 'zanr', u };
   p.innerHTML = `<div class="zadani">Z jakého žánru je ukázka?</div>
     <div class="ukazka">„${u.t}“</div>`;
-  const odezva = document.createElement('div');
-  odezva.className = 'odezva';
+  const odezva = odezvaEl();
   Uloha.vyber({
     kam: p, odezva,
     moznosti: Uloha.zamichej(Object.entries(ZANRY)).map(([klic, popis]) => ({ klic, popis })),
     spravnyKlic: u.z,
     zpravaOk: `✅ ${ZANRY[u.z]} – ${u.proc}.`,
     zpravaChyba: 'Všimni si, kdo v příběhu vystupuje a jestli se váže ke skutečnému místu.',
-    poSpravne: skore.vyhodnot,
-    dalsi: novaUloha,
+    poSpravne: napoprve => {
+      hotovo(p, napoprve, u.z);
+      p.appendChild(pravidloEl('📖', `<span class="vysledek">${ZANRY[u.z]}</span> —
+        ${u.proc}.
+        <div style="margin-top:6px">Žánr se vždycky pozná podle toho, <b>kdo v příběhu
+        vystupuje</b> a <b>k čemu je vyprávěn</b>: ${OTAZKA_ZANRU[u.z]}.</div>`));
+    },
+    prodleva: PRODLEVA, dalsi: novaUloha,
   });
   p.appendChild(odezva);
 }
@@ -133,20 +247,27 @@ function zanr() {
 /* ---- Řečtí bohové ----------------------------------------------------------------- */
 function bohove() {
   const p = $('plocha');
-  const u = Uloha.nahodne(BOHOVE);
+  let u;
+  do { u = Uloha.nahodne(BOHOVE); } while (u === posledni);
+  posledni = u;
+  uloha = { rezim: 'bohove', u };
   const jine = Uloha.zamichej(BOHOVE.filter(x => x.n !== u.n)).slice(0, 3);
   p.innerHTML = `<div class="zadani">O kterého boha jde?</div>
     <div class="karta"><div class="obrazek">${u.e}</div><div class="popis-p">${u.o}</div></div>`;
-  const odezva = document.createElement('div');
-  odezva.className = 'odezva';
+  const odezva = odezvaEl();
   Uloha.vyber({
     kam: p, odezva,
     moznosti: Uloha.zamichej([u, ...jine]).map(x => ({ klic: x.n, popis: x.n })),
     spravnyKlic: u.n,
     zpravaOk: `✅ ${u.n} – ${u.o}.`,
     zpravaChyba: 'To je jiný bůh z řecké mytologie.',
-    poSpravne: skore.vyhodnot,
-    dalsi: novaUloha,
+    poSpravne: napoprve => {
+      hotovo(p, napoprve, 'baje');
+      p.appendChild(pravidloEl(u.e, `<span class="vysledek">${u.n}</span> — ${u.o}.
+        <div style="margin-top:6px">Na obrazech a sochách ho poznáš podle odznaku:
+        <b>${u.atribut}</b>. Římané ho převzali pod jménem <b>${u.rim}</b>.</div>`));
+    },
+    prodleva: PRODLEVA, dalsi: novaUloha,
   });
   p.appendChild(odezva);
 }
@@ -154,20 +275,26 @@ function bohove() {
 /* ---- Báje a hrdinové --------------------------------------------------------------- */
 function hrdinove() {
   const p = $('plocha');
-  const u = Uloha.nahodne(HRDINOVE);
+  let u;
+  do { u = Uloha.nahodne(HRDINOVE); } while (u === posledni);
+  posledni = u;
+  uloha = { rezim: 'hrdinove', u };
   const jine = Uloha.zamichej(HRDINOVE.filter(x => x.n !== u.n)).slice(0, 3);
   p.innerHTML = `<div class="zadani">O kterém hrdinovi se to vypráví?</div>
     <div class="karta"><div class="obrazek">${u.e}</div><div class="popis-p">${u.o}</div></div>`;
-  const odezva = document.createElement('div');
-  odezva.className = 'odezva';
+  const odezva = odezvaEl();
   Uloha.vyber({
     kam: p, odezva,
     moznosti: Uloha.zamichej([u, ...jine]).map(x => ({ klic: x.n, popis: x.n })),
     spravnyKlic: u.n,
     zpravaOk: `✅ ${u.n} – ${u.o}.`,
     zpravaChyba: 'To je příběh jiného hrdiny.',
-    poSpravne: skore.vyhodnot,
-    dalsi: novaUloha,
+    poSpravne: napoprve => {
+      hotovo(p, napoprve, 'baje');
+      p.appendChild(pravidloEl(u.e, `<span class="vysledek">${u.n}</span> — ${u.o}.
+        <div style="margin-top:6px">Proč se ten příběh vypráví dodnes: ${u.odkaz}.</div>`));
+    },
+    prodleva: PRODLEVA, dalsi: novaUloha,
   });
   p.appendChild(odezva);
 }
@@ -175,26 +302,70 @@ function hrdinove() {
 /* ---- Literární pojmy ---------------------------------------------------------------- */
 function pojmy() {
   const p = $('plocha');
-  const u = Uloha.nahodne(POJMY);
+  let u;
+  do { u = Uloha.nahodne(POJMY); } while (u === posledni);
+  posledni = u;
+  uloha = { rezim: 'pojmy', u };
   const jine = Uloha.zamichej(POJMY.filter(x => x.n !== u.n)).slice(0, 3);
   p.innerHTML = `<div class="zadani">Který pojem se sem hodí?</div>
     <div class="karta"><div class="obrazek">📖</div><div class="popis-p">${u.o}</div></div>`;
-  const odezva = document.createElement('div');
-  odezva.className = 'odezva';
+  const odezva = odezvaEl();
   Uloha.vyber({
     kam: p, odezva,
     moznosti: Uloha.zamichej([u, ...jine]).map(x => ({ klic: x.n, popis: x.n })),
     spravnyKlic: u.n,
     zpravaOk: `✅ ${u.n} – ${u.o}.`,
     zpravaChyba: 'To je jiný pojem.',
-    poSpravne: skore.vyhodnot,
-    dalsi: novaUloha,
+    poSpravne: napoprve => {
+      hotovo(p, napoprve, ZANRY[u.n] !== undefined ? u.n : null);
+      p.appendChild(pravidloEl('📖', `<span class="vysledek">${u.n}</span> — ${u.o}.
+        <div style="margin-top:6px">Příklad: <i>${u.priklad}</i></div>`));
+    },
+    prodleva: PRODLEVA, dalsi: novaUloha,
   });
   p.appendChild(odezva);
 }
 
+/* ---- nápověda -------------------------------------------------------------- */
+/* Zužuje: řekne, čeho si v ukázce všímat, správnou odpověď neprozradí. */
+function napoveda() {
+  if (!uloha || napovedaVidet) return;
+  const p = $('plocha');
+  const u = uloha.u;
+  const el = document.createElement('div');
+  el.className = 'pravidlo tip';
+  let text, klic;
+
+  if (uloha.rezim === 'zanr') {
+    text = `Podívej se, <b>kdo v ukázce vystupuje</b>: zvířata s lidskou povahou → bajka ·
+      bohové → báje · skutečné místo nebo historická osoba → pověst · kouzla a neurčité
+      „byl jednou jeden“ → pohádka. Přehled je pod úlohou.`;
+    klic = u.z;
+  } else if (uloha.rezim === 'bohove') {
+    text = `Rozděl si bohy podle toho, <b>čemu vládnou</b>: nebe a blesky · moře · podsvětí ·
+      válka · láska · moudrost · slunce a hudba · lov · řemesla · poselství.
+      Popis v úloze míří přesně na jednu z těch oblastí.`;
+    klic = u.n;
+  } else if (uloha.rezim === 'hrdinove') {
+    text = `Zaměř se na <b>jednu věc, kterou hrdina udělal</b> — právě podle ní se každý
+      z nich pamatuje: úkoly, labyrint, křídla, bloudění po moři, zranitelná pata,
+      oheň, hudba v podsvětí.`;
+    klic = u.n;
+  } else {
+    text = `Přečti si popis ještě jednou a zeptej se, jestli mluví o <b>celém příběhu</b>
+      (žánr: mýtus, bajka, pověst, pohádka), o <b>jednom postupu ve vyprávění</b>
+      (personifikace, ponaučení), nebo o <b>něčem v příběhu</b> (hrdina, labyrint).`;
+    klic = u.n;
+  }
+  el.innerHTML = `<span class="znak">🔎</span><div>${text}</div>`;
+  p.appendChild(el);
+  ztlum(p, klic);
+  napovedaVidet = true;
+}
+
+/* ---- ovládání -------------------------------------------------------------- */
 const REZIMY = { zanr, bohove, hrdinove, pojmy };
-function novaUloha() { REZIMY[rezim](); }
+function novaUloha() { napovedaVidet = false; REZIMY[rezim](); }
 
 document.querySelectorAll('#rezimy button').forEach(b => b.addEventListener('click', () => {
   document.querySelectorAll('#rezimy button').forEach(x => x.classList.remove('active'));
@@ -203,8 +374,10 @@ document.querySelectorAll('#rezimy button').forEach(b => b.addEventListener('cli
   novaUloha();
 }));
 $('btnDalsi').addEventListener('click', novaUloha);
+$('btnNapoveda').addEventListener('click', napoveda);
 document.addEventListener('keydown', e => {
   if (e.key === 'ArrowRight' || e.key === 'Enter') { e.preventDefault(); novaUloha(); }
+  if (e.key === 'h' || e.key === 'H') napoveda();
 });
 novaUloha();
 </script>

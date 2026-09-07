@@ -23,6 +23,13 @@
     .veta-cela { font-size: clamp(1.1rem, 4vw, 1.6rem); font-weight: 600; max-width: 640px; line-height: 1.45; }
     .veta-cela .podmet { color: var(--accent); text-decoration: underline; }
     .veta-cela .prisudek { color: var(--warn); text-decoration: underline; }
+    .pomucka .skupina { flex: 1 1 190px; }
+    .pomucka .skupina.sviti { box-shadow: 0 0 0 2px var(--accent-soft); }
+    .pomucka .modra { color: var(--accent); }
+    .pomucka .zluta { color: var(--warn); }
+    /* dvojice v kartičce: podmět ← spojka → přísudek */
+    .paru { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; font-size: 1.05rem; }
+    .paru .sipka { color: var(--text-faint); }
   </style>
 </head>
 <body>
@@ -40,13 +47,35 @@
 
   <div class="ovladani">
     <button class="hlavni" id="btnDalsi">Přeskočit →</button>
+    <button id="btnNapoveda">💡 Nápověda</button>
+    <span class="serie" id="serie"></span>
     <span class="skore" id="skore"></span>
   </div>
 
+  <div class="pomucka" id="pomucka">
+    <div class="skupina" data-h="podmet">
+      <h2><span class="modra">🔵</span> Podmět</h2>
+      <div class="znaky"><span class="znak">kdo? co?</span></div>
+      <p class="popis">O <b>kom nebo o čem</b> věta mluví. Bývá to podstatné jméno nebo zájmeno
+        a stojí v <b>1. pádě</b>.</p>
+    </div>
+    <div class="skupina" data-h="prisudek">
+      <h2><span class="zluta">🟡</span> Přísudek</h2>
+      <div class="znaky"><span class="znak">co dělá?</span></div>
+      <p class="popis">Co podmět <b>dělá</b> nebo <b>jaký je</b>. Bývá to sloveso v určitém tvaru.</p>
+    </div>
+    <div class="skupina" data-h="shoda">
+      <h2>🔗 Shoda</h2>
+      <div class="znaky"><span class="znak">chlapec kreslil × chlapci kreslili</span></div>
+      <p class="popis">Podmět a přísudek se k sobě <b>hlásí</b>: přísudek se řídí rodem a číslem
+        podmětu. Proto se jim říká <b>základní skladební dvojice</b>.</p>
+    </div>
+  </div>
+
   <p class="napoveda">
-    <b>Podmět</b> je ten, kdo něco dělá – ptáme se <i>kdo? co?</i>
-    <b>Přísudek</b> říká, co podmět dělá – ptáme se <i>co dělá?</i>
-    Když podmět ve větě není vyjádřený, poznáme ho z koncovky slovesa (<i>Píšeme úkol.</i> → my).
+    Nevyjádřený podmět <b>ve větě chybí jako slovo</b>, ale poznáš ho z koncovky slovesa
+    (<i>Píšeme úkol.</i> → my). Věta <b>bezpodmětná</b> podmět nemá vůbec (<i>Venku prší.</i>).
+    Klávesy: <kbd>H</kbd> nápověda · <kbd>Enter</kbd> další.
   </p>
 
 <script>
@@ -64,7 +93,11 @@ const VETY = [
   { s: ['Napsal', 'jsem', 'dlouhý', 'dopis'], podmet: -1, prisudek: 0, druh: 'nevyjadreny', kdo: 'já' },
   { s: ['Sluníčko', 'krásně', 'svítí'], podmet: 0, prisudek: 2, druh: 'podstatne' },
   { s: ['Moji', 'kamarádi', 'přišli', 'včas'], podmet: 1, prisudek: 2, druh: 'podstatne' },
-  { s: ['Venku', 'prší'], podmet: -1, prisudek: 1, druh: 'nevyjadreny', kdo: 'nikdo – je to bezpodmětá věta' },
+  { s: ['Venku', 'prší'], podmet: -1, prisudek: 1, druh: 'bezpodmetna' },
+  { s: ['Celý', 'den', 'sněžilo'], podmet: -1, prisudek: 2, druh: 'bezpodmetna' },
+  { s: ['Ráno', 'se', 'brzy', 'rozednilo'], podmet: -1, prisudek: 3, druh: 'bezpodmetna' },
+  { s: ['Půjdeme', 'do', 'kina'], podmet: -1, prisudek: 0, druh: 'nevyjadreny', kdo: 'my' },
+  { s: ['Čteš', 'moc', 'rychle'], podmet: -1, prisudek: 0, druh: 'nevyjadreny', kdo: 'ty' },
   { s: ['Ona', 'zpívá', 'krásně'], podmet: 0, prisudek: 1, druh: 'zajmeno' },
   { s: ['Pět', 'žáků', 'chybělo'], podmet: 1, prisudek: 2, druh: 'podstatne' },
   { s: ['My', 'čteme', 'knihu'], podmet: 0, prisudek: 1, druh: 'zajmeno' },
@@ -74,19 +107,90 @@ const DRUHY_PODMETU = {
   podstatne: { nazev: 'podstatné jméno', ikona: '📗' },
   zajmeno: { nazev: 'zájmeno', ikona: '🙋' },
   nevyjadreny: { nazev: 'nevyjádřený podmět', ikona: '👻' },
+  bezpodmetna: { nazev: 'věta bezpodmětná', ikona: '🌧️' },
 };
+
+/* Nevyjádřený podmět a bezpodmětná věta se často pletou, proto se v úloze
+   nabízejí obě možnosti a kartička rozdíl pokaždé připomene. */
+const POPIS_PODMETU = {
+  podstatne: 'podmět je ve větě napsaný <b>podstatným jménem</b> v 1. pádě',
+  zajmeno: 'podmět je ve větě napsaný <b>zájmenem</b> v 1. pádě',
+  nevyjadreny: 'podmět ve větě <b>není napsaný</b>, ale dá se doplnit z koncovky slovesa',
+  bezpodmetna: 'věta <b>žádný podmět nemá</b> a doplnit se nedá – děj se odehrává sám',
+};
+
+let uloha = null, posledni = null, serie = 0, napovedaVidet = false;
+
+/* ---- společné díly --------------------------------------------------------- */
+function odezvaEl() { const d = document.createElement('div'); d.className = 'odezva'; return d; }
+
+/* Kartička s rozborem potřebuje čas na přečtení; po chybě ještě delší. */
+const PRODLEVA = napoprve => (napoprve ? 2100 : 3100);
+
+/* Přehled pod úlohou žije – po odpovědi se rozsvítí, o který člen šlo. */
+const pomuckaDiv = $('pomucka');
+function rozsvit(klic) {
+  pomuckaDiv.querySelectorAll('.skupina').forEach(el =>
+    el.classList.toggle('sviti', el.dataset.h === klic));
+}
+
+function hotovo(p, napoprve, klic) {
+  skore.vyhodnot(napoprve);
+  serie = napoprve ? serie + 1 : 0;
+  $('serie').textContent = serie >= 3 ? '🔥 série ' + serie : '';
+  rozsvit(klic);
+  const tip = p.querySelector('.pravidlo.tip');
+  if (tip) tip.remove();
+}
+
+function pravidloEl(znak, html) {
+  const el = document.createElement('div');
+  el.className = 'pravidlo ok';
+  el.innerHTML = `<span class="znak">${znak}</span><div>${html}</div>`;
+  return el;
+}
+
+/* Věta s podtrženým podmětem a přísudkem – ukazuje se až po odpovědi. */
+function vetaSCleny(v) {
+  return v.s.map((slovo, i) => {
+    if (i === v.podmet) return `<span class="podmet">${slovo}</span>`;
+    if (i === v.prisudek) return `<span class="prisudek">${slovo}</span>`;
+    return slovo;
+  }).join(' ') + '.';
+}
+
+/* Kartička s rozborem základní skladební dvojice. */
+function dvojiceHTML(v) {
+  const podmet = v.podmet >= 0 ? v.s[v.podmet]
+    : (v.druh === 'bezpodmetna' ? '—' : `(${v.kdo})`);
+  return `<div class="paru"><span class="podmet">${podmet}</span>
+      <span class="sipka">←→</span><span class="prisudek">${v.s[v.prisudek]}</span></div>
+    <div style="margin-top:6px">${vetaSCleny(v)}</div>`;
+}
+
+/* Nápověda zužuje, neprozrazuje: ztlumí polovinu špatných možností. */
+function ztlum(p, jeSpravna) {
+  const spatne = [...p.querySelectorAll('.moznosti button, .veta-slova button')]
+    .filter(b => !jeSpravna(b) && !b.disabled);
+  Uloha.zamichej(spatne).slice(0, Math.ceil(spatne.length / 2))
+    .forEach(b => { b.disabled = true; b.style.opacity = '0.25'; });
+}
+const podleKlice = klic => b => b.dataset.klic === klic;
 
 /* ---- Klikací hledání ve větě --------------------------------------------------- */
 function klikaciUloha(hledanyIndex, popis, zpravaOk, zpravaNeni) {
   const p = $('plocha');
-  const v = Uloha.nahodne(VETY.filter(x => (hledanyIndex === 'podmet' ? x.podmet : x.prisudek) >= 0));
+  const vhodne = VETY.filter(x => (hledanyIndex === 'podmet' ? x.podmet : x.prisudek) >= 0);
+  let v;
+  do { v = Uloha.nahodne(vhodne); } while (v === posledni && vhodne.length > 1);
+  posledni = v;
   const cil = hledanyIndex === 'podmet' ? v.podmet : v.prisudek;
+  uloha = { rezim: hledanyIndex, v, cil };
 
   p.innerHTML = `<div class="zadani">${popis}</div>`;
   const radek = document.createElement('div');
   radek.className = 'veta-slova';
-  const odezva = document.createElement('div');
-  odezva.className = 'odezva';
+  const odezva = odezvaEl();
   const stav = { chyboval: false, hotovo: false };
 
   v.s.forEach((slovo, i) => {
@@ -98,8 +202,18 @@ function klikaciUloha(hledanyIndex, popis, zpravaOk, zpravaNeni) {
       stav, odezva,
       zpravaOk: zpravaOk(v.s[cil]),
       zpravaChyba: zpravaNeni,
-      poSpravne: skore.vyhodnot,
-      dalsi: novaUloha,
+      poSpravne: napoprve => {
+        hotovo(p, napoprve, hledanyIndex);
+        p.appendChild(pravidloEl(hledanyIndex === 'podmet' ? '🔵' : '🟡', `${dvojiceHTML(v)}
+          <div style="margin-top:6px">${hledanyIndex === 'podmet'
+            ? `Na podmět se ptáme <b>kdo? co?</b> — „${v.s[v.prisudek]}“ a odpověď je
+               <span class="vysledek">${v.s[cil]}</span>. Podmět je vždycky v 1. pádě.`
+            : `Na přísudek se ptáme <b>co dělá</b> ${v.podmet >= 0 ? v.s[v.podmet] : 'podmět'}?
+               — odpověď je <span class="vysledek">${v.s[cil]}</span>. Přísudek je sloveso
+               v určitém tvaru.`}
+            Spolu tvoří <b>základní skladební dvojici</b>.</div>`));
+      },
+      prodleva: PRODLEVA, dalsi: novaUloha,
     }));
     radek.appendChild(b);
   });
@@ -119,25 +233,41 @@ const najdiPrisudek = () => klikaciUloha('prisudek',
 /* ---- Jaký je podmět ------------------------------------------------------------ */
 function druhPodmetu() {
   const p = $('plocha');
-  const v = Uloha.nahodne(VETY);
+  let v;
+  do { v = Uloha.nahodne(VETY); } while (v === posledni);
+  posledni = v;
+  uloha = { rezim: 'druhPodmetu', v };
+  /* Přísudek je podtržený už v zadání – kde se rozhoduje, má být vidět předem. */
   const veta = v.s.map((s, i) =>
     i === v.prisudek ? `<span class="prisudek">${s}</span>` : s).join(' ');
 
-  p.innerHTML = `<div class="zadani">Jaký podmět má tato věta?</div>
+  p.innerHTML = `<div class="zadani">Jaký podmět má tato věta?
+      <span style="color:var(--text-faint)">(přísudek je podtržený)</span></div>
     <div class="karta"><div class="veta-cela">${veta}.</div></div>`;
-  const odezva = document.createElement('div');
-  odezva.className = 'odezva';
+  const odezva = odezvaEl();
   Uloha.vyber({
     kam: p, odezva,
     moznosti: Uloha.zamichej(Object.entries(DRUHY_PODMETU))
       .map(([klic, d]) => ({ klic, ikona: d.ikona, popis: d.nazev })),
     spravnyKlic: v.druh,
-    zpravaOk: v.druh === 'nevyjadreny'
-      ? `✅ Podmět není vyjádřený – z přísudku poznáme, že jde o „${v.kdo}“.`
+    zpravaOk: v.druh === 'nevyjadreny' ? `✅ Podmět není vyjádřený – doplníme „${v.kdo}“.`
+      : v.druh === 'bezpodmetna' ? '✅ Věta bezpodmětná – podmět nemá vůbec.'
       : `✅ Podmět „${v.s[v.podmet]}“ je ${DRUHY_PODMETU[v.druh].nazev}.`,
-    zpravaChyba: 'Je podmět ve větě napsaný slovem, nebo ho poznáš jen z koncovky slovesa?',
-    poSpravne: skore.vyhodnot,
-    dalsi: novaUloha,
+    zpravaChyba: 'Je podmět ve větě napsaný slovem, dá se doplnit z koncovky slovesa, nebo tam žádný není?',
+    poSpravne: napoprve => {
+      hotovo(p, napoprve, 'podmet');
+      p.appendChild(pravidloEl(DRUHY_PODMETU[v.druh].ikona, `${dvojiceHTML(v)}
+        <div style="margin-top:6px"><span class="vysledek">${DRUHY_PODMETU[v.druh].nazev}</span>
+          — ${POPIS_PODMETU[v.druh]}${v.druh === 'nevyjadreny'
+            ? `; z koncovky slovesa <i>${v.s[v.prisudek]}</i> poznáme, že jde o <b>${v.kdo}</b>`
+            : ''}.
+          ${v.druh === 'bezpodmetna'
+            ? 'Pozor na rozdíl: u <b>nevyjádřeného</b> podmětu se dá doplnit já, ty, my… tady ne.'
+            : v.druh === 'nevyjadreny'
+              ? 'Pozor na rozdíl: <b>bezpodmětná</b> věta by žádný podmět doplnit nešel (Prší.).'
+              : ''}</div>`));
+    },
+    prodleva: PRODLEVA, dalsi: novaUloha,
   });
   p.appendChild(odezva);
 }
@@ -145,8 +275,11 @@ function druhPodmetu() {
 /* ---- Patří k sobě? ------------------------------------------------------------- */
 function dvojice() {
   const p = $('plocha');
-  const v = Uloha.nahodne(VETY.filter(x => x.podmet >= 0));
+  let v;
+  do { v = Uloha.nahodne(VETY.filter(x => x.podmet >= 0)); } while (v === posledni);
+  posledni = v;
   const spravna = `${v.s[v.podmet]} – ${v.s[v.prisudek]}`;
+  uloha = { rezim: 'dvojice', v, spravna };
 
   /* nesprávné dvojice: podmět z jiné věty nebo náhodné slovo z téhle */
   const jina = Uloha.nahodne(VETY.filter(x => x !== v && x.podmet >= 0));
@@ -160,22 +293,63 @@ function dvojice() {
 
   p.innerHTML = `<div class="zadani">Která dvojice tvoří základní skladební dvojici?</div>
     <div class="karta"><div class="veta-cela">${v.s.join(' ')}.</div></div>`;
-  const odezva = document.createElement('div');
-  odezva.className = 'odezva';
+  const odezva = odezvaEl();
   Uloha.vyber({
     kam: p, odezva,
     moznosti: Uloha.zamichej(moznosti).map(t => ({ klic: t, popis: t })),
     spravnyKlic: spravna,
     zpravaOk: `✅ ${spravna} – podmět a přísudek k sobě patří.`,
     zpravaChyba: 'Základní skladební dvojici tvoří podmět a přísudek – nic jiného.',
-    poSpravne: skore.vyhodnot,
-    dalsi: novaUloha,
+    poSpravne: napoprve => {
+      hotovo(p, napoprve, 'shoda');
+      p.appendChild(pravidloEl('🔗', `${dvojiceHTML(v)}
+        <div style="margin-top:6px"><b>${v.s[v.podmet]}</b> (kdo? co?) a
+          <b>${v.s[v.prisudek]}</b> (co dělá?) k sobě patří — tvoří
+          <span class="vysledek">základní skladební dvojici</span>. Ostatní slova ve větě
+          je jen rozvíjejí.</div>`));
+    },
+    prodleva: PRODLEVA, dalsi: novaUloha,
   });
   p.appendChild(odezva);
 }
 
+/* ---- nápověda -------------------------------------------------------------- */
+/* Zužuje: ukáže, na co se ptát, správnou odpověď neřekne. */
+function napoveda() {
+  if (!uloha || napovedaVidet) return;
+  const p = $('plocha');
+  const v = uloha.v;
+  const el = document.createElement('div');
+  el.className = 'pravidlo tip';
+  let text, jeSpravna;
+
+  if (uloha.rezim === 'podmet') {
+    text = `Najdi ve větě nejdřív <b>sloveso</b> (${v.s[v.prisudek]}) a zeptej se na ně
+      <b>kdo? co?</b> ${v.s[v.prisudek]}? Odpověď je podmět — a je vždycky v <b>1. pádě</b>.`;
+    jeSpravna = b => [...b.parentElement.children].indexOf(b) === uloha.cil;
+  } else if (uloha.rezim === 'prisudek') {
+    text = `Přísudek je <b>sloveso v určitém tvaru</b> — dá se u něj určit osoba, číslo a čas.
+      Projdi větu a zkus u každého slova říct „já …, ty …“.`;
+    jeSpravna = b => [...b.parentElement.children].indexOf(b) === uloha.cil;
+  } else if (uloha.rezim === 'druhPodmetu') {
+    text = `Zeptej se na podtržený přísudek <b>kdo? co?</b> Když ve větě odpověď stojí jako slovo,
+      rozhodni, jestli je to podstatné jméno, nebo zájmeno. Když tam není, zkus ji doplnit
+      (já, ty, my…) — <b>když to jde</b>, je podmět nevyjádřený, <b>když ne</b>, je věta bezpodmětná.`;
+    jeSpravna = podleKlice(v.druh);
+  } else {
+    text = `Základní skladební dvojici tvoří <b>podmět</b> (kdo? co?) a <b>přísudek</b> (co dělá?).
+      Najdi ve větě sloveso — to je přísudek — a k němu dohledej, kdo ten děj vykonává.`;
+    jeSpravna = podleKlice(uloha.spravna);
+  }
+  el.innerHTML = `<span class="znak">🔎</span><div>${text}</div>`;
+  p.appendChild(el);
+  ztlum(p, jeSpravna);
+  napovedaVidet = true;
+}
+
+/* ---- ovládání -------------------------------------------------------------- */
 const REZIMY = { najdiPodmet, najdiPrisudek, druhPodmetu, dvojice };
-function novaUloha() { REZIMY[rezim](); }
+function novaUloha() { napovedaVidet = false; REZIMY[rezim](); }
 
 document.querySelectorAll('#rezimy button').forEach(b => b.addEventListener('click', () => {
   document.querySelectorAll('#rezimy button').forEach(x => x.classList.remove('active'));
@@ -184,8 +358,10 @@ document.querySelectorAll('#rezimy button').forEach(b => b.addEventListener('cli
   novaUloha();
 }));
 $('btnDalsi').addEventListener('click', novaUloha);
+$('btnNapoveda').addEventListener('click', napoveda);
 document.addEventListener('keydown', e => {
   if (e.key === 'ArrowRight' || e.key === 'Enter') { e.preventDefault(); novaUloha(); }
+  if (e.key === 'h' || e.key === 'H') napoveda();
 });
 novaUloha();
 </script>

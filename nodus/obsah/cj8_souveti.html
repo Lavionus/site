@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="../vyuka.css">
   <script src="../theme.js"></script>
   <script src="../podpis.js" defer></script>
+  <script src="../rec.js"></script>
   <script src="../uloha.js"></script>
   <style>
     .souveti { font-size: clamp(1.02rem, 3.8vw, 1.35rem); font-weight: 600; max-width: 660px; line-height: 1.7; }
@@ -26,6 +27,20 @@
     .carky button.skulina.spatne { background: var(--danger); border-color: var(--danger); color: #fff; }
     .uloha-text { max-width: 640px; font-size: 1.02rem; line-height: 1.6; }
     .uloha-text b { color: var(--accent); }
+    /* spojka, podle které se druh souvětí rozhoduje – svítí už v zadání */
+    .souveti .spoust { color: var(--zvyraz-text); font-weight: 700; }
+    .pomucka .skupina { flex: 1 1 230px; }
+    .pomucka .skupina.sviti { box-shadow: 0 0 0 2px var(--accent-soft); }
+    .pomucka .znak.sviti { border-color: var(--accent); }
+    /* schéma souvětí v kartičce: VH ← VV, nebo VH ↔ VH */
+    .schema { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-top: 6px; }
+    .schema .box {
+      border: 2px solid var(--border-strong); border-radius: 7px; padding: 3px 9px;
+      font-weight: 700; font-size: 0.85rem;
+    }
+    .schema .box.vh { border-color: var(--accent); color: var(--accent); }
+    .schema .box.vv { border-color: var(--warn); color: var(--warn); }
+    .schema .spona { color: var(--text-faint); }
   </style>
 </head>
 <body>
@@ -43,13 +58,38 @@
 
   <div class="ovladani">
     <button class="hlavni" id="btnDalsi">Přeskočit →</button>
+    <button id="btnNapoveda">💡 Nápověda</button>
+    <span class="serie" id="serie"></span>
     <span class="skore" id="skore"></span>
   </div>
 
+  <div class="pomucka" id="pomucka">
+    <div class="skupina" data-h="sourad">
+      <h2>↔️ Souvětí souřadné</h2>
+      <div class="znaky">
+        <span class="znak" data-pomer="slucovaci">a, i, ani, nebo</span>
+        <span class="znak" data-pomer="stupnovaci">nejen – ale i, dokonce</span>
+        <span class="znak" data-pomer="odporovaci">ale, avšak, však, nýbrž</span>
+        <span class="znak" data-pomer="vylucovaci">buď – anebo</span>
+        <span class="znak" data-pomer="pricinny">neboť, totiž, vždyť</span>
+        <span class="znak" data-pomer="dusledkovy">proto, tedy, tudíž</span>
+      </div>
+      <p class="popis">Obě věty jsou <b>hlavní</b> — každá by mohla stát sama.
+        Spojuje je <b>poměr</b>, ne závislost.</p>
+    </div>
+    <div class="skupina" data-h="podrad">
+      <h2>↘️ Souvětí podřadné</h2>
+      <div class="znaky"><span class="znak">že, aby, když, protože, jestliže, ačkoli, který, kdo, kde, jak</span></div>
+      <p class="popis">Věta vedlejší <b>závisí na hlavní</b> a sama by nedávala smysl.
+        Její druh se pozná <b>otázkou z věty hlavní</b> — stejně jako větné členy.</p>
+    </div>
+  </div>
+
   <p class="napoveda">
-    <b>Souvětí souřadné</b> obsahuje aspoň dvě věty hlavní, <b>souvětí podřadné</b> jednu větu hlavní
-    a alespoň jednu vedlejší. Vedlejší větu poznáš podle spojky (že, aby, když, protože, který…)
-    a podle otázky, na kterou odpovídá.
+    Žlutě svítí <b>spojovací výraz</b> — právě podle něj se souvětí rozebírá. Pozor:
+    stejná spojka může uvozovat různé druhy vět, proto vždycky ještě polož <b>otázku</b>
+    z věty hlavní.
+    Klávesy: <kbd>H</kbd> nápověda · <kbd>Enter</kbd> další.
   </p>
 
 <script>
@@ -60,22 +100,22 @@ function odezvaEl() { const d = document.createElement('div'); d.className = 'od
 
 /* druh: 'sourad' = dvě věty hlavní, 'podrad' = hlavní + vedlejší */
 const SOUVETI = [
-  { t: 'Petr přišel domů a hned si udělal úkoly.', druh: 'sourad', pomer: 'slucovaci' },
-  { t: 'Chtěl jsem jít ven, ale začalo pršet.', druh: 'sourad', pomer: 'odporovaci' },
-  { t: 'Buď se učíš, nebo jdeš pomáhat na zahradu.', druh: 'sourad', pomer: 'vylucovaci' },
-  { t: 'Zaspal, proto přišel pozdě.', druh: 'sourad', pomer: 'dusledkovy' },
-  { t: 'Nešel do školy, byl totiž nemocný.', druh: 'sourad', pomer: 'pricinny' },
-  { t: 'Nejenže uklidil pokoj, ale také umyl nádobí.', druh: 'sourad', pomer: 'stupnovaci' },
-  { t: 'Věděl, že má pravdu.', druh: 'podrad', vv: 'predmetna' },
-  { t: 'Kdo pozdě chodí, sám sobě škodí.', druh: 'podrad', vv: 'podmetna' },
-  { t: 'Kniha, kterou jsi mi půjčil, se mi líbila.', druh: 'podrad', vv: 'privlastkova' },
-  { t: 'Když zazvonilo, žáci vyběhli na chodbu.', druh: 'podrad', vv: 'casova' },
-  { t: 'Zůstali jsme doma, protože pršelo.', druh: 'podrad', vv: 'pricinna' },
-  { t: 'Učil se, aby uspěl u zkoušky.', druh: 'podrad', vv: 'ucelova' },
-  { t: 'Půjdeme na výlet, jestliže bude hezky.', druh: 'podrad', vv: 'podminkova' },
-  { t: 'Ačkoli byl unavený, dočetl knihu.', druh: 'podrad', vv: 'pripustkova' },
-  { t: 'Šli jsme tam, kde jsme se domluvili.', druh: 'podrad', vv: 'mistni' },
-  { t: 'Pracoval tak, jak ho to naučili.', druh: 'podrad', vv: 'zpusobova' },
+  { t: 'Petr přišel domů a hned si udělal úkoly.', druh: 'sourad', pomer: 'slucovaci', sp: 'a' },
+  { t: 'Chtěl jsem jít ven, ale začalo pršet.', druh: 'sourad', pomer: 'odporovaci', sp: 'ale' },
+  { t: 'Buď se učíš, nebo jdeš pomáhat na zahradu.', druh: 'sourad', pomer: 'vylucovaci', sp: 'nebo' },
+  { t: 'Zaspal, proto přišel pozdě.', druh: 'sourad', pomer: 'dusledkovy', sp: 'proto' },
+  { t: 'Nešel do školy, byl totiž nemocný.', druh: 'sourad', pomer: 'pricinny', sp: 'totiž' },
+  { t: 'Nejenže uklidil pokoj, ale také umyl nádobí.', druh: 'sourad', pomer: 'stupnovaci', sp: 'ale také' },
+  { t: 'Věděl, že má pravdu.', druh: 'podrad', vv: 'predmetna', sp: 'že', ot: 'Co věděl?' },
+  { t: 'Kdo pozdě chodí, sám sobě škodí.', druh: 'podrad', vv: 'podmetna', sp: 'Kdo', ot: 'Kdo sám sobě škodí?' },
+  { t: 'Kniha, kterou jsi mi půjčil, se mi líbila.', druh: 'podrad', vv: 'privlastkova', sp: 'kterou', ot: 'Která kniha?' },
+  { t: 'Když zazvonilo, žáci vyběhli na chodbu.', druh: 'podrad', vv: 'casova', sp: 'Když', ot: 'Kdy vyběhli?' },
+  { t: 'Zůstali jsme doma, protože pršelo.', druh: 'podrad', vv: 'pricinna', sp: 'protože', ot: 'Proč jsme zůstali doma?' },
+  { t: 'Učil se, aby uspěl u zkoušky.', druh: 'podrad', vv: 'ucelova', sp: 'aby', ot: 'Za jakým účelem se učil?' },
+  { t: 'Půjdeme na výlet, jestliže bude hezky.', druh: 'podrad', vv: 'podminkova', sp: 'jestliže', ot: 'Za jaké podmínky půjdeme?' },
+  { t: 'Ačkoli byl unavený, dočetl knihu.', druh: 'podrad', vv: 'pripustkova', sp: 'Ačkoli', ot: 'I přes co dočetl knihu?' },
+  { t: 'Šli jsme tam, kde jsme se domluvili.', druh: 'podrad', vv: 'mistni', sp: 'kde', ot: 'Kam jsme šli?' },
+  { t: 'Pracoval tak, jak ho to naučili.', druh: 'podrad', vv: 'zpusobova', sp: 'jak', ot: 'Jak pracoval?' },
 ];
 
 const VV = {
@@ -99,11 +139,69 @@ const POMERY = {
   dusledkovy: 'důsledkový (proto, tedy, tudíž)',
 };
 
+let uloha = null, posledni = null, serie = 0, napovedaVidet = false;
+
+/* Kartička s rozborem potřebuje čas na přečtení; po chybě ještě delší. */
+const PRODLEVA = napoprve => (napoprve ? 2300 : 3300);
+
+/* Přehled pod úlohou žije – po odpovědi se rozsvítí druh souvětí a poměr. */
+const pomuckaDiv = $('pomucka');
+function rozsvit(druhKlic, pomerKlic) {
+  pomuckaDiv.querySelectorAll('.skupina').forEach(el =>
+    el.classList.toggle('sviti', el.dataset.h === druhKlic));
+  pomuckaDiv.querySelectorAll('.znak[data-pomer]').forEach(el =>
+    el.classList.toggle('sviti', el.dataset.pomer === pomerKlic));
+}
+
+function hotovo(p, napoprve, druhKlic, pomerKlic) {
+  skore.vyhodnot(napoprve);
+  serie = napoprve ? serie + 1 : 0;
+  $('serie').textContent = serie >= 3 ? '🔥 série ' + serie : '';
+  rozsvit(druhKlic, pomerKlic);
+  const tip = p.querySelector('.pravidlo.tip');
+  if (tip) tip.remove();
+}
+
+function pravidloEl(znak, html) {
+  const el = document.createElement('div');
+  el.className = 'pravidlo ok';
+  el.innerHTML = `<span class="znak">${znak}</span><div>${html}</div>`;
+  return el;
+}
+
+/* Souvětí se svítícím spojovacím výrazem – kde se rozhoduje, má být vidět předem. */
+function souvetiHTML(u) {
+  return u.sp ? u.t.replace(u.sp, `<span class="spoust">${u.sp}</span>`) : u.t;
+}
+
+/* Schéma stavby souvětí – ukáže se až po odpovědi. */
+function schemaHTML(u) {
+  return u.druh === 'sourad'
+    ? `<div class="schema"><span class="box vh">VH 1</span>
+        <span class="spona">— ${POMERY[u.pomer].split(' (')[0]} —</span>
+        <span class="box vh">VH 2</span></div>`
+    : `<div class="schema"><span class="box vh">VH</span>
+        <span class="spona">←</span>
+        <span class="box vv">VV ${VV[u.vv].split(' (')[0]}</span></div>`;
+}
+
+/* Nápověda zužuje, neprozrazuje: ztlumí polovinu špatných možností. */
+function ztlum(p, jeSpravna) {
+  const spatne = [...p.querySelectorAll('.moznosti button, .carky button.skulina')]
+    .filter(b => !jeSpravna(b) && !b.disabled);
+  Uloha.zamichej(spatne).slice(0, Math.ceil(spatne.length / 2))
+    .forEach(b => { b.disabled = true; b.style.opacity = '0.25'; });
+}
+const podleKlice = klic => b => b.dataset.klic === klic;
+
 function druh() {
   const p = $('plocha');
-  const u = Uloha.nahodne(SOUVETI);
+  let u;
+  do { u = Uloha.nahodne(SOUVETI); } while (u === posledni);
+  posledni = u;
+  uloha = { rezim: 'druh', u };
   p.innerHTML = `<div class="zadani">Jaké je to souvětí?</div>
-    <div class="karta"><div class="souveti">${u.t}</div></div>`;
+    <div class="karta"><div class="souveti">${souvetiHTML(u)}</div></div>`;
   const odezva = odezvaEl();
   Uloha.vyber({
     kam: p, odezva, trida: 'dve',
@@ -116,8 +214,18 @@ function druh() {
       ? `✅ Obě věty jsou hlavní, spojuje je poměr ${POMERY[u.pomer].split(' (')[0]}.`
       : `✅ Věta „${u.t}“ obsahuje vedlejší větu ${VV[u.vv].split(' (')[0]}.`,
     zpravaChyba: 'Zeptej se, jestli může každá věta stát samostatně. Když ne, je vedlejší.',
-    poSpravne: skore.vyhodnot,
-    dalsi: novaUloha,
+    poSpravne: napoprve => {
+      hotovo(p, napoprve, u.druh, u.pomer);
+      p.appendChild(pravidloEl(u.druh === 'sourad' ? '↔️' : '↘️', `Souvětí
+        <span class="vysledek">${u.druh === 'sourad' ? 'souřadné' : 'podřadné'}</span>.
+        ${schemaHTML(u)}
+        <div style="margin-top:6px">${u.druh === 'sourad'
+          ? `Obě věty by mohly stát <b>samostatně</b>; spojka <b>${u.sp}</b> mezi ně vkládá
+             poměr ${POMERY[u.pomer].split(' (')[0]}.`
+          : `Věta uvozená spojkou <b>${u.sp}</b> sama o sobě nedává smysl — <b>závisí</b>
+             na větě hlavní a odpovídá na otázku „${u.ot}“`}</div>`));
+    },
+    prodleva: PRODLEVA, dalsi: novaUloha,
   });
   p.appendChild(odezva);
 }
@@ -125,9 +233,12 @@ function druh() {
 function vedlejsi() {
   const p = $('plocha');
   const podradne = SOUVETI.filter(x => x.druh === 'podrad');
-  const u = Uloha.nahodne(podradne);
+  let u;
+  do { u = Uloha.nahodne(podradne); } while (u === posledni);
+  posledni = u;
+  uloha = { rezim: 'vedlejsi', u };
   p.innerHTML = `<div class="zadani">Urči druh vedlejší věty:</div>
-    <div class="karta"><div class="souveti">${u.t}</div></div>`;
+    <div class="karta"><div class="souveti">${souvetiHTML(u)}</div></div>`;
   const odezva = odezvaEl();
   Uloha.vyber({
     kam: p, odezva,
@@ -136,8 +247,17 @@ function vedlejsi() {
     spravnyKlic: u.vv,
     zpravaOk: `✅ ${VV[u.vv]}`,
     zpravaChyba: 'Polož si otázku z věty hlavní – odpověď dá vedlejší věta.',
-    poSpravne: skore.vyhodnot,
-    dalsi: novaUloha,
+    poSpravne: napoprve => {
+      hotovo(p, napoprve, 'podrad', null);
+      p.appendChild(pravidloEl('🏷️', `Z věty hlavní se zeptáme „<b>${u.ot}</b>“ a odpoví
+        celá vedlejší věta — je to věta
+        <span class="vysledek">${VV[u.vv]}</span>.
+        ${schemaHTML(u)}
+        <div style="margin-top:6px">Druhy vedlejších vět se určují <b>stejnými otázkami
+        jako větné členy</b>: vedlejší věta zastupuje ve větě hlavní podmět, předmět,
+        přívlastek nebo příslovečné určení.</div>`));
+    },
+    prodleva: PRODLEVA, dalsi: novaUloha,
   });
   p.appendChild(odezva);
 }
@@ -157,7 +277,10 @@ const CARKY = [
 ];
 function carky() {
   const p = $('plocha');
-  const u = Uloha.nahodne(CARKY);
+  let u;
+  do { u = Uloha.nahodne(CARKY); } while (u === posledni);
+  posledni = u;
+  uloha = { rezim: 'carky', u };
   const stav = { chyboval: false, hotovo: false };
 
   p.innerHTML = `<div class="zadani uloha-text">Klepni na místo, kam patří <b>čárka</b>.</div>`;
@@ -178,8 +301,15 @@ function carky() {
         prvek: b, spravne: i === u.kde, stav, odezva,
         zpravaOk: `✅ ${u.slova.slice(0, u.kde + 1).join(' ')}, ${u.slova.slice(u.kde + 1).join(' ')} – ${u.proc}`,
         zpravaChyba: 'Čárka odděluje věty – hledej, kde jedna věta končí a druhá začíná.',
-        poSpravne: skore.vyhodnot,
-        dalsi: novaUloha,
+        poSpravne: napoprve => {
+          hotovo(p, napoprve, null, null);
+          p.appendChild(pravidloEl('✏️', `<b>${u.slova.slice(0, u.kde + 1).join(' ')},
+            ${u.slova.slice(u.kde + 1).join(' ')}</b>
+            <div style="margin-top:6px">Čárka patří <span class="vysledek">${u.proc}</span>.
+            V souvětí odděluje čárka <b>jednotlivé věty</b> — kolik je ve větě sloves
+            v určitém tvaru, tolik je vět, a mezi ně patří čárka.</div>`));
+        },
+        prodleva: PRODLEVA, dalsi: novaUloha,
       }));
       box.appendChild(b);
     }
@@ -191,9 +321,12 @@ function carky() {
 function pomer() {
   const p = $('plocha');
   const souradna = SOUVETI.filter(x => x.druh === 'sourad');
-  const u = Uloha.nahodne(souradna);
+  let u;
+  do { u = Uloha.nahodne(souradna); } while (u === posledni);
+  posledni = u;
+  uloha = { rezim: 'pomer', u };
   p.innerHTML = `<div class="zadani">V jakém poměru jsou věty hlavní?</div>
-    <div class="karta"><div class="souveti">${u.t}</div></div>`;
+    <div class="karta"><div class="souveti">${souvetiHTML(u)}</div></div>`;
   const odezva = odezvaEl();
   Uloha.vyber({
     kam: p, odezva,
@@ -202,14 +335,67 @@ function pomer() {
     spravnyKlic: u.pomer,
     zpravaOk: `✅ ${POMERY[u.pomer]}`,
     zpravaChyba: 'Sleduj spojku – ta poměr mezi větami nejčastěji prozradí.',
-    poSpravne: skore.vyhodnot,
-    dalsi: novaUloha,
+    poSpravne: napoprve => {
+      hotovo(p, napoprve, 'sourad', u.pomer);
+      p.appendChild(pravidloEl('↔️', `Spojovací výraz <b>${u.sp}</b> zapojuje věty
+        v poměru <span class="vysledek">${POMERY[u.pomer]}</span>.
+        ${schemaHTML(u)}
+        <div style="margin-top:6px">${VYZNAM_POMERU[u.pomer]}</div>`));
+    },
+    prodleva: PRODLEVA, dalsi: novaUloha,
   });
   p.appendChild(odezva);
 }
 
+const VYZNAM_POMERU = {
+  slucovaci: 'Obsahy se prostě <b>řadí vedle sebe</b> — jedno a k tomu druhé.',
+  stupnovaci: 'Druhá věta první <b>stupňuje</b> — přidává něco víc, než se čekalo.',
+  odporovaci: 'Druhá věta jde <b>proti</b> očekávání z první.',
+  vylucovaci: 'Platí <b>jen jedna</b> z možností, obě zároveň ne.',
+  pricinny: 'Druhá věta říká <b>proč</b> platí ta první (příčina jde až po následku).',
+  dusledkovy: 'Druhá věta říká, <b>co z první plyne</b> (následek jde po příčině).',
+};
+
+/* ---- nápověda -------------------------------------------------------------- */
+/* Zužuje: ukáže, na co se ptát, správnou odpověď neřekne. */
+function napoveda() {
+  if (!uloha || napovedaVidet) return;
+  const p = $('plocha');
+  const u = uloha.u;
+  const el = document.createElement('div');
+  el.className = 'pravidlo tip';
+  let text, jeSpravna;
+
+  if (uloha.rezim === 'druh') {
+    text = `Zkus obě věty <b>přečíst zvlášť</b>. Když každá dává smysl i sama, jsou obě hlavní
+      (souvětí souřadné). Když jedna bez druhé <b>visí ve vzduchu</b>, je vedlejší
+      (souvětí podřadné). Rozhodne spojka <b>${u.sp}</b>.`;
+    jeSpravna = podleKlice(u.druh);
+  } else if (uloha.rezim === 'vedlejsi') {
+    text = `Zakryj si vedlejší větu a z <b>věty hlavní</b> se na ni zeptej: kdo? co? koho?
+      jaký? kdy? kde? jak? proč? za jakým účelem? Na kterou otázku vedlejší věta odpoví,
+      takový je její druh.`;
+    jeSpravna = podleKlice(u.vv);
+  } else if (uloha.rezim === 'carky') {
+    text = `Spočítej ve větě <b>slovesa v určitém tvaru</b> — tolik je ve větě vět.
+      Čárka patří tam, kde jedna končí a druhá začíná, tedy obvykle <b>před spojku</b>.`;
+    jeSpravna = b => [...b.parentElement.querySelectorAll('button.skulina')].indexOf(b) === u.kde;
+  } else {
+    text = `Podívej se na svítící spojku <b>${u.sp}</b> a najdi ji v přehledu poměrů
+      pod úlohou. Pak si ještě ověř význam: řadí se obsahy vedle sebe, stupňují,
+      jdou proti sobě, vylučují se, nebo jeden vyplývá z druhého?`;
+    jeSpravna = podleKlice(u.pomer);
+    rozsvit('sourad', null);
+  }
+  el.innerHTML = `<span class="znak">🔎</span><div>${text}</div>`;
+  p.appendChild(el);
+  ztlum(p, jeSpravna);
+  napovedaVidet = true;
+}
+
+/* ---- ovládání -------------------------------------------------------------- */
 const REZIMY = { druh, vedlejsi, carky, pomer };
-function novaUloha() { REZIMY[rezim](); }
+function novaUloha() { napovedaVidet = false; REZIMY[rezim](); }
 
 document.querySelectorAll('#rezimy button').forEach(b => b.addEventListener('click', () => {
   document.querySelectorAll('#rezimy button').forEach(x => x.classList.remove('active'));
@@ -218,6 +404,11 @@ document.querySelectorAll('#rezimy button').forEach(b => b.addEventListener('cli
   novaUloha();
 }));
 $('btnDalsi').addEventListener('click', novaUloha);
+$('btnNapoveda').addEventListener('click', napoveda);
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === 'Enter') { e.preventDefault(); novaUloha(); }
+  if (e.key === 'h' || e.key === 'H') napoveda();
+});
 novaUloha();
 </script>
 </body>

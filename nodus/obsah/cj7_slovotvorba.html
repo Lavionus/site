@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="../vyuka.css">
   <script src="../theme.js"></script>
   <script src="../podpis.js" defer></script>
+  <script src="../rec.js"></script>
   <script src="../uloha.js"></script>
   <style>
     .slovo-velke { font-size: clamp(1.7rem, 6vw, 2.6rem); font-weight: 700; letter-spacing: 0.02em; }
@@ -22,6 +23,17 @@
     .casti button.spatne { background: var(--danger); border-color: var(--danger); color: #fff; }
     .rozbor { color: var(--text-faint); font-size: 0.82rem; }
     .zkratka { font-size: clamp(1.8rem, 7vw, 3rem); font-weight: 700; letter-spacing: 0.06em; }
+    /* barvy částí slova jsou v celé stránce stejné – v úloze i v kartičce */
+    .cast-0 { color: var(--zvyraz-text); }
+    .cast-1 { color: var(--accent); }
+    .cast-2 { color: var(--ok-text); }
+    .cast-3 { color: var(--text-muted); }
+    .rozbor-radek { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+    .rozbor-clen { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+    .rozbor-clen .text { font-weight: 700; }
+    .rozbor-clen .znacka { font-size: 0.72rem; color: var(--text-faint); }
+    .pomucka .skupina { flex: 1 1 190px; }
+    .pomucka .skupina.sviti { box-shadow: 0 0 0 2px var(--accent-soft); }
   </style>
 </head>
 <body>
@@ -39,20 +51,50 @@
 
   <div class="ovladani">
     <button class="hlavni" id="btnDalsi">Přeskočit →</button>
+    <button id="btnNapoveda">💡 Nápověda</button>
+    <span class="serie" id="serie"></span>
     <span class="skore" id="skore"></span>
   </div>
 
+  <div class="pomucka" id="pomucka">
+    <div class="skupina" data-h="odvoz">
+      <h2>🌱 Odvozování</h2>
+      <div class="znaky"><span class="znak">les → <b>les</b>ník · <b>pře</b>skočit</span></div>
+      <p class="popis">K jednomu základu se přidá <b>předpona nebo přípona</b>.
+        Kořen zůstane jen jeden — tak se odvozování pozná.</p>
+    </div>
+    <div class="skupina" data-h="sklad">
+      <h2>🧲 Skládání</h2>
+      <div class="znaky"><span class="znak">země + psát → <b>zeměpis</b></span></div>
+      <p class="popis">Spojí se <b>dva základy</b>, často spojovací samohláskou
+        (-o-, -e-). Ve slově tedy najdeš <b>dva kořeny</b>.</p>
+    </div>
+    <div class="skupina" data-h="zkrac">
+      <h2>🔠 Zkracování</h2>
+      <div class="znaky"><span class="znak">ČR · MHD · Čedok · atd.</span></div>
+      <p class="popis">Z počátečních písmen nebo slabik vznikne <b>zkratka</b>
+        (jen se píše) nebo <b>zkratkové slovo</b> (dá se i skloňovat).</p>
+    </div>
+    <div class="skupina" data-h="stavba">
+      <h2>🧱 Stavba slova</h2>
+      <div class="znaky"><span class="znak"><span class="cast-0">pře</span><span class="cast-1">skoč</span><span class="cast-2">i</span><span class="cast-3">t</span></span></div>
+      <p class="popis"><span class="cast-0">předpona</span> · <span class="cast-1">kořen</span> ·
+        <span class="cast-2">přípona</span> · <span class="cast-3">koncovka</span>.
+        Kořen je vždycky, ostatní části být nemusí.</p>
+    </div>
+  </div>
+
   <p class="napoveda">
-    <b>Odvozování</b> = přidání předpony nebo přípony k základu (les → lesník).
-    <b>Skládání</b> = spojení dvou základů (zeměpis).
-    <b>Zkracování</b> = vznik zkratky nebo zkratkového slova (ČR, Čedok).
-    Slovo se skládá z <b>předpony</b>, <b>kořene</b>, <b>přípony</b> a <b>koncovky</b>.
+    Rozdíl mezi <b>zkratkou</b> a <b>zkratkovým slovem</b>: zkratku (ČR, atd.) jen píšeme
+    a čteme rozepsanou, zkratkové slovo (Čedok) se vyslovuje i skloňuje jako běžné slovo.
+    Klávesy: <kbd>H</kbd> nápověda · <kbd>Enter</kbd> další.
   </p>
 
 <script>
 const $ = id => document.getElementById(id);
 const skore = Uloha.skore('nodus_cj7_slovotvorba', $('skore'));
 let rezim = 'zpusob';
+let uloha = null, posledni = null, serie = 0, napovedaVidet = false;
 
 const ZPUSOBY = { odvoz: 'odvozování', sklad: 'skládání', zkrac: 'zkracování' };
 
@@ -122,22 +164,83 @@ const ZKRATKY = [
   { z: 'mj.', v: 'mimo jiné', jine: ['mezi jinými', 'místo jiného', 'mnoho jiných'] },
 ];
 
+/* ---- společné díly --------------------------------------------------------- */
+function odezvaEl() { const d = document.createElement('div'); d.className = 'odezva'; return d; }
+
+/* Kartička s rozborem potřebuje čas na přečtení; po chybě ještě delší. */
+const PRODLEVA = napoprve => (napoprve ? 2200 : 3200);
+
+/* Přehled pod úlohou žije – po odpovědi se rozsvítí probíraný způsob tvoření. */
+const pomuckaDiv = $('pomucka');
+function rozsvit(klic) {
+  pomuckaDiv.querySelectorAll('.skupina').forEach(el =>
+    el.classList.toggle('sviti', el.dataset.h === klic));
+}
+
+function hotovo(p, napoprve, klic) {
+  skore.vyhodnot(napoprve);
+  serie = napoprve ? serie + 1 : 0;
+  $('serie').textContent = serie >= 3 ? '🔥 série ' + serie : '';
+  rozsvit(klic);
+  const tip = p.querySelector('.pravidlo.tip');
+  if (tip) tip.remove();
+}
+
+function pravidloEl(znak, html) {
+  const el = document.createElement('div');
+  el.className = 'pravidlo ok';
+  el.innerHTML = `<span class="znak">${znak}</span><div>${html}</div>`;
+  return el;
+}
+
+const IKONA_ZPUSOBU = { odvoz: '🌱', sklad: '🧲', zkrac: '🔠' };
+const POZNAVACKA = {
+  odvoz: 'slovo má <b>jeden kořen</b> a k němu přibyla předpona nebo přípona',
+  sklad: 've slově jsou <b>dva základy</b> spojené v jedno',
+  zkrac: 'slovo vzniklo z <b>počátečních písmen nebo slabik</b> delšího názvu',
+};
+
+/* Celý rozbor stavby slova – ukáže se až po správné odpovědi. */
+function rozborHTML(u, zvyraz) {
+  return '<div class="rozbor-radek">' + u.casti
+    .map((c, i) => [c, i]).filter(([c]) => c !== '')
+    .map(([c, i]) => `<div class="rozbor-clen${i === zvyraz ? ' sviti' : ''}">
+        <span class="text cast-${i}">${c}</span>
+        <span class="znacka">${NAZVY_CASTI[i]}</span></div>`).join('') + '</div>';
+}
+
+/* Nápověda zužuje, neprozrazuje: ztlumí polovinu špatných možností. */
+function ztlum(p, jeSpravna) {
+  const spatne = [...p.querySelectorAll('.moznosti button, .casti button')]
+    .filter(b => !jeSpravna(b) && !b.disabled);
+  Uloha.zamichej(spatne).slice(0, Math.ceil(spatne.length / 2))
+    .forEach(b => { b.disabled = true; b.style.opacity = '0.25'; });
+}
+const podleKlice = klic => b => b.dataset.klic === klic;
+
 /* ---- Jak slovo vzniklo ------------------------------------------------------------ */
 function zpusob() {
   const p = $('plocha');
-  const u = Uloha.nahodne(SLOVA_ZPUSOB);
+  let u;
+  do { u = Uloha.nahodne(SLOVA_ZPUSOB); } while (u === posledni);
+  posledni = u;
+  uloha = { rezim: 'zpusob', u };
   p.innerHTML = `<div class="zadani">Jak vzniklo slovo</div>
     <div class="karta"><div class="slovo-velke">${u.s}</div></div>`;
-  const odezva = document.createElement('div');
-  odezva.className = 'odezva';
+  const odezva = odezvaEl();
   Uloha.vyber({
     kam: p, odezva,
     moznosti: Uloha.zamichej(Object.entries(ZPUSOBY).map(([k, v]) => ({ klic: k, popis: v }))),
     spravnyKlic: u.z,
     zpravaOk: `✅ ${ZPUSOBY[u.z]} – ${u.vysvetleni}`,
     zpravaChyba: 'Hledej, zda jsou ve slově dva základy (skládání), nebo jen předpona a přípona.',
-    poSpravne: skore.vyhodnot,
-    dalsi: novaUloha,
+    poSpravne: napoprve => {
+      hotovo(p, napoprve, u.z);
+      p.appendChild(pravidloEl(IKONA_ZPUSOBU[u.z], `<b>${u.s}</b> vzniklo
+        <span class="vysledek">${ZPUSOBY[u.z]}</span>: ${u.vysvetleni}.
+        <div style="margin-top:6px">Poznáš to podle toho, že ${POZNAVACKA[u.z]}.</div>`));
+    },
+    prodleva: PRODLEVA, dalsi: novaUloha,
   });
   p.appendChild(odezva);
 }
@@ -145,26 +248,35 @@ function zpusob() {
 /* ---- Části slova ------------------------------------------------------------------- */
 function stavba() {
   const p = $('plocha');
-  const u = Uloha.nahodne(STAVBA);
+  let u;
+  do { u = Uloha.nahodne(STAVBA); } while (u === posledni);
+  posledni = u;
   const indexy = u.casti.map((c, i) => [c, i]).filter(([c]) => c !== '');
-  const hledanyIndex = Uloha.nahodne(indexy.filter(([, i]) => i <= 3))[1];
-  const nazev = NAZVY_CASTI[Math.min(hledanyIndex, 3)];
+  const hledanyIndex = Uloha.nahodne(indexy)[1];
+  const nazev = NAZVY_CASTI[hledanyIndex];
+  uloha = { rezim: 'stavba', u, hledanyIndex, nazev };
   const stav = { chyboval: false, hotovo: false };
 
   p.innerHTML = `<div class="zadani">Klepni na <b>${nazev}</b> ve slově <b>${u.slovo}</b>.</div>`;
   const box = document.createElement('div');
   box.className = 'casti';
-  const odezva = document.createElement('div');
-  odezva.className = 'odezva';
+  const odezva = odezvaEl();
   indexy.forEach(([cast, i]) => {
     const b = document.createElement('button');
     b.textContent = cast;
     b.addEventListener('click', () => Uloha.odpoved({
       prvek: b, spravne: i === hledanyIndex, stav, odezva,
       zpravaOk: `✅ „${cast}“ je ${nazev}. Celé slovo: ${indexy.map(([c]) => c).join('-')}`,
-      zpravaChyba: `„${cast}“ je ${NAZVY_CASTI[Math.min(i, 3)]} – hledáme ${nazev}.`,
-      poSpravne: skore.vyhodnot,
-      dalsi: novaUloha,
+      zpravaChyba: `„${cast}“ je ${NAZVY_CASTI[i]} – hledáme ${nazev}.`,
+      poSpravne: napoprve => {
+        hotovo(p, napoprve, 'stavba');
+        p.appendChild(pravidloEl('🧱', `${rozborHTML(u, hledanyIndex)}
+          <div style="margin-top:6px"><b>${u.casti[hledanyIndex]}</b> je
+          <span class="vysledek">${nazev}</span> — ${POPIS_CASTI[hledanyIndex]}
+          <div style="margin-top:6px">Postup je vždycky stejný: najdi nejdřív <b>kořen</b>
+          (část společnou slovům příbuzným), a co je před ním a za ním, se pak už rozliší samo.</div></div>`));
+      },
+      prodleva: PRODLEVA, dalsi: novaUloha,
     }));
     box.appendChild(b);
   });
@@ -175,10 +287,12 @@ function stavba() {
 /* ---- Vytvoř slovo ------------------------------------------------------------------ */
 function tvor() {
   const p = $('plocha');
-  const u = Uloha.nahodne(TVORENI);
+  let u;
+  do { u = Uloha.nahodne(TVORENI); } while (u === posledni);
+  posledni = u;
+  uloha = { rezim: 'tvor', u };
   p.innerHTML = `<div class="zadani">${u.otazka}</div>`;
-  const odezva = document.createElement('div');
-  odezva.className = 'odezva';
+  const odezva = odezvaEl();
   Uloha.vyber({
     kam: p, odezva,
     moznosti: Uloha.zamichej([u.spravne, ...Uloha.zamichej(u.jine).slice(0, 3)])
@@ -186,8 +300,15 @@ function tvor() {
     spravnyKlic: u.spravne,
     zpravaOk: `✅ ${u.spravne}`,
     zpravaChyba: 'Které slovo se opravdu používá? Přípona musí sedět k významu.',
-    poSpravne: skore.vyhodnot,
-    dalsi: novaUloha,
+    poSpravne: napoprve => {
+      hotovo(p, napoprve, 'odvoz');
+      p.appendChild(pravidloEl('✏️', `Správně je <span class="vysledek">${u.spravne}</span>.
+        <div style="margin-top:6px">Nová slova vznikají <b>odvozováním</b> — k základu se
+        přidá přípona. Ostatní možnosti jsou utvořené podle stejného vzorce, ale
+        <b>čeština je nepoužívá</b>: která přípona se k danému významu hodí, se nedá
+        odvodit pravidlem, to prostě znáš z mluvení a čtení.</div>`));
+    },
+    prodleva: PRODLEVA, dalsi: novaUloha,
   });
   p.appendChild(odezva);
 }
@@ -195,25 +316,80 @@ function tvor() {
 /* ---- Zkratky ------------------------------------------------------------------------ */
 function zkratky() {
   const p = $('plocha');
-  const u = Uloha.nahodne(ZKRATKY);
+  let u;
+  do { u = Uloha.nahodne(ZKRATKY); } while (u === posledni);
+  posledni = u;
+  uloha = { rezim: 'zkratky', u };
   p.innerHTML = `<div class="zadani">Co znamená zkratka</div>
     <div class="karta"><div class="zkratka">${u.z}</div></div>`;
-  const odezva = document.createElement('div');
-  odezva.className = 'odezva';
+  const odezva = odezvaEl();
   Uloha.vyber({
     kam: p, odezva,
     moznosti: Uloha.zamichej([u.v, ...u.jine]).map(t => ({ klic: t, popis: t })),
     spravnyKlic: u.v,
     zpravaOk: `✅ ${u.z} = ${u.v}`,
     zpravaChyba: 'Rozepiš si počáteční písmena – co dávají za smysl?',
-    poSpravne: skore.vyhodnot,
-    dalsi: novaUloha,
+    poSpravne: napoprve => {
+      hotovo(p, napoprve, 'zkrac');
+      const teckou = u.z.includes('.');
+      p.appendChild(pravidloEl('🔠', `<b>${u.z}</b> =
+        <span class="vysledek">${u.v}</span>.
+        <div style="margin-top:6px">${teckou
+          ? 'Je to <b>grafická zkratka</b> — jen se píše, nahlas se čte celá rozepsaná, a proto za ní stojí <b>tečka</b>.'
+          : 'Je to <b>iniciálová zkratka</b> z počátečních písmen; píše se velkými písmeny a bez teček.'}</div>`));
+    },
+    prodleva: PRODLEVA, dalsi: novaUloha,
   });
   p.appendChild(odezva);
 }
 
+/* ---- nápověda -------------------------------------------------------------- */
+const POPIS_CASTI = [
+  'stojí před kořenem a mění význam slova.',
+  'nese hlavní význam a je společný slovům příbuzným.',
+  'stojí za kořenem a tvoří se jí nové slovo.',
+  'je úplně na konci a mění se při skloňování nebo časování.',
+];
+
+/* Zužuje: ukáže postup, správnou odpověď neřekne. */
+function napoveda() {
+  if (!uloha || napovedaVidet) return;
+  const p = $('plocha');
+  const u = uloha.u;
+  const el = document.createElement('div');
+  el.className = 'pravidlo tip';
+  let text, jeSpravna;
+
+  if (uloha.rezim === 'zpusob') {
+    text = `Spočítej ve slově <b>kořeny</b>. Jeden kořen s předponou nebo příponou →
+      odvozování. Dva základy spojené v jedno → skládání. Jen počáteční písmena delšího
+      názvu → zkracování.`;
+    jeSpravna = podleKlice(u.z);
+  } else if (uloha.rezim === 'stavba') {
+    text = `Najdi nejdřív <b>kořen</b> — část, kterou má slovo společnou se slovy příbuznými
+      (zkus jich pár vymyslet). Co je <b>před ním</b>, je předpona; hned <b>za ním</b>
+      přípona a úplně <b>na konci</b> koncovka, která se mění při skloňování.`;
+    jeSpravna = b => b.textContent === uloha.u.casti[uloha.hledanyIndex];
+  } else if (uloha.rezim === 'tvor') {
+    text = `Zkus všechny možnosti <b>říct nahlas ve větě</b>. Tři z nich znějí divně —
+      čeština je netvoří, i když by podle pravidla mohly vzniknout. Vyber tu,
+      kterou <b>opravdu slýcháš</b>.`;
+    jeSpravna = podleKlice(u.spravne);
+  } else {
+    text = `Rozepiš si <b>písmeno po písmenu</b>: každé začíná jedno slovo.
+      ${u.z.includes('.') ? 'Tečka na konci znamená, že jde o zkrácený zápis běžných slov.'
+        : 'Velká písmena bez teček bývají názvy institucí nebo států.'}`;
+    jeSpravna = podleKlice(u.v);
+  }
+  el.innerHTML = `<span class="znak">🔎</span><div>${text}</div>`;
+  p.appendChild(el);
+  ztlum(p, jeSpravna);
+  napovedaVidet = true;
+}
+
+/* ---- ovládání -------------------------------------------------------------- */
 const REZIMY = { zpusob, stavba, tvor, zkratky };
-function novaUloha() { REZIMY[rezim](); }
+function novaUloha() { napovedaVidet = false; REZIMY[rezim](); }
 
 document.querySelectorAll('#rezimy button').forEach(b => b.addEventListener('click', () => {
   document.querySelectorAll('#rezimy button').forEach(x => x.classList.remove('active'));
@@ -222,6 +398,11 @@ document.querySelectorAll('#rezimy button').forEach(b => b.addEventListener('cli
   novaUloha();
 }));
 $('btnDalsi').addEventListener('click', novaUloha);
+$('btnNapoveda').addEventListener('click', napoveda);
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === 'Enter') { e.preventDefault(); novaUloha(); }
+  if (e.key === 'h' || e.key === 'H') napoveda();
+});
 novaUloha();
 </script>
 </body>

@@ -5,19 +5,16 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Literární směry a autoři</title>
   <link rel="stylesheet" href="../common.css">
+  <link rel="stylesheet" href="../vyuka.css">
   <script src="../theme.js"></script>
   <script src="../podpis.js" defer></script>
+  <script src="../rec.js"></script>
+  <script src="../uloha.js"></script>
   <style>
-    body { background-color: var(--bg-deep); padding: 24px clamp(14px, 3vw, 40px); min-height: 100vh; }
-    h1 { font-size: 1.4rem; margin-bottom: 4px; }
-    .podtitul { color: var(--text-muted); font-size: 0.88rem; margin-bottom: 16px; }
-    .rezimy { display: flex; flex-wrap: wrap; gap: 8px; margin-bottom: 14px; }
-    .rezimy button {
-      background: var(--bg-control); border: 1px solid var(--border-strong); color: var(--text-muted);
-      border-radius: 6px; padding: 7px 13px; font-size: 0.84rem; cursor: pointer;
-    }
-    .rezimy button.active { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
-    .smer { background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px 18px; margin-bottom: 12px; max-width: 860px; }
+    /* Vzhled kvízu (plocha, možnosti, odezva, kartičky) řeší vyuka.css – tady
+       zůstávají jen styly přehledu směrů, který má tahle stránka vlastní. */
+    .smer { background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 16px 18px; margin-bottom: 12px; max-width: 860px; transition: border-color 0.2s; }
     .smer h2 { font-size: 1.05rem; display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
     .smer h2 .obdobi { font-size: 0.78rem; color: var(--accent); font-weight: 600; }
     .smer .znaky { color: var(--text-muted); font-size: 0.88rem; margin: 6px 0 10px; }
@@ -25,26 +22,11 @@
     .smer td { padding: 4px 8px 4px 0; border-bottom: 1px solid var(--border); vertical-align: top; }
     .smer td:first-child { font-weight: 600; white-space: nowrap; }
     .smer td:last-child { color: var(--text-muted); }
-    .karta { background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 22px; max-width: 640px; }
-    .zadani { font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.5px; color: var(--text-faint); margin-bottom: 8px; }
-    .dotaz { font-size: 1.4rem; font-weight: 700; margin-bottom: 18px; min-height: 2.2rem; }
-    .moznosti { display: grid; gap: 8px; }
-    .moznosti button {
-      background: var(--bg-elevated); border: 1px solid var(--border); color: var(--text);
-      border-radius: 8px; padding: 12px 14px; font-size: 1rem; cursor: pointer; text-align: left;
-    }
-    .moznosti button:hover { border-color: var(--accent); }
-    .moznosti button.ok { background: rgba(76, 175, 125, 0.2); border-color: var(--ok); }
-    .moznosti button.spatne { background: rgba(224, 93, 93, 0.18); border-color: var(--danger); }
-    .moznosti button:disabled { cursor: default; }
-    .stavovy { display: flex; align-items: center; gap: 16px; margin-top: 16px; font-size: 0.9rem; }
-    .serie { color: var(--warn); }
-    .pomer { color: var(--text-muted); margin-left: auto; font-variant-numeric: tabular-nums; }
-    .dalsi {
-      background: var(--accent); border: 1px solid var(--accent); color: #fff; border-radius: 6px;
-      padding: 8px 16px; font-size: 0.88rem; cursor: pointer; visibility: hidden;
-    }
-    .dalsi:hover { background: var(--accent-hover); }
+    /* přehled žije: po odpovědi se rozsvítí směr a autor, o které v úloze šlo */
+    .smer.sviti { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
+    .smer tr.sviti td { color: var(--ok-text); }
+    .dotaz { font-size: clamp(1.3rem, 5vw, 1.9rem); font-weight: 700; }
+    .moznosti.smery button { max-width: 100%; text-align: left; font-size: 0.98rem; }
   </style>
 </head>
 <body>
@@ -52,23 +34,28 @@
   <p class="podtitul">Přehled hlavních směrů, autorů a děl + kvíz (SŠ, maturitní minimum).</p>
 
   <div class="rezimy" id="rezimy">
-    <button data-rezim="prehled" class="active">Přehled</button>
-    <button data-rezim="autor">Kvíz: autor → směr</button>
-    <button data-rezim="dilo">Kvíz: dílo → autor</button>
+    <button data-rezim="prehled" class="active">📖 Přehled</button>
+    <button data-rezim="autor">✍️ Autor → směr</button>
+    <button data-rezim="dilo">📕 Dílo → autor</button>
+    <button data-rezim="obdobi">🕰️ Směr → období</button>
   </div>
+
+  <div class="plocha" id="plocha" style="display:none"></div>
+
+  <div class="ovladani" id="ovladani" style="display:none">
+    <button class="hlavni" id="btnDalsi">Přeskočit →</button>
+    <button id="btnNapoveda">💡 Nápověda</button>
+    <span class="serie" id="serie"></span>
+    <span class="skore" id="skore"></span>
+  </div>
+
+  <p class="napoveda" id="klavesy" style="display:none">
+    Směr se dá skoro vždycky odhadnout z <b>doby</b>: kdy autor žil, takový směr ho
+    obklopoval. Celý přehled zůstává pod úlohou.
+    Klávesy: <kbd>H</kbd> nápověda · <kbd>Enter</kbd> další.
+  </p>
 
   <div id="prehled"></div>
-
-  <div class="karta" id="kviz" style="display:none">
-    <div class="zadani" id="zadani"></div>
-    <div class="dotaz" id="dotaz"></div>
-    <div class="moznosti" id="moznosti"></div>
-    <div class="stavovy">
-      <button class="dalsi" id="btnDalsi">Další →</button>
-      <span class="serie" id="serie"></span>
-      <span class="pomer" id="pomer"></span>
-    </div>
-  </div>
 
 <script>
 const SMERY = [
@@ -114,54 +101,146 @@ const $ = id => document.getElementById(id);
 
 /* ---------- přehled ---------- */
 $('prehled').innerHTML = SMERY.map(s => `
-  <div class="smer">
+  <div class="smer" data-smer="${s.nazev}">
     <h2>${s.nazev} <span class="obdobi">${s.obdobi}</span></h2>
     <div class="znaky">${s.znaky}</div>
-    <table>${s.autori.map(([a, d]) => `<tr><td>${a}</td><td>${d}</td></tr>`).join('')}</table>
+    <table>${s.autori.map(([a, d]) =>
+      `<tr data-autor="${a}"><td>${a}</td><td>${d}</td></tr>`).join('')}</table>
   </div>`).join('');
 
-/* ---------- kvíz ---------- */
-let rezim = 'prehled', uloha = null, spravne = 0, celkem = 0, serie = 0;
+/* ---------- kvíz ----------
+   Chování odpovědí (zaklepání u chyby, zelená a automatický posun u správné,
+   skóre v localStorage a zápis do studijního deníku) řeší sdílený uloha.js –
+   stránka se tak ovládá stejně jako ostatní procvičování v Nodusu. */
+const skore = Uloha.skore('nodus_literarni_smery', $('skore'));
+let rezim = 'prehled', uloha = null, posledni = null, serie = 0, napovedaVidet = false;
 
-// dvojice pro kvízy
-const AUTOR_SMER = SMERY.flatMap(s => s.autori.filter(([a]) => a !== '(anonym)').map(([a]) => [a, s.nazev]));
-const DILO_AUTOR = SMERY.flatMap(s => s.autori.filter(([a]) => a !== '(anonym)').flatMap(([a, d]) =>
-  d.split(/[,;]/).slice(0, 2).map(x => x.trim()).filter(x => x && !x.startsWith('nositel')).map(x => [x, a])));
+const SMER_PODLE_NAZVU = Object.fromEntries(SMERY.map(s => [s.nazev, s]));
 
-function zamichej(p) { p = [...p]; for (let i = p.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [p[i], p[j]] = [p[j], p[i]]; } return p; }
+/* Dvojice pro kvízy. Anonymní autoři se vynechávají – „(anonym)“ by jako odpověď
+   nedávalo smysl a ve dvou směrech je navíc tentýž řetězec. */
+const AUTOR_SMER = SMERY.flatMap(s => s.autori.filter(([a]) => a !== '(anonym)')
+  .map(([a, d]) => ({ otazka: a, odpoved: s.nazev, smer: s.nazev, dila: d })));
+const DILO_AUTOR = SMERY.flatMap(s => s.autori.filter(([a]) => a !== '(anonym)')
+  .flatMap(([a, d]) => d.split(/[,;]/).slice(0, 2).map(x => x.trim())
+    .filter(x => x && !x.startsWith('nositel'))
+    .map(x => ({ otazka: x, odpoved: a, smer: s.nazev, dila: d }))));
+const SMER_OBDOBI = SMERY.map(s => ({ otazka: s.nazev, odpoved: s.obdobi, smer: s.nazev }));
 
-function dalsi() {
-  const zdroj = rezim === 'autor' ? AUTOR_SMER : DILO_AUTOR;
-  uloha = zdroj[Math.floor(Math.random() * zdroj.length)];
-  $('zadani').textContent = rezim === 'autor' ? 'Do kterého směru / období patří autor?' : 'Kdo je autorem díla?';
-  $('dotaz').textContent = uloha[0];
-  const spatneMoznosti = zamichej([...new Set(zdroj.map(z => z[1]).filter(x => x !== uloha[1]))]).slice(0, 3);
-  const moznosti = zamichej([uloha[1], ...spatneMoznosti]);
-  $('moznosti').innerHTML = '';
-  moznosti.forEach(m => {
-    const b = document.createElement('button');
-    b.textContent = m;
-    b.onclick = () => {
-      celkem++;
-      if (m === uloha[1]) { spravne++; serie++; b.classList.add('ok'); }
-      else { serie = 0; b.classList.add('spatne'); [...$('moznosti').children].find(x => x.textContent === uloha[1]).classList.add('ok'); }
-      [...$('moznosti').children].forEach(x => x.disabled = true);
-      $('serie').textContent = serie >= 3 ? '🔥 série ' + serie : '';
-      $('pomer').textContent = spravne + ' / ' + celkem;
-      $('btnDalsi').style.visibility = 'visible';
-    };
-    $('moznosti').appendChild(b);
-  });
-  $('btnDalsi').style.visibility = 'hidden';
+const ZDROJE = { autor: AUTOR_SMER, dilo: DILO_AUTOR, obdobi: SMER_OBDOBI };
+const ZADANI = {
+  autor: 'Do kterého směru / období patří autor?',
+  dilo: 'Kdo je autorem díla?',
+  obdobi: 'Do jakého období směr spadá?',
+};
+
+/* Kartička s vysvětlením potřebuje čas na přečtení; po chybě ještě delší. */
+const PRODLEVA = napoprve => (napoprve ? 2600 : 3600);
+
+/* Přehled pod kvízem žije – po odpovědi se v něm rozsvítí probíraný směr i autor. */
+function rozsvit(smer, autor) {
+  $('prehled').querySelectorAll('.smer').forEach(el =>
+    el.classList.toggle('sviti', el.dataset.smer === smer));
+  $('prehled').querySelectorAll('tr').forEach(el =>
+    el.classList.toggle('sviti', !!autor && el.dataset.autor === autor));
 }
-$('btnDalsi').onclick = dalsi;
 
-document.querySelectorAll('#rezimy button').forEach(b => b.onclick = () => {
+function hotovo(p, napoprve, smer, autor) {
+  skore.vyhodnot(napoprve);
+  serie = napoprve ? serie + 1 : 0;
+  $('serie').textContent = serie >= 3 ? '🔥 série ' + serie : '';
+  rozsvit(smer, autor);
+  const tip = p.querySelector('.pravidlo.tip');
+  if (tip) tip.remove();
+}
+
+/* Kartička „proč“ – zasadí odpověď do směru, období a k dalším dílům autora. */
+function pravidloEl(u) {
+  const smer = SMER_PODLE_NAZVU[u.smer];
+  const el = document.createElement('div');
+  el.className = 'pravidlo ok';
+  el.innerHTML = `<span class="znak">📚</span><div>
+      <span class="vysledek">${u.odpoved}</span>
+      <div style="margin-top:6px"><b>${smer.nazev}</b> (${smer.obdobi}) — ${smer.znaky}</div>
+      ${u.dila ? `<div style="margin-top:6px">Další díla: <i>${u.dila}</i></div>` : ''}
+    </div>`;
+  return el;
+}
+
+/* Nápověda zužuje, neprozrazuje: ztlumí polovinu špatných možností. */
+function ztlum(p, spravnyKlic) {
+  const spatne = [...p.querySelectorAll('.moznosti button')]
+    .filter(b => b.dataset.klic !== spravnyKlic && !b.disabled);
+  Uloha.zamichej(spatne).slice(0, Math.ceil(spatne.length / 2))
+    .forEach(b => { b.disabled = true; b.style.opacity = '0.25'; });
+}
+
+function novaUloha() {
+  napovedaVidet = false;
+  if (rezim === 'prehled') return;
+  const p = $('plocha');
+  const zdroj = ZDROJE[rezim];
+  let u;
+  do { u = Uloha.nahodne(zdroj); } while (u === posledni && zdroj.length > 1);
+  posledni = u;
+  uloha = u;
+
+  const spatne = Uloha.zamichej([...new Set(zdroj.map(z => z.odpoved))]
+    .filter(x => x !== u.odpoved)).slice(0, 3);
+  p.innerHTML = `<div class="zadani">${ZADANI[rezim]}</div>
+    <div class="karta"><div class="dotaz">${u.otazka}</div></div>`;
+  const odezva = document.createElement('div');
+  odezva.className = 'odezva';
+  Uloha.vyber({
+    kam: p, odezva, trida: 'smery',
+    moznosti: Uloha.zamichej([u.odpoved, ...spatne]).map(t => ({ klic: t, popis: t })),
+    spravnyKlic: u.odpoved,
+    zpravaOk: '\u2705 ' + u.odpoved,
+    zpravaChyba: rezim === 'dilo'
+      ? 'Zkus si vybavit dobu, ve které dílo vzniklo – autor do ní patří.'
+      : 'Rozhodni podle doby: kdy autor žil, takový směr ho obklopoval.',
+    poSpravne: napoprve => {
+      hotovo(p, napoprve, u.smer, rezim === 'autor' ? u.otazka : u.odpoved);
+      p.appendChild(pravidloEl(u));
+    },
+    prodleva: PRODLEVA, dalsi: novaUloha,
+  });
+  p.appendChild(odezva);
+}
+
+/* ---- nápověda -------------------------------------------------------------- */
+/* Zužuje: prozradí období nebo typický znak, ne odpověď samotnou. */
+function napoveda() {
+  if (!uloha || napovedaVidet || rezim === 'prehled') return;
+  const p = $('plocha');
+  const smer = SMER_PODLE_NAZVU[uloha.smer];
+  const el = document.createElement('div');
+  el.className = 'pravidlo tip';
+  el.innerHTML = `<span class="znak">🔎</span><div>${rezim === 'obdobi'
+    ? `Čím je směr typický: ${smer.znaky} Podle toho odhadni, do jakého století patří.`
+    : `Hledaný směr spadá do období <b>${smer.obdobi}</b>. Typické pro něj je: ${smer.znaky}`}</div>`;
+  p.appendChild(el);
+  ztlum(p, uloha.odpoved);
+  napovedaVidet = true;
+}
+
+/* ---- ovládání -------------------------------------------------------------- */
+document.querySelectorAll('#rezimy button').forEach(b => b.addEventListener('click', () => {
   document.querySelectorAll('#rezimy button').forEach(x => x.classList.remove('active'));
-  b.classList.add('active'); rezim = b.dataset.rezim;
-  $('prehled').style.display = rezim === 'prehled' ? '' : 'none';
-  $('kviz').style.display = rezim === 'prehled' ? 'none' : '';
-  if (rezim !== 'prehled') dalsi();
+  b.classList.add('active');
+  rezim = b.dataset.rezim;
+  const kviz = rezim !== 'prehled';
+  $('plocha').style.display = kviz ? '' : 'none';
+  $('ovladani').style.display = kviz ? '' : 'none';
+  $('klavesy').style.display = kviz ? '' : 'none';
+  if (kviz) novaUloha(); else rozsvit(null, null);
+}));
+$('btnDalsi').addEventListener('click', novaUloha);
+$('btnNapoveda').addEventListener('click', napoveda);
+document.addEventListener('keydown', e => {
+  if (rezim === 'prehled') return;
+  if (e.key === 'ArrowRight' || e.key === 'Enter') { e.preventDefault(); novaUloha(); }
+  if (e.key === 'h' || e.key === 'H') napoveda();
 });
 </script>
 </body>

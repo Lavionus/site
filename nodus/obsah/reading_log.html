@@ -22,9 +22,14 @@
     }
     input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); }
     textarea { resize: vertical; min-height: 64px; }
-    .hvezdicky { display: flex; gap: 4px; font-size: 1.4rem; cursor: pointer; user-select: none; }
-    .hvezdicky span { color: var(--text-faint); }
-    .hvezdicky span.plna { color: var(--warn); }
+    .hvezdicky { display: flex; gap: 4px; font-size: 1.4rem; user-select: none; }
+    /* hvězdičky jsou tlačítka, ne pasivní <span> – jdou tak ovládat i klávesnicí */
+    .hvezdicky button {
+      background: none; border: none; padding: 0 2px; font-size: inherit; line-height: 1;
+      color: var(--text-faint); cursor: pointer; font-family: inherit;
+    }
+    .hvezdicky button.plna { color: var(--warn); }
+    .hvezdicky button:focus-visible { outline: 2px solid var(--accent); border-radius: 4px; }
     .btn {
       background: var(--accent); border: 1px solid var(--accent); color: #fff; border-radius: 6px;
       padding: 9px 16px; font-size: 0.88rem; cursor: pointer; margin-top: 14px;
@@ -99,6 +104,7 @@
           <option value="pridani">Nejnovější</option>
           <option value="nazev">Podle názvu</option>
           <option value="hodnoceni">Podle hodnocení</option>
+          <option value="datum">Podle data dočtení</option>
         </select>
         <div class="statistiky" id="statistiky"></div>
       </div>
@@ -107,10 +113,23 @@
   </div>
 
   <script>
-    const KEY = 'reading_log_knihy';
+    /* Klíče v localStorage mají v Nodusu předponu nodus_ (hlavní web má webapp_) –
+       oba weby běží na stejném originu, takže nepředponovaný klíč hrozil kolizí.
+       Starý název se při prvním otevření přenese, aby nikdo o deník nepřišel. */
+    const KEY = 'nodus_ctenarsky_denik';
+    const STARY_KEY = 'reading_log_knihy';
     const STAVY = { prectena: ['Přečtená', 'stav-prectena'], ctu: ['Právě čtu', 'stav-ctu'], chci: ['Chci číst', 'stav-chci'] };
     let knihy = [];
-    try { knihy = JSON.parse(localStorage.getItem(KEY)) || []; } catch { knihy = []; }
+    try {
+      knihy = JSON.parse(localStorage.getItem(KEY)) || [];
+      if (!knihy.length) {
+        const stare = JSON.parse(localStorage.getItem(STARY_KEY) || 'null');
+        if (Array.isArray(stare) && stare.length) {
+          knihy = stare;
+          localStorage.setItem(KEY, JSON.stringify(knihy));
+        }
+      }
+    } catch { knihy = []; }
     let upravovaneId = null;
     let hodnoceni = 0;
 
@@ -120,10 +139,13 @@
     /* hvězdičky ve formuláři */
     const hvezdyEl = $('fHvezdy');
     for (let i = 1; i <= 5; i++) {
-      const s = document.createElement('span');
-      s.textContent = '★';
-      s.addEventListener('click', () => { hodnoceni = (hodnoceni === i) ? 0 : i; vykresliHvezdy(); });
-      hvezdyEl.appendChild(s);
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.textContent = '★';
+      b.title = i + ' z 5';
+      b.setAttribute('aria-label', 'Hodnocení ' + i + ' z 5');
+      b.addEventListener('click', () => { hodnoceni = (hodnoceni === i) ? 0 : i; vykresliHvezdy(); });
+      hvezdyEl.appendChild(b);
     }
     function vykresliHvezdy() {
       [...hvezdyEl.children].forEach((s, i) => s.classList.toggle('plna', i < hodnoceni));
@@ -134,6 +156,7 @@
       hodnoceni = 0;
       ['fNazev', 'fAutor', 'fDatum', 'fPozn'].forEach(id => $(id).value = '');
       $('fStav').value = 'prectena';
+      predvyplnDatum();
       $('formTitulek').textContent = 'Přidat knihu';
       $('fUlozit').textContent = 'Uložit knihu';
       $('fZrusit').style.display = 'none';
@@ -164,6 +187,14 @@
     });
 
     $('fZrusit').addEventListener('click', vycistiFormular);
+
+    /* U přečtené knihy je datum dočtení skoro vždycky dnešek – předvyplní se samo,
+       ale jen dokud si ho uživatel sám nepřepsal. */
+    function predvyplnDatum() {
+      if ($('fStav').value !== 'prectena' || $('fDatum').value) return;
+      $('fDatum').value = new Date().toISOString().slice(0, 10);
+    }
+    $('fStav').addEventListener('change', predvyplnDatum);
 
     function upravit(id) {
       const k = knihy.find(x => x.id === id);
@@ -199,6 +230,9 @@
       const r = $('razeni').value;
       if (r === 'nazev') seznam = [...seznam].sort((a, b) => a.nazev.localeCompare(b.nazev, 'cs'));
       else if (r === 'hodnoceni') seznam = [...seznam].sort((a, b) => (b.hodnoceni || 0) - (a.hodnoceni || 0));
+      /* Knihy bez data patří na konec – prázdný řetězec by se jinak řadil první. */
+      else if (r === 'datum') seznam = [...seznam].sort((a, b) =>
+        (b.datum || '').localeCompare(a.datum || ''));
 
       const el = $('seznam');
       el.innerHTML = '';
@@ -230,8 +264,19 @@
       });
 
       const prectene = knihy.filter(k => k.stav === 'prectena');
-      const letos = prectene.filter(k => k.datum && k.datum.startsWith(String(new Date().getFullYear())));
-      $('statistiky').textContent = `${knihy.length} knih · ${prectene.length} přečteno · ${letos.length} letos`;
+      const rok = new Date().getFullYear();
+      const letos = prectene.filter(k => k.datum && k.datum.startsWith(String(rok)));
+      const loni = prectene.filter(k => k.datum && k.datum.startsWith(String(rok - 1)));
+      const ohodnocene = prectene.filter(k => k.hodnoceni);
+      const prumer = ohodnocene.length
+        ? (ohodnocene.reduce((s, k) => s + k.hodnoceni, 0) / ohodnocene.length).toFixed(1)
+        : null;
+      $('statistiky').textContent = [
+        `${knihy.length} knih`,
+        `${prectene.length} přečteno`,
+        `${letos.length} letos` + (loni.length ? ` (loni ${loni.length})` : ''),
+        prumer ? `⌀ ${prumer} ★` : null,
+      ].filter(Boolean).join(' · ');
     }
 
     ['hledani', 'filtrStav', 'razeni'].forEach(id => $(id).addEventListener('input', vykresli));
@@ -249,17 +294,29 @@
     $('souborImport').addEventListener('change', e => {
       const f = e.target.files[0];
       if (!f) return;
+      /* Import se se stávajícím deníkem slučuje, nepřepisuje ho. Knihy se párují
+         podle id: co v deníku je, se aktualizuje, co chybí, přibude. Dřív import
+         celý seznam nahradil, takže se dal deník omylem smazat. */
       f.text().then(async t => {
         const data = JSON.parse(t);
         if (!Array.isArray(data)) throw 0;
-        if (!await Dialog.potvrd(`Načíst ${data.length} knih? Stávající seznam bude nahrazen.`)) return;
-        knihy = data;
+        const stavajici = new Map(knihy.map(k => [k.id, k]));
+        const novych = data.filter(k => k && !stavajici.has(k.id)).length;
+        const zmenenych = data.length - novych;
+        if (!await Dialog.potvrd(`Načíst ${data.length} knih? Přibude ${novych} nových`
+            + `${zmenenych ? `, ${zmenenych} už v deníku máte a přepíše se` : ''}.`)) return;
+        for (const k of data) {
+          if (!k || k.id == null) continue;
+          const i = knihy.findIndex(x => x.id === k.id);
+          if (i >= 0) knihy[i] = k; else knihy.unshift(k);
+        }
         uloz();
         vykresli();
       }).catch(() => Dialog.info('Soubor se nepodařilo načíst – očekávám JSON export z této aplikace.'));
       e.target.value = '';
     });
 
+    predvyplnDatum();
     vykresli();
   </script>
 </body>

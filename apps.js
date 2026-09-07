@@ -117,6 +117,11 @@ const KATALOG_SEKCE = [
         ]
       },
       {
+        "soubor": "obsah/kulturni_akce.html",
+        "nazev": "🎪 Kulturní akce v krajích",
+        "tagy": ["akce", "výstavy", "hody", "poutě", "festivaly", "vinobraní", "jarmark", "posezení", "kraje", "kultura"]
+      },
+      {
         "soubor": "obsah/todo.html",
         "nazev": "✅ Úkoly",
         "tagy": [
@@ -263,6 +268,19 @@ const KATALOG_SEKCE = [
           "půjčka",
           "splátka",
           "úrok"
+        ]
+      },
+      {
+        "soubor": "obsah/hypo_podil.html",
+        "nazev": "🏠 Dělení hypotéky ve dvou",
+        "tagy": [
+          "hypotéka",
+          "podíl",
+          "spolumajitel",
+          "partneři",
+          "vklad",
+          "spoluvlastnictví",
+          "kdo kolik platí"
         ]
       },
       {

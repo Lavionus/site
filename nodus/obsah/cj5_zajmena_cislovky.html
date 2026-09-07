@@ -20,6 +20,10 @@
       padding: 5px 10px; font-size: 0.76rem; color: var(--text-muted);
     }
     .prehled b { color: var(--text); }
+    .prehled span { transition: border-color 0.2s, color 0.2s; }
+    /* přehled žije: po odpovědi se rozsvítí druh, o který v úloze šlo */
+    .prehled span.sviti { border-color: var(--accent); color: var(--text); background: var(--accent-soft); }
+    .prehled .nadpis { background: none; border: none; color: var(--text-faint); font-weight: 700; }
   </style>
 </head>
 <body>
@@ -37,6 +41,8 @@
 
   <div class="ovladani">
     <button class="hlavni" id="btnDalsi">Přeskočit →</button>
+    <button id="btnNapoveda">💡 Nápověda</button>
+    <span class="serie" id="serie"></span>
     <span class="skore" id="skore"></span>
   </div>
 
@@ -44,7 +50,9 @@
 
   <p class="napoveda">
     Pomůcka na <b>mě/mně</b>: dosaď si <i>tebe</i> nebo <i>tobě</i>.
-    Kde se hodí <b>tebe</b>, píšeš <b>mě</b>; kde <b>tobě</b>, píšeš <b>mně</b>.
+    Kde se hodí <b>tebe</b>, píšeš <b>mě</b> (2. a 4. pád); kde <b>tobě</b>, píšeš
+    <b>mně</b> (3. a 6. pád). Krátké slovo – krátký tvar.
+    Klávesy: <kbd>H</kbd> nápověda · <kbd>Enter</kbd> další.
   </p>
 
 <script>
@@ -67,7 +75,7 @@ const ZAJMENA = [
   { z: 'můj', d: 'privlastnovaci' }, { z: 'tvoje', d: 'privlastnovaci' }, { z: 'svůj', d: 'privlastnovaci' },
   { z: 'ten', d: 'ukazovaci' }, { z: 'tato', d: 'ukazovaci' }, { z: 'onen', d: 'ukazovaci' },
   { z: 'kdo', d: 'tazaci' }, { z: 'jaký', d: 'tazaci' }, { z: 'který', d: 'tazaci' },
-  { z: 'někdo', d: 'neurcita' }, { z: 'každý', d: 'neurcita' }, { z: 'několik', d: 'neurcita' },
+  { z: 'někdo', d: 'neurcita' }, { z: 'každý', d: 'neurcita' }, { z: 'některý', d: 'neurcita' },
   { z: 'nikdo', d: 'zaporna' }, { z: 'nic', d: 'zaporna' }, { z: 'žádný', d: 'zaporna' },
 ];
 
@@ -96,25 +104,94 @@ const ME_MNE = [
   { v: 'Ptali se _ na cestu.', spr: 'mě', proc: 'ptali se tebe → mě (2. pád)' },
 ];
 
-$('prehled').innerHTML = Object.values(DRUHY_ZAJMEN).map(t => `<span>${t}</span>`).join('');
+/* Přehled pod úlohou se přepíná podle režimu – v úloze o číslovkách by seznam
+   druhů zájmen jen mátl. Po odpovědi se v něm rozsvítí probíraný druh. */
+const prehledDiv = $('prehled');
+function vykresliPrehled(tabulka, nadpis) {
+  prehledDiv.innerHTML = `<span class="nadpis">${nadpis}</span>` +
+    Object.entries(tabulka).map(([klic, t]) => `<span data-druh="${klic}">${t}</span>`).join('');
+}
+function rozsvit(klic) {
+  prehledDiv.querySelectorAll('span[data-druh]').forEach(el =>
+    el.classList.toggle('sviti', el.dataset.druh === klic));
+}
+
+let uloha = null, posledni = null, serie = 0, napovedaVidet = false;
+
+/* ---- společné díly --------------------------------------------------------- */
+function odezvaEl() { const d = document.createElement('div'); d.className = 'odezva'; return d; }
+
+/* Kartička s pravidlem se musí stihnout přečíst; po chybě je na ni času víc. */
+const PRODLEVA = napoprve => (napoprve ? 2000 : 3000);
+
+function hotovo(p, napoprve, klic) {
+  skore.vyhodnot(napoprve);
+  serie = napoprve ? serie + 1 : 0;
+  $('serie').textContent = serie >= 3 ? '🔥 série ' + serie : '';
+  rozsvit(klic);
+  const tip = p.querySelector('.pravidlo.tip');
+  if (tip) tip.remove();
+}
+
+function pravidloEl(znak, html) {
+  const el = document.createElement('div');
+  el.className = 'pravidlo ok';
+  el.innerHTML = `<span class="znak">${znak}</span><div>${html}</div>`;
+  return el;
+}
+
+/* Nápověda zužuje, neprozrazuje: ztlumí polovinu špatných možností. */
+function ztlum(p, spravnyKlic) {
+  const spatne = [...p.querySelectorAll('.moznosti button')]
+    .filter(b => b.dataset.klic !== spravnyKlic && !b.disabled);
+  Uloha.zamichej(spatne).slice(0, Math.ceil(spatne.length / 2))
+    .forEach(b => { b.disabled = true; b.style.opacity = '0.25'; });
+}
+
+/* Na co se u kterého druhu ptáme – nápověda i kartička z toho čerpají. */
+const OTAZKA_ZAJMENA = {
+  osobni: 'zastupuje osobu nebo věc, o které mluvíme (já, ty, on, se)',
+  privlastnovaci: 'říká, <b>komu něco patří</b> (můj, tvůj, svůj)',
+  ukazovaci: '<b>ukazuje</b> na osobu nebo věc (ten, tento, onen)',
+  tazaci: '<b>ptá se</b> a stojí na začátku otázky (kdo, co, jaký, který)',
+  vztazna: 'uvozuje <b>vedlejší větu</b> (kdo, co, který, jenž)',
+  neurcita: 'osobu ani věc <b>neurčuje přesně</b> (někdo, každý, některý)',
+  zaporna: 'osobu nebo věc <b>popírá</b> (nikdo, nic, žádný)',
+};
+const OTAZKA_CISLOVKY = {
+  zakladni: '<b>kolik?</b>',
+  radove: '<b>kolikátý?</b>',
+  druhove: '<b>kolikery?</b> (kolik druhů)',
+  nasobne: '<b>kolikrát?</b>',
+};
 
 /* ---- Druh zájmena ------------------------------------------------------------- */
 function druhZajmena() {
   const p = $('plocha');
-  const u = Uloha.nahodne(ZAJMENA);
+  vykresliPrehled(DRUHY_ZAJMEN, 'Druhy zájmen:');
+  let u;
+  do { u = Uloha.nahodne(ZAJMENA); } while (u === posledni);
+  posledni = u;
+  uloha = { rezim: 'druhZajmena', u };
   const jine = Uloha.zamichej(Object.keys(DRUHY_ZAJMEN).filter(d => d !== u.d && d !== 'vztazna')).slice(0, 3);
   p.innerHTML = `<div class="zadani">Jaký druh zájmena to je?</div>
     <div class="karta"><div class="slovo-velke">${u.z}</div></div>`;
-  const odezva = document.createElement('div');
-  odezva.className = 'odezva';
+  const odezva = odezvaEl();
   Uloha.vyber({
     kam: p, odezva,
     moznosti: Uloha.zamichej([u.d, ...jine]).map(d => ({ klic: d, popis: DRUHY_ZAJMEN[d].split(' (')[0] })),
     spravnyKlic: u.d,
     zpravaOk: `✅ ${u.z} je zájmeno ${DRUHY_ZAJMEN[u.d]}.`,
     zpravaChyba: 'Zkontroluj si přehled druhů pod úlohou.',
-    poSpravne: skore.vyhodnot,
-    dalsi: novaUloha,
+    poSpravne: napoprve => {
+      hotovo(p, napoprve, u.d);
+      p.appendChild(pravidloEl('🙋', `<b>${u.z}</b> je zájmeno
+        <span class="vysledek">${DRUHY_ZAJMEN[u.d].split(' (')[0]}</span> —
+        ${OTAZKA_ZAJMENA[u.d]}.
+        <div style="margin-top:6px">Zájmeno vždycky <b>zastupuje</b> podstatné či přídavné jméno,
+        nebo na ně ukazuje. Druh se pozná podle toho, co přesně dělá.</div>`));
+    },
+    prodleva: PRODLEVA, dalsi: novaUloha,
   });
   p.appendChild(odezva);
 }
@@ -122,11 +199,14 @@ function druhZajmena() {
 /* ---- Druh číslovky ------------------------------------------------------------- */
 function druhCislovky() {
   const p = $('plocha');
-  const u = Uloha.nahodne(CISLOVKY);
+  vykresliPrehled(DRUHY_CISLOVEK, 'Druhy číslovek:');
+  let u;
+  do { u = Uloha.nahodne(CISLOVKY); } while (u === posledni);
+  posledni = u;
+  uloha = { rezim: 'druhCislovky', u };
   p.innerHTML = `<div class="zadani">Jaký druh číslovky to je?</div>
     <div class="karta"><div class="slovo-velke">${u.c}</div></div>`;
-  const odezva = document.createElement('div');
-  odezva.className = 'odezva';
+  const odezva = odezvaEl();
   Uloha.vyber({
     kam: p, odezva,
     moznosti: Uloha.zamichej(Object.entries(DRUHY_CISLOVEK))
@@ -134,8 +214,14 @@ function druhCislovky() {
     spravnyKlic: u.d,
     zpravaOk: `✅ ${u.c} je číslovka ${DRUHY_CISLOVEK[u.d]}.`,
     zpravaChyba: 'Zeptej se: kolik? kolikátý? kolikery? kolikrát?',
-    poSpravne: skore.vyhodnot,
-    dalsi: novaUloha,
+    poSpravne: napoprve => {
+      hotovo(p, napoprve, u.d);
+      p.appendChild(pravidloEl('🔢', `Na <b>${u.c}</b> se zeptáme ${OTAZKA_CISLOVKY[u.d]} —
+        je to číslovka <span class="vysledek">${DRUHY_CISLOVEK[u.d].split(' (')[0]}</span>.
+        <div style="margin-top:6px">Druh číslovky se vždycky pozná otázkou:
+        kolik? → základní · kolikátý? → řadová · kolikery? → druhová · kolikrát? → násobná.</div>`));
+    },
+    prodleva: PRODLEVA, dalsi: novaUloha,
   });
   p.appendChild(odezva);
 }
@@ -143,11 +229,14 @@ function druhCislovky() {
 /* ---- mě, nebo mně? ------------------------------------------------------------- */
 function meMne() {
   const p = $('plocha');
-  const u = Uloha.nahodne(ME_MNE);
-  p.innerHTML = `<div class="zadani">Doplň správný tvar:</div>
+  vykresliPrehled(DRUHY_ZAJMEN, 'Druhy zájmen:');
+  let u;
+  do { u = Uloha.nahodne(ME_MNE); } while (u === posledni);
+  posledni = u;
+  uloha = { rezim: 'meMne', u };
+  p.innerHTML = `<div class="zadani">Doplň správný tvar zájmena <b>já</b>:</div>
     <div class="karta"><div class="veta">${u.v.replace('_', '<span class="mezera">?</span>')}</div></div>`;
-  const odezva = document.createElement('div');
-  odezva.className = 'odezva';
+  const odezva = odezvaEl();
   Uloha.vyber({
     kam: p, odezva, trida: 'velke',
     moznosti: Uloha.zamichej([{ klic: 'mě', popis: 'mě' }, { klic: 'mně', popis: 'mně' }]),
@@ -155,10 +244,17 @@ function meMne() {
     zpravaOk: `✅ ${u.v.replace('_', u.spr)} – ${u.proc}`,
     zpravaChyba: 'Dosaď si tebe / tobě: tebe → mě, tobě → mně.',
     poSpravne: napoprve => {
-      skore.vyhodnot(napoprve);
+      hotovo(p, napoprve, 'osobni');
       p.querySelector('.mezera').textContent = u.spr;
+      const [dosazeni, pad] = u.proc.split(' → ');
+      p.appendChild(pravidloEl('✍️', `<b>${u.v.replace('_', u.spr)}</b>
+        <div style="margin-top:6px">Dosadíme <i>ty</i>: „${dosazeni}“ — a
+        <b>${dosazeni.includes('tebe') ? 'tebe' : 'tobě'}</b> odpovídá tvar
+        <span class="vysledek">${u.spr}</span> (${pad.replace(/^m[ěn]{1,2}ě? /, '')}).
+        <div style="margin-top:6px">Kratší <b>tebe</b> → kratší <b>mě</b>,
+        delší <b>tobě</b> → delší <b>mně</b>.</div></div>`));
     },
-    dalsi: novaUloha,
+    prodleva: PRODLEVA, dalsi: novaUloha,
   });
   p.appendChild(odezva);
 }
@@ -167,13 +263,15 @@ function meMne() {
 function poznej() {
   const p = $('plocha');
   const jeZajmeno = Math.random() < 0.5;
+  vykresliPrehled(jeZajmeno ? DRUHY_ZAJMEN : DRUHY_CISLOVEK,
+    jeZajmeno ? 'Druhy zájmen:' : 'Druhy číslovek:');
   const u = jeZajmeno ? Uloha.nahodne(ZAJMENA) : Uloha.nahodne(CISLOVKY);
   const slovo = jeZajmeno ? u.z : u.c;
+  uloha = { rezim: 'poznej', u, jeZajmeno, slovo };
 
   p.innerHTML = `<div class="zadani">Je to zájmeno, nebo číslovka?</div>
     <div class="karta"><div class="slovo-velke">${slovo}</div></div>`;
-  const odezva = document.createElement('div');
-  odezva.className = 'odezva';
+  const odezva = odezvaEl();
   Uloha.vyber({
     kam: p, odezva, trida: 'dve',
     moznosti: [
@@ -185,14 +283,57 @@ function poznej() {
       ? `✅ ${slovo} je zájmeno – zastupuje podstatné jméno nebo na ně ukazuje.`
       : `✅ ${slovo} je číslovka – vyjadřuje počet nebo pořadí.`,
     zpravaChyba: 'Vyjadřuje to počet či pořadí (číslovka), nebo zastupuje jméno (zájmeno)?',
-    poSpravne: skore.vyhodnot,
-    dalsi: novaUloha,
+    poSpravne: napoprve => {
+      hotovo(p, napoprve, u.d);
+      p.appendChild(pravidloEl(jeZajmeno ? '🙋' : '🔢', jeZajmeno
+        ? `<b>${slovo}</b> je <span class="vysledek">zájmeno</span> —
+           ${OTAZKA_ZAJMENA[u.d]}. Zájmeno <b>zastupuje</b> jméno nebo na ně ukazuje;
+           na počet se ho zeptat nedá.`
+        : `<b>${slovo}</b> je <span class="vysledek">číslovka</span> — zeptáme se
+           ${OTAZKA_CISLOVKY[u.d]}. Číslovky vyjadřují <b>počet, pořadí, počet druhů
+           nebo kolikrát</b> se něco děje.`));
+    },
+    prodleva: PRODLEVA, dalsi: novaUloha,
   });
   p.appendChild(odezva);
 }
 
+/* ---- nápověda -------------------------------------------------------------- */
+/* Zužuje: ukáže otázku nebo dosazení, správnou odpověď neřekne. */
+function napoveda() {
+  if (!uloha || napovedaVidet) return;
+  const p = $('plocha');
+  const el = document.createElement('div');
+  el.className = 'pravidlo tip';
+  let text, klic;
+
+  if (uloha.rezim === 'druhZajmena') {
+    text = `Zkus zájmeno použít ve větě a poslouchej, <b>co dělá</b>: ptá se, ukazuje,
+      přivlastňuje, popírá? Podle toho ho najdeš v přehledu pod úlohou.`;
+    klic = uloha.u.d;
+  } else if (uloha.rezim === 'druhCislovky') {
+    text = `Vyzkoušej postupně všechny čtyři otázky: <b>kolik? kolikátý? kolikery? kolikrát?</b>
+      Na jednu z nich číslovka odpoví.`;
+    klic = uloha.u.d;
+  } else if (uloha.rezim === 'meMne') {
+    text = `Dosaď do věty místo mezery <b>tebe</b> a pak <b>tobě</b> — jedno z toho bude znít
+      česky. <b>Krátké</b> tebe → krátké <b>mě</b>, <b>delší</b> tobě → delší <b>mně</b>.`;
+    klic = uloha.u.spr;
+  } else {
+    text = `Zkus se slova zeptat <b>kolik? kolikátý? kolikrát?</b> Když na některou z otázek
+      odpoví, je to číslovka. Když místo toho <b>zastupuje</b> nějaké jméno
+      (dá se za ně dosadit podstatné jméno), je to zájmeno.`;
+    klic = uloha.jeZajmeno ? 'zajmeno' : 'cislovka';
+  }
+  el.innerHTML = `<span class="znak">🔎</span><div>${text}</div>`;
+  p.appendChild(el);
+  ztlum(p, klic);
+  napovedaVidet = true;
+}
+
+/* ---- ovládání -------------------------------------------------------------- */
 const REZIMY = { druhZajmena, druhCislovky, meMne, poznej };
-function novaUloha() { REZIMY[rezim](); }
+function novaUloha() { napovedaVidet = false; REZIMY[rezim](); }
 
 document.querySelectorAll('#rezimy button').forEach(b => b.addEventListener('click', () => {
   document.querySelectorAll('#rezimy button').forEach(x => x.classList.remove('active'));
@@ -201,8 +342,10 @@ document.querySelectorAll('#rezimy button').forEach(b => b.addEventListener('cli
   novaUloha();
 }));
 $('btnDalsi').addEventListener('click', novaUloha);
+$('btnNapoveda').addEventListener('click', napoveda);
 document.addEventListener('keydown', e => {
   if (e.key === 'ArrowRight' || e.key === 'Enter') { e.preventDefault(); novaUloha(); }
+  if (e.key === 'h' || e.key === 'H') napoveda();
 });
 novaUloha();
 </script>

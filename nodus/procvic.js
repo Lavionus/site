@@ -118,7 +118,9 @@ const Procvic = (function () {
               chyby.push(aktualni);
               if (skore) skore.vyhodnot(false);
               box.querySelectorAll('button').forEach(x => x.disabled = true);
-              setTimeout(dalsi, 1600);
+              /* Posun řídí společné nastavení (auto s prodlevou / ručně) – i po
+                 druhé chybě, kdy je na přečtení správné odpovědi nejvíc potřeba. */
+              Uloha.posun(dalsi, 1600, false, odezva);
             }
           });
           box.appendChild(b);
@@ -173,7 +175,7 @@ const Procvic = (function () {
       chyby.push(aktualni);
       if (skore) skore.vyhodnot(false);
       pole.disabled = true;
-      setTimeout(dalsi, 1600);
+      Uloha.posun(dalsi, 1600, false, odezva);
     }
 
     function konec() {

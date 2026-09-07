@@ -113,11 +113,40 @@ i funkce `(napoprve) => ms` — stránky, které po odpovědi ukazují kartičku
 s vysvětlením, potřebují delší pauzu, a po chybě ještě delší, protože právě
 tehdy si má žák vysvětlení přečíst. Bez pole platí `Uloha.PRODLEVA` (900 ms).
 
-## Pravopisné stránky
+## Posun na další otázku
+
+Jak dlouho se po odpovědi čeká, si řídí **uživatel** — každý čte kartičku
+„proč“ jinak rychle. Volba je jediná pro celý Nodus (`nodus_posun`
+v `localStorage`) a `uloha.js` si k ní sám vloží přepínač do lišty `.ovladani`
+každé procvičovací stránky; do stránek se kvůli tomu nesahá.
+
+| Volba | Co dělá |
+|---|---|
+| automaticky – normálně / déle / hodně dlouho | pauzu, kterou si spočítala stránka, **násobí** 1× / 1,8× / 3× |
+| ručně | místo časovače se pod kartičku vloží tlačítko **Pokračovat →** |
+
+Násobek (a ne pevný počet vteřin) je zvolený schválně: zachová poměr mezi
+krátkým „✅ Správně“ a rozborem souvětí, takže si stránky dál řídí vlastní
+tempo a nastavení jen posune celou škálu.
+
+Nové stránky nemusí dělat nic — stačí `dalsi` v `Uloha.odpoved`. Kdo si posun
+plánuje sám (například po druhé chybě), volá místo `setTimeout(novaUloha, ms)`
+funkci **`Uloha.posun(novaUloha, ms)`**; jinak by na takové stránce volba
+neplatila.
+
+## Pravopisné a mluvnické stránky
 
 Stránky o pravopisu (`doplnovacky`, `vyjmenovana_slova`, `shoda_podmetu`,
-`diktat_gen`, `cj2_tvrde_mekke`, `cj3_parove`, `cj2_abeceda`) drží stejný postup,
-aby se dítě neučilo pokaždé nové ovládání. Díly na to jsou ve `vyuka.css`:
+`diktat_gen`, `cj2_tvrde_mekke`, `cj3_parove`, `cj2_abeceda`) a celá skupina
+**Tvarosloví & skladba** (`cj2_druhy_vet`, `slovni_druhy`, `cj3_slovesa`,
+`cj3_podstatna`, `cj4_pady`, `synonyma_antonyma`, `cj4_stavba_slova`,
+`cj5_pridavna`, `cj5_skladebni_dvojice`, `cj5_zajmena_cislovky`, `vetny_rozbor`,
+`cj6_slovni_zasoba`, `cj7_rozvijejici`, `cj7_neohebne`, `cj7_slovotvorba`,
+`cj8_souveti`, `cj9_vyvoj_jazyka`), skupina **Čtení & literatura**
+(`slabiky`, `cteni_s_porozumenim`, `cj6_baje`, `cj9_literatura_20`,
+`literarni_smery`) a **Sloh a komunikace** (`cj4_prima_rec`, `cj8_sloh`)
+drží stejný postup, aby se dítě neučilo pokaždé nové ovládání.
+Díly na to jsou ve `vyuka.css`:
 
 | Třída | K čemu je |
 |---|---|
@@ -139,8 +168,15 @@ Pravidla, která z toho plynou:
    souhlásku v přehledu, ztlumí polovinu možností — správnou odpověď neřekne.
 3. **Chyba nezavírá úlohu.** Špatná možnost zaklepe a zčervená, otázka běží dál
    (řeší `uloha.js`); do skóre se počítá jen odpověď napoprvé.
-4. **Přehled pod úlohou žije.** Souhláska, pár nebo rod se v něm po odpovědi
-   rozsvítí — přehled tak není jen text, ale ukazuje, kam probíraný jev patří.
+4. **Přehled pod úlohou žije.** Souhláska, pár, rod, vzor nebo druh se v něm po
+   odpovědi rozsvítí — přehled tak není jen text, ale ukazuje, kam probíraný jev patří.
+5. **Odpověď se vysvětlí, ne jen potvrdí.** Po správné odpovědi přibude
+   `.pravidlo.ok` s celým rozborem (mluvnické určení, schéma souvětí, stavba slova)
+   a s větou, *proč* to tak je. Kvůli tomu má stránka delší `prodleva`
+   (zhruba 2 s napoprvé, 3 s po chybě) — jinak kartička zmizí dřív, než se přečte.
+6. **Nápověda je v `#btnNapoveda` a na klávese `H`.** Vloží `.pravidlo.tip`
+   s postupem („na co se zeptej“) a ztlumí polovinu špatných možností. Sérii
+   správných odpovědí napoprvé ukazuje `.ovladani .serie` (🔥 od tří).
 
 ## Zpracování připravovaného tématu
 

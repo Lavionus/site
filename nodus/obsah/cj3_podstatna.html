@@ -20,6 +20,9 @@
     .veta-slova button:hover:not(:disabled) { border-color: var(--accent); }
     .veta-slova button.spravne { background: var(--ok); border-color: var(--ok); color: #fff; }
     .veta-slova button.spatne { background: var(--danger); border-color: var(--danger); color: #fff; }
+    .pomucka .skupina { flex: 1 1 180px; }
+    .pomucka .skupina.sviti { box-shadow: 0 0 0 2px var(--accent-soft); }
+    .pomucka .ukaz { color: var(--accent); font-weight: 700; }
   </style>
 </head>
 <body>
@@ -37,18 +40,40 @@
 
   <div class="ovladani">
     <button class="hlavni" id="btnDalsi">Přeskočit →</button>
+    <button id="btnNapoveda">💡 Nápověda</button>
+    <span class="serie" id="serie"></span>
     <span class="skore" id="skore"></span>
   </div>
 
+  <div class="pomucka" id="pomucka">
+    <div class="skupina" data-h="m">
+      <h2>🚹 Rod mužský</h2>
+      <div class="znaky"><span class="znak"><span class="ukaz">ten</span> pes, ten strom</span></div>
+      <p class="popis">Před slovo se dá dosadit <b>ten</b>.</p>
+    </div>
+    <div class="skupina" data-h="z">
+      <h2>🚺 Rod ženský</h2>
+      <div class="znaky"><span class="znak"><span class="ukaz">ta</span> kočka, ta kniha</span></div>
+      <p class="popis">Před slovo se dá dosadit <b>ta</b>.</p>
+    </div>
+    <div class="skupina" data-h="s">
+      <h2>⚪ Rod střední</h2>
+      <div class="znaky"><span class="znak"><span class="ukaz">to</span> okno, to auto</span></div>
+      <p class="popis">Před slovo se dá dosadit <b>to</b>.</p>
+    </div>
+  </div>
+
   <p class="napoveda">
-    Rod poznáš dosazením: <b>ten</b> pes (mužský), <b>ta</b> kočka (ženský), <b>to</b> okno (střední).
     Podstatná jména označují osoby, zvířata a věci – ptáme se <i>kdo? co?</i>
+    Rod se u jednoho slova nemění, číslo ano: <i>jeden pes – dva psi</i>.
+    Klávesy: <kbd>H</kbd> nápověda · <kbd>Enter</kbd> další.
   </p>
 
 <script>
 const $ = id => document.getElementById(id);
 const skore = Uloha.skore('nodus_cj3_podstatna', $('skore'));
 let rezim = 'rod';
+let uloha = null, posledni = null, serie = 0, napovedaVidet = false;
 
 /* jednotné číslo, množné číslo, rod */
 const SLOVA = [
@@ -94,22 +119,73 @@ const VETY = [
   { s: ['Táta', 'opravuje', 'staré', 'auto'], i: [0, 3] },
 ];
 
+/* ---- společné díly --------------------------------------------------------- */
+function odezvaEl() { const d = document.createElement('div'); d.className = 'odezva'; return d; }
+
+/* Kartička s pravidlem potřebuje čas na přečtení; po chybě ještě delší. */
+const PRODLEVA = napoprve => (napoprve ? 1900 : 2900);
+
+/* Přehled pod úlohou žije – po odpovědi se v něm rozsvítí probíraný rod. */
+const pomuckaDiv = $('pomucka');
+function rozsvit(rodKlic) {
+  pomuckaDiv.querySelectorAll('.skupina').forEach(el =>
+    el.classList.toggle('sviti', el.dataset.h === rodKlic));
+}
+
+function hotovo(p, napoprve, rodKlic) {
+  skore.vyhodnot(napoprve);
+  serie = napoprve ? serie + 1 : 0;
+  $('serie').textContent = serie >= 3 ? '🔥 série ' + serie : '';
+  rozsvit(rodKlic);
+  const tip = p.querySelector('.pravidlo.tip');
+  if (tip) tip.remove();
+}
+
+/* Kartička „proč“ – ukáže se až po správné odpovědi. */
+function pravidloEl(u, mnozne) {
+  const r = RODY[u.r];
+  const el = document.createElement('div');
+  el.className = 'pravidlo ok';
+  el.innerHTML = `<span class="znak">📗</span><div>
+      <b>${r.ukaz} ${u.j}</b> — rod <span class="vysledek">${r.nazev}</span>.
+      Rod se pozná dosazením ukazovacího zájmena <b>${r.ukaz}</b> a u jednoho slova
+      se nikdy nemění.
+      <div style="margin-top:6px">Číslo se naopak mění:
+        jeden <b>${u.j}</b> (číslo jednotné) — více <b>${u.mn}</b> (číslo množné)${
+        u.j === u.mn ? '. Tady zní obě čísla stejně a pozná se až podle věty' : ''}.
+        ${mnozne === undefined ? '' : `V úloze bylo číslo <span class="vysledek">${
+          mnozne ? 'množné' : 'jednotné'}</span>.`}</div>
+    </div>`;
+  return el;
+}
+
+/* Nápověda zužuje, neprozrazuje: ztlumí polovinu špatných možností. */
+function ztlum(p, jeSpravna) {
+  const spatne = [...p.querySelectorAll('.moznosti button, .veta-slova button')]
+    .filter((b, i) => !jeSpravna(b, i) && !b.disabled);
+  Uloha.zamichej(spatne).slice(0, Math.ceil(spatne.length / 2))
+    .forEach(b => { b.disabled = true; b.style.opacity = '0.25'; });
+}
+const podleKlice = klic => b => b.dataset.klic === klic;
+
 /* ---- Určit rod ------------------------------------------------------------- */
 function rod() {
   const p = $('plocha');
-  const u = Uloha.nahodne(SLOVA);
+  let u;
+  do { u = Uloha.nahodne(SLOVA); } while (u === posledni);
+  posledni = u;
+  uloha = { u };
   p.innerHTML = `<div class="zadani">Jaký je rod tohoto podstatného jména?</div>
     <div class="karta"><div class="slovo">${u.j}</div></div>`;
-  const odezva = document.createElement('div');
-  odezva.className = 'odezva';
+  const odezva = odezvaEl();
   Uloha.vyber({
     kam: p, odezva,
     moznosti: Object.entries(RODY).map(([klic, r]) => ({ klic, popis: r.nazev + ' (' + r.ukaz + ')' })),
     spravnyKlic: u.r,
     zpravaOk: `✅ ${RODY[u.r].ukaz} ${u.j} – rod ${RODY[u.r].nazev}.`,
     zpravaChyba: 'Zkus si před slovo dosadit ten, ta, to.',
-    poSpravne: skore.vyhodnot,
-    dalsi: novaUloha,
+    poSpravne: napoprve => { hotovo(p, napoprve, u.r); p.appendChild(pravidloEl(u)); },
+    prodleva: PRODLEVA, dalsi: novaUloha,
   });
   p.appendChild(odezva);
 }
@@ -120,10 +196,10 @@ function cislo() {
   const u = Uloha.nahodne(SLOVA.filter(x => x.j !== x.mn));
   const mnozne = Math.random() < 0.5;
   const zobrazene = mnozne ? u.mn : u.j;
+  uloha = { u, mnozne, zobrazene };
   p.innerHTML = `<div class="zadani">Je slovo v jednotném, nebo množném čísle?</div>
     <div class="karta"><div class="slovo">${zobrazene}</div></div>`;
-  const odezva = document.createElement('div');
-  odezva.className = 'odezva';
+  const odezva = odezvaEl();
   Uloha.vyber({
     kam: p, odezva, trida: 'dve',
     moznosti: [
@@ -134,8 +210,8 @@ function cislo() {
     zpravaOk: mnozne ? `✅ Množné číslo – jeden ${u.j}, více ${u.mn}.`
                      : `✅ Jednotné číslo – jeden ${u.j}, více ${u.mn}.`,
     zpravaChyba: 'Zkus si před slovo říct „jeden“ nebo „více“.',
-    poSpravne: skore.vyhodnot,
-    dalsi: novaUloha,
+    poSpravne: napoprve => { hotovo(p, napoprve, u.r); p.appendChild(pravidloEl(u, mnozne)); },
+    prodleva: PRODLEVA, dalsi: novaUloha,
   });
   p.appendChild(odezva);
 }
@@ -145,18 +221,18 @@ function prevod() {
   const p = $('plocha');
   const u = Uloha.nahodne(SLOVA.filter(x => x.j !== x.mn));
   const jine = Uloha.zamichej(SLOVA.filter(x => x.mn !== u.mn)).slice(0, 3);
+  uloha = { u, prevod: true };
   p.innerHTML = `<div class="zadani">Jak zní slovo v množném čísle?</div>
     <div class="karta"><div class="slovo">${u.j}</div></div>`;
-  const odezva = document.createElement('div');
-  odezva.className = 'odezva';
+  const odezva = odezvaEl();
   Uloha.vyber({
     kam: p, odezva,
     moznosti: Uloha.zamichej([u, ...jine]).map(x => ({ klic: x.mn, popis: x.mn })),
     spravnyKlic: u.mn,
     zpravaOk: `✅ jeden ${u.j} → více ${u.mn}`,
     zpravaChyba: 'To je množné číslo jiného slova.',
-    poSpravne: skore.vyhodnot,
-    dalsi: novaUloha,
+    poSpravne: napoprve => { hotovo(p, napoprve, u.r); p.appendChild(pravidloEl(u, true)); },
+    prodleva: PRODLEVA, dalsi: novaUloha,
   });
   p.appendChild(odezva);
 }
@@ -164,12 +240,14 @@ function prevod() {
 /* ---- Najdi podstatné jméno ve větě ---------------------------------------- */
 function najdi() {
   const p = $('plocha');
-  const v = Uloha.nahodne(VETY);
-  p.innerHTML = '<div class="zadani">Klepni na podstatné jméno ve větě.</div>';
+  let v;
+  do { v = Uloha.nahodne(VETY); } while (v === posledni);
+  posledni = v;
+  uloha = { v, najdi: true };
+  p.innerHTML = '<div class="zadani">Klepni na podstatné jméno ve větě. Ptej se <b>kdo? co?</b></div>';
   const radek = document.createElement('div');
   radek.className = 'veta-slova';
-  const odezva = document.createElement('div');
-  odezva.className = 'odezva';
+  const odezva = odezvaEl();
   const stav = { chyboval: false, hotovo: false };
 
   const vsechna = v.i.map(idx => v.s[idx]);
@@ -184,16 +262,61 @@ function najdi() {
         ? `✅ Ano, „${slovo}“ je podstatné jméno. Ve větě jsou i další: ${vsechna.join(', ')}.`
         : `✅ Ano, „${slovo}“ je podstatné jméno – ptáme se kdo? co?`,
       zpravaChyba: 'Tohle podstatné jméno není. Hledej osobu, zvíře nebo věc.',
-      poSpravne: skore.vyhodnot,
-      dalsi: novaUloha,
+      poSpravne: napoprve => {
+        hotovo(p, napoprve, null);
+        const el = document.createElement('div');
+        el.className = 'pravidlo ok';
+        el.innerHTML = `<span class="znak">🔎</span><div>
+            <span class="vysledek">${vsechna.join(', ')}</span> —
+            ${vsechna.length > 1 ? 'to jsou podstatná jména' : 'to je podstatné jméno'} v téhle větě.
+            Označují osoby, zvířata a věci a ptáme se na ně <b>kdo? co?</b>
+            <div style="margin-top:6px">Ostatní slova ve větě podstatná jména nejsou –
+              vyjadřují děj (slovesa), vlastnost (přídavná jména) nebo vztah (předložky).</div>
+          </div>`;
+        p.appendChild(el);
+      },
+      prodleva: PRODLEVA, dalsi: novaUloha,
     }));
     radek.appendChild(b);
   });
   p.append(radek, odezva);
 }
 
+/* ---- nápověda -------------------------------------------------------------- */
+/* Zužuje: ukáže, jak se ptát, správnou odpověď neřekne. */
+function napoveda() {
+  if (!uloha || napovedaVidet) return;
+  const p = $('plocha');
+  const el = document.createElement('div');
+  el.className = 'pravidlo tip';
+
+  if (uloha.najdi) {
+    el.innerHTML = `<span class="znak">🔎</span><div>Projdi větu slovo po slovu a u každého
+      zkus otázku <b>kdo? co?</b> Podstatné jméno je to, na které se dá takhle zeptat –
+      a jde před ně dát <b>ten, ta, to</b>.</div>`;
+    ztlum(p, b => uloha.v.i.includes([...b.parentElement.children].indexOf(b)));
+  } else if (uloha.prevod) {
+    el.innerHTML = `<span class="znak">🔎</span><div>Řekni si nahlas „jeden ${uloha.u.j},
+      dva…“. Množné číslo musí být od <b>stejného slova</b> – ostatní možnosti patří
+      jiným podstatným jménům.</div>`;
+    ztlum(p, podleKlice(uloha.u.mn));
+  } else if (uloha.mnozne !== undefined) {
+    el.innerHTML = `<span class="znak">🔎</span><div>Zkus říct „<b>jeden ${uloha.zobrazene}</b>“
+      a „<b>více ${uloha.zobrazene}</b>“. Jen jedno z toho zní česky.</div>`;
+    ztlum(p, podleKlice(uloha.mnozne ? 'mn' : 'j'));
+  } else {
+    el.innerHTML = `<span class="znak">🔎</span><div>Zkus postupně
+      „<b>ten ${uloha.u.j}</b>“, „<b>ta ${uloha.u.j}</b>“, „<b>to ${uloha.u.j}</b>“.
+      Které z toho zní česky?</div>`;
+    ztlum(p, podleKlice(uloha.u.r));
+  }
+  p.appendChild(el);
+  napovedaVidet = true;
+}
+
+/* ---- ovládání -------------------------------------------------------------- */
 const REZIMY = { rod, cislo, prevod, najdi };
-function novaUloha() { REZIMY[rezim](); }
+function novaUloha() { napovedaVidet = false; REZIMY[rezim](); }
 
 document.querySelectorAll('#rezimy button').forEach(b => b.addEventListener('click', () => {
   document.querySelectorAll('#rezimy button').forEach(x => x.classList.remove('active'));
@@ -202,8 +325,10 @@ document.querySelectorAll('#rezimy button').forEach(b => b.addEventListener('cli
   novaUloha();
 }));
 $('btnDalsi').addEventListener('click', novaUloha);
+$('btnNapoveda').addEventListener('click', napoveda);
 document.addEventListener('keydown', e => {
   if (e.key === 'ArrowRight' || e.key === 'Enter') { e.preventDefault(); novaUloha(); }
+  if (e.key === 'h' || e.key === 'H') napoveda();
 });
 novaUloha();
 </script>

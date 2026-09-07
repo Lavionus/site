@@ -8,6 +8,7 @@
   <link rel="stylesheet" href="../vyuka.css">
   <script src="../theme.js"></script>
   <script src="../podpis.js" defer></script>
+  <script src="../rec.js"></script>
   <script src="../uloha.js"></script>
   <style>
     .veta-slova { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; max-width: 680px; }
@@ -21,6 +22,16 @@
     .veta-slova .cast.spravne { background: var(--ok); border-color: var(--ok); color: #fff; }
     .veta-slova .cast.spatne { background: var(--danger); border-color: var(--danger); color: #fff; }
     .rozbor { display: flex; flex-direction: column; gap: 4px; color: var(--text-faint); font-size: 0.82rem; }
+    /* rozbor v kartičce: každý člen s názvem pod sebou */
+    .rozbor-radek { display: flex; flex-wrap: wrap; gap: 6px; }
+    .rozbor-clen { display: flex; flex-direction: column; align-items: center; gap: 2px; }
+    .rozbor-clen .text { font-weight: 700; color: var(--text); }
+    .rozbor-clen .znacka { font-size: 0.72rem; color: var(--text-faint); }
+    .rozbor-clen.sviti .text { color: var(--ok-text); }
+    .rozbor-clen.sviti .znacka { color: var(--ok-text); }
+    .pomucka .skupina { flex: 1 1 175px; }
+    .pomucka .skupina.sviti { box-shadow: 0 0 0 2px var(--accent-soft); }
+    .pomucka .znak.sviti { border-color: var(--accent); }
   </style>
 </head>
 <body>
@@ -38,19 +49,46 @@
 
   <div class="ovladani">
     <button class="hlavni" id="btnDalsi">Přeskočit →</button>
+    <button id="btnNapoveda">💡 Nápověda</button>
+    <span class="serie" id="serie"></span>
     <span class="skore" id="skore"></span>
   </div>
 
+  <div class="pomucka" id="pomucka">
+    <div class="skupina" data-h="pt">
+      <h2>🎯 Předmět</h2>
+      <div class="znaky"><span class="znak">koho? co? komu? čemu? kým? čím?</span></div>
+      <p class="popis">Rozvíjí <b>sloveso</b>. Pádové otázky <b>kromě 1. a 5. pádu</b> —
+        na 1. pád se ptá podmět.</p>
+    </div>
+    <div class="skupina" data-h="pk">
+      <h2>🎨 Přívlastek</h2>
+      <div class="znaky"><span class="znak">jaký? který? čí?</span></div>
+      <p class="popis">Rozvíjí <b>podstatné jméno</b>, u kterého stojí — nikdy sloveso.</p>
+    </div>
+    <div class="skupina" data-h="pu">
+      <h2>🧭 Příslovečné určení</h2>
+      <div class="znaky">
+        <span class="znak" data-druh="pum">místa — kde? kam?</span>
+        <span class="znak" data-druh="puc">času — kdy?</span>
+        <span class="znak" data-druh="puz">způsobu — jak?</span>
+        <span class="znak" data-druh="pup">příčiny — proč?</span>
+      </div>
+      <p class="popis">Rozvíjí <b>sloveso</b> a říká okolnosti děje.</p>
+    </div>
+  </div>
+
   <p class="napoveda">
-    <b>Předmět</b> se ptá pádovými otázkami kromě 1. a 5. pádu (koho? co? komu? čemu?).
-    <b>Přívlastek</b> rozvíjí podstatné jméno (jaký? který? čí?).
-    <b>Příslovečné určení</b> říká, kde, kdy, jak nebo proč se děj odehrává.
+    Předmět i příslovečné určení rozvíjejí sloveso — liší se otázkou: na předmět se ptáme
+    <b>pádem</b> (koho? čeho?), na příslovečné určení <b>okolností</b> (kde? kdy? jak? proč?).
+    Klávesy: <kbd>H</kbd> nápověda · <kbd>Enter</kbd> další.
   </p>
 
 <script>
 const $ = id => document.getElementById(id);
 const skore = Uloha.skore('nodus_cj7_rozvijejici', $('skore'));
 let rezim = 'urceni';
+let uloha = null, posledni = null, serie = 0, napovedaVidet = false;
 
 /* Věta je rozdělená na větné členy; předložka patří k členu, který uvozuje.
    po = podmět, ps = přísudek, pt = předmět, pk = přívlastek,
@@ -104,17 +142,87 @@ function vykresliVetu(v, volby = {}) {
   return box;
 }
 
+/* Věty, ve kterých se dá zadat konkrétní úloha – předpočítané, aby se na ně
+   nemuselo losovat se zkusmým opakováním (to může teoreticky vyjít naprázdno). */
+const VETY_PU = VETY.filter(v => v.some(x => x[1].startsWith('pu')));
+const VETY_PK = VETY.filter(v => v.some((x, k) => x[1] === 'pk' && k + 1 < v.length));
+
+/* ---- společné díly --------------------------------------------------------- */
+function odezvaEl() { const d = document.createElement('div'); d.className = 'odezva'; return d; }
+
+/* Kartička s rozborem potřebuje čas na přečtení; po chybě ještě delší. */
+const PRODLEVA = napoprve => (napoprve ? 2300 : 3300);
+
+/* Přehled pod úlohou žije – po odpovědi se rozsvítí probíraný člen. */
+const pomuckaDiv = $('pomucka');
+function rozsvit(tag) {
+  const z = tag ? zaklad(tag) : null;
+  pomuckaDiv.querySelectorAll('.skupina').forEach(el =>
+    el.classList.toggle('sviti', el.dataset.h === z));
+  pomuckaDiv.querySelectorAll('.znak[data-druh]').forEach(el =>
+    el.classList.toggle('sviti', el.dataset.druh === tag));
+}
+
+function hotovo(p, napoprve, tag) {
+  skore.vyhodnot(napoprve);
+  serie = napoprve ? serie + 1 : 0;
+  $('serie').textContent = serie >= 3 ? '🔥 série ' + serie : '';
+  rozsvit(tag);
+  const tip = p.querySelector('.pravidlo.tip');
+  if (tip) tip.remove();
+}
+
+/* Celý rozbor věty – ukáže se až po správné odpovědi, aby bylo vidět,
+   jak probíraný člen zapadá do zbytku. */
+function rozborHTML(v, zvyraz) {
+  return '<div class="rozbor-radek">' + v.map(([text, tag], k) =>
+    `<div class="rozbor-clen${k === zvyraz ? ' sviti' : ''}">
+       <span class="text">${text}</span><span class="znacka">${ZKRATKA[tag]}</span>
+     </div>`).join('') + '</div>';
+}
+
+const ZKRATKA = {
+  po: 'podmět', ps: 'přísudek', pt: 'předmět', pk: 'přívlastek',
+  pum: 'PU místa', puc: 'PU času', puz: 'PU způsobu', pup: 'PU příčiny',
+};
+
+function pravidloEl(znak, html) {
+  const el = document.createElement('div');
+  el.className = 'pravidlo ok';
+  el.innerHTML = `<span class="znak">${znak}</span><div>${html}</div>`;
+  return el;
+}
+
+/* Který člen daný člen rozvíjí – tím se předmět a příslovečné určení liší od přívlastku. */
+const RIDICI = {
+  pt: 'sloveso (přísudek)', pk: 'podstatné jméno, u kterého stojí',
+  pum: 'sloveso (přísudek)', puc: 'sloveso (přísudek)',
+  puz: 'sloveso (přísudek)', pup: 'sloveso (přísudek)',
+  po: 'nic – je to základní větný člen', ps: 'nic – je to základní větný člen',
+};
+
+/* Nápověda zužuje, neprozrazuje: ztlumí polovinu špatných možností. */
+function ztlum(p, jeSpravna) {
+  const spatne = [...p.querySelectorAll('.moznosti button, .veta-slova button.cast')]
+    .filter(b => !jeSpravna(b) && !b.disabled);
+  Uloha.zamichej(spatne).slice(0, Math.ceil(spatne.length / 2))
+    .forEach(b => { b.disabled = true; b.style.opacity = '0.25'; });
+}
+const podleKlice = klic => b => b.dataset.klic === klic;
+
 /* ---- Urči větný člen ------------------------------------------------------------ */
 function urceni() {
   const p = $('plocha');
-  const v = Uloha.nahodne(VETY);
+  let v;
+  do { v = Uloha.nahodne(VETY); } while (v === posledni);
+  posledni = v;
   const i = Uloha.nahodneCislo(0, v.length - 1);
   const tag = v[i][1];
+  uloha = { rezim: 'urceni', v, i, tag };
 
   p.innerHTML = `<div class="zadani">Jakým větným členem je <b>${v[i][0]}</b>?</div>`;
   p.appendChild(vykresliVetu(v, { zvyraz: i }));
-  const odezva = document.createElement('div');
-  odezva.className = 'odezva';
+  const odezva = odezvaEl();
   Uloha.vyber({
     kam: p, odezva,
     moznosti: Uloha.zamichej([
@@ -127,8 +235,15 @@ function urceni() {
     spravnyKlic: zaklad(tag),
     zpravaOk: `✅ ${v[i][0]} – ${NAZEV[tag]}` + (OTAZKA[tag] ? ` (ptáme se: ${OTAZKA[tag]})` : ''),
     zpravaChyba: 'Zkus se zeptat: kdo? co dělá? koho? čeho? jaký? kde? kdy?',
-    poSpravne: skore.vyhodnot,
-    dalsi: novaUloha,
+    poSpravne: napoprve => {
+      hotovo(p, napoprve, tag);
+      p.appendChild(pravidloEl('🏷️', `${rozborHTML(v, i)}
+        <div style="margin-top:6px"><b>${v[i][0]}</b> je
+        <span class="vysledek">${NAZEV[tag]}</span>${OTAZKA[tag]
+          ? ` — ptáme se <b>${OTAZKA[tag]}</b>` : ''}
+        a rozvíjí ${RIDICI[tag]}.</div>`));
+    },
+    prodleva: PRODLEVA, dalsi: novaUloha,
   });
   p.appendChild(odezva);
 }
@@ -136,18 +251,16 @@ function urceni() {
 /* ---- Druh příslovečného určení --------------------------------------------------- */
 function druhPU() {
   const p = $('plocha');
-  let v, i, pojistka = 0;
-  do {
-    v = Uloha.nahodne(VETY);
-    const kandidati = v.map((x, k) => [x, k]).filter(([x]) => x[1].startsWith('pu'));
-    i = kandidati.length ? Uloha.nahodne(kandidati)[1] : -1;
-  } while (i < 0 && pojistka++ < 100);
+  let v;
+  do { v = Uloha.nahodne(VETY_PU); } while (v === posledni && VETY_PU.length > 1);
+  posledni = v;
+  const i = Uloha.nahodne(v.map((x, k) => k).filter(k => v[k][1].startsWith('pu')));
   const tag = v[i][1];
+  uloha = { rezim: 'druhPU', v, i, tag };
 
   p.innerHTML = `<div class="zadani">Jaké příslovečné určení je <b>${v[i][0]}</b>?</div>`;
   p.appendChild(vykresliVetu(v, { zvyraz: i }));
-  const odezva = document.createElement('div');
-  odezva.className = 'odezva';
+  const odezva = odezvaEl();
   Uloha.vyber({
     kam: p, odezva,
     moznosti: Uloha.zamichej([
@@ -159,8 +272,17 @@ function druhPU() {
     spravnyKlic: tag,
     zpravaOk: `✅ ${v[i][0]} – ${NAZEV[tag]}, ptáme se ${OTAZKA[tag]}`,
     zpravaChyba: 'Polož si otázku: kde, kdy, jak, nebo proč?',
-    poSpravne: skore.vyhodnot,
-    dalsi: novaUloha,
+    poSpravne: napoprve => {
+      hotovo(p, napoprve, tag);
+      const sloveso = (v.find(x => x[1] === 'ps') || ['sloveso'])[0];
+      p.appendChild(pravidloEl('🧭', `${rozborHTML(v, i)}
+        <div style="margin-top:6px">Zeptáme se na přísudek <b>${sloveso}</b>:
+        <b>${OTAZKA[tag]}</b> — odpověď je <b>${v[i][0]}</b>, tedy
+        <span class="vysledek">${NAZEV[tag]}</span>.
+        <div style="margin-top:6px">Druh příslovečného určení se vždycky pozná otázkou,
+        ne slovem samotným: totéž slovo může být v jiné větě jiným určením.</div></div>`));
+    },
+    prodleva: PRODLEVA, dalsi: novaUloha,
   });
   p.appendChild(odezva);
 }
@@ -168,24 +290,35 @@ function druhPU() {
 /* ---- Najdi ve větě ---------------------------------------------------------------- */
 function najdi() {
   const p = $('plocha');
-  let v, hledany, pojistka = 0;
-  do {
-    v = Uloha.nahodne(VETY);
-    hledany = Uloha.nahodne(['pt', 'pk', 'pu']);
-  } while (!v.some(x => zaklad(x[1]) === hledany) && pojistka++ < 100);
+  const hledany = Uloha.nahodne(['pt', 'pk', 'pu']);
+  const vhodne = VETY.filter(x => x.some(c => zaklad(c[1]) === hledany));
+  let v;
+  do { v = Uloha.nahodne(vhodne); } while (v === posledni && vhodne.length > 1);
+  posledni = v;
   const popis = { pt: 'předmět', pk: 'přívlastek', pu: 'příslovečné určení' }[hledany];
+  const otazky = { pt: 'koho? co? komu? čemu?', pk: 'jaký? který? čí?', pu: 'kde? kdy? jak? proč?' };
+  uloha = { rezim: 'najdi', v, hledany, popis };
   const stav = { chyboval: false, hotovo: false };
 
-  p.innerHTML = `<div class="zadani">Klepni ve větě na <b>${popis}</b>.</div>`;
-  const odezva = document.createElement('div');
-  odezva.className = 'odezva';
+  p.innerHTML = `<div class="zadani">Klepni ve větě na <b>${popis}</b>
+      <span style="color:var(--text-faint)">(${otazky[hledany]})</span></div>`;
+  const odezva = odezvaEl();
   const box = vykresliVetu(v, {
     klikaci: (i, el) => Uloha.odpoved({
       prvek: el, spravne: zaklad(v[i][1]) === hledany, stav, odezva,
       zpravaOk: `✅ ${v[i][0]} je ${NAZEV[v[i][1]]}.`,
       zpravaChyba: `${v[i][0]} je ${NAZEV[v[i][1]]} – hledáme ${popis}.`,
-      poSpravne: skore.vyhodnot,
-      dalsi: novaUloha,
+      poSpravne: napoprve => {
+        hotovo(p, napoprve, v[i][1]);
+        const vsechny = v.filter(x => zaklad(x[1]) === hledany).map(x => x[0]);
+        p.appendChild(pravidloEl('🔎', `${rozborHTML(v, i)}
+          <div style="margin-top:6px"><span class="vysledek">${vsechny.join(', ')}</span> —
+          ${vsechny.length > 1 ? `${popis} je ve větě víckrát` : `to je ${popis} v téhle větě`}.
+          Ptáme se <b>${otazky[hledany]}</b> a ${hledany === 'pk'
+            ? 'odpověď se váže k podstatnému jménu'
+            : 'odpověď se váže k přísudku'}.</div>`));
+      },
+      prodleva: PRODLEVA, dalsi: novaUloha,
     }),
   });
   p.appendChild(box);
@@ -195,32 +328,83 @@ function najdi() {
 /* ---- Co přívlastek rozvíjí -------------------------------------------------------- */
 function ridici() {
   const p = $('plocha');
-  let v, i, pojistka = 0;
-  do {
-    v = Uloha.nahodne(VETY);
-    const kandidati = v.map((x, k) => [x, k]).filter(([x, k]) => x[1] === 'pk' && k + 1 < v.length);
-    i = kandidati.length ? Uloha.nahodne(kandidati)[1] : -1;
-  } while (i < 0 && pojistka++ < 100);
+  let v;
+  do { v = Uloha.nahodne(VETY_PK); } while (v === posledni && VETY_PK.length > 1);
+  posledni = v;
+  const i = Uloha.nahodne(v.map((x, k) => k).filter(k => v[k][1] === 'pk' && k + 1 < v.length));
+  uloha = { rezim: 'ridici', v, i };
   const stav = { chyboval: false, hotovo: false };
 
   p.innerHTML = `<div class="zadani">Přívlastek <b>${v[i][0]}</b> rozvíjí které slovo? Klepni na ně.</div>`;
-  const odezva = document.createElement('div');
-  odezva.className = 'odezva';
+  const odezva = odezvaEl();
   p.appendChild(vykresliVetu(v, {
     zvyraz: i,
     klikaci: (k, el) => Uloha.odpoved({
       prvek: el, spravne: k === i + 1, stav, odezva,
       zpravaOk: `✅ ${v[i][0]} ${v[i + 1][0]} – přívlastek rozvíjí podstatné jméno „${v[i + 1][0]}“.`,
       zpravaChyba: 'Přívlastek se váže k podstatnému jménu, u kterého stojí.',
-      poSpravne: skore.vyhodnot,
-      dalsi: novaUloha,
+      poSpravne: napoprve => {
+        hotovo(p, napoprve, 'pk');
+        p.appendChild(pravidloEl('↗️', `${rozborHTML(v, i + 1)}
+          <div style="margin-top:6px">Přívlastek <b>${v[i][0]}</b> se ptá
+          <b>jaký? který? čí?</b> a odpovídá na to u slova
+          <span class="vysledek">${v[i + 1][0]}</span> — spolu tvoří
+          <b>skladební dvojici</b>.
+          <div style="margin-top:6px">Přívlastek se váže vždycky k <b>podstatnému jménu</b>,
+          nikdy ke slovesu. Tím se liší od příslovečného určení.</div></div>`));
+      },
+      prodleva: PRODLEVA, dalsi: novaUloha,
     }),
   }));
   p.appendChild(odezva);
 }
 
+/* ---- nápověda -------------------------------------------------------------- */
+/* Zužuje: ukáže, jakou otázku položit, správnou odpověď neřekne. */
+function napoveda() {
+  if (!uloha || napovedaVidet) return;
+  const p = $('plocha');
+  const v = uloha.v;
+  const sloveso = (v.find(x => x[1] === 'ps') || ['sloveso'])[0];
+  const el = document.createElement('div');
+  el.className = 'pravidlo tip';
+  let text, jeSpravna;
+
+  if (uloha.rezim === 'urceni') {
+    text = `Zjisti nejdřív, <b>co ten člen rozvíjí</b>. Váže se k podstatnému jménu vedle sebe
+      (→ přívlastek), nebo k přísudku <b>${sloveso}</b>? Když k přísudku, rozhodni podle otázky:
+      <b>pádová</b> otázka → předmět, otázka na <b>okolnost</b> (kde, kdy, jak, proč) →
+      příslovečné určení.`;
+    jeSpravna = podleKlice(zaklad(uloha.tag));
+  } else if (uloha.rezim === 'druhPU') {
+    text = `Zeptej se na přísudek <b>${sloveso}</b> postupně: <b>kde? kdy? jak? proč?</b>
+      Na jednu z těch otázek odpoví právě <b>${v[uloha.i][0]}</b>.`;
+    jeSpravna = podleKlice(uloha.tag);
+  } else if (uloha.rezim === 'najdi') {
+    text = uloha.hledany === 'pk'
+      ? `Hledej slovo, které stojí <b>u podstatného jména</b> a říká o něm
+         <b>jaké? které? čí?</b> je.`
+      : uloha.hledany === 'pt'
+        ? `Zeptej se na přísudek <b>${sloveso}</b> pádovými otázkami
+           (<b>koho? co? komu? čemu? kým? čím?</b>) — kromě 1. a 5. pádu.`
+        : `Zeptej se na přísudek <b>${sloveso}</b> na okolnosti:
+           <b>kde? kdy? jak? proč?</b>`;
+    jeSpravna = b => zaklad(v[[...b.parentElement.children].indexOf(b)][1]) === uloha.hledany;
+  } else {
+    text = `Přívlastek se váže k <b>podstatnému jménu</b> — a to obvykle stojí hned
+      <b>za ním</b>. Zkus říct „${v[uloha.i][0]} …“ a poslouchej, se kterým slovem to zní
+      jako jedno spojení.`;
+    jeSpravna = b => [...b.parentElement.children].indexOf(b) === uloha.i + 1;
+  }
+  el.innerHTML = `<span class="znak">🔎</span><div>${text}</div>`;
+  p.appendChild(el);
+  ztlum(p, jeSpravna);
+  napovedaVidet = true;
+}
+
+/* ---- ovládání -------------------------------------------------------------- */
 const REZIMY = { urceni, druhPU, najdi, ridici };
-function novaUloha() { REZIMY[rezim](); }
+function novaUloha() { napovedaVidet = false; REZIMY[rezim](); }
 
 document.querySelectorAll('#rezimy button').forEach(b => b.addEventListener('click', () => {
   document.querySelectorAll('#rezimy button').forEach(x => x.classList.remove('active'));
@@ -229,6 +413,11 @@ document.querySelectorAll('#rezimy button').forEach(b => b.addEventListener('cli
   novaUloha();
 }));
 $('btnDalsi').addEventListener('click', novaUloha);
+$('btnNapoveda').addEventListener('click', napoveda);
+document.addEventListener('keydown', e => {
+  if (e.key === 'ArrowRight' || e.key === 'Enter') { e.preventDefault(); novaUloha(); }
+  if (e.key === 'h' || e.key === 'H') napoveda();
+});
 novaUloha();
 </script>
 </body>

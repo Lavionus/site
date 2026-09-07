@@ -21,8 +21,13 @@
   const AUTOR = 'Radovan Valenta';
   const MAIL = 'hdm@seznam.cz';
   const DILO = 'Webové stránky';   // název díla – každý web má v kopii ten svůj
+  const ROZCESTNIK = 'Rozcestník';  // popisek odkazu zpět – v každé kopii ten svůj
   const ID = 'autor-podpis';
   const VYSKA = 22;            // px – výška pruhu
+
+  // Kořen webu = adresář, ve kterém leží tento soubor. Odtud se odvodí
+  // odkaz zpět do rozcestníku, aniž by se musela počítat hloubka stránky.
+  const KOREN = new URL('.', document.currentScript.src);
 
   if (window.self !== window.top) return;   // v rámu podpis patří nadřazené stránce
 
@@ -35,7 +40,8 @@
   box-sizing: border-box;
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: space-between;
+  gap: 10px;
   padding: 0 10px;
   font-family: var(--font, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif);
   font-size: 11px;
@@ -51,8 +57,26 @@
   pointer-events: none;   /* nikdy nepohltí kliknutí */
   user-select: none;
 }
+#${ID} .podpis-text {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  margin-left: auto;   /* bez odkazu drží podpis vpravo */
+}
+#${ID} .podpis-zpet {
+  pointer-events: auto;   /* pruh sám kliknutí nepohlcuje */
+  flex: none;
+  color: var(--accent, #4a9eff);
+  text-decoration: none;
+  font-weight: 600;
+}
+#${ID} .podpis-zpet:hover { text-decoration: underline; }
+/* na úzkém displeji ustoupí název díla, ať se vejde odkaz i autor */
+@media (max-width: 480px) {
+  #${ID} .podpis-dilo { display: none; }
+}
 @media print {
   #${ID} { position: static; border: 0; background: none; color: #444; }
+  #${ID} .podpis-zpet { display: none; }
 }`;
 
   // Rozměry počítané z celé výšky okna (height: 100vh) o pruhu nevědí —
@@ -128,6 +152,27 @@
     }
   }
 
+  // Odkaz zpět do rozcestníku – jen na podstránce otevřené samostatně.
+  // Cesta stránky vůči kořeni webu je zároveň klíčem v katalogu aplikací,
+  // takže se dá rovnou předat rozcestníku v hashi (index.html#obsah/x.html).
+  function odkazZpet() {
+    const koren = KOREN.href;
+    const zde = location.href.split('#')[0].split('?')[0];
+    if (!zde.startsWith(koren)) return null;
+
+    let cesta;
+    try { cesta = decodeURIComponent(zde.slice(koren.length)); } catch { return null; }
+    // prázdná cesta i samotný index.html = rozcestník, ten odkaz na sebe nepotřebuje
+    if (!cesta || cesta === 'index.html') return null;
+
+    const a = document.createElement('a');
+    a.className = 'podpis-zpet';
+    a.href = koren + 'index.html#' + cesta;
+    a.textContent = '← ' + ROZCESTNIK;
+    a.title = 'Zpět do rozcestníku aplikací';
+    return a;
+  }
+
   function vloz() {
     if (document.getElementById(ID)) return;
 
@@ -143,7 +188,20 @@
 
     const podpis = document.createElement('div');
     podpis.id = ID;
-    podpis.textContent = DILO + ' © ' + AUTOR + ' · ' + MAIL;
+
+    // Samostatně otevřená podstránka nemá kolem sebe menu rozcestníku
+    // (deep-link, záložka, odkaz z dlaždice) – nabídne se návrat.
+    const zpet = odkazZpet();
+    if (zpet) podpis.appendChild(zpet);
+
+    const text = document.createElement('span');
+    text.className = 'podpis-text';
+    const dilo = document.createElement('span');
+    dilo.className = 'podpis-dilo';
+    dilo.textContent = DILO + ' ';
+    text.append(dilo, document.createTextNode('© ' + AUTOR + ' · ' + MAIL));
+    podpis.appendChild(text);
+
     telo.appendChild(podpis);
 
     zmensCeloobrazovkove();
