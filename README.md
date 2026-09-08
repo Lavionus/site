@@ -5,7 +5,7 @@ Statický web se sbírkou malých HTML aplikací, hostovaný na GitHub Pages
 
 | Cesta | Web | Katalog | Stránky |
 |---|---|---|---|
-| `/` | hlavní rozcestník – 267 aplikací | `apps.js` | `obsah/` |
+| `/` | hlavní rozcestník – 271 aplikací | `apps.js` | `obsah/` |
 | `/nodus/` | ◈ **Nodus** – výukový web: 77 aplikací + 174 připravovaných témat podle osnov ZŠ | `nodus/apps.js` | `nodus/obsah/` |
 
 Nodus má vlastní rozcestník, úvodní přehled, ikony, manifest i service worker,
@@ -53,6 +53,19 @@ tvarů): je to školní slovní zásoba ZŠ, u které se dá u každého zahran�
 ukázat český význam a počítač nehraje slova, která dítě nemůže znát. V souboru
 se udržuje jen základ (`ZAKLAD` s významy, `NAVIC` bez nich) a odvozené tvary
 (množné číslo, `-ing`, `-ed`, stupňování) se dopočítají při načtení.
+
+**Solitaire** (`obsah/solitaire.html`) hraje Klondike s otáčením po jedné kartě
+a neomezeným počtem kol balíčku – proto se dá při hledání tahu koukat i do
+neotočených karet zásoby, na každou z nich se hráč dostane. Z toho žije
+**Nápověda** (najde první užitečný tah; přesun uvnitř stolu nabízí jen tehdy,
+když odkryje kartu nebo uvolní sloupec, jinak by posílala karty dokola)
+i hláška **„žádný tah už není možný"**, která se ukáže sama po tahu, jímž se
+partie zasekne. Tlačítko **Dokončit** se nabídne teprve tehdy, když si odklizení
+na základy stránka nanečisto zkusí na kopii stavu a vyjde – pouhé „všechny karty
+lícem nahoru" nestačí, karta potřebná na základ může být zavalená vyšší kartou
+a automat by se zasekl v půli. Celé dokončení je v historii jeden krok, takže ho
+Zpět vrátí najednou. Ze sloupce se smí brát jen sestupná řada střídavých barev
+(`jeSekvence`) a na prázdný sloupec smí jen král – jako v pravidlech.
 
 Po větší změně zvyš verzi cache v `sw.js` (`webapp-vN`), resp. v `nodus/sw.js`
 (`nodus-vN`) – jinak návštěvník uvidí novou verzi až při druhém načtení.

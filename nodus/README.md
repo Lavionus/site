@@ -5,8 +5,8 @@ Samostatný web s interaktivními výukovými aplikacemi pro základní školu �
 dějepis a informatika. Vše běží v prohlížeči, bez serveru a bez registrace,
 po prvním otevření i offline (PWA + service worker).
 
-Katalog je zároveň **kostrou osnov ZŠ**: 243 témat v 11 předmětech a 9 ročnících
-plus 8 nástrojů bez vazby na předmět — dohromady 251 položek. Osnova je momentálně
+Katalog je zároveň **kostrou osnov ZŠ**: 244 témat v 11 předmětech a 9 ročnících
+plus 10 nástrojů bez vazby na předmět — dohromady 254 položek. Osnova je momentálně
 pokrytá celá, žádné téma nezůstalo jen jako zástupce (🚧). Přehled je na stránce
 [Osnova](obsah/osnova.html).
 
@@ -20,9 +20,13 @@ pokrytá celá, žádné téma nezůstalo jen jako zástupce (🚧). Přehled je
 | `apps.js` | katalog (jediný zdroj pravdy pro menu, hledání i úvodní přehled) |
 | `obsah/prehled.html` | úvodní stránka v pracovní ploše (ročníky, předměty, tip dne, oblíbené) |
 | `obsah/osnova.html` | mřížka ročníků × předmětů s přehledem pokrytí učiva |
+| `obsah/ucitel.html` | kabinet učitele – rozcestník pro přípravu a nástroje do hodiny |
+| `obsah/prezentace.html` | tvorba slidů, promítání na plátno a tisk podkladů |
+| `obsah/predstaveni.html` | živé ukázky – zkrácené, ale funkční verze šesti aplikací na jedné stránce |
 | `obsah/*.html` | jednotlivé výukové aplikace |
 | `obsah/lib/`, `obsah/textures/`, `obsah/Anatomy/` | knihovny a data aplikací |
 | `common.css`, `theme.js` | sdílený vzhled a přepínání světlého/tmavého režimu |
+| `projektor.js` | zvětšení obrazu pro projektor a tabuli – používá rozcestník i prezentace |
 | `podpis.js` | autorský podpis (`Nodus © Radovan Valenta · hdm@seznam.cz`) ve vlastním pruhu dole – patří do `<head>` **každé** stránky; název díla drží konstanta `DILO` |
 | `rec.js` | čtení nahlas – systémový hlas, jinak vestavěný ze složky `hlas/` |
 | `uloha.js` | společné chování úloh: zaklepání u chyby, zelená a automatický posun u správné odpovědi, skóre |
@@ -84,6 +88,244 @@ kde ji učitel opustil.
 Arch v náhledu je vždy bílý papír, proto uvnitř `.sheet-page` **nesmí být
 proměnné motivu** — ve světlém režimu vycházelo `--bg-hover` na bílém papíře
 jako neviditelná čísla úloh a linka na jméno, a to i v tisku.
+
+## Pro učitele
+
+Učitelské stránky drží pohromadě `obsah/ucitel.html` (**Kabinet učitele**) —
+v horní části rozcestník po přípravných nástrojích (pracovní listy, slidy,
+osnova, ukázky, knihovna sad, citace), pod ním nástroje, které běží přímo
+v hodině: časovač a stopky, losování žáka, dělení do skupin, skóre týmů,
+kostka a semafor hluku.
+
+Pravidla, kterými se stránka řídí:
+
+- **Čte se z poslední lavice.** Čísla i jména jsou v `clamp()` škále přes celou
+  šířku, ne v okénku — nástroj se pouští na plátno, ne na notebook.
+- **Seznam třídy je jeden.** Losování, skupiny i výběr do týmů berou jména
+  ze stejného `nodus_tridy_v1`, aby se třída psala jen jednou. Tříd může být víc.
+- **Losování bez opakování.** Dokud se kolo neuzavře, nikdo nepadne dvakrát
+  (a vylosovaní jsou v seznamu odškrtnutí). Po vyčerpání začne samo nové kolo —
+  losování nikdy nezůstane stát. Bez téhle volby aspoň nepadne tentýž žák dvakrát za sebou.
+- **Odkazy respektují rám.** Uvnitř rozcestníku se dlaždice otevírají v jeho
+  pracovní ploše (`postMessage`), samostatně otevřená stránka odkazuje přímo.
+
+Časovač si zvuk skládá v `AudioContext` — žádný soubor navíc, funguje offline.
+Skóre týmů a seznamy tříd zůstávají v `localStorage`, takže soutěž může běžet
+přes několik hodin i dnů.
+
+## Tvorba slidů a prezentace
+
+`obsah/prezentace.html` skládá výklad ze slidů deseti druhů a promítá je na
+plátno. Kromě editoru má **okno pro učitele**, **kvíz s vyhodnocením**,
+**časovač úkolu** a tisk podkladů.
+
+| Druh slidu | K čemu je |
+|---|---|
+| titulní | název hodiny a podtitul |
+| text | nadpis a odrážky |
+| dva sloupce | text vedle textu, nebo text vedle obrázku (dají se prohodit) |
+| otázka | zadání; odpověď se odkryje až dalším posunem |
+| kvíz | až šest možností, třída hádá, klik nebo klávesa `1`–`9` vyhodnotí |
+| obrázek | z adresy, nebo soubor vložený přímo do prezentace |
+| citát | velký text s podpisem autora |
+| aplikace | **živá aplikace Nodusu** přímo ve slidu |
+| časovač | velký odpočet pro samostatnou nebo skupinovou práci |
+| tabule | prázdná plocha na kreslení při výkladu |
+
+Na čem stránka stojí:
+
+- **Jedno vykreslení pro všechno.** Náhled, miniatura v seznamu, promítané
+  plátno, přehled slidů, okno pro učitele i miniatura v tisku prochází funkcí
+  `vykresli`. Promítaný a vytištěný slide se proto nemůžou rozejít a nový druh
+  slidu stačí přidat na jediném místě.
+- **Pevné plátno 1280 px.** Slide má vždy stejné rozměry (720 px na výšku při
+  16:9, 960 při 4:3) a teprve celý se škáluje do místa (`Projektor.vmestnej`).
+  Kdyby se místo toho počítalo písmo podle okna, vypadala by příprava na
+  projektoru jinak než na notebooku, kde vznikala — a učitel by to zjistil
+  až ve třídě.
+- **Živě běží jen promítaný slide.** Aplikace se vkládá do rámu jen na plátně;
+  v seznamu, v přehledu a v tisku je místo ní zástupce. Dvacet současně
+  běžících aplikací by z prohlížeče udělalo topení. Konec promítání rám
+  vyprázdní, takže aplikace pod editorem dál neběží.
+- **Text se nikdy nevkládá jako HTML.** Zápis zná jen odrážku (`- `),
+  mezinadpis (`## `) a `**zvýraznění**`; všechno ostatní projde přes escape.
+- **Zadání dřív než řešení.** Otázka i kvíz mají dva kroky (`odkryto`).
+  U kvízu špatná volba zčervená a otázka běží dál, správná odkryje řešení
+  i vysvětlení — vysvětlení se po chybě **neukáže**, jinak by si ho třída
+  přečetla dřív, než dojde ke správné odpovědi.
+- **Do podkladů se odpovědi netisknou.** Žák dostane prázdné pole, učitel si
+  svou kopii vytiskne s volbou *Tisknout odpovědi a řešení kvízů*.
+
+### Okno pro učitele
+
+Tlačítko *Okno pro učitele* otevře druhé okno téže stránky (adresa s kotvou
+`#prezenter`; kotva a ne parametr proto, že service worker má stránku v cache
+pod čistou adresou a s parametrem by se okno offline nenačetlo). Na plátně
+zůstane slide, na notebooku učitel vidí **poznámky, následující slide, hodiny
+a čas od začátku hodiny** a může odtud prezentaci ovládat.
+
+Obě okna spojuje `BroadcastChannel`; kde chybí, zaskočí událost `storage` —
+obě cesty doručují jen do *ostatních* oken, takže se okno neposlouchá samo.
+Zprávy mají pořadové číslo, jinak by v prohlížeči, kde fungují obě cesty,
+přišel každý posun dvakrát. Kanálem chodí **jen pozice**, ne sada: prezentace
+s vloženými obrázky má klidně megabajty a posílat je při každém posunu by
+okno zadusilo. Okno pro učitele si sadu čte ze stejného `localStorage`.
+
+### Ovládání při promítání
+
+`→`/`mezerník` další, `←` zpět, `1`–`9` odpověď v kvízu, `B` černá, `W` bílá,
+`O` přehled slidů, `P` pero, `Z` zpět poslední tah, `E` smazat kresbu,
+`T` pozastavit časovač, `N` poznámky, `F` celá obrazovka, `Esc` konec.
+Pero má tři tloušťky včetně poloprůhledného zvýrazňovače a kresba se drží
+u slidu, ne u obrazovky. Ovládací lišta se sama schová, aby na plátně
+nesvítila přes výklad.
+
+Když učitel klikne do aplikace ve slidu, klávesy chytá rám. Přeposílají se
+proto do stránky klávesy prezentačního klikátka (`PageUp`/`PageDown`) a `Esc` —
+šipky a mezerník ne, ty v aplikaci patří tomu, kdo v ní zrovna něco ovládá.
+
+### Sestavení z textu
+
+Celou prezentaci lze nasypat jako text (`Sada → Sestavit z textu`) a stejně tak
+zpátky vypsat — učitel má přípravu v textovém editoru a nemusí ji překlikávat:
+
+```
+# Pravěk            → titulní slide (další řádek je podtitul)
+---                 → oddělovač slidů
+## Doba kamenná     → slide s textem
+- paleolit          → odrážka
+> zeptat se na …    → poznámka pro učitele (na plátno se nedostane)
+? Otázka   / = Odpověď
+?? Kvíz    / + správná možnost / * špatná možnost
+! adresa | popisek  → obrázek        " text | autor → citát
+@ obsah/bunka.html | nadpis → aplikace
+T 10 | zadání       → časovač na 10 minut      ___ → tabule
+```
+
+Převod tam i zpět zachovává druhy slidů, poznámky i správné odpovědi (hlídá
+to test). Čtyři **šablony hodin** (výklad, opakování, skupinová práce, pokus)
+jsou popsané stejným zápisem — jsou to jen texty, ne zvláštní kód.
+
+### Další drobnosti, které se osvědčily
+
+- Seznam slidů má miniatury (tentýž `vykresli`, jen zmenšený) a **přetahování myší**;
+  `Alt`+`↑`/`↓` posune vybraný, `Ctrl`+`D` duplikuje, `Ctrl`+`Z` vrátí smazaný.
+  Mazání se proto na nic neptá — potvrzovací otázka u každého slidu při skládání
+  prezentace jen zdržuje.
+- Obrázek se dá do slidu **přetáhnout myší**; zmenší se na 1600 px a uloží se
+  přímo do prezentace, takže funguje i bez internetu.
+- Zápis do `localStorage` má kvótu kolem 5 MB a přeteče typicky vložený obrázek.
+  Selhání se **hlásí** — mlčet by znamenalo, že učitel přijde o přípravu, aniž
+  by tušil proč.
+- Podklady se tisknou po 3 (s linkami na poznámky žáka), 6, 2, nebo po jednom
+  na stránku na šířku — poslední volba slouží k uložení prezentace do PDF.
+  Arch je vždy bílý papír, i když je prezentace tmavá.
+
+Sady se ukládají do `localStorage` (`nodus_prezentace_v1`) a dají se vyvézt
+i načíst jako JSON — tak se příprava přenese na školní počítač.
+
+Testy: `python3 _test/run.py slidy.html` (druhy slidů, textový zápis, kvíz,
+časovač, okno pro učitele, vkládání obrázku a tisk).
+
+## Režim projektor
+
+`projektor.js` zvětšuje obraz pro plátno nebo interaktivní tabuli. Zapíná se
+v rozcestníku tlačítkem 📽️ nebo klávesou **F8**: schová menu i hlavičku,
+požádá o celou obrazovku a nechá na obrazovce jen plovoucí lištu
+(zvětšení −/+, výběr aplikace, celá obrazovka, konec). Úroveň zvětšení
+si režim pamatuje (`nodus_projektor`).
+
+Zvětšuje se **rám, ne obsah v něm**: rámu se nastaví rozměr zmenšený
+o zvolený násobek a `transform: scale()` ho vykreslí na celou plochu.
+Stránka uvnitř tak vidí menší okno a rozloží se podle něj. Zkoušelo se
+i `zoom` vložený do dokumentu v rámu — u stránek, které staví na `100vh`
+(a takových je tu většina: plátna, mapy, glóbusy), se plocha zvětšila i na
+výšku, stránka přetekla a začala rolovat. Cena škálování rámu je měkčí
+plátno při velkém zvětšení; text a SVG se překreslují ostře.
+
+Rám s aplikací má v `index.html` atribut `allowfullscreen` — bez něj prohlížeč
+odmítne celou obrazovku vyžádanou stránkou uvnitř rámu (typicky promítání
+z `prezentace.html`).
+
+Testy učitelských stránek: `python3 _test/run.py ucitelske.html`
+(kabinet, slidy, promítání, podklady k tisku a režim projektor).
+
+## Stránka živých ukázek
+
+`obsah/predstaveni.html` je stránka, kterou se Nodus ukazuje kolegům, rodičům
+nebo na projektoru. Neříká, co web umí — **nechá to vyzkoušet**: sedm zkrácených,
+ale plně funkčních aplikací pod sebou.
+
+| Ukázka | Co se v ní dá dělat | Předloha |
+|---|---|---|
+| Gravitační hřiště | tažením vystřelit planetku, sledovat elipsu, dobu oběhu a výstřednost | `gravitacni_hriste.html` |
+| Periodická tabulka | všech 118 prvků, klik dopočítá konfiguraci a rozběhne Bohrův model | `periodic_table.html` |
+| Aerodynamický tunel | táhnout překážku proudem, měnit velikost a rychlost větru | `vitr_tunel.html` |
+| Stavba rostlinné buňky | klikat na organely ve schématu | `bunka.html` |
+| Kvadratická funkce | jezdci měnit a, b, c, sledovat vrchol, kořeny a diskriminant | `grafy_funkci.html` |
+| Procvičování | odpovídat na úlohy s kartičkou „proč“ | jádro `uloha.js` |
+| Generátor testů | složit a vytisknout list podle ročníku, tématu a obtížnosti | `pracovni_listy.html` |
+
+Stránka **záměrně neodkazuje na plné verze aplikací** — každá karta místo toho
+nese štítek *Ukázková verze* a pořadí (`3 / 7`). Kdo se chce dostat dál, má
+k tomu tlačítka v úvodu a v závěru; uvnitř ukázky nemá co odvádět pozornost.
+
+Kolem ukázek je pak to, co potřebují ostatní dvě publika: pás **pro školu**
+(nic se neinstaluje, offline, data zůstávají ve škole, podle osnovy ZŠ) pro toho,
+kdo o nasazení rozhoduje — mluví **jen o provozu, ne o ceně a účtech**, aby si
+web nechal otevřené dveře k případné monetizaci, a **lepivá lišta ukázek** pro toho, kdo stránku
+promítá — skáče se s ní mezi ukázkami a zvýrazněná položka říká, kde v pořadí
+zrovna jsme. V hlavičce se kreslí síť uzlů (značka Nodusu je uzel); je to jen
+kulisa pod obsahem, která se při `prefers-reduced-motion` nakreslí jednou
+a zůstane stát.
+
+Pravidla, kterými se stránka řídí:
+
+- **Soběstačnost.** Stránka má vlastní kopii palety z `common.css`, vlastní
+  přepínač motivu a vlastní vyhodnocení odpovědí. Sdílené `theme.js`, `podpis.js`
+  a `apps.js` jsou v ní jen jako doplněk — když se soubor pošle mailem nebo
+  nahraje jinam a všechny tři chybí, stránka funguje dál. Cena je jedno místo
+  navíc při změně palety.
+- **Tři režimy podle katalogu.** Podle toho, jestli se povedlo načíst `apps.js`,
+  se stránka chová jako podstránka rozcestníku (volba se posílá rodiči přes
+  `postMessage`), jako samostatně otevřená stránka Nodusu (odkazy na
+  `../index.html#soubor`), nebo jako osamocený soubor — pak se odkazy do Nodusu,
+  čísla katalogu i podpisový pruh nahradí tím, co dává smysl bez zbytku webu.
+- **Data se neopisují.** Prvky, výpočet elektronové konfigurace, popisky organel
+  i schéma buňky jsou převzaté ze zdrojů plných verzí, aby ukázka neříkala něco
+  jiného než aplikace, kterou má představit.
+- **Běží jen to, co je vidět.** Každé plátno má vlastní `IntersectionObserver`;
+  šest současně běžících animací by jinak zbytečně vytěžovalo notebook i tablet.
+
+Pasti, na které se při psaní narazilo:
+
+1. `grid-template-columns: 1fr` u sloupce s periodickou tabulkou se na mobilu
+   roztáhl na šířku mřížky (580 px), vodorovný posuv uvnitř neměl co posouvat
+   a tabulka se jen oříznula. Správně je **`minmax(0, 1fr)`** plus `min-width: 0`
+   na položkách mřížky.
+2. Duhová škála rychlosti (modrá → zelená → červená) v tunelu udělala ze
+   **zeleného** volného proudu vizuální šum. Škála je proto zakotvená v rychlosti
+   větru (modrá) a teprve zrychlení hoří do oranžova; ve světlém režimu má
+   vlastní, tmavší sadu, jinak na bílém papíře zmizí.
+3. Graf funkce musí **posunout výřez za vrcholem** — u malého `a` nebo velkého
+   `c` leží vrchol mimo plátno a jezdec pak vypadá, že nic nedělá.
+4. Skok z lišty musel dostat **vlastní obsluhu**: samotné `scroll-margin-top`
+   nestačilo, protože `scrollIntoView` na zvýrazněné položce lepivé lišty
+   dorovnával i svislé rolování a hlavička karty skončila schovaná pod lištou.
+   Lištou se proto posouvá jen vodorovně a stránka se roluje ručně.
+5. Míchaný list (*Mix témat ročníku*) nesmí být jen seznam úloh: u zadání jako
+   „hustota →“ nebylo poznat, co se má dělat. Vybere se proto **pár témat**
+   (zhruba jedno na čtyři úlohy, ne celý ročník) a úlohy se sázejí **po oddílech**
+   s pokynem nad každým z nich; číslování běží přes celý list.
+6. Arch generátoru testů je jako v plné verzi **vždycky bílý papír**, takže
+   uvnitř `.list` schválně nejsou proměnné motivu; ve světlém režimu by se
+   jinak linky na jméno a čísla úloh slily s papírem.
+7. Tisk schovává obsah pravidlem **„všechno kromě archu“**
+   (`body > *:not(.obal)`, `.obal > *:not(#test)`), ne výčtem konkrétních
+   prvků — ten se rozešel s obsahem, jakmile stránka dostala pás pro školu
+   a lištu ukázek, a ty pak vyjely na papír nad arch. `@page { margin: 14mm }`
+   musí být **mimo** `@media print`; vnořené `@page` Chrome zahodí a arch
+   doléhá na ořezovou hranu.
 
 ## Psaní nové procvičovací aplikace
 
@@ -196,6 +438,36 @@ a cituje očekávaný výstup RVP. Až téma zpracuješ:
 Záznam do příslušné sekce v `apps.js` (`soubor`, `nazev`, `tagy`, `predmet`,
 `rocniky`, případně `stav: 'plan'`) a odpovídající stránka v `obsah/`.
 
+## Proudové motory
+
+`obsah/proudove_motory.html` ukazuje v řezu osm druhů motorů (turbo-jet,
+turbo-fan, turbo-prop, turbo-shaft, ram-jet, scramjet, raketový motor a
+průmyslovou plynovou turbínu) a nechá jimi protékat vzduch. Stojí na dvou
+věcech, které se nesmí rozejít:
+
+- **Geometrie.** Každý motor je pár kanálů popsaných klíčovými body
+  `[x, vnější poloměr, vnitřní poloměr]`; kreslí se horní polovina a zrcadlí
+  se dolů. `hranice` říká, kudy vede stěna, `vypln` (jen dvouproudový motor)
+  kudy sahá výplň kanálu před rozdělovačem a `stenaIn` kde se kreslí
+  rozdělovač proudů. Body za `hranice` slouží jen vlečce za tryskou.
+- **Fyzika.** Tlaky a teploty počítá Braytonův cyklus z tlakového poměru
+  kompresoru, teploty před turbínou a náporu (`ramT`, `ramP`) — proto čísla
+  v měřicím panelu odpovídají skutečným motorům a proto ram-jet pod M 0,8 sám
+  hlásí, že nemá tah. Rychlost proudu se **nekreslí od oka**: plyne z rovnice
+  kontinuity `v ~ T / (p · A)`, takže se proud sám zrychlí v trysce a zpomalí
+  v širokém sání. Ze stejného vzorce žije i graf pod motorem.
+
+Dvě vědomé úlevy oku: teplota a tlak mají škálu společnou pro všechny motory
+(jinak by 1 400 K výtok rakety vypadal stejně žhavě jako komora turbo-jetu) a
+rychlost částic se násobí `stav.zisk`, protože turbovrtulový motor má výtok
+130 m/s a proudový 900 — bez srovnání by jeden stál a druhý mihotal. Naměřená
+čísla v panelu zůstávají skutečná.
+
+Testy: `python3 _test/run.py motory.html` (cyklus, proudění a vykreslení všech
+osmi motorů), `motory_paticka.html` (úzké okno 420 px) a `motory_snimky.html`,
+který uloží snímek každého motoru do `_test/motor_*.png` — geometrii je potřeba
+kontrolovat okem.
+
 ## Psací písmo
 
 Ve složce `fonty/` je **Playwrite CZ** – česká varianta školní psací abecedy
@@ -250,7 +522,8 @@ do jiného repozitáře. Zůstávají jen tyto vazby na nadřazený web
 
 - `obsah/iss.html`, `obsah/planet_globe.html` → odkaz na `weather_globe.html` (glóbus počasí)
 - `obsah/eduMaps.html` → odkaz na `map_export.html` (tvorba map)
-- `obsah/prehled.html` (patička) a `index.html` (tlačítko *Ostatní aplikace*) → `../index.html`
+- `obsah/prehled.html` a `obsah/predstaveni.html` (patička) a `index.html`
+  (tlačítko *Ostatní aplikace*) → `../index.html`
 
 Opačným směrem je hlavní web závislý na této složce jediným místem:
 `obsah/weather_globe.html` používá textury Země z `../nodus/obsah/textures/`

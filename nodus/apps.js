@@ -2368,7 +2368,10 @@ const KATALOG_SEKCE = [
           "srážky planet",
           "sluneční soustava",
           "kruhová dráha",
-          "stabilita soustavy"
+          "stabilita soustavy",
+          "těžiště",
+          "akce a reakce",
+          "zachování hybnosti"
         ],
         "predmet": "f",
         "rocniky": [
@@ -2396,15 +2399,18 @@ const KATALOG_SEKCE = [
       },
       {
         "soubor": "obsah/gravitacni_hriste.html",
-        "nazev": "🎯 Gravitační hřiště",
+        "nazev": "🎯 Kosmický prak: oběžné dráhy",
         "tagy": [
-          "gravitace",
+          "oběžná dráha",
           "fyzika",
           "kepler",
-          "oběžná dráha",
+          "keplerovy zákony",
+          "elipsa",
+          "gravitace",
           "vesmír",
           "simulace",
-          "kosmická rychlost"
+          "kosmická rychlost",
+          "družice"
         ],
         "predmet": "f",
         "rocniky": [
@@ -2426,6 +2432,41 @@ const KATALOG_SEKCE = [
         "predmet": "f",
         "rocniky": [
           7
+        ]
+      },
+      {
+        "soubor": "obsah/proudove_motory.html",
+        "nazev": "\ud83d\udeeb Proudov\u00e9 motory \u2013 kudy proud\u00ed vzduch",
+        "tagy": [
+          "fyzika",
+          "proudov\u00fd motor",
+          "turb\u00edna",
+          "kompresor",
+          "spalovac\u00ed komora",
+          "tryska",
+          "turbojet",
+          "turbofan",
+          "dvouproudov\u00fd motor",
+          "turbovrtulov\u00fd motor",
+          "turboh\u0159\u00eddelov\u00fd motor",
+          "n\u00e1porov\u00fd motor",
+          "ramjet",
+          "scramjet",
+          "raketov\u00fd motor",
+          "plynov\u00e1 turb\u00edna",
+          "tah",
+          "tlak",
+          "teplota",
+          "Brayton\u016fv cyklus",
+          "proud\u011bn\u00ed",
+          "simulace",
+          "2. stupe\u0148",
+          "s\u0161"
+        ],
+        "predmet": "f",
+        "rocniky": [
+          8,
+          9
         ]
       },
       {
@@ -4413,6 +4454,56 @@ const KATALOG_SEKCE = [
     "nazev": "🖨️ Pro učitele",
     "skupina": "dalsi",
     "polozky": [
+      {
+        "soubor": "obsah/ucitel.html",
+        "nazev": "🧑\u200d🏫 Kabinet učitele",
+        "tagy": [
+          "učitel",
+          "hodina",
+          "časovač",
+          "stopky",
+          "losování žáka",
+          "náhodný žák",
+          "skupiny",
+          "rozdělení do skupin",
+          "skóre týmů",
+          "soutěž",
+          "kostka",
+          "semafor hluku",
+          "seznam třídy",
+          "projektor"
+        ]
+      },
+      {
+        "soubor": "obsah/prezentace.html",
+        "nazev": "🖥️ Tvorba slidů a prezentace",
+        "tagy": [
+          "prezentace",
+          "slidy",
+          "výklad",
+          "projektor",
+          "plátno",
+          "interaktivní tabule",
+          "promítání",
+          "pero",
+          "kreslení do slidu",
+          "podklady k tisku",
+          "handout",
+          "poznámky učitele",
+          "okno pro učitele",
+          "aplikace ve slidu",
+          "kvíz",
+          "časovač ve slidu",
+          "citát",
+          "dva sloupce",
+          "šablony hodin",
+          "sestavení z textu",
+          "zvýrazňovač",
+          "klikátko",
+          "pdf",
+          "učitel"
+        ]
+      },
       {
         "soubor": "obsah/citation_generator.html",
         "nazev": "📚 Generátor citací",

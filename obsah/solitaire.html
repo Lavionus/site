@@ -21,8 +21,14 @@ h1{font-size:1.4rem;margin-bottom:10px;font-weight:600;text-align:center;color:#
 .karta.rub{background:linear-gradient(135deg,#3949ab 25%,#5c6bc0 25% 50%,#3949ab 50% 75%,#5c6bc0 75%);color:transparent}
 .karta.vybrana{outline:3px solid #ffd54f;outline-offset:-2px}
 .karta .dole{position:absolute;bottom:4px;right:6px;transform:rotate(180deg)}
-.stat{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;color:#cfe8d6;font-size:.9rem}
+.stat{display:flex;flex-wrap:wrap;gap:8px;justify-content:space-between;align-items:center;margin-bottom:8px;color:#cfe8d6;font-size:.9rem}
 .btn{background:#2e7d32;color:#fff;border:1px solid #4caf50;padding:8px 14px;border-radius:6px;cursor:pointer;font-weight:600;font-size:.85rem}
+.btn:disabled{opacity:.4;cursor:default}
+.zprava{min-height:1.3em;margin-bottom:10px;text-align:center;font-size:.9rem;color:#ffd54f}
+.zprava.konec{color:#ff8a80;font-weight:600}
+.karta.napoveda{outline:3px solid #4fc3f7;outline-offset:-2px;animation:puls .9s ease-in-out infinite}
+.slot.napoveda{border-color:#4fc3f7;box-shadow:0 0 0 2px rgba(79,195,247,.55)}
+@keyframes puls{50%{outline-color:rgba(79,195,247,.2)}}
 .vyhra{position:fixed;inset:0;background:rgba(0,0,0,.75);display:none;align-items:center;justify-content:center;flex-direction:column;gap:16px;z-index:10}
 .vyhra.zobraz{display:flex}
 .vyhra h2{font-size:2.2rem;color:#ffd54f}
@@ -34,9 +40,12 @@ h1{font-size:1.4rem;margin-bottom:10px;font-weight:600;text-align:center;color:#
   <div class="stat">
     <span>Tahů: <b id="tahy">0</b></span>
     <button class="btn" id="zpet" title="Vrátit poslední tah (Ctrl+Z)">↶ Zpět</button>
+    <button class="btn" id="napoveda" title="Ukázat možný tah (N)">💡 Nápověda</button>
+    <button class="btn" id="dokonci" title="Přesunout všechny karty na základy">⚡ Dokončit</button>
     <button class="btn" id="nova">↺ Nová hra</button>
     <span id="rekordBox"></span>
   </div>
+  <div class="zprava" id="zprava"></div>
   <div class="horni">
     <div class="slot" id="balicek" title="Klikni pro otočení karty"></div>
     <div class="slot" id="odkladaci"></div>
@@ -56,6 +65,7 @@ const HODN=['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
 const jeCervena=b=>b===1||b===2;
 let balicek,odkladaci,zaklady,sloupce,vybrano,tahu;
 let historie=[],rek=null;
+let automat=false;            // běží automatické dokončení
 const KLIC_HRA='webapp_hra_solitaire_stav';
 
 /* Stav partie je malý (52 karet), takže si ho můžeme dovolit ukládat celý –
@@ -71,9 +81,9 @@ function ulozHru(){
 }
 function aktualizujZpet(){$('zpet').disabled=historie.length===0;}
 function zpet(){
-  if(!historie.length)return;
+  if(!historie.length||automat)return;
   nastav(historie.pop());
-  aktualizujZpet();ulozHru();render();
+  aktualizujZpet();ulozHru();zvyrazni(null);zprava('');render();
 }
 
 function novaHra(){
@@ -86,8 +96,8 @@ function novaHra(){
     sloupce[s][sloupce[s].length-1].licem=true;
   }
   balicek=karty;odkladaci=[];zaklady=[[],[],[],[]];
-  vybrano=null;tahu=0;historie=[];
-  aktualizujZpet();ulozHru();
+  vybrano=null;tahu=0;historie=[];automat=false;
+  aktualizujZpet();ulozHru();zvyrazni(null);zprava('');
   render();
 }
 function kartaHtml(k,vybr){
@@ -125,9 +135,19 @@ function render(){
     });
     kontejner.appendChild(div);
   });
+  aktualizujTlacitka();
 }
 function muzeNaZaklad(k,z){
   return k.b===z&&k.h===zaklady[z].length;
+}
+/* Ze sloupce se smí brát jen sestupná řada střídavých barev – jinak by šlo
+   libovolné karty přenášet po hromadách a hra by ztratila pravidla. */
+function jeSekvence(sl,i){
+  for(let j=i;j<sl.length;j++){
+    if(!sl[j].licem)return false;
+    if(j>i&&!(sl[j-1].h===sl[j].h+1&&jeCervena(sl[j-1].b)!==jeCervena(sl[j].b)))return false;
+  }
+  return true;
 }
 function muzeNaSloupec(k,sl){
   const cil=sl[sl.length-1];
@@ -137,7 +157,10 @@ function muzeNaSloupec(k,sl){
 function polozVybrane(cilTyp,cilIndex){
   let karty;
   if(vybrano.typ==='odkladaci')karty=[odkladaci[odkladaci.length-1]];
-  else karty=sloupce[vybrano.s].slice(vybrano.i);
+  else{
+    if(!jeSekvence(sloupce[vybrano.s],vybrano.i))return false;
+    karty=sloupce[vybrano.s].slice(vybrano.i);
+  }
   if(cilTyp==='zaklad'){
     if(karty.length!==1||!muzeNaZaklad(karty[0],cilIndex))return false;
     zaklady[cilIndex].push(karty[0]);
@@ -159,6 +182,190 @@ function zkusAutoZaklad(k){
   for(let z=0;z<4;z++)if(muzeNaZaklad(k,z))return z;
   return -1;
 }
+
+/* ====== hledání tahů: nápověda, „už to nejde“ a automatické dokončení ======
+   Hrajeme s otáčením po jedné kartě a neomezeným počtem kol balíčku, takže
+   na každou kartu v zásobě se dá dostat – při hledání tahu se proto smí
+   koukat i do neotočených karet balíčku. */
+function popisKarty(k){return HODN[k.h]+BARVY[k.b];}
+
+// Přesun uvnitř stolu má smysl jen tehdy, když odkryje rubem otočenou kartu
+// nebo uvolní sloupec; jinak by nápověda posílala karty dokola.
+function uzitecnyPresun(si,ki){
+  return ki>0?!sloupce[si][ki-1].licem:true;
+}
+function najdiTah(){
+  // 1. vrcholy sloupců na základ
+  for(let s=0;s<7;s++){
+    const sl=sloupce[s],k=sl[sl.length-1];
+    if(!k||!k.licem)continue;
+    const z=zkusAutoZaklad(k);
+    if(z>=0)return{zdroj:{typ:'sloupec',s,i:sl.length-1},cil:{typ:'zaklad',i:z},
+      popis:popisKarty(k)+' patří na základ '+BARVY[z]};
+  }
+  // 2. odkládací balíček na základ
+  const od=odkladaci[odkladaci.length-1];
+  if(od){
+    const z=zkusAutoZaklad(od);
+    if(z>=0)return{zdroj:{typ:'odkladaci'},cil:{typ:'zaklad',i:z},
+      popis:popisKarty(od)+' z odkládacího balíčku patří na základ '+BARVY[z]};
+  }
+  // 3. mezi sloupci
+  for(let s=0;s<7;s++){
+    const sl=sloupce[s];
+    for(let i=0;i<sl.length;i++){
+      if(!sl[i].licem||!jeSekvence(sl,i)||!uzitecnyPresun(s,i))continue;
+      for(let c=0;c<7;c++){
+        if(c===s)continue;
+        if(i===0&&!sloupce[c].length)continue; // z prázdna do prázdna nic nezískáme
+        if(muzeNaSloupec(sl[i],sloupce[c]))return{zdroj:{typ:'sloupec',s,i},cil:{typ:'sloupec',i:c},
+          popis:popisKarty(sl[i])+' přesuň do '+(c+1)+'. sloupce'+
+            (sloupce[c].length?' na '+popisKarty(sloupce[c][sloupce[c].length-1]):' (prázdný)')};
+      }
+    }
+  }
+  // 4. odkládací balíček do sloupce
+  if(od)for(let c=0;c<7;c++){
+    if(muzeNaSloupec(od,sloupce[c]))return{zdroj:{typ:'odkladaci'},cil:{typ:'sloupec',i:c},
+      popis:popisKarty(od)+' z odkládacího balíčku dej do '+(c+1)+'. sloupce'};
+  }
+  return null;
+}
+// Karta čekající v zásobě, se kterou by šlo něco dělat po otočení.
+function tahZeZasoby(){
+  const cekajici=[...balicek,...odkladaci.slice(0,-1)];
+  for(const k of cekajici){
+    if(zkusAutoZaklad(k)>=0)return k;
+    for(let c=0;c<7;c++)if(muzeNaSloupec(k,sloupce[c]))return k;
+  }
+  return null;
+}
+function existujeTah(){return!!najdiTah()||!!tahZeZasoby();}
+
+function zprava(text,konec){
+  const el=$('zprava');
+  el.textContent=text||'';
+  el.classList.toggle('konec',!!konec);
+}
+function zvyrazni(tah){
+  document.querySelectorAll('.napoveda').forEach(el=>el.classList.remove('napoveda'));
+  if(!tah)return;
+  if(tah.zdroj.typ==='odkladaci')$('odkladaci').querySelector('.karta')?.classList.add('napoveda');
+  else if(tah.zdroj.typ==='balicek')$('balicek').classList.add('napoveda');
+  else document.querySelectorAll(`.sloupec[data-s="${tah.zdroj.s}"] .karta`).forEach(el=>{
+    if(+el.dataset.i>=tah.zdroj.i)el.classList.add('napoveda');
+  });
+  if(tah.cil){
+    const cil=tah.cil.typ==='zaklad'?document.querySelector(`.zaklad[data-z="${tah.cil.i}"]`)
+                                    :document.querySelector(`.sloupec[data-s="${tah.cil.i}"]`);
+    cil?.classList.add('napoveda');
+  }
+}
+function napoveda(){
+  if(automat)return;
+  const tah=najdiTah();
+  if(tah){zvyrazni(tah);zprava('💡 '+tah.popis);return;}
+  if(balicek.length||odkladaci.length){
+    const k=tahZeZasoby();
+    if(k){
+      zvyrazni({zdroj:{typ:'balicek'}});
+      zprava('💡 Na stole žádný tah není, ale v zásobě čeká použitelná karta ('+popisKarty(k)+') – otáčej balíček.');
+      return;
+    }
+  }
+  zvyrazni(null);
+  zprava('🚫 Žádný tah už není možný – partii nejde dohrát. Zkus tlačítko Zpět, nebo rozdej novou hru.',true);
+}
+function zkontrolujKonec(){
+  if(zaklady.every(z=>z.length===13))return;
+  if(!existujeTah())zprava('🚫 Žádný tah už není možný – partii nejde dohrát. Zkus tlačítko Zpět, nebo rozdej novou hru.',true);
+}
+
+/* Dokončit: když už zbývá jen odklízet karty na základy, uděláme to za hráče.
+   Nabízíme to teprve tehdy, když si to nanečisto zkusíme na kopii stavu a
+   vyjde to – samotné „všechny karty lícem nahoru" nestačí, karta potřebná na
+   základ může být zavalená vyšší kartou a pak by se automat zasekl v půli. */
+function dokonceniVyjde(){
+  if(zaklady.every(z=>z.length===13))return false;
+  if(sloupce.some(sl=>sl.some(k=>!k.licem)))return false;
+  let bal=balicek.map(k=>({...k})),odk=odkladaci.map(k=>({...k}));
+  const zak=zaklady.map(z=>z.length),sl=sloupce.map(s=>s.map(k=>({...k})));
+  let naprazdno=0;
+  for(let i=0;i<600;i++){
+    if(zak.every(d=>d===13))return true;
+    let posun=false;
+    for(const s of sl){
+      const k=s[s.length-1];
+      if(k&&zak[k.b]===k.h){zak[k.b]++;s.pop();posun=true;break;}
+    }
+    if(!posun){
+      const k=odk[odk.length-1];
+      if(k&&zak[k.b]===k.h){zak[k.b]++;odk.pop();posun=true;}
+    }
+    if(posun){naprazdno=0;continue;}
+    if(!bal.length&&!odk.length)return false;
+    if(bal.length)odk.push(bal.pop());
+    else{bal=odk.reverse();odk=[];}
+    if(++naprazdno>bal.length+odk.length+2)return false;   // celé kolo bez užitku
+  }
+  return false;
+}
+let lzeDokoncitCache=false;
+function lzeDokoncit(){return lzeDokoncitCache;}
+function aktualizujTlacitka(){
+  lzeDokoncitCache=dokonceniVyjde();
+  const el=$('dokonci');
+  if(el){
+    el.disabled=automat||!lzeDokoncitCache;
+    el.title=lzeDokoncitCache?'Přesunout všechny zbývající karty na základy'
+                             :'Zatím to nejde – nejdřív odkryj a srovnej karty ve sloupcích';
+  }
+}
+function dokonciTah(){ // jeden přesun na základ, nebo false
+  for(let s=0;s<7;s++){
+    const sl=sloupce[s],k=sl[sl.length-1];
+    if(!k)continue;
+    const z=zkusAutoZaklad(k);
+    if(z>=0){zaklady[z].push(sl.pop());tahu++;return true;}
+  }
+  const od=odkladaci[odkladaci.length-1];
+  if(od){
+    const z=zkusAutoZaklad(od);
+    if(z>=0){zaklady[z].push(odkladaci.pop());tahu++;return true;}
+  }
+  return false;
+}
+function dokonci(){
+  if(automat||!lzeDokoncit())return;
+  historie.push(stav());
+  if(historie.length>300)historie.shift();
+  automat=true;vybrano=null;zprava('');zvyrazni(null);aktualizujZpet();
+  let naprazdno=0;                       // kolik otočení po sobě nic nepřineslo
+  const krok=()=>{
+    if(zaklady.every(z=>z.length===13)){
+      automat=false;ulozHru();render();zkontrolujVyhru();return;
+    }
+    if(dokonciTah())naprazdno=0;
+    else if(balicek.length||odkladaci.length){
+      if(balicek.length){const k=balicek.pop();k.licem=true;odkladaci.push(k);}
+      else{balicek=odkladaci.reverse().map(k=>({...k,licem:false}));odkladaci=[];}
+      tahu++;
+      if(++naprazdno>balicek.length+odkladaci.length+2){ // pojistka, nemělo by nastat
+        automat=false;ulozHru();render();
+        zprava('Dál to samo nejde – zbylé karty se musí nejdřív přerovnat ve sloupcích.');
+        return;
+      }
+    }else{
+      automat=false;ulozHru();render();
+      zprava('Dál to samo nejde – zbylé karty se musí nejdřív přerovnat ve sloupcích.');
+      return;
+    }
+    render();
+    setTimeout(krok,80);
+  };
+  krok();
+}
+
 function obsluhaKliku(e){
   const karta=e.target.closest('.karta');
   // balíček
@@ -221,20 +428,28 @@ function obsluhaKliku(e){
 }
 
 document.addEventListener('click',e=>{
-  if(e.target.closest('#zpet')||e.target.closest('#nova')||e.target.closest('#vyhra'))return;
+  if(automat)return;
+  if(e.target.closest('#zpet')||e.target.closest('#nova')||e.target.closest('#vyhra')
+     ||e.target.closest('#napoveda')||e.target.closest('#dokonci'))return;
   const pred=stav();
+  zvyrazni(null);
   obsluhaKliku(e);
   // do historie ukládáme jen skutečnou změnu, ne pouhé přeznačení karty
   if(stav()!==pred){
     historie.push(pred);
     if(historie.length>300)historie.shift();
     aktualizujZpet();ulozHru();
+    zprava('');
+    zkontrolujKonec();
   }
 });
 document.addEventListener('keydown',e=>{
   if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==='z'){e.preventDefault();zpet();}
+  else if(!e.ctrlKey&&!e.metaKey&&e.key.toLowerCase()==='n'){e.preventDefault();napoveda();}
 });
 $('zpet').onclick=zpet;
+$('napoveda').onclick=napoveda;
+$('dokonci').onclick=dokonci;
 
 function zkontrolujVyhru(){
   if(!zaklady.every(z=>z.length===13))return;
@@ -257,7 +472,7 @@ window.addEventListener('DOMContentLoaded',()=>{
   let obnoveno=false;
   try{
     const ulozene=localStorage.getItem(KLIC_HRA);
-    if(ulozene){nastav(ulozene);historie=[];aktualizujZpet();render();obnoveno=true;}
+    if(ulozene){nastav(ulozene);historie=[];aktualizujZpet();render();zkontrolujKonec();obnoveno=true;}
   }catch{/* poškozený záznam – prostě rozdáme znovu */}
   if(!obnoveno)novaHra();
 });

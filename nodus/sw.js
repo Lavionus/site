@@ -5,7 +5,7 @@
 /* Při větší aktualizaci webu zvyš číslo verze — stará cache se u návštěvníků
    smaže a vše se stáhne čerstvé (jinak SWR ukáže novou verzi až na druhé načtení). */
 const PREFIX = 'nodus-';
-const CACHE = PREFIX + 'v55';
+const CACHE = PREFIX + 'v60';
 const JADRO = [
   './',
   './index.html',
@@ -19,6 +19,7 @@ const JADRO = [
   './vyjmenovana.js',
   './procvic.js',
   './rekord.js',
+  './projektor.js',   // režim projektor (rozcestník i prezentace)
   './pisemne.js',
   './mapy.js',
   './vyuka.css',
@@ -33,6 +34,7 @@ const JADRO = [
   './logo.svg',        // značka v hlavičce (CSS maska)
   './obsah/prehled.html',
   './obsah/osnova.html',
+  './obsah/predstaveni.html',
 ];
 
 self.addEventListener('install', e => {

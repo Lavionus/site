@@ -1,0 +1,2226 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🖥️ Tvorba slidů a prezentace</title>
+<meta name="description" content="Nodus – sestavení výkladu do slidů, promítání na plátno nebo tabuli, okno pro učitele s poznámkami, kreslení do slidu a tisk podkladů pro žáky.">
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../podpis.js" defer></script>
+<script src="../dialog.js" defer></script>
+<script src="../projektor.js"></script>
+<style>
+body{min-height:100vh;padding:16px}
+.wrap{max-width:1560px;margin:0 auto}
+h1{font-size:1.5rem;font-weight:600;text-align:center}
+.sub0{text-align:center;color:var(--text-faint);font-size:.85rem;margin:4px 0 14px}
+kbd{background:var(--bg-control);border:1px solid var(--border-strong);border-bottom-width:2px;border-radius:4px;
+  padding:0 4px;font-family:ui-monospace,monospace;font-size:.85em}
+
+/* ---------- horní lišta ---------- */
+.lista{display:flex;flex-wrap:wrap;gap:8px;align-items:center;background:var(--bg-elevated);
+  border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:14px}
+.lista .sada{flex:1 1 210px;min-width:0;display:flex;align-items:center;gap:8px}
+.lista .mezera{flex:1 1 0;min-width:0}
+select,input[type=text],input[type=number],input[type=search],textarea{background:var(--bg-control);
+  border:1px solid var(--border-strong);border-radius:5px;color:var(--text);padding:8px;font-size:.88rem;
+  font-family:inherit;width:100%}
+textarea{background:var(--bg-input);font-size:.9rem;line-height:1.5;resize:vertical;min-height:150px}
+select:focus,input:focus,textarea:focus{outline:2px solid var(--accent);outline-offset:-1px}
+.btn{background:var(--accent);color:#fff;border:none;padding:9px 15px;border-radius:6px;cursor:pointer;
+  font-weight:600;font-size:.87rem;font-family:inherit;white-space:nowrap;line-height:1.3}
+.btn:hover{background:var(--accent-hover)}
+.btn.sec{background:var(--bg-control);color:var(--text);border:1px solid var(--border-strong)}
+.btn.sec:hover{background:var(--bg-hover)}
+.btn.mini{padding:6px 10px;font-size:.78rem;font-weight:500}
+.btn:disabled{opacity:.4;cursor:not-allowed}
+/* Nabídka pod tlačítkem (sada, tisk, vložení) – šetří místo v liště */
+.rozbal{position:relative}
+.rozbal>.menu{display:none;position:absolute;right:0;top:calc(100% + 5px);z-index:30;min-width:210px;
+  background:var(--bg-elevated);border:1px solid var(--border-strong);border-radius:8px;padding:6px;
+  box-shadow:var(--shadow)}
+.rozbal.open>.menu{display:block}
+.rozbal .menu button{display:block;width:100%;text-align:left;background:none;border:none;color:var(--text);
+  font-family:inherit;font-size:.84rem;padding:8px 10px;border-radius:5px;cursor:pointer}
+.rozbal .menu button:hover{background:var(--bg-hover)}
+.rozbal .menu hr{border:none;border-top:1px solid var(--border);margin:5px 2px}
+.rozbal .menu .popis{font-size:.72rem;color:var(--text-faint);padding:4px 10px 6px}
+
+/* ---------- rozvržení ---------- */
+.app{display:grid;grid-template-columns:262px minmax(0,1fr) 340px;gap:14px;align-items:start}
+@media(max-width:1240px){.app{grid-template-columns:250px minmax(0,1fr)}.panel.upravy{grid-column:1/-1}}
+@media(max-width:780px){.app{grid-template-columns:1fr}}
+.panel{background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;padding:12px}
+.panel h3{font-size:.72rem;color:var(--text-faint);text-transform:uppercase;letter-spacing:.6px;margin-bottom:9px;
+  display:flex;align-items:center;gap:8px}
+.panel h3 .pocet{margin-left:auto;font-weight:400;letter-spacing:0}
+.field{margin-bottom:10px}
+.field label,.lbl{display:block;font-size:.74rem;color:var(--text-faint);margin-bottom:4px}
+.hint{font-size:.72rem;color:var(--text-faint);line-height:1.45;margin-top:6px}
+.radek{display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+.prep{display:flex;align-items:center;gap:7px;font-size:.83rem;color:var(--text-muted);cursor:pointer;margin:4px 0}
+.prep input{width:15px;height:15px;accent-color:var(--accent);flex:0 0 auto}
+
+/* ---------- seznam slidů ---------- */
+.seznam{max-height:56vh;overflow-y:auto;display:flex;flex-direction:column;gap:6px;margin-bottom:10px;
+  scrollbar-width:thin}
+.polozka{display:flex;align-items:center;gap:8px;background:var(--bg-panel);border:1px solid var(--border);
+  border-radius:6px;padding:6px;cursor:grab;text-align:left;font-family:inherit;color:var(--text-muted);width:100%}
+.polozka:hover{border-color:var(--border-strong);color:var(--text)}
+.polozka.on{border-color:var(--accent);background:var(--accent-soft);color:var(--text)}
+.polozka.tahne{opacity:.4}
+.polozka.cil{border-top:2px solid var(--accent)}
+.polozka .cislo{flex:0 0 auto;font-size:.72rem;color:var(--text-faint);font-variant-numeric:tabular-nums;min-width:1.3em;text-align:right}
+.polozka .nahledik{flex:0 0 auto;width:80px;aspect-ratio:var(--pomer,16/9);position:relative;overflow:hidden;
+  border-radius:3px;background:#000;border:1px solid var(--border)}
+.polozka .nahledik .slide{position:absolute;top:0;left:0;transform:scale(var(--k,.0625));transform-origin:top left}
+.polozka .txt{flex:1;min-width:0}
+.polozka .nm{font-size:.8rem;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;display:block}
+.polozka .typ{font-size:.68rem;color:var(--text-faint);display:block;margin-top:2px}
+.pridat{display:grid;grid-template-columns:1fr 1fr;gap:6px}
+.pridat .btn{display:flex;align-items:center;justify-content:center;gap:4px;width:100%;height:36px;
+  padding:0 6px;font-size:.74rem}
+
+/* ---------- náhled slidu ---------- */
+.jeviste{position:relative;width:100%;aspect-ratio:var(--pomer,16/9);background:#000;border:1px solid var(--border);
+  border-radius:8px;overflow:hidden}
+.jeviste.pretahni{outline:3px dashed var(--accent);outline-offset:-6px}
+.slide{width:var(--sw,1280px);height:var(--sh,720px);position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);
+  background:var(--s-bg,#15171c);color:var(--s-fg,#f2f4f8);display:flex;flex-direction:column;
+  padding:60px 68px;font-size:28px;line-height:1.5;overflow:hidden}
+.slide.svetly{--s-bg:#fff;--s-fg:#15171c}
+.slide h2{font-size:54px;line-height:1.15;font-weight:700;margin-bottom:26px;color:var(--s-nadpis,#8bbcff)}
+.slide.svetly h2{--s-nadpis:#1f5bb5}
+.slide h3{font-size:34px;font-weight:600;margin:16px 0 10px;opacity:.9}
+.slide p{margin-bottom:15px}
+.slide ul{margin:0 0 15px 34px}
+.slide li{margin-bottom:13px}
+.slide b{color:var(--s-duraz,#ffd479)}
+.slide.svetly b{--s-duraz:#a86400}
+.slide .stred{margin:auto;text-align:center}
+.slide .stred h2{font-size:74px;margin-bottom:16px}
+.slide .stred .pod{font-size:32px;opacity:.75}
+.slide img{max-width:100%;max-height:100%;object-fit:contain;margin:auto;display:block;min-height:0}
+.slide .popisek{text-align:center;font-size:23px;opacity:.75;margin-top:14px}
+.slide .odpoved{margin-top:auto;background:rgba(76,175,125,.16);border-left:6px solid var(--ok);
+  padding:20px 24px;border-radius:8px;font-size:30px}
+.slide .odpoved.skryta{visibility:hidden}
+.slide .ramecek{flex:1;min-height:0;position:relative;background:#000;border-radius:8px;overflow:hidden}
+.slide .ramecek iframe{width:100%;height:100%;border:none;background:var(--bg)}
+.slide .zastupce{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;
+  border:3px dashed rgba(128,128,128,.5);border-radius:12px;text-align:center;padding:24px;min-height:0}
+.slide .zastupce .ik{font-size:70px}
+.slide .zastupce .nm{font-size:33px;font-weight:600}
+.slide .zastupce .ce{font-size:21px;opacity:.6;font-family:ui-monospace,monospace}
+.slide .cislo-sl{position:absolute;right:26px;bottom:16px;font-size:20px;opacity:.35}
+.slide .paticka-sl{position:absolute;left:26px;bottom:16px;font-size:20px;opacity:.35;max-width:60%;
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.slide.prazdna{background:var(--s-bg,#15171c)}
+
+/* dva sloupce */
+.slide .dva{flex:1;display:grid;grid-template-columns:1fr 1fr;gap:40px;min-height:0;align-items:center}
+.slide .dva.obraceno{direction:rtl}
+.slide .dva.obraceno>*{direction:ltr}
+.slide .dva .sl{min-width:0;min-height:0;overflow:hidden}
+.slide .dva img{margin:0 auto}
+
+/* citát */
+.slide .citat{margin:auto;text-align:center;max-width:88%}
+.slide .citat .tx{font-size:46px;line-height:1.35;font-style:italic}
+.slide .citat .aut{font-size:28px;opacity:.7;margin-top:26px}
+
+/* kvíz */
+.slide .moznosti{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin-top:10px}
+.slide .moznosti.jeden{grid-template-columns:1fr}
+.slide .moz{display:flex;align-items:center;gap:16px;background:rgba(128,128,128,.14);
+  border:3px solid rgba(128,128,128,.35);border-radius:12px;padding:16px 20px;font-size:27px;text-align:left;
+  color:inherit;font-family:inherit;cursor:default;line-height:1.3}
+.slide .moz .kl{flex:0 0 auto;width:44px;height:44px;border-radius:50%;background:rgba(128,128,128,.3);
+  display:flex;align-items:center;justify-content:center;font-weight:700;font-size:24px}
+.slide .moz.klikaci{cursor:pointer}
+.slide .moz.klikaci:hover{border-color:var(--accent,#6aa6fd)}
+.slide .moz.spravna{background:rgba(76,175,125,.22);border-color:#4caf7d}
+.slide .moz.spatna{background:rgba(224,93,93,.18);border-color:#e05d5d;opacity:.75}
+
+/* časovač na slidu */
+.slide .odpocet{margin:auto;text-align:center}
+.slide .odpocet .cas{font-size:190px;font-weight:700;line-height:1;font-variant-numeric:tabular-nums}
+.slide .odpocet .cas.dochazi{color:#e8a33d}
+.slide .odpocet .cas.konec{color:#e05d5d}
+.slide .odpocet .pod{font-size:26px;opacity:.6;margin-top:18px}
+
+.nahled-info{display:flex;align-items:center;gap:8px;margin-top:9px;font-size:.78rem;color:var(--text-faint);flex-wrap:wrap}
+.nahled-info .roz{flex:1;min-width:120px}
+
+/* ---------- promítání ---------- */
+#show{display:none;position:fixed;inset:0;z-index:2147482000;background:#000}
+#show.bezi{display:block}
+#show .jeviste{width:100%;height:100%;aspect-ratio:auto;border:none;border-radius:0}
+#show.cerna .slide,#show.cerna #kresba{visibility:hidden}
+#show.bila .slide,#show.bila #kresba{visibility:hidden}
+#show.bila{background:#fff}
+#kresba{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);touch-action:none}
+#kresba.aktivni{cursor:crosshair}
+.show-ovl{position:absolute;left:50%;bottom:16px;transform:translateX(-50%);display:flex;align-items:center;gap:6px;
+  background:rgba(24,24,28,.9);border:1px solid #4a4a4a;border-radius:999px;padding:6px 9px;z-index:5;
+  opacity:0;transition:opacity .25s ease;pointer-events:none;flex-wrap:wrap;justify-content:center;max-width:96vw}
+.show-ovl.vidno{opacity:1;pointer-events:auto}
+.show-ovl button{background:#333;border:1px solid #4a4a4a;color:#eee;border-radius:999px;min-width:40px;height:40px;
+  padding:0 12px;font-size:1rem;cursor:pointer;line-height:1;font-family:inherit}
+.show-ovl button:hover{background:#6aa6fd;border-color:#6aa6fd;color:#fff}
+.show-ovl button.on{background:#6aa6fd;border-color:#6aa6fd;color:#fff}
+.show-ovl .stav{color:#bbb;font-size:.85rem;padding:0 8px;font-variant-numeric:tabular-nums;white-space:nowrap}
+.show-ovl .odd{width:1px;height:26px;background:#4a4a4a;margin:0 3px}
+.show-ovl .barvy{display:flex;gap:4px}
+.show-ovl .barvy button{min-width:26px;width:26px;height:26px;padding:0;border-radius:50%}
+.show-ovl .barvy button.on{outline:2px solid #fff;outline-offset:2px}
+.show-ovl .sirky{display:flex;gap:4px}
+.show-ovl .sirky button{min-width:32px;width:32px;height:32px;padding:0;font-size:.8rem}
+.pruh{position:absolute;left:0;bottom:0;height:4px;background:#6aa6fd;z-index:6;transition:width .2s ease}
+#pozn{position:absolute;left:0;right:0;bottom:0;max-height:38%;overflow-y:auto;background:rgba(20,20,24,.94);
+  color:#ddd;border-top:1px solid #444;padding:14px 18px 26px;font-size:1rem;line-height:1.5;display:none;z-index:4;white-space:pre-wrap}
+#pozn.vidno{display:block}
+#prehled{position:absolute;inset:0;background:rgba(10,10,12,.96);z-index:7;padding:20px;overflow-y:auto;display:none;
+  grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:14px;align-content:start}
+#prehled.vidno{display:grid}
+.mini{position:relative;aspect-ratio:var(--pomer,16/9);border:2px solid #444;border-radius:8px;overflow:hidden;cursor:pointer;background:#000}
+.mini.on{border-color:#6aa6fd}
+.mini .slide{transform:scale(var(--k));transform-origin:top left;top:0;left:0;position:absolute}
+.mini .st{position:absolute;left:6px;bottom:4px;color:#bbb;font-size:.75rem;background:rgba(0,0,0,.6);padding:1px 6px;border-radius:4px}
+
+/* ---------- okno pro učitele (prezentér) ---------- */
+body.prezenter>.wrap,body.prezenter #tisk{display:none}
+#prezenter{display:none;position:fixed;inset:0;background:var(--bg);padding:12px;
+  grid-template-rows:auto 1fr auto;gap:12px}
+body.prezenter #prezenter{display:grid}
+#prezenter .hl{display:flex;align-items:center;gap:12px;flex-wrap:wrap}
+#prezenter .hl .nazev{font-weight:600;flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+#prezenter .hodiny{font-size:1.6rem;font-variant-numeric:tabular-nums;font-weight:700}
+#prezenter .hodiny.malo{font-size:1rem;font-weight:400;color:var(--text-faint)}
+#prezenter .telo{display:grid;grid-template-columns:1.35fr 1fr;gap:12px;min-height:0}
+@media(max-width:900px){#prezenter .telo{grid-template-columns:1fr;grid-template-rows:auto auto}}
+#prezenter .sloupec{display:flex;flex-direction:column;gap:8px;min-height:0}
+#prezenter .ram{position:relative;aspect-ratio:var(--pomer,16/9);background:#000;border:1px solid var(--border);
+  border-radius:8px;overflow:hidden}
+#prezenter .ram .slide{transform:scale(var(--k));transform-origin:top left;top:0;left:0;position:absolute}
+#prezenter .ram .stitek{position:absolute;left:0;top:0;background:rgba(0,0,0,.6);color:#ddd;font-size:.72rem;
+  padding:2px 8px;border-bottom-right-radius:6px;z-index:2}
+#prezenter .poznamky{flex:1;min-height:120px;overflow-y:auto;background:var(--bg-panel);border:1px solid var(--border);
+  border-radius:8px;padding:14px;font-size:1.05rem;line-height:1.55;white-space:pre-wrap}
+#prezenter .poznamky.prazdne{color:var(--text-faint);font-style:italic}
+#prezenter .ovl{display:flex;gap:8px;flex-wrap:wrap;align-items:center;justify-content:center}
+#prezenter .odpojeno{background:var(--warn);color:#20160a;border-radius:6px;padding:6px 10px;font-size:.8rem;font-weight:600}
+
+/* ---------- dialogy stránky ---------- */
+dialog.velky{border:1px solid var(--border);border-radius:10px;padding:0;background:var(--bg-elevated);
+  color:var(--text);max-width:min(94vw,760px);width:100%;box-shadow:0 10px 40px rgba(0,0,0,.5)}
+dialog.velky::backdrop{background:rgba(0,0,0,.55)}
+dialog.velky .telo{padding:18px}
+dialog.velky h3{font-size:1rem;margin-bottom:10px}
+dialog.velky .paticka{display:flex;gap:8px;justify-content:flex-end;padding:12px 18px;border-top:1px solid var(--border);flex-wrap:wrap}
+dialog.velky textarea{min-height:280px;font-family:ui-monospace,monospace;font-size:.85rem}
+.sablony{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:10px}
+.sablony button{background:var(--bg-panel);border:1px solid var(--border);border-radius:8px;padding:12px;
+  text-align:left;color:var(--text);font-family:inherit;cursor:pointer}
+.sablony button:hover{border-color:var(--accent)}
+.sablony .nm{font-weight:600;font-size:.9rem;margin-bottom:4px}
+.sablony .po{font-size:.76rem;color:var(--text-faint);line-height:1.4}
+
+/* ---------- tisk podkladů ---------- */
+#tisk{display:none}
+@media print{
+  body>.wrap,#show,#prezenter{display:none!important}
+  #autor-podpis{display:none!important}
+  #tisk{display:block}
+  @page{size:A4 portrait;margin:12mm}
+  @page nasirku{size:A4 landscape;margin:8mm}
+}
+#tisk .list{page-break-after:always}
+#tisk .list:last-child{page-break-after:auto}
+#tisk .list.sirka{page:nasirku}
+#tisk .hl{font-size:11pt;color:#444;border-bottom:1px solid #bbb;padding-bottom:4px;margin-bottom:7mm;
+  display:flex;justify-content:space-between;gap:10px}
+#tisk .bunka{margin-bottom:7mm;display:flex;gap:6mm;align-items:flex-start;break-inside:avoid}
+#tisk .bunka.samostatny{margin:0;height:100%}
+#tisk .ram{flex:0 0 auto;aspect-ratio:var(--pomer,16/9);border:1px solid #999;position:relative;overflow:hidden;background:#fff}
+#tisk .ram .slide{transform:scale(var(--k));transform-origin:top left;top:0;left:0;position:absolute}
+#tisk .linky{flex:1;min-width:0}
+#tisk .linky .nm{font-size:10pt;color:#333;margin-bottom:3mm}
+#tisk .linky .lin{border-bottom:1px solid #bbb;height:8mm}
+#tisk .pozn{font-size:9.5pt;color:#333;white-space:pre-wrap;line-height:1.4}
+#tisk .mrizka{display:grid;grid-template-columns:1fr 1fr;gap:6mm}
+#tisk .mrizka .bunka{display:block;margin:0}
+#tisk .mrizka .ram{width:100%}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>🖥️ Tvorba slidů a prezentace</h1>
+  <div class="sub0">Výklad na plátno, do slidu se dá vložit i celá aplikace Nodusu.
+    Poznámky vidí jen učitel ve svém okně, podklady pro žáky se tisknou z téhož.</div>
+
+  <div class="lista">
+    <div class="sada">
+      <label class="lbl" for="vyberSady" style="margin:0;white-space:nowrap">Sada</label>
+      <select id="vyberSady"></select>
+    </div>
+    <div class="rozbal" id="rozbalSada">
+      <button class="btn sec mini" id="bSadaMenu" aria-haspopup="true" aria-expanded="false">📁 Sada ▾</button>
+      <div class="menu">
+        <button id="bNova">＋ Nová prezentace</button>
+        <button id="bSablona">🧱 Nová podle šablony…</button>
+        <button id="bPrejmenuj">✎ Přejmenovat</button>
+        <button id="bKopie">⧉ Vytvořit kopii</button>
+        <button id="bSmaz">🗑 Smazat prezentaci</button>
+        <hr>
+        <button id="bImport">📥 Načíst ze souboru…</button>
+        <button id="bExport">📤 Uložit do souboru</button>
+        <button id="bZTextu">📝 Sestavit z textu…</button>
+        <button id="bDoTextu">📄 Zobrazit jako text</button>
+        <div class="popis">Text je nejrychlejší cesta, jak nasypat hotovou přípravu do slidů.</div>
+      </div>
+    </div>
+    <span class="mezera"></span>
+    <span class="hint" id="stavUlozeni" style="margin:0"></span>
+    <button class="btn sec mini" id="bTisk">🖨️ Podklady…</button>
+    <button class="btn sec" id="bPrezenter">🗒️ Okno pro učitele</button>
+    <button class="btn" id="bSpust">▶ Promítat od začátku (F5)</button>
+  </div>
+
+  <div class="app">
+    <div class="panel">
+      <h3>Slidy <span class="pocet" id="pocetSlidu"></span></h3>
+      <div class="seznam" id="seznam"></div>
+      <div class="lbl">Přidat slide</div>
+      <div class="pridat" id="pridat"></div>
+      <div class="hint">Slidy se dají přetahovat myší. <kbd>Alt</kbd>+<kbd>↑</kbd>/<kbd>↓</kbd> posune vybraný,
+        <kbd>Ctrl</kbd>+<kbd>D</kbd> duplikuje, <kbd>Ctrl</kbd>+<kbd>Z</kbd> vrátí smazaný.</div>
+    </div>
+
+    <div class="panel">
+      <h3>Náhled <span class="pocet" id="nahledTyp"></span></h3>
+      <div class="jeviste" id="jeviste"><div class="slide" id="nahled"></div></div>
+      <div class="nahled-info">
+        <span class="roz" id="nahledInfo">—</span>
+        <button class="btn sec mini" id="bNahoru" title="Posunout výš (Alt+↑)">↑ Výš</button>
+        <button class="btn sec mini" id="bDolu" title="Posunout níž (Alt+↓)">↓ Níž</button>
+        <button class="btn sec mini" id="bDuplikuj" title="Duplikovat (Ctrl+D)">⧉ Duplikovat</button>
+        <button class="btn sec mini" id="bSmazSlide" title="Smazat slide">🗑 Smazat</button>
+        <button class="btn sec mini" id="bOdtud" title="Promítat od tohoto slidu">▶ Promítat odtud</button>
+      </div>
+      <div class="hint">Obrázek se dá do slidu přetáhnout myší přímo sem.</div>
+    </div>
+
+    <div class="panel upravy">
+      <h3>Úpravy slidu</h3>
+      <div id="formular"></div>
+      <div class="field">
+        <label for="fPozn">Poznámky pro učitele</label>
+        <textarea id="fPozn" style="min-height:90px"></textarea>
+        <div class="hint">Vidí je jen učitel – v okně pro učitele, klávesou <kbd>N</kbd> při promítání
+          a v tištěných podkladech.</div>
+      </div>
+
+      <details id="nastaveniSady">
+        <summary style="cursor:pointer;font-size:.78rem;color:var(--text-faint);margin:10px 0 6px">
+          ⚙️ Nastavení prezentace</summary>
+        <div class="field">
+          <label for="fPomer">Poměr stran plátna</label>
+          <select id="fPomer">
+            <option value="16:9">16:9 – dataprojektor a moderní plátno</option>
+            <option value="4:3">4:3 – starší projektor</option>
+          </select>
+        </div>
+        <label class="prep"><input type="checkbox" id="fCisla"> Číslovat slidy</label>
+        <label class="prep"><input type="checkbox" id="fPaticka"> Název prezentace v patičce slidu</label>
+        <label class="prep"><input type="checkbox" id="fTmave"> Nové slidy zakládat tmavé</label>
+      </details>
+
+      <div class="hint" style="margin-top:12px">
+        <b>Klávesy při promítání:</b> <kbd>→</kbd>/<kbd>mezerník</kbd> další, <kbd>←</kbd> zpět,
+        <kbd>1</kbd>–<kbd>9</kbd> odpověď v kvízu, <kbd>B</kbd> černá, <kbd>W</kbd> bílá,
+        <kbd>O</kbd> přehled, <kbd>P</kbd> pero, <kbd>Z</kbd> zpět tah, <kbd>E</kbd> smazat kresbu,
+        <kbd>T</kbd> časovač, <kbd>N</kbd> poznámky, <kbd>Esc</kbd> konec.
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ---------- promítání ---------- -->
+<div id="show">
+  <div class="jeviste" id="showJeviste">
+    <div class="slide" id="showSlide"></div>
+    <canvas id="kresba"></canvas>
+  </div>
+  <div id="pozn"></div>
+  <div id="prehled"></div>
+  <div class="pruh" id="pruh"></div>
+  <div class="show-ovl" id="showOvl">
+    <button id="oPrev" title="Předchozí (←)">‹</button>
+    <span class="stav" id="oStav">1 / 1</span>
+    <button id="oNext" title="Další (→)">›</button>
+    <span class="odd"></span>
+    <button id="oPero" title="Pero (P)">✏️</button>
+    <span class="barvy" id="oBarvy"></span>
+    <span class="sirky" id="oSirky"></span>
+    <button id="oZpet" title="Zpět poslední tah (Z)">↩</button>
+    <button id="oGuma" title="Smazat kresbu (E)">🧽</button>
+    <span class="odd"></span>
+    <button id="oPrehled" title="Přehled slidů (O)">▦</button>
+    <button id="oCerna" title="Černá obrazovka (B)">⬛</button>
+    <button id="oPozn" title="Poznámky (N)">🗒️</button>
+    <span class="stav" id="oCas">0:00</span>
+    <button id="oFull" title="Celá obrazovka (F)">⛶</button>
+    <button id="oKonec" title="Konec (Esc)">✕</button>
+  </div>
+</div>
+
+<!-- ---------- okno pro učitele ---------- -->
+<div id="prezenter">
+  <div class="hl">
+    <span class="nazev" id="pzNazev">—</span>
+    <span id="pzOdpojeno" class="odpojeno" hidden>Promítací okno se neozývá</span>
+    <span class="hodiny malo" id="pzHodiny">—</span>
+    <span class="hodiny" id="pzCas">0:00</span>
+    <button class="btn sec mini" id="pzNuluj">↺ Vynulovat čas</button>
+  </div>
+  <div class="telo">
+    <div class="sloupec">
+      <div class="ram" id="pzTed"><span class="stitek">Právě promítám</span></div>
+      <div class="ovl">
+        <button class="btn sec" id="pzPrev">‹ Zpět</button>
+        <span class="hodiny malo" id="pzStav">1 / 1</span>
+        <button class="btn" id="pzNext">Další ›</button>
+        <button class="btn sec" id="pzCerna">⬛ Černá</button>
+      </div>
+    </div>
+    <div class="sloupec">
+      <div class="ram" id="pzDalsi"><span class="stitek">Následuje</span></div>
+      <div class="poznamky" id="pzPozn"></div>
+    </div>
+  </div>
+  <div class="hint" style="text-align:center;margin:0">
+    Toto okno patří na notebook učitele, promítací okno na plátno.
+    Ovládat se dá odsud i odtamtud – klávesy fungují v obou.
+  </div>
+</div>
+
+<div id="tisk"></div>
+
+<!-- ---------- dialogy ---------- -->
+<dialog class="velky" id="dlgText">
+  <div class="telo">
+    <h3 id="dlgTextNadpis">Sestavit z textu</h3>
+    <div class="hint" id="dlgTextNapoveda"></div>
+    <textarea id="dlgTextPole" spellcheck="false"></textarea>
+  </div>
+  <div class="paticka">
+    <button class="btn sec" id="dlgTextZrus">Zavřít</button>
+    <button class="btn sec" id="dlgTextKopiruj">⧉ Zkopírovat</button>
+    <button class="btn" id="dlgTextOk">Sestavit slidy</button>
+  </div>
+</dialog>
+
+<dialog class="velky" id="dlgTisk">
+  <div class="telo">
+    <h3>Podklady k tisku</h3>
+    <div class="field">
+      <label for="tiskRezim">Co tisknout</label>
+      <select id="tiskRezim">
+        <option value="3">3 slidy na stránku + místo na poznámky žáka</option>
+        <option value="6">6 slidů na stránku (přehled)</option>
+        <option value="2">2 slidy na stránku (velké)</option>
+        <option value="1">1 slide na stránku, na šířku (pro uložení do PDF)</option>
+      </select>
+    </div>
+    <label class="prep"><input type="checkbox" id="tiskPozn"> Tisknout i poznámky učitele</label>
+    <label class="prep"><input type="checkbox" id="tiskOdpovedi"> Tisknout odpovědi a řešení kvízů</label>
+    <label class="prep"><input type="checkbox" id="tiskJmeno" checked> Řádek na jméno v záhlaví</label>
+    <div class="hint">Řešení se tiskne jen do učitelské kopie – žákům zůstane prázdné pole.
+      Tiskne se vždy na bílý papír, i když je prezentace tmavá.</div>
+  </div>
+  <div class="paticka">
+    <button class="btn sec" id="dlgTiskZrus">Zrušit</button>
+    <button class="btn" id="dlgTiskOk">🖨️ Tisknout</button>
+  </div>
+</dialog>
+
+<dialog class="velky" id="dlgSablony">
+  <div class="telo">
+    <h3>Šablona hodiny</h3>
+    <div class="hint" style="margin-bottom:12px">Vytvoří novou prezentaci s připravenou kostrou – texty se pak jen přepíšou.</div>
+    <div class="sablony" id="sablonySeznam"></div>
+  </div>
+  <div class="paticka"><button class="btn sec" id="dlgSablonyZrus">Zavřít</button></div>
+</dialog>
+
+<script src="../apps.js" onerror="window.KATALOG_SEKCE=null"></script>
+<script>
+/* ============================================================
+   Tvorba slidů a promítání.
+
+   Slide je jen datová položka – stejný objekt vykreslí do náhledu,
+   na plátno, do miniatury v seznamu, do okna pro učitele i do tisku
+   jediná funkce `vykresli`. Promítaný a vytištěný slide se proto
+   nemůžou rozejít.
+
+   Plátno má pevných 1280 px na šířku (720 nebo 960 na výšku podle
+   poměru) a teprve celý slide se škáluje do dostupného místa
+   (projektor.js). Kdyby se místo toho měnila velikost písma podle
+   okna, vypadala by příprava na projektoru jinak než na notebooku,
+   kde vznikala, a učitel by to zjistil až ve třídě.
+   ============================================================ */
+const KLIC = 'nodus_prezentace_v1';
+const KLIC_KANAL = 'nodus_prezentace_kanal';
+const SIRKA = 1280;
+const POMERY = { '16:9': 720, '4:3': 960 };
+
+const TYPY = {
+  nadpis:   { ik: '🏷️', nm: 'Titulní' },
+  text:     { ik: '📝', nm: 'Text' },
+  dva:      { ik: '🧱', nm: 'Dva sloupce' },
+  otazka:   { ik: '❓', nm: 'Otázka' },
+  kviz:     { ik: '🅰️', nm: 'Kvíz' },
+  obrazek:  { ik: '🖼️', nm: 'Obrázek' },
+  citat:    { ik: '❝', nm: 'Citát' },
+  aplikace: { ik: '🧩', nm: 'Aplikace' },
+  casovac:  { ik: '⏱️', nm: 'Časovač' },
+  tabule:   { ik: '🧑‍🏫', nm: 'Tabule' },
+};
+const BARVY = ['#ff5252', '#ffd479', '#6aa6fd', '#4caf7d', '#ffffff'];
+const SIRKY = [5, 12, 26];
+const PISMENA = 'ABCDEFGHI';
+
+const $ = id => document.getElementById(id);
+const novéId = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+// Okno pro učitele se pozná podle kotvy v adrese. Kotva (a ne parametr
+// za otazníkem) proto, že service worker má stránku v cache pod čistou
+// adresou – s parametrem by se okno offline nenačetlo.
+const jePrezenter = location.hash === '#prezenter'
+  || new URLSearchParams(location.search).has('prezenter');
+
+/* ============================================================
+   Data
+   ============================================================ */
+function prazdnySlide(typ, tmave = true) {
+  const s = { id: novéId(), typ, nadpis: '', telo: '', pozn: '', svetly: !tmave };
+  if (typ === 'nadpis') { s.nadpis = 'Název hodiny'; s.telo = 'třída, datum'; }
+  if (typ === 'text') { s.nadpis = 'Nadpis'; s.telo = '- první bod\n- druhý bod'; }
+  if (typ === 'dva') { s.nadpis = 'Nadpis'; s.telo = '- vlevo'; s.telo2 = 'vpravo'; s.url = ''; s.obraceno = false; }
+  if (typ === 'otazka') { s.nadpis = 'Otázka pro třídu?'; s.telo = 'Odpověď, která se ukáže na další klik.'; }
+  if (typ === 'kviz') {
+    s.nadpis = 'Kvízová otázka?';
+    s.moznosti = [{ text: 'správná odpověď', spravna: true }, { text: 'špatná odpověď', spravna: false }];
+    s.telo = '';
+  }
+  if (typ === 'obrazek') { s.url = ''; s.telo = ''; }
+  if (typ === 'citat') { s.telo = 'Text citátu.'; s.nadpis = 'autor'; }
+  if (typ === 'aplikace') { s.soubor = ''; s.nadpis = ''; }
+  if (typ === 'casovac') { s.nadpis = 'Práce ve dvojicích'; s.sekundy = 300; }
+  if (typ === 'tabule') { s.svetly = true; s.nadpis = ''; }
+  return s;
+}
+
+function novaSada(nazev, slidy) {
+  return {
+    id: novéId(), nazev: nazev || 'Nová prezentace', upraveno: Date.now(),
+    pomer: '16:9', cisla: true, paticka: false, tmave: true,
+    slidy: slidy && slidy.length ? slidy : [prazdnySlide('nadpis')],
+  };
+}
+
+/* Starší sady neměly nastavení ani nové typy – doplní se při načtení,
+   aby zbytek kódu nemusel počítat s chybějícími poli. */
+function dopln(sada) {
+  sada.pomer = POMERY[sada.pomer] ? sada.pomer : '16:9';
+  sada.cisla = sada.cisla !== false;
+  sada.paticka = !!sada.paticka;
+  sada.tmave = sada.tmave !== false;
+  sada.slidy = (sada.slidy || []).filter(Boolean);
+  if (!sada.slidy.length) sada.slidy.push(prazdnySlide('nadpis'));
+  for (const s of sada.slidy) {
+    if (!TYPY[s.typ]) s.typ = 'text';
+    if (!s.id) s.id = novéId();
+    if (s.typ === 'kviz' && !Array.isArray(s.moznosti)) s.moznosti = [];
+    if (s.typ === 'casovac' && !(s.sekundy > 0)) s.sekundy = 300;
+  }
+  return sada;
+}
+
+function nacti() {
+  try {
+    const d = JSON.parse(localStorage.getItem(KLIC));
+    if (d && Array.isArray(d.sady) && d.sady.length) {
+      d.sady.forEach(dopln);
+      return d;
+    }
+  } catch { /* poškozený nebo prázdný záznam – začne se nanovo */ }
+  const s = novaSada('Ukázková hodina');
+  return { aktivni: s.id, sady: [s] };
+}
+
+let data = nacti();
+let sada = data.sady.find(s => s.id === data.aktivni) || data.sady[0];
+let vybrany = 0;
+let vyskaSlidu = POMERY[sada.pomer];
+let hlasenaKvota = false;
+
+function uloz(tise = false) {
+  sada.upraveno = Date.now();
+  data.aktivni = sada.id;
+  try {
+    localStorage.setItem(KLIC, JSON.stringify(data));
+    if (!tise) oznamUlozeni();
+    return true;
+  } catch (e) {
+    // Kvóta úložiště je kolem 5 MB; přeteče typicky vložený obrázek.
+    // Mlčet by bylo nejhorší – učitel by přišel o přípravu, aniž by tušil proč.
+    if (!hlasenaKvota) {
+      hlasenaKvota = true;
+      Dialog.chyba('Prezentace se nevešla do paměti prohlížeče – nejspíš kvůli velkému obrázku. '
+        + 'Ulož ji do souboru a obrázek zmenši nebo použij adresu místo vloženého souboru.');
+    }
+    return false;
+  }
+}
+
+function oznamUlozeni() {
+  const el = $('stavUlozeni');
+  if (!el) return;
+  const t = new Date();
+  el.textContent = 'Uloženo ' + t.getHours() + ':' + String(t.getMinutes()).padStart(2, '0');
+}
+
+/* ============================================================
+   Vykreslení slidu
+   ============================================================ */
+// Jednoduchý zápis textu: „- “ odrážka, „## “ mezinadpis, **tučně**.
+function text2html(t) {
+  const bezpecne = s => s.replace(/[&<>]/g, z => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[z]));
+  const tucne = s => bezpecne(s).replace(/\*\*(.+?)\*\*/g, '<b>$1</b>');
+  const ven = [];
+  let vSeznamu = false;
+  for (const radek of String(t || '').split('\n')) {
+    const r = radek.trim();
+    if (!r) { if (vSeznamu) { ven.push('</ul>'); vSeznamu = false; } continue; }
+    if (r.startsWith('- ')) {
+      if (!vSeznamu) { ven.push('<ul>'); vSeznamu = true; }
+      ven.push('<li>' + tucne(r.slice(2)) + '</li>');
+      continue;
+    }
+    if (vSeznamu) { ven.push('</ul>'); vSeznamu = false; }
+    if (r.startsWith('## ')) ven.push('<h3>' + tucne(r.slice(3)) + '</h3>');
+    else ven.push('<p>' + tucne(r) + '</p>');
+  }
+  if (vSeznamu) ven.push('</ul>');
+  return ven.join('');
+}
+
+const jedenRadek = t => text2html(t).replace(/<\/?p>/g, '');
+const cas2text = s => Math.floor(Math.max(0, s) / 60) + ':' + String(Math.max(0, s) % 60).padStart(2, '0');
+
+/* zivy = smí se vložit rám s aplikací. V přehledu, v seznamu a v tisku
+   se místo něj kreslí zástupce – dvacet běžících aplikací naráz by
+   z prohlížeče udělalo topení.
+   klikaci = kvíz reaguje na klik (jen při promítání).
+   kvizStav = pole stavů možností: null, 'spravna', 'spatna'. */
+function vykresli(el, s, volby = {}) {
+  const { zivy = false, cislo = 0, odkryto = true, kvizStav = null, klikaci = false, paticka = '' } = volby;
+  el.className = 'slide' + (s.svetly ? ' svetly' : '') + (s.typ === 'tabule' ? ' prazdna' : '');
+  el.innerHTML = '';
+  const h = (tag, tridy, html) => {
+    const e = document.createElement(tag);
+    if (tridy) e.className = tridy;
+    if (html != null) e.innerHTML = html;
+    el.appendChild(e);
+    return e;
+  };
+  const obrazek = (kam, url, popis) => {
+    const o = document.createElement('img');
+    o.src = url;
+    o.alt = popis || 'obrázek slidu';
+    kam.appendChild(o);
+    return o;
+  };
+  const nadpisSlidu = () => { if (s.nadpis) h('h2', null, jedenRadek(s.nadpis)); };
+
+  if (s.typ === 'nadpis') {
+    const st = h('div', 'stred');
+    st.innerHTML = `<h2>${jedenRadek(s.nadpis)}</h2>`
+      + (s.telo ? `<div class="pod">${jedenRadek(s.telo)}</div>` : '');
+
+  } else if (s.typ === 'text') {
+    nadpisSlidu();
+    h('div', null, text2html(s.telo));
+
+  } else if (s.typ === 'dva') {
+    nadpisSlidu();
+    const d = h('div', 'dva' + (s.obraceno ? ' obraceno' : ''));
+    const a = document.createElement('div');
+    a.className = 'sl';
+    a.innerHTML = text2html(s.telo);
+    const b = document.createElement('div');
+    b.className = 'sl';
+    if (s.url) obrazek(b, s.url, s.telo2 || s.nadpis);
+    else b.innerHTML = text2html(s.telo2);
+    d.append(a, b);
+
+  } else if (s.typ === 'otazka') {
+    nadpisSlidu();
+    if (s.telo) h('div', 'odpoved' + (odkryto ? '' : ' skryta'), text2html(s.telo));
+
+  } else if (s.typ === 'kviz') {
+    nadpisSlidu();
+    const moz = (s.moznosti || []).filter(m => m && m.text);
+    const m = h('div', 'moznosti' + (moz.length <= 2 ? ' jeden' : ''));
+    moz.forEach((o, i) => {
+      const b = document.createElement('div');
+      const stav = kvizStav && kvizStav[i];
+      b.className = 'moz' + (klikaci ? ' klikaci' : '')
+        + (stav === 'spravna' || (odkryto && !kvizStav && o.spravna) ? ' spravna' : '')
+        + (stav === 'spatna' ? ' spatna' : '');
+      b.dataset.moz = String(i);
+      b.innerHTML = `<span class="kl">${PISMENA[i] || i + 1}</span><span class="tx"></span>`;
+      b.querySelector('.tx').innerHTML = jedenRadek(o.text);
+      m.appendChild(b);
+    });
+    // Vysvětlení patří až k odkryté správné odpovědi. Po chybě se neukáže –
+    // třída má hádat dál, ne si ho přečíst dřív, než dojde ke správné volbě.
+    if (s.telo && odkryto) h('div', 'odpoved', text2html(s.telo));
+
+  } else if (s.typ === 'obrazek') {
+    nadpisSlidu();
+    if (s.url) obrazek(el, s.url, s.telo || s.nadpis);
+    else h('div', 'zastupce').innerHTML = '<div class="ik">🖼️</div><div class="nm">Doplň obrázek</div>';
+    if (s.telo) h('div', 'popisek', jedenRadek(s.telo));
+
+  } else if (s.typ === 'citat') {
+    const c = h('div', 'citat');
+    c.innerHTML = `<div class="tx">„${jedenRadek(s.telo)}“</div>`
+      + (s.nadpis ? `<div class="aut">— ${jedenRadek(s.nadpis)}</div>` : '');
+
+  } else if (s.typ === 'aplikace') {
+    nadpisSlidu();
+    const nazev = nazevAplikace(s.soubor);
+    if (zivy && s.soubor) {
+      const r = h('div', 'ramecek');
+      const f = document.createElement('iframe');
+      f.src = '../' + s.soubor;
+      f.title = nazev;
+      f.allow = 'fullscreen';
+      r.appendChild(f);
+    } else {
+      const z = h('div', 'zastupce');
+      z.innerHTML = `<div class="ik">🧩</div><div class="nm"></div>`
+        + (s.soubor ? `<div class="ce"></div>` : '');
+      z.querySelector('.nm').textContent = nazev || 'Vyber aplikaci';
+      if (s.soubor) z.querySelector('.ce').textContent = s.soubor;
+    }
+
+  } else if (s.typ === 'casovac') {
+    const o = h('div', 'odpocet');
+    o.innerHTML = `<div class="cas">${cas2text(volby.zbyva ?? s.sekundy)}</div>`
+      + (s.nadpis ? '<div class="pod"></div>' : '');
+    if (s.nadpis) o.querySelector('.pod').textContent = s.nadpis;
+  }
+
+  if (cislo) h('div', 'cislo-sl', String(cislo));
+  if (paticka) h('div', 'paticka-sl').textContent = paticka;
+}
+
+/* Rozměry plátna – mění se s poměrem stran celé sady. */
+function pouzijPomer() {
+  vyskaSlidu = POMERY[sada.pomer] || 720;
+  document.documentElement.style.setProperty('--sw', SIRKA + 'px');
+  document.documentElement.style.setProperty('--sh', vyskaSlidu + 'px');
+  document.documentElement.style.setProperty('--pomer', sada.pomer.replace(':', '/'));
+}
+
+/* ============================================================
+   Katalog aplikací
+   ============================================================ */
+// apps.js je nepovinný: když se stránka otevře samotná (mimo Nodus), vybere
+// se aplikace ručně zapsanou cestou a zbytek funguje beze změny.
+const KATALOG = (typeof KATALOG_SEKCE !== 'undefined' && Array.isArray(KATALOG_SEKCE))
+  ? KATALOG_SEKCE : null;
+
+function nazevAplikace(soubor) {
+  if (!soubor) return '';
+  if (KATALOG) {
+    for (const sek of KATALOG) {
+      const p = sek.polozky.find(x => x.soubor === soubor);
+      if (p) return p.nazev;
+    }
+  }
+  return soubor.replace(/^obsah\//, '').replace(/\.html$/, '');
+}
+
+/* ============================================================
+   Seznam slidů – miniatury a přetahování
+   ============================================================ */
+function popisSlidu(s) {
+  return (s.nadpis || '').trim()
+    || (s.typ === 'aplikace' ? nazevAplikace(s.soubor) : '')
+    || (s.typ === 'citat' ? (s.telo || '').trim().slice(0, 40) : '')
+    || (s.telo || '').trim().split('\n')[0]
+    || TYPY[s.typ].nm;
+}
+
+let tahnuty = -1;
+
+function vykresliSeznam() {
+  const el = $('seznam');
+  el.innerHTML = '';
+  sada.slidy.forEach((s, i) => {
+    const b = document.createElement('div');
+    b.className = 'polozka' + (i === vybrany ? ' on' : '');
+    b.draggable = true;
+    b.dataset.i = String(i);
+    b.setAttribute('role', 'button');
+    b.tabIndex = 0;
+    b.innerHTML = '<span class="cislo"></span><span class="nahledik"><span class="slide"></span></span>'
+      + '<span class="txt"><span class="nm"></span><span class="typ"></span></span>';
+    b.querySelector('.cislo').textContent = String(i + 1);
+    b.querySelector('.nm').textContent = popisSlidu(s);
+    b.querySelector('.typ').textContent = TYPY[s.typ].ik + ' ' + TYPY[s.typ].nm;
+    // Miniatura je tentýž slide zmenšený – ne zvláštní kresba, která by se
+    // s vykreslením mohla rozejít.
+    vykresli(b.querySelector('.slide'), s, { cislo: 0 });
+    b.addEventListener('click', () => { vybrany = i; vykresliVse(); });
+    b.addEventListener('keydown', e => {
+      if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); vybrany = i; vykresliVse(); }
+    });
+    b.addEventListener('dragstart', e => {
+      tahnuty = i;
+      b.classList.add('tahne');
+      e.dataTransfer.effectAllowed = 'move';
+      try { e.dataTransfer.setData('text/plain', String(i)); } catch { /* starší prohlížeč */ }
+    });
+    b.addEventListener('dragend', () => {
+      tahnuty = -1;
+      el.querySelectorAll('.polozka').forEach(p => p.classList.remove('tahne', 'cil'));
+    });
+    b.addEventListener('dragover', e => {
+      if (tahnuty < 0) return;
+      e.preventDefault();
+      el.querySelectorAll('.polozka').forEach(p => p.classList.remove('cil'));
+      b.classList.add('cil');
+    });
+    b.addEventListener('drop', e => {
+      e.preventDefault();
+      if (tahnuty < 0 || tahnuty === i) return;
+      presunSlide(tahnuty, i);
+    });
+    el.appendChild(b);
+  });
+  $('pocetSlidu').textContent = sada.slidy.length + '×';
+  // Při procházení šipkami musí být vybraný slide vidět, i když je seznam dlouhý.
+  el.querySelector('.polozka.on')?.scrollIntoView({ block: 'nearest' });
+  // Miniatury dostanou měřítko až v dokumentu – dřív nemají šířku.
+  requestAnimationFrame(() => {
+    el.querySelectorAll('.nahledik').forEach(n =>
+      n.style.setProperty('--k', n.clientWidth / SIRKA));
+  });
+}
+
+function presunSlide(z, na) {
+  const [s] = sada.slidy.splice(z, 1);
+  sada.slidy.splice(na, 0, s);
+  vybrany = na;
+  uloz(); vykresliVse();
+}
+
+/* ============================================================
+   Formulář
+   ============================================================ */
+function pole(popisek, id, hodnota, { vice = false, napoveda = '', typ = 'text' } = {}) {
+  const d = document.createElement('div');
+  d.className = 'field';
+  const l = document.createElement('label');
+  l.textContent = popisek;
+  l.htmlFor = id;
+  const v = document.createElement(vice ? 'textarea' : 'input');
+  if (!vice) v.type = typ;
+  v.id = id;
+  v.value = hodnota ?? '';
+  d.append(l, v);
+  if (napoveda) {
+    const n = document.createElement('div');
+    n.className = 'hint';
+    n.textContent = napoveda;
+    d.appendChild(n);
+  }
+  return d;
+}
+
+function prepinac(popisek, zapnuto, zmena) {
+  const l = document.createElement('label');
+  l.className = 'prep';
+  const ch = document.createElement('input');
+  ch.type = 'checkbox';
+  ch.checked = !!zapnuto;
+  ch.addEventListener('change', () => zmena(ch.checked));
+  l.append(ch, document.createTextNode(popisek));
+  return l;
+}
+
+function vykresliFormular() {
+  const f = $('formular');
+  f.innerHTML = '';
+  const s = sada.slidy[vybrany];
+  if (!s) return;
+  const zmena = (klic, prvek, prevod) => {
+    prvek.addEventListener('input', () => {
+      s[klic] = prevod ? prevod(prvek.value) : prvek.value;
+      uloz(true); vykresliSeznam(); vykresliNahled();
+    });
+  };
+  const pridej = (d, klic, prevod) => { f.appendChild(d); zmena(klic, d.querySelector('input,textarea'), prevod); };
+
+  const napovedaTextu = '„- “ na začátku řádku udělá odrážku, „## “ mezinadpis, **text** zvýrazní.';
+
+  if (s.typ === 'nadpis') {
+    pridej(pole('Název', 'fNadpis', s.nadpis), 'nadpis');
+    pridej(pole('Podtitul', 'fTelo', s.telo), 'telo');
+
+  } else if (s.typ === 'text') {
+    pridej(pole('Nadpis', 'fNadpis', s.nadpis), 'nadpis');
+    pridej(pole('Obsah', 'fTelo', s.telo, { vice: true, napoveda: napovedaTextu }), 'telo');
+
+  } else if (s.typ === 'dva') {
+    pridej(pole('Nadpis', 'fNadpis', s.nadpis), 'nadpis');
+    pridej(pole('Levý sloupec', 'fTelo', s.telo, { vice: true, napoveda: napovedaTextu }), 'telo');
+    pridej(pole('Pravý sloupec – text', 'fTelo2', s.telo2, { vice: true,
+      napoveda: 'Použije se, jen když není vyplněný obrázek.' }), 'telo2');
+    f.appendChild(poleObrazku(s, 'Pravý sloupec – obrázek'));
+    f.appendChild(prepinac('Prohodit sloupce', s.obraceno, v => {
+      s.obraceno = v; uloz(true); vykresliNahled(); vykresliSeznam();
+    }));
+
+  } else if (s.typ === 'otazka') {
+    pridej(pole('Otázka', 'fNadpis', s.nadpis), 'nadpis');
+    pridej(pole('Odpověď (ukáže se až na další klik)', 'fTelo', s.telo, { vice: true }), 'telo');
+
+  } else if (s.typ === 'kviz') {
+    pridej(pole('Otázka', 'fNadpis', s.nadpis), 'nadpis');
+    f.appendChild(poleMoznosti(s));
+    pridej(pole('Vysvětlení (ukáže se po odpovědi)', 'fTelo', s.telo, { vice: true }), 'telo');
+
+  } else if (s.typ === 'obrazek') {
+    f.appendChild(poleObrazku(s, 'Obrázek'));
+    pridej(pole('Nadpis', 'fNadpis', s.nadpis), 'nadpis');
+    pridej(pole('Popisek pod obrázkem', 'fTelo', s.telo), 'telo');
+
+  } else if (s.typ === 'citat') {
+    pridej(pole('Text citátu', 'fTelo', s.telo, { vice: true }), 'telo');
+    pridej(pole('Autor', 'fNadpis', s.nadpis), 'nadpis');
+
+  } else if (s.typ === 'casovac') {
+    pridej(pole('Popis úkolu', 'fNadpis', s.nadpis), 'nadpis');
+    const d = pole('Kolik minut', 'fMinuty', (s.sekundy / 60).toFixed(0), { typ: 'number',
+      napoveda: 'Odpočet se rozběhne sám, jakmile se slide objeví. Klávesou T se pozastaví.' });
+    f.appendChild(d);
+    const v = d.querySelector('input');
+    v.min = '1'; v.max = '90';
+    v.addEventListener('input', () => {
+      s.sekundy = Math.max(1, Math.min(90, Number(v.value) || 1)) * 60;
+      uloz(true); vykresliNahled();
+    });
+
+  } else if (s.typ === 'aplikace') {
+    pridej(pole('Nadpis', 'fNadpis', s.nadpis), 'nadpis');
+    f.appendChild(poleAplikace(s));
+  }
+
+  if (s.typ !== 'tabule') {
+    f.appendChild(prepinac('Světlý slide (bílé pozadí)', s.svetly, v => {
+      s.svetly = v; uloz(true); vykresliNahled(); vykresliSeznam();
+    }));
+  }
+
+  const p = $('fPozn');
+  p.value = s.pozn || '';
+  p.oninput = () => { s.pozn = p.value; uloz(true); };
+}
+
+/* Obrázek: adresa, nebo soubor z disku vložený do prezentace. */
+function poleObrazku(s, popisek) {
+  const d = document.createElement('div');
+  d.className = 'field';
+  const l = document.createElement('label');
+  l.textContent = popisek;
+  l.htmlFor = 'fUrl';
+  const v = document.createElement('input');
+  v.type = 'text';
+  v.id = 'fUrl';
+  v.value = s.url && s.url.startsWith('data:') ? '' : (s.url || '');
+  v.placeholder = s.url && s.url.startsWith('data:') ? 'vložený soubor' : 'adresa obrázku';
+  v.addEventListener('input', () => { s.url = v.value; uloz(true); vykresliNahled(); vykresliSeznam(); });
+  const r = document.createElement('div');
+  r.className = 'radek';
+  r.style.marginTop = '6px';
+  const bSoubor = document.createElement('button');
+  bSoubor.className = 'btn sec mini';
+  bSoubor.textContent = '📁 Vložit ze souboru';
+  bSoubor.addEventListener('click', () => vyberObrazek(s));
+  const bPryc = document.createElement('button');
+  bPryc.className = 'btn sec mini';
+  bPryc.textContent = '✕ Odebrat';
+  bPryc.addEventListener('click', () => {
+    s.url = ''; uloz(); vykresliFormular(); vykresliNahled(); vykresliSeznam();
+  });
+  r.append(bSoubor, bPryc);
+  const n = document.createElement('div');
+  n.className = 'hint';
+  n.textContent = 'Vložený soubor se zmenší a uloží přímo do prezentace – funguje pak i bez internetu. '
+    + 'Obrázek z internetu se offline nezobrazí.';
+  d.append(l, v, r, n);
+  return d;
+}
+
+/* Možnosti kvízu – řádek na možnost, přepínač označí tu správnou. */
+function poleMoznosti(s) {
+  const d = document.createElement('div');
+  d.className = 'field';
+  const l = document.createElement('div');
+  l.className = 'lbl';
+  l.textContent = 'Možnosti (zaškrtnutá je správná)';
+  d.appendChild(l);
+  s.moznosti = s.moznosti || [];
+  s.moznosti.forEach((m, i) => {
+    const r = document.createElement('div');
+    r.className = 'radek';
+    r.style.marginBottom = '5px';
+    const ch = document.createElement('input');
+    ch.type = 'checkbox';
+    ch.checked = !!m.spravna;
+    ch.title = 'Správná odpověď';
+    ch.style.cssText = 'width:16px;height:16px;accent-color:var(--ok);flex:0 0 auto';
+    ch.addEventListener('change', () => { m.spravna = ch.checked; uloz(true); vykresliNahled(); });
+    const t = document.createElement('input');
+    t.type = 'text';
+    t.value = m.text || '';
+    t.placeholder = 'Text možnosti ' + (PISMENA[i] || i + 1);
+    t.style.flex = '1';
+    t.addEventListener('input', () => { m.text = t.value; uloz(true); vykresliNahled(); });
+    const x = document.createElement('button');
+    x.className = 'btn sec mini';
+    x.textContent = '✕';
+    x.title = 'Odebrat možnost';
+    x.addEventListener('click', () => {
+      s.moznosti.splice(i, 1);
+      uloz(); vykresliFormular(); vykresliNahled();
+    });
+    r.append(ch, t, x);
+    d.appendChild(r);
+  });
+  const b = document.createElement('button');
+  b.className = 'btn sec mini';
+  b.textContent = '＋ Další možnost';
+  b.disabled = s.moznosti.length >= 6;
+  b.addEventListener('click', () => {
+    s.moznosti.push({ text: '', spravna: false });
+    uloz(); vykresliFormular(); vykresliNahled();
+  });
+  d.appendChild(b);
+  return d;
+}
+
+/* Výběr aplikace z katalogu – s hledáním, protože položek je přes dvě stě. */
+function poleAplikace(s) {
+  const d = document.createElement('div');
+  d.className = 'field';
+  if (!KATALOG) {
+    const l = document.createElement('label');
+    l.textContent = 'Cesta k aplikaci';
+    l.htmlFor = 'fApp';
+    const v = document.createElement('input');
+    v.type = 'text';
+    v.id = 'fApp';
+    v.value = s.soubor || '';
+    v.addEventListener('input', () => { s.soubor = v.value; uloz(true); vykresliNahled(); vykresliSeznam(); });
+    const n = document.createElement('div');
+    n.className = 'hint';
+    n.textContent = 'Katalog se nenačetl (stránka běží mimo Nodus). Zapiš cestu, např. obsah/bunka.html.';
+    d.append(l, v, n);
+    return d;
+  }
+  const l = document.createElement('label');
+  l.textContent = 'Aplikace Nodusu';
+  l.htmlFor = 'fApp';
+  const hled = document.createElement('input');
+  hled.type = 'search';
+  hled.placeholder = '🔍 Hledat v katalogu…';
+  hled.style.marginBottom = '6px';
+  const sel = document.createElement('select');
+  sel.id = 'fApp';
+  sel.size = 1;
+
+  function naplnit(dotaz = '') {
+    const q = dotaz.trim().toLowerCase();
+    sel.innerHTML = '<option value="">— vyber aplikaci —</option>';
+    let nalezeno = 0;
+    for (const sek of KATALOG) {
+      const g = document.createElement('optgroup');
+      g.label = sek.nazev;
+      for (const p of sek.polozky) {
+        if (p.stav === 'plan') continue;
+        const text = (p.nazev + ' ' + (p.tagy || []).join(' ')).toLowerCase();
+        if (q && !text.includes(q)) continue;
+        const o = document.createElement('option');
+        o.value = p.soubor;
+        o.textContent = p.nazev;
+        g.appendChild(o);
+        nalezeno++;
+      }
+      if (g.children.length) sel.appendChild(g);
+    }
+    sel.value = s.soubor || '';
+    pocet.textContent = q ? `${nalezeno} odpovídá hledání` : '';
+  }
+  const pocet = document.createElement('div');
+  pocet.className = 'hint';
+  hled.addEventListener('input', () => naplnit(hled.value));
+  sel.addEventListener('change', () => {
+    s.soubor = sel.value; uloz(); vykresliSeznam(); vykresliNahled();
+  });
+  const n = document.createElement('div');
+  n.className = 'hint';
+  n.textContent = 'Aplikace se při promítání spustí přímo ve slidu – dá se v ní klikat i zadávat.';
+  d.append(l, hled, sel, pocet, n);
+  naplnit();
+  return d;
+}
+
+/* ---------- vložení obrázku ---------- */
+// Obrázek se zmenší na 1600 px a uloží jako data: URL. Fotka z telefonu má
+// klidně 4 MB; do kvóty localStorage (~5 MB) by se vešla sotva jedna.
+const MAX_HRANA = 1600;
+
+function zmensiObrazek(soubor) {
+  return new Promise((hotovo, chyba) => {
+    const ctecka = new FileReader();
+    ctecka.onerror = () => chyba(new Error('soubor se nepodařilo přečíst'));
+    ctecka.onload = () => {
+      const im = new Image();
+      im.onerror = () => chyba(new Error('to není obrázek'));
+      im.onload = () => {
+        const k = Math.min(1, MAX_HRANA / Math.max(im.width, im.height));
+        if (k === 1 && ctecka.result.length < 700000) { hotovo(ctecka.result); return; }
+        const c = document.createElement('canvas');
+        c.width = Math.round(im.width * k);
+        c.height = Math.round(im.height * k);
+        c.getContext('2d').drawImage(im, 0, 0, c.width, c.height);
+        hotovo(c.toDataURL('image/jpeg', 0.82));
+      };
+      im.src = ctecka.result;
+    };
+    ctecka.readAsDataURL(soubor);
+  });
+}
+
+async function vlozObrazek(s, soubor) {
+  if (!soubor || !soubor.type.startsWith('image/')) { Dialog.chyba('To není obrázek.'); return; }
+  try {
+    s.url = await zmensiObrazek(soubor);
+    if (s.typ !== 'obrazek' && s.typ !== 'dva') s.typ = 'obrazek';
+    if (uloz()) Dialog.info('Obrázek vložen do prezentace.');
+    vykresliVse();
+  } catch (e) {
+    Dialog.chyba('Obrázek se nepodařilo načíst: ' + e.message);
+  }
+}
+
+function vyberObrazek(s) {
+  const v = document.createElement('input');
+  v.type = 'file';
+  v.accept = 'image/*';
+  v.addEventListener('change', () => v.files[0] && vlozObrazek(s, v.files[0]));
+  v.click();
+}
+
+// Obrázek se dá do slidu přetáhnout rovnou na náhled.
+const jevisteEl = $('jeviste');
+jevisteEl.addEventListener('dragover', e => {
+  if (!e.dataTransfer.types.includes('Files')) return;
+  e.preventDefault();
+  jevisteEl.classList.add('pretahni');
+});
+jevisteEl.addEventListener('dragleave', () => jevisteEl.classList.remove('pretahni'));
+jevisteEl.addEventListener('drop', e => {
+  if (!e.dataTransfer.files.length) return;
+  e.preventDefault();
+  jevisteEl.classList.remove('pretahni');
+  vlozObrazek(sada.slidy[vybrany], e.dataTransfer.files[0]);
+});
+
+/* ============================================================
+   Náhled a překreslení
+   ============================================================ */
+function vykresliNahled() {
+  const s = sada.slidy[vybrany];
+  const el = $('nahled');
+  if (!s) {
+    el.className = 'slide';
+    el.innerHTML = '';
+    $('nahledInfo').textContent = 'Sada nemá žádný slide.';
+    return;
+  }
+  vykresli(el, s, {
+    cislo: sada.cisla ? vybrany + 1 : 0,
+    paticka: sada.paticka ? sada.nazev : '',
+  });
+  Projektor.vmestnej(el, SIRKA, vyskaSlidu);
+  $('nahledInfo').textContent = `Slide ${vybrany + 1} z ${sada.slidy.length}`;
+  $('nahledTyp').textContent = TYPY[s.typ].ik + ' ' + TYPY[s.typ].nm;
+}
+
+function vykresliVse() {
+  pouzijPomer();
+  $('vyberSady').value = sada.id;
+  $('fPomer').value = sada.pomer;
+  $('fCisla').checked = sada.cisla;
+  $('fPaticka').checked = sada.paticka;
+  $('fTmave').checked = sada.tmave;
+  vykresliSeznam();
+  vykresliFormular();
+  vykresliNahled();
+}
+
+function vykresliSady() {
+  const sel = $('vyberSady');
+  sel.innerHTML = '';
+  for (const s of data.sady) {
+    const o = document.createElement('option');
+    o.value = s.id;
+    o.textContent = `${s.nazev} (${s.slidy.length})`;
+    sel.appendChild(o);
+  }
+  sel.value = sada.id;
+}
+
+/* ============================================================
+   Akce nad slidy
+   ============================================================ */
+$('pridat').innerHTML = Object.entries(TYPY)
+  .map(([id, t]) => `<button class="btn sec mini" data-pridat="${id}">${t.ik} ${t.nm}</button>`).join('');
+
+function pridejSlide(typ) {
+  sada.slidy.splice(vybrany + 1, 0, prazdnySlide(typ, sada.tmave));
+  vybrany = Math.min(vybrany + 1, sada.slidy.length - 1);
+  uloz(); vykresliSady(); vykresliVse();
+}
+document.querySelectorAll('[data-pridat]').forEach(b =>
+  b.addEventListener('click', () => pridejSlide(b.dataset.pridat)));
+
+function posunSlide(smer) {
+  const j = vybrany + smer;
+  if (j < 0 || j >= sada.slidy.length) return;
+  presunSlide(vybrany, j);
+}
+$('bNahoru').addEventListener('click', () => posunSlide(-1));
+$('bDolu').addEventListener('click', () => posunSlide(1));
+
+function duplikujSlide() {
+  const s = sada.slidy[vybrany];
+  if (!s) return;
+  sada.slidy.splice(vybrany + 1, 0, { ...structuredClone(s), id: novéId() });
+  vybrany++;
+  uloz(); vykresliSady(); vykresliVse();
+}
+$('bDuplikuj').addEventListener('click', duplikujSlide);
+
+// Smazaný slide se drží stranou, dokud se nesmaže další – Ctrl+Z ho vrátí.
+// Potvrzovací otázka u každého mazání by při skládání prezentace zdržovala.
+let koš = null;
+
+function smazSlide() {
+  if (!sada.slidy.length) return;
+  koš = { slide: sada.slidy[vybrany], kam: vybrany, sadaId: sada.id };
+  sada.slidy.splice(vybrany, 1);
+  if (!sada.slidy.length) sada.slidy.push(prazdnySlide('text', sada.tmave));
+  vybrany = Math.max(0, Math.min(vybrany, sada.slidy.length - 1));
+  uloz(); vykresliSady(); vykresliVse();
+  Dialog.info('Slide smazán – Ctrl+Z ho vrátí.');
+}
+$('bSmazSlide').addEventListener('click', smazSlide);
+
+function vratSmazany() {
+  if (!koš || koš.sadaId !== sada.id) { Dialog.info('Není co vracet.'); return; }
+  sada.slidy.splice(koš.kam, 0, koš.slide);
+  vybrany = koš.kam;
+  koš = null;
+  uloz(); vykresliSady(); vykresliVse();
+}
+
+$('bOdtud').addEventListener('click', () => spust(vybrany));
+
+/* ---------- nastavení prezentace ---------- */
+$('fPomer').addEventListener('change', e => {
+  sada.pomer = e.target.value;
+  uloz(); vykresliVse();
+});
+for (const [id, klic] of [['fCisla', 'cisla'], ['fPaticka', 'paticka'], ['fTmave', 'tmave']]) {
+  $(id).addEventListener('change', e => { sada[klic] = e.target.checked; uloz(); vykresliVse(); });
+}
+
+/* ============================================================
+   Sady
+   ============================================================ */
+$('vyberSady').addEventListener('change', e => {
+  sada = data.sady.find(s => s.id === e.target.value) || sada;
+  vybrany = 0;
+  uloz(); vykresliVse();
+});
+$('bNova').addEventListener('click', async () => {
+  const n = await Dialog.zeptej('Název nové prezentace', 'Nová prezentace');
+  if (n === null) return;
+  zalozSadu(novaSada(n.trim() || 'Nová prezentace'));
+});
+$('bPrejmenuj').addEventListener('click', async () => {
+  const n = await Dialog.zeptej('Nový název', sada.nazev);
+  if (n === null || !n.trim()) return;
+  sada.nazev = n.trim();
+  uloz(); vykresliSady(); vykresliVse();
+});
+$('bKopie').addEventListener('click', () => {
+  const k = structuredClone(sada);
+  k.id = novéId();
+  k.nazev = sada.nazev + ' (kopie)';
+  k.slidy.forEach(s => s.id = novéId());
+  zalozSadu(k);
+});
+$('bSmaz').addEventListener('click', async () => {
+  if (!await Dialog.potvrd(`Smazat prezentaci „${sada.nazev}“ i se všemi slidy?`)) return;
+  data.sady = data.sady.filter(s => s.id !== sada.id);
+  if (!data.sady.length) data.sady.push(novaSada());
+  sada = data.sady[0];
+  vybrany = 0;
+  uloz(); vykresliSady(); vykresliVse();
+});
+
+function zalozSadu(nova) {
+  data.sady.push(dopln(nova));
+  sada = nova;
+  vybrany = 0;
+  uloz(); vykresliSady(); vykresliVse();
+}
+
+$('bExport').addEventListener('click', () => {
+  const b = new Blob([JSON.stringify(sada, null, 2)], { type: 'application/json' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(b);
+  a.download = sada.nazev.replace(/[^\wÀ-ɏ -]+/g, '_') + '.nodus-slidy.json';
+  a.click();
+  setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+});
+$('bImport').addEventListener('click', () => {
+  const v = document.createElement('input');
+  v.type = 'file';
+  v.accept = '.json,application/json';
+  v.addEventListener('change', async () => {
+    const f = v.files[0];
+    if (!f) return;
+    try {
+      const d = JSON.parse(await f.text());
+      if (!Array.isArray(d.slidy) || !d.slidy.length) throw new Error('bez slidů');
+      d.id = novéId();
+      d.nazev = String(d.nazev || f.name.replace(/\..*$/, ''));
+      d.slidy.forEach(s => s.id = novéId());
+      zalozSadu(d);
+      Dialog.info(`Načteno: ${d.nazev} (${d.slidy.length} slidů)`);
+    } catch {
+      Dialog.chyba('Soubor nevypadá jako uložená prezentace Nodusu.');
+    }
+  });
+  v.click();
+});
+
+/* ============================================================
+   Textový zápis prezentace
+
+   Nejrychlejší cesta z hotové přípravy do slidů: učitel má výklad
+   napsaný v textovém editoru, vloží ho sem a má prezentaci. Formát
+   je proto úmyslně chudý – dá se psát bez čtení nápovědy.
+   ============================================================ */
+const NAPOVEDA_TEXT = `Slidy odděl řádkem ---
+# Titulek        → titulní slide (další řádek je podtitul)
+## Nadpis        → slide s textem (odrážky se píšou jako "- ")
+? Otázka         → otázka pro třídu, řádek "= " je odpověď
+?? Otázka        → kvíz, "+ " je správná možnost, "* " špatná
+! adresa | popis → obrázek
+" text | autor   → citát
+@ obsah/bunka.html | nadpis → aplikace Nodusu
+T 5 | zadání     → časovač na 5 minut
+___              → prázdná tabule na kreslení
+> poznámka       → poznámka pro učitele (na plátno se nedostane)`;
+
+function slidyDoTextu(sl) {
+  const bloky = sl.map(s => {
+    const r = [];
+    if (s.typ === 'nadpis') { r.push('# ' + s.nadpis); if (s.telo) r.push(s.telo); }
+    else if (s.typ === 'text') { r.push('## ' + s.nadpis); if (s.telo) r.push(s.telo); }
+    else if (s.typ === 'dva') {
+      r.push('## ' + s.nadpis);
+      r.push(s.telo || '');
+      r.push('||');
+      r.push(s.url ? '! ' + s.url : (s.telo2 || ''));
+    } else if (s.typ === 'otazka') { r.push('? ' + s.nadpis); if (s.telo) r.push('= ' + s.telo.replace(/\n/g, ' ')); }
+    else if (s.typ === 'kviz') {
+      r.push('?? ' + s.nadpis);
+      for (const m of s.moznosti || []) r.push((m.spravna ? '+ ' : '* ') + m.text);
+      if (s.telo) r.push('= ' + s.telo.replace(/\n/g, ' '));
+    } else if (s.typ === 'obrazek') r.push('! ' + (s.url && s.url.startsWith('data:') ? '(vložený obrázek)' : s.url) + (s.telo ? ' | ' + s.telo : ''));
+    else if (s.typ === 'citat') r.push('" ' + s.telo + (s.nadpis ? ' | ' + s.nadpis : ''));
+    else if (s.typ === 'aplikace') r.push('@ ' + s.soubor + (s.nadpis ? ' | ' + s.nadpis : ''));
+    else if (s.typ === 'casovac') r.push('T ' + Math.round(s.sekundy / 60) + (s.nadpis ? ' | ' + s.nadpis : ''));
+    else if (s.typ === 'tabule') r.push('___');
+    if (s.pozn) r.push(...s.pozn.split('\n').map(x => '> ' + x));
+    return r.join('\n');
+  });
+  return bloky.join('\n---\n');
+}
+
+function textDoSlidu(text, tmave) {
+  const slidy = [];
+  for (const blok of String(text).split(/^\s*---\s*$/m)) {
+    const radky = blok.split('\n');
+    const pozn = radky.filter(r => r.trim().startsWith('> ')).map(r => r.trim().slice(2)).join('\n');
+    const telo = radky.filter(r => !r.trim().startsWith('> '));
+    // první neprázdný řádek určuje druh slidu
+    let i = 0;
+    while (i < telo.length && !telo[i].trim()) i++;
+    if (i >= telo.length) continue;
+    const prvni = telo[i].trim();
+    const zbytek = telo.slice(i + 1).join('\n').trim();
+    const casti = t => t.split('|').map(x => x.trim());
+    let s;
+    if (prvni.startsWith('## ')) {
+      if (zbytek.includes('||')) {
+        const [a, b] = zbytek.split(/^\s*\|\|\s*$/m);
+        s = prazdnySlide('dva', tmave);
+        s.nadpis = prvni.slice(3);
+        s.telo = (a || '').trim();
+        const p = (b || '').trim();
+        if (p.startsWith('! ')) { s.url = casti(p.slice(2))[0]; s.telo2 = ''; }
+        else { s.telo2 = p; s.url = ''; }
+      } else {
+        s = prazdnySlide('text', tmave);
+        s.nadpis = prvni.slice(3);
+        s.telo = zbytek;
+      }
+    } else if (prvni.startsWith('# ')) {
+      s = prazdnySlide('nadpis', tmave);
+      s.nadpis = prvni.slice(2);
+      s.telo = zbytek;
+    } else if (prvni.startsWith('?? ')) {
+      s = prazdnySlide('kviz', tmave);
+      s.nadpis = prvni.slice(3);
+      s.moznosti = [];
+      s.telo = '';
+      for (const r of zbytek.split('\n').map(x => x.trim()).filter(Boolean)) {
+        if (r.startsWith('+ ')) s.moznosti.push({ text: r.slice(2), spravna: true });
+        else if (r.startsWith('* ')) s.moznosti.push({ text: r.slice(2), spravna: false });
+        else if (r.startsWith('= ')) s.telo = r.slice(2);
+      }
+    } else if (prvni.startsWith('? ')) {
+      s = prazdnySlide('otazka', tmave);
+      s.nadpis = prvni.slice(2);
+      const od = zbytek.split('\n').find(r => r.trim().startsWith('= '));
+      s.telo = od ? od.trim().slice(2) : zbytek;
+    } else if (prvni.startsWith('! ')) {
+      const [url, popis] = casti(prvni.slice(2));
+      s = prazdnySlide('obrazek', tmave);
+      s.url = url === '(vložený obrázek)' ? '' : url;
+      s.telo = popis || '';
+    } else if (prvni.startsWith('" ')) {
+      const [tx, aut] = casti(prvni.slice(2));
+      s = prazdnySlide('citat', tmave);
+      s.telo = tx;
+      s.nadpis = aut || '';
+    } else if (prvni.startsWith('@ ')) {
+      const [ce, nad] = casti(prvni.slice(2));
+      s = prazdnySlide('aplikace', tmave);
+      s.soubor = ce;
+      s.nadpis = nad || '';
+    } else if (/^T\s+\d+/.test(prvni)) {
+      const [cast1, popis] = casti(prvni);
+      s = prazdnySlide('casovac', tmave);
+      s.sekundy = Math.max(1, Math.min(90, parseInt(cast1.slice(1), 10) || 5)) * 60;
+      s.nadpis = popis || '';
+    } else if (prvni.startsWith('___')) {
+      s = prazdnySlide('tabule', tmave);
+    } else {
+      s = prazdnySlide('text', tmave);
+      s.nadpis = '';
+      s.telo = [prvni, zbytek].filter(Boolean).join('\n');
+    }
+    s.pozn = pozn;
+    slidy.push(s);
+  }
+  return slidy;
+}
+
+const dlgText = $('dlgText');
+let textRezim = 'import';
+
+function otevriText(rezim) {
+  textRezim = rezim;
+  $('dlgTextNadpis').textContent = rezim === 'import' ? 'Sestavit slidy z textu' : 'Prezentace jako text';
+  $('dlgTextNapoveda').textContent = rezim === 'import' ? NAPOVEDA_TEXT
+    : 'Zápis se dá zkopírovat, upravit v textovém editoru a vložit zpátky přes „Sestavit z textu“.';
+  $('dlgTextNapoveda').style.whiteSpace = 'pre-wrap';
+  $('dlgTextPole').value = rezim === 'import' ? '' : slidyDoTextu(sada.slidy);
+  $('dlgTextOk').hidden = rezim !== 'import';
+  dlgText.showModal();
+}
+$('bZTextu').addEventListener('click', () => otevriText('import'));
+$('bDoTextu').addEventListener('click', () => otevriText('export'));
+$('dlgTextZrus').addEventListener('click', () => dlgText.close());
+$('dlgTextKopiruj').addEventListener('click', async () => {
+  const pole = $('dlgTextPole');
+  pole.select();
+  try {
+    await navigator.clipboard.writeText(pole.value);
+    Dialog.info('Zkopírováno do schránky.');
+  } catch {
+    Dialog.info('Text je označený – zkopíruj ho klávesou Ctrl+C.');
+  }
+});
+$('dlgTextOk').addEventListener('click', async () => {
+  const slidy = textDoSlidu($('dlgTextPole').value, sada.tmave);
+  if (!slidy.length) { Dialog.chyba('V textu nejsou žádné slidy.'); return; }
+  dlgText.close();
+  const nahradit = await Dialog.potvrd(
+    `Sestaveno ${slidy.length} slidů. Nahradit jimi prezentaci „${sada.nazev}“? `
+    + 'Zrušením se místo toho přidají na konec.');
+  if (nahradit) sada.slidy = slidy;
+  else sada.slidy = sada.slidy.concat(slidy);
+  vybrany = nahradit ? 0 : sada.slidy.length - slidy.length;
+  uloz(); vykresliSady(); vykresliVse();
+});
+
+/* ============================================================
+   Šablony hodin
+   ============================================================ */
+const SABLONY = [
+  {
+    nm: 'Výklad nové látky',
+    po: 'Cíl, opakování, výklad, aplikace, kvíz, shrnutí a úkol.',
+    text: `# Název hodiny\ntřída, datum\n---\n## Co se dnes naučíme\n- první cíl\n- druhý cíl\n---\n? Co jsme probírali minule?\n= Krátké zopakování.\n---\n## Výklad\n- klíčový pojem\n- druhý pojem\n> Nezapomenout na příklad z praxe.\n---\n@ obsah/bunka.html | Vyzkoušejme si to\n---\n?? Kontrolní otázka?\n+ správná odpověď\n* špatná odpověď\n= Proč je odpověď správná.\n---\n## Shrnutí\n- co si odnést\n---\n## Domácí úkol\n- zadání`,
+  },
+  {
+    nm: 'Opakování a procvičení',
+    po: 'Série kvízových otázek a čas na samostatnou práci.',
+    text: `# Opakování\ntřída, datum\n---\n?? První otázka?\n+ správně\n* špatně\n---\n?? Druhá otázka?\n+ správně\n* špatně\n---\n?? Třetí otázka?\n+ správně\n* špatně\n---\nT 10 | Samostatná práce\n---\n## Co nám dělá potíže\n- poznámky ze třídy`,
+  },
+  {
+    nm: 'Práce ve skupinách',
+    po: 'Zadání, odpočet, prezentace skupin a hodnocení.',
+    text: `# Skupinová práce\ntéma\n---\n## Zadání\n- co má skupina vytvořit\n- na co si dát pozor\n---\n## Rozdělení do skupin\n- skupina 1\n- skupina 2\n- skupina 3\n---\nT 15 | Práce ve skupinách\n---\n___\n> Sem si kreslíme závěry skupin.\n---\n## Hodnocení\n- co se povedlo\n- co příště jinak`,
+  },
+  {
+    nm: 'Pokus / laboratorní práce',
+    po: 'Hypotéza, postup, měření a závěr.',
+    text: `# Pokus\nnázev pokusu\n---\n? Co myslíte, že se stane?\n= Necháme třídu tipovat, teprve pak měříme.\n---\n## Pomůcky a postup\n- pomůcka\n- krok postupu\n---\nT 10 | Měření\n---\n## Výsledky\n- co jsme naměřili\n---\n## Závěr\n- potvrdila se hypotéza?`,
+  },
+];
+
+const dlgSablony = $('dlgSablony');
+$('sablonySeznam').innerHTML = SABLONY.map((s, i) =>
+  `<button data-sab="${i}"><span class="nm"></span><span class="po"></span></button>`).join('');
+[...$('sablonySeznam').children].forEach((b, i) => {
+  b.querySelector('.nm').textContent = SABLONY[i].nm;
+  b.querySelector('.po').textContent = SABLONY[i].po;
+  b.querySelector('.nm').style.display = 'block';
+  b.addEventListener('click', () => {
+    dlgSablony.close();
+    zalozSadu(novaSada(SABLONY[i].nm, textDoSlidu(SABLONY[i].text, true)));
+    Dialog.info('Prezentace založena podle šablony – texty přepiš svými.');
+  });
+});
+$('bSablona').addEventListener('click', () => dlgSablony.showModal());
+$('dlgSablonyZrus').addEventListener('click', () => dlgSablony.close());
+
+/* ---------- rozbalovací nabídka v liště ---------- */
+const rozbalSada = $('rozbalSada');
+$('bSadaMenu').addEventListener('click', e => {
+  e.stopPropagation();
+  const open = rozbalSada.classList.toggle('open');
+  $('bSadaMenu').setAttribute('aria-expanded', String(open));
+});
+document.addEventListener('click', e => {
+  if (!e.target.closest('#rozbalSada')) rozbalSada.classList.remove('open');
+});
+rozbalSada.querySelector('.menu').addEventListener('click', () => rozbalSada.classList.remove('open'));
+
+/* ============================================================
+   Podklady k tisku
+
+   Miniatura se do tisku vejde tak, že se slide zmenší transformem;
+   počítat velikosti písma zvlášť pro papír by znamenalo druhý vzhled,
+   který by se s promítaným rozešel.
+   ============================================================ */
+const dlgTisk = $('dlgTisk');
+$('bTisk').addEventListener('click', () => dlgTisk.showModal());
+$('dlgTiskZrus').addEventListener('click', () => dlgTisk.close());
+$('dlgTiskOk').addEventListener('click', () => { dlgTisk.close(); pripravTisk(); window.print(); });
+
+function pripravTisk() {
+  const t = $('tisk');
+  t.innerHTML = '';
+  const naList = Number($('tiskRezim').value) || 3;
+  const sPozn = $('tiskPozn').checked;
+  const sOdpovedmi = $('tiskOdpovedi').checked;
+  const sJmenem = $('tiskJmeno').checked;
+  const mm = v => v * 3.7795;      // mm na px
+  const sirkaRamu = { 1: mm(255), 2: mm(150), 3: mm(108), 6: mm(80) }[naList];
+
+  const slide = s => {
+    const ram = document.createElement('div');
+    ram.className = 'ram';
+    ram.style.width = sirkaRamu + 'px';
+    const sl = document.createElement('div');
+    sl.className = 'slide';
+    ram.appendChild(sl);
+    // Arch je bílý papír, takže i tmavé slidy se tisknou světle – jinak
+    // by tiskárna vyplivla černou stránku a text by nebyl vidět.
+    vykresli(sl, { ...s, svetly: true }, {
+      cislo: sada.cisla ? sada.slidy.indexOf(s) + 1 : 0,
+      paticka: sada.paticka ? sada.nazev : '',
+      odkryto: sOdpovedmi,
+    });
+    ram.style.setProperty('--k', sirkaRamu / SIRKA);
+    return ram;
+  };
+
+  const zahlavi = () => {
+    const hl = document.createElement('div');
+    hl.className = 'hl';
+    hl.innerHTML = '<span></span>' + (sJmenem ? '<span>Jméno: ______________________</span>' : '');
+    hl.firstChild.textContent = sada.nazev;
+    return hl;
+  };
+
+  if (naList === 1) {
+    // Jeden slide na stránku na šířku – tak se prezentace uloží do PDF.
+    for (const s of sada.slidy) {
+      const list = document.createElement('div');
+      list.className = 'list sirka';
+      const b = document.createElement('div');
+      b.className = 'bunka samostatny';
+      b.appendChild(slide(s));
+      list.appendChild(b);
+      if (sPozn && s.pozn) {
+        const p = document.createElement('div');
+        p.className = 'pozn';
+        p.textContent = s.pozn;
+        list.appendChild(p);
+      }
+      t.appendChild(list);
+    }
+    return;
+  }
+
+  for (let i = 0; i < sada.slidy.length; i += naList) {
+    const list = document.createElement('div');
+    list.className = 'list';
+    list.appendChild(zahlavi());
+    const skupina = sada.slidy.slice(i, i + naList);
+    if (naList === 6) {
+      const m = document.createElement('div');
+      m.className = 'mrizka';
+      for (const s of skupina) {
+        const b = document.createElement('div');
+        b.className = 'bunka';
+        b.appendChild(slide(s));
+        if (sPozn && s.pozn) {
+          const p = document.createElement('div');
+          p.className = 'pozn';
+          p.textContent = s.pozn;
+          b.appendChild(p);
+        }
+        m.appendChild(b);
+      }
+      list.appendChild(m);
+    } else {
+      for (const s of skupina) {
+        const b = document.createElement('div');
+        b.className = 'bunka';
+        const lin = document.createElement('div');
+        lin.className = 'linky';
+        const nm = document.createElement('div');
+        nm.className = 'nm';
+        nm.textContent = 'Poznámky';
+        lin.appendChild(nm);
+        if (sPozn && s.pozn) {
+          const p = document.createElement('div');
+          p.className = 'pozn';
+          p.textContent = s.pozn;
+          lin.appendChild(p);
+        } else {
+          for (let r = 0; r < (naList === 2 ? 7 : 4); r++) {
+            const l = document.createElement('div');
+            l.className = 'lin';
+            lin.appendChild(l);
+          }
+        }
+        b.append(slide(s), lin);
+        list.appendChild(b);
+      }
+    }
+    t.appendChild(list);
+  }
+}
+
+/* ============================================================
+   Kanál mezi promítacím oknem a oknem pro učitele
+
+   BroadcastChannel doručuje jen do jiných oken téhož webu; kde chybí
+   (starší prohlížeč), zaskočí událost `storage`, která se také spouští
+   pouze v ostatních oknech. Zprávy proto mají pořadové číslo –
+   v prohlížeči, kde fungují obě cesty, by jinak přišly dvakrát.
+   ============================================================ */
+const Kanal = (function () {
+  let bc = null;
+  try { bc = new BroadcastChannel(KLIC_KANAL); } catch { /* zaskočí localStorage */ }
+  const posluchaci = [];
+  let posledni = 0;
+  let cislo = 0;
+  const prijmi = z => {
+    if (!z || z.c <= posledni) return;
+    posledni = z.c;
+    posluchaci.forEach(f => f(z));
+  };
+  if (bc) bc.onmessage = e => prijmi(e.data);
+  window.addEventListener('storage', e => {
+    if (e.key !== KLIC_KANAL || !e.newValue) return;
+    try { prijmi(JSON.parse(e.newValue)); } catch { /* cizí zápis */ }
+  });
+  return {
+    posli(z) {
+      z.c = ++cislo + Date.now();
+      if (bc) bc.postMessage(z);
+      try { localStorage.setItem(KLIC_KANAL, JSON.stringify(z)); } catch { /* bez paměti */ }
+    },
+    pri(f) { posluchaci.push(f); },
+  };
+})();
+
+/* ============================================================
+   Promítání
+   ============================================================ */
+const show = $('show');
+let bezi = false, poziceShow = 0, odkryto = true, skryvac = 0;
+let kvizStav = null;
+let casOd = 0, casTik = 0;
+let odpocet = null;   // { zbyva, bezi, tik } u slidu s časovačem
+
+function stavShow() {
+  const n = sada.slidy.length;
+  $('oStav').textContent = `${poziceShow + 1} / ${n}`;
+  $('pruh').style.width = ((poziceShow + 1) / n * 100) + '%';
+  $('oCas').textContent = cas2text(Math.floor((Date.now() - casOd) / 1000));
+}
+
+function posliStav() {
+  Kanal.posli({
+    co: 'stav', sadaId: sada.id, pozice: poziceShow, pocet: sada.slidy.length,
+    odkryto, bezi, casOd, cerna: show.classList.contains('cerna'),
+  });
+}
+
+function ukazSlide(i, { krok = false } = {}) {
+  poziceShow = Math.max(0, Math.min(i, sada.slidy.length - 1));
+  const s = sada.slidy[poziceShow];
+  // U otázky i kvízu je první krok jen zadání; odpověď se odkryje dalším posunem.
+  if (!krok) {
+    odkryto = s.typ !== 'otazka' && s.typ !== 'kviz';
+    kvizStav = null;
+  }
+  zastavOdpocet();
+  vykresli($('showSlide'), s, {
+    zivy: true,
+    cislo: sada.cisla ? poziceShow + 1 : 0,
+    paticka: sada.paticka ? sada.nazev : '',
+    odkryto, kvizStav, klikaci: s.typ === 'kviz',
+  });
+  const k = Projektor.vmestnej($('showSlide'), SIRKA, vyskaSlidu);
+  pripravKresbu(k);
+  if (s.typ === 'casovac') spustOdpocet(s.sekundy);
+  propojKlavesyRamu();
+  $('pozn').textContent = s.pozn || '(Slide nemá poznámky.)';
+  stavShow();
+  oznacPrehled();
+  posliStav();
+}
+
+/* Jakmile učitel klikne do aplikace ve slidu, klávesy chytá rám a šipky
+   by prezentaci neposunuly. Přeposílají se proto klávesy prezentačního
+   klikátka (PageUp/PageDown) a Esc – šipky a mezerník ne, ty v aplikaci
+   patří žákovi, který v ní zrovna něco ovládá. */
+function propojKlavesyRamu() {
+  const f = $('showSlide').querySelector('iframe');
+  if (!f) return;
+  const pripoj = () => {
+    try {
+      const doc = f.contentDocument;
+      if (!doc || doc.__klavesyProps) return;
+      doc.__klavesyProps = true;
+      doc.addEventListener('keydown', e => {
+        if (e.key === 'PageDown') { e.preventDefault(); dalsi(); }
+        else if (e.key === 'PageUp') { e.preventDefault(); predchozi(); }
+        else if (e.key === 'Escape') { e.preventDefault(); konec(); }
+      });
+    } catch { /* rám z jiného webu – klávesy zůstanou jemu */ }
+  };
+  f.addEventListener('load', pripoj);
+  pripoj();
+}
+
+function dalsi() {
+  const s = sada.slidy[poziceShow];
+  if (s && (s.typ === 'otazka' || s.typ === 'kviz') && !odkryto) {
+    odkryto = true;
+    ukazSlide(poziceShow, { krok: true });
+    return;
+  }
+  if (poziceShow < sada.slidy.length - 1) ukazSlide(poziceShow + 1);
+}
+function predchozi() {
+  if (poziceShow > 0) ukazSlide(poziceShow - 1);
+}
+
+function spust(od = 0) {
+  if (!sada.slidy.length) { Dialog.chyba('Prezentace nemá žádný slide.'); return; }
+  bezi = true;
+  show.classList.add('bezi');
+  // Plátno leží přes stránku napevno; bez tohohle by se pod ním dala
+  // editační obrazovka odrolovat a na projektoru by vyjel posuvník.
+  document.body.style.overflow = 'hidden';
+  casOd = Date.now();
+  clearInterval(casTik);
+  casTik = setInterval(stavShow, 1000);
+  ukazSlide(od);
+  Projektor.celaObrazovka(document.documentElement);
+  probudOvladani();
+}
+
+function konec() {
+  bezi = false;
+  show.classList.remove('bezi', 'cerna', 'bila');
+  document.body.style.overflow = '';
+  $('prehled').classList.remove('vidno');
+  $('pozn').classList.remove('vidno');
+  $('showSlide').innerHTML = '';   // zastaví běžící aplikaci ve slidu
+  clearInterval(casTik);
+  zastavOdpocet();
+  if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+  posliStav();
+  vykresliNahled();
+}
+
+$('bSpust').addEventListener('click', () => spust(0));
+$('oNext').addEventListener('click', dalsi);
+$('oPrev').addEventListener('click', predchozi);
+$('oKonec').addEventListener('click', konec);
+$('oFull').addEventListener('click', () => Projektor.celaObrazovka(document.documentElement));
+$('oCerna').addEventListener('click', () => { show.classList.toggle('cerna'); posliStav(); });
+$('oPozn').addEventListener('click', () => $('pozn').classList.toggle('vidno'));
+$('oPrehled').addEventListener('click', prepniPrehled);
+
+// Ovládání se samo schová, aby na plátně nesvítilo přes výklad.
+function probudOvladani() {
+  $('showOvl').classList.add('vidno');
+  clearTimeout(skryvac);
+  skryvac = setTimeout(() => $('showOvl').classList.remove('vidno'), 2600);
+}
+show.addEventListener('mousemove', probudOvladani);
+show.addEventListener('touchstart', probudOvladani, { passive: true });
+
+/* ---------- kvíz ---------- */
+$('showSlide').addEventListener('click', e => {
+  const b = e.target.closest('.moz');
+  if (!b || !bezi) return;
+  odpovezKviz(Number(b.dataset.moz));
+});
+
+function odpovezKviz(i) {
+  const s = sada.slidy[poziceShow];
+  if (!s || s.typ !== 'kviz') return;
+  const moz = (s.moznosti || []).filter(m => m && m.text);
+  if (!moz[i]) return;
+  kvizStav = kvizStav || moz.map(() => null);
+  // Špatná volba zčervená a otázka běží dál; správná odkryje celé řešení,
+  // aby třída viděla, která odpověď platí a proč.
+  if (moz[i].spravna) {
+    moz.forEach((m, j) => { if (m.spravna) kvizStav[j] = 'spravna'; });
+    odkryto = true;
+  } else {
+    kvizStav[i] = 'spatna';
+  }
+  ukazSlide(poziceShow, { krok: true });
+}
+
+/* ---------- časovač na slidu ---------- */
+function zastavOdpocet() {
+  if (odpocet) clearInterval(odpocet.tik);
+  odpocet = null;
+}
+
+function spustOdpocet(sekundy) {
+  odpocet = { zbyva: sekundy, bezi: true, tik: 0 };
+  kresliOdpocet();
+  odpocet.tik = setInterval(() => {
+    if (!odpocet || !odpocet.bezi) return;
+    odpocet.zbyva--;
+    if (odpocet.zbyva <= 0) {
+      odpocet.zbyva = 0;
+      odpocet.bezi = false;
+      clearInterval(odpocet.tik);
+      pipni();
+    }
+    kresliOdpocet();
+  }, 1000);
+}
+
+function kresliOdpocet() {
+  const el = $('showSlide').querySelector('.odpocet .cas');
+  if (!el || !odpocet) return;
+  el.textContent = cas2text(odpocet.zbyva);
+  el.classList.toggle('dochazi', odpocet.zbyva > 0 && odpocet.zbyva <= 60);
+  el.classList.toggle('konec', odpocet.zbyva === 0);
+}
+
+function pipni() {
+  // Zvuk se skládá rovnou v prohlížeči – žádný soubor navíc a funguje offline.
+  try {
+    const ac = new (window.AudioContext || window.webkitAudioContext)();
+    [0, 0.25, 0.5].forEach(t => {
+      const o = ac.createOscillator(), g = ac.createGain();
+      o.frequency.value = 880;
+      g.gain.setValueAtTime(0.0001, ac.currentTime + t);
+      g.gain.exponentialRampToValueAtTime(0.25, ac.currentTime + t + 0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001, ac.currentTime + t + 0.18);
+      o.connect(g); g.connect(ac.destination);
+      o.start(ac.currentTime + t); o.stop(ac.currentTime + t + 0.2);
+    });
+    setTimeout(() => ac.close(), 1500);
+  } catch { /* prohlížeč zvuk nedovolil – čas i tak doběhl viditelně */ }
+}
+
+/* ---------- přehled slidů ---------- */
+function prepniPrehled() {
+  const p = $('prehled');
+  if (p.classList.contains('vidno')) { p.classList.remove('vidno'); return; }
+  p.innerHTML = '';
+  sada.slidy.forEach((s, i) => {
+    const m = document.createElement('div');
+    m.className = 'mini' + (i === poziceShow ? ' on' : '');
+    const sl = document.createElement('div');
+    sl.className = 'slide';
+    m.appendChild(sl);
+    vykresli(sl, s, { cislo: 0 });
+    const st = document.createElement('div');
+    st.className = 'st';
+    st.textContent = (i + 1) + '. ' + popisSlidu(s);
+    m.appendChild(st);
+    m.addEventListener('click', () => { p.classList.remove('vidno'); ukazSlide(i); });
+    p.appendChild(m);
+  });
+  p.classList.add('vidno');
+  // Miniatury se škálují až po vložení do stránky – dřív nemají rozměr.
+  requestAnimationFrame(() => {
+    p.querySelectorAll('.mini').forEach(m =>
+      m.style.setProperty('--k', m.clientWidth / SIRKA));
+  });
+}
+function oznacPrehled() {
+  $('prehled').querySelectorAll('.mini').forEach((m, i) => m.classList.toggle('on', i === poziceShow));
+}
+
+/* ---------- kreslení do slidu ---------- */
+const platno = $('kresba');
+const ctx = platno.getContext('2d');
+let pero = false, barva = BARVY[0], sirkaPera = SIRKY[0], kresli = false;
+const tahy = {};        // kresba se drží u slidu, ne u obrazovky
+
+function pripravKresbu(k) {
+  platno.width = SIRKA;
+  platno.height = vyskaSlidu;
+  platno.style.width = SIRKA + 'px';
+  platno.style.height = vyskaSlidu + 'px';
+  platno.style.transform = `translate(-50%, -50%) scale(${k})`;
+  platno.style.pointerEvents = pero ? 'auto' : 'none';
+  platno.classList.toggle('aktivni', pero);
+  prekresliTahy();
+}
+
+function prekresliTahy() {
+  ctx.clearRect(0, 0, SIRKA, vyskaSlidu);
+  const t = tahy[sada.slidy[poziceShow]?.id] || [];
+  ctx.lineCap = ctx.lineJoin = 'round';
+  for (const tah of t) {
+    ctx.strokeStyle = tah.barva;
+    ctx.lineWidth = tah.sirka;
+    // Zvýrazňovač (nejtlustší stopa) je poloprůhledný, aby text pod ním zůstal čitelný.
+    ctx.globalAlpha = tah.sirka >= SIRKY[2] ? 0.35 : 1;
+    ctx.beginPath();
+    tah.body.forEach((b, i) => i ? ctx.lineTo(b[0], b[1]) : ctx.moveTo(b[0], b[1]));
+    ctx.stroke();
+  }
+  ctx.globalAlpha = 1;
+}
+
+// Souřadnice se počítají z rozměru plátna na obrazovce, aby kresba
+// seděla i po zvětšení do celé obrazovky.
+function bod(e) {
+  const r = platno.getBoundingClientRect();
+  return [(e.clientX - r.left) / r.width * SIRKA, (e.clientY - r.top) / r.height * vyskaSlidu];
+}
+
+platno.addEventListener('pointerdown', e => {
+  if (!pero) return;
+  kresli = true;
+  platno.setPointerCapture(e.pointerId);
+  const id = sada.slidy[poziceShow].id;
+  (tahy[id] ||= []).push({ barva, sirka: sirkaPera, body: [bod(e)] });
+});
+platno.addEventListener('pointermove', e => {
+  if (!kresli) return;
+  const t = tahy[sada.slidy[poziceShow].id];
+  t[t.length - 1].body.push(bod(e));
+  prekresliTahy();
+});
+for (const ev of ['pointerup', 'pointercancel', 'pointerleave'])
+  platno.addEventListener(ev, () => { kresli = false; });
+
+function prepniPero(zap) {
+  pero = zap === undefined ? !pero : zap;
+  $('oPero').classList.toggle('on', pero);
+  platno.style.pointerEvents = pero ? 'auto' : 'none';
+  platno.classList.toggle('aktivni', pero);
+}
+$('oPero').addEventListener('click', () => prepniPero());
+$('oGuma').addEventListener('click', () => {
+  delete tahy[sada.slidy[poziceShow]?.id];
+  prekresliTahy();
+});
+$('oZpet').addEventListener('click', vratTah);
+
+function vratTah() {
+  const t = tahy[sada.slidy[poziceShow]?.id];
+  if (t && t.length) { t.pop(); prekresliTahy(); }
+}
+
+const barvyEl = $('oBarvy');
+BARVY.forEach((b, i) => {
+  const t = document.createElement('button');
+  t.style.background = b;
+  t.title = 'Barva pera';
+  t.className = i === 0 ? 'on' : '';
+  t.addEventListener('click', () => {
+    barva = b;
+    barvyEl.querySelectorAll('button').forEach(x => x.classList.remove('on'));
+    t.classList.add('on');
+    prepniPero(true);
+  });
+  barvyEl.appendChild(t);
+});
+
+const sirkyEl = $('oSirky');
+['▪', '⬛', '🖍️'].forEach((popis, i) => {
+  const t = document.createElement('button');
+  t.textContent = popis;
+  t.title = ['tenké pero', 'silné pero', 'zvýrazňovač'][i];
+  t.className = i === 0 ? 'on' : '';
+  t.addEventListener('click', () => {
+    sirkaPera = SIRKY[i];
+    sirkyEl.querySelectorAll('button').forEach(x => x.classList.remove('on'));
+    t.classList.add('on');
+    prepniPero(true);
+  });
+  sirkyEl.appendChild(t);
+});
+
+/* ============================================================
+   Okno pro učitele
+
+   Otevírá se jako druhé okno téže stránky s ?prezenter=1: na plátně
+   je slide, na notebooku poznámky, následující slide a čas. Data si
+   okno čte ze stejného localStorage, kanálem chodí jen pozice –
+   posílat celou sadu by u vložených obrázků znamenalo megabajty
+   při každém posunu.
+   ============================================================ */
+let oknoPrezentera = null;
+
+$('bPrezenter').addEventListener('click', () => {
+  if (oknoPrezentera && !oknoPrezentera.closed) { oknoPrezentera.focus(); return; }
+  uloz(true);   // okno čte sadu z úložiště, musí tam být ta aktuální
+  oknoPrezentera = window.open(location.pathname + '#prezenter', 'nodus_prezenter',
+    'width=1100,height=720');
+  if (!oknoPrezentera) {
+    Dialog.chyba('Prohlížeč zablokoval nové okno. Povol vyskakovací okna pro tuto stránku.');
+    return;
+  }
+  Dialog.info('Okno pro učitele je otevřené – přesuň ho na notebook a promítej z tohoto okna.');
+  setTimeout(posliStav, 600);
+});
+
+Kanal.pri(z => {
+  if (jePrezenter) return;
+  if (z.co === 'kdo') { posliStav(); return; }
+  if (z.co !== 'prikaz') return;
+  if (z.akce === 'dalsi') { if (!bezi) spust(0); else dalsi(); }
+  else if (z.akce === 'zpet') predchozi();
+  else if (z.akce === 'jdi') { if (!bezi) spust(z.i); else ukazSlide(z.i); }
+  else if (z.akce === 'cerna') { show.classList.toggle('cerna'); posliStav(); }
+  else if (z.akce === 'nuluj') { casOd = Date.now(); stavShow(); posliStav(); }
+  else if (z.akce === 'konec') konec();
+});
+
+function spustPrezentera() {
+  document.body.classList.add('prezenter');
+  document.title = '🗒️ Poznámky – ' + document.title;
+  let stav = { pozice: 0, pocet: sada.slidy.length, bezi: false, casOd: Date.now() };
+  let slyseno = 0;
+
+  const prikaz = (akce, i) => Kanal.posli({ co: 'prikaz', akce, i });
+
+  function nactiSadu(id) {
+    if (id && id !== sada.id) {
+      const d = nacti();
+      const s = d.sady.find(x => x.id === id);
+      if (s) { data = d; sada = s; }
+    }
+  }
+
+  function vykresliMini(kam, i, stitek) {
+    const s = sada.slidy[i];
+    kam.innerHTML = `<span class="stitek">${stitek}</span>`;
+    const sl = document.createElement('div');
+    sl.className = 'slide';
+    kam.appendChild(sl);
+    if (s) vykresli(sl, s, { cislo: sada.cisla ? i + 1 : 0 });
+    requestAnimationFrame(() => kam.style.setProperty('--k', kam.clientWidth / SIRKA));
+  }
+
+  function kresli() {
+    pouzijPomer();
+    const i = Math.max(0, Math.min(stav.pozice, sada.slidy.length - 1));
+    $('pzNazev').textContent = sada.nazev;
+    $('pzStav').textContent = `${i + 1} / ${sada.slidy.length}`;
+    vykresliMini($('pzTed'), i, stav.bezi ? 'Právě promítám' : 'Připraveno k promítání');
+    vykresliMini($('pzDalsi'), i + 1, i + 1 < sada.slidy.length ? 'Následuje' : 'Konec prezentace');
+    const s = sada.slidy[i];
+    const p = $('pzPozn');
+    p.textContent = s && s.pozn ? s.pozn : 'Tento slide nemá poznámky.';
+    p.classList.toggle('prazdne', !(s && s.pozn));
+  }
+
+  Kanal.pri(z => {
+    if (z.co !== 'stav') return;
+    slyseno = Date.now();
+    $('pzOdpojeno').hidden = true;
+    nactiSadu(z.sadaId);
+    stav = z;
+    kresli();
+  });
+
+  // Hodiny běží u učitele, ne u promítacího okna – tak jsou na notebooku
+  // plynulé i ve chvíli, kdy plátno zrovna nic neposílá.
+  setInterval(() => {
+    $('pzCas').textContent = cas2text(Math.floor((Date.now() - (stav.casOd || Date.now())) / 1000));
+    const t = new Date();
+    $('pzHodiny').textContent = t.getHours() + ':' + String(t.getMinutes()).padStart(2, '0');
+    if (slyseno && Date.now() - slyseno > 8000) $('pzOdpojeno').hidden = false;
+  }, 1000);
+
+  $('pzNext').addEventListener('click', () => prikaz('dalsi'));
+  $('pzPrev').addEventListener('click', () => prikaz('zpet'));
+  $('pzCerna').addEventListener('click', () => prikaz('cerna'));
+  $('pzNuluj').addEventListener('click', () => prikaz('nuluj'));
+  document.addEventListener('keydown', e => {
+    if (/^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName)) return;
+    if (e.key === 'ArrowRight' || e.key === ' ' || e.key === 'PageDown') { e.preventDefault(); prikaz('dalsi'); }
+    else if (e.key === 'ArrowLeft' || e.key === 'PageUp') { e.preventDefault(); prikaz('zpet'); }
+    else if (e.key === 'b' || e.key === 'B') prikaz('cerna');
+  });
+
+  kresli();
+  Kanal.posli({ co: 'kdo' });   // promítací okno odpoví svým stavem
+}
+
+/* ============================================================
+   Klávesy
+   ============================================================ */
+document.addEventListener('keydown', e => {
+  const vPoli = /^(INPUT|TEXTAREA|SELECT)$/.test(document.activeElement.tagName);
+  if (!bezi) {
+    if (e.key === 'F5') { e.preventDefault(); spust(0); return; }
+    if (document.querySelector('dialog[open]')) return;
+    // Editor: úpravy pořadí a vracení smazaného jdou i z klávesnice.
+    if (e.altKey && e.key === 'ArrowUp') { e.preventDefault(); posunSlide(-1); }
+    else if (e.altKey && e.key === 'ArrowDown') { e.preventDefault(); posunSlide(1); }
+    else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'd') { e.preventDefault(); duplikujSlide(); }
+    else if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'z' && !vPoli) { e.preventDefault(); vratSmazany(); }
+    else if (!vPoli && (e.key === 'ArrowDown' || e.key === 'ArrowUp')) {
+      const j = vybrany + (e.key === 'ArrowDown' ? 1 : -1);
+      if (j >= 0 && j < sada.slidy.length) { e.preventDefault(); vybrany = j; vykresliVse(); }
+    }
+    return;
+  }
+  const k = e.key;
+  if (k === 'Escape') {
+    if ($('prehled').classList.contains('vidno')) { $('prehled').classList.remove('vidno'); return; }
+    e.preventDefault(); konec(); return;
+  }
+  if (k >= '1' && k <= '9' && sada.slidy[poziceShow]?.typ === 'kviz') {
+    e.preventDefault(); odpovezKviz(Number(k) - 1);
+  }
+  else if (k === 'ArrowRight' || k === 'PageDown' || k === ' ' || k === 'Enter') { e.preventDefault(); dalsi(); }
+  else if (k === 'ArrowLeft' || k === 'PageUp' || k === 'Backspace') { e.preventDefault(); predchozi(); }
+  else if (k === 'Home') ukazSlide(0);
+  else if (k === 'End') ukazSlide(sada.slidy.length - 1);
+  else if (k === 'b' || k === 'B') { show.classList.toggle('cerna'); posliStav(); }
+  else if (k === 'w' || k === 'W') show.classList.toggle('bila');
+  else if (k === 'o' || k === 'O') prepniPrehled();
+  else if (k === 'p' || k === 'P') prepniPero();
+  else if (k === 'z' || k === 'Z') vratTah();
+  else if (k === 'n' || k === 'N') $('pozn').classList.toggle('vidno');
+  else if (k === 'f' || k === 'F') Projektor.celaObrazovka(document.documentElement);
+  else if (k === 'e' || k === 'E') { delete tahy[sada.slidy[poziceShow]?.id]; prekresliTahy(); }
+  else if ((k === 't' || k === 'T') && odpocet) { odpocet.bezi = !odpocet.bezi; }
+  probudOvladani();
+});
+
+// Změna velikosti okna (i přechod do celé obrazovky) mění měřítko slidu.
+window.addEventListener('resize', () => {
+  if (jePrezenter) return;
+  if (bezi) {
+    const k = Projektor.vmestnej($('showSlide'), SIRKA, vyskaSlidu);
+    pripravKresbu(k);
+  } else {
+    vykresliNahled();
+    vykresliSeznam();
+  }
+});
+
+// Zavření okna s běžící prezentací nesmí nechat okno pro učitele viset v nevědomí.
+window.addEventListener('beforeunload', () => {
+  if (!jePrezenter && bezi) Kanal.posli({ co: 'stav', sadaId: sada.id, pozice: poziceShow, bezi: false });
+});
+
+/* ---------- start ---------- */
+pouzijPomer();
+if (jePrezenter) {
+  spustPrezentera();
+} else {
+  vykresliSady();
+  vykresliVse();
+  oznamUlozeni();
+}
+</script>
+</body>
+</html>

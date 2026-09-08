@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📄 Markdown → DOCX / ODT</title>
+<script src="lib/marked.min.js"></script>
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../podpis.js" defer></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:20px}
+.container{max-width:1300px;margin:0 auto}
+h1{font-size:1.6rem;margin-bottom:6px;font-weight:600;text-align:center}
+.podnadpis{text-align:center;color:var(--text-faint);font-size:.85rem;margin-bottom:16px}
+.toolbar{display:flex;gap:10px;justify-content:center;margin-bottom:14px;flex-wrap:wrap;align-items:center}
+.btn{background:var(--accent);color:#fff;border:none;padding:9px 16px;border-radius:6px;cursor:pointer;font-size:.85rem;font-weight:600}
+.btn-sec{background:var(--border);color:var(--text)}
+.btn-sec:hover{background:var(--border-strong)}
+.nazev{background:var(--bg-input);border:1px solid var(--border);color:var(--text);padding:8px 10px;border-radius:6px;font-size:.85rem;width:190px}
+.stav{color:var(--text-faint);font-size:.85rem;min-height:1.2em;text-align:center;margin-bottom:10px}
+.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:860px){.grid{grid-template-columns:1fr}}
+.panel{background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;overflow:hidden;display:flex;flex-direction:column}
+.panel h2{font-size:.85rem;color:var(--accent);padding:10px 14px;background:var(--bg-hover);border-bottom:1px solid var(--border);text-transform:uppercase;letter-spacing:1px}
+textarea{flex:1;min-height:440px;background:var(--bg-input);border:none;color:var(--text);padding:14px;font-family:'SF Mono',Consolas,monospace;font-size:.9rem;resize:none;line-height:1.5}
+textarea:focus{outline:none}
+.preview{flex:1;min-height:440px;padding:16px 20px;overflow-y:auto;background:var(--bg-input)}
+.preview h1,.preview h2,.preview h3{border-bottom:1px solid var(--border);padding-bottom:4px;margin:12px 0 8px}
+.preview p{margin:8px 0}
+.preview code{background:var(--bg-hover);padding:2px 6px;border-radius:4px;font-family:monospace}
+.preview pre{background:var(--bg-hover);padding:12px;border-radius:6px;overflow-x:auto;margin:10px 0}
+.preview pre code{background:none;padding:0}
+.preview blockquote{border-left:4px solid var(--accent);padding-left:12px;color:var(--text-faint);margin:10px 0}
+.preview table{border-collapse:collapse;margin:10px 0}
+.preview td,.preview th{border:1px solid var(--border);padding:6px 10px}
+.preview a{color:var(--accent)}
+.preview ul,.preview ol{margin:8px 0 8px 22px}
+.preview img{max-width:100%}
+body.tahnu{outline:3px dashed var(--accent);outline-offset:-8px}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>📄 Markdown → DOCX / ODT</h1>
+  <p class="podnadpis">Převod textu v Markdownu na dokument pro Word (.docx), LibreOffice (.odt) nebo starší Word (.doc). Vše probíhá v prohlížeči, nic se nikam neodesílá.</p>
+  <div class="toolbar">
+    <button class="btn btn-sec" id="otevriBtn">📂 Načíst .md</button>
+    <input type="file" id="soubor" accept=".md,.markdown,.txt,text/markdown,text/plain" hidden>
+    <input type="text" class="nazev" id="nazevSouboru" value="dokument" title="Název výsledného souboru (bez přípony)">
+    <button class="btn" id="docxBtn">💾 Stáhnout .docx</button>
+    <button class="btn" id="odtBtn">💾 Stáhnout .odt</button>
+    <button class="btn btn-sec" id="docBtn">💾 Stáhnout .doc</button>
+    <button class="btn btn-sec" id="vycistiBtn">🗑️ Vyčistit</button>
+  </div>
+  <p class="stav" id="stav">Soubor .md můžeš také přetáhnout kamkoli na stránku.</p>
+  <div class="grid">
+    <div class="panel">
+      <h2>Markdown vstup</h2>
+      <textarea id="vstup" placeholder="# Nadpis&#10;&#10;Napiš **markdown**…" spellcheck="false"></textarea>
+    </div>
+    <div class="panel">
+      <h2>Náhled dokumentu</h2>
+      <div class="preview" id="nahled"></div>
+    </div>
+  </div>
+</div>
+<script>
+(function () {
+  'use strict';
+  const $ = id => document.getElementById(id);
+
+  /* ---------- ZIP (metoda „uloženo“, bez komprese) ----------
+     DOCX i ODT jsou ZIP archivy. Nekomprimované položky stačí – soubory
+     jsou malé a odpadá závislost na knihovně. */
+  const CRC = (() => {
+    const t = new Uint32Array(256);
+    for (let i = 0; i < 256; i++) {
+      let c = i;
+      for (let k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1);
+      t[i] = c >>> 0;
+    }
+    return t;
+  })();
+  function crc32(u8) {
+    let c = 0xFFFFFFFF;
+    for (let i = 0; i < u8.length; i++) c = CRC[(c ^ u8[i]) & 0xFF] ^ (c >>> 8);
+    return (c ^ 0xFFFFFFFF) >>> 0;
+  }
+  function zip(polozky) {
+    const enc = new TextEncoder();
+    const casti = [], centralni = [];
+    let offset = 0;
+    polozky.forEach(p => {
+      const data = typeof p.data === 'string' ? enc.encode(p.data) : p.data;
+      const jmeno = enc.encode(p.name);
+      const crc = crc32(data);
+      const lok = new Uint8Array(30 + jmeno.length);
+      const dv = new DataView(lok.buffer);
+      dv.setUint32(0, 0x04034b50, true);
+      dv.setUint16(4, 20, true);            // verze potřebná k rozbalení
+      dv.setUint16(8, 0, true);             // metoda 0 = uloženo
+      dv.setUint16(12, 0x21, true);         // datum (1. 1. 1980)
+      dv.setUint32(14, crc, true);
+      dv.setUint32(18, data.length, true);
+      dv.setUint32(22, data.length, true);
+      dv.setUint16(26, jmeno.length, true);
+      lok.set(jmeno, 30);
+      casti.push(lok, data);
+
+      const cen = new Uint8Array(46 + jmeno.length);
+      const cv = new DataView(cen.buffer);
+      cv.setUint32(0, 0x02014b50, true);
+      cv.setUint16(4, 20, true);
+      cv.setUint16(6, 20, true);
+      cv.setUint16(10, 0, true);
+      cv.setUint16(14, 0x21, true);
+      cv.setUint32(16, crc, true);
+      cv.setUint32(20, data.length, true);
+      cv.setUint32(24, data.length, true);
+      cv.setUint16(28, jmeno.length, true);
+      cv.setUint32(42, offset, true);
+      cen.set(jmeno, 46);
+      centralni.push(cen);
+      offset += lok.length + data.length;
+    });
+    const cdVelikost = centralni.reduce((s, c) => s + c.length, 0);
+    const konec = new Uint8Array(22);
+    const kv = new DataView(konec.buffer);
+    kv.setUint32(0, 0x06054b50, true);
+    kv.setUint16(8, polozky.length, true);
+    kv.setUint16(10, polozky.length, true);
+    kv.setUint32(12, cdVelikost, true);
+    kv.setUint32(16, offset, true);
+    return new Blob([...casti, ...centralni, konec], { type: 'application/zip' });
+  }
+
+  /* ---------- Markdown → blokový model ---------- */
+  const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&apos;');
+
+  function useky(uzel, stav) {
+    stav = stav || {};
+    let out = [];
+    uzel.childNodes.forEach(n => {
+      if (n.nodeType === 3) {
+        if (n.textContent) out.push(Object.assign({}, stav, { text: n.textContent }));
+        return;
+      }
+      if (n.nodeType !== 1) return;
+      const tag = n.tagName;
+      if (tag === 'UL' || tag === 'OL') return;      // vnořené seznamy řeší volající
+      if (tag === 'BR') { out.push({ br: 1 }); return; }
+      const s = Object.assign({}, stav);
+      if (tag === 'STRONG' || tag === 'B') s.b = 1;
+      if (tag === 'EM' || tag === 'I') s.i = 1;
+      if (tag === 'CODE') s.code = 1;
+      if (tag === 'DEL' || tag === 'S') s.strike = 1;
+      if (tag === 'A') s.href = n.getAttribute('href') || '';
+      if (tag === 'IMG') {
+        out.push(Object.assign({}, s, { text: '[obrázek: ' + (n.getAttribute('alt') || n.getAttribute('src') || '') + ']', i: 1 }));
+        return;
+      }
+      out = out.concat(useky(n, s));
+    });
+    return out;
+  }
+
+  function bloky(html) {
+    const doc = document.createElement('div');
+    doc.innerHTML = html;
+    const out = [];
+    projdi(doc, 0);
+    return out;
+
+    function projdi(rodic, uroven) {
+      Array.from(rodic.children).forEach(el => {
+        const tag = el.tagName;
+        if (/^H[1-6]$/.test(tag)) out.push({ t: 'h', lvl: +tag[1], runs: useky(el) });
+        else if (tag === 'P') out.push({ t: 'p', runs: useky(el) });
+        else if (tag === 'UL' || tag === 'OL') {
+          const ord = tag === 'OL';
+          Array.from(el.children).forEach(li => {
+            out.push({ t: 'li', ord: ord, lvl: uroven, runs: useky(li) });
+            Array.from(li.children).forEach(vn => {
+              if (vn.tagName === 'UL' || vn.tagName === 'OL') {
+                const obal = document.createElement('div');
+                obal.appendChild(vn.cloneNode(true));
+                projdi(obal, uroven + 1);
+              }
+            });
+          });
+        }
+        else if (tag === 'BLOCKQUOTE') {
+          const vnitrek = el.children.length ? el.children : [el];
+          Array.from(vnitrek).forEach(p => out.push({ t: 'q', runs: useky(p) }));
+        }
+        else if (tag === 'PRE') out.push({ t: 'code', radky: el.textContent.replace(/\n$/, '').split('\n') });
+        else if (tag === 'HR') out.push({ t: 'hr' });
+        else if (tag === 'TABLE') {
+          const radky = [];
+          el.querySelectorAll('tr').forEach(tr => {
+            radky.push(Array.from(tr.children).map(td => ({
+              hlavicka: td.tagName === 'TH', runs: useky(td)
+            })));
+          });
+          if (radky.length) out.push({ t: 'table', radky: radky });
+        }
+        else if (tag === 'DIV' || tag === 'SECTION') projdi(el, uroven);
+        else if (el.textContent.trim()) out.push({ t: 'p', runs: useky(el) });
+      });
+    }
+  }
+
+  /* ---------- DOCX ---------- */
+  function docx(bl) {
+    const odkazy = [];                                    // href → rId
+    const idOdkazu = href => {
+      let i = odkazy.indexOf(href);
+      if (i < 0) { odkazy.push(href); i = odkazy.length - 1; }
+      return 'rIdL' + i;
+    };
+    const rPr = u => {
+      let p = '';
+      if (u.b) p += '<w:b/>';
+      if (u.i) p += '<w:i/>';
+      if (u.strike) p += '<w:strike/>';
+      if (u.code) p += '<w:rFonts w:ascii="Consolas" w:hAnsi="Consolas"/><w:sz w:val="19"/>';
+      if (u.href) p += '<w:rStyle w:val="Hyperlink"/>';
+      return p ? '<w:rPr>' + p + '</w:rPr>' : '';
+    };
+    const bezi = (runs) => runs.map(u => {
+      if (u.br) return '<w:r><w:br/></w:r>';
+      if (!u.text) return '';
+      const r = '<w:r>' + rPr(u) + '<w:t xml:space="preserve">' + esc(u.text) + '</w:t></w:r>';
+      return u.href ? '<w:hyperlink r:id="' + idOdkazu(u.href) + '">' + r + '</w:hyperlink>' : r;
+    }).join('');
+    const odst = (styl, runs, extra) => '<w:p><w:pPr>' + (styl ? '<w:pStyle w:val="' + styl + '"/>' : '') +
+      (extra || '') + '</w:pPr>' + bezi(runs) + '</w:p>';
+
+    let telo = '';
+    bl.forEach(b => {
+      if (b.t === 'h') telo += odst('Nadpis' + Math.min(b.lvl, 6), b.runs);
+      else if (b.t === 'p') telo += odst('', b.runs);
+      else if (b.t === 'q') telo += odst('Citace', b.runs);
+      else if (b.t === 'hr') telo += '<w:p><w:pPr><w:pBdr><w:bottom w:val="single" w:sz="6" w:space="1" w:color="999999"/></w:pBdr></w:pPr></w:p>';
+      else if (b.t === 'li') telo += odst('Seznam', b.runs,
+        '<w:numPr><w:ilvl w:val="' + Math.min(b.lvl, 2) + '"/><w:numId w:val="' + (b.ord ? 2 : 1) + '"/></w:numPr>');
+      else if (b.t === 'code') {
+        const runs = [];
+        b.radky.forEach((r, i) => { if (i) runs.push({ br: 1 }); runs.push({ text: r, code: 1 }); });
+        telo += odst('Kod', runs);
+      }
+      else if (b.t === 'table') {
+        const sirka = Math.max.apply(null, b.radky.map(r => r.length));
+        let t = '<w:tbl><w:tblPr><w:tblW w:w="5000" w:type="pct"/>' +
+          '<w:tblBorders>' + ['top', 'left', 'bottom', 'right', 'insideH', 'insideV']
+            .map(s => '<w:' + s + ' w:val="single" w:sz="4" w:color="999999"/>').join('') +
+          '</w:tblBorders></w:tblPr><w:tblGrid>' +
+          new Array(sirka).fill('<w:gridCol w:w="' + Math.floor(9360 / sirka) + '"/>').join('') + '</w:tblGrid>';
+        b.radky.forEach(r => {
+          t += '<w:tr>';
+          for (let i = 0; i < sirka; i++) {
+            const c = r[i] || { runs: [] };
+            const runs = c.hlavicka ? c.runs.map(u => Object.assign({}, u, { b: 1 })) : c.runs;
+            t += '<w:tc><w:tcPr><w:tcW w:w="0" w:type="auto"/>' +
+              (c.hlavicka ? '<w:shd w:val="clear" w:fill="EEEEEE"/>' : '') +
+              '</w:tcPr>' + odst('', runs) + '</w:tc>';
+          }
+          t += '</w:tr>';
+        });
+        telo += t + '</w:tbl><w:p/>';
+      }
+    });
+
+    const dokument = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+      '<w:document xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"' +
+      ' xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships"><w:body>' +
+      telo + '<w:sectPr><w:pgSz w:w="11906" w:h="16838"/>' +
+      '<w:pgMar w:top="1134" w:right="1134" w:bottom="1134" w:left="1134"/></w:sectPr></w:body></w:document>';
+
+    const nadpisStyl = (n, sz, barva) =>
+      '<w:style w:type="paragraph" w:styleId="Nadpis' + n + '"><w:name w:val="heading ' + n + '"/>' +
+      '<w:basedOn w:val="Normal"/><w:pPr><w:keepNext/>' +
+      '<w:spacing w:before="240" w:after="120"/><w:outlineLvl w:val="' + (n - 1) + '"/></w:pPr>' +
+      '<w:rPr><w:b/><w:sz w:val="' + sz + '"/><w:color w:val="' + barva + '"/></w:rPr></w:style>';
+
+    const styly = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+      '<w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">' +
+      '<w:docDefaults><w:rPrDefault><w:rPr><w:rFonts w:ascii="Calibri" w:hAnsi="Calibri"/>' +
+      '<w:sz w:val="22"/><w:lang w:val="cs-CZ"/></w:rPr></w:rPrDefault>' +
+      '<w:pPrDefault><w:pPr><w:spacing w:after="120" w:line="276" w:lineRule="auto"/></w:pPr></w:pPrDefault></w:docDefaults>' +
+      '<w:style w:type="paragraph" w:default="1" w:styleId="Normal"><w:name w:val="Normal"/></w:style>' +
+      nadpisStyl(1, 40, '1F3864') + nadpisStyl(2, 32, '2E5496') + nadpisStyl(3, 26, '2E5496') +
+      nadpisStyl(4, 24, '404040') + nadpisStyl(5, 22, '404040') + nadpisStyl(6, 22, '595959') +
+      '<w:style w:type="paragraph" w:styleId="Citace"><w:name w:val="Quote"/><w:basedOn w:val="Normal"/>' +
+      '<w:pPr><w:pBdr><w:left w:val="single" w:sz="18" w:space="8" w:color="7F7F7F"/></w:pBdr><w:ind w:left="454"/></w:pPr>' +
+      '<w:rPr><w:i/><w:color w:val="595959"/></w:rPr></w:style>' +
+      '<w:style w:type="paragraph" w:styleId="Kod"><w:name w:val="Code"/><w:basedOn w:val="Normal"/>' +
+      '<w:pPr><w:shd w:val="clear" w:fill="F2F2F2"/><w:spacing w:before="120" w:after="120"/><w:ind w:left="170" w:right="170"/></w:pPr>' +
+      '<w:rPr><w:rFonts w:ascii="Consolas" w:hAnsi="Consolas"/><w:sz w:val="19"/></w:rPr></w:style>' +
+      '<w:style w:type="paragraph" w:styleId="Seznam"><w:name w:val="List Paragraph"/><w:basedOn w:val="Normal"/>' +
+      '<w:pPr><w:spacing w:after="40"/><w:contextualSpacing/></w:pPr></w:style>' +
+      '<w:style w:type="character" w:styleId="Hyperlink"><w:name w:val="Hyperlink"/>' +
+      '<w:rPr><w:color w:val="0563C1"/><w:u w:val="single"/></w:rPr></w:style>' +
+      '</w:styles>';
+
+    const uroven = (i, format, text, odsazeni) =>
+      '<w:lvl w:ilvl="' + i + '"><w:start w:val="1"/><w:numFmt w:val="' + format + '"/>' +
+      '<w:lvlText w:val="' + text + '"/><w:lvlJc w:val="left"/><w:pPr><w:ind w:left="' + odsazeni +
+      '" w:hanging="360"/></w:pPr>' + (format === 'bullet'
+        ? '<w:rPr><w:rFonts w:ascii="' + (text === 'o' ? 'Courier New' : 'Symbol') +
+          '" w:hAnsi="' + (text === 'o' ? 'Courier New' : 'Symbol') + '"/></w:rPr>' : '') + '</w:lvl>';
+    const cislovani = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+      '<w:numbering xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main">' +
+      '<w:abstractNum w:abstractNumId="0">' +
+      uroven(0, 'bullet', '', 720) + uroven(1, 'bullet', 'o', 1440) + uroven(2, 'bullet', '', 2160) +
+      '</w:abstractNum><w:abstractNum w:abstractNumId="1">' +
+      uroven(0, 'decimal', '%1.', 720) + uroven(1, 'lowerLetter', '%2.', 1440) + uroven(2, 'lowerRoman', '%3.', 2160) +
+      '</w:abstractNum>' +
+      '<w:num w:numId="1"><w:abstractNumId w:val="0"/></w:num>' +
+      '<w:num w:numId="2"><w:abstractNumId w:val="1"/></w:num></w:numbering>';
+
+    const vztahy = '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+      '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +
+      '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>' +
+      '<Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/numbering" Target="numbering.xml"/>' +
+      odkazy.map((h, i) => '<Relationship Id="rIdL' + i + '"' +
+        ' Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/hyperlink"' +
+        ' Target="' + esc(h) + '" TargetMode="External"/>').join('') +
+      '</Relationships>';
+
+    return zip([
+      { name: '[Content_Types].xml', data: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+        '<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">' +
+        '<Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>' +
+        '<Default Extension="xml" ContentType="application/xml"/>' +
+        '<Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>' +
+        '<Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/>' +
+        '<Override PartName="/word/numbering.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.numbering+xml"/>' +
+        '</Types>' },
+      { name: '_rels/.rels', data: '<?xml version="1.0" encoding="UTF-8" standalone="yes"?>' +
+        '<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">' +
+        '<Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>' +
+        '</Relationships>' },
+      { name: 'word/document.xml', data: dokument },
+      { name: 'word/styles.xml', data: styly },
+      { name: 'word/numbering.xml', data: cislovani },
+      { name: 'word/_rels/document.xml.rels', data: vztahy },
+    ]);
+  }
+
+  /* ---------- ODT ---------- */
+  /* Příznaky zvýraznění: název části stylu + vlastnosti. Pořadí je závazné –
+     `usek` z nich skládá název stylu a `kombinace` z nich generuje definice. */
+  const KOD_TEXT = 'style:font-name="Consolas" fo:font-size="9.5pt"';
+  const PRIZNAKY = [
+    ['b', 'fo:font-weight="bold"'],
+    ['i', 'fo:font-style="italic"'],
+    ['code', KOD_TEXT + ' fo:background-color="#f2f2f2"'],
+    ['s', 'style:text-line-through-style="solid"'],
+    ['a', 'fo:color="#0563c1" style:text-underline-style="solid"'],
+  ];
+
+  function odt(bl) {
+    const usek = u => {
+      if (u.br) return '<text:line-break/>';
+      if (!u.text) return '';
+      let t = esc(u.text).replace(/ {2,}/g, m => '<text:s text:c="' + (m.length - 1) + '"/> ');
+      const zapnuto = { b: u.b, i: u.i, code: u.code, s: u.strike, a: u.href };
+      const styl = PRIZNAKY.filter(f => zapnuto[f[0]]).map(f => f[0]).join('');
+      if (styl) t = '<text:span text:style-name="T_' + styl + '">' + t + '</text:span>';
+      if (u.href) t = '<text:a xlink:type="simple" xlink:href="' + esc(u.href) + '">' + t + '</text:a>';
+      return t;
+    };
+    const bezi = runs => runs.map(usek).join('');
+    const p = (styl, runs) => '<text:p text:style-name="' + styl + '">' + bezi(runs) + '</text:p>';
+
+    let telo = '';
+    const zasobnik = [];
+    const zavriSeznamy = () => { while (zasobnik.length) { telo += '</text:list-item></text:list>'; zasobnik.pop(); } };
+
+    bl.forEach(b => {
+      if (b.t !== 'li') zavriSeznamy();
+      if (b.t === 'h') telo += '<text:h text:style-name="H' + Math.min(b.lvl, 6) + '" text:outline-level="' +
+        Math.min(b.lvl, 6) + '">' + bezi(b.runs) + '</text:h>';
+      else if (b.t === 'p') telo += p('Text', b.runs);
+      else if (b.t === 'q') telo += p('Citace', b.runs);
+      else if (b.t === 'hr') telo += '<text:p text:style-name="Linka"/>';
+      else if (b.t === 'code') telo += b.radky.map((r, i) =>
+        p(b.radky.length === 1 ? 'KodJeden' : i === 0 ? 'KodPrvni' : i === b.radky.length - 1 ? 'KodPosledni' : 'Kod',
+          [{ text: r, code: 1 }])).join('');
+      else if (b.t === 'li') {
+        const chci = Math.min(b.lvl, 4) + 1;
+        while (zasobnik.length > chci) { telo += '</text:list-item></text:list>'; zasobnik.pop(); }
+        if (zasobnik.length === chci) telo += '</text:list-item><text:list-item>';
+        while (zasobnik.length < chci) {
+          telo += '<text:list text:style-name="' + (b.ord ? 'L_num' : 'L_odr') + '"><text:list-item>';
+          zasobnik.push(1);
+        }
+        telo += p('Polozka', b.runs);
+      }
+      else if (b.t === 'table') {
+        const sirka = Math.max.apply(null, b.radky.map(r => r.length));
+        telo += '<table:table table:name="Tabulka" table:style-name="Tab">' +
+          '<table:table-column table:style-name="TabSl" table:number-columns-repeated="' + sirka + '"/>';
+        b.radky.forEach(r => {
+          telo += '<table:table-row>';
+          for (let i = 0; i < sirka; i++) {
+            const c = r[i] || { runs: [] };
+            const runs = c.hlavicka ? c.runs.map(u => Object.assign({}, u, { b: 1 })) : c.runs;
+            telo += '<table:table-cell table:style-name="' + (c.hlavicka ? 'TabBunkaH' : 'TabBunka') +
+              '" office:value-type="string">' + p('Bunka', runs) + '</table:table-cell>';
+          }
+          telo += '</table:table-row>';
+        });
+        telo += '</table:table>';
+      }
+    });
+    zavriSeznamy();
+
+    const NS = 'xmlns:office="urn:oasis:names:tc:opendocument:xmlns:office:1.0"' +
+      ' xmlns:style="urn:oasis:names:tc:opendocument:xmlns:style:1.0"' +
+      ' xmlns:text="urn:oasis:names:tc:opendocument:xmlns:text:1.0"' +
+      ' xmlns:table="urn:oasis:names:tc:opendocument:xmlns:table:1.0"' +
+      ' xmlns:fo="urn:oasis:names:tc:opendocument:xmlns:xsl-fo-compatible:1.0"' +
+      ' xmlns:xlink="http://www.w3.org/1999/xlink"' +
+      ' office:version="1.2"';
+
+    const odstStyl = (jmeno, vlastnosti, textVlastnosti) =>
+      '<style:style style:name="' + jmeno + '" style:family="paragraph" style:parent-style-name="Standard">' +
+      '<style:paragraph-properties ' + vlastnosti + '/>' +
+      (textVlastnosti ? '<style:text-properties ' + textVlastnosti + '/>' : '') + '</style:style>';
+    const znakStyl = (jmeno, vlastnosti) =>
+      '<style:style style:name="' + jmeno + '" style:family="text"><style:text-properties ' + vlastnosti + '/></style:style>';
+    const nadpis = (n, vel, barva) => odstStyl('H' + n,
+      'fo:margin-top="0.35cm" fo:margin-bottom="0.2cm" fo:keep-with-next="always"',
+      'fo:font-size="' + vel + 'pt" fo:font-weight="bold" fo:color="' + barva + '"');
+    const seznamStyl = (jmeno, ord) => '<text:list-style style:name="' + jmeno + '">' +
+      [0, 1, 2, 3, 4].map(i => ord
+        ? '<text:list-level-style-number text:level="' + (i + 1) + '" style:num-suffix="." style:num-format="' +
+          ['1', 'a', 'i', '1', 'a'][i] + '"><style:list-level-properties text:space-before="' +
+          (0.6 + i * 0.6) + 'cm" text:min-label-width="0.6cm"/></text:list-level-style-number>'
+        : '<text:list-level-style-bullet text:level="' + (i + 1) + '" text:bullet-char="' +
+          ['•', '◦', '▪', '•', '◦'][i] + '"><style:list-level-properties text:space-before="' +
+          (0.6 + i * 0.6) + 'cm" text:min-label-width="0.6cm"/></text:list-level-style-bullet>').join('') +
+      '</text:list-style>';
+    const KOD_RAM = 'fo:background-color="#f2f2f2" fo:padding-left="0.2cm" fo:padding-right="0.2cm" fo:margin-left="0.3cm"';
+
+    const styly =
+      odstStyl('Text', 'fo:margin-bottom="0.2cm"') +
+      nadpis(1, 20, '#1f3864') + nadpis(2, 16, '#2e5496') + nadpis(3, 13, '#2e5496') +
+      nadpis(4, 12, '#404040') + nadpis(5, 11, '#404040') + nadpis(6, 11, '#595959') +
+      odstStyl('Polozka', 'fo:margin-bottom="0.08cm"') +
+      odstStyl('Citace', 'fo:margin-left="0.8cm" fo:margin-bottom="0.2cm" fo:border-left="0.08cm solid #7f7f7f" fo:padding-left="0.3cm"',
+        'fo:font-style="italic" fo:color="#595959"') +
+      odstStyl('Kod', KOD_RAM, KOD_TEXT) +
+      odstStyl('KodPrvni', KOD_RAM + ' fo:padding-top="0.15cm" fo:margin-top="0.2cm"', KOD_TEXT) +
+      odstStyl('KodPosledni', KOD_RAM + ' fo:padding-bottom="0.15cm" fo:margin-bottom="0.2cm"', KOD_TEXT) +
+      odstStyl('KodJeden', KOD_RAM + ' fo:padding-top="0.15cm" fo:padding-bottom="0.15cm" fo:margin-top="0.2cm" fo:margin-bottom="0.2cm"', KOD_TEXT) +
+      odstStyl('Linka', 'fo:border-bottom="0.03cm solid #999999" fo:margin-top="0.3cm" fo:margin-bottom="0.3cm"') +
+      odstStyl('Bunka', 'fo:margin-bottom="0cm"') +
+      '<style:style style:name="Tab" style:family="table"><style:table-properties style:rel-width="100%" table:align="margins"/></style:style>' +
+      '<style:style style:name="TabSl" style:family="table-column"><style:table-column-properties style:use-optimal-column-width="true"/></style:style>' +
+      '<style:style style:name="TabBunka" style:family="table-cell"><style:table-cell-properties fo:border="0.02cm solid #999999" fo:padding="0.1cm"/></style:style>' +
+      '<style:style style:name="TabBunkaH" style:family="table-cell"><style:table-cell-properties fo:border="0.02cm solid #999999" fo:padding="0.1cm" fo:background-color="#eeeeee"/></style:style>' +
+      seznamStyl('L_odr', false) + seznamStyl('L_num', true);
+
+    /* Znakové styly pro všechny kombinace zvýraznění (pořadí příznaků musí
+       odpovídat pořadí v `usek`, jinak by název stylu neseděl). */
+    const kombinace = (() => {
+      let out = '';
+      for (let m = 1; m < (1 << PRIZNAKY.length); m++) {
+        const vybrane = PRIZNAKY.filter((_, i) => m & (1 << i));
+        out += znakStyl('T_' + vybrane.map(f => f[0]).join(''),
+          vybrane.map(f => f[1]).join(' '));
+      }
+      return out;
+    })();
+
+    const obsah = '<?xml version="1.0" encoding="UTF-8"?>' +
+      '<office:document-content ' + NS + '><office:automatic-styles>' + styly + kombinace +
+      '</office:automatic-styles><office:body><office:text>' + telo + '</office:text></office:body></office:document-content>';
+
+    const styleXml = '<?xml version="1.0" encoding="UTF-8"?>' +
+      '<office:document-styles ' + NS + '><office:styles>' +
+      '<style:style style:name="Standard" style:family="paragraph">' +
+      '<style:text-properties style:font-name="Calibri" fo:font-size="11pt" fo:language="cs" fo:country="CZ"/>' +
+      '</style:style></office:styles>' +
+      '<office:automatic-styles><style:page-layout style:name="PL"><style:page-layout-properties ' +
+      'fo:page-width="21cm" fo:page-height="29.7cm" style:print-orientation="portrait" ' +
+      'fo:margin-top="2cm" fo:margin-bottom="2cm" fo:margin-left="2cm" fo:margin-right="2cm"/></style:page-layout></office:automatic-styles>' +
+      '<office:master-styles><style:master-page style:name="Standard" style:page-layout-name="PL"/></office:master-styles>' +
+      '</office:document-styles>';
+
+    const manifest = '<?xml version="1.0" encoding="UTF-8"?>' +
+      '<manifest:manifest xmlns:manifest="urn:oasis:names:tc:opendocument:xmlns:manifest:1.0" manifest:version="1.2">' +
+      '<manifest:file-entry manifest:full-path="/" manifest:media-type="application/vnd.oasis.opendocument.text"/>' +
+      '<manifest:file-entry manifest:full-path="content.xml" manifest:media-type="text/xml"/>' +
+      '<manifest:file-entry manifest:full-path="styles.xml" manifest:media-type="text/xml"/>' +
+      '<manifest:file-entry manifest:full-path="meta.xml" manifest:media-type="text/xml"/>' +
+      '</manifest:manifest>';
+
+    const meta = '<?xml version="1.0" encoding="UTF-8"?>' +
+      '<office:document-meta ' + NS + ' xmlns:meta="urn:oasis:names:tc:opendocument:xmlns:meta:1.0">' +
+      '<office:meta><meta:generator>Markdown - DOCX/ODT</meta:generator>' +
+      '<meta:creation-date>' + new Date().toISOString().slice(0, 19) + '</meta:creation-date></office:meta></office:document-meta>';
+
+    /* mimetype musí být první položkou archivu (a nekomprimovaná). */
+    return zip([
+      { name: 'mimetype', data: 'application/vnd.oasis.opendocument.text' },
+      { name: 'META-INF/manifest.xml', data: manifest },
+      { name: 'content.xml', data: obsah },
+      { name: 'styles.xml', data: styleXml },
+      { name: 'meta.xml', data: meta },
+    ]);
+  }
+
+  /* ---------- .doc (Word otevře HTML se svým MIME typem) ---------- */
+  function doc(html) {
+    const s = '<!DOCTYPE html><html xmlns:o="urn:schemas-microsoft-com:office:office"' +
+      ' xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">' +
+      '<head><meta charset="utf-8"><title>Dokument</title>' +
+      '<style>@page{size:21cm 29.7cm;margin:2cm}' +
+      'body{font-family:Calibri,sans-serif;font-size:11pt;line-height:1.4}' +
+      'h1{font-size:20pt;color:#1f3864}h2{font-size:16pt;color:#2e5496}h3{font-size:13pt;color:#2e5496}' +
+      'code,pre{font-family:Consolas,monospace;font-size:9.5pt;background:#f2f2f2}' +
+      'pre{padding:8pt;border:1px solid #ddd}' +
+      'blockquote{border-left:3pt solid #7f7f7f;margin-left:0.8cm;padding-left:0.3cm;color:#595959;font-style:italic}' +
+      'table{border-collapse:collapse}td,th{border:1px solid #999;padding:4pt}th{background:#eee}' +
+      'a{color:#0563c1}</style></head><body>' + html + '</body></html>';
+    return new Blob(['﻿' + s], { type: 'application/msword' });
+  }
+
+  /* ---------- UI ---------- */
+  const UKAZKA = '# Ukázkový dokument\n\n' +
+    'Tato stránka převede **Markdown** na *dokument* pro Word nebo LibreOffice — ' +
+    'včetně nadpisů, seznamů, tabulek a [odkazů](https://lavionus.github.io/site/).\n\n' +
+    '## Co umí přenést\n\n' +
+    '- nadpisy úrovní 1–6\n' +
+    '- seznamy\n  - i vnořené\n- **tučné**, *kurzívu*, `kód` a ~~přeškrtnutí~~\n\n' +
+    '1. číslované seznamy\n2. tabulky\n3. blokové citace\n\n' +
+    '> Vše se počítá přímo v prohlížeči, žádný soubor se nikam neodesílá.\n\n' +
+    '## Tabulka\n\n' +
+    '| Formát | Přípona | Otevře |\n|---|---|---|\n' +
+    '| Word | .docx | Word, LibreOffice, Google Docs |\n' +
+    '| OpenDocument | .odt | LibreOffice, Word |\n' +
+    '| Word (starší) | .doc | Word |\n\n' +
+    '## Ukázka kódu\n\n' +
+    '```js\nconsole.log("ahoj světe");\n```\n\n' +
+    '---\n\nHotovo — stačí kliknout na tlačítko se stažením.\n';
+
+  let html = '';
+  function prevod() {
+    html = marked.parse($('vstup').value || '');
+    $('nahled').innerHTML = html;
+  }
+  function stav(t) { $('stav').textContent = t; }
+  function stahni(blob, pripona) {
+    const zaklad = ($('nazevSouboru').value || 'dokument').replace(/[\\/:*?"<>|]/g, '_').replace(/\.[^.]*$/, '');
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = zaklad + '.' + pripona;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+    stav('Uloženo jako ' + a.download + ' (' + Math.max(1, Math.round(blob.size / 1024)) + ' kB).');
+  }
+  function exportuj(typ) {
+    if (!$('vstup').value.trim()) { stav('Nejdřív vlož nebo načti nějaký Markdown.'); return; }
+    prevod();
+    try {
+      if (typ === 'docx') stahni(docx(bloky(html)), 'docx');
+      else if (typ === 'odt') stahni(odt(bloky(html)), 'odt');
+      else stahni(doc(html), 'doc');
+    } catch (e) {
+      stav('Převod selhal: ' + e.message);
+      console.error(e);
+    }
+  }
+
+  function nactiSoubor(f) {
+    if (!f) return;
+    const r = new FileReader();
+    r.onload = () => {
+      $('vstup').value = r.result;
+      $('nazevSouboru').value = f.name.replace(/\.[^.]*$/, '') || 'dokument';
+      prevod();
+      stav('Načteno: ' + f.name);
+    };
+    r.readAsText(f, 'UTF-8');
+  }
+
+  $('vstup').addEventListener('input', prevod);
+  $('otevriBtn').onclick = () => $('soubor').click();
+  $('soubor').onchange = e => { nactiSoubor(e.target.files[0]); e.target.value = ''; };
+  $('docxBtn').onclick = () => exportuj('docx');
+  $('odtBtn').onclick = () => exportuj('odt');
+  $('docBtn').onclick = () => exportuj('doc');
+  $('vycistiBtn').onclick = () => { $('vstup').value = ''; prevod(); stav('Vyčištěno.'); };
+
+  ['dragenter', 'dragover'].forEach(ev => document.addEventListener(ev, e => {
+    e.preventDefault(); document.body.classList.add('tahnu');
+  }));
+  ['dragleave', 'drop'].forEach(ev => document.addEventListener(ev, e => {
+    e.preventDefault();
+    if (ev === 'drop' || !e.relatedTarget) document.body.classList.remove('tahnu');
+  }));
+  document.addEventListener('drop', e => nactiSoubor(e.dataTransfer.files[0]));
+
+  $('vstup').value = UKAZKA;
+  prevod();
+
+  /* Zpřístupněno pro automatické testy (_test/md_dokument.py). */
+  window.MD_DOKUMENT = { bloky: bloky, docx: docx, odt: odt, doc: doc, marked: marked };
+})();
+</script>
+</body>
+</html>

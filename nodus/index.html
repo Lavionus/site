@@ -572,6 +572,93 @@
 
       .pracovni-plocha { width: 100%; }
     }
+
+    .ovladani button.aktivni {
+      background-color: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+
+    /* ---- Režim projektor (viz projektor.js) ----
+       Zapnutý režim schová menu i hlavičku a nechá na obrazovce jen
+       plovoucí lištu; obsah se zvětšuje škálováním rámu. Lišta má
+       velké terče, protože se na ni klepe prstem na tabuli. */
+    body.projektor .menu,
+    body.projektor .hlavicka,
+    body.projektor .menu-overlay { display: none; }
+
+    body.projektor .pracovni-plocha { background-color: #000; }
+
+    .projektor-lista {
+      display: none;
+      position: fixed;
+      right: 14px;
+      bottom: calc(14px + var(--podpis-vyska, 0px));
+      z-index: 1200;
+      gap: 6px;
+      align-items: center;
+      background-color: var(--bg-elevated);
+      border: 1px solid var(--border-strong);
+      border-radius: 999px;
+      padding: 6px 8px;
+      box-shadow: var(--shadow);
+      opacity: 0.35;
+      transition: opacity 0.2s ease;
+    }
+
+    /* Lišta nesmí přebíjet obraz – rozsvítí se, až když o ni učitel stojí. */
+    .projektor-lista:hover,
+    .projektor-lista:focus-within { opacity: 1; }
+
+    body.projektor .projektor-lista { display: flex; }
+
+    .projektor-lista button {
+      background-color: var(--bg-control);
+      border: 1px solid var(--border-strong);
+      color: var(--text);
+      border-radius: 999px;
+      min-width: 42px;
+      height: 42px;
+      padding: 0 12px;
+      font-size: 1.05rem;
+      line-height: 1;
+      cursor: pointer;
+    }
+
+    .projektor-lista button:hover {
+      background-color: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+
+
+    /* Menu vyvolané z lišty leží nad obrazem, aby se dala vybrat další
+       aplikace bez opuštění režimu. */
+    body.projektor.menu-nad .menu {
+      display: block;
+      position: fixed;
+      top: 0;
+      left: 0;
+      height: 100vh;
+      width: min(85%, 340px);
+      z-index: 1300;
+      box-shadow: 2px 0 14px rgba(0, 0, 0, 0.55);
+    }
+
+    body.projektor.menu-nad .menu-overlay {
+      display: block;
+      opacity: 1;
+      pointer-events: auto;
+      z-index: 1250;
+    }
+
+    .projektor-lista .uroven {
+      font-size: 0.9rem;
+      color: var(--text-muted);
+      min-width: 52px;
+      text-align: center;
+      font-variant-numeric: tabular-nums;
+    }
   </style>
 </head>
 <body>
@@ -585,7 +672,10 @@
         <a class="odkaz-zpet" href="../index.html" title="Přejít na hlavní web s ostatními aplikacemi">↩ <span class="jen-desktop-inline">Ostatní aplikace</span></a>
         <button id="btnDomu" title="Úvodní přehled">🏠</button>
         <button id="btnOsnova" title="Osnova – pokrytí učiva podle ročníků">🗺️</button>
+        <button id="btnUcitel" title="Kabinet učitele – pracovní listy, slidy, nástroje do hodiny">🧑‍🏫</button>
+        <button id="btnPredstaveni" title="Živé ukázky – co Nodus umí">◈</button>
         <button id="btnTema" title="Přepnout světlý / tmavý režim">🌙</button>
+        <button id="btnProjektor" title="Režim projektor – zvětšit obraz a schovat menu (F8)">📽️</button>
         <button id="btnNoveOkno" title="Otevřít aktuální aplikaci v novém okně">🗗</button>
         <button id="rozbalitVse" class="jen-desktop" title="Rozbalit vše">⊞ Rozbalit</button>
         <button id="sbalitVse" class="jen-desktop" title="Sbalit vše">⊟ Sbalit</button>
@@ -622,12 +712,22 @@
       </nav>
 
       <main class="pracovni-plocha">
-        <iframe name="okno" src="obsah/prehled.html" title="Aktivní aplikace"></iframe>
+        <iframe name="okno" src="obsah/prehled.html" title="Aktivní aplikace" allowfullscreen></iframe>
       </main>
+    </div>
+
+    <div class="projektor-lista" id="projektorLista" role="group" aria-label="Režim projektor">
+      <button id="projMensi" title="Zmenšit obraz">−</button>
+      <span class="uroven" id="projUroven">150 %</span>
+      <button id="projVetsi" title="Zvětšit obraz">+</button>
+      <button id="projMenu" title="Vybrat jinou aplikaci">☰</button>
+      <button id="projFull" title="Celá obrazovka">⛶</button>
+      <button id="projKonec" title="Ukončit režim projektor (Esc)">✕</button>
     </div>
   </div>
 
   <script src="apps.js"></script>
+  <script src="projektor.js"></script>
   <script>
     /* ============================================================
        Nodus: menu se generuje z katalogu v apps.js.
@@ -656,7 +756,8 @@
     const DOMOVSKA = 'obsah/prehled.html';
     // stránky, které nejsou aplikacemi v katalogu, ale smí se otevřít v ploše
     // (na vyslovnost.html pořád přesměrovává staré odkazy hlavní web)
-    const STRANKY_MIMO_KATALOG = [DOMOVSKA, 'obsah/osnova.html', 'obsah/vyslovnost.html'];
+    const STRANKY_MIMO_KATALOG = [DOMOVSKA, 'obsah/osnova.html', 'obsah/predstaveni.html',
+      'obsah/vyslovnost.html'];
     const KEY_PAGE = 'nodus_current_page';
     const KEY_COLLAPSE = 'nodus_collapsed_sections';
     const KEY_SKUPINA = 'nodus_skupina';
@@ -907,6 +1008,12 @@
     document.getElementById('btnOsnova').addEventListener('click', () => {
       location.hash = 'obsah/osnova.html';
     });
+    document.getElementById('btnUcitel').addEventListener('click', () => {
+      location.hash = 'obsah/ucitel.html';
+    });
+    document.getElementById('btnPredstaveni').addEventListener('click', () => {
+      location.hash = 'obsah/predstaveni.html';
+    });
     document.getElementById('btnNoveOkno').addEventListener('click', () => {
       window.open(aktualni || DOMOVSKA, '_blank');
     });
@@ -1146,7 +1253,12 @@
         hledatMenu.select();
         return;
       }
+      if (e.key === 'F8') { e.preventDefault(); nastavProjektor(!projektorZap); return; }
       if (e.key === 'Escape') {
+        if (document.body.classList.contains('menu-nad')) {
+          document.body.classList.remove('menu-nad'); return;
+        }
+        if (projektorZap) { nastavProjektor(false); return; }
         if (skupinyEl.classList.contains('show')) { setSkupinyOpen(false); skupinyToggle.focus(); return; }
         if (aktualniDotaz()) { nastavDotaz(''); aplikujFiltr(); }
         closeMenu();
@@ -1182,6 +1294,65 @@
     window.addEventListener('resize', () => {
       if (!window.matchMedia('(max-width: 1024px)').matches) closeMenu();
     });
+
+
+    /* ---- Režim projektor ----
+       Zvětšuje se rám s aplikací (projektor.js), stránky uvnitř se nemění.
+       Úroveň si režim pamatuje, takže se druhé zapnutí trefí do stejného
+       zvětšení jako minulá hodina. */
+    const KEY_PROJEKTOR = 'nodus_projektor';
+    const projLista = document.getElementById('projektorLista');
+    const projUroven = document.getElementById('projUroven');
+    const btnProjektor = document.getElementById('btnProjektor');
+    let projektorZap = false;
+    let projektorK = Number(precti(localStorage, KEY_PROJEKTOR)) || 1.5;
+
+    function zobrazUroven() {
+      projUroven.textContent = Math.round(projektorK * 100) + ' %';
+      btnProjektor.classList.toggle('aktivni', projektorZap);
+      btnProjektor.setAttribute('aria-pressed', String(projektorZap));
+    }
+
+    function pouzijProjektor() {
+      if (projektorZap) Projektor.uprav(iframe, projektorK);
+      else Projektor.zrus(iframe);
+      zobrazUroven();
+    }
+
+    function nastavProjektor(zap) {
+      projektorZap = zap;
+      document.body.classList.toggle('projektor', zap);
+      if (!zap) document.body.classList.remove('menu-nad');
+      // Rám se přepočítává až po překreslení – hlavička a menu mizí ve stejném
+      // snímku a plocha by se jinak změřila ještě ve staré velikosti.
+      requestAnimationFrame(pouzijProjektor);
+      if (zap) Projektor.celaObrazovka(document.documentElement);
+      else if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
+    }
+
+    function zmenUroven(smer) {
+      projektorK = Projektor.posun(projektorK, smer);
+      uloz(localStorage, KEY_PROJEKTOR, String(projektorK));
+      pouzijProjektor();
+    }
+
+    btnProjektor.addEventListener('click', () => nastavProjektor(!projektorZap));
+    document.getElementById('projVetsi').addEventListener('click', () => zmenUroven(1));
+    document.getElementById('projMensi').addEventListener('click', () => zmenUroven(-1));
+    document.getElementById('projKonec').addEventListener('click', () => nastavProjektor(false));
+    document.getElementById('projFull').addEventListener('click', () =>
+      Projektor.celaObrazovka(document.documentElement));
+    document.getElementById('projMenu').addEventListener('click', e => {
+      e.stopPropagation();
+      document.body.classList.toggle('menu-nad');
+    });
+    menuOverlay.addEventListener('click', () => document.body.classList.remove('menu-nad'));
+    menuSekceEl.addEventListener('click', e => {
+      if (e.target.closest('a[data-page]')) document.body.classList.remove('menu-nad');
+    });
+    window.addEventListener('resize', pouzijProjektor);
+    document.addEventListener('fullscreenchange', () => requestAnimationFrame(pouzijProjektor));
+    zobrazUroven();
 
     /* ---- Start ---- */
     renderMenu();

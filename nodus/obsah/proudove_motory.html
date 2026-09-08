@@ -1,0 +1,914 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🛫 Proudové motory – jak jimi proudí vzduch</title>
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../podpis.js" defer></script>
+<style>
+body{height:100vh;overflow:hidden;display:flex;flex-direction:column}
+.horni{display:flex;gap:10px;align-items:center;padding:10px 16px;background:var(--bg-elevated);border-bottom:1px solid var(--border);flex-wrap:wrap}
+.horni h1{font-size:1.05rem;font-weight:600;margin-right:auto}
+.motory{display:flex;gap:6px;padding:8px 16px;background:var(--bg-panel);border-bottom:1px solid var(--border);overflow-x:auto}
+.motory button{white-space:nowrap;font-size:.78rem;padding:6px 11px}
+.panel{display:flex;gap:14px;align-items:center;padding:9px 16px;background:var(--bg-panel);border-bottom:1px solid var(--border);flex-wrap:wrap}
+.panel label{font-size:.78rem;color:var(--text-muted);display:flex;align-items:center;gap:7px}
+.panel .hodnota{color:var(--text-faint);min-width:3.2em;font-variant-numeric:tabular-nums}
+input[type=range]{width:120px;accent-color:var(--accent)}
+select{background:var(--bg-input);color:var(--text);border:1px solid var(--border);border-radius:6px;padding:5px 8px;font-size:.8rem}
+button{background:var(--bg-control);border:1px solid var(--border-strong);color:var(--text);border-radius:6px;padding:7px 13px;font-size:.82rem;cursor:pointer}
+button:hover{background:var(--accent);color:#fff;border-color:var(--accent)}
+button.zap{background:var(--accent);color:#fff;border-color:var(--accent)}
+.prep{display:flex;align-items:center;gap:7px;font-size:.78rem;color:var(--text-muted);cursor:pointer;user-select:none}
+.prep input{accent-color:var(--accent);width:16px;height:16px;cursor:pointer}
+.plocha{flex:1;position:relative;overflow:hidden;background:#070d16}
+canvas{display:block;width:100%;height:100%;touch-action:none}
+/* překryvy leží na tmavém plátně, proto mají vlastní podklad nezávislý na motivu */
+.mereni{position:absolute;top:12px;left:12px;background:rgba(9,18,30,.85);border:1px solid rgba(120,170,220,.28);border-radius:10px;padding:9px 13px;font-size:.76rem;line-height:1.7;color:#cfe1f2;font-variant-numeric:tabular-nums;pointer-events:none;max-width:230px}
+.mereni b{color:#fff;font-weight:600}
+.mereni .var{color:#ffd27f}
+.mereni .nadpis{color:#8fb7dd;font-size:.72rem;letter-spacing:.04em;text-transform:uppercase;margin-bottom:3px}
+.info{position:absolute;top:12px;right:12px;width:290px;max-width:calc(100% - 24px);max-height:calc(100% - 24px);overflow:auto;background:rgba(9,18,30,.93);border:1px solid rgba(120,170,220,.35);border-radius:10px;padding:11px 14px 12px;font-size:.78rem;line-height:1.6;color:#b6c8da}
+.info b{color:#e8f2fb}
+.info h2{font-size:.9rem;color:#fff;margin:0 0 6px}
+.info p{margin:0 0 8px}
+.info .zavri{position:absolute;top:6px;right:8px;background:none;border:none;color:#8fa6bb;font-size:1rem;padding:0;cursor:pointer}
+.info .zavri:hover{background:none;color:#fff}
+.napoveda{position:absolute;left:12px;bottom:10px;font-size:.73rem;color:#cfe1f2;background:rgba(8,20,32,.6);padding:4px 9px;border-radius:6px;pointer-events:none}
+.skala{position:absolute;right:12px;bottom:10px;font-size:.72rem;color:#cfe1f2;background:rgba(8,20,32,.6);padding:5px 9px;border-radius:6px;pointer-events:none;display:flex;align-items:center;gap:8px}
+.skala .pas{width:120px;height:9px;border-radius:5px}
+@media(max-width:820px){.info{display:none}.mereni{font-size:.68rem;max-width:170px}.panel{gap:9px;padding:8px 10px}input[type=range]{width:88px}}
+</style>
+</head>
+<body>
+<div class="horni">
+  <h1>🛫 Proudové motory – kudy proudí vzduch</h1>
+  <button id="btnPauza">⏸️ Pauza</button>
+  <button id="btnInfo">❓ O motoru</button>
+</div>
+
+<div class="motory" id="motory"></div>
+
+<div class="panel">
+  <label>🔥 Plyn <input type="range" id="plyn" min="5" max="100" step="1" value="85"><span class="hodnota" id="plynV">85 %</span></label>
+  <label>✈️ Rychlost letu <input type="range" id="mach" min="0" max="80" step="1" value="8"><span class="hodnota" id="machV">M 0,8</span></label>
+  <label>🎨 <select id="rezim">
+      <option value="rychlost">Barva: rychlost</option>
+      <option value="teplota" selected>Barva: teplota</option>
+      <option value="tlak">Barva: tlak</option>
+    </select></label>
+  <label>⏩ <select id="tempo">
+      <option value="0.4">Tempo: pomalu</option>
+      <option value="1" selected>Tempo: normální</option>
+      <option value="2.2">Tempo: rychle</option>
+    </select></label>
+  <label class="prep"><input type="checkbox" id="popisky" checked> 🏷️ Popisky</label>
+  <label class="prep"><input type="checkbox" id="graf" checked> 📈 Průběh podél motoru</label>
+  <label class="prep"><input type="checkbox" id="okoliZap" checked> 💨 Okolní vzduch</label>
+</div>
+
+<div class="plocha">
+  <canvas id="c"></canvas>
+  <div class="mereni" id="mereni"></div>
+  <div class="info" id="infoBox"><button class="zavri" id="zavriInfo" title="Zavřít">✕</button><div id="infoText"></div></div>
+  <div class="napoveda">🟩 kompresor · 🟧 turbína · 🟪 hnací hřídel &nbsp;|&nbsp; mezerník = pauza · ← → = jiný motor</div>
+  <div class="skala" id="skala"><span id="skalaMin">–</span><span class="pas" id="skalaPas"></span><span id="skalaMax">–</span></div>
+</div>
+
+<script>
+/* ------------------------------------------------------------------
+   Model: každý motor je popsaný geometrií kanálů (řez horní polovinou,
+   dolní se zrcadlí) a termodynamickým cyklem. Rychlost proudu se
+   nedopočítává „od oka“, ale z rovnice kontinuity: hmotnostní tok
+   ρ·v·A je podél kanálu stálý, a protože ρ ~ p/T, platí v ~ T/(p·A).
+   Tlaky a teploty počítá Braytonův cyklus z tlakového poměru
+   kompresoru a teploty před turbínou – čísla v měřicím panelu proto
+   odpovídají skutečným motorům.
+   ------------------------------------------------------------------ */
+const CP = 1005, KAPPA = 1.4, EXPN = (KAPPA - 1) / KAPPA;  // vzduch
+const T0 = 288, P0 = 1;                                     // okolí (15 °C, 1 bar)
+const ramT = m => T0 * (1 + 0.2 * m * m);                   // ohřev nárazem
+const ramP = m => Math.pow(1 + 0.2 * m * m, 3.5) * 0.97;    // tlak nárazem (se ztrátou v sání)
+const kf = (...b) => b;
+
+// pomocné pro cykly ------------------------------------------------
+function skrtPR(PR, plyn) { return 1 + (PR - 1) * (0.30 + 0.70 * plyn); }
+function skrtTIT(TIT, plyn, min) { return Math.max(min, 730 + (TIT - 730) * plyn); }
+function expanze(T, p, pKonec) { return T * Math.pow(Math.max(pKonec, 1e-3) / p, EXPN); }
+function vyt(dT) { return Math.sqrt(2 * CP * Math.max(0, dT)); }
+
+// ------------------------------------------------------------------
+//  KATALOG MOTORŮ
+// ------------------------------------------------------------------
+const MOTORY = [
+{
+  id: 'turbojet', nazev: 'Turbo-jet', emoji: '🚀', PR: 12, TIT: 1450,
+  strucne: 'Proudový motor – všechen vzduch projde jádrem a vyletí tryskou.',
+  info: `<h2>🚀 Turbo-jet (proudový motor)</h2>
+  <p>Nejjednodušší proudový motor. <b>Kompresor</b> stlačí nasátý vzduch, ve
+  <b>spalovací komoře</b> se přidá palivo a směs hoří, horký plyn roztočí
+  <b>turbínu</b> (ta pohání kompresor) a zbytek energie se v <b>trysce</b>
+  změní na rychlost. Tah vzniká tím, že plyn odchází rychleji, než vzduch
+  přiletěl.</p>
+  <p><b>Kde:</b> stíhačky, starší dopravní letadla (Tu-104, Caravelle).<br>
+  <b>Plus:</b> jednoduchý, dobrý při vysoké rychlosti.<br>
+  <b>Minus:</b> hlučný a při malé rychlosti žíznivý.</p>
+  <p><b>Zkus:</b> přepni barvu na <b>tlak</b> – uvidíš, jak tlak roste přes
+  kompresor a padá až v turbíně a trysce.</p>`,
+  kanaly: [{ id: 'jadro', hranice: [0, 1000],
+    kf: [kf(0,105,0), kf(70,102,24), kf(130,100,36), kf(400,72,36), kf(430,80,33),
+         kf(560,80,33), kf(580,84,35), kf(690,96,32), kf(780,86,15), kf(880,66,0),
+         kf(1000,60,0), kf(1160,92,0)] }],
+  dily: [
+    { typ:'hridel', x0:150, x1:690, r:13 },
+    { typ:'lopatky', x0:145, x1:390, pocet:9, barva:'komp' },
+    { typ:'ohen', x0:435, x1:558 },
+    { typ:'lopatky', x0:592, x1:678, pocet:3, barva:'turb' } ],
+  popisky: [
+    { t:'Sání', x:55, r:150, sm:1 }, { t:'Kompresor', x:265, r:158, sm:1 },
+    { t:'Turbína', x:635, r:150, sm:1 }, { t:'Tryska', x:900, r:140, sm:1 },
+    { t:'Spalovací komora', x:495, r:150, sm:-1 }, { t:'Hřídel', x:330, r:120, sm:-1, cil:13 } ],
+  cyklus(m, plyn) {
+    const PR = skrtPR(this.PR, plyn), T1 = ramT(m), p1 = ramP(m);
+    const T2 = T1 * Math.pow(PR, EXPN), p2 = p1 * PR;
+    const T3 = skrtTIT(this.TIT, plyn, T2 + 90), p3 = p2 * 0.96;
+    const T4 = T3 - (T2 - T1), p4 = p3 * Math.pow(T4 / T3, 1 / EXPN);
+    const T5 = expanze(T4, p4, P0), ve = vyt(T4 - T5), v0 = m * 340;
+    return { kanaly: { jadro: {
+        T: [kf(0,T0), kf(120,T1), kf(400,T2), kf(438,T3), kf(560,T3), kf(680,T4), kf(1000,T5), kf(1160,T5*0.7)],
+        p: [kf(0,P0), kf(120,p1), kf(400,p2), kf(560,p3), kf(690,p4), kf(1000,P0), kf(1160,P0)],
+        ve } },
+      stat: { PR, T3, ve, v0, tah: ve - v0, ucin: 1 - T1 / T2 } };
+  }
+},
+{
+  id: 'turbofan', nazev: 'Turbo-fan', emoji: '🛫', PR: 40, TIT: 1600, BPR: 8, fanPR: 1.55,
+  strucne: 'Dvouproudový motor – velká část vzduchu obtéká jádro kolem dokola.',
+  info: `<h2>🛫 Turbo-fan (dvouproudový motor)</h2>
+  <p>Motor dnešních dopravních letadel. Velké <b>dmychadlo</b> (fan) nasaje
+  hodně vzduchu a jen malá část jde do jádra; zbytek jde <b>obtokovým
+  kanálem</b> okolo. Ten studený proud dělá většinu tahu.</p>
+  <p><b>Obtokový poměr</b> tohoto motoru je 8 : 1 – na jeden kilogram vzduchu
+  v jádru připadá osm kilogramů kolem. Je úspornější a mnohem tišší než
+  turbo-jet: je lepší postrčit hodně vzduchu málo než málo vzduchu hodně.</p>
+  <p><b>Kde:</b> Boeing 737, Airbus A320, prakticky každý dopravní letoun.<br>
+  <b>Zkus:</b> porovnej rychlost výtoku s turbo-jetem – je nižší, a přesto je
+  tah větší, protože vzduchu proteče násobně víc.</p>`,
+  kanaly: [
+    { id:'jadro', hranice:[150,1000], vypln:[0,1000], podil:1.6,
+      kf: [kf(0,92,0), kf(70,90,24), kf(140,88,38), kf(200,90,42), kf(420,66,40),
+           kf(455,74,36), kf(615,74,36), kf(635,78,38), kf(700,88,36), kf(835,96,30),
+           kf(900,86,12), kf(1000,84,0), kf(1140,104,0)] },
+    { id:'obtok', hranice:[0,880], stenaIn:[150,880], podil:2.4,
+      kf: [kf(0,184,92), kf(70,182,90), kf(140,180,88), kf(200,176,100), kf(300,170,98),
+           kf(700,162,100), kf(820,158,102), kf(880,150,96), kf(1000,150,86)] } ],
+  dily: [
+    { typ:'lopatky', x0:100, x1:150, pocet:2, barva:'fan', r0:30, r1:180 },
+    { typ:'hridel', x0:130, x1:835, r:10 },
+    { typ:'hridel', x0:350, x1:700, r:25, duty:true },
+    { typ:'lopatky', x0:215, x1:330, pocet:4, barva:'komp', kanal:'jadro' },
+    { typ:'lopatky', x0:355, x1:425, pocet:5, barva:'komp2', kanal:'jadro' },
+    { typ:'ohen', x0:460, x1:612 },
+    { typ:'lopatky', x0:645, x1:695, pocet:2, barva:'turb', kanal:'jadro' },
+    { typ:'lopatky', x0:715, x1:830, pocet:4, barva:'turb2', kanal:'jadro' } ],
+  popisky: [
+    { t:'Dmychadlo (fan)', x:125, r:225, sm:1 }, { t:'Obtokový proud', x:520, r:205, sm:1 },
+    { t:'Vysokotlaká turbína', x:668, r:225, sm:1 }, { t:'Tryska jádra', x:950, r:150, sm:1 },
+    { t:'Nízkotlaký kompresor', x:270, r:150, sm:-1 }, { t:'Vysokotlaký kompresor', x:390, r:205, sm:-1 },
+    { t:'Spalovací komora', x:535, r:150, sm:-1 }, { t:'Nízkotlaká turbína', x:775, r:205, sm:-1 } ],
+  cyklus(m, plyn) {
+    const T1 = ramT(m), p1 = ramP(m), fPR = 1 + (this.fanPR - 1) * (0.35 + 0.65 * plyn);
+    const Tf = T1 * Math.pow(fPR, EXPN), pf = p1 * fPR;
+    const PR = skrtPR(this.PR, plyn), PRc = Math.max(1.5, PR / fPR);
+    const T2 = Tf * Math.pow(PRc, EXPN), p2 = pf * PRc;
+    const T3 = skrtTIT(this.TIT, plyn, T2 + 90), p3 = p2 * 0.96;
+    const dT = (T2 - Tf) + this.BPR * (Tf - T1);
+    const T4 = Math.max(T3 * 0.35, T3 - dT), p4 = p3 * Math.pow(T4 / T3, 1 / EXPN);
+    const T5 = expanze(T4, p4, P0), ve = vyt(T4 - T5);
+    const Tfe = expanze(Tf, pf, P0), vb = vyt(Tf - Tfe), v0 = m * 340;
+    const tah = ((ve - v0) + this.BPR * (vb - v0)) / (1 + this.BPR);
+    return { kanaly: {
+        jadro: { T:[kf(0,T0), kf(150,Tf), kf(430,T2), kf(465,T3), kf(612,T3), kf(830,T4), kf(1000,T5), kf(1140,T5*0.7)],
+                 p:[kf(0,P0), kf(150,pf), kf(430,p2), kf(612,p3), kf(835,p4), kf(1000,P0), kf(1140,P0)], ve },
+        obtok: { T:[kf(0,T0), kf(150,Tf), kf(800,Tf), kf(880,Tfe), kf(1000,Tfe)],
+                 p:[kf(0,P0), kf(150,pf), kf(800,pf*0.98), kf(880,P0), kf(1000,P0)], ve: vb } },
+      stat: { PR, T3, ve, vb, v0, tah, ucin: 1 - T1 / T2, extra: ['Obtokový poměr', this.BPR.toFixed(0) + ' : 1'] } };
+  }
+},
+{
+  id: 'turboprop', nazev: 'Turbo-prop', emoji: '🛩️', PR: 10, TIT: 1350,
+  strucne: 'Turbovrtulový – turbína přes převodovku roztáčí vrtuli.',
+  info: `<h2>🛩️ Turbo-prop (turbovrtulový motor)</h2>
+  <p>Uvnitř je stejná turbína jako v proudovém motoru, ale skoro všechna
+  energie horkých plynů se odebere turbínou a přes <b>převodovku</b> roztáčí
+  <b>vrtuli</b>. Výfuk dává jen pár procent tahu.</p>
+  <p>Vrtule musí mít mnohem nižší otáčky než turbína (ta dělá i 30 000 ot/min),
+  proto ta velká převodovka vpředu.</p>
+  <p><b>Kde:</b> L-410, ATR 72, Dash 8, zemědělská a vojenská letadla.<br>
+  <b>Plus:</b> nejúspornější do rychlosti asi 600 km/h.<br>
+  <b>Minus:</b> nad tuto rychlost konce vrtule dosáhnou rychlosti zvuku
+  a účinnost prudce klesne.</p>`,
+  kanaly: [{ id:'jadro', hranice:[175,1000],
+    kf: [kf(175,100,0), kf(215,97,22), kf(260,94,35), kf(470,70,36), kf(500,78,34),
+         kf(645,78,34), kf(665,82,36), kf(790,92,34), kf(890,96,30), kf(1000,92,14),
+         kf(1120,100,0)] }],
+  dily: [
+    { typ:'vrtule', x:45, r:215 },
+    { typ:'prevodovka', x0:88, x1:152, r:66 },
+    { typ:'hridel', x0:120, x1:880, r:13 },
+    { typ:'lopatky', x0:270, x1:460, pocet:7, barva:'komp' },
+    { typ:'ohen', x0:505, x1:642 },
+    { typ:'lopatky', x0:680, x1:875, pocet:5, barva:'turb' } ],
+  popisky: [
+    { t:'Vrtule', x:45, r:243, sm:1 }, { t:'Převodovka', x:120, r:150, sm:1, cil:66 },
+    { t:'Kompresor', x:360, r:150, sm:1 }, { t:'Turbína', x:780, r:150, sm:1 },
+    { t:'Hřídel', x:200, r:120, sm:-1, cil:13 }, { t:'Spalovací komora', x:575, r:150, sm:-1 },
+    { t:'Výfuk', x:1030, r:130, sm:-1 } ],
+  cyklus(m, plyn) {
+    const PR = skrtPR(this.PR, plyn), T1 = ramT(m), p1 = ramP(m);
+    const T2 = T1 * Math.pow(PR, EXPN), p2 = p1 * PR;
+    const T3 = skrtTIT(this.TIT, plyn, T2 + 90), p3 = p2 * 0.96;
+    const T5 = expanze(T3, p3, P0 * 1.06), v0 = m * 340;
+    const prace = CP * (T3 - T5) - CP * (T2 - T1);
+    return { kanaly: { jadro: {
+        T:[kf(175,T1), kf(470,T2), kf(508,T3), kf(642,T3), kf(890,T5*1.05), kf(1000,T5), kf(1120,T5*0.8)],
+        p:[kf(175,p1), kf(470,p2), kf(642,p3), kf(890,P0*1.15), kf(1000,P0), kf(1120,P0)],
+        ve: 130 } },
+      stat: { PR, T3, ve: 130, v0, vykon: prace / 1000, ucin: 1 - T1 / T2,
+              extra: ['Vrtule', Math.round(700 + 900 * plyn) + ' ot/min'] } };
+  }
+},
+{
+  id: 'turboshaft', nazev: 'Turbo-shaft', emoji: '🚁', PR: 12, TIT: 1400,
+  strucne: 'Turbohřídelový – volná turbína roztáčí hřídel, výfuk jde do stran.',
+  info: `<h2>🚁 Turbo-shaft (turbohřídelový motor)</h2>
+  <p>Skoro totéž co turbo-prop, ale bez vrtule: veškerý výkon jde
+  <b>hnacím hřídelem</b> ven. Klíčová je <b>volná (výkonová) turbína</b> – není
+  spojená s kompresorem, takže se může točit jinou rychlostí a dá se úplně
+  zastavit, zatímco generátor plynu (kompresor + jeho turbína) běží dál.</p>
+  <p><b>Kde:</b> vrtulníky, tanky, lodě, čerpací stanice plynovodů.<br>
+  <b>Zkus:</b> ubírej plyn – teplota před turbínou klesá, ale kompresor se
+  zastavuje pomaleji, protože ho pohání vlastní turbína.</p>`,
+  kanaly: [{ id:'jadro', hranice:[0, 1000],
+    kf: [kf(0,100,0), kf(60,98,22), kf(120,96,36), kf(380,72,36), kf(410,80,33),
+         kf(550,80,33), kf(572,84,35), kf(660,92,34), kf(700,98,38), kf(760,122,60),
+         kf(880,158,96), kf(1000,182,116)] }],
+  dily: [
+    { typ:'hridel', x0:140, x1:660, r:13 },
+    { typ:'lopatky', x0:135, x1:372, pocet:8, barva:'komp' },
+    { typ:'ohen', x0:415, x1:548 },
+    { typ:'lopatky', x0:580, x1:648, pocet:2, barva:'turb' },
+    { typ:'lopatky', x0:672, x1:730, pocet:2, barva:'turb2' },
+    { typ:'vystup', x0:690, x1:1130, r:17 } ],
+  popisky: [
+    { t:'Kompresor', x:250, r:150, sm:1 }, { t:'Turbína kompresoru', x:612, r:150, sm:1 },
+    { t:'Výfuk', x:950, r:265, sm:1 }, { t:'Spalovací komora', x:480, r:150, sm:-1 },
+    { t:'Volná (výkonová) turbína', x:700, r:150, sm:-1 }, { t:'Hnací hřídel', x:1055, r:70, sm:-1, cil:17 } ],
+  cyklus(m, plyn) {
+    const PR = skrtPR(this.PR, plyn), T1 = ramT(m), p1 = ramP(m);
+    const T2 = T1 * Math.pow(PR, EXPN), p2 = p1 * PR;
+    const T3 = skrtTIT(this.TIT, plyn, T2 + 90), p3 = p2 * 0.96;
+    const T4 = T3 - (T2 - T1), p4 = p3 * Math.pow(T4 / T3, 1 / EXPN);
+    const T5 = expanze(T4, p4, P0 * 1.05);
+    return { kanaly: { jadro: {
+        T:[kf(0,T0), kf(120,T1), kf(380,T2), kf(418,T3), kf(548,T3), kf(660,T4), kf(760,T5), kf(1000,T5*0.96)],
+        p:[kf(0,P0), kf(120,p1), kf(380,p2), kf(548,p3), kf(660,p4), kf(770,P0*1.1), kf(1000,P0)],
+        ve: 110 } },
+      stat: { PR, T3, ve: 110, v0: m * 340, vykon: CP * (T4 - T5) / 1000, ucin: 1 - T1 / T2 } };
+  }
+},
+{
+  id: 'ramjet', nazev: 'Ram-jet', emoji: '💨', TIT: 2100,
+  strucne: 'Náporový motor – stlačuje jen nárazem, nemá jedinou rotující část.',
+  info: `<h2>💨 Ram-jet (náporový motor)</h2>
+  <p>Nemá kompresor ani turbínu – <b>žádnou pohyblivou část</b>. Vzduch se
+  stlačí sám tím, jak motor letí: v sání zbrzdí z nadzvukové na podzvukovou
+  rychlost (M &lt; 1) a přitom prudce stoupne jeho tlak i teplota. Pak se
+  přidá palivo, směs hoří za <b>držákem plamene</b> a horký plyn odchází
+  tryskou nadzvukově.</p>
+  <p><b>Háček:</b> ve stoje nemá žádný tah – musí být nejdřív rozlétaný
+  (raketou nebo jiným motorem) zhruba nad M 0,5, prakticky až nad M 2.
+  Pracuje asi do M 5.</p>
+  <p><b>Zkus:</b> táhni rychlost letu od 0 nahoru a sleduj tlakový poměr –
+  všechen tlak dělá jen rychlost.</p>`,
+  minM: 0.8,
+  kanaly: [{ id:'jadro', hranice:[0, 1000],
+    kf: [kf(0,112,0), kf(60,112,18), kf(150,110,48), kf(255,108,74), kf(360,105,48),
+         kf(420,102,10), kf(440,100,0), kf(660,100,0), kf(790,66,0), kf(1000,96,0),
+         kf(1180,118,0)] }],
+  dily: [
+    { typ:'drzak', x:432 },
+    { typ:'vstrik', x:405 },
+    { typ:'ohen', x0:440, x1:670 } ],
+  popisky: [
+    { t:'Vstup M>1', x:70, r:155, sm:1 }, { t:'Vstřik paliva', x:400, r:155, sm:1 },
+    { t:'Tryska (M=1 v hrdle)', x:800, r:145, sm:1 }, { t:'Komprese M<1', x:230, r:155, sm:-1 },
+    { t:'Spalovací komora', x:560, r:145, sm:-1 }, { t:'Výtok M>1', x:1050, r:150, sm:-1 } ],
+  cyklus(m, plyn) {
+    const T1 = ramT(m), p1 = Math.max(P0 * 1.001, ramP(m) * (m > 1 ? 0.92 : 1));
+    const T3 = Math.max(T1 + 20, skrtTIT(this.TIT, plyn, T1 + 20));
+    const p3 = p1 * 0.94;
+    const T5 = expanze(T3, p3, P0), ve = vyt(T3 - T5), v0 = m * 340;
+    return { kanaly: { jadro: {
+        T:[kf(0,T0), kf(60,T0*1.1), kf(360,T1), kf(445,T3), kf(670,T3), kf(1000,T5), kf(1180,T5*0.75)],
+        p:[kf(0,P0), kf(60,P0*1.2), kf(360,p1), kf(670,p3), kf(1000,P0), kf(1180,P0)],
+        ve } },
+      stat: { PR: p1, T3, ve, v0, tah: ve - v0, ucin: 1 - T0 / T1,
+              varovani: m < this.minM ? 'Málo rychlosti – náporový motor nemá tah, musí být rozlétaný.' : null } };
+  }
+},
+{
+  id: 'scramjet', nazev: 'Scramjet', emoji: '⚡', TIT: 2900,
+  strucne: 'Nadzvukové spalování – vzduch se ani v komoře nezpomalí pod M 1.',
+  info: `<h2>⚡ Scramjet (nadzvukové spalování)</h2>
+  <p>Zkratka ze <i>supersonic combustion ramjet</i>. Nad rychlostí zhruba M 5
+  už se nevyplatí vzduch brzdit na podzvuk – zahřál by se tak, že by se
+  molekuly rozpadly a teplo by se nedalo využít. Scramjet ho proto nechá téct
+  <b>nadzvukově celou dobu</b>, i skrz plamen. Palivo (vodík) musí shořet za
+  méně než tisícinu sekundy.</p>
+  <p><b>Kde:</b> zatím jen experimenty – X-43A (M 9,6) a X-51 Waverider.
+  Rozlétat ho musí raketa nebo jiný motor, sám funguje až od M 4–5.</p>
+  <p><b>Zkus:</b> nastav rychlost pod M 4 – motor nemá čím stlačit vzduch.</p>`,
+  minM: 4,
+  kanaly: [{ id:'jadro', hranice:[0, 1000],
+    kf: [kf(0,195,0), kf(50,190,6), kf(200,160,46), kf(330,140,60), kf(450,128,64),
+         kf(540,128,62), kf(700,138,52), kf(850,168,22), kf(1000,200,0), kf(1170,225,0)] }],
+  dily: [ { typ:'vstrik', x:435 }, { typ:'ohen', x0:450, x1:720, slabsi:true } ],
+  popisky: [
+    { t:'Vstupní klín', x:120, r:245, sm:1 }, { t:'Vstřik paliva', x:430, r:230, sm:1 },
+    { t:'Tryska', x:930, r:250, sm:1 }, { t:'Nadzvuková komprese', x:290, r:240, sm:-1 },
+    { t:'Spalování při M>1', x:600, r:230, sm:-1 } ],
+  cyklus(m, plyn) {
+    const T1 = T0 * (1 + 0.2 * m * m * 0.45);                 // brzdí se jen částečně
+    const p1 = Math.max(P0 * 1.001, Math.pow(1 + 0.2 * m * m * 0.45, 3.5) * 0.85);
+    const T3 = Math.max(T1 + 20, skrtTIT(this.TIT, plyn, T1 + 20));
+    const p3 = p1 * 0.88;
+    const T5 = expanze(T3, p3, P0), ve = vyt(2 * CP * 0 + (T3 - T5)) , v0 = m * 340;
+    const veS = Math.max(ve, v0 * 1.02);
+    return { kanaly: { jadro: {
+        T:[kf(0,T0), kf(330,T1*0.9), kf(455,T1), kf(520,T3), kf(720,T3), kf(1000,T5), kf(1170,T5*0.8)],
+        p:[kf(0,P0), kf(330,p1*0.85), kf(455,p1), kf(720,p3), kf(1000,P0), kf(1170,P0)],
+        ve: veS } },
+      stat: { PR: p1, T3, ve: veS, v0, tah: veS - v0, ucin: 1 - T0 / T1,
+              varovani: m < this.minM ? 'Pod M 4 scramjet nefunguje – nemá čím vzduch stlačit.' : null } };
+  }
+},
+{
+  id: 'raketa', nazev: 'Raketa', emoji: '🚀', strucne: 'Raketový motor – palivo i okysličovadlo veze s sebou, vzduch nepotřebuje.',
+  info: `<h2>🚀 Raketový motor (na tuhé palivo)</h2>
+  <p>Jediný z těchto motorů, který <b>nepotřebuje vzduch</b>: okysličovadlo je
+  namíchané přímo v <b>zrnu paliva</b>. Proto funguje i ve vakuu – a proto na
+  rychlosti letu vůbec nezáleží.</p>
+  <p>Zrno hoří po povrchu, v komoře je tlak i 60 barů a teplota přes 3000 °C.
+  <b>Hrdlo</b> (nejužší místo) hlídá, kolik plynu smí ven, a udržuje v komoře
+  tlak; v rozšiřující se části trysky se pak plyn urychlí na několikanásobek
+  rychlosti zvuku.</p>
+  <p><b>Zkus:</b> barvu <b>tlak</b> – vidíš, jak tlak drží až do hrdla a pak
+  padá; a barvu <b>rychlost</b> – plyn se rozjede až za hrdlem.</p>`,
+  bezVzduchu: true,
+  kanaly: [{ id:'jadro', hranice:[0, 1000], zdroj:[90, 645],
+    kf: [kf(0,96,0), kf(650,96,0), kf(700,90,0), kf(790,36,0), kf(840,48,0),
+         kf(1000,118,0), kf(1200,150,0)] }],
+  dily: [
+    { typ:'zapal', x:38 },
+    { typ:'zrno', x0:85, x1:330 }, { typ:'zrno', x0:360, x1:640 },
+    { typ:'ohen', x0:90, x1:660, slabsi:true } ],
+  popisky: [
+    { t:'Izolovaný obal', x:210, r:150, sm:1 }, { t:'Hrdlo – řídí tlak', x:790, r:150, sm:1 },
+    { t:'Tryska', x:990, r:175, sm:1 }, { t:'Zapalovač', x:38, r:130, sm:-1 },
+    { t:'Zrno paliva', x:470, r:150, sm:-1 }, { t:'Vysoký tlak', x:660, r:150, sm:-1 } ],
+  cyklus(m, plyn) {
+    const CPG = 1900, EXPG = 1 / 6;                      // horké spaliny, κ ≈ 1,2
+    const pc = 8 + 52 * plyn, Tc = 2400 + 900 * plyn, pe = Math.max(0.35, pc * 0.008);
+    const Te = Tc * Math.pow(pe / pc, EXPG);
+    const ve = Math.sqrt(2 * CPG * (Tc - Te));
+    return { kanaly: { jadro: {
+        T:[kf(0,Tc), kf(660,Tc), kf(790,Tc*0.92), kf(1000,Te), kf(1200,Te*0.8)],
+        p:[kf(0,pc), kf(690,pc), kf(790,pc*0.56), kf(1000,pe), kf(1200,pe)],
+        ve } },
+      stat: { PR: pc, T3: Tc, ve, v0: m * 340, tah: ve,
+              extra: ['Tlak v komoře', pc.toFixed(0) + ' bar'] } };
+  }
+},
+{
+  id: 'plynova', nazev: 'Plynová turbína', emoji: '🏭', PR: 18, TIT: 1500,
+  strucne: 'Průmyslová turbína – výkon jde předním hřídelem do generátoru nebo čerpadla.',
+  info: `<h2>🏭 Plynová turbína (průmyslová)</h2>
+  <p>Stejný Braytonův cyklus jako u letadel, jen postavený nastojato na zemi.
+  Vzduch stlačí <b>nízkotlaký a vysokotlaký kompresor</b>, ve spalovací komoře
+  se přidá zemní plyn, <b>vysokotlaká turbína</b> pohání kompresory a
+  <b>výkonová turbína</b> roztáčí <b>výstupní hřídel</b> – generátor,
+  čerpadlo nebo lodní šroub.</p>
+  <p><b>Odpouštěcí ventil</b> pouští při rozběhu část vzduchu z kompresoru ven,
+  aby se kompresor nedostal do pumpáže (přerušení proudění).</p>
+  <p><b>Kde:</b> paroplynové elektrárny, kompresorové stanice, lodě.
+  Ve spojení s parní turbínou (paroplynový cyklus) dosahuje účinnosti přes 60 %,
+  což je nejvíc ze všech tepelných strojů.</p>`,
+  bezVzduchu: true,
+  kanaly: [{ id:'jadro', hranice:[110, 1000],
+    kf: [kf(110,105,0), kf(160,101,20), kf(205,98,34), kf(425,74,35), kf(455,82,33),
+         kf(600,82,33), kf(622,86,35), kf(745,96,34), kf(830,108,42), kf(910,142,76),
+         kf(1000,178,112)] }],
+  dily: [
+    { typ:'vystup', x0:-110, x1:210, r:18 },
+    { typ:'hridel', x0:200, x1:745, r:13 },
+    { typ:'lopatky', x0:215, x1:418, pocet:7, barva:'komp' },
+    { typ:'ohen', x0:458, x1:598 },
+    { typ:'lopatky', x0:630, x1:700, pocet:2, barva:'turb' },
+    { typ:'lopatky', x0:725, x1:820, pocet:3, barva:'turb2' },
+    { typ:'ventil', x:437 } ],
+  popisky: [
+    { t:'Sání', x:130, r:150, sm:1 }, { t:'Kompresory', x:310, r:150, sm:1 },
+    { t:'Vysokotlaká turbína', x:665, r:150, sm:1 }, { t:'Výfuk', x:975, r:235, sm:1 },
+    { t:'Výstupní hřídel', x:-55, r:72, sm:-1, cil:18 }, { t:'Odpouštěcí ventil', x:437, r:200, sm:-1 },
+    { t:'Spalovací komora', x:528, r:150, sm:-1 }, { t:'Výkonová turbína', x:790, r:150, sm:-1 } ],
+  cyklus(m, plyn) {
+    const PR = skrtPR(this.PR, plyn), T1 = T0, p1 = P0 * 0.99;
+    const T2 = T1 * Math.pow(PR, EXPN), p2 = p1 * PR;
+    const T3 = skrtTIT(this.TIT, plyn, T2 + 90), p3 = p2 * 0.96;
+    const T4 = T3 - (T2 - T1), p4 = p3 * Math.pow(T4 / T3, 1 / EXPN);
+    const T5 = expanze(T4, p4, P0 * 1.03);
+    return { kanaly: { jadro: {
+        T:[kf(110,T1), kf(425,T2), kf(460,T3), kf(598,T3), kf(745,T4), kf(900,T5), kf(1000,T5*0.97)],
+        p:[kf(110,p1), kf(425,p2), kf(598,p3), kf(745,p4), kf(900,P0*1.06), kf(1000,P0)],
+        ve: 90 } },
+      stat: { PR, T3, ve: 90, v0: 0, vykon: CP * (T4 - T5) / 1000, ucin: 1 - T1 / T2,
+              extra: ['Výfuk', Math.round(T5 - 273) + ' °C (do kotle)'] } };
+  }
+}
+];
+
+// ------------------------------------------------------------------
+//  Interpolace a geometrie
+// ------------------------------------------------------------------
+function vzorek(pole, x) {           // lineární interpolace v [[x, a, b...]]
+  if (x <= pole[0][0]) return pole[0];
+  const n = pole.length;
+  if (x >= pole[n - 1][0]) return pole[n - 1];
+  let i = 1; while (i < n && pole[i][0] < x) i++;
+  const a = pole[i - 1], b = pole[i], t = (x - a[0]) / (b[0] - a[0]);
+  const v = [x];
+  for (let k = 1; k < a.length; k++) v.push(a[k] + (b[k] - a[k]) * t);
+  return v;
+}
+const polomery = (kan, x) => { const v = vzorek(kan.kf, x); return [v[1], v[2]]; };
+const hodnota = (pole, x) => vzorek(pole, x)[1];
+
+// ------------------------------------------------------------------
+//  Barevné škály
+// ------------------------------------------------------------------
+function skala(stopy, t) {
+  t = Math.max(0, Math.min(1, t));
+  for (let i = 1; i < stopy.length; i++) {
+    if (t <= stopy[i][0]) {
+      const a = stopy[i - 1], b = stopy[i], u = (t - a[0]) / (b[0] - a[0]);
+      return 'rgb(' + Math.round(a[1][0] + (b[1][0] - a[1][0]) * u) + ',' +
+             Math.round(a[1][1] + (b[1][1] - a[1][1]) * u) + ',' +
+             Math.round(a[1][2] + (b[1][2] - a[1][2]) * u) + ')';
+    }
+  }
+  return 'rgb(255,255,255)';
+}
+// Teplota a tlak mají škálu společnou pro všechny motory – jinak by chladný
+// výtok rakety (1400 K) vypadal stejně žhavě jako komora turbo-jetu.
+const T_SKALA = [250, 3400], P_SKALA = [0.3, 70];
+const SK_TEPLOTA = [[0,[70,140,255]],[.2,[80,220,235]],[.42,[240,235,120]],[.65,[255,150,50]],[.85,[255,80,40]],[1,[255,240,220]]];
+const SK_RYCHLOST = [[0,[60,110,230]],[.3,[70,200,200]],[.55,[130,225,110]],[.78,[250,215,80]],[1,[255,90,60]]];
+const SK_TLAK = [[0,[60,120,220]],[.35,[120,110,225]],[.65,[200,90,200]],[.85,[250,140,120]],[1,[255,235,200]]];
+
+// ------------------------------------------------------------------
+//  Stav
+// ------------------------------------------------------------------
+const plt = document.getElementById('c'), ctx = plt.getContext('2d');
+let motor = MOTORY[0], stav = null, castice = [], okoli = [];
+let bezi = true, cas = 0, sirka = 0, vyska = 0;
+const ui = id => document.getElementById(id);
+
+function machHodnota() { return ui('mach').value / 10; }
+function plynHodnota() { return ui('plyn').value / 100; }
+
+// přepočet cyklu + rychlostního pole -------------------------------
+function prepocti() {
+  const m = motor.bezVzduchu ? 0 : machHodnota();
+  const c = motor.cyklus(m, plynHodnota());
+  stav = c;
+  stav.m = m;
+  stav.kanalStav = {};
+  let vmax = 1, tmin = 1e9, tmax = 0, pmin = 1e9, pmax = 0;
+  motor.kanaly.forEach(kan => {
+    const s = c.kanaly[kan.id];
+    const konec = kan.kf[kan.kf.length - 1][0];
+    // za výstupem už proud nezpomaluje (volná vlečka), proto se x zastropuje
+    const f = x0 => { const x = Math.min(x0, kan.hranice[1]), [ro, ri] = polomery(kan, x);
+      return hodnota(s.T, x) / (Math.max(0.02, hodnota(s.p, x)) * Math.max(1, ro * ro - ri * ri)); };
+    const fRef = f(kan.hranice[1]) || 1;
+    const st = { kan, s, konec, f, fRef, rychlost: x => s.ve * f(x) / fRef };
+    stav.kanalStav[kan.id] = st;
+    for (let x = kan.kf[0][0]; x <= konec; x += 10) {
+      vmax = Math.max(vmax, st.rychlost(x));
+      const T = hodnota(s.T, x), p = hodnota(s.p, x);
+      tmin = Math.min(tmin, T); tmax = Math.max(tmax, T);
+      pmin = Math.min(pmin, p); pmax = Math.max(pmax, p);
+    }
+  });
+  stav.vmax = vmax; stav.tmin = tmin; stav.tmax = tmax; stav.pmin = pmin; stav.pmax = pmax;
+  // Kreslicí zisk: turbovrtulový motor má výtok 130 m/s a proudový 900 – bez
+  // srovnání by jeden animoval nehybně a druhý mihotal. Rozdíl zůstane vidět,
+  // jen zmenšený; naměřená čísla v panelu jsou pořád skutečná.
+  stav.zisk = Math.min(3, Math.max(0.4, Math.pow(600 / vmax, 0.6)));
+  napisMereni(); napisSkalu();
+}
+
+// částice ----------------------------------------------------------
+function novaCastice(kanId, kdekoli) {
+  const st = stav.kanalStav[kanId], kan = st.kan;
+  const z = kan.zdroj || [kan.kf[0][0], kan.kf[0][0] + 40];
+  return { kan: kanId,
+    x: kdekoli ? kan.kf[0][0] + Math.random() * (st.konec - kan.kf[0][0])
+               : z[0] + Math.random() * (z[1] - z[0]),
+    psi: Math.random(), sgn: Math.random() < .5 ? 1 : -1 };
+}
+function nasypCastice() {
+  castice = [];
+  const celkem = Math.min(1500, Math.max(520, Math.round(sirka * 1.0)));
+  const vahy = motor.kanaly.map(k => k.podil || 1);
+  const soucet = vahy.reduce((a, b) => a + b, 0);
+  motor.kanaly.forEach((k, i) => {
+    const n = Math.round(celkem * vahy[i] / soucet);
+    for (let j = 0; j < n; j++) castice.push(novaCastice(k.id, true));
+  });
+  okoli = [];
+  for (let i = 0; i < 130; i++) okoli.push({ x: Math.random() * 1400 - 200, y: (Math.random() * 2 - 1) });
+}
+
+// ------------------------------------------------------------------
+//  Vykreslení
+// ------------------------------------------------------------------
+function rozmery() {
+  const r = plt.getBoundingClientRect(), dpr = Math.min(2, devicePixelRatio || 1);
+  plt.width = Math.round(r.width * dpr); plt.height = Math.round(r.height * dpr);
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+  sirka = r.width; vyska = r.height;
+}
+function pohled() {
+  const grafOn = ui('graf').checked && vyska > 330;
+  const hMotor = grafOn ? vyska * 0.76 : vyska;
+  let rmax = 60, xmin = 0, xmax = 1000;
+  motor.kanaly.forEach(k => k.kf.forEach(v => { rmax = Math.max(rmax, v[1]); xmin = Math.min(xmin, v[0]); xmax = Math.max(xmax, v[0]); }));
+  (motor.dily || []).forEach(d => { if (d.r) rmax = Math.max(rmax, d.r); if (d.r1) rmax = Math.max(rmax, d.r1);
+    if (d.x0 !== undefined) { xmin = Math.min(xmin, d.x0); xmax = Math.max(xmax, d.x1); } });
+  if (ui('popisky').checked) { (motor.popisky || []).forEach(p => { rmax = Math.max(rmax, p.r + 26); xmin = Math.min(xmin, p.x - 60); xmax = Math.max(xmax, p.x + 60); }); }
+  // vlevo nahoře stojí měřicí panel – motor se kreslí až vedle něj, ať ho nepřekrývá
+  const zleva = sirka > 760 ? 248 : 0;
+  const s = Math.min((sirka - zleva - 36) / (xmax - xmin), (hMotor - 30) / (2 * rmax));
+  return { s, ox: zleva + (sirka - zleva - (xmax - xmin) * s) / 2 - xmin * s,
+           oy: hMotor / 2, grafOn, hMotor, xmin, xmax };
+}
+const PX = (v, x) => v.ox + x * v.s;
+const PY = (v, r) => v.oy - r * v.s;
+
+function barvaCastice(kanId, x, v) {
+  const s = stav.kanalStav[kanId].s, r = ui('rezim').value;
+  if (r === 'teplota') { const T = hodnota(s.T, x);
+    // mocnina 0,6: společná škála sahá až k 3 100 °C v raketě, bez ní by
+    // sedmisetstupňový výfuk turbíny vycházel skoro stejně modrý jako sání
+    return skala(SK_TEPLOTA, Math.pow(Math.max(0, (T - T_SKALA[0]) / (T_SKALA[1] - T_SKALA[0])), 0.6)); }
+  if (r === 'tlak') { const p = hodnota(s.p, x), lo = Math.log(P_SKALA[0]), hi = Math.log(P_SKALA[1]);
+    return skala(SK_TLAK, (Math.log(Math.max(P_SKALA[0], p)) - lo) / (hi - lo)); }
+  return skala(SK_RYCHLOST, v / stav.vmax);
+}
+
+function kresli(dt) {
+  const v = pohled();
+  ctx.clearRect(0, 0, sirka, vyska);
+  const poz = ctx.createLinearGradient(0, 0, 0, vyska);
+  poz.addColorStop(0, '#08111d'); poz.addColorStop(1, '#050a12');
+  ctx.fillStyle = poz; ctx.fillRect(0, 0, sirka, vyska);
+
+  kresliOkoli(v, dt);
+  motor.kanaly.forEach(k => kresliKanal(v, k));
+  kresliCastice(v, dt);
+  motor.kanaly.forEach(k => kresliStenu(v, k));
+  kresliNaboj(v);
+  (motor.dily || []).forEach(d => kresliDil(v, d));
+  if (ui('popisky').checked) kresliPopisky(v);
+  if (v.grafOn) kresliGraf(v);
+  if (stav.stat.varovani) {
+    ctx.fillStyle = 'rgba(255,120,90,.92)'; ctx.font = '600 14px system-ui, sans-serif';
+    ctx.textAlign = 'center'; ctx.fillText('⚠ ' + stav.stat.varovani, sirka / 2, 24); ctx.textAlign = 'left';
+  }
+}
+
+function kresliOkoli(v, dt) {
+  if (motor.bezVzduchu || stav.m <= 0.02 || !ui('okoliZap').checked) return;
+  const rychlost = stav.m * 340 * 1.2 * stav.zisk * parseFloat(ui('tempo').value);
+  let rmax = 0; motor.kanaly.forEach(k => k.kf.forEach(t => rmax = Math.max(rmax, t[1])));
+  ctx.strokeStyle = 'rgba(120,180,235,.30)'; ctx.lineWidth = 1.2;
+  ctx.beginPath();
+  okoli.forEach(c => {
+    if (bezi) { c.x += rychlost * dt; if (c.x > 1250) { c.x = -260; c.y = (Math.random() * 2 - 1); } }
+    const r = rmax * (1.12 + Math.abs(c.y) * 0.55) * Math.sign(c.y || 1);
+    const x = PX(v, c.x), y = PY(v, r);
+    if (y < -20 || y > vyska) return;
+    ctx.moveTo(x, y); ctx.lineTo(x + Math.max(6, rychlost * 0.02 * v.s), y);
+  });
+  ctx.stroke();
+}
+
+function kresliKanal(v, kan) {
+  const [k0, k1] = kan.vypln || kan.hranice;
+  ctx.beginPath();
+  for (let x = k0; x <= k1; x += 6) { const [ro] = polomery(kan, x); ctx.lineTo(PX(v, x), PY(v, ro)); }
+  for (let x = k1; x >= k0; x -= 6) { const [, ri] = polomery(kan, x); ctx.lineTo(PX(v, x), PY(v, ri)); }
+  ctx.closePath();
+  ctx.fillStyle = 'rgba(70,130,190,.10)';
+  ctx.fill();
+  ctx.save(); ctx.scale(1, 1);
+  ctx.beginPath();
+  for (let x = k0; x <= k1; x += 6) { const [ro] = polomery(kan, x); ctx.lineTo(PX(v, x), 2 * v.oy - PY(v, ro)); }
+  for (let x = k1; x >= k0; x -= 6) { const [, ri] = polomery(kan, x); ctx.lineTo(PX(v, x), 2 * v.oy - PY(v, ri)); }
+  ctx.closePath(); ctx.fill(); ctx.restore();
+}
+
+function kresliStenu(v, kan) {
+  const [h0, h1] = kan.hranice;
+  ctx.lineWidth = 2.6; ctx.strokeStyle = '#aab8c9'; ctx.lineJoin = 'round';
+  [1, -1].forEach(sm => {
+    ctx.beginPath();
+    for (let x = h0; x <= h1; x += 5) { const [ro] = polomery(kan, x); const y = v.oy - sm * ro * v.s; ctx.lineTo(PX(v, x), y); }
+    ctx.stroke();
+  });
+  if (kan.stenaIn) {                       // rozdělovač proudů u dvouproudého motoru
+    ctx.lineWidth = 1.8; ctx.strokeStyle = 'rgba(170,184,201,.75)';
+    [1, -1].forEach(sm => { ctx.beginPath();
+      for (let x = kan.stenaIn[0]; x <= kan.stenaIn[1]; x += 5) { const [, ri] = polomery(kan, x); ctx.lineTo(PX(v, x), v.oy - sm * ri * v.s); }
+      ctx.stroke(); });
+  }
+}
+
+function kresliNaboj(v) {                    // střední těleso / rotor (šedé)
+  const kan = motor.kanaly[0];
+  const [h0, h1] = kan.vypln || kan.hranice;   // špička nábojového kužele začíná už před dmychadlem
+  ctx.beginPath(); let zacal = false;
+  for (let x = h0; x <= h1; x += 5) { const [, ri] = polomery(kan, x); if (ri < 0.5) continue; if (!zacal) { ctx.moveTo(PX(v, x), PY(v, ri)); zacal = true; } else ctx.lineTo(PX(v, x), PY(v, ri)); }
+  for (let x = h1; x >= h0; x -= 5) { const [, ri] = polomery(kan, x); if (ri < 0.5) continue; ctx.lineTo(PX(v, x), 2 * v.oy - PY(v, ri)); }
+  if (!zacal) return;
+  ctx.closePath();
+  const g = ctx.createLinearGradient(0, v.oy - 90, 0, v.oy + 90);
+  g.addColorStop(0, '#8b96a4'); g.addColorStop(.5, '#5f6a79'); g.addColorStop(1, '#8b96a4');
+  ctx.fillStyle = g; ctx.fill();
+  ctx.strokeStyle = '#c3ccd8'; ctx.lineWidth = 1.4; ctx.stroke();
+}
+
+const BARVY_LOPATEK = { komp:'#8fdc9c', komp2:'#5fbf78', fan:'#a9e6b6', turb:'#ff9a5c', turb2:'#ff7a4a' };
+function kresliDil(v, d) {
+  const kan = motor.kanaly.find(k => k.id === (d.kanal || motor.kanaly[0].id)) || motor.kanaly[0];
+  if (d.typ === 'lopatky') {
+    const n = Math.max(1, d.pocet);
+    for (let i = 0; i < n; i++) {
+      const x = n === 1 ? d.x0 : d.x0 + (d.x1 - d.x0) * i / (n - 1);
+      let ro, ri;
+      if (d.r1 !== undefined) { ro = d.r1; ri = d.r0; } else { [ro, ri] = polomery(kan, x); }
+      const svetla = i % 2 === 0;
+      ctx.strokeStyle = BARVY_LOPATEK[d.barva] || '#8fdc9c';
+      ctx.globalAlpha = svetla ? 1 : .62;
+      ctx.lineWidth = Math.max(2.2, 5.5 * v.s);
+      ctx.lineCap = 'round';
+      const sklon = (svetla ? 1 : -1) * 3 * v.s;
+      [1, -1].forEach(sm => {
+        ctx.beginPath();
+        ctx.moveTo(PX(v, x) - sklon, v.oy - sm * (ri + 2) * v.s);
+        ctx.lineTo(PX(v, x) + sklon, v.oy - sm * (ro - 2) * v.s);
+        ctx.stroke();
+      });
+      ctx.globalAlpha = 1;
+    }
+  } else if (d.typ === 'hridel' || d.typ === 'vystup') {
+    const barva = d.typ === 'vystup' ? '#a86ff0' : '#4a8f5e';
+    ctx.fillStyle = barva;
+    ctx.fillRect(PX(v, d.x0), PY(v, d.r), (d.x1 - d.x0) * v.s, 2 * d.r * v.s);
+    ctx.strokeStyle = 'rgba(255,255,255,.35)'; ctx.lineWidth = 1;
+    ctx.strokeRect(PX(v, d.x0), PY(v, d.r), (d.x1 - d.x0) * v.s, 2 * d.r * v.s);
+    if (d.duty) {                         // vysokotlaká hřídel je trubka kolem nízkotlaké
+      ctx.fillStyle = '#2f6b46'; const vn = d.r * 0.5;
+      ctx.fillRect(PX(v, d.x0), PY(v, vn), (d.x1 - d.x0) * v.s, 2 * vn * v.s); }
+  } else if (d.typ === 'ohen') {
+    const p = plynHodnota(), bliknuti = .8 + .2 * Math.sin(cas * 9) * p;
+    const a = (d.slabsi ? .30 : .48) * p * bliknuti;
+    const g = ctx.createLinearGradient(PX(v, d.x0), 0, PX(v, d.x1), 0);
+    g.addColorStop(0, 'rgba(255,215,110,0)');
+    g.addColorStop(.18, `rgba(255,205,90,${a})`);
+    g.addColorStop(.55, `rgba(255,150,55,${a * .85})`);
+    g.addColorStop(1, 'rgba(255,110,50,0)');
+    ctx.fillStyle = g;
+    [1, -1].forEach(sm => {
+      ctx.beginPath();
+      for (let x = d.x0; x <= d.x1; x += 5) { const [ro] = polomery(kan, x); ctx.lineTo(PX(v, x), v.oy - sm * ro * v.s); }
+      for (let x = d.x1; x >= d.x0; x -= 5) { const [, ri] = polomery(kan, x); ctx.lineTo(PX(v, x), v.oy - sm * ri * v.s); }
+      ctx.closePath(); ctx.fill();
+    });
+  } else if (d.typ === 'vrtule') {
+    const x = PX(v, d.x), rr = d.r * v.s;
+    ctx.save();
+    ctx.globalAlpha = .10 + .06 * Math.sin(cas * 8);    // rozmazaný kotouč otáčení
+    ctx.fillStyle = '#7f8b9a';
+    ctx.beginPath(); ctx.ellipse(x, v.oy, 13 * v.s, rr, 0, 0, 6.3); ctx.fill();
+    ctx.globalAlpha = 1;
+    [1, -1].forEach(sm => {
+      ctx.fillStyle = '#262d38'; ctx.strokeStyle = '#59636f'; ctx.lineWidth = 1.4;
+      ctx.beginPath();
+      ctx.moveTo(x - 20 * v.s, v.oy - sm * 20 * v.s);
+      ctx.quadraticCurveTo(x - 28 * v.s, v.oy - sm * rr * .62, x - 13 * v.s, v.oy - sm * rr);
+      ctx.quadraticCurveTo(x, v.oy - sm * rr * 1.04, x + 13 * v.s, v.oy - sm * rr * .97);
+      ctx.quadraticCurveTo(x + 27 * v.s, v.oy - sm * rr * .48, x + 20 * v.s, v.oy - sm * 20 * v.s);
+      ctx.closePath(); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = '#f0b429';                        // žluté konce listů
+      ctx.beginPath(); ctx.ellipse(x, v.oy - sm * rr * .93, 11 * v.s, 17 * v.s, 0, 0, 6.3); ctx.fill();
+    });
+    ctx.fillStyle = '#8a95a3'; ctx.strokeStyle = '#c3ccd8'; ctx.lineWidth = 1.5;
+    ctx.beginPath(); ctx.ellipse(x, v.oy, 17 * v.s, 30 * v.s, 0, 0, 6.3); ctx.fill(); ctx.stroke();
+    ctx.restore();
+  } else if (d.typ === 'prevodovka') {
+    ctx.fillStyle = '#59636f'; ctx.strokeStyle = '#c3ccd8'; ctx.lineWidth = 2;
+    const x = PX(v, d.x0), w = (d.x1 - d.x0) * v.s;
+    ctx.beginPath(); ctx.roundRect(x, PY(v, d.r), w, 2 * d.r * v.s, 6 * v.s); ctx.fill(); ctx.stroke();
+    ctx.strokeStyle = '#a86ff0'; ctx.lineWidth = Math.max(1.5, 3 * v.s);
+    for (let i = 0; i < 4; i++) { const yy = PY(v, d.r * (0.6 - i * 0.4));
+      ctx.beginPath(); ctx.moveTo(x + 6 * v.s, yy); ctx.lineTo(x + w - 6 * v.s, yy); ctx.stroke(); }
+  } else if (d.typ === 'zrno') {
+    const kan0 = motor.kanaly[0];
+    [1, -1].forEach(sm => {
+      ctx.fillStyle = '#d23c3c';
+      ctx.beginPath();
+      for (let x = d.x0; x <= d.x1; x += 6) { const [ro] = polomery(kan0, x); ctx.lineTo(PX(v, x), v.oy - sm * (ro - 6) * v.s); }
+      for (let x = d.x1; x >= d.x0; x -= 6) { const [ro] = polomery(kan0, x); ctx.lineTo(PX(v, x), v.oy - sm * (ro - 40) * v.s); }
+      ctx.closePath(); ctx.fill();
+    });
+  } else if (d.typ === 'zapal') {
+    ctx.fillStyle = '#6ddc7a';
+    ctx.beginPath(); ctx.ellipse(PX(v, d.x), v.oy, 22 * v.s, 40 * v.s, 0, 0, 6.3); ctx.fill();
+  } else if (d.typ === 'drzak') {
+    ctx.strokeStyle = '#ffd27f'; ctx.lineWidth = Math.max(2, 4 * v.s); ctx.lineCap = 'round';
+    [1, -1].forEach(sm => { for (let i = 0; i < 3; i++) {
+      const r = (28 + i * 26) * sm, x = PX(v, d.x);
+      ctx.beginPath(); ctx.moveTo(x + 10 * v.s, PY(v, r - 11 * sm));
+      ctx.lineTo(x - 8 * v.s, PY(v, r)); ctx.lineTo(x + 10 * v.s, PY(v, r + 11 * sm)); ctx.stroke(); } });
+  } else if (d.typ === 'vstrik') {
+    ctx.strokeStyle = '#7fd7ff'; ctx.lineWidth = Math.max(1.5, 2.6 * v.s);
+    [1, -1].forEach(sm => { const [ro] = polomery(motor.kanaly[0], d.x);
+      ctx.beginPath(); ctx.moveTo(PX(v, d.x), v.oy - sm * ro * v.s);
+      ctx.lineTo(PX(v, d.x), v.oy - sm * (ro - 30) * v.s); ctx.stroke();
+      for (let i = 0; i < 3; i++) { ctx.beginPath();
+        ctx.arc(PX(v, d.x) + (6 + i * 9) * v.s, v.oy - sm * (ro - 34 - i * 4) * v.s, 2.2 * v.s, 0, 6.3);
+        ctx.fillStyle = '#7fd7ff'; ctx.fill(); } });
+  } else if (d.typ === 'ventil') {
+    const [ro] = polomery(motor.kanaly[0], d.x);
+    ctx.fillStyle = '#5b6c80'; ctx.strokeStyle = '#c3ccd8'; ctx.lineWidth = 1.5;
+    const w = 22 * v.s, h = 26 * v.s;
+    ctx.beginPath(); ctx.rect(PX(v, d.x) - w / 2, v.oy + ro * v.s, w, h); ctx.fill(); ctx.stroke();
+  }
+}
+
+function kresliCastice(v, dt) {
+  const tempo = parseFloat(ui('tempo').value) * 1.2 * stav.zisk;
+  ctx.lineCap = 'round';
+  for (const c of castice) {
+    const st = stav.kanalStav[c.kan], kan = st.kan;
+    const rych = Math.max(4, st.rychlost(c.x));
+    if (bezi) {
+      c.x += rych * tempo * dt;
+      if (c.x > st.konec) Object.assign(c, novaCastice(c.kan, false));
+    }
+    const [ro, ri] = polomery(kan, c.x);
+    const r = Math.sqrt(ri * ri + c.psi * (ro * ro - ri * ri));
+    const y = v.oy - c.sgn * r * v.s;
+    const x = PX(v, c.x);
+    const d = Math.min(26, Math.max(3, rych * stav.zisk * 0.016)) * v.s;
+    ctx.strokeStyle = barvaCastice(c.kan, c.x, rych);
+    ctx.lineWidth = Math.max(1.1, 2.3 * v.s);
+    // za tryskou vlečka postupně bledne, aby proud nekončil ostrou hranou
+    const zaKoncem = c.x - kan.hranice[1];
+    ctx.globalAlpha = zaKoncem > 0 ? Math.max(.15, 1 - zaKoncem / Math.max(60, st.konec - kan.hranice[1])) : 1;
+    ctx.beginPath(); ctx.moveTo(x - d, y); ctx.lineTo(x, y); ctx.stroke();
+    ctx.globalAlpha = 1;
+  }
+}
+
+function kresliPopisky(v) {
+  ctx.font = Math.max(10, Math.min(13, 13 * Math.min(1, sirka / 900))) + 'px system-ui, sans-serif';
+  (motor.popisky || []).forEach(p => {
+    const x = PX(v, p.x), y = v.oy - p.sm * p.r * v.s;
+    const kan = motor.kanaly.reduce((nej, k) => {
+      const [ro] = polomery(k, p.x); return ro > nej.ro ? { ro, k } : nej; }, { ro: 0, k: motor.kanaly[0] });
+    const cil = v.oy - p.sm * (p.cil !== undefined ? p.cil : Math.min(p.r - 6, kan.ro)) * v.s;
+    ctx.strokeStyle = 'rgba(160,190,220,.5)'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(x, y + p.sm * 4); ctx.lineTo(x, cil); ctx.stroke();
+    ctx.fillStyle = '#dbe7f3'; ctx.textAlign = 'center';
+    ctx.textBaseline = p.sm > 0 ? 'bottom' : 'top';
+    const w = ctx.measureText(p.t).width;
+    ctx.fillStyle = 'rgba(8,18,30,.72)';
+    ctx.fillRect(x - w / 2 - 5, y - (p.sm > 0 ? 15 : 1), w + 10, 15);
+    ctx.fillStyle = '#dbe7f3'; ctx.fillText(p.t, x, y + (p.sm > 0 ? -2 : 2));
+  });
+  ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+}
+
+function kresliGraf(v) {
+  const y0 = v.hMotor + 8, h = vyska - y0 - 38;   // dole zůstane místo na nápovědu a škálu
+  if (h < 40) return;
+  const st = stav.kanalStav[motor.kanaly[0].id];
+  const x0 = PX(v, v.xmin), x1 = PX(v, Math.min(v.xmax, st.konec));
+  ctx.fillStyle = 'rgba(12,22,36,.7)'; ctx.fillRect(x0, y0, x1 - x0, h);
+  ctx.strokeStyle = 'rgba(120,160,200,.25)'; ctx.lineWidth = 1; ctx.strokeRect(x0, y0, x1 - x0, h);
+  const krivky = [
+    { n:'teplota T', b:'#ff8a5c', f: x => hodnota(st.s.T, x), max: stav.tmax },
+    { n:'tlak p',    b:'#8fdc9c', f: x => hodnota(st.s.p, x), max: stav.pmax },
+    { n:'rychlost v',b:'#7fb8ff', f: x => st.rychlost(x),      max: stav.vmax } ];
+  const zac = st.kan.kf[0][0];
+  krivky.forEach(k => {
+    ctx.strokeStyle = k.b; ctx.lineWidth = 2; ctx.beginPath();
+    for (let x = zac; x <= st.konec; x += 5) {
+      const yy = y0 + h - (k.f(x) / k.max) * (h - 32) - 6;   // nahoře místo pro legendu
+      ctx.lineTo(PX(v, x), yy);
+    }
+    ctx.stroke();
+  });
+  ctx.font = '11px system-ui, sans-serif';
+  let lx = x0 + 8;
+  krivky.forEach(k => { ctx.fillStyle = k.b; ctx.fillRect(lx, y0 + 8, 12, 3);
+    ctx.fillStyle = '#b6c8da'; ctx.fillText(k.n, lx + 17, y0 + 12); lx += ctx.measureText(k.n).width + 34; });
+}
+
+// ------------------------------------------------------------------
+//  Panely
+// ------------------------------------------------------------------
+const cislo = (v, d = 0) => v.toLocaleString('cs-CZ', { minimumFractionDigits: d, maximumFractionDigits: d });
+function napisMereni() {
+  const s = stav.stat, r = [];
+  r.push(['Tlakový poměr', cislo(s.PR, 1) + ' ×']);
+  r.push([motor.id === 'raketa' ? 'Teplota v komoře' : 'Nejvyšší teplota', cislo(s.T3 - 273) + ' °C']);
+  r.push(['Rychlost výtoku', cislo(s.ve) + ' m/s']);
+  if (!motor.bezVzduchu) r.push(['Rychlost letu', cislo(s.v0) + ' m/s (M ' + cislo(stav.m, 1) + ')']);
+  if (s.tah !== undefined) r.push(['Specifický tah', cislo(s.tah) + ' N na kg/s']);
+  if (s.vykon !== undefined) r.push(['Výkon hřídele', cislo(s.vykon) + ' kW na kg/s']);
+  if (s.ucin !== undefined) r.push(['Tepelná účinnost', cislo(s.ucin * 100) + ' %']);
+  if (s.extra) r.push(s.extra);
+  ui('mereni').innerHTML = '<div class="nadpis">' + motor.emoji + ' ' + motor.nazev + '</div>' +
+    r.map(([a, b]) => a + ' <b>' + b + '</b>').join('<br>');
+}
+function napisSkalu() {
+  const r = ui('rezim').value, pas = ui('skalaPas');
+  let stopy, min, max;
+  if (r === 'teplota') { stopy = SK_TEPLOTA; min = cislo(T_SKALA[0] - 273) + ' °C'; max = cislo(T_SKALA[1] - 273) + ' °C'; }
+  else if (r === 'tlak') { stopy = SK_TLAK; min = cislo(P_SKALA[0], 1) + ' bar'; max = cislo(P_SKALA[1]) + ' bar'; }
+  else { stopy = SK_RYCHLOST; min = '0'; max = cislo(stav.vmax) + ' m/s'; }
+  pas.style.background = 'linear-gradient(90deg,' + stopy.map(s => skala(stopy, s[0]) + ' ' + (s[0] * 100) + '%').join(',') + ')';
+  ui('skalaMin').textContent = min; ui('skalaMax').textContent = max;
+}
+function vyberMotor(id) {
+  motor = MOTORY.find(m => m.id === id) || MOTORY[0];
+  [...ui('motory').children].forEach(b => b.classList.toggle('zap', b.dataset.id === motor.id));
+  ui('infoText').innerHTML = motor.info;
+  ui('mach').disabled = !!motor.bezVzduchu;
+  prepocti(); nasypCastice();
+}
+
+// ------------------------------------------------------------------
+//  Ovládání
+// ------------------------------------------------------------------
+ui('motory').innerHTML = MOTORY.map(m =>
+  `<button data-id="${m.id}" title="${m.strucne}">${m.emoji} ${m.nazev}</button>`).join('');
+ui('motory').onclick = e => { const b = e.target.closest('button'); if (b) vyberMotor(b.dataset.id); };
+ui('plyn').oninput = () => { ui('plynV').textContent = ui('plyn').value + ' %'; prepocti(); };
+ui('mach').oninput = () => { ui('machV').textContent = 'M ' + cislo(machHodnota(), 1); prepocti(); };
+ui('rezim').onchange = napisSkalu;
+ui('graf').onchange = ui('popisky').onchange = ui('okoliZap').onchange = () => {};
+ui('btnPauza').onclick = () => { bezi = !bezi; ui('btnPauza').textContent = bezi ? '⏸️ Pauza' : '▶️ Spustit'; };
+ui('btnInfo').onclick = () => { const b = ui('infoBox'); b.style.display = b.style.display === 'none' ? 'block' : 'none'; };
+ui('zavriInfo').onclick = () => ui('infoBox').style.display = 'none';
+addEventListener('keydown', e => {
+  if (e.target.tagName === 'INPUT' || e.target.tagName === 'SELECT') return;
+  if (e.code === 'Space') { e.preventDefault(); ui('btnPauza').click(); }
+  if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+    const i = MOTORY.findIndex(m => m.id === motor.id);
+    vyberMotor(MOTORY[(i + (e.key === 'ArrowRight' ? 1 : MOTORY.length - 1)) % MOTORY.length].id);
+  }
+});
+addEventListener('resize', () => { rozmery(); nasypCastice(); });
+
+// ------------------------------------------------------------------
+rozmery();
+vyberMotor('turbojet');
+ui('infoBox').style.display = 'none';
+let posledni = performance.now();
+(function smycka(t) {
+  const dt = Math.min(0.05, (t - posledni) / 1000); posledni = t;
+  if (bezi) cas += dt;
+  kresli(dt);
+  requestAnimationFrame(smycka);
+})(posledni);
+</script>
+</body>
+</html>

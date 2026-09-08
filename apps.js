@@ -44,6 +44,11 @@ const KATALOG_SEKCE = [
         "tagy": ["markdown", "html", "převod", "konverze", "readme"]
       },
       {
+        "soubor": "obsah/md_dokument.html",
+        "nazev": "📄 Markdown → DOCX / ODT",
+        "tagy": ["markdown", "word", "docx", "odt", "odf", "doc", "libreoffice", "převod", "konverze", "dokument"]
+      },
+      {
         "soubor": "obsah/word_counter.html",
         "nazev": "🔡 Počítadlo slov",
         "tagy": ["počet slov", "znaky", "délka textu", "statistika textu"]

@@ -1,0 +1,2099 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Nodus – živé ukázky</title>
+  <meta name="description" content="Ukázková stránka Nodusu: interaktivní periodická tabulka, gravitační hřiště, aerodynamický tunel, stavba buňky, graf funkce a procvičování – vše živé přímo na stránce.">
+  <link rel="icon" href="../favicon.svg" type="image/svg+xml">
+  <link rel="alternate icon" href="../favicon.ico" sizes="16x16 32x32 48x48">
+  <!-- Sdílené skripty Nodusu jsou tu jen jako doplněk: theme.js srovná motiv
+       s rozcestníkem, podpis.js přidá autorský pruh, apps.js dodá čísla katalogu.
+       Stránka je ale schválně SOBĚSTAČNÁ – když se vytrhne ze složky a všechny
+       tři chybí, funguje dál (má vlastní palettu, vlastní přepínač motivu
+       a části závislé na katalogu se samy skryjí). -->
+  <script src="../theme.js"></script>
+  <script src="../podpis.js" defer></script>
+  <style>
+    /* ============================================================
+       Nodus – stránka živých ukázek.
+
+       Barvy jsou schválně KOPIE proměnných z common.css, ne odkaz na něj:
+       tahle stránka se má dát poslat jako jediný soubor (učiteli mailem,
+       na projektor, do cizího webu) a musí vypadat stejně i bez zbytku
+       Nodusu. Cena je jedno místo navíc při změně palety.
+       ============================================================ */
+    :root {
+      --bg: #1a1a1a; --bg-deep: #121212; --bg-panel: #242424; --bg-elevated: #2d2d2d;
+      --bg-control: #383838; --bg-input: #1e1e1e; --bg-hover: #333333;
+      --text: #e0e0e0; --text-muted: #b0b0b0; --text-faint: #888888;
+      --border: #404040; --border-strong: #4a4a4a;
+      --accent: #6aa6fd; --accent-soft: rgba(106, 166, 253, 0.15); --accent-hover: #8bbcff;
+      --ok: #4caf7d; --warn: #e0a63f; --danger: #e05d5d;
+      --ok-text: var(--ok); --danger-text: var(--danger); --zvyraz-text: var(--warn);
+      --radius: 8px; --shadow: 0 2px 10px rgba(0, 0, 0, 0.45);
+      --font: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      color-scheme: dark;
+    }
+    :root[data-theme="light"] {
+      --bg: #f2f3f5; --bg-deep: #e8eaed; --bg-panel: #ffffff; --bg-elevated: #ffffff;
+      --bg-control: #e9ecef; --bg-input: #ffffff; --bg-hover: #e2e6ea;
+      --text: #24292f; --text-muted: #4b535b; --text-faint: #7a828a;
+      --border: #d0d7de; --border-strong: #b9c2cb;
+      --accent: #2f6fce; --accent-soft: rgba(47, 111, 206, 0.12); --accent-hover: #1f5bb5;
+      --shadow: 0 2px 10px rgba(0, 0, 0, 0.12);
+      /* stavové barvy pro TEXT na bílém papíře – tmavší, jinak nejsou vidět */
+      --ok-text: #1f7a52; --danger-text: #b3261e; --zvyraz-text: #8a6209;
+      color-scheme: light;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: var(--font); background: var(--bg-deep); color: var(--text); }
+    .obal { max-width: 1060px; margin: 0 auto; padding: 0 clamp(14px, 3.5vw, 36px); }
+
+    /* ---- Úvodní pruh ---- */
+    .hero {
+      background: radial-gradient(1200px 380px at 10% -40%, var(--accent-soft), transparent 70%), var(--bg-panel);
+      border-bottom: 1px solid var(--border);
+      padding: clamp(26px, 5vw, 52px) 0 clamp(22px, 4vw, 38px);
+    }
+    .hero h1 {
+      font-size: clamp(1.9rem, 6vw, 3rem); font-weight: 700; letter-spacing: -0.01em;
+      display: flex; align-items: center; gap: 0.28em; margin-bottom: 10px;
+    }
+    .hero h1 .symbol { width: 1.05em; height: 1em; fill: var(--accent); flex: none; }
+    .hero .claim { font-size: clamp(1rem, 2.4vw, 1.25rem); line-height: 1.5; max-width: 660px; }
+    .hero .claim b { color: var(--accent); font-weight: 650; }
+    .hero .drobne { color: var(--text-muted); font-size: 0.92rem; line-height: 1.6; max-width: 660px; margin-top: 10px; }
+
+    .cisla { display: flex; flex-wrap: wrap; gap: clamp(16px, 4vw, 40px); margin-top: 22px; }
+    .cisla .hodnota { font-size: clamp(1.5rem, 4.5vw, 2rem); font-weight: 700; color: var(--accent); font-variant-numeric: tabular-nums; }
+    .cisla .popisek { color: var(--text-faint); font-size: 0.8rem; }
+
+    .tlacitka { display: flex; flex-wrap: wrap; gap: 9px; margin-top: 22px; }
+    .tlacitka a, .tlacitka button, .demo-lista button, .demo-lista a {
+      display: inline-flex; align-items: center; gap: 6px;
+      background: var(--bg-control); border: 1px solid var(--border-strong); color: var(--text);
+      border-radius: 9px; padding: 10px 16px; font-size: 0.92rem; font-family: inherit;
+      font-weight: 600; text-decoration: none; cursor: pointer;
+      transition: transform 0.12s ease, border-color 0.12s ease, background-color 0.12s ease;
+    }
+    .tlacitka a:hover, .tlacitka button:hover, .demo-lista button:hover, .demo-lista a:hover {
+      border-color: var(--accent); background: var(--bg-hover); transform: translateY(-2px);
+    }
+    .tlacitka .hlavni { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .tlacitka .hlavni:hover { background: var(--accent-hover); border-color: var(--accent-hover); }
+
+    /* Značka Nodusu je uzel – síť teček a spojnic v hlavičce na to hraje.
+       Je jen kulisa: leží pod obsahem, nechytá klikání a při
+       prefers-reduced-motion se nakreslí jen jednou a zamrzne. */
+    .hero { position: relative; overflow: hidden; }
+    .hero > .obal { position: relative; z-index: 1; }
+    #heroPlatno {
+      position: absolute; inset: 0; width: 100%; height: 100%;
+      pointer-events: none; opacity: 0.5;
+    }
+
+    /* ---- Pás pro školu (pro ředitele a správce sítě) ---- */
+    .skola {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(215px, 1fr)); gap: 10px;
+      margin: 22px 0 4px;
+    }
+    /* jen vnější karta je flex – vnitřní blok s textem se jinak roztrhal
+       na dva úzké sloupce vedle sebe */
+    .skola > div {
+      display: flex; gap: 10px; align-items: flex-start;
+      background: var(--bg-panel); border: 1px solid var(--border); border-radius: 10px;
+      padding: 12px 14px;
+    }
+    .skola > div > div { min-width: 0; }
+    .skola .znak { font-size: 1.3rem; line-height: 1.1; }
+    .skola b { display: block; font-size: 0.88rem; margin-bottom: 2px; }
+    .skola span.text { color: var(--text-muted); font-size: 0.8rem; line-height: 1.45; }
+
+    /* ---- Lišta ukázek (na projektoru se s ní skáče mezi ukázkami) ---- */
+    .lista-ukazek {
+      position: sticky; top: 0; z-index: 20;
+      display: flex; gap: 6px; overflow-x: auto; scrollbar-width: thin;
+      background: color-mix(in srgb, var(--bg-deep) 88%, transparent);
+      backdrop-filter: blur(6px);
+      border-bottom: 1px solid var(--border);
+      margin: 22px 0 0; padding: 9px 0;
+    }
+    .lista-ukazek a {
+      display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
+      background: var(--bg-panel); border: 1px solid var(--border); border-radius: 999px;
+      padding: 6px 13px; color: var(--text-muted); text-decoration: none;
+      font-size: 0.82rem; font-weight: 600;
+      transition: color 0.12s ease, border-color 0.12s ease, background-color 0.12s ease;
+    }
+    .lista-ukazek a:hover { color: var(--text); border-color: var(--accent); }
+    .lista-ukazek a.aktivni {
+      background: var(--accent); border-color: var(--accent); color: #fff;
+    }
+    .lista-ukazek a .cislo { opacity: 0.65; font-size: 0.72rem; font-variant-numeric: tabular-nums; }
+
+    /* ---- Karta jedné ukázky ---- */
+    .demo {
+      background: var(--bg-panel); border: 1px solid var(--border); border-radius: 14px;
+      margin: 26px 0; overflow: hidden; box-shadow: var(--shadow);
+      scroll-margin-top: 62px;          /* aby ukázku nepřekryla lepivá lišta */
+      transition: border-color 0.15s ease;
+    }
+    .demo:hover { border-color: var(--border-strong); }
+    .demo > header {
+      background: linear-gradient(115deg, var(--accent-soft), transparent 62%);
+    }
+    .demo > header {
+      display: flex; flex-wrap: wrap; align-items: baseline; gap: 8px 12px;
+      padding: 16px 18px 12px; border-bottom: 1px solid var(--border);
+    }
+    .demo > header h2 { font-size: 1.08rem; font-weight: 650; }
+    .demo > header .predmet {
+      background: var(--accent-soft); color: var(--accent); border: 1px solid var(--border);
+      border-radius: 999px; padding: 3px 10px; font-size: 0.74rem; font-weight: 650;
+    }
+    .demo > header .ukazka-stitek {
+      margin-left: auto; color: var(--text-faint); font-size: 0.74rem; font-weight: 600;
+      letter-spacing: 0.06em; text-transform: uppercase; white-space: nowrap;
+      border: 1px dashed var(--border-strong); border-radius: 999px; padding: 3px 10px;
+    }
+    .demo > header .poradi {
+      margin-left: auto; color: var(--text-faint); font-size: 0.74rem; font-weight: 700;
+      font-variant-numeric: tabular-nums; letter-spacing: 0.04em;
+    }
+    /* pořadí už odsadilo štítek doprava, druhé auto by je od sebe roztrhlo */
+    .demo > header .poradi + .ukazka-stitek { margin-left: 0; }
+    .demo > header p { flex-basis: 100%; color: var(--text-muted); font-size: 0.88rem; line-height: 1.5; }
+    .demo .telo { padding: 16px 18px 18px; }
+    .demo-lista { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 12px; }
+    .demo-lista button { padding: 8px 13px; font-size: 0.86rem; font-weight: 500; }
+    .demo-lista .napoveda { color: var(--text-faint); font-size: 0.79rem; line-height: 1.45; }
+    .demo-lista .oddel { margin-left: auto; }
+    .demo-lista label { display: inline-flex; align-items: center; gap: 6px; color: var(--text-muted); font-size: 0.84rem; }
+    .demo-lista input[type=range] { accent-color: var(--accent); width: 110px; }
+    .demo-lista input[type=checkbox] { accent-color: var(--accent); }
+
+    .platno-obal {
+      position: relative; background: var(--bg-input); border: 1px solid var(--border);
+      border-radius: 10px; overflow: hidden;
+    }
+    .platno-obal canvas { display: block; width: 100%; touch-action: none; }
+    .platno-obal .cedule {
+      position: absolute; left: 10px; top: 9px; color: var(--text-faint);
+      font-size: 0.78rem; line-height: 1.5; pointer-events: none;
+      background: color-mix(in srgb, var(--bg-input) 78%, transparent);
+      border-radius: 7px; padding: 5px 9px;
+    }
+    .platno-obal .cedule b { color: var(--text-muted); }
+
+    /* ---- 1. Gravitační hřiště ---- */
+    #gravPlatno { height: 400px; }
+    .grav-udaje {
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(108px, 1fr)); gap: 8px; margin-top: 10px;
+    }
+    .grav-udaje div {
+      background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 8px; padding: 8px 10px;
+    }
+    .grav-udaje .popisek { color: var(--text-faint); font-size: 0.72rem; }
+    .grav-udaje .hodnota { font-size: 1.02rem; font-weight: 650; font-variant-numeric: tabular-nums; }
+
+    /* ---- 2. Periodická tabulka ---- */
+    .pt-obal { display: grid; grid-template-columns: minmax(0, 1fr) 268px; gap: 14px; align-items: start; }
+    .pt-obal > div { min-width: 0; }
+    .pt-posuv { overflow-x: auto; padding-bottom: 6px; }
+    .pt-mrizka {
+      display: grid; grid-template-columns: repeat(18, minmax(30px, 1fr));
+      gap: 2px; min-width: 580px;
+    }
+    .pt-prvek {
+      aspect-ratio: 1; border: 0; border-radius: 3px; padding: 2px 0 0; cursor: pointer;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      color: #12181f; font-family: inherit; line-height: 1.05; overflow: hidden;
+      transition: transform 0.1s ease, box-shadow 0.1s ease;
+    }
+    .pt-prvek .z { font-size: 0.46rem; opacity: 0.75; }
+    .pt-prvek .zn { font-size: 0.82rem; font-weight: 700; }
+    .pt-prvek .nz { font-size: 0.4rem; opacity: 0.8; max-width: 100%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .pt-prvek:hover { transform: scale(1.16); box-shadow: 0 0 0 2px var(--text); z-index: 2; }
+    .pt-prvek.vybrany { box-shadow: 0 0 0 2px var(--text); z-index: 2; }
+    .pt-prvek.ztlumeny { opacity: 0.16; }
+    .pt-mezera { grid-column: 1 / -1; height: 7px; }
+
+    .pt-detail {
+      background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 10px;
+      padding: 14px; position: sticky; top: 10px;
+    }
+    .pt-detail .hlava { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; }
+    .pt-detail .znak { font-size: 2.4rem; font-weight: 700; line-height: 1; }
+    .pt-detail h3 { font-size: 1.02rem; }
+    .pt-detail .kat { color: var(--text-faint); font-size: 0.76rem; }
+    .pt-detail .radek { display: flex; justify-content: space-between; gap: 10px; font-size: 0.8rem; padding: 3px 0; border-bottom: 1px solid var(--border); }
+    .pt-detail .radek span { color: var(--text-muted); }
+    .pt-detail .radek b { font-variant-numeric: tabular-nums; }
+    .pt-detail .konf { font-size: 0.76rem; color: var(--text-muted); margin-top: 8px; line-height: 1.5; word-break: break-word; }
+    .pt-detail canvas { display: block; width: 100%; height: 170px; margin-top: 6px; }
+    .pt-legenda { display: flex; flex-wrap: wrap; gap: 4px 8px; margin-top: 10px; }
+    .pt-legenda button {
+      display: inline-flex; align-items: center; gap: 5px; background: none; border: 0;
+      color: var(--text-muted); font-family: inherit; font-size: 0.74rem; cursor: pointer; padding: 2px 4px;
+      border-radius: 5px;
+    }
+    .pt-legenda button:hover, .pt-legenda button.aktivni { background: var(--bg-hover); color: var(--text); }
+    .pt-legenda i { width: 10px; height: 10px; border-radius: 2px; }
+    .pt-hledat {
+      background: var(--bg-input); border: 1px solid var(--border-strong); color: var(--text);
+      border-radius: 8px; padding: 8px 12px; font-family: inherit; font-size: 0.86rem; width: 190px;
+    }
+    .pt-hledat:focus { outline: none; border-color: var(--accent); }
+    @media (max-width: 780px) {
+      /* minmax(0, 1fr), ne 1fr: sloupec by se jinak roztáhl na šířku mřížky
+         prvků (580 px), .pt-posuv by neměl co posouvat a tabulka by se
+         na mobilu jen oříznula */
+      .pt-obal { grid-template-columns: minmax(0, 1fr); }
+      .pt-detail { position: static; }
+    }
+    .pt-posuv { min-width: 0; }
+
+    /* ---- 3. Aerodynamický tunel ---- */
+    #tunelPlatno { height: 300px; }
+
+    /* ---- 4. Buňka ---- */
+    .bunka-obal { display: grid; grid-template-columns: minmax(0, 320px) minmax(0, 1fr); gap: 16px; align-items: start; }
+    .bunka-obal svg { width: 100%; height: auto; display: block; background: var(--bg-input); border-radius: 10px; border: 1px solid var(--border); }
+    .organ { cursor: pointer; transform-box: fill-box; transform-origin: center; }
+    .organ:hover { opacity: 0.8; }
+    .organ.vybrany { filter: drop-shadow(0 0 6px #f5c542); }
+    .bunka-info {
+      background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px;
+    }
+    .bunka-info h3 { font-size: 1rem; margin-bottom: 6px; }
+    .bunka-info p { color: var(--text-muted); font-size: 0.9rem; line-height: 1.6; }
+    .bunka-seznam { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 12px; }
+    .bunka-seznam button {
+      background: var(--bg-control); border: 1px solid var(--border); color: var(--text-muted);
+      border-radius: 999px; padding: 5px 11px; font-size: 0.78rem; font-family: inherit; cursor: pointer;
+    }
+    .bunka-seznam button:hover, .bunka-seznam button.vybrany { border-color: var(--accent); color: var(--text); }
+    @media (max-width: 700px) { .bunka-obal { grid-template-columns: 1fr; } }
+
+    /* ---- 5. Graf funkce ---- */
+    #grafPlatno { height: 320px; }
+    .graf-vzorec {
+      font-size: 1.15rem; font-weight: 650; text-align: center; margin-bottom: 10px;
+      font-variant-numeric: tabular-nums;
+    }
+    .graf-vzorec .a, .jezdec.a { color: var(--accent); }
+    .graf-vzorec .b, .jezdec.b { color: var(--warn); }
+    .graf-vzorec .c, .jezdec.c { color: var(--ok); }
+    .jezdec { font-size: 1rem; font-style: italic; }
+    .graf-fakta { color: var(--text-muted); font-size: 0.84rem; line-height: 1.6; margin-top: 10px; }
+    .graf-fakta b { color: var(--text); font-variant-numeric: tabular-nums; }
+
+    /* ---- 6. Procvičování ---- */
+    .plocha {
+      background: var(--bg-elevated); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 22px 20px; text-align: center; min-height: 300px;
+      display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 15px;
+    }
+    .plocha .zadani { color: var(--text-muted); font-size: 0.98rem; }
+    .veta-uloha { font-size: clamp(1.3rem, 4vw, 1.9rem); font-weight: 650; line-height: 1.5; }
+    .veta-uloha .spoust { color: var(--zvyraz-text); }
+    .veta-uloha .mezera {
+      display: inline-block; min-width: 1.1em; border-bottom: 3px solid var(--accent);
+      text-align: center; color: var(--accent);
+    }
+    .veta-uloha .mezera.doplneno { color: var(--ok-text); border-color: var(--ok-text); }
+    .moznosti { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+    .moznosti button {
+      min-width: 104px; padding: 13px 16px; border-radius: 12px; cursor: pointer;
+      background: var(--bg-control); border: 1px solid var(--border-strong); color: var(--text);
+      font-family: inherit; font-size: 1.02rem; font-weight: 600;
+      transition: transform 0.12s ease, border-color 0.12s ease;
+    }
+    .moznosti button:hover { border-color: var(--accent); transform: translateY(-3px); }
+    .moznosti button.spravne { background: var(--ok); border-color: var(--ok); color: #fff; }
+    .moznosti button.spatne { background: var(--danger); border-color: var(--danger); color: #fff; }
+    .odezva { font-size: 1rem; font-weight: 600; min-height: 26px; }
+    .odezva.ok { color: var(--ok-text); }
+    .odezva.chyba { color: var(--danger-text); }
+    .pravidlo {
+      display: flex; gap: 10px; text-align: left; max-width: 620px;
+      background: var(--bg-panel); border: 1px solid var(--border); border-left: 3px solid var(--ok);
+      border-radius: 8px; padding: 12px 14px; color: var(--text-muted); font-size: 0.9rem; line-height: 1.6;
+    }
+    .pravidlo .znak { font-size: 1.3rem; line-height: 1.2; }
+    .pravidlo b { color: var(--text); }
+    @keyframes trhnuti {
+      0%, 100% { transform: translateX(0); } 20% { transform: translateX(-6px); }
+      40% { transform: translateX(6px); } 60% { transform: translateX(-4px); } 80% { transform: translateX(4px); }
+    }
+    .trhni { animation: trhnuti 0.35s; }
+
+    /* ---- 7. Generátor testů ---- */
+    .test-volby { display: flex; flex-wrap: wrap; gap: 10px 14px; align-items: flex-end; margin-bottom: 12px; }
+    .test-volby label { display: flex; flex-direction: column; gap: 4px; color: var(--text-faint); font-size: 0.76rem; }
+    .test-volby select, .test-volby input {
+      background: var(--bg-input); border: 1px solid var(--border-strong); color: var(--text);
+      border-radius: 8px; padding: 8px 10px; font-family: inherit; font-size: 0.88rem;
+    }
+    .test-volby select:focus, .test-volby input:focus { outline: none; border-color: var(--accent); }
+    .test-volby input { width: 108px; text-transform: uppercase; letter-spacing: 0.08em; }
+
+    /* Arch je vždycky bílý papír – proto tady schválně NEJSOU proměnné motivu.
+       Ve světlém režimu by se jinak čísla úloh a linky na jméno slily s papírem
+       (stejná past je popsaná u plného generátoru pracovních listů). */
+    .list {
+      background: #ffffff; color: #17191c; border: 1px solid var(--border);
+      border-radius: 8px; padding: 22px clamp(16px, 3vw, 30px); margin-top: 14px;
+    }
+    .list h3 { font-size: 1.05rem; margin-bottom: 2px; }
+    .list .pokyn { font-size: 0.86rem; color: #4b535b; margin-bottom: 12px; }
+    .list .hlavicka {
+      display: flex; flex-wrap: wrap; gap: 8px 22px; border-bottom: 1px solid #c9ced4;
+      padding-bottom: 10px; margin-bottom: 14px; font-size: 0.82rem; color: #4b535b;
+    }
+    .list .hlavicka span { flex: 1 1 150px; border-bottom: 1px dotted #9aa1a8; padding-bottom: 2px; }
+    .list ol { columns: 2; column-gap: 30px; list-style: none; counter-reset: uloha; }
+    .list li {
+      counter-increment: uloha; break-inside: avoid; margin-bottom: 11px;
+      display: flex; gap: 8px; align-items: baseline; font-size: 0.94rem;
+    }
+    .list li::before {
+      content: counter(uloha) "."; color: #6b7480; font-size: 0.78rem;
+      min-width: 1.4em; text-align: right; flex: none;
+    }
+    .list li .zadani-listu { flex: 1; }
+    .list li .misto { display: inline-block; min-width: 3.4em; border-bottom: 1px solid #9aa1a8; }
+    /* Nadpis oddílu na archu – pokyn pro následující úlohy. Nepočítá se do
+       číslování a nesmí zůstat na konci sloupce sám bez svých úloh. */
+    .list li.oddil {
+      counter-increment: none; display: block; margin: 14px 0 8px;
+      font-size: 0.82rem; color: #3d444b; break-after: avoid; break-inside: avoid;
+    }
+    .list li.oddil:first-child { margin-top: 0; }
+    .list li.oddil::before { content: none; }
+    .list li.oddil b { color: #17191c; }
+    .list .reseni { border-top: 1px solid #c9ced4; margin-top: 12px; padding-top: 10px; font-size: 0.84rem; color: #3d444b; }
+    .list .reseni b { color: #17191c; }
+    .list .kod { margin-top: 12px; font-size: 0.74rem; color: #6b7480; letter-spacing: 0.06em; }
+    @media (max-width: 620px) { .list ol { columns: 1; } }
+
+    /* Tisk: z celé stránky jde na papír jen vygenerovaný list.
+       Schovává se výčtem „všechno kromě“, ne seznamem konkrétních prvků –
+       ten se rozešel s obsahem, jakmile stránka dostala pás pro školu
+       a lištu ukázek, a ty pak vyjely na papír nad arch. */
+    /* Okraj tiskové stránky. Patří MIMO @media print – vnořené @page Chrome
+       zahodí a arch pak doléhá na ořezovou hranu (první znaky řádků se ztrácejí).
+       Na obrazovku @page stejně nemá vliv. */
+    @page { margin: 14mm; }
+
+    @media print {
+      body > *:not(.obal),
+      .obal > *:not(#test),
+      .demo-lista, .test-volby, #test > header { display: none !important; }
+      body { background: #fff; }
+      .obal { max-width: none; padding: 0; }
+      .demo { border: 0; box-shadow: none; margin: 0; background: none; }
+      .demo .telo { padding: 0; }
+      .list { border: 0; border-radius: 0; padding: 2mm; margin: 0; }
+      .list .reseni { break-before: page; }
+    }
+
+    /* ---- Závěr ---- */
+    .zaver {
+      background: linear-gradient(120deg, var(--accent-soft), transparent 75%);
+      border: 1px solid var(--border); border-radius: 14px; padding: clamp(20px, 4vw, 30px); margin: 30px 0;
+    }
+    .zaver h2 { font-size: 1.2rem; margin-bottom: 8px; }
+    .zaver p { color: var(--text-muted); font-size: 0.92rem; line-height: 1.6; max-width: 640px; }
+    .pata { color: var(--text-faint); font-size: 0.79rem; line-height: 1.6; padding: 16px 0 40px; }
+    .pata a { color: var(--text-muted); }
+    .skryto { display: none !important; }
+  </style>
+</head>
+<body>
+
+<div class="hero">
+  <canvas id="heroPlatno" aria-hidden="true"></canvas>
+  <div class="obal">
+    <h1><svg class="symbol" viewBox="0 0 782 737" aria-hidden="true" xmlns="http://www.w3.org/2000/svg"><g transform="translate(0,737) scale(0.1,-0.1)"><path d="M3640 7351 c-1053 -202 -1833 -1281 -1877 -2598 -7 -225 -12 -217 97 -157 114 62 372 174 544 236 135 48 132 45 140 116 76 673 470 1325 944 1561 266 133 585 135 851 4 655 -322 1060 -1322 937 -2313 -111 -897 -506 -1752 -1128 -2442 -38 -42 -68 -80 -68 -86 0 -41 405 -332 574 -414 49 -23 49 -23 113 47 967 1047 1478 2693 1233 3970 -190 988 -781 1759 -1540 2009 -249 82 -593 110 -820 67z M3630 4884 c-591 -50 -1072 -179 -1585 -424 -1037 -494 -1786 -1337 -1985 -2230 -249 -1117 371 -2005 1530 -2194 212 -35 557 -48 708 -27 37 5 110 15 162 21 352 44 788 179 1130 350 138 69 137 67 34 140 -137 97 -266 203 -412 338 -98 91 -138 122 -150 117 -920 -378 -1848 -255 -2176 289 -337 560 -9 1434 771 2053 921 732 2090 975 3201 667 90 -25 166 -44 168 -41 6 6 23 100 40 217 17 128 31 554 18 563 -46 28 -480 116 -704 143 -127 15 -640 27 -750 18z M6246 4168 c-3 -12 -12 -77 -21 -143 -21 -157 -69 -424 -100 -550 -28 -115 -41 -87 101 -205 680 -564 998 -1352 765 -1899 -328 -771 -1696 -828 -2731 -113 -729 503 -1365 1438 -1600 2350 -14 53 -15 53 -157 -12 -277 -128 -540 -288 -535 -327 10 -81 175 -514 285 -751 377 -809 1056 -1586 1749 -2004 1386 -835 3092 -622 3632 453 494 985 -31 2305 -1251 3143 -125 86 -131 89 -137 58z"/></g></svg> Nodus</h1>
+    <p class="claim">Sedm <b>živých ukázek</b> přímo tady na stránce – ne obrázky, ne video.
+      Klikejte, táhněte, posouvejte. Přesně tohle dělají žáci v Nodusu, jen ve zkrácené podobě.</p>
+    <p class="drobne">Interaktivní procvičování a názorné simulace pro celou základní školu.
+      Všechno běží přímo v prohlížeči – nic se neinstaluje a po prvním otevření to jede i bez internetu.</p>
+
+    <div class="cisla" id="cisla"></div>
+
+    <div class="tlacitka">
+      <a class="hlavni" href="../index.html" id="btnOtevrit">▶ Otevřít Nodus</a>
+      <a href="#grav">🪐 Skočit na první ukázku</a>
+      <a href="#test">🖨️ Vyrobit test</a>
+      <button type="button" id="btnTema" title="Přepnout světlý / tmavý režim">🌙 Motiv</button>
+    </div>
+  </div>
+</div>
+
+<div class="obal">
+
+  <!-- Čtyři věty pro toho, kdo o nasazení rozhoduje. Schválně jen o provozu
+       (instalace, síť, data, osnova) – o ceně a účtech tu nic neslibujeme. -->
+  <div class="skola">
+    <div><span class="znak" aria-hidden="true">🖥️</span><div>
+      <b>Nic se neinstaluje</b><span class="text">Běží v prohlížeči – na počítači, tabletu i interaktivní tabuli.</span></div></div>
+    <div><span class="znak" aria-hidden="true">📴</span><div>
+      <b>Funguje offline</b><span class="text">Po prvním otevření běží i bez sítě – i na starším notebooku.</span></div></div>
+    <div><span class="znak" aria-hidden="true">🔒</span><div>
+      <b>Data zůstávají ve škole</b><span class="text">Vše počítá prohlížeč. Nic se nikam neodesílá.</span></div></div>
+    <div><span class="znak" aria-hidden="true">📐</span><div>
+      <b>Podle osnovy ZŠ</b><span class="text">Každé téma má svůj předmět a ročník, ne jen název aplikace.</span></div></div>
+  </div>
+
+  <nav class="lista-ukazek" id="listaUkazek" aria-label="Přejít na ukázku"></nav>
+
+  <!-- ================= 1. Gravitační hřiště ================= -->
+  <section class="demo" id="grav" data-nav="🪐 Gravitace">
+    <header>
+      <span class="predmet">⚛️ Fyzika · 6.–9. ročník</span>
+      <h2>🪐 Gravitační hřiště</h2>
+      <span class="ukazka-stitek">Ukázková verze</span>
+      <p><b>Táhněte myší od hvězdy a pusťte</b> – jako prakem vystřelíte planetku. Krátké tažení =
+        pád do hvězdy, dlouhé = únik do prázdna. Někde mezi tím je oběžná dráha.</p>
+    </header>
+    <div class="telo">
+      <div class="platno-obal">
+        <canvas id="gravPlatno"></canvas>
+        <div class="cedule" id="gravCedule"><b>Táhněte a pusťte.</b></div>
+      </div>
+      <div class="grav-udaje" id="gravUdaje"></div>
+      <div class="demo-lista">
+        <button type="button" id="gravOrbita">🌍 Kruhová dráha</button>
+        <button type="button" id="gravStop">⏸ Pauza</button>
+        <button type="button" id="gravSmaz">🧹 Vymazat</button>
+        <span class="napoveda">Počítá se Newtonův gravitační zákon (leapfrog), proto z toho vycházejí
+          skutečné elipsy – i Keplerovy zákony.</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 2. Periodická tabulka ================= -->
+  <section class="demo" id="prvky" data-nav="⚛️ Prvky">
+    <header>
+      <span class="predmet">⚗️ Chemie · 8.–9. ročník</span>
+      <h2>⚛️ Periodická tabulka prvků</h2>
+      <span class="ukazka-stitek">Ukázková verze</span>
+      <p>Všech 118 prvků. <b>Klepněte na kterýkoli</b> – vpravo se dopočítá elektronová konfigurace
+        a rozběhne se Bohrův model se skutečným počtem elektronů ve slupkách.</p>
+    </header>
+    <div class="telo">
+      <div class="pt-obal">
+        <div>
+          <div class="pt-posuv"><div class="pt-mrizka" id="ptMrizka"></div></div>
+          <div class="pt-legenda" id="ptLegenda"></div>
+        </div>
+        <div class="pt-detail" id="ptDetail"></div>
+      </div>
+      <div class="demo-lista">
+        <input type="search" class="pt-hledat" id="ptHledat" placeholder="🔍 Hledat prvek…" autocomplete="off">
+        <button type="button" id="ptNahodny">🎲 Náhodný prvek</button>
+        <span class="napoveda">Skupiny v legendě fungují jako filtr.</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 3. Aerodynamický tunel ================= -->
+  <section class="demo" id="tunel" data-nav="💨 Tunel">
+    <header>
+      <span class="predmet">⚛️ Fyzika · 7.–9. ročník</span>
+      <h2>💨 Vítr a překážky – aerodynamický tunel</h2>
+      <span class="ukazka-stitek">Ukázková verze</span>
+      <p><b>Táhněte překážku</b> napříč proudem a měňte její velikost. Barva částic ukazuje rychlost:
+        po stranách se vzduch zrychlí, před překážkou a za ní se zastaví.</p>
+    </header>
+    <div class="telo">
+      <div class="platno-obal">
+        <canvas id="tunelPlatno"></canvas>
+        <div class="cedule" id="tunelCedule"></div>
+      </div>
+      <div class="demo-lista">
+        <label>Velikost <input type="range" id="tunelR" min="18" max="70" value="42"></label>
+        <label>Vítr <input type="range" id="tunelV" min="20" max="150" value="80"></label>
+        <label><input type="checkbox" id="tunelStopy" checked> Stopy proudění</label>
+        <span class="napoveda">Rychlejší proud = nižší tlak. Právě z toho vzniká vztlak na křídle.</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 4. Stavba buňky ================= -->
+  <section class="demo" id="bunka" data-nav="🔬 Buňka">
+    <header>
+      <span class="predmet">🧬 Přírodopis · 6. ročník</span>
+      <h2>🔬 Stavba rostlinné buňky</h2>
+      <span class="ukazka-stitek">Ukázková verze</span>
+      <p><b>Klepněte na organelu</b> v obrázku (nebo na její jméno) a zjistěte, co v buňce dělá.</p>
+    </header>
+    <div class="telo">
+      <div class="bunka-obal">
+        <svg viewBox="0 0 300 300" id="bunkaSvg" xmlns="http://www.w3.org/2000/svg" role="img" aria-label="Schéma rostlinné buňky"></svg>
+        <div>
+          <div class="bunka-info" id="bunkaInfo"></div>
+          <div class="bunka-seznam" id="bunkaSeznam"></div>
+        </div>
+      </div>
+      <div class="demo-lista">
+        <span class="napoveda">Ilustrace je zjednodušená pro výuku – velikosti a tvary organel
+          neodpovídají skutečnému měřítku.</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 5. Graf funkce ================= -->
+  <section class="demo" id="graf" data-nav="📈 Funkce">
+    <header>
+      <span class="predmet">🔢 Matematika · 9. ročník</span>
+      <h2>📈 Kvadratická funkce naživo</h2>
+      <span class="ukazka-stitek">Ukázková verze</span>
+      <p><b>Posouvejte koeficienty</b> a sledujte, co se dělá s parabolou. Vrchol, průsečíky s osami
+        i diskriminant se přepočítávají okamžitě.</p>
+    </header>
+    <div class="telo">
+      <div class="graf-vzorec" id="grafVzorec"></div>
+      <div class="platno-obal"><canvas id="grafPlatno"></canvas></div>
+      <div class="demo-lista">
+        <label><b class="jezdec a">a</b> <input type="range" id="grafA" min="-30" max="30" value="10" step="1"></label>
+        <label><b class="jezdec b">b</b> <input type="range" id="grafB" min="-60" max="60" value="0" step="1"></label>
+        <label><b class="jezdec c">c</b> <input type="range" id="grafC" min="-50" max="50" value="-20" step="1"></label>
+        <button type="button" id="grafReset">↩ Zpět na y = x²</button>
+      </div>
+      <div class="graf-fakta" id="grafFakta"></div>
+    </div>
+  </section>
+
+  <!-- ================= 6. Procvičování ================= -->
+  <section class="demo" id="uloha" data-nav="✍️ Procvičování">
+    <header>
+      <span class="predmet">📖 Napříč předměty</span>
+      <h2>✍️ Procvičování, které vysvětluje</h2>
+      <span class="ukazka-stitek">Ukázková verze</span>
+      <p>Tohle je jádro celého webu: špatná odpověď úlohu <b>nezavírá</b>, jen zaklepe.
+        Po správné odpovědi přijde kartička <b>proč</b> to tak je.</p>
+    </header>
+    <div class="telo">
+      <div class="plocha" id="plocha"></div>
+      <div class="demo-lista">
+        <button type="button" id="btnDalsi">Další úloha →</button>
+        <span class="napoveda" id="ulohaSkore"></span>
+      </div>
+    </div>
+  </section>
+
+  <!-- ================= 7. Generátor testů ================= -->
+  <section class="demo" id="test" data-nav="🖨️ Testy">
+    <header>
+      <span class="predmet">🍎 Pro učitele · 1.–9. ročník</span>
+      <h2>🖨️ Generátor testů</h2>
+      <span class="ukazka-stitek">Ukázková verze</span>
+      <p>Vyberte ročník, téma a obtížnost – <b>list se složí sám</b> a dá se rovnou vytisknout.
+        Stejný <b>kód listu</b> vyrobí pokaždé stejný test, takže se dá zadat i za rok znovu.</p>
+    </header>
+    <div class="telo">
+      <div class="test-volby">
+        <label>Ročník <select id="testRocnik"></select></label>
+        <label>Téma <select id="testTema"></select></label>
+        <label>Obtížnost <select id="testObtiznost">
+          <option value="easy">lehká</option>
+          <option value="medium" selected>střední</option>
+          <option value="hard">těžká</option>
+        </select></label>
+        <label>Úloh <select id="testPocet">
+          <option>6</option><option selected>10</option><option>16</option><option>20</option>
+        </select></label>
+        <label>Kód listu <input type="text" id="testKod" maxlength="8" autocomplete="off"></label>
+      </div>
+      <div class="demo-lista">
+        <button type="button" id="testNovy">🎲 Nový list</button>
+        <button type="button" id="testReseni">👁 Ukázat řešení</button>
+        <button type="button" id="testTisk">🖨️ Vytisknout</button>
+        <span class="napoveda">Tiskne se jen arch – ovládání ani zbytek stránky na papír nejdou.</span>
+      </div>
+      <div class="list" id="testList"></div>
+    </div>
+  </section>
+
+  <section class="zaver">
+    <h2>A tohle byl jen ochutnávkový talíř</h2>
+    <p id="zaverText">Plné verze umí mnohem víc: gravitační hřiště kreslí Keplerovy plochy a dráhové
+      elementy, periodická tabulka má popisy a kvíz, tunel počítá odpor tvaru, buňka má i živočišnou
+      variantu a fotografii modelu, generátor listů má přes sto témat, záhlaví se školou a tisk
+      řešení na zvláštní stránce. A vedle nich je ještě celá osnova od první do deváté třídy.</p>
+    <div class="tlacitka">
+      <a class="hlavni" href="../index.html" id="btnOtevrit2">▶ Otevřít Nodus</a>
+      <a href="prehled.html" id="btnPrehled">🏠 Přehled učiva</a>
+      <a href="osnova.html" id="btnOsnova">🗺️ Osnova podle ročníků</a>
+    </div>
+  </section>
+
+  <p class="pata">
+    Nodus běží celý v prohlížeči – žádná data neopouštějí počítač.
+    Obsah slouží k procvičování, ne jako náhrada učebnice.
+    <span id="pataOdkaz"></span>
+  </p>
+</div>
+
+<script src="../apps.js"></script>
+<script>
+/* ============================================================
+   Nodus – živé ukázky.
+
+   Stránka běží ve třech situacích a ve všech musí vypadat stejně:
+     • uvnitř rozcestníku (iframe) – odkazy posílá rodiči přes postMessage,
+     • samostatně otevřená ve složce Nodusu – odkazy vedou na ../index.html,
+     • vytržená ze složky (jediný soubor jinde) – odkazy do Nodusu se
+       nezobrazí vůbec a stránka je čistě ukázková.
+   Rozlišuje se podle toho, jestli se povedlo načíst katalog `apps.js`.
+
+   Ukázky jsou zkrácené verze skutečných aplikací; data (prvky, organely,
+   schéma buňky) jsou převzatá z jejich zdrojů, aby ukázka neříkala něco
+   jiného než plná verze.
+   ============================================================ */
+const $ = id => document.getElementById(id);
+const vRozcestniku = window.parent !== window;
+const vNodusu = typeof KATALOG_SEKCE !== 'undefined';
+
+/* ---- Odkazy do Nodusu -------------------------------------------------- */
+function napojOtevreni(el, soubor) {
+  el.href = '../index.html#' + soubor;
+  el.target = '_top';
+  el.addEventListener('click', ev => {
+    if (!vRozcestniku) return;
+    ev.preventDefault();
+    window.parent.postMessage({ otevri: soubor }, '*');
+  });
+}
+
+if (vNodusu) {
+  napojOtevreni($('btnPrehled'), 'obsah/prehled.html');
+  napojOtevreni($('btnOsnova'), 'obsah/osnova.html');
+  [$('btnOtevrit'), $('btnOtevrit2')].forEach(a => {
+    a.target = '_top';
+    a.addEventListener('click', ev => {
+      if (!vRozcestniku) return;
+      ev.preventDefault();
+      window.parent.postMessage({ otevri: 'obsah/prehled.html' }, '*');
+    });
+  });
+
+  const vsechny = KATALOG_SEKCE.flatMap(s => s.polozky).filter(p => p.stav !== 'plan');
+  const rocniku = new Set(vsechny.flatMap(p => p.rocniky || [])).size;
+  [[vsechny.length, 'hotových aplikací'], [KATALOG_PREDMETY.length, 'předmětů'],
+   [rocniku, 'ročníků ZŠ'], [KATALOG_SEKCE.length, 'tematických okruhů']].forEach(([h, p]) => {
+    const d = document.createElement('div');
+    d.innerHTML = `<div class="hodnota">${h}</div><div class="popisek">${p}</div>`;
+    $('cisla').appendChild(d);
+  });
+
+  const a = document.createElement('a');
+  a.href = '../../index.html';
+  a.target = '_top';
+  a.textContent = 'Ostatní aplikace autora';
+  $('pataOdkaz').append('· ', a);
+} else {
+  // Stránka je vytržená ze složky Nodusu – co by vedlo do prázdna, zmizí.
+  $('cisla').remove();
+  document.querySelectorAll('.tlacitka a[href^="../"], .tlacitka a[href$=".html"]').forEach(a => a.remove());
+  $('zaverText').textContent = 'Plné verze těchto aplikací i celá osnova od první do deváté '
+    + 'třídy jsou ve výukovém webu Nodus.';
+}
+
+/* ---- Podpis pro samostatně poslaný soubor ----------------------------
+   Uvnitř Nodusu kreslí podpis pruh z podpis.js a v rámu patří nadřazené
+   stránce. Když ale stránka putuje sama (bez podpis.js), nesměla by být
+   bez autora – doplní se proto do patičky. Čeká se na `load`, protože
+   podpis.js je `defer` a v tu chvíli ještě nemusí být hotový. */
+window.addEventListener('load', () => {
+  if (window.parent !== window || document.getElementById('autor-podpis')) return;
+  const p = document.createElement('span');
+  p.textContent = ' · Nodus © Radovan Valenta · hdm@seznam.cz';
+  document.querySelector('.pata').appendChild(p);
+});
+
+/* ---- Motiv ------------------------------------------------------------
+   Vlastní přepínač, protože stránka má fungovat i bez rozcestníku a bez
+   theme.js. Klíč je ale společný, takže se volba s Nodusem nerozchází. */
+function popisTemata() {
+  const btn = $('btnTema');
+  btn.textContent = document.documentElement.dataset.theme === 'light' ? '☀️ Motiv' : '🌙 Motiv';
+}
+{
+  const btn = $('btnTema');
+  const jeSvetlo = () => document.documentElement.dataset.theme === 'light';
+  try {
+    if (localStorage.getItem('webapp_theme') === 'light') document.documentElement.dataset.theme = 'light';
+  } catch { /* soukromé okno – zůstane tmavý režim */ }
+  popisTemata();
+  btn.addEventListener('click', () => {
+    const svetlo = !jeSvetlo();
+    if (svetlo) document.documentElement.dataset.theme = 'light';
+    else delete document.documentElement.dataset.theme;
+    try { localStorage.setItem('webapp_theme', svetlo ? 'light' : 'dark'); } catch { /* nevadí */ }
+    popisTemata();
+  });
+}
+
+/* ---- Barvy pro plátna -------------------------------------------------
+   Canvas neumí var(--…), barvy se proto čtou z CSS a přepočítají při každé
+   změně motivu (i té, kterou udělá rozcestník přes theme.js). */
+const TEMA = {};
+function nactiBarvy() {
+  const s = getComputedStyle(document.documentElement);
+  ['--bg-input', '--bg-panel', '--text', '--text-muted', '--text-faint', '--border',
+   '--accent', '--ok', '--warn', '--danger'].forEach(k => {
+    TEMA[k.slice(2)] = s.getPropertyValue(k).trim();
+  });
+  TEMA.svetlo = document.documentElement.dataset.theme === 'light';
+}
+nactiBarvy();
+new MutationObserver(() => {
+  nactiBarvy();
+  popisTemata();
+}).observe(document.documentElement, { attributeFilter: ['data-theme'] });
+
+/* ---- Plátno a smyčka --------------------------------------------------
+   Každá ukázka běží jen tehdy, když je opravdu vidět. Šest současně
+   běžících animací by jinak zbytečně vytěžovalo notebook i tablet. */
+function nastavPlatno(cv) {
+  const ctx = cv.getContext('2d');
+  const zmer = () => {
+    const r = cv.getBoundingClientRect();
+    if (!r.width) return;
+    cv.width = Math.round(r.width * devicePixelRatio);
+    cv.height = Math.round(r.height * devicePixelRatio);
+    ctx.setTransform(devicePixelRatio, 0, 0, devicePixelRatio, 0, 0);
+  };
+  new ResizeObserver(zmer).observe(cv);
+  zmer();
+  return { ctx, w: () => cv.clientWidth, h: () => cv.clientHeight };
+}
+
+function animuj(prvek, krok) {
+  let id = null, minule = 0;
+  const smycka = t => {
+    const dt = Math.min((t - minule) / 1000, 0.05);
+    minule = t;
+    krok(dt);
+    id = requestAnimationFrame(smycka);
+  };
+  new IntersectionObserver(([z]) => {
+    if (z.isIntersecting && id === null) { minule = performance.now(); id = requestAnimationFrame(smycka); }
+    else if (!z.isIntersecting && id !== null) { cancelAnimationFrame(id); id = null; }
+  }, { threshold: 0.01 }).observe(prvek);
+}
+
+/* pozice ukazatele v souřadnicích plátna (myš i dotyk) */
+function bod(cv, e) {
+  const r = cv.getBoundingClientRect();
+  return { x: e.clientX - r.left, y: e.clientY - r.top };
+}
+
+/* ---- Lišta ukázek a číslování karet -----------------------------------
+   Na projektoru se s lištou skáče mezi ukázkami bez rolování; zvýrazněná
+   položka zároveň říká, kde v pořadí zrovna jsme. */
+{
+  const sekce = [...document.querySelectorAll('.demo[data-nav]')];
+  const lista = $('listaUkazek');
+  const odkazy = new Map();
+  const VYSKA_LISTY = 56;
+
+  sekce.forEach((sec, i) => {
+    const a = document.createElement('a');
+    a.href = '#' + sec.id;
+    a.innerHTML = `<span class="cislo">${i + 1}</span>${sec.dataset.nav}`;
+    // Skok si řídíme sami: samotné `scroll-margin-top` na skok z lišty
+    // nestačilo (karta skončila schovaná pod lepivou lištou) a plynulé
+    // rolování se navíc na projektoru čte líp než střih.
+    a.addEventListener('click', ev => {
+      ev.preventDefault();
+      const kam = sec.getBoundingClientRect().top + window.scrollY - VYSKA_LISTY;
+      window.scrollTo({ top: kam, behavior: 'smooth' });
+      history.replaceState(null, '', '#' + sec.id);
+    });
+    lista.appendChild(a);
+    odkazy.set(sec.id, a);
+
+    const poradi = document.createElement('span');
+    poradi.className = 'poradi';
+    poradi.textContent = `${i + 1} / ${sekce.length}`;
+    sec.querySelector('header .ukazka-stitek').before(poradi);
+  });
+
+  // Zvýrazní se ukázka, která právě prochází středem okna – proto ten
+  // rootMargin: pásmo je vysoké pár procent kolem poloviny výšky.
+  // Stejně se zachovají i odkazy z úvodního pruhu.
+  document.querySelectorAll('.tlacitka a[href^="#"]').forEach(a => {
+    a.addEventListener('click', ev => {
+      const cil = document.querySelector(a.getAttribute('href'));
+      if (!cil) return;
+      ev.preventDefault();
+      window.scrollTo({ top: cil.getBoundingClientRect().top + window.scrollY - VYSKA_LISTY, behavior: 'smooth' });
+    });
+  });
+
+  // Vede se seznam ukázek v pásmu kolem středu okna, ne jen poslední změna:
+  // nad první ukázkou (v hlavičce) a pod poslední není v pásmu nic a lišta
+  // nemá co zvýrazňovat – jinak by tam svítila naposledy viděná položka.
+  const vPasmu = new Set();
+  const sledovac = new IntersectionObserver(zaznamy => {
+    zaznamy.forEach(z => {
+      if (z.isIntersecting) vPasmu.add(z.target.id);
+      else vPasmu.delete(z.target.id);
+    });
+    const aktivni = sekce.find(sec => vPasmu.has(sec.id));
+    lista.querySelectorAll('a').forEach(x => x.classList.remove('aktivni'));
+    if (!aktivni) return;
+    const a = odkazy.get(aktivni.id);
+    a.classList.add('aktivni');
+    // Posouvá se výhradně lišta, ne stránka: scrollIntoView na lepivém prvku
+    // dorovnával i svislé rolování a rušil tím doskok pod lištu.
+    lista.scrollTo({ left: Math.max(0, a.offsetLeft - 14), behavior: 'smooth' });
+  }, { rootMargin: '-45% 0px -50% 0px' });
+  sekce.forEach(sec => sledovac.observe(sec));
+}
+
+/* ---- Síť uzlů v hlavičce ---------------------------------------------
+   Značka Nodusu je uzel, hlavička na to hraje sítí teček a spojnic.
+   Je to čistě kulisa: pod obsahem, bez klikání a v tichém režimu
+   (prefers-reduced-motion) se nakreslí jen jednou a zůstane stát. */
+{
+  const cv = $('heroPlatno');
+  const P = nastavPlatno(cv);
+  const klid = matchMedia('(prefers-reduced-motion: reduce)').matches;
+  let uzly = [], sirka = 0;
+
+  function nasyp() {
+    const w = P.w(), h = P.h();
+    sirka = w;
+    const pocet = Math.min(46, Math.round(w * h / 16000));
+    uzly = Array.from({ length: pocet }, () => ({
+      x: Math.random() * w, y: Math.random() * h,
+      vx: (Math.random() - 0.5) * 9, vy: (Math.random() - 0.5) * 9,
+    }));
+  }
+  nasyp();
+
+  function kresli(dt) {
+    const { ctx } = P, w = P.w(), h = P.h();
+    if (w !== sirka) nasyp();
+    ctx.clearRect(0, 0, w, h);
+
+    if (!klid) {
+      for (const u of uzly) {
+        u.x += u.vx * dt; u.y += u.vy * dt;
+        if (u.x < 0 || u.x > w) u.vx *= -1;
+        if (u.y < 0 || u.y > h) u.vy *= -1;
+      }
+    }
+    ctx.strokeStyle = TEMA.accent;
+    ctx.lineWidth = 1;
+    for (let i = 0; i < uzly.length; i++) {
+      for (let j = i + 1; j < uzly.length; j++) {
+        const d = Math.hypot(uzly[i].x - uzly[j].x, uzly[i].y - uzly[j].y);
+        if (d > 150) continue;
+        ctx.globalAlpha = (1 - d / 150) * 0.3;
+        ctx.beginPath();
+        ctx.moveTo(uzly[i].x, uzly[i].y); ctx.lineTo(uzly[j].x, uzly[j].y);
+        ctx.stroke();
+      }
+    }
+    ctx.fillStyle = TEMA.accent;
+    for (const u of uzly) {
+      ctx.globalAlpha = 0.5;
+      ctx.beginPath(); ctx.arc(u.x, u.y, 1.8, 0, 7); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+  }
+
+  if (klid) { requestAnimationFrame(() => kresli(0)); new ResizeObserver(() => kresli(0)).observe(cv); }
+  else animuj(cv, kresli);
+}
+
+/* ============================================================
+   1. GRAVITAČNÍ HŘIŠTĚ
+   Zkrácená verze obsah/gravitacni_hriste.html – stejná fyzika
+   (leapfrog kick-drift-kick), bez Keplerových ploch a panelu elementů.
+   ============================================================ */
+{
+  const cv = $('gravPlatno');
+  const P = nastavPlatno(cv);
+  const MU = 12e6;          // gravitační parametr hvězdy (px³/s²)
+  const R_HVEZDA = 15;      // poloměr hvězdy v pixelech
+  const MAX_TELES = 8;
+  const BARVY = ['#6aa6fd', '#e06666', '#7fd48f', '#e6c87a', '#c98bd4', '#7fd4d4', '#f0975a'];
+  let telesa = [], jiskry = [], hvezdicky = [], dalsiBarva = 0;
+  let bezi = true, mireni = null, pocty = { shorelo: 0, uniklo: 0 };
+
+  const stred = () => ({ x: P.w() / 2, y: P.h() / 2 });
+
+  function pozadi() {
+    hvezdicky = [];
+    for (let i = 0; i < 120; i++) {
+      hvezdicky.push({ x: Math.random(), y: Math.random(), a: Math.random() * 0.5 + 0.15 });
+    }
+  }
+  pozadi();
+
+  function zrychleni(x, y) {
+    const s = stred(), dx = s.x - x, dy = s.y - y;
+    const r2 = dx * dx + dy * dy, r = Math.sqrt(r2);
+    const a = MU / Math.max(r2, 1);
+    return { ax: a * dx / r, ay: a * dy / r, r };
+  }
+
+  // leapfrog: udrží energii dráhy stabilní, elipsy se nerozpadají
+  function krok(t, h) {
+    let a = zrychleni(t.x, t.y);
+    t.vx += a.ax * h / 2; t.vy += a.ay * h / 2;
+    t.x += t.vx * h; t.y += t.vy * h;
+    a = zrychleni(t.x, t.y);
+    t.vx += a.ax * h / 2; t.vy += a.ay * h / 2;
+    return a.r;
+  }
+
+  // dráhové elementy ze stavového vektoru – čísla v panelu nikdy nemluví
+  // jinak než nakreslený pohyb, protože pocházejí ze stejných hodnot
+  function elementy(t) {
+    const s = stred(), x = t.x - s.x, y = t.y - s.y;
+    const r = Math.hypot(x, y), v2 = t.vx * t.vx + t.vy * t.vy;
+    const eps = v2 / 2 - MU / r;
+    const rv = x * t.vx + y * t.vy;
+    const ex = ((v2 - MU / r) * x - rv * t.vx) / MU, ey = ((v2 - MU / r) * y - rv * t.vy) / MU;
+    const e = Math.hypot(ex, ey), a = -MU / (2 * eps);
+    return { r, v: Math.sqrt(v2), e, a, vazane: eps < 0,
+             T: eps < 0 ? 2 * Math.PI * Math.sqrt(a * a * a / MU) : Infinity };
+  }
+
+  function novaPlanetka(x, y, vx, vy) {
+    telesa.push({ x, y, vx, vy, barva: BARVY[dalsiBarva++ % BARVY.length], stopa: [], obehy: 0, uhel: null });
+    if (telesa.length > MAX_TELES) telesa.shift();
+  }
+
+  function vybuch(x, y, barva) {
+    for (let i = 0; i < 22; i++) {
+      const u = Math.random() * Math.PI * 2, r = 40 + Math.random() * 90;
+      jiskry.push({ x, y, vx: Math.cos(u) * r, vy: Math.sin(u) * r, zivot: 1, barva });
+    }
+  }
+
+  cv.addEventListener('pointerdown', e => {
+    mireni = { ...bod(cv, e), mx: bod(cv, e).x, my: bod(cv, e).y };
+    try { cv.setPointerCapture(e.pointerId); } catch { /* nedůvěryhodná událost v testu */ }
+  });
+  cv.addEventListener('pointermove', e => {
+    if (!mireni) return;
+    const b = bod(cv, e);
+    mireni.mx = b.x; mireni.my = b.y;
+  });
+  cv.addEventListener('pointerup', () => {
+    if (!mireni) return;
+    const vx = (mireni.x - mireni.mx) * 1.7, vy = (mireni.y - mireni.my) * 1.7;
+    if (Math.hypot(vx, vy) > 6) novaPlanetka(mireni.x, mireni.y, vx, vy);
+    mireni = null;
+  });
+  cv.addEventListener('pointercancel', () => { mireni = null; });
+
+  $('gravOrbita').addEventListener('click', () => {
+    const s = stred(), r = Math.min(P.w(), P.h()) * 0.34;
+    const u = Math.random() * Math.PI * 2, v = Math.sqrt(MU / r);
+    novaPlanetka(s.x + Math.cos(u) * r, s.y + Math.sin(u) * r, -Math.sin(u) * v, Math.cos(u) * v);
+  });
+  $('gravStop').addEventListener('click', e => {
+    bezi = !bezi;
+    e.currentTarget.textContent = bezi ? '⏸ Pauza' : '▶ Spustit';
+  });
+  $('gravSmaz').addEventListener('click', () => { telesa = []; jiskry = []; pocty = { shorelo: 0, uniklo: 0 }; });
+
+  const udaje = [['telesa', 'planetek'], ['obehy', 'oběhů'], ['perioda', 'doba oběhu'],
+                 ['vystrednost', 'výstřednost e'], ['osud', 'shořelo / uniklo']];
+  $('gravUdaje').innerHTML = udaje.map(([id, p]) =>
+    `<div><div class="popisek">${p}</div><div class="hodnota" id="grav_${id}">–</div></div>`).join('');
+  const cislo = (n, d = 2) => n.toFixed(d).replace('.', ',');
+  const sklon = n => n === 1 ? 'planetka' : n < 5 ? 'planetky' : 'planetek';
+
+  function fyzika(dt) {
+    const s = stred();
+    for (const t of telesa) {
+      // menší kroky = přesnější dráha i u rychlých průletů kolem hvězdy
+      for (let i = 0; i < 4; i++) krok(t, dt / 4);
+      const u = Math.atan2(t.y - s.y, t.x - s.x);
+      if (t.uhel !== null) {
+        let d = u - t.uhel;
+        while (d > Math.PI) d -= 2 * Math.PI;
+        while (d < -Math.PI) d += 2 * Math.PI;
+        t.naskladano = (t.naskladano || 0) + d;
+        t.obehy = Math.floor(Math.abs(t.naskladano) / (2 * Math.PI));
+      }
+      t.uhel = u;
+      t.stopa.push({ x: t.x, y: t.y });
+      if (t.stopa.length > 260) t.stopa.shift();
+    }
+    telesa = telesa.filter(t => {
+      const r = Math.hypot(t.x - s.x, t.y - s.y);
+      if (r < R_HVEZDA + 3) { vybuch(t.x, t.y, t.barva); pocty.shorelo++; return false; }
+      if (r > 4000) { pocty.uniklo++; return false; }
+      return true;
+    });
+    jiskry = jiskry.filter(j => {
+      j.x += j.vx * dt; j.y += j.vy * dt; j.zivot -= dt * 1.6;
+      return j.zivot > 0;
+    });
+  }
+
+  function panel() {
+    const t = telesa[telesa.length - 1];
+    $('grav_telesa').textContent = telesa.length;
+    $('grav_osud').textContent = pocty.shorelo + ' / ' + pocty.uniklo;
+    if (!t) {
+      ['obehy', 'perioda', 'vystrednost'].forEach(k => { $('grav_' + k).textContent = '–'; });
+      return;
+    }
+    const el = elementy(t);
+    $('grav_obehy').textContent = t.obehy;
+    $('grav_perioda').textContent = el.vazane ? cislo(el.T, 1) + ' s' : 'uniká';
+    $('grav_vystrednost').textContent = el.vazane ? cislo(el.e) : cislo(el.e) + ' (>1)';
+  }
+
+  function kresli() {
+    const { ctx } = P, w = P.w(), h = P.h(), s = stred();
+    ctx.fillStyle = TEMA.svetlo ? '#0d1526' : '#0a0f1a';
+    ctx.fillRect(0, 0, w, h);
+    ctx.fillStyle = '#ffffff';
+    for (const z of hvezdicky) { ctx.globalAlpha = z.a; ctx.fillRect(z.x * w, z.y * h, 1.4, 1.4); }
+    ctx.globalAlpha = 1;
+
+    for (const t of telesa) {
+      ctx.strokeStyle = t.barva; ctx.lineWidth = 1.6;
+      ctx.beginPath();
+      t.stopa.forEach((p, i) => {
+        ctx.globalAlpha = 0.06 + 0.5 * (i / t.stopa.length);
+        if (i === 0) ctx.moveTo(p.x, p.y); else ctx.lineTo(p.x, p.y);
+      });
+      ctx.stroke();
+      ctx.globalAlpha = 1;
+      ctx.fillStyle = t.barva;
+      ctx.beginPath(); ctx.arc(t.x, t.y, 5, 0, 7); ctx.fill();
+    }
+
+    for (const j of jiskry) {
+      ctx.globalAlpha = Math.max(j.zivot, 0);
+      ctx.fillStyle = j.barva;
+      ctx.beginPath(); ctx.arc(j.x, j.y, 2.2, 0, 7); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+
+    const g = ctx.createRadialGradient(s.x, s.y, 2, s.x, s.y, R_HVEZDA * 3.4);
+    g.addColorStop(0, '#fff6d5'); g.addColorStop(0.34, '#ffcf5c');
+    g.addColorStop(1, 'rgba(255,180,60,0)');
+    ctx.fillStyle = g;
+    ctx.beginPath(); ctx.arc(s.x, s.y, R_HVEZDA * 3.4, 0, 7); ctx.fill();
+    ctx.fillStyle = '#fff3c4';
+    ctx.beginPath(); ctx.arc(s.x, s.y, R_HVEZDA, 0, 7); ctx.fill();
+
+    if (mireni) {
+      const rychlost = Math.hypot(mireni.x - mireni.mx, mireni.y - mireni.my) * 1.7;
+      ctx.strokeStyle = TEMA.accent; ctx.lineWidth = 2; ctx.setLineDash([5, 4]);
+      ctx.beginPath(); ctx.moveTo(mireni.x, mireni.y); ctx.lineTo(mireni.mx, mireni.my); ctx.stroke();
+      ctx.setLineDash([]);
+      ctx.fillStyle = TEMA.accent;
+      ctx.beginPath(); ctx.arc(mireni.x, mireni.y, 5, 0, 7); ctx.fill();
+      const kruhova = Math.sqrt(MU / Math.max(Math.hypot(mireni.x - s.x, mireni.y - s.y), 1));
+      ctx.font = '12px ' + getComputedStyle(document.body).fontFamily;
+      ctx.fillStyle = TEMA['text-muted'];
+      ctx.fillText(Math.round(rychlost / kruhova * 100) + ' % kruhové rychlosti',
+                   mireni.mx + 10, mireni.my - 8);
+    }
+  }
+
+  const cedule = $('gravCedule');
+  animuj(cv, dt => {
+    if (bezi) fyzika(dt);
+    kresli();
+    panel();
+    cedule.innerHTML = telesa.length
+      ? '<b>' + telesa.length + '</b> ' + sklon(telesa.length) + ' na dráze'
+      : '<b>Táhněte myší a pusťte</b> – vystřelíte planetku.';
+  });
+}
+
+/* ============================================================
+   3. AERODYNAMICKÝ TUNEL
+   Zkrácená verze obsah/vitr_tunel.html. Proudění kolem válce se počítá
+   analyticky (potenciální obtékání), takže je vidět učebnicový jev:
+   u boků překážky se proud zrychlí, před ní a za ní se zastaví.
+   ============================================================ */
+{
+  const cv = $('tunelPlatno');
+  const P = nastavPlatno(cv);
+  const cast = [];
+  let prekazka = { x: 0.42, y: 0.5, r: 42 };   // x, y v poměru k plátnu
+  let tahnu = false;
+
+  const sU = $('tunelV'), sR = $('tunelR'), sStopy = $('tunelStopy');
+  const U = () => +sU.value;
+
+  // Škála je zakotvená v rychlosti volného proudu (t = 0,5): ta má základní
+  // modrou, zpomalený proud tmavne, zrychlený hoří do oranžova a červena.
+  // Diverging škála přes bílý střed vypadala vybledle, protože většina plátna
+  // je právě volný proud.
+  // Na bílém papíře světlého režimu je stejná škála skoro neviditelná,
+  // proto má vlastní, tmavší sadu.
+  const STUPNE_TMA = [[0, [26, 42, 82]], [0.5, [106, 166, 253]], [0.75, [224, 166, 63]], [1, [224, 93, 61]]];
+  const STUPNE_SVETLO = [[0, [150, 170, 200]], [0.5, [47, 111, 206]], [0.75, [200, 130, 20]], [1, [176, 38, 30]]];
+  function barvaRychlosti(t) {
+    const STUPNE = TEMA.svetlo ? STUPNE_SVETLO : STUPNE_TMA;
+    for (let i = 1; i < STUPNE.length; i++) {
+      if (t > STUPNE[i][0]) continue;
+      const [t0, c0] = STUPNE[i - 1], [t1, c1] = STUPNE[i];
+      const k = (t - t0) / (t1 - t0);
+      return `rgb(${c0.map((v, j) => Math.round(v + (c1[j] - v) * k)).join(',')})`;
+    }
+    return TEMA.svetlo ? 'rgb(176,38,30)' : 'rgb(224,93,61)';
+  }
+
+  function nasypej() {
+    cast.length = 0;
+    for (let i = 0; i < 700; i++) cast.push({ x: Math.random(), y: Math.random(), v: 0 });
+  }
+  nasypej();
+
+  // rychlostní pole potenciálního obtékání válce (v soustavě překážky)
+  function pole(x, y, cx, cy, R, u) {
+    const dx = x - cx, dy = y - cy, r2 = dx * dx + dy * dy;
+    if (r2 < R * R) return { vx: 0, vy: 0, uvnitr: true };
+    const k = R * R / (r2 * r2);
+    return { vx: u * (1 - k * (dx * dx - dy * dy)), vy: -u * k * 2 * dx * dy, uvnitr: false };
+  }
+
+  cv.addEventListener('pointerdown', e => {
+    tahnu = true;
+    try { cv.setPointerCapture(e.pointerId); } catch { /* nevadí */ }
+    posun(e);
+  });
+  cv.addEventListener('pointermove', e => { if (tahnu) posun(e); });
+  cv.addEventListener('pointerup', () => { tahnu = false; });
+  cv.addEventListener('pointercancel', () => { tahnu = false; });
+  function posun(e) {
+    const b = bod(cv, e);
+    prekazka.x = Math.min(0.8, Math.max(0.15, b.x / P.w()));
+    prekazka.y = Math.min(0.85, Math.max(0.15, b.y / P.h()));
+  }
+  sR.addEventListener('input', () => { prekazka.r = +sR.value; });
+
+  animuj(cv, dt => {
+    const { ctx } = P, w = P.w(), h = P.h();
+    const cx = prekazka.x * w, cy = prekazka.y * h, R = prekazka.r, u = U();
+
+    if (sStopy.checked) {
+      ctx.fillStyle = TEMA['bg-input'];
+      ctx.globalAlpha = 0.16;
+      ctx.fillRect(0, 0, w, h);
+      ctx.globalAlpha = 1;
+    } else {
+      ctx.fillStyle = TEMA['bg-input'];
+      ctx.fillRect(0, 0, w, h);
+    }
+
+    let nejrychlejsi = 0;
+    for (const c of cast) {
+      const x = c.x * w, y = c.y * h;
+      const p = pole(x, y, cx, cy, R, u);
+      const v = Math.hypot(p.vx, p.vy);
+      c.v = v;
+      if (v > nejrychlejsi) nejrychlejsi = v;
+      // částice uvnitř překážky nebo za pravým okrajem se vrací na začátek
+      if (p.uvnitr || c.x > 1) { c.x = -0.02; c.y = Math.random(); continue; }
+      c.x += p.vx * dt / w;
+      c.y += p.vy * dt / h;
+      if (c.y < 0 || c.y > 1) { c.x = -0.02; c.y = Math.random(); continue; }
+
+      // Barva podle rychlosti rozvržená kolem rychlosti volného proudu:
+      // modrá = pomaleji než vítr (stagnace před překážkou a za ní),
+      // světlá = rychlost větru, červená = zrychlený proud u boků.
+      // Přechod přes zelenou (běžný duhový přechod) by tenhle střed rozmazal.
+      const t = Math.min(v / (2 * u), 1);
+      ctx.fillStyle = barvaRychlosti(t);
+      ctx.globalAlpha = 0.45 + 0.55 * t;
+      ctx.fillRect(c.x * w, c.y * h, 2.4, 2.4);
+    }
+    ctx.globalAlpha = 1;
+
+    ctx.fillStyle = TEMA.svetlo ? '#9aa4b0' : '#5c6672';
+    ctx.strokeStyle = TEMA.text;
+    ctx.lineWidth = 2;
+    ctx.beginPath(); ctx.arc(cx, cy, R, 0, 7); ctx.fill(); ctx.stroke();
+
+    $('tunelCedule').innerHTML =
+      'u boků až <b>' + Math.round(nejrychlejsi / u * 100) + ' %</b> rychlosti větru<br>'
+      + '<span style="color:' + barvaRychlosti(0.1) + '">■</span> zpomaleno · '
+      + '<span style="color:' + barvaRychlosti(0.5) + '">■</span> rychlost větru · '
+      + '<span style="color:' + barvaRychlosti(1) + '">■</span> zrychleno';
+  });
+}
+</script>
+<script>
+/* ============================================================
+   2. PERIODICKÁ TABULKA
+   Zkrácená verze obsah/periodic_table.html. Data prvků, barvy skupin
+   i výpočet elektronové konfigurace (Madelungovo pravidlo s výjimkami)
+   jsou převzaté odtud, aby se ukázka a plná verze nerozcházely.
+   ============================================================ */
+{
+  const CATS={'alkalicke':['Alkalické kovy','#e74c3c'],'kovy-alk-zem':['Kovy alk. zemin','#e67e22'],'prechodne':['Přechodné kovy','#f1c40f'],'kovy':['Kovy','#27ae60'],'polokovy':['Polokovy','#1abc9c'],'nekovy':['Nekovy','#3498db'],'halogeny':['Halogeny','#9b59b6'],'vzacne':['Vzácné plyny','#e84393'],'lanthanoidy':['Lanthanoidy','#16a085'],'aktinoidy':['Aktinoidy','#8e44ad']};
+  const EL=[
+  [1,'H','Vodík',1,1,'nekovy',1.008],[2,'He','Helium',18,1,'vzacne',4.003],
+  [3,'Li','Lithium',1,2,'alkalicke',6.94],[4,'Be','Beryllium',2,2,'kovy-alk-zem',9.012],[5,'B','Bor',13,2,'polokovy',10.81],[6,'C','Uhlík',14,2,'nekovy',12.011],[7,'N','Dusík',15,2,'nekovy',14.007],[8,'O','Kyslík',16,2,'nekovy',15.999],[9,'F','Fluor',17,2,'halogeny',18.998],[10,'Ne','Neon',18,2,'vzacne',20.18],
+  [11,'Na','Sodík',1,3,'alkalicke',22.99],[12,'Mg','Hořčík',2,3,'kovy-alk-zem',24.305],[13,'Al','Hliník',13,3,'kovy',26.982],[14,'Si','Křemík',14,3,'polokovy',28.085],[15,'P','Fosfor',15,3,'nekovy',30.974],[16,'S','Síra',16,3,'nekovy',32.06],[17,'Cl','Chlor',17,3,'halogeny',35.45],[18,'Ar','Argon',18,3,'vzacne',39.948],
+  [19,'K','Draslík',1,4,'alkalicke',39.098],[20,'Ca','Vápník',2,4,'kovy-alk-zem',40.078],[21,'Sc','Skandium',3,4,'prechodne',44.956],[22,'Ti','Titan',4,4,'prechodne',47.867],[23,'V','Vanad',5,4,'prechodne',50.942],[24,'Cr','Chrom',6,4,'prechodne',51.996],[25,'Mn','Mangan',7,4,'prechodne',54.938],[26,'Fe','Železo',8,4,'prechodne',55.845],[27,'Co','Kobalt',9,4,'prechodne',58.933],[28,'Ni','Nikl',10,4,'prechodne',58.693],[29,'Cu','Měď',11,4,'prechodne',63.546],[30,'Zn','Zinek',12,4,'prechodne',65.38],[31,'Ga','Gallium',13,4,'kovy',69.723],[32,'Ge','Germanium',14,4,'polokovy',72.63],[33,'As','Arsen',15,4,'polokovy',74.922],[34,'Se','Selen',16,4,'nekovy',78.971],[35,'Br','Brom',17,4,'halogeny',79.904],[36,'Kr','Krypton',18,4,'vzacne',83.798],
+  [37,'Rb','Rubidium',1,5,'alkalicke',85.468],[38,'Sr','Stroncium',2,5,'kovy-alk-zem',87.62],[39,'Y','Yttrium',3,5,'prechodne',88.906],[40,'Zr','Zirkonium',4,5,'prechodne',91.224],[41,'Nb','Niob',5,5,'prechodne',92.906],[42,'Mo','Molybden',6,5,'prechodne',95.95],[43,'Tc','Technecium',7,5,'prechodne',98],[44,'Ru','Ruthenium',8,5,'prechodne',101.07],[45,'Rh','Rhodium',9,5,'prechodne',102.91],[46,'Pd','Palladium',10,5,'prechodne',106.42],[47,'Ag','Stříbro',11,5,'prechodne',107.87],[48,'Cd','Kadmium',12,5,'prechodne',112.41],[49,'In','Indium',13,5,'kovy',114.82],[50,'Sn','Cín',14,5,'kovy',118.71],[51,'Sb','Antimon',15,5,'polokovy',121.76],[52,'Te','Tellur',16,5,'polokovy',127.6],[53,'I','Jod',17,5,'halogeny',126.9],[54,'Xe','Xenon',18,5,'vzacne',131.29],
+  [55,'Cs','Cesium',1,6,'alkalicke',132.91],[56,'Ba','Baryum',2,6,'kovy-alk-zem',137.33],[57,'La','Lanthan',3,6,'lanthanoidy',138.91],[72,'Hf','Hafnium',4,6,'prechodne',178.49],[73,'Ta','Tantal',5,6,'prechodne',180.95],[74,'W','Wolfram',6,6,'prechodne',183.84],[75,'Re','Rhenium',7,6,'prechodne',186.21],[76,'Os','Osmium',8,6,'prechodne',190.23],[77,'Ir','Iridium',9,6,'prechodne',192.22],[78,'Pt','Platina',10,6,'prechodne',195.08],[79,'Au','Zlato',11,6,'prechodne',196.97],[80,'Hg','Rtuť',12,6,'prechodne',200.59],[81,'Tl','Thallium',13,6,'kovy',204.38],[82,'Pb','Olovo',14,6,'kovy',207.2],[83,'Bi','Bismut',15,6,'kovy',208.98],[84,'Po','Polonium',16,6,'kovy',209],[85,'At','Astat',17,6,'halogeny',210],[86,'Rn','Radon',18,6,'vzacne',222],
+  [87,'Fr','Francium',1,7,'alkalicke',223],[88,'Ra','Radium',2,7,'kovy-alk-zem',226],[89,'Ac','Aktinium',3,7,'aktinoidy',227],[104,'Rf','Rutherfordium',4,7,'prechodne',267],[105,'Db','Dubnium',5,7,'prechodne',268],[106,'Sg','Seaborgium',6,7,'prechodne',269],[107,'Bh','Bohrium',7,7,'prechodne',270],[108,'Hs','Hassium',8,7,'prechodne',269],[109,'Mt','Meitnerium',9,7,'prechodne',278],[110,'Ds','Darmstadtium',10,7,'prechodne',281],[111,'Rg','Roentgenium',11,7,'prechodne',282],[112,'Cn','Kopernicium',12,7,'prechodne',285],[113,'Nh','Nihonium',13,7,'kovy',286],[114,'Fl','Flerovium',14,7,'kovy',289],[115,'Mc','Moscovium',15,7,'kovy',290],[116,'Lv','Livermorium',16,7,'kovy',293],[117,'Ts','Tennessin',17,7,'halogeny',294],[118,'Og','Oganesson',18,7,'vzacne',294],
+  [58,'Ce','Cer',4,9,'lanthanoidy',140.12],[59,'Pr','Praseodym',5,9,'lanthanoidy',140.91],[60,'Nd','Neodym',6,9,'lanthanoidy',144.24],[61,'Pm','Promethium',7,9,'lanthanoidy',145],[62,'Sm','Samarium',8,9,'lanthanoidy',150.36],[63,'Eu','Europium',9,9,'lanthanoidy',151.96],[64,'Gd','Gadolinium',10,9,'lanthanoidy',157.25],[65,'Tb','Terbium',11,9,'lanthanoidy',158.93],[66,'Dy','Dysprosium',12,9,'lanthanoidy',162.5],[67,'Ho','Holmium',13,9,'lanthanoidy',164.93],[68,'Er','Erbium',14,9,'lanthanoidy',167.26],[69,'Tm','Thulium',15,9,'lanthanoidy',168.93],[70,'Yb','Ytterbium',16,9,'lanthanoidy',173.05],[71,'Lu','Lutecium',17,9,'lanthanoidy',174.97],
+  [90,'Th','Thorium',4,10,'aktinoidy',232.04],[91,'Pa','Protaktinium',5,10,'aktinoidy',231.04],[92,'U','Uran',6,10,'aktinoidy',238.03],[93,'Np','Neptunium',7,10,'aktinoidy',237],[94,'Pu','Plutonium',8,10,'aktinoidy',244],[95,'Am','Americium',9,10,'aktinoidy',243],[96,'Cm','Curium',10,10,'aktinoidy',247],[97,'Bk','Berkelium',11,10,'aktinoidy',247],[98,'Cf','Kalifornium',12,10,'aktinoidy',251],[99,'Es','Einsteinium',13,10,'aktinoidy',252],[100,'Fm','Fermium',14,10,'aktinoidy',257],[101,'Md','Mendelevium',15,10,'aktinoidy',258],[102,'No','Nobelium',16,10,'aktinoidy',259],[103,'Lr','Lawrencium',17,10,'aktinoidy',262]
+  ];
+  const PLYNY=new Set([1,2,7,8,9,10,17,18,36,54,86]), KAPALNE=new Set([35,80]);
+  const skupenstvi=z=>PLYNY.has(z)?'plynné':KAPALNE.has(z)?'kapalné':z>=104?'neznámé (syntetický)':'pevné';
+  const ORDER=['1s','2s','2p','3s','3p','4s','3d','4p','5s','4d','5p','6s','4f','5d','6p','7s','5f','6d','7p'];
+  const CAP={s:2,p:6,d:10,f:14};
+  const VYJIMKY={24:{'4s':1,'3d':5},29:{'4s':1,'3d':10},41:{'5s':1,'4d':4},42:{'5s':1,'4d':5},44:{'5s':1,'4d':7},45:{'5s':1,'4d':8},46:{'5s':0,'4d':10},47:{'5s':1,'4d':10},57:{'4f':0,'5d':1},58:{'4f':1,'5d':1},64:{'4f':7,'5d':1},78:{'6s':1,'5d':9},79:{'6s':1,'5d':10},89:{'5f':0,'6d':1},90:{'5f':0,'6d':2},91:{'5f':2,'6d':1},92:{'5f':3,'6d':1},93:{'5f':4,'6d':1},96:{'5f':7,'6d':1},103:{'6d':0,'7p':1}};
+  function obsazeni(z){
+    let zb=z; const occ={};
+    for(const o of ORDER){ if(zb<=0)break; const n=Math.min(CAP[o[1]],zb); occ[o]=n; zb-=n; }
+    const v=VYJIMKY[z]; if(v)for(const k in v)occ[k]=v[k];
+    for(const k in occ)if(!occ[k])delete occ[k];
+    return occ;
+  }
+  const JADRA=[[86,'Rn',['1s','2s','2p','3s','3p','4s','3d','4p','5s','4d','5p','6s','4f','5d','6p']],
+               [54,'Xe',['1s','2s','2p','3s','3p','4s','3d','4p','5s','4d','5p']],
+               [36,'Kr',['1s','2s','2p','3s','3p','4s','3d','4p']],
+               [18,'Ar',['1s','2s','2p','3s','3p']],
+               [10,'Ne',['1s','2s','2p']],
+               [2,'He',['1s']]];
+  function konfigurace(z){
+    const occ=obsazeni(z);
+    for(const[cz,sym,orbs]of JADRA){
+      if(z>cz&&orbs.every(o=>occ[o]===CAP[o[1]])){
+        const zbytek=ORDER.filter(o=>!orbs.includes(o)&&occ[o]).map(o=>o+'<sup>'+occ[o]+'</sup>').join(' ');
+        return '['+sym+'] '+zbytek;
+      }
+    }
+    return ORDER.filter(o=>occ[o]).map(o=>o+'<sup>'+occ[o]+'</sup>').join(' ');
+  }
+  function slupky(z){
+    const occ=obsazeni(z), s=[0,0,0,0,0,0,0];
+    for(const o in occ)s[+o[0]-1]+=occ[o];
+    return s.filter((_,i)=>s[i]>0);
+  }
+
+  const mrizka = $('ptMrizka'), detail = $('ptDetail'), legenda = $('ptLegenda');
+  let filtr = null, hledane = '', vybrany = 26;   // železo jako první pohled
+
+  // řádek 8 je mezera mezi hlavní tabulkou a lanthanoidy/aktinoidy
+  const mezera = document.createElement('div');
+  mezera.className = 'pt-mezera';
+  mezera.style.gridRow = 8;
+
+  EL.forEach(e => {
+    const [z, zn, nazev, skupina, perioda, kat] = e;
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'pt-prvek';
+    b.style.gridColumn = skupina;
+    b.style.gridRow = perioda;
+    b.style.background = CATS[kat][1];
+    b.title = nazev;
+    b.innerHTML = `<span class="z">${z}</span><span class="zn">${zn}</span>`
+      + `<span class="nz">${nazev}</span>`;
+    b.addEventListener('click', () => ukazPrvek(z));
+    e.prvek = b;
+    mrizka.appendChild(b);
+  });
+  mrizka.appendChild(mezera);
+
+  legenda.innerHTML = Object.entries(CATS).map(([k, [n, c]]) =>
+    `<button type="button" data-kat="${k}"><i style="background:${c}"></i>${n}</button>`).join('');
+  legenda.addEventListener('click', ev => {
+    const b = ev.target.closest('button');
+    if (!b) return;
+    filtr = filtr === b.dataset.kat ? null : b.dataset.kat;
+    legenda.querySelectorAll('button').forEach(x => x.classList.toggle('aktivni', x.dataset.kat === filtr));
+    prekresliFiltr();
+  });
+
+  $('ptHledat').addEventListener('input', ev => {
+    hledane = ev.target.value.trim().toLowerCase();
+    prekresliFiltr();
+    // jediná shoda se rovnou otevře – hledání tak nahrazuje klikání
+    const shody = EL.filter(vyhovuje);
+    if (hledane && shody.length === 1) ukazPrvek(shody[0][0]);
+  });
+
+  $('ptNahodny').addEventListener('click', () => ukazPrvek(EL[Math.floor(Math.random() * EL.length)][0]));
+
+  function vyhovuje(e) {
+    const [z, zn, nazev, , , kat] = e;
+    if (filtr && kat !== filtr) return false;
+    if (!hledane) return true;
+    return String(z) === hledane || zn.toLowerCase() === hledane
+      || nazev.toLowerCase().startsWith(hledane) || zn.toLowerCase().startsWith(hledane);
+  }
+
+  function prekresliFiltr() {
+    const filtruje = filtr || hledane;
+    EL.forEach(e => {
+      e.prvek.classList.toggle('ztlumeny', filtruje && !vyhovuje(e));
+      e.prvek.classList.toggle('vybrany', e[0] === vybrany);
+    });
+  }
+
+  /* ---- detail s Bohrovým modelem ---- */
+  detail.innerHTML = `
+    <div class="hlava"><div class="znak" id="ptZnak"></div>
+      <div><h3 id="ptNazev"></h3><div class="kat" id="ptKat"></div></div></div>
+    <div class="radek"><span>Protonové číslo</span><b id="ptZ"></b></div>
+    <div class="radek"><span>Atomová hmotnost</span><b id="ptM"></b></div>
+    <div class="radek"><span>Skupina / perioda</span><b id="ptSP"></b></div>
+    <div class="radek"><span>Skupenství (20 °C)</span><b id="ptSk"></b></div>
+    <div class="konf" id="ptKonf"></div>
+    <canvas id="ptBohr"></canvas>
+    <div class="konf" id="ptSlupky"></div>`;
+
+  const B = nastavPlatno($('ptBohr'));
+  let bohr = { slupky: [], barva: '#6aa6fd' };
+
+  function ukazPrvek(z) {
+    const e = EL.find(x => x[0] === z);
+    if (!e) return;
+    vybrany = z;
+    const [num, zn, nazev, skupina, perioda, kat, hmotnost] = e;
+    $('ptZnak').textContent = zn;
+    $('ptZnak').style.color = CATS[kat][1];
+    $('ptNazev').textContent = nazev;
+    $('ptKat').textContent = CATS[kat][0];
+    $('ptZ').textContent = num;
+    $('ptM').textContent = String(hmotnost).replace('.', ',');
+    $('ptSP').textContent = (skupina <= 18 && perioda <= 7 ? skupina : '—') + ' / '
+      + (perioda <= 7 ? perioda : num < 89 ? '6' : '7');
+    $('ptSk').textContent = skupenstvi(num);
+    $('ptKonf').innerHTML = 'Konfigurace: ' + konfigurace(num);
+    const s = slupky(num);
+    $('ptSlupky').textContent = 'Elektrony ve slupkách: ' + s.join(' · ');
+    bohr = { slupky: s, barva: CATS[kat][1] };
+    prekresliFiltr();
+  }
+
+  animuj($('ptBohr'), () => {
+    const { ctx } = B, w = B.w(), h = B.h();
+    ctx.clearRect(0, 0, w, h);
+    const cx = w / 2, cy = h / 2;
+    const maxR = Math.min(w, h) / 2 - 8;
+    const n = bohr.slupky.length;
+    const t = performance.now() / 1000;
+
+    ctx.fillStyle = bohr.barva;
+    ctx.beginPath(); ctx.arc(cx, cy, 9, 0, 7); ctx.fill();
+
+    bohr.slupky.forEach((pocet, i) => {
+      const r = maxR * (i + 1) / n;
+      ctx.strokeStyle = TEMA.border;
+      ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.arc(cx, cy, r, 0, 7); ctx.stroke();
+      // vnější slupky obíhají pomaleji – opticky odpovídá skutečnosti
+      const rychlost = 0.9 / (i + 1);
+      for (let k = 0; k < pocet; k++) {
+        const u = t * rychlost + k * 2 * Math.PI / pocet;
+        ctx.fillStyle = TEMA.accent;
+        ctx.beginPath();
+        ctx.arc(cx + Math.cos(u) * r, cy + Math.sin(u) * r, 2.6, 0, 7);
+        ctx.fill();
+      }
+    });
+  });
+
+  ukazPrvek(vybrany);
+}
+
+/* ============================================================
+   4. STAVBA ROSTLINNÉ BUŇKY
+   Schéma i popisky jsou převzaté z obsah/bunka.html (rostlinná varianta –
+   je celá vektorová, takže funguje i v jediném souboru bez obrázků).
+   ============================================================ */
+{
+  const ORGANELY={
+  jadro:{n:'🔵 Jádro',d:'Obsahuje DNA (genetickou informaci) a řídí veškerou činnost buňky.'},
+  mitochondrie:{n:'🟠 Mitochondrie',d:'„Elektrárna buňky" — buněčné dýchání, výroba energie (ATP).'},
+  er:{n:'🌀 Endoplazmatické retikulum',d:'Síť kanálků pro výrobu a transport bílkovin a tuků.'},
+  golgi:{n:'📦 Golgiho aparát',d:'Balí, upravuje a exportuje látky vyrobené v buňce.'},
+  ribozom:{n:'⚫ Ribozomy',d:'Malé částice, na kterých se syntetizují bílkoviny.'},
+  cytoplazma:{n:'💧 Cytoplazma',d:'Gelovité prostředí uvnitř buňky, ve kterém probíhá většina buněčných dějů.'},
+  membrana:{n:'🟢 Buněčná membrána',d:'Obaluje buňku, řídí, co do ní vstupuje a co z ní vystupuje.'},
+  lyzozom:{n:'🟡 Lyzozom',d:'Váček plný trávicích enzymů — rozkládá opotřebované části buňky a pohlcené látky.'},
+  vezikula:{n:'🫧 Vezikula',d:'Menší membránový váček pro skladování a transport látek uvnitř buňky.'},
+  stena:{n:'🟩 Buněčná stěna',d:'Pevný obal z celulózy — jen u rostlin, dává buňce tvar a ochranu.'},
+  vakuola:{n:'🔷 Vakuola',d:'Velký váček s buněčnou šťávou — jen u rostlin, udržuje tlak (turgor) a skladuje látky.'},
+  chloroplast:{n:'🟢 Chloroplast',d:'Obsahuje chlorofyl — jen u rostlin, probíhá v něm fotosyntéza.'}
+  };
+  const DEFS=`
+    <filter id="gooCell" x="-25%" y="-25%" width="150%" height="150%">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="7" result="blur"/>
+      <feColorMatrix in="blur" mode="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 22 -10" result="goo"/>
+    </filter>
+    <radialGradient id="cytoGrad" cx="40%" cy="35%" r="75%">
+      <stop offset="0%" stop-color="#3d4d2f"/>
+      <stop offset="100%" stop-color="#25301c"/>
+    </radialGradient>
+    <radialGradient id="cytoGradAn" cx="40%" cy="35%" r="75%">
+      <stop offset="0%" stop-color="#3a4a3a"/>
+      <stop offset="100%" stop-color="#212f21"/>
+    </radialGradient>
+    <radialGradient id="nucGrad" cx="35%" cy="30%" r="75%">
+      <stop offset="0%" stop-color="#6a8fc5"/>
+      <stop offset="100%" stop-color="#3a5a8a"/>
+    </radialGradient>
+    <linearGradient id="vacGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#7fd4e0" stop-opacity=".55"/>
+      <stop offset="100%" stop-color="#4fa8bd" stop-opacity=".55"/>
+    </linearGradient>
+  `;
+  const MITO=(tx,ty,rot,scale)=>`
+    <g class="organ" data-o="mitochondrie" transform="translate(${tx},${ty}) rotate(${rot}) scale(${scale||1})">
+      <ellipse cx="0" cy="0" rx="26" ry="14" fill="#d97a52" stroke="#7a3a1e" stroke-width="1.5"/>
+      <path d="M-16,-6 Q-12,0 -16,6 M-6,-8 Q-2,0 -6,8 M4,-8 Q8,0 4,8 M14,-6 Q18,0 14,6" stroke="#7a3a1e" stroke-width="1.3" fill="none"/>
+    </g>`;
+  const RIBO=(pts)=>`<g class="organ" data-o="ribozom" fill="#fff">`+pts.map(([x,y])=>`<circle cx="${x}" cy="${y}" r="2.6"/>`).join('')+`</g>`;
+  function svgPlant(){
+    return `<defs>${DEFS}</defs>
+    <rect class="organ" data-o="stena" x="18" y="18" width="264" height="264" rx="36" fill="none" stroke="#6ba84a" stroke-width="9"/>
+    <rect x="18" y="18" width="264" height="264" rx="36" fill="#2a3a20"/>
+
+    <g filter="url(#gooCell)" fill="url(#cytoGrad)">
+      <rect x="34" y="34" width="232" height="232" rx="26"/>
+      <circle cx="34" cy="150" r="14"/><circle cx="266" cy="150" r="14"/>
+      <circle cx="150" cy="34" r="14"/><circle cx="150" cy="266" r="14"/>
+    </g>
+    <rect class="organ" data-o="membrana" x="35" y="35" width="230" height="230" rx="25" fill="none" stroke="#7fb3c9" stroke-width="2.5" opacity=".85"/>
+    <rect class="organ" data-o="cytoplazma" x="40" y="40" width="220" height="220" rx="22" fill="transparent"/>
+
+    <g class="organ" data-o="vakuola">
+      <path d="M150,60 C200,60 232,90 232,140 C232,185 205,222 160,228 C115,233 78,210 68,168 C58,126 78,85 118,68 C128,64 139,60 150,60 Z" fill="url(#vacGrad)" stroke="#4a98ad" stroke-width="2"/>
+    </g>
+
+    <g class="organ" data-o="jadro">
+      <circle cx="80" cy="220" r="34" fill="url(#nucGrad)" stroke="#25406b" stroke-width="2"/>
+      <circle cx="80" cy="220" r="39" fill="none" stroke="#4a6fa5" stroke-width="2" opacity=".6" stroke-dasharray="3 3"/>
+      <circle cx="90" cy="211" r="10" fill="#26385c"/>
+    </g>
+
+    <g class="organ" data-o="chloroplast" transform="translate(215,205) rotate(-10)">
+      <ellipse cx="0" cy="0" rx="24" ry="14" fill="#3f8f4f" stroke="#1e5a2a" stroke-width="1.5"/>
+      <path d="M-15,-6 h30 M-15,-1 h30 M-15,4 h30 M-15,9 h24" stroke="#1e5a2a" stroke-width="1.3"/>
+    </g>
+    <g class="organ" data-o="chloroplast" transform="translate(225,95) rotate(18)">
+      <ellipse cx="0" cy="0" rx="22" ry="13" fill="#3f8f4f" stroke="#1e5a2a" stroke-width="1.5"/>
+      <path d="M-14,-5 h28 M-14,0 h28 M-14,5 h22" stroke="#1e5a2a" stroke-width="1.3"/>
+    </g>
+
+    ${MITO(215,150,-5,0.85)}
+
+    ${RIBO([[140,90],[150,98],[130,100],[180,180],[190,188]])}
+    `;
+  }
+
+  const svg = $('bunkaSvg'), info = $('bunkaInfo'), seznam = $('bunkaSeznam');
+  svg.innerHTML = svgPlant();
+
+  function ukaz(klic) {
+    const o = ORGANELY[klic];
+    if (!o) return;
+    info.innerHTML = `<h3>${o.n}</h3><p>${o.d}</p>`;
+    svg.querySelectorAll('.organ').forEach(el => el.classList.toggle('vybrany', el.dataset.o === klic));
+    seznam.querySelectorAll('button').forEach(b => b.classList.toggle('vybrany', b.dataset.o === klic));
+  }
+
+  // do seznamu patří jen to, co je v tomhle schématu opravdu nakreslené
+  const vSchematu = [...new Set([...svg.querySelectorAll('.organ')].map(el => el.dataset.o))];
+  seznam.innerHTML = vSchematu.map(k =>
+    `<button type="button" data-o="${k}">${ORGANELY[k].n}</button>`).join('');
+  seznam.addEventListener('click', ev => {
+    const b = ev.target.closest('button');
+    if (b) ukaz(b.dataset.o);
+  });
+  svg.addEventListener('click', ev => {
+    const el = ev.target.closest('.organ');
+    if (el) ukaz(el.dataset.o);
+  });
+
+  info.innerHTML = '<h3>Klepněte na organelu</h3><p>Vyberte část buňky v obrázku nebo v seznamu '
+    + 'pod ním a zjistěte, co v buňce dělá.</p>';
+}
+
+/* ============================================================
+   5. KVADRATICKÁ FUNKCE
+   Zkrácená verze obsah/grafy_funkci.html – jen parabola, zato s vrcholem,
+   kořeny a diskriminantem, které se přepočítají při každém pohybu jezdce.
+   ============================================================ */
+{
+  const cv = $('grafPlatno');
+  const P = nastavPlatno(cv);
+  const sA = $('grafA'), sB = $('grafB'), sC = $('grafC');
+  const cislo = n => (Math.round(n * 100) / 100).toString().replace('.', ',').replace('-', '\u2212');
+
+  const koef = () => ({ a: +sA.value / 10, b: +sB.value / 10, c: +sC.value / 10 });
+
+  function vzorec({ a, b, c }) {
+    const cleny = [[a, 'x²', 'a'], [b, 'x', 'b'], [c, '', 'c']]
+      .filter(([h]) => h)
+      .map(([h, x, tr]) => {
+        const abs = Math.abs(h);
+        const cis = (abs === 1 && x) ? '' : cislo(abs);   // 1x² se píše jako x²
+        return { zaporny: h < 0, html: `<span class="${tr}">${cis}${x}</span>` };
+      });
+    if (!cleny.length) return 'y = 0';
+    return 'y = ' + cleny.map((c, i) =>
+      (i === 0 ? (c.zaporny ? '−' : '') : (c.zaporny ? ' − ' : ' + ')) + c.html).join('');
+  }
+
+  function kresli() {
+    const { a, b, c } = koef();
+    const { ctx } = P, w = P.w(), h = P.h();
+    // Jednotka je na obou osách stejná, jinak by se parabola deformovala.
+    // Když vrchol vyjede z plátna (velké c nebo malé a), obraz se za ním
+    // svisle posune – jinak by jezdec „nic nedělal“, protože klíčové místo
+    // grafu leží mimo výřez.
+    const jed = Math.min(w / 16, h / 11);
+    const pulY = (h / 2) / jed;
+    let posunY = 0;
+    if (a) {
+      const vy = c - b * b / (4 * a);
+      if (Math.abs(vy) > pulY * 0.8) posunY = vy - Math.sign(vy) * pulY * 0.6;
+    }
+    const px = x => w / 2 + x * jed, py = y => h / 2 - (y - posunY) * jed;
+    const odX = Math.ceil(-w / 2 / jed), doX = Math.floor(w / 2 / jed);
+    const odY = Math.ceil(posunY - pulY), doY = Math.floor(posunY + pulY);
+
+    ctx.fillStyle = TEMA['bg-input'];
+    ctx.fillRect(0, 0, w, h);
+
+    ctx.strokeStyle = TEMA.border;
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    for (let x = odX; x <= doX; x++) { ctx.moveTo(px(x), 0); ctx.lineTo(px(x), h); }
+    for (let y = odY; y <= doY; y++) { ctx.moveTo(0, py(y)); ctx.lineTo(w, py(y)); }
+    ctx.stroke();
+
+    ctx.strokeStyle = TEMA['text-faint'];
+    ctx.lineWidth = 1.6;
+    ctx.beginPath();
+    ctx.moveTo(0, py(0)); ctx.lineTo(w, py(0));
+    ctx.moveTo(px(0), 0); ctx.lineTo(px(0), h);
+    ctx.stroke();
+
+    // čísla na osách – bez nich se z grafu nedá nic odečíst
+    ctx.fillStyle = TEMA['text-faint'];
+    ctx.font = '11px ' + getComputedStyle(document.body).fontFamily;
+    ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    for (let x = odX; x <= doX; x++) {
+      if (!x || px(x) < 12 || px(x) > w - 12) continue;
+      ctx.fillText(x, px(x), Math.min(Math.max(py(0) + 4, 4), h - 14));
+    }
+    ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+    for (let y = odY; y <= doY; y++) {
+      if (!y || py(y) < 10 || py(y) > h - 10) continue;
+      ctx.fillText(y, Math.max(px(0) - 5, 18), py(y));
+    }
+    ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+
+    ctx.strokeStyle = TEMA.accent;
+    ctx.lineWidth = 2.6;
+    ctx.beginPath();
+    for (let i = 0; i <= w; i++) {
+      const x = (i - w / 2) / jed, y = a * x * x + b * x + c;
+      const Y = py(y);
+      if (i === 0) ctx.moveTo(i, Y); else ctx.lineTo(i, Y);
+    }
+    ctx.stroke();
+
+    const fakta = [];
+    if (a) {
+      const vx = -b / (2 * a), vy = a * vx * vx + b * vx + c;
+      ctx.fillStyle = TEMA.warn;
+      ctx.beginPath(); ctx.arc(px(vx), py(vy), 5, 0, 7); ctx.fill();
+      fakta.push(`Vrchol <b>[${cislo(vx)}; ${cislo(vy)}]</b>`);
+      const D = b * b - 4 * a * c;
+      fakta.push(`Diskriminant <b>${cislo(D)}</b>`);
+      if (D > 0) {
+        const koreny = [(-b - Math.sqrt(D)) / (2 * a), (-b + Math.sqrt(D)) / (2 * a)].sort((p, q) => p - q);
+        const [x1, x2] = koreny;
+        koreny.forEach(x => {
+          ctx.fillStyle = TEMA.ok;
+          ctx.beginPath(); ctx.arc(px(x), py(0), 5, 0, 7); ctx.fill();
+        });
+        fakta.push(`Kořeny <b>${cislo(x1)}</b> a <b>${cislo(x2)}</b>`);
+      } else if (D === 0) {
+        ctx.fillStyle = TEMA.ok;
+        ctx.beginPath(); ctx.arc(px(-b / (2 * a)), py(0), 5, 0, 7); ctx.fill();
+        fakta.push('Jeden dvojnásobný kořen – parabola se osy jen dotkne');
+      } else {
+        fakta.push('Žádný reálný kořen – parabola osu x neprotne');
+      }
+      fakta.push(a > 0 ? 'Parabola je otevřená nahoru (minimum ve vrcholu)'
+                       : 'Parabola je otevřená dolů (maximum ve vrcholu)');
+    } else {
+      fakta.push('Při <b>a = 0</b> to už není kvadratická funkce – zbyla přímka.');
+    }
+
+    $('grafVzorec').innerHTML = vzorec({ a, b, c });
+    $('grafFakta').innerHTML = fakta.join(' · ');
+  }
+
+  [sA, sB, sC].forEach(s => s.addEventListener('input', kresli));
+  $('grafReset').addEventListener('click', () => {
+    sA.value = 10; sB.value = 0; sC.value = 0;
+    kresli();
+  });
+  new ResizeObserver(kresli).observe(cv);
+  kresli();
+}
+
+/* ============================================================
+   6. PROCVIČOVÁNÍ
+   Chování odpovědí odpovídá sdílenému uloha.js Nodusu (zaklepání u chyby,
+   zelená a posun u správné odpovědi, kartička „proč"), jen je tu opsané
+   nakrátko, aby stránka nepotřebovala žádný další soubor.
+   ============================================================ */
+{
+  const UKAZKY = [
+    {
+      predmet: '📖 Čeština · 4. ročník',
+      zadani: 'Doplň i/y do vyjmenovaného slova.',
+      veta: 'Za vsí stojí starý <span class="spoust">m</span><span class="mezera"></span>l<span class="spoust">n</span>.',
+      doplni: 'ý',
+      moznosti: ['ý', 'í'], spravna: 'ý',
+      pravidlo: '<b>mlýn</b> je vyjmenované slovo po <b>m</b> – píše se v něm tvrdé ý. '
+              + 'Pozor na <i>mlít</i> (obilí), to vyjmenované slovo není.',
+    },
+    {
+      predmet: '🔢 Matematika · 5. ročník',
+      zadani: 'Kolik je tři čtvrtiny z dvaceti?',
+      veta: '¾ z 20 = ?',
+      moznosti: ['15', '16', '12', '5'], spravna: '15',
+      pravidlo: 'Nejdřív jedna čtvrtina: <b>20 : 4 = 5</b>. Tři čtvrtiny jsou tedy <b>3 · 5 = 15</b>.',
+    },
+    {
+      predmet: '🇬🇧 Angličtina · 6. ročník',
+      zadani: 'Vyber správný tvar slovesa.',
+      veta: 'She <span class="mezera"></span> to school every day.',
+      doplni: 'goes',
+      moznosti: ['goes', 'go', 'going'], spravna: 'goes',
+      pravidlo: 'Přítomný čas prostý: ve <b>3. osobě jednotného čísla</b> (he / she / it) přibude '
+              + 'slovesu koncovka <b>-s</b>, po -o dokonce <b>-es</b>: <i>go → goes</i>.',
+    },
+    {
+      predmet: '🧬 Přírodopis · 6. ročník',
+      zadani: 'Která část buňky řídí její činnost a nese dědičnou informaci?',
+      veta: 'Buňka',
+      moznosti: ['jádro', 'mitochondrie', 'vakuola'], spravna: 'jádro',
+      pravidlo: 'Řídí <b>jádro</b> – je v něm DNA. Mitochondrie buňce dodávají energii, '
+              + 'vakuola je zásobárna vody a látek.',
+    },
+    {
+      predmet: '⚛️ Fyzika · 8. ročník',
+      zadani: 'Jaká je jednotka elektrického napětí?',
+      veta: 'U = ?',
+      moznosti: ['volt (V)', 'ampér (A)', 'watt (W)'], spravna: 'volt (V)',
+      pravidlo: 'Napětí <b>U</b> se měří ve <b>voltech</b>. Ampér patří proudu <i>I</i>, '
+              + 'watt výkonu <i>P</i>.',
+    },
+    {
+      predmet: '📜 Dějepis · 7. ročník',
+      zadani: 'Ve kterém století vládl Karel IV.?',
+      veta: 'Karel IV. (1316–1378)',
+      moznosti: ['14. století', '13. století', '15. století'], spravna: '14. století',
+      pravidlo: 'Roky 13xx spadají do <b>14. století</b> – století je vždy o jedno vyšší než '
+              + 'první dvojčíslí letopočtu.',
+    },
+  ];
+
+  const plocha = $('plocha'), skoreEl = $('ulohaSkore');
+  const zamichej = p => { const a = [...p]; for (let i = a.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } return a; };
+  let poradi = zamichej(UKAZKY), index = 0, spravne = 0, pokusy = 0, casovac = null;
+
+  function dalsi() {
+    clearTimeout(casovac);
+    index++;
+    if (index >= poradi.length) {
+      const posledni = poradi[poradi.length - 1];
+      do { poradi = zamichej(UKAZKY); } while (poradi[0] === posledni);
+      index = 0;
+    }
+    vykresli(poradi[index]);
+  }
+
+  function vykresli(u) {
+    clearTimeout(casovac);
+    plocha.innerHTML = `<div class="zadani">${u.predmet} — ${u.zadani}</div>`
+      + `<div class="veta-uloha">${u.veta}</div><div class="odezva"></div>`;
+    const odezva = plocha.querySelector('.odezva');
+    const moznosti = document.createElement('div');
+    moznosti.className = 'moznosti';
+    let chyboval = false, hotovo = false;
+
+    zamichej(u.moznosti).forEach(popis => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.textContent = popis;
+      b.addEventListener('click', () => {
+        if (hotovo) return;
+        if (popis !== u.spravna) {
+          // chyba úlohu nezavírá – jen zaklepe a otázka běží dál
+          chyboval = true;
+          b.classList.remove('trhni');
+          void b.offsetWidth;
+          b.classList.add('trhni', 'spatne');
+          setTimeout(() => b.classList.remove('spatne', 'trhni'), 420);
+          odezva.className = 'odezva chyba';
+          odezva.textContent = 'Ještě ne – zkus to znovu.';
+          return;
+        }
+        hotovo = true;
+        b.classList.add('spravne');
+        odezva.className = 'odezva ok';
+        odezva.textContent = '✅ Správně!';
+        pokusy++;
+        if (!chyboval) spravne++;
+        skoreEl.textContent = `Správně napoprvé: ${spravne} z ${pokusy}`;
+
+        const mezera = plocha.querySelector('.mezera');
+        if (u.doplni && mezera) { mezera.textContent = u.doplni; mezera.classList.add('doplneno'); }
+
+        const p = document.createElement('div');
+        p.className = 'pravidlo';
+        p.innerHTML = '<span class="znak">💡</span><div>' + u.pravidlo + '</div>';
+        plocha.appendChild(p);
+        // delší pauza kvůli kartičce s vysvětlením, po chybě ještě delší
+        casovac = setTimeout(dalsi, chyboval ? 3800 : 2600);
+      });
+      moznosti.appendChild(b);
+    });
+    plocha.appendChild(moznosti);
+  }
+
+  $('btnDalsi').addEventListener('click', dalsi);
+  vykresli(poradi[index]);
+}
+/* ============================================================
+   7. GENERÁTOR TESTŮ
+   Zkrácená verze obsah/pracovni_listy.html: patnáct generátorů místo
+   celého katalogu, bez záhlaví školy a bez ukládání nastavení. Zůstává
+   to podstatné – úlohy se počítají ze seedovaného generátoru náhody,
+   takže **stejný kód listu vyrobí pokaždé stejný test** (a řešení k němu).
+   Slovní zásoba i banky úloh jsou převzaté z plné verze.
+   ============================================================ */
+{
+  function makeRng(seedStr){
+    let h=2166136261>>>0;
+    for(let i=0;i<seedStr.length;i++){h^=seedStr.charCodeAt(i);h=Math.imul(h,16777619)>>>0;}
+    let s=h>>>0;
+    const next=()=>{s=s+0x6D2B79F5|0;let t=Math.imul(s^s>>>15,1|s);t=t+Math.imul(t^t>>>7,61|t)^t;return ((t^t>>>14)>>>0)/4294967296;};
+    const R={
+      next,
+      int:(a,b)=>a+Math.floor(next()*(b-a+1)),
+      pick:a=>a[Math.floor(next()*a.length)],
+      chance:p=>next()<p,
+      shuffle(a){const o=a.slice();for(let i=o.length-1;i>0;i--){const j=Math.floor(next()*(i+1));[o[i],o[j]]=[o[j],o[i]];}return o;}
+    };
+    return R;
+  }
+
+  function tier(bank,d){
+    if(d==='easy')return bank.easy;
+    if(d==='hard')return bank.hard.concat(bank.medium);
+    return bank.easy.concat(bank.medium);
+  }
+  const VYJM={easy:[
+  {t:'B_dlíme na kraji města.',a:'bydlíme'},{t:'Na louce se pásl dob_tek.',a:'dobytek'},
+  {t:'V lese jsme našli léčivou b_linu.',a:'bylinu'},{t:'Kob_la měla malé hříbě.',a:'kobyla'},
+  {t:'Chlapec byl velmi b_strý.',a:'bystrý'},{t:'Sl_šeli jsme zvonit zvon.',a:'slyšeli'},
+  {t:'Ve ml_ně se mele mouka.',a:'mlýně'},{t:'Na obloze se bl_skalo.',a:'blýskalo'},
+  {t:'Kachna rychle pol_kala zrní.',a:'polykala'},{t:'Nesmíme pl_tvat vodou.',a:'plýtvat'},
+  {t:'V zimě jezdíme na l_žích.',a:'lyžích'},{t:'Kolem květin bzučel hm_z.',a:'hmyz'},
+  {t:'Po kuchyni pobíhala m_š.',a:'myš'},{t:'Před jídlem si musíme um_t ruce.',a:'umýt'},
+  {t:'Večer jsme viděli netop_ra.',a:'netopýra'},{t:'Kůň má tvrdé kop_to.',a:'kopyto'},
+  {t:'Brambory jsme dali do p_tle.',a:'pytle'},{t:'S_n pomáhal otci na zahradě.',a:'syn'},
+  {t:'K snídani jsme měli chléb se s_rem.',a:'sýrem'},{t:'Na větvi seděla s_kora.',a:'sýkora'},
+  {t:'Ve vodě si hrála v_dra.',a:'vydra'},{t:'V noci houkal v_r.',a:'výr'},
+  {t:'Br_ ráno vstáváme do školy.',a:'brzy'},{t:'Jaz_k je sval v ústech.',a:'jazyk'},
+  {t:'Dítě si zv_kalo na nový režim.',a:'zvykalo'},{t:'Žv_kat s plnou pusou se nemá.',a:'žvýkat'},
+  {t:'Včely roznášejí p_l z květu na květ.',a:'pyl'},{t:'B_k stál uprostřed ohrady.',a:'býk'}],
+  medium:[
+  {t:'Maminka nám dala sladký s_rup.',a:'sirup'},{t:'Za stodolou stály v_dle.',a:'vidle'},
+  {t:'Přes pole běžela l_ška.',a:'liška'},{t:'Z_ma přišla letos brzy.',a:'zima'},
+  {t:'M_sa byla plná ovoce.',a:'mísa'},{t:'Ob_vatelé města protestovali.',a:'obyvatelé'},
+  {t:'Nábytek do b_tu vybírali dlouho.',a:'bytu'},{t:'Postavili si nové ob_dlí.',a:'obydlí'},
+  {t:'U nás je takový starý ob_čej.',a:'obyčej'},{t:'Voda v potoce tvořila v_r.',a:'vír'},
+  {t:'Ve starém doupěti sedí v_r.',a:'výr'},{t:'Chci b_t doktorem.',a:'být'},
+  {t:'Nesmíš b_t slabší kamarády.',a:'bít'},{t:'Chtěl bych m_t nové kolo.',a:'mít'},
+  {t:'Po obědě musím m_t nádobí.',a:'mýt'},{t:'Do polévky přidáme s_rovou zeleninu.',a:'syrovou'},
+  {t:'L_dé přišli včas.',a:'lidé'},{t:'Muž měl l_sou hlavu.',a:'lysou'},
+  {t:'Řeka pomalu pl_nula krajinou.',a:'plynula'},{t:'Vz_kal bolestí, když upadl.',a:'vzlykal'},
+  {t:'Na poli hvízdal s_sel.',a:'sysel'},{t:'Slep_š není had, ale ještěrka.',a:'slepýš'}],
+  hard:[
+  {t:'Nachom_tl se tam v nevhodnou chvíli.',a:'nachomýtl'},{t:'Na zahradě rostl pel_něk.',a:'pelyněk'},
+  {t:'Ve tmě se tř_pytily hvězdy.',a:'třpytily'},{t:'Chlapec klop_tl o kámen.',a:'klopýtl'},
+  {t:'V sadu se ozýval s_ček.',a:'sýček'},{t:'Vzduch byl s_chravý a vlhký.',a:'sychravý'},
+  {t:'Prádlo na šňůře us_chalo.',a:'usychalo'},{t:'Dm_chadlo rozfoukalo oheň.',a:'dmýchadlo'},
+  {t:'Kuře mělo jemné chm_ří.',a:'chmýří'},{t:'Hlem_žď se pomalu plazil.',a:'hlemýžď'},
+  {t:'Dveře je třeba večer zam_kat.',a:'zamykat'},{t:'Začal zp_tovat svědomí.',a:'zpytovat'},
+  {t:'Za svůj čin musel p_kat.',a:'pykat'},{t:'Na mezi rostl p_r.',a:'pýr'},
+  {t:'Dívka se p_řila studem.',a:'pýřila'},{t:'L_tko ho po běhu bolelo.',a:'lýtko'},
+  {t:'Provaz byl svázaný l_kem.',a:'lýkem'},{t:'Dřevorubci m_tili les.',a:'mýtili'},
+  {t:'M_lí se, kdo si myslí, že to bylo snadné.',a:'mýlí'},{t:'Přib_slav leží na Vysočině.',a:'Přibyslav'},
+  {t:'Provaz byl upletený z l_ka.',a:'lýka'},{t:'Ten hubený pes je učiněné v_žle.',a:'vyžle'},
+  {t:'Na návsi byl velký pov_k.',a:'povyk'},{t:'V kovárně žhnula v_heň.',a:'výheň'}]};
+  const BPVM={easy:[
+  {w:'o_d',f:'oběd'},{w:'_žet',f:'běžet'},{w:'_kný',f:'pěkný'},{w:'_st',f:'pěst'},
+  {w:'_da',f:'věda'},{w:'_ž',f:'věž'},{w:'_sto',f:'město'},{w:'_síc',f:'měsíc'},
+  {w:'s_chat',f:'spěchat'},{w:'z_v',f:'zpěv'},{w:'s_t',f:'svět'},{w:'_kký',f:'měkký'},
+  {w:'do_hnout',f:'doběhnout'},{w:'_k',f:'věk'},{w:'rozu_t',f:'rozumět'},{w:'_lásek',f:'bělásek'},
+  {w:'_trný',f:'větrný'},{w:'_ch',f:'měch'},{w:'_hem',f:'během'},{w:'ú_ch',f:'úspěch'}],
+  medium:[
+  {w:'o_v',f:'objev'},{w:'o_dnat',f:'objednat'},{w:'o_kt',f:'objekt'},{w:'su_kt',f:'subjekt'},
+  {w:'_zd auta',f:'vjezd'},{w:'_t do garáže',f:'vjet'},{w:'o_ť',f:'oběť'},{w:'o_mka',f:'objímka'},
+  {w:'ná_stí',f:'náměstí'},{w:'za_stnanec',f:'zaměstnanec'},{w:'zá_r',f:'záměr'},{w:'o_tí',f:'objetí'},
+  {w:'roz_r',f:'rozměr'},{w:'ú_ra',f:'úvěra'}],
+  hard:[
+  {w:'do_nka',f:'domněnka'},{w:'vzpo_l si',f:'vzpomněl'},{w:'zapo_l',f:'zapomněl'},
+  {w:'připo_l',f:'připomněl'},{w:'po_nka (květina)',f:'pomněnka'},{w:'u_l to',f:'uměl'},
+  {w:'rozu_l',f:'rozuměl'},{w:'u_ní',f:'umění'},{w:'vy_nit',f:'vyměnit'},
+  {w:'z_na',f:'změna'},{w:'ná_stek',f:'náměstek'},{w:'do_vat se',f:'domnívat se'}]};
+  const SYN={easy:[['radost','veselí'],['smutek','žal'],['rychlý','svižný'],['statečný','odvážný'],['krásný','nádherný'],['chytrý','bystrý'],['velký','obrovský'],['malý','drobný'],['silný','mohutný'],['klidný','tichý'],['unavený','vyčerpaný'],['bohatý','zámožný']],
+  medium:[['dům','stavení'],['pes','hafan'],['učitel','kantor'],['říci','pravit'],['jít','kráčet'],['dívat se','hledět'],['práce','dřina'],['strach','obava'],['lež','nepravda'],['cesta','stezka'],['zvíře','živočich'],['nemocný','chorý']],
+  hard:[['okamžitě','ihned'],['zřejmě','patrně'],['podivný','zvláštní'],['nesnadný','obtížný'],['pochybovat','váhat'],['zdůraznit','vyzdvihnout'],['skromný','nenáročný'],['pečlivý','svědomitý'],['vzácný','ojedinělý'],['přemluvit','přesvědčit'],['výstižný','trefný'],['lhostejný','netečný']]};
+  const ANT={easy:[['velký','malý'],['den','noc'],['teplo','zima'],['začátek','konec'],['radost','smutek'],['mladý','starý'],['rychlý','pomalý'],['vysoký','nízký'],['plný','prázdný'],['čistý','špinavý'],['světlo','tma'],['tvrdý','měkký']],
+  medium:[['pravda','lež'],['přítel','nepřítel'],['bohatý','chudý'],['hluboký','mělký'],['ostrý','tupý'],['sladký','hořký'],['odvaha','strach'],['užitečný','zbytečný'],['veselý','smutný'],['blízko','daleko'],['vpřed','vzad'],['láska','nenávist']],
+  hard:[['skromný','domýšlivý'],['štědrý','lakomý'],['pilný','líný'],['ochotný','neochotný'],['jistota','nejistota'],['přijmout','odmítnout'],['pochválit','pokárat'],['zvětšit','zmenšit'],['souhlas','nesouhlas'],['klidný','rozčilený'],['úspěch','neúspěch'],['vhodný','nevhodný']]};
+  const ZVIRATA={
+  easy:[['pes','savec'],['kočka','savec'],['kráva','savec'],['kapr','ryba'],['štika','ryba'],['holub','pták'],['vrabec','pták'],['orel','pták'],['skokan zelený','obojživelník'],['ještěrka','plaz'],['moucha','hmyz'],['mravenec','hmyz']],
+  medium:[['netopýr','savec'],['delfín','savec'],['tučňák','pták'],['čáp','pták'],['mlok','obojživelník'],['zmije','plaz'],['želva','plaz'],['pstruh','ryba'],['včela','hmyz'],['pavouk','pavoukovci'],['rak','korýši'],['hlemýžď','měkkýši']],
+  hard:[['velryba','savec'],['ptakopysk','savec'],['žralok','ryba'],['krokodýl','plaz'],['čolek','obojživelník'],['klíště','pavoukovci'],['krab','korýši'],['chobotnice','měkkýši'],['škeble','měkkýši'],['žížala','kroužkovci'],['medúza','žahavci'],['korál','žahavci']]};
+  const VELICINY={
+  easy:[['dráha','s','m','metr'],['čas','t','s','sekunda'],['hmotnost','m','kg','kilogram'],['objem','V','m³','metr krychlový'],['síla','F','N','newton'],['teplota','t','°C','stupeň Celsia']],
+  medium:[['rychlost','v','m/s','metr za sekundu'],['hustota','ρ','kg/m³','kilogram na metr krychlový'],['tlak','p','Pa','pascal'],['práce','W','J','joule'],['výkon','P','W','watt'],['energie','E','J','joule']],
+  hard:[['elektrický proud','I','A','ampér'],['elektrické napětí','U','V','volt'],['elektrický odpor','R','Ω','ohm'],['frekvence','f','Hz','hertz'],['elektrický náboj','Q','C','coulomb'],['teplo','Q','J','joule']]};
+
+  const LV = { easy: 0, medium: 1, hard: 2 };
+  const znamenko = n => (n < 0 ? '− ' + (-n) : '+ ' + n);
+  const desetinne = n => String(Math.round(n * 100) / 100).replace('.', ',');
+
+  /* Generátor: r = ročníky, t = název, instr = pokyn nad úlohami,
+     gen(d, R) => { q: zadání, a: řešení } */
+  const G = {
+    scitani: { r: [1, 2, 3, 4, 5], t: '🔢 Sčítání a odčítání', instr: 'Vypočítej.', gen(d, R) {
+      const max = [20, 100, 1000][LV[d]], op = R.chance(0.5) ? '+' : '−';
+      let a = R.int(1, max), b = R.int(1, max);
+      if (op === '−' && b > a) [a, b] = [b, a];
+      return { q: `${a} ${op} ${b} =`, a: String(op === '+' ? a + b : a - b) };
+    } },
+    nasobilka: { r: [2, 3, 4, 5], t: '🔢 Malá násobilka', instr: 'Vypočítej zpaměti.', gen(d, R) {
+      const [od, do_] = [[2, 5], [2, 10], [6, 12]][LV[d]];
+      const a = R.int(od, do_), b = R.int(od, do_);
+      return { q: `${a} · ${b} =`, a: String(a * b) };
+    } },
+    deleni: { r: [3, 4, 5, 6], t: '🔢 Dělení se zbytkem', instr: 'Vypočítej, uveď i zbytek.', gen(d, R) {
+      const del = R.int(2, [5, 9, 12][LV[d]]);
+      const a = R.int(del + 1, [40, 100, 300][LV[d]]);
+      return { q: `${a} : ${del} =`, a: `${Math.floor(a / del)} zb. ${a % del}` };
+    } },
+    poradi: { r: [4, 5, 6, 7], t: '🔢 Pořadí operací', instr: 'Dodrž pořadí operací.', gen(d, R) {
+      if (LV[d] === 0) { const a = R.int(2, 10), b = R.int(2, 9), c = R.int(2, 9); return { q: `${a} + ${b} · ${c} =`, a: String(a + b * c) }; }
+      if (LV[d] === 1) { const a = R.int(2, 12), b = R.int(2, 12), c = R.int(2, 9); return { q: `(${a} + ${b}) · ${c} =`, a: String((a + b) * c) }; }
+      const c = R.int(2, 9), q = R.int(2, 12), a = R.int(2, 15), b = R.int(2, 15);
+      return { q: `${a} + ${c * q} : ${c} − ${b} =`, a: String(a + q - b) };
+    } },
+    zaokrouhleni: { r: [4, 5, 6, 7], t: '🔢 Zaokrouhlování', instr: 'Zaokrouhli podle zadání.', gen(d, R) {
+      const lvl = LV[d], jed = [10, 100, 1000][lvl], nazev = ['desítky', 'stovky', 'tisíce'][lvl];
+      const n = R.int(jed, jed * [9, 99, 99][lvl]);
+      return { q: `Zaokrouhli na ${nazev}: ${n} =`, a: String(Math.round(n / jed) * jed) };
+    } },
+    procenta: { r: [6, 7, 8, 9], t: '🔢 Procenta z čísla', instr: 'Vypočítej.', gen(d, R) {
+      const p = R.pick([[10, 25, 50], [5, 20, 75], [12, 35, 65]][LV[d]]);
+      const zaklad = R.int(2, [20, 40, 80][LV[d]]) * 10;
+      return { q: `${p} % z ${zaklad} =`, a: desetinne(zaklad * p / 100) };
+    } },
+    rovnice: { r: [7, 8, 9], t: '🔢 Lineární rovnice', instr: 'Vyřeš rovnici, zapiš i zkoušku.', gen(d, R) {
+      const x = R.int(1, [8, 12, 20][LV[d]]), a = R.int(2, [5, 9, 12][LV[d]]), b = R.int(1, 20);
+      if (LV[d] < 2) return { q: `${a}x + ${b} = ${a * x + b}`, a: `x = ${x}` };
+      // těžká úroveň: neznámá na obou stranách; pravá strana se dopočítá tak,
+      // aby řešením bylo právě x (a smí vyjít i záporná – proto se sází se znaménkem)
+      const c = R.int(1, a - 1 > 0 ? a - 1 : 1) + (a === 1 ? 1 : 0);
+      const prava = (a - c) * x + b;
+      return { q: `${a}x + ${b} = ${c}x ${znamenko(prava)}`, a: `x = ${x}` };
+    } },
+    prevody: { r: [4, 5, 6, 7, 8, 9], t: '🔢 Převody jednotek', instr: 'Doplň chybějící údaj.', gen(d, R) {
+      const rady = [[['m', 'cm', 100], ['kg', 'g', 1000], ['h', 'min', 60]],
+                    [['km', 'm', 1000], ['l', 'ml', 1000], ['min', 's', 60]],
+                    [['km²', 'ha', 100], ['t', 'kg', 1000], ['m³', 'l', 1000]]][LV[d]];
+      const [vel, mal, k] = R.pick(rady), n = R.int(2, 40);
+      return R.chance(0.5)
+        ? { q: `${n} ${vel} = ____ ${mal}`, a: `${n * k} ${mal}` }
+        : { q: `${n * k} ${mal} = ____ ${vel}`, a: `${n} ${vel}` };
+    } },
+    obdelnik: { r: [4, 5, 6, 7], t: '🔢 Obvod a obsah obdélníku', instr: 'Vypočítej a nezapomeň na jednotky.', gen(d, R) {
+      const a = R.int(2, [10, 20, 40][LV[d]]), b = R.int(2, [10, 20, 40][LV[d]]);
+      return R.chance(0.5)
+        ? { q: `Obdélník a = ${a} cm, b = ${b} cm. Obvod o =`, a: `${2 * (a + b)} cm` }
+        : { q: `Obdélník a = ${a} cm, b = ${b} cm. Obsah S =`, a: `${a * b} cm²` };
+    } },
+    vyjmenovana: { r: [3, 4, 5, 6], t: '📖 Vyjmenovaná slova (i/y)', instr: 'Doplň i, í, y nebo ý.', gen(d, R) {
+      const it = R.pick(tier(VYJM, d));
+      return { q: it.t, a: it.a };
+    } },
+    bpvm: { r: [2, 3, 4, 5], t: '📖 Doplňovačka bě/pě/vě/mě', instr: 'Doplň chybějící skupinu hlásek.', gen(d, R) {
+      const it = R.pick(tier(BPVM, d));
+      return { q: it.w, a: it.f };
+    } },
+    synonyma: { r: [3, 4, 5, 6], t: '📖 Synonyma', instr: 'Napiš slovo souznačné.', gen(d, R) {
+      const p = R.pick(tier(SYN, d));
+      return R.chance(0.5) ? { q: `${p[0]} →`, a: p[1] } : { q: `${p[1]} →`, a: p[0] };
+    } },
+    antonyma: { r: [2, 3, 4, 5], t: '📖 Antonyma (opozita)', instr: 'Napiš slovo opačného významu.', gen(d, R) {
+      const p = R.pick(tier(ANT, d));
+      return { q: `${p[0]} →`, a: p[1] };
+    } },
+    veliciny: { r: [6, 7, 8, 9], t: '⚛️ Veličiny a jednotky', instr: 'Doplň značku veličiny a její jednotku.', gen(d, R) {
+      const v = R.pick(tier(VELICINY, d));
+      return { q: `${v[0]} → značka ____, jednotka ____`, a: `${v[1]}, ${v[2]} (${v[3]})` };
+    } },
+    zvirata: { r: [4, 5, 6, 7], t: '🧬 Zařaď živočicha', instr: 'Napiš, do které skupiny živočich patří.', gen(d, R) {
+      const z = R.pick(tier(ZVIRATA, d));
+      return { q: `${z[0]} →`, a: z[1] };
+    } },
+  };
+
+  const selRocnik = $('testRocnik'), selTema = $('testTema'), selObt = $('testObtiznost');
+  const selPocet = $('testPocet'), poleKod = $('testKod'), archEl = $('testList');
+  let ukazReseni = false;
+  let obtiznostRucne = false;   // jakmile si ji učitel přenastaví, ročník do ní přestane sahat
+
+  for (let r = 1; r <= 9; r++) {
+    selRocnik.appendChild(new Option(r + '. ročník', r));
+  }
+  selRocnik.value = 5;
+
+  const proRocnik = r => Object.entries(G).filter(([, g]) => g.r.includes(+r));
+
+  function naplnTemata() {
+    const drive = selTema.value;
+    selTema.innerHTML = '';
+    selTema.appendChild(new Option('🎲 Mix témat ročníku', 'mix'));
+    proRocnik(selRocnik.value).forEach(([id, g]) => selTema.appendChild(new Option(g.t, id)));
+    selTema.value = [...selTema.options].some(o => o.value === drive) ? drive : 'mix';
+  }
+
+  const novyKod = () => {
+    const zn = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';   // bez znaků, které se pletou (I, O, 0, 1)
+    return Array.from({ length: 5 }, () => zn[Math.floor(Math.random() * zn.length)]).join('');
+  };
+
+  function slozList() {
+    const kod = (poleKod.value || '').toUpperCase().replace(/[^A-Z0-9]/g, '') || novyKod();
+    poleKod.value = kod;
+    const rocnik = selRocnik.value, obt = selObt.value, pocet = +selPocet.value;
+    // Do semínka jde i nastavení: stejný kód s jiným ročníkem má dát jiný list,
+    // ale stejný kód se stejným nastavením pokaždé přesně tentýž.
+    const R = makeRng(`${kod}|${rocnik}|${selTema.value}|${obt}|${pocet}`);
+    // U míchaného listu se nebere celý ročník: z deseti úloh by vzniklo deset
+    // témat po jedné úloze. Vybere se pár témat a úlohy se mezi ně rozdělí,
+    // takže list vypadá jako opravdový test – několik oddílů po pár úlohách.
+    const dostupne = proRocnik(rocnik);
+    const vybrane = selTema.value === 'mix'
+      ? R.shuffle(dostupne).slice(0, Math.min(dostupne.length, Math.max(2, Math.round(pocet / 4))))
+      : [[selTema.value, G[selTema.value]]];
+    if (!vybrane.length) return;
+
+    const ulohy = [];
+    const videne = new Set();
+    for (let i = 0; i < pocet; i++) {
+      const [, g] = vybrane[i % vybrane.length];
+      let it = null;
+      // pár pokusů na neopakující se zadání; banka témat je konečná, takže
+      // se po vyčerpání smíří i s opakováním, jen se kvůli tomu nezacyklí
+      for (let pokus = 0; pokus < 12; pokus++) {
+        it = g.gen(obt, R);
+        if (!videne.has(it.q)) break;
+      }
+      videne.add(it.q);
+      ulohy.push({ ...it, instr: g.instr, tema: g.t });
+    }
+
+    // Úlohy se seskupí po tématech a každá skupina dostane nad sebe svůj pokyn.
+    // Bez toho nebylo u míchaného listu poznat, co se u které úlohy má dělat –
+    // „hustota →“ samo o sobě neřekne nic.
+    const skupiny = new Map();
+    ulohy.forEach(u => {
+      if (!skupiny.has(u.tema)) skupiny.set(u.tema, { instr: u.instr, ulohy: [] });
+      skupiny.get(u.tema).ulohy.push(u);
+    });
+    const poradiUloh = [...skupiny.values()].flatMap(sk => sk.ulohy);   // číslování jde podle vysázeného pořadí
+
+    const nazev = selTema.value === 'mix'
+      ? `Opakování – ${rocnik}. ročník`
+      : G[selTema.value].t.replace(/^\S+\s/, '');
+    const pokyny = skupiny.size > 1
+      ? 'Úlohy jsou rozdělené do oddílů – pokyn platí vždy pro celý oddíl nad ním.'
+      : ulohy[0].instr;
+    const dnes = new Date().toLocaleDateString('cs-CZ');
+
+    // Místo na odpověď se dopisuje jen tam, kde si ho zadání neudělalo samo
+    // (třeba „značka ____, jednotka ____“) – jinak jsou na řádku linky dvě.
+    const polozka = u =>
+      `<li><span class="zadani-listu">${u.q}${u.q.includes('____') ? '' : ' <span class="misto"></span>'}</span></li>`;
+    const telo = skupiny.size > 1
+      ? [...skupiny.entries()].map(([tema, sk]) =>
+          `<li class="oddil"><b>${tema}</b> ${sk.instr}</li>` + sk.ulohy.map(polozka).join('')).join('')
+      : ulohy.map(polozka).join('');
+
+    archEl.innerHTML =
+      `<h3>${nazev}</h3><div class="pokyn">${pokyny}</div>` +
+      `<div class="hlavicka"><span>Jméno:</span><span>Třída:</span><span>Datum: ${dnes}</span></div>` +
+      `<ol>${telo}</ol>` +
+      (ukazReseni
+        ? '<div class="reseni"><b>Řešení:</b> ' + poradiUloh.map((u, i) => `${i + 1}. ${u.a}`).join(' · ') + '</div>'
+        : '') +
+      `<div class="kod">Kód listu: ${kod}</div>`;
+  }
+
+  selRocnik.addEventListener('change', () => {
+    if (!obtiznostRucne) {
+      const r = +selRocnik.value;
+      selObt.value = r <= 3 ? 'easy' : r <= 6 ? 'medium' : 'hard';
+    }
+    naplnTemata();
+    slozList();
+  });
+  selObt.addEventListener('change', () => { obtiznostRucne = true; slozList(); });
+  [selTema, selPocet].forEach(s => s.addEventListener('change', slozList));
+  poleKod.addEventListener('change', slozList);
+  $('testNovy').addEventListener('click', () => { poleKod.value = novyKod(); slozList(); });
+  $('testReseni').addEventListener('click', e => {
+    ukazReseni = !ukazReseni;
+    e.currentTarget.textContent = ukazReseni ? '🙈 Skrýt řešení' : '👁 Ukázat řešení';
+    slozList();
+  });
+  $('testTisk').addEventListener('click', () => window.print());
+
+  naplnTemata();
+  poleKod.value = novyKod();
+  slozList();
+}
+
+</script>
+</body>
+</html>
