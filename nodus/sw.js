@@ -5,7 +5,7 @@
 /* Při větší aktualizaci webu zvyš číslo verze — stará cache se u návštěvníků
    smaže a vše se stáhne čerstvé (jinak SWR ukáže novou verzi až na druhé načtení). */
 const PREFIX = 'nodus-';
-const CACHE = PREFIX + 'v60';
+const CACHE = PREFIX + 'v61';
 const JADRO = [
   './',
   './index.html',
@@ -61,7 +61,10 @@ self.addEventListener('fetch', e => {
 
   e.respondWith(
     caches.open(CACHE).then(async cache => {
-      const cached = await cache.match(e.request);
+      // Stránka otevřená s parametrem (např. ucitel.html?tabule=1 – okno pro
+      // třídu) je v cache uložená bez něj; bez ignoreSearch by offline spadla.
+      const cached = await cache.match(e.request)
+        || (url.search ? await cache.match(e.request, { ignoreSearch: true }) : undefined);
       const zeSite = fetch(e.request)
         .then(resp => {
           if (resp.ok) cache.put(e.request, resp.clone());

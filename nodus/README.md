@@ -20,7 +20,7 @@ pokrytá celá, žádné téma nezůstalo jen jako zástupce (🚧). Přehled je
 | `apps.js` | katalog (jediný zdroj pravdy pro menu, hledání i úvodní přehled) |
 | `obsah/prehled.html` | úvodní stránka v pracovní ploše (ročníky, předměty, tip dne, oblíbené) |
 | `obsah/osnova.html` | mřížka ročníků × předmětů s přehledem pokrytí učiva |
-| `obsah/ucitel.html` | kabinet učitele – rozcestník pro přípravu a nástroje do hodiny |
+| `obsah/ucitel.html` | kabinet učitele – rozcestník pro přípravu a nástroje do hodiny (ve dvou úrovních záložek) |
 | `obsah/prezentace.html` | tvorba slidů, promítání na plátno a tisk podkladů |
 | `obsah/predstaveni.html` | živé ukázky – zkrácené, ale funkční verze šesti aplikací na jedné stránce |
 | `obsah/*.html` | jednotlivé výukové aplikace |
@@ -91,23 +91,91 @@ jako neviditelná čísla úloh a linka na jméno, a to i v tisku.
 
 ## Pro učitele
 
-Učitelské stránky drží pohromadě `obsah/ucitel.html` (**Kabinet učitele**) —
-v horní části rozcestník po přípravných nástrojích (pracovní listy, slidy,
-osnova, ukázky, knihovna sad, citace), pod ním nástroje, které běží přímo
-v hodině: časovač a stopky, losování žáka, dělení do skupin, skóre týmů,
-kostka a semafor hluku.
+Učitelské stránky drží pohromadě `obsah/ucitel.html` (**Kabinet učitele**).
+Stránka se přepíná mezi **dvěma částmi** (přepínač nahoře, volba se pamatuje
+v `nodus_ucitel_cast`):
+
+- **📋 Příprava na hodinu** — rozcestník po přípravných nástrojích (pracovní listy,
+  slidy, osnova, ukázky, knihovna sad, kartičky, citace).
+- **🧰 Nástroje do hodiny** — to, co běží přímo v hodině.
+
+Nástroje jsou uvnitř ve **dvou úrovních záložek**: nahoře skupina, pod ní nástroje.
+
+| Skupina | Nástroje |
+|---|---|
+| 🧭 Průběh hodiny | časovač (i stopky), semafor hluku |
+| 🎲 Náhoda | kostka, mince |
+| 👥 Práce se třídou | losování žáka, skupiny, skóre týmů |
+
+Práce se třídou je schválně **poslední a schovaná** — uprostřed hodiny se sahá
+spíš po časovači a kostce, seznam žáků se řeší při přípravě.
 
 Pravidla, kterými se stránka řídí:
 
 - **Čte se z poslední lavice.** Čísla i jména jsou v `clamp()` škále přes celou
   šířku, ne v okénku — nástroj se pouští na plátno, ne na notebook.
+- **Celá obrazovka na plátno.** Časovač, semafor, kostka, mince, losování
+  i skóre mají tlačítko ⛶ (klávesa `F`). Používá se Fullscreen API a když ho
+  prohlížeč nebo rám odmítne, nástroj se roztáhne přes okno třídou `zvetseno`
+  (`position: fixed`) — ve fullscreenu se skryjí ovládací drobnosti (`.drobne`)
+  a písmo povyroste.
 - **Seznam třídy je jeden.** Losování, skupiny i výběr do týmů berou jména
   ze stejného `nodus_tridy_v1`, aby se třída psala jen jednou. Tříd může být víc.
 - **Losování bez opakování.** Dokud se kolo neuzavře, nikdo nepadne dvakrát
   (a vylosovaní jsou v seznamu odškrtnutí). Po vyčerpání začne samo nové kolo —
   losování nikdy nezůstane stát. Bez téhle volby aspoň nepadne tentýž žák dvakrát za sebou.
+  Losovat jde i víc žáků naráz (dvojice, trojice) — vylosovaní jsou vždy různí.
+- **Okno pro třídu.** Tlačítko „🖵 Okno pro třídu“ otevře tutéž stránku
+  s `?tabule=1`; ta schová celé ovládání a ukazuje jen to, co má vidět třída
+  (čas s prstencem, jméno, kostky, semafor, skupiny, skóre). Posílá se přes
+  `BroadcastChannel('nodus_ucitel_tabule')` a **vysílá vždy jen otevřený nástroj** —
+  jinak by si časovač a losování přebíjely obrazovku. Nové okno se po načtení
+  zeptá zprávou `{dotaz:true}` a kabinet mu pošle poslední stav. Čas se posílá jen
+  při změně sekundy, ne každý snímek. `sw.js` proto při hledání v cache zkouší
+  i `ignoreSearch` — jinak by stránka s parametrem offline spadla.
+- **Displej nesmí zhasnout.** Když běží odpočet nebo svítí semafor, drží stránka
+  `navigator.wakeLock`; po návratu na záložku si ho vezme znovu.
+- **Kdo dnes chybí.** Klik na jméno v losování žáka označí absenci — vypadne
+  z losování i z dělení do skupin. Absence je vedle seznamu třídy
+  (`nodus_absence_v1`) a platí jen na dnešek, takže se jména nemusí mazat a dopisovat.
+- **Záloha do souboru.** `⤓ Záloha` uloží třídy i týmy jako JSON, `⤒ Obnovit` je
+  načte zpátky — localStorage je jen v jednom prohlížeči, doma i ve škole by se
+  jinak seznamy psaly dvakrát.
+- **Klávesy platí jen v části s nástroji.** V přípravě mezerník nic nespouští,
+  aby se stránka dala normálně procházet.
 - **Odkazy respektují rám.** Uvnitř rozcestníku se dlaždice otevírají v jeho
   pracovní ploše (`postMessage`), samostatně otevřená stránka odkazuje přímo.
+
+- **Výběr délky časovač nespouští.** Předvolba (i vlastní počet minut) jen nastaví čas
+  a tlačítko „Spustit“ začne pulsovat (`.btn.puls`, u `prefers-reduced-motion` místo
+  animace obrys) — učitel pustí odpočet, až je třída připravená, ne když si vybírá délku.
+- **Časovač počítá z hodin, ne přičítáním sekund.** Stav se v `requestAnimationFrame`
+  smyčce dopočítává z `performance.now()`; `setInterval` v zabrané záložce zaostává
+  a odpočet by lhal. Prstenec kolem číslic je SVG kružnice řízená `stroke-dashoffset`
+  (u stopek ukazuje vteřiny v minutě). `+1 min` přičítá i do celku, jinak by prstenec přetekl.
+- **Kostka umí víc než šestku.** Sady k4–k100 i vlastní rozsah, až deset kostek
+  najednou se součtem, historie posledních dvanácti hodů a volitelná **paměť**:
+  do vyčerpání kola padne každé číslo jen jednou (nad 200 čísel se paměť vypne,
+  seznam by se nedal přečíst). Rozsah 1–6 se kreslí puntíky, ostatní číslicí.
+  Nastavení i paměť drží `nodus_kostka_v1`.
+
+- **Zvuk konce se plánuje dopředu.** Ve skryté záložce prohlížeč zastaví
+  `requestAnimationFrame` a časovače přiškrtí; tóny naplánované do `AudioContextu`
+  (`o.start(currentTime + zbývá)`) ale zazní přesně, takže konec času je slyšet,
+  i když učitel mezitím přepnul do prezentace. Odpočet navíc jede kromě rAF
+  i v `setInterval(500)`, který v pozadí běží dál.
+- **Kostka i mince kreslí histogram.** Sloupečky četností (u víc kostek četnosti
+  součtů) dělají z pomůcky pokus do pravděpodobnosti; jiný rozsah nebo počet kostek
+  začíná nový pokus, nad 30 sloupečků se graf skryje.
+- **Skupiny umí role a jmenovky.** Volitelně přidělí prvním členům role (mluvčí,
+  zapisovatel, časoměřič, materiály) a `🏷 Jmenovky na lavice` je vytiskne
+  po dvou na šířku (třída `tisk-jmenovky` přepne, co se tiskne).
+- **Skóre se dá vzít zpět.** Překliknutí `+5` místo `+1` vrátí `↶ Vrátit bod`;
+  zásobník změn se maže při vynulování, smazání týmů i obnovení ze zálohy.
+- **Záložky jsou opravdové záložky.** `role="tablist"`/`tab`/`tabpanel`,
+  `aria-selected` a přepínání šipkami; ve fullscreenu se řádek podzáložek
+  přestěhuje dovnitř zvětšeného nástroje, takže se dá přepnout nástroj
+  bez opuštění celé obrazovky (fullscreen převezme nový nástroj).
 
 Časovač si zvuk skládá v `AudioContext` — žádný soubor navíc, funguje offline.
 Skóre týmů a seznamy tříd zůstávají v `localStorage`, takže soutěž může běžet
@@ -258,12 +326,12 @@ ale plně funkčních aplikací pod sebou.
 
 | Ukázka | Co se v ní dá dělat | Předloha |
 |---|---|---|
-| Gravitační hřiště | tažením vystřelit planetku, sledovat elipsu, dobu oběhu a výstřednost | `gravitacni_hriste.html` |
+| Gravitační hřiště | tažením vystřelit planetku s předpovědí dráhy, zapnout gravitační pole a vektory, sledovat elipsu, dobu oběhu a výstřednost | `gravitacni_hriste.html` |
 | Periodická tabulka | všech 118 prvků, klik dopočítá konfiguraci a rozběhne Bohrův model | `periodic_table.html` |
 | Aerodynamický tunel | táhnout překážku proudem, měnit velikost a rychlost větru | `vitr_tunel.html` |
-| Stavba rostlinné buňky | klikat na organely ve schématu | `bunka.html` |
+| Stavba buňky | klikat na organely v číslovaném schématu, přepínat rostlinnou/živočišnou | `bunka.html` |
 | Kvadratická funkce | jezdci měnit a, b, c, sledovat vrchol, kořeny a diskriminant | `grafy_funkci.html` |
-| Procvičování | odpovídat na úlohy s kartičkou „proč“ | jádro `uloha.js` |
+| Procvičování | odpovídat na 34 úloh z 11 předmětů s kartičkou „proč“ | jádro `uloha.js` |
 | Generátor testů | složit a vytisknout list podle ročníku, tématu a obtížnosti | `pracovni_listy.html` |
 
 Stránka **záměrně neodkazuje na plné verze aplikací** — každá karta místo toho
@@ -282,18 +350,36 @@ a zůstane stát.
 Pravidla, kterými se stránka řídí:
 
 - **Soběstačnost.** Stránka má vlastní kopii palety z `common.css`, vlastní
-  přepínač motivu a vlastní vyhodnocení odpovědí. Sdílené `theme.js`, `podpis.js`
-  a `apps.js` jsou v ní jen jako doplněk — když se soubor pošle mailem nebo
-  nahraje jinam a všechny tři chybí, stránka funguje dál. Cena je jedno místo
-  navíc při změně palety.
+  přepínač motivu, vlastní vyhodnocení odpovědí i vlastní vektorové schéma buňky.
+  Sdílené `podpis.js` a `apps.js` jsou v ní jen jako doplněk — když se soubor
+  pošle mailem nebo nahraje jinam a oba chybí, stránka funguje dál (podpis si
+  v takovém případě dopíše do patičky sama). Cena je jedno místo navíc při
+  změně palety.
+- **Vlastní motiv.** Jako jediná stránka Nodusu startuje ve **světlém** režimu –
+  promítá se a ukazuje. `theme.js` proto nelinkuje (srovnával by ji se zbytkem
+  webu) a volbu si pamatuje pod vlastním klíčem `nodus_ukazky_tema`; přepnutí
+  tady nepřeklopí celý Nodus ani naopak. Výchozí `data-theme="light"` je rovnou
+  v `<html>`, aby při načtení neproblesklo tmavé pozadí.
 - **Tři režimy podle katalogu.** Podle toho, jestli se povedlo načíst `apps.js`,
   se stránka chová jako podstránka rozcestníku (volba se posílá rodiči přes
   `postMessage`), jako samostatně otevřená stránka Nodusu (odkazy na
   `../index.html#soubor`), nebo jako osamocený soubor — pak se odkazy do Nodusu,
   čísla katalogu i podpisový pruh nahradí tím, co dává smysl bez zbytku webu.
 - **Data se neopisují.** Prvky, výpočet elektronové konfigurace, popisky organel
-  i schéma buňky jsou převzaté ze zdrojů plných verzí, aby ukázka neříkala něco
-  jiného než aplikace, kterou má představit.
+  i banky úloh generátoru jsou převzaté ze zdrojů plných verzí, aby ukázka
+  neříkala něco jiného než aplikace, kterou má představit. Výjimkou je schéma
+  buňky: to je nakreslené znovu (plná verze stojí na fotografii `Anatomy/Cell.png`,
+  a 1,2 MB obrázku by ze stránky udělalo něco, co se nedá poslat jako jeden soubor).
+  Kresba drží vlastní barvy nezávisle na motivu — organely mají v učebnicích
+  ustálené barvy a na tmavém podkladu by ztratily kontrast.
+- **Předpověď kreslí totéž, co pak poletí.** Dráha při míření se v gravitačním
+  hřišti dopočítává **stejným leapfrogem** jako běžící simulace, dopředu do
+  prvního oběhu, pádu do hvězdy nebo úniku z plátna; barva rovnou říká výsledek
+  (zelená / červená / oranžová). Kdyby předpověď byla vlastní aproximace,
+  ukázka by lhala. Gravitace samotná se dá **přikreslit** tlačítkem *Ukázat
+  gravitaci* (výchozí je vypnutá, ať je v prázdném vesmíru vidět hlavně dráha):
+  mřížka šipek k hvězdě s délkou podle 1/r² a u každé planetky žlutý vektor síly
+  se zeleným vektorem rychlosti. Na fyziku přepínač nesahá, ta běží pořád.
 - **Běží jen to, co je vidět.** Každé plátno má vlastní `IntersectionObserver`;
   šest současně běžících animací by jinak zbytečně vytěžovalo notebook i tablet.
 
@@ -317,10 +403,14 @@ Pasti, na které se při psaní narazilo:
    „hustota →“ nebylo poznat, co se má dělat. Vybere se proto **pár témat**
    (zhruba jedno na čtyři úlohy, ne celý ročník) a úlohy se sázejí **po oddílech**
    s pokynem nad každým z nich; číslování běží přes celý list.
-6. Arch generátoru testů je jako v plné verzi **vždycky bílý papír**, takže
+6. Linka na odpověď patří jen k úlohám, kde se odpovídá **za** zadání.
+   Doplňovačky (vyjmenovaná slova, bě/pě/vě/mě) se vyplňují přímo ve slově —
+   generátor je proto značí `vText: true` a linka se u nich vynechá; stejně tak
+   u zadání, které si místo udělalo samo („značka ____, jednotka ____“).
+7. Arch generátoru testů je jako v plné verzi **vždycky bílý papír**, takže
    uvnitř `.list` schválně nejsou proměnné motivu; ve světlém režimu by se
    jinak linky na jméno a čísla úloh slily s papírem.
-7. Tisk schovává obsah pravidlem **„všechno kromě archu“**
+8. Tisk schovává obsah pravidlem **„všechno kromě archu“**
    (`body > *:not(.obal)`, `.obal > *:not(#test)`), ne výčtem konkrétních
    prvků — ten se rozešel s obsahem, jakmile stránka dostala pás pro školu
    a lištu ukázek, a ty pak vyjely na papír nad arch. `@page { margin: 14mm }`
