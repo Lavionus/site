@@ -5,8 +5,8 @@ Samostatný web s interaktivními výukovými aplikacemi pro základní školu �
 dějepis a informatika. Vše běží v prohlížeči, bez serveru a bez registrace,
 po prvním otevření i offline (PWA + service worker).
 
-Katalog je zároveň **kostrou osnov ZŠ**: 244 témat v 11 předmětech a 9 ročnících
-plus 10 nástrojů bez vazby na předmět — dohromady 254 položek. Osnova je momentálně
+Katalog je zároveň **kostrou osnov ZŠ**: 245 témat v 11 předmětech a 9 ročnících
+plus 10 nástrojů bez vazby na předmět — dohromady 255 položek. Osnova je momentálně
 pokrytá celá, žádné téma nezůstalo jen jako zástupce (🚧). Přehled je na stránce
 [Osnova](obsah/osnova.html).
 
@@ -527,6 +527,50 @@ a cituje očekávaný výstup RVP. Až téma zpracuješ:
 
 Záznam do příslušné sekce v `apps.js` (`soubor`, `nazev`, `tagy`, `predmet`,
 `rocniky`, případně `stav: 'plan'`) a odpovídající stránka v `obsah/`.
+
+## Vrtačka a lis
+
+`obsah/vrtacka_lis.html` ukazuje dva stroje z dílny a síly, které v nich působí —
+na jedné stránce, ve dvou záložkách. Obě scény se kreslí do virtuálního plátna
+1000 × 700 a do plochy se jen zvětší, takže drží proporce i na mobilu.
+
+- **Vrtačka** počítá z měrné řezné síly materiálu `kc`: řeznou rychlost
+  v<sub>c</sub> = π·d·n/1000, krouticí moment M<sub>k</sub> = kc·f·d²/8000,
+  přítlačnou sílu F<sub>f</sub> = 0,25·kc·f·d a z nich výkon a čas provrtání.
+  Proto sedí i to, co učebnice říká slovy: dvakrát tlustší vrták potřebuje
+  čtyřikrát větší moment a nerez se vrtá desetkrát pomaleji než dřevo.
+  Tlačítko *Doporučené otáčky* dopočítá `n` na 75 % horní meze pásma materiálu —
+  test hlídá, že výsledek u všech pěti materiálů opravdu do pásma padne.
+- **Hydraulický lis** stojí na Pascalově zákonu: p = F₁/S₁ a F₂ = p·S₂.
+  Zdvih velkého pístu h₂ = h₁·S₁/S₂ z toho plyne, takže zlaté pravidlo
+  mechaniky není nakreslené „pro ilustraci" — počet zdvihů pákou, o který se
+  scéna opírá, z něj vychází (`potreba = (mezera + dráha) / h₂`).
+
+Kresba drží dvě věci, které se nesmí rozejít:
+
+- **Geometrie lisu se počítá, nekreslí od oka.** Výchozí poloha velkého pístu
+  `PIST0` se skládá zpětně z traverzy, mezery `MEZERA · PMM`, výšky předmětu,
+  desky a pístnice. Když se změní mezera nebo měřítko, mezera na obrazovce
+  odpovídá dál — jinak by displej hlásil dotyk, který v kresbě není.
+- **Stroje mají vlastní kovové barvy** (`KOV`) nezávislé na motivu. S barvami
+  z `common.css` se ve světlém režimu rám lisu slil s podkladem. Text, šipky
+  a stavový řádek si barvu z motivu berou dál.
+
+Jediná vědomá úleva oku: čím víc zdvihů práce potřebuje, tím rychleji se pumpuje
+(`doba = 8 / potreba`, nejvýš 0,35 s a nejméně 0,04 s na zdvih), aby lisování
+netrvalo minuty. Počet zdvihů, dráhy i práce zůstávají skutečné — zrychluje se
+jen kreslení ruky na páce.
+
+Přepínače *Síly*, *Moment / tlak*, *Práce a dráhy* a *Čísla u šipek* jsou
+společné pro obě scény, takže se stejná stránka dá pustit jako holá animace
+i jako plně popsané schéma. Úkoly (🎯) se **nevyhodnocují tlačítkem** — zadání
+se kontroluje průběžně podle toho, jak jsou stroje nastavené, takže žák vidí
+odezvu už při tažení posuvníku.
+
+Testy: `python3 _test/run.py vrtacka_lis.html` (vzorce, vrtání skrz, hlášky,
+lisování s dostatečnou i nedostatečnou silou, úkoly a přepínače zobrazení),
+`vl_uzky.html` (okno 420 px) a `vl_snimky.html`, který uloží snímky obou scén
+do `_test/vl_*.png` — kresbu je potřeba kontrolovat okem.
 
 ## Proudové motory
 

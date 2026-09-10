@@ -2356,6 +2356,30 @@ const KATALOG_SEKCE = [
         ]
       },
       {
+        "soubor": "obsah/vrtacka_lis.html",
+        "nazev": "🛠️ Vrtačka a lis: síly při práci",
+        "tagy": [
+          "fyzika",
+          "technická výchova",
+          "vrtačka",
+          "řezná rychlost",
+          "krouticí moment",
+          "přítlačná síla",
+          "hydraulický lis",
+          "pascalův zákon",
+          "tlak",
+          "zlaté pravidlo mechaniky",
+          "práce",
+          "simulace",
+          "2. stupeň"
+        ],
+        "predmet": "f",
+        "rocniky": [
+          7,
+          8
+        ]
+      },
+      {
         "soubor": "obsah/gravitacni_hriste2.html",
         "nazev": "🌀 Gravitační hřiště: Vzájemná přitažlivost",
         "tagy": [
