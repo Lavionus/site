@@ -7,6 +7,8 @@
   <script src="lib/three.r128.min.js"></script>
   <link rel="stylesheet" href="../common.css">
   <script src="../theme.js"></script>
+  <script src="../dialog.js"></script>
+  <script src="../tvary.js"></script>
   <script src="../podpis.js" defer></script>
   <style>
     * {
@@ -413,7 +415,7 @@
     .stats-section {
       margin-top: 15px;
       padding: 12px;
-      background-color: #353535;
+      background-color: var(--border);
       border-radius: 4px;
     }
 
@@ -441,7 +443,7 @@
     .flange-info-section {
       margin-top: 15px;
       padding: 15px;
-      background-color: #353535;
+      background-color: var(--border);
       border-radius: 4px;
     }
 
@@ -518,9 +520,9 @@
     }
   
 /* světlý režim: dorovnání kontrastu textu */
-:root[data-theme="light"] .stats-value { color: #749fde; }
+:root[data-theme="light"] .stats-value { color: var(--accent); }
 :root[data-theme="light"] .controls-hint { color: var(--text-muted); }
-:root[data-theme="light"] strong { color: #749fde; }
+:root[data-theme="light"] strong { color: var(--accent); }
 :root[data-theme="light"] h3 { color: var(--text) !important; }
 </style>
 </head>
@@ -720,6 +722,8 @@
             </div>
           </div>
         </div>
+
+        <div id="tvary"></div>
       </div>
     </div>
   </div>
@@ -839,6 +843,16 @@
 
       // Vygenerování výchozí redukce
       generateReduction();
+
+      sbirka = Tvary.pripoj({
+        klic: 'webapp_redukce_tvary',
+        typ: 'redukce',
+        nazev: 'Redukce',
+        kontejner: document.getElementById('tvary'),
+        parametry: parametryTvaru,
+        pouzij: pouzijTvar,
+        popis: popisTvaru
+      });
     }
 
     // Funkce pro vytvoření geometrie redukce
@@ -1491,7 +1505,7 @@
       // Vyčištění exportní geometrie
       exportGeometry.dispose();
 
-      downloadFile(stl, 'redukce.stl', 'text/plain');
+      downloadFile(stl, jmenoSouboru('stl'), 'text/plain');
       showNotification('STL soubor exportován', 'success');
     }
 
@@ -1559,7 +1573,7 @@
       // Vyčištění exportní geometrie
       exportGeometry.dispose();
 
-      downloadFile(obj, 'redukce.obj', 'text/plain');
+      downloadFile(obj, jmenoSouboru('obj'), 'text/plain');
       showNotification('OBJ soubor exportován', 'success');
     }
 
@@ -1689,6 +1703,74 @@
           console.error('Chyba při načítání nastavení:', e);
         }
       }
+    }
+
+    /* ------------------------------------------------------------------ */
+    /* Uložené tvary                                                       */
+    /* ------------------------------------------------------------------ */
+    let sbirka = null;
+
+    function parametryTvaru() {
+      const p = {
+        inputLength: parseFloat(document.getElementById('inputLength').value),
+        inputDiameter: parseFloat(document.getElementById('inputDiameter').value),
+        outputLength: parseFloat(document.getElementById('outputLength').value),
+        outputDiameter: parseFloat(document.getElementById('outputDiameter').value),
+        wallThickness: parseFloat(document.getElementById('wallThickness').value),
+        transitionLength: parseFloat(document.getElementById('transitionLength').value),
+        reductionType: document.querySelector('input[name="reductionType"]:checked').value,
+        bendAngle: parseFloat(document.getElementById('bendAngle').value)
+      };
+      for (const k in p) {
+        if (typeof p[k] === 'number' && !isFinite(p[k])) {
+          showNotification('Vyplňte všechny rozměry číslem', 'error');
+          return null;
+        }
+      }
+      if (p.inputDiameter <= p.wallThickness * 2 || p.outputDiameter <= p.wallThickness * 2) {
+        showNotification('Průměry musí být větší než dvojnásobek tloušťky stěny', 'error');
+        return null;
+      }
+      return p;
+    }
+
+    // Cizí záznam (např. z jiného generátoru nebo z poškozené zálohy) by tiše
+    // nastavil prázdné hodnoty — radši se řekne, co je špatně.
+    function platnyTvar(p) {
+      return !!(p && isFinite(p.inputDiameter) && isFinite(p.outputDiameter));
+    }
+
+    function pouzijTvar(p) {
+      if (!platnyTvar(p)) throw new Error('uložený tvar nepatří generátoru redukcí');
+      ['inputLength', 'inputDiameter', 'outputLength', 'outputDiameter',
+       'wallThickness', 'transitionLength', 'bendAngle']
+        .forEach(k => { if (p[k] !== undefined) document.getElementById(k).value = p[k]; });
+
+      const angleGroup = document.getElementById('angleGroup');
+      if (p.reductionType === 'long') {
+        document.getElementById('reductionLong').checked = true;
+        angleGroup.classList.add('active');
+      } else if (p.reductionType === 'longShort') {
+        document.getElementById('reductionLongShort').checked = true;
+        angleGroup.classList.add('active');
+      } else {
+        document.getElementById('reductionShort').checked = true;
+        angleGroup.classList.remove('active');
+      }
+      generateReduction();
+    }
+
+    function popisTvaru(p) {
+      if (!platnyTvar(p)) return 'neznámý tvar';
+      const typ = p.reductionType === 'long' ? 'dlouhá'
+        : p.reductionType === 'longShort' ? 'dlouhá volitelná' : 'krátká';
+      const uhel = p.bendAngle ? ', ' + p.bendAngle + '°' : '';
+      return p.inputDiameter + ' → ' + p.outputDiameter + ' mm (' + typ + uhel + ')';
+    }
+
+    function jmenoSouboru(pripona) {
+      const nazev = sbirka && sbirka.aktivni();
+      return (nazev ? Tvary.nazevSouboru(nazev) : 'redukce') + '.' + pripona;
     }
 
     // Toast notifikace

@@ -5,7 +5,7 @@ Statický web se sbírkou malých HTML aplikací, hostovaný na GitHub Pages
 
 | Cesta | Web | Katalog | Stránky |
 |---|---|---|---|
-| `/` | hlavní rozcestník – 271 aplikací | `apps.js` | `obsah/` |
+| `/` | hlavní rozcestník – 272 aplikací | `apps.js` | `obsah/` |
 | `/nodus/` | ◈ **Nodus** – výukový web: 77 aplikací + 174 připravovaných témat podle osnov ZŠ | `nodus/apps.js` | `nodus/obsah/` |
 
 Nodus má vlastní rozcestník, úvodní přehled, ikony, manifest i service worker,
@@ -26,6 +26,15 @@ má vlastní kopii, aby zůstal soběstačný, a v ní je název díla `Nodus`
 přidá spodní odsazení, `100vh` v CSS stránky se zmenší o výšku pruhu a prvky
 ukotvené napevno u spodní hrany se nad něj posunou. Uvnitř rozcestníku se
 v iframu nekreslí, podpis tam patří nadřazené stránce.
+
+Historii vytvořených tvarů v obou generátorech trubek (`obsah/tubeRed.html`,
+`obsah/tubeSplit.html`) obsluhuje sdílený `tvary.js`: uloží nastavení stránky do
+`localStorage` pod názvem (nezadaný se odvodí z rozměrů, např. `100 → 2× 40 mm`),
+umí je znovu načíst, přepsat, přejmenovat, smazat a celou sbírku vyvézt nebo
+nahrát ze souboru JSON. Stránka modulu dodá jen čtyři funkce (co uložit, jak to
+nastavit zpět, krátký popis a kontrolu, že záznam patří jí); klíče jsou oddělené
+(`webapp_redukce_tvary`, `webapp_rozbocka_tvary`) a export STL/OBJ se pojmenuje
+podle naposledy uloženého či načteného tvaru.
 
 Větší datové soubory leží vedle své stránky v `obsah/` a načítají se jako
 klasický `<script>`, ne přes `fetch` – tím fungují i z `file://` a service worker

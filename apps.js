@@ -1265,6 +1265,11 @@ const KATALOG_SEKCE = [
         "tagy": ["trubky", "redukce", "rozvin", "plech", "svařování"]
       },
       {
+        "soubor": "obsah/tubeSplit.html",
+        "nazev": "🔱 Rozbočka trubek",
+        "tagy": ["trubky", "rozbočka", "odsávání", "vývody", "kalhoty", "redukce", "svařování"]
+      },
+      {
         "soubor": "obsah/cookieCutter.html",
         "nazev": "🍪 Vykrajovátka",
         "tagy": ["vykrajovátka", "cukroví", "3d tisk", "pečení", "stl"]

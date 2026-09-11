@@ -2345,6 +2345,9 @@ const KATALOG_SEKCE = [
           "převod",
           "jednoduché stroje",
           "zlaté pravidlo mechaniky",
+          "páčidlo",
+          "odvalení kamene",
+          "vytržení pařezu",
           "simulace",
           "2. stupeň",
           "sš"
