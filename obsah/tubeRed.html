@@ -322,7 +322,7 @@
             <div class="radio-group" style="flex-direction:column;gap:6px">
               <div class="radio-option">
                 <input type="radio" id="reductionShort" name="reductionType" value="short" checked>
-                <label for="reductionShort">Krátká (vložená) <span style="color:#e05d5d">experimentální</span></label>
+                <label for="reductionShort">Krátká (vložená)</label>
               </div>
               <div class="radio-option">
                 <input type="radio" id="reductionLong" name="reductionType" value="long">
@@ -340,10 +340,7 @@
             <input type="number" id="bendAngle" value="0" min="-90" max="90" step="5">
           </div>
 
-          <div class="poznamka">
-            Úhel stočení se zadává u dlouhých redukcí — vstupní příruba zůstává
-            na místě a výstupní se stočí po oblouku.
-          </div>
+          <div class="poznamka" id="poznamkaTyp"></div>
         </div>
       </div>
 
@@ -397,6 +394,17 @@
             <div class="flange-info-item">
               <span class="flange-info-label">Délka:</span>
               <span class="flange-info-value" id="outputLengthInfo">50 mm</span>
+            </div>
+          </div>
+
+          <div class="flange-info-group">
+            <div class="flange-info-item">
+              <span class="flange-info-label">Šířka prstence:</span>
+              <span class="flange-info-value" id="infoPrstenec">–</span>
+            </div>
+            <div class="flange-info-item">
+              <span class="flange-info-label">Délka dílu:</span>
+              <span class="flange-info-value" id="infoDelkaDilu">–</span>
             </div>
           </div>
         </div>
@@ -492,16 +500,46 @@
       const inputLength = parseFloat(document.getElementById('inputLength').value);
       const outputLength = parseFloat(document.getElementById('outputLength').value);
 
+      const vlozena = document.querySelector('input[name="reductionType"]:checked').value === 'short';
+
+      // U vložené redukce je zadaný výstupní průměr dírou (ID), ne vnějškem:
+      // do díry se zasune výstupní trubka, objímka kolem ní má stěnu navíc.
       const inputID = inputDiameter - (2 * wallThickness);
-      const outputID = outputDiameter - (2 * wallThickness);
+      const outputID = vlozena ? outputDiameter : outputDiameter - (2 * wallThickness);
+      const outputOD = vlozena ? outputDiameter + (2 * wallThickness) : outputDiameter;
 
       document.getElementById('inputOD').textContent = inputDiameter.toFixed(1) + ' mm';
       document.getElementById('inputID').textContent = inputID.toFixed(1) + ' mm';
       document.getElementById('inputLengthInfo').textContent = inputLength.toFixed(1) + ' mm';
-      
-      document.getElementById('outputOD').textContent = outputDiameter.toFixed(1) + ' mm';
+
+      document.getElementById('outputOD').textContent = outputOD.toFixed(1) + ' mm';
       document.getElementById('outputID').textContent = outputID.toFixed(1) + ' mm';
       document.getElementById('outputLengthInfo').textContent = outputLength.toFixed(1) + ' mm';
+
+      // U vložené redukce je délka dílu daná vstupní přírubou, ne součtem
+      const prstenec = document.getElementById('infoPrstenec');
+      if (prstenec) {
+        prstenec.textContent = vlozena
+          ? ((inputDiameter - outputDiameter) / 2).toFixed(1) + ' mm'
+          : '–';
+      }
+      const delkaDilu = document.getElementById('infoDelkaDilu');
+      if (delkaDilu) {
+        const transitionLength = parseFloat(document.getElementById('transitionLength').value);
+        delkaDilu.textContent = (vlozena
+          ? Math.max(inputLength, outputLength)
+          : inputLength + transitionLength + outputLength).toFixed(1) + ' mm';
+      }
+
+      const poznamka = document.getElementById('poznamkaTyp');
+      if (poznamka) {
+        poznamka.textContent = vlozena
+          ? 'Vnější průměr dílu je vstupní průměr, díra je výstupní průměr — díl se zasune do vstupní '
+            + 'trubky a do díry výstupní. Prstenec mezi nimi je vlastní redukce. Výstupní objímka je '
+            + 'vložená dovnitř, takže délka dílu je délka vstupní příruby (délka přechodu se nepoužije).'
+          : 'Vstupní příruba zůstává na místě a výstupní se stočí po oblouku o zadaný úhel. '
+            + 'Díl má délku vstup + přechod + výstup.';
+      }
     }
 
     // Inicializace 3D scény
@@ -602,6 +640,87 @@
       });
     }
 
+    /* ------------------------------------------------------------------ */
+    /* Vložená (krátká) redukce                                            */
+    /* ------------------------------------------------------------------ */
+    /* Díl je souosý, takže stačí popsat jeho řez a otočit ho kolem osy.
+       Vnější průměr dílu = vstupní průměr (zasune se do vstupní trubky),
+       díra = výstupní průměr (zasune se do ní výstupní trubka). Prstenec mezi
+       nimi je vlastní redukce. Výstupní objímka je vložená dovnitř vstupní
+       části, proto je díl krátký — jeho délka je délka vstupní příruby, ne
+       součet obou.
+
+            ┌───────────────┐ ← vnější plášť (OD = vstupní průměr)
+            │ ┌───────────┐ │
+            │ │  dutina   │ │
+            │ │ ┌───────┐ │ │ ← objímka (ID = výstupní průměr)
+            │ │ │ díra  │ │ │
+            ├─┴─┴───────┴─┴─┤ ← čelní prstenec = redukce
+    */
+    function rotacniTeleso(profil, seg) {
+      // sousední body, které padnou na sebe, by daly nulové plošky
+      const body = [];
+      for (const b of profil) {
+        const posl = body[body.length - 1];
+        if (!posl || Math.abs(posl[0] - b[0]) > 1e-9 || Math.abs(posl[1] - b[1]) > 1e-9) body.push(b);
+      }
+      while (body.length > 2) {
+        const a = body[0], z = body[body.length - 1];
+        if (Math.abs(a[0] - z[0]) < 1e-9 && Math.abs(a[1] - z[1]) < 1e-9) body.pop(); else break;
+      }
+
+      const V = [], I = [];
+      const prstenec = (r, z) => {
+        const od = V.length / 3;
+        for (let s = 0; s < seg; s++) {
+          const a = 2 * Math.PI * s / seg;
+          V.push(r * Math.cos(a), r * Math.sin(a), z);
+        }
+        return od;
+      };
+
+      // Každý úsek řezu dostane vlastní dvojici prstenců (body se nesdílejí),
+      // aby hrany dílu zůstaly ostré a nerozmazalo je průměrování normál.
+      for (let k = 0; k < body.length; k++) {
+        const a = body[k], b = body[(k + 1) % body.length];
+        const iA = prstenec(a[0], a[1]);
+        const iB = prstenec(b[0], b[1]);
+        for (let s = 0; s < seg; s++) {
+          const n = (s + 1) % seg;
+          I.push(iA + s, iA + n, iB + n, iA + s, iB + n, iB + s);
+        }
+      }
+
+      const g = new THREE.BufferGeometry();
+      g.setAttribute('position', new THREE.Float32BufferAttribute(V, 3));
+      g.setIndex(I);
+      g.computeVertexNormals();
+      return g;
+    }
+
+    function createInsertGeometry(p) {
+      const seg = p.segments || 32;
+      const t = p.wallThickness;
+      const Rvnejsi = p.inputDiameter / 2;          // vnější poloměr dílu
+      const rDira = p.outputDiameter / 2;           // poloměr díry
+      const Rvnitrni = Rvnejsi - t;                 // vnitřní stěna vnější části
+      const rObjimka = Math.min(rDira + t, Rvnitrni);   // vnější poloměr objímky
+      const Lv = p.inputLength;
+      const zPrstenec = Lv - t;                     // spodek čelního prstence
+      const zObjimka = Math.min(Lv - p.outputLength, zPrstenec);   // zadní konec objímky
+
+      // Řez v rovině (poloměr, z) obcházený tak, aby normály mířily ven.
+      return rotacniTeleso([
+        [Rvnejsi, 0], [Rvnejsi, Lv],      // vnější plášť
+        [rDira, Lv],                      // čelní prstenec — vlastní redukce
+        [rDira, zObjimka],                // díra pro výstupní trubku
+        [rObjimka, zObjimka],             // čelo objímky
+        [rObjimka, zPrstenec],            // vnější stěna objímky
+        [Rvnitrni, zPrstenec],            // spodek prstence
+        [Rvnitrni, 0]                     // vnitřní stěna vnější části
+      ], seg);
+    }
+
     // Funkce pro vytvoření geometrie redukce
     function createReductionGeometry(params) {
       const {
@@ -617,6 +736,9 @@
         segments = 32  // Výchozí počet segmentů
       } = params;
 
+      // Vložená redukce má vlastní, mnohem jednodušší tvar
+      if (!isLong && !isLongShort) return createInsertGeometry(params);
+
       const geometry = new THREE.BufferGeometry();
       const vertices = [];
       const indices = [];
@@ -626,31 +748,7 @@
       const innerInputRadius = inputRadius - wallThickness;
       const innerOutputRadius = outputRadius - wallThickness;
 
-      // Určení délky přechodové části pro krátkou redukci
-      let effectiveTransitionLength = transitionLength;
-      let isNested = false;
-      
-      if (!isLong && !isLongShort) {
-        // Krátká redukce - zkontrolovat zda je možné vložení
-        const smallerRadius = Math.min(inputRadius, outputRadius);
-        const largerRadius = Math.max(inputRadius, outputRadius);
-        const smallerInnerRadius = Math.min(innerInputRadius, innerOutputRadius);
-        
-        if (smallerRadius <= largerRadius - wallThickness * 2) {
-          // Příruby se mohou vložit do sebe
-          // Prstenec má tloušťku wallThickness ve směru -Z
-          isNested = true;
-          effectiveTransitionLength = wallThickness;
-        } else {
-          // Normální přechodová část
-          effectiveTransitionLength = Math.min(transitionLength, 50);
-        }
-        
-        // Zajistit minimální tloušťku přechodové části (pro nevložené redukce)
-        if (!isNested) {
-          effectiveTransitionLength = Math.max(effectiveTransitionLength, wallThickness);
-        }
-      }
+      const effectiveTransitionLength = transitionLength;
 
       const bendRadians = (bendAngle * Math.PI) / 180;
       
@@ -672,8 +770,7 @@
       // Vytvoření vrcholů pro přechodovou část
       const sections = 20;
       
-      // Pro vloženou krátkou redukci začíná prstenec na konci prodloužené vstupní příruby
-      const transitionStartZ = isNested ? inputLength + wallThickness : inputLength;
+      const transitionStartZ = inputLength;
       
       for (let i = 0; i <= sections; i++) {
         const t = i / sections;
@@ -685,8 +782,7 @@
         // Výpočet pozice a orientace podél křivky
         let x = 0;
         let y = 0;
-        // Pro vloženou redukci jde prstenec ve směru -Z
-        let z = isNested ? (transitionStartZ - t * effectiveTransitionLength) : (transitionStartZ + t * effectiveTransitionLength);
+        let z = transitionStartZ + t * effectiveTransitionLength;
         let rotationAngle = 0;
 
         if ((isLong || isLongShort) && bendAngle !== 0) {
@@ -736,8 +832,7 @@
       }
 
       // Přední příruba (vstupní)
-      // Pro vloženou krátkou redukci je prodloužená o wallThickness
-      const inputFlangeEnd = isNested ? inputLength + wallThickness : inputLength;
+      const inputFlangeEnd = inputLength;
       
       for (let j = 0; j <= segments; j++) {
         const theta = (j / segments) * Math.PI * 2;
@@ -759,8 +854,7 @@
       // Zadní příruba (výstupní) - otočená o bendAngle
       let xEnd = 0;
       let yEnd = 0;
-      // Pro vloženou redukci začíná výstupní příruba na stejné pozici jako začátek prstence
-      let zEnd = isNested ? transitionStartZ : (transitionStartZ + effectiveTransitionLength);
+      let zEnd = transitionStartZ + effectiveTransitionLength;
       let endRotation = 0;
       
       if ((isLong || isLongShort) && bendAngle !== 0) {
@@ -784,18 +878,11 @@
       let dirY = Math.sin(endRotation);
       let dirZ = Math.cos(endRotation);
       
-      // Pro krátkou redukci má výstupní příruba směřovat zpět
-      if (!isLong && !isLongShort) {
-        dirY = 0;
-        dirZ = -1;
-      }
-
       // Vytvoření rotační matice pro výstupní přírubu
       const cosEnd = Math.cos(endRotation);
       const sinEnd = Math.sin(endRotation);
       
-      // Pro vloženou krátkou redukci je výstupní příruba také prodloužená o wallThickness
-      const outputFlangeLength = isNested ? outputLength + wallThickness : outputLength;
+      const outputFlangeLength = outputLength;
 
       // První kruh výstupní příruby (napojení na přechodovou část)
       for (let j = 0; j <= segments; j++) {
@@ -1007,7 +1094,24 @@
         showNotification('Vstupní průměr musí být větší než dvojnásobek tloušťky stěny', 'error');
         return;
       }
-      if (params.outputDiameter <= params.wallThickness * 2) {
+      if (reductionType === 'short') {
+        // U vložené redukce je výstupní průměr dírou — musí se vejít dovnitř
+        // vstupní trubky a zbýt aspoň stěna na objímku.
+        if (params.outputDiameter <= 0) {
+          showNotification('Výstupní průměr musí být kladný', 'error');
+          return;
+        }
+        if (params.outputDiameter >= params.inputDiameter - 2 * params.wallThickness) {
+          showNotification('U vložené redukce musí být výstupní průměr (díra) menší než '
+            + (params.inputDiameter - 2 * params.wallThickness).toFixed(1)
+            + ' mm — tedy vstupní průměr zmenšený o dvě tloušťky stěny', 'error');
+          return;
+        }
+        if (params.outputLength <= params.wallThickness) {
+          showNotification('Délka výstupní příruby musí být větší než tloušťka stěny', 'error');
+          return;
+        }
+      } else if (params.outputDiameter <= params.wallThickness * 2) {
         showNotification('Výstupní průměr musí být větší než dvojnásobek tloušťky stěny', 'error');
         return;
       }
@@ -1485,8 +1589,19 @@
           return null;
         }
       }
-      if (p.inputDiameter <= p.wallThickness * 2 || p.outputDiameter <= p.wallThickness * 2) {
-        showNotification('Průměry musí být větší než dvojnásobek tloušťky stěny', 'error');
+      if (p.inputDiameter <= p.wallThickness * 2) {
+        showNotification('Vstupní průměr musí být větší než dvojnásobek tloušťky stěny', 'error');
+        return null;
+      }
+      if (p.reductionType === 'short') {
+        // u vložené redukce je výstupní průměr dírou — jiná podmínka
+        if (p.outputDiameter <= 0 || p.outputDiameter >= p.inputDiameter - 2 * p.wallThickness) {
+          showNotification('U vložené redukce musí být výstupní průměr (díra) menší než vstupní '
+            + 'zmenšený o dvě tloušťky stěny', 'error');
+          return null;
+        }
+      } else if (p.outputDiameter <= p.wallThickness * 2) {
+        showNotification('Výstupní průměr musí být větší než dvojnásobek tloušťky stěny', 'error');
         return null;
       }
       return p;
@@ -1541,7 +1656,7 @@
       setTimeout(() => {
         notification.style.animation = 'slideOut 0.3s ease-out';
         setTimeout(() => {
-          document.body.removeChild(notification);
+          if (notification.parentNode) document.body.removeChild(notification);
         }, 300);
       }, 3000);
     }
@@ -1549,6 +1664,7 @@
     // Event listeners
     document.querySelectorAll('input[name="reductionType"]').forEach(radio => {
       radio.addEventListener('change', function() {
+        updateFlangeInfo();
         const angleGroup = document.getElementById('angleGroup');
         if (this.value === 'long' || this.value === 'longShort') {
           angleGroup.classList.add('active');
@@ -1556,6 +1672,7 @@
           angleGroup.classList.remove('active');
           document.getElementById('bendAngle').value = 0;
         }
+        generateReduction();
       });
     });
 
