@@ -5,7 +5,7 @@ Statický web se sbírkou malých HTML aplikací, hostovaný na GitHub Pages
 
 | Cesta | Web | Katalog | Stránky |
 |---|---|---|---|
-| `/` | hlavní rozcestník – 272 aplikací | `apps.js` | `obsah/` |
+| `/` | hlavní rozcestník – 273 aplikací | `apps.js` | `obsah/` |
 | `/nodus/` | ◈ **Nodus** – výukový web: 77 aplikací + 174 připravovaných témat podle osnov ZŠ | `nodus/apps.js` | `nodus/obsah/` |
 
 Nodus má vlastní rozcestník, úvodní přehled, ikony, manifest i service worker,

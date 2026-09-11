@@ -102,6 +102,11 @@ const KATALOG_SEKCE = [
         "tagy": ["jména", "přezdívka", "postava", "náhodné jméno", "fantasy"]
       },
       {
+        "soubor": "obsah/word_gen.html",
+        "nazev": "🔤 Generátor slov",
+        "tagy": ["vymyšlená slova", "pseudoslova", "název projektu", "značka", "brand", "dvojice slov", "náhodné slovo", "fantasy"]
+      },
+      {
         "soubor": "obsah/print_editor.html",
         "nazev": "🖨️ Editor pro tisk a export",
         "tagy": ["tisk", "markdown", "export", "html editor", "wysiwyg", "formátování"]

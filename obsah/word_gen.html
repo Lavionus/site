@@ -1,0 +1,707 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🔤 Generátor slov</title>
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../podpis.js" defer></script>
+<script src="../dialog.js" defer></script>
+<style>
+body{min-height:100vh;padding:10px;line-height:1.35}
+.container{max-width:980px;margin:0 auto}
+.zahlavi{display:flex;align-items:baseline;gap:4px 12px;flex-wrap:wrap;margin:0 2px 8px}
+h1{font-size:1.2rem;font-weight:600}
+.sub{color:var(--text-faint);font-size:.78rem}
+.card{background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:8px;box-shadow:var(--shadow)}
+.hlava{display:flex;align-items:center;justify-content:space-between;gap:6px;flex-wrap:wrap;margin-bottom:7px}
+h2{font-size:.9rem;color:var(--accent);font-weight:600;white-space:nowrap}
+h2 .pocet{color:var(--text-faint);font-weight:400;font-size:.78rem;margin-left:3px}
+
+/* nastavení */
+.nastaveni{display:flex;flex-wrap:wrap;align-items:flex-end;gap:8px}
+.pole{display:flex;flex-direction:column;gap:2px;font-size:.7rem;color:var(--text-muted)}
+.pole input,.pole select{background:var(--bg-input);border:1px solid var(--border-strong);border-radius:5px;color:var(--text);padding:5px 7px;font:inherit;font-size:.88rem;height:31px}
+.pole input[type=number]{width:54px}
+.pole input[type=text]{width:66px}
+.volba{display:flex;align-items:center;gap:5px;height:31px;font-size:.8rem;color:var(--text-muted);cursor:pointer;user-select:none;white-space:nowrap}
+.volba input{width:15px;height:15px;accent-color:var(--accent);cursor:pointer}
+input:focus,select:focus{outline:none;border-color:var(--accent);box-shadow:0 0 0 2px var(--accent-soft)}
+
+/* tlačítka */
+.btn{background:var(--accent);color:#fff;border:none;height:31px;padding:0 14px;border-radius:5px;cursor:pointer;font:inherit;font-weight:600;font-size:.88rem;white-space:nowrap;margin-left:auto;transition:background .15s,transform .1s}
+.btn:hover{background:var(--accent-hover)}
+.btn:active{transform:scale(.98)}
+/* bílá na světlém tmavém akcentu má kontrast jen ~2,6:1 */
+:root:not([data-theme="light"]) .btn{color:#0b1a30}
+.btn2{background:var(--bg-control);color:var(--text);border:1px solid var(--border);padding:3px 8px;border-radius:5px;cursor:pointer;font:inherit;font-size:.78rem;white-space:nowrap}
+.btn2:hover:not(:disabled){border-color:var(--accent)}
+.btn2:disabled{opacity:.45;cursor:default}
+.btn2.nebezpecne:hover:not(:disabled){border-color:var(--danger);color:var(--danger)}
+.tlacitka{display:flex;gap:4px;flex-wrap:wrap}
+
+/* dvojice */
+.dvojice-radek{display:flex;gap:6px 8px;flex-wrap:wrap;align-items:center}
+#dvojice{flex:1 1 220px;min-width:0;background:var(--bg-input);border:1px solid var(--border-strong);border-radius:6px;color:var(--text);padding:5px 10px;height:34px;font:inherit;font-size:1.05rem;font-weight:600}
+#dvojice::placeholder{color:var(--text-faint);font-weight:400;font-size:.88rem}
+.dvojice-radek .btn2{height:34px;padding:0 10px}
+.citac{font-size:.75rem;color:var(--text-faint);min-width:26px}
+.citac.plno{color:var(--accent);font-weight:600}
+.varianty{display:flex;flex-wrap:wrap;gap:4px;align-items:center;font-size:.75rem;color:var(--text-faint)}
+.varianty:not(:empty){margin-top:6px}
+.varianta{background:transparent;border:1px dashed var(--border-strong);color:var(--text-muted);border-radius:5px;padding:1px 7px;cursor:pointer;font:inherit;font-size:.8rem}
+.varianta:hover{border-style:solid;border-color:var(--accent);color:var(--text)}
+
+/* mřížka slov */
+#mrizka{display:grid;grid-template-columns:repeat(auto-fill,minmax(112px,1fr));gap:5px}
+.slovo{position:relative;background:var(--bg-panel);border:1px solid var(--border);border-radius:6px;padding:5px 8px;font:inherit;font-size:.9rem;font-weight:600;color:var(--text);cursor:pointer;text-align:center;overflow-wrap:anywhere;transition:transform .12s,border-color .15s,background .15s}
+.slovo:hover{transform:translateY(-1px);border-color:var(--accent);background:var(--bg-hover)}
+.slovo:active{transform:scale(.97)}
+.slovo:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+.slovo.vybrane{border-color:var(--accent);background:var(--accent-soft);box-shadow:inset 0 0 0 1px var(--accent)}
+.slovo.ulozene::after{content:'★';position:absolute;top:1px;right:4px;font-size:.55rem;color:var(--warn)}
+.slovo.blik{animation:blik .45s ease}
+@keyframes blik{0%{background:var(--accent-soft);border-color:var(--accent);transform:scale(1.04)}}
+#mrizka .prazdne{grid-column:1/-1}
+
+/* štítky */
+.dole{display:grid;grid-template-columns:1fr 1fr;gap:8px;align-items:start}
+@media(max-width:760px){.dole{grid-template-columns:1fr}}
+.stitky{display:flex;flex-wrap:wrap;gap:4px}
+.stitek{display:inline-flex;align-items:center;background:var(--bg-panel);border:1px solid var(--border);border-radius:999px;font-size:.82rem;overflow:hidden;transition:border-color .15s}
+.stitek:hover{border-color:var(--accent)}
+.stitek.vybrane{border-color:var(--accent);background:var(--accent-soft)}
+.stitek .text{background:none;border:none;color:var(--text);font:inherit;padding:2px 2px 2px 9px;cursor:pointer}
+.stitek .x{background:none;border:none;color:var(--text-faint);font-size:.95rem;line-height:1;padding:2px 8px 2px 4px;cursor:pointer}
+.stitek .x:hover{color:var(--danger)}
+.prazdne{color:var(--text-faint);font-size:.8rem;font-style:italic}
+
+@media(max-width:520px){
+  body{padding:6px}
+  .card{padding:8px}
+  .btn{flex:1 1 100%;margin-left:0}
+  #mrizka{grid-template-columns:repeat(auto-fill,minmax(96px,1fr))}
+}
+@media(prefers-reduced-motion:reduce){
+  .slovo,.btn,.stitek{transition:none}
+  .slovo:hover{transform:none}
+  .slovo.blik{animation:none}
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <div class="zahlavi">
+    <h1>🔤 Generátor slov</h1>
+    <p class="sub">Klik na slovo ho zapamatuje a přidá do dvojice · G = generovat</p>
+  </div>
+
+  <section class="card">
+    <div class="nastaveni">
+      <label class="pole">Styl
+        <select id="styl"></select>
+      </label>
+      <label class="pole">Min. délka
+        <input type="number" id="minDelka" min="3" max="16" value="5">
+      </label>
+      <label class="pole">Max. délka
+        <input type="number" id="maxDelka" min="3" max="16" value="9">
+      </label>
+      <label class="pole">Začíná na
+        <input type="text" id="zacatek" maxlength="4" placeholder="cokoli" spellcheck="false" autocomplete="off">
+      </label>
+      <label class="pole">Končí na
+        <input type="text" id="konec" maxlength="4" placeholder="cokoli" spellcheck="false" autocomplete="off">
+      </label>
+      <label class="pole">Počet
+        <select id="pocet">
+          <option>20</option><option selected>40</option><option>60</option><option>100</option>
+        </select>
+      </label>
+      <label class="volba" title="Za každou souhláskou samohláska a naopak – bez shluků jako „str“ nebo „ou“ (např. Bakotu, Ramise)">
+        <input type="checkbox" id="stridat"> Střídat souhl./samohl.
+      </label>
+      <button class="btn" id="generovat" title="Klávesová zkratka: G">🎲 Generovat</button>
+    </div>
+  </section>
+
+  <section class="card">
+    <div class="dvojice-radek">
+      <h2>Dvojice</h2>
+      <span class="citac" id="citac">0 / 2</span>
+      <input type="text" id="dvojice" placeholder="Klikni na slova níže nebo piš ručně…" spellcheck="false" autocomplete="off" aria-label="Vybraná dvojice slov">
+      <div class="tlacitka">
+        <button class="btn2" id="prohodit" title="Prohodit pořadí slov">⇄</button>
+        <button class="btn2" id="ulozitDvojici" title="Uložit dvojici (Enter)">☆ Uložit</button>
+        <button class="btn2 nebezpecne" id="vymazatDvojici">Vymazat</button>
+      </div>
+    </div>
+    <div class="varianty" id="varianty"></div>
+  </section>
+
+  <section class="card">
+    <div class="hlava">
+      <h2>Vygenerovaná slova <span class="pocet" id="pocetSlov"></span></h2>
+      <button class="btn2" id="predchozi" disabled title="Vrátit předchozí várku slov">↶ Předchozí várka</button>
+    </div>
+    <div id="mrizka"></div>
+  </section>
+
+  <div class="dole">
+    <section class="card">
+      <div class="hlava">
+        <h2>Zapamatovaná slova <span class="pocet" id="pocetUlozenych"></span></h2>
+        <div class="tlacitka">
+          <button class="btn2" id="nahodnaDvojice" title="Složit dvojici ze dvou náhodných zapamatovaných slov">🎲 Dvojice</button>
+          <button class="btn2" id="kopirovatSlova" title="Kopírovat všechna slova" aria-label="Kopírovat všechna slova">📋</button>
+          <button class="btn2 nebezpecne" id="vymazatSlova">Vymazat vše</button>
+        </div>
+      </div>
+      <div class="stitky" id="ulozenaSlova"></div>
+    </section>
+
+    <section class="card">
+      <div class="hlava">
+        <h2>Uložené dvojice <span class="pocet" id="pocetDvojic"></span></h2>
+        <div class="tlacitka">
+          <button class="btn2" id="kopirovatDvojice" title="Kopírovat všechny dvojice" aria-label="Kopírovat všechny dvojice">📋</button>
+          <button class="btn2 nebezpecne" id="vymazatDvojice">Vymazat vše</button>
+        </div>
+      </div>
+      <div class="stitky" id="ulozeneDvojice"></div>
+    </section>
+  </div>
+</div>
+
+<script>
+const $ = id => document.getElementById(id);
+
+// ============ Styly ============
+// Slovo = slabiky (začátek + samohláska) a koncovka. Opakovaná položka
+// v poli má větší váhu. `zakazSlabiky` vyřadí jednotlivou slabiku,
+// `zakaz` celé slovo (pravopis, nevyslovitelné shluky samohlásek).
+const STYLY = {
+  univerzalni: {
+    nazev: 'Univerzální',
+    zacatky: ['b','br','c','cr','d','dr','f','fl','fr','g','gl','gr','h','j','k','kr','l','m','n','p','pl','pr','qu','r','s','sl','sn','sp','st','str','t','tr','v','z'],
+    samohlasky: ['a','e','i','o','u','ai','ei','ou'],
+    konce: ['','','','','l','m','n','r','s','t','x','th','nd','nt','st','sk','rn','lm','ph','sh'],
+  },
+  cesky: {
+    nazev: 'České',
+    zacatky: ['b','br','č','d','dr','h','hr','ch','j','k','kl','kr','l','m','ml','n','p','pl','pr','r','ř','s','sk','sl','st','š','t','tr','v','vl','z','zb','ž'],
+    samohlasky: ['a','a','e','e','i','o','o','u','á','í','y','ou','ě'],
+    konce: ['','','','','k','l','n','r','s','t','ch','c','v','ň','št','sk','nk','vice','nov','dlo','tka','ček'],
+    // po měkkých souhláskách nepíšeme y, ě jen po b p v m f d t n, ů ne na začátku
+    zakaz: /[čřšžjc][yý]|(^|[^bpvmfdtn])ě|(^|[aeiouyáéíóúůěý])ů/,
+  },
+  fantasy: {
+    nazev: 'Fantasy (elfí)',
+    zacatky: ['','l','l','n','r','s','th','v','m','g','d','f','y','c','sh','gl','dr','tr','gw'],
+    samohlasky: ['a','a','a','e','e','e','i','i','o','o','ae','ia','ie','y','ë'],
+    konce: ['','','n','l','r','s','th','nd','dor','wen','riel','las','mir','ion','ith','ar'],
+    zakaz: /([aeiouyë])\1|[aeiouyë]{3}/,
+  },
+  latinsky: {
+    nazev: 'Latinské',
+    zacatky: ['c','cl','cr','d','f','fl','g','gr','l','m','n','p','pr','qu','r','s','st','t','tr','v'],
+    samohlasky: ['a','a','e','i','i','o','u','ae','au'],
+    konce: ['us','us','um','a','is','ix','or','ia','ex','ius','o','ens','ax','n',''],
+    zakaz: /([aeiou])\1|[aeiou]{3}/,
+  },
+  japonsky: {
+    nazev: 'Japonské',
+    zacatky: ['','k','k','s','t','n','h','m','y','r','r','w','sh','ch','ts','g','z','d','b','f'],
+    samohlasky: ['a','i','u','e','o'],
+    konce: ['','','','','n'],
+    zakazSlabiky: /^(yi|ye|wu|wi|we|wo|ts[aieo]|si|ti|tu|hu|zi|di|du|f[aieo])$/,
+    zakaz: /[aiueo]{3}/,
+  },
+  scifi: {
+    nazev: 'Sci-fi',
+    zacatky: ['z','x','k','v','tr','kr','n','q','r','s','dr','th','vr','zy','ks'],
+    samohlasky: ['a','o','e','i','y','a','o'],
+    konce: ['x','x','n','on','ar','ex','ix','is','os','ek','ux','','tron','ra','ta'],
+    zakaz: /[aeioy]{3}|([aeioy])\1/,
+  },
+};
+
+const nahodne = pole => pole[Math.floor(Math.random() * pole.length)];
+const KONCI_SAMOHLASKOU = /[aeiouyáéíóúůěýë]$/i;
+const SAMOHLASKA = /[aeiouyáéíóúůěýë]/i;
+
+// true, když se v textu písmeno po písmenu střídá souhláska a samohláska
+function stridaSe(text) {
+  for (let i = 1; i < text.length; i++) {
+    if (SAMOHLASKA.test(text[i]) === SAMOHLASKA.test(text[i - 1])) return false;
+  }
+  return true;
+}
+
+// Varianta stylu jen z jednopísmenných hlásek. Prázdný začátek (slovo
+// začínající samohláskou) uprostřed slova by dal dvě samohlásky za sebou –
+// takové slovo vyřadí kontrola `strida` ve vytvorSlovo.
+function stridavyStyl(styl) {
+  return {
+    ...styl,
+    zacatky: styl.zacatky.filter(z => z === '' || (z.length === 1 && !SAMOHLASKA.test(z))),
+    samohlasky: styl.samohlasky.filter(s => s.length === 1),
+    konce: styl.konce.filter(k => k === '' || (!SAMOHLASKA.test(k[0]) && stridaSe(k))),
+    strida: true,
+  };
+}
+
+function slabika(styl, bezZacatku) {
+  for (let i = 0; i < 20; i++) {
+    const s = (bezZacatku ? '' : nahodne(styl.zacatky)) + nahodne(styl.samohlasky);
+    if (!styl.zakazSlabiky || !styl.zakazSlabiky.test(s)) return s;
+  }
+  return nahodne(styl.samohlasky);
+}
+
+// souhláska před zadaným koncem, který začíná samohláskou („Brako" + t + „a")
+function napojeni(styl, konec) {
+  const zacatky = styl.zacatky.filter(z => z !== '');
+  for (let i = 0; i < 20; i++) {
+    const z = nahodne(zacatky);
+    if (!styl.zakazSlabiky || !styl.zakazSlabiky.test(z + konec[0])) return z;
+  }
+  return nahodne(zacatky);
+}
+
+// Cílová délka se losuje rovnoměrně z rozsahu, takže krátká i dlouhá slova
+// přicházejí stejně často (skládání náhodného počtu slabik dává hlavně střed).
+function vytvorSlovo(styl, min, max, zacatek, konec = '') {
+  const konecSamohlaskou = konec !== '' && SAMOHLASKA.test(konec[0]);
+  // kolik místa nechat na konci: koncovka stylu, nebo zadaný konec (+ až dvě souhlásky před ním)
+  const rezerva = konec ? konec.length + (konecSamohlaskou ? 2 : 0) : 1;
+  for (let pokus = 0; pokus < 100; pokus++) {
+    const cil = min + Math.floor(Math.random() * (max - min + 1));
+    // začátek končící samohláskou („ko") už je slabika – stačí mu koncovka („Kon");
+    // stejně tak konec začínající samohláskou – stačí před něj souhláska („Bus", „Krus")
+    let slovo = zacatek, predchozi = '';
+    let slabik = KONCI_SAMOHLASKOU.test(zacatek) || konecSamohlaskou ? 1 : 0;
+    for (let krok = 0; krok < 30 && slabik < 8 && (slabik === 0 || slovo.length + rezerva < cil); krok++) {
+      // za souhláskou ze zadaného začátku musí přijít samohláska
+      const s = slabika(styl, slovo !== '' && !KONCI_SAMOHLASKOU.test(slovo));
+      if (s === predchozi) continue; // „baba", „tsutsu"
+      slovo += s;
+      predchozi = s;
+      slabik++;
+    }
+    if (konec) {
+      if (konecSamohlaskou && (slovo === '' || KONCI_SAMOHLASKOU.test(slovo))) slovo += napojeni(styl, konec);
+      slovo += konec;
+    } else {
+      const konce = styl.konce.filter(k => slovo.length + k.length <= max);
+      if (!konce.length) continue;
+      slovo += nahodne(konce);
+    }
+    if (slovo.length < min || slovo.length > max) continue;
+    // zadaný začátek a konec se nekontrolují, jen jejich napojení na zbytek slova
+    const jadro = slovo.slice(Math.max(0, zacatek.length - 1), slovo.length - Math.max(0, konec.length - 1));
+    if (/(.)\1\1/.test(jadro) || (styl.zakaz && styl.zakaz.test(jadro))) continue;
+    if (styl.strida && !stridaSe(jadro)) continue;
+    return slovo.charAt(0).toLocaleUpperCase('cs') + slovo.slice(1);
+  }
+  return null;
+}
+
+function generujVarku(n, styl, min, max, zacatek, konec = '') {
+  const nalezena = new Set();
+  for (let pokus = 0; nalezena.size < n && pokus < n * 200; pokus++) {
+    const slovo = vytvorSlovo(styl, min, max, zacatek, konec);
+    if (slovo) nalezena.add(slovo);
+  }
+  return [...nalezena];
+}
+
+// ============ Pomocné ============
+const KLIC = 'webapp_slova_';
+function nacti(klic, vychozi) {
+  try {
+    const v = JSON.parse(localStorage.getItem(KLIC + klic));
+    return v ?? vychozi;
+  } catch { return vychozi; }
+}
+function uloz(klic, hodnota) {
+  try { localStorage.setItem(KLIC + klic, JSON.stringify(hodnota)); } catch {}
+}
+const seznamTextu = v => Array.isArray(v) ? v.filter(x => typeof x === 'string') : [];
+
+function tvar(n, jedno, dve, pet) {
+  return n === 1 ? jedno : (n >= 2 && n <= 4 ? dve : pet);
+}
+
+// dialog.js se načítá s defer – při prvním běhu skriptu ještě nemusí existovat
+function hlaska(text, chyba) {
+  if (typeof Dialog === 'undefined') return;
+  chyba ? Dialog.chyba(text) : Dialog.info(text);
+}
+function potvrd(text) {
+  return typeof Dialog !== 'undefined' ? Dialog.potvrd(text) : Promise.resolve(confirm(text));
+}
+
+async function kopiruj(text, popis) {
+  try {
+    await navigator.clipboard.writeText(text);
+  } catch {
+    // v iframu bez oprávnění clipboard-write
+    const ta = document.createElement('textarea');
+    ta.value = text;
+    ta.style.cssText = 'position:fixed;opacity:0;pointer-events:none';
+    document.body.appendChild(ta);
+    ta.select();
+    const ok = document.execCommand('copy');
+    ta.remove();
+    if (!ok) return hlaska('Kopírování se nepovedlo', true);
+  }
+  hlaska('Zkopírováno: ' + (popis || text));
+}
+
+function prazdne(text) {
+  const e = document.createElement('div');
+  e.className = 'prazdne';
+  e.textContent = text;
+  return e;
+}
+
+// ============ Nastavení ============
+const selStyl = $('styl'), inMin = $('minDelka'), inMax = $('maxDelka'),
+      inZacatek = $('zacatek'), inKonec = $('konec'), selPocet = $('pocet'), chkStridat = $('stridat');
+
+const jenPismena = text => text.toLocaleLowerCase('cs').replace(/[^a-záčďéěíňóřšťúůýžë]/g, '');
+
+for (const [id, styl] of Object.entries(STYLY)) selStyl.add(new Option(styl.nazev, id));
+
+function obnovNastaveni() {
+  const s = nacti('nastaveni', {});
+  if (s && typeof s === 'object') {
+    if (STYLY[s.styl]) selStyl.value = s.styl;
+    if (s.min) inMin.value = s.min;
+    if (s.max) inMax.value = s.max;
+    if (typeof s.zacatek === 'string') inZacatek.value = s.zacatek;
+    if (typeof s.konec === 'string') inKonec.value = s.konec;
+    if ([...selPocet.options].some(o => o.value === String(s.pocet))) selPocet.value = s.pocet;
+    chkStridat.checked = s.stridat === true;
+  }
+}
+
+function prectiNastaveni() {
+  let min = parseInt(inMin.value, 10), max = parseInt(inMax.value, 10);
+  if (isNaN(min)) min = 5;
+  if (isNaN(max)) max = 9;
+  min = Math.max(3, Math.min(16, min));
+  max = Math.max(3, Math.min(16, max));
+  if (min > max) [min, max] = [max, min];
+  inMin.value = min;
+  inMax.value = max;
+  const zacatek = jenPismena(inZacatek.value), konec = jenPismena(inKonec.value);
+  inZacatek.value = zacatek;
+  inKonec.value = konec;
+  const n = { styl: selStyl.value, min, max, zacatek, konec, pocet: parseInt(selPocet.value, 10), stridat: chkStridat.checked };
+  uloz('nastaveni', n);
+  return n;
+}
+
+// ============ Dvojice ============
+const vstup = $('dvojice');
+const slovaDvojice = () => vstup.value.trim().split(/\s+/).filter(Boolean);
+
+function nastavDvojici(slova) {
+  vstup.value = slova.join(' ');
+  poZmeneDvojice();
+}
+
+function poZmeneDvojice() {
+  const s = slovaDvojice();
+  $('citac').textContent = s.length + ' / 2';
+  $('citac').classList.toggle('plno', s.length === 2);
+  $('prohodit').disabled = $('ulozitDvojici').disabled = s.length !== 2;
+  uloz('rozpracovana', vstup.value);
+  vykresliVarianty(s);
+  oznacVybrane();
+}
+
+// klik na slovo, které už ve dvojici je, ho z ní odebere
+function prepniVeDvojici(slovo) {
+  const s = slovaDvojice();
+  const i = s.indexOf(slovo);
+  if (i >= 0) {
+    s.splice(i, 1);
+    nastavDvojici(s);
+    return 'odebrano';
+  }
+  if (s.length >= 2) {
+    hlaska('Dvojice je plná – klikni na slovo v ní, nebo ji vymaž');
+    return 'plno';
+  }
+  s.push(slovo);
+  nastavDvojici(s);
+  return 'pridano';
+}
+
+function vykresliVarianty(s) {
+  const box = $('varianty');
+  box.textContent = '';
+  if (s.length === 1) box.textContent = 'Vyber ještě jedno slovo.';
+  if (s.length !== 2) return;
+  const [a, b] = s;
+  const tvary = new Set([
+    `${a} ${b}`,
+    a + b,
+    a + b.toLocaleLowerCase('cs'),
+    `${a}-${b}`,
+    (a + b).toLocaleLowerCase('cs'),
+  ]);
+  box.append('Kopírovat:');
+  for (const t of tvary) {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'varianta';
+    btn.textContent = t;
+    btn.addEventListener('click', () => kopiruj(t));
+    box.appendChild(btn);
+  }
+}
+
+vstup.addEventListener('input', () => {
+  const s = slovaDvojice();
+  if (s.length > 2) {
+    nastavDvojici(s.slice(0, 2));
+    hlaska('Dvojice má nejvýš 2 slova');
+  } else {
+    poZmeneDvojice();
+  }
+});
+vstup.addEventListener('keydown', e => {
+  if (e.key === 'Enter') ulozDvojici();
+});
+
+$('prohodit').addEventListener('click', () => nastavDvojici(slovaDvojice().reverse()));
+$('vymazatDvojici').addEventListener('click', () => {
+  nastavDvojici([]);
+  vstup.focus();
+});
+
+// ============ Zapamatovaná slova a dvojice ============
+let ulozenaSlova = seznamTextu(nacti('ulozena', []));
+let ulozeneDvojice = seznamTextu(nacti('dvojice', []));
+
+function stitek(text, titulek, priKliku, priOdebrani) {
+  const st = document.createElement('span');
+  st.className = 'stitek';
+  st.dataset.hodnota = text;
+  const t = document.createElement('button');
+  t.type = 'button';
+  t.className = 'text';
+  t.textContent = text;
+  t.title = titulek;
+  t.addEventListener('click', priKliku);
+  const x = document.createElement('button');
+  x.type = 'button';
+  x.className = 'x';
+  x.textContent = '×';
+  x.title = 'Odebrat';
+  x.setAttribute('aria-label', 'Odebrat ' + text);
+  x.addEventListener('click', priOdebrani);
+  st.append(t, x);
+  return st;
+}
+
+function vykresliUlozena() {
+  const box = $('ulozenaSlova');
+  box.textContent = '';
+  const n = ulozenaSlova.length;
+  $('pocetUlozenych').textContent = n ? `(${n})` : '';
+  $('nahodnaDvojice').disabled = n < 2;
+  $('kopirovatSlova').disabled = $('vymazatSlova').disabled = !n;
+  if (!n) box.appendChild(prazdne('Zatím nic. Klikni na vygenerované slovo.'));
+  for (const slovo of ulozenaSlova) {
+    box.appendChild(stitek(slovo, 'Přidat do dvojice / odebrat z ní',
+      () => prepniVeDvojici(slovo),
+      () => {
+        ulozenaSlova = ulozenaSlova.filter(w => w !== slovo);
+        uloz('ulozena', ulozenaSlova);
+        vykresliUlozena();
+      }));
+  }
+  oznacVybrane();
+}
+
+function vykresliDvojice() {
+  const box = $('ulozeneDvojice');
+  box.textContent = '';
+  const n = ulozeneDvojice.length;
+  $('pocetDvojic').textContent = n ? `(${n})` : '';
+  $('kopirovatDvojice').disabled = $('vymazatDvojice').disabled = !n;
+  if (!n) box.appendChild(prazdne('Hotovou dvojici ulož tlačítkem ☆ Uložit.'));
+  for (const d of ulozeneDvojice) {
+    box.appendChild(stitek(d, 'Načíst do dvojice',
+      () => nastavDvojici(d.split(' ')),
+      () => {
+        ulozeneDvojice = ulozeneDvojice.filter(x => x !== d);
+        uloz('dvojice', ulozeneDvojice);
+        vykresliDvojice();
+      }));
+  }
+  oznacVybrane();
+}
+
+function zapamatuj(slovo) {
+  if (ulozenaSlova.includes(slovo)) return;
+  ulozenaSlova.push(slovo);
+  uloz('ulozena', ulozenaSlova);
+  vykresliUlozena();
+}
+
+function ulozDvojici() {
+  const s = slovaDvojice();
+  if (s.length !== 2) return hlaska('Dvojice potřebuje dvě slova');
+  const text = s.join(' ');
+  if (ulozeneDvojice.includes(text)) return hlaska('Tahle dvojice už je uložená');
+  ulozeneDvojice.unshift(text);
+  uloz('dvojice', ulozeneDvojice);
+  vykresliDvojice();
+  hlaska('Dvojice uložena');
+}
+$('ulozitDvojici').addEventListener('click', ulozDvojici);
+
+$('nahodnaDvojice').addEventListener('click', () => {
+  const i = Math.floor(Math.random() * ulozenaSlova.length);
+  let j = Math.floor(Math.random() * (ulozenaSlova.length - 1));
+  if (j >= i) j++;
+  nastavDvojici([ulozenaSlova[i], ulozenaSlova[j]]);
+});
+
+$('kopirovatSlova').addEventListener('click', () => {
+  const n = ulozenaSlova.length;
+  kopiruj(ulozenaSlova.join('\n'), `${n} ${tvar(n, 'slovo', 'slova', 'slov')}`);
+});
+$('kopirovatDvojice').addEventListener('click', () => {
+  const n = ulozeneDvojice.length;
+  kopiruj(ulozeneDvojice.join('\n'), `${n} ${tvar(n, 'dvojice', 'dvojice', 'dvojic')}`);
+});
+
+$('vymazatSlova').addEventListener('click', async () => {
+  if (!ulozenaSlova.length || !await potvrd('Vymazat všechna zapamatovaná slova?')) return;
+  ulozenaSlova = [];
+  uloz('ulozena', ulozenaSlova);
+  vykresliUlozena();
+});
+$('vymazatDvojice').addEventListener('click', async () => {
+  if (!ulozeneDvojice.length || !await potvrd('Vymazat všechny uložené dvojice?')) return;
+  ulozeneDvojice = [];
+  uloz('dvojice', ulozeneDvojice);
+  vykresliDvojice();
+});
+
+// ============ Mřížka ============
+const mrizka = $('mrizka');
+let varka = [];
+const historie = [];
+
+function oznacVybrane() {
+  const vybrana = new Set(slovaDvojice());
+  const ulozena = new Set(ulozenaSlova);
+  const dvojice = slovaDvojice().join(' ');
+  mrizka.querySelectorAll('.slovo').forEach(b => {
+    const ve = vybrana.has(b.textContent);
+    b.classList.toggle('vybrane', ve);
+    b.setAttribute('aria-pressed', ve);
+    b.classList.toggle('ulozene', ulozena.has(b.textContent));
+  });
+  $('ulozenaSlova').querySelectorAll('.stitek').forEach(st =>
+    st.classList.toggle('vybrane', vybrana.has(st.dataset.hodnota)));
+  $('ulozeneDvojice').querySelectorAll('.stitek').forEach(st =>
+    st.classList.toggle('vybrane', st.dataset.hodnota === dvojice));
+}
+
+function vykresliMrizku() {
+  mrizka.textContent = '';
+  $('pocetSlov').textContent = varka.length ? `(${varka.length})` : '';
+  $('predchozi').disabled = !historie.length;
+  if (!varka.length) {
+    mrizka.appendChild(prazdne('Pro tohle nastavení se žádná slova nenašla – zkus širší rozsah délky nebo jiný začátek či konec.'));
+    return;
+  }
+  const frag = document.createDocumentFragment();
+  for (const slovo of varka) {
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'slovo';
+    b.textContent = slovo;
+    frag.appendChild(b);
+  }
+  mrizka.appendChild(frag);
+  oznacVybrane();
+}
+
+mrizka.addEventListener('click', e => {
+  const b = e.target.closest('.slovo');
+  if (!b) return;
+  const slovo = b.textContent;
+  zapamatuj(slovo);
+  if (prepniVeDvojici(slovo) === 'pridano') {
+    b.classList.remove('blik');
+    void b.offsetWidth; // restart animace při rychlém opakovaném kliku
+    b.classList.add('blik');
+  }
+});
+
+function generuj() {
+  const n = prectiNastaveni();
+  if (n.zacatek.length + n.konec.length > n.max) {
+    const co = [n.zacatek && `začátek „${n.zacatek}"`, n.konec && `konec „${n.konec}"`].filter(Boolean).join(' a ');
+    hlaska(`Na ${co} je max. délka ${n.max} příliš krátká`);
+  }
+  const styl = n.stridat ? stridavyStyl(STYLY[n.styl]) : STYLY[n.styl];
+  const nova = generujVarku(n.pocet, styl, n.min, n.max, n.zacatek, n.konec);
+  if (varka.length) {
+    historie.push(varka);
+    if (historie.length > 20) historie.shift();
+  }
+  varka = nova;
+  uloz('varka', varka);
+  vykresliMrizku();
+  if (nova.length && nova.length < n.pocet) {
+    hlaska(`Našlo se jen ${nova.length} ${tvar(nova.length, 'unikátní slovo', 'unikátní slova', 'unikátních slov')}`);
+  }
+}
+
+$('generovat').addEventListener('click', generuj);
+$('predchozi').addEventListener('click', () => {
+  if (!historie.length) return;
+  varka = historie.pop();
+  uloz('varka', varka);
+  vykresliMrizku();
+});
+
+[selStyl, selPocet, chkStridat].forEach(el => el.addEventListener('change', generuj));
+[inMin, inMax, inZacatek, inKonec].forEach(el => {
+  el.addEventListener('change', prectiNastaveni);
+  el.addEventListener('keydown', e => { if (e.key === 'Enter') generuj(); });
+});
+
+document.addEventListener('keydown', e => {
+  if (e.key.toLowerCase() !== 'g' || e.ctrlKey || e.metaKey || e.altKey) return;
+  if (e.target.closest('input, select, textarea, [contenteditable]')) return;
+  e.preventDefault();
+  generuj();
+});
+
+// ============ Start ============
+obnovNastaveni();
+const rozpracovana = nacti('rozpracovana', '');
+vstup.value = typeof rozpracovana === 'string' ? rozpracovana : '';
+vykresliUlozena();
+vykresliDvojice();
+// poslední várka přežije znovunačtení (rozcestník stránku v iframu načítá znovu)
+varka = seznamTextu(nacti('varka', []));
+if (varka.length) vykresliMrizku();
+else generuj();
+poZmeneDvojice();
+</script>
+</body>
+</html>
