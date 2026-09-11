@@ -713,20 +713,42 @@
         return b;
       }
 
+      // Dokud má kterýkoli vývod šev, musí mít kruhový řez celá rozbočka: rozkrok
+      // se počítá z průsečíků kružnic, a protažení do elipsy roste i směrem dovnitř,
+      // takže dřív protažený vývod by přelezl do sousedů, kteří se ještě nerozdělily.
+      // Proto se čeká na okamžik, kdy se rozdělí poslední dvojice.
+      const zVstup = p.vstupDelka, zKonecPrechodu = p.vstupDelka + Ltr;
       let sRozdeleni = 0;
       for (let i = 0; i < N; i++) {
         for (let j = i + 1; j < N; j++) {
           sRozdeleni = Math.max(sRozdeleni, dotyk(i, j, false), dotyk(i, j, true));
         }
       }
+      const zRozdeleni = new Array(N).fill(zVstup + Ltr * sRozdeleni);
 
-      function tvar(s) {
-        if (sRozdeleni >= 1 - 1e-9) return 0;
-        const tau = Math.max(0, Math.min(1, (s - sRozdeleni) / (1 - sRozdeleni)));
-        return tau * tau * (3 - 2 * tau);
-      }
+      // Protažení řezu do elipsy: z řezu rovinou z se tím stane šikmý řez rovnou
+      // kruhovou trubkou, takže vývod pak plynule pokračuje jako válec s kolmým
+      // čelem. Narovnání pokračuje i do první části příruby — u strmých a širokých
+      // vývodů zbývá na konci přechodu jen pár milimetrů a celá změna tvaru by se
+      // tam zlomila do ostré hrany.
       const protazeni = alfa.map(a => 1 / Math.cos(a));
-      const osaA = (i, s, uvnitr) => polomer(i, s, uvnitr) * (1 + (protazeni[i] - 1) * tvar(s));
+      const delkaNarovnani = [], zNarovnano = [];
+      for (let i = 0; i < N; i++) {
+        const delka = Math.max(0, p.vyvody[i].delka);
+        // Šikmý řez sahá o r·tg α dopředu; narovnání musí skončit dřív, jinak by
+        // poslední elipsa přesáhla za kolmé čelo a plášť by se tam přehnul.
+        const rezerva = rvo[i] * Math.tan(alfa[i]) + 2;
+        const d = Math.max(0, Math.min(delka * 0.6, delka - rezerva));
+        delkaNarovnani.push(d);
+        zNarovnano.push(zKonecPrechodu + d * Math.cos(alfa[i]));
+      }
+
+      function pomerOs(i, z) {
+        const od = zRozdeleni[i], doU = zNarovnano[i];
+        if (doU - od < 1e-9) return protazeni[i];
+        const t = Math.max(0, Math.min(1, (z - od) / (doU - od)));
+        return 1 + (protazeni[i] - 1) * t * t * (3 - 2 * t);
+      }
 
       function pruseciky(c1, r1, c2, r2) {
         const dx = c2[0] - c1[0], dy = c2[1] - c1[1];
@@ -781,11 +803,17 @@
 
       const norm2pi = (a) => { const x = a % (2 * Math.PI); return x < 0 ? x + 2 * Math.PI : x; };
 
-      // Část obvodu vývodu i, která leží na povrchu součásti: celý obvod bez
-      // úseků schovaných uvnitř sousedních vývodů. Zbude-li úseků víc (u tří
-      // vývodů se uprostřed otevírá díra), bere se ten největší — prostředek
-      // rozkroku tak zůstane vyplněný materiálem.
-      function zivyOblouk(i, kruhy) {
+      // Úseky obvodu vývodu i, které jsou schované uvnitř sousedních vývodů.
+      // Vrací pole { s, d, ps, pk } — úsek od úhlu s délky d, s přesnými
+      // průsečíky na obou koncích. Prázdné pole = celý obvod je vidět,
+      // null = vývod je celý uvnitř souseda.
+      //
+      // Dřív se z obvodu bral jen největší viditelný úsek. To u tří vývodů
+      // zaslepilo středový kanálek mezi nimi (kružnice vývodů se v jednom pásu
+      // překrývají po dvojicích, ale osu už nekryjí) — plocha kanálku chyběla,
+      // pojistka ji zacelila velkými šikmými trojúhelníky a ty procházely
+      // dutinami vývodů. Proto se teď zachovají všechny viditelné úseky.
+      function zakryty(i, kruhy) {
         const c = kruhy[i].c, r = kruhy[i].r;
         const kryt = [];
         for (let j = 0; j < N; j++) {
@@ -801,43 +829,43 @@
           const sj = Math.atan2(cj[1] - c[1], cj[0] - c[0]);
           const d01 = norm2pi(a1 - a0);
           // schovaný je ten z oblouků, který míří k sousedovi
-          if (norm2pi(sj - a0) < d01) kryt.push({ s: a0, d: d01, ps: pr[0], pk: pr[1] });
-          else kryt.push({ s: a1, d: 2 * Math.PI - d01, ps: pr[1], pk: pr[0] });
+          if (norm2pi(sj - a0) < d01) kryt.push({ s: norm2pi(a0), d: d01, ps: pr[0], pk: pr[1] });
+          else kryt.push({ s: norm2pi(a1), d: 2 * Math.PI - d01, ps: pr[1], pk: pr[0] });
         }
-        if (!kryt.length) return { plny: true };
-
-        const meze = [];
-        for (const k of kryt) {
-          meze.push({ a: norm2pi(k.s), p: k.ps });
-          meze.push({ a: norm2pi(k.s + k.d), p: k.pk });
-        }
-        meze.sort((x, y) => x.a - y.a);
-        let nej = null;
-        for (let m = 0; m < meze.length; m++) {
-          const od = meze[m], doU = meze[(m + 1) % meze.length];
-          const delka = norm2pi(doU.a - od.a);
-          if (delka < 1e-12) continue;
-          const stred = norm2pi(od.a + delka / 2);
-          let volny = true;
-          for (const k of kryt) if (norm2pi(stred - k.s) < k.d) { volny = false; break; }
-          if (volny && (!nej || delka > nej.delka)) nej = { od: od.a, delka: delka, bodOd: od.p, bodDo: doU.p };
-        }
-        return nej;
+        return kryt;
       }
 
-      const V = [], I = [];
-      const bod = (x, y, z) => { V.push(x, y, z); return V.length / 3 - 1; };
-      const ctverec = (a, b, c, d) => { I.push(a, b, c, a, c, d); };
+      // Kam srazit vzorek, který padl do zákrytu: na bližší konec souvislého
+      // zákrytu (navazující zákryty od více sousedů se berou jako jeden).
+      // null = vzorek je vidět a zůstává na svém místě.
+      function srazitNa(fi, zak) {
+        if (!zak || !zak.length) return null;
+        let akt = null;
+        for (const k of zak) if (norm2pi(fi - k.s) < k.d) { akt = k; break; }
+        if (!akt) return null;
 
-      // Oblouk vstupní trubky připadající vývodu i (na začátku přechodu).
-      function oblouk0(i, rad) {
-        if (N === 1) return { plny: true };
-        const od = hranice[i][0], doU = hranice[i][1];
-        return {
-          od: od, delka: norm2pi(doU - od),
-          bodOd: [rad * Math.cos(od), rad * Math.sin(od)],
-          bodDo: [rad * Math.cos(doU), rad * Math.sin(doU)]
-        };
+        let zac = akt.s, konec = norm2pi(akt.s + akt.d), bodZac = akt.ps, bodKonec = akt.pk;
+        for (let kolo = 0; kolo < zak.length; kolo++) {
+          let zmena = false;
+          for (const k of zak) {
+            if (k === akt) continue;
+            if (norm2pi(konec - k.s) < k.d) { konec = norm2pi(k.s + k.d); bodKonec = k.pk; zmena = true; }
+            if (norm2pi(zac - k.s) < k.d) { zac = k.s; bodZac = k.ps; zmena = true; }
+          }
+          if (!zmena) break;
+        }
+        // celý obvod zakrytý → sraženo na jeden bod
+        if (norm2pi(konec - zac) < 1e-9) return bodKonec;
+        return norm2pi(konec - fi) <= norm2pi(fi - zac) ? bodKonec : bodZac;
+      }
+
+      // Zákryt na začátku přechodu, kde jsou všechny kružnice totožné: vývod i
+      // vidí jen svou výseč, zbytek obvodu patří sousedům.
+      function zakryt0(i, rad) {
+        if (N === 1) return [];
+        const od = norm2pi(hranice[i][0]), doU = norm2pi(hranice[i][1]);
+        const naKruhu = (a) => [rad * Math.cos(a), rad * Math.sin(a)];
+        return [{ s: doU, d: norm2pi(od - doU), ps: naKruhu(doU), pk: naKruhu(od) }];
       }
 
       function kruhyProS(s, uvnitr) {
@@ -854,42 +882,57 @@
         return kruhy;
       }
 
-      // Prstenec: K bodů rovnoměrně po živém oblouku. Krajní body jsou přesné
-      // průsečíky se sousedy — po nich vede šev, který sdílí sousední vývod.
-      // Je-li oblouk celý, první a poslední bod splývají a prstenec se uzavře.
-      // Vzorky leží na pevných azimutech (nezávisle na tom, jak velkou část
-      // obvodu vývod zrovna zabírá) — mřížka je tak po celé délce pravidelná.
-      // Kdyby se rozkládaly po živém oblouku, při rozdělení vývodů, kdy oblouk
-      // odmocninově rychle doroste na plný kruh, by se celý prstenec pootočil a
-      // sousední pásy plošek by byly zkroucené: to je ten přelis na ploše.
-      // Co padne do zákrytu souseda, se srazí na přesný průsečík — po něm vede
-      // šev, který sdílí sousední vývod.
-      function prstenLoft(i, z, osaA, osaB, c, oblouk) {
+      const V = [], I = [];
+      const bod = (x, y, z) => { V.push(x, y, z); return V.length / 3 - 1; };
+      const ctverec = (a, b, c, d) => { I.push(a, b, c, a, c, d); };
+
+      // Vzorky leží na pevných azimutech (nezávisle na tom, jakou část obvodu
+      // vývod zrovna zabírá) — mřížka je tak po celé délce pravidelná. Co padne
+      // do zákrytu souseda, se srazí na přesný průsečík; po něm vede šev, který
+      // sdílí sousední vývod.
+      function prstenLoft(i, z, osaA, osaB, c, zak) {
         const ux = smer[i][0], uy = smer[i][1], wx = -uy, wy = ux;
         const naObvodu = (a) => {
           const psi = a - uhly[i], cs = Math.cos(psi), sn = Math.sin(psi);
           return [c[0] + osaA * cs * ux + osaB * sn * wx, c[1] + osaA * cs * uy + osaB * sn * wy];
         };
-        const plny = !oblouk || oblouk.plny;
+        const body = [], srazen = [];
+        for (let k = 0; k < K - 1; k++) {
+          const a = uhly[i] + Math.PI + 2 * Math.PI * k / (K - 1);
+          const nahrada = srazitNa(a, zak);
+          body.push(nahrada || naObvodu(a));
+          srazen.push(!!nahrada);
+        }
+
+        // Konce švu musí ležet na síti obou sousedů. Když je překryv užší než
+        // rozestup vzorků, jeden vývod by ho minul a druhý ne — okraje by na sebe
+        // nenavázaly. Proto se nejbližší vzorek přichytí přesně na průsečík.
+        if (zak && zak.length) {
+          const krok = 2 * Math.PI / (K - 1);
+          for (const k of zak) {
+            for (const [p, uhel] of [[k.ps, k.s], [k.pk, norm2pi(k.s + k.d)]]) {
+              // vnitřní konec sousedících zákrytů na povrchu neleží
+              let schovany = false;
+              for (const j of zak) {
+                if (j === k) continue;
+                const t = norm2pi(uhel - j.s);
+                if (t > 1e-9 && t < j.d - 1e-9) { schovany = true; break; }
+              }
+              if (schovany) continue;
+              const idx = Math.round(norm2pi(uhel - (uhly[i] + Math.PI)) / krok) % (K - 1);
+              body[idx] = p;
+              srazen[idx] = true;
+            }
+          }
+        }
+
         const pr = [];
         pr.srazen = [];
         for (let k = 0; k < K; k++) {
+          const m = k === K - 1 ? 0 : k;
           if (k === K - 1) { pr.push(pr[0]); pr.srazen.push(pr.srazen[0]); continue; }
-          const a = uhly[i] + Math.PI + 2 * Math.PI * k / (K - 1);
-          let b, srazen = false;
-          if (plny) {
-            b = naObvodu(a);
-          } else {
-            const t = norm2pi(a - oblouk.od);
-            if (t <= oblouk.delka) {
-              b = naObvodu(a);
-            } else {
-              srazen = true;
-              b = (t - oblouk.delka <= 2 * Math.PI - t) ? oblouk.bodDo : oblouk.bodOd;
-            }
-          }
-          pr.push(bod(b[0], b[1], z));
-          pr.srazen.push(srazen);
+          pr.push(bod(body[m][0], body[m][1], z));
+          pr.srazen.push(srazen[m]);
         }
         return pr;
       }
@@ -909,27 +952,39 @@
         for (const uvnitr of [false, true]) {
           const kruhy = kruhyProS(rez.s, uvnitr);
           for (let i = 0; i < N; i++) {
-            const oblouk = rez.s < 1e-12 ? oblouk0(i, kruhy[i].r) : zivyOblouk(i, kruhy);
-            const prsten = prstenLoft(i, rez.z, osaA(i, rez.s, uvnitr), kruhy[i].r,
-                                      kruhy[i].c, oblouk);
+            const zak = rez.s < 1e-12 ? zakryt0(i, kruhy[i].r) : zakryty(i, kruhy);
+            const prsten = prstenLoft(i, rez.z, kruhy[i].r * pomerOs(i, rez.z), kruhy[i].r,
+                                      kruhy[i].c, zak);
             (uvnitr ? uvn : vne)[i].push(prsten);
           }
         }
       }
 
       // --- vývody za přechodem --------------------------------------------
-      // Poslední řez přechodu je přesně šikmý řez rovnou kruhovou trubkou, takže
-      // stačí přidat její kolmé čelo — plášť mezi nimi tvoří přímé povrchové
-      // přímky a nikde nevzniká zlom ani nabobtnání.
+      // Nejdřív se dokončí narovnání průřezu (řezy rovinou z, střed už jede po ose
+      // vývodu), pak přijde kolmé čelo. Poslední elipsa je přesně šikmý řez rovnou
+      // kruhovou trubkou, takže plášť mezi ní a čelem tvoří přímé povrchové přímky.
       const konce = [];
       for (let i = 0; i < N; i++) {
-        const T = new THREE.Vector3(Math.sin(alfa[i]) * smer[i][0], Math.sin(alfa[i]) * smer[i][1], Math.cos(alfa[i]));
-        const e1 = new THREE.Vector3(Math.cos(alfa[i]) * smer[i][0], Math.cos(alfa[i]) * smer[i][1], -Math.sin(alfa[i]));
-        const e2 = new THREE.Vector3(-smer[i][1], smer[i][0], 0);
-        const C = new THREE.Vector3(odsaz[i] * smer[i][0], odsaz[i] * smer[i][1], p.vstupDelka + Ltr)
-          .addScaledVector(T, Math.max(0, p.vyvody[i].delka));
+        const ux = smer[i][0], uy = smer[i][1];
+        const T = new THREE.Vector3(Math.sin(alfa[i]) * ux, Math.sin(alfa[i]) * uy, Math.cos(alfa[i]));
+        const e1 = new THREE.Vector3(Math.cos(alfa[i]) * ux, Math.cos(alfa[i]) * uy, -Math.sin(alfa[i]));
+        const e2 = new THREE.Vector3(-uy, ux, 0);
+        const delka = Math.max(0, p.vyvody[i].delka);
+        const Ln = Math.min(delkaNarovnani[i], delka);
 
-        const prsten = (r) => {
+        const Mn = Ln > 1e-9 ? Math.max(1, Math.round(Ln / 3)) : 0;
+        for (let m = 1; m <= Mn; m++) {
+          const d = Ln * m / Mn;                                  // posun po ose vývodu
+          const z = zKonecPrechodu + d * Math.cos(alfa[i]);
+          const stred = [(odsaz[i] + d * Math.sin(alfa[i])) * ux, (odsaz[i] + d * Math.sin(alfa[i])) * uy];
+          const pom = pomerOs(i, z);
+          vne[i].push(prstenLoft(i, z, rvo[i] * pom, rvo[i], stred, []));
+          uvn[i].push(prstenLoft(i, z, rvi[i] * pom, rvi[i], stred, []));
+        }
+
+        const C = new THREE.Vector3(odsaz[i] * ux, odsaz[i] * uy, zKonecPrechodu).addScaledVector(T, delka);
+        const prstenKolmy = (r) => {
           const pr = [];
           pr.srazen = new Array(K).fill(false);
           for (let k = 0; k < K; k++) {
@@ -942,9 +997,8 @@
           }
           return pr;
         };
-
-        vne[i].push(prsten(rvo[i]));
-        uvn[i].push(prsten(rvi[i]));
+        vne[i].push(prstenKolmy(rvo[i]));
+        uvn[i].push(prstenKolmy(rvi[i]));
         konce.push(C);
       }
 
@@ -1028,8 +1082,15 @@
             v = okraj.get(v);
           }
           if (v === start && smycka.length >= 3) {
-            for (let k = 1; k + 1 < smycka.length; k++) {
-              noveI.push(smycka[0], smycka[k + 1], smycka[k]);   // opačná orientace než okraj
+            // Vějíř z těžiště dá menší a pravidelnější plošky než z prvního
+            // vrcholu; u protáhlé smyčky by přes ni jinak ležel dlouhý trojúhelník,
+            // který projede dutinou vývodu.
+            let tx = 0, ty = 0, tz = 0;
+            for (const b of smycka) { tx += noveV[b * 3]; ty += noveV[b * 3 + 1]; tz += noveV[b * 3 + 2]; }
+            const stred = noveV.length / 3;
+            noveV.push(tx / smycka.length, ty / smycka.length, tz / smycka.length);
+            for (let k = 0; k < smycka.length; k++) {
+              noveI.push(stred, smycka[(k + 1) % smycka.length], smycka[k]);   // opačná orientace než okraj
             }
           }
         }
