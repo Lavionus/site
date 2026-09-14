@@ -27,10 +27,22 @@
     .scena .vyska { stroke: var(--warn); stroke-width: 2.5; stroke-dasharray: 6 4; }
     .scena .strana { stroke: var(--ok); stroke-width: 2.5; }
     .scena .obal { fill: none; stroke: var(--border-strong); stroke-width: 2; stroke-dasharray: 4 4; }
-    .scena .naplnene { fill: rgba(106,166,253,0.55); }
+    .scena .voda { fill: rgba(70,150,250,0.5); }
+    .scena .hladina { fill: rgba(150,205,255,0.8); }
+    .scena .hladina-pruh { fill: rgba(170,215,255,0.85); }
+    .scena .proud { fill: rgba(95,170,255,0.7); }
+    .scena .kapka { fill: rgba(160,210,255,0.9); }
+    .scena .cakanec { fill: none; stroke: rgba(160,210,255,0.7); stroke-width: 1.6; }
+    .scena .kohout { fill: var(--border-strong); }
+    .scena .ryska { stroke: var(--text-faint); stroke-width: 1.4; stroke-dasharray: 3 4; }
+    .scena .ryska-text { fill: var(--text-faint); font-size: 11px; }
+    .scena .mira { stroke: var(--warn); stroke-width: 1.4; stroke-dasharray: 5 5; opacity: 0.7; }
+    .ovladace button:disabled { opacity: 0.42; cursor: default; border-color: var(--border); }
+    .vypocet .pomer .vysledek { color: var(--warn); }
     .scena .popis { fill: var(--text-muted); font-size: 12px; text-anchor: middle; }
     .scena .popis.v { fill: var(--warn); }
     .scena .popis.s { fill: var(--ok); }
+    .scena .popis.vlevo { text-anchor: start; }
 
     .ovladace {
       display: flex; flex-wrap: wrap; gap: 8px 14px;
@@ -386,103 +398,425 @@ function prekresliSit() {
 }
 
 /* ============================================================
-   Režim 3: Proč třetina – kužel se třikrát vylije do válce.
+   Režim 3: Proč třetina – těleso se přelije do opsané nádoby.
+   Zdroj se nejdřív napustí vodou, pak se zvedne, nakloní,
+   proudem vyleje do nádoby a vrátí se zpět.
    ============================================================ */
-const tretina = { tvar: 'kuzel', naplneno: 0, bezi: false };
+const TVARY_TRETINA = {
+  kuzel: {
+    zdroj: 'kuzel', nadoba: 'valec', podil: 1 / 3, davek: 3, R: 38, V: 120,
+    nazevZ: 'kužel', nazevN: 'válec',
+    rozmery: 'r = 3 cm, v = 6 cm',
+    vzorecZ: 'V = ⅓ · πr² · v = ⅓ · 3,14 · 3² · 6', hodnotaZ: 56.52,
+    vzorecN: 'V = πr² · v = 3,14 · 3² · 6', hodnotaN: 169.56,
+  },
+  jehlan: {
+    zdroj: 'jehlan', nadoba: 'hranol', podil: 1 / 3, davek: 3, R: 38, V: 120,
+    nazevZ: 'jehlan', nazevN: 'hranol',
+    rozmery: 'a = 5 cm, v = 6 cm',
+    vzorecZ: 'V = ⅓ · a² · v = ⅓ · 5² · 6', hodnotaZ: 50,
+    vzorecN: 'V = a² · v = 5² · 6', hodnotaN: 150,
+  },
+  koule: {
+    zdroj: 'koule', nadoba: 'valec', podil: 2 / 3, davek: 1, R: 58, V: 116,
+    nazevZ: 'koule', nazevN: 'opsaný válec',
+    rozmery: 'r = 4 cm, výška válce = 2r = 8 cm',
+    vzorecZ: 'V = 4/3 · πr³ = 4/3 · 3,14 · 4³', hodnotaZ: 267.95,
+    vzorecN: 'V = πr² · 2r = 3,14 · 4² · 8', hodnotaN: 401.92,
+  },
+};
+/* fáze jedné dávky: název a délka v sekundách */
+const FAZE_TRETINA = [
+  ['napousteni', 1.5], ['prenos', 0.9], ['liti', 1.9], ['navrat', 0.7],
+];
+const tretina = {
+  tvar: 'kuzel', faze: -1, t: 0, davky: 0, zaklad: 0,
+  rychlost: 1, auto: false, bezi: false, cas: 0, vlna: 0, gen: 0,
+};
+
+const hladkost = t => (t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2);
+const svgBod = (x, y) => `${Math.round(x * 100) / 100} ${Math.round(y * 100) / 100}`;
 
 function tretinaRezim() {
   const p = $('plocha');
-  tretina.naplneno = 0;
+  tretina.gen++;
+  tretina.faze = -1; tretina.t = 0; tretina.davky = 0;
+  tretina.zaklad = 0; tretina.auto = false; tretina.bezi = false; tretina.vlna = 0;
   p.innerHTML = `
-    <div class="zadani uloha-text">Kolikrát se musí kužel vylít do válce se
-      <b>stejnou podstavou i výškou</b>, než ho naplní? Vyzkoušej si to.</div>
+    <div class="zadani uloha-text" id="zadaniTretina"></div>
     <div class="prepinac-tvar" id="tvaryTretina">
       <button data-tvar="kuzel" class="zap">🍦 Kužel → válec</button>
       <button data-tvar="jehlan">🔻 Jehlan → hranol</button>
+      <button data-tvar="koule">⚽ Koule → válec</button>
     </div>
-    <svg class="scena" id="scenaTretina" viewBox="0 0 420 260" role="img" aria-label="Prelevani"></svg>
+    <svg class="scena" id="scenaTretina" viewBox="0 0 430 300" role="img"
+         aria-label="Přelévání vody z tělesa do nádoby"></svg>
     <div class="ovladace">
-      <button id="btnNalij">💧 Nalij jednu dávku</button>
-      <button id="btnReset2">↺ Vylij</button>
-      <label>Naplněno <span class="hodnota" id="hodNaplneno"></span></label>
+      <button id="btnNalij">💧 Napustit a přelít</button>
+      <button id="btnVse">⏩ Nalít vše</button>
+      <button id="btnReset2">↺ Vylít</button>
+      <label>Rychlost
+        <input type="range" id="posRychlost" min="0.4" max="3" step="0.1" value="1">
+        <span class="hodnota" id="hodRychlost">1×</span></label>
+      <label>Naplněno <span class="hodnota" id="hodNaplneno">0 %</span></label>
     </div>
+    <div class="vypocet" id="vypocetTretina"></div>
     <p class="vysvetlivka" id="popisTretina"></p>`;
 
   $('tvaryTretina').addEventListener('click', e => {
     const b = e.target.closest('button[data-tvar]');
-    if (!b) return;
+    if (!b || b.dataset.tvar === tretina.tvar) return;
     tretina.tvar = b.dataset.tvar;
-    tretina.naplneno = 0;
     $('tvaryTretina').querySelectorAll('button').forEach(x => x.classList.toggle('zap', x === b));
-    prekresliTretinu();
+    resetTretiny();
   });
-  $('btnNalij').addEventListener('click', nalij);
-  $('btnReset2').addEventListener('click', () => { tretina.naplneno = 0; prekresliTretinu(); });
+  $('btnNalij').addEventListener('click', () => spustDavku(false));
+  $('btnVse').addEventListener('click', () => spustDavku(true));
+  $('btnReset2').addEventListener('click', resetTretiny);
+  $('posRychlost').addEventListener('input', e => {
+    tretina.rychlost = +e.target.value;
+    $('hodRychlost').textContent = fmt1(tretina.rychlost) + '×';
+  });
   prekresliTretinu();
 }
 
-function nalij() {
-  if (tretina.bezi || tretina.naplneno >= 0.999) return;
+function resetTretiny() {
+  if (!$('scenaTretina')) return;
+  tretina.gen++;
+  tretina.faze = -1; tretina.t = 0; tretina.davky = 0;
+  tretina.zaklad = 0; tretina.auto = false; tretina.bezi = false;
+  prekresliTretinu();
+}
+
+function spustDavku(auto) {
+  const T = TVARY_TRETINA[tretina.tvar];
+  tretina.auto = auto;
+  if (tretina.bezi || tretina.davky >= T.davek) return;
+  tretina.faze = 0; tretina.t = 0;
+  tretina.zaklad = tretina.davky * T.podil;
   tretina.bezi = true;
-  const cil = Math.min(1, tretina.naplneno + 1 / 3);
-  const krok = () => {
-    if (!$('scenaTretina')) { tretina.bezi = false; return; }
-    tretina.naplneno = Math.min(cil, tretina.naplneno + 0.012);
-    prekresliTretinu();
-    if (tretina.naplneno < cil - 0.0001) requestAnimationFrame(krok);
-    else { tretina.naplneno = cil; tretina.bezi = false; prekresliTretinu(); }
+  tretina.cas = 0;
+  const moje = tretina.gen;
+  requestAnimationFrame(ts => tretinaKrok(ts, moje));
+}
+
+function tretinaKrok(ts, moje) {
+  if (!$('scenaTretina') || moje !== tretina.gen) return;
+  if (!tretina.cas) tretina.cas = ts;
+  const dt = Math.min(0.06, (ts - tretina.cas) / 1000) * tretina.rychlost;
+  tretina.cas = ts;
+  tretina.vlna += dt;
+  tretina.t += dt / FAZE_TRETINA[tretina.faze][1];
+  if (tretina.t >= 1) {
+    const T = TVARY_TRETINA[tretina.tvar];
+    if (FAZE_TRETINA[tretina.faze][0] === 'liti') {
+      tretina.davky++;
+      tretina.zaklad = tretina.davky * T.podil;
+    }
+    tretina.t = 0;
+    tretina.faze++;
+    if (tretina.faze >= FAZE_TRETINA.length) {
+      tretina.faze = -1;
+      tretina.bezi = false;
+      prekresliTretinu();
+      if (tretina.auto && tretina.davky < T.davek) spustDavku(true);
+      return;
+    }
+  }
+  prekresliTretinu();
+  requestAnimationFrame(t2 => tretinaKrok(t2, moje));
+}
+
+/* stav (q = naplnění zdroje, f = naplnění nádoby, ang/posun = poloha zdroje) */
+function stavTretiny() {
+  const T = TVARY_TRETINA[tretina.tvar];
+  const nazev = tretina.faze >= 0 ? FAZE_TRETINA[tretina.faze][0] : 'klid';
+  const t = hladkost(Math.min(1, Math.max(0, tretina.t)));
+  let q = 0, f = tretina.zaklad, prenos = 0;
+  if (nazev === 'napousteni') q = t;
+  else if (nazev === 'prenos') { q = 1; prenos = t; }
+  else if (nazev === 'liti') { q = 1 - t; f = tretina.zaklad + T.podil * t; prenos = 1; }
+  else if (nazev === 'navrat') { q = 0; prenos = 1 - t; }
+  return { T, nazev, q, f: Math.min(1, f), prenos };
+}
+
+/* výška hladiny ve zdroji podle objemového podílu q (přesně) */
+function hladinaZdroje(T, q) {
+  const R = T.R, V = T.V;
+  if (q <= 0) return { h: 0, r: 0 };
+  if (T.zdroj === 'koule') {
+    // q = h²(3R−h) / (4R³) – převrátíme půlením intervalu
+    let a = 0, b = 2 * R;
+    for (let i = 0; i < 40; i++) {
+      const m = (a + b) / 2;
+      if (m * m * (3 * R - m) / (4 * R * R * R) < q) a = m; else b = m;
+    }
+    const h = (a + b) / 2;
+    return { h, r: Math.sqrt(Math.max(0, h * (2 * R - h))) };
+  }
+  const h = V * (1 - Math.cbrt(1 - q));      // od podstavy nahoru
+  return { h, r: R * Math.cbrt(1 - q) };
+}
+
+/* Čtyřboký jehlan v kosoúhlé projekci: podstava ABCD (D je zadní, skrytý roh),
+   vrchol přesně nad jejím středem. Řez ve výšce hladiny je podobný rovnoběžník,
+   proto hladina vždy leží uvnitř tělesa. */
+function jehlanGeom(xK, ZEM, R, V) {
+  const d = R * 0.42, dy = d * 0.55;
+  return {
+    A: [xK - R, ZEM], B: [xK + R, ZEM],
+    C: [xK + R + d, ZEM - dy], D: [xK - R + d, ZEM - dy],
+    vrch: [xK + d / 2, ZEM - dy / 2 - V], d, dy,
   };
-  requestAnimationFrame(krok);
+}
+
+/* obrys zdrojového tělesa v klidové poloze */
+function siluetaZdroje(T, xK, ZEM) {
+  const R = T.R, V = T.V, ry = R * 0.3;
+  if (T.zdroj === 'kuzel') {
+    return `M${svgBod(xK, ZEM - V)} L${svgBod(xK - R, ZEM)}
+            A${R} ${ry} 0 0 0 ${svgBod(xK + R, ZEM)} Z`;
+  }
+  if (T.zdroj === 'jehlan') {
+    const g = jehlanGeom(xK, ZEM, R, V);
+    return `M${svgBod(...g.A)} L${svgBod(...g.B)} L${svgBod(...g.C)} L${svgBod(...g.vrch)} Z`;
+  }
+  const cy = ZEM - R;
+  return `M${svgBod(xK - R, cy)} A${R} ${R} 0 1 0 ${svgBod(xK + R, cy)}
+          A${R} ${R} 0 1 0 ${svgBod(xK - R, cy)} Z`;
+}
+
+/* svislý proud vody s vlnkou a kapkami */
+function proudVody(x, y1, y2, sirka, faze) {
+  if (y2 - y1 < 2) return '';
+  const n = 12, L = [], P = [];
+  for (let i = 0; i <= n; i++) {
+    const t = i / n, y = y1 + (y2 - y1) * t;
+    const posun = Math.sin(faze * 7 + t * 9) * 1.8 * t;
+    const w = sirka * (0.55 + 0.45 * Math.abs(Math.sin(faze * 6 + t * 7))) * (1 - 0.25 * t);
+    L.push(`${svgBod(x + posun - w / 2, y)}`);
+    P.unshift(`${svgBod(x + posun + w / 2, y)}`);
+  }
+  let kapky = '';
+  for (let k = 0; k < 3; k++) {
+    const t = ((faze * 1.3 + k / 3) % 1);
+    const y = y1 + (y2 - y1) * t;
+    const cx = x + Math.sin(faze * 7 + t * 9) * 2.6;
+    if (y < y2 - 3) {
+      kapky += `<ellipse class="kapka" cx="${cx.toFixed(1)}" cy="${y.toFixed(1)}" rx="2.2" ry="3.2"/>`;
+    }
+  }
+  return `<path class="proud" d="M${L.join(' L')} L${P.join(' L')} Z"/>` + kapky;
 }
 
 function prekresliTretinu() {
-  if (!$('scenaTretina')) return;
-  const ZEM2 = 210, V = 150, R = 46;
-  const xK = 110, xN = 290;
-  const jeKuzel = tretina.tvar === 'kuzel';
-  const f = tretina.naplneno;
+  const sc = $('scenaTretina');
+  if (!sc) return;
+  const { T, nazev, q, f, prenos } = stavTretiny();
+  const ZEM = 250, V = T.V, R = T.R, ry = R * 0.3;
+  const xK = 108, xN = 306;
+  const jeHranol = T.nadoba === 'hranol';
+  const skos = R * 0.42;
 
-  // vlevo zdrojové těleso, vpravo nádoba s hladinou
-  let zdroj;
-  if (jeKuzel) {
-    zdroj = `<path class="plast" d="M${xK} ${ZEM2 - V} L${xK - R} ${ZEM2}
-               A${R} ${R * 0.3} 0 0 0 ${xK + R} ${ZEM2} Z"/>
-             <ellipse class="zadni" cx="${xK}" cy="${ZEM2}" rx="${R}" ry="${R * 0.3}"/>`;
-  } else {
-    const h = R * 0.42;
-    zdroj = `<polygon class="plast" points="${xK},${ZEM2 - V} ${xK - R},${ZEM2} ${xK + R},${ZEM2}"/>
-             <polygon class="podstava" points="${xK - R},${ZEM2} ${xK + R},${ZEM2}
-               ${xK + R + h},${ZEM2 - h * 0.55} ${xK - R + h},${ZEM2 - h * 0.55}"/>`;
+  /* --- poloha zdroje: zvednutí a naklonění nad nádobu --- */
+  const uhelMax = T.zdroj === 'koule' ? 0 : 148;
+  const ang = uhelMax * prenos;
+  const px = xK, py = ZEM - V / 2;                    // střed otáčení
+  const otoc = (x, y) => {
+    const a = ang * Math.PI / 180, c = Math.cos(a), s = Math.sin(a);
+    return [px + (x - px) * c - (y - py) * s, py + (x - px) * s + (y - py) * c];
+  };
+  const geoJ = T.zdroj === 'jehlan' ? jehlanGeom(xK, ZEM, R, V) : null;
+  const vrchol = geoJ ? geoJ.vrch : [xK, ZEM - V];    // otvor tělesa
+  // hubička = nejnižší bod tělesa po naklonění (u koule spodek koule)
+  const kandidati = T.zdroj === 'koule'
+    ? [[xK, ZEM]]
+    : [otoc(xK - R, ZEM), otoc(xK + R, ZEM), otoc(...vrchol)];
+  const hubicka = kandidati.reduce((a, b) => (b[1] > a[1] ? b : a));
+  const cilH = [xN - (T.zdroj === 'koule' ? 0 : 6), ZEM - V - (T.zdroj === 'koule' ? 30 : 24)];
+  const tx = (cilH[0] - hubicka[0]) * prenos;
+  const ty = (cilH[1] - hubicka[1]) * prenos;
+  const transf = `translate(${svgBod(tx, ty).replace(' ', ',')}) rotate(${ang.toFixed(2)} ${svgBod(px, py)})`;
+  const hub = [hubicka[0] + tx, hubicka[1] + ty];
+
+  /* --- hladina ve zdroji --- */
+  const hz = hladinaZdroje(T, q);
+  let yHl;                                            // y hladiny ve scéně
+  const k = hz.r / R;                                 // zmenšení řezu proti podstavě
+  if (ang < 0.5) {
+    // u jehlanu leží hladina na přední hraně řezu, u ostatních na ose
+    yHl = (geoJ ? geoJ.vrch[1] + k * (ZEM - geoJ.vrch[1]) : ZEM - hz.h) + ty;
+  } else {                                            // nakloněno: lineárně mezi obalem
+    const rohy = [otoc(xK - R, ZEM), otoc(xK + R, ZEM), otoc(...vrchol), otoc(xK, ZEM)]
+      .map(b => b[1] + ty);
+    const yMin = Math.min(...rohy) - ry, yMax = Math.max(...rohy) + ry;
+    yHl = yMax - (yMax - yMin) * q;
   }
 
-  const hladina = ZEM2 - V * f;
-  let nadoba;
-  if (jeKuzel) {
-    nadoba = (f > 0.001
-      ? `<rect class="naplnene" x="${xN - R}" y="${hladina}" width="${R * 2}" height="${V * f}"/>
-         <ellipse class="naplnene" cx="${xN}" cy="${hladina}" rx="${R}" ry="${R * 0.3}"/>`
-      : '') +
-      `<ellipse class="obal" cx="${xN}" cy="${ZEM2 - V}" rx="${R}" ry="${R * 0.3}"/>
-      <line class="obal" x1="${xN - R}" y1="${ZEM2 - V}" x2="${xN - R}" y2="${ZEM2}"/>
-      <line class="obal" x1="${xN + R}" y1="${ZEM2 - V}" x2="${xN + R}" y2="${ZEM2}"/>
-      <ellipse class="obal" cx="${xN}" cy="${ZEM2}" rx="${R}" ry="${R * 0.3}"/>`;
+  const sil = siluetaZdroje(T, xK, ZEM);
+  const vlnkaZ = ang < 0.5 ? Math.sin(tretina.vlna * 5) * 0.6 : 0;
+
+  let zdroj = `<clipPath id="clipZdroj"><path d="${sil}" transform="${transf}"/></clipPath>`;
+  if (q > 0.001) {
+    zdroj += `<rect class="voda" x="0" y="${yHl.toFixed(1)}" width="430"
+                height="${Math.max(0, 300 - yHl).toFixed(1)}" clip-path="url(#clipZdroj)"/>
+              <rect class="hladina-pruh" x="0" y="${yHl.toFixed(1)}" width="430" height="2.5"
+                clip-path="url(#clipZdroj)"/>`;
+    if (ang < 0.5 && hz.r > 1) {
+      if (geoJ) {
+        const rez = b => svgBod(geoJ.vrch[0] + k * (b[0] - geoJ.vrch[0]) + tx,
+                                geoJ.vrch[1] + k * (b[1] - geoJ.vrch[1]) + ty).replace(' ', ',');
+        zdroj += `<polygon class="hladina" points="${[geoJ.A, geoJ.B, geoJ.C, geoJ.D].map(rez).join(' ')}"/>`;
+      } else {
+        zdroj += `<ellipse class="hladina" cx="${(xK + tx).toFixed(1)}" cy="${yHl.toFixed(1)}"
+                    rx="${hz.r.toFixed(1)}" ry="${(hz.r * 0.3 + vlnkaZ).toFixed(1)}"/>`;
+      }
+    }
+  }
+  zdroj += `<path class="plast" d="${sil}" transform="${transf}"/>`;
+  if (T.zdroj === 'kuzel') {
+    zdroj += `<ellipse class="zadni" cx="${xK}" cy="${ZEM}" rx="${R}" ry="${ry}"
+                transform="${transf}"/>`;
+  } else if (T.zdroj === 'jehlan') {
+    const b2 = p2 => svgBod(...p2).replace(' ', ',');
+    zdroj += `<polygon class="podstava" transform="${transf}"
+                points="${[geoJ.A, geoJ.B, geoJ.C, geoJ.D].map(b2).join(' ')}"/>
+              <line class="plast" transform="${transf}" x1="${geoJ.B[0]}" y1="${geoJ.B[1]}"
+                x2="${geoJ.vrch[0]}" y2="${geoJ.vrch[1]}"/>
+              <path class="zadni" transform="${transf}" d="M${svgBod(...geoJ.A)} L${svgBod(...geoJ.D)}
+                L${svgBod(...geoJ.C)} M${svgBod(...geoJ.D)} L${svgBod(...geoJ.vrch)}"/>`;
   } else {
-    nadoba = (f > 0.001
-      ? `<rect class="naplnene" x="${xN - R}" y="${hladina}" width="${R * 2}" height="${V * f}"/>` : '')
-      + `<rect class="obal" x="${xN - R}" y="${ZEM2 - V}" width="${R * 2}" height="${V}"/>`;
+    zdroj += `<ellipse class="zadni" cx="${xK}" cy="${ZEM - R}" rx="${R}" ry="${R * 0.32}"
+                transform="${transf}"/>`;
   }
 
-  const davky = Math.round(f * 3);
-  $('scenaTretina').innerHTML = zdroj + nadoba +
-    `<text class="popis" x="${xK}" y="${ZEM2 + 24}">${jeKuzel ? 'kužel' : 'jehlan'}</text>
-     <text class="popis" x="${xN}" y="${ZEM2 + 24}">${jeKuzel ? 'válec' : 'hranol'} — nalito ${davky}×</text>
-     <text class="popis v" x="${xN + R + 30}" y="${ZEM2 - V / 2}">stejné v</text>`;
+  /* --- nádoba a její hladina --- */
+  const yHlN = ZEM - V * f;
+  const vlnkaN = (nazev === 'liti' ? Math.sin(tretina.vlna * 9) * 1.4 : Math.sin(tretina.vlna * 2) * 0.4);
+  const dyN = skos * 0.55;
+  const clipN = jeHranol
+    ? `<polygon points="${xN - R},${ZEM - V} ${xN - R + skos},${ZEM - V - dyN}
+         ${xN + R + skos},${ZEM - V - dyN} ${xN + R + skos},${(ZEM - dyN).toFixed(1)}
+         ${xN + R},${ZEM} ${xN - R},${ZEM}"/>`
+    : `<path d="M${svgBod(xN - R, ZEM - V)} L${svgBod(xN - R, ZEM)}
+         A${R} ${ry} 0 0 0 ${svgBod(xN + R, ZEM)} L${svgBod(xN + R, ZEM - V)} Z"/>`;
+  let nadoba = `<clipPath id="clipNadoba">${clipN}</clipPath>`;
+  if (f > 0.0005) {
+    nadoba += `<rect class="voda" x="${xN - R - 2}" y="${yHlN.toFixed(1)}" width="${R * 2 + 4}"
+                 height="${(V * f + 4).toFixed(1)}" clip-path="url(#clipNadoba)"/>`;
+    nadoba += jeHranol
+      ? `<polygon class="hladina" points="${xN - R},${yHlN.toFixed(1)} ${xN + R},${yHlN.toFixed(1)}
+           ${xN + R + skos},${(yHlN - skos * 0.55).toFixed(1)} ${xN - R + skos},${(yHlN - skos * 0.55).toFixed(1)}"/>`
+      : `<ellipse class="hladina" cx="${xN}" cy="${yHlN.toFixed(1)}" rx="${R}"
+           ry="${(ry + vlnkaN).toFixed(1)}"/>`;
+  }
+  // rysky po dávkách
+  for (let i = 1; i <= T.davek; i++) {
+    const podil = Math.min(1, i * T.podil);
+    const y = ZEM - V * podil;
+    const popis = T.podil === 1 / 3 ? ['⅓', '⅔', '1'][i - 1] : '⅔';
+    const kraj = xN + R + (jeHranol ? skos : 0);
+    nadoba += `<line class="ryska" x1="${xN - R - 6}" y1="${y.toFixed(1)}" x2="${kraj + 6}" y2="${y.toFixed(1)}"/>
+      <text class="ryska-text" x="${kraj + 12}" y="${(y + 4).toFixed(1)}">${popis}</text>`;
+  }
+  nadoba += jeHranol
+    ? `<rect class="obal" x="${xN - R}" y="${ZEM - V}" width="${R * 2}" height="${V}"/>
+       <polygon class="obal" points="${xN - R},${ZEM - V} ${xN + R},${ZEM - V}
+         ${xN + R + skos},${(ZEM - V - dyN).toFixed(1)} ${xN - R + skos},${(ZEM - V - dyN).toFixed(1)}"/>
+       <polygon class="obal" points="${xN + R},${ZEM - V} ${xN + R + skos},${(ZEM - V - dyN).toFixed(1)}
+         ${xN + R + skos},${(ZEM - dyN).toFixed(1)} ${xN + R},${ZEM}"/>`
+    : `<ellipse class="obal" cx="${xN}" cy="${ZEM - V}" rx="${R}" ry="${ry}"/>
+       <line class="obal" x1="${xN - R}" y1="${ZEM - V}" x2="${xN - R}" y2="${ZEM}"/>
+       <line class="obal" x1="${xN + R}" y1="${ZEM - V}" x2="${xN + R}" y2="${ZEM}"/>
+       <ellipse class="obal" cx="${xN}" cy="${ZEM}" rx="${R}" ry="${ry}"/>`;
 
+  /* --- kohoutek a proudy vody --- */
+  const yUsti = 44, xUsti = vrchol[0];
+  const kohout = prenos > 0.02 ? '' : `<g class="kohout">
+      <rect x="0" y="14" width="13" height="28" rx="4"/>
+      <rect x="8" y="24" width="${(xUsti - 4).toFixed(1)}" height="9" rx="4"/>
+      <rect x="${(xUsti - 4.5).toFixed(1)}" y="24" width="9" height="${yUsti - 24}" rx="3"/>
+      <circle cx="24" cy="21" r="6"/>
+    </g>`;
+  let voda = '';
+  if (nazev === 'napousteni') {
+    voda += proudVody(xUsti, yUsti, yHl - 1, 9, tretina.vlna);
+    voda += `<ellipse class="cakanec" cx="${xUsti.toFixed(1)}" cy="${yHl.toFixed(1)}"
+      rx="${(6 + 8 * ((tretina.vlna * 2) % 1)).toFixed(1)}"
+      ry="${(2 + 2.4 * ((tretina.vlna * 2) % 1)).toFixed(1)}"/>`;
+  }
+  if (nazev === 'liti' && q > 0.004) {
+    voda += proudVody(hub[0], hub[1], yHlN - 1, 9, tretina.vlna + 0.4);
+    voda += `<ellipse class="cakanec" cx="${hub[0].toFixed(1)}" cy="${yHlN.toFixed(1)}"
+      rx="${(7 + 9 * ((tretina.vlna * 2.4) % 1)).toFixed(1)}"
+      ry="${(2 + 2.6 * ((tretina.vlna * 2.4) % 1)).toFixed(1)}"/>`;
+  }
+
+  /* --- popisky --- */
+  const hotovo = tretina.davky >= T.davek && !tretina.bezi;
+  const popisky = `
+    <line class="mira" x1="${xK - R - 26}" y1="${ZEM - V}" x2="${xN + R + 4}" y2="${ZEM - V}"/>
+    <text class="popis v vlevo" x="${xK - R - 26}" y="${ZEM - V - 8}">${T.zdroj === 'koule' ? 'výška válce = 2r' : 'stejná výška v'}</text>
+    <text class="popis" x="${xK}" y="${ZEM + 26}">${T.nazevZ}</text>
+    <text class="popis" x="${xN}" y="${ZEM + 26}">${T.nazevN}</text>
+    <text class="popis s" x="${xN}" y="${ZEM + 43}">nalito ${tretina.davky}× z ${T.davek}</text>`;
+
+  sc.innerHTML = kohout + zdroj + nadoba + voda + popisky;
+
+  /* --- čísla a texty pod scénou --- */
+  const cil = T.davek * T.podil;
   $('hodNaplneno').textContent = Math.round(f * 100) + ' %';
-  $('popisTretina').innerHTML = f >= 0.999
-    ? 'Přesně <b>třikrát</b> — proto je ve vzorci ta <b>jedna třetina</b>: '
-      + `V<sub>${jeKuzel ? 'kužele' : 'jehlanu'}</sub> = ⅓ · S<sub>p</sub> · v.`
-    : `Nalito ${davky}× ze 3. ${davky ? 'Zkus další dávku.' : 'Zmáčkni „Nalij jednu dávku“.'}`;
+  $('zadaniTretina').innerHTML = T.zdroj === 'koule'
+    ? 'Jakou část <b>opsaného válce</b> (stejný poloměr, výška 2r) zaplní voda z <b>koule</b>? '
+      + 'Napusť kouli a přelij ji.'
+    : `Kolikrát se musí <b>${T.nazevZ}</b> vylít do <b>${T.nazevN === 'hranol' ? 'hranolu' : 'válce'}</b> `
+      + 'se <b>stejnou podstavou i výškou</b>, než ho naplní? Napusť těleso vodou a přelij ji.';
+  $('btnNalij').disabled = tretina.bezi || tretina.davky >= T.davek;
+  $('btnVse').disabled = tretina.bezi || tretina.davky >= T.davek || T.davek < 2;
+  $('btnReset2').disabled = tretina.bezi || (tretina.davky === 0 && f < 0.001);
+
+  $('vypocetTretina').innerHTML = `
+    <div class="karticka objem">
+      <div class="nadpis">${T.nazevZ} (${T.rozmery})</div>
+      <div class="radek">${T.vzorecZ}</div>
+      <div class="radek vysledek">${fmt(T.hodnotaZ)} cm³</div>
+    </div>
+    <div class="karticka povrch">
+      <div class="nadpis">${T.nazevN}</div>
+      <div class="radek">${T.vzorecN}</div>
+      <div class="radek vysledek">${fmt(T.hodnotaN)} cm³</div>
+    </div>
+    <div class="karticka pomer">
+      <div class="nadpis">Nalito</div>
+      <div class="radek">${tretina.davky} × ${fmt(T.hodnotaZ)} = ${fmt(tretina.davky * T.hodnotaZ)} cm³
+        z ${fmt(T.hodnotaN)} cm³</div>
+      <div class="radek vysledek">${Math.round(f * 100)} % nádoby</div>
+    </div>
+    <div class="karticka pomer">
+      <div class="nadpis">Poměr objemů</div>
+      <div class="radek">${fmt(T.hodnotaZ)} : ${fmt(T.hodnotaN)}</div>
+      <div class="radek vysledek">= ${T.podil === 1 / 3 ? '1 : 3  →  ⅓' : '2 : 3  →  ⅔'}</div>
+    </div>`;
+
+  let text;
+  if (hotovo && T.zdroj === 'koule') {
+    text = 'Koule zaplnila přesně <b>dvě třetiny</b> opsaného válce (stejný poloměr, výška 2r). '
+      + 'Proto V<sub>koule</sub> = ⅔ · πr² · 2r = <b>4/3 · πr³</b>. '
+      + 'A zbylá třetina válce? To je právě kužel se stejnou podstavou a výškou.';
+  } else if (hotovo) {
+    text = `Přesně <b>třikrát</b> — proto je ve vzorci ta <b>jedna třetina</b>: `
+      + `V<sub>${T.zdroj === 'kuzel' ? 'kužele' : 'jehlanu'}</sub> = ⅓ · S<sub>p</sub> · v. `
+      + `Zkus i ostatní tělesa.`;
+  } else if (nazev === 'napousteni') {
+    text = `Napouštím ${T.nazevZ} — voda stoupá, ale u špičatého tělesa <b>nerovnoměrně</b>: `
+      + 'dole je ho víc než nahoře.';
+  } else if (nazev === 'prenos') text = 'Zvedám plné těleso nad nádobu…';
+  else if (nazev === 'liti') text = `Přelévám do ${T.nazevN === 'hranol' ? 'hranolu' : 'válce'} — sleduj rysky.`;
+  else if (nazev === 'navrat') text = 'Hotovo, vracím prázdné těleso zpět.';
+  else if (tretina.davky === 0) text = 'Zmáčkni <b>„Napustit a přelít“</b> a počítej dávky. '
+    + `Kolik jich bude potřeba na ${T.davek === 1 ? 'celý' : 'celou'} nádobu?`;
+  else text = `Nalito ${tretina.davky}× z ${T.davek}. Zkus další dávku.`;
+  $('popisTretina').innerHTML = text;
 }
 
 /* ============================================================
@@ -653,7 +987,7 @@ function novaUloha() {
     prekresliSit();
     return;
   }
-  if (rezim === 'tretina') { tretina.naplneno = 0; prekresliTretinu(); return; }
+  if (rezim === 'tretina') { resetTretiny(); return; }
   REZIMY[rezim]();
 }
 
