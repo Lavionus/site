@@ -1,7 +1,7 @@
 # Revize webu — nálezy a provedené opravy
 
 Revize proběhla 26. 8. 2026 nad všemi **517 stránkami** (264 v `obsah/`, 253 v
-`nodus/obsah/`). Všechny nálezy z ní jsou **opravené**; tenhle dokument je
+`metodus/obsah/`). Všechny nálezy z ní jsou **opravené**; tenhle dokument je
 zároveň zápisem, co se změnilo a proč.
 
 Ověřeno automaticky (nástroje leží v `_test/`, složka je v `.gitignore`):
@@ -12,13 +12,13 @@ Ověřeno automaticky (nástroje leží v `_test/`, složka je v `.gitignore`):
 | `_test/sweep.py` — načtení všech 517 stránek | **0 stránek neshodilo JS** |
 | `_test/syntaxe.py` — `node --check` nad 541 skripty | **0 syntaktických chyb** |
 | `_test/async_pasti.py` — hlídač async návratových hodnot | **0 nálezů** |
-| katalogy `apps.js` / `nodus/apps.js` | 264 + 250 položek, **0 chybějících souborů** |
+| katalogy `apps.js` / `metodus/apps.js` | 264 + 250 položek, **0 chybějících souborů** |
 
 ---
 
 ## Co se nedotklo
 
-Rozcestníky (hledání, oblíbené, nedávné, filtry Nodusu), `flashcards`, `chess`
+Rozcestníky (hledání, oblíbené, nedávné, filtry Metodusu), `flashcards`, `chess`
 (minimax + alfa-beta), `statistics`, `word_counter`, `cable_sizing_calc`,
 `dew_point`, `forecast`, `Heritage`, `trip_planner` — tyhle části jsou v pořádku
 a měnily se jen tam, kde do nich zasáhla některá ze systémových oprav.
@@ -49,7 +49,7 @@ s jednotným pruhem „🏆 Nejlepší: … ↺“ a klíči `webapp_hra_*`. Nas
 Bez rekordu zůstávají už jen čtyři a záměrně: `crossword_gen` a `bingo_gen` jsou
 generátory, `dwarf_colony` a `pirateers` otevřené sandboxy bez konce hry.
 
-### A2 · Nodus: 74 stránek mimo vlastní standard ✅
+### A2 · Metodus: 74 stránek mimo vlastní standard ✅
 
 `uloha.js` uměl jen úlohy, kde se **klepe na možnost** — proto stránky s psanou
 odpovědí stály mimo. Vznikl proto modul **`procvic.js`**, který stejná pravidla
@@ -68,7 +68,7 @@ Sedmička kvízů byla převedená:
   rekord, zápis do `Uloha.skore` a barvy z tokenů. `mental_math` navíc přenese
   starý rekord z klíče `mentalmath_best`.
 
-> **Zbývá do budoucna:** zbylých ~67 nestandardních stránek Nodusu jsou z velké
+> **Zbývá do budoucna:** zbylých ~67 nestandardních stránek Metodusu jsou z velké
 > části referenční a simulační (`periodic_table`, `optika`, `paka`,
 > `slepa_mapa_evropa`…), kde `uloha.js` nedává smysl. Sjednocení jejich hlaviček
 > je kosmetická práce na samostatnou dávku.
@@ -77,11 +77,11 @@ Sedmička kvízů byla převedená:
 
 `edu_progress.html` si dřív musel uživatel naklikat celý ručně. Teď:
 
-- **`uloha.js` vede deník činnosti** (`nodus_aktivita`) — u každé odpovědi zapíše
+- **`uloha.js` vede deník činnosti** (`metodus_aktivita`) — u každé odpovědi zapíše
   datum, název stránky a poměr správně/pokusů. Název stránky bereme z adresy,
   protože klíče skóre se na soubory namapovat nedají (33 ze 171 má zkrácený tvar).
 - Deník z toho **sám** počítá sérii dní, kalendář, celkový počet odpovědí
-  a úspěšnost; předmět si dohledá v `nodus/apps.js`.
+  a úspěšnost; předmět si dohledá v `metodus/apps.js`.
 - Přibyl přehled **„co ti jde a co drhne“** — témata seřazená podle úspěšnosti
   napoprvé, s odkazem rovnou na procvičení.
 - Ruční zaškrtávání zůstalo jako doplněk (zeleně automatické, modře ruční).
@@ -165,5 +165,5 @@ jinak by se nedaly zachytit chyby z prvního běhu skriptů. Testy interakce bě
 v reálném čase; `--virtual-time-budget` se nepoužívá, protože v něm neběží
 `requestAnimationFrame`.
 
-> Po nasazení zvyš verzi cache: `sw.js` je na `webapp-v71`, `nodus/sw.js` na
-> `nodus-v31` — obojí už zvednuté touto dávkou.
+> Po nasazení zvyš verzi cache: `sw.js` je na `webapp-v71`, `metodus/sw.js` na
+> `metodus-v31` — obojí už zvednuté touto dávkou.

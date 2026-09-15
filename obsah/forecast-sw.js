@@ -27,8 +27,8 @@ self.addEventListener('activate', (event) => {
   event.waitUntil(
     caches.keys()
       // Mazat jen VLASTNÍ staré cache. Na stejném originu běží i service worker
-      // rozcestníku (webapp-*) a Nodusu (nodus-*); bez filtru na prefix by si
-      // weby navzájem mazaly offline cache při každé aktualizaci verze.
+      // rozcestníku (webapp-*); bez filtru na prefix by si weby navzájem mazaly
+      // offline cache při každé aktualizaci verze.
       .then((keys) => Promise.all(
         keys.filter((k) => k.startsWith(PREFIX) && k !== CACHE_NAME).map((k) => caches.delete(k))
       ))

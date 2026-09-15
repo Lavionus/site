@@ -6,22 +6,39 @@ Statický web se sbírkou malých HTML aplikací, hostovaný na GitHub Pages
 | Cesta | Web | Katalog | Stránky |
 |---|---|---|---|
 | `/` | hlavní rozcestník – 273 aplikací | `apps.js` | `obsah/` |
-| `/nodus/` | ◈ **Nodus** – výukový web: 77 aplikací + 174 připravovaných témat podle osnov ZŠ | `nodus/apps.js` | `nodus/obsah/` |
 
-Nodus má vlastní rozcestník, úvodní přehled, ikony, manifest i service worker,
-takže se dá nasadit i samostatně – podrobnosti v [`nodus/README.md`](nodus/README.md).
-Hlavní web na něj odkazuje z menu a z úvodní stránky; staré odkazy
-`index.html#obsah/<výuková aplikace>` se automaticky přesměrují.
+## Tři oddělené weby
+
+Výukový web **Metodus** a jeho **ukázková stránka** tady od září 2026 nejsou.
+Každý má vlastní složku, vlastní repozitář a vlastní GitHub Pages — schválně,
+aby se z jednoho nedalo odmazáním adresy v prohlížeči dojít na druhý:
+
+| Složka (vedle téhle) | Repozitář | Adresa |
+|---|---|---|
+| `---------------github_site` | `Lavionus/site` | <https://lavionus.github.io/site/> |
+| `metodus` | `Lavionus/metodus` | <https://lavionus.github.io/metodus/> |
+| `metodus-ukazka` | `Lavionus/metodus-ukazka` | <https://lavionus.github.io/metodus-ukazka/> |
+
+Proto **tenhle web na Metodus nikde neodkazuje** — ani z menu, ani z úvodní
+stránky, ani přesměrováním starých `#obsah/<výuková aplikace>` (neznámý hash
+otevře domovskou stránku). Když se sem přidá odkaz na Metodus, ztratí celé
+oddělení smysl.
+
+Dvě věci si hlavní web kvůli tomu drží ve vlastní kopii:
+`obsah/textures/8k_earth_{daymap,nightmap}.jpg` pro `obsah/weather_globe.html`
+a `obsah/historicke_mapy_odkazy.html` pro mapové nástroje. Dřív si obojí půjčoval
+z `metodus/`. Když se předloha v Metodusu změní, je potřeba kopii obnovit ručně.
 
 ```bash
 ./test_local.sh          # lokální server na http://localhost:8000 (nikdy file://)
-./upload.sh "zpráva"     # commit + pull --rebase + push
+./upload.sh "zpráva"     # nahraje VŠECHNY TŘI weby (ukázku si předtím vyrobí ze zdroje)
+./upload.sh -n           # nasucho: ukáže, co by se nahrálo, a nic neodešle
 ```
 
 Podpis autora (`Webové stránky © Radovan Valenta · hdm@seznam.cz`) vykresluje
-`podpis.js` ve vlastním pruhu u spodní hrany okna (22 px, text vpravo) – `nodus/`
-má vlastní kopii, aby zůstal soběstačný, a v ní je název díla `Nodus`
-(konstanta `DILO` na začátku souboru). Každá nová stránka ho musí mít v `<head>`:
+`podpis.js` ve vlastním pruhu u spodní hrany okna (22 px, text vpravo) – Metodus
+má ve svém repozitáři vlastní kopii s vlastním názvem díla (konstanta `DILO`
+na začátku souboru). Každá nová stránka ho musí mít v `<head>`:
 `<script src="../podpis.js" defer></script>`. Pruh obsah nepřekrývá: tělu se
 přidá spodní odsazení, `100vh` v CSS stránky se zmenší o výšku pruhu a prvky
 ukotvené napevno u spodní hrany se nad něj posunou. Uvnitř rozcestníku se
@@ -76,5 +93,5 @@ a automat by se zasekl v půli. Celé dokončení je v historii jeden krok, tak�
 Zpět vrátí najednou. Ze sloupce se smí brát jen sestupná řada střídavých barev
 (`jeSekvence`) a na prázdný sloupec smí jen král – jako v pravidlech.
 
-Po větší změně zvyš verzi cache v `sw.js` (`webapp-vN`), resp. v `nodus/sw.js`
-(`nodus-vN`) – jinak návštěvník uvidí novou verzi až při druhém načtení.
+Po větší změně zvyš verzi cache v `sw.js` (`webapp-vN`) – jinak návštěvník uvidí
+novou verzi až při druhém načtení. Metodus má svou vlastní v `../metodus/sw.js`.

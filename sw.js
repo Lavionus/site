@@ -5,7 +5,7 @@
 /* Při větší aktualizaci webu zvyš číslo verze — stará cache se u návštěvníků
    smaže a vše se stáhne čerstvé (jinak SWR ukáže novou verzi až na druhé načtení). */
 const PREFIX = 'webapp-';
-const CACHE = PREFIX + 'v100';
+const CACHE = PREFIX + 'v102';
 const JADRO = [
   './',
   './index.html',
@@ -30,8 +30,9 @@ self.addEventListener('activate', e => {
   e.waitUntil(
     caches.keys()
       // Mazat jen VLASTNÍ staré cache. Na stejném originu běží i service worker
-      // Nodusu (nodus-*) a stránky Předpověď počasí (forecast-*); bez filtru na
-      // prefix by si weby navzájem mazaly offline cache při každé aktualizaci.
+      // stránky Předpověď počasí (forecast-*); bez filtru na prefix by si weby
+      // navzájem mazaly offline cache při každé aktualizaci. (Výukový web má
+      // dnes vlastní origin, jeho cache metodus-* se odsud nedají ani vidět.)
       .then(keys => Promise.all(
         keys.filter(k => k.startsWith(PREFIX) && k !== CACHE).map(k => caches.delete(k))
       ))
