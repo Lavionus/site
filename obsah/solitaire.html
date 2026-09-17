@@ -8,30 +8,128 @@
 <script src="../theme.js"></script>
 <script src="../podpis.js" defer></script>
 <script src="../rekord.js" defer></script>
+<script>
+/* Motiv (barevné ladění stolu a karet) nastavíme ještě před vykreslením,
+   aby stránka neproblikla světlým pozadím. Ukládá se do localStorage. */
+(function(){
+  try{ var m=localStorage.getItem('webapp_hra_solitaire_motiv'); }catch{ m=null; }
+  document.documentElement.dataset.motiv = m || 'sukno';
+})();
+</script>
 <style>
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1f4e2e;color:var(--text);min-height:100vh;padding:14px}
-.container{max-width:820px;margin:0 auto}
-h1{font-size:1.4rem;margin-bottom:10px;font-weight:600;text-align:center;color:#fff}
+
+/* ============================================================
+   Barevné motivy. Cílem je hraní bez svícení do očí: stůl i líc
+   karet jsou u tmavých motivů ztlumené (žádná bílá #fff), ale
+   kontrast hodnot na kartě zůstává vysoký kvůli čitelnosti.
+   ============================================================ */
+:root[data-motiv="sukno"]{
+  --stul:#2b4536; --stul-2:#243b2d; --stul-text:#c6d8c9;
+  --karta:#e9e3d5; --karta-okraj:#b3ab98; --karta-stin:rgba(0,0,0,.45);
+  --cervena:#a32a2c; --cerna:#23252b; --stred-pruh:.16;
+  --rub-1:#33543f; --rub-2:#456b52; --rub-okraj:#5d8168;
+  --slot:rgba(255,255,255,.22); --vyber:#e8c15a; --tip:#5fb8e8;
+  --btn:#34614180; --btn-okraj:#5f8f6c; --btn-text:#dff0e2; --zprava:#e8c15a;
+}
+:root[data-motiv="noc"]{
+  --stul:#16202e; --stul-2:#111a26; --stul-text:#b8c6d8;
+  --karta:#d6d0c1; --karta-okraj:#9d9784; --karta-stin:rgba(0,0,0,.55);
+  --cervena:#9c3033; --cerna:#1b1e24; --stred-pruh:.15;
+  --rub-1:#22344a; --rub-2:#2f475f; --rub-okraj:#42607d;
+  --slot:rgba(255,255,255,.18); --vyber:#d8b45a; --tip:#4f9fd0;
+  --btn:#22344a; --btn-okraj:#3d5a75; --btn-text:#cfdcea; --zprava:#d8b45a;
+}
+:root[data-motiv="uhel"]{
+  --stul:#1b1c1e; --stul-2:#151618; --stul-text:#bdbdb8;
+  --karta:#ccc7ba; --karta-okraj:#928d80; --karta-stin:rgba(0,0,0,.6);
+  --cervena:#96312f; --cerna:#1a1c1f; --stred-pruh:.15;
+  --rub-1:#2a2c2f; --rub-2:#3a3d41; --rub-okraj:#4d5155;
+  --slot:rgba(255,255,255,.16); --vyber:#c9a84f; --tip:#5aa0c4;
+  --btn:#2c2e31; --btn-okraj:#494c50; --btn-text:#d2d2cd; --zprava:#c9a84f;
+}
+:root[data-motiv="sepie"]{
+  --stul:#2b2219; --stul-2:#241c15; --stul-text:#d3c1a6;
+  --karta:#e3d5b9; --karta-okraj:#ab9974; --karta-stin:rgba(0,0,0,.5);
+  --cervena:#96351f; --cerna:#2a2318; --stred-pruh:.17;
+  --rub-1:#43301f; --rub-2:#5b422c; --rub-okraj:#6f5338;
+  --slot:rgba(255,235,200,.22); --vyber:#d8a73f; --tip:#69a7b5;
+  --btn:#3d2e20; --btn-okraj:#63492f; --btn-text:#e0cfae; --zprava:#d8a73f;
+}
+:root[data-motiv="les"]{
+  --stul:#15241d; --stul-2:#101c17; --stul-text:#aec5b4;
+  --karta:#cdd2c4; --karta-okraj:#949a89; --karta-stin:rgba(0,0,0,.55);
+  --cervena:#8d3134; --cerna:#161d19; --stred-pruh:.15;
+  --rub-1:#1e3329; --rub-2:#2c4737; --rub-okraj:#3d6049;
+  --slot:rgba(255,255,255,.16); --vyber:#c5a94f; --tip:#57a394;
+  --btn:#1f3529; --btn-okraj:#3a5a45; --btn-text:#c6d8ca; --zprava:#c5a94f;
+}
+:root[data-motiv="den"]{
+  --stul:#d9e2dc; --stul-2:#cdd8d1; --stul-text:#2c3a33;
+  --karta:#fffdf7; --karta-okraj:#b9bdb4; --karta-stin:rgba(0,0,0,.25);
+  --cervena:#b32020; --cerna:#1b1b1b; --stred-pruh:.2;
+  --rub-1:#5b7ea8; --rub-2:#7a9cc2; --rub-okraj:#48688c;
+  --slot:rgba(0,0,0,.25); --vyber:#b8860b; --tip:#1d6fa5;
+  --btn:#ffffff; --btn-okraj:#9aa79f; --btn-text:#24312b; --zprava:#8a6200;
+}
+
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  background:var(--stul);color:var(--stul-text);min-height:100vh;padding:14px}
+.container{max-width:820px;margin:0 auto;
+  /* velikost písma na kartách dopočítává render() podle šířky karty */
+  --pismo-roh:18px; --pismo-stred:38px}
+h1{font-size:1.4rem;margin-bottom:10px;font-weight:600;text-align:center;color:var(--stul-text)}
 .horni,.dolni{display:grid;grid-template-columns:repeat(7,1fr);gap:8px;margin-bottom:14px}
-.slot{aspect-ratio:0.7;border:2px dashed rgba(255,255,255,.25);border-radius:8px;position:relative}
+.slot{aspect-ratio:0.7;border:2px dashed var(--slot);border-radius:8px;position:relative}
 .sloupec{aspect-ratio:auto;min-height:120px;position:relative}
-.karta{position:absolute;width:100%;aspect-ratio:0.7;background:#fff;border-radius:8px;border:1px solid var(--text-faint);cursor:pointer;padding:4px 6px;font-weight:700;font-size:clamp(.8rem,2.4vw,1.15rem);line-height:1.1;box-shadow:0 1px 3px rgba(0,0,0,.4)}
-.karta.cervena{color:#c62828}.karta.cerna{color:#212121}
-.karta.rub{background:linear-gradient(135deg,#3949ab 25%,#5c6bc0 25% 50%,#3949ab 50% 75%,#5c6bc0 75%);color:transparent}
-.karta.vybrana{outline:3px solid #ffd54f;outline-offset:-2px}
-.karta .dole{position:absolute;bottom:4px;right:6px;transform:rotate(180deg)}
-.stat{display:flex;flex-wrap:wrap;gap:8px;justify-content:space-between;align-items:center;margin-bottom:8px;color:#cfe8d6;font-size:.9rem}
-.btn{background:#2e7d32;color:#fff;border:1px solid #4caf50;padding:8px 14px;border-radius:6px;cursor:pointer;font-weight:600;font-size:.85rem}
+
+/* ---- karta ---- */
+.karta{position:absolute;width:100%;aspect-ratio:0.7;background:var(--karta);border-radius:8px;
+  border:1px solid var(--karta-okraj);cursor:pointer;overflow:hidden;
+  font-weight:800;font-variant-numeric:tabular-nums;line-height:1;
+  box-shadow:0 1px 3px var(--karta-stin)}
+.karta.cervena{color:var(--cervena)}
+.karta.cerna{color:var(--cerna)}
+.karta .roh{position:absolute;top:4px;left:5px;display:flex;align-items:center;gap:.08em;
+  font-size:var(--pismo-roh);letter-spacing:-.02em;white-space:nowrap}
+.karta .roh i{font-style:normal;font-size:1.05em}
+.karta .dole{top:auto;left:auto;bottom:4px;right:5px;transform:rotate(180deg)}
+/* velký středový symbol – hlavní vodítko, když se na kartu díváš bez brýlí */
+.karta .stred{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  font-size:var(--pismo-stred);opacity:var(--stred-pruh);pointer-events:none}
+.karta.rub{background:
+  repeating-linear-gradient(135deg,var(--rub-1) 0 10px,var(--rub-2) 10px 20px);
+  border-color:var(--rub-okraj)}
+.karta.vybrana{outline:3px solid var(--vyber);outline-offset:-3px}
+
+.stat{display:flex;flex-wrap:wrap;gap:8px;justify-content:space-between;align-items:center;
+  margin-bottom:8px;color:var(--stul-text);font-size:.9rem}
+.btn{background:var(--btn);color:var(--btn-text);border:1px solid var(--btn-okraj);padding:8px 14px;
+  border-radius:6px;cursor:pointer;font-weight:600;font-size:.85rem}
 .btn:disabled{opacity:.4;cursor:default}
-.zprava{min-height:1.3em;margin-bottom:10px;text-align:center;font-size:.9rem;color:#ffd54f}
-.zprava.konec{color:#ff8a80;font-weight:600}
-.karta.napoveda{outline:3px solid #4fc3f7;outline-offset:-2px;animation:puls .9s ease-in-out infinite}
-.slot.napoveda{border-color:#4fc3f7;box-shadow:0 0 0 2px rgba(79,195,247,.55)}
-@keyframes puls{50%{outline-color:rgba(79,195,247,.2)}}
-.vyhra{position:fixed;inset:0;background:rgba(0,0,0,.75);display:none;align-items:center;justify-content:center;flex-direction:column;gap:16px;z-index:10}
+.zprava{min-height:1.3em;margin-bottom:10px;text-align:center;font-size:.9rem;color:var(--zprava)}
+.zprava.konec{color:#e8726b;font-weight:600}
+
+/* ---- lišta motivů ---- */
+.motivy{display:flex;flex-wrap:wrap;gap:6px;justify-content:center;align-items:center;margin-bottom:10px}
+.motivy .popis{font-size:.7rem;letter-spacing:1px;text-transform:uppercase;opacity:.7;margin-right:2px}
+.motivy button{display:flex;align-items:center;gap:6px;background:var(--btn);color:var(--btn-text);
+  border:1px solid var(--btn-okraj);border-radius:14px;padding:5px 11px 5px 6px;
+  font:inherit;font-size:.78rem;font-weight:600;cursor:pointer;opacity:.72}
+.motivy button:hover{opacity:1}
+.motivy button.sel{opacity:1;border-color:var(--vyber);box-shadow:0 0 0 1px var(--vyber)}
+.motivy .vzorek{width:16px;height:16px;border-radius:50%;border:1px solid rgba(0,0,0,.35);
+  background:linear-gradient(135deg,var(--u-stul) 0 50%,var(--u-karta) 50% 100%);flex:none}
+
+.karta.napoveda{outline:3px solid var(--tip);outline-offset:-3px;animation:puls .9s ease-in-out infinite}
+.slot.napoveda{border-color:var(--tip);box-shadow:0 0 0 2px var(--tip)}
+@keyframes puls{50%{outline-color:transparent}}
+.vyhra{position:fixed;inset:0;background:rgba(0,0,0,.78);display:none;align-items:center;
+  justify-content:center;flex-direction:column;gap:16px;z-index:10}
 .vyhra.zobraz{display:flex}
-.vyhra h2{font-size:2.2rem;color:#ffd54f}
+.vyhra h2{font-size:2.2rem;color:var(--vyber);text-align:center;padding:0 16px}
+.prazdny{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;
+  color:var(--slot);font-size:var(--pismo-stred)}
 </style>
 </head>
 <body>
@@ -45,6 +143,7 @@ h1{font-size:1.4rem;margin-bottom:10px;font-weight:600;text-align:center;color:#
     <button class="btn" id="nova">↺ Nová hra</button>
     <span id="rekordBox"></span>
   </div>
+  <div class="motivy" id="motivy"></div>
   <div class="zprava" id="zprava"></div>
   <div class="horni">
     <div class="slot" id="balicek" title="Klikni pro otočení karty"></div>
@@ -100,39 +199,77 @@ function novaHra(){
   aktualizujZpet();ulozHru();zvyrazni(null);zprava('');
   render();
 }
+/* Roh karty nese hodnotu i symbol vedle sebe (vejde se do úzkého pruhu
+   překrytých karet), uprostřed je navíc velký symbol barvy. */
 function kartaHtml(k,vybr){
-  const text=HODN[k.h]+BARVY[k.b];
-  return `<div class="karta ${k.licem?(jeCervena(k.b)?'cervena':'cerna'):'rub'} ${vybr?'vybrana':''}">${k.licem?text+`<span class="dole">${text}</span>`:''}</div>`;
+  const v=vybr?' vybrana':'';
+  if(!k.licem)return `<div class="karta rub${v}"></div>`;
+  const h=HODN[k.h],b=BARVY[k.b];
+  const roh=`<b>${h}</b><i>${b}</i>`;
+  return `<div class="karta ${jeCervena(k.b)?'cervena':'cerna'}${v}">`+
+    `<span class="roh">${roh}</span>`+
+    `<span class="stred">${b}</span>`+
+    `<span class="roh dole">${roh}</span></div>`;
+}
+/* Rozměry počítáme z reálné šířky karty, ne z vw – kontejner má strop 820 px,
+   takže na širokém monitoru by vw písmo přerostlo kartu. */
+function rozmery(){
+  const kontejner=$('sloupce');
+  const sirka=(kontejner.clientWidth-6*8)/7;      // 7 sloupců, 6 mezer po 8 px
+  const vyska=sirka/0.7;
+  document.querySelector('.container').style.setProperty('--pismo-roh',Math.round(vyska*0.20)+'px');
+  document.querySelector('.container').style.setProperty('--pismo-stred',Math.round(vyska*0.42)+'px');
+  return{sirka,vyska};
+}
+/* Rubem otočené karty stačí naznačit úzkým proužkem, lícové potřebují tolik
+   místa, aby byl vidět celý roh s hodnotou – jinak by se velké písmo zakrylo. */
+function kroky(vyska){
+  const rub=Math.max(9,Math.round(vyska*0.13));
+  let lic=Math.round(vyska*0.32);
+  const minLic=Math.round(vyska*0.24);
+  const STROP=620;                                 // nad tím už je sloupec neúnosně dlouhý
+  let nejdelsi=0,rubuTam=0,licuTam=0;
+  sloupce.forEach(sl=>{
+    const r=sl.filter(k=>!k.licem).length,l=sl.length-r;
+    if(r*rub+l*lic>nejdelsi){nejdelsi=r*rub+l*lic;rubuTam=r;licuTam=l;}
+  });
+  if(nejdelsi>STROP&&licuTam>1)
+    lic=Math.max(minLic,Math.floor((STROP-rubuTam*rub)/licuTam));
+  return{rub,lic};
 }
 function render(){
   $('tahy').textContent=tahu;
+  const{vyska}=rozmery();
   // balíček
-  $('balicek').innerHTML=balicek.length?kartaHtml({licem:false}):'<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.4);font-size:1.6rem">↺</div>';
+  $('balicek').innerHTML=balicek.length?kartaHtml({licem:false}):'<div class="prazdny">↺</div>';
   // odkládací
   const od=odkladaci[odkladaci.length-1];
   $('odkladaci').innerHTML=od?kartaHtml(od,vybrano&&vybrano.typ==='odkladaci'):'';
   // základy
   document.querySelectorAll('.zaklad').forEach((el,i)=>{
     const k=zaklady[i][zaklady[i].length-1];
-    el.innerHTML=k?kartaHtml(k):`<div style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,.3);font-size:1.5rem">${BARVY[i]}</div>`;
+    el.innerHTML=k?kartaHtml(k):`<div class="prazdny">${BARVY[i]}</div>`;
   });
   // sloupce
   const kontejner=$('sloupce');
   kontejner.innerHTML='';
-  const krok=Math.min(26,Math.max(14,Math.floor(340/Math.max(...sloupce.map(s=>s.length),1))));
+  const krok=kroky(vyska);
   sloupce.forEach((sl,si)=>{
     const div=document.createElement('div');
     div.className='slot sloupec';
     div.dataset.s=si;
-    div.style.minHeight=(120+sl.length*krok)+'px';
+    let y=0,konec=0;
+    const w=document.createElement('div');
     sl.forEach((k,ki)=>{
-      const w=document.createElement('div');
       w.innerHTML=kartaHtml(k,vybrano&&vybrano.typ==='sloupec'&&vybrano.s===si&&ki>=vybrano.i);
       const el=w.firstChild;
-      el.style.top=(ki*krok)+'px';
+      el.style.top=y+'px';
       el.dataset.s=si;el.dataset.i=ki;
       div.appendChild(el);
+      konec=y;
+      y+=k.licem?krok.lic:krok.rub;
     });
+    div.style.minHeight=Math.round(konec+vyska)+'px';
     kontejner.appendChild(div);
   });
   aktualizujTlacitka();
@@ -430,7 +567,7 @@ function obsluhaKliku(e){
 document.addEventListener('click',e=>{
   if(automat)return;
   if(e.target.closest('#zpet')||e.target.closest('#nova')||e.target.closest('#vyhra')
-     ||e.target.closest('#napoveda')||e.target.closest('#dokonci'))return;
+     ||e.target.closest('#napoveda')||e.target.closest('#dokonci')||e.target.closest('#motivy'))return;
   const pred=stav();
   zvyrazni(null);
   obsluhaKliku(e);
@@ -451,6 +588,47 @@ $('zpet').onclick=zpet;
 $('napoveda').onclick=napoveda;
 $('dokonci').onclick=dokonci;
 
+/* ====== barevné motivy ======
+   Každý motiv je jen sada proměnných v CSS; tady si držíme popisky a dvě
+   barvy do vzorku na tlačítku. Volba přežije zavření záložky. */
+const KLIC_MOTIV='webapp_hra_solitaire_motiv';
+const MOTIVY=[
+  {id:'sukno',nazev:'Sukno',    stul:'#2b4536',karta:'#e9e3d5'},
+  {id:'les',  nazev:'Tmavý les',stul:'#15241d',karta:'#cdd2c4'},
+  {id:'noc',  nazev:'Noční',    stul:'#16202e',karta:'#d6d0c1'},
+  {id:'uhel', nazev:'Uhlová',   stul:'#1b1c1e',karta:'#ccc7ba'},
+  {id:'sepie',nazev:'Sépie',    stul:'#2b2219',karta:'#e3d5b9'},
+  {id:'den',  nazev:'Denní',    stul:'#d9e2dc',karta:'#fffdf7'}
+];
+function nastavMotiv(id){
+  if(!MOTIVY.some(m=>m.id===id))id=MOTIVY[0].id;
+  document.documentElement.dataset.motiv=id;
+  try{localStorage.setItem(KLIC_MOTIV,id);}catch{/* soukromé okno – nevadí */}
+  document.querySelectorAll('#motivy button').forEach(b=>b.classList.toggle('sel',b.dataset.m===id));
+}
+function renderMotivy(){
+  const bar=$('motivy');
+  bar.innerHTML='<span class="popis">Motiv</span>';
+  const ted=document.documentElement.dataset.motiv;
+  MOTIVY.forEach(m=>{
+    const b=document.createElement('button');
+    b.dataset.m=m.id;
+    b.title='Barevné ladění stolu a karet: '+m.nazev;
+    b.classList.toggle('sel',m.id===ted);
+    b.innerHTML=`<span class="vzorek" style="--u-stul:${m.stul};--u-karta:${m.karta}"></span>${m.nazev}`;
+    b.onclick=()=>nastavMotiv(m.id);
+    bar.appendChild(b);
+  });
+}
+
+/* Písmo i odstup karet se odvozují od šířky sloupce, takže po změně
+   velikosti okna (nebo otočení telefonu) je potřeba překreslit. */
+let prekresliCas=null;
+window.addEventListener('resize',()=>{
+  clearTimeout(prekresliCas);
+  prekresliCas=setTimeout(()=>{if(sloupce)render();},150);
+});
+
 function zkontrolujVyhru(){
   if(!zaklady.every(z=>z.length===13))return;
   $('vyhra').classList.add('zobraz');
@@ -465,6 +643,7 @@ function zkontrolujVyhru(){
 $('nova').onclick=novaHra;
 
 window.addEventListener('DOMContentLoaded',()=>{
+  renderMotivy();
   if(typeof Rekord!=='undefined'){
     rek=Rekord.sleduj('webapp_hra_solitaire',{vyssiLepsi:false,popisek:'Nejméně tahů',format:v=>v+' tahů'});
     rek.prvek($('rekordBox'));
