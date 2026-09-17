@@ -304,13 +304,6 @@
     }
     .kbd { background: var(--bg-hover); border: 1px solid var(--border-strong); border-radius: 3px; padding: 1px 6px; font-size:.72rem; }
 
-    /* Lightning flash overlay */
-    #flash {
-      position: fixed; inset: 0; z-index: 999;
-      background: linear-gradient(to bottom, rgba(215,228,255,1), rgba(215,228,255,.2));
-      opacity: 0; pointer-events: none;
-    }
-
     /* Per-card action button (⚡ Zahřmít hned) */
     .action-btn {
       margin-top: 4px;
@@ -321,6 +314,11 @@
     }
     .action-btn:hover { background: #3f5a85; color: #fff; }
 
+    .audio-note, .sound-status { font-size: .76rem; color: var(--text-muted); line-height: 1.5; }
+    .audio-note { margin-top: 16px; }
+    .audio-note a { color: var(--accent); }
+    .sound-status { min-height: 1.5em; margin-top: 7px; }
+    .toggle input:focus-visible ~ .tog-track { outline: 2px solid var(--accent); outline-offset: 3px; }
     /* Responsive */
     @media (max-width: 600px) {
       .sound-grid { grid-template-columns: 1fr; }
@@ -340,7 +338,6 @@
 </style>
 </head>
 <body>
-<div id="flash"></div>
 <div class="container">
 
   <!-- HEADER -->
@@ -348,7 +345,7 @@
     <div class="header-top">
       <div class="header-title">
         <h1>🌧️ Relaxační zvuky</h1>
-        <p>Generátor přírodních zvuků pro meditaci, soustředění a spánek</p>
+        <p>Skutečné nahrávky přírody pro soustředění, odpočinek a spánek</p>
       </div>
       <span class="active-badge hidden" id="activeBadge">0 zvuků</span>
     </div>
@@ -369,8 +366,8 @@
 
       <div class="master-row" title="Konvoluční dozvuk — dodá zvukům prostor">
         <label>Prostor</label>
-        <input type="range" id="spaceVol" min="0" max="100" value="22" style="width:100px">
-        <span id="spaceVolVal" style="color:#6aa6fd;font-size:.8rem;min-width:30px;">22%</span>
+        <input type="range" id="spaceVol" min="0" max="100" value="0" style="width:100px">
+        <span id="spaceVolVal" style="color:#6aa6fd;font-size:.8rem;min-width:30px;">0%</span>
       </div>
 
       <div class="sleep-ctrl">
@@ -397,6 +394,9 @@
 
   <!-- SOUNDS -->
   <div id="soundsRoot"></div>
+  <p class="audio-note">Přírodní zvuky přehráváme z nahrávek, bílý a hnědý šum vznikají v generátoru.
+    Barva jemně upravuje výšky, 50 % zachovává původní znění. Pro přirozený poslech nechte Prostor na 0 %.
+    <a href="relaxsounds-audio/SOURCES.md">Zdroje a licence nahrávek</a>.</p>
 
   <div class="kbd-hint">
     <span class="kbd">Space</span> Přehrát / Pauza &nbsp;·&nbsp;
@@ -450,7 +450,7 @@ function initAudio() {
   if (audioCtx) return;
   audioCtx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 44100 });
   masterGain = audioCtx.createGain();
-  masterGain.gain.value = 0.8;
+  masterGain.gain.value = +document.getElementById('masterVol').value / 100;
   analyser = audioCtx.createAnalyser();
   analyser.fftSize = 2048;
   analyser.smoothingTimeConstant = 0.88;
@@ -465,10 +465,19 @@ function initAudio() {
   wetGain.gain.value = (+document.getElementById('spaceVol').value/100)*1.1;
   masterGain.connect(dry);  dry.connect(bus);
   masterGain.connect(hall); hall.connect(wetGain); wetGain.connect(bus);
-  bus.connect(analyser);
+  // Shared headroom and compressor protect both listening and exported mixes.
+  const headroom = audioCtx.createGain();
+  headroom.gain.value = 0.65;
+  const limiter = audioCtx.createDynamicsCompressor();
+  limiter.threshold.value = -12;
+  limiter.knee.value = 12;
+  limiter.ratio.value = 12;
+  limiter.attack.value = 0.003;
+  limiter.release.value = 0.3;
+  bus.connect(headroom); headroom.connect(limiter); limiter.connect(analyser);
   analyser.connect(audioCtx.destination);
   mediaStreamDest = audioCtx.createMediaStreamDestination();
-  bus.connect(mediaStreamDest);
+  limiter.connect(mediaStreamDest);
 }
 
 // Syntetická impulzní odezva sálu: exponenciálně dohasínající šum
@@ -520,168 +529,7 @@ function makeNoiseSrc(buf) {
   s.loop = true;
   return s;
 }
-function makeLPF(f, Q)   { const n = audioCtx.createBiquadFilter(); n.type='lowpass';  n.frequency.value=f; if(Q) n.Q.value=Q; return n; }
-function makeHPF(f)      { const n = audioCtx.createBiquadFilter(); n.type='highpass'; n.frequency.value=f; return n; }
-function makeBPF(f, Q)   { const n = audioCtx.createBiquadFilter(); n.type='bandpass'; n.frequency.value=f; n.Q.value=Q; return n; }
-function makeLFO(hz, t)  { const o = audioCtx.createOscillator(); o.type=t||'sine'; o.frequency.value=hz; o.start(); return o; }
 function makeGain(v=1)   { const g = audioCtx.createGain(); g.gain.value=v; return g; }
-// Měkká tanh saturace — dodá basům "váhu" a zabrání tvrdému digitálnímu clippingu
-function makeSoftClip(drive=2) {
-  const ws = audioCtx.createWaveShaper();
-  const n = 1024, c = new Float32Array(n);
-  const norm = Math.tanh(drive);
-  for (let i = 0; i < n; i++) {
-    const x = (i / (n - 1)) * 2 - 1;
-    c[i] = Math.tanh(x * drive) / norm;
-  }
-  ws.curve = c; ws.oversample = '2x';
-  return ws;
-}
-
-function fadeIn(g, target) {
-  g.gain.setValueAtTime(0.0001, audioCtx.currentTime);
-  g.gain.setTargetAtTime(target, audioCtx.currentTime, FADE);
-}
-function fadeOut(g, cb) {
-  g.gain.setTargetAtTime(0, audioCtx.currentTime, FADE);
-  setTimeout(cb, 800);
-}
-
-// ═══════════════════════════════════════════════════════════════
-// HROM — celý úder se renderuje po vzorcích do bufferu.
-// Grafy uzlů (šum + filtry) zněly jako "fén"; tady máme plnou
-// kontrolu: roj mikroimpulzů podél větví kanálu blesku, trhavý
-// sestupný chirp, sub-basovou tlakovou vlnu, vícenásobné ozvěny
-// od mraků a terénu a dozvuk s filtrem zavírajícím se v čase.
-// ═══════════════════════════════════════════════════════════════
-
-const TAU = 6.28318530718;
-
-function renderThunder(dist /* 0 = nad hlavou … 1 = daleko */) {
-  const sr    = audioCtx.sampleRate;
-  const close = 1 - dist;
-  const dur   = 7 + Math.random()*3 + dist*5;          // 7–15 s
-  const n     = Math.ceil(dur*sr);
-  const buf   = audioCtx.createBuffer(2, n, sr);
-  const L = buf.getChannelData(0), R = buf.getChannelData(1);
-
-  /* ── řídicí obálky na 200 Hz (pak lineární interpolace) ── */
-  const cr = 200, M = Math.ceil(dur*cr)+2;
-  const body = new Float32Array(M), cut = new Float32Array(M);
-  // hlavní úder + 1–3 ozvěny (odrazy zvuku od mraků a terénu)
-  const peals = [{ t:0.02+dist*0.55, a:1, w:0.5+dist*1.4 }];
-  const nEcho = 1 + Math.floor(Math.random()*2.6);
-  let te = 1 + Math.random()*1.5;
-  for (let e=0; e<nEcho; e++) {
-    peals.push({ t:te, a:0.45*Math.pow(0.62,e)*(0.7+Math.random()*0.6), w:1.2+e*0.8+Math.random() });
-    te += 1.2 + Math.random()*2.2;
-  }
-  // nepravidelné pomalé "válení" dozvuku
-  const rf1=0.28+Math.random()*0.5, rp1=Math.random()*TAU;
-  const rf2=0.9 +Math.random()*0.9, rp2=Math.random()*TAU;
-  const f0 = 300 + close*900;   // jak moc se filtr otevře při úderu
-  for (let i=0; i<M; i++) {
-    const tc = i/cr;
-    let env=0, cf=55;
-    for (const p of peals) {
-      const dt = tc - p.t;
-      if (dt > 0) {
-        const x = p.a * (1-Math.exp(-dt/(0.02+p.w*0.06))) * Math.exp(-dt/(p.w*1.3));
-        env += x;
-        cf  += x * f0 * Math.exp(-dt/2.2);   // výšky dozní jako první
-      }
-    }
-    const roll = 0.62 + 0.28*Math.sin(TAU*rf1*tc+rp1) + 0.10*Math.sin(TAU*rf2*tc+rp2);
-    body[i] = env * Math.max(0.05, roll);
-    cut[i]  = 1 - Math.exp(-TAU*Math.min(sr*0.35, 45 + cf)/sr);  // rovnou koeficient filtru
-  }
-
-  /* ── tělo: dekorelovaný hnědý šum přes časově proměnný 12dB lowpass ── */
-  let bL=0,bR=0, lpL=0,lpR=0, lp2L=0,lp2R=0;
-  const crStep = cr/sr;
-  let ci = 0;
-  for (let i=0; i<n; i++) {
-    const i0 = ci|0, fr = ci-i0;
-    const k = (body[i0] + (body[i0+1]-body[i0])*fr) * 9;
-    const a =  cut[i0]  + (cut[i0+1]-cut[i0])*fr;
-    ci += crStep;
-    bL = (bL + 0.03*(Math.random()*2-1)) / 1.03;
-    bR = (bR + 0.03*(Math.random()*2-1)) / 1.03;
-    lpL += a*(bL*k - lpL);  lp2L += a*(lpL - lp2L);
-    lpR += a*(bR*k - lpR);  lp2R += a*(lpR - lp2R);
-    L[i] = lp2L;  R[i] = lp2R;
-  }
-
-  /* ── prásknutí — jen blízké údery ──
-     Čistě šumové (žádné sinusové sweepy — ty zněly jako laser):
-     2–5 překrývajících se výbuchů bílého šumu, každý s okamžitým
-     nástupem, trhaným nepravidelným rozpadem a filtrem, který se
-     z ~7 kHz rychle zavírá. Zní jako roztržení vzduchu, ne jako tón. */
-  if (close > 0.35) {
-    const cAmp = Math.pow(close, 1.6);
-    const nCr = 2 + Math.floor(Math.random()*3);   // blesk mívá víc zpětných výbojů
-    for (let c=0; c<nCr; c++) {
-      const t0  = Math.floor((c===0 ? 0.005 : Math.random()*0.35)*sr);
-      const dur = 0.06 + Math.random()*0.12;       // 60–180 ms jádro
-      const len = Math.min(n-t0, Math.floor(dur*3*sr));
-      const amp = cAmp * (c===0 ? 1 : 0.4+Math.random()*0.5) * 1.5;
-      const panL = 0.35+Math.random()*0.3;
-      let lp=0, lp2=0, slow=0, gate=1;
-      for (let j=0; j<len; j++) {
-        const tj = j/sr;
-        if ((j&31)===0) gate = 0.35+0.65*Math.random();  // trhaný rozpad po ~0,7 ms blocích
-        const w = (Math.random()*2-1) * Math.exp(-tj/dur) * gate * amp;
-        // lowpass zavírající se 7 kHz → 1,2 kHz (vzduch spolkne výšky okamžitě)
-        const fc = 1200 + 5800*Math.exp(-tj/(dur*0.7));
-        const a  = 1 - Math.exp(-TAU*fc/sr);
-        lp  += a*(w - lp);   lp2 += a*(lp - lp2);
-        slow += 0.02*(lp2 - slow);                 // odečtením pomalé složky ~ highpass
-        const v = (lp2 - slow)*1.6;
-        L[t0+j] += v*(1.3-panL);  R[t0+j] += v*(0.3+panL);
-      }
-    }
-  }
-
-  /* ── sub-basová tlaková vlna ── */
-  if (close > 0.25) {
-    const sAmp = Math.pow(close,1.3) * 1.1;
-    const sDur = 1.4 + close*1.3, sLen = Math.floor(sDur*sr);
-    const fS   = 46 + Math.random()*18;
-    const t0   = Math.floor((0.02+dist*0.5)*sr);
-    let ph = 0;
-    for (let j=0; j<sLen && t0+j<n; j++) {
-      const tj = j/sr, p = j/sLen;
-      const f  = 26 + (fS-26)*Math.exp(-tj/0.55);
-      ph += TAU*f/sr;
-      const env = (1-Math.exp(-tj/0.03)) * Math.pow(1-p,1.7);
-      const v = sAmp * env * Math.sin(ph);
-      L[t0+j] += v;  R[t0+j] += v*0.94;
-    }
-  }
-
-  /* ── měkká saturace (váha) + normalizace ── */
-  let peak = 0;
-  for (let i=0; i<n; i++) {
-    let x = Math.max(-3, Math.min(3, L[i]));  x = x*(27+x*x)/(27+9*x*x);  L[i] = x;
-    let y = Math.max(-3, Math.min(3, R[i]));  y = y*(27+y*y)/(27+9*y*y);  R[i] = y;
-    const ax = Math.abs(x), ay = Math.abs(y);
-    if (ax > peak) peak = ax;
-    if (ay > peak) peak = ay;
-  }
-  const gN = peak > 0 ? 0.88/peak : 1;
-  for (let i=0; i<n; i++) { L[i] *= gN;  R[i] *= gN; }
-  return buf;
-}
-
-// Vizuální záblesk — světlo dorazí okamžitě, hrom až po něm
-function lightningFlash(dist) {
-  const el = document.getElementById('flash');
-  if (!el) return;
-  const s = Math.max(0.06, 0.4*(1-dist*0.8));
-  const seq = [[0,s,'40ms'],[70,s*0.25,'50ms'],[130,s*0.9,'40ms'],[220,0,'600ms']];
-  seq.forEach(([t,o,tr])=>setTimeout(()=>{ el.style.transition='opacity '+tr; el.style.opacity=o; }, t));
-}
-
 // ═══════════════════════════════════════════════════════════════
 // SOUND DEFINITIONS
 // ═══════════════════════════════════════════════════════════════
@@ -693,616 +541,155 @@ const CATEGORIES = [
   { id:'ambient', label:'🔊  Okolní šumy' },
 ];
 
-const SOUNDS = [
-
-  // ═══ RAIN ═══
-  {
-    id:'lightRain', cat:'rain', icon:'🌦️', name:'Jemný déšť',
-    volume:70, paramVal:45, nodes:null,
-    param:{ name:'Intenzita', min:0, max:100, unit:'%' },
-    start(mg) {
-      const src = makeNoiseSrc(), bpf = makeBPF(2800,0.6), hpf = makeHPF(1300), g = makeGain(0);
-      src.connect(bpf); bpf.connect(hpf); hpf.connect(g); g.connect(mg);
-      src.start();
-      fadeIn(g, this._vol());
-      this.nodes = { src, g, bpf };
+// Local field recordings: original speed, original stereo, no added noise bed.
+// Each run owns its nodes and request. A late decode cannot revive a stopped sound.
+function recordedSound(id, cat, icon, name, file, thunder=false) {
+  return {
+    id, cat, icon, name, file, volume:65, paramVal:thunder ? 20 : 50,
+    param: {name:thunder ? 'Pauza' : 'Barva', min:0, max:100, unit:thunder ? ' s' : '%'},
+    ...(thunder ? {
+      param2:{name:'Vzdálenost',min:0,max:100,unit:'%'}, param2Val:30,
+      action:{label:'⚡ Přehrát hromy od začátku'}
+    } : {}),
+    nodes:null,
+    status(message) {
+      const el=document.getElementById('status-'+this.id);
+      if(el) el.textContent=message;
+    },
+    async start(mg) {
+      this.stop();
+      const run={g:makeGain(0), filter:audioCtx.createBiquadFilter(), sources:new Set(),
+        controller:new AbortController(), buffer:null, cancelled:false};
+      this.nodes=run;
+      run.filter.type=thunder ? 'lowpass' : 'highshelf';
+      run.filter.frequency.value=thunder ? 16000 : 2400;
+      run.filter.Q.value=0.5;
+      run.filter.connect(run.g); run.g.connect(mg);
       this.setPar(this.paramVal);
+      if(thunder) this.setPar2(this.param2Val);
+      this.status('Načítám nahrávku…');
+      try {
+        const response=await fetch('relaxsounds-audio/'+file+'.mp3', {signal:run.controller.signal});
+        if(!response.ok) throw new Error('HTTP '+response.status);
+        const bytes=await response.arrayBuffer();
+        if(this.nodes!==run) return;
+        const buffer=await audioCtx.decodeAudioData(bytes);
+        if(this.nodes!==run) return;
+        run.buffer=buffer;
+        this.setVol(this.volume);
+        // Schedule a full recording ahead: transitions do not depend on a short JS timer.
+        this.schedule(run, audioCtx.currentTime+0.04, true);
+        this.status('Přehrává se nahrávka');
+      } catch(error) {
+        if(this.nodes!==run || error.name==='AbortError') return;
+        this.stop();
+        this.status('Nahrávku se nepodařilo načíst. Zkuste zvuk znovu zapnout.');
+        const tog=document.getElementById('tog-'+id);
+        if(tog) tog.checked=false;
+        document.getElementById('card-'+id)?.classList.remove('active');
+        updateActiveBadge(); checkAllStopped(); saveMix();
+      }
     },
-    stop() { if(!this.nodes) return; fadeOut(this.nodes.g, ()=>this._kill()); },
-    setVol(v) { this.volume=v; if(this.nodes) this.nodes.g.gain.setTargetAtTime(this._vol(), audioCtx.currentTime, FADE); },
-    setPar(v) { this.paramVal=v; if(this.nodes) this.nodes.bpf.frequency.value = 1000+v*38; },
-    _vol() { return (this.volume/100)*0.38; },
-    _kill() { if(!this.nodes)return; try{this.nodes.src.stop()}catch(e){}; try{this.nodes.g.disconnect()}catch(e){}; this.nodes=null; },
-  },
-
-  {
-    id:'medRain', cat:'rain', icon:'🌧️', name:'Střední déšť',
-    volume:70, paramVal:60, nodes:null,
-    param:{ name:'Intenzita', min:0, max:100, unit:'%' },
-    start(mg) {
-      const src=makeNoiseSrc(), bpf=makeBPF(1100,0.4), g=makeGain(0);
-      src.connect(bpf); bpf.connect(g); g.connect(mg); src.start();
-      fadeIn(g, this._vol());
-      this.nodes={src,g,bpf}; this.setPar(this.paramVal);
-    },
-    stop() { if(!this.nodes)return; fadeOut(this.nodes.g, ()=>this._kill()); },
-    setVol(v) { this.volume=v; if(this.nodes) this.nodes.g.gain.setTargetAtTime(this._vol(), audioCtx.currentTime, FADE); },
-    setPar(v) { this.paramVal=v; if(this.nodes) this.nodes.bpf.frequency.value = 500+v*13; },
-    _vol() { return (this.volume/100)*0.55; },
-    _kill() { if(!this.nodes)return; try{this.nodes.src.stop()}catch(e){}; try{this.nodes.g.disconnect()}catch(e){}; this.nodes=null; },
-  },
-
-  {
-    id:'heavyRain', cat:'rain', icon:'⛈️', name:'Silný déšť',
-    volume:70, paramVal:75, nodes:null,
-    param:{ name:'Intenzita', min:0, max:100, unit:'%' },
-    start(mg) {
-      const src=makeNoiseSrc(), bpf=makeBPF(700,0.25);
-      const shelf=audioCtx.createBiquadFilter(); shelf.type='highshelf'; shelf.frequency.value=3000; shelf.gain.value=-10;
-      const g=makeGain(0);
-      src.connect(bpf); bpf.connect(shelf); shelf.connect(g); g.connect(mg); src.start();
-      fadeIn(g, this._vol());
-      this.nodes={src,g,bpf}; this.setPar(this.paramVal);
-    },
-    stop() { if(!this.nodes)return; fadeOut(this.nodes.g, ()=>this._kill()); },
-    setVol(v) { this.volume=v; if(this.nodes) this.nodes.g.gain.setTargetAtTime(this._vol(), audioCtx.currentTime, FADE); },
-    setPar(v) { this.paramVal=v; if(this.nodes) this.nodes.bpf.frequency.value = 280+v*8; },
-    _vol() { return (this.volume/100)*0.78; },
-    _kill() { if(!this.nodes)return; try{this.nodes.src.stop()}catch(e){}; try{this.nodes.g.disconnect()}catch(e){}; this.nodes=null; },
-  },
-
-  {
-    id:'roofRain', cat:'rain', icon:'🏠', name:'Déšť na střeše',
-    volume:70, paramVal:50, nodes:null, active:false, _timer:null, _mg:null,
-    param:{ name:'Rezonance', min:0, max:100, unit:'%' },
-    start(mg) {
-      this.active=true; this._mg=mg;
-      // Podklad — tlumený plošný šum deště nad hlavou
-      const src=makeNoiseSrc(), bpf=makeBPF(1600,0.8), lpf=makeLPF(3500);
-      const g=makeGain(0), fade=makeGain(0);
-      src.connect(bpf); bpf.connect(lpf); lpf.connect(g); g.connect(fade); fade.connect(mg);
-      src.start(); fadeIn(fade,1); g.gain.value=this._vol();
-      this.nodes={src,fade,g};
-      this._scheduleTap();
+    schedule(run, at, first=false) {
+      if(this.nodes!==run || run.cancelled) return;
+      const duration=run.buffer.duration;
+      const crossfade=Math.min(3, duration/4);
+      const src=audioCtx.createBufferSource(), env=makeGain(0);
+      src.buffer=run.buffer;
+      src.connect(env); env.connect(run.filter);
+      // Equal-power fades preserve perceived level across unrelated recording ends.
+      const fade=thunder ? 0.08 : crossfade;
+      const fadeIn=new Float32Array(128), fadeOut=new Float32Array(128);
+      for(let i=0;i<128;i++) {
+        fadeIn[i]=Math.sin(i/127*Math.PI/2);
+        fadeOut[i]=Math.cos(i/127*Math.PI/2);
+      }
+      env.gain.setValueCurveAtTime(fadeIn,at,first ? 0.35 : fade);
+      env.gain.setValueCurveAtTime(fadeOut,at+duration-fade,fade);
+      const voice={src,env,at,end:at+duration}; run.sources.add(voice);
+      src.start(at);
+      const next=at+duration+(thunder ? this.paramVal : -crossfade);
+      src.onended=()=>{
+        if(!run.sources.delete(voice)) return;
+        src.onended=null;
+        src.disconnect(); env.disconnect();
+        if(this.nodes!==run || run.cancelled) return;
+        // The successor already exists. Queue its successor before it reaches the seam.
+        if(run.nextAt!==undefined) {
+          const t=Math.max(run.nextAt,audioCtx.currentTime+0.03);
+          this.schedule(run,t);
+        }
+      };
+      run.nextAt=next;
+      if(first) this.schedule(run,next);
     },
     stop() {
-      this.active=false;
-      if(this._timer){clearTimeout(this._timer);this._timer=null;}
-      if(!this.nodes)return;
-      fadeOut(this.nodes.fade, ()=>this._kill());
+      const run=this.nodes; if(!run) return;
+      this.nodes=null; run.cancelled=true; run.controller.abort();
+      run.g.gain.cancelScheduledValues(audioCtx.currentTime);
+      run.g.gain.setTargetAtTime(0,audioCtx.currentTime,0.08);
+      for(const {src} of run.sources) { try { src.stop(audioCtx.currentTime+0.5); } catch(_) {} }
+      setTimeout(()=>{
+        for(const {src,env} of run.sources) { src.disconnect(); env.disconnect(); }
+        run.sources.clear(); run.filter.disconnect(); run.g.disconnect(); run.buffer=null;
+      },600);
+      this.status('Nahrávka připravena');
     },
-    setVol(v) { this.volume=v; if(this.nodes) this.nodes.g.gain.value=this._vol(); },
-    setPar(v) { this.paramVal=v; },
-    _scheduleTap() {
-      if(!this.active) return;
-      // Jednotlivé kapky: krátký šumový impulz přes rezonanční filtr
-      // "cinkne" o krytinu — každá kapka jinde, jinak silně, jinou výškou
-      if(audioCtx.state==='running'){
-        const now=audioCtx.currentTime;
-        const vol=(this.volume/100)*0.34*(0.1+Math.random()*0.9);
-        const src=makeNoiseSrc(); src.loop=false;
-        const bpf=makeBPF(500+Math.random()*1900, 3+this.paramVal*0.12);
-        const g=makeGain(0);
-        const dur=0.018+Math.random()*0.04;
-        g.gain.setValueAtTime(vol, now);
-        g.gain.exponentialRampToValueAtTime(0.0001, now+dur);
-        src.connect(bpf); bpf.connect(g); g.connect(this._mg);
-        src.start(now, Math.random()*3); src.stop(now+dur+0.05);
-        src.onended=()=>{try{g.disconnect()}catch(e){}};
-      }
-      this._timer=setTimeout(()=>this._scheduleTap(), 18+Math.random()*70);
+    setVol(v) {
+      this.volume=v;
+      if(this.nodes) this.nodes.g.gain.setTargetAtTime(v/100*0.7,audioCtx.currentTime,FADE);
     },
-    _vol() { return (this.volume/100)*0.3; },
-    _kill() { if(!this.nodes)return; try{this.nodes.src.stop()}catch(e){}; try{this.nodes.fade.disconnect()}catch(e){}; this.nodes=null; },
-  },
+    setPar(v) {
+      this.paramVal=v;
+      if(!thunder && this.nodes) this.nodes.filter.gain.setTargetAtTime((v-50)*0.12,audioCtx.currentTime,0.15);
+    },
+    setPar2(v) {
+      this.param2Val=v;
+      if(this.nodes) this.nodes.filter.frequency.setTargetAtTime(16000*Math.pow(0.035,v/100),audioCtx.currentTime,0.2);
+    },
+    _burst() { this.start(masterGain); },
+    _kill() { this.stop(); }
+  };
+}
 
-  {
-    id:'tropRain', cat:'rain', icon:'🌴', name:'Tropický liják',
-    volume:70, paramVal:80, nodes:null,
-    param:{ name:'Intenzita', min:0, max:100, unit:'%' },
+function noiseSound(id,icon,name,brown) {
+  return {id,cat:'ambient',icon,name,volume:60,param:null,paramVal:null,nodes:null,
     start(mg) {
-      const src=makeNoiseSrc(), hpf=makeHPF(450);
-      const lfo=makeLFO(0.28,'sine'), lfoG=makeGain(0.14);
-      const g=makeGain(0), fade=makeGain(0);
-      lfo.connect(lfoG); lfoG.connect(g.gain);
-      src.connect(hpf); hpf.connect(g); g.connect(fade); fade.connect(mg);
-      src.start(); fadeIn(fade,1); g.gain.value=this._vol();
-      this.nodes={src,fade,g,hpf,lfo}; this.setPar(this.paramVal);
-    },
-    stop() { if(!this.nodes)return; fadeOut(this.nodes.fade, ()=>this._kill()); },
-    setVol(v) { this.volume=v; if(this.nodes) this.nodes.g.gain.value=this._vol(); },
-    setPar(v) { this.paramVal=v; if(this.nodes) this.nodes.hpf.frequency.value=800-v*3.5; },
-    _vol() { return (this.volume/100)*0.88; },
-    _kill() { if(!this.nodes)return; try{this.nodes.src.stop();this.nodes.lfo.stop()}catch(e){}; try{this.nodes.fade.disconnect()}catch(e){}; this.nodes=null; },
-  },
-
-  // ═══ STORM ═══
-  {
-    id:'thunder', cat:'storm', icon:'⚡', name:'Hrom',
-    volume:80, paramVal:40, param2Val:35, nodes:null, active:false, _timer:null, _mg:null, _pre:null, _preDist:0,
-    param:{ name:'Četnost', min:0, max:100, unit:'%' },
-    param2:{ name:'Vzdálenost', min:0, max:100, unit:'%' },
-    action:{ label:'⚡ Zahřmít hned' },
-    start(mg) {
-      this.active=true; this._mg=mg;
-      // První hrom brzy po zapnutí, ať uživatel ví, že funguje
-      this._timer = setTimeout(()=>{ if(this.active){this._burst(); this._scheduleNext();} }, 800+Math.random()*1500);
-    },
-    stop() { this.active=false; if(this._timer){clearTimeout(this._timer);this._timer=null;} this._pre=null; },
-    setVol(v) { this.volume=v; },
-    setPar(v) { this.paramVal=v; },
-    setPar2(v) { this.param2Val=v; this._pre=null; }, // předrenderovaný úder už neodpovídá nové vzdálenosti
-    _scheduleNext() {
-      if(!this.active) return;
-      const density = this.paramVal/100;
-      // Při 100 % → 2–8 s, při 50 % → 12–28 s, při 0 % → 30–60 s
-      const minS = 2  + (1-density)*28;
-      const maxS = minS + 6 + (1-density)*18;
-      const delay = (minS + Math.random()*(maxS-minS)) * 1000;
-      this._timer = setTimeout(()=>{ if(this.active){this._burst(); this._scheduleNext();} }, delay);
-    },
-    _dist() {
-      // Slider udává těžiště bouřky, jednotlivé údery se kolem něj rozptylují
-      const bias = this.param2Val/100;
-      return Math.min(1, Math.max(0.02, bias + (Math.random()-0.5)*0.55));
-    },
-    _burst(manual) {
-      // Při pauze (suspended) currentTime stojí — neplánovat, jinak by se
-      // všechny údery nahromadily a po obnovení zazněly naráz
-      if (!audioCtx || audioCtx.state !== 'running') return;
-      let buf, dist;
-      if (this._pre && !manual) { buf=this._pre; dist=this._preDist; this._pre=null; }
-      else { dist=this._dist(); buf=renderThunder(dist); }
-      // Světlo dorazí okamžitě, zvuk se zpožděním podle vzdálenosti
-      const delay = manual ? 0.06 : dist*2.2;
-      lightningFlash(dist);
-      const src = audioCtx.createBufferSource(); src.buffer = buf;
-      const g   = makeGain((this.volume/100) * (1.0 - dist*0.45));
-      const pan = audioCtx.createStereoPanner();
-      pan.pan.value = (Math.random()*1.2-0.6) * (0.3+dist*0.7);
-      src.connect(g); g.connect(pan); pan.connect(this._mg);
-      src.start(audioCtx.currentTime + delay);
-      src.onended = ()=>{ try{ pan.disconnect(); }catch(e){} };
-      // Další úder předrenderuj s předstihem, ať nikdy neškubne UI
-      setTimeout(()=>{ if(this.active && !this._pre){ this._preDist=this._dist(); this._pre=renderThunder(this._preDist); } }, 1500);
-    },
-    _kill() { this.stop(); },
-  },
-
-  {
-    id:'stormWind', cat:'storm', icon:'🌪️', name:'Bouřkový vítr',
-    volume:70, paramVal:60, nodes:null,
-    param:{ name:'Rychlost', min:0, max:100, unit:'%' },
-    start(mg) {
-      const src=makeNoiseSrc(), lpf=makeLPF(340);
-      const lfo=makeLFO(0.22,'sine'), lfoG=makeGain(220);
-      lfo.connect(lfoG); lfoG.connect(lpf.frequency);
-      // Dvě LFO s nesoudělnými periodami — poryvy nepřichází pravidelně
-      const gLfo=makeLFO(0.065,'sine'), gLfoG=makeGain(0.2);
-      const gLfo2=makeLFO(0.157,'sine'), gLfo2G=makeGain(0.11);
-      gLfo.connect(gLfoG); gLfo2.connect(gLfo2G);
-      const modG=makeGain(this._vol()), fade=makeGain(0);
-      gLfoG.connect(modG.gain); gLfo2G.connect(modG.gain);
-      src.connect(lpf); lpf.connect(modG); modG.connect(fade); fade.connect(mg);
-      src.start(); fadeIn(fade,1);
-      this.nodes={src,fade,modG,lpf,lfo,gLfo,gLfo2}; this.setPar(this.paramVal);
-    },
-    stop() { if(!this.nodes)return; fadeOut(this.nodes.fade, ()=>this._kill()); },
-    setVol(v) { this.volume=v; if(this.nodes) this.nodes.modG.gain.setTargetAtTime(this._vol(), audioCtx.currentTime, FADE); },
-    setPar(v) { this.paramVal=v; if(this.nodes){ this.nodes.lpf.frequency.value=150+v*3.8; this.nodes.lfo.frequency.value=0.1+v*0.004; } },
-    _vol() { return (this.volume/100)*0.62; },
-    _kill() { if(!this.nodes)return; try{this.nodes.src.stop();this.nodes.lfo.stop();this.nodes.gLfo.stop();this.nodes.gLfo2.stop()}catch(e){}; try{this.nodes.fade.disconnect()}catch(e){}; this.nodes=null; },
-  },
-
-  // ═══ NATURE ═══
-  {
-    id:'ocean', cat:'nature', icon:'🌊', name:'Oceánské vlny',
-    volume:70, paramVal:35, nodes:null,
-    param:{ name:'Vlnění', min:0, max:100, unit:'%' },
-    start(mg) {
-      // Dvě LFO s nesoudělnými periodami — vlny nepřichází metronomicky
-      const src=makeNoiseSrc(), lpf=makeLPF(520);
-      const lfo1=makeLFO(0.06,'sine'),  lfo1G=makeGain(0.24);
-      const lfo2=makeLFO(0.097,'sine'), lfo2G=makeGain(0.17);
-      lfo1.connect(lfo1G); lfo2.connect(lfo2G);
-      const modG=makeGain(this._vol()), fade=makeGain(0);
-      lfo1G.connect(modG.gain); lfo2G.connect(modG.gain);
-      src.connect(lpf); lpf.connect(modG); modG.connect(fade);
-      // Příboj — sykot tříštící se vlny, dýchá spolu s hlavní vlnou
-      const hSrc=makeNoiseSrc(), hpf=makeHPF(1400);
-      const hModG=makeGain(this._hiss());
-      const h1=makeGain(0.06), h2=makeGain(0.045);
-      lfo1.connect(h1); lfo2.connect(h2);
-      h1.connect(hModG.gain); h2.connect(hModG.gain);
-      hSrc.connect(hpf); hpf.connect(hModG); hModG.connect(fade);
-      fade.connect(mg);
-      src.start(); hSrc.start(); fadeIn(fade,1);
-      this.nodes={src,hSrc,fade,modG,hModG,lpf,lfo1,lfo2}; this.setPar(this.paramVal);
-    },
-    stop() { if(!this.nodes)return; fadeOut(this.nodes.fade, ()=>this._kill()); },
-    setVol(v) { this.volume=v; if(this.nodes){ this.nodes.modG.gain.setTargetAtTime(this._vol(), audioCtx.currentTime, FADE); this.nodes.hModG.gain.setTargetAtTime(this._hiss(), audioCtx.currentTime, FADE); } },
-    setPar(v) { this.paramVal=v; if(this.nodes){ this.nodes.lfo1.frequency.value=0.022+v*0.0012; this.nodes.lfo2.frequency.value=0.035+v*0.002; this.nodes.lpf.frequency.value=320+v*4; } },
-    _vol()  { return (this.volume/100)*0.5; },
-    _hiss() { return (this.volume/100)*0.07; },
-    _kill() { if(!this.nodes)return; try{this.nodes.src.stop();this.nodes.hSrc.stop();this.nodes.lfo1.stop();this.nodes.lfo2.stop()}catch(e){}; try{this.nodes.fade.disconnect()}catch(e){}; this.nodes=null; },
-  },
-
-  {
-    id:'river', cat:'nature', icon:'🏞️', name:'Říční proud',
-    volume:70, paramVal:50, nodes:null,
-    param:{ name:'Turbulence', min:0, max:100, unit:'%' },
-    start(mg) {
-      const src=makeNoiseSrc(), bpf=makeBPF(920,1.2), hpf=makeHPF(380);
-      const lfo=makeLFO(3.8,'sine'), lfoG=makeGain(0.038);
-      lfo.connect(lfoG);
-      const g=makeGain(0), fade=makeGain(0);
-      lfoG.connect(g.gain);
-      src.connect(bpf); bpf.connect(hpf); hpf.connect(g); g.connect(fade); fade.connect(mg);
-      src.start(); fadeIn(fade,1); g.gain.value=this._vol();
-      this.nodes={src,fade,g,bpf,lfo}; this.setPar(this.paramVal);
-    },
-    stop() { if(!this.nodes)return; fadeOut(this.nodes.fade, ()=>this._kill()); },
-    setVol(v) { this.volume=v; if(this.nodes) this.nodes.g.gain.value=this._vol(); },
-    setPar(v) { this.paramVal=v; if(this.nodes){ this.nodes.bpf.Q.value=0.6+v*0.038; this.nodes.bpf.frequency.value=580+v*6.5; } },
-    _vol() { return (this.volume/100)*0.46; },
-    _kill() { if(!this.nodes)return; try{this.nodes.src.stop();this.nodes.lfo.stop()}catch(e){}; try{this.nodes.fade.disconnect()}catch(e){}; this.nodes=null; },
-  },
-
-  {
-    id:'campfire', cat:'nature', icon:'🔥', name:'Táborák',
-    volume:70, paramVal:55, nodes:null, active:false, _crk:null,
-    param:{ name:'Praskání', min:0, max:100, unit:'%' },
-    start(mg) {
-      this.active=true; this._mg=mg;
-      const src=makeNoiseSrc(), lpf=makeLPF(210);
-      const g=makeGain(0), fade=makeGain(0);
-      src.connect(lpf); lpf.connect(g); g.connect(fade); fade.connect(mg);
-      src.start(); fadeIn(fade,1); g.gain.value=this._vol();
-      this.nodes={src,fade,g};
-      this._scheduleCrackle();
+      this.stop();
+      const src=makeNoiseSrc(brown ? getBrownBuf() : getWhiteBuf()), g=makeGain(0);
+      src.connect(g); g.connect(mg); src.start(); this.nodes={src,g}; this.setVol(this.volume);
     },
     stop() {
-      this.active=false;
-      if(this._crk){clearTimeout(this._crk);this._crk=null;}
-      if(!this.nodes)return;
-      fadeOut(this.nodes.fade, ()=>this._kill());
+      const run=this.nodes; if(!run) return; this.nodes=null;
+      run.g.gain.setTargetAtTime(0,audioCtx.currentTime,0.08);
+      run.src.stop(audioCtx.currentTime+0.5);
+      run.src.onended=()=>{ run.src.disconnect(); run.g.disconnect(); };
     },
-    setVol(v) { this.volume=v; if(this.nodes) this.nodes.g.gain.value=this._vol(); },
-    setPar(v) { this.paramVal=v; },
-    _scheduleCrackle() {
-      if(!this.active) return;
-      const str = this.paramVal/100;
-      if(audioCtx.state==='running' && Math.random() < str*0.7) {
-        const now = audioCtx.currentTime;
-        const crk = makeNoiseSrc(); crk.loop=false;
-        const hpf = makeHPF(1200+Math.random()*1800);
-        const cg = makeGain(0);
-        const vol = (this.volume/100) * 0.5 * (0.3+Math.random()*0.7);
-        const dur = 0.008+Math.random()*0.05;
-        cg.gain.setValueAtTime(vol, now);
-        cg.gain.exponentialRampToValueAtTime(0.0001, now+dur);
-        crk.connect(hpf); hpf.connect(cg); cg.connect(this._mg);
-        crk.start(now); crk.stop(now+dur+0.01);
-        crk.onended=()=>{try{cg.disconnect()}catch(e){}};
-      }
-      const next = (0.04+Math.random()*0.22)*1000;
-      this._crk = setTimeout(()=>this._scheduleCrackle(), next);
-    },
-    _vol() { return (this.volume/100)*0.28; },
-    _kill() { if(!this.nodes)return; try{this.nodes.src.stop()}catch(e){}; try{this.nodes.fade.disconnect()}catch(e){}; this.nodes=null; },
-  },
+    setVol(v) { this.volume=v; if(this.nodes) this.nodes.g.gain.setTargetAtTime(v/100*(brown ? 0.6 : 0.12),audioCtx.currentTime,FADE); },
+    setPar() {}, _kill() { this.stop(); }
+  };
+}
 
-  {
-    id:'birds', cat:'nature', icon:'🐦', name:'Lesní ptáci',
-    volume:70, paramVal:45, nodes:null, active:false, _timer:null, _mg:null,
-    param:{ name:'Aktivita', min:0, max:100, unit:'%' },
-    start(mg) {
-      this.active=true; this._mg=mg;
-      // Subtle background forest hiss
-      const src=makeNoiseSrc(), bpf=makeBPF(3400,2.5);
-      const g=makeGain(0); const fade=makeGain(0);
-      src.connect(bpf); bpf.connect(g); g.connect(fade); fade.connect(mg);
-      src.start(); fadeIn(fade,1); g.gain.value=(this.volume/100)*0.038;
-      this.nodes={src,fade,g};
-      this._scheduleNext();
-    },
-    stop() {
-      this.active=false;
-      if(this._timer){clearTimeout(this._timer);this._timer=null;}
-      if(!this.nodes)return;
-      fadeOut(this.nodes.fade, ()=>this._kill());
-    },
-    setVol(v) { this.volume=v; if(this.nodes) this.nodes.g.gain.value=(v/100)*0.038; },
-    setPar(v) { this.paramVal=v; },
-    _scheduleNext() {
-      if(!this.active) return;
-      const density = this.paramVal/100;
-      const delay = (0.4+Math.random()*(9-density*6))*1000;
-      this._timer = setTimeout(()=>{ if(this.active){this._chirp(); this._scheduleNext();} }, delay);
-    },
-    _chirp() {
-      if(audioCtx.state!=='running') return;
-      const now = audioCtx.currentTime;
-      // Náhodná vzdálenost a místo ve stereu — pták zpívá pokaždé odjinud
-      const distance = 0.35+Math.random()*0.65;
-      const vol = (this.volume/100)*0.2*distance;
-      const pan = audioCtx.createStereoPanner();
-      pan.pan.value = Math.random()*1.4-0.7;
-      pan.connect(this._mg);
-      const style = Math.floor(Math.random()*3); // 3 bird types
-      const notes = style===2 ? (2+Math.floor(Math.random()*5)) : (1+Math.floor(Math.random()*3));
-      const baseF = style===0 ? 2400+Math.random()*1200 : style===1 ? 1800+Math.random()*800 : 3200+Math.random()*1600;
-      const noteSpacing = 0.07+Math.random()*0.1;
-      for(let n=0;n<notes;n++){
-        const t=now+n*noteSpacing;
-        const osc=audioCtx.createOscillator();
-        osc.type = style===1 ? 'triangle' : 'sine';
-        const fMod = style===2 ? 1.3+Math.random()*0.4 : 1.12+Math.random()*0.3;
-        osc.frequency.setValueAtTime(baseF*(0.95+Math.random()*0.1), t);
-        osc.frequency.exponentialRampToValueAtTime(baseF*fMod, t+0.055);
-        osc.frequency.exponentialRampToValueAtTime(baseF*0.82, t+0.14);
-        const g=makeGain(0);
-        g.gain.setValueAtTime(0, t);
-        g.gain.linearRampToValueAtTime(vol*(0.6+Math.random()*0.4), t+0.022);
-        g.gain.linearRampToValueAtTime(0, t+0.18);
-        osc.connect(g); g.connect(pan);
-        osc.start(t); osc.stop(t+0.22);
-        const isLast = n===notes-1;
-        osc.onended=()=>{try{g.disconnect(); if(isLast) pan.disconnect();}catch(e){}};
-      }
-    },
-    _kill() { if(!this.nodes)return; try{this.nodes.src.stop()}catch(e){}; try{this.nodes.fade.disconnect()}catch(e){}; this.nodes=null; },
-  },
-
-  // ═══ AMBIENT ═══
-  {
-    id:'wind', cat:'ambient', icon:'💨', name:'Tichý vítr',
-    volume:70, paramVal:40, nodes:null,
-    param:{ name:'Rychlost', min:0, max:100, unit:'%' },
-    start(mg) {
-      const src=makeNoiseSrc(), lpf=makeLPF(300);
-      const lfo=makeLFO(0.1,'sine'), lfoG=makeGain(130);
-      lfo.connect(lfoG); lfoG.connect(lpf.frequency);
-      const gLfo=makeLFO(0.048,'sine'), gLfoG=makeGain(0.16);
-      gLfo.connect(gLfoG);
-      const modG=makeGain(this._vol()), fade=makeGain(0);
-      gLfoG.connect(modG.gain);
-      src.connect(lpf); lpf.connect(modG); modG.connect(fade); fade.connect(mg);
-      src.start(); fadeIn(fade,1);
-      this.nodes={src,fade,modG,lpf,lfo,gLfo}; this.setPar(this.paramVal);
-    },
-    stop() { if(!this.nodes)return; fadeOut(this.nodes.fade, ()=>this._kill()); },
-    setVol(v) { this.volume=v; if(this.nodes) this.nodes.modG.gain.setTargetAtTime(this._vol(), audioCtx.currentTime, FADE); },
-    setPar(v) { this.paramVal=v; if(this.nodes){ this.nodes.lpf.frequency.value=110+v*3.2; this.nodes.lfo.frequency.value=0.06+v*0.0028; } },
-    _vol() { return (this.volume/100)*0.48; },
-    _kill() { if(!this.nodes)return; try{this.nodes.src.stop();this.nodes.lfo.stop();this.nodes.gLfo.stop()}catch(e){}; try{this.nodes.fade.disconnect()}catch(e){}; this.nodes=null; },
-  },
-
-  {
-    id:'crickets', cat:'ambient', icon:'🦗', name:'Noční cvrčci',
-    volume:60, paramVal:55, nodes:null, active:false, _voices:null, _mg:null,
-    param:{ name:'Hustota', min:0, max:100, unit:'%' },
-    start(mg) {
-      this.active=true; this._mg=mg;
-      // Tři virtuální cvrčci — každý má vlastní výšku, tempo a místo ve stereu.
-      // Cvrček necvrká nepřetržitě: krátká dávka pulzů, pauza, znovu.
-      this._voices=[];
-      for(let v=0; v<3; v++){
-        const voice={
-          freq: 3800 + v*420 + Math.random()*300,
-          pan:  [-0.55, 0.05, 0.6][v] + (Math.random()*0.2-0.1),
-          interval: 0.55 + v*0.22 + Math.random()*0.5,
-          timer: null,
-        };
-        const loop=()=>{
-          if(!this.active) return;
-          const density=this.paramVal/100;
-          if(audioCtx.state==='running' && (v===0 || Math.random() < 0.2+density*0.8)) this._chirp(voice);
-          voice.timer=setTimeout(loop, voice.interval*(0.85+Math.random()*0.3)*1000);
-        };
-        voice.timer=setTimeout(loop, Math.random()*800);
-        this._voices.push(voice);
-      }
-    },
-    stop() {
-      this.active=false;
-      if(this._voices){ this._voices.forEach(v=>clearTimeout(v.timer)); this._voices=null; }
-    },
-    setVol(v) { this.volume=v; },
-    setPar(v) { this.paramVal=v; },
-    _chirp(voice) {
-      // Cvrkot = 3–5 rychlých pulzů tónu ~4 kHz, ne souvislé pískání
-      const t0=audioCtx.currentTime+0.01;
-      const vol=(this.volume/100)*0.13*(0.7+Math.random()*0.3);
-      const pulses=3+Math.floor(Math.random()*3);
-      const period=0.052+Math.random()*0.022;
-      const osc=audioCtx.createOscillator();
-      osc.type='sine';
-      osc.frequency.value=voice.freq*(0.99+Math.random()*0.02);
-      const g=makeGain(0);
-      const pan=audioCtx.createStereoPanner(); pan.pan.value=voice.pan;
-      osc.connect(g); g.connect(pan); pan.connect(this._mg);
-      for(let p=0;p<pulses;p++){
-        const t=t0+p*period;
-        g.gain.setValueAtTime(0.0001,t);
-        g.gain.linearRampToValueAtTime(vol, t+0.009);
-        g.gain.setValueAtTime(vol, t+period*0.55);
-        g.gain.linearRampToValueAtTime(0.0001, t+period*0.72);
-      }
-      osc.start(t0); osc.stop(t0+pulses*period+0.04);
-      osc.onended=()=>{try{pan.disconnect()}catch(e){}};
-    },
-    _kill() { this.stop(); },
-  },
-
-  {
-    id:'chimes', cat:'ambient', icon:'🎐', name:'Zvonkohra',
-    volume:55, paramVal:45, nodes:null, active:false, _timer:null, _mg:null, _gust:0.3,
-    param:{ name:'Vánek', min:0, max:100, unit:'%' },
-    start(mg) { this.active=true; this._mg=mg; this._loop(); },
-    stop() { this.active=false; if(this._timer){clearTimeout(this._timer);this._timer=null;} },
-    setVol(v) { this.volume=v; },
-    setPar(v) { this.paramVal=v; },
-    _loop() {
-      if(!this.active) return;
-      // síla vánku = pomalá náhodná procházka; trubice cinkají ve shlucích
-      this._gust=Math.min(1,Math.max(0.05,this._gust+(Math.random()-0.48)*0.25));
-      const wind=(0.2+this.paramVal/100*0.8)*this._gust;
-      if(audioCtx.state==='running' && Math.random()<wind*0.9){
-        const notes=1+Math.floor(Math.random()*Math.ceil(wind*4));
-        let t=0;
-        for(let i=0;i<notes;i++){ setTimeout(()=>this._strike(), t); t+=60+Math.random()*320; }
-      }
-      this._timer=setTimeout(()=>this._loop(), 350+Math.random()*900);
-    },
-    _strike() {
-      if(!this.active||audioCtx.state!=='running') return;
-      const now=audioCtx.currentTime;
-      // pentatonika; trubicový zvon = neharmonické parciály ~1 : 2.0 : 3.0
-      const scale=[523.3,587.3,659.3,784,880,1046.5];
-      const idx=Math.floor(Math.random()*scale.length);
-      const f=scale[idx]*(0.998+Math.random()*0.004);
-      const vol=(this.volume/100)*0.16*(0.5+Math.random()*0.5);
-      const pan=audioCtx.createStereoPanner();
-      pan.pan.value=(idx/(scale.length-1))*1.1-0.55;   // každá trubice má své místo
-      pan.connect(this._mg);
-      [[1,1,3.2+Math.random()*2],[2.004,0.42,1.5],[2.98,0.22,0.8],[4.2,0.1,0.4]].forEach(([r,a,dec])=>{
-        const o=audioCtx.createOscillator(); o.type='sine'; o.frequency.value=f*r;
-        const g=makeGain(0);
-        g.gain.setValueAtTime(0,now);
-        g.gain.linearRampToValueAtTime(vol*a,now+0.004);
-        g.gain.exponentialRampToValueAtTime(0.0001,now+dec);
-        o.connect(g); g.connect(pan);
-        o.start(now); o.stop(now+dec+0.05);
-      });
-      // ťuknutí úderníku
-      const click=makeNoiseSrc(); click.loop=false;
-      const cb=makeBPF(f*2.5,8), cg=makeGain(0);
-      cg.gain.setValueAtTime(vol*0.5,now);
-      cg.gain.exponentialRampToValueAtTime(0.0001,now+0.02);
-      click.connect(cb); cb.connect(cg); cg.connect(pan);
-      click.start(now,Math.random()*2); click.stop(now+0.03);
-      setTimeout(()=>{try{pan.disconnect()}catch(e){}},6500);
-    },
-    _kill() { this.stop(); },
-  },
-
-  {
-    id:'train', cat:'ambient', icon:'🚂', name:'Noční vlak',
-    volume:60, paramVal:50, nodes:null, active:false, _timer:null, _hornT:null, _mg:null,
-    param:{ name:'Rychlost', min:0, max:100, unit:'%' },
-    start(mg) {
-      this.active=true; this._mg=mg;
-      // dunění vagonu + tichý svist kolejí
-      const src=makeNoiseSrc(getBrownBuf()), lpf=makeLPF(150);
-      const lfo=makeLFO(0.07,'sine'), lfoG=makeGain(0.06);
-      const g=makeGain(0), fade=makeGain(0);
-      lfo.connect(lfoG); lfoG.connect(g.gain);
-      src.connect(lpf); lpf.connect(g); g.connect(fade); fade.connect(mg);
-      const hSrc=makeNoiseSrc(), hbp=makeBPF(3000,4), hg=makeGain(0);
-      hSrc.connect(hbp); hbp.connect(hg); hg.connect(fade);
-      src.start(); hSrc.start(); fadeIn(fade,1);
-      g.gain.value=this._vol(); hg.gain.value=this._vol()*0.06;
-      this.nodes={src,hSrc,fade,g,hg,lfo};
-      this._clackLoop(); this._hornLoop();
-    },
-    stop() {
-      this.active=false;
-      if(this._timer){clearTimeout(this._timer);this._timer=null;}
-      if(this._hornT){clearTimeout(this._hornT);this._hornT=null;}
-      if(this.nodes) fadeOut(this.nodes.fade,()=>this._kill());
-    },
-    setVol(v) { this.volume=v; if(this.nodes){this.nodes.g.gain.value=this._vol(); this.nodes.hg.gain.value=this._vol()*0.06;} },
-    setPar(v) { this.paramVal=v; },
-    _clackLoop() {
-      if(!this.active) return;
-      // klapot podvozků: dva rychlé páry — „ka-klak … ka-klak"
-      const T=1.9-this.paramVal/100*1.25;
-      if(audioCtx.state==='running'){
-        const now=audioCtx.currentTime;
-        [[0,1],[0.14,0.8],[T*0.42,0.9],[T*0.42+0.14,0.7]].forEach(([dt,a])=>this._clack(now+dt,a));
-      }
-      this._timer=setTimeout(()=>this._clackLoop(), T*1000);
-    },
-    _clack(t,a) {
-      const vol=(this.volume/100)*0.30*a*(0.85+Math.random()*0.3);
-      const src=makeNoiseSrc(); src.loop=false;
-      const bp=makeBPF(420+Math.random()*350,2.5), g=makeGain(0);
-      g.gain.setValueAtTime(vol,t);
-      g.gain.exponentialRampToValueAtTime(0.0001,t+0.05);
-      src.connect(bp); bp.connect(g); g.connect(this._mg);
-      src.start(t,Math.random()*3); src.stop(t+0.08);
-      src.onended=()=>{try{g.disconnect()}catch(e){}};
-      // tupý náraz pod tím
-      const s2=makeNoiseSrc(getBrownBuf()); s2.loop=false;
-      const lp=makeLPF(140), g2=makeGain(0);
-      g2.gain.setValueAtTime(vol*1.4,t);
-      g2.gain.exponentialRampToValueAtTime(0.0001,t+0.09);
-      s2.connect(lp); lp.connect(g2); g2.connect(this._mg);
-      s2.start(t,Math.random()*3); s2.stop(t+0.12);
-      s2.onended=()=>{try{g2.disconnect()}catch(e){}};
-    },
-    _hornLoop() {
-      if(!this.active) return;
-      this._hornT=setTimeout(()=>{
-        if(this.active&&audioCtx.state==='running'&&Math.random()<0.6) this._horn();
-        this._hornLoop();
-      }, (45+Math.random()*100)*1000);
-    },
-    _horn() {
-      // vzdálená houkačka — mollový akord, jen občas a potichu
-      const now=audioCtx.currentTime;
-      const vol=(this.volume/100)*0.05;
-      const pan=audioCtx.createStereoPanner(); pan.pan.value=Math.random()*1.2-0.6;
-      const lp=makeLPF(900); lp.connect(pan); pan.connect(this._mg);
-      [311,370,466].forEach(f=>{
-        const o=audioCtx.createOscillator(); o.type='sawtooth'; o.frequency.value=f*(0.995+Math.random()*0.01);
-        const g=makeGain(0);
-        g.gain.setValueAtTime(0,now);
-        g.gain.linearRampToValueAtTime(vol,now+0.35);
-        g.gain.setValueAtTime(vol,now+1.4);
-        g.gain.linearRampToValueAtTime(0,now+2.4);
-        o.connect(g); g.connect(lp);
-        o.start(now); o.stop(now+2.5);
-      });
-      setTimeout(()=>{try{pan.disconnect()}catch(e){}},3000);
-    },
-    _vol() { return (this.volume/100)*0.4; },
-    _kill() { if(!this.nodes)return; try{this.nodes.src.stop();this.nodes.hSrc.stop();this.nodes.lfo.stop()}catch(e){}; try{this.nodes.fade.disconnect()}catch(e){}; this.nodes=null; },
-  },
-
-  {
-    id:'brownNoise', cat:'ambient', icon:'🟤', name:'Hnědý šum',
-    volume:65, paramVal:null, nodes:null, param:null,
-    start(mg) {
-      const src=makeNoiseSrc(getBrownBuf()), lpf=makeLPF(900), g=makeGain(0);
-      src.connect(lpf); lpf.connect(g); g.connect(mg); src.start();
-      fadeIn(g, this._vol());
-      this.nodes={src,g};
-    },
-    stop() { if(!this.nodes)return; fadeOut(this.nodes.g, ()=>this._kill()); },
-    setVol(v) { this.volume=v; if(this.nodes) this.nodes.g.gain.setTargetAtTime(this._vol(), audioCtx.currentTime, FADE); },
-    setPar(v) {},
-    _vol() { return (this.volume/100)*0.52; },
-    _kill() { if(!this.nodes)return; try{this.nodes.src.stop()}catch(e){}; try{this.nodes.g.disconnect()}catch(e){}; this.nodes=null; },
-  },
-
-  {
-    id:'whiteNoise', cat:'ambient', icon:'⬜', name:'Bílý šum',
-    volume:60, paramVal:null, nodes:null, param:null,
-    start(mg) {
-      const src=makeNoiseSrc(), g=makeGain(0);
-      src.connect(g); g.connect(mg); src.start();
-      fadeIn(g, this._vol());
-      this.nodes={src,g};
-    },
-    stop() { if(!this.nodes)return; fadeOut(this.nodes.g, ()=>this._kill()); },
-    setVol(v) { this.volume=v; if(this.nodes) this.nodes.g.gain.setTargetAtTime(this._vol(), audioCtx.currentTime, FADE); },
-    setPar(v) {},
-    _vol() { return (this.volume/100)*0.28; },
-    _kill() { if(!this.nodes)return; try{this.nodes.src.stop()}catch(e){}; try{this.nodes.g.disconnect()}catch(e){}; this.nodes=null; },
-  },
+const SOUNDS = [
+  recordedSound('lightRain','rain','🌦️','Jemný déšť','light-rain'),
+  recordedSound('medRain','rain','🌧️','Déšť na okně','rain-on-window'),
+  recordedSound('heavyRain','rain','⛈️','Déšť na stanu','rain-on-tent'),
+  recordedSound('roofRain','rain','🏠','Déšť na plechové střeše','rain-on-car-roof'),
+  recordedSound('tropRain','rain','🌴','Déšť na listí','rain-on-leaves'),
+  recordedSound('thunder','storm','⚡','Bouřka s hromy','thunder',true),
+  recordedSound('stormWind','storm','🌪️','Kvílení větru','howling-wind'),
+  recordedSound('ocean','nature','🌊','Mořský příboj','waves'),
+  recordedSound('river','nature','🏞️','Říční proud','river'),
+  recordedSound('campfire','nature','🔥','Táborák','campfire'),
+  recordedSound('birds','nature','🐦','Lesní ptáci','birds'),
+  recordedSound('wind','ambient','💨','Tichý vítr','wind'),
+  recordedSound('crickets','ambient','🦗','Noční cvrčci','crickets'),
+  recordedSound('chimes','ambient','🎐','Zvonkohra','wind-chimes'),
+  recordedSound('train','ambient','🚂','Uvnitř jedoucího vlaku','inside-a-train'),
+  noiseSound('brownNoise','🟤','Hnědý šum',true),
+  noiseSound('whiteNoise','⬜','Bílý šum',false),
 ];
+
 
 // ═══════════════════════════════════════════════════════════════
 // PRESETS
@@ -1310,18 +697,20 @@ const SOUNDS = [
 
 const PRESETS = [
   { name:'🌩️ Bouřka',      sounds:{ heavyRain:75, tropRain:40, thunder:65, stormWind:45 } },
-  { name:'🌲 Ranní les',    sounds:{ lightRain:35, birds:70, wind:30, brownNoise:15 } },
-  { name:'🌊 U moře',       sounds:{ ocean:80, wind:35, brownNoise:20 } },
-  { name:'🔥 Teplá noc',    sounds:{ crickets:65, campfire:70, brownNoise:25 } },
+  { name:'🌲 Ranní les',    sounds:{ lightRain:35, birds:70, wind:30, brownNoise:0 } },
+  { name:'🌊 U moře',       sounds:{ ocean:80, wind:35, brownNoise:0 } },
+  { name:'🔥 Teplá noc',    sounds:{ crickets:65, campfire:70, brownNoise:0 } },
   { name:'📚 Soustředění',  sounds:{ brownNoise:72, lightRain:28, whiteNoise:15 } },
   { name:'😴 Hluboký spánek', sounds:{ heavyRain:45, brownNoise:80, wind:20 } },
   { name:'🎐 Zen zahrada',  sounds:{ chimes:60, river:45, birds:25, wind:20 } },
-  { name:'🚂 Nočním vlakem', sounds:{ train:70, medRain:35, brownNoise:18 } },
+  { name:'🚂 Nočním vlakem', sounds:{ train:70, medRain:35, brownNoise:0 } },
 ];
 
 let activePreset = -1;
+let presetTimer = null;
 
 function applyPreset(idx) {
+  clearTimeout(presetTimer);
   initAudio();
   if(audioCtx.state==='suspended') audioCtx.resume();
 
@@ -1336,11 +725,12 @@ function applyPreset(idx) {
   });
 
   // Short delay then apply preset
-  setTimeout(()=>{
+  presetTimer = setTimeout(()=>{
+    presetTimer = null;
     const preset = PRESETS[idx];
     Object.entries(preset.sounds).forEach(([id, vol]) => {
       const s = SOUNDS.find(x=>x.id===id);
-      if(!s) return;
+      if(!s || vol === 0) return;
       s.volume = vol;
       const tog = document.getElementById('tog-'+s.id);
       const volSl = document.getElementById('vol-'+s.id);
@@ -1393,28 +783,29 @@ function buildUI() {
             <span>${sound.name}</span>
           </div>
           <label class="toggle">
-            <input type="checkbox" id="tog-${sound.id}">
+            <input type="checkbox" id="tog-${sound.id}" aria-label="Přehrát: ${sound.name}">
             <span class="tog-track"></span>
           </label>
         </div>
         <div class="card-controls">
           <div class="ctrl-row">
             <span class="ctrl-lbl">Hlasitost</span>
-            <input type="range" id="vol-${sound.id}" min="0" max="100" value="${sound.volume}">
+            <input type="range" id="vol-${sound.id}" aria-label="Hlasitost: ${sound.name}" min="0" max="100" value="${sound.volume}">
             <span class="ctrl-val" id="vol-val-${sound.id}">${sound.volume}%</span>
           </div>
           ${sound.param ? `<div class="ctrl-row">
             <span class="ctrl-lbl">${sound.param.name}</span>
-            <input type="range" id="par-${sound.id}" min="${sound.param.min}" max="${sound.param.max}" value="${sound.paramVal??50}">
+            <input type="range" id="par-${sound.id}" aria-label="${sound.param.name}: ${sound.name}" min="${sound.param.min}" max="${sound.param.max}" value="${sound.paramVal??50}">
             <span class="ctrl-val" id="par-val-${sound.id}">${sound.paramVal??50}${sound.param.unit}</span>
           </div>` : ''}
           ${sound.param2 ? `<div class="ctrl-row">
             <span class="ctrl-lbl">${sound.param2.name}</span>
-            <input type="range" id="par2-${sound.id}" min="${sound.param2.min}" max="${sound.param2.max}" value="${sound.param2Val??50}">
+            <input type="range" id="par2-${sound.id}" aria-label="${sound.param2.name}: ${sound.name}" min="${sound.param2.min}" max="${sound.param2.max}" value="${sound.param2Val??50}">
             <span class="ctrl-val" id="par2-val-${sound.id}">${sound.param2Val??50}${sound.param2.unit}</span>
           </div>` : ''}
           ${sound.action ? `<button class="action-btn" id="act-${sound.id}">${sound.action.label}</button>` : ''}
-        </div>`;
+        </div>
+        <div class="sound-status" id="status-${sound.id}" role="status">${sound.file ? 'Skutečná nahrávka' : 'Generovaný šum'}</div>`;
       grid.appendChild(card);
     });
     root.appendChild(grid);
@@ -1480,8 +871,9 @@ function buildUI() {
       document.getElementById('act-'+s.id).addEventListener('click',()=>{
         initAudio();
         if(audioCtx.state==='suspended') audioCtx.resume();
-        s._mg = s._mg || masterGain;
-        s._burst(true);
+        const tog = document.getElementById('tog-'+s.id);
+        if(!tog.checked) { tog.checked=true; tog.dispatchEvent(new Event('change')); }
+        else s._burst();
       });
     }
   });
@@ -1554,6 +946,7 @@ document.getElementById('masterPlay').addEventListener('click',()=>{
 document.getElementById('stopAll').addEventListener('click', stopAllSounds);
 
 function stopAllSounds(){
+  clearTimeout(presetTimer); presetTimer = null;
   SOUNDS.forEach(s=>{
     const tog=document.getElementById('tog-'+s.id);
     if(tog&&tog.checked){
@@ -1565,6 +958,7 @@ function stopAllSounds(){
   setPlaying(false);
   updateActiveBadge();
   activePreset=-1; renderPresetBtns();
+  saveMix();
 }
 
 // Master volume
@@ -1652,12 +1046,12 @@ function saveMix(){
   SOUNDS.forEach(s=>{
     mix[s.id]={ vol:s.volume, par:s.paramVal, par2:s.param2Val, on:document.getElementById('tog-'+s.id)?.checked };
   });
-  try{ localStorage.setItem('relaxMix2', JSON.stringify(mix)); } catch(e){}
+  try{ localStorage.setItem('relaxMix3', JSON.stringify(mix)); } catch(e){}
 }
 
 function restoreMix(){
   try{
-    const saved=JSON.parse(localStorage.getItem('relaxMix2'));
+    const saved=JSON.parse(localStorage.getItem('relaxMix3'));
     if(!saved) return;
     SOUNDS.forEach(s=>{
       const d=saved[s.id]; if(!d) return;
@@ -1756,7 +1150,7 @@ function startRecording(){
   if(!isPlaying){ setStatus('Nejprve spusťte alespoň jeden zvuk.',''); return; }
   recChunks=[];
   const mimeType=MediaRecorder.isTypeSupported('audio/webm;codecs=opus')?'audio/webm;codecs=opus':'audio/webm';
-  mediaRec=new MediaRecorder(mediaStreamDest.stream,{mimeType});
+  mediaRec=new MediaRecorder(mediaStreamDest.stream,{mimeType, audioBitsPerSecond:192000});
   mediaRec.ondataavailable=e=>{ if(e.data.size>0) recChunks.push(e.data); };
   mediaRec.onstop=finishRec;
   mediaRec.start(1000);

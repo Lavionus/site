@@ -26,6 +26,7 @@
   <script src="lib/hammer.min.js"></script>
   <script src="lib/chartjs-plugin-zoom.min.js"></script>
   <link rel="stylesheet" href="lib/leaflet/leaflet.css" />
+  <link rel="stylesheet" href="lib/maplibre/maplibre-gl.css" />
   <link rel="stylesheet" href="../common.css">
   <script src="../theme.js"></script>
   <script src="../podpis.js" defer></script>
@@ -807,13 +808,6 @@
     .radar-layer {
       transition: opacity 0.4s ease-in-out;
       will-change: opacity;
-    }
-
-    /* Tmavý podklad bez API klíče: běžné OSM dlaždice ztmavené filtrem.
-       Filtr sedí na kontejneru vrstvy, radarových odrazů nad ním se nedotkne. */
-    .dark-tiles {
-      /* Neutrálně šedý podklad (jako bývalá CARTO dark) – barevný zůstane jen radar */
-      filter: invert(1) grayscale(1) brightness(0.9) contrast(1.15);
     }
 
     /* Pod tmavým podkladem ať neprosvítá světlé pozadí mapy, než dojedou dlaždice */
@@ -2211,6 +2205,10 @@
   </div>
 
   <script src="lib/leaflet/leaflet.js"></script>
+  <!-- Vektorové podklady OpenFreeMap: MapLibre GL + můstek do Leafletu -->
+  <script src="lib/maplibre/maplibre-gl.js"></script>
+  <script src="lib/maplibre/leaflet-maplibre-gl.js"></script>
+  <script src="lib/maplibre/ofm-basemap.js"></script>
   <script>
     // Pojistka: pokud se z CDN nenačte Chart.js (výpadek / blokace), dej uživateli vědět
     if (typeof Chart === 'undefined') {
@@ -4777,7 +4775,10 @@
       radarViewKey = '';
       radarCancelRequested = false;
 
-      radarMap = L.map('radar-map', { minZoom: 4 });
+      // maxZoom patří mapě, ne vrstvám: vektorový podklad není GridLayer,
+      // takže z něj Leaflet zoom limity nepřevezme a getMaxZoom() by vrátil Infinity.
+      radarMap = L.map('radar-map', { minZoom: 4, maxZoom: 20 });
+      createGlBasePane(radarMap);
 
       radarMap.fitBounds(czechRepublicBounds, {
           padding: [20, 20]
@@ -4793,25 +4794,22 @@
       radarBaseLayers = {
         'Topografická mapa': L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
           attribution: '© OpenTopoMap contributors, SRTM | Map style: © OpenTopoMap (CC-BY-SA)',
-          maxZoom: 19,
+          maxZoom: 20,
           maxNativeZoom: 17 // server nad z17 vrací obrázek "zoom level not supported" – nad touto úrovní jen zvětšíme poslední dostupné dlaždice
         }),
-        'OpenStreetMap': L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          attribution: '© OpenStreetMap contributors',
-          maxZoom: 18
-        }),
-        // Tmavý podklad bez API klíče (CARTO dark_all už klíč vyžaduje):
-        // standardní OSM dlaždice ztmavené CSS filtrem vrstvy – viz .dark-tiles
-        'Tmavá mapa': L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          attribution: '© OpenStreetMap contributors',
-          maxZoom: 18,
-          className: 'dark-tiles'
-        })
+        'OpenStreetMap': openFreeMapLayer('liberty'),
+        // Nativně tmavý podklad – bez API klíče a bez CSS filtru
+        'Tmavá mapa': openFreeMapLayer('dark')
       };
 
       radarBaseLayers[getSavedRadarBaseLayer()].addTo(radarMap);
       L.control.layers(radarBaseLayers).addTo(radarMap);
       syncRadarMapBackground(getSavedRadarBaseLayer());
+
+      // Vektorový podklad si drží rozměr z okamžiku vzniku – dokud mu Leaflet
+      // neohlásí velikost, kreslí jen do části plátna. Rastrové dlaždice to
+      // nepotřebují, GL ano.
+      setTimeout(() => radarMap.invalidateSize(), 200);
 
       // Slider pro zoom – zrcadlí a ovládá zoom mapy vedle vestavěných +/- tlačítek
       const zoomSlider = document.getElementById('radarZoom');
@@ -7038,6 +7036,12 @@
         ensureRadarPreload(); // dotáhni, co se dřív nestihlo
       }
 
+      // Skrytá záložka nemá rozměr; po zobrazení ho mapě připomeň, jinak
+      // vektorový podklad zůstane vykreslený jen v části plochy.
+      if (tabName === 'radar' && radarMap) {
+        setTimeout(() => radarMap.invalidateSize(), 50);
+      }
+
       if (tabName === 'geomag') {
         setTimeout(initGeomagForecast, 100);
       }
@@ -7166,14 +7170,14 @@
           scrollWheelZoom: false, doubleClickZoom: false, boxZoom: false,
           keyboard: false, touchZoom: false
         });
-        // Tmavý podklad bez API klíče – ztmavené OSM dlaždice (viz .dark-tiles)
-        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-          maxZoom: 12, className: 'dark-tiles'
-        }).addTo(kioskMap);
+        // Tmavý podklad bez API klíče – OpenFreeMap (vektorový)
+        createGlBasePane(kioskMap);
+        openFreeMapLayer('dark', { maxZoom: 12 }).addTo(kioskMap);
       }
       const center = currentLocationData ? [currentLocationData.lat, currentLocationData.lon] : [49.8, 15.5];
       kioskMap.setView(center, 7);
       setTimeout(() => kioskMap.invalidateSize(), 150);
+      setTimeout(() => kioskMap.invalidateSize(), 600); // GL podklad dorovná rozměr až po načtení stylu
       updateKioskRadar();
     }
 
