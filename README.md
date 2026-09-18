@@ -44,6 +44,14 @@ přidá spodní odsazení, `100vh` v CSS stránky se zmenší o výšku pruhu a 
 ukotvené napevno u spodní hrany se nad něj posunou. Uvnitř rozcestníku se
 v iframu nekreslí, podpis tam patří nadřazené stránce.
 
+**Rozbočka** (`obsah/tubeSplit.html`) má stejné kónické konce a sražení jako
+`obsah/tubeRedCone.html` – zvlášť pro vstupní přírubu a společně pro všechny
+vývody (bývají stejné a karty vývodů jsou už dost nabité). Řezy vstupní příruby
+se dopočítají tam, kde se profil lomí; u vývodů se fazeta smí zakousnout jen do
+rovné části za narovnáním průřezu (`narovnani()` – stejný výpočet používá
+geometrie i kontrola), protože blíž k přechodu je řez ještě elipsa a kolmá
+fazeta by ji přehnula. Síť zůstává uzavřená (každá hrana ve dvou trojúhelnících).
+
 Historii vytvořených tvarů v obou generátorech trubek (`obsah/tubeRed.html`,
 `obsah/tubeSplit.html`) obsluhuje sdílený `tvary.js`: uloží nastavení stránky do
 `localStorage` pod názvem (nezadaný se odvodí z rozměrů, např. `100 → 2× 40 mm`),
@@ -59,6 +67,24 @@ si je uloží při prvním otevření stránky. Slovník ke Scrabblu
 (`obsah/scrabbleSlovnik.js`, 41 tis. tvarů, 366 kB) vznikl tak, že frekvenční
 seznam českých slov z titulků (hermitdave/FrequencyWords) prošel pravopisným
 slovníkem cs_CZ (LibreOffice/hunspell); postup je popsaný v hlavičce souboru.
+
+**Redukce s kónusem** (`obsah/tubeRedCone.html`) je samostatná kopie
+`obsah/tubeRed.html` navíc s kónickými konci přírub. U napojení na druhou přírubu
+má příruba rozměry podle zadání (OD/ID) a k svému volnému konci se lineárně mění
+o zadanou hodnotu průměru – zvlášť zvenku (plášť se zužuje) a zevnitř (díra se
+rozšiřuje), podle režimu *bez kónusu / zvenku / zevnitř / oboje*; záporná hodnota
+kónus obrátí. Nezávisle na kónusu se dá na hranu volného konce dát ještě
+**sražení** (fazeta zvenku / zevnitř / oboje) – měří se od plochy, kterou tam
+nechal kónus, takže jde obojí kombinovat. Každá fazeta má vlastní rozměr v mm
+(o kolik se posune poloměr) a vlastní úhel od osy dílu: 45° je stejně hluboká
+jako dlouhá, 30° zajede do délky skoro dvakrát dál, 60° naopak sotva půl.
+Na konci musí zbýt aspoň 0,2 mm stěny a fazeta se při daném úhlu musí vejít do
+délky příruby, jinak se díl
+nevygeneruje a stránka řekne proč. Příruby dlouhých redukcí se kvůli tomu staví
+z řezu (`profilPriruby` + `pridejProfil`) místo napevno indexovaných prstenců –
+do řezu se tak dá přidat libovolný počet hran. Obě stránky žijí odděleně – vlastní `localStorage`
+(`reductionConeSettings`, tvary pod `webapp_redukce_konus_tvary`) – takže
+**opravy ve společné geometrii je potřeba udělat v obou souborech**.
 
 **Kulturní akce v krajích** (`obsah/kulturni_akce.html`) staví na katalogu
 `obsah/kulturniAkceData.js` – 100 tradičních každoročních akcí (hody, poutě,

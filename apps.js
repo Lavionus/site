@@ -1271,9 +1271,14 @@ const KATALOG_SEKCE = [
         "tagy": ["trubky", "redukce", "rozvin", "plech", "svařování"]
       },
       {
+        "soubor": "obsah/tubeRedCone.html",
+        "nazev": "🔩 Redukce s kónusem",
+        "tagy": ["trubky", "redukce", "kónus", "kuželové konce", "zkosení", "nábeh", "svařování", "3d tisk"]
+      },
+      {
         "soubor": "obsah/tubeSplit.html",
         "nazev": "🔱 Rozbočka trubek",
-        "tagy": ["trubky", "rozbočka", "odsávání", "vývody", "kalhoty", "redukce", "svařování"]
+        "tagy": ["trubky", "rozbočka", "odsávání", "vývody", "kalhoty", "redukce", "svařování", "kónus", "sražení", "fazeta"]
       },
       {
         "soubor": "obsah/cookieCutter.html",
