@@ -257,8 +257,10 @@ v jednom sloupci; k němu **osnova** z nadpisů se scroll-spy a filtrem (`Alt+O`
 hledání v dokumentu se zvýrazněním a počítadlem nálezů (`Ctrl+F`), **sbalitelné
 oddíly** (klik na šipku u nadpisu; tlačítko „Oddíly" sbalí vše), **bloky kódu
 s hlavičkou** (jazyk, počet řádků, kopírování, sbalení — i hromadně přepínačem
-„Sbalit bloky kódu"), pruh postupu čtení, statistika (slova, znaky, odhad doby
-čtení) a tisk do PDF, který vytiskne jen dokument a vše rozbalené. Rozečtený
+„Sbalit bloky kódu"), pruh postupu čtení a statistika (slova, znaky, odhad doby
+čtení). Osnovu jde **zamknout k místu v textu** (🔒 v její hlavičce, výchozí):
+drží aktivní kapitolu uprostřed a posouvá se jen při změně kapitoly, aby
+nebojovala s ručním listováním. Rozečtený
 text i pozice ve stránce se pamatují v `localStorage`
 (`md_dokument_text`, `md_dokument_pozice`), typografie a téma v
 `md_dokument_cteni`.
@@ -284,9 +286,57 @@ až za `common.css` a každé definuje **celou** paletu, ne jen odchylky; usadit
 musí ještě před vykreslením, o to se stará krátký skript v `<head>`. Nadstavba
 sahá jen do DOM náhledu, export do DOCX/ODT pracuje s HTML od `marked`, takže se
 do výsledných dokumentů obaly kódu ani kotvy nadpisů nedostanou. Ověřuje to
-`_test/md_ctecka.py` (44 kontrol v headless Chromiu) vedle původního
+`_test/md_ctecka.py` (100 kontrol v headless Chromiu) vedle původního
 `_test/md_dokument.py`; `_test/md_snimky.html` slouží ke snímkování čtečky
 (`?tema=…&rezim=…&osnova=1&hledat=slovo&dolu=px`).
+
+**Poznámky** (panel vpravo, `Alt+P`) se drží **bloku, ke kterému patří**, a
+ukládají se na **úplný konec dokumentu** jako HTML komentář — jsou tedy součástí
+.md souboru, ale v náhledu, na GitHubu ani v jiných prohlížečích Markdownu
+vidět nejsou. Jedním zdrojem pravdy je text v editoru:
+
+```
+<!-- md-poznamky
+Poznámky ke čtení (stránka „Markdown → DOCX / ODT“): číslo řádku dokumentu a poznámka.
+7 {"kotva":"Druhý odstavec o hruškách.","text":"text poznámky"}
+-->
+```
+
+Číslo je řádek, kde blok začíná, kotva začátek jeho textu. Řádky bloků se
+počítají z tokenů `marked.lexer()` (nejvyšší úroveň odpovídá dětem `.telo` jedna
+k jedné; nic nevykreslí jen mezery, definice odkazů a HTML komentáře). Po úpravě
+textu se poznámka hledá na svém řádku, pak podle kotvy (nejbližší shoda), takže
+se s odstavcem posune; nenajde-li se, zůstane u nejbližšího bloku s ⚠ a 📌 ji
+připne jinam. `--` v textu poznámky se zapisuje jako JSON `\u002d`, jinak by
+komentář ukončilo. Přepsání bloku uprostřed psaní v editoru by rozbilo jeho
+historii Zpět, proto se přeskupení zapíše až po opuštění editoru. Značky
+poznámek a tlačítko „📝+“ leží ve vlastní vrstvě nad listem (`.pozn-vrstva`,
+pozice podle `offsetTop` bloku, přepočet přes `ResizeObserver`) — do bloků se
+nesahá, hledání, osnova ani sbalování je nevidí. Do .docx/.odt/.doc jdou
+poznámky jen na přání (přepínač v patě panelu) jako příloha na konci;
+`window.MD_PRO_EXPORT` z exportu vždy odebere skrytý blok.
+
+**Ukládání** (.md, .docx, .odt, .doc; `Ctrl+S` = .md) jde přes dialog „Uložit
+jako“ (`showSaveFilePicker` – Chrome, Edge, Opera). Prohlížeče bez něj (Firefox,
+Safari) dostanou klasické stažení a stránka poradí zapnout „Vždy se ptát, kam
+ukládat“; zavření dialogu se ohlásí jako zrušené uložení.
+
+**Tisk** má vlastní panel: papír (A4/A5/Letter, orientace, okraje), písmo
+a velikost, nová stránka před nadpisem 1./2. úrovně, obsah na začátku, záhlaví
+s názvem, čísla stránek „n / celkem“ (okrajové boxy `@page`, Chromium 131+;
+Firefox je zatím ignoruje), vypsání adres odkazů, barevné/černobílé nadpisy
+a poznámky u odstavců nebo na konci. Proměnnou část skládá `pouzijTisk()` do
+`<style id="tiskStyl">`, prvky jen pro tisk (`.jen-tisk`) leží v listu trvale —
+nastavení tak platí i pro `Ctrl+P`. Tmavá témata mají `color-scheme: dark`,
+tisk ho vrací na světlé, jinak by plátno natřelo tmavě i okraje stránky.
+Ověřuje to `_test/md_tisk.py`: vytiskne `_test/md_tisk.html` do PDF a obsah
+stránek zkontroluje přes `pdftotext`.
+
+**Celá obrazovka** schová pruh s podpisem: `:root:fullscreen` nastaví
+`--podpis-vyska` na 0 (podle ní `podpis.js` odsazuje tělo a zkracuje `100vh`)
+a `#autor-podpis` skryje. Rám rozcestníku (`index.html`) má kvůli tomu
+`allow="fullscreen"` — bez něj by celou obrazovku z podstránky nešlo zapnout
+vůbec.
 
 Po větší změně zvyš verzi cache v `sw.js` (`webapp-vN`) – jinak návštěvník uvidí
 novou verzi až při druhém načtení. Metodus má svou vlastní v `../metodus/sw.js`.
