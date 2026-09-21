@@ -3,1449 +3,1213 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>📄 Generátor stránek A4</title>
+  <title>📏 Papíry na tisk – mřížky, linky, tečky</title>
   <script src="lib/jspdf.umd.min.js"></script>
   <link rel="stylesheet" href="../common.css">
   <script src="../theme.js"></script>
+  <script src="../dialog.js"></script>
   <script src="../podpis.js" defer></script>
   <style>
-    * {
-      margin: 0;
-      padding: 0;
-      box-sizing: border-box;
-    }
+    /* Stránka počítá všechno v milimetrech: papír se tiskne, ne prohlíží.
+       Vzor se sestaví jako seznam čar a teček v mm a ten se pak vykreslí
+       do náhledu (SVG), do PDF (vektorově) i do PNG — jeden výpočet,
+       tři výstupy, žádná kopie geometrie navíc. */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
 
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      font-family: var(--font, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif);
       background-color: var(--bg);
       color: var(--text);
-      min-height: 10vh;
+      min-height: 100vh;
     }
 
-    .container {
-      max-width: 1400px;
-      margin: 0 auto;
-      padding: 20px;
-      display: flex;
-      gap: 20px;
-    }
+    .container { max-width: 1500px; margin: 0 auto; padding: 16px 20px 20px; }
 
-    .header {
-      text-align: center;
-      margin-bottom: 30px;
-      display: none;
-    }
+    .header { text-align: center; margin-bottom: 14px; }
+    .header h1 { font-size: 1.35rem; font-weight: 600; margin-bottom: 6px; }
+    .header p { font-size: .85rem; color: var(--text-muted); }
 
-    .controls-section {
+    .main { display: grid; grid-template-columns: 380px 1fr; gap: 18px; align-items: start; }
+
+    .panel {
       background-color: var(--bg-elevated);
       border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 20px;
-      width: 350px;
-      flex-shrink: 0;
-      height: fit-content;
+      border-radius: var(--radius, 8px);
+      padding: 14px 16px;
+      max-height: calc(100vh - 150px);
+      overflow-y: auto;
     }
 
-    .controls-title {
-      font-size: 1.1rem;
-      font-weight: 600;
-      margin-bottom: 20px;
-      color: var(--text);
-      display: flex;
-      align-items: center;
-      gap: 10px;
+    details.sekce { border-top: 1px solid var(--border); }
+    details.sekce:first-of-type { border-top: none; }
+    details.sekce > summary {
+      list-style: none; cursor: pointer; padding: 12px 2px;
+      font-size: 1rem; font-weight: 600;
+      display: flex; align-items: center; gap: 8px; user-select: none;
+    }
+    details.sekce > summary::-webkit-details-marker { display: none; }
+    details.sekce > summary::after { content: '▸'; margin-left: auto; color: var(--text-faint); transition: transform .2s ease; }
+    details.sekce[open] > summary::after { transform: rotate(90deg); }
+    details.sekce > summary:focus-visible { outline: 2px solid var(--accent); border-radius: 4px; }
+    .sekce-telo { padding: 2px 2px 14px; }
+
+    .pole { margin-bottom: 14px; }
+    .pole:last-child { margin-bottom: 0; }
+    .pole > label, .popisek {
+      display: block; font-size: .8rem; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: .5px; margin-bottom: 6px; font-weight: 600;
+    }
+    .pole input[type="number"], .pole input[type="text"], .pole select {
+      width: 100%; padding: 8px 10px;
+      background-color: var(--bg-input); border: 1px solid var(--border-strong);
+      border-radius: 4px; color: var(--text); font-size: .9rem; font-family: inherit;
+    }
+    .pole input:focus, .pole select:focus { outline: none; border-color: var(--accent); }
+    .pole input[type="color"] {
+      width: 100%; height: 38px; padding: 3px;
+      background-color: var(--bg-input); border: 1px solid var(--border-strong);
+      border-radius: 4px; cursor: pointer;
+    }
+    .pole input[type="range"] {
+      width: 100%; height: 6px; background: var(--border); border-radius: 3px;
+      -webkit-appearance: none; appearance: none; outline: none; cursor: pointer;
+    }
+    .pole input[type="range"]::-webkit-slider-thumb {
+      -webkit-appearance: none; width: 18px; height: 18px;
+      background: var(--accent); border-radius: 50%; cursor: pointer;
+    }
+    .pole input[type="range"]::-moz-range-thumb {
+      width: 18px; height: 18px; background: var(--accent);
+      border: none; border-radius: 50%; cursor: pointer;
+    }
+    .hodnota { float: right; color: var(--accent); font-weight: 600; font-size: .85rem; text-transform: none; letter-spacing: 0; }
+
+    .dvojice { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+    .ctverice { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+    .prepinac {
+      display: flex; align-items: center; gap: 8px; margin-bottom: 10px;
+      font-size: .88rem; color: var(--text); cursor: pointer; font-weight: 500;
+    }
+    .prepinac input { width: 16px; height: 16px; accent-color: var(--accent); cursor: pointer; }
+
+    .volby-vzoru { display: none; }
+    .volby-vzoru.aktivni { display: block; }
+
+    .predvolby { display: grid; grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 6px; }
+    .predvolby button {
+      padding: 7px 8px; font-size: .8rem; font-family: inherit;
+      background: var(--bg-control); color: var(--text);
+      border: 1px solid var(--border-strong); border-radius: 4px; cursor: pointer;
+      text-align: left; line-height: 1.25;
+    }
+    .predvolby button:hover { border-color: var(--accent); }
+    .predvolby button b { display: block; font-size: .84rem; font-weight: 600; }
+    .predvolby button span { color: var(--text-faint); font-size: .72rem; }
+
+    .tlacitka { display: flex; gap: 8px; margin-top: 14px; flex-wrap: wrap; }
+    .btn {
+      flex: 1 1 110px; padding: 10px 12px;
+      border: 1px solid var(--border-strong); border-radius: 4px; cursor: pointer;
+      font-size: .88rem; font-family: inherit; font-weight: 500;
+      background-color: var(--bg-control); color: var(--text);
+      transition: filter .15s ease;
+    }
+    .btn:hover { filter: brightness(1.12); }
+    .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+    .btn-hlavni { background-color: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+
+    .napoveda {
+      background-color: var(--accent-soft); border-left: 3px solid var(--accent);
+      border-radius: 4px; padding: 10px 12px; margin-top: 12px;
+      font-size: .82rem; line-height: 1.55; color: var(--text-muted);
+    }
+    .napoveda strong { color: var(--text); }
+
+    .varovani {
+      display: none; background-color: var(--bg-control); border-left: 3px solid var(--warn);
+      border-radius: 4px; padding: 10px 12px; margin-top: 12px;
+      font-size: .84rem; line-height: 1.5; color: var(--text);
+    }
+    .varovani.vidno { display: block; }
+
+    /* --- náhled --------------------------------------------------------- */
+    .nahled {
+      background-color: var(--bg-elevated); border: 1px solid var(--border);
+      border-radius: var(--radius, 8px); overflow: hidden;
+    }
+    .nahled-lista {
+      display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+      padding: 8px 12px; border-bottom: 1px solid var(--border);
+      font-size: .82rem; color: var(--text-muted);
+    }
+    .nahled-lista b { color: var(--accent); font-weight: 600; }
+    .nahled-plocha {
+      display: flex; justify-content: center; align-items: flex-start;
+      padding: 18px; background-color: var(--bg-deep);
+      min-height: 50vh; overflow: auto;
+    }
+    /* Náhled se zmenší tak, aby byl vidět celý list — papír se prohlíží
+       vcelku, ne po kouscích. Při tisku se omezení zruší a platí
+       milimetry ze značky <svg>. */
+    #papir {
+      box-shadow: 0 4px 18px rgba(0, 0, 0, .35);
+      max-width: 100%;
+      max-height: calc(100vh - 250px);
+      width: auto;
+      height: auto;
+      background: #fff;
     }
 
-    .control-group {
-      display: flex;
-      flex-direction: column;
-      margin-bottom: 20px;
+    @media (max-width: 1000px) {
+      .main { grid-template-columns: 1fr; }
+      .panel { max-height: none; }
+      .nahled-plocha { max-height: none; }
     }
 
-    .control-group h3 {
-      font-size: 0.9rem;
-      color: var(--text-faint);
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      margin-bottom: 8px;
-      font-weight: 600;
-    }
-
-    .control-input {
-      padding: 10px 12px;
-      background-color: var(--border);
-      border: 1px solid var(--border-strong);
-      border-radius: 4px;
-      color: var(--text);
-      font-size: 0.9rem;
-      transition: all 0.3s ease;
-    }
-
-    .control-input:focus {
-      outline: none;
-      border-color: var(--accent);
-    }
-
-    .color-input {
-      height: 40px;
-      padding: 5px;
-      cursor: pointer;
-    }
-
-    .action-buttons {
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      margin-top: 20px;
-    }
-
-    .action-btn {
-      background-color: var(--accent);
-      color: white;
-      border: none;
-      padding: 12px 20px;
-      border-radius: 4px;
-      cursor: pointer;
-      font-size: 0.9rem;
-      transition: background-color 0.2s ease;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      gap: 8px;
-    }
-
-    .action-btn:hover {
-      background-color: var(--accent);
-    }
-
-    .action-btn.secondary {
-      background-color: var(--border);
-    }
-
-    .action-btn.secondary:hover {
-      background-color: var(--border-strong);
-    }
-
-    .preview-section {
-      background-color: var(--bg-elevated);
-      border: 1px solid var(--border);
-      border-radius: 8px;
-      padding: 20px;
-      flex: 1;
-      display: flex;
-      flex-direction: column;
-    }
-
-    .preview-title {
-      font-size: 1.1rem;
-      font-weight: 600;
-      margin-bottom: 15px;
-      color: var(--text);
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
-
-    .preview-container {
-      flex: 1;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      padding: 20px;
-      background-color: var(--bg);
-      border-radius: 4px;
-      overflow: auto;
-    }
-
-    .a4-preview {
-      position: relative;
-      width: 595px;
-      height: 842px;
-      background-color: white;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-      overflow: hidden;
-    }
-
-    .a4-preview canvas {
-      display: block;
-      width: 100%;
-      height: 100%;
-    }
-
-    .notification {
-      position: fixed;
-      top: 20px;
-      right: 20px;
-      padding: 15px 20px;
-      border-radius: 4px;
-      color: white;
-      font-size: 0.9rem;
-      z-index: 10000;
-      min-width: 300px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      animation: slideIn 0.3s ease-out;
-    }
-
-    .notification.success {
-      background-color: #4caf50;
-      border-left: 4px solid #45a049;
-    }
-
-    .notification.info {
-      background-color: #2196f3;
-      border-left: 4px solid #1976d2;
-    }
-
-    .notification.warning {
-      background-color: #ff9800;
-      border-left: 4px solid #f57c00;
-    }
-
-    .notification.error {
-      background-color: #f44336;
-      border-left: 4px solid #d32f2f;
-    }
-
-    @keyframes slideIn {
-      from {
-        transform: translateX(100%);
-        opacity: 0;
-      }
-      to {
-        transform: translateX(0);
-        opacity: 1;
-      }
-    }
-
-    @media (max-width: 1024px) {
-      .container {
-        flex-direction: column;
-      }
-      .controls-section {
-        width: 100%;
-      }
-    }
-
-    @media (max-width: 768px) {
-      .container {
-        padding: 10px;
-      }
-      .a4-preview {
-        width: 100%;
-        height: auto;
-        aspect-ratio: 1 / 1.414;
-      }
-    }
-
-    .pattern-info {
-      margin-top: 0;
-      font-size: 0.8rem;
-      color: var(--text-faint);
-      line-height: 1.4;
-    }
-
-    .mm-info {
-      display: none;
-    }
-    
-    .input-with-unit-and-info {
-      display: flex;
-      flex-direction: column;
-    }
-
-    .input-line {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-    }
-
-    .input-line .control-input {
-      flex-grow: 1;
-    }
-
-    .unit-text {
-      color: var(--text-faint);
-      font-size: 0.9rem;
-      font-weight: 600;
-      line-height: 40px;
-      flex-shrink: 0;
-    }
-
-    .mm-info-inline {
-      color: var(--text-faint);
-      font-size: 0.8rem;
-      flex-shrink: 0;
-      line-height: 40px;
-    }
-
-    .pattern-info-line {
-      margin-top: 5px;
-    }
-
-    .margin-controls {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: 10px;
-      margin-top: 10px;
-    }
-
-    .margin-control {
-      display: flex;
-      flex-direction: column;
-    }
-
-    .margin-control h4 {
-      font-size: 0.8rem;
-      color: var(--text-faint);
-      margin-bottom: 5px;
-      font-weight: 600;
-    }
-
-    .quality-info {
-      background-color: #2d4a2d;
-      border: 1px solid #4caf50;
-      color: #81c784;
-      padding: 10px;
-      border-radius: 4px;
-      font-size: 0.8rem;
-      margin-top: 10px;
-      line-height: 1.4;
-    }
-
-    .export-buttons {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 10px;
-      margin-top: 10px;
-    }
-
-    /* Tiskové styly */
+    /* --- tisk: na papír jde jen vzor, vektorově a v přesných mm --------- */
     @media print {
-      body {
-        background-color: white;
-      }
-
-      .container {
-        display: block;
-        max-width: none;
-        padding: 0;
-        margin: 0;
-      }
-
-      .controls-section {
-        display: none !important;
-      }
-
-      .preview-section {
-        background-color: white;
-        border: none;
-        padding: 0;
-        margin: 0;
-      }
-
-      .preview-title {
-        display: none !important;
-      }
-
-      .preview-container {
-        padding: 0;
-        background-color: white;
-        display: block;
-      }
-
-      .a4-preview {
-        width: 210mm;
-        height: 297mm;
-        box-shadow: none;
-        page-break-after: avoid;
-      }
-
-      .notification {
-        display: none !important;
-      }
-
-      @page {
-        size: A4;
-        margin: 0;
-      }
+      body { background: #fff; }
+      .container { max-width: none; padding: 0; }
+      .header, .panel, .nahled-lista { display: none !important; }
+      .main { display: block; }
+      .nahled { border: none; background: #fff; }
+      .nahled-plocha { padding: 0; min-height: 0; max-height: none; background: #fff; display: block; overflow: visible; }
+      #papir { box-shadow: none; max-width: none; max-height: none; }
+      @page { margin: 0; }
     }
-  
-/* světlý režim: dorovnání kontrastu textu */
-:root[data-theme="light"] .action-btn.secondary { color: var(--text); }
-</style>
+  </style>
 </head>
 <body>
   <div class="container">
-    <div class="controls-section">
-      <div class="controls-title">⚙️ Nastavení vzoru</div>
-      
-      <div class="control-group">
-        <h3>📊 Typ vzoru</h3>
-        <select id="patternType" class="control-input">
-          <option value="grid">Mřížka</option>
-          <option value="dots">Body</option>
-          <option value="lines">Linky (jako sešit)</option>
-          <option value="triangles">Trojúhelníky</option>
-          <option value="lineEnds">Koncové body linek</option>
-          <option value="triangleNodes">Uzlové body trojúhelníků</option>
-        </select>
-        <div class="pattern-info" id="patternInfo">
-          Vytvoří pravidelnou mřížku se zadaným rozestupem
-        </div>
-      </div>
-      
-      <div class="control-group">
-        <h3>📏 Rozestup</h3>
-        <div class="input-with-unit-and-info">
-          <div class="input-line">
-            <input type="number" id="spacing" class="control-input" min="10" max="200" value="50">
-            <span class="unit-text">px</span>
-            <div class="mm-info-inline" id="spacingMm">
-              (≈ 17.6 mm)
+    <div class="header">
+      <h1>📏 Papíry na tisk</h1>
+      <p>Čtverečky, linky, tečky, izometrie, noty — v milimetrech, s vektorovým PDF a SVG.</p>
+    </div>
+
+    <div class="main">
+      <div class="panel">
+
+        <details class="sekce" open>
+          <summary>⭐ Hotové papíry</summary>
+          <div class="sekce-telo">
+            <div class="predvolby" id="predvolby"></div>
+          </div>
+        </details>
+
+        <details class="sekce" open>
+          <summary>🧩 Vzor</summary>
+          <div class="sekce-telo">
+            <div class="pole">
+              <label for="vzor">Druh vzoru</label>
+              <select id="vzor"></select>
+              <div class="napoveda" id="popisVzoru"></div>
+            </div>
+
+            <div class="pole" id="poleRozestup">
+              <label for="rozestup">Rozestup (mm) <span class="hodnota" id="rozestupHod">5</span></label>
+              <input type="number" id="rozestup" min="1" max="100" step="0.5" value="5">
+            </div>
+
+            <div class="volby-vzoru" id="volbyZvyrazneni">
+              <div class="pole">
+                <label for="zvyrazniPo">Silnější čára každou <span class="hodnota" id="zvyrazniPoHod">5.</span></label>
+                <input type="range" id="zvyrazniPo" min="0" max="12" step="1" value="5">
+                <div class="napoveda">0 = všechny čáry stejné.</div>
+              </div>
+            </div>
+
+            <div class="volby-vzoru" id="volbyLinky">
+              <label class="prepinac"><input type="checkbox" id="okrajovaCara"> Okrajová čára (svislá)</label>
+              <div class="pole">
+                <label for="okrajOd">Okrajová čára od levého kraje (mm)</label>
+                <input type="number" id="okrajOd" min="5" max="80" step="1" value="25">
+              </div>
+              <label class="prepinac"><input type="checkbox" id="pomocneLinky"> Pomocné linky (čtyřlinka na psaní)</label>
+            </div>
+
+            <div class="volby-vzoru" id="volbyIzo">
+              <label class="prepinac"><input type="checkbox" id="izoSvisle" checked> Přidat svislé čáry</label>
+            </div>
+
+            <div class="volby-vzoru" id="volbyHex">
+              <div class="pole">
+                <label for="hexOtoceni">Postavení šestiúhelníků</label>
+                <select id="hexOtoceni">
+                  <option value="spicka">Špičkou nahoru</option>
+                  <option value="hrana">Hranou nahoru</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="volby-vzoru" id="volbyNoty">
+              <div class="dvojice">
+                <div class="pole">
+                  <label for="notyRozestup">Rozestup linek (mm)</label>
+                  <input type="number" id="notyRozestup" min="1" max="12" step="0.5" value="2.5">
+                </div>
+                <div class="pole">
+                  <label for="notyMezera">Mezera mezi osnovami (mm)</label>
+                  <input type="number" id="notyMezera" min="5" max="60" step="1" value="16">
+                </div>
+              </div>
+            </div>
+
+            <div class="volby-vzoru" id="volbyKaligrafie">
+              <div class="dvojice">
+                <div class="pole">
+                  <label for="sklon">Sklon vodicích čar (°)</label>
+                  <input type="number" id="sklon" min="0" max="60" step="1" value="35">
+                </div>
+                <div class="pole">
+                  <label for="sklonRozestup">Rozestup šikmých (mm)</label>
+                  <input type="number" id="sklonRozestup" min="3" max="40" step="1" value="10">
+                </div>
+              </div>
+            </div>
+
+            <div class="volby-vzoru" id="volbyPolar">
+              <div class="pole">
+                <label for="paprsku">Počet paprsků <span class="hodnota" id="paprskuHod">24</span></label>
+                <input type="range" id="paprsku" min="4" max="72" step="2" value="24">
+              </div>
+            </div>
+
+            <div class="pole">
+              <label for="tloustka">Tloušťka čáry (mm) <span class="hodnota" id="tloustkaHod">0,20</span></label>
+              <input type="range" id="tloustka" min="0.05" max="1" step="0.05" value="0.2">
             </div>
           </div>
-          
-          <div class="pattern-info-line">
-            <div class="pattern-info">Rozestup mezi prvky v pixelech</div>
+        </details>
+
+        <details class="sekce" open>
+          <summary>📄 Papír</summary>
+          <div class="sekce-telo">
+            <div class="dvojice">
+              <div class="pole">
+                <label for="format">Formát</label>
+                <select id="format">
+                  <option value="A3">A3 (297 × 420 mm)</option>
+                  <option value="A4" selected>A4 (210 × 297 mm)</option>
+                  <option value="A5">A5 (148 × 210 mm)</option>
+                  <option value="letter">Letter (216 × 279 mm)</option>
+                </select>
+              </div>
+              <div class="pole">
+                <label for="orientace">Orientace</label>
+                <select id="orientace">
+                  <option value="na-vysku">Na výšku</option>
+                  <option value="na-sirku">Na šířku</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="popisek">Okraje (mm)</div>
+            <div class="ctverice">
+              <div class="pole">
+                <label for="okrajHorni">Horní</label>
+                <input type="number" id="okrajHorni" min="0" max="60" step="1" value="10">
+              </div>
+              <div class="pole">
+                <label for="okrajPravy">Pravý</label>
+                <input type="number" id="okrajPravy" min="0" max="60" step="1" value="10">
+              </div>
+              <div class="pole">
+                <label for="okrajDolni">Dolní</label>
+                <input type="number" id="okrajDolni" min="0" max="60" step="1" value="10">
+              </div>
+              <div class="pole">
+                <label for="okrajLevy">Levý</label>
+                <input type="number" id="okrajLevy" min="0" max="60" step="1" value="10">
+              </div>
+            </div>
+            <label class="prepinac"><input type="checkbox" id="stejneOkraje" checked> Držet všechny okraje stejné</label>
+            <label class="prepinac"><input type="checkbox" id="zarovnatNaStred" checked> Vystředit vzor do plochy</label>
           </div>
+        </details>
+
+        <details class="sekce">
+          <summary>🎨 Barvy</summary>
+          <div class="sekce-telo">
+            <div class="dvojice">
+              <div class="pole">
+                <label for="barva">Barva vzoru</label>
+                <input type="color" id="barva" value="#8a8a8a">
+              </div>
+              <div class="pole">
+                <label for="barvaPapiru">Barva papíru</label>
+                <input type="color" id="barvaPapiru" value="#ffffff">
+              </div>
+            </div>
+            <div class="pole">
+              <label for="barvaOkraje">Barva okrajové čáry</label>
+              <input type="color" id="barvaOkraje" value="#d05a5a">
+            </div>
+            <label class="prepinac"><input type="checkbox" id="tisknoutPapir"> Vytisknout i barvu papíru</label>
+            <div class="napoveda">
+              Světle šedá nebo modrá čára <strong>nepřebíjí</strong> to, co do papíru napíšete.
+              Plochu papíru tiskárna vybarví jen tehdy, když si o to řeknete — jinak se šetří inkoust.
+            </div>
+          </div>
+        </details>
+
+        <div id="varovani" class="varovani" role="status"></div>
+
+        <div class="tlacitka">
+          <button type="button" class="btn btn-hlavni" id="btnTisk">🖨️ Vytisknout</button>
+          <button type="button" class="btn" id="btnVychozi">↩️ Výchozí</button>
+        </div>
+        <div class="tlacitka">
+          <button type="button" class="btn" id="btnPdf">📄 PDF</button>
+          <button type="button" class="btn" id="btnSvg">✏️ SVG</button>
+          <button type="button" class="btn" id="btnPng">🖼 PNG 300 DPI</button>
         </div>
       </div>
-      <div class="control-group">
-        <h3>🎨 Barva</h3>
-        <input type="color" id="color" class="control-input color-input" value="#000000">
-        <div class="pattern-info">Barva vzoru na stránce</div>
-      </div>
-      
-      <div class="control-group">
-        <h3>📐 Tloušťka čáry</h3>
-        <input type="number" id="lineWidth" class="control-input" min="0.5" max="5" step="0.5" value="1">
-        <div class="pattern-info">Tloušťka čar v pixelech</div>
-      </div>
-      
-      <div class="control-group">
-        <h3>📏 Tiskové okraje</h3>
-        <div class="margin-controls">
-          <div class="margin-control">
-            <h4>Horní okraj (mm)</h4>
-            <input type="number" id="marginTop" class="control-input" min="0" max="50" value="20">
-          </div>
-          <div class="margin-control">
-            <h4>Pravý okraj (mm)</h4>
-            <input type="number" id="marginRight" class="control-input" min="0" max="50" value="20">
-          </div>
-          <div class="margin-control">
-            <h4>Dolní okraj (mm)</h4>
-            <input type="number" id="marginBottom" class="control-input" min="0" max="50" value="20">
-          </div>
-          <div class="margin-control">
-            <h4>Levý okraj (mm)</h4>
-            <input type="number" id="marginLeft" class="control-input" min="0" max="50" value="20">
-          </div>
+
+      <div class="nahled">
+        <div class="nahled-lista">
+          <span>Plocha vzoru: <b id="infoPlocha">190 × 277 mm</b></span>
+          <span>Rozestup: <b id="infoRozestup">5 mm</b></span>
+          <span>Prvků: <b id="infoPrvku">0</b></span>
+          <span id="infoPocty"></span>
         </div>
-      </div>
-      
-      <div class="action-buttons">
-        <button class="action-btn" id="generateBtn">
-          🔄 Generovat vzor
-        </button>
-        
-        <div class="export-buttons">
-          <button class="action-btn secondary" id="downloadPdf">
-            📥 PDF
-          </button>
-          <button class="action-btn secondary" id="downloadSvg">
-            📥 SVG
-          </button>
-          <button class="action-btn secondary" id="downloadPng">
-            📥 PNG
-          </button>
-          <button class="action-btn secondary" id="printPage">
-            🖨️ Tisk
-          </button>
-        </div>
-      </div>
-      
-      <div class="quality-info">
-        <strong>Tip pro kvalitní tisk:</strong> Pro nejlepší výsledky použijte vysoké rozlišení (300 DPI) při tisku PDF.
-      </div>
-    </div>
-    
-    <div class="preview-section">
-      <div class="preview-title">👁️ Náhled stránky A4</div>
-      <div class="preview-container">
-        <div class="a4-preview">
-          <canvas id="patternCanvas"></canvas>
+        <div class="nahled-plocha">
+          <svg id="papir" xmlns="http://www.w3.org/2000/svg"></svg>
         </div>
       </div>
     </div>
   </div>
 
   <script>
-    // Globální proměnné
-    let canvas = null;
-    let ctx = null;
-    let currentPattern = 'grid';
-    let currentSpacing = 50;
-    let currentColor = '#000000';
-    let currentLineWidth = 1;
-    let marginTop = 20;
-    let marginRight = 20;
-    let marginBottom = 20;
-    let marginLeft = 20;
+  (function () {
+    'use strict';
 
-    // Popisy vzorů
-    const patternDescriptions = {
-      grid: "Vytvoří pravidelnou mřížku se zadaným rozestupem",
-      dots: "Vytvoří pole bodů v pravidelných rozestupech",
-      lines: "Vytvoří vodorovné linky jako v sešitu",
-      triangles: "Vytvoří síť rovnostranných trojúhelníků",
-      dotlines: "Body propojené vodorovnými a svislými linkami",
-      dottriangles: "Body propojené do trojúhelníkové sítě",
-      lineEnds: "Koncové body linek (bez spojujících čar)",
-      triangleNodes: "Uzlové body trojúhelníkové sítě (bez čar)"
+    /* ==================================================================
+       1. GEOMETRIE VZORU
+       ------------------------------------------------------------------
+       Vzor se sestaví jako seznam prvků v milimetrech papíru:
+
+         cary     – úsečky {x1,y1,x2,y2,t,b,d}
+         tecky    – vyplněné kroužky {x,y,r,b}
+         kruznice – obtažené kružnice {x,y,r,t,b}
+
+       Z toho pak vzniká náhled (SVG), tisk (týž SVG), PDF (vektorově)
+       i PNG. Geometrie je jen jedna, výstupy tři — u původní stránky
+       byl každý vzor napsaný třikrát a verze se rozcházely.
+       ================================================================== */
+
+    const FORMATY = {
+      A3: [297, 420], A4: [210, 297], A5: [148, 210], letter: [215.9, 279.4]
     };
 
-    // Převod mm na pixely (při 72 DPI: 1mm = 2.8346456692913px)
-    function mmToPx(mm) {
-      return mm * 2.8346456692913;
-    }
+    const NOVY = () => ({ cary: [], tecky: [], kruznice: [] });
 
-    // Převod pixelů na mm
-    function pxToMm(px) {
-      return px / 2.8346456692913;
-    }
-
-    // Funkce pro zobrazení notifikace
-    function showNotification(message, type = 'info') {
-      const notification = document.createElement('div');
-      notification.className = `notification ${type}`;
-      notification.innerHTML = `
-        <span>${message}</span>
-        <button onclick="this.parentElement.remove()" style="background:none;border:none;color:white;float:right;cursor:pointer;font-size:1.2rem;">×</button>
-      `;
-
-      document.body.appendChild(notification);
-
-      setTimeout(() => {
-        if (notification.parentElement) {
-          notification.remove();
-        }
-      }, 5000);
-    }
-
-    // Inicializace canvasu
-    function initCanvas() {
-      canvas = document.getElementById('patternCanvas');
-      ctx = canvas.getContext('2d');
-      
-      canvas.width = 595;
-      canvas.height = 842;
-      
-      generatePattern();
-    }
-
-    // Aktualizace zobrazení přepočtu pixelů na mm
-    function updateSpacingMm() {
-      const spacingMmElement = document.getElementById('spacingMm');
-      spacingMmElement.textContent = `(≈ ${pxToMm(currentSpacing).toFixed(1)} mm)`;
-    }
-
-    // Generování vzoru podle aktuálních nastavení
-    function generatePattern() {
-      if (!ctx) return;
-      
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      
-      ctx.strokeStyle = currentColor;
-      ctx.fillStyle = currentColor;
-      ctx.lineWidth = currentLineWidth;
-      
-      const topPx = mmToPx(marginTop);
-      const rightPx = mmToPx(marginRight);
-      const bottomPx = mmToPx(marginBottom);
-      const leftPx = mmToPx(marginLeft);
-      
-      const workWidth = canvas.width - leftPx - rightPx;
-      const workHeight = canvas.height - topPx - bottomPx;
-      
-      switch(currentPattern) {
-        case 'grid':
-          drawGrid(leftPx, topPx, workWidth, workHeight, currentSpacing);
-          break;
-        case 'dots':
-          drawDots(leftPx, topPx, workWidth, workHeight, currentSpacing);
-          break;
-        case 'lines':
-          drawLines(leftPx, topPx, workWidth, workHeight, currentSpacing);
-          break;
-        case 'triangles':
-          drawTriangles(leftPx, topPx, workWidth, workHeight, currentSpacing);
-          break;
-        case 'dotlines':
-          drawDotLines(leftPx, topPx, workWidth, workHeight, currentSpacing);
-          break;
-        case 'dottriangles':
-          drawDotTriangles(leftPx, topPx, workWidth, workHeight, currentSpacing);
-          break;
-        case 'lineEnds':
-          drawLineEnds(leftPx, topPx, workWidth, workHeight, currentSpacing);
-          break;
-        case 'triangleNodes':
-          drawTriangleNodes(leftPx, topPx, workWidth, workHeight, currentSpacing);
-          break;
+    // Liang–Barsky: ořez úsečky do obdélníku (šikmé rodiny čar se generují
+    // s přesahem a tady se zastřihnou přesně na plochu).
+    function orez(x1, y1, x2, y2, r) {
+      let t0 = 0, t1 = 1;
+      const dx = x2 - x1, dy = y2 - y1;
+      const p = [-dx, dx, -dy, dy];
+      const q = [x1 - r.x, r.x + r.w - x1, y1 - r.y, r.y + r.h - y1];
+      for (let i = 0; i < 4; i++) {
+        if (p[i] === 0) { if (q[i] < 0) return null; continue; }
+        const t = q[i] / p[i];
+        if (p[i] < 0) { if (t > t1) return null; if (t > t0) t0 = t; }
+        else { if (t < t0) return null; if (t < t1) t1 = t; }
       }
-      
-      drawMargins(leftPx, topPx, workWidth, workHeight);
+      return { x1: x1 + t0 * dx, y1: y1 + t0 * dy, x2: x1 + t1 * dx, y2: y1 + t1 * dy };
     }
 
-    // Kreslení okrajů (pouze pro náhled)
-    function drawMargins(left, top, width, height) {
+    /* Rodina rovnoběžek: úhel ve stupních (0 = vodorovně, roste proti
+       směru hodinových ručiček), `kolmyRozestup` je vzdálenost mezi
+       sousedními čarami měřená kolmo. Čáry se vedou přes celou plochu
+       a ořežou se na ni. */
+    function rodinaCar(prim, plocha, uhel, kolmyRozestup, styl, posun) {
+      if (kolmyRozestup <= 0) return;
+      const a = uhel * Math.PI / 180;
+      const dx = Math.cos(a), dy = -Math.sin(a);       // y na papíře roste dolů
+      const nx = -dy, ny = dx;                          // normála
+      const sx = plocha.x + plocha.w / 2, sy = plocha.y + plocha.h / 2;
+      const dosah = Math.hypot(plocha.w, plocha.h);
+      const kroku = Math.ceil(dosah / kolmyRozestup) + 2;
+      const o = posun || 0;
+      for (let k = -kroku; k <= kroku; k++) {
+        const px = sx + nx * (k * kolmyRozestup + o);
+        const py = sy + ny * (k * kolmyRozestup + o);
+        const u = orez(px - dx * dosah, py - dy * dosah, px + dx * dosah, py + dy * dosah, plocha);
+        if (u) prim.cary.push(Object.assign(u, styl));
+      }
+    }
+
+    // Kolik celých rozestupů se vejde a o kolik se má vzor posunout,
+    // aby zbytek zůstal na obou stranách stejný.
+    function zarovnani(delka, rozestup, naStred) {
+      const pocet = Math.floor(delka / rozestup + 1e-9);
+      return naStred ? (delka - pocet * rozestup) / 2 : 0;
+    }
+
+    function mrizkaCar(prim, plocha, rozestup, v, styl, zvyrazneny) {
+      const ox = zarovnani(plocha.w, rozestup, v.naStred);
+      const oy = zarovnani(plocha.h, rozestup, v.naStred);
+      let i = 0;
+      for (let x = plocha.x + ox; x <= plocha.x + plocha.w + 1e-6; x += rozestup, i++) {
+        prim.cary.push(Object.assign({ x1: x, y1: plocha.y, x2: x, y2: plocha.y + plocha.h },
+          zvyrazneny && zvyrazneny(i) ? zvyrazneny(i) : styl));
+      }
+      i = 0;
+      for (let y = plocha.y + oy; y <= plocha.y + plocha.h + 1e-6; y += rozestup, i++) {
+        prim.cary.push(Object.assign({ x1: plocha.x, y1: y, x2: plocha.x + plocha.w, y2: y },
+          zvyrazneny && zvyrazneny(i) ? zvyrazneny(i) : styl));
+      }
+    }
+
+    function mrizkaBodu(prim, plocha, rozestup, v, polomer, barva) {
+      const ox = zarovnani(plocha.w, rozestup, v.naStred);
+      const oy = zarovnani(plocha.h, rozestup, v.naStred);
+      for (let y = plocha.y + oy; y <= plocha.y + plocha.h + 1e-6; y += rozestup) {
+        for (let x = plocha.x + ox; x <= plocha.x + plocha.w + 1e-6; x += rozestup) {
+          prim.tecky.push({ x, y, r: polomer, b: barva });
+        }
+      }
+    }
+
+    // Trojúhelníková (izometrická) mřížka bodů: řádky se střídavě posouvají.
+    function trojuhelnikoveBody(plocha, rozestup, naStred) {
+      const vyskaRadku = rozestup * Math.sqrt(3) / 2;
+      const body = [];
+      const oy = zarovnani(plocha.h, vyskaRadku, naStred);
+      let radek = 0;
+      for (let y = plocha.y + oy; y <= plocha.y + plocha.h + 1e-6; y += vyskaRadku, radek++) {
+        const posun = (radek % 2) * rozestup / 2;
+        const ox = zarovnani(plocha.w - posun, rozestup, naStred) + posun;
+        for (let x = plocha.x + ox; x <= plocha.x + plocha.w + 1e-6; x += rozestup) body.push({ x, y });
+      }
+      return body;
+    }
+
+    /* Šestiúhelníky se kreslí po hranách a hrany se sdílejí — bez
+       zahazování duplikátů by každá vnitřní hrana byla v souboru dvakrát
+       a tiskárna by ji přejela dvakrát. */
+    function hexHrany(prim, plocha, strana, spickaNahoru, styl) {
+      const videne = new Set();
+      const klic = (x1, y1, x2, y2) => {
+        const a = x1.toFixed(2) + ',' + y1.toFixed(2), b = x2.toFixed(2) + ',' + y2.toFixed(2);
+        return a < b ? a + '|' + b : b + '|' + a;
+      };
+      const sirka = spickaNahoru ? Math.sqrt(3) * strana : 2 * strana;
+      const vyska = spickaNahoru ? 2 * strana : Math.sqrt(3) * strana;
+      const krokX = spickaNahoru ? sirka : sirka * 0.75;
+      const krokY = spickaNahoru ? vyska * 0.75 : vyska;
+      for (let radek = -1; radek * krokY < plocha.h + vyska; radek++) {
+        for (let sloupec = -1; sloupec * krokX < plocha.w + sirka; sloupec++) {
+          const posunX = spickaNahoru ? (radek % 2 ? sirka / 2 : 0) : 0;
+          const posunY = spickaNahoru ? 0 : (sloupec % 2 ? vyska / 2 : 0);
+          const cx = plocha.x + sloupec * krokX + posunX;
+          const cy = plocha.y + radek * krokY + posunY;
+          const vrcholy = [];
+          for (let i = 0; i < 6; i++) {
+            const a = (spickaNahoru ? 90 : 0) + i * 60;
+            vrcholy.push([cx + strana * Math.cos(a * Math.PI / 180), cy - strana * Math.sin(a * Math.PI / 180)]);
+          }
+          for (let i = 0; i < 6; i++) {
+            const [x1, y1] = vrcholy[i], [x2, y2] = vrcholy[(i + 1) % 6];
+            const k = klic(x1, y1, x2, y2);
+            if (videne.has(k)) continue;
+            videne.add(k);
+            const u = orez(x1, y1, x2, y2, plocha);
+            if (u) prim.cary.push(Object.assign(u, styl));
+          }
+        }
+      }
+    }
+
+    /* --- jednotlivé vzory ---------------------------------------------- */
+
+    const VZORY = {
+      ctverecky: {
+        nazev: '▦ Čtverečky',
+        popis: 'Klasický čtverečkovaný papír. Každou n-tou čáru lze zesílit — na milimetrovém papíře se tak počítají desítky.',
+        volby: ['rozestup', 'zvyrazneni'],
+        kresli(prim, plocha, v) {
+          const silna = { t: v.tloustka * 2, b: v.barva };
+          const tenka = { t: v.tloustka, b: v.barva };
+          const po = Math.round(v.zvyrazniPo);
+          mrizkaCar(prim, plocha, v.rozestup, v, tenka, po >= 2 ? (i => (i % po === 0 ? silna : null)) : null);
+        }
+      },
+
+      milimetrak: {
+        nazev: '▨ Milimetrový papír',
+        popis: 'Pevné tři úrovně: 1 mm slabě, 5 mm silněji, 10 mm nejsilněji. Rozestup se nenastavuje, jinak by to nebyl milimetrák.',
+        volby: [],
+        kresli(prim, plocha, v) {
+          mrizkaCar(prim, plocha, 1, v, { t: v.tloustka * 0.5, b: v.barva });
+          mrizkaCar(prim, plocha, 5, v, { t: v.tloustka, b: v.barva });
+          mrizkaCar(prim, plocha, 10, v, { t: v.tloustka * 1.8, b: v.barva });
+        }
+      },
+
+      tecky: {
+        nazev: '⠿ Tečky',
+        popis: 'Tečkovaný papír (bullet journal): vede ruku, ale na stránce skoro není vidět.',
+        volby: ['rozestup'],
+        kresli(prim, plocha, v) {
+          mrizkaBodu(prim, plocha, v.rozestup, v, Math.max(0.12, v.tloustka * 0.9), v.barva);
+        }
+      },
+
+      krizky: {
+        nazev: '✚ Křížky',
+        popis: 'Místo teček krátké křížky — přesnější než tečka, míň nápadné než celá mřížka.',
+        volby: ['rozestup'],
+        kresli(prim, plocha, v) {
+          const r = Math.min(v.rozestup * 0.16, 2);
+          const styl = { t: v.tloustka, b: v.barva };
+          const ox = zarovnani(plocha.w, v.rozestup, v.naStred);
+          const oy = zarovnani(plocha.h, v.rozestup, v.naStred);
+          for (let y = plocha.y + oy; y <= plocha.y + plocha.h + 1e-6; y += v.rozestup) {
+            for (let x = plocha.x + ox; x <= plocha.x + plocha.w + 1e-6; x += v.rozestup) {
+              const vodorovna = orez(x - r, y, x + r, y, plocha);
+              const svisla = orez(x, y - r, x, y + r, plocha);
+              if (vodorovna) prim.cary.push(Object.assign(vodorovna, styl));
+              if (svisla) prim.cary.push(Object.assign(svisla, styl));
+            }
+          }
+        }
+      },
+
+      linky: {
+        nazev: '☰ Linky',
+        popis: 'Linkovaný papír jako sešit. Volitelně se svislou okrajovou čárou a s přerušovanou pomocnou linkou pro psaní.',
+        volby: ['rozestup', 'linky'],
+        kresli(prim, plocha, v) {
+          const styl = { t: v.tloustka, b: v.barva };
+          const pomocna = { t: v.tloustka * 0.7, b: v.barva, d: [1.2, 1.2] };
+          const oy = zarovnani(plocha.h, v.rozestup, v.naStred);
+          for (let y = plocha.y + oy; y <= plocha.y + plocha.h + 1e-6; y += v.rozestup) {
+            prim.cary.push({ x1: plocha.x, y1: y, x2: plocha.x + plocha.w, y2: y, t: styl.t, b: styl.b });
+            const stred = y - v.rozestup / 2;
+            if (v.pomocneLinky && stred >= plocha.y - 1e-6) {
+              prim.cary.push({ x1: plocha.x, y1: stred, x2: plocha.x + plocha.w, y2: stred, t: pomocna.t, b: pomocna.b, d: pomocna.d });
+            }
+          }
+          if (v.okrajovaCara) {
+            const x = plocha.x + v.okrajOd;
+            if (x < plocha.x + plocha.w) {
+              prim.cary.push({ x1: x, y1: plocha.y, x2: x, y2: plocha.y + plocha.h, t: v.tloustka * 1.2, b: v.barvaOkraje });
+            }
+          }
+        }
+      },
+
+      konceLinek: {
+        nazev: '⋯ Konce linek',
+        popis: 'Jen tečky na začátku a konci každého řádku — papír vypadá prázdně, ale ruka má kam mířit (vzor z předchozí verze stránky).',
+        volby: ['rozestup'],
+        kresli(prim, plocha, v) {
+          const r = Math.max(0.15, v.tloustka * 1.2);
+          const oy = zarovnani(plocha.h, v.rozestup, v.naStred);
+          for (let y = plocha.y + oy; y <= plocha.y + plocha.h + 1e-6; y += v.rozestup) {
+            prim.tecky.push({ x: plocha.x, y, r, b: v.barva });
+            prim.tecky.push({ x: plocha.x + plocha.w, y, r, b: v.barva });
+          }
+        }
+      },
+
+      izometrie: {
+        nazev: '⧉ Izometrie',
+        popis: 'Šikmé čáry po 30° pro kreslení v izometrii; svislé čáry se dají vypnout.',
+        volby: ['rozestup', 'izo'],
+        kresli(prim, plocha, v) {
+          const styl = { t: v.tloustka, b: v.barva };
+          const kolmo = v.rozestup * Math.sqrt(3) / 2;
+          rodinaCar(prim, plocha, 30, kolmo, styl);
+          rodinaCar(prim, plocha, -30, kolmo, styl);
+          if (v.izoSvisle) rodinaCar(prim, plocha, 90, v.rozestup, styl);
+        }
+      },
+
+      trojuhelniky: {
+        nazev: '△ Trojúhelníky',
+        popis: 'Síť rovnostranných trojúhelníků — tři rodiny čar po 60°, každá hrana jen jednou.',
+        volby: ['rozestup'],
+        kresli(prim, plocha, v) {
+          const styl = { t: v.tloustka, b: v.barva };
+          const kolmo = v.rozestup * Math.sqrt(3) / 2;
+          rodinaCar(prim, plocha, 0, kolmo, styl);
+          rodinaCar(prim, plocha, 60, kolmo, styl);
+          rodinaCar(prim, plocha, -60, kolmo, styl);
+        }
+      },
+
+      izoTecky: {
+        nazev: '⋰ Izometrické tečky',
+        popis: 'Body v trojúhelníkové mřížce — izometrie bez čar.',
+        volby: ['rozestup'],
+        kresli(prim, plocha, v) {
+          const r = Math.max(0.12, v.tloustka * 0.9);
+          for (const b of trojuhelnikoveBody(plocha, v.rozestup, v.naStred)) {
+            prim.tecky.push({ x: b.x, y: b.y, r, b: v.barva });
+          }
+        }
+      },
+
+      sestiuhelniky: {
+        nazev: '⬡ Šestiúhelníky',
+        popis: 'Včelí plástev. Rozestup je délka strany šestiúhelníku.',
+        volby: ['rozestup', 'hex'],
+        kresli(prim, plocha, v) {
+          hexHrany(prim, plocha, v.rozestup, v.hexOtoceni === 'spicka', { t: v.tloustka, b: v.barva });
+        }
+      },
+
+      kosoctverce: {
+        nazev: '◇ Kosočtverce',
+        popis: 'Dvě rodiny šikmých čar po 60° — kosočtverečná síť na vzorování a pletení.',
+        volby: ['rozestup'],
+        kresli(prim, plocha, v) {
+          const styl = { t: v.tloustka, b: v.barva };
+          rodinaCar(prim, plocha, 60, v.rozestup, styl);
+          rodinaCar(prim, plocha, -60, v.rozestup, styl);
+        }
+      },
+
+      noty: {
+        nazev: '𝄞 Notová osnova',
+        popis: 'Pět linek v osnově, mezi osnovami volné místo na noty i text.',
+        volby: ['noty'],
+        kresli(prim, plocha, v) { osnova(prim, plocha, v, 5); }
+      },
+
+      tabulatura: {
+        nazev: '🎸 Tabulatura',
+        popis: 'Šest linek pro kytarovou tabulaturu.',
+        volby: ['noty'],
+        kresli(prim, plocha, v) { osnova(prim, plocha, v, 6); }
+      },
+
+      kaligrafie: {
+        nazev: '✒ Kaligrafie',
+        popis: 'Řádky s šikmými vodicími čarami — drží sklon písma.',
+        volby: ['rozestup', 'kaligrafie'],
+        kresli(prim, plocha, v) {
+          const styl = { t: v.tloustka, b: v.barva };
+          const oy = zarovnani(plocha.h, v.rozestup, v.naStred);
+          for (let y = plocha.y + oy; y <= plocha.y + plocha.h + 1e-6; y += v.rozestup) {
+            prim.cary.push({ x1: plocha.x, y1: y, x2: plocha.x + plocha.w, y2: y, t: styl.t, b: styl.b });
+          }
+          rodinaCar(prim, plocha, 90 - v.sklon, v.sklonRozestup, { t: v.tloustka * 0.6, b: v.barva });
+        }
+      },
+
+      polar: {
+        nazev: '◎ Kruhová mřížka',
+        popis: 'Soustředné kružnice a paprsky — na grafy v polárních souřadnicích i na rozvrhy dne.',
+        volby: ['rozestup', 'polar'],
+        kresli(prim, plocha, v) {
+          const cx = plocha.x + plocha.w / 2, cy = plocha.y + plocha.h / 2;
+          const maxR = Math.min(plocha.w, plocha.h) / 2;
+          const styl = { t: v.tloustka, b: v.barva };
+          for (let r = v.rozestup; r <= maxR + 1e-6; r += v.rozestup) {
+            prim.kruznice.push({ x: cx, y: cy, r, t: styl.t, b: styl.b });
+          }
+          // paprsky začínají až u první kružnice, jinak je střed slepený
+          const n = Math.round(v.paprsku);
+          const odR = Math.min(v.rozestup * 0.35, maxR * 0.1);
+          for (let i = 0; i < n; i++) {
+            const a = (i / n) * Math.PI * 2;
+            prim.cary.push({
+              x1: cx + Math.cos(a) * odR, y1: cy + Math.sin(a) * odR,
+              x2: cx + Math.cos(a) * maxR, y2: cy + Math.sin(a) * maxR,
+              t: styl.t * 0.8, b: styl.b
+            });
+          }
+        }
+      }
+    };
+
+    function osnova(prim, plocha, v, pocetLinek) {
+      const styl = { t: v.tloustka, b: v.barva };
+      const vyskaOsnovy = (pocetLinek - 1) * v.notyRozestup;
+      const krok = vyskaOsnovy + v.notyMezera;
+      const oy = zarovnani(plocha.h + v.notyMezera, krok, v.naStred);
+      for (let y = plocha.y + oy; y + vyskaOsnovy <= plocha.y + plocha.h + 1e-6; y += krok) {
+        for (let i = 0; i < pocetLinek; i++) {
+          const ly = y + i * v.notyRozestup;
+          prim.cary.push({ x1: plocha.x, y1: ly, x2: plocha.x + plocha.w, y2: ly, t: styl.t, b: styl.b });
+        }
+      }
+    }
+
+    /* ==================================================================
+       2. VÝSTUPY — SVG, plátno, PDF
+       Čáry se sdružují podle tloušťky, barvy a přerušování; z každé
+       skupiny je pak jedna cesta (SVG) nebo jedno nastavení pera (PDF).
+       Soubor je díky tomu malý a tiskárna nepřejíždí jednu čáru dvakrát.
+       ================================================================== */
+
+    const klicStylu = c => `${(+c.t).toFixed(3)}|${c.b}|${c.d ? c.d.join(',') : ''}`;
+
+    function skupiny(cary) {
+      const m = new Map();
+      for (const c of cary) {
+        const k = klicStylu(c);
+        if (!m.has(k)) m.set(k, { t: +c.t, b: c.b, d: c.d || null, cary: [] });
+        m.get(k).cary.push(c);
+      }
+      return [...m.values()];
+    }
+
+    const cislo = x => (Math.round(x * 1000) / 1000).toString();
+
+    function doSvg(prim, v, sirka, vyska, tisknoutPapir) {
+      const kusy = [];
+      kusy.push(`<rect id="papirPlocha" x="0" y="0" width="${cislo(sirka)}" height="${cislo(vyska)}" fill="${tisknoutPapir ? v.barvaPapiru : '#ffffff'}"/>`);
+      for (const s of skupiny(prim.cary)) {
+        const d = s.cary.map(c => `M${cislo(c.x1)} ${cislo(c.y1)}L${cislo(c.x2)} ${cislo(c.y2)}`).join('');
+        kusy.push(`<path d="${d}" fill="none" stroke="${s.b}" stroke-width="${cislo(s.t)}"`
+          + (s.d ? ` stroke-dasharray="${s.d.map(cislo).join(' ')}"` : '') + ' stroke-linecap="butt"/>');
+      }
+      const podleBarvy = new Map();
+      for (const t of prim.tecky) {
+        const k = t.b + '|' + t.r.toFixed(3);
+        if (!podleBarvy.has(k)) podleBarvy.set(k, { b: t.b, r: t.r, body: [] });
+        podleBarvy.get(k).body.push(t);
+      }
+      for (const s of podleBarvy.values()) {
+        // tečka jako čárka nulové délky s kulatým koncem: v souboru je
+        // řádově kratší než <circle> pro každý bod
+        const d = s.body.map(t => `M${cislo(t.x)} ${cislo(t.y)}h0`).join('');
+        kusy.push(`<path d="${d}" fill="none" stroke="${s.b}" stroke-width="${cislo(s.r * 2)}" stroke-linecap="round"/>`);
+      }
+      for (const k of prim.kruznice) {
+        kusy.push(`<circle cx="${cislo(k.x)}" cy="${cislo(k.y)}" r="${cislo(k.r)}" fill="none" stroke="${k.b}" stroke-width="${cislo(k.t)}"/>`);
+      }
+      return kusy.join('\n');
+    }
+
+    function naPlatno(ctx, prim, v, sirka, vyska, mer, tisknoutPapir) {
       ctx.save();
-      
-      ctx.strokeStyle = 'rgba(128, 128, 128, 0.5)';
-      ctx.lineWidth = 1;
-      ctx.setLineDash([5, 5]);
-      
-      ctx.beginPath();
-      ctx.rect(left, top, width, height);
-      ctx.stroke();
-      
+      ctx.scale(mer, mer);
+      ctx.fillStyle = tisknoutPapir ? v.barvaPapiru : '#ffffff';
+      ctx.fillRect(0, 0, sirka, vyska);
+      ctx.lineCap = 'butt';
+      for (const s of skupiny(prim.cary)) {
+        ctx.strokeStyle = s.b;
+        ctx.lineWidth = s.t;
+        ctx.setLineDash(s.d || []);
+        ctx.beginPath();
+        for (const c of s.cary) { ctx.moveTo(c.x1, c.y1); ctx.lineTo(c.x2, c.y2); }
+        ctx.stroke();
+      }
+      ctx.setLineDash([]);
+      for (const t of prim.tecky) {
+        ctx.fillStyle = t.b;
+        ctx.beginPath();
+        ctx.arc(t.x, t.y, t.r, 0, Math.PI * 2);
+        ctx.fill();
+      }
+      for (const k of prim.kruznice) {
+        ctx.strokeStyle = k.b;
+        ctx.lineWidth = k.t;
+        ctx.beginPath();
+        ctx.arc(k.x, k.y, k.r, 0, Math.PI * 2);
+        ctx.stroke();
+      }
       ctx.restore();
     }
 
-    // Kreslení mřížky
-    function drawGrid(left, top, width, height, spacing) {
-      for (let y = top; y <= top + height; y += spacing) {
-        ctx.beginPath();
-        ctx.moveTo(left, y);
-        ctx.lineTo(left + width, y);
-        ctx.stroke();
-      }
-      
-      for (let x = left; x <= left + width; x += spacing) {
-        ctx.beginPath();
-        ctx.moveTo(x, top);
-        ctx.lineTo(x, top + height);
-        ctx.stroke();
-      }
+    function barvaNaRgb(hex) {
+      const h = hex.replace('#', '');
+      const p = h.length === 3 ? h.split('').map(z => z + z) : [h.slice(0, 2), h.slice(2, 4), h.slice(4, 6)];
+      return p.map(z => parseInt(z, 16));
     }
 
-    // Kreslení bodů
-    function drawDots(left, top, width, height, spacing) {
-      for (let y = top; y <= top + height; y += spacing) {
-        for (let x = left; x <= left + width; x += spacing) {
-          ctx.beginPath();
-          ctx.arc(x, y, currentLineWidth, 0, Math.PI * 2);
-          ctx.fill();
-        }
+    /* PDF se kreslí čarami, ne obrázkem: soubor je malý, čáry ostré při
+       libovolném zvětšení a tiskárna je vytiskne v plném rozlišení.
+       Původní stránka do PDF vkládala PNG ve čtyřnásobku náhledu. */
+    function doPdf(prim, v, sirka, vyska, tisknoutPapir) {
+      const { jsPDF } = window.jspdf;
+      const pdf = new jsPDF({
+        orientation: sirka > vyska ? 'landscape' : 'portrait',
+        unit: 'mm',
+        format: [sirka, vyska],
+        compress: true
+      });
+      if (tisknoutPapir) {
+        const [r, g, b] = barvaNaRgb(v.barvaPapiru);
+        pdf.setFillColor(r, g, b);
+        pdf.rect(0, 0, sirka, vyska, 'F');
       }
+      for (const s of skupiny(prim.cary)) {
+        const [r, g, b] = barvaNaRgb(s.b);
+        pdf.setDrawColor(r, g, b);
+        pdf.setLineWidth(s.t);
+        if (pdf.setLineDashPattern) pdf.setLineDashPattern(s.d || [], 0);
+        for (const c of s.cary) pdf.line(c.x1, c.y1, c.x2, c.y2);
+      }
+      if (pdf.setLineDashPattern) pdf.setLineDashPattern([], 0);
+      /* Tečka se kreslí jako čárka nulové délky s kulatým koncem. Kružnice
+         je v PDF čtveřice Bézierů (a barva se nastavuje u každé zvlášť) —
+         u dvou tisíc teček z toho byl megabajtový soubor. */
+      if (prim.tecky.length) {
+        pdf.setLineCap('round');
+        const podle = new Map();
+        for (const t of prim.tecky) {
+          const k = t.b + '|' + t.r.toFixed(3);
+          if (!podle.has(k)) podle.set(k, { b: t.b, r: t.r, body: [] });
+          podle.get(k).body.push(t);
+        }
+        for (const s2 of podle.values()) {
+          const [r, g, b] = barvaNaRgb(s2.b);
+          pdf.setDrawColor(r, g, b);
+          pdf.setLineWidth(s2.r * 2);
+          for (const t of s2.body) pdf.line(t.x, t.y, t.x + 0.001, t.y);
+        }
+        pdf.setLineCap('butt');
+      }
+      for (const k of prim.kruznice) {
+        const [r, g, b] = barvaNaRgb(k.b);
+        pdf.setDrawColor(r, g, b);
+        pdf.setLineWidth(k.t);
+        pdf.circle(k.x, k.y, k.r, 'S');
+      }
+      return pdf;
     }
 
-    // Kreslení linek (jako v sešitu)
-    function drawLines(left, top, width, height, spacing) {
-      for (let y = top; y <= top + height; y += spacing) {
-        ctx.beginPath();
-        ctx.moveTo(left, y);
-        ctx.lineTo(left + width, y);
-        ctx.stroke();
-      }
+    function stahni(blob, jmeno) {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = jmeno;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      setTimeout(() => URL.revokeObjectURL(url), 2000);
     }
 
-    // Kreslení trojúhelníků
-    function drawTriangles(left, top, width, height, spacing) {
-      const triangleHeight = spacing * Math.sqrt(3) / 2;
-      
-      const startY = top;
-      const startX = left;
-      
-      for (let row = 0; row * triangleHeight <= height + triangleHeight; row++) {
-        for (let col = 0; col * spacing <= width + spacing; col++) {
-          const offset = (row % 2) * spacing / 2;
-          
-          const x1 = startX + col * spacing + offset;
-          const y1 = startY + row * triangleHeight;
-          const x2 = startX + col * spacing + spacing / 2 + offset;
-          const y2 = startY + row * triangleHeight + triangleHeight;
-          const x3 = startX + col * spacing - spacing / 2 + offset;
-          const y3 = startY + row * triangleHeight + triangleHeight;
-          
-          if (x1 >= left && x1 <= left + width && y1 >= top && y1 <= top + height) {
-            ctx.beginPath();
-            ctx.moveTo(x1, y1);
-            ctx.lineTo(x2, y2);
-            ctx.lineTo(x3, y3);
-            ctx.closePath();
-            ctx.stroke();
-          }
-        }
-      }
+    /* ==================================================================
+       3. STAV STRÁNKY
+       ================================================================== */
+
+    const el = id => document.getElementById(id);
+    const KLIC = 'papiry_nastaveni';
+    const MAX_PRVKU = 40000;
+
+    const VYCHOZI = {
+      vzor: 'ctverecky', rozestup: 5, zvyrazniPo: 5, tloustka: 0.2,
+      okrajovaCara: false, okrajOd: 25, pomocneLinky: false,
+      izoSvisle: true, hexOtoceni: 'spicka',
+      notyRozestup: 2.5, notyMezera: 16,
+      sklon: 35, sklonRozestup: 10, paprsku: 24,
+      format: 'A4', orientace: 'na-vysku',
+      okrajHorni: 10, okrajPravy: 10, okrajDolni: 10, okrajLevy: 10,
+      stejneOkraje: true, naStred: true,
+      barva: '#8a8a8a', barvaPapiru: '#ffffff', barvaOkraje: '#d05a5a',
+      tisknoutPapir: false
+    };
+
+    const CISLA = ['rozestup', 'zvyrazniPo', 'tloustka', 'okrajOd', 'notyRozestup', 'notyMezera',
+      'sklon', 'sklonRozestup', 'paprsku', 'okrajHorni', 'okrajPravy', 'okrajDolni', 'okrajLevy'];
+    const ZASKRTAVATKA = ['okrajovaCara', 'pomocneLinky', 'izoSvisle', 'stejneOkraje', 'tisknoutPapir'];
+
+    const PREDVOLBY = [
+      { nazev: 'Čtverečky 5 mm', popis: 'školní sešit', n: { vzor: 'ctverecky', rozestup: 5, zvyrazniPo: 0, tloustka: 0.2 } },
+      { nazev: 'Čtverečky 1 cm', popis: 'na rýsování', n: { vzor: 'ctverecky', rozestup: 10, zvyrazniPo: 0, tloustka: 0.25 } },
+      { nazev: 'Milimetrák', popis: '1 / 5 / 10 mm', n: { vzor: 'milimetrak', tloustka: 0.2, barva: '#3f7fbf', okrajHorni: 8, okrajPravy: 8, okrajDolni: 8, okrajLevy: 8 } },
+      { nazev: 'Tečky 5 mm', popis: 'bullet journal', n: { vzor: 'tecky', rozestup: 5, tloustka: 0.3, barva: '#9a9a9a' } },
+      { nazev: 'Linky 8 mm', popis: 'sešit s okrajem', n: { vzor: 'linky', rozestup: 8, okrajovaCara: true, okrajOd: 25, pomocneLinky: false, tloustka: 0.2 } },
+      { nazev: 'Psaní 12 mm', popis: 's pomocnou linkou', n: { vzor: 'linky', rozestup: 12, pomocneLinky: true, okrajovaCara: true, okrajOd: 20, tloustka: 0.25 } },
+      { nazev: 'Izometrie 10 mm', popis: '3D náčrty', n: { vzor: 'izometrie', rozestup: 10, izoSvisle: true, tloustka: 0.18 } },
+      { nazev: 'Trojúhelníky 10 mm', popis: 'rovnostranné', n: { vzor: 'trojuhelniky', rozestup: 10, tloustka: 0.18 } },
+      { nazev: 'Plástev 8 mm', popis: 'šestiúhelníky', n: { vzor: 'sestiuhelniky', rozestup: 8, tloustka: 0.2 } },
+      { nazev: 'Notová osnova', popis: '5 linek', n: { vzor: 'noty', notyRozestup: 2.5, notyMezera: 16, tloustka: 0.2, barva: '#444444' } },
+      { nazev: 'Tabulatura', popis: 'kytara, 6 linek', n: { vzor: 'tabulatura', notyRozestup: 3, notyMezera: 18, tloustka: 0.2, barva: '#444444' } },
+      { nazev: 'Kaligrafie 10 mm', popis: 'sklon 35°', n: { vzor: 'kaligrafie', rozestup: 10, sklon: 35, sklonRozestup: 10, tloustka: 0.2 } },
+      { nazev: 'Kruhy 10 mm', popis: 'polární mřížka', n: { vzor: 'polar', rozestup: 10, paprsku: 24, tloustka: 0.2 } },
+      { nazev: 'Kosočtverce 10 mm', popis: 'na vzory', n: { vzor: 'kosoctverce', rozestup: 10, tloustka: 0.18 } }
+    ];
+
+    function rozmeryPapiru(v) {
+      const [a, b] = FORMATY[v.format] || FORMATY.A4;
+      return v.orientace === 'na-sirku' ? [b, a] : [a, b];
     }
 
-    // Kreslení bodů s linkami
-    function drawDotLines(left, top, width, height, spacing) {
-      for (let y = top; y <= top + height; y += spacing) {
-        for (let x = left; x <= left + width; x += spacing) {
-          ctx.beginPath();
-          ctx.arc(x, y, currentLineWidth * 1.5, 0, Math.PI * 2);
-          ctx.fill();
-        }
-      }
-      
-      for (let y = top; y <= top + height; y += spacing) {
-        ctx.beginPath();
-        for (let x = left; x <= left + width; x += spacing) {
-          if (x === left) {
-            ctx.moveTo(x, y);
-          } else {
-            ctx.lineTo(x, y);
-          }
-        }
-        ctx.stroke();
-      }
-      
-      for (let x = left; x <= left + width; x += spacing) {
-        ctx.beginPath();
-        for (let y = top; y <= top + height; y += spacing) {
-          if (y === top) {
-            ctx.moveTo(x, y);
-          } else {
-            ctx.lineTo(x, y);
-          }
-        }
-        ctx.stroke();
-      }
+    function ctiUI() {
+      const v = {
+        vzor: el('vzor').value,
+        hexOtoceni: el('hexOtoceni').value,
+        format: el('format').value,
+        orientace: el('orientace').value,
+        barva: el('barva').value,
+        barvaPapiru: el('barvaPapiru').value,
+        barvaOkraje: el('barvaOkraje').value,
+        naStred: el('zarovnatNaStred').checked
+      };
+      for (const k of CISLA) v[k] = parseFloat(el(k).value);
+      for (const k of ZASKRTAVATKA) v[k] = el(k).checked;
+      return v;
     }
 
-    // Kreslení bodů s trojúhelníky
-    function drawDotTriangles(left, top, width, height, spacing) {
-      const triangleHeight = spacing * Math.sqrt(3) / 2;
-      
-      for (let row = 0; row * triangleHeight <= height + triangleHeight; row++) {
-        for (let col = 0; col * spacing <= width + spacing; col++) {
-          const offset = (row % 2) * spacing / 2;
-          const x = left + col * spacing + offset;
-          const y = top + row * triangleHeight;
-          
-          if (x >= left && x <= left + width && y >= top && y <= top + height) {
-            ctx.beginPath();
-            ctx.arc(x, y, currentLineWidth * 1.5, 0, Math.PI * 2);
-            ctx.fill();
-          }
-        }
-      }
-      
-      for (let row = 0; row * triangleHeight <= height + triangleHeight; row++) {
-        for (let col = 0; col * spacing <= width + spacing; col++) {
-          const offset = (row % 2) * spacing / 2;
-          
-          const x1 = left + col * spacing + offset;
-          const y1 = top + row * triangleHeight;
-          const x2 = left + col * spacing + spacing / 2 + offset;
-          const y2 = top + row * triangleHeight + triangleHeight;
-          const x3 = left + col * spacing - spacing / 2 + offset;
-          const y3 = top + row * triangleHeight + triangleHeight;
-          
-          if (x1 >= left && x1 <= left + width && y1 >= top && y1 <= top + height) {
-            ctx.beginPath();
-            ctx.moveTo(x1, y1);
-            ctx.lineTo(x2, y2);
-            ctx.lineTo(x3, y3);
-            ctx.closePath();
-            ctx.stroke();
-          }
-        }
-      }
+    function pouzijNastaveni(p) {
+      const v = Object.assign({}, VYCHOZI, p || {});
+      el('vzor').value = v.vzor;
+      el('hexOtoceni').value = v.hexOtoceni;
+      el('format').value = v.format;
+      el('orientace').value = v.orientace;
+      el('barva').value = v.barva;
+      el('barvaPapiru').value = v.barvaPapiru;
+      el('barvaOkraje').value = v.barvaOkraje;
+      el('zarovnatNaStred').checked = !!v.naStred;
+      for (const k of CISLA) el(k).value = v[k];
+      for (const k of ZASKRTAVATKA) el(k).checked = !!v[k];
+      obnovPopisky();
+      prepniVolby();
     }
 
-    // Kreslení koncových bodů linek
-    function drawLineEnds(left, top, width, height, spacing) {
-      for (let y = top; y <= top + height; y += spacing) {
-        ctx.beginPath();
-        ctx.arc(left, y, currentLineWidth * 1.5, 0, Math.PI * 2);
-        ctx.fill();
-        
-        ctx.beginPath();
-        ctx.arc(left + width, y, currentLineWidth * 1.5, 0, Math.PI * 2);
-        ctx.fill();
-      }
+    function ulozNastaveni(v) {
+      try { localStorage.setItem(KLIC, JSON.stringify(v)); } catch (e) { /* plný localStorage stránku nezastaví */ }
     }
 
-    // Kreslení uzlů trojúhelníků (bez čar)
-    function drawTriangleNodes(left, top, width, height, spacing) {
-      const triangleHeight = spacing * Math.sqrt(3) / 2;
-      
-      const startY = top;
-      const startX = left;
-      
-      for (let row = 0; row * triangleHeight <= height + triangleHeight; row++) {
-        for (let col = 0; col * spacing <= width + spacing; col++) {
-          const offset = (row % 2) * spacing / 2;
-          
-          const x1 = startX + col * spacing + offset;
-          const y1 = startY + row * triangleHeight;
-          
-          if (x1 >= left && x1 <= left + width && y1 >= top && y1 <= top + height) {
-            ctx.beginPath();
-            ctx.arc(x1, y1, currentLineWidth * 1.5, 0, Math.PI * 2);
-            ctx.fill();
-          }
-        }
-      }
+    function nactiNastaveni() {
+      try { const s = localStorage.getItem(KLIC); return s ? JSON.parse(s) : null; } catch (e) { return null; }
     }
 
-    // Export do PDF s vysokým rozlišením
-    function exportToPDF() {
-      if (!canvas) return;
-      
+    function obnovPopisky() {
+      el('rozestupHod').textContent = el('rozestup').value;
+      const po = Math.round(parseFloat(el('zvyrazniPo').value));
+      el('zvyrazniPoHod').textContent = po >= 2 ? po + '.' : 'nikdy';
+      el('tloustkaHod').textContent = parseFloat(el('tloustka').value).toFixed(2).replace('.', ',');
+      el('paprskuHod').textContent = el('paprsku').value;
+    }
+
+    function prepniVolby() {
+      const vzor = VZORY[el('vzor').value];
+      const volby = vzor ? vzor.volby : [];
+      el('popisVzoru').textContent = vzor ? vzor.popis : '';
+      el('poleRozestup').style.display = volby.includes('rozestup') ? '' : 'none';
+      const mapa = {
+        zvyrazneni: 'volbyZvyrazneni', linky: 'volbyLinky', izo: 'volbyIzo',
+        hex: 'volbyHex', noty: 'volbyNoty', kaligrafie: 'volbyKaligrafie', polar: 'volbyPolar'
+      };
+      for (const [klic, id] of Object.entries(mapa)) {
+        el(id).classList.toggle('aktivni', volby.includes(klic));
+      }
+      const stejne = el('stejneOkraje').checked;
+      for (const k of ['okrajPravy', 'okrajDolni', 'okrajLevy']) el(k).disabled = stejne;
+    }
+
+    /* ==================================================================
+       4. SESTAVENÍ A VYKRESLENÍ
+       ================================================================== */
+
+    let posledni = null;   // { prim, v, sirka, vyska }
+
+    function zobrazVarovani(zpravy) {
+      const box = el('varovani');
+      if (!zpravy.length) { box.classList.remove('vidno'); box.innerHTML = ''; return; }
+      box.innerHTML = zpravy.map(z => '• ' + z).join('<br>');
+      box.classList.add('vidno');
+    }
+
+    function sestav() {
+      const v = ctiUI();
+      const zpravy = [];
+
+      if (v.stejneOkraje) {
+        v.okrajPravy = v.okrajDolni = v.okrajLevy = v.okrajHorni;
+        el('okrajPravy').value = el('okrajDolni').value = el('okrajLevy').value = v.okrajHorni;
+      }
+
+      const [sirka, vyska] = rozmeryPapiru(v);
+      const plocha = {
+        x: v.okrajLevy, y: v.okrajHorni,
+        w: sirka - v.okrajLevy - v.okrajPravy,
+        h: vyska - v.okrajHorni - v.okrajDolni
+      };
+
+      if (plocha.w < 10 || plocha.h < 10) {
+        zobrazVarovani(['Okraje ukrojily skoro celý papír — zmenšete je.']);
+        el('papir').innerHTML = '';
+        return null;
+      }
+
+      const vzor = VZORY[v.vzor] || VZORY.ctverecky;
+      const prim = NOVY();
+      vzor.kresli(prim, plocha, v);
+
+      const prvku = prim.cary.length + prim.tecky.length + prim.kruznice.length;
+      if (prvku > MAX_PRVKU) {
+        zobrazVarovani([`Vzor by měl ${prvku.toLocaleString('cs-CZ')} prvků — to už prohlížeč ani tiskárna nezvládnou rozumně. Zvětšete rozestup.`]);
+        el('papir').innerHTML = '';
+        return null;
+      }
+
+      if (v.rozestup && v.rozestup < v.tloustka * 4 && vzor.volby.includes('rozestup')) {
+        zpravy.push('Čáry jsou při tomhle rozestupu skoro u sebe — na papíře splynou.');
+      }
+      if (v.tloustka < 0.1) zpravy.push('Čára tenčí než 0,1 mm se na běžné tiskárně nemusí vykreslit.');
+      if (v.vzor === 'milimetrak' && Math.min(plocha.w, plocha.h) > 190 && v.tloustka > 0.25) {
+        zpravy.push('U milimetráku se osvědčí tenká čára (0,15–0,2 mm), jinak je papír tmavý.');
+      }
+      zobrazVarovani(zpravy);
+
+      el('infoPlocha').textContent = `${plocha.w.toFixed(0)} × ${plocha.h.toFixed(0)} mm`;
+      el('infoRozestup').textContent = vzor.volby.includes('rozestup')
+        ? `${String(v.rozestup).replace('.', ',')} mm`
+        : (v.vzor === 'milimetrak' ? '1 / 5 / 10 mm' : `${String(v.notyRozestup).replace('.', ',')} mm`);
+      el('infoPrvku').textContent = prvku.toLocaleString('cs-CZ');
+      el('infoPocty').textContent = prim.tecky.length
+        ? `${prim.tecky.length.toLocaleString('cs-CZ')} teček`
+        : `${prim.cary.length.toLocaleString('cs-CZ')} čar`;
+
+      posledni = { prim, v, sirka, vyska, plocha };
+      return posledni;
+    }
+
+    function vykresli() {
+      const s = sestav();
+      if (!s) return;
+      const papir = el('papir');
+      papir.setAttribute('viewBox', `0 0 ${cislo(s.sirka)} ${cislo(s.vyska)}`);
+      papir.setAttribute('width', s.sirka + 'mm');
+      papir.setAttribute('height', s.vyska + 'mm');
+      papir.innerHTML = doSvg(s.prim, s.v, s.sirka, s.vyska, true);
+      ulozNastaveni(s.v);
+    }
+
+    function jmenoSouboru(pripona) {
+      const v = ctiUI();
+      const vzor = (VZORY[v.vzor] || {}).nazev || 'vzor';
+      const cisty = vzor.replace(/^\S+\s/, '').replace(/[^\p{L}\p{N}._-]+/gu, '_').toLowerCase();
+      return `papir_${cisty}_${v.format}.${pripona}`;
+    }
+
+    function exportPdf() {
+      const s = posledni || sestav();
+      if (!s) return;
       try {
-        const { jsPDF } = window.jspdf;
-        const pdf = new jsPDF({
-          orientation: 'portrait',
-          unit: 'mm',
-          format: 'a4'
+        const pdf = doPdf(s.prim, s.v, s.sirka, s.vyska, s.v.tisknoutPapir);
+        pdf.save(jmenoSouboru('pdf'));
+        Dialog.info('PDF uloženo — vektorově, ostré při jakémkoli zvětšení.');
+      } catch (e) {
+        Dialog.chyba('PDF se nepodařilo vytvořit: ' + e.message);
+      }
+    }
+
+    function exportSvg() {
+      const s = posledni || sestav();
+      if (!s) return;
+      const telo = doSvg(s.prim, s.v, s.sirka, s.vyska, s.v.tisknoutPapir);
+      const text = `<?xml version="1.0" encoding="UTF-8"?>\n`
+        + `<svg xmlns="http://www.w3.org/2000/svg" width="${s.sirka}mm" height="${s.vyska}mm" `
+        + `viewBox="0 0 ${cislo(s.sirka)} ${cislo(s.vyska)}">\n${telo}\n</svg>\n`;
+      stahni(new Blob([text], { type: 'image/svg+xml' }), jmenoSouboru('svg'));
+      Dialog.info('SVG uloženo v milimetrech 1:1.');
+    }
+
+    function exportPng() {
+      const s = posledni || sestav();
+      if (!s) return;
+      const dpi = 300;
+      const mer = dpi / 25.4;
+      const platno = document.createElement('canvas');
+      platno.width = Math.round(s.sirka * mer);
+      platno.height = Math.round(s.vyska * mer);
+      naPlatno(platno.getContext('2d'), s.prim, s.v, s.sirka, s.vyska, mer, true);
+      platno.toBlob(b => {
+        stahni(b, jmenoSouboru('png'));
+        Dialog.info(`PNG uloženo (${platno.width} × ${platno.height} bodů, 300 DPI).`);
+      }, 'image/png');
+    }
+
+    /* Tisk jde přes tentýž SVG v stránce — je vektorový, takže čáry
+       vyjdou v plném rozlišení tiskárny. Barva papíru se před tiskem
+       zbělí, pokud si ji uživatel nevyžádal (šetří se inkoust). */
+    function pripravTisk() {
+      const plocha = el('papir').querySelector('#papirPlocha');
+      if (plocha) plocha.setAttribute('fill', el('tisknoutPapir').checked ? el('barvaPapiru').value : '#ffffff');
+    }
+    function poTisku() {
+      const plocha = el('papir').querySelector('#papirPlocha');
+      if (plocha) plocha.setAttribute('fill', el('barvaPapiru').value);
+    }
+
+    /* ==================================================================
+       5. OVLÁDÁNÍ
+       ================================================================== */
+
+    function postavNabidku() {
+      const sel = el('vzor');
+      sel.innerHTML = '';
+      for (const [id, vzor] of Object.entries(VZORY)) {
+        const o = document.createElement('option');
+        o.value = id;
+        o.textContent = vzor.nazev;
+        sel.appendChild(o);
+      }
+      const box = el('predvolby');
+      box.innerHTML = '';
+      for (const p of PREDVOLBY) {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.innerHTML = `<b></b><span></span>`;
+        b.querySelector('b').textContent = p.nazev;
+        b.querySelector('span').textContent = p.popis;
+        b.addEventListener('click', () => {
+          pouzijNastaveni(Object.assign({}, ctiUI(), p.n));
+          vykresli();
+          Dialog.info(p.nazev + ' — nastaveno.');
         });
-        
-        const scale = 4;
-        const tempCanvas = document.createElement('canvas');
-        const tempCtx = tempCanvas.getContext('2d');
-        
-        tempCanvas.width = canvas.width * scale;
-        tempCanvas.height = canvas.height * scale;
-        
-        tempCtx.strokeStyle = currentColor;
-        tempCtx.fillStyle = currentColor;
-        tempCtx.lineWidth = currentLineWidth * scale;
-        
-        const topPx = mmToPx(marginTop) * scale;
-        const rightPx = mmToPx(marginRight) * scale;
-        const bottomPx = mmToPx(marginBottom) * scale;
-        const leftPx = mmToPx(marginLeft) * scale;
-        
-        const workWidth = tempCanvas.width - leftPx - rightPx;
-        const workHeight = tempCanvas.height - topPx - bottomPx;
-        
-        const spacingPx = currentSpacing * scale;
-        
-        switch(currentPattern) {
-          case 'grid':
-            drawHighResGrid(tempCtx, leftPx, topPx, workWidth, workHeight, spacingPx);
-            break;
-          case 'dots':
-            drawHighResDots(tempCtx, leftPx, topPx, workWidth, workHeight, spacingPx);
-            break;
-          case 'lines':
-            drawHighResLines(tempCtx, leftPx, topPx, workWidth, workHeight, spacingPx);
-            break;
-          case 'triangles':
-            drawHighResTriangles(tempCtx, leftPx, topPx, workWidth, workHeight, spacingPx);
-            break;
-          case 'dotlines':
-            drawHighResDotLines(tempCtx, leftPx, topPx, workWidth, workHeight, spacingPx);
-            break;
-          case 'dottriangles':
-            drawHighResDotTriangles(tempCtx, leftPx, topPx, workWidth, workHeight, spacingPx);
-            break;
-          case 'lineEnds':
-            drawHighResLineEnds(tempCtx, leftPx, topPx, workWidth, workHeight, spacingPx);
-            break;
-          case 'triangleNodes':
-            drawHighResTriangleNodes(tempCtx, leftPx, topPx, workWidth, workHeight, spacingPx);
-            break;
-        }
-        
-        const imgData = tempCanvas.toDataURL('image/png', 1.0);
-        pdf.addImage(imgData, 'PNG', 0, 0, 210, 297);
-        
-        pdf.save('vzor-a4.pdf');
-        
-        showNotification('PDF úspěšně staženo (vysoká kvalita)', 'success');
-      } catch (error) {
-        console.error('Chyba při exportu do PDF:', error);
-        showNotification('Chyba při exportu do PDF', 'error');
+        box.appendChild(b);
       }
     }
 
-    // Funkce pro kreslení s vysokým rozlišením
-    function drawHighResGrid(ctx, left, top, width, height, spacing) {
-      for (let y = top; y <= top + height; y += spacing) {
-        ctx.beginPath();
-        ctx.moveTo(left, y);
-        ctx.lineTo(left + width, y);
-        ctx.stroke();
-      }
-      
-      for (let x = left; x <= left + width; x += spacing) {
-        ctx.beginPath();
-        ctx.moveTo(x, top);
-        ctx.lineTo(x, top + height);
-        ctx.stroke();
-      }
-    }
+    function pripojUdalosti() {
+      el('vzor').addEventListener('change', () => { prepniVolby(); vykresli(); });
+      el('hexOtoceni').addEventListener('change', vykresli);
+      el('format').addEventListener('change', vykresli);
+      el('orientace').addEventListener('change', vykresli);
 
-    function drawHighResDots(ctx, left, top, width, height, spacing) {
-      for (let y = top; y <= top + height; y += spacing) {
-        for (let x = left; x <= left + width; x += spacing) {
-          ctx.beginPath();
-          ctx.arc(x, y, ctx.lineWidth / 2, 0, Math.PI * 2);
-          ctx.fill();
-        }
+      for (const k of CISLA) {
+        el(k).addEventListener('input', () => { obnovPopisky(); vykresli(); });
       }
-    }
+      for (const k of ZASKRTAVATKA) {
+        el(k).addEventListener('change', () => { prepniVolby(); vykresli(); });
+      }
+      el('zarovnatNaStred').addEventListener('change', vykresli);
+      for (const k of ['barva', 'barvaPapiru', 'barvaOkraje']) {
+        el(k).addEventListener('input', vykresli);
+      }
 
-    function drawHighResLines(ctx, left, top, width, height, spacing) {
-      for (let y = top; y <= top + height; y += spacing) {
-        ctx.beginPath();
-        ctx.moveTo(left, y);
-        ctx.lineTo(left + width, y);
-        ctx.stroke();
-      }
-    }
-
-    function drawHighResTriangles(ctx, left, top, width, height, spacing) {
-      const triangleHeight = spacing * Math.sqrt(3) / 2;
-      
-      const startY = top;
-      const startX = left;
-      
-      for (let row = 0; row * triangleHeight <= height + triangleHeight; row++) {
-        for (let col = 0; col * spacing <= width + spacing; col++) {
-          const offset = (row % 2) * spacing / 2;
-          
-          const x1 = startX + col * spacing + offset;
-          const y1 = startY + row * triangleHeight;
-          const x2 = startX + col * spacing + spacing / 2 + offset;
-          const y2 = startY + row * triangleHeight + triangleHeight;
-          const x3 = startX + col * spacing - spacing / 2 + offset;
-          const y3 = startY + row * triangleHeight + triangleHeight;
-          
-          if (x1 >= left && x1 <= left + width && y1 >= top && y1 <= top + height) {
-            ctx.beginPath();
-            ctx.moveTo(x1, y1);
-            ctx.lineTo(x2, y2);
-            ctx.lineTo(x3, y3);
-            ctx.closePath();
-            ctx.stroke();
-          }
-        }
-      }
-    }
-
-    function drawHighResDotLines(ctx, left, top, width, height, spacing) {
-      for (let y = top; y <= top + height; y += spacing) {
-        for (let x = left; x <= left + width; x += spacing) {
-          ctx.beginPath();
-          ctx.arc(x, y, ctx.lineWidth * 1.5, 0, Math.PI * 2);
-          ctx.fill();
-        }
-      }
-      
-      for (let y = top; y <= top + height; y += spacing) {
-        ctx.beginPath();
-        for (let x = left; x <= left + width; x += spacing) {
-          if (x === left) {
-            ctx.moveTo(x, y);
-          } else {
-            ctx.lineTo(x, y);
-          }
-        }
-        ctx.stroke();
-      }
-      
-      for (let x = left; x <= left + width; x += spacing) {
-        ctx.beginPath();
-        for (let y = top; y <= top + height; y += spacing) {
-          if (y === top) {
-            ctx.moveTo(x, y);
-          } else {
-            ctx.lineTo(x, y);
-          }
-        }
-        ctx.stroke();
-      }
-    }
-
-    function drawHighResDotTriangles(ctx, left, top, width, height, spacing) {
-      const triangleHeight = spacing * Math.sqrt(3) / 2;
-      
-      for (let row = 0; row * triangleHeight <= height + triangleHeight; row++) {
-        for (let col = 0; col * spacing <= width + spacing; col++) {
-          const offset = (row % 2) * spacing / 2;
-          const x = left + col * spacing + offset;
-          const y = top + row * triangleHeight;
-          
-          if (x >= left && x <= left + width && y >= top && y <= top + height) {
-            ctx.beginPath();
-            ctx.arc(x, y, ctx.lineWidth * 1.5, 0, Math.PI * 2);
-            ctx.fill();
-          }
-        }
-      }
-      
-      for (let row = 0; row * triangleHeight <= height + triangleHeight; row++) {
-        for (let col = 0; col * spacing <= width + spacing; col++) {
-          const offset = (row % 2) * spacing / 2;
-          
-          const x1 = left + col * spacing + offset;
-          const y1 = top + row * triangleHeight;
-          const x2 = left + col * spacing + spacing / 2 + offset;
-          const y2 = top + row * triangleHeight + triangleHeight;
-          const x3 = left + col * spacing - spacing / 2 + offset;
-          const y3 = top + row * triangleHeight + triangleHeight;
-          
-          if (x1 >= left && x1 <= left + width && y1 >= top && y1 <= top + height) {
-            ctx.beginPath();
-            ctx.moveTo(x1, y1);
-            ctx.lineTo(x2, y2);
-            ctx.lineTo(x3, y3);
-            ctx.closePath();
-            ctx.stroke();
-          }
-        }
-      }
-    }
-
-    function drawHighResLineEnds(ctx, left, top, width, height, spacing) {
-      for (let y = top; y <= top + height; y += spacing) {
-        ctx.beginPath();
-        ctx.arc(left, y, ctx.lineWidth * 1.5, 0, Math.PI * 2);
-        ctx.fill();
-        
-        ctx.beginPath();
-        ctx.arc(left + width, y, ctx.lineWidth * 1.5, 0, Math.PI * 2);
-        ctx.fill();
-      }
-    }
-
-    function drawHighResTriangleNodes(ctx, left, top, width, height, spacing) {
-      const triangleHeight = spacing * Math.sqrt(3) / 2;
-      
-      const startY = top;
-      const startX = left;
-      
-      for (let row = 0; row * triangleHeight <= height + triangleHeight; row++) {
-        for (let col = 0; col * spacing <= width + spacing; col++) {
-          const offset = (row % 2) * spacing / 2;
-          
-          const x1 = startX + col * spacing + offset;
-          const y1 = startY + row * triangleHeight;
-          
-          if (x1 >= left && x1 <= left + width && y1 >= top && y1 <= top + height) {
-            ctx.beginPath();
-            ctx.arc(x1, y1, ctx.lineWidth * 1.5, 0, Math.PI * 2);
-            ctx.fill();
-          }
-        }
-      }
-    }
-
-    // Export do SVG
-    function exportToSVG() {
-      try {
-        const svg = document.createElementNS("http://www.w3.org/2000/svg", "svg");
-        svg.setAttribute("xmlns", "http://www.w3.org/2000/svg");
-        svg.setAttribute("width", "595");
-        svg.setAttribute("height", "842");
-        svg.setAttribute("viewBox", "0 0 595 842");
-        
-        const topPx = mmToPx(marginTop);
-        const rightPx = mmToPx(marginRight);
-        const bottomPx = mmToPx(marginBottom);
-        const leftPx = mmToPx(marginLeft);
-        
-        const workWidth = 595 - leftPx - rightPx;
-        const workHeight = 842 - topPx - bottomPx;
-        
-        switch(currentPattern) {
-          case 'grid':
-            createSvgGrid(svg, leftPx, topPx, workWidth, workHeight, currentSpacing);
-            break;
-          case 'dots':
-            createSvgDots(svg, leftPx, topPx, workWidth, workHeight, currentSpacing);
-            break;
-          case 'lines':
-            createSvgLines(svg, leftPx, topPx, workWidth, workHeight, currentSpacing);
-            break;
-          case 'triangles':
-            createSvgTriangles(svg, leftPx, topPx, workWidth, workHeight, currentSpacing);
-            break;
-          case 'dotlines':
-            createSvgDotLines(svg, leftPx, topPx, workWidth, workHeight, currentSpacing);
-            break;
-          case 'dottriangles':
-            createSvgDotTriangles(svg, leftPx, topPx, workWidth, workHeight, currentSpacing);
-            break;
-          case 'lineEnds':
-            createSvgLineEnds(svg, leftPx, topPx, workWidth, workHeight, currentSpacing);
-            break;
-          case 'triangleNodes':
-            createSvgTriangleNodes(svg, leftPx, topPx, workWidth, workHeight, currentSpacing);
-            break;
-        }
-        
-        const serializer = new XMLSerializer();
-        let svgString = serializer.serializeToString(svg);
-        
-        svgString = '<?xml version="1.0" encoding="UTF-8" standalone="no"?>\n' + svgString;
-        
-        const blob = new Blob([svgString], {type: "image/svg+xml"});
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.download = "vzor-a4.svg";
-        link.href = url;
-        link.click();
-        
-        setTimeout(() => URL.revokeObjectURL(url), 100);
-        
-        showNotification('SVG úspěšně staženo', 'success');
-      } catch (error) {
-        console.error('Chyba při exportu do SVG:', error);
-        showNotification('Chyba při exportu do SVG', 'error');
-      }
-    }
-
-    // Funkce pro vytváření SVG elementů
-    function createSvgGrid(svg, left, top, width, height, spacing) {
-      for (let y = top; y <= top + height; y += spacing) {
-        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-        line.setAttribute("x1", left);
-        line.setAttribute("y1", y);
-        line.setAttribute("x2", left + width);
-        line.setAttribute("y2", y);
-        line.setAttribute("stroke", currentColor);
-        line.setAttribute("stroke-width", currentLineWidth);
-        svg.appendChild(line);
-      }
-      
-      for (let x = left; x <= left + width; x += spacing) {
-        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-        line.setAttribute("x1", x);
-        line.setAttribute("y1", top);
-        line.setAttribute("x2", x);
-        line.setAttribute("y2", top + height);
-        line.setAttribute("stroke", currentColor);
-        line.setAttribute("stroke-width", currentLineWidth);
-        svg.appendChild(line);
-      }
-    }
-
-    function createSvgDots(svg, left, top, width, height, spacing) {
-      for (let y = top; y <= top + height; y += spacing) {
-        for (let x = left; x <= left + width; x += spacing) {
-          const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-          circle.setAttribute("cx", x);
-          circle.setAttribute("cy", y);
-          circle.setAttribute("r", currentLineWidth);
-          circle.setAttribute("fill", currentColor);
-          svg.appendChild(circle);
-        }
-      }
-    }
-
-    function createSvgLines(svg, left, top, width, height, spacing) {
-      for (let y = top; y <= top + height; y += spacing) {
-        const line = document.createElementNS("http://www.w3.org/2000/svg", "line");
-        line.setAttribute("x1", left);
-        line.setAttribute("y1", y);
-        line.setAttribute("x2", left + width);
-        line.setAttribute("y2", y);
-        line.setAttribute("stroke", currentColor);
-        line.setAttribute("stroke-width", currentLineWidth);
-        svg.appendChild(line);
-      }
-    }
-
-    function createSvgTriangles(svg, left, top, width, height, spacing) {
-      const triangleHeight = spacing * Math.sqrt(3) / 2;
-      
-      const startY = top;
-      const startX = left;
-      
-      for (let row = 0; row * triangleHeight <= height + triangleHeight; row++) {
-        for (let col = 0; col * spacing <= width + spacing; col++) {
-          const offset = (row % 2) * spacing / 2;
-          
-          const x1 = startX + col * spacing + offset;
-          const y1 = startY + row * triangleHeight;
-          const x2 = startX + col * spacing + spacing / 2 + offset;
-          const y2 = startY + row * triangleHeight + triangleHeight;
-          const x3 = startX + col * spacing - spacing / 2 + offset;
-          const y3 = startY + row * triangleHeight + triangleHeight;
-          
-          if (x1 >= left && x1 <= left + width && y1 >= top && y1 <= top + height) {
-            const polygon = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
-            polygon.setAttribute("points", `${x1},${y1} ${x2},${y2} ${x3},${y3}`);
-            polygon.setAttribute("stroke", currentColor);
-            polygon.setAttribute("stroke-width", currentLineWidth);
-            polygon.setAttribute("fill", "none");
-            svg.appendChild(polygon);
-          }
-        }
-      }
-    }
-
-    function createSvgDotLines(svg, left, top, width, height, spacing) {
-      for (let y = top; y <= top + height; y += spacing) {
-        for (let x = left; x <= left + width; x += spacing) {
-          const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-          circle.setAttribute("cx", x);
-          circle.setAttribute("cy", y);
-          circle.setAttribute("r", currentLineWidth * 1.5);
-          circle.setAttribute("fill", currentColor);
-          svg.appendChild(circle);
-        }
-      }
-      
-      for (let y = top; y <= top + height; y += spacing) {
-        const line = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
-        let points = '';
-        for (let x = left; x <= left + width; x += spacing) {
-          points += `${x},${y} `;
-        }
-        line.setAttribute("points", points.trim());
-        line.setAttribute("stroke", currentColor);
-        line.setAttribute("stroke-width", currentLineWidth);
-        line.setAttribute("fill", "none");
-        svg.appendChild(line);
-      }
-      
-      for (let x = left; x <= left + width; x += spacing) {
-        const line = document.createElementNS("http://www.w3.org/2000/svg", "polyline");
-        let points = '';
-        for (let y = top; y <= top + height; y += spacing) {
-          points += `${x},${y} `;
-        }
-        line.setAttribute("points", points.trim());
-        line.setAttribute("stroke", currentColor);
-        line.setAttribute("stroke-width", currentLineWidth);
-        line.setAttribute("fill", "none");
-        svg.appendChild(line);
-      }
-    }
-
-    function createSvgDotTriangles(svg, left, top, width, height, spacing) {
-      const triangleHeight = spacing * Math.sqrt(3) / 2;
-      
-      for (let row = 0; row * triangleHeight <= height + triangleHeight; row++) {
-        for (let col = 0; col * spacing <= width + spacing; col++) {
-          const offset = (row % 2) * spacing / 2;
-          const x = left + col * spacing + offset;
-          const y = top + row * triangleHeight;
-          
-          if (x >= left && x <= left + width && y >= top && y <= top + height) {
-            const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-            circle.setAttribute("cx", x);
-            circle.setAttribute("cy", y);
-            circle.setAttribute("r", currentLineWidth * 1.5);
-            circle.setAttribute("fill", currentColor);
-            svg.appendChild(circle);
-          }
-        }
-      }
-      
-      for (let row = 0; row * triangleHeight <= height + triangleHeight; row++) {
-        for (let col = 0; col * spacing <= width + spacing; col++) {
-          const offset = (row % 2) * spacing / 2;
-          
-          const x1 = left + col * spacing + offset;
-          const y1 = top + row * triangleHeight;
-          const x2 = left + col * spacing + spacing / 2 + offset;
-          const y2 = top + row * triangleHeight + triangleHeight;
-          const x3 = left + col * spacing - spacing / 2 + offset;
-          const y3 = top + row * triangleHeight + triangleHeight;
-          
-          if (x1 >= left && x1 <= left + width && y1 >= top && y1 <= top + height) {
-            const polygon = document.createElementNS("http://www.w3.org/2000/svg", "polygon");
-            polygon.setAttribute("points", `${x1},${y1} ${x2},${y2} ${x3},${y3}`);
-            polygon.setAttribute("stroke", currentColor);
-            polygon.setAttribute("stroke-width", currentLineWidth);
-            polygon.setAttribute("fill", "none");
-            svg.appendChild(polygon);
-          }
-        }
-      }
-    }
-
-    function createSvgLineEnds(svg, left, top, width, height, spacing) {
-      for (let y = top; y <= top + height; y += spacing) {
-        const circleLeft = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-        circleLeft.setAttribute("cx", left);
-        circleLeft.setAttribute("cy", y);
-        circleLeft.setAttribute("r", currentLineWidth * 1.5);
-        circleLeft.setAttribute("fill", currentColor);
-        svg.appendChild(circleLeft);
-        
-        const circleRight = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-        circleRight.setAttribute("cx", left + width);
-        circleRight.setAttribute("cy", y);
-        circleRight.setAttribute("r", currentLineWidth * 1.5);
-        circleRight.setAttribute("fill", currentColor);
-        svg.appendChild(circleRight);
-      }
-    }
-
-    function createSvgTriangleNodes(svg, left, top, width, height, spacing) {
-      const triangleHeight = spacing * Math.sqrt(3) / 2;
-      
-      const startY = top;
-      const startX = left;
-      
-      for (let row = 0; row * triangleHeight <= height + triangleHeight; row++) {
-        for (let col = 0; col * spacing <= width + spacing; col++) {
-          const offset = (row % 2) * spacing / 2;
-          
-          const x1 = startX + col * spacing + offset;
-          const y1 = startY + row * triangleHeight;
-          
-          if (x1 >= left && x1 <= left + width && y1 >= top && y1 <= top + height) {
-            const circle = document.createElementNS("http://www.w3.org/2000/svg", "circle");
-            circle.setAttribute("cx", x1);
-            circle.setAttribute("cy", y1);
-            circle.setAttribute("r", currentLineWidth * 1.5);
-            circle.setAttribute("fill", currentColor);
-            svg.appendChild(circle);
-          }
-        }
-      }
-    }
-
-    // Export do PNG
-    function exportToPNG() {
-      if (!canvas) return;
-      
-      try {
-        const scale = 4;
-        const tempCanvas = document.createElement('canvas');
-        const tempCtx = tempCanvas.getContext('2d');
-        
-        tempCanvas.width = canvas.width * scale;
-        tempCanvas.height = canvas.height * scale;
-        
-        tempCtx.strokeStyle = currentColor;
-        tempCtx.fillStyle = currentColor;
-        tempCtx.lineWidth = currentLineWidth * scale;
-        
-        const topPx = mmToPx(marginTop) * scale;
-        const rightPx = mmToPx(marginRight) * scale;
-        const bottomPx = mmToPx(marginBottom) * scale;
-        const leftPx = mmToPx(marginLeft) * scale;
-        
-        const workWidth = tempCanvas.width - leftPx - rightPx;
-        const workHeight = tempCanvas.height - topPx - bottomPx;
-        
-        const spacingPx = currentSpacing * scale;
-        
-        switch(currentPattern) {
-          case 'grid':
-            drawHighResGrid(tempCtx, leftPx, topPx, workWidth, workHeight, spacingPx);
-            break;
-          case 'dots':
-            drawHighResDots(tempCtx, leftPx, topPx, workWidth, workHeight, spacingPx);
-            break;
-          case 'lines':
-            drawHighResLines(tempCtx, leftPx, topPx, workWidth, workHeight, spacingPx);
-            break;
-          case 'triangles':
-            drawHighResTriangles(tempCtx, leftPx, topPx, workWidth, workHeight, spacingPx);
-            break;
-          case 'dotlines':
-            drawHighResDotLines(tempCtx, leftPx, topPx, workWidth, workHeight, spacingPx);
-            break;
-          case 'dottriangles':
-            drawHighResDotTriangles(tempCtx, leftPx, topPx, workWidth, workHeight, spacingPx);
-            break;
-          case 'lineEnds':
-            drawHighResLineEnds(tempCtx, leftPx, topPx, workWidth, workHeight, spacingPx);
-            break;
-          case 'triangleNodes':
-            drawHighResTriangleNodes(tempCtx, leftPx, topPx, workWidth, workHeight, spacingPx);
-            break;
-        }
-        
-        const dataURL = tempCanvas.toDataURL('image/png');
-        const link = document.createElement('a');
-        link.download = 'vzor-a4.png';
-        link.href = dataURL;
-        link.click();
-        
-        showNotification('PNG úspěšně staženo (vysoká kvalita)', 'success');
-      } catch (error) {
-        console.error('Chyba při exportu do PNG:', error);
-        showNotification('Chyba při exportu do PNG', 'error');
-      }
-    }
-
-    // Tisk stránky - OPRAVENO
-    function printPage() {
-      window.print();
-    }
-
-    // Aktualizace popisu vzoru
-    function updatePatternInfo() {
-      const patternInfo = document.getElementById('patternInfo');
-      patternInfo.textContent = patternDescriptions[currentPattern] || '';
-    }
-
-    // Inicializace aplikace
-    function initApp() {
-      initCanvas();
-      
-      updateSpacingMm();
-      
-      document.getElementById('generateBtn').addEventListener('click', generatePattern);
-      document.getElementById('downloadPdf').addEventListener('click', exportToPDF);
-      document.getElementById('downloadSvg').addEventListener('click', exportToSVG);
-      document.getElementById('downloadPng').addEventListener('click', exportToPNG);
-      document.getElementById('printPage').addEventListener('click', printPage);
-      
-      document.getElementById('patternType').addEventListener('change', function() {
-        currentPattern = this.value;
-        updatePatternInfo();
-        generatePattern();
+      el('btnTisk').addEventListener('click', () => window.print());
+      el('btnPdf').addEventListener('click', exportPdf);
+      el('btnSvg').addEventListener('click', exportSvg);
+      el('btnPng').addEventListener('click', exportPng);
+      el('btnVychozi').addEventListener('click', async () => {
+        if (!(await Dialog.potvrd('Vrátit všechna nastavení na výchozí?'))) return;
+        pouzijNastaveni(VYCHOZI);
+        vykresli();
+        Dialog.info('Nastavení je zpátky na výchozím.');
       });
-      
-      document.getElementById('spacing').addEventListener('change', function() {
-        currentSpacing = parseInt(this.value) || 50;
-        updateSpacingMm();
-        generatePattern();
-      });
-      
-      document.getElementById('color').addEventListener('change', function() {
-        currentColor = this.value;
-        generatePattern();
-      });
-      
-      document.getElementById('lineWidth').addEventListener('change', function() {
-        currentLineWidth = parseFloat(this.value) || 1;
-        generatePattern();
-      });
-      
-      document.getElementById('marginTop').addEventListener('change', function() {
-        marginTop = parseInt(this.value) || 20;
-        generatePattern();
-      });
-      
-      document.getElementById('marginRight').addEventListener('change', function() {
-        marginRight = parseInt(this.value) || 20;
-        generatePattern();
-      });
-      
-      document.getElementById('marginBottom').addEventListener('change', function() {
-        marginBottom = parseInt(this.value) || 20;
-        generatePattern();
-      });
-      
-      document.getElementById('marginLeft').addEventListener('change', function() {
-        marginLeft = parseInt(this.value) || 20;
-        generatePattern();
-      });
-      
-      updatePatternInfo();
+
+      window.addEventListener('beforeprint', pripravTisk);
+      window.addEventListener('afterprint', poTisku);
     }
 
-    document.addEventListener('DOMContentLoaded', initApp);
+    function start() {
+      postavNabidku();
+      pouzijNastaveni(nactiNastaveni() || VYCHOZI);
+      pripojUdalosti();
+      vykresli();
+    }
+
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start);
+    else start();
+
+    // pro testy
+    window.PAPIRY = { VZORY, FORMATY, sestav, doSvg, doPdf, VYCHOZI, PREDVOLBY };
+  })();
   </script>
 </body>
 </html>

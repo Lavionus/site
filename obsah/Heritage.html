@@ -381,7 +381,7 @@
             <!-- TAB: PEOPLE -->
             <div id="tab-people" class="tab-content active">
                 <button class="btn btn-primary" onclick="openPersonModal()">➕ Nová osoba</button>
-                <input type="text" class="search-bar" id="searchBox" placeholder="🔍 Hledat jméno, rok, poznámky..." oninput="scheduleRenderPersonList()">
+                <input type="text" class="search-bar" id="searchBox" placeholder="🔍 Hledat jméno, rok, poznámky… (Enter = skočit)" oninput="scheduleRenderPersonList()" onkeydown="if(event.key==='Enter'){event.preventDefault();skocNaPrvniNalezenou();}">
                 <div class="quick-filters" id="quickFilters">
                     <span class="filter-chip active" data-filter="all" onclick="setFilter('all')">Všichni</span>
                     <span class="filter-chip" data-filter="male" onclick="setFilter('male')">♂ Muži</span>
@@ -542,6 +542,12 @@
                             <button class="btn btn-outline" onclick="document.getElementById('importFile').click()" style="flex:1">📂 Nahrát</button>
                         </div>
                         <input type="file" id="importFile" style="display:none" onchange="importJSON(this)">
+                        <div class="setting-sublabel">GEDCOM (výměna s jinými programy):</div>
+                        <div class="btn-row">
+                            <button class="btn btn-outline btn-sm" onclick="exportGEDCOM()" title="Uloží rodokmen ve formátu, kterému rozumí MyHeritage, Ancestry, Gramps…">🧬 Uložit .ged</button>
+                            <button class="btn btn-outline btn-sm" onclick="document.getElementById('gedcomFile').click()" title="Načte rodokmen z jiného programu">🧬 Načíst .ged</button>
+                        </div>
+                        <input type="file" id="gedcomFile" accept=".ged,.gedcom,text/plain" style="display:none" onchange="importGEDCOM(this)">
                     </div>
                 </div>
 
@@ -578,6 +584,10 @@
                     </div>
                     <div class="settings-section-content" id="sectionTools">
                         <button class="btn btn-warning" onclick="checkDataConsistency()">🔍 Kontrola dat</button>
+                        <button class="btn btn-outline" onclick="openRelationModal()">🔗 Jak jsou příbuzní?</button>
+                        <a class="btn btn-outline" href="rodokmen.html" style="display:block;text-align:center;text-decoration:none;margin-top:6px"
+                           title="Novější nástroj: staví se od nejmladší generace, hlídá nesmysly a umí načíst zálohu odsud">
+                           🌳 Zkusit Stavitel rodokmenu</a>
                         <div class="btn-row">
                             <button class="btn btn-outline btn-sm" onclick="toggleFullscreen()">⛶ Fullscreen</button>
                             <button class="btn btn-outline btn-sm" onclick="toggleKeyboardHelp()">⌨️ Zkratky</button>
@@ -641,6 +651,7 @@
         <div class="context-menu-item" onclick="contextAction('duplicate')">📋 Duplikovat</div>
         <div class="context-menu-divider"></div>
         <div class="context-menu-item" onclick="contextAction('center')">🔍 Centrovat pohled</div>
+        <div class="context-menu-item" onclick="contextAction('relation')">🔗 Příbuznost s pivotem</div>
         <div class="context-menu-divider"></div>
         <div class="context-menu-item danger" onclick="contextAction('delete')">🗑️ Smazat</div>
     </div>
@@ -755,6 +766,32 @@
             <div class="modal-footer">
                 <button class="btn btn-outline" style="width:auto;" onclick="closeModal()">Zrušit</button>
                 <button class="btn btn-primary" style="width:auto;" onclick="savePerson()">Uložit</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: PŘÍBUZNOST -->
+    <div class="modal-overlay" id="relationModal">
+        <div class="modal" style="width: 620px;">
+            <div class="modal-header">
+                <span>🔗 Jak jsou příbuzní?</span>
+                <button onclick="closeRelationModal()" style="background:none; border:none; color:var(--text-main); font-size:1.5rem; cursor:pointer;">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="relationA">Osoba A</label>
+                    <select id="relationA" onchange="computeRelation()"></select>
+                </div>
+                <div class="form-group">
+                    <label for="relationB">Osoba B</label>
+                    <select id="relationB" onchange="computeRelation()"></select>
+                </div>
+                <div id="relationResult" style="margin-top:14px;"></div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-outline" style="width:auto;" onclick="closeRelationModal()">Zavřít</button>
+                <button class="btn btn-outline" style="width:auto;" onclick="prohodOsoby()">⇄ Prohodit</button>
+                <button class="btn btn-primary" style="width:auto;" onclick="computeRelation()">Spočítat</button>
             </div>
         </div>
     </div>
@@ -1093,6 +1130,9 @@
         }
 
         function resizeCanvas() {
+            // Posluchač na resize je navěšený dřív, než se plátno vytvoří —
+            // bez téhle pojistky padala stránka hned po načtení.
+            if (!State.canvas) return;
             const parent = document.getElementById('mainArea');
             State.canvas.width = parent.clientWidth;
             State.canvas.height = parent.clientHeight;
@@ -1364,17 +1404,22 @@
             }
         }
 
-        function pushUndo() {
-            if(State.undoStack.length > 20) State.undoStack.shift();
-            State.undoStack.push(JSON.stringify(State.people));
-        }
 
         function performUndo() {
-            if(State.undoStack.length === 0) return;
+            if(State.undoStack.length === 0) {
+                showNotification('Není co vrátit', 'info');
+                return;
+            }
+            // Současný stav musí jít do zásobníku „znovu", jinak se po
+            // vrácení nedalo nic zopakovat.
+            State.redoStack.push(JSON.stringify(State.people));
             const prev = State.undoStack.pop();
             State.people = JSON.parse(prev);
+            rebuildPeopleCache();
             saveData();
             scheduleRender();
+            renderUI();
+            showNotification('Akce vrácena', 'info');
         }
 
         // --- RENDERING ---
@@ -1908,8 +1953,8 @@
             showNotification('Akce opakována', 'info');
         }
 
-        // 🆕 Override pushUndo to support redo
-        const originalPushUndo = pushUndo;
+        /* Jediná definice: dřív byla v souboru dvakrát a platila ta
+           pozdější — což se při čtení kódu snadno přehlédne. */
         function pushUndo() {
             if(State.undoStack.length > 30) State.undoStack.shift(); // Increased limit
             State.undoStack.push(JSON.stringify(State.people));
@@ -1973,6 +2018,16 @@
                     break;
                 case 'addParent':
                     addParentToPerson(personId);
+                    break;
+                case 'relation':
+                    // příbuznost vybrané osoby s pivotem (kořenem rodokmenu)
+                    State.selectedNodeId = personId;
+                    openRelationModal();
+                    if (State.pivotId && State.pivotId !== personId) {
+                        document.getElementById('relationA').value = personId;
+                        document.getElementById('relationB').value = State.pivotId;
+                        computeRelation();
+                    }
                     break;
             }
         }
@@ -3619,6 +3674,7 @@
                                 anomalies.push({
                                     type: 'error',
                                     person: person,
+                                    duplicitaId: dup.id,
                                     message: `Možná duplicitní osoba - stejné jméno a datum narození jako ${dup.firstName} ${dup.lastName} (ID: ${dup.id})`,
                                     severity: 'high',
                                     solution: `Sloučte duplicitní záznamy nebo upravte data tak, aby byly jedinečné.`
@@ -3859,6 +3915,11 @@
                                 onclick="focusOnPerson('${anomaly.person.id}')">
                             🔍 Zobrazit
                         </button>
+                        ${anomaly.duplicitaId ? `
+                        <button class="btn btn-warning" style="width: auto; padding: 5px 10px; font-size: 0.8rem;"
+                                onclick="slucDuplicitu('${anomaly.person.id}', '${anomaly.duplicitaId}')">
+                            🔗 Sloučit
+                        </button>` : ''}
                     </div>
                 </div>
             `;
@@ -3874,6 +3935,91 @@
                 renderCanvas();
                 closeConsistencyModal();
             }
+        }
+
+        /* ================================================================
+           SLOUČENÍ DVOU ZÁZNAMŮ JEDNÉ OSOBY
+           ----------------------------------------------------------------
+           Kontrola dat duplicity umí najít, ale doteď se musely spravovat
+           ručně — a ručně se snadno zapomene přepojit děti nebo partnery.
+           Zůstane první záznam, druhý mu předá, co sám nemá, a všechny
+           odkazy na něj se přepojí.
+           ================================================================ */
+        function slucOsoby(idHlavni, idDruhy) {
+            const hlavni = State.peopleMap.get(idHlavni);
+            const druhy = State.peopleMap.get(idDruhy);
+            if (!hlavni || !druhy || idHlavni === idDruhy) return false;
+
+            pushUndo();
+
+            for (const pole of ['firstName', 'lastName', 'birthDate', 'birthPlace', 'deathDate',
+                                'deathPlace', 'occupation', 'address']) {
+                if (!hlavni[pole] && druhy[pole]) hlavni[pole] = druhy[pole];
+            }
+            if (druhy.notes) {
+                hlavni.notes = hlavni.notes ? `${hlavni.notes}\n${druhy.notes}` : druhy.notes;
+            }
+            if (hlavni.gender === 'other' && druhy.gender !== 'other') hlavni.gender = druhy.gender;
+
+            const sjednot = (a, b) => [...new Set([...(a || []), ...(b || [])])];
+            hlavni.parents = sjednot(hlavni.parents, druhy.parents).filter(id => id !== idHlavni && id !== idDruhy).slice(0, 2);
+            hlavni.partners = sjednot(hlavni.partners, druhy.partners).filter(id => id !== idHlavni && id !== idDruhy);
+
+            // přepojit všechny odkazy ostatních osob na zrušený záznam
+            for (const p of State.people) {
+                if (p.id === idDruhy) continue;
+                const oprav = pole => {
+                    if (!Array.isArray(p[pole])) return;
+                    p[pole] = [...new Set(p[pole].map(id => id === idDruhy ? idHlavni : id))].filter(id => id !== p.id);
+                };
+                oprav('parents');
+                oprav('partners');
+            }
+
+            State.people = State.people.filter(p => p.id !== idDruhy);
+            for (const mod of ['manual', 'auto', 'butterfly']) {
+                if (State.layoutPositions[mod]) delete State.layoutPositions[mod][idDruhy];
+            }
+            if (State.pivotId === idDruhy) State.pivotId = idHlavni;
+            if (State.selectedNodeId === idDruhy) State.selectedNodeId = idHlavni;
+
+            rebuildPeopleCache();
+            saveData();
+            saveLayoutPositions();
+            renderUI();
+            scheduleRender();
+            return true;
+        }
+
+        async function slucDuplicitu(idHlavni, idDruhy) {
+            const a = State.peopleMap.get(idHlavni), b = State.peopleMap.get(idDruhy);
+            if (!a || !b) return;
+            const potvrzeno = await Dialog.potvrd(
+                `Sloučit „${jmenoOsoby(b)}" do „${jmenoOsoby(a)}"?\n\n`
+                + 'Zůstane první záznam, druhý mu předá chybějící údaje a všechny vazby '
+                + '(rodiče, partneři, děti) se přepojí. Vrátit to jde tlačítkem Zpět.');
+            if (!potvrzeno) return;
+            if (slucOsoby(idHlavni, idDruhy)) {
+                showNotification('Záznamy sloučeny', 'success');
+                checkDataConsistency();
+            }
+        }
+
+        /* Enter ve vyhledávacím poli přenese pohled na první nalezenou
+           osobu — jinak se musí hledat v seznamu a klikat ručně. */
+        function skocNaPrvniNalezenou() {
+            const hledane = document.getElementById('searchBox').value.trim().toLowerCase();
+            if (!hledane) return;
+            const nalezena = State.people.find(p =>
+                `${p.firstName || ''} ${p.lastName || ''} ${p.birthDate || ''} ${p.notes || ''} ${p.occupation || ''} ${p.address || ''}`
+                    .toLowerCase().includes(hledane));
+            if (!nalezena) {
+                showNotification('Nikdo takový v rodokmenu není', 'warning');
+                return;
+            }
+            focusOnPerson(nalezena.id);
+            renderPersonList();
+            showNotification(`Nalezeno: ${jmenoOsoby(nalezena)}`, 'info');
         }
 
         function openConsistencyModal() {
@@ -5409,6 +5555,523 @@
             
             doc.save('rodokmen-cb.pdf');
             showNotification('ČB PDF vygenerováno', 'success');
+        }
+
+        /* ================================================================
+           GEDCOM 5.5.1 — výměnný formát genealogických programů
+           ----------------------------------------------------------------
+           Bez něj je rodokmen uvězněný v téhle stránce. S ním se dá
+           přenést do MyHeritage, Ancestry, Gramps, FamilySearch i zpátky.
+
+           Model stránky drží vztahy u osoby (parents[], partners[]),
+           GEDCOM je drží v rodinách (FAM: HUSB, WIFE, CHIL) — převod tam
+           i zpět tedy znamená rodiny poskládat, respektive rozpustit.
+           ================================================================ */
+
+        const GEDCOM_MESICE = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+
+        // 1885-03-07 → 7 MAR 1885; neúplné datum se přepíše, jak je.
+        function datumDoGedcomu(iso) {
+            if (!iso) return '';
+            const m = String(iso).match(/^(\d{4})-(\d{2})-(\d{2})$/);
+            if (m) return `${+m[3]} ${GEDCOM_MESICE[+m[2] - 1]} ${m[1]}`;
+            const r = String(iso).match(/^(\d{4})-(\d{2})$/);
+            if (r) return `${GEDCOM_MESICE[+r[2] - 1]} ${r[1]}`;
+            return String(iso);
+        }
+
+        // 7 MAR 1885 → 1885-03-07; ABT/BEF/AFT a samotný rok se zachovají,
+        // jak nejlépe to jde (vstup typu date umí jen úplné datum).
+        function datumZGedcomu(text) {
+            if (!text) return '';
+            const t = String(text).trim().toUpperCase().replace(/^(ABT|EST|CAL|BEF|AFT|FROM|TO|INT)\s+/, '');
+            const uplne = t.match(/^(\d{1,2})\s+([A-Z]{3})\s+(\d{3,4})$/);
+            if (uplne) {
+                const m = GEDCOM_MESICE.indexOf(uplne[2]);
+                if (m >= 0) return `${uplne[3].padStart(4, '0')}-${String(m + 1).padStart(2, '0')}-${uplne[1].padStart(2, '0')}`;
+            }
+            const mesicRok = t.match(/^([A-Z]{3})\s+(\d{3,4})$/);
+            if (mesicRok) {
+                const m = GEDCOM_MESICE.indexOf(mesicRok[1]);
+                if (m >= 0) return `${mesicRok[2].padStart(4, '0')}-${String(m + 1).padStart(2, '0')}-01`;
+            }
+            const rok = t.match(/(\d{3,4})/);
+            return rok ? `${rok[1].padStart(4, '0')}-01-01` : '';
+        }
+
+        /* Z vazeb u osob poskládá rodiny: jedna rodina = dvojice rodičů
+           (nebo osamělý rodič) a jejich děti; partnerské dvojice bez dětí
+           dostanou rodinu vlastní. */
+        function sestavRodiny(lide) {
+            const podleId = new Map(lide.map(p => [p.id, p]));
+            const rodiny = new Map();
+            const klic = ids => ids.slice().sort().join('+');
+
+            const dejRodinu = (rodice) => {
+                const k = klic(rodice);
+                if (!rodiny.has(k)) rodiny.set(k, { rodice: rodice.slice(), deti: [] });
+                return rodiny.get(k);
+            };
+
+            for (const p of lide) {
+                const rodice = (p.parents || []).filter(id => podleId.has(id));
+                if (rodice.length) dejRodinu(rodice).deti.push(p.id);
+            }
+            for (const p of lide) {
+                for (const partnerId of (p.partners || [])) {
+                    if (!podleId.has(partnerId)) continue;
+                    dejRodinu([p.id, partnerId]);
+                }
+            }
+            return [...rodiny.values()];
+        }
+
+        // Sestavení textu je oddělené od stahování, aby šlo ověřit testem.
+        function gedcomText() {
+            const lide = State.people;
+            const cisloOsoby = new Map(lide.map((p, i) => [p.id, `@I${i + 1}@`]));
+            const rodiny = sestavRodiny(lide);
+            const cisloRodiny = rodiny.map((_, i) => `@F${i + 1}@`);
+
+            // u koho je která rodina: jako dítě (FAMC) a jako partner (FAMS)
+            const famc = new Map(), fams = new Map();
+            rodiny.forEach((r, i) => {
+                r.deti.forEach(id => famc.set(id, cisloRodiny[i]));
+                r.rodice.forEach(id => {
+                    if (!fams.has(id)) fams.set(id, []);
+                    fams.get(id).push(cisloRodiny[i]);
+                });
+            });
+
+            const radky = [];
+            const pridej = (uroven, tag, hodnota) => {
+                const h = hodnota === undefined || hodnota === null ? '' : String(hodnota).replace(/\r?\n/g, ' ');
+                radky.push(`${uroven} ${tag}${h ? ' ' + h : ''}`);
+            };
+            const dnes = new Date();
+
+            pridej(0, 'HEAD');
+            pridej(1, 'SOUR', 'Heritage');
+            pridej(2, 'NAME', 'Heritage - genealogicka aplikace');
+            pridej(2, 'VERS', '3.0');
+            pridej(1, 'DATE', `${dnes.getDate()} ${GEDCOM_MESICE[dnes.getMonth()]} ${dnes.getFullYear()}`);
+            pridej(1, 'GEDC');
+            pridej(2, 'VERS', '5.5.1');
+            pridej(2, 'FORM', 'LINEAGE-LINKED');
+            pridej(1, 'CHAR', 'UTF-8');
+            pridej(1, 'SUBM', '@SUB1@');
+
+            pridej(0, '@SUB1@ SUBM');
+            pridej(1, 'NAME', 'Heritage');
+
+            for (const p of lide) {
+                pridej(0, `${cisloOsoby.get(p.id)} INDI`);
+                const jmeno = `${p.firstName || ''} /${p.lastName || ''}/`.trim();
+                pridej(1, 'NAME', jmeno);
+                if (p.firstName) pridej(2, 'GIVN', p.firstName);
+                if (p.lastName) pridej(2, 'SURN', p.lastName);
+                pridej(1, 'SEX', p.gender === 'female' ? 'F' : (p.gender === 'male' ? 'M' : 'U'));
+                if (p.birthDate || p.birthPlace) {
+                    pridej(1, 'BIRT');
+                    if (p.birthDate) pridej(2, 'DATE', datumDoGedcomu(p.birthDate));
+                    if (p.birthPlace) pridej(2, 'PLAC', p.birthPlace);
+                }
+                if (p.deathDate || p.deathPlace) {
+                    pridej(1, 'DEAT');
+                    if (p.deathDate) pridej(2, 'DATE', datumDoGedcomu(p.deathDate));
+                    if (p.deathPlace) pridej(2, 'PLAC', p.deathPlace);
+                }
+                if (p.occupation) pridej(1, 'OCCU', p.occupation);
+                if (p.address) {
+                    pridej(1, 'RESI');
+                    pridej(2, 'ADDR', p.address);
+                }
+                if (p.notes) {
+                    // dlouhá poznámka se v GEDCOMu láme značkou CONT
+                    const casti = String(p.notes).split(/\r?\n/);
+                    pridej(1, 'NOTE', casti[0]);
+                    casti.slice(1).forEach(c => pridej(2, 'CONT', c));
+                }
+                if (famc.has(p.id)) pridej(1, 'FAMC', famc.get(p.id));
+                (fams.get(p.id) || []).forEach(f => pridej(1, 'FAMS', f));
+            }
+
+            rodiny.forEach((r, i) => {
+                pridej(0, `${cisloRodiny[i]} FAM`);
+                const rodiceObjekty = r.rodice.map(id => State.peopleMap.get(id)).filter(Boolean);
+                const muz = rodiceObjekty.find(p => p.gender === 'male');
+                const zena = rodiceObjekty.find(p => p.gender === 'female');
+                const zbytek = rodiceObjekty.filter(p => p !== muz && p !== zena);
+                if (muz) pridej(1, 'HUSB', cisloOsoby.get(muz.id));
+                if (zena) pridej(1, 'WIFE', cisloOsoby.get(zena.id));
+                zbytek.forEach(p => pridej(1, muz ? 'WIFE' : 'HUSB', cisloOsoby.get(p.id)));
+                r.deti.forEach(id => pridej(1, 'CHIL', cisloOsoby.get(id)));
+            });
+
+            pridej(0, 'TRLR');
+            return { text: radky.join('\r\n') + '\r\n', pocetRodin: rodiny.length };
+        }
+
+        function exportGEDCOM() {
+            if (!State.people.length) {
+                showNotification('Rodokmen je prázdný', 'warning');
+                return;
+            }
+            const { text, pocetRodin } = gedcomText();
+            const blob = new Blob(['﻿' + text], { type: 'text/plain;charset=utf-8' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'rodokmen.ged';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+            showNotification(`GEDCOM uložen: ${State.people.length} osob, ${pocetRodin} rodin`, 'success');
+        }
+
+        /* --- čtení GEDCOMu ------------------------------------------- */
+
+        function rozeberGedcom(text) {
+            const radky = String(text).replace(/^﻿/, '').split(/\r\n|\r|\n/);
+            const zaznamy = [];
+            let aktualni = null, posledniUroven1 = null, posledniUroven2 = null;
+            for (const syrovy of radky) {
+                const r = syrovy.trim();
+                if (!r) continue;
+                const m = r.match(/^(\d+)\s+(?:(@[^@]+@)\s+)?([A-Za-z0-9_]+)(?:\s+(.*))?$/);
+                if (!m) continue;
+                const uroven = +m[1], xref = m[2] || null, tag = m[3].toUpperCase(), hodnota = m[4] || '';
+                if (uroven === 0) {
+                    aktualni = { xref, tag, hodnota, deti: [] };
+                    zaznamy.push(aktualni);
+                    posledniUroven1 = posledniUroven2 = null;
+                } else if (uroven === 1 && aktualni) {
+                    posledniUroven1 = { tag, hodnota, deti: [] };
+                    aktualni.deti.push(posledniUroven1);
+                    posledniUroven2 = null;
+                } else if (uroven === 2 && posledniUroven1) {
+                    posledniUroven2 = { tag, hodnota, deti: [] };
+                    posledniUroven1.deti.push(posledniUroven2);
+                } else if (uroven >= 3 && posledniUroven2) {
+                    posledniUroven2.deti.push({ tag, hodnota, deti: [] });
+                }
+                // CONT/CONC navazují na předchozí hodnotu
+                if (tag === 'CONT' || tag === 'CONC') {
+                    const cil = uroven === 2 ? posledniUroven1 : (uroven === 1 ? aktualni : posledniUroven2);
+                    if (cil) cil.hodnota += (tag === 'CONT' ? '\n' : '') + hodnota;
+                }
+            }
+            return zaznamy;
+        }
+
+        function gedcomNaOsoby(zaznamy) {
+            const dej = (uzel, tag) => (uzel.deti || []).find(d => d.tag === tag);
+            const osoby = new Map();   // xref -> osoba
+            const rodiny = [];
+
+            for (const z of zaznamy) {
+                if (z.tag === 'INDI' && z.xref) {
+                    const jmenoUzel = dej(z, 'NAME');
+                    let krestni = '', prijmeni = '';
+                    if (jmenoUzel) {
+                        const g = dej(jmenoUzel, 'GIVN'), s2 = dej(jmenoUzel, 'SURN');
+                        const m = String(jmenoUzel.hodnota).match(/^([^/]*)\/([^/]*)\/?(.*)$/);
+                        krestni = (g && g.hodnota) || (m ? m[1] : jmenoUzel.hodnota) || '';
+                        prijmeni = (s2 && s2.hodnota) || (m ? m[2] : '') || '';
+                    }
+                    const sex = dej(z, 'SEX');
+                    const narozeni = dej(z, 'BIRT'), umrti = dej(z, 'DEAT');
+                    const bydliste = dej(z, 'RESI');
+                    const poznamka = dej(z, 'NOTE');
+                    const povolani = dej(z, 'OCCU');
+                    osoby.set(z.xref, {
+                        id: crypto.randomUUID(),
+                        firstName: krestni.trim(),
+                        lastName: prijmeni.trim(),
+                        gender: sex && sex.hodnota.toUpperCase() === 'F' ? 'female'
+                              : (sex && sex.hodnota.toUpperCase() === 'M' ? 'male' : 'other'),
+                        birthDate: narozeni ? datumZGedcomu((dej(narozeni, 'DATE') || {}).hodnota) : '',
+                        birthPlace: narozeni ? ((dej(narozeni, 'PLAC') || {}).hodnota || '') : '',
+                        deathDate: umrti ? datumZGedcomu((dej(umrti, 'DATE') || {}).hodnota) : '',
+                        deathPlace: umrti ? ((dej(umrti, 'PLAC') || {}).hodnota || '') : '',
+                        occupation: povolani ? povolani.hodnota : '',
+                        address: bydliste ? ((dej(bydliste, 'ADDR') || {}).hodnota || '') : '',
+                        notes: poznamka ? poznamka.hodnota : '',
+                        parents: [], partners: [],
+                        x: 0, y: 0, generation: 0, generationOrder: 0, manuallyPositioned: false
+                    });
+                } else if (z.tag === 'FAM') {
+                    rodiny.push({
+                        rodice: (z.deti || []).filter(d => d.tag === 'HUSB' || d.tag === 'WIFE').map(d => d.hodnota.trim()),
+                        deti: (z.deti || []).filter(d => d.tag === 'CHIL').map(d => d.hodnota.trim())
+                    });
+                }
+            }
+
+            for (const r of rodiny) {
+                const rodiceId = r.rodice.map(x => osoby.get(x)).filter(Boolean).map(p => p.id);
+                for (const dite of r.deti) {
+                    const d = osoby.get(dite);
+                    if (d) d.parents = rodiceId.slice();
+                }
+                const partneri = r.rodice.map(x => osoby.get(x)).filter(Boolean);
+                for (const a of partneri) {
+                    for (const b of partneri) {
+                        if (a !== b && !a.partners.includes(b.id)) a.partners.push(b.id);
+                    }
+                }
+            }
+            return [...osoby.values()];
+        }
+
+        /* ================================================================
+           PŘÍBUZNOST — „jak jsme příbuzní?"
+           ----------------------------------------------------------------
+           Najde se nejbližší společný předek obou osob; ze dvou vzdáleností
+           k němu vyplyne i český název vztahu. Když pokrevní vztah není,
+           zkusí se cesta přes partnera (švagr, tchán…).
+           ================================================================ */
+
+        // Předkové osoby: id → { vzdalenost, pres } pro pozdější složení cesty.
+        function predkoveSVzdalenosti(id) {
+            const mapa = new Map([[id, { vzdalenost: 0, pres: null }]]);
+            const fronta = [id];
+            while (fronta.length) {
+                const akt = fronta.shift();
+                const osoba = State.peopleMap.get(akt);
+                if (!osoba) continue;
+                for (const rodic of (osoba.parents || [])) {
+                    if (!State.peopleMap.has(rodic) || mapa.has(rodic)) continue;
+                    mapa.set(rodic, { vzdalenost: mapa.get(akt).vzdalenost + 1, pres: akt });
+                    fronta.push(rodic);
+                }
+            }
+            return mapa;
+        }
+
+        const prapraX = (kolikrat, zaklad) => 'pra'.repeat(Math.max(0, kolikrat)) + zaklad;
+
+        function nazevPredka(vzdalenost, zena) {
+            if (vzdalenost === 1) return zena ? 'matka' : 'otec';
+            if (vzdalenost === 2) return zena ? 'babička' : 'dědeček';
+            return prapraX(vzdalenost - 2, zena ? 'babička' : 'dědeček');
+        }
+
+        function nazevPotomka(vzdalenost, zena) {
+            if (vzdalenost === 1) return zena ? 'dcera' : 'syn';
+            if (vzdalenost === 2) return zena ? 'vnučka' : 'vnuk';
+            return prapraX(vzdalenost - 2, zena ? 'vnučka' : 'vnuk');
+        }
+
+        const CISLOVKY = ['', 'prvního', 'druhého', 'třetího', 'čtvrtého', 'pátého', 'šestého', 'sedmého'];
+
+        /* dA = kolik generací dělí osobu A od společného předka, dB totéž
+           pro B. Z dvojice čísel plyne celý název vztahu. */
+        function nazevVztahu(dA, dB, zenaA, spolecnychRodicu) {
+            if (dA === 0 && dB === 0) return 'tatáž osoba';
+            if (dA === 0) return nazevPredka(dB, zenaA);
+            if (dB === 0) return nazevPotomka(dA, zenaA);
+            if (dA === 1 && dB === 1) {
+                const vlastni = spolecnychRodicu >= 2 ? 'vlastní' : 'nevlastní';
+                return `${vlastni} ${zenaA ? 'sestra' : 'bratr'}`;
+            }
+            if (dA === 1) {
+                const zaklad = zenaA ? 'teta' : 'strýc';
+                return dB === 2 ? zaklad : prapraX(dB - 2, zaklad);
+            }
+            if (dB === 1) {
+                const zaklad = zenaA ? 'neteř' : 'synovec';
+                return dA === 2 ? zaklad : prapraX(dA - 2, zaklad);
+            }
+            const stupen = Math.min(dA, dB) - 1;             // 1 = bratranci
+            const posun = Math.abs(dA - dB);
+            let text = zenaA ? 'sestřenice' : 'bratranec';
+            if (stupen >= 2) text += ` z ${CISLOVKY[stupen] || (stupen + '.')} kolena`;
+            if (posun) text += ` (o ${posun} ${posun === 1 ? 'generaci' : 'generace'} posunutý)`;
+            return text;
+        }
+
+        function jmenoOsoby(p) {
+            if (!p) return '?';
+            return `${p.firstName || ''} ${p.lastName || ''}`.trim() || 'Bez jména';
+        }
+
+        // Řetěz jmen od osoby k předkovi (podle mapy z predkoveSVzdalenosti).
+        function cestaKPredkovi(mapa, odId, kPredkovi) {
+            const cesta = [];
+            let akt = kPredkovi;
+            while (akt) {
+                cesta.push(jmenoOsoby(State.peopleMap.get(akt)));
+                const uzel = mapa.get(akt);
+                akt = uzel ? uzel.pres : null;
+            }
+            return cesta.reverse();   // od osoby k předkovi
+        }
+
+        /* bezPartneru = true → hledá se jen pokrevní vztah. Bez toho by se
+           dvojice partnerů odkazovala jedna na druhou donekonečna; navíc
+           švagrovský vztah je z definice jeden krok přes partnera. */
+        function zjistiVztah(idA, idB, bezPartneru) {
+            if (!idA || !idB) return null;
+            const a = State.peopleMap.get(idA), b = State.peopleMap.get(idB);
+            if (!a || !b) return null;
+            if (idA === idB) return { text: 'tatáž osoba', cesta: [jmenoOsoby(a)] };
+
+            if ((a.partners || []).includes(idB)) {
+                return { text: a.gender === 'female' ? 'manželka / partnerka' : 'manžel / partner',
+                         cesta: [jmenoOsoby(a), jmenoOsoby(b)] };
+            }
+
+            const predkoveA = predkoveSVzdalenosti(idA);
+            const predkoveB = predkoveSVzdalenosti(idB);
+            let nej = null;
+            for (const [id, uzelA] of predkoveA) {
+                const uzelB = predkoveB.get(id);
+                if (!uzelB) continue;
+                const soucet = uzelA.vzdalenost + uzelB.vzdalenost;
+                if (!nej || soucet < nej.soucet) nej = { id, dA: uzelA.vzdalenost, dB: uzelB.vzdalenost, soucet };
+            }
+
+            if (nej) {
+                const spolecni = (a.parents || []).filter(x => (b.parents || []).includes(x)).length;
+                const text = nazevVztahu(nej.dA, nej.dB, a.gender === 'female', spolecni);
+                // cestaKPredkovi vrací řetěz od osoby k předkovi; druhá
+                // půlka se otočí, aby cesta plynule pokračovala k B
+                const doPredka = cestaKPredkovi(predkoveA, idA, nej.id);
+                const odPredka = cestaKPredkovi(predkoveB, idB, nej.id).reverse();
+                return {
+                    text, predek: jmenoOsoby(State.peopleMap.get(nej.id)),
+                    dA: nej.dA, dB: nej.dB,
+                    cesta: doPredka.concat(odPredka.slice(1))
+                };
+            }
+
+            /* Pokrevně nic — zkusit přes partnera. Na běžné případy má
+               čeština vlastní slova (zeť, tchyně, švagr), zbytek se opíše. */
+            const zena = a.gender === 'female';
+            const jeSourozenec = t => /bratr|sestra/.test(t);
+            const jeRodic = t => /^(otec|matka)$/.test(t);
+            const jeDite = t => /^(syn|dcera)$/.test(t);
+
+            if (bezPartneru) return { text: null, cesta: [] };
+
+            for (const partnerId of (a.partners || [])) {
+                const pres = zjistiVztah(partnerId, idB, true);
+                if (!pres || !pres.text || pres.text === 'tatáž osoba') continue;
+                let text;
+                if (jeSourozenec(pres.text)) text = zena ? 'švagrová' : 'švagr';
+                else if (jeDite(pres.text)) text = zena ? 'snacha' : 'zeť';
+                else if (jeRodic(pres.text)) text = zena ? 'nevlastní matka' : 'nevlastní otec';
+                else text = `${zena ? 'manželka' : 'manžel'} osoby, která je pro B ${pres.text}`;
+                return { text, cesta: [jmenoOsoby(a)].concat(pres.cesta), pres: true };
+            }
+            for (const partnerId of (b.partners || [])) {
+                const pres = zjistiVztah(idA, partnerId, true);
+                if (!pres || !pres.text || pres.text === 'tatáž osoba') continue;
+                let text;
+                if (jeRodic(pres.text)) text = zena ? 'tchyně' : 'tchán';
+                else if (jeSourozenec(pres.text)) text = zena ? 'švagrová' : 'švagr';
+                else if (jeDite(pres.text)) text = zena ? 'nevlastní dcera' : 'nevlastní syn';
+                else text = `${pres.text} ${b.gender === 'female' ? 'manželky' : 'manžela'} osoby B`;
+                return { text, cesta: pres.cesta.concat([jmenoOsoby(b)]), pres: true };
+            }
+            return { text: null, cesta: [] };
+        }
+
+        function naplnVyberOsob(select, vybraneId) {
+            const lide = State.people.slice().sort((x, y) =>
+                jmenoOsoby(x).localeCompare(jmenoOsoby(y), 'cs'));
+            select.innerHTML = lide.map(p =>
+                `<option value="${p.id}">${jmenoOsoby(p)}${p.birthDate ? ' (* ' + String(p.birthDate).slice(0, 4) + ')' : ''}</option>`).join('');
+            if (vybraneId) select.value = vybraneId;
+        }
+
+        function openRelationModal() {
+            if (State.people.length < 2) {
+                showNotification('Na příbuznost jsou potřeba aspoň dvě osoby', 'warning');
+                return;
+            }
+            const a = State.selectedNodeId || State.pivotId || State.people[0].id;
+            let b = State.pivotId && State.pivotId !== a ? State.pivotId : null;
+            if (!b) b = (State.people.find(p => p.id !== a) || {}).id;
+            naplnVyberOsob(document.getElementById('relationA'), a);
+            naplnVyberOsob(document.getElementById('relationB'), b);
+            document.getElementById('relationModal').style.display = 'flex';
+            computeRelation();
+        }
+
+        function closeRelationModal() {
+            document.getElementById('relationModal').style.display = 'none';
+        }
+
+        function prohodOsoby() {
+            const a = document.getElementById('relationA'), b = document.getElementById('relationB');
+            const pom = a.value; a.value = b.value; b.value = pom;
+            computeRelation();
+        }
+
+        function computeRelation() {
+            const idA = document.getElementById('relationA').value;
+            const idB = document.getElementById('relationB').value;
+            const box = document.getElementById('relationResult');
+            const vysledek = zjistiVztah(idA, idB);
+            const a = State.peopleMap.get(idA), b = State.peopleMap.get(idB);
+            if (!vysledek || !vysledek.text) {
+                box.innerHTML = `<div style="padding:12px;border-radius:8px;background:var(--surface-hover);">
+                    <b>${jmenoOsoby(a)}</b> a <b>${jmenoOsoby(b)}</b>: žádná společná větev
+                    ani spojení přes partnera.</div>`;
+                return;
+            }
+            const spolecny = vysledek.predek
+                ? `<div style="margin-top:8px;color:var(--text-muted);font-size:.85rem;">
+                     Nejbližší společný předek: <b>${vysledek.predek}</b>
+                     (${vysledek.dA} ${vysledek.dA === 1 ? 'generace' : 'generací'} k A,
+                      ${vysledek.dB} ${vysledek.dB === 1 ? 'generace' : 'generací'} k B)</div>` : '';
+            const cesta = vysledek.cesta && vysledek.cesta.length > 1
+                ? `<div style="margin-top:10px;font-size:.85rem;line-height:1.7;">
+                     <span style="color:var(--text-muted);">Cesta:</span> ${vysledek.cesta.map(j => `<b>${j}</b>`).join(' → ')}</div>` : '';
+            // věta se schválně vyhýbá skloňování jmen („je pro Václav IV." by
+            // bylo špatně a skloňovat jména strojově se nedá spolehlivě)
+            box.innerHTML = `<div style="padding:14px;border-radius:8px;background:var(--surface-hover);">
+                <div style="font-size:.9rem;color:var(--text-muted);">
+                    A: <b style="color:var(--text-main)">${jmenoOsoby(a)}</b><br>
+                    B: <b style="color:var(--text-main)">${jmenoOsoby(b)}</b></div>
+                <div style="margin-top:10px;font-size:1.05rem;">A je pro B:</div>
+                <div style="font-size:1.35rem;color:var(--primary);margin-top:2px;">${vysledek.text}</div>
+                ${spolecny}${cesta}</div>`;
+        }
+
+        async function importGEDCOM(input) {
+            const soubor = input.files && input.files[0];
+            input.value = '';
+            if (!soubor) return;
+            try {
+                setLoadingState(true);
+                const text = await soubor.text();
+                const osoby = gedcomNaOsoby(rozeberGedcom(text));
+                if (!osoby.length) {
+                    showNotification('V souboru nejsou žádné osoby (čekal jsem GEDCOM)', 'error');
+                    return;
+                }
+                const nahradit = State.people.length === 0 ||
+                    await Dialog.potvrd(`Načíst ${osoby.length} osob z GEDCOMu?\n\nOK = nahradit současný rodokmen, Zrušit = ponechat a nic neměnit.`);
+                if (!nahradit) return;
+                pushUndo();
+                State.people = osoby;
+                rebuildPeopleCache();
+                State.pivotId = osoby[0].id;
+                State.layoutPositions = { manual: {}, auto: {}, butterfly: {} };
+                saveData();
+                autoLayout();
+                renderUI();
+                resetView();
+                showNotification(`Načteno ${osoby.length} osob z GEDCOMu`, 'success');
+            } catch (chyba) {
+                console.error(chyba);
+                showNotification('Soubor se nepodařilo přečíst: ' + chyba.message, 'error');
+            } finally {
+                setLoadingState(false);
+            }
         }
     </script>
 </body>

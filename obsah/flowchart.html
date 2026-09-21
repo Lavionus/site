@@ -3,171 +3,1353 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>🔀 Flowchart editor</title>
+<title>🔀 Editor diagramů</title>
 <link rel="stylesheet" href="../common.css">
 <script src="../theme.js"></script>
+<script src="../dialog.js"></script>
+<script src="../tvary.js"></script>
 <script src="../podpis.js" defer></script>
-<script src="../dialog.js" defer></script>
 <style>
-*{margin:0;padding:0;box-sizing:border-box}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);height:100vh;display:flex;flex-direction:column;overflow:hidden}
-.listy{background:var(--bg-elevated);border-bottom:1px solid var(--border);padding:8px 12px;display:flex;gap:8px;flex-wrap:wrap;align-items:center}
-.btn{background:var(--border);color:var(--text);border:1px solid var(--border-strong);padding:7px 12px;border-radius:6px;cursor:pointer;font-size:.83rem}
-.btn:hover{background:var(--border-strong)}
-.btn.active{background:var(--accent);color:#fff;border-color:var(--accent)}
-.btn-red{color:#ff8a80}
-.info{color:var(--text-faint);font-size:.78rem;margin-left:auto}
-#platno{flex:1;cursor:default}
-svg{width:100%;height:100%;background:#151515}
-.uzel{cursor:grab}
-.uzel text{fill:#fff;font-size:13px;text-anchor:middle;dominant-baseline:middle;pointer-events:none}
-.uzel .tvar{stroke:var(--accent);stroke-width:1.5;fill:#2d3a4d}
-.uzel.vybrany .tvar{stroke:#ffd54f;stroke-width:2.5}
-.hrana{stroke:var(--text-faint);stroke-width:1.8;fill:none;marker-end:url(#sipka)}
-.hrana.vybrana{stroke:#ffd54f}
+  /* Diagram je jen data (uzly a hrany) — plátno je SVG, které se z těch dat
+     překresluje celé. Velikost uzlu si počítá sám podle textu, hrany se
+     zakotví přesně na okraj tvaru, takže se šipka nikdy nezapíchne dovnitř. */
+  * { margin: 0; padding: 0; box-sizing: border-box; }
 
-/* světlý režim: dorovnání kontrastu textu */
-:root[data-theme="light"] .btn.btn-red { color: #8a4b45; }
+  body {
+    font-family: var(--font, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif);
+    background: var(--bg); color: var(--text);
+    height: 100vh; display: flex; flex-direction: column; overflow: hidden;
+  }
+
+  .listy {
+    background: var(--bg-elevated); border-bottom: 1px solid var(--border);
+    padding: 6px 10px; display: flex; gap: 6px; flex-wrap: wrap; align-items: center;
+  }
+  .oddelovac { width: 1px; align-self: stretch; background: var(--border); margin: 2px 4px; }
+
+  .btn {
+    background: var(--bg-control); color: var(--text);
+    border: 1px solid var(--border-strong);
+    padding: 6px 10px; border-radius: 6px; cursor: pointer;
+    font-size: .82rem; font-family: inherit; white-space: nowrap;
+  }
+  .btn:hover { filter: brightness(1.15); }
+  .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .btn.zapnuto { background: var(--accent); color: #fff; border-color: var(--accent); font-weight: 600; }
+  .btn:disabled { opacity: .45; cursor: default; }
+  .btn-nebezpecny { color: var(--danger); }
+
+  .stopa { color: var(--text-faint); font-size: .76rem; margin-left: auto; text-align: right; line-height: 1.35; }
+  .stopa b { color: var(--accent); font-weight: 600; }
+
+  .plocha { flex: 1; position: relative; overflow: hidden; }
+  #svg { width: 100%; height: 100%; background: var(--bg-deep); display: block; touch-action: none; }
+
+  .uzel { cursor: grab; }
+  .uzel.tahne { cursor: grabbing; }
+  .uzel .tvar { stroke-width: 1.6; }
+  .uzel.vybrany .tvar { stroke: var(--accent-hover, #8bbcff); stroke-width: 3; }
+  .uzel text { font-size: 13px; text-anchor: middle; pointer-events: none; font-family: var(--font, sans-serif); }
+
+  /* Barvy uzlů: v tmavém motivu tmavá výplň se světlým lemem, ve
+     světlém naopak — text tak zůstane čitelný v obou. */
+  .uzel .tvar { fill: #2d3a4d; stroke: #6aa6fd; }
+  .uzel.b-zelena  .tvar { fill: #26402f; stroke: #5fc98a; }
+  .uzel.b-zluta   .tvar { fill: #43391f; stroke: #e0b13f; }
+  .uzel.b-cervena .tvar { fill: #452b2b; stroke: #e07a7a; }
+  .uzel.b-fialova .tvar { fill: #382b4a; stroke: #b08ce0; }
+  .uzel.b-seda    .tvar { fill: #333333; stroke: #9a9a9a; }
+  .uzel text { fill: var(--text); }
+
+  :root[data-theme="light"] .uzel .tvar { fill: #e3edfb; stroke: #2f6fce; }
+  :root[data-theme="light"] .uzel.b-zelena  .tvar { fill: #e2f5e9; stroke: #177540; }
+  :root[data-theme="light"] .uzel.b-zluta   .tvar { fill: #fdf3d7; stroke: #8a6800; }
+  :root[data-theme="light"] .uzel.b-cervena .tvar { fill: #fbe6e4; stroke: #c0392b; }
+  :root[data-theme="light"] .uzel.b-fialova .tvar { fill: #efe6fb; stroke: #6f42c1; }
+  :root[data-theme="light"] .uzel.b-seda    .tvar { fill: #ececec; stroke: #6b7280; }
+
+  .barvy button.b-modra   { background: #6aa6fd; }
+  .barvy button.b-zelena  { background: #5fc98a; }
+  .barvy button.b-zluta   { background: #e0b13f; }
+  .barvy button.b-cervena { background: #e07a7a; }
+  .barvy button.b-fialova { background: #b08ce0; }
+  .barvy button.b-seda    { background: #9a9a9a; }
+
+  .hrana { fill: none; stroke: var(--text-muted); stroke-width: 1.8; stroke-linejoin: round; stroke-linecap: round; }
+  #sipka path { fill: var(--text-muted); }
+  .hrana-popis { fill: var(--text-muted); }
+  .hrana-dotyk { fill: none; stroke: transparent; stroke-width: 14; cursor: pointer; }
+  .hrana.vybrana { stroke: var(--accent-hover, #8bbcff); stroke-width: 3; }
+  .hrana-popis { font-size: 11px; text-anchor: middle; pointer-events: none; font-family: var(--font, sans-serif); }
+  .hrana-popis-pozadi { fill: var(--bg-deep); }
+
+  .mrizka line { stroke: var(--border); stroke-width: .5; }
+  .vyber-ramecek { fill: var(--accent-soft, rgba(106,166,253,.15)); stroke: var(--accent); stroke-width: 1; stroke-dasharray: 4 3; }
+  .spoj-naznak { stroke: var(--accent); stroke-width: 2; stroke-dasharray: 5 4; fill: none; pointer-events: none; }
+
+  .napoveda {
+    position: absolute; left: 12px; bottom: 12px;
+    background: var(--bg-panel); border: 1px solid var(--border); border-radius: 6px;
+    padding: 8px 11px; font-size: .76rem; color: var(--text-muted); line-height: 1.6;
+    max-width: 330px; box-shadow: var(--shadow, 0 2px 10px rgba(0,0,0,.45));
+  }
+  .napoveda b { color: var(--text); }
+  .napoveda kbd {
+    background: var(--bg-control); border: 1px solid var(--border-strong);
+    border-radius: 3px; padding: 0 4px; font-size: .72rem; font-family: ui-monospace, monospace;
+  }
+  .napoveda.skryta { display: none; }
+
+  .panel-tvaru {
+    position: absolute; right: 12px; top: 12px; width: 210px;
+    background: var(--bg-panel); border: 1px solid var(--border); border-radius: 6px;
+    padding: 10px 12px; font-size: .8rem; box-shadow: var(--shadow, 0 2px 10px rgba(0,0,0,.45));
+  }
+  .panel-tvaru h3 { font-size: .78rem; text-transform: uppercase; letter-spacing: .5px; color: var(--text-faint); margin-bottom: 8px; }
+  .panel-tvaru.skryty { display: none; }
+  .barvy { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+  .barvy button {
+    width: 26px; height: 26px; border-radius: 5px; cursor: pointer;
+    border: 2px solid transparent;
+  }
+  .barvy button[aria-pressed="true"] { border-color: var(--text); }
+  .panel-tvaru .radek { display: flex; gap: 6px; margin-bottom: 8px; }
+  .panel-tvaru .radek .btn { flex: 1; text-align: center; padding: 5px 6px; font-size: .76rem; }
+
+  .diagramy-okno {
+    position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+    width: min(520px, 92vw); max-height: 80vh; overflow: auto;
+    background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 8px;
+    padding: 14px 16px; box-shadow: 0 10px 40px rgba(0,0,0,.5); z-index: 20;
+  }
+  .diagramy-okno.skryte { display: none; }
+  .diagramy-okno h2 { font-size: 1rem; margin-bottom: 10px; }
+  .diagramy-zavrit { position: absolute; right: 10px; top: 10px; }
+
+  @media (max-width: 720px) {
+    .stopa { display: none; }
+    .napoveda { display: none; }
+    .panel-tvaru { right: 6px; top: 6px; width: 170px; padding: 8px; }
+  }
 </style>
 </head>
 <body>
-<div class="listy">
-  <button class="btn" data-add="obdelnik">▭ Proces</button>
-  <button class="btn" data-add="kosoctverec">◇ Rozhodnutí</button>
-  <button class="btn" data-add="oval">⬭ Start/Konec</button>
-  <button class="btn" id="rezimSpoj">🔗 Spojovat</button>
-  <button class="btn" id="prejmenuj">✏️ Přejmenovat</button>
-  <button class="btn btn-red" id="smaz">🗑️ Smazat vybrané</button>
-  <button class="btn" id="exportSvg">💾 Export SVG</button>
-  <button class="btn btn-red" id="vseSmaz">Nový diagram</button>
-  <span class="info">Klik = vybrat · tažení = přesun · režim Spojovat: klikni na 2 uzly · dvojklik = přejmenovat</span>
-</div>
-<div id="platno">
-<svg id="svg" xmlns="http://www.w3.org/2000/svg">
-  <defs><marker id="sipka" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto"><path d="M0,0 L10,4 L0,8 z" fill="#888"/></marker></defs>
-  <g id="hrany"></g><g id="uzly"></g>
-</svg>
-</div>
-<script>
-const svg=document.getElementById('svg');
-const gU=document.getElementById('uzly'),gH=document.getElementById('hrany');
-const STORE='flowchart.v1';
-let st;
-try{st=JSON.parse(localStorage.getItem(STORE));}catch(e){}
-if(!st)st={uzly:[{id:1,typ:'oval',x:300,y:60,text:'Start'},{id:2,typ:'obdelnik',x:300,y:180,text:'Krok 1'},{id:3,typ:'kosoctverec',x:300,y:310,text:'Podmínka?'}],hrany:[{a:1,b:2,text:''},{a:2,b:3,text:''}],nid:4};
-const save=()=>localStorage.setItem(STORE,JSON.stringify(st));
-let vybranyUzel=null,vybranaHrana=null,spojRezim=false,spojPrvni=null,drag=null;
+<div class="listy" id="listy">
+  <button class="btn" data-pridej="proces">▭ Proces</button>
+  <button class="btn" data-pridej="rozhodnuti">◇ Rozhodnutí</button>
+  <button class="btn" data-pridej="terminal">⬭ Start/Konec</button>
+  <button class="btn" data-pridej="vstup">▱ Vstup/Výstup</button>
+  <button class="btn" data-pridej="priprava">⬡ Příprava</button>
+  <button class="btn" data-pridej="databaze">🛢 Databáze</button>
+  <button class="btn" data-pridej="dokument">📄 Dokument</button>
+  <button class="btn" data-pridej="spojka">◯ Spojka</button>
+  <button class="btn" data-pridej="poznamka">🗒 Poznámka</button>
 
-function tvarSvg(u){
-  const w=120,h=u.typ==='kosoctverec'?70:46;
-  if(u.typ==='obdelnik')return `<rect class="tvar" x="${-w/2}" y="${-h/2}" width="${w}" height="${h}" rx="4"/>`;
-  if(u.typ==='oval')return `<rect class="tvar" x="${-w/2}" y="${-h/2}" width="${w}" height="${h}" rx="${h/2}"/>`;
-  return `<polygon class="tvar" points="0,${-h/2} ${w/2+10},0 0,${h/2} ${-w/2-10},0"/>`;
-}
-function render(){
-  gU.innerHTML=st.uzly.map(u=>
-    `<g class="uzel ${vybranyUzel===u.id?'vybrany':''}" data-id="${u.id}" transform="translate(${u.x},${u.y})">${tvarSvg(u)}<text>${esc(u.text)}</text></g>`).join('');
-  gH.innerHTML=st.hrany.map((h,i)=>{
-    const a=st.uzly.find(u=>u.id===h.a),b=st.uzly.find(u=>u.id===h.b);
-    if(!a||!b)return'';
-    // zkrátit čáru k okraji uzlu (přibližně)
-    const dx=b.x-a.x,dy=b.y-a.y,d=Math.hypot(dx,dy)||1;
-    const r1=38,r2=44;
-    const x1=a.x+dx/d*r1,y1=a.y+dy/d*r1,x2=b.x-dx/d*r2,y2=b.y-dy/d*r2;
-    const mx=(x1+x2)/2,my=(y1+y2)/2;
-    return `<path class="hrana ${vybranaHrana===i?'vybrana':''}" data-i="${i}" d="M${x1},${y1} L${x2},${y2}" pointer-events="stroke" stroke-linecap="round"/>`+
-      (h.text?`<text x="${mx}" y="${my-6}" fill="#ffd54f" font-size="11" text-anchor="middle">${esc(h.text)}</text>`:'');
-  }).join('');
-}
-const esc=s=>String(s).replace(/&/g,'&amp;').replace(/</g,'&lt;');
-function poz(e){
-  const pt=svg.createSVGPoint();pt.x=e.clientX;pt.y=e.clientY;
-  const p=pt.matrixTransform(svg.getScreenCTM().inverse());
-  return {x:p.x,y:p.y};
-}
-svg.addEventListener('pointerdown',async e=>{
-  const g=e.target.closest('.uzel');
-  const hr=e.target.closest('.hrana');
-  if(g){
-    const id=+g.dataset.id;
-    if(spojRezim){
-      if(spojPrvni===null){spojPrvni=id;vybranyUzel=id;}
-      else if(spojPrvni!==id){
-        const text=st.uzly.find(u=>u.id===spojPrvni).typ==='kosoctverec'?await Dialog.zeptej('Popisek větve (ano/ne, volitelné):','')||'':'';
-        st.hrany.push({a:spojPrvni,b:id,text});
-        spojPrvni=null;vybranyUzel=null;save();
-      }
-      render();return;
+  <span class="oddelovac"></span>
+  <button class="btn" id="btnSpoj" title="Spojit dva uzly (klávesa S)">🔗 Spojovat</button>
+  <button class="btn" id="btnZpet" title="Zpět (Ctrl+Z)">↶</button>
+  <button class="btn" id="btnVpred" title="Znovu (Ctrl+Shift+Z)">↷</button>
+  <button class="btn btn-nebezpecny" id="btnSmaz" title="Smazat vybrané (Delete)">🗑️</button>
+
+  <span class="oddelovac"></span>
+  <button class="btn" id="btnMrizka" title="Přichytávat k mřížce (G)">⊞ Mřížka</button>
+  <button class="btn" id="btnKolena" title="Lomené hrany (L)">⌐ Kolena</button>
+  <button class="btn" id="btnSrovnat" title="Srovnat do vrstev">📐 Srovnat</button>
+  <button class="btn" id="btnFit" title="Ukázat celý diagram (F)">🎯 Celý</button>
+
+  <span class="oddelovac"></span>
+  <button class="btn" id="btnDiagramy">💾 Diagramy</button>
+  <button class="btn" id="btnExport">📤 Export</button>
+  <button class="btn" id="btnImport">📥 Import</button>
+  <button class="btn btn-nebezpecny" id="btnNovy">Nový</button>
+
+  <span class="stopa" id="stopa"></span>
+</div>
+
+<div class="plocha" id="plocha">
+  <svg id="svg" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <marker id="sipka" markerWidth="9" markerHeight="7" refX="8.5" refY="3.5" orient="auto" markerUnits="strokeWidth">
+        <path d="M0,0 L9,3.5 L0,7 z"/>
+      </marker>
+    </defs>
+    <g id="scena">
+      <g id="gMrizka" class="mrizka"></g>
+      <g id="gHrany"></g>
+      <g id="gUzly"></g>
+      <g id="gPrekryv"></g>
+    </g>
+  </svg>
+
+  <div class="panel-tvaru skryty" id="panelTvaru">
+    <h3 id="panelNadpis">Vybraný uzel</h3>
+    <div class="barvy" id="paletaBarev"></div>
+    <div class="radek">
+      <button class="btn" id="btnPrejmenuj">✏️ Text</button>
+      <button class="btn" id="btnKopie">⧉ Kopie</button>
+    </div>
+    <div class="radek" id="radekTypu">
+      <select class="btn" id="zmenaTypu" style="width:100%"></select>
+    </div>
+  </div>
+
+  <div class="napoveda" id="napovedaBox">
+    <button class="btn" id="zavritNapovedu" style="float:right;padding:1px 6px;margin-left:8px" title="Skrýt (H)">✕</button>
+    <b>Myš:</b> tažení = přesun · kolečko = přiblížení · pravé tlačítko nebo mezerník = posun plátna · tažení na prázdnu = výběr rámečkem<br>
+    <b>Klávesy:</b> <kbd>S</kbd> spojovat · <kbd>Enter</kbd> přejmenovat · <kbd>Del</kbd> smazat · <kbd>Ctrl</kbd>+<kbd>Z</kbd> zpět · <kbd>Ctrl</kbd>+<kbd>D</kbd> kopie · <kbd>šipky</kbd> posun · <kbd>H</kbd> skrýt nápovědu
+  </div>
+
+  <div class="diagramy-okno skryte" id="oknoDiagramy">
+    <button class="btn diagramy-zavrit" id="zavritDiagramy">✕</button>
+    <h2>💾 Uložené diagramy</h2>
+    <div id="tvary"></div>
+  </div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  /* ==================================================================
+     1. TVARY UZLŮ
+     ------------------------------------------------------------------
+     Každý tvar umí tři věci: spočítat svou velikost podle textu,
+     nakreslit se a vrátit svůj obrys jako mnohoúhelník. Obrys je
+     důležitý — hrana se na něj zakotví přesně, takže šipka končí na
+     hraně tvaru, ne uvnitř něj a ne kus před ním (což byl u původní
+     verze pevný odhad „38 px od středu“, stejný pro obdélník i kosočtverec).
+     ================================================================== */
+
+  const RADEK = 17;          // výška řádku textu
+  const MIN_SIRKA = 110;
+  const MAX_SIRKA_TEXTU = 170;
+
+  function mereni() {
+    const platno = document.createElement('canvas');
+    const ctx = platno.getContext('2d');
+    const pismo = getComputedStyle(document.body).fontFamily || 'sans-serif';
+    ctx.font = '13px ' + pismo;
+    return t => ctx.measureText(t).width;
+  }
+  let sirkaTextu = null;
+
+  // Zalomí text na řádky tak, aby se vešel do maximální šířky.
+  function zalom(text) {
+    const slova = String(text || '').split(/\s+/).filter(Boolean);
+    if (!slova.length) return [''];
+    const radky = [];
+    let radek = slova[0];
+    for (let i = 1; i < slova.length; i++) {
+      const zkouska = radek + ' ' + slova[i];
+      if (sirkaTextu(zkouska) > MAX_SIRKA_TEXTU) { radky.push(radek); radek = slova[i]; }
+      else radek = zkouska;
     }
-    vybranyUzel=id;vybranaHrana=null;
-    const u=st.uzly.find(x=>x.id===id);
-    const p=poz(e);
-    drag={u,ox:p.x-u.x,oy:p.y-u.y};
-    render();
-  }else if(hr){
-    vybranaHrana=+hr.dataset.i;vybranyUzel=null;render();
-  }else{
-    vybranyUzel=null;vybranaHrana=null;spojPrvni=null;render();
+    radky.push(radek);
+    return radky.slice(0, 6);
   }
-});
-svg.addEventListener('pointermove',e=>{
-  if(!drag)return;
-  const p=poz(e);
-  drag.u.x=Math.round(p.x-drag.ox);drag.u.y=Math.round(p.y-drag.oy);
-  render();
-});
-svg.addEventListener('pointerup',()=>{if(drag){drag=null;save();}});
-svg.addEventListener('dblclick',async e=>{
-  const g=e.target.closest('.uzel');
-  if(!g)return;
-  const u=st.uzly.find(x=>x.id===+g.dataset.id);
-  const t=await Dialog.zeptej('Text uzlu:',u.text);
-  if(t!==null){u.text=t;save();render();}
-});
-document.querySelectorAll('[data-add]').forEach(b=>b.onclick=()=>{
-  st.uzly.push({id:st.nid++,typ:b.dataset.add,x:150+Math.random()*300,y:100+Math.random()*250,text:'Nový'});
-  save();render();
-});
-document.getElementById('rezimSpoj').onclick=function(){
-  spojRezim=!spojRezim;spojPrvni=null;
-  this.classList.toggle('active',spojRezim);
-};
-document.getElementById('prejmenuj').onclick=async ()=>{
-  if(vybranyUzel===null)return Dialog.info('Nejdřív vyberte uzel.');
-  const u=st.uzly.find(x=>x.id===vybranyUzel);
-  const t=await Dialog.zeptej('Text uzlu:',u.text);
-  if(t!==null){u.text=t;save();render();}
-};
-document.getElementById('smaz').onclick=()=>{
-  if(vybranyUzel!==null){
-    st.uzly=st.uzly.filter(u=>u.id!==vybranyUzel);
-    st.hrany=st.hrany.filter(h=>h.a!==vybranyUzel&&h.b!==vybranyUzel);
-    vybranyUzel=null;
-  }else if(vybranaHrana!==null){
-    st.hrany.splice(vybranaHrana,1);vybranaHrana=null;
+
+  const pamet = new Map();
+  function metriky(u) {
+    const klic = u.typ + '|' + u.text;
+    if (pamet.has(klic)) return pamet.get(klic);
+    const radky = zalom(u.text);
+    const sirka = Math.max(...radky.map(sirkaTextu), 10);
+    const t = TVARY[u.typ] || TVARY.proces;
+    const m = t.rozmer(sirka, radky.length);
+    m.radky = radky;
+    if (pamet.size > 500) pamet.clear();
+    pamet.set(klic, m);
+    return m;
   }
-  save();render();
-};
-document.getElementById('vseSmaz').onclick=async ()=>{
-  if(!await Dialog.potvrd('Smazat celý diagram?'))return;
-  st={uzly:[],hrany:[],nid:1};save();render();
-};
-document.getElementById('exportSvg').onclick=()=>{
-  const klon=svg.cloneNode(true);
-  klon.setAttribute('width',svg.clientWidth);klon.setAttribute('height',svg.clientHeight);
-  // vložit styly přímo
-  const css=`.uzel text{fill:#fff;font-size:13px;text-anchor:middle;dominant-baseline:middle;font-family:sans-serif}.uzel .tvar{stroke:#6aa6fd;stroke-width:1.5;fill:#2d3a4d}.hrana{stroke:#888;stroke-width:1.8;fill:none;marker-end:url(#sipka)}`;
-  const styl=document.createElementNS('http://www.w3.org/2000/svg','style');
-  styl.textContent=css;klon.prepend(styl);
-  klon.style.background='#151515';
-  const blob=new Blob([new XMLSerializer().serializeToString(klon)],{type:'image/svg+xml'});
-  const a=document.createElement('a');
-  a.href=URL.createObjectURL(blob);a.download='diagram.svg';a.click();
-};
-window.addEventListener('keydown',e=>{
-  if(e.key==='Delete')document.getElementById('smaz').click();
-});
-render();
+
+  const obdelnikBody = (w, h) => [[-w / 2, -h / 2], [w / 2, -h / 2], [w / 2, h / 2], [-w / 2, h / 2]];
+  const zaokrouhli = x => Math.round(x * 100) / 100;
+
+  function elipsaBody(w, h, kroku) {
+    const b = [];
+    for (let i = 0; i < (kroku || 28); i++) {
+      const a = (i / (kroku || 28)) * Math.PI * 2;
+      b.push([Math.cos(a) * w / 2, Math.sin(a) * h / 2]);
+    }
+    return b;
+  }
+
+  const TVARY = {
+    proces: {
+      nazev: '▭ Proces',
+      rozmer: (s, r) => ({ w: Math.max(MIN_SIRKA, s + 28), h: Math.max(44, r * RADEK + 22) }),
+      kresli: (w, h) => `<rect class="tvar" x="${-w / 2}" y="${-h / 2}" width="${w}" height="${h}" rx="5"/>`,
+      body: obdelnikBody
+    },
+
+    rozhodnuti: {
+      nazev: '◇ Rozhodnutí',
+      rozmer: (s, r) => ({ w: Math.max(130, (s + 30) * 1.55), h: Math.max(76, (r * RADEK + 18) * 1.8) }),
+      kresli: (w, h) => `<polygon class="tvar" points="0,${-h / 2} ${w / 2},0 0,${h / 2} ${-w / 2},0"/>`,
+      body: (w, h) => [[0, -h / 2], [w / 2, 0], [0, h / 2], [-w / 2, 0]]
+    },
+
+    terminal: {
+      nazev: '⬭ Start/Konec',
+      rozmer: (s, r) => ({ w: Math.max(MIN_SIRKA, s + 40), h: Math.max(44, r * RADEK + 22) }),
+      kresli: (w, h) => `<rect class="tvar" x="${-w / 2}" y="${-h / 2}" width="${w}" height="${h}" rx="${h / 2}"/>`,
+      body: (w, h) => {
+        const r = h / 2, rovna = Math.max(0, w / 2 - r), b = [];
+        for (let i = 0; i <= 10; i++) {
+          const a = -Math.PI / 2 + (i / 10) * Math.PI;
+          b.push([rovna + Math.cos(a) * r, Math.sin(a) * r]);
+        }
+        for (let i = 0; i <= 10; i++) {
+          const a = Math.PI / 2 + (i / 10) * Math.PI;
+          b.push([-rovna + Math.cos(a) * r, Math.sin(a) * r]);
+        }
+        return b;
+      }
+    },
+
+    vstup: {
+      nazev: '▱ Vstup/Výstup',
+      rozmer: (s, r) => ({ w: Math.max(MIN_SIRKA, s + 48), h: Math.max(44, r * RADEK + 22) }),
+      kresli(w, h) { return `<polygon class="tvar" points="${this.body(w, h).map(p => p.join(',')).join(' ')}"/>`; },
+      body: (w, h) => {
+        const s = h * 0.32;
+        return [[-w / 2 + s, -h / 2], [w / 2, -h / 2], [w / 2 - s, h / 2], [-w / 2, h / 2]];
+      }
+    },
+
+    priprava: {
+      nazev: '⬡ Příprava',
+      rozmer: (s, r) => ({ w: Math.max(MIN_SIRKA, s + 52), h: Math.max(46, r * RADEK + 24) }),
+      kresli(w, h) { return `<polygon class="tvar" points="${this.body(w, h).map(p => p.join(',')).join(' ')}"/>`; },
+      body: (w, h) => {
+        const s = Math.min(24, w * 0.18);
+        return [[-w / 2 + s, -h / 2], [w / 2 - s, -h / 2], [w / 2, 0], [w / 2 - s, h / 2], [-w / 2 + s, h / 2], [-w / 2, 0]];
+      }
+    },
+
+    databaze: {
+      nazev: '🛢 Databáze',
+      rozmer: (s, r) => ({ w: Math.max(MIN_SIRKA, s + 30), h: Math.max(56, r * RADEK + 34) }),
+      kresli(w, h) {
+        const e = Math.min(14, h * 0.22);
+        return `<path class="tvar" d="M${-w / 2},${-h / 2 + e} a${w / 2},${e} 0 0 1 ${w},0 `
+          + `v${h - 2 * e} a${w / 2},${e} 0 0 1 ${-w},0 z"/>`
+          + `<path class="tvar" style="fill:none" d="M${-w / 2},${-h / 2 + e} a${w / 2},${e} 0 0 0 ${w},0"/>`;
+      },
+      body: obdelnikBody
+    },
+
+    dokument: {
+      nazev: '📄 Dokument',
+      rozmer: (s, r) => ({ w: Math.max(MIN_SIRKA, s + 30), h: Math.max(52, r * RADEK + 30) }),
+      kresli(w, h) {
+        const v = Math.min(12, h * 0.2);
+        return `<path class="tvar" d="M${-w / 2},${-h / 2} h${w} v${h - v} `
+          + `q${-w / 4},${v * 1.4} ${-w / 2},0 q${-w / 4},${-v * 1.4} ${-w / 2},0 z"/>`;
+      },
+      body: (w, h) => obdelnikBody(w, h * 0.94)
+    },
+
+    spojka: {
+      nazev: '◯ Spojka',
+      rozmer: (s) => { const d = Math.max(46, s + 18); return { w: d, h: d }; },
+      kresli: (w, h) => `<circle class="tvar" cx="0" cy="0" r="${Math.min(w, h) / 2}"/>`,
+      body: (w, h) => elipsaBody(Math.min(w, h), Math.min(w, h))
+    },
+
+    poznamka: {
+      nazev: '🗒 Poznámka',
+      rozmer: (s, r) => ({ w: Math.max(MIN_SIRKA, s + 26), h: Math.max(40, r * RADEK + 20) }),
+      kresli(w, h) {
+        const r = Math.min(14, w * 0.16);
+        return `<path class="tvar" style="stroke-dasharray:5 3" d="M${-w / 2},${-h / 2} h${w - r} l${r},${r} `
+          + `v${h - r} h${-w} z"/>`;
+      },
+      body: obdelnikBody
+    }
+  };
+
+  /* Průsečík polopřímky ze středu uzlu s jeho obrysem — tady se hrana
+     zastaví. Obrys je mnohoúhelník, takže jedna rutina stačí na všechny
+     tvary; u oblých se obrys navzorkuje. */
+  function okrajUzlu(u, dx, dy) {
+    const m = metriky(u);
+    const t = TVARY[u.typ] || TVARY.proces;
+    const body = t.body(m.w, m.h);
+    const dl = Math.hypot(dx, dy) || 1;
+    const rx = dx / dl, ry = dy / dl;
+    /* Paprsek z těžiště: s*R = A + t*E. Vektorovým součinem s E vyjde
+       vzdálenost po paprsku, součinem s R poloha na hraně; platí jen
+       průsečík před sebou (s > 0) a uvnitř úsečky (0 ≤ t ≤ 1). */
+    let nej = null;
+    for (let i = 0; i < body.length; i++) {
+      const [ax, ay] = body[i], [bx, by] = body[(i + 1) % body.length];
+      const ex = bx - ax, ey = by - ay;
+      const RxE = rx * ey - ry * ex;
+      if (Math.abs(RxE) < 1e-9) continue;
+      const s = (ax * ey - ay * ex) / RxE;
+      const t2 = (ax * ry - ay * rx) / RxE;
+      if (s <= 0 || t2 < -1e-6 || t2 > 1 + 1e-6) continue;
+      if (nej === null || s < nej) nej = s;
+    }
+    const d = nej === null ? Math.max(m.w, m.h) / 2 : nej;
+    return { x: u.x + rx * d, y: u.y + ry * d };
+  }
+
+  // Střed strany uzlu — kotva pro lomené (pravoúhlé) hrany.
+  function stranaUzlu(u, strana) {
+    const m = metriky(u);
+    if (strana === 'l') return { x: u.x - m.w / 2, y: u.y };
+    if (strana === 'p') return { x: u.x + m.w / 2, y: u.y };
+    if (strana === 'h') return { x: u.x, y: u.y - m.h / 2 };
+    return { x: u.x, y: u.y + m.h / 2 };
+  }
+
+  function obalUzlu(u) {
+    const m = metriky(u);
+    return { x: u.x - m.w / 2, y: u.y - m.h / 2, w: m.w, h: m.h };
+  }
+
+  /* ==================================================================
+     2. STAV, HISTORIE, VYKRESLENÍ
+     ================================================================== */
+
+  const KLIC = 'flowchart.v1';
+  const svg = document.getElementById('svg');
+  const scena = document.getElementById('scena');
+  const gMrizka = document.getElementById('gMrizka');
+  const gHrany = document.getElementById('gHrany');
+  const gUzly = document.getElementById('gUzly');
+  const gPrekryv = document.getElementById('gPrekryv');
+  const el = id => document.getElementById(id);
+
+  const BARVY = ['modra', 'zelena', 'zluta', 'cervena', 'fialova', 'seda'];
+  const MRIZKA = 20;
+
+  let stav = { uzly: [], hrany: [], nid: 1, hid: 1 };
+  let vybrane = new Set();       // id vybraných uzlů
+  let vybranaHrana = null;       // id vybrané hrany
+  let pohled = { x: 0, y: 0, mer: 1 };
+  let spojRezim = false, spojPrvni = null;
+  let prichytavat = true, kolena = false;
+  let schranka = null;
+  const historie = [], budoucnost = [];
+
+  function vychoziDiagram() {
+    return {
+      uzly: [
+        { id: 1, typ: 'terminal', x: 320, y: 70, text: 'Start', barva: 'zelena' },
+        { id: 2, typ: 'proces', x: 320, y: 180, text: 'Udělej krok', barva: 'modra' },
+        { id: 3, typ: 'rozhodnuti', x: 320, y: 310, text: 'Hotovo?', barva: 'zluta' },
+        { id: 4, typ: 'terminal', x: 320, y: 450, text: 'Konec', barva: 'cervena' }
+      ],
+      hrany: [
+        { id: 1, a: 1, b: 2, text: '' },
+        { id: 2, a: 2, b: 3, text: '' },
+        { id: 3, a: 3, b: 4, text: 'ano' },
+        { id: 4, a: 3, b: 2, text: 'ne' }
+      ],
+      nid: 5, hid: 5
+    };
+  }
+
+  // Starší uložený diagram neměl u hran id ani barvy u uzlů — doplní se.
+  function srovnejData(d) {
+    if (!d || !Array.isArray(d.uzly)) return null;
+    let hid = 1;
+    const prevod = { obdelnik: 'proces', kosoctverec: 'rozhodnuti', oval: 'terminal' };
+    d.uzly.forEach(u => {
+      u.typ = prevod[u.typ] || u.typ;
+      if (!TVARY[u.typ]) u.typ = 'proces';
+      if (!u.barva || !BARVY.includes(u.barva)) u.barva = 'modra';
+      u.text = String(u.text == null ? '' : u.text);
+    });
+    d.hrany = (d.hrany || []).filter(h => d.uzly.some(u => u.id === h.a) && d.uzly.some(u => u.id === h.b));
+    d.hrany.forEach(h => { if (!h.id) h.id = hid; hid = Math.max(hid, h.id) + 1; h.text = String(h.text || ''); });
+    d.nid = Math.max(1, ...d.uzly.map(u => u.id + 1), d.nid || 1);
+    d.hid = Math.max(hid, d.hid || 1);
+    return d;
+  }
+
+  function nacti() {
+    try {
+      const s = localStorage.getItem(KLIC);
+      return s ? srovnejData(JSON.parse(s)) : null;
+    } catch (e) { return null; }
+  }
+
+  function uloz() {
+    try { localStorage.setItem(KLIC, JSON.stringify(stav)); } catch (e) { /* plný localStorage stránku nezastaví */ }
+  }
+
+  function snimek() {
+    historie.push(JSON.stringify(stav));
+    if (historie.length > 80) historie.shift();
+    budoucnost.length = 0;
+  }
+
+  function zpet() {
+    if (!historie.length) return;
+    budoucnost.push(JSON.stringify(stav));
+    stav = JSON.parse(historie.pop());
+    vybrane = new Set([...vybrane].filter(id => stav.uzly.some(u => u.id === id)));
+    vybranaHrana = null;
+    uloz(); vykresli();
+  }
+
+  function vpred() {
+    if (!budoucnost.length) return;
+    historie.push(JSON.stringify(stav));
+    stav = JSON.parse(budoucnost.pop());
+    uloz(); vykresli();
+  }
+
+  const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+
+  /* --- geometrie hrany ------------------------------------------------ */
+
+  function cestaHrany(a, b) {
+    if (!kolena) {
+      const dx = b.x - a.x, dy = b.y - a.y;
+      const p1 = okrajUzlu(a, dx, dy);
+      const p2 = okrajUzlu(b, -dx, -dy);
+      return { d: `M${zaokrouhli(p1.x)},${zaokrouhli(p1.y)} L${zaokrouhli(p2.x)},${zaokrouhli(p2.y)}`,
+               stred: { x: (p1.x + p2.x) / 2, y: (p1.y + p2.y) / 2 } };
+    }
+    /* Lomená hrana ve tvaru „L“: z jednoho uzlu se vyjde vodorovně a do
+       druhého se vjede svisle (nebo naopak). Dřívější tvar „Z“ se třemi
+       úseky vedl středem mezi uzly a rád procházel skrz jiné uzly. */
+    const dx = b.x - a.x, dy = b.y - a.y;
+    const vodorovne = Math.abs(dx) >= Math.abs(dy);
+    let p1, p2, roh;
+    if (vodorovne) {
+      p1 = stranaUzlu(a, dx > 0 ? 'p' : 'l');
+      p2 = Math.abs(dy) < 6 ? stranaUzlu(b, dx > 0 ? 'l' : 'p') : stranaUzlu(b, dy > 0 ? 'h' : 'd');
+      roh = { x: p2.x, y: p1.y };
+    } else {
+      p1 = stranaUzlu(a, dy > 0 ? 'd' : 'h');
+      p2 = Math.abs(dx) < 6 ? stranaUzlu(b, dy > 0 ? 'h' : 'd') : stranaUzlu(b, dx > 0 ? 'l' : 'p');
+      roh = { x: p1.x, y: p2.y };
+    }
+    const body = [[p1.x, p1.y], [roh.x, roh.y], [p2.x, p2.y]];
+    const d = body.map((p, i) => `${i ? 'L' : 'M'}${zaokrouhli(p[0])},${zaokrouhli(p[1])}`).join(' ');
+    // popisek patří na delší z obou ramen, tam je pro něj místo
+    const rameno1 = Math.hypot(roh.x - p1.x, roh.y - p1.y);
+    const rameno2 = Math.hypot(p2.x - roh.x, p2.y - roh.y);
+    const stred = rameno1 >= rameno2
+      ? { x: (p1.x + roh.x) / 2, y: (p1.y + roh.y) / 2 }
+      : { x: (roh.x + p2.x) / 2, y: (roh.y + p2.y) / 2 };
+    return { d, stred };
+  }
+
+  /* --- vykreslení ------------------------------------------------------ */
+
+  function vykresliMrizku() {
+    if (!prichytavat) { gMrizka.innerHTML = ''; return; }
+    const r = svg.getBoundingClientRect();
+    const x0 = Math.floor((-pohled.x / pohled.mer) / MRIZKA) * MRIZKA;
+    const y0 = Math.floor((-pohled.y / pohled.mer) / MRIZKA) * MRIZKA;
+    const sirka = r.width / pohled.mer + MRIZKA * 2;
+    const vyska = r.height / pohled.mer + MRIZKA * 2;
+    if (sirka / MRIZKA > 400 || vyska / MRIZKA > 400) { gMrizka.innerHTML = ''; return; }
+    const kusy = [];
+    for (let x = x0; x < x0 + sirka; x += MRIZKA) kusy.push(`<line x1="${x}" y1="${y0}" x2="${x}" y2="${y0 + vyska}"/>`);
+    for (let y = y0; y < y0 + vyska; y += MRIZKA) kusy.push(`<line x1="${x0}" y1="${y}" x2="${x0 + sirka}" y2="${y}"/>`);
+    gMrizka.innerHTML = kusy.join('');
+  }
+
+  function vykresli() {
+    scena.setAttribute('transform', `translate(${pohled.x},${pohled.y}) scale(${pohled.mer})`);
+    vykresliMrizku();
+
+    const podleId = new Map(stav.uzly.map(u => [u.id, u]));
+    gHrany.innerHTML = stav.hrany.map(h => {
+      const a = podleId.get(h.a), b = podleId.get(h.b);
+      if (!a || !b) return '';
+      const c = cestaHrany(a, b);
+      const vybrana = vybranaHrana === h.id ? ' vybrana' : '';
+      let kus = `<path class="hrana-dotyk" data-hrana="${h.id}" d="${c.d}"/>`
+        + `<path class="hrana${vybrana}" data-hrana="${h.id}" d="${c.d}" marker-end="url(#sipka)"/>`;
+      if (h.text) {
+        const sirka = sirkaTextu(h.text) + 8;
+        kus += `<rect class="hrana-popis-pozadi" x="${zaokrouhli(c.stred.x - sirka / 2)}" y="${zaokrouhli(c.stred.y - 15)}" `
+          + `width="${zaokrouhli(sirka)}" height="15" rx="3"/>`
+          + `<text class="hrana-popis" data-hrana="${h.id}" x="${zaokrouhli(c.stred.x)}" y="${zaokrouhli(c.stred.y - 4)}">${esc(h.text)}</text>`;
+      }
+      return kus;
+    }).join('');
+
+    gUzly.innerHTML = stav.uzly.map(u => {
+      const m = metriky(u);
+      const t = TVARY[u.typ] || TVARY.proces;
+      const prvniY = -((m.radky.length - 1) * RADEK) / 2;
+      const text = m.radky.map((r, i) =>
+        `<tspan x="0" y="${zaokrouhli(prvniY + i * RADEK + 4)}">${esc(r)}</tspan>`).join('');
+      return `<g class="uzel b-${u.barva}${vybrane.has(u.id) ? ' vybrany' : ''}${spojPrvni === u.id ? ' vybrany' : ''}" `
+        + `data-id="${u.id}" transform="translate(${u.x},${u.y})">`
+        + t.kresli(m.w, m.h) + `<text>${text}</text></g>`;
+    }).join('');
+
+    el('btnZpet').disabled = !historie.length;
+    el('btnVpred').disabled = !budoucnost.length;
+    obnovPanel();
+    obnovStopu();
+  }
+
+  function obnovStopu() {
+    el('stopa').innerHTML = `<b>${stav.uzly.length}</b> uzlů · <b>${stav.hrany.length}</b> hran · `
+      + `zvětšení <b>${Math.round(pohled.mer * 100)} %</b>`
+      + (spojRezim ? ' · <b>režim spojování</b>' : '');
+  }
+
+  function obnovPanel() {
+    const panel = el('panelTvaru');
+    const jedenUzel = vybrane.size === 1 ? stav.uzly.find(u => u.id === [...vybrane][0]) : null;
+    if (!jedenUzel && vybranaHrana === null) { panel.classList.add('skryty'); return; }
+    panel.classList.remove('skryty');
+    el('panelNadpis').textContent = jedenUzel ? 'Vybraný uzel' : 'Vybraná hrana';
+    el('radekTypu').style.display = jedenUzel ? '' : 'none';
+    el('btnKopie').style.display = jedenUzel ? '' : 'none';
+    el('paletaBarev').style.display = jedenUzel ? '' : 'none';
+    if (jedenUzel) {
+      el('zmenaTypu').value = jedenUzel.typ;
+      [...el('paletaBarev').children].forEach(b =>
+        b.setAttribute('aria-pressed', String(b.dataset.barva === jedenUzel.barva)));
+    }
+  }
+
+  /* ==================================================================
+     3. OVLÁDÁNÍ MYŠÍ A KLÁVESNICÍ
+     ================================================================== */
+
+  function doSveta(e) {
+    const r = svg.getBoundingClientRect();
+    return {
+      x: (e.clientX - r.left - pohled.x) / pohled.mer,
+      y: (e.clientY - r.top - pohled.y) / pohled.mer
+    };
+  }
+
+  const kMrizce = v => prichytavat ? Math.round(v / MRIZKA) * MRIZKA : Math.round(v);
+
+  let rezim = null, tah = null, ramecek = null, posun = null, mezernik = false, hybalo = false;
+
+  function uzelPodle(e) {
+    const g = e.target.closest('.uzel');
+    return g ? stav.uzly.find(u => u.id === +g.dataset.id) : null;
+  }
+
+  function hranaPodle(e) {
+    const t = e.target.closest('[data-hrana]');
+    return t ? stav.hrany.find(h => h.id === +t.dataset.hrana) : null;
+  }
+
+  svg.addEventListener('contextmenu', e => e.preventDefault());
+
+  svg.addEventListener('pointerdown', e => {
+    // U nedůvěryhodné (syntetické) události zachycení ukazatele vyhodí
+    // NotFoundError a shodilo by celou obsluhu — proto v try/catch.
+    try { svg.setPointerCapture(e.pointerId); } catch (chyba) { /* nevadí */ }
+    hybalo = false;
+    const bod = doSveta(e);
+
+    if (e.button === 1 || e.button === 2 || mezernik) {
+      rezim = 'posun';
+      posun = { x: e.clientX - pohled.x, y: e.clientY - pohled.y };
+      return;
+    }
+
+    const uzel = uzelPodle(e);
+
+    if (spojRezim) {
+      if (!uzel) { spojPrvni = null; gPrekryv.innerHTML = ''; vykresli(); return; }
+      if (spojPrvni === null) { spojPrvni = uzel.id; vykresli(); return; }
+      if (spojPrvni !== uzel.id) {
+        snimek();
+        stav.hrany.push({ id: stav.hid++, a: spojPrvni, b: uzel.id, text: '' });
+        uloz();
+      }
+      spojPrvni = null;
+      gPrekryv.innerHTML = '';
+      vykresli();
+      return;
+    }
+
+    if (uzel) {
+      if (e.shiftKey) {
+        if (vybrane.has(uzel.id)) vybrane.delete(uzel.id); else vybrane.add(uzel.id);
+      } else if (!vybrane.has(uzel.id)) {
+        vybrane = new Set([uzel.id]);
+      }
+      vybranaHrana = null;
+      rezim = 'tah';
+      tah = {
+        zacatek: bod,
+        puvodni: stav.uzly.filter(u => vybrane.has(u.id)).map(u => ({ u, x: u.x, y: u.y })),
+        snimekVzat: false
+      };
+      vykresli();
+      return;
+    }
+
+    const hrana = hranaPodle(e);
+    if (hrana) {
+      vybranaHrana = hrana.id;
+      vybrane.clear();
+      vykresli();
+      return;
+    }
+
+    if (!e.shiftKey) { vybrane.clear(); vybranaHrana = null; }
+    rezim = 'ramecek';
+    ramecek = { x0: bod.x, y0: bod.y, x1: bod.x, y1: bod.y };
+    vykresli();
+  });
+
+  svg.addEventListener('pointermove', e => {
+    if (spojRezim && spojPrvni !== null) {
+      const u = stav.uzly.find(x => x.id === spojPrvni);
+      const b = doSveta(e);
+      if (u) {
+        const p = okrajUzlu(u, b.x - u.x, b.y - u.y);
+        gPrekryv.innerHTML = `<path class="spoj-naznak" d="M${zaokrouhli(p.x)},${zaokrouhli(p.y)} L${zaokrouhli(b.x)},${zaokrouhli(b.y)}"/>`;
+      }
+    }
+    if (!rezim) return;
+    hybalo = true;
+
+    if (rezim === 'posun') {
+      pohled.x = e.clientX - posun.x;
+      pohled.y = e.clientY - posun.y;
+      vykresli();
+      return;
+    }
+
+    if (rezim === 'tah') {
+      const bod = doSveta(e);
+      const dx = bod.x - tah.zacatek.x, dy = bod.y - tah.zacatek.y;
+      if (!tah.snimekVzat && (Math.abs(dx) > 1 || Math.abs(dy) > 1)) { snimek(); tah.snimekVzat = true; }
+      for (const p of tah.puvodni) {
+        p.u.x = kMrizce(p.x + dx);
+        p.u.y = kMrizce(p.y + dy);
+      }
+      vykresli();
+      return;
+    }
+
+    if (rezim === 'ramecek') {
+      const bod = doSveta(e);
+      ramecek.x1 = bod.x; ramecek.y1 = bod.y;
+      const x = Math.min(ramecek.x0, ramecek.x1), y = Math.min(ramecek.y0, ramecek.y1);
+      const w = Math.abs(ramecek.x1 - ramecek.x0), h = Math.abs(ramecek.y1 - ramecek.y0);
+      gPrekryv.innerHTML = `<rect class="vyber-ramecek" x="${x}" y="${y}" width="${w}" height="${h}"/>`;
+      for (const u of stav.uzly) {
+        const o = obalUzlu(u);
+        const uvnitr = o.x + o.w > x && o.x < x + w && o.y + o.h > y && o.y < y + h;
+        if (uvnitr) vybrane.add(u.id);
+      }
+      vykresli();
+      gPrekryv.innerHTML = `<rect class="vyber-ramecek" x="${x}" y="${y}" width="${w}" height="${h}"/>`;
+    }
+  });
+
+  svg.addEventListener('pointerup', () => {
+    if (rezim === 'tah' && tah && tah.snimekVzat) uloz();
+    if (rezim === 'ramecek') gPrekryv.innerHTML = '';
+    rezim = null; tah = null; ramecek = null; posun = null;
+    vykresli();
+  });
+
+  svg.addEventListener('pointercancel', () => { rezim = null; tah = null; ramecek = null; posun = null; });
+
+  svg.addEventListener('wheel', e => {
+    e.preventDefault();
+    const r = svg.getBoundingClientRect();
+    const mx = e.clientX - r.left, my = e.clientY - r.top;
+    const nasobek = Math.exp(-e.deltaY * 0.0015);
+    const novy = Math.max(0.2, Math.min(3, pohled.mer * nasobek));
+    // zvětšuje se k místu pod kurzorem, ne ke středu plátna
+    pohled.x = mx - (mx - pohled.x) * (novy / pohled.mer);
+    pohled.y = my - (my - pohled.y) * (novy / pohled.mer);
+    pohled.mer = novy;
+    vykresli();
+  }, { passive: false });
+
+  svg.addEventListener('dblclick', async e => {
+    const uzel = uzelPodle(e);
+    if (uzel) return prejmenuj(uzel);
+    const hrana = hranaPodle(e);
+    if (hrana) return popisHrany(hrana);
+    const bod = doSveta(e);
+    pridejUzel('proces', kMrizce(bod.x), kMrizce(bod.y));
+  });
+
+  async function prejmenuj(u) {
+    const t = await Dialog.zeptej('Text uzlu:', u.text);
+    if (t === null) return;
+    snimek();
+    u.text = t;
+    uloz(); vykresli();
+  }
+
+  async function popisHrany(h) {
+    const t = await Dialog.zeptej('Popisek hrany (např. ano / ne):', h.text);
+    if (t === null) return;
+    snimek();
+    h.text = t;
+    uloz(); vykresli();
+  }
+
+  function pridejUzel(typ, x, y) {
+    snimek();
+    const u = {
+      id: stav.nid++, typ,
+      x: x != null ? x : kMrizce((-pohled.x + svg.clientWidth / 2) / pohled.mer),
+      y: y != null ? y : kMrizce((-pohled.y + svg.clientHeight / 2) / pohled.mer),
+      text: typ === 'rozhodnuti' ? 'Podmínka?' : (typ === 'terminal' ? 'Start' : 'Nový krok'),
+      barva: typ === 'rozhodnuti' ? 'zluta' : (typ === 'terminal' ? 'zelena' : 'modra')
+    };
+    stav.uzly.push(u);
+    vybrane = new Set([u.id]);
+    vybranaHrana = null;
+    uloz(); vykresli();
+    return u;
+  }
+
+  function smazVybrane() {
+    if (!vybrane.size && vybranaHrana === null) return;
+    snimek();
+    if (vybrane.size) {
+      stav.uzly = stav.uzly.filter(u => !vybrane.has(u.id));
+      stav.hrany = stav.hrany.filter(h => !vybrane.has(h.a) && !vybrane.has(h.b));
+      vybrane.clear();
+    }
+    if (vybranaHrana !== null) {
+      stav.hrany = stav.hrany.filter(h => h.id !== vybranaHrana);
+      vybranaHrana = null;
+    }
+    uloz(); vykresli();
+  }
+
+  function zkopirujVybrane() {
+    if (!vybrane.size) return;
+    schranka = {
+      uzly: stav.uzly.filter(u => vybrane.has(u.id)).map(u => Object.assign({}, u)),
+      hrany: stav.hrany.filter(h => vybrane.has(h.a) && vybrane.has(h.b)).map(h => Object.assign({}, h))
+    };
+  }
+
+  function vloz(posunXY) {
+    if (!schranka || !schranka.uzly.length) return;
+    snimek();
+    const mapa = new Map();
+    const d = posunXY == null ? MRIZKA * 2 : posunXY;
+    for (const u of schranka.uzly) {
+      const novy = Object.assign({}, u, { id: stav.nid++, x: u.x + d, y: u.y + d });
+      mapa.set(u.id, novy.id);
+      stav.uzly.push(novy);
+    }
+    for (const h of schranka.hrany) {
+      stav.hrany.push({ id: stav.hid++, a: mapa.get(h.a), b: mapa.get(h.b), text: h.text });
+    }
+    vybrane = new Set([...mapa.values()]);
+    vybranaHrana = null;
+    uloz(); vykresli();
+  }
+
+  function obalDiagramu() {
+    if (!stav.uzly.length) return null;
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    for (const u of stav.uzly) {
+      const o = obalUzlu(u);
+      x0 = Math.min(x0, o.x); y0 = Math.min(y0, o.y);
+      x1 = Math.max(x1, o.x + o.w); y1 = Math.max(y1, o.y + o.h);
+    }
+    return { x: x0, y: y0, w: x1 - x0, h: y1 - y0 };
+  }
+
+  function ukazCely() {
+    const o = obalDiagramu();
+    if (!o) { pohled = { x: 0, y: 0, mer: 1 }; vykresli(); return; }
+    const r = svg.getBoundingClientRect();
+    const okraj = 50;
+    const mer = Math.max(0.2, Math.min(2, Math.min((r.width - okraj * 2) / o.w, (r.height - okraj * 2) / o.h)));
+    pohled.mer = mer;
+    pohled.x = r.width / 2 - (o.x + o.w / 2) * mer;
+    pohled.y = r.height / 2 - (o.y + o.h / 2) * mer;
+    vykresli();
+  }
+
+  /* Automatické srovnání: uzly se rozloží do vrstev podle toho, jak
+     daleko jsou od začátku (uzlu bez vstupní hrany). Cykly nevadí —
+     uzel dostane vrstvu při prvním dosažení. */
+  function srovnejDoVrstev() {
+    if (!stav.uzly.length) return;
+    snimek();
+    const vstupy = new Map(stav.uzly.map(u => [u.id, 0]));
+    for (const h of stav.hrany) vstupy.set(h.b, (vstupy.get(h.b) || 0) + 1);
+    let fronta = stav.uzly.filter(u => !vstupy.get(u.id)).map(u => u.id);
+    if (!fronta.length) fronta = [stav.uzly[0].id];
+    const vrstva = new Map(fronta.map(id => [id, 0]));
+    const zbyva = new Set(stav.uzly.map(u => u.id));
+    while (fronta.length) {
+      const id = fronta.shift();
+      zbyva.delete(id);
+      for (const h of stav.hrany.filter(h => h.a === id)) {
+        if (!vrstva.has(h.b)) { vrstva.set(h.b, vrstva.get(id) + 1); fronta.push(h.b); }
+      }
+    }
+    let volna = Math.max(0, ...vrstva.values()) + 1;
+    for (const id of zbyva) vrstva.set(id, volna);
+
+    const podleVrstev = new Map();
+    for (const u of stav.uzly) {
+      const v = vrstva.get(u.id) || 0;
+      if (!podleVrstev.has(v)) podleVrstev.set(v, []);
+      podleVrstev.get(v).push(u);
+    }
+    const KROK_Y = 130, KROK_X = 210;
+    for (const [v, uzly] of podleVrstev) {
+      uzly.forEach((u, i) => {
+        u.x = kMrizce(400 + (i - (uzly.length - 1) / 2) * KROK_X);
+        u.y = kMrizce(80 + v * KROK_Y);
+      });
+    }
+    uloz(); vykresli(); ukazCely();
+  }
+
+  /* ==================================================================
+     4. EXPORT A IMPORT
+     ------------------------------------------------------------------
+     Vyvezený SVG musí být samostatný: styly jsou v CSS stránky, takže
+     se při exportu spočítají a zapíšou přímo do značek. Ořízne se na
+     obsah diagramu, ne na okno prohlížeče (to byla chyba původní verze
+     — co bylo mimo výřez, v souboru chybělo).
+     ================================================================== */
+
+  const STYLY_K_PREPISU = ['fill', 'stroke', 'stroke-width', 'stroke-dasharray', 'font-size',
+    'font-family', 'text-anchor', 'stroke-linejoin', 'stroke-linecap'];
+
+  function vlozStyly(zdroj, cil) {
+    const s = getComputedStyle(zdroj);
+    for (const vlastnost of STYLY_K_PREPISU) {
+      const h = s.getPropertyValue(vlastnost);
+      if (h && h !== 'none' || vlastnost === 'fill') cil.setAttribute(vlastnost, h);
+    }
+  }
+
+  function standalonniSvg() {
+    const obal = obalDiagramu();
+    if (!obal) return null;
+    const okraj = 24;
+    const ns = 'http://www.w3.org/2000/svg';
+    const ven = document.createElementNS(ns, 'svg');
+    ven.setAttribute('xmlns', ns);
+    ven.setAttribute('viewBox', `${obal.x - okraj} ${obal.y - okraj} ${obal.w + okraj * 2} ${obal.h + okraj * 2}`);
+    ven.setAttribute('width', Math.round(obal.w + okraj * 2));
+    ven.setAttribute('height', Math.round(obal.h + okraj * 2));
+
+    const pozadi = document.createElementNS(ns, 'rect');
+    pozadi.setAttribute('x', obal.x - okraj);
+    pozadi.setAttribute('y', obal.y - okraj);
+    pozadi.setAttribute('width', obal.w + okraj * 2);
+    pozadi.setAttribute('height', obal.h + okraj * 2);
+    pozadi.setAttribute('fill', getComputedStyle(svg).backgroundColor || '#ffffff');
+    ven.appendChild(pozadi);
+
+    const barvaSipky = getComputedStyle(gHrany.querySelector('.hrana') || document.body).stroke || '#888';
+    const defs = document.createElementNS(ns, 'defs');
+    defs.innerHTML = `<marker id="sipka" markerWidth="9" markerHeight="7" refX="8.5" refY="3.5" `
+      + `orient="auto" markerUnits="strokeWidth"><path d="M0,0 L9,3.5 L0,7 z" fill="${barvaSipky}"/></marker>`;
+    ven.appendChild(defs);
+
+    for (const skupina of [gHrany, gUzly]) {
+      const klon = skupina.cloneNode(true);
+      klon.removeAttribute('id');
+      klon.querySelectorAll('.hrana-dotyk').forEach(x => x.remove());
+      const zdrojove = [...skupina.querySelectorAll('*')];
+      const klonove = [...klon.querySelectorAll('*')];
+      // klonuje se i s .hrana-dotyk, proto se styly berou podle pořadí
+      // v původní skupině a přebytečné prvky se nejdřív odstranily
+      let j = 0;
+      for (let i = 0; i < zdrojove.length; i++) {
+        if (zdrojove[i].classList.contains('hrana-dotyk')) continue;
+        if (klonove[j]) vlozStyly(zdrojove[i], klonove[j]);
+        j++;
+      }
+      klon.querySelectorAll('.hrana').forEach(p => p.setAttribute('marker-end', 'url(#sipka)'));
+      ven.appendChild(klon);
+    }
+    return new XMLSerializer().serializeToString(ven);
+  }
+
+  function stahni(blob, jmeno) {
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = jmeno;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
+  }
+
+  function exportSvg() {
+    const text = standalonniSvg();
+    if (!text) return Dialog.info('Diagram je prázdný.');
+    stahni(new Blob([text], { type: 'image/svg+xml' }), 'diagram.svg');
+    Dialog.info('SVG uloženo — ořezané na diagram, se styly uvnitř.');
+  }
+
+  function exportPng() {
+    const text = standalonniSvg();
+    if (!text) return Dialog.info('Diagram je prázdný.');
+    const blob = new Blob([text], { type: 'image/svg+xml;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const img = new Image();
+    img.onload = () => {
+      const mer = 2;
+      const platno = document.createElement('canvas');
+      platno.width = img.width * mer;
+      platno.height = img.height * mer;
+      const ctx = platno.getContext('2d');
+      ctx.scale(mer, mer);
+      ctx.drawImage(img, 0, 0);
+      URL.revokeObjectURL(url);
+      platno.toBlob(b => {
+        stahni(b, 'diagram.png');
+        Dialog.info(`PNG uloženo (${platno.width} × ${platno.height} bodů).`);
+      }, 'image/png');
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); Dialog.chyba('PNG se nepodařilo vytvořit.'); };
+    img.src = url;
+  }
+
+  function exportJson() {
+    stahni(new Blob([JSON.stringify(stav, null, 2)], { type: 'application/json' }), 'diagram.json');
+    Dialog.info('JSON uložen — dá se sem zase nahrát.');
+  }
+
+  /* Mermaid: textový zápis diagramu, kterým umí spousta nástrojů
+     (GitHub, Obsidian, dokumentace) vykreslit totéž. */
+  const MERMAID_TVAR = {
+    proces: t => `["${t}"]`, rozhodnuti: t => `{"${t}"}`, terminal: t => `(["${t}"])`,
+    vstup: t => `[/"${t}"/]`, priprava: t => `{{"${t}"}}`, databaze: t => `[("${t}")]`,
+    dokument: t => `["${t}"]`, spojka: t => `(("${t}"))`, poznamka: t => `["${t}"]`
+  };
+
+  function doMermaid() {
+    const jmeno = u => 'n' + u.id;
+    const radky = ['flowchart TD'];
+    for (const u of stav.uzly) {
+      const t = (MERMAID_TVAR[u.typ] || MERMAID_TVAR.proces)(String(u.text).replace(/"/g, "'"));
+      radky.push(`    ${jmeno(u)}${t}`);
+    }
+    for (const h of stav.hrany) {
+      const popis = h.text ? `|"${String(h.text).replace(/"/g, "'")}"|` : '';
+      radky.push(`    n${h.a} -->${popis} n${h.b}`);
+    }
+    return radky.join('\n');
+  }
+
+  function exportMermaid() {
+    stahni(new Blob([doMermaid()], { type: 'text/plain' }), 'diagram.mmd');
+    Dialog.info('Mermaid uložen — vloží se do Markdownu mezi ```mermaid.');
+  }
+
+  /* Opačný směr: z mermaidového zápisu se poskládá diagram. Rozumí
+     podmnožině, kterou sama stránka vyváží (uzel s tvarem, hrana
+     s popiskem); co nepozná, přeskočí. */
+  function zMermaidu(text) {
+    const uzly = new Map();
+    const hrany = [];
+    let nid = 1, hid = 1;
+    const tvarPodleZavorek = z => {
+      if (z.startsWith('{{')) return 'priprava';
+      if (z.startsWith('{')) return 'rozhodnuti';
+      if (z.startsWith('(([')) return 'spojka';
+      if (z.startsWith('((')) return 'spojka';
+      if (z.startsWith('([')) return 'terminal';
+      if (z.startsWith('[(')) return 'databaze';
+      if (z.startsWith('[/')) return 'vstup';
+      return 'proces';
+    };
+    const dejUzel = (klic, zavorky, popis) => {
+      if (!uzly.has(klic)) {
+        uzly.set(klic, { id: nid++, typ: 'proces', x: 0, y: 0, text: klic, barva: 'modra' });
+      }
+      const u = uzly.get(klic);
+      if (zavorky) {
+        u.typ = tvarPodleZavorek(zavorky);
+        if (popis != null) u.text = popis;
+      }
+      return u;
+    };
+    /* Pozor na pořadí v alternaci: delší závorky musí být první, jinak
+       se u `(["Start"])` uzavře jen `]` a zbylá `)` rozbije zbytek řádku. */
+    const kus = '([A-Za-z0-9_]+)(\\s*(?:\\{\\{|\\(\\(|\\(\\[|\\[\\(|\\[\\/|\\[|\\{|\\()[^\\]\\}\\)]*(?:\\}\\}|\\)\\)|\\)\\]|\\/\\]|\\]\\)|\\]|\\}|\\))?)?';
+    const vzorHrany = new RegExp(kus + '\\s*-{2,3}>\\s*(?:\\|([^|]*)\\|\\s*)?' + kus, '');
+    for (const radek of String(text).split(/\r?\n/)) {
+      const r = radek.trim();
+      if (!r || /^(flowchart|graph|%%|subgraph|end)/i.test(r)) continue;
+      const m = r.match(vzorHrany);
+      if (m) {
+        const a = dejUzel(m[1], m[2], m[2] ? popisZTvaru(m[2]) : null);
+        const b = dejUzel(m[4], m[5], m[5] ? popisZTvaru(m[5]) : null);
+        hrany.push({ id: hid++, a: a.id, b: b.id, text: (m[3] || '').replace(/^"|"$/g, '').trim() });
+        continue;
+      }
+      const su = r.match(new RegExp('^' + kus + '\\s*$'));
+      if (su && su[2]) dejUzel(su[1], su[2], popisZTvaru(su[2]));
+    }
+    if (!uzly.size) return null;
+    return srovnejData({ uzly: [...uzly.values()], hrany, nid, hid });
+  }
+
+  const popisZTvaru = z => z.replace(/^[\s\[\]\(\)\{\}\/]+|[\s\[\]\(\)\{\}\/]+$/g, '').replace(/^"|"$/g, '');
+
+  async function nactiSoubor(soubor) {
+    const text = await soubor.text();
+    let novy = null;
+    if (/^\s*\{/.test(text)) {
+      try { novy = srovnejData(JSON.parse(text)); } catch (e) { novy = null; }
+    } else {
+      novy = zMermaidu(text);
+    }
+    if (!novy || !novy.uzly.length) return Dialog.chyba('Soubor se nepodařilo přečíst — čekal jsem JSON z téhle stránky nebo mermaidový zápis.');
+    snimek();
+    stav = novy;
+    if (!stav.uzly.some(u => u.x || u.y)) srovnejDoVrstev();
+    vybrane.clear(); vybranaHrana = null;
+    uloz(); vykresli(); ukazCely();
+    Dialog.info(`Načteno: ${stav.uzly.length} uzlů, ${stav.hrany.length} hran.`);
+  }
+
+  /* ==================================================================
+     5. LIŠTA, KLÁVESY, START
+     ================================================================== */
+
+  function postavPanel() {
+    const paleta = el('paletaBarev');
+    paleta.innerHTML = '';
+    for (const b of BARVY) {
+      const t = document.createElement('button');
+      t.type = 'button';
+      t.className = 'b-' + b;
+      t.dataset.barva = b;
+      t.title = b;
+      t.setAttribute('aria-pressed', 'false');
+      t.addEventListener('click', () => {
+        if (!vybrane.size) return;
+        snimek();
+        stav.uzly.filter(u => vybrane.has(u.id)).forEach(u => { u.barva = b; });
+        uloz(); vykresli();
+      });
+      paleta.appendChild(t);
+    }
+    const vyber = el('zmenaTypu');
+    vyber.innerHTML = '';
+    for (const [id, t] of Object.entries(TVARY)) {
+      const o = document.createElement('option');
+      o.value = id;
+      o.textContent = t.nazev;
+      vyber.appendChild(o);
+    }
+    vyber.addEventListener('change', () => {
+      if (!vybrane.size) return;
+      snimek();
+      stav.uzly.filter(u => vybrane.has(u.id)).forEach(u => { u.typ = vyber.value; });
+      uloz(); vykresli();
+    });
+  }
+
+  function nabidkaExportu(tlacitko) {
+    const stara = document.getElementById('nabidkaExport');
+    if (stara) { stara.remove(); return; }
+    const m = document.createElement('div');
+    m.id = 'nabidkaExport';
+    m.style.cssText = 'position:absolute;z-index:30;background:var(--bg-panel);border:1px solid var(--border);'
+      + 'border-radius:6px;padding:6px;display:flex;flex-direction:column;gap:4px;box-shadow:0 6px 24px rgba(0,0,0,.4)';
+    const r = tlacitko.getBoundingClientRect();
+    m.style.left = Math.min(r.left, window.innerWidth - 190) + 'px';
+    m.style.top = (r.bottom + 4) + 'px';
+    const polozky = [
+      ['🖼 SVG (vektor)', exportSvg],
+      ['🌄 PNG (obrázek)', exportPng],
+      ['🧾 JSON (k úpravám)', exportJson],
+      ['📝 Mermaid (text)', exportMermaid]
+    ];
+    for (const [popis, akce] of polozky) {
+      const b = document.createElement('button');
+      b.className = 'btn';
+      b.textContent = popis;
+      b.addEventListener('click', () => { m.remove(); akce(); });
+      m.appendChild(b);
+    }
+    document.body.appendChild(m);
+    setTimeout(() => {
+      const zavri = e => { if (!m.contains(e.target)) { m.remove(); document.removeEventListener('pointerdown', zavri); } };
+      document.addEventListener('pointerdown', zavri);
+    }, 0);
+  }
+
+  function prepniSpoj(zapnout) {
+    spojRezim = zapnout === undefined ? !spojRezim : zapnout;
+    spojPrvni = null;
+    gPrekryv.innerHTML = '';
+    el('btnSpoj').classList.toggle('zapnuto', spojRezim);
+    vykresli();
+  }
+
+  function pripojListu() {
+    document.querySelectorAll('[data-pridej]').forEach(b =>
+      b.addEventListener('click', () => pridejUzel(b.dataset.pridej)));
+
+    el('btnSpoj').addEventListener('click', () => prepniSpoj());
+    el('btnZpet').addEventListener('click', zpet);
+    el('btnVpred').addEventListener('click', vpred);
+    el('btnSmaz').addEventListener('click', smazVybrane);
+    el('btnMrizka').addEventListener('click', () => {
+      prichytavat = !prichytavat;
+      el('btnMrizka').classList.toggle('zapnuto', prichytavat);
+      vykresli();
+    });
+    el('btnKolena').addEventListener('click', () => {
+      kolena = !kolena;
+      el('btnKolena').classList.toggle('zapnuto', kolena);
+      try { localStorage.setItem(KLIC + '.kolena', kolena ? '1' : '0'); } catch (e) { /* nevadí */ }
+      vykresli();
+    });
+    el('btnSrovnat').addEventListener('click', srovnejDoVrstev);
+    el('btnFit').addEventListener('click', ukazCely);
+    el('btnExport').addEventListener('click', e => nabidkaExportu(e.currentTarget));
+    el('btnImport').addEventListener('click', () => {
+      const vstup = document.createElement('input');
+      vstup.type = 'file';
+      vstup.accept = '.json,.mmd,.txt,application/json,text/plain';
+      vstup.addEventListener('change', () => { if (vstup.files[0]) nactiSoubor(vstup.files[0]); });
+      vstup.click();
+    });
+    el('btnNovy').addEventListener('click', async () => {
+      if (!(await Dialog.potvrd('Zahodit tenhle diagram a začít znovu?'))) return;
+      snimek();
+      stav = { uzly: [], hrany: [], nid: 1, hid: 1 };
+      vybrane.clear(); vybranaHrana = null;
+      uloz(); vykresli();
+    });
+    el('btnPrejmenuj').addEventListener('click', () => {
+      if (vybrane.size === 1) prejmenuj(stav.uzly.find(u => u.id === [...vybrane][0]));
+      else if (vybranaHrana !== null) popisHrany(stav.hrany.find(h => h.id === vybranaHrana));
+    });
+    el('btnKopie').addEventListener('click', () => { zkopirujVybrane(); vloz(); });
+    el('btnDiagramy').addEventListener('click', () => el('oknoDiagramy').classList.toggle('skryte'));
+    el('zavritNapovedu').addEventListener('click', () => el('napovedaBox').classList.add('skryta'));
+    el('zavritDiagramy').addEventListener('click', () => el('oknoDiagramy').classList.add('skryte'));
+
+    // plátno se kreslí podle velikosti okna (mřížka)
+    window.addEventListener('resize', vykresli);
+  }
+
+  function pripojKlavesy() {
+    window.addEventListener('keydown', e => {
+      // cíl nemusí být prvek (událost poslaná na window), proto opatrně
+      const cil = e.target;
+      if (cil && cil.matches && cil.matches('input, textarea, select')) return;
+      const ctrl = e.ctrlKey || e.metaKey;
+
+      if (e.code === 'Space' && !mezernik) { mezernik = true; svg.style.cursor = 'grab'; }
+
+      if (ctrl && e.key.toLowerCase() === 'z') { e.preventDefault(); return e.shiftKey ? vpred() : zpet(); }
+      if (ctrl && e.key.toLowerCase() === 'y') { e.preventDefault(); return vpred(); }
+      if (ctrl && e.key.toLowerCase() === 'c') { zkopirujVybrane(); return; }
+      if (ctrl && e.key.toLowerCase() === 'v') { e.preventDefault(); return vloz(); }
+      if (ctrl && e.key.toLowerCase() === 'd') { e.preventDefault(); zkopirujVybrane(); return vloz(); }
+      if (ctrl && e.key.toLowerCase() === 'a') {
+        e.preventDefault();
+        vybrane = new Set(stav.uzly.map(u => u.id));
+        vybranaHrana = null;
+        return vykresli();
+      }
+
+      if (e.key === 'Delete' || e.key === 'Backspace') { e.preventDefault(); return smazVybrane(); }
+      if (e.key === 'Escape') { prepniSpoj(false); vybrane.clear(); vybranaHrana = null; return vykresli(); }
+      if (e.key === 'Enter') {
+        if (vybrane.size === 1) prejmenuj(stav.uzly.find(u => u.id === [...vybrane][0]));
+        else if (vybranaHrana !== null) popisHrany(stav.hrany.find(h => h.id === vybranaHrana));
+        return;
+      }
+      if (e.key.startsWith('Arrow') && vybrane.size) {
+        e.preventDefault();
+        const krok = e.shiftKey ? 1 : (prichytavat ? MRIZKA : 5);
+        const dx = (e.key === 'ArrowRight' ? krok : 0) - (e.key === 'ArrowLeft' ? krok : 0);
+        const dy = (e.key === 'ArrowDown' ? krok : 0) - (e.key === 'ArrowUp' ? krok : 0);
+        snimek();
+        stav.uzly.filter(u => vybrane.has(u.id)).forEach(u => { u.x += dx; u.y += dy; });
+        uloz(); vykresli();
+        return;
+      }
+
+      const k = e.key.toLowerCase();
+      if (k === 's') return prepniSpoj();
+      if (k === 'g') return el('btnMrizka').click();
+      if (k === 'l') return el('btnKolena').click();
+      if (k === 'f') return ukazCely();
+      if (k === 'h') return el('napovedaBox').classList.toggle('skryta');
+    });
+
+    window.addEventListener('keyup', e => {
+      if (e.code === 'Space') { mezernik = false; svg.style.cursor = ''; }
+    });
+  }
+
+  function pripojSbirku() {
+    if (typeof Tvary === 'undefined') return;
+    Tvary.pripoj({
+      klic: 'webapp_flowchart_diagramy',
+      typ: 'diagram',
+      nazev: 'Diagram',
+      kontejner: el('tvary'),
+      parametry: () => JSON.parse(JSON.stringify(stav)),
+      pouzij: (p) => {
+        const novy = srovnejData(JSON.parse(JSON.stringify(p)));
+        if (!novy) return;
+        snimek();
+        stav = novy;
+        vybrane.clear(); vybranaHrana = null;
+        uloz(); vykresli(); ukazCely();
+        el('oknoDiagramy').classList.add('skryte');
+      },
+      popis: (p) => {
+        const prvni = (p.uzly || []).find(u => u.text);
+        return (prvni ? prvni.text + ' — ' : '') + `${(p.uzly || []).length} uzlů, ${(p.hrany || []).length} hran`;
+      }
+    });
+  }
+
+  function start() {
+    sirkaTextu = mereni();
+    stav = nacti() || vychoziDiagram();
+    try { kolena = localStorage.getItem(KLIC + '.kolena') === '1'; } catch (e) { /* nevadí */ }
+    el('btnKolena').classList.toggle('zapnuto', kolena);
+    el('btnMrizka').classList.toggle('zapnuto', prichytavat);
+    postavPanel();
+    pripojListu();
+    pripojKlavesy();
+    pripojSbirku();
+    vykresli();
+    ukazCely();
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start);
+  else start();
+
+  // pro testy
+  window.DIAGRAM = {
+    stav: () => stav, TVARY, okrajUzlu, cestaHrany, doMermaid, zMermaidu,
+    standalonniSvg, srovnejData, obalDiagramu, vykresli,
+    nastav: d => { stav = srovnejData(d); vykresli(); }
+  };
+})();
 </script>
 </body>
 </html>

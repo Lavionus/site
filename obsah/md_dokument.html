@@ -7,65 +7,411 @@
 <script src="lib/marked.min.js"></script>
 <link rel="stylesheet" href="../common.css">
 <script src="../theme.js"></script>
+<script>
+/* Vlastní téma čtečky se musí usadit ještě před prvním vykreslením,
+   jinak stránka blikne barvami z rozcestníku. Plnou obsluhu má skript dole. */
+(function () {
+  try {
+    const t = JSON.parse(localStorage.getItem('md_dokument_cteni') || '{}').tema;
+    if (t && t !== 'auto') document.documentElement.dataset.mdTema = t;
+  } catch { /* file:// nebo zakázané úložiště */ }
+})();
+</script>
 <script src="../podpis.js" defer></script>
 <style>
+/* ============================================================
+   Barevná témata stránky.
+
+   Výchozí stav (bez atributu data-md-tema) dědí barvy z common.css,
+   tedy z volby udělané v rozcestníku (světlá/tmavá). Vlastní téma se
+   zapíná atributem <html data-md-tema="…">; jeho pravidla stojí až
+   za common.css, takže přebijí i data-theme přicházející z rozcestníku.
+   Proto každé téma definuje celou paletu, ne jen odchylky.
+   ============================================================ */
+:root[data-md-tema="dark"] {
+  --bg:#1a1a1a; --bg-deep:#121212; --bg-panel:#242424; --bg-elevated:#2d2d2d;
+  --bg-control:#383838; --bg-input:#1e1e1e; --bg-hover:#333333;
+  --text:#e0e0e0; --text-muted:#b0b0b0; --text-faint:#888888;
+  --border:#404040; --border-strong:#4a4a4a;
+  --accent:#6aa6fd; --accent-soft:rgba(106,166,253,.15); --accent-hover:#8bbcff;
+  --ok:#4caf7d; --warn:#e0a63f; --danger:#e05d5d;
+  --shadow:0 2px 10px rgba(0,0,0,.45);
+  color-scheme: dark;
+}
+:root[data-md-tema="light"] {
+  --bg:#f2f3f5; --bg-deep:#e8eaed; --bg-panel:#ffffff; --bg-elevated:#ffffff;
+  --bg-control:#e9ecef; --bg-input:#ffffff; --bg-hover:#e2e6ea;
+  --text:#24292f; --text-muted:#4b535b; --text-faint:#686f77;
+  --border:#d0d7de; --border-strong:#b9c2cb;
+  --accent:#2f6fce; --accent-soft:rgba(47,111,206,.12); --accent-hover:#1f5bb5;
+  --ok:#177540; --warn:#7d5800; --danger:#c0392b;
+  --shadow:0 2px 10px rgba(0,0,0,.12);
+  color-scheme: light;
+}
+/* Sépie – teplý papír, na dlouhé čtení nejšetrnější k očím při denním světle. */
+:root[data-md-tema="sepie"] {
+  --bg:#e7d9b0; --bg-deep:#dccd9f; --bg-panel:#f4e8c6; --bg-elevated:#f4e8c6;
+  --bg-control:#e3d4aa; --bg-input:#f6ebcd; --bg-hover:#e9dcb6;
+  --text:#3e3323; --text-muted:#5a4c37; --text-faint:#796a4e;
+  --border:#cdb98d; --border-strong:#b59f6d;
+  --accent:#8a5017; --accent-soft:rgba(138,80,23,.15); --accent-hover:#6b3c0f;
+  --ok:#3c6630; --warn:#775200; --danger:#a23524;
+  --shadow:0 2px 10px rgba(80,60,30,.2);
+  color-scheme: light;
+
+  /* Zrno papíru: šum z feTurbulence v SVG jako datová adresa (žádný soubor
+     navíc, dlaždice 180 px se opakuje). Vrstva je nad barvou plochy, proto
+     musí zůstat hodně průhledná – jinak text ztratí kontrast. */
+  --zrno: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='z'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23z)' opacity='0.3'/%3E%3C/svg%3E");
+  /* nestejnoměrné nažloutnutí – papír není plochá barva */
+  --skvrny: radial-gradient(120% 90% at 18% 8%, rgba(255,250,228,.55), rgba(255,250,228,0) 60%),
+            radial-gradient(90% 70% at 88% 92%, rgba(168,132,66,.16), rgba(168,132,66,0) 65%);
+
+  /* list dokumentu */
+  --list-bg:#f6ebcd; --list-text:#3e3323; --list-muted:#5a4c37; --list-border:#cdb98d;
+  --list-akcent:#8a5017; --list-akcent-soft:rgba(138,80,23,.15);
+  --list-kod:#e7dab5; --list-kod-hlava:#ded0a6;
+}
+:root[data-md-tema="sepie"] body,
+:root[data-md-tema="sepie"] .hlavicka,
+:root[data-md-tema="sepie"] .stav,
+:root[data-md-tema="sepie"] .panel,
+:root[data-md-tema="sepie"] .osnova,
+:root[data-md-tema="sepie"] .vzhled{background-image:var(--zrno)}
+/* Nokturno – tmavě modré, méně modrého svitu než čistě šedé tmavé téma. */
+:root[data-md-tema="nokturno"] {
+  --bg:#0f1621; --bg-deep:#0a1018; --bg-panel:#16202e; --bg-elevated:#16202e;
+  --bg-control:#223047; --bg-input:#121b26; --bg-hover:#1d2938;
+  --text:#ccd8e8; --text-muted:#9bacc2; --text-faint:#78899e;
+  --border:#26354a; --border-strong:#36486180;
+  --accent:#7cc2ff; --accent-soft:rgba(124,194,255,.15); --accent-hover:#a3d5ff;
+  --ok:#5bc48d; --warn:#e8b45a; --danger:#f0736f;
+  --shadow:0 2px 12px rgba(0,0,0,.55);
+  color-scheme: dark;
+}
+/* Les – tlumené zelenošedé, klidné denní téma s nízkým jasem. */
+:root[data-md-tema="les"] {
+  --bg:#e9eee6; --bg-deep:#dde4d8; --bg-panel:#f6f9f3; --bg-elevated:#f6f9f3;
+  --bg-control:#dfe6da; --bg-input:#f6f9f3; --bg-hover:#e2e9dd;
+  --text:#25302a; --text-muted:#44514a; --text-faint:#63705f;
+  --border:#c9d4c3; --border-strong:#adbba6;
+  --accent:#2f6d4f; --accent-soft:rgba(47,109,79,.13); --accent-hover:#215139;
+  --ok:#1d6b3f; --warn:#7a5500; --danger:#b23b2c;
+  --shadow:0 2px 10px rgba(30,50,35,.15);
+  color-scheme: light;
+}
+/* Stará knihovna – tmavý ořech, mosazné kování a list zažloutlého papíru.
+   Tmavé téma, které nesvítí do očí: nic tu není čistě šedé ani čistě bílé. */
+:root[data-md-tema="knihovna"] {
+  --bg:#241c15; --bg-deep:#1a140f; --bg-panel:#2e241b; --bg-elevated:#2e241b;
+  --bg-control:#3b2f23; --bg-input:#2a2118; --bg-hover:#3a2e22;
+  --text:#ece0c8; --text-muted:#c6b494; --text-faint:#9d8b70;
+  --border:#4a3a2a; --border-strong:#65523c;
+  --accent:#d9a441; --accent-soft:rgba(217,164,65,.16); --accent-hover:#f0bc5c;
+  --accent-text:#241c15;      /* na mosazi by bílý text zanikl */
+  --ok:#86b06a; --warn:#e0a63f; --danger:#e0776a;
+  --shadow:0 2px 14px rgba(0,0,0,.5);
+  color-scheme: dark;
+
+  /* list starého papíru – v tmavém prostředí tlumenější, aby nezářil */
+  --list-bg:#e9dcbc; --list-text:#332a1d; --list-muted:#5c4f3a; --list-border:#c2ac84;
+  --list-akcent:#8a4f14; --list-akcent-soft:rgba(138,79,20,.16);
+  --list-kod:#dbcda6; --list-kod-hlava:#d2c197;
+  --zrno: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='z'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='180' height='180' filter='url(%23z)' opacity='0.26'/%3E%3C/svg%3E");
+  --skvrny: radial-gradient(120% 90% at 18% 8%, rgba(255,247,214,.5), rgba(255,247,214,0) 60%),
+            radial-gradient(90% 70% at 88% 92%, rgba(120,88,40,.2), rgba(120,88,40,0) 65%);
+}
+
+/* Vysoký kontrast – pro slabozraké a pro čtení na ostrém světle. */
+:root[data-md-tema="kontrast"] {
+  --bg:#000000; --bg-deep:#000000; --bg-panel:#000000; --bg-elevated:#0b0b0b;
+  --bg-control:#1c1c1c; --bg-input:#000000; --bg-hover:#242424;
+  --text:#ffffff; --text-muted:#ededed; --text-faint:#d0d0d0;
+  --border:#8a8a8a; --border-strong:#ffffff;
+  --accent:#ffd400; --accent-soft:rgba(255,212,0,.2); --accent-hover:#ffe866;
+  --accent-text:#000000;      /* žlutá plocha s bílým textem by byla nečitelná */
+  --ok:#5bff9d; --warn:#ffd400; --danger:#ff7a6e;
+  --shadow:none;
+  color-scheme: dark;
+}
+
+/* ============================================================
+   Rozvržení aplikace
+   ============================================================ */
+:root{ --accent-text:#ffffff; }   /* text na akcentní ploše; témata si ho přepisují */
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;padding:20px}
-.container{max-width:1300px;margin:0 auto}
-h1{font-size:1.6rem;margin-bottom:6px;font-weight:600;text-align:center}
-.podnadpis{text-align:center;color:var(--text-faint);font-size:.85rem;margin-bottom:16px}
-.toolbar{display:flex;gap:10px;justify-content:center;margin-bottom:14px;flex-wrap:wrap;align-items:center}
-.btn{background:var(--accent);color:#fff;border:none;padding:9px 16px;border-radius:6px;cursor:pointer;font-size:.85rem;font-weight:600}
-.btn-sec{background:var(--border);color:var(--text)}
-.btn-sec:hover{background:var(--border-strong)}
-.nazev{background:var(--bg-input);border:1px solid var(--border);color:var(--text);padding:8px 10px;border-radius:6px;font-size:.85rem;width:190px}
-.stav{color:var(--text-faint);font-size:.85rem;min-height:1.2em;text-align:center;margin-bottom:10px}
-.grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-@media(max-width:860px){.grid{grid-template-columns:1fr}}
-.panel{background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;overflow:hidden;display:flex;flex-direction:column}
-.panel h2{font-size:.85rem;color:var(--accent);padding:10px 14px;background:var(--bg-hover);border-bottom:1px solid var(--border);text-transform:uppercase;letter-spacing:1px}
-textarea{flex:1;min-height:440px;background:var(--bg-input);border:none;color:var(--text);padding:14px;font-family:'SF Mono',Consolas,monospace;font-size:.9rem;resize:none;line-height:1.5}
+[hidden]{display:none !important}
+body{font-family:var(--font);background:var(--bg);color:var(--text);height:100vh;overflow:hidden;display:flex;flex-direction:column}
+
+/* pruh postupu čtení – ukazuje, kolik dokumentu je za tebou */
+.prubeh{position:fixed;top:0;left:0;right:0;height:3px;background:transparent;z-index:40;pointer-events:none}
+.prubeh i{display:block;height:100%;width:0;background:var(--accent);transition:width .08s linear}
+
+.hlavicka{flex:none;background:var(--bg-elevated);border-bottom:1px solid var(--border);padding:8px 12px 6px;display:flex;flex-direction:column;gap:6px}
+.radek{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.mezera{flex:1 1 auto;min-width:0}
+h1{font-size:1rem;font-weight:600;white-space:nowrap}
+.btn{background:var(--accent);color:var(--accent-text);border:none;padding:7px 12px;border-radius:6px;cursor:pointer;font-size:.82rem;font-weight:600}
+.btn:hover{background:var(--accent-hover)}
+.btn-sec{background:var(--bg-control);color:var(--text)}
+.btn-sec:hover{background:var(--bg-hover)}
+.nazev{background:var(--bg-input);border:1px solid var(--border);color:var(--text);padding:7px 9px;border-radius:6px;font-size:.82rem;width:150px}
+.ikona{background:transparent;border:1px solid var(--border);color:var(--text-muted);padding:5px 9px;border-radius:6px;cursor:pointer;font-size:.8rem;white-space:nowrap}
+.ikona:hover{background:var(--bg-hover);color:var(--text)}
+.ikona[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+
+/* přepínač režimu zobrazení */
+.rezimy{display:flex;border:1px solid var(--border);border-radius:6px;overflow:hidden;flex:none}
+.rezimy button{background:transparent;border:none;border-right:1px solid var(--border);color:var(--text-muted);padding:6px 10px;cursor:pointer;font-size:.8rem}
+.rezimy button:last-child{border-right:none}
+.rezimy button:hover{background:var(--bg-hover);color:var(--text)}
+.rezimy button.zap{background:var(--accent-soft);color:var(--accent);font-weight:600}
+
+.statistika{font-size:.76rem;color:var(--text-faint);white-space:nowrap}
+.stav{flex:none;color:var(--text-faint);font-size:.78rem;padding:4px 12px;border-bottom:1px solid var(--border);background:var(--bg-panel);min-height:1.7em}
+
+/* hledání v dokumentu */
+.hledani{display:flex;align-items:center;gap:4px}
+.hledani input{background:var(--bg-input);border:1px solid var(--border);color:var(--text);padding:5px 8px;border-radius:6px;font-size:.8rem;width:170px}
+.hledani .pocet{font-size:.74rem;color:var(--text-faint);min-width:42px;text-align:center}
+
+/* panel vzhledu */
+.vzhled{background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius);padding:10px 12px;display:flex;gap:16px;flex-wrap:wrap;align-items:center}
+.vzhled label{font-size:.78rem;color:var(--text-muted);display:flex;align-items:center;gap:6px}
+.vzhled select{background:var(--bg-input);border:1px solid var(--border);color:var(--text);padding:5px 8px;border-radius:6px;font-size:.8rem}
+.vzhled input[type=range]{width:110px;accent-color:var(--accent)}
+.vzhled input[type=checkbox]{accent-color:var(--accent);width:15px;height:15px}
+.vzhled .hodnota{font-size:.74rem;color:var(--text-faint);min-width:34px;display:inline-block;text-align:right}
+.vzhled .skupina{display:flex;align-items:center;gap:6px}
+
+/* pracovní plocha */
+.plocha{flex:1;display:flex;gap:10px;padding:10px 12px;min-height:0}
+.panel{background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;display:flex;flex-direction:column;min-width:0;flex:1}
+.panel > h2{flex:none;font-size:.72rem;color:var(--accent);padding:7px 12px;background:var(--bg-hover);border-bottom:1px solid var(--border);text-transform:uppercase;letter-spacing:1px}
+textarea{flex:1;background:var(--bg-input);border:none;color:var(--text);padding:12px;font-family:'SF Mono',Consolas,monospace;font-size:.88rem;resize:none;line-height:1.55;min-height:0}
 textarea:focus{outline:none}
-.preview{flex:1;min-height:440px;padding:16px 20px;overflow-y:auto;background:var(--bg-input)}
-.preview h1,.preview h2,.preview h3{border-bottom:1px solid var(--border);padding-bottom:4px;margin:12px 0 8px}
-.preview p{margin:8px 0}
-.preview code{background:var(--bg-hover);padding:2px 6px;border-radius:4px;font-family:monospace}
-.preview pre{background:var(--bg-hover);padding:12px;border-radius:6px;overflow-x:auto;margin:10px 0}
-.preview pre code{background:none;padding:0}
-.preview blockquote{border-left:4px solid var(--accent);padding-left:12px;color:var(--text-faint);margin:10px 0}
-.preview table{border-collapse:collapse;margin:10px 0}
+
+/* obsah dokumentu (osnova) */
+.osnova{flex:none;width:250px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius);display:flex;flex-direction:column;overflow:hidden}
+.osnova-hlava{flex:none;padding:7px 10px;background:var(--bg-hover);border-bottom:1px solid var(--border);display:flex;gap:6px;align-items:center}
+.osnova-hlava span{font-size:.72rem;color:var(--accent);text-transform:uppercase;letter-spacing:1px}
+.osnova-hlava input{flex:1;min-width:0;background:var(--bg-input);border:1px solid var(--border);color:var(--text);padding:4px 7px;border-radius:5px;font-size:.76rem}
+.osnova nav{flex:1;overflow-y:auto;padding:6px 0}
+.osnova a{display:block;padding:3px 10px;font-size:.8rem;color:var(--text-muted);text-decoration:none;border-left:2px solid transparent;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.osnova a:hover{background:var(--bg-hover);color:var(--text)}
+.osnova a.tady{color:var(--accent);border-left-color:var(--accent);background:var(--accent-soft)}
+.osnova a[data-uroven="2"]{padding-left:22px}
+.osnova a[data-uroven="3"]{padding-left:34px}
+.osnova a[data-uroven="4"]{padding-left:46px}
+.osnova a[data-uroven="5"],.osnova a[data-uroven="6"]{padding-left:58px}
+.osnova .prazdno{padding:10px;font-size:.78rem;color:var(--text-faint)}
+
+/* náhled / čtečka */
+.preview{flex:1;padding:18px 22px 60px;overflow-y:auto;background:var(--bg-deep);min-height:0;scroll-behavior:smooth;
+  --cte-vel:16px;--cte-radek:1.65;--cte-sirka:74ch;--cte-pismo:var(--font);
+  font-size:var(--cte-vel);line-height:var(--cte-radek);font-family:var(--cte-pismo)}
+.preview h1,.preview h2,.preview h3,.preview h4,.preview h5,.preview h6{line-height:1.3;margin:1.4em 0 .5em;position:relative}
+.preview h1{font-size:1.7em;border-bottom:1px solid var(--border);padding-bottom:.25em}
+.preview h2{font-size:1.38em;border-bottom:1px solid var(--border);padding-bottom:.2em}
+.preview h3{font-size:1.16em}
+.preview h4,.preview h5,.preview h6{font-size:1em;color:var(--text-muted)}
+.telo{background-color:var(--list-bg,var(--bg-input));background-image:var(--zrno,none),var(--skvrny,none);
+  border:1px solid var(--border);border-radius:var(--radius);box-shadow:var(--shadow);padding:26px 30px}
+/* Témata s papírem mají na listu vlastní sadu barev – text na něm leží i v tmavém
+   prostředí, takže se barvy z okolí (např. mosazná linka) nedají použít. */
+:root[data-md-tema="sepie"] .telo,
+:root[data-md-tema="knihovna"] .telo{
+  color:var(--list-text);
+  --text:var(--list-text); --text-muted:var(--list-muted); --text-faint:var(--list-muted);
+  --border:var(--list-border); --border-strong:var(--list-border);
+  --accent:var(--list-akcent); --accent-hover:var(--list-akcent); --accent-soft:var(--list-akcent-soft);
+  --bg-hover:var(--list-kod); --bg-control:var(--list-kod-hlava);
+}
+.preview .telo > :first-child{margin-top:0}
+.preview p{margin:.8em 0}
+.preview code{background:var(--bg-hover);padding:2px 5px;border-radius:4px;font-family:'SF Mono',Consolas,monospace;font-size:.88em}
+.preview pre{background:var(--bg-hover);padding:12px 14px;overflow-x:auto;margin:0;font-size:.88em;line-height:1.5}
+.preview pre code{background:none;padding:0;font-size:1em}
+.preview blockquote{border-left:4px solid var(--accent);padding:.1em 0 .1em 14px;color:var(--text-muted);margin:1em 0;font-style:italic}
+.preview table{border-collapse:collapse;margin:1em 0;display:block;overflow-x:auto;max-width:100%}
 .preview td,.preview th{border:1px solid var(--border);padding:6px 10px}
+.preview th{background:var(--bg-hover)}
+.preview tbody tr:nth-child(even){background:var(--bg-hover)}
 .preview a{color:var(--accent)}
-.preview ul,.preview ol{margin:8px 0 8px 22px}
-.preview img{max-width:100%}
-body.tahnu{outline:3px dashed var(--accent);outline-offset:-8px}
+.preview ul,.preview ol{margin:.8em 0 .8em 1.5em}
+.preview li{margin:.3em 0}
+.preview li > ul,.preview li > ol{margin:.3em 0 .3em 1.2em}
+.preview img{max-width:100%;border-radius:var(--radius)}
+.preview hr{border:none;border-top:1px solid var(--border);margin:1.8em 0}
+.preview.blok p,.preview.blok li{text-align:justify;hyphens:auto}
+
+/* sbalitelné nadpisy – u dlouhých dokumentů zkrátí stránku na osnovu */
+.preview .sbal{position:absolute;left:-1.1em;top:.15em;width:1em;background:none;border:none;color:var(--text-faint);cursor:pointer;font-size:.8em;line-height:1;padding:0;opacity:0;transition:opacity .12s}
+.preview h1:hover .sbal,.preview h2:hover .sbal,.preview h3:hover .sbal,
+.preview h4:hover .sbal,.preview h5:hover .sbal,.preview h6:hover .sbal{opacity:1}
+.preview .sbal[aria-expanded="false"]{opacity:1;color:var(--accent)}
+.preview .skryto{display:none}
+.preview .sbaleno-znacka{font-size:.72em;color:var(--text-faint);margin-left:.6em;font-weight:400;font-style:italic}
+
+/* bloky kódu – hlavička s jazykem, kopírováním a sbalením */
+.kod-blok{margin:1em 0;border:1px solid var(--border);border-radius:var(--radius);overflow:hidden;background:var(--bg-hover)}
+.kod-hlava{display:flex;align-items:center;gap:8px;padding:4px 8px;background:var(--bg-control);border-bottom:1px solid var(--border);font-size:.72rem;color:var(--text-faint);font-family:var(--font)}
+.kod-hlava .jmeno{font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px}
+.kod-hlava .mezera{flex:1}
+.kod-hlava button{background:transparent;border:1px solid var(--border);color:var(--text-muted);border-radius:5px;padding:2px 7px;font-size:.7rem;cursor:pointer}
+.kod-hlava button:hover{background:var(--bg-hover);color:var(--text)}
+.kod-blok.sbaleno pre{display:none}
+.kod-blok.sbaleno{background:var(--bg-control)}
+
+/* hledání – zvýraznění nálezů */
+.preview mark.nalez{background:#ffe08a;color:#1a1a1a;border-radius:3px;padding:0 1px}
+.preview mark.nalez.aktivni{background:#ff9b3d;color:#1a1a1a;box-shadow:0 0 0 2px rgba(255,155,61,.45)}
+
+/* tlačítko zpět nahoru */
+.nahoru{position:fixed;right:20px;bottom:40px;width:38px;height:38px;border-radius:50%;border:1px solid var(--border);background:var(--bg-elevated);color:var(--text-muted);cursor:pointer;font-size:1.1rem;box-shadow:var(--shadow);z-index:30}
+.nahoru:hover{color:var(--accent);border-color:var(--accent)}
+
+/* režimy zobrazení */
+[data-rezim="cteni"] .panel-editor{display:none}
+[data-rezim="editor"] .panel-nahled{display:none}
+[data-rezim="editor"] .osnova{display:none}
+[data-rezim="cteni"] .preview .telo{max-width:var(--cte-sirka);margin:0 auto}
+[data-rezim="cteni"] .preview{padding:28px 24px 25vh}
+[data-rezim="cteni"] .telo{padding:40px 44px 48px}
+[data-rezim="cteni"] .panel-nahled > h2{display:none}
+
+body.tahnu{outline:3px dashed var(--accent);outline-offset:-6px}
+
+@media(max-width:900px){
+  .plocha{flex-direction:column}
+  .osnova{width:auto;max-height:32vh}
+  h1{font-size:.92rem}
+  .nazev{width:110px}
+}
+@media(max-width:640px){
+  .dlouhy{display:none}
+  .statistika{display:none}
+  .btn,.ikona,.rezimy button{padding:6px 8px}
+  .nazev{width:88px}
+  .hledani input{width:120px}
+  .vzhled{gap:10px}
+  .preview{padding:14px 14px 40px}
+  [data-rezim="cteni"] .preview{padding:16px 14px 20vh}
+}
+
+/* tisk / uložení do PDF: jen text dokumentu, vše rozbalené */
+@media print{
+  body{height:auto;overflow:visible;background:#fff;color:#000;display:block}
+  .hlavicka,.stav,.osnova,.panel-editor,.prubeh,.nahoru,.kod-hlava,.preview .sbal{display:none !important}
+  .plocha{display:block;padding:0}
+  .panel{border:none;background:#fff;display:block}
+  .preview,.panel,body,.telo{background-image:none !important}
+  .telo{background-color:#fff;border:none;box-shadow:none;padding:0;color:#000}
+  .preview{overflow:visible;background:#fff;color:#000;padding:0;height:auto;font-size:11pt}
+  .preview .skryto{display:revert !important}
+  .kod-blok.sbaleno pre{display:block !important}
+  .kod-blok{border:1px solid #bbb;background:#f6f6f6}
+  .preview a{color:#0057b8}
+  .preview pre{background:#f2f2f2}
+}
 </style>
 </head>
 <body>
-<div class="container">
-  <h1>📄 Markdown → DOCX / ODT</h1>
-  <p class="podnadpis">Převod textu v Markdownu na dokument pro Word (.docx), LibreOffice (.odt) nebo starší Word (.doc). Vše probíhá v prohlížeči, nic se nikam neodesílá.</p>
-  <div class="toolbar">
-    <button class="btn btn-sec" id="otevriBtn">📂 Načíst .md</button>
+<div class="prubeh"><i id="prubeh"></i></div>
+
+<header class="hlavicka">
+  <div class="radek">
+    <h1 id="titulek">📄<span class="dlouhy"> Markdown → DOCX / ODT</span></h1>
+    <div class="rezimy" role="group" aria-label="Režim zobrazení">
+      <button data-rezim="editor" title="Jen zdrojový Markdown (Alt+1)">✏️ Editor</button>
+      <button data-rezim="split" title="Zdroj i náhled vedle sebe (Alt+2)">◫ Rozdělené</button>
+      <button data-rezim="cteni" title="Jen dokument, zdrojový kód skrytý (Alt+3)">📖 Čtení</button>
+    </div>
+    <span class="mezera"></span>
+    <button class="btn btn-sec" id="otevriBtn">📂<span class="dlouhy"> Načíst .md</span></button>
     <input type="file" id="soubor" accept=".md,.markdown,.txt,text/markdown,text/plain" hidden>
     <input type="text" class="nazev" id="nazevSouboru" value="dokument" title="Název výsledného souboru (bez přípony)">
-    <button class="btn" id="docxBtn">💾 Stáhnout .docx</button>
-    <button class="btn" id="odtBtn">💾 Stáhnout .odt</button>
-    <button class="btn btn-sec" id="docBtn">💾 Stáhnout .doc</button>
-    <button class="btn btn-sec" id="vycistiBtn">🗑️ Vyčistit</button>
+    <button class="btn" id="docxBtn">💾 .docx</button>
+    <button class="btn" id="odtBtn">💾 .odt</button>
+    <button class="btn btn-sec" id="docBtn">💾 .doc</button>
+    <button class="btn btn-sec" id="vycistiBtn" title="Vyprázdnit dokument">🗑️</button>
   </div>
-  <p class="stav" id="stav">Soubor .md můžeš také přetáhnout kamkoli na stránku.</p>
-  <div class="grid">
-    <div class="panel">
-      <h2>Markdown vstup</h2>
-      <textarea id="vstup" placeholder="# Nadpis&#10;&#10;Napiš **markdown**…" spellcheck="false"></textarea>
+  <div class="radek">
+    <button class="ikona" id="osnovaBtn" aria-pressed="false" title="Obsah dokumentu (Alt+O)">▤<span class="dlouhy"> Obsah</span></button>
+    <button class="ikona" id="hledatBtn" title="Hledat v dokumentu (Ctrl+F)">🔍<span class="dlouhy"> Hledat</span></button>
+    <div class="hledani" id="hledani" hidden>
+      <input type="search" id="dotaz" placeholder="Hledat v dokumentu…" autocomplete="off">
+      <span class="pocet" id="pocetNalezu">0/0</span>
+      <button class="ikona" id="predchoziBtn" title="Předchozí nález (Shift+Enter)">▲</button>
+      <button class="ikona" id="dalsiBtn" title="Další nález (Enter)">▼</button>
+      <button class="ikona" id="zavriHledaniBtn" title="Zavřít hledání (Esc)">✕</button>
     </div>
-    <div class="panel">
-      <h2>Náhled dokumentu</h2>
-      <div class="preview" id="nahled"></div>
-    </div>
+    <button class="ikona" id="sbalVseBtn" title="Sbalit/rozbalit všechny oddíly">⇕<span class="dlouhy"> Oddíly</span></button>
+    <span class="mezera"></span>
+    <span class="statistika" id="statistika"></span>
+    <span class="mezera"></span>
+    <button class="ikona" id="vzhledBtn" aria-pressed="false" title="Téma, písmo, šířka sloupce">🎨<span class="dlouhy"> Vzhled</span></button>
+    <button class="ikona" id="tiskBtn" title="Tisk nebo uložení do PDF (Ctrl+P)">🖨️<span class="dlouhy"> Tisk</span></button>
+    <button class="ikona" id="celaBtn" title="Celá obrazovka (F)">⤢<span class="dlouhy"> Celá</span></button>
   </div>
-</div>
+  <div class="vzhled" id="panelVzhled" hidden>
+    <label>🎨 Téma
+      <select id="temaVyber">
+        <option value="auto">Podle rozcestníku</option>
+        <option value="light">Světlé</option>
+        <option value="dark">Tmavé</option>
+        <option value="sepie">Sépie (papír)</option>
+        <option value="les">Les</option>
+        <option value="nokturno">Nokturno</option>
+        <option value="knihovna">Stará knihovna</option>
+        <option value="kontrast">Vysoký kontrast</option>
+      </select>
+    </label>
+    <label>🔤 Písmo
+      <select id="pismoVyber">
+        <option value="system">Systémové</option>
+        <option value="serif">Patkové (na čtení)</option>
+        <option value="sans">Bezpatkové</option>
+        <option value="mono">Strojopis</option>
+      </select>
+    </label>
+    <span class="skupina">Aa
+      <input type="range" id="velikost" min="13" max="26" step="1" title="Velikost písma">
+      <span class="hodnota" id="velikostHodnota"></span>
+    </span>
+    <span class="skupina">↕
+      <input type="range" id="radkovani" min="13" max="23" step="1" title="Řádkování">
+      <span class="hodnota" id="radkovaniHodnota"></span>
+    </span>
+    <span class="skupina">↔
+      <input type="range" id="sirka" min="50" max="120" step="2" title="Šířka sloupce textu (v režimu čtení)">
+      <span class="hodnota" id="sirkaHodnota"></span>
+    </span>
+    <label><input type="checkbox" id="blokText"> Do bloku</label>
+    <label><input type="checkbox" id="sbalKod"> Sbalit bloky kódu</label>
+    <button class="ikona" id="vychoziBtn" title="Vrátit výchozí nastavení čtení">↺ Výchozí</button>
+  </div>
+</header>
+
+<p class="stav" id="stav">Soubor .md můžeš přetáhnout kamkoli na stránku.</p>
+
+<main class="plocha">
+  <aside class="osnova" id="osnovaPanel" hidden>
+    <div class="osnova-hlava"><span>Obsah</span><input type="search" id="osnovaFiltr" placeholder="filtr…" autocomplete="off"></div>
+    <nav id="osnova"></nav>
+  </aside>
+  <section class="panel panel-editor">
+    <h2>Markdown vstup</h2>
+    <textarea id="vstup" placeholder="# Nadpis&#10;&#10;Napiš **markdown**…" spellcheck="false"></textarea>
+  </section>
+  <section class="panel panel-nahled">
+    <h2>Náhled dokumentu</h2>
+    <div class="preview" id="nahled"></div>
+  </section>
+</main>
+
+<button class="nahoru" id="nahoruBtn" hidden title="Zpět nahoru">↑</button>
+
 <script>
 (function () {
   'use strict';
@@ -555,6 +901,7 @@ body.tahnu{outline:3px dashed var(--accent);outline-offset:-8px}
   function prevod() {
     html = marked.parse($('vstup').value || '');
     $('nahled').innerHTML = html;
+    document.dispatchEvent(new CustomEvent('md-vykresleno'));
   }
   function stav(t) { $('stav').textContent = t; }
   function stahni(blob, pripona) {
@@ -615,6 +962,458 @@ body.tahnu{outline:3px dashed var(--accent);outline-offset:-8px}
 
   /* Zpřístupněno pro automatické testy (_test/md_dokument.py). */
   window.MD_DOKUMENT = { bloky: bloky, docx: docx, odt: odt, doc: doc, marked: marked };
+})();
+</script>
+
+<script>
+/* ============================================================
+   Čtečka – vše kolem pohodlného čtení dlouhých .md souborů:
+   témata, režimy zobrazení, typografie, osnova, hledání,
+   sbalování oddílů i bloků kódu a pamatování rozečtené stránky.
+
+   S převodníkem výš komunikuje jen přes událost `md-vykresleno`,
+   kterou vyvolá po každém překreslení náhledu, a přes hodnotu
+   #vstup. Export do DOCX/ODT pracuje s HTML od knihovny marked,
+   ne s DOM náhledu, takže úpravy níže (obaly kódu, kotvy nadpisů)
+   se do výsledných dokumentů nepromítnou.
+   ============================================================ */
+(function () {
+  'use strict';
+  const $ = id => document.getElementById(id);
+  const nahled = $('nahled');
+
+  const KLIC_NASTAVENI = 'md_dokument_cteni';
+  const KLIC_TEXT = 'md_dokument_text';
+  const KLIC_POZICE = 'md_dokument_pozice';
+
+  const VYCHOZI = { tema: 'auto', rezim: 'split', vel: 16, radek: 16, sirka: 74,
+                    pismo: 'system', blok: false, sbalKod: false, osnova: false };
+
+  const PISMA = {
+    system: 'var(--font)',
+    serif: 'Georgia, "Times New Roman", "Liberation Serif", serif',
+    sans: '"Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif',
+    mono: '"SF Mono", Consolas, "DejaVu Sans Mono", monospace'
+  };
+
+  /* Přes file:// nebo při zakázaném úložišti localStorage vyhodí výjimku. */
+  function precti(klic) { try { return localStorage.getItem(klic); } catch { return null; } }
+  function zapis(klic, hodnota) { try { localStorage.setItem(klic, hodnota); } catch { /* jen se nezapamatuje */ } }
+
+  let nast = Object.assign({}, VYCHOZI);
+  try { Object.assign(nast, JSON.parse(precti(KLIC_NASTAVENI) || '{}')); } catch { /* poškozený záznam */ }
+
+  function uloz() { zapis(KLIC_NASTAVENI, JSON.stringify(nast)); }
+
+  /* ---------- téma ----------
+     'auto' = řídí rozcestník (theme.js + common.css). Jakákoli jiná volba
+     se zapíše do data-md-tema a přebije i zprávu z rozcestníku. */
+  function pouzijTema() {
+    if (nast.tema === 'auto') delete document.documentElement.dataset.mdTema;
+    else document.documentElement.dataset.mdTema = nast.tema;
+  }
+
+  /* ---------- typografie ---------- */
+  function pouzijVzhled() {
+    const s = nahled.style;
+    s.setProperty('--cte-vel', nast.vel + 'px');
+    s.setProperty('--cte-radek', (nast.radek / 10).toFixed(1));
+    s.setProperty('--cte-sirka', nast.sirka + 'ch');
+    s.setProperty('--cte-pismo', PISMA[nast.pismo] || PISMA.system);
+    nahled.classList.toggle('blok', !!nast.blok);
+    $('velikostHodnota').textContent = nast.vel + ' px';
+    $('radkovaniHodnota').textContent = (nast.radek / 10).toFixed(1);
+    $('sirkaHodnota').textContent = nast.sirka + ' zn.';
+    $('velikost').value = nast.vel;
+    $('radkovani').value = nast.radek;
+    $('sirka').value = nast.sirka;
+    $('temaVyber').value = nast.tema;
+    $('pismoVyber').value = nast.pismo;
+    $('blokText').checked = !!nast.blok;
+    $('sbalKod').checked = !!nast.sbalKod;
+  }
+
+  /* ---------- režim zobrazení ---------- */
+  function pouzijRezim(rezim) {
+    nast.rezim = rezim;
+    document.body.dataset.rezim = rezim;
+    document.querySelectorAll('.rezimy button').forEach(b =>
+      b.classList.toggle('zap', b.dataset.rezim === rezim));
+    uloz();
+    aktualizujPrubeh();
+  }
+
+  function pouzijOsnovu(zapnuto) {
+    nast.osnova = zapnuto;
+    $('osnovaPanel').hidden = !zapnuto || nast.rezim === 'editor';
+    $('osnovaBtn').setAttribute('aria-pressed', String(zapnuto));
+    uloz();
+  }
+
+  /* ---------- osnova (obsah dokumentu) ---------- */
+  const NADPISY = 'h1,h2,h3,h4,h5,h6';
+  let kotvy = [];
+
+  function postavOsnovu() {
+    const nav = $('osnova');
+    nav.textContent = '';
+    kotvy = Array.from(nahled.querySelectorAll(NADPISY));
+    if (!kotvy.length) {
+      const p = document.createElement('p');
+      p.className = 'prazdno';
+      p.textContent = 'Dokument nemá nadpisy.';
+      nav.appendChild(p);
+      return;
+    }
+    kotvy.forEach((h, i) => {
+      h.id = h.id || 'nadpis-' + i;
+      const a = document.createElement('a');
+      a.href = '#' + h.id;
+      a.dataset.uroven = h.tagName[1];
+      a.textContent = h.dataset.text || h.textContent;
+      a.onclick = e => {
+        e.preventDefault();
+        // cíl může být schovaný ve sbaleném oddílu – pak se nejdřív rozbalí
+        if (!h.offsetParent) rozbalVse();
+        h.scrollIntoView({ block: 'start' });
+      };
+      nav.appendChild(a);
+    });
+    filtrujOsnovu();
+    zvyrazniVOsnove();
+  }
+
+  function filtrujOsnovu() {
+    const dotaz = $('osnovaFiltr').value.trim().toLowerCase();
+    $('osnova').querySelectorAll('a').forEach(a => {
+      a.hidden = !!dotaz && !a.textContent.toLowerCase().includes(dotaz);
+    });
+  }
+
+  /* Zvýrazní v osnově nadpis, u kterého právě jsi. */
+  function zvyrazniVOsnove() {
+    if (!kotvy.length) return;
+    const hranice = nahled.getBoundingClientRect().top + 80;
+    let aktivni = 0;
+    kotvy.forEach((h, i) => { if (h.offsetParent && h.getBoundingClientRect().top <= hranice) aktivni = i; });
+    $('osnova').querySelectorAll('a').forEach((a, i) => a.classList.toggle('tady', i === aktivni));
+  }
+
+  /* ---------- sbalitelné oddíly ---------- */
+  function pridejSbalovani() {
+    nahled.querySelectorAll(NADPISY).forEach(h => {
+      h.dataset.text = h.textContent;
+      const b = document.createElement('button');
+      b.className = 'sbal';
+      b.type = 'button';
+      b.textContent = '▾';
+      b.setAttribute('aria-expanded', 'true');
+      b.title = 'Sbalit / rozbalit oddíl';
+      b.onclick = () => prepniOddil(h);
+      h.prepend(b);
+    });
+  }
+
+  function prepniOddil(h, vynut) {
+    const b = h.querySelector('.sbal');
+    if (!b) return;
+    const sbalit = vynut === undefined ? b.getAttribute('aria-expanded') === 'true' : vynut;
+    const uroven = +h.tagName[1];
+    let pocet = 0;
+    for (let el = h.nextElementSibling; el; el = el.nextElementSibling) {
+      if (/^H[1-6]$/.test(el.tagName) && +el.tagName[1] <= uroven) break;
+      el.classList.toggle('skryto', sbalit);
+      pocet++;
+    }
+    b.setAttribute('aria-expanded', String(!sbalit));
+    b.textContent = sbalit ? '▸' : '▾';
+    const stara = h.querySelector('.sbaleno-znacka');
+    if (stara) stara.remove();
+    if (sbalit && pocet) {
+      const z = document.createElement('span');
+      z.className = 'sbaleno-znacka';
+      z.textContent = '(' + pocet + ' skrytých bloků)';
+      h.appendChild(z);
+    }
+  }
+
+  function rozbalVse() { nahled.querySelectorAll(NADPISY).forEach(h => prepniOddil(h, false)); }
+  function sbalVse() { nahled.querySelectorAll(NADPISY).forEach(h => prepniOddil(h, true)); }
+
+  /* ---------- bloky kódu ---------- */
+  function obalKod() {
+    nahled.querySelectorAll('pre').forEach(pre => {
+      const kod = pre.querySelector('code');
+      const jazyk = (kod && (kod.className.match(/language-([\w+#.-]+)/) || [])[1]) || 'kód';
+      const radky = pre.textContent.replace(/\n$/, '').split('\n').length;
+
+      const obal = document.createElement('div');
+      obal.className = 'kod-blok';
+      const hlava = document.createElement('div');
+      hlava.className = 'kod-hlava';
+
+      const jmeno = document.createElement('span');
+      jmeno.className = 'jmeno';
+      jmeno.textContent = jazyk;
+      const pocet = document.createElement('span');
+      pocet.textContent = radky + (radky === 1 ? ' řádek' : radky < 5 ? ' řádky' : ' řádků');
+      const mezera = document.createElement('span');
+      mezera.className = 'mezera';
+
+      const kopiruj = document.createElement('button');
+      kopiruj.type = 'button';
+      kopiruj.textContent = '⧉ Kopírovat';
+      kopiruj.onclick = () => {
+        const text = pre.textContent;
+        const hotovo = () => { kopiruj.textContent = '✓ Zkopírováno'; setTimeout(() => kopiruj.textContent = '⧉ Kopírovat', 1500); };
+        // clipboard API je jen v zabezpečeném kontextu (https/localhost)
+        if (navigator.clipboard && window.isSecureContext) navigator.clipboard.writeText(text).then(hotovo, nahradniKopie);
+        else nahradniKopie();
+        function nahradniKopie() {
+          const t = document.createElement('textarea');
+          t.value = text; t.style.position = 'fixed'; t.style.opacity = '0';
+          document.body.appendChild(t); t.select();
+          try { document.execCommand('copy'); hotovo(); } catch { kopiruj.textContent = '✗ Nelze'; }
+          t.remove();
+        }
+      };
+
+      const prepni = document.createElement('button');
+      prepni.type = 'button';
+      prepni.textContent = '▾';
+      prepni.title = 'Sbalit / rozbalit kód';
+      prepni.onclick = () => {
+        const sbaleno = obal.classList.toggle('sbaleno');
+        prepni.textContent = sbaleno ? '▸' : '▾';
+      };
+
+      hlava.append(jmeno, pocet, mezera, kopiruj, prepni);
+      pre.replaceWith(obal);
+      obal.append(hlava, pre);
+      if (nast.sbalKod) { obal.classList.add('sbaleno'); prepni.textContent = '▸'; }
+    });
+  }
+
+  /* ---------- hledání v dokumentu ---------- */
+  let nalezy = [], kdeJsem = -1;
+
+  function zrusZvyrazneni() {
+    nahled.querySelectorAll('mark.nalez').forEach(m => m.replaceWith(document.createTextNode(m.textContent)));
+    nahled.normalize();
+    nalezy = []; kdeJsem = -1;
+  }
+
+  function hledej() {
+    const dotaz = $('dotaz').value;
+    zrusZvyrazneni();
+    if (dotaz.length < 2) { $('pocetNalezu').textContent = '0/0'; return; }
+    const jehla = dotaz.toLowerCase();
+    const chodec = document.createTreeWalker(nahled, NodeFilter.SHOW_TEXT, {
+      acceptNode: n => (n.nodeValue.toLowerCase().includes(jehla) && !n.parentElement.closest('.kod-hlava, .sbaleno-znacka, .skryto'))
+        ? NodeFilter.FILTER_ACCEPT : NodeFilter.FILTER_REJECT
+    });
+    const uzly = [];
+    for (let n = chodec.nextNode(); n; n = chodec.nextNode()) uzly.push(n);
+    uzly.forEach(uzel => {
+      let zbytek = uzel, poloha;
+      while ((poloha = zbytek.nodeValue.toLowerCase().indexOf(jehla)) !== -1) {
+        const stred = zbytek.splitText(poloha);
+        zbytek = stred.splitText(jehla.length);
+        const m = document.createElement('mark');
+        m.className = 'nalez';
+        stred.replaceWith(m);
+        m.appendChild(stred);
+        nalezy.push(m);
+      }
+    });
+    if (nalezy.length) skoc(0); else $('pocetNalezu').textContent = '0/0';
+  }
+
+  function skoc(kam) {
+    if (!nalezy.length) return;
+    kdeJsem = (kam + nalezy.length) % nalezy.length;
+    nalezy.forEach((m, i) => m.classList.toggle('aktivni', i === kdeJsem));
+    nalezy[kdeJsem].scrollIntoView({ block: 'center' });
+    $('pocetNalezu').textContent = (kdeJsem + 1) + '/' + nalezy.length;
+  }
+
+  function otevriHledani(otevrit) {
+    $('hledani').hidden = !otevrit;
+    $('hledatBtn').setAttribute('aria-pressed', String(otevrit));
+    if (otevrit) { $('dotaz').focus(); $('dotaz').select(); }
+    else zrusZvyrazneni();
+  }
+
+  /* ---------- statistika a postup ---------- */
+  function statistika() {
+    const text = $('vstup').value;
+    const slova = (text.match(/[^\s]+/g) || []).length;
+    const minuty = Math.max(1, Math.round(slova / 200));
+    const poctuNadpisu = nahled.querySelectorAll(NADPISY).length;
+    $('statistika').textContent = slova.toLocaleString('cs') + ' slov · ' +
+      text.length.toLocaleString('cs') + ' znaků · ' + poctuNadpisu + ' nadpisů · ~' + minuty + ' min čtení';
+  }
+
+  function aktualizujPrubeh() {
+    const lze = nahled.scrollHeight - nahled.clientHeight;
+    const podil = lze > 8 ? nahled.scrollTop / lze : 0;
+    $('prubeh').style.width = (podil * 100).toFixed(1) + '%';
+    $('nahoruBtn').hidden = nahled.scrollTop < 300;
+  }
+
+  /* ---------- pamatování textu a rozečtené pozice ---------- */
+  function otisk(s) {           // jednoduchý hash, jen na poznání „je to týž dokument“
+    let h = 0;
+    for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) | 0;
+    return s.length + ':' + h;
+  }
+
+  let casovacUlozeni = 0;
+  function ulozText() {
+    clearTimeout(casovacUlozeni);
+    casovacUlozeni = setTimeout(() => zapis(KLIC_TEXT, $('vstup').value), 600);
+  }
+
+  let casovacPozice = 0;
+  function ulozPozici() {
+    clearTimeout(casovacPozice);
+    casovacPozice = setTimeout(() => {
+      zapis(KLIC_POZICE, JSON.stringify({ otisk: otisk($('vstup').value), y: Math.round(nahled.scrollTop) }));
+    }, 400);
+  }
+
+  function obnovPozici() {
+    let ulozeno;
+    try { ulozeno = JSON.parse(precti(KLIC_POZICE) || 'null'); } catch { return; }
+    if (!ulozeno || ulozeno.otisk !== otisk($('vstup').value) || !ulozeno.y) return;
+    // scroll-behavior:smooth by skok animoval přes celý dokument
+    const puvodni = nahled.style.scrollBehavior;
+    nahled.style.scrollBehavior = 'auto';
+    nahled.scrollTop = ulozeno.y;
+    nahled.style.scrollBehavior = puvodni;
+    $('stav').textContent = 'Pokračuješ tam, kde jsi minule skončil(a).';
+  }
+
+  /* ---------- po každém překreslení náhledu ---------- */
+  /* Vše vykreslené se vloží do jednoho obalu – na něm drží šířka sloupce
+     textu v režimu čtení (jednotka „ch“ se počítá z písma daného prvku). */
+  function obalTelo() {
+    if (nahled.firstElementChild && nahled.firstElementChild.classList.contains('telo')) return;
+    const telo = document.createElement('div');
+    telo.className = 'telo';
+    while (nahled.firstChild) telo.appendChild(nahled.firstChild);
+    nahled.appendChild(telo);
+  }
+
+  document.addEventListener('md-vykresleno', () => {
+    zrusZvyrazneni();
+    obalTelo();
+    obalKod();
+    pridejSbalovani();
+    postavOsnovu();
+    statistika();
+    aktualizujPrubeh();
+    if ($('dotaz').value && !$('hledani').hidden) hledej();
+    ulozText();
+  });
+
+  /* ---------- ovládání ---------- */
+  document.querySelectorAll('.rezimy button').forEach(b =>
+    b.onclick = () => { pouzijRezim(b.dataset.rezim); pouzijOsnovu(nast.osnova); });
+
+  $('osnovaBtn').onclick = () => pouzijOsnovu(!nast.osnova);
+  $('osnovaFiltr').oninput = filtrujOsnovu;
+  $('vzhledBtn').onclick = () => {
+    const otevrit = $('panelVzhled').hidden;
+    $('panelVzhled').hidden = !otevrit;
+    $('vzhledBtn').setAttribute('aria-pressed', String(otevrit));
+  };
+  $('hledatBtn').onclick = () => otevriHledani($('hledani').hidden);
+  $('zavriHledaniBtn').onclick = () => otevriHledani(false);
+  $('dotaz').oninput = hledej;
+  $('dotaz').onkeydown = e => {
+    if (e.key === 'Enter') { e.preventDefault(); nalezy.length ? skoc(kdeJsem + (e.shiftKey ? -1 : 1)) : hledej(); }
+    if (e.key === 'Escape') otevriHledani(false);
+  };
+  $('dalsiBtn').onclick = () => skoc(kdeJsem + 1);
+  $('predchoziBtn').onclick = () => skoc(kdeJsem - 1);
+
+  let vseSbaleno = false;
+  $('sbalVseBtn').onclick = () => { vseSbaleno = !vseSbaleno; vseSbaleno ? sbalVse() : rozbalVse(); };
+
+  $('tiskBtn').onclick = () => window.print();
+  $('celaBtn').onclick = () => {
+    if (document.fullscreenElement) document.exitFullscreen();
+    else document.documentElement.requestFullscreen?.().catch(() => {
+      $('stav').textContent = 'Celou obrazovku prohlížeč nepovolil – zkus klávesu F11.';
+    });
+  };
+  $('nahoruBtn').onclick = () => nahled.scrollTo({ top: 0 });
+
+  $('temaVyber').onchange = e => { nast.tema = e.target.value; pouzijTema(); uloz(); };
+  $('pismoVyber').onchange = e => { nast.pismo = e.target.value; pouzijVzhled(); uloz(); };
+  $('velikost').oninput = e => { nast.vel = +e.target.value; pouzijVzhled(); uloz(); };
+  $('radkovani').oninput = e => { nast.radek = +e.target.value; pouzijVzhled(); uloz(); };
+  $('sirka').oninput = e => { nast.sirka = +e.target.value; pouzijVzhled(); uloz(); };
+  $('blokText').onchange = e => { nast.blok = e.target.checked; pouzijVzhled(); uloz(); };
+  $('sbalKod').onchange = e => {
+    nast.sbalKod = e.target.checked;
+    uloz();
+    nahled.querySelectorAll('.kod-blok').forEach(o => {
+      o.classList.toggle('sbaleno', nast.sbalKod);
+      o.querySelector('.kod-hlava button:last-child').textContent = nast.sbalKod ? '▸' : '▾';
+    });
+  };
+  $('vychoziBtn').onclick = () => {
+    const tema = nast.tema;                       // téma je volba, ne typografie – zůstává
+    nast = Object.assign({}, VYCHOZI, { tema: tema, rezim: nast.rezim, osnova: nast.osnova });
+    pouzijVzhled(); uloz();
+    nahled.querySelectorAll('.kod-blok.sbaleno').forEach(o => {
+      o.classList.remove('sbaleno');
+      o.querySelector('.kod-hlava button:last-child').textContent = '▾';
+    });
+  };
+
+  nahled.addEventListener('scroll', () => { aktualizujPrubeh(); zvyrazniVOsnove(); ulozPozici(); }, { passive: true });
+  $('vstup').addEventListener('input', () => { statistika(); });
+
+  // načtení souboru přepne do čtení – proto ho uživatel nejčastěji otevírá
+  $('soubor').addEventListener('change', e => {
+    if (e.target.files && e.target.files.length) pouzijRezim('cteni');
+  });
+  document.addEventListener('drop', () => pouzijRezim('cteni'));
+
+  /* ---------- klávesové zkratky ---------- */
+  document.addEventListener('keydown', e => {
+    const vePoli = /^(INPUT|TEXTAREA|SELECT)$/.test(e.target.tagName);
+    if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'f') { e.preventDefault(); otevriHledani(true); return; }
+    if (e.key === 'Escape') { if (!$('hledani').hidden) otevriHledani(false); return; }
+    if (e.altKey && !e.ctrlKey && !e.metaKey) {
+      const rezimy = { '1': 'editor', '2': 'split', '3': 'cteni' };
+      if (rezimy[e.key]) { e.preventDefault(); pouzijRezim(rezimy[e.key]); pouzijOsnovu(nast.osnova); return; }
+      if (e.key.toLowerCase() === 'o') { e.preventDefault(); pouzijOsnovu(!nast.osnova); return; }
+    }
+    if (vePoli || e.ctrlKey || e.metaKey || e.altKey) return;
+    if (e.key === 'f') { e.preventDefault(); $('celaBtn').click(); }
+  });
+
+  /* ---------- start ---------- */
+  pouzijTema();
+  pouzijVzhled();
+  pouzijRezim(nast.rezim);
+  pouzijOsnovu(nast.osnova);
+
+  // Rozečtený text z minule. Převodník výš vložil ukázku; vlastní text ji
+  // nahradí a `input` donutí převodník překreslit náhled.
+  const ulozenyText = precti(KLIC_TEXT);
+  if (ulozenyText && ulozenyText.trim() && ulozenyText !== $('vstup').value) {
+    $('vstup').value = ulozenyText;
+    $('vstup').dispatchEvent(new Event('input'));
+    $('stav').textContent = 'Obnoven text z minula. „🗑️“ ho smaže, „📂 Načíst .md“ nahradí souborem.';
+    obnovPozici();
+  } else {
+    document.dispatchEvent(new CustomEvent('md-vykresleno'));
+  }
 })();
 </script>
 </body>

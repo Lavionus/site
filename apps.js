@@ -1109,11 +1109,17 @@ const KATALOG_SEKCE = [
       },
       {
         "soubor": "obsah/flowchart.html",
-        "nazev": "🔀 Flowchart editor",
+        "nazev": "🔀 Editor diagramů",
         "tagy": [
           "diagram",
           "schéma",
-          "vývojový"
+          "vývojový",
+          "flowchart",
+          "mermaid",
+          "postup",
+          "proces",
+          "svg",
+          "png"
         ]
       },
       {
@@ -1171,9 +1177,15 @@ const KATALOG_SEKCE = [
         "tagy": ["dithering", "pixelizace", "rastr", "retro", "obrázek"]
       },
       {
+        "soubor": "obsah/rodokmen.html",
+        "nazev": "🌳 Stavitel rodokmenu",
+        "tagy": ["rodokmen", "genealogie", "předkové", "rodina", "strom", "gedcom", "vývod", "matrika",
+                 "příbuznost", "ověření", "sosa", "ahnentafel", "profesionální"]
+      },
+      {
         "soubor": "obsah/Heritage.html",
         "nazev": "🌳 Heritage tree",
-        "tagy": ["rodokmen", "genealogie", "předkové", "rodina", "strom"]
+        "tagy": ["rodokmen", "genealogie", "předkové", "rodina", "strom", "gedcom", "příbuznost", "matrika", "bratranec", "rodinný strom", "export"]
       },
       {
         "soubor": "obsah/gene_map.html",
@@ -1268,12 +1280,7 @@ const KATALOG_SEKCE = [
       {
         "soubor": "obsah/tubeRed.html",
         "nazev": "🔧 Redukce trubek",
-        "tagy": ["trubky", "redukce", "rozvin", "plech", "svařování"]
-      },
-      {
-        "soubor": "obsah/tubeRedCone.html",
-        "nazev": "🔩 Redukce s kónusem",
-        "tagy": ["trubky", "redukce", "kónus", "kuželové konce", "zkosení", "nábeh", "svařování", "3d tisk"]
+        "tagy": ["trubky", "redukce", "rozvin", "plech", "svařování", "kónus", "sražení", "fazeta"]
       },
       {
         "soubor": "obsah/tubeSplit.html",
@@ -1283,7 +1290,7 @@ const KATALOG_SEKCE = [
       {
         "soubor": "obsah/cookieCutter.html",
         "nazev": "🍪 Vykrajovátka",
-        "tagy": ["vykrajovátka", "cukroví", "3d tisk", "pečení", "stl"]
+        "tagy": ["vykrajovátka", "cukroví", "3d tisk", "pečení", "stl", "obj", "svg", "vánoce", "velikonoce", "perníčky", "monogram", "z obrázku", "šablona", "50 tvarů", "zvířátka", "srdíčko", "hvězda", "stromek"]
       },
       {
         "soubor": "obsah/voronoi_stl.html",
@@ -1306,8 +1313,8 @@ const KATALOG_SEKCE = [
       },
       {
         "soubor": "obsah/gridGen.html",
-        "nazev": "📏 Mřížka A4",
-        "tagy": ["mřížka", "a4", "tisk", "papír", "čtverečky"]
+        "nazev": "📏 Papíry na tisk",
+        "tagy": ["mřížka", "a4", "a3", "a5", "tisk", "papír", "čtverečky", "milimetrový papír", "linky", "tečky", "izometrie", "notová osnova", "tabulatura", "šestiúhelníky", "kaligrafie", "pdf", "svg"]
       },
       {
         "soubor": "obsah/splitGen.html",

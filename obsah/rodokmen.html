@@ -1,0 +1,2723 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🌳 Stavitel rodokmenu</title>
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../dialog.js"></script>
+<script src="../tvary.js"></script>
+<script src="../podpis.js" defer></script>
+<style>
+  /* Rodokmen se staví od nejmladší generace nahoru k předkům. Data drží
+     model po vzoru GEDCOMu: osoby a rodiny. Rodina (dvojice + děti) je to,
+     co dělá výběr manžela, sourozenců i nevlastních dětí přirozeným —
+     v modelu „každý má pole rodičů a partnerů" se totéž dělá ručně a
+     nedůsledně. */
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: var(--font, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif);
+    background: var(--bg); color: var(--text);
+    height: 100vh; display: flex; flex-direction: column; overflow: hidden;
+  }
+
+  /* ---------- lišta ---------- */
+  .lista {
+    display: flex; align-items: center; gap: 6px; flex-wrap: wrap;
+    padding: 6px 10px; background: var(--bg-elevated); border-bottom: 1px solid var(--border);
+  }
+  .lista .znacka { font-weight: 700; margin-right: 6px; }
+  .lista .znacka span { color: var(--text-faint); font-weight: 400; font-size: .78rem; }
+  .oddel { width: 1px; align-self: stretch; background: var(--border); margin: 2px 4px; }
+
+  .btn {
+    background: var(--bg-control); color: var(--text); border: 1px solid var(--border-strong);
+    padding: 6px 10px; border-radius: 6px; cursor: pointer;
+    font-size: .82rem; font-family: inherit; white-space: nowrap;
+  }
+  .btn:hover:not(:disabled) { filter: brightness(1.15); }
+  .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+  .btn:disabled { opacity: .45; cursor: default; }
+  .btn.hlavni { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+  .btn.zapnuto { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+  .btn.varovny { border-color: var(--warn); color: var(--warn); }
+  .btn.mini { padding: 4px 8px; font-size: .76rem; }
+
+  .stopa { margin-left: auto; font-size: .76rem; color: var(--text-faint); text-align: right; line-height: 1.4; }
+  .stopa b { color: var(--accent); }
+
+  /* ---------- rozvržení ---------- */
+  .telo { flex: 1; display: grid; grid-template-columns: 330px 1fr; min-height: 0; }
+  .panel {
+    background: var(--bg-elevated); border-right: 1px solid var(--border);
+    display: flex; flex-direction: column; min-height: 0;
+  }
+  .panel-zalozky { display: flex; border-bottom: 1px solid var(--border); }
+  .panel-zalozky button {
+    flex: 1; padding: 9px 4px; background: none; border: none; border-bottom: 2px solid transparent;
+    color: var(--text-muted); font-family: inherit; font-size: .82rem; cursor: pointer;
+  }
+  .panel-zalozky button[aria-selected="true"] { color: var(--accent); border-bottom-color: var(--accent); font-weight: 600; }
+  .panel-obsah { flex: 1; overflow-y: auto; padding: 12px; }
+  .panel-obsah[hidden] { display: none; }
+
+  .plocha { position: relative; overflow: hidden; background: var(--bg-deep); }
+  #plátno { width: 100%; height: 100%; display: block; touch-action: none; cursor: grab; }
+  #plátno.tahne { cursor: grabbing; }
+
+  /* ---------- formulář ---------- */
+  .pole { margin-bottom: 10px; }
+  .pole label, .nadpisek {
+    display: block; font-size: .72rem; text-transform: uppercase; letter-spacing: .5px;
+    color: var(--text-muted); font-weight: 600; margin-bottom: 4px;
+  }
+  .pole input, .pole select, .pole textarea {
+    width: 100%; padding: 7px 9px; background: var(--bg-input); color: var(--text);
+    border: 1px solid var(--border-strong); border-radius: 4px; font-size: .88rem; font-family: inherit;
+  }
+  .pole textarea { resize: vertical; min-height: 54px; }
+  .pole input:focus, .pole select:focus, .pole textarea:focus { outline: none; border-color: var(--accent); }
+  .dvojice { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .napoveda-pole { font-size: .72rem; color: var(--text-faint); margin-top: 3px; }
+
+  .sekce { border-top: 1px solid var(--border); margin-top: 12px; padding-top: 10px; }
+  .sekce h3 { font-size: .78rem; text-transform: uppercase; letter-spacing: .5px; color: var(--text-muted); margin-bottom: 8px; }
+
+  .vazby { display: flex; flex-direction: column; gap: 6px; }
+  .vazba {
+    display: flex; align-items: center; gap: 8px; padding: 6px 8px;
+    background: var(--bg-control); border: 1px solid var(--border-strong); border-radius: 5px; font-size: .84rem;
+  }
+  .vazba .role { color: var(--text-faint); font-size: .72rem; min-width: 62px; }
+  .vazba .jmeno { flex: 1; cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .vazba .jmeno:hover { color: var(--accent); text-decoration: underline; }
+  .vazba button { background: none; border: none; color: var(--text-faint); cursor: pointer; font-size: .9rem; padding: 0 2px; }
+  .vazba button:hover { color: var(--danger); }
+
+  .akce-mrizka { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
+
+  /* ---------- seznam osob ---------- */
+  .hledani { position: relative; margin-bottom: 8px; }
+  .seznam { display: flex; flex-direction: column; gap: 4px; }
+  .polozka {
+    display: flex; align-items: center; gap: 8px; padding: 7px 9px; cursor: pointer;
+    background: var(--bg-control); border: 1px solid transparent; border-radius: 5px; font-size: .86rem;
+  }
+  .polozka:hover { border-color: var(--border-strong); }
+  .polozka[aria-selected="true"] { border-color: var(--accent); background: var(--accent-soft); }
+  .polozka .tecka { width: 9px; height: 9px; border-radius: 50%; flex-shrink: 0; }
+  .tecka.m { background: #64b5f6; } .tecka.z { background: #f06292; } .tecka.x { background: #b0b0b0; }
+  .polozka .roky { color: var(--text-faint); font-size: .76rem; margin-left: auto; white-space: nowrap; }
+  .polozka .jmeno { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .odznak-ego { font-size: .68rem; background: var(--accent); color: #fff; border-radius: 3px; padding: 1px 4px; }
+
+  /* ---------- karty ve stromu ---------- */
+  .karta rect.ramecek { fill: var(--bg-elevated); stroke: var(--border-strong); stroke-width: 1.5; }
+  .karta.muz rect.ramecek { stroke: #4f8fd6; }
+  .karta.zena rect.ramecek { stroke: #d6699b; }
+  .karta.vybrana rect.ramecek { stroke: var(--accent); stroke-width: 3; }
+  .karta.ego rect.ramecek { stroke-dasharray: none; stroke-width: 3; stroke: var(--ok); }
+  .karta text { font-family: var(--font, sans-serif); }
+  .karta .jmeno { font-size: 13px; font-weight: 600; fill: var(--text); }
+  .karta .udaj { font-size: 11px; fill: var(--text-muted); }
+  .karta .sosa { font-size: 10px; fill: var(--text-faint); }
+  .karta .znacka-chyby { font-size: 13px; }
+  .karta:hover rect.ramecek { filter: brightness(1.2); }
+  .spoj { fill: none; stroke: var(--text-faint); stroke-width: 1.6; }
+  .spoj.partner { stroke: #d6699b; stroke-dasharray: 5 3; }
+  .mrizka-cara { stroke: var(--border); stroke-width: .5; }
+
+  /* ---------- plovoucí prvky ---------- */
+  .ovladani-pohledu {
+    position: absolute; right: 12px; top: 12px; display: flex; flex-direction: column; gap: 6px;
+  }
+  .ovladani-pohledu .btn { width: 38px; text-align: center; }
+
+  .legenda {
+    position: absolute; left: 12px; bottom: 12px; font-size: .74rem; color: var(--text-muted);
+    background: var(--bg-panel); border: 1px solid var(--border); border-radius: 6px; padding: 7px 10px; line-height: 1.6;
+  }
+  .legenda b { color: var(--text); }
+  .legenda.skryta { display: none; }
+
+  /* ---------- modální okna ---------- */
+  .zaclona {
+    position: fixed; inset: 0; background: rgba(0,0,0,.6); backdrop-filter: blur(2px);
+    display: none; align-items: center; justify-content: center; z-index: 60; padding: 16px;
+  }
+  .zaclona.vidno { display: flex; }
+  .okno {
+    background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 10px;
+    width: min(720px, 96vw); max-height: 88vh; display: flex; flex-direction: column;
+    box-shadow: 0 16px 48px rgba(0,0,0,.5);
+  }
+  .okno-hlava { display: flex; align-items: center; justify-content: space-between; padding: 12px 16px; border-bottom: 1px solid var(--border); font-weight: 600; }
+  .okno-telo { padding: 14px 16px; overflow-y: auto; }
+  .okno-pata { padding: 10px 16px; border-top: 1px solid var(--border); display: flex; gap: 8px; justify-content: flex-end; }
+  .zavrit { background: none; border: none; color: var(--text-muted); font-size: 1.3rem; cursor: pointer; }
+
+  .navrhy { max-height: 320px; overflow-y: auto; display: flex; flex-direction: column; gap: 4px; margin-top: 8px; }
+
+  .nalez {
+    border-left: 3px solid var(--border-strong); background: var(--bg-control);
+    border-radius: 5px; padding: 9px 11px; margin-bottom: 8px; font-size: .86rem; line-height: 1.5;
+  }
+  .nalez.chyba { border-left-color: var(--danger); }
+  .nalez.varovani { border-left-color: var(--warn); }
+  .nalez.info { border-left-color: var(--accent); }
+  .nalez .kdo { font-weight: 600; }
+  .nalez .reseni { color: var(--text-muted); font-size: .8rem; margin-top: 3px; }
+  .nalez .tlacitka { display: flex; gap: 6px; margin-top: 7px; flex-wrap: wrap; }
+
+  .kvalita-pruh { height: 8px; background: var(--border); border-radius: 4px; overflow: hidden; margin: 6px 0 2px; }
+  .kvalita-pruh div { height: 100%; background: var(--ok); }
+
+  .statistika { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+  .statistika .dlazdice { background: var(--bg-control); border: 1px solid var(--border-strong); border-radius: 6px; padding: 10px 12px; }
+  .statistika .cislo { font-size: 1.5rem; font-weight: 700; color: var(--accent); }
+  .statistika .popis { font-size: .78rem; color: var(--text-muted); }
+
+  table.prehled { width: 100%; border-collapse: collapse; font-size: .84rem; }
+  table.prehled th, table.prehled td { text-align: left; padding: 5px 8px; border-bottom: 1px solid var(--border); }
+  table.prehled th { color: var(--text-muted); font-weight: 600; font-size: .76rem; text-transform: uppercase; }
+
+  @media (max-width: 860px) {
+    .telo { grid-template-columns: 1fr; position: relative; }
+    .panel { position: absolute; inset: 0 auto 0 0; width: min(300px, 88vw); z-index: 40;
+             transform: translateX(-100%); transition: transform .2s ease; box-shadow: 4px 0 18px rgba(0,0,0,.35); }
+    .panel.otevreny { transform: none; }
+    #btnPanel { display: inline-block !important; }
+    .stopa { display: none; }
+    .legenda { display: none; }
+  }
+</style>
+</head>
+<body>
+
+<div class="lista">
+  <span class="znacka">🌳 Stavitel rodokmenu <span>od nejmladších k předkům</span></span>
+  <button class="btn" id="btnPanel" style="display:none">☰</button>
+
+  <span class="oddel"></span>
+  <button class="btn hlavni" id="btnNovaOsoba" title="Nová osoba (Ctrl+N)">➕ Osoba</button>
+  <button class="btn" id="btnZpet" title="Zpět (Ctrl+Z)">↶</button>
+  <button class="btn" id="btnVpred" title="Znovu (Ctrl+Shift+Z)">↷</button>
+
+  <span class="oddel"></span>
+  <button class="btn zapnuto" id="btnVyvod" title="Vývod předků od výchozí osoby">⬆ Předkové</button>
+  <button class="btn" id="btnRozrod" title="Rozrod potomků">⬇ Potomci</button>
+  <button class="btn" id="btnCely" title="Celý strom (F)">🎯</button>
+
+  <span class="oddel"></span>
+  <button class="btn varovny" id="btnOvereni" title="Projít strom a najít nesrovnalosti">🔍 Ověřit strom</button>
+  <button class="btn" id="btnPribuznost" title="Jak jsou dva lidé příbuzní">🔗 Příbuznost</button>
+  <button class="btn" id="btnStatistiky">📊 Statistiky</button>
+
+  <span class="oddel"></span>
+  <button class="btn" id="btnNacist">📂 Načíst</button>
+  <button class="btn" id="btnUlozit">💾 Uložit</button>
+  <button class="btn" id="btnStromy">🗂 Uložené</button>
+
+  <span class="stopa" id="stopa"></span>
+</div>
+
+<div class="telo">
+  <div class="panel" id="panel">
+    <div class="panel-zalozky" role="tablist">
+      <button role="tab" id="zalozkaOsoba" aria-selected="true">🙋 Osoba</button>
+      <button role="tab" id="zalozkaSeznam" aria-selected="false">📋 Seznam</button>
+    </div>
+
+    <div class="panel-obsah" id="obsahOsoba">
+      <div id="detailOsoby"></div>
+    </div>
+
+    <div class="panel-obsah" id="obsahSeznam" hidden>
+      <div class="hledani">
+        <input type="text" id="hledat" placeholder="🔍 Hledat jméno, rok, místo…" autocomplete="off"
+               style="width:100%;padding:8px 10px;background:var(--bg-input);color:var(--text);border:1px solid var(--border-strong);border-radius:4px;font-family:inherit">
+      </div>
+      <div class="nadpisek" id="pocetOsob"></div>
+      <div class="seznam" id="seznamOsob"></div>
+    </div>
+  </div>
+
+  <div class="plocha" id="plocha">
+    <svg id="plátno" xmlns="http://www.w3.org/2000/svg">
+      <g id="scena">
+        <g id="gSpoje"></g>
+        <g id="gKarty"></g>
+      </g>
+    </svg>
+    <div class="ovladani-pohledu">
+      <button class="btn" id="btnPriblizit" title="Přiblížit">+</button>
+      <button class="btn" id="btnOddalit" title="Oddálit">−</button>
+      <button class="btn" id="btnNaEgo" title="Na výchozí osobu (E)">🎯</button>
+    </div>
+    <div class="legenda" id="legenda">
+      <b>Stavba:</b> vyberte osobu a přidejte jí otce, matku, partnera nebo dítě.<br>
+      <b>Myš:</b> tažení = posun · kolečko = přiblížení · klik na kartu = výběr · dvojklik = úprava<br>
+      <b>Klávesy:</b> Ctrl+N nová · Ctrl+Z zpět · F celý strom · E na výchozí osobu · L skrýt legendu
+    </div>
+  </div>
+</div>
+
+<!-- výběr osoby (napovídá, netřeba rolovat dlouhý seznam) -->
+<div class="zaclona" id="oknoVyber">
+  <div class="okno" style="width:min(560px,96vw)">
+    <div class="okno-hlava"><span id="vyberNadpis">Vybrat osobu</span><button class="zavrit" data-zavri="oknoVyber">✕</button></div>
+    <div class="okno-telo">
+      <div class="pole">
+        <label for="vyberHledani">Najít mezi zapsanými</label>
+        <input type="text" id="vyberHledani" placeholder="Pište jméno…" autocomplete="off">
+        <div class="napoveda-pole" id="vyberPoznamka"></div>
+      </div>
+      <div class="navrhy" id="vyberNavrhy"></div>
+      <div class="sekce">
+        <h3>Nebo založit novou osobu</h3>
+        <div class="dvojice">
+          <div class="pole"><label for="novaJmeno">Jméno</label><input type="text" id="novaJmeno"></div>
+          <div class="pole"><label for="novaPrijmeni">Příjmení</label><input type="text" id="novaPrijmeni"></div>
+        </div>
+        <div class="dvojice">
+          <div class="pole"><label for="novaNarozeni">Narození</label><input type="text" id="novaNarozeni" placeholder="1885 / 3.2.1885"></div>
+          <div class="pole"><label for="novaPohlavi">Pohlaví</label>
+            <select id="novaPohlavi"><option value="m">muž</option><option value="z">žena</option><option value="?">neuvedeno</option></select>
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="okno-pata">
+      <button class="btn" data-zavri="oknoVyber">Zrušit</button>
+      <button class="btn hlavni" id="vyberZalozit">Založit a připojit</button>
+    </div>
+  </div>
+</div>
+
+<!-- ověření stromu -->
+<div class="zaclona" id="oknoOvereni">
+  <div class="okno">
+    <div class="okno-hlava"><span>🔍 Ověření rodokmenu</span><button class="zavrit" data-zavri="oknoOvereni">✕</button></div>
+    <div class="okno-telo" id="overeniObsah"></div>
+    <div class="okno-pata">
+      <button class="btn" data-zavri="oknoOvereni">Zavřít</button>
+      <button class="btn hlavni" id="btnOvereniZnovu">⟳ Zkontrolovat znovu</button>
+    </div>
+  </div>
+</div>
+
+<!-- příbuznost -->
+<div class="zaclona" id="oknoPribuznost">
+  <div class="okno" style="width:min(620px,96vw)">
+    <div class="okno-hlava"><span>🔗 Jak jsou příbuzní?</span><button class="zavrit" data-zavri="oknoPribuznost">✕</button></div>
+    <div class="okno-telo">
+      <div class="dvojice">
+        <div class="pole"><label for="pribuznyA">Osoba A</label><select id="pribuznyA"></select></div>
+        <div class="pole"><label for="pribuznyB">Osoba B</label><select id="pribuznyB"></select></div>
+      </div>
+      <div id="pribuznostVysledek"></div>
+    </div>
+    <div class="okno-pata">
+      <button class="btn" data-zavri="oknoPribuznost">Zavřít</button>
+      <button class="btn" id="btnProhodit">⇄ Prohodit</button>
+    </div>
+  </div>
+</div>
+
+<!-- statistiky -->
+<div class="zaclona" id="oknoStatistiky">
+  <div class="okno">
+    <div class="okno-hlava"><span>📊 Statistiky rodokmenu</span><button class="zavrit" data-zavri="oknoStatistiky">✕</button></div>
+    <div class="okno-telo" id="statistikyObsah"></div>
+    <div class="okno-pata"><button class="btn" data-zavri="oknoStatistiky">Zavřít</button></div>
+  </div>
+</div>
+
+<!-- uložené stromy -->
+<div class="zaclona" id="oknoStromy">
+  <div class="okno" style="width:min(560px,96vw)">
+    <div class="okno-hlava"><span>🗂 Uložené rodokmeny</span><button class="zavrit" data-zavri="oknoStromy">✕</button></div>
+    <div class="okno-telo"><div id="tvary"></div></div>
+    <div class="okno-pata"><button class="btn" data-zavri="oknoStromy">Zavřít</button></div>
+  </div>
+</div>
+
+<input type="file" id="souborVstup" accept=".json,.ged,.gedcom,.txt,application/json,text/plain" style="display:none">
+
+<script>
+(function () {
+  'use strict';
+
+  /* ==================================================================
+     1. MODEL
+     ------------------------------------------------------------------
+     Osoba drží jen své údaje, vazby jsou v rodinách:
+
+        rodina = { partneri: [id, id], deti: [id, …], svatba }
+
+     Díky tomu se manžel vybírá jednou (a platí pro všechny společné
+     děti), sourozenci vzniknou sami a nevlastní se od vlastních liší
+     tím, ze které rodiny pocházejí. Model odpovídá GEDCOMu, takže
+     import i export jsou přímočaré.
+     ================================================================== */
+
+  const KLIC = 'rodokmen_pro_data';
+  const VERZE = 1;
+
+  const Stav = {
+    osoby: new Map(),
+    rodiny: new Map(),
+    ego: null,           // výchozí osoba — nejmladší generace, odkud se staví
+    vybrany: null,
+    rezim: 'vyvod',      // 'vyvod' = předkové, 'rozrod' = potomci
+    pohled: { x: 0, y: 0, mer: 1 },
+    historie: [],
+    budoucnost: [],
+    rozvrzeni: { uzly: [], spoje: [] },
+    zmeneno: false
+  };
+
+  const noveId = predpona => predpona + Date.now().toString(36).slice(-5) + Math.random().toString(36).slice(2, 7);
+
+  function prazdnaOsoba(data) {
+    return Object.assign({
+      id: noveId('o'),
+      jmeno: '', prijmeni: '', rodnePrijmeni: '',
+      pohlavi: '?',                      // 'm' | 'z' | '?'
+      narozeni: '', mistoNarozeni: '',
+      umrti: '', mistoUmrti: '',
+      povolani: '', bydliste: '', poznamka: '',
+      zdroje: [],                        // [{popis, odkaz}]
+      rodinaDite: null,                  // rodina, ve které je dítětem
+      rodinyPartner: []                  // rodiny, ve kterých je partnerem
+    }, data || {});
+  }
+
+  function prazdnaRodina(data) {
+    return Object.assign({
+      id: noveId('r'),
+      partneri: [],
+      deti: [],
+      svatba: '', mistoSvatby: '', rozvod: false
+    }, data || {});
+  }
+
+  const osoba = id => Stav.osoby.get(id) || null;
+  const rodina = id => Stav.rodiny.get(id) || null;
+
+  function celeJmeno(o) {
+    if (!o) return '(neznámý)';
+    const jm = `${o.jmeno || ''} ${o.prijmeni || ''}`.trim();
+    return jm || '(bez jména)';
+  }
+
+  function jmenoSRoky(o) {
+    if (!o) return '(neznámý)';
+    const r = rozsahLet(o);
+    return celeJmeno(o) + (r ? ` (${r})` : '');
+  }
+
+  /* --- datum ---------------------------------------------------------
+     Matriky dávají data v nejrůznější podobě a přesnosti; vstup typu
+     „date" by si vynutil úplné datum a neúplné údaje by se ztratily.
+     Proto se ukládá text tak, jak ho člověk napsal, a zvlášť se z něj
+     vytáhne rok, měsíc a den. */
+
+  const MESICE_CZ = ['ledna', 'února', 'března', 'dubna', 'května', 'června',
+    'července', 'srpna', 'září', 'října', 'listopadu', 'prosince'];
+
+  function parsujDatum(text) {
+    if (!text) return null;
+    let t = String(text).trim().toLowerCase();
+    if (!t) return null;
+    let priblizne = false, smer = '=';
+    if (/^(asi|kolem|cca|ca\.?|~|okolo)\s+/.test(t)) { priblizne = true; t = t.replace(/^(asi|kolem|cca|ca\.?|~|okolo)\s+/, ''); }
+    if (/^(před|pred)\s+/.test(t)) { smer = '<'; t = t.replace(/^(před|pred)\s+/, ''); }
+    if (/^(po)\s+/.test(t)) { smer = '>'; t = t.replace(/^(po)\s+/, ''); }
+    if (/\?$/.test(t)) { priblizne = true; t = t.replace(/\?+$/, '').trim(); }
+
+    let m = t.match(/^(\d{1,2})\.\s*(\d{1,2})\.\s*(\d{3,4})$/);          // 3. 2. 1885
+    if (m) return { text, rok: +m[3], mesic: +m[2], den: +m[1], priblizne, smer };
+    m = t.match(/^(\d{3,4})-(\d{1,2})-(\d{1,2})$/);                       // 1885-02-03
+    if (m) return { text, rok: +m[1], mesic: +m[2], den: +m[3], priblizne, smer };
+    m = t.match(/^(\d{1,2})\.\s*(\d{3,4})$/);                             // 2. 1885
+    if (m) return { text, rok: +m[2], mesic: +m[1], den: null, priblizne, smer };
+    m = t.match(/^(\d{3,4})-(\d{1,2})$/);                                 // 1885-02
+    if (m) return { text, rok: +m[1], mesic: +m[2], den: null, priblizne, smer };
+    m = t.match(/^(\d{3,4})$/);                                           // 1885
+    if (m) return { text, rok: +m[1], mesic: null, den: null, priblizne, smer };
+    m = t.match(/(\d{3,4})/);                                             // poslední záchrana
+    if (m) return { text, rok: +m[1], mesic: null, den: null, priblizne: true, smer };
+    return { text, rok: null, mesic: null, den: null, priblizne: true, smer };
+  }
+
+  const rok = hodnota => { const d = parsujDatum(hodnota); return d && d.rok ? d.rok : null; };
+
+  // Pořadové číslo dne pro porovnání; u neúplných dat se doplní střed období.
+  function denCislo(hodnota, dolni) {
+    const d = parsujDatum(hodnota);
+    if (!d || !d.rok) return null;
+    const m = d.mesic || (dolni ? 1 : 12);
+    const den = d.den || (dolni ? 1 : 28);
+    return d.rok * 10000 + m * 100 + den;
+  }
+
+  function datumHezky(hodnota) {
+    const d = parsujDatum(hodnota);
+    if (!d) return '';
+    if (!d.rok) return d.text;
+    const predpona = d.priblizne ? 'asi ' : (d.smer === '<' ? 'před ' : (d.smer === '>' ? 'po ' : ''));
+    if (d.den && d.mesic) return `${predpona}${d.den}. ${MESICE_CZ[d.mesic - 1]} ${d.rok}`;
+    if (d.mesic) return `${predpona}${d.mesic}/${d.rok}`;
+    return predpona + d.rok;
+  }
+
+  /* Rod slovesa podle pohlaví — „narodila se" místo „narodil(a) se".
+     U neuvedeného pohlaví zůstane tvar se závorkou. */
+  function tvar(o, muzsky, zensky) {
+    if (!o || o.pohlavi === '?') return muzsky + '(' + zensky.slice(muzsky.length) + ')';
+    return o.pohlavi === 'z' ? zensky : muzsky;
+  }
+
+  function rozsahLet(o) {
+    const n = rok(o.narozeni), u = rok(o.umrti);
+    if (n && u) return `${n}–${u}`;
+    if (n) return `* ${n}`;
+    if (u) return `† ${u}`;
+    return '';
+  }
+
+  function vekVLetech(odHodnota, doHodnota) {
+    const a = parsujDatum(odHodnota), b = parsujDatum(doHodnota);
+    if (!a || !b || !a.rok || !b.rok) return null;
+    let vek = b.rok - a.rok;
+    if (a.mesic && b.mesic) {
+      if (b.mesic < a.mesic || (b.mesic === a.mesic && a.den && b.den && b.den < a.den)) vek--;
+    }
+    return vek;
+  }
+
+  const zijici = o => !o.umrti && (!rok(o.narozeni) || (new Date().getFullYear() - rok(o.narozeni)) < 110);
+
+  /* --- vazby ---------------------------------------------------------- */
+
+  const rodinyKdeJePartner = id => (osoba(id)?.rodinyPartner || []).map(rodina).filter(Boolean);
+  const rodinaKdeJeDite = id => { const o = osoba(id); return o && o.rodinaDite ? rodina(o.rodinaDite) : null; };
+
+  function rodiceOsoby(id) {
+    const r = rodinaKdeJeDite(id);
+    if (!r) return [];
+    return r.partneri.map(osoba).filter(Boolean);
+  }
+
+  function otecMatka(id) {
+    const rodice = rodiceOsoby(id);
+    let otec = rodice.find(p => p.pohlavi === 'm') || null;
+    let matka = rodice.find(p => p.pohlavi === 'z') || null;
+    const zbytek = rodice.filter(p => p !== otec && p !== matka);
+    if (!otec && zbytek.length) otec = zbytek.shift();
+    if (!matka && zbytek.length) matka = zbytek.shift();
+    return { otec, matka };
+  }
+
+  function partneriOsoby(id) {
+    const ven = [];
+    for (const r of rodinyKdeJePartner(id)) {
+      for (const p of r.partneri) if (p !== id && osoba(p)) ven.push({ osoba: osoba(p), rodina: r });
+    }
+    return ven;
+  }
+
+  function detiOsoby(id) {
+    const ven = [];
+    for (const r of rodinyKdeJePartner(id)) {
+      for (const d of r.deti) if (osoba(d)) ven.push({ osoba: osoba(d), rodina: r });
+    }
+    return ven;
+  }
+
+  function sourozenciOsoby(id) {
+    const r = rodinaKdeJeDite(id);
+    if (!r) return [];
+    return r.deti.filter(d => d !== id).map(osoba).filter(Boolean);
+  }
+
+  function jePredkem(predekId, potomekId, hloubka) {
+    if (!predekId || !potomekId) return false;
+    if (predekId === potomekId) return true;
+    if ((hloubka || 0) > 60) return false;
+    for (const r of rodiceOsoby(potomekId)) {
+      if (jePredkem(predekId, r.id, (hloubka || 0) + 1)) return true;
+    }
+    return false;
+  }
+
+  function vsichniPredkove(id, hloubka, ven, uroven) {
+    ven = ven || new Map();
+    uroven = uroven || 0;
+    if (uroven > (hloubka || 40) || ven.has(id)) return ven;
+    ven.set(id, uroven);
+    for (const r of rodiceOsoby(id)) vsichniPredkove(r.id, hloubka, ven, uroven + 1);
+    return ven;
+  }
+
+  function vsichniPotomci(id, ven, uroven) {
+    ven = ven || new Map();
+    uroven = uroven || 0;
+    if (uroven > 40 || ven.has(id)) return ven;
+    ven.set(id, uroven);
+    for (const d of detiOsoby(id)) vsichniPotomci(d.osoba.id, ven, uroven + 1);
+    return ven;
+  }
+
+  /* ==================================================================
+     2. PRAVIDLA — co nesmí vzniknout a na co se má upozornit
+     ------------------------------------------------------------------
+     Kontrola se pouští už při vytváření vazby, ne až při pozdějším
+     ověření: nesmyslný údaj se nejlíp neopravuje, ale nevpustí dovnitř.
+     „chyba" vazbu nepovolí, „varovani" se jen potvrzuje.
+     ================================================================== */
+
+  const MEZE = {
+    minVekRodice: 12,        // dřív dítě mít nešlo
+    nizkyVekRodice: 15,      // pod tím se ptáme
+    maxVekMatky: 55,
+    maxVekOtce: 80,
+    maxDozitiLet: 110,
+    minVekSvatby: 14,
+    maxRozdilPartneru: 40,
+    minMeziSourozenci: 9     // měsíců (dvojčata mají stejné datum)
+  };
+
+  function kontrolaRodicDite(rodicId, diteId) {
+    const ven = { ok: true, chyba: null, varovani: [] };
+    const r = osoba(rodicId), d = osoba(diteId);
+    if (!r || !d) return { ok: false, chyba: 'Osoba neexistuje.', varovani: [] };
+    if (rodicId === diteId) return { ok: false, chyba: 'Nikdo nemůže být svým vlastním rodičem.', varovani: [] };
+    if (jePredkem(diteId, rodicId)) {
+      return { ok: false, varovani: [],
+        chyba: `${celeJmeno(d)} je ${tvar(d, 'předkem', 'předkyní')} osoby ${celeJmeno(r)} — vznikl by kruh v rodokmenu.` };
+    }
+    const rr = rok(r.narozeni), rd = rok(d.narozeni);
+    if (rr && rd) {
+      const rozdil = rd - rr;
+      if (rozdil < MEZE.minVekRodice) {
+        return { ok: false, varovani: [],
+          chyba: `${celeJmeno(r)} by v době narození dítěte ${celeJmeno(d)} ${rozdil <= 0
+            ? 'ještě ' + tvar(r, 'nebyl', 'nebyla') + ' na světě'
+            : tvar(r, 'měl', 'měla') + ' ' + rozdil + ' let'}.` };
+      }
+      if (rozdil < MEZE.nizkyVekRodice) ven.varovani.push(`Rodič by měl v době narození dítěte jen ${rozdil} let.`);
+      if (r.pohlavi === 'z' && rozdil > MEZE.maxVekMatky) ven.varovani.push(`Matka by při narození dítěte měla ${rozdil} let.`);
+      if (r.pohlavi === 'm' && rozdil > MEZE.maxVekOtce) ven.varovani.push(`Otec by při narození dítěte měl ${rozdil} let.`);
+    }
+    const umrtiR = denCislo(r.umrti, false), narozeniD = denCislo(d.narozeni, true);
+    if (umrtiR && narozeniD && umrtiR < narozeniD) {
+      const mezera = (narozeniD - umrtiR) / 10000;
+      if (r.pohlavi === 'z') {
+        return { ok: false, varovani: [], chyba: `Matka zemřela dřív, než se dítě narodilo.` };
+      }
+      if (mezera > 1) return { ok: false, varovani: [], chyba: `Otec zemřel ${mezera.toFixed(1)} roku před narozením dítěte.` };
+      ven.varovani.push('Dítě se narodilo až po otcově smrti (pohrobek).');
+    }
+    if (d.rodinaDite && rodina(d.rodinaDite) && !rodina(d.rodinaDite).partneri.includes(rodicId)
+        && rodina(d.rodinaDite).partneri.length >= 2) {
+      ven.varovani.push('Dítě už má zapsané dva rodiče — nový nahradí jednoho z nich.');
+    }
+    return ven;
+  }
+
+  function kontrolaPartneru(aId, bId) {
+    const ven = { ok: true, chyba: null, varovani: [] };
+    const a = osoba(aId), b = osoba(bId);
+    if (!a || !b) return { ok: false, chyba: 'Osoba neexistuje.', varovani: [] };
+    if (aId === bId) return { ok: false, chyba: 'Nikdo nemůže být partnerem sám sobě.', varovani: [] };
+    if (partneriOsoby(aId).some(p => p.osoba.id === bId)) {
+      return { ok: false, chyba: 'Tyhle dva už spolu rodinu mají.', varovani: [] };
+    }
+    if (jePredkem(aId, bId) || jePredkem(bId, aId)) {
+      return { ok: false, chyba: 'Předek a potomek nemohou být partnery.', varovani: [] };
+    }
+    if (sourozenciOsoby(aId).some(s => s.id === bId)) {
+      return { ok: false, chyba: 'Sourozenci nemohou být partnery.', varovani: [] };
+    }
+    const ra = rok(a.narozeni), rb = rok(b.narozeni);
+    if (ra && rb && Math.abs(ra - rb) > MEZE.maxRozdilPartneru) {
+      ven.varovani.push(`Věkový rozdíl partnerů je ${Math.abs(ra - rb)} let.`);
+    }
+    const umrtiA = denCislo(a.umrti, false), narozeniB = denCislo(b.narozeni, true);
+    const umrtiB = denCislo(b.umrti, false), narozeniA = denCislo(a.narozeni, true);
+    if ((umrtiA && narozeniB && umrtiA < narozeniB) || (umrtiB && narozeniA && umrtiB < narozeniA)) {
+      return { ok: false, chyba: 'Jeden z partnerů zemřel dřív, než se druhý narodil.', varovani: [] };
+    }
+    // vzdálenější příbuzenství se nezakazuje, jen připomene
+    const predkoveA = vsichniPredkove(aId, 6), predkoveB = vsichniPredkove(bId, 6);
+    for (const [id] of predkoveA) {
+      if (predkoveB.has(id) && id !== aId && id !== bId) {
+        ven.varovani.push(`Partneři mají společného předka: ${celeJmeno(osoba(id))}.`);
+        break;
+      }
+    }
+    return ven;
+  }
+
+  function kontrolaDiteDoRodiny(rodinaId, diteId) {
+    const r = rodina(rodinaId);
+    if (!r) return { ok: false, chyba: 'Rodina neexistuje.', varovani: [] };
+    if (r.deti.includes(diteId)) return { ok: false, chyba: 'Dítě už v téhle rodině je.', varovani: [] };
+    const ven = { ok: true, chyba: null, varovani: [] };
+    for (const rodicId of r.partneri) {
+      const v = kontrolaRodicDite(rodicId, diteId);
+      if (!v.ok) return v;
+      ven.varovani.push(...v.varovani);
+    }
+    const d = osoba(diteId);
+    if (d && d.rodinaDite && d.rodinaDite !== rodinaId) {
+      ven.varovani.push('Dítě je zapsané v jiné rodině — přepíše se na tuhle.');
+    }
+    return ven;
+  }
+
+  /* ==================================================================
+     3. OPERACE NAD STROMEM (každá si hlídá stav a historii)
+     ================================================================== */
+
+  function snimek() {
+    Stav.historie.push(serializuj());
+    if (Stav.historie.length > 60) Stav.historie.shift();
+    Stav.budoucnost.length = 0;
+  }
+
+  function zpet() {
+    if (!Stav.historie.length) return false;
+    Stav.budoucnost.push(serializuj());
+    obnovZeSerializace(Stav.historie.pop());
+    return true;
+  }
+
+  function vpred() {
+    if (!Stav.budoucnost.length) return false;
+    Stav.historie.push(serializuj());
+    obnovZeSerializace(Stav.budoucnost.pop());
+    return true;
+  }
+
+  function pridejOsobu(data) {
+    const o = prazdnaOsoba(data);
+    Stav.osoby.set(o.id, o);
+    if (!Stav.ego) Stav.ego = o.id;
+    return o;
+  }
+
+  function zalozRodinu(partneri) {
+    const r = prazdnaRodina({ partneri: (partneri || []).filter(Boolean) });
+    Stav.rodiny.set(r.id, r);
+    for (const p of r.partneri) {
+      const o = osoba(p);
+      if (o && !o.rodinyPartner.includes(r.id)) o.rodinyPartner.push(r.id);
+    }
+    return r;
+  }
+
+  // Rodina, ve které je osoba dítětem; když žádná není, založí se.
+  function zajistiRodinuDitete(diteId) {
+    const d = osoba(diteId);
+    if (!d) return null;
+    if (d.rodinaDite && rodina(d.rodinaDite)) return rodina(d.rodinaDite);
+    const r = zalozRodinu([]);
+    r.deti.push(diteId);
+    d.rodinaDite = r.id;
+    return r;
+  }
+
+  function pridejRodice(diteId, rodicId) {
+    const kontrola = kontrolaRodicDite(rodicId, diteId);
+    if (!kontrola.ok) return kontrola;
+    const r = zajistiRodinuDitete(diteId);
+    const novy = osoba(rodicId);
+    if (!r.partneri.includes(rodicId)) {
+      if (r.partneri.length >= 2) {
+        // nahradí se rodič stejného pohlaví, jinak ten druhý v pořadí
+        const stejne = r.partneri.find(p => osoba(p) && osoba(p).pohlavi === novy.pohlavi);
+        const nahrazovany = stejne || r.partneri[1];
+        odpojPartneraZRodiny(r.id, nahrazovany);
+      }
+      r.partneri.push(rodicId);
+      if (!novy.rodinyPartner.includes(r.id)) novy.rodinyPartner.push(r.id);
+    }
+    return kontrola;
+  }
+
+  function pridejPartnera(aId, bId) {
+    const kontrola = kontrolaPartneru(aId, bId);
+    if (!kontrola.ok) return kontrola;
+    // bezdětná rodina jen s jedním partnerem se dá doplnit
+    const volna = rodinyKdeJePartner(aId).find(r => r.partneri.length === 1);
+    if (volna) {
+      volna.partneri.push(bId);
+      const b = osoba(bId);
+      if (!b.rodinyPartner.includes(volna.id)) b.rodinyPartner.push(volna.id);
+    } else {
+      zalozRodinu([aId, bId]);
+    }
+    return kontrola;
+  }
+
+  function pridejDite(rodinaId, diteId) {
+    const kontrola = kontrolaDiteDoRodiny(rodinaId, diteId);
+    if (!kontrola.ok) return kontrola;
+    const r = rodina(rodinaId), d = osoba(diteId);
+    if (d.rodinaDite && d.rodinaDite !== rodinaId) {
+      const stara = rodina(d.rodinaDite);
+      if (stara) stara.deti = stara.deti.filter(x => x !== diteId);
+    }
+    r.deti.push(diteId);
+    d.rodinaDite = r.id;
+    return kontrola;
+  }
+
+  function odpojPartneraZRodiny(rodinaId, osobaId) {
+    const r = rodina(rodinaId), o = osoba(osobaId);
+    if (!r || !o) return;
+    r.partneri = r.partneri.filter(p => p !== osobaId);
+    o.rodinyPartner = o.rodinyPartner.filter(x => x !== rodinaId);
+    uklidRodinu(rodinaId);
+  }
+
+  function odpojRodice(diteId, rodicId) {
+    const r = rodinaKdeJeDite(diteId);
+    if (!r) return;
+    if (r.partneri.length <= 1 && r.deti.length === 1) {
+      // rodina by zůstala prázdná — dítě se osamostatní
+      const d = osoba(diteId);
+      d.rodinaDite = null;
+      r.deti = r.deti.filter(x => x !== diteId);
+      odpojPartneraZRodiny(r.id, rodicId);
+      uklidRodinu(r.id);
+      return;
+    }
+    odpojPartneraZRodiny(r.id, rodicId);
+  }
+
+  function odpojDite(rodinaId, diteId) {
+    const r = rodina(rodinaId), d = osoba(diteId);
+    if (!r || !d) return;
+    r.deti = r.deti.filter(x => x !== diteId);
+    if (d.rodinaDite === rodinaId) d.rodinaDite = null;
+    uklidRodinu(rodinaId);
+  }
+
+  // Rodina bez partnerů a bez dětí (nebo s jediným členem) nemá smysl.
+  function uklidRodinu(rodinaId) {
+    const r = rodina(rodinaId);
+    if (!r) return;
+    if (r.partneri.length === 0 && r.deti.length === 0) {
+      Stav.rodiny.delete(rodinaId);
+      for (const o of Stav.osoby.values()) {
+        o.rodinyPartner = o.rodinyPartner.filter(x => x !== rodinaId);
+        if (o.rodinaDite === rodinaId) o.rodinaDite = null;
+      }
+    }
+  }
+
+  function smazOsobu(id) {
+    const o = osoba(id);
+    if (!o) return;
+    for (const r of [...Stav.rodiny.values()]) {
+      r.partneri = r.partneri.filter(p => p !== id);
+      r.deti = r.deti.filter(d => d !== id);
+    }
+    Stav.osoby.delete(id);
+    for (const dalsi of Stav.osoby.values()) {
+      if (dalsi.rodinaDite && !Stav.rodiny.has(dalsi.rodinaDite)) dalsi.rodinaDite = null;
+    }
+    for (const r of [...Stav.rodiny.keys()]) uklidRodinu(r);
+    if (Stav.ego === id) Stav.ego = Stav.osoby.size ? [...Stav.osoby.keys()][0] : null;
+    if (Stav.vybrany === id) Stav.vybrany = Stav.ego;
+  }
+
+  /* --- uložení a načtení ---------------------------------------------- */
+
+  function serializuj() {
+    return JSON.stringify({
+      verze: VERZE,
+      ego: Stav.ego,
+      osoby: [...Stav.osoby.values()],
+      rodiny: [...Stav.rodiny.values()]
+    });
+  }
+
+  function obnovZeSerializace(text) {
+    const data = typeof text === 'string' ? JSON.parse(text) : text;
+    Stav.osoby = new Map((data.osoby || []).map(o => [o.id, prazdnaOsoba(o)]));
+    Stav.rodiny = new Map((data.rodiny || []).map(r => [r.id, prazdnaRodina(r)]));
+    Stav.ego = data.ego && Stav.osoby.has(data.ego) ? data.ego : ([...Stav.osoby.keys()][0] || null);
+    if (!Stav.osoby.has(Stav.vybrany)) Stav.vybrany = Stav.ego;
+    srovnejVazby();
+  }
+
+  /* Po načtení cizích dat se dopočítají zpětné odkazy a zahodí se
+     ukazatele na neexistující osoby — jinak by se na nich rozbilo
+     vykreslování. */
+  function srovnejVazby() {
+    for (const o of Stav.osoby.values()) { o.rodinyPartner = []; }
+    for (const r of Stav.rodiny.values()) {
+      r.partneri = [...new Set(r.partneri.filter(p => Stav.osoby.has(p)))].slice(0, 2);
+      r.deti = [...new Set(r.deti.filter(d => Stav.osoby.has(d) && !r.partneri.includes(d)))];
+      for (const p of r.partneri) osoba(p).rodinyPartner.push(r.id);
+    }
+    for (const o of Stav.osoby.values()) {
+      if (o.rodinaDite && !Stav.rodiny.has(o.rodinaDite)) o.rodinaDite = null;
+    }
+    for (const r of Stav.rodiny.values()) {
+      for (const d of r.deti) { const o = osoba(d); if (o) o.rodinaDite = r.id; }
+    }
+    for (const id of [...Stav.rodiny.keys()]) uklidRodinu(id);
+  }
+
+  /* ==================================================================
+     4. ROZVRŽENÍ STROMU
+     ------------------------------------------------------------------
+     Vývod předků: výchozí osoba dole, generace nad ní. Šířka se počítá
+     z listů, takže se podstromy nikdy nepřekryjí.
+     Rozrod potomků: dvoufázově — nejdřív se změří šířka každého
+     podstromu, pak se podle ní umístí; jednofázové skládání podle
+     kurzoru se u větších rodin překrývá.
+     ================================================================== */
+
+  const KARTA = { s: 186, v: 62 };
+  const KROK_X = KARTA.s + 26;
+  const KROK_Y = 116;
+  const MAX_GENERACI = 14;
+
+  function rozvrhniVyvod(egoId) {
+    const uzly = [], spoje = [];
+    let dalsiList = 0;
+    if (!osoba(egoId)) return { uzly, spoje };
+
+    function rek(id, gen, sosa, cesta) {
+      const o = osoba(id);
+      if (!o) return null;
+      const opakovani = cesta.has(id);
+      let rodiceUzly = [];
+      if (!opakovani && gen < MAX_GENERACI) {
+        const { otec, matka } = otecMatka(id);
+        const dalsiCesta = new Set(cesta);
+        dalsiCesta.add(id);
+        if (otec) rodiceUzly.push(rek(otec.id, gen + 1, sosa * 2, dalsiCesta));
+        if (matka) rodiceUzly.push(rek(matka.id, gen + 1, sosa * 2 + 1, dalsiCesta));
+      }
+      rodiceUzly = rodiceUzly.filter(Boolean);
+      let x;
+      if (rodiceUzly.length) {
+        x = (rodiceUzly[0].x + rodiceUzly[rodiceUzly.length - 1].x) / 2;
+      } else {
+        x = dalsiList * KROK_X;
+        dalsiList++;
+      }
+      const uzel = { id, gen, sosa, x, y: -gen * KROK_Y, opakovani };
+      uzly.push(uzel);
+      for (const r of rodiceUzly) spoje.push({ z: uzel, do: r, typ: 'rodic' });
+      return uzel;
+    }
+
+    rek(egoId, 0, 1, new Set());
+    return { uzly, spoje };
+  }
+
+  function rozvrhniRozrod(korenId) {
+    const uzly = [], spoje = [];
+    if (!osoba(korenId)) return { uzly, spoje };
+    const sirky = new Map();
+
+    const rodinySPotomky = id => rodinyKdeJePartner(id);
+
+    function sirka(id, cesta) {
+      if (sirky.has(id)) return sirky.get(id);
+      const opakovani = cesta.has(id);
+      const dalsiCesta = new Set(cesta); dalsiCesta.add(id);
+      const rodiny = opakovani ? [] : rodinySPotomky(id);
+      const pocetPartneru = rodiny.reduce((s, r) => s + (r.partneri.length > 1 ? 1 : 0), 0);
+      const sirkaParu = (1 + pocetPartneru) * KROK_X;
+      let sirkaDeti = 0;
+      for (const r of rodiny) for (const d of r.deti) sirkaDeti += sirka(d, dalsiCesta);
+      const v = Math.max(sirkaParu, sirkaDeti);
+      sirky.set(id, v);
+      return v;
+    }
+
+    function umisti(id, levy, gen, cesta) {
+      const o = osoba(id);
+      if (!o || gen > MAX_GENERACI) return null;
+      const opakovani = cesta.has(id);
+      const dalsiCesta = new Set(cesta); dalsiCesta.add(id);
+      const rodiny = opakovani ? [] : rodinySPotomky(id);
+      const celkem = sirka(id, cesta);
+
+      let sirkaDeti = 0;
+      for (const r of rodiny) for (const d of r.deti) sirkaDeti += sirka(d, dalsiCesta);
+
+      const pocetPartneru = rodiny.reduce((s, r) => s + (r.partneri.length > 1 ? 1 : 0), 0);
+      const sirkaParu = (1 + pocetPartneru) * KROK_X;
+
+      // pár se postaví doprostřed svého bloku, děti pod něj
+      const stredBloku = levy + celkem / 2;
+      const x = stredBloku - (pocetPartneru * KROK_X) / 2;
+      const uzel = { id, gen, x, y: gen * KROK_Y, opakovani, sosa: null };
+      uzly.push(uzel);
+
+      let kurzorDeti = stredBloku - sirkaDeti / 2;
+      let posunPartnera = 1;
+      for (const r of rodiny) {
+        const partnerId = r.partneri.find(p => p !== id);
+        let partnerUzel = null;
+        if (partnerId && osoba(partnerId)) {
+          partnerUzel = { id: partnerId, gen, x: x + posunPartnera * KROK_X, y: gen * KROK_Y, opakovani: true, sosa: null, jePartner: true };
+          uzly.push(partnerUzel);
+          spoje.push({ z: uzel, do: partnerUzel, typ: 'partner', rodina: r.id });
+          posunPartnera++;
+        }
+        const stredParu = partnerUzel ? (x + partnerUzel.x) / 2 : x;
+        for (const d of r.deti) {
+          const sirkaDitete = sirka(d, dalsiCesta);
+          const ditě = umisti(d, kurzorDeti, gen + 1, dalsiCesta);
+          kurzorDeti += sirkaDitete;
+          if (ditě) spoje.push({ z: { x: stredParu, y: uzel.y }, do: ditě, typ: 'dite' });
+        }
+      }
+      return uzel;
+    }
+
+    umisti(korenId, 0, 0, new Set());
+    return { uzly, spoje };
+  }
+
+  function prepocitejRozvrzeni() {
+    const koren = Stav.rezim === 'vyvod' ? Stav.ego : (Stav.vybrany || Stav.ego);
+    Stav.rozvrzeni = Stav.rezim === 'vyvod' ? rozvrhniVyvod(koren) : rozvrhniRozrod(koren);
+    return Stav.rozvrzeni;
+  }
+
+  /* ==================================================================
+     5. VYKRESLENÍ
+     ================================================================== */
+
+  const el = id => document.getElementById(id);
+  const esc = s => String(s == null ? '' : s)
+    .replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  const zaokr = x => Math.round(x * 10) / 10;
+
+  let nalezyPodleOsoby = new Map();   // id → nejhorší závažnost nálezu
+
+  function kartaSvg(uzel) {
+    const o = osoba(uzel.id);
+    if (!o) return '';
+    const x = uzel.x, y = uzel.y;
+    const tridy = ['karta'];
+    tridy.push(o.pohlavi === 'm' ? 'muz' : (o.pohlavi === 'z' ? 'zena' : 'neurcene'));
+    if (Stav.vybrany === uzel.id) tridy.push('vybrana');
+    if (Stav.ego === uzel.id) tridy.push('ego');
+
+    const roky = rozsahLet(o);
+    const misto = o.mistoNarozeni || o.bydliste || '';
+    const znacka = nalezyPodleOsoby.get(uzel.id);
+    const ikonaChyby = znacka === 'chyba' ? '⛔' : (znacka === 'varovani' ? '⚠️' : '');
+
+    return `<g class="${tridy.join(' ')}" data-id="${uzel.id}" transform="translate(${zaokr(x - KARTA.s / 2)},${zaokr(y - KARTA.v / 2)})">
+      <rect class="ramecek" width="${KARTA.s}" height="${KARTA.v}" rx="7"/>
+      <text class="jmeno" x="10" y="21">${esc(zkrat(celeJmeno(o), 24))}</text>
+      <text class="udaj" x="10" y="38">${esc(roky || 'bez dat')}</text>
+      ${misto ? `<text class="udaj" x="10" y="53">${esc(zkrat(misto, 26))}</text>` : ''}
+      ${uzel.sosa ? `<text class="sosa" x="${KARTA.s - 8}" y="16" text-anchor="end">${uzel.sosa}</text>` : ''}
+      ${uzel.opakovani && !uzel.jePartner ? `<text class="sosa" x="${KARTA.s - 8}" y="${KARTA.v - 8}" text-anchor="end">↻ opakuje se</text>` : ''}
+      ${ikonaChyby ? `<text class="znacka-chyby" x="${KARTA.s - 10}" y="${KARTA.v - 8}" text-anchor="end">${ikonaChyby}</text>` : ''}
+    </g>`;
+  }
+
+  function zkrat(text, kolik) {
+    const t = String(text || '');
+    return t.length > kolik ? t.slice(0, kolik - 1) + '…' : t;
+  }
+
+  function spojSvg(spoj) {
+    const a = spoj.z, b = spoj.do;
+    if (spoj.typ === 'partner') {
+      const y = a.y;
+      return `<path class="spoj partner" d="M${zaokr(a.x + KARTA.s / 2)},${zaokr(y)} L${zaokr(b.x - KARTA.s / 2)},${zaokr(y)}"/>`;
+    }
+    if (spoj.typ === 'rodic') {
+      // z horní hrany dítěte nahoru k dolní hraně rodiče
+      const y1 = a.y - KARTA.v / 2, y2 = b.y + KARTA.v / 2;
+      const stred = (y1 + y2) / 2;
+      return `<path class="spoj" d="M${zaokr(a.x)},${zaokr(y1)} V${zaokr(stred)} H${zaokr(b.x)} V${zaokr(y2)}"/>`;
+    }
+    const y1 = a.y + KARTA.v / 2, y2 = b.y - KARTA.v / 2;
+    const stred = (y1 + y2) / 2;
+    return `<path class="spoj" d="M${zaokr(a.x)},${zaokr(y1)} V${zaokr(stred)} H${zaokr(b.x)} V${zaokr(y2)}"/>`;
+  }
+
+  function vykresli() {
+    prepocitejRozvrzeni();
+    const { uzly, spoje } = Stav.rozvrzeni;
+    el('scena').setAttribute('transform',
+      `translate(${Stav.pohled.x},${Stav.pohled.y}) scale(${Stav.pohled.mer})`);
+    el('gSpoje').innerHTML = spoje.map(spojSvg).join('');
+    el('gKarty').innerHTML = uzly.map(kartaSvg).join('');
+    obnovStopu();
+  }
+
+  function obalStromu() {
+    const { uzly } = Stav.rozvrzeni;
+    if (!uzly.length) return null;
+    const xs = uzly.map(u => u.x), ys = uzly.map(u => u.y);
+    return {
+      x: Math.min(...xs) - KARTA.s / 2, y: Math.min(...ys) - KARTA.v / 2,
+      sirka: Math.max(...xs) - Math.min(...xs) + KARTA.s,
+      vyska: Math.max(...ys) - Math.min(...ys) + KARTA.v
+    };
+  }
+
+  function ukazCely() {
+    prepocitejRozvrzeni();
+    const obal = obalStromu();
+    const r = el('plátno').getBoundingClientRect();
+    if (!obal) { Stav.pohled = { x: r.width / 2, y: r.height / 2, mer: 1 }; return vykresli(); }
+    const okraj = 60;
+    const mer = Math.max(0.15, Math.min(1.6,
+      Math.min((r.width - okraj * 2) / obal.sirka, (r.height - okraj * 2) / obal.vyska)));
+    Stav.pohled.mer = mer;
+    Stav.pohled.x = r.width / 2 - (obal.x + obal.sirka / 2) * mer;
+    Stav.pohled.y = r.height / 2 - (obal.y + obal.vyska / 2) * mer;
+    vykresli();
+  }
+
+  function najdiUzel(id) {
+    return Stav.rozvrzeni.uzly.find(u => u.id === id && !u.jePartner)
+        || Stav.rozvrzeni.uzly.find(u => u.id === id);
+  }
+
+  function ukazOsobu(id) {
+    prepocitejRozvrzeni();
+    const uzel = najdiUzel(id);
+    if (!uzel) return;
+    const r = el('plátno').getBoundingClientRect();
+    Stav.pohled.x = r.width / 2 - uzel.x * Stav.pohled.mer;
+    Stav.pohled.y = r.height / 2 - uzel.y * Stav.pohled.mer;
+    vykresli();
+  }
+
+  /* ==================================================================
+     6. OVĚŘENÍ STROMU
+     ------------------------------------------------------------------
+     Každý nález nese, koho se týká, co je špatně, co s tím — a kde to
+     jde, i hotovou opravu na jedno klepnutí. Opravy jsou popsané daty,
+     aby šly spustit i z testu.
+     ================================================================== */
+
+  function overStrom() {
+    const nalezy = [];
+    const pridej = (zavaznost, osoby, text, reseni, oprava) =>
+      nalezy.push({ zavaznost, osoby, text, reseni, oprava: oprava || null });
+
+    for (const o of Stav.osoby.values()) {
+      const nar = denCislo(o.narozeni, true), umr = denCislo(o.umrti, false);
+
+      if (nar && umr && umr < nar) {
+        pridej('chyba', [o.id], `${celeJmeno(o)}: datum úmrtí (${datumHezky(o.umrti)}) předchází narození (${datumHezky(o.narozeni)}).`,
+          'Nejspíš jsou data prohozená.', { druh: 'prohoditData', osoba: o.id, popis: 'Prohodit data' });
+      }
+      const vek = vekVLetech(o.narozeni, o.umrti);
+      if (vek !== null && vek > MEZE.maxDozitiLet) {
+        pridej('varovani', [o.id], `${celeJmeno(o)} by se ${tvar(o, 'dožil', 'dožila')} ${vek} let.`, 'Zkontrolujte rok narození i úmrtí.');
+      }
+      if (!o.umrti && rok(o.narozeni) && (new Date().getFullYear() - rok(o.narozeni)) > MEZE.maxDozitiLet) {
+        pridej('varovani', [o.id],
+          `${celeJmeno(o)} je ${tvar(o, 'veden', 'vedena')} jako žijící, ale ${tvar(o, 'narodil', 'narodila')} se před ${new Date().getFullYear() - rok(o.narozeni)} lety.`,
+          'Doplňte datum úmrtí.');
+      }
+      if (!o.jmeno && !o.prijmeni) {
+        pridej('varovani', [o.id], 'Osoba nemá jméno ani příjmení.', 'Doplňte aspoň příjmení, ať jde v seznamu najít.');
+      }
+      if (!o.narozeni && !o.umrti) {
+        pridej('info', [o.id], `${celeJmeno(o)} nemá žádné datum.`, 'Doplňte aspoň přibližný rok narození („asi 1880“).');
+      }
+      if (o.pohlavi === '?') {
+        const jeOtec = rodinyKdeJePartner(o.id).some(r => r.deti.length);
+        pridej('info', [o.id], `${celeJmeno(o)} nemá uvedené pohlaví.`,
+          jeOtec ? 'U rodičů je pohlaví potřeba pro správné rozvržení vývodu.' : 'Doplňte pohlaví.');
+      }
+    }
+
+    // vztahy rodič–dítě
+    for (const r of Stav.rodiny.values()) {
+      for (const diteId of r.deti) {
+        const d = osoba(diteId);
+        if (!d) continue;
+        for (const rodicId of r.partneri) {
+          const rodic = osoba(rodicId);
+          if (!rodic) continue;
+          const rr = rok(rodic.narozeni), rd = rok(d.narozeni);
+          if (rr && rd) {
+            const rozdil = rd - rr;
+            if (rozdil < MEZE.minVekRodice) {
+              pridej('chyba', [rodicId, diteId],
+                `${celeJmeno(rodic)} by při narození dítěte ${celeJmeno(d)} ${rozdil <= 0
+                  ? 'ještě ' + tvar(rodic, 'nebyl', 'nebyla') + ' na světě'
+                  : tvar(rodic, 'měl', 'měla') + ' ' + rozdil + ' let'}.`,
+                'Buď je špatně některý rok, nebo ta vazba nepatří sem.',
+                { druh: 'odpojitRodice', dite: diteId, rodic: rodicId, popis: 'Odpojit rodiče' });
+            } else if (rozdil < MEZE.nizkyVekRodice) {
+              pridej('varovani', [rodicId, diteId],
+                `${celeJmeno(rodic)} ${tvar(rodic, 'měl', 'měla')} při narození dítěte ${celeJmeno(d)} jen ${rozdil} let.`, 'Ověřte v matrice.');
+            } else if (rodic.pohlavi === 'z' && rozdil > MEZE.maxVekMatky) {
+              pridej('varovani', [rodicId, diteId], `${celeJmeno(rodic)} by rodila v ${rozdil} letech.`, 'Bývá to zapsaná babička místo matky.');
+            } else if (rodic.pohlavi === 'm' && rozdil > MEZE.maxVekOtce) {
+              pridej('varovani', [rodicId, diteId], `${celeJmeno(rodic)} by měl dítě v ${rozdil} letech.`, 'Ověřte, jestli nejde o děda.');
+            }
+          }
+          const umrtiRodice = denCislo(rodic.umrti, false), narozeniDitete = denCislo(d.narozeni, true);
+          if (umrtiRodice && narozeniDitete && umrtiRodice < narozeniDitete) {
+            const rozdilLet = (narozeniDitete - umrtiRodice) / 10000;
+            if (rodic.pohlavi === 'z') {
+              pridej('chyba', [rodicId, diteId], `${celeJmeno(rodic)} zemřela před narozením dítěte ${celeJmeno(d)}.`,
+                'Matka nemůže zemřít před porodem — zkontrolujte data nebo vazbu.',
+                { druh: 'odpojitRodice', dite: diteId, rodic: rodicId, popis: 'Odpojit rodiče' });
+            } else if (rozdilLet > 1) {
+              pridej('chyba', [rodicId, diteId], `${celeJmeno(rodic)} zemřel ${rozdilLet.toFixed(1)} roku před narozením dítěte ${celeJmeno(d)}.`,
+                'Zkontrolujte data nebo vazbu.',
+                { druh: 'odpojitRodice', dite: diteId, rodic: rodicId, popis: 'Odpojit rodiče' });
+            } else {
+              pridej('info', [rodicId, diteId],
+                `${celeJmeno(d)} se ${tvar(d, 'narodil', 'narodila')} až po smrti otce (pohrobek).`, 'Jen na vědomí.');
+            }
+          }
+        }
+
+        // jedno dítě, jen jeden rodič
+        if (r.partneri.length === 1) {
+          pridej('info', [diteId], `${celeJmeno(d)} má zapsaného jen jednoho rodiče.`, 'Doplňte druhého rodiče, ať vývod pokračuje po obou větvích.');
+        }
+      }
+
+      // sourozenci příliš blízko po sobě
+      const deti = r.deti.map(osoba).filter(Boolean).filter(d => rok(d.narozeni));
+      for (let i = 0; i < deti.length; i++) {
+        for (let j = i + 1; j < deti.length; j++) {
+          const a = deti[i], b = deti[j];
+          const da = denCislo(a.narozeni, true), db = denCislo(b.narozeni, true);
+          if (!da || !db || a.narozeni === b.narozeni) continue;   // stejné datum = dvojčata
+          const mesicu = Math.abs((db - da) / 10000) * 12;
+          if (mesicu > 0 && mesicu < MEZE.minMeziSourozenci) {
+            pridej('varovani', [a.id, b.id],
+              `${celeJmeno(a)} a ${celeJmeno(b)} se narodili jen ${Math.round(mesicu)} měsíců po sobě.`,
+              'Buď jde o dvojčata (pak mají mít stejné datum), nebo je jedno datum špatně.');
+          }
+        }
+      }
+
+      // svatba
+      if (r.svatba) {
+        for (const pId of r.partneri) {
+          const p = osoba(pId);
+          if (!p) continue;
+          const vekSvatby = vekVLetech(p.narozeni, r.svatba);
+          if (vekSvatby !== null && vekSvatby < MEZE.minVekSvatby) {
+            pridej('varovani', [pId],
+              `${celeJmeno(p)} by se ${tvar(p, 'ženil', 'vdávala')} v ${vekSvatby} letech.`, 'Ověřte datum svatby.');
+          }
+          const umrti = denCislo(p.umrti, false), svatba = denCislo(r.svatba, true);
+          if (umrti && svatba && svatba > umrti) {
+            pridej('chyba', [pId],
+              `${celeJmeno(p)} se ${tvar(p, 'ženil', 'vdávala')} po své smrti (svatba ${datumHezky(r.svatba)}, úmrtí ${datumHezky(p.umrti)}).`,
+              'Zkontrolujte datum svatby nebo úmrtí.');
+          }
+        }
+      }
+    }
+
+    // duplicity
+    const podleKlice = new Map();
+    for (const o of Stav.osoby.values()) {
+      const klic = `${(o.jmeno || '').toLowerCase()}|${(o.prijmeni || '').toLowerCase()}|${rok(o.narozeni) || ''}`;
+      if (klic === '||') continue;
+      if (!podleKlice.has(klic)) podleKlice.set(klic, []);
+      podleKlice.get(klic).push(o);
+    }
+    for (const skupina of podleKlice.values()) {
+      if (skupina.length < 2) continue;
+      for (let i = 1; i < skupina.length; i++) {
+        pridej('varovani', [skupina[0].id, skupina[i].id],
+          `${celeJmeno(skupina[0])} je v rodokmenu ${skupina.length}×.`,
+          'Pokud jde o tutéž osobu, sloučením se přepojí všechny vazby.',
+          { druh: 'sloucit', hlavni: skupina[0].id, druhy: skupina[i].id, popis: 'Sloučit záznamy' });
+      }
+    }
+
+    // kruh v předcích (kdyby vznikl načtením cizích dat)
+    for (const o of Stav.osoby.values()) {
+      const predkove = vsichniPredkove(o.id, 40);
+      if (predkove.size && [...predkove.keys()].some(id => id !== o.id && jePredkem(o.id, id))) {
+        pridej('chyba', [o.id], `${celeJmeno(o)} je ${tvar(o, 'vlastním předkem', 'vlastní předkyní')} — v rodokmenu je kruh.`,
+          'Odpojte chybnou vazbu rodič–dítě.');
+        break;
+      }
+    }
+
+    // osoby mimo strom výchozí osoby
+    if (Stav.ego) {
+      const spojene = spojeneSEgem();
+      for (const o of Stav.osoby.values()) {
+        if (!spojene.has(o.id)) {
+          pridej('info', [o.id], `${celeJmeno(o)} není nijak ${tvar(o, 'spojen', 'spojena')} s výchozí osobou.`,
+            'Buď doplňte vazbu, nebo osobu smažte — do vývodu se jinak nedostane.');
+        }
+      }
+    }
+
+    const poradi = { chyba: 0, varovani: 1, info: 2 };
+    nalezy.sort((a, b) => poradi[a.zavaznost] - poradi[b.zavaznost]);
+    return nalezy;
+  }
+
+  // Všechny osoby dosažitelné z výchozí osoby po vazbách (oběma směry).
+  function spojeneSEgem() {
+    const videne = new Set();
+    if (!Stav.ego) return videne;
+    const fronta = [Stav.ego];
+    while (fronta.length) {
+      const id = fronta.shift();
+      if (videne.has(id)) continue;
+      videne.add(id);
+      for (const r of rodiceOsoby(id)) fronta.push(r.id);
+      for (const s of sourozenciOsoby(id)) fronta.push(s.id);
+      for (const p of partneriOsoby(id)) fronta.push(p.osoba.id);
+      for (const d of detiOsoby(id)) fronta.push(d.osoba.id);
+    }
+    return videne;
+  }
+
+  /* --- opravy ---------------------------------------------------------- */
+
+  function provedOpravu(oprava) {
+    if (!oprava) return false;
+    snimek();
+    let hotovo = false;
+    if (oprava.druh === 'prohoditData') {
+      const o = osoba(oprava.osoba);
+      if (o) { const pom = o.narozeni; o.narozeni = o.umrti; o.umrti = pom; hotovo = true; }
+    } else if (oprava.druh === 'odpojitRodice') {
+      odpojRodice(oprava.dite, oprava.rodic);
+      hotovo = true;
+    } else if (oprava.druh === 'sloucit') {
+      hotovo = sloucOsoby(oprava.hlavni, oprava.druhy);
+    } else if (oprava.druh === 'pohlaviPodleRole') {
+      const o = osoba(oprava.osoba);
+      if (o) { o.pohlavi = oprava.pohlavi; hotovo = true; }
+    }
+    if (!hotovo) Stav.historie.pop();
+    return hotovo;
+  }
+
+  /* Sloučení dvou záznamů téže osoby: zůstane první, druhý mu předá, co
+     sám nemá, a všechny vazby se přepojí. */
+  function sloucOsoby(hlavniId, druhyId) {
+    const h = osoba(hlavniId), d = osoba(druhyId);
+    if (!h || !d || hlavniId === druhyId) return false;
+
+    for (const pole of ['jmeno', 'prijmeni', 'rodnePrijmeni', 'narozeni', 'mistoNarozeni',
+                        'umrti', 'mistoUmrti', 'povolani', 'bydliste']) {
+      if (!h[pole] && d[pole]) h[pole] = d[pole];
+    }
+    if (h.pohlavi === '?' && d.pohlavi !== '?') h.pohlavi = d.pohlavi;
+    if (d.poznamka) h.poznamka = h.poznamka ? `${h.poznamka}\n${d.poznamka}` : d.poznamka;
+    h.zdroje = [...(h.zdroje || []), ...(d.zdroje || [])];
+
+    for (const r of Stav.rodiny.values()) {
+      r.partneri = r.partneri.map(p => p === druhyId ? hlavniId : p);
+      r.deti = r.deti.map(x => x === druhyId ? hlavniId : x);
+      r.partneri = [...new Set(r.partneri)].filter(p => !r.deti.includes(p));
+      r.deti = [...new Set(r.deti)];
+    }
+    if (!h.rodinaDite && d.rodinaDite) h.rodinaDite = d.rodinaDite;
+    Stav.osoby.delete(druhyId);
+    if (Stav.ego === druhyId) Stav.ego = hlavniId;
+    if (Stav.vybrany === druhyId) Stav.vybrany = hlavniId;
+    srovnejVazby();
+    return true;
+  }
+
+  /* ==================================================================
+     7. PŘÍBUZNOST
+     ================================================================== */
+
+  const praX = (kolik, zaklad) => 'pra'.repeat(Math.max(0, kolik)) + zaklad;
+  const CISLOVKY = ['', 'prvního', 'druhého', 'třetího', 'čtvrtého', 'pátého', 'šestého', 'sedmého'];
+
+  function nazevVztahu(dA, dB, zenaA, spolecnychRodicu) {
+    if (dA === 0 && dB === 0) return 'tatáž osoba';
+    if (dA === 0) return dB === 1 ? (zenaA ? 'matka' : 'otec')
+      : dB === 2 ? (zenaA ? 'babička' : 'dědeček') : praX(dB - 2, zenaA ? 'babička' : 'dědeček');
+    if (dB === 0) return dA === 1 ? (zenaA ? 'dcera' : 'syn')
+      : dA === 2 ? (zenaA ? 'vnučka' : 'vnuk') : praX(dA - 2, zenaA ? 'vnučka' : 'vnuk');
+    if (dA === 1 && dB === 1) return `${spolecnychRodicu >= 2 ? 'vlastní' : 'nevlastní'} ${zenaA ? 'sestra' : 'bratr'}`;
+    if (dA === 1) return dB === 2 ? (zenaA ? 'teta' : 'strýc') : praX(dB - 2, zenaA ? 'teta' : 'strýc');
+    if (dB === 1) return dA === 2 ? (zenaA ? 'neteř' : 'synovec') : praX(dA - 2, zenaA ? 'neteř' : 'synovec');
+    const stupen = Math.min(dA, dB) - 1, posun = Math.abs(dA - dB);
+    let text = zenaA ? 'sestřenice' : 'bratranec';
+    if (stupen >= 2) text += ` z ${CISLOVKY[stupen] || stupen + '.'} kolena`;
+    if (posun) text += ` (o ${posun} ${posun === 1 ? 'generaci' : 'generace'} posunutý)`;
+    return text;
+  }
+
+  function predkoveSCestou(id) {
+    const mapa = new Map([[id, { vzdalenost: 0, pres: null }]]);
+    const fronta = [id];
+    while (fronta.length) {
+      const akt = fronta.shift();
+      for (const r of rodiceOsoby(akt)) {
+        if (mapa.has(r.id)) continue;
+        mapa.set(r.id, { vzdalenost: mapa.get(akt).vzdalenost + 1, pres: akt });
+        fronta.push(r.id);
+      }
+    }
+    return mapa;
+  }
+
+  function retez(mapa, odPredka) {
+    const ven = [];
+    let akt = odPredka;
+    while (akt) { ven.push(celeJmeno(osoba(akt))); akt = (mapa.get(akt) || {}).pres; }
+    return ven.reverse();   // od osoby k předkovi
+  }
+
+  function zjistiVztah(idA, idB, bezPartneru) {
+    const a = osoba(idA), b = osoba(idB);
+    if (!a || !b) return null;
+    if (idA === idB) return { text: 'tatáž osoba', cesta: [celeJmeno(a)] };
+    if (partneriOsoby(idA).some(p => p.osoba.id === idB)) {
+      return { text: a.pohlavi === 'z' ? 'manželka / partnerka' : 'manžel / partner', cesta: [celeJmeno(a), celeJmeno(b)] };
+    }
+    const pA = predkoveSCestou(idA), pB = predkoveSCestou(idB);
+    let nej = null;
+    for (const [id, uzelA] of pA) {
+      const uzelB = pB.get(id);
+      if (!uzelB) continue;
+      const soucet = uzelA.vzdalenost + uzelB.vzdalenost;
+      if (!nej || soucet < nej.soucet) nej = { id, dA: uzelA.vzdalenost, dB: uzelB.vzdalenost, soucet };
+    }
+    if (nej) {
+      const spolecniRodice = rodiceOsoby(idA).filter(r => rodiceOsoby(idB).some(x => x.id === r.id)).length;
+      return {
+        text: nazevVztahu(nej.dA, nej.dB, a.pohlavi === 'z', spolecniRodice),
+        predek: celeJmeno(osoba(nej.id)), dA: nej.dA, dB: nej.dB,
+        cesta: retez(pA, nej.id).concat(retez(pB, nej.id).reverse().slice(1))
+      };
+    }
+    if (bezPartneru) return { text: null, cesta: [] };
+
+    const zena = a.pohlavi === 'z';
+    const sourozenec = t => /bratr|sestra/.test(t), rodicT = t => /^(otec|matka)$/.test(t), diteT = t => /^(syn|dcera)$/.test(t);
+    for (const p of partneriOsoby(idA)) {
+      const pres = zjistiVztah(p.osoba.id, idB, true);
+      if (!pres || !pres.text || pres.text === 'tatáž osoba') continue;
+      const text = sourozenec(pres.text) ? (zena ? 'švagrová' : 'švagr')
+        : diteT(pres.text) ? (zena ? 'snacha' : 'zeť')
+        : rodicT(pres.text) ? (zena ? 'nevlastní matka' : 'nevlastní otec')
+        : `${zena ? 'manželka' : 'manžel'} osoby, která je pro B ${pres.text}`;
+      return { text, cesta: [celeJmeno(a)].concat(pres.cesta) };
+    }
+    for (const p of partneriOsoby(idB)) {
+      const pres = zjistiVztah(idA, p.osoba.id, true);
+      if (!pres || !pres.text || pres.text === 'tatáž osoba') continue;
+      const text = rodicT(pres.text) ? (zena ? 'tchyně' : 'tchán')
+        : sourozenec(pres.text) ? (zena ? 'švagrová' : 'švagr')
+        : diteT(pres.text) ? (zena ? 'nevlastní dcera' : 'nevlastní syn')
+        : `${pres.text} ${b.pohlavi === 'z' ? 'manželky' : 'manžela'} osoby B`;
+      return { text, cesta: pres.cesta.concat([celeJmeno(b)]) };
+    }
+    return { text: null, cesta: [] };
+  }
+
+  /* ==================================================================
+     8. STATISTIKY A ÚPLNOST VÝVODU
+     ================================================================== */
+
+  function statistiky() {
+    const osoby = [...Stav.osoby.values()];
+    const muzi = osoby.filter(o => o.pohlavi === 'm').length;
+    const zeny = osoby.filter(o => o.pohlavi === 'z').length;
+    const sDatem = osoby.filter(o => o.narozeni || o.umrti).length;
+    const sMistem = osoby.filter(o => o.mistoNarozeni).length;
+    const seZdrojem = osoby.filter(o => (o.zdroje || []).length).length;
+    const veky = osoby.map(o => vekVLetech(o.narozeni, o.umrti)).filter(v => v !== null && v >= 0 && v < 120);
+    const prumernyVek = veky.length ? Math.round(veky.reduce((a, b) => a + b, 0) / veky.length) : null;
+
+    const prijmeni = new Map();
+    for (const o of osoby) {
+      const p = (o.prijmeni || '').trim();
+      if (p) prijmeni.set(p, (prijmeni.get(p) || 0) + 1);
+    }
+    const mista = new Map();
+    for (const o of osoby) {
+      const m = (o.mistoNarozeni || '').trim();
+      if (m) mista.set(m, (mista.get(m) || 0) + 1);
+    }
+
+    // úplnost vývodu: kolik z 2^g předků dané generace je vyplněno
+    const uplnost = [];
+    if (Stav.ego) {
+      let uroven = [Stav.ego];
+      for (let g = 1; g <= 10 && uroven.length; g++) {
+        const dalsi = [];
+        for (const id of uroven) for (const r of rodiceOsoby(id)) dalsi.push(r.id);
+        if (!dalsi.length) break;
+        uplnost.push({ generace: g, nalezeno: dalsi.length, mozne: Math.pow(2, g) });
+        uroven = dalsi;
+      }
+    }
+
+    return {
+      osob: osoby.length, rodin: Stav.rodiny.size, muzi, zeny,
+      neurcene: osoby.length - muzi - zeny,
+      sDatem, sMistem, seZdrojem, prumernyVek,
+      generaci: uplnost.length,
+      prijmeni: [...prijmeni.entries()].sort((a, b) => b[1] - a[1]).slice(0, 8),
+      mista: [...mista.entries()].sort((a, b) => b[1] - a[1]).slice(0, 8),
+      uplnost,
+      kvalita: osoby.length ? Math.round(((sDatem / osoby.length) * 0.5 + (sMistem / osoby.length) * 0.3
+                + (seZdrojem / osoby.length) * 0.2) * 100) : 0
+    };
+  }
+
+  /* ==================================================================
+     9. NAČÍTÁNÍ CIZÍCH DAT
+     ------------------------------------------------------------------
+     Umí tři věci: vlastní zálohu, export ze starší stránky Heritage
+     (pole osob s poli `parents` a `partners`) a GEDCOM 5.5.1.
+     ================================================================== */
+
+  function zHeritage(pole) {
+    const osoby = new Map();
+    const prevodPohlavi = { male: 'm', female: 'z', other: '?' };
+    for (const p of pole) {
+      const o = prazdnaOsoba({
+        id: p.id || noveId('o'),
+        jmeno: p.firstName || '', prijmeni: p.lastName || '',
+        pohlavi: prevodPohlavi[p.gender] || '?',
+        narozeni: p.birthDate || '', mistoNarozeni: p.birthPlace || '',
+        umrti: p.deathDate || '', mistoUmrti: p.deathPlace || '',
+        povolani: p.occupation || '', bydliste: p.address || '',
+        poznamka: p.notes || ''
+      });
+      osoby.set(o.id, o);
+    }
+    const rodiny = new Map();
+    const klic = ids => ids.slice().sort().join('+');
+    const dejRodinu = partneri => {
+      const k = klic(partneri);
+      if (!rodiny.has(k)) rodiny.set(k, prazdnaRodina({ partneri: partneri.slice() }));
+      return rodiny.get(k);
+    };
+    for (const p of pole) {
+      const rodice = (p.parents || []).filter(id => osoby.has(id));
+      if (rodice.length) dejRodinu(rodice).deti.push(p.id);
+    }
+    for (const p of pole) {
+      for (const partner of (p.partners || [])) {
+        if (osoby.has(partner)) dejRodinu([p.id, partner]);
+      }
+    }
+    return { osoby: [...osoby.values()], rodiny: [...rodiny.values()] };
+  }
+
+  function doHeritage() {
+    return [...Stav.osoby.values()].map(o => {
+      const rodice = rodiceOsoby(o.id).map(r => r.id);
+      const partneri = partneriOsoby(o.id).map(p => p.osoba.id);
+      return {
+        id: o.id, firstName: o.jmeno, lastName: o.prijmeni,
+        gender: o.pohlavi === 'm' ? 'male' : (o.pohlavi === 'z' ? 'female' : 'other'),
+        birthDate: o.narozeni, birthPlace: o.mistoNarozeni,
+        deathDate: o.umrti, deathPlace: o.mistoUmrti,
+        occupation: o.povolani, address: o.bydliste,
+        parents: rodice, partners: partneri, notes: o.poznamka,
+        x: 0, y: 0, generation: 0, generationOrder: 0, manuallyPositioned: false
+      };
+    });
+  }
+
+  /* --- GEDCOM --------------------------------------------------------- */
+
+  const GED_MESICE = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
+
+  function datumDoGedcomu(hodnota) {
+    const d = parsujDatum(hodnota);
+    if (!d || !d.rok) return hodnota ? String(hodnota) : '';
+    const predpona = d.priblizne ? 'ABT ' : (d.smer === '<' ? 'BEF ' : (d.smer === '>' ? 'AFT ' : ''));
+    if (d.den && d.mesic) return `${predpona}${d.den} ${GED_MESICE[d.mesic - 1]} ${d.rok}`;
+    if (d.mesic) return `${predpona}${GED_MESICE[d.mesic - 1]} ${d.rok}`;
+    return predpona + d.rok;
+  }
+
+  function datumZGedcomu(text) {
+    if (!text) return '';
+    let t = String(text).trim().toUpperCase();
+    let predpona = '';
+    const m0 = t.match(/^(ABT|EST|CAL|BEF|AFT|FROM|TO|INT)\s+/);
+    if (m0) {
+      predpona = m0[1] === 'BEF' ? 'před ' : (m0[1] === 'AFT' ? 'po ' : 'asi ');
+      t = t.slice(m0[0].length);
+    }
+    let m = t.match(/^(\d{1,2})\s+([A-Z]{3})\s+(\d{3,4})$/);
+    if (m) { const i = GED_MESICE.indexOf(m[2]); if (i >= 0) return `${predpona}${+m[1]}.${i + 1}.${+m[3]}`; }
+    m = t.match(/^([A-Z]{3})\s+(\d{3,4})$/);
+    if (m) { const i = GED_MESICE.indexOf(m[1]); if (i >= 0) return `${predpona}${i + 1}.${+m[2]}`; }
+    m = t.match(/(\d{3,4})/);
+    return m ? predpona + m[1] : String(text);
+  }
+
+  function rozeberGedcom(text) {
+    const radky = String(text).replace(/^﻿/, '').split(/\r\n|\r|\n/);
+    const zaznamy = [];
+    let zaznam = null, uroven1 = null, uroven2 = null;
+    for (const syrovy of radky) {
+      const r = syrovy.trim();
+      if (!r) continue;
+      const m = r.match(/^(\d+)\s+(?:(@[^@]+@)\s+)?([A-Za-z0-9_]+)(?:\s+(.*))?$/);
+      if (!m) continue;
+      const uroven = +m[1], xref = m[2] || null, tag = m[3].toUpperCase(), hodnota = m[4] || '';
+      if (tag === 'CONT' || tag === 'CONC') {
+        const cil = uroven >= 3 ? uroven2 : (uroven === 2 ? uroven1 : zaznam);
+        if (cil) cil.hodnota = (cil.hodnota || '') + (tag === 'CONT' ? '\n' : '') + hodnota;
+        continue;
+      }
+      if (uroven === 0) { zaznam = { xref, tag, hodnota, deti: [] }; zaznamy.push(zaznam); uroven1 = uroven2 = null; }
+      else if (uroven === 1 && zaznam) { uroven1 = { tag, hodnota, deti: [] }; zaznam.deti.push(uroven1); uroven2 = null; }
+      else if (uroven === 2 && uroven1) { uroven2 = { tag, hodnota, deti: [] }; uroven1.deti.push(uroven2); }
+      else if (uroven >= 3 && uroven2) uroven2.deti.push({ tag, hodnota, deti: [] });
+    }
+    return zaznamy;
+  }
+
+  function zGedcomu(text) {
+    const zaznamy = rozeberGedcom(text);
+    const dej = (uzel, tag) => (uzel.deti || []).find(d => d.tag === tag);
+    const osoby = new Map();      // xref → osoba
+    const rodiny = [];
+    for (const z of zaznamy) {
+      if (z.tag === 'INDI' && z.xref) {
+        const jmenoUzel = dej(z, 'NAME');
+        let krestni = '', prijmeni = '';
+        if (jmenoUzel) {
+          const g = dej(jmenoUzel, 'GIVN'), s = dej(jmenoUzel, 'SURN');
+          const m = String(jmenoUzel.hodnota).match(/^([^/]*)\/([^/]*)\/?(.*)$/);
+          krestni = (g && g.hodnota) || (m ? m[1] : jmenoUzel.hodnota) || '';
+          prijmeni = (s && s.hodnota) || (m ? m[2] : '') || '';
+        }
+        const sex = (dej(z, 'SEX') || {}).hodnota || '';
+        const nar = dej(z, 'BIRT'), umr = dej(z, 'DEAT'), bydl = dej(z, 'RESI');
+        osoby.set(z.xref, prazdnaOsoba({
+          jmeno: krestni.trim(), prijmeni: prijmeni.trim(),
+          pohlavi: sex.toUpperCase() === 'F' ? 'z' : (sex.toUpperCase() === 'M' ? 'm' : '?'),
+          narozeni: nar ? datumZGedcomu((dej(nar, 'DATE') || {}).hodnota) : '',
+          mistoNarozeni: nar ? ((dej(nar, 'PLAC') || {}).hodnota || '') : '',
+          umrti: umr ? datumZGedcomu((dej(umr, 'DATE') || {}).hodnota) : '',
+          mistoUmrti: umr ? ((dej(umr, 'PLAC') || {}).hodnota || '') : '',
+          povolani: (dej(z, 'OCCU') || {}).hodnota || '',
+          bydliste: bydl ? ((dej(bydl, 'ADDR') || {}).hodnota || '') : '',
+          poznamka: (dej(z, 'NOTE') || {}).hodnota || '',
+          zdroje: (z.deti || []).filter(d => d.tag === 'SOUR').map(d => ({ popis: d.hodnota || 'zdroj', odkaz: '' }))
+        }));
+      } else if (z.tag === 'FAM') {
+        const svatba = dej(z, 'MARR');
+        rodiny.push({
+          xref: z.xref,
+          partneri: (z.deti || []).filter(d => d.tag === 'HUSB' || d.tag === 'WIFE').map(d => d.hodnota.trim()),
+          deti: (z.deti || []).filter(d => d.tag === 'CHIL').map(d => d.hodnota.trim()),
+          svatba: svatba ? datumZGedcomu((dej(svatba, 'DATE') || {}).hodnota) : '',
+          mistoSvatby: svatba ? ((dej(svatba, 'PLAC') || {}).hodnota || '') : '',
+          rozvod: !!dej(z, 'DIV')
+        });
+      }
+    }
+    const venRodiny = rodiny.map(r => prazdnaRodina({
+      partneri: r.partneri.map(x => osoby.get(x)).filter(Boolean).map(o => o.id),
+      deti: r.deti.map(x => osoby.get(x)).filter(Boolean).map(o => o.id),
+      svatba: r.svatba, mistoSvatby: r.mistoSvatby, rozvod: r.rozvod
+    }));
+    return { osoby: [...osoby.values()], rodiny: venRodiny };
+  }
+
+  function doGedcomu() {
+    const osoby = [...Stav.osoby.values()];
+    const rodiny = [...Stav.rodiny.values()];
+    const cisloO = new Map(osoby.map((o, i) => [o.id, `@I${i + 1}@`]));
+    const cisloR = new Map(rodiny.map((r, i) => [r.id, `@F${i + 1}@`]));
+    const radky = [];
+    const p = (uroven, tag, hodnota) => radky.push(`${uroven} ${tag}${hodnota ? ' ' + String(hodnota).replace(/\r?\n/g, ' ') : ''}`);
+    const dnes = new Date();
+
+    p(0, 'HEAD');
+    p(1, 'SOUR', 'StavitelRodokmenu');
+    p(2, 'NAME', 'Stavitel rodokmenu');
+    p(1, 'DATE', `${dnes.getDate()} ${GED_MESICE[dnes.getMonth()]} ${dnes.getFullYear()}`);
+    p(1, 'GEDC'); p(2, 'VERS', '5.5.1'); p(2, 'FORM', 'LINEAGE-LINKED');
+    p(1, 'CHAR', 'UTF-8');
+
+    for (const o of osoby) {
+      p(0, `${cisloO.get(o.id)} INDI`);
+      p(1, 'NAME', `${o.jmeno || ''} /${o.prijmeni || ''}/`.trim());
+      if (o.jmeno) p(2, 'GIVN', o.jmeno);
+      if (o.prijmeni) p(2, 'SURN', o.prijmeni);
+      p(1, 'SEX', o.pohlavi === 'z' ? 'F' : (o.pohlavi === 'm' ? 'M' : 'U'));
+      if (o.narozeni || o.mistoNarozeni) {
+        p(1, 'BIRT');
+        if (o.narozeni) p(2, 'DATE', datumDoGedcomu(o.narozeni));
+        if (o.mistoNarozeni) p(2, 'PLAC', o.mistoNarozeni);
+      }
+      if (o.umrti || o.mistoUmrti) {
+        p(1, 'DEAT');
+        if (o.umrti) p(2, 'DATE', datumDoGedcomu(o.umrti));
+        if (o.mistoUmrti) p(2, 'PLAC', o.mistoUmrti);
+      }
+      if (o.povolani) p(1, 'OCCU', o.povolani);
+      if (o.bydliste) { p(1, 'RESI'); p(2, 'ADDR', o.bydliste); }
+      if (o.poznamka) {
+        const casti = String(o.poznamka).split(/\r?\n/);
+        p(1, 'NOTE', casti[0]);
+        casti.slice(1).forEach(c => p(2, 'CONT', c));
+      }
+      for (const z of (o.zdroje || [])) p(1, 'SOUR', [z.popis, z.odkaz].filter(Boolean).join(' — '));
+      if (o.rodinaDite && cisloR.has(o.rodinaDite)) p(1, 'FAMC', cisloR.get(o.rodinaDite));
+      for (const rid of o.rodinyPartner) if (cisloR.has(rid)) p(1, 'FAMS', cisloR.get(rid));
+    }
+
+    for (const r of rodiny) {
+      p(0, `${cisloR.get(r.id)} FAM`);
+      const partneri = r.partneri.map(osoba).filter(Boolean);
+      const muz = partneri.find(x => x.pohlavi === 'm');
+      const zena = partneri.find(x => x.pohlavi === 'z');
+      const zbytek = partneri.filter(x => x !== muz && x !== zena);
+      if (muz) p(1, 'HUSB', cisloO.get(muz.id));
+      if (zena) p(1, 'WIFE', cisloO.get(zena.id));
+      zbytek.forEach(x => p(1, muz ? 'WIFE' : 'HUSB', cisloO.get(x.id)));
+      for (const d of r.deti) if (cisloO.has(d)) p(1, 'CHIL', cisloO.get(d));
+      if (r.svatba || r.mistoSvatby) {
+        p(1, 'MARR');
+        if (r.svatba) p(2, 'DATE', datumDoGedcomu(r.svatba));
+        if (r.mistoSvatby) p(2, 'PLAC', r.mistoSvatby);
+      }
+      if (r.rozvod) p(1, 'DIV', 'Y');
+    }
+    p(0, 'TRLR');
+    return radky.join('\r\n') + '\r\n';
+  }
+
+  /* Rozpoznání formátu: vlastní záloha, pole z Heritage, nebo GEDCOM. */
+  function rozpoznejANacti(text) {
+    const orez = text.replace(/^﻿/, '').trim();
+    if (orez.startsWith('{') || orez.startsWith('[')) {
+      const data = JSON.parse(orez);
+      if (Array.isArray(data)) {
+        if (!data.length) return { chyba: 'Soubor je prázdný.' };
+        if (data[0] && (data[0].firstName !== undefined || data[0].lastName !== undefined)) {
+          return Object.assign({ puvod: 'Heritage' }, zHeritage(data));
+        }
+        return { chyba: 'Pole v JSONu nevypadá jako osoby z Heritage.' };
+      }
+      if (data && Array.isArray(data.osoby)) {
+        return { puvod: 'vlastní záloha', osoby: data.osoby, rodiny: data.rodiny || [], ego: data.ego };
+      }
+      if (data && Array.isArray(data.people)) {
+        return Object.assign({ puvod: 'Heritage' }, zHeritage(data.people));
+      }
+      return { chyba: 'JSON nemá známou strukturu.' };
+    }
+    if (/^\s*0\s+HEAD/m.test(orez) || /0\s+@[^@]+@\s+INDI/.test(orez)) {
+      return Object.assign({ puvod: 'GEDCOM' }, zGedcomu(orez));
+    }
+    return { chyba: 'Soubor nevypadá jako záloha ani GEDCOM.' };
+  }
+
+  function nastavData(data) {
+    Stav.osoby = new Map((data.osoby || []).map(o => [o.id, prazdnaOsoba(o)]));
+    Stav.rodiny = new Map((data.rodiny || []).map(r => [r.id, prazdnaRodina(r)]));
+    srovnejVazby();
+    Stav.ego = (data.ego && Stav.osoby.has(data.ego)) ? data.ego : navrhniEgo();
+    Stav.vybrany = Stav.ego;
+  }
+
+  /* Výchozí osoba = nejmladší generace. Bere se ten, kdo nemá potomky
+     a má nejpozdější narození; bez dat rozhodne největší hloubka předků. */
+  function navrhniEgo() {
+    const osoby = [...Stav.osoby.values()];
+    if (!osoby.length) return null;
+    const bezPotomku = osoby.filter(o => !detiOsoby(o.id).length);
+    const zakladna = bezPotomku.length ? bezPotomku : osoby;
+    let nejlepsi = zakladna[0], nejlepsiSkore = -Infinity;
+    for (const o of zakladna) {
+      const r = rok(o.narozeni);
+      const hloubka = vsichniPredkove(o.id, 20).size;
+      const skore = (r ? r : 0) + hloubka * 2;
+      if (skore > nejlepsiSkore) { nejlepsiSkore = skore; nejlepsi = o; }
+    }
+    return nejlepsi.id;
+  }
+
+  /* ==================================================================
+     10. PANEL OSOBY
+     ------------------------------------------------------------------
+     Tady se strom staví: u vybrané osoby jsou rovnou tlačítka „přidat
+     otce / matku / partnera / dítě / sourozence". Vazba tak vzniká
+     v kontextu člověka, ne vybíráním ze seznamu v rozbalovátku.
+     ================================================================== */
+
+  function poleFormulare(id, popisek, hodnota, napoveda, typ) {
+    return `<div class="pole">
+      <label for="${id}">${popisek}</label>
+      <input type="${typ || 'text'}" id="${id}" value="${esc(hodnota)}" autocomplete="off">
+      ${napoveda ? `<div class="napoveda-pole">${napoveda}</div>` : ''}
+    </div>`;
+  }
+
+  function radekVazby(role, clovek, akce) {
+    return `<div class="vazba">
+      <span class="role">${role}</span>
+      <span class="jmeno" data-vyber="${clovek.id}">${esc(jmenoSRoky(clovek))}</span>
+      ${akce ? `<button title="Odpojit" data-odpoj="${akce}">✕</button>` : ''}
+    </div>`;
+  }
+
+  function vykresliDetail() {
+    const box = el('detailOsoby');
+    const o = osoba(Stav.vybrany);
+    if (!o) {
+      box.innerHTML = `<div class="napoveda-pole" style="line-height:1.7">
+        <b>Začněte nejmladší generací.</b><br>
+        Založte sebe (nebo dítě, od kterého rodokmen stavíte) a postupně přidávejte
+        rodiče — strom poroste vzhůru k předkům.</div>
+        <button class="btn hlavni" id="btnPrvniOsoba" style="width:100%;margin-top:10px">➕ Založit první osobu</button>`;
+      const btn = el('btnPrvniOsoba');
+      if (btn) btn.addEventListener('click', () => novaOsobaDialog());
+      return;
+    }
+
+    const { otec, matka } = otecMatka(o.id);
+    const partneri = partneriOsoby(o.id);
+    const deti = detiOsoby(o.id);
+    const sourozenci = sourozenciOsoby(o.id);
+    const jeEgo = Stav.ego === o.id;
+
+    box.innerHTML = `
+      <div style="display:flex;align-items:center;gap:8px;margin-bottom:10px">
+        <div style="flex:1;font-weight:600;font-size:1.02rem">${esc(celeJmeno(o))}</div>
+        ${jeEgo ? '<span class="odznak-ego">výchozí</span>' : ''}
+      </div>
+      <div class="akce-mrizka" style="margin-bottom:12px">
+        <button class="btn mini" id="btnEgo" ${jeEgo ? 'disabled' : ''}>🎯 Výchozí osoba</button>
+        <button class="btn mini" id="btnUkazVeStromu">🔍 Ukázat ve stromu</button>
+        <button class="btn mini" id="btnRozrodOdtud">⬇ Potomci odtud</button>
+        <button class="btn mini" id="btnSmazOsobu" style="color:var(--danger)">✕ Smazat</button>
+      </div>
+
+      <div class="dvojice">
+        ${poleFormulare('f_jmeno', 'Jméno', o.jmeno)}
+        ${poleFormulare('f_prijmeni', 'Příjmení', o.prijmeni)}
+      </div>
+      <div class="dvojice">
+        ${poleFormulare('f_rodne', 'Rodné příjmení', o.rodnePrijmeni)}
+        <div class="pole">
+          <label for="f_pohlavi">Pohlaví</label>
+          <select id="f_pohlavi">
+            <option value="m" ${o.pohlavi === 'm' ? 'selected' : ''}>muž</option>
+            <option value="z" ${o.pohlavi === 'z' ? 'selected' : ''}>žena</option>
+            <option value="?" ${o.pohlavi === '?' ? 'selected' : ''}>neuvedeno</option>
+          </select>
+        </div>
+      </div>
+      <div class="dvojice">
+        ${poleFormulare('f_narozeni', 'Narození', o.narozeni, 'stačí rok, i „asi 1880“')}
+        ${poleFormulare('f_mistoNar', 'Místo narození', o.mistoNarozeni)}
+      </div>
+      <div class="dvojice">
+        ${poleFormulare('f_umrti', 'Úmrtí', o.umrti)}
+        ${poleFormulare('f_mistoUmrti', 'Místo úmrtí', o.mistoUmrti)}
+      </div>
+      <div class="dvojice">
+        ${poleFormulare('f_povolani', 'Povolání', o.povolani)}
+        ${poleFormulare('f_bydliste', 'Bydliště', o.bydliste)}
+      </div>
+      <div class="pole">
+        <label for="f_poznamka">Poznámka</label>
+        <textarea id="f_poznamka">${esc(o.poznamka)}</textarea>
+      </div>
+
+      <div class="sekce">
+        <h3>Rodiče</h3>
+        <div class="vazby">
+          ${otec ? radekVazby('otec', otec, `rodic:${otec.id}`)
+                 : `<button class="btn mini" data-pridej="otec">➕ Přidat otce</button>`}
+          ${matka ? radekVazby('matka', matka, `rodic:${matka.id}`)
+                  : `<button class="btn mini" data-pridej="matka">➕ Přidat matku</button>`}
+        </div>
+      </div>
+
+      <div class="sekce">
+        <h3>Partneři a rodiny</h3>
+        <div class="vazby">
+          ${partneri.map(p => radekVazby(p.rodina.svatba ? `⚭ ${rok(p.rodina.svatba) || ''}` : 'partner',
+              p.osoba, `partner:${p.rodina.id}:${p.osoba.id}`)).join('')}
+          <button class="btn mini" data-pridej="partner">➕ Přidat partnera / partnerku</button>
+          ${partneri.length ? `<div class="pole" style="margin-top:6px">
+            <label for="f_svatba">Svatba (první rodina)</label>
+            <input type="text" id="f_svatba" value="${esc(partneri[0].rodina.svatba || '')}" placeholder="např. 12.5.1901">
+          </div>` : ''}
+        </div>
+      </div>
+
+      <div class="sekce">
+        <h3>Děti</h3>
+        <div class="vazby">
+          ${deti.map(d => radekVazby('dítě', d.osoba, `dite:${d.rodina.id}:${d.osoba.id}`)).join('')}
+          <button class="btn mini" data-pridej="dite">➕ Přidat dítě</button>
+        </div>
+      </div>
+
+      <div class="sekce">
+        <h3>Sourozenci</h3>
+        <div class="vazby">
+          ${sourozenci.map(s => radekVazby('sourozenec', s, `sourozenec:${s.id}`)).join('')}
+          <button class="btn mini" data-pridej="sourozenec">➕ Přidat sourozence</button>
+        </div>
+      </div>
+
+      <div class="sekce">
+        <h3>Zdroje</h3>
+        <div class="vazby" id="seznamZdroju">
+          ${(o.zdroje || []).map((z, i) => `<div class="vazba">
+            <span class="jmeno" style="cursor:default">${esc(z.popis)}${z.odkaz ? ` — <a href="${esc(z.odkaz)}" target="_blank" rel="noopener">odkaz</a>` : ''}</span>
+            <button title="Smazat zdroj" data-zdroj="${i}">✕</button></div>`).join('')}
+          <button class="btn mini" id="btnZdroj">➕ Přidat zdroj (matrika, odkaz…)</button>
+        </div>
+        <div class="napoveda-pole">Zdroj u každého údaje je to, co dělá rodokmen doložitelným.</div>
+      </div>`;
+
+    pripojDetail(o);
+  }
+
+  function pripojDetail(o) {
+    const zmenPole = (id, klic) => {
+      const prvek = el(id);
+      if (!prvek) return;
+      prvek.addEventListener('change', () => {
+        snimek();
+        o[klic] = prvek.value;
+        poZmene();
+      });
+    };
+    zmenPole('f_jmeno', 'jmeno'); zmenPole('f_prijmeni', 'prijmeni');
+    zmenPole('f_rodne', 'rodnePrijmeni'); zmenPole('f_pohlavi', 'pohlavi');
+    zmenPole('f_narozeni', 'narozeni'); zmenPole('f_mistoNar', 'mistoNarozeni');
+    zmenPole('f_umrti', 'umrti'); zmenPole('f_mistoUmrti', 'mistoUmrti');
+    zmenPole('f_povolani', 'povolani'); zmenPole('f_bydliste', 'bydliste');
+    zmenPole('f_poznamka', 'poznamka');
+
+    const svatba = el('f_svatba');
+    if (svatba) {
+      svatba.addEventListener('change', () => {
+        const prvni = partneriOsoby(o.id)[0];
+        if (!prvni) return;
+        snimek();
+        prvni.rodina.svatba = svatba.value;
+        poZmene();
+      });
+    }
+
+    el('btnEgo')?.addEventListener('click', () => { snimek(); Stav.ego = o.id; poZmene(); ukazCely(); });
+    el('btnUkazVeStromu')?.addEventListener('click', () => ukazOsobu(o.id));
+    el('btnRozrodOdtud')?.addEventListener('click', () => { Stav.rezim = 'rozrod'; Stav.vybrany = o.id; obnovRezim(); ukazCely(); });
+    el('btnSmazOsobu')?.addEventListener('click', async () => {
+      const potvrzeno = await Dialog.potvrd(`Smazat osobu ${celeJmeno(o)}?\n\nVazby na ni zmizí, ostatní osoby zůstanou.`);
+      if (!potvrzeno) return;
+      snimek();
+      smazOsobu(o.id);
+      poZmene();
+      Dialog.info('Osoba smazána (jde vrátit tlačítkem Zpět).');
+    });
+    el('btnZdroj')?.addEventListener('click', async () => {
+      const popis = await Dialog.zeptej('Popis zdroje (např. „Matrika N Jihlava 1861, fol. 23“):', '');
+      if (!popis) return;
+      const odkaz = await Dialog.zeptej('Odkaz (nepovinné):', '');
+      snimek();
+      o.zdroje = o.zdroje || [];
+      o.zdroje.push({ popis, odkaz: odkaz || '' });
+      poZmene();
+    });
+
+    el('detailOsoby').querySelectorAll('[data-zdroj]').forEach(b => b.addEventListener('click', () => {
+      snimek();
+      o.zdroje.splice(+b.dataset.zdroj, 1);
+      poZmene();
+    }));
+
+    el('detailOsoby').querySelectorAll('[data-vyber]').forEach(s => s.addEventListener('click', () => {
+      Stav.vybrany = s.dataset.vyber;
+      poZmene();
+      ukazOsobu(Stav.vybrany);
+    }));
+
+    el('detailOsoby').querySelectorAll('[data-odpoj]').forEach(b => b.addEventListener('click', async () => {
+      const [druh, a, c] = b.dataset.odpoj.split(':');
+      const potvrzeno = await Dialog.potvrd('Opravdu odpojit tuhle vazbu? Osoby zůstanou, zmizí jen jejich spojení.');
+      if (!potvrzeno) return;
+      snimek();
+      if (druh === 'rodic') odpojRodice(o.id, a);
+      else if (druh === 'partner') odpojPartneraZRodiny(a, c);
+      else if (druh === 'dite') odpojDite(a, c);
+      else if (druh === 'sourozenec') { const r = rodinaKdeJeDite(a); if (r) odpojDite(r.id, a); }
+      poZmene();
+    }));
+
+    el('detailOsoby').querySelectorAll('[data-pridej]').forEach(b =>
+      b.addEventListener('click', () => otevriVyber(b.dataset.pridej, o.id)));
+  }
+
+  /* ==================================================================
+     11. VÝBĚR OSOBY — napovídá mezi zapsanými, nebo rovnou založí novou
+     ================================================================== */
+
+  let vyberKontext = null;
+
+  const POPISKY_VYBERU = {
+    otec: 'Otec', matka: 'Matka', partner: 'Partner / partnerka',
+    dite: 'Dítě', sourozenec: 'Sourozenec', nova: 'Nová osoba'
+  };
+
+  function otevriVyber(druh, kOsobeId) {
+    const k = osoba(kOsobeId);
+    vyberKontext = { druh, kOsobe: kOsobeId };
+    el('vyberNadpis').textContent = `${POPISKY_VYBERU[druh] || 'Osoba'}${k ? ' — ' + celeJmeno(k) : ''}`;
+    el('vyberHledani').value = '';
+    el('novaJmeno').value = '';
+    el('novaNarozeni').value = '';
+    el('novaPrijmeni').value = navrhniPrijmeni(druh, k);
+    el('novaPohlavi').value = druh === 'otec' ? 'm' : druh === 'matka' ? 'z'
+      : druh === 'partner' && k ? (k.pohlavi === 'm' ? 'z' : k.pohlavi === 'z' ? 'm' : '?') : '?';
+    el('vyberPoznamka').textContent = popisPravidel(druh);
+    zobrazNavrhy('');
+    el('oknoVyber').classList.add('vidno');
+    setTimeout(() => el('vyberHledani').focus(), 30);
+  }
+
+  function navrhniPrijmeni(druh, k) {
+    if (!k) return '';
+    if (druh === 'otec' || druh === 'sourozenec') return k.prijmeni || '';
+    if (druh === 'dite') {
+      const otecRodiny = partneriOsoby(k.id).find(p => p.osoba.pohlavi === 'm');
+      return k.pohlavi === 'm' ? (k.prijmeni || '') : (otecRodiny ? otecRodiny.osoba.prijmeni : '');
+    }
+    return '';   // u matky a partnerky se čeká rodné příjmení
+  }
+
+  function popisPravidel(druh) {
+    if (druh === 'otec' || druh === 'matka') return 'Nabízí se jen lidé, kteří můžou být rodičem (věk, žádný kruh v rodokmenu).';
+    if (druh === 'partner') return 'Nenabízí se předci, potomci ani sourozenci.';
+    if (druh === 'dite') return 'Nabízí se jen lidé mladší než rodiče a bez kruhu v rodokmenu.';
+    if (druh === 'sourozenec') return 'Sourozenec se připojí ke stejným rodičům.';
+    return '';
+  }
+
+  // Kandidáti: vyřadí se ti, u kterých by vazba byla nemožná; zbytek se
+  // seřadí podle shody se zadaným textem.
+  function kandidati(text) {
+    if (!vyberKontext) return [];
+    const hledane = text.trim().toLowerCase();
+    const k = osoba(vyberKontext.kOsobe);
+    const ven = [];
+    for (const o of Stav.osoby.values()) {
+      if (!k || o.id === k.id) continue;
+      let kontrola = { ok: true, varovani: [] };
+      if (vyberKontext.druh === 'otec' || vyberKontext.druh === 'matka') kontrola = kontrolaRodicDite(o.id, k.id);
+      else if (vyberKontext.druh === 'partner') kontrola = kontrolaPartneru(k.id, o.id);
+      else if (vyberKontext.druh === 'dite') {
+        const r = rodinyKdeJePartner(k.id)[0];
+        kontrola = r ? kontrolaDiteDoRodiny(r.id, o.id) : kontrolaRodicDite(k.id, o.id);
+      } else if (vyberKontext.druh === 'sourozenec') {
+        const r = rodinaKdeJeDite(k.id);
+        kontrola = r ? kontrolaDiteDoRodiny(r.id, o.id) : { ok: true, varovani: [] };
+      }
+      if (!kontrola.ok) continue;
+      const jmeno = `${o.jmeno} ${o.prijmeni} ${o.narozeni} ${o.mistoNarozeni}`.toLowerCase();
+      if (hledane && !jmeno.includes(hledane)) continue;
+      let skore = 0;
+      if (vyberKontext.druh === 'otec' && o.pohlavi === 'm') skore += 3;
+      if (vyberKontext.druh === 'matka' && o.pohlavi === 'z') skore += 3;
+      if (hledane && jmeno.startsWith(hledane)) skore += 2;
+      if (kontrola.varovani.length) skore -= 1;
+      ven.push({ osoba: o, skore, varovani: kontrola.varovani });
+    }
+    return ven.sort((a, b) => b.skore - a.skore || celeJmeno(a.osoba).localeCompare(celeJmeno(b.osoba), 'cs')).slice(0, 40);
+  }
+
+  function zobrazNavrhy(text) {
+    const box = el('vyberNavrhy');
+    const seznam = kandidati(text);
+    if (!seznam.length) {
+      box.innerHTML = `<div class="napoveda-pole">Nikdo vhodný mezi zapsanými — založte novou osobu níž.</div>`;
+      return;
+    }
+    box.innerHTML = seznam.map(k => `<div class="polozka" data-pripoj="${k.osoba.id}">
+        <span class="tecka ${k.osoba.pohlavi === 'm' ? 'm' : k.osoba.pohlavi === 'z' ? 'z' : 'x'}"></span>
+        <span class="jmeno">${esc(celeJmeno(k.osoba))}${k.varovani.length ? ' ⚠️' : ''}</span>
+        <span class="roky">${esc(rozsahLet(k.osoba))}</span>
+      </div>`).join('');
+    box.querySelectorAll('[data-pripoj]').forEach(p =>
+      p.addEventListener('click', () => pripojVybraneho(p.dataset.pripoj)));
+  }
+
+  async function pripojVybraneho(id) {
+    if (!vyberKontext) return;
+    const { druh, kOsobe } = vyberKontext;
+    const vysledek = provedPripojeni(druh, kOsobe, id, true);
+    if (!vysledek) return;
+    if (vysledek.varovani && vysledek.varovani.length) {
+      const pokracovat = await Dialog.potvrd(`Pozor:\n• ${vysledek.varovani.join('\n• ')}\n\nPřidat i tak?`);
+      if (!pokracovat) return;
+    }
+    const konec = provedPripojeni(druh, kOsobe, id, false);
+    if (konec && konec.ok === false) { Dialog.chyba(konec.chyba); return; }
+    el('oknoVyber').classList.remove('vidno');
+    Stav.vybrany = id;
+    poZmene();
+  }
+
+  /* jenOveřit = true → nic se nemění, jen se vrátí výsledek kontroly */
+  function provedPripojeni(druh, kOsobeId, komuId, jenOveřit) {
+    const k = osoba(kOsobeId);
+    if (!k) return null;
+    if (jenOveřit) {
+      if (druh === 'otec' || druh === 'matka') return kontrolaRodicDite(komuId, kOsobeId);
+      if (druh === 'partner') return kontrolaPartneru(kOsobeId, komuId);
+      if (druh === 'dite') {
+        const r = rodinyKdeJePartner(kOsobeId)[0];
+        return r ? kontrolaDiteDoRodiny(r.id, komuId) : kontrolaRodicDite(kOsobeId, komuId);
+      }
+      if (druh === 'sourozenec') {
+        const r = rodinaKdeJeDite(kOsobeId);
+        return r ? kontrolaDiteDoRodiny(r.id, komuId) : { ok: true, varovani: [] };
+      }
+      return { ok: true, varovani: [] };
+    }
+    snimek();
+    let vysledek = { ok: true, varovani: [] };
+    if (druh === 'otec' || druh === 'matka') {
+      vysledek = pridejRodice(kOsobeId, komuId);
+    } else if (druh === 'partner') {
+      vysledek = pridejPartnera(kOsobeId, komuId);
+    } else if (druh === 'dite') {
+      let r = rodinyKdeJePartner(kOsobeId)[0];
+      if (!r) r = zalozRodinu([kOsobeId]);
+      vysledek = pridejDite(r.id, komuId);
+    } else if (druh === 'sourozenec') {
+      const r = zajistiRodinuDitete(kOsobeId);
+      vysledek = pridejDite(r.id, komuId);
+    }
+    if (vysledek.ok === false) { Stav.historie.pop(); return vysledek; }
+    poZmene();
+    return vysledek;
+  }
+
+  /* ==================================================================
+     12. SEZNAM OSOB, STOPA, PŘEKRESLENÍ
+     ================================================================== */
+
+  function vykresliSeznam() {
+    const hledane = (el('hledat').value || '').trim().toLowerCase();
+    const osoby = [...Stav.osoby.values()]
+      .filter(o => !hledane || `${o.jmeno} ${o.prijmeni} ${o.narozeni} ${o.umrti} ${o.mistoNarozeni} ${o.povolani}`
+        .toLowerCase().includes(hledane))
+      .sort((a, b) => (a.prijmeni || '').localeCompare(b.prijmeni || '', 'cs')
+        || (a.jmeno || '').localeCompare(b.jmeno || '', 'cs'));
+    el('pocetOsob').textContent = `${osoby.length} z ${Stav.osoby.size} osob`;
+    el('seznamOsob').innerHTML = osoby.map(o => `<div class="polozka" data-id="${o.id}"
+        aria-selected="${Stav.vybrany === o.id}">
+        <span class="tecka ${o.pohlavi === 'm' ? 'm' : o.pohlavi === 'z' ? 'z' : 'x'}"></span>
+        <span class="jmeno">${esc(celeJmeno(o))}</span>
+        ${Stav.ego === o.id ? '<span class="odznak-ego">výchozí</span>' : ''}
+        <span class="roky">${esc(rozsahLet(o))}</span>
+      </div>`).join('');
+    el('seznamOsob').querySelectorAll('[data-id]').forEach(p => p.addEventListener('click', () => {
+      Stav.vybrany = p.dataset.id;
+      prepniZalozku('osoba');
+      poZmene();
+      ukazOsobu(Stav.vybrany);
+    }));
+  }
+
+  function obnovStopu() {
+    const s = statistiky();
+    el('stopa').innerHTML = `<b>${s.osob}</b> osob · <b>${s.rodin}</b> rodin · `
+      + `výchozí: <b>${esc(celeJmeno(osoba(Stav.ego)))}</b> · kvalita dat <b>${s.kvalita} %</b>`;
+    el('btnZpet').disabled = !Stav.historie.length;
+    el('btnVpred').disabled = !Stav.budoucnost.length;
+  }
+
+  let casovacUlozeni = null;
+  function uloz() {
+    clearTimeout(casovacUlozeni);
+    casovacUlozeni = setTimeout(() => {
+      try { localStorage.setItem(KLIC, serializuj()); } catch (e) { /* plný localStorage stránku nezastaví */ }
+    }, 300);
+  }
+
+  function poZmene() {
+    vykresli();
+    vykresliDetail();
+    vykresliSeznam();
+    uloz();
+  }
+
+  function prepniZalozku(kam) {
+    const osobaZal = kam === 'osoba';
+    el('zalozkaOsoba').setAttribute('aria-selected', String(osobaZal));
+    el('zalozkaSeznam').setAttribute('aria-selected', String(!osobaZal));
+    el('obsahOsoba').hidden = !osobaZal;
+    el('obsahSeznam').hidden = osobaZal;
+  }
+
+  function obnovRezim() {
+    el('btnVyvod').classList.toggle('zapnuto', Stav.rezim === 'vyvod');
+    el('btnRozrod').classList.toggle('zapnuto', Stav.rezim === 'rozrod');
+    vykresli();
+  }
+
+  /* ==================================================================
+     13. PLÁTNO — posun, přiblížení, výběr
+     ================================================================== */
+
+  function pripojPlatno() {
+    const svg = el('plátno');
+    let tah = null;
+
+    const doSveta = e => {
+      const r = svg.getBoundingClientRect();
+      return { x: (e.clientX - r.left - Stav.pohled.x) / Stav.pohled.mer,
+               y: (e.clientY - r.top - Stav.pohled.y) / Stav.pohled.mer };
+    };
+
+    svg.addEventListener('pointerdown', e => {
+      try { svg.setPointerCapture(e.pointerId); } catch (chyba) { /* syntetická událost */ }
+      const karta = e.target.closest('.karta');
+      if (karta) {
+        Stav.vybrany = karta.dataset.id;
+        prepniZalozku('osoba');
+        vykresli();
+        vykresliDetail();
+        vykresliSeznam();
+        if (window.innerWidth <= 860) el('panel').classList.add('otevreny');
+        return;
+      }
+      tah = { x: e.clientX - Stav.pohled.x, y: e.clientY - Stav.pohled.y };
+      svg.classList.add('tahne');
+    });
+
+    svg.addEventListener('pointermove', e => {
+      if (!tah) return;
+      Stav.pohled.x = e.clientX - tah.x;
+      Stav.pohled.y = e.clientY - tah.y;
+      vykresli();
+    });
+
+    const konec = () => { tah = null; svg.classList.remove('tahne'); };
+    svg.addEventListener('pointerup', konec);
+    svg.addEventListener('pointercancel', konec);
+
+    svg.addEventListener('wheel', e => {
+      e.preventDefault();
+      const r = svg.getBoundingClientRect();
+      const mx = e.clientX - r.left, my = e.clientY - r.top;
+      const novy = Math.max(0.15, Math.min(2.5, Stav.pohled.mer * Math.exp(-e.deltaY * 0.0015)));
+      Stav.pohled.x = mx - (mx - Stav.pohled.x) * (novy / Stav.pohled.mer);
+      Stav.pohled.y = my - (my - Stav.pohled.y) * (novy / Stav.pohled.mer);
+      Stav.pohled.mer = novy;
+      vykresli();
+    }, { passive: false });
+
+    svg.addEventListener('dblclick', e => {
+      const karta = e.target.closest('.karta');
+      if (karta) { Stav.vybrany = karta.dataset.id; prepniZalozku('osoba'); poZmene(); }
+    });
+  }
+
+  /* ==================================================================
+     14. OKNA: ověření, příbuznost, statistiky
+     ================================================================== */
+
+  function vykresliOvereni() {
+    const nalezy = overStrom();
+    nalezyPodleOsoby = new Map();
+    for (const n of nalezy) {
+      for (const id of n.osoby) {
+        const stav = nalezyPodleOsoby.get(id);
+        if (n.zavaznost === 'chyba' || (n.zavaznost === 'varovani' && stav !== 'chyba')) {
+          nalezyPodleOsoby.set(id, n.zavaznost);
+        }
+      }
+    }
+    const pocty = { chyba: 0, varovani: 0, info: 0 };
+    nalezy.forEach(n => pocty[n.zavaznost]++);
+    const s = statistiky();
+
+    const hlavicka = `
+      <div style="display:flex;gap:10px;flex-wrap:wrap;margin-bottom:12px">
+        <div class="dlazdice" style="flex:1;min-width:110px;background:var(--bg-control);border:1px solid var(--border-strong);border-radius:6px;padding:8px 10px">
+          <div style="font-size:1.4rem;font-weight:700;color:${pocty.chyba ? 'var(--danger)' : 'var(--ok)'}">${pocty.chyba}</div>
+          <div style="font-size:.76rem;color:var(--text-muted)">chyb (nemožné údaje)</div></div>
+        <div class="dlazdice" style="flex:1;min-width:110px;background:var(--bg-control);border:1px solid var(--border-strong);border-radius:6px;padding:8px 10px">
+          <div style="font-size:1.4rem;font-weight:700;color:var(--warn)">${pocty.varovani}</div>
+          <div style="font-size:.76rem;color:var(--text-muted)">varování (podezřelé)</div></div>
+        <div class="dlazdice" style="flex:1;min-width:110px;background:var(--bg-control);border:1px solid var(--border-strong);border-radius:6px;padding:8px 10px">
+          <div style="font-size:1.4rem;font-weight:700;color:var(--accent)">${pocty.info}</div>
+          <div style="font-size:.76rem;color:var(--text-muted)">doplnit (kvalita dat)</div></div>
+      </div>
+      <div class="nadpisek">Úplnost a doloženost</div>
+      <div class="kvalita-pruh"><div style="width:${s.kvalita}%"></div></div>
+      <div class="napoveda-pole">Kvalita dat ${s.kvalita} % — počítá se z dat narození, míst a uvedených zdrojů.</div>
+      ${nalezy.some(n => n.oprava) ? `<button class="btn" id="btnOpravitVse" style="margin-top:10px">🛠 Opravit vše, co jde bezpečně</button>` : ''}
+      <hr style="border:0;border-top:1px solid var(--border);margin:12px 0">`;
+
+    const seznam = nalezy.length ? nalezy.map((n, i) => `
+      <div class="nalez ${n.zavaznost}">
+        <div class="kdo">${n.zavaznost === 'chyba' ? '⛔' : n.zavaznost === 'varovani' ? '⚠️' : 'ℹ️'} ${esc(n.text)}</div>
+        <div class="reseni">${esc(n.reseni || '')}</div>
+        <div class="tlacitka">
+          <button class="btn mini" data-ukaz="${n.osoby[0]}">Zobrazit</button>
+          ${n.oprava ? `<button class="btn mini" data-oprav="${i}">${esc(n.oprava.popis)}</button>` : ''}
+        </div>
+      </div>`).join('')
+      : `<div class="napoveda-pole">Žádné nesrovnalosti — rodokmen je v pořádku. 🎉</div>`;
+
+    el('overeniObsah').innerHTML = hlavicka + seznam;
+
+    el('overeniObsah').querySelectorAll('[data-ukaz]').forEach(b => b.addEventListener('click', () => {
+      Stav.vybrany = b.dataset.ukaz;
+      prepniZalozku('osoba');
+      poZmene();
+      ukazOsobu(Stav.vybrany);
+    }));
+    el('overeniObsah').querySelectorAll('[data-oprav]').forEach(b => b.addEventListener('click', () => {
+      const n = nalezy[+b.dataset.oprav];
+      if (provedOpravu(n.oprava)) { poZmene(); vykresliOvereni(); Dialog.info('Opraveno.'); }
+    }));
+    el('btnOpravitVse')?.addEventListener('click', async () => {
+      const bezpecne = nalezy.filter(n => n.oprava && n.oprava.druh === 'prohoditData');
+      if (!bezpecne.length) return Dialog.info('Nic, co by šlo opravit bez rozhodnutí člověka.');
+      if (!(await Dialog.potvrd(`Opravit ${bezpecne.length} nálezů (prohození dat narození a úmrtí)?`))) return;
+      bezpecne.forEach(n => provedOpravu(n.oprava));
+      poZmene();
+      vykresliOvereni();
+      Dialog.info(`Opraveno: ${bezpecne.length}`);
+    });
+    vykresli();
+  }
+
+  function naplnVyber(select, vybrane) {
+    const osoby = [...Stav.osoby.values()].sort((a, b) => celeJmeno(a).localeCompare(celeJmeno(b), 'cs'));
+    select.innerHTML = osoby.map(o => `<option value="${o.id}">${esc(jmenoSRoky(o))}</option>`).join('');
+    if (vybrane) select.value = vybrane;
+  }
+
+  function spocitejPribuznost() {
+    const idA = el('pribuznyA').value, idB = el('pribuznyB').value;
+    const box = el('pribuznostVysledek');
+    const a = osoba(idA), b = osoba(idB);
+    const v = zjistiVztah(idA, idB);
+    if (!v || !v.text) {
+      box.innerHTML = `<div class="nalez info"><b>${esc(celeJmeno(a))}</b> a <b>${esc(celeJmeno(b))}</b>:
+        žádná společná větev ani spojení přes partnera.</div>`;
+      return;
+    }
+    box.innerHTML = `<div class="nalez info">
+      <div style="font-size:.85rem;color:var(--text-muted)">A: <b>${esc(celeJmeno(a))}</b> · B: <b>${esc(celeJmeno(b))}</b></div>
+      <div style="margin-top:8px">A je pro B:</div>
+      <div style="font-size:1.3rem;color:var(--accent)">${esc(v.text)}</div>
+      ${v.predek ? `<div class="reseni">Nejbližší společný předek: <b>${esc(v.predek)}</b>
+        (${v.dA} ↑ k A, ${v.dB} ↑ k B)</div>` : ''}
+      ${v.cesta && v.cesta.length > 1 ? `<div class="reseni">Cesta: ${v.cesta.map(j => esc(j)).join(' → ')}</div>` : ''}
+    </div>`;
+  }
+
+  function vykresliStatistiky() {
+    const s = statistiky();
+    const radek = (nadpis, dvojice) => `
+      <div class="nadpisek" style="margin-top:14px">${nadpis}</div>
+      <table class="prehled"><tbody>
+        ${dvojice.map(([k, v]) => `<tr><td>${esc(k)}</td><td style="text-align:right">${esc(v)}</td></tr>`).join('')}
+      </tbody></table>`;
+    el('statistikyObsah').innerHTML = `
+      <div class="statistika">
+        <div class="dlazdice"><div class="cislo">${s.osob}</div><div class="popis">osob</div></div>
+        <div class="dlazdice"><div class="cislo">${s.rodin}</div><div class="popis">rodin</div></div>
+        <div class="dlazdice"><div class="cislo">${s.generaci}</div><div class="popis">generací předků</div></div>
+        <div class="dlazdice"><div class="cislo">${s.prumernyVek ?? '–'}</div><div class="popis">průměrný věk dožití</div></div>
+        <div class="dlazdice"><div class="cislo">${s.kvalita} %</div><div class="popis">kvalita dat</div></div>
+        <div class="dlazdice"><div class="cislo">${s.muzi}/${s.zeny}</div><div class="popis">mužů / žen</div></div>
+      </div>
+      ${s.uplnost.length ? radek('Úplnost vývodu (kolik předků z možných)',
+        s.uplnost.map(u => [`${u.generace}. generace`, `${u.nalezeno} z ${u.mozne} (${Math.round(u.nalezeno / u.mozne * 100)} %)`])) : ''}
+      ${s.prijmeni.length ? radek('Nejčastější příjmení', s.prijmeni.map(([k, v]) => [k, v + '×'])) : ''}
+      ${s.mista.length ? radek('Nejčastější místa narození', s.mista.map(([k, v]) => [k, v + '×'])) : ''}
+      ${radek('Doloženost', [
+        ['osoby s datem', `${s.sDatem} z ${s.osob}`],
+        ['osoby s místem narození', `${s.sMistem} z ${s.osob}`],
+        ['osoby s uvedeným zdrojem', `${s.seZdrojem} z ${s.osob}`]])}`;
+  }
+
+  /* ==================================================================
+     15. VÝSTUPY
+     ================================================================== */
+
+  function stahni(obsah, jmeno, typ) {
+    const blob = obsah instanceof Blob ? obsah : new Blob([obsah], { type: typ || 'text/plain;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = jmeno;
+    document.body.appendChild(a); a.click(); document.body.removeChild(a);
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
+  }
+
+  function svgStromu() {
+    prepocitejRozvrzeni();
+    const obal = obalStromu();
+    if (!obal) return null;
+    const okraj = 30;
+    const styl = `
+      .karta rect.ramecek{fill:#ffffff;stroke:#888;stroke-width:1.5}
+      .karta.muz rect.ramecek{stroke:#3f7fbf}
+      .karta.zena rect.ramecek{stroke:#c0567f}
+      .karta .jmeno{font:600 13px sans-serif;fill:#111}
+      .karta .udaj{font:11px sans-serif;fill:#555}
+      .karta .sosa{font:10px sans-serif;fill:#888}
+      .spoj{fill:none;stroke:#777;stroke-width:1.6}
+      .spoj.partner{stroke:#c0567f;stroke-dasharray:5 3}`;
+    return `<svg xmlns="http://www.w3.org/2000/svg" width="${Math.round(obal.sirka + okraj * 2)}" height="${Math.round(obal.vyska + okraj * 2)}" `
+      + `viewBox="${zaokr(obal.x - okraj)} ${zaokr(obal.y - okraj)} ${zaokr(obal.sirka + okraj * 2)} ${zaokr(obal.vyska + okraj * 2)}">`
+      + `<style>${styl}</style><rect x="${zaokr(obal.x - okraj)}" y="${zaokr(obal.y - okraj)}" `
+      + `width="${zaokr(obal.sirka + okraj * 2)}" height="${zaokr(obal.vyska + okraj * 2)}" fill="#ffffff"/>`
+      + Stav.rozvrzeni.spoje.map(spojSvg).join('')
+      + Stav.rozvrzeni.uzly.map(kartaSvg).join('')
+      + '</svg>';
+  }
+
+  function exportPng() {
+    const text = svgStromu();
+    if (!text) return Dialog.info('Strom je prázdný.');
+    const blob = new Blob([text], { type: 'image/svg+xml;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const img = new Image();
+    img.onload = () => {
+      const platno = document.createElement('canvas');
+      platno.width = img.width * 2; platno.height = img.height * 2;
+      const ctx = platno.getContext('2d');
+      ctx.scale(2, 2);
+      ctx.drawImage(img, 0, 0);
+      URL.revokeObjectURL(url);
+      platno.toBlob(b => { stahni(b, 'rodokmen.png'); Dialog.info('PNG uloženo.'); }, 'image/png');
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); Dialog.chyba('PNG se nepodařilo vytvořit.'); };
+    img.src = url;
+  }
+
+  /* Vývodová tabulka (Ahnentafel): očíslovaní předkové — otec má
+     dvojnásobek čísla dítěte, matka o jedna víc. Tiskne se a čte
+     i bez obrázku, proto je v genealogii standardem. */
+  function vyvodovaTabulka() {
+    const radky = [];
+    const fronta = [{ id: Stav.ego, cislo: 1 }];
+    const videne = new Set();
+    while (fronta.length) {
+      const { id, cislo } = fronta.shift();
+      const o = osoba(id);
+      if (!o || cislo > 4096) continue;
+      const generace = Math.floor(Math.log2(cislo)) + 1;
+      radky.push({ cislo, generace, o });
+      if (videne.has(id)) continue;
+      videne.add(id);
+      const { otec, matka } = otecMatka(id);
+      if (otec) fronta.push({ id: otec.id, cislo: cislo * 2 });
+      if (matka) fronta.push({ id: matka.id, cislo: cislo * 2 + 1 });
+    }
+    radky.sort((a, b) => a.cislo - b.cislo);
+    const polozky = radky.map(r => `<tr><td>${r.cislo}</td><td>${r.generace}</td>
+      <td><b>${esc(celeJmeno(r.o))}</b>${r.o.rodnePrijmeni ? ` (roz. ${esc(r.o.rodnePrijmeni)})` : ''}</td>
+      <td>${esc(datumHezky(r.o.narozeni))}${r.o.mistoNarozeni ? ', ' + esc(r.o.mistoNarozeni) : ''}</td>
+      <td>${esc(datumHezky(r.o.umrti))}${r.o.mistoUmrti ? ', ' + esc(r.o.mistoUmrti) : ''}</td>
+      <td>${esc(r.o.povolani || '')}</td></tr>`).join('');
+    return `<!DOCTYPE html><html lang="cs"><head><meta charset="UTF-8">
+      <title>Vývod z předků — ${esc(celeJmeno(osoba(Stav.ego)))}</title>
+      <style>body{font-family:Georgia,serif;margin:28px;color:#111}
+        h1{font-size:1.4rem;margin-bottom:4px} .podnadpis{color:#666;margin-bottom:18px;font-size:.9rem}
+        table{border-collapse:collapse;width:100%;font-size:.86rem}
+        th,td{border-bottom:1px solid #ccc;padding:5px 7px;text-align:left;vertical-align:top}
+        th{background:#f0f0f0} tr:nth-child(even){background:#fafafa}
+        @media print{body{margin:10mm} th{background:#eee}}</style></head><body>
+      <h1>Vývod z předků — ${esc(celeJmeno(osoba(Stav.ego)))}</h1>
+      <div class="podnadpis">Číslování podle Sosy–Stradonitze: otec osoby n má číslo 2n, matka 2n+1.
+        Sestaveno ${new Date().toLocaleDateString('cs-CZ')}.</div>
+      <table><thead><tr><th>č.</th><th>gen.</th><th>jméno</th><th>narození</th><th>úmrtí</th><th>povolání</th></tr></thead>
+      <tbody>${polozky}</tbody></table></body></html>`;
+  }
+
+  function nabidkaUlozeni(tlacitko) {
+    const stara = document.getElementById('nabidkaUlozit');
+    if (stara) { stara.remove(); return; }
+    const m = document.createElement('div');
+    m.id = 'nabidkaUlozit';
+    m.style.cssText = 'position:absolute;z-index:80;background:var(--bg-panel);border:1px solid var(--border);'
+      + 'border-radius:8px;padding:6px;display:flex;flex-direction:column;gap:4px;box-shadow:0 8px 28px rgba(0,0,0,.45)';
+    const r = tlacitko.getBoundingClientRect();
+    m.style.left = Math.min(r.left, window.innerWidth - 240) + 'px';
+    m.style.top = (r.bottom + 4) + 'px';
+    const polozky = [
+      ['💾 Záloha (JSON)', () => stahni(serializuj(), 'rodokmen-zaloha.json', 'application/json')],
+      ['🧬 GEDCOM (.ged)', () => stahni('﻿' + doGedcomu(), 'rodokmen.ged')],
+      ['🌳 Pro stránku Heritage', () => stahni(JSON.stringify(doHeritage(), null, 2), 'rodokmen-heritage.json', 'application/json')],
+      ['🖼 Obrázek stromu (SVG)', () => { const s = svgStromu(); s ? stahni(s, 'rodokmen.svg', 'image/svg+xml') : Dialog.info('Strom je prázdný.'); }],
+      ['🌄 Obrázek stromu (PNG)', exportPng],
+      ['📜 Vývodová tabulka (HTML)', () => stahni(vyvodovaTabulka(), 'vyvod-z-predku.html', 'text/html')]
+    ];
+    for (const [popis, akce] of polozky) {
+      const b = document.createElement('button');
+      b.className = 'btn';
+      b.textContent = popis;
+      b.addEventListener('click', () => { m.remove(); akce(); });
+      m.appendChild(b);
+    }
+    document.body.appendChild(m);
+    setTimeout(() => {
+      const zavri = e => { if (!m.contains(e.target)) { m.remove(); document.removeEventListener('pointerdown', zavri); } };
+      document.addEventListener('pointerdown', zavri);
+    }, 0);
+  }
+
+  async function nactiZeSouboru(soubor) {
+    try {
+      const text = await soubor.text();
+      const data = rozpoznejANacti(text);
+      if (data.chyba) { Dialog.chyba(data.chyba); return; }
+      if (!data.osoby || !data.osoby.length) { Dialog.chyba('V souboru nejsou žádné osoby.'); return; }
+      if (Stav.osoby.size) {
+        const potvrzeno = await Dialog.potvrd(
+          `Načíst ${data.osoby.length} osob (${data.puvod})?\n\nSoučasný rodokmen se nahradí — vrátit to jde tlačítkem Zpět.`);
+        if (!potvrzeno) return;
+      }
+      snimek();
+      nastavData(data);
+      Stav.rezim = 'vyvod';
+      obnovRezim();
+      poZmene();
+      ukazCely();
+      Dialog.info(`Načteno: ${Stav.osoby.size} osob, ${Stav.rodiny.size} rodin (${data.puvod}).`);
+    } catch (chyba) {
+      Dialog.chyba('Soubor se nepodařilo přečíst: ' + chyba.message);
+    }
+  }
+
+  /* ==================================================================
+     16. SPUŠTĚNÍ
+     ================================================================== */
+
+  function novaOsobaDialog() {
+    vyberKontext = { druh: 'nova', kOsobe: null };
+    el('vyberNadpis').textContent = 'Nová osoba';
+    el('vyberHledani').value = '';
+    el('vyberPoznamka').textContent = 'Zapište nejmladší generaci — od ní rodokmen poroste k předkům.';
+    el('vyberNavrhy').innerHTML = '';
+    ['novaJmeno', 'novaPrijmeni', 'novaNarozeni'].forEach(id => el(id).value = '');
+    el('novaPohlavi').value = '?';
+    el('oknoVyber').classList.add('vidno');
+    setTimeout(() => el('novaJmeno').focus(), 30);
+  }
+
+  function zalozAPripoj() {
+    const jmeno = el('novaJmeno').value.trim();
+    const prijmeni = el('novaPrijmeni').value.trim();
+    if (!jmeno && !prijmeni) { Dialog.chyba('Zadejte aspoň jméno nebo příjmení.'); return; }
+    snimek();
+    const novy = pridejOsobu({
+      jmeno, prijmeni,
+      pohlavi: el('novaPohlavi').value,
+      narozeni: el('novaNarozeni').value.trim()
+    });
+    let vysledek = { ok: true, varovani: [] };
+    if (vyberKontext && vyberKontext.druh !== 'nova' && vyberKontext.kOsobe) {
+      vysledek = provedPripojeni(vyberKontext.druh, vyberKontext.kOsobe, novy.id, false) || vysledek;
+      if (vysledek.ok === false) {
+        Stav.osoby.delete(novy.id);
+        Dialog.chyba(vysledek.chyba);
+        return;
+      }
+    }
+    el('oknoVyber').classList.remove('vidno');
+    Stav.vybrany = novy.id;
+    if (!Stav.ego) Stav.ego = novy.id;
+    prepniZalozku('osoba');
+    poZmene();
+    if (vysledek.varovani && vysledek.varovani.length) {
+      Dialog.info('Přidáno s upozorněním: ' + vysledek.varovani.join(' '));
+    }
+  }
+
+  function pripojLista() {
+    el('btnPanel').addEventListener('click', () => el('panel').classList.toggle('otevreny'));
+    el('btnNovaOsoba').addEventListener('click', () => novaOsobaDialog());
+    el('btnZpet').addEventListener('click', () => { if (zpet()) { poZmene(); Dialog.info('Vráceno'); } });
+    el('btnVpred').addEventListener('click', () => { if (vpred()) { poZmene(); Dialog.info('Zopakováno'); } });
+    el('btnVyvod').addEventListener('click', () => { Stav.rezim = 'vyvod'; obnovRezim(); ukazCely(); });
+    el('btnRozrod').addEventListener('click', () => { Stav.rezim = 'rozrod'; obnovRezim(); ukazCely(); });
+    el('btnCely').addEventListener('click', ukazCely);
+    el('btnPriblizit').addEventListener('click', () => { Stav.pohled.mer = Math.min(2.5, Stav.pohled.mer * 1.2); vykresli(); });
+    el('btnOddalit').addEventListener('click', () => { Stav.pohled.mer = Math.max(0.15, Stav.pohled.mer / 1.2); vykresli(); });
+    el('btnNaEgo').addEventListener('click', () => { if (Stav.ego) { Stav.vybrany = Stav.ego; poZmene(); ukazOsobu(Stav.ego); } });
+
+    el('btnOvereni').addEventListener('click', () => { vykresliOvereni(); el('oknoOvereni').classList.add('vidno'); });
+    el('btnOvereniZnovu').addEventListener('click', vykresliOvereni);
+    el('btnPribuznost').addEventListener('click', () => {
+      if (Stav.osoby.size < 2) return Dialog.info('Na příbuznost jsou potřeba aspoň dvě osoby.');
+      naplnVyber(el('pribuznyA'), Stav.vybrany || Stav.ego);
+      const druhy = [...Stav.osoby.keys()].find(id => id !== (Stav.vybrany || Stav.ego));
+      naplnVyber(el('pribuznyB'), Stav.ego !== Stav.vybrany ? Stav.ego : druhy);
+      spocitejPribuznost();
+      el('oknoPribuznost').classList.add('vidno');
+    });
+    el('pribuznyA').addEventListener('change', spocitejPribuznost);
+    el('pribuznyB').addEventListener('change', spocitejPribuznost);
+    el('btnProhodit').addEventListener('click', () => {
+      const a = el('pribuznyA').value;
+      el('pribuznyA').value = el('pribuznyB').value;
+      el('pribuznyB').value = a;
+      spocitejPribuznost();
+    });
+    el('btnStatistiky').addEventListener('click', () => { vykresliStatistiky(); el('oknoStatistiky').classList.add('vidno'); });
+    el('btnUlozit').addEventListener('click', e => nabidkaUlozeni(e.currentTarget));
+    el('btnNacist').addEventListener('click', () => el('souborVstup').click());
+    el('souborVstup').addEventListener('change', e => {
+      const soubor = e.target.files && e.target.files[0];
+      e.target.value = '';
+      if (soubor) nactiZeSouboru(soubor);
+    });
+    el('btnStromy').addEventListener('click', () => el('oknoStromy').classList.add('vidno'));
+
+    el('zalozkaOsoba').addEventListener('click', () => prepniZalozku('osoba'));
+    el('zalozkaSeznam').addEventListener('click', () => { prepniZalozku('seznam'); vykresliSeznam(); });
+    el('hledat').addEventListener('input', vykresliSeznam);
+
+    el('vyberHledani').addEventListener('input', () => zobrazNavrhy(el('vyberHledani').value));
+    el('vyberZalozit').addEventListener('click', zalozAPripoj);
+    ['novaJmeno', 'novaPrijmeni', 'novaNarozeni'].forEach(id =>
+      el(id).addEventListener('keydown', e => { if (e.key === 'Enter') zalozAPripoj(); }));
+
+    document.querySelectorAll('[data-zavri]').forEach(b =>
+      b.addEventListener('click', () => el(b.dataset.zavri).classList.remove('vidno')));
+    document.querySelectorAll('.zaclona').forEach(z =>
+      z.addEventListener('pointerdown', e => { if (e.target === z) z.classList.remove('vidno'); }));
+  }
+
+  function pripojKlavesy() {
+    window.addEventListener('keydown', e => {
+      const cil = e.target;
+      const vePoli = cil && cil.matches && cil.matches('input, textarea, select');
+      const ctrl = e.ctrlKey || e.metaKey;
+
+      if (ctrl && e.key.toLowerCase() === 'z') { e.preventDefault(); if (e.shiftKey ? vpred() : zpet()) poZmene(); return; }
+      if (ctrl && e.key.toLowerCase() === 'y') { e.preventDefault(); if (vpred()) poZmene(); return; }
+      if (ctrl && e.key.toLowerCase() === 'n') { e.preventDefault(); return novaOsobaDialog(); }
+      if (ctrl && e.key.toLowerCase() === 'f') { e.preventDefault(); prepniZalozku('seznam'); el('hledat').focus(); return; }
+      if (e.key === 'Escape') { document.querySelectorAll('.zaclona.vidno').forEach(z => z.classList.remove('vidno')); return; }
+      if (vePoli) return;
+      const k = e.key.toLowerCase();
+      if (k === 'f') return ukazCely();
+      if (k === 'e') { if (Stav.ego) { Stav.vybrany = Stav.ego; poZmene(); ukazOsobu(Stav.ego); } return; }
+      if (k === 'l') return el('legenda').classList.toggle('skryta');
+      if (e.key === 'Delete' && Stav.vybrany) el('btnSmazOsobu')?.click();
+    });
+  }
+
+  function pripojSbirku() {
+    if (typeof Tvary === 'undefined') return;
+    Tvary.pripoj({
+      klic: 'webapp_rodokmen_stromy',
+      typ: 'rodokmen',
+      nazev: 'Rodokmen',
+      kontejner: el('tvary'),
+      parametry: () => JSON.parse(serializuj()),
+      pouzij: (p) => {
+        snimek();
+        nastavData(p);
+        poZmene();
+        ukazCely();
+        el('oknoStromy').classList.remove('vidno');
+      },
+      popis: (p) => {
+        const prvni = (p.osoby || []).find(o => o.prijmeni || o.jmeno);
+        return `${prvni ? (prvni.prijmeni || prvni.jmeno) + ' — ' : ''}${(p.osoby || []).length} osob`;
+      }
+    });
+  }
+
+  function ukazkovyStrom() {
+    const ja = pridejOsobu({ jmeno: 'Anna', prijmeni: 'Nováková', pohlavi: 'z', narozeni: '1995', mistoNarozeni: 'Brno' });
+    const otec = pridejOsobu({ jmeno: 'Petr', prijmeni: 'Novák', pohlavi: 'm', narozeni: '1965' });
+    const matka = pridejOsobu({ jmeno: 'Jana', prijmeni: 'Nováková', rodnePrijmeni: 'Dvořáková', pohlavi: 'z', narozeni: '1968' });
+    pridejRodice(ja.id, otec.id);
+    pridejRodice(ja.id, matka.id);
+    const ded = pridejOsobu({ jmeno: 'Josef', prijmeni: 'Novák', pohlavi: 'm', narozeni: '1938', umrti: '2010' });
+    const babi = pridejOsobu({ jmeno: 'Marie', prijmeni: 'Nováková', rodnePrijmeni: 'Svobodová', pohlavi: 'z', narozeni: '1940' });
+    pridejRodice(otec.id, ded.id);
+    pridejRodice(otec.id, babi.id);
+    Stav.ego = ja.id;
+    Stav.vybrany = ja.id;
+  }
+
+  function start() {
+    let nacteno = false;
+    try {
+      const ulozene = localStorage.getItem(KLIC);
+      if (ulozene) { obnovZeSerializace(ulozene); nacteno = Stav.osoby.size > 0; }
+    } catch (e) { /* poškozený obsah klíče se prostě nepoužije */ }
+    if (!nacteno) ukazkovyStrom();
+
+    pripojLista();
+    pripojPlatno();
+    pripojKlavesy();
+    pripojSbirku();
+    prepniZalozku('osoba');
+    obnovRezim();
+    poZmene();
+    ukazCely();
+
+    window.addEventListener('resize', () => vykresli());
+  }
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start);
+  else start();
+
+  // most pro testy
+  window.RODOKMEN = {
+    Stav, osoba, rodina, celeJmeno, parsujDatum, datumHezky, rok, vekVLetech,
+    pridejOsobu, pridejRodice, pridejPartnera, pridejDite, zalozRodinu, zajistiRodinuDitete,
+    odpojRodice, odpojDite, odpojPartneraZRodiny, smazOsobu, sloucOsoby,
+    kontrolaRodicDite, kontrolaPartneru, kontrolaDiteDoRodiny,
+    overStrom, provedOpravu, zjistiVztah, statistiky, spojeneSEgem,
+    rozvrhniVyvod, rozvrhniRozrod, prepocitejRozvrzeni,
+    zHeritage, doHeritage, zGedcomu, doGedcomu, rozpoznejANacti, nastavData,
+    serializuj, obnovZeSerializace, srovnejVazby, navrhniEgo, vyvodovaTabulka,
+    rodiceOsoby, partneriOsoby, detiOsoby, sourozenciOsoby, otecMatka, jePredkem,
+    prazdnaOsoba, prazdnaRodina, KARTA, poZmene, ukazkovyStrom
+  };
+})();
+</script>
+</body>
+</html>
