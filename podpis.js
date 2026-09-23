@@ -19,7 +19,7 @@
    ============================================================ */
 (function () {
   const AUTOR = 'Radovan Valenta';
-  const MAIL = 'hdm@seznam.cz';
+  const MAIL = 'Metodus@email.cz';
   const DILO = 'Webové stránky';   // název díla – každý web má v kopii ten svůj
   const ROZCESTNIK = 'Rozcestník';  // popisek odkazu zpět – v každé kopii ten svůj
   const ID = 'autor-podpis';
