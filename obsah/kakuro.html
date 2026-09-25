@@ -1,0 +1,601 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🔢 Kakuro</title>
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../podpis.js" defer></script>
+<script src="../rekord.js" defer></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;user-select:none;-webkit-user-select:none}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;padding:20px 12px;display:flex;flex-direction:column;align-items:center}
+h1{font-size:1.6rem;margin-bottom:6px;font-weight:600}
+.sub{color:var(--text-faint);font-size:.85rem;margin-bottom:14px;text-align:center;max-width:480px;line-height:1.4}
+.top{display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap;justify-content:center}
+.btn{background:var(--accent);color:#fff;border:none;padding:9px 14px;border-radius:6px;cursor:pointer;font-weight:600;font-size:.9rem}
+.btn-sec{background:var(--bg-control);color:var(--text)}
+.btn-sec:hover{background:var(--bg-hover)}
+.btn.zapnuto{background:var(--ok);color:#fff}
+select{background:var(--bg-control);border:1px solid var(--border-strong);border-radius:6px;color:var(--text);padding:8px}
+.info{color:var(--text-faint);font-size:.9rem;display:flex;gap:14px;align-items:center;flex-wrap:wrap;justify-content:center;margin-bottom:12px}
+/* Deska má vlastní barvy (papír a tmavá pole se součty) – stejné v obou tématech */
+.deska{display:grid;width:min(480px,94vw);aspect-ratio:1;gap:1px;background:#555;border:2px solid #222;touch-action:manipulation}
+.pole{position:relative;min-width:0;min-height:0;background:#fbf8f1;display:flex;align-items:center;justify-content:center;cursor:pointer;color:#1f3a70;font-weight:600;font-size:calc(min(480px,94vw) / var(--n) * .55);line-height:1}
+.pole.cerne{background:#3a3d44;cursor:default;color:#eee}
+.pole.cerne.nic{background:#2a2c31}
+.pole.cerne svg{position:absolute;inset:0;width:100%;height:100%}
+.pole.cerne svg line{stroke:#8a8e98;stroke-width:1.2}
+.pole.cerne svg text{fill:#f1f1f1;font-size:36px;font-weight:700;font-family:var(--font)}
+.pole.cerne svg text.chyba{fill:#ff7b6b}
+.pole.cerne svg text.hotovo{fill:#8dd08a}
+.pole.vybrane{background:#ffe89a}
+.pole.stejny{background:#eef3ff}
+.pole.vybrane.stejny{background:#ffe89a}
+.pole.konflikt{color:#c0392b}
+.pole.spatne::after{content:'';position:absolute;inset:2px;border:2px solid #c0392b;border-radius:3px}
+.pole.napoveda{color:#1f7a3a}
+.poznamky{display:grid;grid-template-columns:repeat(3,1fr);grid-template-rows:repeat(3,1fr);width:100%;height:100%;font-size:calc(min(480px,94vw) / var(--n) * .22);color:#6a7280;font-weight:500}
+.poznamky span{display:flex;align-items:center;justify-content:center}
+.kombinace{margin-top:10px;min-height:2.6em;font-size:.85rem;color:var(--text-muted);text-align:center;max-width:480px;line-height:1.4}
+.kombinace b{color:var(--text)}
+.klavesy{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:10px;width:min(480px,94vw)}
+.klavesa{background:var(--bg-elevated);border:1px solid var(--border);border-radius:6px;padding:12px 0;text-align:center;cursor:pointer;font-size:1.15rem;font-weight:600;color:var(--text)}
+.klavesa:hover{background:var(--bg-hover)}
+.msg{margin-top:12px;font-size:1.2rem;font-weight:700;min-height:30px;color:var(--ok);text-align:center;max-width:480px}
+.pravidla{margin-top:12px;max-width:480px;color:var(--text-muted);font-size:.85rem;line-height:1.5}
+.pravidla summary{cursor:pointer;color:var(--text);font-weight:600;margin-bottom:6px}
+.pravidla li{margin-left:18px}
+</style>
+</head>
+<body>
+<h1>🔢 Kakuro</h1>
+<p class="sub">Číselná křížovka: doplň do bílých polí číslice 1–9 tak, aby součet každého úseku odpovídal číslu v tmavém poli. V jednom úseku se číslice nesmí opakovat.</p>
+<div class="top">
+  <select id="velikost" title="Velikost">
+    <option value="6">5×5 · lehké</option><option value="8" selected>7×7 · střední</option>
+    <option value="10">9×9 · těžší</option><option value="12">11×11 · velké</option>
+  </select>
+  <button class="btn" id="denniBtn" title="Stejné zadání pro všechny, každý den nové">📅 Denní</button>
+  <button class="btn" id="noveBtn">🔄 Nové</button>
+  <button class="btn btn-sec" id="zpetBtn">↩️ Zpět</button>
+  <button class="btn btn-sec" id="poznamkyBtn" title="Tužka: malé poznámky do pole">✏️ Poznámky</button>
+  <button class="btn btn-sec" id="kontrolaBtn">✓ Kontrola</button>
+  <button class="btn btn-sec" id="napovedaBtn">💡 Nápověda</button>
+</div>
+<div class="info">
+  <span id="rezim">—</span>
+  <span>⏱️ <b id="cas">0:00</b></span>
+  <span id="rekordBox"></span>
+</div>
+<div class="deska" id="deska"></div>
+<div class="kombinace" id="kombinace"></div>
+<div class="klavesy" id="klavesy"></div>
+<div class="msg" id="msg"></div>
+<details class="pravidla">
+  <summary>Ovládání a pravidla</summary>
+  <ul>
+    <li>Vyber bílé pole a klepni na číslici (nebo ji napiš na klávesnici). Šipky posouvají výběr, Delete/Backspace maže.</li>
+    <li>✏️ Poznámky přepnou tužku – číslice se pak zapisují malé jako možnosti (klávesa P).</li>
+    <li>Číslo v tmavém poli nad úhlopříčkou platí pro úsek vpravo, pod úhlopříčkou pro úsek dolů.</li>
+    <li>Pod deskou se ukazují všechny kombinace číslic, které dávají součet úseků vybraného pole.</li>
+    <li>Zadání má vždy jediné řešení a dá se vyřešit úvahou bez hádání.</li>
+  </ul>
+</details>
+
+<!-- Čistá logika: bez DOM, testuje se v node (_test/logicke_mrizky.js). -->
+<script>
+const KakuroLogika = (function () {
+  function rng(seed) {
+    let a = seed >>> 0;
+    return function () {
+      a = (a + 0x6D2B79F5) >>> 0;
+      let t = a;
+      t = Math.imul(t ^ (t >>> 15), t | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  function hash(text) {
+    let h = 2166136261;
+    for (let i = 0; i < text.length; i++) { h ^= text.charCodeAt(i); h = Math.imul(h, 16777619); }
+    return h >>> 0;
+  }
+  function zamichej(pole, r) {
+    for (let i = pole.length - 1; i > 0; i--) {
+      const j = Math.floor(r() * (i + 1));
+      [pole[i], pole[j]] = [pole[j], pole[i]];
+    }
+    return pole;
+  }
+
+  // KOMBINACE[delka][soucet] = seznam bitových masek (bit d = číslice d) bez opakování
+  const KOMBINACE = [];
+  for (let d = 0; d <= 9; d++) { KOMBINACE.push([]); for (let s = 0; s <= 45; s++) KOMBINACE[d].push([]); }
+  for (let m = 0; m < 1024; m += 2) {   // bit 0 nepoužíváme
+    let d = 0, s = 0;
+    for (let c = 1; c <= 9; c++) if (m & (1 << c)) { d++; s += c; }
+    KOMBINACE[d][s].push(m);
+  }
+  function bity(m) { const o = []; for (let c = 1; c <= 9; c++) if (m & (1 << c)) o.push(c); return o; }
+  function pocetBitu(m) { let k = 0; while (m) { m &= m - 1; k++; } return k; }
+
+  /* Úseky z masky černých polí: [{pole:[indexy], hlava: index černého pole, svisly}] */
+  function useky(n, cerne) {
+    const U = [];
+    for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) {
+      const i = y * n + x;
+      if (!cerne[i]) continue;
+      for (const [dy, dx, svisly] of [[0, 1, false], [1, 0, true]]) {
+        const pole = [];
+        let yy = y + dy, xx = x + dx;
+        while (yy < n && xx < n && !cerne[yy * n + xx]) { pole.push(yy * n + xx); yy += dy; xx += dx; }
+        if (pole.length) U.push({ pole, hlava: i, svisly });
+      }
+    }
+    return U;
+  }
+
+  /* Tvar desky: horní řádek a levý sloupec jsou černé, uvnitř náhodná černá pole
+     (středově souměrně). Pak se opravuje: úsek délky 1 zčerná, dlouhý úsek
+     se rozpůlí (krátké úseky mají méně rozkladů součtu → snáz jediné řešení). Bílá pole musí zůstat souvislá. */
+  function tvar(n, r) {
+    for (let pokus = 0; pokus < 500; pokus++) {
+      const c = new Array(n * n).fill(false);
+      for (let i = 0; i < n; i++) { c[i] = true; c[i * n] = true; }
+      const hustota = 0.24 + r() * 0.08;
+      const maxUsek = n <= 8 ? 5 : 6;
+      for (let y = 1; y < n; y++) for (let x = 1; x < n; x++) {
+        const y2 = n - y, x2 = n - x;   // souměrné pole ve vnitřku (1..n-1)
+        if (y * n + x > y2 * n + x2) continue;
+        if (r() < hustota) { c[y * n + x] = true; c[y2 * n + x2] = true; }
+      }
+      let zmena = true, kol = 0;
+      while (zmena && kol++ < 50) {
+        zmena = false;
+        for (let y = 1; y < n; y++) for (let x = 1; x < n; x++) {
+          const i = y * n + x;
+          if (c[i]) continue;
+          const h = (x > 1 && !c[i - 1]) || (x < n - 1 && !c[i + 1]);
+          const v = (y > 1 && !c[i - n]) || (y < n - 1 && !c[i + n]);
+          if (!h || !v) { c[i] = true; zmena = true; }
+        }
+        for (const u of useky(n, c)) if (u.pole.length > maxUsek) { c[u.pole[Math.floor(u.pole.length / 2)]] = true; zmena = true; }
+      }
+      const bila = [];
+      for (let i = 0; i < n * n; i++) if (!c[i]) bila.push(i);
+      if (bila.length < (n - 1) * (n - 1) * 0.5) continue;
+      // souvislost bílých polí
+      const vid = new Set([bila[0]]), fr = [bila[0]];
+      while (fr.length) {
+        const i = fr.pop(), y = Math.floor(i / n), x = i % n;
+        for (const [dy, dx] of [[0, 1], [1, 0], [0, -1], [-1, 0]]) {
+          const yy = y + dy, xx = x + dx, j = yy * n + xx;
+          if (yy >= 0 && yy < n && xx >= 0 && xx < n && !c[j] && !vid.has(j)) { vid.add(j); fr.push(j); }
+        }
+      }
+      if (vid.size === bila.length) return c;
+    }
+    return null;
+  }
+
+  /* Podpora číslic v úseku pro jednu kombinaci `m`: pro každé pole masku číslic,
+     které v něm mohou stát při nějakém úplném rozdělení číslic kombinace mezi
+     pole úseku (párování s ohledem na domény). null = kombinace nejde rozdělit. */
+  // paměť mezivýsledků s razítkem volání – nemusí se před každým voláním mazat
+  const MEMO = new Int32Array(10 * 1024);
+  let razitko = 0, ANO = 0, NE = 0, pPole = null, pDom = null, pM = 0, pL = 0, pPodpora = null;
+  function f(k, used) {
+    if (k === pL) return used === pM;
+    const key = k * 1024 + used;
+    if (MEMO[key] === ANO) return true;
+    if (MEMO[key] === NE) return false;
+    let ok = false, moz = pDom[pPole[k]] & pM & ~used;
+    while (moz) {
+      const b = moz & -moz; moz ^= b;
+      if (f(k + 1, used | b)) { ok = true; pPodpora[k] |= b; }
+    }
+    MEMO[key] = ok ? ANO : NE;
+    return ok;
+  }
+  function podporaKombinace(pole, dom, m, podpora) {
+    razitko += 2;
+    if (razitko > 2e9) { MEMO.fill(0); razitko = 2; }
+    ANO = razitko; NE = razitko + 1;
+    pPole = pole; pDom = dom; pM = m; pL = pole.length; pPodpora = podpora;
+    return f(0, 0);
+  }
+
+  /* Propagace: pole smí mít jen číslice, které se v některé kombinaci součtu dají
+     úplně rozdělit mezi pole úseku. Úseky se zpracovávají z fronty – znovu jen
+     ty, kterým se změnila doména některého pole. Mění `dom`; false = spor. */
+  function propaguj(U, soucty, dom) {
+    if (!U.zU) {
+      U.zU = {};
+      U.forEach((u, k) => u.pole.forEach(i => (U.zU[i] = U.zU[i] || []).push(k)));
+    }
+    const fronta = U.map((_, k) => k), vFronte = new Uint8Array(U.length).fill(1);
+    const nove = new Array(10), podpora = new Array(10);
+    while (fronta.length) {
+      const k = fronta.pop(); vFronte[k] = 0;
+      const u = U[k], L = u.pole.length;
+      let sjednoceni = 0, jiste = true;
+      for (const i of u.pole) { sjednoceni |= dom[i]; if (dom[i] & (dom[i] - 1)) jiste = false; }
+      if (jiste) {   // vše určeno: stačí ověřit součet a neopakování
+        let s = 0, m = 0;
+        for (const i of u.pole) { if (m & dom[i]) return false; m |= dom[i]; s += 31 - Math.clz32(dom[i]); }
+        if (s !== soucty[k]) return false;
+        continue;
+      }
+      nove.fill(0, 0, L);
+      let nejaka = false;
+      for (const m of KOMBINACE[L][soucty[k]] || []) {
+        if ((m & sjednoceni) !== m) continue;
+        podpora.fill(0, 0, L);
+        if (!podporaKombinace(u.pole, dom, m, podpora)) continue;
+        nejaka = true;
+        for (let q = 0; q < L; q++) nove[q] |= podpora[q];
+      }
+      if (!nejaka) return false;
+      for (let q = 0; q < L; q++) {
+        const i = u.pole[q];
+        if (nove[q] === dom[i]) continue;
+        dom[i] = nove[q];
+        for (const k2 of U.zU[i]) if (!vFronte[k2]) { vFronte[k2] = 1; fronta.push(k2); }
+      }
+    }
+    return true;
+  }
+  const PLNA = 0b1111111110;
+  function pocatecniDomeny(n, cerne) {
+    const dom = new Array(n * n).fill(0);
+    for (let i = 0; i < n * n; i++) if (!cerne[i]) dom[i] = PLNA;
+    return dom;
+  }
+
+  /* Řešitel: propagace + větvení na poli s nejmenší doménou. */
+  function pocetReseni(n, cerne, soucty, limit = 2, vystup) {
+    const U = useky(n, cerne);
+    const bila = [];
+    for (let i = 0; i < n * n; i++) if (!cerne[i]) bila.push(i);
+    let pocet = 0;
+    const propagujDom = dom => propaguj(U, soucty, dom);
+
+    function hotovyUsek(dom, k) {
+      let s = 0, m = 0;
+      for (const i of U[k].pole) { const d = bity(dom[i])[0]; if (m & (1 << d)) return false; m |= 1 << d; s += d; }
+      return s === soucty[k];
+    }
+    function krok(dom) {
+      if (!propagujDom(dom)) return false;
+      let vyb = -1, nej = 99;
+      for (const i of bila) { const p = pocetBitu(dom[i]); if (p > 1 && p < nej) { nej = p; vyb = i; } }
+      if (vyb < 0) {
+        for (let k = 0; k < U.length; k++) if (!hotovyUsek(dom, k)) return false;
+        pocet++;
+        if (vystup) vystup.push(dom.map(d => d ? bity(d)[0] : 0));
+        return pocet >= limit;
+      }
+      for (const c of bity(dom[vyb])) {
+        const d2 = dom.slice(); d2[vyb] = 1 << c;
+        if (krok(d2)) return true;
+      }
+      return false;
+    }
+    krok(pocatecniDomeny(n, cerne));
+    return pocet;
+  }
+
+  // Náhodné vyplnění bílých polí (bez opakování v úsecích).
+  function vypln(n, cerne, r) {
+    const U = useky(n, cerne);
+    const zUseku = new Array(n * n).fill(null).map(() => []);
+    U.forEach((u, k) => u.pole.forEach(i => zUseku[i].push(k)));
+    const bila = [];
+    for (let i = 0; i < n * n; i++) if (!cerne[i]) bila.push(i);
+    const hod = new Array(n * n).fill(0);
+    const pouzite = U.map(() => 0);
+    let kroku = 0;
+    function krok(p) {
+      if (p === bila.length) return true;
+      if (++kroku > 20000) return false;
+      const i = bila[p];
+      // krajní číslice mají přednost – součty z nich mají málo rozkladů
+      const poradi = [1, 2, 3, 4, 5, 6, 7, 8, 9].map(c => [c, (Math.abs(c - 5) + 1) * r()]).sort((a, b) => b[1] - a[1]).map(x => x[0]);
+      for (const c of poradi) {
+        const b = 1 << c;
+        if (zUseku[i].some(k => pouzite[k] & b)) continue;
+        hod[i] = c; zUseku[i].forEach(k => pouzite[k] |= b);
+        if (krok(p + 1)) return true;
+        zUseku[i].forEach(k => pouzite[k] &= ~b);
+      }
+      hod[i] = 0;
+      return false;
+    }
+    return krok(0) ? hod : null;
+  }
+
+  /* Kolik polí určí samotná propagace (bez hádání). Rovná-li se počtu bílých
+     polí, zadání má jediné řešení a dá se vyřešit čistou úvahou. */
+  function urcenychPropagaci(n, cerne, U, soucty) {
+    const dom = pocatecniDomeny(n, cerne);
+    if (!propaguj(U, soucty, dom)) return -1;
+    let k = 0;
+    for (let i = 0; i < n * n; i++) if (!cerne[i] && pocetBitu(dom[i]) === 1) k++;
+    return { k, dom };
+  }
+
+  /* Generátor: tvar → náhodné vyplnění → horolezení. V každém kroku se vezme
+     pole, které propagace neurčila, a zkusí se v něm všechny přípustné číslice;
+     ponechá se ta, po které propagace určí nejvíc polí. Cíl: celé zadání
+     vyřeší propagace (jediné řešení bez hádání). */
+  function generuj(n, seed) {
+    const r = rng(seed);
+    for (let pokus = 0; pokus < 60; pokus++) {
+      const cerne = tvar(n, r);
+      if (!cerne) continue;
+      const U = useky(n, cerne);
+      const zU = new Array(n * n).fill(null).map(() => []);
+      U.forEach((u, k) => u.pole.forEach(i => zU[i].push(k)));
+      const bila = [];
+      for (let i = 0; i < n * n; i++) if (!cerne[i]) bila.push(i);
+      const hod = vypln(n, cerne, r);
+      if (!hod) continue;
+      const soucet = () => U.map(u => u.pole.reduce((s, i) => s + hod[i], 0));
+      let nyni = urcenychPropagaci(n, cerne, U, soucet());
+      let stagnace = 0;
+      for (let krok = 0; krok < 6 * bila.length && nyni.k < bila.length && stagnace < 25; krok++) {
+        const neurcena = bila.filter(i => pocetBitu(nyni.dom[i]) > 1);
+        const i = neurcena[Math.floor(r() * neurcena.length)];
+        let pouzite = 0;
+        for (const k of zU[i]) for (const j of U[k].pole) if (j !== i) pouzite |= 1 << hod[j];
+        const puv = hod[i];
+        let nej = null, nejC = puv;
+        // stačí pár náhodných kandidátů – každé vyhodnocení je celá propagace
+        const kandidati = zamichej([1, 2, 3, 4, 5, 6, 7, 8, 9].filter(c => c !== puv && !(pouzite & (1 << c))), r).slice(0, 4);
+        for (const c of kandidati) {
+          hod[i] = c;
+          const v = urcenychPropagaci(n, cerne, U, soucet());
+          if (v.k > (nej ? nej.k : nyni.k - (r() < 0.2 ? 2 : 0))) { nej = v; nejC = c; }
+        }
+        hod[i] = nejC;
+        if (nej) { stagnace = nej.k > nyni.k ? 0 : stagnace + 1; nyni = nej; } else stagnace++;
+      }
+      if (nyni.k === bila.length) {
+        const soucty = soucet();
+        const hlavy = {};   // pro vykreslení: index černého pole → {vpravo, dolu}
+        U.forEach((u, k) => {
+          hlavy[u.hlava] = hlavy[u.hlava] || {};
+          hlavy[u.hlava][u.svisly ? 'dolu' : 'vpravo'] = soucty[k];
+        });
+        return { n, cerne, soucty, reseni: hod, hlavy };
+      }
+    }
+    return null;
+  }
+
+  return { rng, hash, KOMBINACE, bity, useky, tvar, vypln, pocetReseni, generuj };
+})();
+</script>
+
+<script>
+(function () {
+  const $ = id => document.getElementById(id);
+  let hra = null, U = [], zUseku = [], hod = [], pozn = [], historie = [], vybrane = -1;
+  let start = 0, tik = null, konec = false, rezim = 'denni', napoveda = false, tuzka = false;
+  const rekordy = {};
+
+  function dnes() {
+    const d = new Date();
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  }
+
+  // generování velké desky trvá i sekundy – nejdřív ukázat hlášku, pak počítat
+  function nova(r) {
+    $('msg').textContent = '⏳ Generuji zadání…';
+    clearInterval(tik);
+    setTimeout(() => novaHned(r), 30);
+  }
+  function novaHned(r) {
+    rezim = r;
+    const n = +$('velikost').value;
+    const seed = r === 'denni' ? KakuroLogika.hash('kakuro|' + dnes() + '|' + n) : (Math.random() * 2 ** 32) >>> 0;
+    hra = KakuroLogika.generuj(n, seed);
+    U = KakuroLogika.useky(n, hra.cerne);
+    zUseku = new Array(n * n).fill(null).map(() => []);
+    U.forEach((u, k) => u.pole.forEach(i => zUseku[i].push(k)));
+    hod = new Array(n * n).fill(0);
+    pozn = new Array(n * n).fill(0);
+    historie = []; konec = false; napoveda = false;
+    vybrane = hra.cerne.indexOf(false);
+    $('msg').textContent = '';
+    $('rezim').textContent = r === 'denni' ? '📅 Denní zadání ' + new Date().toLocaleDateString('cs-CZ') : '🎲 Náhodné zadání';
+    nastavRekord(n);
+    clearInterval(tik); start = Date.now(); tik = setInterval(ukazCas, 500); ukazCas();
+    kresli();
+  }
+
+  function nastavRekord(n) {
+    if (typeof Rekord === 'undefined') return;
+    if (!rekordy[n]) rekordy[n] = Rekord.sleduj('webapp_hra_kakuro_' + n,
+      { vyssiLepsi: false, popisek: 'Rekord ' + (n - 1) + '×' + (n - 1), format: formatCas });
+    rekordy[n].prvek($('rekordBox'));
+  }
+  function formatCas(s) { return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); }
+  function sekundy() { return Math.floor((Date.now() - start) / 1000); }
+  function ukazCas() { if (!konec) $('cas').textContent = formatCas(sekundy()); }
+
+  // stav úseků: konflikty (opakování) a hotové/chybné součty
+  function stavUseku() {
+    const konflikt = new Set(), useky = U.map(() => '');
+    U.forEach((u, k) => {
+      const videno = {};
+      let s = 0, plny = true;
+      for (const i of u.pole) {
+        if (!hod[i]) { plny = false; continue; }
+        s += hod[i];
+        if (videno[hod[i]] !== undefined) { konflikt.add(i); konflikt.add(videno[hod[i]]); }
+        videno[hod[i]] = i;
+      }
+      if (plny) useky[k] = s === hra.soucty[k] ? 'hotovo' : 'chyba';
+      else if (s >= hra.soucty[k]) useky[k] = 'chyba';
+    });
+    return { konflikt, useky };
+  }
+
+  function kresli(zvyrazni) {
+    const n = hra.n, d = $('deska');
+    d.style.setProperty('--n', n);
+    d.style.gridTemplateColumns = d.style.gridTemplateRows = `repeat(${n},minmax(0,1fr))`;
+    const st = stavUseku();
+    const stavHlavy = {};
+    U.forEach((u, k) => { stavHlavy[u.hlava + (u.svisly ? 'd' : 'v')] = st.useky[k]; });
+    const vybraneUseky = vybrane >= 0 ? zUseku[vybrane] : [];
+    const stejne = new Set();
+    vybraneUseky.forEach(k => U[k].pole.forEach(i => stejne.add(i)));
+    d.innerHTML = '';
+    for (let i = 0; i < n * n; i++) {
+      const p = document.createElement('div');
+      p.dataset.i = i;
+      if (hra.cerne[i]) {
+        const h = hra.hlavy[i];
+        p.className = 'pole cerne' + (h ? '' : ' nic');
+        if (h) {
+          let svg = '<svg viewBox="0 0 100 100" preserveAspectRatio="none"><line x1="0" y1="0" x2="100" y2="100"/>';
+          if (h.vpravo) svg += `<text x="92" y="40" text-anchor="end" class="${stavHlavy[i + 'v'] || ''}">${h.vpravo}</text>`;
+          if (h.dolu) svg += `<text x="8" y="90" class="${stavHlavy[i + 'd'] || ''}">${h.dolu}</text>`;
+          p.innerHTML = svg + '</svg>';
+        }
+      } else {
+        p.className = 'pole';
+        if (i === vybrane) p.classList.add('vybrane');
+        else if (stejne.has(i)) p.classList.add('stejny');
+        if (st.konflikt.has(i)) p.classList.add('konflikt');
+        if (hod[i]) p.textContent = hod[i];
+        else if (pozn[i]) {
+          const g = document.createElement('div'); g.className = 'poznamky';
+          for (let c = 1; c <= 9; c++) { const s = document.createElement('span'); s.textContent = pozn[i] & (1 << c) ? c : ''; g.appendChild(s); }
+          p.appendChild(g);
+        }
+        if (zvyrazni && zvyrazni.has(i)) p.classList.add(zvyrazni.trida);
+      }
+      d.appendChild(p);
+    }
+    ukazKombinace();
+  }
+
+  function ukazKombinace() {
+    if (vybrane < 0 || konec) { $('kombinace').innerHTML = ''; return; }
+    const radky = zUseku[vybrane].map(k => {
+      const u = U[k], s = hra.soucty[k];
+      const komb = KakuroLogika.KOMBINACE[u.pole.length][s].map(m => KakuroLogika.bity(m).join('+'));
+      const smer = u.svisly ? '↓' : '→';
+      const txt = komb.length > 6 ? komb.slice(0, 6).join(', ') + ` … (${komb.length})` : komb.join(', ');
+      return `${smer} <b>${s}</b> v ${u.pole.length} polích: ${txt}`;
+    });
+    $('kombinace').innerHTML = radky.join('<br>');
+  }
+
+  function kresliKlavesy() {
+    const k = $('klavesy');
+    k.innerHTML = '';
+    for (let c = 1; c <= 9; c++) {
+      const b = document.createElement('div'); b.className = 'klavesa'; b.textContent = c;
+      b.onclick = () => zapis(c); k.appendChild(b);
+    }
+    const x = document.createElement('div'); x.className = 'klavesa'; x.textContent = '⌫'; x.title = 'Smazat';
+    x.onclick = () => zapis(0); k.appendChild(x);
+  }
+
+  function zapis(c) {
+    if (konec || vybrane < 0 || hra.cerne[vybrane]) return;
+    const i = vybrane;
+    if (tuzka && c) {
+      historie.push([i, hod[i], pozn[i]]);
+      pozn[i] ^= 1 << c; hod[i] = 0;
+    } else {
+      if (hod[i] === c && !pozn[i]) return;
+      historie.push([i, hod[i], pozn[i]]);
+      hod[i] = c; if (!c) pozn[i] = 0;
+    }
+    $('msg').textContent = '';
+    kresli();
+    zkontrolujKonec();
+  }
+
+  function zkontrolujKonec() {
+    for (let i = 0; i < hra.n * hra.n; i++) if (!hra.cerne[i] && hod[i] !== hra.reseni[i]) return;
+    konec = true; clearInterval(tik); vybrane = -1;
+    const s = sekundy();
+    $('cas').textContent = formatCas(s);
+    let zprava = '🎉 Vyřešeno za ' + formatCas(s) + '!';
+    if (napoveda) zprava += ' (s nápovědou – do rekordů se nepočítá)';
+    else if (rekordy[hra.n] && rekordy[hra.n].zapis(s)) zprava = '🏆 Nový rekord: ' + formatCas(s) + '!';
+    $('msg').textContent = zprava;
+    kresli();
+  }
+
+  $('deska').addEventListener('click', e => {
+    const p = e.target.closest('.pole');
+    if (!p || konec) return;
+    const i = +p.dataset.i;
+    if (hra.cerne[i]) return;
+    vybrane = i; kresli();
+  });
+  document.addEventListener('keydown', e => {
+    if (!hra || konec || e.target.tagName === 'SELECT') return;
+    const n = hra.n;
+    if (e.key >= '1' && e.key <= '9') { zapis(+e.key); e.preventDefault(); return; }
+    if (e.key === 'Backspace' || e.key === 'Delete' || e.key === '0') { zapis(0); e.preventDefault(); return; }
+    if (e.key === 'p' || e.key === 'P') { $('poznamkyBtn').click(); return; }
+    const pohyb = { ArrowLeft: [0, -1], ArrowRight: [0, 1], ArrowUp: [-1, 0], ArrowDown: [1, 0] }[e.key];
+    if (!pohyb || vybrane < 0) return;
+    e.preventDefault();
+    let y = Math.floor(vybrane / n), x = vybrane % n;
+    for (;;) {
+      y += pohyb[0]; x += pohyb[1];
+      if (y < 0 || y >= n || x < 0 || x >= n) return;
+      if (!hra.cerne[y * n + x]) { vybrane = y * n + x; kresli(); return; }
+    }
+  });
+
+  $('zpetBtn').onclick = () => {
+    if (konec || !historie.length) return;
+    const [i, h, p] = historie.pop();
+    hod[i] = h; pozn[i] = p; vybrane = i; kresli();
+  };
+  $('poznamkyBtn').onclick = () => {
+    tuzka = !tuzka;
+    $('poznamkyBtn').classList.toggle('zapnuto', tuzka);
+  };
+  $('kontrolaBtn').onclick = () => {
+    if (konec) return;
+    const spatne = new Set();
+    hod.forEach((v, i) => { if (v && v !== hra.reseni[i]) spatne.add(i); });
+    spatne.trida = 'spatne';
+    kresli(spatne);
+    $('msg').textContent = spatne.size ? '✗ Chybných číslic: ' + spatne.size : '👍 Zatím bez chyby';
+  };
+  $('napovedaBtn').onclick = () => {
+    if (konec) return;
+    // doplní správnou číslici do vybraného pole, případně do prvního nevyplněného/chybného
+    let i = vybrane >= 0 && hod[vybrane] !== hra.reseni[vybrane] ? vybrane : -1;
+    if (i < 0) for (let k = 0; k < hra.n * hra.n; k++) if (!hra.cerne[k] && hod[k] !== hra.reseni[k]) { i = k; break; }
+    if (i < 0) return;
+    napoveda = true;
+    historie.push([i, hod[i], pozn[i]]);
+    hod[i] = hra.reseni[i]; pozn[i] = 0; vybrane = i;
+    const z = new Set([i]); z.trida = 'napoveda';
+    kresli(z);
+    zkontrolujKonec();
+  };
+  $('denniBtn').onclick = () => nova('denni');
+  $('noveBtn').onclick = () => nova('nove');
+  $('velikost').onchange = () => nova(rezim);
+  kresliKlavesy();
+  window.addEventListener('DOMContentLoaded', () => nova('denni'));
+})();
+</script>
+</body>
+</html>

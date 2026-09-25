@@ -1,0 +1,2124 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🧩 Skládačka soukolí</title>
+  <link rel="stylesheet" href="../common.css">
+  <script src="../theme.js"></script>
+  <script src="../dialog.js"></script>
+  <script src="../podpis.js" defer></script>
+  <script src="ozub_geometrie.js"></script>
+  <style>
+    /* Volné hřiště: díly se berou z palety a pokládají na plochu. Kola
+       stejného modulu se při přiblížení sama přichytí do záběru, kola
+       v různých patrech na stejné ose sdílejí hřídel. Z výsledné sítě
+       vazeb se spočte pohyb všech dílů od motoru — převody, smysly
+       otáčení, momenty — a odhalí se kolize a zablokované smyčky. */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: var(--font); background: var(--bg); color: var(--text); min-height: 100vh; }
+    .container { max-width: 1600px; margin: 0 auto; padding: 14px 18px 24px; }
+    .header { display: flex; align-items: baseline; gap: 14px; flex-wrap: wrap; margin-bottom: 12px; }
+    .header h1 { font-size: 1.35rem; font-weight: 650; }
+    .header p { font-size: .85rem; color: var(--text-muted); }
+    .header a { color: var(--accent); }
+
+    .main { display: grid; grid-template-columns: 318px minmax(0, 1fr); gap: 14px; align-items: start; }
+    .panel { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: var(--radius); padding: 4px 13px 10px;
+      position: sticky; top: 10px; max-height: calc(100vh - 20px); overflow-y: auto; }
+    details.sekce { border-top: 1px solid var(--border); }
+    details.sekce:first-of-type { border-top: none; }
+    details.sekce > summary { list-style: none; cursor: pointer; padding: 10px 2px; font-size: .93rem; font-weight: 600; display: flex; gap: 8px; align-items: center; user-select: none; }
+    details.sekce > summary::-webkit-details-marker { display: none; }
+    details.sekce > summary::after { content: '▸'; margin-left: auto; color: var(--text-faint); transition: transform .2s; }
+    details.sekce[open] > summary::after { transform: rotate(90deg); }
+    .sekce-telo { padding: 0 1px 12px; }
+
+    .paleta { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 6px; }
+    .dil { display: flex; flex-direction: column; align-items: center; gap: 3px; padding: 7px 3px 6px; background: var(--bg-control);
+      border: 1px solid var(--border); border-radius: 7px; color: var(--text); font: inherit; font-size: .72rem; cursor: pointer; line-height: 1.15; text-align: center; }
+    .dil:hover { background: var(--bg-hover); }
+    .dil[aria-pressed="true"] { border-color: var(--accent); background: var(--accent-soft); box-shadow: inset 0 0 0 1px var(--accent); }
+    /* Výběr není díl, ale režim práce — dlaždice je proto průhledná s čárkovaným okrajem. */
+    .dil.dil-vyber { background: transparent; border-style: dashed; border-color: var(--border-strong); color: var(--text-muted); }
+    .dil.dil-vyber:hover { background: var(--bg-hover); color: var(--text); }
+    .dil.dil-vyber[aria-pressed="true"] { border-style: solid; color: var(--accent); }
+    .paleta .oddelovac { grid-column: 1 / -1; font-size: .68rem; color: var(--text-faint); text-transform: uppercase; letter-spacing: .5px; margin: 4px 0 -2px; }
+    .dil svg { width: 30px; height: 30px; }
+    .napoveda { font-size: .76rem; color: var(--text-faint); line-height: 1.45; margin-top: 8px; }
+
+    .pole { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 9px; }
+    .pole .cely { grid-column: 1 / -1; }
+    .fg label { display: flex; justify-content: space-between; gap: 4px; font-size: .7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: .4px; margin-bottom: 4px; font-weight: 600; }
+    .fg label .j { text-transform: none; letter-spacing: 0; color: var(--text-faint); font-weight: 500; }
+    .fg input[type=number], .fg input[type=text], .fg select { width: 100%; padding: 6px 8px; background: var(--bg-input); color: var(--text); border: 1px solid var(--border); border-radius: 6px; font: inherit; font-size: .88rem; }
+    .fg input[type=color] { width: 100%; height: 32px; border: 1px solid var(--border); border-radius: 6px; background: var(--bg-input); padding: 2px; }
+    .fg input:focus, .fg select:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); }
+    .zatr { display: flex; align-items: center; gap: 8px; font-size: .85rem; cursor: pointer; padding: 2px 0; }
+    .zatr input { width: 16px; height: 16px; accent-color: var(--accent); }
+    .btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 6px 10px; background: var(--bg-control); color: var(--text);
+      border: 1px solid var(--border); border-radius: 6px; font: inherit; font-size: .82rem; cursor: pointer; white-space: nowrap; }
+    .btn:hover { background: var(--bg-hover); }
+    .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+    .btn.hl { background: var(--accent); border-color: var(--accent); color: #fff; }
+    .btn.nebezpeci { color: var(--danger); }
+    .btn[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+    .btn:disabled { opacity: .45; cursor: default; }
+    .radek { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 10px; }
+    .prazdne { color: var(--text-faint); font-size: .84rem; line-height: 1.5; }
+    .priklady { display: flex; flex-direction: column; gap: 5px; }
+    .priklady .btn { justify-content: flex-start; white-space: normal; text-align: left; }
+
+    .plocha { display: flex; flex-direction: column; gap: 12px; min-width: 0; }
+    .karta { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: var(--radius); min-width: 0; }
+    .karta > h2 { font-size: .96rem; font-weight: 650; padding: 11px 13px 0; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+    .karta > h2 .vpravo { margin-left: auto; display: flex; gap: 6px; flex-wrap: wrap; }
+    .karta-telo { padding: 10px 13px 13px; }
+    .lista { display: flex; align-items: center; gap: 6px; padding: 8px 10px; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+    .lista .mezera { flex: 1; }
+    .lista label { font-size: .78rem; color: var(--text-muted); display: flex; gap: 6px; align-items: center; }
+    .lista input[type=range] { width: 100px; accent-color: var(--accent); }
+    .platno-box { position: relative; height: min(66vh, 680px); min-height: 330px; background: var(--bg-deep); overflow: hidden; touch-action: none;
+      border-radius: 0 0 var(--radius) var(--radius); }
+    .platno-box canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+    .hud { position: absolute; left: 10px; top: 10px; font-size: .76rem; line-height: 1.5; color: var(--text-muted); pointer-events: none;
+      background: color-mix(in srgb, var(--bg-elevated) 85%, transparent); border: 1px solid var(--border); border-radius: 6px; padding: 6px 9px; max-width: calc(100% - 20px); font-variant-numeric: tabular-nums; }
+    .hud b { color: var(--text); }
+    .rezim-info { position: absolute; left: 50%; bottom: 12px; transform: translateX(-50%); background: var(--accent); color: #fff; font-size: .8rem;
+      padding: 6px 12px; border-radius: 16px; box-shadow: var(--shadow); pointer-events: none; white-space: nowrap; max-width: calc(100% - 20px); overflow: hidden; text-overflow: ellipsis; }
+    .napoveda-platno { position: absolute; right: 10px; bottom: 8px; font-size: .68rem; color: var(--text-faint); pointer-events: none; text-align: right; }
+
+    .kpi { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 10px; }
+    .kpi div { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: var(--radius); padding: 9px 12px; min-width: 0; }
+    .kpi small { display: block; font-size: .7rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: .3px; margin-bottom: 3px; }
+    .kpi b { display: block; font-size: 1.18rem; font-weight: 650; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+    .kpi span { display: block; font-size: .73rem; color: var(--text-faint); margin-top: 2px; }
+    .varovani { display: flex; flex-direction: column; gap: 6px; }
+    .var { display: flex; gap: 9px; padding: 7px 11px; border-radius: 7px; font-size: .84rem; line-height: 1.45; border: 1px solid var(--border);
+      border-left: 3px solid var(--warn); background: var(--bg-elevated); }
+    .var.chyba { border-left-color: var(--danger); }
+    .var.ok { border-left-color: var(--ok); }
+    .var.info { border-left-color: var(--accent); }
+    table.t { width: 100%; border-collapse: collapse; font-size: .83rem; font-variant-numeric: tabular-nums; }
+    table.t th, table.t td { padding: 6px 8px; border-bottom: 1px solid var(--border); text-align: left; vertical-align: top; }
+    table.t th { font-size: .7rem; text-transform: uppercase; letter-spacing: .3px; color: var(--text-muted); font-weight: 600; }
+    table.t td.c { text-align: right; white-space: nowrap; }
+    table.t tr[data-id] { cursor: pointer; }
+    table.t tr[data-id]:hover td { background: var(--bg-hover); }
+    table.t tr.vybrany td { background: var(--accent-soft); }
+    .posuv { overflow-x: auto; }
+    .skryt { display: none !important; }
+    .barva { display: inline-block; width: 10px; height: 10px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
+    .stav { font-size: .72rem; padding: 1px 6px; border-radius: 9px; border: 1px solid var(--border); white-space: nowrap; }
+    .stav.ok { color: var(--ok); border-color: var(--ok); }
+    .stav.chyba { color: var(--danger); border-color: var(--danger); }
+    .stav.volne { color: var(--text-faint); }
+    .dva { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr); gap: 12px; align-items: start; }
+
+    /* ---- horní nabídka ---- */
+    .menu { display: flex; gap: 4px; flex-wrap: wrap; background: var(--bg-elevated); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 4px; margin-bottom: 12px; position: relative; z-index: 40; }
+    .menu-p { position: relative; }
+    .menu-tl { background: transparent; border: 1px solid transparent; color: var(--text); font: inherit; font-size: .88rem; padding: 6px 12px; border-radius: 6px; cursor: pointer; }
+    .menu-tl::after { content: ' ▾'; color: var(--text-faint); font-size: .75em; }
+    .menu-tl:hover, .menu-tl[aria-expanded="true"] { background: var(--bg-hover); }
+    .menu-tl:focus-visible { outline: 2px solid var(--accent); }
+    .roleta { position: absolute; top: calc(100% + 4px); left: 0; min-width: 280px; max-width: min(92vw, 360px); max-height: 70vh; overflow-y: auto;
+      background: var(--bg-elevated); border: 1px solid var(--border-strong); border-radius: 8px; box-shadow: var(--shadow); padding: 5px; display: none; flex-direction: column; }
+    .roleta.otevrena { display: flex; }
+    .roleta button { text-align: left; background: transparent; border: none; color: var(--text); font: inherit; font-size: .86rem; padding: 7px 10px; border-radius: 5px; cursor: pointer; }
+    .roleta button:hover, .roleta button:focus-visible { background: var(--accent-soft); outline: none; }
+    .roleta hr { border: none; border-top: 1px solid var(--border); margin: 4px 2px; }
+    .roleta-pozn { font-size: .72rem; color: var(--text-faint); padding: 6px 10px 3px; line-height: 1.4; }
+
+    /* ---- plovoucí okno vlastností dílu ---- */
+    .okno { position: absolute; z-index: 20; width: 252px; font-size: .8rem; max-height: calc(100% - 16px); display: flex; flex-direction: column;
+      background: color-mix(in srgb, var(--bg-elevated) 80%, transparent); -webkit-backdrop-filter: blur(6px); backdrop-filter: blur(6px);
+      border: 1px solid var(--border-strong); border-radius: 10px; box-shadow: var(--shadow); transition: background .15s; }
+    .okno:hover, .okno:focus-within { background: color-mix(in srgb, var(--bg-elevated) 95%, transparent); }
+    .okno-hlava { display: flex; align-items: center; gap: 3px; padding: 4px 4px 4px 6px; border-bottom: 1px solid var(--border); cursor: move; user-select: none; touch-action: none; }
+    .okno-hlava input[type=color] { flex: 0 0 22px; width: 22px; height: 22px; padding: 0; border: 1px solid var(--border-strong); border-radius: 5px; background: none; cursor: pointer; }
+    .okno-hlava input[type=color]::-webkit-color-swatch-wrapper { padding: 1px; }
+    .okno-hlava input[type=color]::-webkit-color-swatch { border: none; border-radius: 3px; }
+    .okno-nazev { flex: 1; min-width: 0; background: transparent; border: 1px solid transparent; color: var(--text); font: inherit; font-weight: 650; font-size: .84rem; padding: 3px 5px; border-radius: 5px; cursor: text; }
+    .okno-nazev:hover { border-color: var(--border); }
+    .okno-nazev:focus { outline: none; border-color: var(--accent); background: var(--bg-input); }
+    .okno-ikona, .okno-zavrit { flex: 0 0 26px; width: 26px; height: 26px; border: none; background: transparent; color: var(--text-muted); line-height: 1; border-radius: 5px; cursor: pointer; padding: 0; }
+    .okno-ikona { font-size: .9rem; }
+    .okno-zavrit { font-size: 1.2rem; }
+    .okno-ikona:hover, .okno-zavrit:hover { background: var(--bg-hover); color: var(--text); }
+    .okno-ikona.nebezpeci:hover { color: var(--danger); }
+    .okno-ikona:focus-visible, .okno-zavrit:focus-visible { outline: 2px solid var(--accent); }
+    .okno-telo { padding: 7px 8px 8px; overflow-y: auto; display: flex; flex-direction: column; gap: 7px; }
+    .kp { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 5px 5px; }
+    .kp .s2 { grid-column: span 2; }
+    .kp .s3 { grid-column: 1 / -1; }
+    .kf { display: flex; flex-direction: column; gap: 1px; font-size: .62rem; color: var(--text-faint); text-transform: uppercase; letter-spacing: .3px; min-width: 0; }
+    .kf input, .kf select { width: 100%; height: 26px; padding: 2px 5px; background: var(--bg-input); color: var(--text); border: 1px solid var(--border); border-radius: 5px;
+      font: inherit; font-size: .8rem; text-transform: none; letter-spacing: 0; }
+    .kf input:focus, .kf select:focus { outline: none; border-color: var(--accent); }
+    .patra-r { display: flex; align-items: center; gap: 5px; font-size: .62rem; color: var(--text-faint); text-transform: uppercase; letter-spacing: .3px; }
+    .patra { flex: 1; display: grid; grid-template-columns: repeat(10, minmax(0, 1fr)); gap: 2px; }
+    .patra button { height: 22px; padding: 0; background: var(--bg-control); color: var(--text); border: 1px solid var(--border); border-radius: 4px; font: inherit; font-size: .74rem; cursor: pointer; }
+    .cipy { display: flex; flex-wrap: wrap; gap: 4px; }
+    .cip { font: inherit; font-size: .72rem; padding: 2px 8px; border-radius: 11px; border: 1px solid var(--border); background: var(--bg-control); color: var(--text-muted); cursor: pointer; }
+    .cip:hover { color: var(--text); }
+    .cip[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+    .kp-pozn { font-size: .68rem; color: var(--text-faint); line-height: 1.35; }
+    .kp-pozn b { color: var(--text-muted); font-weight: 600; }
+    .kp-odkaz { align-self: flex-start; font: inherit; font-size: .72rem; background: none; border: none; color: var(--accent); cursor: pointer; padding: 0; text-decoration: underline; }
+    .patra button:hover { background: var(--bg-hover); }
+    .patra button[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 650; }
+
+    @media (max-width: 1100px) {
+      .main { grid-template-columns: minmax(0, 1fr); }
+      .panel { position: static; max-height: none; }
+      .kpi { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .dva { grid-template-columns: minmax(0, 1fr); }
+    }
+    @media (max-width: 700px) {
+      .container { padding: 10px 10px 20px; }
+      .platno-box { height: 58vh; }
+      .paleta { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+      .napoveda-platno { display: none; }
+      .okno { left: 8px !important; right: 8px; top: auto !important; bottom: 8px; width: auto; max-height: 55% !important; }
+      .okno-hlava { cursor: default; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🧩 Skládačka soukolí</h1>
+      <p>Poskládejte si vlastní převod z kol, věnců, hřebenů, řemenů a řetězů — převody, otáčky a momenty se spočtou samy.
+        Jednotlivá kola do detailu navrhnete v <a href="ozubena_kola.html">Návrháři ozubených soukolí</a>.</p>
+    </div>
+
+    <nav class="menu" id="menu" aria-label="Nabídka">
+      <div class="menu-p"><button type="button" class="menu-tl" aria-haspopup="true" aria-expanded="false">📁 Projekt</button>
+        <div class="roleta" role="menu">
+          <button type="button" role="menuitem" data-akce="nova">📄 Nová prázdná plocha</button>
+          <button type="button" role="menuitem" data-akce="ulozit">💾 Uložit sestavu (.json)</button>
+          <button type="button" role="menuitem" data-akce="nacist">📂 Načíst sestavu…</button>
+          <button type="button" role="menuitem" data-akce="odkaz">🔗 Zkopírovat odkaz na sestavu</button>
+          <div class="roleta-pozn">Rozpracovaná sestava se průběžně ukládá v prohlížeči. Odkaz obsahuje celou sestavu.</div>
+        </div></div>
+      <div class="menu-p"><button type="button" class="menu-tl" aria-haspopup="true" aria-expanded="false">📚 Příklady</button>
+        <div class="roleta" role="menu" id="rolePriklady"></div></div>
+      <div class="menu-p"><button type="button" class="menu-tl" aria-haspopup="true" aria-expanded="false">📐 Výkresy</button>
+        <div class="roleta" role="menu">
+          <button type="button" role="menuitem" data-akce="vykres-svg">📐 Výkres roztečí os (SVG)</button>
+          <button type="button" role="menuitem" data-akce="vykres-dxf">📐 Výkres roztečí os (DXF)</button>
+          <button type="button" role="menuitem" data-akce="vykres-tisk">🖨 Tisknout výkres</button>
+          <hr>
+          <button type="button" role="menuitem" data-akce="plocha-svg">🖼 Obrázek plochy 1 : 1 (SVG)</button>
+          <button type="button" role="menuitem" data-akce="plocha-png">🖼 Obrázek plochy (PNG)</button>
+          <div class="roleta-pozn">Výkres 1 : 1 obsahuje osy všech hřídelí, kótované rozteče os mezi spolupracujícími díly a tabulku otvorů od osy motoru — podklad pro vrtání montážní desky.</div>
+        </div></div>
+      <div class="menu-p"><button type="button" class="menu-tl" aria-haspopup="true" aria-expanded="false">📦 Export</button>
+        <div class="roleta" role="menu">
+          <button type="button" role="menuitem" data-akce="stl-vybrany">⬇ STL — vybraný díl</button>
+          <button type="button" role="menuitem" data-akce="stl-zip">⬇ STL — každý díl zvlášť (ZIP)</button>
+          <button type="button" role="menuitem" data-akce="stl-deska">⬇ STL — všechny díly na podložku</button>
+          <button type="button" role="menuitem" data-akce="stl-sestava">⬇ STL — celá sestava (patra nad sebou)</button>
+          <hr>
+          <button type="button" role="menuitem" data-akce="csv">⬇ Kusovník (CSV)</button>
+          <div class="roleta-pozn">STL je v milimetrech, osa Z nahoru; každý díl je uzavřené těleso o své šířce.</div>
+        </div></div>
+    </nav>
+    <input type="file" id="soubor" accept=".json,application/json" hidden>
+
+    <div class="main">
+      <aside class="panel" aria-label="Paleta a pohon">
+        <details class="sekce" open>
+          <summary>🧰 Díly</summary>
+          <div class="sekce-telo">
+            <div class="paleta" id="paleta" role="group" aria-label="Paleta dílů"></div>
+            <p class="napoveda" id="napovedaPaleta">Klepněte na díl a pak do plochy. Kolo stejného modulu se u jiného kola samo přichytí do záběru, v jiném patře na stejnou hřídel.</p>
+          </div>
+        </details>
+        <details class="sekce" open>
+          <summary>⚡ Pohon</summary>
+          <div class="sekce-telo">
+            <div class="pole">
+              <div class="fg"><label for="gOtacky">Otáčky motoru <span class="j">min⁻¹</span></label><input type="number" id="gOtacky" min="0.01" max="100000" step="1"></div>
+              <div class="fg"><label for="gSmer">Smysl</label><select id="gSmer"><option value="1">↺ proti hodinám</option><option value="-1">↻ po směru</option></select></div>
+              <div class="fg"><label for="gMoment">Moment motoru <span class="j">N·m</span></label><input type="number" id="gMoment" min="0" max="100000" step="0.1"></div>
+              <div class="fg"><label for="gRezim">Chod</label><select id="gRezim"><option value="plynule">plynulý</option><option value="kyv">kyvadlový (tam a zpět)</option></select></div>
+              <div class="fg"><label for="gKyv">Rozkyv motoru <span class="j">otáček</span></label><input type="number" id="gKyv" min="0.05" max="50" step="0.05"></div>
+              <div class="fg"><label for="gM">Modul nových kol <span class="j">mm</span></label><input type="number" id="gM" min="0.2" max="20" step="0.05"></div>
+            </div>
+            <label class="zatr" style="margin-top:10px"><input type="checkbox" id="gUcinnost"> Počítat se ztrátami (účinnost soukolí 98 %, řemen 96 %, řetěz 97 %)</label>
+          </div>
+        </details>
+      </aside>
+
+      <main class="plocha">
+        <section class="karta" aria-label="Pracovní plocha">
+          <div class="lista">
+            <button type="button" class="btn" id="btnPlay" aria-pressed="true" title="Mezerník">⏸ Pauza</button>
+            <button type="button" class="btn" id="btnNula" title="Výchozí poloha">⏮</button>
+            <label>Animace <input type="range" id="gAnimace" min="0.05" max="3" step="0.05" aria-label="Rychlost animace"><span id="gAnimaceTxt"></span></label>
+            <span class="mezera"></span>
+            <button type="button" class="btn" id="btnZpet" title="Zpět (Ctrl+Z)">↶</button>
+            <button type="button" class="btn" id="btnVpred" title="Znovu (Ctrl+Y)">↷</button>
+            <button type="button" class="btn" id="btnPopisky" aria-pressed="true">🏷 Popisky</button>
+            <button type="button" class="btn" id="btnFit" title="Zobrazit vše">⤢ Vše</button>
+          </div>
+          <div class="platno-box" id="platnoBox">
+            <canvas id="platno" aria-label="Pracovní plocha se soukolím"></canvas>
+            <div class="hud" id="hud"></div>
+            <div class="rezim-info skryt" id="rezimInfo"></div>
+            <div class="okno skryt" id="okno" role="dialog" aria-label="Vlastnosti dílu">
+              <div class="okno-hlava" id="oknoHlava">
+                <input type="color" id="oknoBarva" aria-label="Barva dílu" title="Barva dílu">
+                <input type="text" id="oknoNazev" class="okno-nazev" aria-label="Název dílu" title="Název dílu — klepněte a přepište">
+                <button type="button" class="okno-ikona" id="iDuplikat" aria-label="Duplikovat díl" title="Duplikovat">⧉</button>
+                <button type="button" class="okno-ikona nebezpeci" id="iSmazat" aria-label="Smazat díl" title="Smazat (Del)">🗑</button>
+                <button type="button" class="okno-zavrit" id="oknoZavrit" aria-label="Zavřít vlastnosti" title="Zavřít (Esc)">×</button></div>
+              <div class="okno-telo" id="inspektor"></div>
+            </div>
+            <div class="napoveda-platno">tažení dílu = posun · tažení plochy = posun pohledu · kolečko = zoom<br>Del = smazat · Ctrl+Z = zpět · Esc = zrušit</div>
+          </div>
+        </section>
+
+        <div class="kpi" id="kpi"></div>
+        <div class="varovani" id="varovani"></div>
+
+        <div class="dva">
+          <section class="karta">
+            <h2>⚙️ Díly a jejich pohyb</h2>
+            <div class="karta-telo posuv" id="tabulka"></div>
+          </section>
+          <section class="karta">
+            <h2>📋 Kusovník <span class="vpravo"><button type="button" class="btn" id="btnCsv">⬇ CSV</button></span></h2>
+            <div class="karta-telo posuv" id="kusovnik"></div>
+          </section>
+        </div>
+      </main>
+    </div>
+  </div>
+
+  <script>
+  (function () {
+    'use strict';
+    const O = Ozub, { PI, TAU } = O;
+    const el = id => document.getElementById(id);
+    const KLIC = 'webapp_skladacka_soukoli';
+    const f = (v, d = 2) => (v == null || !isFinite(v)) ? '—' : Number(v).toFixed(d).replace('.', ',');
+    const esc = s => String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+    const gcd = (a, b) => { a = Math.abs(a); b = Math.abs(b); while (b) [a, b] = [b, a % b]; return a; };
+    const ALFA = O.rad(20);
+
+    /* ==================================================================
+       1. KATALOG DÍLŮ
+       ================================================================== */
+    const BARVY = { kolo: '#4f86e8', venec: '#e39a2d', hreben: '#3fae7a', remenice: '#8d99a6', retezka: '#b86ad6' };
+    // Každý nově položený díl dostane jinou barvu — ze sady dobře rozlišitelných
+    // odstínů se vezme ta, která je na ploše použitá nejméně (při shodě první v pořadí).
+    const SADA_BAREV = ['#4f86e8', '#e39a2d', '#3fae7a', '#b86ad6', '#d9534f', '#2bb3c0', '#c9a227',
+      '#e0679a', '#7a8cff', '#8bbf3f', '#b5764a', '#8d99a6'];
+    function novaBarva() {
+      const pocty = new Map(SADA_BAREV.map(b => [b, 0]));
+      for (const q of S.prvky) { const b = (q.barva || '').toLowerCase(); if (pocty.has(b)) pocty.set(b, pocty.get(b) + 1); }
+      let nej = SADA_BAREV[0];
+      for (const b of SADA_BAREV) if (pocty.get(b) < pocty.get(nej)) nej = b;
+      return nej;
+    }
+    const IKONY = {
+      kolo: '<circle cx="15" cy="15" r="9"/><path d="M15 3v3M15 24v3M3 15h3M24 15h3M6.5 6.5l2.1 2.1M21.4 21.4l2.1 2.1M6.5 23.5l2.1-2.1M21.4 8.6l2.1-2.1"/><circle cx="15" cy="15" r="2.5"/>',
+      pastorek: '<circle cx="15" cy="15" r="6"/><path d="M15 6v3M15 21v3M6 15h3M21 15h3M8.6 8.6l2 2M19.4 19.4l2 2M8.6 21.4l2-2M19.4 10.6l2-2"/><circle cx="15" cy="15" r="1.8"/>',
+      velke: '<circle cx="15" cy="15" r="12"/><circle cx="15" cy="15" r="10" stroke-dasharray="1.6 1.6"/><circle cx="15" cy="15" r="2.5"/><circle cx="15" cy="9" r="2"/><circle cx="15" cy="21" r="2"/>',
+      venec: '<circle cx="15" cy="15" r="13"/><circle cx="15" cy="15" r="9.5" stroke-dasharray="1.8 1.6"/><circle cx="19" cy="15" r="4.5"/>',
+      hreben: '<path d="M2 11h2l1.2-3h2.6L9 11h2l1.2-3h2.6L16 11h2l1.2-3h2.6L23 11h2l1.2-3M2 11v5h26v-5"/><circle cx="15" cy="23" r="4"/>',
+      remenice: '<circle cx="8" cy="15" r="5"/><circle cx="22" cy="15" r="3"/><path d="M8 10l14 2M8 20l14-2"/>',
+      retezka: '<circle cx="15" cy="15" r="9"/><path d="M15 4v3M15 23v3M4 15h3M23 15h3M7.2 7.2l2 2M20.8 20.8l2 2M7.2 22.8l2-2M20.8 9.2l2-2"/><circle cx="15" cy="15" r="3" stroke-dasharray="1.5 1.2"/>',
+      remen: '<circle cx="8" cy="15" r="5"/><circle cx="23" cy="15" r="3.5"/><path d="M8 10l15 1.5M8 20l15-1.5" stroke-width="2.4"/>',
+      remenx: '<circle cx="8" cy="15" r="5"/><circle cx="23" cy="15" r="3.5"/><path d="M8 10l15 8.5M8 20l15-8.5" stroke-width="2.2"/>',
+      retez: '<circle cx="8" cy="15" r="5"/><circle cx="23" cy="15" r="3.5"/><path d="M8 10l15 1.5M8 20l15-1.5" stroke-width="2.6" stroke-dasharray="1.6 1.4"/>',
+    };
+    const PALETA = [
+      { id: 'kolo', druh: 'kolo', nazev: 'Ozubené kolo', h: { z: 30 } },
+      { id: 'pastorek', druh: 'kolo', nazev: 'Pastorek', h: { z: 12 } },
+      { id: 'velke', druh: 'kolo', nazev: 'Velké kolo', h: { z: 60 } },
+      { id: 'venec', druh: 'venec', nazev: 'Věnec', h: { z: 60 } },
+      { id: 'hreben', druh: 'hreben', nazev: 'Hřeben', h: { n: 16, uhel: 0 } },
+      { id: 'remenice', druh: 'remenice', nazev: 'Řemenice', h: { D: 40 } },
+      { id: 'retezka', druh: 'retezka', nazev: 'Řetězové kolo', h: { z: 18, p: 12.7 } },
+      { id: 'remen', nastroj: 'remen', nazev: 'Řemen' },
+      { id: 'remenx', nastroj: 'remenx', nazev: 'Zkřížený řemen' },
+      { id: 'retez', nastroj: 'retez', nazev: 'Řetěz' },
+    ];
+    const NAZVY_DRUHU = { kolo: 'Ozubené kolo', venec: 'Věnec (vnitřní ozubení)', hreben: 'Hřeben', remenice: 'Řemenice', retezka: 'Řetězové kolo' };
+    const NAZVY_VAZEB = { remen: 'Řemen', remenx: 'Zkřížený řemen', retez: 'Řetěz' };
+    const UCINNOST = { ext: 0.98, int: 0.985, hreben: 0.97, hridel: 1, remen: 0.96, remenx: 0.95, retez: 0.97 };
+
+    /* ==================================================================
+       2. STAV SESTAVY
+       ================================================================== */
+    const NAST_VYCHOZI = { m: 2, otacky: 30, smer: 1, moment: 1, rezim: 'plynule', kyv: 1, animace: 0.5, popisky: true, ucinnost: true };
+    let S = { prvky: [], vazby: [], dalsiId: 1, nast: { ...NAST_VYCHOZI } };
+    let vybrany = null;                 // id vybraného prvku
+    const zpet = [], vpred = [];
+
+    const najdi = id => S.prvky.find(p => p.id === id);
+    function snimek() { return JSON.stringify({ prvky: S.prvky, vazby: S.vazby, dalsiId: S.dalsiId }); }
+    function zapamatuj() {
+      zpet.push(snimek());
+      if (zpet.length > 80) zpet.shift();
+      vpred.length = 0;
+      aktualizujTlacitkaHistorie();
+    }
+    function obnovSnimek(txt) {
+      const d = JSON.parse(txt);
+      S.prvky = d.prvky; S.vazby = d.vazby; S.dalsiId = d.dalsiId;
+      if (vybrany && !najdi(vybrany)) vybrany = null;
+      zmena();
+    }
+    function krokZpet() { if (!zpet.length) return; vpred.push(snimek()); obnovSnimek(zpet.pop()); aktualizujTlacitkaHistorie(); }
+    function krokVpred() { if (!vpred.length) return; zpet.push(snimek()); obnovSnimek(vpred.pop()); aktualizujTlacitkaHistorie(); }
+    function aktualizujTlacitkaHistorie() { el('btnZpet').disabled = !zpet.length; el('btnVpred').disabled = !vpred.length; }
+
+    // Šířka (tloušťka) dílu a středový otvor — jako v Návrháři ozubených soukolí.
+    function vychoziVyroba(druh, roztec) {
+      return {
+        b: druh === 'retezka' ? +(0.57 * (roztec || 12.7)).toFixed(1) : druh === 'remenice' ? 10 : 8,
+        d: druh === 'venec' || druh === 'hreben' ? 0 : 5, otvor: 'kruh', odlehceni: true,
+      };
+    }
+    function novyPrvek(druh, h, x, y, docasny) {
+      const p = { id: docasny ? -1 : S.dalsiId++, druh, x, y, patro: 0, m: S.nast.m, z: 30, n: 16, uhel: 0, D: 40, p: 12.7, nazev: '', barva: BARVY[druh], motor: false, vystup: false, volne: false,
+        ...vychoziVyroba(druh, h.p), ...h };
+      if (druh === 'remenice' || druh === 'retezka') delete p.m;
+      p.nazev = p.nazev || `${NAZVY_DRUHU[druh]} ${druh === 'remenice' ? 'Ø' + f(p.D, 0) : druh === 'hreben' ? p.n + ' z.' : 'z' + p.z}`;
+      return p;
+    }
+
+    /* ==================================================================
+       3. GEOMETRIE DÍLŮ (s mezipamětí)
+       ================================================================== */
+    const tvary = new Map();
+    function klicTvaru(p) { return [p.druh, p.z, p.m, p.n, p.D, p.p, p.d, p.otvor, p.odlehceni].join('|'); }
+
+    function polomery(p) {
+      if (p.druh === 'kolo') return { r: p.z * p.m / 2, ra: p.z * p.m / 2 + p.m, ri: 0 };
+      if (p.druh === 'venec') { const r = p.z * p.m / 2; return { r, ra: r + 1.25 * p.m + Math.max(3 * p.m, 4), ri: Math.max(r - p.m, r * Math.cos(ALFA) * 1.001) }; }
+      if (p.druh === 'remenice') return { r: p.D / 2, ra: p.D / 2 + 1.5, ri: 0 };
+      if (p.druh === 'retezka') {
+        // hlavový průměr uprostřed rozmezí ISO 606: d + p(1,125 − 0,8/z) − d1 (d1 = průměr válečku ≈ 0,625 p)
+        const r = p.p / (2 * Math.sin(PI / p.z));
+        return { r, ra: (2 * r + p.p * (1.125 - 0.8 / p.z) - 0.625 * p.p) / 2, ri: 0 };
+      }
+      return { r: 0, ra: 0, ri: 0 };
+    }
+    function roztecHrebene(p) { return PI * p.m; }
+    function delkaHrebene(p) { return p.n * PI * p.m; }
+    function vyskaHrebene(p) { return 1.25 * p.m + Math.max(3 * p.m, 5); }
+
+    function tvar(p) {
+      const k = klicTvaru(p);
+      if (tvary.has(k)) return tvary.get(k);
+      let obrys, otvory = [];
+      const { r, ra } = polomery(p);
+      // středový otvor (kruh / pero / D / šestihran) a odlehčení mezi nábojem a věncem
+      const rNaboj = p.d > 0 ? p.d / 2 + Math.max(3, p.d * 0.5) : 3;
+      const otvor = () => { if (p.d > 0) { const h = O.dira(p.d, p.otvor || 'kruh'); if (h) otvory.push(h); } };
+      const odlehci = rVnejsi => { if (p.odlehceni && rVnejsi - rNaboj > 8) otvory.push(...O.odlehceni(rNaboj + 1.5, rVnejsi, rVnejsi > 60 ? 6 : 5)); };
+      if (p.druh === 'kolo') {
+        const tol = p.m * 0.004;
+        const g = O.pulZubu({ z: p.z, mt: p.m, at: ALFA, xm: 0, hc: 1.25 * p.m, rho: 0.38 * p.m, jt: 0.04 * p.m, ra, tol, vzorky: 500 });
+        obrys = O.obrysZPulky(g.pul, p.z);
+        const rf = r - 1.25 * p.m;
+        otvor();
+        odlehci(rf - Math.max(2 * p.m, 3));
+      } else if (p.druh === 'venec') {
+        const { ri } = polomery(p);
+        obrys = O.kruh(0, 0, ra, 220);
+        otvory.push(O.cw(O.dutinaVence(p.z, p.m, ALFA, 0, 1, 0.25, 0.04 * p.m, ri, p.m * 0.004)));
+      } else if (p.druh === 'hreben') {
+        obrys = O.hreben({ mn: p.m, an: ALFA, beta: 0, jt: 0.04 * p.m, ha: 1, c: 0.25, n: p.n, telo: Math.max(3 * p.m, 5) }).obrys;
+        const L = delkaHrebene(p), n = Math.max(2, Math.floor(L / 40) + 1);
+        for (let j = 0; j < n; j++) otvory.push(O.cw(O.kruh(-L / 2 + L * (j + 0.5) / n, 1.25 * p.m + Math.max(3 * p.m, 5) / 2, Math.min(1.7, p.m * 0.6), 24)));
+      } else if (p.druh === 'remenice') {
+        obrys = O.kruh(0, 0, ra, 120);
+        otvor();
+        odlehci(r - Math.max(3, r * 0.15));
+      } else if (p.druh === 'retezka') {
+        // zubová mezera = sedlo válečku v roztečném bodě, vycentrovaná na θ = 0
+        // Sedlo válečku (poloměr rs) v roztečném bodě; bok zubu je oblouk
+        // opsaný ze středu sousedního válečku poloměrem p − rs.
+        const rs = 0.505 * 0.625 * p.p + 0.035, per = TAU / p.z, rb = p.p - rs;
+        const R = th => {
+          const ux = Math.cos(th), uy = Math.sin(th);
+          let best = ra;
+          for (const c of [0, per, -per]) {
+            const t = O.paprsekKruh(ux, uy, r * Math.cos(c), r * Math.sin(c), rs);
+            if (t < best) best = t;
+          }
+          // zub mezi sedly [0, per] (nebo [−per, 0]) leží v průniku kruhů okolo obou sedel
+          for (const c of th >= 0 ? [0, per] : [-per, 0]) {
+            const cx = r * Math.cos(c), cy = r * Math.sin(c), b = ux * cx + uy * cy;
+            const D = b * b - (cx * cx + cy * cy - rb * rb);
+            if (D >= 0) { const t2 = b + Math.sqrt(D); if (t2 < best) best = t2; }
+          }
+          return best;
+        };
+        obrys = O.polarniObrys(R, p.z, 90, p.p * 0.002);
+        otvor();
+        odlehci(r - rs - Math.max(3, p.p * 0.4));
+      }
+      const cesta = new Path2D();
+      for (const sm of [obrys, ...otvory]) { sm.forEach(([x, y], i) => i ? cesta.lineTo(x, y) : cesta.moveTo(x, y)); cesta.closePath(); }
+      const t = { obrys, otvory, cesta };
+      tvary.set(k, t);
+      if (tvary.size > 200) tvary.delete(tvary.keys().next().value);
+      return t;
+    }
+
+    // Hřeben: jednotkové vektory podél (eu) a kolmo ven od zubů (en).
+    function osyHrebene(p) {
+      const a = O.rad(p.uhel || 0);
+      return { eu: [Math.cos(a), Math.sin(a)], en: [-Math.sin(a), Math.cos(a)] };
+    }
+
+    /* ==================================================================
+       4. VAZBY: záběry, hřídele, řemeny — a kolize
+       Každá vazba je lineární: hodnota(b) = k · hodnota(a); u otáčivých
+       dílů je hodnota úhlová rychlost, u hřebene posuvná rychlost (mm/s).
+       ================================================================== */
+    function vDutineVence(A, B) {
+      const V = A.druh === 'venec' ? A : B.druh === 'venec' ? B : null, X = V === A ? B : A;
+      return !!V && X.druh !== 'venec' && A.patro === B.patro && polomery(X).ra <= polomery(V).ri - 0.05;
+    }
+
+    function analyzuj() {
+      const vazby = [], kolize = [], vule = [], soupatro = [];
+      const P = S.prvky;
+      for (let i = 0; i < P.length; i++) for (let j = i + 1; j < P.length; j++) {
+        const A = P[i], B = P[j];
+        const dx = B.x - A.x, dy = B.y - A.y, d = Math.hypot(dx, dy);
+        const tocA = A.druh !== 'hreben', tocB = B.druh !== 'hreben';
+        // společná hřídel
+        if (tocA && tocB && d < 0.05) {
+          // díl v dutině věnce (slunce) je souosý, ale otáčí se nezávisle
+          if (vDutineVence(A, B)) continue;
+          if (!A.volne && !B.volne) vazby.push({ a: A.id, b: B.id, typ: 'hridel', k: 1 });
+          if (A.patro === B.patro) soupatro.push([A.id, B.id]);
+          continue;
+        }
+        if (A.patro !== B.patro) continue;
+        const pa = polomery(A), pb = polomery(B);
+        // kolo – kolo
+        if (A.druh === 'kolo' && B.druh === 'kolo') {
+          const D = pa.r + pb.r;
+          if (A.m === B.m && Math.abs(d - D) <= 0.25 * A.m) {
+            vazby.push({ a: A.id, b: B.id, typ: 'ext', k: -A.z / B.z });
+            if (Math.abs(d - D) > 0.02 * A.m) vule.push([A.id, B.id, d - D]);
+          } else if (d < pa.ra + pb.ra) kolize.push([A.id, B.id]);
+          continue;
+        }
+        // kolo – věnec
+        if ((A.druh === 'kolo' && B.druh === 'venec') || (A.druh === 'venec' && B.druh === 'kolo')) {
+          const K = A.druh === 'kolo' ? A : B, V = A.druh === 'venec' ? A : B;
+          const pk = polomery(K), pv = polomery(V), D = pv.r - pk.r;
+          if (K.m === V.m && Math.abs(d - D) <= 0.25 * K.m && V.z > K.z) {
+            // hodnota(pastorek) = z_v / z_k · hodnota(věnec)
+            vazby.push({ a: V.id, b: K.id, typ: 'int', k: V.z / K.z, interference: V.z - K.z < 10 });
+            if (Math.abs(d - D) > 0.02 * K.m) vule.push([A.id, B.id, d - D]);
+          } else {
+            const uvnitr = d + pk.ra <= pv.ri - 0.05, venku = d - pk.ra >= pv.ra;
+            if (!uvnitr && !venku) kolize.push([A.id, B.id]);
+          }
+          continue;
+        }
+        // kolo – hřeben
+        if ((A.druh === 'kolo' && B.druh === 'hreben') || (A.druh === 'hreben' && B.druh === 'kolo')) {
+          const K = A.druh === 'kolo' ? A : B, H = A.druh === 'hreben' ? A : B;
+          const { eu, en } = osyHrebene(H), pk = polomery(K);
+          const u = (K.x - H.x) * eu[0] + (K.y - H.y) * eu[1], w = (K.x - H.x) * en[0] + (K.y - H.y) * en[1];
+          const L = delkaHrebene(H);
+          if (K.m === H.m && Math.abs(w + pk.r) <= 0.25 * K.m && Math.abs(u) <= L / 2 + pk.r * 0.3) {
+            vazby.push({ a: K.id, b: H.id, typ: 'hreben', k: -pk.r });
+            if (Math.abs(w + pk.r) > 0.02 * K.m) vule.push([A.id, B.id, -(w + pk.r)]);
+          } else {
+            const cu = Math.max(-L / 2, Math.min(L / 2, u)), cw = Math.max(-H.m, Math.min(vyskaHrebene(H), w));
+            if (Math.hypot(u - cu, w - cw) < pk.ra) kolize.push([A.id, B.id]);
+          }
+          continue;
+        }
+        if (A.druh === 'hreben' && B.druh === 'hreben') continue;
+        // věnec s něčím uvnitř / ostatní kruhové díly
+        if (A.druh === 'venec' || B.druh === 'venec') {
+          const V = A.druh === 'venec' ? A : B, X = V === A ? B : A;
+          if (X.druh === 'hreben') continue;
+          const pv = polomery(V), px = polomery(X);
+          const uvnitr = d + px.ra <= pv.ri - 0.05, venku = d - px.ra >= pv.ra;
+          if (!uvnitr && !venku) kolize.push([A.id, B.id]);
+          continue;
+        }
+        if (tocA && tocB && d < pa.ra + pb.ra) kolize.push([A.id, B.id]);
+        if ((!tocA || !tocB)) {
+          const H = tocA ? B : A, X = tocA ? A : B;
+          const { eu, en } = osyHrebene(H), px = polomery(X);
+          const u = (X.x - H.x) * eu[0] + (X.y - H.y) * eu[1], w = (X.x - H.x) * en[0] + (X.y - H.y) * en[1];
+          const L = delkaHrebene(H);
+          const cu = Math.max(-L / 2, Math.min(L / 2, u)), cw = Math.max(-H.m, Math.min(vyskaHrebene(H), w));
+          if (Math.hypot(u - cu, w - cw) < px.ra) kolize.push([A.id, B.id]);
+        }
+      }
+      // řemeny a řetězy
+      for (const v of S.vazby) {
+        const A = najdi(v.a), B = najdi(v.b);
+        if (!A || !B) continue;
+        const ra = polomery(A).r, rb = polomery(B).r;
+        const k = v.typ === 'retez' ? A.z / B.z : (v.typ === 'remenx' ? -ra / rb : ra / rb);
+        vazby.push({ a: A.id, b: B.id, typ: v.typ, k, remen: v });
+      }
+      return { vazby, kolize, vule, soupatro };
+    }
+
+    /* ==================================================================
+       5. KINEMATIKA — šíření pohybu od motoru, fáze zubů, zablokování
+       ================================================================== */
+    let R = null;       // výsledek řešení
+
+    function res() {
+      const A = analyzuj();
+      const sousede = new Map(S.prvky.map(p => [p.id, []]));
+      for (const v of A.vazby) {
+        sousede.get(v.a).push({ n: v.b, k: v.k, v, zpet: false });
+        sousede.get(v.b).push({ n: v.a, k: 1 / v.k, v, zpet: true });
+      }
+      const motor = S.prvky.find(p => p.motor && p.druh !== 'hreben');
+      const pomer = new Map();      // hodnota dílu / úhlová rychlost motoru
+      const zlomek = new Map();     // přesný poměr [čitatel, jmenovatel] nebo null
+      const stupne = new Map(), eta = new Map(), komponenta = new Map();
+      const zablokovane = new Set();
+      let nk = 0;
+      const koreny = motor ? [motor, ...S.prvky.filter(p => p !== motor)] : S.prvky.slice();
+      for (const kor of koreny) {
+        if (komponenta.has(kor.id)) continue;
+        const idk = nk++;
+        const jeMotor = kor === motor;
+        const fronta = [kor.id];
+        komponenta.set(kor.id, idk);
+        pomer.set(kor.id, 1); zlomek.set(kor.id, [1, 1]); stupne.set(kor.id, 0); eta.set(kor.id, 1);
+        let konflikt = false;
+        const cleny = [kor.id];
+        while (fronta.length) {
+          const id = fronta.shift();
+          for (const s of sousede.get(id)) {
+            const ocek = pomer.get(id) * s.k;
+            if (!komponenta.has(s.n)) {
+              komponenta.set(s.n, idk); cleny.push(s.n);
+              pomer.set(s.n, ocek);
+              const zl = zlomek.get(id);
+              let nz = null;
+              if (zl) {
+                const v = s.v, a = najdi(v.a), b = najdi(v.b);
+                let c = null, j = null;
+                if (v.typ === 'hridel') { c = 1; j = 1; }
+                else if (v.typ === 'ext' || v.typ === 'retez') { c = (v.typ === 'ext' ? -1 : 1) * a.z; j = b.z; }
+                else if (v.typ === 'int') { c = a.z; j = b.z; }
+                if (c != null) {
+                  if (s.zpet) [c, j] = [j, c];
+                  let cc = zl[0] * c, jj = zl[1] * j;
+                  if (jj < 0) { cc = -cc; jj = -jj; }
+                  const g = gcd(cc, jj) || 1;
+                  nz = [cc / g, jj / g];
+                }
+              }
+              zlomek.set(s.n, nz);
+              stupne.set(s.n, stupne.get(id) + (s.v.typ === 'hridel' ? 0 : 1));
+              eta.set(s.n, eta.get(id) * (UCINNOST[s.v.typ] || 1));
+              fronta.push(s.n);
+            } else if (Math.abs(pomer.get(s.n) - ocek) > 1e-9 * (1 + Math.abs(ocek))) {
+              konflikt = true;
+            }
+          }
+        }
+        if (konflikt) cleny.forEach(id => zablokovane.add(id));
+        if (!jeMotor) cleny.forEach(id => { if (!zablokovane.has(id)) pomer.set(id, 0); });
+      }
+      zablokovane.forEach(id => pomer.set(id, 0));
+      const pohanene = new Set(motor ? S.prvky.filter(p => komponenta.get(p.id) === komponenta.get(motor.id) && !zablokovane.has(p.id)).map(p => p.id) : []);
+
+      // Fáze: aby do sebe zuby zapadly. Počítá se po kostře vazeb od kořene.
+      const faze = new Map(), nelicuji = [];
+      const sousZab = new Map(S.prvky.map(p => [p.id, []]));
+      for (const v of A.vazby) if (['ext', 'int', 'hreben', 'hridel'].includes(v.typ)) { sousZab.get(v.a).push(v); sousZab.get(v.b).push(v); }
+      const koreny2 = motor ? [motor, ...S.prvky] : S.prvky;
+      for (const kor of koreny2) {
+        if (faze.has(kor.id)) continue;
+        faze.set(kor.id, 0);
+        const fronta = [kor.id];
+        while (fronta.length) {
+          const id = fronta.shift();
+          for (const v of sousZab.get(id)) {
+            const jin = v.a === id ? v.b : v.a;
+            if (v.typ === 'hridel') { if (!faze.has(jin)) { faze.set(jin, 0); fronta.push(jin); } continue; }
+            const ocek = ocekavanaFaze(najdi(id), faze.get(id), najdi(jin));
+            if (!faze.has(jin)) { faze.set(jin, ocek); fronta.push(jin); }
+            else {
+              const X = najdi(jin);
+              const per = X.druh === 'hreben' ? roztecHrebene(X) : TAU / X.z;
+              let dlt = faze.get(jin) - ocek;
+              dlt -= per * Math.round(dlt / per);
+              const mm = X.druh === 'hreben' ? Math.abs(dlt) : Math.abs(dlt) * polomery(X).r;
+              if (mm > 0.06 * X.m) nelicuji.push([id, jin, mm]);
+            }
+          }
+        }
+      }
+      R = { ...A, motor, pomer, zlomek, stupne, eta, zablokovane, pohanene, faze, nelicuji };
+    }
+
+    // Fáze dílu X odvozená od souseda P v záběru (P má fázi fp).
+    function ocekavanaFaze(P, fp, X) {
+      if (X.druh === 'hreben' || P.druh === 'hreben') {
+        const H = X.druh === 'hreben' ? X : P, K = H === X ? P : X;
+        const { eu, en } = osyHrebene(H), r = polomery(K).r;
+        const Fx = K.x + r * en[0], Fy = K.y + r * en[1];
+        const uF = (Fx - H.x) * eu[0] + (Fy - H.y) * eu[1];
+        const posunMezery = H.n % 2 ? roztecHrebene(H) / 2 : 0;
+        const th = Math.atan2(en[1], en[0]);
+        if (X === H) return uF - posunMezery - r * (fp - th);          // posun hřebene
+        return th + (uF - posunMezery - fp) / r;                          // natočení kola
+      }
+      if (X.druh === 'venec' || P.druh === 'venec') {
+        const V = X.druh === 'venec' ? X : P, K = V === X ? P : X;
+        const th = Math.atan2(K.y - V.y, K.x - V.x);
+        if (X === V) return th + (fp - th) * K.z / V.z;
+        return th + (fp - th) * V.z / K.z;
+      }
+      const th = Math.atan2(X.y - P.y, X.x - P.x);
+      return th + PI + PI / X.z - (P.z / X.z) * (fp - th);
+    }
+
+    /* ==================================================================
+       6. VÝSTUPY: KPI, varování, tabulka, kusovník
+       ================================================================== */
+    const omegaMotoru = () => S.nast.smer * S.nast.otacky * TAU / 60;
+    function otacky(p) { return R.pomer.get(p.id) * S.nast.otacky * S.nast.smer; }   // min⁻¹ se znaménkem (+ = proti hodinám)
+    function smerText(n) { return Math.abs(n) < 1e-9 ? 'stojí' : n > 0 ? '↺' : '↻'; }
+    function zlomekText(z) { return z ? (z[1] === 1 ? `${Math.abs(z[0])}` : `${Math.abs(z[0])}/${z[1]}`) : null; }
+
+    function vykresliVystupy() {
+      const vystupy = S.prvky.filter(p => p.vystup);
+      const vyst = vystupy.find(p => R.pohanene.has(p.id));
+      const kpi = [];
+      if (!R.motor) kpi.push(['Převod', '—', 'označte motor']);
+      else if (!vyst) kpi.push(['Převod', '—', vystupy.length ? 'výstup není poháněn' : 'označte výstup']);
+      else if (vyst.druh === 'hreben') {
+        const v = R.pomer.get(vyst.id) * S.nast.otacky * S.nast.smer * TAU / 60;
+        kpi.push(['Posuv hřebene', f(Math.abs(R.pomer.get(vyst.id)) * TAU, 2) + ' mm', 'na 1 otáčku motoru']);
+        kpi.push(['Rychlost hřebene', f(Math.abs(v), 1) + ' mm/s', '']);
+      } else {
+        const q = R.pomer.get(vyst.id), i = 1 / Math.abs(q);
+        const zl = R.zlomek.get(vyst.id);
+        const presne = zl ? `${Math.abs(zl[1])} : ${Math.abs(zl[0])}` : null;
+        kpi.push(['Převodový poměr i', f(i, 4), presne ? `přesně ${presne}` + (i >= 1 ? ' (do pomala)' : ' (do rychla)') : (i >= 1 ? 'do pomala' : 'do rychla')]);
+        kpi.push(['Otáčky výstupu', f(Math.abs(otacky(vyst)), 2) + ' min⁻¹', (q > 0 ? 'stejný smysl' : 'opačný smysl') + ' jako motor']);
+        const et = S.nast.ucinnost ? R.eta.get(vyst.id) : 1;
+        kpi.push(['Moment výstupu', f(S.nast.moment * i * et, 2) + ' N·m', S.nast.ucinnost ? `účinnost ${f(et * 100, 1)} %` : 'bez ztrát']);
+      }
+      if (kpi.length < 4) kpi.push(['Stupňů převodu', vyst ? R.stupne.get(vyst.id) : '—', `${S.prvky.length} dílů, ${R.vazby.filter(v => v.typ !== 'hridel').length} vazeb`]);
+      const doplnky = [['Dílů', S.prvky.length, `${S.prvky.filter(q => R.pohanene.has(q.id)).length} poháněných`],
+        ['Záběrů', R.vazby.filter(v => ['ext', 'int', 'hreben'].includes(v.typ)).length, 'ozubených dvojic'],
+        ['Řemenů a řetězů', S.vazby.length, '']];
+      while (kpi.length < 4) kpi.push(doplnky.shift());
+      el('kpi').innerHTML = kpi.slice(0, 4).map(([l, v, p]) => `<div><small>${l}</small><b>${v}</b><span>${p || '&nbsp;'}</span></div>`).join('');
+
+      const w = [];
+      const jm = id => esc((najdi(id) || {}).nazev || '?');
+      if (!S.prvky.length) w.push({ u: 'info', t: 'Plocha je prázdná. Vezměte kolo z palety vlevo, nebo otevřete některý z příkladů.' });
+      else if (!R.motor) w.push({ u: 'info', t: 'Žádný díl nepohání motor. Vyberte kolo a zaškrtněte „Motor (pohon)“.' });
+      if (R.zablokovane.size) w.push({ u: 'chyba', t: 'Soukolí je zablokované — ve smyčce vazeb si převody odporují (např. tři vnější kola do trojúhelníku). Díly: ' + [...R.zablokovane].map(jm).join(', ') + '.' });
+      for (const [a, b] of R.kolize) w.push({ u: 'chyba', t: `Kolize: ${jm(a)} a ${jm(b)} se překrývají. Posuňte je, nebo dejte jeden do jiného patra.` });
+      for (const [a, b] of R.soupatro) w.push({ u: 'pozor', t: `${jm(a)} a ${jm(b)} jsou na společné hřídeli ve stejném patře — překrývají se. Dejte jeden díl do jiného patra.` });
+      for (const p of S.prvky) {
+        if (!(p.d > 0) || p.druh === 'venec' || p.druh === 'hreben') continue;
+        const mez = p.druh === 'kolo' ? polomery(p).r - 1.25 * p.m : p.druh === 'retezka' ? polomery(p).r - 0.4 * p.p : polomery(p).r;
+        if (p.d / 2 > mez - 1.5) w.push({ u: 'chyba', t: `${esc(p.nazev)}: otvor Ø${f(p.d, 1)} je na tento díl příliš velký.` });
+      }
+      for (const [a, b, d] of R.vule) w.push({ u: 'pozor', t: `${jm(a)} a ${jm(b)} nejsou přesně v záběru (odchylka osové vzdálenosti ${f(d, 2)} mm). Přetáhněte kolo — samo se přichytí.` });
+      for (const [a, b] of R.nelicuji) w.push({ u: 'pozor', t: `Zuby ${jm(a)} a ${jm(b)} ve smyčce nelícují — kola by šla smontovat jen s pootočením. Změňte polohu nebo počet zubů.` });
+      for (const v of R.vazby) if (v.interference) w.push({ u: 'pozor', t: `${jm(v.a)} a ${jm(v.b)}: věnec má jen o ${najdi(v.a).z - najdi(v.b).z} zubů víc než pastorek — hrozí interference hlav (potřeba aspoň 10).` });
+      const moduly = new Set();
+      for (const v of R.vazby) if (['ext', 'int', 'hreben'].includes(v.typ)) moduly.add(najdi(v.a).m);
+      const hrebenMotor = S.nast.rezim === 'plynule' && S.prvky.some(p => p.druh === 'hreben' && R.pohanene.has(p.id));
+      if (hrebenMotor) w.push({ u: 'info', t: 'Hřeben je poháněn plynule — ujede. Pro ukázku přepněte chod na kyvadlový.' });
+      const volne = S.prvky.filter(p => R.motor && !R.pohanene.has(p.id) && !R.zablokovane.has(p.id));
+      if (volne.length && R.motor) w.push({ u: 'info', t: 'Nepoháněné díly (nemají vazbu k motoru): ' + volne.map(p => esc(p.nazev)).join(', ') + '.' });
+      if (!w.length || (w.every(x => x.u === 'info') && R.motor && vyst)) w.unshift({ u: 'ok', t: 'Sestava funguje — všechny vazby jsou v pořádku.' });
+      const ik = { chyba: '⛔', pozor: '⚠️', info: 'ℹ️', ok: '✅' };
+      el('varovani').innerHTML = w.map(x => `<div class="var ${x.u}"><span>${ik[x.u]}</span><span>${x.t}</span></div>`).join('');
+
+      // tabulka dílů
+      if (!S.prvky.length) { el('tabulka').innerHTML = '<p class="prazdne">Zatím tu nic není.</p>'; }
+      else {
+        let h = '<table class="t"><thead><tr><th>Díl</th><th>Patro</th><th>Rozměr</th><th>Otáčky</th><th>Smysl</th><th>Poměr k motoru</th><th>Moment</th><th>Stav</th></tr></thead><tbody>';
+        for (const p of S.prvky) {
+          const zab = R.zablokovane.has(p.id), poh = R.pohanene.has(p.id);
+          const kol = R.kolize.some(k => k.includes(p.id));
+          let stav = poh ? '<span class="stav ok">pohání se</span>' : '<span class="stav volne">stojí</span>';
+          if (zab) stav = '<span class="stav chyba">zablokováno</span>';
+          if (kol) stav += ' <span class="stav chyba">kolize</span>';
+          const q = R.pomer.get(p.id);
+          let ot = '—', smer = '—', pom = '—', mom = '—';
+          if (poh) {
+            if (p.druh === 'hreben') {
+              ot = f(Math.abs(q * omegaMotoru()), 1) + ' mm/s';
+              smer = q * S.nast.smer > 0 ? '→' : '←';
+              pom = f(Math.abs(q) * TAU, 2) + ' mm/ot';
+              mom = f(S.nast.moment * 1000 / Math.abs(q) * (S.nast.ucinnost ? R.eta.get(p.id) : 1), 1) + ' N';
+            } else {
+              const n = otacky(p);
+              ot = f(Math.abs(n), 2) + ' min⁻¹'; smer = smerText(n);
+              const zl = R.zlomek.get(p.id);
+              pom = q === 0 ? '—' : (zl ? `${zlomekText([zl[1], Math.abs(zl[0])])}` : f(1 / Math.abs(q), 4));
+              mom = f(S.nast.moment / Math.abs(q) * (S.nast.ucinnost ? R.eta.get(p.id) : 1), 2) + ' N·m';
+            }
+          }
+          const rozm = rozmerText(p);
+          const znak = (p.motor ? ' ⚡' : '') + (p.vystup ? ' 🎯' : '');
+          h += `<tr data-id="${p.id}" class="${p.id === vybrany ? 'vybrany' : ''}"><td><span class="barva" style="background:${p.barva}"></span>${esc(p.nazev)}${znak}</td>
+            <td class="c">${p.patro}</td><td>${rozm}</td><td class="c">${ot}</td><td class="c">${smer}</td><td class="c">${pom}</td><td class="c">${mom}</td><td>${stav}</td></tr>`;
+        }
+        for (const v of S.vazby) {
+          const a = najdi(v.a), b = najdi(v.b);
+          if (!a || !b) continue;
+          const L = delkaRemene(v);
+          const info = v.typ === 'retez' ? `${Math.ceil(L / a.p / 2) * 2} článků (${f(L, 0)} mm)` : `délka ${f(L, 1)} mm`;
+          h += `<tr><td colspan="2">${NAZVY_VAZEB[v.typ]}: ${esc(a.nazev)} → ${esc(b.nazev)}</td><td colspan="6">${info}</td></tr>`;
+        }
+        el('tabulka').innerHTML = h + '</tbody></table>';
+        el('tabulka').querySelectorAll('tr[data-id]').forEach(tr => tr.addEventListener('click', () => vyber(+tr.dataset.id)));
+      }
+      vykresliKusovnik();
+    }
+
+    function rozmerText(p) {
+      if (p.druh === 'kolo') return `z ${p.z}, m ${f(p.m, 2)}, Ø${f(p.z * p.m + 2 * p.m, 1)}`;
+      if (p.druh === 'venec') return `z ${p.z}, m ${f(p.m, 2)}, Ø${f(2 * polomery(p).ra, 1)}`;
+      if (p.druh === 'hreben') return `${p.n} zubů, m ${f(p.m, 2)}, ${f(delkaHrebene(p), 1)} mm`;
+      if (p.druh === 'remenice') return `Ø${f(p.D, 1)}`;
+      if (p.druh === 'retezka') return `z ${p.z}, rozteč ${f(p.p, 2)}`;
+      return '';
+    }
+
+    function polozkyKusovniku() {
+      const mapa = new Map();
+      for (const p of S.prvky) {
+        const k = NAZVY_DRUHU[p.druh] + '|' + rozmerText(p);
+        if (!mapa.has(k)) mapa.set(k, { nazev: NAZVY_DRUHU[p.druh], rozmer: rozmerText(p), pocet: 0, barva: p.barva });
+        mapa.get(k).pocet++;
+      }
+      for (const v of S.vazby) {
+        const a = najdi(v.a);
+        if (!a) continue;
+        const L = delkaRemene(v);
+        const r = v.typ === 'retez' ? `rozteč ${f(a.p, 2)} mm, ${Math.ceil(L / a.p / 2) * 2} článků` : `délka ${f(L, 0)} mm`;
+        const k = NAZVY_VAZEB[v.typ] + '|' + r;
+        if (!mapa.has(k)) mapa.set(k, { nazev: NAZVY_VAZEB[v.typ], rozmer: r, pocet: 0 });
+        mapa.get(k).pocet++;
+      }
+      const hridele = new Set(S.prvky.filter(p => p.druh !== 'hreben').map(p => f(p.x, 2) + ',' + f(p.y, 2)));
+      if (hridele.size) mapa.set('hridel', { nazev: 'Hřídel / čep', rozmer: 'podle uložení', pocet: hridele.size });
+      return [...mapa.values()];
+    }
+    function vykresliKusovnik() {
+      const r = polozkyKusovniku();
+      if (!r.length) { el('kusovnik').innerHTML = '<p class="prazdne">Kusovník je prázdný.</p>'; return; }
+      el('kusovnik').innerHTML = '<table class="t"><thead><tr><th>Díl</th><th>Rozměr</th><th>Ks</th></tr></thead><tbody>' +
+        r.map(x => `<tr><td>${x.barva ? `<span class="barva" style="background:${x.barva}"></span>` : ''}${esc(x.nazev)}</td><td>${esc(x.rozmer)}</td><td class="c">${x.pocet}</td></tr>`).join('') + '</tbody></table>';
+    }
+
+    /* ==================================================================
+       7. ŘEMENY A ŘETĚZY — dráha kolem dvou kol
+       ================================================================== */
+    function drahaRemene(v) {
+      const A = najdi(v.a), B = najdi(v.b);
+      const ra = polomery(A).r, rb = polomery(B).r;
+      const dx = B.x - A.x, dy = B.y - A.y, d = Math.hypot(dx, dy);
+      const base = Math.atan2(dy, dx);
+      const pts = [];
+      const oblouk = (C, r, a0, a1) => {
+        const n = Math.max(6, Math.ceil(Math.abs(a1 - a0) / 0.08));
+        for (let i = 0; i <= n; i++) { const a = a0 + (a1 - a0) * i / n; pts.push([C.x + r * Math.cos(a), C.y + r * Math.sin(a)]); }
+      };
+      if (v.typ === 'remenx') {
+        if (d <= ra + rb) return null;
+        const b = Math.acos((ra + rb) / d);
+        oblouk(B, rb, base + b + PI, base - b + 3 * PI);
+        oblouk(A, ra, base - b, base + b - TAU);
+      } else {
+        if (d <= Math.abs(ra - rb)) return null;
+        const b = Math.acos((ra - rb) / d);
+        oblouk(B, rb, base + b, base - b);
+        oblouk(A, ra, base - b, base + b - TAU);
+      }
+      pts.push(pts[0]);
+      return pts;
+    }
+    function delkaRemene(v) {
+      const p = drahaRemene(v);
+      if (!p) return NaN;
+      let L = 0;
+      for (let i = 1; i < p.length; i++) L += Math.hypot(p[i][0] - p[i - 1][0], p[i][1] - p[i - 1][1]);
+      return L;
+    }
+
+    /* ==================================================================
+       8. KRESLENÍ
+       ================================================================== */
+    const platno = el('platno'), ctx = platno.getContext('2d');
+    const pohled = { cx: 0, cy: 0, s: 3 };
+    let W = 0, H = 0, DPR = 1;
+    let cas = 0, hraje = true;
+    const barvy = {};
+    let nahled = null;           // náhled pokládaného dílu {p, x, y, info}
+    let nastroj = null;          // id položky palety nebo null (= výběr)
+    let spojOd = null;           // první kolo při natahování řemenu
+    let oknoCeka = false;        // okno vlastností se ukáže až po uvolnění tlačítka myši
+
+    function nactiBarvy() {
+      const cs = getComputedStyle(document.documentElement);
+      const v = (n, d) => cs.getPropertyValue(n).trim() || d;
+      Object.assign(barvy, { pozadi: v('--bg-deep', '#121212'), text: v('--text', '#e0e0e0'), slaby: v('--text-faint', '#888'), stredni: v('--text-muted', '#b0b0b0'),
+        mrizka: v('--border', '#404040'), akcent: v('--accent', '#6aa6fd'), ok: v('--ok', '#4caf7d'), chyba: v('--danger', '#e05d5d'), svetle: document.documentElement.dataset.theme === 'light',
+        pismo: getComputedStyle(document.body).fontFamily || 'sans-serif' });
+    }
+    function tmavsi(hex, q) {
+      const n = parseInt(hex.slice(1), 16);
+      q = q || (barvy.svetle ? 0.62 : 0.55);
+      return `rgb(${Math.round(((n >> 16) & 255) * q)},${Math.round(((n >> 8) & 255) * q)},${Math.round((n & 255) * q)})`;
+    }
+
+    function velikost() {
+      const box = el('platnoBox');
+      DPR = Math.min(window.devicePixelRatio || 1, 2.5);
+      W = box.clientWidth; H = box.clientHeight;
+      platno.width = Math.max(1, Math.round(W * DPR)); platno.height = Math.max(1, Math.round(H * DPR));
+      kresli();
+    }
+
+    function uhelMotoru() {
+      const w = omegaMotoru() * S.nast.animace;
+      if (S.nast.rezim === 'kyv') { const A = S.nast.kyv * TAU; return A * Math.sin(w * cas / A); }
+      return w * cas;
+    }
+    // natočení (rad) nebo posun hřebene (mm) dílu v okamžiku animace
+    function poloha(p, Phi) {
+      const q = R.pomer.get(p.id) || 0;
+      const ph = R.faze.get(p.id) || 0;
+      return ph + q * Phi;
+    }
+
+    function transformace(p, Phi) {
+      if (p.druh === 'hreben') {
+        const a = O.rad(p.uhel || 0);
+        return { x: p.x, y: p.y, rot: a, posun: poloha(p, Phi) };
+      }
+      return { x: p.x, y: p.y, rot: poloha(p, Phi), posun: 0 };
+    }
+
+    function obalka() {
+      let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
+      const pridej = (x, y) => { x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); };
+      for (const p of S.prvky) {
+        if (p.druh === 'hreben') {
+          const { eu, en } = osyHrebene(p), L = delkaHrebene(p) / 2, hv = vyskaHrebene(p);
+          for (const [u, w] of [[-L, -p.m], [L, -p.m], [-L, hv], [L, hv]]) pridej(p.x + u * eu[0] + w * en[0], p.y + u * eu[1] + w * en[1]);
+        } else { const r = polomery(p).ra; pridej(p.x - r, p.y - r); pridej(p.x + r, p.y + r); }
+      }
+      return isFinite(x0) ? { x0, x1, y0, y1 } : null;
+    }
+    function prizpusob() {
+      const b = obalka();
+      if (!b || !W) { pohled.cx = 0; pohled.cy = 0; pohled.s = 3; kresli(); return; }
+      pohled.cx = (b.x0 + b.x1) / 2; pohled.cy = (b.y0 + b.y1) / 2;
+      pohled.s = Math.max(0.05, Math.min(40, Math.min((W - 60) / (b.x1 - b.x0 || 1), (H - 90) / (b.y1 - b.y0 || 1)) * 0.92));
+      kresli();
+    }
+    const naSvet = (sx, sy) => [pohled.cx + (sx - W / 2) / pohled.s, pohled.cy - (sy - H / 2) / pohled.s];
+
+    function kresliDil(p, t, stav, zvyr) {
+      const k = pohled.s * DPR, ox = W * DPR / 2 - pohled.cx * k, oy = H * DPR / 2 + pohled.cy * k;
+      const px = DPR / k;
+      const tv = tvar(p);
+      // stín dílu ve vyšším patře
+      if (p.patro > 0) {
+        ctx.setTransform(k, 0, 0, -k, ox + 3 * p.patro * DPR, oy + 3 * p.patro * DPR);
+        ctx.translate(t.x, t.y); ctx.rotate(t.rot); if (t.posun) ctx.translate(t.posun, 0);
+        ctx.globalAlpha = 0.25; ctx.fillStyle = '#000'; ctx.fill(tv.cesta, 'evenodd'); ctx.globalAlpha = 1;
+      }
+      ctx.setTransform(k, 0, 0, -k, ox, oy);
+      ctx.translate(t.x, t.y); ctx.rotate(t.rot); if (t.posun) ctx.translate(t.posun, 0);
+      ctx.globalAlpha = stav === 'volne' ? 0.55 : (p.patro > 0 ? 0.93 : 0.88);
+      ctx.fillStyle = p.barva; ctx.fill(tv.cesta, 'evenodd');
+      ctx.globalAlpha = 1;
+      ctx.lineJoin = 'round';
+      ctx.strokeStyle = stav === 'chyba' ? barvy.chyba : tmavsi(p.barva);
+      ctx.lineWidth = px * (stav === 'chyba' ? 2.2 : 1.1);
+      ctx.stroke(tv.cesta);
+      if (zvyr) { ctx.strokeStyle = barvy.akcent; ctx.lineWidth = px * 2.6; ctx.stroke(tv.cesta); }
+      if (p.druh === 'remenice') {
+        ctx.beginPath(); ctx.arc(0, 0, polomery(p).r - 1.5, 0, TAU);
+        ctx.strokeStyle = tmavsi(p.barva, 0.4); ctx.lineWidth = Math.max(px, 2.2); ctx.stroke();
+      }
+      // značka natočení
+      if (p.druh !== 'hreben') {
+        const r = polomery(p);
+        const rz = p.druh === 'venec' ? (r.ri + r.ra) / 2 + (r.ra - r.ri) * 0.25 : r.r * 0.62;
+        ctx.beginPath(); ctx.arc(rz, 0, Math.max(2.5 * px, Math.min(r.r * 0.05, 3)), 0, TAU);
+        ctx.fillStyle = barvy.svetle ? '#fff' : '#111'; ctx.globalAlpha = 0.85; ctx.fill(); ctx.globalAlpha = 1;
+      }
+    }
+
+    function kresli() {
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      ctx.fillStyle = barvy.pozadi; ctx.fillRect(0, 0, platno.width, platno.height);
+      if (!R) return;
+      const k = pohled.s * DPR, ox = W * DPR / 2 - pohled.cx * k, oy = H * DPR / 2 + pohled.cy * k;
+      const px = DPR / k;
+      const svet = () => ctx.setTransform(k, 0, 0, -k, ox, oy);
+      // mřížka
+      svet();
+      const krok = pohled.s > 20 ? 1 : pohled.s > 2 ? 10 : 100;
+      const [vx0, vy1] = naSvet(0, 0), [vx1, vy0] = naSvet(W, H);
+      ctx.beginPath();
+      for (let x = Math.ceil(vx0 / krok) * krok; x <= vx1; x += krok) { ctx.moveTo(x, vy0); ctx.lineTo(x, vy1); }
+      for (let y = Math.ceil(vy0 / krok) * krok; y <= vy1; y += krok) { ctx.moveTo(vx0, y); ctx.lineTo(vx1, y); }
+      ctx.strokeStyle = barvy.mrizka; ctx.globalAlpha = 0.35; ctx.lineWidth = px; ctx.stroke(); ctx.globalAlpha = 1;
+
+      const Phi = uhelMotoru();
+      const kolizni = new Set(R.kolize.flat());
+      const razeni = S.prvky.slice().sort((a, b) => a.patro - b.patro || (a.druh === 'venec' ? -1 : 0) - (b.druh === 'venec' ? -1 : 0));
+      const patra = [...new Set(razeni.map(p => p.patro))];
+      for (const pat of patra) {
+        for (const p of razeni) {
+          if (p.patro !== pat) continue;
+          const stav = R.zablokovane.has(p.id) || kolizni.has(p.id) ? 'chyba' : (R.pohanene.has(p.id) ? 'ok' : 'volne');
+          kresliDil(p, transformace(p, Phi), stav, p.id === vybrany);
+        }
+        // řemeny v tomto patře (podle vyššího z obou kol)
+        for (const v of S.vazby) {
+          const a = najdi(v.a), b = najdi(v.b);
+          if (!a || !b || Math.max(a.patro, b.patro) !== pat) continue;
+          const d = drahaRemene(v);
+          if (!d) continue;
+          svet();
+          ctx.beginPath(); d.forEach(([x, y], i) => i ? ctx.lineTo(x, y) : ctx.moveTo(x, y));
+          const beh = (R.pomer.get(a.id) || 0) * Phi * polomery(a).r;
+          if (v.typ === 'retez') {
+            ctx.strokeStyle = barvy.svetle ? '#555' : '#9aa0a8'; ctx.lineWidth = a.p * 0.62; ctx.lineCap = 'butt';
+            ctx.setLineDash([a.p * 0.55, a.p * 0.45]); ctx.lineDashOffset = beh; ctx.stroke();
+            ctx.setLineDash([]); ctx.lineWidth = a.p * 0.18; ctx.strokeStyle = barvy.svetle ? '#333' : '#5d636b'; ctx.stroke();
+          } else {
+            ctx.strokeStyle = barvy.svetle ? '#3d3d3d' : '#2b2b2b'; ctx.lineWidth = Math.max(3 * px, Math.min(polomery(a).r, polomery(b).r) * 0.14); ctx.lineCap = 'round'; ctx.stroke();
+            ctx.setLineDash([6 * px, 7 * px]); ctx.lineDashOffset = beh; ctx.strokeStyle = barvy.svetle ? '#9a9a9a' : '#777'; ctx.lineWidth = Math.max(px, ctx.lineWidth * 0.25); ctx.stroke();
+            ctx.setLineDash([]);
+          }
+        }
+      }
+      // středy, hřídele
+      for (const p of S.prvky) {
+        if (p.druh === 'hreben') continue;
+        svet();
+        const r = 1.6 * DPR / k * 2;
+        ctx.beginPath(); ctx.moveTo(p.x - r * 2, p.y); ctx.lineTo(p.x + r * 2, p.y); ctx.moveTo(p.x, p.y - r * 2); ctx.lineTo(p.x, p.y + r * 2);
+        ctx.strokeStyle = barvy.stredni; ctx.lineWidth = px; ctx.globalAlpha = 0.3; ctx.stroke(); ctx.globalAlpha = 1;
+      }
+      // vybraný díl: roztečná kružnice / přímka
+      const vyb = vybrany && najdi(vybrany);
+      if (vyb) {
+        svet(); ctx.setLineDash([6 * px, 4 * px]); ctx.strokeStyle = barvy.akcent; ctx.lineWidth = px * 1.2;
+        if (vyb.druh === 'hreben') {
+          const { eu } = osyHrebene(vyb), L = delkaHrebene(vyb) / 2;
+          ctx.beginPath(); ctx.moveTo(vyb.x - eu[0] * L, vyb.y - eu[1] * L); ctx.lineTo(vyb.x + eu[0] * L, vyb.y + eu[1] * L); ctx.stroke();
+        } else { ctx.beginPath(); ctx.arc(vyb.x, vyb.y, polomery(vyb).r, 0, TAU); ctx.stroke(); }
+        ctx.setLineDash([]);
+      }
+      // body záběru
+      for (const v of R.vazby) {
+        if (!['ext', 'int', 'hreben'].includes(v.typ)) continue;
+        const a = najdi(v.a), b = najdi(v.b);
+        let x, y;
+        if (v.typ === 'hreben') { const K = a.druh === 'kolo' ? a : b, Hh = K === a ? b : a; const { en } = osyHrebene(Hh), r = polomery(K).r; x = K.x + en[0] * r; y = K.y + en[1] * r; }
+        else if (v.typ === 'int') { const K = b, V = a, d = Math.hypot(K.x - V.x, K.y - V.y) || 1, r = polomery(V).r; x = V.x + (K.x - V.x) / d * r; y = V.y + (K.y - V.y) / d * r; }
+        else { const d = Math.hypot(b.x - a.x, b.y - a.y) || 1, r = polomery(a).r; x = a.x + (b.x - a.x) / d * r; y = a.y + (b.y - a.y) / d * r; }
+        svet(); ctx.beginPath(); ctx.arc(x, y, 3.2 * px, 0, TAU);
+        ctx.fillStyle = R.zablokovane.has(a.id) ? barvy.chyba : barvy.ok; ctx.fill();
+      }
+      // náhled pokládaného dílu
+      if (nahled) {
+        const t = { x: nahled.x, y: nahled.y, rot: nahled.p.druh === 'hreben' ? O.rad(nahled.p.uhel || 0) : 0, posun: 0 };
+        ctx.globalAlpha = 0.55; kresliDil(nahled.p, t, 'ok', true); ctx.globalAlpha = 1;
+        if (nahled.cil) {
+          svet(); ctx.beginPath(); ctx.moveTo(nahled.x, nahled.y); ctx.lineTo(nahled.cil.x, nahled.cil.y);
+          ctx.strokeStyle = barvy.ok; ctx.setLineDash([4 * px, 3 * px]); ctx.lineWidth = 1.5 * px; ctx.stroke(); ctx.setLineDash([]);
+        }
+      }
+      if (spojOd) {
+        const A = najdi(spojOd);
+        if (A) { svet(); ctx.beginPath(); ctx.arc(A.x, A.y, polomery(A).ra + 3 * px * 3, 0, TAU); ctx.strokeStyle = barvy.akcent; ctx.lineWidth = 2 * px; ctx.setLineDash([5 * px, 4 * px]); ctx.stroke(); ctx.setLineDash([]); }
+      }
+      // popisky
+      if (S.nast.popisky) {
+        ctx.setTransform(1, 0, 0, 1, 0, 0);
+        ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+        for (const p of S.prvky) {
+          let x = p.x, y = p.y;
+          if (p.druh === 'hreben') { const { en } = osyHrebene(p); x += en[0] * vyskaHrebene(p) * 0.55; y += en[1] * vyskaHrebene(p) * 0.55; }
+          else if (p.druh === 'venec') { const r = polomery(p); y -= (r.ri + r.ra) / 2; }
+          const sx = x * k + ox, sy = -y * k + oy + (p.druh === 'venec' || p.druh === 'hreben' ? 0 : -18 * DPR) + p.patro * 13 * DPR;
+          const znak = (p.motor ? '⚡ ' : '') + (p.vystup ? '🎯 ' : '');
+          const radek1 = znak + p.nazev;
+          let radek2 = '';
+          if (R.pohanene.has(p.id)) {
+            if (p.druh === 'hreben') radek2 = f(Math.abs(R.pomer.get(p.id) * omegaMotoru()), 1) + ' mm/s';
+            else { const n = otacky(p); radek2 = f(Math.abs(n), Math.abs(n) < 10 ? 2 : 1) + ' min⁻¹ ' + smerText(n); }
+          } else if (R.zablokovane.has(p.id)) radek2 = 'zablokováno';
+          ctx.font = `600 ${11.5 * DPR}px ${barvy.pismo}`;
+          const w1 = ctx.measureText(radek1).width;
+          ctx.font = `${10.5 * DPR}px ${barvy.pismo}`;
+          const w2 = radek2 ? ctx.measureText(radek2).width : 0;
+          const ww = Math.max(w1, w2) + 10 * DPR, hh = (radek2 ? 30 : 17) * DPR;
+          ctx.fillStyle = barvy.pozadi; ctx.globalAlpha = 0.78; ctx.fillRect(sx - ww / 2, sy - hh / 2, ww, hh); ctx.globalAlpha = 1;
+          ctx.fillStyle = barvy.text; ctx.font = `600 ${11.5 * DPR}px ${barvy.pismo}`;
+          ctx.fillText(radek1, sx, sy - (radek2 ? 7 * DPR : 0));
+          if (radek2) { ctx.font = `${10.5 * DPR}px ${barvy.pismo}`; ctx.fillStyle = R.zablokovane.has(p.id) ? barvy.chyba : barvy.stredni; ctx.fillText(radek2, sx, sy + 7.5 * DPR); }
+        }
+      }
+      aktualizujHud(Phi);
+    }
+
+    function aktualizujHud(Phi) {
+      if (!R.motor) { el('hud').innerHTML = 'Motor: <b>není</b>'; return; }
+      el('hud').innerHTML = `Motor: <b>${esc(R.motor.nazev)}</b> · ${f(S.nast.otacky, 1)} min⁻¹ ${S.nast.smer > 0 ? '↺' : '↻'}<br>` +
+        `natočení motoru <b>${f(((Phi * 180 / PI) % 360 + 360) % 360, 1)}°</b> · animace ${f(S.nast.animace, 2)}×`;
+    }
+
+    /* ==================================================================
+       9. POKLÁDÁNÍ, PŘICHYCENÍ, TAŽENÍ
+       ================================================================== */
+    // Najde nejbližší polohu, kde díl p u bodu (x, y) zabírá s jiným dílem nebo sdílí hřídel.
+    function prichyt(p, x, y) {
+      const tolPx = 18 / pohled.s;
+      let best = null;
+      const kand = (nx, ny, cil, info, patro) => {
+        // cíle v jiném patře mají malou penalizaci, ať vyhraje stejné patro
+        const d = Math.hypot(nx - x, ny - y) + (patro !== p.patro ? tolPx * 0.3 : 0);
+        if (!best || d < best.d) best = { x: nx, y: ny, d, cil, info, patro };
+      };
+      for (const Q of S.prvky) {
+        if (Q.id === p.id) continue;
+        const dq = Math.hypot(x - Q.x, y - Q.y) || 1e-9;
+        const pq = polomery(Q), pp = polomery(p);
+        // na střed jiného dílu → společná hřídel (patro se zvolí samo)
+        if (p.druh !== 'hreben' && Q.druh !== 'hreben' && dq < Math.max(tolPx * 1.3, pq.r * 0.35)) kand(Q.x, Q.y, Q, 'na hřídel', patroNaOse(p, Q));
+        if (!p.m || Q.m !== p.m) continue;
+        const kand0 = kand;
+        const kandZ = (nx, ny, cil, info) => kand0(nx, ny, cil, info, Q.patro);
+        if (p.druh === 'kolo' && Q.druh === 'kolo') {
+          const D = pp.r + pq.r;
+          if (Math.abs(dq - D) < Math.max(tolPx, 1.5 * p.m)) kandZ(Q.x + (x - Q.x) / dq * D, Q.y + (y - Q.y) / dq * D, Q, 'záběr');
+        } else if (p.druh === 'kolo' && Q.druh === 'venec') {
+          const D = pq.r - pp.r;
+          if (D > 0 && Math.abs(dq - D) < Math.max(tolPx, 1.5 * p.m)) kandZ(Q.x + (x - Q.x) / dq * D, Q.y + (y - Q.y) / dq * D, Q, 'záběr ve věnci');
+        } else if (p.druh === 'venec' && Q.druh === 'kolo') {
+          const D = pp.r - pq.r;
+          if (D > 0 && Math.abs(dq - D) < Math.max(tolPx, 1.5 * p.m)) kandZ(Q.x + (x - Q.x) / dq * D, Q.y + (y - Q.y) / dq * D, Q, 'záběr ve věnci');
+        } else if (p.druh === 'kolo' && Q.druh === 'hreben') {
+          const { eu, en } = osyHrebene(Q);
+          const u = (x - Q.x) * eu[0] + (y - Q.y) * eu[1], w = (x - Q.x) * en[0] + (y - Q.y) * en[1];
+          if (Math.abs(w + pp.r) < Math.max(tolPx, 1.5 * p.m) && Math.abs(u) < delkaHrebene(Q) / 2) kandZ(Q.x + u * eu[0] - pp.r * en[0], Q.y + u * eu[1] - pp.r * en[1], Q, 'záběr s hřebenem');
+        } else if (p.druh === 'hreben' && Q.druh === 'kolo') {
+          const { eu, en } = osyHrebene(p);
+          const wq = (Q.x - x) * en[0] + (Q.y - y) * en[1], uq = (Q.x - x) * eu[0] + (Q.y - y) * eu[1];
+          const opr = wq + pq.r;
+          if (Math.abs(opr) < Math.max(tolPx, 1.5 * p.m) && Math.abs(uq) < delkaHrebene(p) / 2) kandZ(x + opr * en[0], y + opr * en[1], Q, 'záběr s kolem');
+        }
+      }
+      return best;
+    }
+
+    // Patro pro díl nasazený na osu dílu Q: nejbližší volné nad ostatními díly na ose.
+    function patroNaOse(p, Q) {
+      if (vDutineVence({ ...p, patro: Q.patro }, Q)) return Q.patro;
+      const osa = S.prvky.filter(o => o.id !== p.id && o.druh !== 'hreben' && Math.hypot(o.x - Q.x, o.y - Q.y) < 0.05);
+      const obsazeno = new Set(osa.map(o => o.patro));
+      if (!obsazeno.has(p.patro)) return p.patro;
+      return Math.min(9, Math.max(...obsazeno) + 1);
+    }
+
+    function nastavNahled(sx, sy) {
+      const pal = PALETA.find(q => q.id === nastroj);
+      if (!pal || pal.nastroj) { nahled = null; return; }
+      const [x, y] = naSvet(sx, sy);
+      const p = novyPrvek(pal.druh, { ...pal.h, barva: novaBarva() }, x, y, true);
+      const b = prichyt(p, x, y);
+      if (b) p.patro = b.patro;
+      nahled = { p, x: b ? b.x : x, y: b ? b.y : y, cil: b ? b.cil : null, info: b ? b.info : null };
+      zobrazRezim();
+    }
+
+    function hitTest(sx, sy) {
+      const [x, y] = naSvet(sx, sy);
+      const razeni = S.prvky.slice().sort((a, b) => b.patro - a.patro || (a.druh === 'venec' ? 1 : 0) - (b.druh === 'venec' ? 1 : 0));
+      for (const p of razeni) {
+        if (p.druh === 'hreben') {
+          const { eu, en } = osyHrebene(p);
+          const u = (x - p.x) * eu[0] + (y - p.y) * eu[1], w = (x - p.x) * en[0] + (y - p.y) * en[1];
+          if (Math.abs(u) <= delkaHrebene(p) / 2 && w >= -p.m && w <= vyskaHrebene(p)) return p;
+          continue;
+        }
+        const r = polomery(p), d = Math.hypot(x - p.x, y - p.y);
+        if (p.druh === 'venec' ? (d >= r.ri && d <= r.ra) : d <= r.ra) return p;
+      }
+      return null;
+    }
+
+    function zobrazRezim() {
+      const info = el('rezimInfo');
+      let t = '';
+      const pal = PALETA.find(q => q.id === nastroj);
+      if (pal && pal.nastroj) t = spojOd ? `${NAZVY_VAZEB[pal.nastroj]}: klepněte na druhé ${pal.nastroj === 'retez' ? 'řetězové kolo' : 'kolo / řemenici'}` : `${NAZVY_VAZEB[pal.nastroj]}: klepněte na první ${pal.nastroj === 'retez' ? 'řetězové kolo' : 'řemenici'}`;
+      else if (pal) t = `Pokládání: ${pal.nazev}` + (nahled && nahled.info ? ` · přichyceno (${nahled.info})` : ' · klepněte do plochy');
+      info.textContent = t;
+      info.classList.toggle('skryt', !t);
+    }
+
+    function nastavNastroj(id) {
+      nastroj = id; spojOd = null; nahled = null;
+      document.querySelectorAll('.dil').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.id === (id || ''))));
+      platno.style.cursor = id ? 'crosshair' : 'grab';
+      zobrazRezim(); kresli();
+    }
+
+    (function () {
+      const prsty = new Map();
+      let tah = null, minVzd = 0;
+      const rel = e => { const r = platno.getBoundingClientRect(); return [e.clientX - r.left, e.clientY - r.top]; };
+      platno.addEventListener('pointerdown', e => {
+        try { platno.setPointerCapture(e.pointerId); } catch { /* syntetická událost */ }
+        prsty.set(e.pointerId, { x: e.clientX, y: e.clientY });
+        const [sx, sy] = rel(e);
+        if (prsty.size > 1) { tah = null; return; }
+        const pal = PALETA.find(q => q.id === nastroj);
+        if (pal && pal.nastroj) {
+          const Q = hitTest(sx, sy);
+          const hodi = Q && (pal.nastroj === 'retez' ? Q.druh === 'retezka' : Q.druh === 'remenice');
+          if (!hodi) { if (Q) Dialog.info(pal.nastroj === 'retez' ? 'Řetěz spojuje jen řetězová kola.' : 'Řemen spojuje jen řemenice.'); return; }
+          if (!spojOd) { spojOd = Q.id; zobrazRezim(); kresli(); return; }
+          if (Q.id === spojOd) return;
+          const A = najdi(spojOd);
+          if (pal.nastroj === 'retez' && Math.abs(A.p - Q.p) > 1e-9) { Dialog.chyba('Řetězová kola mají různou rozteč.'); return; }
+          zapamatuj();
+          S.vazby = S.vazby.filter(v => !((v.a === A.id && v.b === Q.id) || (v.a === Q.id && v.b === A.id)));
+          S.vazby.push({ typ: pal.nastroj, a: A.id, b: Q.id });
+          spojOd = null; zmena(); zobrazRezim();
+          return;
+        }
+        if (pal) {
+          nastavNahled(sx, sy);
+          if (!nahled) return;
+          zapamatuj();
+          const p = novyPrvek(pal.druh, { ...pal.h, patro: nahled.p.patro, barva: novaBarva() }, nahled.x, nahled.y);
+          if (!S.prvky.some(q => q.motor) && p.druh !== 'hreben') p.motor = true;
+          S.prvky.push(p);
+          vybrany = p.id;
+          oknoCeka = true;
+          nahled = null;
+          if (!e.shiftKey) nastavNastroj(null);
+          zmena();
+          return;
+        }
+        const Q = hitTest(sx, sy);
+        if (Q) {
+          oknoCeka = true;          // při tažení dílu okno nepřekáží
+          vyber(Q.id);
+          const [wx, wy] = naSvet(sx, sy);
+          tah = { id: Q.id, dx: Q.x - wx, dy: Q.y - wy, pohnuto: false, zaloha: snimek() };
+          platno.style.cursor = 'grabbing';
+        } else {
+          if (vybrany) vyber(null);
+          tah = { pan: true };
+          platno.style.cursor = 'grabbing';
+        }
+      });
+      platno.addEventListener('pointermove', e => {
+        const [sx, sy] = rel(e);
+        const pr = prsty.get(e.pointerId);
+        if (!pr) { if (nastroj) { nastavNahled(sx, sy); kresli(); } return; }
+        const dx = e.clientX - pr.x, dy = e.clientY - pr.y;
+        pr.x = e.clientX; pr.y = e.clientY;
+        if (prsty.size >= 2) {
+          const [a, b] = [...prsty.values()];
+          const d = Math.hypot(a.x - b.x, a.y - b.y);
+          if (minVzd) zoom(d / minVzd, (a.x + b.x) / 2, (a.y + b.y) / 2);
+          minVzd = d; return;
+        }
+        if (!tah) return;
+        if (tah.pan) { pohled.cx -= dx / pohled.s; pohled.cy += dy / pohled.s; kresli(); return; }
+        const p = najdi(tah.id);
+        const [wx, wy] = naSvet(sx, sy);
+        let x = wx + tah.dx, y = wy + tah.dy;
+        const b = prichyt(p, x, y);
+        if (b && !e.altKey) { x = b.x; y = b.y; p.patro = b.patro; }
+        p.x = x; p.y = y; tah.pohnuto = true;
+        res(); kresli();
+      });
+      const konec = e => {
+        prsty.delete(e.pointerId); minVzd = 0;
+        if (tah && tah.pohnuto) { zpet.push(tah.zaloha); if (zpet.length > 80) zpet.shift(); vpred.length = 0; aktualizujTlacitkaHistorie(); zmena(); }
+        tah = null;
+        platno.style.cursor = nastroj ? 'crosshair' : 'grab';
+        if (oknoCeka) {
+          oknoCeka = false;
+          if (vybrany) { const [sx, sy] = rel(e); umistiOkno(sx, sy); vykresliInspektor(); }
+        }
+      };
+      platno.addEventListener('pointerup', konec);
+      platno.addEventListener('pointercancel', konec);
+      platno.addEventListener('pointerleave', () => { if (nahled) { nahled = null; kresli(); } });
+      platno.addEventListener('wheel', e => { e.preventDefault(); zoom(Math.exp(-e.deltaY * 0.0015), e.clientX, e.clientY); }, { passive: false });
+    })();
+
+    function zoom(nas, clientX, clientY) {
+      const r = platno.getBoundingClientRect();
+      const mx = clientX - r.left - W / 2, my = clientY - r.top - H / 2;
+      const wx = pohled.cx + mx / pohled.s, wy = pohled.cy - my / pohled.s;
+      pohled.s = Math.max(0.03, Math.min(60, pohled.s * nas));
+      pohled.cx = wx - mx / pohled.s; pohled.cy = wy + my / pohled.s;
+      kresli();
+    }
+
+    /* ==================================================================
+       10. INSPEKTOR VYBRANÉHO DÍLU
+       ================================================================== */
+    // sx, sy = místo klepnutí na plátně; okno se objeví vedle dílu, ne přes něj
+    function vyber(id, sx, sy) {
+      const novy = id && id !== vybrany;
+      vybrany = id;
+      if (novy && !oknoCeka) umistiOkno(sx, sy);
+      vykresliInspektor();
+      vykresliVystupy();
+      kresli();
+    }
+
+    // Viditelná část plochy (v souřadnicích plochy) — při odrolované stránce
+    // může být kus plochy mimo okno prohlížeče.
+    function viditelnaCast() {
+      const r = el('platnoBox').getBoundingClientRect();
+      const v = { top: Math.max(0, -r.top), bottom: Math.min(r.height, window.innerHeight - r.top),
+                  left: Math.max(0, -r.left), right: Math.min(r.width, window.innerWidth - r.left) };
+      if (v.bottom - v.top < 140) { v.top = 0; v.bottom = r.height; }
+      if (v.right - v.left < 200) { v.left = 0; v.right = r.width; }
+      return v;
+    }
+    const jeMobil = () => window.matchMedia('(max-width: 700px)').matches;
+
+    // Okno se vejde celé do viditelné části plochy; když je obsah vyšší, roluje se uvnitř.
+    function udrzOknoVidet() {
+      const okno = el('okno');
+      if (okno.classList.contains('skryt') || jeMobil()) return;
+      const v = viditelnaCast(), m = 6;
+      okno.style.maxHeight = Math.max(120, v.bottom - v.top - 2 * m) + 'px';
+      const w = okno.offsetWidth, h = okno.offsetHeight;
+      const x = Math.max(v.left + m, Math.min(v.right - w - m, okno.offsetLeft));
+      const y = Math.max(v.top + m, Math.min(v.bottom - h - m, okno.offsetTop));
+      okno.style.left = x + 'px'; okno.style.top = y + 'px';
+    }
+
+    // Nové okno: vedle místa klepnutí (na stranu, kde je víc místa), jinak vpravo nahoře.
+    function umistiOkno(sx, sy) {
+      const okno = el('okno'), v = viditelnaCast(), w = 252, odstup = 40;
+      let x, y;
+      if (sx == null) { x = v.right - w - 10; y = v.top + 10; }
+      else { x = sx > (v.left + v.right) / 2 ? sx - w - odstup : sx + odstup; y = sy - 90; }
+      okno.style.left = x + 'px'; okno.style.top = y + 'px';
+    }
+
+    const RETEZY = [[6.35, '04B · ANSI 25 (6,35)'], [8, '05B (8,0)'], [9.525, '06B · ANSI 35 (9,525)'], [12.7, '08B · ANSI 40 (12,7)'], [15.875, '10B (15,875)'], [19.05, '12B (19,05)']];
+    const TVARY_OTVORU = [['kruh', 'kruh'], ['pero', 's perem'], ['D', 'D'], ['sestihran', 'šestihran']];
+
+    function vykresliInspektor() {
+      const box = el('inspektor'), okno = el('okno');
+      const p = vybrany && najdi(vybrany);
+      okno.classList.toggle('skryt', !p || oknoCeka);
+      if (!p) { box.innerHTML = ''; return; }
+      if (document.activeElement !== el('oknoNazev')) el('oknoNazev').value = p.nazev || NAZVY_DRUHU[p.druh];
+      el('oknoBarva').value = p.barva;
+      const c = (id, label, min, max, krok, v, tr) => `<label class="kf ${tr || ''}">${label}<input type="number" data-k="${id}" min="${min}" max="${max}" step="${krok}" value="${v}"></label>`;
+      const sel = (id, label, moz, v, tr) => `<label class="kf ${tr || ''}">${label}<select data-k="${id}">${moz.map(([a, t]) => `<option value="${a}" ${String(a) === String(v) ? 'selected' : ''}>${t}</option>`).join('')}</select></label>`;
+      let h = '<div class="kp">';
+      if (p.druh === 'kolo' || p.druh === 'venec') h += c('z', 'Zuby z', p.druh === 'venec' ? 12 : 5, 400, 1, p.z) + c('m', 'Modul', 0.2, 20, 0.05, p.m);
+      if (p.druh === 'hreben') h += c('n', 'Zubů', 2, 400, 1, p.n) + c('m', 'Modul', 0.2, 20, 0.05, p.m);
+      if (p.druh === 'remenice') h += c('D', 'Průměr', 5, 2000, 1, p.D, 's2');
+      if (p.druh === 'retezka') h += c('z', 'Zuby z', 6, 200, 1, p.z) + sel('p', 'Řetěz', RETEZY.map(([v, t]) => [v, t.split(' ')[0]]), RETEZY.find(([v]) => Math.abs(v - p.p) < 1e-6)?.[0] ?? p.p);
+      h += c('b', p.druh === 'retezka' ? 'Tloušťka' : 'Šířka', 0.5, 500, 0.5, p.b);
+      if (p.druh === 'hreben') h += c('uhel', 'Natočení °', -360, 360, 5, p.uhel, 's3');
+      if (p.druh !== 'venec' && p.druh !== 'hreben') h += c('d', 'Otvor Ø', 0, 500, 0.1, p.d) + sel('otvor', 'Tvar otvoru', TVARY_OTVORU, p.otvor || 'kruh', 's2');
+      h += '</div>';
+      h += `<div class="patra-r">Patro<div class="patra" role="group" aria-label="Patro">${Array.from({ length: 10 }, (_, i) =>
+        `<button type="button" data-patro="${i}" aria-pressed="${p.patro === i}" title="Patro ${i} — zabírá jen se stejným patrem">${i}</button>`).join('')}</div></div>`;
+      const cipy = [];
+      if (p.druh !== 'hreben') cipy.push(['motor', '⚡ Motor', 'pohání soustavu']);
+      cipy.push(['vystup', '🎯 Výstup', 'převod se počítá k tomuto dílu']);
+      if (p.druh !== 'hreben') cipy.push(['volne', '↻ Volně na ose', 'na stejné ose s jiným dílem, ale neotáčí se s ním']);
+      if (['kolo', 'remenice', 'retezka'].includes(p.druh)) cipy.push(['odlehceni', '◌ Odlehčení', 'odlehčovací otvory']);
+      h += `<div class="cipy">${cipy.map(([k, t, ti]) => `<button type="button" class="cip" data-prepni="${k}" aria-pressed="${!!p[k]}" title="${ti}">${t}</button>`).join('')}</div>`;
+      h += `<div class="kp">${c('x', 'X mm', -100000, 100000, 0.1, +p.x.toFixed(2))}${c('y', 'Y mm', -100000, 100000, 0.1, +p.y.toFixed(2))}<span class="kf">&nbsp;</span></div>`;
+      const souv = R ? R.vazby.filter(v => v.a === p.id || v.b === p.id) : [];
+      if (souv.length) {
+        const pop = { ext: 'záběr', int: 'věnec', hreben: 'hřeben', hridel: 'hřídel', remen: 'řemen', remenx: 'zkř. řemen', retez: 'řetěz' };
+        h += '<div class="kp-pozn">' + souv.map(v => `${pop[v.typ]}: <b>${esc(najdi(v.a === p.id ? v.b : v.a).nazev)}</b>`).join(' · ') + '</div>';
+      }
+      const par = p.druh === 'kolo' && R && R.vazby.find(v => v.typ === 'ext' && (v.a === p.id || v.b === p.id));
+      if (par) h += '<button type="button" class="kp-odkaz" id="iNavrhar">⚙️ Otevřít dvojici v Návrháři</button>';
+      box.innerHTML = h;
+
+      box.querySelectorAll('[data-k]').forEach(inp => {
+        const k = inp.dataset.k;
+        inp.addEventListener('change', () => {
+          let v = inp.value;
+          if (inp.type === 'number' || k === 'p') {
+            v = parseFloat(String(v).replace(',', '.'));
+            if (!isFinite(v) || (inp.min !== '' && v < +inp.min) || (inp.max !== '' && v > +inp.max)) { inp.value = p[k]; return; }
+            if (['z', 'n'].includes(k)) v = Math.round(v);
+          }
+          zapamatuj(); p[k] = v; zmena();
+        });
+      });
+      box.querySelectorAll('[data-prepni]').forEach(b => b.addEventListener('click', () => {
+        const k = b.dataset.prepni;
+        zapamatuj();
+        if (k === 'motor' && !p.motor) S.prvky.forEach(q => { q.motor = false; });
+        p[k] = !p[k];
+        zmena();
+      }));
+      box.querySelectorAll('[data-patro]').forEach(b => b.addEventListener('click', () => {
+        const n = +b.dataset.patro;
+        if (n === p.patro) return;
+        zapamatuj(); p.patro = n; zmena();
+      }));
+      if (par) el('iNavrhar').addEventListener('click', () => {
+        const q = najdi(par.a === p.id ? par.b : par.a);
+        const [z1, z2] = p.z <= q.z ? [p.z, q.z] : [q.z, p.z];
+        const d = { v: 1, typ: 'celni', hodnoty: { celni: { m: p.m, z1, z2, x1: 0, x2: 0, aw: 0, zuby: 'prime' } } };
+        const b64 = btoa(unescape(encodeURIComponent(JSON.stringify(d)))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+        window.open('ozubena_kola.html#n=' + b64, '_blank');
+      });
+      udrzOknoVidet();
+    }
+
+    function duplikujVybrany() {
+      const p = vybrany && najdi(vybrany);
+      if (!p) return;
+      zapamatuj();
+      const q = { ...p, id: S.dalsiId++, x: p.x + polomery(p).ra * 2.2 + 10, motor: false, vystup: false, barva: novaBarva() };
+      if (p.druh === 'hreben') { q.x = p.x; q.y = p.y - vyskaHrebene(p) * 3; }
+      S.prvky.push(q); vybrany = q.id; zmena();
+    }
+
+    function smazVybrany() {
+      if (!vybrany) return;
+      zapamatuj();
+      S.prvky = S.prvky.filter(p => p.id !== vybrany);
+      S.vazby = S.vazby.filter(v => v.a !== vybrany && v.b !== vybrany);
+      vybrany = null;
+      zmena();
+    }
+
+    /* ==================================================================
+       11. PŘÍKLADY
+       ================================================================== */
+    function sestava(fn) {
+      const P = [], V = [];
+      let id = 1;
+      const pridej = (druh, h, x, y) => { const p = novyPrvek(druh, h, x, y); p.id = id++; P.push(p); return p; };
+      // kolo se středem ve směru `uhel` (°) od kola A tak, aby zabíralo
+      const vedle = (A, h, uhel, druh) => {
+        const B = novyPrvek(druh || 'kolo', { m: A.m, patro: A.patro, ...h }, 0, 0, true);
+        const D = druh === 'venec' ? polomery(B).r - polomery(A).r : polomery(A).r + polomery(B).r;
+        const a = O.rad(uhel);
+        const p = pridej(druh || 'kolo', { m: A.m, patro: A.patro, ...h }, A.x + D * Math.cos(a), A.y + D * Math.sin(a));
+        return p;
+      };
+      const nast = fn({ pridej, vedle, spoj: (typ, a, b) => V.push({ typ, a: a.id, b: b.id }) }) || {};
+      return { prvky: P, vazby: V, dalsiId: id, nast };
+    }
+
+    const PRIKLADY = [
+      { nazev: 'Jednoduchý převod 1 : 3', f: ({ pridej, vedle }) => {
+        const a = pridej('kolo', { z: 15, m: 2, motor: true, nazev: 'Pastorek z15' }, 0, 0);
+        vedle(a, { z: 45, vystup: true, nazev: 'Kolo z45' }, 0);
+      } },
+      { nazev: 'Vložené kolo — stejný smysl otáčení', f: ({ pridej, vedle }) => {
+        const a = pridej('kolo', { z: 20, m: 2, motor: true, nazev: 'Hnací z20' }, 0, 0);
+        const b = vedle(a, { z: 13, nazev: 'Vložené z13' }, 0);
+        vedle(b, { z: 30, vystup: true, nazev: 'Hnané z30' }, 0);
+      } },
+      { nazev: 'Dvoustupňová převodovka 1 : 12', f: ({ pridej, vedle }) => {
+        const a = pridej('kolo', { z: 12, m: 2, motor: true, nazev: 'Pastorek 1' }, 0, 0);
+        const b = vedle(a, { z: 36, nazev: 'Kolo 1' }, 0);
+        const c = pridej('kolo', { z: 12, m: 2, patro: 1, barva: '#3fae7a', nazev: 'Pastorek 2' }, b.x, b.y);
+        vedle(c, { z: 48, vystup: true, barva: '#3fae7a', nazev: 'Kolo 2' }, 70);
+      } },
+      { nazev: 'Hodinový ciferníkový převod 1 : 12', f: ({ pridej, vedle }) => {
+        const a = pridej('kolo', { z: 12, m: 1, motor: true, nazev: 'Minutová trubka z12' }, 0, 0);
+        const b = vedle(a, { z: 36, nazev: 'Minutové kolo z36' }, 20);
+        const c = pridej('kolo', { z: 8, m: 1.2, patro: 1, barva: '#3fae7a', nazev: 'Pastorek z8' }, b.x, b.y);
+        pridej('kolo', { z: 32, m: 1.2, patro: 1, barva: '#b86ad6', volne: true, vystup: true, nazev: 'Hodinové kolo z32' }, 0, 0);
+        return { otacky: 60 };
+      } },
+      { nazev: 'Pastorek ve věnci', f: ({ pridej, vedle }) => {
+        const v = pridej('venec', { z: 60, m: 2, vystup: true, nazev: 'Věnec z60' }, 0, 0);
+        pridej('kolo', { z: 15, m: 2, motor: true, nazev: 'Pastorek z15' }, (60 - 15), 0);
+      } },
+      { nazev: 'Planetové kola na pevných osách', f: ({ pridej }) => {
+        pridej('kolo', { z: 18, m: 2, motor: true, nazev: 'Slunce z18' }, 0, 0);
+        for (let k = 0; k < 3; k++) { const a = k * TAU / 3; pridej('kolo', { z: 18, m: 2, barva: '#3fae7a', nazev: 'Satelit ' + (k + 1) }, 36 * Math.cos(a), 36 * Math.sin(a)); }
+        pridej('venec', { z: 54, m: 2, vystup: true, nazev: 'Věnec z54' }, 0, 0);
+      } },
+      { nazev: 'Hřeben a pastorek (kyvadlově)', f: ({ pridej }) => {
+        pridej('kolo', { z: 16, m: 2, motor: true, nazev: 'Pastorek z16' }, 0, 0);
+        pridej('hreben', { n: 24, m: 2, uhel: 0, vystup: true, nazev: 'Hřeben' }, 0, 16);
+        return { rezim: 'kyv', kyv: 1.2, otacky: 12 };
+      } },
+      { nazev: 'Řemen + ozubení', f: ({ pridej, vedle, spoj }) => {
+        const a = pridej('remenice', { D: 30, motor: true, nazev: 'Řemenice motoru Ø30' }, 0, 0);
+        const b = pridej('remenice', { D: 90, nazev: 'Řemenice Ø90' }, 140, 0);
+        spoj('remen', a, b);
+        const c = pridej('kolo', { z: 15, m: 2, patro: 1, nazev: 'Pastorek z15' }, 140, 0);
+        vedle(c, { z: 45, vystup: true, nazev: 'Kolo z45' }, -90);
+        return { otacky: 90 };
+      } },
+      { nazev: 'Řetěz jako u jízdního kola 42 : 16', f: ({ pridej, spoj }) => {
+        const a = pridej('retezka', { z: 42, p: 12.7, motor: true, nazev: 'Převodník z42' }, 0, 0);
+        const b = pridej('retezka', { z: 16, p: 12.7, vystup: true, nazev: 'Pastorek z16' }, 420, 0);
+        spoj('retez', a, b);
+        return { otacky: 70 };
+      } },
+      { nazev: 'Řetězové kolo na ozubeném kole (1 : 4)', f: ({ pridej, vedle, spoj }) => {
+        const a = pridej('kolo', { z: 20, m: 2, motor: true, nazev: 'Pastorek z20', d: 8, otvor: 'D' }, 0, 0);
+        const b = vedle(a, { z: 40, nazev: 'Kolo z40', d: 12, otvor: 'pero' }, 0);
+        const c = pridej('retezka', { z: 12, p: 12.7, patro: 1, nazev: 'Řetězka z12', d: 12, otvor: 'pero' }, b.x, b.y);
+        const e = pridej('retezka', { z: 24, p: 12.7, patro: 1, vystup: true, nazev: 'Řetězka z24', d: 15, otvor: 'pero' }, b.x + 220, b.y - 40);
+        spoj('retez', c, e);
+      } },
+      { nazev: 'Zkřížený řemen — obrácení smyslu', f: ({ pridej, spoj }) => {
+        const a = pridej('remenice', { D: 60, motor: true, nazev: 'Hnací Ø60' }, 0, 0);
+        const b = pridej('remenice', { D: 40, vystup: true, nazev: 'Hnaná Ø40' }, 160, 0);
+        spoj('remenx', a, b);
+      } },
+      { nazev: 'Zablokovaná trojice (ukázka chyby)', f: ({ pridej }) => {
+        pridej('kolo', { z: 20, m: 2, motor: true, nazev: 'Kolo A' }, 0, 0);
+        pridej('kolo', { z: 20, m: 2, nazev: 'Kolo B' }, 40, 0);
+        pridej('kolo', { z: 20, m: 2, vystup: true, nazev: 'Kolo C' }, 20, 40 * Math.sin(PI / 3));
+      } },
+    ];
+
+    function nactiPriklad(pr) {
+      zapamatuj();
+      const d = sestava(pr.f);
+      S.prvky = d.prvky; S.vazby = d.vazby; S.dalsiId = d.dalsiId;
+      S.nast = { ...S.nast, rezim: 'plynule', ...d.nast };
+      vybrany = null; cas = 0;
+      obnovGlobalni();
+      zmena(); prizpusob();
+    }
+
+    /* ==================================================================
+       12. ZMĚNY, ULOŽENÍ, EXPORTY
+       ================================================================== */
+    function zmena() {
+      res();
+      vykresliInspektor();
+      vykresliVystupy();
+      kresli();
+      uloz();
+    }
+    function uloz() { try { localStorage.setItem(KLIC, JSON.stringify(S)); } catch { /* bez úložiště */ } }
+    function nactiStav(d) {
+      if (!d || !Array.isArray(d.prvky)) return false;
+      for (const p of d.prvky) for (const [k, v] of Object.entries(vychoziVyroba(p.druh, p.p))) if (p[k] == null) p[k] = v;
+      S = { prvky: d.prvky, vazby: Array.isArray(d.vazby) ? d.vazby : [], dalsiId: d.dalsiId || (Math.max(0, ...d.prvky.map(p => p.id)) + 1), nast: { ...NAST_VYCHOZI, ...(d.nast || {}) } };
+      return true;
+    }
+
+    function obnovGlobalni() {
+      const n = S.nast;
+      el('gOtacky').value = n.otacky; el('gSmer').value = String(n.smer); el('gMoment').value = n.moment;
+      el('gRezim').value = n.rezim; el('gKyv').value = n.kyv; el('gM').value = n.m;
+      el('gUcinnost').checked = !!n.ucinnost; el('gAnimace').value = n.animace; el('gAnimaceTxt').textContent = f(n.animace, 2) + '×';
+      el('btnPopisky').setAttribute('aria-pressed', String(!!n.popisky));
+    }
+
+    function stahni(blob, nazev) {
+      const u = URL.createObjectURL(blob), a = document.createElement('a');
+      a.href = u; a.download = nazev; document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(u), 3000);
+    }
+
+    function svgExport() {
+      if (!S.prvky.length) { Dialog.chyba('Plocha je prázdná.'); return; }
+      const Phi = uhelMotoru();
+      const b = obalka(), ok = 10;
+      const w = b.x1 - b.x0 + 2 * ok, h = b.y1 - b.y0 + 2 * ok;
+      const P = (x, y) => `${(x - b.x0 + ok).toFixed(3)},${(b.y1 - y + ok).toFixed(3)}`;
+      const casti = [];
+      for (const p of S.prvky.slice().sort((a, c) => a.patro - c.patro)) {
+        const t = transformace(p, Phi), tv = tvar(p), c = Math.cos(t.rot), s = Math.sin(t.rot);
+        const tr = ([x, y]) => { x += t.posun; return P(x * c - y * s + t.x, x * s + y * c + t.y); };
+        const d = [tv.obrys, ...tv.otvory].map(sm => 'M' + sm.map(tr).join('L') + 'Z').join(' ');
+        casti.push(`<path d="${d}" fill="${p.barva}" fill-opacity="0.6" fill-rule="evenodd" stroke="#000" stroke-width="0.15"><title>${esc(p.nazev)}</title></path>`);
+      }
+      for (const v of S.vazby) {
+        const d = drahaRemene(v);
+        if (d) casti.push(`<path d="M${d.map(([x, y]) => P(x, y)).join('L')}" fill="none" stroke="#333" stroke-width="${v.typ === 'retez' ? 3 : 2}"${v.typ === 'retez' ? ' stroke-dasharray="3 2"' : ''}/>`);
+      }
+      const txt = `<?xml version="1.0" encoding="UTF-8"?>\n<svg xmlns="http://www.w3.org/2000/svg" width="${w.toFixed(2)}mm" height="${h.toFixed(2)}mm" viewBox="0 0 ${w.toFixed(3)} ${h.toFixed(3)}">\n<title>Skládačka soukolí</title>\n${casti.join('\n')}\n</svg>\n`;
+      stahni(new Blob([txt], { type: 'image/svg+xml' }), 'skladacka_soukoli.svg');
+    }
+
+    function csv() {
+      const r = polozkyKusovniku();
+      const q = s => '"' + String(s).replace(/"/g, '""') + '"';
+      const t = ['Díl;Rozměr;Kusů', ...r.map(x => [x.nazev, x.rozmer, x.pocet].map(q).join(';'))].join('\r\n');
+      stahni(new Blob(['﻿' + t], { type: 'text/csv;charset=utf-8' }), 'kusovnik_skladacka.csv');
+    }
+
+    const b64 = s => btoa(unescape(encodeURIComponent(s))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    const zB64 = s => decodeURIComponent(escape(atob(s.replace(/-/g, '+').replace(/_/g, '/'))));
+
+
+    /* ==================================================================
+       12b. EXPORT STL — vytlačení obrysů (three.js jen kvůli triangulaci)
+       ================================================================== */
+    let slibThree = null;
+    function nactiThree() {
+      if (window.THREE) return Promise.resolve();
+      if (!slibThree) slibThree = new Promise((ok, chyba) => {
+        const sc = document.createElement('script');
+        sc.src = 'lib/three.r128.min.js';
+        sc.onload = ok; sc.onerror = () => { slibThree = null; chyba(new Error('knihovnu three.js se nepodařilo načíst')); };
+        document.head.appendChild(sc);
+      });
+      return slibThree;
+    }
+
+    // Tělesa dílu v jeho vlastní soustavě (střed v počátku, z od 0).
+    function telesaDilu(p) {
+      const tv = tvar(p);
+      if (p.druh === 'remenice') {
+        const r = polomery(p).r, lem = 1.2;
+        return [
+          { obrys: tv.obrys, otvory: tv.otvory, z0: 0, h: lem },
+          { obrys: O.kruh(0, 0, r, 160), otvory: tv.otvory, z0: lem, h: p.b },
+          { obrys: tv.obrys, otvory: tv.otvory, z0: lem + p.b, h: lem },
+        ];
+      }
+      return [{ obrys: tv.obrys, otvory: tv.otvory, z0: 0, h: p.b }];
+    }
+    const vyskaDilu = p => telesaDilu(p).reduce((m, t) => Math.max(m, t.z0 + t.h), 0);
+
+    // Uzavřená síť vytlačeného obrysu: víka z earcut, boky ze sdílených vrcholů.
+    function sitTelesa(t) {
+      const smycky = [t.obrys, ...(t.otvory || [])];
+      const n0 = smycky.reduce((s, l) => s + l.length, 0);
+      const pos = new Float32Array(2 * n0 * 3);
+      let q = 0;
+      for (const z of [t.z0, t.z0 + t.h]) for (const sm of smycky) for (const [x, y] of sm) { pos[q++] = x; pos[q++] = y; pos[q++] = z; }
+      const idx = [];
+      const vse = smycky.flat();
+      const troj = THREE.ShapeUtils.triangulateShape(t.obrys.map(([x, y]) => new THREE.Vector2(x, y)),
+        (t.otvory || []).map(o => o.map(([x, y]) => new THREE.Vector2(x, y))));
+      for (const [a, b, c] of troj) {
+        const A = vse[a], B = vse[b], C = vse[c];
+        const ccw = (B[0] - A[0]) * (C[1] - A[1]) - (B[1] - A[1]) * (C[0] - A[0]) > 0;
+        if (ccw) idx.push(n0 + a, n0 + b, n0 + c, a, c, b); else idx.push(n0 + a, n0 + c, n0 + b, a, b, c);
+      }
+      let o = 0;
+      for (const sm of smycky) {
+        const L = sm.length;
+        for (let i = 0; i < L; i++) { const j = (i + 1) % L; idx.push(o + i, o + j, n0 + o + j, o + i, n0 + o + j, n0 + o + i); }
+        o += L;
+      }
+      return { pos, idx };
+    }
+
+    function stlBinarni(site, nazev) {
+      let n = 0;
+      for (const m of site) n += m.idx.length / 3;
+      const buf = new ArrayBuffer(84 + n * 50), dv = new DataView(buf);
+      const hl = ('Skladacka soukoli - ' + (nazev || '')).normalize('NFD').replace(/[^\x20-\x7e]/g, '').slice(0, 80);
+      for (let i = 0; i < hl.length; i++) dv.setUint8(i, hl.charCodeAt(i));
+      dv.setUint32(80, n, true);
+      let o = 84;
+      for (const { pos, idx } of site) for (let t = 0; t < idx.length; t += 3) {
+        const a = idx[t] * 3, b = idx[t + 1] * 3, c = idx[t + 2] * 3;
+        const ux = pos[b] - pos[a], uy = pos[b + 1] - pos[a + 1], uz = pos[b + 2] - pos[a + 2];
+        const vx = pos[c] - pos[a], vy = pos[c + 1] - pos[a + 1], vz = pos[c + 2] - pos[a + 2];
+        const nx = uy * vz - uz * vy, ny = uz * vx - ux * vz, nz = ux * vy - uy * vx, L = Math.hypot(nx, ny, nz) || 1;
+        dv.setFloat32(o, nx / L, true); dv.setFloat32(o + 4, ny / L, true); dv.setFloat32(o + 8, nz / L, true); o += 12;
+        for (const v of [a, b, c]) { dv.setFloat32(o, pos[v], true); dv.setFloat32(o + 4, pos[v + 1], true); dv.setFloat32(o + 8, pos[v + 2], true); o += 12; }
+        o += 2;
+      }
+      return new Uint8Array(buf);
+    }
+
+    // Sítě dílu posunuté a natočené do polohy (x, y, rot, dz; u hřebene i posun).
+    function siteDilu(p, x, y, rot, dz, posun) {
+      const c = Math.cos(rot), sn = Math.sin(rot);
+      return telesaDilu(p).map(t => {
+        const m = sitTelesa(t), q = m.pos;
+        for (let i = 0; i < q.length; i += 3) {
+          const X = q[i] + (posun || 0), Y = q[i + 1];
+          q[i] = X * c - Y * sn + x; q[i + 1] = X * sn + Y * c + y; q[i + 2] += dz;
+        }
+        return m;
+      });
+    }
+
+    const CRC = (() => { const t = new Uint32Array(256); for (let i = 0; i < 256; i++) { let c = i; for (let k = 0; k < 8; k++) c = (c & 1) ? (0xEDB88320 ^ (c >>> 1)) : (c >>> 1); t[i] = c >>> 0; } return t; })();
+    function crc32(u8) { let c = 0xFFFFFFFF; for (let i = 0; i < u8.length; i++) c = CRC[(c ^ u8[i]) & 0xFF] ^ (c >>> 8); return (c ^ 0xFFFFFFFF) >>> 0; }
+    // ZIP bez komprese (metoda „uloženo“)
+    function zip(polozky) {
+      const enc = new TextEncoder(), casti = [], centr = [];
+      let off = 0;
+      for (const p of polozky) {
+        const data = p.data, jm = enc.encode(p.name), crc = crc32(data);
+        const lok = new Uint8Array(30 + jm.length), dv = new DataView(lok.buffer);
+        dv.setUint32(0, 0x04034b50, true); dv.setUint16(4, 20, true); dv.setUint16(6, 0x0800, true); dv.setUint16(12, 0x21, true);
+        dv.setUint32(14, crc, true); dv.setUint32(18, data.length, true); dv.setUint32(22, data.length, true); dv.setUint16(26, jm.length, true);
+        lok.set(jm, 30); casti.push(lok, data);
+        const cen = new Uint8Array(46 + jm.length), cv = new DataView(cen.buffer);
+        cv.setUint32(0, 0x02014b50, true); cv.setUint16(4, 20, true); cv.setUint16(6, 20, true); cv.setUint16(8, 0x0800, true); cv.setUint16(14, 0x21, true);
+        cv.setUint32(16, crc, true); cv.setUint32(20, data.length, true); cv.setUint32(24, data.length, true); cv.setUint16(28, jm.length, true);
+        cv.setUint32(42, off, true); cen.set(jm, 46); centr.push(cen);
+        off += lok.length + data.length;
+      }
+      const vel = centr.reduce((a, c) => a + c.length, 0), kon = new Uint8Array(22), kv = new DataView(kon.buffer);
+      kv.setUint32(0, 0x06054b50, true); kv.setUint16(8, polozky.length, true); kv.setUint16(10, polozky.length, true);
+      kv.setUint32(12, vel, true); kv.setUint32(16, off, true);
+      return new Blob([...casti, ...centr, kon], { type: 'application/zip' });
+    }
+
+    const bezpecneJmeno = t => String(t).normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^\w.-]+/g, '_').replace(/^_+|_+$/g, '') || 'dil';
+
+    // Obdélníková obálka dílu v jeho soustavě (pro rozložení na podložku).
+    function obalkaDilu(p) {
+      let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
+      for (const [x, y] of tvar(p).obrys) { x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); }
+      return { x0, x1, y0, y1 };
+    }
+
+    async function exportStl(rezim) {
+      if (!S.prvky.length) { Dialog.chyba('Plocha je prázdná.'); return; }
+      if (rezim === 'vybrany' && !vybrany) { Dialog.chyba('Nejdřív vyberte díl (klepněte na něj v ploše).'); return; }
+      try {
+        await nactiThree();
+        if (rezim === 'vybrany') {
+          const p = najdi(vybrany);
+          stahni(new Blob([stlBinarni(siteDilu(p, 0, 0, 0, 0), p.nazev)], { type: 'model/stl' }), bezpecneJmeno(p.nazev) + '.stl');
+        } else if (rezim === 'zip') {
+          const pouzite = new Set();
+          const polozky = S.prvky.map(p => {
+            let j = bezpecneJmeno(p.nazev);
+            while (pouzite.has(j)) j += '_' + p.id;
+            pouzite.add(j);
+            return { name: j + '.stl', data: stlBinarni(siteDilu(p, 0, 0, 0, 0), p.nazev) };
+          });
+          stahni(zip(polozky), 'skladacka_dily_stl.zip');
+        } else if (rezim === 'deska') {
+          const site = [];
+          let x = 0, y = 0, radek = 0;
+          for (const p of S.prvky) {
+            const b = obalkaDilu(p), w = b.x1 - b.x0, h = b.y1 - b.y0;
+            if (x > 0 && x + w > 220) { x = 0; y += radek + 5; radek = 0; }
+            site.push(...siteDilu(p, x - b.x0, y - b.y0, 0, 0));
+            x += w + 5; radek = Math.max(radek, h);
+          }
+          stahni(new Blob([stlBinarni(site, 'podlozka')], { type: 'model/stl' }), 'skladacka_podlozka.stl');
+        } else {
+          const Phi = uhelMotoru();
+          const vyska = Math.max(...S.prvky.map(vyskaDilu)) + 1;
+          const site = [];
+          for (const p of S.prvky) {
+            const t = transformace(p, Phi);
+            site.push(...siteDilu(p, t.x, t.y, t.rot, p.patro * vyska, t.posun));
+          }
+          stahni(new Blob([stlBinarni(site, 'sestava')], { type: 'model/stl' }), 'skladacka_sestava.stl');
+        }
+        Dialog.info('STL uloženo.');
+      } catch (e) { Dialog.chyba('Export se nepovedl: ' + (e.message || e)); }
+    }
+
+    /* ==================================================================
+       12c. VÝKRES — osy hřídelí, rozteče os, tabulka otvorů
+       ================================================================== */
+    function podkladyVykresu() {
+      const osy = [];
+      for (const p of S.prvky) {
+        if (p.druh === 'hreben') continue;
+        let o = osy.find(q => Math.hypot(q.x - p.x, q.y - p.y) < 0.01);
+        if (!o) { o = { x: p.x, y: p.y, dily: [], d: 0, tvar: 'kruh', rMax: 0 }; osy.push(o); }
+        o.dily.push(p);
+        if ((p.d || 0) > o.d) { o.d = p.d; o.tvar = p.otvor || 'kruh'; }
+        o.rMax = Math.max(o.rMax, polomery(p).ra);
+      }
+      // počátek souřadnic = osa motoru (jinak první osa)
+      const motor = S.prvky.find(p => p.motor && p.druh !== 'hreben');
+      osy.sort((a, b) => (motor && Math.hypot(b.x - motor.x, b.y - motor.y) < 0.01) - (motor && Math.hypot(a.x - motor.x, a.y - motor.y) < 0.01) || a.x - b.x || a.y - b.y);
+      osy.forEach((o, i) => { o.oznaceni = 'A' + (i + 1); });
+      const nula = osy[0] ? { x: osy[0].x, y: osy[0].y } : { x: 0, y: 0 };
+      const osaDilu = id => osy.find(o => o.dily.some(p => p.id === id));
+      const roztece = [], klice = new Set();
+      const popis = { ext: 'záběr', int: 'záběr ve věnci', remen: 'řemen', remenx: 'zkřížený řemen', retez: 'řetěz' };
+      for (const v of (R ? R.vazby : [])) {
+        if (!popis[v.typ]) continue;
+        const a = osaDilu(v.a), b = osaDilu(v.b);
+        if (!a || !b || a === b) continue;
+        const k = [a.oznaceni, b.oznaceni].sort().join('-');
+        if (klice.has(k)) continue;
+        klice.add(k);
+        roztece.push({ a, b, L: Math.hypot(b.x - a.x, b.y - a.y), druh: popis[v.typ] });
+      }
+      return { osy, nula, roztece };
+    }
+
+    function svgVykres() {
+      const { osy, nula, roztece } = podkladyVykresu();
+      const obal = obalka();
+      const okraj = 22, sirkaTab = 0;
+      const x0 = obal.x0 - okraj, x1 = obal.x1 + okraj, y0 = obal.y0 - okraj, y1 = obal.y1 + okraj;
+      const radkuTab = osy.length + 2;
+      const hTab = radkuTab * 6 + 26;
+      const W = Math.max(x1 - x0, 190), Hk = (y1 - y0);
+      const Hc = Hk + hTab + 8;
+      const X = x => (x - x0).toFixed(3), Y = y => (y1 - y).toFixed(3);
+      const c = [];
+      const car = (xa, ya, xb, yb, st) => c.push(`<line x1="${X(xa)}" y1="${Y(ya)}" x2="${X(xb)}" y2="${Y(yb)}" ${st}/>`);
+      const text = (x, y, t, st) => c.push(`<text x="${X(x)}" y="${Y(y)}" ${st || ''}>${esc(t)}</text>`);
+      const TENKA = 'stroke="#000" stroke-width="0.18" fill="none"';
+      const OSA = 'stroke="#000" stroke-width="0.18" stroke-dasharray="6 1.5 1 1.5" fill="none"';
+      // obrysy dílů v klidové poloze
+      for (const p of S.prvky.slice().sort((a, b) => a.patro - b.patro)) {
+        const t = transformace(p, 0), tv = tvar(p), cs = Math.cos(t.rot), sn = Math.sin(t.rot);
+        const tr = ([x, y]) => { x += t.posun; return `${X(x * cs - y * sn + t.x)},${Y(x * sn + y * cs + t.y)}`; };
+        c.push(`<path d="${[tv.obrys, ...tv.otvory].map(sm => 'M' + sm.map(tr).join('L') + 'Z').join(' ')}" fill="none" stroke="#777" stroke-width="0.13"/>`);
+        if (p.druh !== 'hreben') c.push(`<circle cx="${X(p.x)}" cy="${Y(p.y)}" r="${polomery(p).r.toFixed(3)}" stroke="#999" stroke-width="0.15" stroke-dasharray="6 1.5 1 1.5" fill="none"/>`);
+      }
+      for (const v of S.vazby) { const d = drahaRemene(v); if (d) c.push(`<path d="M${d.map(([x, y]) => X(x) + ',' + Y(y)).join('L')}" fill="none" stroke="#999" stroke-width="0.25" stroke-dasharray="2 1"/>`); }
+      // osy, otvory, značky
+      for (const o of osy) {
+        const r = o.rMax + 4;
+        car(o.x - r, o.y, o.x + r, o.y, OSA); car(o.x, o.y - r, o.x, o.y + r, OSA);
+        if (o.d > 0) c.push(`<circle cx="${X(o.x)}" cy="${Y(o.y)}" r="${(o.d / 2).toFixed(3)}" stroke="#000" stroke-width="0.5" fill="none"/>`);
+        const bx = o.x + Math.max(o.d / 2, 3) + 3, by = o.y + Math.max(o.d / 2, 3) + 3;
+        c.push(`<circle cx="${X(bx + 3)}" cy="${Y(by + 1.2)}" r="3.4" fill="#fff" stroke="#000" stroke-width="0.3"/>`);
+        text(bx + 3, by, o.oznaceni, 'font-size="3" text-anchor="middle" font-weight="bold"');
+      }
+      // kóty roztečí os
+      roztece.forEach((k, i) => {
+        const { a, b, L } = k;
+        const ux = (b.x - a.x) / L, uy = (b.y - a.y) / L, nx = -uy, ny = ux;
+        const off = 8 + (i % 3) * 6;
+        const A = [a.x + nx * off, a.y + ny * off], B = [b.x + nx * off, b.y + ny * off];
+        car(a.x + nx * 1.5, a.y + ny * 1.5, A[0] + nx * 1.5, A[1] + ny * 1.5, TENKA);
+        car(b.x + nx * 1.5, b.y + ny * 1.5, B[0] + nx * 1.5, B[1] + ny * 1.5, TENKA);
+        car(A[0], A[1], B[0], B[1], 'stroke="#000" stroke-width="0.25"');
+        for (const [P, s2] of [[A, 1], [B, -1]]) {
+          const s3 = 2.5, w = 0.7;
+          c.push(`<path d="M${X(P[0])},${Y(P[1])}L${X(P[0] + s2 * ux * s3 + nx * w)},${Y(P[1] + s2 * uy * s3 + ny * w)}L${X(P[0] + s2 * ux * s3 - nx * w)},${Y(P[1] + s2 * uy * s3 - ny * w)}Z" fill="#000"/>`);
+        }
+        const mx = (A[0] + B[0]) / 2 + nx * 1.2, my = (A[1] + B[1]) / 2 + ny * 1.2;
+        let ang = -Math.atan2(uy, ux) * 180 / PI;
+        if (ang > 90) ang -= 180; if (ang < -90) ang += 180;
+        c.push(`<text x="${X(mx)}" y="${Y(my)}" font-size="3.2" text-anchor="middle" transform="rotate(${ang.toFixed(2)} ${X(mx)} ${Y(my)})">${f(L, 3)} (${esc(k.druh)})</text>`);
+      });
+      // tabulka otvorů
+      const ty = Hk + 8;
+      const tr = [];
+      tr.push(`<text x="4" y="${ty}" font-size="4" font-weight="bold">Tabulka otvorů — souřadnice od osy ${osy[0] ? osy[0].oznaceni : ''} (motor), mm</text>`);
+      const sloupce = [4, 18, 42, 66, 96, 124];
+      const hl = ['Osa', 'X', 'Y', 'Otvor', 'Vzdál. od A1', 'Díly na ose'];
+      hl.forEach((h, i) => tr.push(`<text x="${sloupce[i]}" y="${ty + 8}" font-size="3" font-weight="bold">${h}</text>`));
+      tr.push(`<line x1="4" y1="${ty + 9.5}" x2="${W - 4}" y2="${ty + 9.5}" stroke="#000" stroke-width="0.25"/>`);
+      const tvarText = { kruh: '', pero: ' s perem', D: ' D', sestihran: ' 6hr' };
+      osy.forEach((o, i) => {
+        const yy = ty + 15 + i * 6;
+        const bunky = [o.oznaceni, f(o.x - nula.x, 3), f(o.y - nula.y, 3), o.d > 0 ? 'Ø' + f(o.d, 2) + tvarText[o.tvar] : '—',
+          f(Math.hypot(o.x - nula.x, o.y - nula.y), 3), o.dily.map(p => p.nazev).join(', ')];
+        bunky.forEach((b, j) => tr.push(`<text x="${sloupce[j]}" y="${yy}" font-size="3">${esc(b)}</text>`));
+      });
+      const Wmm = W.toFixed(2), Hmm = Hc.toFixed(2);
+      return `<?xml version="1.0" encoding="UTF-8"?>
+<svg xmlns="http://www.w3.org/2000/svg" width="${Wmm}mm" height="${Hmm}mm" viewBox="0 0 ${Wmm} ${Hmm}" font-family="Arial, sans-serif">
+<title>Skládačka soukolí – rozteče os</title>
+<rect x="0" y="0" width="${Wmm}" height="${Hmm}" fill="#fff"/>
+<rect x="1" y="1" width="${(W - 2).toFixed(2)}" height="${(Hc - 2).toFixed(2)}" fill="none" stroke="#000" stroke-width="0.35"/>
+<text x="4" y="6" font-size="3.5">Skládačka soukolí — rozteče os · měřítko 1 : 1 · rozměry v mm · ${new Date().toLocaleDateString('cs-CZ')}</text>
+${c.join('\n')}
+${tr.join('\n')}
+</svg>
+`;
+    }
+
+    function dxfVykres() {
+      const { osy, nula, roztece } = podkladyVykresu();
+      const r = [];
+      const p = (k, v) => r.push(String(k), String(v));
+      const vrstvy = [['OBRYSY', 8], ['OSY', 1], ['OTVORY', 7], ['KOTY', 3]];
+      p(0, 'SECTION'); p(2, 'HEADER'); p(9, '$ACADVER'); p(1, 'AC1009'); p(9, '$INSUNITS'); p(70, 4); p(0, 'ENDSEC');
+      p(0, 'SECTION'); p(2, 'TABLES');
+      p(0, 'TABLE'); p(2, 'LTYPE'); p(70, 1); p(0, 'LTYPE'); p(2, 'CONTINUOUS'); p(70, 0); p(3, 'Solid line'); p(72, 65); p(73, 0); p(40, 0); p(0, 'ENDTAB');
+      p(0, 'TABLE'); p(2, 'LAYER'); p(70, vrstvy.length);
+      for (const [n, c] of vrstvy) { p(0, 'LAYER'); p(2, n); p(70, 0); p(62, c); p(6, 'CONTINUOUS'); }
+      p(0, 'ENDTAB'); p(0, 'ENDSEC');
+      p(0, 'SECTION'); p(2, 'ENTITIES');
+      const X = x => (x - nula.x).toFixed(4), Y = y => (y - nula.y).toFixed(4);
+      const cara = (vr, xa, ya, xb, yb) => { p(0, 'LINE'); p(8, vr); p(10, X(xa)); p(20, Y(ya)); p(30, 0); p(11, X(xb)); p(21, Y(yb)); p(31, 0); };
+      const txt = (x, y, h, t) => { p(0, 'TEXT'); p(8, 'KOTY'); p(10, X(x)); p(20, Y(y)); p(30, 0); p(40, h); p(1, t.normalize('NFD').replace(/[̀-ͯ]/g, '')); };
+      for (const q of S.prvky) {
+        const t = transformace(q, 0), tv = tvar(q), cs = Math.cos(t.rot), sn = Math.sin(t.rot);
+        for (const sm of [tv.obrys, ...tv.otvory]) {
+          p(0, 'POLYLINE'); p(8, 'OBRYSY'); p(66, 1); p(70, 1); p(10, 0); p(20, 0); p(30, 0);
+          for (let [x, y] of sm) { x += t.posun; p(0, 'VERTEX'); p(8, 'OBRYSY'); p(10, X(x * cs - y * sn + t.x)); p(20, Y(x * sn + y * cs + t.y)); p(30, 0); }
+          p(0, 'SEQEND'); p(8, 'OBRYSY');
+        }
+      }
+      for (const o of osy) {
+        const rr = o.rMax + 4;
+        cara('OSY', o.x - rr, o.y, o.x + rr, o.y); cara('OSY', o.x, o.y - rr, o.x, o.y + rr);
+        if (o.d > 0) { p(0, 'CIRCLE'); p(8, 'OTVORY'); p(10, X(o.x)); p(20, Y(o.y)); p(30, 0); p(40, (o.d / 2).toFixed(4)); }
+        txt(o.x + 3, o.y + 3, 3, `${o.oznaceni}  X ${f(o.x - nula.x, 3)}  Y ${f(o.y - nula.y, 3)}${o.d > 0 ? '  D ' + f(o.d, 2) : ''}`);
+      }
+      for (const k of roztece) {
+        const mx = (k.a.x + k.b.x) / 2, my = (k.a.y + k.b.y) / 2;
+        cara('KOTY', k.a.x, k.a.y, k.b.x, k.b.y);
+        txt(mx, my + 1.5, 2.5, `${k.a.oznaceni}-${k.b.oznaceni} = ${f(k.L, 3)}`);
+      }
+      p(0, 'ENDSEC'); p(0, 'EOF');
+      return r.join('\r\n') + '\r\n';
+    }
+
+    function tiskVykresu() {
+      if (!S.prvky.length) { Dialog.chyba('Plocha je prázdná.'); return; }
+      const svg = svgVykres().replace(/^<\?xml[^>]*>\s*/, '');
+      const w = window.open('', '_blank');
+      if (!w) { stahni(new Blob([svgVykres()], { type: 'image/svg+xml' }), 'skladacka_vykres.svg'); Dialog.info('Okno pro tisk bylo zablokováno — výkres se stáhl jako SVG.'); return; }
+      w.document.write(`<!DOCTYPE html><html lang="cs"><head><meta charset="UTF-8"><title>Výkres — rozteče os</title>
+        <style>@page{margin:8mm} body{margin:0;background:#fff} svg{display:block} p{font:12px sans-serif;margin:6px 0}@media print{p{display:none}}</style></head>
+        <body><p>Tiskněte v měřítku 100 % (bez „přizpůsobit stránce“), aby výkres odpovídal 1 : 1.</p>${svg}</body></html>`);
+      w.document.close();
+      setTimeout(() => { try { w.focus(); w.print(); } catch { /* uživatel okno zavřel */ } }, 300);
+    }
+
+    /* ==================================================================
+       13. OVLÁDÁNÍ A START
+       ================================================================== */
+    // Prázdná plocha bez potvrzování — tlačítko Zpět (Ctrl+Z) sestavu vrátí.
+    function novaPlocha() {
+      if (!S.prvky.length && !S.vazby.length) { Dialog.info('Plocha už je prázdná — vezměte díl z palety vlevo.'); return; }
+      zapamatuj();
+      S.prvky = []; S.vazby = []; vybrany = null; cas = 0;
+      zmena(); prizpusob();
+      nastavNastroj(null);
+      Dialog.info('Prázdná plocha. Předchozí sestavu vrátí Zpět (Ctrl+Z).');
+    }
+
+    const prazdnaPlocha = () => { if (!S.prvky.length) { Dialog.chyba('Plocha je prázdná.'); return true; } return false; };
+    const AKCE = {
+      nova: novaPlocha,
+      ulozit: () => stahni(new Blob([JSON.stringify(S, null, 1)], { type: 'application/json' }), 'skladacka_soukoli.json'),
+      nacist: () => el('soubor').click(),
+      odkaz: async () => {
+        const url = location.href.split('#')[0] + '#s=' + b64(JSON.stringify(S));
+        try { await navigator.clipboard.writeText(url); Dialog.info('Odkaz na sestavu je ve schránce.'); }
+        catch { await Dialog.zeptej('Zkopírujte odkaz:', url); }
+      },
+      'vykres-svg': () => { if (!prazdnaPlocha()) stahni(new Blob([svgVykres()], { type: 'image/svg+xml' }), 'skladacka_vykres.svg'); },
+      'vykres-dxf': () => { if (!prazdnaPlocha()) stahni(new Blob([dxfVykres()], { type: 'application/dxf' }), 'skladacka_vykres.dxf'); },
+      'vykres-tisk': tiskVykresu,
+      'plocha-svg': svgExport,
+      'plocha-png': () => { kresli(); platno.toBlob(b => b && stahni(b, 'skladacka_soukoli.png')); },
+      'stl-vybrany': () => exportStl('vybrany'),
+      'stl-zip': () => exportStl('zip'),
+      'stl-deska': () => exportStl('deska'),
+      'stl-sestava': () => exportStl('sestava'),
+      csv,
+    };
+
+    function pripojMenu() {
+      const menu = el('menu');
+      const zavri = () => menu.querySelectorAll('.roleta.otevrena').forEach(r => {
+        r.classList.remove('otevrena'); r.previousElementSibling.setAttribute('aria-expanded', 'false');
+      });
+      const otevri = tl => {
+        const r = tl.nextElementSibling;
+        zavri();
+        r.classList.add('otevrena'); tl.setAttribute('aria-expanded', 'true');
+        r.style.left = '';
+        const b = r.getBoundingClientRect();
+        if (b.right > window.innerWidth - 8) r.style.left = (window.innerWidth - 8 - b.right) + 'px';
+      };
+      menu.addEventListener('click', e => {
+        const tl = e.target.closest('.menu-tl');
+        if (tl) { tl.getAttribute('aria-expanded') === 'true' ? zavri() : otevri(tl); return; }
+        const a = e.target.closest('[data-akce], [data-pr]');
+        if (!a) return;
+        zavri();
+        if (a.dataset.pr != null) nactiPriklad(PRIKLADY[+a.dataset.pr]);
+        else AKCE[a.dataset.akce]();
+      });
+      // otevřená nabídka se při najetí myší přepne na sousední
+      menu.addEventListener('pointerover', e => {
+        const tl = e.target.closest('.menu-tl');
+        if (tl && e.pointerType === 'mouse' && menu.querySelector('.roleta.otevrena') && tl.getAttribute('aria-expanded') !== 'true') otevri(tl);
+      });
+      document.addEventListener('pointerdown', e => { if (!e.target.closest('#menu')) zavri(); });
+      document.addEventListener('keydown', e => { if (e.key === 'Escape') zavri(); });
+    }
+
+    // Okno vlastností: zavírací křížek a přetahování za hlavičku.
+    function pripojOkno() {
+      const okno = el('okno'), hlava = el('oknoHlava');
+      el('oknoZavrit').addEventListener('click', () => vyber(null));
+      el('iSmazat').addEventListener('click', smazVybrany);
+      el('iDuplikat').addEventListener('click', duplikujVybrany);
+      el('oknoNazev').addEventListener('change', () => {
+        const p = vybrany && najdi(vybrany);
+        const t = el('oknoNazev').value.trim();
+        if (!p || !t || t === p.nazev) return;
+        zapamatuj(); p.nazev = t; zmena();
+      });
+      el('oknoNazev').addEventListener('keydown', e => { if (e.key === 'Enter') e.target.blur(); });
+      el('oknoBarva').addEventListener('change', () => {
+        const p = vybrany && najdi(vybrany);
+        if (!p) return;
+        zapamatuj(); p.barva = el('oknoBarva').value; zmena();
+      });
+      window.addEventListener('scroll', udrzOknoVidet, { passive: true });
+      window.addEventListener('resize', udrzOknoVidet);
+      let tah = null;
+      hlava.addEventListener('pointerdown', e => {
+        if (e.target.closest('button, input') || jeMobil()) return;
+        try { hlava.setPointerCapture(e.pointerId); } catch { /* syntetická událost */ }
+        tah = { x: e.clientX - okno.offsetLeft, y: e.clientY - okno.offsetTop };
+      });
+      hlava.addEventListener('pointermove', e => {
+        if (!tah) return;
+        okno.style.left = (e.clientX - tah.x) + 'px';
+        okno.style.top = (e.clientY - tah.y) + 'px';
+        udrzOknoVidet();
+      });
+      const konec = () => { tah = null; };
+      hlava.addEventListener('pointerup', konec);
+      hlava.addEventListener('pointercancel', konec);
+    }
+
+    function pripoj() {
+      const pal = el('paleta');
+      const dlazdice = q => `<button type="button" class="dil" data-id="${q.id}" aria-pressed="false" title="${q.nazev}">
+        <svg viewBox="0 0 30 30" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${IKONY[q.id]}</svg>${q.nazev}</button>`;
+      pal.innerHTML = `<button type="button" class="dil dil-vyber" id="btnVyber" data-id="" aria-pressed="true" title="Výběr a posun dílů (Esc)">
+          <svg viewBox="0 0 30 30" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 5l13 11-6 1 3.5 7-3 1.4-3.4-7L9 22z"/></svg>Výběr a posun</button>` +
+        PALETA.filter(q => !q.nastroj).map(dlazdice).join('') +
+        '<div class="oddelovac">Spojení</div>' + PALETA.filter(q => q.nastroj).map(dlazdice).join('');
+      pal.addEventListener('click', e => {
+        const b = e.target.closest('.dil');
+        if (!b) return;
+        const id = b.dataset.id;
+        nastavNastroj(!id || nastroj === id ? null : id);
+      });
+      el('rolePriklady').innerHTML = '<button type="button" role="menuitem" data-akce="nova">📄 Prázdná plocha</button><hr>' +
+        PRIKLADY.map((p, i) => `<button type="button" role="menuitem" data-pr="${i}">${esc(p.nazev)}</button>`).join('');
+      pripojMenu();
+      pripojOkno();
+
+      const glob = (id, k, cislo) => el(id).addEventListener('change', () => {
+        let v = el(id).type === 'checkbox' ? el(id).checked : el(id).value;
+        if (cislo) { v = parseFloat(String(v).replace(',', '.')); if (!isFinite(v) || v < +el(id).min || v > +el(id).max) { obnovGlobalni(); return; } }
+        S.nast[k] = v; if (k === 'smer') S.nast.smer = +v;
+        zmena();
+      });
+      glob('gOtacky', 'otacky', true); glob('gSmer', 'smer'); glob('gMoment', 'moment', true); glob('gRezim', 'rezim');
+      glob('gKyv', 'kyv', true); glob('gM', 'm', true); glob('gUcinnost', 'ucinnost');
+      el('gAnimace').addEventListener('input', () => { S.nast.animace = +el('gAnimace').value; el('gAnimaceTxt').textContent = f(S.nast.animace, 2) + '×'; uloz(); });
+
+      el('btnPlay').addEventListener('click', () => prepniHrani(!hraje));
+      el('btnNula').addEventListener('click', () => { cas = 0; kresli(); });
+      el('btnZpet').addEventListener('click', krokZpet);
+      el('btnVpred').addEventListener('click', krokVpred);
+      el('btnPopisky').addEventListener('click', () => { S.nast.popisky = !S.nast.popisky; obnovGlobalni(); uloz(); kresli(); });
+      el('btnFit').addEventListener('click', prizpusob);
+      el('btnCsv').addEventListener('click', csv);
+      el('soubor').addEventListener('change', async e => {
+        const s = e.target.files[0]; e.target.value = '';
+        if (!s) return;
+        try {
+          const d = JSON.parse(await s.text());
+          zapamatuj();
+          if (!nactiStav(d)) throw new Error('soubor neobsahuje sestavu');
+          vybrany = null; obnovGlobalni(); zmena(); prizpusob();
+        } catch (err) { Dialog.chyba('Soubor nejde načíst: ' + err.message); }
+      });
+
+      document.addEventListener('keydown', e => {
+        const vPoli = e.target.closest('input, select, textarea');
+        if ((e.ctrlKey || e.metaKey) && !vPoli && e.key.toLowerCase() === 'z') { e.preventDefault(); e.shiftKey ? krokVpred() : krokZpet(); return; }
+        if ((e.ctrlKey || e.metaKey) && !vPoli && e.key.toLowerCase() === 'y') { e.preventDefault(); krokVpred(); return; }
+        if (vPoli) return;
+        if (e.key === 'Escape') { if (!nastroj && vybrany) vyber(null); nastavNastroj(null); return; }
+        if ((e.key === 'Delete' || e.key === 'Backspace') && vybrany) { e.preventDefault(); smazVybrany(); return; }
+        if (e.key === ' ' && !e.target.closest('button')) { e.preventDefault(); prepniHrani(!hraje); }
+      });
+      if (window.ResizeObserver) new ResizeObserver(velikost).observe(el('platnoBox'));
+      window.addEventListener('resize', velikost);
+      new MutationObserver(() => { nactiBarvy(); kresli(); }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+    }
+
+    function prepniHrani(h) {
+      hraje = h; posledni = 0;
+      el('btnPlay').textContent = h ? '⏸ Pauza' : '▶ Přehrát';
+      el('btnPlay').setAttribute('aria-pressed', String(h));
+    }
+    let posledni = 0;
+    function smycka(ts) {
+      const box = el('platnoBox');
+      if (box.clientWidth !== W || box.clientHeight !== H) velikost();
+      if (hraje) { const dt = posledni ? Math.min(0.1, (ts - posledni) / 1000) : 0; cas += dt; kresli(); }
+      posledni = ts;
+      requestAnimationFrame(smycka);
+    }
+
+    function start() {
+      let d = null;
+      const m = location.hash.match(/#s=([\w-]+)/);
+      if (m) { try { d = JSON.parse(zB64(m[1])); } catch { d = null; } }
+      if (!d) { try { d = JSON.parse(localStorage.getItem(KLIC) || 'null'); } catch { d = null; } }
+      const maStav = nactiStav(d);
+      nactiBarvy();
+      pripoj();
+      obnovGlobalni();
+      aktualizujTlacitkaHistorie();
+      velikost();
+      if (!maStav || !S.prvky.length) {
+        const pr = sestava(PRIKLADY[2].f);
+        S.prvky = pr.prvky; S.vazby = pr.vazby; S.dalsiId = pr.dalsiId;
+      }
+      zmena();
+      prizpusob();
+      nastavNastroj(null);
+      requestAnimationFrame(smycka);
+      window.SKLADACKA = { svgVykres, dxfVykres, podkladyVykresu, siteDilu, stlBinarni, nactiThree, zip, vyber, stav: () => S, reseni: () => R, nactiPriklad: i => nactiPriklad(PRIKLADY[i]), PRIKLADY, zmena, prichyt, najdi, nastavCas: t => { cas = t; kresli(); }, analyzuj };
+    }
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', start); else start();
+  })();
+  </script>
+</body>
+</html>

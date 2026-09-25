@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>💡 Akari</title>
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../podpis.js" defer></script>
+<script src="../rekord.js" defer></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;user-select:none;-webkit-user-select:none}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;padding:20px 12px;display:flex;flex-direction:column;align-items:center}
+h1{font-size:1.6rem;margin-bottom:6px;font-weight:600}
+.sub{color:var(--text-faint);font-size:.85rem;margin-bottom:14px;text-align:center;max-width:480px;line-height:1.4}
+.top{display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap;justify-content:center}
+.btn{background:var(--accent);color:#fff;border:none;padding:9px 14px;border-radius:6px;cursor:pointer;font-weight:600;font-size:.9rem}
+.btn-sec{background:var(--bg-control);color:var(--text)}
+.btn-sec:hover{background:var(--bg-hover)}
+select{background:var(--bg-control);border:1px solid var(--border-strong);border-radius:6px;color:var(--text);padding:8px}
+.info{color:var(--text-faint);font-size:.9rem;display:flex;gap:14px;align-items:center;flex-wrap:wrap;justify-content:center;margin-bottom:12px}
+/* Barvy desky jsou vlastní (ne z tématu) – kontrast žárovka/osvětlení/černá musí sedět v obou tématech. */
+.board{--pole:#f4f1ea;--svetlo:#ffe680;--cerna:#26282c;display:grid;width:min(480px,94vw);aspect-ratio:1;gap:1px;background:#8a8a8a;border:2px solid #26282c;border-radius:4px;touch-action:manipulation}
+.cell{position:relative;min-width:0;min-height:0;display:flex;align-items:center;justify-content:center;background:var(--pole);cursor:pointer;font-size:calc(min(480px,94vw) / var(--n) * .55);line-height:1;transition:background .12s}
+.cell.lit{background:var(--svetlo)}
+.cell.cerna{background:var(--cerna);color:#f4f1ea;font-weight:700;cursor:default;font-size:calc(min(480px,94vw) / var(--n) * .5)}
+.cell.cerna.splneno{color:#7d8088}
+.cell.cerna.chyba{color:#ff6b6b}
+.cell .zarovka{width:70%;aspect-ratio:1;border-radius:50%;background:radial-gradient(circle at 38% 35%,#fffbe0,#ffd21f 55%,#e0a800);box-shadow:0 0 10px rgba(255,190,0,.9)}
+.cell.konflikt .zarovka{background:radial-gradient(circle at 38% 35%,#ffd0d0,#e74c3c 60%,#a12a1e);box-shadow:0 0 10px rgba(231,76,60,.9)}
+.cell .tecka{width:16%;aspect-ratio:1;border-radius:50%;background:#555}
+.cell.napoveda::after{content:'';position:absolute;inset:2px;border:3px solid #1f5bb5;border-radius:3px;animation:blik .5s 3 alternate}
+.cell.spatne::after{content:'';position:absolute;inset:2px;border:3px solid #c0392b;border-radius:3px}
+@keyframes blik{from{opacity:1}to{opacity:.2}}
+.msg{margin-top:14px;font-size:1.2rem;font-weight:700;min-height:30px;color:var(--ok);text-align:center}
+.pravidla{margin-top:14px;max-width:480px;color:var(--text-muted);font-size:.85rem;line-height:1.5}
+.pravidla summary{cursor:pointer;color:var(--text);font-weight:600;margin-bottom:6px}
+.pravidla li{margin-left:18px}
+</style>
+</head>
+<body>
+<h1>💡 Akari</h1>
+<p class="sub">Rozmísti žárovky tak, aby osvítily všechna bílá pole. Žárovka svítí svým řádkem i sloupcem až po černé pole a dvě žárovky na sebe nesmí svítit.</p>
+<div class="top">
+  <select id="velikost" title="Velikost mřížky">
+    <option value="7">7×7 · lehké</option><option value="10" selected>10×10 · střední</option>
+    <option value="12">12×12 · těžší</option><option value="14">14×14 · velké</option>
+  </select>
+  <button class="btn" id="denniBtn" title="Stejné zadání pro všechny, každý den nové">📅 Denní</button>
+  <button class="btn" id="noveBtn">🔄 Nové</button>
+  <button class="btn btn-sec" id="zpetBtn">↩️ Zpět</button>
+  <button class="btn btn-sec" id="kontrolaBtn" title="Označí chybně umístěné žárovky">✓ Kontrola</button>
+  <button class="btn btn-sec" id="napovedaBtn">💡 Nápověda</button>
+</div>
+<div class="info">
+  <span id="rezim">—</span>
+  <span>⏱️ <b id="cas">0:00</b></span>
+  <span id="rekordBox"></span>
+</div>
+<div class="board" id="board"></div>
+<div class="msg" id="msg"></div>
+<details class="pravidla">
+  <summary>Ovládání a pravidla</summary>
+  <ul>
+    <li>Klepnutí na bílé pole: prázdné → žárovka → tečka (tady žárovka není) → prázdné. Pravé tlačítko myši dá rovnou tečku.</li>
+    <li>Žárovka osvítí svůj řádek a sloupec, dokud nenarazí na černé pole nebo okraj.</li>
+    <li>Dvě žárovky se nesmí vidět (zčervenají).</li>
+    <li>Číslo v černém poli říká, kolik žárovek s ním sousedí stranou (ne rohem). Černá pole bez čísla žádné omezení nemají.</li>
+    <li>Hotovo, když svítí celá deska. Zadání má vždy jediné řešení.</li>
+  </ul>
+</details>
+
+<!-- Čistá logika: bez DOM, testuje se v node (_test/logicke_mrizky.js). -->
+<script>
+const AkariLogika = (function () {
+  function rng(seed) {
+    let a = seed >>> 0;
+    return function () {
+      a = (a + 0x6D2B79F5) >>> 0;
+      let t = a;
+      t = Math.imul(t ^ (t >>> 15), t | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  function hash(text) {
+    let h = 2166136261;
+    for (let i = 0; i < text.length; i++) { h ^= text.charCodeAt(i); h = Math.imul(h, 16777619); }
+    return h >>> 0;
+  }
+  function zamichej(pole, r) {
+    for (let i = pole.length - 1; i > 0; i--) {
+      const j = Math.floor(r() * (i + 1));
+      [pole[i], pole[j]] = [pole[j], pole[i]];
+    }
+    return pole;
+  }
+
+  /* Zadání: pole `bunky` délky n*n; -2 = bílé, -1 = černé bez čísla, 0–4 = černé s číslem.
+     Předpočítáme pro každé bílé pole seznam polí, která vidí (řádek + sloupec po černou),
+     a pro každé číslo jeho bílé sousedy. */
+  function priprav(n, bunky) {
+    const vidi = new Array(n * n), sousedi = new Array(n * n);
+    for (let i = 0; i < n * n; i++) {
+      if (bunky[i] !== -2) {
+        if (bunky[i] >= 0) {
+          const y = Math.floor(i / n), x = i % n, s = [];
+          for (const [dy, dx] of [[0, 1], [1, 0], [0, -1], [-1, 0]]) {
+            const yy = y + dy, xx = x + dx;
+            if (yy >= 0 && yy < n && xx >= 0 && xx < n && bunky[yy * n + xx] === -2) s.push(yy * n + xx);
+          }
+          sousedi[i] = s;
+        }
+        continue;
+      }
+      const y = Math.floor(i / n), x = i % n, v = [];
+      for (const [dy, dx] of [[0, 1], [1, 0], [0, -1], [-1, 0]]) {
+        let yy = y + dy, xx = x + dx;
+        while (yy >= 0 && yy < n && xx >= 0 && xx < n && bunky[yy * n + xx] === -2) {
+          v.push(yy * n + xx); yy += dy; xx += dx;
+        }
+      }
+      vidi[i] = v;
+    }
+    return { vidi, sousedi };
+  }
+
+  /* Řešitel s propagací: stav pole 0 = neznámé, 1 = žárovka, 2 = zakázané.
+     Větvení je binární (žárovka / zakázané) na neznámém poli, které osvětluje
+     nejhůř pokryté neosvícené pole — tím se řešení nepočítají dvakrát. */
+  function pocetReseni(n, bunky, limit = 2, vystup) {
+    const { vidi, sousedi } = priprav(n, bunky);
+    const bila = [], cisla = [];
+    for (let i = 0; i < n * n; i++) { if (bunky[i] === -2) bila.push(i); else if (bunky[i] >= 0) cisla.push(i); }
+    let pocet = 0;
+
+    function poloz(st, i) {
+      if (st[i] === 2) return false;
+      if (st[i] === 1) return true;
+      st[i] = 1;
+      for (const j of vidi[i]) { if (st[j] === 1) return false; st[j] = 2; }
+      return true;
+    }
+    function propaguj(st) {
+      let zmena = true;
+      while (zmena) {
+        zmena = false;
+        for (const c of cisla) {
+          let maji = 0, volne = 0;
+          for (const j of sousedi[c]) { if (st[j] === 1) maji++; else if (st[j] === 0) volne++; }
+          const k = bunky[c];
+          if (maji > k || maji + volne < k) return false;
+          if (volne && maji === k) { for (const j of sousedi[c]) if (st[j] === 0) st[j] = 2; zmena = true; }
+          else if (volne && maji + volne === k) {
+            for (const j of sousedi[c]) if (st[j] === 0 && !poloz(st, j)) return false;
+            zmena = true;
+          }
+        }
+        for (const i of bila) {
+          if (st[i] === 1) continue;
+          let osv = false, kand = -1, kolik = 0;
+          if (st[i] === 0) { kand = i; kolik = 1; }
+          for (const j of vidi[i]) {
+            if (st[j] === 1) { osv = true; break; }
+            if (st[j] === 0) { kand = j; kolik++; }
+          }
+          if (osv) continue;
+          if (kolik === 0) return false;
+          if (kolik === 1) { if (!poloz(st, kand)) return false; zmena = true; }
+        }
+      }
+      return true;
+    }
+    function krok(st) {
+      if (!propaguj(st)) return false;
+      // najít neosvícené pole s nejméně kandidáty
+      let nej = -1, nejK = 1e9;
+      for (const i of bila) {
+        if (st[i] === 1) continue;
+        let osv = false, kolik = st[i] === 0 ? 1 : 0, kand = st[i] === 0 ? i : -1;
+        for (const j of vidi[i]) {
+          if (st[j] === 1) { osv = true; break; }
+          if (st[j] === 0) { kolik++; if (kand < 0) kand = j; }
+        }
+        if (!osv && kolik < nejK) { nejK = kolik; nej = kand; }
+      }
+      if (nej < 0) {
+        // všechno svítí; zbývající neznámá pole u čísel musí sedět (propagace to hlídá) → řešení
+        for (const c of cisla) {
+          let maji = 0;
+          for (const j of sousedi[c]) if (st[j] === 1) maji++;
+          if (maji !== bunky[c]) return false;
+        }
+        pocet++;
+        if (vystup && !vystup.length) vystup.push(st.map(v => v === 1));
+        return pocet >= limit;
+      }
+      const a = st.slice();
+      if (poloz(a, nej) && krok(a)) return true;
+      const b = st.slice(); b[nej] = 2;
+      return krok(b);
+    }
+    /* Pozn.: neznámé pole u čísla, které po osvícení všeho zůstalo neznámé,
+       by mohlo dát víc řešení (žárovka tam / ne). Propagace čísla to ale
+       rozhodne: buď je číslo splněné (zbytek zakázán), nebo se musí dosadit. */
+    krok(new Uint8Array(n * n));
+    return pocet;
+  }
+
+  // Náhodná černá pole (středově souměrně – pěknější na pohled).
+  function cernaPole(n, r) {
+    const b = new Array(n * n).fill(-2);
+    const hustota = 0.16 + r() * 0.06;
+    for (let i = 0; i < Math.ceil(n * n / 2); i++) {
+      if (r() < hustota) { b[i] = -1; b[n * n - 1 - i] = -1; }
+    }
+    return b;
+  }
+
+  function generuj(n, seed) {
+    const r = rng(seed);
+    for (let pokus = 0; pokus < 300; pokus++) {
+      const b = cernaPole(n, r);
+      const { vidi } = priprav(n, b);
+      // náhodné platné rozmístění: žárovku dáváme vždy na neosvícené pole
+      const zar = new Array(n * n).fill(false), svit = new Array(n * n).fill(false);
+      for (const i of zamichej([...Array(n * n).keys()], r)) {
+        if (b[i] !== -2 || svit[i]) continue;
+        zar[i] = svit[i] = true;
+        for (const j of vidi[i]) svit[j] = true;
+      }
+      // očíslovat všechna černá pole
+      const plne = b.slice();
+      for (let i = 0; i < n * n; i++) {
+        if (b[i] !== -1) continue;
+        const y = Math.floor(i / n), x = i % n;
+        let k = 0;
+        for (const [dy, dx] of [[0, 1], [1, 0], [0, -1], [-1, 0]]) {
+          const yy = y + dy, xx = x + dx;
+          if (yy >= 0 && yy < n && xx >= 0 && xx < n && zar[yy * n + xx]) k++;
+        }
+        plne[i] = k;
+      }
+      if (pocetReseni(n, plne) !== 1) continue;
+      // ubírat čísla, dokud zůstává jediné řešení
+      for (const i of zamichej([...Array(n * n).keys()], r)) {
+        if (plne[i] < 0) continue;
+        const puv = plne[i];
+        plne[i] = -1;
+        if (pocetReseni(n, plne) !== 1) plne[i] = puv;
+      }
+      return { n, bunky: plne, reseni: zar };
+    }
+    return null;
+  }
+
+  // Vyhodnocení tahu hráče: `zar` = Set indexů žárovek.
+  function vyhodnot(n, bunky, zar) {
+    const { vidi, sousedi } = priprav(n, bunky);
+    const osv = new Set(), konflikt = new Set(), cisla = {};
+    for (const i of zar) {
+      osv.add(i);
+      for (const j of vidi[i]) { osv.add(j); if (zar.has(j)) { konflikt.add(i); konflikt.add(j); } }
+    }
+    let vse = true;
+    for (let i = 0; i < n * n; i++) {
+      if (bunky[i] === -2 && !osv.has(i)) vse = false;
+      if (bunky[i] >= 0) {
+        const k = sousedi[i].filter(j => zar.has(j)).length;
+        cisla[i] = k === bunky[i] ? 'ok' : k > bunky[i] ? 'moc' : 'malo';
+      }
+    }
+    const vyreseno = vse && !konflikt.size && Object.values(cisla).every(v => v === 'ok');
+    return { osv, konflikt, cisla, vyreseno };
+  }
+
+  return { rng, hash, generuj, pocetReseni, vyhodnot };
+})();
+</script>
+
+<script>
+(function () {
+  const $ = id => document.getElementById(id);
+  let hra = null, stav = [], historie = [], start = 0, tik = null, konec = false, rezim = 'denni', napoveda = false;
+  const rekordy = {};
+
+  function dnes() {
+    const d = new Date();
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  }
+
+  function nova(r) {
+    rezim = r;
+    const n = +$('velikost').value;
+    const seed = r === 'denni' ? AkariLogika.hash('akari|' + dnes() + '|' + n) : (Math.random() * 2 ** 32) >>> 0;
+    hra = AkariLogika.generuj(n, seed);
+    stav = new Array(n * n).fill(0);   // 0 prázdné, 1 žárovka, 2 tečka
+    historie = []; konec = false; napoveda = false;
+    $('msg').textContent = '';
+    $('rezim').textContent = r === 'denni' ? '📅 Denní zadání ' + new Date().toLocaleDateString('cs-CZ') : '🎲 Náhodné zadání';
+    nastavRekord(n);
+    clearInterval(tik); start = Date.now(); tik = setInterval(ukazCas, 500); ukazCas();
+    kresli();
+  }
+
+  function nastavRekord(n) {
+    if (typeof Rekord === 'undefined') return;
+    if (!rekordy[n]) rekordy[n] = Rekord.sleduj('webapp_hra_akari_' + n,
+      { vyssiLepsi: false, popisek: 'Rekord ' + n + '×' + n, format: formatCas });
+    rekordy[n].prvek($('rekordBox'));
+  }
+  function formatCas(s) { return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); }
+  function sekundy() { return Math.floor((Date.now() - start) / 1000); }
+  function ukazCas() { if (!konec) $('cas').textContent = formatCas(sekundy()); }
+
+  function zarovky() {
+    const s = new Set();
+    stav.forEach((v, i) => { if (v === 1) s.add(i); });
+    return s;
+  }
+
+  function kresli(zvyrazni) {
+    const n = hra.n, b = $('board');
+    b.style.setProperty('--n', n);
+    b.style.gridTemplateColumns = b.style.gridTemplateRows = `repeat(${n},minmax(0,1fr))`;
+    const v = AkariLogika.vyhodnot(n, hra.bunky, zarovky());
+    b.innerHTML = '';
+    for (let i = 0; i < n * n; i++) {
+      const d = document.createElement('div');
+      d.dataset.i = i;
+      const c = hra.bunky[i];
+      if (c !== -2) {
+        d.className = 'cell cerna';
+        if (c >= 0) {
+          d.textContent = c;
+          if (v.cisla[i] === 'ok') d.classList.add('splneno');
+          if (v.cisla[i] === 'moc') d.classList.add('chyba');
+        }
+      } else {
+        d.className = 'cell' + (v.osv.has(i) ? ' lit' : '');
+        if (stav[i] === 1) {
+          d.innerHTML = '<span class="zarovka"></span>';
+          if (v.konflikt.has(i)) d.classList.add('konflikt');
+        } else if (stav[i] === 2) d.innerHTML = '<span class="tecka"></span>';
+      }
+      if (zvyrazni && zvyrazni.has(i)) d.classList.add(zvyrazni.trida);
+      b.appendChild(d);
+    }
+    return v;
+  }
+
+  function nastav(i, hodnota) {
+    if (konec || hra.bunky[i] !== -2 || stav[i] === hodnota) return;
+    historie.push([i, stav[i]]);
+    stav[i] = hodnota;
+    const v = kresli();
+    if (v.vyreseno) hotovo();
+  }
+
+  function hotovo() {
+    konec = true; clearInterval(tik);
+    const s = sekundy();
+    $('cas').textContent = formatCas(s);
+    let zprava = '🎉 Vše svítí! Vyřešeno za ' + formatCas(s) + '.';
+    if (napoveda) zprava += ' (s nápovědou – do rekordů se nepočítá)';
+    else if (rekordy[hra.n] && rekordy[hra.n].zapis(s)) zprava = '🏆 Nový rekord: ' + formatCas(s) + '!';
+    $('msg').textContent = zprava;
+  }
+
+  $('board').addEventListener('click', e => {
+    const c = e.target.closest('.cell');
+    if (!c) return;
+    const i = +c.dataset.i;
+    nastav(i, (stav[i] + 1) % 3);
+  });
+  $('board').addEventListener('contextmenu', e => {
+    e.preventDefault();
+    const c = e.target.closest('.cell');
+    if (!c) return;
+    const i = +c.dataset.i;
+    nastav(i, stav[i] === 2 ? 0 : 2);
+  });
+
+  $('zpetBtn').onclick = () => {
+    if (konec || !historie.length) return;
+    const [i, v] = historie.pop();
+    stav[i] = v; kresli();
+  };
+  $('kontrolaBtn').onclick = () => {
+    if (konec) return;
+    const spatne = new Set();
+    stav.forEach((v, i) => {
+      if (v === 1 && !hra.reseni[i]) spatne.add(i);
+      if (v === 2 && hra.reseni[i]) spatne.add(i);
+    });
+    spatne.trida = 'spatne';
+    kresli(spatne);
+    $('msg').textContent = spatne.size ? '✗ Chybných polí: ' + spatne.size : '👍 Zatím bez chyby';
+  };
+  $('napovedaBtn').onclick = () => {
+    if (konec) return;
+    // nejdřív chybná žárovka, jinak chybějící žárovka
+    let i = stav.findIndex((v, k) => v === 1 && !hra.reseni[k]);
+    let text = '💡 Tahle žárovka tu být nemá.';
+    if (i < 0) { i = hra.reseni.findIndex((z, k) => z && stav[k] !== 1); text = '💡 Sem patří žárovka.'; }
+    if (i < 0) return;
+    napoveda = true;
+    const z = new Set([i]); z.trida = 'napoveda';
+    kresli(z);
+    $('msg').textContent = text;
+  };
+  $('denniBtn').onclick = () => nova('denni');
+  $('noveBtn').onclick = () => nova('nove');
+  $('velikost').onchange = () => nova(rezim);
+  window.addEventListener('DOMContentLoaded', () => nova('denni'));
+})();
+</script>
+</body>
+</html>

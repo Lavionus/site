@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🧠 Mastermind</title>
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../podpis.js" defer></script>
+<script src="../rekord.js" defer></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;user-select:none;-webkit-user-select:none}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;padding:20px 12px;display:flex;flex-direction:column;align-items:center}
+h1{font-size:1.6rem;margin-bottom:6px;font-weight:600}
+.sub{color:var(--text-faint);font-size:.85rem;margin-bottom:14px;text-align:center;max-width:460px;line-height:1.4}
+.top{display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap;justify-content:center}
+.btn{background:var(--accent);color:#fff;border:none;padding:9px 14px;border-radius:6px;cursor:pointer;font-weight:600;font-size:.9rem}
+.btn:disabled{opacity:.45;cursor:default}
+.btn-sec{background:var(--bg-control);color:var(--text)}
+.btn-sec:hover{background:var(--bg-hover)}
+select{background:var(--bg-control);border:1px solid var(--border-strong);border-radius:6px;color:var(--text);padding:8px}
+.info{color:var(--text-faint);font-size:.9rem;display:flex;gap:14px;align-items:center;flex-wrap:wrap;justify-content:center;margin-bottom:12px}
+.volba{display:flex;align-items:center;gap:6px;color:var(--text-muted);font-size:.85rem;cursor:pointer}
+.deska{background:var(--bg-panel);border:1px solid var(--border);border-radius:12px;padding:10px;display:flex;flex-direction:column;gap:6px;width:min(420px,94vw)}
+.radek{display:flex;align-items:center;gap:8px;padding:5px 6px;border-radius:8px}
+@media(max-width:480px){.deska{gap:2px;padding:6px}.radek{padding:3px 6px}}
+.radek.aktivni{background:var(--accent-soft);outline:1px solid var(--accent)}
+.radek .c{width:22px;color:var(--text-faint);font-size:.8rem;text-align:right;flex:none}
+.kolicka{display:flex;gap:6px;flex:1}
+.kolicko{width:var(--k);height:var(--k);border-radius:50%;flex:none;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:calc(var(--k) * .42);color:rgba(0,0,0,.55);background:var(--bg-deep);box-shadow:inset 0 2px 4px rgba(0,0,0,.35)}
+.kolicko.b{box-shadow:inset -3px -4px 6px rgba(0,0,0,.25),0 1px 2px rgba(0,0,0,.3)}
+.radek.aktivni .kolicko{cursor:pointer}
+.radek.aktivni .kolicko.vybrane{outline:3px solid var(--text);outline-offset:1px}
+.odezva{display:grid;grid-template-columns:repeat(var(--sl),12px);gap:4px;flex:none;width:44px;justify-content:center;align-items:center;justify-items:center}
+.odezva span{width:6px;height:6px;border-radius:50%;background:var(--border-strong)}
+.odezva .cerny,.odezva .bily{width:12px;height:12px}
+.odezva .cerny{background:radial-gradient(circle at 35% 35%,#ff7b6b,#d0281a);box-shadow:0 0 0 1px rgba(0,0,0,.35)}
+.odezva .bily{background:radial-gradient(circle at 35% 35%,#fff,#d8d8d8);box-shadow:0 0 0 1px rgba(0,0,0,.45)}
+/* paleta s tlačítky drží u spodní hrany, ať se na mobilu nemusí mezi pokusy rolovat */
+.dole{position:sticky;bottom:var(--podpis-vyska,0px);z-index:2;background:var(--bg);padding:10px 0 8px;width:min(420px,94vw);display:flex;flex-direction:column;align-items:center;border-top:1px solid var(--border);margin-top:8px}
+.paleta{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;margin-bottom:8px}
+.paleta .kolicko{cursor:pointer}
+.ovladani{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.tajny{display:flex;align-items:center;gap:8px;padding:6px;border-bottom:1px dashed var(--border);margin-bottom:4px}
+.tajny .c{width:22px;flex:none}
+.tajny .kolicko.skryte{background:repeating-linear-gradient(45deg,var(--bg-control) 0 6px,var(--bg-hover) 6px 12px)}
+.msg{margin-top:6px;font-size:1.15rem;font-weight:700;min-height:28px;color:var(--ok);text-align:center;max-width:460px}
+.msg.prohra{color:var(--danger)}
+.moznosti{color:var(--text-muted);font-size:.85rem;margin-top:4px;min-height:1.2em;text-align:center}
+.pravidla{margin-top:14px;max-width:460px;color:var(--text-muted);font-size:.85rem;line-height:1.5}
+.pravidla summary{cursor:pointer;color:var(--text);font-weight:600;margin-bottom:6px}
+.pravidla li{margin-left:18px}
+</style>
+</head>
+<body>
+<h1>🧠 Mastermind</h1>
+<p class="sub">Uhodni tajnou kombinaci barev. Po každém pokusu uvidíš, kolik barev je na správném místě (🔴 červená) a kolik je ve kombinaci, ale jinde (⚪ bílá).</p>
+<div class="top">
+  <select id="varianta" title="Varianta">
+    <option value="4-6">4 pozice · 6 barev</option>
+    <option value="4-8">4 pozice · 8 barev</option>
+    <option value="5-8">5 pozic · 8 barev</option>
+  </select>
+  <label class="volba"><input type="checkbox" id="opakovani" checked> barvy se můžou opakovat</label>
+</div>
+<div class="top">
+  <button class="btn" id="denniBtn" title="Stejná tajná kombinace pro všechny, každý den nová">📅 Denní</button>
+  <button class="btn" id="noveBtn">🔄 Nová hra</button>
+  <button class="btn btn-sec" id="napovedaBtn" title="Navrhne kombinaci, která odpovídá všem dosavadním odezvám">💡 Nápověda</button>
+</div>
+<div class="info">
+  <span id="rezim">—</span>
+  <label class="volba"><input type="checkbox" id="pocitadlo"> ukazovat počet možností</label>
+  <span id="rekordBox"></span>
+</div>
+<div class="deska" id="deska"></div>
+<div class="moznosti" id="moznosti"></div>
+<div class="msg" id="msg"></div>
+<div class="dole">
+  <div class="paleta" id="paleta"></div>
+  <div class="ovladani">
+    <button class="btn btn-sec" id="smazatBtn">⌫ Smazat</button>
+    <button class="btn" id="odeslatBtn">✔ Zkusit</button>
+  </div>
+</div>
+<details class="pravidla">
+  <summary>Ovládání a pravidla</summary>
+  <ul>
+    <li>Klepnutím na barvu v paletě ji vložíš na vybranou pozici (vybraná pozice je orámovaná; klepnutím na pozici ji vybereš).</li>
+    <li>Klávesnice: čísla 1–8 vkládají barvy, Backspace maže, Enter odešle pokus.</li>
+    <li>🔴 červený kolíček = správná barva na správném místě, ⚪ bílý = barva v kombinaci je, ale jinde. Pořadí kolíčků v odezvě nic neznamená.</li>
+    <li>Máš 10 pokusů. Čísla na kuličkách pomáhají rozlišit barvy.</li>
+    <li>Nápověda navrhne kombinaci, která je v souladu se všemi odezvami – taková může být tajná.</li>
+  </ul>
+</details>
+
+<!-- Čistá logika: bez DOM, testuje se v node (_test/logicke_mrizky.js). -->
+<script>
+const MastermindLogika = (function () {
+  function rng(seed) {
+    let a = seed >>> 0;
+    return function () {
+      a = (a + 0x6D2B79F5) >>> 0;
+      let t = a;
+      t = Math.imul(t ^ (t >>> 15), t | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  function hash(text) {
+    let h = 2166136261;
+    for (let i = 0; i < text.length; i++) { h ^= text.charCodeAt(i); h = Math.imul(h, 16777619); }
+    return h >>> 0;
+  }
+
+  // Odezva: [černé, bílé]. Bílé = shody barev bez ohledu na místo minus černé.
+  function odezva(tajna, pokus) {
+    let cerne = 0;
+    const a = new Array(10).fill(0), b = new Array(10).fill(0);
+    for (let i = 0; i < tajna.length; i++) {
+      if (tajna[i] === pokus[i]) cerne++;
+      a[tajna[i]]++; b[pokus[i]]++;
+    }
+    let shody = 0;
+    for (let c = 0; c < 10; c++) shody += Math.min(a[c], b[c]);
+    return [cerne, shody - cerne];
+  }
+
+  // Všechny kombinace délky `delka` z `barev` barev (volitelně bez opakování).
+  function vsechny(delka, barev, opakovani) {
+    const out = [], k = new Array(delka);
+    (function krok(p) {
+      if (p === delka) { out.push(k.slice()); return; }
+      for (let c = 0; c < barev; c++) {
+        if (!opakovani && k.slice(0, p).includes(c)) continue;
+        k[p] = c; krok(p + 1);
+      }
+    })(0);
+    return out;
+  }
+
+  function tajna(delka, barev, opakovani, seed) {
+    const r = rng(seed), vse = vsechny(delka, barev, opakovani);
+    return vse[Math.floor(r() * vse.length)];
+  }
+
+  // Kombinace, které odpovídají všem dosavadním pokusům [{pokus, odezva}].
+  function mozne(delka, barev, opakovani, historie) {
+    return vsechny(delka, barev, opakovani).filter(k =>
+      historie.every(h => { const o = odezva(k, h.pokus); return o[0] === h.odezva[0] && o[1] === h.odezva[1]; }));
+  }
+
+  return { rng, hash, odezva, vsechny, tajna, mozne };
+})();
+</script>
+
+<script>
+(function () {
+  const $ = id => document.getElementById(id);
+  const BARVY = ['#e74c3c', '#3498db', '#2ecc71', '#f1c40f', '#e67e22', '#9b59b6', '#1abc9c', '#f78fb3'];
+  const POKUSU = 10;
+  let delka = 4, barev = 6, opak = true, tajna = [], historie = [], aktualni = [], vybrana = 0, konec = false, rezim = 'denni', napoveda = false;
+  const rekordy = {};
+
+  function dnes() {
+    const d = new Date();
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  }
+  function klicVarianty() { return delka + '_' + barev + (opak ? '' : '_bez'); }
+
+  function nova(r) {
+    rezim = r;
+    [delka, barev] = $('varianta').value.split('-').map(Number);
+    opak = $('opakovani').checked;
+    const seed = r === 'denni' ? MastermindLogika.hash('mastermind|' + dnes() + '|' + klicVarianty()) : (Math.random() * 2 ** 32) >>> 0;
+    tajna = MastermindLogika.tajna(delka, barev, opak, seed);
+    historie = []; aktualni = new Array(delka).fill(-1); vybrana = 0; konec = false; napoveda = false;
+    $('msg').textContent = ''; $('msg').className = 'msg';
+    $('rezim').textContent = r === 'denni' ? '📅 Denní kombinace ' + new Date().toLocaleDateString('cs-CZ') : '🎲 Náhodná kombinace';
+    nastavRekord();
+    kresliPaletu();
+    kresli();
+  }
+
+  function nastavRekord() {
+    if (typeof Rekord === 'undefined') return;
+    const k = klicVarianty();
+    if (!rekordy[k]) rekordy[k] = Rekord.sleduj('webapp_hra_mastermind_' + k,
+      { vyssiLepsi: false, popisek: 'Nejméně pokusů', format: v => v + '×' });
+    rekordy[k].prvek($('rekordBox'));
+  }
+
+  function kolicko(barva, velikost) {
+    const d = document.createElement('div');
+    d.className = 'kolicko';
+    d.style.setProperty('--k', velikost + 'px');
+    if (barva >= 0) { d.classList.add('b'); d.style.background = BARVY[barva]; d.textContent = barva + 1; }
+    return d;
+  }
+
+  function velikostKolicka() {
+    const sirka = Math.min(420, window.innerWidth * 0.94) - 20 - 12 - 22 - 44 - 16 * 2;
+    const strop = window.innerWidth < 480 ? 34 : 40;
+    return Math.max(24, Math.min(strop, Math.floor((sirka - 6 * (delka - 1)) / delka)));
+  }
+
+  function kresli() {
+    const d = $('deska'), k = velikostKolicka();
+    d.innerHTML = '';
+    // tajná kombinace nahoře – odkryje se na konci
+    const t = document.createElement('div');
+    t.className = 'tajny';
+    t.innerHTML = '<span class="c">🔒</span>';
+    const tk = document.createElement('div'); tk.className = 'kolicka';
+    for (let i = 0; i < delka; i++) {
+      const c = kolicko(konec ? tajna[i] : -1, k);
+      if (!konec) c.classList.add('skryte');
+      tk.appendChild(c);
+    }
+    t.appendChild(tk);
+    d.appendChild(t);
+    for (let r = 0; r < POKUSU; r++) {
+      const radek = document.createElement('div');
+      radek.className = 'radek';
+      const aktivni = !konec && r === historie.length;
+      if (aktivni) radek.classList.add('aktivni');
+      radek.innerHTML = `<span class="c">${r + 1}</span>`;
+      const kk = document.createElement('div'); kk.className = 'kolicka';
+      const h = historie[r];
+      for (let i = 0; i < delka; i++) {
+        const barva = h ? h.pokus[i] : aktivni ? aktualni[i] : -1;
+        const c = kolicko(barva, k);
+        if (aktivni) {
+          if (i === vybrana) c.classList.add('vybrane');
+          c.onclick = () => { vybrana = i; kresli(); };
+        }
+        kk.appendChild(c);
+      }
+      radek.appendChild(kk);
+      const o = document.createElement('div'); o.className = 'odezva';
+      o.style.setProperty('--sl', Math.ceil(delka / 2));
+      o.title = h ? `${h.odezva[0]} na správném místě, ${h.odezva[1]} jinde` : '';
+      for (let i = 0; i < delka; i++) {
+        const s = document.createElement('span');
+        if (h && i < h.odezva[0]) s.className = 'cerny';
+        else if (h && i < h.odezva[0] + h.odezva[1]) s.className = 'bily';
+        o.appendChild(s);
+      }
+      radek.appendChild(o);
+      d.appendChild(radek);
+    }
+    $('odeslatBtn').disabled = konec || aktualni.includes(-1);
+    ukazMoznosti();
+  }
+
+  function ukazMoznosti() {
+    if (!$('pocitadlo').checked || konec) { $('moznosti').textContent = ''; return; }
+    const m = MastermindLogika.mozne(delka, barev, opak, historie).length;
+    $('moznosti').textContent = 'Odezvám zatím odpovídá ' + m + ' ' + (m === 1 ? 'kombinace' : m < 5 ? 'kombinace' : 'kombinací') + '.';
+  }
+
+  function kresliPaletu() {
+    const p = $('paleta');
+    p.innerHTML = '';
+    for (let c = 0; c < barev; c++) {
+      const k = kolicko(c, window.innerWidth < 480 ? 38 : 44);
+      k.title = 'Barva ' + (c + 1);
+      k.onclick = () => vloz(c);
+      p.appendChild(k);
+    }
+  }
+
+  function vloz(c) {
+    if (konec) return;
+    if (!opak && aktualni.includes(c) && aktualni[vybrana] !== c) {
+      $('msg').className = 'msg prohra';
+      $('msg').textContent = 'V této variantě se barvy neopakují.';
+      return;
+    }
+    $('msg').textContent = ''; $('msg').className = 'msg';
+    aktualni[vybrana] = c;
+    // posun na další prázdnou pozici
+    const dalsi = aktualni.findIndex((v, i) => v === -1 && i > vybrana);
+    const prvni = aktualni.indexOf(-1);
+    vybrana = dalsi >= 0 ? dalsi : prvni >= 0 ? prvni : vybrana;
+    kresli();
+  }
+
+  function smaz() {
+    if (konec) return;
+    if (aktualni[vybrana] === -1 && vybrana > 0) vybrana--;
+    aktualni[vybrana] = -1;
+    kresli();
+  }
+
+  function odesli() {
+    if (konec || aktualni.includes(-1)) return;
+    const o = MastermindLogika.odezva(tajna, aktualni);
+    historie.push({ pokus: aktualni.slice(), odezva: o });
+    aktualni = new Array(delka).fill(-1); vybrana = 0;
+    if (o[0] === delka) {
+      konec = true;
+      const n = historie.length;
+      let zprava = '🎉 Uhodnuto na ' + n + '. pokus!';
+      if (napoveda) zprava += ' (s nápovědou – do rekordů se nepočítá)';
+      else if (rekordy[klicVarianty()] && rekordy[klicVarianty()].zapis(n)) zprava = '🏆 Nový rekord: uhodnuto na ' + n + '. pokus!';
+      $('msg').textContent = zprava;
+    } else if (historie.length >= POKUSU) {
+      konec = true;
+      $('msg').className = 'msg prohra';
+      $('msg').textContent = '😞 Došly pokusy. Tajná kombinace je nahoře.';
+    }
+    kresli();
+  }
+
+  $('napovedaBtn').onclick = () => {
+    if (konec) return;
+    const m = MastermindLogika.mozne(delka, barev, opak, historie);
+    const navrh = m[Math.floor(Math.random() * m.length)];
+    napoveda = true;
+    aktualni = navrh.slice(); vybrana = 0;
+    $('msg').className = 'msg';
+    $('msg').textContent = '💡 Tahle kombinace odpovídá všem odezvám (možností: ' + m.length + ').';
+    kresli();
+  };
+  $('smazatBtn').onclick = smaz;
+  $('odeslatBtn').onclick = odesli;
+  $('pocitadlo').onchange = ukazMoznosti;
+  $('denniBtn').onclick = () => nova('denni');
+  $('noveBtn').onclick = () => nova('nove');
+  $('varianta').onchange = () => nova(rezim);
+  $('opakovani').onchange = () => nova(rezim);
+  window.addEventListener('resize', () => { if (tajna.length) kresli(); });
+  document.addEventListener('keydown', e => {
+    if (e.target.tagName === 'SELECT' || e.target.tagName === 'INPUT') return;
+    const c = +e.key;
+    if (c >= 1 && c <= barev) { vloz(c - 1); e.preventDefault(); }
+    else if (e.key === 'Backspace') { smaz(); e.preventDefault(); }
+    else if (e.key === 'Enter') { odesli(); e.preventDefault(); }
+    else if (e.key === 'ArrowLeft') { vybrana = Math.max(0, vybrana - 1); kresli(); }
+    else if (e.key === 'ArrowRight') { vybrana = Math.min(delka - 1, vybrana + 1); kresli(); }
+  });
+  window.addEventListener('DOMContentLoaded', () => nova('denni'));
+})();
+</script>
+</body>
+</html>

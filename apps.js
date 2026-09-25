@@ -1293,6 +1293,21 @@ const KATALOG_SEKCE = [
         "tagy": ["vykrajovátka", "cukroví", "3d tisk", "pečení", "stl", "obj", "svg", "vánoce", "velikonoce", "perníčky", "monogram", "z obrázku", "šablona", "50 tvarů", "zvířátka", "srdíčko", "hvězda", "stromek"]
       },
       {
+        "soubor": "obsah/turbina_navrhar.html",
+        "nazev": "🌀 Návrhář turbín a proudění",
+        "tagy": ["turbína", "vrtule", "proudění", "cfd", "lbm", "větrná elektrárna", "savonius", "darrieus", "gorlov", "tesla", "pelton", "kaplan", "bánki", "cross-flow", "lopatka", "naca", "bem", "aerodynamika", "hydrodynamika", "stl"]
+      },
+      {
+        "soubor": "obsah/ozubena_kola.html",
+        "nazev": "⚙️ Návrhář ozubených soukolí",
+        "tagy": ["ozubená kola", "ozubení", "převod", "převodovka", "evolventa", "modul", "pastorek", "šikmé zuby", "šípové zuby", "hřeben", "planetová převodovka", "vnitřní ozubení", "cevové soukolí", "lucerna", "mlýn", "hodinové kolo", "cykloida", "maltézský kříž", "rohatka", "západka", "kusovník", "stl", "3mf", "dxf", "3d tisk"]
+      },
+      {
+        "soubor": "obsah/soukoli_skladacka.html",
+        "nazev": "🧩 Skládačka soukolí",
+        "tagy": ["ozubená kola", "převod", "převodovka", "skládačka", "hřiště", "simulace", "převodový poměr", "řemen", "řetěz", "řemenice", "hřeben", "věnec", "vložené kolo", "hodinový převod", "otáčky", "moment", "kinematika"]
+      },
+      {
         "soubor": "obsah/voronoi_stl.html",
         "nazev": "🕸 Voronoi z STL",
         "tagy": ["voronoi", "stl", "3d model", "síť", "odlehčení"]
@@ -1310,6 +1325,11 @@ const KATALOG_SEKCE = [
           "rozklad",
           "lepení"
         ]
+      },
+      {
+        "soubor": "obsah/strihy.html",
+        "nazev": "✂️ Střihy – oděvy a kopací míč",
+        "tagy": ["střih", "šití", "oblečení", "tričko", "mikina", "sukně", "kalhoty", "šaty", "halenka", "košile", "vesta", "župan", "kimono", "šortky", "legíny", "zavinovací sukně", "zástěra", "čepice", "kšiltovka", "klobouk", "pelerína", "pončo", "míč", "fotbalový míč", "panely", "šestiúhelník", "pětiúhelník", "střihový plán", "spotřeba látky", "tisk po stranách", "vnořený střih", "pdf", "dxf"]
       },
       {
         "soubor": "obsah/gridGen.html",
@@ -1838,6 +1858,11 @@ const KATALOG_SEKCE = [
         "tagy": ["obrana věží", "strategie", "vlny", "věže"]
       },
       {
+        "soubor": "obsah/podzemi.html",
+        "nazev": "🗡️ Nekonečné podzemí",
+        "tagy": ["dungeon", "crawler", "roguelike", "dungeon master", "podzemí", "bludiště", "rpg", "hra"]
+      },
+      {
         "soubor": "obsah/tower_defense_sc.html",
         "nazev": "🛰️ Sector Defense",
         "tagy": ["obrana věží", "vesmír", "strategie", "sci-fi"]
@@ -2088,6 +2113,83 @@ const KATALOG_SEKCE = [
         "soubor": "obsah/trivia.html",
         "nazev": "❓ Vědomostní kvíz",
         "tagy": ["kvíz", "vědomosti", "otázky", "test", "soutěž"]
+      }
+    ]
+  },
+  {
+    "nazev": "🧠 Logické mřížky",
+    "skupina": "hry",
+    "polozky": [
+      {
+        "soubor": "obsah/queens.html",
+        "nazev": "👑 Královny (Queens)",
+        "tagy": ["queens", "královny", "dáma", "oblasti", "logika", "hlavolam", "denní hádanka"]
+      },
+      {
+        "soubor": "obsah/akari.html",
+        "nazev": "💡 Akari (Light Up)",
+        "tagy": ["akari", "light up", "žárovky", "osvětlení", "logika", "hlavolam", "nikoli", "denní hádanka"]
+      },
+      {
+        "soubor": "obsah/mastermind.html",
+        "nazev": "🧠 Mastermind",
+        "tagy": ["mastermind", "logik", "hádání kombinace", "barvy", "kolíčky", "dedukce", "bulls and cows"]
+      },
+      {
+        "soubor": "obsah/hashi.html",
+        "nazev": "🔗 Mosty (Hashi)",
+        "tagy": ["hashi", "hashiwokakero", "bridges", "mosty", "ostrovy", "propojování", "logika", "hlavolam", "denní hádanka"]
+      },
+      {
+        "soubor": "obsah/kakuro.html",
+        "nazev": "🔢 Kakuro",
+        "tagy": ["kakuro", "číselná křížovka", "součty", "čísla", "sudoku", "logika", "hlavolam", "denní hádanka"]
+      },
+      {
+        "soubor": "obsah/nurikabe.html",
+        "nazev": "🏝️ Nurikabe",
+        "tagy": ["nurikabe", "ostrovy", "moře", "zatápění", "logika", "hlavolam", "denní hádanka"]
+      },
+      {
+        "soubor": "obsah/slitherlink.html",
+        "nazev": "⭕ Slitherlink",
+        "tagy": ["slitherlink", "smyčka", "loop", "tečky", "čáry", "fences", "logika", "hlavolam", "denní hádanka"]
+      }
+    ]
+  },
+  {
+    "nazev": "🏝️ Tropické ostrovy",
+    "skupina": "hry",
+    "polozky": [
+      {
+        "soubor": "obsah/karibik.html",
+        "nazev": "🏴‍☠️ Tajemství Karibiku",
+        "tagy": ["piráti", "poklad", "karibik", "ostrovy", "plachetnice", "mapa", "mlha", "rybaření", "explorace", "hádanka", "denní výprava"]
+      },
+      {
+        "soubor": "obsah/trosecnici.html",
+        "nazev": "🏝️ Trosečníci",
+        "tagy": ["trosečník", "survival", "přežití", "ostrov", "tahová strategie", "pixel art", "průzkum", "mlha", "rybaření", "procedurální mapa"]
+      },
+      {
+        "soubor": "obsah/poklad.html",
+        "nazev": "🗝️ Poklad pirátů",
+        "tagy": ["piráti", "poklad", "ostrov", "indicie", "dedukce", "logika", "hlavolam", "mapa", "denní hádanka"]
+      },
+      {
+        "soubor": "obsah/rybar.html",
+        "nazev": "🎣 Tropický rybář",
+        "tagy": ["rybaření", "ryby", "rybář", "moře", "molo", "útes", "návnada", "atlas ryb", "relax", "tropy"]
+      },
+      {
+        "soubor": "obsah/obchodnik.html",
+        "nazev": "⚓ Pirát obchodník",
+        "tagy": ["obchod", "piráti", "karibik", "ekonomie", "ceny", "loď", "plavba", "strategie", "taipan", "pixel art"]
+      },
+      {
+        "soubor": "obsah/laguna.html",
+        "nazev": "🐠 Laguna",
+        "tagy": ["potápění", "šnorchlování", "ryby", "korály", "fotografie", "atlas", "podmořský svět", "relax", "moře", "mangrovy", "modrá díra", "pixel art"]
       }
     ]
   },

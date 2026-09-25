@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🏝️ Trosečníci</title>
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../podpis.js" defer></script>
+<script src="../rekord.js"></script>
+<script src="../dialog.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+html,body{height:100%}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:var(--bg);color:var(--text);
+  height:100%;display:flex;flex-direction:column;overflow:hidden}
+.lista{display:flex;flex-wrap:wrap;align-items:center;gap:6px 12px;padding:7px 10px;border-bottom:1px solid var(--border);background:var(--bg-panel)}
+.lista h1{font-size:1.2rem;font-weight:700;white-space:nowrap}
+.nazev{color:var(--text-muted);font-style:italic;font-size:.88rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:220px;min-width:60px;flex:0 1 auto}
+.stav{display:flex;flex-wrap:wrap;gap:4px;align-items:center;flex:1;justify-content:flex-end}
+.chip{display:inline-flex;align-items:center;gap:3px;padding:2px 6px;border-radius:999px;background:var(--bg-control);
+  border:1px solid var(--border);font-size:.82rem;font-weight:600;white-space:nowrap;font-variant-numeric:tabular-nums}
+.chip.varovani{border-color:var(--danger);color:var(--danger)}
+.chip.plno{border-color:var(--warn)}
+.trend{font-style:normal;font-size:.7rem;font-weight:700;margin-left:1px}
+.trend.nahoru{color:var(--ok)}
+.trend.dolu{color:var(--danger)}
+.trend:empty{display:none}
+.chip.ab{position:relative;overflow:hidden;min-width:74px}
+.chip.ab i{position:absolute;left:0;top:0;bottom:0;background:var(--accent-soft, rgba(90,150,250,.25));z-index:0;transition:width .2s}
+.chip.ab span,.chip.ab b{position:relative;z-index:1}
+.btn{background:var(--accent);color:#fff;border:none;padding:7px 12px;border-radius:6px;cursor:pointer;font-weight:600;font-size:.88rem}
+.btn:hover{background:var(--accent-hover)}
+.btn:disabled{opacity:.5;cursor:default}
+.btn.sede{background:var(--bg-control);color:var(--text);border:1px solid var(--border-strong)}
+.btn.sede:hover{background:var(--bg-hover)}
+.menu-btn{font-size:1.1rem;padding:4px 10px}
+.hra{flex:1;display:flex;min-height:0}
+.mapa-obal{flex:1;position:relative;min-width:0;background:#0d1a2b;touch-action:none;overflow:hidden}
+#mapa{position:absolute;inset:0;width:100%;height:100%;display:block;image-rendering:pixelated;cursor:pointer}
+#minimapa{position:absolute;top:8px;right:8px;width:120px;height:120px;image-rendering:pixelated;
+  border:2px solid rgba(255,255,255,.55);border-radius:4px;box-shadow:0 2px 10px rgba(0,0,0,.5);cursor:crosshair}
+.zoom{position:absolute;right:8px;bottom:8px;display:flex;flex-direction:column;gap:6px}
+.zoom button{width:36px;height:36px;border-radius:8px;border:1px solid rgba(255,255,255,.4);background:rgba(13,26,43,.8);
+  color:#fff;font-size:1.25rem;font-weight:700;line-height:1;cursor:pointer}
+/* noc a konec hry – přes mapu */
+.prekryv{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;padding:16px;
+  background:rgba(8,14,40,.72);animation:stmivani .6s ease-out;z-index:5}
+.prekryv[hidden]{display:none}
+@keyframes stmivani{from{background:rgba(8,14,40,0)}}
+.karta{background:var(--bg-elevated);color:var(--text);border:1px solid var(--border);border-radius:12px;padding:18px 20px;
+  max-width:360px;width:100%;box-shadow:0 10px 40px rgba(0,0,0,.5);line-height:1.5;max-height:100%;overflow-y:auto}
+.karta h2{font-size:1.2rem;margin-bottom:10px}
+.karta p{margin-bottom:6px}
+.karta ul{margin:8px 0 14px 20px}
+.karta .tlacitka{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.spatne{color:var(--danger)} .dobre{color:var(--ok)}
+.panel{width:330px;flex:none;display:flex;flex-direction:column;min-height:0;border-left:1px solid var(--border);background:var(--bg-panel);font-size:.9rem;line-height:1.45}
+.panel-hlava{padding:8px 12px 0;flex:none;max-height:34%;overflow-y:auto}
+.panel-hlava:empty{display:none}
+.zalozky{display:flex;flex:none;border-bottom:1px solid var(--border);padding:0 6px;gap:2px;margin-top:6px}
+.zalozky button{flex:1;display:flex;flex-direction:column;align-items:center;gap:1px;padding:5px 2px 6px;border:none;background:none;color:var(--text-muted);
+  cursor:pointer;font-size:1.05rem;border-bottom:2px solid transparent;position:relative;min-width:0}
+.zalozky button span{font-size:.68rem;font-weight:600;letter-spacing:.2px}
+.zalozky button:hover{color:var(--text)}
+.zalozky button[aria-selected="true"]{color:var(--text);border-bottom-color:var(--accent)}
+.odznak{position:absolute;top:2px;right:18%;font-size:.62rem;background:var(--accent);color:#fff;border-radius:999px;padding:0 5px;line-height:1.5;font-style:normal}
+.odznak:empty{display:none}
+.odznak.tecka{width:8px;height:8px;padding:0;right:24%;top:5px}
+.odznak.tecka:not(.nove){display:none}
+.panel-obsah{flex:1;min-height:0;overflow-y:auto;padding:8px 12px 12px}
+.zalozka[hidden]{display:none}
+.zalozka[data-tab="tady"]{display:flex;flex-direction:column}
+.zalozka[data-tab="tady"][hidden]{display:none}
+.zalozka[data-tab="tady"]>#info{order:0}
+.zalozka[data-tab="tady"]>.sekce{order:1}
+.zalozka[data-tab="tady"].tady-stojim>#info{order:2;margin-top:12px;padding-top:8px;border-top:1px solid var(--border)}
+.zalozka[data-tab="tady"].tady-stojim>.sekce:last-child{order:3}
+/* v záložkách oddělují sekce nadpisy, ne čáry (skryté sekce by nechávaly prázdné linky) */
+.zalozka .sekce{border-top:none;padding-top:0;margin-top:14px}
+.zalozka>.sekce:first-child,.zalozka.tady-stojim>.sekce:nth-child(2){margin-top:0}
+.kratce{font-size:.86rem;margin-bottom:3px!important}
+details.popis-pole summary{cursor:pointer}
+details.popis-pole p{font-size:.82rem;margin:3px 0!important}
+.odkaz{background:none;border:none;color:var(--accent);cursor:pointer;font-size:.8rem;padding:0}
+.zalozka>h3:first-child{margin-top:2px}
+.panel-pata{flex:none;padding:8px 12px 10px;border-top:1px solid var(--border);background:var(--bg-panel)}
+.panel-pata .spat{margin-top:0}
+.spat small{font-weight:400;opacity:.85;margin-left:4px}
+details.nedostupne{margin-top:6px}
+details.nedostupne summary{cursor:pointer;padding:3px 0}
+#stavbyJine{display:flex;flex-direction:column;gap:5px;margin-top:4px}
+.sekce.prvni{margin-top:0;padding-top:0;border-top:none}
+.sekce.prvni+.sekce.prvni,.sekce+.sekce.prvni{margin-top:12px;padding-top:10px;border-top:1px solid var(--border)}
+.rada.sbalena>.tip{display:none}
+.rada-hlava{cursor:pointer}
+.panel h2{font-size:1.05rem;margin-bottom:4px}
+.panel h3{font-size:.95rem;margin:6px 0 2px}
+.panel p{margin-bottom:6px}
+.popis{color:var(--text-muted)}
+.tip{color:var(--text-faint);font-size:.8rem}
+.sekce{margin-top:12px;padding-top:10px;border-top:1px solid var(--border)}
+.sekce>h3{margin-top:0;margin-bottom:6px}
+#akce{display:flex;flex-direction:column;gap:5px}
+.akce{display:flex;align-items:center;gap:8px;width:100%;text-align:left;padding:6px 8px;border-radius:8px;cursor:pointer;
+  border:1px solid var(--border-strong);background:var(--bg-control);color:var(--text);font-size:.88rem}
+.akce:hover{background:var(--bg-hover);border-color:var(--accent)}
+.akce.nelze{cursor:not-allowed;border-style:dashed}
+.akce.nelze .ak-ikona,.akce.nelze .ak-cena{opacity:.45}
+.akce.nelze .ak-nazev{color:var(--text-muted)}
+.akce.nelze:hover{border-color:var(--border-strong);background:var(--bg-control)}
+.ak-ikona{font-size:1.15rem;width:1.4em;text-align:center}
+.ak-nazev{flex:1;display:flex;flex-direction:column}
+.ak-nazev small{color:var(--text-faint);font-size:.74rem}
+.ak-nazev small.cena{color:var(--text-muted);font-size:.8rem}
+.ak-nazev small.duvod{font-style:italic}
+.ak-cena{font-weight:700;font-size:.8rem;white-space:nowrap;color:var(--text-muted);display:flex;gap:4px;align-items:center}
+kbd{display:inline-block;padding:0 5px;border:1px solid var(--border-strong);border-radius:4px;font-size:.72rem;background:var(--bg-control);font-family:inherit}
+.spat{width:100%;margin-top:8px;padding:9px;font-size:.95rem}
+#predmety{display:flex;flex-wrap:wrap;gap:6px}
+.predmet{display:inline-flex;flex-direction:column;align-items:center;min-width:52px;padding:4px 6px;border-radius:8px;
+  background:var(--bg-control);border:1px solid var(--border);font-size:1.2rem;cursor:help}
+.predmet small{font-size:.66rem;color:var(--text-muted)}
+#denik{list-style:none;display:flex;flex-direction:column;gap:5px;font-size:.82rem}
+#denik li{padding-left:8px;border-left:2px solid var(--border)}
+#denik .dz-den{color:var(--text-faint);font-variant-numeric:tabular-nums}
+#denik .dz-noc{border-color:#6b6fd8;color:var(--text-muted)}
+#denik .dz-objev{border-color:#e6b800}
+#denik .dz-pribeh{border-color:var(--accent);font-style:italic}
+#denik .dz-konec{border-color:var(--danger);color:var(--danger)}
+#objevene{list-style:none;display:flex;flex-direction:column;gap:3px}
+#objevene button{background:none;border:none;color:var(--accent);cursor:pointer;font-size:.88rem;padding:1px 0;text-align:left}
+#objevene button:hover{text-decoration:underline}
+details.napoveda summary{cursor:pointer;font-weight:600}
+details.stavet summary{cursor:pointer;list-style:none}
+details.stavet summary::-webkit-details-marker{display:none}
+details.stavet summary h3::before{content:'▸ ';color:var(--text-faint)}
+details.stavet[open] summary h3::before{content:'▾ '}
+#stavby{display:flex;flex-direction:column;gap:5px;margin-top:6px}
+details.napoveda p{font-size:.8rem;color:var(--text-muted);margin-top:5px}
+#rekord{margin-top:10px;font-size:.82rem}
+.chip[hidden]{display:none}
+#lodDily{list-style:none;display:flex;flex-direction:column;gap:3px;font-size:.84rem}
+#lodDily li{display:flex;justify-content:space-between;gap:8px;padding:2px 6px;border-radius:5px}
+#lodDily li.ted{background:var(--bg-control);border:1px solid var(--accent)}
+#lodDily li.hotovo{color:var(--text-muted)}
+.symboly{display:flex;gap:8px;margin-bottom:6px}
+.symbol{width:34px;height:34px;display:flex;align-items:center;justify-content:center;border-radius:6px;border:1px dashed var(--border-strong);font-size:1.2rem;opacity:.5}
+.symbol.mam{border:1px solid var(--accent);opacity:1;background:var(--bg-control)}
+#tajKroky{list-style:none;font-size:.82rem;color:var(--text-muted);display:flex;flex-direction:column;gap:2px}
+#rekordPlavba,#rekordLide{font-size:.82rem}
+.rada{border:1px solid var(--accent);border-radius:8px;padding:5px 10px;margin-bottom:6px;background:color-mix(in srgb, var(--accent) 10%, transparent)}
+.rada-hlava{display:flex;align-items:center;gap:6px}
+.rada-hlava b{flex:1}
+.rada-zavrit{background:none;border:none;color:var(--text-faint);cursor:pointer;font-size:.9rem;padding:0 2px}
+.rada-cil{font-weight:600;margin:2px 0 1px!important;cursor:pointer}
+.rada-jak{font-weight:400;font-size:.75rem;color:var(--accent);margin-left:4px}
+.rada:not(.sbalena) .rada-jak{display:none}
+.rada .tip{font-size:.8rem;line-height:1.4}
+ul.uvod{margin:6px 0 10px 18px;display:flex;flex-direction:column;gap:5px;font-size:.9rem}
+.prepinac-rady{display:flex;gap:8px;align-items:flex-start;font-size:.88rem;cursor:pointer}
+#objevyList{list-style:none;display:flex;flex-direction:column;gap:5px;font-size:.84rem}
+#objevyList .neznamy{color:var(--text-faint)}
+.objev-ikona{font-size:1.4rem;vertical-align:middle}
+.chip.pocasi small{margin-left:4px;opacity:.75;letter-spacing:1px}
+.varovani{border:1px solid var(--warn);background:color-mix(in srgb, var(--warn) 12%, transparent);border-radius:8px;padding:4px 9px;margin-bottom:6px;font-size:.8rem}
+.varovani p{margin:1px 0!important;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:help}
+.tip-ikona{opacity:.55;font-size:.75rem}
+.karta .tlacitka.svisle{flex-direction:column}
+.karta .tlacitka.svisle .btn{text-align:left}
+.karta .vysledek{margin-top:8px;padding-top:8px;border-top:1px solid var(--border)}
+img.portret{width:40px;height:40px;image-rendering:pixelated;border-radius:6px;background:var(--bg-control);border:1px solid var(--border);flex:none}
+img.portret.mini{width:24px;height:24px;border-radius:4px}
+#lide{list-style:none;display:flex;flex-direction:column;gap:6px}
+.clovek{display:flex;gap:8px;align-items:center;padding:5px;border-radius:8px;border:1px solid var(--border)}
+.clovek.ve-vyprave{border-color:var(--accent);background:var(--bg-control)}
+.cl-telo{flex:1;min-width:0;display:flex;flex-direction:column;gap:3px}
+.cl-jm{font-size:.86rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.cl-telo select{width:100%;padding:3px 5px;border-radius:5px;border:1px solid var(--border-strong);background:var(--bg-input);color:var(--text);font-size:.8rem}
+.cl-zdravi{font-size:.78rem;font-weight:700;white-space:nowrap}
+.navrat{font-size:.72rem;color:var(--text-muted)}
+.pruh{height:4px;border-radius:2px;background:var(--border);overflow:hidden}
+.pruh i{display:block;height:100%}
+.nalez-portrety{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-bottom:10px}
+.nalez-portrety figure{text-align:center;font-size:.8rem;line-height:1.3}
+.nalez-portrety img.portret{width:64px;height:64px}
+.nalez-bilance{font-weight:700;margin-top:8px}
+ul.noc-lide{list-style:none;margin:6px 0!important;display:flex;flex-direction:column;gap:4px}
+ul.noc-lide li{display:flex;align-items:center;gap:6px;font-size:.88rem}
+.nl-jm{flex:1}
+.etapa{font-size:.76rem;color:var(--text-faint);margin-top:10px}
+dialog.menu{border:1px solid var(--border);border-radius:12px;padding:0;background:var(--bg-elevated);color:var(--text);
+  max-width:min(92vw,380px);width:100%;margin:auto;box-shadow:0 10px 40px rgba(0,0,0,.5)}
+dialog.menu::backdrop{background:rgba(0,0,0,.5)}
+.menu-telo{padding:16px 18px;display:flex;flex-direction:column;gap:10px}
+.menu-telo h2{font-size:1.1rem}
+.menu-telo .radek{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
+.menu-telo input.seed{flex:1;min-width:100px;padding:7px 9px;border-radius:6px;border:1px solid var(--border-strong);background:var(--bg-input);color:var(--text)}
+.menu-telo label.btn{display:inline-block}
+.menu-telo hr{border:none;border-top:1px solid var(--border)}
+@media (max-width:760px){
+  .hra{flex-direction:column}
+  .mapa-obal{flex:none;height:44%}
+  .panel{min-height:0}
+  .stav{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;padding-bottom:1px}
+  .stav::-webkit-scrollbar{display:none}
+  .lista{gap:4px 10px;padding:5px 8px}
+  .zalozky button{padding:3px 2px 4px}
+  .panel-pata{padding:6px 10px 8px}
+  .panel-pata .spat{padding:7px}
+  .panel{width:auto;flex:1;border-left:none;border-top:1px solid var(--border)}
+  .panel-hlava .rada .tip{font-size:.76rem}
+  #minimapa{width:84px;height:84px}
+  .stav{justify-content:flex-start;order:3;flex-basis:100%}
+  .nazev{flex:1;max-width:none}
+  .chip{font-size:.8rem;padding:2px 7px}
+}
+</style>
+</head>
+<body>
+<header class="lista">
+  <h1>🏝️ Trosečníci</h1>
+  <span class="nazev" id="nazevOstrova"></span>
+  <div class="stav" aria-label="Stav trosečníka">
+    <span class="chip" title="Den na ostrově">📅 <b id="den">1</b></span>
+    <span class="chip pocasi" id="pocasiChip" title="Počasí"><b id="pocasi">☀️</b></span>
+    <span class="chip ab" title="Akční body – zbývající síly na dnešek"><i id="abPruh"></i><span>⚡</span><b id="ab">12/12</b></span>
+    <span class="chip" id="lidiChip" title="Lidé">👥 <b id="lidi">1</b></span>
+    <span class="chip" id="zdraviChip" title="Zdraví">❤️ <b id="zdravi">80</b></span>
+    <span class="chip" id="jidloChip" title="Jídlo / limit zásob (1 na noc)">🍖 <b id="jidlo">0</b><i class="trend" id="trend_jidlo"></i></span>
+    <span class="chip" id="vodaChip" title="Voda / místo v nádobách (2 na noc)">💧 <b id="voda">0</b><i class="trend" id="trend_voda"></i></span>
+    <span class="chip" title="Dřevo">🪵 <b id="drevo">0</b><i class="trend" id="trend_drevo"></i></span>
+    <span class="chip" title="Kámen">🪨 <b id="kamen">0</b><i class="trend" id="trend_kamen"></i></span>
+    <span class="chip" title="Vlákna">🌿 <b id="vlakna">0</b><i class="trend" id="trend_vlakna"></i></span>
+    <span class="chip" title="Hlína" hidden>🧱 <b id="hlina">0</b><i class="trend" id="trend_hlina"></i></span>
+    <span class="chip" title="Kov" hidden>⚙️ <b id="kov">0</b><i class="trend" id="trend_kov"></i></span>
+    <span class="chip" title="Léčivky" hidden>🌱 <b id="lecivky">0</b><i class="trend" id="trend_lecivky"></i></span>
+    <span class="chip" title="Pochodně" hidden>🔥 <b id="pochodne">0</b><i class="trend" id="trend_pochodne"></i></span>
+  </div>
+  <button class="btn sede menu-btn" id="btnMenu" title="Hra: nový ostrov, uložení">☰</button>
+</header>
+<main class="hra">
+  <div class="mapa-obal" id="mapaObal">
+    <canvas id="mapa" aria-label="Mapa ostrova"></canvas>
+    <canvas id="minimapa" title="Minimapa – kliknutím přesuneš pohled"></canvas>
+    <div class="zoom">
+      <button id="btnPlus" title="Přiblížit (+)">+</button>
+      <button id="btnMinus" title="Oddálit (−)">−</button>
+      <button id="btnStred" title="Na trosečníka (C)">⌖</button>
+    </div>
+    <div class="prekryv" id="noc" hidden>
+      <div class="karta" role="dialog" aria-labelledby="nocNadpis">
+        <h2 id="nocNadpis">🌙 Noc</h2>
+        <div id="nocText"></div>
+        <div class="tlacitka"><button class="btn" id="nocDal">☀️ Nový den</button></div>
+      </div>
+    </div>
+    <div class="prekryv" id="nalez" hidden>
+      <div class="karta" role="dialog" aria-labelledby="nalezNadpis">
+        <h2 id="nalezNadpis">👤 Trosečník!</h2>
+        <div class="nalez-portrety" id="nalezPortrety"></div>
+        <div id="nalezText"></div>
+        <p><b>Přijmout do tábora?</b></p>
+        <div class="tlacitka">
+          <button class="btn" id="nalezPrijmout">🤝 Přijmout</button>
+          <button class="btn sede" id="nalezOdmitnout">🚶 Nechat být</button>
+        </div>
+      </div>
+    </div>
+    <div class="prekryv" id="udalost" hidden>
+      <div class="karta" role="dialog" aria-labelledby="udalostNadpis">
+        <h2 id="udalostNadpis">Událost</h2>
+        <div id="udalostText"></div>
+        <div class="tlacitka svisle" id="udalostTlacitka"></div>
+      </div>
+    </div>
+    <div class="prekryv" id="konec" hidden>
+      <div class="karta" role="dialog" aria-labelledby="konecNadpis">
+        <h2 id="konecNadpis">☠️ Konec</h2>
+        <div id="konecText"></div>
+        <div class="tlacitka">
+          <button class="btn" id="konecZnovu">🔁 Stejný ostrov znovu</button>
+          <button class="btn sede" id="konecNovy">🎲 Nový ostrov</button>
+        </div>
+      </div>
+    </div>
+  </div>
+  <aside class="panel">
+    <div class="panel-hlava">
+      <div class="rada" id="rada" hidden></div>
+      <div class="varovani" id="varovani" hidden></div>
+    </div>
+    <nav class="zalozky" role="tablist" aria-label="Panel">
+      <button role="tab" data-tab="tady" aria-selected="true" title="Pole, akce a stavby (T)">✋<span>Tady</span></button>
+      <button role="tab" data-tab="lide" title="Lidé a jejich práce (L)">👥<span>Lidé</span><b class="odznak" id="odznakLide"></b></button>
+      <button role="tab" data-tab="tabor" title="Loď, tajemství, věci, místa (B)">🏕️<span>Tábor</span><b class="odznak" id="odznakTabor"></b></button>
+      <button role="tab" data-tab="denik" title="Deník (J)">📖<span>Deník</span><b class="odznak tecka" id="odznakDenik"></b></button>
+      <button role="tab" data-tab="vice" title="Objevy, nápověda, rekordy (V)">💡<span>Více</span></button>
+    </nav>
+    <div class="panel-obsah" id="panelObsah">
+      <section class="zalozka" data-tab="tady">
+        <div id="info"></div>
+        <div class="sekce">
+          <h3>✋ Co tady můžu dělat</h3>
+          <div id="akce"></div>
+        </div>
+        <div class="sekce">
+          <h3>🔨 Stavět tady <span class="tip" id="taborInfo"></span></h3>
+          <div id="stavby"></div>
+          <details class="nedostupne" id="stavbyNedostupne" hidden>
+            <summary class="tip" id="stavbyNedostupneSouhrn"></summary>
+            <div id="stavbyJine"></div>
+          </details>
+        </div>
+      </section>
+      <section class="zalozka" data-tab="lide" hidden>
+        <h3>👥 Lidé <span class="tip" id="pocetLidi"></span></h3>
+        <ul id="lide"></ul>
+        <p class="tip" id="lideTip"></p>
+      </section>
+      <section class="zalozka" data-tab="tabor" hidden>
+        <div class="sekce prvni" id="lodPanel" hidden>
+          <h3>⛵ Loď <span class="tip" id="lodPostup"></span></h3>
+          <ul id="lodDily"></ul>
+          <p class="tip" id="lodTip"></p>
+        </div>
+        <div class="sekce prvni" id="tajPanel" hidden>
+          <h3>🗿 Tajemství ostrova</h3>
+          <div class="symboly" id="tajSymboly"></div>
+          <ul id="tajKroky"></ul>
+        </div>
+        <div class="sekce prvni">
+          <h3>🎒 Věci</h3>
+          <div id="predmety"></div>
+        </div>
+        <div class="sekce">
+          <h3>⭐ Objevená místa <span class="tip" id="pocetObjevenych"></span></h3>
+          <ul id="objevene"></ul>
+        </div>
+      </section>
+      <section class="zalozka" data-tab="denik" hidden>
+        <h3>📖 Deník</h3>
+        <ul id="denik"></ul>
+      </section>
+      <section class="zalozka" data-tab="vice" hidden>
+        <h3>💡 Objevy <span class="tip" id="pocetObjevu"></span></h3>
+        <ul id="objevyList"></ul>
+        <div class="sekce">
+      <details class="napoveda" open>
+        <summary>❓ Jak se hraje</summary>
+        <p>Každý den máš <b>12 akčních bodů</b>. Krok po pláži nebo savaně stojí 1 AB, džunglí, skalami a přes brod 2 AB. Akce na místě stojí 1–3 AB.</p>
+        <p>V noci sníš <b>1 🍖</b> a vypiješ <b>2 💧</b>. Co chybí, bere zdraví – žízeň víc než hlad. Kolik vody uneseš, určují nádoby. Nevyužité AB jsou odpočinek.</p>
+        <p>Klikni na pole → ukáže se cesta (červené tečky: dnes už nedojdeš), druhým klikem tam dojdeš. Když síly dojdou, můžeš jít <b>dál přes únavu</b> (až 6 AB navíc denně, každý stojí výpravu 3 ❤️), nebo zastavit – cíl zůstane vybraný a ráno se pokračuje.</p>
+        <p><kbd>←↑→↓</kbd>/<kbd>WASD</kbd> krok (se <kbd>Shift</kbd> i přes únavu) · <kbd>1</kbd>–<kbd>9</kbd> akce · <kbd>Mezerník</kbd>/<kbd>N</kbd> jít spát (mezerník i odklepne souhrn noci) · záložky <kbd>T</kbd> tady, <kbd>L</kbd> lidé, <kbd>B</kbd> tábor, <kbd>J</kbd> deník, <kbd>V</kbd> více · <kbd>+</kbd><kbd>−</kbd>/kolečko zoom · tažení posun · <kbd>C</kbd> na trosečníka</p>
+        <p><b>Pěšiny a stezky:</b> kudy se často chodí, tam se prošlape cesta. Po 4 průchodech 🟫 pěšina – přes džungli, skály, sopku i brod za 1 AB místo 2. Po 12 průchodech 🟨 stezka – krok za ½ AB (dva kroky za 1 AB). Hledání cesty je samo využívá.</p>
+        <p><b>Tábor:</b> první stavba je ohniště. Přístřešek, sběrač, sklad, políčko i pila musí stát nejvýš 5 polí od něj; molo patří na pláž u vody. Stavíš na poli, kde stojíš – musí být volné. Spánek v přístřešku (+5 ❤️) nebo chatrči (+10 ❤️) a u ohně (+2 ❤️) platí, když ležíš na poli stavby nebo hned vedle.</p>
+        <p><b>Lidé:</b> na ostrově přežili další trosečníci. Když k nim dojdeš, můžeš je přijmout – každý přinese pracovní sílu, ale za noc sní 1 🍖 a vypije 2 💧. Výprava (až 3 lidé) chodí s tebou: každý další člen +3 AB a jeho profese pomáhá. Ostatním přiděl práci v táboře, udělají ji přes noc. Do výpravy a z ní se přeřazuje jen doma v táboře. Při nedostatku jedí a pijí nejdřív ti nejslabší.</p>
+        <p><b>Počasí:</b> v liště je dnešek a předpověď na 2 dny. 🌧️ Déšť plní sběrače, ale kdo spí venku, promokne (−3 ❤️). 🔥 Ve vedru vypije každý 3 💧. ⛈️ Bouře se ohlásí 2 dny předem: výprava −4 AB, bez střechy −10 ❤️, nádoby se naplní – a stavby se můžou poškodit (🔧 oprava za polovinu ceny).</p>
+        <p><b>Objevy:</b> nové technologie nevznikají výzkumem, ale tím, co na ostrově najdeš – hlínu u řeky, byliny v džungli, rudu na sopce… Nápovědy jsou v panelu 💡 Objevy. Kovárna a dílna pak vyrábějí nástroje (akce, když stojíš na jejich poli).</p>
+        <p><b>Tajemství a loď:</b> kamenná hlava, ruiny, vodopád, sopka a jeskyně spolu souvisí – sbírej symboly (panel 🗿). Loděnici na pláži u moře odemkne řemeslo; loď má 5 dílů – každý nejdřív připravíš (suroviny) a pak na něm pracuješ. Hotová loď může kdykoli odplout – nebo zůstanete.</p>
+        <p><b>Signální hranice:</b> od 12. dne jde postavit na pláži nebo skalách. Když hoří (přiložit 4 🪵 na 3 dny, déšť ji uhasí), může si vás od 50. dne všimnout projíždějící loď – záchrana bez vlastní lodi, ale nikdy nevíš kdy.</p>
+        <p><b>Podzemí:</b> za otevřenými kamennými dveřmi se prohledává přímo z pole jeskyně – každé prohledání (3 AB + 1 🔥) vás posune hlouběji: příběh, kořist, pasti a artefakty. Lékař a tesař ve výpravě pomůžou. Na dně čeká srdce ostrova.</p>
+        <p><b>Události:</b> ráno se může něco stát – někdy musíš rozhodnout. Oheň na pobřeží nebo vrak po bouři znamená nové trosečníky; 📦 bedny na pláži stojí za to otevřít.</p>
+        <p>Ze skal a sopky je vidět dál. Hra se ukládá sama po každém tahu.</p>
+      </details>
+          <div id="rekord"></div>
+          <div id="rekordPlavba"></div>
+          <div id="rekordLide"></div>
+        </div>
+      </section>
+    </div>
+    <div class="panel-pata">
+      <button class="btn spat" id="btnSpat" title="Ukončit den (mezerník)">🌙 Jít spát <small id="spatAB"></small></button>
+    </div>
+  </aside>
+</main>
+<dialog class="menu" id="menu">
+  <div class="menu-telo">
+    <h2>🏝️ Hra</h2>
+    <button class="btn" id="btnNovy">🎲 Nový náhodný ostrov</button>
+    <button class="btn sede" id="btnDne">📅 Ostrov dne (pro všechny stejný)</button>
+    <div class="radek">
+      <input class="seed" id="seed" aria-label="Seed ostrova" title="Stejné číslo nebo slovo dá stejný ostrov">
+      <button class="btn sede" id="btnSeed">Hrát tento ostrov</button>
+    </div>
+    <hr>
+    <div class="radek">
+      <button class="btn sede" id="btnExport">💾 Uložit do souboru</button>
+      <label class="btn sede">📂 Načíst ze souboru<input type="file" id="souborImport" accept=".json,application/json" hidden></label>
+    </div>
+    <hr>
+    <label class="prepinac-rady"><input type="checkbox" id="radyZap"> 🧭 Rady pro začátečníky (průvodce „Co dál?" a uvítání)</label>
+    <button class="btn sede" id="menuZavrit">Zavřít</button>
+  </div>
+</dialog>
+<script src="trosecnici/nahoda.js"></script>
+<script src="trosecnici/svet.js"></script>
+<script src="trosecnici/hra.js"></script>
+<script src="trosecnici/stavby.js"></script>
+<script src="trosecnici/postavy.js"></script>
+<script src="trosecnici/pocasi.js"></script>
+<script src="trosecnici/udalosti.js"></script>
+<script src="trosecnici/objevy.js"></script>
+<script src="trosecnici/tajemstvi.js"></script>
+<script src="trosecnici/podzemi.js"></script>
+<script src="trosecnici/rady.js"></script>
+<script src="trosecnici/grafika.js"></script>
+<script src="trosecnici/ui.js"></script>
+</body>
+</html>

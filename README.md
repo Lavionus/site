@@ -237,6 +237,45 @@ modelu. Headless testy běží ve výchozím DPI 1, takže na to nepřijdou — 
 v `_test/vykr_dpi.py` běh s `--force-device-scale-factor=2`, který porovná CSS
 rozměr plátna s kontejnerem.
 
+**Návrhář turbín a proudění** (`obsah/turbina_navrhar.html`) má čtyři pohledy
+na jeden návrh: 2D výkres řezu rotorem (vlastní editor s mnohoúhelníky,
+křivkami, profily NACA, lopatkami, rotačním polem, undo, export SVG), 2D simulaci
+proudění mřížkovou Boltzmannovou metodou (D2Q9, BGK + Smagorinsky, odraz od
+pohybující se stěny, moment výměnou hybnosti → Cp, automatické proměření
+Cp(λ)), 3D model s animovanými stopami proudu (export STL/OBJ v mm) a analýzu:
+vrtule a Kaplan přes BEM (Prandtl, Buhl, poláry s Viternovou extrapolací),
+Darrieus přes MST (Strickland), Savonius empiricky, Pelton a Bánki Eulerovou
+rovnicí, Tesla bilancí momentu hybnosti mezi disky. Ruční úprava výkresu přepne
+typ na „Vlastní tvar“ (3D = vytažení výkresu). Rotor se v LBM otáčí ⟲ (Bánki ⟳,
+výkres je proto zrcadlený). LBM běží při Re ~ 10²–10³, takže Cp vychází nižší
+než v literatuře — slouží k porovnání tvarů. Testy: `_test/turbina.py`
+(modely, stabilita, 3D těsnost listu), `turbina_krivka.py`, `turbina_dpi.py`,
+`turbina2.py` (předlohy, pohon, vazba proud ↔ rotor), `turbina3.py` (každý stroj ve svém okolí, 2D i 3D).
+**Od 25. 9. 2026 jeden řešič pro 2D i 3D**: 3D částice nese pole řešiče a úhel rotoru je z řešiče
+(dřív šlo o předepsané kinematické pole, které na rotor nereagovalo). **Okolí stroje** (`okoli()`)
+dává oblast výpočtu, typy okrajů (`vstup` rychlost, `tlak` spád, `vystup` tlak bez zpětného proudu,
+`volne`) a stěny jako tvary s příznakem `okoli` – u osových strojů navíc `lathe` profil pro 3D rotaci.
+**Osové stroje**: meridiánový řez s osově souměrnými členy (zdroj hmoty −ρu_r/r, hybnost −ρu·u_r/r
++ vazké členy) a aktuátorovým diskem svázaným s BEM prvky listu; ověřeno proti teorii hybnosti
+(C_T = 0,89 → rychlost v disku 0,64, úplav 0,32; teorie 0,67 / 0,33). **Pozor na Guův zdroj síly:**
+činitel 1 − 1/2τ platí jen s posunem rovnovážné rychlosti o F/2ρ – bez něj se při τ ≈ 0,52 do proudu
+dostalo jen 5 % síly disku. **Tenké listy** (Darrieus, Bánki) jsou aktuátorové čáry (Gaussovo jádro
+ε ≈ 2 buňky); Darrieus pak dává λ ≈ 4, Cp ≈ 0,45 (MST 0,40–0,46). Turbíny s dýzou mají tlakový vstup
+(spád), jinak se při přiškrcení kolem tlak neomezeně zvyšoval. Rozkmitání u Peltonu způsoboval roh
+dýzy uvnitř obálky lžic – hubice musí ležet vně ≈ 1,2 Rp. Ponořený paprsek se u kola ohýbá (jednofázový
+model), proto míří o kus výš.
+Galerie **📚 Předlohy** (33 návrhů) je v `Predlohy.SEZNAM`. **Režim pohonu motorem**
+(`TYPY[typ].pohon`, parametry ve `stav.pp`) počítá vrtule a lodní šrouby přes BEM
+s indukovanou rychlostí (bisekce, funguje i pro statický tah), míchadla výkonovým
+číslem Np, tangenciální ventilátor bezrozměrnou charakteristikou a Teslovo
+čerpadlo. **Rotor ve 3D reaguje na proud**: J·dω/dt = M_proud(ω) − k·ω² − tření,
+kde M_proud(ω) je z výkonové křivky modelu (`dynZTabulky`); časové měřítko
+zobrazení se drží, dokud se nezmění typ, takže je vidět zrychlení při silnějším
+proudu. Tření 4 % jmenovitého momentu způsobí, že štíhlý Darrieus ani vrtule bez
+natočení listů se z klidu nerozběhnou. Ve 2D je volný rotor výchozí; okamžitý moment
+z LBM má při zakrývání buněk stěnou velké špičky, proto jde do dynamiky přes dolní
+propust (~250 kroků).
+
 **Solitaire** (`obsah/solitaire.html`) hraje Klondike s otáčením po jedné kartě
 a neomezeným počtem kol balíčku – proto se dá při hledání tahu koukat i do
 neotočených karet zásoby, na každou z nich se hráč dostane. Z toho žije

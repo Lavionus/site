@@ -18,8 +18,7 @@
    nakreslil ze starší verze v cache prohlížeče.
    ============================================================ */
 (function () {
-  const AUTOR = 'Radovan Valenta';
-  const MAIL = 'Metodus@email.cz';
+  const MAIL = 'hdm@seznam.cz';
   const DILO = 'Webové stránky';   // název díla – každý web má v kopii ten svůj
   const ROZCESTNIK = 'Rozcestník';  // popisek odkazu zpět – v každé kopii ten svůj
   const ID = 'autor-podpis';
@@ -199,7 +198,7 @@
     const dilo = document.createElement('span');
     dilo.className = 'podpis-dilo';
     dilo.textContent = DILO + ' ';
-    text.append(dilo, document.createTextNode('© ' + AUTOR + ' · ' + MAIL));
+    text.append(dilo, document.createTextNode('© ' + MAIL));
     podpis.appendChild(text);
 
     telo.appendChild(podpis);

@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🔗 Mosty (Hashi)</title>
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../podpis.js" defer></script>
+<script src="../rekord.js" defer></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;user-select:none;-webkit-user-select:none}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;padding:20px 12px;display:flex;flex-direction:column;align-items:center}
+h1{font-size:1.6rem;margin-bottom:6px;font-weight:600}
+.sub{color:var(--text-faint);font-size:.85rem;margin-bottom:14px;text-align:center;max-width:480px;line-height:1.4}
+.top{display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap;justify-content:center}
+.btn{background:var(--accent);color:#fff;border:none;padding:9px 14px;border-radius:6px;cursor:pointer;font-weight:600;font-size:.9rem}
+.btn-sec{background:var(--bg-control);color:var(--text)}
+.btn-sec:hover{background:var(--bg-hover)}
+select{background:var(--bg-control);border:1px solid var(--border-strong);border-radius:6px;color:var(--text);padding:8px}
+.info{color:var(--text-faint);font-size:.9rem;display:flex;gap:14px;align-items:center;flex-wrap:wrap;justify-content:center;margin-bottom:12px}
+/* Deska je moře – vlastní barvy, stejné v obou tématech */
+.deska{width:min(520px,94vw);aspect-ratio:1;background:#bfe3ec;border-radius:10px;border:2px solid #7fb6c4;touch-action:none;display:block}
+.deska .mrizka{stroke:#a9d6e1;stroke-width:.03}
+.deska .most{stroke:#5a3d22;stroke-width:.09;stroke-linecap:round}
+.deska .most.chyba{stroke:#c0392b}
+.deska .zona{stroke:transparent;stroke-width:.7;cursor:pointer}
+.deska .zona:hover{stroke:rgba(90,61,34,.12)}
+.deska .ostrov circle{fill:#fff8e6;stroke:#5a3d22;stroke-width:.06;cursor:pointer}
+.deska .ostrov text{font-size:.5px;font-weight:700;fill:#3a2814;text-anchor:middle;dominant-baseline:central;pointer-events:none;font-family:var(--font)}
+.deska .ostrov.hotovo circle{fill:#bfe6b0;stroke:#3f7a33}
+.deska .ostrov.moc circle{fill:#f7c1ba;stroke:#c0392b}
+.deska .ostrov.vybrany circle{stroke:#1f5bb5;stroke-width:.12}
+.deska .ostrov.napoveda circle{stroke:#1f5bb5;stroke-width:.14;animation:blik .5s 4 alternate}
+.deska .napovedaMost{stroke:#1f5bb5;stroke-width:.16;stroke-dasharray:.2 .15;stroke-linecap:round;animation:blik .5s 4 alternate}
+@keyframes blik{from{opacity:1}to{opacity:.2}}
+.msg{margin-top:14px;font-size:1.2rem;font-weight:700;min-height:30px;color:var(--ok);text-align:center;max-width:480px}
+.msg.varovani{color:var(--warn)}
+.pravidla{margin-top:14px;max-width:480px;color:var(--text-muted);font-size:.85rem;line-height:1.5}
+.pravidla summary{cursor:pointer;color:var(--text);font-weight:600;margin-bottom:6px}
+.pravidla li{margin-left:18px}
+</style>
+</head>
+<body>
+<h1>🔗 Mosty (Hashi)</h1>
+<p class="sub">Propoj ostrovy mosty. Číslo říká, kolik mostů z ostrova vede. Mosty vedou jen rovně, nekříží se, mezi dvěma ostrovy jsou nejvýš dva a nakonec musí být propojené všechny ostrovy.</p>
+<div class="top">
+  <select id="velikost" title="Velikost">
+    <option value="7">7×7 · lehké</option><option value="9" selected>9×9 · střední</option>
+    <option value="11">11×11 · těžší</option><option value="13">13×13 · velké</option>
+  </select>
+  <button class="btn" id="denniBtn" title="Stejné zadání pro všechny, každý den nové">📅 Denní</button>
+  <button class="btn" id="noveBtn">🔄 Nové</button>
+  <button class="btn btn-sec" id="zpetBtn">↩️ Zpět</button>
+  <button class="btn btn-sec" id="kontrolaBtn" title="Obarví mosty, které v řešení nejsou">✓ Kontrola</button>
+  <button class="btn btn-sec" id="napovedaBtn">💡 Nápověda</button>
+</div>
+<div class="info">
+  <span id="rezim">—</span>
+  <span>⏱️ <b id="cas">0:00</b></span>
+  <span id="rekordBox"></span>
+</div>
+<svg class="deska" id="deska"></svg>
+<div class="msg" id="msg"></div>
+<details class="pravidla">
+  <summary>Ovládání a pravidla</summary>
+  <ul>
+    <li>Klepnutí na mezeru mezi dvěma ostrovy přidá most: žádný → jeden → dva → žádný.</li>
+    <li>Nebo táhni od ostrova k sousednímu ostrovu (případně klepni na jeden a pak na druhý).</li>
+    <li>Mosty vedou jen vodorovně nebo svisle a nesmí se křížit s jinými mosty ani vést přes ostrov.</li>
+    <li>Ostrov se zelená, když má přesně tolik mostů, kolik ukazuje číslo; červená, když má víc.</li>
+    <li>Hotovo, když všechna čísla sedí a všechny ostrovy tvoří jednu propojenou síť. Zadání má jediné řešení.</li>
+  </ul>
+</details>
+
+<!-- Čistá logika: bez DOM, testuje se v node (_test/logicke_mrizky.js). -->
+<script>
+const HashiLogika = (function () {
+  function rng(seed) {
+    let a = seed >>> 0;
+    return function () {
+      a = (a + 0x6D2B79F5) >>> 0;
+      let t = a;
+      t = Math.imul(t ^ (t >>> 15), t | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  function hash(text) {
+    let h = 2166136261;
+    for (let i = 0; i < text.length; i++) { h ^= text.charCodeAt(i); h = Math.imul(h, 16777619); }
+    return h >>> 0;
+  }
+  const SMERY = [[0, 1], [1, 0], [0, -1], [-1, 0]];
+
+  /* Z rozmístění ostrovů [{x,y,k}] spočítá možné mosty: každý ostrov s nejbližším
+     ostrovem v každém ze 4 směrů. Hrana = {a, b, svisla, pole: [indexy polí mezi]}.
+     `krizi[e]` = hrany, které hranu e kříží. */
+  function hrany(n, ostrovy) {
+    const mapa = new Array(n * n).fill(-1);
+    ostrovy.forEach((o, i) => { mapa[o.y * n + o.x] = i; });
+    const E = [];
+    ostrovy.forEach((o, i) => {
+      for (const [dy, dx] of [[0, 1], [1, 0]]) {
+        let y = o.y + dy, x = o.x + dx;
+        const pole = [];
+        while (y < n && x < n && mapa[y * n + x] < 0) { pole.push(y * n + x); y += dy; x += dx; }
+        if (y < n && x < n) E.push({ a: i, b: mapa[y * n + x], svisla: dy === 1, pole });
+      }
+    });
+    const krizi = E.map(() => []);
+    for (let i = 0; i < E.length; i++) for (let j = i + 1; j < E.length; j++) {
+      if (E[i].svisla === E[j].svisla) continue;
+      const s = new Set(E[i].pole);
+      if (E[j].pole.some(p => s.has(p))) { krizi[i].push(j); krizi[j].push(i); }
+    }
+    const zOstrova = ostrovy.map(() => []);
+    E.forEach((e, k) => { zOstrova[e.a].push(k); zOstrova[e.b].push(k); });
+    return { E, krizi, zOstrova };
+  }
+
+  /* Řešitel: domény hran [lo, hi] v rozsahu 0–2, propagace součtů na ostrovech,
+     křížení a souvislosti (graf možných hran musí být souvislý a žádná uzavřená
+     skupina ostrovů nesmí zůstat oddělená). Vrací počet řešení (nejvýš limit). */
+  function pocetReseni(n, ostrovy, limit = 2, vystup) {
+    const { E, krizi, zOstrova } = hrany(n, ostrovy);
+    const m = E.length, N = ostrovy.length;
+    let pocet = 0;
+
+    function souvisly(lo, hi) {
+      // graf s hranami hi>0 musí být souvislý
+      const videno = new Uint8Array(N), fr = [0]; videno[0] = 1; let k = 1;
+      while (fr.length) {
+        const i = fr.pop();
+        for (const e of zOstrova[i]) {
+          if (hi[e] === 0) continue;
+          const j = E[e].a === i ? E[e].b : E[e].a;
+          if (!videno[j]) { videno[j] = 1; k++; fr.push(j); }
+        }
+      }
+      if (k < N) return false;
+      // uzavřená skupina: komponenta přes lo>0, kde všechny ostrovy mají lo-součet = číslo
+      // a žádná další hrana už nejde přidat → pokud není celá, je to slepá ulička
+      const komp = new Int32Array(N).fill(-1);
+      for (let s = 0; s < N; s++) {
+        if (komp[s] >= 0) continue;
+        const cl = [s]; komp[s] = s; let uzavrena = true;
+        for (let q = 0; q < cl.length; q++) {
+          const i = cl[q];
+          for (const e of zOstrova[i]) {
+            if (hi[e] > lo[e]) uzavrena = false;
+            if (lo[e] === 0) continue;
+            const j = E[e].a === i ? E[e].b : E[e].a;
+            if (komp[j] < 0) { komp[j] = s; cl.push(j); }
+          }
+        }
+        if (uzavrena && cl.length < N) return false;
+      }
+      return true;
+    }
+
+    function propaguj(lo, hi) {
+      let zmena = true;
+      while (zmena) {
+        zmena = false;
+        for (let e = 0; e < m; e++) if (lo[e] > 0) for (const f of krizi[e]) {
+          if (lo[f] > 0) return false;
+          if (hi[f] > 0) { hi[f] = 0; zmena = true; }
+        }
+        for (let i = 0; i < N; i++) {
+          const k = ostrovy[i].k;
+          let sLo = 0, sHi = 0;
+          for (const e of zOstrova[i]) { sLo += lo[e]; sHi += hi[e]; }
+          if (sLo > k || sHi < k) return false;
+          for (const e of zOstrova[i]) {
+            const nlo = Math.max(lo[e], k - (sHi - hi[e]));
+            const nhi = Math.min(hi[e], k - (sLo - lo[e]));
+            if (nlo > nhi) return false;
+            if (nlo !== lo[e] || nhi !== hi[e]) { lo[e] = nlo; hi[e] = nhi; zmena = true; }
+          }
+        }
+        // dva ostrovy s číslem 1 (nebo dvojice 2–2 dvojitým mostem) by se uzavřely samy do sebe
+        if (N > 2) for (let e = 0; e < m; e++) {
+          const ka = ostrovy[E[e].a].k, kb = ostrovy[E[e].b].k;
+          if (ka === kb && ka <= 2 && hi[e] >= ka) {
+            if (lo[e] >= ka) return false;
+            hi[e] = ka - 1; zmena = true;
+          }
+        }
+      }
+      return souvisly(lo, hi);
+    }
+
+    function krok(lo, hi) {
+      if (!propaguj(lo, hi)) return false;
+      let vyb = -1;
+      for (let e = 0; e < m; e++) if (lo[e] < hi[e]) {
+        if (vyb < 0 || hi[e] - lo[e] < hi[vyb] - lo[vyb]) vyb = e;
+      }
+      if (vyb < 0) {
+        pocet++;
+        if (vystup && !vystup.length) vystup.push(Array.from(lo));
+        return pocet >= limit;
+      }
+      for (let v = hi[vyb]; v >= lo[vyb]; v--) {
+        const l2 = lo.slice(), h2 = hi.slice();
+        l2[vyb] = h2[vyb] = v;
+        if (krok(l2, h2)) return true;
+      }
+      return false;
+    }
+    krok(new Uint8Array(m), new Uint8Array(m).fill(2));
+    return pocet;
+  }
+
+  /* Generátor: síť roste od jednoho ostrova – z náhodného ostrova se vystřelí most
+     náhodným směrem a na jeho konci vznikne nový ostrov. Most nesmí křížit jiný
+     most ani vést přes ostrov a nový ostrov nesmí přímo sousedit s jiným. Nakonec
+     se ještě přidá pár mostů mezi ostrovy, které na sebe vidí (smyčky = obtížnost). */
+  function generuj(n, seed) {
+    const r = rng(seed);
+    const cil = Math.round(n * n * (0.2 + r() * 0.04));
+    for (let pokus = 0; pokus < 200; pokus++) {
+      const obs = new Array(n * n).fill(0);   // 0 volno, 1 ostrov, 2 most vodorovně, 3 svisle
+      const ost = [], mosty = new Map();      // klíč "a-b" → počet
+      const x0 = Math.floor(r() * n), y0 = Math.floor(r() * n);
+      ost.push({ x: x0, y: y0 }); obs[y0 * n + x0] = 1;
+      const idx = new Map([[y0 * n + x0, 0]]);
+      let neuspech = 0;
+      while (ost.length < cil && neuspech < 2000) {
+        const zdroj = Math.floor(r() * ost.length), o = ost[zdroj];
+        const [dy, dx] = SMERY[Math.floor(r() * 4)];
+        const delka = 2 + Math.floor(r() * Math.max(1, Math.floor(n / 2)));
+        let ok = true, y = o.y, x = o.x;
+        const cesta = [];
+        for (let s = 1; s < delka; s++) {
+          y += dy; x += dx;
+          if (y < 0 || y >= n || x < 0 || x >= n || obs[y * n + x] !== 0) { ok = false; break; }
+          cesta.push(y * n + x);
+        }
+        y = o.y + dy * delka; x = o.x + dx * delka;
+        if (!ok || y < 0 || y >= n || x < 0 || x >= n || obs[y * n + x] !== 0) { neuspech++; continue; }
+        // nový ostrov nesmí sousedit s jiným ostrovem
+        let soused = false;
+        for (const [ay, ax] of SMERY) {
+          const yy = y + ay, xx = x + ax;
+          if (yy >= 0 && yy < n && xx >= 0 && xx < n && obs[yy * n + xx] === 1) soused = true;
+        }
+        if (soused) { neuspech++; continue; }
+        const nove = ost.length;
+        ost.push({ x, y }); obs[y * n + x] = 1; idx.set(y * n + x, nove);
+        for (const p of cesta) obs[p] = dy ? 3 : 2;
+        mosty.set(Math.min(zdroj, nove) + '-' + Math.max(zdroj, nove), r() < 0.35 ? 2 : 1);
+      }
+      if (ost.length < cil * 0.8) continue;
+      // doplňkové mosty mezi ostrovy, které na sebe vidí přes volné moře
+      for (let i = 0; i < ost.length; i++) for (const [dy, dx] of [[0, 1], [1, 0]]) {
+        if (r() > 0.3) continue;
+        let y = ost[i].y + dy, x = ost[i].x + dx;
+        const cesta = [];
+        while (y < n && x < n && obs[y * n + x] === 0) { cesta.push(y * n + x); y += dy; x += dx; }
+        if (y >= n || x >= n || obs[y * n + x] !== 1 || !cesta.length) continue;
+        const j = idx.get(y * n + x);
+        const kl = Math.min(i, j) + '-' + Math.max(i, j);
+        if (mosty.has(kl)) continue;
+        for (const p of cesta) obs[p] = dy ? 3 : 2;
+        mosty.set(kl, r() < 0.3 ? 2 : 1);
+      }
+      const k = new Array(ost.length).fill(0);
+      for (const [kl, v] of mosty) { const [a, b] = kl.split('-').map(Number); k[a] += v; k[b] += v; }
+      const ostrovy = ost.map((o, i) => ({ x: o.x, y: o.y, k: k[i] }));
+      const res = [];
+      if (pocetReseni(n, ostrovy, 2, res) !== 1) continue;
+      return { n, ostrovy, reseni: res[0] };
+    }
+    return null;
+  }
+
+  // Stav hráče: pole počtů mostů podle indexu hrany. Vrací součty, křížení a souvislost.
+  function vyhodnot(n, ostrovy, stav) {
+    const { E, krizi, zOstrova } = hrany(n, ostrovy);
+    const soucty = ostrovy.map((o, i) => zOstrova[i].reduce((s, e) => s + stav[e], 0));
+    const krizeni = new Set();
+    for (let e = 0; e < E.length; e++) if (stav[e]) for (const f of krizi[e]) if (stav[f]) { krizeni.add(e); krizeni.add(f); }
+    const videno = new Uint8Array(ostrovy.length), fr = [0]; videno[0] = 1; let kolik = 1;
+    while (fr.length) {
+      const i = fr.pop();
+      for (const e of zOstrova[i]) {
+        if (!stav[e]) continue;
+        const j = E[e].a === i ? E[e].b : E[e].a;
+        if (!videno[j]) { videno[j] = 1; kolik++; fr.push(j); }
+      }
+    }
+    const cislaSedi = soucty.every((s, i) => s === ostrovy[i].k);
+    return { soucty, krizeni, cislaSedi, souvisle: kolik === ostrovy.length, vyreseno: cislaSedi && !krizeni.size && kolik === ostrovy.length };
+  }
+
+  return { rng, hash, hrany, pocetReseni, generuj, vyhodnot };
+})();
+</script>
+
+<script>
+(function () {
+  const $ = id => document.getElementById(id);
+  const NS = 'http://www.w3.org/2000/svg';
+  let hra = null, H = null, stav = [], historie = [], start = 0, tik = null, konec = false, rezim = 'denni', napoveda = false, vybrany = -1;
+  const rekordy = {};
+
+  function dnes() {
+    const d = new Date();
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  }
+
+  function nova(r) {
+    rezim = r;
+    const n = +$('velikost').value;
+    const seed = r === 'denni' ? HashiLogika.hash('hashi|' + dnes() + '|' + n) : (Math.random() * 2 ** 32) >>> 0;
+    hra = HashiLogika.generuj(n, seed);
+    H = HashiLogika.hrany(n, hra.ostrovy);
+    stav = new Array(H.E.length).fill(0);
+    historie = []; konec = false; napoveda = false; vybrany = -1;
+    $('msg').textContent = ''; $('msg').className = 'msg';
+    $('rezim').textContent = r === 'denni' ? '📅 Denní zadání ' + new Date().toLocaleDateString('cs-CZ') : '🎲 Náhodné zadání';
+    nastavRekord(n);
+    clearInterval(tik); start = Date.now(); tik = setInterval(ukazCas, 500); ukazCas();
+    kresli();
+  }
+
+  function nastavRekord(n) {
+    if (typeof Rekord === 'undefined') return;
+    if (!rekordy[n]) rekordy[n] = Rekord.sleduj('webapp_hra_hashi_' + n,
+      { vyssiLepsi: false, popisek: 'Rekord ' + n + '×' + n, format: formatCas });
+    rekordy[n].prvek($('rekordBox'));
+  }
+  function formatCas(s) { return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); }
+  function sekundy() { return Math.floor((Date.now() - start) / 1000); }
+  function ukazCas() { if (!konec) $('cas').textContent = formatCas(sekundy()); }
+
+  function el(tag, attr, rodic) {
+    const e = document.createElementNS(NS, tag);
+    for (const k in attr) e.setAttribute(k, attr[k]);
+    if (rodic) rodic.appendChild(e);
+    return e;
+  }
+
+  function stred(i) { const o = hra.ostrovy[i]; return [o.x + 0.5, o.y + 0.5]; }
+
+  function kresli(zvyrazneni) {
+    const n = hra.n, svg = $('deska');
+    svg.setAttribute('viewBox', `0 0 ${n} ${n}`);
+    svg.innerHTML = '';
+    const v = HashiLogika.vyhodnot(n, hra.ostrovy, stav);
+    const g0 = el('g', {}, svg);
+    for (let i = 0; i <= n; i++) {
+      el('line', { x1: i, y1: 0, x2: i, y2: n, class: 'mrizka' }, g0);
+      el('line', { x1: 0, y1: i, x2: n, y2: i, class: 'mrizka' }, g0);
+    }
+    // klikací zóny a mosty
+    const gz = el('g', {}, svg), gm = el('g', {}, svg);
+    H.E.forEach((e, k) => {
+      const [x1, y1] = stred(e.a), [x2, y2] = stred(e.b);
+      const z = el('line', { x1, y1, x2, y2, class: 'zona' }, gz);
+      z.dataset.e = k;
+      const pocet = stav[k];
+      if (!pocet) return;
+      const tr = zvyrazneni && zvyrazneni.spatneMosty && zvyrazneni.spatneMosty.has(k);
+      const cls = 'most' + (v.krizeni.has(k) || tr ? ' chyba' : '');
+      const off = pocet === 2 ? 0.12 : 0;
+      const ox = e.svisla ? off : 0, oy = e.svisla ? 0 : off;
+      for (const s of pocet === 2 ? [-1, 1] : [0]) {
+        const m = el('line', { x1: x1 + ox * s, y1: y1 + oy * s, x2: x2 + ox * s, y2: y2 + oy * s, class: cls }, gm);
+        m.style.pointerEvents = 'none';
+      }
+    });
+    if (zvyrazneni && zvyrazneni.most >= 0) {
+      const e = H.E[zvyrazneni.most], [x1, y1] = stred(e.a), [x2, y2] = stred(e.b);
+      el('line', { x1, y1, x2, y2, class: 'napovedaMost' }, gm).style.pointerEvents = 'none';
+    }
+    const go = el('g', {}, svg);
+    hra.ostrovy.forEach((o, i) => {
+      const g = el('g', { class: 'ostrov' }, go);
+      g.dataset.o = i;
+      if (v.soucty[i] === o.k) g.classList.add('hotovo');
+      else if (v.soucty[i] > o.k) g.classList.add('moc');
+      if (i === vybrany) g.classList.add('vybrany');
+      el('circle', { cx: o.x + 0.5, cy: o.y + 0.5, r: 0.38 }, g);
+      el('text', { x: o.x + 0.5, y: o.y + 0.53 }, g).textContent = o.k;
+    });
+    return v;
+  }
+
+  function prepniMost(k) {
+    if (konec) return;
+    const nova = (stav[k] + 1) % 3;
+    // most nesmí křížit existující most
+    if (nova > 0 && H.krizi[k].some(f => stav[f] > 0)) {
+      $('msg').className = 'msg varovani';
+      $('msg').textContent = 'Mosty se nesmí křížit.';
+      return;
+    }
+    $('msg').textContent = ''; $('msg').className = 'msg';
+    historie.push([k, stav[k]]);
+    stav[k] = nova;
+    const v = kresli();
+    if (v.vyreseno) hotovo();
+    else if (v.cislaSedi && !v.krizeni.size && !v.souvisle) {
+      $('msg').className = 'msg varovani';
+      $('msg').textContent = 'Čísla sedí, ale ostrovy nejsou propojené do jedné sítě.';
+    }
+  }
+
+  function hranaMezi(a, b) {
+    return H.E.findIndex(e => (e.a === a && e.b === b) || (e.a === b && e.b === a));
+  }
+
+  function hotovo() {
+    konec = true; clearInterval(tik); vybrany = -1;
+    const s = sekundy();
+    $('cas').textContent = formatCas(s);
+    let zprava = '🎉 Všechny ostrovy propojeny za ' + formatCas(s) + '!';
+    if (napoveda) zprava += ' (s nápovědou – do rekordů se nepočítá)';
+    else if (rekordy[hra.n] && rekordy[hra.n].zapis(s)) zprava = '🏆 Nový rekord: ' + formatCas(s) + '!';
+    $('msg').className = 'msg';
+    $('msg').textContent = zprava;
+    kresli();
+  }
+
+  /* Ukazatel: klepnutí na zónu mostu přepne most; tažení z ostrova na ostrov
+     (nebo klepnutí na dva ostrovy po sobě) přepne most mezi nimi. */
+  let tah = null;
+  function cil(e) {
+    const t = document.elementFromPoint(e.clientX, e.clientY);
+    if (!t) return null;
+    const g = t.closest && t.closest('.ostrov');
+    if (g) return { o: +g.dataset.o };
+    if (t.classList && t.classList.contains('zona')) return { e: +t.dataset.e };
+    return null;
+  }
+  // nejbližší ostrov ve směru tažení (pro tah, který skončí v moři)
+  function ostrovVeSmeru(i, dx, dy) {
+    const svisle = Math.abs(dy) > Math.abs(dx);
+    const k = H.E.findIndex(e => (e.a === i || e.b === i) && e.svisla === svisle &&
+      (svisle ? Math.sign(hra.ostrovy[e.a === i ? e.b : e.a].y - hra.ostrovy[i].y) === Math.sign(dy)
+              : Math.sign(hra.ostrovy[e.a === i ? e.b : e.a].x - hra.ostrovy[i].x) === Math.sign(dx)));
+    return k;
+  }
+  $('deska').addEventListener('pointerdown', ev => {
+    if (konec || !hra) return;
+    const c = cil(ev);
+    if (!c) return;
+    try { $('deska').setPointerCapture(ev.pointerId); } catch (_) { /* syntetické události */ }
+    tah = { c, x: ev.clientX, y: ev.clientY };
+  });
+  $('deska').addEventListener('pointerup', ev => {
+    if (!tah) return;
+    const t = tah; tah = null;
+    const dx = ev.clientX - t.x, dy = ev.clientY - t.y;
+    const posun = Math.hypot(dx, dy) > $('deska').getBoundingClientRect().width / hra.n * 0.5;
+    if (t.c.o !== undefined && posun) {
+      const k = ostrovVeSmeru(t.c.o, dx, dy);
+      vybrany = -1;
+      if (k >= 0) prepniMost(k); else kresli();
+      return;
+    }
+    if (t.c.e !== undefined) { vybrany = -1; prepniMost(t.c.e); return; }
+    // klepnutí na ostrov: výběr, druhé klepnutí na souseda = most
+    const o = t.c.o;
+    if (vybrany < 0 || vybrany === o) { vybrany = vybrany === o ? -1 : o; kresli(); return; }
+    const k = hranaMezi(vybrany, o);
+    vybrany = k >= 0 ? -1 : o;
+    if (k >= 0) prepniMost(k); else kresli();
+  });
+  $('deska').addEventListener('pointercancel', () => { tah = null; });
+
+  $('zpetBtn').onclick = () => {
+    if (konec || !historie.length) return;
+    const [k, v] = historie.pop();
+    stav[k] = v; kresli();
+  };
+  $('kontrolaBtn').onclick = () => {
+    if (konec) return;
+    const spatneMosty = new Set();
+    stav.forEach((v, k) => { if (v > hra.reseni[k]) spatneMosty.add(k); });
+    kresli({ spatneMosty });
+    $('msg').className = spatneMosty.size ? 'msg varovani' : 'msg';
+    $('msg').textContent = spatneMosty.size ? '✗ Navíc je mostů: ' + spatneMosty.size + ' (červeně)' : '👍 Žádný most navíc';
+  };
+  $('napovedaBtn').onclick = () => {
+    if (konec) return;
+    // nejdřív most navíc, jinak chybějící most
+    let k = stav.findIndex((v, i) => v > hra.reseni[i]);
+    let text = '💡 Tady je mostů víc, než má být.';
+    if (k < 0) {
+      k = stav.findIndex((v, i) => v < hra.reseni[i]);
+      text = k >= 0 ? '💡 Tady ' + (hra.reseni[k] === 2 ? 'vedou dva mosty.' : 'vede most.') : '';
+    }
+    if (k < 0) return;
+    napoveda = true;
+    kresli({ most: k });
+    $('msg').className = 'msg';
+    $('msg').textContent = text;
+  };
+  $('denniBtn').onclick = () => nova('denni');
+  $('noveBtn').onclick = () => nova('nove');
+  $('velikost').onchange = () => nova(rezim);
+  window.addEventListener('DOMContentLoaded', () => nova('denni'));
+})();
+</script>
+</body>
+</html>

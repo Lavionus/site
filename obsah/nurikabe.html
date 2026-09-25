@@ -1,0 +1,660 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🏝️ Nurikabe</title>
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../podpis.js" defer></script>
+<script src="../rekord.js" defer></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;user-select:none;-webkit-user-select:none}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;padding:20px 12px;display:flex;flex-direction:column;align-items:center}
+h1{font-size:1.6rem;margin-bottom:6px;font-weight:600}
+.sub{color:var(--text-faint);font-size:.85rem;margin-bottom:14px;text-align:center;max-width:480px;line-height:1.4}
+.top{display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap;justify-content:center}
+.btn{background:var(--accent);color:#fff;border:none;padding:9px 14px;border-radius:6px;cursor:pointer;font-weight:600;font-size:.9rem}
+.btn-sec{background:var(--bg-control);color:var(--text)}
+.btn-sec:hover{background:var(--bg-hover)}
+select{background:var(--bg-control);border:1px solid var(--border-strong);border-radius:6px;color:var(--text);padding:8px}
+.info{color:var(--text-faint);font-size:.9rem;display:flex;gap:14px;align-items:center;flex-wrap:wrap;justify-content:center;margin-bottom:12px}
+/* Deska: písek (ostrovy) a moře – vlastní barvy, stejné v obou tématech */
+.deska{display:grid;width:min(480px,94vw);aspect-ratio:1;gap:1px;background:#b9a57e;border:2px solid #6f5d3c;border-radius:4px;touch-action:none}
+.pole{position:relative;min-width:0;min-height:0;background:#f6ecd2;display:flex;align-items:center;justify-content:center;cursor:pointer;font-weight:700;color:#4a3717;font-size:calc(min(480px,94vw) / var(--n) * .52);line-height:1}
+.pole.more{background:#2f7fa8;background-image:linear-gradient(160deg,#3a8fba,#256d93)}
+.pole.more.blok{background:#8e3b46;background-image:repeating-linear-gradient(45deg,#8e3b46 0 5px,#a24a55 5px 10px)}
+.pole.cislo{cursor:default}
+.pole.cislo.chyba{color:#c0392b}
+.pole.cislo.hotovo{color:#3c7a2c}
+.pole .tecka{width:18%;aspect-ratio:1;border-radius:50%;background:#b39a6a}
+.pole.spatne::after{content:'';position:absolute;inset:2px;border:3px solid #c0392b;border-radius:3px}
+.pole.napoveda::after{content:'';position:absolute;inset:2px;border:3px solid #ffd21f;border-radius:3px;animation:blik .5s 4 alternate}
+@keyframes blik{from{opacity:1}to{opacity:.2}}
+.msg{margin-top:14px;font-size:1.2rem;font-weight:700;min-height:30px;color:var(--ok);text-align:center;max-width:480px}
+.msg.varovani{color:var(--warn)}
+.pravidla{margin-top:14px;max-width:480px;color:var(--text-muted);font-size:.85rem;line-height:1.5}
+.pravidla summary{cursor:pointer;color:var(--text);font-weight:600;margin-bottom:6px}
+.pravidla li{margin-left:18px}
+</style>
+</head>
+<body>
+<h1>🏝️ Nurikabe</h1>
+<p class="sub">Zatop moře tak, aby zbyly ostrovy. Každý ostrov obsahuje právě jedno číslo a má tolik polí, kolik číslo říká. Moře je jedno souvislé a nikde netvoří čtverec 2×2.</p>
+<div class="top">
+  <select id="velikost" title="Velikost">
+    <option value="6">6×6 · lehké</option><option value="8" selected>8×8 · střední</option>
+    <option value="10">10×10 · těžší</option>
+  </select>
+  <button class="btn" id="denniBtn" title="Stejné zadání pro všechny, každý den nové">📅 Denní</button>
+  <button class="btn" id="noveBtn">🔄 Nové</button>
+  <button class="btn btn-sec" id="zpetBtn">↩️ Zpět</button>
+  <button class="btn btn-sec" id="kontrolaBtn" title="Označí chybně zatopená nebo označená pole">✓ Kontrola</button>
+  <button class="btn btn-sec" id="napovedaBtn">💡 Nápověda</button>
+</div>
+<div class="info">
+  <span id="rezim">—</span>
+  <span>⏱️ <b id="cas">0:00</b></span>
+  <span id="rekordBox"></span>
+</div>
+<div class="deska" id="deska"></div>
+<div class="msg" id="msg"></div>
+<details class="pravidla">
+  <summary>Ovládání a pravidla</summary>
+  <ul>
+    <li>Klepnutí mění pole: prázdné → moře → tečka (jistě ostrov) → prázdné. Tažením kreslíš víc polí najednou.</li>
+    <li>Každý ostrov (souvislá skupina nezatopených polí) obsahuje právě jedno číslo a má přesně tolik polí.</li>
+    <li>Ostrovy se navzájem dotýkají nanejvýš rohem.</li>
+    <li>Všechno moře je propojené a nikde nevznikne zatopený čtverec 2×2 (zčervená).</li>
+    <li>Zadání má vždy jediné řešení a skoro vždy se dá vyřešit úvahou bez hádání.</li>
+  </ul>
+</details>
+
+<!-- Čistá logika: bez DOM, testuje se v node (_test/logicke_mrizky.js). -->
+<script>
+const NurikabeLogika = (function () {
+  function rng(seed) {
+    let a = seed >>> 0;
+    return function () {
+      a = (a + 0x6D2B79F5) >>> 0;
+      let t = a;
+      t = Math.imul(t ^ (t >>> 15), t | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  function hash(text) {
+    let h = 2166136261;
+    for (let i = 0; i < text.length; i++) { h ^= text.charCodeAt(i); h = Math.imul(h, 16777619); }
+    return h >>> 0;
+  }
+  function zamichej(pole, r) {
+    for (let i = pole.length - 1; i > 0; i--) {
+      const j = Math.floor(r() * (i + 1));
+      [pole[i], pole[j]] = [pole[j], pole[i]];
+    }
+    return pole;
+  }
+  const cacheS = {}, cacheC = {};
+  function sousede(n) {
+    if (cacheS[n]) return cacheS[n];
+    const S = cacheS[n] = [];
+    for (let i = 0; i < n * n; i++) {
+      const y = Math.floor(i / n), x = i % n, s = [];
+      if (y > 0) s.push(i - n);
+      if (y < n - 1) s.push(i + n);
+      if (x > 0) s.push(i - 1);
+      if (x < n - 1) s.push(i + 1);
+      S.push(s);
+    }
+    return S;
+  }
+  // levé horní rohy všech čtverců 2×2
+  function ctverce(n) {
+    if (cacheC[n]) return cacheC[n];
+    const C = cacheC[n] = [];
+    for (let y = 0; y < n - 1; y++) for (let x = 0; x < n - 1; x++) {
+      const i = y * n + x;
+      C.push([i, i + 1, i + n, i + n + 1]);
+    }
+    return C;
+  }
+
+  const NEZNAME = 0, MORE = 1, ZEME = 2;
+
+  /* Propagace nad stavem st (0 neznámé, 1 moře, 2 země). cisla[i] > 0 = číslo.
+     Pravidla:
+      1) země, na kterou nedosáhne žádné číslo (cestou přes neznámá/zemi a v mezích
+         velikosti), je moře;
+      2) hotový ostrov (velikost = číslo) → jeho neznámí sousedé jsou moře;
+      3) neznámé pole, které sousedí se dvěma různými ostrovy s čísly → moře;
+      4) čtverec 2×2 se třemi moři → čtvrté pole je země;
+      5) nedokončený ostrov s jediným možným rozšířením → rozšířit;
+      6) souvislé moře s jediným východem (a jinde je další moře) → východ je moře;
+      7) země bez čísla, která se může připojit k číslu jen jedním polem → to pole je země.
+     Vrací false při sporu. */
+  function propaguj(n, cisla, st, S, C, celkemZeme) {
+    const N = n * n;
+    let zmena = true;
+    const komp = new Int32Array(N), vel = [], cisloKomp = [], vKomp = [];
+    const dosah = new Uint8Array(N), dist = new Int32Array(N);
+    function komponentyZeme() {
+      komp.fill(-1); vel.length = 0; cisloKomp.length = 0; vKomp.length = 0;
+      for (let i = 0; i < N; i++) {
+        if (st[i] !== ZEME || komp[i] >= 0) continue;
+        const id = vel.length, fr = [i], cl = [i];
+        komp[i] = id; let c = -1, spor = false;
+        while (fr.length) {
+          const a = fr.pop();
+          if (cisla[a]) { if (c >= 0) spor = true; c = a; }
+          for (const b of S[a]) if (st[b] === ZEME && komp[b] < 0) { komp[b] = id; fr.push(b); cl.push(b); }
+        }
+        if (spor) return false;
+        vel.push(cl.length); cisloKomp.push(c); vKomp.push(cl);
+      }
+      return true;
+    }
+    while (zmena) {
+      zmena = false;
+      if (!komponentyZeme()) return false;
+      // velikosti ostrovů
+      for (let k = 0; k < vel.length; k++) {
+        const c = cisloKomp[k];
+        if (c >= 0 && vel[k] > cisla[c]) return false;
+        if (c >= 0 && vel[k] === cisla[c]) {
+          for (const a of vKomp[k]) for (const b of S[a]) if (st[b] === NEZNAME) { st[b] = MORE; zmena = true; }
+        }
+      }
+      if (zmena) continue;
+      // 3) neznámé mezi dvěma různými ostrovy (s čísly nebo bez – dva ostrovy s čísly)
+      for (let i = 0; i < N; i++) {
+        if (st[i] !== NEZNAME) continue;
+        let prvni = -1, dva = false;
+        for (const b of S[i]) if (st[b] === ZEME && cisloKomp[komp[b]] >= 0) {
+          const c = cisloKomp[komp[b]];
+          if (prvni < 0) prvni = c; else if (c !== prvni) dva = true;
+        }
+        if (dva) { st[i] = MORE; zmena = true; }
+      }
+      if (zmena) continue;
+      // 4) čtverce 2×2
+      for (const q of C) {
+        let more = 0, nez = -1, nezPocet = 0;
+        for (const i of q) { if (st[i] === MORE) more++; else if (st[i] === NEZNAME) { nez = i; nezPocet++; } }
+        if (more === 4) return false;
+        if (more === 3 && nezPocet === 1) { st[nez] = ZEME; zmena = true; }
+      }
+      if (zmena) continue;
+      // 1) dosah čísel: BFS od každého nedokončeného ostrova s číslem přes neznámá pole
+      //    (ne přes pole sousedící s cizím ostrovem), vzdálenost < zbývající kapacita
+      dosah.fill(0);
+      for (let k = 0; k < vel.length; k++) {
+        const c = cisloKomp[k];
+        if (c < 0) continue;
+        const zbyva = cisla[c] - vel[k];
+        dist.fill(-1); const fr = [];
+        for (const a of vKomp[k]) { dist[a] = 0; fr.push(a); dosah[a] = 1; }
+        for (let q = 0; q < fr.length; q++) {
+          const a = fr[q];
+          if (dist[a] >= zbyva) continue;
+          for (const b of S[a]) {
+            if (dist[b] >= 0 || st[b] === MORE) continue;
+            if (st[b] === ZEME && komp[b] !== k) {
+              // cizí země: připojit jde jen zemi bez čísla, a jen když se vejde;
+              // pak je dosažitelná celá (vzdálenost podhodnocená = bezpečná strana)
+              const kb = komp[b];
+              if (cisloKomp[kb] >= 0 || dist[a] + vel[kb] > zbyva) continue;
+              for (const z of vKomp[kb]) if (dist[z] < 0) { dist[z] = dist[a] + 1; dosah[z] = 1; fr.push(z); }
+              continue;
+            }
+            // pole sousedící s jiným ostrovem s číslem nelze použít
+            let cizi = false;
+            for (const d of S[b]) if (st[d] === ZEME && komp[d] !== k && cisloKomp[komp[d]] >= 0) cizi = true;
+            if (cizi) continue;
+            dist[b] = dist[a] + 1; dosah[b] = 1; fr.push(b);
+          }
+        }
+      }
+      for (let i = 0; i < N; i++) {
+        if (dosah[i]) continue;
+        if (st[i] === ZEME) return false;          // země bez možnosti dostat číslo
+        if (st[i] === NEZNAME) { st[i] = MORE; zmena = true; }
+      }
+      if (zmena) continue;
+      // 5) + 7) ostrov (nedokončený s číslem, nebo bez čísla) s jediným možným rozšířením
+      for (let k = 0; k < vel.length; k++) {
+        const c = cisloKomp[k];
+        if (c >= 0 && vel[k] === cisla[c]) continue;
+        const moz = new Set();
+        for (const a of vKomp[k]) for (const b of S[a]) if (st[b] === NEZNAME) moz.add(b);
+        if (moz.size === 0) return false;
+        // po změně přepočítat komponenty – ostatní by počítaly se starým stavem
+        if (moz.size === 1) { st[[...moz][0]] = ZEME; zmena = true; break; }
+      }
+      if (zmena) continue;
+      // 6) souvislost moře
+      const mk = new Int32Array(N).fill(-1);
+      const morePocty = [];
+      let vseMore = 0;
+      for (let i = 0; i < N; i++) if (st[i] === MORE) vseMore++;
+      for (let i = 0; i < N; i++) {
+        if (st[i] !== MORE || mk[i] >= 0) continue;
+        const id = morePocty.length, fr = [i];
+        mk[i] = id; let pocet = 1;
+        const vychody = new Set();
+        for (let q = 0; q < fr.length; q++) {
+          const a = fr[q];
+          for (const b of S[a]) {
+            if (st[b] === MORE && mk[b] < 0) { mk[b] = id; fr.push(b); pocet++; }
+            else if (st[b] === NEZNAME) vychody.add(b);
+          }
+        }
+        morePocty.push(pocet);
+        if (pocet < vseMore || (N - celkemZeme) > pocet) {
+          if (vychody.size === 0) return false;
+          if (vychody.size === 1) { st[[...vychody][0]] = MORE; zmena = true; break; }
+        }
+      }
+    }
+    return true;
+  }
+
+  function celkovaZeme(cisla) { let s = 0; for (const c of cisla) s += c; return s; }
+
+  function platne(n, cisla, st, S, C) {
+    // úplné ověření hotového stavu (bez neznámých)
+    const N = n * n;
+    for (const q of C) if (q.every(i => st[i] === MORE)) return false;
+    const komp = new Int32Array(N).fill(-1);
+    for (let i = 0; i < N; i++) {
+      if (st[i] !== ZEME || komp[i] >= 0) continue;
+      const fr = [i]; komp[i] = i; let c = 0, k = 0, v = 0;
+      for (let q = 0; q < fr.length; q++) {
+        const a = fr[q]; v++;
+        if (cisla[a]) { c++; k = cisla[a]; }
+        for (const b of S[a]) if (st[b] === ZEME && komp[b] < 0) { komp[b] = i; fr.push(b); }
+      }
+      if (c !== 1 || v !== k) return false;
+    }
+    let prvni = -1, more = 0;
+    for (let i = 0; i < N; i++) if (st[i] === MORE) { more++; if (prvni < 0) prvni = i; }
+    if (!more) return true;
+    const vid = new Uint8Array(N), fr = [prvni]; vid[prvni] = 1; let k = 1;
+    for (let q = 0; q < fr.length; q++) for (const b of S[fr[q]]) if (st[b] === MORE && !vid[b]) { vid[b] = 1; k++; fr.push(b); }
+    return k === more;
+  }
+
+  function pocatecniStav(n, cisla) {
+    const st = new Uint8Array(n * n);
+    for (let i = 0; i < n * n; i++) if (cisla[i]) st[i] = ZEME;
+    return st;
+  }
+
+  /* Řešitel: propagace + větvení (moře / země) na neznámém poli vedle
+     nedokončeného ostrova. Vrací počet řešení (nejvýš limit). */
+  function pocetReseni(n, cisla, limit = 2, vystup) {
+    const S = sousede(n), C = ctverce(n), cz = celkovaZeme(cisla);
+    let pocet = 0;
+    function krok(st) {
+      if (!propaguj(n, cisla, st, S, C, cz)) return false;
+      let vyb = -1;
+      for (let i = 0; i < n * n && vyb < 0; i++) if (st[i] === NEZNAME) {
+        for (const b of S[i]) if (st[b] === ZEME) { vyb = i; break; }
+      }
+      if (vyb < 0) vyb = st.indexOf(NEZNAME);
+      if (vyb < 0) {
+        if (!platne(n, cisla, st, S, C)) return false;
+        pocet++;
+        if (vystup) vystup.push(Array.from(st));
+        return pocet >= limit;
+      }
+      for (const v of [MORE, ZEME]) {
+        const s2 = st.slice(); s2[vyb] = v;
+        if (krok(s2)) return true;
+      }
+      return false;
+    }
+    krok(pocatecniStav(n, cisla));
+    return pocet;
+  }
+
+  /* Kolik polí se určí úvahou: propagace + zkouška o krok napřed (když volba
+     moře/země pro neznámé pole vede po propagaci ke sporu, platí opak).
+     Tohle odpovídá tomu, jak zadání řeší člověk, a vylučuje nutnost hádat. */
+  function urcenoUvahou(n, cisla) {
+    const S = sousede(n), C = ctverce(n), cz = celkovaZeme(cisla);
+    const st = pocatecniStav(n, cisla);
+    if (!propaguj(n, cisla, st, S, C, cz)) return -1;
+    let zmena = true;
+    while (zmena) {
+      zmena = false;
+      for (let i = 0; i < n * n; i++) {
+        if (st[i] !== NEZNAME) continue;
+        for (const v of [MORE, ZEME]) {
+          const zk = st.slice(); zk[i] = v;
+          if (propaguj(n, cisla, zk, S, C, cz)) continue;
+          st[i] = v === MORE ? ZEME : MORE;
+          if (!propaguj(n, cisla, st, S, C, cz)) return -1;
+          zmena = true;
+          break;
+        }
+      }
+    }
+    let k = 0;
+    for (let i = 0; i < n * n; i++) if (st[i] !== NEZNAME) k++;
+    return k;
+  }
+  function urcenoPropagaci(n, cisla) {
+    const S = sousede(n), C = ctverce(n);
+    const st = pocatecniStav(n, cisla);
+    if (!propaguj(n, cisla, st, S, C, celkovaZeme(cisla))) return -1;
+    let k = 0;
+    for (let i = 0; i < n * n; i++) if (st[i] !== NEZNAME) k++;
+    return k;
+  }
+
+  /* Náhodné platné řešení: ostrovy rostou v souvislém moři. Pole se ostrovu
+     přidá, jen když nesousedí s jiným ostrovem a moře zůstane souvislé.
+     Nakonec se odstraní zatopené čtverce 2×2. */
+  function nahodneReseni(n, r) {
+    const N = n * n, S = sousede(n), C = ctverce(n);
+    const ost = new Int32Array(N).fill(-1);   // -1 moře, jinak číslo ostrova
+    const velikosti = [];
+    function moreSouvisle(bez) {
+      let start = -1, pocet = 0;
+      for (let i = 0; i < N; i++) if (ost[i] < 0 && i !== bez) { pocet++; if (start < 0) start = i; }
+      if (!pocet) return false;
+      const vid = new Uint8Array(N), fr = [start]; vid[start] = 1; let k = 1;
+      for (let q = 0; q < fr.length; q++) for (const b of S[fr[q]]) if (ost[b] < 0 && b !== bez && !vid[b]) { vid[b] = 1; k++; fr.push(b); }
+      return k === pocet;
+    }
+    function lzePridat(i, id) {
+      if (ost[i] >= 0) return false;
+      for (const b of S[i]) if (ost[b] >= 0 && ost[b] !== id) return false;
+      return moreSouvisle(i);
+    }
+    // menší ostrovy = hustší čísla = zadání jde odvodit úvahou (velké ostrovy
+    // nechávají široké neurčené plochy)
+    const maxVel = n <= 6 ? 5 : 6;
+    for (let pokus = 0; pokus < N * 3; pokus++) {
+      const i = Math.floor(r() * N);
+      if (!lzePridat(i, velikosti.length)) continue;
+      const id = velikosti.length;
+      ost[i] = id; velikosti.push(1);
+      const cil = 1 + Math.floor(Math.pow(r(), 1.6) * maxVel);
+      while (velikosti[id] < cil) {
+        const moz = [];
+        for (let a = 0; a < N; a++) if (ost[a] === id) for (const b of S[a]) if (lzePridat(b, id)) moz.push(b);
+        if (!moz.length) break;
+        ost[moz[Math.floor(r() * moz.length)]] = id; velikosti[id]++;
+      }
+    }
+    // čtverce 2×2 z moře: přilepit pole k sousednímu ostrovu nebo založit nový
+    for (let kolo = 0; kolo < 4; kolo++) {
+      let zbyva = false;
+      for (const q of zamichej(C.slice(), r)) {
+        if (!q.every(i => ost[i] < 0)) continue;
+        let hotovo = false;
+        for (const i of zamichej(q.slice(), r)) {
+          const ids = new Set();
+          for (const b of S[i]) if (ost[b] >= 0) ids.add(ost[b]);
+          if (ids.size > 1) continue;
+          const id = ids.size ? [...ids][0] : velikosti.length;
+          if (!moreSouvisle(i)) continue;
+          if (id === velikosti.length) velikosti.push(0);
+          ost[i] = id; velikosti[id]++;
+          hotovo = true; break;
+        }
+        if (!hotovo) zbyva = true;
+      }
+      if (!zbyva) break;
+    }
+    for (const q of C) if (q.every(i => ost[i] < 0)) return null;
+    return { ost, velikosti };
+  }
+
+  /* Generátor: náhodné řešení, číslo na náhodném poli každého ostrova. Když
+     řešení není jediné nebo ho propagace nedokáže celé odvodit, zkouší se
+     přesouvat čísla uvnitř ostrovů (horolezení na počtu odvozených polí). */
+  function generuj(n, seed) {
+    const r = rng(seed), N = n * n;
+    let zaloha = null, zalohaSkore = -1;   // nejlepší jednoznačné zadání, kdyby úvaha nestačila
+    for (let pokus = 0; pokus < 120; pokus++) {
+      const res = nahodneReseni(n, r);
+      if (!res) continue;
+      const { ost, velikosti } = res;
+      const pole = velikosti.map(() => []);
+      for (let i = 0; i < N; i++) if (ost[i] >= 0) pole[ost[i]].push(i);
+      const cislo = pole.map(p => p[Math.floor(r() * p.length)]);
+      const zadani = () => { const c = new Array(N).fill(0); cislo.forEach((i, k) => { c[i] = velikosti[k]; }); return c; };
+      // horolezení: přesouvat čísla uvnitř ostrovů, dokud roste počet odvozených polí
+      function horolez(mira, kroku, nyni) {
+        for (let krok = 0; krok < kroku && nyni < N; krok++) {
+          const k = Math.floor(r() * pole.length);
+          if (pole[k].length < 2) continue;
+          const puv = cislo[k];
+          let nej = nyni, nejI = puv;
+          for (const i of zamichej(pole[k].slice(), r).slice(0, 4)) {
+            if (i === puv) continue;
+            cislo[k] = i;
+            const v = mira(n, zadani());
+            if (v > nej) { nej = v; nejI = i; }
+          }
+          cislo[k] = nejI; nyni = nej;
+        }
+        return nyni;
+      }
+      let nyni = horolez(urcenoPropagaci, 8 * velikosti.length, urcenoPropagaci(n, zadani()));
+      // nadějné zadání doladit měřítkem se zkouškou o krok napřed (dražší)
+      if (nyni < N && nyni > N * 0.45) nyni = horolez(urcenoUvahou, 2 * velikosti.length, urcenoUvahou(n, zadani()));
+      const c = zadani();
+      const reseni = Array.from(ost, v => v >= 0 ? ZEME : MORE);
+      if (nyni === N) return { n, cisla: c, reseni };
+      const uvaha = Math.max(nyni, urcenoUvahou(n, c));
+      if (uvaha === N) return { n, cisla: c, reseni };
+      if (uvaha > zalohaSkore && uvaha > N * 0.6 && pocetReseni(n, c, 2) === 1) {
+        zaloha = { n, cisla: c, reseni, tezke: true }; zalohaSkore = uvaha;
+      }
+    }
+    return zaloha;
+  }
+
+  return { rng, hash, NEZNAME, MORE, ZEME, sousede, ctverce, propaguj, platne, pocetReseni, urcenoPropagaci, urcenoUvahou, nahodneReseni, generuj };
+})();
+</script>
+
+<script>
+(function () {
+  const $ = id => document.getElementById(id);
+  const L = NurikabeLogika;
+  let hra = null, S = null, C = null, stav = [], historie = [], start = 0, tik = null, konec = false, rezim = 'denni', napoveda = false;
+  const rekordy = {};
+
+  function dnes() {
+    const d = new Date();
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  }
+
+  function nova(r) {
+    $('msg').className = 'msg';
+    $('msg').textContent = '⏳ Generuji zadání…';
+    clearInterval(tik);
+    setTimeout(() => novaHned(r), 30);
+  }
+  function novaHned(r) {
+    rezim = r;
+    const n = +$('velikost').value;
+    const seed = r === 'denni' ? L.hash('nurikabe|' + dnes() + '|' + n) : (Math.random() * 2 ** 32) >>> 0;
+    hra = L.generuj(n, seed);
+    S = L.sousede(n); C = L.ctverce(n);
+    stav = new Array(n * n).fill(0);   // 0 prázdné, 1 moře, 2 tečka
+    historie = []; konec = false; napoveda = false;
+    $('msg').textContent = '';
+    $('rezim').textContent = r === 'denni' ? '📅 Denní zadání ' + new Date().toLocaleDateString('cs-CZ') : '🎲 Náhodné zadání';
+    nastavRekord(n);
+    clearInterval(tik); start = Date.now(); tik = setInterval(ukazCas, 500); ukazCas();
+    kresli();
+  }
+
+  function nastavRekord(n) {
+    if (typeof Rekord === 'undefined') return;
+    if (!rekordy[n]) rekordy[n] = Rekord.sleduj('webapp_hra_nurikabe_' + n,
+      { vyssiLepsi: false, popisek: 'Rekord ' + n + '×' + n, format: formatCas });
+    rekordy[n].prvek($('rekordBox'));
+  }
+  function formatCas(s) { return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); }
+  function sekundy() { return Math.floor((Date.now() - start) / 1000); }
+  function ukazCas() { if (!konec) $('cas').textContent = formatCas(sekundy()); }
+
+  /* Rozbor hráčova stavu: zatopené čtverce 2×2 a stav čísel. Ostrov čísla se
+     počítá z nezatopených polí souvisle spojených s číslem; „hotovo", když je
+     ohraničený mořem a má správnou velikost, „chyba", když je víc polí jistě
+     země (čísla/tečky) než číslo dovoluje nebo když obsahuje dvě čísla. */
+  function rozbor() {
+    const n = hra.n, N = n * n;
+    const bloky = new Set();
+    for (const q of C) if (q.every(i => stav[i] === 1)) q.forEach(i => bloky.add(i));
+    const cisla = {};
+    const vid = new Int32Array(N).fill(-1);
+    for (let i = 0; i < N; i++) {
+      if (!hra.cisla[i] || vid[i] >= 0) continue;
+      // komponenta jistě-země (čísla + tečky)
+      const fr = [i]; vid[i] = i;
+      let jiste = 0, pocetCisel = 0;
+      for (let q = 0; q < fr.length; q++) {
+        const a = fr[q]; jiste++;
+        if (hra.cisla[a]) pocetCisel++;
+        for (const b of S[a]) if (vid[b] < 0 && (hra.cisla[b] || stav[b] === 2)) { vid[b] = i; fr.push(b); }
+      }
+      // komponenta všech nezatopených polí
+      const vid2 = new Uint8Array(N), fr2 = [i]; vid2[i] = 1;
+      for (let q = 0; q < fr2.length; q++) for (const b of S[fr2[q]]) if (!vid2[b] && stav[b] !== 1) { vid2[b] = 1; fr2.push(b); }
+      let st = '';
+      if (pocetCisel > 1 || jiste > hra.cisla[i]) st = 'chyba';
+      else if (fr2.length === hra.cisla[i]) st = 'hotovo';
+      else if (fr2.length < hra.cisla[i]) st = 'chyba';
+      fr.forEach(a => { if (hra.cisla[a]) cisla[a] = pocetCisel > 1 ? 'chyba' : st; });
+    }
+    return { bloky, cisla };
+  }
+
+  function vyreseno() {
+    const n = hra.n;
+    const st = new Uint8Array(n * n);
+    for (let i = 0; i < n * n; i++) st[i] = stav[i] === 1 ? L.MORE : L.ZEME;
+    return L.platne(n, hra.cisla, st, S, C);
+  }
+
+  function kresli(zvyrazni) {
+    const n = hra.n, d = $('deska');
+    d.style.setProperty('--n', n);
+    d.style.gridTemplateColumns = d.style.gridTemplateRows = `repeat(${n},minmax(0,1fr))`;
+    const ro = rozbor();
+    d.innerHTML = '';
+    for (let i = 0; i < n * n; i++) {
+      const p = document.createElement('div');
+      p.dataset.i = i;
+      p.className = 'pole';
+      if (hra.cisla[i]) {
+        p.classList.add('cislo');
+        p.textContent = hra.cisla[i];
+        if (ro.cisla[i]) p.classList.add(ro.cisla[i]);
+      } else if (stav[i] === 1) {
+        p.classList.add('more');
+        if (ro.bloky.has(i)) p.classList.add('blok');
+      } else if (stav[i] === 2) p.innerHTML = '<span class="tecka"></span>';
+      if (zvyrazni && zvyrazni.has(i)) p.classList.add(zvyrazni.trida);
+      d.appendChild(p);
+    }
+  }
+
+  function nastav(i, v) {
+    if (hra.cisla[i] || stav[i] === v) return false;
+    historie.push([i, stav[i]]);
+    stav[i] = v;
+    return true;
+  }
+
+  function zkontrolujKonec() {
+    if (!vyreseno()) return;
+    konec = true; clearInterval(tik);
+    const s = sekundy();
+    $('cas').textContent = formatCas(s);
+    let zprava = '🎉 Ostrovy hotové za ' + formatCas(s) + '!';
+    if (napoveda) zprava += ' (s nápovědou – do rekordů se nepočítá)';
+    else if (rekordy[hra.n] && rekordy[hra.n].zapis(s)) zprava = '🏆 Nový rekord: ' + formatCas(s) + '!';
+    $('msg').className = 'msg';
+    $('msg').textContent = zprava;
+  }
+
+  // Ukazatel: klepnutí cykluje, tažení kreslí hodnotu podle prvního pole.
+  let tah = null;
+  function poleZBodu(e) {
+    const el = document.elementFromPoint(e.clientX, e.clientY);
+    const p = el && el.closest('.pole');
+    return p ? +p.dataset.i : -1;
+  }
+  $('deska').addEventListener('pointerdown', e => {
+    if (konec || !hra) return;
+    const i = poleZBodu(e);
+    if (i < 0 || hra.cisla[i]) return;
+    try { $('deska').setPointerCapture(e.pointerId); } catch (_) { /* syntetické události */ }
+    tah = { start: i, hodnota: (stav[i] + 1) % 3, tazeno: false, posledni: i };
+  });
+  $('deska').addEventListener('pointermove', e => {
+    if (!tah) return;
+    const i = poleZBodu(e);
+    if (i < 0 || i === tah.posledni) return;
+    if (!tah.tazeno) { tah.tazeno = true; nastav(tah.start, tah.hodnota); }
+    tah.posledni = i;
+    nastav(i, tah.hodnota);
+    kresli();
+  });
+  $('deska').addEventListener('pointerup', () => {
+    if (!tah) return;
+    const t = tah; tah = null;
+    if (!t.tazeno) nastav(t.start, t.hodnota);
+    $('msg').textContent = '';
+    kresli();
+    zkontrolujKonec();
+  });
+  $('deska').addEventListener('pointercancel', () => { tah = null; kresli(); });
+
+  $('zpetBtn').onclick = () => {
+    if (konec || !historie.length) return;
+    const [i, v] = historie.pop();
+    stav[i] = v; kresli();
+  };
+  $('kontrolaBtn').onclick = () => {
+    if (konec) return;
+    const spatne = new Set();
+    stav.forEach((v, i) => {
+      if (v === 1 && hra.reseni[i] !== L.MORE) spatne.add(i);
+      if (v === 2 && hra.reseni[i] !== L.ZEME) spatne.add(i);
+    });
+    spatne.trida = 'spatne';
+    kresli(spatne);
+    $('msg').className = spatne.size ? 'msg varovani' : 'msg';
+    $('msg').textContent = spatne.size ? '✗ Chybných polí: ' + spatne.size : '👍 Zatím bez chyby';
+  };
+  $('napovedaBtn').onclick = () => {
+    if (konec) return;
+    // chybné pole má přednost; jinak první nevyplněné moře, pak nevyplněná země
+    let i = stav.findIndex((v, k) => (v === 1 && hra.reseni[k] !== L.MORE) || (v === 2 && hra.reseni[k] !== L.ZEME));
+    let text = '💡 Tohle pole je označené špatně.';
+    if (i < 0) { i = stav.findIndex((v, k) => v !== 1 && hra.reseni[k] === L.MORE && !hra.cisla[k]); text = '💡 Tady je moře.'; }
+    if (i < 0) return;
+    napoveda = true;
+    const z = new Set([i]); z.trida = 'napoveda';
+    kresli(z);
+    $('msg').className = 'msg';
+    $('msg').textContent = text;
+  };
+  $('denniBtn').onclick = () => nova('denni');
+  $('noveBtn').onclick = () => nova('nove');
+  $('velikost').onchange = () => nova(rezim);
+  window.addEventListener('DOMContentLoaded', () => nova('denni'));
+})();
+</script>
+</body>
+</html>

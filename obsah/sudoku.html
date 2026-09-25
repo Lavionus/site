@@ -28,7 +28,7 @@ select{background:var(--border);border:1px solid var(--border-strong);border-rad
 .cell:nth-child(9n){border-right:none}
 .board>.cell:nth-child(n+19):nth-child(-n+27),.board>.cell:nth-child(n+46):nth-child(-n+54){border-bottom:2px solid var(--accent)}
 .pad{display:grid;grid-template-columns:repeat(5,1fr);gap:6px;margin-top:16px;width:min(450px,92vw)}
-.key{background:var(--bg-elevated);border:1px solid var(--border);border-radius:6px;padding:14px 0;text-align:center;cursor:pointer;font-size:1.2rem;font-weight:600}
+.key{touch-action:none;-webkit-touch-callout:none;background:var(--bg-elevated);border:1px solid var(--border);border-radius:6px;padding:14px 0;text-align:center;cursor:pointer;font-size:1.2rem;font-weight:600}
 .key:hover{background:var(--bg-hover)}
 .msg{margin-top:14px;font-size:1.2rem;font-weight:700;min-height:30px;color:#27ae60}
 .cell.conflict{background:#5a2a2a;color:#e74c3c}
@@ -152,6 +152,34 @@ function place(n){
   render();
   if(puzzle.flat().every(v=>v!==0))checkWin();
 }
+// Podržení čísla v režimu poznámek: zapíše ho do všech volných polí bloku 3×3 s vybraným polem,
+// kde nekoliduje s číslem už vyplněným v řádku, sloupci nebo bloku. Když ho tam už všechna mají, smaže ho.
+function placeNoteInBlock(n){
+  if(selected<0||!n)return;const r0=Math.floor(selected/9),c0=selected%9;
+  const br=r0-r0%3,bc=c0-c0%3,cells=[];
+  for(let r=br;r<br+3;r++)for(let c=bc;c<bc+3;c++){
+    if(puzzle[r][c])continue;let ok=true;
+    for(let k=0;k<9&&ok;k++)if(puzzle[r][k]===n||puzzle[k][c]===n||puzzle[br+Math.floor(k/3)][bc+k%3]===n)ok=false;
+    if(ok)cells.push(r*9+c);}
+  if(!cells.length)return;
+  pushHistory();
+  const all=cells.every(i=>notes[i].has(n));
+  cells.forEach(i=>all?notes[i].delete(n):notes[i].add(n));
+  render();
+}
+// Krátký stisk = place(n); v režimu poznámek podržení (≥ HOLD_MS) = placeNoteInBlock(n).
+const HOLD_MS=450;let holdTimer=null,holdN=0,holdDone=false;
+function pressStart(n){
+  if(!notesMode||!n){place(n);return;}
+  clearTimeout(holdTimer);holdN=n;holdDone=false;
+  holdTimer=setTimeout(()=>{holdDone=true;holdTimer=null;placeNoteInBlock(holdN);},HOLD_MS);
+}
+function pressEnd(n){
+  if(!holdTimer||n!==holdN)return;
+  clearTimeout(holdTimer);holdTimer=null;
+  if(!holdDone)place(n);
+}
+function pressCancel(){clearTimeout(holdTimer);holdTimer=null;}
 // Vrátí množinu indexů buněk, které jsou v rozporu s pravidly (duplicita v řádku/sloupci/bloku).
 function findConflicts(){
   const bad=new Set();const units=[];
@@ -185,16 +213,24 @@ $('checkBtn').onclick=()=>{
   setTimeout(()=>document.querySelectorAll('.conflict').forEach(d=>d.classList.remove('conflict')),1500);
 };
 $('pad').innerHTML=[1,2,3,4,5,6,7,8,9].map(n=>`<div class="key" data-n="${n}">${n}</div>`).join('')+'<div class="key" data-n="0">⌫</div>';
-$('pad').querySelectorAll('.key').forEach(k=>k.onclick=()=>place(+k.dataset.n));
+$('pad').querySelectorAll('.key').forEach(k=>{
+  const n=+k.dataset.n;if(n)k.title='V režimu poznámek podržením zapíšete poznámku do celého bloku 3×3';
+  k.addEventListener('pointerdown',e=>{if(e.button)return;e.preventDefault();pressStart(n);});
+  k.addEventListener('pointerup',()=>pressEnd(n));
+  k.addEventListener('pointerleave',pressCancel);k.addEventListener('pointercancel',pressCancel);
+});
+$('pad').addEventListener('contextmenu',e=>e.preventDefault());
 function toggleNotes(){notesMode=!notesMode;$('notesBtn').classList.toggle('active',notesMode);}
 $('notesBtn').onclick=toggleNotes;
 $('undoBtn').onclick=undo;
 document.addEventListener('keydown',e=>{
   if((e.ctrlKey||e.metaKey)&&(e.key==='z'||e.key==='Z')){e.preventDefault();undo();return;}
-  if(e.key>='1'&&e.key<='9')place(+e.key);else if(e.key==='Backspace'||e.key==='Delete'||e.key==='0')place(0);
+  if(e.key>='1'&&e.key<='9'){if(!e.repeat)pressStart(+e.key);}else if(e.key==='Backspace'||e.key==='Delete'||e.key==='0')place(0);
   else if(e.key==='n'||e.key==='N')toggleNotes();
   else if(e.key.startsWith('Arrow')&&selected>=0){let r=Math.floor(selected/9),c=selected%9;
     if(e.key==='ArrowUp')r=(r+8)%9;if(e.key==='ArrowDown')r=(r+1)%9;if(e.key==='ArrowLeft')c=(c+8)%9;if(e.key==='ArrowRight')c=(c+1)%9;selected=r*9+c;render();}});
+document.addEventListener('keyup',e=>{if(e.key>='1'&&e.key<='9')pressEnd(+e.key);});
+window.addEventListener('blur',pressCancel);
 // ---- Snímky (snapshots) ----
 let snapshots=[];
 try{snapshots=JSON.parse(localStorage.getItem('sudokuSnaps')||'[]');}catch(e){snapshots=[];}

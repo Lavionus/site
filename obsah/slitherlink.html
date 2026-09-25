@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>⭕ Slitherlink</title>
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../podpis.js" defer></script>
+<script src="../rekord.js" defer></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;user-select:none;-webkit-user-select:none}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;padding:20px 12px;display:flex;flex-direction:column;align-items:center}
+h1{font-size:1.6rem;margin-bottom:6px;font-weight:600}
+.sub{color:var(--text-faint);font-size:.85rem;margin-bottom:14px;text-align:center;max-width:480px;line-height:1.4}
+.top{display:flex;gap:8px;align-items:center;margin-bottom:10px;flex-wrap:wrap;justify-content:center}
+.btn{background:var(--accent);color:#fff;border:none;padding:9px 14px;border-radius:6px;cursor:pointer;font-weight:600;font-size:.9rem}
+.btn-sec{background:var(--bg-control);color:var(--text)}
+.btn-sec:hover{background:var(--bg-hover)}
+select{background:var(--bg-control);border:1px solid var(--border-strong);border-radius:6px;color:var(--text);padding:8px}
+.info{color:var(--text-faint);font-size:.9rem;display:flex;gap:14px;align-items:center;flex-wrap:wrap;justify-content:center;margin-bottom:12px}
+/* Deska: papír s tečkami – vlastní barvy, stejné v obou tématech */
+.deska{width:min(500px,94vw);aspect-ratio:1;background:#fbf8f1;border-radius:8px;border:1px solid #d8d0bd;touch-action:none;display:block}
+.deska .bod{fill:#2d2d2d}
+.deska .cislo{font-size:.55px;font-weight:600;fill:#2d2d2d;text-anchor:middle;dominant-baseline:central;font-family:var(--font);pointer-events:none}
+.deska .cislo.hotovo{fill:#9aa19a}
+.deska .cislo.chyba{fill:#c0392b}
+.deska .hrana{stroke:#1f5bb5;stroke-width:.12;stroke-linecap:round}
+.deska .hrana.hotovo{stroke:#2f8a4a}
+.deska .krizek{stroke:#b04a4a;stroke-width:.05;stroke-linecap:round}
+.deska .zona{stroke:transparent;stroke-width:.42;cursor:pointer;stroke-linecap:butt}
+.deska .zona:hover{stroke:rgba(31,91,181,.12)}
+.deska .spatne{stroke:#e74c3c;stroke-width:.2;stroke-linecap:round;opacity:.55}
+.deska .napoveda{stroke:#f1c40f;stroke-width:.24;stroke-linecap:round;animation:blik .5s 4 alternate}
+.deska .uvnitr{fill:rgba(47,138,74,.13)}
+@keyframes blik{from{opacity:1}to{opacity:.2}}
+.msg{margin-top:14px;font-size:1.2rem;font-weight:700;min-height:30px;color:var(--ok);text-align:center;max-width:480px}
+.msg.varovani{color:var(--warn)}
+.pravidla{margin-top:14px;max-width:480px;color:var(--text-muted);font-size:.85rem;line-height:1.5}
+.pravidla summary{cursor:pointer;color:var(--text);font-weight:600;margin-bottom:6px}
+.pravidla li{margin-left:18px}
+</style>
+</head>
+<body>
+<h1>⭕ Slitherlink</h1>
+<p class="sub">Spoj tečky jedinou uzavřenou smyčkou. Číslo v políčku říká, kolik jeho stran smyčka využívá. Smyčka se nekříží ani nevětví.</p>
+<div class="top">
+  <select id="velikost" title="Velikost">
+    <option value="5">5×5 · lehké</option><option value="7" selected>7×7 · střední</option>
+    <option value="10">10×10 · těžší</option>
+  </select>
+  <button class="btn" id="denniBtn" title="Stejné zadání pro všechny, každý den nové">📅 Denní</button>
+  <button class="btn" id="noveBtn">🔄 Nové</button>
+  <button class="btn btn-sec" id="zpetBtn">↩️ Zpět</button>
+  <button class="btn btn-sec" id="kontrolaBtn" title="Označí čáry, které do smyčky nepatří">✓ Kontrola</button>
+  <button class="btn btn-sec" id="napovedaBtn">💡 Nápověda</button>
+</div>
+<div class="info">
+  <span id="rezim">—</span>
+  <span>⏱️ <b id="cas">0:00</b></span>
+  <span id="rekordBox"></span>
+</div>
+<svg class="deska" id="deska"></svg>
+<div class="msg" id="msg"></div>
+<details class="pravidla">
+  <summary>Ovládání a pravidla</summary>
+  <ul>
+    <li>Klepnutí na spojnici dvou teček: nic → čára → ✕ (tady čára není) → nic. Pravé tlačítko myši dá rovnou ✕.</li>
+    <li>Tažením přes spojnice kreslíš víc čar najednou (nebo je mažeš, když začneš na čáře).</li>
+    <li>Číslo = počet stran políčka, kudy vede smyčka. Políčka bez čísla mohou mít libovolný počet.</li>
+    <li>Smyčka je jediná, uzavřená, bez křížení a větvení.</li>
+    <li>Zadání má vždy jediné řešení a dá se vyřešit úvahou bez hádání.</li>
+  </ul>
+</details>
+
+<!-- Čistá logika: bez DOM, testuje se v node (_test/logicke_mrizky.js). -->
+<script>
+const SlitherLogika = (function () {
+  function rng(seed) {
+    let a = seed >>> 0;
+    return function () {
+      a = (a + 0x6D2B79F5) >>> 0;
+      let t = a;
+      t = Math.imul(t ^ (t >>> 15), t | 1);
+      t ^= t + Math.imul(t ^ (t >>> 7), t | 61);
+      return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+  }
+  function hash(text) {
+    let h = 2166136261;
+    for (let i = 0; i < text.length; i++) { h ^= text.charCodeAt(i); h = Math.imul(h, 16777619); }
+    return h >>> 0;
+  }
+  function zamichej(pole, r) {
+    for (let i = pole.length - 1; i > 0; i--) {
+      const j = Math.floor(r() * (i + 1));
+      [pole[i], pole[j]] = [pole[j], pole[i]];
+    }
+    return pole;
+  }
+
+  /* Geometrie čtvercové mřížky n×n políček. Hrany: nejdřív vodorovné
+     (n+1 řad po n), pak svislé (n řad po n+1). Vrcholy (n+1)×(n+1). */
+  const cache = {};
+  function geometrie(n) {
+    if (cache[n]) return cache[n];
+    const H = (y, x) => y * n + x, V = (y, x) => (n + 1) * n + y * (n + 1) + x;
+    const E = (n + 1) * n * 2, vrch = (y, x) => y * (n + 1) + x;
+    const konce = new Array(E), hranyPole = [], hranyVrch = [];
+    for (let y = 0; y <= n; y++) for (let x = 0; x < n; x++) konce[H(y, x)] = [vrch(y, x), vrch(y, x + 1)];
+    for (let y = 0; y < n; y++) for (let x = 0; x <= n; x++) konce[V(y, x)] = [vrch(y, x), vrch(y + 1, x)];
+    for (let y = 0; y < n; y++) for (let x = 0; x < n; x++) hranyPole.push([H(y, x), H(y + 1, x), V(y, x), V(y, x + 1)]);
+    for (let i = 0; i < (n + 1) * (n + 1); i++) hranyVrch.push([]);
+    konce.forEach(([a, b], e) => { hranyVrch[a].push(e); hranyVrch[b].push(e); });
+    // políčka po obou stranách hrany (-1 = mimo desku)
+    const stranyHrany = new Array(E);
+    for (let y = 0; y <= n; y++) for (let x = 0; x < n; x++) stranyHrany[H(y, x)] = [y > 0 ? (y - 1) * n + x : -1, y < n ? y * n + x : -1];
+    for (let y = 0; y < n; y++) for (let x = 0; x <= n; x++) stranyHrany[V(y, x)] = [x > 0 ? y * n + x - 1 : -1, x < n ? y * n + x : -1];
+    return (cache[n] = { n, E, H, V, konce, hranyPole, hranyVrch, stranyHrany });
+  }
+
+  const NEZNAMA = 0, CARA = 1, NIC = 2;
+
+  /* Propagace nad stavem hran. Pravidla:
+      - číslo: hotový počet čar → zbytek ✕; čáry + neznámé = číslo → vše čára;
+      - vrchol: stupeň 0 nebo 2 (dvě čáry → zbytek ✕, jedna čára a jedna
+        neznámá → čára, žádná čára a jedna neznámá → ✕);
+      - smyčka: neznámá hrana, která by spojila oba konce jedné cesty, je ✕,
+        pokud by vzniklá smyčka nebyla celým řešením;
+      - uzavřená smyčka, kolem které zbývají další čáry → spor.
+     Vrací false při sporu, 'hotovo' při nalezeném úplném řešení. */
+  function propaguj(g, cisla, st) {
+    const { E, konce, hranyPole, hranyVrch } = g;
+    let zmena = true;
+    while (zmena) {
+      zmena = false;
+      for (let p = 0; p < hranyPole.length; p++) {
+        const c = cisla[p];
+        if (c < 0) continue;
+        let car = 0, nez = 0;
+        for (const e of hranyPole[p]) { if (st[e] === CARA) car++; else if (st[e] === NEZNAMA) nez++; }
+        if (car > c || car + nez < c) return false;
+        if (!nez) continue;
+        if (car === c) { for (const e of hranyPole[p]) if (st[e] === NEZNAMA) st[e] = NIC; zmena = true; }
+        else if (car + nez === c) { for (const e of hranyPole[p]) if (st[e] === NEZNAMA) st[e] = CARA; zmena = true; }
+      }
+      for (let v = 0; v < hranyVrch.length; v++) {
+        let car = 0, nez = 0, posl = -1;
+        for (const e of hranyVrch[v]) { if (st[e] === CARA) car++; else if (st[e] === NEZNAMA) { nez++; posl = e; } }
+        if (car > 2 || (car === 1 && nez === 0)) return false;
+        if (!nez) continue;
+        if (car === 2) { for (const e of hranyVrch[v]) if (st[e] === NEZNAMA) st[e] = NIC; zmena = true; }
+        else if (car === 1 && nez === 1) { st[posl] = CARA; zmena = true; }
+        else if (car === 0 && nez === 1) { st[posl] = NIC; zmena = true; }
+      }
+      if (zmena) continue;
+      // cesty: konec → druhý konec, a délky
+      const r = cesty(g, st);
+      if (r === false) return false;
+      if (r.smycka) {
+        // uzavřená smyčka: musí obsahovat všechny čáry a splnit čísla
+        if (r.smycka < r.celkem) return false;
+        for (let e = 0; e < E; e++) if (st[e] === NEZNAMA) st[e] = NIC;
+        for (let p = 0; p < hranyPole.length; p++) if (cisla[p] >= 0) {
+          let car = 0;
+          for (const e of hranyPole[p]) if (st[e] === CARA) car++;
+          if (car !== cisla[p]) return false;
+        }
+        return 'hotovo';
+      }
+      for (let e = 0; e < E; e++) {
+        if (st[e] !== NEZNAMA) continue;
+        const [a, b] = konce[e];
+        if (r.druhy[a] !== b) continue;
+        // hrana by uzavřela cestu a→b; smí jen jako poslední tah celého řešení
+        if (r.delka[a] !== r.celkem || !cislaSedi(g, cisla, st, e)) { st[e] = NIC; zmena = true; }
+      }
+    }
+    return true;
+  }
+  // sedí všechna čísla, když se k čarám přidá hrana e (ostatní neznámé = ✕)?
+  function cislaSedi(g, cisla, st, e) {
+    for (let p = 0; p < g.hranyPole.length; p++) {
+      if (cisla[p] < 0) continue;
+      let car = 0;
+      for (const f of g.hranyPole[p]) if (st[f] === CARA || f === e) car++;
+      if (car !== cisla[p]) return false;
+    }
+    return true;
+  }
+  /* Projde čáry: pro každý konec cesty zjistí druhý konec a počet hran cesty.
+     Vrací {druhy, delka, celkem, smycka} (smycka = délka uzavřené smyčky nebo 0). */
+  function cesty(g, st) {
+    const { E, konce, hranyVrch } = g;
+    const Vn = hranyVrch.length;
+    const druhy = new Int32Array(Vn).fill(-1), delka = new Int32Array(Vn), vid = new Uint8Array(E);
+    let celkem = 0, smycka = 0;
+    for (let e = 0; e < E; e++) if (st[e] === CARA) celkem++;
+    const stupen = v => { let k = 0; for (const e of hranyVrch[v]) if (st[e] === CARA) k++; return k; };
+    for (let v = 0; v < Vn; v++) {
+      if (druhy[v] >= 0 || stupen(v) !== 1) continue;
+      let prev = -1, cur = v, d = 0;
+      for (;;) {
+        let dal = -1;
+        for (const e of hranyVrch[cur]) if (st[e] === CARA && e !== prev) { dal = e; break; }
+        if (dal < 0) break;
+        vid[dal] = 1; d++;
+        prev = dal;
+        cur = konce[dal][0] === cur ? konce[dal][1] : konce[dal][0];
+      }
+      druhy[v] = cur; druhy[cur] = v; delka[v] = delka[cur] = d;
+    }
+    // čáry, které nepatří žádné otevřené cestě, tvoří uzavřené smyčky
+    for (let e = 0; e < E; e++) if (st[e] === CARA && !vid[e]) {
+      // projít smyčku
+      let k = 0, prev = e, cur = konce[e][1];
+      vid[e] = 1; k = 1;
+      for (;;) {
+        let dal = -1;
+        for (const f of hranyVrch[cur]) if (st[f] === CARA && f !== prev) { dal = f; break; }
+        if (dal < 0 || vid[dal]) break;
+        vid[dal] = 1; k++; prev = dal;
+        cur = konce[dal][0] === cur ? konce[dal][1] : konce[dal][0];
+      }
+      if (smycka) return false;   // dvě smyčky
+      smycka = k;
+    }
+    return { druhy, delka, celkem, smycka };
+  }
+
+  function platne(g, cisla, st) {
+    const r = cesty(g, st);
+    if (!r || !r.smycka || r.smycka !== r.celkem) return false;
+    for (let p = 0; p < g.hranyPole.length; p++) if (cisla[p] >= 0) {
+      let car = 0;
+      for (const e of g.hranyPole[p]) if (st[e] === CARA) car++;
+      if (car !== cisla[p]) return false;
+    }
+    return true;
+  }
+
+  /* Řešitel: propagace + větvení na neznámé hraně u konce cesty. */
+  function pocetReseni(n, cisla, limit = 2, vystup) {
+    const g = geometrie(n);
+    let pocet = 0;
+    function krok(st) {
+      const p = propaguj(g, cisla, st);
+      if (!p) return false;
+      if (p === 'hotovo' || !st.includes(NEZNAMA)) {
+        if (!platne(g, cisla, st)) return false;
+        pocet++;
+        if (vystup) vystup.push(Array.from(st));
+        return pocet >= limit;
+      }
+      // hrana u vrcholu se stupněm 1 (prodloužení cesty), jinak první neznámá
+      let vyb = -1;
+      for (let v = 0; v < g.hranyVrch.length && vyb < 0; v++) {
+        let car = 0, nez = -1;
+        for (const e of g.hranyVrch[v]) { if (st[e] === CARA) car++; else if (st[e] === NEZNAMA) nez = e; }
+        if (car === 1 && nez >= 0) vyb = nez;
+      }
+      if (vyb < 0) vyb = st.indexOf(NEZNAMA);
+      for (const v of [CARA, NIC]) {
+        const s2 = st.slice(); s2[vyb] = v;
+        if (krok(s2)) return true;
+      }
+      return false;
+    }
+    krok(new Uint8Array(g.E));
+    return pocet;
+  }
+
+  /* Kolik hran se určí úvahou: propagace, případně i se zkouškou o krok napřed
+     (když volba čára/✕ vede ke sporu, platí opak). */
+  function urcenoUvahou(n, cisla, zkouska) {
+    const g = geometrie(n), st = new Uint8Array(g.E);
+    let p = propaguj(g, cisla, st);
+    if (!p) return -1;
+    let zmena = zkouska && p !== 'hotovo';
+    while (zmena) {
+      zmena = false;
+      for (let e = 0; e < g.E; e++) {
+        if (st[e] !== NEZNAMA) continue;
+        for (const v of [CARA, NIC]) {
+          const zk = st.slice(); zk[e] = v;
+          if (propaguj(g, cisla, zk)) continue;
+          st[e] = v === CARA ? NIC : CARA;
+          p = propaguj(g, cisla, st);
+          if (!p) return -1;
+          zmena = p !== 'hotovo';
+          break;
+        }
+        if (p === 'hotovo') break;
+      }
+    }
+    if (st.includes(NEZNAMA)) { let k = 0; for (const v of st) if (v !== NEZNAMA) k++; return k; }
+    return platne(g, cisla, st) ? g.E : -1;
+  }
+
+  /* Náhodná smyčka = hranice náhodné oblasti „uvnitř". Oblast roste od jednoho
+     políčka; políčko se přidá, jen když oblast i okolí (včetně okraje desky)
+     zůstanou souvislé a nevznikne dotyk rohy (to by smyčku zkřížilo). */
+  function nahodnaSmycka(n, r) {
+    const N = n * n, uvnitr = new Uint8Array(N);
+    const sous = i => { const y = Math.floor(i / n), x = i % n, s = []; if (y > 0) s.push(i - n); if (y < n - 1) s.push(i + n); if (x > 0) s.push(i - 1); if (x < n - 1) s.push(i + 1); return s; };
+    function venkuSouvisle() {
+      // venkovní políčka musí být propojená s okrajem desky
+      const vid = new Uint8Array(N), fr = [];
+      for (let i = 0; i < N; i++) {
+        const y = Math.floor(i / n), x = i % n;
+        if (!uvnitr[i] && (y === 0 || x === 0 || y === n - 1 || x === n - 1)) { vid[i] = 1; fr.push(i); }
+      }
+      for (let q = 0; q < fr.length; q++) for (const b of sous(fr[q])) if (!uvnitr[b] && !vid[b]) { vid[b] = 1; fr.push(b); }
+      for (let i = 0; i < N; i++) if (!uvnitr[i] && !vid[i]) return false;
+      return true;
+    }
+    function bezRohu() {
+      for (let y = 0; y < n - 1; y++) for (let x = 0; x < n - 1; x++) {
+        const a = uvnitr[y * n + x], b = uvnitr[y * n + x + 1], c = uvnitr[(y + 1) * n + x], d = uvnitr[(y + 1) * n + x + 1];
+        if (a === d && b === c && a !== b) return false;
+      }
+      return true;
+    }
+    const start = Math.floor(n / 2) * n + Math.floor(n / 2) + (r() < 0.5 ? 0 : -1);
+    uvnitr[start] = 1;
+    const cil = Math.floor(N * (0.45 + r() * 0.15));
+    let velikost = 1, nezdar = 0;
+    while (velikost < cil && nezdar < N * 8) {
+      const hranice = [];
+      for (let i = 0; i < N; i++) if (uvnitr[i]) for (const b of sous(i)) if (!uvnitr[b]) hranice.push(b);
+      const i = hranice[Math.floor(r() * hranice.length)];
+      uvnitr[i] = 1;
+      if (venkuSouvisle() && bezRohu()) { velikost++; nezdar = 0; }
+      else { uvnitr[i] = 0; nezdar++; }
+    }
+    return uvnitr;
+  }
+
+  function hranyZOblasti(n, uvnitr) {
+    const g = geometrie(n), st = new Uint8Array(g.E);
+    for (let e = 0; e < g.E; e++) {
+      const [a, b] = g.stranyHrany[e];
+      const ua = a >= 0 ? uvnitr[a] : 0, ub = b >= 0 ? uvnitr[b] : 0;
+      st[e] = ua !== ub ? CARA : NIC;
+    }
+    return st;
+  }
+
+  /* Generátor: náhodná smyčka → všechna čísla → ubírání čísel, dokud zadání
+     jde celé odvodit úvahou (u větších desek se zkouškou o krok napřed). */
+  function generuj(n, seed) {
+    const r = rng(seed), g = geometrie(n);
+    const zkouska = n >= 7;
+    for (let pokus = 0; pokus < 30; pokus++) {
+      const uvnitr = nahodnaSmycka(n, r);
+      const reseni = hranyZOblasti(n, uvnitr);
+      const cisla = g.hranyPole.map(h => h.reduce((s, e) => s + (reseni[e] === CARA ? 1 : 0), 0));
+      if (urcenoUvahou(n, cisla, zkouska) !== g.E) continue;
+      for (const p of zamichej([...cisla.keys()], r)) {
+        const puv = cisla[p];
+        cisla[p] = -1;
+        if (urcenoUvahou(n, cisla, zkouska) !== g.E) cisla[p] = puv;
+      }
+      return { n, cisla, reseni: Array.from(reseni) };
+    }
+    return null;
+  }
+
+  return { rng, hash, NEZNAMA, CARA, NIC, geometrie, propaguj, cesty, platne, pocetReseni, urcenoUvahou, nahodnaSmycka, hranyZOblasti, generuj };
+})();
+</script>
+
+<script>
+(function () {
+  const $ = id => document.getElementById(id);
+  const NS = 'http://www.w3.org/2000/svg';
+  const L = SlitherLogika;
+  let hra = null, g = null, stav = [], historie = [], start = 0, tik = null, konec = false, rezim = 'denni', napoveda = false;
+  const rekordy = {};
+  const OKRAJ = 0.5;   // okraj kolem mřížky v jednotkách políček
+
+  function dnes() {
+    const d = new Date();
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+  }
+
+  function nova(r) {
+    $('msg').className = 'msg';
+    $('msg').textContent = '⏳ Generuji zadání…';
+    clearInterval(tik);
+    setTimeout(() => novaHned(r), 30);
+  }
+  function novaHned(r) {
+    rezim = r;
+    const n = +$('velikost').value;
+    const seed = r === 'denni' ? L.hash('slitherlink|' + dnes() + '|' + n) : (Math.random() * 2 ** 32) >>> 0;
+    hra = L.generuj(n, seed);
+    g = L.geometrie(n);
+    stav = new Array(g.E).fill(0);
+    historie = []; konec = false; napoveda = false;
+    $('msg').textContent = '';
+    $('rezim').textContent = r === 'denni' ? '📅 Denní zadání ' + new Date().toLocaleDateString('cs-CZ') : '🎲 Náhodné zadání';
+    nastavRekord(n);
+    clearInterval(tik); start = Date.now(); tik = setInterval(ukazCas, 500); ukazCas();
+    kresli();
+  }
+
+  function nastavRekord(n) {
+    if (typeof Rekord === 'undefined') return;
+    if (!rekordy[n]) rekordy[n] = Rekord.sleduj('webapp_hra_slitherlink_' + n,
+      { vyssiLepsi: false, popisek: 'Rekord ' + n + '×' + n, format: formatCas });
+    rekordy[n].prvek($('rekordBox'));
+  }
+  function formatCas(s) { return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0'); }
+  function sekundy() { return Math.floor((Date.now() - start) / 1000); }
+  function ukazCas() { if (!konec) $('cas').textContent = formatCas(sekundy()); }
+
+  function el(tag, attr, rodic) {
+    const e = document.createElementNS(NS, tag);
+    for (const k in attr) e.setAttribute(k, attr[k]);
+    if (rodic) rodic.appendChild(e);
+    return e;
+  }
+  function souradniceVrcholu(v) { const n = hra.n; return [v % (n + 1) + OKRAJ, Math.floor(v / (n + 1)) + OKRAJ]; }
+
+  function kresli(zvyrazni) {
+    const n = hra.n, svg = $('deska');
+    svg.setAttribute('viewBox', `0 0 ${n + 2 * OKRAJ} ${n + 2 * OKRAJ}`);
+    svg.innerHTML = '';
+    const car = stav.map(v => v === 1 ? L.CARA : v === 2 ? L.NIC : L.NEZNAMA);
+    // po dokončení vybarvit vnitřek smyčky
+    if (konec) {
+      const gv = el('g', {}, svg);
+      for (let p = 0; p < n * n; p++) {
+        // políčko je uvnitř, když paprsek doleva protne lichý počet svislých čar
+        const y = Math.floor(p / n), x = p % n;
+        let k = 0;
+        for (let xx = 0; xx <= x; xx++) if (stav[g.V(y, xx)] === 1) k++;
+        if (k % 2) el('rect', { x: x + OKRAJ, y: y + OKRAJ, width: 1, height: 1, class: 'uvnitr' }, gv);
+      }
+    }
+    // čísla
+    const gc = el('g', {}, svg);
+    hra.cisla.forEach((c, p) => {
+      if (c < 0) return;
+      let pocet = 0, nez = 0;
+      for (const e of g.hranyPole[p]) { if (stav[e] === 1) pocet++; else if (stav[e] === 0) nez++; }
+      const t = el('text', { x: p % n + OKRAJ + 0.5, y: Math.floor(p / n) + OKRAJ + 0.53, class: 'cislo' }, gc);
+      if (pocet > c || pocet + nez < c) t.classList.add('chyba');
+      // nula je „splněná" hned od začátku – zešedne, až ji hráč obkreslí křížky
+      else if (pocet === c && (c > 0 || !nez)) t.classList.add('hotovo');
+      t.textContent = c;
+    });
+    // klikací zóny, čáry a křížky
+    const gz = el('g', {}, svg), gh = el('g', {}, svg);
+    for (let e = 0; e < g.E; e++) {
+      const [a, b] = g.konce[e], [x1, y1] = souradniceVrcholu(a), [x2, y2] = souradniceVrcholu(b);
+      const z = el('line', { x1: x1 + (x2 - x1) * 0.12, y1: y1 + (y2 - y1) * 0.12, x2: x2 - (x2 - x1) * 0.12, y2: y2 - (y2 - y1) * 0.12, class: 'zona' }, gz);
+      z.dataset.e = e;
+      if (zvyrazni && zvyrazni.has(e)) el('line', { x1, y1, x2, y2, class: zvyrazni.trida }, gh).style.pointerEvents = 'none';
+      if (stav[e] === 1) el('line', { x1, y1, x2, y2, class: 'hrana' + (konec ? ' hotovo' : '') }, gh).style.pointerEvents = 'none';
+      else if (stav[e] === 2) {
+        const mx = (x1 + x2) / 2, my = (y1 + y2) / 2, d = 0.09;
+        el('line', { x1: mx - d, y1: my - d, x2: mx + d, y2: my + d, class: 'krizek' }, gh).style.pointerEvents = 'none';
+        el('line', { x1: mx - d, y1: my + d, x2: mx + d, y2: my - d, class: 'krizek' }, gh).style.pointerEvents = 'none';
+      }
+    }
+    const gb = el('g', {}, svg);
+    for (let v = 0; v < (n + 1) * (n + 1); v++) {
+      const [x, y] = souradniceVrcholu(v);
+      el('circle', { cx: x, cy: y, r: 0.07, class: 'bod' }, gb).style.pointerEvents = 'none';
+    }
+  }
+
+  function nastav(e, v) {
+    if (stav[e] === v) return false;
+    historie.push([e, stav[e]]);
+    stav[e] = v;
+    return true;
+  }
+
+  function zkontrolujKonec() {
+    const car = stav.map(v => v === 1 ? L.CARA : L.NIC);
+    if (!L.platne(g, hra.cisla, car)) return;
+    konec = true; clearInterval(tik);
+    const s = sekundy();
+    $('cas').textContent = formatCas(s);
+    let zprava = '🎉 Smyčka uzavřena za ' + formatCas(s) + '!';
+    if (napoveda) zprava += ' (s nápovědou – do rekordů se nepočítá)';
+    else if (rekordy[hra.n] && rekordy[hra.n].zapis(s)) zprava = '🏆 Nový rekord: ' + formatCas(s) + '!';
+    $('msg').className = 'msg';
+    $('msg').textContent = zprava;
+    kresli();
+  }
+
+  /* Ukazatel: hranu vybírá nejbližší spojnice k bodu (spolehlivější než zásah
+     tenké zóny prstem). Klepnutí cykluje, tažení kreslí hodnotu prvního tahu. */
+  function hranaZBodu(ev) {
+    const svg = $('deska'), r = svg.getBoundingClientRect(), n = hra.n;
+    const m = (n + 2 * OKRAJ) / r.width;
+    const px = (ev.clientX - r.left) * m - OKRAJ, py = (ev.clientY - r.top) * m - OKRAJ;
+    const fx = px - Math.floor(px), fy = py - Math.floor(py);
+    let y = Math.floor(py), x = Math.floor(px);
+    // vzdálenost k nejbližší vodorovné a svislé čáře
+    const dh = Math.min(fy, 1 - fy), dv = Math.min(fx, 1 - fx);
+    if (dh > 0.38 && dv > 0.38) return -1;     // střed políčka – nic
+    if (dh <= dv) {
+      const yy = fy < 0.5 ? y : y + 1;
+      if (yy < 0 || yy > n || x < 0 || x >= n) return -1;
+      return g.H(yy, x);
+    }
+    const xx = fx < 0.5 ? x : x + 1;
+    if (xx < 0 || xx > n || y < 0 || y >= n) return -1;
+    return g.V(y, xx);
+  }
+  let tah = null;
+  $('deska').addEventListener('pointerdown', ev => {
+    if (konec || !hra || ev.button === 2) return;
+    const e = hranaZBodu(ev);
+    if (e < 0) return;
+    try { $('deska').setPointerCapture(ev.pointerId); } catch (_) { /* syntetické události */ }
+    tah = { start: e, hodnota: (stav[e] + 1) % 3, tazeno: false, posledni: e };
+  });
+  $('deska').addEventListener('pointermove', ev => {
+    if (!tah) return;
+    const e = hranaZBodu(ev);
+    if (e < 0 || e === tah.posledni) return;
+    if (!tah.tazeno) { tah.tazeno = true; if (tah.hodnota === 2) tah.hodnota = 0; nastav(tah.start, tah.hodnota); }
+    tah.posledni = e;
+    nastav(e, tah.hodnota);
+    kresli();
+  });
+  $('deska').addEventListener('pointerup', () => {
+    if (!tah) return;
+    const t = tah; tah = null;
+    if (!t.tazeno) nastav(t.start, t.hodnota);
+    $('msg').textContent = '';
+    kresli();
+    zkontrolujKonec();
+  });
+  $('deska').addEventListener('pointercancel', () => { tah = null; kresli(); });
+  $('deska').addEventListener('contextmenu', ev => {
+    ev.preventDefault();
+    if (konec || !hra) return;
+    const e = hranaZBodu(ev);
+    if (e < 0) return;
+    nastav(e, stav[e] === 2 ? 0 : 2);
+    kresli();
+  });
+
+  $('zpetBtn').onclick = () => {
+    if (konec || !historie.length) return;
+    const [e, v] = historie.pop();
+    stav[e] = v; kresli();
+  };
+  $('kontrolaBtn').onclick = () => {
+    if (konec) return;
+    const spatne = new Set();
+    stav.forEach((v, e) => {
+      if (v === 1 && hra.reseni[e] !== L.CARA) spatne.add(e);
+      if (v === 2 && hra.reseni[e] === L.CARA) spatne.add(e);
+    });
+    spatne.trida = 'spatne';
+    kresli(spatne);
+    $('msg').className = spatne.size ? 'msg varovani' : 'msg';
+    $('msg').textContent = spatne.size ? '✗ Chybných spojnic: ' + spatne.size : '👍 Zatím bez chyby';
+  };
+  $('napovedaBtn').onclick = () => {
+    if (konec) return;
+    let e = stav.findIndex((v, k) => (v === 1 && hra.reseni[k] !== L.CARA) || (v === 2 && hra.reseni[k] === L.CARA));
+    let text = '💡 Tahle spojnice je označená špatně.';
+    if (e < 0) { e = stav.findIndex((v, k) => v !== 1 && hra.reseni[k] === L.CARA); text = '💡 Tudy vede smyčka.'; }
+    if (e < 0) return;
+    napoveda = true;
+    const z = new Set([e]); z.trida = 'napoveda';
+    kresli(z);
+    $('msg').className = 'msg';
+    $('msg').textContent = text;
+  };
+  $('denniBtn').onclick = () => nova('denni');
+  $('noveBtn').onclick = () => nova('nove');
+  $('velikost').onchange = () => nova(rezim);
+  window.addEventListener('DOMContentLoaded', () => nova('denni'));
+})();
+</script>
+</body>
+</html>
