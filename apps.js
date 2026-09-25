@@ -394,6 +394,11 @@ const KATALOG_SEKCE = [
           "kč/l",
           "balení"
         ]
+      },
+      {
+        "soubor": "obsah/inflace.html",
+        "nazev": "📉 Inflační kalkulačka ČR",
+        "tagy": ["inflace", "kupní síla", "čsú", "znehodnocení", "přepočet", "reálná mzda", "ceny v minulosti", "koruna"]
       }
     ]
   },
@@ -427,6 +432,11 @@ const KATALOG_SEKCE = [
           "čtečka",
           "skener"
         ]
+      },
+      {
+        "soubor": "obsah/barcode_gen.html",
+        "nazev": "▥ Generátor čárových kódů",
+        "tagy": ["čárový kód", "ean", "ean-13", "ean-8", "upc", "code 128", "isbn", "štítky", "sklad", "barcode"]
       },
       {
         "soubor": "obsah/random_picker.html",
@@ -2269,6 +2279,21 @@ const KATALOG_SEKCE = [
         "soubor": "obsah/recipes.html",
         "nazev": "🍳 Kniha receptů",
         "tagy": ["vaření", "recept", "porce", "přepočet množství", "ingredience"]
+      },
+      {
+        "soubor": "obsah/kvasek_chleb.html",
+        "nazev": "🍞 Kvásek a chleba",
+        "tagy": ["kvásek", "chléb", "pečení", "pekařská procenta", "hydratace", "kvas", "žitný", "sourdough", "krmení kvásku"]
+      },
+      {
+        "soubor": "obsah/kuchynske_miry.html",
+        "nazev": "🥄 Kuchyňské míry podle suroviny",
+        "tagy": ["hrnek", "lžíce", "lžička", "gramy", "převod", "mouka", "cukr", "cup", "forma na dort", "trouba", "droždí"]
+      },
+      {
+        "soubor": "obsah/fermentace.html",
+        "nazev": "🫙 Fermentace a zavařování",
+        "tagy": ["kvašení", "kysané zelí", "okurky", "solanka", "sterilace", "zavařování", "nálev", "kompot", "kimči", "ocet"]
       }
     ]
   },
@@ -2280,6 +2305,17 @@ const KATALOG_SEKCE = [
         "soubor": "obsah/household_docs.html",
         "nazev": "📜 Vzory dokumentů pro domácnost",
         "tagy": ["plná moc", "výpověď z nájmu", "půjčka", "reklamace", "smlouva"]
+      }
+    ]
+  },
+  {
+    "nazev": "⚖️ Právní výpočty",
+    "skupina": "dokumenty",
+    "polozky": [
+      {
+        "soubor": "obsah/dedicke_podily.html",
+        "nazev": "⚖️ Dědické podíly",
+        "tagy": ["dědictví", "dědická třída", "zákonná posloupnost", "pozůstalost", "sjm", "povinný díl", "občanský zákoník", "závěť"]
       }
     ]
   },

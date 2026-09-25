@@ -101,7 +101,7 @@ const PodzemiZvuk = (function () {
     // krok: tlumený dopad + drť pod botou
     krok(a, b, t, R, o) {
       const tichy = o && o.tichy;
-      const out = vystup(a, b, { pan: (R() - 0.5) * 0.25, dozvuk: 0.22, hlas: tichy ? 0.35 : 1 });
+      const out = vystup(a, b, { pan: (R() - 0.5) * 0.25, dozvuk: 0.22, hlas: tichy ? 0.15 : 0.4 });   // kroky jen tiše v pozadí
       const g = obalka(a, t, 0.55, 0.004, 0.11);
       sumZdroj(a, t, 0.13, g, 'lowpass', 420 + R() * 260, 0.8);
       g.connect(out);
@@ -127,13 +127,6 @@ const PodzemiZvuk = (function () {
         sumZdroj(a, t + 0.03, 0.3, e, 'highpass', 5000);
         e.connect(out);
       }
-    },
-    // otočka: jen šoupnutí
-    otocka(a, b, t, R) {
-      const out = vystup(a, b, { dozvuk: 0.15, hlas: 0.7 });
-      const g = obalka(a, t, 0.5, 0.04, 0.16);
-      sumZdroj(a, t, 0.22, g, 'bandpass', 1400 + R() * 600, 0.7);
-      g.connect(out);
     },
     // náraz do zdi
     naraz(a, b, t, R) {
@@ -339,6 +332,26 @@ const PodzemiZvuk = (function () {
         const s = a.createOscillator(); s.type = 'triangle'; s.frequency.value = f;
         const e = obalka(a, t + 0.01, 0.12, 0.002, 0.35);
         s.connect(e); e.connect(out); s.start(t + 0.01); s.stop(t + 0.4);
+      }
+    },
+    // přehození zbraní: švihnutí, pak drnknutí tětivy (luk) nebo cinknutí čepele
+    prehozeni(a, b, t, R, o) {
+      const out = vystup(a, b, { dozvuk: 0.2, hlas: 0.7 });
+      const g = obalka(a, t, 0.35, 0.03, 0.12);
+      const f = sumZdroj(a, t, 0.16, g, 'bandpass', 900, 2);
+      f.frequency.setValueAtTime(700, t); f.frequency.exponentialRampToValueAtTime(2600, t + 0.14);
+      g.connect(out);
+      const t2 = t + 0.13, s = a.createOscillator();
+      if (o && o.luk) {
+        s.type = 'triangle';
+        s.frequency.setValueAtTime(230 + R() * 20, t2); s.frequency.exponentialRampToValueAtTime(170, t2 + 0.3);
+        const e = obalka(a, t2, 0.4, 0.002, 0.3);
+        s.connect(e); e.connect(out); s.start(t2); s.stop(t2 + 0.35);
+      } else {
+        s.type = 'sine'; s.frequency.value = 2400 + R() * 300;
+        const e = obalka(a, t2, 0.18, 0.002, 0.45);
+        s.connect(e); e.connect(out); s.start(t2); s.stop(t2 + 0.5);
+        cvak(a, t2, 4200, 0.3, 0.02, out);
       }
     },
     // jídlo: tři křupnutí

@@ -1,0 +1,378 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🥄 Kuchyňské míry podle suroviny</title>
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../podpis.js" defer></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;padding:20px}
+.container{max-width:860px;margin:0 auto}
+h1{font-size:1.6rem;margin-bottom:6px;font-weight:600;text-align:center}
+.podtitul{text-align:center;color:var(--text-faint);font-size:.88rem;margin-bottom:18px}
+.card{background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;padding:20px;margin-bottom:18px}
+h2{font-size:1.05rem;color:var(--accent);margin-bottom:14px}
+h3{font-size:.92rem;color:var(--text-muted);margin:14px 0 8px;font-weight:600}
+.grid{display:grid;grid-template-columns:2fr 1fr 1fr;gap:12px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.grid4{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+@media(max-width:600px){.grid,.grid2,.grid4{grid-template-columns:1fr 1fr}.grid>:first-child{grid-column:1/-1}}
+label{display:block;font-size:.82rem;color:var(--text-faint);margin-bottom:5px}
+input,select{width:100%;background:var(--bg-input);border:1px solid var(--border-strong);border-radius:4px;color:var(--text);padding:9px;font:inherit}
+.vysledky{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:8px;margin-top:14px}
+.vysledky div{background:var(--bg-panel);border:1px solid var(--border);border-radius:6px;padding:9px 11px}
+.vysledky div.hlavni{border-color:var(--accent);background:var(--accent-soft)}
+.vysledky b{display:block;font-size:1.15rem;font-variant-numeric:tabular-nums}
+.vysledky span{font-size:.78rem;color:var(--text-faint)}
+.note{font-size:.8rem;color:var(--text-faint);line-height:1.55;margin-top:12px}
+.note b{color:var(--text-muted)}
+.btn{background:var(--bg-control);border:1px solid var(--border-strong);color:var(--text);padding:8px 12px;border-radius:6px;cursor:pointer;font:inherit;font-size:.88rem}
+.btn:hover{border-color:var(--accent)}
+.radek{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px;align-items:center}
+table{width:100%;border-collapse:collapse;font-size:.88rem}
+td,th{padding:5px 4px;border-bottom:1px solid var(--border);text-align:left;vertical-align:middle}
+th{color:var(--text-faint);font-weight:500;font-size:.8rem}
+td.g{text-align:right;font-variant-numeric:tabular-nums;white-space:nowrap;font-weight:600}
+td input,td select{padding:6px}
+td .x{background:none;border:0;color:var(--text-faint);cursor:pointer;font-size:1rem;padding:4px 8px}
+td .x:hover{color:var(--danger)}
+.recept td:nth-child(1){width:80px}.recept td:nth-child(2){width:120px}
+@media(max-width:600px){.recept td:nth-child(1){width:64px}.recept td:nth-child(2){width:92px}}
+tfoot td{font-weight:600;border-bottom:0}
+.hero{font-size:1.4rem;font-weight:700;margin-top:10px;font-variant-numeric:tabular-nums}
+.ref td,.ref th{text-align:right}.ref td:first-child,.ref th:first-child{text-align:left}
+
+/* tmavé téma: světlejší doplňkový text (4,5:1 i na kartě) */
+:root:not([data-theme="light"]){--text-faint:#a3a3a3}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>🥄 Kuchyňské míry podle suroviny</h1>
+  <p class="podtitul">Hrnky, lžíce a mililitry na gramy – hrnek mouky neváží tolik co hrnek cukru</p>
+
+  <div class="card">
+    <h2>Převodník</h2>
+    <div class="grid">
+      <div><label for="surovina">Surovina</label><select id="surovina"></select></div>
+      <div><label for="mnozstvi">Množství</label><input type="text" inputmode="decimal" id="mnozstvi" value="1"></div>
+      <div><label for="jednotka">Jednotka</label><select id="jednotka"></select></div>
+    </div>
+    <div class="vysledky" id="vysledky"></div>
+    <p class="note" id="poznSuroviny"></p>
+  </div>
+
+  <div class="card">
+    <h2>Přepočet receptu na gramy</h2>
+    <table class="recept">
+      <thead><tr><th>Množství</th><th>Jednotka</th><th>Surovina</th><th style="text-align:right">Gramy</th><th></th></tr></thead>
+      <tbody id="receptRadky"></tbody>
+      <tfoot><tr><td colspan="3">Celkem</td><td class="g" id="receptCelkem">–</td><td></td></tr></tfoot>
+    </table>
+    <div class="radek">
+      <button class="btn" id="pridejRadek">+ řádek</button>
+      <span style="flex:1"></span>
+      <label for="porceZ" style="margin:0">Porcí</label><input id="porceZ" type="number" min="1" value="4" style="width:70px">
+      <span>→</span>
+      <input id="porceNa" type="number" min="1" value="4" style="width:70px" aria-label="Nový počet porcí">
+      <button class="btn" id="smazRecept">🗑 Vyčistit</button>
+    </div>
+    <p class="note">Gramy se po zadání jiného počtu porcí přepočítají. Množství lze psát i jako zlomek: <b>1/2</b>, <b>1 1/2</b>, <b>0,75</b>.</p>
+  </div>
+
+  <div class="card">
+    <h2>Jiná velikost formy</h2>
+    <div class="grid4">
+      <div><label for="formaTvar1">Recept je pro</label><select id="formaTvar1"><option value="kruh">kulatou formu</option><option value="obdelnik">obdélník / plech</option></select></div>
+      <div id="forma1"></div>
+      <div><label for="formaTvar2">Péct budu v</label><select id="formaTvar2"><option value="kruh">kulaté formě</option><option value="obdelnik">obdélníku / plechu</option></select></div>
+      <div id="forma2"></div>
+    </div>
+    <div class="hero" id="formaVysledek"></div>
+    <p class="note">Poměr ploch dna – všechny suroviny vynásob tímto číslem (při stejné výšce těsta). Je-li nová forma výrazně menší a vyšší, prodluž dobu pečení a sniž teplotu o 10 °C.</p>
+  </div>
+
+  <div class="card">
+    <h2>Trouba a droždí</h2>
+    <div class="grid2">
+      <div>
+        <h3 style="margin-top:0">Teplota trouby</h3>
+        <div class="grid2">
+          <div><label for="stC">°C (horní/spodní)</label><input type="number" id="stC" value="180" step="5"></div>
+          <div><label for="stF">°F</label><input type="number" id="stF" value="356" step="5"></div>
+        </div>
+        <div id="troubaInfo" class="note" style="margin-top:4px"></div>
+      </div>
+      <div>
+        <h3 style="margin-top:0">Droždí</h3>
+        <div class="grid2">
+          <div><label for="drCerstve">čerstvé (g)</label><input type="number" id="drCerstve" value="21" step="1" min="0"></div>
+          <div><label for="drSusene">sušené instantní (g)</label><input type="number" id="drSusene" value="7" step="0.5" min="0"></div>
+        </div>
+        <p class="note" style="margin-top:4px">Poměr 3 : 1. Kostka čerstvého droždí = 42 g, sáček sušeného = 7 g ≈ ½ kostky, stačí na ~500 g mouky.</p>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Tahák – 1 hrnek (250 ml), 1 lžíce (15 ml), 1 lžička (5 ml)</h2>
+    <div style="overflow-x:auto"><table class="ref" id="tahak"></table></div>
+    <p class="note"><b>Orientační hodnoty.</b> Sypké suroviny se liší podle toho, jak se nabírají – mouka nabraná hrnkem přímo z pytle váží až o 15 % víc než nasypaná lžící. U pečení, kde záleží na přesnosti (kynuté těsto, makronky), použij váhu.
+      Hrnkem se tu myslí <b>250 ml</b> (český „hrnek“ i metrický cup); americký cup má 236,6 ml. Lžíce je <b>15 ml</b> zarovnaná, lžička <b>5 ml</b>, kávová lžička 2,5 ml. Špetka soli ≈ 0,3–0,5 g.</p>
+  </div>
+</div>
+
+<script>
+/* ===== Data a převody (bez DOM) – vystaveno jako window.MIRY pro testy ===== */
+const MIRY = (function(){
+  // hustota v g/ml (sypná, zarovnaná míra); ks = typické balení / kus
+  const SUROVINY = [
+    ['Mouky a obiloviny', [
+      ['hladka', 'mouka hladká', 0.56], ['polohruba', 'mouka polohrubá', 0.60], ['hruba', 'mouka hrubá', 0.64],
+      ['celozrnna', 'mouka celozrnná pšeničná', 0.52], ['zitna', 'mouka žitná', 0.48], ['spaldova', 'mouka špaldová', 0.46],
+      ['krupice', 'krupice dětská', 0.68], ['polenta', 'kukuřičná krupice (polenta)', 0.62],
+      ['vlocky', 'ovesné vločky', 0.38], ['strouhanka', 'strouhanka', 0.47],
+      ['skrob', 'škrob kukuřičný (Solamyl)', 0.50], ['skrobBram', 'škrob bramborový', 0.60],
+      ['ryze', 'rýže (syrová)', 0.80], ['cocka', 'čočka (suchá)', 0.80], ['kuskus', 'kuskus', 0.72],
+    ]],
+    ['Cukry a sladidla', [
+      ['krystal', 'cukr krystal', 0.84], ['krupice_c', 'cukr krupice', 0.80], ['moucka', 'cukr moučka', 0.52],
+      ['trtinovy', 'cukr třtinový', 0.85], ['med', 'med', 1.42], ['sirup', 'javorový sirup', 1.32],
+      ['kakao', 'kakao', 0.40],
+    ]],
+    ['Tuky a tekutiny', [
+      ['voda', 'voda', 1.00], ['mleko', 'mléko', 1.03], ['smetana', 'smetana ke šlehání', 1.00],
+      ['zakysana', 'zakysaná smetana', 1.02], ['jogurt', 'jogurt bílý', 1.05], ['tvaroh', 'tvaroh měkký', 1.00],
+      ['olej', 'olej', 0.92], ['maslo', 'máslo', 0.96, { kostka: 250 }], ['maslo_r', 'máslo rozpuštěné', 0.91],
+      ['sadlo', 'sádlo', 0.92], ['ocet', 'ocet', 1.01],
+    ]],
+    ['Vejce', [
+      ['vejce', 'vejce celé (M, bez skořápky)', 1.03, { ks: 50 }], ['bilek', 'bílek', 1.04, { ks: 30 }],
+      ['zloutek', 'žloutek', 1.03, { ks: 18 }],
+    ]],
+    ['Kypřidla a koření', [
+      ['sul', 'sůl jemná', 1.20], ['sulHruba', 'sůl hrubá / mořská', 1.00],
+      ['prasek', 'prášek do pečiva', 0.80, { sáček: 12 }], ['soda', 'jedlá soda', 1.10],
+      ['drozdiC', 'droždí čerstvé', null, { kostka: 42 }], ['drozdiS', 'droždí sušené', 0.60, { sáček: 7 }],
+      ['zelatina', 'želatina prášková', 0.65, { sáček: 20 }], ['skorice', 'skořice mletá', 0.50],
+    ]],
+    ['Ořechy, semínka, sušené ovoce', [
+      ['orechyM', 'ořechy mleté', 0.42], ['orechyS', 'ořechy sekané', 0.50], ['mandleM', 'mandle mleté', 0.41],
+      ['makM', 'mák mletý', 0.45], ['makC', 'mák celý', 0.60], ['kokos', 'kokos strouhaný', 0.38],
+      ['rozinky', 'rozinky', 0.63], ['cokolada', 'čokoládové kousky', 0.72], ['syr', 'sýr strouhaný', 0.45],
+    ]],
+  ];
+  const seznam = [];
+  for (const [skupina, pol] of SUROVINY) for (const [id, nazev, hustota, ks] of pol) seznam.push({ id, nazev, hustota, ks: ks || {}, skupina });
+  const podleId = Object.fromEntries(seznam.map(s => [s.id, s]));
+
+  // objemové jednotky v ml, hmotnostní v g
+  const OBJEM = { 'ml': 1, 'cl': 10, 'dl': 100, 'l': 1000, 'hrnek': 250, 'US cup': 236.588, 'lžíce': 15, 'lžička': 5, 'kávová lžička': 2.5, 'fl oz': 29.5735 };
+  const HMOTNOST = { 'g': 1, 'dkg': 10, 'kg': 1000, 'oz': 28.3495, 'lb': 453.592 };
+  const NAZVY_KS = { ks: 'ks', kostka: 'kostka', sáček: 'sáček' };
+
+  function jednotky(s) {
+    const j = [];
+    if (s.hustota) j.push(...Object.keys(OBJEM));
+    j.push(...Object.keys(HMOTNOST));
+    j.push(...Object.keys(s.ks));
+    return j;
+  }
+  // převod na gramy
+  function naGramy(s, mnozstvi, jednotka) {
+    if (jednotka in HMOTNOST) return mnozstvi * HMOTNOST[jednotka];
+    if (jednotka in s.ks) return mnozstvi * s.ks[jednotka];
+    if (jednotka in OBJEM && s.hustota) return mnozstvi * OBJEM[jednotka] * s.hustota;
+    return NaN;
+  }
+  function zGramu(s, g, jednotka) {
+    if (jednotka in HMOTNOST) return g / HMOTNOST[jednotka];
+    if (jednotka in s.ks) return g / s.ks[jednotka];
+    if (jednotka in OBJEM && s.hustota) return g / s.hustota / OBJEM[jednotka];
+    return NaN;
+  }
+  // „1 1/2“, „3/4“, „0,75“, „1.5“ → číslo
+  function cti(t) {
+    t = String(t).trim().replace(',', '.').replace(/½/g, ' 1/2').replace(/¼/g, ' 1/4').replace(/¾/g, ' 3/4').trim();
+    if (!t) return NaN;
+    let m = t.match(/^(\d+(?:\.\d+)?)\s+(\d+)\/(\d+)$/);
+    if (m) return +m[1] + m[2] / m[3];
+    m = t.match(/^(\d+)\/(\d+)$/);
+    if (m) return m[1] / m[2];
+    return /^\d*\.?\d+$/.test(t) ? +t : NaN;
+  }
+  // zobrazení s přesností podle velikosti; u lžic a hrnků i ve čtvrtinách
+  function zlomek(x) {
+    const cele = Math.floor(x + 1e-9), zb = x - cele;
+    const ctvrt = Math.round(zb * 4);
+    const z = ['', '¼', '½', '¾', ''][ctvrt];
+    const c = ctvrt === 4 ? cele + 1 : cele;
+    if (c === 0 && !z) return '0';
+    return (c ? c + (z ? ' ' : '') : '') + z;
+  }
+  function formatuj(x, jednotka) {
+    if (!isFinite(x)) return '–';
+    if (['hrnek', 'US cup', 'lžíce', 'lžička', 'kávová lžička', 'ks', 'kostka', 'sáček'].includes(jednotka) && x < 20) {
+      const pres = Math.abs(x * 4 - Math.round(x * 4)) < 0.08;
+      return (pres ? '' : '≈ ') + zlomek(x);
+    }
+    const d = x >= 100 ? 0 : x >= 10 ? 1 : 2;
+    return x.toLocaleString('cs-CZ', { maximumFractionDigits: d });
+  }
+  // plocha formy v cm²
+  const plocha = (tvar, a, b) => tvar === 'kruh' ? Math.PI * a * a / 4 : a * b;
+  return { seznam, podleId, OBJEM, HMOTNOST, jednotky, naGramy, zGramu, cti, zlomek, formatuj, plocha, NAZVY_KS };
+})();
+window.MIRY = MIRY;
+
+/* ===== Uživatelské rozhraní ===== */
+(function(){
+  const $ = id => document.getElementById(id);
+  const KLIC = 'webapp_kuchynske_miry_v1';
+  let stav = { surovina: 'hladka', mnozstvi: '1', jednotka: 'hrnek', recept: null, porceZ: 4, porceNa: 4,
+    forma: { t1: 'kruh', a1: 24, b1: 24, t2: 'kruh', a2: 26, b2: 26 } };
+  try { const u = JSON.parse(localStorage.getItem(KLIC)); if (u && typeof u === 'object') Object.assign(stav, u); } catch (e) {}
+  const uloz = () => { try { localStorage.setItem(KLIC, JSON.stringify(stav)); } catch (e) {} };
+  if (!Array.isArray(stav.recept)) stav.recept = [
+    { m: '2', j: 'hrnek', s: 'hladka' }, { m: '1', j: 'hrnek', s: 'krystal' }, { m: '1/2', j: 'hrnek', s: 'olej' },
+    { m: '1', j: 'hrnek', s: 'mleko' }, { m: '2', j: 'ks', s: 'vejce' }, { m: '1', j: 'sáček', s: 'prasek' },
+  ];
+  const fmtG = g => isFinite(g) ? MIRY.formatuj(g, 'g') + ' g' : '–';
+
+  function volbySurovin(vybrana) {
+    let h = '', sk = '';
+    for (const s of MIRY.seznam) {
+      if (s.skupina !== sk) { if (sk) h += '</optgroup>'; h += `<optgroup label="${s.skupina}">`; sk = s.skupina; }
+      h += `<option value="${s.id}"${s.id === vybrana ? ' selected' : ''}>${s.nazev}</option>`;
+    }
+    return h + '</optgroup>';
+  }
+  const volbyJednotek = (s, vybrana) => MIRY.jednotky(s).map(j =>
+    `<option value="${j}"${j === vybrana ? ' selected' : ''}>${MIRY.NAZVY_KS[j] || j}</option>`).join('');
+
+  /* --- převodník --- */
+  function prevodnik() {
+    const s = MIRY.podleId[stav.surovina] || MIRY.seznam[0];
+    stav.surovina = s.id;
+    const jed = MIRY.jednotky(s);
+    if (!jed.includes(stav.jednotka)) stav.jednotka = s.hustota ? 'hrnek' : jed[0];
+    $('jednotka').innerHTML = volbyJednotek(s, stav.jednotka);
+    const m = MIRY.cti(stav.mnozstvi);
+    const g = MIRY.naGramy(s, m, stav.jednotka);
+    uloz();
+    if (!isFinite(g)) { $('vysledky').innerHTML = '<div><b>–</b><span>zadej množství (např. 1 1/2)</span></div>'; return; }
+    const ukaz = s.hustota ? ['g', 'dkg', 'ml', 'dl', 'hrnek', 'lžíce', 'lžička', 'US cup', 'oz'] : ['g', 'dkg', 'oz'];
+    for (const k of Object.keys(s.ks)) ukaz.push(k);
+    $('vysledky').innerHTML = ukaz.map(j => {
+      const v = MIRY.zGramu(s, g, j);
+      return `<div class="${j === 'g' ? 'hlavni' : ''}"><b>${MIRY.formatuj(v, j)}</b><span>${MIRY.NAZVY_KS[j] || j}</span></div>`;
+    }).join('');
+    const p = [];
+    if (s.hustota) p.push(`1 hrnek (250 ml) ≈ <b>${MIRY.formatuj(250 * s.hustota, 'g')} g</b>, 1 lžíce ≈ <b>${MIRY.formatuj(15 * s.hustota, 'g')} g</b>, 1 lžička ≈ <b>${MIRY.formatuj(5 * s.hustota, 'g')} g</b>.`);
+    else p.push('Tuhá surovina – převádí se jen hmotnost a balení.');
+    for (const [k, v] of Object.entries(s.ks)) p.push(`1 ${MIRY.NAZVY_KS[k]} = ${v} g.`);
+    $('poznSuroviny').innerHTML = p.join(' ');
+  }
+  $('surovina').innerHTML = volbySurovin(stav.surovina);
+  $('mnozstvi').value = stav.mnozstvi;
+  $('surovina').addEventListener('change', e => { stav.surovina = e.target.value; prevodnik(); });
+  $('jednotka').addEventListener('change', e => { stav.jednotka = e.target.value; prevodnik(); });
+  $('mnozstvi').addEventListener('input', e => { stav.mnozstvi = e.target.value; prevodnik(); });
+
+  /* --- recept --- */
+  function receptKresli() {
+    $('receptRadky').innerHTML = stav.recept.map((r, i) => {
+      const s = MIRY.podleId[r.s] || MIRY.seznam[0];
+      if (!MIRY.jednotky(s).includes(r.j)) r.j = MIRY.jednotky(s)[0];
+      return `<tr data-i="${i}">
+        <td><input data-k="m" value="${String(r.m).replace(/"/g, '')}" inputmode="decimal" aria-label="Množství"></td>
+        <td><select data-k="j" aria-label="Jednotka">${volbyJednotek(s, r.j)}</select></td>
+        <td><select data-k="s" aria-label="Surovina">${volbySurovin(s.id)}</select></td>
+        <td class="g"></td><td><button class="x" title="Smazat řádek" aria-label="Smazat řádek">✕</button></td></tr>`;
+    }).join('');
+    receptPocitej();
+  }
+  function receptPocitej() {
+    const k = (+stav.porceNa > 0 && +stav.porceZ > 0) ? stav.porceNa / stav.porceZ : 1;
+    let celkem = 0;
+    $('receptRadky').querySelectorAll('tr').forEach(tr => {
+      const r = stav.recept[+tr.dataset.i], s = MIRY.podleId[r.s];
+      const g = MIRY.naGramy(s, MIRY.cti(r.m), r.j) * k;
+      tr.querySelector('.g').textContent = fmtG(g);
+      if (isFinite(g)) celkem += g;
+    });
+    $('receptCelkem').textContent = fmtG(celkem);
+    uloz();
+  }
+  $('receptRadky').addEventListener('input', e => {
+    const tr = e.target.closest('tr'); if (!tr) return;
+    const r = stav.recept[+tr.dataset.i], k = e.target.dataset.k;
+    r[k] = e.target.value;
+    if (k === 's') receptKresli(); else receptPocitej();
+  });
+  $('receptRadky').addEventListener('click', e => {
+    if (!e.target.classList.contains('x')) return;
+    stav.recept.splice(+e.target.closest('tr').dataset.i, 1); receptKresli();
+  });
+  $('pridejRadek').onclick = () => { stav.recept.push({ m: '1', j: 'hrnek', s: 'hladka' }); receptKresli(); };
+  $('smazRecept').onclick = () => { stav.recept = [{ m: '', j: 'hrnek', s: 'hladka' }]; receptKresli(); };
+  $('porceZ').value = stav.porceZ; $('porceNa').value = stav.porceNa;
+  $('porceZ').addEventListener('input', e => { stav.porceZ = +e.target.value; receptPocitej(); });
+  $('porceNa').addEventListener('input', e => { stav.porceNa = +e.target.value; receptPocitej(); });
+
+  /* --- forma --- */
+  function formaPole(n) {
+    const f = stav.forma, t = f['t' + n];
+    $('forma' + n).innerHTML = t === 'kruh'
+      ? `<label for="fa${n}">průměr (cm)</label><input type="number" id="fa${n}" min="1" value="${f['a' + n]}">`
+      : `<label>rozměry (cm)</label><div style="display:flex;gap:4px"><input type="number" id="fa${n}" min="1" value="${f['a' + n]}" aria-label="délka">` +
+        `<input type="number" id="fb${n}" min="1" value="${f['b' + n]}" aria-label="šířka"></div>`;
+    $('fa' + n).addEventListener('input', e => { f['a' + n] = +e.target.value; forma(); });
+    if ($('fb' + n)) $('fb' + n).addEventListener('input', e => { f['b' + n] = +e.target.value; forma(); });
+  }
+  function forma() {
+    const f = stav.forma;
+    const p1 = MIRY.plocha(f.t1, f.a1, f.b1), p2 = MIRY.plocha(f.t2, f.a2, f.b2);
+    uloz();
+    if (!(p1 > 0 && p2 > 0)) { $('formaVysledek').textContent = '–'; return; }
+    const k = p2 / p1;
+    $('formaVysledek').innerHTML = `× ${k.toLocaleString('cs-CZ', { maximumFractionDigits: 2 })} <span style="font-size:.85rem;font-weight:400;color:var(--text-faint)">(${Math.round(p1)} cm² → ${Math.round(p2)} cm²)</span>`;
+  }
+  ['1', '2'].forEach(n => {
+    $('formaTvar' + n).value = stav.forma['t' + n];
+    $('formaTvar' + n).addEventListener('change', e => { stav.forma['t' + n] = e.target.value; formaPole(n); forma(); });
+    formaPole(n);
+  });
+
+  /* --- trouba a droždí --- */
+  const PLYN = [[140, 1], [150, 2], [165, 3], [180, 4], [190, 5], [200, 6], [220, 7], [230, 8], [240, 9]];
+  function trouba(zdroj) {
+    let c = +$('stC').value;
+    if (zdroj === 'F') { c = (+$('stF').value - 32) * 5 / 9; $('stC').value = Math.round(c); }
+    else $('stF').value = Math.round(c * 9 / 5 + 32);
+    if (!isFinite(c)) return;
+    const pl = PLYN.reduce((a, b) => Math.abs(b[0] - c) < Math.abs(a[0] - c) ? b : a);
+    const typ = c < 130 ? 'sušení, pečení sněhových pusinek' : c < 160 ? 'pomalé pečení, tvarohové dorty' : c < 185 ? 'bábovky, koláče, piškot' :
+      c < 210 ? 'kynuté pečivo, zelenina' : 'pizza, chléb, zapékání dozlatova';
+    $('troubaInfo').innerHTML = `Horkovzduch: <b>${Math.round((c - 20) / 5) * 5} °C</b> · plynová trouba: <b>stupeň ${pl[1]}</b>` +
+      (Math.abs(pl[0] - c) > 12 ? ' (mimo stupnici)' : '') + `<br>Typicky: ${typ}.`;
+  }
+  $('stC').addEventListener('input', () => trouba('C'));
+  $('stF').addEventListener('input', () => trouba('F'));
+  $('drCerstve').addEventListener('input', e => $('drSusene').value = Math.round(+e.target.value / 3 * 10) / 10);
+  $('drSusene').addEventListener('input', e => $('drCerstve').value = Math.round(+e.target.value * 3));
+
+  /* --- tahák --- */
+  let t = '<tr><th>Surovina</th><th>hrnek</th><th>lžíce</th><th>lžička</th></tr>';
+  for (const s of MIRY.seznam) if (s.hustota)
+    t += `<tr><td>${s.nazev}</td><td>${Math.round(250 * s.hustota)} g</td><td>${MIRY.formatuj(15 * s.hustota, 'g')} g</td><td>${MIRY.formatuj(5 * s.hustota, 'g')} g</td></tr>`;
+  $('tahak').innerHTML = t;
+
+  prevodnik(); receptKresli(); forma(); trouba('C');
+})();
+</script>
+</body>
+</html>

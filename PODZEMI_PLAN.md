@@ -380,6 +380,50 @@ Po každé etapě bot znovu změří obtížnost (cíl: rozumný hráč průměr
   načtení, mříží nejde projít ale je vidět, k páce se dá dojít, páka otevře mříž i po načtení, teleport přenese.
   Headless 146/146 (pohled skrz mříž, páka nahoře/dole, zvednutí mříže ťuknutím, teleport, tma a ukazatel 🔥).
 
+### Celá obrazovka (25. 9. 2026)
+
+- Tlačítko **⛶ Celá obrazovka** ve spodní liště: Fullscreen API na celý dokument (i v rozcestníku – iframe má
+  `allowfullscreen`), kde chybí (iPhone), aspoň rozvržení přes celé okno. Třída `body.cela`; Esc / opuštění
+  fullscreenu režim vypne, tlačítko se přepíše na **↩️ Zmenšit**.
+- Pohled vyplní zbylé místo, plátno drží 4 : 3 přes `object-fit: contain` – dotykový kříž a boj leží v černých
+  pruzích a scénu nezakrývají. Na výšku: HUD nahoře, deník (poslední 2 řádky) a tlačítka dole; na šířku: pohled
+  vlevo, panel s HUD, deníkem a tlačítky vpravo; do 520 px výšky se panel zhustí (skryje rekord a biom).
+- `body.cela{padding:0 !important}` – podpis.js dává tělu inline spodní odsazení, výšku `100dvh` už zmenšuje sám.
+- **Test:** `python3 _test/podzemi_cela.py` – okna 1280×720, 1000×560, 560×1000 a rámy 360×740, 740×360, 390×660:
+  všech 31 ovládacích prvků (tlačítka, HUD, deník, minimapa) leží celé v okně, stránka neroluje; 8/8.
+  Původní `podzemi_snimek.py` 148/148.
+
+### Tišší pohyb (25. 9. 2026)
+
+- Otočka je bez zvuku (syntéza `otocka` odstraněna), kroky hrají na 40 % původní hlasitosti
+  (špička 0,17–0,24 místo 0,35–0,49). Headless 147/147.
+
+### Strach přejde, pochodeň z batohu (25. 9. 2026)
+
+- Potvora na útěku si vylosuje 4–9 tahů strachu (`strachDo`), pak se vzchopí (událost `vzchopila`, hlas potvory,
+  zápis do deníku) a jde znovu do boje; podruhé už neuteče (`vzchopila`). Obě pole jsou v `POLE_POTVORY` na konci,
+  starší uložení se dopočítají (`strachDo == null` – po JSON je z `undefined` v poli `null`).
+- **Chyba:** pochodeň v batohu neměla tlačítko – logika `pouzij` ji zapálit uměla, UI ne. Teď: popis v detailu
+  („doplníš světlo o 50 %, teď X %"), tlačítko **Zapálit**, přiřazení do rychlé lišty; plnou pochodeň odmítne
+  (`plnaPochoden`, tah se nespotřebuje).
+- **Testy:** `node _test/podzemi_strach.js` (200 seedů: útěk 4–9 tahů, znovu neuteče, přežije uložení; pochodeň),
+  `python3 _test/podzemi_pochoden.py` (tlačítko, rychlá lišta, plná pochodeň) 5/5, `podzemi_snimek.py` 147/147,
+  bot 300 výprav: smrt průměrně 13,3. patro.
+
+### Slot pro luk, přehození zbraní, větší batoh (25. 9. 2026)
+
+- **Luk má vlastní slot** `luk` (v `SLOTY` hned za `zbran`, `slotPro` pozná luk podle `dosah`). V ruce je jen jedno
+  z nich – `hrac.drzi` ('zbran' | 'luk'); `vRuce(s)` / `drziLuk(s)`. Bonusy (síla…) dává jen zbraň v ruce, kletby
+  platí z obou. Nasazená zbraň či luk jde rovnou do ruky. Zloděj začíná s lukem na zádech.
+- **Přehození** akcí `prehod`: klávesa **R** nebo tlačítko ⇄🏹/⇄⚔️ v pohledu (vedle štítu, jen když máš luk);
+  nestojí tah (`konecTahu` umí jen celé tahy), podržení neopakuje. Vlastní zvuk `prehozeni` (švih + tětiva / čepel).
+- **Větší batoh** u obchodníka, po stupních: Kožená brašna +4 (150 💰), Cestovní vak +8 (400), Trpasličí krosna +12
+  (900) – `BATOHY`, `hrac.batohStupen`, `kapacita(s)` místo `MAX_BATOH`; sleva z hádanky i Smlouvač platí.
+- Starší uložení: luk ve slotu zbraně se přesune do slotu Luk (a zůstane v ruce). Nákupy u obchodníka se teď
+  ukládají hned (dřív až po dalším tahu).
+- **Testy:** `node _test/podzemi_luk.js` 20/20, `python3 _test/podzemi_luk_ui.py` 11/11 (i 4 tlačítka boje na
+  360 px bez překryvu), `podzemi_snimek.py` 148/148, bot 300 výprav: průměr 13,3. patro (bot batohy nekupuje).
+
 ## Další náměty
 
 - víc druhů pastí a hádanek (páky, přepínače, teleportní dlaždice), obchodník v hlubinách za zlato

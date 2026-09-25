@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>▥ Generátor čárových kódů</title>
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../podpis.js" defer></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;padding:20px}
+.container{max-width:860px;margin:0 auto}
+h1{font-size:1.6rem;margin-bottom:6px;font-weight:600;text-align:center}
+.podtitul{text-align:center;color:var(--text-faint);font-size:.88rem;margin-bottom:18px}
+.card{background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;padding:20px;margin-bottom:18px}
+h2{font-size:1.05rem;color:var(--accent);margin-bottom:14px}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+@media(max-width:640px){.grid{grid-template-columns:1fr 1fr}}
+label{display:block;font-size:.82rem;color:var(--text-faint);margin-bottom:5px}
+input,select,textarea{width:100%;background:var(--bg-input);border:1px solid var(--border-strong);border-radius:4px;color:var(--text);padding:9px;font:inherit}
+textarea{min-height:110px;font-family:ui-monospace,Consolas,monospace;resize:vertical}
+input[type=checkbox]{width:auto;margin-right:6px}
+.chk{display:flex;align-items:center;font-size:.9rem;color:var(--text-muted);margin-top:22px}
+.tabs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:14px}
+.tabs button,.btn{background:var(--bg-control);border:1px solid var(--border-strong);color:var(--text);padding:9px 14px;border-radius:6px;cursor:pointer;font:inherit;font-size:.9rem}
+.tabs button.active{background:var(--accent);border-color:var(--accent);color:#fff}
+.btn:hover,.tabs button:hover{border-color:var(--accent)}
+.btn.primarni{background:var(--accent);border-color:var(--accent);color:#fff}
+.radek{display:flex;gap:8px;flex-wrap:wrap;margin-top:14px}
+.vstup{font-size:1.2rem;font-family:ui-monospace,Consolas,monospace;letter-spacing:.04em}
+.stav{margin-top:10px;font-size:.88rem;min-height:1.3em;line-height:1.5}
+.stav.ok{color:var(--ok)}.stav.chyba{color:var(--danger)}.stav.info{color:var(--text-muted)}
+/* plocha kódu je vždy bílá – černá na bílé je jediná kombinace, kterou spolehlivě přečte každá čtečka */
+.plocha{background:#fff;border-radius:6px;padding:16px;display:flex;justify-content:center;align-items:center;min-height:150px;overflow-x:auto}
+.plocha svg{max-width:100%;height:auto}
+.stitky{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:10px;background:#fff;border-radius:6px;padding:12px}
+.stitky .stitek{border:1px dashed #bbb;padding:8px;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#000;font-size:.75rem;text-align:center;break-inside:avoid}
+.stitky .stitek svg{max-width:100%;height:auto}
+.stitky .stitek.spatne{color:#b00020;border-color:#b00020}
+.note{font-size:.8rem;color:var(--text-faint);line-height:1.55;margin-top:10px}
+.note b{color:var(--text-muted)}
+table{width:100%;border-collapse:collapse;font-size:.86rem}
+td,th{padding:6px 8px;border-bottom:1px solid var(--border);text-align:left}
+th{color:var(--text-faint);font-weight:500}
+code{font-family:ui-monospace,Consolas,monospace;color:var(--text-muted)}
+@media print{
+  body{background:#fff;padding:0}
+  .container>*:not(#tiskOblast){display:none!important}
+  #tiskOblast{display:block!important;border:0;padding:0;background:#fff}
+  #tiskOblast h2,#tiskOblast .radek,#tiskOblast .note,#tiskOblast textarea,#tiskOblast label{display:none!important}
+  .stitky{padding:0;gap:6px}
+}
+
+/* tmavé téma: světlejší doplňkový text (4,5:1 i na kartě) a tmavé písmo na světle modrém akcentu */
+:root:not([data-theme="light"]){--text-faint:#a3a3a3}
+:root:not([data-theme="light"]) .tabs button.active,:root:not([data-theme="light"]) .btn.primarni{color:#111}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>▥ Generátor čárových kódů</h1>
+  <p class="podtitul">EAN-13, EAN-8, UPC-A a Code 128 · export SVG/PNG · hromadný tisk štítků</p>
+
+  <div class="card">
+    <div class="tabs" id="typy">
+      <button data-typ="ean13" class="active">EAN-13</button>
+      <button data-typ="ean8">EAN-8</button>
+      <button data-typ="upca">UPC-A</button>
+      <button data-typ="code128">Code 128</button>
+    </div>
+    <label for="data" id="dataLabel">Číslo (12 číslic, kontrolní se dopočítá)</label>
+    <input id="data" class="vstup" autocomplete="off" spellcheck="false" value="859123456789">
+    <div class="stav" id="stav"></div>
+    <div class="grid" style="margin-top:12px">
+      <div><label for="modul">Šířka modulu (px)</label><input type="number" id="modul" min="1" max="8" step="1" value="3"></div>
+      <div><label for="vyska">Výška čar (px)</label><input type="number" id="vyska" min="20" max="400" step="5" value="110"></div>
+      <div><label for="okraj">Klidová zóna (moduly)</label><input type="number" id="okraj" min="0" max="30" step="1" value="10"></div>
+      <label class="chk"><input type="checkbox" id="popisek" checked>Text pod kódem</label>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Náhled</h2>
+    <div class="plocha" id="plocha"></div>
+    <div class="radek">
+      <button class="btn primarni" id="stahniSvg">⬇ SVG</button>
+      <button class="btn" id="stahniPng">⬇ PNG (4×)</button>
+      <button class="btn" id="kopiruj">📋 Kopírovat SVG</button>
+    </div>
+    <p class="note" id="info"></p>
+  </div>
+
+  <div class="card" id="tiskOblast">
+    <h2>Hromadně – štítky k tisku</h2>
+    <label for="hromadne">Jeden kód na řádek (použije se zvolený typ; volitelně „kód ; popisek“)</label>
+    <textarea id="hromadne" spellcheck="false" placeholder="859123456789 ; Med lesní 500 g&#10;859123456796 ; Med květový 250 g"></textarea>
+    <div class="radek">
+      <button class="btn primarni" id="vytvorStitky">▦ Vytvořit štítky</button>
+      <button class="btn" id="tiskni">🖨 Tisk</button>
+      <button class="btn" id="rada">🔢 Doplnit řadu</button>
+    </div>
+    <p class="note">„Doplnit řadu“ vezme první řádek jako začátek a přidá dalších 9 po sobě jdoucích čísel (u EAN s přepočtenou kontrolní číslicí).</p>
+    <div class="stitky" id="stitky" style="margin-top:12px;display:none"></div>
+  </div>
+
+  <div class="card">
+    <h2>Co je co</h2>
+    <table>
+      <tr><th>Typ</th><th>Obsah</th><th>Použití</th></tr>
+      <tr><td>EAN-13</td><td>12 číslic + kontrolní</td><td>zboží v obchodech (Evropa), ISBN knih (978/979)</td></tr>
+      <tr><td>EAN-8</td><td>7 číslic + kontrolní</td><td>malé obaly</td></tr>
+      <tr><td>UPC-A</td><td>11 číslic + kontrolní</td><td>zboží v USA a Kanadě</td></tr>
+      <tr><td>Code 128</td><td>libovolný text ASCII</td><td>sklady, inventář, zásilky, interní evidence</td></tr>
+    </table>
+    <p class="note"><b>EAN pro prodej v obchodech</b> přiděluje organizace GS1 (v ČR GS1 Czech Republic, prefix 859). Vymyšlené číslo se sice vytiskne a přečte, ale v obchodní síti nebude platné. Pro vlastní potřebu (sklad, e-shop, sklep s marmeládami) použij <b>Code 128</b> nebo EAN s prefixem <b>20–29</b>, který je vyhrazený pro interní použití.<br>
+    Do pole EAN-13 lze vložit i <b>ISBN-10</b> (např. 80-7203-452-9) – převede se na EAN-13 s prefixem 978.<br>
+    Code 128 umí jen znaky ASCII; <b>česká diakritika</b> se do něj spolehlivě zakódovat nedá (čtečky ji čtou nejednotně), proto ji stránka odmítne.</p>
+  </div>
+</div>
+
+<script>
+/* ===== Kódování (čistá logika, bez DOM) – vystaveno jako window.CARKOVY_KOD pro testy ===== */
+const CARKOVY_KOD = (function(){
+  // EAN: sady L (lichá parita), G (sudá) a R (pravá polovina)
+  const L = ['0001101','0011001','0010011','0111101','0100011','0110001','0101111','0111011','0110111','0001011'];
+  const R = L.map(s => s.replace(/./g, c => c === '0' ? '1' : '0'));
+  const G = R.map(s => s.split('').reverse().join(''));
+  const PARITA = ['LLLLLL','LLGLGG','LLGGLG','LLGGGL','LGLLGG','LGGLLG','LGGGLL','LGLGLG','LGLGGL','LGGLGL'];
+
+  // kontrolní číslice GS1: zprava váhy 3,1,3,1…
+  function kontrolni(cislice) {
+    let s = 0;
+    for (let i = 0; i < cislice.length; i++) {
+      const d = +cislice[cislice.length - 1 - i];
+      s += d * (i % 2 === 0 ? 3 : 1);
+    }
+    return String((10 - s % 10) % 10);
+  }
+
+  function isbn10naEan(t) {
+    const c = t.replace(/[\s-]/g, '').toUpperCase();
+    if (!/^\d{9}[\dX]$/.test(c)) return null;
+    let s = 0;
+    for (let i = 0; i < 10; i++) s += (c[i] === 'X' ? 10 : +c[i]) * (10 - i);
+    if (s % 11 !== 0) return { chyba: 'ISBN-10 má chybnou kontrolní číslici.' };
+    const z = '978' + c.slice(0, 9);
+    return { cislo: z + kontrolni(z) };
+  }
+
+  // Ověří/doplní číslo pro EAN/UPC. delka = celková délka včetně kontrolní číslice.
+  function priprav(text, delka, nazev) {
+    const t = String(text).replace(/[\s-]/g, '');
+    if (!/^\d+$/.test(t)) return { chyba: nazev + ' smí obsahovat jen číslice.' };
+    if (t.length === delka - 1) {
+      const k = kontrolni(t);
+      return { cislo: t + k, zprava: 'Kontrolní číslice dopočítána: ' + k };
+    }
+    if (t.length === delka) {
+      const k = kontrolni(t.slice(0, -1));
+      if (k !== t[delka - 1]) return { chyba: 'Chybná kontrolní číslice – má být ' + k + ' (' + t.slice(0, -1) + k + ').' };
+      return { cislo: t, zprava: 'Kontrolní číslice sedí.' };
+    }
+    return { chyba: nazev + ' potřebuje ' + (delka - 1) + ' číslic (nebo ' + delka + ' včetně kontrolní), zadáno ' + t.length + '.' };
+  }
+
+  function ean13(text) {
+    let p;
+    if (/^[\d\s-]{9,13}[\dXx]$/.test(String(text).trim()) && String(text).replace(/[\s-]/g, '').length === 10) {
+      p = isbn10naEan(text);
+      if (!p) p = { chyba: 'Neplatné ISBN-10.' };
+      else if (p.cislo) p.zprava = 'ISBN-10 převedeno na EAN-13.';
+    } else p = priprav(text, 13, 'EAN-13');
+    if (p.chyba) return p;
+    const c = p.cislo, par = PARITA[+c[0]];
+    let m = '101';
+    for (let i = 1; i <= 6; i++) m += (par[i - 1] === 'L' ? L : G)[+c[i]];
+    m += '01010';
+    for (let i = 7; i <= 12; i++) m += R[+c[i]];
+    m += '101';
+    return { ...p, moduly: m, typ: 'ean13',
+      // úseky textu pod kódem: [text, od modulu, do modulu]; první číslice stojí vlevo mimo kód
+      text: [[c[0], -9, -1], [c.slice(1, 7), 3, 45], [c.slice(7), 50, 92]],
+      ochranne: [0, 1, 2, 45, 46, 47, 48, 49, 92, 93, 94] };
+  }
+
+  function ean8(text) {
+    const p = priprav(text, 8, 'EAN-8');
+    if (p.chyba) return p;
+    const c = p.cislo;
+    let m = '101';
+    for (let i = 0; i < 4; i++) m += L[+c[i]];
+    m += '01010';
+    for (let i = 4; i < 8; i++) m += R[+c[i]];
+    m += '101';
+    return { ...p, moduly: m, typ: 'ean8', text: [[c.slice(0, 4), 3, 31], [c.slice(4), 36, 64]],
+      ochranne: [0, 1, 2, 31, 32, 33, 34, 35, 64, 65, 66] };
+  }
+
+  function upca(text) {
+    const p = priprav(text, 12, 'UPC-A');
+    if (p.chyba) return p;
+    const c = p.cislo;
+    let m = '101';
+    for (let i = 0; i < 6; i++) m += L[+c[i]];
+    m += '01010';
+    for (let i = 6; i < 12; i++) m += R[+c[i]];
+    m += '101';
+    // u UPC-A jsou první a poslední číslice (celé znaky) protažené jako ochranné čáry
+    const ochr = [0, 1, 2, 45, 46, 47, 48, 49, 92, 93, 94];
+    for (let i = 3; i < 10; i++) ochr.push(i);
+    for (let i = 85; i < 92; i++) ochr.push(i);
+    return { ...p, moduly: m, typ: 'upca',
+      text: [[c[0], -9, -1], [c.slice(1, 6), 10, 45], [c.slice(6, 11), 50, 85], [c[11], 96, 104]],
+      ochranne: ochr };
+  }
+
+  // Code 128: šířky čar a mezer pro hodnoty 0–106 (106 = STOP)
+  const C128 = ('212222 222122 222221 121223 121322 131222 122213 122312 132212 221213 ' +
+    '221312 231212 112232 122132 122231 113222 123122 123221 223211 221132 ' +
+    '221231 213212 223112 312131 311222 321122 321221 312212 322112 322211 ' +
+    '212123 212321 232121 111323 131123 131321 112313 132113 132311 211313 ' +
+    '231113 231311 112133 112331 132131 113123 113321 133121 313121 211331 ' +
+    '231131 213113 213311 213131 311123 311321 331121 312113 312311 332111 ' +
+    '314111 221411 431111 111224 111422 121124 121421 141122 141221 112214 ' +
+    '112412 122114 122411 142112 142211 241211 221114 413111 241112 134111 ' +
+    '111242 121142 121241 114212 124112 124211 411212 421112 421211 212141 ' +
+    '214121 412121 111143 111341 131141 114113 114311 411113 411311 113141 ' +
+    '114131 311141 411131 211412 211214 211232 2331112').split(' ');
+  const START = { A: 103, B: 104, C: 105 };
+  const PREPNI = { A: 101, B: 100, C: 99 };  // hodnota znaku „CODE x“ (platí z obou ostatních sad)
+
+  function delkaCislic(s, i) { let n = 0; while (i + n < s.length && s.charCodeAt(i + n) >= 48 && s.charCodeAt(i + n) <= 57) n++; return n; }
+  const ridici = ch => ch.charCodeAt(0) < 32;
+  const male = ch => ch.charCodeAt(0) >= 96;
+
+  function code128(text) {
+    const s = String(text);
+    if (!s.length) return { chyba: 'Zadej text ke kódování.' };
+    for (const ch of s) {
+      const k = ch.charCodeAt(0);
+      if (k > 127) return { chyba: 'Znak „' + ch + '“ není v ASCII – Code 128 umí jen znaky bez diakritiky.' };
+      if (k === 127) return { chyba: 'Znak DEL nelze zakódovat.' };
+    }
+    const hodnoty = [];
+    let sada;
+    const n0 = delkaCislic(s, 0);
+    if (n0 >= 4 || (n0 === s.length && n0 % 2 === 0)) sada = 'C';
+    else {
+      // sada A jen tehdy, když se řídicí znak objeví dřív než malé písmeno
+      sada = 'B';
+      for (const ch of s) { if (male(ch)) break; if (ridici(ch)) { sada = 'A'; break; } }
+    }
+    hodnoty.push(START[sada]);
+    let i = 0;
+    while (i < s.length) {
+      if (sada === 'C') {
+        if (delkaCislic(s, i) >= 2) { hodnoty.push(+s.substr(i, 2)); i += 2; continue; }
+        sada = ridici(s[i]) ? 'A' : 'B';
+        hodnoty.push(PREPNI[sada]);
+        continue;
+      }
+      const n = delkaCislic(s, i);
+      // do sady C se vyplatí přejít u 4+ číslic na konci, jinak u 6+
+      if (n >= 6 || (n >= 4 && i + n === s.length)) {
+        if (n % 2 === 1) { hodnoty.push(s.charCodeAt(i) - 32); i++; }
+        sada = 'C'; hodnoty.push(PREPNI.C);
+        continue;
+      }
+      const ch = s[i], k = s.charCodeAt(i);
+      if (sada === 'B' && ridici(ch)) { sada = 'A'; hodnoty.push(PREPNI.A); continue; }
+      if (sada === 'A' && male(ch)) { sada = 'B'; hodnoty.push(PREPNI.B); continue; }
+      hodnoty.push(sada === 'A' && k < 32 ? k + 64 : k - 32);
+      i++;
+    }
+    let soucet = hodnoty[0];
+    for (let j = 1; j < hodnoty.length; j++) soucet += hodnoty[j] * j;
+    const kontrola = soucet % 103;
+    hodnoty.push(kontrola, 106);
+    let m = '';
+    for (const h of hodnoty) {
+      const w = C128[h];
+      for (let j = 0; j < w.length; j++) m += (j % 2 === 0 ? '1' : '0').repeat(+w[j]);
+    }
+    const tisk = s.replace(/[\x00-\x1f]/g, '·');
+    return { moduly: m, typ: 'code128', hodnoty, cislo: s,
+      zprava: 'Znaků: ' + s.length + ', symbolů: ' + (hodnoty.length - 3) + ', kontrolní hodnota ' + kontrola,
+      text: [[tisk, 0, m.length]], ochranne: [] };
+  }
+
+  const KODERY = { ean13, ean8, upca, code128 };
+
+  // SVG z modulů. o = { modul, vyska, okraj, popisek }
+  function svg(k, o) {
+    const mw = o.modul, h = o.vyska, q = o.okraj;
+    const ean = k.typ !== 'code128';
+    const velPisma = ean ? mw * 9 : Math.max(11, mw * 7);
+    const dolu = o.popisek ? (ean ? velPisma * 0.55 : velPisma + mw * 3) : 0;
+    const vlevo = ean && o.popisek && (k.typ === 'ean13' || k.typ === 'upca') ? Math.max(q, 9) : q;
+    const vpravo = k.typ === 'upca' && o.popisek ? Math.max(q, 9) : q;
+    const sirka = (vlevo + k.moduly.length + vpravo) * mw;
+    const vyskaCelk = h + dolu + (o.popisek && ean ? velPisma * 0.5 : 0) + mw * 2;
+    const ochr = new Set(k.ochranne);
+    let r = '';
+    // souvislé běhy čar slučujeme do jednoho obdélníku
+    for (let i = 0; i < k.moduly.length;) {
+      if (k.moduly[i] !== '1') { i++; continue; }
+      let j = i; while (j < k.moduly.length && k.moduly[j] === '1' && ochr.has(j) === ochr.has(i)) j++;
+      const dlouha = o.popisek && ean && ochr.has(i);
+      const vc = o.popisek && ean ? (dlouha ? h + velPisma * 0.5 : h - velPisma * 0.35) : h;
+      r += `<rect x="${(vlevo + i) * mw}" y="${mw}" width="${(j - i) * mw}" height="${vc}"/>`;
+      i = j;
+    }
+    let t = '';
+    if (o.popisek) {
+      for (const [txt, od, doo] of k.text) {
+        const x = (vlevo + (od + doo) / 2) * mw;
+        const y = ean ? mw + h + velPisma * 0.55 : mw + h + velPisma + mw;
+        const esc = txt.replace(/&/g, '&amp;').replace(/</g, '&lt;');
+        const roztec = ean && txt.length > 1 ? ` textLength="${((doo - od) * mw * 0.92).toFixed(1)}" lengthAdjust="spacing"` : '';
+        t += `<text x="${x}" y="${y}" text-anchor="middle"${roztec}>${esc}</text>`;
+      }
+    }
+    return `<svg xmlns="http://www.w3.org/2000/svg" width="${sirka}" height="${Math.ceil(vyskaCelk)}" viewBox="0 0 ${sirka} ${Math.ceil(vyskaCelk)}">` +
+      `<rect width="100%" height="100%" fill="#fff"/><g fill="#000">${r}</g>` +
+      `<g fill="#000" font-family="'OCR-B','Consolas','DejaVu Sans Mono',monospace" font-size="${velPisma}">${t}</g></svg>`;
+  }
+
+  return { ...KODERY, kontrolni, isbn10naEan, svg, C128 };
+})();
+window.CARKOVY_KOD = CARKOVY_KOD;
+
+/* ===== Uživatelské rozhraní ===== */
+(function(){
+  const $ = id => document.getElementById(id);
+  const KLIC = 'webapp_barcode_v1';
+  const POPISY = {
+    ean13: 'Číslo (12 číslic, kontrolní se dopočítá; lze vložit i ISBN-10)',
+    ean8: 'Číslo (7 číslic, kontrolní se dopočítá)',
+    upca: 'Číslo (11 číslic, kontrolní se dopočítá)',
+    code128: 'Text (písmena bez diakritiky, číslice, symboly)',
+  };
+  const VZORY = { ean13: '859123456789', ean8: '8591234', upca: '03600029145', code128: 'SKLAD-A12-000451' };
+  const PREFIXY = [
+    [/^97[89]/, 'ISBN – kniha'], [/^977/, 'ISSN – periodikum'], [/^2/, 'interní použití (prefix 20–29)'],
+    [/^859/, 'GS1 Česká republika'], [/^858/, 'GS1 Slovensko'], [/^(4[0-4])/, 'GS1 Německo'],
+    [/^590/, 'GS1 Polsko'], [/^599/, 'GS1 Maďarsko'], [/^(90|91)/, 'GS1 Rakousko'], [/^(0|1[0-3])/, 'GS1 USA a Kanada (UPC)'],
+    [/^3[0-7]/, 'GS1 Francie'], [/^(8[0-3])/, 'GS1 Itálie'], [/^50/, 'GS1 Velká Británie'], [/^(87)/, 'GS1 Nizozemsko'],
+    [/^(76)/, 'GS1 Švýcarsko'], [/^(69)/, 'GS1 Čína'], [/^(45|49)/, 'GS1 Japonsko'],
+  ];
+
+  let stav = { typ: 'ean13', data: {}, modul: 3, vyska: 110, okraj: 10, popisek: true, hromadne: '' };
+  try { Object.assign(stav, JSON.parse(localStorage.getItem(KLIC)) || {}); } catch (e) {}
+  const uloz = () => { try { localStorage.setItem(KLIC, JSON.stringify(stav)); } catch (e) {} };
+
+  let posledni = null;
+
+  function volby() {
+    const cis = (id, a, b, d) => { const v = Math.round(+$(id).value); return isFinite(v) && v >= a && v <= b ? v : d; };
+    return { modul: cis('modul', 1, 8, 3), vyska: cis('vyska', 20, 400, 110), okraj: cis('okraj', 0, 30, 10), popisek: $('popisek').checked };
+  }
+
+  function prekresli() {
+    const text = $('data').value;
+    stav.data[stav.typ] = text;
+    Object.assign(stav, volby());
+    uloz();
+    const k = CARKOVY_KOD[stav.typ](text);
+    const el = $('stav');
+    if (k.chyba) {
+      el.className = 'stav chyba'; el.textContent = '⚠ ' + k.chyba;
+      $('plocha').innerHTML = '<span style="color:#777">Kód nelze vytvořit</span>';
+      $('info').textContent = ''; posledni = null; return;
+    }
+    el.className = 'stav ok'; el.textContent = '✓ ' + (k.zprava || '');
+    const s = CARKOVY_KOD.svg(k, volby());
+    $('plocha').innerHTML = s;
+    posledni = { svg: s, k };
+    let info = '';
+    if (stav.typ === 'ean13') {
+      const p = PREFIXY.find(([re]) => re.test(k.cislo));
+      info = 'Celé číslo: <b>' + k.cislo + '</b>' + (p ? ' · prefix: ' + p[1] : '');
+    } else if (stav.typ === 'code128') {
+      info = 'Délka kódu: <b>' + k.moduly.length + ' modulů</b> (' + (k.moduly.length * volby().modul) + ' px bez okrajů). ' +
+        'Dlouhé řady číslic se kódují úsporně po dvojicích (sada C).';
+    } else info = 'Celé číslo: <b>' + k.cislo + '</b>';
+    $('info').innerHTML = info;
+  }
+
+  function nastavTyp(typ) {
+    stav.typ = typ;
+    document.querySelectorAll('#typy button').forEach(b => b.classList.toggle('active', b.dataset.typ === typ));
+    $('dataLabel').textContent = POPISY[typ];
+    $('data').value = stav.data[typ] != null ? stav.data[typ] : VZORY[typ];
+    $('data').inputMode = typ === 'code128' ? 'text' : 'numeric';
+    prekresli();
+  }
+
+  function nazevSouboru(pripona) {
+    const z = posledni ? String(posledni.k.cislo).replace(/[^\w-]+/g, '_').slice(0, 40) : 'kod';
+    return (stav.typ + '_' + z || 'kod') + '.' + pripona;
+  }
+  function stahni(blob, jmeno) {
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob); a.download = jmeno;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  }
+
+  $('stahniSvg').onclick = () => { if (posledni) stahni(new Blob([posledni.svg], { type: 'image/svg+xml' }), nazevSouboru('svg')); };
+  $('stahniPng').onclick = () => {
+    if (!posledni) return;
+    const img = new Image();
+    const url = URL.createObjectURL(new Blob([posledni.svg], { type: 'image/svg+xml' }));
+    img.onload = () => {
+      const c = document.createElement('canvas'), z = 4;
+      c.width = img.width * z; c.height = img.height * z;
+      const g = c.getContext('2d');
+      g.imageSmoothingEnabled = false;
+      g.drawImage(img, 0, 0, c.width, c.height);
+      URL.revokeObjectURL(url);
+      c.toBlob(b => stahni(b, nazevSouboru('png')), 'image/png');
+    };
+    img.src = url;
+  };
+  $('kopiruj').onclick = async () => {
+    if (!posledni) return;
+    try { await navigator.clipboard.writeText(posledni.svg); $('kopiruj').textContent = '✓ Zkopírováno'; }
+    catch (e) { $('kopiruj').textContent = '✗ Schránka nedostupná'; }
+    setTimeout(() => $('kopiruj').textContent = '📋 Kopírovat SVG', 1500);
+  };
+
+  function vytvorStitky() {
+    stav.hromadne = $('hromadne').value; uloz();
+    const radky = stav.hromadne.split('\n').map(r => r.trim()).filter(Boolean);
+    const box = $('stitky');
+    box.innerHTML = '';
+    box.style.display = radky.length ? 'grid' : 'none';
+    const o = { ...volby(), modul: 2, vyska: 70, okraj: Math.min(volby().okraj, 10) };
+    for (const r of radky.slice(0, 500)) {
+      const [kod, ...popis] = r.split(';');
+      const k = CARKOVY_KOD[stav.typ](kod.trim());
+      const d = document.createElement('div');
+      d.className = 'stitek' + (k.chyba ? ' spatne' : '');
+      if (k.chyba) d.textContent = kod.trim() + ' – ' + k.chyba;
+      else {
+        d.innerHTML = CARKOVY_KOD.svg(k, o);
+        if (popis.length) { const p = document.createElement('div'); p.textContent = popis.join(';').trim(); d.appendChild(p); }
+      }
+      box.appendChild(d);
+    }
+  }
+  $('vytvorStitky').onclick = vytvorStitky;
+  $('tiskni').onclick = () => { vytvorStitky(); window.print(); };
+  $('rada').onclick = () => {
+    const prvni = ($('hromadne').value.split('\n').find(r => r.trim()) || $('data').value).split(';')[0].trim();
+    let rada = [];
+    if (stav.typ === 'code128') {
+      const m = prvni.match(/^(.*?)(\d+)$/);
+      if (!m) { $('stav').className = 'stav chyba'; $('stav').textContent = '⚠ Řadu lze doplnit jen u textu končícího číslem.'; return; }
+      for (let i = 0; i < 10; i++) rada.push(m[1] + String(BigInt(m[2]) + BigInt(i)).padStart(m[2].length, '0'));
+    } else {
+      const d = { ean13: 12, ean8: 7, upca: 11 }[stav.typ];
+      const zaklad = prvni.replace(/\D/g, '').slice(0, d);
+      if (zaklad.length !== d) { $('stav').className = 'stav chyba'; $('stav').textContent = '⚠ První řádek musí mít aspoň ' + d + ' číslic.'; return; }
+      for (let i = 0; i < 10; i++) {
+        const z = String(BigInt(zaklad) + BigInt(i)).padStart(d, '0').slice(-d);
+        rada.push(z + CARKOVY_KOD.kontrolni(z));
+      }
+    }
+    $('hromadne').value = rada.join('\n');
+    vytvorStitky();
+  };
+
+  document.querySelectorAll('#typy button').forEach(b => b.onclick = () => nastavTyp(b.dataset.typ));
+  $('data').addEventListener('input', prekresli);
+  ['modul', 'vyska', 'okraj', 'popisek'].forEach(id => $(id).addEventListener('input', prekresli));
+
+  $('modul').value = stav.modul; $('vyska').value = stav.vyska; $('okraj').value = stav.okraj;
+  $('popisek').checked = stav.popisek !== false;
+  $('hromadne').value = stav.hromadne || '';
+  nastavTyp(['ean13', 'ean8', 'upca', 'code128'].includes(stav.typ) ? stav.typ : 'ean13');
+})();
+</script>
+</body>
+</html>

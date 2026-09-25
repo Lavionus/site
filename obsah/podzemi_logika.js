@@ -580,8 +580,18 @@
     hulkaLeceni: { typ: 'hulka', ikona: 'hulka', nazev: 'Hůlka hojení', lvl: 10, kouzlo: 'leceni' },
     klic: { typ: 'klic', ikona: 'klic', nazev: 'Klíč od pokladnice', lvl: 1 },
   };
-  const SLOTY = ['zbran', 'stit', 'helma', 'brneni', 'boty', 'amulet', 'prsten1', 'prsten2'];
+  const SLOTY = ['zbran', 'luk', 'stit', 'helma', 'brneni', 'boty', 'amulet', 'prsten1', 'prsten2'];
   const MAX_BATOH = 16;
+  // větší batohy od obchodníka – kupují se postupně, každý přidá místa k základním 16
+  const BATOHY = [
+    { nazev: 'Kožená brašna', navic: 4, cena: 150 },
+    { nazev: 'Cestovní vak', navic: 8, cena: 400 },
+    { nazev: 'Trpasličí krosna', navic: 12, cena: 900 },
+  ];
+  const kapacita = s => MAX_BATOH + ((BATOHY[(s.hrac.batohStupen || 0) - 1] || {}).navic || 0);
+  // v ruce je buď zbraň na blízko, nebo luk (přehazuje se klávesou R)
+  const drziLuk = s => s.hrac.drzi === 'luk' && !!s.hrac.vybava.luk;
+  const vRuce = s => drziLuk(s) ? s.hrac.vybava.luk : s.hrac.vybava.zbran;
   const VZACNOSTI = [
     { nazev: 'Běžná kvalita', barva: '#c8c8c8' },
     { nazev: 'Neobvyklá kvalita', barva: '#5fd35f' },
@@ -726,14 +736,18 @@
     return sk;
   }
 
-  function slotPro(p) { return p.typ === 'prsten' ? 'prsten' : SLOTY.includes(p.typ) ? p.typ : null; }
+  function slotPro(p) {
+    if (p.typ === 'zbran' && ZAKLADY[p.zaklad].dosah) return 'luk';
+    return p.typ === 'prsten' ? 'prsten' : SLOTY.includes(p.typ) ? p.typ : null;
+  }
 
   // hodnoty hráče včetně výbavy
   function odvozene(s) {
     const h = s.hrac, v = h.vybava, o = { sila: h.sila, obrana: h.obrana, magie: h.magie, maxHp: h.maxHp, presnost: 0, ohen: 0 };
+    const vPouzdre = drziLuk(s) ? 'zbran' : 'luk';   // zbraň, která není v ruce, bonusy nedává
     for (const slot of SLOTY) {
       const p = v[slot];
-      if (!p) continue;
+      if (!p || slot === vPouzdre) continue;
       const w = vlastnostiPredmetu(p);
       o.sila += w.sila || 0; o.obrana += w.obrana || 0; o.magie += w.magie || 0;
       o.maxHp += w.zdravi || 0; o.presnost += w.presnost || 0; o.ohen += w.ohen || 0;
@@ -748,8 +762,9 @@
       else if (k === 'zranitelnost') o.obrana -= 2;
       else if (k === 'hlad') o.hladovost *= 2;
     }
-    const zb = v.zbran ? vlastnostiPredmetu(v.zbran) : { min: 1, max: 3, rychlost: 1 };   // pěsti
-    o.zbran = { min: zb.min, max: zb.max, rychlost: zb.rychlost, dosah: zb.dosah ? zb.dosah + (ma(s, 'lukostrelec') ? 2 : 0) : 0, nazev: v.zbran ? nazevPredmetu(s, v.zbran) : 'Pěsti' };
+    const ruka = vRuce(s);
+    const zb = ruka ? vlastnostiPredmetu(ruka) : { min: 1, max: 3, rychlost: 1 };   // pěsti
+    o.zbran = { min: zb.min, max: zb.max, rychlost: zb.rychlost, dosah: zb.dosah ? zb.dosah + (ma(s, 'lukostrelec') ? 2 : 0) : 0, nazev: ruka ? nazevPredmetu(s, ruka) : 'Pěsti' };
     o.sipy = h.batoh.filter(p => p.typ === 'sipy').reduce((a, p) => a + p.pocet, 0);
     return o;
   }
@@ -762,7 +777,7 @@
       const st = b.find(q => q.typ === 'sipy');
       if (st) { st.pocet += p.pocet; return true; }
     }
-    if (b.length >= MAX_BATOH) return false;
+    if (b.length >= kapacita(s)) return false;
     b.push(p);
     return true;
   }
@@ -1208,6 +1223,10 @@
   const cenaNakupu = (s, p) => Math.max(1, Math.round(cenaPredmetu(p, s) * (1 - (s.obchod ? s.obchod.sleva : 0)) * (ma(s, 'smlouvac') ? 0.8 : 1)));
   const cenaVykupu = (s, p) => Math.floor(cenaPredmetu(p, s) * (ma(s, 'smlouvac') ? 0.4 : 0.2));
   const cenaOdkleti = s => 40 * s.patro;
+  const cenaBatohu = s => {
+    const dalsi = BATOHY[s.hrac.batohStupen || 0];
+    return dalsi ? Math.round(dalsi.cena * (1 - (s.obchod ? s.obchod.sleva : 0)) * (ma(s, 'smlouvac') ? 0.8 : 1)) : null;
+  };
   const uObchodnika = s => !!s.obchod && Math.abs(s.obchod.x - s.x) + Math.abs(s.obchod.y - s.y) === 1;
 
   function obchodAkce(s, typ, arg, ud) {
@@ -1231,6 +1250,15 @@
       s.zlato += cena;
       if (!(p.prokleti && p.odhaleno)) o.zbozi.push(p);        // prokleté si obchodník nevystaví
       ud.push({ typ: 'prodal', nazev: nazevPredmetu(s, p), cena });
+      return true;
+    }
+    if (typ === 'batoh') {
+      const dalsi = BATOHY[s.hrac.batohStupen || 0], cena = cenaBatohu(s);
+      if (!dalsi) return false;
+      if (s.zlato < cena) { ud.push({ typ: 'malo', cena }); return false; }
+      s.zlato -= cena; s.stat.utraceno += cena;
+      s.hrac.batohStupen = (s.hrac.batohStupen || 0) + 1;
+      ud.push({ typ: 'vetsiBatoh', nazev: dalsi.nazev, mist: kapacita(s), cena });
       return true;
     }
     if (typ === 'odklet') {
@@ -1400,6 +1428,7 @@
     b.splice(i, 1);
     if (v[slot]) b.push(v[slot]);
     v[slot] = p;
+    if (slot === 'zbran' || slot === 'luk') s.hrac.drzi = slot;   // nasazenou zbraň bereš rovnou do ruky
     srovnejZdravi(s);
     ud.push({ typ: 'nasadil', nazev: nazevPredmetu(s, p), predmet: p });
     if (p.prokleti && !p.odhaleno) {
@@ -1422,7 +1451,7 @@
     const v = s.hrac.vybava;
     if (!v[slot]) return false;
     if (v[slot].prokleti) { v[slot].odhaleno = true; ud.push({ typ: 'prokleto', nazev: nazevPredmetu(s, v[slot]) }); return false; }
-    if (s.hrac.batoh.length >= MAX_BATOH) { ud.push({ typ: 'plno', pocet: 1 }); return false; }
+    if (s.hrac.batoh.length >= kapacita(s)) { ud.push({ typ: 'plno', pocet: 1 }); return false; }
     s.hrac.batoh.push(v[slot]);
     ud.push({ typ: 'sundal', nazev: nazevPredmetu(s, v[slot]) });
     v[slot] = null;
@@ -1441,6 +1470,7 @@
       return true;
     }
     if (p.typ === 'pochoden') {
+      if (h.pochoden >= MAX_PALIVA) { ud.push({ typ: 'plnaPochoden' }); return false; }
       b.splice(i, 1);
       h.pochoden = Math.min(MAX_PALIVA, h.pochoden + ZAKLADY.pochoden.palivo);
       ud.push({ typ: 'zapalil' });
@@ -1609,7 +1639,8 @@
     const tr = TRIDY[s.trida] || TRIDY.rytir;
     s.hrac = {
       hp: tr.hp, maxHp: tr.hp, sila: tr.sila, obrana: 0, magie: tr.magie, uroven: 1, zk: 0, zkDalsi: 15, sytost: 100,
-      vybava: { zbran: null, stit: null, helma: null, brneni: null, boty: null, amulet: null, prsten1: null, prsten2: null },
+      vybava: { zbran: null, luk: null, stit: null, helma: null, brneni: null, boty: null, amulet: null, prsten1: null, prsten2: null },
+      drzi: 'zbran', batohStupen: 0,
       batoh: [], schopnosti: tr.schopnost ? [tr.schopnost] : [], volba: null, kryti: false, pochoden: 800,
     };
     s.zabito = 0; s.tajne = 0; s.zlato = 0; s.bossu = 0;
@@ -1638,6 +1669,7 @@
     if (!tr.bezLektvaru) s.hrac.batoh.push(novyPredmet(s, 'lektvar', { lektvar: 'leceni' }), novyPredmet(s, 'lektvar', { lektvar: 'leceni' }));
     for (const [zaklad, o] of tr.navic) {
       const p = novyPredmet(s, zaklad, o);
+      if (slotPro(p) === 'luk' && !v.luk) { v.luk = p; continue; }   // luk rovnou na záda
       if (p.typ === 'hulka') p.naboje = 4;
       if (p.typ === 'svitek') { s.znameSvitky.push(zaklad); if (!s.rychla[2]) s.rychla[2] = { zaklad }; }
       s.hrac.batoh.push(p);
@@ -1857,6 +1889,14 @@
       konecTahu(s, 1, ud);
       return { tah: true, udalost: 'kryt', udalosti: ud };
     }
+    if (typ === 'prehod') {
+      // rychlé přehození zbraň ↔ luk – nestojí tah, stejně jako otočka
+      const h = s.hrac, na = drziLuk(s) ? 'zbran' : 'luk';
+      if (na === 'luk' && !h.vybava.luk) return { tah: false, udalost: 'bezLuku', udalosti: ud };
+      h.drzi = na;
+      ud.push({ typ: 'prehodil', luk: na === 'luk', nazev: h.vybava[na] ? nazevPredmetu(s, h.vybava[na]) : 'Pěsti' });
+      return { tah: false, udalost: 'prehod', udalosti: ud };
+    }
     if (typ === 'cekej') {
       rozhlednise(s, ud, true);                   // čekání = pozorné prohledání okolí
       konecTahu(s, 1, ud);
@@ -1886,7 +1926,7 @@
       konecTahu(s, o.zbran.rychlost, ud);
       return { tah: true, udalost: m ? 'utok' : 'mach', udalosti: ud };
     }
-    if (typ === 'kup' || typ === 'prodej' || typ === 'odklet' || typ === 'hadanka') {
+    if (typ === 'kup' || typ === 'prodej' || typ === 'odklet' || typ === 'hadanka' || typ === 'batoh') {
       const ok = obchodAkce(s, typ, arg, ud);
       return { tah: false, udalost: ok ? typ : 'nic', udalosti: ud };   // obchodování čas nestojí
     }
@@ -2130,9 +2170,18 @@
       if (m.stav === 'bloudi') { m.stav = 'honi'; ud.push({ typ: 'spatrila', id: m.id, druh: m.druh, x: m.x, y: m.y }); }
       m.stopa = 8;
     } else if (m.stav === 'honi' && --m.stopa <= 0) m.stav = 'bloudi';
-    if (m.stav === 'honi' && d.uteka && m.hp < m.maxHp * d.uteka) {
+    if (m.stav === 'honi' && d.uteka && !m.vzchopila && m.hp < m.maxHp * d.uteka) {
       m.stav = 'utika';
+      m.strachDo = s.tah + Ri(s, 4, 9);              // strach po pár tazích přejde
       ud.push({ typ: 'utika', id: m.id, druh: m.druh, x: m.x, y: m.y });
+    }
+    if (m.stav === 'utika') {
+      if (m.strachDo == null) m.strachDo = s.tah + Ri(s, 4, 9);        // starší uložení (po JSON null)
+      if (s.tah >= m.strachDo) {
+        // vzchopí se a jde znovu do boje – podruhé už neuteče
+        m.stav = 'honi'; m.stopa = 8; m.vzchopila = true; delete m.strachDo;
+        ud.push({ typ: 'vzchopila', id: m.id, druh: m.druh, x: m.x, y: m.y });
+      }
     }
 
     const pv = pole[d.dvere ? 1 : 0], w = s.mapaPatra.w;
@@ -2279,7 +2328,7 @@
     return u8;
   }
 
-  const POLE_POTVORY = ['id', 'druh', 'x', 'y', 'hp', 'maxHp', 'bonus', 'stav', 'energie', 'stopa', 'volal', 'pan', 'smer'];
+  const POLE_POTVORY = ['id', 'druh', 'x', 'y', 'hp', 'maxHp', 'bonus', 'stav', 'energie', 'stopa', 'volal', 'pan', 'smer', 'strachDo', 'vzchopila'];
   function serializuj(s) {
     return JSON.stringify({
       verze: 4, seed: s.seed, patro: s.patro, tah: s.tah, nejhlubsi: s.nejhlubsi, rng: s.rng,
@@ -2329,6 +2378,11 @@
     if (d.paka) s.paka = d.paka;
     if (d.sebraneLouce) s.sebraneLouce = new Set(d.sebraneLouce);
     if (s.hrac.pochoden === undefined) s.hrac.pochoden = 800;       // starší uložení pochodeň neznalo
+    if (s.hrac.vybava && s.hrac.vybava.luk === undefined) {          // starší uložení: luk byl ve slotu zbraně
+      const v = s.hrac.vybava;
+      v.luk = null; s.hrac.drzi = 'zbran';
+      if (v.zbran && ZAKLADY[v.zbran.zaklad].dosah) { v.luk = v.zbran; v.zbran = null; s.hrac.drzi = 'luk'; }
+    }
     if (d.verze >= 4) {
       s.pasti = d.pasti || [];
       (d.dekorace || []).forEach((u, i) => { if (s.dekorace[i]) s.dekorace[i].pouzito = !!u; });
@@ -2363,7 +2417,7 @@
     novaVyprava, vstupDoPatra, akce, dlazdice, dvereZavrene, blokujePohled, vidi,
     aktualizujViditelnost, serializuj, obnov, ascii, mulberry32, smichej,
     jeLouc, SANCE_LOUCE, MAX_PALIVA, TRIDY, seedDne, SCHOPNOSTI, najdiCestu, HADANKY, KLETBY, cenaPredmetu, cenaNakupu, cenaVykupu, cenaOdkleti, uObchodnika, BESTIAR, BOSSOVE, bossZiv, JMENA, potvoraNa, zkDalsi, OBTIZNOST, UCELY, DEKORACE, PASTI, dekoraceNa, pastNa, prekazkaNa, souvisle,
-    ZAKLADY, SLOTY, MAX_BATOH, VZACNOSTI, VLASTNOSTI, LEKTVARY, novyPredmet, nahodnyPredmet, nazevPredmetu,
+    ZAKLADY, SLOTY, MAX_BATOH, BATOHY, kapacita, cenaBatohu, drziLuk, vRuce, VZACNOSTI, VLASTNOSTI, LEKTVARY, novyPredmet, nahodnyPredmet, nazevPredmetu,
     vlastnostiPredmetu, skorePredmetu, slotPro, odvozene, truhlaNa, doBatohu,
   };
   if (typeof module !== 'undefined' && module.exports) module.exports = API;
