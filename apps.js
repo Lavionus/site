@@ -1143,6 +1143,11 @@ const KATALOG_SEKCE = [
         "tagy": ["fonty", "písmo", "typografie", "náhled", "párování"]
       },
       {
+        "soubor": "obsah/prevod_pisma.html",
+        "nazev": "🧝 Převodník písma",
+        "tagy": ["fonty", "písmo", "elfí písmo", "tengwar", "tolkien", "pán prstenů", "runy", "futhark", "hlaholice", "azbuka", "cyrilice", "alfabeta", "řečtina", "ogam", "braille", "slepecké písmo", "hieroglyfy", "egypt", "fénické písmo", "etruské písmo", "gótské písmo", "morseovka", "přepis", "transliterace", "vlastní font"]
+      },
+      {
         "soubor": "obsah/colorblind_sim.html",
         "nazev": "🌈 Simulace barvosleposti",
         "tagy": ["barvoslepost", "přístupnost", "simulace", "daltonismus", "kontrast"]
@@ -1303,6 +1308,11 @@ const KATALOG_SEKCE = [
         "tagy": ["vykrajovátka", "cukroví", "3d tisk", "pečení", "stl", "obj", "svg", "vánoce", "velikonoce", "perníčky", "monogram", "z obrázku", "šablona", "50 tvarů", "zvířátka", "srdíčko", "hvězda", "stromek"]
       },
       {
+        "soubor": "obsah/text3d.html",
+        "nazev": "🔠 3D text z písma",
+        "tagy": ["3d tisk", "stl", "3mf", "svg", "číslo domu", "popisné číslo", "cedulka", "jmenovka", "nápis", "písmena", "font", "písmo", "reliéf", "rytina", "šablona", "sprej", "tengwar", "elfí písmo", "runy", "braille", "hieroglyfy", "podložka", "tiskárna", "vlastní font"]
+      },
+      {
         "soubor": "obsah/turbina_navrhar.html",
         "nazev": "🌀 Návrhář turbín a proudění",
         "tagy": ["turbína", "vrtule", "proudění", "cfd", "lbm", "větrná elektrárna", "savonius", "darrieus", "gorlov", "tesla", "pelton", "kaplan", "bánki", "cross-flow", "lopatka", "naca", "bem", "aerodynamika", "hydrodynamika", "stl"]
@@ -1459,6 +1469,11 @@ const KATALOG_SEKCE = [
           "tesařina",
           "rozestup"
         ]
+      },
+      {
+        "soubor": "obsah/pudorys.html",
+        "nazev": "🏠 Půdorys a rozvody",
+        "tagy": ["půdorys", "dispozice", "patro", "místnost", "stěny", "okna", "dveře", "kóty", "rozvody", "voda", "elektro", "kanalizace", "plyn", "topení", "zásuvky", "dxf", "3d", "výkaz", "plocha m2", "stavba", "rekonstrukce"]
       },
       {
         "soubor": "obsah/wooden_shed_3d.html",
@@ -1904,6 +1919,11 @@ const KATALOG_SEKCE = [
         ]
       },
       {
+        "soubor": "obsah/trpaslici.html",
+        "nazev": "⛰️ Srdce hory",
+        "tagy": ["trpaslíci", "hora", "budovatelská strategie", "kopání", "těžba", "důl", "pixel art", "boční řez", "gravitace", "dwarf fortress", "craft the world", "procedurální mapa"]
+      },
+      {
         "soubor": "obsah/dwarf_colony.html",
         "nazev": "⛏️ Trpasličí kolonie",
         "tagy": [
@@ -2194,12 +2214,82 @@ const KATALOG_SEKCE = [
       {
         "soubor": "obsah/obchodnik.html",
         "nazev": "⚓ Pirát obchodník",
-        "tagy": ["obchod", "piráti", "karibik", "ekonomie", "ceny", "loď", "plavba", "strategie", "taipan", "pixel art"]
+        "tagy": ["obchod", "piráti", "karibik", "ekonomie", "ceny", "loď", "plavba", "strategie", "taipan", "pixel art", "flotila", "vylepšení", "noc", "stará mapa", "game boy"]
       },
       {
         "soubor": "obsah/laguna.html",
         "nazev": "🐠 Laguna",
         "tagy": ["potápění", "šnorchlování", "ryby", "korály", "fotografie", "atlas", "podmořský svět", "relax", "moře", "mangrovy", "modrá díra", "pixel art"]
+      },
+      {
+        "soubor": "obsah/zapad_slunce.html",
+        "nazev": "🌅 Západ slunce",
+        "tagy": ["relax", "relaxace", "západ slunce", "východ slunce", "úsvit", "bouřka", "delfíni", "pláž", "molo", "útes", "plachetnice", "mangrovy", "laguna", "moře", "vlny", "palmy", "hvězdy", "dýchání", "zvuky přírody", "usínání", "karibik", "zelený záblesk", "bioluminiscence"]
+      },
+      {
+        "soubor": "obsah/kostky.html",
+        "nazev": "🎲 Pirátské kostky",
+        "tagy": ["kostky", "liar's dice", "perudo", "blafování", "pravděpodobnost", "piráti", "AI soupeři", "strategie", "denní výzva", "hospoda"]
+      },
+      {
+        "soubor": "obsah/stychy.html",
+        "nazev": "🃏 Štychy na palubě",
+        "tagy": ["karty", "štychy", "odhad", "piráti", "AI soupeři", "strategie", "trumfy", "denní výzva", "tahová", "více hráčů"]
+      },
+      {
+        "soubor": "obsah/taverna.html",
+        "nazev": "🍹 Taverna v přístavu",
+        "tagy": ["manažerská", "taverna", "hospoda", "vaření", "recepty", "piráti", "ekonomika", "časovka", "pixel art", "vylepšení", "zvěsti", "denní výzva", "přístav"]
+      },
+      {
+        "soubor": "obsah/plantaz.html",
+        "nazev": "🌴 Plantáž",
+        "tagy": ["budovatelská", "strategie", "tahová", "ekonomika", "simulace", "farmaření", "ostrov", "počasí", "hurikány", "obchod", "pixel art", "denní výzva"]
+      },
+      {
+        "soubor": "obsah/lodenice.html",
+        "nazev": "⚓ Loděnice",
+        "tagy": ["lodě", "plachetnice", "fyzika", "Archimédes", "stabilita", "metacentrum", "simulace", "konstrukce", "stavění", "zakázky", "polární diagram", "denní výzva"]
+      },
+      {
+        "soubor": "obsah/navigator.html",
+        "nazev": "🧭 Navigátor",
+        "tagy": ["navigace", "sextant", "Polárka", "astronomie", "deklinace", "výpočet polohy", "mapa", "karibik", "plachetnice", "výuková", "simulace", "denní výzva"]
+      },
+      {
+        "soubor": "obsah/lahev.html",
+        "nazev": "🍾 Vzkaz v láhvi",
+        "tagy": ["šifry", "luštění", "kryptografie", "Caesar", "morseovka", "substituce", "Vigenère", "piráti", "poklad", "mapa", "denní výzva", "logika"]
+      },
+      {
+        "soubor": "obsah/uzly.html",
+        "nazev": "🪢 Námořnické uzly",
+        "tagy": ["hlavolam", "logika", "planarita", "rozmotávání", "uzly", "lana", "námořnictví", "atlas", "výuka", "kvíz", "denní výzva"]
+      },
+      {
+        "soubor": "obsah/steeldrum.html",
+        "nazev": "🥁 Steel drum",
+        "tagy": ["hudba", "rytmická hra", "steel drum", "calypso", "karibik", "syntéza zvuku", "paměť", "Simon", "denní výzva", "dotyk", "klávesnice"]
+      },
+      {
+        "soubor": "obsah/regata.html",
+        "nazev": "⛵ Regata",
+        "tagy": ["plachetnice", "regata", "závod", "vítr", "polární diagram", "křižování", "taktika", "AI soupeři", "denní výzva", "simulace", "dotykové ovládání"]
+      },
+      {
+        "soubor": "obsah/zelvy.html",
+        "nazev": "🐢 Želví pláž",
+        "tagy": ["želvy", "mořské želvy", "pláž", "noc", "příroda", "ochrana přírody", "světelné znečištění", "pixel art", "relax", "deník", "denní výzva"]
+      },
+      {
+        "soubor": "obsah/plaz.html",
+        "nazev": "🐚 Plážový sběratel",
+        "tagy": ["pláž", "mušle", "sběratelství", "příliv", "odliv", "Měsíc", "pixel art", "relax", "atlas", "příroda", "denní výzva"]
+      },
+      {
+        "soubor": "obsah/zivly.html",
+        "nazev": "🌋 Živly ostrova",
+        "tagy": ["sopka", "vulkán", "erupce", "hurikán", "počasí", "karibik", "simulace", "výuková", "zeměpis", "předpověď", "evakuace", "denní výzva"]
       }
     ]
   },

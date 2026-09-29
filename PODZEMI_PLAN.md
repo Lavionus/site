@@ -424,8 +424,224 @@ Po každé etapě bot znovu změří obtížnost (cíl: rozumný hráč průměr
 - **Testy:** `node _test/podzemi_luk.js` 20/20, `python3 _test/podzemi_luk_ui.py` 11/11 (i 4 tlačítka boje na
   360 px bez překryvu), `podzemi_snimek.py` 148/148, bot 300 výprav: průměr 13,3. patro (bot batohy nekupuje).
 
+### Šípy jdou sebrat, ukazatele nad potvorami, chytřejší bot (29. 9. 2026)
+
+- **Šípy:** vystřelený šíp zůstane s šancí `NAVRAT_SIPU` = 50 % ležet – pod zasaženou potvorou (kde stála při
+  zásahu), nebo na posledním volném poli letu (nikdy ve zdi). Šíp ušetřený Lukostřelcem se nekopíruje.
+  `polozNaZem` skládá šípy na hromádku; sebrání šlápnutím jako u ostatních věcí.
+- **Ukazatele nad potvorami (pixel art ve scéně):** pruh zdraví u zraněných (u bosse vždy; šířka podle velikosti
+  spritu; rudý > 50 %, oranžový pod, žlutý = utíká), nový znak **!** = utíká (vedle Z / ?). Potvoře schované
+  za bližší potvorou se značky nekreslí (v chodbě se jinak slévaly).
+- **Bot `CHYTRY=1`:** nosí nejvýš 4 jídla, u obchodníka prodá horší výbavu a kupuje větší batoh (`BEZBATOHU=1`
+  bez batohu). Výchozí bot beze změny, na něj je vyladěná `OBTIZNOST`.
+- **Zjištění k obtížnosti (300 výprav, do 40. patra):** výchozí bot si ucpe batoh jídlem (v průměru ~10 kusů –
+  jídlo se neskládá), takže nemá kam dát lektvary. Rozumný bot: bez většího batohu 97/300 přežije do 40. patra
+  (výchozí 8/300), s batohem 168/300. „Průměr smrti" navíc přeživší nepočítá, takže obtížnost podhodnocuje.
+  Menší stupně batohu (+3/+6/+9) ani vyšší ceny výsledek skoro nezměnily – rozhoduje, jestli batoh přeteče.
+  **Návrh (neprovedeno, čeká na rozhodnutí):** přeladit `OBTIZNOST` na `CHYTRY=1`, nebo jídlo skládat na
+  hromádky jako šípy.
+- **Testy:** `node _test/podzemi_luk.js` 24/24 (i šípy na zemi), `python3 _test/podzemi_ukazatele.py` 5/5,
+  `podzemi_snimek.py` 148/148, `podzemi_cela/pochoden/luk_ui` beze změny, výchozí bot 13,3. patro, 8 přeživších.
+
+### Bot ve hře, dotykové rozvržení (29. 9. 2026)
+
+- **Bot je modul `obsah/podzemi_bot.js`** (`PodzemiBot.vytvor(L).rozhodni(s, stat, volby)`), sdílený testem
+  vyvážení i hrou – jeden bot. Volby `chytry`, `slaby`, `bezBatohu`, `akce` (kudy pouštět nákupy u obchodníka).
+  Výchozí bot v testu dává stejná čísla jako dřív (13,3. patro, 8/300).
+- **🤖 Sledovat bota** (spodní lišta): bot (chytrý, náhodné povolání) hraje **ukázkovou výpravu**. Tvoje uložená
+  výprava zůstane v úložišti, `uloz()` během ukázky nic nezapisuje, `bezZaznamu` hlídá rekord, síň slávy,
+  denní výpravu i úspěchy; smrt bota nemaže uložení ani neukazuje epitaf. Po konci (⏹, Esc, smrt bota) se
+  tvoje výprava obnoví. Proužek v pohledu: povolání, patro, tempo 1× / 2× / 4× (zkracuje i animace), ⏹.
+  Za bota se nehraje (klávesy pohybu i tlačítka jsou vypnuté), batoh a mapu jde otevřít – bot mezitím počká.
+  Pojistka: 40 kroků bez tahu → bot počká.
+- **Dotykové rozvržení** (`body.dotyk`; Nastavení → Rozvržení: automaticky / dotykové / klasické, automaticky
+  = `pointer: coarse`). Tatáž tlačítka se jen přestěhují z pohledu do `#panel`. Nic se neroluje (100dvh).
+  - Na výšku: HUD kompaktně, obraz bez tlačítek, deník (zbytek výšky), panel: horní řádek rychlá lišta +
+    ⏳ 🛡️ ⇄, spodní řádek velký útok (88 px) pod levým palcem a kříž pod pravým; lišta 🎒 Batoh · 🗺️ Mapa · ⋯ Další
+    (ostatní volby v rozbalovacím panelu 2×N, zavře se volbou nebo ťuknutím mimo).
+  - Na šířku jako gamepad: obraz uprostřed (`--pw` nechá stranám ≥ ~150 px), vlevo HUD, rychlá lišta, akce
+    a útok, vpravo ikonové menu, deník a kříž.
+  - „Tlačítka: vlevo" zrcadlí panel pro leváky, „skrytá" schová kříž. Celá obrazovka v dotykovém režimu jen
+    skryje lištu prohlížeče (rozvržení `body.cela` platí jen pro klasické).
+  - Past: `.boj` má v základním CSS `position:absolute` – v mřížce pak nezvětší řádek a přeteče do sousedů.
+- **Testy:** `python3 _test/podzemi_bot_ui.py` 7/7 (hraje, nic neukládá, vrátí výpravu i po smrti bota),
+  `python3 _test/podzemi_dotyk.py` 17/17 (10 velikostí telefon/tablet na výšku i šířku, leváci: vše na displeji,
+  ≥ 44 px, bez překryvu, nic přes obraz, 4 : 3, bez rolování, ⋯ Další), ostatní sady beze změny.
+
+### Záloha a varianty grafiky (29. 9. 2026)
+
+- **Záloha** stavu před grafikou: `podzemi_kopie_2026-09-29/` v kořeni webu (hra, logika, bot, zvuk, plán,
+  testy, `ZALOHA.txt` s postupem obnovy). „kopie" v názvu → `.gitignore` ji vynechá; leží ve stejné hloubce jako
+  `obsah/`, takže běží (`/podzemi_kopie_2026-09-29/podzemi.html`). Sdílí s hrou localStorage.
+- **Šest stylů grafiky** (`nast.grafika`, Nastavení → Grafika, klávesa **G**, tlačítko 🎨 ve spodní liště /
+  v ⋯ Další): Pixel art (původní), EGA – 16 barev (Bayer 4×4, mírné oteplení), Game Boy (4 zelené odstíny),
+  Rytina na pergamenu (inkoust / sépie / papír), Fosforový monitor (zelená + řádkování), Drátěný model.
+  Barevné styly = `prebarvi()` nad hotovým snímkem na konci `kresliScenu` (i efekty a nápisy) a nad minimapou
+  i velkou mapou; výsledky přes LUT (EGA 32k položek).
+- **Drátěný model:** raycaster si vede `idb` (pole × 8 + druh plochy: podlaha, strop, 4 strany stěny, dveře) a
+  `svb` (světlo v pixelu). Hrana = změna `idb` vpravo/dole → obrysy zdí, dveří, mříží i mřížka podlahy a stropu;
+  jas čáry ze světla loučí (ne z textury – spáry na okraji dlaždic jsou tmavé a čáry by zmizely). Sprity se
+  kreslí přes drát a přebarví se zeleně.
+  Past: `BAYER` už v kódu byla (stínování textur) – druhá deklarace by shodila celý skript.
+- Výkon (headless, snímek): pixel 2,1 ms, EGA 3,1, Game Boy 4,3, rytina 4,3, fosfor 3,3, drát 3,9.
+- **Testy:** `python3 _test/podzemi_grafika.py` 16/16 (paleta každého stylu v obraze i minimapě, výkon,
+  G, Nastavení), ostatní sady beze změny (`podzemi_dotyk` 17/17 – ⋯ Další na šířku ve 3 sloupcích).
+
+### Záloha a varianty grafiky (29. 9. 2026)
+
+- **Záloha** předchozí verze (v178: bot, dotykové rozvržení…) ve složce `podzemi_kopie_2026-09-29/` v kořeni webu
+  (hra, logika, bot, zvuk, plán, testy, `ZALOHA.txt` s postupem obnovy). Git ji ignoruje (`*kopie*`), jde spustit
+  přes lokální server – složka je ve stejné hloubce jako `obsah/`, takže sdílené `../common.css` atd. fungují.
+- **Šest stylů grafiky** (Nastavení → Grafika, klávesa **G**, tlačítko **🎨** ve spodní liště / „⋯ Další"):
+  Pixel art (výchozí), EGA – 16 barev (Bayerův rastr, mírně oteplené), Game Boy (4 odstíny), Rytina na
+  pergamenu (inkoust / sépie / papír), Fosforový monitor (zelený s řádkováním), Drátěný model.
+  - Barevné styly = přebarvení hotového snímku `prebarvi()` na konci `kresliScenu` (i efekty, čísla, nápisy);
+    stejně se přebarví minimapa i velká mapa.
+  - Drátěný model: raycaster si vede buffer ploch `idb` (pole × 8 + druh: podlaha, strop, 4 strany stěny, dveře)
+    a světla `svb`; hrana = změna plochy vpravo/dole → obrysy zdí, dveří, mříží i mřížka podlahy a stropu.
+    Jas čar je ze světla, ne z textury (spáry na okraji dlaždic jsou tmavé – mřížka pak mizela). Sprity se
+    kreslí přes model a dobarví se do zelena.
+  - Past: `BAYER` už v kódu byl (stínování textur) – nová matice je `RASTR`.
+- **Testy:** `python3 _test/podzemi_grafika.py` 16/16 (paleta každého stylu v obraze i minimapě, snímek 2–6 ms,
+  G i výběr v Nastavení), všechny ostatní sady beze změny (148/148, dotyk 17/17…).
+
+### Etapa A – hromádky, potulné potvory, nové vyladění (29. 9. 2026)
+
+- **Hromádky:** jídlo (podle druhu), lektvary (podle lektvaru), svitky, pochodně a ruda se skládají, nejvýš
+  `MAX_HROMADKA` = 9 kusů na místo (bez limitu by se do jednoho místa vešlo 30 léčivých lektvarů). Spotřeba
+  i prodej po kusu (`odeberKus`), zahození celé hromádky, na zemi se skládají také. `srovnejHromadky` běží po
+  každé akci (`akce` = `akceBezUklidu` + úklid) i po načtení → uložení je vždy ve stejném tvaru a starší
+  uložení se sama sloučí. UI: počet na políčku, součet v rychlé liště, „Prodat 1 z N".
+- **Potulné potvory:** `SANCE_POTULNE` = 1/110 za tah, daleko (≥ 8 polí) a mimo dohled, jen do limitu patra,
+  ne v obchodě/kovárně/pokladnici/za mříží/u bosse; hráč slyší jen vzdálené kroky.
+- **Zjištění:** s hromádkami rozumný bot unese všechny nalezené lektvary → 66 % výprav došlo do 40. patra.
+  Ani drahota lektvarů v hloubce (`DRAHOTA_LEKTVARU` 6 %/patro, ponechána – zlato má dole cenu), ani potulné
+  potvory to nezměnily; rozhoduje síla potvor. **`OBTIZNOST` → hpRust 0,55 · utokRust 1,3 · presnostRust 0,02**
+  (dřív 0,35 · 0,8 · 0,02). Kalibruje se teď na rozumného bota (výchozí v testu, `HLOUPY=1` = starý).
+- Test: `node _test/podzemi_hromadky.js` 16/16; `podzemi_boj.js` vypisuje i medián všech výprav (přeživší = 40).
+
+### Etapa B – kovárna (29. 9. 2026)
+
+- **Kovář** (`mistrKovar`, vlastní sprite: zrzavý vous, zástěra, kovadlina se žhavým železem) v **kovárně**
+  od 3. patra, ~15 % pater (ne u bosse). Umisťuje se až po všem ostatním s vlastní náhodou (`seed ^ 0x60A7F0`),
+  takže starší uložení se po načtení postaví stejně (patro se generuje znovu ze seedu!).
+- Kování: zbraně a luky +1 poškození, štít/helma/brnění/boty +1 obrana za stupeň, nejvýš **+5** (`p.kovani`,
+  název „Meč +3"). Platba zlatem `70·(k+1)²·(1+0,08·patro)` (Smlouvač −20 %), nebo **železnou rudou**
+  `2·(k+1)` kusů. Ruda (`surovina`, skládá se) v náhodné kořisti (~6 %), cena 15. Kování nestojí tah.
+- Okno kovárny (na sobě / v batohu, cena ve zlatě i rudě, „mistrovsky ukováno"), zvuk `kovani` (dva zvonivé
+  údery), značka na mapě. Bot (rozumný) kuje jednou za patro s rezervou 150 zlatých.
+- Vyvážení: s původní cenou (50·(k+1)^1,7, ruda k+1) přežilo 15,7 %; po zdražení **10,3 %**, průměrná smrt
+  11,2. patro, bot ukove ~4,5 stupně na výpravu.
+- Testy: `node _test/podzemi_kovar.js` 14/14, `python3 _test/podzemi_kovar_ui.py` 6/6 (pozor: `?bezpotvor`
+  maže i dekorace – tedy i kováře).
+
+### Etapa C – taktika potvor (29. 9. 2026)
+
+- **Goblin lučištník** (5.–16. patro): `strelec` + `drzOdstup` – drží se na dostřel a střílí šípy (vlastní text,
+  zvuk luku, světlá střela). **Goblin šaman** (7.–22.): `leci` – každé 3 tahy vyléčí nejzraněnějšího spojence na
+  dohled do 5 polí (35 % zdraví; zelené „+N" a třpyt `leceniPotvory`), drží odstup. Oba mají vlastní sprite.
+- **Burcování smečky** (`smecka`: goblin, lučištník, šaman, ork): kdo tě zahlédne nebo se probudí, vzbudí druhy
+  do 5 polí (událost `burcuje`, výkřik). Krysy a další samotáři ne.
+- **Útěk ke skupině:** vyděšená potvora běží k nejbližšímu spojenci (ne blíž k hráči); u něj strach přejde hned.
+- Bot: střelce a léčitele na dohled (do 6 polí) pronásleduje – jinak stál pod palbou.
+- Vyvážení: taktiky zpřísnily patra 5–22 (bez úprav 0 % přeživších) → lučištník 0,5 / 2–6, `OBTIZNOST`
+  **0,45 · 1,1 · 0,02**: medián všech výprav 10. patro, průměrná smrt 11,4., do 40. patra 4,7 %.
+- Test: `node _test/podzemi_taktika.js` 10/10 (aréna 13×9 místo náhodných místností – ty bývají 3×3 až 6×5).
+
+### Etapa D – úkoly v patře (29. 9. 2026)
+
+- ~40 % pater od 2. (ne u bosse) dostane úkol (`zadejUkol`, vlastní náhoda `seed ^ 0x0B0C0B`, až na konci
+  generování): **náčelník** (jedna ze 3 nejsilnějších potvor mimo start: 2× zdraví, +2 útok, 2× zkušenosti,
+  zlatá korunka `^` nad hlavou), **ztracený deník** (předmět `ukol` na zemi v místnosti; šlápnutím splněno,
+  do batohu se nedostane), **lov** (vyhub 3–6 potvor v patře, počítají se i potulné).
+- Odměna: zlato (12–20 × patro + 20) a předmět o 2 úrovně lepší (bez kletby, vzácnost ≥ 1). Stav úkolu
+  `s.ukol` a příznak `nacelnik` u potvory se ukládají; starší uložení = bez úkolu.
+- UI: štítek 📜 v HUD, oznámení po sestupu i pádu jámou, zpráva o postupu, fanfára `ukol`.
+- Vyvážení: medián 12. patro, do 40. patra 4 %. Testy: `node _test/podzemi_ukoly.js` 7/7,
+  `python3 _test/podzemi_ukoly_ui.py` 3/3.
+
+### Etapa E – klíčové předměty (29. 9. 2026)
+
+- **Krumpáč** (6 použití): prokope zeď před hráčem (ne okraj mapy, ne páku; tajnou zeď odhalí), 5 tahů,
+  hluk do 7 polí. Prokopaná pole `s.prokopano` se ukládají a po načtení (patro se generuje znovu) se vrátí.
+- **Lano** (skládá se): nouzový sestup o patro bez zranění (ne u živého bosse; UI se ptá na potvrzení).
+- **Lucerna** (stačí nést): pochodeň dohořívá 3× pomaleji, dohled 6 místo 5, silnější světlo, lepší šance
+  všimnout si pastí a tajných dveří v chůzi (dosah 2).
+- Zdroje: náhodná kořist (~3 %, lvl lano 2 / krumpáč 3 / lucerna 4), každý obchodník nabízí jeden nástroj
+  (bez dalšího volání náhody generátoru – staré uložené hry sedí). Bot se lanem zachrání při nízkém zdraví.
+- Vyvážení: medián 10. patro, do 40. patra 7,3 %. Testy: `node _test/podzemi_nastroje.js` 12/12,
+  `python3 _test/podzemi_nastroje_ui.py` 4/4. Pozor: porty testů jiných projektů v `_test/` se kryjí
+  (8187 = i `rybar_snimky.py`) – `podzemi_bot_ui.py` teď na 8287/9707.
+
+### Etapa F – bot na denní výpravě (29. 9. 2026)
+
+- `botDenni(datum, třída)` odehraje stejnou denní mapu se stejným povoláním (rozumný bot) po dávkách 1500 akcí
+  (hra se nezasekne), nejvýš do 40. patra; výsledek v `webapp_hra_podzemi_denni_bot` (datum|třída, posledních 40).
+  Spouští se na pozadí 2 s po startu denní výpravy. Epitaf: „🤖 Bot se stejným povoláním dnes došel do X. patra
+  – porazil jsi ho o N pater / byl o N lepší"; síň slávy – Denní: „· 🤖 bot: X. patro".
+- Test `python3 _test/podzemi_denni_bot.py` 5/5 – bot v prohlížeči dojde přesně tam co v node (deterministický).
+
+### Etapa G – ladění stylů grafiky (29. 9. 2026)
+
+- Barvy podle prostředí (`LADENI_PROSTREDI`): fosfor – kobky zelený, jeskyně modrozelený, doly a láva jantarový,
+  krypta fialový, Podivno tyrkysový; Game Boy a rytina mají pro každé prostředí vlastní 4 / 3 odstíny.
+- Fosforový monitor a drátěný model: soudkovité zakřivení obrazovky + ztmavené rohy (předpočítaná mapa
+  `crtMapa`/`crtVinet`) a **dosvit luminoforu** (`dosvit`, útlum 0,72 za snímek – při pohybu stopy dohasínají).
+  Při přepnutí stylu se dosvit vynuluje. Snímek stále do ~6 ms.
+- Test `podzemi_grafika.py` 18/18 (i barvy fosforu v kobkách, jeskyních a lávě).
+
+### Etapa H – hudba (29. 9. 2026)
+
+- Generativní hudba v `podzemi_zvuk.js` na vlastním kanálu (`bus.hudba`, Nastavení → Hlasitost hudby, výchozí
+  25 %, 0 = vypnuto): tichý bordun (kořen + kvinta) a řídká melodie – náhodná procházka po stupnici prostředí
+  (kobky D dórská, jeskyně A pentatonika, doly E frygická, krypta C harmonická moll s „varhanami", láva
+  F frygická dominantní, Podivno celotónová), basový tón každý takt. Boj (potvora tě honí do 7 polí):
+  tempo až +90 %, melodie o oktávu výš, buben a činel; napětí náběh/doznění plynule (`bojCil`).
+- Plánovač s předstihem (`setInterval` 200 ms, okno 0,6 s), v neaktivní záložce stojí. Poslech ověřuje uživatel.
+- Test `python3 _test/podzemi_hudba.py` 15/15 (offline `zmerHudbu`: 6 prostředí × klid/boj, bez NaN,
+  špička 0,3–0,72 při plné hlasitosti kanálu, v boji ~2× víc dob).
+
+### Styl Dungeon Master (1987) (29. 9. 2026)
+
+- Sedmý styl grafiky `dm`: vlastní textury (paleta a vzory „prostředí" `DM` – šedomodré kamenné bloky, šedé
+  desky, skoro černý strop; stejné v celém podzemí jako v originále), **tma skokově po celých polích** (`TMA_DM`,
+  bez barevného světla loučí), ploché stupně bez Bayerova rastru, 16 barev v duchu Atari ST (`DM16`, výběr
+  nejbližší barvy i podle odstínu – jinak goblin zhnědl; tmavá zelená místo tmavé modré).
+- **Pohyb po celých polích bez animace** (`tempoAnim` = 0), ostatní styly plynulé.
+- Rozhraní: kamenný vystouplý rám pohledu, hranatá šedá tlačítka se šipkami, zpráva žlutě na černém
+  (`body[data-grafika=dm]`).
+- Test `podzemi_grafika.py` 22/22 (≤ 16 barev, rám, okamžitá otočka v DM a plynulá v ostatních).
+
+### Styl a rozvržení „Temná fantasy" podle předlohy (29. 9. 2026)
+
+- Osmý styl grafiky `temna`: textury prostředí `TEMNA` – velké kvádry s nasvícenou horní/levou hranou,
+  mramorováním a variantou s vytesaným sloupem (`kvadry`), nepravidelné kamenné desky z buněk se spárami
+  a prasklinami (`slaby`), klenutý strop s žebry (`zebra`); chladná břidlicová paleta, teplé louče.
+  Úprava snímku `temnaUprava`: záře kolem světel (jasné body do mapy 1/4, rozmazat, přičíst), kontrastní
+  křivka (střední tóny dolů), chladné stíny, ztmavené okraje. Snímek ~6 ms.
+- Rudý **banner se jménem potvory** před tebou (do 5 polí; náčelník zlatě), počítá se při vykreslení.
+- **Rozvržení** (`body.temnaUI`, jen styl temna, ne dotykový displej, okno ≥ 1000 px): vlevo inventář po
+  kategoriích (Zbraně, Zbroj, Šperky, Lektvary, Jídlo, Ostatní; klik = detail v batohu) a minimapa na
+  pergamenu (`naPergamen`: pozadí průhledné, zdi hnědým inkoustem, barevné značky zůstanou); uprostřed
+  pohled v kamenném rámu, deník, lišta; vpravo portrét hrdiny (programově 20×20 podle povolání: rytíř
+  helma a vous, zloděj kápě a šátek, mág klobouk a vousy, barbar hříva a jizva), zdraví a zkušenosti,
+  výbava v ruce, rychlá lišta, akce a kamenný kříž. Přepíná se i při změně velikosti okna.
+- Testy: `podzemi_grafika.py` 24/24 (i banner), `python3 _test/podzemi_temna_ui.py` 8/8 (kategorie, panely
+  bez překryvu, bez rolování, portrét, klik do inventáře, vypnutí při 900 px a jiném stylu).
+
+### Temná fantasy ve vysokém rozlišení, „malovaný" pixel art (29. 9. 2026)
+
+- `nastavDetail(hd)`: Temná fantasy kreslí **512×384** (K = 2), ostatní styly 256×192. RW/RH/TS jsou
+  proměnné; buffery (`obraz`, `buf`, `idb`, `svb`, `zbuf`) a předpočty (CRT, vineta, dosvit) se založí znovu.
+  Pixelové prvky (nápisy, zbraň v ruce, pruhy a značky nad potvorami, čísla) se násobí `K`.
+- Textury 64×64: zdi, zeď se sloupem, tajná zeď, podlaha a strop malované nativně (`malovaneTextury`) –
+  rampy s posunem odstínu (stíny do modrofialova, světla do okrové), zkosené kvádry, stopy dláta, otlučené
+  rohy, mech ve spárách, kanelovaný sloup, desky s nasvícenou hranou, klenba se žebry. Ostatní textury
+  (dveře, schody, pasti, louče, páka, mříž) a **sprity potvor** zvětšuje **Scale2x (EPX)** – zaoblí šikminy;
+  sprity navíc dostínuje (hrana na světle, spodek ve stínu). Zbraň v ruce také Scale2x.
+- Výkon: bez úprav 25 ms/snímek → kontrastní křivka tabulkou a světlo jednou za 2 px (podlaha) / 2 řádky
+  (stěny) → **14 ms**. Test `podzemi_grafika.py` 26/26 (HD mez 20 ms, rozlišení 512×384 vs. 256×192).
+
 ## Další náměty
 
-- víc druhů pastí a hádanek (páky, přepínače, teleportní dlaždice), obchodník v hlubinách za zlato
-- identifikace svitků podobně jako lektvary, prokleté předměty
-- denní výprava se společným seedem pro všechny (srovnání v síni slávy)
+- záznam výpravy a přehrání (hra je deterministická podle seedu – stačí uložit tahy) – uživatel zatím nechtěl

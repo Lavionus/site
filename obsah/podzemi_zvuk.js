@@ -50,10 +50,11 @@ const PodzemiZvuk = (function () {
     };
     const efekty = kanal();
     efekty.prostredi = kanal();
+    efekty.hudba = kanal();
     return efekty;
   }
   const PROSTREDI = ['kapka', 'krumpac', 'zvon', 'bublani', 'duneni', 'podivno', 'prasknuti', 'bouchnuti', 'sepot'];
-  let hlasEfekty = 1, hlasProstredi = 0.7;
+  let hlasEfekty = 1, hlasProstredi = 0.7, hlasHudba = 0.25;
   // výstup jednoho zvuku: hlasitost → (vzdálenost = dolní propust) → panoráma → suchý / dozvuk
   function vystup(a, b, o) {
     o = Object.assign({ pan: 0, dozvuk: 0.25, hlas: 1, dalka: 0 }, o);
@@ -353,6 +354,38 @@ const PodzemiZvuk = (function () {
         s.connect(e); e.connect(out); s.start(t2); s.stop(t2 + 0.5);
         cvak(a, t2, 4200, 0.3, 0.02, out);
       }
+    },
+    // kování: dva zvonivé údery kladiva o kovadlinu (nesouměrné alikvoty = kov)
+    kovani(a, b, t, R) {
+      const out = vystup(a, b, { dozvuk: 0.35, hlas: 0.75 });
+      for (const [dt, sila] of [[0, 1], [0.24, 0.7]]) {
+        const tt = t + dt;
+        cvak(a, tt, 3800 + R() * 400, 0.5 * sila, 0.02, out);
+        for (const [f, h, d] of [[1180, 0.22, 0.9], [1870, 0.14, 0.6], [2960, 0.08, 0.4]]) {
+          const o = a.createOscillator(); o.type = 'sine'; o.frequency.value = f * (1 + (R() - 0.5) * 0.01);
+          const e = obalka(a, tt, h * sila, 0.002, d);
+          o.connect(e); e.connect(out); o.start(tt); o.stop(tt + d + 0.05);
+        }
+      }
+    },
+    // šaman léčí spojence: stoupající třpyt
+    leceniPotvory(a, b, t, R) {
+      const out = vystup(a, b, { dozvuk: 0.4, hlas: 0.55 });
+      [660, 880, 1170, 1560].forEach((f, i) => {
+        const tt = t + i * 0.06, o = a.createOscillator(); o.type = 'triangle'; o.frequency.value = f * (1 + (R() - 0.5) * 0.02);
+        const e = obalka(a, tt, 0.18, 0.01, 0.35);
+        o.connect(e); e.connect(out); o.start(tt); o.stop(tt + 0.4);
+      });
+    },
+    // splněný úkol: krátká fanfára (dur kvintakord nahoru a zpátky na kvintu)
+    ukol(a, b, t, R) {
+      const out = vystup(a, b, { dozvuk: 0.35, hlas: 0.6 });
+      [[523, 0], [659, 0.1], [784, 0.2], [1047, 0.32], [784, 0.5]].forEach(([f, dt]) => {
+        const tt = t + dt, o = a.createOscillator(); o.type = 'square'; o.frequency.value = f;
+        const fl = a.createBiquadFilter(); fl.type = 'lowpass'; fl.frequency.value = 2400;
+        const e = obalka(a, tt, 0.12, 0.005, dt >= 0.5 ? 0.5 : 0.14);
+        o.connect(fl); fl.connect(e); e.connect(out); o.start(tt); o.stop(tt + 0.6);
+      });
     },
     // jídlo: tři křupnutí
     jist(a, b, t, R) {
@@ -737,8 +770,9 @@ const PodzemiZvuk = (function () {
         if (!AC) return;
         ac = new AC();
         bus = sestav(ac, ac.destination);
-        bus.nastav(hlasEfekty); bus.prostredi.nastav(hlasProstredi);
+        bus.nastav(hlasEfekty); bus.prostredi.nastav(hlasProstredi); bus.hudba.nastav(hlasHudba);
         planujAtmosferu();
+        casovacHudby = setInterval(tikHudby, 200);
       }
       if (ac.state === 'suspended') ac.resume();
     } catch { ac = null; }
@@ -778,6 +812,111 @@ const PodzemiZvuk = (function () {
     }, (A.od + Math.random() * (A.do - A.od)) * 1000);
   }
 
+  // --- hudba: generativní podkres podle prostředí; v boji zrychlí a přidá bubny ------------------------
+  // bordun (kořen a kvinta) + řídká melodie, která se toulá po stupnici prostředí
+  const HUDBA = {
+    'Kamenné kobky':    { koren: 146.83, stupnice: [0, 2, 3, 5, 7, 9, 10], barva: 'triangle', tempo: 54 },   // D dórská
+    'Zatopené jeskyně': { koren: 110.00, stupnice: [0, 3, 5, 7, 10], barva: 'sine', tempo: 48 },              // A moll pentatonika
+    'Trpasličí doly':   { koren: 82.41, stupnice: [0, 1, 3, 5, 7, 8, 10], barva: 'square', tempo: 60 },       // E frygická
+    'Krypta':           { koren: 130.81, stupnice: [0, 2, 3, 5, 7, 8, 11], barva: 'varhany', tempo: 44 },     // C harmonická moll
+    'Lávové podzemí':   { koren: 87.31, stupnice: [0, 1, 4, 5, 7, 8, 10], barva: 'sawtooth', tempo: 58 },     // F frygická dominantní
+    'Podivno':          { koren: 123.47, stupnice: [0, 2, 4, 6, 8, 10], barva: 'sine', tempo: 40 },           // celotónová
+  };
+  const hudba = { biom: 'Kamenné kobky', boj: 0, bojCil: 0, dalsi: 0, doba: 0, ton: 7, dron: null, dronBiom: null };
+  let casovacHudby = 0;
+  function barvaOsc(a, o, barva) {
+    if (barva === 'varhany') o.setPeriodicWave(a.createPeriodicWave(new Float32Array([0, 1, 0.55, 0.35, 0.2, 0.1]), new Float32Array(6)));
+    else o.type = barva;
+  }
+  function tonHudby(a, cil, t, f, delka, hlas, barva, jas) {
+    const o = a.createOscillator(); barvaOsc(a, o, barva); o.frequency.value = f;
+    const fl = a.createBiquadFilter(); fl.type = 'lowpass'; fl.frequency.value = jas || 1400;
+    const e = a.createGain();
+    e.gain.setValueAtTime(0.0001, t); e.gain.exponentialRampToValueAtTime(hlas, t + Math.min(0.12, delka * 0.3));
+    e.gain.exponentialRampToValueAtTime(0.0001, t + delka);
+    o.connect(fl); fl.connect(e); e.connect(cil.suchy); e.connect(cil.mokry);
+    o.start(t); o.stop(t + delka + 0.05);
+  }
+  function dronHudby(a, cil, H, t) {
+    const g = a.createGain(); g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.045, t + 3);
+    const fl = a.createBiquadFilter(); fl.type = 'lowpass'; fl.frequency.value = 520;
+    const osc = [H.koren / 2, H.koren * 0.75, H.koren / 2 * 1.004].map(f => {
+      const o = a.createOscillator(); barvaOsc(a, o, H.barva === 'square' || H.barva === 'sawtooth' ? 'triangle' : H.barva); o.frequency.value = f;
+      o.connect(fl); o.start(t); return o;
+    });
+    fl.connect(g); g.connect(cil.suchy); g.connect(cil.mokry);
+    return { stop(tt) { g.gain.cancelScheduledValues(tt); g.gain.setValueAtTime(g.gain.value || 0.045, tt); g.gain.exponentialRampToValueAtTime(0.0001, tt + 2.5); osc.forEach(o => o.stop(tt + 2.6)); } };
+  }
+  // naplánuje doby hudby až do času doKdy (živě po kouscích, v testu celé najednou)
+  function planujHudbu(a, cil, doKdy, R) {
+    const H = HUDBA[hudba.biom] || HUDBA['Kamenné kobky'];
+    if (hudba.dronBiom !== hudba.biom) {
+      if (hudba.dron) hudba.dron.stop(a.currentTime);
+      hudba.dron = dronHudby(a, cil, H, Math.max(a.currentTime, hudba.dalsi)); hudba.dronBiom = hudba.biom;
+    }
+    if (hudba.dalsi < a.currentTime) hudba.dalsi = a.currentTime + 0.05;
+    while (hudba.dalsi < doKdy) {
+      const t = hudba.dalsi, boj = hudba.boj, n = H.stupnice.length;
+      const interval = 60 / (H.tempo * (1 + 0.9 * boj));
+      // melodie: náhodná procházka po stupnici (v boji hustší a výš)
+      if (R() < 0.45 + 0.35 * boj) {
+        hudba.ton = Math.max(0, Math.min(n * 2 + 2, hudba.ton + [-2, -1, -1, 1, 1, 2][Math.floor(R() * 6)]));
+        const pul = H.stupnice[hudba.ton % n] + 12 * Math.floor(hudba.ton / n);
+        tonHudby(a, cil, t, H.koren * Math.pow(2, pul / 12 + (boj > 0.5 ? 1 : 0)), interval * (1.6 + R()), 0.07, H.barva, 1100 + 900 * boj);
+      }
+      if (hudba.doba % 8 === 0) tonHudby(a, cil, t, H.koren / 2, interval * 6, 0.06, H.barva, 500);   // basový tón každý takt
+      // boj: buben na lichých dobách, činel na sudých
+      if (boj > 0.15) {
+        if (hudba.doba % 2 === 0) {
+          const o = a.createOscillator(); o.type = 'sine';
+          o.frequency.setValueAtTime(95, t); o.frequency.exponentialRampToValueAtTime(42, t + 0.22);
+          const e = a.createGain(); e.gain.setValueAtTime(0.0001, t); e.gain.exponentialRampToValueAtTime(0.22 * boj, t + 0.005); e.gain.exponentialRampToValueAtTime(0.0001, t + 0.28);
+          o.connect(e); e.connect(cil.suchy); o.start(t); o.stop(t + 0.3);
+        } else {
+          const z = a.createBufferSource(); z.buffer = sum(a);
+          const hp = a.createBiquadFilter(); hp.type = 'highpass'; hp.frequency.value = 6000;
+          const e = a.createGain(); e.gain.setValueAtTime(0.0001, t); e.gain.exponentialRampToValueAtTime(0.04 * boj, t + 0.003); e.gain.exponentialRampToValueAtTime(0.0001, t + 0.08);
+          z.connect(hp); hp.connect(e); e.connect(cil.suchy); z.start(t, R() * 1.5); z.stop(t + 0.1);
+        }
+      }
+      hudba.boj += (hudba.bojCil - hudba.boj) * 0.25;               // napětí přichází a odchází plynule
+      hudba.doba++; hudba.dalsi = t + interval;
+    }
+  }
+  function tikHudby() {
+    if (!ac || ac.state !== 'running' || !zapnuto || hlasHudba <= 0 || document.hidden) return;
+    try { planujHudbu(ac, bus.hudba, ac.currentTime + 0.6, Math.random); } catch { /* hudba není pro hru nutná */ }
+  }
+  // UI hlásí prostředí a napětí (0 = klid, 1 = boj)
+  function nastavHudbu(biom, boj) {
+    if (HUDBA[biom]) hudba.biom = biom;
+    hudba.bojCil = Math.max(0, Math.min(1, boj || 0));
+  }
+  function hlasitostHudby(v) {
+    hlasHudba = v;
+    if (bus) bus.hudba.nastav(v);
+    if (v <= 0 && hudba.dron && ac) { hudba.dron.stop(ac.currentTime); hudba.dron = null; hudba.dronBiom = null; }
+  }
+  // test: kousek hudby offline (kolik sekund, prostředí, napětí) – špička a RMS
+  async function zmerHudbu(biom, boj, sekund) {
+    const oc = new OfflineAudioContext(2, 44100 * (sekund || 8), 44100);
+    const b = sestav(oc, oc.destination); b.hudba.nastav(1);
+    const zaloha = Object.assign({}, hudba);
+    Object.assign(hudba, { biom, boj: boj || 0, bojCil: boj || 0, dalsi: 0.05, doba: 0, ton: 7, dron: null, dronBiom: null });
+    let s = 11;
+    const R = () => ((s = (s * 16807) % 2147483647) / 2147483647);
+    planujHudbu(oc, b.hudba, (sekund || 8) - 0.5, R);
+    const pocetDob = hudba.doba;
+    Object.assign(hudba, zaloha);
+    const buf = await oc.startRendering();
+    let spicka = 0, sq = 0, nan = false;
+    for (let k = 0; k < 2; k++) {
+      const d = buf.getChannelData(k);
+      for (let i = 0; i < d.length; i++) { const v = d[i]; if (v !== v) nan = true; spicka = Math.max(spicka, Math.abs(v)); sq += v * v; }
+    }
+    return { biom, boj, dob: pocetDob, spicka: +spicka.toFixed(3), rms: +Math.sqrt(sq / (buf.length * 2)).toFixed(4), nan };
+  }
+
   function hlasitost(efekty, prostredi) {
     hlasEfekty = efekty; hlasProstredi = prostredi;
     if (bus) { bus.nastav(efekty); bus.prostredi.nastav(prostredi); }
@@ -807,7 +946,8 @@ const PodzemiZvuk = (function () {
   }
 
   return {
-    odemkni, hraj, nastav, zmer, nastavProstredi, hlasitost,
+    odemkni, hraj, nastav, zmer, nastavProstredi, hlasitost, nastavHudbu, hlasitostHudby, zmerHudbu,
+    get prostrediHudby() { return Object.keys(HUDBA); },
     get zapnuto() { return zapnuto; },
     get bezi() { return !!ac && ac.state === 'running'; },
     druhy: Object.keys(ZVUKY),

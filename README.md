@@ -5,7 +5,7 @@ Statický web se sbírkou malých HTML aplikací, hostovaný na GitHub Pages
 
 | Cesta | Web | Katalog | Stránky |
 |---|---|---|---|
-| `/` | hlavní rozcestník – 273 aplikací | `apps.js` | `obsah/` |
+| `/` | hlavní rozcestník – 315 aplikací | `apps.js` | `obsah/` |
 
 ## Tři oddělené weby
 
@@ -236,6 +236,44 @@ CSS rozměr, vykreslí se dvakrát větší než jeho místo a z náhledu zbude 
 modelu. Headless testy běží ve výchozím DPI 1, takže na to nepřijdou — proto je
 v `_test/vykr_dpi.py` běh s `--force-device-scale-factor=2`, který porovná CSS
 rozměr plátna s kontejnerem.
+
+**Písma: 3D text a Převodník písma** (`obsah/text3d.html`, `obsah/prevod_pisma.html`)
+sdílejí složku `obsah/fonty/`: 70 volně šiřitelných fontů (SIL OFL, tři Apache 2.0;
+soupis a copyrighty v `fonty/LICENCE.md`, plné znění `fonty/OFL.txt` a `APACHE-2.0.txt`), katalog
+a úložiště vlastních fontů `fonty/fonty.js` a přepis do jiných písem
+`fonty/prepis.js`. **Vlastní fonty** (TTF/OTF/WOFF/WOFF2) se ukládají do
+IndexedDB `webapp_fonty` (localStorage by na soubory nestačil) a obě stránky je
+vidí, protože běží na stejném originu. Přepis: tengwar v kódování Free Tengwar /
+CSUR (U+E000…) pro font Alcarin Tengwar — samohlásky jako tehtar nad předchozí
+nebo následující souhláskou, dlouhé na dlouhém nosiči, `s`/`z` s tehtou jako
+nuquerna, `r` před samohláskou rómen, jinak óre, ď/ť/ň dvě tečky pod; dál runy
+(futhark), hlaholice, azbuka, alfabeta, ogam, Braillovo písmo (česká tabulka), egyptské
+hieroglyfy (jednosouhlásková abeceda), fénické (zprava doleva – 3D text řádky otáčí),
+etruské, gótské a Morseovka. **Offline / file://:** 3D text potřebuje bajty fontu
+(obrysy čte opentype.js), jenže stránka otevřená z disku nesmí soubor načíst
+přes `fetch()`; převodníku to nevadilo, protože písmo kreslí prohlížeč přes
+`FontFace(url())`. Proto má každý font kopii jako skript `fonty/js/<soubor>.js`
+(base64, vyrábí `fonty/sestav_js.py` – **po přidání fontu spustit**), kterou
+`fonty.js` načte, když `fetch()` selže (`_test/pismo_file.py`). 3D text navíc zná
+**podložky tiskáren**: obrys v náhledu, kontrola, zda se model vejde (i natočený),
+doporučené zmenšení a „regálové“ rozložení samostatných písmen na jednu či víc
+podložek. Obě stránky vyplňují výšku okna (výšku plochy dopočítá JS z polohy
+pod lištami a z `--podpis-vyska`). **3D text** čte obrysy
+glyfů přes `lib/opentype.min.js` (křivky se dělí podle průhybu, odchylka
+0,03 mm) a sjednocuje je přes `lib/clipper.min.js` (Clipper 6.4.2, Boost
+licence) — psací písma i diakritika se překrývají a bez sjednocení by šablona
+nebo rytina vyšly s překříženými dírami. Režimy jen písmena / reliéf na desce /
+vyrytý (volitelně s výplní druhou barvou) / prořezaná šablona jsou jen
+vytažení 2D oblastí v různých výškách (rozdíly oblastí dělá Clipper), žádné 3D
+booleovské operace. Znaménka s nulovou šířkou (tehtar) se vystředí nad
+předchozí písmeno, protože opentype.js neumí kotvy GPOS. Earcut na víku občas
+nechá T-spoj (vrchol díry na hraně trojúhelníku) — `opravTSpoje` najde
+nespárované hrany a trojúhelník v tom bodě rozdělí; bez toho slicery hlásí
+„opravené chyby“. Export: STL (celek / text / deska), **3MF s deskou a textem
+jako dvěma díly jednoho objektu** (ve sliceru se jim jen přiřadí filamenty),
+ZIP s každým souvislým kusem zvlášť a SVG obrysu. Geometrie je vystavená jako
+Výběr fontu na obou stránkách je sdílená komponenta `FONTY.vyberFontu` (tlačítko s ukázkou a panel s hledáním, druhy a mřížkou náhledů vlastního textu; panel je `position: fixed` a umisťuje se podle tlačítka, jinak by ho ořízl rolovací boční panel). **Prázdná políčka u tengwaru** mimo stránku nejsou chyba: znaky leží v soukromé oblasti Unicode a bez nainstalovaného fontu je nic nenakreslí — převodník proto nabízí obrázek, „Kopírovat pro Word“ (HTML s názvem fontu) a stažení fontu; otevření přes `file://` hlásí, že fonty nejde načíst. `window.TEXT3D` a testuje se v node nad všemi fonty a režimy (`_test/text3d_tesnost.js`: těsnost hran,
+kladný objem); prohlížečová kontrola obou stránek `_test/pismo_snimky.py [dpi]`.
 
 **Návrhář turbín a proudění** (`obsah/turbina_navrhar.html`) má čtyři pohledy
 na jeden návrh: 2D výkres řezu rotorem (vlastní editor s mnohoúhelníky,

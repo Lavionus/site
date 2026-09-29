@@ -1,0 +1,718 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🧝 Převodník písma – elfí písmo, runy, hlaholice</title>
+  <script src="lib/opentype.min.js"></script>
+  <link rel="stylesheet" href="../common.css">
+  <script src="../theme.js"></script>
+  <script src="../dialog.js"></script>
+  <script src="fonty/fonty.js"></script>
+  <script src="fonty/prepis.js"></script>
+  <script src="../podpis.js" defer></script>
+  <style>
+    /* Vlevo se píše česky, vpravo se tentýž text hned ukazuje jiným
+       písmem. U písem s vlastními znaky (tengwar, runy, hlaholice, ogam)
+       se text nejdřív přepíše (prepis.js), jinak se jen změní font. */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: var(--font, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif);
+      background: var(--bg); color: var(--text); min-height: 100vh;
+    }
+    .container { padding: 12px 16px 16px; }
+    .header { display: flex; align-items: baseline; gap: 12px; flex-wrap: wrap; margin-bottom: 12px; }
+    .header h1 { font-size: 1.35rem; font-weight: 600; }
+    .header p { font-size: .85rem; color: var(--text-muted); }
+    .skryto { display: none !important; }
+
+    /* --- výběr písma (dlaždice) --- */
+    .pisma { display: grid; grid-template-columns: repeat(auto-fill, minmax(92px, 1fr)); gap: 6px; padding: 2px 0 6px; }
+    .pismo {
+      min-width: 0; display: flex; flex-direction: column; align-items: center; gap: 2px;
+      padding: 7px 6px 6px; cursor: pointer; font: inherit; color: var(--text-muted);
+      background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 10px;
+      transition: border-color .15s, background .15s, transform .15s;
+    }
+    .pismo:hover { border-color: var(--accent); color: var(--text); }
+    .pismo:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .pismo[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--text); box-shadow: inset 0 0 0 1px var(--accent); }
+    .pismo .znak { font-size: 1.45rem; line-height: 1.2; height: 1.25em; color: var(--text); white-space: nowrap; overflow: hidden; max-width: 100%; }
+    .pismo .nazev { font-size: .72rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100%; }
+
+    /* --- lišta nastavení --- */
+    .lista {
+      display: flex; flex-wrap: wrap; gap: 12px 16px; align-items: flex-end;
+      background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 10px;
+      padding: 12px 14px; margin: 6px 0 14px;
+    }
+    .pole { display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+    .pole > label, .popisek {
+      font-size: .72rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: .5px; font-weight: 600;
+    }
+    .pole select {
+      padding: 8px 9px; background: var(--bg-input); border: 1px solid var(--border-strong);
+      border-radius: 6px; color: var(--text); font-size: .88rem; font-family: inherit;
+    }
+    .pole select:focus { outline: none; border-color: var(--accent); }
+    .pole-font { flex: 1 1 300px; }
+    .pole input[type="range"] { width: 140px; accent-color: var(--accent); height: 34px; }
+    .hodnota { color: var(--accent); font-weight: 600; text-transform: none; }
+
+    .segment { display: flex; align-self: flex-start; border: 1px solid var(--border-strong); border-radius: 6px; overflow: hidden; }
+    .segment button {
+      padding: 8px 11px; border: none; background: var(--bg-control); color: var(--text-muted);
+      font: inherit; font-size: .85rem; cursor: pointer; border-right: 1px solid var(--border-strong);
+    }
+    .segment button:last-child { border-right: none; }
+    .segment button[aria-pressed="true"] { background: var(--accent); color: #fff; }
+
+    .vzhledy { display: flex; gap: 6px; align-items: center; }
+    .vzhled {
+      width: 34px; height: 34px; border-radius: 50%; cursor: pointer; border: 2px solid var(--border-strong);
+      font-size: 15px; font-weight: 700; display: flex; align-items: center; justify-content: center; padding: 0;
+    }
+    .vzhled[aria-pressed="true"] { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-soft); transform: scale(1.08); }
+    .vzhled:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .vlastni-barvy { display: flex; gap: 6px; }
+    .vlastni-barvy input { width: 34px; height: 34px; padding: 2px; border: 1px solid var(--border-strong); border-radius: 6px; background: var(--bg-input); cursor: pointer; }
+
+    .btn {
+      padding: 8px 12px; border: 1px solid var(--border-strong); border-radius: 6px; cursor: pointer;
+      font-size: .85rem; font-family: inherit; background: var(--bg-control); color: var(--text);
+      transition: filter .15s ease, border-color .15s; white-space: nowrap;
+    }
+    .btn:hover { border-color: var(--accent); }
+    .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+    .btn-primary { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+    .btn-primary:hover { filter: brightness(1.1); }
+    .btn-mala { padding: 5px 9px; font-size: .8rem; }
+
+    /* --- panely --- */
+    .panely { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; height: var(--vyska-panelu, 70vh); min-height: 360px; }
+    .panel {
+      background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 10px;
+      display: flex; flex-direction: column; min-width: 0; overflow: hidden;
+    }
+    .panel-hlava {
+      display: flex; align-items: center; gap: 8px; flex-wrap: wrap; min-height: 46px;
+      padding: 6px 10px 6px 14px; border-bottom: 1px solid var(--border);
+      font-size: .8rem; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: .5px;
+    }
+    .panel-hlava .mezera { flex: 1; }
+    .panel-hlava .btn, .panel-hlava select { text-transform: none; letter-spacing: 0; font-weight: 500; }
+    .panel-hlava select {
+      padding: 5px 8px; background: var(--bg-control); color: var(--text); border: 1px solid var(--border-strong);
+      border-radius: 6px; font: inherit; font-size: .8rem; max-width: 170px;
+    }
+    .pocitadlo { font-weight: 400; text-transform: none; letter-spacing: 0; color: var(--text-faint); }
+    #zdroj {
+      flex: 1; width: 100%; min-height: 0; resize: none; border: none; outline: none;
+      background: var(--bg-input); color: var(--text); padding: 18px; font-size: 1.15rem; line-height: 1.55;
+      font-family: inherit;
+    }
+    #zdroj:focus { box-shadow: inset 0 0 0 2px var(--accent-soft); }
+
+    #vystup {
+      --v-bg: var(--bg-input); --v-text: var(--text); --v-stin: none;
+      flex: 1; min-height: 0; padding: 18px 22px; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere;
+      background: var(--v-bg); color: var(--v-text); text-shadow: var(--v-stin);
+      font-size: 36px; line-height: 1.55; transition: background .25s, color .25s;
+    }
+    #vystup.prazdny::before { content: 'Tady se objeví převedený text…'; color: var(--text-faint); font-family: var(--font); font-size: 1rem; text-shadow: none; }
+    #vystup.nacita { opacity: .35; }
+
+    .akce { display: flex; flex-wrap: wrap; gap: 6px; padding: 8px 10px; border-top: 1px solid var(--border); background: var(--bg-elevated); }
+    .akce .mezera { flex: 1; }
+
+    .panel-vystup.cela {
+      position: fixed; inset: 0 0 22px 0; z-index: 100; border-radius: 0; border: none;
+    }
+    .panel-vystup.cela #vystup { min-height: 0; }
+
+    .hlaseni {
+      margin-top: 12px; padding: 9px 12px; border-left: 3px solid var(--warn); border-radius: 6px;
+      background: var(--bg-control); font-size: .86rem; line-height: 1.5;
+    }
+    .hlaseni.chyba { border-left-color: var(--danger); }
+    .hlaseni:empty { display: none; }
+    .rada {
+      margin-top: 12px; padding: 10px 12px; border-left: 3px solid var(--accent); border-radius: 6px;
+      background: var(--accent-soft); font-size: .84rem; line-height: 1.55; color: var(--text-muted);
+    }
+    .rada strong { color: var(--text); }
+    .rada code { font-size: .8rem; }
+    details.rada summary { cursor: pointer; color: var(--text); font-weight: 600; }
+    details.rada[open] summary { margin-bottom: 6px; }
+
+    body.tazeni .panely { outline: 3px dashed var(--accent); outline-offset: 4px; border-radius: 10px; }
+
+    @media (max-width: 860px) {
+      .panely { grid-template-columns: 1fr; height: auto; }
+      #zdroj { min-height: 170px; }
+      #vystup { min-height: 240px; }
+    }
+    @media (max-width: 520px) {
+      .container { padding: 10px 10px 16px; }
+      .header p { display: none; }
+      .pole { flex: 1 1 100%; }
+      .pole input[type="range"] { width: 100%; }
+      .pisma { grid-template-columns: repeat(4, 1fr); }
+      .akce .btn { flex: 1 1 auto; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🧝 Převodník písma</h1>
+      <p>Pište česky vlevo – vpravo hned uvidíte stejný text elfím písmem, runami, hlaholicí nebo jiným fontem.</p>
+    </div>
+
+    <div class="pisma" id="pisma" role="group" aria-label="Písmo"></div>
+
+    <div class="lista">
+      <div class="pole pole-font">
+        <span class="popisek">Font</span>
+        <div id="font"></div>
+        <input type="file" id="soubor" accept=".ttf,.otf,.woff,.woff2,font/*" multiple hidden>
+      </div>
+      <div class="pole skryto" id="poleTehta">
+        <label for="tehta">Samohlásky (tehtar)</label>
+        <select id="tehta">
+          <option value="predchozi">nad předchozí souhláskou</option>
+          <option value="nasledujici">nad následující souhláskou</option>
+        </select>
+      </div>
+      <div class="pole skryto" id="poleOddelovac">
+        <label for="oddelovac">Mezi slovy</label>
+        <select id="oddelovac">
+          <option value="">mezera</option>
+          <option value="1">tečka ᛫</option>
+        </select>
+      </div>
+      <div class="pole">
+        <label for="velikost">Velikost <span class="hodnota" id="velikostHodnota"></span></label>
+        <input type="range" id="velikost" min="14" max="140" step="1" value="36">
+      </div>
+      <div class="pole">
+        <span class="popisek">Zarovnání</span>
+        <div class="segment" id="zarovnani">
+          <button type="button" data-v="left" title="Vlevo" aria-label="Zarovnat vlevo">⇤</button>
+          <button type="button" data-v="center" title="Na střed" aria-label="Zarovnat na střed">↔</button>
+          <button type="button" data-v="right" title="Vpravo" aria-label="Zarovnat vpravo">⇥</button>
+        </div>
+      </div>
+      <div class="pole">
+        <span class="popisek">Vzhled</span>
+        <div class="vzhledy" id="vzhledy"></div>
+      </div>
+      <div class="pole skryto" id="poleBarvy">
+        <span class="popisek">Barvy</span>
+        <div class="vlastni-barvy">
+          <input type="color" id="barvaText" value="#2b1a0e" aria-label="Barva písma" title="Barva písma">
+          <input type="color" id="barvaPozadi" value="#f4e6c8" aria-label="Barva pozadí" title="Barva pozadí">
+        </div>
+      </div>
+    </div>
+
+    <div class="panely">
+      <section class="panel" aria-labelledby="hlavaZdroj">
+        <div class="panel-hlava">
+          <span id="hlavaZdroj">✏️ Česky</span>
+          <span class="pocitadlo" id="pocet"></span>
+          <span class="mezera"></span>
+          <select id="ukazky" aria-label="Vložit ukázkový text">
+            <option value="">📜 Ukázky…</option>
+          </select>
+          <button type="button" class="btn btn-mala" id="smazat">✕ Smazat</button>
+        </div>
+        <textarea id="zdroj" spellcheck="false" aria-label="Zdrojový text" placeholder="Začněte psát…"></textarea>
+      </section>
+
+      <section class="panel panel-vystup" id="panelVystup" aria-labelledby="hlavaVystup">
+        <div class="panel-hlava">
+          <span id="hlavaVystup">🪄 Převedeno</span>
+          <span class="pocitadlo" id="nazevFontu"></span>
+          <span class="mezera"></span>
+          <button type="button" class="btn btn-mala" id="celaObrazovka" title="Na celou obrazovku (Esc zpět)">⛶ Celá obrazovka</button>
+        </div>
+        <div id="vystup" lang="cs" aria-live="polite"></div>
+        <div class="akce">
+          <button type="button" class="btn btn-primary" id="png">🖼 Stáhnout PNG</button>
+          <button type="button" class="btn" id="kopirovatObr">📋 Kopírovat obrázek</button>
+          <button type="button" class="btn" id="kopirovatWord" title="Text i s názvem fontu – ve Wordu nebo LibreOffice se zobrazí, když je font nainstalovaný">📝 Kopírovat pro Word</button>
+          <button type="button" class="btn" id="kopirovat">📋 Jen znaky</button>
+          <button type="button" class="btn" id="stahnoutFont" title="Soubor fontu k instalaci do počítače">⬇ Font</button>
+          <button type="button" class="btn" id="odkaz" title="Zkopíruje odkaz, který otevře tenhle text se stejným písmem a vzhledem">🔗 Odkaz</button>
+          <span class="mezera"></span>
+          <button type="button" class="btn" id="do3d" title="Otevře 3D text se stejným textem a písmem">🔠 Vyrobit 3D model</button>
+        </div>
+      </section>
+    </div>
+
+    <div class="hlaseni" id="hlaseni"></div>
+    <div class="rada skryto" id="radaSoukrome"></div>
+
+    <details class="rada">
+      <summary>ℹ️ O fontech a kopírování</summary>
+      Všechny dodané fonty jsou <strong>volně šiřitelné</strong> (SIL Open Font License) a leží ve složce <code>obsah/fonty/</code>.
+      Vlastní font (TTF, OTF, WOFF, WOFF2) nahrajete z nabídky fontů nebo ho přetáhnete na panely – uloží se jen ve vašem
+      prohlížeči a bude k dispozici i příště, také ve <a href="text3d.html">3D textu</a>.
+      <br><strong>Obrázek</strong> vypadá všude stejně. <strong>Kopírovat pro Word</strong> vloží text s názvem fontu –
+      v dokumentu se zobrazí správně, když si font nainstalujete (tlačítko <strong>⬇ Font</strong>, poklepat na soubor, Instalovat).
+      <strong>Jen znaky</strong> zkopíruje holé znaky; bez fontu z nich jinde zbudou prázdná políčka.
+    </details>
+  </div>
+
+  <script>
+  (function () {
+    const el = id => document.getElementById(id);
+    const KLIC = 'webapp_prevod_pisma';
+
+    const VZHLEDY = [
+      { id: 'motiv',    nazev: 'Podle motivu webu', znak: 'A' },
+      { id: 'pergamen', nazev: 'Pergamen', bg: '#f1e1bd', text: '#3a220f', bg2: '#d9bf8c' },
+      { id: 'papir',    nazev: 'Papír',    bg: '#ffffff', text: '#111111' },
+      { id: 'noc',      nazev: 'Noc a zlato', bg: '#0d1322', text: '#e3c46e', stin: '0 0 12px rgba(227,196,110,.35)' },
+      { id: 'elfi',     nazev: 'Elfí les', bg: '#0f2a22', text: '#d4f0dd', stin: '0 0 14px rgba(160,240,200,.45)' },
+      { id: 'vlastni',  nazev: 'Vlastní barvy', znak: '🎨' },
+    ];
+    const UKAZKY = [
+      ['Není zlato vše, co se třpytí', 'Není zlato vše, co se třpytí,\nne každý, kdo bloudí, je ztracen.'],
+      ['Mluv, příteli, a vejdi', 'Mluv, příteli, a vejdi.'],
+      ['Vítejte', 'Vítejte v našem domě'],
+      ['Jméno a adresa', 'Jan Novák\nNerudova 42'],
+      ['Abeceda', 'a á b c č d ď e é ě f g h ch i í j k l m n ň o ó p q r ř s š t ť u ú ů v w x y ý z ž'],
+      ['Přání', 'Ať vám hvězdy svítí na cestu.'],
+    ];
+    // ukázka na dlaždici písma (vysází se cílovým fontem)
+    const ZNAKY_PISMA = { zadny: 'Aa', runy: 'ᚱᚢᚾᚨ', hlaholice: 'Ⰰⰱⰲ', azbuka: 'Абв', alfabeta: 'Αβγ', ogam: 'ᚑᚌᚐᚋ',
+      braille: '⠃⠗⠇', hieroglyfy: '𓅓𓂋𓏏', fenicke: '𐤀𐤁𐤂', etruske: '𐌀𐌁𐌂', goticke: '𐌰𐌱𐌲', morse: '·–·' };
+    const KRATKE = { zadny: 'Jen font', tengwar: 'Tengwar', runy: 'Runy', hlaholice: 'Hlaholice', azbuka: 'Azbuka', alfabeta: 'Alfabeta',
+      ogam: 'Ogam', braille: 'Braille', hieroglyfy: 'Hieroglyfy', fenicke: 'Fénické', etruske: 'Etruské', goticke: 'Gótské', morse: 'Morseovka' };
+    // přepisy s vlastními znaky (a vlastním fontem)
+    const VLASTNI_ZNAKY = PREPIS.SEZNAM.filter(p => p.vlastniPismo).map(p => p.id);
+
+    let stav = {
+      text: 'Není zlato vše, co se třpytí,\nne každý, kdo bloudí, je ztracen.',
+      prepis: 'tengwar', font: 'tengwar', fontProLatinku: 'uncial', tehta: 'predchozi', oddelovac: '',
+      velikost: 36, zarovnani: 'left', vzhled: 'pergamen', barvaText: '#2b1a0e', barvaPozadi: '#f4e6c8',
+    };
+    try { Object.assign(stav, JSON.parse(localStorage.getItem(KLIC) || '{}')); } catch (e) { /* výchozí */ }
+
+    /* Odkaz: text i nastavení zakódované za # (base64url z JSON).
+       Přebírají se jen známé klíče se stejným typem hodnoty; po načtení
+       se # smaže, ať obnovení stránky nepřepíše pozdější úpravy.      */
+    const zakoduj = o => {
+      let t = ''; for (const x of new TextEncoder().encode(JSON.stringify(o))) t += String.fromCharCode(x);
+      return btoa(t).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    };
+    const dekoduj = t => JSON.parse(new TextDecoder().decode(Uint8Array.from(atob(t.replace(/-/g, '+').replace(/_/g, '/')), c => c.charCodeAt(0))));
+    let zOdkazu = false;
+    try {
+      const m = /[#&]n=([A-Za-z0-9_-]+)/.exec(location.hash);
+      if (m) {
+        const o = dekoduj(m[1]);
+        for (const k of Object.keys(stav)) if (k in o && typeof o[k] === typeof stav[k]) stav[k] = o[k];
+        zOdkazu = true;
+        history.replaceState(null, '', location.href.replace(/#.*$/, ''));
+      }
+    } catch (e) { setTimeout(() => Dialog.chyba('Odkaz s textem je poškozený.'), 0); }
+    const uloz = () => { try { localStorage.setItem(KLIC, JSON.stringify(stav)); } catch (e) { /* nevadí */ } };
+
+    let fonty = [];
+    const prevedeno = () => stav.prepis === 'zadny' ? stav.text
+      : PREPIS.preved(stav.prepis, stav.text, { tehta: stav.tehta, oddelovac: !!stav.oddelovac });
+    const cilPisma = () => VLASTNI_ZNAKY.includes(stav.prepis) ? stav.prepis : 'latinka';
+
+    /* ---------- dlaždice písem ---------- */
+    for (const p of PREPIS.SEZNAM) {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'pismo'; b.dataset.v = p.id; b.title = p.nazev;
+      const z = document.createElement('span'); z.className = 'znak';
+      z.textContent = p.id === 'tengwar' ? PREPIS.preved('tengwar', 'elf') : ZNAKY_PISMA[p.id];
+      const n = document.createElement('span'); n.className = 'nazev'; n.textContent = KRATKE[p.id] || p.nazev;
+      b.append(z, n);
+      el('pisma').appendChild(b);
+      if (p.font) FONTY.rodina(p.font).then(r => { z.style.fontFamily = `"${r}", serif`; }).catch(() => {});
+    }
+    el('pisma').addEventListener('click', e => {
+      const b = e.target.closest('.pismo');
+      if (!b) return;
+      zmenPrepis(b.dataset.v);
+    });
+    function zmenPrepis(id) {
+      const staryCil = cilPisma();
+      if (staryCil === 'latinka') stav.fontProLatinku = stav.font;
+      stav.prepis = id;
+      const p = PREPIS.SEZNAM.find(x => x.id === id);
+      // k přepisu rovnou vybrat font, který dané znaky má; u latinky
+      // se vrátí font, který uživatel pro latinku naposledy vybral
+      if (VLASTNI_ZNAKY.includes(id)) stav.font = p.font;
+      else if (staryCil !== 'latinka') stav.font = stav.fontProLatinku || 'uncial';
+      vyber.nastav(fonty, stav.font);
+      vykresli();
+      // azbuka a alfabeta: když font jejich písmena nemá, vzít doporučený
+      if (p && p.font && (id === 'azbuka' || id === 'alfabeta')) {
+        const vzor = PREPIS.preved(id, 'abcdefghijklmnoprstuvz');
+        FONTY.opentype(stav.font).then(f => {
+          if (stav.prepis !== id) return;
+          if ([...vzor].some(ch => f.charToGlyphIndex(ch) === 0)) {
+            stav.font = p.font; vyber.nastav(fonty, stav.font); vykresli();
+          }
+        }).catch(() => {});
+      }
+    }
+
+    /* ---------- vzhledy ---------- */
+    for (const v of VZHLEDY) {
+      const b = document.createElement('button');
+      b.type = 'button'; b.className = 'vzhled'; b.dataset.v = v.id; b.title = v.nazev; b.setAttribute('aria-label', 'Vzhled: ' + v.nazev);
+      if (v.bg) { b.style.background = v.bg2 ? `radial-gradient(circle at 35% 30%, ${v.bg}, ${v.bg2})` : v.bg; b.style.color = v.text; b.textContent = 'A'; }
+      else { b.style.background = 'var(--bg-input)'; b.style.color = 'var(--text)'; b.textContent = v.znak; }
+      el('vzhledy').appendChild(b);
+    }
+    el('vzhledy').addEventListener('click', e => {
+      const b = e.target.closest('.vzhled'); if (!b) return;
+      stav.vzhled = b.dataset.v; vykresli();
+    });
+    function barvyVzhledu() {
+      const css = getComputedStyle(document.documentElement);
+      const v = VZHLEDY.find(x => x.id === stav.vzhled) || VZHLEDY[0];
+      if (v.id === 'motiv') return { bg: css.getPropertyValue('--bg-input').trim() || '#1e1e1e', text: css.getPropertyValue('--text').trim() || '#e0e0e0' };
+      if (v.id === 'vlastni') return { bg: stav.barvaPozadi, text: stav.barvaText };
+      return v;
+    }
+    function obarviVystup() {
+      const v = el('vystup'), b = barvyVzhledu();
+      v.style.setProperty('--v-bg', b.bg2 ? `radial-gradient(ellipse at 50% 35%, ${b.bg} 55%, ${b.bg2})` : b.bg);
+      v.style.setProperty('--v-text', b.text);
+      v.style.setProperty('--v-stin', b.stin || 'none');
+      for (const x of el('vzhledy').children) x.setAttribute('aria-pressed', x.dataset.v === stav.vzhled);
+      el('poleBarvy').classList.toggle('skryto', stav.vzhled !== 'vlastni');
+    }
+    el('barvaText').addEventListener('input', () => { stav.barvaText = el('barvaText').value; obarviVystup(); uloz(); });
+    el('barvaPozadi').addEventListener('input', () => { stav.barvaPozadi = el('barvaPozadi').value; obarviVystup(); uloz(); });
+    new MutationObserver(obarviVystup).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+    /* ---------- fonty ---------- */
+    const vyber = FONTY.vyberFontu(el('font'), {
+      ukazka: () => prevedeno() || 'Aa',
+      filtr: f => f.vlastni || f.pismo === cilPisma(),
+      doporucene: cilPisma,
+      onZmena: id => { stav.font = id; if (cilPisma() === 'latinka') stav.fontProLatinku = id; vykresli(); },
+      onNahrat: () => el('soubor').click(),
+      onSmazat: async f => {
+        if (!(await Dialog.potvrd(`Smazat font „${f.nazev}“? Zmizí i z 3D textu.`))) return;
+        await FONTY.smaz(f.id);
+        await obnovFonty();
+        vykresli();
+      },
+    });
+    async function obnovFonty() {
+      fonty = await FONTY.seznam();
+      if (!fonty.some(f => f.id === stav.font)) stav.font = cilPisma() === 'latinka' ? 'uncial' : PREPIS.SEZNAM.find(x => x.id === stav.prepis).font;
+      vyber.nastav(fonty, stav.font);
+    }
+    async function nahraj(soubory) {
+      let posledni = null;
+      for (const f of soubory) {
+        try { posledni = await FONTY.pridej(f); Dialog.info('Font „' + posledni.nazev + '“ uložen'); }
+        catch (e) { Dialog.chyba(e.message || String(e)); }
+      }
+      if (posledni) {
+        stav.font = posledni.id;
+        await obnovFonty();
+        vykresli();
+      }
+    }
+    el('soubor').addEventListener('change', async () => { await nahraj([...el('soubor').files]); el('soubor').value = ''; });
+    let hloubka = 0;
+    const nesouSoubor = e => e.dataTransfer && [...e.dataTransfer.types].includes('Files');
+    document.addEventListener('dragenter', e => { if (nesouSoubor(e)) { hloubka++; document.body.classList.add('tazeni'); } });
+    document.addEventListener('dragleave', () => { if (--hloubka <= 0) { hloubka = 0; document.body.classList.remove('tazeni'); } });
+    document.addEventListener('dragover', e => { if (nesouSoubor(e)) e.preventDefault(); });
+    document.addEventListener('drop', e => {
+      if (!e.dataTransfer || !e.dataTransfer.files.length) return;
+      e.preventDefault();
+      hloubka = 0; document.body.classList.remove('tazeni');
+      nahraj([...e.dataTransfer.files]);
+    });
+
+    /* ---------- vykreslení ---------- */
+    let beh = 0;
+    function hlaseni(text, chyba) {
+      const h = el('hlaseni');
+      h.textContent = text || '';
+      h.classList.toggle('chyba', !!chyba);
+    }
+    async function vykresli() {
+      uloz();
+      const text = prevedeno();
+      const v = el('vystup');
+      v.textContent = text;
+      v.classList.toggle('prazdny', !text);
+      v.style.fontSize = stav.velikost + 'px';
+      v.style.textAlign = stav.zarovnani;
+      el('velikostHodnota').textContent = stav.velikost + ' px';
+      el('pocet').textContent = stav.text.length ? `${stav.text.length} znaků` : '';
+      for (const b of el('zarovnani').children) b.setAttribute('aria-pressed', b.dataset.v === stav.zarovnani);
+      for (const b of el('pisma').children) b.setAttribute('aria-pressed', b.dataset.v === stav.prepis);
+      el('poleTehta').classList.toggle('skryto', stav.prepis !== 'tengwar');
+      el('poleOddelovac').classList.toggle('skryto', stav.prepis !== 'runy');
+      obarviVystup();
+      const f = fonty.find(x => x.id === stav.font);
+      el('nazevFontu').textContent = f ? '· ' + f.nazev : '';
+
+      const p = PREPIS.SEZNAM.find(x => x.id === stav.prepis);
+      const rada = el('radaSoukrome');
+      if (stav.prepis === 'tengwar') {
+        rada.innerHTML = '<strong>Proč jinde vidím prázdné znaky?</strong> Tengwar nemá v Unicode oficiální místo – jeho znaky leží '
+          + 'v soukromé oblasti (U+E000…) a nakreslit je umí jen font, který je zná (zde Alcarin Tengwar). Po zkopírování '
+          + 'do chatu, e-mailu nebo dokumentu bez tohoto fontu z nich zbudou prázdná políčka. Použijte <strong>obrázek</strong>, '
+          + 'nebo si font nainstalujte (<strong>⬇ Font</strong>) a vložte text přes <strong>Kopírovat pro Word</strong>.'
+          + (p && p.popis ? '<br>' + p.popis : '');
+      } else if (VLASTNI_ZNAKY.includes(stav.prepis)) {
+        rada.innerHTML = `<strong>${p.nazev}</strong> je v Unicode, zkopírovaný text se zobrazí všude, kde je nějaký font s tímto písmem (Noto). ` + (p.popis || '');
+      } else rada.textContent = '';
+      rada.classList.toggle('skryto', !rada.textContent);
+
+      const muj = ++beh;
+      v.classList.add('nacita');
+      try {
+        const rodina = await FONTY.rodina(stav.font);
+        if (muj !== beh) return;
+        v.style.fontFamily = `"${rodina}", ${stav.prepis === 'morse' ? 'monospace' : 'serif'}`;
+        v.classList.remove('nacita');
+      } catch (e) {
+        if (muj !== beh) return;
+        v.classList.remove('nacita');
+        hlaseni('Font se nepodařilo načíst. ' + (e.message || e), true);
+        return;
+      }
+      vyber.obnovUkazky();
+      zkontrolujZnaky(text, muj);
+    }
+
+    // Znaky, které font nemá (prohlížeč je tiše vykreslí jiným písmem
+    // nebo jako prázdná políčka).
+    async function zkontrolujZnaky(text, muj) {
+      try {
+        const font = await FONTY.opentype(stav.font);
+        if (muj !== beh) return;
+        const chybi = new Set();
+        for (const ch of text) if (!/\s/.test(ch) && font.charToGlyphIndex(ch) === 0) chybi.add(ch);
+        const vzor = [...chybi].slice(0, 30).map(ch => ch.charCodeAt(0) >= 0xE000 && ch.charCodeAt(0) <= 0xF8FF ? 'U+' + ch.charCodeAt(0).toString(16).toUpperCase() : ch).join(' ');
+        hlaseni(chybi.size ? `Vybraný font nemá ${chybi.size} znaků (${vzor}) – zobrazí se náhradním písmem nebo jako prázdná políčka. Vyberte jiný font.` : '');
+      } catch (e) { if (muj === beh) hlaseni(''); }   // WOFF2 nejde rozložit – kontrola se vynechá
+    }
+
+    /* ---------- obrázek ---------- */
+    async function platno() {
+      const text = prevedeno();
+      if (!text.trim()) { Dialog.chyba('Není co převést.'); return null; }
+      const rodina = await FONTY.rodina(stav.font);
+      const vel = stav.velikost * 2;             // obrázek ve dvojnásobném rozlišení
+      const fontCss = `${vel}px "${rodina}", serif`;
+      try { await document.fonts.load(fontCss, text); } catch (e) { /* vykreslí se, co je */ }
+      const radky = text.split('\n');
+      const c = document.createElement('canvas');
+      const ctx = c.getContext('2d');
+      ctx.font = fontCss;
+      const mereni = radky.map(r => ctx.measureText(r || ' '));
+      const nahoru = Math.max(...mereni.map(m => m.actualBoundingBoxAscent || vel * 0.8), vel * 0.8);
+      const dolu = Math.max(...mereni.map(m => m.actualBoundingBoxDescent || vel * 0.25), vel * 0.25);
+      const radek = Math.max(vel * 1.55, nahoru + dolu);
+      const sirka = Math.max(...mereni.map(m => Math.max(m.width, (m.actualBoundingBoxRight || 0) + (m.actualBoundingBoxLeft || 0))));
+      const okraj = Math.round(vel * 0.7);
+      c.width = Math.ceil(sirka + 2 * okraj);
+      c.height = Math.ceil(nahoru + dolu + (radky.length - 1) * radek + 2 * okraj);
+      const b = barvyVzhledu();
+      ctx.fillStyle = b.bg;
+      ctx.fillRect(0, 0, c.width, c.height);
+      if (b.bg2) {
+        const g = ctx.createRadialGradient(c.width / 2, c.height * 0.35, Math.min(c.width, c.height) * 0.3, c.width / 2, c.height / 2, Math.max(c.width, c.height) * 0.75);
+        g.addColorStop(0, b.bg); g.addColorStop(1, b.bg2);
+        ctx.fillStyle = g; ctx.fillRect(0, 0, c.width, c.height);
+      }
+      ctx.fillStyle = b.text;
+      if (b.stin) { ctx.shadowColor = b.stin.match(/rgba?\([^)]*\)/)[0]; ctx.shadowBlur = vel * 0.35; }
+      ctx.font = fontCss;
+      ctx.textBaseline = 'alphabetic';
+      ctx.textAlign = stav.zarovnani;
+      const x = stav.zarovnani === 'left' ? okraj : stav.zarovnani === 'right' ? c.width - okraj : c.width / 2;
+      radky.forEach((r, i) => ctx.fillText(r, x, okraj + nahoru + i * radek));
+      return c;
+    }
+    const doBlobu = c => new Promise(ok => c.toBlob(ok, 'image/png'));
+    el('png').addEventListener('click', async () => {
+      const c = await platno();
+      if (!c) return;
+      const b = await doBlobu(c);
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(b);
+      a.download = 'pismo_' + stav.prepis + '.png';
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+    });
+    el('kopirovatObr').addEventListener('click', async () => {
+      try {
+        const c = await platno();
+        if (!c) return;
+        await navigator.clipboard.write([new ClipboardItem({ 'image/png': doBlobu(c) })]);
+        Dialog.info('Obrázek je ve schránce – vložte ho Ctrl+V');
+      } catch (e) { Dialog.chyba('Prohlížeč nedovolil zkopírovat obrázek – použijte „Stáhnout PNG“.'); }
+    });
+
+    async function doSchranky(prosty, html) {
+      try {
+        if (html && window.ClipboardItem) {
+          await navigator.clipboard.write([new ClipboardItem({
+            'text/plain': new Blob([prosty], { type: 'text/plain' }),
+            'text/html': new Blob([html], { type: 'text/html' }),
+          })]);
+        } else await navigator.clipboard.writeText(prosty);
+        return true;
+      } catch (e) {
+        // záloha pro prohlížeče bez Clipboard API (a iframe bez oprávnění)
+        const d = document.createElement('div');
+        d.contentEditable = 'true';
+        d.style.cssText = 'position:fixed;left:-9999px;top:0;white-space:pre-wrap';
+        if (html) d.innerHTML = html; else d.textContent = prosty;
+        document.body.appendChild(d);
+        const r = document.createRange(); r.selectNodeContents(d);
+        const s = getSelection(); s.removeAllRanges(); s.addRange(r);
+        let ok = false;
+        try { ok = document.execCommand('copy'); } catch (e2) { /* nic */ }
+        s.removeAllRanges(); d.remove();
+        return ok;
+      }
+    }
+    el('kopirovat').addEventListener('click', async () => {
+      const ok = await doSchranky(prevedeno());
+      if (!ok) return Dialog.chyba('Kopírování se nepovedlo.');
+      Dialog.info(stav.prepis === 'tengwar'
+        ? 'Znaky zkopírovány. Bez fontu Alcarin Tengwar se jinde ukážou jako prázdná políčka.'
+        : 'Text zkopírován');
+    });
+    el('kopirovatWord').addEventListener('click', async () => {
+      const text = prevedeno();
+      const jmeno = await FONTY.jmenoRodiny(stav.font);
+      const esc = s => s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+      const html = `<p style="font-family:'${jmeno}';font-size:${Math.round(stav.velikost * 0.75)}pt;white-space:pre-wrap">`
+        + esc(text).replace(/\n/g, '<br>') + '</p>';
+      const ok = await doSchranky(text, html);
+      if (!ok) return Dialog.chyba('Kopírování se nepovedlo.');
+      const f = fonty.find(x => x.id === stav.font);
+      Dialog.info(`Zkopírováno s fontem „${jmeno}“. V dokumentu se zobrazí správně, když je font nainstalovaný${f && !f.vlastni ? ' (⬇ Font)' : ''}.`);
+    });
+    el('stahnoutFont').addEventListener('click', () => {
+      FONTY.stahni(stav.font).then(() => Dialog.info('Soubor fontu stažen – poklepáním ho nainstalujete.'))
+        .catch(e => Dialog.chyba(e.message || String(e)));
+    });
+
+    // Předá text a písmo 3D textu (sdílí nastavení přes localStorage).
+    el('do3d').addEventListener('click', () => {
+      try {
+        const s = JSON.parse(localStorage.getItem('webapp_text3d') || '{}');
+        s.text = stav.text;
+        s.prepis = stav.prepis === 'morse' ? 'zadny' : stav.prepis;
+        s.tehta = stav.tehta;
+        const f = fonty.find(x => x.id === stav.font);
+        if (f && f.pro3d) s.font = stav.font;
+        localStorage.setItem('webapp_text3d', JSON.stringify(s));
+      } catch (e) { /* bez předání */ }
+      location.href = 'text3d.html';
+    });
+
+    el('odkaz').addEventListener('click', async () => {
+      const o = Object.assign({}, stav);
+      const f = fonty.find(x => x.id === stav.font);
+      if (f && f.vlastni) o.font = PREPIS.SEZNAM.find(x => x.id === stav.prepis).font || 'uncial';
+      const url = location.href.replace(/#.*$/, '') + '#n=' + zakoduj(o);
+      if (url.length > 8000) Dialog.info('Text je dlouhý – odkaz může být pro některé programy příliš dlouhý.');
+      try { await navigator.clipboard.writeText(url); }
+      catch (e) { Dialog.zeptej('Odkaz na text (zkopírujte):', url); return; }
+      Dialog.info('Odkaz zkopírován' + (f && f.vlastni ? ' – vlastní font se odkazem nepřenese.' : '.'));
+    });
+
+    /* ---------- souběžné rolování ----------
+       U dlouhého textu se výstup posouvá spolu se zdrojem (v poměru,
+       protože převedený text bývá jinak dlouhý). Pojistka `vede` brání
+       tomu, aby se panely roztočily navzájem.                        */
+    let vede = null;
+    function souladRolovani(z, na) {
+      z.addEventListener('scroll', () => {
+        if (vede && vede !== z) return;
+        vede = z;
+        const max = z.scrollHeight - z.clientHeight;
+        na.scrollTop = max > 0 ? z.scrollTop / max * (na.scrollHeight - na.clientHeight) : 0;
+        clearTimeout(souladRolovani.t);
+        souladRolovani.t = setTimeout(() => { vede = null; }, 120);
+      }, { passive: true });
+    }
+    souladRolovani(el('zdroj'), el('vystup'));
+    souladRolovani(el('vystup'), el('zdroj'));
+
+    /* ---------- celá obrazovka ---------- */
+    function celaObrazovka(zap) {
+      const p = el('panelVystup');
+      const na = zap === undefined ? !p.classList.contains('cela') : zap;
+      p.classList.toggle('cela', na);
+      el('celaObrazovka').textContent = na ? '✕ Zavřít' : '⛶ Celá obrazovka';
+    }
+    el('celaObrazovka').addEventListener('click', () => celaObrazovka());
+    document.addEventListener('keydown', e => { if (e.key === 'Escape') celaObrazovka(false); });
+
+    /* ---------- ovládání ---------- */
+    for (const [nazev, text] of UKAZKY) {
+      const o = document.createElement('option');
+      o.value = text; o.textContent = nazev;
+      el('ukazky').appendChild(o);
+    }
+    el('ukazky').addEventListener('change', () => {
+      const t = el('ukazky').value;
+      el('ukazky').value = '';
+      if (!t) return;
+      el('zdroj').value = t; stav.text = t; vykresli();
+    });
+    el('zdroj').value = stav.text;
+    el('tehta').value = stav.tehta;
+    el('oddelovac').value = stav.oddelovac;
+    el('velikost').value = stav.velikost;
+    el('barvaText').value = stav.barvaText;
+    el('barvaPozadi').value = stav.barvaPozadi;
+
+    el('zdroj').addEventListener('input', () => { stav.text = el('zdroj').value; vykresli(); });
+    el('smazat').addEventListener('click', () => { el('zdroj').value = ''; stav.text = ''; vykresli(); el('zdroj').focus(); });
+    el('tehta').addEventListener('change', () => { stav.tehta = el('tehta').value; vykresli(); });
+    el('oddelovac').addEventListener('change', () => { stav.oddelovac = el('oddelovac').value; vykresli(); });
+    el('velikost').addEventListener('input', () => { stav.velikost = +el('velikost').value; vykresli(); });
+    el('zarovnani').addEventListener('click', e => {
+      const b = e.target.closest('button');
+      if (!b) return;
+      stav.zarovnani = b.dataset.v; vykresli();
+    });
+
+    if (FONTY.ZE_SOUBORU) hlaseni(FONTY.HLASKA_SOUBOR, true);
+    // Panely vyplní okno až k podpisu dole; výška se počítá z jejich
+    // skutečné polohy, protože lišty nad nimi se na úzkém okně zalamují.
+    function vyskaPanelu() {
+      const p = document.querySelector('.panely');
+      const podpis = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--podpis-vyska')) || 0;
+      const h = window.innerHeight - (p.getBoundingClientRect().top + window.scrollY) - podpis - 16;
+      document.documentElement.style.setProperty('--vyska-panelu', Math.max(360, Math.round(h)) + 'px');
+    }
+    window.addEventListener('resize', vyskaPanelu);
+    if (window.ResizeObserver) new ResizeObserver(vyskaPanelu).observe(document.querySelector('.lista'));
+    vyskaPanelu();
+
+    obnovFonty().then(() => {
+      if (zOdkazu) Dialog.info('Text načten z odkazu.');
+      return vykresli();
+    });
+  })();
+  </script>
+</body>
+</html>

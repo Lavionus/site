@@ -58,6 +58,10 @@ table.ceny th,table.ceny td{padding:3px 4px;text-align:right;border-bottom:1px d
 table.ceny th:first-child,table.ceny td:first-child{text-align:left}
 .polozka{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px dashed var(--border)}
 .polozka span{flex:1}
+.sekce{font-size:.8rem;color:var(--text-faint);text-transform:uppercase;letter-spacing:.04em;margin:12px 0 2px}
+.polozka .popis{display:block;font-size:.76rem;color:var(--text-faint)}
+.polozka img.pix{flex:none}
+.stupne{letter-spacing:1px;color:var(--accent)}
 .denik div{padding:3px 0;border-bottom:1px dashed var(--border)}
 .denik .cas{color:var(--text-faint);margin-right:6px}
 .d-dobre{color:var(--ok)}.d-spatne{color:var(--danger)}.d-zvest{color:var(--warn)}
@@ -101,6 +105,8 @@ table.ceny th:first-child,table.ceny td:first-child{text-align:left}
         <option value="nahodna">🎲 Náhodné moře</option>
       </select>
       <button class="btn" id="bNova">⛵ Nová partie</button>
+      <select id="grafika" aria-label="Grafický styl mapy" title="Grafický styl mapy (klávesa G)"></select>
+      <select id="hustota" aria-label="Velikost pixelů" title="Velikost pixelů"></select>
       <span id="rekordBox"></span>
     </div>
   </div>
@@ -129,10 +135,14 @@ table.ceny th:first-child,table.ceny td:first-child{text-align:left}
       <div class="panel denik" id="p-denik"></div>
       <div class="panel napoveda" id="p-napoveda">
         <ul>
-          <li>Máš <b>30 dní</b>. Nakupuj levně, prodávej draze. Na konci se spočítá <b>čisté jmění</b>: hotovost + náklad − dluh.</li>
+          <li>Máš <b>30 dní</b>. Nakupuj levně, prodávej draze. Na konci se spočítá <b>čisté jmění</b>: hotovost + náklad + lodě flotily − dluh.</li>
           <li><b>Zelená</b> cena = levnější než obvykle, <b>červená</b> = dražší. Každý přístav něco vyrábí (levně) a něco shání (draze). Když nakoupíš hodně najednou, cena poleze nahoru – a když zaplavíš trh, spadne.</li>
           <li>Klikni na přístav na mapě (nebo na něj najeď myší) – kartička ukáže, kolik dní trvá cesta, jak je nebezpečná a co tam bylo naposledy levné a drahé. Kolem <b>Tortugy</b> se to hemží piráty.</li>
-          <li>Když v loděnici rozšíříš podpalubí na 180 beden, ze šalupy se stane dvoustěžňová briga. Potrhané plachty a kouř prozradí, že trup potřebuje opravu.</li>
+          <li>Když v loděnici rozšíříš podpalubí na 180 beden, ze šalupy se stane dvoustěžňová briga, při 260 bednách trojstěžník. Potrhané plachty a kouř prozradí, že trup potřebuje opravu.</li>
+          <li><b>Vylepšení</b> v loděnici: nové plachty zkrátí plavbu, měděné oplechování tlumí bouře, dalekohled odhalí piráty včas, lodní tesař opravuje trup na moři. Tajnou skrýš pro náklad postaví jen pašeráci na Tortuze.</li>
+          <li><b>Flotila:</b> můžeš si koupit až 3 doprovodné lodě (s modrou vlajkou). Přidají místo v podpalubí a děla a odradí část pirátů – ale každý den chtějí <b>žold</b>, v bouři se můžou potopit a piráti je umí odvléct. Galeona (jen v Havaně) je obrovská, ale zpomalí celou flotilu. Lodě se na konci počítají do jmění svou prodejní cenou.</li>
+          <li>V hospodě se dají najmout <b>žoldnéři</b> – přidají sílu v boji a větší kořist.</li>
+          <li>Styl mapy (den, soumrak, noc, stará mapa, Game Boy) a velikost pixelů přepneš nahoře vedle tlačítka Nová partie, styl i klávesou <b>G</b>.</li>
           <li>Na moři přichází bouře, vraky i piráti. Proti pirátům pomáhají <b>děla</b>, útěk je sázka do loterie a vzdát se znamená přijít o půl nákladu.</li>
           <li><b>Hospoda</b> prodává zvěsti o tom, co se brzy stane na trzích – a občas mapu k pokladu.</li>
           <li>Po 30 dnech se spočítá výsledek a zapíše rekord. Pak můžeš <b>plout dál bez časového limitu</b> – do rekordu se ale počítá jen jmění po 30 dnech.</li>
@@ -171,6 +181,25 @@ const ObchodnikLogika = (function () {
     podpalubi: [{ kap: 60, cena: 0 }, { kap: 110, cena: 450 }, { kap: 180, cena: 1100 }, { kap: 260, cena: 2400 }],
     delo: 70, maxDel: 12, oprava: 3,
   };
+  // vylepšení vlajkové lodi; kde: seznam přístavů (jinak každá loděnice)
+  const VYLEPSENI = {
+    plachty: { nazev: 'Nové plachty', e: '🌬️', ceny: [650, 1500], popis: ['Plavba o pětinu kratší, snazší útěk', 'Plavba o třetinu kratší, ještě snazší útěk'] },
+    oplechovani: { nazev: 'Měděné oplechování', e: '🟫', ceny: [550, 1300], popis: ['Bouře nadělají o třetinu menší škody (celá flotila)', 'Bouře nadělají jen 40 % škody (celá flotila)'] },
+    dalekohled: { nazev: 'Mosazný dalekohled', e: '🔭', ceny: [320], popis: ['Piráty uvidíš včas – potkáš je méně často a snáz utečeš'] },
+    tesar: { nazev: 'Lodní tesař', e: '🪚', ceny: [450], popis: ['Na moři opravuje každý den 3 % trupu všem lodím'] },
+    skrys: { nazev: 'Tajná skrýš', e: '🗝️', ceny: [380], popis: ['Piráti najdou jen polovinu nákladu'], kde: ['tortuga'] },
+  };
+  const ZOLDNER = { cena: 45, max: 10, mzda: 1 };
+  // lodě flotily (doprovod); kde: kde se prodávají
+  const TYPY_LODI = {
+    salupa: { nazev: 'Šalupa', cena: 900, kap: 50, dela: 2, zold: 4, kde: ['royal', 'tortuga', 'havana'] },
+    briga: { nazev: 'Briga', cena: 2000, kap: 100, dela: 4, zold: 8, kde: ['royal', 'havana'] },
+    galeona: { nazev: 'Galeona', cena: 4200, kap: 200, dela: 8, zold: 15, pomala: true, kde: ['havana'] },
+  };
+  const MAX_FLOTILA = 3;
+  const JMENA_LODI = ['Vlaštovka', 'Delfín', 'Albatros', 'Esperanza', 'Fortuna', 'Racek', 'Modrý marlin', 'La Paloma', 'Hvězda jihu', 'Santa Rosa', 'Mořská panna', 'Bouřlivák'];
+  const RYCHLOST_PLACHET = [1, 0.8, 0.65];
+  const STIT_OPLECHOVANI = [1, 0.65, 0.4];
 
   function rng(seed) {
     let a = seed >>> 0;
@@ -192,6 +221,27 @@ const ObchodnikLogika = (function () {
     return Math.max(1, Math.round(Math.hypot((p.x - q.x) * 1.4, p.y - q.y) * 4.6));
   }
   function riziko(a, b) { return (PRISTAV[a].nebezpeci + PRISTAV[b].nebezpeci) / 2; }
+  // doplní pole, která starší uložené hry nemají
+  function doplnStav(h) {
+    h.vyl = Object.assign({ plachty: 0, oplechovani: 0, dalekohled: 0, tesar: 0, skrys: 0 }, h.vyl || {});
+    h.flotila = h.flotila || []; h.zoldneri = h.zoldneri || 0;
+    h.statistika = Object.assign({ obchodu: 0, pirati: 0, vyhry: 0, bouri: 0, ztraceneLode: 0 }, h.statistika || {});
+    return h;
+  }
+  const pomalaFlotila = h => h.flotila.some(f => TYPY_LODI[f.typ].pomala);
+  // skutečná délka cesty podle plachet (galeona ve flotile zdržuje)
+  function dniCesty(h, a, b) {
+    const k = RYCHLOST_PLACHET[h.vyl.plachty] + (pomalaFlotila(h) ? 0.15 : 0);
+    return Math.max(1, Math.round(dni(a, b) * k));
+  }
+  const palebnaSila = h => h.dela + h.flotila.reduce((a, f) => a + TYPY_LODI[f.typ].dela, 0) + h.zoldneri * 0.5;
+  const mzdy = h => h.flotila.reduce((a, f) => a + TYPY_LODI[f.typ].zold, 0) + h.zoldneri * ZOLDNER.mzda;
+  function sanceBoje(h, P) { const D = palebnaSila(h); return Math.min(0.92, Math.max(0.08, (D + 1) / (D + P + 2) + 0.12)); }
+  function sanceUteku(h, P) {
+    const s = 0.5 - P * 0.015 + (h.podpalubi === 0 ? 0.1 : 0) + h.vyl.plachty * 0.08 + (h.vyl.dalekohled ? 0.12 : 0)
+      - (pomalaFlotila(h) ? 0.1 : 0) - h.flotila.length * 0.04;
+    return Math.min(0.9, Math.max(0.05, s));
+  }
 
   function novaHra(seed) {
     const r = rng(seed);
@@ -213,12 +263,13 @@ const ObchodnikLogika = (function () {
       mapa: null, plavba: null, statistika: { obchodu: 0, pirati: 0, vyhry: 0, bouri: 0 },
     };
     for (const p of PRISTAVY) { h.trend[p.id] = {}; h.tlak[p.id] = {}; for (const z of ZBOZI) { h.trend[p.id][z.id] = 1; h.tlak[p.id][z.id] = 0; } }
+    doplnStav(h);
     for (let k = 0; k < 3; k++) naplanujUdalost(h);
     zapamatujCeny(h);
     zapis(h, `Vyplouváš z Port Royal s ${h.zlato} zlatými a dluhem ${h.dluh} u lichváře Mendozy.`, 'info');
     return h;
   }
-  const kapacita = h => LODENICE.podpalubi[h.podpalubi].kap;
+  const kapacita = h => LODENICE.podpalubi[h.podpalubi].kap + h.flotila.reduce((a, f) => a + TYPY_LODI[f.typ].kap, 0);
   const obsazeno = h => Object.values(h.naklad).reduce((a, b) => a + b, 0);
   function zapis(h, t, druh) { h.denik.push({ den: h.den, t, druh: druh || 'info' }); if (h.denik.length > 200) h.denik.shift(); }
 
@@ -288,6 +339,11 @@ const ObchodnikLogika = (function () {
   function denPlyne(h) {
     h.den++;
     h.dluh = Math.round(h.dluh * (1 + UROK));
+    const m = mzdy(h);
+    if (m) {
+      if (h.zlato >= m) h.zlato -= m;
+      else { const chybi = m - h.zlato; h.zlato = 0; h.dluh += chybi; zapis(h, `💸 Na žold chybělo ${chybi} zlatých – Mendoza ho zálohoval a připsal k dluhu.`, 'spatne'); }
+    }
     for (const p of PRISTAVY) for (const z of ZBOZI) {
       const t = h.trend[p.id][z.id];
       h.trend[p.id][z.id] = Math.max(0.7, Math.min(1.4, t + (1 - t) * 0.15 + gauss(h) * z.vol));
@@ -302,10 +358,21 @@ const ObchodnikLogika = (function () {
   /* ---------- plavba ---------- */
   function vypluj(h, cil) {
     if (h.konec || h.plavba || cil === h.pristav || !PRISTAV[cil]) return false;
-    const d = dni(h.pristav, cil);
+    const d = dniCesty(h, h.pristav, cil);
     h.plavba = { z: h.pristav, do: cil, dni: d, den: 0, udalost: null };
     zapis(h, `Vyplouváme z ${PRISTAV[h.pristav].nazev} do ${PRISTAV[cil].nazev} (${d} ${d === 1 ? 'den' : d < 5 ? 'dny' : 'dní'}).`, 'info');
     return true;
+  }
+  // loď flotily je ztracená (potopená nebo ukořistěná); náklad, který se nevejde, jde s ní
+  function ztratLod(h, f, text) {
+    h.flotila = h.flotila.filter(x => x !== f); h.statistika.ztraceneLode++;
+    let navic = obsazeno(h) - kapacita(h), ztraceno = 0;
+    while (navic > 0) {
+      const z = Object.keys(h.naklad).sort((a, b) => h.naklad[b] - h.naklad[a])[0];
+      const n = Math.min(navic, h.naklad[z]); h.naklad[z] -= n; navic -= n; ztraceno += n;
+      if (!h.naklad[z]) { delete h.naklad[z]; delete h.nakupni[z]; }
+    }
+    return text + (ztraceno ? ` S ní i ${ztraceno} beden zboží.` : '');
   }
   // jeden den na moři; vrací událost, která čeká na rozhodnutí (piráti), nebo null
   function denNaMori(h) {
@@ -313,18 +380,28 @@ const ObchodnikLogika = (function () {
     pl.den++;
     denPlyne(h);
     if (h.konec) return null;
+    // tesař na palubě spraví kus trupu každý den
+    if (h.vyl.tesar) { if (h.trup > 0) h.trup = Math.min(100, h.trup + 3); for (const f of h.flotila) f.trup = Math.min(100, f.trup + 3); }
     const rz = riziko(pl.z, pl.do);
     const x = nahoda(h);
+    // dalekohled a početný konvoj piráty odrazují
+    const pPir = (0.05 + rz * 0.13) * (h.vyl.dalekohled ? 0.75 : 1) * (1 - 0.12 * h.flotila.length);
     let u = null;
-    if (x < 0.05 + rz * 0.13) {
-      const sila = Math.round(2 + nahoda(h) * 6 + rz * 5 + h.den * 0.12);
+    if (x < pPir) {
+      const sila = Math.round(2 + nahoda(h) * 6 + rz * 5 + h.den * 0.12 + h.flotila.length * 1.5);
       u = { typ: 'pirati', sila };
       h.statistika.pirati++;
       zapis(h, `🏴‍☠️ Na obzoru pirátská loď se ${sila} děly!`, 'spatne');
-    } else if (x < 0.05 + rz * 0.13 + 0.08) {
-      const skoda = Math.round(8 + nahoda(h) * 18);
+    } else if (x < pPir + 0.08) {
+      const stit = STIT_OPLECHOVANI[h.vyl.oplechovani];
+      const skoda = Math.round((8 + nahoda(h) * 18) * stit);
       h.trup = Math.max(0, h.trup - skoda); h.statistika.bouri++;
       let t = `⛈️ Bouře! Trup utrpěl ${skoda} % škody.`;
+      for (const f of h.flotila.slice()) {
+        const sf = Math.round((4 + nahoda(h) * 22) * stit);
+        f.trup = Math.max(0, f.trup - sf);
+        if (!f.trup) t += ' ' + ztratLod(h, f, `${TYPY_LODI[f.typ].nazev} ${f.jmeno} se v bouři rozlomila a šla ke dnu!`);
+      }
       if (obsazeno(h) && nahoda(h) < 0.35) {
         const z = Object.keys(h.naklad)[Math.floor(nahoda(h) * Object.keys(h.naklad).length)];
         const n = Math.max(1, Math.round(h.naklad[z] * (0.1 + nahoda(h) * 0.15)));
@@ -333,7 +410,7 @@ const ObchodnikLogika = (function () {
       }
       zapis(h, t, 'spatne'); u = { typ: 'bourka', text: t };
       if (h.trup <= 0) { ukonci(h, 'potopena'); return u; }
-    } else if (x < 0.05 + rz * 0.13 + 0.08 + 0.05) {
+    } else if (x < pPir + 0.08 + 0.05) {
       const z = ZBOZI[Math.floor(nahoda(h) * 4)].id;
       const n = Math.min(kapacita(h) - obsazeno(h), 4 + Math.floor(nahoda(h) * 12));
       if (n > 0) { h.naklad[z] = (h.naklad[z] || 0) + n; h.nakupni[z] = h.nakupni[z] || 0; }
@@ -361,23 +438,29 @@ const ObchodnikLogika = (function () {
     const P = pl.udalost.sila; let vysledek;
     const ztratNaklad = podil => {
       let ztraceno = 0;
+      if (h.vyl.skrys) podil *= 0.5;
       for (const z of Object.keys(h.naklad)) { const n = Math.round(h.naklad[z] * podil); h.naklad[z] -= n; ztraceno += n; if (!h.naklad[z]) { delete h.naklad[z]; delete h.nakupni[z]; } }
       return ztraceno;
     };
     const boj = () => {
-      const sance = Math.min(0.92, Math.max(0.08, (h.dela + 1) / (h.dela + P + 2) + 0.12));
-      if (nahoda(h) < sance) {
-        const korist = 40 + Math.round(nahoda(h) * P * 30), skoda = Math.round(nahoda(h) * 12);
+      if (nahoda(h) < sanceBoje(h, P)) {
+        const korist = 40 + Math.round(nahoda(h) * P * 30) + h.zoldneri * 10, skoda = Math.round(nahoda(h) * 12);
         h.zlato += korist; h.trup = Math.max(1, h.trup - skoda); h.statistika.vyhry++;
         return { ok: true, text: `💣 Po krátké přestřelce piráti prchají! Z jejich lodi jsme ukoristili ${korist} zlatých. Trup −${skoda} %.` };
       }
       const skoda = Math.round(15 + nahoda(h) * 25); h.trup = Math.max(0, h.trup - skoda);
+      // piráti si můžou odvést i loď z doprovodu
+      let lod = '';
+      if (h.flotila.length && nahoda(h) < 0.3) {
+        const f = h.flotila.slice().sort((a, b) => a.trup - b.trup)[0];
+        lod = ' ' + ztratLod(h, f, `Odvlekli nám i ${TYPY_LODI[f.typ].nazev.toLowerCase()} ${f.jmeno}!`);
+      } else for (const f of h.flotila) f.trup = Math.max(5, f.trup - Math.round(nahoda(h) * 20));
       const n = ztratNaklad(0.4 + nahoda(h) * 0.2), z = Math.round(h.zlato * 0.25); h.zlato -= z;
-      return { ok: false, text: `💥 Prohráli jsme. Trup −${skoda} %, piráti odnesli ${n} ks zboží a ${z} zlatých.` };
+      return { ok: false, text: `💥 Prohráli jsme. Trup −${skoda} %, piráti odnesli ${n} ks zboží a ${z} zlatých.${lod}` };
     };
     if (volba === 'boj') vysledek = boj();
     else if (volba === 'utek') {
-      if (nahoda(h) < 0.5 - P * 0.015 + (h.podpalubi === 0 ? 0.1 : 0)) vysledek = { ok: true, text: '🌬️ Chytili jsme vítr do plachet a piráti zůstali za obzorem.' };
+      if (nahoda(h) < sanceUteku(h, P)) vysledek = { ok: true, text: '🌬️ Chytili jsme vítr do plachet a piráti zůstali za obzorem.' };
       else { const b = boj(); vysledek = { ok: b.ok, text: 'Útěk se nepovedl, musíme bojovat! ' + b.text }; }
     } else {
       const n = ztratNaklad(0.5);
@@ -403,11 +486,56 @@ const ObchodnikLogika = (function () {
       h.zlato -= LODENICE.delo; h.dela++; return true;
     }
     if (co === 'oprava') {
-      const n = Math.min(100 - h.trup, Math.floor(h.zlato / LODENICE.oprava));
-      if (n <= 0) return false;
-      h.zlato -= n * LODENICE.oprava; h.trup += n; zapis(h, `🔨 Trup opraven na ${h.trup} %.`, 'dobre'); return true;
+      // nejdřív vlajková loď, pak doprovod
+      let celkem = 0;
+      for (const lod of [h, ...h.flotila]) {
+        const n = Math.min(100 - lod.trup, Math.floor(h.zlato / LODENICE.oprava));
+        if (n <= 0) continue;
+        h.zlato -= n * LODENICE.oprava; lod.trup += n; celkem += n;
+      }
+      if (!celkem) return false;
+      zapis(h, h.flotila.length ? `🔨 Tesaři opravili flotilu (${celkem} % za ${celkem * LODENICE.oprava} zlatých).` : `🔨 Trup opraven na ${h.trup} %.`, 'dobre'); return true;
+    }
+    const v = VYLEPSENI[co];
+    if (v) {
+      const cena = cenaVylepseni(h, co);
+      if (cena === null || h.zlato < cena || (v.kde && !v.kde.includes(h.pristav))) return false;
+      h.zlato -= cena; h.vyl[co]++;
+      zapis(h, `🔨 ${v.e} ${v.nazev}${v.ceny.length > 1 ? ` (${h.vyl[co]}. stupeň)` : ''}: ${v.popis[h.vyl[co] - 1].toLowerCase()}.`, 'dobre');
+      return true;
     }
     return false;
+  }
+  const cenaVylepseni = (h, co) => { const c = VYLEPSENI[co].ceny[h.vyl[co]]; return c === undefined ? null : c; };
+  const opravaCena = h => ((100 - h.trup) + h.flotila.reduce((a, f) => a + 100 - f.trup, 0)) * LODENICE.oprava;
+  const hodnotaLode = f => Math.round(TYPY_LODI[f.typ].cena * 0.5 * (0.4 + 0.6 * f.trup / 100));
+  function kupLod(h, typ) {
+    const t = TYPY_LODI[typ];
+    if (!t || h.plavba || h.konec || !t.kde.includes(h.pristav) || h.flotila.length >= MAX_FLOTILA || h.zlato < t.cena) return null;
+    const volna = JMENA_LODI.filter(j => !h.flotila.some(f => f.jmeno === j));
+    const f = { typ, trup: 100, jmeno: volna[Math.floor(nahoda(h) * volna.length)] };
+    h.zlato -= t.cena; h.flotila.push(f);
+    zapis(h, `⛵ Do flotily přibyla ${t.nazev.toLowerCase()} ${f.jmeno} (+${t.kap} beden, +${t.dela} děl, žold ${t.zold} zl./den).`, 'dobre');
+    return f;
+  }
+  function prodejLod(h, i) {
+    const f = h.flotila[i];
+    if (!f || h.plavba || h.konec || !PRISTAV[h.pristav].lodenice) return 0;
+    if (obsazeno(h) > kapacita(h) - TYPY_LODI[f.typ].kap) return 0;   // nejdřív vyložit
+    const c = hodnotaLode(f); h.zlato += c; h.flotila.splice(i, 1);
+    zapis(h, `⛵ ${TYPY_LODI[f.typ].nazev} ${f.jmeno} prodána za ${c} zlatých.`, 'info');
+    return c;
+  }
+  function najmi(h, n) {
+    if (h.plavba || h.konec) return 0;
+    n = Math.min(n, ZOLDNER.max - h.zoldneri, Math.floor(h.zlato / ZOLDNER.cena)); if (n <= 0) return 0;
+    h.zlato -= n * ZOLDNER.cena; h.zoldneri += n;
+    zapis(h, `⚔️ Najato ${n} ${n === 1 ? 'žoldnéř' : n < 5 ? 'žoldnéři' : 'žoldnéřů'} (celkem ${h.zoldneri}). Žold ${ZOLDNER.mzda} zl. na hlavu a den.`, 'info');
+    return n;
+  }
+  function propust(h) {
+    if (h.plavba || h.konec || !h.zoldneri) return 0;
+    const n = h.zoldneri; h.zoldneri = 0; zapis(h, `⚔️ Propuštěno ${n} žoldnéřů.`, 'info'); return n;
   }
   function splat(h, n) {
     if (!PRISTAV[h.pristav].banka || h.plavba) return 0;
@@ -445,7 +573,8 @@ const ObchodnikLogika = (function () {
   function hodnotaNakladu(h) {
     let s = 0; for (const [z, n] of Object.entries(h.naklad)) s += cenaProdej(h, h.pristav, z) * n; return s;
   }
-  const jmeni = h => h.zlato + hodnotaNakladu(h) - h.dluh;
+  const hodnotaFlotily = h => h.flotila.reduce((a, f) => a + hodnotaLode(f), 0);
+  const jmeni = h => h.zlato + hodnotaNakladu(h) + hodnotaFlotily(h) - h.dluh;
   function ukonci(h, duvod) {
     if (h.konec) return;
     h.konec = { duvod, jmeni: duvod === 'potopena' ? h.zlato - h.dluh : jmeni(h) };
@@ -467,7 +596,8 @@ const ObchodnikLogika = (function () {
     return '💸 Dlužník na útěku';
   }
 
-  return { DNY, UROK, ZBOZI, PRISTAVY, PRISTAV, LODENICE, GEN, CENA_ZVESTI, CENA_MAPY,
+  return { DNY, UROK, ZBOZI, PRISTAVY, PRISTAV, LODENICE, GEN, CENA_ZVESTI, CENA_MAPY, VYLEPSENI, ZOLDNER, TYPY_LODI, MAX_FLOTILA,
+    doplnStav, dniCesty, palebnaSila, mzdy, sanceBoje, sanceUteku, cenaVylepseni, opravaCena, hodnotaLode, hodnotaFlotily, kupLod, prodejLod, najmi, propust,
     rng, hash, novaHra, dni, riziko, kapacita, obsazeno, cenaNakup, cenaProdej, relativne, stredniCena, kup, prodej, maxNakup,
     denPlyne, vypluj, denNaMori, resPiraty, vylepsi, splat, pujc, maxPujcka, kupZvest, kupMapu, hodnotaNakladu, jmeni, ukonci, plujDal, titul };
 })();
@@ -483,7 +613,7 @@ const ObchodnikLogika = (function () {
     set(k, v) { try { localStorage.setItem(k, v); } catch { /* úložiště nedostupné */ } },
     del(k) { try { localStorage.removeItem(k); } catch { /* úložiště nedostupné */ } },
   };
-  const KLIC = 'webapp_hra_obchodnik_stav';
+  const KLIC = 'webapp_hra_obchodnik_stav', KLIC_GRAF = 'webapp_hra_obchodnik_grafika';
   const DEN_S = 0.9;   // kolik sekund trvá jeden den plavby
   let h = null, rek = null, cv, ctx, cw = 0, ch = 0, dpr = 1, vybrany = null, hover = null, zalozka = 'trh';
   let anim = null;     // animace plavby: {z, do, dni, den, cas, pokrok, pauza, bourka, blesk, vrak, pirat, klesa}
@@ -491,6 +621,8 @@ const ObchodnikLogika = (function () {
   const ostrovy = {};
 
   const dnesStr = () => { const d = new Date(); return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0'); };
+  const LOK = { royal: 'v Port Royal', tortuga: 'na Tortuze', nassau: 'v Nassau', havana: 'v Havaně', cartagena: 'v Cartageně', martinik: 'na Martiniku' };
+  const cislo = v => String(Math.round(v * 10) / 10).replace('.', ',');
   const dniText = d => d + ' ' + (d === 1 ? 'den' : d < 5 ? 'dny' : 'dní');
 
   function nova(rezim) {
@@ -505,7 +637,7 @@ const ObchodnikLogika = (function () {
     try {
       const s = JSON.parse(ls.get(KLIC) || 'null');
       if (!s || !s.profil || (s.konec && s.konec.duvod === 'potopena')) return false;
-      h = s; $('rezim').value = s.rezim || 'denni';
+      h = L.doplnStav(s); $('rezim').value = s.rezim || 'denni';
       tvaryOstrovu();
       if (h.plavba) {
         pokracujPlavbu();
@@ -613,7 +745,7 @@ const ObchodnikLogika = (function () {
     return c;
   }
   // text vystředěný na x, y = horní hrana velkých písmen
-  function napis(t, x, y, barva, obrys) { const s = text(t, barva, obrys), k = M.ts; bx.drawImage(s, Math.round(x - s.width * k / 2), y - 3 * k, s.width * k, s.height * k); return s; }
+  function napis(t, x, y, barva, obrys) { const s = text(t, barva, obrys || P.textObrys), k = M.ts; bx.drawImage(s, Math.round(x - s.width * k / 2), y - 3 * k, s.width * k, s.height * k); return s; }
 
   /* ---------- sprity ---------- */
   const P = {
@@ -623,10 +755,46 @@ const ObchodnikLogika = (function () {
     trava: '#74b24f', trava2: '#61a043', les: '#3e7e39', les2: '#2e6430', lesS: '#56a04a',
     hora: '#8d8270', horaS: '#b3a88f', horaT: '#665c4c',
     drevo: '#9a6433', drevoT: '#4a2c14', text: '#fff1cf', zluta: '#ffd24a',
+    textObrys: OBRYS, trasa: 'rgba(255,244,214,.55)', trasaHotova: '#f07050', trasaZbyva: 'rgba(255,244,214,.5)',
   };
-  // typ 0 = šalupa (1 stěžeň), 1 = briga (2 stěžně); f = snímek vlajky; pos = poškození 0–2
+  const P0 = JSON.parse(JSON.stringify(P));
+  /* ---------- grafické styly: jiná paleta terénu a/nebo dobarvení celého snímku ---------- */
+  const SEDA = v => { const x = Math.round(v).toString(16).padStart(2, '0'); return '#' + x + x + x; };
+  const STYLY = {
+    pixel: { nazev: '☀️ Den' },
+    soumrak: { nazev: '🌅 Soumrak', tint: [1.02, 0.72, 0.62], add: [30, 6, 30], svetla: 0.55 },
+    noc: { nazev: '🌙 Noc', tint: [0.27, 0.36, 0.6], add: [4, 10, 34], svetla: 1 },
+    mapa: {
+      nazev: '📜 Stará mapa', filtrVse: true, sepie: 0.7, papir: true,
+      P: {
+        more: ['#dcc38c', '#e4cd98', '#ead5a4', '#eedbac', '#efdeb0', '#ecd9a8'],
+        pena: '#6a4a2a', pena2: '#9a7a50', trpyt: '#c9ab78', trpyt2: '#8a6a44',
+        pisek: '#cfae72', pisekS: '#dcc088', pisekT: '#6a4a2a',
+        trava: '#b39a5c', trava2: '#a88f52', les: '#7f7a40', les2: '#625f30', lesS: '#979050',
+        hora: '#9a7a54', horaS: '#bba076', horaT: '#6a4e30',
+        text: '#4a2410', textObrys: '#f3e4bc', zluta: '#b0281a',
+        trasa: 'rgba(90,50,20,.55)', trasaHotova: '#a0281a', trasaZbyva: 'rgba(90,50,20,.45)',
+      },
+    },
+    gameboy: {
+      nazev: '🎮 Game Boy', filtrVse: true, gb: true,
+      P: {
+        more: [SEDA(150), SEDA(118), SEDA(88), SEDA(86), SEDA(86), SEDA(80)],
+        pena: SEDA(255), pena2: SEDA(200), trpyt: SEDA(170), trpyt2: SEDA(255),
+        pisek: SEDA(225), pisekS: SEDA(255), pisekT: SEDA(150),
+        trava: SEDA(190), trava2: SEDA(170), les: SEDA(60), les2: SEDA(20), lesS: SEDA(120),
+        hora: SEDA(120), horaS: SEDA(180), horaT: SEDA(50),
+        text: SEDA(255), textObrys: SEDA(0), zluta: SEDA(255),
+        trasa: SEDA(210), trasaHotova: SEDA(0), trasaZbyva: SEDA(200),
+      },
+    },
+  };
+  const HUSTOTY = { jemna: { nazev: 'jemné pixely', f: 1 }, stredni: { nazev: 'střední pixely', f: 1.5 }, hruba: { nazev: 'hrubé pixely', f: 2.2 } };
+  const GB = [[15, 56, 15], [48, 98, 48], [139, 172, 15], [196, 220, 110]];
+  let styl = 'pixel', hustota = 'jemna';
+  // typ 0 = šalupa (1 stěžeň), 1 = briga (2 stěžně), 2 = galeona (3 stěžně, kastel na zádi); f = snímek vlajky; pos = poškození 0–2
   function lodRadky(typ, f, pos) {
-    const W = typ ? 30 : 24, V = 18, g = Array.from({ length: V }, () => Array(W).fill('.'));
+    const W = typ === 2 ? 36 : typ ? 30 : 24, V = 18, g = Array.from({ length: V }, () => Array(W).fill('.'));
     const pas = (x0, x1, y, c) => { for (let x = x0; x <= x1; x++) g[y][x] = c; };
     const stezen = (x, y0, y1) => { for (let y = y0; y <= y1; y++) g[y][x] = 'm'; };
     const plachta = (x0, x1, y0, y1) => { for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) g[y][x] = x === x1 || y === y1 ? 's' : 'w'; };
@@ -645,6 +813,19 @@ const ObchodnikLogika = (function () {
       pas(1, 3, 11, 'h'); g[12][1] = 'h'; g[12][2] = 'l'; g[12][3] = 'h'; pas(4, 20, 12, 'y'); pas(21, 22, 12, 'm');
       pas(1, 22, 13, 'h'); for (let x = 1; x <= 21; x++) g[14][x] = x % 3 ? 'h' : 'k';
       pas(2, 21, 15, 'H'); pas(3, 19, 16, 'H'); pas(5, 17, 17, 'H');
+    } else if (typ === 2) {
+      hlavni = 17;
+      pas(3, 11, 4, 'm'); plachta(3, 11, 5, 7);
+      pas(13, 22, 2, 'm'); plachta(13, 22, 3, 6); pas(12, 23, 7, 'm'); plachta(12, 23, 8, 10);
+      pas(25, 30, 4, 'm'); plachta(25, 30, 5, 6); pas(25, 31, 7, 'm'); plachta(25, 31, 8, 10);
+      stezen(7, 1, 11); stezen(17, 0, 11); stezen(27, 2, 11); kliver(32, 4); pas(32, 35, 11, 'm');
+      g[1][28] = 'r'; if (!f) g[1][29] = 'r';
+      g[8][15] = 'x'; g[9][14] = 'x'; g[9][16] = 'x';
+      lano(7, 1, 0, 9); lano(27, 2, 35, 11); lano(17, 0, 7, 1); lano(17, 0, 27, 2);
+      pas(0, 6, 9, 'h'); pas(0, 6, 10, 'h'); g[10][2] = 'l'; g[10][4] = 'l'; pas(0, 6, 11, 'h');
+      pas(0, 6, 12, 'h'); g[12][1] = 'l'; g[12][3] = 'l'; g[12][5] = 'l'; pas(7, 32, 12, 'y'); pas(33, 34, 12, 'm');
+      pas(0, 34, 13, 'h'); for (let x = 1; x <= 33; x++) g[14][x] = x % 3 ? 'h' : 'k';
+      pas(1, 33, 15, 'H'); pas(3, 31, 16, 'H'); pas(5, 29, 17, 'H');
     } else {
       hlavni = 8;
       pas(2, 14, 3, 'm'); plachta(2, 14, 4, 6); pas(1, 14, 7, 'm'); plachta(1, 14, 8, 10);
@@ -670,9 +851,14 @@ const ObchodnikLogika = (function () {
   }
   const PAL_LOD = { m: '#5a3a1c', r: '#d33b2c', w: '#f6efdc', x: '#c8352b', s: '#d2c6aa', h: '#8f5a2c', H: '#5e3618', y: '#d9a441', l: '#b87a44', k: '#2a1a10', g: 'rgba(60,40,24,.7)', p: '#c9b48a' };
   const PAL_PIRAT = { m: '#3b2a1c', r: '#15151a', w: '#3a3a46', x: '#ece6d6', s: '#272733', h: '#4a3a30', H: '#2e241c', y: '#7a6a4a', l: '#5a4a3a', k: '#0e0a08', g: 'rgba(20,14,10,.7)', p: '#55556a' };
-  const lodCache = new Map();
+  // měděné oplechování je vidět na dně trupu
+  const PAL_LOD_MED = Object.assign({}, PAL_LOD, { H: '#b8743a' });
+  const PAL_DOPROVOD = Object.assign({}, PAL_LOD, { r: '#2f6fb3', x: '#2f6fb3' });
+  const PAL_DOPROVOD_MED = Object.assign({}, PAL_DOPROVOD, { H: '#b8743a' });
+  const lodCache = new Map(), palId = new Map();
   function lodSprite(pal, typ, pos, f, vlevo) {
-    const k = (pal === PAL_LOD ? 'l' : 'p') + typ + pos + f + (vlevo ? 1 : 0);
+    if (!palId.has(pal)) palId.set(pal, palId.size);
+    const k = palId.get(pal) + '|' + typ + pos + f + (vlevo ? 1 : 0);
     if (!lodCache.has(k)) lodCache.set(k, sprite(lodRadky(typ, f, pos), pal, { zrcadlo: vlevo, bez: 'g' }));
     return lodCache.get(k);
   }
@@ -765,7 +951,7 @@ const ObchodnikLogika = (function () {
 
   /* ================= MAPA: stavba ================= */
   const M = { klic: '', AW: 0, AH: 0, Z: 1, ts: 1, ox: 0, oy: 0, s: 6, poz: {}, dok: {}, trasy: {} };
-  const buf = platno(1, 1), bx = buf.getContext('2d');
+  const buf = platno(1, 1), bx = buf.getContext('2d', { willReadFrequently: true });
   const prekryv = (a, b) => Math.max(0, Math.min(a.x1, b.x1) - Math.max(a.x0, b.x0)) * Math.max(0, Math.min(a.y1, b.y1) - Math.max(a.y0, b.y0));
   function polomer(body, a) {
     const n = body.length, f = (((a / (Math.PI * 2)) % 1) + 1) % 1 * n, i = Math.floor(f) % n, u = f - Math.floor(f), u2 = (1 - Math.cos(Math.PI * u)) / 2;
@@ -773,7 +959,7 @@ const ObchodnikLogika = (function () {
   }
   function zajistiMapu() {
     if (!h || M.AW < 40 || M.AH < 40) return false;
-    const klic = M.AW + 'x' + M.AH + '|' + M.ts + '|' + h.seed;
+    const klic = M.AW + 'x' + M.AH + '|' + M.ts + '|' + h.seed + '|' + styl;
     if (M.klic !== klic) { postavMapu(); M.klic = klic; }
     return true;
   }
@@ -863,7 +1049,7 @@ const ObchodnikLogika = (function () {
       }
       return !zabrano.some(z => x < z.x + z.w && z.x < x + w && y < z.y + z.v && z.y < y + v);
     };
-    M.majak = null; M.vlajka = null;
+    M.majak = null; M.vlajka = null; M.okna = [];
     for (const p of L.PRISTAVY) {
       const q = M.poz[p.id], d = M.dok[p.id], smer = d.vlevo ? -1 : 1;
       if (p.id === 'royal') {
@@ -884,7 +1070,8 @@ const ObchodnikLogika = (function () {
         const x = Math.round(q.x + smer * r() * s * 1.1 - 3), y = Math.round(q.y - s * 0.75 + r() * s * 0.9);
         if (volno(x + 1, y + 1, 5, 4, [1, 2, 3])) {
           zabrano.push({ x, y, w: 7, v: 6 });
-          obj.push({ spr: SPR.domy[Math.floor(r() * SPR.domy.length)], x, y }); hotovo++;
+          const typ = Math.floor(r() * SPR.domy.length);
+          obj.push({ spr: SPR.domy[typ], x, y }); M.okna.push({ x: x + (typ === 1 ? 2 : 4), y: y + 4, f: r() * 6 }); hotovo++;
         }
       }
     }
@@ -923,6 +1110,33 @@ const ObchodnikLogika = (function () {
       M.stitky[p.id] = { cx: (nej.x0 + nej.x1) / 2, y: nej.y0 + 1, sipka: (nahore ? nej.y0 : e.y0) - 6 };
     });
     M.obsazene = obsazene;
+    // kotviště doprovodných lodí: volná voda kousek od mola, mimo popisky
+    M.kotviste = {};
+    for (const p of L.PRISTAVY) {
+      const d = M.dok[p.id], kand = [], vybr = [];
+      for (let dy = -26; dy <= 30; dy += 2) for (let dx = -46; dx <= 46; dx += 2) {
+        const x = d.x + dx, y = d.y + dy;
+        if (x < 16 || x > AW - 16 || y < 20 || y > AH - 5) continue;
+        if (Math.abs(dx) < 40 && Math.abs(dy) < 20) continue;   // místo vlajkové lodi
+        if (![-12, -6, 0, 6, 12].every(o => D[y * AW + x + o] >= 2.5) || D[(y - 9) * AW + x] < 1) continue;
+        const o = { x0: x - 12, x1: x + 12, y0: y - 16, y1: y + 1 };
+        let sk = Math.hypot(dx, dy * 1.6);
+        for (const z of obsazene) sk += prekryv(o, z) * 2;
+        kand.push({ x, y, sk });
+      }
+      kand.sort((a, b) => a.sk - b.sk);
+      for (const k of kand) { if (vybr.length >= 3) break; if (vybr.every(v => Math.abs(v.x - k.x) >= 40 || Math.abs(v.y - k.y) >= 19)) vybr.push(k); }
+      M.kotviste[p.id] = vybr;
+    }
+    // papír pro starou mapu: jemná zrnitost a ztmavlé okraje
+    M.papir = null;
+    if (STYLY[styl].papir) {
+      M.papir = new Float32Array(N);
+      for (let y = 0; y < AH; y++) for (let x = 0; x < AW; x++) {
+        const vx = (x / AW - 0.5) * 2, vy = (y / AH - 0.5) * 2, vin = 1 - 0.28 * Math.pow(Math.max(Math.abs(vx), Math.abs(vy)) * 0.6 + Math.hypot(vx, vy) * 0.4, 3);
+        M.papir[y * AW + x] = vin * (0.9 + 0.1 * sum(x * 0.08, y * 0.08, 21) + (hashXY(x, y, 5) - 0.5) * 0.06);
+      }
+    }
     // rybářské loďky kroužící kolem ostrovů
     M.lodicky = [];
     for (let k = 0; k < 60 && M.lodicky.length < 3; k++) {
@@ -1069,8 +1283,16 @@ const ObchodnikLogika = (function () {
     return { x: d.x, y: d.y, vlevo: d.vlevo, jede: false };
   }
   // loď: y je čára ponoru; ponor = o kolik pixelů je loď pod hladinou navíc
-  function kresliLod(pal, typ, pos, x, y, vlevo, t, ponor, alfa) {
+  const TYP_SPRITE = { salupa: 0, briga: 1, galeona: 2 };
+  const typVlajkove = () => h.podpalubi >= 3 ? 2 : h.podpalubi >= 2 ? 1 : 0;
+  function kotviste(pid, k) {
+    const kv = M.kotviste && M.kotviste[pid] && M.kotviste[pid][k], d = M.dok[pid];
+    if (kv) return { x: kv.x, y: kv.y, vlevo: d.vlevo };
+    return { x: d.x + (d.vlevo ? 1 : -1) * 26 * (k + 1), y: d.y + 3, vlevo: d.vlevo };
+  }
+  function kresliLod(pal, typ, pos, x, y, vlevo, t, ponor, alfa, lucerna) {
     const spr = lodSprite(pal, typ, pos, Math.floor(t * 3) % 2, vlevo), w = spr.width, x0 = Math.round(x - w / 2), y0 = Math.round(y) - 16;
+    if (lucerna && M.lucerny) M.lucerny.push({ x: vlevo ? x0 + w - 3 : x0 + 2, y: y0 + 9 });
     const vid = 17 - (ponor || 0);
     if (vid <= 0) return;
     if (alfa !== undefined) bx.globalAlpha = Math.max(0, alfa);
@@ -1083,7 +1305,10 @@ const ObchodnikLogika = (function () {
   }
   function kresli(now, dt) {
     if (!zajistiMapu()) return;
-    const t = now / 1000, AW = M.AW, AH = M.AH, s = M.s;
+    const t = now / 1000, AW = M.AW, AH = M.AH, s = M.s, st = STYLY[styl];
+    // u dobarvených stylů (noc, soumrak) se popisky kreslí až po dobarvení, aby zůstaly čitelné
+    const nad = [], pozde = fn => (st.tint ? nad.push(fn) : fn());
+    M.lucerny = [];
     bx.imageSmoothingEnabled = false;
     bx.drawImage(M.podklad, 0, 0);
     // vlny u břehu a třpyt
@@ -1125,13 +1350,13 @@ const ObchodnikLogika = (function () {
       for (const p of L.PRISTAVY) {
         if (p.id === h.pristav) continue;
         const tr = trasa(h.pristav, p.id), akt = p.id === vybrany || p.id === hover;
-        if (!akt) tecky(tr, 0, 1, 'rgba(255,244,214,.55)', 0);
-        popisky.push({ tr, akt, d: L.dni(h.pristav, p.id) });
+        if (!akt) tecky(tr, 0, 1, P.trasa, 0);
+        popisky.push({ tr, akt, d: L.dniCesty(h, h.pristav, p.id) });
       }
       for (const pp of popisky) if (pp.akt) tecky(pp.tr, 0, 1, P.zluta, -t * 6);
     } else if (anim) {
-      tecky(lod.tr, 0, lod.u, '#f07050', 0);
-      tecky(lod.tr, lod.u, 1, 'rgba(255,244,214,.5)', 0);
+      tecky(lod.tr, 0, lod.u, P.trasaHotova, 0);
+      tecky(lod.tr, lod.u, 1, P.trasaZbyva, 0);
     }
     // přístavy: vlajka Tortugy, maják, křížek z mapy
     if (M.vlajka) bx.drawImage(SPR.vlajka[Math.floor(t * 2.5) % 2], M.vlajka.x, M.vlajka.y);
@@ -1145,17 +1370,17 @@ const ObchodnikLogika = (function () {
     for (const m of M.mraky) bx.drawImage(m.spr, Math.round(mrakX(m)), Math.round(m.y));
     bx.globalAlpha = 1;
     // jména přístavů, ikony služeb, šipka výběru
-    for (const p of L.PRISTAVY) {
+    pozde(() => { for (const p of L.PRISTAVY) {
       const q = M.poz[p.id], st = M.stitky[p.id], akt = p.id === vybrany || p.id === hover;
       napis(p.nazev, st.cx, st.y, akt ? P.zluta : P.text);
       const ik = []; if (p.banka) ik.push(SPR.mince); if (p.lodenice) ik.push(SPR.kladivo);
       let x = st.cx - (ik.reduce((a, c) => a + c.width + 1, 0) - 1) / 2;
       for (const c of ik) { bx.drawImage(c, Math.round(x), st.y + 7 * M.ts + 2); x += c.width + 1; }
       if (p.id === vybrany && !h.plavba) bx.drawImage(SPR.sipka, q.x - 3, st.sipka - 4 + Math.round(Math.sin(t * 6) * 1.5));
-    }
+    } });
     // délky cest: po trase se hledá místo, kde popisek nic nezakryje
     const dalsi = [];
-    for (const pp of popisky) {
+    pozde(() => { for (const pp of popisky) {
       const w = text(dniText(pp.d), P.text).width * M.ts;
       let bod = null, nejS = Infinity, nejO = null;
       for (const u of [0.5, 0.42, 0.58, 0.34, 0.66, 0.27, 0.73, 0.2, 0.8]) {
@@ -1171,7 +1396,7 @@ const ObchodnikLogika = (function () {
       if (!pp.akt) bx.globalAlpha = 0.85;
       napis(dniText(pp.d), bod.x, Math.round(bod.y) - 8 * M.ts, pp.akt ? P.zluta : P.text);
       bx.globalAlpha = 1;
-    }
+    } });
     // brázda za lodí
     if (lod.jede && lod.tr) {
       for (let k = 0; k < 9; k++) {
@@ -1193,10 +1418,21 @@ const ObchodnikLogika = (function () {
     const houp = Math.round(Math.sin(t * 2.2) * 0.8);
     // piráti (za naší lodí = o kus výš)
     if (anim && anim.pirat) kresliPiraty(anim.pirat, lod, t, dt);
+    // doprovodné lodě: na moři plují v brázdě, v přístavu kotví opodál
+    (h.flotila || []).forEach((f, k) => {
+      let x, y, vlevo = lod.vlevo, kv = null;
+      if (anim && lod.tr) {
+        const u = lod.u - (k + 1) * 24 / lod.tr.L;
+        if (u > 0) { const b = bodTrasy(lod.tr, u); x = b.x; y = b.y; } else kv = kotviste(anim.z, k);
+      } else kv = kotviste(h.pristav, k);
+      if (kv) { x = kv.x; y = kv.y; vlevo = kv.vlevo; }
+      const hp = Math.round(Math.sin(t * 2.2 + k * 1.7) * 0.8);
+      kresliLod(h.vyl.oplechovani ? PAL_DOPROVOD_MED : PAL_DOPROVOD, TYP_SPRITE[f.typ], f.trup < 30 ? 2 : f.trup < 60 ? 1 : 0, x, y + hp, vlevo, t + k * 0.37, 0, undefined, true);
+    });
     // naše loď
     let ponor = 0;
     if (anim && anim.klesa !== undefined) { anim.klesa += dt; ponor = Math.floor(anim.klesa * 7); if (Math.random() < 0.3) efekty.push({ typ: 'bublina', x: lod.x + (Math.random() - 0.5) * 12, y: lod.y, t: 0, do: 0.8 }); }
-    kresliLod(PAL_LOD, h.podpalubi >= 2 ? 1 : 0, h.trup < 30 ? 2 : h.trup < 60 ? 1 : 0, lod.x, lod.y + houp, lod.vlevo, t, ponor);
+    kresliLod(h.vyl && h.vyl.oplechovani ? PAL_LOD_MED : PAL_LOD, typVlajkove(), h.trup < 30 ? 2 : h.trup < 60 ? 1 : 0, lod.x, lod.y + houp, lod.vlevo, t, ponor, undefined, !ponor);
     if (h.trup < 35 && !h.konec && Math.random() < dt * 2.5) efekty.push({ typ: 'dym', tmavy: true, x: lod.x + (Math.random() - 0.5) * 10, y: lod.y - 5, t: 0, do: 1.3 });
     if (anim && anim.vrak > 0) {
       for (let k = 0; k < 3; k++) {
@@ -1211,6 +1447,7 @@ const ObchodnikLogika = (function () {
       const f = Math.floor(t * 4 + k) % 2;
       bx.drawImage(SPR.racekStin[f], x + 3, y + 9); bx.drawImage(SPR.racek[f], x, y);
     }
+    if (st.tint) { dobarvi(st); svetla(st, t); for (const f of nad) f(); }
     const karta = h.plavba || h.konec ? null : hover || vybrany;
     if (karta) kresliKartu(karta);
     // větrná růžice
@@ -1240,6 +1477,7 @@ const ObchodnikLogika = (function () {
     for (let y = 1; y < AH - 1; y++) { bx.fillStyle = y % 3 ? '#b98a4e' : '#7a4a24'; bx.fillRect(1, y, 1, 1); bx.fillRect(AW - 2, AH - 1 - y, 1, 1); }
     bx.fillStyle = '#e0b040';
     for (const [x, y] of [[1, 1], [AW - 3, 1], [1, AH - 3], [AW - 3, AH - 3]]) bx.fillRect(x, y, 2, 2);
+    if (st.filtrVse) prefiltruj(st);
     // zvětšení po celých pixelech
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.imageSmoothingEnabled = false;
@@ -1253,7 +1491,7 @@ const ObchodnikLogika = (function () {
     if (id === h.pristav) radky.push({ t: 'TADY KOTVÍŠ' });
     else {
       const rz = L.riziko(h.pristav, id);
-      radky.push({ t: dniText(L.dni(h.pristav, id)) + ' - ' + (rz > 0.7 ? 'VYSOKÉ' : rz > 0.45 ? 'STŘEDNÍ' : 'NÍZKÉ') + ' RIZIKO', b: rz > 0.7 ? '#a02818' : INK });
+      radky.push({ t: dniText(L.dniCesty(h, h.pristav, id)) + ' - ' + (rz > 0.7 ? 'VYSOKÉ' : rz > 0.45 ? 'STŘEDNÍ' : 'NÍZKÉ') + ' RIZIKO', b: rz > 0.7 ? '#a02818' : INK });
     }
     const v = h.videno[id];
     if (!v) radky.push({ t: 'CENY NEZNÁMÉ', b: '#6a5030' });
@@ -1351,6 +1589,76 @@ const ObchodnikLogika = (function () {
       }
     }
   }
+  /* ---------- grafické styly: dobarvení snímku ---------- */
+  function dobarvi(st) {
+    const img = bx.getImageData(0, 0, M.AW, M.AH), d = img.data, [kr, kg, kb] = st.tint, [ar, ag, ab] = st.add;
+    for (let i = 0; i < d.length; i += 4) {
+      const r = d[i] * kr + ar, g = d[i + 1] * kg + ag, b = d[i + 2] * kb + ab;
+      d[i] = r > 255 ? 255 : r; d[i + 1] = g > 255 ? 255 : g; d[i + 2] = b > 255 ? 255 : b;
+    }
+    bx.putImageData(img, 0, 0);
+  }
+  // okna domů, maják a lucerny na lodích; síla podle stylu
+  function svetla(st, t) {
+    const s = st.svetla || 0;
+    if (!s) return;
+    for (const o of M.okna) {
+      if (Math.sin(t * 0.7 + o.f * 3) < -0.8) continue;   // tu a tam někdo zhasne
+      bx.fillStyle = `rgba(255,190,80,${0.4 * s})`; bx.fillRect(o.x - 1, o.y - 1, 3, 3);
+      bx.fillStyle = s > 0.8 ? '#ffd46a' : 'rgba(255,212,106,.8)'; bx.fillRect(o.x, o.y, 1, 1);
+    }
+    if (M.majak) {
+      const a = t * 1.1, mx = M.majak.x + 0.5, my = M.majak.y - 0.5;
+      for (let k = 3; k < 46; k++) {
+        const al = s * 0.5 * (1 - k / 46), sirka = 1 + Math.floor(k / 14);
+        bx.fillStyle = `rgba(255,244,180,${al})`;
+        bx.fillRect(Math.round(mx + Math.cos(a) * k), Math.round(my + Math.sin(a) * k * 0.6), sirka, sirka);
+      }
+      bx.fillStyle = `rgba(255,240,160,${0.35 * s})`; bx.fillRect(M.majak.x - 2, M.majak.y - 3, 5, 5);
+      bx.fillStyle = '#fff6c0'; bx.fillRect(M.majak.x, M.majak.y - 1, 1, 1);
+    }
+    for (const l of M.lucerny) {
+      bx.fillStyle = `rgba(255,200,90,${0.25 * s})`; bx.fillRect(l.x - 2, l.y - 2, 5, 5);
+      bx.fillStyle = '#ffe08a'; bx.fillRect(l.x, l.y, 1, 1);
+    }
+    // měsíční třpyt na hlubině
+    if (s > 0.8) for (const g of M.trpyt) {
+      const f = (t * 0.3 + g.f) % 5; if (f >= 1.6) continue;
+      bx.fillStyle = 'rgba(200,220,255,.55)'; bx.fillRect(g.x + Math.floor(f * 2), g.y, 2, 1);
+    }
+  }
+  // stará mapa (sépie na papíře) a Game Boy (4 odstíny zelené s rozptylem)
+  function prefiltruj(st) {
+    const AW = M.AW, img = bx.getImageData(0, 0, AW, M.AH), d = img.data, pap = M.papir, sep = st.sepie || 0;
+    for (let i = 0, j = 0; i < d.length; i += 4, j++) {
+      let r = d[i], g = d[i + 1], b = d[i + 2];
+      if (st.gb) {
+        const x = j % AW, y = (j / AW) | 0, v = (0.3 * r + 0.59 * g + 0.11 * b) / 255 * 3, zak = Math.floor(v);
+        const q = GB[Math.min(3, zak + (v - zak > BAYER[(y & 3) * 4 + (x & 3)] ? 1 : 0))];
+        d[i] = q[0]; d[i + 1] = q[1]; d[i + 2] = q[2];
+        continue;
+      }
+      if (sep) {
+        const sr = 0.393 * r + 0.769 * g + 0.189 * b, sg = 0.349 * r + 0.686 * g + 0.168 * b, sb = 0.272 * r + 0.534 * g + 0.131 * b;
+        r += (Math.min(255, sr) - r) * sep; g += (Math.min(255, sg) - g) * sep; b += (Math.min(255, sb) - b) * sep;
+      }
+      if (pap) { const k = pap[j]; r *= k; g *= k; b *= k; }
+      d[i] = r; d[i + 1] = g; d[i + 2] = b;
+    }
+    bx.putImageData(img, 0, 0);
+  }
+  function nastavStyl(novy, nH) {
+    if (STYLY[novy]) styl = novy;
+    if (HUSTOTY[nH]) hustota = nH;
+    for (const k of Object.keys(P0)) P[k] = Array.isArray(P0[k]) ? P0[k].slice() : P0[k];
+    Object.assign(P, STYLY[styl].P || {});
+    if (SPR.sipka) SPR.sipka = sprite(['#####', '.###.', '..#..'], { '#': P.zluta });
+    $('scena').dataset.styl = styl;
+    ls.set(KLIC_GRAF, JSON.stringify({ styl, hustota }));
+    M.klic = '';
+    if (cv) velikost();
+  }
+
   let posledni = 0;
   function snimek(now) {
     const dt = Math.min(0.05, (now - (posledni || now)) / 1000);
@@ -1410,11 +1718,14 @@ const ObchodnikLogika = (function () {
   }
   function ukazPiraty(u) {
     if (anim && !anim.pirat) { const l = zajistiMapu() ? poziceLode() : { vlevo: false }; anim.pirat = { t: 0, faze: 'blizi', strana: l.vlevo ? -1 : 1, x: 0, y: 0 }; }
-    const sance = Math.round(Math.min(0.92, Math.max(0.08, (h.dela + 1) / (h.dela + u.sila + 2) + 0.12)) * 100);
-    okno('piratLod', 'Piráti!', `Pirátská loď se <b>${u.sila}</b> děly nás dohání. Ty máš <b>${h.dela}</b> ${h.dela === 1 ? 'dělo' : h.dela < 5 ? 'děla' : 'děl'}.<br>Šance v boji zhruba ${sance} %.`, [
-      ['💣 Bojovat', () => rozhodni('boj'), true],
-      ['🌬️ Pokusit se utéct', () => rozhodni('utek')],
-      ['🏳️ Vzdát se (přijdeš o půl nákladu)', () => rozhodni('vzdat')],
+    const sance = Math.round(L.sanceBoje(h, u.sila) * 100), utek = Math.round(L.sanceUteku(h, u.sila) * 100), sila = L.palebnaSila(h);
+    const zdroje = [`${h.dela} ${h.dela === 1 ? 'dělo' : h.dela < 5 ? 'děla' : 'děl'}`];
+    if (h.flotila.length) zdroje.push(`${sila - h.dela - h.zoldneri * 0.5} děl doprovodu`);
+    if (h.zoldneri) zdroje.push(`${h.zoldneri} žoldnéřů`);
+    okno('piratLod', 'Piráti!', `Pirátská loď se <b>${u.sila}</b> děly nás dohání. Ty máš ${zdroje.join(' + ')} – palebná síla <b>${cislo(sila)}</b>.<br>Šance v boji zhruba ${sance} %, útěk ${utek} %.`, [
+      [`💣 Bojovat (${sance} %)`, () => rozhodni('boj'), true],
+      [`🌬️ Pokusit se utéct (${utek} %)`, () => rozhodni('utek')],
+      [`🏳️ Vzdát se (přijdeš o ${h.vyl.skrys ? 'čtvrt' : 'půl'} nákladu)`, () => rozhodni('vzdat')],
     ]);
   }
   function rozhodni(v) {
@@ -1454,9 +1765,9 @@ const ObchodnikLogika = (function () {
     let novy = false;
     if (rek && !k.zapsano && !h.volna) { novy = rek.zapis(j); k.zapsano = true; k.rekord = novy; }
     uloz();
-    const tab = `<table><tr><td>Hotovost</td><td>${h.zlato} 🪙</td></tr><tr><td>Náklad (prodejní cena)</td><td>${k.duvod === 'potopena' ? 'ke dnu' : L.hodnotaNakladu(h) + ' 🪙'}</td></tr>
+    const tab = `<table><tr><td>Hotovost</td><td>${h.zlato} 🪙</td></tr><tr><td>Náklad (prodejní cena)</td><td>${k.duvod === 'potopena' ? 'ke dnu' : L.hodnotaNakladu(h) + ' 🪙'}</td></tr>${h.flotila.length && k.duvod !== 'potopena' ? `<tr><td>Flotila (${h.flotila.length} ${h.flotila.length === 1 ? 'loď' : 'lodě'})</td><td>${L.hodnotaFlotily(h)} 🪙</td></tr>` : ''}
       <tr><td>Dluh</td><td>−${h.dluh} 🪙</td></tr><tr><td><b>Čisté jmění</b></td><td>${j} 🪙</td></tr>
-      <tr><td>Pirátská setkání / vítězství</td><td>${h.statistika.pirati} / ${h.statistika.vyhry}</td></tr><tr><td>Bouří</td><td>${h.statistika.bouri}</td></tr>${h.jmeni30 !== undefined ? `<tr><td>Jmění po ${h.den30} dnech (rekord)</td><td>${h.jmeni30} 🪙</td></tr>` : ''}</table>`;
+      <tr><td>Pirátská setkání / vítězství</td><td>${h.statistika.pirati} / ${h.statistika.vyhry}</td></tr><tr><td>Bouří</td><td>${h.statistika.bouri}</td></tr>${h.statistika.ztraceneLode ? `<tr><td>Ztracených lodí</td><td>${h.statistika.ztraceneLode}</td></tr>` : ''}${h.jmeni30 !== undefined ? `<tr><td>Jmění po ${h.den30} dnech (rekord)</td><td>${h.jmeni30} 🪙</td></tr>` : ''}</table>`;
     const uvod = k.duvod === 'potopena' ? (h.volna ? `Loď se potopila ${h.den}. dne volné plavby.` : 'Loď se potopila dřív, než uplynulo 30 dní.')
       : h.volna ? `Volná plavba skončila ${h.den}. dne.` : h.den > L.DNY ? 'Třicet dní na moři je za tebou.' : `Partie ukončena ${h.den}. dne.`;
     const volby = [['⛵ Nová partie', () => { zavri(); nova($('rezim').value); }, true]];
@@ -1489,8 +1800,10 @@ const ObchodnikLogika = (function () {
       `<span class="chip${h.dluh > 1200 ? ' nizko' : ''}" title="Dluh u lichváře (+2 % denně)">💸 ${h.dluh}</span>` +
       `<span class="chip" title="Náklad">📦 ${L.obsazeno(h)}/${L.kapacita(h)}</span>` +
       `<span class="chip${h.trup < 35 ? ' nizko' : ''}" title="Trup">🛶 ${h.trup} %</span>` +
-      `<span class="chip" title="Děla">💣 ${h.dela}</span>` +
-      `<span class="chip" title="Čisté jmění = hotovost + náklad − dluh">📈 ${j}</span>`;
+      `<span class="chip" title="Palebná síla (děla vlajkové lodi + doprovod + žoldnéři)">💣 ${cislo(L.palebnaSila(h))}</span>` +
+      (h.flotila.length ? `<span class="chip" title="Doprovodné lodě">⛵ +${h.flotila.length}</span>` : '') +
+      (L.mzdy(h) ? `<span class="chip" title="Denní žold posádek doprovodu a žoldnéřů">🧾 −${L.mzdy(h)}/den</span>` : '') +
+      `<span class="chip" title="Čisté jmění = hotovost + náklad + lodě flotily − dluh">📈 ${j}</span>`;
   }
   function obnovPlavbu() {
     const el = $('plavba'); el.innerHTML = '';
@@ -1501,7 +1814,7 @@ const ObchodnikLogika = (function () {
     }
     if (h.plavba) { el.innerHTML = `<span class="slabe">Den ${h.plavba.den} z ${h.plavba.dni} na moři…</span>`; return; }
     if (vybrany) {
-      const d = L.dni(h.pristav, vybrany), rz = L.riziko(h.pristav, vybrany);
+      const d = L.dniCesty(h, h.pristav, vybrany), rz = L.riziko(h.pristav, vybrany);
       const r = rz > 0.7 ? '🔴 vysoké' : rz > 0.45 ? '🟠 střední' : '🟢 nízké';
       el.innerHTML = `<span>➡ <b>${L.PRISTAV[vybrany].nazev}</b> · ${dniText(d)} · riziko pirátů ${r}${!h.volna && h.den + d > L.DNY ? ' · <span class="drahe">nestihneš do konce!</span>' : ''}</span>`;
       const b = document.createElement('button'); b.className = 'btn hlavni'; b.textContent = '⛵ Vyplout'; b.onclick = () => vypluj(vybrany);
@@ -1517,7 +1830,7 @@ const ObchodnikLogika = (function () {
     const el = $('p-trh');
     if (h.plavba) { el.innerHTML = '<p class="slabe">Na moři se neobchoduje. Trh uvidíš v dalším přístavu.</p>'; return; }
     const p = h.pristav, volno = L.kapacita(h) - L.obsazeno(h), zavreno = !!h.konec;
-    el.innerHTML = `<h3>🏪 Trh v ${L.PRISTAV[p].nazev}</h3>`;
+    el.innerHTML = `<h3>🏪 Trh ${LOK[p]}</h3>`;
     const tab = document.createElement('table'); tab.className = 'trh';
     tab.innerHTML = '<tr><th>Zboží</th><th>Koupit</th><th>Prodat</th><th>Máš</th><th></th></tr>';
     for (const z of L.ZBOZI) {
@@ -1562,21 +1875,50 @@ const ObchodnikLogika = (function () {
   }
   function obnovLodenici() {
     const el = $('p-lodenice'), P = L.PRISTAV[h.pristav];
-    if (h.plavba || !P.lodenice) { el.innerHTML = `<p class="slabe">Loděnice je v ${L.PRISTAVY.filter(p => p.lodenice).map(p => p.nazev).join(', ')}.</p>`; return; }
-    el.innerHTML = `<h3>🔨 Loděnice v ${P.nazev}</h3>`;
-    const dalsi = L.LODENICE.podpalubi[h.podpalubi + 1], oprava = (100 - h.trup) * L.LODENICE.oprava;
-    const radky = [
-      [`📦 Větší podpalubí ${dalsi ? `(${L.kapacita(h)} → ${dalsi.kap} beden)` : '(máš největší)'}`, dalsi ? dalsi.cena : null, () => L.vylepsi(h, 'podpalubi'), !dalsi || h.zlato < (dalsi ? dalsi.cena : 0)],
-      [`💣 Další dělo (${h.dela}/${L.LODENICE.maxDel})`, L.LODENICE.delo, () => L.vylepsi(h, 'delo'), h.dela >= L.LODENICE.maxDel || h.zlato < L.LODENICE.delo],
-      [`🛶 Opravit trup (${h.trup} %)`, oprava, () => L.vylepsi(h, 'oprava'), h.trup >= 100 || h.zlato < L.LODENICE.oprava],
-    ];
-    for (const [t, c, fn, dis] of radky) {
-      const r = document.createElement('div'); r.className = 'polozka';
-      r.innerHTML = `<span>${t}</span><b>${c === null ? '' : c + ' 🪙'}</b>`;
-      r.appendChild(tl('Koupit', () => { fn(); uloz(); obnov(); }, dis || h.konec));
-      el.appendChild(r);
+    const lodenice = L.PRISTAVY.filter(p => p.lodenice).map(p => p.nazev).join(', ');
+    if (h.plavba || !P.lodenice) {
+      el.innerHTML = `<p class="slabe">Loděnice je v ${lodenice}.</p>` + prehledFlotily();
+      return;
     }
-    el.insertAdjacentHTML('beforeend', '<p class="slabe malePis" style="margin-top:8px">Oprava stojí 3 zlaté za procento. Když trup klesne na nulu, loď se potopí i s nákladem.</p>');
+    const zav = !!h.konec, akce = fn => () => { fn(); uloz(); obnov(); };
+    const radek = (html, cena, tlacitko) => { const r = document.createElement('div'); r.className = 'polozka'; r.innerHTML = `${html}<b>${cena === null ? '' : cena + ' 🪙'}</b>`; if (tlacitko) r.appendChild(tlacitko); el.appendChild(r); return r; };
+    el.innerHTML = `<h3>🔨 Loděnice ${LOK[h.pristav]}</h3><div class="sekce">Vlajková loď</div>`;
+    const dalsi = L.LODENICE.podpalubi[h.podpalubi + 1], oprava = L.opravaCena(h);
+    const vl = obrazek(null, 2, lodSprite(h.vyl.oplechovani ? PAL_LOD_MED : PAL_LOD, typVlajkove(), 0, 0, false));
+    radek(`${vl}<span>📦 Větší podpalubí ${dalsi ? `(${L.LODENICE.podpalubi[h.podpalubi].kap} → ${dalsi.kap} beden)` : '(máš největší)'}<span class="popis">${h.podpalubi === 1 ? 'Ze šalupy bude dvoustěžňová briga.' : h.podpalubi === 2 ? 'Z brigy bude trojstěžník s kastelem na zádi.' : 'Víc místa na zboží.'}</span></span>`,
+      dalsi ? dalsi.cena : null, tl('Koupit', akce(() => L.vylepsi(h, 'podpalubi')), zav || !dalsi || h.zlato < dalsi.cena));
+    radek(`<span>💣 Další dělo (${h.dela}/${L.LODENICE.maxDel})</span>`, L.LODENICE.delo, tl('Koupit', akce(() => L.vylepsi(h, 'delo')), zav || h.dela >= L.LODENICE.maxDel || h.zlato < L.LODENICE.delo));
+    radek(`<span>🛶 Opravit ${h.flotila.length ? 'celou flotilu' : 'trup'} (${[h.trup, ...h.flotila.map(f => f.trup)].join(' / ')} %)<span class="popis">3 zlaté za procento; na co nestačí peníze, zůstane rozbité.</span></span>`,
+      oprava || null, tl('Opravit', akce(() => L.vylepsi(h, 'oprava')), zav || !oprava || h.zlato < L.LODENICE.oprava));
+    el.insertAdjacentHTML('beforeend', '<div class="sekce">Vylepšení</div>');
+    for (const [id, v] of Object.entries(L.VYLEPSENI)) {
+      const st = h.vyl[id], cena = L.cenaVylepseni(h, id), jinde = v.kde && !v.kde.includes(h.pristav);
+      const stupne = v.ceny.length > 1 ? ` <span class="stupne">${'●'.repeat(st)}${'○'.repeat(v.ceny.length - st)}</span>` : st ? ' <span class="stupne">✔</span>' : '';
+      const popis = cena === null ? v.popis[st - 1] : v.popis[st];
+      radek(`<span>${v.e} ${v.nazev}${stupne}<span class="popis">${popis}${jinde && cena !== null ? ` – jen ${v.kde.map(k => LOK[k]).join(', ')}` : ''}</span></span>`,
+        cena, tl(cena === null ? 'Máš' : 'Koupit', akce(() => L.vylepsi(h, id)), zav || cena === null || jinde || h.zlato < cena));
+    }
+    el.insertAdjacentHTML('beforeend', `<div class="sekce">Flotila (${h.flotila.length}/${L.MAX_FLOTILA})</div>`);
+    h.flotila.forEach((f, i) => {
+      const t = L.TYPY_LODI[f.typ], img = obrazek(null, 2, lodSprite(PAL_DOPROVOD, TYP_SPRITE[f.typ], f.trup < 30 ? 2 : f.trup < 60 ? 1 : 0, 0, false));
+      const plno = L.obsazeno(h) > L.kapacita(h) - t.kap;
+      radek(`${img}<span>${t.nazev} <b>${f.jmeno}</b> · trup ${f.trup} %<span class="popis">${t.kap} beden, ${t.dela} děl, žold ${t.zold}/den${plno ? ' – před prodejem vylož náklad' : ''}</span></span>`,
+        L.hodnotaLode(f), tl('Prodat', async () => {
+          const q = `Prodat ${t.nazev.toLowerCase()} ${f.jmeno} za ${L.hodnotaLode(f)} zlatých?`;
+          if (typeof Dialog !== 'undefined' ? await Dialog.potvrd(q) : confirm(q)) { L.prodejLod(h, i); uloz(); obnov(); }
+        }, zav || plno));
+    });
+    for (const [id, t] of Object.entries(L.TYPY_LODI)) {
+      const tady = t.kde.includes(h.pristav), img = obrazek(null, 2, lodSprite(PAL_DOPROVOD, TYP_SPRITE[id], 0, 0, false));
+      radek(`${img}<span>Koupit: ${t.nazev}<span class="popis">+${t.kap} beden, +${t.dela} děl, žold ${t.zold} zl./den${t.pomala ? ', pomalá – plavby o kus delší' : ''}${tady ? '' : ` – prodává se ${t.kde.map(k => LOK[k]).join(', ')}`}</span></span>`,
+        t.cena, tl('Koupit', akce(() => { const f = L.kupLod(h, id); if (f) nastavStav(`⛵ Vítej ve flotile, <b>${f.jmeno}</b>!`); }), zav || !tady || h.flotila.length >= L.MAX_FLOTILA || h.zlato < t.cena));
+    }
+    el.insertAdjacentHTML('beforeend', '<p class="slabe malePis" style="margin-top:8px">Doprovodné lodě rozšíří podpalubí, přidají děla a odradí piráty. Každý den ale chtějí žold – když nemáš hotovost, připíše se k dluhu. Na konci se počítají do jmění za polovinu ceny.</p>');
+  }
+  function prehledFlotily() {
+    if (!h.flotila.length && !h.zoldneri) return '';
+    const radky = h.flotila.map(f => `<div class="polozka"><span>${L.TYPY_LODI[f.typ].nazev} <b>${f.jmeno}</b><span class="popis">trup ${f.trup} % · ${L.TYPY_LODI[f.typ].kap} beden · ${L.TYPY_LODI[f.typ].dela} děl</span></span></div>`).join('');
+    return `<div class="sekce">Tvoje flotila</div>${radky}${h.zoldneri ? `<p class="malePis">⚔️ Žoldnéřů na palubě: ${h.zoldneri}</p>` : ''}<p class="slabe malePis">Žold celkem ${L.mzdy(h)} zl./den.</p>`;
   }
   function obnovHospodu() {
     const el = $('p-hospoda');
@@ -1590,6 +1932,12 @@ const ObchodnikLogika = (function () {
     r2.innerHTML = `<span>Mapa k pokladu od jednookého Pedra<br><span class="slabe malePis">${h.mapa ? 'Už jednu máš – křížek u ' + L.PRISTAV[h.mapa.pristav].nazev : 'Prý pravá. Většinou.'}</span></span><b>${L.CENA_MAPY} 🪙</b>`;
     r2.appendChild(tl('Koupit', () => { const p = L.kupMapu(h); if (p) okno('mapa', 'Mapa k pokladu', `Křížek je u přístavu <b>${p.nazev}</b>. Stačí tam doplout.`, [['Schovat mapu', zavri, true]]); uloz(); obnov(); }, !!h.mapa || h.zlato < L.CENA_MAPY || h.konec));
     el.appendChild(r2);
+    const r3 = document.createElement('div'); r3.className = 'polozka';
+    r3.innerHTML = `<span>⚔️ Najmout žoldnéře (${h.zoldneri}/${L.ZOLDNER.max})<br><span class="slabe malePis">Každý přidá půl děla v boji a kus kořisti. Žold ${L.ZOLDNER.mzda} zl./den.</span></span><b>${L.ZOLDNER.cena} 🪙</b>`;
+    r3.appendChild(tl('+1', () => { L.najmi(h, 1); uloz(); obnov(); }, h.zoldneri >= L.ZOLDNER.max || h.zlato < L.ZOLDNER.cena || h.konec));
+    r3.appendChild(tl('+5', () => { L.najmi(h, 5); uloz(); obnov(); }, h.zoldneri >= L.ZOLDNER.max || h.zlato < L.ZOLDNER.cena || h.konec));
+    if (h.zoldneri) r3.appendChild(tl('Propustit', () => { L.propust(h); uloz(); obnov(); }, h.konec));
+    el.appendChild(r3);
     if (h.zvesti.length) el.insertAdjacentHTML('beforeend', '<h3 style="margin-top:12px">Co už víš</h3>' + h.zvesti.slice(-6).reverse().map(z => `<p class="malePis">${z}</p>`).join(''));
   }
   function obnovBanku() {
@@ -1629,8 +1977,8 @@ const ObchodnikLogika = (function () {
     // velikost „pixelu" v CSS px: 2 na malém displeji, víc na velkém; na zařízení vždy celé číslo
     // jemná mřížka: asi 460 „pixelů" na kratší straně, cílově 1,35 CSS px na pixel; na zařízení vždy celé číslo
     // a nejméně 2 body (na obyčejném displeji tedy 2 CSS px, na HiDPI 1,3–1,6)
-    const css = Math.max(1.35, Math.min(cw, ch) / 460);
-    M.Z = Math.max(2, Math.round(css * dpr));
+    const css = Math.max(1.35, Math.min(cw, ch) / 460) * HUSTOTY[hustota].f;
+    M.Z = Math.max(2, Math.min(Math.round(css * dpr), Math.floor(W / 200) || 2));
     // písmo se zvětší celým násobkem, aby jeho bod měl aspoň 1,2 CSS px
     M.ts = Math.max(1, Math.ceil(1.2 * dpr / M.Z - 0.05));
     M.AW = Math.floor(W / M.Z); M.AH = Math.floor(V / M.Z);
@@ -1641,6 +1989,18 @@ const ObchodnikLogika = (function () {
   function start() {
     cv = $('mapa'); ctx = cv.getContext('2d');
     pripravSprity();
+    let g = {}; try { g = JSON.parse(ls.get(KLIC_GRAF) || '{}') || {}; } catch { /* poškozené nastavení */ }
+    $('grafika').innerHTML = Object.entries(STYLY).map(([k, v]) => `<option value="${k}">${v.nazev}</option>`).join('');
+    $('hustota').innerHTML = Object.entries(HUSTOTY).map(([k, v]) => `<option value="${k}">${v.nazev}</option>`).join('');
+    nastavStyl(g.styl, g.hustota);
+    $('grafika').value = styl; $('hustota').value = hustota;
+    $('grafika').onchange = () => nastavStyl($('grafika').value, hustota);
+    $('hustota').onchange = () => nastavStyl(styl, $('hustota').value);
+    // G = další grafický styl (mimo psaní do polí)
+    document.addEventListener('keydown', e => {
+      if ((e.key !== 'g' && e.key !== 'G') || e.ctrlKey || e.metaKey || e.altKey || /INPUT|SELECT|TEXTAREA/.test(document.activeElement && document.activeElement.tagName)) return;
+      const k = Object.keys(STYLY); nastavStyl(k[(k.indexOf(styl) + 1) % k.length], hustota); $('grafika').value = styl;
+    });
     if (typeof Rekord !== 'undefined') { rek = Rekord.sleduj('webapp_hra_obchodnik', { vyssiLepsi: true, popisek: 'Největší jmění', format: v => v + ' 🪙' }); rek.prvek($('rekordBox')); }
     cv.addEventListener('pointerdown', e => {
       if (!h || h.plavba || h.konec) return;

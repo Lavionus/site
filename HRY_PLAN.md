@@ -60,6 +60,26 @@ Stav se odškrtává průběžně; „pokračuj" = vzít první neodškrtnutou p
       barvy, dekorace a druhy; celkem 50 druhů a 18 pokladů ze dna, atlas s filtrem podle map;
       testy `_test/laguna_test.js`, `_test/laguna_snimky.py`.
 
+### Rozšíření tropických ostrovů (od 29. 9. 2026)
+
+Každá hra: `obsah/<soubor>.html`, první inline skript `const <Hra>Logika = (function(){…})()` bez DOM,
+druhý UI v IIFE; test logiky `_test/<soubor>_test.js` (node, přes `_test/logicke_mrizky.js`), rekord
+`webapp_hra_<soubor>*`, zvuk jen syntetizovaný (Web Audio), šířka od 320 px, obě témata.
+
+- [x] 🎲 Pirátské kostky – `obsah/kostky.html` – Liar's Dice/Perudo: lebky jako žolíci (½ / 2n+1), „Lháři!" i volitelné „Přesně!", 2–4 AI piráti s povahami (počtář, blafařka, čtenář s pamětí…), 3 obtížnosti + denní výzva, tabulka pravděpodobností, statistika; test `_test/kostky_test.js`.
+- [x] 🃏 Štychy na palubě – `obsah/stychy.html` – štychová hra s tajným odhadem, 10 kol, 3–5 hráčů, Kapitán/Pirát/Panna/Útěk + trumfová Černá vlajka, 3 úrovně AI (heuristika, Monte Carlo), denní plavba, deník skóre; test `_test/stychy_test.js`.
+- [x] 🍹 Taverna v přístavu – `obsah/taverna.html` – časovaná manažerská hra po večerech: hosté s trpělivostí, recepty ze surovin + krok, pálení jídel, úklid, fronta akcí; ráno trh s kazícími se surovinami, vylepšení, recepty, jídelní lístek, události a zvěsti (sbírka); kampaň 15 dní / denní / nekonečná, 3 obtížnosti; test `_test/taverna_test.js`.
+- [x] 🌴 Plantáž – `obsah/plantaz.html` – tahová budovatelská hra po měsících: klučení džungle, 6 plodin s nároky na vodu a půdu, sucho/deště, hurikány s předpovědí, střídání plodin, lis/palírna/sušárna, trh a zakázky lodí, placení dělníci/družstvo; cíl za 5 let ×3 obtížnosti + volná hra + denní ostrov; test `_test/plantaz_test.js`.
+- [x] ⚓ Loděnice – `obsah/lodenice.html` – stavba lodi z dílů (4 trupy, 3 dřeva, ráhnové/gaflové plachty, stěžně, balast, děla, náklad), fyzika výtlak/ponor/GM/GZ/rychlost trupu, polární diagram, zkouška na moři s převrhnutím a zaplavením, 8 zakázek ★–★★★ + denní zakázka; test `_test/lodenice_test.js`.
+- [x] 🧭 Navigátor – `obsah/navigator.html` – plavba bez GPS mezi 15 přístavy Karibiku (12 tras): kompas, log s přesýpacími hodinami, výpočet polohy pravítkem a úhloměrem, sextant (Polárka, polední Slunce + deklinace), chronometr, proudy a drift, zaměření mysů, 3 obtížnosti, denní plavba; test `_test/navigator_test.js`.
+- [x] 🪢 Námořnické uzly – `obsah/uzly.html` – hlavolam „Rozmotej lana" (planarita, 15 úrovní 6–38 kolíků, denní zadání se sérií, náhodná 10–40, hvězdy, rekordy) + atlas 11 uzlů s krokovou SVG animací (nad/pod), k čemu slouží a častá chyba, kvíz; test `_test/uzly_test.js`.
+- [x] 🍾 Vzkaz v láhvi – `obsah/lahev.html` – denní šifrovaný vzkaz (Caesar, atbaš, morseovka, zednářská, substituce s frekvencemi, Vigenère s hádankou, sloupcová transpozice), 3 obtížnosti, pomůcky, mapa ostrova 14×10 s kopáním, série dní, archiv; test `_test/lahev_test.js`.
+- [x] 🥁 Steel drum – `obsah/steeldrum.html` – tenor pan 29 polí v kvintovém kruhu, syntéza Web Audio; volná hra s calypso doprovodem, rytmus (7 skladeb, 3 obtížnosti, combo ×4, kalibrace latence), Opakuj po mně s denním motivem; test `_test/steeldrum_test.js`.
+- [x] ⛵ Regata – `obsah/regata.html` – závod plachetnic shora: polární diagram, trim plachty s vlaječkami, nárazy a stáčení větru, větrný stín, start s odpočtem a předčasným startem, obeplutí bójí levobokem, 3–5 AI, 3 tratě, denní regata, rekord trati; test `_test/regata_test.js`.
+- [x] 🐢 Želví pláž – `obsah/zelvy.html` – noční pláž v pixel artu, mláďata táhnou ke světlu a lampy je svádějí do vnitrozemí; baterka (červené/bílé světlo), zhasínání lamp, žlábky v písku; krab duch, volavka, pes; 12 nocí kampaně + denní a náhodná noc, deník přírodovědce, sbírka 5 druhů, odznaky; test `_test/zelvy_test.js`.
+- [x] 🌋 Živly ostrova – `obsah/zivly.html` – průřez sopkou (SiO₂/plyny/tlak → typ erupce, VEI, presety Soufrière Hills/Mont Pelée/La Soufrière) a hurikán (26,5 °C, střih, Coriolis, Saffir–Simpson); mini-hry 🎯 Vulkanolog a 🎯 Předpověď, 3 obtížnosti, denní výzva; test `_test/zivly_test.js`.
+- [x] 🐚 Plážový sběratel – `obsah/plaz.html` – odliv podle Měsíce (jarní/hluchý), 5 zón, 36 druhů + 8 tvorů k focení, třpyt a hrabání, počasí, 5 pláží, denní pláž; test `_test/plaz_test.js`.
+
 ## Po každé hře
 
 1. Test logiky v node (unikátnost řešení, řešitelnost generátoru na mnoha seedech).
