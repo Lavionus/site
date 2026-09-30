@@ -6,7 +6,8 @@
    Pohyby:
      chůze   – vodorovně na stojné pole
      pád     – vodorovně na nestojné pole a pád na první stojné
-               (hledání cest dovolí pád nejvýš o 3 pole)
+               (hledání cest dovolí pád nejvýš o 3 pole; o 2–3 pole jen tam,
+               odkud se dá vylézt zpátky do výšky, ze které se skáče)
      schod   – o pole výš na vedlejší stojné pole (nad hlavou volno)
      překrok – přes díru širokou jedno pole na pole za ní
      lezení  – svisle po schodišti nahoru/dolů
@@ -41,8 +42,35 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
     }
   }
 
+  // Dá se z pole l (dopad) vylézt zpátky do řádku y? Malé BFS (nejvýš VYLEZ_LIMIT polí) bez této kontroly.
+  // Výsledek se pamatuje jen v rámci jednoho tahu – je to čistá funkce stavu, takže uložení hry nic nemění.
+  const VYLEZ_LIMIT = 400;
+  const fronta2 = new Int32Array(VYLEZ_LIMIT + 8), znacka2 = new Uint32Array(N);
+  let kolo2 = 0;
+  function vylezitelne(hra, l, y) {
+    if (hra._vylezTik !== hra.tik) { hra._vylezTik = hra.tik; hra._vylez = new Map(); }
+    const klic = l * H + y, znam = hra._vylez.get(klic);
+    if (znam !== undefined) return znam;
+    kolo2 = (kolo2 + 1) >>> 0 || 1;
+    if (kolo2 === 1) znacka2.fill(0);
+    let h = 0, o = 0, ok = false;
+    fronta2[o++] = l; znacka2[l] = kolo2;
+    while (h < o && !ok) {
+      const i = fronta2[h++];
+      if ((i / W | 0) <= y) { ok = true; break; }
+      sousede(hra, i, j => {
+        if (ok || znacka2[j] === kolo2) return;
+        if ((j / W | 0) <= y) { ok = true; return; }
+        if (o < VYLEZ_LIMIT) { znacka2[j] = kolo2; fronta2[o++] = j; }
+      }, true);
+    }
+    hra._vylez.set(klic, ok);
+    return ok;
+  }
+
   // sousedé pro hledání cest: fn(cíl, přes) – přes = vodorovné pole, ze kterého se padá (jinak −1)
-  function sousede(hra, i, fn) {
+  // bezKontroly = neověřovat, jestli se z hlubšího seskoku dá vylézt (vnitřek vylezitelne)
+  function sousede(hra, i, fn, bezKontroly) {
     const x = i % W, y = i / W | 0;
     for (const dx of [-1, 1]) {
       const nx = x + dx;
@@ -51,7 +79,8 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
       if (volne(hra, n)) {
         if (stojne(hra, n)) fn(n, -1);
         else {
-          const l = dopad(hra, n); if (l >= 0 && (l / W | 0) - y <= PAD_CESTY) fn(l, n);
+          const l = dopad(hra, n), hloubka = (l / W | 0) - y;
+          if (l >= 0 && hloubka <= PAD_CESTY && (hloubka <= 1 || bezKontroly || vylezitelne(hra, l, y))) fn(l, n);
           // překročení díry široké jedno pole
           const nn = n + dx;
           if (nx + dx >= 0 && nx + dx < W && volne(hra, nn) && stojne(hra, nn)) fn(nn, -1);
@@ -110,7 +139,7 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
     return c.reverse();
   }
 
-  T.cesty = { MAX_PAD, volne, stojne, dopad, sousede, krok, hledej };
+  T.cesty = { MAX_PAD, volne, stojne, dopad, sousede, krok, hledej, vylezitelne };
 })(TRP);
 
 if (typeof module !== 'undefined') module.exports = TRP;

@@ -652,19 +652,27 @@ a do vítězství, přežití prvních 3 zim, křivku populace, hladomor, pří�
 `node _test/trpaslici_bot.js 12 10` (≈ 11 min); ladění `--diag`, `--od=N`, prostředí `KONEC_MAPA=od-do`,
 `DESKY`, `CINNOSTI`, `MAPA`.
 
-Výsledek (12 her × nejvýš 10 let, 621 s): **prohra 0 %, přežití prvních 3 zim 100 %**, populace 10 → 15 (4. rok)
-→ 20 (6. rok) → 30 (11. rok), úmrtí za 12 her: boj 26, žízeň 1; nejhlubší bod medián 124 m; Spáč předčasně 0 %.
-Klíč vykoval bot ve 3 hrách z 12 (295., 352., 422. den), vyhrál 1 hru (398. den = 8,3 roku); předchozí dávka
-s týmž botem 2 z 12 (328. a 424. den). Na začátku etapy bot nevyhrál nikdy a 17 % her prohrál v 1. roce.
-Zbylé hry bez vítězství zastaví botova navigace, ne hra: magma nebo obří houba přímo pod šachtou, pomalé
-kopání v hloubce a daleké cesty (bot nestaví druhou základnu dole). Zkušený hráč to obejde; cíl „medián
-8–12 let" tak odpovídá vítězným hrám bota.
+Výsledek (24 her × nejvýš 10 let, seedy 1–24, dvě dávky po 12 paralelně ≈ 10 min): **vítězství 4 z 24 (17 %),
+prohra 1 z 24 (goblinní nájezdy v 5.–8. roce), přežití prvních 3 zim 100 %**; vítězství medián 6,4–6,5 roku;
+Klíč medián 266.–281. den; populace 10 → 15–16 (4. rok) → 21–22 (6. rok) → 30–33 (11. rok); úmrtí za 24 her:
+boj 111, žízeň 3, hlad 0; nejhlubší bod medián 135 m; Spáč předčasně 0 %. Na začátku etapy bot nevyhrál nikdy
+a 17 % her prohrál v 1. roce. Boj je teď jediná velká příčina smrti – bot nestaví obranu kromě strážců
+(zkouška s pastmi v předsíni výsledek nezlepšila: železo chybělo jinde).
+Hry bez vítězství zastaví botova navigace, ne hra: jezera a magma pod šachtou (bot je obchází odbočkou, ale ne
+vždy najde pevnou podlahu), pomalé kopání v hloubce a daleké cesty (bot nestaví druhou základnu dole).
+Výsledky jednotlivých dávek po 12 hrách kolísají (8–33 % vítězství při téže verzi), proto měřit aspoň 24 her.
+Bot se naučil (vše v `_test/trpaslici_bot.js`): vyhrazení horníci (čtvrtina klanu), kácet jen při nedostatku dřeva,
+zlato do tavírny přednostně, milíř s trvalou zakázkou, štoly končí před kapalinou, starými stavbami a stropem
+jeskyně, odbočka šachty kolem magmatu a neodčerpatelné vody (i z vyššího schodu), tunel do Srdce s přednostním
+kopáním, nekopat rudu ve stropu místností (vznikla by síň, která se zřítí), goblinní tunel obejít, dokud nejsou
+zbraně, houbárny na vykopaných úsecích štol (1 na 7 trpaslíků).
 
 Co bot odhalil a co se ve hře změnilo (týká se i hráče):
 
 | problém | oprava |
 |---|---|
 | potok v údolí (3 pole) odřízl levou část údolí – stromy za ním nešly pokácet | potok na povrchu se brodí |
+| trpaslík seskočil o 2–3 pole tam, odkud se nevyleze (ze štoly do jeskyně pod ní), a uvízl | hledání cest seskočí o 2–3 pole jen tam, odkud malé hledání (≤ 400 polí) najde cestu zpátky do výšky skoku; výsledek se pamatuje v rámci tahu, takže uložení hry determinismus nemění |
 | trpaslík si vykopal šachtu pod sebou a uvízl na dně | pod sebe kope jen schodiště, pod žebříkem nebo jámu hloubky 1, ze které se vystoupí do strany |
 | hledání práce „nejbližší první": nalezenou desku, Klíč ani materiál pro vzdálenou dílnu nikdo nevzal, vždy bylo co uklízet blíž | přednostní průchody: čtení desky, zažehnutí Klíčem, donést materiál na plán/do dílny (s krátkou blokací, když cesta není) |
 | hvězdná ruda ležela hlavně pod 138 m, kde se budí Spáč, a Klíč ji přitom potřebuje | jisté žíly hvězdné rudy nad Srdcem v 126–134 m |
@@ -673,6 +681,7 @@ Co bot odhalil a co se ve hře změnilo (týká se i hráče):
 | zboží karavany a dary padaly na pevné pole u brány – i do zdi, kterou tam hráč postavil (fuzz 40×6000) | skládají se na nejbližší volné stojné pole |
 | v zimě trpaslíci umírali žízní u zamrzlého potoka | led se dá pít (pomaleji, nálada −9) |
 | kuchyně a pivovar bez zakázek nevařily | výchozí trvalé zakázky 20 |
+| plán s donesenými materiály (žebřík v hluboké šachtě) nikdo nepostavil – vždy bylo co dělat blíž | připravené plány mají přednostní průchod jako donáška |
 | hráč neměl jak říct „tohle nejdřív" | nástroj ⭐ přednost (klávesa P, hvězdička na poli): označené kopání se udělá dřív než cokoli jiného; `VERZE` uložení 9 |
 | krápník v jeskyni zablokoval žebřík a nešel odstranit | stavba krápník odlomí |
 
@@ -681,7 +690,7 @@ Nové v rozhraní: sekce **🧭 Co dál?** hned pod názvem hory – 17 výukov�
 nejrychlejší vítězství, nejhlubší šachta, nejvyšší sláva (v menu; nový rekord hlásí okno konce hry).
 Dotykové rozvržení ověřeno v rámu 360 px (nic nepřetéká) a při DPI 2 (klik trefí pole). `sw.js` na `webapp-v209`.
 
-Testy: `node _test/trpaslici_test.js 20` ✔, `node _test/trpaslici_sim.js 40 6000` 99 kontrol, 0 chyb,
+Testy: `node _test/trpaslici_test.js 20` ✔, `node _test/trpaslici_sim.js 40 6000` 102 kontrol, 0 chyb,
 `python3 _test/trpaslici_snimek.py` 59/59, bot viz výše.
 
 Vědomé kompromisy:
@@ -690,6 +699,5 @@ Vědomé kompromisy:
 |---|---|
 | cíl „medián 8–12 let" platí pro zkušeného hráče; bot je hloupější než člověk a část her nedotáhne | rok má 48 dní = 48 minut při 1× (den = 600 tahů = 1 minuta) – 8 let je ~6 h při 1×, ~1,6 h při 4× |
 | bot „vidí" celou mapu (ví, kde jsou ruiny a Srdce) | měří tempo hospodářství a průchodnost řetězce, ne průzkum |
-| hledání cest dovolí seskočit až 3 pole i tam, odkud se nevyleze (např. ze štoly do jeskyně pod ní) | omezení na 1 pole rozbilo běžné cesty v údolí a sklepích; hra uvízlého hlásí („potřebuje žebřík") a žebřík ho vysvobodí |
 | boj je hlavní příčina smrti v dlouhé hře | nájezdy rostou se slávou a hloubkou záměrně; obrana (strážci, mříže, pasti) je hráčova práce |
 
