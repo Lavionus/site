@@ -701,3 +701,376 @@ Vědomé kompromisy:
 | bot „vidí" celou mapu (ví, kde jsou ruiny a Srdce) | měří tempo hospodářství a průchodnost řetězce, ne průzkum |
 | boj je hlavní příčina smrti v dlouhé hře | nájezdy rostou se slávou a hloubkou záměrně; obrana (strážci, mříže, pasti) je hráčova práce |
 
+Dodatek (30. 9. 2026): paleta stavění rozdělená do 6 skupin s nadpisy – chodby a šachty, jídlo a pití, nábytek,
+řemeslné dílny, kovy a oheň, obrana (`TRP.stavby.SKUPINY_STAVEB`; test v node hlídá, že je každá stavba právě v jedné
+skupině). Zamčená runová kovárna má 🔒 a je ztlumená. `sw.js` na `webapp-v210`.
+
+Dodatek (30. 9. 2026) – pravý panel. Dřív: nahoře rozbalený dlouhý návod „Jak hrát", výběr (co hráč
+právě klepl) až pod seznamem klanu, deník, příběh, vrstvy a ovládání pod sebou – podstatné se ztrácelo.
+Teď: nahoře jen název hory, **⚠️ Pozor** (co hoří: nepřátelé, uvízlí, praskající strop, hlad; oranžově
+mírnější – pivo, postele; klepnutí skočí na místo / vybere trpaslíka; logika `TRP.hra.upozorneni`, test v node),
+**🧭 Co dál?** a **🔍 výběr**. Zbytek v záložkách 🧔 Klan (+ kdo co dělá) | 📦 Sklad (+ přehled) | 📜 Deník
+(odznak s počtem nových důležitých zpráv) | 🔥 Příběh | ❓ Pomoc (jak hrát, ovládání, vrstvy); lišta záložek
+se při posunu panelu drží nahoře, poslední záložka se pamatuje (`webapp_hra_trpaslici_zalozka`).
+`sw.js` na `webapp-v211`; UI test 60/60.
+
+Dodatek (30. 9. 2026) – nedostupné stavby v paletě jsou zešedlé a nejdou vybrat; místo ceny ukazují důvod
+(„potřebuje tesařskou dílnu", „…tesařskou nebo kamenickou dílnu", „nejdřív přečti runovou desku", „nejdřív najdi
+magma"). Materiál je dostupný, když už někde leží, dá se vykopat/pokácet (dřevo, kámen), nebo stojí dílna, která ho
+vyrábí (podle receptů); materiál, který jen chybí na skladě, zůstává jako dřív červeným počtem. Otevřená paleta se
+průběžně obnovuje. Logika `TRP.stavby.dostupnost`, test v node i v prohlížeči. `sw.js` na `webapp-v212`.
+
+Dodatek (30. 9. 2026) – jemná grafika. Menu → 🎨 Grafika: klasická / jemná (pamatuje se, `webapp_hra_trpaslici_grafika`).
+Jemná má 32 × 32 px na dlaždici při stejné velikosti na obrazovce (`J = 2` v `grafika.js`, kreslení přes `di()`,
+které sprite zmenší na logickou velikost). Horniny, neznámá hora, voda a magma, okraje, stíny, značky a led se kreslí
+nativně jemně (dvě oktávy šumu, Bayerovo rozptýlení do tónů, jemnější kresba každé horniny: oblázky a kořínky v hlíně,
+zrna žuly, sloupce čediče, zkosené kvádry zdiva, runy…). Ručně kreslené sprity (trpaslíci, dílny, stromy, věci, tvorové)
+se zjemní algoritmem EPX/Scale2x (zaoblené šikmé hrany), dostanou poloviční obrys a světlejší horní / tmavší spodní hranu.
+Porovnání: `_test/trpaslici_jemna_porovnani.png` (vlevo klasická, vpravo jemná) a `_test/trpaslici_jemna_sprity.png`.
+UI test 62/62 (přepnutí tam a zpět, velikosti dlaždic, bez chyb JS). `sw.js` na `webapp-v213`.
+Vědomý kompromis: postavy a dílny nejsou překreslené ručně ve 32 px – EPX je zjemní, ale nový detail nepřidá.
+
+
+Dodatek (30. 9. 2026) – zásoby ve skladech jsou stále vidět v horní liště hned za datem (🍖 jídlo a 🍺 pivo s varováním, pak ostatní věci podle druhu). Klepnutí otevře záložku 📦 Sklad s podrobným přehledem. Na úzkém displeji jde lištou posouvat do strany. UI test 63/63, `sw.js` na `webapp-v214`.
+
+Dodatek (30. 9. 2026) – obrázky a ikony (dodané z ChatGPT). `ui-skin.js` za běhu nahrazuje emoji v celém GUI lokálními
+PNG ikonami z `assets/ui-icons` (vyrenderované z fontu Noto Color Emoji skriptem `generate-ui-icons.py`); `ui-skin.css`
+dává tmavému tématu textury kamene, železa a dřeva. Ilustrace: události (klan, návštěvník, objev), konec hry (vítězství,
+porážka), karavana, keyart v menu. Kontrola: všech 102 emoji, která hra používá, má ikonu (doplněna ⬆ pro mříž);
+opraven rozsah výrazu v `ui-skin.js` – ⭐ a ⬇ (U+2B00–2BFF) se dřív neměnily. Keyart pro náhled sdílení a záložní obrázek
+je nově 1200×675 JPG (255 kB místo 2,8 MB PNG); zdrojové PNG v plném rozlišení (`*-original.png`, keyart PNG, 25 MB)
+jsou v `.gitignore`, na web se nenahrají. Na světlém tématu je ikona menu ztmavená. UI test 63/63, `sw.js` na `webapp-v215`.
+
+
+Dodatek (30. 9. 2026) – základní zásoby mají v horní liště pevné místo a jsou vždy vidět i s nulou (ztlumeně): 🍖 jídlo, 🍺 pivo, 🪵 dřevo, 🪨 kámen, ⚫ uhlí, 🔩 železné pruty, 📦 ostatní (součet, výpis v nápovědě). Čísla mají pevnou šířku, čipy se neposouvají. Klan a „kdo co dělá" jsou jedna karta na trpaslíka (kdo, co dělá, nálada, stav + řádek prací); horní řádek ikon přepne práci všem (částečně povolená práce je napůl ztlumená). UI test 65/65, `sw.js` na `webapp-v216`.
+
+Dodatek (30. 9. 2026) – pravý klik (bez tažení) s jiným nástrojem než „pohled" nebo s otevřenou paletou vrátí nástroj „pohled" a nic neoznačí; tažení pravým tlačítkem dál posouvá pohled. UI test 66/66, `sw.js` na `webapp-v217`.
+
+Dodatek (30. 9. 2026) – 🎯 pracoviště: v kartě trpaslíka jde zvolit „jen <dílna>" (z typů dílen, které v kolonii stojí; u vlastního řemesla s poznámkou). Přiřazený trpaslík pracuje jen v dílnách toho typu (ostatní druhy práce se mu vypnou, po zrušení se vrátí původní) a dílnu toho typu pak obsluhují jen přiřazení; bez přiřazení platí dál „řemeslník, jinak kdokoli". Detail dílny ukazuje, kdo v ní smí pracovat (🎯 = přiřazený). Logika `TRP.hra.smiVDilne` / `nastavDilnu`, testy v node (pravidla + sládek v běžící hře nekope ani nenosí) a v prohlížeči. UI test 67/67, `sw.js` na `webapp-v218`.
+
+Dodatek (30. 9. 2026) – záložky jsou úplně nahoře v pravém panelu: 🧭 Přehled (hora, ⚠️ Pozor, Co dál; odznak s počtem naléhavých upozornění) | 🔍 Výběr (detail pole/trpaslíka – otevře se sám při novém výběru) | 🧔 Klan | 📦 Sklad | 📜 Deník | 🔥 Příběh | ❓ Pomoc. Při přepnutí se panel posune na začátek. Nábytek ze skladu (postele, stoly, židle) se sám naplánuje do ložnice/jídelny (každých 60 tahů, `TRP.stavby.rozmistiNabytek`); bez ložnice na postele ve skladu upozorní Pozor. Testy: sim 40×6000 0 chyb, UI 67/67; `sw.js` na `webapp-v220`.
+
+Dodatek (30. 9. 2026) – oznámení nad mapou: důležitá zpráva deníku (objev, nález, smrt, zranění, uvíznutí, příběh, karavana) se ukáže jako lísteček s textem (7 s, příběh 12 s, nejvýš 3 najednou); klepnutí otevře Deník. Náhled stavby: s nástrojem stavby se pod myší kreslí průsvitná stavba v plné velikosti s půdorysem – zeleně, když jde postavit, červeně s důvodem v pruhu nahoře („⛔ neprozkoumané místo"…); pruh i paleta píší „zabere 2 pole" (↔ 2 pole). UI test 69/69, `sw.js` na `webapp-v221`.
+
+Dodatek (30. 9. 2026) – teploměry v kartě trpaslíka: tři svislé ukazatele 🍖 jídlo, 💧 pití, 🙂 nálada (zelená ≥ 60, žlutá ≥ 30, červená), hodnota po najetí myší; nahradily smajlík a ikony hladu/žízně. UI test 70/70 (i skutečná výška), `sw.js` na `webapp-v222`.
+
+Dodatek (30. 9. 2026) – popisy staveb: klepnutí na hotovou stavbu (pumpa, žebřík, podpěra, dveře, louč, past, nábytek, schodiště) ukáže ve Výběru, k čemu je, a stav (pumpa: voda do 3 polí ano/ne; past napnutá/spuštěná; dveře poškození); popis mají i dílny a plány; při stavění ho ukáže pruh nahoře. UI test 71/71, `sw.js` na `webapp-v223`.
+
+Dodatek (30. 9. 2026) – obchod s karavanou přepracován: zboží jako karty s velkou ikonou, zásobou a cenou (zlaté mince), uprostřed výměna – košík Dostaneš/Dáš, váhy (měřič pokrytí ceny), stav dohody a tlačítka ⚖️ Doplnit (přidá nejdražší zboží mimo jídlo, pivo, dřevo, kámen, uhlí, železné pruty), ↺ Vyčistit a 🤝 Plácnout si. Ovládání: klik +1, Shift+klik +10, Ctrl/⌘+klik vše, pravý klik −1 (Shift −10, Ctrl vše), klik v košíku vrací. UI test 72/72, `sw.js` na `webapp-v224`.
+
+Dodatek (30. 9. 2026) – propracovanější sprity trpaslíků a dílen (`grafika.js`): trpaslík má stínování zleva shora, halenu v tlumené barvě profese, trojtónové vousy s knírem, velký nos, boty se špičkou a pokrývku hlavy podle profese (horník helma se svítící lampou, strážce rohatá přilba, farmář slamák, ostatní kapuce s cípem; kovář a sládek zástěru) – `spriteTrpaslika(…, prof)` má nový 7. parametr. V jemném stylu se po EPX dokreslí oko s leskem, obočí, prameny vousů a lesk přezky (`kresba.hotovo(obrys, jemne)`). Všech 11 dílen překresleno s pozadím (nářadí na desce, police, lampičky, zásoby) a má 4 snímky animace (oheň, pára, kouř z milíře, bublající guláš, kapající pivo, otáčení brusu, třpyt drahokamů, pulzující runy); `a.dilna[typ]` je teď pole snímků. Nová vrstva `k.zar()` = průsvitná záře/kouř bez obrysu. Náhled všech spritů: `_test/trpaslici_sprity.html?z=6&jen=trp|dil&styl=klasicky|jemny&snimek=n`. UI test 72/72, `sw.js` na `webapp-v225`.
+
+Dodatek (30. 9. 2026) – 📊 bilance zásob v záložce Sklad: hra zaznamenává skutečný tok věcí (výroba podle zdroje: kuchyně, pivovar, pole, houbárna, kopání, kácení, karavana…; spotřeba: jedli/pili trpaslíci, dílny, stavby, prodej, události) po dnech (`TRP.prace.tok`, jen v paměti) a `TRP.hra.bilance` z něj počítá průměr za poslední 2 celé dny. Karty 🍖 jídlo a 🍺 pivo: výroba, spotřeba, bilance, výdrž zásoby, kapacita kuchyní/pivovarů při nepřetržité práci a kolik trpaslíků uživí (spotřeba na trpaslíka zkalibrovaná měřením: ~0,48 jídla a ~0,6 napití za den); tabulka surovin (houby, ječmen, dřevo, kámen, uhlí, železné pruty); po najetí myší odkud/kam. Testy: node (tok kuchyně, kapacita 30/den, uživí ~63), UI 73/73; `sw.js` na `webapp-v225`.
+
+Dodatek (30. 9. 2026) – sprity, etapa 0 z `Trpaslici_SPRITY_PLAN.md`: společné palety `MAT` a pomůcky v `grafika.js`, náhled celého atlasu a test `_test/trpaslici_sprity_test.py`. Opravena výjimka při kreslení hvězdného prutu na zemi. UI test 73/73, `sw.js` na `webapp-v226`.
+
+Dodatek (30. 9. 2026) – filtr skladu vylepšen: místo jedné skupiny ze seznamu lze zapnout/vypnout celé skupiny (zaškrtávátko se stavem vše/část/nic) i jednotlivé druhy (ikony s počtem kusů v tomto skladu), rychlé „vše"/„nic", ⭐ přednostní sklad (nové věci se nosí nejdřív sem, i když je jiný blíž) a přehled zaplnění. Logika `TRP.stavby.prijimaneDruhy` / `nastavFiltr` (z.filtr; starší uložení se skupinou z.druh fungují dál). Testy node + UI 74/74; `sw.js` na `webapp-v226`.
+
+Dodatek (30. 9. 2026) – sprity, etapa 1 z `Trpaslici_SPRITY_PLAN.md`: propracovaný nábytek, socha, dveře (poškození a otevření), žebřík, podpěra, schodiště, louč (4 snímky se září), pumpa (páka a proud vody při čerpání), past, mříž, pařez a úroda ve 4 fázích. UI test 74/74, `sw.js` na `webapp-v227`.
+
+Dodatek (30. 9. 2026) – sprity, etapa 2 z `Trpaslici_SPRITY_PLAN.md`: propracované věci na zemi (suroviny, pruty, nástroje, jídlo, cennosti) a úhledné hromádky stejných věcí. UI test 74/74, `sw.js` na `webapp-v228`.
+
+Dodatek (30. 9. 2026) – zpřesněná bilance: průměr až ze 4 celých dnů (dřív 2 – skákalo to), zásoba počítá i jídlo/pivo mimo sklad (trpaslíci jedí odkudkoli; nápověda ukáže sklad/jinde), kapacita kuchyní a pivovarů je reálná (× 0,33 – naměřeno: kuchyně 9–10 z teoretických 30, pivovar 7–8 z 20 za den) i s teoretickou pro srovnání, upozornění na trvalou zakázku „udržuj N" (plná zásoba = dílna nevaří), nový řádek „Nepokryto" (pili vodu / led, jedli syrové suroviny) a bez měření (první den, po načtení) odhad spotřeby z počtu trpaslíků. Testy node + UI 74/74; `sw.js` na `webapp-v227`.
+
+Dodatek (30. 9. 2026) – sprity, etapa 3 z `Trpaslici_SPRITY_PLAN.md`: propracovaní tvorové (goblin, pavouk, netopýr, Spáč) se 4 snímky chůze, útokem, zábleskem při zásahu a rozpadem na částice při smrti. UI test 74/74, `sw.js` na `webapp-v229`.
+
+Dodatek (30. 9. 2026) – sprity, etapa 5 z `Trpaslici_SPRITY_PLAN.md`: propracovaná příroda (jedle, keře, balvany, houby, krápníky, krystaly, desky, sloupy, brána), animace trávy, hub, krápníků, krystalů a run, hořící Výheň předků ve 4 snímcích, led s prasklinami. UI test 74/74, `sw.js` na `webapp-v230`.
+
+Dodatek (30. 9. 2026) – sprity, etapa 7 z `Trpaslici_SPRITY_PLAN.md`: animovaná karavana, pixelový vykřičník zuřivosti a Zzz, ukazatele zdraví a průběhu s rámečkem, jiskry s ocáskem a protáhlé kapky. UI test 74/74, `sw.js` na `webapp-v232`.
+
+Dodatek (30. 9. 2026) – sprity, etapa 6 z `Trpaslici_SPRITY_PLAN.md`: jemné rudy a praskliny kreslené nativně, pěna na vodě, bubliny a jiskry magmatu, třetí vrstva hor. UI test 74/74, `sw.js` na `webapp-v233`.
+
+Dodatek (30. 9. 2026) – sprity, etapa 4 z `Trpaslici_SPRITY_PLAN.md`: plavání, jizva, obvaz/rudá tvář/pot jako překryvy stavu a vlastní portrét 32 × 32 v kartě trpaslíka. UI test 74/74, `sw.js` na `webapp-v234`.
+
+Dodatek (30. 9. 2026) – sprity, etapa 8 z `Trpaslici_SPRITY_PLAN.md`: vyhlazení jemného stylu při zoomu 1, kontrola paměti a doby stavby atlasu; plán spritů je celý hotový. UI test 74/74, `sw.js` na `webapp-v235`.
+
+Dodatek (30. 9. 2026) – grafika 2. kolo, etapa A z `Trpaslici_GRAFIKA2_PLAN.md`: nerovné hrany terénu, zaoblené rohy a vyplněné kouty (jeskyně místo schodů po polích), prolnutí hornin, zrcadlené textury. UI test 74/74, `sw.js` na `webapp-v236`.
+
+Dodatek (30. 9. 2026) – strážci (⚔️) aktivně likvidují hrozbu: jakmile je v hoře známý nepřítel, strážce pustí jinou práci (ne jídlo/spánek), běžný hlad a únava počkají (jen kritická potřeba má přednost), hledá nejbližšího nepřítele kdekoli v dosažitelné hoře (dřív jen do 1 500 polí), cíl každých 12 tahů přepočítá, když se nepřítel pohnul, a u nepřítele zůstává, dokud žije. Tvorové skrytí v neprozkoumaných jeskyních je nelákají; nedosažitelný nepřítel (létá, za vodou) → nové hledání po 60 tazích. Bot 24 her: vítězství 5/24, prohra 0, smrt v boji 60 (dřív 111). Testy: sim 40×6000 0 chyb (36 µs/tah), UI 74/74; `sw.js` na `webapp-v228`.
+
+Dodatek (30. 9. 2026) – zóny se na mapě kreslí jen při práci se zónami (nástroj / paleta zón); vybrané pole v zóně
+ukáže jen tu jednu; úroda na polích a v houbárnách je vidět vždy. Trvalé kácení: značka „kácet" zůstává na pařezu,
+dorostlý strom se skácí znovu, dokud ji nezruší ✖️ zrušit; kácecí nástroj jde natáhnout i přes pařezy.
+❄️ Předpověď zimy v Přehledu (`TRP.hra.predpovedZimy`): jídlo v porcích (hotové + suroviny: s kuchyní 2 porce z kusu,
+bez ní ½), denní změna z bilance, v zimě bez podílu polí; verdikt přežijete / těsně / jídlo dojde N. den zimy (nebo
+před zimou) s počtem chybějících porcí a radou; pivo vydrží / nevydrží; Pozor hlásí hlad do 15 dnů. Testy: node
+(trvalé kácení, předpověď), UI 76/76, sim 40×6000 0 chyb.
+
+## Plán: systém priorit (návrh 30. 9. 2026 – ke schválení)
+
+### Jak to je teď
+Práci si trpaslík vybírá **„nejbližší první"** (jedno hledání do šířky od jeho místa) a smí jen druhy práce,
+které má zapnuté (7 přepínačů: kopat, kácet, stavět, nosit, pole, řemeslo, stráž). Postupně přibyly jednotlivé
+výjimky, každá napsaná zvlášť: ⭐ přednostní kopání, čtení runové desky, zažehnutí Klíčem, donést materiál na plán
+/ do dílny, postavit plán s donesenými materiály, 🎯 pracoviště (přiřazení k dílně), poplach strážců, ⭐ přednostní
+sklad, jídlo/pití/spánek (s prahem kritické potřeby). Chybí jednotný způsob, jak říct „tohle je důležitější než
+tamto" – pro celý klan i pro jednotlivce.
+
+### Cíl
+1. **Priorita trpaslíka pro druh práce** – místo zapnuto/vypnuto stupně **1 (hlavní) · 2 (běžná) · 3 (když není co
+   jiného) · vypnuto**. Horník: kopat 1, nosit 3; sládek: řemeslo 1, pole 2… Nahradí dnešní přepínače i většinu výjimek.
+2. **Priorita úkolu** – ⭐ (přednost) jednotně pro všechno, co hráč označuje: kopání (už je), plány staveb, zakázky
+   dílen, sklady (už je), pole ke sklizni. ⭐ úkol vyhrává nad stupněm trpaslíka o jeden stupeň.
+3. **Nouzové priority (automaticky, dočasně)** – hra sama zvedne prioritu, když hrozí škoda, a v Pozor napíše proč:
+   poplach → stráž 1 · hlad/zima na krku (předpověď zimy „hlad") → kuchyně, sklizeň a houbárny 1 · praskající strop →
+   podpěry 1 · zatopení šachty → pumpa 1 · kritická potřeba trpaslíka → jídlo/pití/spánek přeruší cokoli (jako dnes).
+
+### Pravidlo výběru práce
+Trpaslík vezme úkol s **nejlepším stupněm**; mezi úkoly stejného stupně **nejbližší**. Stupeň úkolu =
+min(stupeň trpaslíka pro druh − ⭐ úkolu, nouzový stupeň). Jídlo/pití/spánek zůstávají mimo stupně (kritická potřeba
+vyhrává vždy, běžná potřeba jen když trpaslík nemá práci stupně 1 – jako u dnešních strážců).
+Rozpracovaná práce se přeruší jen kvůli úkolu o **2 stupně lepšímu** (jinak by trpaslíci těkali).
+
+### Algoritmus (výkon je podmínkou – dnes ~32 µs na tah)
+- Globální **seznamy čekajících úkolů po druzích** (označená pole, plány, dílny připravené k výrobě, věci k odnesení,
+  zralá pole) udržované při změnách – ne prohledáváním mapy.
+- Pro trpaslíka projít stupně 1 → 3; u každého jen druhy, které mají čekající úkol. Jedno hledání do šířky se
+  zastaví u prvního úkolu daného stupně (nejbližší) – nemusí se hledat přes celou horu.
+- Nedosažitelné úkoly dostanou krátkou blokaci (jako dnes `lovBlok`, `donestBlok`), ať se nehledají pořád dokola.
+- Dnešní přednostní průchody (deska, Klíč, donést, stavět, ⭐ kopání, poplach) se stanou obyčejnými pravidly stupňů –
+  kód se zjednoduší.
+
+### Rozhraní
+- **Klan**: ikony prací v kartě trpaslíka ukazují číslo stupně (1/2/3, vypnuto šedě); klik cykluje 1 → 2 → 3 → vyp,
+  pravý klik opačně; horní řádek nastaví stupeň všem. Předvolby: „podle profese", „všichni všechno (2)".
+- **⭐** jednotně: nástroj ⭐ přednost funguje i na plány staveb a pole; v detailu dílny ⭐ u zakázky a šipky
+  ↑/↓ pořadí zakázek.
+- **Přehled / Pozor**: „Nouzová priorita: hlad – kuchaři a farmáři mají kuchyni a sklizeň na 1" (s tlačítkem zrušit).
+- Nápověda a „Co dál?" vysvětlí stupně jednou větou.
+
+### Data a kompatibilita
+`t.priorita = { kopat: 1..3|0, … }` místo `t.povoleno` (0 = vypnuto); načtení staré hry převede povoleno 1 → výchozí
+stupeň podle profese, 0 → vypnuto. `hra.prio` (⭐ kopání) se rozšíří na plány (`p.prio`) a zakázky (`z.prio`).
+`VERZE` uložení 10. 🎯 pracoviště zůstává (je to jemnější než stupeň – „jen tahle dílna").
+
+### Etapy
+| # | co | ověření |
+|---|---|---|
+| P1 | datový model, převod starých uložení, výchozí stupně podle profese | node: převod, uložení/obnova shodná |
+| P2 | výběr práce podle stupňů + seznamy čekajících úkolů; výjimky převést na pravidla | node: horník se stupněm kopání 1 kope, i když je nošení blíž; všechny dosavadní scénáře; výkon ≤ dnešní µs/tah |
+| P3 | UI stupňů v Klanu, předvolby, horní řádek | prohlížeč: cyklení klikem, pravým klikem, všem |
+| P4 | ⭐ pro plány, pole a zakázky; pořadí zakázek | node + prohlížeč |
+| P5 | nouzové priority + hlášení v Pozor | node: hlad/strop/zatopení/poplach zvednou stupeň a po odeznění ho vrátí |
+| P6 | bot hraje se stupni (horníci kopat 1, kuchaři řemeslo 1…), vyvážení 24 her | vítězství/prohry/úmrtí proti dnešku |
+
+### Rozhodnutí (30. 9. 2026)
+1. Tři stupně (1–3) + vypnuto.
+2. Nouze je důležitější než ⭐, kromě obrany (poplach strážců zůstává samostatný a nejvyšší).
+3. Nouze se zapíná a vypíná sama.
+
+### Provedeno (30. 9. 2026) – P1–P5, P6 měřením
+- **Stupně v `t.povoleno`** (0 vypnuto, 1–3) – veškerý kód „má povoleno?" funguje beze změny. Výchozí podle profese
+  (`TRP.hra.HLAVNI_PRACE`): horník kopat 1, řemeslníci dílna 1, farmář pole a dílna 1, strážce stráž 1, ostatní 2,
+  stráž 0. Uložení `VERZE 10`; hry verze 9 se dál načtou a převedou (0/1 → hlavní 1, ostatní 2).
+- **Výběr práce** (`najdiPraci`): hledá po úrovních 0 (nouze) · 0,5 · 1 · 2 · 3, v každé nejbližší úkol; ⭐ úkol,
+  rozdělaná práce (donést, postavit připravené) a příběh (deska, Klíč) o stupeň výš (nejvýš 0,5 – tak ⭐ platí i pro
+  hlavní práci); ⭐ plán s donesenými materiály o dva. Nemožné úrovně se přeskočí, neúspěšné hledání má blokaci
+  20 tahů. Dosavadní přednostní průchody (⭐ kopání, donést, stavět) nahradila pravidla stupňů. Výkon se zlepšil:
+  fuzz 25–27 µs/tah (dřív 36–38) a trpaslíci udělají víc (vykopáno +12 %, postaveno +25 %).
+- **Nouze** (`hlidejNouzi` každých 60 tahů, s hysterezí): hlad (jídla < 1,5 dne nebo předpověď „dojde do 6 dnů";
+  vypne se při > 3 dnech) → kuchyně, sklizeň a donáška do kuchyně na úroveň 0; praskající strop + plán podpěry →
+  stavba a donáška podpěr 0; voda u pumpy → čerpání 0. Zapnutí/vypnutí v deníku, aktivní nouze v Pozor (🚨).
+- **UI**: ikony prací v kartě trpaslíka s číslem stupně (1 zlatě, 2, 3 tlumeně, šedá vypnuto), klik další /
+  pravý klik předchozí; horní řádek mění většinový stupeň všem; předvolby „podle profese" a „vše na 2";
+  ⭐ nástroj přepíná i plány staveb (⭐ ve Výběru plánu); zakázky dílny s ↑ (pořadí = pořadí výroby).
+- Testy: node (stupně, ⭐ u hlavní práce, nouze zap/vyp, převod verze 9, ⭐ plánů a pořadí zakázek), UI 76/76,
+  sim 40×6000 0 chyb. `sw.js` na `webapp-v240`.
+- Nedoděláno: ⭐ značka na plánech přímo na mapě (grafika.js teď upravuje jiná relace) a ⭐ pro pole.
+- **Vyvážení po zavedení stupňů** (bot 24 her: nejdřív 0/24 vítězství a hladomor medián ~190 dní):
+  - úrovně jsou `[0, 0,5, 0,9, 1, 1,9, 2, 2,9, 3]` – rozdělaná práce (donést, postavit připravené) jde těsně před
+    ostatní práci téhož stupně (s − 0,1), ne o celý stupeň výš; připravená dílna u hlavní práce na 0,5;
+  - výchozí nošení a pole mají všichni na 1 (logistika a potrava drží klan), ostatní 2, hlavní práce 1;
+  - `smiVDilne`: řemeslník má přednost, jen když dílnu opravdu smí dělat (má ji povolenou a nemá jiné pracoviště);
+    nově **zaskočí kdokoli**, když připravená dílna čeká bez obsluhy ≥ 100 tahů (`d.cekaOd`), u kuchyně v nouzi
+    o jídlo hned – kuchyni dřív obsluhovali jen farmáři a ti nestíhali (kuchyně připravená a prázdná 30–60 % času);
+  - nouze „hlad" dává sklizni úroveň 0 jen při nedostatku surovin (`nouze.pole`: houby + ječmen < 2 dny) – dřív
+    celý klan v nouzi sklízel (tisíce hub na skladě) a nikdo nenosil do kuchyně, takže hlad se prohluboval;
+  - výsledek: hladomor medián 0 a 12 dní (A/B se starým `najdiPraci` na stejném stromu: 11 a 34), vítězství 2/24
+    (A/B 1/24), 1 prohra. Nižší počet vítězství proti dřívějším 4–5/24 je i v A/B, tedy z jiných změn (trvalé
+    kácení, strážci), ne ze stupňů. Bot má ladicí env `PODILY` (čím tráví čas farmáři), `BOT_STUPNE=vse1`, `HLAD`.
+  - UI 76/76, sim scénáře 0 chyb (nový test zaskočení v dílně), `sw.js` na `webapp-v247`.
+
+Dodatek (30. 9. 2026) – připomínky z hraní (dílny, potřeby, tesání, detail trpaslíka):
+- **Chyba kopání**: `P.vDosahu` zkoušela u šikmého cíle jen první ze dvou cest (nad hlavou / z boku), `cilKopani` obě →
+  trpaslík došel, cíl „mimo dosah", pustil ho a hned našel znovu (tisíce opuštění za 48 dní, horník uvízl v smyčce).
+  Opraveno – obě funkce teď rozhodují stejně.
+- **Dvě pracoviště v dílně** (všechny dílny mají 2 pole): pracoviště 0 = dílna (`d.vRobe`, `d.rez`), pracoviště 1 =
+  `d.m2`; úloha nese `misto`. Dva trpaslíci vyrábějí současně, každé pracoviště má vlastní zakázku a donášku;
+  kapacita v bilanci ×2. Starší uložení fungují (d.m2 vznikne samo).
+- **Vyhrazený pracovník si nosí sám**: kdo je přiřazen k dílně (nošení vypnuté), nosí materiál do své dílny na
+  stupni řemesla – dřív čekali 4 kuchaři na cizí nosiče.
+- **Potřeby**: úbytek jídla 0,08 → 0,06, pití 0,1 → 0,075, spánku 0,2 → 0,15 za tah (méně cest za jídlem a pitím,
+  kratší spánek, nižší spotřeba jídla a piva). Měření (bot, env `CAS=1`): spánek ~22 %, jídlo+pití ~13 % času;
+  potřeby přeruší práci jen kriticky (< 12) – většinu „otočení cestou" dělal poplach strážců (záměr) a chyba kopání.
+- **Otesání stěny** (nástroj 🧱 otesat, klávesa O): značka `OZN.TESAT` na volném prozkoumaném poli s neotesaným
+  pozadím; kameník přednostně (jinak kdokoli se stavěním), stupeň stavění; kamenná stěna zadarmo, hliněná/jílová/suť
+  za 1 kámen (donese ho). Výsledek: pozadí = kamenná zeď (`M.ZED`), kreslí se stávajícími texturami. Pozadí se nově
+  ukládá (`pozadi` v POLE, starší uložení bez něj se načtou).
+- **Detail trpaslíka**: sekce Práce – přepínače stupňů (klik/pravý klik), souhrn podle stupňů, volba pracoviště.
+- Bot 24 her: vítězství 5/24 (dřív 2/24), prohra 1, hladomor 0, čas do vítězství medián 195 dní (dřív 398).
+  Nově 7 odchodů za 12 her (záchvaty vzteku) – sledovat náladu (méně jídel a piv = méně dobrých vzpomínek?).
+- Ladění: háček `TRP.hra.ladeniPusteni(hra, t, p)` v `pustPraci` (ve hře prázdný), bot env `CAS=1` (čas podle činností,
+  počty úkolů, kdo a odkud práci pustil), `PODILY=1`. Testy: sim + dva kuchaři naráz, otesání (vč. uložení), UI 77/77.
+  `sw.js` na `webapp-v248`.
+
+Dodatek (30. 9. 2026) – grafika 2. kolo, etapa R z `Trpaslici_GRAFIKA2_PLAN.md`: náhodné varianty přírody, věcí, nábytku, tvorů a trpaslíků. `sw.js` na `webapp-v237`.
+
+Dodatek (30. 9. 2026) – grafika 2. kolo, etapa B z `Trpaslici_GRAFIKA2_PLAN.md`: barevné rozmazané světlo, denní barvy, měkká mlha. `sw.js` na `webapp-v238`.
+
+Dodatek (30. 9. 2026) – grafika 2. kolo, etapa D z `Trpaslici_GRAFIKA2_PLAN.md`: plynulý zoom, dojezd a setrvačnost kamery. UI test 76/76, `sw.js` na `webapp-v239`.
+
+Dodatek (30. 9. 2026) – grafika 2. kolo, etapa C z `Trpaslici_GRAFIKA2_PLAN.md`: 4snímková chůze, ease pohybu, pád se zrychlením, dýchání a mrkání, louč 6 snímků. `sw.js` na `webapp-v241`.
+
+Dodatek (30. 9. 2026) – grafika 2. kolo, etapa F z `Trpaslici_GRAFIKA2_PLAN.md`: barevná obloha s hvězdami a měsícem, hory se vzdušnou perspektivou, voda a magma 8 snímků, tón podle hloubky. `sw.js` na `webapp-v242`.
+
+Dodatek (30. 9. 2026) – grafika 2. kolo, etapa G z `Trpaslici_GRAFIKA2_PLAN.md`: aditivní jiskry a oheň, prach a měkký kouř, zatřesení při závalu. UI test 76/76, `sw.js` na `webapp-v243`.
+
+Dodatek (30. 9. 2026) – grafika 2. kolo, etapa E z `Trpaslici_GRAFIKA2_PLAN.md`: zvětšovač MMPX s prostředními tóny, výběrový obrys, nový styl hladká 4× při přiblížení. `sw.js` na `webapp-v244`.
+
+Dodatek (30. 9. 2026) – grafika 2. kolo, etapa H z `Trpaslici_GRAFIKA2_PLAN.md`: stoupající Zzz, pulzující značky a výběr, plynulé ukazatele, přepínače efektů v nastavení. UI test 76/76, `sw.js` na `webapp-v245`.
+
+Dodatek (30. 9. 2026) – grafika 2. kolo, etapa I z `Trpaslici_GRAFIKA2_PLAN.md`: výkon kreslení: bloky terénu, světlo ve výřezu, oprava stavby oblohy, snímek 4–5 ms, p95 ≤ 7 ms. Druhé kolo grafiky hotové, UI test 76/76, `sw.js` na `webapp-v246`.
+
+Dodatek (1. 10. 2026) – sprity nových nepřátel v `grafika.js`: goblinní lukostřelec (`lukostrelec` = goblin s koženou kapucí, toulcem a lukem; utok0 natažená tětiva se šípem, utok1 výstřel; 3 odstíny kůže) a horský troll (`trol`, 20 × 20 přes okraj pole: shrbený šedozelený trup s hrbolatou kůží, vystrčená hlava s nosem, tlamou a kly, světlá paže, okovaný kyj – zvednutý / úder k zemi; varianta s mechem a jizvou). Při výstřelu lukostřelce letí k nejbližšímu trpaslíkovi v dosahu šíp jako částice (`tvar: 'sip'`, jen vizuálně), ukazatel zdraví je u vysokých tvorů nad hlavou, rozpad při smrti v jejich barvách. Pojistka `vzhled` v `sadaTvora` zůstala. Sprite test 132/132, node testy 0 chyb, `sw.js` na `webapp-v249`.
+
+Dodatek (1. 10. 2026) – pásmo Spáče v grafice: `kresliPasmoSpace()` (nad vrstvou tmy) podle `T.pribeh.hloubkaVarovani(hra)` – jen když je `aktivni` a hráč má nástroj kopat nebo schody (`stav.nastroj` z `ui.js` / `stav.tah.druh`), jen nad známými poli: řádky 130–137 m jantarově šrafované (α 0,12), od 138 m červeně (α 0,15), na hranách čáry s popisky „130 m – hora duní“ a „138 m – Spáč“ (vpravo od hloubkového měřítka, ~10 CSS px při každém zoomu). Sprite test 132/132, výkon 4/4, `sw.js` na `webapp-v250`. UI test 90/91 – padá jen „v noci většina klanu spí“ (logika spánku, mimo grafiku).
+
+## Revize a opravy (1. 10. 2026)
+
+Oponentura ze čtyř stran (logika simulace, UI/UX, herní design a vyvážení, robustnost/uložení/testy) a opravy ve třech
+vlnách agentů rozdělených podle souborů. Hlavní body:
+
+**Chyby simulace**
+- Potřeby běžely jen ve ~43 % tahů (`krokTrpaslika` se vracel uprostřed kroku před `POT.tik`) – teď každý tah;
+  `UBYTEK` přepočten tak, aby účinná spotřeba zůstala, `NA_TRPASLIKA` s faktorem 0,85.
+- Truchlení se sčítalo bez stropu (lavina vzteku a odchodů) – souhrnná vzpomínka `truchli` (−12, další −4, max −24),
+  `odesli` (max −8); záchvat vzteku se odloží, dokud hrozí nepřítel.
+- Značky: kopání bere jen KOPAT/SCHODY, zeď maže značku, obří houba se kácí; tesání jen dosažitelných stěn
+  (`P.kTesani`), při neúspěchu `hra.tesatBlok`.
+- Uložení: `_tok`, `deskaBlok`, `tesatBlok`, `poplach`, `_cas` se ukládají (dřív se načtená hra rozcházela),
+  jediný seznam `KLICE`, kontrola struktury, `VERZE 11` (čte 9 a 10), věci po sloupcích (save 326 → 126 kB).
+- Plán „na podlahu" se zruší, když se podlaha vykope; kuchyně má v hladu přednost i před pivovarem;
+  odchod vrací zbraň a zbroj; pracoviště na zmizelé zakázce se uvolní; `cekaOd` se nuluje.
+- Výkon: `prijimaneDruhy` v WeakMap, volné věci jednou za tah – pozdní hra 960 → ~310 µs/tah, p99 10 → 1,5 ms.
+
+**Design a vyvážení**
+- Finále: na Spáče jen ozbrojení strážci ve skupině ≥ 3, ústup pod 35 ♥, civilisté utíkají (`krokCivilisty`),
+  při zažehnutí žádný nájezd; `silaObrany` s odhadem v Přehledu.
+- Nájezdy: první 2 slabí goblini, ohlášení den předem, síla podle klanu, ozbrojených, roků a neklidu hory
+  (`neklid`), lukostřelec od 2. roku, troll od 3. roku (sprity od druhé relace).
+- Klíč až po 2 ze 3 artefaktů (`klicPodminka`); varování „hora duní" od 130 m, potvrzení kopání pod 138 m, pásmo
+  Spáče v grafice.
+- Jídlo: kuchyně z houby 1 jídlo, z ječmene 2; ječné pivo lepší; houbárna pomalejší (u vody rychlejší), mělké
+  farmy v zimě pomalejší, v zimě se jí víc. Farmy mají cíl zásoby (`nastavCilFarmy`, auto 5 × klan) – konec
+  hromad hub (max věcí ~800 místo ~8 000), nošení 38 → 27 % času.
+- Dřevo: lesní školka (zóna `les`), obří houba dá i dřevo; blokace výroby zbraní (`coBlokujeVyrobu`).
+- Nálada: základ 45, kvalita jídelny/ložnice (kamenný nábytek, sochy, otesané stěny), pestrá piva, nevrlý pod 30.
+- Tvrdá skála bez železného krumpáče 1,8× pomaleji. Ošetřovna (zóna `osetrovna`), poplach (`prepniPoplach`).
+- Události s kompromisy, řetěz poutníka (návrat / zvěd), `hlas_hlubin`; milníky slávy 120/200/300/400.
+- Karavana vykoupí potraviny od 10 ks o 25 % dráž (`prodejDruhu`).
+- Typy zpráv `boj`, `varovani`, `obchod`, `obdobi` (smrt jen pro úmrtí) s vlastním zvukem a barvou.
+
+**UI**: klik v Klanu nepřepíná záložku, klávesové zkratky neruší formuláře, nápověda podle kódu, čitelnější
+stupně (hlavička, barevné odznaky, aria), detail trpaslíka se sbalitelnými částmi, sjednocená upozornění o jídle,
+úzký displej (pauza a rychlost vždy vidět), bezpečné načítání (záloha nečitelného uložení, dotaz u `?seed`, hlášení
+plného úložiště, varování při druhé záložce, pád simulace hru pozastaví), nová hra v pauze, cíl farmy, čas klanu,
+poplach, kvalita místností, hromadná cena v karavaně.
+
+**Infrastruktura**: `.gitignore` pro zálohy `*.bak*` a vývojové soubory ikon; `sw.js` předcachuje Srdce hory
+(148 souborů, kontrola `_test/sw_trpaslici_check.js`); výkonový test `_test/trpaslici_vykon_sim.js` s fixturou
+pozdní hry; bot hlídá počet věcí a velikost uložení.
+
+Testy: sim (scénáře + fuzz 20 × 6000 s porovnáním po načtení) 0 chyb, generátor, výkon, sw check, UI 96/96.
+`sw.js` na `webapp-v251`.
+
+Bot po revizi (24 her × 10 let): vítězství 2/24 (čas do vítězství 290 a 327 dní – cíl delší hry splněn), prohry
+2/24 (obě v dávce --od=1, nájezdy: 122 úmrtí v boji proti 12 v druhé dávce), hladomor medián 0 a 11 dní, max věcí
+~800–980, uložení do 115 kB. Otevřené: síla pozdních nájezdů v některých horách vysoká; bot neumí dobře koncovku
+(zlato/uhlí pro runovou kovárnu, hvězdná ruda, šachta) – nízký počet vítězství je hlavně slabina bota.
+
+Dodatek (1. 10. 2026) – světlo loučí bylo přepálené (celé místnosti plně osvětlené, oranžový nádech): v `grafika.js`
+`svetloPoli` strmější úbytek (`pad` 1,8 u louče, 1,5 u dílen a Výhně), jas zdrojů se skládá jako světlo
+(1 − (1−a)(1−b)) místo součtu, nádech zdrojů nejvýš 16 %. Logika (`svetlo.js`, nálada „pracuje ve tmě") beze změny.
+Výkon 4/4, sprity 132/132, UI 96/96, `sw.js` na `webapp-v252`.
+
+Dodatek (1. 10. 2026) – přání z hraní:
+- Otesání i podlahy: značka 🧱 na nevykopané hornině, nad kterou je volno (`P.jePodlaha`), trpaslík ji otesá ze
+  stoje nad ní (`cilTesani` bere i pole pod nohama) → terén `M.ZED` (opracovaný kámen); ruda v ní se vytěží a
+  položí nad podlahu (`P.otesejPodlahu`); hliněná podlaha za 1 kámen. Test v sim.
+- Klan: filtr podle práce (zapnutá na kterémkoli stupni, řazeno podle stupně), ozbrojení, „výbava" (vypíše
+  nástroj, zbraň, zbroj u každého); ikony výbavy v kartě; dvojklik na trpaslíka otevře detail (`e.detail >= 2`,
+  karta se mezi kliky překreslí).
+- Sklad: sbalitelné oddíly (jídlo, pivo, zbraně a nástroje, suroviny, přehled zásob), stav v localStorage
+  `webapp_hra_trpaslici_sklad_sekce`.
+- UI 97/97, sim 0 chyb, `sw.js` na `webapp-v253`.
+
+Dodatek (1. 10. 2026) – výzbroj po odebrání stráže: trpaslík bez práce ⚔️ stráž, který nic nedělá, odloží válečnou
+sekeru a/nebo zbroj, když ji některý strážce nemá (`odlozBojovou` v hra.js, kontrola jednou za 30 tahů, ne při
+známém nepříteli); věc se odnese do skladu a nevybavený strážce si ji vezme. Zpráva v deníku. Sim test, UI 97/97,
+`sw.js` na `webapp-v254`.
+
+Dodatek (1. 10. 2026) – čepice, ztracené kliky, otesání všech líců:
+- Čepice v barvě hlavní práce: `T.hra.hlavniPrace(t)` (vyhrazená dílna → řemeslo; práce na nejvyšším stupni bez
+  nošení, pole jen u farmáře; stráž přednost; 3+ rovnocenné nebo 2 mimo profesi = všestranný → šedá).
+  `grafika.js`: `BARVY_PRACE`, `barvaCepice`, parametr `cepice` u `spriteTrpaslika`/`trpaslik`/`trpaslikSpi`/
+  `portretTrpaslika` (tvar pokrývky dál podle profese). Legenda v Klanu a v nápovědě.
+- Ztracené kliky v panelu: periodické překreslení (250 ms) nahradilo prvek mezi stiskem a puštěním → klik zmizel.
+  Teď se panel nepřekresluje, dokud hráč drží tlačítko mimo mapu (`stiskOd`, nejdéle 3 s). UI test.
+- Otesání všech lícových ploch v dosahu kopání (podlaha, strop, boční stěna; `P.jeLic`, `P.licZDosahu`), ruda se
+  vytěží k tesaři. Vnitřní skála a rohy bez volného souseda se neoznačí. Sim test.
+- Sim 0 chyb, sprity 132/132, UI 98/98, `sw.js` na `webapp-v255`.
+
+Dodatek (1. 10. 2026) – spánek podle potřeby a výtah:
+- Spánek: zrušen noční rytmus (`PRAH.unavaVNoci`, vstávání od 5:00) – trpaslík jde spát pod `PRAH.unava` (20)
+  a vstane vyspalý (`PRAH.vyspany` 95) kdykoli během dne. Testy: unavený spí v poledne, vyspalý v noci bdí.
+- Výtah (`vytah`, 🛗, 2 dřeva na pole, po tesařské dílně – nové pole `vyzaduje` v STAVBY): `hra.lez = 3`.
+  `cesty.js`: jízda mezi stanicemi téže šachty (konce + místa s podlahou vedle) je v `sousede` jediný krok, takže
+  ji hledání cest upřednostní; `krok` vrací `'vytah'`, doba `DOBA.nastup + DOBA.vytah × polí` (3 + 1/pole proti
+  5–6 u žebříku a schodů; `T.hra.dobaKroku`). Tvorové výtahem nejezdí (`sousede(…, bezVytahu)`). Grafika: šachta
+  s trámy, vodítky a lanem, plošina na dně a pod jedoucím trpaslíkem (stojí, neleze). Test: 20 polí dolů a kopnout
+  59 tahů proti 132 po žebříku.
+- `sw.js` na `webapp-v256`.
+
+Dodatek (1. 10. 2026) – strážci, zprávy s místem, poplach, stavby do skály, studna, ⭐ na všechno, velikost hory:
+- Čistý strážce (jen ⚔️ stráž, `T.hrozby.jenStraz`) v klidu cvičí: ve zbrojnici, jinak na místě (`cvicit` s `naMiste`,
+  dovednost za 600 tahů místo 300); hledá se každý tah, ne jednou za 30.
+- Zprávy nesou místo (`zprava(hra, typ, text, i)` → `denik[].i`): úmrtí, zranění, uvíznutí, nájezdy, tvorové, krádež,
+  nálezy rud, objevy, poklad, závaly a praskající strop, pramen, dostavěná dílna/studna, Spáč a Výheň, karavana.
+  Klik na oznámení nebo zprávu v deníku (📍) posune pohled a ukáže rozbíhající se kruhy (`ukazMisto`, `stav.zvyrazni`).
+- Poplach se odvolá sám, když během něj byl v hoře nepřítel a padne poslední (`hra.poplach = 2`); vyhlášený předem trvá.
+- Jednopolové stavby na volno (ne zeď) jdou naplánovat do nevykopané skály – pole se označí ke kopání, u žebříku a
+  výtahu jako schodiště (`svisle`); výtah jde přes schody i žebřík (`naLezu`), žebříkové dřevo se vrátí.
+- Studna (`studna`, 🪣, kámen 4 + dřevo 1, 2 pole, `misto: 'voda'`, kód `K.STUDNA`, levé/pravé pole ve `stavbaStav`
+  1/2): stavba na dvě pole vody (`S.volnoProPlan`), voda v ní neteče ani se nevyrovnává, pumpa ji nebere, nezamrzá;
+  pití: pivo nebo studna – co je blíž (`POT.uStudny`), vzpomínka −2 místo −6 za vodu z jezírka. Grafika 32 × 28.
+- ⭐ přednost: na kterékoli pole plánu, tlačítko v detailu plánu, „⭐ s předností" při stavění, ⭐ na mapě u plánu.
+- Velikost hory: `T.hora.VELIKOSTI` malá 64 / střední 96 / velká 128 / obří 160 (šířka; hloubka pevná), volba v menu,
+  jiná velikost = uložit volbu a načíst stránku (`webapp_hra_trpaslici_velikost`, `…_nova`); jeskyně a žíly se násobí
+  šířkou; uložení nese `sirka`, jiná velikost se při načtení/importu přepne. Test `node _test/trpaslici_velikosti.js`.
+  Malá hora má někdy méně než 8 stromů (generátorový test počítá se střední).
+- Sim 0 chyb, fuzz 0, sprity 132/132, UI 99/99, `sw.js` na `webapp-v257`.
+
+Dodatek (2. 10. 2026) – revize 2, opravy logiky (hra/potreby/hrozby/stavby/prace/priroda/cesty/ulozeni/pribeh):
+- Léčení nepředběhne hlad a žízeň (`POT.muzeLecit`): zraněný hladový se nejdřív nají (dřív ležel, vstával každé 2 tahy
+  a umřel hlady vedle jídla); zraněný bez jídla/místa k léčení pracuje.
+- Strážce bez zbraně/zbroje si ji nejdřív vezme (`vybavStrazce`, i čistý strážce a výzbroj odložená bývalým strážcem).
+  Výcvik v lekcích po 60 tazích, potřeba lekci ukončí, pokrok v `t.cvik` (zbrojnice 2/tah, na místě 1, 600 = +1 boj).
+- Uvízlý: záchranný žebřík ⭐ (`zachranUviznuteho` – svisle volnou jámou k poli dosažitelnému ze skladu, ověřeno
+  hledáním cesty s dočasným žebříkem, jednou za 600 tahů, plány se neopakují); zpráva s místem se opakuje po 1200 tazích;
+  „Pozor" má jednu položku s počtem (`pocet`).
+- Plán „na volno" do nevykopaného pole pod dílnou/studnou/stavbou či plánem „na podlahu" se odmítne (`S.neseStavbu`);
+  kopání kvůli plánu nikdy nezboří (plán se zruší). Neprozkoumané pole se odmítne vždy. Plán si pamatuje svou značku
+  ke kopání (`p.vykopat`), zrušení ji smaže. Žebřík do skály: po vytesání schodiště se plán zruší (dřevo zůstane).
+  Výtah na výtah ne.
+- Materiál zrušeného plánu a zbourané studny na nejbližší suché stojné pole (`P.sucheMisto`); `usadVeci` přesune věci
+  z vody a z hladiny. Magma vypaří studnu → studna zmizí celá.
+- Útěk před nepřítelem bez výtahu. Tesání líce jen přes volné pole (DOSAH 3–4, `stojiskaLice`, `licZDosahu`, `kTesani`,
+  `cilTesani`). Otesaný líc si pamatuje horninu (`hra.tesano`, ukládá se): rozpětí stropu = max(zeď, původní)
+  (`P.rozpetiNa`), vykopaný dá to co původní hornina (obložená hlína vrátí kámen).
+- Poplach předem ruší jen viděný nepřítel (ne netopýr, ne tvor v neprozkoumané jeskyni; `u.viden`).
+- Determinismus: prostředí klanu v pevném rozvrhu (nová hra, pak každých 60 tahů) a ukládá se (`prostrediStav`);
+  vlhkost houbárny bez mezipaměti. Fuzz končí mimo hranici 60 tahů, zakládá ošetřovny, tesá, zraňuje.
+- Výtah: mapa pole šachty → stanice jednou za tah, jízdy jednou za šachtu v jednom hledání (`znakBfs`), z pole bez
+  stanice jen na konce šachty. vytah_bench: tah s 85polovou šachtou ~500 → ~400 µs (bez výtahu ~295); BFS 64 → 38 µs.
+- Uložení `VERZE` 12 (čte 9–12; pole `tesano`, `padloPodle`, `prostrediStav`). Padlí podle příčiny `hra.padloPodle`
+  (boj, hlad, zizen, pad, zaval, magma, utonuti; i ve `statistiky`). 16 nových testů v sim (revize 2).

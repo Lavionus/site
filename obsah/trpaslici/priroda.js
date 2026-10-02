@@ -40,7 +40,7 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
         };
         if (!kvalif(x)) { x++; continue; }
         let x1 = x, rozpeti = Infinity;
-        while (x1 < W && kvalif(x1)) { rozpeti = Math.min(rozpeti, MATERIAL[t[(y - 1) * W + x1]].rozpeti || 1); x1++; }
+        while (x1 < W && kvalif(x1)) { rozpeti = Math.min(rozpeti, P.rozpetiNa(hra, (y - 1) * W + x1)); x1++; }   // otesaný strop drží aspoň jako původní hornina
         if (x1 - x > rozpeti) out.push({ klic: `${y}:${x}:${x1 - 1}`, y, x0: x, x1: x1 - 1, rozpeti });
         x = x1;
       }
@@ -55,7 +55,7 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
       // úsek se jen rozrostl nebo zmenšil → zdědí odpočet a nehlásí se znovu
       const prekryv = hra.praskani.filter(q => q.y === s.y && q.x0 <= s.x1 && s.x0 <= q.x1);
       if (prekryv.length) return Object.assign(s, { tik: Math.min(...prekryv.map(q => q.tik)) });
-      if (hra.tik - (hra.varovaniStrop || -9999) >= 600) zprava('zraneni', `Strop síně praská (${s.x1 - s.x0 + 1} polí bez podpěry, ${MATERIAL[hra.hora.teren[(s.y - 1) * W + s.x0]].nazev} unese ${s.rozpeti})! Postav podpěry, než se zřítí.`);
+      if (hra.tik - (hra.varovaniStrop || -9999) >= 600) zprava('zraneni', `Strop síně praská (${s.x1 - s.x0 + 1} polí bez podpěry, ${MATERIAL[hra.hora.teren[(s.y - 1) * W + s.x0]].nazev} unese ${s.rozpeti})! Postav podpěry, než se zřítí.`, (s.y - 1) * W + s.x0);
       hra.varovaniStrop = hra.tik;
       T.hra.zvuk(hra, 'praskani', (s.y - 1) * W + s.x0);
       return Object.assign(s, { tik: hra.tik + DOBA_PRASKANI });
@@ -95,8 +95,8 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
     hra.stabilitaZmena++; hra.svetloZmena++; hra.vodaKlid = false;
     T.hra.zvuk(hra, 'zaval', (s.y - 1) * W + ((s.x0 + s.x1) >> 1), s.x1 - s.x0 + 1);
     const mrtvi = zraneni.filter(u => u.zdravi <= 0);
-    zprava('smrt', 'ZÁVAL! Strop síně se zřítil.' + (zraneni.length ? ' Zasypalo: ' + zraneni.map(u => u.jmeno).join(', ') + '.' : ''));
-    for (const u of mrtvi) T.hra.umri(hra, u, `${u.jmeno} zahynul pod závalem.`);
+    zprava('smrt', 'ZÁVAL! Strop síně se zřítil.' + (zraneni.length ? ' Zasypalo: ' + zraneni.map(u => u.jmeno).join(', ') + '.' : ''), (s.y - 1) * W + ((s.x0 + s.x1) >> 1));
+    for (const u of mrtvi) T.hra.umri(hra, u, `${u.jmeno} zahynul pod závalem.`, 'zaval');
   }
 
   // pojistka: co skončilo uvnitř skály, se vytlačí na nejbližší volné pole nad ní
@@ -120,8 +120,8 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
       hra.veci = hra.veci.filter(v => v.nese || v.i !== j);
       if (hra.stavba[j] || hra.lez[j]) { S.zbourej(hra, j, () => {}); hra.lez[j] = 0; hra.svetloZmena++; }
       if (hra.planNa.has(j)) T.hra.zrusPlany(hra, j % W, j / W | 0, j % W, j / W | 0);
-      for (const u of hra.trpaslici.slice()) if (u.i === j || u.o === j) T.hra.umri(hra, u, `${u.jmeno} shořel v magmatu.`);
-    } else if (hra.stavba[j] === S.K.LOUC) { S.zbourej(hra, j, () => {}); zprava('uvizl', 'Voda uhasila louč.'); }
+      for (const u of hra.trpaslici.slice()) if (u.i === j || u.o === j) T.hra.umri(hra, u, `${u.jmeno} shořel v magmatu.`, 'magma');
+    } else if (hra.stavba[j] === S.K.LOUC) { S.zbourej(hra, j, () => {}); zprava('uvizl', 'Voda uhasila louč.', j); }
   }
   // jednotka kapaliny na i: dolů, nebo o krok k nejbližšímu spádu v řádku
   function tekuti(hra, i, typ, pohnuto, zprava) {
@@ -149,7 +149,7 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
       const zleva = (hra.tik >> 2) & 1;
       for (let k = 0; k < W; k++) {
         const x = zleva ? k : W - 1 - k, i = y * W + x;
-        if (t[i] !== typ || pohnuto[i]) continue;
+        if (t[i] !== typ || pohnuto[i] || hra.stavba[i] === S.K.STUDNA) continue;      // studna vodu zadrží
         if (tekuti(hra, i, typ, pohnuto, zprava)) pohyb++;
       }
     }
@@ -166,7 +166,7 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
       let ytop = H, vrch = -1, cil = -1, ycil = -1;
       for (let h = 0; h < teleso.length; h++) {
         const i = teleso[h], y = i / W | 0, x = i % W;
-        if (y < ytop) { ytop = y; vrch = i; }
+        if (y < ytop && hra.stavba[i] !== S.K.STUDNA) { ytop = y; vrch = i; }        // ze studny se nevyrovnává
         for (const j of [i - W, i + W, x > 0 ? i - 1 : -1, x < W - 1 ? i + 1 : -1]) {
           if (j < 0 || j >= N || videno[j]) continue;
           if (t[j] === typ) { videno[j] = 1; teleso.push(j); continue; }
@@ -186,7 +186,12 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
     let n = 0;
     for (let i = W; i < N - W; i++) {
       if (t[i] !== M.MAGMA) continue;
-      for (const j of [i - 1, i + 1, i - W, i + W]) if (t[j] === M.VODA) { t[i] = M.OBSIDIAN; t[j] = M.VZDUCH; n++; break; }
+      for (const j of [i - 1, i + 1, i - W, i + W]) if (t[j] === M.VODA) {
+        t[i] = M.OBSIDIAN; t[j] = M.VZDUCH; n++;
+        // studna bez vody zmizí celá (obě pole), materiál vypadne na suché místo
+        if (hra.stavba[j] === S.K.STUDNA) { S.zbourej(hra, j, (druh, k, mat) => P.novaVec(hra, druh, k, mat !== undefined ? mat : druh === 'drevo' ? 'drevo' : 0)); P.usadVeci(hra); zprava('uvizl', 'Magma vypařilo vodu ze studny – studna je pryč.', j); }
+        break;
+      }
     }
     if (n) { zprava('objev', `Syčí pára – magma se setkalo s vodou a ztuhlo na obsidián (${n} polí).`); hra.stabilitaZmena++; hra.svetloZmena++; }
     return n;
@@ -196,7 +201,7 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
     for (const u of hra.trpaslici.slice()) {
       if (hra.hora.teren[u.i] !== M.VODA) continue;
       u.zdravi -= 0.4;
-      if (u.zdravi <= 0) { T.hra.umri(hra, u, `${u.jmeno} se utopil.`); continue; }
+      if (u.zdravi <= 0) { T.hra.umri(hra, u, `${u.jmeno} se utopil.`, 'utonuti'); continue; }
       const nad = u.i - W;
       if (u.t >= u.dur && nad >= 0 && !pevne(hra.hora.teren[nad]) && hra.hora.teren[nad] !== M.MAGMA) {
         T.hra.pustPraci(hra, u); u.o = u.i; u.i = nad; u.t = 0; u.dur = 3; u.stav = 'plave';
@@ -210,7 +215,7 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
     if (hra.bezPramenu || hra.hora.pozadi[c] !== M.VAPENEC || hl < 18 || hl > 55) return;
     if (P.nahoda(hra) >= 0.015) return;
     hra.prameny.push({ i: c, zbyva: 16, dalsi: hra.tik });
-    zprava('uvizl', 'Z pukliny ve vápenci vytryskl pramen! Voda poteče, dokud se zdroj nevyčerpá.');
+    zprava('uvizl', 'Z pukliny ve vápenci vytryskl pramen! Voda poteče, dokud se zdroj nevyčerpá.', c);
   }
   // nejvyšší jednotka vody do 3 polí od pumpy (odčerpá se jako první)
   function vodaUPumpy(hra, i) {
@@ -219,7 +224,7 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
     for (let y = y0 - 3; y <= y0 + 3; y++) for (let x = x0 - 3; x <= x0 + 3; x++) {
       if (x < 0 || y < 0 || x >= W || y >= H) continue;
       const j = y * W + x;
-      if (hra.hora.teren[j] === M.VODA && hra.znamo[j] && (nej < 0 || j < nej)) nej = j;
+      if (hra.hora.teren[j] === M.VODA && hra.znamo[j] && hra.stavba[j] !== S.K.STUDNA && (nej < 0 || j < nej)) nej = j;   // studnu pumpa nečerpá
     }
     return nej;
   }

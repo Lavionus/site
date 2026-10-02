@@ -1,0 +1,1235 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>🇺🇦 Vývoj války na Ukrajině</title>
+<link rel="stylesheet" href="lib/leaflet/leaflet.css">
+<script src="lib/leaflet/leaflet.js"></script>
+<script src="lib/chart.min.js"></script>
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../podpis.js" defer></script>
+<style>
+:root {
+  --ru: #d64545; --ru-old: #8f2a2a; --ru-adv: #c97624; --ru-inf: #b05cc4; --ua: #3d7fe0;
+  --ru-soft: rgba(214, 69, 69, .16); --ua-soft: rgba(61, 127, 224, .16);
+}
+:root[data-theme="light"] {
+  --ru: #c43a3a; --ru-old: #7d2020; --ru-adv: #c2701c; --ru-inf: #9a45b0; --ua: #2f6fce;
+  --ru-soft: rgba(196, 58, 58, .10); --ua-soft: rgba(47, 111, 206, .10);
+}
+body { background: var(--bg-deep); padding: 24px clamp(14px, 3vw, 40px); min-height: 100vh; }
+.obal { max-width: 1040px; margin: 0 auto; }
+h1 { font-size: 1.55rem; margin-bottom: 4px; }
+.podtitul { color: var(--text-muted); font-size: .9rem; margin-bottom: 14px; line-height: 1.5; }
+.karta { background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; margin-bottom: 20px; }
+h2 { font-size: 1.12rem; color: var(--accent); margin-bottom: 4px; }
+h3 { font-size: .95rem; margin: 18px 0 6px; }
+.zdroj { color: var(--text-faint); font-size: .78rem; margin-bottom: 14px; line-height: 1.5; }
+.zdroj a, .pozn a, .podtitul a, table a { color: var(--accent); }
+.pozn { color: var(--text-faint); font-size: .8rem; margin-top: 12px; line-height: 1.55; }
+.stav { font-size: .82rem; color: var(--text-muted); margin: 6px 0; }
+.stav.chyba { color: var(--danger); }
+
+/* štítky ověření */
+.stitek { display: inline-flex; align-items: center; gap: 4px; font-size: .7rem; font-weight: 600; padding: 2px 7px; border-radius: 10px; white-space: nowrap; vertical-align: middle; border: 1px solid; }
+.s-over { color: var(--ok); border-color: var(--ok); }
+.s-odhad { color: var(--warn); border-color: var(--warn); }
+.s-tvrz { color: var(--text-faint); border-color: var(--border-strong); border-style: dashed; }
+.legenda-stitku { display: flex; flex-wrap: wrap; gap: 8px 16px; font-size: .8rem; color: var(--text-muted); margin-bottom: 20px; }
+.legenda-stitku > span { display: flex; align-items: center; gap: 6px; }
+
+/* dlaždice */
+.dlazdice { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; }
+.dlazdice > div { background: var(--bg-input); border: 1px solid var(--border); border-radius: 6px; padding: 12px 14px; min-width: 0; }
+.dlazdice .popis { font-size: .74rem; color: var(--text-faint); text-transform: uppercase; letter-spacing: .4px; }
+.dlazdice .hodnota { font-size: 1.55rem; font-weight: 700; margin-top: 4px; font-variant-numeric: tabular-nums; }
+.dlazdice .detail { font-size: .8rem; color: var(--text-muted); margin-top: 3px; line-height: 1.4; }
+.dlazdice .stitek { margin-top: 6px; }
+.dlazdice .detail a { color: var(--accent); }
+
+/* mapa */
+#mapa { height: 520px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-input); }
+@media (max-width: 600px) { #mapa { height: 400px; } }
+.vrstvy { display: flex; flex-wrap: wrap; gap: 6px 14px; margin: 10px 0 0; font-size: .82rem; }
+.vrstvy label { display: flex; align-items: center; gap: 6px; cursor: pointer; color: var(--text-muted); }
+.vrstvy .vzorek { width: 14px; height: 14px; border-radius: 3px; display: inline-block; border: 1px solid rgba(0,0,0,.25); }
+.vrstvy .km { color: var(--text-faint); font-variant-numeric: tabular-nums; }
+.leaflet-container { font-family: var(--font); }
+
+/* vaflový diagram 100 políček */
+.vafle-obal { display: flex; gap: 22px; align-items: center; flex-wrap: wrap; margin-top: 16px; }
+.vafle { display: grid; grid-template-columns: repeat(10, 22px); gap: 3px; }
+.vafle i { width: 22px; height: 22px; border-radius: 4px; background: var(--ua-soft); border: 1px solid var(--ua); }
+.vafle i.stare { background: var(--ru-old); border-color: var(--ru-old); }
+.vafle i.nove { background: var(--ru); border-color: var(--ru); }
+.vafle-legenda { font-size: .86rem; line-height: 1.9; color: var(--text-muted); flex: 1; min-width: 220px; }
+.vafle-legenda b { color: var(--text); font-variant-numeric: tabular-nums; }
+.ctverec { display: inline-block; width: 12px; height: 12px; border-radius: 3px; margin-right: 6px; vertical-align: -1px; }
+
+/* srovnání ISW × DeepState */
+.srovnani { display: grid; gap: 10px; margin-top: 8px; }
+.pruh-radek { display: grid; grid-template-columns: 170px 1fr 120px; gap: 10px; align-items: center; font-size: .85rem; }
+.pruh-radek .jm { color: var(--text-muted); }
+.pruh-radek .val { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
+.pruh { height: 16px; background: var(--bg-input); border-radius: 4px; overflow: hidden; border: 1px solid var(--border); }
+.pruh > div { height: 100%; border-radius: 0 4px 4px 0; }
+@media (max-width: 560px) { .pruh-radek { grid-template-columns: 1fr 100px; } .pruh-radek .pruh { grid-column: 1 / -1; grid-row: 2; } }
+.verdikt { margin-top: 12px; padding: 10px 12px; border-radius: 6px; font-size: .86rem; line-height: 1.5; border-left: 4px solid var(--ok); background: var(--bg-input); }
+.verdikt.varovani { border-left-color: var(--warn); }
+
+/* grafy */
+.graf { position: relative; height: 320px; }
+.graf.nizky { height: 260px; }
+.graf.vysoky { height: 440px; }
+@media (max-width: 560px) { .graf { height: 260px; } .graf.vysoky { height: 520px; } }
+.prepinac { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 10px; }
+.prepinac button { background: var(--bg-control); border: 1px solid var(--border-strong); color: var(--text-muted); border-radius: 6px; padding: 5px 11px; cursor: pointer; font-size: .8rem; }
+.prepinac button:hover { background: var(--bg-hover); color: var(--text); }
+.prepinac button.aktivni { background: var(--accent); border-color: var(--accent); color: #fff; }
+.prirovnani { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; margin-top: 14px; }
+.prirovnani > div { background: var(--bg-input); border: 1px solid var(--border); border-radius: 6px; padding: 10px 12px; font-size: .84rem; color: var(--text-muted); line-height: 1.45; }
+.prirovnani b { color: var(--text); font-size: 1.1rem; font-variant-numeric: tabular-nums; }
+
+/* časosběr */
+.cas-ovladani { display: flex; flex-wrap: wrap; gap: 4px 18px; }
+.cas-lista { display: flex; gap: 6px; align-items: center; margin: 4px 0 2px; }
+.cas-lista button { background: var(--bg-control); border: 1px solid var(--border-strong); color: var(--text); border-radius: 6px; min-width: 40px; height: 36px; cursor: pointer; font-size: .9rem; }
+.cas-lista button:hover { background: var(--bg-hover); }
+.cas-lista button.hlavni { background: var(--accent); border-color: var(--accent); color: #fff; min-width: 52px; }
+.cas-lista input { flex: 1; min-width: 0; accent-color: var(--accent); height: 36px; }
+.cas-osa { position: relative; height: 16px; font-size: .72rem; color: var(--text-faint); margin: 0 30px 10px 156px; font-variant-numeric: tabular-nums; }
+.cas-osa span { position: absolute; top: 0; border-left: 1px solid var(--border-strong); padding-left: 3px; line-height: 1; }
+.cas-telo { display: grid; grid-template-columns: 1fr 280px; gap: 14px; }
+@media (max-width: 820px) { .cas-telo { grid-template-columns: 1fr; } }
+#casMapa { height: 480px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-input); }
+@media (max-width: 600px) { #casMapa { height: 360px; } }
+.cas-info { background: var(--bg-input); border: 1px solid var(--border); border-radius: 6px; padding: 14px; font-size: .84rem; color: var(--text-muted); line-height: 1.5; min-width: 0; }
+.cas-info .datum { font-size: 1.6rem; font-weight: 700; color: var(--text); font-variant-numeric: tabular-nums; line-height: 1.2; }
+.cas-info .radek { margin-top: 10px; }
+.cas-info .radek b { color: var(--text); font-size: 1.05rem; font-variant-numeric: tabular-nums; }
+.cas-info .plus { color: var(--ru-adv); } .cas-info .minus { color: var(--ua); }
+.cas-info .datum.nacita { opacity: .45; }
+.cas-info .udalost { margin-top: 12px; padding: 8px 10px; border-left: 3px solid var(--accent); background: var(--accent-soft); border-radius: 4px; color: var(--text); }
+.cas-info .over { font-size: .76rem; color: var(--text-faint); margin-top: 10px; }
+.cas-legenda { display: flex; flex-wrap: wrap; gap: 6px 16px; font-size: .8rem; color: var(--text-muted); margin-top: 10px; align-items: center; }
+.cas-legenda i { display: inline-block; width: 14px; height: 14px; border-radius: 3px; margin-right: 6px; vertical-align: -2px; }
+.udalosti { columns: 2 300px; font-size: .8rem; color: var(--text-muted); margin: 10px 0 0 22px; line-height: 1.6; }
+.udalosti li::marker { color: var(--text-faint); font-weight: 600; }
+.udalosti b { color: var(--text); font-weight: 600; font-variant-numeric: tabular-nums; }
+.udalosti a { color: inherit; cursor: pointer; text-decoration: underline dotted; }
+
+/* lidé */
+.lide-pruhy { display: grid; gap: 14px; margin-top: 10px; }
+.lide-pruhy .jm { font-size: .85rem; color: var(--text-muted); margin-bottom: 4px; display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
+.lide-pruhy .jm b { color: var(--text); font-variant-numeric: tabular-nums; }
+.lide-pruhy .pruh { height: 22px; }
+
+/* tabulky */
+details { margin-top: 12px; font-size: .84rem; }
+summary { cursor: pointer; color: var(--accent); }
+.tab-obal { overflow-x: auto; margin-top: 8px; }
+table { border-collapse: collapse; width: 100%; font-size: .82rem; }
+th, td { padding: 6px 8px; border-bottom: 1px solid var(--border); text-align: left; vertical-align: top; }
+th { color: var(--text-faint); font-weight: 600; font-size: .76rem; text-transform: uppercase; letter-spacing: .3px; }
+td.n, th.n { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.dva-sl { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+@media (max-width: 760px) { .dva-sl { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+<div class="obal">
+  <h1>🇺🇦 Vývoj války na Ukrajině</h1>
+  <p class="podtitul">
+    Stav fronty podle denních map <b>Institute for the Study of War</b> (ISW) a další otevřená data.
+    Každé číslo nese štítek, nakolik je ověřené — a kde to jde, stránka ho sama porovná s nezávislým zdrojem.
+    Data se stahují živě při otevření stránky. <span id="denValky"></span>
+  </p>
+  <div class="legenda-stitku">
+    <span><span class="stitek s-over">✔ ověřeno</span> nezávisle doloženo (foto, jmenovité záznamy, ověření OSN, mapa ISW s kontrolou druhým zdrojem)</span>
+    <span><span class="stitek s-odhad">≈ odhad</span> rekonstrukce nebo odhad s udanou nejistotou</span>
+    <span><span class="stitek s-tvrz">📢 tvrzení</span> údaj jedné strany konfliktu, nezávisle neověřený</span>
+  </div>
+
+  <!-- ================= Přehled ================= -->
+  <div class="karta">
+    <h2>📌 Stav k poslední mapě ISW</h2>
+    <p class="zdroj" id="iswZdroj">Načítám mapu ISW…</p>
+    <div class="dlazdice" id="dlazdice"></div>
+    <div class="vafle-obal">
+      <div class="vafle" id="vafle" role="img" aria-label="100 políček = celé území Ukrajiny"></div>
+      <div class="vafle-legenda" id="vafleLegenda"></div>
+    </div>
+  </div>
+
+  <!-- ================= Mapa ================= -->
+  <div class="karta">
+    <h2>🗺️ Mapa kontroly území (ISW)</h2>
+    <p class="zdroj">Vrstvy přímo z veřejné mapy ISW/CTP „Assessed Control of Terrain in Ukraine“ (ArcGIS). Plochy počítá tato stránka z polygonů geodeticky (sférický model Země).</p>
+    <div id="mapa"></div>
+    <div class="vrstvy" id="vrstvy"></div>
+    <p class="pozn">
+      <b>Jak číst mapu ISW:</b> „kontrola“ = ISW posoudilo, že území ruské síly drží. „Postup“ = ruské síly v oblasti operují nebo útočí, ale ISW nepovažuje území za ovládnuté.
+      „Infiltrace“ = drobné průniky malých skupin bez kontroly. „Tvrzené“ = ruské zdroje tvrdí, ale ISW nemá potvrzení.
+      ISW za kontrolu považuje jen to, co je doložené geolokovanými záběry; infiltrace vede zvlášť. Při válce malých průniků je tak hranice kontroly neostrá oběma směry — srovnání s DeepStateMap níže to ukazuje v číslech.
+    </p>
+  </div>
+
+  <!-- ================= Časosběr ================= -->
+  <div class="karta" id="casosber">
+    <h2>🎞️ Časosběr fronty</h2>
+    <p class="zdroj">Snímky ruskem ovládaného území krok za krokem. Od 8. 7. 2024 denní mapy <a href="https://deepstatemap.live/" target="_blank" rel="noopener">DeepStateMap</a> (zrcadlo <a href="https://github.com/cyterat/deepstate-map-data" target="_blank" rel="noopener">cyterat/deepstate-map-data</a>) <span class="stitek s-over">✔ ověřeno</span>;
+      pro roky 2022–2024 schematické rekonstrukce podle map ISW z projektu <a href="https://github.com/longlinecode/russo-ukrainian-front-daily" target="_blank" rel="noopener">russo-ukrainian-front-daily</a> (přesnost asi 5–10 km) <span class="stitek s-odhad">≈ odhad</span>.</p>
+    <div class="cas-ovladani">
+      <div class="prepinac" id="casKrok" role="group" aria-label="Krok mezi snímky">
+        <button data-krok="7" class="aktivni" aria-pressed="true">Týden</button><button data-krok="14">2 týdny</button><button data-krok="m">Měsíc</button>
+      </div>
+      <div class="prepinac" id="casRychlost" role="group" aria-label="Rychlost přehrávání">
+        <button data-ms="1400">Pomalu</button><button data-ms="700" class="aktivni" aria-pressed="true">Středně</button><button data-ms="250">Rychle</button>
+      </div>
+      <div class="prepinac" id="casVyrez" role="group" aria-label="Výřez mapy">
+        <button data-v="ua" class="aktivni" aria-pressed="true">Celá Ukrajina</button><button data-v="donbas">Donbas</button><button data-v="jih">Jih</button><button data-v="sever">Charkov–Sumy</button>
+      </div>
+    </div>
+    <div class="cas-lista">
+      <button id="casZpet" title="Předchozí snímek" aria-label="Předchozí snímek">◀</button>
+      <button id="casHraj" class="hlavni" title="Přehrát" aria-label="Přehrát">▶</button>
+      <button id="casVpred" title="Další snímek" aria-label="Další snímek">▶|</button>
+      <input type="range" id="casPosuv" min="0" max="0" value="0" aria-label="Datum snímku">
+    </div>
+    <div class="cas-osa" id="casOsa"></div>
+    <div class="cas-telo">
+      <div id="casMapa" role="img" aria-label="Mapa časosběru fronty"></div>
+      <div class="cas-info" id="casInfo" aria-live="polite"><div class="stav">Načítám snímky…</div></div>
+    </div>
+    <div class="cas-legenda">
+      <span><i style="background:var(--ru);opacity:.6"></i>ruská kontrola</span>
+      <span><i style="background:var(--ru-adv)"></i>přibylo Rusku od předchozího snímku</span>
+      <span><i style="background:var(--ua)"></i>získala zpět Ukrajina</span>
+      <span><i style="background:repeating-linear-gradient(-45deg,var(--ru) 0 1.5px,transparent 1.5px 5px);outline:1px dashed var(--ru);outline-offset:-1px"></i>sever 2022 (únor–duben, schematicky)</span>
+      <span class="pozn" style="margin:0">Změny jsou pro viditelnost obtažené o 2 px — skutečná plocha je v panelu vpravo.</span>
+    </div>
+  </div>
+
+  <!-- ================= Ověření ================= -->
+  <div class="karta">
+    <h2 id="krizova">🔎 Křížová kontrola: ISW × DeepStateMap</h2>
+    <p class="zdroj">Dva nezávislé týmy mapují frontu vlastní metodikou: americký think-tank ISW a ukrajinský projekt DeepStateMap (denní plochy přes otevřený repozitář <a href="https://github.com/longlinecode/russo-ukrainian-front-daily" target="_blank" rel="noopener">russo-ukrainian-front-daily</a>, zrcadlo <a href="https://github.com/cyterat/deepstate-map-data" target="_blank" rel="noopener">cyterat/deepstate-map-data</a>).</p>
+    <div class="srovnani" id="srovnani"><div class="stav">Načítám…</div></div>
+    <div id="verdikt"></div>
+  </div>
+
+  <!-- ================= Vývoj území ================= -->
+  <div class="karta">
+    <h2>📈 Vývoj okupovaného území od 24. 2. 2022</h2>
+    <p class="zdroj">Ruskem ovládané území Ukrajiny včetně Krymu a částí Donbasu obsazených už v letech 2014–2015. Do 7. 7. 2024 jde o 16 klíčových dat rekonstruovaných podle map ISW (přesnost asi 5–10 km), od 8. 7. 2024 o denní data DeepStateMap. Řada rekonstrukcí nezahrnuje sever obsazený v únoru až dubnu 2022 (až ~35 000 km² u Kyjeva, Černihivu a Sum) — ten ukazuje zvláštní tečkovaná čára. Rekonstrukce <span class="stitek s-odhad">≈ odhad</span>, denní data <span class="stitek s-over">✔ ověřeno</span></p>
+    <div class="graf"><canvas id="grafUzemi" role="img" aria-label="Graf: ruskem ovládané území Ukrajiny od února 2022 v km²"></canvas></div>
+    <ol class="udalosti" id="udalosti"></ol>
+    <p class="pozn" style="margin-top:4px">Svislá čára <span style="color:var(--accent)">■</span> = snímek zobrazený v časosběru. Kliknutím do grafu na něj časosběr přeskočí.</p>
+    <h3>Čistá měsíční změna území (DeepStateMap, od července 2024)</h3>
+    <p class="pozn" style="margin:0 0 6px">Sloupec = ruské zisky minus území, které Ukrajina získala zpět. Skoro nulový měsíc neznamená klid na frontě — jen že se obojí vyrovnalo.</p>
+    <div class="graf nizky"><canvas id="grafMesice" role="img" aria-label="Graf: měsíční změny ruskem ovládaného území"></canvas></div>
+    <div class="prirovnani" id="prirovnani"></div>
+    <details><summary>Tabulka měsíčních změn</summary><div class="tab-obal" id="tabMesice"></div></details>
+  </div>
+
+  <!-- ================= Technika ================= -->
+  <div class="karta">
+    <h2>🛡️ Ztráty techniky doložené fotografií (Oryx)</h2>
+    <p class="zdroj">Projekt <a href="https://www.oryxspioenkop.com/2022/02/attack-on-europe-documenting-equipment.html" target="_blank" rel="noopener">Oryx</a> započítá jen techniku, jejíž zničení, poškození, opuštění nebo ukořistění dokládá fotografie či video. Skutečné ztráty jsou proto vyšší — jde o <b>doložené minimum</b>. Denní export: <a href="https://github.com/leedrake5/Russia-Ukraine" target="_blank" rel="noopener">leedrake5/Russia-Ukraine</a>. <span class="stitek s-over">✔ ověřeno</span></p>
+    <div class="dlazdice" id="oryxDlazdice"><div class="stav">Načítám…</div></div>
+    <p class="pozn" id="oryxStav" style="margin-top:8px"></p>
+    <h3>Doložené ztráty podle druhu techniky</h3>
+    <div class="graf vysoky"><canvas id="grafOryx" role="img" aria-label="Graf: fotograficky doložené ztráty techniky podle druhu, Rusko a Ukrajina"></canvas></div>
+    <h3>Kumulativní doložené ztráty v čase (všechny druhy)</h3>
+    <div class="graf nizky"><canvas id="grafOryxCas" role="img" aria-label="Graf: kumulativní doložené ztráty techniky v čase"></canvas></div>
+    <div class="stav" id="oryxCasStav"></div>
+    <details><summary>Tabulka podle druhu techniky</summary><div class="tab-obal" id="tabOryx"></div></details>
+  </div>
+
+  <!-- ================= Tvrzení vs. doloženo ================= -->
+  <div class="karta">
+    <h2>⚖️ Proč záleží na ověření: tvrzení × doloženo</h2>
+    <p class="zdroj">Ruské ztráty podle denních hlášení Generálního štábu ZSU (<a href="https://github.com/PetroIvaniuk/2022-Ukraine-Russia-War-Dataset" target="_blank" rel="noopener">otevřená datová sada</a>) <span class="stitek s-tvrz">📢 tvrzení</span> proti fotograficky doloženým ztrátám podle Oryxu <span class="stitek s-over">✔ ověřeno</span>. Pravda leží někde mezi: Oryx nevidí vše, hlášení strany konfliktu nikdo nekontroluje.</p>
+    <div class="graf" id="tvrzeniObal"><canvas id="grafTvrzeni" role="img" aria-label="Graf: ruské ztráty podle tvrzení GŠ ZSU proti ztrátám doloženým Oryxem"></canvas></div>
+    <p class="pozn">Kategorie nejsou definované úplně stejně. Obrněná vozidla = u Oryxu AFV + BVP + OT + MRAP + IMV; PVO = protiletadlové raketové komplety + kanóny. Poměr je proto orientační. Dělostřelectvo záměrně chybí: GŠ ZSU do něj počítá i minomety, Oryx je vede zvlášť a ve fotodokumentaci jich zachytí jen zlomek — srovnání by bylo zavádějící.</p>
+  </div>
+
+  <!-- ================= Lidé ================= -->
+  <div class="karta">
+    <h2>🕯️ Lidské oběti</h2>
+    <div class="dva-sl">
+      <div>
+        <h3>Ruští vojáci</h3>
+        <div class="lide-pruhy" id="vojaci"></div>
+        <p class="pozn">Mediazona a ruská služba BBC zveřejňují jen jména doložená nekrology, zprávami úřadů a veřejnými záznamy — je to <b>tvrdé minimum</b>; samy uvádějí, že skutečný počet mrtvých je „výrazně vyšší“. Číslo GŠ ZSU zahrnuje zabité i raněné vyřazené z boje. <b>Pruhy proto nejsou dvě verze téhož čísla</b>: první jsou jen jmenovitě doložení mrtví, druhý všichni vyřazení podle jedné strany konfliktu.</p>
+      </div>
+      <div>
+        <h3>Civilisté na Ukrajině (OSN)</h3>
+        <div class="dlazdice" id="civilisteDlazdice"></div>
+        <div class="graf nizky" style="margin-top:12px"><canvas id="grafCivil" role="img" aria-label="Graf: civilní oběti leden až srpen 2024, 2025 a 2026"></canvas></div>
+      </div>
+    </div>
+    <p class="pozn">Civilní oběti: <a href="https://ukraine.ohchr.org/en/Protection-of-Civilians-in-Armed-Conflict-August-2026" target="_blank" rel="noopener">Monitorovací mise OSN pro lidská práva (HRMMU), zpráva za srpen 2026</a>, stav k 31. 8. 2026. OSN započítá jen jednotlivě ověřené případy; skutečná čísla jsou podle OSN výrazně vyšší, hlavně kvůli okupovaným městům jako Mariupol, kam mise nemá přístup.
+      Ruští vojáci: <a href="https://en.zona.media/article/2026/09/21/casualties_eng-trl" target="_blank" rel="noopener">Mediazona</a>, jmenný seznam k 21. 9. 2026. Ukrajinské vojenské ztráty nejsou spolehlivě veřejně doložené, proto je stránka neuvádí.</p>
+    <h3>Vysídlení (UNHCR, stav k 19. 2. 2026) <span class="stitek s-over">✔ ověřeno</span></h3>
+    <div class="dlazdice" id="vysidleni"></div>
+    <p class="pozn">Zdroj: <a href="https://data.unhcr.org/en/documents/download/121256" target="_blank" rel="noopener">UNHCR — Ukraine Emergency Four Years On, 2026 Update</a>. Uprchlíci = registrovaní v hostitelských zemích; vnitřně vysídlení podle IOM.</p>
+  </div>
+
+  <!-- ================= Zdroje ================= -->
+  <div class="karta">
+    <h2>📚 Zdroje a jak jsou ověřené</h2>
+    <div class="tab-obal">
+      <table>
+        <thead><tr><th>Zdroj</th><th>Co měří</th><th>Ověření</th><th>Stav dat</th></tr></thead>
+        <tbody id="tabZdroje"></tbody>
+      </table>
+    </div>
+    <p class="pozn">
+      Podíly počítány z rozlohy Ukrajiny v mezinárodně uznaných hranicích (603 628 km², včetně Krymu).
+      Srovnání s Českem: 78 871 km², Praha 496 km².
+      Mapový podklad © Esri, HERE, Garmin, © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>;
+      vrstvy kontroly území © Institute for the Study of War &amp; AEI's Critical Threats Project.
+      Stránka nic neupravuje ani nepředpovídá — jen zobrazuje a porovnává zveřejněná data.
+    </p>
+  </div>
+</div>
+
+<script>
+/* ============================================================
+   Vývoj války na Ukrajině – živá otevřená data
+   ISW (ArcGIS) · DeepStateMap · Oryx · GŠ ZSU · OHCHR · Mediazona · UNHCR
+   ============================================================ */
+const $ = id => document.getElementById(id);
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const fmt = (n, d = 0) => Number(n).toLocaleString('cs-CZ', { minimumFractionDigits: d, maximumFractionDigits: d });
+const UA_KM2 = 603628, CZ_KM2 = 78871, PRAHA_KM2 = 496;
+const ZACATEK = Date.UTC(2022, 1, 24);
+const MES3 = ['led','úno','bře','dub','kvě','čvn','čvc','srp','zář','říj','lis','pro'];
+const MESICE = ['leden','únor','březen','duben','květen','červen','červenec','srpen','září','říjen','listopad','prosinec'];
+const MESICE_EN = ['january','february','march','april','may','june','july','august','september','october','november','december'];
+const prahy = km => km >= PRAHA_KM2 ? `${fmt(km / PRAHA_KM2, 1)}× rozloha Prahy` : `${fmt(km / PRAHA_KM2 * 100)} % rozlohy Prahy`;
+const datumCz = s => { const [r, m, d] = s.split('-').map(Number); return `${d}. ${m}. ${r}`; };
+const STITEK = { over: '<span class="stitek s-over">✔ ověřeno</span>', odhad: '<span class="stitek s-odhad">≈ odhad</span>', tvrz: '<span class="stitek s-tvrz">📢 tvrzení</span>' };
+
+const URL_ISW = 'https://www.arcgis.com/sharing/rest/content/items/9f04944a2fe84edab9da31750c2b15eb/data?f=json';
+const URL_PRED2022 = 'https://services5.arcgis.com/SaBe5HMtmnbqSWlu/arcgis/rest/services/VIEW_Russian_controlled_Ukrainian_Territory_before_February_24_2022/FeatureServer/36/query?where=1%3D1&outFields=OBJECTID&f=geojson&outSR=4326&maxAllowableOffset=0.002&geometryPrecision=4';
+const URL_DEEPSTATE = 'https://raw.githubusercontent.com/longlinecode/russo-ukrainian-front-daily/main/data/series.json';
+const URL_ORYX = d => `https://raw.githubusercontent.com/leedrake5/Russia-Ukraine/main/data/byType/${d}.csv`;
+const URL_GS = 'https://raw.githubusercontent.com/PetroIvaniuk/2022-Ukraine-Russia-War-Dataset/main/data/russia_losses_equipment.json';
+const URL_HIST = 'https://raw.githubusercontent.com/longlinecode/russo-ukrainian-front-daily/main/data/history.json';
+const URL_DS_DEN = d => `https://raw.githubusercontent.com/cyterat/deepstate-map-data/main/data/deepstatemap_data_${d.replaceAll('-', '')}.geojson`;
+const URL_GS_OSOBY = 'https://raw.githubusercontent.com/PetroIvaniuk/2022-Ukraine-Russia-War-Dataset/main/data/russia_losses_personnel.json';
+
+/* Statické údaje z dokumentů, které nemají otevřené API.
+   Každý byl ověřen proti primárnímu zdroji (PDF / článek), viz odkazy. */
+const STATICKA = {
+  mediazona: { pocet: 258989, k: '2026-09-21' },
+  ohchr: { zabito: 17257, zraneno: 53693, k: '2026-08-31', srpen: { zabito: 372, zraneno: 2349 },
+           ledenSrpen: [ { rok: 2024, zabito: 1392, zraneno: 5496 }, { rok: 2025, zabito: 1694, zraneno: 8165 }, { rok: 2026, zabito: 2222, zraneno: 13058 } ] },
+  unhcr: { uprchlici: 5923870, evropa: 5300000, idp: 3700000, k: '2026-02-19' },
+};
+
+const stav = { isw: null, deepstate: null, oryx: null, gs: null, gsOsoby: null };
+
+async function stahni(url, typ = 'json') {
+  const r = await fetch(url, { cache: 'no-cache' });
+  if (!r.ok) throw new Error(`HTTP ${r.status}`);
+  return typ === 'json' ? r.json() : r.text();
+}
+
+/* ---------- geodetická plocha (sférický exces, stejný vzorec jako d3/Leaflet.draw) ---------- */
+const R = 6378137;
+function plochaKruhu(kr) {
+  let a = 0;
+  for (let i = 0; i < kr.length; i++) {
+    const [x1, y1] = kr[i], [x2, y2] = kr[(i + 1) % kr.length];
+    a += (x2 - x1) * Math.PI / 180 * (2 + Math.sin(y1 * Math.PI / 180) + Math.sin(y2 * Math.PI / 180));
+  }
+  return a * R * R / 2;
+}
+// Vnější kruh a díry mají opačnou orientaci, takže součet se znaménkem = plocha bez děr.
+const plochaPolygonu = kruhy => Math.abs(kruhy.reduce((s, k) => s + plochaKruhu(k), 0)) / 1e6;
+
+/* ============================================================
+   1) ISW – webová mapa s vloženými denními polygony
+   ============================================================ */
+const VRSTVY_ISW = [
+  { titul: 'Assessed Russian-Controlled Terrain', id: 'kontrola', nazev: 'Ruská kontrola (posouzeno ISW)', barva: '--ru', pruhl: .45, zap: true },
+  { titul: 'Assessed Russian Advances', id: 'postup', nazev: 'Ruský postup bez kontroly', barva: '--ru-adv', pruhl: .45, zap: true },
+  { titul: 'Assessed Russian Infiltration Areas', id: 'infiltrace', nazev: 'Ruské infiltrace', barva: '--ru-inf', pruhl: .5, zap: true },
+  { titul: 'Claimed Russian Territory', id: 'tvrzene', nazev: 'Tvrzeno Ruskem, nepotvrzeno', barva: '--ru-adv', pruhl: .15, zap: false, carkovane: true },
+];
+
+async function nactiIsw() {
+  const [mapa, pred] = await Promise.all([stahni(URL_ISW), stahni(URL_PRED2022).catch(() => null)]);
+  const vrstvy = {};
+  let datum = null;
+  for (const op of mapa.operationalLayers || []) {
+    const def = VRSTVY_ISW.find(v => v.titul === op.title);
+    if (!def || !op.featureCollection) continue;
+    const prvky = op.featureCollection.layers.flatMap(l => l.featureSet.features);
+    let km2 = 0;
+    const geo = { type: 'FeatureCollection', features: [] };
+    for (const f of prvky) {
+      const kruhy = f.geometry?.rings;
+      if (!kruhy) continue;
+      km2 += plochaPolygonu(kruhy);
+      // Esri kruhy → GeoJSON (Leaflet si s orientací poradí; díry vykreslí evenodd)
+      geo.features.push({ type: 'Feature', properties: {}, geometry: { type: 'Polygon', coordinates: kruhy } });
+      const d = f.attributes?.pub_date;
+      if (d && (!datum || d > datum)) datum = d;
+    }
+    vrstvy[def.id] = { ...def, km2, geo, pocet: prvky.length };
+  }
+  if (!vrstvy.kontrola) throw new Error('mapa ISW neobsahuje vrstvu kontroly území');
+  if (!datum) throw new Error('mapa ISW neuvádí datum (pub_date)');
+  let pred2022 = null;
+  if (pred?.features) {
+    let km2 = 0;
+    for (const f of pred.features) {
+      const g = f.geometry; if (!g) continue;
+      const polys = g.type === 'Polygon' ? [g.coordinates] : g.coordinates;
+      for (const p of polys) km2 += plochaPolygonu(p);
+    }
+    pred2022 = { km2, geo: pred };
+  }
+  return { vrstvy, datum, pred2022, upraveno: mapa.modified };
+}
+
+function vykresliIsw() {
+  const { vrstvy, datum, pred2022 } = stav.isw;
+  const kontrola = vrstvy.kontrola.km2;
+  const podil = kontrola / UA_KM2 * 100;
+  const predKm = pred2022?.km2 ?? null;
+  const odInvaze = predKm != null ? kontrola - predKm : null;
+  const isoZpravy = (() => { const [r, m, d] = datum.split('-').map(Number); return `${MESICE_EN[m - 1]}-${d}-${r}`; })();
+  const odkazZpravy = `https://understandingwar.org/research/russia-ukraine/russian-offensive-campaign-assessment-${isoZpravy}/`;
+  $('iswZdroj').innerHTML = `Mapa ISW ze dne <b>${datumCz(datum)}</b> · denní zpráva: <a href="${odkazZpravy}" target="_blank" rel="noopener">Russian Offensive Campaign Assessment, ${datumCz(datum)}</a> · <a href="https://www.arcgis.com/home/item.html?id=9f04944a2fe84edab9da31750c2b15eb" target="_blank" rel="noopener">zdrojová mapa ISW</a>`;
+
+  const dl = [
+    { popis: 'Ruskem ovládané území', hodnota: `${fmt(kontrola)} km²`, detail: `${fmt(podil, 1)} % rozlohy Ukrajiny · ${fmt(kontrola / CZ_KM2, 2)}× rozloha Česka${stav.deepstate ? `<br>DeepStateMap: ${fmt(stav.deepstate.denni.at(-1).km2)} km² (<a href="#krizova">proč se liší</a>)` : ''}`, s: STITEK.over },
+  ];
+  if (predKm != null) {
+    dl.push({ popis: 'Z toho obsazeno do 24. 2. 2022', hodnota: `${fmt(predKm)} km²`, detail: 'Krym a části Doněcké a Luhanské oblasti (2014–2015)', s: STITEK.over });
+    dl.push({ popis: 'Obsazeno od začátku invaze', hodnota: `${fmt(odInvaze)} km²`, detail: `≈ ${prahy(odInvaze)}`, s: STITEK.over });
+  }
+  dl.push({ popis: 'Oblasti ruského postupu', hodnota: `${fmt((vrstvy.postup?.km2 || 0) + (vrstvy.infiltrace?.km2 || 0))} km²`, detail: `sporné území: postup ${fmt(vrstvy.postup?.km2 || 0)} km² + infiltrace ${fmt(vrstvy.infiltrace?.km2 || 0)} km² (posouzení ISW, ne kontrola)`, s: '' });
+  $('dlazdice').innerHTML = dl.map(x => `<div><div class="popis">${x.popis}</div><div class="hodnota">${x.hodnota}</div><div class="detail">${x.detail}</div>${x.s}</div>`).join('');
+
+  // vafle: 100 políček = Ukrajina
+  const nStare = predKm != null ? Math.round(predKm / UA_KM2 * 100) : 0;
+  const nVse = Math.round(podil);
+  $('vafle').innerHTML = Array.from({ length: 100 }, (_, i) => `<i class="${i < nStare ? 'stare' : i < nVse ? 'nove' : ''}"></i>`).join('');
+  $('vafleLegenda').innerHTML = `
+    <div><b>Jedno políčko = 1 % Ukrajiny</b> (≈ ${fmt(UA_KM2 / 100)} km²)</div>
+    ${predKm != null ? `<div><span class="ctverec" style="background:var(--ru-old)"></span>obsazeno už 2014–2015: <b>${fmt(predKm / UA_KM2 * 100, 1)} %</b></div>
+    <div><span class="ctverec" style="background:var(--ru)"></span>obsazeno od 24. 2. 2022: <b>${fmt(odInvaze / UA_KM2 * 100, 1)} %</b></div>` : ''}
+    <div><span class="ctverec" style="background:var(--ua-soft);border:1px solid var(--ua)"></span>pod kontrolou Ukrajiny: <b>${fmt(100 - podil, 1)} %</b></div>`;
+
+  bezpecne(vykresliMapu);
+  bezpecne(vykresliSrovnani);
+}
+
+/* ---------- mapa ---------- */
+let mapa = null;
+const mapoveVrstvy = {};
+// Esri šedé podklady (bez klíče); popisky jako zvláštní vrstva nad polygony ISW
+const urlEsri = typ => `https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_${document.documentElement.dataset.theme === 'light' ? 'Light' : 'Dark'}_Gray_${typ}/MapServer/tile/{z}/{y}/{x}`;
+// Při změně tématu se vrstvy podkladu tvoří znovu: L.TileLayer.setUrl při necelém
+// zoomu (zoomSnap .25) dosadí do adresy např. z=5.75 a server vrátí cizí dlaždice.
+function nastavPodklad(m, vrstvy) {
+  m._podklad?.remove(); m._popisky?.remove();
+  m._podklad = L.tileLayer(urlEsri('Base'), { maxZoom: 16, attribution: `Podklad © Esri, HERE, Garmin, © OpenStreetMap · ${vrstvy}` }).addTo(m);
+  m._popisky = L.tileLayer(urlEsri('Reference'), { maxZoom: 16, pane: 'popisky' }).addTo(m);
+}
+function novaMapa(id, vrstvy) {
+  const m = L.map(id, { preferCanvas: true, zoomSnap: .25 });
+  m.fitBounds([[44.3, 22.1], [52.4, 40.3]]);
+  m.createPane('popisky').style.zIndex = 650;
+  m.getPane('popisky').style.pointerEvents = 'none';
+  m._atribuce = vrstvy;
+  nastavPodklad(m, vrstvy);
+  return m;
+}
+function stylVrstvy(def) {
+  const b = css(def.barva);
+  return { color: b, weight: def.carkovane ? 1.5 : 1, dashArray: def.carkovane ? '4 4' : null, fillColor: b, fillOpacity: def.pruhl, fillRule: 'evenodd' };
+}
+function vykresliMapu() {
+  if (!mapa) {
+    mapa = novaMapa('mapa', 'vrstvy © ISW/CTP');
+  }
+  const { vrstvy, pred2022 } = stav.isw;
+  const defs = [];
+  if (pred2022) defs.push(pred2022.def = pred2022.def || { id: 'pred2022', nazev: 'Obsazeno před 24. 2. 2022', barva: '--ru-old', pruhl: .55, zap: true, km2: pred2022.km2, geo: pred2022.geo });
+  for (const d of VRSTVY_ISW) if (vrstvy[d.id]) defs.push(vrstvy[d.id]);
+  // pořadí kreslení: kontrola dospod, předválečné nad ní (zvýraznění), drobné vrstvy navrch
+  const poradi = ['tvrzene', 'kontrola', 'pred2022', 'postup', 'infiltrace'];
+  defs.sort((a, b) => poradi.indexOf(a.id) - poradi.indexOf(b.id));
+  for (const d of defs) {
+    mapoveVrstvy[d.id]?.remove();
+    const vrstva = L.geoJSON(d.geo, { style: () => stylVrstvy(d), interactive: false });
+    vrstva.def = d;
+    mapoveVrstvy[d.id] = vrstva;
+    if (d.zap) vrstva.addTo(mapa);
+  }
+  const vypis = [...defs].sort((a, b) => poradi.indexOf(b.id) - poradi.indexOf(a.id));
+  $('vrstvy').innerHTML = vypis.map(d => `
+    <label><input type="checkbox" data-id="${d.id}" ${d.zap ? 'checked' : ''}>
+      <span class="vzorek" style="background:var(${d.barva});opacity:${Math.min(1, d.pruhl + .35)}"></span>
+      ${d.nazev} <span class="km">${fmt(d.km2)} km²</span></label>`).join('');
+  $('vrstvy').querySelectorAll('input').forEach(ch => ch.addEventListener('change', () => {
+    const v = mapoveVrstvy[ch.dataset.id];
+    v.def.zap = ch.checked;
+    if (ch.checked) v.addTo(mapa); else v.remove();
+    srovnejPoradi();
+  }));
+  srovnejPoradi();
+  function srovnejPoradi() { poradi.forEach(id => { const v = mapoveVrstvy[id]; if (v && mapa.hasLayer(v)) v.bringToFront(); }); }
+}
+
+/* ============================================================
+   2) DeepStateMap – řada ploch, křížová kontrola s ISW
+   ============================================================ */
+function vykresliSrovnani() {
+  if (!stav.isw || !stav.deepstate) return;
+  const isw = stav.isw.vrstvy.kontrola.km2;
+  const iswSirsi = isw + (stav.isw.vrstvy.postup?.km2 || 0) + (stav.isw.vrstvy.infiltrace?.km2 || 0);
+  const ds = stav.deepstate.denni;
+  // DeepState ke stejnému dni jako mapa ISW (nebo nejbližší starší)
+  const stejny = [...ds].reverse().find(b => b.d <= stav.isw.datum) || ds[ds.length - 1];
+  const max = Math.max(isw, iswSirsi, stejny.km2) * 1.02;
+  const radek = (jm, km, barva) => `<div class="pruh-radek"><span class="jm">${jm}</span><div class="pruh"><div style="width:${km / max * 100}%;background:${barva}"></div></div><span class="val">${fmt(km)} km²</span></div>`;
+  $('srovnani').innerHTML =
+    radek(`ISW – kontrola (${datumCz(stav.isw.datum)})`, isw, 'var(--ru)') +
+    radek('ISW – kontrola + postup + infiltrace', iswSirsi, 'var(--ru-adv)') +
+    radek(`DeepStateMap (${datumCz(stejny.d)})`, stejny.km2, 'var(--ru-old)');
+  const rozdil = stejny.km2 - isw, proc = rozdil / isw * 100;
+  const ok = Math.abs(proc) <= 5;
+  $('verdikt').innerHTML = `<div class="verdikt ${ok ? '' : 'varovani'}">
+    ${ok ? '✔' : '⚠'} Zdroje se liší o <b>${fmt(Math.abs(rozdil))} km² (${fmt(Math.abs(proc), 1)} %)</b> —
+    ${ok ? 'shoda v mezích rozdílných metodik.' : 'rozdíl je větší než obvykle, čísla berte s rezervou.'}
+    ${stejny.km2 >= isw && stejny.km2 <= iswSirsi
+      ? `DeepStateMap leží mezi užším a širším vymezením ISW (${fmt(isw)}–${fmt(iswSirsi)} km²): rozdíl odpovídá pásmu, které ISW vede jako sporný „postup“ nebo „infiltraci“ a DeepStateMap zčásti už počítá jako ruské.`
+      : `DeepStateMap ${rozdil > 0 ? 'vykazuje víc než dokonce širší vymezení ISW' : 'vykazuje méně než ISW'} (ISW s postupem a infiltracemi ${fmt(iswSirsi)} km²)${ok ? '.' : ' — metodiky se v tomto období rozcházejí víc než obvykle.'}`}
+    Samotný výpočet ploch má přesnost asi ±1 % (generalizace hranic a pobřeží).
+  </div>`;
+}
+
+function vykresliUzemi() {
+  const { serie } = stav.deepstate;
+  const ru = css('--ru'), mriz = css('--border'), txt = css('--text-faint');
+  // skutečná časová osa (ms) – 16 historických bodů a denní řada mají každý svou hustotu
+  const t = d => Date.parse(d + 'T00:00:00Z');
+  const prvniDenni = serie.findIndex(b => b.s === 'd');
+  const hist = serie.filter(b => b.s === 'h').map(b => ({ x: t(b.d), y: b.km2 }));
+  // g = sever obsazený v únoru až dubnu 2022 (rekonstrukce ho vede zvlášť)
+  const sever = serie.filter(b => b.s === 'h' && b.d <= '2022-04-07').map(b => ({ x: t(b.d), y: b.km2 + (b.g || 0) }));
+  // napojení: poslední historický bod i do denní řady, aby čára nebyla přerušená
+  const denni = serie.slice(Math.max(0, prvniDenni - 1)).map(b => ({ x: t(b.d), y: b.km2 }));
+  const sady = [
+    { label: 'Rekonstrukce podle map ISW (2022–2024)', data: hist, borderColor: ru, backgroundColor: ru, borderDash: [5, 4], borderWidth: 2, pointRadius: 3.5, pointHitRadius: 8 },
+    { label: 'Včetně severu (únor–duben 2022)', data: sever, borderColor: ru, backgroundColor: css('--ru-soft'), borderDash: [2, 3], borderWidth: 1.5, pointRadius: 2.5, pointHitRadius: 8 },
+    { label: 'DeepStateMap denně', data: denni, borderColor: ru, backgroundColor: css('--ru-soft'), fill: 'origin', borderWidth: 2, pointRadius: 0, pointHitRadius: 4 },
+  ];
+  if (stav.isw) sady.push({ label: 'ISW (spočteno touto stránkou)', data: [{ x: t(stav.isw.datum), y: stav.isw.vrstvy.kontrola.km2 }], borderColor: css('--text'), backgroundColor: css('--bg-panel'), pointRadius: 6, pointBorderWidth: 2, showLine: false });
+  const volby = zakladVoleb({
+    x: { type: 'linear', min: t('2022-02-01'), max: Date.now(), ticks: { color: txt, maxRotation: 0, stepSize: 182.6 * 864e5, callback: v => { const d = new Date(v); return `${MES3[d.getUTCMonth()]} ${d.getUTCFullYear()}`; } }, grid: { display: false } },
+    y: { min: 0, ticks: { color: txt, callback: v => `${fmt(v / 1000)} tis.` }, grid: { color: mriz }, title: { display: true, text: 'km²', color: txt } },
+  }, c => `${c.dataset.label}: ${fmt(c.parsed.y)} km² (${fmt(c.parsed.y / UA_KM2 * 100, 1)} % Ukrajiny)`, items => datumCz(new Date(items[0].parsed.x).toISOString().slice(0, 10)));
+  volby.interaction = { mode: 'nearest', axis: 'x', intersect: false };
+  volby.layout = { padding: { top: 4 } };
+  volby.onClick = (ev, _, ch) => skocNaDatum(isoZms(ch.scales.x.getValueForPixel(ev.x)));
+  znovuGraf('grafUzemi', { type: 'line', data: { datasets: sady }, options: volby, plugins: [pluginZnacky] });
+  $('udalosti').innerHTML = UDALOSTI.map(u => `<li><a href="#casosber" data-d="${u.d}"><b>${datumCz(u.d)}</b></a> – ${u.t}</li>`).join('');
+  $('udalosti').querySelectorAll('a').forEach(a => a.onclick = e => { e.preventDefault(); skocNaDatum(a.dataset.d); $('casosber').scrollIntoView({ behavior: 'smooth' }); });
+
+  // měsíční změny z denních dat
+  const den = stav.deepstate.denni;
+  const mesice = [];
+  let predchozi = den[0];
+  for (let i = 1; i < den.length; i++) {
+    const b = den[i], dalsi = den[i + 1];
+    if (!dalsi || dalsi.d.slice(0, 7) !== b.d.slice(0, 7)) {
+      // první měsíc řady (od 8. 7. 2024) a běžící měsíc nejsou celé
+      mesice.push({ m: b.d.slice(0, 7), zmena: b.km2 - predchozi.km2, uplny: !!dalsi && (mesice.length > 0 || den[0].d.endsWith('-01')), od: predchozi.d, konec: b.d });
+      predchozi = b;
+    }
+  }
+  stav.deepstate.mesice = mesice;
+  const ua = css('--ua');
+  znovuGraf('grafMesice', {
+    type: 'bar',
+    data: { labels: mesice.map(m => m.m), datasets: [{
+      label: 'Čistá změna ruskem ovládaného území', data: mesice.map(m => m.zmena),
+      backgroundColor: mesice.map(m => m.zmena >= 0 ? ru : ua), borderRadius: 4, borderSkipped: false, maxBarThickness: 28,
+    }] },
+    options: zakladVoleb({
+      x: { ticks: { color: txt, maxRotation: 0, autoSkip: true, callback(v) { const [r, m] = this.getLabelForValue(v).split('-'); return m === '01' ? `led ${r}` : MES3[+m - 1]; } }, grid: { display: false } },
+      y: { ticks: { color: txt, callback: v => fmt(v) }, grid: { color: mriz }, title: { display: true, text: 'km² za měsíc', color: txt } },
+    }, c => `Čistě ${c.parsed.y >= 0 ? 'pro Rusko' : 'pro Ukrajinu'} ${fmt(Math.abs(c.parsed.y))} km² ≈ ${prahy(Math.abs(c.parsed.y))}`,
+       items => { const m = mesice[items[0].dataIndex]; const [r, mm] = m.m.split('-'); return `${MESICE[+mm - 1]} ${r}${m.uplny ? '' : ` (neúplný, do ${datumCz(m.konec)})`}`; }, false),
+  });
+
+  // přirovnání
+  const posl = den[den.length - 1];
+  const najdi = dnu => { const t = new Date(posl.d); t.setUTCDate(t.getUTCDate() - dnu); const s = t.toISOString().slice(0, 10); return [...den].reverse().find(b => b.d <= s); };
+  const p = [30, 90, 365].map(n => ({ n, b: najdi(n) })).filter(x => x.b);
+  $('prirovnani').innerHTML = p.map(({ n, b }) => {
+    const z = posl.km2 - b.km2, zaDen = z / n;
+    return `<div>Za posledních <b>${n === 365 ? '12 měsíců' : n + ' dní'}</b><br>
+      Rusko čistě ${z >= 0 ? 'získalo' : 'ztratilo'} <b>${fmt(Math.abs(z))} km²</b><br>
+      = ${prahy(Math.abs(z))} · ${fmt(Math.abs(zaDen), 1)} km²/den
+      <br><span style="font-size:.76rem">(${fmt(Math.abs(z) / UA_KM2 * 100, 2)} % Ukrajiny)</span></div>`;
+  }).join('');
+  const uplne = mesice.filter(m => m.uplny);
+  if (uplne.length) {
+    const max = uplne.reduce((a, b) => b.zmena > a.zmena ? b : a);
+    const [r, mm] = max.m.split('-');
+    $('prirovnani').innerHTML += `<div>Měsíc s největším čistým ziskem Ruska (od 7/2024)<br><b>${MESICE[+mm - 1]} ${r}</b><br>
+      +${fmt(max.zmena)} km² = ${prahy(max.zmena)}<br><span style="font-size:.76rem">(${fmt(max.zmena / ((msDen(max.konec) - msDen(max.od)) / 864e5), 1)} km²/den)</span></div>`;
+  }
+  $('tabMesice').innerHTML = `<table><thead><tr><th>Měsíc</th><th class="n">Změna (km²)</th><th class="n">≈ Prahy</th></tr></thead><tbody>${
+    [...mesice].reverse().map(m => { const [r, mm] = m.m.split('-'); return `<tr><td>${MESICE[+mm - 1]} ${r}${m.uplny ? '' : ' (neúplný)'}</td><td class="n">${m.zmena >= 0 ? '+' : '−'}${fmt(Math.abs(m.zmena))}</td><td class="n">${fmt(Math.abs(m.zmena) / PRAHA_KM2, 1)}</td></tr>`; }).join('')
+  }</tbody></table>`;
+}
+
+/* ============================================================
+   2b) Klíčové události (veřejně doložená data; mapa ukazuje jen Ukrajinu,
+       Kurská operace proběhla na ruském území)
+   ============================================================ */
+const UDALOSTI = [
+  { d: '2022-02-24', t: 'Začátek celoplošné ruské invaze' },
+  { d: '2022-04-02', t: 'Ukrajina ohlásila osvobození Kyjevské oblasti, Rusko se stahuje ze severu' },
+  { d: '2022-05-20', t: 'Kapitulace obránců Azovstalu, pád Mariupolu' },
+  { d: '2022-07-03', t: 'Pád Lysyčansku, Rusko prohlásilo celou Luhanskou oblast za dobytou' },
+  { d: '2022-09-06', t: 'Začátek ukrajinské protiofenzivy v Charkovské oblasti' },
+  { d: '2022-11-11', t: 'Ukrajina osvobodila Cherson, Rusko se stáhlo za Dněpr' },
+  { d: '2023-05-20', t: 'Rusko (Wagner) ovládlo Bachmut' },
+  { d: '2024-02-17', t: 'Ukrajinská vojska se stáhla z Avdijivky' },
+  { d: '2024-08-06', t: 'Ukrajinský vpád do Kurské oblasti Ruska (mimo mapu Ukrajiny)' },
+];
+const msDen = d => Date.parse(d + 'T00:00:00Z');
+const isoZms = t => new Date(t).toISOString().slice(0, 10);
+
+// svislé značky událostí a právě zobrazeného snímku časosběru v grafu území
+const pluginZnacky = {
+  id: 'znacky',
+  afterDatasetsDraw(ch) {
+    const { ctx, chartArea: a, scales: { x } } = ch;
+    ctx.save();
+    ctx.font = '600 10px ' + css('--font');
+    ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+    UDALOSTI.forEach((u, i) => {
+      const px = x.getPixelForValue(msDen(u.d));
+      if (px < a.left || px > a.right) return;
+      ctx.strokeStyle = css('--text-faint'); ctx.globalAlpha = .55; ctx.setLineDash([2, 3]); ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(px, a.top + 16); ctx.lineTo(px, a.bottom); ctx.stroke();
+      ctx.globalAlpha = 1; ctx.setLineDash([]);
+      ctx.fillStyle = css('--bg-panel'); ctx.strokeStyle = css('--text-faint');
+      ctx.beginPath(); ctx.arc(px, a.top + 8, 8, 0, 7); ctx.fill(); ctx.stroke();
+      ctx.fillStyle = css('--text'); ctx.fillText(String(i + 1), px, a.top + 8.5);
+    });
+    const sn = cas.snimky[cas.i];
+    if (sn) {
+      const px = x.getPixelForValue(msDen(sn.d));
+      ctx.strokeStyle = css('--accent'); ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.moveTo(px, a.top); ctx.lineTo(px, a.bottom); ctx.stroke();
+    }
+    ctx.restore();
+  },
+};
+
+/* ============================================================
+   2c) Časosběr fronty
+   ============================================================ */
+const cas = { snimky: [], i: 0, krok: 7, ms: 700, hraje: false, hist: null, mapa: null, vrstva: null, token: 0, beh: 0, geo: new Map() };
+
+// Vlastní canvasová vrstva: kreslí stav a změny proti předchozímu snímku přes
+// skládání masek (aktuální − předchozí = zisk, předchozí − aktuální = ztráta),
+// takže není potřeba žádná knihovna na průniky polygonů.
+const VrstvaZmen = L.Layer.extend({
+  onAdd(m) {
+    this._m = m;
+    this._c = L.DomUtil.create('canvas', 'leaflet-zoom-hide');
+    m.getPanes().overlayPane.appendChild(this._c);
+    // flyTo neanimuje přes leaflet-zoom-anim, takže plátno se při zoomu schová ručně;
+    // moveend přijde i po zoomu, zoomend by kreslil podruhé
+    this._udalosti = { zoomstart: () => { this._c.style.visibility = 'hidden'; }, moveend: this.kresli, resize: this.kresli };
+    m.on(this._udalosti, this);
+    this.kresli();
+  },
+  onRemove(m) { this._c.remove(); m.off(this._udalosti, this); },
+  nastav(akt, pred, sever) { this.akt = akt; this.pred = pred; this.sever = sever?.length ? sever : null; this.kresli(); },
+  _cesta(ctx, kruhy) {
+    ctx.beginPath();
+    for (const k of kruhy) {
+      for (let j = 0; j < k.length; j++) {
+        const p = this._m.latLngToContainerPoint([k[j][1], k[j][0]]);
+        if (j) ctx.lineTo(p.x, p.y); else ctx.moveTo(p.x, p.y);
+      }
+      ctx.closePath();
+    }
+  },
+  // pomocná plátna se drží na vrstvě a mění velikost jen při změně mapy
+  _platno(klic, w, h) {
+    const c = this[klic] || (this[klic] = document.createElement('canvas'));
+    if (c.width !== w || c.height !== h) { c.width = w; c.height = h; }
+    else { const x = c.getContext('2d'); x.setTransform(1, 0, 0, 1, 0, 0); x.globalCompositeOperation = 'source-over'; x.clearRect(0, 0, w, h); }
+    return c;
+  },
+  _maska(plus, minus, barva, dpr, w, h, klic) {
+    const c = this._platno('_pm', w, h);
+    const x = c.getContext('2d', { willReadFrequently: true });
+    x.globalCompositeOperation = 'source-over'; x.setTransform(dpr, 0, 0, dpr, 0, 0);
+    x.fillStyle = '#000'; this._cesta(x, plus); x.fill('evenodd');
+    x.globalCompositeOperation = 'destination-out'; this._cesta(x, minus); x.fill('evenodd');
+    // práh: zbytky vyhlazení na shodných hranicích (poloprůhledné pixely) zahodit,
+    // jinak by je obtažení zviditelnilo jako falešný lem kolem celého území
+    const img = x.getImageData(0, 0, w, h), px = img.data;
+    let zbylo = 0;
+    for (let i = 3; i < px.length; i += 4) { if (px[i] < 160) px[i] = 0; else { px[i] = 255; zbylo++; } }
+    if (!zbylo) return null;
+    x.putImageData(img, 0, 0);
+    // obtažení o 2 px (dilatace), aby byly i drobné změny vidět
+    x.setTransform(1, 0, 0, 1, 0, 0);
+    const d = this._platno(klic, w, h);
+    const y = d.getContext('2d');
+    y.globalCompositeOperation = 'source-over';
+    for (const [ox, oy] of [[0, 0], [2, 0], [-2, 0], [0, 2], [0, -2], [1.5, 1.5], [-1.5, 1.5], [1.5, -1.5], [-1.5, -1.5]]) y.drawImage(c, ox * dpr, oy * dpr);
+    y.globalCompositeOperation = 'source-in'; y.fillStyle = barva; y.fillRect(0, 0, w, h);
+    return d;
+  },
+  kresli() {
+    if (!this._m) return;
+    const m = this._m, vel = m.getSize(), dpr = window.devicePixelRatio || 1;
+    const w = Math.round(vel.x * dpr), h = Math.round(vel.y * dpr);
+    const c = this._c;
+    c.width = w; c.height = h; c.style.width = vel.x + 'px'; c.style.height = vel.y + 'px'; c.style.visibility = '';
+    L.DomUtil.setPosition(c, m.containerPointToLayerPoint([0, 0]));
+    const ctx = c.getContext('2d');
+    if (!this.akt) return;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    this._cesta(ctx, this.akt);
+    ctx.globalAlpha = .42; ctx.fillStyle = css('--ru'); ctx.fill('evenodd');
+    ctx.globalAlpha = 1; ctx.strokeStyle = css('--ru'); ctx.lineWidth = 1; ctx.stroke();
+    if (this.sever) {   // krátkodobě obsazený sever 2022: vybledlá výplň se šrafou a čárkovaný obrys
+      ctx.save();
+      this._cesta(ctx, this.sever);
+      ctx.clip('evenodd');
+      ctx.globalCompositeOperation = 'destination-out'; ctx.globalAlpha = .7; ctx.fill('evenodd');
+      ctx.globalCompositeOperation = 'source-over'; ctx.globalAlpha = .9; ctx.strokeStyle = css('--ru'); ctx.lineWidth = 1.2;
+      ctx.beginPath();
+      for (let d = -vel.y; d < vel.x; d += 7) { ctx.moveTo(d, vel.y); ctx.lineTo(d + vel.y, 0); }
+      ctx.stroke();
+      ctx.restore();
+      this._cesta(ctx, this.sever);
+      ctx.setLineDash([4, 3]); ctx.strokeStyle = css('--ru'); ctx.stroke(); ctx.setLineDash([]);
+    }
+    if (this.pred) {
+      ctx.setTransform(1, 0, 0, 1, 0, 0);
+      for (const m of [this._maska(this.akt, this.pred, css('--ru-adv'), dpr, w, h, '_pz'), this._maska(this.pred, this.akt, css('--ua'), dpr, w, h, '_pu')]) if (m) ctx.drawImage(m, 0, 0);
+    }
+  },
+});
+
+// history.json: kruhy delta-kódované v tisícinách stupně [x0, y0, dx1, dy1, …]
+function dekodujKruhy(kod) {
+  return kod.map(arr => {
+    let x = arr[0], y = arr[1];
+    const k = [[x / 1e3, y / 1e3]];
+    for (let i = 2; i < arr.length; i += 2) { x += arr[i]; y += arr[i + 1]; k.push([x / 1e3, y / 1e3]); }
+    return k;
+  });
+}
+const plochaKruhu2 = kruhy => Math.abs(kruhy.reduce((s, k) => s + plochaKruhu(k), 0)) / 1e6;
+
+function sestavSnimky() {
+  const posledni = stav.deepstate.denni.at(-1).d;
+  // history.json opakuje beze změny stav k 1. dni měsíce (24 ze 40 snímků) → nechat jen
+  // snímky, kde se něco změnilo, jinak by časosběr ukazoval „beze změny“ a pak nafouknuté tempo
+  const s = [];
+  let minuly = '';
+  for (const f of cas.hist) {
+    const otisk = JSON.stringify([f.ru, f.grey || []]);
+    if (otisk !== minuly) s.push({ d: f.d, typ: 'h', f });
+    minuly = otisk;
+  }
+  const prvni = msDen('2024-07-08'), konec = msDen(posledni);
+  if (cas.krok === 'm') {
+    s.push({ d: '2024-07-08', typ: 'd' });
+    for (let r = 2024, m = 7; ; m === 11 ? (r++, m = 0) : m++) {
+      const t = Date.UTC(r, m, 1);
+      if (t >= konec) break;
+      s.push({ d: isoZms(t), typ: 'd' });
+    }
+  } else {
+    for (let t = prvni; t < konec; t += cas.krok * 864e5) s.push({ d: isoZms(t), typ: 'd' });
+  }
+  s.push({ d: posledni, typ: 'd' });
+  return s;
+}
+
+async function nactiSnimek(sn) {
+  if (sn.kruhy) return sn;
+  if (sn.typ === 'h') {
+    sn.kruhy = dekodujKruhy(sn.f.ru);
+    // „grey“ = sever obsazený v únoru až dubnu 2022 (Kyjevsko, Černihivsko, Sumsko), veden zvlášť
+    sn.sever = dekodujKruhy(sn.f.grey || []);
+    sn.km2 = plochaKruhu2(sn.kruhy) + (sn.sever.length ? plochaKruhu2(sn.sever) : 0);
+    sn.severKm2 = sn.sever.length ? plochaKruhu2(sn.sever) : 0;
+    sn.publik = sn.f.km2 + (sn.f.grey_km2 || 0);
+    return sn;
+  }
+  // denní soubor může výjimečně chybět → zkusí až 3 dny nazpět
+  for (let z = 0; z < 4; z++) {
+    const d = isoZms(msDen(sn.d) - z * 864e5);
+    if (!cas.geo.has(d)) cas.geo.set(d, stahni(URL_DS_DEN(d)).catch(e => {
+      if (!/HTTP 404/.test(e.message)) { cas.geo.delete(d); throw e; }   // síť: zkusit příště znovu
+      return null;                                                       // den v archivu chybí
+    }));
+    const g = await cas.geo.get(d);
+    if (!g) continue;
+    const kruhy = [];
+    for (const f of g.features || []) {
+      const geo = f.geometry; if (!geo) continue;
+      for (const p of geo.type === 'Polygon' ? [geo.coordinates] : geo.coordinates) kruhy.push(...p);
+    }
+    sn.kruhy = kruhy; sn.skut = d;
+    sn.km2 = plochaKruhu2(kruhy);
+    sn.publik = stav.deepstate.denni.find(b => b.d === d)?.km2;
+    return sn;
+  }
+  throw new Error('v archivu chybí');
+}
+
+async function zobrazSnimek(i) {
+  clearTimeout(cas.odklad);   // čekající skok z posuvníku by jinak přepsal novější volbu
+  i = Math.max(0, Math.min(cas.snimky.length - 1, i));
+  const token = ++cas.token;
+  cas.i = i;
+  $('casPosuv').value = i;
+  $('casPosuv').setAttribute('aria-valuetext', datumCz(cas.snimky[i].d));
+  const sn = cas.snimky[i], pred = cas.snimky[i - 1];
+  $('casInfo').querySelector('.datum')?.classList.add('nacita');
+  try {
+    await Promise.all([nactiSnimek(sn), pred && nactiSnimek(pred)]);
+  } catch (e) {
+    if (token === cas.token) {
+      if (cas.hraje) prehravej();
+      $('casInfo').innerHTML = `<div class="stav chyba">⚠ Snímek ${datumCz(sn.d)} se nepodařilo stáhnout (${e.message}). Zkuste jiný snímek nebo později.</div>`;
+    }
+    return;
+  }
+  if (token !== cas.token) return;
+  // rozdíl má smysl jen mezi snímky stejného původu (rekonstrukce × DeepState mají jinou generalizaci)
+  const srovnatelne = !!pred && pred.typ === sn.typ;
+  const vse = x => x.sever?.length ? x.kruhy.concat(x.sever) : x.kruhy;   // sever se s jihem nepřekrývá
+  cas.vrstva.nastav(vse(sn), srovnatelne ? vse(pred) : null, sn.sever || null);
+  vykresliInfoSnimku(sn, pred, srovnatelne);
+  grafy.grafUzemi?.draw();
+  // během přehrávání dopředu načíst další snímky
+  if (cas.hraje) for (let k = 1; k <= 3; k++) if (cas.snimky[i + k]) nactiSnimek(cas.snimky[i + k]).catch(() => {});
+}
+
+function vykresliInfoSnimku(sn, pred, srovnatelne) {
+  const datum = sn.skut || sn.d;
+  let html = `<div class="datum">${datumCz(datum)}</div>
+    <div>${sn.typ === 'd' ? 'DeepStateMap ' + STITEK.over : 'rekonstrukce podle ISW ' + STITEK.odhad}</div>
+    <div class="radek">Rusko ovládá<br><b>${fmt(sn.km2)} km²</b> · ${fmt(sn.km2 / UA_KM2 * 100, 1)} % Ukrajiny
+    ${sn.severKm2 ? `<br><span style="font-size:.78rem">z toho ${fmt(sn.severKm2)} km² na severu (Kyjevsko, Černihivsko, Sumsko) — na mapě čárkovaně</span>` : ''}</div>`;
+  if (pred) {
+    const zmena = sn.km2 - pred.km2;
+    const dnu = Math.max(1, Math.round((msDen(datum) - msDen(pred.skut || pred.d)) / 864e5));
+    const tr = zmena > 0.5 ? 'plus' : zmena < -0.5 ? 'minus' : '';
+    html += `<div class="radek">Od ${datumCz(pred.skut || pred.d)} (${dnu} ${dnu === 1 ? 'den' : dnu < 5 ? 'dny' : 'dní'})<br>` + (Math.abs(zmena) < 0.5
+      ? `<b>beze změny</b></div>`
+      : `<b class="${tr}">${zmena >= 0 ? '+' : '−'}${fmt(Math.abs(zmena))} km²</b> ${zmena >= 0 ? 'pro Rusko' : 'pro Ukrajinu'}<br>
+      ≈ ${prahy(Math.abs(zmena))} · ${fmt(Math.abs(zmena) / dnu, 1)} km²/den</div>`);
+    if (!srovnatelne && pred.typ !== sn.typ) html += `<div class="over">Přechod z rekonstrukce na denní mapy — změnu na mapě nezvýrazňuji, rozdíl zčásti vzniká jinou generalizací hranic.</div>`;
+  }
+  const od = pred ? msDen(pred.skut || pred.d) : -Infinity, doo = msDen(datum);
+  const ud = UDALOSTI.filter(u => msDen(u.d) > od && msDen(u.d) <= doo);
+  for (const u of ud) html += `<div class="udalost">📍 <b>${datumCz(u.d)}</b> – ${u.t}</div>`;
+  if (sn.publik) {
+    const odch = (sn.km2 - sn.publik) / sn.publik * 100;
+    html += sn.typ === 'd'
+      ? `<div class="over">✔ Ověření: plocha spočtená zde z mapy ${fmt(sn.km2)} km², publikovaná řada DeepStateMap ${fmt(sn.publik)} km² (odchylka ${fmt(Math.abs(odch), 2)} %).</div>`
+      : `<div class="over">Kontrola výpočtu: ${fmt(sn.km2)} km² proti ${fmt(sn.publik)} km² uvedeným u rekonstrukce (odchylka ${fmt(Math.abs(odch), 2)} %). Přesnost samotné rekonstrukce je asi 5–10 km.</div>`;
+  }
+  $('casInfo').innerHTML = html;
+}
+
+function nastavKrok(krok) {
+  clearTimeout(cas.odklad);
+  const datum = cas.snimky[cas.i]?.d;
+  cas.krok = krok;
+  cas.snimky = sestavSnimky();
+  const posuv = $('casPosuv');
+  posuv.max = cas.snimky.length - 1;
+  let i = cas.snimky.length - 1;
+  if (datum) { i = cas.snimky.findLastIndex(s => s.d <= datum); if (i < 0) i = 0; }
+  // popisky let na místě prvního snímku daného roku (snímky nejsou v čase rozložené rovnoměrně)
+  const n = cas.snimky.length - 1;
+  $('casOsa').innerHTML = [...new Set(cas.snimky.map(s => s.d.slice(0, 4)))]
+    .map(r => `<span style="left:${cas.snimky.findIndex(s => s.d.startsWith(r)) / n * 100}%">${r}</span>`).join('');
+  zobrazSnimek(i);
+}
+
+function skocNaDatum(d) {
+  if (!cas.snimky.length) return;
+  let i = cas.snimky.findLastIndex(s => s.d <= d);
+  zobrazSnimek(i < 0 ? 0 : i);
+}
+
+async function prehravej() {
+  cas.hraje = !cas.hraje;
+  const beh = ++cas.beh;   // rychlé pauza→přehrát nesmí spustit druhou smyčku vedle staré
+  const tl = $('casHraj');
+  tl.textContent = cas.hraje ? '⏸' : '▶';
+  tl.title = cas.hraje ? 'Pozastavit' : 'Přehrát';
+  tl.setAttribute('aria-label', tl.title);
+  // během přehrávání neohlašovat každý snímek čtečce obrazovky
+  $('casInfo').setAttribute('aria-live', cas.hraje ? 'off' : 'polite');
+  if (cas.hraje && cas.i >= cas.snimky.length - 1) await zobrazSnimek(0);
+  while (cas.hraje && beh === cas.beh) {
+    await new Promise(r => setTimeout(r, cas.ms));
+    if (!cas.hraje || beh !== cas.beh) break;
+    if (cas.i >= cas.snimky.length - 1) { prehravej(); break; }
+    await zobrazSnimek(cas.i + 1);
+  }
+}
+
+function initCasosber() {
+  if (cas.mapa || !cas.hist || !stav.deepstate) return;
+  cas.mapa = novaMapa('casMapa', 'DeepStateMap · rekonstrukce ISW');
+  cas.vrstva = new VrstvaZmen().addTo(cas.mapa);
+  // při tažení posuvníkem stahovat až po krátké pauze, ne každý přejetý snímek
+  $('casPosuv').addEventListener('input', e => {
+    if (cas.hraje) prehravej();
+    const i = +e.target.value;
+    $('casPosuv').setAttribute('aria-valuetext', datumCz(cas.snimky[i].d));
+    clearTimeout(cas.odklad);
+    cas.odklad = setTimeout(() => zobrazSnimek(i), 120);
+  });
+  $('casZpet').onclick = () => { if (cas.hraje) prehravej(); zobrazSnimek(cas.i - 1); };
+  $('casVpred').onclick = () => { if (cas.hraje) prehravej(); zobrazSnimek(cas.i + 1); };
+  $('casHraj').onclick = prehravej;
+  $('casKrok').querySelectorAll('button').forEach(b => b.onclick = () => {
+    $('casKrok').querySelectorAll('button').forEach(x => { x.classList.toggle('aktivni', x === b); x.setAttribute('aria-pressed', x === b); });
+    nastavKrok(b.dataset.krok === 'm' ? 'm' : +b.dataset.krok);
+  });
+  const VYREZY = { ua: [[44.3, 22.1], [52.4, 40.3]], donbas: [[47.4, 36.4], [49.4, 39.2]], jih: [[46.2, 32.2], [48.0, 37.0]], sever: [[49.3, 35.3], [51.5, 38.4]] };
+  $('casVyrez').querySelectorAll('button').forEach(b => b.onclick = () => {
+    $('casVyrez').querySelectorAll('button').forEach(x => { x.classList.toggle('aktivni', x === b); x.setAttribute('aria-pressed', x === b); });
+    cas.mapa.flyToBounds(VYREZY[b.dataset.v], { duration: .6 });
+  });
+  $('casRychlost').querySelectorAll('button').forEach(b => b.onclick = () => {
+    $('casRychlost').querySelectorAll('button').forEach(x => { x.classList.toggle('aktivni', x === b); x.setAttribute('aria-pressed', x === b); });
+    cas.ms = +b.dataset.ms;
+  });
+  document.addEventListener('keydown', e => {
+    const a = document.activeElement;
+    if (!cas.snimky.length || e.altKey || e.ctrlKey || e.metaKey) return;
+    // posuvník šipky zpracuje sám (událost input), mapy jimi posouvají, pole je potřebují k psaní
+    if (a && (/INPUT|TEXTAREA|SELECT/.test(a.tagName) || a.closest('.leaflet-container'))) return;
+    const r = $('casosber').getBoundingClientRect();
+    if (r.bottom < 0 || r.top > innerHeight) return;
+    if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+    e.preventDefault();
+    if (cas.hraje) prehravej();
+    zobrazSnimek(cas.i + (e.key === 'ArrowLeft' ? -1 : 1));
+  });
+  nastavKrok(7);
+}
+
+/* ============================================================
+   3) Oryx – fotograficky doložené ztráty techniky
+   ============================================================ */
+// CSV po znacích přes celý text: pole v uvozovkách smí obsahovat čárku i konec
+// řádku (export Oryx má např. „Surface-To-Air Missile Systems⏎“), "" = uvozovka.
+function parsujCsv(text) {
+  const radky = []; let pole = [], cur = '', uv = false;
+  for (let i = 0; i < text.length; i++) {
+    const ch = text[i];
+    if (uv) {
+      if (ch === '"' && text[i + 1] === '"') { cur += '"'; i++; }
+      else if (ch === '"') uv = false;
+      else cur += ch;
+    } else if (ch === '"') uv = true;
+    else if (ch === ',') { pole.push(cur); cur = ''; }
+    else if (ch === '\n') { pole.push(cur); radky.push(pole); pole = []; cur = ''; }
+    else if (ch !== '\r') cur += ch;
+  }
+  if (cur || pole.length) { pole.push(cur); radky.push(pole); }
+  const hl = radky.shift().map(h => h.trim());
+  return radky.filter(r => r.length === hl.length).map(r => Object.fromEntries(hl.map((h, i) => [h, r[i].trim()])));
+}
+function oryxSouhrn(radky) {
+  const s = { Russia: {}, Ukraine: {} };
+  // Oryx vede ruské lodě jako „Naval Ships and Submarines“, ukrajinské jen „Naval Ships“
+  const KLIC = { 'Naval Ships': 'Naval Ships and Submarines' };
+  for (const r of radky) if (s[r.country] && r.equipment_type) s[r.country][r.equipment_type.startsWith('Losses of Armoured') ? 'ACV' : KLIC[r.equipment_type] || r.equipment_type] = { celkem: +r.type_total, zniceno: +r.destroyed, ukoristeno: +r.captured, opusteno: +r.abandoned, poskozeno: +r.damaged };
+  return s;
+}
+const isoDen = t => new Date(t).toISOString().slice(0, 10);
+
+async function nactiOryx() {
+  // nejnovější soubor: dnes nebo až 6 dní zpět
+  for (let i = 0; i < 7; i++) {
+    const d = isoDen(Date.now() - i * 864e5);
+    try { const t = await stahni(URL_ORYX(d), 'text'); return { datum: d, data: oryxSouhrn(parsujCsv(t)) }; } catch { /* zkusí starší */ }
+  }
+  throw new Error('nepodařilo se najít aktuální export Oryx');
+}
+
+const ORYX_DRUHY = [
+  ['Tanks', 'Tanky'], ['Infantry Fighting Vehicles', 'Bojová vozidla pěchoty'], ['Armoured Fighting Vehicles', 'Obrněná bojová vozidla'],
+  ['Armoured Personnel Carriers', 'Obrněné transportéry'], ['Infantry Mobility Vehicles', 'Obrněné vozy (IMV)'], ['Mine-Resistant Ambush Protected', 'MRAP'],
+  ['Self-Propelled Artillery', 'Samohybné dělostřelectvo'], ['Towed Artillery', 'Tažené dělostřelectvo'], ['Rocket and Missile Artillery', 'Raketomety'],
+  ['Surface-To-Air Missile Systems', 'Protiletadlové rak. komplety'], ['Aircraft', 'Letouny'], ['Helicopters', 'Vrtulníky'],
+  ['Naval Ships and Submarines', 'Lodě a ponorky'], ['Trucks and similar vehicles', 'Nákladní a jiná vozidla'],
+];
+
+function vykresliOryx() {
+  const { datum, data } = stav.oryx;
+  const ru = data.Russia, ua = data.Ukraine;
+  const pomer = (a, b) => b ? fmt(a / b, 1) : '–';
+  const t = (k, jm) => `<div><div class="popis">${jm}</div><div class="hodnota"><span style="color:var(--ru)">${fmt(ru[k]?.celkem || 0)}</span> : <span style="color:var(--ua)">${fmt(ua[k]?.celkem || 0)}</span></div><div class="detail">Rusko : Ukrajina · poměr ${pomer(ru[k]?.celkem, ua[k]?.celkem)} : 1</div></div>`;
+  $('oryxDlazdice').innerHTML = t('All Types', 'Veškerá technika') + t('ACV', 'Obrněná vozidla vč. tanků') + t('Tanks', 'Tanky') + t('Aircraft', 'Letouny');
+  $('oryxStav').textContent = `Stav k ${datumCz(datum)}. Součty zahrnují zničenou, poškozenou, opuštěnou i ukořistěnou techniku.`;
+
+  const ruB = css('--ru'), uaB = css('--ua'), txt = css('--text-faint'), mriz = css('--border');
+  const druhy = ORYX_DRUHY.filter(([k]) => ru[k] || ua[k]);
+  znovuGraf('grafOryx', {
+    type: 'bar',
+    data: { labels: druhy.map(d => d[1]), datasets: [
+      { label: 'Rusko', data: druhy.map(([k]) => ru[k]?.celkem || 0), backgroundColor: ruB, borderRadius: 4, borderSkipped: false, barPercentage: .85, categoryPercentage: .8 },
+      { label: 'Ukrajina', data: druhy.map(([k]) => ua[k]?.celkem || 0), backgroundColor: uaB, borderRadius: 4, borderSkipped: false, barPercentage: .85, categoryPercentage: .8 },
+    ] },
+    options: { ...zakladVoleb({
+      x: { ticks: { color: txt, callback: v => fmt(v) }, grid: { color: mriz } },
+      y: { ticks: { color: css('--text-muted'), autoSkip: false }, grid: { display: false } },
+    }, c => { const k = druhy[c.dataIndex][0], z = (c.datasetIndex ? ua : ru)[k]; return z ? `${c.dataset.label}: ${fmt(z.celkem)} (zničeno ${fmt(z.zniceno)}, poškozeno ${fmt(z.poskozeno)}, opuštěno ${fmt(z.opusteno)}, ukořistěno ${fmt(z.ukoristeno)})` : ''; }), indexAxis: 'y' },
+  });
+  $('tabOryx').innerHTML = `<table><thead><tr><th>Druh</th><th class="n">Rusko</th><th class="n">Ukrajina</th><th class="n">Poměr</th></tr></thead><tbody>${
+    [['All Types', 'Celkem'], ...druhy].map(([k, jm]) => `<tr><td>${jm}</td><td class="n">${fmt(ru[k]?.celkem || 0)}</td><td class="n">${fmt(ua[k]?.celkem || 0)}</td><td class="n">${pomer(ru[k]?.celkem, ua[k]?.celkem)} : 1</td></tr>`).join('')
+  }</tbody></table>`;
+  vykresliTvrzeni();
+}
+
+async function nactiOryxCas() {
+  // první den každého měsíce od března 2022 (chybí-li soubor, zkusí další dny)
+  const body = [];
+  const dnes = new Date();
+  for (let r = 2022, m = 2; r < dnes.getUTCFullYear() || (r === dnes.getUTCFullYear() && m <= dnes.getUTCMonth()); m === 11 ? (r++, m = 0) : m++) body.push({ r, m });
+  $('oryxCasStav').textContent = `Stahuji ${body.length} měsíčních snímků…`;
+  const vysledky = new Array(body.length);
+  let hotovo = 0;
+  async function jeden(i) {
+    const { r, m } = body[i];
+    for (let d = 1; d <= 4; d++) {
+      const s = `${r}-${String(m + 1).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
+      try { const x = oryxSouhrn(parsujCsv(await stahni(URL_ORYX(s), 'text'))); vysledky[i] = { d: s, ru: x.Russia['All Types']?.celkem, ua: x.Ukraine['All Types']?.celkem }; break; } catch { }
+    }
+    $('oryxCasStav').textContent = `Stahuji měsíční snímky… ${++hotovo}/${body.length}`;
+  }
+  // nejvýš 6 požadavků souběžně
+  let dalsi = 0;
+  await Promise.all(Array.from({ length: 6 }, async () => { while (dalsi < body.length) await jeden(dalsi++); }));
+  const rada = vysledky.filter(v => v && v.ru);
+  const dnes2 = stav.oryx?.data;
+  if (dnes2?.Russia['All Types'] && rada.at(-1)?.d !== stav.oryx.datum) rada.push({ d: stav.oryx.datum, ru: dnes2.Russia['All Types'].celkem, ua: dnes2.Ukraine['All Types']?.celkem });
+  return rada;
+}
+function vykresliOryxCas(rada) {
+  const txt = css('--text-faint'), mriz = css('--border');
+  znovuGraf('grafOryxCas', {
+    type: 'line',
+    data: { labels: rada.map(b => b.d), datasets: [
+      { label: 'Rusko', data: rada.map(b => b.ru), borderColor: css('--ru'), backgroundColor: css('--ru'), borderWidth: 2, pointRadius: 0, pointHitRadius: 8 },
+      { label: 'Ukrajina', data: rada.map(b => b.ua), borderColor: css('--ua'), backgroundColor: css('--ua'), borderWidth: 2, pointRadius: 0, pointHitRadius: 8 },
+    ] },
+    options: zakladVoleb({
+      x: { ticks: { color: txt, maxRotation: 0, autoSkip: true, maxTicksLimit: 8, callback(v) { return this.getLabelForValue(v).slice(0, 7).split('-').reverse().join('/'); } }, grid: { display: false } },
+      y: { ticks: { color: txt, callback: v => fmt(v) }, grid: { color: mriz } },
+    }, c => `${c.dataset.label}: ${fmt(c.parsed.y)} kusů`, items => datumCz(items[0].label)),
+  });
+  $('oryxCasStav').textContent = `${rada.length} měsíčních snímků, poslední ${datumCz(rada[rada.length - 1].d)}. Strmost čáry = tempo doložených ztrát; občasné poklesy jsou opravy v databázi Oryx.`;
+}
+
+/* ============================================================
+   4) Tvrzení GŠ ZSU × doloženo Oryxem
+   ============================================================ */
+function vykresliTvrzeni() {
+  if (!stav.oryx || !stav.gs) return;
+  const o = stav.oryx.data.Russia, g = stav.gs.posledni;
+  const sum = (...k) => k.reduce((s, x) => s + (o[x]?.celkem || 0), 0);
+  const kat = [
+    ['Tanky', g.tank, sum('Tanks')],
+    ['Obrněná vozidla', g.APC, sum('Armoured Fighting Vehicles', 'Infantry Fighting Vehicles', 'Armoured Personnel Carriers', 'Mine-Resistant Ambush Protected', 'Infantry Mobility Vehicles')],
+    ['Raketomety', g.MRL, sum('Rocket and Missile Artillery')],
+    ['PVO', g['anti-aircraft warfare'], sum('Surface-To-Air Missile Systems', 'Anti-Aircraft Guns', 'Self-Propelled Anti-Aircraft Guns')],
+    ['Letouny', g.aircraft, sum('Aircraft')],
+    ['Vrtulníky', g.helicopter, sum('Helicopters')],
+    ['Lodě a ponorky', (g['naval ship'] || 0) + (g.submarines || 0), sum('Naval Ships and Submarines')],
+  ];
+  const txt = css('--text-faint'), mriz = css('--border');
+  znovuGraf('grafTvrzeni', {
+    type: 'bar',
+    data: { labels: kat.map(k => `${k[0]} (${fmt(k[1] / k[2], 1)}×)`), datasets: [
+      { label: `Tvrzení GŠ ZSU (${datumCz(stav.gs.posledni.date)})`, data: kat.map(k => k[1]), backgroundColor: css('--ru-soft'), borderColor: css('--ru'), borderWidth: 1.5, borderDash: [4, 3], borderRadius: 4, borderSkipped: false },
+      { label: `Doloženo Oryxem (${datumCz(stav.oryx.datum)})`, data: kat.map(k => k[2]), backgroundColor: css('--ru'), borderRadius: 4, borderSkipped: false },
+    ] },
+    options: { ...zakladVoleb({
+      x: { type: 'logarithmic', ticks: { color: txt, maxRotation: 0, callback: v => [10, 100, 1000, 10000, 100000].includes(v) ? fmt(v) : '' }, grid: { color: mriz }, title: { display: true, text: 'kusů (logaritmická osa)', color: txt } },
+      y: { ticks: { color: css('--text-muted'), autoSkip: false }, grid: { display: false } },
+    }, c => `${c.dataset.label}: ${fmt(c.parsed.x)}`), indexAxis: 'y' },
+  });
+}
+
+/* ---------- lidé ---------- */
+function vykresliLidi() {
+  const mz = STATICKA.mediazona;
+  const gsO = stav.gsOsoby;
+  const max = gsO ? gsO.personnel : mz.pocet;
+  const pr = (jm, n, barva, s, styl = '') => `<div><div class="jm"><span>${jm} ${s}</span><b>${fmt(n)}</b></div><div class="pruh"><div style="width:${n / max * 100}%;background:${barva};${styl}"></div></div></div>`;
+  $('vojaci').innerHTML =
+    pr(`Jmenovitě doložení mrtví (Mediazona + BBC, ${datumCz(mz.k)})`, mz.pocet, 'var(--ru)', STITEK.over) +
+    (gsO ? pr(`Zabití a ranění podle GŠ ZSU (${datumCz(gsO.date)})`, gsO.personnel, 'var(--ru-soft)', STITEK.tvrz, 'border:1.5px dashed var(--ru);box-sizing:border-box') : '');
+
+  const o = STATICKA.ohchr;
+  $('civilisteDlazdice').innerHTML = `
+    <div><div class="popis">Zabití civilisté</div><div class="hodnota">${fmt(o.zabito)}</div><div class="detail">od 24. 2. 2022 do ${datumCz(o.k)}; v srpnu 2026: ${fmt(o.srpen.zabito)}</div>${STITEK.over}</div>
+    <div><div class="popis">Zranění civilisté</div><div class="hodnota">${fmt(o.zraneno)}</div><div class="detail">v srpnu 2026: ${fmt(o.srpen.zraneno)}</div>${STITEK.over}</div>`;
+  const txt = css('--text-faint'), mriz = css('--border');
+  znovuGraf('grafCivil', {
+    type: 'bar',
+    data: { labels: o.ledenSrpen.map(x => `leden–srpen ${x.rok}`), datasets: [
+      { label: 'Zabití', data: o.ledenSrpen.map(x => x.zabito), backgroundColor: css('--ru-old'), borderRadius: 4, borderSkipped: false },
+      { label: 'Zranění', data: o.ledenSrpen.map(x => x.zraneno), backgroundColor: css('--ru-adv'), borderRadius: 4, borderSkipped: false },
+    ] },
+    options: zakladVoleb({
+      x: { ticks: { color: txt }, grid: { display: false } },
+      y: { ticks: { color: txt, callback: v => fmt(v) }, grid: { color: mriz } },
+    }, c => `${c.dataset.label}: ${fmt(c.parsed.y)}`),
+  });
+  const u = STATICKA.unhcr;
+  $('vysidleni').innerHTML = `
+    <div><div class="popis">Uprchlíci v zahraničí</div><div class="hodnota">${fmt(u.uprchlici / 1e6, 2)} mil.</div><div class="detail">${fmt(u.uprchlici)} osob, z toho ${fmt(u.evropa / 1e6, 1)} mil. v Evropě</div></div>
+    <div><div class="popis">Vnitřně vysídlení</div><div class="hodnota">${fmt(u.idp / 1e6, 1)} mil.</div><div class="detail">lidé vysídlení ze svých domovů uvnitř Ukrajiny (údaj IOM)</div></div>`;
+}
+
+/* ---------- zdroje ---------- */
+function vykresliZdroje() {
+  const r = (zdroj, co, over, kdy) => `<tr><td>${zdroj}</td><td>${co}</td><td>${over}</td><td>${kdy}</td></tr>`;
+  $('tabZdroje').innerHTML = [
+    r('<a href="https://understandingwar.org/" target="_blank" rel="noopener">ISW / Critical Threats</a> (ArcGIS)', 'kontrola území, postupy, infiltrace', STITEK.over + ' denní analýza z geolokovaných záběrů; zde navíc porovnáno s DeepStateMap', stav.isw ? datumCz(stav.isw.datum) : '–'),
+    r('<a href="https://deepstatemap.live/" target="_blank" rel="noopener">DeepStateMap</a> (přes GitHub)', 'denní plocha okupovaného území', STITEK.over + ' nezávislá druhá mapa', stav.deepstate ? datumCz(stav.deepstate.denni.at(-1).d) : '–'),
+    r('<a href="https://www.oryxspioenkop.com/" target="_blank" rel="noopener">Oryx</a> (přes GitHub)', 'ztráty techniky obou stran', STITEK.over + ' každý kus doložen fotkou/videem', stav.oryx ? datumCz(stav.oryx.datum) : '–'),
+    r('<a href="https://www.zsu.gov.ua/" target="_blank" rel="noopener">GŠ ZSU</a> (přes GitHub)', 'ruské ztráty podle Ukrajiny', STITEK.tvrz + ' jen pro srovnání', stav.gs ? datumCz(stav.gs.posledni.date) : '–'),
+    r('<a href="https://ukraine.ohchr.org/" target="_blank" rel="noopener">OSN – HRMMU</a>', 'civilní oběti', STITEK.over + ' každý případ ověřen misí OSN', datumCz(STATICKA.ohchr.k)),
+    r('<a href="https://en.zona.media/" target="_blank" rel="noopener">Mediazona</a> + BBC', 'jmenovitě doložení mrtví ruští vojáci', STITEK.over + ' jména z veřejných záznamů', datumCz(STATICKA.mediazona.k)),
+    r('<a href="https://data.unhcr.org/en/situations/ukraine" target="_blank" rel="noopener">UNHCR</a>', 'uprchlíci a vysídlení', STITEK.over + ' registrace hostitelských zemí', datumCz(STATICKA.unhcr.k)),
+  ].join('');
+}
+
+/* ============================================================
+   Grafy – společné volby a překreslení při změně tématu
+   ============================================================ */
+const grafy = {};
+function zakladVoleb(scales, popisek, titulek, legenda = true) {
+  return {
+    responsive: true, maintainAspectRatio: false, animation: false,
+    interaction: { mode: 'index', intersect: false },
+    plugins: {
+      legend: { display: legenda, labels: { color: css('--text-muted'), boxWidth: 12, usePointStyle: true } },
+      tooltip: { callbacks: { label: popisek, ...(titulek ? { title: titulek } : {}) } },
+    },
+    scales,
+  };
+}
+function znovuGraf(id, konfig) {
+  grafy[id]?.destroy();
+  grafy[id] = new Chart($(id), konfig);
+}
+
+/* ============================================================
+   Start
+   ============================================================ */
+// karta tvrzení × doloženo závisí na dvou zdrojích; hlášky se sčítají, nepřepisují
+function chybaTvrzeni(text) {
+  const obal = $('tvrzeniObal');
+  if (!obal.querySelector('.stav')) { obal.innerHTML = ''; obal.style.height = 'auto'; }
+  obal.insertAdjacentHTML('beforeend', `<div class="stav chyba">⚠ ${text}</div>`);
+}
+function chyba(el, text, e) { $(el).innerHTML = `<div class="stav chyba">⚠ ${text}: ${e.message}</div>`; console.error(e); }
+
+// chyba v jedné části nesmí zastavit vykreslení ostatních
+const CIL_CHYBY = { vykresliSrovnani: 'srovnani', vykresliUzemi: 'prirovnani', vykresliOryx: 'oryxDlazdice', vykresliOryxCas: 'oryxCasStav', vykresliLidi: 'vojaci', vykresliIsw: 'dlazdice' };
+const bezpecne = (fn, ...a) => {
+  try { fn(...a); }
+  catch (e) { console.error(fn.name, e); if (CIL_CHYBY[fn.name]) chyba(CIL_CHYBY[fn.name], 'Část stránky se nepodařilo vykreslit', e); }
+};
+function prekresli() {
+  if (stav.isw) bezpecne(vykresliIsw);
+  if (stav.deepstate) bezpecne(vykresliUzemi);
+  if (stav.oryx) bezpecne(vykresliOryx);
+  if (stav.oryxCas?.length) bezpecne(vykresliOryxCas, stav.oryxCas);
+  bezpecne(vykresliLidi);
+}
+
+(function start() {
+  const t0 = new Date(); // místní půlnoc, ne UTC (jinak se v ČR den přepíná až v 1–2 h)
+  const dnu = Math.round((Date.UTC(t0.getFullYear(), t0.getMonth(), t0.getDate()) - ZACATEK) / 864e5) + 1;
+  $('denValky').innerHTML = `Dnes je <b>${fmt(dnu)}. den</b> celoplošné ruské invaze.`;
+  vykresliLidi();
+  vykresliZdroje();
+
+  nactiIsw().then(d => { stav.isw = d; vykresliIsw(); if (stav.deepstate) vykresliUzemi(); vykresliZdroje(); })
+    .catch(e => { chyba('dlazdice', 'Mapu ISW se nepodařilo načíst', e); $('iswZdroj').textContent = ''; $('srovnani').innerHTML = ''; });
+
+  stahni(URL_DEEPSTATE).then(d => {
+    const serie = d.series.filter(b => b.km2 > 0);
+    stav.deepstate = { serie, denni: serie.filter(b => b.s === 'd') };
+    initCasosber(); bezpecne(vykresliUzemi); bezpecne(vykresliSrovnani); bezpecne(vykresliZdroje);
+    if (stav.isw) bezpecne(vykresliIsw);
+  }).catch(e => {
+    chyba('prirovnani', 'Řadu DeepStateMap se nepodařilo načíst', e);
+    $('srovnani').innerHTML = '<div class="stav chyba">⚠ Bez řady DeepStateMap nelze křížově kontrolovat.</div>';
+    $('casInfo').innerHTML = '<div class="stav chyba">⚠ Časosběr potřebuje řadu DeepStateMap, která se nenačetla.</div>';
+  });
+
+  nactiOryx().then(d => {
+    stav.oryx = d; vykresliOryx(); vykresliZdroje();
+    nactiOryxCas().then(r => {
+      if (!r.length) throw new Error('žádný měsíční snímek');
+      stav.oryxCas = r; vykresliOryxCas(r);
+    }).catch(e => chyba('oryxCasStav', 'Časovou řadu Oryx se nepodařilo načíst', e));
+  }).catch(e => {
+    chyba('oryxDlazdice', 'Data Oryx se nepodařilo načíst', e);
+    chybaTvrzeni('Bez dat Oryx nelze tvrzení s doloženými ztrátami porovnat.');
+  });
+
+  stahni(URL_HIST).then(d => { cas.hist = d.frames; initCasosber(); })
+    .catch(e => { console.error('history.json', e); cas.hist = []; initCasosber(); }); // bez rekonstrukcí jen denní snímky
+
+  stahni(URL_GS).then(d => { stav.gs = { posledni: d[d.length - 1] }; vykresliTvrzeni(); vykresliZdroje(); })
+    .catch(e => { console.error('GŠ ZSU', e); chybaTvrzeni(`Hlášení GŠ ZSU se nepodařilo načíst: ${e.message}`); });
+  stahni(URL_GS_OSOBY).then(d => { stav.gsOsoby = d[d.length - 1]; vykresliLidi(); })
+    .catch(e => console.error('GŠ ZSU osoby', e));
+
+  // změna tématu (theme.js přepíná data-theme) → nové barvy grafů, vrstev i podkladu
+  let tema = document.documentElement.dataset.theme;
+  new MutationObserver(() => {
+    if (document.documentElement.dataset.theme === tema) return;   // theme.js zapisuje i stejnou hodnotu
+    tema = document.documentElement.dataset.theme;
+    for (const m of [mapa, cas.mapa]) if (m) nastavPodklad(m, m._atribuce); prekresli(); cas.vrstva?.kresli(); })
+    .observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+})();
+</script>
+</body>
+</html>

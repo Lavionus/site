@@ -167,3 +167,88 @@ v reálném čase; `--virtual-time-budget` se nepoužívá, protože v něm neb�
 
 > Po nasazení zvyš verzi cache: `sw.js` je na `webapp-v71`, `metodus/sw.js` na
 > `metodus-v31` — obojí už zvednuté touto dávkou.
+
+---
+
+## Revize stránky `obsah/valka_ukrajina.html` (2. 10. 2026)
+
+Stránku jsem prošel ručně a souběžně ji zkontroloval nezávislý recenzent, který ověřoval
+čisté funkce v node nad živými daty. Nálezy jsem ověřil a všechny opravil.
+
+### Chyby v datech (uživatel viděl špatná čísla)
+
+| Nález | Oprava |
+|---|---|
+| Parser CSV dělil text na řádky dřív, než zpracoval uvozovky. Export Oryx má v poli `"Surface-To-Air Missile Systems⏎"` konec řádku, takže **ukrajinské protiletadlové komplety ukazovaly 0 místo 179** a v tooltipu „NaN“. | Parser čte po znacích přes celý text, uvozovky platí i přes konce řádků, `""` = uvozovka, hodnoty se ořezávají. |
+| Oryx vede ukrajinské lodě jako `Naval Ships`, ruské jako `Naval Ships and Submarines` → **ukrajinské lodě ukazovaly 0 místo 44**. | Sjednocení klíče v `oryxSouhrn`. |
+| Graf vývoje území měl u rekonstrukcí 2022–2024 štítek „ověřeno“, ačkoli časosběr je správně vede jako odhad. | Dva štítky: rekonstrukce ≈ odhad, denní data ✔ ověřeno. |
+| Verdikt křížové kontroly ISW × DeepStateMap vždy tvrdil, že DeepState leží mezi užším a širším vymezením ISW, i když čísla vyšla jinak. | Text se volí podle skutečné polohy čísel; doplněna přesnost výpočtu ±1 %. |
+| Červenec 2024 (data až od 8. 7.) se počítal jako celý měsíc a mohl vyjít jako „nejrychlejší“; denní tempo se dělilo pevnými 30,4 dny. | První i běžící měsíc jsou označené jako neúplné, tempo se počítá ze skutečného počtu dní. |
+| Poslední bod časové řady Oryx byl dvakrát. | Duplicita odstraněna. |
+| Den války se přepínal o půlnoci UTC, tedy v ČR až v 1–2 h ráno. | Počítá se od místní půlnoci. |
+| Formulace „GŠ ZSU = zabití a *těžce* ranění“, „Rusko ovládlo Luhanskou oblast“ a „z Mariupolu chybí většina obětí“ tvrdily víc, než zdroje říkají. | Přeformulováno podle zdrojů (Rusko oblast „prohlásilo za dobytou“, OSN „výrazně vyšší“ čísla kvůli okupovaným městům). |
+
+Ověřeno výpočtem: vrstvy ISW „kontrola“, „postup“ a „infiltrace“ se nepřekrývají (průnik 0 km²), takže
+dlaždice nic nezapočítává dvakrát. Části mimo obrys Ukrajiny (~1,3 %) jsou jen 207 drobných proužků podél
+hranice a pobřeží, tedy generalizace hranic.
+
+### Chyby v chování
+
+- **Dvojí přehrávání:** rychlé pauza → přehrát spustilo druhou smyčku a snímky běžely dvojnásobnou rychlostí. Opraveno číslem běhu.
+- **Stránka visela na „Načítám…“:** po výpadku DeepStateMap se to týkalo křížové kontroly a časosběru, po výpadku GŠ ZSU zůstalo prázdné plátno. Chyba v jedné části navíc zastavila překreslení ostatních při změně tématu. Opraveno: každá sekce má vlastní chybovou hlášku a vykreslení je izolované (`bezpecne`).
+- **Vrstva časosběru:** při přeletu na výřez ujížděla mapě. Každý snímek navíc alokoval 4 plátna velikosti mapy (~30 MB při DPI 2) a po zoomu se kreslil dvakrát. Opraveno: plátno se při zoomu schová, pomocná plátna se znovu používají a kreslí se jen na `moveend`.
+- **Tažení posuvníkem:** spouštělo stovku souběžných stahování a přechodná síťová chyba se zapamatovala navždy. Opraveno: posuvník čeká 120 ms, snímky se přednačítají jen při přehrávání a po síťové chybě se zkusí znovu (404 se pamatuje).
+- **Šipky na klávesnici:** posouvaly snímek i při práci s mapou a fungovaly i s Alt (Zpět v prohlížeči). Opraveno.
+- **Zbytečné překreslování:** `theme.js` zapisuje téma i beze změny, a každé takové zapsání překreslilo celou stránku. Opraveno.
+- **Přístupnost:**
+  - grafy mají `role="img"` a popis,
+  - posuvník hlásí datum (`aria-valuetext`),
+  - přepínače mají `aria-pressed`,
+  - odkazy na události jsou ovladatelné klávesnicí,
+  - panel snímku se ohlašuje (`aria-live`, při přehrávání vypnuto).
+- **Kompatibilita:** odstraněn operátor `||=`, kvůli kterému by Safari < 14 nespustil vůbec nic.
+
+### Testy
+
+| Kontrola | Výsledek |
+|---|---|
+| `node --check` + jednotkový test parseru a `oryxSouhrn` nad živým CSV | 0 NaN, PVO UA 179, lodě UA 44 |
+| `_test/test_valka_cas.py` (časosběr: krokování, kroky týden/2 týdny/měsíc, přehrávání, pauza/přehrát, šipky, aria) | prošlo, 0 chyb JS |
+| totéž s `DPR=2` | plátno 1362 px na 681 CSS px, bez lemů |
+| `_test/snimek_valka.py` (obě témata, úzký displej 360 px) | nic nepřetéká, 0 chyb JS |
+| výpadek všech zdrojů z GitHubu (`--host-resolver-rules`) | každá sekce ukáže chybu, nic nevisí, 0 chyb JS |
+
+Zbývá vědomě: statická čísla OSN, Mediazony a UNHCR je potřeba při aktualizaci obnovit ručně
+(konstanta `STATICKA`). `findLastIndex` a `.at()` vyžadují Safari 15.4+ nebo Firefox 104+.
+
+### Druhé kolo revize (2. 10. 2026, zaměřené na čtenáře a na regrese)
+
+Recenzent s čerstvým pohledem zkontroloval opravy z prvního kola i obsah. Já jsem prošel celostránkové
+snímky a ověřil sporná místa v datech.
+
+**Chyby v obsahu**
+
+| Nález | Oprava |
+|---|---|
+| **Sever 2022 chyběl.** Rekonstrukce vede území obsazené v únoru až dubnu 2022 u Kyjeva, Černihivu a Sum (až 34 532 km²) ve zvláštní vrstvě `grey`, kterou stránka nepoužívala. Březnové maximum vycházelo o ~35 000 km² nižší a stažení ze severu (událost č. 2) na grafu ani v časosběru vůbec nebylo vidět. | Graf má tečkovanou řadu „včetně severu“, časosběr kreslí sever šrafovaně a počítá ho do plochy. Ukazuje 163 827 km² (27,1 %) k 21. 3. 2022 a −34 417 km² k 7. 4. 2022. |
+| **24 ze 40 historických snímků byly kopie předchozího.** Časosběr ukazoval „+0 km²“ a hned potom nafouknuté tempo (Avdijivka 56,9 km²/den místo 8,9). | Kopie se vyřazují, zůstává 16 skutečných snímků. |
+| Graf měsíců ukazuje **čistou** změnu, ale popisky mluvily o „ziscích a ztrátách“ a o „nejrychlejším měsíci postupu“. Ověřil jsem, že skoro nulové měsíce 2026 nejsou výpadek dat (mapa se měnila 22–25krát měsíčně). | Nadpis, vysvětlivka i tooltip mluví o čisté změně; „Měsíc s největším čistým ziskem Ruska (od 7/2024)“. |
+| Věta „ISW spíše nadhodnocuje ruskou kontrolu“ odporovala číslům na stránce (DeepStateMap uvádí o 4 000 km² víc). | Přeformulováno neutrálně. |
+| Na stránce byly dvě různé „aktuální“ plochy bez vysvětlení (ISW 113 069 a DeepStateMap 117 096 km²). | Dlaždice uvádí obě a odkazuje na křížovou kontrolu. |
+| Pruhy „mrtví podle Mediazony“ a „zabití + ranění podle GŠ ZSU“ sváděly ke srovnání. | Výslovně napsáno, že nejde o tutéž veličinu. |
+| Sporné území (postup a infiltrace) neslo štítek „ověřeno“. U rekonstrukcí se srovnání s vlastním zdrojem tvářilo jako ověření. | Štítek odebrán; u rekonstrukcí je to „kontrola výpočtu“. |
+| Vnitřně vysídlení byli označeni jako „lidé bez domova“; číslo 5,3 mil. bylo natvrdo mimo `STATICKA`; srovnání s počtem obyvatel Česka bylo zavádějící. | Opraveno a přesunuto do `STATICKA`, srovnání odstraněno. |
+| U nulové změny se zobrazovalo „+0 km² pro Rusko“. | Nově „beze změny“. |
+| Verdikt mohl současně tvrdit „shoda“ i „metodiky se rozcházejí“. | Opraveno. |
+
+**Regrese z prvního kola**
+
+- Čekající skok z posuvníku (120 ms) mohl po přepnutí kroku skočit na nesouvisející datum.
+- `bezpecne` některé chyby spolkl a sekce zůstala na „Načítám…“. Teď se hláška vypíše do dané sekce.
+- Pomocné plátno se při zoomu prohlížeče pod 100 % mazalo jen zčásti.
+- Při výpadku Oryxu i GŠ ZSU zároveň druhá chybová hláška spadla, protože přepisovala už odstraněné plátno. Tuhle chybu našel až test výpadků, hlášky se teď sčítají.
+- Chyba snímku časosběru je česky a přehrávání se na ní zastaví.
+
+**Testy:** `_test/test_valka_cas.py` (navíc kontroly snímků 21. 3. a 7. 4. 2022 a 18. 2. 2024),
+`_test/snimek_valka.py` (obě témata, 360 px) a test výpadku všech zdrojů z GitHubu — 0 chyb JS,
+nic nevisí na „Načítám…“.

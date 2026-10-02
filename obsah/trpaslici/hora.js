@@ -17,7 +17,17 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
   'use strict';
   const { Nahoda, smichej, sum2D, fbm } = T.nahoda;
 
-  const W = 96, H = 192, UDOLI = 32;
+  // velikost mapy = šířka hory (hloubka je pevná – drží ji příběh: Spáč ve 138 m, Srdce ~150 m); volí se při nové hře
+  // a platí od načtení stránky (všechny moduly si W berou při startu), v prohlížeči z localStorage, v node z TRP_VELIKOST
+  const VELIKOSTI = { mala: 64, stredni: 96, velka: 128, obri: 160 };
+  const VELIKOST = (() => {
+    let v = globalThis.TRP_VELIKOST;
+    if (!v && typeof window !== 'undefined') { try { v = window.localStorage.getItem('webapp_hra_trpaslici_velikost'); } catch (e) { v = null; } }
+    return VELIKOSTI[v] ? v : 'stredni';
+  })();
+  const W = VELIKOSTI[VELIKOST], H = 192, UDOLI = 32;
+  const HLOUBKA_SPACE = 138, HVEZDNE_MIN = 10;      // práh Spáče (= pribeh.HLOUBKA_SPACE) a nejmenší zásoba hvězdné rudy nad ním
+  const NASOBEK = W / 96;                        // jeskyně a žíly přibývají se šířkou
   const SNIH = UDOLI - 17;                   // povrch nad touto výškou je zasněžený
 
   const M = { VZDUCH: 0, HLINA: 1, JIL: 2, VAPENEC: 3, ZULA: 4, CEDIC: 5, HLUBINNY: 6, PODLOZI: 7,
@@ -255,7 +265,7 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
       }
       return null;
     }
-    const pocet = (a, b) => Rn.cele(a, b);
+    const pocet = (a, b) => Math.max(1, Math.round(Rn.cele(a, b) * NASOBEK));
     for (let k = pocet(3, 4); k > 0; k--) jeskyne1('krapnikova', 22, 48, Rn.cele(5, 8), Rn.cele(3, 4), 0.56);
     for (let k = pocet(2, 3); k > 0; k--) jeskyne1('jeskyne', 55, 86, Rn.cele(5, 7), Rn.cele(3, 4), 0.55);
     const jezero = jeskyne1('jezero', 95, 124, Rn.cele(9, 12), Rn.cele(4, 5), 0.6);
@@ -341,9 +351,14 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
       n += zila(R.HVEZDNA, srdce.x + Rn.cele(-14, 14), UDOLI + Rn.cele(126, 134), 4);
     for (const r of [R.UHLI, R.MED, R.ZELEZO, R.ZLATO, R.STRIBRO, R.DRAHOKAM, R.HVEZDNA]) {
       const d = RUDA[r];
-      for (let k = 0; k < d.zil; k++)
+      for (let k = 0, n = Math.max(1, Math.round(d.zil * NASOBEK)); k < n; k++)
         zila(r, Rn.cele(2, W - 3), UDOLI + Rn.cele(d.od, d.do), Rn.cele(d.delka[0], d.delka[1]));
     }
+    // pojistka pro Klíč (7 hvězdných prutů na 2 artefakty a Klíč + rezerva): aspoň HVEZDNE_MIN kusů hvězdné rudy nad
+    // prahem Spáče (138 m) na každé velikosti hory – chybí-li, další žíly nad Srdcem (126–134 m)
+    const nadPrahem = () => { let n = 0; for (let i = 0; i < N; i++) if (ruda[i] === R.HVEZDNA && (i / W | 0) - UDOLI < HLOUBKA_SPACE) n++; return n; };
+    for (let pokus = 0; pokus < 40 && nadPrahem() < HVEZDNE_MIN; pokus++)
+      zila(R.HVEZDNA, Math.max(2, Math.min(W - 3, srdce.x + Rn.cele(-20, 20))), UDOLI + Rn.cele(126, 134), 4);
 
     // 10) objekty: les, louka, jeskyně -----------------------------------------------
     for (let x = 1; x < W - 1; x++) {
@@ -441,7 +456,7 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
     return d;
   }
 
-  T.hora = { W, H, UDOLI, SNIH, M, MATERIAL, R, RUDA, O, OBJEKT, PRUHLEDNE, pevne,
+  T.hora = { HVEZDNE_MIN, VELIKOSTI, VELIKOST, W, H, UDOLI, SNIH, M, MATERIAL, R, RUDA, O, OBJEKT, PRUHLEDNE, pevne,
              generuj, odhal, pocatecniZnamo, vzdalenostKopani };
 })(TRP);
 

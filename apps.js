@@ -2435,6 +2435,11 @@ const KATALOG_SEKCE = [
     "skupina": "ostatni",
     "polozky": [
       {
+        "soubor": "obsah/valka_ukrajina.html",
+        "nazev": "🇺🇦 Vývoj války na Ukrajině",
+        "tagy": ["ukrajina", "válka", "rusko", "isw", "fronta", "mapa fronty", "okupace", "deepstate", "oryx", "ztráty", "osn", "uprchlíci", "zprávy"]
+      },
+      {
         "soubor": "obsah/contact_page.html",
         "nazev": "Kontakt",
         "tagy": ["kontakt", "e-mail", "napište nám", "autor"]
