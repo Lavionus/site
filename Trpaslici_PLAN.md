@@ -1074,3 +1074,280 @@ Dodatek (2. 10. 2026) – revize 2, opravy logiky (hra/potreby/hrozby/stavby/pra
   stanice jen na konce šachty. vytah_bench: tah s 85polovou šachtou ~500 → ~400 µs (bez výtahu ~295); BFS 64 → 38 µs.
 - Uložení `VERZE` 12 (čte 9–12; pole `tesano`, `padloPodle`, `prostrediStav`). Padlí podle příčiny `hra.padloPodle`
   (boj, hlad, zizen, pad, zaval, magma, utonuti; i ve `statistiky`). 16 nových testů v sim (revize 2).
+
+Dodatek (2. 10. 2026) – etapa 3 revize: chyby nalezené botem a návrh (logika; UI beze změny):
+- Dílny: rezervace počítá jen dosažitelné věci (`volneProDilny`, dosah ze skladů `T.hra.dosahSkladuTik` jednou za tah,
+  líně – jen když nestačí sklad); rozpracovaná pracoviště si drží, co jim chybí; pracoviště, kterému materiál 2 dny
+  nikde dosažitelně neleží, se uvolní (`m.chybiOd`, donesené vypadne). Zaseknutá pracoviště v botu 1 294 → 81, „leží
+  nedostupně" 682 → 0.
+- Záchrana: obecná cesta ven (`planujVystup`: žebřík, bez dřeva schodiště vytesané do skály vedle jámy – `najdiSchody`,
+  ověřené hledáním cesty s dočasnou úpravou terénu); uvízlý (žebřík čekající na dřevo přes 1 200 tahů se nahradí
+  schodištěm), cenné věci v jámě (`zachranVeci` jednou za 600 tahů, věci v jedné jámě sdílí záchranu) a Srdce hory
+  pod nedokončeným žebříkem, když je Klíč hotový (seed 1047290: žebřík končil 2 pole nad podlahou Srdce). Pole
+  záchranného schodiště se vždy označí jako schod (i dříve označené ke kopání – jinak vznikla svislá šachta).
+- Žebřík jde i pod pumpu postavenou na holém poli šachty. Poplach drží jen útočníci (nájezd `u.najezd`, do 15 polí od
+  trpaslíka, nedávný útok) – pavouk v odlehlé jeskyni už klan neschovává.
+- Nájezdy: síla podle slávy (`min(2,5; sláva/150)`) místo ozbrojených/3; `T.hrozby.predpovedNajezdu` (den, síla, trollové,
+  odkud, pole); varování s místem (brána / tunel). Odkrytý tunel, ze kterého nevede cesta ke klanu, nájezd nepoužije
+  (dřív v něm uvízly desítky goblinů); nájezdník, který se 120 hledání ke klanu nedostane, se stáhne.
+- Finále: Spáč odolnější proti silné obraně (odolnost 1 + 0,15 za ozbrojeného nad 3, nejvýš 2 – `silaSpace().odolnost`),
+  dvě vlny pavouků z puklin Srdce během zažíhání (`VLNY` 150 a 380), nájezd čeká i po pádu Spáče, dokud se zažíhá;
+  předčasné probuzení = trvale +0,3 neklidu (`hra.spac.brzy`). Civilista jdoucí pít/jíst před Spáčem nečeká
+  (s kritickou potřebou ani neutíká) – dlouhé finále jinak zabíjelo žízní.
+- Kusovník Klíče `T.pribeh.kusovnikKlice(hra, sDosahem)` (potřeba / má / chybí / nedostupné, `drzet`) a `kusovnikText`
+  v „Co dál?" (kroky 11–15); příběhové zakázky mají v dílnách přednost a drží si materiál (uhlí na ležící hvězdnou rudu
+  ap.); jednorázové varování, když trvalá zakázka vezme poslední uhlí potřebné pro Klíč (`odemceno.varUhli`).
+- Dřevo: strom 3 polena (pařez 4 dny), obří houba 2 polena, sazenice ve školce 3 dny, výtah 1 dřevo na pole.
+  Spánek: vzpomínka 3 dny (do dalšího spánku); mrtvý kód `POT.noc` pryč.
+- Hvězdná ruda: generátor zaručí ≥ 10 kusů nad 138 m na každé velikosti (`T.hora.HVEZDNE_MIN`, test v generátoru);
+  karavana ji veze od slávy 200 nebo když ji Klíč potřebuje. Milníky slávy 120/200/250/330 (klíče slava300/400
+  zůstaly), deska +10, artefakt +25, události víc slávy. Volný režim: „Co dál?" pokračuje cíli (hloubka 80 a 140 m,
+  velká síň, opevnění, sláva 250 a 330 – `VOLNE_CILE`).
+- Události: naslouchání hlubinám prozradí jednu žílu hvězdné rudy; rychlé vylomení dutiny zraní 30–75 ♥ a může zabít.
+  Texty: 1. krok „Co dál?" s výškou síně.
+- Výkon: strážci při nedosažitelném nepříteli neprohledávají horu každý tah (`t.strazBlok` 30 tahů, cíle v množině),
+  tvorové hledají trpaslíky přes množinu polí (`poleUTrpasliku`). Nová fixtura `trpaslici_den290_seed628374.json`
+  (bot, výtah 137 polí, studna): 4,9 ms → ~1,0 ms na tah, p99 ~3,7 ms; rozpočty 2 200 µs / 8 ms / 250 kB.
+- Testy: 20 nových scénářů v sim (etapa 3 revize), fuzz zkouší výtah, studnu, pumpu, past, mříž, ⭐, poplach a cíle
+  farem; `trpaslici_velikosti.js` na malé a obří hoře fuzz s uložením a pokračováním + všechny scénáře (`VEL=`,
+  scénář 1 se mimo šířku 96 přeskočí s důvodem); `trpaslici_test.js` umí `VEL=`. Bot: `ULOZ=den` uloží hru (fixtura).
+- Bot 24 her × 10 let (dávky --od=1 a --od=13) proti etapě 2: vítězství 10/24 (9/24), prohry 0 (1), čas do vítězství
+  medián 234 dní (229), Klíč v 16 hrách (11); úmrtí 280 (246) – boj 227 (192), žízeň 27 (32), hlad 7 (9); uvíznutí
+  164 (118), z toho zemřelo 18 (41); výtah ve 14 hrách (11), studna ve 20 (16); sláva medián 401–425 (344–366),
+  nálada 64–66 (61–63). Dřevo na začátku 2.–5. roku pořád medián 0–1 (bot spotřebuje každé poleno a lesní školku
+  nezaloží – hledá ji jen na úbočí nad horou). Uložení zůstává VERZE 12 (nová pole jsou jen doplňková).
+
+## Revize 2 a opravy (2. 10. 2026) – souhrn etap
+- Etapa 1 (chyby): léčení nepředběhne hlad/žízeň; čistý strážce se nejdřív vyzbrojí a cvičí v krátkých lekcích;
+  záchrana uvízlých (žebřík ⭐ / schodiště); plán pod stavbou se odmítne; materiál nikdy do vody; studna bez vody
+  zmizí; žebřík přes schody se zruší; útěk a otesání bez „skoků"; otesaná skála si pamatuje horninu (`hra.tesano`);
+  plány do neznáma odmítnuty; poplach jen kvůli viděným nepřátelům; deterministické `prostredi`; rychlejší výtah;
+  `VERZE 12`; `hra.padloPodle`. UI: ⭐ s předností klikatelné, import jiné velikosti bez ztráty a bez smyčky,
+  deník v pozdní hře, chyba panelu nevypne události.
+- Etapa 2 (bot): opravy bota, příčiny smrti z `padloPodle`, bot staví výtah/studnu, vyhlašuje poplach; měření 9/24.
+- Etapa 3 (design + chyby z měření): dílny bez nedostupného materiálu, záchrana cenných věcí z jam, schodiště místo
+  žebříku bez dřeva, kusovník Klíče, přednost zakázek příběhu, víc dřeva a výtah za 1 dřevo, spánková vzpomínka
+  3 dny, nájezdy podle slávy + předpověď, těžší finále (odolnost Spáče, vlny pavouků), ≥ 10 hvězdné rudy nad 138 m,
+  milníky 120/200/250/330, cíle volného režimu, riskantnější události, testy pro všechny velikosti a nová fixtura.
+  Bot 24 her: vítězství 10/24, proher 0, uvízlých mrtvých 18 (dřív 41).
+- Etapa 4 (UI): varování před závalem při kopání, nájezd v Pozor, méně červené na začátku, zkratky, 📍 přístupné,
+  úzký displej, přehlednější Klan, legenda čepic z kódu, 6 nových ikon, nápověda v oddílech, `?velikost=`,
+  „Prohlédnout horu", minimapa podle W/H, SW registrace ve hře; kusovník jako tabulka, předpověď nájezdu, odolnost
+  Spáče, žebřík pod pumpou.
+- Testy: sim 0 chyb, fuzz 0 rozdílů, generátor, velikosti (64–160), výkon, sw check, UI 116/116, sprity 132/132,
+  výkon kreslení 4/4. `sw.js` na `webapp-v264`.
+
+## Revize 3 – opravy logiky (2. 10. 2026)
+- Záchrana uvízlých a věcí nikdy nekope v hloubce Spáče (`naSchod` odmítne řádky, kde `T.pribeh.budiSpace`; zbývá žebřík,
+  jinak zpráva s radou) ani do neznáma: pole schodiště musí být známé a každé z 8 polí kolem známé nebo pevná skála
+  (dřív schodiště prokopalo skrytou jeskyni – pavouci, goblinní tunel, Srdce → Spáč). Ověření výstupu, oblast i dosah
+  ze skladů pro záchranu (`dosahZachrany`) nejdou přes neprozkoumaná pole (`C.sRezimem(hra, mriz, znamo, fn)`);
+  `overVystup` vrací terén v `finally`.
+- Zavřená mříž nikoho neuvězní: „uvízl" se hlásí jen, když se ke skladu nedá dojít ani přes otevřenou mříž; záchrana
+  věcí počítá mříž jako průchozí (dřív schodiště obcházelo mříž).
+- Plán stavby do skály pod 138 m (žebřík, výtah, podpěra…) sám kopání neoznačí – `S.prekazka` vrátí
+  „probudilo by Spáče – nejdřív vyznač kopání ručně"; po ručním vyznačení (UI s potvrzením) se plán přijme.
+- Evidence záchran `hra.zachrany` (ukládá se, starší uložení = prázdná, VERZE zůstává 12): když uvízlý vyleze jinak,
+  umře, cenná věc zmizí / je dosažitelná nebo Srdce dosažitelné, zbylé ⭐ plány žebříku se zruší (donesené dřevo
+  vypadne) a značky schodiště smažou (`hlidejZachrany` každých 150 tahů); schodiště místo žebříku ruší visící žebřík.
+- Cenné věci k záchraně: hvězdná ruda/ocel, zlato, zlatý prut, drahokam, Klíč, šperk, brus, pohár + to, čeho kusovník
+  Klíče potřebuje víc, než je dosažitelně (železo ani stříbro samo už záchranu nespustí).
+- Strážci: nedosažitelný či neznámý tvor nezastaví výcvik (lov zkusí jednou za 60 tahů – `t.lovBlok`); čistý strážce
+  v pozdní hře s pavoukem v odlehlé jeskyni cvičí místo 7 104 nečinných tahů.
+- Kusovník: materiál na cestě k rozpracovanému výrobku se nepočítá podruhé (uhlí k hvězdné oceli).
+- Finále: opuštěné zažíhání při živém Spáči nájezd neodkládá navždy (jen když někdo zažíhá nebo zažíhání postoupilo
+  v posledních 2 dnech). Nájezd tunelem: cesta ke klanu se ověří z každého místa výstupu (neúspěch celého prohledání
+  vyřadí i místa, kam se odtud došlo).
+- `sucheMisto`: jen přes známá pole, limit 1 500, marné hledání se pamatuje do změny tahu/tvaru hory.
+- Zvěd nekrade, co drží kusovník Klíče, ani nic dražšího než 45.
+- Uložení: tvor se známým druhem, cestou a zdravím; `spac`, `odemceno`, `artefakty`, `objeveno`, `nalezeno`, `nouze`
+  objekty; karavana/událost/prostředí/záchrany a rezervace ověřené – chybné uložení se odmítne česky hned při načtení.
+- Testy: 12 nových scénářů v sim (Spáč, skrytá jeskyně, mříž, plán pod 138 m, výcvik + strazBlok/lovBlok, zbytky
+  záchran ×3, schodiště po 1 200 tazích bez dřeva, železo v jámě, kusovník, nájezd za finále, zvěd, chybné uložení);
+  `trpaslici_velikosti.js` fuzz začíná chodbou a schodištěm, značky navazují na trpaslíky, 4 seedy × 9 000 tahů
+  (vykopáno 54–209 polí místo 4–34). Výkonová fixtura přegenerovaná botem (34 trpaslíků, žádní uvěznění nájezdníci):
+  průměr ~435 µs, p99 ~2,1 ms → rozpočty 900 µs / 4,5 ms / 50 ms / 6 ms / 170 kB.
+- Bot 24 her × 10 let (--od=1 a --od=13): vítězství 11/24 (10/24), prohra 1 (0), uvíznutí 161 (164), zemřelo uvízlých
+  13 (18), Spáč předčasně 0 %.
+
+## Revize 4 – design a vyvážení (2. 10. 2026)
+- Nájezdy a spáči: civilista (a zraněný strážce pod 35 ♥) se při poplachu i bez něj schová, když je do 12 polí viděný
+  nájezdník / Spáč / tvor, který nedávno útočil (`hra.hrozbaU`); spánek, jídlo a léčení v jeho dosahu přeruší (spáč se
+  vzbudí), daleko od něj pokračují. Postel (spánek i léčení) jen daleko od útočníka, na zemi v jeho dosahu se nespí
+  (jen v krajní únavě). Civilista utíká pod 60 ♥ a před trollem vždy; ústup už nestojí 10 tahů. Úkryt bez poplachu skončí,
+  když do 20 polí nikdo není. Kdo nese Klíč / zažíhá, se neschovává. Civilista neudělá krok na 2 pole k viděnému
+  nájezdníkovi či Spáčovi (počká, po 4 pokusech práci pustí) – dřív si chodili pro věci padlých k nájezdníkům (i výtahem,
+  v jedné hře volného režimu 16 mrtvých u jedné stanice).
+- Vodítko `T.pribeh.voditko(hra)` → `{cil: deska|ruiny|srdce|vyhen, smer, x, y, i, xOd, xDo, hloubka, presne, text}`;
+  stopy v `hra.odemceno.stopaRuin/stopaSrdce` (první deska, naslouchání hlasu hlubin – teď od 90 m bez desky);
+  hotový Klíč „táhne" (přesný směr a vzdálenost). „Co dál?" kroky 10, 12, 16 přidávají 🧭 text a `r.voditko`.
+- Finále: Spáč a pavouci z vln (`u.vlna`) jdou po zažíhajícím (`hrozby.zazehnujici`), Spáč pak hlídá Výheň; odolnost =
+  základní útok ozbrojených strážců (bez Rohu) / 45 bez stropu; `silaObrany` počítá zbývající vlny pavouků a zažíhajícího
+  civilistu (`vlny`, `kolSpace`, `civilu`), meze odhadu 2,5 / 1,2.
+- Artefakty: `T.pribeh.zvolArtefakty(hra, [a, b] | null)` (uloží `hra.odemceno.volbaArt`), `volbaArtefaktu(hra)` →
+  `{zvoleno, doporuceno, poradi, duvod}`; výchozí Roh, když nájezdy bolí (boj ≥ 4 nebo 15 % max. klanu) nebo chybí
+  6 obrněných strážců – jen se známým stříbrem. Kusovník se řídí volbou (dřív rozhodoval materiál → vždy kladivo + lampa).
+- Klan: migranti 1 + sláva/60 (max 4), jen do volných postelí v ložnicích + 1 (`T.obdobi.mistoVKlanu`, `MAX_KLAN`);
+  bez místa přijdou hosté s darem (událost `hoste`), zbloudilý v plné hoře jen přespí. Přátelé (`t.pratele`, zakladatelé
+  po dvojicích, příchozí se skupinou + 1 starousedlík): smrt přítele −16 na 6 dní; padlý veterán (boj ≥ 6 / kopání ≥ 12)
+  −5 nálady všem a sláva −5.
+- Nálada: nevrlý pod 40 (dřív 30), návyk na stejný zážitek (−8 % za opakování, nejvýš na 40 %, `t.navyk`), přepych od
+  3. roku (`T.potreby.prepych`: socha 1 bod, kamenný nábytek ½; pod 0,15/trpaslíka −4/−6, od 0,5 +3), legenda (650) +4.
+- Nájezdy: síla 1 + klan/9 + lákadlo (sláva/200, max 4) + nájezdy/7 + neklid, × (W/96)^¼, strop 18 a nejvýš
+  0,6 × klan (aspoň 3 – zdecimovaný klan nedorazí); troll na každé
+  4 obrněné strážce (ne podle roku); od 6. nájezdu druhy `utok/kradez/obleh/podkop` (`hra.dalsiNajezdTyp`, obléhání
+  `hra.oblehani` – karavana se otočí, migranti nepřijdou); odstup × (96/W)^¼; `predpovedNajezdu` vrací `typ`, `lakadlo`;
+  `T.hrozby.lakadloInfo`. Vyčištěný goblinní tunel (`odemceno.tunelVycisten`, sláva +20) nájezdy nepouští.
+- Ekonomika: hlubší uhlí 40–110 m (vlastní generátor, hlavní náhoda se neposouvá); lesní školka i pod zemí (obří houby →
+  houbové dřevo, i v zimě); kovaná socha z 2 železných prutů (kovárna, výheň); sochy se samy rozmístí do jídelny;
+  karavana vykupuje pruty hromadně; milník 500 = dílny 1,15× a výkup +20 %, 650 = legenda (+4 nálada, 3 veteráni).
+- Nošení: sklizeň rovnou do kuchyně/pivovaru, který ji čeká (`primoDoDilny`); jídlo a pivo z dílen do jídelny (tam se
+  počítají do zásob a neodnášejí se – `S.vJidelne`).
+- Volný režim: pozdní cíle (tunel, 155 m, sláva 500/650, volitelný Spáč – `T.pribeh.vyzviSpace`, Spáč se drží 25 polí od
+  Srdce), pak nekonečný cíl (`opakovanyCil`). Bot `REZIM=volny`.
+- Velikost: Srdce a ruiny na široké hoře v užším pásmu (střední a malá beze změny).
+- Uložení: VERZE zůstává 12; nové klíče `dalsiNajezdTyp`, `oblehani` (ověřené), ostatní v `odemceno` / trpaslících.
+- Testy: 15 nových scénářů v sim (revize 4), úpravy 4 starých (odolnost, milníky, migranti, dílna se 2 kuchaři –
+  delší okno, přeplněný sklad na malé hoře ≤ 24).
+- Bot: postele pro klan + 2 a další ložnice na štolách (19/33/47/61 m), podzemní lesní školka při nedostatku dřeva, artefakty
+  podle kusovníku (`ARTEFAKTY=roh,lampa` = volba hráče), kované sochy z přebytku prutů, prodej prutů nad 25, sochy neprodává,
+  ruiny znovu jiným řádkem / schodištěm (kritérium = známá deska, ne „objeveno"), s Klíčem a slabou obranou třetina strážců,
+  po roce s Klíčem jde do Srdce i bez dobré obrany; `REZIM=volny` (tunel, Srdce, výzva Spáče, počet splněných cílů).
+- Měření (hook s příčinou smrti a druhem nájezdu; 24 her × 10 let střední + 8 malých + 8 obřích; v závorce stejný běh
+  před změnami): střední vítězství 12/24 (11/24), prohry 0 (1), čas do vítězství medián 197 dní (200); padlí v boji 114
+  (196) – v nájezdech 47 (165), na nájezd 0,11 (0,38), v posteli 6 (45), ve finále 62 (28; Spáč + pavouci, medián 3 na
+  finále, odhad „vyrovnaný" 10/12); nálada medián 54 (64–66), 10. percentil 46 (49–51); dřevo na začátku 2.–6. roku
+  medián 7–79 (0–8), železné pruty 2–25 (1–73); čas: nošení 25–29 % (31–32 %), jídlo a pití 6–7 % (10 %), nečinnost
+  29–36 % (18–22 %); milníky 120/200/250/330 d56/87/106/129 (50/75/103/147), 500 d182 (19/24), 650 d277 (8/24);
+  Roh v 10/24 hrách (0); populace 4./7./10. rok 25/35/39 (30/38/39). Malá hora: 3/8 + 1 prohra (6/8), na nájezd 0,06
+  (0,28); obří: 5/8 (3/8), na nájezd 0,21 (0,19). Volný režim 6 her: splněno medián 17 z 20 cílů, Spáč poražen 4/6.
+- Výkon: průměr tahu fixtury ~780 µs (dřív ~460) – úkryty a čekání civilistů během nájezdu ve fixtuře; v rozpočtu 900.
+
+## Revize 3 – souhrn oprav (2. 10. 2026)
+- Etapa 1: záchranné kopání nikdy v pásmu Spáče, ne do neznáma, ne kolem zavřené mříže; plány pod 138 m bez
+  automatického kopání; strážci cvičí i při nedosažitelném tvoru; úklid zbytků záchran (`hra.zachrany`); záchrana jen
+  cenných věcí; kusovník bez dvojího uhlí; nájezd za opuštěného finále; tunel ověřený z každého místa; `sucheMisto`
+  přes známá pole; zvěd nekrade díly Klíče; přísnější `obnov`; nová výkonová fixtura; hlubší test velikostí.
+  Data a offline: import vždy s potvrzením a zálohou („↺ Vrátit"), `?seed/velikost` se z adresy odstraní, konec hry
+  nejde obejít, fokus v Klanu, SW dotahuje sadu hned a navigace s dotazem fungují offline, robustnější UI test.
+- Etapa 2 (design): útěk ze spánku/jídla před nájezdníky, postele daleko od nepřátel; vodítko k ruinám a Srdci
+  (`voditko`); těžší finále (Spáč a vlny jdou po zažíhajícím, odolnost = útok/45); volba artefaktů; migranti podle
+  postelí, přátelství a ztráta veterána; nálada (nevrlý pod 40, návyk, přepych); trollové podle obrněných strážců,
+  druhy nájezdů (útok/loupež/obléhání/podkop), lákadlo slávy do 800; hlubší uhlí, podzemní školka, kovaná socha,
+  výkup prutů; přímé dodávky farma → kuchyně → jídelna; milníky 500/650; pozdní cíle volného režimu a výzva Spáče;
+  nájezdy podle šířky hory; hosté místo migrantů v plné hoře.
+- Etapa 3 (UI): jednotná předpověď nájezdu v Pozor i Přehledu, kusovník sbalitelný se stromem surovin, zima
+  první den podle potřeby, srozumitelné varování před podpěrami, nápověda v sbalitelných oddílech, volba artefaktů,
+  vodítko 🧭 a pásmo v grafice, druhy nájezdů a lákadlo, místo v klanu, milníky v Příběhu, výzva Spáče, přepych,
+  19 nových ikon, větší dotykové cíle, hlášení odmítnutých polí obdélníku.
+- Předpověď nájezdu počítá slabší loupež a podkop bez místa jako útok (shoda s `najezd`).
+- Bot: střední hora 12/24 vítězství, 0 proher, 0,11 padlých na nájezd (dřív 0,38), padlí v posteli 6 (dřív 45),
+  nálada medián 54; obří 5/8; malá 3/12 + 1 prohra (ve 2 měřeních ~30 % – k doladění). Nečinnost 29–36 % času.
+- Testy: sim 0 chyb, fuzz 0 rozdílů, generátor, velikosti, výkon (rezerva malá: ~780 z 900 µs), sw check,
+  UI 132/132, sprity 132/132, výkon kreslení 4/4. `sw.js` na `webapp-v267`.
+
+Dodatek (5. 10. 2026) – výtah do hloubky (hlášení hráče: šachta skončila po jednom poli): od revize 2 se plány
+do neprozkoumaných polí odmítaly, takže výtah táhnutý z místnosti dolů se naplánoval jen na známá pole a zbytek tahu
+tiše propadl; hráč pak šachtu označil obyčejným kopáním, které pod sebe kope jen o pole. Teď žebřík a výtah (`svisle`)
+jdou naplánovat i do neznáma (stejná kontrola pro každé neznámé pole – nic neprozradí), šachta se označí jako schodiště,
+hráčovo obyčejné kopání v šachtě se na schodiště změní, plán na nekopatelné skále se zruší se zprávou. Rada při
+svislém pruhu obyčejného kopání, popisy výtahu/žebříku a nápověda. Test: 11 polí výtahu do neznáma postaveno.
+`sw.js` na `webapp-v268`.
+
+Dodatek (5. 10. 2026) – louč do nevykopaného pole (hlášení hráče, dřív šlo): od revize 2 se plány do neprozkoumaných
+polí odmítaly, takže louč do vyznačené chodby za hranou známého nešla. Teď všechny jednopolové stavby na volno kromě
+zdi (`S.doNeznama`: louč, podpěra, žebřík, výtah…) jdou do neznáma (stejná odpověď pro vzduch i skálu), pole se označí
+ke kopání; plán na nekopatelné skále se zruší se zprávou. Testy upravené (louč na konci chodby do neznáma se postaví).
+
+Dodatek (5. 10. 2026) – lišta nejpoužívanějších staveb: vpravo vedle spodní lišty nástrojů (`#oblibene`), až 6
+nejčastěji umístěných staveb a zón podle počtu úspěšných umístění (localStorage `webapp_hra_trpaslici_oblibene`,
+platí napříč hrami), klik vybere nástroj bez palety, zamčené zešedlé s důvodem; na úzkém displeji nad lištou
+nástrojů a schovaná, když je otevřená paleta. UI test 133/133, `sw.js` na `webapp-v271`.
+
+Dodatek (5. 10. 2026) – podpěra vytesaná ze skály: podpěra naplánovaná do pole, které se kope, se po vykopání rovnou
+vytesá z kamene (`vytesejPodperu` v hra.js) – bez dřeva, kámen z pole nevypadne (ruda ano), `materialNa = 'kamen'`,
+vlastní sprite `podperaKamen` (šedý sloup s hlavicí a spárami), zvuk kladiva. Dřevěná podpěra se staví jen do
+volného místa. Test: tři sloupy v síni bez dřeva, bez závalu (dřív se síň zřítila). UI 133/133, sprity 132/132,
+`sw.js` na `webapp-v272`.
+
+Dodatek (5. 10. 2026) – „donesená postel je pořád plán": nábytek se po donesení ještě musí usadit (stavění 🔨).
+Nová `T.hra.procCekaPlan(hra, p)` – detail plánu říká, na co čeká: materiál se nosí / pole se vykope / chybí podlaha /
+nikdo nemá zapnuté stavění / žádný stavitel se nedostane (chybí cesta) / čeká na volného stavitele (s radou ⭐).
+Donesený nábytek se usazuje o stupeň dřív (`stupen('stavet', … nabytek ? 1 …)`); čekání pod zátěží 127–179 tahů
+(dřív až 419). Test v sim, UI 133/133, `sw.js` na `webapp-v273`.
+
+Dodatek (5. 10. 2026) – dovednosti: kromě kopání (0–20) a boje (0–10) nově stavění, nošení a chůze, kácení, polní
+práce, řemeslo a tesání (0–10, `T.hra.DOVEDNOSTI`). Každá dokončená práce dá bod (`zlepsi`), další stupeň za
+4 + 2 × stupeň bodů (`prahDov`); stupeň = o 5 % rychlejší práce (`fDov`, mistr o polovinu), nošení zrychluje i chůzi
+(zlomek tahu se přenáší, `t.krokZbytek`; výtah ne). Začátek podle profese (tesař řemeslo 3 + stavění 2, kameník
+řemeslo + tesání 3, kovář/sládek řemeslo 3, farmář pole 3), zkušení přistěhovalci +3 i v řemesle. Zprávy při stupních
+5 a 10. Detail trpaslíka: všechny dovednosti s hvězdami, stupněm, zrychlením a postupem. Test: 40 donášek → stupeň 5,
+mistr nošení ujde trasu za 11 tahů místo 17. Oprava: `pridejZakazku` u dílny bez receptů (zbrojnice) – dřív pád.
+Výkonový rozpočet zvednut na 1100 µs / 6 ms (měřeno ~880 µs / ~4,8 ms i bez dovedností – rezerva se ztratila
+v revizi 4 úkryty při nájezdu; k optimalizaci). `sw.js` na `webapp-v275`.
+
+### Dodatek 5. 10. 2026 – jídelna v sestavách židle–stůl–židle
+Automatické rozmístění nábytku (`rozmistiNabytek`) dělí v jídelně každou vodorovnou řadu podlahy od levého kraje
+na trojice židle–stůl–židle (`slotyJidelny`); zbylá dvojice na konci řady je židle+stůl, osamělé pole patří soše
+(sochy jdou nejdřív na pole mimo sestavy). Louč, podpěra či žebřík řadu přeruší. Židle se kreslí čelem ke stolu
+(`zidleVlevo` – stůl nebo jeho plán vlevo a ne vpravo → zrcadlený sprite, i u plánu). Test v simulaci
+(7 polí → `zidle stul zidle zidle stul zidle socha`, otočení). `sw.js` na `webapp-v276`.
+
+### Dodatek 5. 10. 2026 – louč odhaluje okolní skálu
+Dosud bylo kolem vykopaných chodeb vidět jen sousední skálu. Dostavěná louč (`S.dokonci`) teď zavolá
+`T.svetlo.odhalKolemLouce`: odhalí neznámá pevná pole (skálu i rudu) v kruhu poloměru 4 (`ODHAL_LOUCE`,
+dx²+dy² ≤ r²+r). Průhledná pole (jeskyně, voda, magma) se neodhalují – invariant `odhal()` (známé průhledné pole
+⇒ známá celá dutina) zůstává a louč skrz skálu do dutiny nevidí, takže se neobjevují oblasti ani nebudí jeskyně.
+Načtení starší hry odhalí okolí už postavených loučí (bez změny verze uložení). Test v simulaci (45 → 0 neznámých
+polí v kruhu, shoda po načtení). `sw.js` na `webapp-v277`.
+
+### Dodatek 5. 10. 2026 – výběr příchozích migrantů
+Když přijde víc trpaslíků, okno události místo „všechny / jen prvního / odmítnout" ukáže zaškrtávací seznam
+(výchozí všichni) a tlačítko „Přijmout vybrané (N z M)" (bez výběru zakázané) + „Odmítnout". Logika:
+`UD.vyres(hra, 0, vyber)` → `efekt(…, vyber)` přijme jen zaškrtnuté indexy (prázdný výběr = odmítnutí); původní
+volby 0/1/2 bez výběru fungují dál (bot, testy). Test v simulaci (3 příchozí, výběr [0, 2]). `sw.js` na `webapp-v278`.
+
+### Dodatek 5. 10. 2026 – lišta oblíbených podle čerstvé četnosti
+Hlášení: nejpoužívanější stavby se neaktualizovaly. Počty se sčítaly napořád (i z dřívějších her), takže starý
+návyk (louč 30×) držel místo a nové se nahoru nedostalo. Teď skóre vyprchává: každé použití přidá 1 a ostatním
+ubere 7 % (`VYPRCHANI = 0.93`, poločas ~10 použití; skóre < 0,05 se maže). Staré uložené počty se při načtení
+zmenší do nové stupnice (součet ≤ 1/(1−0,93) ≈ 14,3). Ověřeno v prohlížeči: louč 30 / podpěra 20 / sklad 12 →
+po 8 žebřících je žebřík první. Z tooltipu zmizelo „použito N×". `sw.js` na `webapp-v279`.
+
+### Dodatek 5. 10. 2026 – vlhká skála u vody
+Pevná pole sousedící (4-okolí) s vodou se kreslí jako vlhká: dlaždice (i okrajová s maskou) přebarvená
+`source-atop` do modra (alfa 0,28) se třemi svislými lesklými šmouhami podle varianty (`vlhkaDlazdice`, cache
+WeakMap podle zdrojového plátna). V cache bloků to sedí – podpis bloku obsahuje terén i s okrajem 1 pole.
+Prosakování (jen s efekty, každý snímek, fáze `prosak`): z vlhké skály nad volným polem kape kapka (asi polovina
+polí, perioda 2,2–4 s), asi třetina bočních stěn do volného pole má stružku se stékající kapkou. Vlhkost je vidět
+i u vody za neznámem – varuje dřív, než se do jezera prokope. Čistě vizuální, hra se nemění. Výkon grafiky 4/4
+(jemný zoom 2: 4,8 ms). `sw.js` na `webapp-v280`.
+
+### Dodatek 5. 10. 2026 – studna stahuje vodu z okolí
+Studna (levé pole `stavbaStav` 1) každých 10 tahů (`STUDNA_KROK`, tik % 10 === 3, i když voda spí) vsákne
+nejvyšší známou jednotku vody do 3 polí (`STUDNA_DOSAH`, čtverec kolem obou polí studny); vlastní vodu nechá.
+Okolí tak vyschne (louže v síni, jamky vedle studny), voda zdálky dotéká a mizí taky – studna v jezeře ho pomalu
+vysuší (~60 polí za den). `T.priroda.vodaUStudny`. Popis studny, detail pole a nápověda doplněny. Test v simulaci
+(4 louže v dosahu zmizí, studna plná, jamka 6 polí daleko zůstane). Bot 4×3 roky bez chyb. `sw.js` na `webapp-v281`.
+
+### Dodatek 5. 10. 2026 – vyhrazení řemeslníci odnášejí své výrobky
+Hlášení (den 143): plný sklad ječmene, 4 trpaslíci vyhrazení pro kuchyň, 4–5 pro pivovar, a jídlo i pivo na nule.
+Příčina: vyhrazený trpaslík (`nastavDilnu`) má vypnuté vše kromě řemesla, takže výrobky nenosí. Když nosiči
+nestíhají, hotové jídlo a pivo leží u dílny. Trvalá zakázka „udržuj N" ale počítá všechny kusy (`pocty`), takže
+dílna „má plno" a stojí, zatímco sklad (`P.zasoby`: sklad a jídelna) ukazuje 0. Reprodukce: 4 dny → 20 jídla
+a 21 piva u dílen, ve skladu 0.
+Oprava v `najdiPraci`: trpaslík vyhrazený k dílně bez nošení smí odnést výrobky svého typu dílny (`RECEPTY[t.dilna]`),
+které leží na poli dílny nebo vedle ní, na stupni řemesla – tedy až když není co vyrábět. V detailu dílny teď
+trvalá zakázka ukazuje „(je N, ve skladu M)", když se počty liší. Test v simulaci (bez nosičů po 3 dnech
+jídlo i pivo 20 ve skladu). `sw.js` na `webapp-v282`.
+
+### Dodatek 5. 10. 2026 – nástroj 🪚 zbourat
+Hlášení: nešlo odstranit už postavený prvek. Nový nástroj 🪚 zbourat (klávesa D, v liště před ✖️ zrušit):
+značka `OZN.BOURAT` (5) v `hra.oznac` (ukládá se jako ostatní značky, verze uložení beze změny) na známá pole
+se stavbou, žebříkem nebo výtahem (`P.lzeBourat`). Práce `bourat` pro stavitele (stupeň stavět, dosah jako
+u stavění): rozebírá polovinu doby stavby (`S.dobaBourani`), pak `S.rozeber` – stavba vrátí celý materiál
+(`zbourej(…, plne)`), dvoupolová dílna a studna zmizí celé, podpěra vytesaná ze skály dá kámen, žebřík a výtah
+dřevo. Značky bez stavby se uklízejí (tik % 60 === 50). Značka: červený čárkovaný rám s křížem, náhled tažení
+červený; detail pole, nápověda a klávesové zkratky doplněny. Pozor: rozebraný nábytek ze zóny se znovu sám
+naplánuje (rozmistiNabytek) – kdo ho nechce, zmenší zónu. Test v simulaci (5 staveb, vráceno dřevo 5/5 a kámen
+z vytesané podpěry). Testy: scénáře, fuzz, výkon, UI 133/133, sprity 132/132. `sw.js` na `webapp-v283`.

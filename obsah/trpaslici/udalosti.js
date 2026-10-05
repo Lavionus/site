@@ -26,7 +26,7 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
     let k = 0;
     for (const v of hra.veci.slice()) {
       if (k >= n) break;
-      if (v.druh !== druh || v.nese || v.rez || !S.jeSklad(hra, v.i)) continue;
+      if (v.druh !== druh || v.nese || v.rez || !(S.jeSklad(hra, v.i) || S.vJidelne(hra, v.i, druh))) continue;   // (jídlo a pivo i z jídelny)
       hra.veci.splice(hra.veci.indexOf(v), 1); k++; T.prace.tok(hra, druh, 'm', 'události');
     }
     return k;
@@ -42,8 +42,16 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
     return kdo;
   }
   // zloděj ze skladu: nejcennější věci (ne Klíč)
+  // zvěd ukradne n nejcennějších věcí ze skladu – ne to, co drží kusovník Klíče (hvězdná ruda, pruty, šperk…), a nic
+  // dražšího než ZVED_MAX (dřív dokázal ukrást díly Klíče a tím na měsíce zastavit kampaň)
+  const ZVED_MAX = 45;
   function ukradni(hra, n) {
-    const vv = Object.values(T.obdobi.naProdej(hra)).flat().sort((a, b) => T.obdobi.hodnotaVeci(b) - T.obdobi.hodnotaVeci(a)).slice(0, n);
+    const kus = T.pribeh.kusovnikKlice(hra), drzet = Object.assign({}, kus ? kus.drzet : {});
+    const vv = Object.entries(T.obdobi.naProdej(hra)).flatMap(([druh, a]) => {
+      const nech = Math.min(a.length, drzet[druh] || 0);
+      return a.sort((x, y) => T.obdobi.hodnotaVeci(y) - T.obdobi.hodnotaVeci(x)).slice(nech);
+    }).filter(v => T.obdobi.hodnotaVeci(v) <= ZVED_MAX && !v.druh.startsWith('art_'))
+      .sort((a, b) => T.obdobi.hodnotaVeci(b) - T.obdobi.hodnotaVeci(a)).slice(0, n);
     for (const v of vv) { hra.veci.splice(hra.veci.indexOf(v), 1); T.prace.tok(hra, v.druh, 'm', 'události'); }
     return vv.map(v => P.VECI[v.druh].nazev);
   }
@@ -184,9 +192,10 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
       },
     },
     hlas_hlubin: {                                    // příběh: jednou v kampani, od 100 m po první desce
-      vaha: 3, podminka: hra => hra.rezim !== 'volny' && !hra.spac.probuzen && !hra.spac.hlas && hra.nejhloubeji >= 100 && hra.prectene.length >= 1,
+      // (dřív až po první desce; teď od 90 m – naslouchání prozradí i směr k ruinám a k Srdci, viz pribeh.voditko)
+      vaha: 3, podminka: hra => hra.rezim !== 'volny' && !hra.spac.probuzen && !hra.spac.hlas && hra.nejhloubeji >= 90,
       text: () => 'Horníci v hloubce slyší z hlubin pomalé údery – jako by bilo obří srdce. Starší trpaslíci se bojí kopat dál.',
-      volby: () => ['Zazpívat píseň předků (−6 piv)', 'Poslat 2 horníky naslouchat (půl dne práce, prozradí jednu žílu)', 'Kopat dál (sláva +6)'],
+      volby: () => ['Zazpívat píseň předků (−6 piv)', 'Poslat 2 horníky naslouchat (půl dne práce; prozradí směr k ruinám a k Srdci a jednu žílu hvězdné rudy)', 'Kopat dál (sláva +6)'],
       efekt(hra, p, i) {
         hra.spac.hlas = true;
         if (i === 0) {
@@ -205,22 +214,42 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
           let n = 0, kde = -1;
           if (zily.length) for (const j of zily[0].kusy) if (nad(j) && !hra.znamo[j] && hra.hora.ruda[j] === T.hora.R.HVEZDNA) { hra.znamo[j] = 1; n++; kde = j; }
           if (kde >= 0) T.hra.zprava(hra, 'nalez', `Ozvěna prozradila žílu hvězdné rudy (${n} ${n < 5 ? 'pole' : 'polí'}).`, kde);
+          // naslouchání prozradí směr: ruiny, které klan ještě nenašel, a pásmo sloupců Srdce hory
+          T.pribeh.odhalStopy(hra, true, true);
+          const v = T.pribeh.voditko(hra);
+          if (v.text) T.hra.zprava(hra, 'pribeh', '🧭 ' + v.text, v.i);
           return `${kdo.map(t => t.jmeno).join(' a ')} naslouchali u stěn. Tlukot sílí pod ${T.pribeh.HLOUBKA_SPACE} m – tam spí Spáč. ` +
-            (n ? `Ozvěna prozradila jednu žílu hvězdné rudy (${n} ${n < 5 ? 'pole' : 'polí'}).` : 'Žádnou další žílu hvězdné rudy ozvěna neprozradila.');
+            (n ? `Ozvěna prozradila jednu žílu hvězdné rudy (${n} ${n < 5 ? 'pole' : 'polí'}).` : 'Žádnou další žílu hvězdné rudy ozvěna neprozradila.') +
+            (v.text ? ' ' + v.text : '');
         }
         slava(hra, 6); vsem(hra, 'bojí se hlubin', -3, 2);
         if (nah(hra) < 0.3) { T.hrozby.tvorZHlubin(hra, (typ, text, i) => T.hra.zprava(hra, typ, text, i)); }
         return 'Kopalo se dál. Trpaslíci se ohlížejí přes rameno.';
       },
     },
-    zbloudily: {
-      vaha: 1, podminka: hra => hra.trpaslici.length < 40 && hra.trpaslici.length > 0,
-      param: hra => ({ lide: [{ jmeno: T.hra.noveJmeno(hra, []), prof: T.hra.nahodnaProfese(hra) }] }),
-      text: (hra, p) => `Na prahu stojí zbloudilý trpaslík ${p.lide[0].jmeno} (${T.hra.PROFESE[p.lide[0].prof].nazev}). Prosí o přijetí do klanu.`,
-      volby: () => ['Přijmout', 'Odmítnout'],
+    zbloudily: {                                      // bez místa v klanu (strop, postele) jen nocleh a zpráva do světa
+      vaha: 1, podminka: hra => hra.trpaslici.length > 0,
+      param: hra => ({ lide: [{ jmeno: T.hra.noveJmeno(hra, []), prof: T.hra.nahodnaProfese(hra) }], plno: T.obdobi.mistoVKlanu(hra).volno <= 0 }),
+      text: (hra, p) => `Na prahu stojí zbloudilý trpaslík ${p.lide[0].jmeno} (${T.hra.PROFESE[p.lide[0].prof].nazev}). ` +
+        (p.plno ? 'Rád by zůstal, ale v hoře pro něj není místo – prosí aspoň o nocleh.' : 'Prosí o přijetí do klanu.'),
+      volby: (hra, p) => p.plno ? ['Dát mu nocleh a jídlo na cestu (−2 jídla, sláva +4)', 'Poslat ho dál'] : ['Přijmout', 'Odmítnout'],
       efekt(hra, p, i) {
+        if (p.plno) {
+          if (i === 0) { odeber(hra, 'jidlo', 2); slava(hra, 4); return `${p.lide[0].jmeno} přespal u krbu a ráno odešel vyprávět o vaší pohostinnosti.`; }
+          return `${p.lide[0].jmeno} pokračoval dál po horách.`;
+        }
         if (i === 0) { T.obdobi.prijmi(hra, p.lide); return `${p.lide[0].jmeno} se přidal ke klanu.`; }
         return `${p.lide[0].jmeno} smutně odešel.`;
+      },
+    },
+    hoste: {                                          // začátek období bez místa pro migranty: hosté s darem (obdobi.js)
+      vaha: 0,
+      text: (hra, p) => `Sláva hory přivedla skupinu trpaslíků, ale ${p.proc}. Hosté zůstanou na noc a nabízejí dar za pohostinnost.`,
+      volby: () => ['Přijmout dar (2 železné pruty a drahokam)', 'Vystrojit hostinu (−6 piv, sláva +10, nálada)', 'Rozloučit se'],
+      efekt(hra, p, i) {
+        if (i === 0) { uBrany(hra, 'prut_zelezo', 2); uBrany(hra, 'drahokam', 1); return 'Dar leží před bránou. Hosté odešli hledat jinou horu.'; }
+        if (i === 1) { odeber(hra, 'pivo', 6); slava(hra, 10); vsem(hra, 'hostina pro poutníky', 4, 2); return 'Hostina se vydařila – hosté roznesou slávu klanu po horách.'; }
+        return 'Hosté odešli hledat jinou horu.';
       },
     },
     migranti: {
@@ -228,8 +257,16 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
       text: (hra, p) => `Sláva hory se nese krajem. Přišla skupina trpaslíků: ` +
         p.lide.map(T.obdobi.popisPrichoziho).join(', ') + '. Přijmete je?',
       volby: (hra, p) => p.lide.length > 1 ? ['Přijmout všechny', `Přijmout jen prvního (${p.lide[0].jmeno})`, 'Odmítnout'] : ['Přijmout', 'Odmítnout'],
-      efekt(hra, p, i) {
-        const vse = p.lide.length === 1 ? i === 0 : i === 0, jeden = p.lide.length > 1 && i === 1;
+      // vyber: indexy příchozích, které hráč v okně zaškrtl (volba 0) – přijmou se jen ti
+      efekt(hra, p, i, vyber) {
+        if (i === 0 && Array.isArray(vyber) && p.lide.length > 1) {
+          const lide = p.lide.filter((l, k) => vyber.includes(k));
+          if (!lide.length) return 'Skupina odešla hledat jinou horu.';
+          T.obdobi.prijmi(hra, lide);
+          if (lide.length === p.lide.length) return `Klan se rozrostl o ${lide.length}.`;
+          return `${lide.length === 1 ? 'Zůstal' : 'Zůstali'} ${lide.map(l => l.jmeno).join(', ')}, ostatní šli dál.`;
+        }
+        const vse = i === 0, jeden = p.lide.length > 1 && i === 1;
         if (vse) { T.obdobi.prijmi(hra, p.lide); return `Klan se rozrostl o ${p.lide.length}.`; }
         if (jeden) { T.obdobi.prijmi(hra, [p.lide[0]]); return `${p.lide[0].jmeno} zůstal, ostatní šli dál.`; }
         return 'Skupina odešla hledat jinou horu.';
@@ -247,7 +284,7 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
   function navrat(hra) {
     const n = hra.odemceno.navrat;
     delete hra.odemceno.navrat;
-    if (n.pomohl) { zacni(hra, 'poutnik_navrat', { jmeno: n.jmeno || T.hra.noveJmeno(hra, []), prof: n.prof || T.hra.nahodnaProfese(hra), plno: hra.trpaslici.length >= 40 }); return; }
+    if (n.pomohl) { zacni(hra, 'poutnik_navrat', { jmeno: n.jmeno || T.hra.noveJmeno(hra, []), prof: n.prof || T.hra.nahodnaProfese(hra), plno: T.obdobi.mistoVKlanu(hra).volno <= 0 }); return; }
     const co = ukradni(hra, 2);
     T.hra.zprava(hra, 'boj', co.length ? `🌙 Vyhnaný poutník byl goblinní zvěd! V noci se vrátil s kumpány a ze skladu zmizelo: ${co.join(', ')}.`
       : '🌙 Vyhnaný poutník byl goblinní zvěd – v noci slídil kolem brány, ale nic neukradl.');
@@ -262,11 +299,11 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
     let r = nah(hra) * soucet;
     for (const [id, d] of mozne) { r -= d.vaha; if (r < 0) { zacni(hra, id); return; } }
   }
-  function vyres(hra, i) {
+  function vyres(hra, i, vyber) {
     const u = hra.udalost;
     if (!u) return '';
     hra.udalost = null;
-    const text = UDALOSTI[u.id].efekt(hra, u.param, i) || '';
+    const text = UDALOSTI[u.id].efekt(hra, u.param, i, vyber) || '';
     if (text) zprava(hra, text, 'udalost');
     return text;
   }

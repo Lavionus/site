@@ -5,7 +5,7 @@
 /* Při větší aktualizaci webu zvyš číslo verze — stará cache se u návštěvníků
    smaže a vše se stáhne čerstvé (jinak SWR ukáže novou verzi až na druhé načtení). */
 const PREFIX = 'webapp-';
-const CACHE = PREFIX + 'v261';
+const CACHE = PREFIX + 'v284';
 const JADRO = [
   './',
   './index.html',
@@ -42,6 +42,8 @@ const TRPASLICI_IKONY = [
   '2328', '23f8', '25b6', '2600', '2605', '2639', '2668', '267e', '2692', '2694', '2699', '26a0', '26aa',
   '26ab', '26cf', '26f0', '26f2', '2702', '2705', '2714', '2716', '2728', '2734', '2744', '2753', '2764',
   '2b06', '2b07', '2b50',
+  '23f3', '1f4cb', '1f4ad', '1f4ca', '1f3c1', '1f517', '2696', '24d8', '1f6a8', '1f393', '1f4d0', '274c', '26d4',   // revize 4: čas, seznam, nečinnost,
+  '1f442', '1f441', '1f3ba', '1f451', '1f3db', '1f319',                                                            // bilance, konec, odkaz, váhy, info…
 ];
 const TRPASLICI = [
   './obsah/trpaslici.html',
@@ -82,6 +84,35 @@ const TRPASLICI = [
   ...TRPASLICI_IKONY.map(n => `./obsah/trpaslici/assets/ui-icons/${n}.png`),
 ];
 
+/* Síně pod horou (obsah/sine.html) – malá hra bez obrázků (vše kreslí kód), ~0,4 MB skriptů.
+   Docachuje se celá na pozadí při prvním otevření, stejně jako Srdce hory.
+   Že seznam sedí se soubory na disku, hlídá _test/sw_sine_check.js. */
+const SINE = [
+  './obsah/sine.html',
+  './obsah/sine/castice.js',
+  './obsah/sine/cesty.js',
+  './obsah/sine/hra.js',
+  './obsah/sine/hrozby.js',
+  './obsah/sine/ilustrace.js',
+  './obsah/sine/kresba.js',
+  './obsah/sine/mistnosti.js',
+  './obsah/sine/nahoda.js',
+  './obsah/sine/obdobi.js',
+  './obsah/sine/postavy.js',
+  './obsah/sine/potreby.js',
+  './obsah/sine/prace.js',
+  './obsah/sine/pribeh.js',
+  './obsah/sine/priroda.js',
+  './obsah/sine/stavby.js',
+  './obsah/sine/svet.js',
+  './obsah/sine/svetlo.js',
+  './obsah/sine/udalosti.js',
+  './obsah/sine/ui.js',
+  './obsah/sine/ulozeni.js',
+  './obsah/sine/zvuk.js',
+];
+
+
 // Dotáhne do cache, co z dané sady ještě chybí (po jednom, chyby ignoruje – při
 // příštím otevření se zkusí znovu). Běží jen jednou naráz pro každou sadu.
 const dotahuje = new Map();
@@ -91,7 +122,8 @@ function dotahniSadu(nazev, seznam) {
     for (const u of seznam) {
       try {
         if (await cache.match(u)) continue;
-        const resp = await fetch(u);
+        // no-cache: hned po nasazení by HTTP cache (GitHub Pages: max-age 600) mohla vrátit starý soubor
+        const resp = await fetch(u, { cache: 'no-cache' });
         if (resp.ok) await cache.put(u, resp);
       } catch (_) { /* offline nebo chyba sítě – zkusí se příště */ }
     }
@@ -101,7 +133,14 @@ function dotahniSadu(nazev, seznam) {
 }
 
 self.addEventListener('install', e => {
-  e.waitUntil(caches.open(CACHE).then(c => c.addAll(JADRO)).then(() => self.skipWaiting()));
+  e.waitUntil(caches.open(CACHE).then(c => c.addAll(JADRO.map(u => new Request(u, { cache: 'no-cache' })))).then(() => self.skipWaiting()));
+});
+
+// stránka hry si o docachování řekne sama (postMessage po navigator.serviceWorker.ready): při prvním
+// otevření hry přímo (ne přes rozcestník) se SW registruje až po načtení a navigaci na hru tedy neviděl
+self.addEventListener('message', e => {
+  if (e.data && e.data.typ === 'dotahni' && e.data.sada === 'trpaslici') e.waitUntil(dotahniSadu('trpaslici', TRPASLICI));
+  if (e.data && e.data.typ === 'dotahni' && e.data.sada === 'sine') e.waitUntil(dotahniSadu('sine', SINE));
 });
 
 self.addEventListener('activate', e => {
@@ -125,13 +164,17 @@ self.addEventListener('fetch', e => {
 
   // otevření Srdce hory → na pozadí docachovat celou hru (obrázky, ikony, skripty)
   if (url.pathname.endsWith('/obsah/trpaslici.html')) e.waitUntil(dotahniSadu('trpaslici', TRPASLICI));
+  if (url.pathname.endsWith('/obsah/sine.html')) e.waitUntil(dotahniSadu('sine', SINE));
 
+  // navigace s dotazem (trpaslici.html?seed=…&velikost=…) je pořád táž stránka: hledat bez dotazu a ukládat bez něj
+  const navigace = e.request.mode === 'navigate';
+  const klic = navigace ? url.origin + url.pathname : e.request;
   e.respondWith(
     caches.open(CACHE).then(async cache => {
-      const cached = await cache.match(e.request);
+      const cached = await cache.match(klic, { ignoreSearch: navigace });
       const zeSite = fetch(e.request)
         .then(resp => {
-          if (resp.ok) cache.put(e.request, resp.clone());
+          if (resp.ok) cache.put(klic, resp.clone());
           return resp;
         })
         // offline a stránka není v cache -> respondWith(undefined) by

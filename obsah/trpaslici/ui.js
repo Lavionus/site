@@ -15,7 +15,8 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
   const KLIC_GRAFIKA = 'webapp_hra_trpaslici_grafika';
   const KLIC_PREPNUTI = 'webapp_hra_trpaslici_prepnuti';    // sessionStorage: kolikrát po sobě se stránka kvůli velikosti hory načetla znovu (pojistka proti smyčce)
   const KLIC_EFEKTY = 'webapp_hra_trpaslici_efekty';        // JSON { svetlo: true, … } – jen změněné volby
-  const TAH_MS = 100;                            // jeden tah simulace při rychlosti 1×
+  const TAH_MS = 100;
+  const VELIKOST_NAZEV = { mala: 'malá', stredni: 'střední', velka: 'velká', obri: 'obří' };                            // jeden tah simulace při rychlosti 1×
   const $ = id => document.getElementById(id);
 
   const st = { hra: null, vseZnamo: false, vyber: null, najeti: null, nastroj: 'pohled', tah: null,
@@ -59,7 +60,7 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
     $('seed').value = st.hra.seed;
     kam.z = vychoziZoom();
     naBranu();
-    $('jak').open = hra.tik < HRA.TAHU_ZA_DEN;      // nápověda rozbalená jen na začátku hry
+    if (hra.tik < HRA.TAHU_ZA_DEN) $('jakZacatek').open = true;   // na začátku hry rozbalený oddíl „Začátek" nápovědy
     $('btnKonec').hidden = true;
     posledniDenik = -1;
     obnovPanel(true);
@@ -122,35 +123,67 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
     document.body.appendChild(a); a.click(); a.remove();
     setTimeout(() => URL.revokeObjectURL(a.href), 1000);
   }
+  // import vždy potvrdit; rozehraná hra jde do zálohy (KLIC_ULOZENI + '_zaloha') a z Přehledu se dá vrátit
   function importuj(soubor) {
     const r = new FileReader();
-    r.onload = () => {
-      try { zacniHru(U.obnov(r.result)); uloz(); oznam(`Načteno: ${st.hra.hora.nazev}, den ${HRA.den(st.hra)}.`); }
+    r.onload = async () => {
+      let hra = null, vel = null;
+      try { hra = U.obnov(r.result); }
       catch (e) {
-        const vel = e.sirka && Object.keys(HORA.VELIKOSTI).find(k => HORA.VELIKOSTI[k] === e.sirka);
+        vel = e.sirka && Object.keys(HORA.VELIKOSTI).find(k => HORA.VELIKOSTI[k] === e.sirka);
         let d = null; try { d = JSON.parse(r.result); } catch (e2) { /* není JSON */ }
-        if (vel && d && d.hra === 'srdce-hory') {      // jiná velikost hory: rozehranou zálohovat, soubor uložit a načíst znovu
-          uloz();
-          const puvodni = uloziste.cti(KLIC_ULOZENI);
-          const zapisy = (puvodni != null ? [[KLIC_ULOZENI + '_zaloha', puvodni]] : []).concat([[KLIC_ULOZENI, r.result], [KLIC_VELIKOST, vel]]);
-          try { sessionStorage.setItem(KLIC_PREPNUTI + '_import', '1'); } catch (e2) { /* nic */ }   // po načtení: kdyby soubor nešel přečíst, záloha rozehrané se nepřepíše
-          if (!znovuNacti(zapisy)) {
-            try { sessionStorage.removeItem(KLIC_PREPNUTI + '_import'); } catch (e2) { /* nic */ }
-            selhaloPrepnuti('Načtení hory jiné velikosti');
-          }
-          return;
-        }
-        oznam('Soubor se nedá načíst: ' + e.message, true);
+        if (!vel || !d || d.hra !== 'srdce-hory') { oznam('Soubor se nedá načíst: ' + e.message, true); return; }
+      }
+      const co = hra ? `${hra.hora.nazev}, den ${HRA.den(hra)}` : `hora velikosti ${HORA.VELIKOSTI[vel]}`;
+      if (st.hra && typeof Dialog !== 'undefined' && !await Dialog.potvrd(`Načíst hru ze souboru (${co})? Rozehraná hora ${st.hra.hora.nazev} (den ${HRA.den(st.hra)}) se nahradí – ` +
+        'zůstane zálohovaná v prohlížeči a v Přehledu ji půjde vrátit (↺ Vrátit předchozí hru).', { ok: 'Načíst', zrus: 'Zrušit' })) return;
+      uloz();
+      const puvodni = uloziste.cti(KLIC_ULOZENI);
+      if (hra) {                                     // stejná velikost hory: zálohovat rozehranou a načíst hned
+        if (puvodni != null && !uloziste.pis(KLIC_ULOZENI + '_zaloha', puvodni)) { selhaloPrepnuti('Načtení hry ze souboru'); return; }
+        zacniHru(hra);
+        st.bezUkladani = null; $('hlaseni').hidden = true;   // načtená hra se ukládá (i po dřívější chybě načtení / simulace)
+        uloz();
+        ukazNacteno(puvodni != null);
+        return;
+      }
+      // jiná velikost hory: rozehranou zálohovat, soubor uložit a načíst znovu
+      const zapisy = (puvodni != null ? [[KLIC_ULOZENI + '_zaloha', puvodni]] : []).concat([[KLIC_ULOZENI, r.result], [KLIC_VELIKOST, vel]]);
+      try { sessionStorage.setItem(KLIC_PREPNUTI + '_import', '1'); } catch (e2) { /* bez sessionStorage – značka v adrese (znovuNacti) */ }   // po načtení: kdyby soubor nešel přečíst, záloha rozehrané se nepřepíše
+      if (!znovuNacti(zapisy, { 'import': 1 })) {
+        try { sessionStorage.removeItem(KLIC_PREPNUTI + '_import'); } catch (e2) { /* nic */ }
+        selhaloPrepnuti('Načtení hory jiné velikosti');
       }
     };
     r.readAsText(soubor);
   }
+  // po úspěšném importu: hláška v Přehledu s možností vrátit předchozí hru
+  function ukazNacteno(zaloha) {
+    const co = `${st.hra.hora.nazev}, den ${HRA.den(st.hra)}`.replace(/[<&]/g, '');
+    zalozka('prehled');
+    ukazHlaseni(`📂 Načteno ze souboru: ${co}.` + (zaloha ? ' Předchozí rozehraná hra zůstala zálohovaná v prohlížeči.' : ''),
+      (zaloha ? [['↺ Vrátit předchozí hru', 'vratZalohu']] : []).concat([['Zavřít', 'zavri']]));
+    oznam(`Načteno: ${co}.` + (zaloha ? ' · ↺ Vrátit předchozí hru jde v Přehledu.' : ''));
+  }
+  // adresa stránky bez odkazu na horu (?seed=, &velikost=) a bez značek přenačtení; navic = značky pro příští start
+  const ZNACKY = ['prepnuti', 'import'];
+  function adresa(bezOdkazu, navic) {
+    const u = new URL(location.href);
+    for (const k of (bezOdkazu ? ['seed', 'velikost'] : []).concat(ZNACKY)) u.searchParams.delete(k);
+    for (const k in navic || {}) u.searchParams.set(k, navic[k]);
+    return u.href;
+  }
+  function vycistiAdresu(bezOdkazu) {
+    try { const a = adresa(bezOdkazu); if (a !== location.href) history.replaceState(history.state, '', a); } catch (e) { /* nic */ }
+  }
   // přepnutí velikosti hory: zapsat [klíč, hodnota] a načíst stránku znovu (moduly si šířku berou při startu).
   // Když zápis selže, vrátí původní hodnoty a false (bez přenačtení – jinak by se mohla točit smyčka);
   // stejně tak po dvou přenačteních za sebou bez úspěšného startu.
-  function znovuNacti(zapisy) {
-    let n = 0;
-    try { n = Number(sessionStorage.getItem(KLIC_PREPNUTI)) || 0; } catch (e) { /* bez sessionStorage */ }
+  // Počítadlo je v sessionStorage a pro jistotu i v adrese (&prepnuti=n) – bez sessionStorage by bylo pořád 0.
+  // Přenačtení z naší vůle odkaz ?seed=/&velikost= z adresy odstraní (rozhodnuto je), ať se po něm neptá znovu.
+  function znovuNacti(zapisy, znacky) {
+    let n = Number(new URLSearchParams(location.search).get('prepnuti')) || 0;
+    try { n = Math.max(n, Number(sessionStorage.getItem(KLIC_PREPNUTI)) || 0); } catch (e) { /* bez sessionStorage */ }
     if (n >= 2) return false;
     const predtim = zapisy.map(([k]) => [k, uloziste.cti(k)]);
     for (const [k, v] of zapisy) {
@@ -160,6 +193,7 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
     }
     try { sessionStorage.setItem(KLIC_PREPNUTI, String(n + 1)); } catch (e) { /* nic */ }
     st.bezUkladani = 'prepnuti';                    // pagehide → uloz() nesmí zapsané přepsat rozehranou hrou
+    try { history.replaceState(history.state, '', adresa(true, Object.assign({ prepnuti: n + 1 }, znacky))); } catch (e) { /* nic */ }
     location.reload();
     return true;
   }
@@ -362,7 +396,7 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
         if (pr) r('⚠️ Strop', `<b class="spatne">praská – zřítí se za ${Math.max(0, Math.ceil((pr.tik - hra.tik) / 10))} s</b>`);
       } else if (t === M.VODA || t === M.MAGMA) {
         r('Kapalina', mat.nazev);
-        if (hra.stavba[i] === ST.K.STUDNA) r('Stavba', '🪣 studna – voda tu zůstane, pije se z ní');
+        if (hra.stavba[i] === ST.K.STUDNA) r('Stavba', '🪣 studna – voda tu zůstane, pije se z ní; vodu do 3 polí kolem stahuje do sebe');
       } else {
         r('Volno', hora.pozadi[i] === M.VZDUCH ? 'obloha' : 'dutina (' + MATERIAL[hora.pozadi[i]].nazev + ')');
         if (hra.lez[i] === 1) r('Stavba', 'vytesané schodiště');
@@ -380,7 +414,7 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
       const veci = P.veciNa(hra, i);
       if (veci.length) r('Leží tu', veci.map(v => P.VECI[v.druh].nazev).join(', '));
     }
-    if (hra.oznac[i]) r('Práce', { [P.OZN.SCHODY]: '⛰️ vytesat schodiště', [P.OZN.KACET]: '🪓 kácet', [P.OZN.TESAT]: (hora.teren[i] === M.VZDUCH ? '🧱 otesat stěnu' : '🧱 otesat ' + (P.jePodlaha(hra, i) ? 'podlahu' : hora.teren[i + W] === M.VZDUCH ? 'strop' : 'stěnu z horniny') + (hora.ruda[i] ? ' (ruda se vytěží)' : '')) + (P.tesatZaKamen(hra, i) ? ' – za 1 kámen' : '') }[hra.oznac[i]] || '⛏️ vykopat');
+    if (hra.oznac[i]) r('Práce', { [P.OZN.SCHODY]: '⛰️ vytesat schodiště', [P.OZN.KACET]: '🪓 kácet', [P.OZN.BOURAT]: '🪚 zbourat (trpaslík rozebere, materiál vrátí)', [P.OZN.TESAT]: (hora.teren[i] === M.VZDUCH ? '🧱 otesat stěnu' : '🧱 otesat ' + (P.jePodlaha(hra, i) ? 'podlahu' : hora.teren[i + W] === M.VZDUCH ? 'strop' : 'stěnu z horniny') + (hora.ruda[i] ? ' (ruda se vytěží)' : '')) + (P.tesatZaKamen(hra, i) ? ' – za 1 kámen' : '') }[hra.oznac[i]] || '⛏️ vykopat');
     return radky.join('');
   }
   function popisTrpaslika(t) {
@@ -391,8 +425,8 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
       [['Dělá', cinnost(hra, t)], ['Zdraví', `${zdravi} (${Math.max(0, Math.round(t.zdravi))} %)`],
        ['Kde', y === 0 ? 'v úrovni údolí' : y < 0 ? `${-y} m nad údolím` : `${y} m pod údolím`]].map(([a, b]) => radek(a, b)).join('') +
       // dovednosti a výbava sbalitelné – detail jinak přetéká
-      rozbal('dov', '🎓 Dovednosti a výbava', [['Kopání', hvezdy(Math.ceil(t.dov.kopani / 4)) + ` ${t.dov.kopani}/20`],
-       ['Boj', hvezdy(Math.ceil((t.dov.boj || 0) / 2)) + ` ${t.dov.boj || 0}/10` + (t.zbran ? ' · 🗡️ válečná sekera' : '') + (t.zbroj ? ` · 🛡️ ${t.zbroj.mat === 'med' ? 'měděná' : 'železná'} zbroj` : '')],
+      rozbal('dov', '🎓 Dovednosti a výbava', [...dovednostiRadky(t),
+       ['Výzbroj', [t.zbran ? '🗡️ válečná sekera' : '', t.zbroj ? `🛡️ ${t.zbroj.mat === 'med' ? 'měděná' : 'železná'} zbroj` : ''].filter(Boolean).join(' · ') || '–'],
        ['Nástroj', t.nastroj ? `${P.VECI[t.nastroj.druh].ikona} ${t.nastroj.mat === 'med' ? 'měděný' : 'železný'} ${P.VECI[t.nastroj.druh].nazev} (${Math.ceil(t.nastroj.stav)} %)`
          : (ST.PREFERUJE[t.prof] ? `<i>žádný – chce ${P.VECI[ST.PREFERUJE[t.prof]].nazev}</i>` : '–')]]
         .map(([a, b]) => radek(a, b)).join('')) +
@@ -402,10 +436,22 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
       }).join('') +
       `<div class="nalada">` + rozbal('nalada', `${smajlik(t.nalada)} nálada ${t.nalada}/100${naladaCil(hra, t)} <small>práce ${Math.round(POT.rychlost(t) * 100)} %${POT.nevrly(t) ? ` · <span class="spatne">nevrlý (pod ${POT.NEVRLY} o 15 % pomaleji)</span>` : ''}</small>`,
         `<div class="duvod"><span>základ</span><span>${POT.ZAKLAD}</span></div>` + POT.rozpis(hra, t).sort((a, b) => a[1] - b[1]).map(([txt, h]) => `<div class="duvod ${h < 0 ? 'minus' : 'plus'}"><span>${txt}</span><span>${h > 0 ? '+' : ''}${h}</span></div>`).join('')) +
-      '</div>' + pracePanel(hra, t) +
+      '</div>' + prepychHtml(hra) + pracePanel(hra, t) +
       (st.sledovat ? '<p class="tip" style="margin-top:4px">🎥 Pohled ho sleduje – posunem pohledu sledování skončí.</p>' : '');
   }
   // pět hvězd (prázdné šedě) – i nula je vidět jako prázdné hvězdy
+  // dovednosti trpaslíka: hvězdy, stupeň, o kolik rychleji pracuje a postup k dalšímu stupni (kopání a boj mají vlastní počítadla)
+  function dovednostiRadky(t) {
+    return Object.entries(HRA.DOVEDNOSTI).map(([k, D]) => {
+      const lvl = (t.dov && t.dov[k]) || 0;
+      const postup = lvl >= D.max ? 1 : k === 'kopani' ? (t.zkusenost || 0) / (6 + 2 * lvl) : k === 'boj' ? (t.cvik || 0) / 600 : ((t.xp && t.xp[k]) || 0) / HRA.prahDov(lvl);
+      const bonus = k === 'kopani' ? Math.round(8 * lvl) : k === 'boj' ? Math.round(10 * lvl) : Math.round(5 * lvl);
+      const popis = `${D.nazev} ${lvl}/${D.max}${bonus ? ` – ${k === 'boj' ? 'útok' : 'rychlost'} +${bonus} %` : ''}; ${lvl >= D.max ? 'mistr' : `do dalšího stupně ${Math.round(postup * 100)} %`}`;
+      return [`${D.ikona} ${D.nazev.replace(' a chůze', '')}`, `<span class="dov-hodnota" title="${popis}">` + hvezdy(Math.ceil(lvl / D.max * 5)) +
+        ` ${lvl}/${D.max}${bonus ? ` <small>+${bonus} %</small>` : ''}` +
+        `<i class="dov-postup"><b style="width:${Math.round(Math.min(1, postup) * 100)}%"></b></i></span>`];
+    });
+  }
   const hvezdy = n => { n = Math.max(0, Math.min(5, n)); return `<span class="hvezdy" aria-hidden="true">${'★'.repeat(n)}<span class="prazdne">${'★'.repeat(5 - n)}</span></span>`; };
   // nálada se po chvilkách přepočítá na součet důvodů – kam míří, když se liší od současné
   const naladaCil = (hra, t) => { const c = POT.spocitejNaladu(hra, t); return c !== t.nalada ? ` <span class="nalada-cil" title="Nálada se postupně srovná se součtem důvodů">→ míří k ${c}</span>` : ''; };
@@ -419,10 +465,10 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
   }
   // přepínač stupně práce: odznak 1/2/3 (zlatý, stříbrný, bronzový), vypnuto přeškrtnuté; aria-label „kopání: stupeň 2"
   const ZKRATKY = { kopat: 'kop', kacet: 'kác', stavet: 'stav', nosit: 'nos', pole: 'pole', remeslo: 'řem', hlidat: 'stráž' };
-  function prepinac(k, ik, s, attrs, kdo, trida, title) {
+  function prepinac(k, ik, s, attrs, kdo, trida, title, aria) {
     const nazev = PRACE_NAZEV[k].split(' (')[0];
-    return `<button class="prepinac${s ? ' zap s' + s : ' vyp'}${trida || ''}" ${attrs} data-k="${k}" aria-label="${kdo ? kdo + ' – ' : ''}${nazev}: ${s ? 'stupeň ' + s : 'vypnuto'}" ` +
-      `title="${title || `${kdo ? kdo + ': ' : ''}${PRACE_NAZEV[k]} – ${STUPNE[s]}. Klik = další stupeň, pravý klik = předchozí`}"><span class="ik">${ik}</span><small class="stupen">${s || ''}</small></button>`;
+    return `<button class="prepinac${s ? ' zap s' + s : ' vyp'}${trida || ''}" ${attrs} data-k="${k}" aria-label="${aria || `${kdo ? kdo + ' – ' : ''}${nazev}: ${s ? 'stupeň ' + s : 'vypnuto'}`}" ` +
+      `title="${title || `${kdo ? kdo + ': ' : ''}${PRACE_NAZEV[k]} – ${STUPNE[s]}. Klik / Enter = další stupeň, pravý klik / Shift+Enter / Backspace = předchozí`}"><span class="ik">${ik}</span><small class="stupen">${s || ''}</small></button>`;
   }
   const hlavickaPraci = () => `<div class="prace-hlavicka" aria-hidden="true">${PRACE.map(([k]) => `<span>${ZKRATKY[k]}</span>`).join('')}</div>`;
   // sbalitelný oddíl detailu; rozbalení přežije překreslení panelu
@@ -435,7 +481,7 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
   function dostupnaPrace(hra) {                    // kolik práce jakého druhu vůbec existuje (jednou za tah)
     if (st.dp && st.dp.tik === hra.tik && st.dp.hra === hra) return st.dp;
     const d = { tik: hra.tik, hra, kopat: 0, kacet: 0, stavet: hra.plany.length, nosit: 0, pole: 0, remeslo: 0, hlidat: (hra.tvorove || []).length };
-    for (let i = 0; i < hra.oznac.length; i++) { const o = hra.oznac[i]; if (!o) continue; if (o === P.OZN.KACET) d.kacet++; else if (o === P.OZN.TESAT) d.stavet++; else d.kopat++; }
+    for (let i = 0; i < hra.oznac.length; i++) { const o = hra.oznac[i]; if (!o) continue; if (o === P.OZN.KACET) d.kacet++; else if (o === P.OZN.TESAT || o === P.OZN.BOURAT) d.stavet++; else d.kopat++; }
     for (const x of hra.dilny) if (x.fronta.length) d.remeslo++;
     for (const z of hra.zony) if (ST.FARMY[z.typ]) d.pole++;
     for (const v of hra.veci) if (!v.nese && !ST.jeSklad(hra, v.i)) { d.nosit++; break; }
@@ -499,23 +545,38 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
     const bonus = jid ? 4 + (k.kamen ? 2 : 0) + Math.min(4, 2 * k.sochy) + (zdi >= 60 ? 2 : 0) : 5 + (zdi >= 60 ? 2 : 0) + (k.sochy ? 2 : 0);
     const rady = [];
     if (zdi < 60) rady.push(`🧱 otesej stěny (${zdi} %, od 60 % +2)`);
-    if (jid ? k.sochy < 2 : !k.sochy) rady.push(`🗿 socha z kamenictví (+2${jid ? ', nejvýš 2' : ''})`);
+    if (jid ? k.sochy < 2 : !k.sochy) rady.push(`🗿 socha z kamenictví nebo kovaná z kovárny (+2${jid ? ', nejvýš 2' : ''})`);
     if (jid && !k.kamen) rady.push('kamenný stůl nebo židle z kamenictví (+2)');
     return `<div class="kvalita">${radek('Kvalita', `<b>+${bonus}</b> k náladě ${jid ? 'při jídle' : 'po spánku'}`)}` +
       radek('Otesané stěny', `${zdi} %`) + radek('Sochy', k.sochy) + (jid ? radek('Kamenný nábytek', `${k.kamen} z ${k.nabytek}`) : '') +
-      (rady.length ? `<p class="tip">Zlepší ji: ${rady.join(' · ')}.</p>` : '<p class="tip">✅ Nádherná síň – víc už nejde.</p>') + '</div>';
+      (rady.length ? `<p class="tip">Zlepší ji: ${rady.join(' · ')}.</p>` : '<p class="tip">✅ Nádherná síň – víc už nejde.</p>') + prepychHtml(hra) + '</div>';
+  }
+  // přepych (potreby.prepych): od 3. roku chtějí sochy a kamenný nábytek – co chybí; prázdné, dokud ho nechtějí
+  const desetinne = x => String(Math.round(x * 100) / 100).replace('.', ',');
+  function prepychHtml(hra) {
+    if (!POT.prepych) return '';
+    const px = POT.prepych(hra);
+    if (!px.chce) return '';
+    const tr = px.stav === 'chybí' ? 'spatne' : px.stav === 'přepych' ? 'dobre' : '';
+    return `<p class="tip prepych">🗿 Přepych: <b class="${tr}">${px.stav}</b>${px.hodnota ? ` (nálada ${px.hodnota > 0 ? '+' : ''}${px.hodnota})` : ''} – ${desetinne(px.naTrp)} bodu na trpaslíka (socha 1, kamenný nábytek ½; pod ${desetinne(px.malo)} mrzí, od ${desetinne(px.dost)} těší)` +
+      (px.potreba ? `. <b>Chybí ještě ${mn(px.potreba, 'bod', 'body', 'bodů')}</b> – socha z kamenictví nebo kovaná z kovárny, kamenný stůl či židle.` : '.') + '</p>';
   }
   // farma: stav políček a cílová zásoba (nad ní se nesklízí ani neseje)
   function farmaDetail(hra, zo) {
     const c = ST.cilFarmy(hra, zo), V = P.VECI[c.plodina], ma = HRA.zasobaPlodin(hra)[c.plodina] || 0;
     let h = '';
-    if (zo.typ === 'les') {                          // lesní školka: stromky (pařez s sazenicí), jedle, prázdno
-      let prazdne = 0, stromky = 0, jedle = 0;
+    if (zo.typ === 'les') {                          // lesní školka: venku jedle (pařez/sazenice), pod zemí obří houby (rostou ze spor)
+      let prazdne = 0, stromky = 0, jedle = 0, houby = 0, spory = 0;
+      const roste = new Set((hra.parezy || []).map(q => q.i));
       for (let k = 0; k < hra.zona.length; k++) if (hra.zona[k] === zo.id) {
         const o = hra.hora.obj[k];
-        if (o === HORA.O.STROM) jedle++; else if (o === HORA.O.PAREZ) stromky++; else prazdne++;
+        if (o === HORA.O.STROM) jedle++; else if (o === HORA.O.HOUBA) houby++;
+        else if (o === HORA.O.PAREZ) { if (hra.hora.pozadi[k] === M.VZDUCH) stromky++; else spory++; }
+        else if (roste.has(k)) spory++; else prazdne++;
       }
-      h += radek('Políčka', `volná ${prazdne} · stromky a pařezy ${stromky} · vzrostlé jedle ${jedle}`);
+      h += radek('Políčka', `volná ${prazdne}` + (stromky || jedle ? ` · sazenice a pařezy ${stromky} · vzrostlé jedle ${jedle}` : '') +
+        (spory || houby ? ` · houby ze spor ${spory} · obří houby ${houby}` : ''));
+      if (!stromky && !jedle && !spory && !houby) h += '<p class="tip">Venku farmáři sázejí jedle (za 3 dny vzrostou), pod zemí obří houby (za 4 dny, i v zimě) – houba dá 2 houby a 2 polena houbového dřeva.</p>';
     } else {
       let zas = 0, roste = 0, zrale = 0, prazdne = 0;
       for (let k = 0; k < hra.zona.length; k++) if (hra.zona[k] === zo.id) { const u = hra.uroda[k]; if (!u) prazdne++; else if (u === 101) zrale++; else if (u > 40) roste++; else zas++; }
@@ -542,6 +603,7 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
       const kdo = sRem.filter(t => HRA.smiVDilne(hra, t, d)).map(t => t.jmeno + (t.dilna === d.typ ? ' 🎯' : '')).join(', ') ||
         `<span class="spatne">nikdo – ${!sRem.length ? 'nikdo nemá zapnuté řemeslo ⚒️ (Klan)' : sRem.every(t => t.dilna && t.dilna !== d.typ) ? 'všichni s řemeslem mají jiné pracoviště' : 'řemeslník je jinde, ostatní zaskočí, když nestíhá'}</span>`;
       h += `<div class="blok"><h4>${D.ikona} ${D.nazev}</h4><p class="popis">${D.popis}</p><p class="tip">Pracuje: ${kdo}</p>` +
+        (d.typ === 'runova_kovarna' ? volbaArtHtml(hra) : '') +
         [d, d.m2].map((mi, k) => mi && mi.vRobe ? (() => {             // dvě pracoviště – dva trpaslíci naráz
           const zk = d.fronta.find(q => q.id === mi.vRobe.zak), rc = zk && ST.RECEPTY[d.typ][zk.r];
           if (!rc) return '';
@@ -564,7 +626,9 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
         }).join('') +
         (d.fronta.length ? '<p class="tip" style="margin-top:4px">Zakázky:</p>' + d.fronta.map(zk => {
           const rc = ST.RECEPTY[d.typ][zk.r];
-          const popis = zk.trvala ? `udržuj ${zk.cil} × ${P.VECI[rc.vyrobek].nazev} <small>(je ${hra.veci.filter(v => v.druh === rc.vyrobek).length})</small>` : `${rc.nazev || P.VECI[rc.vyrobek].nazev} × ${zk.zbyva}`;
+          // „je N" počítá všechny kusy (i ležící u dílny a nesené); kolik z nich ještě není ve skladu, se ukáže zvlášť
+          const vsech = zk.trvala ? hra.veci.filter(v => v.druh === rc.vyrobek).length : 0, veSkl = zk.trvala ? (z[rc.vyrobek] || 0) : 0;
+          const popis = zk.trvala ? `udržuj ${zk.cil} × ${P.VECI[rc.vyrobek].nazev} <small>(je ${vsech}${vsech > veSkl ? `, ve skladu ${veSkl}` : ''})</small>` : `${rc.nazev || P.VECI[rc.vyrobek].nazev} × ${zk.zbyva}`;
           return `<div class="recept"><span>${zk.trvala ? '♾️' : '▶'} ${popis}</span>` +
             (zk.trvala ? `<button class="mini" data-akce="udrzuj" data-dilna="${d.id}" data-r="${zk.r}" data-n="-5" title="O 5 méně">−5</button>` : '') +
             `<button class="mini" data-akce="zakazka-nahoru" data-dilna="${d.id}" data-id="${zk.id}" title="Posunout výš – dílna dělá zakázky shora dolů">↑</button>` +
@@ -578,7 +642,7 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
       h += `<div class="blok"><h4>${D.ikona} plán: ${D.nazev}${pl.prio ? ' ⭐' : ''}</h4><p class="popis">${D.popis}</p>` +
         Object.entries(D.mat).map(([druh, n]) => radek(P.VECI[druh].ikona + ' ' + P.VECI[druh].nazev, `${pl.doneseno[druh]} / ${n}` +
           (pl.doneseno[druh] < n && !(z[druh] || hra.veci.some(v => v.druh === druh)) ? ' <span class="spatne">– chybí!</span>' : ''))).join('') +
-        `<p class="tip">${ST.pripraven(pl) ? 'Materiál je na místě, čeká se na stavitele.' : 'Trpaslíci nosí materiál.'}</p>` +
+        (c => `<p class="tip${c.spatne ? ' spatne' : ''}">${c.text}</p>`)(HRA.procCekaPlan(hra, pl)) +
         `<button class="btn${pl.prio ? '' : ' sede'} mini-sirka" data-akce="plan-prio" data-i="${i}" title="Přednost: plán se postaví dřív (o dva stupně výš), materiál se k němu nosí přednostně">${pl.prio ? '⭐ Má přednost – zrušit' : '⭐ Dát přednost'}</button> ` +
         `<button class="btn sede mini-sirka" data-akce="zrus-plan" data-i="${i}">✖ Zrušit plán</button></div>`;
     }
@@ -770,6 +834,52 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
   const dnyTxt = x => x === Infinity ? 'dlouho' : mn(Math.max(0, Math.round(x)), 'den', 'dny', 'dní');
   // jedno číslo „na kolik dní jídlo vystačí" pro Přehled, Pozor i Sklad: porce (jídlo i suroviny) proti denní bilanci
   const dniJidla = zp => zp.verdikt === 'hlad' ? zp.dojdeZaDni : zp.sazba < 0 ? zp.porce / -zp.sazba : Infinity;
+  // předpověď zimy pro UI: dokud není celý den dat, počítá se spotřeba jídla podle potřeby klanu (kolik by snědl dosyta) –
+  // měřená spotřeba z kusu prvního dne (všichni se najedí naráz) by verdikt přehodila z „přežijete" na „chybí ~29 porcí"
+  function zimaUI(hra) {
+    if (st.zimaC && st.zimaC.hra === hra && st.zimaC.tik === hra.tik) return st.zimaC.z;
+    const z = HRA.predpovedZimy(hra), b = HRA.bilance(hra).jidlo;
+    if (!b.dni && b.potreba > 0 && Math.abs(b.spotreba - b.potreba) > 1e-9) {
+      const d = b.spotreba - b.potreba;               // o kolik měření přestřelilo (kladné = spotřeba vyšší než potřeba)
+      z.sazba += d; z.sazbaZima += d;
+      z.naZacatku = z.porce + z.sazba * z.dnyDoZimy;
+      z.naKonci = z.naZacatku + z.sazbaZima * z.dnyZimy;
+      z.spotrebaDen = b.potreba;
+      z.dojdeZaDni = null;
+      if (z.naZacatku < 0) { z.verdikt = 'hlad'; z.dojdeZaDni = z.porce / -z.sazba; }
+      else if (z.naKonci < 0) { z.verdikt = 'hlad'; z.dojdeZaDni = z.dnyDoZimy + z.naZacatku / -z.sazbaZima; }
+      else z.verdikt = z.naKonci < 2 * z.spotrebaDen ? 'tesne' : 'ok';
+      z.chybi = Math.max(0, Math.ceil(-z.naKonci + (z.verdikt === 'hlad' ? 2 * z.spotrebaDen : 0)));
+      z.podlePotreby = true;
+    }
+    st.zimaC = { hra, tik: hra.tik, z };
+    return z;
+  }
+  // čas jako „HH:MM" pro tah (den začíná v 6:00 – viz hra.hodina)
+  const hhmm = tik => { const h = (6 + (tik % HRA.TAHU_ZA_DEN) / HRA.TAHU_ZA_DEN * 24) % 24; return String(Math.floor(h)).padStart(2, '0') + ':' + String(Math.floor(h % 1 * 6) * 10).padStart(2, '0'); };
+  // kdy přijde nájezd: v posledním dni hodina („dnes ~14:00 (za 3 h)"), jinak počet dní
+  function kdyNajezd(hra, p) {
+    const zaTahu = p.tik - hra.tik, T_ = HRA.TAHU_ZA_DEN;
+    if (zaTahu <= 0) return 'každou chvíli';
+    if (zaTahu > T_) return `za ${dnyTxt(Math.ceil(p.zaDni))}`;
+    const hod = zaTahu / T_ * 24, kal = t => Math.floor((6 + t / T_ * 24) / 24);   // kalendářní den (půlnoc, ne 6:00)
+    if (hod < 1) return `za chvíli (~${hhmm(p.tik)})`;
+    return `${kal(p.tik) === kal(hra.tik) ? 'dnes' : 'zítra'} ~${hhmm(p.tik)} (za ${Math.round(hod)} h)`;
+  }
+  // „🛏️ Místo v klanu: 31/34 postelí · strop 40 · přijdou až 2" (+ proč méně)
+  function mistoKlanuText(hra, mk) {
+    return `🛏️ Místo v klanu: ${mk.pocet}/${mk.postele} postelí · strop ${mk.max} · ` +
+      (hra.oblehani ? 'během obléhání nepřijde nikdo' : mk.migrantu ? `přijdou až ${mk.migrantu}` : 'noví nepřijdou') +
+      (mk.duvod ? ` – ${mk.duvod}` : !hra.oblehani && mk.migrantu < 4 && mk.zeSlavy === mk.migrantu ? ` (víc se slávou: 1 + sláva/60, nejvýš 4)` : '') +
+      '. Noví trpaslíci obsadí jen volné postele v ložnicích (+1 přespí na zemi); bez místa přijdou jen hosté s darem.';
+  }
+  // kdo a odkud přijde (z predpovedNajezdu – stejné texty pro Pozor i Přehled)
+  function popisNajezdu(p) {
+    const kdo = p.prvni ? `hrstka goblinů (~${p.sila})` : `~${mn(p.goblinu, 'goblin', 'goblini', 'goblinů')}` + (p.lukostrelci ? ' i s lukostřelci' : '') +
+      (p.trollu ? ` + ${mn(p.trollu, 'troll', 'trollové', 'trollů')}` : '');
+    const odkud = p.odkud === 'tunel' ? 'z goblinního tunelu' : p.odkud === 'hlubiny' ? 'z hlubin k nejhlubším chodbám' : 'údolím k bráně';
+    return { kdo, odkud, typ: p.typNazev || 'útok', typPopis: p.typPopis || '', i: p.i >= 0 ? p.i : undefined };
+  }
   function radaJidlo(hra, zp) {
     if (!hra.dilny.some(d => d.typ === 'kuchyne')) return 'Postav kuchyni (🔨 stavět) – z houby uvaří 1 jídlo, z ječmene 2';
     if (!hra.zony.some(z => z.typ === 'houbarna' || z.typ === 'pole')) return 'Založ houbárnu nebo pole (🗺️ zóny)';
@@ -779,7 +889,7 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
   // „Pozor": seřazený seznam z logiky (váha); jídlo jednou s konkrétní radou místo 🍖/❄️/nouze hladu, plus obrana proti Spáči
   function pozorSeznam(hra) {
     const n = hra.trpaslici.length; if (!n) return [];
-    const zp = HRA.predpovedZimy(hra), dni = dniJidla(zp), nz = hra.nouze || {}, jidlo = P.zasoby(hra).jidlo || 0;
+    const zp = zimaUI(hra), dni = dniJidla(zp), nz = hra.nouze || {}, jidlo = P.zasoby(hra).jidlo || 0;
     const nouzeHlad = HRA.textNouze(hra, 'hlad');
     const out = HRA.upozorneni(hra).filter(u => u.ikona !== '❄️' && u.ikona !== '🍖' && !(u.ikona === '🚨' && u.text.includes(nouzeHlad)))
       .map(u => Object.assign({}, u, { text: u.text.replace(/,? viz Přehled$/, '') }));
@@ -790,14 +900,20 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
         text: `${nz.hlad ? 'Hlad – ' : ''}jídlo vydrží ~${dnyTxt(dni)} (${mn(jidlo, 'jídlo', 'jídla', 'jídel')} pro ${n}${hladovi ? `, ${hladovi} hladových` : ''}). ${radaJidlo(hra, zp)}.` });
     }
     // nájezd ohlášený den předem (hrozby.js varujNajezd: tik = dalsiNajezd − den) – do jeho příchodu v Pozor
+    // (stejná předpověď jako ⚔️ Příští nájezd v Přehledu: počty, druh a odkud z hrozby.predpovedNajezdu)
     const doNajezdu = hra.dalsiNajezd - hra.tik;
     if (doNajezdu > 0 && doNajezdu <= HRA.TAHU_ZA_DEN) {
-      const sila = T.hrozby.silaNajezdu(hra), tunel = hra.hora.oblasti.find(o => o.typ === 'tunel');
-      const zTunelu = tunel && hra.objeveno[tunel.cislo] && (tunel.bunky || []).find(i => hra.hora.teren[i] === M.VZDUCH);
-      const br = hra.hora.brana, ozbrojeni = hra.trpaslici.some(t => t.povoleno.hlidat && t.zbran);
-      out.push({ ikona: '⚔️', i: zTunelu !== undefined && zTunelu !== false ? zTunelu : br.y * W + br.x, vaha: 9,
-        text: `Zítra nájezd (~${mn(sila, 'nepřítel', 'nepřátelé', 'nepřátel')}${zTunelu ? ', z goblinního tunelu' : ', k bráně'}) – ` +
-          (hra.poplach ? 'poplach už platí' : 'vyhlas 🔔 poplach') + (ozbrojeni ? '' : ' / ozbroj strážce') });
+      const p = T.hrozby.predpovedNajezdu(hra), pn = popisNajezdu(p), ozbrojeni = hra.trpaslici.some(t => t.povoleno.hlidat && t.zbran);
+      const kdy = kdyNajezd(hra, p);
+      out.push({ ikona: '⚔️', i: pn.i, vaha: 9, najezd: true,
+        text: `Nájezd ${kdy}: ${p.typ !== 'utok' ? pn.typ + ' – ' : ''}${pn.kdo}, ${pn.odkud}. ` +
+          (hra.poplach ? 'Poplach už platí' : 'Vyhlas 🔔 poplach') + (ozbrojeni ? '' : ' a ozbroj strážce') });
+    }
+    // obléhání: goblini čekají u brány (karavana se otočí, migranti nepřijdou), pak zaútočí
+    if (hra.oblehani) {
+      const u = (hra.tvorove || []).find(u => u.obleh), hod = Math.max(0, Math.ceil((hra.oblehani.do - hra.tik) / HRA.TAHU_ZA_DEN * 24));
+      out.push({ ikona: '⚔️', i: u ? u.i : undefined, vaha: 8,
+        text: `Obléhání – goblini s lukostřelci čekají u brány ještě ~${hod} h, pak zaútočí. Karavana neprojde, noví trpaslíci nepřijdou; strážci je mohou rozehnat dřív.` });
     }
     // finále na spadnutí (Spáč vzhůru, Klíč hotový, Výheň se zažíhá) a obrana nestačí
     if (PB.kampan(hra) && !hra.spac.porazen && (hra.spac.probuzen || hra.zazehnuti || hra.veci.some(v => v.druh === 'klic'))) {
@@ -863,9 +979,14 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
     const f = st.filtrKlanu || '', vyber = filtrujKlan(hra, f);
     const filtrH = filtrKlanuHtml(hra, f, vyber.length);
     if ($('klanFiltr').dataset.h !== filtrH) { $('klanFiltr').dataset.h = filtrH; $('klanFiltr').innerHTML = filtrH; }
-    const klan = (vyber.length ? '' : '<p class="tip">Nikdo – zkus jiný filtr.</p>') + vyber.map(t => `<div class="clen-karta${st.vybrany === t.id ? ' vybrany' : ''}"><button class="clen${st.vybrany === t.id ? ' vybrany' : ''}" data-id="${t.id}">` +
+    // stejný důvod nečinnosti u všech zobrazených: jednou nad seznamem, v kartách jen „odpočívá"
+    const cinnosti = new Map(vyber.map(t => [t.id, cinnost(hra, t)]));
+    const c0 = vyber.length >= 2 ? cinnosti.get(vyber[0].id) : '', spolecny = c0.startsWith('odpočívá – ') && vyber.every(t => cinnosti.get(t.id) === c0) ? c0.slice('odpočívá – '.length) : '';
+    const klan = (vyber.length ? '' : '<p class="tip">Nikdo – zkus jiný filtr.</p>') +
+      (spolecny ? `<p class="tip klan-spolecne">💤 ${f ? 'Všichni zobrazení' : 'Všichni'} odpočívají – ${spolecny}.</p>` : '') +
+      vyber.map(t => `<div class="clen-karta${st.vybrany === t.id ? ' vybrany' : ''}"><button class="clen${st.vybrany === t.id ? ' vybrany' : ''}" data-id="${t.id}">` +
       `<img src="${portret(t)}" alt="" width="24" height="24"><span><b>${t.jmeno}</b> <small>${HRA.PROFESE[t.prof].nazev}</small>` +
-      (c => `<small class="cinnost" title="${c.replace(/"/g, '&quot;')}">${c}</small>`)(cinnost(hra, t)) + `</span>` +
+      (c => `<small class="cinnost" title="${c.replace(/"/g, '&quot;')}">${c}</small>`)(spolecny ? 'odpočívá' : cinnosti.get(t.id)) + `</span>` +
       `${t.uvizl ? '<i title="uvízl">🆘</i>' : ''}${t.zdravi < 100 ? '<i title="zraněný">🩹</i>' : ''}` +
       vybavaIkony(t) +
       `<span class="teplomery">${teplomer('jídlo', t.jidlo)}${teplomer('pití', t.piti)}${teplomer('nálada', t.nalada, smajlik(t.nalada))}</span>` +
@@ -878,9 +999,18 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
     if ((klan !== posledniKlan || vse) && !vybira) { $('klan').innerHTML = klan; posledniKlan = klan; }
     const vseH = PRACE.map(([k, ik]) => {
       const zap = hra.trpaslici.filter(t => t.povoleno[k]).length, s = vetsinovyStupen(hra, k), stejne = hra.trpaslici.every(t => (t.povoleno[k] || 0) === s);
-      return prepinac(k, ik, s, '', 'všem', stejne ? '' : ' cast', `${PRACE_NAZEV[k]}: povoleno ${zap} z ${hra.trpaslici.length}${stejne ? `, všichni ${STUPNE[s]}` : ', různě'}. Klik = všem další stupeň, pravý klik = předchozí`);
+      return prepinac(k, ik, s, '', 'všem', stejne ? '' : ' cast', `${PRACE_NAZEV[k]}: povoleno ${zap} z ${hra.trpaslici.length}${stejne ? `, všichni ${STUPNE[s]}` : ', různě'}. Klik / Enter = všem další stupeň, pravý klik / Shift+Enter / Backspace = předchozí`,
+        stejne ? '' : `všem – ${PRACE_NAZEV[k].split(' (')[0]}: ${s ? `většinou ${s}` : 'většinou vypnuto'} (různě)`);
     }).join('');
     if ($('praceVse').dataset.h !== vseH) { $('praceVse').dataset.h = vseH; $('praceVse').innerHTML = vseH; }
+    // místo v klanu: postele v ložnicích, strop klanu a kolik migrantů může přijít (obdobi.mistoVKlanu)
+    if (OB.mistoVKlanu) {
+      const mk = OB.mistoVKlanu(hra), mh = mistoKlanuText(hra, mk);
+      textJen($('klanMisto'), mh);
+      $('klanMisto').classList.toggle('spatne', !mk.migrantu);
+      $('mistoChip').querySelector('b').textContent = `${mk.pocet}/${mk.postele}`;
+      $('mistoChip').title = mh;
+    }
     if (st.zalozka === 'sklad') vykresliBilanci(hra);
     if ($('prehledZasob').open) {
       const vse_ = {}, nese = {};
@@ -898,16 +1028,20 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
     const pr = (hra.prectene.length ? hra.prectene.map(k => `<p class="ulomek"><b>📜 ${PB.ULOMKY[k].nadpis}</b><br>${PB.ULOMKY[k].text}</p>`).join('')
       : '<p class="tip">Runové desky předků leží v ruinách hluboko v hoře. Kdo je přečte, pozná cestu k Srdci.</p>') +
       (Object.keys(hra.artefakty).length ? '<div class="chipy">' + Object.keys(hra.artefakty).map(k => `<span class="chip" title="${PB.ARTEFAKTY[k].popis}">${PB.ARTEFAKTY[k].ikona} ${PB.ARTEFAKTY[k].nazev}</span>`).join('') + '</div>' : '') +
-      `<p class="tip">${hra.rezim === 'volny' ? 'Volný režim – Spáč spí a hra nekončí.' : hra.vyhenHori ? '🔥 Výheň předků hoří.' : hra.spac.probuzen && !hra.spac.porazen ? '🌋 Pradávný spáč je vzhůru!' : 'Cíl: zažehnout Výheň předků Klíčem k Srdci.'}</p>`;
+      `<p class="tip">${hra.rezim === 'volny' ? (hra.spac.probuzen && !hra.spac.porazen ? 'Volný režim – 🌋 vyzvaný Spáč je vzhůru!' : hra.spac.porazen ? 'Volný režim – Spáč padl, hra nekončí.' : 'Volný režim – Spáč spí (vyzvat ho jde, až najdete Srdce hory) a hra nekončí.')
+        : hra.vyhenHori ? '🔥 Výheň předků hoří.' : hra.spac.probuzen && !hra.spac.porazen ? '🌋 Pradávný spáč je vzhůru!' : 'Cíl: zažehnout Výheň předků Klíčem k Srdci.'}</p>` +
+      milnikyHtml(hra);
     if ($('pribeh').dataset.h !== pr) { $('pribeh').innerHTML = pr; $('pribeh').dataset.h = pr; }
     // výukové úkoly
     const cd = PB.coDal(hra);
-    const cdh = cd ? `${cd.text} <small>(krok ${cd.krok}/${cd.z})</small>` : '✅ Všechny úkoly splněné – hora je vaše.';
+    st.voditko = cd && cd.voditko && cd.voditko.cil ? cd.voditko : null;   // pásmo hledání na mapě (grafika)
+    const cdh = coDalHtml(hra, cd);
     if ($('coDal').dataset.h !== cdh) { $('coDal').innerHTML = cdh; $('coDal').dataset.h = cdh; }
     $('odkazJak').hidden = hra.tik >= HRA.TAHU_ZA_DEN;                   // „❓ Jak hrát" jen první den
     if (rekordy) rekordy.hloubka.zapis(hra.nejhloubeji);
     // deník
     if (!$('paleta').hidden) vykresliPaletu();
+    vykresliOblibene();
     // ❄️ předpověď zimy
     if (st.zalozka === 'prehled') { vykresliZimu(hra); vykresliObranu(hra); vykresliCas(hra); }
     // co hoří
@@ -962,12 +1096,20 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
     $('udalostObraz').src = `trpaslici/assets/${obraz[0]}`;
     $('udalostObraz').alt = obraz[1];
     $('udalostText').textContent = u.text;
-    $('udalostVolby').innerHTML = u.volby.map((v, i) => `<button class="btn${i ? ' sede' : ''}" data-i="${i}">${v}</button>`).join('');
+    if (u.id === 'migranti' && u.param.lide.length > 1) {   // víc příchozích: hráč si zaškrtne, koho přijme
+      const n = u.param.lide.length;
+      $('udalostVolby').innerHTML = `<fieldset class="vyber-prichozich"><legend>Koho přijmout</legend>` +
+        u.param.lide.map((l, k) => `<label><input type="checkbox" data-k="${k}" checked> ${OB.popisPrichoziho(l)}</label>`).join('') + `</fieldset>` +
+        `<button class="btn" data-i="0" data-vyber="1">Přijmout vybrané (${n} z ${n})</button>` +
+        `<button class="btn sede" data-i="${u.volby.length - 1}">${u.volby[u.volby.length - 1]}</button>`;
+    } else $('udalostVolby').innerHTML = u.volby.map((v, i) => `<button class="btn${i ? ' sede' : ''}" data-i="${i}">${v}</button>`).join('');
     const d = $('udalostOkno');
     if (!d.open) d.showModal();
   }
-  function vyresUdalost(i) {
-    const text = UD.vyres(st.hra, i);
+  // zaškrtnutí příchozí (indexy) v okně migrantů
+  const vybraniPrichozi = () => [...$('udalostVolby').querySelectorAll('.vyber-prichozich input')].filter(c => c.checked).map(c => +c.dataset.k);
+  function vyresUdalost(i, vyber) {
+    const text = UD.vyres(st.hra, i, vyber);
     $('udalostOkno').close();
     udalostOtevrena = null;
     if (text) oznam(text);
@@ -1029,7 +1171,7 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
   const cislo = (x, zn) => { const v = Math.round(x * 10) / 10; return (zn && v > 0 ? '+' : '') + String(v).replace('.', ','); };
   const zdrojeText = o => Object.entries(o).sort((a, b) => b[1] - a[1]).map(([k, v]) => `${k} ${v}`).join(', ') || 'nic';
   function vykresliZimu(hra) {
-    const z = HRA.predpovedZimy(hra), dny = x => { const v = Math.max(0, Math.round(x)); return `${v} ${v === 1 ? 'den' : v >= 2 && v <= 4 ? 'dny' : 'dní'}`; };
+    const z = zimaUI(hra), dny = x => { const v = Math.max(0, Math.round(x)); return `${v} ${v === 1 ? 'den' : v >= 2 && v <= 4 ? 'dny' : 'dní'}`; };
     textJen($('zimaNadpis'), z.vZime ? `❄️ Zima – do jara ${dny(z.dnyZimy)}` : `❄️ Do zimy ${dny(z.dnyDoZimy)}`);
     const porci = x => mn(Math.max(0, Math.round(x)), 'porce', 'porce', 'porcí');
     let verdikt, trida = z.verdikt;
@@ -1042,7 +1184,9 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
       ` Chybí ~${porci(z.chybi)} – ${radaJidlo(hra, z).replace(/^./, c => c.toLowerCase())}.`;
     const html = `<div class="zima-verdikt ${trida}">${verdikt}</div>` +
       `<p class="tip">Jídlo: ~${porci(z.porce)} (i ze surovin${z.kuchyne ? '' : ' – bez kuchyně jen poloviční'}), denně ${cislo(z.sazba, 1)}` +
-      (z.zPoli > 0.05 ? `, v zimě ${cislo(z.sazbaZima, 1)} (pole nerostou)` : '') + `. <span title="Větší ze skutečné spotřeby a potřeby (kolik by klan snědl dosyta)">Klan sní ~${cislo(z.spotrebaDen)}/den.</span></p>` +
+      (z.zPoli > 0.05 ? `, v zimě ${cislo(z.sazbaZima, 1)} (pole nerostou)` : '') + `. ` +
+        (z.podlePotreby ? `<span title="Než uplyne celý den, počítá se s tím, kolik klan sní dosyta – měření z kusu dne (všichni se najedí naráz) by klamalo">Klan sní ~${cislo(z.spotrebaDen)}/den (odhad podle potřeby, dokud neuplyne celý den).</span></p>`
+          : `<span title="Větší ze skutečné spotřeby a potřeby (kolik by klan snědl dosyta)">Klan sní ~${cislo(z.spotrebaDen)}/den.</span></p>`) +
       `<p class="tip">${z.pivo.vydrzi ? '🍺 Pivo vydrží.' : '🍺 Pivo nevydrží – trpaslíci budou pít vodu nebo led (horší nálada, žízní ale nezemřou).'}</p>`;
     if ($('zima').dataset.h !== html) { $('zima').innerHTML = html; $('zima').dataset.h = html; }
   }
@@ -1056,25 +1200,128 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
     if ($('casKlanu').dataset.h !== html) { $('casKlanu').innerHTML = html; $('casKlanu').dataset.h = html; }
     $('casObdobi').textContent = c.vzorku ? `– poslední ${Math.min(c.dni, HRA.den(hra))} ${Math.min(c.dni, HRA.den(hra)) === 1 ? 'den' : 'dny'}` : '';
   }
+  // 🧭 „Co dál?": krok, vodítko s 📍, volba artefaktů, kusovník Klíče (sbalitelný) a výzva Spáče (volný režim)
+  function coDalHtml(hra, cd) {
+    let h;
+    if (!cd) h = '✅ Všechny úkoly splněné – hora je vaše.';
+    else {
+      let text = cd.text.split(' Kusovník Klíče:')[0].split(' 🧭 ')[0];
+      // krok „vytěž hvězdnou rudu": počet z kusovníku (logika píše pevných 7 – po ukutém artefaktu nebo s rozpracovaným by nesouhlasil)
+      const k = cd.kusovnik || (/hvězdných prutů/.test(text) ? PB.kusovnikKlice(hra, true) : null);
+      if (k && k.potreba && /hvězdných prutů/.test(text)) {
+        const n = k.potreba.prut_hvezdny || 0, art = k.artefakty.length;
+        text = text.replace(/na 2 artefakty a Klíč je potřeba \d+ hvězdných prutů/, `na ${art === 2 ? '2 artefakty a ' : art === 1 ? 'zbylý artefakt a ' : ''}Klíč je ještě potřeba ${n} × hvězdná ocel`)
+          .replace(/\d+ hvězdných prutů/, `${n} × hvězdná ocel`);
+      }
+      h = `${text} <small>(krok ${cd.krok}/${cd.z})</small>`;
+      const v = cd.voditko;
+      if (v && v.text) h += `<p class="voditko">🧭 ${v.text}${v.i >= 0 ? ` <button class="kus-kde" data-misto="${v.i}" title="Klikni – posunout pohled na místo, kam vodítko ukazuje">📍 ukázat</button>` : ''}</p>`;
+      h += volbaArtHtml(hra);
+      if (cd.kusovnik) h += kusovnikHtml(cd.kusovnik);
+    }
+    if (PB.lzeVyzvatSpace && PB.lzeVyzvatSpace(hra))
+      h += `<button class="btn mini-sirka vyzva-space" data-akce="vyzvi-space" title="Volitelný boss volného režimu: Spáč se probudí v Srdci hory, ozbrojení strážci na něj jdou aspoň ve třech (sláva +40)">⚔️ Vyzvat Spáče</button>`;
+    return h;
+  }
+  // ⭐ milníky slávy (obdobi.milnikyInfo): splněné, další s tím, kolik slávy chybí, odměny
+  function milnikyHtml(hra) {
+    if (!OB.milnikyInfo) return '';
+    const m = OB.milnikyInfo(hra);
+    return `<h4 class="milniky-nadpis">⭐ Milníky slávy <small>(teď ${m.slava})</small></h4><ul class="milniky" id="milniky">` +
+      m.seznam.map(x => `<li class="${x.splneno ? 'splneno' : x === m.dalsi ? 'dalsi' : ''}"><b>${x.splneno ? '✅' : x === m.dalsi ? '▶' : '·'} ${x.slava}</b>` +
+        `${x === m.dalsi ? ` <small>(chybí ${Math.max(0, x.slava - m.slava)})</small>` : ''} – ${x.text.replace(/^\S+\s/, '')}</li>`).join('') + '</ul>';
+  }
+  // ✨ volba dvojice artefaktů před Klíčem (pribeh.volbaArtefaktu / zvolArtefakty): „Co dál?" i detail runové kovárny
+  const PARY_ART = [['kladivo', 'lampa'], ['kladivo', 'roh'], ['lampa', 'roh']];
+  function volbaArtHtml(hra) {
+    if (!PB.kampan(hra) || !hra.odemceno.artefakty || hra.artefakty.klic || PB.klicPodminka(hra).ok || !PB.volbaArtefaktu) return '';
+    const v = PB.volbaArtefaktu(hra), A = PB.ARTEFAKTY, jmena = par => par.map(k => `${A[k].ikona} ${A[k].nazev}`).join(' + ');
+    const stejny = (a, b) => !!a && a.length === b.length && a.every(k => b.includes(k));
+    const hotove = PB.DEDICTVI.filter(k => hra.artefakty[k]);
+    return `<div class="volba-art"><b>✨ Které 2 ze 3 artefaktů ukovat před Klíčem?</b><br><small>` +
+      (v.zvoleno ? `Zvoleno: ${jmena(v.zvoleno)}. Hra by doporučila ${jmena(v.doporuceno)}.` : `Hra volí sama: ${jmena(v.doporuceno)} – ${v.duvod}.`) +
+      (hotove.length ? ` Hotovo: ${jmena(hotove)}.` : '') + `</small><div class="volba-art-pary" role="group" aria-label="Dvojice artefaktů">` +
+      PARY_ART.map(p => { const zap = stejny(v.zvoleno, p);
+        return `<button class="mini${zap ? ' zap' : ''}" data-akce="art" data-art="${p.join(',')}" aria-pressed="${zap}" title="${p.map(k => `${A[k].nazev}: ${A[k].popis}`).join(' · ')}">${p.map(k => A[k].ikona).join('+')}${stejny(v.doporuceno, p) ? ' <small>doporučeno</small>' : ''}</button>`; }).join('') +
+      `<button class="mini${v.zvoleno ? '' : ' zap'}" data-akce="art" data-art="auto" aria-pressed="${!v.zvoleno}" title="Hra zvolí sama podle stavu klanu (doporučení se může změnit)">auto</button></div></div>`;
+  }
+  function akceArtefaktu(b) {                       // klik na dvojici / auto (Co dál? i detail kovárny)
+    PB.zvolArtefakty(st.hra, b.dataset.art === 'auto' ? null : b.dataset.art.split(','));
+    obnovPanel(true);
+  }
+  async function vyzviSpace() {
+    const hra = st.hra; if (!PB.lzeVyzvatSpace(hra)) return;
+    const o = T.hrozby.silaObrany(hra);
+    if (typeof Dialog !== 'undefined' && !await Dialog.potvrd(`⚔️ Vyzvat Pradávného spáče? Probudí se v Srdci hory a nepůjde vrátit. Útočí na něj jen ozbrojení strážci, aspoň ${T.hrozby.SKUPINA_NA_SPACE} naráz; ostatní utíkají. ` +
+      `Odhad boje teď: ${o.odhad} (ozbrojených strážců ${o.ozbrojenych}, útok ${o.utok}). Za vítězství sláva +40.`, { ok: '⚔️ Vyzvat', zrus: 'Ještě ne' })) return;
+    if (st.hra !== hra) return;
+    PB.vyzviSpace(hra); obnovPanel(true); spinave = true;
+  }
+  // 🗝️ kusovník Klíče v „Co dál?": věc | má / třeba; suroviny odsazené pod výrobky; nedostupné kusy (v jámě) s 📍 na místo.
+  // Sbalitelný (pamatuje se), v souhrnu kolik položek chybí; s kusem v jámě se rozbalí sám.
+  const SUROVINY_KUS = new Set(['hvezdna', 'zlato', 'stribro', 'zelezo', 'drahokam', 'uhli']);
+  function kusovnikHtml(k) {
+    const radky = k.polozky.map(p => {
+      const stav = p.nedosazitelne ? ` <button class="kus-kde" data-kus="${p.druh}" title="Klikni – ukázat, kde leží">⚠️ ${p.nedosazitelne} v jámě 📍</button>`
+        : p.chybi ? ` <b class="spatne">chybí ${p.chybi}</b>` : ' ✅';
+      const tr = [SUROVINY_KUS.has(p.druh) ? 'surovina' : '', p.nedosazitelne ? 'nedos' : p.chybi ? '' : 'hotovo'].filter(Boolean).join(' ');
+      return `<tr${tr ? ` class="${tr}"` : ''}><td>${p.ikona} ${p.nazev}</td><td>${p.ma} / ${p.potreba}${stav}</td></tr>`;
+    }).join('');
+    const chybi = k.polozky.filter(p => p.chybi || p.nedosazitelne).length, jama = k.polozky.some(p => p.nedosazitelne);
+    const art = k.artefakty.length ? ` · artefakty ${k.artefakty.map(a => PB.ARTEFAKTY[a].ikona).join(' ')}` : '';
+    sekceOtevrena('kusovnik');                        // načte uložený stav sekcí; výchozí sbaleno
+    const otevreno = jama || sekceSkladu.kusovnik === true;
+    return `<details class="kusovnik-det" data-sekce="kusovnik"${otevreno ? ' open' : ''}><summary>🗝️ Kusovník Klíče${art} – ` +
+      (chybi ? `<span class="spatne">chybí ${mn(chybi, 'položka', 'položky', 'položek')}</span>` : '✅ vše pohromadě') + `</summary>` +
+      `<table class="tab kusovnik" id="kusovnik"><thead><tr><th>věc</th><th>má / třeba</th></tr></thead><tbody>${radky}</tbody></table></details>`;
+  }
+  // klik na nedostupný kus kusovníku: ukázat první takový kus (leží, nikdo ho nenese, ze skladu se k němu nedojde)
+  function ukazKus(druh) {
+    const hra = st.hra, F = HRA.dosahSkladuTik(hra);
+    const v = F && hra.veci.find(v => v.druh === druh && !v.nese && !HRA.dosazitelna(hra, v, F));
+    if (!v) return;
+    st.vybrany = 0; st.vyber = { x: v.i % W, y: v.i / W | 0 }; ukazMisto(v.i); obnovPanel(true);
+  }
   // 🛡️ obrana proti Spáči (kampaň, dokud žije) a neklid hory
   const ODHAD_TRIDA = { 'dobrý': 'dobre', 'vyrovnaný': 'varuj', 'špatný': 'spatne', 'málo strážců': 'spatne' };
   // obrana proti Spáči má smysl až ke konci kampaně: Klíč, 2 artefakty, hloubka od 120 m, nebo Spáč už je vzhůru
   const spacNaObzoru = hra => hra.spac.probuzen || hra.zazehnuti || hra.artefakty.klic || hra.veci.some(v => v.druh === 'klic') ||
     Object.keys(hra.artefakty).filter(k => k !== 'klic').length >= 2 || (hra.nejhloubeji || 0) >= 120;
   function vykresliObranu(hra) {
-    const spac = PB.kampan(hra) && !hra.spac.porazen && spacNaObzoru(hra), nk = T.hrozby.neklid(hra), pr = Math.round(nk * 100);
+    // (volný režim: Spáč jako volitelný boss – obrana se ukáže, jakmile ho jde vyzvat nebo je vzhůru)
+    const spac = !hra.spac.porazen && (PB.kampan(hra) ? spacNaObzoru(hra) : hra.spac.probuzen || PB.lzeVyzvatSpace(hra));
+    const nk = T.hrozby.neklid(hra), pr = Math.round(nk * 100);
     let html = '';
     if (spac) {
       const o = T.hrozby.silaObrany(hra), sp = o.spac;
       html += radek('Strážci', `${o.strazcu} <small>(ozbrojených ${o.ozbrojenych})</small>`) +
         radek('Útok strážců', `⚔️ ${o.utok}` + (o.zbroj && o.ozbrojenych ? ` · 🛡️ zbroj ~${Math.round(o.zbroj / o.ozbrojenych * 100)} %` : '')) +
         radek('Spáč', `${sp.vzhuru ? '<b class="spatne">vzhůru</b>' : 'spí'} · ❤ ${sp.zdravi}/${sp.max} · ⚔️ ${sp.utok}`) +
+        radek('Odolnost Spáče', `<span title="Spáč roste s obranou klanu: odolnost = základní útok všech ozbrojených strážců (bez Rohu hory) / 45, aspoň 1, bez horní meze. Zásahy strážců se jí dělí – rozhoduje zbroj (kolik ran strážci vydrží) a Roh hory (útok 1,3× se do odolnosti nepočítá).${sp.vzhuru ? ' Pevně daná při probuzení.' : ' Určí se při probuzení.'}">🪨 ×${String(Math.round(sp.odolnost * 100) / 100).replace('.', ',')}</span>`) +
+        `<p class="tip obrana-pozn">🪨 Zásahy strážců se dělí odolností – ta roste s útokem ozbrojených strážců (útok/45)${sp.vzhuru ? ', teď už pevná' : ', určí se při probuzení'}. Pomůže zbroj a Roh hory.</p>` +
         `<div class="obrana-odhad ${ODHAD_TRIDA[o.odhad] || ''}">Odhad boje: <b>${o.odhad}</b>` +
         (o.odhad === 'málo strážců' ? ` – na Spáče jdou jen ozbrojení strážci, aspoň ${T.hrozby.SKUPINA_NA_SPACE}` : o.odhad === 'špatný' ? ' – vyzbroj a vycvič další strážce' : '') + '</div>';
     }
-    const tip = `Neklid hory ${pr} %: s hloubkou a artefakty rostou nájezdy a z hlubin lezou tvorové`;
+    // ⚔️ předpověď příštího nájezdu (kdy, jak silný, odkud) – klik ukáže místo, odkud přijde
+    const p = hra.trpaslici.length && hra.dalsiNajezd ? T.hrozby.predpovedNajezdu(hra) : null;
+    if (p && p.zaDni < 400) {                      // (ladění a testy odsouvají nájezdy na věčnost)
+      const pn = popisNajezdu(p), kdy = kdyNajezd(hra, p);
+      const tipN = `Nájezd přijde ${p.den}. den (~${hhmm(p.tik)}); síla ${p.sila} (troll = 3) roste s klanem, slávou, počtem nájezdů a neklidem hory.` + (pn.i !== undefined ? ' Klikni – ukázat, odkud přijde.' : '');
+      html += pn.i !== undefined
+        ? `<button class="najezd-kde" id="najezdPredpoved" data-i="${pn.i}" title="${tipN}"><span>⚔️ Příští nájezd</span><span>${kdy}: ${pn.kdo}, ${pn.odkud} <span class="kde">📍</span></span></button>`
+        : `<div class="radek" id="najezdPredpoved" title="${tipN}"><span>⚔️ Příští nájezd</span><span>${kdy}: ${pn.kdo}, ${pn.odkud}</span></div>`;
+      html += radek('Druh nájezdu', `<span title="${pn.typPopis}">${pn.typ}${p.typ !== 'utok' ? ` – ${pn.typPopis}` : ''}</span>`);
+      const lk = p.lakadlo;
+      if (lk) html += radek('Sláva láká', `<span title="${lk.text}">+${String(lk.body).replace('.', ',')} k síle nájezdu <small>(max +${lk.max})</small></span>`);
+    }
+    if (hra.oblehani) {
+      const hod = Math.max(0, Math.ceil((hra.oblehani.do - hra.tik) / HRA.TAHU_ZA_DEN * 24));
+      html += radek('Obléhání', `<b class="spatne">goblini u brány ještě ~${hod} h</b> <small>– karavana ani noví trpaslíci neprojdou</small>`);
+    }
+    const tip = `Neklid hory ${pr} %: s hloubkou a artefakty rostou nájezdy a z hlubin lezou tvorové` + (hra.spac.brzy ? '; předčasně probuzený Spáč ho trvale zvedl o 30 %' : '');
     html += `<div class="pruh neklid${nk >= 0.75 ? ' spatne' : nk >= 0.4 ? ' varuj' : ''}" title="${tip}" role="img" aria-label="${tip}"><span>🌋 neklid hory</span><i><b style="width:${pr}%"></b></i><small>${pr} %</small></div>`;
-    textJen($('obranaNadpis'), spac ? '🛡️ Obrana proti Spáči' : '🌋 Neklid hory');
+    if (hra.spac.brzy) html += '<p class="tip obrana-brzy">⚠️ Spáč se probudil předčasně (bez Klíče) – neklid hory je natrvalo o 30 % vyšší.</p>';
+    textJen($('obranaNadpis'), spac ? '🛡️ Obrana proti Spáči' : '🌋 Neklid hory a nájezdy');
     if ($('obrana').dataset.h !== html) { $('obrana').innerHTML = html; $('obrana').dataset.h = html; }
   }
   // ⚒️ výroba zbraní, zbroje a nástrojů: co jde ukovat hned a co chybí (souhrnně podle příčiny)
@@ -1109,7 +1356,7 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
     const b = HRA.bilance(hra), n = hra.trpaslici.length;
     const d0 = b.jidlo.dni;
     const obd = d0 ? `průměr za ${d0 === 1 ? 'poslední den' : `poslední ${d0} ${d0 < 5 ? 'dny' : 'dní'}`}` : 'zatím jen dnešek – odhad';
-    const zp = HRA.predpovedZimy(hra), dJ = dniJidla(zp);
+    const zp = zimaUI(hra), dJ = dniJidla(zp);
     const vydrzJidla = () => dJ === Infinity ? 'zásoba roste' : dJ < 1 ? '<b class="bil-minus">dojde dnes!</b>' : `vydrží ~${dnyTxt(dJ)}`;
     const vydrz = r => r === b.jidlo ? vydrzJidla() : r.bilance >= 0 ? (r.vyroba || r.spotreba ? 'zásoba roste' : '') : r.vydrzi < 1 ? '<b class="bil-minus">dojde dnes!</b>' : `vydrží ~${Math.floor(r.vydrzi)} ${Math.floor(r.vydrzi) === 1 ? 'den' : Math.floor(r.vydrzi) < 5 ? 'dny' : 'dní'}`;
     const karta = (druh, dilna, dilnaMn, kusy, nevari) => {
@@ -1256,7 +1503,7 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
   // během tažení kopání: velikost obdélníku a varování, že síň bude potřebovat podpěry
   function infoTahu() {
     const t = st.tah, el = $('nastrojInfo');
-    if (!t || t.druh !== 'kopat') { if (el.dataset.tah) { el.dataset.tah = ''; el.dataset.h = ''; el.hidden = true; } return; }
+    if (!t || t.druh !== 'kopat') { if (el.dataset.tah) { el.dataset.tah = ''; el.dataset.h = ''; el.hidden = true; el.classList.remove('tah-kopani'); } return; }
     const x0 = Math.max(0, Math.min(t.x0, t.x1)), x1 = Math.min(W - 1, Math.max(t.x0, t.x1));
     const y0 = Math.max(1, Math.min(t.y0, t.y1)), y1 = Math.min(H - 2, Math.max(t.y0, t.y1));
     const klic = [x0, y0, x1, y1].join(',');
@@ -1264,17 +1511,20 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
     el.dataset.tah = klic;
     const sir = x1 - x0 + 1, vys = y1 - y0 + 1, roz = rozpetiPoKopani(st.hra, x0, y0, x1, y1);
     el.innerHTML = `⛏️ <b>${sir}×${vys}</b> <small>(${mn(sir * vys, 'pole', 'pole', 'polí')})</small>` +
-      (roz ? ` <span class="nejde">⚠️ potřebuje podpěry (rozpětí ${roz})</span><br><small>Síň vysoká 3+ pole se bez podpěr zřítí – nejvýš 2 pole vysoko je bezpečné, jinak postav 🪵 podpěry aspoň každá ${roz} pole.</small>`
+      (roz ? ` <span class="nejde">⚠️ potřebuje podpěry</span><br><small>${podperyText(roz)}</small>`
         : vys >= 3 ? ' <span class="jde">✅ strop vydrží</span>' : '');
-    el.dataset.h = ''; el.hidden = false;
+    el.dataset.h = ''; el.hidden = false; el.classList.add('tah-kopani');   // na úzkém displeji dole, ať nezakrývá tažení
   }
+  // rada k síni, jejíž strop neunese celou šířku (roz = kolik polí strop unese bez podpěry)
+  const podperyText = roz => `Síň vysoká 3 a víc polí se bez podpěr zřítí. Postav 🪵 podpěry tak, aby mezi nimi bylo nejvýš ${mn(roz, 'pole', 'pole', 'polí')} – nebo kopej nejvýš 2 pole vysoko (to je bezpečné vždy).`;
   function nastav(n) {
     st.nastroj = n; spinave = true;
-    $('nastrojInfo').dataset.tah = '';
+    $('nastrojInfo').dataset.tah = ''; $('nastrojInfo').classList.remove('tah-kopani');
     const skupina = n.split(':')[0];
     for (const b of document.querySelectorAll('#nastroje button')) b.setAttribute('aria-pressed', b.dataset.n === skupina);
+    for (const b of document.querySelectorAll('#oblibene button')) b.setAttribute('aria-pressed', b.dataset.n === n);
     cv.classList.toggle('kresli', n !== 'pohled');
-    $('paleta').hidden = true;
+    $('paleta').hidden = true; vykresliOblibene();
     const [druh, typ] = n.split(':');
     $('nastrojInfo').hidden = !typ;
     if (druh === 'stavba') {
@@ -1286,16 +1536,55 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
         : `${ST.ZONY[typ].ikona} <b>${ST.ZONY[typ].nazev}</b> – táhni obdélník <small>(Esc = konec)</small>`;
     }
   }
+  // --- nejpoužívanější stavby a zóny: lišta vedle nástrojů (skóre v prohlížeči – jen pohodlí hráče) ---
+  // Skóre je čerstvá četnost: každé použití přidá 1 a všem ostatním ubere VYPRCHANI (po ~10 použitích jiných věcí
+  // zbude polovina). Dřív se sčítalo napořád, takže co se hodně stavělo kdysi (i v jiných hrách), drželo místo
+  // a nové návyky se do lišty nedostaly.
+  const KLIC_OBLIBENE = 'webapp_hra_trpaslici_oblibene', OBLIBENYCH = 6, VYPRCHANI = 0.93;
+  let oblibene = null;
+  function pocetPouziti() {
+    if (!oblibene) {
+      try { oblibene = JSON.parse(uloziste.cti(KLIC_OBLIBENE) || '{}') || {}; } catch (e) { oblibene = {}; }
+      // součet skóre s vyprcháváním nepřesáhne 1 / (1 − VYPRCHANI); staré trvalé počty se do té stupnice zmenší
+      const max = 1 / (1 - VYPRCHANI), soucet = Object.values(oblibene).reduce((a, b) => a + (+b || 0), 0);
+      if (soucet > max + 0.01) for (const k of Object.keys(oblibene)) oblibene[k] = Math.round(oblibene[k] * max / soucet * 1000) / 1000;
+    }
+    return oblibene;
+  }
+  function zapocitejPouziti(klic) {
+    const o = pocetPouziti();
+    for (const k of Object.keys(o)) { o[k] = Math.round(o[k] * VYPRCHANI * 1000) / 1000; if (o[k] < 0.05) delete o[k]; }
+    o[klic] = (o[klic] || 0) + 1;
+    try { localStorage.setItem(KLIC_OBLIBENE, JSON.stringify(o)); } catch (e) { /* jen pohodlí */ }
+    vykresliOblibene();
+  }
+  function vykresliOblibene() {
+    const el = $('oblibene'); if (!el || !st.hra) return;
+    const o = pocetPouziti();
+    const klice = Object.keys(o).filter(k => { const [d, t] = k.split(':'); return d === 'stavba' ? !!ST.STAVBY[t] : d === 'zona' && !!ST.ZONY[t]; })
+      .sort((a, b) => o[b] - o[a] || a.localeCompare(b)).slice(0, OBLIBENYCH);
+    const html = klice.map(k => {
+      const [d, t] = k.split(':'), D = d === 'stavba' ? ST.STAVBY[t] : ST.ZONY[t];
+      const proc = d === 'stavba' ? ST.dostupnost(st.hra, t) : null;
+      return `<button data-n="${k}" aria-pressed="${st.nastroj === k}"${proc ? ' disabled' : ''} title="${D.nazev}${proc ? ' – ' + proc : ''}">${D.ikona}<small>${D.nazev}</small></button>`;
+    }).join('');
+    if (el.dataset.h !== html) { el.innerHTML = html; el.dataset.h = html; }
+    el.hidden = !klice.length || (window.innerWidth <= 600 && !$('paleta').hidden);   // na úzkém displeji by překážela paletě
+    // vpravo vedle lišty nástrojů; na úzkém displeji nad ní (CSS)
+    const n = $('nastroje');
+    if (!el.hidden && n && window.innerWidth > 600) el.style.left = (n.offsetLeft + n.offsetWidth + 6) + 'px';
+    else el.style.left = '';
+  }
   function ukazPaletu(co) {
     const pal = $('paleta');
-    if (!pal.hidden && pal.dataset.co === co) { pal.hidden = true; spinave = true; return; }
+    if (!pal.hidden && pal.dataset.co === co) { pal.hidden = true; spinave = true; vykresliOblibene(); return; }
     pal.dataset.co = co; pal.dataset.h = '';
     vykresliPaletu();
-    pal.hidden = false; spinave = true;
+    pal.hidden = false; spinave = true; vykresliOblibene();
   }
   // kam která zóna jde (stavby.lzeZona) a co v ní musí stát – druhý řádek tlačítka v paletě
   const PRAVIDLA_ZON = { sklad: 'na podlahu, venku i pod zemí', loznice: 'pod zem · potřebuje postele', jidelna: 'pod zem · stoly a židle',
-    pole: 'venku na hlínu nebo jíl', houbarna: 'pod zem na pevnou podlahu', les: 'venku na hlínu nebo jíl', osetrovna: 'pod zem · potřebuje postele' };
+    pole: 'venku na hlínu nebo jíl', houbarna: 'pod zem na pevnou podlahu', les: 'venku jedle (hlína, jíl) · pod zemí obří houby', osetrovna: 'pod zem · potřebuje postele' };
   // obsah palety (volá se i při obnově panelu, aby se stavby odemkly, jakmile jdou postavit)
   function vykresliPaletu() {
     const pal = $('paleta'), co = pal.dataset.co;
@@ -1314,7 +1603,18 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
         `<button data-n="zona:zmensit" class="zmensit" title="Vyjmout pole ze zóny (táhni přes ně)"><span>✂️</span><b>zmenšit zónu</b><i>táhni přes pole, která vyjmout</i></button>`;
     if (pal.dataset.h !== html) { pal.innerHTML = html; pal.dataset.h = html; }
   }
+  // po konci hry (dokud hráč nezvolí „Hrát dál") čas stojí – mezerník, 1/2/3 ani tlačítka rychlosti hru nerozběhnou
+  const hraStoji = () => !!(st.hra && st.hra.konec && !st.hra.konec.pokracovat);
   function nastavRychlost(r) {
+    if (r && hraStoji()) {
+      r = 0;
+      const ted = performance.now();
+      if (!(ted - st.konecOznamen < 3000)) {          // hlášku jednou za chvíli, ne při každém stisku
+        st.konecOznamen = ted;
+        oznam(st.hra.konec.vitezstvi ? 'Hra skončila vítězstvím – dál se hraje přes „🏁 Konec hry" → „Hrát dál (volný režim)".'
+          : 'Hra skončila – klan zanikl. Novou horu začneš přes „🏁 Konec hry" nebo menu ☰.');
+      }
+    }
     if (r) st.predPauzou = r;
     st.rychlost = r;
     for (const b of document.querySelectorAll('#rychlost button')) b.setAttribute('aria-pressed', +b.dataset.r === r);
@@ -1337,7 +1637,7 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
     const ted = performance.now(), dt = Math.min(0.1, (ted - (st.posledniKresba || ted)) / 1000);
     st.posledniKresba = ted;
     const p = { hora: st.hra.hora, znamo: st.hra.znamo, vseZnamo: st.vseZnamo, vyber: st.vybrany ? null : st.vyber,
-                najeti: st.najeti, dpr, hra: st.hra, alfa: st.alfa, vybrany: st.vybrany, tah: st.tah, dt, nahled: nahledStavby(), zony: viditelneZony(), pauza: st.rychlost === 0, nastroj: st.nastroj, zvyrazni: st.zvyrazni };
+                najeti: st.najeti, dpr, hra: st.hra, alfa: st.alfa, vybrany: st.vybrany, tah: st.tah, dt, nahled: nahledStavby(), zony: viditelneZony(), pauza: st.rychlost === 0, nastroj: st.nastroj, zvyrazni: st.zvyrazni, voditko: st.voditko };
     const k = kamKresby();
     G.kresli(ctx, p, k, snimek, (performance.now() - cas0) / 1000);
     G.kresliMinimapu(mctx, p, k, cv.width, cv.height);
@@ -1401,21 +1701,63 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
     }
     if (druh === 'stavba') {
       const id0 = hra.dalsiId, n = ST.naplanujObdelnik(hra, typ, r.x0, r.y0, r.x1, r.y1);
+      if (n) zapocitejPouziti('stavba:' + typ);
       if (n && st.stavPrio) for (const p of hra.plany) if (p.id >= id0) p.prio = true;           // ⭐ s předností
       if (!n) oznam(`${ST.STAVBY[typ].nazev}: ${ST.prekazka(hra, typ, r.y0 * W + r.x0) || 'sem to nejde'}`, true);
+      else if (!ST.STAVBY[typ].sirka) {              // obdélník přijatý jen zčásti: kolik polí a proč (nejčastější důvod)
+        const odm = odmitnutaPole(hra, typ, r, id0);
+        if (odm.n) oznam(`${ST.STAVBY[typ].nazev}: ${mn(n, 'pole naplánováno', 'pole naplánována', 'polí naplánováno')}, ${mn(odm.n, 'pole odmítnuto', 'pole odmítnuta', 'polí odmítnuto')} – ${odm.duvod}` +
+          (odm.dalsi ? ` (a ${mn(odm.dalsi, 'další důvod', 'další důvody', 'dalších důvodů')})` : '') + '.', odm.vaha);
+      }
     } else if (druh === 'zona') {
       if (typ === 'zmensit') ST.zrusZonu(hra, r.x0, r.y0, r.x1, r.y1);
       else if (!ST.novaZona(hra, r.x0, r.y0, r.x1, r.y1, typ, 'vse'))
         oznam(typ === 'sklad' ? 'Sklad jde jen na prozkoumanou volnou podlahu, která ještě není v jiné zóně.'
-          : typ === 'pole' || typ === 'les' ? `${ST.ZONY[typ].nazev[0].toUpperCase() + ST.ZONY[typ].nazev.slice(1)} jde jen venku na hlínu nebo jíl (ne na balvany a stavby).`
+          : typ === 'pole' ? 'Pole jde jen venku na hlínu nebo jíl (ne na balvany a stavby).'
+          : typ === 'les' ? 'Lesní školka jde venku na hlínu nebo jíl (jedle), nebo pod zemí na pevnou podlahu (obří houby) – ne na balvany, žebříky a stavby.'
           : typ === 'houbarna' ? 'Houbárna jde jen pod zem na pevnou podlahu.'
           : 'Místnost jde jen do prozkoumaného volného prostoru pod zemí.', true);
-      else { st.vybrany = 0; st.vyber = { x: r.x0, y: r.y0 }; }
+      else { st.vybrany = 0; st.vyber = { x: r.x0, y: r.y0 }; zapocitejPouziti('zona:' + typ); }
+    } else if (druh === 'bourat') {
+      const n = P.oznac(hra, r.x0, r.y0, r.x1, r.y1, 'bourat');
+      if (!n) oznam('🪚 Tady není co zbourat – označ postavenou stavbu, nábytek, louč, žebřík nebo výtah.', true);
+      else {
+        let podpera = false, nabytek = false;
+        for (let y = Math.min(r.y0, r.y1); y <= Math.max(r.y0, r.y1); y++) for (let x = Math.min(r.x0, r.x1); x <= Math.max(r.x0, r.x1); x++) {
+          const i = y * W + x; if (hra.oznac[i] !== P.OZN.BOURAT) continue;
+          if (hra.stavba[i] === ST.K.PODPERA) podpera = true;
+          const typ = ST.KOD_TYP[hra.stavba[i]]; if (typ && ST.STAVBY[typ].nabytek && hra.zona[i] && ST.NABYTEK_ZONY[typ] === (ST.zonaNa(hra, i) || {}).typ) nabytek = true;
+        }
+        if (podpera) oznam('⚠️ Bez podpěry se strop může zřítit – rozebírej, až pod ním nikdo nebude.', true);
+        else if (nabytek) oznam('🪚 Rozebraný nábytek se vrátí do skladu a sám se zase rozmístí do své místnosti – natrvalo ho odstraníš zmenšením zóny.');
+      }
     } else if (druh === 'zrusit') {
       P.oznac(hra, r.x0, r.y0, r.x1, r.y1, 'zrusit');
       HRA.zrusPlany(hra, r.x0, r.y0, r.x1, r.y1);
-    } else { P.oznac(hra, r.x0, r.y0, r.x1, r.y1, druh); if (druh === 'prio') HRA.prioPlanu(hra, r.x0, r.y0, r.x1, r.y1); }
+    } else {
+      // kopání: síň, která bude potřebovat podpěry, ohlásit i po puštění (pruh při tažení na úzkém displeji snadno přehlédneš)
+      const x0 = Math.max(0, Math.min(r.x0, r.x1)), x1 = Math.min(W - 1, Math.max(r.x0, r.x1)), y0 = Math.max(1, Math.min(r.y0, r.y1)), y1 = Math.min(H - 2, Math.max(r.y0, r.y1));
+      const roz = druh === 'kopat' ? rozpetiPoKopani(hra, x0, y0, x1, y1) : 0;
+      P.oznac(hra, r.x0, r.y0, r.x1, r.y1, druh); if (druh === 'prio') HRA.prioPlanu(hra, r.x0, r.y0, r.x1, r.y1);
+      if (roz) oznam('⚠️ Vyznačená síň bude potřebovat podpěry: ' + podperyText(roz).replace(/^Síň vysoká 3 a víc polí se bez podpěr zřítí\. /, ''));
+      // úzký svislý pruh kopání = pokus o šachtu: obyčejným kopáním se pod sebe kopat nedá (trpaslík by spadl do jámy)
+      else if (druh === 'kopat' && x1 - x0 <= 1 && y1 - y0 >= 2)
+        oznam('⛏️ Pod sebe se obyčejným kopáním kope jen o jedno pole. Svislou šachtu vyznač nástrojem ⛰️ schody (L), nebo rovnou potáhni 🛗 výtah či 🪜 žebřík shora až dolů – šachta se pod nimi vykope sama.');
+    }
     obnovPanel(true);
+  }
+  // pole obdélníku stavby, kam se plán nevešel (po naplanujObdelnik): počet a nejčastější důvod (ST.prekazka)
+  function odmitnutaPole(hra, typ, r, id0) {
+    const duvody = new Map(); let n = 0;
+    const x0 = Math.max(0, Math.min(r.x0, r.x1)), x1 = Math.min(W - 1, Math.max(r.x0, r.x1)), y0 = Math.max(0, Math.min(r.y0, r.y1)), y1 = Math.min(H - 1, Math.max(r.y0, r.y1));
+    for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) {
+      const i = y * W + x, pid = hra.planNa.get(i);
+      if (pid && pid >= id0) continue;               // nový plán tady stojí
+      const d = ST.prekazka(hra, typ, i) || 'sem to nejde';
+      n++; duvody.set(d, (duvody.get(d) || 0) + 1);
+    }
+    const serazene = [...duvody.entries()].sort((a, b) => b[1] - a[1]);
+    return { n, duvod: serazene.length ? serazene[0][0] : '', dalsi: Math.max(0, serazene.length - 1), vaha: serazene.some(([d]) => /Spáč/.test(d)) };
   }
 
   // --- ovládání ---------------------------------------------------------------------
@@ -1425,7 +1767,7 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
     // tlačítko kliknuté myší nesmí držet fokus (zkratky by pak psaly do něj); fokus z klávesnice zůstává
     document.addEventListener('click', e => {
       if (e.detail === 0) return;                                  // Enter/mezerník na tlačítku = klávesnice
-      const b = e.target instanceof Element && e.target.closest('#panel button, #panel [role=button], #panel summary, .lista button, #nastroje button, #paleta button, .zoom button, .mapa-akce button');
+      const b = e.target instanceof Element && e.target.closest('#panel button, #panel [role=button], #panel summary, .lista button, #nastroje button, #oblibene button, #paleta button, .zoom button, .mapa-akce button');
       if (b && !b.closest('dialog') && document.activeElement === b) b.blur();
     });
     const pustil = () => setTimeout(() => { stiskOd = 0; }, 0);   // až po události click
@@ -1545,10 +1887,13 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
     for (const b of document.querySelectorAll('#nastroje button'))
       b.onclick = () => (b.dataset.n === 'stavba' || b.dataset.n === 'zona') ? ukazPaletu(b.dataset.n) : nastav(b.dataset.n);
     $('paleta').addEventListener('click', e => { const b = e.target.closest('button'); if (b && !b.disabled) nastav(b.dataset.n); });
+    $('oblibene').addEventListener('click', e => { const b = e.target.closest('button'); if (b && !b.disabled) nastav(b.dataset.n); });
+    window.addEventListener('resize', () => vykresliOblibene());
     // tlačítka v panelu vybraného pole
     $('info').addEventListener('click', e => {
       const b = e.target.closest('[data-akce]'); if (!b || b.tagName === 'SELECT' || b.disabled) return;
       const hra = st.hra, a = b.dataset.akce;
+      if (a === 'art') { akceArtefaktu(b); return; }
       if (a.startsWith('filtr-') || a === 'sklad-prio') {
         const z = hra.zony.find(z => z.id === +b.dataset.zona); if (!z) return;
         const set = ST.prijimaneDruhy(z);
@@ -1580,12 +1925,28 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
     // dlouhý stisk na dotykovém displeji vyvolá contextmenu – ten stupeň potichu snižovat nesmí
     let typUkazatele = 'mouse';
     $('panel').addEventListener('pointerdown', e => { typUkazatele = e.pointerType || 'mouse'; }, true);
+    // překreslení panelu kartu vymění: fokus z klávesnice vrátit na stejný přepínač (týž trpaslík a práce), ne na <body>
+    const vratFokus = (b, kde, mel) => {
+      if (!mel || b.isConnected) return;
+      const n = $(kde).querySelector(`button.prepinac[data-k="${b.dataset.k}"]` + (b.dataset.id ? `[data-id="${b.dataset.id}"]` : ''));
+      if (n) n.focus();
+    };
+    const zmenStupen = (b, zpet, kde) => {
+      const t = st.hra.trpaslici.find(t => t.id === +b.dataset.id); if (!t) return;
+      const mel = document.activeElement === b;
+      nastavStupen(st.hra, t, b.dataset.k, dalsiStupen(t.povoleno[b.dataset.k] || 0, zpet));
+      obnovPanel(true); vratFokus(b, kde, mel);
+    };
     const stupenKlik = zpet => e => {
       const b = e.target.closest('button.prepinac'); if (!b) return;
       if (zpet) { e.preventDefault(); if (typUkazatele === 'touch') return; }
-      const t = st.hra.trpaslici.find(t => t.id === +b.dataset.id); if (!t) return;
-      nastavStupen(st.hra, t, b.dataset.k, dalsiStupen(t.povoleno[b.dataset.k] || 0, zpet));
-      obnovPanel(true);
+      zmenStupen(b, zpet, e.currentTarget.id);
+    };
+    // z klávesnice: Enter / mezerník = další stupeň (klik), Shift+Enter nebo Backspace = předchozí
+    const stupenZpetKlavesou = (fn) => e => {
+      const b = e.target.closest('button.prepinac'); if (!b) return;
+      if (!((e.key === 'Enter' && e.shiftKey) || e.key === 'Backspace') || e.ctrlKey || e.metaKey || e.altKey) return;
+      e.preventDefault(); e.stopPropagation(); fn(b, e.currentTarget.id);
     };
     const pracovisteZmena = e => {
       const sel = e.target.closest('select[data-id]'); if (!sel) return;
@@ -1596,6 +1957,7 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
     for (const id of ['klan', 'info']) {                  // karta v klanu i detail trpaslíka
       $(id).addEventListener('click', stupenKlik(false));
       $(id).addEventListener('contextmenu', stupenKlik(true));
+      $(id).addEventListener('keydown', stupenZpetKlavesou((b, kde) => zmenStupen(b, true, kde)));
       $(id).addEventListener('change', pracovisteZmena);
     }
     const stupenVsem = zpet => e => {                       // všem stejný stupeň (další / předchozí od většinového)
@@ -1609,13 +1971,17 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
       }
       const b = e.target.closest('button.prepinac'); if (!b) return;
       if (zpet) { e.preventDefault(); if (typUkazatele === 'touch') return; }
-      const k = b.dataset.k, s = dalsiStupen(vetsinovyStupen(st.hra, k), zpet);
+      stupenVsemZmen(b, zpet);
+    };
+    const stupenVsemZmen = (b, zpet) => {
+      const k = b.dataset.k, s = dalsiStupen(vetsinovyStupen(st.hra, k), zpet), mel = document.activeElement === b;
       for (const t of st.hra.trpaslici) nastavStupen(st.hra, t, k, s);
-      obnovPanel(true);
+      obnovPanel(true); vratFokus(b, 'praceVse', mel);
     };
     $('praceVse').addEventListener('click', stupenVsem(false));
     document.querySelector('.predvolby').addEventListener('click', stupenVsem(false));
     $('praceVse').addEventListener('contextmenu', stupenVsem(true));
+    $('praceVse').addEventListener('keydown', stupenZpetKlavesou(b => stupenVsemZmen(b, true)));
     $('prehledZasob').open = sekceOtevrena('zasoby');
     $('prehledZasob').addEventListener('toggle', () => { zapamatujSekci('zasoby', $('prehledZasob').open); obnovPanel(true); });
     $('bilance').addEventListener('toggle', e => { const d = e.target; if (d.dataset && d.dataset.sekce) zapamatujSekci(d.dataset.sekce, d.open); }, true);
@@ -1672,13 +2038,20 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
       else if (k === 'x') nastav('zrusit');
       else if (k === 'c') nastav('kacet');
       else if (k === 'o') nastav('tesat');
+      else if (k === 'd') nastav('bourat');
       else if (k === 'b') ukazPaletu('stavba');
       else if (k === 'z') ukazPaletu('zona');
       else if (k === 'v' || e.key === 'Escape') { nastav('pohled'); st.tah = null; }
     });
 
     // události a obchod
-    $('udalostVolby').addEventListener('click', e => { const b = e.target.closest('button'); if (b) vyresUdalost(+b.dataset.i); });
+    $('udalostVolby').addEventListener('click', e => { const b = e.target.closest('button'); if (b) vyresUdalost(+b.dataset.i, b.dataset.vyber ? vybraniPrichozi() : undefined); });
+    $('udalostVolby').addEventListener('change', () => {          // počet vybraných v tlačítku; bez nikoho se přijmout nedá
+      const b = $('udalostVolby').querySelector('[data-vyber]');
+      if (!b) return;
+      const v = vybraniPrichozi().length, n = $('udalostVolby').querySelectorAll('.vyber-prichozich input').length;
+      b.textContent = `Přijmout vybrané (${v} z ${n})`; b.disabled = !v;
+    });
     $('udalostOkno').addEventListener('cancel', e => e.preventDefault());       // bez volby se okno nezavře
     $('btnKaravana').onclick = otevriObchod;
     $('btnPoplachZap').onclick = () => { HRA.prepniPoplach(st.hra); obnovPanel(true); };
@@ -1711,7 +2084,8 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
     $('obchodOkno').addEventListener('close', () => { if (st.predObchodem) { nastavRychlost(st.predObchodem); st.predObchodem = 0; } });
     // menu
     const menu = $('menu');
-    $('btnMenu').onclick = () => { $('celaHora').checked = st.vseZnamo; menu.showModal(); };
+    // volba velikosti ukazuje skutečnou velikost rozehrané hory (dřívější nepotvrzené klepnutí se zahodí)
+    $('btnMenu').onclick = () => { $('celaHora').checked = st.vseZnamo; for (const r of document.querySelectorAll('input[name=velikost]')) r.checked = r.value === HORA.VELIKOST; menu.showModal(); };
     $('menuZavrit').onclick = () => menu.close();
     const zacni = async seed => {
       menu.close();
@@ -1791,9 +2165,20 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
       stav.classList.toggle('dal-vpravo', stav.scrollLeft + stav.clientWidth < stav.scrollWidth - 2);
       stav.classList.toggle('dal-vlevo', stav.scrollLeft > 2);
     };
-    stav.addEventListener('scroll', stin, { passive: true }); window.addEventListener('resize', stin); stin(); setTimeout(stin, 400);
-    // minimapa v poměru stran hory: plátno W × H, v CSS pevná výška a šířka auto (podle velikosti hory)
+    // ještě šipka „›" u pravého okraje: klepnutí lištu posune (stín sám je málo nápadný)
+    const dal = $('stavDal');
+    const stin2 = () => { stin(); dal.hidden = !stav.classList.contains('dal-vpravo') || getComputedStyle(stav).overflowX !== 'auto'; };
+    dal.onclick = () => stav.scrollBy({ left: Math.max(80, stav.clientWidth * 0.6), behavior: PLYNULE ? 'smooth' : 'auto' });
+    stav.addEventListener('scroll', stin2, { passive: true }); window.addEventListener('resize', stin2); stin2(); setTimeout(stin2, 400);
+    // minimapa v poměru stran hory: plátno W × H, v CSS výška (šířka auto podle velikosti hory); úzká hora (malá 64 polí)
+    // by při pevné výšce měla minimapu jen ~47 px širokou → vyšší, aby byla aspoň MIN_SIRKA široká (nejvýš půl mapy na výšku)
     mini.width = W; mini.height = H;
+    const minimapa = () => {
+      const uzky = matchMedia('(max-width:760px)').matches, zaklad = uzky ? 96 : 144, minS = uzky ? 48 : 72;
+      const v = Math.min(Math.max(zaklad, Math.ceil(minS * H / W)), Math.max(zaklad, Math.floor($('mapaObal').clientHeight * 0.5)));
+      mini.style.height = v + 'px';
+    };
+    minimapa(); window.addEventListener('resize', minimapa);
     for (const b of document.querySelectorAll('.zalozky button')) b.onclick = () => zalozka(b.dataset.zal);
     // záložky šipkami (vzor ARIA tabs): ←/→ další, Home/End krajní; fokus jde s výběrem
     document.querySelector('.zalozky').addEventListener('keydown', e => {
@@ -1804,7 +2189,12 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
       const b = tl[(j + tl.length) % tl.length]; zalozka(b.dataset.zal); b.focus();
     });
     $('hlaseni').onclick = e => { const b = e.target.closest('[data-hlaseni]'); if (b) akceHlaseni(b.dataset.hlaseni); };
-    $('odkazJak').onclick = () => { zalozka('pomoc'); $('jak').open = true; };
+    $('odkazJak').onclick = () => { zalozka('pomoc'); $('jakZacatek').open = true; };
+    // obsah nápovědy: rozbalí oddíl a posune k němu
+    document.querySelector('.jak-obsah').addEventListener('click', e => {
+      const b = e.target.closest('button[data-jak]'), d = b && $(b.dataset.jak); if (!d) return;
+      d.open = true; d.scrollIntoView({ block: 'start', behavior: PLYNULE ? 'smooth' : 'auto' });
+    });
     // jiná záložka ukládá stejnou hru → ukládání se navzájem přepisuje
     window.addEventListener('storage', e => {
       if (e.key !== KLIC_ULOZENI || !e.newValue || st.jinaZalozka || performance.now() - cas0 < 3000) return;   // hned po načtení: uložení odcházející stránky
@@ -1814,6 +2204,19 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
     const naSklad = () => { zalozka('sklad'); const d = $('prehledZasob'); d.open = true; d.scrollIntoView({ block: 'nearest' }); };
     $('zasobyLista').onclick = naSklad;
     $('zasobyLista').onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); e.stopPropagation(); naSklad(); } };
+    $('obrana').onclick = e => {
+      // jen posune pohled a místo krátce zvýrazní – záložka (Přehled) i výběr zůstanou
+      const b = e.target.closest('button#najezdPredpoved'); if (!b || !(+b.dataset.i >= 0)) return;
+      ukazMisto(+b.dataset.i);
+    };
+    $('coDal').onclick = e => {
+      const b = e.target.closest('button'); if (!b) return;
+      if (b.dataset.kus) ukazKus(b.dataset.kus);
+      else if (b.dataset.misto) ukazMisto(+b.dataset.misto);          // 🧭 vodítko: jen posunout pohled
+      else if (b.dataset.akce === 'art') akceArtefaktu(b);
+      else if (b.dataset.akce === 'vyzvi-space') vyzviSpace();
+    };
+    $('coDal').addEventListener('toggle', e => { const d = e.target; if (d.dataset && d.dataset.sekce) zapamatujSekci(d.dataset.sekce, d.open); }, true);
     $('pozor').onclick = e => {
       const b = e.target.closest('button[data-pozor]'); const u = b && st.pozor && st.pozor[+b.dataset.pozor];
       if (!u || u.i === undefined) return;
@@ -1842,6 +2245,7 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
     if (nova) { try { localStorage.removeItem(KLIC_NOVA); } catch (e) { /* nic */ } }
     let poImportu = false;                          // stránka se načetla kvůli importu hory jiné velikosti
     try { poImportu = !!sessionStorage.getItem(KLIC_PREPNUTI + '_import'); sessionStorage.removeItem(KLIC_PREPNUTI + '_import'); } catch (e) { /* nic */ }
+    if (q.has('import')) poImportu = true;          // značka v adrese (bez sessionStorage)
     if (text && !nova) {
       try { ulozena = U.obnov(text); }
       catch (e) {
@@ -1860,7 +2264,7 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
     const prepniVelikost = () => znovuNacti([[KLIC_NOVA, JSON.stringify({ seed, rezim: 'kampan' })], [KLIC_VELIKOST, velUrl]]);
     if (jinaVel && !ulozena && !chybaNacteni && prepniVelikost()) return;
     if (ulozena) zacniHru(ulozena); else if (nova) novaHra(nova.seed >>> 0, nova.rezim); else novaHra(seed);
-    nastav('pohled'); if (ulozena) nastavRychlost(1);
+    nastav('pohled'); if (ulozena && !hraStoji()) nastavRychlost(1);
     zalozka(st.zalozka);
     if (chybaNacteni && poImportu) {
       zalozka('prehled');
@@ -1872,18 +2276,23 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
       ukazHlaseni(`⚠️ Uloženou hru se nepodařilo načíst (${String(chybaNacteni.message).replace(/[<&]/g, '')}). Původní data jsou zálohovaná v prohlížeči a nepřepíšou se; nová hora se zatím neukládá.`,
         [['💾 Stáhnout zálohu', 'zaloha'], ['▶ Hrát novou horu a ukládat', 'pokracuj']]);
       oznam('Uloženou hru se nepodařilo načíst – záloha zůstala, viz Přehled.', true);
-    }
+    } else if (poImportu && ulozena) ukazNacteno(uloziste.cti(KLIC_ULOZENI + '_zaloha') != null);
     // odkaz ?seed= (nebo &velikost=) na jinou horu než rozehraná: zeptat se, než se rozehraná hra přepíše
-    if (ulozena && ((q.get('seed') != null && ulozena.seed !== seed) || jinaVel) && typeof Dialog !== 'undefined') {
+    // (po importu nikdy – stránku načetl import, ne odkaz); bezpečná volba „Pokračovat v rozehrané" má fokus (Enter, Esc)
+    if (!poImportu && ulozena && ((q.get('seed') != null && ulozena.seed !== seed) || jinaVel) && typeof Dialog !== 'undefined') {
       nastavRychlost(0);
-      Dialog.potvrd(`Odkaz vede na jinou horu (${q.get('seed') != null ? 'seed ' + q.get('seed') : 'jiný seed'}${jinaVel ? `, velikost ${HORA.VELIKOSTI[velUrl]}` : ''}), ale v prohlížeči je rozehraná hora ${ulozena.hora.nazev} (den ${HRA.den(ulozena)}). ` +
-        'Začít novou horu podle odkazu? Rozehraná hra se přepíše – případně si ji předtím ulož do souboru (☰).', { ok: 'Nová hora', zrus: 'Pokračovat v rozehrané' })
-        .then(ano => {
-          if (!ano) { nastavRychlost(st.predPauzou || 1); return; }
-          if (jinaVel) { if (!prepniVelikost()) selhaloPrepnuti('Přepnutí velikosti hory'); return; }
-          novaHra(seed);
-        });
-    }
+      const dotaz = Dialog.potvrd(`Odkaz vede na jinou horu (${q.get('seed') != null ? 'seed ' + q.get('seed') : 'jiný seed'}${jinaVel ? `, velikost ${VELIKOST_NAZEV[velUrl] || velUrl} (${HORA.VELIKOSTI[velUrl]})` : ''}), ale v prohlížeči je rozehraná hora ${ulozena.hora.nazev} (den ${HRA.den(ulozena)}). ` +
+        'Začít novou horu podle odkazu? Rozehraná hra se přepíše – případně si ji předtím ulož do souboru (☰).', { ok: 'Nová hora', zrus: 'Pokračovat v rozehrané' });
+      const bezpecne = [...document.querySelectorAll('dialog.dlg-okno[open] .dlg-tlacitka button:not(.hlavni)')].pop();
+      if (bezpecne) bezpecne.focus();
+      vycistiAdresu(false);
+      dotaz.then(ano => {
+        vycistiAdresu(true);                          // rozhodnuto: po přenačtení se už neptat
+        if (!ano) { nastavRychlost(st.predPauzou || 1); return; }
+        if (jinaVel) { if (!prepniVelikost()) selhaloPrepnuti('Přepnutí velikosti hory'); return; }
+        novaHra(seed);
+      });
+    } else vycistiAdresu(true);                       // odkaz je použitý (nebo sedí s rozehranou) – z adresy pryč, i značky přenačtení
     try { sessionStorage.removeItem(KLIC_PREPNUTI); } catch (e) { /* nic */ }   // start se povedl: pojistku proti smyčce vynulovat
     requestAnimationFrame(smycka);
   }

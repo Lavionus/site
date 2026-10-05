@@ -6,6 +6,8 @@
      pár polí od otvoru (slábne s každým krokem),
    - louče: svítí do vzdálenosti 7 polí, šíří se jen volnými poli
      (zeď světlo zastaví), zdi vedle osvětlených polí jsou vidět.
+   Postavená louč navíc odhalí skálu (i s rudou) v kruhu 4 polí
+   kolem sebe; dutiny za skálou zůstanou skryté.
    Výsledek je 0 (tma) až 1 (plné světlo) pro každé pole. Mapy se
    přepočítají jen po změně tvaru hory nebo loučí (hra.svetloZmena).
    Čistá logika bez DOM.
@@ -16,7 +18,7 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
   'use strict';
   const { W, H, M, pevne } = T.hora;
   const N = W * H;
-  const DOSAH_LOUCE = 7, DOSAH_SLUNCE = 4;
+  const DOSAH_LOUCE = 7, DOSAH_SLUNCE = 4, ODHAL_LOUCE = 4;
 
   const pruchozi = (hra, i) => !pevne(hra.hora.teren[i]);
 
@@ -77,7 +79,22 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
     return Math.max(m.slunce[i] * denni(T.hra.hodina(hra)), m.louce[i]);
   }
 
-  T.svetlo = { DOSAH_LOUCE, mapy, denni, svetloNa, prepocitej };
+  // Louč odhalí neznámou skálu v kruhu kolem sebe (ať je vidět, kam kopat a kde je ruda). Odhaluje jen pevná pole:
+  // průhledná (jeskyně, voda, magma) by porušila invariant odhal() – známé průhledné pole má známou celou dutinu –
+  // a louč skrz skálu do dutiny stejně nevidí. Vrací počet nově odhalených polí.
+  function odhalKolemLouce(hra, i) {
+    const x0 = i % W, y0 = i / W | 0, r = ODHAL_LOUCE;
+    let n = 0;
+    for (let y = Math.max(0, y0 - r); y <= Math.min(H - 1, y0 + r); y++)
+      for (let x = Math.max(0, x0 - r); x <= Math.min(W - 1, x0 + r); x++) {
+        const dx = x - x0, dy = y - y0, j = y * W + x;
+        if (dx * dx + dy * dy > r * r + r || hra.znamo[j] || !pevne(hra.hora.teren[j])) continue;
+        hra.znamo[j] = 1; n++;
+      }
+    return n;
+  }
+
+  T.svetlo = { DOSAH_LOUCE, ODHAL_LOUCE, odhalKolemLouce, mapy, denni, svetloNa, prepocitej };
 })(TRP);
 
 if (typeof module !== 'undefined') module.exports = TRP;

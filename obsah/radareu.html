@@ -250,6 +250,111 @@
             cursor: not-allowed;
         }
 
+        /* Špendlíky */
+        .pin-btn-row {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .pin-btn-row .load-btn {
+            flex: 1;
+            padding: 8px 10px;
+        }
+
+        .pin-hint {
+            font-size: 0.8rem;
+            color: var(--text-faint);
+            margin-bottom: 10px;
+        }
+
+        .pin-list {
+            list-style: none;
+            max-height: 240px;
+            overflow-y: auto;
+        }
+
+        .pin-list li {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 6px 4px;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.9rem;
+        }
+
+        .pin-list .pin-name {
+            flex: 1;
+            min-width: 0;
+            cursor: pointer;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        .pin-list .pin-name:hover {
+            color: var(--accent);
+        }
+
+        .pin-list .pin-del {
+            background: none;
+            border: none;
+            color: var(--text-faint);
+            cursor: pointer;
+            font-size: 1rem;
+            padding: 0 4px;
+        }
+
+        .pin-list .pin-del:hover {
+            color: #e53935;
+        }
+
+        .pin-icon {
+            font-size: 28px;
+            line-height: 1;
+            filter: drop-shadow(0 1px 2px rgba(0,0,0,0.6));
+        }
+
+        .pin-popup input {
+            width: 100%;
+            padding: 5px 6px;
+            margin-bottom: 6px;
+            border: 1px solid #bbb;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            background: #fff;
+            color: #222;
+        }
+
+        .pin-popup .pin-popup-btns {
+            display: flex;
+            gap: 6px;
+        }
+
+        .pin-popup button {
+            flex: 1;
+            padding: 4px 8px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            background: #1976d2;
+            color: #fff;
+        }
+
+        .pin-popup button.pin-popup-del {
+            background: #e53935;
+        }
+
+        .pin-popup .pin-coords {
+            font-size: 0.75rem;
+            color: #666;
+            margin-top: 6px;
+        }
+
+        #map.pin-mode, #map.pin-mode .leaflet-interactive {
+            cursor: crosshair;
+        }
+
         .time-labels {
             display: flex;
             justify-content: space-between;
@@ -532,6 +637,15 @@
                 <div id="errorContainer"></div>
                 
                 <div class="panel">
+                    <h3>📍 Špendlíky</h3>
+                    <div class="pin-btn-row">
+                        <button class="load-btn" id="pinModeBtn" onclick="togglePinMode()">📍 Přidat špendlík</button>
+                    </div>
+                    <div class="pin-hint" id="pinHint">Klikněte na tlačítko a pak do mapy. Špendlíky se pamatují v tomto prohlížeči.</div>
+                    <ul class="pin-list" id="pinList"></ul>
+                </div>
+
+                <div class="panel">
                     <h3>Legenda srážek</h3>
                     <div class="legend-item">
                         <div class="legend-color" style="background: rgba(181, 208, 208, 0.8);"></div>
@@ -668,6 +782,187 @@
             }
         }
 
+        // ---------- Špendlíky (uložené v localStorage) ----------
+        const PIN_KEY = 'webapp_radareu_spendliky';
+        let pins = [];               // {id, lat, lng, nazev}
+        const pinMarkers = new Map(); // id -> L.marker
+        let pinMode = false;
+        let newPinId = null;          // čerstvě zapíchnutý – název se hned označí
+
+        const pinIcon = L.divIcon({
+            className: 'pin-icon',
+            html: '📍',
+            iconSize: [28, 28],
+            iconAnchor: [9, 27],
+            popupAnchor: [5, -26]
+        });
+
+        function loadPins() {
+            try {
+                const data = JSON.parse(localStorage.getItem(PIN_KEY) || '[]');
+                if (Array.isArray(data)) {
+                    pins = data
+                        .filter(p => p && typeof p.id === 'string' && Number.isFinite(p.lat) && Number.isFinite(p.lng))
+                        .map(p => ({ id: p.id, lat: p.lat, lng: p.lng, nazev: String(p.nazev || 'Špendlík') }));
+                }
+            } catch (e) {
+                pins = [];
+            }
+        }
+
+        function savePins() {
+            try {
+                localStorage.setItem(PIN_KEY, JSON.stringify(pins));
+            } catch (e) {
+                console.warn('Špendlíky nejde uložit:', e);
+            }
+        }
+
+        function escapeHtml(t) {
+            return String(t).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+        }
+
+        function pinPopupHtml(pin) {
+            return `<div class="pin-popup">
+                <input type="text" maxlength="60" value="${escapeHtml(pin.nazev)}" data-pin="${pin.id}" placeholder="Název">
+                <div class="pin-popup-btns">
+                    <button onclick="renamePinFromPopup('${pin.id}')">Uložit</button>
+                    <button class="pin-popup-del" onclick="deletePin('${pin.id}')">Smazat</button>
+                </div>
+                <div class="pin-coords">${pin.lat.toFixed(4)}, ${pin.lng.toFixed(4)}</div>
+            </div>`;
+        }
+
+        function addPinMarker(pin) {
+            const marker = L.marker([pin.lat, pin.lng], {
+                icon: pinIcon,
+                draggable: true
+            }).addTo(map);
+
+            marker.bindPopup(() => pinPopupHtml(pin));
+            marker.bindTooltip(() => escapeHtml(pin.nazev), { direction: 'top', offset: [5, -24] });
+
+            marker.on('popupopen', e => {
+                const input = e.popup.getElement().querySelector('input');
+                if (!input) return;
+                input.addEventListener('keydown', ev => {
+                    if (ev.key === 'Enter') renamePinFromPopup(pin.id);
+                });
+                if (newPinId === pin.id) {
+                    newPinId = null;
+                    input.select();
+                    input.focus();
+                }
+            });
+
+            marker.on('dragend', () => {
+                const ll = marker.getLatLng();
+                pin.lat = ll.lat;
+                pin.lng = ll.lng;
+                savePins();
+                renderPinList();
+            });
+
+            pinMarkers.set(pin.id, marker);
+            return marker;
+        }
+
+        function renderPinList() {
+            const list = document.getElementById('pinList');
+            list.innerHTML = '';
+            if (pins.length === 0) {
+                list.innerHTML = '<li style="color: var(--text-faint); border: none;">Zatím žádné špendlíky</li>';
+                return;
+            }
+            pins.forEach(pin => {
+                const li = document.createElement('li');
+                const name = document.createElement('span');
+                name.className = 'pin-name';
+                name.textContent = '📍 ' + pin.nazev;
+                name.title = `${pin.lat.toFixed(4)}, ${pin.lng.toFixed(4)}`;
+                name.onclick = () => {
+                    map.flyTo([pin.lat, pin.lng], Math.max(map.getZoom(), 8));
+                    map.once('moveend', () => pinMarkers.get(pin.id)?.openPopup());
+                    if (isMobile && sidebarVisible) toggleSidebar();
+                };
+                const del = document.createElement('button');
+                del.className = 'pin-del';
+                del.textContent = '✕';
+                del.title = 'Smazat špendlík';
+                del.onclick = () => deletePin(pin.id);
+                li.append(name, del);
+                list.appendChild(li);
+            });
+        }
+
+        function setPinMode(on) {
+            pinMode = on;
+            const btn = document.getElementById('pinModeBtn');
+            btn.classList.toggle('active', on);
+            btn.textContent = on ? '✋ Zrušit přidávání' : '📍 Přidat špendlík';
+            document.getElementById('pinHint').textContent = on
+                ? 'Klikněte do mapy, kam špendlík zapíchnout (Esc zruší).'
+                : 'Klikněte na tlačítko a pak do mapy. Špendlíky se pamatují v tomto prohlížeči.';
+            document.getElementById('map').classList.toggle('pin-mode', on);
+        }
+
+        function togglePinMode() {
+            setPinMode(!pinMode);
+            if (pinMode && isMobile && sidebarVisible) toggleSidebar();
+        }
+
+        function addPin(latlng) {
+            const pin = {
+                id: Date.now().toString(36) + Math.random().toString(36).slice(2, 6),
+                lat: latlng.lat,
+                lng: latlng.lng,
+                nazev: 'Špendlík ' + (pins.length + 1)
+            };
+            newPinId = pin.id;
+            pins.push(pin);
+            savePins();
+            renderPinList();
+            addPinMarker(pin).openPopup();
+        }
+
+        function renamePinFromPopup(id) {
+            const pin = pins.find(p => p.id === id);
+            const input = document.querySelector(`.pin-popup input[data-pin="${id}"]`);
+            if (!pin || !input) return;
+            pin.nazev = input.value.trim() || pin.nazev;
+            savePins();
+            renderPinList();
+            const marker = pinMarkers.get(id);
+            if (marker) marker.closePopup();
+        }
+
+        function deletePin(id) {
+            pins = pins.filter(p => p.id !== id);
+            const marker = pinMarkers.get(id);
+            if (marker) {
+                map.removeLayer(marker);
+                pinMarkers.delete(id);
+            }
+            savePins();
+            renderPinList();
+        }
+
+        function initPins() {
+            loadPins();
+            pins.forEach(addPinMarker);
+            renderPinList();
+
+            map.on('click', e => {
+                if (!pinMode) return;
+                addPin(e.latlng);
+                setPinMode(false);
+            });
+
+            document.addEventListener('keydown', e => {
+                if (e.key === 'Escape' && pinMode) setPinMode(false);
+            });
+        }
+
         function initMap() {
             try {
                 console.log('Inicializace mapy...');
@@ -714,6 +1009,8 @@
                     imperial: false,
                     updateWhenIdle: false
                 }).addTo(map);
+
+                initPins();
 
                 console.log('Mapa inicializována');
 
@@ -803,46 +1100,76 @@
             }
         }
 
+        // RainViewer dodává dlaždice jen do zoomu 7 a povoluje ~500 dlaždic
+        // za minutu. Proto v mapě držíme jen aktuální a následující snímek
+        // (ne všechny najednou) a nad zoomem 7 se dlaždice jen zvětšují.
+        const RADAR_MAX_NATIVE_ZOOM = 7;
+        const RADAR_OPACITY = 0.7;
+
         function preloadRadarLayers() {
             // Odeber případné staré vrstvy
             cleanupRadarLayers();
 
-            // Vytvoř a přednačti všechny snímky najednou – vrstvy zůstanou
-            // v mapě s nulovou průhledností, takže animace už nic nestahuje
+            // Vrstvy jen vytvoříme, do mapy je přidává showRadarFrame
             radarLayers = radarFrames.map(frame => {
                 const tileUrl = `https://tilecache.rainviewer.com${frame.path}/256/{z}/{x}/{y}/2/1_1.png`;
-                const layer = L.tileLayer(tileUrl, {
+                return L.tileLayer(tileUrl, {
                     opacity: 0,
+                    maxNativeZoom: RADAR_MAX_NATIVE_ZOOM,
+                    maxZoom: 18,
                     attribution: 'Radarová data: RainViewer',
                     className: 'radar-layer',
                     pane: 'overlayPane'
                 });
-                layer.addTo(map);
-                return layer;
             });
         }
 
         function restoreRadarLayers() {
             console.log('Obnovuji radarové vrstvy po změně mapového podkladu...');
-
-            radarLayers.forEach((layer, i) => {
-                if (!map.hasLayer(layer)) {
-                    layer.addTo(map);
-                }
-                layer.setOpacity(i === currentFrame ? 0.7 : 0);
-            });
+            showRadarFrame(currentFrame);
         }
 
         function showRadarFrame(frameIndex) {
             if (!radarLayers[frameIndex]) return;
 
-            // Plynulý přechod: jen přepneme průhlednost, dlaždice jsou
-            // už přednačtené a CSS transition se postará o crossfade
-            radarLayers.forEach((layer, i) => {
-                layer.setOpacity(i === frameIndex ? 0.7 : 0);
-            });
+            const n = radarLayers.length;
+            const nextIndex = (frameIndex + 1) % n;
+            const prevLayer = currentRadarLayer;
+            const layer = radarLayers[frameIndex];
+            const next = radarLayers[nextIndex];
 
-            currentRadarLayer = radarLayers[frameIndex];
+            if (!map.hasLayer(layer)) layer.addTo(map);
+            layer.setOpacity(RADAR_OPACITY);
+
+            // Následující snímek se přednačte neviditelně kvůli plynulé animaci
+            if (next !== layer) {
+                if (!map.hasLayer(next)) next.addTo(map);
+                next.setOpacity(0);
+            }
+
+            if (prevLayer && prevLayer !== layer && prevLayer !== next) {
+                prevLayer.setOpacity(0);
+            }
+
+            currentRadarLayer = layer;
+            nextRadarLayer = next;
+
+            // Ostatní vrstvy hned odeber z mapy, aby se při zoomu
+            // nestahovaly dlaždice všech snímků. Jen právě mizející
+            // předchozí snímek počká na doběhnutí crossfadu.
+            radarLayers.forEach(l => {
+                if (l !== layer && l !== next && l !== prevLayer && map.hasLayer(l)) {
+                    map.removeLayer(l);
+                }
+            });
+            if (prevLayer && prevLayer !== layer && prevLayer !== next) {
+                setTimeout(() => {
+                    if (prevLayer !== currentRadarLayer && prevLayer !== nextRadarLayer && map.hasLayer(prevLayer)) {
+                        map.removeLayer(prevLayer);
+                    }
+                }, 400);
+            }
+
             updateCurrentFrameInfo(frameIndex);
         }
 

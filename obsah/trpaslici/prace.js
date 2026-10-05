@@ -16,7 +16,7 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
   const C = T.cesty;
   const N = W * H;
 
-  const OZN = { NIC: 0, KOPAT: 1, SCHODY: 2, KACET: 3, TESAT: 4 };
+  const OZN = { NIC: 0, KOPAT: 1, SCHODY: 2, KACET: 3, TESAT: 4, BOURAT: 5 };
   // otesání: zadní stěna vykopané prostory (pozadí → kamenný obklad) nebo líc nevykopané horniny – podlaha, strop,
   // boční stěna (terén → opracovaný kámen, ruda v něm se vytěží); hliněná stěna či líc spotřebuje kámen
   const OTESANE = [M.ZED, M.CIHLA, M.RUNA], ZA_KAMEN = [M.HLINA, M.JIL, M.SUT];
@@ -125,6 +125,8 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
     const t = hra.hora.teren[i];
     return pevne(t) && t !== M.PODLOZI && i !== (hra.hora.srdce.y + 1) * W + hra.hora.srdce.x;   // podstavec Výhně předků drží
   }
+  // co jde zbourat: postavená stavba (dílna, studna, nábytek, louč, podpěra…), žebřík nebo výtah na známém poli
+  const lzeBourat = (hra, i) => !!hra.znamo[i] && (!!hra.stavba[i] || hra.lez[i] === 2 || hra.lez[i] === 3);
   function oznac(hra, x0, y0, x1, y1, druh) {
     if (x0 > x1) [x0, x1] = [x1, x0];
     if (y0 > y1) [y0, y1] = [y1, y0];
@@ -140,6 +142,7 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
         continue;
       }
       if (druh === 'nekacet') { if (hra.oznac[i] === OZN.KACET) { hra.oznac[i] = 0; n++; } continue; }
+      if (druh === 'bourat') { if (lzeBourat(hra, i) && hra.oznac[i] !== OZN.BOURAT) { hra.oznac[i] = OZN.BOURAT; hra.prio[i] = 0; n++; } continue; }
       if (druh === 'tesat') { if (lzeTesat(hra, i) && kTesani(hra, i) && !hra.oznac[i]) { hra.oznac[i] = OZN.TESAT; n++; } continue; }
       if (!lzeKopat(hra, i)) continue;
       const v = druh === 'schody' ? OZN.SCHODY : OZN.KOPAT;
@@ -343,18 +346,26 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
       if (t[v.i] === M.VODA || (v.i + W < N && t[v.i + W] === M.VODA && !C.stojne(hra, v.i))) v.i = sucheMisto(hra, v.i);
     }
   }
-  // nejbližší suché stojné pole od i (BFS přes volno a vodu); když žádné není, i
+  // nejbližší suché stojné pole od i (BFS přes známé volno a vodu – neprozkoumanou jeskyní se věc neprotáhne);
+  // když žádné není, i. Neúspěch se pamatuje do změny tahu nebo tvaru hory (usadVeci se volá mnohokrát za tah
+  // a věc ve vodě bez suchého břehu dřív pokaždé prohledala tisíce polí); neukládá se – výsledek je stejný
+  const SUCHE_LIMIT = 1500;
+  const sucheMarne = new WeakMap();
   function sucheMisto(hra, i) {
     if (hra.hora.teren[i] === M.VZDUCH && C.stojne(hra, i)) return i;
+    let c = sucheMarne.get(hra);
+    if (!c || c.tik !== hra.tik || c.zmena !== hra.svetloZmena) sucheMarne.set(hra, c = { tik: hra.tik, zmena: hra.svetloZmena, pole: new Set() });
+    if (c.pole.has(i)) return i;
     const t = hra.hora.teren, videno = new Set([i]), q = [i];
-    for (let h = 0; h < q.length && h < 4000; h++) {
+    for (let h = 0; h < q.length && h < SUCHE_LIMIT; h++) {
       const a = q[h], x = a % W;
       for (const j of [a - W, x > 0 ? a - 1 : -1, x < W - 1 ? a + 1 : -1, a + W]) {
-        if (j < 0 || j >= N || videno.has(j) || pevne(t[j]) || t[j] === M.MAGMA) continue;
+        if (j < 0 || j >= N || videno.has(j) || pevne(t[j]) || t[j] === M.MAGMA || !hra.znamo[j]) continue;
         if (t[j] === M.VZDUCH && C.stojne(hra, j)) return j;
         videno.add(j); q.push(j);
       }
     }
+    c.pole.add(i);
     return i;
   }
 
@@ -376,7 +387,7 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
   // zásoby ve skladech po druzích
   function zasoby(hra) {
     const z = {};
-    for (const v of hra.veci) if (!v.nese && T.stavby.jeSklad(hra, v.i)) z[v.druh] = (z[v.druh] || 0) + 1;
+    for (const v of hra.veci) if (!v.nese && (T.stavby.jeSklad(hra, v.i) || T.stavby.vJidelne(hra, v.i, v.druh))) z[v.druh] = (z[v.druh] || 0) + 1;
     return z;
   }
 
@@ -388,7 +399,7 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
     return ((t ^ t >>> 14) >>> 0) / 4294967296;
   }
 
-  T.prace = { OZN, VECI, DOSAH, oznac, lzeTesat, tesatZaKamen, kTesani, jePodlaha, jeLic, licZDosahu, otesejPodlahu, lzeKopat, cilKopani, vDosahu, dobaKopani, TVRDA, BEZ_ZELEZA, zeleznyKrumpac, tvrdaSkala, vykopej, usadVeci,
+  T.prace = { lzeBourat, OZN, VECI, DOSAH, oznac, lzeTesat, tesatZaKamen, kTesani, jePodlaha, jeLic, licZDosahu, otesejPodlahu, lzeKopat, cilKopani, vDosahu, dobaKopani, TVRDA, BEZ_ZELEZA, zeleznyKrumpac, tvrdaSkala, vykopej, usadVeci,
               podepreno, sucheMisto, puvodni, rozpetiNa, veciNa, volneVeci, volnaVec, zasoby, nahoda, novaVec, tok, skacej, DRUH_RUDY: Z_RUDY };
 })(TRP);
 

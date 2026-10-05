@@ -7,9 +7,11 @@
    láká lepší karavany a víc nových trpaslíků.
    Karavana přijede 8. den jara a 6. den podzimu a zůstane 2 dny.
    Obchod je výměnný: hodnota prodaného musí pokrýt hodnotu koupeného.
-   Milníky slávy (120, 200, 250, 330) jednou odemknou odměnu: zbraně
-   a vzácné zboží v karavanách, zkušené migranty a hvězdnou rudu, písně
-   bardů, čestnou stráž. Odemčené milníky jsou v hra.odemceno (slava120,
+   Milníky slávy (120, 200, 250, 330, 500, 650) jednou odemknou odměnu:
+   zbraně a vzácné zboží v karavanách, zkušené migranty a hvězdnou rudu,
+   písně bardů, čestnou stráž, cech mistrů (rychlejší dílny, dražší výkup),
+   legendu hor (nálada, veteráni). Migrantů přijde podle slávy, ale jen
+   do volných postelí v ložnicích (mistoVKlanu, strop MAX_KLAN). Odemčené milníky jsou v hra.odemceno (slava120,
    slava200, slava300 a slava400 – klíče zůstaly z dřívějších prahů 300/400).
    Hvězdnou rudu karavana veze i tehdy, když ji potřebuje Klíč k Srdci.
    Čistá logika bez DOM.
@@ -56,12 +58,13 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
   // karavana prodává dráž, než kupuje; sláva zlepší ceny
   const cenaNakup = druh => Math.ceil((HODNOTA[druh] || 1) * 1.5);
   function cenaProdej(hra, v) {
-    const bonus = 1 + Math.min(0.5, (hra.slava || 0) / 200);
+    const bonus = 1 + Math.min(0.5, (hra.slava || 0) / 200) + (hra.odemceno && hra.odemceno.slava500 ? 0.2 : 0);   // milník 500: cech vykupuje dráž
     return Math.max(1, Math.floor(hodnotaVeci(v) * (CENNOSTI.includes(v.druh) ? 1.2 : 1) * bonus));
   }
 
   // potraviny a pití ve velkém (od 10 kusů) karavana vykoupí o čtvrtinu dráž – přebytek farem jde zpeněžit
-  const HROMADNE = ['jidlo', 'pivo', 'houby', 'jecmen'], HROMADNE_OD = 10, HROMADNE_BONUS = 1.25;
+  // (i železné pruty – přebytek z tavíren jde zpeněžit, dřív se jich hromadilo 73–145 bez užitku)
+  const HROMADNE = ['jidlo', 'pivo', 'houby', 'jecmen', 'prut_zelezo'], HROMADNE_OD = 10, HROMADNE_BONUS = 1.25;
   function prodejDruhu(hra, druh, vv, n) {          // cena za n nejcennějších kusů vv (seřazené sestupně)
     let s = 0;
     for (let j = 0; j < n; j++) s += cenaProdej(hra, vv[j]);
@@ -169,11 +172,22 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
     return { ok: true, zprava: 'Obchod uzavřen.', dam, chci };
   }
 
-  // noví trpaslíci: skupina podle slávy (1–5), přednost mají chybějící řemesla
+  // Místo v klanu (pro migranty a UI): strop MAX_KLAN trpaslíků a postele v ložnicích. Migrantů přijde podle slávy
+  // 1 + sláva/60 (nejvýš 4), ale jen do volných postelí + 1 (jeden přespí na zemi) a do stropu. Dřív 1 + sláva/30 (max 5)
+  // bez ohledu na bydlení: padlé hned nahradili noví a strop 40 klan měl kolem 8. roku – smrt nic nestála.
+  const MAX_KLAN = 40, SLAVA_NA_MIGRANTA = 60, MAX_MIGRANTU = 4;
+  function mistoVKlanu(hra) {
+    const n = hra.trpaslici.length, pr = T.potreby.prostredi(hra);
+    const postele = pr.posteleLoznice || 0, volnePostele = Math.max(0, postele - n);
+    const zeSlavy = Math.max(1, Math.min(MAX_MIGRANTU, 1 + Math.floor((hra.slava || 0) / SLAVA_NA_MIGRANTA)));
+    const volno = Math.max(0, Math.min(MAX_KLAN - n, volnePostele + 1));
+    const migrantu = Math.min(zeSlavy, volno);
+    return { pocet: n, max: MAX_KLAN, postele, volnePostele, zeSlavy, volno, migrantu,
+             duvod: n >= MAX_KLAN ? `klan je plný (${MAX_KLAN} trpaslíků)` : migrantu < zeSlavy ? `chybí postele v ložnicích (volných ${volnePostele})` : '' };
+  }
+  // noví trpaslíci: skupina podle slávy a volných postelí (mistoVKlanu), přednost mají chybějící řemesla
   function skupinaMigrantu(hra) {
-    const n = Math.max(1, Math.min(5, 1 + Math.floor((hra.slava || 0) / 30)));
-    const volne = 40 - hra.trpaslici.length;
-    const pocet = Math.min(n, volne);
+    const pocet = mistoVKlanu(hra).migrantu;
     const ma = new Set(hra.trpaslici.map(t => t.prof));
     const chybi = Object.keys(T.hra.PROFESE).filter(p => !ma.has(p));
     const lide = [];
@@ -181,17 +195,24 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
       const prof = chybi.length && P.nahoda(hra) < 0.6 ? chybi.splice(Math.floor(P.nahoda(hra) * chybi.length), 1)[0]
         : T.hra.nahodnaProfese(hra);
       const l = { jmeno: T.hra.noveJmeno(hra, lide.map(l => l.jmeno)), prof };
-      if (hra.odemceno && hra.odemceno.slava200 && P.nahoda(hra) < 0.5) l.zkuseny = true;   // milník slávy: zkušení řemeslníci
+      if (hra.odemceno && (hra.odemceno.slava650 || (hra.odemceno.slava200 && P.nahoda(hra) < 0.5))) l.zkuseny = true;   // milníky slávy: zkušení řemeslníci
       lide.push(l);
     }
     return lide;
   }
   // zkuseny: +3 kopání a boj; vyzbrojeny: přinese válečnou sekeru a zbroj
   function prijmi(hra, lide) {
-    const kde = naOkraji(hra);
+    const kde = naOkraji(hra), stari = hra.trpaslici.slice(), novi = [];
     for (const l of lide) {
       const t = T.hra.pridejTrpaslika(hra, l.jmeno, l.prof, kde);
-      if (l.zkuseny || l.vyzbrojeny) { t.dov.kopani = Math.min(20, t.dov.kopani + 3); t.dov.boj = Math.min(10, (t.dov.boj || 0) + 3); }
+      // přátelé: kdo přišel spolu, a jeden ze starousedlíků (podle id – bez náhody)
+      for (const u of novi) T.hra.spratel(t, u);
+      if (stari.length) T.hra.spratel(t, stari[t.id % stari.length]);
+      novi.push(t);
+      if (l.zkuseny || l.vyzbrojeny) {
+        t.dov.kopani = Math.min(20, t.dov.kopani + 3); t.dov.boj = Math.min(10, (t.dov.boj || 0) + 3);
+        for (const k of ['stavba', 'noseni', 'kaceni', 'pole', 'remeslo', 'tesani']) if (t.dov[k] || k === 'noseni') t.dov[k] = Math.min(10, (t.dov[k] || 0) + 3);   // i jeho řemeslo
+      }
       if (l.vyzbrojeny) {
         t.zbran = { druh: 'valecna_sekera', mat: 'zelezo', stav: 100 }; t.zbroj = { druh: 'zbroj', mat: 'zelezo', stav: 100 };
         t.povoleno.hlidat = 1;
@@ -206,6 +227,8 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
     { slava: 200, klic: 'slava200', text: '🎺 Mistři řemesel slyšeli o vaší hoře – noví příchozí bývají zkušení a karavany vozí i hvězdnou rudu.' },
     { slava: 250, klic: 'slava300', text: '🎺 Bardi skládají písně o vašem klanu! Klan je hrdý a jeho jméno zná celý kraj.' },
     { slava: 330, klic: 'slava400', text: '🎺 Králové hor posílají čestnou stráž: dva zkušení strážci se zbraní a zbrojí čekají u brány.' },
+    { slava: 500, klic: 'slava500', text: '🎺 Cech mistrů přijal klan mezi slavné: mistři učí vaše řemeslníky – dílny vyrábějí 1,15× rychleji a karavany vykupují o pětinu dráž.' },
+    { slava: 650, klic: 'slava650', text: '👑 Legenda hor! Klan patří k nejslavnějším v kraji: každý je na to hrdý (nálada +4 natrvalo), noví příchozí jsou zkušení mistři a králové posílají tři veterány se zbraní a zbrojí.' },
   ];
   function hlidejMilniky(hra) {
     if (!hra.odemceno || !hra.trpaslici.length) return;
@@ -214,15 +237,23 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
       hra.odemceno[m.klic] = true;
       T.hra.zprava(hra, 'objev', m.text);
       if (m.klic === 'slava300') for (const t of hra.trpaslici) T.potreby.vzpominka(hra, t, 'písně o našem klanu', 6, 4);
-      if (m.klic === 'slava400' && !hra.udalost && hra.trpaslici.length < 40) {
-        const lide = [0, 1].map(() => ({ jmeno: T.hra.noveJmeno(hra, []), prof: 'strazce', vyzbrojeny: true }));
-        lide[1].jmeno = T.hra.noveJmeno(hra, [lide[0].jmeno]);
-        T.udalosti.zacni(hra, 'migranti', { lide: lide.slice(0, 40 - hra.trpaslici.length) });
+      // čestná stráž (330: 2, 650: 3 veteráni) – jen do stropu klanu (postele nepotřebují, přinesou si houně); bez místa sláva
+      const straz = m.klic === 'slava400' ? 2 : m.klic === 'slava650' ? 3 : 0;
+      if (straz && !hra.udalost) {
+        const lide = [];
+        for (let k = 0; k < Math.min(straz, MAX_KLAN - hra.trpaslici.length); k++) lide.push({ jmeno: T.hra.noveJmeno(hra, lide.map(l => l.jmeno)), prof: 'strazce', vyzbrojeny: true });
+        if (lide.length) T.udalosti.zacni(hra, 'migranti', { lide });
+        else { hra.slavaBonus = (hra.slavaBonus || 0) + 10; T.hra.zprava(hra, 'objev', 'Čestná stráž se v plné hoře nevejde – králové místo ní posílají dary (sláva +10).'); }
       }
       return;                                        // jeden milník za den
     }
   }
 
+  // milníky slávy pro UI: [{ slava, klic, text, splneno }] a další nesplněný
+  function milnikyInfo(hra) {
+    const sez = MILNIKY.map(m => ({ slava: m.slava, klic: m.klic, text: m.text, splneno: !!(hra.odemceno && hra.odemceno[m.klic]) }));
+    return { seznam: sez, dalsi: sez.find(m => !m.splneno) || null, slava: hra.slava || 0 };
+  }
   // jednou za den (na začátku dne)
   function novyDen(hra) {
     hra.slava = spocitejSlavu(hra);
@@ -240,12 +271,15 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
           if (z && z.typ === 'pole') { hra.uroda[i] = 0; spaleno++; }
         }
         if (spaleno) T.hra.zprava(hra, 'varovani', `Mráz spálil úrodu na ${spaleno} polích.`);
-      } else if (!hra.udalost && hra.trpaslici.length < 40 && hra.trpaslici.length > 0) {
+      } else if (!hra.udalost && hra.trpaslici.length > 0 && !hra.oblehani) {
+        // bez místa (strop, žádná volná postel) přijdou místo migrantů hosté s darem
         const lide = skupinaMigrantu(hra);
         if (lide.length) T.udalosti.zacni(hra, 'migranti', { lide });
+        else T.udalosti.zacni(hra, 'hoste', { proc: mistoVKlanu(hra).duvod || 'v hoře není místo' });
       }
     }
-    if (DNY_KARAVANY.includes(d) && !hra.karavana && hra.trpaslici.length) {
+    if (DNY_KARAVANY.includes(d) && !hra.karavana && hra.trpaslici.length && hra.oblehani) T.hra.zprava(hra, 'obchod', '🐫 Karavana se otočila – údolí obléhají goblini.');
+    else if (DNY_KARAVANY.includes(d) && !hra.karavana && hra.trpaslici.length) {
       hra.karavana = novaKaravana(hra);
       T.hra.zvuk(hra, 'zvonek');
       T.hra.zprava(hra, 'obchod', (hra.odemceno && hra.odemceno.slava120 ? '🐫 Do údolí dorazila vyhlášená karavana se zbraněmi a vzácným zbožím!' : '🐫 Do údolí dorazila karavana!') +
@@ -263,7 +297,7 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
 
   T.obdobi = { DNI_OBDOBI, DNI_ROKU, OBDOBI, DNY_KARAVANY, HODNOTA, CENNOSTI, den, denRoku, obdobi, rok, zima,
                hodnotaVeci, cenaNakup, cenaProdej, prodejDruhu, HROMADNE, HROMADNE_OD, HROMADNE_BONUS, spocitejSlavu, naProdej, uBrany, naOkraji, novaKaravana, obchod,
-               skupinaMigrantu, prijmi, popisPrichoziho, MILNIKY, hlidejMilniky, novyDen, tik };
+               skupinaMigrantu, prijmi, popisPrichoziho, MILNIKY, hlidejMilniky, novyDen, tik, MAX_KLAN, mistoVKlanu, milnikyInfo };
 })(TRP);
 
 if (typeof module !== 'undefined') module.exports = TRP;

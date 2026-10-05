@@ -1653,6 +1653,12 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
     for (const [x, y, w] of [[3, 4, 5], [9, 4, 4], [3, 8, 3], [7, 8, 6], [3, 12, 5], [9, 12, 4]]) k.obd(x, y, w, 1, 'rgba(190,210,230,.55)');
     return k.hotovo();
   }
+  function oznaceniBourani() {                    // zbourat: červený čárkovaný rám a šikmý kříž přes stavbu
+    const k = kresba(S, S);
+    for (let i = 0; i < S; i++) for (const [x, y] of [[i, 0], [i, S - 1], [0, i], [S - 1, i]]) if ((i >> 1) % 2 === 0) k.bod(x, y, 'rgba(255,95,85,.95)');
+    for (let i = 3; i <= 12; i++) { k.bod(i, i, 'rgba(255,95,85,.8)'); k.bod(15 - i, i, 'rgba(255,95,85,.8)'); }
+    return k.hotovo('rgba(40,0,0,.6)');
+  }
   function praskliny(stupen) {
     if (J > 1) return na4(prasklinyJemne(stupen));
     const r = mulberry32(smichej(stupen, 5, 5));
@@ -1715,6 +1721,15 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
     return k.hotovo(OBRYS);
   }
 
+  function podperaKamen() {                        // podpěra vytesaná ze skály: kamenný sloup s hlavicí a patkou, spáry kvádrů
+    const k = kresba(S, S), Kk = KAMEN;
+    k.obd(1, 0, 14, 3, Kk[1]); k.obd(1, 0, 14, 1, Kk[2]); k.obd(1, 2, 14, 1, Kk[0]);                     // hlavice
+    k.obd(5, 3, 6, 11, Kk[1]); k.obd(5, 3, 1, 11, Kk[2]); k.obd(10, 3, 1, 11, Kk[0]);                     // dřík
+    for (const y of [6, 10]) k.obd(6, y, 4, 1, Kk[0]);                                                    // spáry
+    k.bod(7, 8, Kk[0]); k.bod(8, 12, Kk[0]);
+    k.obd(3, 14, 10, 2, Kk[1]); k.obd(3, 14, 10, 1, Kk[2]);                                               // patka
+    return k.hotovo(OBRYS);
+  }
   // dveře: 0 celé, 1 naštípnuté (1–3 rány), 2 rozbité (4+ ran), 3 otevřené (někdo prochází)
   function dvere(stav) {
     const k = kresba(S, S), D = DREVO;
@@ -2954,7 +2969,7 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
     a.schody = schodiste();
     a.ozn = [null, oznaceni(false), oznaceni(true)].map(c => c && c.width < S * J ? na4(c) : c);   // jemná značka má 32 px
     a.prask = [0, 1, 2].map(praskliny);
-    a.zebrik = zebrik(); a.vytah = vytah(); a.plosina = plosina(); a.studna = studna(); a.podpera = podpera(); a.dvere = [0, 1, 2, 3].map(dvere); a.louc = [0, 1, 2, 3, 4, 5].map(f => louc(f));
+    a.zebrik = zebrik(); a.vytah = vytah(); a.plosina = plosina(); a.studna = studna(); a.podpera = podpera(); a.podperaKamen = podperaKamen(); a.dvere = [0, 1, 2, 3].map(dvere); a.louc = [0, 1, 2, 3, 4, 5].map(f => louc(f));
     a.dilna = {};
     for (const typ of ['tesarna', 'kamenictvi', 'kuchyne', 'pivovar', 'milir', 'tavirna', 'kovarna', 'brusirna', 'magmovyhen', 'zbrojnice', 'runova_kovarna'])
       a.dilna[typ] = [0, 1, 2, 3].map(f => dilna(typ, f));
@@ -2976,6 +2991,7 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
     a.obj[O.PAREZ] = [0, 1, 2, 3].map(parez);
     a.ozn[3] = oznaceniKaceni();
     a.ozn[4] = oznaceniTesani();
+    a.ozn[5] = oznaceniBourani();
     a.prio = znackaPriority();
     a.zima = {};
     for (const o of ZIMA_OBJ) a.zima[o] = a.obj[o].map((c, v) => zasnez(c, v));        // prvních 4 z 16 variant (ostatní líně)
@@ -3219,6 +3235,25 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
     for (const b of bloky.m.values()) { b.c.width = b.c.height = 0; }   // plátno uvolnit hned (ne až s úklidem)
     bloky.m.clear(); bloky.a = bloky.hora = null;
   }
+  // vlhká skála u vody: dlaždice (i s okrajovou maskou) ztmavená do modra s mokrými šmouhami – jen tam, kde je
+  // hornina (source-atop), takže vykousnuté okraje zůstanou průhledné. Cache podle zdrojového plátna a varianty.
+  const vlhkeCache = new WeakMap();
+  function vlhkaDlazdice(src, v) {
+    let m = vlhkeCache.get(src);
+    if (!m) { m = []; vlhkeCache.set(src, m); }
+    if (m[v]) return m[v];
+    const c = platno(src.width, src.height), x = c.getContext('2d'), k = src.width / S;
+    x.drawImage(src, 0, 0);
+    x.globalCompositeOperation = 'source-atop';
+    x.fillStyle = 'rgba(18,44,78,0.28)'; x.fillRect(0, 0, c.width, c.height);
+    for (let s = 0; s < 3; s++) {                  // stékající vlhkost: svislé lesklé šmouhy
+      const sx = ((smichej(v, s, 11) >>> 0) % 14) + 1, sy = (smichej(v, s, 12) >>> 0) % 6, d = 4 + (smichej(v, s, 13) >>> 0) % 7;
+      x.fillStyle = 'rgba(150,200,235,0.20)'; x.fillRect(sx * k, sy * k, k, d * k);
+      x.fillStyle = 'rgba(200,230,255,0.30)'; x.fillRect(sx * k, (sy + d - 1) * k, k, k);   // kapka na konci šmouhy
+    }
+    m[v] = c;
+    return c;
+  }
   function podpisBloku(hora, znamo, vse, lez, bx, by, glob) {
     const { teren, pozadi, ruda } = hora;
     const xa = Math.max(0, bx * BLOK - 1), xb = Math.min(W - 1, bx * BLOK + BLOK), ya = Math.max(0, by * BLOK - 1), yb = Math.min(H - 1, by * BLOK + BLOK);
@@ -3315,6 +3350,31 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
       ctx.fillStyle = barva; ctx.fillText(text, tx, ty);
     }
   }
+  // vodítko z „Co dál?" (pribeh.voditko, ui předá stav.voditko): pásmo sloupců xOd–xDo kolem hloubky cíle (±4 pole)
+  // jemně modře s čárkovaným okrajem a popiskem; přesné místo (deska, Srdce s Klíčem) pulzujícím kroužkem. Kreslí se
+  // i přes neznámá pole (tma) – právě tam se hledá.
+  function kresliVoditko(ctx, stav, kam, x0, x1, y0, y1, z) {
+    const v = stav.voditko, dpr = stav.dpr || 1;
+    if (v.xOd != null && v.xDo != null && v.hloubka != null) {
+      const yc = UDOLI + v.hloubka, ya = Math.max(0, yc - 4), yb = Math.min(H - 1, yc + 4);
+      if (yb < y0 - 1 || ya > y1 + 1 || v.xDo < x0 - 1 || v.xOd > x1 + 1) return;
+      const px = v.xOd * S, py = ya * S, w = (v.xDo - v.xOd + 1) * S, h = (yb - ya + 1) * S;
+      ctx.fillStyle = 'rgba(110,190,255,.10)'; ctx.fillRect(px, py, w, h);
+      ctx.strokeStyle = 'rgba(140,210,255,.7)'; ctx.lineWidth = 2 * dpr / z;
+      ctx.setLineDash([6 * dpr / z, 4 * dpr / z]); ctx.strokeRect(px, py, w, h); ctx.setLineDash([]);
+      const pis = 10 * dpr / z, text = `${v.cil === 'ruiny' ? 'ruiny předků' : v.cil === 'srdce' ? 'Srdce hory' : 'cíl'} ~${v.hloubka} m`;
+      ctx.font = `bold ${pis.toFixed(2)}px sans-serif`; ctx.textBaseline = 'bottom';
+      ctx.fillStyle = 'rgba(10,8,12,.8)'; ctx.fillText(text, px + 3 * dpr / z + dpr / z, py - 2 * dpr / z + dpr / z);
+      ctx.fillStyle = '#9fd6ff'; ctx.fillText(text, px + 3 * dpr / z, py - 2 * dpr / z);
+    } else if (v.presne && v.x != null && v.y != null) {
+      if (v.x < x0 - 2 || v.x > x1 + 2 || v.y < y0 - 2 || v.y > y1 + 2) return;
+      const ted = performance.now(), r = S * (0.9 + 0.25 * Math.sin(ted / 300));
+      ctx.strokeStyle = 'rgba(140,210,255,.8)'; ctx.lineWidth = 2 * dpr / z;
+      ctx.setLineDash([5 * dpr / z, 3 * dpr / z]);
+      ctx.beginPath(); ctx.arc(v.x * S + S / 2, v.y * S + S / 2, r, 0, Math.PI * 2); ctx.stroke(); ctx.setLineDash([]);
+      animaceDo = Math.max(animaceDo, ted + 50);
+    }
+  }
   function kresli(ctx, stav, kam, snimek, cas) {
     if (mereniF) mereniF._t = performance.now();
     jemnostProZoom(kam.z);
@@ -3347,6 +3407,11 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
     const pev = (x, y) => x < 0 || y < 0 || x >= W || y >= H ? true : pevne(teren[y * W + x]);
     const hra = stav.hra, lez = hra && hra.lez;
 
+    // pevné pole sousedící s vodou (i za neznámem – vlhkost prozradí vodu za stěnou dřív, než se do ní prokope)
+    const vlhka = i => {
+      const x = i % W;
+      return teren[i - W] === M.VODA || teren[i + W] === M.VODA || (x > 0 && teren[i - 1] === M.VODA) || (x < W - 1 && teren[i + 1] === M.VODA);
+    };
     // 1) pole – kreslení jednoho pole (c = kontext); bezKap: animovaná kapalina se nekreslí a vrátí se true
     // (bloky terénu ji kreslí zvlášť každý snímek). Hranice kreslení v rámci pole: nic nepřesahuje do sousedních polí.
     const kresliKapalinu = (c, x, y, i, t) => {
@@ -3376,10 +3441,12 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
           const cepice = y > 0 && (odkryto & 1) && teren[i - W] === M.VZDUCH && pozadi[i - W] === M.VZDUCH && t !== M.CIHLA;
           const eroze = odkryto & (cepice ? ~1 : 15);
           if (eroze && pozadi[i] !== M.VZDUCH && a.zed[pozadi[i]]) di(c, a.zed[pozadi[i]][v], px, py);
-          di(c, dlazdiceOkraje(a, hora, i, t, v, odkryto, eroze, sous, fos ? 1 : 0), px, py);
+          const dl = dlazdiceOkraje(a, hora, i, t, v, odkryto, eroze, sous, fos ? 1 : 0);
+          di(c, vlhka(i) ? vlhkaDlazdice(dl, v) : dl, px, py);
           return false;
         }
-        di(c, (zrcadlo(i) ? a.horninaZ : a.hornina)[t][v], px, py);
+        const hl = (zrcadlo(i) ? a.horninaZ : a.hornina)[t][v];
+        di(c, vlhka(i) ? vlhkaDlazdice(hl, v) : hl, px, py);
         if (ruda[i]) di(c, a.ruda[ruda[i]][v], px, py);
         else if (fos) di(c, fosilie(a, i), px, py);
         return false;
@@ -3419,6 +3486,28 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
       }
     }
     faze('ton');
+    // prosakování: z vlhké skály kape voda do volného pole pod ní a stéká po stěně do volného pole vedle
+    if (efektyF) {
+      const tt = (cas || 0) / 1000;
+      for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) {
+        const i = y * W + x;
+        if (!pevne(teren[i]) || !zn(x, y) || !vlhka(i)) continue;
+        const h = smichej(hora.seed, i, 31) >>> 0, px = x * S, py = y * S;
+        if (y < H - 1 && teren[i + W] === M.VZDUCH && (h & 1)) {        // kapka: naroste na spodní hraně a spadne
+          const per = 2.2 + (h % 7) * 0.3, f = ((tt + (h % 97) / 37) % per) / per, kx = px + 3 + (h >> 3) % 10;
+          ctx.fillStyle = 'rgba(150,205,240,0.85)';
+          if (f < 0.6) ctx.fillRect(kx, py + S, 1, f < 0.3 ? 1 : 2);
+          else { const dy = Math.min(S - 2, (f - 0.6) / 0.4 * (f - 0.6) / 0.4 * S * 1.2); ctx.fillRect(kx, py + S + 1 + dy, 1, 2); }
+        }
+        for (const [sx, smer] of [[x - 1, -1], [x + 1, 1]]) {            // stružka po boční stěně
+          if (sx < 0 || sx >= W || teren[y * W + sx] !== M.VZDUCH || ((h >>> 6) + smer + 3) % 3) continue;   // jen asi třetina stěn
+          const f = ((tt * 0.6 + (h % 53) / 19) % 1), hx = smer > 0 ? px + S : px - 1;
+          ctx.fillStyle = 'rgba(120,180,225,0.45)'; ctx.fillRect(hx, py + 2, 1, S - 3);
+          ctx.fillStyle = 'rgba(200,235,255,0.8)'; ctx.fillRect(hx, py + 2 + Math.floor(f * (S - 4)), 1, 2);
+        }
+      }
+    }
+    faze('prosak');
     // 2) tráva a sníh na povrchu (jen venku – nad polem je obloha)
     for (let y = Math.max(1, y0); y <= y1; y++) for (let x = x0; x <= x1; x++) {
       const i = y * W + x;
@@ -3489,6 +3578,7 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
       }
     }
     if (hra) kresliPasmoSpace(ctx, stav, hra, kam, x0, x1, y0, y1, zn, z);   // pásmo Spáče (nad tmou, jen při kopání)
+    if (stav.voditko) kresliVoditko(ctx, stav, kam, x0, x1, y0, y1, z);      // 🧭 kam hledat (ruiny, Srdce) – jen s aktivním vodítkem
     // 4) výběr a najetí myší
     ctx.lineWidth = 1 / z;
     if (stav.nahled) {                            // náhled stavby pod myší: průsvitná stavba a půdorys (zelený = jde, červený = nejde)
@@ -3541,7 +3631,7 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
     if (typ === 'zebrik') di(ctx, a.zebrik, px, py);
     else if (typ === 'vytah') di(ctx, a.vytah, px, py);
     else if (typ === 'studna') { if (!(hra.stavba[i] && hra.stavbaStav[i] === 2)) di(ctx, a.studna, px, py - 12); }   // z levého pole; stříška nad podlahou
-    else if (typ === 'podpera') di(ctx, a.podpera, px, py);
+    else if (typ === 'podpera') di(ctx, mat === 'kamen' ? a.podperaKamen : a.podpera, px, py);   // vytesaná ze skály = kamenná
     else if (typ === 'dvere') {                  // otevřené, když v nich někdo stojí; jinak podle poškození od goblinů
       const rany = hra.stavbaStav ? hra.stavbaStav[i] : 0;
       di(ctx, a.dvere[hra.trpaslici.some(t => t.i === i) ? 3 : rany >= 4 ? 2 : rany ? 1 : 0], px, py);
@@ -3556,7 +3646,9 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
     else if (typ === 'zed') di(ctx, a.hornina[M.ZED][hra.hora.varianta[i]], px, py);
     else if (a.dilna[typ]) di(ctx, a.dilna[typ][((snimek >> 1) + i) & 3], px, py);
     else if (ST.STAVBY[typ] && ST.STAVBY[typ].nabytek) {
-      const m = mat === 'drevo' ? 'drevo' : 'kamen', img = GEN_NAB[typ] ? nabytekVarianta(m, typ, i) : a.nabytek[m][typ];
+      const m = mat === 'drevo' ? 'drevo' : 'kamen';
+      let img = GEN_NAB[typ] ? nabytekVarianta(m, typ, i) : a.nabytek[m][typ];
+      if (typ === 'zidle' && ST.zidleVlevo(hra, i)) img = zVar('nz' + m + (smichej(i, 61, 3) & 7), () => zrcadli(img));   // čelem ke stolu vlevo
       di(ctx, img, px, py + S - vys(img));
     }
   }
@@ -3644,6 +3736,14 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
     // postavené stavby
     for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) {
       const i = y * W + x;
+      // pumpa podložená žebříkem (šachta pod pumpou): žebřík, přes něj pumpa a navrch znovu obě štěříny žebříku
+      // (celý žebřík s obrysem je skoro plný blok – přes pumpu by ji schoval, pod ní by zmizel on)
+      if (hra.lez[i] === 2 && hra.stavba[i] === ST.K.PUMPA) {
+        di(ctx, a.zebrik, x * S, y * S); kresliStavbu(ctx, a, hra, 'pumpa', i, null, snimek);
+        const z = a.zebrik, q = z.width / S;
+        for (const sx of [2, 10]) ctx.drawImage(z, sx * q, 0, 4 * q, z.height, x * S + sx, y * S, 4, S);
+        continue;
+      }
       if (hra.lez[i] === 2) di(ctx, a.zebrik, x * S, y * S);
       else if (hra.lez[i] === 3) {                 // výtah; na dně šachty parkuje plošina
         di(ctx, a.vytah, x * S, y * S);
@@ -3694,7 +3794,7 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
     // označené práce (i na neprozkoumaných polích)
     // nová značka naskočí krátkým prolnutím (jen když pole bylo vidět už minule – ne při posunu pohledu či načtení),
     // okraj všech značek jemně pulzuje
-    const oz = hra.oznac, ted = performance.now(), pv = znackyPohled, okraje = [null, [], [], [], []];
+    const oz = hra.oznac, ted = performance.now(), pv = znackyPohled, okraje = [null, [], [], [], [], []];
     if (znackyHra !== hra) { znacky.clear(); znackyHra = hra; }
     for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) {
       const i = y * W + x, v = oz[i];
@@ -3714,10 +3814,10 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
     {
       const pu = puls(ted);
       ctx.lineWidth = 1; ctx.globalAlpha = 0.1 + 0.35 * pu;
-      for (let v = 1; v <= 4; v++) {
+      for (let v = 1; v <= 5; v++) {
         const o = okraje[v];
         if (!o.length) continue;
-        ctx.strokeStyle = v === 4 ? '#bed2e6' : v === 3 ? '#ff9a3c' : v === 2 ? '#8cebff' : '#ffd25a';
+        ctx.strokeStyle = v === 5 ? '#ff5f55' : v === 4 ? '#bed2e6' : v === 3 ? '#ff9a3c' : v === 2 ? '#8cebff' : '#ffd25a';
         ctx.beginPath();
         for (let k = 0; k < o.length; k += 2) ctx.rect(o[k] * S + 0.5, o[k + 1] * S + 0.5, S - 1, S - 1);
         ctx.stroke();
@@ -3729,9 +3829,9 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
     if (tah) {
       const [xa, xb] = tah.x0 < tah.x1 ? [tah.x0, tah.x1] : [tah.x1, tah.x0];
       const [ya, yb] = tah.y0 < tah.y1 ? [tah.y0, tah.y1] : [tah.y1, tah.y0];
-      ctx.fillStyle = tah.druh === 'zrusit' ? 'rgba(255,90,90,.22)' : tah.druh === 'schody' ? 'rgba(140,235,255,.22)' : 'rgba(255,210,90,.22)';
+      ctx.fillStyle = tah.druh === 'zrusit' || tah.druh === 'bourat' ? 'rgba(255,90,90,.22)' : tah.druh === 'schody' ? 'rgba(140,235,255,.22)' : 'rgba(255,210,90,.22)';
       ctx.fillRect(xa * S, ya * S, (xb - xa + 1) * S, (yb - ya + 1) * S);
-      ctx.strokeStyle = tah.druh === 'zrusit' ? '#ff7070' : tah.druh === 'schody' ? '#8cebff' : '#ffd25a';
+      ctx.strokeStyle = tah.druh === 'zrusit' || tah.druh === 'bourat' ? '#ff7070' : tah.druh === 'schody' ? '#8cebff' : '#ffd25a';
       ctx.lineWidth = 1;
       ctx.strokeRect(xa * S + 0.5, ya * S + 0.5, (xb - xa + 1) * S - 1, (yb - ya + 1) * S - 1);
     }

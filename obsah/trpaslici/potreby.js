@@ -25,7 +25,8 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
   const ZDRAVI = { hlad: 0.04, zizen: 0.06, hojeni: 0.004, hojeniVeSpanku: 0.04 };   // za tah
   const ZLOST = 13;                               // přírůstek/úbytek zlosti při přepočtu nálady (jednou za 30 tahů)
   const PRAH = { hlad: 30, zizen: 30, unava: 20, vyspany: 95, kriticky: 12, zraneny: 60, lecitHned: 35, vylecen: 95 };
-  const ZAKLAD = 45, NEVRLY = 30;                 // základ nálady; pod NEVRLY pracuje ještě pomaleji
+  // základ nálady; pod NEVRLY je trpaslík nevrlý a pracuje ještě pomaleji (dřív 30 – nevrlý nebyl skoro nikdo, medián nálady 64–66)
+  const ZAKLAD = 45, NEVRLY = 40;
   const ZIMA_HLAD = 1.2;                          // v zimě se jí víc (zima z hory)
   const OSETROVNA = 3;                            // hojení v posteli na ošetřovně (× hojení ve spánku)
   const NASYCENI = { jidlo: 70, houby: 35, jecmen: 30, pivo: 70, voda: 50 };
@@ -35,7 +36,15 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
     t.vzpominky = []; t.zlost = 0; t.zuri = 0; t.hledejPotrebu = 0;
   }
   // klic: vzpomínka, která nahradí předchozí se stejným klíčem (jídlo, pití, spánek – vždy jen ta poslední)
+  // Návyk: stejný dobrý zážitek (táž jídelna, totéž pivo, táž ložnice) těší čím dál míň – za každé opakování o 8 %,
+  // nejvýš na 40 %; jiný zážitek (lepší síň, jiné pivo) návyk vynuluje. Počítadlo t.navyk = { klic: { text, n } }.
+  const NAVYK = new Set(['jidlo', 'piti', 'spanek']), NAVYK_KROK = 0.08, NAVYK_MIN = 0.4;
   function vzpominka(hra, t, text, hodnota, dni, klic) {
+    if (klic && hodnota > 0 && NAVYK.has(klic)) {
+      const nv = t.navyk || (t.navyk = {}), z = nv[klic];
+      if (z && z.text === text) z.n = Math.min(20, z.n + 1); else nv[klic] = { text, n: 0 };
+      hodnota = Math.max(1, Math.round(hodnota * Math.max(NAVYK_MIN, 1 - NAVYK_KROK * nv[klic].n)));
+    }
     if (klic) t.vzpominky = t.vzpominky.filter(v => v.klic !== klic || v.text === text);
     const v = t.vzpominky.find(v => v.text === text);
     const doTik = hra.tik + Math.round(dni * T.hra.TAHU_ZA_DEN);
@@ -57,7 +66,7 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
     return hra.prostrediStav || obnovProstredi(hra);
   }
   function obnovProstredi(hra) {
-    const r = { tik: hra.tik, posteleLoznice: 0, posteleOsetrovna: 0, postele: 0, obytnych: 0, otesanych: 0 };
+    const r = { tik: hra.tik, posteleLoznice: 0, posteleOsetrovna: 0, postele: 0, obytnych: 0, otesanych: 0, sochy: 0, kamennyNabytek: 0 };
     const typy = {}; for (const z of hra.zony) typy[z.id] = z.typ;
     for (let i = 0; i < N; i++) {
       const typ = hra.zona[i] ? typy[hra.zona[i]] : null, postel = hra.stavba[i] === S.K.POSTEL;
@@ -65,16 +74,33 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
       if (typ === 'loznice' || typ === 'jidelna') { r.obytnych++; if (S.OTESANE_POZADI.includes(hra.hora.pozadi[i])) r.otesanych++; }
       if (postel && typ === 'loznice') r.posteleLoznice++;
       if (postel && typ === 'osetrovna') r.posteleOsetrovna++;
+      if (hra.stavba[i] === S.K.SOCHA) r.sochy++;
+      else if (hra.stavba[i] && hra.materialNa.get(i) === 'kamen') r.kamennyNabytek++;
     }
     r.podilOtesano = r.obytnych ? r.otesanych / r.obytnych : 0;
     hra.prostrediStav = r;
     return r;
+  }
+  // Přepych (pozdní potřeba): od 3. roku trpaslíci chtějí sochy a kamenný nábytek – bod přepychu = socha (i kovaná),
+  // půl bodu kus kamenného nábytku; na trpaslíka pod 0,15 bodu mrzí (od 5. roku víc), od 0,5 těší.
+  const PREPYCH_OD_ROKU = 3, PREPYCH_MALO = 0.15, PREPYCH_DOST = 0.5;
+  function prepych(hra) {
+    const pr = prostredi(hra), n = hra.trpaslici.length;
+    const body = (pr.sochy || 0) + 0.5 * (pr.kamennyNabytek || 0), naTrp = n ? body / n : 0;
+    const rok = T.obdobi ? T.obdobi.rok(hra) : 1, chce = rok >= PREPYCH_OD_ROKU;
+    return { body, naTrp: Math.round(naTrp * 100) / 100, chce, malo: PREPYCH_MALO, dost: PREPYCH_DOST,
+             stav: !chce ? 'zatím nechtějí' : naTrp < PREPYCH_MALO ? 'chybí' : naTrp >= PREPYCH_DOST ? 'přepych' : 'stačí',
+             potreba: Math.max(0, Math.ceil(PREPYCH_MALO * n - body)), hodnota: !chce ? 0 : naTrp < PREPYCH_MALO ? (rok >= 5 ? -6 : -4) : naTrp >= PREPYCH_DOST ? 3 : 0 };
   }
   // trvalé dobré stavy z prostředí: [text, hodnota]
   function stavyProstredi(hra, t) {
     const r = [], pr = prostredi(hra), n = hra.trpaslici.length;
     if (n && pr.posteleLoznice >= n) r.push(['každý má svou postel v ložnici', 3]);
     if (pr.obytnych >= 6 && pr.podilOtesano >= 0.6) r.push(['bydlí v otesaných kamenných síních', pr.podilOtesano >= 0.95 ? 5 : 3]);
+    const px = prepych(hra);
+    if (px.hodnota < 0) r.push(['chybí mu přepych – sochy a kamenný nábytek', px.hodnota]);
+    else if (px.hodnota > 0) r.push(['žije v přepychu', px.hodnota]);
+    if (hra.odemceno && hra.odemceno.slava650) r.push(['patří k legendárnímu klanu', 4]);
     return r;
   }
 
@@ -135,6 +161,9 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
     // zranění se řadí podle zdraví (35 ≈ jako hlad 35) – ale jen když trpaslík nemá hlad ani žízeň (muzeLecit)
     const poradi = [[t.piti, 'pit', zizen(t)], [t.jidlo, 'jist', hlad(t)], [t.spanek, 'spat', unava(hra, t)], [t.zdravi - 25, 'lecit', muzeLecit(hra, t)]]
       .filter(p => p[2]).sort((a, b) => a[0] - b[0]);
+    // útočník v hoře: postel jen daleko od něj (dřív se spalo a léčilo v nejbližší posteli u brány – i během nájezdu);
+    // spát na zemi v jeho dosahu jde jen v krajní únavě
+    const hrozba = hra.tvorove.length > 0 && T.hra.hrozbaU, bezpecne = i => !hrozba || !T.hra.hrozbaU(hra, i);
     for (const [, co] of poradi) {
       let r = null;
       if (co === 'jist') {
@@ -153,15 +182,15 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
       } else if (co === 'lecit') {
         const obsazene = new Set(hra.trpaslici.filter(u => u !== t && u.prace && u.prace.postel >= 0).map(u => u.prace.postel));
         const naOsetrovne = i => { const z = S.zonaNa(hra, i); return !!z && z.typ === 'osetrovna'; };
-        r = C.hledej(hra, t.i, i => hra.stavba[i] === S.K.POSTEL && !obsazene.has(i) && naOsetrovne(i) ? { typ: 'spat', postel: i, pos: i, faze: 'k_cili', lecit: true, osetrovna: true } : 0);
-        if (!r && t.zdravi < PRAH.lecitHned) r = C.hledej(hra, t.i, i => hra.stavba[i] === S.K.POSTEL && !obsazene.has(i) ? { typ: 'spat', postel: i, pos: i, faze: 'k_cili', lecit: true } : 0);
+        r = C.hledej(hra, t.i, i => hra.stavba[i] === S.K.POSTEL && !obsazene.has(i) && naOsetrovne(i) && bezpecne(i) ? { typ: 'spat', postel: i, pos: i, faze: 'k_cili', lecit: true, osetrovna: true } : 0);
+        if (!r && t.zdravi < PRAH.lecitHned) r = C.hledej(hra, t.i, i => hra.stavba[i] === S.K.POSTEL && !obsazene.has(i) && bezpecne(i) ? { typ: 'spat', postel: i, pos: i, faze: 'k_cili', lecit: true } : 0);
       } else {
         const obsazene = new Set(hra.trpaslici.filter(u => u !== t && u.prace && u.prace.postel >= 0).map(u => u.prace.postel));
         // postele na ošetřovně jsou pro zraněné (zdravý v nich spí, jen když jiná postel není)
         const naOsetrovne = i => { const z = hra.zona[i] && S.zonaNa(hra, i); return !!z && z.typ === 'osetrovna'; };
-        r = C.hledej(hra, t.i, i => hra.stavba[i] === S.K.POSTEL && !obsazene.has(i) && !naOsetrovne(i) ? { typ: 'spat', postel: i, pos: i, faze: 'k_cili' } : 0);
-        if (!r && prostredi(hra).posteleOsetrovna) r = C.hledej(hra, t.i, i => hra.stavba[i] === S.K.POSTEL && !obsazene.has(i) ? { typ: 'spat', postel: i, pos: i, faze: 'k_cili', osetrovna: naOsetrovne(i) } : 0);
-        if (!r) r = { i: t.i, hodnota: { typ: 'spat', postel: -1, pos: t.i, faze: 'k_cili' }, cesta: [] };
+        r = C.hledej(hra, t.i, i => hra.stavba[i] === S.K.POSTEL && !obsazene.has(i) && !naOsetrovne(i) && bezpecne(i) ? { typ: 'spat', postel: i, pos: i, faze: 'k_cili' } : 0);
+        if (!r && prostredi(hra).posteleOsetrovna) r = C.hledej(hra, t.i, i => hra.stavba[i] === S.K.POSTEL && !obsazene.has(i) && bezpecne(i) ? { typ: 'spat', postel: i, pos: i, faze: 'k_cili', osetrovna: naOsetrovne(i) } : 0);
+        if (!r && (bezpecne(t.i) || t.spanek < 5)) r = { i: t.i, hodnota: { typ: 'spat', postel: -1, pos: t.i, faze: 'k_cili' }, cesta: [] };
       }
       if (r) return r;
     }
@@ -204,7 +233,7 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
     }
     return true;
   }
-  T.potreby = { ledova, UBYTEK, PRAH, NASYCENI, ZAKLAD, NEVRLY, ZIMA_HLAD, OSETROVNA, nevrly, zraneny, maKdeLecit, muzeLecit, hlad, zizen, prostredi, obnovProstredi, stavyProstredi, vychozi, vzpominka, souhrnnaVzpominka, rozpis, spocitejNaladu, rychlost, tik, potrebuje, kriticke,
+  T.potreby = { prepych, NAVYK, ledova, UBYTEK, PRAH, NASYCENI, ZAKLAD, NEVRLY, ZIMA_HLAD, OSETROVNA, nevrly, zraneny, maKdeLecit, muzeLecit, hlad, zizen, prostredi, obnovProstredi, stavyProstredi, vychozi, vzpominka, souhrnnaVzpominka, rozpis, spocitejNaladu, rychlost, tik, potrebuje, kriticke,
                 najdi, uVody, uStudny, uStolu };
 })(TRP);
 

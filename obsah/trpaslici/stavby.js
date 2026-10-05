@@ -19,13 +19,13 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
   // misto: 'volno' = jakékoli volné pole, 'podlaha' = volné pole s pevnou zemí pod sebou
   const STAVBY = {
     zebrik:     { nazev: 'žebřík', ikona: '🪜', mat: { drevo: 1 }, doba: 25, misto: 'volno', svisle: true,
-                  popis: 'Svislá cesta nahoru i dolů – i do šachty, kterou už někdo vykopal.' },
+                  popis: 'Svislá cesta nahoru i dolů. Potáhni ho od podlahy dolů – i do skály a neprozkoumaných míst: šachta se pod ním vytesá jako schodiště.' },
     vytah:      { nazev: 'výtah', ikona: '🛗', mat: { drevo: 1 }, doba: 35, misto: 'volno', vyzaduje: 'tesarna', naLezu: true, svisle: true,
-                  popis: 'Plošina na rumpálu ve svislé šachtě – nahoru i dolů mnohem rychleji než po schodech nebo žebříku (pole za tah místo za 6). Stav ho do šachty pole po poli (táhni svisle) – i přes schody a žebřík (nahradí je) nebo do skály (šachta se nejdřív vytesá); vystupuje se na koncích a všude, kde je vedle šachty podlaha.' },
+                  popis: 'Plošina na rumpálu ve svislé šachtě – nahoru i dolů mnohem rychleji než po schodech nebo žebříku (pole za tah místo za 6). Potáhni ho svisle od podlahy až do hloubky, kam má vést – i přes schody a žebřík (nahradí je) a do skály či neprozkoumaných míst: šachta se pod ním vytesá jako schodiště a výtah se staví postupně za kopáči. Vystupuje se na koncích a všude, kde je vedle šachty podlaha.' },
     studna:     { nazev: 'studna', ikona: '🪣', mat: { kamen: 4, drevo: 1 }, doba: 60, misto: 'voda', sirka: 2, kod: K.STUDNA, neniDilna: true, uVody: true,
-                  popis: 'Kamenná roubená studna na dvou polích s vodou vedle sebe. Vodu v nich zadrží (neodteče, nezamrzne, pumpa ji nevyčerpá) a trpaslíci se z ní napijí, kdykoli je blíž než pivo – čistá voda ze studny kazí náladu méně než voda z jezírka.' },
+                  popis: 'Kamenná roubená studna na dvou polích s vodou vedle sebe. Vodu v nich zadrží (neodteče, nezamrzne, pumpa ji nevyčerpá) a stahuje do sebe vodu z okolí do 3 polí, takže kolem vyschne a trpaslíci se z ní napijí, kdykoli je blíž než pivo – čistá voda ze studny kazí náladu méně než voda z jezírka.' },
     podpera:    { nazev: 'podpěra', ikona: '🪵', mat: { drevo: 1 }, doba: 30, misto: 'volno', kod: K.PODPERA,
-                  popis: 'Trám pod strop síně. Síň vysoká 3+ pole potřebuje podpěru aspoň každých N polí (hlína 3, vápenec 5, žula 9). Jde naplánovat i do pole označeného ke kopání.' },
+                  popis: 'Trám pod strop síně. Síň vysoká 3+ pole potřebuje podpěru aspoň každých N polí (hlína 3, vápenec 5, žula 9). Naplánovaná do skály, která se kope, se rovnou vytesá z kamene – bez dřeva (kámen z pole zůstane ve sloupu).' },
     dvere:      { nazev: 'dveře', ikona: '🚪', mat: { drevo: 1 }, doba: 35, misto: 'podlaha', kod: K.DVERE,
                   popis: 'Trpaslíci projdou; voda, magma ani netvoři ne (goblini je ale umí vyrazit).' },
     mriz:       { nazev: 'padací mříž', ikona: '🚧', mat: { prut_zelezo: 2 }, doba: 50, misto: 'volno', kod: K.MRIZ,
@@ -35,7 +35,7 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
     pumpa:      { nazev: 'ruční pumpa', ikona: '⛲', mat: { drevo: 3 }, doba: 50, misto: 'volno', kod: K.PUMPA, naLezu: true,
                   popis: 'Trpaslík u ní odčerpává vodu do 3 polí okolo – na zatopené chodby a šachty (jde postavit i na schod či žebřík; pod pumpu v šachtě jde žebřík i dodatečně).' },
     louc:       { nazev: 'louč', ikona: '🔥', mat: { drevo: 1 }, doba: 12, misto: 'volno', kod: K.LOUC,
-                  popis: 'Světlo na zdi. Temné chodby budou kazit náladu.' },
+                  popis: 'Světlo na zdi. Temné chodby budou kazit náladu. Rozsvícená louč ukáže okolní skálu i rudu (kruh 4 polí), dutiny za skálou ne.' },
     zed:        { nazev: 'kamenná zeď', ikona: '🧱', mat: { kamen: 1 }, doba: 40, misto: 'volno',
                   popis: 'Zazdí volné pole – oprava přehnaného kopání.' },
     tesarna:    { nazev: 'tesařská dílna', ikona: '🪚', mat: { drevo: 3 }, doba: 80, misto: 'podlaha', sirka: 2, kod: K.DILNA,
@@ -65,7 +65,7 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
     stul:       { nazev: 'stůl', ikona: '🍽️', mat: { stul: 1 }, doba: 20, misto: 'podlaha', kod: K.STUL, nabytek: true,
                   popis: 'Patří do jídelny.' },
     zidle:      { nazev: 'židle', ikona: '🪑', mat: { zidle: 1 }, doba: 15, misto: 'podlaha', kod: K.ZIDLE, nabytek: true,
-                  popis: 'Patří do jídelny ke stolu.' },
+                  popis: 'Patří do jídelny ke stolu – rozmístí se do sestav židle–stůl–židle, vždy čelem ke stolu.' },
     socha:      { nazev: 'socha', ikona: '🗿', mat: { socha: 1 }, doba: 25, misto: 'podlaha', kod: K.SOCHA, nabytek: true,
                   popis: 'Ozdoba síně. Trpaslíci mají rádi krásný kámen.' },
   };
@@ -135,7 +135,9 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
   RECEPTY.kovarna.push(
     { vyrobek: 'valecna_sekera', mat: ['prut_zelezo', 'prut_zelezo', 'uhli'], doba: 110, vmat: 'zelezo', nazev: 'válečná sekera' },
     { vyrobek: 'zbroj', mat: ['prut_zelezo', 'prut_zelezo', 'prut_zelezo', 'uhli'], doba: 140, vmat: 'zelezo', nazev: 'železná zbroj' },
-    { vyrobek: 'zbroj', mat: ['prut_med', 'prut_med', 'prut_med', 'uhli'], doba: 120, vmat: 'med', nazev: 'měděná zbroj' });
+    { vyrobek: 'zbroj', mat: ['prut_med', 'prut_med', 'prut_med', 'uhli'], doba: 120, vmat: 'med', nazev: 'měděná zbroj' },
+    // kovaná socha: přebytečné železné pruty na výzdobu (přepych pro náladu, sláva +8, karavana ji vykoupí za 25)
+    { vyrobek: 'socha', mat: ['prut_zelezo', 'prut_zelezo', 'uhli'], doba: 100, vmat: 'zelezo', nazev: 'kovaná socha' });
   RECEPTY.magmovyhen = [
     { vyrobek: 'prut_zelezo', mat: ['zelezo'], doba: 60 },
     { vyrobek: 'prut_med', mat: ['med'], doba: 50 },
@@ -146,6 +148,7 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
     { vyrobek: 'kladivo', mat: ['prut_zelezo'], doba: 60, vmat: 'zelezo', nazev: 'železné kladivo' },
     { vyrobek: 'valecna_sekera', mat: ['prut_zelezo', 'prut_zelezo'], doba: 90, vmat: 'zelezo', nazev: 'válečná sekera' },
     { vyrobek: 'zbroj', mat: ['prut_zelezo', 'prut_zelezo', 'prut_zelezo'], doba: 110, vmat: 'zelezo', nazev: 'železná zbroj' },
+    { vyrobek: 'socha', mat: ['prut_zelezo', 'prut_zelezo'], doba: 80, vmat: 'zelezo', nazev: 'kovaná socha' },
   ];
   // kolik kusů kterého materiálu recept potřebuje
   function materialReceptu(rc) { const m = {}; for (const d of rc.mat) m[d] = (m[d] || 0) + 1; return m; }
@@ -180,7 +183,7 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
     jidelna: { nazev: 'jídelna', ikona: '🍽️', barva: 'rgba(110,190,90,', popis: 'Stoly a židle pro společné jídlo. Jídlo u stolu zlepší náladu.' },
     pole:    { nazev: 'pole ječmene', ikona: '🌾', barva: 'rgba(220,200,90,', popis: 'Venku na hlíně. Ječmen dozraje zhruba za dva dny (v zimě neroste), každé pole dá 2 snopy – snop je 2 porce jídla nebo 2 dobrá piva.' },
     houbarna:{ nazev: 'houbárna', ikona: '🍄', barva: 'rgba(170,110,210,', popis: 'Pod zemí na pevné podlaze. Houby dorostou za 2–3 dny (u vody rychleji, mělko pod povrchem v zimě pomalu), každé pole dá 1 houbu.' },
-    les:     { nazev: 'lesní školka', ikona: '🌲', barva: 'rgba(60,150,80,', popis: 'Venku na hlíně. Farmáři sázejí stromky, za pár dní z nich jsou jedle; když dřevo dochází, sami je pokácí (pařez zase doroste).' },
+    les:     { nazev: 'lesní školka', ikona: '🌲', barva: 'rgba(60,150,80,', popis: 'Venku na hlíně jedle, pod zemí na pevné podlaze obří houby (houbové dřevo, rostou i v zimě). Farmáři sázejí, za pár dní je co kácet; když dřevo dochází, sami je pokácí (pařez i houba zase dorostou).' },
     osetrovna:{ nazev: 'ošetřovna', ikona: '🩹', barva: 'rgba(230,90,90,', popis: 'Postele pro zraněné: v ní se hojí třikrát rychleji. Zraněný trpaslík (zdraví pod 60) si sem jde lehnout.' },
   };
   const FARMY = { pole: 'jecmen', houbarna: 'houby', les: 'drevo' };
@@ -200,6 +203,9 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
   // --- zóny -------------------------------------------------------------------------
   const zonaNa = (hra, i) => hra.zona[i] ? hra.zony.find(z => z.id === hra.zona[i]) : null;
   function jeSklad(hra, i) { const z = zonaNa(hra, i); return !!z && z.typ === 'sklad'; }
+  // jídlo a pivo v jídelně jsou „uložené" (u stolu, kde se jí): neodnáší se do skladu a počítají se do zásob
+  const DRUHY_JIDELNY = new Set(['jidlo', 'pivo']);
+  function vJidelne(hra, i, druh) { if (!DRUHY_JIDELNY.has(druh) || !hra.zona[i]) return false; const z = zonaNa(hra, i); return !!z && z.typ === 'jidelna'; }
   function prijme(hra, i, druh) {
     const z = zonaNa(hra, i);
     if (!z || z.typ !== 'sklad') return false;
@@ -230,7 +236,8 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
     const venku = hra.hora.pozadi[i] === M.VZDUCH, pod = hra.hora.teren[i + W];
     if (typ === 'pole') return venku && (pod === M.HLINA || pod === M.JIL) && !hra.lez[i] && !hra.stavba[i] &&
       hra.hora.obj[i] !== O.STROM && hra.hora.obj[i] !== O.BALVAN && hra.hora.obj[i] !== O.PAREZ;
-    if (typ === 'les') return venku && (pod === M.HLINA || pod === M.JIL) && !hra.lez[i] && !hra.stavba[i] && hra.hora.obj[i] !== O.BALVAN;
+    // lesní školka: venku na hlíně (jedle), pod zemí na pevné podlaze (obří houby – houbové dřevo, rostou i v zimě)
+    if (typ === 'les') return (venku ? (pod === M.HLINA || pod === M.JIL) : pevne(pod)) && !hra.lez[i] && !hra.stavba[i] && hra.hora.obj[i] !== O.BALVAN;
     if (venku && typ !== 'sklad') return false;                       // místnost a houbárna jen pod zemí
     if (typ === 'houbarna') return pevne(pod) && !hra.lez[i] && !hra.stavba[i];
     return typ !== 'sklad' || C.stojne(hra, i);
@@ -307,10 +314,34 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
     return b;
   }
   // Hotový nábytek ze skladu se sám rozmístí do své zóny (postele do ložnice, stoly a židle do jídelny):
-  // na každý kus, který ještě nemá plán, se naplánuje stavba na první volné místo zóny (židle přednostně ke stolu).
-  const NABYTEK_ZONY = { postel: 'loznice', stul: 'jidelna', zidle: 'jidelna' };
+  // na každý kus, který ještě nemá plán, se naplánuje stavba na první volné místo zóny (v jídelně do sestav židle–stůl–židle).
+  // (sochy do jídelny – přepych pro náladu, dřív ležely ve skladu, dokud je hráč sám nepostavil)
+  const NABYTEK_ZONY = { postel: 'loznice', stul: 'jidelna', zidle: 'jidelna', socha: 'jidelna' };
   // postele jdou nejdřív do ošetřovny (stačí jí pár), pak do ložnic
   const DALSI_ZONY = { postel: ['osetrovna'] };
+  // Jídelna se zařizuje v sestavách židle–stůl–židle: každá vodorovná řada podlahy zóny se dělí od levého kraje
+  // po trojicích (židle, stůl, židle); zbude-li na konci řady dvojice, je to židle a stůl, osamělé pole zůstane soše.
+  // Vrací mapu pole → 'zidle'/'stul' (pole bez podlahy ani zbytky v ní nejsou).
+  function slotyJidelny(hra, id) {
+    const sl = new Map();
+    // pole, kam může nábytek přijít (louč, podpěra či žebřík řadu přeruší, ať se sestavy nerozbijí o překážku)
+    const podlaha = i => hra.zona[i] === id && hra.znamo[i] && i + W < N && pevne(hra.hora.teren[i + W]) && !hra.lez[i] &&
+      (hra.hora.teren[i] === M.VZDUCH || jeOznaceno(hra, i)) && (!hra.stavba[i] || (STAVBY[KOD_TYP[hra.stavba[i]]] || {}).nabytek);
+    for (let i = 0; i < N; i++) {
+      if (!podlaha(i) || (i % W > 0 && podlaha(i - 1))) continue;        // jen začátek řady
+      let n = 1;
+      while ((i + n) % W > 0 && podlaha(i + n)) n++;
+      for (let k = 0; k < n; k++) {
+        const o = k % 3, zbyva = n - (k - o);                             // kolik polí řady zbývá od začátku této trojice
+        if (zbyva >= 3 || (zbyva === 2 && o < 2)) sl.set(i + k, o === 1 ? 'stul' : 'zidle');
+      }
+    }
+    return sl;
+  }
+  const stulNa = (hra, j) => hra.stavba[j] === K.STUL || (hra.planNa.has(j) && planPodle(hra, hra.planNa.get(j)).typ === 'stul');
+  const stulU = (hra, i) => stulNa(hra, i - 1) || stulNa(hra, i + 1);
+  // židle se kreslí čelem ke stolu: bez stolu napravo, se stolem nalevo se otočí doleva
+  function zidleVlevo(hra, i) { return i % W > 0 && stulNa(hra, i - 1) && !((i + 1) % W > 0 && stulNa(hra, i + 1)); }
   function rozmistiNabytek(hra) {
     for (const [druh, typZony0] of Object.entries(NABYTEK_ZONY)) for (const typZony of (DALSI_ZONY[druh] || []).concat(typZony0)) {
       let volnych = hra.veci.filter(v => v.druh === druh).length - hra.plany.filter(p => p.typ === druh).length;
@@ -322,11 +353,15 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
         volnych = Math.min(volnych, Math.max(2, Math.ceil(hra.trpaslici.length / 5)) - maji);
         if (volnych <= 0) continue;
       }
-      const stulU = i => [i - 1, i + 1].some(j => hra.stavba[j] === K.STUL || (hra.planNa.has(j) && planPodle(hra, hra.planNa.get(j)).typ === 'stul'));
       for (const z of hra.zony) {
         if (z.typ !== typZony || volnych <= 0) continue;
         let bunky = bunkyZony(hra, z.id).filter(i => !hra.planNa.has(i) && !hra.stavba[i] && !prekazka(hra, druh, i));
-        if (druh === 'zidle') bunky = bunky.filter(stulU).concat(bunky.filter(i => !stulU(i)));
+        if (typZony === 'jidelna') {               // stoly a židle jen na svá místa v sestavách, sochy nejdřív do zbytku
+          const sl = slotyJidelny(hra, z.id);
+          if (druh === 'socha') bunky = bunky.filter(i => !sl.has(i)).concat(bunky.filter(i => sl.has(i)));
+          else bunky = bunky.filter(i => sl.get(i) === druh);
+          if (druh === 'zidle') bunky = bunky.filter(i => stulU(hra, i)).concat(bunky.filter(i => !stulU(hra, i)));
+        }
         for (const i of bunky) {
           if (volnych <= 0) break;
           if (hra.planNa.has(i) || prekazka(hra, druh, i)) continue;
@@ -380,11 +415,20 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
         continue;
       }
       // jednopolová stavba „na volno" jde naplánovat i do nevykopané skály – pole se nejdřív vykope (viz naplanuj);
-      // neprozkoumané pole se odmítne vždy (jinak by plán prozradil, co v něm je)
-      if (!hra.znamo[j]) return 'neprozkoumané místo';
+      // neprozkoumané pole: jednopolové stavby na volno (louč, podpěra, žebřík, výtah…) ano – pole se označí ke kopání
+      // (chodba či šachta do neznáma i s loučemi); kontrola je pro každé neznámé pole stejná, aby plán neprozradil, co v něm je
+      if (!hra.znamo[j]) {
+        if (!doNeznama(d)) return 'neprozkoumané místo';
+        if (hra.planNa.has(j)) return 'už tu něco je';
+        if (!jeOznaceno(hra, j) && T.pribeh && T.pribeh.budiSpace(hra, j / W | 0)) return 'probudilo by Spáče – nejdřív vyznač kopání ručně';
+        continue;
+      }
       const pockej = vykopatPred(hra, d, j);
       if (hra.hora.teren[j] !== M.VZDUCH && !pockej) return 'není volné místo';
       if (pockej && neseStavbu(hra, j)) return 'pod stavbou – vykopáním by se zbořila';
+      // plán sám skálu ke kopání neoznačí v hloubce Spáče (kopání ho probudí) – hráč musí kopání vyznačit vědomě
+      // (UI se ptá); pole už označené ke kopání plán přijme
+      if (pockej && !jeOznaceno(hra, j) && T.pribeh && T.pribeh.budiSpace(hra, j / W | 0)) return 'probudilo by Spáče – nejdřív vyznač kopání ručně';
       // žebřík jde i pod pumpu postavenou na holém poli šachty (jinak by v šachtě zůstala mezera, kudy se nevyleze)
       const podPumpu = d === STAVBY.zebrik && hra.stavba[j] === K.PUMPA && !hra.lez[j];
       if ((hra.stavba[j] && !podPumpu) || (hra.lez[j] && !d.naLezu) || hra.planNa.has(j)) return 'už tu něco je';
@@ -398,6 +442,8 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
   }
   // jednopolová stavba na volno (žebřík, výtah, podpěra, louč…) do nevykopané skály: pole se označí ke kopání –
   // u svislých cest (žebřík, výtah) jako schodiště, ať jde šachta kopat dolů
+  const doNeznama = d => !d.sirka && d.misto === 'volno' && d !== STAVBY.zed;
+  const jeOznaceno = (hra, j) => hra.oznac[j] === T.prace.OZN.KOPAT || hra.oznac[j] === T.prace.OZN.SCHODY;
   const vykopatPred = (hra, d, j) => !d.sirka && d.misto === 'volno' && d !== STAVBY.zed && pevne(hra.hora.teren[j]) && T.prace.lzeKopat(hra, j);
   // nese pole j (nevykopané) stavbu nebo plán nad sebou? (dílna, studna, stavba či plán „na podlahu") – vykopáním by se zbořily
   function neseStavbu(hra, j) {
@@ -413,9 +459,15 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
     const d = STAVBY[typ];
     // značku ke kopání, kterou plán sám přidal, si pamatuje (p.vykopat) – zrušení plánu ji zase smaže
     const vykopat = [];
-    for (const j of bunkyPlanu(typ, i)) if (vykopatPred(hra, d, j) && hra.oznac[j] !== T.prace.OZN.KOPAT && hra.oznac[j] !== T.prace.OZN.SCHODY) {
-      hra.oznac[j] = d.svisle ? T.prace.OZN.SCHODY : T.prace.OZN.KOPAT;
-      vykopat.push(j);
+    for (const j of bunkyPlanu(typ, i)) {
+      // šachta žebříku či výtahu: neznámé pole a skála se razí jako schodiště (dolů se obyčejným kopáním kopat nedá) –
+      // i hráčovo obyčejné kopání v šachtě se na schodiště změní
+      const neznamo = doNeznama(d) && !hra.znamo[j];
+      if (d.svisle && hra.oznac[j] === T.prace.OZN.KOPAT) { hra.oznac[j] = T.prace.OZN.SCHODY; continue; }
+      if ((neznamo || vykopatPred(hra, d, j)) && hra.oznac[j] !== T.prace.OZN.KOPAT && hra.oznac[j] !== T.prace.OZN.SCHODY) {
+        hra.oznac[j] = d.svisle ? T.prace.OZN.SCHODY : T.prace.OZN.KOPAT;
+        vykopat.push(j);
+      }
     }
     const p = { id: hra.dalsiId++, typ, i, doneseno: {}, vCeste: {}, rez: 0, prace: 0 };
     if (vykopat.length) p.vykopat = vykopat;
@@ -504,14 +556,15 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
         zprava('stavba', `${stavitel.jmeno} dostavěl ${d.nazev}.`, p.i);
       }
       if (d.nabytek) hra.materialNa.set(p.i, p.mat || 'drevo');
+      if (d.kod === K.LOUC && T.svetlo) T.svetlo.odhalKolemLouce(hra, p.i);   // louč posvítí do okolní skály
     }
   }
   function dilnaNa(hra, i) {
     if (hra.stavba[i] !== K.DILNA) return null;
     return hra.dilny.find(d => i === d.i || i === d.i + 1) || null;
   }
-  // zbourání stavby, které zmizela podlaha (materiál zůstane ležet)
-  function zbourej(hra, i, veciZpet) {
+  // zbourání stavby, které zmizela podlaha (materiál zůstane ležet – z každého druhu kus; dílna vrátí vše)
+  function zbourej(hra, i, veciZpet, plne) {
     const kod = hra.stavba[i];
     if (!kod) return;
     hra.svetloZmena++; hra.stabilitaZmena++; hra.vodaKlid = false;
@@ -536,15 +589,39 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
     hra.stavba[i] = 0;
     if (hra.zavreno) hra.zavreno[i] = 0;
     if (hra.stavbaStav) hra.stavbaStav[i] = 0;
-    const typ = KOD_TYP[kod];
-    if (typ) for (const druh of Object.keys(STAVBY[typ].mat)) veciZpet(druh, kam, hra.materialNa.get(i));
+    const typ = KOD_TYP[kod], mat = hra.materialNa.get(i);
+    if (typ === 'podpera' && mat === 'kamen') veciZpet('kamen', kam, 0);        // podpěra vytesaná ze skály: kámen
+    else if (typ) for (const [druh, n] of Object.entries(STAVBY[typ].mat)) for (let k = 0; k < (plne ? n : 1); k++) veciZpet(druh, kam, mat);
     hra.materialNa.delete(i);
   }
+  // Rozebrání na přání hráče (nástroj 🪚 zbourat): stavba vrátí celý materiál; žebřík a výtah se rozeberou
+  // (pole zůstane volné – vytesané schody pod žebříkem zmizí s ním). Vrací pole, kterých se to týkalo.
+  function rozeber(hra, i, veciZpet) {
+    if (hra.stavba[i]) {
+      const d = dilnaNa(hra, i), j = hra.stavba[i] === K.STUDNA ? (hra.stavbaStav[i] === 2 ? i - 1 : i + 1) : d ? (d.i === i ? i + 1 : d.i) : -1;
+      zbourej(hra, i, veciZpet, true);
+      return j >= 0 ? [i, j] : [i];
+    }
+    if (hra.lez[i] === 2 || hra.lez[i] === 3) {
+      const typ = hra.lez[i] === 3 ? 'vytah' : 'zebrik';
+      hra.lez[i] = 0;
+      for (const [druh, n] of Object.entries(STAVBY[typ].mat)) for (let k = 0; k < n; k++) veciZpet(druh, i, druh === 'drevo' ? 'drevo' : 0);
+      hra.svetloZmena++; hra.stabilitaZmena++; hra.vodaKlid = false;
+      return [i];
+    }
+    return [];
+  }
+  // jak dlouho se bourá (polovina doby stavby)
+  function dobaBourani(hra, i) {
+    const d = dilnaNa(hra, i), typ = d ? d.typ : hra.stavba[i] ? KOD_TYP[hra.stavba[i]] : hra.lez[i] === 3 ? 'vytah' : 'zebrik';
+    return Math.max(10, Math.round(((STAVBY[typ] || {}).doba || 20) / 2));
+  }
+  const nazevNa = (hra, i) => { const d = dilnaNa(hra, i), typ = d ? d.typ : hra.stavba[i] ? KOD_TYP[hra.stavba[i]] : hra.lez[i] === 3 ? 'vytah' : hra.lez[i] === 2 ? 'zebrik' : null; return typ && STAVBY[typ] ? STAVBY[typ].nazev : 'stavbu'; };
 
-  T.stavby = { K, STAVBY, SKUPINY_STAVEB, KOD_TYP, RECEPTY, NASTROJE, OPOTREBENI, PREFERUJE, OHNIVE_DILNY, materialReceptu, PROFESE_DILNY, CIL_FARMY, cilFarmy, nastavCilFarmy, kvalitaZony, OTESANE_POZADI, DALSI_ZONY, VYCHOZI_ZAKAZKY, SKUPINY, ZONY, FARMY, MAX_NA_POLI, STAV_DOSAH,
+  T.stavby = { doNeznama, slotyJidelny, zidleVlevo, vJidelne, DRUHY_JIDELNY, K, STAVBY, SKUPINY_STAVEB, KOD_TYP, RECEPTY, NASTROJE, OPOTREBENI, PREFERUJE, OHNIVE_DILNY, materialReceptu, PROFESE_DILNY, CIL_FARMY, cilFarmy, nastavCilFarmy, kvalitaZony, OTESANE_POZADI, DALSI_ZONY, VYCHOZI_ZAKAZKY, SKUPINY, ZONY, FARMY, MAX_NA_POLI, STAV_DOSAH,
                zonaNa, jeSklad, prijme, lzeZona, novaZona, zrusZonu, uklidZony, bunkyZony, vybaveni,
                bunkyPlanu, prekazka, naplanuj, neseStavbu, naplanujObdelnik, chybi, pripraven, planPodle, zrusPlan,
-               planVDosahu, mistoPlanu, volnoProPlan, zrusPlanBezPodlahy, dokonci, dilnaNa, zbourej, dostupnost, rozmistiNabytek, NABYTEK_ZONY, prijimaneDruhy, nastavFiltr, DRUHY_SKLADU };
+               planVDosahu, mistoPlanu, volnoProPlan, zrusPlanBezPodlahy, dokonci, dilnaNa, zbourej, rozeber, dobaBourani, nazevNa, dostupnost, rozmistiNabytek, NABYTEK_ZONY, prijimaneDruhy, nastavFiltr, DRUHY_SKLADU };
 })(TRP);
 
 if (typeof module !== 'undefined') module.exports = TRP;

@@ -193,13 +193,16 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
     }
     let cisloOblasti = 1;
     const sw = SRDCE[0].length, sh = SRDCE.length;
-    const srdceO = razitko(SRDCE, Rn.cele(8, W - 9 - sw), UDOLI + Rn.cele(143, 150), 'srdce', cisloOblasti++);
+    // Srdce a ruiny v pásmu, které roste se šířkou jen zvolna (na střední a malé hoře beze změny): na obří hoře dřív
+    // ležely až 130 polí od brány – cesta tam byla delší než celá střední hora
+    const sirsi = Math.round((W - 96) * 0.4);
+    const srdceO = razitko(SRDCE, Rn.cele(8, Math.min(W - 9 - sw, 72 + sirsi)), UDOLI + Rn.cele(143, 150), 'srdce', cisloOblasti++);
     const srdce = { x: srdceO.x + SRDCE[4].indexOf('V'), y: srdceO.y + 4 };
     const ruiny = [];
     for (const [sab, od, do_] of [[SIN_PREDKU, 98, 122], [STRAZNICE, 60, 125]]) {
       for (let pokus = 0; pokus < 60; pokus++) {
         const w = sab[0].length, h = sab.length;
-        const x0 = Rn.cele(3, W - 4 - w), y0 = UDOLI + Rn.cele(od, do_);
+        const x0 = Rn.cele(3, Math.min(W - 4 - w, 92 - w + sirsi)), y0 = UDOLI + Rn.cele(od, do_);
         if (!volnePro(x0, y0, w, h, 6)) continue;
         ruiny.push(razitko(sab, x0, y0, sab === SIN_PREDKU ? 'sin' : 'straznice', cisloOblasti++));
         break;
@@ -324,20 +327,21 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
 
     // 9) rudné žíly (náhodné procházky) ----------------------------------------------
     const zily = [];
-    function zila(r, x, y, delka) {
-      const d = RUDA[r], kusy = [];
-      let sx = Rn.sance(0.5) ? 1 : -1, sy = 0;
+    // rng/od/do_: vlastní generátor a pásmo hloubek (dodatečné žíly – hlubší uhlí – nesmí posunout hlavní náhodu)
+    function zila(r, x, y, delka, rng, od, do_) {
+      const Rn_ = rng || Rn, d = RUDA[r], kusy = [], hOd = od ?? d.od, hDo = do_ ?? d.do;
+      let sx = Rn_.sance(0.5) ? 1 : -1, sy = 0;
       for (let k = 0; k < delka; k++) {
         for (let t = 0; t < d.sila; t++) {
-          const xx = x + (t && Rn.sance(0.5) ? sx : 0), yy = y + (t ? 1 : 0), i = I(xx, yy);
+          const xx = x + (t && Rn_.sance(0.5) ? sx : 0), yy = y + (t ? 1 : 0), i = I(xx, yy);
           if (!uvnitr(xx, yy) || rez[i] || ruda[i] || !pevne(teren[i]) || teren[i] === M.PODLOZI ||
               teren[i] === M.CIHLA || teren[i] === M.RUNA || yy <= povrch[xx] + 1) continue;
           ruda[i] = r; kusy.push(i);
         }
-        if (Rn.sance(0.3)) sy = Rn.cele(-1, 1);
-        if (Rn.sance(0.15)) sx = -sx;
-        x += Rn.sance(0.75) ? sx : 0; y += sy;
-        if (y - UDOLI < d.od - 4 || y - UDOLI > d.do + 4) sy = -sy, y += 2 * sy;
+        if (Rn_.sance(0.3)) sy = Rn_.cele(-1, 1);
+        if (Rn_.sance(0.15)) sx = -sx;
+        x += Rn_.sance(0.75) ? sx : 0; y += sy;
+        if (y - UDOLI < hOd - 4 || y - UDOLI > hDo + 4) sy = -sy, y += 2 * sy;
       }
       if (kusy.length) zily.push({ r, kusy });
       return kusy.length;
@@ -359,6 +363,11 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
     const nadPrahem = () => { let n = 0; for (let i = 0; i < N; i++) if (ruda[i] === R.HVEZDNA && (i / W | 0) - UDOLI < HLOUBKA_SPACE) n++; return n; };
     for (let pokus = 0; pokus < 40 && nadPrahem() < HVEZDNE_MIN; pokus++)
       zila(R.HVEZDNA, Math.max(2, Math.min(W - 3, srdce.x + Rn.cele(-20, 20))), UDOLI + Rn.cele(126, 134), 4);
+
+    // hlubší uhlí (40–110 m): pod zemí bylo jediné palivo z milíře (ze dřeva) – v 2.–6. roce chybělo dřevo i uhlí.
+    // Vlastní generátor: hlavní náhoda (jeskyně, stromy…) se neposune, přibydou jen žíly v dosud prázdné hornině.
+    { const Ru = Nahoda(smichej(seed, 91, 91));
+      for (let k = Math.max(2, Math.round(Ru.cele(5, 7) * NASOBEK)); k > 0; k--) zila(R.UHLI, Ru.cele(2, W - 3), UDOLI + Ru.cele(40, 110), Ru.cele(8, 16), Ru, 40, 110); }
 
     // 10) objekty: les, louka, jeskyně -----------------------------------------------
     for (let x = 1; x < W - 1; x++) {

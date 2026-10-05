@@ -22,7 +22,17 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
   const MAX_PAD = 3;                           // pád z větší výšky zraní
   const PAD_CESTY = MAX_PAD;                   // hledání cest seskočí nejvýš o MAX_PAD
 
-  const volne = (hra, i) => hra.hora.teren[i] === M.VZDUCH && !(hra.zavreno && hra.zavreno[i]);   // zavřená mříž nepustí
+  // režim hledání (jen dočasně přes sRezimem): skrzMriz = zavřená mříž se bere jako otevřená (uvízlý za zavřenou
+  // mříží neuvízl – mříž se dá otevřít), jenZnamo = neprozkoumaná pole jsou neprůchozí (záchrana nesmí počítat
+  // s cestou skrytou jeskyní)
+  let skrzMriz = false, jenZnamo = false;
+  const volne = (hra, i) => hra.hora.teren[i] === M.VZDUCH && !(hra.zavreno && hra.zavreno[i] && !skrzMriz) && !(jenZnamo && !hra.znamo[i]);   // zavřená mříž nepustí
+  // fn() s režimem hledání; mezipaměti cest (vylézání, stanice výtahu) se před i po zahodí
+  function sRezimem(hra, mriz, znamo, fn) {
+    const a = skrzMriz, b = jenZnamo;
+    skrzMriz = !!mriz; jenZnamo = !!znamo; hra._vylezTik = -1; hra._vytahTik = -1;
+    try { return fn(); } finally { skrzMriz = a; jenZnamo = b; hra._vylezTik = -1; hra._vytahTik = -1; }
+  }
   function stojne(hra, i) {
     const t = hra.hora.teren;
     if (t[i] !== M.VZDUCH) return false;
@@ -187,7 +197,7 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
     return c.reverse();
   }
 
-  T.cesty = { MAX_PAD, volne, stojne, dopad, sousede, krok, hledej, vylezitelne, jeVytah, sachta, staniceVytahu };
+  T.cesty = { MAX_PAD, volne, sRezimem, stojne, dopad, sousede, krok, hledej, vylezitelne, jeVytah, sachta, staniceVytahu };
 })(TRP);
 
 if (typeof module !== 'undefined') module.exports = TRP;

@@ -48,7 +48,9 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
                  'praskani', 'prameny', 'stabilitaZmena', 'stabilitaKlid', 'vodaKlid', 'klidKroku', 'odteklo', 'odcerpano', 'varovaniStrop', 'cyklus', 'tvorove', 'dalsiNajezd', 'pastiNapnout', 'zabito', 'najezdu',
                  'rezim', 'prectene', 'deskyPrectene', 'odemceno', 'artefakty', 'spac', 'zazehnuti', 'vyhenHori', 'konec', 'maxTrp', 'padlo', 'nouze',
                  '_tok', 'deskaBlok', 'tesatBlok', 'poplach', '_cas',   // poplach: vyhlášený hráčem; _cas: čím klan tráví čas (TRP.hra.casKlanu)
-                 'padloPodle', 'prostrediStav'];   // padlí podle příčiny; prostředí klanu (počítá se jednou za 60 tahů, viz potreby.prostredi)
+                 'padloPodle', 'prostrediStav',    // padlí podle příčiny; prostředí klanu (počítá se jednou za 60 tahů, viz potreby.prostredi)
+                 'zachrany',                       // evidence záchranných žebříků a schodišť (starší uložení ji nemají – prázdná)
+                 'dalsiNajezdTyp', 'oblehani'];    // druh příštího nájezdu a probíhající obléhání (starší uložení: útok, žádné)
   // klíče, které se ukládají zvlášť (pole jako RLE, mapy jako dvojice, věci po sloupcích) – pro test úplnosti uložení
   const ZVLAST = ['seed', 'hora', 'veci', 'rez', 'materialNa', 'planNa'].concat(POLE_HRY);
 
@@ -113,7 +115,19 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
     for (const p of hra.plany) over(p && T.stavby.STAVBY[p.typ] && pole(p.i) && p.doneseno && p.vCeste, 'plán stavby');
     for (const d of hra.dilny) over(d && T.stavby.STAVBY[d.typ] && pole(d.i) && Array.isArray(d.fronta), 'dílna');
     for (const z of hra.zony) over(z && cislo(z.id) && T.stavby.ZONY[z.typ], 'zóna');
-    for (const u of hra.tvorove || []) over(u && pole(u.i), 'tvor');
+    // tvorové: známý druh, cesta, zdraví (neznámý druh dřív prošel a první tah spadl – „obnovit poslední uložení" pak cyklilo)
+    for (const u of hra.tvorove || []) over(u && pole(u.i) && T.hrozby.DRUHY[u.druh] && Array.isArray(u.cesta) && cislo(u.zdravi), 'tvor');
+    // vnořené objekty stavu (null nebo pole místo objektu by spadlo až v prvním tahu)
+    const objekt = x => !!x && typeof x === 'object' && !Array.isArray(x);
+    for (const k of ['spac', 'odemceno', 'artefakty', 'objeveno', 'nalezeno']) over(objekt(hra[k]), k);
+    over(objekt(hra.nouze), 'nouze');
+    over(hra.karavana === null || hra.karavana === undefined || objekt(hra.karavana), 'karavana');
+    over(hra.udalost === null || hra.udalost === undefined || (objekt(hra.udalost) && Array.isArray(hra.udalost.volby)), 'událost');
+    over(hra.prostrediStav === undefined || hra.prostrediStav === null || objekt(hra.prostrediStav), 'prostředí');
+    for (const t of hra.trpaslici) over(!t.zachrana || Array.isArray(t.zachrana) || (objekt(t.zachrana) && Array.isArray(t.zachrana.pole) && t.zachrana.pole.every(pole)), 'záchrana trpaslíka');
+    over(!hra.oblehani || (objekt(hra.oblehani) && cislo(hra.oblehani.do)), 'obléhání');
+    over(!hra.dalsiNajezdTyp || !!T.hrozby.TYPY_NAJEZDU[hra.dalsiNajezdTyp], 'druh nájezdu');
+    over(Array.isArray(hra.zachrany) && hra.zachrany.every(e => objekt(e) && typeof e.kdo === 'string' && Array.isArray(e.pole) && e.pole.every(pole) && (!e.veci || Array.isArray(e.veci))), 'záchrany');
   }
   function obnov(text) {
     let d;
@@ -137,8 +151,10 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
     hra.nouze = d.nouze || {};
     hra.poplach = d.poplach === 2 ? 2 : !!d.poplach;                       // starší uložení poplach nemají
     if (!hra.padloPodle || typeof hra.padloPodle !== 'object') hra.padloPodle = {};
+    if (!('zachrany' in d)) hra.zachrany = [];                             // starší uložení evidenci záchran nemají
     overStav(hra, N);
-    over(Array.isArray(d.rez) && Array.isArray(d.materialNa || []), 'rezervace');
+    const dvojice = a => Array.isArray(a) && a.every(e => Array.isArray(e) && e.length === 2 && Number.isInteger(e[0]) && e[0] >= 0 && e[0] < N);
+    over(dvojice(d.rez) && dvojice(d.materialNa || []), 'rezervace');
     if (d.verze === 9) for (const t of hra.trpaslici) {   // verze 9: povoleno 0/1 → stupně (hlavní práce 1, ostatní 2)
       const hl = T.hra.HLAVNI_PRACE[t.prof] || [];
       for (const k of Object.keys(t.povoleno)) if (t.povoleno[k] === 1 && !hl.includes(k) && !['hlidat', 'nosit', 'pole'].includes(k)) t.povoleno[k] = 2;
@@ -148,6 +164,8 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
     hra.planNa = new Map();
     for (const p of hra.plany) for (const j of T.stavby.bunkyPlanu(p.typ, p.i)) hra.planNa.set(j, p.id);
     if (!d.prostrediStav) T.potreby.obnovProstredi(hra);      // starší uložení: spočítat z načteného stavu
+    // louče z dřívějška (před odhalováním okolní skály) – u novějších uložení se nic nezmění
+    if (T.svetlo) for (let i = 0; i < N; i++) if (hra.stavba[i] === T.stavby.K.LOUC) T.svetlo.odhalKolemLouce(hra, i);
     return hra;
   }
 

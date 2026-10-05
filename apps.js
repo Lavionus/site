@@ -1924,6 +1924,11 @@ const KATALOG_SEKCE = [
         "tagy": ["trpaslíci", "hora", "budovatelská strategie", "kopání", "těžba", "důl", "pixel art", "boční řez", "gravitace", "dwarf fortress", "craft the world", "procedurální mapa"]
       },
       {
+        "soubor": "obsah/sine.html",
+        "nazev": "🏰 Síně pod horou",
+        "tagy": ["trpaslíci", "hora", "budovatelská strategie", "pohled shora", "kopání", "síně", "patra", "malovaná mapa", "dwarf fortress", "rimworld", "procedurální mapa", "obrana", "příběh"]
+      },
+      {
         "soubor": "obsah/dwarf_colony.html",
         "nazev": "⛏️ Trpasličí kolonie",
         "tagy": [

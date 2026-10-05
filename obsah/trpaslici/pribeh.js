@@ -53,6 +53,8 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
     const u = ULOMKY[k];
     zprava(hra, 'pribeh', `📜 ${u.nadpis}: ${u.text}`);
     if (u.odemkne) { hra.odemceno[u.odemkne] = true; zprava(hra, 'objev', u.odemkne === 'runovaKovarna' ? 'Odemčeno: runová kovárna (🔨 stavět).' : 'Odemčeno: artefakty v runové kovárně.'); }
+    // první deska ukáže cestu: kde leží další ruiny (druhá deska odemyká artefakty) a pásmo sloupců Srdce hory
+    if (k === 0 && kampan(hra)) { odhalStopy(hra, true, true); const v = voditko(hra); if (v.text) zprava(hra, 'pribeh', '🧭 ' + v.text, v.i); }
   }
   function prectiDesku(hra, i) {
     if (hra.deskyPrectene.includes(i)) return;
@@ -75,6 +77,93 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
     return { ok, ma, potreba: DEDICTVI_NA_KLIC,
              chybi: ok ? '' : `Klíč jde ukovat až po ${DEDICTVI_NA_KLIC} ze 3 artefaktů (kladivo, lampa, roh) – hotovo ${ma}.` };
   }
+  // --- vodítko: kam dál hledat (ruiny s deskou, Srdce hory) – „Co dál?", zprávy a UI ------------------------------
+  // Stopy (ukládají se v hra.odemceno): stopaRuin = čísla ruin, na které ukázala deska či hlas hlubin (pásmo sloupců
+  // a hloubka), stopaSrdce = pásmo sloupců Srdce (z první desky nebo hlasu hlubin); hotový Klíč „táhne" k Srdci přesně.
+  // Dřív „Co dál?" říkalo jen „≈150 m": 6 ze 14 nedohraných her mělo Klíč a Srdce nenašlo, 6 nepřečetlo druhou desku.
+  function odhalStopy(hra, ruiny, srdce) {
+    const o = hra.odemceno;
+    if (ruiny) o.stopaRuin = hra.hora.ruiny.filter(r => !hra.objeveno[r.cislo]).map(r => r.cislo);
+    if (srdce) o.stopaSrdce = 1;
+  }
+  const PASMO = 8;                                   // pásmo sloupců (± polí) u stopy
+  function smerOd(hra, x) {
+    const dx = x - hra.hora.brana.x;
+    return { smer: dx < 0 ? 'vlevo' : 'vpravo', dx: Math.abs(dx) };
+  }
+  const deskaRuiny = (hra, r) => { for (let y = r.y; y < r.y + r.h; y++) for (let x = r.x; x < r.x + r.w; x++) if (hra.hora.obj[y * W + x] === O.DESKA) return y * W + x; return -1; };
+  // { cil: 'deska'|'ruiny'|'srdce'|'vyhen'|null, smer: 'vlevo'|'vpravo'|null, x, y (pole, když je místo přesné), i (pole cíle pro
+  //   skok v UI), xOd, xDo (pásmo sloupců), hloubka (m), presne, text }
+  function voditko(hra) {
+    const r0 = { cil: null, smer: null, presne: false, text: '' };
+    if (!kampan(hra) || hra.vyhenHori) return r0;
+    const hl = y => y - UDOLI;
+    // 1) nepřečtená deska v objevených ruinách
+    for (const r of hra.hora.ruiny) {
+      const d = deskaRuiny(hra, r);
+      if (d < 0 || hra.deskyPrectene.includes(d) || !hra.objeveno[r.cislo]) continue;
+      if (hra.prectene.length >= 2) break;
+      const sm = smerOd(hra, d % W);
+      return { cil: 'deska', smer: sm.smer, x: d % W, y: d / W | 0, i: d, hloubka: hl(d / W | 0), presne: true,
+               text: `Runová deska v ruinách (${hl(d / W | 0)} m, ${sm.dx} polí ${sm.smer} od brány) čeká na přečtení – dojde k ní řemeslník.` };
+    }
+    // 2) ruiny, dokud nejsou přečtené obě desky (druhá odemyká artefakty)
+    if (hra.prectene.length < 2) {
+      const stopa = (hra.odemceno.stopaRuin || []);
+      const r = hra.hora.ruiny.find(r => !hra.objeveno[r.cislo] && stopa.includes(r.cislo));
+      if (r) {
+        const xc = r.x + (r.w >> 1), sm = smerOd(hra, xc), od = Math.max(1, xc - PASMO), do_ = Math.min(W - 2, xc + PASMO);
+        return { cil: 'ruiny', smer: sm.smer, xOd: od, xDo: do_, hloubka: hl(r.y + r.h - 2), i: (r.y + r.h - 2) * W + xc, presne: false,
+                 text: `Runy ukazují na ${hra.prectene.length ? 'další ' : ''}ruiny předků: kolem ${hl(r.y + r.h - 2)} m, ${Math.max(0, sm.dx - PASMO)}–${sm.dx + PASMO} polí ${sm.smer} od brány.` };
+      }
+      if (!hra.prectene.length) return { cil: 'ruiny', smer: null, presne: false, text: 'Ruiny předků leží hluboko (60–125 m) – průzkumné štoly do stran je najdou.' };
+    }
+    // 3) Srdce hory, dokud není objevené
+    const sr = hra.hora.srdce, si = sr.y * W + sr.x;
+    if (hra.znamo[si]) return hra.veci.some(v => v.druh === 'klic') ? { cil: 'vyhen', smer: null, x: sr.x, y: sr.y, i: si, hloubka: hl(sr.y), presne: true,
+      text: 'Srdce hory je otevřené – dones Klíč k Výhni předků.' } : r0;
+    const klic = hra.veci.find(v => v.druh === 'klic');
+    if (klic) {
+      const kde = klic.nese ? (hra.trpaslici.find(t => t.id === klic.nese) || {}).i ?? klic.i : klic.i;
+      const dx = sr.x - kde % W, dy = sr.y - (kde / W | 0), d = Math.round(Math.hypot(dx, dy));
+      return { cil: 'srdce', smer: dx < 0 ? 'vlevo' : 'vpravo', x: sr.x, y: sr.y, i: si, hloubka: hl(sr.y), presne: true, vzdalenost: d,
+               text: `🗝️ Klíč táhne ${dx ? `${Math.abs(dx)} polí ${dx < 0 ? 'vlevo' : 'vpravo'}` : 'přímo'}${dy > 0 ? ` a ${dy} m dolů` : dy < 0 ? ` a ${-dy} m nahoru` : ''} (~${d} polí) – Srdce hory leží v ${hl(sr.y)} m, ${smerOd(hra, sr.x).dx} polí ${smerOd(hra, sr.x).smer} od brány.` };
+    }
+    if (hra.odemceno.stopaSrdce) {
+      const sm = smerOd(hra, sr.x), od = Math.max(1, sr.x - PASMO), do_ = Math.min(W - 2, sr.x + PASMO);
+      return { cil: 'srdce', smer: sm.smer, xOd: od, xDo: do_, hloubka: hl(sr.y), i: si, presne: false,
+               text: `Srdce hory leží v ~${hl(sr.y)} m, ${Math.max(0, sm.dx - PASMO)}–${sm.dx + PASMO} polí ${sm.smer} od brány (Klíč pak ukáže přesně).` };
+    }
+    return { cil: 'srdce', smer: null, presne: false, hloubka: hl(sr.y), text: `Srdce hory leží hluboko (~${hl(sr.y)} m) – směr prozradí runová deska.` };
+  }
+
+  // --- volba artefaktů: které 2 ze 3 ukovat před Klíčem ---------------------------------------------------------
+  // hráč (UI) zvolí dvojici – uloží se v hra.odemceno.volbaArt; null = automaticky. Výchozí pořadí: když nájezdy bolí
+  // (padlých v boji aspoň 4 nebo 15 % nejvyššího počtu klanu), Roh hory napřed (útok 1,3×), jinak kladivo a lampa.
+  // Dřív bylo pořadí pevné (kladivo, lampa) a Roh nevznikl ani v jedné hře bota.
+  function zvolArtefakty(hra, par) {
+    if (par === null || par === undefined) { delete hra.odemceno.volbaArt; return true; }
+    if (!Array.isArray(par) || par.length !== DEDICTVI_NA_KLIC || par[0] === par[1] || !par.every(k => DEDICTVI.includes(k))) return false;
+    hra.odemceno.volbaArt = par.slice();
+    return true;
+  }
+  function nabizeneArtefakty(hra) {
+    const boj = (hra.padloPodle && hra.padloPodle.boj) || 0;
+    const boli = boj >= 4 || boj >= 0.15 * (hra.maxTrp || 7);
+    // Roh potřebuje stříbrný pohár: bez nalezeného stříbra by kusovník čekal na nemožné
+    const stribro = !!hra.nalezeno.stribro || hra.veci.some(v => v.druh === 'stribro' || v.druh === 'prut_stribro' || v.druh === 'pohar');
+    // Roh i tehdy, když na finále (Spáč s vlnami pavouků je nejtěžší boj hry) chybí obrněná stráž – méně než 6 strážců
+    // se zbraní i zbrojí (stálé měřítko: odhad obrany kolísá se zraněními a volba by přeskakovala)
+    const finale = hra.trpaslici.filter(t => t.povoleno.hlidat && t.zbran && t.zbroj).length < 6;
+    if ((boli || finale) && stribro) return { poradi: ['roh', 'kladivo', 'lampa'], duvod: boli ? `nájezdy bolí (padlých v boji ${boj}) – Roh hory zvedne útok všech o 30 %` : 'obrana na finále se Spáčem není dobrá – Roh hory zvedne útok všech o 30 %' };
+    return { poradi: DEDICTVI.slice(), duvod: boli || finale ? 'Roh by pomohl, ale chce stříbrný pohár a stříbro klan ještě nenašel' : 'klan je v bezpečí – kladivo a lampa urychlí práci' };
+  }
+  // { zvoleno: [a, b] | null, doporuceno: [a, b], poradi, duvod } pro UI
+  function volbaArtefaktu(hra) {
+    const n = nabizeneArtefakty(hra), z = hra.odemceno.volbaArt || null;
+    return { zvoleno: z ? z.slice() : null, doporuceno: n.poradi.slice(0, DEDICTVI_NA_KLIC), poradi: z ? z.concat(DEDICTVI.filter(k => !z.includes(k))) : n.poradi, duvod: z ? 'volba hráče' : n.duvod };
+  }
+
   // --- kusovník Klíče: co je ještě potřeba od teď po hotový Klíč -------------------------------------------------
   // Klíč = 3 hvězdné pruty + šperk (zlatý prut + drahokam); předtím 2 ze 3 artefaktů (2 hvězdné pruty + železný prut /
   // broušený drahokam / stříbrný pohár); runová kovárna 2 zlaté pruty. Hvězdný prut = hvězdná ruda + uhlí, zlatý, stříbrný
@@ -94,13 +183,19 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
       const z = d.fronta.find(z => z.id === m.vRobe.zak); if (!z) continue;
       const rc = S.RECEPTY[d.typ][z.r];
       if (!Object.values(m.vRobe.doneseno).some(n => n > 0)) continue;
+      // materiál na cestě do dílny je už součástí počítaného výrobku (dřív se uhlí nesené do kovárny počítalo dvakrát:
+      // jako uhlí i jako hotový prut)
+      for (const [druh, n] of Object.entries(m.vRobe.vCeste || {})) if (n > 0) ma[druh] = Math.max(0, (ma[druh] || 0) - n);
       if (rc.vyrobek.startsWith('art_')) { if (!hra.artefakty[rc.vyrobek.slice(4)]) ma[rc.vyrobek] = 1; }
       else ma[rc.vyrobek] = (ma[rc.vyrobek] || 0) + (rc.pocet || 1);
     }
-    // které artefakty ještě (2 ze 3): rozpracovaný, pak ten, na který je přídavný materiál, pak v pořadí kladivo, lampa, roh
+    // které artefakty ještě (2 ze 3): rozpracovaný, pak podle volby hráče / doporučeného pořadí (volbaArtefaktu)
     const hotovo = DEDICTVI.filter(k => hra.artefakty[k] || ma['art_' + k]);
     const zbyva = Math.max(0, DEDICTVI_NA_KLIC - hotovo.length);
-    const kandidati = DEDICTVI.filter(k => !hotovo.includes(k)).sort((a, b) => (ma[ART_VSTUP[b]] ? 1 : 0) - (ma[ART_VSTUP[a]] ? 1 : 0));
+    // (po rozpracovaných: zvolená dvojice / doporučené pořadí – viz volbaArtefaktu; dřív rozhodoval přídavný materiál
+    // na skladě – železné pruty jsou vždy, takže vzniklo vždy kladivo a lampa)
+    const vol = volbaArtefaktu(hra), por = vol.poradi;
+    const kandidati = DEDICTVI.filter(k => !hotovo.includes(k)).sort((a, b) => por.indexOf(a) - por.indexOf(b));
     const artefakty = kandidati.slice(0, zbyva);
     const potreba = { prut_hvezdny: 3 + 2 * artefakty.length, sperk: 1 };
     for (const k of artefakty) potreba[ART_VSTUP[k]] = (potreba[ART_VSTUP[k]] || 0) + 1;
@@ -155,13 +250,16 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
     hra.svetloZmena++;
     hra.slavaBonus = (hra.slavaBonus || 0) + 25;
     zprava(hra, 'objev', `✨ ${ARTEFAKTY[k].ikona} ${ARTEFAKTY[k].nazev} je hotov – ${ARTEFAKTY[k].popis}!`);
+    if (k === 'klic' && kampan(hra) && !hra.znamo[hra.hora.srdce.y * W + hra.hora.srdce.x]) { const v = voditko(hra); if (v.text) zprava(hra, 'pribeh', v.text, v.i); }
   }
-  const faktor = (hra, prace) => (hra.artefakty.kladivo && (prace === 'stavet' || prace === 'vyrobit')) ? 1.3 : 1;
+  // kladivo: stavba a výroba 1,3×; milník slávy 500 (cech mistrů): výroba 1,15×
+  const faktor = (hra, prace) => ((hra.artefakty.kladivo && (prace === 'stavet' || prace === 'vyrobit')) ? 1.3 : 1) *
+    (prace === 'vyrobit' && hra.odemceno && hra.odemceno.slava500 ? 1.15 : 1);
   const utokKlanu = hra => hra.artefakty.roh ? 1.3 : 1;
 
   // --- Spáč ---------------------------------------------------------------------------------
   function probudSpace(hra, proc) {
-    if (!kampan(hra) || hra.spac.probuzen) return;
+    if ((!kampan(hra) && proc !== 'vyzva') || hra.spac.probuzen) return;
     hra.spac.probuzen = true;
     const srdce = hra.hora.oblasti.find(o => o.typ === 'srdce');
     const mista = [];
@@ -169,6 +267,12 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
       const i = y * W + x; if (hra.hora.teren[i] === M.VZDUCH && T.cesty.stojne(hra, i)) mista.push(i);
     }
     const s = T.hrozby.novyTvor(hra, 'spac', mista[Math.floor(P.nahoda(hra) * mista.length)] || hra.hora.srdce.y * W + hra.hora.srdce.x);
+    if (proc === 'vyzva') {                          // volný režim: Spáč jako volitelný boss (hráč ho vyzval)
+      hra.spac.id = s.id; s.odolnost = T.hrozby.odolnostSpace(hra);
+      T.hra.zvuk(hra, 'rev', s.i);
+      zprava(hra, 'boj', '🌋 Klan vyzval PRADÁVNÉHO SPÁČE! Probouzí se v Srdci hory. Ozbrojení strážci na něj jdou aspoň ve třech, ostatní utíkají.', s.i);
+      return;
+    }
     hra.spac.id = s.id;
     s.odolnost = T.hrozby.odolnostSpace(hra);       // silnější obrana klanu = odolnější Spáč
     // předčasné probuzení má trvalou cenu: hora je neklidná (častější a silnější nájezdy, tvorové z hlubin)
@@ -179,6 +283,9 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
       : '🌋 Výheň se rozhořívá a hora duní. PRADÁVNÝ SPÁČ se probouzí – braňte oheň!') +
       ' Kdo nemá zbraň, utíká nahoru; ozbrojení strážci se shromáždí a zaútočí aspoň ve třech.', s.i);
   }
+  // volný režim: Spáč jako volitelný boss – vyzvat ho jde, když je Srdce hory objevené a Spáč ještě nebojoval
+  const lzeVyzvatSpace = hra => !kampan(hra) && !hra.spac.probuzen && !!hra.znamo[hra.hora.srdce.y * W + hra.hora.srdce.x];
+  function vyzviSpace(hra) { if (!lzeVyzvatSpace(hra)) return false; probudSpace(hra, 'vyzva'); return true; }
   function spacPorazen(hra) {
     hra.spac.porazen = true;
     hra.slavaBonus = (hra.slavaBonus || 0) + 40;
@@ -213,6 +320,7 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
   function zazehni(hra, t) {                        // volá práce 'zazehnout' každý tah na místě
     if (!hra.zazehnuti) { hra.zazehnuti = 1; zprava(hra, 'pribeh', `🔥 ${t.jmeno} vkládá Klíč do Výhně předků…`, t.i); if (!hra.spac.porazen) probudSpace(hra, 'finale'); }
     hra.zazehnuti++;
+    hra.spac.zazTik = hra.tik;                     // kdy se naposledy zažíhalo (nájezdy během zažíhání čekají – hrozby.tik)
     if (VLNY.includes(hra.zazehnuti) && kampan(hra)) T.hrozby.vlnaZHlubin(hra, (typ, text, i) => zprava(hra, typ, text, i));
     if (hra.zazehnuti >= DOBA_ZAZEHNUTI) {
       hra.vyhenHori = true; hra.svetloZmena++;
@@ -283,26 +391,58 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
     { text: '⛏️ Hloubkový rekord: 140 m – v hlubinách čeká hvězdná ruda.', hotovo: h => h.nejhloubeji >= 140 },
     { text: '🎺 Dosáhni slávy 250 – bardi začnou zpívat o vašem klanu.', hotovo: h => (h.slava || 0) >= 250 },
     { text: '👑 Dosáhni slávy 330 – králové hor pošlou čestnou stráž.', hotovo: h => (h.slava || 0) >= 330 },
+    // pozdní hra volného režimu
+    { text: '🗡️ Vyčisti goblinní tunel (135–155 m): objev ho, pobij gobliny a obsaď ho – nájezdy tudy přestanou (sláva +20).', hotovo: h => !!h.odemceno.tunelVycisten },
+    { text: '⛏️ Hloubkový rekord: 155 m – až ke kořenům hory.', hotovo: h => h.nejhloubeji >= 155 },
+    { text: '🎺 Dosáhni slávy 500 – cech mistrů zrychlí dílny.', hotovo: h => (h.slava || 0) >= 500 },
+    { text: '🌋 Najdi Srdce hory (~150 m) a vyzvi Pradávného spáče – volitelný boss (sláva +40). Připrav zbroj a strážce.', hotovo: h => !!h.spac.porazen },
+    { text: '👑 Dosáhni slávy 650 – legenda hor.', hotovo: h => (h.slava || 0) >= 650 },
   ];
+  // nekonečné cíle volného režimu po splnění všech: další stovka slávy a další desítka odražených nájezdů
+  function opakovanyCil(hra) {
+    const s = (Math.floor((hra.slava || 0) / 100) + 1) * 100, nj = (Math.floor((hra.najezdu || 0) / 10) + 1) * 10;
+    return { text: `♾️ Sláva ${s} (teď ${hra.slava || 0}) · přežij ${nj}. nájezd (teď ${hra.najezdu || 0}) – hora nikdy nespí.`, opakovany: true, slava: s, najezdu: nj };
+  }
+  // krok kampaně, u kterého se ukazuje vodítko (ruiny, druhá deska, Srdce)
+  const KROKY_VODITKA = new Set([9, 11, 15]);
   function coDal(hra) {
     const volny = hra.rezim === 'volny', zaklad = volny ? UKOLY.length - 8 : UKOLY.length;
     const seznam = volny ? UKOLY.slice(0, zaklad).concat(VOLNE_CILE) : UKOLY, n = seznam.length;
     for (let k = 0; k < n; k++) if (!seznam[k].hotovo(hra)) {
       const r = { krok: k + 1, z: n, text: seznam[k].text };
       if (!volny && KROKY_KUSOVNIKU.has(k)) { const kt = kusovnikText(hra); if (kt) { r.text += ' ' + kt; r.kusovnik = kusovnikKlice(hra, true); } }
+      if (!volny && KROKY_VODITKA.has(k)) { const v = voditko(hra); if (v.text) { r.text += ' 🧭 ' + v.text; r.voditko = v; } }
+      if (!volny && k === 12) { const va = volbaArtefaktu(hra); r.artefakty = va; }
       return r;
     }
+    if (volny) { const o = opakovanyCil(hra); return { krok: n + 1, z: n + 1, text: o.text, opakovany: true }; }
     return null;
+  }
+  // goblinní tunel vyčištěný: objevený, žádný tvor v něm a stojí v něm trpaslík (kontrola jednou za 60 tahů);
+  // odměna sláva +20 a nájezdy tunelem přestanou (hrozby.tunelProNajezd)
+  function hlidejTunel(hra) {
+    if (hra.odemceno.tunelVycisten || hra.tik % 60 !== 15) return;
+    const o = hra.hora.oblasti.find(o => o.typ === 'tunel');
+    if (!o || !hra.objeveno[o.cislo]) return;
+    const ob = hra.hora.oblast;
+    if (hra.tvorove.some(u => ob[u.i] === o.cislo)) return;
+    const t = hra.trpaslici.find(t => ob[t.i] === o.cislo);
+    if (!t) return;
+    hra.odemceno.tunelVycisten = hra.tik;
+    hra.slavaBonus = (hra.slavaBonus || 0) + 20;
+    zprava(hra, 'objev', `🗡️ Goblinní tunel je vyčištěný – ${t.jmeno} v něm zatloukl runu předků. Nájezdy tudy už nepřijdou (sláva +20).`, t.i);
   }
 
   function tik(hra) {
     hra.maxTrp = Math.max(hra.maxTrp || 0, hra.trpaslici.length);
+    hlidejTunel(hra);
     if (!hra.trpaslici.length && !hra.konec && hra.tik > 1) konec(hra, false);
     if (hra.spac.probuzen && !hra.spac.porazen && !hra.tvorove.some(u => u.id === hra.spac.id)) spacPorazen(hra);
   }
 
   T.pribeh = { VLNY, kusovnikKlice, kusovnikText, VOLNE_CILE, HLOUBKA_SPACE, HLOUBKA_VAROVANI, DEDICTVI, DOBA_ZAZEHNUTI, klicPodminka, hloubkaVarovani, budiSpace, ULOMKY, ARTEFAKTY, kampan, prectiDesku, prectiUlomek, artefaktZakazany, vyroben,
-               faktor, utokKlanu, probudSpace, hlidejHloubku, objevenoSrdce, zazehni, statistiky, konec, epilog, UKOLY, coDal, tik };
+               faktor, utokKlanu, probudSpace, hlidejHloubku, objevenoSrdce, zazehni, statistiky, konec, epilog, UKOLY, coDal, tik,
+               voditko, odhalStopy, zvolArtefakty, volbaArtefaktu, opakovanyCil, lzeVyzvatSpace, vyzviSpace, hlidejTunel };
 })(TRP);
 
 if (typeof module !== 'undefined') module.exports = TRP;

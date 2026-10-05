@@ -40,6 +40,28 @@ h3 { font-size: .95rem; margin: 18px 0 6px; }
 .legenda-stitku { display: flex; flex-wrap: wrap; gap: 8px 16px; font-size: .8rem; color: var(--text-muted); margin-bottom: 20px; }
 .legenda-stitku > span { display: flex; align-items: center; gap: 6px; }
 
+/* co je nového */
+.novinky { border: 2px solid var(--accent); box-shadow: 0 0 0 4px var(--accent-soft); }
+.nov-hlava { display: flex; justify-content: space-between; align-items: center; gap: 8px 16px; flex-wrap: wrap; }
+.nov-hlava h2 { font-size: 1.3rem; margin: 0; }
+.nov-hlava .prepinac { margin: 0; }
+.prepinac button:disabled { opacity: .45; cursor: default; }
+#novPopis { margin: 8px 0 14px; font-size: .86rem; color: var(--text-muted); }
+#novPopis b { color: var(--text); }
+.novinky .hodnota .plus { color: var(--ru-adv); } .novinky .hodnota .minus { color: var(--ua); }
+.novinky .hodnota small { font-size: .8rem; font-weight: 600; color: var(--text-muted); }
+#novMapa { height: 380px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-input); margin-top: 14px; }
+@media (max-width: 600px) { #novMapa { height: 320px; } }
+.nov-pod-mapou { display: flex; flex-wrap: wrap; gap: 6px 16px; align-items: center; justify-content: space-between; margin-top: 8px; font-size: .8rem; color: var(--text-muted); }
+.nov-pod-mapou .prepinac { margin: 0; }
+.nov-zdroje { display: flex; flex-wrap: wrap; gap: 6px 8px; margin-top: 14px; font-size: .8rem; color: var(--text-muted); align-items: center; }
+.nov-zdroje .cip { border: 1px solid var(--border-strong); border-radius: 12px; padding: 3px 10px; background: var(--bg-input); white-space: nowrap; }
+.nov-zdroje .cip b { color: var(--text); font-variant-numeric: tabular-nums; }
+.nov-zdroje .cip.nove { border-color: var(--ok); }
+.nov-zdroje .cip.nove::after { content: ' • nové'; color: var(--ok); font-weight: 700; }
+.nov-zpravy { margin-top: 10px; font-size: .82rem; color: var(--text-muted); line-height: 1.7; }
+.nov-zpravy a { color: var(--accent); margin-right: 10px; white-space: nowrap; }
+
 /* dlaždice */
 .dlazdice { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 12px; }
 .dlazdice > div { background: var(--bg-input); border: 1px solid var(--border); border-radius: 6px; padding: 12px 14px; min-width: 0; }
@@ -150,6 +172,32 @@ td.n, th.n { text-align: right; font-variant-numeric: tabular-nums; white-space:
     <span><span class="stitek s-over">✔ ověřeno</span> nezávisle doloženo (foto, jmenovité záznamy, ověření OSN, mapa ISW s kontrolou druhým zdrojem)</span>
     <span><span class="stitek s-odhad">≈ odhad</span> rekonstrukce nebo odhad s udanou nejistotou</span>
     <span><span class="stitek s-tvrz">📢 tvrzení</span> údaj jedné strany konfliktu, nezávisle neověřený</span>
+  </div>
+
+  <!-- ================= Co je nového ================= -->
+  <div class="karta novinky" id="novinky">
+    <div class="nov-hlava">
+      <h2>🆕 Co je nového</h2>
+      <div class="prepinac" id="novObdobi" role="group" aria-label="Období změn">
+        <button data-o="navsteva">Od minulé návštěvy</button><button data-o="7">7 dní</button><button data-o="30">30 dní</button>
+      </div>
+    </div>
+    <p id="novPopis"></p>
+    <div class="dlazdice" id="novDlazdice"><div class="stav">Načítám…</div></div>
+    <div id="novMapa" role="img" aria-label="Mapa změn fronty za zvolené období"></div>
+    <div class="nov-pod-mapou">
+      <span id="novMapaPopis">Načítám mapy…</span>
+      <span class="cas-legenda" style="margin:0">
+        <span><i style="background:var(--ru-adv)"></i>přibylo Rusku</span>
+        <span><i style="background:var(--ua)"></i>získala zpět Ukrajina</span>
+        <span><i style="border:2px solid var(--ru-adv);border-radius:50%;width:12px;height:12px"></i>místo drobné změny</span>
+      </span>
+      <div class="prepinac" id="novVyrez" role="group" aria-label="Výřez mapy změn">
+        <button data-v="zmeny" class="aktivni" aria-pressed="true">Přiblížit na změny</button><button data-v="ua">Celá Ukrajina</button><button data-v="cas">Otevřít v časosběru ↓</button>
+      </div>
+    </div>
+    <div class="nov-zdroje" id="novZdroje"></div>
+    <div class="nov-zpravy" id="novZpravy"></div>
   </div>
 
   <!-- ================= Přehled ================= -->
@@ -399,15 +447,15 @@ async function nactiIsw() {
   return { vrstvy, datum, pred2022, upraveno: mapa.modified };
 }
 
+const odkazZpravyIsw = datum => { const [r, m, d] = datum.split('-').map(Number); return `https://understandingwar.org/research/russia-ukraine/russian-offensive-campaign-assessment-${MESICE_EN[m - 1]}-${d}-${r}/`; };
+
 function vykresliIsw() {
   const { vrstvy, datum, pred2022 } = stav.isw;
   const kontrola = vrstvy.kontrola.km2;
   const podil = kontrola / UA_KM2 * 100;
   const predKm = pred2022?.km2 ?? null;
   const odInvaze = predKm != null ? kontrola - predKm : null;
-  const isoZpravy = (() => { const [r, m, d] = datum.split('-').map(Number); return `${MESICE_EN[m - 1]}-${d}-${r}`; })();
-  const odkazZpravy = `https://understandingwar.org/research/russia-ukraine/russian-offensive-campaign-assessment-${isoZpravy}/`;
-  $('iswZdroj').innerHTML = `Mapa ISW ze dne <b>${datumCz(datum)}</b> · denní zpráva: <a href="${odkazZpravy}" target="_blank" rel="noopener">Russian Offensive Campaign Assessment, ${datumCz(datum)}</a> · <a href="https://www.arcgis.com/home/item.html?id=9f04944a2fe84edab9da31750c2b15eb" target="_blank" rel="noopener">zdrojová mapa ISW</a>`;
+  $('iswZdroj').innerHTML = `Mapa ISW ze dne <b>${datumCz(datum)}</b> · denní zpráva: <a href="${odkazZpravyIsw(datum)}" target="_blank" rel="noopener">Russian Offensive Campaign Assessment, ${datumCz(datum)}</a> · <a href="https://www.arcgis.com/home/item.html?id=9f04944a2fe84edab9da31750c2b15eb" target="_blank" rel="noopener">zdrojová mapa ISW</a>`;
 
   const dl = [
     { popis: 'Ruskem ovládané území', hodnota: `${fmt(kontrola)} km²`, detail: `${fmt(podil, 1)} % rozlohy Ukrajiny · ${fmt(kontrola / CZ_KM2, 2)}× rozloha Česka${stav.deepstate ? `<br>DeepStateMap: ${fmt(stav.deepstate.denni.at(-1).km2)} km² (<a href="#krizova">proč se liší</a>)` : ''}`, s: STITEK.over },
@@ -690,9 +738,20 @@ const VrstvaZmen = L.Layer.extend({
     // práh: zbytky vyhlazení na shodných hranicích (poloprůhledné pixely) zahodit,
     // jinak by je obtažení zviditelnilo jako falešný lem kolem celého území
     const img = x.getImageData(0, 0, w, h), px = img.data;
-    let zbylo = 0;
-    for (let i = 3; i < px.length; i += 4) { if (px[i] < 160) px[i] = 0; else { px[i] = 255; zbylo++; } }
+    let zbylo = 0, x0 = w, y0 = h, x1 = -1, y1 = -1;
+    const bunky = new Set();   // mřížka 16 px se změnami (pro kroužky kolem drobných změn)
+    for (let i = 3; i < px.length; i += 4) {
+      if (px[i] < 160) { px[i] = 0; continue; }
+      px[i] = 255; zbylo++;
+      const p = i >> 2, sx = p % w, sy = (p - sx) / w;
+      if (sx < x0) x0 = sx; if (sx > x1) x1 = sx; if (sy < y0) y0 = sy; if (sy > y1) y1 = sy;
+      if (this.krouzky) bunky.add(Math.floor(sx / dpr / 16) + ',' + Math.floor(sy / dpr / 16));
+    }
+    if (this.krouzky && bunky.size) this._shluky.push({ barva, bunky });
     if (!zbylo) return null;
+    // obdélník změn v CSS pixelech kontejneru (pro „přiblížit na změny“)
+    const m = this.meze;
+    this.meze = { x0: Math.min(m?.x0 ?? Infinity, x0 / dpr), y0: Math.min(m?.y0 ?? Infinity, y0 / dpr), x1: Math.max(m?.x1 ?? -Infinity, x1 / dpr), y1: Math.max(m?.y1 ?? -Infinity, y1 / dpr) };
     x.putImageData(img, 0, 0);
     // obtažení o 2 px (dilatace), aby byly i drobné změny vidět
     x.setTransform(1, 0, 0, 1, 0, 0);
@@ -703,6 +762,31 @@ const VrstvaZmen = L.Layer.extend({
     y.globalCompositeOperation = 'source-in'; y.fillStyle = barva; y.fillRect(0, 0, w, h);
     return d;
   },
+  // drobné změny jsou i obtažené jen pár pixelů → kolem každého shluku kroužek
+  // (jen když je shluků málo; u dlouhého období jsou změny vidět i bez nich)
+  _kresliKrouzky(ctx, dpr) {
+    const shluky = [];
+    for (const { barva, bunky } of this._shluky) {
+      const zbyva = new Set(bunky);
+      for (const start of bunky) {
+        if (!zbyva.delete(start)) continue;
+        const fronta = [start]; let a = Infinity, b = Infinity, c = -Infinity, d = -Infinity;
+        while (fronta.length) {
+          const [x, y] = fronta.pop().split(',').map(Number);
+          a = Math.min(a, x); b = Math.min(b, y); c = Math.max(c, x); d = Math.max(d, y);
+          for (let dx = -2; dx <= 2; dx++) for (let dy = -2; dy <= 2; dy++) { const k = (x + dx) + ',' + (y + dy); if (zbyva.delete(k)) fronta.push(k); }
+        }
+        shluky.push({ barva, x: (a + c + 1) * 8, y: (b + d + 1) * 8, r: Math.max(c - a + 1, d - b + 1) * 8 + 10 });
+      }
+    }
+    if (!shluky.length || shluky.length > 25) return;
+    ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+    for (const k of shluky) {
+      ctx.beginPath(); ctx.arc(k.x, k.y, k.r, 0, 7);
+      ctx.lineWidth = 4.5; ctx.strokeStyle = css('--bg-panel'); ctx.stroke();
+      ctx.lineWidth = 2; ctx.strokeStyle = k.barva; ctx.stroke();
+    }
+  },
   kresli() {
     if (!this._m) return;
     const m = this._m, vel = m.getSize(), dpr = window.devicePixelRatio || 1;
@@ -711,6 +795,7 @@ const VrstvaZmen = L.Layer.extend({
     c.width = w; c.height = h; c.style.width = vel.x + 'px'; c.style.height = vel.y + 'px'; c.style.visibility = '';
     L.DomUtil.setPosition(c, m.containerPointToLayerPoint([0, 0]));
     const ctx = c.getContext('2d');
+    this.meze = null; this._shluky = [];
     if (!this.akt) return;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     this._cesta(ctx, this.akt);
@@ -732,7 +817,9 @@ const VrstvaZmen = L.Layer.extend({
     if (this.pred) {
       ctx.setTransform(1, 0, 0, 1, 0, 0);
       for (const m of [this._maska(this.akt, this.pred, css('--ru-adv'), dpr, w, h, '_pz'), this._maska(this.pred, this.akt, css('--ua'), dpr, w, h, '_pu')]) if (m) ctx.drawImage(m, 0, 0);
+      if (this.krouzky) this._kresliKrouzky(ctx, dpr);
     }
+    this.fire('nakresleno');
   },
 });
 
@@ -1091,6 +1178,207 @@ function vykresliTvrzeni() {
   });
 }
 
+/* ============================================================
+   5) Co je nového – změny od minulé návštěvy (nebo za 7 / 30 dní)
+   ============================================================ */
+// V prohlížeči se pamatuje, ke kterému dni dat byl každý zdroj při minulé návštěvě.
+// Obnovení stránky do 4 h od posledního zobrazení je stále tatáž návštěva.
+const KLIC_NAVSTEVA = 'webapp_valka_navsteva';
+const TATAZ_NAVSTEVA = 4 * 3600e3;
+const nov = { obdobi: 7, minula: null, tato: null, mapa: null, vrstva: null, token: 0, priblizit: true, oryx: new Map(), snimky: new Map() };
+const dnyTvar = n => n === 1 ? 'den' : n >= 2 && n <= 4 ? 'dny' : 'dní';
+const naDen = (rada, d, k = 'd') => { for (let i = rada.length - 1; i >= 0; i--) if (rada[i][k] <= d) return rada[i]; return null; };
+const znamenko = z => `${z >= 0 ? '+' : '−'}${fmt(Math.abs(z))}`;
+
+function nactiNavstevy() {
+  let z = null;
+  try { z = JSON.parse(localStorage.getItem(KLIC_NAVSTEVA)); } catch { }
+  if (z?.tato?.t && Date.now() - z.tato.t > TATAZ_NAVSTEVA) z = { minula: z.tato, tato: null };
+  nov.minula = z?.minula?.t ? z.minula : null;
+  nov.tato = z?.tato || {};
+  nov.obdobi = nov.minula ? 'navsteva' : 7;
+  ulozNavstevu();
+}
+function ulozNavstevu(klic, hodnota) {
+  if (klic) nov.tato[klic] = hodnota;
+  nov.tato.t = Date.now();
+  try { localStorage.setItem(KLIC_NAVSTEVA, JSON.stringify({ minula: nov.minula, tato: nov.tato })); } catch { }
+}
+// den dat, od kterého se u zdroje počítá změna
+function odKdy(zdroj, posledni) {
+  if (nov.obdobi === 'navsteva') {
+    const v = nov.minula[zdroj];
+    return (typeof v === 'object' ? v?.d : v) || isoZms(nov.minula.t);
+  }
+  return isoZms(msDen(posledni) - nov.obdobi * 864e5);
+}
+
+function oryxNa(d) {
+  // export za daný den, případně nejbližší starší (až 4 dny)
+  if (!nov.oryx.has(d)) nov.oryx.set(d, (async () => {
+    for (let z = 0; z < 5; z++) {
+      const den = isoZms(msDen(d) - z * 864e5);
+      try { return { datum: den, data: oryxSouhrn(parsujCsv(await stahni(URL_ORYX(den), 'text'))) }; } catch { }
+    }
+    return null;
+  })());
+  return nov.oryx.get(d);
+}
+
+function vykresliNovinky() {
+  const ted = Date.now();
+  if (nov.obdobi === 'navsteva') {
+    const h = (ted - nov.minula.t) / 3600e3;
+    const pred = h < 24 ? `před ${fmt(Math.max(1, Math.round(h)))} h` : `před ${fmt(Math.round(h / 24))} ${dnyTvar(Math.round(h / 24))}`;
+    const kdy = new Date(nov.minula.t);
+    $('novPopis').innerHTML = `Změny od vaší minulé návštěvy <b>${kdy.getDate()}. ${kdy.getMonth() + 1}. ${kdy.getFullYear()} v ${kdy.getHours()}:${String(kdy.getMinutes()).padStart(2, '0')}</b> (${pred}). U každého zdroje se počítá od dat, která jste tehdy viděli.`;
+  } else {
+    $('novPopis').innerHTML = `Změny za posledních <b>${nov.obdobi} dní</b> u každého zdroje (počítáno od jeho nejnovějších dat).` +
+      (nov.minula ? '' : ' Tohle je první návštěva v tomto prohlížeči — příště tu uvidíte, co se změnilo od dneška.');
+  }
+
+  const dl = [];
+  // území podle DeepStateMap
+  const ds = stav.deepstate?.denni;
+  if (ds) {
+    const posl = ds.at(-1), b = naDen(ds, odKdy('ds', posl.d)) || ds[0];
+    const dnu = Math.round((msDen(posl.d) - msDen(b.d)) / 864e5);
+    if (!dnu) dl.push({ popis: 'Území · DeepStateMap', hodnota: 'beze změny', detail: `Od minula nepřibyla nová denní mapa (poslední ${datumCz(posl.d)}).`, s: STITEK.over });
+    else {
+      const z = posl.km2 - b.km2, tempo = z / dnu;
+      const rok = naDen(ds, isoZms(msDen(posl.d) - 365 * 864e5));
+      const prum = rok && rok.d !== posl.d ? (posl.km2 - rok.km2) / ((msDen(posl.d) - msDen(rok.d)) / 864e5) : 0;
+      const srovnani = prum > 0 ? ` · roční průměr ${fmt(prum, 1)} km²/den → <b>${tempo > prum * 1.25 ? 'rychleji než obvykle' : tempo < prum * .75 ? 'pomaleji než obvykle' : 'obvyklé tempo'}</b>` : '';
+      dl.push({ popis: 'Území · DeepStateMap', hodnota: `<span class="${z >= 0 ? 'plus' : 'minus'}">${znamenko(z)} km²</span> <small>${z >= 0 ? 'pro Rusko' : 'pro Ukrajinu'}</small>`,
+        detail: `${datumCz(b.d)} → ${datumCz(posl.d)} (${dnu} ${dnyTvar(dnu)}) · ≈ ${prahy(Math.abs(z))}<br>${fmt(tempo, 1)} km²/den${srovnani}`, s: STITEK.over });
+    }
+  }
+  // ISW – jen jedna (nejnovější) mapa, srovnat jde jen s uloženou hodnotou z minulé návštěvy
+  const mi = nov.minula?.isw;
+  if (stav.isw && nov.obdobi === 'navsteva' && mi?.km2) {
+    const k = stav.isw.vrstvy.kontrola.km2;
+    const spor = (stav.isw.vrstvy.postup?.km2 || 0) + (stav.isw.vrstvy.infiltrace?.km2 || 0);
+    dl.push(mi.d >= stav.isw.datum
+      ? { popis: 'Území · ISW', hodnota: 'beze změny', detail: `Mapa ISW je stejná jako při minulé návštěvě (${datumCz(stav.isw.datum)}).`, s: STITEK.over }
+      : { popis: 'Území · ISW (kontrola)', hodnota: `<span class="${k >= mi.km2 ? 'plus' : 'minus'}">${znamenko(k - mi.km2)} km²</span>`,
+          detail: `mapa ${datumCz(mi.d)} → ${datumCz(stav.isw.datum)}${mi.spor != null ? `<br>sporné pásmo (postup + infiltrace) ${znamenko(spor - mi.spor)} km²` : ''}`, s: STITEK.over });
+  }
+  // Oryx – fotograficky doložené ztráty
+  if (stav.oryx) {
+    const od = odKdy('oryx', stav.oryx.datum);
+    const zaklad = od >= stav.oryx.datum ? stav.oryx : nov.oryx.get(od)?.hotovo;
+    if (!zaklad && !nov.oryx.has(od)) oryxNa(od).then(x => { nov.oryx.get(od).hotovo = x || { chyba: true }; bezpecne(vykresliNovinky); });
+    if (!zaklad) dl.push({ popis: 'Doložené ztráty techniky · Oryx', hodnota: '…', detail: 'Načítám starší export pro srovnání…', s: '' });
+    else if (zaklad.chyba) dl.push({ popis: 'Doložené ztráty techniky · Oryx', hodnota: '–', detail: `Export Oryx ze dne ${datumCz(od)} se nepodařilo stáhnout.`, s: '' });
+    else {
+      const ru = stav.oryx.data.Russia, ua = stav.oryx.data.Ukraine, r0 = zaklad.data.Russia, u0 = zaklad.data.Ukraine;
+      const pr = (a, b, k) => (a[k]?.celkem || 0) - (b[k]?.celkem || 0);
+      const top = ORYX_DRUHY.map(([k, jm]) => [jm, pr(ru, r0, k)]).filter(x => x[1] > 0).sort((a, b) => b[1] - a[1]).slice(0, 3);
+      dl.push(zaklad.datum === stav.oryx.datum
+        ? { popis: 'Doložené ztráty techniky · Oryx', hodnota: 'beze změny', detail: `Od minula žádný nový export (poslední ${datumCz(stav.oryx.datum)}).`, s: STITEK.over }
+        : { popis: 'Nově doložená technika · Oryx', hodnota: `<span style="color:var(--ru)">+${fmt(pr(ru, r0, 'All Types'))}</span> : <span style="color:var(--ua)">+${fmt(pr(ua, u0, 'All Types'))}</span>`,
+            detail: `Rusko : Ukrajina, ${datumCz(zaklad.datum)} → ${datumCz(stav.oryx.datum)}${top.length ? `<br>Rusko: ${top.map(([jm, n]) => `${jm.toLowerCase()} +${fmt(n)}`).join(', ')}` : ''}`, s: STITEK.over });
+    }
+  }
+  // GŠ ZSU – denní hlášení (tvrzení)
+  if (stav.gs?.rada) {
+    const posl = stav.gs.posledni, b = naDen(stav.gs.rada, odKdy('gs', posl.date), 'date');
+    const o = stav.gsOsobyRada, oP = o?.at(-1), oB = o && naDen(o, odKdy('gs', oP.date), 'date');
+    if (b && b.date < posl.date) {
+      const dnu = Math.round((msDen(posl.date) - msDen(b.date)) / 864e5);
+      const p = k => fmt((posl[k] || 0) - (b[k] || 0));
+      dl.push({ popis: 'Ruské ztráty podle GŠ ZSU', hodnota: oB && oB.date < oP.date ? `+${fmt(oP.personnel - oB.personnel)} <small>osob</small>` : `+${p('tank')} <small>tanků</small>`,
+        detail: `za ${dnu} ${dnyTvar(dnu)} do ${datumCz(posl.date)} · tanky +${p('tank')}, obrněná vozidla +${p('APC')}, dělostřelectvo +${p('field artillery')}, drony +${p('drone')}`, s: STITEK.tvrz });
+    }
+  }
+  $('novDlazdice').innerHTML = dl.length ? dl.map(x => `<div><div class="popis">${x.popis}</div><div class="hodnota">${x.hodnota}</div><div class="detail">${x.detail}</div>${x.s}</div>`).join('') : '<div class="stav">Načítám…</div>';
+
+  // aktuálnost zdrojů; „nové“ = novější než při minulé návštěvě
+  const m = nov.obdobi === 'navsteva' ? nov.minula : null;
+  const cip = (jm, d, minule) => d ? `<span class="cip${minule && d > minule ? ' nove' : ''}">${jm} <b>${datumCz(d)}</b></span>` : '';
+  $('novZdroje').innerHTML = 'Nejnovější data: ' +
+    cip('mapa ISW', stav.isw?.datum, m?.isw?.d) + cip('DeepStateMap', ds?.at(-1).d, m?.ds) + cip('Oryx', stav.oryx?.datum, m?.oryx) + cip('GŠ ZSU', stav.gs?.posledni.date, m?.gs);
+
+  // denní zprávy ISW za období (nejnovější první, nejvýš 10)
+  if (stav.isw) {
+    const posl = stav.isw.datum;
+    let od = nov.obdobi === 'navsteva' ? (mi?.d || isoZms(nov.minula.t)) : isoZms(msDen(posl) - nov.obdobi * 864e5);
+    const dny = [];
+    for (let t = msDen(posl); t > msDen(od) && dny.length < 10; t -= 864e5) dny.push(isoZms(t));
+    if (!dny.length) dny.push(posl);
+    $('novZpravy').innerHTML = `📰 Denní zprávy ISW${dny.length > 1 ? ' za období' : ''} (anglicky, s mapami a podrobnostmi z fronty): ` +
+      dny.map(d => `<a href="${odkazZpravyIsw(d)}" target="_blank" rel="noopener">${datumCz(d)}</a>`).join('');
+  }
+  if (ds) vykresliNovMapu();
+}
+
+async function vykresliNovMapu() {
+  const ds = stav.deepstate.denni, posl = ds.at(-1).d;
+  const b = (naDen(ds, odKdy('ds', posl)) || ds[0]).d;
+  if (!nov.mapa) {
+    nov.mapa = novaMapa('novMapa', 'DeepStateMap');
+    nov.mapa.fitBounds([[46.4, 33.0], [50.8, 39.0]], { animate: false });   // pásmo fronty
+    nov.vrstva = new VrstvaZmen();
+    nov.vrstva.krouzky = true;
+    nov.vrstva.addTo(nov.mapa);
+    nov.vrstva.on('nakresleno', () => {
+      const z = nov.vrstva.meze;
+      if (!nov.priblizit || !z || !nov.vrstva.pred) return;
+      nov.priblizit = false;
+      const mp = nov.mapa, meze = L.latLngBounds(mp.containerPointToLatLng([z.x0, z.y0]), mp.containerPointToLatLng([z.x1, z.y1]));
+      // mimo právě běžící kreslení – fitBounds volané uvnitř moveend Leaflet ignoruje
+      // (zoom z úvodního nastavení ještě může běžet – pak až po jeho konci)
+      setTimeout(() => { const fit = () => mp.fitBounds(meze, { padding: [30, 30], maxZoom: 10 }); if (mp._animatingZoom) mp.once('zoomend', fit); else fit(); });
+    });
+  }
+  const sn = d => { if (!nov.snimky.has(d)) nov.snimky.set(d, { d, typ: 'd' }); return nov.snimky.get(d); };
+  const token = ++nov.token;
+  const klic = b + '|' + posl;
+  if (nov.zobrazeno === klic) { nov.vrstva.kresli(); return; }
+  try {
+    const [akt, pred] = await Promise.all([nactiSnimek(sn(posl)), b < posl ? nactiSnimek(sn(b)) : null]);
+    if (token !== nov.token) return;
+    nov.zobrazeno = klic;
+    nov.vrstva.nastav(akt.kruhy, pred?.kruhy || null, null);
+    $('novMapaPopis').innerHTML = pred
+      ? `Mapa: změny mezi <b>${datumCz(pred.skut || pred.d)}</b> a <b>${datumCz(akt.skut || akt.d)}</b> (obtaženo o 2 px, aby byly vidět)`
+      : `Mapa: stav k <b>${datumCz(akt.skut || akt.d)}</b> — od minula žádná nová denní mapa`;
+  } catch (e) {
+    if (token === nov.token) $('novMapaPopis').innerHTML = `<span class="stav chyba">⚠ Mapu změn se nepodařilo stáhnout (${e.message}).</span>`;
+  }
+}
+
+function initNovinky() {
+  nactiNavstevy();
+  const tl = $('novObdobi').querySelectorAll('button');
+  const oznac = () => tl.forEach(x => { const a = x.dataset.o === String(nov.obdobi); x.classList.toggle('aktivni', a); x.setAttribute('aria-pressed', a); });
+  tl.forEach(b => {
+    if (b.dataset.o === 'navsteva' && !nov.minula) { b.disabled = true; b.title = 'Zatím žádná minulá návštěva v tomto prohlížeči'; }
+    b.onclick = () => {
+      nov.obdobi = b.dataset.o === 'navsteva' ? 'navsteva' : +b.dataset.o; oznac();
+      // obrys změn se měří z celé fronty, ne z výřezu předchozího období
+      nov.mapa?.fitBounds([[46.4, 33.0], [50.8, 39.0]], { animate: false });
+      nov.priblizit = true;
+      $('novVyrez').querySelectorAll('button').forEach(x => { const a = x.dataset.v === 'zmeny'; x.classList.toggle('aktivni', a); x.setAttribute('aria-pressed', a); });
+      bezpecne(vykresliNovinky);
+    };
+  });
+  oznac();
+  $('novVyrez').querySelectorAll('button').forEach(b => b.onclick = () => {
+    if (b.dataset.v === 'cas') {
+      const ds = stav.deepstate?.denni;
+      if (ds) skocNaDatum(ds.at(-1).d);
+      $('casosber').scrollIntoView({ behavior: 'smooth' });
+      return;
+    }
+    $('novVyrez').querySelectorAll('button').forEach(x => { const a = x === b; x.classList.toggle('aktivni', a); x.setAttribute('aria-pressed', a); });
+    if (!nov.mapa) return;
+    if (b.dataset.v === 'ua') nov.mapa.flyToBounds([[44.3, 22.1], [52.4, 40.3]], { duration: .6 });
+    else { nov.priblizit = true; nov.mapa.fitBounds([[46.4, 33.0], [50.8, 39.0]], { animate: false }); nov.vrstva.kresli(); }
+  });
+  bezpecne(vykresliNovinky);
+}
+
 /* ---------- lidé ---------- */
 function vykresliLidi() {
   const mz = STATICKA.mediazona;
@@ -1169,7 +1457,7 @@ function chybaTvrzeni(text) {
 function chyba(el, text, e) { $(el).innerHTML = `<div class="stav chyba">⚠ ${text}: ${e.message}</div>`; console.error(e); }
 
 // chyba v jedné části nesmí zastavit vykreslení ostatních
-const CIL_CHYBY = { vykresliSrovnani: 'srovnani', vykresliUzemi: 'prirovnani', vykresliOryx: 'oryxDlazdice', vykresliOryxCas: 'oryxCasStav', vykresliLidi: 'vojaci', vykresliIsw: 'dlazdice' };
+const CIL_CHYBY = { vykresliNovinky: 'novDlazdice', vykresliSrovnani: 'srovnani', vykresliUzemi: 'prirovnani', vykresliOryx: 'oryxDlazdice', vykresliOryxCas: 'oryxCasStav', vykresliLidi: 'vojaci', vykresliIsw: 'dlazdice' };
 const bezpecne = (fn, ...a) => {
   try { fn(...a); }
   catch (e) { console.error(fn.name, e); if (CIL_CHYBY[fn.name]) chyba(CIL_CHYBY[fn.name], 'Část stránky se nepodařilo vykreslit', e); }
@@ -1188,8 +1476,14 @@ function prekresli() {
   $('denValky').innerHTML = `Dnes je <b>${fmt(dnu)}. den</b> celoplošné ruské invaze.`;
   vykresliLidi();
   vykresliZdroje();
+  initNovinky();
+  const novinky = () => bezpecne(vykresliNovinky);
 
-  nactiIsw().then(d => { stav.isw = d; vykresliIsw(); if (stav.deepstate) vykresliUzemi(); vykresliZdroje(); })
+  nactiIsw().then(d => {
+    stav.isw = d; vykresliIsw(); if (stav.deepstate) vykresliUzemi(); vykresliZdroje(); novinky();
+    const v = d.vrstvy;
+    ulozNavstevu('isw', { d: d.datum, km2: Math.round(v.kontrola.km2), spor: Math.round((v.postup?.km2 || 0) + (v.infiltrace?.km2 || 0)) });
+  })
     .catch(e => { chyba('dlazdice', 'Mapu ISW se nepodařilo načíst', e); $('iswZdroj').textContent = ''; $('srovnani').innerHTML = ''; });
 
   stahni(URL_DEEPSTATE).then(d => {
@@ -1197,14 +1491,16 @@ function prekresli() {
     stav.deepstate = { serie, denni: serie.filter(b => b.s === 'd') };
     initCasosber(); bezpecne(vykresliUzemi); bezpecne(vykresliSrovnani); bezpecne(vykresliZdroje);
     if (stav.isw) bezpecne(vykresliIsw);
+    novinky(); ulozNavstevu('ds', stav.deepstate.denni.at(-1).d);
   }).catch(e => {
     chyba('prirovnani', 'Řadu DeepStateMap se nepodařilo načíst', e);
     $('srovnani').innerHTML = '<div class="stav chyba">⚠ Bez řady DeepStateMap nelze křížově kontrolovat.</div>';
     $('casInfo').innerHTML = '<div class="stav chyba">⚠ Časosběr potřebuje řadu DeepStateMap, která se nenačetla.</div>';
+    $('novMapaPopis').innerHTML = '<span class="stav chyba">⚠ Mapa změn potřebuje řadu DeepStateMap, která se nenačetla.</span>';
   });
 
   nactiOryx().then(d => {
-    stav.oryx = d; vykresliOryx(); vykresliZdroje();
+    stav.oryx = d; vykresliOryx(); vykresliZdroje(); novinky(); ulozNavstevu('oryx', d.datum);
     nactiOryxCas().then(r => {
       if (!r.length) throw new Error('žádný měsíční snímek');
       stav.oryxCas = r; vykresliOryxCas(r);
@@ -1217,9 +1513,9 @@ function prekresli() {
   stahni(URL_HIST).then(d => { cas.hist = d.frames; initCasosber(); })
     .catch(e => { console.error('history.json', e); cas.hist = []; initCasosber(); }); // bez rekonstrukcí jen denní snímky
 
-  stahni(URL_GS).then(d => { stav.gs = { posledni: d[d.length - 1] }; vykresliTvrzeni(); vykresliZdroje(); })
+  stahni(URL_GS).then(d => { stav.gs = { posledni: d[d.length - 1], rada: d }; vykresliTvrzeni(); vykresliZdroje(); novinky(); ulozNavstevu('gs', stav.gs.posledni.date); })
     .catch(e => { console.error('GŠ ZSU', e); chybaTvrzeni(`Hlášení GŠ ZSU se nepodařilo načíst: ${e.message}`); });
-  stahni(URL_GS_OSOBY).then(d => { stav.gsOsoby = d[d.length - 1]; vykresliLidi(); })
+  stahni(URL_GS_OSOBY).then(d => { stav.gsOsoby = d[d.length - 1]; stav.gsOsobyRada = d; vykresliLidi(); novinky(); })
     .catch(e => console.error('GŠ ZSU osoby', e));
 
   // změna tématu (theme.js přepíná data-theme) → nové barvy grafů, vrstev i podkladu
@@ -1227,7 +1523,7 @@ function prekresli() {
   new MutationObserver(() => {
     if (document.documentElement.dataset.theme === tema) return;   // theme.js zapisuje i stejnou hodnotu
     tema = document.documentElement.dataset.theme;
-    for (const m of [mapa, cas.mapa]) if (m) nastavPodklad(m, m._atribuce); prekresli(); cas.vrstva?.kresli(); })
+    for (const m of [mapa, cas.mapa, nov.mapa]) if (m) nastavPodklad(m, m._atribuce); prekresli(); cas.vrstva?.kresli(); nov.vrstva?.kresli(); })
     .observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
 })();
 </script>

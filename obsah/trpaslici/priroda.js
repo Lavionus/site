@@ -235,7 +235,29 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
     return true;
   }
 
+  // Studna stahuje vodu z okolí: každých STUDNA_KROK tahů vsákne nejvyšší známou jednotku vody do STUDNA_DOSAH polí
+  // od svých polí (vlastní vodu nechá). Okolí studny tak vyschne; voda zdálky dotéká a mizí taky.
+  const STUDNA_DOSAH = 3, STUDNA_KROK = 10;
+  function vodaUStudny(hra, i) {                      // i = levé pole studny
+    const x0 = i % W, y0 = i / W | 0;
+    let nej = -1;
+    for (let y = Math.max(0, y0 - STUDNA_DOSAH); y <= Math.min(H - 1, y0 + STUDNA_DOSAH); y++)
+      for (let x = Math.max(0, x0 - STUDNA_DOSAH); x <= Math.min(W - 1, x0 + 1 + STUDNA_DOSAH); x++) {
+        const j = y * W + x;
+        if (hra.hora.teren[j] === M.VODA && hra.znamo[j] && hra.stavba[j] !== S.K.STUDNA && (nej < 0 || j < nej)) nej = j;
+      }
+    return nej;
+  }
+  function studnyStahuji(hra) {
+    for (let i = 0; i < N; i++) {
+      if (hra.stavba[i] !== S.K.STUDNA || hra.stavbaStav[i] !== 1) continue;
+      const j = vodaUStudny(hra, i);
+      if (j >= 0) { hra.hora.teren[j] = M.VZDUCH; hra.vodaKlid = false; }
+    }
+  }
+
   function tik(hra, zprava) {
+    if (hra.tik % STUDNA_KROK === 3) studnyStahuji(hra);
     if (hra.stabilitaKlid !== hra.stabilitaZmena) prepocitejStropy(hra, zprava);
     for (const s of hra.praskani) if (hra.tik % 40 === 0) T.hra.zvuk(hra, 'praskani', (s.y - 1) * W + s.x0 + ((hra.tik >> 3) % (s.x1 - s.x0 + 1)));
     for (const s of hra.praskani.slice()) if (hra.tik >= s.tik) { hra.praskani.splice(hra.praskani.indexOf(s), 1); T.priroda.zaval(hra, s, zprava); }
@@ -264,7 +286,7 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
   }
 
   T.priroda = { DOBA_PRASKANI, nestabilniStropy, prepocitejStropy, zaval, krokKapaliny, ztuhni, mozna_pramen,
-                vodaUPumpy, odcerpej, tik };
+                vodaUPumpy, odcerpej, vodaUStudny, STUDNA_DOSAH, tik };
 })(TRP);
 
 if (typeof module !== 'undefined') module.exports = TRP;

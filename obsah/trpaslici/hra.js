@@ -42,6 +42,31 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
     strazce: { nazev: 'strážce', barva: '#3456a0', kopani: 2 },
   };
   // stupně práce (povoleno[druh]): 0 vypnuto, 1 hlavní, 2 běžná, 3 když není co jiného; hlavní práce podle profese
+  // dovednosti: zlepšují se prací, každý stupeň = o 5 % rychlejší práce (mistr 10 = o polovinu); kopání má 0–20 a vlastní
+  // vzorec (prace.dobaKopani, zkusenost), boj 0–10 se cvičí a bojuje (hrozby.js) – tady jen zbytek a společné zobrazení
+  const DOVEDNOSTI = {
+    kopani:  { nazev: 'kopání', ikona: '⛏️', max: 20 },
+    stavba:  { nazev: 'stavění', ikona: '🔨', max: 10 },
+    noseni:  { nazev: 'nošení a chůze', ikona: '📦', max: 10 },
+    kaceni:  { nazev: 'kácení', ikona: '🪓', max: 10 },
+    pole:    { nazev: 'polní práce', ikona: '🌾', max: 10 },
+    remeslo: { nazev: 'řemeslo', ikona: '⚒️', max: 10 },
+    tesani:  { nazev: 'tesání', ikona: '🧱', max: 10 },
+    boj:     { nazev: 'boj', ikona: '⚔️', max: 10 },
+  };
+  const ZACATEK_DOV = { tesar: { remeslo: 3, stavba: 2 }, kamenik: { remeslo: 3, tesani: 3 }, kovar: { remeslo: 3 }, sladek: { remeslo: 3 }, farmar: { pole: 3 } };
+  const dov = (t, k) => (t.dov && t.dov[k]) || 0;
+  const fDov = (t, k) => 1 + 0.05 * dov(t, k);
+  const prahDov = lvl => 4 + 2 * lvl;                   // hotových úkolů na další stupeň (jako u kopání)
+  function zlepsi(hra, t, k, body) {
+    const D = DOVEDNOSTI[k];
+    if (!D || k === 'kopani' || k === 'boj' || dov(t, k) >= D.max) return;
+    if (!t.xp) t.xp = {};
+    t.xp[k] = (t.xp[k] || 0) + (body || 1);
+    if (t.xp[k] < prahDov(dov(t, k))) return;
+    t.xp[k] = 0; t.dov[k] = dov(t, k) + 1;
+    if (t.dov[k] % 5 === 0) zprava(hra, 'stavba', `${t.jmeno} se zlepšil: ${D.ikona} ${D.nazev} ${t.dov[k]}/${D.max}${t.dov[k] === D.max ? ' – mistr!' : ''}.`, t.i);
+  }
   const HLAVNI_PRACE = { hornik: ['kopat'], tesar: ['remeslo'], kamenik: ['remeslo'], kovar: ['remeslo'], sladek: ['remeslo'], farmar: ['pole', 'remeslo'], strazce: ['hlidat'] };
   // nošení a pole mají všichni na 1 (potrava a logistika drží celý klan), ostatní 2, hlavní práce profese 1
   // hlavní práce trpaslíka (barva čepice): vyhrazená dílna → řemeslo; jinak práce na nejvyšším stupni – nošení nepočítá
@@ -80,7 +105,7 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
       svetloZmena: 0,                            // zvýší se při změně tvaru hory nebo loučí
       vykopane: new Uint8Array(N),               // pole vykopaná trpaslíky (přírodní jeskyně drží)
       tesano: new Uint8Array(N),                 // otesaný líc (terén M.ZED): původní hornina – rozpětí stropu a výnos při kopání
-      tvorove: [], dalsiNajezd: 36 * TAHU_ZA_DEN, pastiNapnout: [], zabito: 0, najezdu: 0,
+      tvorove: [], dalsiNajezd: 36 * TAHU_ZA_DEN, dalsiNajezdTyp: 'utok', oblehani: null, pastiNapnout: [], zabito: 0, najezdu: 0,
       zavreno: new Uint8Array(N), stavbaStav: new Uint8Array(N),   // zavřené mříže; stav pastí a poškození dveří
       praskani: [], prameny: [], stabilitaZmena: 1, stabilitaKlid: 0, vodaKlid: false, klidKroku: 0, odteklo: 0, odcerpano: 0,
       zony: [], plany: [], dilny: [], parezy: [], nouze: {},
@@ -90,6 +115,7 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
       denik: [], nalezeno: {}, objeveno: {}, vykopano: 0, nejhloubeji: 0,
       slava: 0, slavaBonus: 0, karavana: null, udalost: null, posledniDar: 0,
       poplach: false,                            // poplach vyhlášený hráčem: civilisté se schovají (viz ukryjSe)
+      zachrany: [],                              // evidence záchranných žebříků a schodišť (viz hlidejZachrany)
     };
     const { brana } = hora;
     // výchozí sklad: podlaha předsíně
@@ -106,6 +132,9 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
     for (let k = 0; k < 30; k++) P.novaVec(hra, 'jidlo', brana.y * W + brana.x + 4 + (k & 1), 0);
     for (let k = 0; k < 30; k++) P.novaVec(hra, 'pivo', brana.y * W + brana.x + 2 + (k & 1), 0);
     for (let k = 0; k < 2; k++) P.novaVec(hra, 'krumpac', brana.y * W + brana.x + 1, 'med');   // staré měděné krumpáče
+    // zakladatelé jsou přátelé po dvojicích (sedmý s prvním) – bez náhody, ať se neposune průběh hry
+    const z = hra.trpaslici;
+    for (let k = 0; k < z.length; k++) spratel(z[k], z[k % 2 ? k - 1 : (k + 1) % z.length]);
     zprava(hra, 'pribeh', `Klan dorazil k Bráně předků hory ${hora.nazev}. Hora mlčí.`, hora.brana.y * W + hora.brana.x);
     if (rezim === 'volny') hra.rezim = 'volny';
     POT.obnovProstredi(hra);
@@ -121,11 +150,21 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
     };
     POT.vychozi(t);
     t.nastroj = null; t.zbran = null; t.zbroj = null; t.dov.boj = prof === 'strazce' ? 3 : 0; t.utok = 0;
+    Object.assign(t.dov, ZACATEK_DOV[prof] || {}); t.xp = {};
     t.povoleno = vychoziStupne(prof);
     hra.trpaslici.push(t);
     return t;
   }
 
+  // přátelství (t.pratele = id, nejvýš 3): smrt přítele bolí víc než smutek celého klanu (viz umri)
+  const MAX_PRATEL = 3;
+  function spratel(a, b) {
+    if (!a || !b || a === b) return;
+    for (const [x, y] of [[a, b], [b, a]]) {
+      const p = x.pratele || (x.pratele = []);
+      if (!p.includes(y.id) && p.length < MAX_PRATEL) p.push(y.id);
+    }
+  }
   function noveJmeno(hra, vyloucit) {
     const pouzita = new Set(hra.trpaslici.map(t => t.jmeno).concat(vyloucit || []));
     const volna = JMENA.filter(j => !pouzita.has(j));
@@ -340,7 +379,7 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
     const p = t.prace;
     if (p && T.hra.ladeniPusteni) T.hra.ladeniPusteni(hra, t, p);     // háček pro ladicí nástroje (bot), ve hře prázdný
     if (p) {
-      if ((p.typ === 'kopat' || p.typ === 'kacet' || p.typ === 'pole' || p.typ === 'pumpovat' || p.typ === 'cist' || p.typ === 'tesat') && hra.rez.get(p.c) === t.id) hra.rez.delete(p.c);
+      if ((p.typ === 'kopat' || p.typ === 'kacet' || p.typ === 'bourat' || p.typ === 'pole' || p.typ === 'pumpovat' || p.typ === 'cist' || p.typ === 'tesat') && hra.rez.get(p.c) === t.id) hra.rez.delete(p.c);
       if (p.vec) { const v = vecPodle(hra, p.vec); if (v && v.rez === t.id) v.rez = 0; }
       if (p.typ === 'stavet') { const pl = S.planPodle(hra, p.plan); if (pl && pl.rez === t.id) pl.rez = 0; }
       if (p.typ === 'donest' && p.vCeste && p.plan) { const pl = S.planPodle(hra, p.plan); if (pl) pl.vCeste[p.druh]--; }
@@ -403,10 +442,10 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
   }
   // práce na poli farmy i (u = hra.uroda[i]): zasít / sklidit (pole, houbárna), zasadit / pokácet (lesní školka)
   function farmaPrace(hra, z, i, zima) {
-    if (z.typ === 'les') {
+    if (z.typ === 'les') {                          // pod zemí obří houby (rostou i v zimě)
       const o = hra.hora.obj[i];
-      if (o === O.STROM) return farmaSklizi(hra, z);
-      return !zima && (!o || o === O.TRAVA);
+      if (o === O.STROM || o === O.HOUBA) return farmaSklizi(hra, z);
+      return (!zima || hra.hora.pozadi[i] !== M.VZDUCH) && (!o || o === O.TRAVA);
     }
     if (z.typ === 'pole' && zima) return false;
     return hra.uroda[i] === 0 || farmaSklizi(hra, z);
@@ -444,6 +483,15 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
       for (const d of P.DOSAH) { const j = c - d[1] * W - d[0]; if (j >= 0 && j < N) a[j] = a.tik; }
     }
     return a;
+  }
+  // je někde značka k bourání? (jednou za tah – ať se okolí polí při hledání práce zbytečně neprochází)
+  const bouraniCache = new WeakMap();
+  function nejakeBourani(hra) {
+    const c = bouraniCache.get(hra);
+    if (c && c.tik === hra.tik) return c.ano;
+    const ano = hra.oznac.indexOf(P.OZN.BOURAT) >= 0;
+    bouraniCache.set(hra, { tik: hra.tik, ano });
+    return ano;
   }
   const UROVNE = [0, 0.5, 0.9, 1, 1.9, 2, 2.9, 3];   // pořadí hledání práce (viz stupen v najdiPraci)
   function najdiPraci(hra, t) {
@@ -528,6 +576,13 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
     // stupně, které nezávisí na poli, jednou za hledání
     const sKopatPrio = stupen('kopat', 1), sKacet = stupen('kacet'), sPribeh = stupen('remeslo', true), sPumpa = stupen('nosit', false, nz.voda),
           sPole = stupen('pole', false, nz.hlad && nz.pole), sStavet = stupen('stavet'), sHlidat = stupen('hlidat', true), sNosit = stupen('nosit');
+    // trpaslík vyhrazený k dílně (bez nošení) odnese své hotové výrobky od dílny do skladu sám – na stupni řemesla, až
+    // když není co vyrábět. Jinak výrobky ležely u dílny, trvalá zakázka „udržuj N" je počítala jako zásobu a dílna
+    // stála, i když ve skladu nebylo nic (kuchyně a pivovar s vyhrazenými trpaslíky, nosiči zaměstnaní jinde).
+    const sVyrobky = !pov.nosit && t.dilna && pov.remeslo ? stupen('remeslo') : -1;
+    const vyrobky = sVyrobky >= 0 ? new Set((S.RECEPTY[t.dilna] || []).map(rc => rc.vyrobek)) : null;
+    const uSveDilny = i => { const x = i % W; for (const j of [i, x > 0 ? i - 1 : -1, x < W - 1 ? i + 1 : -1]) { const d = j >= 0 && hra.stavba[j] === S.K.DILNA && S.dilnaNa(hra, j); if (d && d.typ === t.dilna) return true; } return false; };
+    const bourat = pov.stavet && nejakeBourani(hra);
     const kandKopat = pov.kopat ? kandidatiKopani(hra) : null;
     const ulohaNa = (i, cil) => {
       if (pov.kopat && kandKopat[i] === kandKopat.tik) {
@@ -554,8 +609,13 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
         const z = S.zonaNa(hra, i);
         if (z && S.FARMY[z.typ] && C.stojne(hra, i) && farmaPrace(hra, z, i, zimaTed)) return { typ: 'pole', c: i, pos: i };
       }
+      if (bourat && sStavet === cil && C.stojne(hra, i)) for (const [dx, dy] of S.STAV_DOSAH) {   // zbourat stavbu v dosahu
+        const j = i + dy * W + dx;
+        if (j < 0 || j >= N || Math.abs((j % W) - x) > 1 || hra.oznac[j] !== P.OZN.BOURAT || hra.rez.has(j) || !P.lzeBourat(hra, j)) continue;
+        return { typ: 'bourat', c: j, pos: i };
+      }
       if (tes && tes.vse && sStavet === cil && C.stojne(hra, i)) { const c = cilTesani(hra, i, false); if (c >= 0) return { typ: 'tesat', c, pos: i }; }
-      if (pov.stavet) { const st = stavet(i); if (st) { const pl = S.planPodle(hra, st.plan); if (stupen('stavet', pl.prio ? 2 : 'r', nz.strop && pl.typ === 'podpera') === cil) return st; } }
+      if (pov.stavet) { const st = stavet(i); if (st) { const pl = S.planPodle(hra, st.plan); if (stupen('stavet', pl.prio ? 2 : S.STAVBY[pl.typ].nabytek ? 1 : 'r', nz.strop && pl.typ === 'podpera') === cil) return st; } }
       if (potreba.size) {
         const dn = donest(i);
         const kuch = dn && nz.hlad && dn.dilna && dilnaPodle(hra, dn.dilna).typ === 'kuchyne';
@@ -572,7 +632,8 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
         if (tes && tes.hlina && !(hra.tesatBlok > hra.tik) && v.druh === 'kamen' && sStavet === cil) return { typ: 'tesat', vec: v.id, pos: i, faze: 'k_veci' };   // kámen na obklad hliněné stěny
         if (cil === 0.5 && pref && v.druh === pref && (!t.nastroj || v.mat === 'zelezo')) return { typ: 'vybavit', vec: v.id, pos: i, faze: 'k_veci' };
         if (sHlidat === cil && ((!t.zbran && v.druh === 'valecna_sekera') || (!t.zbroj && v.druh === 'zbroj'))) return { typ: 'vybavit', vec: v.id, pos: i, faze: 'k_veci' };
-        if (sNosit === cil && !(prijimaTu && prijimaTu.has(v.druh)) && prijima.has(v.druh)) return { typ: 'odnes', vec: v.id, pos: i, faze: 'k_veci' };
+        if ((sNosit === cil || (sVyrobky === cil && vyrobky.has(v.druh) && uSveDilny(i))) && !(prijimaTu && prijimaTu.has(v.druh)) && prijima.has(v.druh) && !(zi && zi.typ === 'jidelna' && S.DRUHY_JIDELNY.has(v.druh)))
+          return { typ: 'odnes', vec: v.id, pos: i, faze: 'k_veci' };
       }
       return 0;
     };
@@ -590,7 +651,7 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
     }
     if (!r) return false;
     const p = r.hodnota;
-    if (p.typ === 'kopat' || p.typ === 'kacet' || p.typ === 'pole' || p.typ === 'pumpovat' || p.typ === 'cist' || (p.typ === 'tesat' && !p.vec)) hra.rez.set(p.c, t.id);
+    if (p.typ === 'kopat' || p.typ === 'kacet' || p.typ === 'bourat' || p.typ === 'pole' || p.typ === 'pumpovat' || p.typ === 'cist' || (p.typ === 'tesat' && !p.vec)) hra.rez.set(p.c, t.id);
     else if (p.typ === 'stavet') S.planPodle(hra, p.plan).rez = t.id;
     else if (p.typ === 'vyrobit') { const d = dilnaPodle(hra, p.dilna); mistoDilny(d, p.misto).rez = t.id; d.cekaOd = 0; }
     else {
@@ -601,6 +662,24 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
     t.prace = p; t.cesta = r.cesta; t.stav = 'jde'; t.akce = 0;
     return true;
   }
+  // Sklizeň rovnou do dílny: farmář s nošením vezme čerstvě sklizený kus a nese ho do kuchyně či pivovaru, jehož
+  // rozpracovaný výrobek ho potřebuje (v nouzi o jídlo kuchyně první). Dřív šla úroda pole → sklad → kuchyně → sklad →
+  // stůl (≈ 4 cesty na jídlo; nošení 30–33 % času klanu).
+  function primoDoDilny(hra, t, v) {
+    if (!t.povoleno.nosit || v.nese || v.rez || v.i !== t.i) return false;
+    let kam = null;
+    const hlad = hra.nouze && hra.nouze.hlad;
+    for (const d of hra.dilny) mista(d).forEach((m, k) => {
+      if (!m.vRobe || chybiDilne(hra, d, v.druh, m) <= 0) return;
+      if (!kam || (hlad && d.typ === 'kuchyne' && kam.d.typ !== 'kuchyne')) kam = { d, k, m };
+    });
+    if (!kam) return false;
+    v.rez = t.id; kam.m.vRobe.vCeste[v.druh]++;
+    t.prace = { typ: 'donest', vec: v.id, druh: v.druh, dilna: kam.d.id, misto: kam.k, pos: t.i, faze: 'k_veci', vCeste: 1 };
+    t.cesta = []; t.stav = 'jde'; t.akce = 0; t.cekej = 0;
+    return true;
+  }
+  const JIDELNA_DOSAH = 600;                          // jak daleko (polí hledání) se nese jídlo do jídelny místo do skladu
   // nová cesta ke stejnému cíli (když se svět změnil)
   function preplanuj(hra, t) {
     const cil = t.prace.pos;
@@ -661,10 +740,33 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
     for (const u of hra.tvorove) if (hra.znamo[u.i] && Math.abs(u.i % W - x) + Math.abs((u.i / W | 0) - y) <= UKRYT_DALEKO) return false;
     return true;
   }
-  function ukryjSe(hra, t) {
+  // Útočník, před kterým se civilista schová i bez poplachu (a kvůli kterému se nejde spát ani léčit do blízké postele):
+  // viděný nájezdník, Spáč, nebo tvor, který nedávno útočil (ne netopýr), do `dosah` polí (Manhattan) od pole i.
+  // Dřív poplach nechal spáče, jedlíky a léčící se strážce na místě – 43 % obětí nájezdů zemřelo v posteli u brány.
+  const HROZBA_BLIZKO = 12, HROZBA_KONEC = 20;
+  function hrozbaU(hra, i, dosah) {
+    const x = i % W, y = i / W | 0, d = dosah || HROZBA_BLIZKO;
+    for (const u of hra.tvorove) {
+      if (u.druh === 'netopyr' || !hra.znamo[u.i] || !(u.najezd || u.druh === 'spac' || u.zautocil > hra.tik - 300)) continue;
+      if (Math.abs(u.i % W - x) + Math.abs((u.i / W | 0) - y) <= d) return true;
+    }
+    return false;
+  }
+  // viděný nájezdník nebo Spáč do 2 polí od pole i (krok tam civilista neudělá)
+  function najezdnikU(hra, i) {
+    const x = i % W, y = i / W | 0;
+    for (const u of hra.tvorove) if ((u.najezd || u.druh === 'spac') && hra.znamo[u.i] && Math.abs(u.i % W - x) + Math.abs((u.i / W | 0) - y) <= 2) return true;
+    return false;
+  }
+  // schová se: civilista a zraněný strážce (pod 35 ♥ ustupuje jako civilista, ne jen o pole); zdravý strážce bojuje
+  const schovaSe = t => !t.povoleno.hlidat || t.zdravi < T.hrozby.ZDRAVI_USTUP;
+  function ukryjSe(hra, t, hrozi) {
     const p = t.prace;
-    if (!hra.poplach || t.povoleno.hlidat || POT.kriticke(hra, t)) { if (p && p.typ === 'ukryt') pustPraci(hra, t); return; }
-    if (p && (p.typ === 'ukryt' || p.typ === 'jist' || p.typ === 'pit' || p.typ === 'spat')) return;
+    if (!schovaSe(t) || POT.kriticke(hra, t)) { if (p && p.typ === 'ukryt') pustPraci(hra, t); return; }
+    if (!hra.poplach && !hrozi) return;               // úkryt bez poplachu skončí sám (viz práce 'ukryt')
+    if (p && (p.typ === 'ukryt' || p.typ === 'zazehnout')) return;     // kdo nese Klíč nebo zažíhá Výheň, zůstane (viz krokCivilisty)
+    // jídlo, pití a spánek (i léčení) daleko od nepřátel počkají; v jejich dosahu je trpaslík nechá (spáč se vzbudí) a schová se
+    if (p && (p.typ === 'jist' || p.typ === 'pit' || p.typ === 'spat') && daleko(hra, t.i) && daleko(hra, p.pos)) return;
     if (t.ukrytBlok > hra.tik) return;
     const r = C.hledej(hra, t.i, i => { if (!hra.zona[i]) return 0; const z = S.zonaNa(hra, i); return z && UKRYT_ZONY.has(z.typ) && C.stojne(hra, i) && daleko(hra, i) ? 1 : 0; });
     if (!r) { t.ukrytBlok = hra.tik + 60; return; }
@@ -724,8 +826,11 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
     if (hra.tvorove.length && T.hrozby.branSe(hra, t, (typ, text, i) => zprava(hra, typ, text, i))) { t.stav = 'bojuje'; return; }
     if (t.zuri > hra.tik) { t.stav = 'zuri'; toulej(hra, t, true); return; }
     if (T.hrozby.krokCivilisty && T.hrozby.krokCivilisty(hra, t)) return;
-    if (hra.poplach || (t.prace && t.prace.typ === 'ukryt')) ukryjSe(hra, t);    // poplach: civilisté se schovají (krokCivilisty řeší jen Spáče)
-    if (t.prace && t.prace.typ === 'cvicit' && hra.tvorove.length) pustPraci(hra, t);
+    // poplach, nebo útočník do 12 polí: civilisté (a zranění strážci) se schovají (krokCivilisty řeší jen útěk před Spáčem)
+    const hrozi = !hra.poplach && hra.tvorove.length > 0 && schovaSe(t) && hrozbaU(hra, t.i);
+    if (hra.poplach || hrozi || (t.prace && t.prace.typ === 'ukryt')) ukryjSe(hra, t, hrozi);
+    // výcvik přeruší jen známý nepřítel, na kterého se strážce může zkusit dostat (nedosažitelný = lovBlok)
+    if (t.prace && t.prace.typ === 'cvicit' && hra.tvorove.length && T.hrozby.znamyNepritel(hra) && !(t.lovBlok > hra.tik)) pustPraci(hra, t);
     if (t.cekej > 0) { t.cekej--; return; }
     // kritická potřeba přeruší práci
     const potrebova = p0 => p0 && (p0.typ === 'jist' || p0.typ === 'pit' || p0.typ === 'spat');
@@ -774,11 +879,22 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
     while (t.cesta.length && t.cesta[0] === t.i) t.cesta.shift();
     if (t.cesta.length) {
       const dalsi = t.cesta[0];
+      // civilista nevkročí na 2 pole k útočníkovi (dřív si chodili pro věci padlých přímo k nájezdníkům – i výtahem –
+      // a v jedné hře jich u jedné stanice zemřelo 16 po sobě); práce počká, úkryt se hledá jinde
+      if (hra.tvorove.length && schovaSe(t) && p.typ !== 'zazehnout' && najezdnikU(hra, dalsi)) {
+        // (počká; po 4 marných pokusech práci pustí – nové hledání práce stojí víc než čekání)
+        if ((t.couvl = (t.couvl || 0) + 1) > 4) { t.couvl = 0; pustPraci(hra, t); t.hledej = 60; } else t.cekej = 30;
+        return;
+      }
       const typ = C.krok(hra, t.i, dalsi);
       if (!typ) { if (!preplanuj(hra, t)) { pustPraci(hra, t); t.hledej = 5; } return; }
       t.cesta.shift();
       t.stav = t.nese ? 'nese' : 'jde';
-      presun(t, dalsi, dobaKroku(typ, t.i, dalsi, t.nese));
+      // nošení a chůze: zkušený trpaslík chodí rychleji (zlomek tahu se přenáší do dalšího kroku)
+      const doba = dobaKroku(typ, t.i, dalsi, t.nese) / (typ === 'vytah' ? 1 : fDov(t, 'noseni')) + (t.krokZbytek || 0);
+      const cele = Math.max(1, Math.floor(doba));
+      t.krokZbytek = Math.round((doba - cele) * 1000) / 1000;
+      presun(t, dalsi, cele);
       return;
     }
     if (t.i !== p.pos) { if (!preplanuj(hra, t)) { pustPraci(hra, t); t.hledej = 5; } return; }
@@ -794,7 +910,10 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
       hra.rez.delete(p.c);
       hotovo(t);
       zvuk(hra, 'vykop', p.c, hra.hora.teren[p.c]);
+      // podpěra naplánovaná do kopané skály se rovnou vytesá z kamene: bez dřeva, kámen zůstane ve sloupu (ruda se vytěží)
+      const pid = hra.planNa.get(p.c), sloup = pid && S.planPodle(hra, pid), id0 = hra.dalsiId;
       P.vykopej(hra, p.c, (typ, text, i) => zprava(hra, typ, text, i));
+      if (sloup && sloup.typ === 'podpera' && hra.plany.includes(sloup) && hra.hora.teren[p.c] === M.VZDUCH) vytesejPodperu(hra, sloup, t, id0);
       opotrebuj(hra, t, 'kopat');
       if (++t.zkusenost >= 6 + 2 * t.dov.kopani) { t.zkusenost = 0; if (t.dov.kopani < 20) t.dov.kopani++; }
       return;
@@ -808,7 +927,7 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
       }
       if (p.c === undefined) { const c = cilTesani(hra, t.i, true, t); if (c < 0) { pustPraci(hra, t); return; } p.c = c; hra.rez.set(c, t.id); }
       if (hra.oznac[p.c] !== P.OZN.TESAT || !P.lzeTesat(hra, p.c) || hra.rez.get(p.c) !== t.id) { pustPraci(hra, t); return; }
-      if (!t.akce) t.akceDoba = Math.max(5, Math.round(DOBA.tesat / POT.rychlost(t) / faktorNastroje(t, 'kopat')));
+      if (!t.akce) t.akceDoba = Math.max(5, Math.round(DOBA.tesat / POT.rychlost(t) / faktorNastroje(t, 'kopat') / fDov(t, 'tesani')));
       t.stav = 'kope';
       if (t.akce % 8 === 4) zvuk(hra, 'uder', p.c, M.ZED);
       if (++t.akce < t.akceDoba) return;
@@ -817,28 +936,47 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
       hra.oznac[p.c] = 0; hra.rez.delete(p.c);
       if (t.nese) { const v = vecPodle(hra, t.nese); if (v) { hra.veci.splice(hra.veci.indexOf(v), 1); P.tok(hra, v.druh, 'm', 'stavby'); } t.nese = 0; }
       hotovo(t, 2);
+      zlepsi(hra, t, 'tesani');
       return;
     }
     if (p.typ === 'kacet') {
       if (hra.oznac[p.c] !== P.OZN.KACET || !kacetelne(hra.hora.obj[p.c]) || Math.abs(p.c - t.i) > 1) { pustPraci(hra, t); return; }
-      t.akceDoba = Math.round(DOBA.kacet / POT.rychlost(t) / faktorNastroje(t, 'kacet')); t.stav = 'kope'; natoc(p.c);
+      t.akceDoba = Math.round(DOBA.kacet / POT.rychlost(t) / faktorNastroje(t, 'kacet') / fDov(t, 'kaceni')); t.stav = 'kope'; natoc(p.c);
       if (t.akce % 8 === 4) zvuk(hra, 'sekera', p.c);
       if (++t.akce < t.akceDoba) return;
       hra.rez.delete(p.c);
       hotovo(t);
       opotrebuj(hra, t, 'kacet');
+      zlepsi(hra, t, 'kaceni');
       P.skacej(hra, p.c);
+      return;
+    }
+    if (p.typ === 'bourat') {
+      const dx = Math.abs((p.c % W) - (t.i % W)), dy = (p.c / W | 0) - (t.i / W | 0);
+      if (hra.oznac[p.c] !== P.OZN.BOURAT || !P.lzeBourat(hra, p.c) || dx > 1 || dy < -2 || dy > 1 || hra.rez.get(p.c) !== t.id) { pustPraci(hra, t); return; }
+      t.akceDoba = Math.round(S.dobaBourani(hra, p.c) / POT.rychlost(t) / faktorNastroje(t, 'stavet') / fDov(t, 'stavba')); t.stav = 'kope'; natoc(p.c);
+      if (t.akce % 10 === 5) zvuk(hra, 'kladivo', p.c);
+      if (++t.akce < t.akceDoba) return;
+      hra.rez.delete(p.c);
+      const nazev = S.nazevNa(hra, p.c);
+      for (const j of S.rozeber(hra, p.c, (druh, i, mat) => P.novaVec(hra, druh, i, mat !== undefined ? mat : druh === 'drevo' ? 'drevo' : 0)))
+        if (hra.oznac[j] === P.OZN.BOURAT) hra.oznac[j] = 0;
+      P.usadVeci(hra);
+      zprava(hra, 'stavba', `${t.jmeno} rozebral ${nazev}.`, p.c);
+      hotovo(t, 2);
+      zlepsi(hra, t, 'stavba');
       return;
     }
     if (p.typ === 'stavet') {
       const pl = S.planPodle(hra, p.plan);
       if (!pl || !S.pripraven(pl) || !S.planVDosahu(hra, t.i, pl) || !S.volnoProPlan(hra, pl) || !S.mistoPlanu(hra, pl)) { pustPraci(hra, t); return; }
-      t.akceDoba = Math.round(S.STAVBY[pl.typ].doba / POT.rychlost(t) / faktorNastroje(t, 'stavet') / T.pribeh.faktor(hra, 'stavet')); t.stav = 'kope'; natoc(pl.i);
+      t.akceDoba = Math.round(S.STAVBY[pl.typ].doba / POT.rychlost(t) / faktorNastroje(t, 'stavet') / T.pribeh.faktor(hra, 'stavet') / fDov(t, 'stavba')); t.stav = 'kope'; natoc(pl.i);
       if (t.akce % 10 === 5) zvuk(hra, 'kladivo', pl.i);
       if (++t.akce < t.akceDoba) return;
       hotovo(t, 2);
       opotrebuj(hra, t, 'stavet');
       S.dokonci(hra, pl, t, (typ, text, i) => zprava(hra, typ, text, i));
+      zlepsi(hra, t, 'stavba');
       return;
     }
     if (p.typ === 'odnes') {
@@ -852,7 +990,10 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
         const prednostni = i => { const z = S.zonaNa(hra, i); return z && z.prio; };
         // všechna pole plná (sklad je přeplněný): na nejméně zaplněné dosažitelné pole, ne všechno na nejbližší
         let nej = -1, nejN = Infinity;
-        const r = (prio && C.hledej(hra, t.i, i => S.prijme(hra, i, v.druh) && prednostni(i) && (pocet.get(i) || 0) < S.MAX_NA_POLI ? 1 : 0)) ||
+        // jídlo a pivo z kuchyně a pivovaru nejdřív do blízké jídelny (ke stolům), pokud tam je místo
+        const doJidelny = S.DRUHY_JIDELNY.has(v.druh) && hra.zony.some(z => z.typ === 'jidelna') &&
+          C.hledej(hra, t.i, i => S.vJidelne(hra, i, v.druh) && C.stojne(hra, i) && (pocet.get(i) || 0) < S.MAX_NA_POLI ? 1 : 0, JIDELNA_DOSAH);
+        const r = doJidelny || (prio && C.hledej(hra, t.i, i => S.prijme(hra, i, v.druh) && prednostni(i) && (pocet.get(i) || 0) < S.MAX_NA_POLI ? 1 : 0)) ||
                   C.hledej(hra, t.i, i => {
                     if (!S.prijme(hra, i, v.druh)) return 0;
                     const n = pocet.get(i) || 0;
@@ -868,7 +1009,7 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
         p.faze = 'k_cili'; p.pos = r.i; t.cesta = r.cesta;
         return;
       }
-      poloz(hra, t); hotovo(t, 2);
+      poloz(hra, t); hotovo(t, 2); zlepsi(hra, t, 'noseni');
       return;
     }
     if (p.typ === 'donest' && p.dilna) {
@@ -883,7 +1024,7 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
       const v = vecPodle(hra, t.nese);
       hra.veci.splice(hra.veci.indexOf(v), 1); P.tok(hra, v.druh, 'm', d.typ);
       t.nese = 0;
-      m.vRobe.doneseno[p.druh]++; m.vRobe.vCeste[p.druh]--;
+      m.vRobe.doneseno[p.druh]++; m.vRobe.vCeste[p.druh]--; zlepsi(hra, t, 'noseni');
       hotovo(t);
       return;
     }
@@ -899,7 +1040,7 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
       const v = vecPodle(hra, t.nese);
       hra.veci.splice(hra.veci.indexOf(v), 1); P.tok(hra, v.druh, 'm', 'stavby');   // materiál se spotřebuje
       t.nese = 0;
-      pl.doneseno[p.druh]++; pl.vCeste[p.druh]--;
+      pl.doneseno[p.druh]++; pl.vCeste[p.druh]--; zlepsi(hra, t, 'noseni');
       if (S.STAVBY[pl.typ].nabytek) pl.mat = v.mat;
       hotovo(t);
       return;
@@ -911,7 +1052,7 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
       const rc = receptPro(d, z);
       // artefakt mezitím dokončila jiná kovárna: zakázka zmizí, materiál vypadne (jinak by vznikl podruhé)
       if (rc.vyrobek.startsWith('art_') && T.pribeh.artefaktZakazany(hra, rc.vyrobek)) { d.fronta.splice(d.fronta.indexOf(z), 1); uvolniMisto(hra, d, p.misto || 0); return; }
-      t.akceDoba = Math.round(rc.doba / POT.rychlost(t) / faktorNastroje(t, 'vyrobit') / T.pribeh.faktor(hra, 'vyrobit')); t.stav = 'kope';
+      t.akceDoba = Math.round(rc.doba / POT.rychlost(t) / faktorNastroje(t, 'vyrobit') / T.pribeh.faktor(hra, 'vyrobit') / fDov(t, 'remeslo')); t.stav = 'kope';
       if (t.akce % 10 === 5) zvuk(hra, ['tavirna', 'kovarna', 'magmovyhen', 'runova_kovarna'].includes(d.typ) ? 'kovadlina' : 'dilna', t.i);
       if (++t.akce < t.akceDoba) return;
       if (rc.vyrobek.startsWith('art_')) T.pribeh.vyroben(hra, rc.vyrobek, t.i);
@@ -921,12 +1062,15 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
       if (!z.trvala && --z.zbyva <= 0) d.fronta.splice(d.fronta.indexOf(z), 1);
       hotovo(t, 2);
       opotrebuj(hra, t, 'vyrobit');
+      zlepsi(hra, t, 'remeslo');
       return;
     }
     if (p.typ === 'lov') { if (T.hrozby.uNepritele(hra, t.i)) { t.stav = 'bojuje'; return; } hotovo(t); return; }
     if (p.typ === 'ukryt') {                       // schovaný: čeká, dokud trvá poplach; když se nepřítel přiblíží, hledá jinde
       t.stav = 'nic';
       if ((hra.tik + t.id) % 60 === 0 && !daleko(hra, t.i)) pustPraci(hra, t);
+      // úkryt bez poplachu (útočník byl blízko) skončí, když už žádný není do 20 polí
+      else if (!hra.poplach && (hra.tik + t.id) % 30 === 0 && !hrozbaU(hra, t.i, HROZBA_KONEC)) hotovo(t);
       return;
     }   // u nepřítele stojí a bije
     if (p.typ === 'cist') {
@@ -978,28 +1122,37 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
       return;
     }
     if (p.typ === 'pole' && hra.zona[p.c] && (S.zonaNa(hra, p.c) || {}).typ === 'les') {    // lesní školka: zasadit / pokácet
-      const o = hra.hora.obj[p.c];
-      if (o !== O.STROM && o && o !== O.TRAVA) { pustPraci(hra, t); return; }
-      if (!t.akce) t.akceDoba = o === O.STROM ? Math.round(DOBA.kacet / POT.rychlost(t) / faktorNastroje(t, 'kacet')) : Math.round(25 / POT.rychlost(t));
+      const o = hra.hora.obj[p.c], kacet = o === O.STROM || o === O.HOUBA;
+      if (!kacet && o && o !== O.TRAVA) { pustPraci(hra, t); return; }
+      if (!t.akce) t.akceDoba = kacet ? Math.round(DOBA.kacet / POT.rychlost(t) / faktorNastroje(t, 'kacet') / fDov(t, 'kaceni')) : Math.round(25 / POT.rychlost(t) / fDov(t, 'pole'));
       t.stav = 'kope';
-      if (o === O.STROM && t.akce % 8 === 4) zvuk(hra, 'sekera', p.c);
+      if (kacet && t.akce % 8 === 4) zvuk(hra, 'sekera', p.c);
       if (++t.akce < t.akceDoba) return;
       hra.rez.delete(p.c);
-      if (o === O.STROM) { P.skacej(hra, p.c); opotrebuj(hra, t, 'kacet'); }
-      else { hra.hora.obj[p.c] = O.PAREZ; hra.parezy.push({ i: p.c, tik: hra.tik + 3 * TAHU_ZA_DEN, sazenice: true }); }   // stromek doroste za 3 dny
+      if (kacet) { P.skacej(hra, p.c); opotrebuj(hra, t, 'kacet'); zlepsi(hra, t, 'kaceni'); }
+      else {
+        zlepsi(hra, t, 'pole');   // stromek doroste za 3 dny, pod zemí obří houba ze spor za 4 (i v zimě)
+        const pod = hra.hora.pozadi[p.c] !== M.VZDUCH;
+        hra.hora.obj[p.c] = O.PAREZ; hra.parezy.push(pod ? { i: p.c, tik: hra.tik + 4 * TAHU_ZA_DEN, sazenice: true, houba: true } : { i: p.c, tik: hra.tik + 3 * TAHU_ZA_DEN, sazenice: true });
+      }
       hotovo(t);
       return;
     }
     if (p.typ === 'pole') {
       const z = S.zonaNa(hra, p.c), plodina = z && S.FARMY[z.typ];
       if (!plodina || hra.uroda[p.c] % 101 !== 0) { pustPraci(hra, t); return; }
-      t.akceDoba = Math.round(20 / POT.rychlost(t)); t.stav = 'kope';
+      t.akceDoba = Math.round(20 / POT.rychlost(t) / fDov(t, 'pole')); t.stav = 'kope';
       if (++t.akce < t.akceDoba) return;
       hra.rez.delete(p.c);
+      zlepsi(hra, t, 'pole');
       if (hra.uroda[p.c] === 101) {                 // pole dá 2 snopy, houbárna 1 houbu
         hra.uroda[p.c] = 0;
-        for (let k = 0; k < (z.typ === 'houbarna' ? 1 : 2); k++) P.novaVec(hra, plodina, p.c, 0, z.typ);
+        let prvni = null;
+        for (let k = 0; k < (z.typ === 'houbarna' ? 1 : 2); k++) { const v = P.novaVec(hra, plodina, p.c, 0, z.typ); prvni = prvni || v; }
         P.usadVeci(hra);
+        hotovo(t);
+        if (prvni && primoDoDilny(hra, t, prvni)) return;     // sklizeň rovnou do kuchyně / pivovaru, který ji čeká
+        return;
       }
       else hra.uroda[p.c] = 1;
       hotovo(t);
@@ -1071,17 +1224,21 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
     }
   }
   // trpaslík, který se nedostane k žádnému skladu, uvízl (typicky v šachtě nebo jámě bez schodiště): sám se naplánuje
-  // záchranný žebřík s ⭐ předností (zachranUviznuteho); zpráva s místem se opakuje, dokud uvízlý je (jednou za 1200 tahů)
+  // záchranný žebřík s ⭐ předností (zachranUviznuteho); zpráva s místem se opakuje, dokud uvízlý je (jednou za 1200 tahů).
+  // Zavřená mříž nikoho neuvězní (dá se otevřít) – dřív se za ní hlásilo uvíznutí a záchrana kopala kolem mříže.
   function hlidejUviznuti(hra, t) {
     if (hra.tik < (t.kontrola || 0)) return;
     t.kontrola = hra.tik + 150;
-    const venku = !!C.hledej(hra, t.i, i => S.jeSklad(hra, i) ? 1 : 0);
+    const kSkladu = i => S.jeSklad(hra, i) ? 1 : 0;
+    const venku = !!C.hledej(hra, t.i, kSkladu) || !!C.sRezimem(hra, true, false, () => C.hledej(hra, t.i, kSkladu));
     t.uvizl = !venku;
-    if (venku) return;
+    if (venku) { t.zachrana = null; return; }          // zbytky záchrany zruší hlidejZachrany
     const z = zachranUviznuteho(hra, t);
     if (!(t.hlaseno > hra.tik)) {
       const n = z ? z.pole.length : 0, poli = n === 1 ? 'pole' : n < 5 ? 'pole' : 'polí';
-      zprava(hra, 'uvizl', `${t.jmeno} uvízl a nedostane se zpátky` + (!z ? '. Postav k němu žebřík nebo vytesej schodiště.'
+      const spac = !z && T.pribeh.budiSpace(hra, t.i / W | 0);
+      zprava(hra, 'uvizl', `${t.jmeno} uvízl a nedostane se zpátky` + (spac ? '. Záchranné schodiště by tu probudilo Spáče – postav k němu žebřík (dřevo), nebo kopej ručně.'
+        : !z ? '. Postav k němu žebřík nebo vytesej schodiště.'
         : z.typ === 'schody' ? ` – dřevo na žebřík není, k němu je vyznačené záchranné schodiště do skály (${n} ${poli}, ⭐ přednost).`
         : ` – k němu je naplánovaný záchranný žebřík (${n} ${poli}, ⭐ přednost, potřebuje dřevo).`), t.i);
       t.hlaseno = hra.tik + 1200;
@@ -1094,19 +1251,36 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
     for (let h = 0; h < q.length; h++) C.sousede(hra, q[h], j => { if (!F[j]) { F[j] = 1; q.push(j); } });
     return q.length ? F : null;
   }
+  // dosah ze skladů pro záchranu: zavřená mříž průchozí, neprozkoumaná pole ne (jednou za tah, neukládá se)
+  const dosahZachranyCache = new WeakMap();
+  function dosahZachrany(hra) {
+    const c = dosahZachranyCache.get(hra);
+    if (c && c.tik === hra.tik) return c.F;
+    const F = C.sRezimem(hra, true, true, () => dosahSkladu(hra));
+    dosahZachranyCache.set(hra, { tik: hra.tik, F });
+    return F;
+  }
   // --- Záchranná cesta ven (uvízlý trpaslík, cenná věc v jámě, Srdce hory pod nedokončeným žebříkem) ---------------
   // Žebřík: z pole, kam se od startu dojde (nejbližší první), svisle nahoru volnou šachtou/jámou k nejbližšímu poli,
   // odkud se vystoupí na pole dosažitelné ze skladu (nebo pole samo dosažitelné je). Schodiště (bez dřeva): sloupec
   // vytesaný do skály hned vedle, zespodu nahoru, dokud z něj nejde vystoupit ven. Spojení se vždy ověří hledáním cesty
   // ze startu do skladu s dočasně položeným žebříkem / vytesaným schodištěm. Vrací { typ: 'zebrik'|'schody', pole } nebo null.
+  // Záchrana nikdy nekope do neprozkoumaného (jeskyně s pavouky, goblinní tunel, Srdce) ani v hloubce Spáče.
   const ZACHRANA_VYSKA = 40, ZACHRANA_POKUSU = 8;
   const zebrikNa = (hra, j) => { const id = hra.planNa.get(j), p = id && S.planPodle(hra, id); return !!p && p.typ === 'zebrik'; };
-  // cesta ze startu do skladu, když se svět dočasně upraví (zmen() / vrat()); mezipaměti cest se zahodí
+  // cesta ze startu do skladu, když se svět dočasně upraví (zmen() / vrat()); zavřená mříž průchozí, neprozkoumaná
+  // pole ne; svět se vrátí i při chybě; mezipaměti cest se zahodí
   function overVystup(hra, start, zmen, vrat) {
-    zmen(); hra._vylezTik = -1; hra._vytahTik = -1;
-    const ok = !!C.hledej(hra, start, i => S.jeSklad(hra, i) ? 1 : 0);
-    vrat(); hra._vylezTik = -1; hra._vytahTik = -1;
-    return ok;
+    try {
+      zmen();
+      return C.sRezimem(hra, true, true, () => !!C.hledej(hra, start, i => S.jeSklad(hra, i) ? 1 : 0));
+    } finally { vrat(); hra._vylezTik = -1; hra._vytahTik = -1; }
+  }
+  // pole, kam se od startu dojde (nejvýš 3000) – se stejnými pravidly jako ověření výstupu
+  function oblastZachrany(hra, start) {
+    const oblast = [];
+    C.sRezimem(hra, true, true, () => C.hledej(hra, start, i => { oblast.push(i); return 0; }, 3000));
+    return oblast;
   }
   function najdiZebrik(hra, start, oblast, F) {
     const vyzkouseno = new Set();
@@ -1116,7 +1290,7 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
       if (!C.stojne(hra, r) || vyzkouseno.has(r % W)) continue;
       const sloupec = [];
       for (let u = r - W, k = 0; u >= 0 && k < ZACHRANA_VYSKA; u -= W, k++) {
-        if (!C.volne(hra, u)) break;
+        if (!C.volne(hra, u) || !hra.znamo[u]) break;
         if (!hra.lez[u] && !zebrikNa(hra, u) && S.prekazka(hra, 'zebrik', u)) break;      // louč, stavba, cizí plán: tudy ne
         sloupec.push(u);
         const x = u % W;
@@ -1130,12 +1304,20 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
     }
     return null;
   }
-  // pole, které jde vytesat na záchranné schodiště: skála, kterou jde kopat, nic nenese a nesousedí s vodou ani magmatem
+  // pole, které jde vytesat na záchranné schodiště: známá skála, kterou jde kopat, nic nenese, nesousedí s vodou ani
+  // magmatem, není v hloubce Spáče (kopání by ho probudilo) a vykopáním se neodkryje nic neznámého – každé z 8 polí
+  // kolem (ta se kopáním odhalí) je známé, nebo pevná skála (jinak by schodiště prokopalo skrytou jeskyni či tunel)
   function naSchod(hra, u) {
     const t = hra.hora.teren;
-    if (!pevne(t[u]) || !P.lzeKopat(hra, u) || S.neseStavbu(hra, u) || hra.planNa.has(u)) return false;
+    if (!pevne(t[u]) || !hra.znamo[u] || !P.lzeKopat(hra, u) || S.neseStavbu(hra, u) || hra.planNa.has(u)) return false;
+    if (T.pribeh.budiSpace(hra, u / W | 0)) return false;
     const x = u % W;
     for (const j of [u - W, u + W, x > 0 ? u - 1 : -1, x < W - 1 ? u + 1 : -1]) if (j >= 0 && j < N && (t[j] === M.VODA || t[j] === M.MAGMA)) return false;
+    for (let dy = -1; dy <= 1; dy++) for (let dx = -1; dx <= 1; dx++) {
+      const j = u + dy * W + dx;
+      if (x + dx < 0 || x + dx >= W || j < 0 || j >= N) continue;
+      if (!hra.znamo[j] && !pevne(t[j])) return false;
+    }
     return true;
   }
   function najdiSchody(hra, start, oblast) {
@@ -1151,8 +1333,9 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
         for (let u = r + s, k = 0; u >= W && k < ZACHRANA_VYSKA && overeni < ZACHRANA_POKUSU; u -= W, k++) {
           if (!naSchod(hra, u)) break;
           sloupec.push(u);
-          // výstup: vedle nebo nad schodem je volné pole mimo jámu, ze které se leze
-          if (!(u - W >= 0 && C.volne(hra, u - W) && !vOblasti.has(u - W)) && ![u - 1, u + 1].some(j => C.volne(hra, j) && !vOblasti.has(j))) continue;
+          // výstup: vedle nebo nad schodem je volné známé pole mimo jámu, ze které se leze
+          const ven = j => C.volne(hra, j) && hra.znamo[j] && !vOblasti.has(j);
+          if (!(u - W >= 0 && ven(u - W)) && ![u - 1, u + 1].some(ven)) continue;
           overeni++;
           const puv = sloupec.map(j => [t[j], hra.lez[j]]);
           if (overVystup(hra, start, () => { for (const j of sloupec) { t[j] = M.VZDUCH; hra.lez[j] = 1; } },
@@ -1164,25 +1347,76 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
   }
   // volné dřevo (ne nesené, ne rezervované) – na záchranný žebřík
   const volneDrevo = hra => { let n = 0; for (const v of hra.veci) if (v.druh === 'drevo' && !v.nese && !v.rez) n++; return n; };
+  // Evidence záchran (hra.zachrany, ukládá se): { kdo: 't<id>' | 'v' | 'srdce', veci: [id] (u 'v'), typ, pole, od } –
+  // pole = záchranou nově naplánované / označené (nebo převzaté od jiné záchrany). Když záchrana přestane být potřeba
+  // (uvízlý se dostal ven jinak nebo umřel, věc je pryč či dosažitelná, Srdce dosažitelné), její zbylé plány žebříku
+  // se zruší (donesené dřevo vypadne) a značky schodiště smažou – dřív zůstávaly ⭐ práce viset.
+  const zachranyPole = (hra, krome) => { const s = new Set(); for (const e of hra.zachrany) if (e !== krome) for (const j of e.pole) s.add(j); return s; };
+  function zrusZbytekZachrany(hra, e, ponechat) {
+    const jine = zachranyPole(hra, e);
+    for (const j of e.pole) {
+      if (jine.has(j) || (ponechat && ponechat.has(j))) continue;
+      if (e.typ === 'zebrik') { if (zebrikNa(hra, j)) zrusPlany(hra, j % W, j / W | 0, j % W, j / W | 0); }
+      else if (hra.oznac[j] === P.OZN.SCHODY && pevne(hra.hora.teren[j]) && !hra.rez.has(j)) { hra.oznac[j] = 0; hra.prio[j] = 0; }
+    }
+  }
+  function zapisZachranu(hra, kdo, z, vlastni, veci) {
+    const jine = zachranyPole(hra, null);
+    const pole = z.pole.filter(j => vlastni.has(j) || jine.has(j));
+    const stara = kdo !== 'v' && hra.zachrany.find(e => e.kdo === kdo);
+    const e = { kdo, typ: z.typ, pole, od: hra.tik };
+    if (veci) e.veci = veci;
+    hra.zachrany.push(e);
+    if (stara) { zrusZbytekZachrany(hra, stara, new Set(z.pole)); hra.zachrany.splice(hra.zachrany.indexOf(stara), 1); }
+  }
+  // je pole záchrany pořád rozpracované? (plán žebříku / značka schodiště)
+  const zbyvaZachrana = (hra, e) => e.pole.some(j => e.typ === 'zebrik' ? zebrikNa(hra, j) : hra.oznac[j] === P.OZN.SCHODY);
+  function zachranaPotreba(hra, e, F) {
+    if (e.kdo === 'srdce') {
+      const srdce = hra.hora.srdce.y * W + hra.hora.srdce.x;
+      return hra.veci.some(v => v.druh === 'klic') && !hra.vyhenHori && !!F && !F[srdce];
+    }
+    if (e.kdo === 'v') return (e.veci || []).some(id => { const v = vecPodle(hra, id); return v && !v.nese && !dosazitelna(hra, v, F); });
+    const t = hra.trpaslici.find(t => 't' + t.id === e.kdo);
+    return !!t && t.uvizl && !!t.zachrana && t.zachrana.typ === e.typ && e.pole.some(j => t.zachrana.pole.includes(j));
+  }
+  // jednou za 150 tahů (pevný rozvrh): hotové záchrany vyřadit, nepotřebné zrušit
+  function hlidejZachrany(hra) {
+    if (!hra.zachrany.length) return;
+    hra.zachrany = hra.zachrany.filter(e => zbyvaZachrana(hra, e));
+    if (!hra.zachrany.length) return;
+    const F = hra.zachrany.some(e => e.kdo[0] !== 't') ? dosahZachrany(hra) : null;
+    for (const e of hra.zachrany.slice()) {
+      if (zachranaPotreba(hra, e, F)) continue;
+      hra.zachrany.splice(hra.zachrany.indexOf(e), 1);
+      zrusZbytekZachrany(hra, e);
+    }
+  }
   // naplánuje cestu ven ze startu: žebřík, když je dřevo (nebo schodiště nejde), jinak schodiště do skály
-  function planujVystup(hra, start, F) {
-    const oblast = [];
-    C.hledej(hra, start, i => { oblast.push(i); return 0; }, 3000);
+  // (z.nove = kolik polí se nově naplánovalo či označilo – 0 = záchrana už běží; z.oblast = kam se od startu dojde);
+  // kdo / veci = komu záchrana patří (evidence hra.zachrany)
+  function planujVystup(hra, start, F, kdo, veci) {
+    const oblast = oblastZachrany(hra, start);
     let z = najdiZebrik(hra, start, oblast, F);
     if (!z || volneDrevo(hra) < z.pole.length) z = najdiSchody(hra, start, oblast) || z;
     if (!z) return null;
-    if (z.typ === 'zebrik') for (const j of z.pole) { if (zebrikNa(hra, j)) continue; const p = S.naplanuj(hra, 'zebrik', j); if (p) p.prio = true; }
-    else for (const j of z.pole) { if (hra.oznac[j] !== P.OZN.KOPAT) hra.oznac[j] = P.OZN.SCHODY; hra.prio[j] = 1; }
+    const vlastni = new Set();
+    if (z.typ === 'zebrik') for (const j of z.pole) { if (zebrikNa(hra, j)) continue; const p = S.naplanuj(hra, 'zebrik', j); if (p) { p.prio = true; vlastni.add(j); } }
+    // (i pole už označené ke kopání musí být schod – vykopané bez schodiště by byla svislá šachta, kudy se padá)
+    else for (const j of z.pole) { if (hra.oznac[j] !== P.OZN.SCHODY) { hra.oznac[j] = P.OZN.SCHODY; vlastni.add(j); } hra.prio[j] = 1; }
     for (const u2 of hra.trpaslici) if (u2.urovenBlok) u2.urovenBlok = UROVNE.map(() => 0);
+    zapisZachranu(hra, kdo, z, vlastni, veci);
+    z.nove = vlastni.size; z.oblast = oblast;
     return z;
   }
   // je záchrana pořád rozpracovaná? (žebřík: plány nebo hotový žebřík; schodiště: značky nebo vytesané schody)
   function zachranaTrva(hra, z) {
     if (!z || !z.pole || !z.pole.length) return false;
-    if (z.typ === 'schody') return z.pole.some(j => hra.oznac[j] === P.OZN.SCHODY || hra.oznac[j] === P.OZN.KOPAT) && z.pole.every(j => hra.oznac[j] || hra.lez[j]);
+    if (z.typ === 'schody') return z.pole.some(j => hra.oznac[j] === P.OZN.SCHODY) && z.pole.every(j => hra.oznac[j] === P.OZN.SCHODY || hra.lez[j]);
     return z.pole.some(j => zebrikNa(hra, j)) && z.pole.every(j => zebrikNa(hra, j) || hra.lez[j]);
   }
   // Uvízlý trpaslík: záchrana jednou za 600 tahů; rozpracovaný žebřík bez dřeva se po 1200 tazích nahradí schodištěm
+  // (plány žebříku se zruší – zapisZachranu – a donesené dřevo vypadne)
   function zachranUviznuteho(hra, t) {
     if (Array.isArray(t.zachrana)) t.zachrana = { typ: 'zebrik', pole: t.zachrana, od: hra.tik };   // starší uložení: jen pole žebříku
     const z0 = t.zachrana;
@@ -1191,46 +1425,59 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
       if (t.zachranaBlok > hra.tik) return z0;
     } else if (t.zachranaBlok > hra.tik) return null;
     t.zachranaBlok = hra.tik + 600;
-    const F = dosahSkladuTik(hra);
+    const F = dosahZachrany(hra);
     if (!F) return null;
     if (zachranaTrva(hra, z0) && z0.typ === 'zebrik') {               // žebřík čeká na dřevo příliš dlouho: zkusit schodiště
-      const oblast = [];
-      C.hledej(hra, t.i, i => { oblast.push(i); return 0; }, 3000);
-      const sch = najdiSchody(hra, t.i, oblast);
+      const sch = najdiSchody(hra, t.i, oblastZachrany(hra, t.i));
       if (!sch) return z0;
-      for (const j of z0.pole) if (zebrikNa(hra, j)) zrusPlany(hra, j % W, j / W | 0, j % W, j / W | 0);
-      for (const j of sch.pole) { if (hra.oznac[j] !== P.OZN.KOPAT) hra.oznac[j] = P.OZN.SCHODY; hra.prio[j] = 1; }
+      // starý žebřík patří záchraně (i ze staršího uložení bez evidence): převzít, ať ho zapisZachranu zruší
+      if (!hra.zachrany.some(e => e.kdo === 't' + t.id)) hra.zachrany.push({ kdo: 't' + t.id, typ: 'zebrik', pole: z0.pole.filter(j => zebrikNa(hra, j)), od: z0.od || hra.tik });
+      const vlastni = new Set();
+      for (const j of sch.pole) { if (hra.oznac[j] !== P.OZN.SCHODY) { hra.oznac[j] = P.OZN.SCHODY; vlastni.add(j); } hra.prio[j] = 1; }
       for (const u2 of hra.trpaslici) if (u2.urovenBlok) u2.urovenBlok = UROVNE.map(() => 0);
+      zapisZachranu(hra, 't' + t.id, sch, vlastni);
       return (t.zachrana = Object.assign(sch, { od: hra.tik }));
     }
     t.zachrana = null;
-    const z = planujVystup(hra, t.i, F);
-    if (z) t.zachrana = Object.assign(z, { od: hra.tik });
+    const z = planujVystup(hra, t.i, F, 't' + t.id);
+    if (z) { delete z.oblast; delete z.nove; t.zachrana = Object.assign(z, { od: hra.tik }); }   // ukládá se – jen typ, pole a začátek
     return t.zachrana;
   }
-  // Cenné věci v jámě, kam se ze skladu nedojde (hvězdná ruda, zlato, drahokamy, Klíč, kusovník Klíče…), a Srdce hory
-  // s hotovým Klíčem: jednou za 600 tahů (pevný rozvrh) nanejvýš jedna nová záchrana; věc se znovu zkusí po 3000 tazích
-  const CENNE = new Set(['hvezdna', 'prut_hvezdny', 'zlato', 'prut_zlato', 'drahokam', 'klic', 'sperk', 'brus', 'pohar', 'stribro', 'prut_stribro', 'zelezo']);
+  // Cenné věci v jámě, kam se ze skladu nedojde, a Srdce hory s hotovým Klíčem: jednou za 600 tahů (pevný rozvrh)
+  // nanejvýš jedna nová záchrana; věc se znovu zkusí po 3000 tazích. Cenné = opravdu vzácné (hvězdná ruda a ocel, zlato,
+  // drahokam, Klíč, šperk, brus, pohár) a to, co kusovník Klíče potřebuje a dosažitelně ho není dost (dřív se kvůli
+  // železu zachraňovala každá ruda spadlá do šachty)
+  const CENNE = new Set(['hvezdna', 'prut_hvezdny', 'zlato', 'prut_zlato', 'drahokam', 'klic', 'sperk', 'brus', 'pohar']);
   function zachranVeci(hra) {
     if (!hra.trpaslici.length || !hra.zony.some(z => z.typ === 'sklad')) return;
-    const kus = T.pribeh.kusovnikKlice(hra);
-    const cenna = v => CENNE.has(v.druh) || (kus && kus.chybi[v.druh] > 0) || (kus && v.druh === 'uhli' && kus.drzet.uhli !== undefined);
-    const kandidati = hra.veci.filter(v => !v.nese && !v.rez && cenna(v) && !(v.zachrana > hra.tik) && C.stojne(hra, v.i) && hra.znamo[v.i]);
     const srdce = hra.hora.srdce.y * W + hra.hora.srdce.x;
     const klic = hra.veci.some(v => v.druh === 'klic') && !hra.vyhenHori && hra.znamo[srdce] && !(hra.odemceno.srdceCesta > hra.tik);
-    if (!kandidati.length && !klic) return;
-    const F = dosahSkladuTik(hra);
+    const kus = T.pribeh.kusovnikKlice(hra);
+    if (!klic && !hra.veci.some(v => !v.nese && !v.rez && (CENNE.has(v.druh) || (kus && kus.potreba[v.druh] > 0)))) return;
+    const F = dosahZachrany(hra);
     if (!F) return;
+    // kusovník: kolik kusů druhu je dosažitelně – zachraňuje se jen, když to nestačí
+    const dosah = {};
+    if (kus) for (const v of hra.veci) if (kus.potreba[v.druh] > 0 && (v.nese || dosazitelna(hra, v, F))) dosah[v.druh] = (dosah[v.druh] || 0) + 1;
+    const cenna = v => CENNE.has(v.druh) || (kus && (dosah[v.druh] || 0) < (kus.potreba[v.druh] || 0));
+    const kandidati = hra.veci.filter(v => !v.nese && !v.rez && cenna(v) && !(v.zachrana > hra.tik) && C.stojne(hra, v.i) && hra.znamo[v.i]);
     if (klic && !F[srdce]) {                        // Klíč je, Srdce známé, ale nikdo k němu nedojde: cesta dolů do Srdce
       hra.odemceno.srdceCesta = hra.tik + 3000;
-      const z = planujVystup(hra, srdce, F);
+      const z = planujVystup(hra, srdce, F, 'srdce');
       if (z) { zprava(hra, 'varovani', `Do Srdce hory se nedá dojít – ${z.typ === 'schody' ? 'vyznačeno záchranné schodiště' : 'naplánován žebřík'} (${z.pole.length} ${z.pole.length < 5 ? 'pole' : 'polí'}, ⭐ přednost).`, srdce); return; }
     }
+    // věci ve stejné jámě sdílí jednu záchranu; rozpracovaná záchrana (nic nového k naplánování) se nehlásí znovu
     for (const v of kandidati) {
-      if (dosazitelna(hra, v, F)) continue;
+      if (v.zachrana > hra.tik || dosazitelna(hra, v, F)) continue;
       v.zachrana = hra.tik + 3000;
-      const z = planujVystup(hra, v.i, F);
-      if (z) { zprava(hra, 'stavba', `${P.VECI[v.druh].nazev[0].toUpperCase() + P.VECI[v.druh].nazev.slice(1)} leží v jámě, kam se nedá dojít – ${z.typ === 'schody' ? 'vyznačeno schodiště' : 'naplánován žebřík'} (⭐ přednost).`, v.i); return; }
+      const oblast = new Set(oblastZachrany(hra, v.i));
+      const vJame = kandidati.filter(w => oblast.has(w.i));
+      const z = planujVystup(hra, v.i, F, 'v', vJame.map(w => w.id));
+      if (!z) continue;
+      for (const w of vJame) w.zachrana = hra.tik + 3000;
+      if (!z.nove) continue;
+      zprava(hra, 'stavba', `${P.VECI[v.druh].nazev[0].toUpperCase() + P.VECI[v.druh].nazev.slice(1)} leží v jámě, kam se nedá dojít – ${z.typ === 'schody' ? 'vyznačeno schodiště' : 'naplánován žebřík'} (⭐ přednost).`, v.i);
+      return;
     }
   }
   // nečinný trpaslík občas přešlápne na vedlejší pole
@@ -1242,6 +1489,36 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
     if (C.krok(hra, t.i, n) === 'chuze') presun(t, n, DOBA.chuze + 2);
   }
   // strážce bez zbraně nebo zbroje: nejbližší volná válečná sekera / zbroj (neúspěch = 60 tahů nehledá)
+  // na co plán čeká (pro detail pole): stavitel, materiál, místo, cesta, přednostnější práce; {text, spatne}
+  const cekaCache = new WeakMap();
+  function procCekaPlan(hra, p) {
+    const c = cekaCache.get(p);
+    if (c && c.tik === hra.tik) return c.r;
+    let r;
+    const stavitele = hra.trpaslici.filter(t => t.povoleno.stavet);
+    if (p.rez) { const t = hra.trpaslici.find(u => u.id === p.rez); r = { text: `🔨 ${t ? t.jmeno + ' ho právě staví' : 'Právě se staví'}.` }; }
+    else if (!S.pripraven(p)) r = { text: 'Trpaslíci nosí materiál.' };
+    else if (!S.volnoProPlan(hra, p)) r = { text: 'Materiál je na místě – pole se ještě musí vykopat.' };
+    else if (!S.mistoPlanu(hra, p)) r = { text: 'Pod plánem chybí pevná podlaha – takhle postavit nejde (zruš plán nebo podlahu doplň).', spatne: true };
+    else if (!stavitele.length) r = { text: 'Materiál je na místě, ale nikdo nemá zapnuté 🔨 stavění – zapni ho v Klanu.', spatne: true };
+    else if (!stavitele.some(t => C.hledej(hra, t.i, i => C.stojne(hra, i) && S.planVDosahu(hra, i, p) ? 1 : 0, 8000)))
+      r = { text: 'Materiál je na místě, ale žádný stavitel se k plánu nedostane – chybí cesta (žebřík, schody).', spatne: true };
+    else {
+      const min = Math.min(...stavitele.map(t => t.povoleno.stavet));
+      r = { text: `Materiál je na místě, čeká se na volného stavitele (stavění má ${stavitele.length} ${stavitele.length === 1 ? 'trpaslík' : stavitele.length < 5 ? 'trpaslíci' : 'trpaslíků'}, nejvýš na stupni ${min}; teď dělají přednostnější práci – ⭐ to uspíší).` };
+    }
+    cekaCache.set(p, { tik: hra.tik, r });
+    return r;
+  }
+  function vytesejPodperu(hra, pl, t, id0) {
+    hra.veci = hra.veci.filter(v => !(v.id >= id0 && (v.druh === 'kamen' || v.druh === 'jil')));   // kámen z pole je ve sloupu
+    for (const [druh, n] of Object.entries(pl.doneseno)) for (let k = 0; k < n; k++) P.novaVec(hra, druh, t.i, druh === 'drevo' ? 'drevo' : 0);
+    for (const k of Object.keys(pl.doneseno)) pl.doneseno[k] = S.STAVBY.podpera.mat[k];      // „hotovo" – nic dalšího se nenese
+    S.dokonci(hra, pl, t, (typ, text, i) => zprava(hra, typ, text, i));
+    hra.materialNa.set(pl.i, 'kamen');
+    zvuk(hra, 'kladivo', pl.i);                       // dotesání sloupu
+    P.usadVeci(hra);
+  }
   function vybavStrazce(hra, t) {
     const chce = v => !v.nese && !v.rez && !(v.blok > hra.tik) && ((!t.zbran && v.druh === 'valecna_sekera') || (!t.zbroj && v.druh === 'zbroj'));
     let r = null;
@@ -1288,7 +1565,19 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
     pp[k] = (pp[k] || 0) + 1;
     // jeden souhrnný smutek: −12 za první smrt, −4 za každou další v jeho trvání, nejvýš −24
     for (const u of hra.trpaslici) POT.souhrnnaVzpominka(hra, u, 'truchli', n => n === 1 ? `truchlí: zemřel ${t.jmeno}` : `truchlí za padlé (${n}, naposledy ${t.jmeno})`, -12, -4, -24, 3);
+    // přátelé truchlí víc a déle (−16 na 6 dní, každý další přítel −6, nejvýš −28)
+    for (const u of hra.trpaslici) if (u.pratele && u.pratele.includes(t.id)) {
+      POT.souhrnnaVzpominka(hra, u, 'pritel', n => n === 1 ? `ztratil přítele ${t.jmeno}` : `ztratil přátele (${n}, naposledy ${t.jmeno})`, -16, -6, -28, 6);
+      u.pratele = u.pratele.filter(id => id !== t.id);
+    }
+    // padlý veterán (mistr boje nebo kopání): klan přijde o jeho umění a celý klan to cítí; sláva utrpí
+    if (veteran(t)) {
+      for (const u of hra.trpaslici) POT.vzpominka(hra, u, `padl veterán ${t.jmeno}`, -5, 4);
+      hra.slavaBonus = (hra.slavaBonus || 0) - 5;
+      zprava(hra, 'varovani', `${t.jmeno} byl veterán (${(t.dov.boj || 0) >= 6 ? 'boj ' + t.dov.boj : 'kopání ' + t.dov.kopani}) – jeho mistrovství nový příchozí hned nenahradí. Sláva klanu −5.`, t.i);
+    }
   }
+  const veteran = t => (t.dov.boj || 0) >= 6 || (t.dov.kopani || 0) >= 12;
 
   function krok(hra) {
     hra.tik++;
@@ -1306,14 +1595,23 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
       hra.parezy = hra.parezy.filter(p => {
         if (p.tik > hra.tik || (zima && !p.houba)) return true;   // v zimě stromy nedorůstají
         const volno = !hra.stavba[p.i] && !hra.planNa.has(p.i) && !hra.lez[p.i] && hra.hora.teren[p.i] === T.hora.M.VZDUCH;
-        if (p.houba) { if (volno && !hra.hora.obj[p.i]) hra.hora.obj[p.i] = O.HOUBA; }
+        if (p.houba) { if (volno && (!hra.hora.obj[p.i] || hra.hora.obj[p.i] === O.PAREZ)) hra.hora.obj[p.i] = O.HOUBA; }   // (i houbová sazenice ve školce)
         else if (hra.hora.obj[p.i] === O.PAREZ && volno) hra.hora.obj[p.i] = O.STROM;
         return false;
       });
     }
     if (hra.tik % 20 === 0) pripravDilny(hra);
     if (hra.tik % 600 === 300) zachranVeci(hra);       // cenné věci v jámě, Srdce hory s Klíčem
+    if (hra.tik % 150 === 40) hlidejZachrany(hra);    // nepotřebné záchrany (uvízlý venku, věc pryč) zrušit
     if (hra.tik % 60 === 30) S.rozmistiNabytek(hra);
+    // plán naplánovaný do neznáma narazil na nekopatelnou skálu (podloží, podstavec Výhně): plán se zruší se zprávou
+    if (hra.tik % 60 === 50 && nejakeBourani(hra)) for (let i = 0; i < N; i++) if (hra.oznac[i] === P.OZN.BOURAT && !P.lzeBourat(hra, i)) hra.oznac[i] = 0;   // stavba už zmizela
+    if (hra.tik % 60 === 50) for (const p of hra.plany.slice()) {
+      if (!S.doNeznama(S.STAVBY[p.typ]) || !hra.znamo[p.i] || !pevne(hra.hora.teren[p.i]) || P.lzeKopat(hra, p.i)) continue;
+      if (hra.oznac[p.i] === P.OZN.SCHODY || hra.oznac[p.i] === P.OZN.KOPAT) hra.oznac[p.i] = 0;
+      zrusPlany(hra, p.i % W, p.i / W | 0, p.i % W, p.i / W | 0);
+      zprava(hra, 'varovani', `Plán (${S.STAVBY[p.typ].nazev}) narazil na skálu, která se nedá kopat – zrušen.`, p.i);
+    }
     if (hra.tik % 60 === 45) hlidejNouzi(hra);   // postele, stoly a židle ze skladu do jejich zón
     // poplach: 2 = během něj už byl v hoře viděný nepřítel (ne netopýr, ne tvor v neprozkoumané jeskyni); jakmile
     // padne poslední viděný útočník, odvolá se sám (vyhlášený předem, než nepřítel přijde, zůstává)
@@ -1346,7 +1644,8 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
   // --- zakázky dílen (volá UI) ------------------------------------------------------------
   // r = index receptu; trvalá zakázka udržuje zásobu `pocet` kusů výrobku
   function pridejZakazku(hra, dilna, r, pocet, trvala) {
-    const rc = S.RECEPTY[dilna.typ][r];
+    const rc = (S.RECEPTY[dilna.typ] || [])[r];
+    if (!rc) return false;                               // dílna bez receptů (zbrojnice) nebo neplatný recept
     if (T.pribeh.artefaktZakazany(hra, rc.vyrobek)) return false;
     if (rc.vyrobek.startsWith('art_')) { if (dilna.fronta.some(z => z.r === r)) return false; pocet = 1; trvala = false; }
     const z = dilna.fronta.find(z => z.r === r && !!z.trvala === !!trvala);
@@ -1408,7 +1707,8 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
     if (p.typ === 'ukryt') return t.i === p.pos ? 'schovává se (poplach)' : 'běží se schovat (poplach)';
     if (p.typ === 'pit') return t.stav === 'ji' ? (p.voda ? 'pije vodu' : 'pije pivo') : (p.voda ? 'jde se napít k vodě' : 'jde na pivo');
     if (p.typ === 'jist') return t.stav === 'ji' ? 'jí' : p.faze === 'k_cili' ? 'nese jídlo ke stolu' : 'jde se najíst';
-    if (p.typ === 'pole' && hra.zona[p.c] && (S.zonaNa(hra, p.c) || {}).typ === 'les') return (t.stav === 'kope' ? '' : 'jde ') + (hra.hora.obj[p.c] === O.STROM ? 'kácet les' : 'sázet stromek');
+    if (p.typ === 'pole' && hra.zona[p.c] && (S.zonaNa(hra, p.c) || {}).typ === 'les') return (t.stav === 'kope' ? '' : 'jde ') +
+      (hra.hora.obj[p.c] === O.STROM ? 'kácet les' : hra.hora.obj[p.c] === O.HOUBA ? 'kácet obří houbu' : hra.hora.pozadi[p.c] !== M.VZDUCH ? 'sázet obří houbu' : 'sázet stromek');
     if (p.typ === 'pole') return (t.stav === 'kope' ? '' : 'jde ') + (hra.uroda[p.c] === 101 ? 'sklízet' : 'sít');
     if (p.typ === 'tesat') {
       const c = p.c, tr = hra.hora.teren;
@@ -1424,6 +1724,7 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
       return (t.stav === 'kope' ? 'kope ' : 'jde kopat ') + co + (hra.oznac[p.c] === P.OZN.SCHODY ? ' (schodiště)' : '');
     }
     if (p.typ === 'kacet') return t.stav === 'kope' ? 'kácí jedli' : 'jde kácet';
+    if (p.typ === 'bourat') return (t.stav === 'kope' ? 'rozebírá ' : 'jde rozebrat ') + S.nazevNa(hra, p.c);
     if (p.typ === 'stavet') {
       const pl = S.planPodle(hra, p.plan);
       return (t.stav === 'kope' ? 'staví ' : 'jde stavět ') + (pl ? S.STAVBY[pl.typ].nazev : '');
@@ -1564,7 +1865,7 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
     obrana: { nazev: 'obrana', ikona: '⚔️' }, ukryt: { nazev: 'úkryt', ikona: '🛡️' }, pribeh: { nazev: 'runy a Srdce', ikona: '📜' },
     zachvat: { nazev: 'záchvaty vzteku', ikona: '😠' }, nic: { nazev: 'nečinnost', ikona: '💭' },
   };
-  const CINNOST_PRACE = { odnes: 'nosit', donest: 'nosit', vybavit: 'nosit', pole: 'pole', kopat: 'kopat', vyrobit: 'dilny', stavet: 'stavet', tesat: 'stavet',
+  const CINNOST_PRACE = { odnes: 'nosit', donest: 'nosit', vybavit: 'nosit', pole: 'pole', kopat: 'kopat', vyrobit: 'dilny', stavet: 'stavet', bourat: 'stavet', tesat: 'stavet',
     pumpovat: 'stavet', kacet: 'kacet', jist: 'jidlo', pit: 'jidlo', lov: 'obrana', cvicit: 'obrana', ukryt: 'ukryt', cist: 'pribeh', zazehnout: 'pribeh' };
   function cinnost(hra, t) {
     if (t.zuri > hra.tik) return 'zachvat';
@@ -1655,10 +1956,10 @@ var TRP = globalThis.TRP = globalThis.TRP || {};
              spotrebaDen, pivo: { zasoba: piv.zasoba, bilance: piv.bilance, naKonci: pivaNaKonci, vydrzi: pivaNaKonci >= 0 } };
   }
 
-  T.hra = { TAHU_ZA_DEN, DOBA, dobaKroku, PROFESE, novaHra, krok, den, hodina, popisCinnosti, zprava, zvuk, pridejTrpaslika, noveJmeno, nahodnaProfese,
+  T.hra = { DOVEDNOSTI, fDov, prahDov, zlepsi, procCekaPlan, TAHU_ZA_DEN, DOBA, dobaKroku, PROFESE, novaHra, krok, den, hodina, popisCinnosti, zprava, zvuk, pridejTrpaslika, noveJmeno, nahodnaProfese,
             pridejZakazku, zrusZakazku, zrusPlany, pustPraci, umri, odejdi, prepniMriz, faktorNastroje, dilnaPripravena, chybiDilne, upozorneni, smiVDilne, nastavDilnu, posunZakazku, prioPlanu, bilance, NA_TRPASLIKA, PROPUSTNOST, predpovedZimy, HLAVNI_PRACE, vychoziStupne, hlavniPrace, NOUZE, hlidejNouzi,
             textNouze, coBlokujeVyrobu, casKlanu, CINNOSTI, cinnost, prepniPoplach, farmaSklizi, zasobaPlodin, rustHoubarny, vlhkaHoubarna, PORCE,
-            dosahSkladu, dosahSkladuTik, dosazitelna };
+            dosahSkladu, dosahSkladuTik, dosazitelna, hrozbaU, daleko, schovaSe, spratel, veteran, MAX_PRATEL };
 })(TRP);
 
 if (typeof module !== 'undefined') module.exports = TRP;
