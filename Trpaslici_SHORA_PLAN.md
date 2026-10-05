@@ -28,7 +28,7 @@ Rozhodl jsem je sám, aby šlo začít. Uživatel je může změnit.
 - [x] **8. Tvorové, boj, střelba, obrana, nájezdy** (5. 10. 2026)
 - [x] **9. Příběh, Spáč, finále, epilog, volný režim** (5. 10. 2026)
 - [x] **10. Malované sprity a ilustrace, částice, zvuk** (5. 10. 2026)
-- [ ] 11. Bot, vyvážení, „Co dál?“, nápověda, offline (sw.js, katalog apps.js)
+- [x] **11. Bot, vyvážení, „Co dál?“, nápověda, offline (sw.js, katalog apps.js)** (5. 10. 2026)
 
 ## Testy
 
@@ -418,4 +418,62 @@ Nové soubory: `obsah/sine/zvuk.js`, `castice.js` a `ilustrace.js`. Grafika zůs
 - **Testy:** `python3 _test/sine_snimek.py` 49/49. Všech 26 zvuků vykreslených offline je slyšet
   a nepřebudí; ozvěna síně prodlouží dozvuk; zvukové události vytvoří částice; všech 11 ilustrací má
   kresbu. Snímky `sine_udalost.png` a `sine_konec.png`.
+
+### Etapa 11 (5. 10. 2026)
+
+Nové soubory: `_test/sine_bot.js` a `_test/sw_sine_check.js`. Hra je v katalogu `apps.js` a v offline sadě `sw.js`.
+
+- **Bot „rozumný správce“** (`node _test/sine_bot.js [her] [let] [--diag]`, `VEL=`, `REZIM=volny`, `LADIT=1`)
+  hraje jen z toho, co vidí hráč (známá pole, vodítko 🧭, panely):
+  - Síně v 1. patře u podesty (dílny 15 × 4, ložnice a jídelna 10 × 3, houbárna, sklad) napojené
+    chodbou s dveřmi. Opory hlídá přes `priroda.nepodeprena` a sloupy tesá ze skály.
+  - Dílny podle potřeby, zakázky (jídlo a pivo podle velikosti klanu, uhlí, pruty, zbraně a zbroj pro
+    strážce, šperk, pohár, broušený drahokam, artefakty, Klíč), pole ječmene v rokli, kácení.
+  - Schodiště do hloubky (nejvýš 7. patro; do 8. jen s Klíčem), průzkumné štoly, těžba rud, které klan
+    vidí a potřebuje. Pumpy u vody; zatopenou podestu opustí a schodiště zkusí jinde.
+  - Strážci: třetina klanu. Poplach při viděném nájezdu. Obchod s karavanou (přebytky za jídlo, pivo,
+    dřevo a železo). Do Srdce jde až s Klíčem a aspoň 5 strážci se zbraní i zbrojí.
+  - Měří: konec, dny, padlé podle tvora, patro, nájezdy, desky, artefakty, Spáče, obchody, velikost
+    uložené hry, µs na tah (medián, p99).
+- **Výsledek (8 her, střední hora, příběh, nejvýš 6 let): 6 vítězství, 0 proher,** 2 hry skončily na limitu
+  se živým Spáčem a přeživším klanem. Medián 191 dní do konce, 12 padlých, nejvíc 33 trpaslíků,
+  sláva ~417, uložená hra ~160 kB. Výhry za 143–258 dní, tedy 3.–6. období 2. roku. Malá hora: 1 z 2 her
+  vítězství. Volný režim: 2 hry po 3 letech bez chyb.
+- **Chyby hry, které bot našel:**
+  - **Nosič se zacyklil:** `volnaMista` počítala jako volné místo ve skladu i ložnice, pole a houbárny,
+    takže vznikala práce „odnést“, kterou nešlo dokončit. Nosič ji bral znovu a znovu (stála přímo pod
+    ním, takže vždy vyhrála) a klan přestal tesat. Oprava: počítají se jen zóny sklad. Věc, pro kterou
+    se nenajde dosažitelný sklad, se den nenabízí. Test „nošení bez místa ve skladu“.
+  - **Hvězdná ruda:** krátké žíly v 7. patře se naslepo skoro nedaly najít. Po druhé desce proto
+    vodítko 🧭 ukazuje nejbližší hvězdnou žílu (patro a směr), dokud klan nemá ocel na Klíč.
+  - **Finále posílalo civilisty na smrt:** když zažíhající padl, Klíč zvedl další a šel ke Spáčovi.
+    Nyní, dokud Spáč žije, vyrazí nový zažíhající jen pod ochranou aspoň 3 zdravých ozbrojených
+    strážců u Spáče.
+  - **Strážci se nesešli:** shromaždiště u Spáče se přidávalo jen bez jiných cílů a čekající strážce
+    odešel za prací. Shromaždiště je teď cílem vždy a strážce na něm čeká.
+  - **Spáč:** zmírněn na 480 ♥ a odolnost = útok / 45 (jako v Srdci hory). Se 40 a 520 ♥ končilo
+    finále pravidelně smrtí klanu.
+- **Výkon:** profil ukázal, že ~47 % času spotřebuje přestavování jednotek práce (smyčky přes celou mapu
+  všech pater při každé změně) a ~40 % hledání práce a skladu, které hledalo 900 tahů za prvním nálezem.
+  Opravy beze změny chování (fuzz dává totožná čísla, uložení a načtení pokračují stejně):
+  - mezipaměť seřazených seznamů označených polí (`prace.znacky`, verze `oznZmena`) a polí zón
+    (`stavby.zonaBunky`, verze `zonZmena`);
+  - přesné ořezání Dijkstry: `cesty.hledej(…, limit, posun)` skončí, jakmile žádný cíl nemůže vyjít
+    levněji (posun = 900 − největší sleva za přednost a záchranu; u skladu 300, není-li sklad s předností).
+  Výsledek: p99 tahu z 3,5–5,5 ms na 1,6–2,8 ms. Nejhorší hra má medián 196 místo 535 µs.
+- **„Co dál?“** (`pribeh.coDal`, v panelu Příběh): 17 kroků příběhu od první síně po zažehnutí Výhně,
+  s vodítkem 🧭 a kusovníkem Klíče u příslušných kroků. Volný režim má 9 základních kroků, 6 cílů
+  a pak nekonečný cíl slávy.
+- **Nápověda ❔** (lišta): ovládání a klávesy, hora (patra, opory podle horniny, voda, místnosti), klan
+  (potřeby, karavana, nájezdy, poplach) a příběh. Při první hře se otevře sama.
+- **Offline:** `sw.js` má seznam `SINE` (stránka a 21 skriptů), stáhne se na pozadí při prvním otevření
+  hry (stránka si o to řekne zprávou „dotahni“), cache `webapp-v284`. Kontrola `node _test/sw_sine_check.js`
+  (položky existují, každý soubor hry je v seznamu, vše, co stránka načítá, je v sadě nebo v jádru).
+  Seznam Srdce hory zůstal netknutý (`sw_trpaslici_check.js` prochází).
+- **Katalog:** `apps.js`, položka „🏰 Síně pod horou“ hned za Srdcem hory.
+- **Testy na konci:** `node _test/sine_test.js` (300 hor) OK, `node _test/sine_sim.js 3 30000` 184/184,
+  `python3 _test/sine_snimek.py` 50/50 (nově „Co dál?“ a nápověda, snímek `sine_napoveda.png`), obě
+  kontroly sw. Nic se nenahrálo (upload a push dělá uživatel).
+- **Zbývá na příště:** 2 z 8 her bota skončily patem se Spáčem (strážci nedosáhnou na skupinu 3 u něj, např.
+  když vede do Srdce jen úzká chodba); na malé hoře bot někdy finále nezačne. Jídla bývá málo.
 
