@@ -204,8 +204,32 @@ body { background: var(--zed-2); overflow: hidden; }
 .tl[aria-pressed="true"] { color: #ffd34d; border-color: rgba(255, 211, 77, .5); }
 .tl .txt { display: inline; }
 
+.zvuk { display: inline-flex; align-items: center; gap: 4px; }
+.zvuk input[type=range] { width: 90px; accent-color: var(--accent); }
+.zvuk[hidden], .kvalita-obal[hidden] { display: none; }
+.kvalita-obal { position: relative; }
+.nabidka {
+  position: absolute; right: 0; top: calc(100% + 6px); z-index: 20; width: 290px;
+  background: #1d2029; border: 1px solid #3a3e50; border-radius: 10px; padding: 6px;
+  box-shadow: 0 10px 30px rgba(0,0,0,.5); color: var(--panel-text);
+}
+.nabidka[hidden] { display: none; }
+.nab-hlava { font-size: .78rem; color: var(--panel-tlumene); padding: 4px 8px 6px; }
+.nab-hlava span { color: var(--panel-text); font-weight: 600; margin-left: 4px; }
+.nabidka button { display: block; width: 100%; text-align: left; background: none; border: 0; color: inherit; font: inherit; font-size: .88rem; padding: 7px 8px; border-radius: 7px; cursor: pointer; }
+.nabidka button:hover { background: #2b2f3e; }
+.nabidka button[aria-checked="true"]::before { content: '✓ '; color: #ffd34d; }
+.nabidka button small { display: block; color: var(--panel-tlumene); font-size: .75rem; }
+.nab-pozn { font-size: .74rem; color: var(--panel-tlumene); line-height: 1.45; padding: 6px 8px 4px; border-top: 1px solid #2f3342; margin-top: 4px; }
+.qr { display: flex; justify-content: center; padding: 6px 0; }
+.qr img, .qr canvas { background: #fff; padding: 8px; border-radius: 8px; width: 196px; height: 196px; }
+a.b { text-decoration: none; display: inline-flex; align-items: center; }
 .plocha { position: relative; flex: 1; min-height: 0; overflow: hidden; }
 #prehravac, #prehravac iframe { position: absolute; inset: 0; width: 100%; height: 100%; border: 0; }
+/* úsporný režim: YouTube volí kvalitu podle velikosti přehrávače, takže ho vykreslíme
+   menší a roztáhneme – jiná cesta, jak kvalitu ovlivnit, ve vloženém přehrávači není */
+#prehravac.zmenseny { right: auto; bottom: auto; width: calc(100% * var(--f)); height: calc(100% * var(--f));
+  transform: scale(calc(1 / var(--f))); transform-origin: 0 0; }
 .zablesk { position: absolute; inset: 0; background: var(--hlavni-svetlo); opacity: 0; pointer-events: none; transition: opacity .7s ease-out; z-index: 3; }
 .zablesk.zapnuto { opacity: 1; transition: none; }
 
@@ -338,6 +362,7 @@ dialog.okno::backdrop { background: rgba(0,0,0,.55); }
 
 @media (max-width: 760px) {
   .tl .txt { display: none; }
+  .zvuk input[type=range] { display: none; }
   .lista-nazev small { display: none; }
 }
 @media (max-width: 560px) {
@@ -415,6 +440,20 @@ dialog.okno::backdrop { background: rgba(0,0,0,.55); }
     <div class="lista-tl">
       <button class="tl" id="tlZpet" type="button" title="Zpět na chodbu (Esc)">🚪<span class="txt">Zpět</span></button>
       <button class="tl hlavni" id="tlJinam" type="button" title="Jiné náhodné místo (N)">🎲<span class="txt">Jinam</span></button>
+      <span class="zvuk" id="zvukSkup" hidden>
+        <button class="tl" id="tlZvuk" type="button" title="Zapnout zvuk (M)">🔇</button>
+        <input type="range" id="hlasitost" min="0" max="100" step="5" value="60" aria-label="Hlasitost">
+      </span>
+      <span class="kvalita-obal" id="kvalitaObal" hidden>
+        <button class="tl" id="tlKvalita" type="button" aria-haspopup="true" aria-expanded="false" title="Kvalita obrazu">⚙<span class="txt" id="kvalitaTxt">Auto</span></button>
+        <div class="nabidka" id="kvalitaNab" hidden>
+          <div class="nab-hlava">Kvalita obrazu <span id="kvalitaTed"></span></div>
+          <button type="button" data-k="auto">Automaticky <small>podle velikosti okna</small></button>
+          <button type="button" data-k="usporne">Úsporně <small>kolem 480p – pro slabší připojení a mobilní data</small></button>
+          <p class="nab-pozn">YouTube stránkám nedovolí kvalitu vnutit – volí ji podle velikosti přehrávače. Úsporný režim proto přehrávač vykreslí menší a roztáhne ho; pod 480p ale YouTube u živých přenosů nejde. Vyšší kvalitu získáš přes celou obrazovku ⛶, ručně ji jde přepnout ozubeným kolem přímo v přehrávači.</p>
+        </div>
+      </span>
+      <button class="tl" id="tlSdilet" type="button" title="Sdílet odkaz na toto místo">📤<span class="txt">Sdílet</span></button>
       <button class="tl" id="tlUlozit" type="button" aria-pressed="false" title="Uložit mezi oblíbená (S)">☆<span class="txt">Uložit</span></button>
       <button class="tl" id="tlOblibene" type="button" title="Seznam oblíbených">★<span class="txt">Oblíbené</span></button>
       <button class="tl" id="tlOdkazyV" type="button" title="Seznam všech odkazů">🔗<span class="txt">Odkazy</span></button>
@@ -512,6 +551,27 @@ dialog.okno::backdrop { background: rgba(0,0,0,.55); }
   <div class="okno-telo" id="odkTelo"></div>
 </dialog>
 
+<dialog class="okno male" id="sdilDlg">
+  <div class="okno-hlava">
+    <h2 id="sdilTitul">📤 Sdílet místo</h2>
+    <button class="b" type="button" data-zavrit>Zavřít</button>
+  </div>
+  <div class="formular">
+    <p class="napoveda" id="sdilPopis"></p>
+    <label>Odkaz na Dveře do světa
+      <input type="text" id="sdilOdkaz" readonly>
+    </label>
+    <div class="radek-tl" style="justify-content:flex-start">
+      <button class="b hlavni" type="button" id="sdilKopirovat">📋 Kopírovat</button>
+      <button class="b" type="button" id="sdilNativni" hidden>📲 Sdílet…</button>
+      <a class="b" id="sdilZdroj" target="_blank" rel="noopener">↗ Původní zdroj</a>
+    </div>
+    <div class="qr" id="sdilQr" aria-label="QR kód odkazu"></div>
+    <p class="napoveda">Odkaz otevře přímo tuhle kameru nebo panorama – stačí ho poslat nebo naskenovat QR kód telefonem.</p>
+  </div>
+</dialog>
+
+<script src="lib/qrcode.min.js"></script>
 <script src="dvere_do_sveta_data.js"></script>
 <script src="dvere_pevniny.js"></script>
 <script>
@@ -566,7 +626,8 @@ function uloz(klic, hodnota) {
 }
 const navstivene = new Set(nacti('navstivene', []));
 const rozbite = nacti('rozbite', {});          // id → čas, kdy přenos selhal
-const nastaveni = Object.assign({ rezim: 'kamery', typ: 'vse', den: true, medailonek: true }, nacti('nastaveni', {}));
+const nastaveni = Object.assign({ rezim: 'kamery', typ: 'vse', den: true, medailonek: true, kvalita: 'auto' }, nacti('nastaveni', {}));
+nastaveni.zvuk = Object.assign({ ztlumeno: true, hlasitost: 60 }, nastaveni.zvuk);
 const ROZBITE_NA = 12 * 3600e3;                 // po 12 h to se stejnou kamerou zkusíme znovu
 for (const [id, t] of Object.entries(rozbite)) if (Date.now() - t > ROZBITE_NA) delete rozbite[id];
 
@@ -873,6 +934,7 @@ async function zavri() {
   vyhled.hidden = true;
   vyhled.style.clipPath = '';
   zrusPrehravac();
+  zapisAdresu(null);
   vchod.classList.remove('otevreno');
   await pockej(700);
   pripravDvere();
@@ -928,7 +990,203 @@ function zrusPrehravac() {
 function zapisNavstevu(k) {
   navstivene.add(k.id); uloz('navstivene', [...navstivene]);
   aktualizujPocet();
+  const yt = k.druh === 'kamera';
+  $('zvukSkup').hidden = !yt;
+  $('kvalitaObal').hidden = !yt;
+  $('kvalitaNab').hidden = true;
+  if (yt) { ukazZvuk(); ukazKvalitu(); }
+  zapisAdresu(k);
 }
+
+/* ---------- zvuk a kvalita (jen YouTube) ----------
+   Ověřeno na skutečném přehrávači: po kliknutí ve stránce jde zvuk zapnout
+   (unMute) i nastavit hlasitost a přenos hraje dál – i uvnitř rozcestníku.
+   Kvalitu YouTube vnutit nedovolí (setPlaybackQuality, vq i suggestedQuality
+   ignoruje), volí ji podle velikosti přehrávače. */
+const KVALITY = { hd2160: '4K', hd1440: '1440p', hd1080: '1080p', hd720: '720p', large: '480p', medium: '360p', small: '240p', tiny: '144p' };
+const ZMENSENI = { auto: 1, usporne: 0.35 };
+if (!ZMENSENI[nastaveni.kvalita]) nastaveni.kvalita = 'auto';
+let zvukOd = 0;     // do té doby nepřebírat stav z přehrávače (běží autoplay se ztlumením)
+let zvukCeka = false;   // zvuk je zapnutý, ale prohlížeč ho zatím nepustil – čeká na klepnutí
+function ukazCekani() {
+  zvukCeka = true;
+  $('tlZvuk').textContent = '🔇';
+  $('tlZvuk').title = 'Zapnout zvuk (M)';
+  $('tlZvuk').setAttribute('aria-pressed', 'false');
+}
+const ytOk = () => !!(prehravac && typeof prehravac.isMuted === 'function' && aktualni?.druh === 'kamera');
+function ukazZvuk() {
+  if (zvukCeka) return ukazCekani();
+  const z = nastaveni.zvuk;
+  const ticho = z.ztlumeno || z.hlasitost === 0;
+  $('tlZvuk').textContent = ticho ? '🔇' : z.hlasitost < 50 ? '🔉' : '🔊';
+  $('tlZvuk').title = ticho ? 'Zapnout zvuk (M)' : 'Ztlumit (M)';
+  $('tlZvuk').setAttribute('aria-pressed', String(!ticho));
+  $('hlasitost').value = z.hlasitost;
+}
+function pouzijZvuk(zGesta) {
+  zvukOd = Date.now() + 2500;
+  if (!ytOk()) return;
+  try {
+    prehravac.setVolume(nastaveni.zvuk.hlasitost);
+    if (nastaveni.zvuk.ztlumeno) prehravac.mute();
+    // bez dřívější interakce s webem by prohlížeč video se zvukem zastavil
+    else if (zGesta || navigator.userActivation?.hasBeenActive !== false) { zvukCeka = false; ukazZvuk(); prehravac.unMute(); hlidejZvuk(); }
+    else { prehravac.mute(); ukazCekani(); }
+  } catch { /* přehrávač ještě není připravený */ }
+}
+// když prohlížeč přehrávání se zvukem nepustí, video se zastaví – pak zpět ztlumit a hrát
+function hlidejZvuk() {
+  const muj = pokus;
+  setTimeout(() => {
+    if (muj !== pokus || !ytOk()) return;
+    try {
+      const st = prehravac.getPlayerState();
+      if (st === 2 || st === -1) {
+        prehravac.mute(); prehravac.playVideo();
+        ukazCekani();     // jen na teď, uložená volba zůstává
+        toast('Prohlížeč zatím nedovolil pustit zvuk – klepni na 🔇 v liště.');
+      }
+    } catch { /* nevadí */ }
+  }, 1500);
+}
+function prepniZvuk() {
+  const z = nastaveni.zvuk;
+  z.ztlumeno = zvukCeka ? false : !z.ztlumeno;
+  zvukCeka = false;
+  if (!z.ztlumeno && z.hlasitost === 0) z.hlasitost = 50;
+  uloz('nastaveni', nastaveni); ukazZvuk(); pouzijZvuk(true);
+}
+$('tlZvuk').addEventListener('click', prepniZvuk);
+$('hlasitost').addEventListener('input', e => {
+  const z = nastaveni.zvuk;
+  z.hlasitost = +e.target.value; z.ztlumeno = z.hlasitost === 0; zvukCeka = false;
+  uloz('nastaveni', nastaveni); ukazZvuk(); pouzijZvuk(true);
+});
+// přehrávač nemá událost pro hlasitost – změny jeho vlastním ovládáním přebíráme dotazem
+setInterval(() => {
+  if (!ytOk() || !bezi || zvukCeka || Date.now() < zvukOd || vyhled.hidden) return;
+  try {
+    const m = prehravac.isMuted(), v = prehravac.getVolume();
+    const z = nastaveni.zvuk;
+    if (m !== z.ztlumeno || (!m && v !== z.hlasitost)) {
+      z.ztlumeno = m; if (!m) z.hlasitost = v;
+      uloz('nastaveni', nastaveni); ukazZvuk();
+    }
+  } catch { /* nevadí */ }
+}, 1000);
+
+function pouzijKvalitu() {
+  const f = ZMENSENI[nastaveni.kvalita] || 1;
+  $('prehravac').classList.toggle('zmenseny', f < 1);
+  $('prehravac').style.setProperty('--f', f);
+  for (const b of $('kvalitaNab').querySelectorAll('button[data-k]')) b.setAttribute('aria-checked', String(b.dataset.k === nastaveni.kvalita));
+  ukazKvalitu();
+}
+function ukazKvalitu() {
+  let q = '';
+  try { if (ytOk()) q = prehravac.getPlaybackQuality(); } catch { /* nevadí */ }
+  const t = KVALITY[q] || '';
+  $('kvalitaTed').textContent = t ? '· teď ' + t : '';
+  $('kvalitaTxt').textContent = (nastaveni.kvalita === 'auto' ? 'Auto' : 'Úspora') + (t ? ' ' + t : '');
+}
+$('tlKvalita').addEventListener('click', e => {
+  e.stopPropagation();
+  const n = $('kvalitaNab'); n.hidden = !n.hidden;
+  $('tlKvalita').setAttribute('aria-expanded', String(!n.hidden));
+  ukazKvalitu();
+});
+$('kvalitaNab').addEventListener('click', e => {
+  e.stopPropagation();
+  const b = e.target.closest('button[data-k]'); if (!b) return;
+  nastaveni.kvalita = b.dataset.k; uloz('nastaveni', nastaveni);
+  pouzijKvalitu();
+  $('kvalitaNab').hidden = true; $('tlKvalita').setAttribute('aria-expanded', 'false');
+});
+document.addEventListener('click', () => { $('kvalitaNab').hidden = true; $('tlKvalita').setAttribute('aria-expanded', 'false'); });
+setInterval(() => { if (ytOk() && !vyhled.hidden) ukazKvalitu(); }, 4000);
+
+/* ---------- sdílení ----------
+   ?k=<YouTube ID> kamera z nabídky · ?sv=<ID panoramatu> panorama z nabídky ·
+   vlastní místa: ?yt=<ID> nebo ?ll=<šířka,délka>&p=<panorama>&h=<směr>, k tomu &n=název&m=místo.
+   V rozcestníku se odkaz skládá jako index.html#obsah/dvere_do_sveta.html?… */
+function parametryMista(k) {
+  const q = new URLSearchParams();
+  if (!k.vlastni) q.set(k.druh === 'sv' ? 'sv' : 'k', k.druh === 'sv' ? k.pano : k.yt);
+  else {
+    if (k.druh === 'kamera') q.set('yt', k.yt);
+    if (k.lat != null) q.set('ll', `${k.lat},${k.lon}`);
+    if (k.druh === 'sv') { if (k.pano) q.set('p', k.pano); if (k.smer) q.set('h', k.smer); }
+    q.set('n', zobrazNazev(k)); if (k.misto) q.set('m', k.misto);
+  }
+  return q.toString();
+}
+function rozcestnik() {
+  // stránka běží v iframu rozcestníku na stejném originu → odkaz má vést přes rozcestník
+  try {
+    const t = window.top;
+    if (t !== window && t.location.origin === location.origin && /(\/|index\.html)$/.test(t.location.pathname)) {
+      const koren = t.location.pathname.replace(/index\.html$/, '');
+      if (location.pathname.startsWith(koren)) return { t, koren, cesta: location.pathname.slice(koren.length) };
+    }
+  } catch { /* cizí původ */ }
+  return null;
+}
+function odkazNaDvere(k) {
+  const q = parametryMista(k), r = rozcestnik();
+  if (r) return r.t.location.origin + r.t.location.pathname + '#' + r.cesta + '?' + q;
+  return location.href.split(/[?#]/)[0] + '?' + q;
+}
+// adresa v prohlížeči ukazuje právě otevřené místo – F5 nebo zkopírovaná adresa vede zpět sem
+function zapisAdresu(k) {
+  const q = k ? parametryMista(k) : '';
+  try { history.replaceState(null, '', location.pathname + (q ? '?' + q : '')); } catch { /* file:// apod. */ }
+  const r = rozcestnik();
+  if (r) try { r.t.history.replaceState(null, '', r.t.location.pathname + '#' + r.cesta + (q ? '?' + q : '')); } catch { /* nevadí */ }
+}
+function mistoZAdresy() {
+  const q = new URLSearchParams(location.search);
+  if (q.get('k')) return PODLE_ID.get(q.get('k')) || false;
+  if (q.get('sv')) return PODLE_ID.get('sv:' + q.get('sv')) || false;
+  const ll = (q.get('ll') || '').split(',').map(Number);
+  const ma = ll.length === 2 && ll.every(Number.isFinite) && Math.abs(ll[0]) <= 90 && Math.abs(ll[1]) <= 180;
+  const zakl = { vlastni: true, typ: 'vlastni', nazev: (q.get('n') || 'Sdílené místo').slice(0, 120), misto: (q.get('m') || '').slice(0, 120),
+    zeme: '', popis: '', lat: ma ? ll[0] : null, lon: ma ? ll[1] : null };
+  zakl.tz = ma ? pasmoZDelky(zakl.lon) : 'UTC';
+  const yt = q.get('yt') || '';
+  if (/^[\w-]{11}$/.test(yt)) return { ...zakl, druh: 'kamera', yt, id: 'vl:yt:' + yt };
+  if (ma) {
+    const p = q.get('p') || '';
+    return { ...zakl, druh: 'sv', pano: /^[\w-]{10,}$/.test(p) ? p : null, smer: Math.round(+q.get('h') || 0), id: 'vl:sv:' + ll.join(',') };
+  }
+  return null;
+}
+let sdilene = null;
+function otevriSdileni(k = aktualni) {
+  if (!k) return;
+  const url = odkazNaDvere(k);
+  sdilene = { k, url };
+  $('sdilTitul').textContent = '📤 ' + zobrazNazev(k);
+  $('sdilPopis').textContent = [k.misto, k.druh === 'sv' ? 'panorama Street View' : 'živá kamera'].filter(Boolean).join(' · ');
+  $('sdilOdkaz').value = url;
+  $('sdilZdroj').href = odkazNa(k);
+  $('sdilNativni').hidden = !navigator.share;
+  $('sdilKopirovat').textContent = '📋 Kopírovat';
+  const qr = $('sdilQr'); qr.replaceChildren();
+  if (window.QRCode) try { new QRCode(qr, { text: url, width: 196, height: 196, correctLevel: QRCode.CorrectLevel.M }); } catch { /* příliš dlouhý text */ }
+  $('sdilDlg').showModal();
+  $('sdilOdkaz').select();
+}
+$('sdilKopirovat').addEventListener('click', async () => {
+  if (!sdilene) return;
+  try { await navigator.clipboard.writeText(sdilene.url); }
+  catch { $('sdilOdkaz').select(); try { document.execCommand('copy'); } catch { /* nevadí */ } }
+  $('sdilKopirovat').textContent = '✓ Zkopírováno';
+});
+$('sdilNativni').addEventListener('click', () => {
+  if (sdilene) navigator.share({ title: 'Dveře do světa – ' + zobrazNazev(sdilene.k), url: sdilene.url }).catch(() => {});
+});
+$('sdilOdkaz').addEventListener('focus', e => e.target.select());
 
 async function spust(k, zKanalu = false) {
   if (k.druh === 'sv') { spustSV(k); return; }
@@ -961,13 +1219,17 @@ async function spust(k, zKanalu = false) {
         let data = {};
         try { data = e.target.getVideoData() || {}; } catch { /* nevadí */ }
         if (data.isLive === false && !zKanalu && k.kanal) { spust(k, true); return; }
+        const poprve = !bezi;
         bezi = true; zmarenoZaSebou = 0;
         clearTimeout(hlidac); hlas(null);
         if (zKanalu) vykresliKartu(k, 'kanal', data.title);
+        if (poprve) pouzijZvuk(false);
+        ukazKvalitu();
       } else if (e.data === YTx.PlayerState.ENDED) {
         if (!zKanalu && k.kanal) spust(k, true); else if (!k.vlastni) selhalo(k);
       }
     },
+    onPlaybackQualityChange: () => { if (muj === pokus) ukazKvalitu(); },
     onError: e => {
       if (muj !== pokus) return;
       zapis(k, zKanalu, 'chyba ' + e.data);
@@ -1282,6 +1544,7 @@ function vykresliOblibene() {
       <div class="obl-akce">
         <button type="button" data-a="otevrit">▶ Otevřít</button>
         <button type="button" data-a="upravit">✎ Upravit</button>
+        <button type="button" data-a="sdilet" title="Sdílet odkaz">📤</button>
         <button type="button" data-a="odkaz" title="Otevřít zdroj v nové záložce">↗</button>
         <button type="button" data-a="smazat" title="Odebrat z oblíbených">🗑</button>
       </div>`;
@@ -1290,6 +1553,7 @@ function vykresliOblibene() {
       if (a === 'otevrit') { $('oblDlg').close(); jdiNa(k); }
       else if (a === 'upravit') upravit(o.id);
       else if (a === 'odkaz') window.open(odkazNa(k), '_blank', 'noopener');
+      else if (a === 'sdilet') otevriSdileni(k);
       else if (a === 'smazat') smazat(o.id);
     });
     ul.appendChild(li);
@@ -1387,12 +1651,15 @@ function vykresliOdkazy() {
       <td>${vlajka(k.zeme)} ${esc(zobrazNazev(k))}${k.misto ? `<br><span class="m">${esc(k.misto)}</span>` : ''}</td>
       <td class="skryt-uzke">${k.druh === 'sv' ? '🌐' : '📡'} ${t.ikona} ${esc(t.nazev)}</td>
       <td class="u"><a href="${esc(u)}" target="_blank" rel="noopener">${esc(u.replace(/^https:\/\/(www\.)?/, ''))}</a></td>
-      <td><button type="button" data-i="${i}" title="Otevřít tady za dveřmi">▶</button></td></tr>`;
+      <td style="white-space:nowrap"><button type="button" data-i="${i}" title="Otevřít tady za dveřmi">▶</button>
+        <button type="button" data-s="${i}" title="Sdílet odkaz na Dveře do světa">📤</button></td></tr>`;
   }).join('');
   $('odkTelo').innerHTML = `<table class="odkazy-tab"><thead><tr><th class="skryt-uzke">#</th><th>Místo</th><th class="skryt-uzke">Druh</th><th>Odkaz</th><th></th></tr></thead><tbody>${radky}</tbody></table>`;
   $('odkTelo').querySelector('tbody').addEventListener('click', e => {
     const b = e.target.closest('button[data-i]');
     if (b) { $('odkDlg').close(); jdiNa(vse[+b.dataset.i]); }
+    const sb = e.target.closest('button[data-s]');
+    if (sb) otevriSdileni(vse[+sb.dataset.s]);
   });
 }
 function otevriOdkazy() { vykresliOdkazy(); $('odkDlg').showModal(); }
@@ -1434,6 +1701,7 @@ vchod.addEventListener('click', () => otevri(cil));
 $('tlZpet').addEventListener('click', zavri);
 $('tlJinam').addEventListener('click', () => jinam());
 $('tlUlozit').addEventListener('click', prepniUlozeni);
+$('tlSdilet').addEventListener('click', () => otevriSdileni());
 $('tlOblibene').addEventListener('click', otevriOblibene);
 $('tlOblibeneCh').addEventListener('click', otevriOblibene);
 $('tlOdkazy').addEventListener('click', otevriOdkazy);
@@ -1461,18 +1729,33 @@ document.addEventListener('keydown', e => {
   else if (k === 'n') jinam();
   else if (k === 'i') medailonek();
   else if (k === 's') prepniUlozeni();
+  else if (k === 'm' && aktualni?.druh === 'kamera') prepniZvuk();
   else if (k === 'f') celaObrazovka();
 });
 
 /* pro testy */
 window.DVERE = { KAMERY, MISTA, vyskaSlunce, faze, vyber, kandidati, nastaveni, rozbite, otevri, zavri, jinam, jdiNa, denik,
-  rozeberOdkaz, kontinent, mapka, oblibene: () => oblibene, stav: () => ({ cil, aktualni, styl, bezi, animuji }) };
+  rozeberOdkaz, kontinent, mapka, mistoZAdresy, odkazNaDvere, parametryMista, prehravac: () => prehravac, oblibene: () => oblibene, stav: () => ({ cil, aktualni, styl, bezi, animuji }) };
 
 medailonek(nastaveni.medailonek);
+pouzijKvalitu();
+ukazZvuk();
 vykresliRezim();
 vykresliCipy();
 aktualizujPocet();
 pripravDvere();
+
+// sdílený odkaz: dveře rovnou vedou na dané místo a samy se otevřou
+const zOdkazu = mistoZAdresy();
+if (zOdkazu) {
+  if (zOdkazu.druh !== druhRezimu()) { prepniRezim(zOdkazu.druh === 'sv' ? 'sv' : 'kamery'); }
+  cil = zOdkazu; ukazCil();
+  $('vyzva').textContent = 'Otevírám sdílené místo: ' + zobrazNazev(zOdkazu);
+  setTimeout(() => otevri(zOdkazu), 600);
+} else if (zOdkazu === false) {
+  $('vyzva').textContent = 'Sdílené místo už v nabídce není – zkus jiné dveře.';
+  zapisAdresu(null);
+}
 })();
 </script>
 </body>
