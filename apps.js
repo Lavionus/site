@@ -1898,6 +1898,11 @@ const KATALOG_SEKCE = [
         "tagy": ["obrana věží", "vesmír", "strategie", "sci-fi"]
       },
       {
+        "soubor": "obsah/obleheni.html",
+        "nazev": "🏝️ Ostrov v obležení",
+        "tagy": ["obrana věží", "tower defense", "ostrov", "lodě", "piráti", "kraken", "wyverny", "fantasy", "strategie", "procedurální mapa", "seed", "kampaň"]
+      },
+      {
         "soubor": "obsah/pong.html",
         "nazev": "🏓 Pong",
         "tagy": ["pong", "pálky", "retro", "arkáda"]

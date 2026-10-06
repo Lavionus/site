@@ -5,7 +5,7 @@
 /* Při větší aktualizaci webu zvyš číslo verze — stará cache se u návštěvníků
    smaže a vše se stáhne čerstvé (jinak SWR ukáže novou verzi až na druhé načtení). */
 const PREFIX = 'webapp-';
-const CACHE = PREFIX + 'v285';
+const CACHE = PREFIX + 'v286';
 const JADRO = [
   './',
   './index.html',
@@ -113,6 +113,21 @@ const SINE = [
 ];
 
 
+/* Ostrov v obležení (obsah/obleheni.html) – tower defense bez obrázků (vše kreslí kód).
+   Že seznam sedí se soubory na disku, hlídá _test/sw_obleheni_check.js. */
+const OBLEHENI = [
+  './obsah/obleheni.html',
+  './obsah/obleheni/data.js',
+  './obsah/obleheni/grafika.js',
+  './obsah/obleheni/kampan.js',
+  './obsah/obleheni/nahoda.js',
+  './obsah/obleheni/ostrov.js',
+  './obsah/obleheni/sim.js',
+  './obsah/obleheni/toky.js',
+  './obsah/obleheni/ui.js',
+  './obsah/obleheni/zvuk.js',
+];
+
 // Dotáhne do cache, co z dané sady ještě chybí (po jednom, chyby ignoruje – při
 // příštím otevření se zkusí znovu). Běží jen jednou naráz pro každou sadu.
 const dotahuje = new Map();
@@ -141,6 +156,7 @@ self.addEventListener('install', e => {
 self.addEventListener('message', e => {
   if (e.data && e.data.typ === 'dotahni' && e.data.sada === 'trpaslici') e.waitUntil(dotahniSadu('trpaslici', TRPASLICI));
   if (e.data && e.data.typ === 'dotahni' && e.data.sada === 'sine') e.waitUntil(dotahniSadu('sine', SINE));
+  if (e.data && e.data.typ === 'dotahni' && e.data.sada === 'obleheni') e.waitUntil(dotahniSadu('obleheni', OBLEHENI));
 });
 
 self.addEventListener('activate', e => {
@@ -165,6 +181,7 @@ self.addEventListener('fetch', e => {
   // otevření Srdce hory → na pozadí docachovat celou hru (obrázky, ikony, skripty)
   if (url.pathname.endsWith('/obsah/trpaslici.html')) e.waitUntil(dotahniSadu('trpaslici', TRPASLICI));
   if (url.pathname.endsWith('/obsah/sine.html')) e.waitUntil(dotahniSadu('sine', SINE));
+  if (url.pathname.endsWith('/obsah/obleheni.html')) e.waitUntil(dotahniSadu('obleheni', OBLEHENI));
 
   // navigace s dotazem (trpaslici.html?seed=…&velikost=…) je pořád táž stránka: hledat bez dotazu a ukládat bez něj
   const navigace = e.request.mode === 'navigate';

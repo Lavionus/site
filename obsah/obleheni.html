@@ -1,0 +1,204 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🏝️ Ostrov v obležení</title>
+<meta name="description" content="Tower defense na ostrově generovaném ze seedu: lodě, výsadky, letci a mořské příšery útočí z moře, ze vzduchu i po souši.">
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../podpis.js" defer></script>
+<script src="../rekord.js"></script>
+<script src="../dialog.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;user-select:none}
+[hidden]{display:none !important}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;padding:12px;display:flex;flex-direction:column;align-items:center}
+h1{font-size:1.45rem;margin-bottom:8px;font-weight:650;text-align:center}
+.game{max-width:820px;width:100%}
+.hud{display:flex;flex-direction:column;gap:6px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;padding:7px 9px;margin-bottom:8px}
+.hudrow{display:flex;align-items:center;gap:6px}
+.hudrow.info{flex-wrap:wrap;row-gap:4px}
+.hud .stat{display:flex;align-items:center;gap:4px;font-size:.9rem;font-weight:600;white-space:nowrap}
+.hud .stat b{font-variant-numeric:tabular-nums}
+.hud .stat small{color:var(--text-faint);font-weight:400}
+.zlato{color:#f1c40f}.pevnost{color:#2ecc71}.pristav{color:#5dade2}.vesnice{color:#e67e22}.vlna{color:var(--accent)}.skore{color:#27ae60}.rek{color:#f1c40f;opacity:.85}
+.pocasi{margin-left:auto;font-size:.8rem;color:var(--text-muted);display:flex;gap:6px;align-items:center;white-space:nowrap}
+.pocasi .sipka{display:inline-block;transition:transform .4s}
+.hudrow.ctrl button{flex:1 1 0;min-width:0;max-width:170px}
+.hud button{background:var(--bg-control);border:1px solid var(--border-strong);color:var(--text);border-radius:6px;padding:7px 8px;cursor:pointer;font-size:.8rem;font-weight:600}
+.hud button:hover{background:var(--bg-hover)}
+.hud button.on{background:var(--accent);color:#fff;border-color:var(--accent)}
+.startbtn{background:#27ae60 !important;color:#fff !important;border-color:#27ae60 !important}
+.startbtn:disabled{opacity:.4;cursor:not-allowed}
+.abilbar{display:flex;gap:6px;margin-bottom:6px}
+.abil{flex:1;background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;padding:6px 8px;cursor:pointer;font-size:.82rem;font-weight:600;color:var(--text);text-align:center;transition:.12s;position:relative;overflow:hidden}
+.abil small{display:block;font-weight:400;color:var(--text-faint);font-size:.68rem;margin-top:1px}
+.abil:hover:not(:disabled){border-color:var(--accent)}
+.abil.arm{border-color:#e67e22;background:#3a2c1e;color:#f0b060}
+.abil:disabled{opacity:.5;cursor:not-allowed}
+.abil .nabit{position:absolute;left:0;bottom:0;height:3px;background:var(--accent)}
+.artefakty{display:flex;gap:5px;min-height:20px;margin-bottom:2px;flex-wrap:wrap}
+.artefakty .art{font-size:1rem;background:var(--bg-elevated);border:1px solid var(--border-strong);border-radius:5px;padding:0 5px;cursor:default}
+.banner{text-align:center;color:#f39c12;font-weight:600;min-height:20px;margin-top:4px;font-size:.92rem}
+.banner.zly{color:#e74c3c}
+@keyframes bpulse{0%{transform:scale(1)}30%{transform:scale(1.08)}100%{transform:scale(1)}}
+.banner.pulse{animation:bpulse .45s ease}
+.nahled{text-align:center;color:#8fb3d9;font-size:.8rem;min-height:18px;margin-bottom:4px;line-height:1.45}
+:root[data-theme="light"] .nahled{color:#2a5a8c}
+.canvaswrap{position:relative;line-height:0}
+#mapa{width:100%;aspect-ratio:4/3;background:#0b3d63;border-radius:8px;border:1px solid var(--border);cursor:pointer;touch-action:manipulation;display:block}
+.overlay{position:absolute;inset:0;background:rgba(12,16,22,.92);border-radius:8px;display:none;flex-direction:column;align-items:center;justify-content:center;gap:10px;text-align:center;padding:16px;line-height:1.45;color:#e8e8e8;overflow-y:auto;z-index:50}
+.overlay.show{display:flex}
+.overlay h2{font-size:1.7rem;color:#f5cd79}
+.overlay h2.prohra{color:#e74c3c}
+.overlay p{color:#c8ccd2;font-size:.9rem;max-width:560px}
+.overlay .tl{background:var(--accent);color:#fff;border:none;padding:10px 22px;border-radius:8px;cursor:pointer;font-weight:600;font-size:.95rem}
+.overlay .tl.druhe{background:#3a4250}
+.radek{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+.volba{min-width:128px;line-height:1.3;background:#2b313b;border:1px solid #4a5260;color:#e8e8e8;border-radius:8px;padding:8px 12px;cursor:pointer;font-weight:600;font-size:.92rem}
+.volba small{display:block;font-weight:400;opacity:.8;font-size:.72rem}
+.volba.on{background:var(--accent);border-color:var(--accent);color:#fff}
+.seedrow{display:flex;gap:6px;align-items:center;flex-wrap:wrap;justify-content:center;font-size:.85rem;color:#c8ccd2}
+.seedrow input{width:7em;padding:6px 8px;border-radius:6px;border:1px solid #4a5260;background:#1b2028;color:#fff;font-family:monospace;font-size:.95rem;text-transform:uppercase;user-select:text}
+.seedrow select{padding:6px;border-radius:6px;border:1px solid #4a5260;background:#1b2028;color:#fff}
+.seedrow button{padding:6px 10px;border-radius:6px;border:1px solid #4a5260;background:#2b313b;color:#fff;cursor:pointer}
+#nahledOstrova{width:min(300px,70vw);aspect-ratio:4/3;border-radius:6px;border:1px solid #4a5260;background:#0b3d63}
+.mapaSouostrovi{width:min(560px,92%);aspect-ratio:16/9}
+.mapaSouostrovi .uzel{cursor:default}
+.mapaSouostrovi .uzel.dostupny{cursor:pointer}
+.selpanel{position:absolute;width:250px;line-height:1.4;background:rgba(28,32,38,.88);backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);border:1px solid var(--accent);border-radius:8px;padding:9px 10px 9px;display:none;z-index:40;box-shadow:0 8px 24px rgba(0,0,0,.55);text-align:left;color:#e8e8e8}
+:root[data-theme="light"] .selpanel{background:rgba(255,255,255,.92);color:var(--text)}
+.selpanel.show{display:block}
+.selpanel h3{font-size:.92rem;margin-bottom:3px;padding-right:18px}
+.selpanel .zav{position:absolute;top:3px;right:5px;background:none;border:none;color:var(--text-faint);font-size:1.05rem;cursor:pointer;padding:2px 5px;line-height:1}
+.selpanel .row{display:flex;justify-content:space-between;font-size:.75rem;padding:1px 0;color:var(--text-muted);gap:8px}
+.selpanel .row b{color:inherit;text-align:right;font-weight:600}
+.selpanel .pozn{font-size:.72rem;color:var(--text-faint);margin:3px 0}
+.selpanel .xpbar{height:5px;background:var(--bg-hover);border-radius:3px;overflow:hidden;margin:3px 0 2px}
+.selpanel .xpbar i{display:block;height:100%;background:linear-gradient(90deg,var(--accent),#7bd88f)}
+.selpanel .acts{display:flex;gap:6px;margin-top:7px}
+.selpanel .acts button,.selpanel .plne{flex:1;border:none;border-radius:6px;padding:7px 4px;cursor:pointer;font-weight:600;font-size:.75rem;color:#fff}
+.selpanel .plne{width:100%;margin-top:6px;line-height:1.3}
+.selpanel .plne small{font-weight:400;opacity:.85}
+.btn-up{background:#27ae60}.btn-up:disabled{opacity:.4;cursor:not-allowed}
+.btn-sell{background:#c0392b}
+.btn-spec{background:#8e44ad}
+.btn-merge{background:linear-gradient(135deg,#b8860b,#f1c40f);color:#1a1a1a !important}
+.btn-merge.sup{background:linear-gradient(135deg,#8e44ad,#e0b0ff)}
+.btn-hl{background:#2e86de}
+.prio{display:flex;gap:3px;flex-wrap:wrap;margin:3px 0}
+.prio button{flex:1 1 calc(50% - 3px);background:var(--bg-control);border:1px solid var(--border-strong);color:var(--text-muted);border-radius:4px;padding:3px 5px;cursor:pointer;font-size:.7rem}
+.prio button.on{background:var(--accent);border-color:var(--accent);color:#fff}
+@media(max-width:560px){.selpanel{width:212px}}
+.tip{position:absolute;pointer-events:none;background:rgba(20,24,30,.92);color:#eee;font-size:.72rem;line-height:1.35;padding:5px 8px;border-radius:6px;border:1px solid #4a5260;z-index:45;max-width:230px;display:none}
+.tip.show{display:block}
+.zalozky{display:flex;gap:4px;margin-top:8px}
+.zalozky button{background:var(--bg-control);border:1px solid var(--border);color:var(--text-muted);border-radius:6px 6px 0 0;padding:5px 12px;cursor:pointer;font-size:.8rem;font-weight:600}
+.zalozky button.on{background:var(--bg-elevated);color:var(--text);border-bottom-color:var(--bg-elevated)}
+.obchod{display:grid;grid-template-columns:repeat(auto-fill,minmax(78px,1fr));gap:6px;padding:7px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:0 8px 8px 8px}
+@media(max-width:560px){.obchod{grid-template-columns:repeat(auto-fill,minmax(66px,1fr))}}
+.karta{position:relative;background:var(--bg-panel);border:2px solid var(--border);border-radius:6px;padding:5px 3px 4px;cursor:pointer;text-align:center;transition:.12s;color:var(--text)}
+.karta:hover{border-color:var(--accent)}
+.karta.sel{border-color:var(--accent);background:var(--accent-soft)}
+.karta.nelze{opacity:.45}
+.karta .ico{font-size:1.2rem;line-height:1.3}
+.karta .nm{font-size:.62rem;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.karta .cena{font-size:.68rem;color:#d4a40c;font-weight:700}
+.karta .dom{font-size:.6rem;letter-spacing:-1px}
+.karta .hk{position:absolute;top:2px;left:4px;font-size:.56rem;color:var(--text-faint);font-weight:700}
+.info{min-height:36px;margin-top:6px;font-size:.78rem;color:var(--text-muted);text-align:center;line-height:1.4}
+.info b{color:var(--text)}
+.info .aura{color:var(--accent)}
+.vrstvy{display:flex;gap:5px;align-items:center;justify-content:center;flex-wrap:wrap;margin-top:6px;font-size:.78rem;color:var(--text-muted)}
+.vrstvy button{background:var(--bg-control);border:1px solid var(--border);color:var(--text-muted);border-radius:12px;padding:3px 10px;cursor:pointer;font-size:.75rem}
+.vrstvy button.on{background:var(--accent);border-color:var(--accent);color:#fff}
+details.napoveda{margin-top:10px;font-size:.82rem;color:var(--text-muted);line-height:1.5;background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;padding:8px 12px}
+details.napoveda summary{cursor:pointer;font-weight:600;color:var(--text)}
+details.napoveda p{margin-top:6px}
+details.napoveda b{color:var(--text)}
+.rekordbox{display:flex;justify-content:center;margin-top:8px}
+:root[data-theme="light"] .zlato{color:#8e7409}
+:root[data-theme="light"] .pevnost{color:#1e864a}
+:root[data-theme="light"] .skore{color:#1e864a}
+:root[data-theme="light"] .rek{color:#8e7409}
+:root[data-theme="light"] .karta .cena{color:#8e6a00}
+:root[data-theme="light"] .banner{color:#b9650a}
+:root[data-theme="light"] .abil.arm{background:#fde9d2;color:#9a4a00}
+</style>
+</head>
+<body>
+<h1>🏝️ Ostrov v obležení</h1>
+<div class="game">
+  <div class="hud">
+    <div class="hudrow info">
+      <span class="stat zlato" title="Zlato">💰 <b id="hZlato">0</b></span>
+      <span class="stat pevnost" title="Výdrž pevnosti – když klesne na nulu, prohráváš">🏰 <b id="hPevnost">0</b><small id="hPevnostMax">/100</small></span>
+      <span class="stat pristav" title="Výdrž přístavu (příjem zlata, šalupy, brander)">⚓ <b id="hPristav">60</b></span>
+      <span class="stat vesnice" title="Neporušené vesnice (příjem zlata)">🏘️ <b id="hVesnice">0</b></span>
+      <span class="stat vlna" title="Vlna">🌊 <b id="hVlna">0</b><small id="hVlnaMax"></small></span>
+      <span class="stat skore" title="Skóre">⭐ <b id="hSkore">0</b></span>
+      <span class="stat rek" title="Tvůj rekord v tomto režimu">🏆 <b id="hRekord">–</b></span>
+      <span class="pocasi" id="hPocasi"></span>
+    </div>
+    <div class="hudrow ctrl">
+      <button id="bRychlost" title="Rychlost (F), pauza (P)">⏩ 1×</button>
+      <button id="bZvuk" title="Zvuk (M)">🔊</button>
+      <button class="startbtn" id="bVlna" title="Další vlna (mezerník)">▶️ Vlna</button>
+      <button id="bAuto" title="Další vlny spouštět samy">🔁 Auto</button>
+      <button id="bMenu" title="Nabídka">☰ Nabídka</button>
+    </div>
+  </div>
+  <div class="abilbar" id="schopnosti"></div>
+  <div class="artefakty" id="artefakty"></div>
+  <div class="banner" id="banner"></div>
+  <div class="nahled" id="nahled"></div>
+  <div class="canvaswrap" id="obal">
+    <canvas id="mapa" width="768" height="576"></canvas>
+    <div class="tip" id="tip"></div>
+    <div class="selpanel" id="panel"></div>
+    <div class="overlay" id="okno"></div>
+  </div>
+  <div class="zalozky" id="zalozky">
+    <button data-z="veze" class="on">🏹 Věže</button>
+    <button data-z="podpora">🏮 Podpora</button>
+    <button data-z="pasti">⚠️ Pasti</button>
+  </div>
+  <div class="obchod" id="obchod"></div>
+  <div class="info" id="info">Vyber stavbu v obchodě (klávesy 1–9, 0, Q–R) a klikni na mapu. Kliknutím na postavenou věž ji vylepšíš nebo prodáš.</div>
+  <div class="vrstvy" id="vrstvy">Vrstva mapy:
+    <button data-v="" class="on">žádná</button>
+    <button data-v="hloubka">🌊 hloubka</button>
+    <button data-v="lode">⛵ kam doplují lodě</button>
+    <button data-v="dostrel">🎯 dostřel věží</button>
+  </div>
+  <details class="napoveda" id="napoveda">
+    <summary>❔ Jak se hraje</summary>
+    <p>🏰 <b>Cíl:</b> ubránit pevnost uprostřed ostrova. Když její výdrž klesne na nulu, prohráváš. ⚓ Přístav a 🏘️ vesnice dávají po každé vlně zlato. Lodě je ostřelují, a když padnou, příjem zmizí. Mezi vlnami je můžeš za zlato obnovit (klikni na ně).</p>
+    <p>🌊 <b>Útoky přicházejí z moře:</b> čluny a brigy plují k plážím (červený praporek = místo přistání) a vysadí pěchotu. Ta pak jde po cestách k pevnosti a útočí na ni, dokud nepadne. Kaperské šalupy a galeony ostřelují přístav a vesnice. Lupičská loď vyloupí přístav. Čluny umí doplout po řece až k mostu. Lodě se řídí <b>hloubkou</b>: čluny projedou mělčinou, galeony jen hlubokou vodou. Vrstva <i>kam doplují lodě</i> to ukáže.</p>
+    <p>🦅 <b>Letci</b> letí přímo a unáší je vítr (šipka vpravo nahoře). Harpyje usednou na věž a na chvíli ji umlčí, wyverny pálí ohněm, balony shazují výsadky. Na letce střílí 🎯 balista, 🎖️ mušketýři, 🔮 mág a každá věž vedle 🏮 majáku.</p>
+    <p>🐍 <b>Mořské příšery:</b> mořský had a kraken plují pod hladinou a vidí je jen maják (nebo když se vynoří). Had obtočí pobřežní věž a ta mlčí, dokud ho nezabiješ. Přízračné lodě jsou v mlze neviditelné bez majáku.</p>
+    <p>🏗️ <b>Stavba:</b> věže se nestaví na cesty ani do vody. 💥 Pobřežní dělo a 🔥 kotel musí stát u vody. Kopec přidá dosah (+18 %), útes pobřežnímu dělu +30 %, les ubere 10 %. V bažině je stavba dvojnásob dražší, na pláži o 10 % levnější. Pasti: zátarasy na cesty, kůly do mělčiny, miny a řetězovou závoru na moře.</p>
+    <p>✨ <b>Jako v Tower Defense:</b> sousední věže se posilují aurami (Chebyshevova vzdálenost 1), od úrovně 3 lze zvolit specializaci, 4 stejné věže ve čtverci 2×2 lze sloučit v <b>baštu</b>, 4 bašty v <b>pevnůstku</b>. Věže sbírají zkušenosti a povyšují (Rekrut → Legenda). Každý nepřítel má jednu imunitu a odolnost vůči 1–2 druhům věží (ukáže se po najetí myší). Synergie: kotel vedle děla = žhavé koule, balista vedle mušketýrů = sražení letců, maják vedle moždíře = navádění na ponořené.</p>
+    <p>⛅ <b>Počasí</b> se ukáže v hlášení hlídky před vlnou: jasno (+25 % zlata), mlha (−15 % dosah), bouře (rychlejší nepřátelé), noc (−20 % dosah, kromě věží u majáku). Hladina se střídá: běžná, <b>odliv</b> (mělčiny vyschnou), běžná, <b>příliv</b> (lodě doplují dál).</p>
+    <p>👹 Každá 10. vlna je <b>boss</b>: Admirálská galeona, Kraken, Matka wyvern, Holandský přízrak nebo Ohnivý titán. Za jeho zničení si vybereš trvalý artefakt.</p>
+    <p>⌨️ <b>Klávesy:</b> 1–9, 0, − věže, Q W E R pasti, mezerník = vlna, P = pauza, F = rychlost, A/S/D = schopnosti, U = vylepšit, X = prodat, Esc = zrušit, M = zvuk. Shift při stavbě = stavět víc.</p>
+  </details>
+</div>
+<script src="obleheni/nahoda.js"></script>
+<script src="obleheni/data.js"></script>
+<script src="obleheni/ostrov.js"></script>
+<script src="obleheni/toky.js"></script>
+<script src="obleheni/sim.js"></script>
+<script src="obleheni/kampan.js"></script>
+<script src="obleheni/grafika.js"></script>
+<script src="obleheni/zvuk.js"></script>
+<script src="obleheni/ui.js"></script>
+<script>
+if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
+  navigator.serviceWorker.register('../sw.js').catch(() => {});
+  navigator.serviceWorker.ready.then(r => { if (r.active) r.active.postMessage({ typ: 'dotahni', sada: 'obleheni' }); }).catch(() => {});
+}
+</script>
+</body>
+</html>

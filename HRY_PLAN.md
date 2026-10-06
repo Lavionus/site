@@ -80,6 +80,10 @@ druhý UI v IIFE; test logiky `_test/<soubor>_test.js` (node, přes `_test/logic
 - [x] 🌋 Živly ostrova – `obsah/zivly.html` – průřez sopkou (SiO₂/plyny/tlak → typ erupce, VEI, presety Soufrière Hills/Mont Pelée/La Soufrière) a hurikán (26,5 °C, střih, Coriolis, Saffir–Simpson); mini-hry 🎯 Vulkanolog a 🎯 Předpověď, 3 obtížnosti, denní výzva; test `_test/zivly_test.js`.
 - [x] 🐚 Plážový sběratel – `obsah/plaz.html` – odliv podle Měsíce (jarní/hluchý), 5 zón, 36 druhů + 8 tvorů k focení, třpyt a hrabání, počasí, 5 pláží, denní pláž; test `_test/plaz_test.js`.
 
+## Obrana ostrova
+
+- [x] 🏝️ Ostrov v obležení – `obsah/obleheni.html` + `obsah/obleheni/` – tower defense na ostrově ze seedu (32 × 24): lodě podle ponoru a přílivu, výsadky na pláže a pěchota po cestách, letci unášení větrem, mořský had a kraken pod hladinou; 12 staveb + 4 pasti, aury, specializace, slučování, hodnosti z TD; počasí, 5 bossů, artefakty; Souostroví (8 ostrovů), nekonečná obrana, ostrov dne. Popis `Obleheni_POPIS.md`, plán `Obleheni_PLAN.md`, testy `_test/obleheni_test.js`, bot `_test/obleheni_bot.js`, snímky `_test/obleheni_snimek.py`.
+
 ## Po každé hře
 
 1. Test logiky v node (unikátnost řešení, řešitelnost generátoru na mnoha seedech).
