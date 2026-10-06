@@ -1777,6 +1777,10 @@ function aktualizujUI(t) {
    ZVUK (Web Audio, vše syntetizované)
    ================================================================== */
 let A = null, zvukZap = false, spanekKonec = 0;
+/* Tablety a telefony (hlavně Android) nestíhají HRTF pannery a dlouhý dozvuk – zvuk pak trhá.
+   Tam se použije levné stereo (equalpower), kratší dozvuk a větší zvukový buffer. */
+const LEHKY_ZVUK = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent) ||
+  (navigator.maxTouchPoints > 1 && window.matchMedia && matchMedia('(pointer: coarse)').matches);
 function sumBuf(ac, sek, typ) {
   const n = Math.floor(ac.sampleRate * sek), b = ac.createBuffer(2, n, ac.sampleRate);
   for (let ch = 0; ch < 2; ch++) {
@@ -1798,7 +1802,8 @@ function sumBuf(ac, sek, typ) {
 }
 function initZvuk() {
   const AC = window.AudioContext || window.webkitAudioContext; if (!AC) return null;
-  const ac = new AC();
+  let ac;
+  try { ac = new AC({ latencyHint: 'playback' }); } catch (e) { ac = new AC(); }   // větší buffer = žádné výpadky
   const master = ac.createGain(); master.gain.value = 0;
   const komp = ac.createDynamicsCompressor(); komp.threshold.value = -14; komp.ratio.value = 3;
   master.connect(komp); komp.connect(ac.destination);
@@ -1851,7 +1856,7 @@ function nastavPozici(p, x, y, z, t, ramp) {
 function prostorAc(ac, x, y, z) {
   if (!ac.createPanner) return ac.createGain();
   const p = ac.createPanner();
-  p.panningModel = 'HRTF'; p.distanceModel = 'inverse'; p.refDistance = 2; p.rolloffFactor = 0.15; p.maxDistance = 500;
+  p.panningModel = LEHKY_ZVUK ? 'equalpower' : 'HRTF'; p.distanceModel = 'inverse'; p.refDistance = 2; p.rolloffFactor = 0.15; p.maxDistance = 500;
   p.zrcadlo = rano();
   nastavPozici(p, x, y, z, ac.currentTime);
   return p;
@@ -1866,7 +1871,7 @@ const DOZVUKY = {
   laguna: { d: 2.4, k: 2.6, tlum: 0.75, echa: [0.03, 0.065], mokre: 0.5 },
 };
 function odezva(ac, par) {
-  const sr = ac.sampleRate, n = Math.floor(sr * par.d), ir = ac.createBuffer(2, n, sr);
+  const sr = ac.sampleRate, n = Math.floor(sr * (LEHKY_ZVUK ? Math.min(1.4, par.d * 0.5) : par.d)), ir = ac.createBuffer(2, n, sr);
   for (let ch = 0; ch < 2; ch++) {
     const d = ir.getChannelData(ch);
     let lp = 0;
@@ -1896,9 +1901,14 @@ function nastavDozvuk(id) {
   A.dozvuky = [{ c: conv, g: g0 }];
 }
 /* hlava posluchače se natáčí spolu s kamerou */
+/* Bez automatizace (setTargetAtTime): automatizovaný posluchač přepne všechny pannery
+   na výpočet po jednotlivých vzorcích a na slabším zařízení zvuk trhá. Stačí pár změn za sekundu. */
 function natocUsi() {
-  const L = A.ac.listener, t = A.ac.currentTime, yaw = clamp(-cam.x / 14, -1, 1) * 0.35 * (rano() ? -1 : 1);
-  if (L.forwardX) { L.forwardX.setTargetAtTime(Math.sin(yaw), t, 0.15); L.forwardZ.setTargetAtTime(-Math.cos(yaw), t, 0.15); }
+  const yaw = Math.round(clamp(-cam.x / 14, -1, 1) * 0.35 * (rano() ? -1 : 1) * 50) / 50;
+  if (yaw === A.yaw) return;
+  A.yaw = yaw;
+  const L = A.ac.listener;
+  if (L.forwardX) { L.forwardX.value = Math.sin(yaw); L.forwardZ.value = -Math.cos(yaw); }
   else if (L.setOrientation) L.setOrientation(Math.sin(yaw), 0, -Math.cos(yaw), 0, 1, 0);
 }
 /* poloha na obrazovce → poloha v prostoru (obzor je daleko vpředu) */
@@ -2113,6 +2123,11 @@ function planujPan(t0, noc) {
   while (P.fraze.length && P.fraze[0].t < t0 + 1) { const n = P.fraze.shift(); if (n.t >= t0 - 0.05) tonPan(Math.max(n.t, t0), n.idx, n.s); }
   if (!P.fraze.length) P.dalsi = P.konec + rnd(3, 10) * (1 + noc * 0.5);
 }
+/* naplánuje plynulou změnu jen tehdy, když se cíl opravdu pohnul (nehromadí automatizaci) */
+function cil(par, v, t, tau) {
+  if (par._cil !== undefined && Math.abs(par._cil - v) < 1e-3) return;
+  par._cil = v; par.setTargetAtTime(v, t, tau);
+}
 function tikZvuku(tWall) {
   if (!A || !zvukZap) return;
   const ac = A.ac, now = ac.currentTime, el = vyskaSlunce(), Z = MISTO.zvirata;
@@ -2120,9 +2135,9 @@ function tikZvuku(tWall) {
   const faktor = { prib: 1, vitr: (0.85 + 0.3 * den) * MISTO.vitr, racci: den * Z.racci, coqui: Math.min(1.5, zaby * Z.coqui), cvrc: Math.min(1.5, cvr * Z.cvrc), drevo: MISTO.drevo, pan: 1, zvon: 1, hrom: 1, ptaci: rano() ? clamp((el + 7) / 5, 0, 1) * clamp((12 - el) / 6, 0, 1) : clamp(el / 4, 0, 1) * 0.3 };
   for (const v of VRSTVY) {
     const n = nast.vrstvy[v.id];
-    A.vyst[v.id].gain.setTargetAtTime((n.on ? n.v : 0) * faktor[v.id], now, 0.6);
+    cil(A.vyst[v.id].gain, (n.on ? n.v : 0) * faktor[v.id], now, 0.6);
   }
-  A.hukot.gain.setTargetAtTime(MISTO.zvuk.hukot, now, 1);
+  cil(A.hukot.gain, MISTO.zvuk.hukot, now, 1);
   for (const v of vlny) {
     if (!v.zvuk && v.t0 < tWall + 1.2) {
       v.zvuk = true;
@@ -2130,10 +2145,10 @@ function tikZvuku(tWall) {
       if (tAc > now - 0.3) zvukVlny(v, Math.max(now + 0.02, tAc));
     }
   }
-  A.vitrG.gain.setTargetAtTime(0.12 + 0.5 * vitr, now, 0.8);
-  if (A.vitrPan.pan) A.vitrPan.pan.setTargetAtTime(Math.sin(tWall * 0.05) * 0.45 + (vitrCil - 0.5) * 0.3, now, 2);
-  A.vitrF.frequency.setTargetAtTime(300 + 600 * vitr, now, 1.2);
-  A.sustG.gain.setTargetAtTime(0.015 + 0.14 * vitr * vitr, now, 0.5);
+  cil(A.vitrG.gain, 0.12 + 0.5 * vitr, now, 0.8);
+  if (A.vitrPan.pan) cil(A.vitrPan.pan, Math.sin(tWall * 0.05) * 0.45 + (vitrCil - 0.5) * 0.3, now, 2);
+  cil(A.vitrF.frequency, 300 + 600 * vitr, now, 1.2);
+  cil(A.sustG.gain, 0.015 + 0.14 * vitr * vitr, now, 0.5);
   if (den > 0.05 && Z.racci > 0 && nast.vrstvy.racci.on) {
     if (!A.dalsiRacek) A.dalsiRacek = now + rnd(2, 8);
     if (A.dalsiRacek < now + 1) { racek(Math.max(now, A.dalsiRacek)); A.dalsiRacek += rnd(6, 20) / Math.max(0.3, den * Z.racci); }
@@ -2185,8 +2200,8 @@ function tikZvuku(tWall) {
     const info = $('spanekInfo');
     if (zbyva <= 0) { spanekKonec = 0; $('spanek').value = '0'; info.textContent = ''; vypniZvuk(); return; }
     info.textContent = `Zvuk se vypne za ${Math.ceil(zbyva / 60)} min.`;
-    A.master.gain.setTargetAtTime(nast.hlas * clamp(zbyva / 90, 0, 1), now, 1);
-  } else A.master.gain.setTargetAtTime(nast.hlas, now, 0.3);
+    cil(A.master.gain, nast.hlas * clamp(zbyva / 90, 0, 1), now, 1);
+  } else cil(A.master.gain, nast.hlas, now, 0.3);
 }
 function zapniZvuk() {
   if (!A) { A = initZvuk(); if (!A) return; nastavDozvuk(nast.misto); }
@@ -2194,13 +2209,13 @@ function zapniZvuk() {
   zvukZap = true;
   vlny.forEach(v => { if (v.t0 > nyni()) v.zvuk = false; });
   A.master.gain.cancelScheduledValues(A.ac.currentTime);
-  A.master.gain.setTargetAtTime(nast.hlas, A.ac.currentTime, 0.8);
+  A.master.gain.setTargetAtTime(nast.hlas, A.ac.currentTime, 0.8); A.master.gain._cil = nast.hlas;
   tikZvuku(nyni());
   obnovTlacitka(); drzObrazovku();
 }
 function vypniZvuk() {
   zvukZap = false;
-  if (A) { const t = A.ac.currentTime; A.master.gain.cancelScheduledValues(t); A.master.gain.setTargetAtTime(0, t, 0.25); setTimeout(() => { if (!zvukZap) A.ac.suspend(); }, 1200); }
+  if (A) { const t = A.ac.currentTime; A.master.gain.cancelScheduledValues(t); A.master.gain.setTargetAtTime(0, t, 0.25); A.master.gain._cil = undefined; setTimeout(() => { if (!zvukZap) A.ac.suspend(); }, 1200); }
   obnovTlacitka(); drzObrazovku();
 }
 function plip(x, y = H * 0.8) {

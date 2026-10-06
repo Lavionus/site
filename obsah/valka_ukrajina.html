@@ -79,6 +79,7 @@ h3 { font-size: .95rem; margin: 18px 0 6px; }
 .vrstvy .vzorek { width: 14px; height: 14px; border-radius: 3px; display: inline-block; border: 1px solid rgba(0,0,0,.25); }
 .vrstvy .km { color: var(--text-faint); font-variant-numeric: tabular-nums; }
 .leaflet-container { font-family: var(--font); }
+.volba-podkladu { font: inherit; font-size: 12px; padding: 3px 4px; border-radius: 4px; border: 1px solid var(--border); background: var(--bg-input); color: var(--text); cursor: pointer; box-shadow: 0 1px 4px rgba(0,0,0,.3); }
 
 /* vaflový diagram 100 políček */
 .vafle-obal { display: flex; gap: 22px; align-items: center; flex-wrap: wrap; margin-top: 16px; }
@@ -338,7 +339,7 @@ td.n, th.n { text-align: right; font-variant-numeric: tabular-nums; white-space:
     <p class="pozn">
       Podíly počítány z rozlohy Ukrajiny v mezinárodně uznaných hranicích (603 628 km², včetně Krymu).
       Srovnání s Českem: 78 871 km², Praha 496 km².
-      Mapový podklad © Esri, HERE, Garmin, © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>;
+      Mapové podklady (volba v pravém horním rohu mapy) © Esri, HERE, Garmin, Maxar, OpenTopoMap, © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>;
       vrstvy kontroly území © Institute for the Study of War &amp; AEI's Critical Threats Project.
       Stránka nic neupravuje ani nepředpovídá — jen zobrazuje a porovnává zveřejněná data.
     </p>
@@ -484,22 +485,71 @@ function vykresliIsw() {
 /* ---------- mapa ---------- */
 let mapa = null;
 const mapoveVrstvy = {};
-// Esri šedé podklady (bez klíče); popisky jako zvláštní vrstva nad polygony ISW
-const urlEsri = typ => `https://server.arcgisonline.com/ArcGIS/rest/services/Canvas/World_${document.documentElement.dataset.theme === 'light' ? 'Light' : 'Dark'}_Gray_${typ}/MapServer/tile/{z}/{y}/{x}`;
+// Podklady bez API klíče (CARTO teď klíč vyžaduje). „Šedý“ sleduje téma stránky.
+// Popisky (u šedého a satelitu) jsou zvláštní vrstva nad polygony.
+const ESRI = 'https://server.arcgisonline.com/ArcGIS/rest/services/';
+const ATR_ESRI = 'Podklad © Esri, HERE, Garmin, © OpenStreetMap';
+const PODKLADY = {
+  sedy: { nazev: 'Šedý (dle tématu)', atr: ATR_ESRI, max: 16,
+    url: () => ESRI + `Canvas/World_${document.documentElement.dataset.theme === 'light' ? 'Light' : 'Dark'}_Gray_Base/MapServer/tile/{z}/{y}/{x}`,
+    popisky: () => ESRI + `Canvas/World_${document.documentElement.dataset.theme === 'light' ? 'Light' : 'Dark'}_Gray_Reference/MapServer/tile/{z}/{y}/{x}` },
+  // tile.openstreetmap.org webové aplikace blokuje (dlaždice „Access blocked“) → open-source servery komunity
+  osm: { nazev: 'OSM – humanitární', max: 19, url: () => 'https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png',
+    atr: 'Podklad © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>, styl HOT, server OSM France' },
+  otm: { nazev: 'OpenTopoMap', max: 17, url: () => 'https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png',
+    atr: 'Podklad © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>, SRTM · styl © <a href="https://opentopomap.org" target="_blank" rel="noopener">OpenTopoMap</a> (CC BY-SA)' },
+  ulice: { nazev: 'Esri – ulice', max: 18, atr: 'Podklad © Esri, HERE, Garmin, © OpenStreetMap',
+    url: () => ESRI + 'World_Street_Map/MapServer/tile/{z}/{y}/{x}' },
+  teren: { nazev: 'Topografická', max: 18, atr: 'Podklad © Esri, HERE, Garmin, FAO, NOAA, USGS, © OpenStreetMap',
+    url: () => ESRI + 'World_Topo_Map/MapServer/tile/{z}/{y}/{x}' },
+  satelit: { nazev: 'Satelitní', max: 18, atr: 'Podklad © Esri, Maxar, Earthstar Geographics',
+    url: () => ESRI + 'World_Imagery/MapServer/tile/{z}/{y}/{x}',
+    popisky: () => ESRI + 'Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}' },
+};
+const KLIC_PODKLAD = 'webapp_valka_podklad';
+let podklad = 'sedy';
+try { const k = localStorage.getItem(KLIC_PODKLAD); if (PODKLADY[k]) podklad = k; } catch { }
+const vsechnyMapy = [];
 // Při změně tématu se vrstvy podkladu tvoří znovu: L.TileLayer.setUrl při necelém
 // zoomu (zoomSnap .25) dosadí do adresy např. z=5.75 a server vrátí cizí dlaždice.
 function nastavPodklad(m, vrstvy) {
-  m._podklad?.remove(); m._popisky?.remove();
-  m._podklad = L.tileLayer(urlEsri('Base'), { maxZoom: 16, attribution: `Podklad © Esri, HERE, Garmin, © OpenStreetMap · ${vrstvy}` }).addTo(m);
-  m._popisky = L.tileLayer(urlEsri('Reference'), { maxZoom: 16, pane: 'popisky' }).addTo(m);
+  m._podklad?.remove(); m._popisky?.remove(); m._popisky = null;
+  const p = PODKLADY[podklad];
+  m._podklad = L.tileLayer(p.url(), { maxZoom: p.max, attribution: `${p.atr} · ${vrstvy}` }).addTo(m);
+  if (p.popisky) m._popisky = L.tileLayer(p.popisky(), { maxZoom: p.max, pane: 'popisky' }).addTo(m);
+  if (m._volbaPodkladu) m._volbaPodkladu.value = podklad;
 }
+function zvolPodklad(k) {
+  if (!PODKLADY[k] || k === podklad) return;
+  podklad = k;
+  try { localStorage.setItem(KLIC_PODKLAD, k); } catch { }
+  for (const m of vsechnyMapy) nastavPodklad(m, m._atribuce);
+}
+// přepínač podkladu v rohu mapy; volba platí pro všechny mapy na stránce
+const VolbaPodkladu = L.Control.extend({
+  options: { position: 'topright' },
+  onAdd(m) {
+    const sel = L.DomUtil.create('select', 'volba-podkladu');
+    sel.title = 'Mapový podklad';
+    sel.setAttribute('aria-label', 'Mapový podklad');
+    sel.innerHTML = Object.entries(PODKLADY).map(([k, p]) => `<option value="${k}">${p.nazev}</option>`).join('');
+    sel.value = podklad;
+    L.DomEvent.disableClickPropagation(sel);
+    L.DomEvent.disableScrollPropagation(sel);
+    sel.addEventListener('change', () => zvolPodklad(sel.value));
+    m._volbaPodkladu = sel;
+    return sel;
+  },
+});
 function novaMapa(id, vrstvy) {
   const m = L.map(id, { preferCanvas: true, zoomSnap: .25 });
   m.fitBounds([[44.3, 22.1], [52.4, 40.3]]);
   m.createPane('popisky').style.zIndex = 650;
   m.getPane('popisky').style.pointerEvents = 'none';
   m._atribuce = vrstvy;
+  new VolbaPodkladu().addTo(m);
   nastavPodklad(m, vrstvy);
+  vsechnyMapy.push(m);
   return m;
 }
 function stylVrstvy(def) {
@@ -1307,7 +1357,7 @@ function vykresliNovinky() {
     for (let t = msDen(posl); t > msDen(od) && dny.length < 10; t -= 864e5) dny.push(isoZms(t));
     if (!dny.length) dny.push(posl);
     $('novZpravy').innerHTML = `📰 Denní zprávy ISW${dny.length > 1 ? ' za období' : ''} (anglicky, s mapami a podrobnostmi z fronty): ` +
-      dny.map(d => `<a href="${odkazZpravyIsw(d)}" target="_blank" rel="noopener">${datumCz(d)}</a>`).join('');
+      dny.map(d => `<a href="${odkazZpravyIsw(d)}" target="_blank" rel="noopener">${datumCz(d)}</a>`).join(' ');
   }
   if (ds) vykresliNovMapu();
 }
@@ -1523,7 +1573,7 @@ function prekresli() {
   new MutationObserver(() => {
     if (document.documentElement.dataset.theme === tema) return;   // theme.js zapisuje i stejnou hodnotu
     tema = document.documentElement.dataset.theme;
-    for (const m of [mapa, cas.mapa, nov.mapa]) if (m) nastavPodklad(m, m._atribuce); prekresli(); cas.vrstva?.kresli(); nov.vrstva?.kresli(); })
+    for (const m of vsechnyMapy) nastavPodklad(m, m._atribuce); prekresli(); cas.vrstva?.kresli(); nov.vrstva?.kresli(); })
     .observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
 })();
 </script>
