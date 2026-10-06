@@ -8,6 +8,7 @@
 <script src="../theme.js"></script>
 <script src="../podpis.js" defer></script>
 <script src="../dialog.js"></script>
+<script src="../rekord.js"></script>
 <style>
 /* Scéna má vlastní „chodbu“ — v tmavém tématu večerní, ve světlém denní. */
 :root {
@@ -17,7 +18,7 @@
   --panel-sklo: rgba(20, 22, 30, .72); --panel-text: #eef0f6; --panel-tlumene: #b8bccb;
   --hlavni-svetlo: #fff3d1;
   --podlaha: clamp(170px, 30vh, 240px);
-  --misto-na-dvere: calc(100vh - var(--podlaha) - 140px);
+  --misto-na-dvere: calc(100vh - var(--podlaha) - 168px);
 }
 :root[data-theme="light"] {
   --zed-1: #e9e1d3; --zed-2: #ddd3c2; --zed-vzor: rgba(120, 90, 50, .05);
@@ -31,125 +32,294 @@ body { background: var(--zed-2); overflow: hidden; }
 .scena {
   position: fixed; inset: 0; overflow: hidden;
   background:
-    radial-gradient(ellipse 38% 34% at 50% 18%, var(--lampa), transparent 70%),
-    repeating-linear-gradient(90deg, var(--zed-vzor) 0 2px, transparent 2px 46px),
+    var(--omitka, none),
+    radial-gradient(ellipse 80% 60% at 50% 45%, transparent 40%, rgba(0,0,0,.35)),
     linear-gradient(var(--zed-1), var(--zed-2));
   transform-origin: 50% 52%;
   transition: transform 1.1s cubic-bezier(.6, 0, .3, 1), filter 1.1s;
 }
 .scena.vstup { transform: scale(2.6); filter: brightness(1.4); }
+/* lamperie s lištou – dává zdi měřítko */
+.lamberie {
+  position: absolute; left: 0; right: 0; bottom: var(--podlaha);
+  height: calc(var(--misto-na-dvere) * .34);
+  background: linear-gradient(rgba(0,0,0,.10), rgba(0,0,0,.16)), var(--omitka, none);
+  border-top: 7px solid transparent;
+  border-image: linear-gradient(rgba(255,255,255,.22), rgba(0,0,0,.25) 45%, rgba(0,0,0,.45)) 1;
+  box-shadow: 0 -2px 6px rgba(0,0,0,.18);
+}
+.lamberie::after { /* soklová lišta u podlahy */
+  content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 14px;
+  background: linear-gradient(rgba(255,255,255,.18), var(--lista) 30%, color-mix(in srgb, var(--lista) 70%, #000));
+  box-shadow: 0 -1px 0 rgba(0,0,0,.3);
+}
+/* podlaha: parkety v perspektivě (rovina sklopená ke zdi) */
 .podlaha {
-  position: absolute; left: 0; right: 0; bottom: 0; height: var(--podlaha);
+  position: absolute; left: 0; right: 0; bottom: 0; height: var(--podlaha); overflow: hidden;
+  perspective: 420px; perspective-origin: 50% -70%;
+  background: var(--podlaha-2);
+}
+.parkety {
+  position: absolute; left: -120%; right: -120%; top: 0; height: 520%;
+  transform-origin: 50% 0; transform: rotateX(78deg);
+  background: var(--parkety, linear-gradient(var(--podlaha-1), var(--podlaha-2))) 0 0 / 200px 400px;
+}
+.podlaha::after { /* zastínění u zdi a odlesk lampy */
+  content: ''; position: absolute; inset: 0; pointer-events: none;
   background:
-    linear-gradient(rgba(0,0,0,.35), transparent 30%),
-    repeating-linear-gradient(90deg, rgba(0,0,0,.10) 0 1px, transparent 1px 90px),
-    linear-gradient(var(--podlaha-1), var(--podlaha-2));
-  border-top: 10px solid var(--lista);
+    radial-gradient(ellipse 30% 55% at 50% 0, rgba(255,220,160,.16), transparent 70%),
+    linear-gradient(rgba(0,0,0,.55), rgba(0,0,0,.08) 22%, transparent 45%, rgba(0,0,0,.25));
 }
 .nadpis {
   position: absolute; top: 18px; left: 0; right: 0; text-align: center;
-  pointer-events: none; color: var(--text);
+  pointer-events: none; color: var(--text); z-index: 2;
 }
-.nadpis h1 { font-size: clamp(1.25rem, 3.4vw, 1.9rem); font-weight: 650; letter-spacing: .02em; }
+.nadpis h1 { font-size: clamp(1.25rem, 3.4vw, 1.9rem); font-weight: 650; letter-spacing: .02em; text-shadow: 0 1px 3px rgba(0,0,0,.4); }
 .nadpis p { color: var(--text-muted); font-size: .92rem; margin-top: 4px; }
 
-/* dveře: vnější tlačítko = zárubeň, uvnitř otvor se světlem a otočné křídlo */
+/* ---------- dveře ----------
+   .vchod (tlačítko) nese rozměry a barvy; uvnitř: lampa, zárubeň (.ram),
+   otvor s průhledem na cíl a křídlo, které se otáčí dovnitř (v perspektivě
+   otvoru, takže ho zeď ořízne jako skutečné dveře). */
 .vchod {
   --v: max(150px, min(var(--misto-na-dvere), 500px));
   --s: calc(var(--v) * .5);
-  --dvere: #7a4a26; --dvere-tmave: #5b361b; --zarubne: #3e2614; --kovani: #d9b45a;
+  --c: calc(var(--v) * .065);                 /* šířka obložky zárubně */
+  --barva: #7a4a26; --ram: #4a2e18;
+  --kov: linear-gradient(135deg, #fff3c2, #d4ac52 40%, #8a6420 75%, #c9a047);
+  --tvar: 2px 2px 0 0; --tvar-ram: 4px 4px 0 0;
   position: absolute; left: 50%; bottom: var(--podlaha);
   width: var(--s); height: var(--v); transform: translateX(-50%);
   border: none; background: none; padding: 0; cursor: pointer;
-  perspective: 1400px;
   -webkit-tap-highlight-color: transparent;
 }
-.vchod::before { /* zárubeň */
-  content: ''; position: absolute; inset: -14px -14px 0 -14px;
-  background: linear-gradient(90deg, var(--zarubne), color-mix(in srgb, var(--zarubne) 70%, #fff) 50%, var(--zarubne));
-  border-radius: var(--tvar-ram, 6px 6px 0 0);
-  box-shadow: 0 10px 40px rgba(0,0,0,.45);
-}
-.otvor {
-  position: absolute; inset: 0; overflow: hidden;
-  border-radius: var(--tvar, 3px 3px 0 0);
-  background: radial-gradient(ellipse at 50% 60%, var(--svetlo, #ffe7a8), color-mix(in srgb, var(--svetlo, #ffe7a8) 40%, #000) 120%);
-}
-.otvor::after { /* záře, která při otevření zesílí */
-  content: ''; position: absolute; inset: 0; background: var(--hlavni-svetlo);
-  opacity: 0; transition: opacity .9s ease-in;
-}
-.vchod.otevreno .otvor::after { opacity: .95; }
-.kridlo {
-  position: absolute; inset: 0;
-  border-radius: var(--tvar, 3px 3px 0 0);
-  background: linear-gradient(100deg, var(--dvere-tmave), var(--dvere) 18%, var(--dvere) 82%, var(--dvere-tmave));
-  transform-origin: 0 50%;
-  transition: transform 1s cubic-bezier(.5, 0, .25, 1), filter 1s;
-  box-shadow: inset 0 0 0 2px rgba(0,0,0,.25);
-  display: grid; grid-template-columns: 1fr 1fr; grid-template-rows: 1fr 1.6fr;
-  gap: 9%; padding: 14% 13% 16%;
-}
-.vchod:hover .kridlo, .vchod:focus-visible .kridlo { transform: rotateY(-7deg); }
-.vchod.otevreno .kridlo { transform: rotateY(-104deg); filter: brightness(.55); }
 .vchod:focus-visible { outline: none; }
-.vchod:focus-visible::before { outline: 3px solid var(--accent); outline-offset: 4px; }
-.panel {
-  border-radius: 3px;
-  box-shadow: inset 2px 2px 0 rgba(255,255,255,.10), inset -2px -2px 0 rgba(0,0,0,.30), inset 0 0 0 6px rgba(0,0,0,.06);
+.vchod:focus-visible .ram { outline: 3px solid var(--accent); outline-offset: 5px; }
+.vchod:disabled { cursor: default; }
+.vchod { touch-action: pan-y; user-select: none; -webkit-user-select: none; }
+
+/* nástěnná lampa nad dveřmi a její svit na zdi */
+.svit {
+  position: absolute; left: 50%; bottom: calc(100% - var(--v) * .55); width: calc(var(--v) * 2.4); height: calc(var(--v) * 1.5);
+  transform: translateX(-50%); pointer-events: none; z-index: -1;
+  background: radial-gradient(ellipse 42% 46% at 50% 22%, var(--lampa), transparent 72%);
 }
-.klika {
-  position: absolute; right: 9%; top: 54%; width: 13%; aspect-ratio: 1;
-  border-radius: 50%;
-  background: radial-gradient(circle at 35% 35%, #fff8, transparent 45%), var(--kovani);
-  box-shadow: 0 2px 4px rgba(0,0,0,.45);
-  transition: transform .3s;
+.lampa {
+  position: absolute; left: 50%; bottom: calc(100% + var(--c) + var(--v) * .03);
+  width: calc(var(--v) * .11); height: calc(var(--v) * .055); transform: translateX(-50%);
+  pointer-events: none;
 }
-.vchod:hover .klika { transform: rotate(-25deg); }
+.lampa::before { /* stínítko */
+  content: ''; position: absolute; inset: 0;
+  clip-path: polygon(18% 0, 82% 0, 100% 100%, 0 100%);
+  background: linear-gradient(90deg, #3a2f25, #8b7356 45%, #3a2f25);
+}
+.lampa::after { /* úchyt a žárovka */
+  content: ''; position: absolute; left: 50%; top: 100%; width: 60%; height: 22%; transform: translateX(-50%);
+  border-radius: 0 0 50% 50%; background: #fff3d0;
+  box-shadow: 0 0 calc(var(--v) * .05) calc(var(--v) * .02) rgba(255, 220, 150, .75);
+}
+:root[data-theme="light"] .lampa::after { box-shadow: 0 0 calc(var(--v) * .03) rgba(255, 220, 150, .6); }
+
+/* zárubeň: profilovaná obložka se stínem na zdi */
+.ram {
+  position: absolute; inset: calc(-1 * var(--c)) calc(-1 * var(--c)) 0 calc(-1 * var(--c));
+  border-radius: var(--tvar-ram);
+  background: var(--ram-tex, none) center / cover, var(--ram);
+  box-shadow:
+    calc(var(--v) * .012) calc(var(--v) * .022) calc(var(--v) * .05) rgba(0,0,0,.45),
+    0 0 0 1px rgba(0,0,0,.28),
+    inset 0 0 0 calc(var(--c) * .10) rgba(255,255,255,.14),
+    inset 0 0 0 calc(var(--c) * .17) rgba(0,0,0,.22),
+    inset 0 0 0 calc(var(--c) * .42) rgba(255,255,255,.07),
+    inset 0 0 0 calc(var(--c) * .50) rgba(0,0,0,.14);
+}
+.ram::after { /* světlo shora, tma u podlahy */
+  content: ''; position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+  background: linear-gradient(rgba(255,240,210,.20), transparent 30%, transparent 70%, rgba(0,0,0,.30));
+}
+
+/* otvor: průhled na cíl, ostění a křídlo */
+.otvor {
+  position: absolute; inset: 0; overflow: hidden; border-radius: var(--tvar);
+  perspective: calc(var(--v) * 2.2); perspective-origin: 62% 52%;
+  background: #0b0d12;
+}
+.pruhled {
+  position: absolute; inset: 0;
+  background: radial-gradient(ellipse 90% 70% at 50% 60%, var(--svetlo, #ffe7a8), color-mix(in srgb, var(--svetlo, #ffe7a8) 30%, #000) 130%);
+}
+.pruhled img {
+  position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover;
+  opacity: 0; transition: opacity .5s;
+  filter: blur(max(4px, calc(var(--v) * .022))) saturate(1.2) brightness(1.2);
+  transform: scale(1.15);     /* rozostřené okraje schovat za ostění */
+}
+.pruhled img.ok { opacity: 1; }
+.zare { /* záře, která se při otevření rozleje – světlo zvenčí je silnější než v chodbě */
+  position: absolute; inset: 0; opacity: 0; pointer-events: none;
+  background: radial-gradient(ellipse 65% 55% at 55% 50%, rgba(255,250,236,.38), rgba(255,250,236,.08) 70%, transparent 100%);
+  mix-blend-mode: screen;
+}
+.osteni { /* hloubka zdi v otvoru */
+  position: absolute; inset: 0; border-radius: inherit; pointer-events: none;
+  box-shadow:
+    inset calc(var(--v) * .045) 0 calc(var(--v) * .012) calc(var(--v) * -.006) rgba(0,0,0,.6),
+    inset calc(var(--v) * -.028) 0 0 0 color-mix(in srgb, var(--ram) 55%, #000),
+    inset 0 calc(var(--v) * .035) calc(var(--v) * .02) calc(var(--v) * -.006) rgba(0,0,0,.65);
+}
+.skvira { /* světlo štěrbinou pod zavřenými dveřmi */
+  position: absolute; left: 4%; right: 4%; bottom: 0; height: max(2px, calc(var(--v) * .006));
+  background: var(--svetlo, #ffe7a8); box-shadow: 0 0 6px 1px var(--svetlo, #ffe7a8);
+  opacity: .85; transition: opacity .4s;
+}
+.kridlo {
+  position: absolute; inset: 0; transform-origin: 0 50%; transform-style: preserve-3d;
+  transition: transform .5s cubic-bezier(.3, .7, .3, 1);
+}
+.vchod:not(:disabled):hover .kridlo, .vchod:focus-visible .kridlo { transform: rotateY(3.5deg); }
+.vchod.s-shoji:not(:disabled):hover .kridlo { transform: translateX(-3%); }
+.lice {
+  position: absolute; inset: 0; border-radius: var(--tvar); overflow: hidden;
+  background: var(--tex, none) center / 100% 100%, var(--barva);
+  box-shadow: inset 0 0 0 1px rgba(0,0,0,.35);
+}
+.lice::after { /* světlo lampy shora, ztmavení u podlahy a hran */
+  content: ''; position: absolute; inset: 0; pointer-events: none; border-radius: inherit;
+  background:
+    linear-gradient(rgba(255,236,200,.16), transparent 32%, transparent 68%, rgba(0,0,0,.26)),
+    linear-gradient(90deg, rgba(0,0,0,.20), transparent 7%, transparent 93%, rgba(0,0,0,.24));
+}
+.lice .tma { position: absolute; inset: 0; background: #000; opacity: 0; pointer-events: none; z-index: 3; }
+.hrana { /* tloušťka křídla – ukáže se při otevření */
+  position: absolute; top: 0; bottom: 0; right: 0; width: calc(var(--v) * .045);
+  transform-origin: 100% 50%; transform: rotateY(-90deg);
+  background: linear-gradient(90deg, color-mix(in srgb, var(--barva) 80%, #fff), color-mix(in srgb, var(--barva) 60%, #000));
+}
+
+/* výplně – kazety s vystouplým polem; světlo shora */
+.vypln { position: absolute; inset: 9% 12% 8%; display: grid; gap: 7%; }
+.p {
+  position: relative; border-radius: 2px;
+  box-shadow:
+    inset 0 calc(var(--v) * .007) calc(var(--v) * .006) rgba(0,0,0,.5),
+    inset 0 calc(var(--v) * -.004) calc(var(--v) * .003) rgba(255,240,210,.20),
+    0 0 0 1px rgba(0,0,0,.18);
+}
+.p::after {
+  content: ''; position: absolute; inset: calc(var(--v) * .016); border-radius: 2px;
+  background: linear-gradient(rgba(255,240,210,.10), transparent 45%, rgba(0,0,0,.12));
+  box-shadow: 0 calc(var(--v) * -.003) 0 rgba(255,240,210,.22), 0 calc(var(--v) * .004) calc(var(--v) * .005) rgba(0,0,0,.35);
+}
+.p.sklo { /* sklo – prosvítá jím cíl */
+  background: var(--nahled, none) center / cover, color-mix(in srgb, var(--svetlo, #ffe7a8) 70%, #222);
+  box-shadow: inset 0 0 0 calc(var(--v) * .006) color-mix(in srgb, var(--barva) 60%, #000), 0 0 0 1px rgba(0,0,0,.3);
+  filter: saturate(.9) blur(2.5px) brightness(1.1);   /* mléčné sklo */
+}
+.p.sklo::after {
+  inset: 0; box-shadow: none;
+  background:
+    linear-gradient(115deg, rgba(255,255,255,.35), transparent 35%, transparent 70%, rgba(255,255,255,.12)),
+    linear-gradient(90deg, transparent calc(50% - 1.5px), color-mix(in srgb, var(--barva) 70%, #000) calc(50% - 1.5px) calc(50% + 1.5px), transparent calc(50% + 1.5px));
+}
+.prkna { position: absolute; inset: 0; pointer-events: none;
+  background: repeating-linear-gradient(90deg, transparent 0 calc(16.66% - 1.5px), rgba(0,0,0,.35) calc(16.66% - 1.5px) 16.66%); }
+.diagonala { position: absolute; inset: 6%; pointer-events: none; border: calc(var(--v) * .012) solid rgba(0,0,0,.18);
+  background: repeating-linear-gradient(45deg, transparent 0 calc(var(--v) * .05), rgba(0,0,0,.28) calc(var(--v) * .05) calc(var(--v) * .053)); }
+.okenko { position: absolute; left: 34%; right: 34%; top: 22%; height: 15%; border-radius: 3px;
+  background: var(--nahled, none) center / cover, color-mix(in srgb, var(--svetlo, #ffe7a8) 70%, #222);
+  box-shadow: inset 0 0 0 calc(var(--v) * .008) #2a2522, 0 1px 0 rgba(255,255,255,.15);
+  filter: blur(2px) brightness(1.1); }
+.okenko::after { content: ''; position: absolute; inset: 0; border-radius: inherit;
+  background: repeating-linear-gradient(90deg, transparent 0 calc(25% - 1.5px), #1d1916 calc(25% - 1.5px) 25%),
+              linear-gradient(115deg, rgba(255,255,255,.3), transparent 40%); }
+.cvoky { position: absolute; inset: 7% 10%; pointer-events: none;
+  background: radial-gradient(circle, #1e1e1e 0 calc(var(--v) * .006), rgba(255,255,255,.25) calc(var(--v) * .006) calc(var(--v) * .008), transparent calc(var(--v) * .009)) 0 0 / 33.3% 25%; }
+
+/* kování */
+.kovani { position: absolute; right: 7%; top: 50%; width: calc(var(--v) * .026); height: calc(var(--v) * .12); z-index: 2; }
+.rozeta {
+  position: absolute; inset: 0; border-radius: calc(var(--v) * .013);
+  background: var(--kov); box-shadow: 0 calc(var(--v) * .004) calc(var(--v) * .006) rgba(0,0,0,.5), inset 0 0 0 1px rgba(255,255,255,.25);
+}
+.rozeta::after { /* klíčová dírka */
+  content: ''; position: absolute; left: 50%; bottom: 18%; width: 26%; height: 17%; transform: translateX(-50%);
+  background: radial-gradient(circle at 50% 30%, #111 0 38%, transparent 40%), linear-gradient(#111, #111) 50% 100% / 34% 60% no-repeat;
+}
+.paka {
+  position: absolute; right: 30%; top: 22%; width: calc(var(--v) * .085); height: calc(var(--v) * .016);
+  border-radius: calc(var(--v) * .008); transform-origin: calc(100% - var(--v) * .008) 50%;
+  background: var(--kov); box-shadow: 0 calc(var(--v) * .006) calc(var(--v) * .006) rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.4);
+  transition: transform .35s cubic-bezier(.3, 1.6, .5, 1);
+}
+.vchod:not(:disabled):hover .paka { transform: rotate(-6deg); }
+.kukatko { position: absolute; left: 50%; top: 27%; width: calc(var(--v) * .02); aspect-ratio: 1; transform: translateX(-50%);
+  border-radius: 50%; background: radial-gradient(circle at 40% 35%, #8fa3b8 0 18%, #111 32%, #111 50%, transparent 52%), var(--kov);
+  box-shadow: 0 1px 2px rgba(0,0,0,.5); z-index: 2; }
+.schranka { position: absolute; left: 30%; right: 30%; top: 47%; height: calc(var(--v) * .032); border-radius: 2px; z-index: 2;
+  background: var(--kov); box-shadow: 0 2px 3px rgba(0,0,0,.45); }
+.schranka::after { content: ''; position: absolute; left: 12%; right: 12%; top: 38%; height: 26%; background: #1a1410; border-radius: 1px; }
+.koule { position: absolute; left: 50%; top: 50%; width: calc(var(--v) * .065); aspect-ratio: 1; transform: translate(-50%, -50%);
+  border-radius: 50%; background: radial-gradient(circle at 35% 30%, #fff6cc, #d9b04c 35%, #6e4f14 80%);
+  box-shadow: 0 calc(var(--v) * .008) calc(var(--v) * .012) rgba(0,0,0,.55); z-index: 2; }
 .stitek {
-  position: absolute; left: 50%; top: 5.5%; transform: translateX(-50%);
-  background: var(--kovani); color: #2b2113;
-  font: 700 clamp(.7rem, 1.9vh, .95rem)/1 ui-monospace, 'Cascadia Mono', Menlo, monospace;
-  padding: 4px 8px; border-radius: 3px; white-space: nowrap;
-  box-shadow: 0 1px 2px rgba(0,0,0,.4), inset 0 1px 0 #fff6;
+  position: absolute; left: 50%; top: 4.5%; transform: translateX(-50%); z-index: 2;
+  background: var(--kov); color: #2a1d0a;
+  font: 700 clamp(.66rem, 1.8vh, .92rem)/1 ui-monospace, 'Cascadia Mono', Menlo, monospace;
+  padding: .32em .9em; border-radius: 2px; white-space: nowrap;
+  text-shadow: 0 1px 0 rgba(255,255,255,.45);
+  box-shadow: 0 1px 2px rgba(0,0,0,.5), inset 0 1px 0 rgba(255,255,255,.5);
 }
-/* škvíra pod dveřmi a světlo rozlité po podlaze */
+.stitek::before, .stitek::after { /* šroubky */
+  content: ''; position: absolute; top: 50%; width: .3em; height: .3em; margin-top: -.15em; border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #fff8, #5a4210 70%);
+}
+.stitek::before { left: .3em; } .stitek::after { right: .3em; }
+
+/* světlo, které se otevřenými dveřmi rozleje po podlaze */
 .paprsek {
   position: absolute; left: 50%; top: calc(100% - var(--podlaha)); width: min(90vw, 460px);
-  height: calc(var(--podlaha) * .8); transform: translateX(-50%);
-  background: radial-gradient(ellipse 50% 22% at 50% 0, var(--svetlo, #ffe7a8), transparent 75%);
-  opacity: .55; pointer-events: none; mix-blend-mode: screen;
-  transition: opacity .8s, background .8s;
+  height: calc(var(--podlaha) * .7); transform: translateX(-50%);
+  background: radial-gradient(ellipse 45% 18% at 50% 0, var(--svetlo, #ffe7a8), transparent 75%);
+  opacity: .5; pointer-events: none; mix-blend-mode: screen; transition: opacity .8s;
 }
-:root[data-theme="light"] .paprsek { mix-blend-mode: normal; opacity: .45; }
-.vchod:hover ~ .paprsek { opacity: .8; }
+:root[data-theme="light"] .paprsek { mix-blend-mode: normal; opacity: .35; }
+.vchod:not(:disabled):hover ~ .paprsek { opacity: .75; }
+.klin {
+  position: absolute; left: 50%; top: calc(100% - var(--podlaha)); height: calc(var(--podlaha) + 2px);
+  width: calc(var(--sirka-dveri, 200px) * 3); transform: translateX(-50%) scaleY(0); transform-origin: 50% 0;
+  clip-path: polygon(33.3% 0, 66.6% 0, 92% 100%, 8% 100%);
+  background: linear-gradient(color-mix(in srgb, var(--svetlo, #ffe7a8) 85%, #fff), transparent 92%);
+  mix-blend-mode: screen; opacity: 0; pointer-events: none;
+}
 
-/* tvary a barvy dveří — pokaždé jiné */
-.vchod.s-modre   { --dvere: #2f6db3; --dvere-tmave: #1f4c80; --zarubne: #e9e4d8; --kovani: #c9cdd3; --tvar: 50% 50% 3px 3px / 26% 26% 0 0; --tvar-ram: 50% 50% 0 0 / 28% 28% 0 0; }
-.vchod.s-cervene { --dvere: #a3322b; --dvere-tmave: #7a221d; --zarubne: #f3efe7; --kovani: #1d1d1d; }
-.vchod.s-zelene  { --dvere: #2d5e46; --dvere-tmave: #1e4231; --zarubne: #f1ede6; --kovani: #d9b45a; }
-.vchod.s-bile    { --dvere: #eeeae2; --dvere-tmave: #cfc9bd; --zarubne: #8a7a66; --kovani: #9a8a5a; }
-.vchod.s-zlute   { --dvere: #e0a526; --dvere-tmave: #b47f12; --zarubne: #5a4632; --kovani: #333; --tvar: 50% 50% 3px 3px / 26% 26% 0 0; --tvar-ram: 50% 50% 0 0 / 28% 28% 0 0; }
+/* ---------- podoby dveří ---------- */
+.vchod.s-modre .stitek, .vchod.s-cervene .stitek, .vchod.s-zlute .stitek { color: #efe7d6; text-shadow: 0 -1px 0 rgba(0,0,0,.6); }
+.vchod.s-modre   { --barva: #2f67a8; --ram: #e8e2d4; --kov: linear-gradient(135deg, #5d5d5d, #2a2a2a 45%, #0f0f0f 80%, #3c3c3c);
+                   --tvar: 50% 50% 2px 2px / 24% 24% 0 0; --tvar-ram: 50% 50% 0 0 / 27% 27% 0 0; }
+.vchod.s-cervene { --barva: #9b2f27; --ram: #f1ece2; --kov: linear-gradient(135deg, #6a6a6a, #2b2b2b 45%, #101010 80%, #404040); }
+.vchod.s-zelene  { --barva: #24523c; --ram: #efeae1; }
+.vchod.s-bile    { --barva: #ece7dc; --ram: #6e5c48; --kov: linear-gradient(135deg, #ffffff, #c4cbd3 40%, #737a83 75%, #b8bfc7); }
+.vchod.s-zlute   { --barva: #c98f1f; --ram: #574332; --kov: linear-gradient(135deg, #6a6a6a, #2b2b2b 45%, #101010 80%, #404040);
+                   --tvar: 50% 50% 2px 2px / 24% 24% 0 0; --tvar-ram: 50% 50% 0 0 / 27% 27% 0 0; }
 .vchod.s-hobit   { --s: var(--v); --v: max(140px, min(calc(var(--misto-na-dvere) * .8), 400px));
-                   --dvere: #3f7a3a; --dvere-tmave: #2b5628; --zarubne: #6b4a2b; --kovani: #e0b652;
-                   --tvar: 50%; --tvar-ram: 50%; }
-.vchod.s-hobit .kridlo { overflow: hidden; grid-template-columns: repeat(6, 1fr); grid-template-rows: 1fr; gap: 3%; padding: 6%; }
-.vchod.s-hobit .panel { border-radius: 0; box-shadow: inset -2px 0 0 rgba(0,0,0,.25); }
-.vchod.s-hobit .klika { right: auto; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 11%; }
-.vchod.s-hobit .stitek { top: 22%; }
-.vchod.s-shoji   { --dvere: #f4ecd8; --dvere-tmave: #e0d4b8; --zarubne: #3b2a1c; --kovani: #3b2a1c; }
-.vchod.s-shoji .kridlo {
+                   --barva: #3d7436; --ram: #6b4a2b; --tvar: 50%; --tvar-ram: 50%; --c: calc(var(--v) * .08); }
+.vchod.s-hobit .lampa { display: none; }
+.vchod.s-hobit .stitek { top: 16%; }
+.vchod.s-hobit .hrana { display: none; }
+.vchod.s-shoji   { --barva: #f3ead2; --ram: #3b2a1c; --kov: linear-gradient(#2b1d12, #2b1d12); }
+.vchod.s-shoji .lice {
   background:
     repeating-linear-gradient(90deg, transparent 0 calc(25% - 3px), #4a3524 calc(25% - 3px) 25%),
     repeating-linear-gradient(0deg, transparent 0 calc(12.5% - 3px), #4a3524 calc(12.5% - 3px) 12.5%),
-    var(--dvere);
-  box-shadow: inset 0 0 0 7px #4a3524;
+    var(--tex, none) center / 100% 100%,
+    rgba(246, 238, 216, .9);    /* papír prosvítá světlem zvenčí */
+  box-shadow: inset 0 0 0 calc(var(--v) * .016) #4a3524;
 }
-.vchod.s-shoji .panel { visibility: hidden; }
-.vchod.s-shoji .klika { border-radius: 3px; width: 6%; aspect-ratio: .3; background: #2b1d12; }
-.vchod.s-shoji .stitek { background: #2b1d12; color: #f4ecd8; }
-.vchod.s-cervene .kridlo, .vchod.s-zelene .kridlo { grid-template-rows: 1.2fr 1fr 1fr; }
-.vchod.s-zelene .panel:nth-child(-n+2) { background: rgba(255, 240, 200, .18); box-shadow: inset 0 0 0 3px rgba(0,0,0,.35); }
+.vchod.s-shoji .lice::after { background: linear-gradient(rgba(255,236,200,.1), transparent 40%, rgba(0,0,0,.18)); }
+.vchod.s-shoji .stitek { background: #2b1d12; color: #f4ecd8; text-shadow: none; }
+.vchod.s-shoji .hrana { display: none; }
+.vchod.s-shoji .kovani { width: calc(var(--v) * .02); height: calc(var(--v) * .09); right: 6%; }
 
 /* ---------- ovládání v chodbě ---------- */
 .ovladani {
@@ -171,6 +341,8 @@ body { background: var(--zed-2); overflow: hidden; }
 .cip:hover { border-color: rgba(255,255,255,.45); }
 .cip[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
 .radek { display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 8px 14px; font-size: .85rem; }
+.radek select { background: transparent; color: var(--panel-text); border: 0; font: inherit; font-size: .85rem; cursor: pointer; }
+.radek select option { background: #1d2029; color: #eef0f6; }
 .radek label { display: inline-flex; align-items: center; gap: 6px; cursor: pointer; background: var(--panel-sklo); padding: 5px 11px; border-radius: 999px; backdrop-filter: blur(6px); }
 .pocet { color: var(--panel-tlumene); background: var(--panel-sklo); padding: 5px 11px; border-radius: 999px; }
 
@@ -259,6 +431,23 @@ a.b { text-decoration: none; display: inline-flex; align-items: center; }
 .karta .mapka .kontinent { position: absolute; right: 7px; bottom: 4px; font-size: .68rem; color: var(--panel-tlumene); letter-spacing: .04em; }
 .karta .cas { margin-top: 9px; font-size: .9rem; display: flex; flex-wrap: wrap; gap: 3px 12px; }
 .karta .cas b { font-variant-numeric: tabular-nums; }
+.karta .pocasi { margin-top: 7px; display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; font-size: .86rem; color: #dfe2ea; }
+.karta .pocasi:empty { display: none; }
+.karta .slunce { margin-top: 6px; display: flex; flex-wrap: wrap; gap: 2px 12px; font-size: .84rem; color: #dfe2ea; font-variant-numeric: tabular-nums; }
+.karta .slunce .pozn { color: #ffd27a; }
+.karta .predpoved { margin-top: 6px; font-size: .8rem; }
+.karta .predpoved summary { cursor: pointer; color: var(--panel-tlumene); list-style: none; }
+.karta .predpoved summary::before { content: '▸ '; }
+.karta .predpoved[open] summary::before { content: '▾ '; }
+.karta .hodiny { display: grid; grid-template-columns: repeat(6, 1fr); gap: 2px; margin-top: 5px; text-align: center; }
+.karta .hod { display: flex; flex-direction: column; align-items: center; gap: 1px; background: rgba(255,255,255,.05); border-radius: 6px; padding: 3px 0; font-size: .95rem; }
+.karta .hod small { font-size: .68rem; color: var(--panel-tlumene); }
+.karta .hod b { font-size: .78rem; font-variant-numeric: tabular-nums; }
+.karta .pocasi .teplota { font-size: 1.35rem; font-weight: 650; color: var(--panel-text); font-variant-numeric: tabular-nums; }
+.karta .pocasi .om { margin-left: auto; font-size: .68rem; color: var(--panel-tlumene); text-decoration: none; opacity: .8; }
+.karta .pocasi .om:hover { text-decoration: underline; opacity: 1; }
+.lista-teplota { font-weight: 600; margin-left: 8px; font-variant-numeric: tabular-nums; }
+.lista-teplota:empty { display: none; }
 .karta .popis { margin-top: 7px; font-size: .86rem; line-height: 1.45; color: #dfe2ea; }
 .karta .poznamka { margin-top: 7px; font-size: .85rem; line-height: 1.4; color: #ffe39a; white-space: pre-wrap; }
 .karta .prestehovano { margin-top: 7px; font-size: .8rem; color: #ffd27a; line-height: 1.4; }
@@ -330,6 +519,7 @@ dialog.okno::backdrop { background: rgba(0,0,0,.55); }
 .seznam-telo li .m { color: var(--text-faint); font-size: .78rem; }
 .seznam-telo li.byl button::after { content: '✓'; margin-left: auto; color: var(--ok); }
 .seznam-telo li.rozbite button { opacity: .5; }
+.novy { display: inline-block; background: #e8b931; color: #2a2006; font-size: .66rem; font-weight: 700; padding: 0 5px; border-radius: 4px; vertical-align: 1px; text-transform: uppercase; }
 
 /* oblíbené */
 .obl-seznam { list-style: none; display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
@@ -350,6 +540,112 @@ dialog.okno::backdrop { background: rgba(0,0,0,.55); }
 .formular .chyba { color: var(--danger); font-size: .85rem; }
 .formular .radek-tl { display: flex; gap: 8px; justify-content: flex-end; flex-wrap: wrap; }
 .formular .dvojice { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+
+/* hra */
+.hra-kryt { display: none; position: absolute; z-index: 2; pointer-events: auto; }
+.vyhled.hra:not(.odhaleno) .hra-kryt-sv.zap { display: flex; left: 0; top: 0; width: 330px; height: 78px; align-items: center; justify-content: center;
+  background: #15171f; color: var(--panel-tlumene); font-size: .8rem; border-bottom-right-radius: 10px; }
+.vyhled.hra:not(.odhaleno) .hra-kryt-yt.zap { display: block; left: 0; right: 0; top: 0; height: 64px; background: linear-gradient(#000 70%, rgba(0,0,0,.85)); }
+.vyhled.hra .karta, .vyhled.hra #tlSdilet, .vyhled.hra #tlUlozit, .vyhled.hra #tlOblibene, .vyhled.hra #tlOdkazyV, .vyhled.hra #tlMapaV,
+.vyhled.hra #tlOknoV, .vyhled.hra #tlInfo, .vyhled.hra #tlJinam { display: none; }
+.vyhled.hra.odhaleno .karta { display: block; }
+.hra-panel { position: absolute; right: 12px; bottom: 12px; z-index: 4; width: min(340px, calc(100% - 24px)); background: rgba(20,22,30,.94);
+  border: 1px solid rgba(255,255,255,.18); border-radius: 12px; overflow: hidden; box-shadow: 0 8px 30px rgba(0,0,0,.5); transition: width .25s; }
+.hra-panel[hidden] { display: none; }
+.hra-panel:hover, .hra-panel.velky { width: min(620px, calc(100% - 24px)); }
+#hraSvg { display: block; width: 100%; height: auto; aspect-ratio: 360 / 145; background: #0f1e33; cursor: crosshair; touch-action: none; }
+#hraSvg .zeme { fill: #2c3e54; stroke: #3d536d; stroke-width: .15; }
+#hraSvg .tip { fill: #ffd34d; stroke: #000; }
+#hraSvg .cil { fill: #ff5b4f; stroke: #fff; }
+#hraSvg .cara { stroke: #ffd34d; stroke-dasharray: 2 1.2; fill: none; }
+.hra-panel-dole { display: flex; align-items: center; gap: 8px; padding: 7px 9px; font-size: .8rem; color: var(--panel-tlumene); }
+.hra-panel-dole span { flex: 1; }
+.hra-vysledek { position: absolute; left: 50%; top: 14px; transform: translateX(-50%); z-index: 4; background: rgba(20,22,30,.95); color: var(--panel-text);
+  border-radius: 12px; padding: 12px 16px; text-align: center; min-width: min(420px, calc(100% - 24px)); box-shadow: 0 8px 30px rgba(0,0,0,.5); }
+.hra-vysledek[hidden] { display: none; }
+.hra-vysledek .body { font-size: 1.6rem; font-weight: 700; color: #ffd34d; }
+.hra-vysledek .tlacitka { margin-top: 10px; display: flex; gap: 8px; justify-content: center; }
+.hra-tab { width: 100%; border-collapse: collapse; font-size: .86rem; margin: 6px 0 10px; }
+.hra-tab td { padding: 5px 4px; border-bottom: 1px solid var(--border); }
+.hra-tab td:last-child { text-align: right; font-variant-numeric: tabular-nums; }
+.hra-celkem { font-size: 1.8rem; font-weight: 700; text-align: center; margin: 4px 0 2px; }
+
+/* cestovní pas */
+.pas-cisla { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 8px; margin: 10px 0 4px; }
+.pas-cislo { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; }
+.pas-cislo b { display: block; font-size: 1.5rem; font-variant-numeric: tabular-nums; }
+.pas-cislo span { font-size: .78rem; color: var(--text-muted); }
+.pas-nadpis { font-size: .95rem; color: var(--accent); margin: 16px 0 8px; }
+.odznaky { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 8px; }
+.odznak { display: flex; gap: 8px; align-items: center; padding: 8px 10px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg-elevated); }
+.odznak .ik { font-size: 1.6rem; line-height: 1; }
+.odznak b { display: block; font-size: .85rem; }
+.odznak small { display: block; font-size: .72rem; color: var(--text-faint); line-height: 1.3; }
+.odznak.zamceno { opacity: .55; }
+.odznak.zamceno .ik { filter: grayscale(1); }
+.odznak .postup { height: 4px; background: var(--bg-control); border-radius: 2px; margin-top: 4px; overflow: hidden; }
+.odznak .postup i { display: block; height: 100%; background: var(--accent); }
+.razitka { display: flex; flex-wrap: wrap; gap: 12px; padding: 6px 2px 10px; }
+.razitko {
+  width: 92px; height: 92px; border-radius: 50%; border: 3px double currentColor; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; text-align: center; font-size: .66rem; font-weight: 700; text-transform: uppercase;
+  letter-spacing: .03em; line-height: 1.15; padding: 6px; opacity: .88; mix-blend-mode: normal;
+}
+.razitko .vl { font-size: 1.5rem; line-height: 1.1; }
+.razitko small { font-size: .58rem; font-weight: 600; opacity: .85; }
+.pas-prazdno { color: var(--text-muted); font-size: .88rem; }
+
+/* okno do světa */
+.lista { position: relative; }
+.okno-ovl { display: inline-flex; align-items: center; gap: 4px; }
+.okno-ovl[hidden] { display: none; }
+.okno-cas { font-size: .8rem; color: var(--panel-tlumene); font-variant-numeric: tabular-nums; min-width: 3.2em; text-align: center; }
+.okno-pruh { position: absolute; left: 0; right: 0; bottom: -1px; height: 3px; background: rgba(255,255,255,.08); }
+.okno-pruh[hidden] { display: none; }
+.okno-pruh span { display: block; height: 100%; width: 0; background: var(--accent); transition: width 1s linear; }
+.vyhled.klidny { cursor: none; }
+.vyhled.klidny .lista { position: absolute; left: 0; right: 0; top: 0; z-index: 5; opacity: 0; transition: opacity .6s; }
+.vyhled.okno-bezi .lista { position: absolute; left: 0; right: 0; top: 0; z-index: 5; transition: opacity .3s; }
+.vyhled.okno-bezi .plocha { flex: 1; }
+.vyhled.klidny .karta { opacity: 0; transform: translateY(-8px); pointer-events: none; }
+
+/* mapa */
+dialog.mapa-okno { width: min(1180px, calc(100% - 16px)); max-height: calc(100vh - 16px); display: flex; flex-direction: column; }
+dialog.mapa-okno:not([open]) { display: none; }
+.mapa-plocha { position: relative; flex: 1; min-height: 0; background: #0f1e33; overflow: hidden; touch-action: none; cursor: grab; }
+.mapa-plocha.tazeni { cursor: grabbing; }
+:root[data-theme="light"] .mapa-plocha { background: #cfe3f5; }
+#mapaSvg { display: block; width: 100%; height: auto; aspect-ratio: 360 / 145; max-height: 68vh; margin: 0 auto; }
+#mapaSvg .zeme { fill: #2c3e54; stroke: #3d536d; stroke-width: .15; }
+:root[data-theme="light"] #mapaSvg .zeme { fill: #f3efe6; stroke: #c9c0ae; }
+#mapaSvg .noc { fill: #000; opacity: .45; pointer-events: none; }
+#mapaSvg .bod { cursor: pointer; stroke: #fff; }
+#mapaSvg .bod.byl { opacity: .45; }
+#mapaSvg .bod.sv { stroke-dasharray: 0.6 0.4; }
+#mapaSvg .bod:hover { stroke: #ffd34d; }
+#mapaSvg .ja { fill: none; stroke: #ffd34d; }
+.mapa-tip { position: absolute; z-index: 2; background: rgba(20,22,30,.92); color: #eef0f6; border-radius: 8px; padding: 6px 9px; font-size: .82rem; line-height: 1.35; pointer-events: none; max-width: 240px; box-shadow: 0 4px 14px rgba(0,0,0,.4); }
+.mapa-tip[hidden] { display: none; }
+.mapa-tip small { color: #b8bccb; }
+.mapa-zoom { position: absolute; right: 10px; top: 10px; display: flex; flex-direction: column; gap: 4px; }
+.mapa-zoom button { width: 32px; height: 32px; border-radius: 8px; border: 1px solid rgba(255,255,255,.2); background: rgba(20,22,30,.8); color: #fff; font-size: 1.1rem; cursor: pointer; }
+.mapa-legenda { display: flex; flex-wrap: wrap; gap: 4px 12px; padding: 8px 14px 12px; font-size: .78rem; color: var(--text-muted); }
+.mapa-legenda i { display: inline-block; width: 9px; height: 9px; border-radius: 50%; margin-right: 4px; vertical-align: -1px; }
+
+/* stav sbírky */
+.prubeh { display: flex; align-items: center; gap: 10px; font-size: .85rem; color: var(--text-muted); margin: 6px 0 10px; }
+.prubeh[hidden] { display: none; }
+.prubeh-pruh { flex: 1; height: 8px; background: var(--bg-control); border-radius: 4px; overflow: hidden; }
+.prubeh-pruh span { display: block; height: 100%; width: 0; background: var(--accent); transition: width .3s; }
+.proverovac { position: fixed; right: 0; bottom: 0; width: 200px; height: 113px; opacity: .01; pointer-events: none; z-index: -1; }
+.stav-tab { width: 100%; border-collapse: collapse; font-size: .85rem; }
+.stav-tab td, .stav-tab th { padding: 5px 6px; border-bottom: 1px solid var(--border); text-align: left; vertical-align: top; }
+.stav-tab th { color: var(--text-muted); font-weight: 600; }
+.stav-tab .m { color: var(--text-faint); font-size: .78rem; }
+.stav-tab button { font: inherit; font-size: .8rem; background: none; border: 1px solid var(--border); color: var(--text); border-radius: 6px; padding: 2px 7px; cursor: pointer; }
+.stitek-stav { display: inline-block; font-size: .72rem; padding: 1px 6px; border-radius: 4px; background: var(--bg-control); }
+.stitek-stav.zle { background: color-mix(in srgb, var(--danger) 25%, transparent); color: var(--danger); }
+.stitek-stav.ok { background: color-mix(in srgb, var(--ok) 25%, transparent); color: var(--ok); }
 
 /* odkazy */
 .odkazy-tab { width: 100%; border-collapse: collapse; font-size: .85rem; margin-top: 8px; }
@@ -402,18 +698,20 @@ dialog.okno::backdrop { background: rgba(0,0,0,.55); }
     <h1>Dveře do světa</h1>
     <p id="podtitul">Za každými dveřmi je živá kamera někde na Zemi. Kam vedou tyhle?</p>
   </div>
-  <div class="podlaha"></div>
+  <div class="lamberie"></div>
+  <div class="podlaha"><div class="parkety"></div></div>
   <button class="vchod" id="vchod" type="button" aria-label="Otevřít dveře">
-    <span class="otvor"></span>
-    <span class="kridlo">
-      <span class="panel"></span><span class="panel"></span>
-      <span class="panel"></span><span class="panel"></span>
-      <span class="panel"></span><span class="panel"></span>
-      <span class="stitek" id="stitek">--:--</span>
-      <span class="klika"></span>
+    <span class="svit"></span><span class="lampa"></span>
+    <span class="ram"></span>
+    <span class="otvor">
+      <span class="pruhled"><img id="nahled" alt="" decoding="async" referrerpolicy="no-referrer"><span class="zare"></span></span>
+      <span class="osteni"></span>
+      <span class="kridlo"><span class="lice" id="lice"></span><span class="hrana"></span></span>
+      <span class="skvira"></span>
     </span>
   </button>
   <div class="paprsek" id="paprsek"></div>
+  <div class="klin" id="klin"></div>
 
   <div class="ovladani">
     <div class="vyzva" id="vyzva">Klepni na dveře</div>
@@ -423,11 +721,21 @@ dialog.okno::backdrop { background: rgba(0,0,0,.55); }
     </div>
     <div class="cipy" id="cipy" role="group" aria-label="Kam vedou dveře"></div>
     <div class="radek">
-      <label id="denniDobaObal" title="Ve dne vede jen tam, kde je zrovna světlo; noční oblohu ukáže jen tam, kde je tma.">
-        <input type="checkbox" id="denniDoba" checked> Kde je teď den
+      <label id="denniDobaObal" title="Podle toho, jaká je v místě právě denní doba">
+        <select id="denniDoba" aria-label="Denní doba v cíli">
+          <option value="den">☀️ Kde je teď den</option>
+          <option value="vychod">🌄 Kde právě svítá</option>
+          <option value="zapad">🌇 Kde právě zapadá slunce</option>
+          <option value="noc">🌙 Kde je teď noc</option>
+          <option value="vse">🕐 Kdykoli</option>
+        </select>
       </label>
       <span class="pocet" id="pocet"></span>
       <button class="cip" id="tlOblibeneCh" type="button">★ Oblíbené</button>
+      <button class="cip" id="tlHra" type="button" title="Hra: poznáš, kde na světě jsi?">🎯 Hádej, kde jsem</button>
+      <button class="cip" id="tlOkno" type="button" title="Místa se budou sama střídat – jako okno do světa">🖼️ Okno do světa</button>
+      <button class="cip" id="tlMapa" type="button">🌍 Mapa</button>
+      <button class="cip" id="tlPas" type="button">🛂 Cestovní pas</button>
       <button class="cip" id="tlSeznam" type="button">🗺️ Všechna místa</button>
       <button class="cip" id="tlOdkazy" type="button">🔗 Odkazy</button>
     </div>
@@ -456,9 +764,18 @@ dialog.okno::backdrop { background: rgba(0,0,0,.55); }
       <button class="tl" id="tlSdilet" type="button" title="Sdílet odkaz na toto místo">📤<span class="txt">Sdílet</span></button>
       <button class="tl" id="tlUlozit" type="button" aria-pressed="false" title="Uložit mezi oblíbená (S)">☆<span class="txt">Uložit</span></button>
       <button class="tl" id="tlOblibene" type="button" title="Seznam oblíbených">★<span class="txt">Oblíbené</span></button>
+      <button class="tl" id="tlMapaV" type="button" title="Mapa všech dveří">🌍<span class="txt">Mapa</span></button>
       <button class="tl" id="tlOdkazyV" type="button" title="Seznam všech odkazů">🔗<span class="txt">Odkazy</span></button>
       <button class="tl" id="tlInfo" type="button" aria-pressed="true" title="Skrýt / ukázat medailonek (I)">ⓘ<span class="txt">Info</span></button>
+      <span class="okno-ovl" id="oknoOvl" hidden>
+        <button class="tl" id="tlOknoPauza" type="button" title="Pozastavit střídání (mezerník)">⏸</button>
+        <span class="okno-cas" id="oknoCas"></span>
+        <button class="tl" id="tlOknoStop" type="button" title="Ukončit okno do světa">✕</button>
+      </span>
+      <button class="tl" id="tlOknoV" type="button" title="Okno do světa – místa se budou sama střídat">🖼️<span class="txt">Okno</span></button>
       <button class="tl" id="tlCela" type="button" title="Celá obrazovka (F)">⛶</button>
+    </div>
+    <div class="okno-pruh" id="oknoPruh" hidden><span></span>
     </div>
   </header>
   <div class="plocha" id="plocha">
@@ -466,6 +783,16 @@ dialog.okno::backdrop { background: rgba(0,0,0,.55); }
     <aside class="karta" id="karta" aria-live="polite"></aside>
     <div class="hlaseni" id="hlaseni" hidden></div>
     <div class="toast" id="toast" hidden></div>
+    <div class="hra-kryt hra-kryt-sv" aria-hidden="true">🤫 tajné</div>
+    <div class="hra-kryt hra-kryt-yt" aria-hidden="true"></div>
+    <div class="hra-panel" id="hraPanel" hidden>
+      <svg id="hraSvg" viewBox="0 5 360 145" preserveAspectRatio="xMidYMid meet" aria-label="Mapa pro tip"></svg>
+      <div class="hra-panel-dole">
+        <span id="hraPanelText">Klikni do mapy, kde si myslíš, že jsi.</span>
+        <button class="tl hlavni" type="button" id="hraTip" disabled>📍 Tipnout</button>
+      </div>
+    </div>
+    <div class="hra-vysledek" id="hraVysledek" hidden></div>
     <div class="zablesk" id="zablesk"></div>
   </div>
 </section>
@@ -474,6 +801,7 @@ dialog.okno::backdrop { background: rgba(0,0,0,.55); }
   <div class="okno-hlava">
     <h2>🗺️ Všechna místa</h2>
     <input type="search" id="hledat" placeholder="Hledat místo, zemi…" aria-label="Hledat místo">
+    <button class="b" type="button" id="tlStav" title="Které kamery a panoramata nefungují">🩺 Stav sbírky</button>
     <button class="b" type="button" data-zavrit>Zavřít</button>
   </div>
   <div class="okno-telo seznam-telo" id="seznamTelo"></div>
@@ -551,6 +879,124 @@ dialog.okno::backdrop { background: rgba(0,0,0,.55); }
   <div class="okno-telo" id="odkTelo"></div>
 </dialog>
 
+<dialog class="okno" id="pasDlg">
+  <div class="okno-hlava">
+    <h2>🛂 Cestovní pas</h2>
+    <button class="b nebezpecne" type="button" id="pasSmazat" title="Začít cestovat znovu od nuly">↺</button>
+    <button class="b" type="button" data-zavrit>Zavřít</button>
+  </div>
+  <div class="okno-telo">
+    <div class="pas-cisla" id="pasCisla"></div>
+    <h3 class="pas-nadpis">Odznaky</h3>
+    <div class="odznaky" id="pasOdznaky"></div>
+    <h3 class="pas-nadpis">Razítka zemí</h3>
+    <div class="razitka" id="pasRazitka"></div>
+  </div>
+</dialog>
+
+<dialog class="okno male" id="hraDlg">
+  <div class="okno-hlava">
+    <h2>🎯 Hádej, kde jsem</h2>
+    <button class="b" type="button" data-zavrit>Zavřít</button>
+  </div>
+  <form class="formular" id="hraForm" method="dialog">
+    <p class="napoveda">Za dveřmi se schová název místa i medailonek. Rozhlédni se a klikni na mapě, kde si myslíš, že jsi. Čím blíž, tím víc bodů – až 5 000 za kolo, hraje se 5 kol.</p>
+    <label>Kam vedou dveře
+      <select id="hraCo">
+        <option value="sv">🌐 Street View – můžeš se rozhlížet i chodit</option>
+        <option value="kamery">📡 Živé kamery – těžší</option>
+        <option value="obe">📡 + 🌐 obojí</option>
+      </select>
+    </label>
+    <div id="hraRekord"></div>
+    <div class="radek-tl">
+      <button class="b" type="button" data-zavrit>Zrušit</button>
+      <button class="b hlavni" type="submit">▶ Hrát</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog class="okno male" id="hraKonecDlg">
+  <div class="okno-hlava">
+    <h2>🏁 Výsledek</h2>
+  </div>
+  <div class="okno-telo" id="hraKonecTelo"></div>
+  <div class="formular" style="padding-top:0">
+    <div class="radek-tl">
+      <button class="b" type="button" id="hraKonecChodba">🚪 Zpět na chodbu</button>
+      <button class="b hlavni" type="button" id="hraZnovu">↻ Hrát znovu</button>
+    </div>
+  </div>
+</dialog>
+
+<dialog class="okno male" id="oknoDlg">
+  <div class="okno-hlava">
+    <h2>🖼️ Okno do světa</h2>
+    <button class="b" type="button" data-zavrit>Zavřít</button>
+  </div>
+  <form class="formular" id="oknoForm" method="dialog">
+    <p class="napoveda">Dveře se budou samy otevírat do dalších míst – hodí se na druhý monitor nebo televizi. Ovládací lišta se po chvíli bez pohybu myši schová.</p>
+    <label>Další místo každých
+      <select id="oknoInterval">
+        <option value="60">1 minutu</option><option value="120">2 minuty</option><option value="300" selected>5 minut</option>
+        <option value="600">10 minut</option><option value="900">15 minut</option><option value="1800">30 minut</option>
+      </select>
+    </label>
+    <label>Co ukazovat
+      <select id="oknoCo">
+        <option value="kamery">📡 Živé kamery</option><option value="sv">🌐 Street View</option><option value="obe">📡 + 🌐 obojí</option>
+      </select>
+    </label>
+    <label style="display:flex;align-items:center;gap:8px"><input type="checkbox" id="oknoCela" checked style="width:auto"> Na celou obrazovku</label>
+    <p class="napoveda">Výběr kategorie, denní doby i zvuk se řídí tím, co máš nastaveno v chodbě. Mezerník střídání pozastaví, N přeskočí na další místo.</p>
+    <div class="radek-tl">
+      <button class="b" type="button" data-zavrit>Zrušit</button>
+      <button class="b hlavni" type="submit">▶ Spustit</button>
+    </div>
+  </form>
+</dialog>
+
+<dialog class="okno mapa-okno" id="mapaDlg">
+  <div class="okno-hlava">
+    <h2 id="mapaTitul">🌍 Mapa dveří</h2>
+    <div class="prepinac" id="mapaFiltr" role="group" aria-label="Co ukázat">
+      <button type="button" data-f="kamera" aria-pressed="true">📡 Kamery</button>
+      <button type="button" data-f="sv" aria-pressed="true">🌐 Street View</button>
+      <button type="button" data-f="nove" aria-pressed="false" title="Jen místa, kde jsem ještě nebyl(a)">✨ Neprošlé</button>
+    </div>
+    <button class="b" type="button" data-zavrit>Zavřít</button>
+  </div>
+  <div class="mapa-plocha" id="mapaPlocha">
+    <svg id="mapaSvg" viewBox="0 5 360 145" preserveAspectRatio="xMidYMid meet" role="img" aria-label="Mapa světa s místy"></svg>
+    <div class="mapa-tip" id="mapaTip" hidden></div>
+    <div class="mapa-zoom">
+      <button type="button" data-z="1.6" title="Přiblížit">+</button>
+      <button type="button" data-z="0.625" title="Oddálit">−</button>
+      <button type="button" data-z="0" title="Celý svět">⌂</button>
+    </div>
+  </div>
+  <div class="mapa-legenda" id="mapaLegenda"></div>
+</dialog>
+
+<dialog class="okno" id="stavDlg">
+  <div class="okno-hlava">
+    <h2>🩺 Stav sbírky</h2>
+    <button class="b" type="button" data-zavrit>Zavřít</button>
+  </div>
+  <div class="okno-nastroje">
+    <button class="b hlavni" type="button" id="stavProverit">▶ Prověřit všechny kamery</button>
+    <button class="b" type="button" id="stavKopirovat">📋 Kopírovat seznam</button>
+    <button class="b nebezpecne" type="button" id="stavVratit">↺ Vrátit vše do nabídky</button>
+    <span class="pruh"></span>
+  </div>
+  <div class="okno-telo">
+    <p class="napoveda" id="stavSouhrn" style="margin:8px 0"></p>
+    <div class="prubeh" id="stavPrubeh" hidden><div class="prubeh-pruh"><span id="stavPruh"></span></div><span id="stavPrubehText"></span></div>
+    <div id="stavProverovac" class="proverovac" aria-hidden="true"></div>
+    <div id="stavSeznam"></div>
+  </div>
+</dialog>
+
 <dialog class="okno male" id="sdilDlg">
   <div class="okno-hlava">
     <h2 id="sdilTitul">📤 Sdílet místo</h2>
@@ -603,7 +1049,6 @@ const TYPY_SV = {
   vzacne:   { ikona: '🧭', nazev: 'Na konci světa' },
 };
 const VLASTNI = { ikona: '📌', nazev: 'Vlastní místo' };
-const STYLY = ['s-dub', 's-modre', 's-cervene', 's-zelene', 's-bile', 's-zlute', 's-hobit', 's-shoji'];
 const PRAHA = [50.087, 14.421];
 const KLIC = 'webapp_dvere_';
 
@@ -627,7 +1072,11 @@ function uloz(klic, hodnota) {
 const navstivene = new Set(nacti('navstivene', []));
 const rozbite = nacti('rozbite', {});          // id → čas, kdy přenos selhal
 const nastaveni = Object.assign({ rezim: 'kamery', typ: 'vse', den: true, medailonek: true, kvalita: 'auto' }, nacti('nastaveni', {}));
+if (!nastaveni.doba) nastaveni.doba = nastaveni.den === false ? 'vse' : 'den';   // dřív zaškrtávátko „den“
 nastaveni.zvuk = Object.assign({ ztlumeno: false, hlasitost: 60 }, nastaveni.zvuk);   // zvuk zapnutý, dokud ho uživatel neztlumí
+const nahlasene = nacti('nahlasene', {});       // id → kdy uživatel nahlásil „nejde“ (trvale mimo výběr)
+const stavMist = nacti('stav', {});             // id → { chyba, kod, n, ok } – záznam selhání a ověření
+const ulozStav = () => uloz('stav', stavMist);
 const ROZBITE_NA = 12 * 3600e3;                 // po 12 h to se stejnou kamerou zkusíme znovu
 for (const [id, t] of Object.entries(rozbite)) if (Date.now() - t > ROZBITE_NA) delete rozbite[id];
 
@@ -644,6 +1093,22 @@ const ulozOblibene = () => uloz('oblibene2', oblibene);
 const zaznam = id => oblibene.find(o => o.id === id);
 const polozkaZaznamu = o => o.polozka || PODLE_ID.get(o.id) || null;
 const zobrazNazev = k => zaznam(k.id)?.nazev || k.nazev;
+
+/* ---------- novinky ve sbírce ----------
+   Stránka si pamatuje, která místa už viděla v nabídce; co přibude, je „nové“
+   14 dní nebo do první návštěvy. Při úplně první návštěvě je známé všechno. */
+const znam = nacti('znam', null);
+const noveOd = nacti('nove', {});
+(function () {
+  const ted = Date.now(), vse = [...KAMERY, ...MISTA].map(k => k.id);
+  if (znam && Array.isArray(znam)) {
+    const z = new Set(znam);
+    for (const id of vse) if (!z.has(id)) noveOd[id] = ted;
+  }
+  for (const [id, t] of Object.entries(noveOd)) if (ted - t > 14 * 864e5) delete noveOd[id];
+  uloz('znam', vse); uloz('nove', noveOd);
+})();
+const jeNove = k => !!noveOd[k.id] && !navstivene.has(k.id);
 
 /* ---------- slunce a čas ---------- */
 // výška slunce nad obzorem (°) – zjednodušené vzorce, přesnost ~1° stačí na den/noc
@@ -685,6 +1150,53 @@ function faze(k) {
   if (h > -12) return { ikona: '🌃', text: rano ? 'před svítáním' : 'po setmění', svetlo: '#6d7fe0', noc: true };
   return { ikona: '🌙', text: 'noc', svetlo: k.typ === 'nebe' ? '#57e3a2' : '#3d55b8', noc: true };
 }
+/* Východ a západ slunce v místním dni: průchod výšky slunce −0,833° (refrakce + poloměr disku),
+   hledá se po 10 minutách a zpřesní půlením. Polární den/noc = žádný průchod. */
+function posunPasma(tz, kdy) {
+  try {
+    const c = Object.fromEntries(new Intl.DateTimeFormat('en-GB', { timeZone: tz, hourCycle: 'h23', year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit', second: '2-digit' })
+      .formatToParts(kdy).map(p => [p.type, p.value]));
+    return Date.UTC(+c.year, c.month - 1, +c.day, +c.hour, +c.minute, +c.second) - Math.floor(kdy.getTime() / 1000) * 1000;
+  } catch { return Math.round((/* odhad z délky */ 0)); }
+}
+function slunceDne(k, kdy = new Date()) {
+  if (!k || k.lat == null) return null;
+  const posun = posunPasma(k.tz, kdy);
+  const mistni = kdy.getTime() + posun;
+  const pulnoc = mistni - (((mistni % 864e5) + 864e5) % 864e5) - posun;   // místní půlnoc v UTC
+  const H0 = -0.833, f = t => vyskaSlunce(k.lat, k.lon, new Date(t)) - H0;
+  const krok = 6e5, prechody = [];
+  let t0 = pulnoc, v0 = f(t0);
+  for (let t1 = pulnoc + krok; t1 <= pulnoc + 864e5; t1 += krok) {
+    const v1 = f(t1);
+    if ((v0 < 0) !== (v1 < 0)) {
+      let a = t0, b = t1, va = v0;
+      for (let i = 0; i < 12; i++) { const m = (a + b) / 2, vm = f(m); if ((vm < 0) === (va < 0)) { a = m; va = vm; } else b = m; }
+      prechody.push({ t: (a + b) / 2, vychod: v0 < 0 });
+    }
+    t0 = t1; v0 = v1;
+  }
+  const vychod = prechody.find(p => p.vychod)?.t ?? null, zapad = prechody.find(p => !p.vychod)?.t ?? null;
+  return { vychod, zapad, polarniDen: !prechody.length && v0 > 0, polarniNoc: !prechody.length && v0 <= 0 };
+}
+function zaJakDlouho(ms) {
+  const min = Math.round(ms / 6e4);
+  if (min < 60) return min + ' min';
+  const h = Math.floor(min / 60), m = min % 60;
+  return h + ' h' + (m ? ' ' + m + ' min' : '');
+}
+function htmlSlunce(k) {
+  const s = slunceDne(k);
+  if (!s) return '';
+  if (s.polarniDen) return '<div class="slunce">☀️ polární den – slunce dnes nezapadne</div>';
+  if (s.polarniNoc) return '<div class="slunce">🌑 polární noc – slunce dnes nevyjde</div>';
+  const cas = t => t == null ? '—' : mistniHodiny(k, new Date(t));
+  const ted = Date.now();
+  let pozn = '';
+  if (s.vychod && s.vychod > ted && s.vychod - ted < 3 * 36e5) pozn = `vychází za ${zaJakDlouho(s.vychod - ted)}`;
+  else if (s.zapad && s.zapad > ted && s.zapad - ted < 3 * 36e5) pozn = `zapadá za ${zaJakDlouho(s.zapad - ted)}`;
+  return `<div class="slunce"><span title="Východ slunce">🌅 ${cas(s.vychod)}</span><span title="Západ slunce">🌇 ${cas(s.zapad)}</span>${pozn ? `<span class="pozn">${pozn}</span>` : ''}</div>`;
+}
 function vzdalenost(k) {
   if (k.lat == null) return null;
   const r = Math.PI / 180, [a, b] = PRAHA;
@@ -695,6 +1207,90 @@ function vlajka(kod) {
   if (!kod) return '📌';
   if (!/^[A-Z]{2}$/.test(kod) || kod === 'UN') return '🛰️';
   return String.fromCodePoint(...[...kod].map(c => 127397 + c.charCodeAt(0)));
+}
+
+/* ---------- počasí ----------
+   Open-Meteo (open-meteo.com): otevřená data bez klíče, licence CC BY 4.0 –
+   proto u údajů nenápadný odkaz „Open-Meteo“. Výsledek se drží 10 minut. */
+const POCASI_TTL = 10 * 60e3;
+const pocasiCache = new Map();   // "šířka,délka" → { cas, slib, d }
+const klicPocasi = k => k.lat.toFixed(2) + ',' + k.lon.toFixed(2);
+function pocasi(k) {
+  if (!k || k.lat == null) return Promise.resolve(null);
+  const klic = klicPocasi(k), c = pocasiCache.get(klic);
+  if (c && Date.now() - c.cas < POCASI_TTL) return c.slib;
+  const url = 'https://api.open-meteo.com/v1/forecast?' + new URLSearchParams({
+    latitude: k.lat, longitude: k.lon, timezone: 'auto', wind_speed_unit: 'kmh',
+    current: 'temperature_2m,apparent_temperature,weather_code,wind_speed_10m,is_day,relative_humidity_2m',
+    hourly: 'temperature_2m,weather_code,is_day', forecast_hours: 13,
+  });
+  const ctrl = new AbortController(), t = setTimeout(() => ctrl.abort(), 8000);
+  const zaznam = { cas: Date.now(), d: null };
+  zaznam.slib = fetch(url, { signal: ctrl.signal })
+    .then(r => r.ok ? r.json() : null)
+    .then(j => (j && j.current && Number.isFinite(j.current.temperature_2m)) ? Object.assign({}, j.current, { hodinove: j.hourly || null }) : null)
+    .catch(() => null)
+    .then(d => { clearTimeout(t); zaznam.d = d; if (!d) pocasiCache.delete(klic); return d; });
+  pocasiCache.set(klic, zaznam);
+  return zaznam.slib;
+}
+// už stažené počasí bez čekání (pro opakované vykreslení)
+function pocasiHned(k) {
+  if (!k || k.lat == null) return null;
+  const c = pocasiCache.get(klicPocasi(k));
+  return c && Date.now() - c.cas < POCASI_TTL ? c.d : null;
+}
+/* WMO kód počasí → emoji a český popis (kódy dle dokumentace Open-Meteo); v noci měsíc místo slunce */
+function popisPocasi(kod, den = true) {
+  if (kod === 0) return den ? ['☀️', 'jasno'] : ['🌙', 'jasno'];
+  if (kod === 1) return den ? ['🌤️', 'skoro jasno'] : ['🌙', 'skoro jasno'];
+  if (kod === 2) return den ? ['⛅', 'polojasno'] : ['☁️', 'polojasno'];
+  if (kod === 3) return ['☁️', 'zataženo'];
+  if (kod === 45 || kod === 48) return ['🌫️', 'mlha'];
+  if (kod >= 51 && kod <= 57) return ['🌦️', 'mrholení'];
+  if (kod === 66 || kod === 67) return ['🌧️', 'mrznoucí déšť'];
+  if (kod >= 61 && kod <= 65) return ['🌧️', 'déšť'];
+  if (kod >= 71 && kod <= 77) return ['🌨️', 'sněžení'];
+  if (kod >= 80 && kod <= 82) return ['🌦️', 'přeháňky'];
+  if (kod === 85 || kod === 86) return ['🌨️', 'sněhové přeháňky'];
+  if (kod >= 95) return ['⛈️', 'bouřka'];
+  return ['🌡️', ''];
+}
+const stupne = t => (Math.round(t) || 0).toLocaleString('cs-CZ') + ' °C';   // „|| 0“: bez −0
+function htmlPocasi(d) {
+  const [ikona, text] = popisPocasi(d.weather_code, d.is_day !== 0);
+  const pocit = Number.isFinite(d.apparent_temperature) && Math.abs(d.apparent_temperature - d.temperature_2m) >= 1.5
+    ? `<span>pocitově ${stupne(d.apparent_temperature)}</span>` : '';
+  return `<span class="teplota" title="Teplota vzduchu">${ikona} ${stupne(d.temperature_2m)}</span>` +
+    (text ? `<span>${text}</span>` : '') + pocit +
+    (Number.isFinite(d.wind_speed_10m) ? `<span title="Vítr">💨 ${Math.round(d.wind_speed_10m)} km/h</span>` : '') +
+    (Number.isFinite(d.relative_humidity_2m) ? `<span title="Vlhkost vzduchu">💧 ${Math.round(d.relative_humidity_2m)} %</span>` : '') +
+    `<a class="om" href="https://open-meteo.com/" target="_blank" rel="noopener" title="Údaje o počasí: Open-Meteo.com (CC BY 4.0)">Open-Meteo</a>`;
+}
+function htmlPredpovedi(d) {
+  const h = d.hodinove;
+  if (!h || !Array.isArray(h.time) || h.time.length < 3) return '';
+  const bunky = [];
+  for (let i = 2; i < h.time.length; i += 2) {
+    const [ikona] = popisPocasi(h.weather_code[i], h.is_day[i] !== 0);
+    bunky.push(`<span class="hod"><small>${h.time[i].slice(11, 13)} h</small>${ikona}<b>${stupne(h.temperature_2m[i]).replace(' °C', '°')}</b></span>`);
+  }
+  return `<details class="predpoved"${nastaveni.predpoved ? ' open' : ''}><summary>Příštích 12 hodin</summary><div class="hodiny">${bunky.join('')}</div></details>`;
+}
+function ukazPocasi(k) {
+  const d = pocasiHned(k);
+  const el = $('kartaPocasi');
+  if (el) {
+    el.innerHTML = d ? htmlPocasi(d) : '';
+    const pp = $('kartaPredpoved');
+    if (pp) {
+      pp.innerHTML = d ? htmlPredpovedi(d) : '';
+      pp.querySelector('details')?.addEventListener('toggle', e => { nastaveni.predpoved = e.target.open; uloz('nastaveni', nastaveni); });
+    }
+  }
+  const lt = $('listaTeplota');
+  if (lt) lt.textContent = d ? popisPocasi(d.weather_code, d.is_day !== 0)[0] + ' ' + stupne(d.temperature_2m) : '';
+  if (!d && k?.lat != null) pocasi(k).then(nove => { if (nove && kartaStav?.k === k && !vyhled.hidden) ukazPocasi(k); });
 }
 
 /* ---------- mapka kontinentu ----------
@@ -772,9 +1368,14 @@ function mapka(lat, lon) {
 }
 
 /* ---------- výběr místa ---------- */
-function vhodneTed(k) {
+function vhodneTed(k, doba = 'den') {
   const f = faze(k);
   if (k.typ === 'vesmir' || f.nevime) return true;
+  if (doba === 'noc') return !!f.noc;
+  if (doba === 'vychod' || doba === 'zapad') {
+    const h = vyskaSlunce(k.lat, k.lon), rano = mistniHodina(k) < 12;
+    return h > -5 && h < 8 && rano === (doba === 'vychod');
+  }
   if (k.typ === 'nebe') return !!f.noc;
   return !!f.den;
 }
@@ -783,11 +1384,20 @@ function sbirkaRezimu() {
   return nastaveni.rezim === 'sv' ? MISTA : KAMERY;
 }
 function kandidati(bezId) {
-  let pool = sbirkaRezimu().filter(k => !rozbite[k.id] && k.id !== bezId);
-  if (nastaveni.typ !== 'vse' && nastaveni.typ !== 'oblibene') pool = pool.filter(k => k.typ === nastaveni.typ);
-  if (nastaveni.den && nastaveni.rezim !== 'sv') {   // panoramata nejsou živá, denní doba nehraje roli
-    const ted = pool.filter(vhodneTed);
+  let pool = sbirkaRezimu().filter(k => !rozbite[k.id] && !nahlasene[k.id] && k.id !== bezId);
+  if (nastaveni.typ === 'nove') pool = pool.filter(k => jeNove(k));
+  else if (nastaveni.typ !== 'vse' && nastaveni.typ !== 'oblibene') pool = pool.filter(k => k.typ === nastaveni.typ);
+  const doba = nastaveni.doba;
+  if (doba !== 'vse' && nastaveni.rezim !== 'sv') {   // panoramata nejsou živá, denní doba nehraje roli
+    const ted = pool.filter(k => vhodneTed(k, doba));
     if (ted.length) pool = ted;
+    else if (doba === 'vychod' || doba === 'zapad') {
+      // nikde to zrovna přesně nesedí → místa, kde je slunce nejblíž obzoru ve správné půlce dne
+      const pulka = pool.filter(k => k.lat != null && (mistniHodina(k) < 12) === (doba === 'vychod'));
+      const serazene = (pulka.length ? pulka : pool).filter(k => k.lat != null)
+        .map(k => [k, Math.abs(vyskaSlunce(k.lat, k.lon) - 1)]).sort((a, b) => a[1] - b[1]).slice(0, 10).map(x => x[0]);
+      if (serazene.length) pool = serazene;
+    }
   }
   return pool;
 }
@@ -810,10 +1420,12 @@ function pripravDvere() {
   const moznosti = STYLY.filter(s => s !== styl);
   styl = moznosti[Math.floor(Math.random() * moznosti.length)];
   vchod.className = 'vchod ' + styl;
+  oblecDvere();
   cil = vyber(aktualni?.id);
   aktualni = null;
   ukazCil();
 }
+let vyzvaPevna = null;   // { cil, text } – hláška, kterou nemá přepsat obnovení času ani počasí
 function ukazCil() {
   const vyzva = $('vyzva');
   if (!cil) {
@@ -823,17 +1435,26 @@ function ukazCil() {
       ? (nastaveni.rezim === 'sv' ? 'Mezi oblíbenými zatím nemáš žádné panorama – ulož si je hvězdičkou za dveřmi.' : 'Mezi oblíbenými zatím nemáš žádnou kameru – ulož si ji hvězdičkou za dveřmi.')
       : 'Tyhle dveře jsou zamčené – zkus jiný výběr.';
     vchod.disabled = true;
+    nahledCile(null);
     return;
   }
   vchod.disabled = false;
+  if ($('nahled').dataset.cil !== cil.id) { $('nahled').dataset.cil = cil.id; nahledCile(cil); }
   const f = faze(cil);
   $('stitek').textContent = f.nevime ? '★' : '🕐 ' + mistniHodiny(cil);
   vchod.style.setProperty('--svetlo', f.svetlo);
   $('paprsek').style.setProperty('--svetlo', f.svetlo);
   vchod.setAttribute('aria-label', f.nevime ? 'Otevřít dveře' : `Otevřít dveře (za nimi je teď ${mistniHodiny(cil)}, ${f.text})`);
-  vyzva.textContent = f.nevime ? 'Klepni na dveře – vedou na jedno z tvých míst'
+  const d = pocasiHned(cil);
+  const pocasiText = d ? ', ' + stupne(d.temperature_2m) + ' ' + popisPocasi(d.weather_code, d.is_day !== 0)[0] : '';
+  vyzva.textContent = (f.nevime ? 'Klepni na dveře – vedou na jedno z tvých míst'
     : cil.druh === 'sv' ? 'Klepni na dveře – vedou na místo, kde je teď ' + mistniHodiny(cil)
-    : 'Klepni na dveře – za nimi je teď ' + f.text;
+    : 'Klepni na dveře – za nimi je teď ' + f.text) + pocasiText;
+  if (vyzvaPevna && vyzvaPevna.cil === cil) vyzva.textContent = vyzvaPevna.text;   // důležitá hláška vydrží, dokud se nezmění cíl
+  if (!d && cil.lat != null) {
+    const tenhle = cil;
+    pocasi(cil).then(nove => { if (nove && cil === tenhle && !animuji && vyhled.hidden) ukazCil(); });
+  }
 }
 function aktualizujPocet() {
   const vse = nastaveni.rezim === 'sv' ? MISTA : KAMERY;
@@ -843,7 +1464,10 @@ function aktualizujPocet() {
 }
 function vykresliCipy() {
   const cipy = $('cipy');
-  const volby = [['vse', '✨ Kamkoli'], ...Object.entries(typy()).map(([id, t]) => [id, t.ikona + ' ' + t.nazev]), ['oblibene', '★ Jen oblíbené']];
+  const pocetNovych = (nastaveni.rezim === 'sv' ? MISTA : KAMERY).filter(jeNove).length;
+  if (!pocetNovych && nastaveni.typ === 'nove') nastaveni.typ = 'vse';
+  const volby = [['vse', '✨ Kamkoli'], ...(pocetNovych ? [['nove', `🆕 Nové (${pocetNovych})`]] : []),
+    ...Object.entries(typy()).map(([id, t]) => [id, t.ikona + ' ' + t.nazev]), ['oblibene', '★ Jen oblíbené']];
   cipy.replaceChildren(...volby.map(([id, text]) => {
     const b = document.createElement('button');
     b.type = 'button'; b.className = 'cip'; b.textContent = text;
@@ -875,9 +1499,9 @@ $('rezim').addEventListener('click', e => {
   prepniRezim(b.dataset.rezim);
   cil = vyber(); ukazCil();
 });
-$('denniDoba').checked = nastaveni.den;
+$('denniDoba').value = nastaveni.doba;
 $('denniDoba').addEventListener('change', e => {
-  nastaveni.den = e.target.checked; uloz('nastaveni', nastaveni);
+  nastaveni.doba = e.target.value; uloz('nastaveni', nastaveni);
   cil = vyber(); ukazCil();
 });
 // cedulka s časem se má hýbat, i když jen stojíme v chodbě
@@ -887,6 +1511,189 @@ setInterval(() => { if (!aktualni && cil) ukazCil(); }, 20000);
 const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
 const pockej = ms => new Promise(r => setTimeout(r, reduce ? 10 : ms));
 let animuji = false;
+/* ---------- textury (generované, nic se nestahuje) ---------- */
+function nahodnost(seed) {
+  let s = seed >>> 0;
+  return () => { s = (s * 1664525 + 1013904223) >>> 0; return s / 4294967296; };
+}
+// hladký hodnotový šum na periodické mřížce w×h
+function sum(nah, w, h) {
+  const g = Float32Array.from({ length: w * h }, nah);
+  return (x, y) => {
+    const x0 = Math.floor(x), y0 = Math.floor(y), fx = x - x0, fy = y - y0;
+    const xa = ((x0 % w) + w) % w, ya = ((y0 % h) + h) % h, xb = (xa + 1) % w, yb = (ya + 1) % h;
+    const sx = fx * fx * (3 - 2 * fx), sy = fy * fy * (3 - 2 * fy);
+    const a = g[ya * w + xa], b = g[ya * w + xb], c = g[yb * w + xa], d = g[yb * w + xb];
+    return a + (b - a) * sx + (c - a) * sy + (a - b - c + d) * sx * sy;
+  };
+}
+const hexRgb = h => [1, 3, 5].map(i => parseInt(h.slice(i, i + 2), 16));
+const texturyCache = new Map();
+/* druh: 'drevo' (letokruhy), 'nater' (natřené dřevo – jen tah štětce a náznak kresby),
+   'papir' (vlákna), 'omitka' (šedý šum pro překrytí), 'parkety' (prkna podlahy) */
+function textura(druh, hex = '#808080', seed = 7) {
+  const klic = druh + hex + seed;
+  if (texturyCache.has(klic)) return texturyCache.get(klic);
+  const W = druh === 'omitka' ? 256 : druh === 'parkety' ? 400 : 192, H = druh === 'omitka' ? 256 : druh === 'parkety' ? 800 : 384;
+  const cv = document.createElement('canvas'); cv.width = W; cv.height = H;
+  const cx = cv.getContext('2d'), img = cx.createImageData(W, H), d = img.data;
+  const nah = nahodnost(seed);
+  const hrube = sum(nah, 12, 6), jemne = sum(nah, 64, 64), vlakna = sum(nah, 96, 24);
+  const [R, G, B] = hexRgb(hex);
+  const sirkaPrkna = W / 5, odstiny = Array.from({ length: 12 }, () => 0.86 + nah() * 0.22), spoje = Array.from({ length: 12 }, () => nah() * H);
+  for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    let t, a = 255;
+    if (druh === 'drevo' || druh === 'parkety' || druh === 'nater') {
+      const px = druh === 'parkety' ? x % sirkaPrkna : x;
+      const vlna = (hrube(px / 22 + (druh === 'parkety' ? Math.floor(x / sirkaPrkna) * 3.7 : 0), y / 170) - 0.5) * 14;
+      const kruh = Math.sin((px + vlna) * 0.30 + jemne(px / 6, y / 40) * 1.2);
+      const kresba = 0.84 + 0.07 * kruh * kruh * Math.sign(kruh) + 0.09 * vlakna(px / 1.3, y / 26);
+      t = druh === 'nater' ? 0.94 + (kresba - 0.8) * 0.18 + 0.04 * jemne(x / 1.5, y / 20) : kresba;
+      if (druh === 'parkety') {
+        const i = Math.floor(x / sirkaPrkna);
+        t *= odstiny[i % 12];
+        if (px < 1.2 || Math.abs(((y + spoje[i % 12]) % (H / 2))) < 1.2) t *= 0.55;   // spáry
+      }
+    } else if (druh === 'papir') {
+      t = 0.93 + 0.06 * vlakna(x / 1.2, y / 1.2) + 0.03 * jemne(x / 4, y / 4);
+    } else { // omitka: šedý šum s průhledností, kreslí se přes barvu zdi
+      const v = 0.75 * jemne(x / 1.4, y / 1.4) + 0.25 * hrube(x / 21.3, y / 42.6);
+      const i = (y * W + x) * 4, svetlo = v > 0.5;
+      d[i] = d[i + 1] = d[i + 2] = svetlo ? 255 : 0; d[i + 3] = Math.abs(v - 0.5) * 34;
+      continue;
+    }
+    const i = (y * W + x) * 4;
+    d[i] = Math.min(255, R * t); d[i + 1] = Math.min(255, G * t); d[i + 2] = Math.min(255, B * t); d[i + 3] = a;
+  }
+  cx.putImageData(img, 0, 0);
+  const url = `url(${cv.toDataURL(druh === 'omitka' ? 'image/png' : 'image/jpeg', 0.86)})`;
+  texturyCache.set(klic, url);
+  return url;
+}
+
+/* ---------- podoby dveří ---------- */
+const kazety = (sloupce, radky, pocet, sklo = []) =>
+  `<span class="vypln" style="grid-template-columns:repeat(${sloupce},1fr);grid-template-rows:${radky}">` +
+  Array.from({ length: pocet }, (_, i) => `<span class="p${sklo.includes(i) ? ' sklo' : ''}"></span>`).join('') + '</span>';
+const KLIKA = '<span class="kovani"><span class="rozeta"></span><span class="paka"></span></span>';
+const PODOBY = {
+  's-dub':     { tex: 'drevo', ram: 'drevo', ramBarva: '#4a2c16', lice: () => kazety(2, '1fr 1.8fr 1.1fr', 6) + KLIKA + '<span class="kukatko"></span>' },
+  's-modre':   { tex: 'nater', ram: 'nater', lice: () => '<span class="prkna"></span><span class="cvoky"></span><span class="okenko"></span>' + KLIKA },
+  's-cervene': { tex: 'nater', ram: 'nater', lice: () => kazety(1, '1fr 1fr 1fr', 3) + KLIKA },
+  's-zelene':  { tex: 'nater', ram: 'nater', lice: () => kazety(2, '1.1fr 0.35fr 1.2fr 1.2fr', 8, [0, 1]) + '<span class="schranka"></span>' + KLIKA },
+  's-bile':    { tex: 'nater', ram: 'drevo', lice: () => kazety(2, '1fr 1fr 1fr', 6) + KLIKA + '<span class="kukatko"></span>' },
+  's-zlute':   { tex: 'nater', ram: 'drevo', lice: () => '<span class="diagonala"></span>' + KLIKA },
+  's-hobit':   { tex: 'nater', ram: 'drevo', lice: () => '<span class="prkna" style="background-size:100% 100%"></span><span class="koule"></span>' },
+  's-shoji':   { tex: 'papir', ram: 'drevo', lice: () => KLIKA.replace('<span class="paka"></span>', '') },
+};
+const STYLY = Object.keys(PODOBY);
+function oblecDvere() {
+  const P = PODOBY[styl], cs = getComputedStyle(vchod);
+  const barva = cs.getPropertyValue('--barva').trim(), ramBarva = P.ramBarva || cs.getPropertyValue('--ram').trim();
+  const seed = 1 + Math.floor(Math.random() * 3);
+  vchod.style.setProperty('--tex', textura(P.tex, barva, seed));
+  vchod.style.setProperty('--ram-tex', textura(P.ram, ramBarva, seed + 3));
+  if (P.ramBarva) vchod.style.setProperty('--ram', ramBarva); else vchod.style.removeProperty('--ram');
+  $('lice').innerHTML = P.lice() + '<span class="stitek" id="stitek">--:--</span><span class="tma"></span>';
+  $('klin').style.setProperty('--sirka-dveri', vchod.offsetWidth + 'px');
+}
+function oblecChodbu() {
+  scena.style.setProperty('--omitka', textura('omitka') + ' 0 0 / 256px 256px');
+  const svetle = document.documentElement.dataset.theme === 'light';
+  scena.style.setProperty('--parkety', textura('parkety', svetle ? '#b98d62' : '#6b4a30', 11));
+}
+new MutationObserver(oblecChodbu).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+/* náhled cíle v otvoru: u YouTube aktuální snímek přenosu (obnovuje se po pár minutách),
+   u Street View se náhled stáhnout nedá (Google ho blokuje) – zůstane záře podle denní doby */
+function nahledCile(k) {
+  const img = $('nahled');
+  img.classList.remove('ok');
+  vchod.style.removeProperty('--nahled');
+  if (!k || k.druh !== 'kamera') { img.removeAttribute('src'); return; }
+  // mq je 16:9 bez černých pruhů (hq má letterbox). Kanály často místo snímku dávají plakát
+  // s nápisy – proto se náhled ukazuje rozostřený a přesvětlený jako světlo zvenčí.
+  const t = Math.floor(Date.now() / 3e5);
+  const zdroje = ['mqdefault_live'].map(n => `https://i.ytimg.com/vi/${encodeURIComponent(k.yt)}/${n}.jpg?t=${t}`);
+  const zkus = i => {
+    if (i >= zdroje.length) return;
+    img.onload = () => {
+      if (img.naturalWidth <= 120) return zkus(i + 1);   // 120×90 = šedá náhrada chybějícího obrázku
+      img.classList.add('ok');
+      vchod.style.setProperty('--nahled', `url("${img.src}")`);
+    };
+    img.onerror = () => zkus(i + 1);
+    img.src = zdroje[i];
+  };
+  zkus(0);
+}
+
+/* ---------- animace dveří ----------
+   stisk kliky → povolení západky → rozmáchnutí dovnitř se setrvačností a dokmitem;
+   současně se rozzáří otvor a světlo zvenčí proteče po podlaze. Zavření zrychluje
+   a končí klapnutím do zárubně. Japonské dveře se místo toho odsunou. */
+const T = ms => reduce ? 1 : ms;
+let animaceDveri = [];
+function anim(el, kf, opt) {
+  if (!el) return null;
+  const a = el.animate(kf, Object.assign({ fill: 'forwards' }, opt));
+  animaceDveri.push(a);
+  return a;
+}
+async function otevriDvere() {
+  const kr = vchod.querySelector('.kridlo'), paka = vchod.querySelector('.paka');
+  const shoji = styl === 's-shoji';
+  const od = getComputedStyle(kr).transform;
+  vchod.classList.add('otvira');
+  anim(paka, [{ transform: 'rotate(-6deg)' }, { transform: 'rotate(-34deg)' }], { duration: T(170), easing: 'ease-in' });
+  await pockej(150);
+  anim(vchod.querySelector('.skvira'), [{ opacity: .85 }, { opacity: 0 }], { duration: T(400) });
+  if (shoji) {
+    anim(kr, [{ transform: od === 'none' ? 'translateX(0)' : od }, { transform: 'translateX(-4%)', offset: .15, easing: 'cubic-bezier(.4,0,.2,1)' }, { transform: 'translateX(-98%)' }],
+      { duration: T(1100) });
+  } else {
+    anim(kr, [
+      { transform: od === 'none' ? 'rotateY(0deg)' : od },
+      { transform: 'rotateY(5deg)', offset: .09, easing: 'cubic-bezier(.32,.02,.2,1)' },  // západka povolí, dveře „cuknou“
+      { transform: 'rotateY(86deg)', offset: .76, easing: 'cubic-bezier(.4,0,.5,1)' },    // rozmáchnutí
+      { transform: 'rotateY(78deg)', offset: .91, easing: 'ease-in-out' },                  // dokmit
+      { transform: 'rotateY(80deg)' },
+    ], { duration: T(1450) });
+  }
+  anim(vchod.querySelector('.lice .tma'), [{ opacity: 0 }, { opacity: shoji ? 0 : .38 }], { duration: T(1100), easing: 'ease-in' });
+  anim(vchod.querySelector('.zare'), [{ opacity: 0 }, { opacity: 1 }], { duration: T(1300), easing: 'ease-in', delay: T(120) });
+  anim($('klin'), [{ opacity: 0, transform: 'translateX(-50%) scaleY(0)' }, { opacity: .75, transform: 'translateX(-50%) scaleY(1)' }],
+    { duration: T(1150), easing: 'cubic-bezier(.3,0,.3,1)', delay: T(80) });
+  anim(paka, [{ transform: 'rotate(-34deg)' }, { transform: 'rotate(0deg)' }], { duration: T(320), delay: T(380), easing: 'cubic-bezier(.3,1.5,.5,1)' });
+  await pockej(1050);
+}
+async function zavriDvere() {
+  const kr = vchod.querySelector('.kridlo');
+  const shoji = styl === 's-shoji';
+  const od = getComputedStyle(kr).transform;
+  animaceDveri.forEach(a => a.cancel());
+  animaceDveri = [];
+  const kridlo = shoji
+    ? anim(kr, [{ transform: od }, { transform: 'translateX(1%)', offset: .9, easing: 'ease-out' }, { transform: 'translateX(0)' }], { duration: T(800), easing: 'cubic-bezier(.5,0,.75,0)' })
+    : anim(kr, [
+        { transform: od, easing: 'cubic-bezier(.55,0,.85,.35)' },                       // zrychluje
+        { transform: 'rotateY(-1.2deg)', offset: .88, easing: 'ease-out' },              // narazí do zárubně
+        { transform: 'rotateY(.4deg)', offset: .95 },
+        { transform: 'rotateY(0deg)' },
+      ], { duration: T(900) });
+  anim(vchod.querySelector('.lice .tma'), [{ opacity: shoji ? 0 : .38 }, { opacity: 0 }], { duration: T(800) });
+  anim(vchod.querySelector('.zare'), [{ opacity: 1 }, { opacity: 0 }], { duration: T(700) });
+  anim($('klin'), [{ opacity: .75, transform: 'translateX(-50%) scaleY(1)' }, { opacity: 0, transform: 'translateX(-50%) scaleY(0)' }], { duration: T(800), easing: 'ease-in' });
+  anim(vchod.querySelector('.skvira'), [{ opacity: 0 }, { opacity: .85 }], { duration: T(300), delay: T(750) });
+  if (kridlo) await kridlo.finished.catch(() => {});
+  // dosednutí: drobný otřes zárubně
+  anim(vchod.querySelector('.ram'), [{ transform: 'translateX(0)' }, { transform: 'translateX(-0.6px)' }, { transform: 'translateX(0.4px)' }, { transform: 'translateX(0)' }], { duration: T(120) });
+  await pockej(140);
+  animaceDveri.forEach(a => a.cancel());
+  animaceDveri = [];
+  vchod.classList.remove('otvira');
+}
+
 
 function vyrezDveri() {
   const r = vchod.querySelector('.otvor').getBoundingClientRect();
@@ -899,13 +1706,13 @@ async function otevri(k) {
   if (animuji || !k) return;
   animuji = true;
   aktualni = k;
-  vchod.classList.add('otevreno');
+  const dvere = otevriDvere();
   vyhled.hidden = false;
   vyhled.classList.add('skryto');
   spust(k);                                   // přenos se načítá, zatímco se dveře otvírají
   vyhled.style.transition = 'none';
   vyhled.style.clipPath = vyrezDveri();
-  await pockej(950);
+  await dvere;
   vyhled.style.clipPath = vyrezDveri();       // dveře se mezitím mohly posunout (změna okna)
   vyhled.classList.remove('skryto');
   $('zablesk').classList.add('zapnuto');
@@ -924,6 +1731,8 @@ async function otevri(k) {
 
 async function zavri() {
   if (animuji || vyhled.hidden) return;
+  stopOkno();
+  ukonciHru();
   animuji = true;
   if (document.fullscreenElement) document.exitFullscreen().catch(() => {});
   scena.classList.remove('vstup');
@@ -935,8 +1744,8 @@ async function zavri() {
   vyhled.style.clipPath = '';
   zrusPrehravac();
   zapisAdresu(null);
-  vchod.classList.remove('otevreno');
-  await pockej(700);
+  await zavriDvere();
+  await pockej(250);
   pripravDvere();
   animuji = false;
   vchod.focus({ preventScroll: true });
@@ -989,6 +1798,7 @@ function zrusPrehravac() {
 }
 function zapisNavstevu(k) {
   navstivene.add(k.id); uloz('navstivene', [...navstivene]);
+  zapisDoPasu(k);
   aktualizujPocet();
   const yt = k.druh === 'kamera';
   $('zvukSkup').hidden = !yt;
@@ -1139,6 +1949,7 @@ function odkazNaDvere(k) {
 }
 // adresa v prohlížeči ukazuje právě otevřené místo – F5 nebo zkopírovaná adresa vede zpět sem
 function zapisAdresu(k) {
+  if (hra && k) return;      // adresa by prozradila odpověď
   const q = k ? parametryMista(k) : '';
   try { history.replaceState(null, '', location.pathname + (q ? '?' + q : '')); } catch { /* file:// apod. */ }
   const r = rozcestnik();
@@ -1220,6 +2031,7 @@ async function spust(k, zKanalu = false) {
         try { data = e.target.getVideoData() || {}; } catch { /* nevadí */ }
         if (data.isLive === false && !zKanalu && k.kanal) { spust(k, true); return; }
         const poprve = !bezi;
+        if (poprve) zaznamenejStav(k, true);
         bezi = true; zmarenoZaSebou = 0;
         clearTimeout(hlidac); hlas(null);
         if (zKanalu) vykresliKartu(k, 'kanal', data.title);
@@ -1311,7 +2123,24 @@ function chybiAdresa(k) {
      ['🚪 Zpět na chodbu', zavri]]);
 }
 
+function zaznamenejStav(k, ok, kod) {
+  if (!k || k.vlastni) return;
+  const z = stavMist[k.id] || (stavMist[k.id] = { n: 0 });
+  if (ok) { if (!z.chyba && !nahlasene[k.id]) { delete stavMist[k.id]; ulozStav(); return; } z.ok = Date.now(); z.n = 0; }
+  else { z.chyba = Date.now(); z.kod = kod || 'neběží'; z.n = (z.n || 0) + 1; }
+  ulozStav();
+}
+function nahlasitMisto(k) {
+  if (!k) return;
+  nahlasene[k.id] = Date.now(); uloz('nahlasene', nahlasene);
+  zaznamenejStav(k, false, 'nahlášeno');
+  toast('Nahlášeno – tohle místo už dveře nevyberou.', ['Vrátit', () => { delete nahlasene[k.id]; uloz('nahlasene', nahlasene); }]);
+  const muj = pokus;
+  setTimeout(() => { if (muj === pokus && !vyhled.hidden) jinam(); }, 900);
+}
+
 function selhalo(k) {
+  zaznamenejStav(k, false, 'přenos neběží');
   rozbite[k.id] = Date.now(); uloz('rozbite', rozbite);
   zmarenoZaSebou++;
   if (zmarenoZaSebou >= 4) {
@@ -1350,19 +2179,25 @@ function vykresliKartu(k, rezim, titulKanalu) {
         ? '<button type="button" data-akce="puvodni">původní pohled</button>'
         : '<button type="button" data-akce="nahradni" title="Když panorama zůstane černé">nic nevidím?</button>'}`
     : `${k.vlastni ? 'YouTube' : 'Živě z YouTube'} · <a href="${esc(url)}" target="_blank" rel="noopener">otevřít zdroj ↗</a>`;
+  const nahlasit = k.vlastni ? '' : ' · <button type="button" data-akce="nahlasit" title="Tohle místo nefunguje – dveře ho už nevyberou">⚠ nejde to</button>';
   $('karta').innerHTML = `
-    <div class="hlavicka"><div class="typ">${t.ikona} ${esc(t.nazev)}</div>
+    <div class="hlavicka"><div class="typ">${t.ikona} ${esc(t.nazev)}${jeNove(k) ? ' <span class="novy">nové</span>' : ''}</div>
       <button type="button" class="skryt" data-akce="skryt" title="Skrýt medailonek (I) – znovu ho otevřeš tlačítkem ⓘ v liště" aria-label="Skrýt medailonek">✕</button></div>
     <h2>${vlajka(k.zeme)} ${esc(nazev)}</h2>
     ${o?.nazev && o.nazev !== k.nazev ? `<div class="puvodni">${esc(k.nazev)}</div>` : ''}
     ${k.misto ? `<div class="misto">${esc(k.misto)}</div>` : ''}
     ${mapka(k.lat, k.lon)}
     ${cas}
+    ${f.nevime || k.typ === 'vesmir' ? '' : htmlSlunce(k)}
+    <div class="pocasi" id="kartaPocasi"></div>
+    <div id="kartaPredpoved"></div>
     ${k.popis ? `<div class="popis">${esc(k.popis)}</div>` : ''}
     ${o?.pozn ? `<div class="poznamka">📝 ${esc(o.pozn)}</div>` : ''}
     ${rezim === 'kanal' ? `<div class="prestehovano">Původní přenos se mezitím přestěhoval – ukazuji, co kanál právě vysílá${titulKanalu ? ': „' + esc(titulKanalu) + '“' : ''}.</div>` : ''}
-    <div class="zdroj">${zdroj}</div>`;
-  $('listaNazev').innerHTML = `${vlajka(k.zeme)} ${esc(nazev)}${k.misto ? `<small>${esc(k.misto)}</small>` : ''}`;
+    <div class="zdroj">${zdroj}${nahlasit}</div>`;
+  $('listaNazev').innerHTML = `${vlajka(k.zeme)} ${esc(nazev)}<span class="lista-teplota" id="listaTeplota"></span>${k.misto ? `<small>${esc(k.misto)}</small>` : ''}`;
+  if (hra && !hra.odhaleno) hraLista();
+  ukazPocasi(k);
   aktualizujUlozit();
 }
 function aktualizujUlozit() {
@@ -1612,9 +2447,9 @@ function vykresliSeznam() {
     for (const k of polozky.sort((a, b) => a.nazev.localeCompare(b.nazev, 'cs'))) {
       const li = document.createElement('li');
       if (navstivene.has(k.id)) li.classList.add('byl');
-      if (rozbite[k.id]) li.classList.add('rozbite');
+      if (rozbite[k.id] || nahlasene[k.id]) li.classList.add('rozbite');
       const b = document.createElement('button'); b.type = 'button';
-      b.innerHTML = `<span>${vlajka(k.zeme)}</span><span>${zaznam(k.id) ? '★ ' : ''}${esc(zobrazNazev(k))}<br><span class="m">${esc(k.misto)} · ${mistniHodiny(k)} ${faze(k).ikona}</span></span>`;
+      b.innerHTML = `<span>${vlajka(k.zeme)}</span><span>${jeNove(k) ? '<span class="novy">nové</span> ' : ''}${nahlasene[k.id] ? '⚠ ' : ''}${zaznam(k.id) ? '★ ' : ''}${esc(zobrazNazev(k))}<br><span class="m">${esc(k.misto)} · ${mistniHodiny(k)} ${faze(k).ikona}</span></span>`;
       b.addEventListener('click', () => { $('seznam').close(); jdiNa(k); });
       li.appendChild(b); ul.appendChild(li);
     }
@@ -1624,6 +2459,592 @@ function vykresliSeznam() {
 }
 $('tlSeznam').addEventListener('click', () => { vykresliSeznam(); $('seznam').showModal(); $('hledat').focus(); });
 $('hledat').addEventListener('input', vykresliSeznam);
+
+// oznámení: za dveřmi do lišty výhledu, v chodbě přes sdílený dialog.js
+function toastChodba(text) {
+  if (!vyhled.hidden) toast(text);
+  else if (typeof Dialog !== 'undefined') Dialog.info(text);
+}
+
+/* ---------- stav sbírky ----------
+   Selhání se zapisují samy (přenos neběží / uživatel nahlásil). „Prověřit všechny
+   kamery“ je postupně zkusí přehrát ve skrytém malém přehrávači – skutečné přehrání
+   je jediná spolehlivá zkouška (stránka videa tvrdí „vložitelné“ i u zakázaných). */
+function problemova() {
+  const vse = [...KAMERY, ...MISTA];
+  return vse.filter(k => nahlasene[k.id] || rozbite[k.id] || stavMist[k.id]?.chyba)
+    .map(k => ({ k, z: stavMist[k.id] || {}, nahl: !!nahlasene[k.id] }))
+    .sort((a, b) => (b.z.chyba || 0) - (a.z.chyba || 0));
+}
+function vykresliStav() {
+  const p = problemova();
+  const zle = p.filter(x => x.nahl || (x.z.chyba && !(x.z.ok > x.z.chyba)));
+  const overeno = Object.values(stavMist).filter(z => z.ok).length;
+  $('stavSouhrn').textContent = `Ve sbírce je ${KAMERY.length} kamer a ${MISTA.length} panoramat. ` +
+    (zle.length ? `Nefunguje nebo je nahlášeno: ${zle.length}.` : 'Žádné místo teď nehlásí problém.') +
+    (overeno ? ` Znovu ověřeno: ${overeno}.` : '');
+  if (!p.length) { $('stavSeznam').innerHTML = '<p class="prazdno">Všechno funguje – nebo to zatím nikdo nezkoušel.<br>Tlačítkem „Prověřit všechny kamery“ je stránka projde sama (trvá to asi 15 minut).</p>'; return; }
+  const dat = t => t ? new Date(t).toLocaleString('cs-CZ', { day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit' }) : '';
+  $('stavSeznam').innerHTML = `<table class="stav-tab"><thead><tr><th>Místo</th><th>Stav</th><th></th></tr></thead><tbody>${p.map((x, i) => {
+    const ok = x.z.ok && x.z.ok > (x.z.chyba || 0) && !x.nahl;
+    const stav = ok ? `<span class="stitek-stav ok">znovu funguje</span> <span class="m">${dat(x.z.ok)}</span>`
+      : `<span class="stitek-stav zle">${esc(x.nahl ? 'nahlášeno' : x.z.kod || 'neběží')}</span> <span class="m">${dat(x.z.chyba || nahlasene[x.k.id])}${x.z.n > 1 ? ' · ' + x.z.n + '×' : ''}</span>`;
+    return `<tr><td>${vlajka(x.k.zeme)} ${esc(x.k.nazev)}<br><span class="m">${x.k.druh === 'sv' ? '🌐 ' + esc(x.k.pano) : '📡 ' + esc(x.k.yt)}</span></td><td>${stav}</td>
+      <td style="white-space:nowrap"><button type="button" data-i="${i}" data-a="zkusit">▶ Zkusit</button> <button type="button" data-i="${i}" data-a="vratit">↺ Vrátit</button></td></tr>`;
+  }).join('')}</tbody></table>`;
+  $('stavSeznam').querySelector('tbody').onclick = e => {
+    const b = e.target.closest('button[data-a]'); if (!b) return;
+    const x = p[+b.dataset.i];
+    vratitMisto(x.k.id);
+    if (b.dataset.a === 'zkusit') { $('stavDlg').close(); $('seznam').close(); jdiNa(x.k); }
+    else vykresliStav();
+  };
+}
+function vratitMisto(id) {
+  delete nahlasene[id]; delete rozbite[id]; delete stavMist[id];
+  uloz('nahlasene', nahlasene); uloz('rozbite', rozbite); ulozStav();
+}
+$('tlStav').addEventListener('click', () => { vykresliStav(); $('stavDlg').showModal(); });
+$('stavVratit').addEventListener('click', async () => {
+  const ano = typeof Dialog !== 'undefined' ? await Dialog.potvrd('Vrátit všechna nahlášená a selhávající místa zpět do nabídky?') : true;
+  if (!ano) return;
+  for (const x of problemova()) vratitMisto(x.k.id);
+  vykresliStav();
+});
+$('stavKopirovat').addEventListener('click', async () => {
+  const text = problemova().map(x => [x.k.druh === 'sv' ? 'sv:' + x.k.pano : x.k.yt, x.k.nazev, x.nahl ? 'nahlášeno' : x.z.kod || '',
+    x.z.chyba ? new Date(x.z.chyba).toISOString() : ''].join(' | ')).join('\n') || '(žádná problémová místa)';
+  try { await navigator.clipboard.writeText(text); $('stavKopirovat').textContent = '✓ Zkopírováno'; }
+  catch { stahni('dvere-do-sveta-stav.txt', text, 'text/plain'); }
+  setTimeout(() => { $('stavKopirovat').textContent = '📋 Kopírovat seznam'; }, 2000);
+});
+
+let proverovani = null;   // { stop: bool }
+function zkusKameru(YTx, k) {
+  return new Promise(hotovo => {
+    const obal = $('stavProverovac'); obal.replaceChildren();
+    const misto = document.createElement('div'); obal.appendChild(misto);
+    let pl, konec = false;
+    const skonci = v => { if (konec) return; konec = true; clearTimeout(t); try { pl.destroy(); } catch { /* nevadí */ } obal.replaceChildren(); hotovo(v); };
+    const t = setTimeout(() => skonci({ ok: false, kod: 'nenačetlo se' }), 18000);
+    const vars = { autoplay: 1, mute: 1, playsinline: 1, controls: 0 };
+    if (/^https?:/.test(location.protocol)) vars.origin = location.origin;
+    pl = new YTx.Player(misto, { videoId: k.yt, width: 200, height: 113, host: 'https://www.youtube-nocookie.com', playerVars: vars, events: {
+      onReady: e => { try { e.target.mute(); e.target.playVideo(); } catch { /* nevadí */ } },
+      onStateChange: e => {
+        if (e.data !== 1) return;
+        let d = {}; try { d = e.target.getVideoData() || {}; } catch { /* nevadí */ }
+        skonci(d.isLive === false ? { ok: false, kod: 'už není živě' } : { ok: true });
+      },
+      onError: e => skonci(e.data === 152 || e.data === 153 ? { ok: null } : { ok: false, kod: e.data === 150 || e.data === 101 ? 'zakázané vložení' : 'chyba ' + e.data }),
+    } });
+  });
+}
+$('stavProverit').addEventListener('click', async () => {
+  if (proverovani) { proverovani.stop = true; return; }
+  let YTx;
+  try { YTx = await nactiYT(); } catch { toastChodba('YouTube se nepodařilo načíst.'); return; }
+  const prov = proverovani = { stop: false };
+  const seznamK = KAMERY.slice();
+  $('stavProverit').textContent = '■ Zastavit';
+  $('stavPrubeh').hidden = false;
+  let zle = 0;
+  for (let i = 0; i < seznamK.length && !prov.stop && $('stavDlg').open; i++) {
+    const k = seznamK[i];
+    $('stavPruh').style.width = (i / seznamK.length * 100) + '%';
+    $('stavPrubehText').textContent = `${i + 1} / ${seznamK.length} · ${k.nazev}`;
+    const v = await zkusKameru(YTx, k);
+    if (v.ok === null) { $('stavPrubehText').textContent = 'Přehrávač ve stránce otevřené ze souboru nefunguje – otevři ji přes web.'; break; }
+    if (v.ok) { zaznamenejStav(k, true); if (rozbite[k.id]) { delete rozbite[k.id]; uloz('rozbite', rozbite); } }
+    else { zle++; zaznamenejStav(k, false, v.kod); rozbite[k.id] = Date.now(); uloz('rozbite', rozbite); }
+    if (i % 10 === 9) vykresliStav();
+  }
+  $('stavPruh').style.width = '100%';
+  if (!/soubor/.test($('stavPrubehText').textContent)) $('stavPrubehText').textContent = (prov.stop || !$('stavDlg').open ? 'Zastaveno. ' : 'Hotovo. ') + `Nefunkčních: ${zle}.`;
+  proverovani = null;
+  $('stavProverit').textContent = '▶ Prověřit všechny kamery';
+  vykresliStav();
+});
+$('stavDlg').addEventListener('close', () => { if (proverovani) proverovani.stop = true; });
+
+/* ---------- hra: Hádej, kde jsem ----------
+   Pět kol; body = 5 000 · e^(−vzdálenost / 2 000 km). Během kola se schová medailonek,
+   název v liště i adresa v prohlížeči a překryje se popisek přehrávače (u Street View
+   adresa v rohu, u YouTube název nahoře). Návštěvy ve hře se do pasu nepočítají. */
+let hra = null;
+const rekordHry = typeof Rekord !== 'undefined'
+  ? Rekord.sleduj('webapp_hra_dvere_hadej', { vyssiLepsi: true, format: v => Math.round(v).toLocaleString('cs-CZ') + ' bodů', popisek: 'Nejlepší výsledek' })
+  : null;
+const HRA_KOL = 5;
+const bodyZa = d => Math.round(5000 * Math.exp(-d / 2000));
+function mistaHry(co) {
+  let pool = co === 'sv' ? MISTA : co === 'kamery' ? KAMERY : [...KAMERY, ...MISTA];
+  pool = pool.filter(k => k.lat != null && k.typ !== 'vesmir' && !nahlasene[k.id] && !rozbite[k.id]);
+  if (co !== 'sv') {
+    const den = pool.filter(k => k.druh === 'sv' || vhodneTed(k, 'den'));   // potmě by se hádalo naslepo
+    if (den.length >= 20) pool = den;
+  }
+  const zamichane = pool.slice().sort(() => Math.random() - 0.5), vybrane = [], zeme = new Set();
+  for (const k of zamichane) { if (vybrane.length >= HRA_KOL) break; if (!zeme.has(k.zeme)) { zeme.add(k.zeme); vybrane.push(k); } }
+  for (const k of zamichane) { if (vybrane.length >= HRA_KOL) break; if (!vybrane.includes(k)) vybrane.push(k); }
+  return vybrane;
+}
+function startHry(co) {
+  const mista = mistaHry(co);
+  if (mista.length < HRA_KOL) { toastChodba('Na hru je teď málo míst.'); return; }
+  stopOkno();
+  hra = { co, mista, kolo: 0, body: 0, vysledky: [], tip: null, odhaleno: false, vb: null };
+  vyhled.classList.add('hra');
+  dalsiKolo();
+}
+function dalsiKolo() {
+  const k = hra.mista[hra.kolo];
+  hra.tip = null; hra.odhaleno = false; hra.vb = null;
+  vyhled.classList.remove('odhaleno');
+  $('hraVysledek').hidden = true;
+  $('hraPanel').hidden = false; $('hraPanel').classList.remove('velky');
+  $('hraTip').disabled = true; $('hraTip').hidden = false;
+  $('hraPanelText').textContent = 'Klikni do mapy, kde si myslíš, že jsi.';
+  kresliHraMapu();
+  if (k.druh !== druhRezimu()) prepniRezim(k.druh === 'sv' ? 'sv' : 'kamery');
+  if (vyhled.hidden) { cil = k; ukazCil(); otevri(k); } else jinam(k);
+  hraLista();
+}
+function hraLista() {
+  if (!hra) return;
+  $('listaNazev').innerHTML = `🎯 Kolo ${Math.min(hra.kolo + 1, HRA_KOL)} / ${HRA_KOL} <small>${hra.body.toLocaleString('cs-CZ')} bodů</small>`;
+  const yt = hra.mista[hra.kolo]?.druh === 'kamera';
+  vyhled.querySelector('.hra-kryt-sv').classList.toggle('zap', !yt);
+  vyhled.querySelector('.hra-kryt-yt').classList.toggle('zap', yt);
+}
+function kresliHraMapu() {
+  const svg = $('hraSvg'), vb = hra.vb || MAPA_CELA, mer = vb[2] / 360;
+  if (!cestaPevninCache) cestaPevninCache = cestaPevnin();
+  let obsah = `<path class="zeme" d="${cestaPevninCache}"/>`;
+  const k = hra.mista[hra.kolo];
+  if (hra.odhaleno && hra.tip) obsah += `<line class="cara" x1="${hra.tip.lon + 180}" y1="${90 - hra.tip.lat}" x2="${k.lon + 180}" y2="${90 - k.lat}" stroke-width="${(.5 * mer).toFixed(2)}"/>`;
+  if (hra.odhaleno) obsah += `<circle class="cil" cx="${k.lon + 180}" cy="${90 - k.lat}" r="${(2.6 * mer).toFixed(2)}" stroke-width="${(.5 * mer).toFixed(2)}"/>`;
+  if (hra.tip) obsah += `<circle class="tip" cx="${hra.tip.lon + 180}" cy="${90 - hra.tip.lat}" r="${(2.2 * mer).toFixed(2)}" stroke-width="${(.4 * mer).toFixed(2)}"/>`;
+  svg.setAttribute('viewBox', vb.join(' '));
+  svg.innerHTML = obsah;
+}
+function bodHraMapy(e) {
+  const svg = $('hraSvg'), r = svg.getBoundingClientRect(), vb = hra.vb || MAPA_CELA;
+  const sx = r.width / vb[2], sy = r.height / vb[3], sc = Math.min(sx, sy);
+  const ox = (r.width - vb[2] * sc) / 2, oy = (r.height - vb[3] * sc) / 2;
+  return { x: vb[0] + (e.clientX - r.left - ox) / sc, y: vb[1] + (e.clientY - r.top - oy) / sc, sc };
+}
+let hraTah = null;
+$('hraSvg').addEventListener('pointerdown', e => { if (hra) hraTah = { x: e.clientX, y: e.clientY, vb: (hra.vb || MAPA_CELA).slice(), posun: false }; });
+$('hraSvg').addEventListener('pointermove', e => {
+  if (!hra || !hraTah) return;
+  const dx = e.clientX - hraTah.x, dy = e.clientY - hraTah.y;
+  if (!hraTah.posun && Math.hypot(dx, dy) > 5 && hra.vb) hraTah.posun = true;
+  if (hraTah.posun) {
+    const sc = bodHraMapy(e).sc, v = hraTah.vb;
+    hra.vb = [Math.max(-20, Math.min(380 - v[2], v[0] - dx / sc)), Math.max(-10, Math.min(190 - v[3], v[1] - dy / sc)), v[2], v[3]];
+    kresliHraMapu();
+  }
+});
+$('hraSvg').addEventListener('pointerup', e => {
+  const t = hraTah; hraTah = null;
+  if (!hra || !t || t.posun || hra.odhaleno) return;
+  const b = bodHraMapy(e);
+  const lat = Math.max(-89, Math.min(89, 90 - b.y)), lon = ((b.x + 180) % 360 + 360) % 360 - 180;
+  hra.tip = { lat, lon };
+  $('hraTip').disabled = false;
+  $('hraPanelText').textContent = 'Spokojený? Tipni – nebo klikni jinam.';
+  kresliHraMapu();
+});
+$('hraSvg').addEventListener('wheel', e => {
+  if (!hra) return;
+  e.preventDefault();
+  const f = e.deltaY < 0 ? 1.35 : 1 / 1.35, c = bodHraMapy(e), vb = (hra.vb || MAPA_CELA).slice();
+  const w = Math.max(10, Math.min(360, vb[2] / f)), h = w * MAPA_CELA[3] / MAPA_CELA[2];
+  const nx = c.x - (c.x - vb[0]) * w / vb[2], ny = c.y - (c.y - vb[1]) * h / vb[3];
+  hra.vb = w >= 360 ? null : [Math.max(-20, Math.min(380 - w, nx)), Math.max(-10, Math.min(190 - h, ny)), w, h];
+  kresliHraMapu();
+}, { passive: false });
+$('hraPanel').addEventListener('pointerdown', () => $('hraPanel').classList.add('velky'));
+function tipni() {
+  if (!hra || !hra.tip || hra.odhaleno) return;
+  const k = hra.mista[hra.kolo];
+  const d = km(hra.tip, k), b = bodyZa(d);
+  hra.body += b; hra.odhaleno = true;
+  hra.vysledky.push({ k, d, b });
+  vyhled.classList.add('odhaleno');
+  $('hraPanel').classList.add('velky');
+  // přiblížit mapu na tip a cíl
+  const x1 = Math.min(hra.tip.lon, k.lon) + 180, x2 = Math.max(hra.tip.lon, k.lon) + 180, y1 = 90 - Math.max(hra.tip.lat, k.lat), y2 = 90 - Math.min(hra.tip.lat, k.lat);
+  const w = Math.min(360, Math.max(30, (x2 - x1) * 1.5, (y2 - y1) * 1.5 * 360 / 145)), h = w * 145 / 360;
+  hra.vb = w >= 360 ? null : [Math.max(-20, (x1 + x2) / 2 - w / 2), Math.max(-10, (y1 + y2) / 2 - h / 2), w, h];
+  kresliHraMapu();
+  $('hraTip').disabled = true; $('hraTip').hidden = true;
+  $('hraPanelText').textContent = `Tvůj tip: ${Math.round(d).toLocaleString('cs-CZ')} km od cíle`;
+  const posledni = hra.kolo + 1 >= HRA_KOL;
+  const hodnoceni = d < 25 ? 'Přesně! 🎯' : d < 300 ? 'Skvělé!' : d < 1000 ? 'Dobrý odhad' : d < 3000 ? 'Ujde to' : 'Tohle bylo daleko…';
+  $('hraVysledek').innerHTML = `<div>${hodnoceni}</div><div class="body">+${b.toLocaleString('cs-CZ')}</div>
+    <div>${vlajka(k.zeme)} <b>${esc(k.nazev)}</b> · ${esc(k.misto || '')}</div>
+    <div style="font-size:.85rem;color:var(--panel-tlumene)">vzdálenost ${Math.round(d).toLocaleString('cs-CZ')} km</div>
+    <div class="tlacitka"><button class="tl hlavni" type="button" id="hraDal">${posledni ? '🏁 Výsledek' : '▶ Další kolo'}</button></div>`;
+  $('hraVysledek').hidden = false;
+  $('hraDal').addEventListener('click', () => { if (posledni) konecHry(); else { hra.kolo++; dalsiKolo(); } });
+  $('hraDal').focus();
+  hraLista();
+  // medailonek s celým popisem místa
+  medailonek(true);
+  vykresliKartu(k, null);
+  $('listaNazev').innerHTML = `🎯 Kolo ${hra.kolo + 1} / ${HRA_KOL} <small>${hra.body.toLocaleString('cs-CZ')} bodů</small>`;
+}
+$('hraTip').addEventListener('click', tipni);
+function konecHry() {
+  const vysl = hra.vysledky, celkem = hra.body;
+  const rekord = rekordHry ? rekordHry.zapis(celkem) : false;
+  pas.hra = Math.max(pas.hra || 0, celkem); ulozPas(); zkontrolujOdznaky();
+  $('hraKonecTelo').innerHTML = `<div class="hra-celkem">${celkem.toLocaleString('cs-CZ')} <small style="font-size:.9rem">z ${(HRA_KOL * 5000).toLocaleString('cs-CZ')} bodů</small></div>
+    ${rekord ? '<p style="text-align:center;color:var(--ok);font-weight:600">🏆 Nový osobní rekord!</p>' : ''}
+    <table class="hra-tab">${vysl.map((v, i) => `<tr><td>${i + 1}.</td><td>${vlajka(v.k.zeme)} ${esc(v.k.nazev)}<br><small style="color:var(--text-faint)">${Math.round(v.d).toLocaleString('cs-CZ')} km od tipu</small></td><td>${v.b.toLocaleString('cs-CZ')}</td></tr>`).join('')}</table>
+    <div id="hraKonecRekord"></div>`;
+  if (rekordHry) rekordHry.prvek($('hraKonecRekord'));
+  $('hraKonecDlg').showModal();
+}
+function ukonciHru() {
+  if (!hra) return;
+  hra = null;
+  vyhled.classList.remove('hra', 'odhaleno');
+  $('hraPanel').hidden = true; $('hraVysledek').hidden = true;
+  vyhled.querySelectorAll('.hra-kryt').forEach(x => x.classList.remove('zap'));
+}
+$('hraKonecChodba').addEventListener('click', () => { $('hraKonecDlg').close(); ukonciHru(); zavri(); });
+$('hraZnovu').addEventListener('click', () => { $('hraKonecDlg').close(); const co = hra?.co || 'sv'; ukonciHru(); startHry(co); });
+$('tlHra').addEventListener('click', () => {
+  $('hraCo').value = nastaveni.hraCo || 'sv';
+  if (rekordHry) rekordHry.prvek($('hraRekord'));
+  $('hraDlg').showModal();
+});
+$('hraForm').addEventListener('submit', e => {
+  e.preventDefault(); $('hraDlg').close();
+  nastaveni.hraCo = $('hraCo').value; uloz('nastaveni', nastaveni);
+  startHry($('hraCo').value);
+});
+
+/* ---------- cestovní pas ----------
+   Každé první otevření místa = razítko jeho země; kilometry se sčítají vzdušnou čarou
+   mezi po sobě jdoucími místy (začíná se v Praze). Odznaky se odemykají samy. */
+const pas = Object.assign({ mista: {}, km: 0, posledni: null, odznaky: {}, hra: 0, noci: 0 }, nacti('pas', {}));
+const ulozPas = () => uloz('pas', pas);
+const KONT7 = { evropa: 'Evropa', asie: 'Asie', afrika: 'Afrika', sam: 'Severní Amerika', jam: 'Jižní Amerika', oceanie: 'Austrálie a Oceánie', antarktida: 'Antarktida' };
+function kontinent7(lat, lon) {
+  const k = kontinent(lat, lon);
+  if (k === 'pacifik') return 'oceanie';
+  if (k === 'arktida') return lon >= -170 && lon < -30 ? 'sam' : lon >= -30 && lon < 60 ? 'evropa' : 'asie';
+  return k;
+}
+function km(a, b) {
+  const r = Math.PI / 180;
+  const d = Math.sin((b.lat - a.lat) * r / 2) ** 2 + Math.cos(a.lat * r) * Math.cos(b.lat * r) * Math.sin((b.lon - a.lon) * r / 2) ** 2;
+  return 2 * 6371 * Math.asin(Math.sqrt(d));
+}
+let nazvyZemi = null;
+function nazevZeme(cc) {
+  try { nazvyZemi = nazvyZemi || new Intl.DisplayNames(['cs'], { type: 'region' }); return nazvyZemi.of(cc) || cc; } catch { return cc; }
+}
+function statistikaPasu() {
+  const m = Object.values(pas.mista);
+  const zeme = new Set(m.map(x => x.z).filter(z => z && z !== 'UN'));
+  const kont = new Set(m.map(x => x.k).filter(Boolean));
+  const typ = t => m.filter(x => x.typ === t).length;
+  return { mist: m.length, zemi: zeme.size, kont: kont.size, kontinenty: kont, km: Math.round(pas.km),
+    sopky: typ('sopky'), zvirata: typ('zvirata'), nebe: typ('nebe'), vesmir: typ('vesmir'), vlaky: typ('vlaky'), hory: typ('hory'),
+    sv: m.filter(x => x.d === 'sv').length, kamery: m.filter(x => x.d === 'kamera').length,
+    cesko: m.filter(x => x.z === 'CZ').length, sever: m.some(x => x.lat > 66.56), jih: m.some(x => x.lat < -60),
+    daleko: Math.max(0, ...m.map(x => x.dal || 0)), noci: pas.noci, hra: pas.hra };
+}
+const ODZNAKY = [
+  ['prvni', '🚪', 'První dveře', 'Otevři svoje první dveře', s => [s.mist, 1]],
+  ['m10', '🎒', 'Výletník', 'Navštiv 10 míst', s => [s.mist, 10]],
+  ['m50', '🧳', 'Cestovatel', 'Navštiv 50 míst', s => [s.mist, 50]],
+  ['m150', '🌐', 'Světoběžník', 'Navštiv 150 míst', s => [s.mist, 150]],
+  ['m400', '👑', 'Pán všech dveří', 'Navštiv 400 míst', s => [s.mist, 400]],
+  ['z10', '🗺️', 'Deset zemí', 'Navštiv místa v 10 zemích', s => [s.zemi, 10]],
+  ['z30', '📮', 'Sběratel razítek', 'Navštiv místa ve 30 zemích', s => [s.zemi, 30]],
+  ['z60', '🏛️', 'Diplomat', 'Navštiv místa v 60 zemích', s => [s.zemi, 60]],
+  ['k7', '🌍', 'Všech sedm kontinentů', 'Včetně Antarktidy', s => [s.kont, 7]],
+  ['sopky', '🌋', 'Vulkanolog', 'Podívej se na 5 sopek', s => [s.sopky, 5]],
+  ['zvirata', '🦁', 'Na safari', 'Pozoruj zvířata na 10 kamerách', s => [s.zvirata, 10]],
+  ['hory', '🏔️', 'Horal', 'Navštiv 10 horských míst', s => [s.hory, 10]],
+  ['nebe', '🌌', 'Pod hvězdami', 'Sleduj noční oblohu na 3 místech', s => [s.nebe, 3]],
+  ['vlaky', '🚂', 'Šotouš', 'Sleduj vlaky na 5 kamerách', s => [s.vlaky, 5]],
+  ['vesmir', '🚀', 'Kosmonaut', 'Podívej se do vesmíru', s => [s.vesmir, 1]],
+  ['noc', '🦉', 'Noční pták', 'Navštiv 10 míst, kde je zrovna noc', s => [s.noci, 10]],
+  ['cesko', '🇨🇿', 'Doma je doma', 'Navštiv 5 míst v Česku', s => [s.cesko, 5]],
+  ['sv', '🚶', 'Pěšák', 'Projdi 25 panoramat Street View', s => [s.sv, 25]],
+  ['sever', '🧊', 'Za polárním kruhem', 'Navštiv místo za severním polárním kruhem', s => [s.sever ? 1 : 0, 1]],
+  ['jih', '🐧', 'Na jihu', 'Navštiv místo jižně od 60. rovnoběžky', s => [s.jih ? 1 : 0, 1]],
+  ['daleko', '🛫', 'Na druhém konci světa', 'Navštiv místo víc než 15 000 km od Prahy', s => [Math.min(s.daleko, 15000), 15000]],
+  ['kolem', '✈️', 'Kolem světa', 'Nacestuj 40 075 km', s => [Math.min(s.km, 40075), 40075]],
+  ['mesic', '🌕', 'Až na Měsíc', 'Nacestuj 384 400 km', s => [Math.min(s.km, 384400), 384400]],
+  ['hra', '🎯', 'Neomylný', 'Získej ve hře Hádej, kde jsem 20 000 bodů', s => [Math.min(s.hra, 20000), 20000]],
+];
+function zkontrolujOdznaky(tise = false) {
+  const st = statistikaPasu(), nove = [];
+  for (const [id, ik, nazev, , f] of ODZNAKY) {
+    const [ma, cil2] = f(st);
+    if (ma >= cil2 && !pas.odznaky[id]) { pas.odznaky[id] = Date.now(); nove.push(ik + ' ' + nazev); }
+  }
+  if (nove.length) { ulozPas(); if (!tise) toastChodba('🏅 Nový odznak: ' + nove.join(', ')); }
+}
+function zapisDoPasu(k) {
+  if (!k || k.lat == null || hra) return;
+  const bod = { lat: k.lat, lon: k.lon };
+  pas.km += km(pas.posledni || { lat: PRAHA[0], lon: PRAHA[1] }, bod);
+  pas.posledni = bod;
+  if (!pas.mista[k.id]) {
+    pas.mista[k.id] = { t: Date.now(), z: k.zeme, k: kontinent7(k.lat, k.lon), typ: k.typ, d: k.druh, lat: Math.round(k.lat * 10) / 10, dal: vzdalenost(k) };
+    if (faze(k).noc && k.typ !== 'vesmir') pas.noci++;
+  }
+  ulozPas();
+  zkontrolujOdznaky();
+}
+function vykresliPas() {
+  const st = statistikaPasu();
+  $('pasCisla').innerHTML = [[st.mist, 'navštívených míst'], [st.zemi, 'zemí'], [st.kont + ' / 7', 'kontinentů'],
+    [st.km.toLocaleString('cs-CZ') + ' km', 'nacestováno'], [Object.keys(pas.odznaky).length + ' / ' + ODZNAKY.length, 'odznaků']]
+    .map(([v, t]) => `<div class="pas-cislo"><b>${v}</b><span>${t}</span></div>`).join('');
+  $('pasOdznaky').innerHTML = ODZNAKY.map(([id, ik, nazev, popis, f]) => {
+    const [ma, c] = f(st), mam = !!pas.odznaky[id];
+    return `<div class="odznak${mam ? '' : ' zamceno'}" title="${esc(popis)}"><span class="ik">${ik}</span><span><b>${esc(nazev)}</b><small>${esc(popis)}</small>
+      ${mam ? `<small>✓ ${new Date(pas.odznaky[id]).toLocaleDateString('cs-CZ')}</small>` : c > 1 ? `<div class="postup"><i style="width:${Math.min(100, ma / c * 100)}%"></i></div>` : ''}</span></div>`;
+  }).join('');
+  const zeme = {};
+  for (const x of Object.values(pas.mista)) if (x.z && x.z !== 'UN' && (!zeme[x.z] || x.t < zeme[x.z].t)) zeme[x.z] = { t: x.t, n: (zeme[x.z]?.n || 0) };
+  for (const x of Object.values(pas.mista)) if (zeme[x.z]) zeme[x.z].n++;
+  const BARVY = ['#b23a48', '#2e5e9e', '#2f7d4f', '#7a4ea3', '#a0622d', '#1f7a7a', '#8a2f6f'];
+  const razitka = Object.entries(zeme).sort((a, b) => a[1].t - b[1].t);
+  $('pasRazitka').innerHTML = razitka.length ? razitka.map(([cc, x], i) => {
+    const h = [...cc].reduce((a, c) => a * 31 + c.charCodeAt(0), 7);
+    return `<div class="razitko" style="color:${BARVY[h % BARVY.length]};transform:rotate(${(h % 17) - 8}deg)" title="${esc(nazevZeme(cc))}: ${x.n} ${x.n === 1 ? 'místo' : x.n < 5 ? 'místa' : 'míst'}">
+      <span class="vl">${vlajka(cc)}</span>${esc(nazevZeme(cc))}<small>${new Date(x.t).toLocaleDateString('cs-CZ')}</small></div>`;
+  }).join('') : '<p class="pas-prazdno">Zatím žádné razítko – otevři nějaké dveře.</p>';
+}
+$('tlPas').addEventListener('click', () => { vykresliPas(); $('pasDlg').showModal(); });
+$('pasSmazat').addEventListener('click', async () => {
+  const ano = typeof Dialog !== 'undefined' ? await Dialog.potvrd('Smazat celý cestovní pas – razítka, kilometry i odznaky?') : true;
+  if (!ano) return;
+  Object.assign(pas, { mista: {}, km: 0, posledni: null, odznaky: {}, hra: 0, noci: 0 });
+  ulozPas(); vykresliPas();
+});
+
+/* ---------- okno do světa ----------
+   Místa se střídají po zvoleném čase; po 4 s bez pohybu myši se lišta i medailonek
+   schovají (medailonek se při každé změně na chvíli ukáže). */
+let okno = null;   // { interval, co, zbyva, pauza }
+function vyberOkno() {
+  if (!okno || okno.co !== 'obe') {
+    if (okno && druhRezimu() !== (okno.co === 'sv' ? 'sv' : 'kamera')) prepniRezim(okno.co === 'sv' ? 'sv' : 'kamery');
+    return vyber(aktualni?.id);
+  }
+  const puvodni = nastaveni.rezim;
+  nastaveni.rezim = Math.random() < 0.5 ? 'sv' : 'kamery';
+  const k = vyber(aktualni?.id);
+  nastaveni.rezim = puvodni;
+  return k;
+}
+function oknoTik() {
+  if (!okno) return;
+  if (!okno.pauza && !animuji) okno.zbyva--;
+  if (okno.zbyva <= 0) { okno.zbyva = okno.interval; oknoDalsi(); }
+  const m = Math.floor(Math.max(0, okno.zbyva) / 60), sec = Math.max(0, okno.zbyva) % 60;
+  $('oknoCas').textContent = okno.pauza ? 'pauza' : `${m}:${String(sec).padStart(2, '0')}`;
+  $('oknoPruh').firstElementChild.style.width = (100 * (1 - okno.zbyva / okno.interval)) + '%';
+}
+function oknoDalsi() {
+  const k = vyberOkno();
+  if (k) jinam(k);
+  ukazNaChvili();
+}
+let klidCas = null;
+function ukazNaChvili() {
+  vyhled.classList.remove('klidny');
+  clearTimeout(klidCas);
+  if (okno) klidCas = setTimeout(() => { if (okno && $('kvalitaNab').hidden && !document.querySelector('dialog[open]')) vyhled.classList.add('klidny'); }, 6000);
+}
+function spustOkno(interval, co, cela) {
+  okno = { interval, co, zbyva: interval, pauza: false, timer: setInterval(oknoTik, 1000) };
+  nastaveni.okno = { interval, co, cela }; uloz('nastaveni', nastaveni);
+  vyhled.classList.add('okno-bezi');
+  $('oknoOvl').hidden = false; $('oknoPruh').hidden = false; $('tlOknoV').hidden = true;
+  const k = vyberOkno();
+  if (vyhled.hidden) { if (k) { cil = k; ukazCil(); otevri(k); } }
+  else if (k) jinam(k);
+  if (cela && document.fullscreenEnabled && !document.fullscreenElement) vyhled.requestFullscreen?.().catch(() => {});
+  oknoTik(); ukazNaChvili();
+}
+function stopOkno() {
+  if (!okno) return;
+  clearInterval(okno.timer); okno = null;
+  clearTimeout(klidCas);
+  vyhled.classList.remove('okno-bezi', 'klidny');
+  $('oknoOvl').hidden = true; $('oknoPruh').hidden = true; $('tlOknoV').hidden = false;
+}
+function pauzaOkna() {
+  if (!okno) return;
+  okno.pauza = !okno.pauza;
+  $('tlOknoPauza').textContent = okno.pauza ? '▶' : '⏸';
+  $('tlOknoPauza').title = okno.pauza ? 'Pokračovat ve střídání (mezerník)' : 'Pozastavit střídání (mezerník)';
+  oknoTik();
+}
+function otevriOknoDlg() {
+  const o = nastaveni.okno || {};
+  $('oknoInterval').value = String(o.interval || 300);
+  $('oknoCo').value = o.co || (nastaveni.rezim === 'sv' ? 'sv' : 'kamery');
+  $('oknoCela').checked = o.cela !== false;
+  $('oknoCela').closest('label').hidden = !document.fullscreenEnabled;
+  $('oknoDlg').showModal();
+}
+$('tlOkno').addEventListener('click', otevriOknoDlg);
+$('tlOknoV').addEventListener('click', otevriOknoDlg);
+$('oknoForm').addEventListener('submit', e => {
+  e.preventDefault();
+  $('oknoDlg').close();
+  spustOkno(+$('oknoInterval').value, $('oknoCo').value, $('oknoCela').checked);
+});
+$('tlOknoPauza').addEventListener('click', pauzaOkna);
+$('tlOknoStop').addEventListener('click', stopOkno);
+['pointermove', 'pointerdown', 'keydown'].forEach(t => vyhled.addEventListener(t, () => { if (okno) ukazNaChvili(); }));
+document.addEventListener('keydown', () => { if (okno) ukazNaChvili(); });
+
+/* ---------- mapa všech dveří ----------
+   Válcová projekce (x = délka + 180, y = 90 − šířka), obrysy pevnin stejné jako
+   u mapky v medailonku. Pás noci podle aktuální polohy slunce. Kolečkem nebo
+   tlačítky se přibližuje, tažením posouvá; klik na bod otevře místo. */
+const BARVY_TYPU = {
+  zvirata: '#e9a23b', hory: '#7fb3e0', more: '#3fc1c9', mesta: '#d07ce8', sopky: '#ef5b4c', nebe: '#8c8cff', vesmir: '#e0e0e0', vlaky: '#a3d55b',
+  vyhlidky: '#ffd166', pamatky: '#f4978e', priroda: '#5fd068', vzacne: '#c0c0c0', vlastni: '#ffffff',
+};
+const mapaFiltr = { kamera: true, sv: true, nove: false };
+let mapaVB = null;
+const MAPA_CELA = [0, 5, 360, 145];
+function cestaPevnin() {
+  let d = '';
+  for (const p of pevniny()) {
+    let pa = null;
+    d += p.body.map(([a, b]) => { const cmd = pa === null || Math.abs(a - pa) > 180 ? 'M' : 'L'; pa = a; return cmd + (a + 180).toFixed(2) + ' ' + (90 - b).toFixed(2); }).join('');
+  }
+  return d;
+}
+let cestaPevninCache = null;
+function cestaNoci() {
+  // subsolární bod: kde je slunce v zenitu; terminátor = kde je výška slunce 0
+  const t = new Date();
+  let lonS = 0, best = -99;
+  for (let l = -180; l < 180; l += 2) { const h = vyskaSlunce(0, l, t); if (h > best) { best = h; lonS = l; } }
+  let dec = 0, bestD = -99;
+  for (let la = -24; la <= 24; la += 0.5) { const h = vyskaSlunce(la, lonS, t); if (h > bestD) { bestD = h; dec = la; } }
+  const r = Math.PI / 180, body = [];
+  for (let l = -180; l <= 180; l += 3) {
+    const tanDec = Math.tan((Math.abs(dec) < 0.3 ? 0.3 : dec) * r);
+    const lat = Math.atan(-Math.cos((l - lonS) * r) / tanDec) / r;
+    body.push([l + 180, 90 - lat]);
+  }
+  const pol = dec > 0 ? 180 : 0;   // noc je u pólu odvráceného od slunce
+  return 'M0 ' + pol + ' ' + body.map(([x, y]) => 'L' + x.toFixed(1) + ' ' + y.toFixed(1)).join(' ') + ' L360 ' + pol + ' Z';
+}
+function mistaNaMape() {
+  const vse = [];
+  if (mapaFiltr.kamera) vse.push(...KAMERY);
+  if (mapaFiltr.sv) vse.push(...MISTA);
+  vse.push(...oblibene.map(o => o.polozka).filter(k => k && (mapaFiltr[k.druh] ?? true)));
+  return vse.filter(k => k.lat != null && !nahlasene[k.id] && (!mapaFiltr.nove || !navstivene.has(k.id)));
+}
+function vykresliMapu() {
+  const svg = $('mapaSvg');
+  const vb = mapaVB || MAPA_CELA;
+  svg.setAttribute('viewBox', vb.join(' '));
+  const mer = vb[2] / 360;                                  // velikost bodů se přizpůsobí přiblížení
+  if (!cestaPevninCache) cestaPevninCache = cestaPevnin();
+  const mista = mistaNaMape();
+  const body = mista.map((k, i) => {
+    const barva = BARVY_TYPU[k.typ] || '#fff';
+    return `<circle class="bod${navstivene.has(k.id) ? ' byl' : ''}${k.druh === 'sv' ? ' sv' : ''}" data-i="${i}" cx="${(k.lon + 180).toFixed(2)}" cy="${(90 - k.lat).toFixed(2)}" r="${(1.25 * mer + .25).toFixed(2)}" fill="${barva}" stroke-width="${(.3 * mer).toFixed(2)}"/>`;
+  }).join('');
+  const ja = aktualni && aktualni.lat != null
+    ? `<circle class="ja" cx="${aktualni.lon + 180}" cy="${90 - aktualni.lat}" r="${(3.2 * mer).toFixed(2)}" stroke-width="${(.6 * mer).toFixed(2)}"/>` : '';
+  svg.innerHTML = `<path class="zeme" d="${cestaPevninCache}"/><path class="noc" d="${cestaNoci()}"/>${body}${ja}`;
+  svg._mista = mista;
+  const typyV = [...new Set(mista.map(k => k.typ))];
+  $('mapaLegenda').innerHTML = typyV.map(t => {
+    const T = TYPY[t] || TYPY_SV[t] || VLASTNI;
+    return `<span><i style="background:${BARVY_TYPU[t] || '#fff'}"></i>${T.ikona} ${esc(T.nazev)}</span>`;
+  }).join('') + `<span>· ${mista.length} míst · poloprůhledné = už prošlé · tmavý pás = noc</span>`;
+  for (const b of $('mapaFiltr').querySelectorAll('button')) b.setAttribute('aria-pressed', String(mapaFiltr[b.dataset.f]));
+}
+function otevriMapu() {
+  mapaFiltr.kamera = nastaveni.rezim !== 'sv' || mapaFiltr.kamera;
+  vykresliMapu();
+  $('mapaDlg').showModal();
+}
+$('tlMapa').addEventListener('click', otevriMapu);
+$('tlMapaV').addEventListener('click', otevriMapu);
+$('mapaFiltr').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  mapaFiltr[b.dataset.f] = !mapaFiltr[b.dataset.f];
+  if (!mapaFiltr.kamera && !mapaFiltr.sv) mapaFiltr[b.dataset.f === 'kamera' ? 'sv' : 'kamera'] = true;
+  vykresliMapu();
+});
+function bodSvg(e) {
+  const svg = $('mapaSvg'), r = svg.getBoundingClientRect(), vb = mapaVB || MAPA_CELA;
+  const s = Math.min(r.width / vb[2], r.height / vb[3]);
+  const ox = (r.width - vb[2] * s) / 2, oy = (r.height - vb[3] * s) / 2;
+  return { x: vb[0] + (e.clientX - r.left - ox) / s, y: vb[1] + (e.clientY - r.top - oy) / s, s };
+}
+function zoomMapy(f, kolem) {
+  const vb = (mapaVB || MAPA_CELA).slice();
+  if (!f) { mapaVB = null; vykresliMapu(); return; }
+  const c = kolem || { x: vb[0] + vb[2] / 2, y: vb[1] + vb[3] / 2 };
+  const w = Math.max(12, Math.min(360, vb[2] / f)), h = w * MAPA_CELA[3] / MAPA_CELA[2];
+  const nx = c.x - (c.x - vb[0]) * w / vb[2], ny = c.y - (c.y - vb[1]) * h / vb[3];
+  mapaVB = w >= 360 ? null : [Math.max(-20, Math.min(380 - w, nx)), Math.max(-10, Math.min(190 - h, ny)), w, h];
+  vykresliMapu();
+}
+$('mapaPlocha').addEventListener('wheel', e => { e.preventDefault(); zoomMapy(e.deltaY < 0 ? 1.35 : 1 / 1.35, bodSvg(e)); }, { passive: false });
+$('mapaDlg').querySelector('.mapa-zoom').addEventListener('click', e => { const b = e.target.closest('button'); if (b) zoomMapy(+b.dataset.z); });
+let mapaTah = null;
+$('mapaPlocha').addEventListener('pointerdown', e => {
+  if (e.target.closest('.mapa-zoom')) return;
+  mapaTah = { x: e.clientX, y: e.clientY, vb: (mapaVB || MAPA_CELA).slice(), posun: false, cil: e.target };
+});
+$('mapaPlocha').addEventListener('pointermove', e => {
+  const tip = $('mapaTip');
+  if (mapaTah) {
+    const dx = e.clientX - mapaTah.x, dy = e.clientY - mapaTah.y;
+    if (!mapaTah.posun && Math.hypot(dx, dy) > 5) { mapaTah.posun = true; $('mapaPlocha').classList.add('tazeni'); tip.hidden = true; }
+    if (mapaTah.posun && mapaVB) {
+      const s = bodSvg(e).s, v = mapaTah.vb;
+      mapaVB = [Math.max(-20, Math.min(380 - v[2], v[0] - dx / s)), Math.max(-10, Math.min(190 - v[3], v[1] - dy / s)), v[2], v[3]];
+      $('mapaSvg').setAttribute('viewBox', mapaVB.join(' '));
+    }
+    return;
+  }
+  const c = e.target.closest?.('.bod');
+  if (!c) { tip.hidden = true; return; }
+  const k = $('mapaSvg')._mista[+c.dataset.i];
+  const r = $('mapaPlocha').getBoundingClientRect();
+  tip.innerHTML = `${vlajka(k.zeme)} <b>${esc(zobrazNazev(k))}</b><br><small>${esc(k.misto || '')}${k.misto ? ' · ' : ''}${mistniHodiny(k)} ${faze(k).ikona} · ${k.druh === 'sv' ? 'Street View' : 'živá kamera'}</small>`;
+  tip.hidden = false;
+  tip.style.left = Math.min(r.width - 250, e.clientX - r.left + 12) + 'px';
+  tip.style.top = (e.clientY - r.top + 14) + 'px';
+});
+$('mapaPlocha').addEventListener('pointerup', e => {
+  const t = mapaTah; mapaTah = null; $('mapaPlocha').classList.remove('tazeni');
+  if (!t || t.posun) return;
+  const c = t.cil.closest?.('.bod');
+  if (!c) return;
+  const k = $('mapaSvg')._mista[+c.dataset.i];
+  $('mapaDlg').close();
+  jdiNa(k);
+});
+$('mapaPlocha').addEventListener('pointerleave', () => { $('mapaTip').hidden = true; });
 
 /* ---------- seznam odkazů ---------- */
 let odkFiltr = 'vse';
@@ -1697,9 +3118,49 @@ $('odkZalozky').addEventListener('click', () => {
 for (const d of document.querySelectorAll('dialog.okno')) {
   d.addEventListener('click', e => { if (e.target === d || e.target.closest('[data-zavrit]')) d.close(); });
 }
-vchod.addEventListener('click', () => otevri(cil));
+/* Dveře jdou i „otlačit“: tah prstem nebo myší doleva je pootevírá, po puštění
+   za polovinou se otevřou, jinak se vrátí. Krátký dotyk zůstává obyčejným klepnutím. */
+let tah = null, poTahu = false;
+vchod.addEventListener('pointerdown', e => {
+  if (vchod.disabled || animuji || e.button > 0) return;
+  tah = { x: e.clientX, y: e.clientY, uhel: 0, aktivni: false, id: e.pointerId };
+});
+vchod.addEventListener('pointermove', e => {
+  if (!tah || e.pointerId !== tah.id) return;
+  const dx = e.clientX - tah.x, dy = e.clientY - tah.y;
+  if (!tah.aktivni) {
+    if (Math.abs(dx) < 10 || Math.abs(dx) < Math.abs(dy)) return;
+    tah.aktivni = true;
+    try { vchod.setPointerCapture(e.pointerId); } catch { /* syntetická událost */ }
+  }
+  const kr = vchod.querySelector('.kridlo'), sirka = vchod.offsetWidth;
+  const podil = Math.max(0, Math.min(1, -dx / (sirka * 0.9)));
+  tah.uhel = podil;
+  kr.style.transition = 'none';
+  kr.style.transform = styl === 's-shoji' ? `translateX(${-podil * 70}%)` : `rotateY(${podil * 70}deg)`;
+  const z = vchod.querySelector('.zare'); if (z) z.style.opacity = podil * 0.8;
+});
+function konecTahu() {
+  if (!tah) return;
+  const t = tah; tah = null;
+  if (!t.aktivni) return;
+  poTahu = true; setTimeout(() => { poTahu = false; }, 50);
+  const kr = vchod.querySelector('.kridlo'), z = vchod.querySelector('.zare');
+  if (t.uhel > 0.42 && cil) {
+    otevri(cil);
+    requestAnimationFrame(() => { kr.style.transition = ''; kr.style.transform = ''; if (z) z.style.opacity = ''; });
+  } else {
+    kr.style.transition = 'transform .45s cubic-bezier(.3,1.4,.5,1)';
+    kr.style.transform = '';
+    if (z) z.style.opacity = '';
+    setTimeout(() => { kr.style.transition = ''; }, 460);
+  }
+}
+vchod.addEventListener('pointerup', konecTahu);
+vchod.addEventListener('pointercancel', konecTahu);
+vchod.addEventListener('click', () => { if (!poTahu) otevri(cil); });
 $('tlZpet').addEventListener('click', zavri);
-$('tlJinam').addEventListener('click', () => jinam());
+$('tlJinam').addEventListener('click', () => { if (okno) { okno.zbyva = okno.interval; oknoDalsi(); } else jinam(); });
 $('tlUlozit').addEventListener('click', prepniUlozeni);
 $('tlSdilet').addEventListener('click', () => otevriSdileni());
 $('tlOblibene').addEventListener('click', otevriOblibene);
@@ -1711,6 +3172,7 @@ $('karta').addEventListener('click', e => {
   const b = e.target.closest('button[data-akce]');
   if (!b) return;
   if (b.dataset.akce === 'skryt') medailonek(false);
+  else if (b.dataset.akce === 'nahlasit') nahlasitMisto(aktualni);
   else if (aktualni?.druh === 'sv') spustSV(aktualni, b.dataset.akce === 'nahradni');
 });
 function celaObrazovka() {
@@ -1725,8 +3187,15 @@ document.addEventListener('keydown', e => {
   if (e.target.closest('input, textarea, select')) return;
   if (vyhled.hidden) return;
   const k = e.key.toLowerCase();
+  if (hra) {
+    if (k === 'enter') { e.preventDefault(); if (!hra.odhaleno) tipni(); else $('hraDal')?.click(); }
+    else if (k === 'escape' && !document.fullscreenElement) { e.preventDefault(); zavri(); }
+    else if (k === 'm' && aktualni?.druh === 'kamera') prepniZvuk();
+    return;
+  }
   if (k === 'escape' && !document.fullscreenElement) { e.preventDefault(); zavri(); }
-  else if (k === 'n') jinam();
+  else if (k === 'n') { if (okno) { okno.zbyva = okno.interval; oknoDalsi(); } else jinam(); }
+  else if (k === ' ' && okno) { e.preventDefault(); pauzaOkna(); }
   else if (k === 'i') medailonek();
   else if (k === 's') prepniUlozeni();
   else if (k === 'm' && aktualni?.druh === 'kamera') prepniZvuk();
@@ -1734,10 +3203,14 @@ document.addEventListener('keydown', e => {
 });
 
 /* pro testy */
-window.DVERE = { KAMERY, MISTA, vyskaSlunce, faze, vyber, kandidati, nastaveni, rozbite, otevri, zavri, jinam, jdiNa, denik,
+window.DVERE = { KAMERY, MISTA, startHry, tipni, hra: () => hra, bodyZa, pas, statistikaPasu, vykresliPas, spustOkno, stopOkno, okno: () => okno, otevriMapu, mistaNaMape, nahlasene, stavMist, noveOd, jeNove, vyskaSlunce, faze, vyber, kandidati, nastaveni, rozbite, otevri, zavri, jinam, jdiNa, denik,
+  podoba: st => { styl = st; vchod.className = 'vchod ' + st; oblecDvere(); ukazCil(); }, otevriDvere, zavriDvere,
+  pocasi, pocasiHned, popisPocasi,
+  slunceDne,
   rozeberOdkaz, kontinent, mapka, mistoZAdresy, odkazNaDvere, parametryMista, prehravac: () => prehravac, oblibene: () => oblibene, stav: () => ({ cil, aktualni, styl, bezi, animuji }) };
 
 medailonek(nastaveni.medailonek);
+oblecChodbu();
 pouzijKvalitu();
 ukazZvuk();
 vykresliRezim();
@@ -1750,10 +3223,12 @@ const zOdkazu = mistoZAdresy();
 if (zOdkazu) {
   if (zOdkazu.druh !== druhRezimu()) { prepniRezim(zOdkazu.druh === 'sv' ? 'sv' : 'kamery'); }
   cil = zOdkazu; ukazCil();
-  $('vyzva').textContent = 'Otevírám sdílené místo: ' + zobrazNazev(zOdkazu);
+  vyzvaPevna = { cil: zOdkazu, text: 'Otevírám sdílené místo: ' + zobrazNazev(zOdkazu) };
+  $('vyzva').textContent = vyzvaPevna.text;
   setTimeout(() => otevri(zOdkazu), 600);
 } else if (zOdkazu === false) {
-  $('vyzva').textContent = 'Sdílené místo už v nabídce není – zkus jiné dveře.';
+  vyzvaPevna = { cil, text: 'Sdílené místo už v nabídce není – zkus jiné dveře.' };
+  $('vyzva').textContent = vyzvaPevna.text;
   zapisAdresu(null);
 }
 })();
