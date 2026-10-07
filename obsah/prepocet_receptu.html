@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🔁 Přepočet receptu</title>
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../podpis.js" defer></script>
+<script src="../dialog.js"></script>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:100vh;padding:20px}
+@media(max-width:420px){body{padding:12px}}
+.container{max-width:920px;margin:0 auto}
+h1{font-size:1.6rem;margin-bottom:6px;font-weight:600;text-align:center}
+.podtitul{text-align:center;color:var(--text-faint);font-size:.88rem;margin-bottom:18px}
+.card{background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;padding:20px;margin-bottom:18px}
+@media(max-width:420px){.card{padding:14px}}
+h2{font-size:1.05rem;color:var(--accent);margin-bottom:14px}
+label{display:block;font-size:.8rem;color:var(--text-faint);margin-bottom:5px}
+input,select,textarea{width:100%;background:var(--bg-input);border:1px solid var(--border-strong);border-radius:4px;color:var(--text);padding:8px 9px;font:inherit;min-width:0}
+textarea{min-height:220px;resize:vertical;line-height:1.5;font-size:.92rem}
+.btn{background:var(--bg-control);border:1px solid var(--border-strong);color:var(--text);padding:7px 11px;border-radius:6px;cursor:pointer;font:inherit;font-size:.86rem}
+.btn:hover{border-color:var(--accent)}
+.btn.primarni{background:var(--accent);border-color:var(--accent);color:#fff}
+.radek{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:10px}
+.radek label{margin:0}
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.tabs button{background:var(--bg-control);border:1px solid var(--border-strong);color:var(--text);padding:8px 12px;border-radius:6px;cursor:pointer;font:inherit;font-size:.88rem}
+.tabs button.active{background:var(--accent);border-color:var(--accent);color:#fff}
+.panel{display:none}.panel.active{display:block}
+.grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}
+.grid2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+@media(max-width:640px){.grid{grid-template-columns:1fr 1fr}.grid2{grid-template-columns:1fr}}
+.forma{background:var(--bg-panel);border:1px solid var(--border);border-radius:6px;padding:12px}
+.forma h3{font-size:.88rem;color:var(--text-muted);margin-bottom:8px;font-weight:600}
+.forma .grid{grid-template-columns:repeat(3,1fr);gap:8px}
+.faktor{display:flex;gap:10px 22px;flex-wrap:wrap;align-items:baseline;margin-top:14px;padding:12px 14px;background:var(--accent-soft);border-left:3px solid var(--accent);border-radius:4px}
+.faktor b{font-size:1.6rem;font-variant-numeric:tabular-nums}
+.faktor span{color:var(--text-muted);font-size:.88rem}
+table{width:100%;border-collapse:collapse;font-size:.9rem}
+td,th{padding:7px 6px;border-bottom:1px solid var(--border);text-align:left;vertical-align:top}
+th{color:var(--text-faint);font-weight:500;font-size:.78rem}
+td.q{text-align:right;white-space:nowrap;font-variant-numeric:tabular-nums;font-weight:700;width:1%}
+td.u{white-space:nowrap;width:1%}
+td.p{color:var(--text-faint);font-size:.8rem}
+tr.nadpis td{font-weight:700;color:var(--accent);padding-top:14px}
+tr.text td{color:var(--text-muted);font-style:italic}
+tr.neurcite td.q{color:var(--text-faint);font-weight:400}
+.puv{display:block;font-size:.74rem;color:var(--text-faint);font-weight:400}
+.note{font-size:.8rem;color:var(--text-faint);line-height:1.55;margin-top:12px}
+.note b{color:var(--text-muted)}
+.mini{font-size:.78rem;color:var(--text-faint)}
+@media(max-width:520px){td.p{display:none}th.p{display:none}}
+
+:root:not([data-theme="light"]){--text-faint:#a3a3a3}
+:root:not([data-theme="light"]) .tabs button.active,:root:not([data-theme="light"]) .btn.primarni{color:#111}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>🔁 Přepočet receptu</h1>
+  <p class="podtitul">Vlož recept jako text – množství se rozpoznají a přepočítají na jiný počet porcí, jinou formu nebo jiné jednotky</p>
+
+  <div class="card">
+    <h2>Recept</h2>
+    <label for="vstup">Každá surovina na vlastním řádku, např. „200 g hladké mouky“, „1 ½ hrnku mléka“, „špetka soli“, „vejce 3 ks“</label>
+    <textarea id="vstup" spellcheck="false"></textarea>
+    <div class="radek">
+      <button class="btn" id="vzor">📋 Vložit vzorový recept</button>
+      <button class="btn" id="vycistit">🗑 Vyčistit</button>
+      <span class="mini" id="rozpoznano"></span>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Přepočítat podle</h2>
+    <div class="tabs" id="rezimy" role="tablist">
+      <button data-r="porce" role="tab">🍽️ Porcí</button>
+      <button data-r="forma" role="tab">🎂 Formy</button>
+      <button data-r="nasobek" role="tab">✖️ Násobku</button>
+      <button data-r="surovina" role="tab">🥚 Suroviny, které mám</button>
+    </div>
+    <div class="panel" data-p="porce">
+      <div class="grid">
+        <div><label for="porceZ">Recept je pro (porcí)</label><input type="number" id="porceZ" min="0.5" step="0.5"></div>
+        <div><label for="porceNa">Chci porcí</label><input type="number" id="porceNa" min="0.5" step="0.5"></div>
+      </div>
+    </div>
+    <div class="panel" data-p="forma">
+      <div class="grid2">
+        <div class="forma"><h3>Forma v receptu</h3><div id="forma1"></div></div>
+        <div class="forma"><h3>Moje forma</h3><div id="forma2"></div></div>
+      </div>
+      <p class="note">Výšku vyplň, jen když chceš jinak vysoký korpus – jinak se počítá s poměrem ploch dna (stejná výška těsta). Plech 40 × 30 cm odpovídá zhruba kulaté formě ⌀ 39 cm, dortová forma ⌀ 26 cm má plochu jako hranatá 23 × 23 cm.</p>
+    </div>
+    <div class="panel" data-p="nasobek">
+      <div class="radek" style="margin-top:0">
+        <label for="nasobek">Násobek</label><input type="text" inputmode="decimal" id="nasobek" style="width:90px">
+        <button class="btn" data-n="0.5">½ ×</button><button class="btn" data-n="1.5">1,5 ×</button><button class="btn" data-n="2">2 ×</button><button class="btn" data-n="3">3 ×</button>
+      </div>
+    </div>
+    <div class="panel" data-p="surovina">
+      <div class="grid">
+        <div style="grid-column:span 2"><label for="sRadek">Surovina</label><select id="sRadek"></select></div>
+        <div><label for="sMam">Mám (ve stejné jednotce)</label><input type="text" inputmode="decimal" id="sMam"></div>
+      </div>
+    </div>
+    <div class="faktor" id="faktor"></div>
+  </div>
+
+  <div class="card">
+    <h2>Přepočtený recept</h2>
+    <div class="radek" style="margin-top:0;margin-bottom:12px">
+      <label for="jednotky">Jednotky</label>
+      <select id="jednotky" style="width:auto">
+        <option value="puvodni">ponechat původní</option>
+        <option value="metricke">metrické (oz, lb, cup → g, ml)</option>
+        <option value="gramy">vše na gramy, kde to jde</option>
+      </select>
+      <label style="display:flex;gap:6px;align-items:center;font-size:.85rem;color:var(--text-muted)"><input type="checkbox" id="cupUS" style="width:auto"> „hrnek“ = americký cup (236,6 ml)</label>
+      <span style="flex:1"></span>
+      <button class="btn primarni" id="kopirovat">📋 Kopírovat</button>
+    </div>
+    <div style="overflow-x:auto"><table>
+      <thead><tr><th style="text-align:right">Množství</th><th>Jedn.</th><th>Surovina</th><th class="p">Poznámka</th></tr></thead>
+      <tbody id="vystup"></tbody>
+    </table></div>
+    <p class="note"><b>Jak se zaokrouhluje:</b> gramy a mililitry podle velikosti (do 10 g na půlgramy, do 100 na celé, nad 100 na pětky), lžíce a hrnky na čtvrtiny a třetiny, vejce na celé kusy s radou, kolik rozšlehaného vejce přidat (vejce M ≈ 50 g bez skořápky, žloutek 18 g, bílek 30 g), stroužky na celé. Převod objemu na hmotnost podle hustoty suroviny (mouka 0,56 g/ml, cukr 0,84, máslo 0,96…) je orientační – podrobnější tabulku má <a href="kuchynske_miry.html" style="color:var(--accent)">🥄 Kuchyňské míry</a>.
+      Hrnek = 250 ml, lžíce = 15 ml, lžička = 5 ml, kávová lžička = 2,5 ml, oz = 28,35 g, lb = 453,6 g, fl oz = 29,6 ml.<br>
+      <b>Při jiné velikosti formy</b> uprav i pečení: menší a vyšší korpus potřebuje nižší teplotu (o 10 °C) a delší čas, velký plech se peče kratší dobu. Koření a sůl při velkém násobení přidávej opatrněji a ochutnávej.</p>
+  </div>
+</div>
+
+<script>
+/* ===== Parser a přepočty (bez DOM) – vystaveno jako window.PREPOCET pro testy ===== */
+const PREPOCET = (function(){
+  const ZLOMKY = { '½': 1/2, '⅓': 1/3, '⅔': 2/3, '¼': 1/4, '¾': 3/4, '⅕': 1/5, '⅖': 2/5, '⅗': 3/5, '⅘': 4/5, '⅙': 1/6, '⅚': 5/6, '⅛': 1/8, '⅜': 3/8, '⅝': 5/8, '⅞': 7/8 };
+  const ZL = Object.keys(ZLOMKY).join('');
+
+  // typ: m = hmotnost (z = gramů), v = objem (z = ml), k = kusová (g = typická hmotnost, pokud je obecná)
+  // tvary: [1, 2–4, 5+, desetinné/zlomek]
+  const JEDNOTKY = {
+    mg:   { typ: 'm', z: 0.001, al: ['mg'] },
+    g:    { typ: 'm', z: 1, al: ['g', 'gr', 'gram', 'gramy', 'gramů', 'gramu', 'grams'] },
+    dkg:  { typ: 'm', z: 10, al: ['dkg', 'dag', 'deka'] },
+    kg:   { typ: 'm', z: 1000, al: ['kg', 'kila', 'kilo', 'kil', 'kilogram', 'kilogramy', 'kilogramů', 'kilogramu'] },
+    oz:   { typ: 'm', z: 28.3495, al: ['oz', 'ounce', 'ounces', 'unce'] },
+    lb:   { typ: 'm', z: 453.592, al: ['lb', 'lbs', 'pound', 'pounds', 'libra', 'libry', 'liber'] },
+    ml:   { typ: 'v', z: 1, al: ['ml', 'mililitr', 'mililitry', 'mililitrů', 'mililitru'] },
+    cl:   { typ: 'v', z: 10, al: ['cl'] },
+    dl:   { typ: 'v', z: 100, al: ['dl', 'decilitr', 'decilitry', 'decilitrů', 'decilitru'] },
+    l:    { typ: 'v', z: 1000, al: ['l', 'litr', 'litry', 'litrů', 'litru', 'liter', 'liters', 'litre', 'litres'] },
+    floz: { typ: 'v', z: 29.5735, al: ['fl oz', 'fl. oz', 'fl.oz', 'floz', 'fluid ounce', 'fluid ounces'], n: 'fl oz' },
+    hrnek:{ typ: 'v', z: 250, tvary: ['hrnek', 'hrnky', 'hrnků', 'hrnku'], al: ['hrnek', 'hrnky', 'hrnků', 'hrnku', 'hrnkem', 'hrneček', 'hrnečky', 'hrnečků', 'hrnečku', 'hrn.'] },
+    cup:  { typ: 'v', z: 236.588, tvary: ['cup', 'cups', 'cups', 'cupu'], al: ['cup', 'cups'] },
+    lzice:{ typ: 'v', z: 15, tvary: ['lžíce', 'lžíce', 'lžic', 'lžíce'], al: ['lžíce', 'lžíci', 'lžic', 'lžícemi', 'polévková lžíce', 'polévkové lžíce', 'polévkových lžic', 'polévkovou lžíci', 'pol. lžíce', 'pl', 'pl.', 'lž', 'lž.', 'tbsp', 'tbsp.', 'tbs', 'tbl', 'tablespoon', 'tablespoons'] },
+    lzicka:{ typ: 'v', z: 5, tvary: ['lžička', 'lžičky', 'lžiček', 'lžičky'], al: ['lžička', 'lžičky', 'lžiček', 'lžičku', 'lžičkou', 'čajová lžička', 'čajové lžičky', 'čajových lžiček', 'čajovou lžičku', 'čl', 'čl.', 'lžič.', 'tsp', 'tsp.', 'teaspoon', 'teaspoons'] },
+    kavlz:{ typ: 'v', z: 2.5, tvary: ['kávová lžička', 'kávové lžičky', 'kávových lžiček', 'kávové lžičky'], al: ['kávová lžička', 'kávové lžičky', 'kávových lžiček', 'kávovou lžičku', 'kl', 'kl.'] },
+    spetka:{ typ: 'k', g: 0.4, tvary: ['špetka', 'špetky', 'špetek', 'špetky'], al: ['špetka', 'špetky', 'špetek', 'špetku', 'štipka', 'štipky', 'štipku', 'pinch', 'pinches'] },
+    ks:   { typ: 'k', tvary: ['ks', 'ks', 'ks', 'ks'], al: ['ks', 'ks.', 'kus', 'kusy', 'kusů', 'kusu', 'pc', 'pcs', 'piece', 'pieces'] },
+    strouzek:{ typ: 'k', g: 5, tvary: ['stroužek', 'stroužky', 'stroužků', 'stroužku'], al: ['stroužek', 'stroužky', 'stroužků', 'stroužku', 'clove', 'cloves'] },
+    platek:{ typ: 'k', tvary: ['plátek', 'plátky', 'plátků', 'plátku'], al: ['plátek', 'plátky', 'plátků', 'plátku', 'slice', 'slices'] },
+    sacek:{ typ: 'k', tvary: ['sáček', 'sáčky', 'sáčků', 'sáčku'], al: ['sáček', 'sáčky', 'sáčků', 'sáčku', 'sáčkem', 'sáč.', 'sač.', 'sachet', 'sachets', 'packet', 'packets'] },
+    baleni:{ typ: 'k', tvary: ['balení', 'balení', 'balení', 'balení'], al: ['balení', 'balíček', 'balíčky', 'balíčku', 'bal.', 'pack', 'package'] },
+    kostka:{ typ: 'k', tvary: ['kostka', 'kostky', 'kostek', 'kostky'], al: ['kostka', 'kostky', 'kostek', 'kostku', 'cube', 'cubes'] },
+    hrst: { typ: 'k', tvary: ['hrst', 'hrsti', 'hrstí', 'hrsti'], al: ['hrst', 'hrsti', 'hrstí', 'hrstě', 'hrstka', 'hrstku', 'handful', 'handfuls'] },
+    svazek:{ typ: 'k', tvary: ['svazek', 'svazky', 'svazků', 'svazku'], al: ['svazek', 'svazky', 'svazků', 'svazku', 'svazeček', 'svazečky', 'svazečku', 'bunch'] },
+    snitka:{ typ: 'k', tvary: ['snítka', 'snítky', 'snítek', 'snítky'], al: ['snítka', 'snítky', 'snítek', 'snítku', 'větvička', 'větvičky', 'větviček', 'větvičku', 'sprig', 'sprigs'] },
+    list: { typ: 'k', tvary: ['list', 'listy', 'listů', 'listu'], al: ['list', 'listy', 'listů', 'lístek', 'lístky', 'lístků'] },
+    plechovka:{ typ: 'k', tvary: ['plechovka', 'plechovky', 'plechovek', 'plechovky'], al: ['plechovka', 'plechovky', 'plechovek', 'plechovku', 'konzerva', 'konzervy', 'konzerv', 'konzervu', 'can', 'cans', 'tin', 'tins'] },
+    kelimek:{ typ: 'k', tvary: ['kelímek', 'kelímky', 'kelímků', 'kelímku'], al: ['kelímek', 'kelímky', 'kelímků', 'kelímku'] },
+  };
+  // seznam aliasů od nejdelšího (aby „lžička“ vyhrála nad „l“)
+  const ALIASY = [];
+  for (const [k, j] of Object.entries(JEDNOTKY)) for (const a of j.al) ALIASY.push([a.toLowerCase(), k]);
+  ALIASY.sort((a, b) => b[0].length - a[0].length);
+
+  // hustoty (g/ml) pro převod objemu na hmotnost – první shoda vyhrává
+  const HUSTOTY = [
+    [/moučk|powdered|icing/, 0.52], [/třtin|brown sugar/, 0.85], [/vanilk.*cukr|vanilla sugar/, 0.84], [/cukr|sugar/, 0.84],
+    [/škrob|solamyl|maizen|starch/, 0.55], [/prášk[a-z]* do pečiva|pr\. do peč|kypřic|baking powder/, 0.8], [/jedlá soda|baking soda|bicarbonate/, 1.1],
+    [/celozrn|whole ?wheat/, 0.52], [/žitn|rye/, 0.48], [/špald|spelt/, 0.46], [/hrub[áé] mouk/, 0.64], [/polohrub/, 0.6], [/mouk|flour/, 0.56],
+    [/kaka[oa]|cocoa/, 0.42], [/rozpušt.*másl|melted butter/, 0.91], [/másl|butter|ghee/, 0.96], [/sádl|lard/, 0.92], [/olej|oil/, 0.92],
+    [/zakysan|sour cream/, 1.02], [/smetan|cream/, 1.0], [/jogurt|yogh?urt/, 1.05], [/tvaroh|quark|ricotta/, 1.0], [/mlék|milk|podmásl|kefír|buttermilk/, 1.03],
+    [/(^|[\s,(])med([\s,.)]|u|em|$)|honey/, 1.42], [/sirup|syrup/, 1.32], [/(^|[\s,(])(sůl|soli|sůlí)|salt/, 1.2],
+    [/vločk|oats/, 0.38], [/rýž|rice/, 0.8], [/krupic|semolina|polent/, 0.66], [/strouhank|breadcrumb/, 0.47],
+    [/mandl|almond/, 0.43], [/ořech|nuts|walnut|pecan|hazelnut/, 0.48], [/mák|poppy/, 0.5], [/kokos|coconut/, 0.38], [/rozink|raisin/, 0.63],
+    [/čokolád|chocolate/, 0.72], [/sýr|cheese|parmazán/, 0.45], [/droždí|yeast/, 0.6], [/ocet|octa|vinegar/, 1.01], [/víno|vína|wine/, 0.99],
+    [/vod[ay]|vodou|water|vývar|bujon|broth|stock/, 1.0], [/džus|šťáv|juice/, 1.04],
+  ];
+  // typické hmotnosti kusových balení podle suroviny
+  const KUSOVE = [
+    [/prášk[a-z]* do pečiva|pr\. do peč|kypřic|baking powder/, 'sacek', 12], [/vanilk.*cukr|vanilin|vanilla sugar/, 'sacek', 20],
+    [/sušen[a-zé]* droždí|droždí sušen|instant/, 'sacek', 7], [/droždí|yeast/, 'kostka', 42], [/droždí/, 'sacek', 7],
+    [/másl|butter/, 'kostka', 250], [/želatin|gelatin/, 'sacek', 20], [/puding/, 'sacek', 37], [/smetan/, 'kelimek', 200], [/jogurt/, 'kelimek', 150], [/tvaroh/, 'baleni', 250],
+  ];
+  const VEJCE = /(^|[\s(,])(vejce|vajec|vajíč[a-zěščřžýáíéůú]*|vejcí|egg|eggs)([\s,.)]|$)|(^|[\s(,])(žloutk|žloutek|yolk)|(^|[\s(,])(bílk|bílek|egg white)/i;
+  const NEURCITE = /(dle|podle|na) chuti|chuti\b|trochu|trošk|na posypání|na pomaštění|na vymazání|na vytření|na smažení|na ozdobu|na zdobení|na podlití|podle potřeby|dle potřeby|to taste|as needed|for garnish|několik|pár (kapek|lístků|snítek)|kapk/i;
+
+  /* ---- čísla ---- */
+  // přečte číslo na začátku řetězce: „1“, „1,5“, „1/2“, „1 1/2“, „1½“, „½“ → { h, delka } | null
+  function ctiCislo(s) {
+    let m = s.match(/^(\d{1,3}(?:[  ]\d{3})+)(?=\s*[^\d\s\/,.])/);         // 1 000 ml
+    if (m) return { h: +m[1].replace(/[  ]/g, ''), delka: m[0].length };
+    m = s.match(new RegExp('^[' + ZL + ']'));
+    if (m) return { h: ZLOMKY[m[0]], delka: 1 };
+    m = s.match(/^(\d+(?:[.,]\d+)?)/);
+    if (!m) return null;
+    const cele = m[1], h = +cele.replace(',', '.'), zbytek = s.slice(m[0].length), celeCislo = /^\d+$/.test(cele);
+    if (celeCislo) {
+      let n = zbytek.match(new RegExp('^\\s?([' + ZL + '])'));
+      if (n) return { h: h + ZLOMKY[n[1]], delka: m[0].length + n[0].length };
+      n = zbytek.match(/^\s*[\/⁄]\s*(\d+)/);
+      if (n && +n[1] > 0) return { h: h / +n[1], delka: m[0].length + n[0].length };
+      n = zbytek.match(/^(?:\s+|-)(\d+)\s*[\/⁄]\s*(\d+)/);
+      if (n && +n[2] > 0 && +n[1] < +n[2]) return { h: h + n[1] / n[2], delka: m[0].length + n[0].length };
+    }
+    return { h, delka: m[0].length };
+  }
+  // množství včetně rozsahu: „2–3“, „1/2 až 1“ → { q, q2, delka, pribl }
+  function ctiMnozstvi(s) {
+    let pribl = false, posun = 0;
+    const p = s.match(/^(?:cca\.?|asi|přibližně|približne|zhruba|about|approx\.?|~|≈)\s*/i);
+    if (p) { pribl = true; posun = p[0].length; s = s.slice(posun); }
+    const a = ctiCislo(s);
+    if (!a) return null;
+    let delka = a.delka, q2 = null;
+    const r = s.slice(a.delka).match(/^\s*(?:-|–|—|až|to|or|nebo)\s*/);
+    if (r) {
+      const b = ctiCislo(s.slice(a.delka + r[0].length));
+      if (b && b.h > a.h) { q2 = b.h; delka = a.delka + r[0].length + b.delka; }
+    }
+    return { q: a.h, q2, delka: delka + posun, pribl };
+  }
+  // jednotka na začátku řetězce (musí končit hranicí slova) → { j, delka } | null
+  function ctiJednotku(s) {
+    const mal = s.toLowerCase();
+    for (const [a, k] of ALIASY) {
+      if (!mal.startsWith(a)) continue;
+      const dalsi = mal.charAt(a.length);
+      if (dalsi === '' || /[\s,;:()\/]/.test(dalsi)) return { j: k, delka: a.length };
+      if (dalsi === '.') return { j: k, delka: a.length + 1 };
+      if (a.endsWith('.')) return { j: k, delka: a.length };
+    }
+    return null;
+  }
+
+  /* ---- řádek ---- */
+  function parsujRadek(radek) {
+    const puvodni = radek;
+    let s = radek.replace(/\t/g, ' ').trim();
+    if (!s) return { typ: 'prazdny', puvodni };
+    s = s.replace(/^(?:[-–—•*·▪◦●○✓✔]|\d+[.)]\s+(?=[\d½⅓⅔¼¾⅛]))\s*/, '').trim();
+    if (/:$/.test(s) && s.length < 50) return { typ: 'nadpis', puvodni, text: s };
+    // 1) množství na začátku
+    let mn = ctiMnozstvi(s);
+    if (mn) {
+      let zbytek = s.slice(mn.delka).replace(/^\s*[x×]\s+/i, ' ');
+      const zbTrim = zbytek.replace(/^\s+/, '');
+      const ju = ctiJednotku(zbTrim);
+      let j = null, jText = '';
+      if (ju) { j = ju.j; jText = zbTrim.slice(0, ju.delka); zbytek = zbTrim.slice(ju.delka); }
+      else zbytek = zbTrim;
+      const surovina = zbytek.replace(/^\s*(?:of\s+)/i, '').trim();
+      // dlouhá věta začínající číslem („2 hodiny nech kynout…“) je postup, ne surovina
+      if (!j && /^(minut|min\.|hodin|hod\.|sekund|°|stup|dní|dny|den)/i.test(surovina)) return { typ: 'text', puvodni, text: s };
+      return { typ: 'polozka', puvodni, q: mn.q, q2: mn.q2, pribl: mn.pribl, j, jText, surovina, poradi: 'pred' };
+    }
+    // 2) jednotka bez čísla („špetka soli“, „lžíce oleje“ = 1)
+    const ju = ctiJednotku(s);
+    const Jb = ju && JEDNOTKY[ju.j];
+    if (ju && Jb.tvary && Jb.tvary[0] === s.slice(0, ju.delka).toLowerCase() && /\s/.test(s.charAt(ju.delka) || ' ')) {
+      const surovina = s.slice(ju.delka).trim();
+      if (surovina && ju.delka > 1) return { typ: 'polozka', puvodni, q: 1, q2: null, pribl: false, j: ju.j, jText: s.slice(0, ju.delka), surovina, poradi: 'pred', bezCisla: true };
+    }
+    // 3) množství na konci („mouka hladká 200 g“, „Vejce: 3 ks“, „cukr – 1/2 hrnku“)
+    const kandidati = [...s.matchAll(new RegExp('(^|[\\s:–—-])(?=(?:cca\\.?\\s*|~\\s*)?[\\d' + ZL + '])', 'g'))].map(m => m.index + m[0].length).reverse();
+    for (const i of kandidati) {
+      if (i === 0) continue;
+      const mn2 = ctiMnozstvi(s.slice(i));
+      if (!mn2) continue;
+      let zb = s.slice(i + mn2.delka).trim(), j = null, jText = '';
+      if (zb) {
+        const ju2 = ctiJednotku(zb);
+        if (!ju2) continue;
+        j = ju2.j; jText = zb.slice(0, ju2.delka); zb = zb.slice(ju2.delka).trim();
+      }
+      if (zb.replace(/[.,;)]/g, '').trim()) continue;
+      const surovina = s.slice(0, i).replace(/[\s:–—-]+$/, '').trim();
+      if (!surovina || surovina.split(/\s+/).length > 8) continue;
+      return { typ: 'polozka', puvodni, q: mn2.q, q2: mn2.q2, pribl: mn2.pribl, j, jText, surovina, poradi: 'za' };
+    }
+    // 4) bez množství
+    const slov = s.split(/\s+/).length;
+    if (NEURCITE.test(s) || (slov <= 6 && !/[.!?]$/.test(s))) return { typ: 'neurcite', puvodni, text: s };
+    return { typ: 'text', puvodni, text: s };
+  }
+  const parsuj = text => String(text).split(/\r?\n/).map(parsujRadek);
+
+  /* ---- formátování ---- */
+  const ZLOMKY_VYSTUP = [[0, ''], [1/4, '¼'], [1/3, '⅓'], [1/2, '½'], [2/3, '⅔'], [3/4, '¾'], [1, '']];
+  function zlomek(x, jenPulky) {
+    let cele = Math.floor(x + 1e-9), zb = x - cele, nej = null;
+    for (const [h, z] of ZLOMKY_VYSTUP) {
+      if (jenPulky && z && h !== 1/2) continue;
+      if (!nej || Math.abs(zb - h) < Math.abs(zb - nej[0])) nej = [h, z];
+    }
+    if (nej[0] === 1) { cele++; nej = [0, '']; }
+    const txt = cele === 0 && !nej[1] ? '0' : (cele ? String(cele) : '') + (cele && nej[1] ? ' ' : '') + nej[1];
+    return { txt, h: cele + nej[0], presne: Math.abs(cele + nej[0] - x) < 0.04 * Math.max(1, x) };
+  }
+  // zaokrouhlení g/ml podle velikosti
+  function zaokrouhli(x) {
+    if (x < 1) return Math.round(x * 10) / 10;
+    if (x < 10) return Math.round(x * 2) / 2;
+    if (x < 100) return Math.round(x);
+    if (x < 1000) return Math.round(x / 5) * 5;
+    return Math.round(x / 10) * 10;
+  }
+  const cs = (x, d = 2) => x.toLocaleString('cs-CZ', { maximumFractionDigits: d });
+  function fmtCislo(x, j) {
+    const J = j && JEDNOTKY[j];
+    if (!J || J.typ === 'k' || ['hrnek', 'cup', 'lzice', 'lzicka', 'kavlz'].includes(j)) {
+      if (x >= 10) return { txt: cs(Math.round(x * 2) / 2, 1), h: Math.round(x * 2) / 2, presne: true };
+      return zlomek(x, j === 'spetka');
+    }
+    if (['g', 'ml', 'mg'].includes(j)) { const h = zaokrouhli(x); return { txt: cs(h, 1), h, presne: true }; }
+    const d = x < 1 ? 2 : x < 10 ? 2 : 1;                       // kg, l, dl, oz, lb …
+    const h = +x.toFixed(x < 10 ? 2 : 1);
+    return { txt: cs(h, d), h, presne: true };
+  }
+  function tvarJednotky(j, h, txt) {
+    if (!j) return '';
+    const J = JEDNOTKY[j];
+    if (!J.tvary) return J.n || j;
+    if (/[¼⅓½⅔¾,]/.test(txt) || h % 1) return J.tvary[3];
+    if (h === 1) return J.tvary[0];
+    if (h >= 2 && h <= 4) return J.tvary[1];
+    return J.tvary[2];
+  }
+  const hustota = surovina => { const s = surovina.toLowerCase(); for (const [re, h] of HUSTOTY) if (re.test(s)) return h; return null; };
+  function kusovaHmotnost(j, surovina) {
+    const s = surovina.toLowerCase();
+    for (const [re, jj, g] of KUSOVE) if (jj === j && re.test(s)) return g;
+    return JEDNOTKY[j] && JEDNOTKY[j].g || null;
+  }
+
+  /* ---- přepočet jedné položky ----
+     volby: { faktor, rezim: 'puvodni'|'metricke'|'gramy', cupUS } → { qTxt, jTxt, surovina, pozn[] } */
+  // „vejce/vajec“, „vajíčko“, „žloutek“, „bílek“ ve správném tvaru k počtu
+  const TVARY_VEJCE = [[/^(vejce|vajec)$/i, ['vejce', 'vejce', 'vajec']], [/^(vajíčko|vajíčka|vajíček)$/i, ['vajíčko', 'vajíčka', 'vajíček']],
+    [/^(žloutek|žloutky|žloutků)$/i, ['žloutek', 'žloutky', 'žloutků']], [/^(bílek|bílky|bílků)$/i, ['bílek', 'bílky', 'bílků']]];
+  function sklonujVejce(text, n) {
+    const i = n === 1 ? 0 : n >= 2 && n <= 4 ? 1 : 2;
+    return text.split(/(\s+)/).map(slovo => {
+      for (const [re, tv] of TVARY_VEJCE) if (re.test(slovo)) { const t = tv[i]; return slovo[0] === slovo[0].toUpperCase() && slovo[0] !== slovo[0].toLowerCase() ? t[0].toUpperCase() + t.slice(1) : t; }
+      return slovo;
+    }).join('');
+  }
+  function prepoctiPolozku(p, volby) {
+    const f = volby.faktor, pozn = [];
+    let q = p.q * f, q2 = p.q2 != null ? p.q2 * f : null, j = p.j, surovina = p.surovina;
+    if (j === 'hrnek' && volby.cupUS) j = 'cup';
+    const vejce = VEJCE.test(' ' + p.surovina + ' ') && (!j || j === 'ks');
+    // převody jednotek
+    if (j && volby.rezim !== 'puvodni') {
+      const J = JEDNOTKY[j];
+      if (J.typ === 'm' && j !== 'g' && j !== 'kg' && j !== 'mg') { q *= J.z; if (q2 != null) q2 *= J.z; j = 'g'; }
+      else if (J.typ === 'v') {
+        const hu = volby.rezim === 'gramy' ? hustota(p.surovina) : null;
+        const malaLzice = ['lzice', 'lzicka', 'kavlz'].includes(j) && volby.rezim === 'metricke';
+        if (hu && !(j === 'kavlz' && q < 1)) { q *= J.z * hu; if (q2 != null) q2 *= J.z * hu; j = 'g'; pozn.push(`přepočteno hustotou ${cs(hu)} g/ml`); }
+        else if (!malaLzice && ['cup', 'floz', 'hrnek'].includes(j)) { q *= J.z; if (q2 != null) q2 *= J.z; j = 'ml'; }
+      }
+      if (j === 'g' && q >= 1000) { q /= 1000; if (q2 != null) q2 /= 1000; j = 'kg'; }
+      if (j === 'ml' && q >= 1000) { q /= 1000; if (q2 != null) q2 /= 1000; j = 'l'; }
+      if (j === 'g' && q < 1 && q2 == null && volby.rezim === 'gramy') pozn.push('méně než gram – špetka');
+    }
+    let qTxt, hodnota = q;
+    if (vejce) {
+      const typ = /žlout|yolk/i.test(p.surovina) ? ['žloutek', 18] : /bílk|bílek|white/i.test(p.surovina) ? ['bílek', 30] : ['vejce', 50];
+      const cele = Math.max(1, Math.round(q));
+      hodnota = cele;
+      qTxt = String(cele);
+      if (q2 != null) { const c2 = Math.max(cele, Math.round(q2)); qTxt += '–' + c2; }
+      else if (Math.abs(q - cele) >= 0.2) {
+        const dolu = Math.floor(q), zbytek = (q - dolu) * typ[1];
+        pozn.push(`přesně ${cs(q, 2)} – nebo ${dolu ? dolu + ' + ' : ''}${Math.round(zbytek)} g rozšlehaného (${typ[0]} ≈ ${typ[1]} g)`);
+      }
+      if (volby.rezim === 'gramy') pozn.push(`≈ ${Math.round(q * typ[1])} g bez skořápky`);
+      surovina = sklonujVejce(surovina, q2 != null ? Math.max(cele, Math.round(q2)) : cele);
+    } else {
+      if (j === 'strouzek') { const c = Math.max(1, Math.round(q)); qTxt = String(c); hodnota = c; }
+      else {
+        const a = fmtCislo(q, j); qTxt = (a.presne ? '' : '≈ ') + a.txt; hodnota = a.h;
+        if (!j && q < 0.5 && q > 0) { qTxt = '½'; hodnota = 0.5; pozn.push(`přesně ${cs(q, 2)} kusu`); }
+      }
+      if (q2 != null) qTxt += '–' + fmtCislo(q2, j).txt;
+    }
+    if (p.pribl) qTxt = 'cca ' + qTxt;
+    if (j && JEDNOTKY[j].typ === 'k' && volby.rezim === 'gramy') {
+      const g = kusovaHmotnost(j, p.surovina);
+      if (g) pozn.push(`≈ ${cs(zaokrouhli(q * g), 1)} g`);
+    }
+    if (j === 'spetka' && f >= 3) pozn.push('sůl a koření dochucuj postupně');
+    const jTxt = j ? tvarJednotky(j, q2 != null ? 5 : hodnota, qTxt) : '';
+    return { qTxt, jTxt, j, q, surovina, pozn };
+  }
+
+  function radekText(p, r) {
+    const kus = [r.qTxt, r.jTxt].filter(Boolean).join(' ');
+    return p.poradi === 'za' ? `${r.surovina} ${kus}` : `${kus} ${r.surovina}`.trim();
+  }
+
+  /* ---- formy ---- */
+  function plochaFormy(f) {
+    if (f.tvar === 'kruh') return Math.PI * f.a * f.a / 4;
+    if (f.tvar === 'ctverec') return f.a * f.a;
+    return f.a * f.b;
+  }
+  function faktorFormy(f1, f2) {
+    const p1 = plochaFormy(f1), p2 = plochaFormy(f2);
+    if (!(p1 > 0 && p2 > 0)) return { plocha: NaN, objem: NaN, faktor: NaN };
+    const plocha = p2 / p1;
+    const objem = f1.h > 0 && f2.h > 0 ? plocha * f2.h / f1.h : plocha;
+    return { p1, p2, plocha, objem, faktor: objem };
+  }
+
+  return { JEDNOTKY, ZLOMKY, ctiCislo, ctiMnozstvi, ctiJednotku, parsujRadek, parsuj, zlomek, zaokrouhli, fmtCislo, tvarJednotky, hustota, prepoctiPolozku, radekText, plochaFormy, faktorFormy, VEJCE };
+})();
+window.PREPOCET = PREPOCET;
+
+/* ===== Uživatelské rozhraní ===== */
+(function(){
+  const $ = id => document.getElementById(id);
+  const KLIC = 'webapp_prepocet_receptu_';
+  const cti = (k, d) => { try { const v = JSON.parse(localStorage.getItem(KLIC + k)); return v == null ? d : v; } catch (e) { return d; } };
+  const pis = (k, v) => { try { localStorage.setItem(KLIC + k, JSON.stringify(v)); } catch (e) {} };
+  const cislo = t => { const c = PREPOCET.ctiMnozstvi(String(t).trim()); return c ? c.q : NaN; };
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const cs = (x, d = 2) => x.toLocaleString('cs-CZ', { maximumFractionDigits: d });
+
+  const VZOR = `Bábovka (forma ⌀ 22 cm), 8 porcí
+
+Těsto:
+250 g hladké mouky
+1 ½ hrnku cukru
+4 vejce
+1 hrnek mléka
+1/2 hrnku oleje
+1 sáček prášku do pečiva
+1 sáček vanilkového cukru
+špetka soli
+2 lžíce kakaa
+nastrouhaná kůra z 1 citronu
+
+Poleva:
+100 g čokolády
+3 PL smetany
+máslo na vymazání formy`;
+
+  let stav = Object.assign({
+    text: VZOR, rezim: 'porce', porceZ: 8, porceNa: 12, nasobek: '2', sRadek: 0, sMam: '',
+    f1: { tvar: 'kruh', a: 22, b: 22, h: '' }, f2: { tvar: 'kruh', a: 26, b: 26, h: '' }, jednotky: 'puvodni', cupUS: false,
+  }, cti('stav', {}));
+  let polozky = [], faktor = 1;
+  const uloz = () => pis('stav', stav);
+
+  $('vstup').value = stav.text;
+  $('vstup').addEventListener('input', e => { stav.text = e.target.value; prepocti(); });
+  $('vzor').onclick = () => { stav.text = VZOR; $('vstup').value = VZOR; prepocti(); };
+  $('vycistit').onclick = async () => {
+    if (stav.text.trim() && !(await Dialog.potvrd('Smazat vložený recept?'))) return;
+    stav.text = ''; $('vstup').value = ''; prepocti(); $('vstup').focus();
+  };
+
+  /* --- režimy --- */
+  function kresliRezim() {
+    document.querySelectorAll('#rezimy button').forEach(b => { const a = b.dataset.r === stav.rezim; b.classList.toggle('active', a); b.setAttribute('aria-selected', a); });
+    document.querySelectorAll('.panel').forEach(p => p.classList.toggle('active', p.dataset.p === stav.rezim));
+  }
+  $('rezimy').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; stav.rezim = b.dataset.r; kresliRezim(); prepocti(); });
+  $('porceZ').value = stav.porceZ; $('porceNa').value = stav.porceNa;
+  $('porceZ').addEventListener('input', e => { stav.porceZ = +e.target.value; prepocti(); });
+  $('porceNa').addEventListener('input', e => { stav.porceNa = +e.target.value; prepocti(); });
+  $('nasobek').value = stav.nasobek;
+  $('nasobek').addEventListener('input', e => { stav.nasobek = e.target.value; prepocti(); });
+  document.querySelectorAll('[data-n]').forEach(b => b.onclick = () => { stav.nasobek = b.dataset.n.replace('.', ','); $('nasobek').value = stav.nasobek; prepocti(); });
+  $('sRadek').addEventListener('change', e => { stav.sRadek = +e.target.value; stav.sMam = ''; $('sMam').value = ''; prepocti(); });
+  $('sMam').addEventListener('input', e => { stav.sMam = e.target.value; prepocti(); });
+  $('jednotky').value = stav.jednotky; $('cupUS').checked = stav.cupUS;
+  $('jednotky').addEventListener('change', e => { stav.jednotky = e.target.value; prepocti(); });
+  $('cupUS').addEventListener('change', e => { stav.cupUS = e.target.checked; prepocti(); });
+
+  function formaPole(n) {
+    const f = stav['f' + n];
+    const rozm = f.tvar === 'kruh' ? `<div><label for="fa${n}">průměr ⌀ (cm)</label><input type="number" id="fa${n}" min="1" value="${f.a}"></div>`
+      : f.tvar === 'ctverec' ? `<div><label for="fa${n}">strana (cm)</label><input type="number" id="fa${n}" min="1" value="${f.a}"></div>`
+      : `<div><label for="fa${n}">délka a (cm)</label><input type="number" id="fa${n}" min="1" value="${f.a}"></div><div><label for="fb${n}">šířka b (cm)</label><input type="number" id="fb${n}" min="1" value="${f.b}"></div>`;
+    $('forma' + n).innerHTML = `<div class="grid"><div><label for="ft${n}">tvar</label><select id="ft${n}">
+      <option value="kruh"${f.tvar === 'kruh' ? ' selected' : ''}>kulatá</option><option value="ctverec"${f.tvar === 'ctverec' ? ' selected' : ''}>čtvercová</option><option value="obdelnik"${f.tvar === 'obdelnik' ? ' selected' : ''}>obdélník / plech</option></select></div>
+      ${rozm}<div><label for="fh${n}">výška těsta (cm)</label><input type="number" id="fh${n}" min="0" step="0.5" value="${f.h}" placeholder="stejná"></div></div>`;
+    $('ft' + n).onchange = e => { f.tvar = e.target.value; formaPole(n); prepocti(); };
+    $('fa' + n).oninput = e => { f.a = +e.target.value; prepocti(); };
+    if ($('fb' + n)) $('fb' + n).oninput = e => { f.b = +e.target.value; prepocti(); };
+    $('fh' + n).oninput = e => { f.h = e.target.value === '' ? '' : +e.target.value; prepocti(); };
+  }
+  formaPole(1); formaPole(2);
+
+  /* --- výpočet --- */
+  function spocitejFaktor() {
+    const r = stav.rezim;
+    if (r === 'porce') {
+      const f = stav.porceZ > 0 && stav.porceNa > 0 ? stav.porceNa / stav.porceZ : NaN;
+      return { f, txt: `${cs(stav.porceZ || 0, 1)} → ${cs(stav.porceNa || 0, 1)} porcí` };
+    }
+    if (r === 'forma') {
+      const ff = PREPOCET.faktorFormy(stav.f1, stav.f2);
+      if (!isFinite(ff.faktor)) return { f: NaN, txt: 'zadej rozměry obou forem' };
+      return { f: ff.faktor, txt: `dno ${Math.round(ff.p1)} cm² → ${Math.round(ff.p2)} cm² (plocha × ${cs(ff.plocha)})` + (ff.objem !== ff.plocha ? `, s výškou objem × ${cs(ff.objem)}` : '') };
+    }
+    if (r === 'nasobek') return { f: cislo(stav.nasobek), txt: 'vlastní násobek' };
+    // podle suroviny, kterou mám
+    const p = polozky[stav.sRadek];
+    if (!p || p.typ !== 'polozka') return { f: NaN, txt: 'vyber surovinu' };
+    const mam = cislo(stav.sMam);
+    if (!(mam > 0)) return { f: 1, txt: `zadej, kolik máš (recept: ${cs(p.q)} ${p.jText || 'ks'})` };
+    return { f: mam / p.q, txt: `mám ${cs(mam)} ${p.jText || 'ks'} místo ${cs(p.q)}` };
+  }
+
+  function prepocti() {
+    uloz();
+    polozky = PREPOCET.parsuj(stav.text);
+    // seznam surovin pro režim „mám“
+    const opts = polozky.map((p, i) => p.typ === 'polozka' ? `<option value="${i}"${i === stav.sRadek ? ' selected' : ''}>${esc(p.puvodni.trim())}</option>` : '').join('');
+    if ($('sRadek').innerHTML !== opts) $('sRadek').innerHTML = opts || '<option>– žádná surovina s množstvím –</option>';
+    if (!polozky[stav.sRadek] || polozky[stav.sRadek].typ !== 'polozka') { const i = polozky.findIndex(p => p.typ === 'polozka'); stav.sRadek = Math.max(0, i); $('sRadek').value = stav.sRadek; }
+    $('sMam').value = stav.sMam;
+    const fk = spocitejFaktor();
+    faktor = fk.f;
+    const pocet = polozky.filter(p => p.typ === 'polozka').length, neur = polozky.filter(p => p.typ === 'neurcite').length;
+    $('rozpoznano').textContent = `Rozpoznáno ${pocet} surovin s množstvím` + (neur ? `, ${neur} bez množství` : '') + '.';
+    $('faktor').innerHTML = isFinite(faktor) && faktor > 0
+      ? `<div><b>× ${cs(faktor, 3)}</b></div><div><span>${esc(fk.txt)}</span></div>`
+      : `<div><span>${esc(fk.txt || 'Zadej platné hodnoty')}</span></div>`;
+    const volby = { faktor: isFinite(faktor) && faktor > 0 ? faktor : 1, rezim: stav.jednotky, cupUS: stav.cupUS };
+    let h = '';
+    for (const p of polozky) {
+      if (p.typ === 'prazdny') continue;
+      if (p.typ === 'nadpis') { h += `<tr class="nadpis"><td colspan="4">${esc(p.text)}</td></tr>`; continue; }
+      if (p.typ === 'text') { h += `<tr class="text"><td colspan="4">${esc(p.text)}</td></tr>`; continue; }
+      if (p.typ === 'neurcite') { h += `<tr class="neurcite"><td class="q">–</td><td class="u"></td><td>${esc(p.text)}</td><td class="p">bez množství, nepřepočítává se</td></tr>`; continue; }
+      const r = PREPOCET.prepoctiPolozku(p, volby);
+      const puv = Math.abs(volby.faktor - 1) > 1e-9 || r.jTxt !== p.jText ? `<span class="puv">${esc(p.q2 != null ? cs(p.q) + '–' + cs(p.q2) : cs(p.q))} ${esc(p.jText)}</span>` : '';
+      h += `<tr><td class="q">${esc(r.qTxt)}${puv}</td><td class="u">${esc(r.jTxt)}</td><td>${esc(r.surovina)}</td><td class="p">${esc(r.pozn.join('; '))}</td></tr>`;
+    }
+    $('vystup').innerHTML = h || '<tr><td colspan="4" class="mini">Vlož recept výše.</td></tr>';
+  }
+
+  function textVystupu() {
+    const volby = { faktor: isFinite(faktor) && faktor > 0 ? faktor : 1, rezim: stav.jednotky, cupUS: stav.cupUS };
+    return polozky.map(p => {
+      if (p.typ !== 'polozka') return p.puvodni.trim();
+      const r = PREPOCET.prepoctiPolozku(p, volby);
+      return PREPOCET.radekText(p, r) + (r.pozn.length ? ' (' + r.pozn.join('; ') + ')' : '');
+    }).join('\n').replace(/\n{3,}/g, '\n\n');
+  }
+  $('kopirovat').onclick = async () => {
+    const t = textVystupu();
+    try { await navigator.clipboard.writeText(t); Dialog.info('Přepočtený recept je ve schránce.'); }
+    catch (e) {
+      const ta = document.createElement('textarea'); ta.value = t; document.body.appendChild(ta); ta.select();
+      try { document.execCommand('copy'); Dialog.info('Přepočtený recept je ve schránce.'); } catch (e2) { Dialog.chyba('Kopírování se nepovedlo.'); }
+      ta.remove();
+    }
+  };
+
+  kresliRezim(); prepocti();
+})();
+</script>
+</body>
+</html>

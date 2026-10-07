@@ -658,6 +658,21 @@ const KATALOG_SEKCE = [
           "káva",
           "energy drink"
         ]
+      },
+      {
+        "soubor": "obsah/alkohol_krev.html",
+        "nazev": "🍺 Alkohol v krvi",
+        "tagy": ["promile", "alkohol", "Widmark", "řízení", "pivo", "víno", "vystřízlivění"]
+      },
+      {
+        "soubor": "obsah/tehotenstvi.html",
+        "nazev": "🤰 Těhotenský kalendář",
+        "tagy": ["těhotenství", "termín porodu", "Naegele", "týden těhotenství", "trimestr", "screening", "porod"]
+      },
+      {
+        "soubor": "obsah/ockovani.html",
+        "nazev": "💉 Očkovací kalendář",
+        "tagy": ["očkování", "vakcíny", "hexavakcína", "MMR", "děti", "přeočkování", "tetanus", "klíšťová encefalitida", "HPV"]
       }
     ]
   },
@@ -717,6 +732,11 @@ const KATALOG_SEKCE = [
         "soubor": "obsah/meteo_units.html",
         "nazev": "🌡️ Převodník meteo jednotek",
         "tagy": ["převod jednotek", "teplota", "tlak", "rychlost větru", "srážky"]
+      },
+      {
+        "soubor": "obsah/bourky.html",
+        "nazev": "⚡ Bouřky a blesky živě",
+        "tagy": ["blesky", "bouřky", "radar", "počasí", "mapa", "živá data"]
       }
     ]
   },
@@ -905,6 +925,11 @@ const KATALOG_SEKCE = [
           "spolujezdci",
           "kilometrovné"
         ]
+      },
+      {
+        "soubor": "obsah/ziva_zeme.html",
+        "nazev": "🌋 Živá Země",
+        "tagy": ["zemětřesení", "požáry", "sopky", "ISS", "mapa", "živá data"]
       }
     ]
   },
@@ -949,6 +974,11 @@ const KATALOG_SEKCE = [
         "soubor": "obsah/sextant.html",
         "nazev": "🧭 Sextant – poloha podle hvězd",
         "tagy": ["astronavigace", "polárka", "zeměpisná šířka", "slunce v poledne"]
+      },
+      {
+        "soubor": "obsah/sky_events.html",
+        "nazev": "🔭 Astronomický kalendář úkazů",
+        "tagy": ["astronomie", "Měsíc", "zatmění", "meteory", "planety", "kalendář", "ics"]
       }
     ]
   },
@@ -1156,6 +1186,11 @@ const KATALOG_SEKCE = [
         "soubor": "obsah/colorblind_sim.html",
         "nazev": "🌈 Simulace barvosleposti",
         "tagy": ["barvoslepost", "přístupnost", "simulace", "daltonismus", "kontrast"]
+      },
+      {
+        "soubor": "obsah/spirograf.html",
+        "nazev": "✒️ Spirograf",
+        "tagy": ["spirograf", "hypotrochoida", "epitrochoida", "kreslení", "vzory", "mandala", "SVG"]
       }
     ]
   },
@@ -1600,6 +1635,27 @@ const KATALOG_SEKCE = [
     ]
   },
   {
+    "nazev": "⚡ Energie & elektro",
+    "skupina": "technika",
+    "polozky": [
+      {
+        "soubor": "obsah/fve_kalk.html",
+        "nazev": "☀️ Výroba fotovoltaiky",
+        "tagy": ["fotovoltaika", "FVE", "solár", "výroba elektřiny", "návratnost", "PVGIS", "energie"]
+      },
+      {
+        "soubor": "obsah/offgrid_baterie.html",
+        "nazev": "🔋 Ostrovní systém",
+        "tagy": ["off-grid", "baterie", "LiFePO4", "měnič", "solární panel", "MPPT", "chata", "průřez kabelu"]
+      },
+      {
+        "soubor": "obsah/logic_gates.html",
+        "nazev": "🔲 Simulátor logických hradel",
+        "tagy": ["logika", "hradla", "digitální obvody", "sčítačka", "klopný obvod", "pravdivostní tabulka", "elektronika"]
+      }
+    ]
+  },
+  {
     "nazev": "💻 Vývoj & nástroje",
     "skupina": "vyvoj",
     "polozky": [
@@ -1861,6 +1917,11 @@ const KATALOG_SEKCE = [
         "tagy": ["pacman", "bludiště", "retro", "arkáda"]
       },
       {
+        "soubor": "obsah/tank1990.html",
+        "nazev": "🪖 Tank 1990",
+        "tagy": ["tank a 1990", "battle city", "tanky", "nes", "famiclone", "retro", "arkáda", "dva hráči", "orel", "editor map"]
+      },
+      {
         "soubor": "obsah/breakout.html",
         "nazev": "🧱 Breakout",
         "tagy": ["arkanoid", "cihly", "pálka", "míček", "arkáda"]
@@ -1967,6 +2028,11 @@ const KATALOG_SEKCE = [
           "simulace života",
           "hra"
         ]
+      },
+      {
+        "soubor": "obsah/bomberman.html",
+        "nazev": "💣 Bomberman",
+        "tagy": ["hra", "arkáda", "retro", "boti", "2 hráči"]
       }
     ]
   },
@@ -2336,6 +2402,11 @@ const KATALOG_SEKCE = [
         "soubor": "obsah/interview_questions.html",
         "nazev": "🎙️ Generátor otázek k výslechu",
         "tagy": ["vyšetřování", "výslech", "svědek", "poškozený", "podezřelý", "pohovor"]
+      },
+      {
+        "soubor": "obsah/vazby_analyza.html",
+        "nazev": "🕸️ Analýza vazeb",
+        "tagy": ["vyšetřování", "graf vazeb", "link analysis", "centralita", "nejkratší cesta", "CSV"]
       }
     ]
   },
@@ -2357,6 +2428,27 @@ const KATALOG_SEKCE = [
         "soubor": "obsah/vin_decoder.html",
         "nazev": "🚗 Dekodér VIN",
         "tagy": ["vozidlo", "vin", "identifikační číslo", "wmi"]
+      },
+      {
+        "soubor": "obsah/sifry.html",
+        "nazev": "🔏 Šifry",
+        "tagy": ["šifra", "Caesar", "Vigenère", "Enigma", "Morseovka", "frekvenční analýza", "kryptografie"]
+      }
+    ]
+  },
+  {
+    "nazev": "🔬 Forenzní výpočty",
+    "skupina": "vysetrovani",
+    "polozky": [
+      {
+        "soubor": "obsah/brzdna_draha.html",
+        "nazev": "🚗 Rychlost z brzdné stopy",
+        "tagy": ["nehoda", "brzdná dráha", "rychlost", "součinitel tření", "dráha zastavení"]
+      },
+      {
+        "soubor": "obsah/doba_smrti.html",
+        "nazev": "🌡️ Odhad doby smrti",
+        "tagy": ["soudní lékařství", "Henssge", "nomogram", "posmrtné skvrny", "ztuhlost"]
       }
     ]
   },
@@ -2399,6 +2491,26 @@ const KATALOG_SEKCE = [
         "soubor": "obsah/fermentace.html",
         "nazev": "🫙 Fermentace a zavařování",
         "tagy": ["kvašení", "kysané zelí", "okurky", "solanka", "sterilace", "zavařování", "nálev", "kompot", "kimči", "ocet"]
+      },
+      {
+        "soubor": "obsah/peceni_masa.html",
+        "nazev": "🥩 Pečení a uzení masa",
+        "tagy": ["maso", "pečeně", "teplota jádra", "propečení", "steak", "sous-vide", "uzení", "udírna", "gril", "časovač", "drůbež", "zvěřina"]
+      },
+      {
+        "soubor": "obsah/kava_pomery.html",
+        "nazev": "☕ Kávové poměry",
+        "tagy": ["káva", "espresso", "V60", "pour-over", "french press", "AeroPress", "moka", "cold brew", "poměr", "mletí", "barista", "časovač"]
+      },
+      {
+        "soubor": "obsah/prepocet_receptu.html",
+        "nazev": "🔁 Přepočet receptu",
+        "tagy": ["recept", "porce", "přepočet", "forma na dort", "plech", "hrnky", "lžíce", "cup", "oz", "zlomky", "vejce", "škálování"]
+      },
+      {
+        "soubor": "obsah/sezonni_potraviny.html",
+        "nazev": "🍎 Sezónní kalendář potravin",
+        "tagy": ["sezóna", "sezónní", "zelenina", "ovoce", "houby", "bylinky", "zvěřina", "ryby", "nákup", "kalendář", "lokální", "co vařit"]
       }
     ]
   },
@@ -2421,6 +2533,26 @@ const KATALOG_SEKCE = [
         "soubor": "obsah/dedicke_podily.html",
         "nazev": "⚖️ Dědické podíly",
         "tagy": ["dědictví", "dědická třída", "zákonná posloupnost", "pozůstalost", "sjm", "povinný díl", "občanský zákoník", "závěť"]
+      },
+      {
+        "soubor": "obsah/lhuty_uroky.html",
+        "nazev": "⚖️ Lhůty a úroky z prodlení",
+        "tagy": ["úrok z prodlení", "repo sazba", "ČNB", "lhůta", "OSŘ", "správní řád", "svátky", "Velikonoce", "fikce doručení", "pracovní dny"]
+      },
+      {
+        "soubor": "obsah/nezabavitelna_castka.html",
+        "nazev": "💸 Nezabavitelná částka (exekuce)",
+        "tagy": ["exekuce", "srážky ze mzdy", "nezabavitelná částka", "přednostní pohledávka", "insolvence", "OSŘ 279", "životní minimum", "2026"]
+      },
+      {
+        "soubor": "obsah/vyzivne.html",
+        "nazev": "👨‍👧 Orientační výživné",
+        "tagy": ["výživné", "alimenty", "tabulka MSp", "střídavá péče", "dítě", "rozvod", "kontrolní částka"]
+      },
+      {
+        "soubor": "obsah/soudni_poplatky.html",
+        "nazev": "🏛️ Soudní poplatky",
+        "tagy": ["soudní poplatek", "sazebník", "žaloba", "platební rozkaz", "odvolání", "dovolání", "rozvod", "katastr", "notář", "549/1991"]
       }
     ]
   },

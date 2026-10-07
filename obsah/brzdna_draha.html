@@ -1,0 +1,340 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🚗 Rychlost z brzdné stopy</title>
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../podpis.js" defer></script>
+<style>
+body{background:var(--bg);color:var(--text);min-height:100vh;padding:20px clamp(10px,3vw,24px)}
+.container{max-width:960px;margin:0 auto}
+h1{font-size:1.6rem;margin-bottom:6px;font-weight:600;text-align:center}
+.sub{text-align:center;color:var(--text-faint);font-size:.85rem;margin-bottom:14px}
+.varovani{border:1px solid var(--warn);border-left:4px solid var(--warn);background:var(--bg-elevated);color:var(--text-muted);border-radius:var(--radius);padding:10px 14px;font-size:.82rem;line-height:1.5;margin-bottom:16px}
+.taby{display:flex;gap:6px;margin-bottom:14px;justify-content:center;flex-wrap:wrap}
+.taby button{background:var(--bg-control);border:1px solid var(--border-strong);color:var(--text-muted);border-radius:6px;padding:8px 14px;font-size:.88rem;cursor:pointer}
+.taby button.active{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+.card{background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:16px}
+.panel{display:none}.panel.active{display:block}
+h2{font-size:1.05rem;color:var(--accent);margin-bottom:10px}
+label{display:block;font-size:.78rem;color:var(--text-faint);margin:10px 0 4px}
+label.chk{display:flex;align-items:center;gap:8px;font-size:.85rem;color:var(--text-muted);cursor:pointer}
+label.chk input{width:auto}
+input,select{width:100%;background:var(--bg-input);border:1px solid var(--border-strong);border-radius:6px;color:var(--text);padding:8px 10px;font-size:.95rem;font-family:inherit}
+input:focus,select:focus{outline:none;border-color:var(--accent)}
+.row{display:flex;gap:12px;flex-wrap:wrap}
+.row>div{flex:1;min-width:140px}
+.vysledky{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin-top:14px}
+.box{background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius);padding:12px}
+.box .popis{font-size:.7rem;text-transform:uppercase;letter-spacing:.5px;color:var(--text-faint);margin-bottom:4px}
+.box .cislo{font-size:1.3rem;font-weight:700}
+.box.hlavni .cislo{color:var(--accent)}
+.box .mini{font-size:.78rem;color:var(--text-muted);margin-top:3px}
+.hlaska{margin-top:10px;font-size:.85rem;color:var(--warn);line-height:1.5}
+.graf{width:100%;height:260px;display:block;margin-top:12px}
+.pas{width:100%;height:120px;display:block;margin-top:12px}
+table{width:100%;border-collapse:collapse;font-size:.84rem}
+th,td{border-bottom:1px solid var(--border);padding:5px 6px;text-align:left}
+th{color:var(--text-faint);font-weight:600}
+td input{padding:4px 6px;font-size:.85rem;width:64px}
+tbody.vyber tr{cursor:pointer}
+tbody.vyber tr:hover td{background:var(--bg-hover)}
+tbody.vyber tr.zvolen td{background:var(--accent-soft)}
+.tabwrap{overflow-x:auto}
+.pozn{font-size:.78rem;color:var(--text-faint);margin-top:8px;line-height:1.5}
+.vzorec{font-size:.9rem;line-height:1.7;margin-top:6px}
+.btn{padding:6px 12px;background:var(--bg-control);border:1px solid var(--border-strong);border-radius:6px;color:var(--text-muted);cursor:pointer;font-size:.8rem;margin-top:8px}
+.legenda{display:flex;gap:14px;flex-wrap:wrap;font-size:.78rem;color:var(--text-muted);margin-top:6px}
+.legenda i{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>🚗 Rychlost z brzdné stopy</h1>
+  <p class="sub">Odhad rychlosti vozidla z délky stopy blokovaných kol a opačně celková dráha zastavení z rychlosti.</p>
+  <div class="varovani">⚠️ <b>Jen orientační výpočet.</b> Znalecký posudek z dopravních nehod je jiná liga: počítá s naměřeným součinitelem adheze na místě, zatížením náprav, stopami po střetu, deformační energií, technickým stavem vozidla a analýzou záznamů. Hodnoty tření níže jsou typická rozmezí z literatury.</div>
+
+  <div class="taby" id="taby">
+    <button data-p="stopa" class="active">Stopa → rychlost</button>
+    <button data-p="zastaveni">Rychlost → dráha zastavení</button>
+  </div>
+
+  <div class="card panel active" id="p-stopa">
+    <h2>Rychlost ze stopy blokovaných kol</h2>
+    <div class="row">
+      <div><label>Délka brzdné stopy s (m)</label><input id="s" type="number" step="0.1" min="0" value="32"></div>
+      <div><label>Povrch vozovky</label><select id="povrch"></select></div>
+      <div><label>Podélný sklon (%; + do kopce, − z kopce)</label><input id="sklon" type="number" step="0.5" value="0"></div>
+    </div>
+    <div class="row">
+      <div><label>Účinnost brzd η (%)</label><input id="ucinnost" type="number" step="1" min="10" max="100" value="100"></div>
+      <div><label>Rychlost na konci stopy (km/h, např. při střetu)</label><input id="vKonec" type="number" step="1" min="0" value="0"></div>
+      <div><label>Doba náběhu brzd t<sub>n</sub> (s)</label><input id="tnS" type="number" step="0.05" min="0" value="0.2"></div>
+    </div>
+    <label class="chk" style="margin-top:12px"><input type="checkbox" id="nabeh" checked> připočíst rychlost ztracenou během náběhu brzd (před vznikem stopy)</label>
+    <label class="chk"><input type="checkbox" id="abs"> vozidlo má ABS</label>
+    <div class="vysledky" id="vyslStopa"></div>
+    <div class="hlaska" id="hlStopa"></div>
+    <canvas class="graf" id="grafStopa" aria-label="Rychlost podle délky stopy"></canvas>
+    <p class="pozn">Graf: počáteční rychlost v závislosti na délce stopy pro minimální a maximální součinitel zvoleného povrchu; bod = zadaná stopa.</p>
+    <div class="vzorec">
+      <i>a</i> = <i>g</i> · (η · μ · cos α + sin α) &nbsp;·&nbsp; <i>v</i> = √(<i>v</i><sub>k</sub>² + 2 · <i>a</i> · <i>s</i>) &nbsp;(+ <i>a</i>·<i>t</i><sub>n</sub>/2 za náběh)<br>
+      <span class="pozn">g = 9,81 m/s², α = arctg(sklon/100). Bez sklonu, ztrát a náběhu je to klasické v = √(2·μ·g·s).</span>
+    </div>
+  </div>
+
+  <div class="card panel" id="p-zastaveni">
+    <h2>Celková dráha zastavení</h2>
+    <div class="row">
+      <div><label>Rychlost (km/h)</label><input id="v" type="number" step="1" min="0" value="90"></div>
+      <div><label>Povrch vozovky</label><select id="povrch2"></select></div>
+      <div><label>Podélný sklon (%)</label><input id="sklon2" type="number" step="0.5" value="0"></div>
+    </div>
+    <div class="row">
+      <div><label>Reakční doba řidiče t<sub>r</sub> (s)</label><input id="tr" type="number" step="0.1" min="0" value="1.0"></div>
+      <div><label>Doba náběhu brzd t<sub>n</sub> (s)</label><input id="tn" type="number" step="0.05" min="0" value="0.2"></div>
+      <div><label>Účinnost brzd η (%)</label><input id="ucinnost2" type="number" step="1" min="10" max="100" value="100"></div>
+    </div>
+    <div class="vysledky" id="vyslZast"></div>
+    <canvas class="pas" id="pasZast" aria-label="Rozdělení dráhy zastavení"></canvas>
+    <div class="legenda"><span><i style="background:var(--text-faint)"></i>reakce</span><span><i style="background:var(--warn)"></i>náběh brzd</span><span><i style="background:var(--accent)"></i>plné brzdění</span></div>
+    <canvas class="graf" id="grafZast" aria-label="Dráha zastavení podle rychlosti"></canvas>
+    <p class="pozn">Graf: dráha zastavení podle rychlosti pro průměrný součinitel každého povrchu (při zadané reakční době a náběhu). Svislá čára = zadaná rychlost.</p>
+    <div class="vzorec"><i>s</i> = <i>v</i>·<i>t</i><sub>r</sub> + <i>v</i>·<i>t</i><sub>n</sub>/2 + <i>v</i>²/(2<i>a</i>) − <i>a</i>·<i>t</i><sub>n</sub>²/24 &nbsp;<span class="pozn">(zpomalení během náběhu roste lineárně od 0 do <i>a</i>)</span></div>
+    <p class="pozn">Reakční doba se běžně uvažuje 0,8–1,0 s (pozorný řidič, očekávaná situace) až 1,5–2 s a více (nečekaná situace, únava, alkohol, telefon). Náběh brzd osobního auta ~0,1–0,3 s, nákladních vozidel se vzduchovými brzdami déle.</p>
+  </div>
+
+  <div class="card">
+    <h2>Součinitele adheze μ (klikni na řádek, hodnoty lze upravit)</h2>
+    <div class="tabwrap"><table>
+      <thead><tr><th>Povrch</th><th>μ min</th><th>μ max</th><th>zpomalení (m/s²)</th></tr></thead>
+      <tbody class="vyber" id="tabMu"></tbody>
+    </table></div>
+    <button class="btn" id="obnovMu">↺ Výchozí hodnoty</button>
+    <p class="pozn">Typická rozmezí pro osobní automobily s blokovanými koly (stav k říjnu 2026, souhrn běžně uváděných hodnot z literatury o rekonstrukci nehod). Opotřebený povrch, nízký vzorek pneu, vyšší rychlost a teplo snižují adhezi; nová drsná vozovka ji zvyšuje. Pro konkrétní místo se součinitel měří (zkušební brzdění, decelerometr).</p>
+  </div>
+</div>
+
+<script id="logika">
+/* ===== Výpočty (bez DOM – testovatelné v node) ===== */
+(function (gl) {
+  const G = 9.81;
+  const POVRCHY = [
+    { id: 'asfalt_suchy', nazev: 'asfalt suchý', min: 0.65, max: 0.85 },
+    { id: 'asfalt_mokry', nazev: 'asfalt mokrý', min: 0.40, max: 0.65 },
+    { id: 'beton_suchy', nazev: 'beton suchý', min: 0.65, max: 0.85 },
+    { id: 'beton_mokry', nazev: 'beton mokrý', min: 0.45, max: 0.70 },
+    { id: 'dlazba_sucha', nazev: 'dlažba (kostky) suchá', min: 0.55, max: 0.75 },
+    { id: 'dlazba_mokra', nazev: 'dlažba (kostky) mokrá', min: 0.35, max: 0.55 },
+    { id: 'sterk', nazev: 'štěrk, šotolina', min: 0.40, max: 0.65 },
+    { id: 'snih', nazev: 'sníh ujetý', min: 0.15, max: 0.30 },
+    { id: 'led', nazev: 'led, náledí', min: 0.05, max: 0.15 }
+  ];
+  const kmh = ms => ms * 3.6, ms = kmh => kmh / 3.6;
+  // zpomalení (m/s²); sklon v %, kladný = do kopce
+  function zpomaleni(mu, sklonPct, ucinnost) {
+    const al = Math.atan((sklonPct || 0) / 100);
+    return G * ((ucinnost == null ? 1 : ucinnost) * mu * Math.cos(al) + Math.sin(al));
+  }
+  // počáteční rychlost (m/s) ze stopy s (m); vKonec (m/s), tn (s) náběh – připočte a·tn/2
+  function rychlostZeStopy(s, mu, o = {}) {
+    const a = zpomaleni(mu, o.sklon, o.ucinnost);
+    if (a <= 0) return { chyba: 'Na tomto sklonu by vozidlo s blokovanými koly nezastavilo (sklon převyšuje tření).' };
+    const vk = o.vKonec || 0;
+    const vStopa = Math.sqrt(vk * vk + 2 * a * s);
+    return { a, vStopa, v: vStopa + (o.tn ? a * o.tn / 2 : 0) };
+  }
+  // dráha zastavení z rychlosti v (m/s)
+  function drahaZastaveni(v, mu, o = {}) {
+    const a = zpomaleni(mu, o.sklon, o.ucinnost);
+    const tr = o.tr || 0, tn = o.tn || 0;
+    const sR = v * tr;
+    if (a <= 0) return { a, sR, chyba: 'Vozidlo na tomto sklonu nezastaví.' };
+    // náběh: zpomalení roste lineárně 0 → a za tn; pokud vozidlo zastaví dřív, ořízne se
+    let sN, vPo, tN = tn;
+    if (tn > 0 && v <= a * tn / 2) { // zastaví už během náběhu: v = a t²/(2 tn)
+      tN = Math.sqrt(2 * v * tn / a); sN = v * tN - a * tN ** 3 / (6 * tn); vPo = 0;
+    } else { sN = v * tn - a * tn * tn / 6; vPo = v - a * tn / 2; }
+    const sB = vPo * vPo / (2 * a);
+    return { a, sR, sN, sB, celkem: sR + sN + sB, cas: tr + tN + vPo / a };
+  }
+  gl.BRZDY = { G, POVRCHY, kmh, ms, zpomaleni, rychlostZeStopy, drahaZastaveni };
+})(typeof window !== 'undefined' ? window : globalThis);
+</script>
+
+<script>
+(function () {
+  const B = window.BRZDY, $ = id => document.getElementById(id);
+  const KLIC = 'webapp_brzdna_draha_';
+  const cz = (x, d = 0) => x.toLocaleString('cs-CZ', { minimumFractionDigits: d, maximumFractionDigits: d });
+  const nacti = (k, d) => { try { const v = localStorage.getItem(KLIC + k); return v ? JSON.parse(v) : d; } catch (e) { return d; } };
+  const uloz = (k, v) => { try { localStorage.setItem(KLIC + k, JSON.stringify(v)); } catch (e) { } };
+  const VYCHOZI = JSON.parse(JSON.stringify(B.POVRCHY));
+  let povrchy = nacti('povrchy', null);
+  if (!Array.isArray(povrchy) || povrchy.length !== VYCHOZI.length) povrchy = JSON.parse(JSON.stringify(VYCHOZI));
+
+  const POLE = ['s', 'povrch', 'sklon', 'ucinnost', 'vKonec', 'tnS', 'nabeh', 'abs', 'v', 'povrch2', 'sklon2', 'tr', 'tn', 'ucinnost2'];
+  function naplnSelecty() {
+    for (const id of ['povrch', 'povrch2']) {
+      const v = $(id).value;
+      $(id).innerHTML = povrchy.map(p => `<option value="${p.id}">${p.nazev} (μ ${cz(p.min, 2)}–${cz(p.max, 2)})</option>`).join('');
+      if (v) $(id).value = v;
+    }
+  }
+  function tabulka() {
+    $('tabMu').innerHTML = povrchy.map(p => `<tr data-id="${p.id}"><td>${p.nazev}</td>
+      <td><input type="number" step="0.01" min="0.01" max="1.5" data-k="min" value="${p.min}"></td>
+      <td><input type="number" step="0.01" min="0.01" max="1.5" data-k="max" value="${p.max}"></td>
+      <td>${cz(p.min * B.G, 1)} – ${cz(p.max * B.G, 1)}</td></tr>`).join('');
+    oznac();
+  }
+  function oznac() {
+    const akt = $('p-stopa').classList.contains('active') ? $('povrch').value : $('povrch2').value;
+    document.querySelectorAll('#tabMu tr').forEach(r => r.classList.toggle('zvolen', r.dataset.id === akt));
+  }
+  $('tabMu').addEventListener('change', e => {
+    const i = e.target; if (!i.dataset.k) return;
+    const p = povrchy.find(x => x.id === i.closest('tr').dataset.id);
+    const v = parseFloat(i.value); if (!(v > 0)) return;
+    p[i.dataset.k] = v; if (p.min > p.max) [p.min, p.max] = [p.max, p.min];
+    uloz('povrchy', povrchy); naplnSelecty(); tabulka(); prepocet();
+  });
+  $('tabMu').addEventListener('click', e => {
+    if (e.target.tagName === 'INPUT') return;
+    const r = e.target.closest('tr'); if (!r) return;
+    $($('p-stopa').classList.contains('active') ? 'povrch' : 'povrch2').value = r.dataset.id; prepocet();
+  });
+  $('obnovMu').onclick = () => { povrchy = JSON.parse(JSON.stringify(VYCHOZI)); uloz('povrchy', povrchy); naplnSelecty(); tabulka(); prepocet(); };
+
+  $('taby').onclick = e => {
+    const b = e.target.closest('button'); if (!b) return;
+    document.querySelectorAll('#taby button').forEach(x => x.classList.toggle('active', x === b));
+    document.querySelectorAll('.panel').forEach(x => x.classList.toggle('active', x.id === 'p-' + b.dataset.p));
+    uloz('tab', b.dataset.p); prepocet();
+  };
+
+  const num = (id, d = 0) => { const v = parseFloat($(id).value); return isFinite(v) ? v : d; };
+  const barva = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim() || '#888';
+  function platno(cv) {
+    const w = cv.clientWidth, h = cv.clientHeight, dpr = window.devicePixelRatio || 1;
+    if (!w) return null;
+    cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
+    const x = cv.getContext('2d'); x.setTransform(dpr, 0, 0, dpr, 0, 0); x.clearRect(0, 0, w, h);
+    x.font = '11px system-ui,sans-serif'; return { x, w, h };
+  }
+  function osy(x, w, h, xMax, yMax, xKrok, yKrok, xJ, yJ, M) {
+    const X = v => M.L + v / xMax * (w - M.L - M.R), Y = v => M.T + (1 - v / yMax) * (h - M.T - M.D);
+    x.strokeStyle = barva('--border'); x.fillStyle = barva('--text-faint'); x.lineWidth = 1;
+    x.textAlign = 'center';
+    for (let v = 0; v <= xMax + 1e-9; v += xKrok) { x.beginPath(); x.moveTo(X(v), M.T); x.lineTo(X(v), h - M.D); x.stroke(); x.fillText(v + xJ, X(v), h - M.D + 14); }
+    x.textAlign = 'right';
+    for (let v = 0; v <= yMax + 1e-9; v += yKrok) { x.beginPath(); x.moveTo(M.L, Y(v)); x.lineTo(w - M.R, Y(v)); x.stroke(); x.fillText(v + yJ, M.L - 4, Y(v) + 4); }
+    return { X, Y };
+  }
+  const zaokrouhliNahoru = (v, k) => Math.max(k, Math.ceil(v / k) * k);
+
+  function prepocetStopa() {
+    const p = povrchy.find(x => x.id === $('povrch').value) || povrchy[0];
+    const s = Math.max(0, num('s')), o = { sklon: num('sklon'), ucinnost: Math.min(100, Math.max(1, num('ucinnost', 100))) / 100, vKonec: B.ms(Math.max(0, num('vKonec'))), tn: $('nabeh').checked ? Math.max(0, num('tnS')) : 0 };
+    const rMin = B.rychlostZeStopy(s, p.min, o), rMax = B.rychlostZeStopy(s, p.max, o);
+    const hl = [];
+    if (rMin.chyba || rMax.chyba) { $('vyslStopa').innerHTML = ''; $('hlStopa').textContent = rMin.chyba || rMax.chyba; kresliStopa(p, o, s); return; }
+    const vStr = (rMin.v + rMax.v) / 2;
+    $('vyslStopa').innerHTML = `
+      <div class="box hlavni"><div class="popis">Počáteční rychlost</div><div class="cislo">${cz(B.kmh(rMin.v))} – ${cz(B.kmh(rMax.v))} km/h</div><div class="mini">střed ≈ ${cz(B.kmh(vStr))} km/h (${cz(vStr, 1)} m/s)</div></div>
+      <div class="box"><div class="popis">Rychlost na začátku stopy</div><div class="cislo">${cz(B.kmh(rMin.vStopa))} – ${cz(B.kmh(rMax.vStopa))} km/h</div><div class="mini">bez náběhu brzd</div></div>
+      <div class="box"><div class="popis">Zpomalení</div><div class="cislo">${cz(rMin.a, 1)} – ${cz(rMax.a, 1)} m/s²</div><div class="mini">μ ${cz(p.min, 2)} – ${cz(p.max, 2)}${o.sklon ? ', sklon ' + cz(o.sklon, 1) + ' %' : ''}</div></div>`;
+    if ($('abs').checked) hl.push('ABS: kola se neblokují, a tak typická černá stopa většinou nevzniká – bývá jen slabá, přerušovaná nebo „rozmazaná“ stopa, často viditelná jen krátce po nehodě. Její délka nemusí odpovídat celé brzdné dráze; brzdění s ABS navíc probíhá blízko maxima adheze (zpomalení bývá vyšší než u blokovaných kol), takže výpočet z neúplné stopy rychlost spíš podhodnotí.');
+    if (o.sklon < -2) hl.push('Jízda z kopce prodlužuje stopu – bez zadání sklonu by vyšla rychlost nadhodnocená.');
+    if (s > 0 && s < 5) hl.push('Velmi krátká stopa: relativně velkou roli hraje náběh brzd a přesnost měření.');
+    $('hlStopa').innerHTML = hl.map(t => '⚠️ ' + t).join('<br>');
+    kresliStopa(p, o, s);
+  }
+  function kresliStopa(p, o, s) {
+    const c = platno($('grafStopa')); if (!c) return;
+    const { x, w, h } = c;
+    const sMax = zaokrouhliNahoru(Math.max(40, s * 1.4), 20);
+    const f = (mu, d) => { const r = B.rychlostZeStopy(d, mu, o); return r.chyba ? 0 : B.kmh(r.v); };
+    const vMax = zaokrouhliNahoru(f(p.max, sMax) * 1.05, 20);
+    const { X, Y } = osy(x, w, h, sMax, vMax, sMax > 200 ? 50 : sMax > 80 ? 20 : 10, vMax > 200 ? 40 : 20, ' m', '', { L: 40, R: 12, T: 10, D: 22 });
+    x.fillStyle = barva('--accent-soft'); x.beginPath();
+    for (let i = 0; i <= 100; i++) { const d = i / 100 * sMax; i ? x.lineTo(X(d), Y(f(p.max, d))) : x.moveTo(X(d), Y(f(p.max, d))); }
+    for (let i = 100; i >= 0; i--) { const d = i / 100 * sMax; x.lineTo(X(d), Y(f(p.min, d))); }
+    x.fill();
+    for (const mu of [p.min, p.max]) {
+      x.strokeStyle = barva('--accent'); x.lineWidth = 2; x.beginPath();
+      for (let i = 0; i <= 100; i++) { const d = i / 100 * sMax; i ? x.lineTo(X(d), Y(f(mu, d))) : x.moveTo(X(d), Y(f(mu, d))); }
+      x.stroke();
+    }
+    if (s > 0) {
+      x.strokeStyle = barva('--warn'); x.setLineDash([4, 4]); x.beginPath(); x.moveTo(X(s), Y(0)); x.lineTo(X(s), Y(f(p.max, s))); x.stroke(); x.setLineDash([]);
+      x.fillStyle = barva('--warn');
+      for (const mu of [p.min, p.max]) { x.beginPath(); x.arc(X(s), Y(f(mu, s)), 4, 0, 7); x.fill(); }
+    }
+    x.fillStyle = barva('--text-faint'); x.textAlign = 'left'; x.fillText('km/h', 4, 12);
+  }
+
+  function prepocetZast() {
+    const p = povrchy.find(x => x.id === $('povrch2').value) || povrchy[0];
+    const v = B.ms(Math.max(0, num('v'))), o = { sklon: num('sklon2'), ucinnost: Math.min(100, Math.max(1, num('ucinnost2', 100))) / 100, tr: Math.max(0, num('tr')), tn: Math.max(0, num('tn')) };
+    const rMin = B.drahaZastaveni(v, p.min, o), rMax = B.drahaZastaveni(v, p.max, o);
+    if (rMin.chyba || rMax.chyba) { $('vyslZast').innerHTML = `<div class="hlaska">${rMin.chyba || rMax.chyba}</div>`; kresliPas(null); kresliZast(v, o); return; }
+    $('vyslZast').innerHTML = `
+      <div class="box hlavni"><div class="popis">Dráha zastavení</div><div class="cislo">${cz(rMax.celkem)} – ${cz(rMin.celkem)} m</div><div class="mini">čas do zastavení ${cz(rMax.cas, 1)} – ${cz(rMin.cas, 1)} s</div></div>
+      <div class="box"><div class="popis">Reakční dráha</div><div class="cislo">${cz(rMin.sR, 1)} m</div><div class="mini">${cz(o.tr, 1)} s bez brzdění</div></div>
+      <div class="box"><div class="popis">Náběh + brzdění</div><div class="cislo">${cz(rMax.sN + rMax.sB)} – ${cz(rMin.sN + rMin.sB)} m</div><div class="mini">zpomalení ${cz(rMin.a, 1)} – ${cz(rMax.a, 1)} m/s²</div></div>`;
+    kresliPas({ min: rMin, max: rMax }); kresliZast(v, o);
+  }
+  function kresliPas(r) {
+    const c = platno($('pasZast')); if (!c || !r) return;
+    const { x, w, h } = c, L = 8, Rm = 8;
+    const sMax = r.min.celkem, sk = (w - L - Rm) / Math.max(1, sMax);
+    const radek = (y, d, popis) => {
+      let pos = L;
+      [[d.sR, '--text-faint'], [d.sN, '--warn'], [d.sB, '--accent']].forEach(([v, b]) => { x.fillStyle = barva(b); x.fillRect(pos, y, v * sk, 26); pos += v * sk; });
+      x.fillStyle = barva('--text'); x.textAlign = 'left'; x.fillText(popis + ': ' + cz(d.celkem) + ' m', L, y - 5);
+      x.strokeStyle = barva('--text'); x.beginPath(); x.moveTo(pos, y - 3); x.lineTo(pos, y + 29); x.stroke();
+    };
+    radek(26, r.max, 'nejlepší adheze'); radek(80, r.min, 'nejhorší adheze');
+  }
+  function kresliZast(vAkt, o) {
+    const c = platno($('grafZast')); if (!c) return;
+    const { x, w, h } = c, vMax = Math.max(140, zaokrouhliNahoru(B.kmh(vAkt) * 1.2, 20));
+    const vzorek = [povrchy.find(p => p.id === 'asfalt_suchy'), povrchy.find(p => p.id === 'asfalt_mokry'), povrchy.find(p => p.id === 'sterk'), povrchy.find(p => p.id === 'snih'), povrchy.find(p => p.id === 'led')].filter(Boolean);
+    const d = (kmh, mu) => { const r = B.drahaZastaveni(B.ms(kmh), mu, o); return r.chyba ? NaN : r.celkem; };
+    let sMax = 0; for (const p of vzorek) { const v = d(vMax, (p.min + p.max) / 2); if (isFinite(v)) sMax = Math.max(sMax, v); }
+    sMax = zaokrouhliNahoru(Math.min(sMax, 600), 50);
+    const { X, Y } = osy(x, w, h, vMax, sMax, vMax > 160 ? 40 : 20, sMax > 300 ? 100 : sMax > 150 ? 50 : 25, '', '', { L: 40, R: 12, T: 10, D: 22 });
+    const barvy = ['#4caf7d', '#6aa6fd', '#e0a63f', '#b48cf0', '#e05d5d'];
+    x.save(); x.beginPath(); x.rect(40, 10, w - 52, h - 32); x.clip();
+    vzorek.forEach((p, i) => {
+      x.strokeStyle = barvy[i]; x.lineWidth = 2; x.beginPath(); let zac = false;
+      for (let k = 0; k <= 100; k++) { const v = k / 100 * vMax, s = d(v, (p.min + p.max) / 2); if (!isFinite(s)) continue; zac ? x.lineTo(X(v), Y(s)) : x.moveTo(X(v), Y(s)); zac = true; }
+      x.stroke();
+    });
+    x.restore();
+    x.strokeStyle = barva('--text'); x.setLineDash([4, 4]); x.beginPath(); x.moveTo(X(B.kmh(vAkt)), 10); x.lineTo(X(B.kmh(vAkt)), h - 22); x.stroke(); x.setLineDash([]);
+    x.textAlign = 'left'; x.font = '11px system-ui,sans-serif';
+    vzorek.forEach((p, i) => { x.fillStyle = barvy[i]; x.fillText('■ ' + p.nazev, 48, 24 + i * 14); });
+    x.fillStyle = barva('--text-faint'); x.textAlign = 'right'; x.fillText('km/h', w - 12, h - 26); x.textAlign = 'left'; x.fillText('m', 4, 12);
+  }
+
+  function prepocet() {
+    const st = {}; POLE.forEach(id => st[id] = $(id).type === 'checkbox' ? $(id).checked : $(id).value); uloz('vstup', st);
+    oznac();
+    if ($('p-stopa').classList.contains('active')) prepocetStopa(); else prepocetZast();
+  }
+
+  naplnSelecty(); tabulka();
+  const st = nacti('vstup', null);
+  if (st) POLE.forEach(id => { if (st[id] == null) return; if ($(id).type === 'checkbox') $(id).checked = st[id]; else $(id).value = st[id]; });
+  POLE.forEach(id => { $(id).addEventListener('input', prepocet); $(id).addEventListener('change', prepocet); });
+  const tab = nacti('tab', 'stopa');
+  if (tab === 'zastaveni') document.querySelector('#taby [data-p="zastaveni"]').click(); else prepocet();
+  window.addEventListener('resize', prepocet);
+})();
+</script>
+</body>
+</html>

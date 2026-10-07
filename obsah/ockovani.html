@@ -1,0 +1,395 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>💉 Očkovací kalendář</title>
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../podpis.js" defer></script>
+<script src="../dialog.js" defer></script>
+<style>
+body{background:var(--bg-deep);padding:20px clamp(12px,3vw,40px);min-height:100vh}
+.container{max-width:1000px;margin:0 auto}
+h1{font-size:1.5rem;margin-bottom:4px}
+.sub{color:var(--text-muted);font-size:.85rem;margin-bottom:14px;line-height:1.5}
+.warn{background:rgba(224,166,63,.15);border:1px solid var(--warn);color:var(--warn);padding:10px 14px;border-radius:8px;font-size:.82rem;margin-bottom:18px;line-height:1.5}
+.card{background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:18px}
+.card h2{font-size:.85rem;color:var(--accent);margin-bottom:12px;text-transform:uppercase;letter-spacing:.04em}
+label.pop{display:block;font-size:.75rem;color:var(--text-faint);margin-bottom:4px}
+input,select{background:var(--bg-input);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:8px;font-family:inherit;font-size:.88rem;min-width:0}
+input:focus,select:focus{outline:none;border-color:var(--accent)}
+.radek{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:12px;align-items:end}
+.radek input,.radek select{width:100%}
+.btn{background:var(--bg-control);color:var(--text);border:1px solid var(--border);padding:8px 14px;border-radius:6px;cursor:pointer;font-size:.85rem;font-family:inherit}
+.btn:hover{background:var(--bg-hover)}
+.btn.hlavni{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+.btn.hlavni:hover{background:var(--accent-hover)}
+.btn.nebezpeci{color:var(--danger);border-color:var(--danger)}
+.btn-radek{display:flex;flex-wrap:wrap;gap:8px}
+.filtry{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:6px}
+.filtr{display:flex;align-items:center;gap:6px;padding:5px 10px;border:1px solid var(--border);border-radius:14px;background:var(--bg-elevated);cursor:pointer;font-size:.8rem;user-select:none}
+.filtr input{accent-color:var(--accent)}
+.tecka{width:10px;height:10px;border-radius:50%;display:inline-block;flex:none}
+.k-povinne{background:#c2405a}.k-hrazene{background:#2f9e74}.k-doporucene{background:#d08a1e}.k-indikovane{background:#8a6fd1}.k-dospeli{background:#3d8bd6}
+.staty{display:grid;grid-template-columns:repeat(auto-fit,minmax(110px,1fr));gap:10px;margin-bottom:14px}
+.stat{background:var(--bg-elevated);border:1px solid var(--border);border-radius:6px;padding:10px;text-align:center}
+.stat b{display:block;font-size:1.25rem;color:var(--accent)}
+.stat b.zle{color:var(--danger)} .stat b.dobre{color:var(--ok)}
+.stat span{font-size:.7rem;color:var(--text-faint)}
+.skupina{margin-bottom:16px}
+.skupina h3{font-size:.8rem;color:var(--text-muted);text-transform:uppercase;letter-spacing:.04em;margin:0 0 6px;padding-bottom:4px;border-bottom:1px solid var(--border)}
+.davka{display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:10px;align-items:start;padding:8px 6px;border-radius:6px}
+.davka+.davka{border-top:1px dashed var(--border)}
+.davka.hotovo{opacity:.6}
+.davka.po{background:rgba(224,93,93,.08)}
+.davka.ted{background:var(--accent-soft)}
+.davka input[type=checkbox]{width:20px;height:20px;margin-top:2px;accent-color:var(--ok);cursor:pointer}
+.davka .nazev{font-weight:600;font-size:.9rem;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.davka .info{font-size:.78rem;color:var(--text-muted);line-height:1.45;margin-top:2px}
+.davka .kdy{text-align:right;font-size:.8rem;white-space:nowrap}
+.davka .kdy b{display:block;font-size:.88rem}
+.davka .kdy input{width:132px;padding:4px 6px;font-size:.8rem}
+.stav{font-size:.66rem;padding:1px 7px;border-radius:9px;border:1px solid var(--border);color:var(--text-faint);font-weight:500}
+.stav.po{border-color:var(--danger);color:var(--danger)}
+.stav.ted{border-color:var(--accent);color:var(--accent)}
+.stav.ok{border-color:var(--ok);color:var(--ok)}
+.prazdno{color:var(--text-faint);font-size:.85rem;text-align:center;padding:16px}
+.pozn{font-size:.75rem;color:var(--text-faint);line-height:1.5;margin-top:10px}
+:root[data-theme="light"] .warn{color:#866426}
+@media(max-width:520px){
+  .davka{grid-template-columns:auto minmax(0,1fr)}
+  .davka .kdy{grid-column:2;text-align:left}
+}
+@media print{
+  body{background:#fff;color:#000;padding:0}
+  .btn-radek,.filtry,#profilKarta .radek,.warn{display:none}
+  .card{border-color:#bbb;break-inside:auto}
+  .skupina{break-inside:avoid}
+  .davka input[type=checkbox]{accent-color:#000}
+}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>💉 Očkovací kalendář</h1>
+  <p class="sub">Osobní harmonogram očkování podle data narození – pravidelné očkování dětí v ČR podle vyhlášky č. 537/2006 Sb., nepovinná hrazená a doporučená očkování i přeočkování dospělých. Provedená očkování si odškrtni; vše zůstává jen v tomto prohlížeči.</p>
+  <div class="warn">⚠️ Jde o <b>orientační přehled</b>. Přesné termíny, použité vakcíny a schéma (např. u nedonošených dětí 3+1, při nemoci nebo zpoždění) určuje praktický lékař pro děti a dorost. Rozhodující je záznam v očkovacím průkazu.</div>
+
+  <div class="card" id="profilKarta">
+    <h2>Osoba</h2>
+    <div class="radek">
+      <div><label class="pop" for="profil">Profil</label><select id="profil"></select></div>
+      <div><label class="pop" for="jmeno">Jméno</label><input type="text" id="jmeno" maxlength="40" placeholder="např. Anička"></div>
+      <div><label class="pop" for="narozeni">Datum narození</label><input type="date" id="narozeni"></div>
+    </div>
+    <div class="btn-radek">
+      <button class="btn" id="novyProfil">+ Další osoba</button>
+      <button class="btn nebezpeci" id="smazatProfil">Smazat profil</button>
+    </div>
+  </div>
+
+  <div class="card">
+    <h2>Harmonogram</h2>
+    <div class="filtry" id="filtry"></div>
+    <div class="filtry">
+      <label class="filtr"><input type="checkbox" id="jenNesplnene"> Skrýt provedená</label>
+      <label class="filtr"><input type="checkbox" id="jenBlizke"> Jen nejbližší 2 roky</label>
+    </div>
+    <div class="btn-radek" style="margin:10px 0 14px">
+      <button class="btn hlavni" id="exportIcs">📅 Export neprovedených (.ics)</button>
+      <button class="btn" id="tisk">🖨 Tisk</button>
+    </div>
+    <div class="staty" id="staty"></div>
+    <div id="seznam"><div class="prazdno">Zadej datum narození.</div></div>
+  </div>
+
+  <p class="pozn"><b>Stav k říjnu 2026.</b> Pravidelné očkování podle vyhlášky č. 537/2006 Sb. ve znění platném od 1. 1. 2022 (hexavakcína ve schématu 2+1, MMR 13.–18. měsíc a 5.–6. rok, přeočkování DTaP 5.–6. rok a dTaP-IPV 10.–11. rok, tetanus 25.–26. rok a dále po 10–15 letech; přehled KHS Středočeského kraje platný k 15. 1. 2026). Hrazená nepovinná očkování podle § 30 zákona č. 48/1997 Sb. a přehledu VZP: pneumokok u kojenců, meningokok B (zahájení do 12 měsíců nebo 14–16 let), meningokok ACWY (1.–2. rok nebo 14–16 let), HPV (zahájení 11–15 let, dívky i chlapci), klíšťová encefalitida od 50 let, pneumokok a chřipka od 65 let. Ostatní (rotaviry, plané neštovice, hepatitida A, klíšťová encefalitida u dětí…) si hradíš sám, pojišťovny na ně často přispívají z fondu prevence.</p>
+</div>
+
+<!-- ===== výpočetní logika (bez DOM, testuje se v node) ===== -->
+<script id="logika">
+window.OCKOVANI = (function () {
+  const DEN = 86400000;
+  function naDen(s) {
+    const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s || '');
+    return m ? Math.round(Date.UTC(+m[1], +m[2] - 1, +m[3]) / DEN) : null;
+  }
+  const zDne = d => new Date(d * DEN).toISOString().slice(0, 10);
+  const dnesDen = (t = new Date()) => Math.round(Date.UTC(t.getFullYear(), t.getMonth(), t.getDate()) / DEN);
+
+  /** přičte k datu {r, m, t, d} – měsíce kalendářně (31. 1. + 1 m = 28./29. 2.) */
+  function pricti(den, o) {
+    if (!o) return den;
+    const dt = new Date(den * DEN);
+    const mesicu = (o.r || 0) * 12 + (o.m || 0);
+    if (mesicu) {
+      const y = dt.getUTCFullYear(), m = dt.getUTCMonth() + mesicu, d = dt.getUTCDate();
+      const posledni = new Date(Date.UTC(y, m + 1, 0)).getUTCDate();
+      den = Math.round(Date.UTC(y, m, Math.min(d, posledni)) / DEN);
+    }
+    return den + (o.t || 0) * 7 + (o.d || 0);
+  }
+
+  /* Kategorie: povinne = pravidelné dle vyhlášky; hrazene = nepovinné hrazené pojišťovnou;
+     doporucene = doporučené, hradí se samo (příspěvek pojišťovny); indikovane = jen pro rizikové;
+     dospeli = dospělí. Věk od/do = doporučené okno od narození.
+     po = {id předchozí dávky, min = minimální odstup, max = nejzazší odstup}. */
+  const DAVKY = [
+    { id: 'bcg', kat: 'indikovane', nazev: 'BCG – tuberkulóza', od: { d: 4 }, do: { t: 6 }, info: 'Jen indikované děti (TBC v rodině, pobyt v zemi s vysokým výskytem). Provádí oddělení TBC.' },
+    { id: 'rota1', kat: 'doporucene', nazev: 'Rotaviry – 1. dávka', od: { t: 6 }, do: { t: 12 }, info: 'Ústní kapky. Dokončit nejpozději do 24. (Rotarix, 2 dávky) / 32. týdne (RotaTeq, 3 dávky).' },
+    { id: 'rota2', kat: 'doporucene', nazev: 'Rotaviry – 2. dávka', od: { t: 10 }, do: { t: 24 }, po: { id: 'rota1', min: { t: 4 } }, info: 'Odstup aspoň 4 týdny.' },
+    { id: 'hexa1', kat: 'povinne', nazev: 'Hexavakcína – 1. dávka', od: { t: 8 }, do: { m: 4 }, info: 'Záškrt, tetanus, černý kašel, Hib, hepatitida B, dětská obrna. Od 9. týdne věku (od 8 dokončených týdnů).' },
+    { id: 'pneu1', kat: 'hrazene', nazev: 'Pneumokok – 1. dávka', od: { t: 8 }, do: { m: 4 }, info: 'Schéma 2+1, obvykle současně s hexavakcínou. Plně hrazeno.' },
+    { id: 'menb1', kat: 'hrazene', nazev: 'Meningokok B – 1. dávka', od: { m: 2 }, do: { m: 12 }, info: 'Hrazeno při zahájení do 12 měsíců věku (schéma 2+1 při zahájení do 5 měsíců).' },
+    { id: 'hexa2', kat: 'povinne', nazev: 'Hexavakcína – 2. dávka', od: { m: 4 }, do: { m: 6 }, po: { id: 'hexa1', min: { m: 2 } }, info: 'Za 2 měsíce po 1. dávce.' },
+    { id: 'pneu2', kat: 'hrazene', nazev: 'Pneumokok – 2. dávka', od: { m: 4 }, do: { m: 6 }, po: { id: 'pneu1', min: { m: 2 } }, info: 'Za 2 měsíce po 1. dávce.' },
+    { id: 'menb2', kat: 'hrazene', nazev: 'Meningokok B – 2. dávka', od: { m: 4 }, do: { m: 12 }, po: { id: 'menb1', min: { m: 2 } }, info: 'Odstup aspoň 2 měsíce.' },
+    { id: 'hexa3', kat: 'povinne', nazev: 'Hexavakcína – 3. dávka', od: { m: 11 }, do: { m: 13 }, po: { id: 'hexa2', min: { m: 6 } }, info: 'Za 6 měsíců po 2. dávce, nejpozději do 13. měsíce. Nedonošené děti: schéma 3+1.' },
+    { id: 'pneu3', kat: 'hrazene', nazev: 'Pneumokok – 3. dávka (posilující)', od: { m: 11 }, do: { m: 15 }, po: { id: 'pneu2', min: { m: 6 } }, info: 'Za 6 měsíců po 2. dávce.' },
+    { id: 'menb3', kat: 'hrazene', nazev: 'Meningokok B – posilující dávka', od: { m: 12 }, do: { m: 15 }, po: { id: 'menb2', min: { m: 6 } }, info: 'Ve 12.–15. měsíci, aspoň 6 měsíců po 2. dávce.' },
+    { id: 'acwy1', kat: 'hrazene', nazev: 'Meningokok ACWY', od: { m: 12 }, do: { m: 24 }, info: 'Hrazeno při očkování od 1. do 2. narozenin.' },
+    { id: 'mmr1', kat: 'povinne', nazev: 'MMR – 1. dávka', od: { m: 13 }, do: { m: 18 }, info: 'Spalničky, příušnice, zarděnky.' },
+    { id: 'var1', kat: 'doporucene', nazev: 'Plané neštovice – 1. dávka', od: { m: 13 }, do: { m: 24 }, info: 'Lze i jako kombinaci MMRV. Pojišťovny přispívají.' },
+    { id: 'kme1', kat: 'doporucene', nazev: 'Klíšťová encefalitida – 1. dávka', od: { m: 12 }, do: { r: 3 }, info: 'Dětské vakcíny od 1 roku. Ideálně v zimě, aby ochrana platila od jara.' },
+    { id: 'kme2', kat: 'doporucene', nazev: 'Klíšťová encefalitida – 2. dávka', od: { m: 13 }, do: { r: 3 }, po: { id: 'kme1', min: { m: 1 }, max: { m: 3 } }, info: '1–3 měsíce po 1. dávce (zrychlené schéma 14 dní).' },
+    { id: 'kme3', kat: 'doporucene', nazev: 'Klíšťová encefalitida – 3. dávka', od: { m: 18 }, do: { r: 4 }, po: { id: 'kme2', min: { m: 5 }, max: { m: 12 } }, info: '5–12 měsíců po 2. dávce.' },
+    { id: 'kme4', kat: 'doporucene', nazev: 'Klíšťová encefalitida – 1. přeočkování', od: { r: 4 }, do: { r: 7 }, po: { id: 'kme3', min: { r: 3 } }, info: 'Za 3 roky, dále každých 5 let (od 60 let po 3 letech).' },
+    { id: 'hepa1', kat: 'doporucene', nazev: 'Hepatitida A – 1. dávka', od: { m: 12 }, do: { r: 6 }, info: 'Doporučeno hlavně před cestami a do kolektivu.' },
+    { id: 'hepa2', kat: 'doporucene', nazev: 'Hepatitida A – 2. dávka', od: { m: 18 }, do: { r: 7 }, po: { id: 'hepa1', min: { m: 6 }, max: { m: 18 } }, info: '6–12 (až 18) měsíců po 1. dávce.' },
+    { id: 'mmr2', kat: 'povinne', nazev: 'MMR – 2. dávka', od: { r: 5 }, do: { r: 6 }, po: { id: 'mmr1', min: { m: 6 } }, info: 'Od 5. do 6. narozenin.' },
+    { id: 'var2', kat: 'doporucene', nazev: 'Plané neštovice – 2. dávka', od: { m: 15 }, do: { r: 6 }, po: { id: 'var1', min: { t: 6 } }, info: 'Aspoň 6 týdnů po 1. dávce, často s MMR v 5–6 letech.' },
+    { id: 'dtap5', kat: 'povinne', nazev: 'DTaP – přeočkování', od: { r: 5 }, do: { r: 6 }, info: 'Záškrt, tetanus, černý kašel – od 5. do 6. narozenin.' },
+    { id: 'dtap10', kat: 'povinne', nazev: 'dTaP-IPV – přeočkování', od: { r: 10 }, do: { r: 11 }, info: 'Záškrt, tetanus, černý kašel a dětská obrna – od 10. do 11. narozenin.' },
+    { id: 'hpv1', kat: 'hrazene', nazev: 'HPV – 1. dávka', od: { r: 11 }, do: { r: 15 }, info: 'Dívky i chlapci, hrazeno při zahájení od 11. do 15. narozenin. Do 15 let 2 dávky, později 3.' },
+    { id: 'hpv2', kat: 'hrazene', nazev: 'HPV – 2. dávka', od: { r: 11, m: 6 }, do: { r: 16 }, po: { id: 'hpv1', min: { m: 6 }, max: { m: 13 } }, info: '6–13 měsíců po 1. dávce.' },
+    { id: 'acwy2', kat: 'hrazene', nazev: 'Meningokok ACWY – dospívající', od: { r: 14 }, do: { r: 16 }, info: 'Hrazeno při očkování od 14. do 16. narozenin.' },
+    { id: 'menbd1', kat: 'hrazene', nazev: 'Meningokok B – dospívající, 1. dávka', od: { r: 14 }, do: { r: 16 }, info: 'Hrazeno při zahájení od 14. do 16. narozenin.' },
+    { id: 'menbd2', kat: 'hrazene', nazev: 'Meningokok B – dospívající, 2. dávka', od: { r: 14, m: 1 }, do: { r: 17 }, po: { id: 'menbd1', min: { m: 1 } }, info: 'Odstup podle vakcíny 1 měsíc (Bexsero) nebo 6 měsíců (Trumenba).' },
+    { id: 'tet25', kat: 'povinne', nazev: 'Tetanus – přeočkování', od: { r: 25 }, do: { r: 26 }, info: 'Povinné přeočkování mezi 25. a 26. rokem, potom každých 10–15 let (doporučeno s dávivým kašlem – dTap).' },
+    { id: 'tet40', kat: 'dospeli', nazev: 'Tetanus – přeočkování', od: { r: 35 }, do: { r: 41 }, po: { id: 'tet25', min: { r: 10 }, max: { r: 15 } }, info: 'Každých 10–15 let.' },
+    { id: 'tet55', kat: 'dospeli', nazev: 'Tetanus – přeočkování', od: { r: 45 }, do: { r: 56 }, po: { id: 'tet40', min: { r: 10 }, max: { r: 15 } }, info: 'Každých 10–15 let.' },
+    { id: 'kme50', kat: 'dospeli', nazev: 'Klíšťová encefalitida (hrazená od 50 let)', od: { r: 50 }, do: { r: 51 }, info: 'Od 50 let hradí pojišťovna základní očkování i přeočkování. Od 60 let přeočkování po 3 letech.' },
+    { id: 'zoster', kat: 'dospeli', nazev: 'Pásový opar', od: { r: 50 }, do: { r: 60 }, info: 'Doporučeno od 50 let, 2 dávky (Shingrix) s odstupem 2–6 měsíců. Pojišťovny přispívají.' },
+    { id: 'rsv60', kat: 'dospeli', nazev: 'RSV', od: { r: 60 }, do: { r: 75 }, info: 'Doporučeno od 60 let, zejména s chronickým onemocněním. Jedna dávka.' },
+    { id: 'pneu65', kat: 'dospeli', nazev: 'Pneumokok (hrazený od 65 let)', od: { r: 65 }, do: { r: 66 }, info: 'Konjugovaná vakcína, hrazeno od 65 let.' },
+    { id: 'tet70', kat: 'dospeli', nazev: 'Tetanus – přeočkování', od: { r: 55 }, do: { r: 71 }, po: { id: 'tet55', min: { r: 10 }, max: { r: 15 } }, info: 'Každých 10–15 let, od 60 let spíš po 10 letech.' },
+    { id: 'tet85', kat: 'dospeli', nazev: 'Tetanus – přeočkování', od: { r: 65 }, do: { r: 86 }, po: { id: 'tet70', min: { r: 10 }, max: { r: 15 } }, info: 'Každých 10 let.' },
+  ];
+
+  /** Chřipka: každoročně, děti od 6 měsíců doporučeno, od 65 let hrazeno. Vrací nejbližší sezónu. */
+  function chripka(narozeni, dnes) {
+    const d = new Date(dnes * DEN);
+    let rok = d.getUTCFullYear();
+    if (d.getUTCMonth() >= 11 && d.getUTCDate() > 15) rok++; // po polovině prosince už příští sezóna
+    const od = Math.round(Date.UTC(rok, 8, 15) / DEN), dO = Math.round(Date.UTC(rok, 11, 15) / DEN);
+    if (pricti(narozeni, { m: 6 }) > dO) return null;
+    const senior = pricti(narozeni, { r: 65 }) <= dO;
+    return { id: 'chripka' + rok, kat: senior ? 'dospeli' : 'doporucene', nazev: `Chřipka – sezóna ${rok}/${String(rok + 1).slice(2)}`,
+      od, do: dO, opakovane: true,
+      info: senior ? 'Každoročně, od 65 let hrazeno pojišťovnou.' : 'Každoročně na podzim, doporučeno od 6 měsíců věku (děti do 9 let poprvé 2 dávky).' };
+  }
+
+  /**
+   * Osobní harmonogram. hotovo = {idDávky: 'YYYY-MM-DD'}.
+   * Vrací pole {id, kat, nazev, info, od, do, doporuceno, provedeno, stav}, seřazené podle doporučeného data.
+   * stav: 'hotovo' | 'po' (po termínu) | 'ted' (v okně) | 'brzy' (do 30 dní) | 'budouci'
+   */
+  function harmonogram(narozeni, hotovo, dnes) {
+    hotovo = hotovo || {};
+    const vys = {};
+    const vysledek = [];
+    for (const v of DAVKY) {
+      let od = pricti(narozeni, v.od), dO = pricti(narozeni, v.do);
+      if (v.po && vys[v.po.id]) {
+        const p = vys[v.po.id];
+        const zaklad = p.provedeno !== null ? p.provedeno : p.doporuceno;
+        od = Math.max(od, pricti(zaklad, v.po.min));
+        if (v.po.max) dO = pricti(zaklad, v.po.max);
+        if (dO < od) dO = od;
+      }
+      const provedeno = hotovo[v.id] ? naDen(hotovo[v.id]) : null;
+      const z = { id: v.id, kat: v.kat, nazev: v.nazev, info: v.info, od, do: dO, doporuceno: od, provedeno };
+      z.stav = stavDavky(z, dnes);
+      vys[v.id] = z;
+      vysledek.push(z);
+    }
+    const ch = chripka(narozeni, dnes);
+    if (ch) {
+      const provedeno = hotovo[ch.id] ? naDen(hotovo[ch.id]) : null;
+      const z = { ...ch, doporuceno: ch.od, provedeno };
+      z.stav = stavDavky(z, dnes);
+      vysledek.push(z);
+    }
+    return vysledek.sort((a, b) => a.doporuceno - b.doporuceno);
+  }
+  function stavDavky(z, dnes) {
+    if (z.provedeno !== null) return 'hotovo';
+    if (dnes > z.do) return 'po';
+    if (dnes >= z.od) return 'ted';
+    if (z.od - dnes <= 30) return 'brzy';
+    return 'budouci';
+  }
+
+  /** popis věku v den „den" (např. „2 měsíce", „5 let") */
+  function vekText(narozeni, den) {
+    let mesicu = 0;
+    while (pricti(narozeni, { m: mesicu + 1 }) <= den) mesicu++;
+    if (mesicu < 3 && den - narozeni < 13 * 7) { const t = Math.floor((den - narozeni) / 7); return t <= 0 ? 'novorozenec' : `${t} ${t === 1 ? 'týden' : t < 5 ? 'týdny' : 'týdnů'}`; }
+    if (mesicu < 24) return `${mesicu} ${mesicu === 1 ? 'měsíc' : mesicu < 5 ? 'měsíce' : 'měsíců'}`;
+    const r = Math.floor(mesicu / 12);
+    return `${r} ${r < 5 ? 'roky' : 'let'}`;
+  }
+
+  // ---- iCalendar ----
+  const icsEsc = s => String(s).replace(/\\/g, '\\\\').replace(/;/g, '\\;').replace(/,/g, '\\,').replace(/\r?\n/g, '\\n');
+  const bajtu = z => { const c = z.codePointAt(0); return c < 0x80 ? 1 : c < 0x800 ? 2 : c < 0x10000 ? 3 : 4; };
+  function fold(radek) {
+    const out = []; let akt = '', b = 0;
+    for (const z of radek) { const n = bajtu(z); if (b + n > (out.length ? 74 : 75)) { out.push(akt); akt = ''; b = 0; } akt += z; b += n; }
+    out.push(akt);
+    return out.join('\r\n ');
+  }
+  function ics(polozky, jmeno, razitko) {
+    const r = ['BEGIN:VCALENDAR', 'VERSION:2.0', 'PRODID:-//lavionus//ockovaci-kalendar//CS', 'CALSCALE:GREGORIAN', 'X-WR-CALNAME:' + icsEsc('Očkování – ' + jmeno)];
+    polozky.forEach(p => {
+      const d = zDne(p.doporuceno).replace(/-/g, ''), d2 = zDne(p.doporuceno + 1).replace(/-/g, '');
+      r.push('BEGIN:VEVENT', `UID:ockovani-${p.id}-${d}-${jmeno.replace(/[^A-Za-z0-9]/g, '')}@lavionus.github.io`, 'DTSTAMP:' + razitko,
+        'DTSTART;VALUE=DATE:' + d, 'DTEND;VALUE=DATE:' + d2, 'SUMMARY:' + icsEsc('💉 ' + jmeno + ': ' + p.nazev),
+        'DESCRIPTION:' + icsEsc(`Doporučené okno: ${zDne(p.od)} až ${zDne(p.do)}. ${p.info}`), 'TRANSP:TRANSPARENT');
+      if (p.opakovane) r.push('RRULE:FREQ=YEARLY');
+      r.push('BEGIN:VALARM', 'ACTION:DISPLAY', 'DESCRIPTION:' + icsEsc('Očkování: ' + p.nazev), 'TRIGGER:-P7D', 'END:VALARM', 'END:VEVENT');
+    });
+    r.push('END:VCALENDAR');
+    return r.map(fold).join('\r\n') + '\r\n';
+  }
+
+  return { naDen, zDne, dnesDen, pricti, DAVKY, harmonogram, chripka, vekText, ics, fold };
+})();
+</script>
+
+<script>
+const $ = id => document.getElementById(id);
+const O = window.OCKOVANI;
+const KLIC = 'webapp_ockovani_';
+function nacti(k, v) { try { const s = localStorage.getItem(KLIC + k); return s === null ? v : JSON.parse(s); } catch (e) { return v; } }
+function uloz(k, v) { try { localStorage.setItem(KLIC + k, JSON.stringify(v)); } catch (e) {} }
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+const fmt = d => new Date(d * 86400000).toLocaleDateString('cs-CZ', { day: 'numeric', month: 'numeric', year: 'numeric', timeZone: 'UTC' });
+
+const KATEGORIE = {
+  povinne: 'Povinné (vyhláška)', hrazene: 'Nepovinné hrazené', doporucene: 'Doporučené (samoplátce)',
+  indikovane: 'Jen indikované', dospeli: 'Dospělí'
+};
+let profily = nacti('profily', null);
+if (!Array.isArray(profily) || !profily.length) profily = [{ id: 'p' + Date.now(), jmeno: '', narozeni: '', hotovo: {} }];
+let aktivni = nacti('aktivni', profily[0].id);
+if (!profily.some(p => p.id === aktivni)) aktivni = profily[0].id;
+let filtr = nacti('filtr', { povinne: true, hrazene: true, doporucene: true, indikovane: false, dospeli: true, jenNesplnene: false, jenBlizke: false });
+const profil = () => profily.find(p => p.id === aktivni);
+const ulozVse = () => { uloz('profily', profily); uloz('aktivni', aktivni); uloz('filtr', filtr); };
+
+$('filtry').innerHTML = Object.entries(KATEGORIE).map(([k, n]) =>
+  `<label class="filtr"><input type="checkbox" data-k="${k}"${filtr[k] ? ' checked' : ''}><span class="tecka k-${k}"></span>${n}</label>`).join('');
+$('filtry').addEventListener('change', e => { filtr[e.target.dataset.k] = e.target.checked; ulozVse(); vykresli(); });
+$('jenNesplnene').checked = filtr.jenNesplnene; $('jenBlizke').checked = filtr.jenBlizke;
+$('jenNesplnene').addEventListener('change', e => { filtr.jenNesplnene = e.target.checked; ulozVse(); vykresli(); });
+$('jenBlizke').addEventListener('change', e => { filtr.jenBlizke = e.target.checked; ulozVse(); vykresli(); });
+
+function vykresliProfily() {
+  $('profil').innerHTML = profily.map((p, i) => `<option value="${p.id}"${p.id === aktivni ? ' selected' : ''}>${esc(p.jmeno || 'Osoba ' + (i + 1))}${p.narozeni ? ' (' + fmt(O.naDen(p.narozeni)) + ')' : ''}</option>`).join('');
+  $('jmeno').value = profil().jmeno; $('narozeni').value = profil().narozeni;
+  $('smazatProfil').disabled = profily.length < 2;
+}
+$('profil').addEventListener('change', () => { aktivni = $('profil').value; ulozVse(); vykresliProfily(); vykresli(); });
+$('jmeno').addEventListener('input', () => { profil().jmeno = $('jmeno').value.trim(); ulozVse(); });
+$('jmeno').addEventListener('change', vykresliProfily);
+$('narozeni').addEventListener('input', () => { profil().narozeni = $('narozeni').value; ulozVse(); vykresli(); });
+$('narozeni').addEventListener('change', vykresliProfily);
+$('novyProfil').addEventListener('click', () => {
+  const p = { id: 'p' + Date.now(), jmeno: '', narozeni: '', hotovo: {} };
+  profily.push(p); aktivni = p.id; ulozVse(); vykresliProfily(); vykresli(); $('jmeno').focus();
+});
+$('smazatProfil').addEventListener('click', async () => {
+  if (profily.length < 2) return;
+  if (!await Dialog.potvrd(`Smazat profil „${profil().jmeno || 'bez jména'}“ včetně odškrtnutých očkování?`)) return;
+  profily = profily.filter(p => p.id !== aktivni); aktivni = profily[0].id; ulozVse(); vykresliProfily(); vykresli();
+});
+
+let posledni = [];
+function vykresli() {
+  const p = profil();
+  const nar = O.naDen(p.narozeni);
+  if (nar === null) {
+    $('seznam').innerHTML = '<div class="prazdno">Zadej datum narození a zobrazí se osobní harmonogram.</div>';
+    $('staty').innerHTML = ''; posledni = []; return;
+  }
+  const dnes = O.dnesDen();
+  const vse = O.harmonogram(nar, p.hotovo, dnes);
+  posledni = vse.filter(z => filtr[z.kat]);
+  const pocet = s => posledni.filter(z => z.stav === s).length;
+  $('staty').innerHTML = `
+    <div class="stat"><b>${O.vekText(nar, dnes)}</b><span>věk</span></div>
+    <div class="stat"><b class="dobre">${pocet('hotovo')}</b><span>provedeno</span></div>
+    <div class="stat"><b>${pocet('ted') + pocet('brzy')}</b><span>teď / do 30 dní</span></div>
+    <div class="stat"><b class="${pocet('po') ? 'zle' : ''}">${pocet('po')}</b><span>po termínu</span></div>`;
+  let zobraz = posledni;
+  if (filtr.jenNesplnene) zobraz = zobraz.filter(z => z.stav !== 'hotovo');
+  if (filtr.jenBlizke) zobraz = zobraz.filter(z => z.stav !== 'hotovo' && z.od <= dnes + 730 && (z.stav !== 'po' || z.do > dnes - 3 * 365));
+  if (!zobraz.length) { $('seznam').innerHTML = '<div class="prazdno">Podle filtru nic k zobrazení.</div>'; return; }
+  // seskupit podle věku při doporučeném datu
+  const skupiny = [];
+  zobraz.forEach(z => {
+    const v = O.vekText(nar, z.doporuceno);
+    if (!skupiny.length || skupiny[skupiny.length - 1].v !== v) skupiny.push({ v, polozky: [] });
+    skupiny[skupiny.length - 1].polozky.push(z);
+  });
+  const STAV = { hotovo: ['ok', 'provedeno'], po: ['po', 'po termínu'], ted: ['ted', 'teď'], brzy: ['ted', 'brzy'], budouci: ['', ''] };
+  $('seznam').innerHTML = skupiny.map(s => `<div class="skupina"><h3>${esc(s.v)}</h3>${s.polozky.map(z => {
+    const [tr, text] = STAV[z.stav];
+    const kdy = z.stav === 'hotovo'
+      ? `<span class="pop">provedeno</span><input type="date" data-datum="${z.id}" value="${O.zDne(z.provedeno)}">`
+      : `<b>${fmt(z.doporuceno)}</b>${z.do > z.od ? `<span>až ${fmt(z.do)}</span>` : ''}`;
+    return `<div class="davka ${z.stav === 'brzy' ? 'ted' : z.stav}">
+      <input type="checkbox" data-id="${z.id}"${z.stav === 'hotovo' ? ' checked' : ''} aria-label="Provedeno: ${esc(z.nazev)}">
+      <div><div class="nazev"><span class="tecka k-${z.kat}" title="${KATEGORIE[z.kat]}"></span>${esc(z.nazev)}${text ? `<span class="stav ${tr}">${text}</span>` : ''}</div>
+      <div class="info">${esc(z.info)}</div></div>
+      <div class="kdy">${kdy}</div></div>`;
+  }).join('')}</div>`).join('');
+}
+$('seznam').addEventListener('change', e => {
+  const p = profil();
+  const cb = e.target.closest('input[type=checkbox]');
+  if (cb) {
+    if (cb.checked) {
+      const z = posledni.find(x => x.id === cb.dataset.id);
+      const dnes = O.dnesDen();
+      // datum: dnes; když okno už uplynulo (zpětné doplňování), doporučené datum – lze přepsat
+      p.hotovo[cb.dataset.id] = O.zDne(z && z.do < dnes ? z.doporuceno : dnes);
+    } else delete p.hotovo[cb.dataset.id];
+    ulozVse(); vykresli(); return;
+  }
+  const di = e.target.closest('input[data-datum]');
+  if (di && O.naDen(di.value) !== null) { p.hotovo[di.dataset.datum] = di.value; ulozVse(); vykresli(); }
+});
+
+$('exportIcs').addEventListener('click', () => {
+  const p = profil();
+  const k = posledni.filter(z => z.stav !== 'hotovo' && z.stav !== 'po');
+  if (!k.length) { Dialog.chyba('Není co exportovat – zadej datum narození nebo uprav filtr.'); return; }
+  const jm = p.jmeno || 'bez jména';
+  const text = O.ics(k, jm, new Date().toISOString().replace(/[-:]/g, '').replace(/\.\d+/, ''));
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([text], { type: 'text/calendar;charset=utf-8' }));
+  a.download = 'ockovani_' + (p.jmeno || 'kalendar').normalize('NFD').replace(/[^\w]/g, '') + '.ics';
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+  Dialog.info(`Exportováno ${k.length} termínů (připomínka týden předem).`);
+});
+$('tisk').addEventListener('click', () => window.print());
+
+vykresliProfily();
+vykresli();
+</script>
+</body>
+</html>

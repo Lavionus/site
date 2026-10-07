@@ -1,0 +1,480 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>✒️ Spirograf</title>
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../podpis.js" defer></script>
+<script src="../dialog.js" defer></script>
+<style>
+body{background:var(--bg-deep);padding:16px clamp(10px,2.5vw,32px);min-height:100vh}
+.container{max-width:1200px;margin:0 auto}
+h1{font-size:1.45rem;margin-bottom:4px}
+.sub{color:var(--text-muted);font-size:.85rem;margin-bottom:14px;line-height:1.5}
+.rozlozeni{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:16px;align-items:start}
+@media(max-width:860px){.rozlozeni{grid-template-columns:1fr}}
+.card{background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:14px}
+.card h2{font-size:.8rem;color:var(--accent);margin-bottom:10px;text-transform:uppercase;letter-spacing:.04em}
+.platno{position:relative;width:100%;aspect-ratio:1;border-radius:var(--radius);overflow:hidden;border:1px solid var(--border);background:var(--bg-panel)}
+.platno canvas{position:absolute;inset:0;width:100%;height:100%;display:block}
+.posuvnik{display:grid;grid-template-columns:72px minmax(0,1fr) 52px;gap:8px;align-items:center;margin-bottom:8px;font-size:.8rem}
+.posuvnik span{color:var(--text-muted)}
+.posuvnik input[type=range]{width:100%;accent-color:var(--accent)}
+.posuvnik input[type=number]{width:100%;background:var(--bg-input);border:1px solid var(--border);color:var(--text);border-radius:5px;padding:3px 4px;font-size:.8rem}
+.btn{background:var(--bg-control);color:var(--text);border:1px solid var(--border);padding:7px 12px;border-radius:6px;cursor:pointer;font-size:.83rem;font-family:inherit}
+.btn:hover{background:var(--bg-hover)}
+.btn.hlavni{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+.btn.hlavni:hover{background:var(--accent-hover)}
+.btn:disabled{opacity:.45;cursor:default}
+.btn-radek{display:flex;flex-wrap:wrap;gap:6px}
+.prepinace{display:flex;gap:6px;margin-bottom:10px}
+.prepinace button{flex:1;padding:6px 8px;border:1px solid var(--border);border-radius:14px;background:var(--bg-elevated);cursor:pointer;font-size:.8rem;color:var(--text);font-family:inherit}
+.prepinace button.on{background:var(--accent-soft);border-color:var(--accent);color:var(--accent)}
+.vrstvy{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:10px}
+.vrstva{display:flex;align-items:center;gap:6px;padding:4px 8px 4px 5px;border:1px solid var(--border);border-radius:14px;background:var(--bg-elevated);cursor:pointer;font-size:.78rem;color:var(--text);font-family:inherit}
+.vrstva.on{border-color:var(--accent);box-shadow:0 0 0 1px var(--accent)}
+.vrstva.skryta{opacity:.45}
+.vrstva i{width:14px;height:14px;border-radius:50%;display:block;border:1px solid var(--border-strong)}
+.radek{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:8px;font-size:.8rem;color:var(--text-muted)}
+.radek input[type=color]{width:42px;height:30px;border:1px solid var(--border);border-radius:6px;background:var(--bg-input);padding:2px;cursor:pointer}
+.radek select{background:var(--bg-input);border:1px solid var(--border);color:var(--text);border-radius:6px;padding:5px;font-family:inherit;font-size:.8rem}
+.info{font-size:.8rem;color:var(--text-muted);line-height:1.6;background:var(--bg-elevated);border:1px solid var(--border);border-radius:6px;padding:8px 10px}
+.info b{color:var(--text)}
+.presety{display:grid;grid-template-columns:repeat(auto-fill,minmax(92px,1fr));gap:6px}
+.presety button{font-size:.76rem;padding:6px 4px}
+.pod-platnem{display:flex;flex-wrap:wrap;gap:6px;margin-top:10px;align-items:center}
+.pozn{font-size:.75rem;color:var(--text-faint);line-height:1.5;margin-top:10px}
+label.zaskrt{display:flex;align-items:center;gap:6px;font-size:.8rem;color:var(--text-muted);cursor:pointer}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>✒️ Spirograf</h1>
+  <p class="sub">Kolečko o poloměru r se odvaluje uvnitř (hypotrochoida) nebo vně (epitrochoida) pevného kruhu R a pero ve vzdálenosti d od středu kolečka kreslí křivku. Skládej víc vrstev, měň barvy a exportuj do PNG nebo SVG.</p>
+
+  <div class="rozlozeni">
+    <div>
+      <div class="platno" id="platno">
+        <canvas id="papir" aria-label="Kresba spirografu"></canvas>
+        <canvas id="mechanika" aria-hidden="true"></canvas>
+      </div>
+      <div class="pod-platnem">
+        <button class="btn hlavni" id="kreslit">▶ Kreslit perem</button>
+        <button class="btn" id="zastavit" disabled>⏸ Dokončit hned</button>
+        <button class="btn" id="nahodne">🎲 Náhodný vzor</button>
+        <button class="btn" id="png">⬇ PNG</button>
+        <button class="btn" id="svg">⬇ SVG</button>
+        <label class="zaskrt"><input type="checkbox" id="ukazKola" checked> ozubená kola při kreslení</label>
+      </div>
+    </div>
+
+    <div>
+      <div class="card">
+        <h2>Vrstvy</h2>
+        <div class="vrstvy" id="vrstvy"></div>
+        <div class="btn-radek">
+          <button class="btn" id="pridatVrstvu">+ Vrstva</button>
+          <button class="btn" id="skrytVrstvu">👁 Skrýt</button>
+          <button class="btn" id="smazatVrstvu">🗑 Smazat</button>
+        </div>
+      </div>
+
+      <div class="card">
+        <h2>Aktivní vrstva</h2>
+        <div class="prepinace" id="typ">
+          <button data-t="hypo">⭕ Uvnitř (hypo)</button>
+          <button data-t="epi">🌼 Vně (epi)</button>
+        </div>
+        <div class="posuvnik"><span>Kruh R</span><input type="range" id="sR" min="10" max="200" step="1"><input type="number" id="nR" min="10" max="200" step="1"></div>
+        <div class="posuvnik"><span>Kolečko r</span><input type="range" id="sr" min="2" max="199" step="1"><input type="number" id="nr" min="2" max="199" step="1"></div>
+        <div class="posuvnik"><span>Pero d</span><input type="range" id="sd" min="0" max="200" step="0.5"><input type="number" id="nd" min="0" max="200" step="0.5"></div>
+        <div class="posuvnik"><span>Natočení °</span><input type="range" id="sa" min="0" max="359" step="1"><input type="number" id="na" min="0" max="359" step="1"></div>
+        <div class="posuvnik"><span>Tloušťka</span><input type="range" id="sw" min="0.25" max="8" step="0.25"><input type="number" id="nw" min="0.25" max="8" step="0.25"></div>
+        <div class="radek">Barva <input type="color" id="barva"></div>
+        <div class="info" id="info"></div>
+      </div>
+
+      <div class="card">
+        <h2>Předvolby</h2>
+        <div class="presety" id="presety"></div>
+      </div>
+
+      <div class="card">
+        <h2>Zobrazení</h2>
+        <div class="posuvnik"><span>Rychlost</span><input type="range" id="rychlost" min="1" max="100" step="1" value="40"><span id="rychlostText" style="text-align:right"></span></div>
+        <div class="radek">Pozadí
+          <select id="pozadi">
+            <option value="motiv">podle motivu</option>
+            <option value="#ffffff">bílé</option>
+            <option value="#fbf6ea">papír</option>
+            <option value="#10131a">noční</option>
+            <option value="pruhledne">průhledné (export)</option>
+          </select>
+        </div>
+      </div>
+    </div>
+  </div>
+  <p class="pozn">Křivka se uzavře, až kolečko oběhne kruh r / NSD(R, r)krát – tedy po NSN(R, r) zubech. Proto pro dvojici 96 / 36 (NSD 12) stačí 3 oběhy a 8 cípů, kdežto 97 / 36 potřebuje 36 oběhů.</p>
+</div>
+
+<!-- ===== výpočetní logika (bez DOM, testuje se v node) ===== -->
+<script id="logika">
+window.SPIROGRAF = (function () {
+  function nsd(a, b) { a = Math.abs(Math.round(a)); b = Math.abs(Math.round(b)); while (b) [a, b] = [b, a % b]; return a; }
+  function nsn(a, b) { return Math.round(a) / nsd(a, b) * Math.round(b); }
+
+  /** rozbor uzavření křivky pro celočíselné R a r */
+  function rozbor(v) {
+    const g = nsd(v.R, v.r);
+    const obehu = Math.round(v.r) / g;           // kolikrát kolečko oběhne pevný kruh
+    const cipu = Math.round(v.R) / g;            // počet smyček / cípů
+    const k = v.typ === 'epi' ? v.R + v.r : v.R - v.r;
+    return { nsd: g, nsn: nsn(v.R, v.r), obehu, cipu, otacekKolecka: Math.abs(k) / g, perioda: 2 * Math.PI * obehu };
+  }
+
+  /** bod křivky pro úhel t (úhel středu kolečka kolem středu kruhu) */
+  function bod(v, t) {
+    const a = (v.natoceni || 0) * Math.PI / 180;
+    let x, y;
+    if (v.typ === 'epi') {
+      const k = v.R + v.r, q = k / v.r * t;
+      x = k * Math.cos(t) - v.d * Math.cos(q);
+      y = k * Math.sin(t) - v.d * Math.sin(q);
+    } else {
+      const k = v.R - v.r, q = k / v.r * t;
+      x = k * Math.cos(t) + v.d * Math.cos(q);
+      y = k * Math.sin(t) - v.d * Math.sin(q);
+    }
+    if (!a) return [x, y];
+    const c = Math.cos(a), s = Math.sin(a);
+    return [x * c - y * s, x * s + y * c];
+  }
+
+  /** největší vzdálenost křivky od středu (pro měřítko) */
+  function dosah(v) { return (v.typ === 'epi' ? v.R + v.r : Math.abs(v.R - v.r)) + Math.abs(v.d); }
+  /** dosah včetně mechaniky (pevný kruh a kolečko) */
+  function dosahMechaniky(v) { return Math.max(dosah(v), v.typ === 'epi' ? v.R + 2 * v.r : v.R); }
+
+  /** počet vzorků na celou křivku – jemnost podle počtu oběhů a velikosti cípů */
+  function pocetVzorku(v) {
+    const r = rozbor(v);
+    return Math.min(240000, Math.max(400, Math.round(r.obehu * 360 * Math.max(1, Math.sqrt(r.cipu / r.obehu)) * 2)));
+  }
+
+  /** pole bodů celé uzavřené křivky [x0,y0,x1,y1,…], poslední = první */
+  function body(v, n) {
+    n = n || pocetVzorku(v);
+    const T = rozbor(v).perioda, out = new Float64Array((n + 1) * 2);
+    for (let i = 0; i <= n; i++) { const p = bod(v, T * i / n); out[2 * i] = p[0]; out[2 * i + 1] = p[1]; }
+    return out;
+  }
+
+  /** SVG celé kresby; vrstvy = [{R,r,d,typ,natoceni,barva,tloustka}], pozadí = barva nebo null */
+  function svg(vrstvy, pozadi, velikost) {
+    velikost = velikost || 1000;
+    const S = Math.max(1, ...vrstvy.map(dosah)) * 1.05;
+    const m = velikost / 2 / S;
+    let o = `<svg xmlns="http://www.w3.org/2000/svg" width="${velikost}" height="${velikost}" viewBox="0 0 ${velikost} ${velikost}">\n`;
+    if (pozadi) o += `<rect width="100%" height="100%" fill="${pozadi}"/>\n`;
+    for (const v of vrstvy) {
+      const b = body(v, Math.min(20000, pocetVzorku(v)));
+      let d = '';
+      for (let i = 0; i < b.length; i += 2) d += (i ? 'L' : 'M') + (velikost / 2 + b[i] * m).toFixed(2) + ' ' + (velikost / 2 + b[i + 1] * m).toFixed(2);
+      o += `<path d="${d}Z" fill="none" stroke="${v.barva}" stroke-width="${v.tloustka}" stroke-linejoin="round" stroke-linecap="round"/>\n`;
+    }
+    return o + '</svg>\n';
+  }
+
+  /** náhodná vrstva; nahoda = funkce vracející [0,1) */
+  function nahodnaVrstva(nahoda) {
+    for (let pokus = 0; pokus < 200; pokus++) {
+      const typ = nahoda() < 0.7 ? 'hypo' : 'epi';
+      const R = 60 + Math.floor(nahoda() * 120);
+      const r = typ === 'hypo' ? 8 + Math.floor(nahoda() * (R - 16)) : 8 + Math.floor(nahoda() * 60);
+      const ro = rozbor({ R, r, typ });
+      if (ro.obehu < 2 || ro.obehu > 30) continue;
+      const d = Math.round((0.3 + nahoda() * 1.0) * r * 2) / 2;
+      return { R, r, d, typ, natoceni: 0 };
+    }
+    return { R: 96, r: 36, d: 30, typ: 'hypo', natoceni: 0 };
+  }
+
+  return { nsd, nsn, rozbor, bod, dosah, dosahMechaniky, pocetVzorku, body, svg, nahodnaVrstva };
+})();
+</script>
+
+<script>
+const $ = id => document.getElementById(id);
+const SP = window.SPIROGRAF;
+const KLIC = 'webapp_spirograf_';
+function nacti(k, v) { try { const s = localStorage.getItem(KLIC + k); return s === null ? v : JSON.parse(s); } catch (e) { return v; } }
+function uloz(k, v) { try { localStorage.setItem(KLIC + k, JSON.stringify(v)); } catch (e) {} }
+
+const PALETA = ['#e0457b', '#3d8bd6', '#2f9e74', '#e08a1e', '#8a5cd6', '#d64545', '#1aa3a3', '#c2a000'];
+const PRESETY = [
+  { nazev: 'Klasika', v: [{ R: 96, r: 36, d: 30, typ: 'hypo', barva: '#3d8bd6', tloustka: 1.5 }] },
+  { nazev: 'Růže', v: [{ R: 105, r: 42, d: 40, typ: 'hypo', barva: '#e0457b', tloustka: 1.5 }, { R: 105, r: 42, d: 40, typ: 'hypo', natoceni: 25.7, barva: '#8a5cd6', tloustka: 1 }] },
+  { nazev: 'Hvězda', v: [{ R: 100, r: 60, d: 58, typ: 'hypo', barva: '#e08a1e', tloustka: 1.25 }] },
+  { nazev: 'Krajka', v: [{ R: 150, r: 53, d: 52, typ: 'hypo', barva: '#1aa3a3', tloustka: 0.75 }] },
+  { nazev: 'Kytička', v: [{ R: 60, r: 15, d: 22, typ: 'epi', barva: '#2f9e74', tloustka: 1.5 }, { R: 60, r: 15, d: 8, typ: 'epi', barva: '#c2a000', tloustka: 1.5 }] },
+  { nazev: 'Mandala', v: [{ R: 120, r: 45, d: 45, typ: 'hypo', barva: '#d64545', tloustka: 1 }, { R: 120, r: 75, d: 30, typ: 'hypo', barva: '#3d8bd6', tloustka: 1 }, { R: 120, r: 24, d: 20, typ: 'hypo', barva: '#e08a1e', tloustka: 1 }] },
+  { nazev: 'Astroida', v: [{ R: 100, r: 25, d: 25, typ: 'hypo', barva: '#8a5cd6', tloustka: 2 }] },
+  { nazev: 'Kardioida', v: [{ R: 60, r: 60, d: 60, typ: 'epi', barva: '#e0457b', tloustka: 2 }] },
+  { nazev: 'Hustá síť', v: [{ R: 151, r: 64, d: 70, typ: 'hypo', barva: '#2f9e74', tloustka: 0.5 }] },
+];
+
+const vychozi = () => JSON.parse(JSON.stringify(PRESETY[1].v));
+let vrstvy = nacti('vrstvy', null);
+if (!Array.isArray(vrstvy) || !vrstvy.length || vrstvy.some(v => !(v.R > 0 && v.r > 0))) vrstvy = vychozi();
+vrstvy.forEach(normalizuj);
+let aktivni = Math.min(nacti('aktivni', 0) | 0, vrstvy.length - 1);
+let zobrazeni = nacti('zobrazeni', { rychlost: 40, pozadi: 'motiv', ukazKola: true });
+
+function normalizuj(v) {
+  v.R = Math.round(Math.min(200, Math.max(10, +v.R || 96)));
+  v.typ = v.typ === 'epi' ? 'epi' : 'hypo';
+  v.r = Math.round(Math.max(2, +v.r || 36));
+  if (v.typ === 'hypo' && v.r >= v.R) v.r = v.R - 1;
+  if (v.r > 199) v.r = 199;
+  v.d = Math.round(Math.max(0, Math.min(200, +v.d || 0)) * 10) / 10;
+  v.natoceni = ((+v.natoceni || 0) % 360 + 360) % 360;
+  v.tloustka = Math.max(0.25, Math.min(8, +v.tloustka || 1.5));
+  if (!/^#[0-9a-f]{6}$/i.test(v.barva || '')) v.barva = PALETA[0];
+  v.skryta = !!v.skryta;
+  return v;
+}
+const ulozVse = () => { uloz('vrstvy', vrstvy); uloz('aktivni', aktivni); uloz('zobrazeni', zobrazeni); };
+
+// ---- plátna se správným DPR ----
+const papir = $('papir'), mech = $('mechanika');
+let W = 0, dpr = 1;
+function velikost() {
+  const box = $('platno');
+  dpr = window.devicePixelRatio || 1;
+  W = box.clientWidth;
+  for (const c of [papir, mech]) { c.width = Math.round(W * dpr); c.height = Math.round(W * dpr); }
+}
+function css(n) { return getComputedStyle(document.documentElement).getPropertyValue(n).trim(); }
+function barvaPozadi() { return zobrazeni.pozadi === 'motiv' ? css('--bg-panel') : zobrazeni.pozadi === 'pruhledne' ? null : zobrazeni.pozadi; }
+function meritko() {
+  const viditelne = vrstvy.filter(v => !v.skryta);
+  // s ukázanými koly počítáme s jejich dosahem stále, aby se měřítko při animaci neměnilo
+  const S = Math.max(1, ...(viditelne.length ? viditelne : vrstvy).map(v => zobrazeni.ukazKola ? SP.dosahMechaniky(v) : SP.dosah(v)));
+  return W / 2 / (S * 1.06);
+}
+
+// ---- kreslení ----
+let cache = new Map(); // vrstva → body
+function bodyVrstvy(v) {
+  const klic = [v.R, v.r, v.d, v.typ, v.natoceni].join('|');
+  let c = cache.get(v);
+  if (!c || c.klic !== klic) { c = { klic, b: SP.body(v) }; cache.set(v, c); }
+  return c.b;
+}
+function pripravKontext(c) {
+  c.setTransform(dpr, 0, 0, dpr, 0, 0);
+  c.lineJoin = 'round'; c.lineCap = 'round';
+}
+function cesta(c, b, od, po, m) {
+  const s = W / 2;
+  c.beginPath();
+  c.moveTo(s + b[2 * od] * m, s + b[2 * od + 1] * m);
+  for (let i = od + 1; i <= po; i++) c.lineTo(s + b[2 * i] * m, s + b[2 * i + 1] * m);
+  c.stroke();
+}
+function prekresli() {
+  const c = papir.getContext('2d');
+  pripravKontext(c);
+  c.clearRect(0, 0, W, W);
+  const pz = barvaPozadi();
+  $('platno').style.background = pz || 'repeating-conic-gradient(var(--bg-control) 0 25%, var(--bg-panel) 0 50%) 0 0/20px 20px';
+  if (pz) { c.fillStyle = pz; c.fillRect(0, 0, W, W); }
+  const m = meritko();
+  for (const v of vrstvy) {
+    if (v.skryta) continue;
+    if (animace) {
+      const idx = vrstvy.indexOf(v), ai = vrstvy.indexOf(animace.v);
+      if (idx > ai) continue;
+      if (idx === ai) { const b = bodyVrstvy(v); c.strokeStyle = v.barva; c.lineWidth = v.tloustka; if (animace.i > 0) cesta(c, b, 0, animace.i, m); continue; }
+    }
+    c.strokeStyle = v.barva; c.lineWidth = v.tloustka;
+    const b = bodyVrstvy(v);
+    cesta(c, b, 0, b.length / 2 - 1, m);
+  }
+  kresliMechaniku();
+}
+
+function kresliMechaniku() {
+  const c = mech.getContext('2d');
+  pripravKontext(c);
+  c.clearRect(0, 0, W, W);
+  if (!animace || !zobrazeni.ukazKola) return;
+  const v = animace.v, m = meritko(), s = W / 2;
+  const b = bodyVrstvy(v), n = b.length / 2 - 1;
+  const t = SP.rozbor(v).perioda * animace.i / n;
+  const a = (v.natoceni || 0) * Math.PI / 180;
+  const k = v.typ === 'epi' ? v.R + v.r : v.R - v.r;
+  const cx = s + k * Math.cos(t + a) * m, cy = s + k * Math.sin(t + a) * m;
+  const px = s + b[2 * animace.i] * m, py = s + b[2 * animace.i + 1] * m;
+  const text = css('--text-faint') || '#888';
+  c.lineWidth = 1.2;
+  c.strokeStyle = text; c.globalAlpha = .55;
+  c.beginPath(); c.arc(s, s, v.R * m, 0, Math.PI * 2); c.stroke();
+  c.globalAlpha = .9;
+  c.fillStyle = css('--accent-soft') || 'rgba(100,150,250,.15)';
+  c.strokeStyle = css('--accent') || '#6aa6fd';
+  c.beginPath(); c.arc(cx, cy, v.r * m, 0, Math.PI * 2); c.fill(); c.stroke();
+  // rameno pera
+  c.beginPath(); c.moveTo(cx, cy); c.lineTo(px, py); c.stroke();
+  c.fillStyle = c.strokeStyle; c.beginPath(); c.arc(cx, cy, 2.5, 0, 7); c.fill();
+  c.fillStyle = v.barva; c.strokeStyle = css('--text') || '#fff'; c.lineWidth = 1.5;
+  c.beginPath(); c.arc(px, py, 4.5, 0, 7); c.fill(); c.stroke();
+  c.globalAlpha = 1;
+}
+
+// ---- animace perem ----
+let animace = null, snimek = 0;
+function spustAnimaci() {
+  zastavAnimaci(false);
+  const fronta = vrstvy.filter(v => !v.skryta);
+  if (!fronta.length) return;
+  animace = { fronta, v: fronta[0], i: 0 };
+  $('zastavit').disabled = false; $('kreslit').textContent = '↻ Znovu';
+  prekresli();
+  let posledni = performance.now();
+  const krok = ted => {
+    if (!animace) return;
+    const dt = Math.min(64, ted - posledni); posledni = ted;
+    const v = animace.v, b = bodyVrstvy(v), n = b.length / 2 - 1;
+    // rychlost: vzorky za sekundu; vyšší rychlost = exponenciálně víc
+    const zaSek = 60 * Math.pow(1.075, zobrazeni.rychlost) * Math.max(1, n / 4000);
+    const novy = Math.min(n, animace.i + Math.max(1, Math.round(zaSek * dt / 1000)));
+    const c = papir.getContext('2d'); pripravKontext(c);
+    c.strokeStyle = v.barva; c.lineWidth = v.tloustka;
+    cesta(c, b, animace.i, novy, meritko());
+    animace.i = novy;
+    if (novy >= n) {
+      const dalsi = animace.fronta[animace.fronta.indexOf(v) + 1];
+      if (dalsi) { animace.v = dalsi; animace.i = 0; prekresli(); }
+      else { zastavAnimaci(true); return; }
+    }
+    kresliMechaniku();
+    snimek = requestAnimationFrame(krok);
+  };
+  snimek = requestAnimationFrame(krok);
+}
+function zastavAnimaci(prekreslit) {
+  cancelAnimationFrame(snimek);
+  const bezelo = !!animace;
+  animace = null;
+  $('zastavit').disabled = true; $('kreslit').textContent = '▶ Kreslit perem';
+  if (prekreslit && bezelo) prekresli();
+}
+
+// ---- ovládání ----
+const POSUVNIKY = [['R', 'sR', 'nR'], ['r', 'sr', 'nr'], ['d', 'sd', 'nd'], ['natoceni', 'sa', 'na'], ['tloustka', 'sw', 'nw']];
+function vykresliOvladani() {
+  const v = vrstvy[aktivni];
+  POSUVNIKY.forEach(([k, s, n]) => { $(s).value = v[k]; $(n).value = v[k]; });
+  $('sr').max = $('nr').max = v.typ === 'hypo' ? v.R - 1 : 199;
+  $('barva').value = v.barva;
+  document.querySelectorAll('#typ button').forEach(b => b.classList.toggle('on', b.dataset.t === v.typ));
+  const ro = SP.rozbor(v);
+  const zubu = ro.nsn;
+  $('info').innerHTML = `NSD(${v.R}, ${v.r}) = <b>${ro.nsd}</b>, NSN = <b>${zubu}</b><br>
+    Uzavře se po <b>${ro.obehu}</b> ${ro.obehu === 1 ? 'oběhu' : 'obězích'} kolečka kolem kruhu<br>
+    <b>${ro.cipu}</b> ${ro.cipu >= 2 && ro.cipu <= 4 ? 'cípy' : ro.cipu === 1 ? 'cíp' : 'cípů'} · kolečko se otočí ${ro.otacekKolecka}× kolem své osy` +
+    (v.d > v.r ? '<br><span style="color:var(--text-faint)">pero mimo kolečko (d &gt; r) → smyčky</span>' : v.d === v.r ? '<br><span style="color:var(--text-faint)">pero na obvodu (d = r) → hroty (cykloida)</span>' : '');
+  $('vrstvy').innerHTML = vrstvy.map((x, i) => `<button class="vrstva${i === aktivni ? ' on' : ''}${x.skryta ? ' skryta' : ''}" data-i="${i}"><i style="background:${x.barva}"></i>${i + 1}: ${x.typ === 'epi' ? 'epi' : 'hypo'} ${x.R}/${x.r}</button>`).join('');
+  $('skrytVrstvu').textContent = v.skryta ? '👁 Zobrazit' : '👁 Skrýt';
+  $('smazatVrstvu').disabled = vrstvy.length < 2;
+  $('rychlost').value = zobrazeni.rychlost; $('rychlostText').textContent = zobrazeni.rychlost;
+  $('pozadi').value = zobrazeni.pozadi; $('ukazKola').checked = zobrazeni.ukazKola;
+}
+function zmenaVrstvy() {
+  normalizuj(vrstvy[aktivni]);
+  zastavAnimaci(false);
+  ulozVse(); vykresliOvladani(); prekresli();
+}
+POSUVNIKY.forEach(([k, s, n]) => {
+  $(s).addEventListener('input', () => { vrstvy[aktivni][k] = parseFloat($(s).value); zmenaVrstvy(); });
+  $(n).addEventListener('change', () => { const x = parseFloat($(n).value); if (isFinite(x)) { vrstvy[aktivni][k] = x; zmenaVrstvy(); } else vykresliOvladani(); });
+});
+$('barva').addEventListener('input', () => { vrstvy[aktivni].barva = $('barva').value; ulozVse(); vykresliOvladani(); if (!animace) prekresli(); });
+$('typ').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; vrstvy[aktivni].typ = b.dataset.t; zmenaVrstvy(); });
+$('vrstvy').addEventListener('click', e => { const b = e.target.closest('.vrstva'); if (!b) return; aktivni = +b.dataset.i; ulozVse(); vykresliOvladani(); });
+$('pridatVrstvu').addEventListener('click', () => {
+  const v = { ...vrstvy[aktivni], skryta: false, barva: PALETA[vrstvy.length % PALETA.length] };
+  v.d = Math.max(0, v.d * 0.7);
+  vrstvy.push(normalizuj(v)); aktivni = vrstvy.length - 1; zmenaVrstvy();
+});
+$('skrytVrstvu').addEventListener('click', () => { vrstvy[aktivni].skryta = !vrstvy[aktivni].skryta; zmenaVrstvy(); });
+$('smazatVrstvu').addEventListener('click', () => {
+  if (vrstvy.length < 2) return;
+  cache.delete(vrstvy[aktivni]); vrstvy.splice(aktivni, 1); aktivni = Math.max(0, aktivni - 1); zmenaVrstvy();
+});
+$('presety').innerHTML = PRESETY.map((p, i) => `<button class="btn" data-i="${i}">${p.nazev}</button>`).join('');
+$('presety').addEventListener('click', e => {
+  const b = e.target.closest('button'); if (!b) return;
+  vrstvy = JSON.parse(JSON.stringify(PRESETY[+b.dataset.i].v)).map(normalizuj); aktivni = 0; cache = new Map();
+  zmenaVrstvy(); spustAnimaci();
+});
+$('nahodne').addEventListener('click', () => {
+  const pocet = 1 + Math.floor(Math.random() * 3);
+  const posun = Math.floor(Math.random() * PALETA.length);
+  vrstvy = []; cache = new Map();
+  const zaklad = SP.nahodnaVrstva(Math.random);
+  for (let i = 0; i < pocet; i++) {
+    // další vrstvy sdílí pevný kruh, aby k sobě ladily
+    const v = i === 0 ? zaklad : { ...SP.nahodnaVrstva(Math.random), R: zaklad.R, typ: zaklad.typ };
+    v.barva = PALETA[(posun + i * 3) % PALETA.length];
+    v.tloustka = [0.75, 1, 1.5, 2][Math.floor(Math.random() * 4)];
+    if (i && Math.random() < 0.4) v.natoceni = Math.floor(Math.random() * 360);
+    vrstvy.push(normalizuj(v));
+  }
+  aktivni = 0; zmenaVrstvy(); spustAnimaci();
+});
+$('kreslit').addEventListener('click', spustAnimaci);
+$('zastavit').addEventListener('click', () => zastavAnimaci(true));
+$('rychlost').addEventListener('input', () => { zobrazeni.rychlost = +$('rychlost').value; $('rychlostText').textContent = zobrazeni.rychlost; ulozVse(); });
+$('pozadi').addEventListener('change', () => { zobrazeni.pozadi = $('pozadi').value; ulozVse(); prekresli(); });
+$('ukazKola').addEventListener('change', () => { zobrazeni.ukazKola = $('ukazKola').checked; ulozVse(); prekresli(); });
+
+// ---- export ----
+function stahni(blob, nazev) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob); a.download = nazev;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(a.href), 2000);
+}
+function viditelneVrstvy() { return vrstvy.filter(v => !v.skryta); }
+$('png').addEventListener('click', () => {
+  const V = viditelneVrstvy(); if (!V.length) { Dialog.chyba('Všechny vrstvy jsou skryté.'); return; }
+  const N = 2048, cv = document.createElement('canvas'); cv.width = cv.height = N;
+  const c = cv.getContext('2d'); c.lineJoin = 'round'; c.lineCap = 'round';
+  const pz = barvaPozadi(); if (pz) { c.fillStyle = pz; c.fillRect(0, 0, N, N); }
+  const S = Math.max(1, ...V.map(SP.dosah)) * 1.05, m = N / 2 / S, k = N / 800; // tloušťka jako na 800px plátně
+  for (const v of V) {
+    const b = bodyVrstvy(v); c.strokeStyle = v.barva; c.lineWidth = v.tloustka * k;
+    c.beginPath(); c.moveTo(N / 2 + b[0] * m, N / 2 + b[1] * m);
+    for (let i = 2; i < b.length; i += 2) c.lineTo(N / 2 + b[i] * m, N / 2 + b[i + 1] * m);
+    c.stroke();
+  }
+  cv.toBlob(bl => bl ? stahni(bl, 'spirograf.png') : Dialog.chyba('PNG se nepodařilo vytvořit.'), 'image/png');
+});
+$('svg').addEventListener('click', () => {
+  const V = viditelneVrstvy(); if (!V.length) { Dialog.chyba('Všechny vrstvy jsou skryté.'); return; }
+  stahni(new Blob([SP.svg(V, barvaPozadi(), 1000)], { type: 'image/svg+xml' }), 'spirograf.svg');
+});
+
+// ---- start ----
+new ResizeObserver(() => { velikost(); prekresli(); }).observe($('platno'));
+new MutationObserver(() => prekresli()).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+velikost();
+vykresliOvladani();
+prekresli();
+</script>
+</body>
+</html>

@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>💣 Bomberman</title>
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../podpis.js" defer></script>
+<script src="../rekord.js"></script>
+<script src="../dialog.js"></script>
+<style>
+  html, body { min-height: 100%; }
+  body { overflow-x: hidden; touch-action: manipulation; display: flex; flex-direction: column; align-items: center; padding: 8px 8px 16px; gap: 8px; }
+  .hlava { width: 100%; max-width: 760px; display: flex; align-items: center; justify-content: space-between; gap: 8px; flex-wrap: wrap; }
+  .hlava h1 { font-size: 1.3rem; font-weight: 600; }
+  .lista { display: flex; gap: 6px; }
+  .tl { background: var(--bg-control); color: var(--text); border: 1px solid var(--border-strong); border-radius: var(--radius); padding: 6px 10px; font: inherit; font-size: .9rem; cursor: pointer; min-height: 36px; }
+  .tl:hover { background: var(--bg-hover); }
+  .tl.hlavni { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; padding: 9px 22px; font-size: 1rem; }
+  .tl.hlavni:hover { background: var(--accent-hover); }
+  #obal { width: 100%; max-width: 760px; display: flex; justify-content: center; }
+  #scena { position: relative; line-height: 0; border-radius: 6px; overflow: hidden; box-shadow: var(--shadow); background: #111; max-width: 100%; }
+  #cv { display: block; image-rendering: pixelated; image-rendering: crisp-edges; touch-action: none; max-width: 100%; }
+  .prekryv { position: absolute; inset: 0; line-height: 1.4; overflow-y: auto; padding: 14px; display: flex; flex-direction: column; align-items: center; gap: 10px;
+    background: var(--bg-panel); background: color-mix(in srgb, var(--bg-panel) 90%, transparent); color: var(--text); }
+  [hidden] { display: none !important; }
+  .prekryv h2 { font-size: 1.15rem; margin-top: 2px; }
+  .karty { display: flex; gap: 6px; }
+  .karta { padding: 7px 14px; border-radius: 999px; border: 1px solid var(--border-strong); background: var(--bg-control); color: var(--text); cursor: pointer; font: inherit; font-size: .92rem; }
+  .karta[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: #fff; }
+  .volby { display: grid; grid-template-columns: auto auto; gap: 8px 10px; align-items: center; font-size: .92rem; max-width: 100%; }
+  .volby label { color: var(--text-muted); }
+  .volby select { background: var(--bg-input); color: var(--text); border: 1px solid var(--border-strong); border-radius: 6px; padding: 5px 6px; font: inherit; font-size: .9rem; }
+  .volby .radek { grid-column: 1 / -1; display: flex; align-items: center; gap: 8px; color: var(--text); }
+  .popis { font-size: .84rem; color: var(--text-muted); text-align: center; max-width: 420px; }
+  .nepratele { display: flex; flex-wrap: wrap; justify-content: center; gap: 4px 12px; font-size: .8rem; color: var(--text-faint); }
+  .nepratele span { display: inline-flex; align-items: center; gap: 4px; }
+  .nepratele canvas { width: 24px; height: 24px; image-rendering: pixelated; }
+  #konecText { text-align: center; font-size: .95rem; color: var(--text-muted); white-space: pre-line; }
+  .tlacitka { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+  /* dotykové ovládání */
+  #dotyk { display: none; width: 100%; max-width: 520px; justify-content: space-between; align-items: center; user-select: none; -webkit-user-select: none; padding: 0 6px; }
+  body.dotykove #dotyk { display: flex; }
+  body.dotykove .klavesnice { display: none; }
+  #kriz { width: 136px; height: 136px; border-radius: 50%; background: var(--bg-control); border: 2px solid var(--border-strong); position: relative; touch-action: none; flex: none; }
+  #kriz::before, #kriz::after { content: ''; position: absolute; background: var(--bg-hover); border-radius: 5px; border: 1px solid var(--border); }
+  #kriz::before { left: 50%; top: 12px; bottom: 12px; width: 38px; transform: translateX(-50%); }
+  #kriz::after { top: 50%; left: 12px; right: 12px; height: 38px; transform: translateY(-50%); }
+  .prave { display: flex; align-items: center; gap: 14px; }
+  #bombaBtn { width: 88px; height: 88px; border-radius: 50%; background: #c83a2a; border: 3px solid #f08a70; color: #fff; font-size: 34px; touch-action: none; flex: none; }
+  #rozbuskaBtn { width: 58px; height: 58px; border-radius: 50%; background: var(--bg-control); border: 2px solid var(--border-strong); color: var(--text); font-size: 22px; touch-action: none; flex: none; }
+  #rozbuskaBtn:disabled { opacity: .35; }
+  .pata { width: 100%; max-width: 760px; display: flex; flex-direction: column; align-items: center; gap: 8px; font-size: .84rem; color: var(--text-faint); text-align: center; }
+  .rekordy { display: flex; flex-wrap: wrap; gap: 6px; justify-content: center; }
+  .ovladani { line-height: 1.6; }
+  .ovladani b { color: var(--text-muted); font-weight: 600; }
+  kbd { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 4px; padding: 0 4px; font-size: .8rem; color: var(--text); }
+  @media (max-width: 420px) {
+    .hlava h1 { font-size: 1.1rem; }
+    .tl { padding: 5px 8px; }
+    #kriz { width: 120px; height: 120px; }
+    #bombaBtn { width: 78px; height: 78px; }
+  }
+</style>
+</head>
+<body>
+<header class="hlava">
+  <h1>💣 Bomberman</h1>
+  <div class="lista">
+    <button class="tl" id="pauzaBtn" type="button" title="Pauza (P / Esc)">⏸</button>
+    <button class="tl" id="zvukBtn" type="button">🔊</button>
+    <button class="tl" id="menuBtn" type="button" title="Zpět do menu">☰ Menu</button>
+  </div>
+</header>
+
+<div id="obal">
+  <div id="scena">
+    <canvas id="cv" width="240" height="224" aria-label="Herní plocha Bombermana"></canvas>
+
+    <div id="menu" class="prekryv">
+      <h2>Vyber hru</h2>
+      <div class="karty" role="group" aria-label="Režim">
+        <button class="karta" type="button" data-rezim="kampan" aria-pressed="true">🏰 Kampaň</button>
+        <button class="karta" type="button" data-rezim="souboj" aria-pressed="false">⚔️ Souboj</button>
+      </div>
+
+      <div id="volbyKampan" class="volby">
+        <label for="odUrovne">Začít od úrovně</label>
+        <select id="odUrovne"></select>
+      </div>
+      <p id="popisKampan" class="popis">Znič všechny potvory a najdi dveře schované pod bednou. Pod jinou bednou čeká vylepšení. Máš 3 životy, vylepšení si neseš dál.</p>
+      <div id="neprateleUrovne" class="nepratele" aria-label="Nepřátelé v úrovni"></div>
+
+      <div id="volbySouboj" class="volby" hidden>
+        <label for="pocetBotu">Počet botů</label>
+        <select id="pocetBotu"><option value="1">1</option><option value="2">2</option><option value="3" selected>3</option></select>
+        <label for="obtiznost">Obtížnost botů</label>
+        <select id="obtiznost"><option value="lehka">lehká</option><option value="stredni" selected>střední</option><option value="tezka">těžká</option></select>
+        <label for="naVyhry">Hraje se na</label>
+        <select id="naVyhry"><option value="1">1 výhru</option><option value="2">2 výhry</option><option value="3" selected>3 výhry</option><option value="5">5 výher</option></select>
+        <label for="limitKola">Náhlá smrt po</label>
+        <select id="limitKola"><option value="90">1:30</option><option value="120" selected>2:00</option><option value="180">3:00</option></select>
+        <div class="radek"><input type="checkbox" id="dvaHraci"><label for="dvaHraci" style="color:inherit">Dva hráči na jedné klávesnici</label></div>
+        <div class="radek"><input type="checkbox" id="sDalkovou" checked><label for="sDalkovou" style="color:inherit">Dálková rozbuška mezi vylepšeními</label></div>
+      </div>
+      <p id="popisSouboj" class="popis" hidden>Každý proti každému v aréně. Kolo vyhrává poslední přeživší, po limitu se aréna začne zavírat zdmi.</p>
+
+      <button class="tl hlavni" id="startBtn" type="button">▶ Hrát</button>
+    </div>
+
+    <div id="konec" class="prekryv" hidden>
+      <h2 id="konecNadpis">Konec hry</h2>
+      <p id="konecText"></p>
+      <div class="tlacitka">
+        <button class="tl hlavni" id="znovuBtn" type="button">↻ Znovu</button>
+        <button class="tl" id="doMenuBtn" type="button">☰ Menu</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div id="dotyk" aria-hidden="true">
+  <div id="kriz"></div>
+  <div class="prave">
+    <button id="rozbuskaBtn" type="button" disabled title="Dálková rozbuška">📡</button>
+    <button id="bombaBtn" type="button" title="Položit bombu">💣</button>
+  </div>
+</div>
+
+<div class="pata">
+  <div class="rekordy"><span id="rekordKampan"></span><span id="rekordSouboj"></span></div>
+  <div class="ovladani klavesnice">
+    <b>Hráč 1:</b> <kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> + <kbd>Mezerník</kbd> bomba, <kbd>E</kbd> rozbuška
+    (sám hraješ i šipkami + <kbd>Enter</kbd>)<br>
+    <b>Hráč 2:</b> šipky + <kbd>Enter</kbd> bomba, pravý <kbd>Shift</kbd> rozbuška ·
+    <kbd>P</kbd>/<kbd>Esc</kbd> pauza · <kbd>M</kbd> zvuk · funguje i gamepad
+  </div>
+  <div>Vylepšení: 💣 víc bomb · 🔥 delší plamen · 🛼 rychlost · 🥾 kopání bomb · 📡 dálková rozbuška</div>
+</div>
+
+<script src="bomberman/hra.js"></script>
+<script src="bomberman/ai.js"></script>
+<script src="bomberman/grafika.js"></script>
+<script src="bomberman/zvuk.js"></script>
+<script src="bomberman/ui.js"></script>
+</body>
+</html>

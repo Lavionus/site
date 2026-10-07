@@ -1,0 +1,487 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Ostrovní systém</title>
+  <link rel="stylesheet" href="../common.css">
+  <script src="../theme.js"></script>
+  <script src="../podpis.js" defer></script>
+  <script src="../dialog.js"></script>
+  <style>
+    body { background-color: var(--bg-deep); padding: 24px clamp(12px, 3vw, 40px); min-height: 100vh; }
+    h1 { font-size: 1.4rem; margin-bottom: 4px; }
+    h2 { font-size: 1rem; margin-bottom: 6px; }
+    .podtitul { color: var(--text-muted); font-size: 0.88rem; margin-bottom: 20px; max-width: 900px; line-height: 1.5; }
+    .obal { max-width: 1180px; display: flex; flex-direction: column; gap: 18px; }
+    .dva { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 18px; }
+    @media (max-width: 860px) { .dva { grid-template-columns: minmax(0, 1fr); } }
+    .karta { background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; min-width: 0; }
+    label { display: block; font-size: 0.8rem; color: var(--text-muted); margin: 12px 0 5px; }
+    input[type="number"], input[type="text"], select {
+      width: 100%; background: var(--bg-input); border: 1px solid var(--border); border-radius: 6px;
+      color: var(--text); padding: 8px 10px; font-size: 0.95rem; min-width: 0;
+    }
+    input:focus, select:focus { outline: none; border-color: var(--accent); }
+    button {
+      background: var(--bg-control); border: 1px solid var(--border-strong); color: var(--text);
+      border-radius: 6px; padding: 7px 12px; font-size: 0.85rem; cursor: pointer;
+    }
+    button:hover { background: var(--bg-hover); }
+    button.active { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+    .prepinace { display: flex; flex-wrap: wrap; gap: 6px; }
+    .mrizka { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0 12px; }
+    .napoveda { font-size: 0.74rem; color: var(--text-faint); margin-top: 5px; line-height: 1.45; }
+
+    /* seznam spotřebičů – na šířku tabulka, na úzko karty */
+    .spot-hlava, .spot-radek {
+      display: grid; grid-template-columns: minmax(110px, 2.2fr) repeat(3, minmax(56px, 0.8fr)) 70px 70px minmax(70px, 0.9fr) 34px;
+      gap: 6px; align-items: center;
+    }
+    .spot-hlava { font-size: 0.7rem; color: var(--text-faint); text-transform: uppercase; letter-spacing: 0.3px; padding: 0 0 6px; border-bottom: 1px solid var(--border); }
+    .spot-radek { padding: 6px 0; border-bottom: 1px solid var(--border); }
+    .spot-radek input, .spot-radek select { padding: 6px 7px; font-size: 0.88rem; }
+    .spot-radek .wh { text-align: right; font-weight: 600; font-variant-numeric: tabular-nums; }
+    .spot-radek .smaz { padding: 4px 0; width: 34px; color: var(--text-faint); }
+    .spot-radek .smaz:hover { color: var(--danger); }
+    .spot-radek .mini { display: none; }
+    @media (max-width: 700px) {
+      .spot-hlava { display: none; }
+      .spot-radek { grid-template-columns: repeat(3, minmax(0, 1fr)); background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 6px; padding: 8px; margin-bottom: 8px; }
+      .spot-radek .nazev { grid-column: 1 / 3; }
+      .spot-radek .smaz { justify-self: end; }
+      .spot-radek .mini { display: block; font-size: 0.68rem; color: var(--text-faint); margin-bottom: 2px; }
+      .spot-radek .wh { grid-column: 1 / -1; text-align: left; }
+    }
+    .spot-pata { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-top: 10px; }
+    .spot-pata select { width: auto; max-width: 100%; }
+    .soucet { margin-left: auto; font-size: 0.9rem; color: var(--text-muted); }
+    .soucet strong { color: var(--text); }
+
+    .vysledky { display: grid; grid-template-columns: repeat(auto-fit, minmax(190px, 1fr)); gap: 10px; }
+    .box { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: var(--radius); padding: 13px; min-width: 0; }
+    .box .popis { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.4px; color: var(--text-faint); margin-bottom: 5px; }
+    .box .cislo { font-size: 1.3rem; font-weight: 700; overflow-wrap: anywhere; }
+    .box .dalsi { font-size: 0.78rem; color: var(--text-muted); margin-top: 4px; line-height: 1.45; }
+    .box.hlavni .cislo { color: var(--accent); }
+    .varovani { border-left: 3px solid var(--warn); background: var(--bg-elevated); padding: 8px 12px; border-radius: 6px; font-size: 0.84rem; color: var(--text); margin-top: 10px; line-height: 1.45; }
+    .varovani:empty { display: none; }
+    .mesice { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 3px; align-items: end; height: 120px; margin-top: 12px; }
+    .mesice .sl { display: flex; flex-direction: column; justify-content: flex-end; align-items: center; height: 100%; min-width: 0; }
+    .mesice .bar { width: 100%; border-radius: 3px 3px 0 0; background: var(--accent); min-height: 2px; }
+    .mesice .bar.malo { background: var(--warn); }
+    .mesice .pct { font-size: 0.62rem; color: var(--text-muted); margin-bottom: 2px; white-space: nowrap; }
+    .mesice-popis { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 3px; font-size: 0.66rem; color: var(--text-faint); text-align: center; margin-top: 3px; }
+    .mesice .sl.vybrany .bar { outline: 2px solid var(--text); outline-offset: 1px; }
+    details { margin-top: 4px; }
+    details summary { cursor: pointer; font-weight: 600; }
+    .vzorce { font-size: 0.85rem; line-height: 1.6; color: var(--text-muted); }
+    .vzorce h3 { font-size: 0.9rem; color: var(--text); margin: 14px 0 4px; }
+    .vzorce code { background: var(--bg-input); border: 1px solid var(--border); border-radius: 4px; padding: 1px 5px; font-size: 0.82rem; color: var(--text); overflow-wrap: anywhere; }
+    .pozn { color: var(--text-faint); font-size: 0.78rem; line-height: 1.55; }
+  </style>
+</head>
+<body>
+  <h1>🔋 Ostrovní systém</h1>
+  <p class="podtitul">Návrh off-grid sestavy pro chatu, karavan nebo dílnu: ze spotřebičů spočítá denní spotřebu,
+    kapacitu baterie, měnič, výkon panelů s regulátorem a průřez kabelu mezi baterií a měničem.</p>
+
+  <div class="obal">
+    <div class="karta">
+      <h2>🔌 Spotřebiče</h2>
+      <div class="spot-hlava"><div>Název</div><div>Výkon W</div><div>Hod./den</div><div>Kusů</div><div>Proud</div><div>Rozběh ×</div><div style="text-align:right">Wh/den</div><div></div></div>
+      <div id="seznam"></div>
+      <div class="spot-pata">
+        <button id="btnPridat">+ Přidat řádek</button>
+        <select id="priklady" aria-label="Vložit příklad spotřebiče"><option value="">Vložit příklad…</option></select>
+        <button id="btnChata" title="Nahradí seznam typickou víkendovou chatou">Ukázka: chata</button>
+        <button id="btnVymazat">Vymazat vše</button>
+        <div class="soucet">Celkem: <strong id="sAC">0</strong> Wh AC + <strong id="sDC">0</strong> Wh DC denně</div>
+      </div>
+      <p class="napoveda">„Rozběh ×“ = kolikrát větší proud bere spotřebič při zapnutí (lednice a kompresory 3–6×, čerpadla 3×, vrtačka 2×, odporová zátěž 1×).
+        U lednice zadejte příkon kompresoru a dobu, kdy skutečně běží (typicky 6–10 h z 24 h). DC spotřebiče jdou přímo z baterie bez měniče.</p>
+    </div>
+
+    <div class="dva">
+      <div class="karta">
+        <h2>⚙️ Baterie a měnič</h2>
+        <label>Napětí systému</label>
+        <div class="prepinace" id="napeti">
+          <button data-v="12">12 V</button><button data-v="24">24 V</button><button data-v="48">48 V</button>
+        </div>
+        <label>Typ baterie</label>
+        <div class="prepinace" id="typBat">
+          <button data-t="olovo">Olověná zaplavená</button><button data-t="agm">AGM / gel</button><button data-t="lfp">LiFePO4</button>
+        </div>
+        <div class="mrizka">
+          <div><label for="dod">Hloubka vybití DoD (%)</label><input type="number" id="dod" min="10" max="100" step="5"></div>
+          <div><label for="ucBat">Účinnost nabití/vybití (%)</label><input type="number" id="ucBat" min="50" max="100" step="1"></div>
+          <div><label for="dny">Dny autonomie</label><input type="number" id="dny" min="0.5" max="14" step="0.5"></div>
+          <div><label for="ucMenic">Účinnost měniče (%)</label><input type="number" id="ucMenic" min="50" max="100" step="1"></div>
+          <div><label for="soudobost">Současně zapnuté (%)</label><input type="number" id="soudobost" min="10" max="100" step="5"></div>
+        </div>
+        <p class="napoveda">Olovo/AGM vybíjejte nejvýš do 50 % (hlubší vybíjení výrazně zkracuje životnost), LiFePO4 do 80–90 %.
+          Dny autonomie = kolik dní bez slunce má baterie vydržet. „Současně zapnuté“ snižuje trvalý výkon měniče,
+          pokud víte, že např. konvice a mikrovlnka nepoběží naráz.</p>
+      </div>
+
+      <div class="karta">
+        <h2>☀️ Panely a kabel</h2>
+        <div class="mrizka">
+          <div><label for="mesic">Návrhový měsíc</label><select id="mesic"></select></div>
+          <div><label for="sklonPSH">Sklon panelů</label><select id="sklonPSH">
+            <option value="35">35° (letní / celoroční)</option><option value="60">60° (zimní provoz)</option>
+            <option value="90">90° (svisle, fasáda)</option><option value="vlastni">vlastní PSH</option></select></div>
+          <div><label for="psh">Sluneční hodiny PSH (h/den)</label><input type="number" id="psh" min="0.2" max="9" step="0.05"></div>
+          <div><label for="ztratyFV">Ztráty FV (%)</label><input type="number" id="ztratyFV" min="0" max="50" step="1"></div>
+          <div><label for="panelW">Výkon 1 panelu (Wp)</label><input type="number" id="panelW" min="10" max="800" step="5"></div>
+          <div><label for="delka">Kabel baterie–měnič (m, jedním směrem)</label><input type="number" id="delka" min="0.2" max="30" step="0.1"></div>
+          <div><label for="ubytek">Max. úbytek napětí (%)</label><input type="number" id="ubytek" min="0.5" max="10" step="0.5"></div>
+        </div>
+        <p class="napoveda">PSH = denní ozáření v kWh/m² na rovinu panelů, tj. počet „hodin plného slunce“.
+          Předvyplněné hodnoty jsou průměry PVGIS pro střed ČR, jižní orientace (2005–2020). Pro celoroční provoz navrhujte na prosinec,
+          pro chatu od května do září na květen nebo září. Ztráty FV zahrnují teplotu, nečistoty, kabely a regulátor (MPPT ~15–20 %, PWM ~25–35 %).</p>
+      </div>
+    </div>
+
+    <div class="karta">
+      <h2>📋 Výsledky</h2>
+      <div class="vysledky">
+        <div class="box"><div class="popis">Denní spotřeba z baterie</div><div class="cislo" id="rDenni">–</div><div class="dalsi" id="rDenni2"></div></div>
+        <div class="box hlavni"><div class="popis">Kapacita baterie</div><div class="cislo" id="rKap">–</div><div class="dalsi" id="rKap2"></div></div>
+        <div class="box hlavni"><div class="popis">Měnič</div><div class="cislo" id="rMenic">–</div><div class="dalsi" id="rMenic2"></div></div>
+        <div class="box hlavni"><div class="popis">Solární panely</div><div class="cislo" id="rFV">–</div><div class="dalsi" id="rFV2"></div></div>
+        <div class="box"><div class="popis">MPPT regulátor</div><div class="cislo" id="rMPPT">–</div><div class="dalsi" id="rMPPT2"></div></div>
+        <div class="box"><div class="popis">Kabel baterie–měnič</div><div class="cislo" id="rKabel">–</div><div class="dalsi" id="rKabel2"></div></div>
+      </div>
+      <div class="varovani" id="varovani"></div>
+      <h2 style="margin-top:18px">Pokrytí denní spotřeby navrženými panely po měsících (%)</h2>
+      <div class="mesice" id="mesice" aria-label="Pokrytí spotřeby po měsících"></div>
+      <div class="mesice-popis" id="mesicePopis"></div>
+      <p class="napoveda">Oranžově měsíce, kdy panely v průměrném dni nepokryjí spotřebu – tam pomůže větší pole, strmější sklon nebo záložní zdroj (centrála).</p>
+    </div>
+
+    <div class="karta">
+      <details>
+        <summary>📐 Jak se počítá (vzorce)</summary>
+        <div class="vzorce">
+          <h3>1. Denní spotřeba</h3>
+          <p><code>E<sub>AC</sub> = Σ P·h·ks</code> pro spotřebiče na 230 V, <code>E<sub>DC</sub> = Σ P·h·ks</code> pro stejnosměrné.
+            Z baterie se odebere <code>E<sub>bat</sub> = E<sub>DC</sub> + E<sub>AC</sub> / η<sub>měnič</sub></code>.</p>
+          <h3>2. Kapacita baterie</h3>
+          <p><code>C<sub>Wh</sub> = E<sub>bat</sub> · dny / DoD</code>, <code>C<sub>Ah</sub> = C<sub>Wh</sub> / U<sub>sys</sub></code>.
+            Bloky 12 V (LiFePO4 12,8 V) se řadí sériově na napětí systému (12 V → 1, 24 V → 2, 48 V → 4 kusy v řetězci) a řetězce paralelně na kapacitu.
+            V zimě má olověná baterie při 0 °C asi o 20 % menší kapacitu – přidejte rezervu.</p>
+          <h3>3. Měnič</h3>
+          <p>Trvalý výkon <code>P = Σ P·ks · soudobost</code>, doporučený jmenovitý výkon měniče ≥ 1,25·P.
+            Špička při rozběhu: <code>P<sub>šp</sub> = P + max((rozběh − 1)·P·ks)</code> – předpokládá se, že se naráz rozbíhá jeden motor.
+            Běžné měniče s čistou sinusovkou snesou krátkodobě asi 2× jmenovitý výkon, proto také musí platit <code>P<sub>jm</sub> ≥ P<sub>šp</sub> / 2</code>.</p>
+          <h3>4. Panely a regulátor</h3>
+          <p>Panely musí denně dodat <code>E<sub>FV</sub> = E<sub>bat</sub> / η<sub>bat</sub></code>, výkon pole
+            <code>P<sub>FV</sub> = E<sub>FV</sub> / (PSH · (1 − ztráty))</code>.
+            MPPT regulátor: výstupní proud <code>I = P<sub>FV</sub> / U<sub>sys</sub> · 1,25</code> (rezerva na chladné jasné dny).
+            Hlídejte i maximální vstupní napětí regulátoru: napětí naprázdno řetězce panelů (V<sub>oc</sub>) při mrazu stoupne asi o 10–15 %.</p>
+          <h3>5. Kabel baterie–měnič</h3>
+          <p>Proud při plném výkonu měniče a vybité baterii: <code>I = P<sub>jm</sub> / (η<sub>měnič</sub> · 0,92·U<sub>sys</sub>)</code>.
+            Průřez z úbytku napětí: <code>S = 2·L·I·ρ / ΔU</code>, ρ<sub>Cu</sub> = 0,0178 Ω·mm²/m, ΔU = U<sub>sys</sub>·úbytek/100.
+            Výsledek se zaokrouhlí na normalizovaný průřez a zkontroluje proti proudové zatížitelnosti jednožilového kabelu volně ve vzduchu.
+            Pojistka co nejblíž baterii, asi 1,25× provozního proudu.</p>
+        </div>
+      </details>
+    </div>
+
+    <p class="pozn">Orientační výpočet pro předběžný návrh. Skutečné komponenty volte podle katalogových listů (max. vstupní napětí MPPT, nabíjecí proud baterie,
+      BMS u LiFePO4) a instalaci na 230 V svěřte osobě s elektrotechnickou kvalifikací. PSH: <a href="https://re.jrc.ec.europa.eu/pvg_tools/cs/" target="_blank" rel="noopener" style="color:var(--accent)">PVGIS</a> (JRC, SARAH-2), 49,8° s. š., 15,5° v. d.</p>
+  </div>
+
+<script>
+/* ==JADRO== výpočetní logika bez DOM (testuje _test/offgrid_baterie_test.js) */
+const OFFGRID = (function () {
+  const MESICE = ['leden', 'únor', 'březen', 'duben', 'květen', 'červen', 'červenec', 'srpen', 'září', 'říjen', 'listopad', 'prosinec'];
+  // PVGIS 5.2, střed ČR (49,8 N 15,5 E), jih, H(i)_d v kWh/m²/den = PSH
+  const PSH = {
+    35: [1.22, 2.14, 3.36, 5.07, 5.14, 5.45, 5.49, 5.11, 4.30, 2.88, 1.52, 1.19],
+    60: [1.35, 2.28, 3.34, 4.71, 4.45, 4.57, 4.67, 4.60, 4.21, 3.04, 1.68, 1.36],
+    90: [1.26, 2.02, 2.71, 3.41, 2.91, 2.84, 2.96, 3.21, 3.30, 2.64, 1.54, 1.30],
+  };
+  const BATERIE = {
+    olovo: { nazev: 'olověná', dod: 50, ucinnost: 80, blokV: 12, bloky: [100, 150, 200, 230] },
+    agm:   { nazev: 'AGM/gel', dod: 50, ucinnost: 85, blokV: 12, bloky: [100, 150, 200, 260] },
+    lfp:   { nazev: 'LiFePO4', dod: 90, ucinnost: 95, blokV: 12.8, bloky: [100, 200, 280, 314] },
+  };
+  const MENICE = [150, 300, 500, 600, 800, 1000, 1500, 2000, 2500, 3000, 3500, 4000, 5000, 6000, 8000, 10000, 12000, 15000];
+  const MPPT = [10, 15, 20, 30, 40, 50, 60, 70, 85, 100, 150, 200];
+  // průřez mm² → zatížitelnost A (jednožilový Cu kabel volně ve vzduchu, ~30 °C, orientačně)
+  const KABELY = [[1.5, 19], [2.5, 26], [4, 35], [6, 46], [10, 64], [16, 86], [25, 115], [35, 142], [50, 182], [70, 226], [95, 275], [120, 320], [150, 365], [185, 415], [240, 490]];
+  const POJISTKY = [10, 15, 20, 25, 30, 40, 50, 60, 80, 100, 125, 150, 175, 200, 250, 300, 350, 400, 500, 630];
+  const RHO = 0.0178;
+
+  const nahoru = (seznam, x) => seznam.find(v => v >= x - 1e-9) ?? null;
+
+  function denni(spotrebice) {
+    let ac = 0, dc = 0;
+    for (const s of spotrebice) {
+      const e = Math.max(0, +s.w || 0) * Math.max(0, +s.h || 0) * Math.max(0, +s.ks || 0);
+      if (s.typ === 'DC') dc += e; else ac += e;
+    }
+    return { ac, dc };
+  }
+
+  /* volba bloků: řetězec n bloků v sérii (dle napětí), p řetězců paralelně – nejmenší počet kusů, pak nejmenší přebytek */
+  function sestavaBaterie(ah, napeti, typ) {
+    const b = BATERIE[typ], serie = Math.max(1, Math.round(napeti / 12));
+    let nej = null;
+    for (const blok of b.bloky) {
+      const par = Math.max(1, Math.ceil(ah / blok - 1e-9));
+      const kusu = serie * par, prebytek = par * blok - ah;
+      if (!nej || kusu < nej.kusu || (kusu === nej.kusu && prebytek < nej.prebytek)) nej = { blok, serie, par, kusu, prebytek, ah: par * blok, blokV: b.blokV };
+    }
+    return nej;
+  }
+
+  function prurez(proud, delka, napeti, ubytekPct) {
+    const dU = napeti * ubytekPct / 100;
+    const sUbytek = 2 * delka * proud * RHO / dU;
+    const podleUbytku = KABELY.find(k => k[0] >= sUbytek - 1e-9);
+    const podleProudu = KABELY.find(k => k[1] >= proud);
+    if (!podleUbytku || !podleProudu) return { sUbytek, s: null };
+    const vol = podleUbytku[0] >= podleProudu[0] ? podleUbytku : podleProudu;
+    const skutecnyUbytek = 2 * delka * proud * RHO / vol[0];
+    return { sUbytek, s: vol[0], zatizitelnost: vol[1], omezeni: vol === podleProudu && podleProudu[0] > podleUbytku[0] ? 'proud' : 'ubytek',
+      dU: skutecnyUbytek, dUpct: skutecnyUbytek / napeti * 100, ztrataW: proud * skutecnyUbytek };
+  }
+
+  /* p = { spotrebice, napeti, typ, dod, ucBat, dny, ucMenic, soudobost, psh, ztratyFV, panelW, delka, ubytek, pshMesice } */
+  function navrh(p) {
+    const { ac, dc } = denni(p.spotrebice);
+    const ucM = p.ucMenic / 100, ucB = p.ucBat / 100, dod = p.dod / 100;
+    const eBat = dc + (ac > 0 ? ac / ucM : 0);
+    const kapWh = eBat * p.dny / dod;
+    const kapAh = kapWh / p.napeti;
+    const sestava = kapAh > 0 ? sestavaBaterie(kapAh, p.napeti, p.typ) : null;
+
+    // měnič (jen AC spotřebiče)
+    let trvaly = 0, maxNavic = 0;
+    for (const s of p.spotrebice) {
+      if (s.typ === 'DC') continue;
+      const w = Math.max(0, +s.w || 0) * Math.max(0, +s.ks || 0);
+      trvaly += w;
+      maxNavic = Math.max(maxNavic, w * Math.max(0, (+s.rozbeh || 1) - 1));
+    }
+    trvaly *= p.soudobost / 100;
+    const spicka = trvaly + maxNavic;
+    const potrebaJm = Math.max(trvaly * 1.25, spicka / 2);
+    const menic = trvaly > 0 ? nahoru(MENICE, potrebaJm) : 0;
+
+    // panely
+    const eFV = eBat / ucB;
+    const pFV = p.psh > 0 ? eFV / (p.psh * (1 - p.ztratyFV / 100)) : Infinity;
+    const panelu = isFinite(pFV) ? Math.max(eBat > 0 ? 1 : 0, Math.ceil(pFV / p.panelW - 1e-9)) : null;
+    const pole = panelu != null ? panelu * p.panelW : null;
+    const iMPPT = pole != null ? pole / p.napeti * 1.25 : null;
+    const mppt = iMPPT != null ? nahoru(MPPT, iMPPT) : null;
+    // pokrytí po měsících s navrženým polem
+    const pokryti = (p.pshMesice || []).map(h => eBat > 0 && pole ? pole * h * (1 - p.ztratyFV / 100) * ucB / eBat : null);
+
+    // kabel baterie–měnič: proud při jmenovitém výkonu měniče (nebo trvalém, není-li v řadě) a napětí 0,92·U
+    const pKabel = menic || potrebaJm;
+    const iDC = pKabel > 0 ? pKabel / (ucM * 0.92 * p.napeti) : 0;
+    const kabel = iDC > 0 ? prurez(iDC, p.delka, p.napeti, p.ubytek) : null;
+    const pojistka = iDC > 0 ? nahoru(POJISTKY, iDC * 1.25) : null;
+
+    const varovani = [];
+    if (p.napeti === 12 && trvaly > 1200) varovani.push('Trvalý výkon nad 1,2 kW na 12 V znamená proudy přes 100 A – zvažte 24 V nebo 48 V systém.');
+    if (p.napeti === 24 && trvaly > 3000) varovani.push('Nad 3 kW je výhodnější 48 V systém (menší proudy, tenčí kabely).');
+    if (trvaly > 0 && !menic) varovani.push('Požadovaný výkon přesahuje běžnou řadu měničů – rozdělte zátěž nebo použijte paralelní měniče.');
+    if (kabel && kabel.s === null) varovani.push('Proud je pro jediný kabel příliš velký – zkraťte vedení, zvyšte napětí systému nebo veďte paralelní kabely.');
+    if (iMPPT != null && !mppt) varovani.push('Pole je pro jeden regulátor příliš velké – rozdělte ho na více MPPT regulátorů.');
+    if (p.typ !== 'lfp' && p.dod > 60) varovani.push('Olověné baterie při vybíjení pod 50 % rychle ztrácejí kapacitu a životnost.');
+    if (sestava && p.typ !== 'lfp' && sestava.par > 3) varovani.push('Více než 3 paralelní řetězce olověných baterií se nabíjejí nerovnoměrně – raději větší články (2 V) nebo LiFePO4.');
+    if (p.dny < 1) varovani.push('Autonomie pod 1 den: baterie nepokryje ani noc po zataženém dni.');
+
+    return { ac, dc, eBat, kapWh, kapAh, sestava, trvaly, spicka, potrebaJm, menic, eFV, pFV, panelu, pole, iMPPT, mppt,
+      pokryti, iDC, kabel, pojistka, varovani };
+  }
+
+  return { MESICE, PSH, BATERIE, MENICE, MPPT, KABELY, denni, sestavaBaterie, prurez, navrh };
+})();
+/* ==KONEC JADRA== */
+</script>
+
+<script>
+(function () {
+  const $ = id => document.getElementById(id);
+  const KLIC = 'webapp_offgrid_baterie_stav';
+  const fmt = (n, d = 0) => (+n).toLocaleString('cs-CZ', { minimumFractionDigits: d, maximumFractionDigits: d });
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+  const PRIKLADY = [
+    { nazev: 'LED žárovka', w: 7, h: 5, ks: 4, typ: 'AC', rozbeh: 1 },
+    { nazev: 'LED pásek 12 V', w: 12, h: 4, ks: 1, typ: 'DC', rozbeh: 1 },
+    { nazev: 'Lednice (kompresor)', w: 90, h: 8, ks: 1, typ: 'AC', rozbeh: 5 },
+    { nazev: 'Kompresorová autolednice 12 V', w: 45, h: 8, ks: 1, typ: 'DC', rozbeh: 3 },
+    { nazev: 'Mraznička', w: 120, h: 9, ks: 1, typ: 'AC', rozbeh: 5 },
+    { nazev: 'Notebook', w: 60, h: 4, ks: 1, typ: 'AC', rozbeh: 1 },
+    { nazev: 'Nabíjení telefonu', w: 10, h: 2, ks: 2, typ: 'DC', rozbeh: 1 },
+    { nazev: 'Televize LED', w: 70, h: 3, ks: 1, typ: 'AC', rozbeh: 1 },
+    { nazev: 'Wi-Fi router / LTE', w: 10, h: 24, ks: 1, typ: 'AC', rozbeh: 1 },
+    { nazev: 'Čerpadlo vody (domácí vodárna)', w: 800, h: 0.5, ks: 1, typ: 'AC', rozbeh: 3 },
+    { nazev: 'Oběhové čerpadlo topení', w: 40, h: 10, ks: 1, typ: 'AC', rozbeh: 1 },
+    { nazev: 'Mikrovlnná trouba', w: 1200, h: 0.2, ks: 1, typ: 'AC', rozbeh: 1.5 },
+    { nazev: 'Rychlovarná konvice', w: 2000, h: 0.15, ks: 1, typ: 'AC', rozbeh: 1 },
+    { nazev: 'Kávovar', w: 1200, h: 0.2, ks: 1, typ: 'AC', rozbeh: 1 },
+    { nazev: 'Vrtačka / bruska', w: 700, h: 0.3, ks: 1, typ: 'AC', rozbeh: 2.5 },
+    { nazev: 'Ventilátor', w: 40, h: 6, ks: 1, typ: 'AC', rozbeh: 2 },
+    { nazev: 'Pračka (praní 40 °C)', w: 500, h: 1, ks: 1, typ: 'AC', rozbeh: 3 },
+    { nazev: 'Fén', w: 1600, h: 0.15, ks: 1, typ: 'AC', rozbeh: 1 },
+    { nazev: 'Kamera / alarm', w: 6, h: 24, ks: 1, typ: 'DC', rozbeh: 1 },
+    { nazev: 'Rádio / reproduktor', w: 15, h: 3, ks: 1, typ: 'AC', rozbeh: 1 },
+  ];
+  const CHATA = ['LED žárovka', 'Lednice (kompresor)', 'Notebook', 'Nabíjení telefonu', 'Wi-Fi router / LTE', 'Čerpadlo vody (domácí vodárna)', 'Mikrovlnná trouba', 'Rádio / reproduktor'];
+
+  const VYCHOZI = { napeti: 24, typ: 'lfp', dod: 90, ucBat: 95, dny: 2, ucMenic: 90, soudobost: 100,
+    mesic: 3, sklonPSH: '35', psh: OFFGRID.PSH[35][3], ztratyFV: 20, panelW: 450, delka: 1.5, ubytek: 2,
+    spotrebice: PRIKLADY.filter(p => CHATA.includes(p.nazev)).map(p => ({ ...p })) };
+  let st;
+  try { st = Object.assign({}, VYCHOZI, JSON.parse(localStorage.getItem(KLIC)) || {}); } catch (e) { st = Object.assign({}, VYCHOZI); }
+  if (!Array.isArray(st.spotrebice)) st.spotrebice = VYCHOZI.spotrebice;
+  const uloz = () => { try { localStorage.setItem(KLIC, JSON.stringify(st)); } catch (e) { /* úložiště nedostupné */ } };
+
+  /* ---------- seznam spotřebičů ---------- */
+  function radekHTML(s, i) {
+    return `<div class="spot-radek" data-i="${i}">
+      <div class="nazev"><span class="mini">Název</span><input type="text" data-k="nazev" value="${esc(s.nazev)}" aria-label="Název"></div>
+      <div><span class="mini">Výkon W</span><input type="number" data-k="w" value="${s.w}" min="0" step="1" aria-label="Výkon W"></div>
+      <div><span class="mini">Hod./den</span><input type="number" data-k="h" value="${s.h}" min="0" max="24" step="0.1" aria-label="Hodin denně"></div>
+      <div><span class="mini">Kusů</span><input type="number" data-k="ks" value="${s.ks}" min="0" step="1" aria-label="Počet kusů"></div>
+      <div><span class="mini">Proud</span><select data-k="typ" aria-label="Střídavý nebo stejnosměrný"><option value="AC"${s.typ !== 'DC' ? ' selected' : ''}>230 V</option><option value="DC"${s.typ === 'DC' ? ' selected' : ''}>DC</option></select></div>
+      <div><span class="mini">Rozběh ×</span><input type="number" data-k="rozbeh" value="${s.rozbeh}" min="1" max="10" step="0.5" aria-label="Rozběhový násobek"></div>
+      <div class="wh"></div>
+      <button class="smaz" title="Odebrat" aria-label="Odebrat spotřebič">✕</button>
+    </div>`;
+  }
+  function kresliSeznam() {
+    $('seznam').innerHTML = st.spotrebice.map(radekHTML).join('') ||
+      '<p class="napoveda" style="padding:10px 0">Seznam je prázdný – přidejte řádek nebo vložte příklad.</p>';
+    spocitej();
+  }
+  $('seznam').addEventListener('input', e => {
+    const r = e.target.closest('.spot-radek'); if (!r || !e.target.dataset.k) return;
+    const s = st.spotrebice[+r.dataset.i], k = e.target.dataset.k;
+    s[k] = (k === 'nazev' || k === 'typ') ? e.target.value : (parseFloat(e.target.value) || 0);
+    spocitej();
+  });
+  $('seznam').addEventListener('change', e => { if (e.target.dataset.k === 'typ') spocitej(); });
+  $('seznam').addEventListener('click', e => {
+    if (!e.target.closest('.smaz')) return;
+    st.spotrebice.splice(+e.target.closest('.spot-radek').dataset.i, 1); kresliSeznam();
+  });
+  $('btnPridat').addEventListener('click', () => { st.spotrebice.push({ nazev: 'Spotřebič', w: 50, h: 1, ks: 1, typ: 'AC', rozbeh: 1 }); kresliSeznam(); });
+  $('priklady').innerHTML += PRIKLADY.map((p, i) => `<option value="${i}">${esc(p.nazev)} – ${p.w} W${p.typ === 'DC' ? ' DC' : ''}</option>`).join('');
+  $('priklady').addEventListener('change', e => {
+    if (e.target.value === '') return;
+    st.spotrebice.push({ ...PRIKLADY[+e.target.value] }); e.target.value = ''; kresliSeznam();
+  });
+  $('btnChata').addEventListener('click', async () => {
+    if (st.spotrebice.length && !(await Dialog.potvrd('Nahradit současný seznam ukázkou „chata“?'))) return;
+    st.spotrebice = VYCHOZI.spotrebice.map(p => ({ ...p })); kresliSeznam();
+  });
+  $('btnVymazat').addEventListener('click', async () => {
+    if (!st.spotrebice.length || !(await Dialog.potvrd('Smazat všechny spotřebiče?'))) return;
+    st.spotrebice = []; kresliSeznam();
+  });
+
+  /* ---------- parametry ---------- */
+  $('mesic').innerHTML = OFFGRID.MESICE.map((m, i) => `<option value="${i}">${m}</option>`).join('');
+  const CISELNE = ['dod', 'ucBat', 'dny', 'ucMenic', 'soudobost', 'psh', 'ztratyFV', 'panelW', 'delka', 'ubytek'];
+  function vyplnPole() {
+    CISELNE.forEach(k => $(k).value = st[k]);
+    $('mesic').value = st.mesic; $('sklonPSH').value = st.sklonPSH;
+    document.querySelectorAll('#napeti button').forEach(b => b.classList.toggle('active', +b.dataset.v === st.napeti));
+    document.querySelectorAll('#typBat button').forEach(b => b.classList.toggle('active', b.dataset.t === st.typ));
+    $('psh').readOnly = st.sklonPSH !== 'vlastni';
+  }
+  function pshZTabulky() {
+    if (st.sklonPSH !== 'vlastni') { st.psh = OFFGRID.PSH[st.sklonPSH][st.mesic]; $('psh').value = st.psh; }
+    $('psh').readOnly = st.sklonPSH !== 'vlastni';
+  }
+  CISELNE.forEach(k => $(k).addEventListener('input', () => { const v = parseFloat($(k).value); if (isFinite(v)) { st[k] = v; spocitej(); } }));
+  $('mesic').addEventListener('change', () => { st.mesic = +$('mesic').value; pshZTabulky(); spocitej(); });
+  $('sklonPSH').addEventListener('change', () => { st.sklonPSH = $('sklonPSH').value; pshZTabulky(); spocitej(); });
+  $('napeti').addEventListener('click', e => { const b = e.target.closest('button'); if (!b) return; st.napeti = +b.dataset.v; vyplnPole(); spocitej(); });
+  $('typBat').addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    st.typ = b.dataset.t; st.dod = OFFGRID.BATERIE[st.typ].dod; st.ucBat = OFFGRID.BATERIE[st.typ].ucinnost;
+    vyplnPole(); spocitej();
+  });
+
+  /* ---------- výpočet a výstup ---------- */
+  function spocitej() {
+    const omez = (v, a, b) => Math.min(b, Math.max(a, v));
+    const p = {
+      spotrebice: st.spotrebice, napeti: st.napeti, typ: st.typ,
+      dod: omez(st.dod, 10, 100), ucBat: omez(st.ucBat, 50, 100), dny: omez(st.dny, 0.1, 30),
+      ucMenic: omez(st.ucMenic, 50, 100), soudobost: omez(st.soudobost, 1, 100),
+      psh: omez(st.psh, 0.1, 12), ztratyFV: omez(st.ztratyFV, 0, 80), panelW: omez(st.panelW, 1, 2000),
+      delka: omez(st.delka, 0.1, 100), ubytek: omez(st.ubytek, 0.1, 20),
+      pshMesice: st.sklonPSH === 'vlastni' ? OFFGRID.PSH[35].map(() => st.psh) : OFFGRID.PSH[st.sklonPSH],
+    };
+    const r = OFFGRID.navrh(p);
+    uloz();
+
+    // Wh/den v řádcích
+    document.querySelectorAll('.spot-radek').forEach(el => {
+      const s = st.spotrebice[+el.dataset.i]; if (!s) return;
+      el.querySelector('.wh').textContent = fmt((+s.w || 0) * (+s.h || 0) * (+s.ks || 0)) + ' Wh';
+    });
+    $('sAC').textContent = fmt(r.ac); $('sDC').textContent = fmt(r.dc);
+
+    const bat = OFFGRID.BATERIE[st.typ];
+    $('rDenni').textContent = fmt(r.eBat) + ' Wh';
+    $('rDenni2').textContent = !r.eBat ? 'zadejte spotřebiče' : r.ac ? `AC ${fmt(r.ac)} Wh ÷ účinnost měniče ${fmt(p.ucMenic)} % + DC ${fmt(r.dc)} Wh` : `jen DC spotřebiče`;
+    if (r.kapAh > 0) {
+      $('rKap').textContent = fmt(r.kapAh) + ' Ah / ' + st.napeti + ' V';
+      const s = r.sestava;
+      $('rKap2').innerHTML = `${fmt(r.kapWh / 1000, 2)} kWh (${bat.nazev}, DoD ${fmt(p.dod)} %, ${fmt(p.dny, 1)} dne)<br>` +
+        `např. ${s.kusu}× ${fmt(s.blokV, 1)} V / ${s.blok} Ah (${s.serie} v sérii × ${s.par} paralelně = ${s.ah} Ah)`;
+    } else { $('rKap').textContent = '–'; $('rKap2').textContent = 'zadejte spotřebiče'; }
+
+    if (r.trvaly > 0) {
+      $('rMenic').textContent = r.menic ? fmt(r.menic) + ' W' : '> ' + fmt(OFFGRID.MENICE[OFFGRID.MENICE.length - 1]) + ' W';
+      $('rMenic2').innerHTML = `trvale ${fmt(r.trvaly)} W, špička při rozběhu ${fmt(r.spicka)} W<br>čistá sinusovka, ${st.napeti} V DC, krátkodobě ≥ ${fmt(r.spicka)} W`;
+    } else { $('rMenic').textContent = 'není potřeba'; $('rMenic2').textContent = 'žádné spotřebiče na 230 V'; }
+
+    if (r.panelu != null && r.eBat > 0) {
+      $('rFV').textContent = r.panelu + '× ' + fmt(p.panelW) + ' Wp';
+      $('rFV2').innerHTML = `pole ${fmt(r.pole)} Wp (potřeba ${fmt(r.pFV)} Wp)<br>${OFFGRID.MESICE[st.mesic]}: PSH ${fmt(p.psh, 2)} h, denně dodat ${fmt(r.eFV)} Wh`;
+      $('rMPPT').textContent = r.mppt ? r.mppt + ' A' : '> 200 A';
+      $('rMPPT2').innerHTML = `vypočteno ${fmt(r.iMPPT, 1)} A (= ${fmt(r.pole)} W / ${st.napeti} V × 1,25)<br>max. vstupní napětí ≥ 1,15 × V<sub>oc</sub> řetězce`;
+    } else {
+      ['rFV', 'rMPPT'].forEach(id => $(id).textContent = '–'); $('rFV2').textContent = ''; $('rMPPT2').textContent = '';
+    }
+
+    if (r.kabel) {
+      $('rKabel').textContent = r.kabel.s ? fmt(r.kabel.s, r.kabel.s < 2 ? 1 : 0) + ' mm² Cu' : 'nevyhoví';
+      $('rKabel2').innerHTML = `proud ${fmt(r.iDC)} A při ${fmt(r.menic || r.potrebaJm)} W, z úbytku ${fmt(r.kabel.sUbytek, 1)} mm²` +
+        (r.kabel.s ? `<br>úbytek ${fmt(r.kabel.dU, 2)} V (${fmt(r.kabel.dUpct, 1)} %), ztráta ${fmt(r.kabel.ztrataW)} W` +
+          (r.kabel.omezeni === 'proud' ? ', rozhodla zatížitelnost' : '') : '') +
+        (r.pojistka ? `<br>pojistka u baterie ${r.pojistka} A` : '');
+    } else { $('rKabel').textContent = '–'; $('rKabel2').textContent = 'bez měniče'; }
+
+    $('varovani').innerHTML = r.varovani.map(v => '⚠️ ' + esc(v)).join('<br>');
+
+    // sloupce pokrytí
+    const max = Math.max(1.5, ...r.pokryti.filter(x => x != null));
+    $('mesice').innerHTML = r.pokryti.map((x, i) => x == null ? '<div class="sl"></div>' :
+      `<div class="sl${i === st.mesic ? ' vybrany' : ''}" title="${OFFGRID.MESICE[i]}: ${fmt(x * 100)} %"><span class="pct">${fmt(x * 100)}</span>` +
+      `<div class="bar${x < 1 ? ' malo' : ''}" style="height:${Math.min(100, x / max * 100).toFixed(1)}%"></div></div>`).join('');
+    $('mesicePopis').innerHTML = OFFGRID.MESICE.map(m => `<div>${m.slice(0, 3)}</div>`).join('');
+  }
+
+  vyplnPole();
+  pshZTabulky();
+  kresliSeznam();
+})();
+</script>
+</body>
+</html>

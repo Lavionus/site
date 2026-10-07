@@ -1,0 +1,512 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Výroba fotovoltaiky</title>
+  <link rel="stylesheet" href="../common.css">
+  <link rel="stylesheet" href="lib/leaflet/leaflet.css">
+  <script src="../theme.js"></script>
+  <script src="../podpis.js" defer></script>
+  <script src="lib/leaflet/leaflet.js"></script>
+  <script src="lib/chart.min.js"></script>
+  <style>
+    body { background-color: var(--bg-deep); padding: 24px clamp(12px, 3vw, 40px); min-height: 100vh; }
+    h1 { font-size: 1.4rem; margin-bottom: 4px; }
+    h2 { font-size: 1rem; margin-bottom: 4px; }
+    .podtitul { color: var(--text-muted); font-size: 0.88rem; margin-bottom: 20px; max-width: 900px; line-height: 1.5; }
+    .rozlozeni { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); gap: 18px; max-width: 1240px; }
+    @media (max-width: 900px) { .rozlozeni { grid-template-columns: minmax(0, 1fr); } }
+    .sloupec { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+    .karta { background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; min-width: 0; }
+    label { display: block; font-size: 0.8rem; color: var(--text-muted); margin: 12px 0 5px; }
+    input[type="number"], select {
+      width: 100%; background: var(--bg-input); border: 1px solid var(--border); border-radius: 6px;
+      color: var(--text); padding: 9px 11px; font-size: 1rem; min-width: 0;
+    }
+    input:focus, select:focus { outline: none; border-color: var(--accent); }
+    .mrizka2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 0 12px; }
+    .napoveda { font-size: 0.74rem; color: var(--text-faint); margin-top: 4px; line-height: 1.4; }
+    #mapa { height: 260px; border-radius: 6px; border: 1px solid var(--border); margin-top: 10px; z-index: 0; }
+    .tlacitka { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+    button {
+      background: var(--bg-control); border: 1px solid var(--border-strong); color: var(--text);
+      border-radius: 6px; padding: 7px 12px; font-size: 0.85rem; cursor: pointer;
+    }
+    button:hover { background: var(--bg-hover); }
+    button.hlavni { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; padding: 10px 16px; font-size: 0.95rem; }
+    button.hlavni:hover { background: var(--accent-hover); }
+    button.male { padding: 5px 9px; font-size: 0.78rem; }
+    button.active { background: var(--accent-soft); border-color: var(--accent); }
+    button:disabled { opacity: 0.55; cursor: wait; }
+    .vysledky { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-top: 12px; }
+    .box { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px; min-width: 0; }
+    .box .popis { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.4px; color: var(--text-faint); margin-bottom: 5px; }
+    .box .cislo { font-size: 1.25rem; font-weight: 700; overflow-wrap: anywhere; }
+    .box .dalsi { font-size: 0.75rem; color: var(--text-muted); margin-top: 3px; }
+    .box.hlavni .cislo { color: var(--accent); }
+    .stav { font-size: 0.85rem; margin-top: 10px; color: var(--text-muted); min-height: 1.2em; line-height: 1.45; }
+    .stav.chyba { color: var(--danger); }
+    .graf-obal { position: relative; height: 290px; margin-top: 10px; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.82rem; margin-top: 8px; }
+    th, td { padding: 5px 6px; border-bottom: 1px solid var(--border); text-align: right; }
+    th:first-child, td:first-child { text-align: left; }
+    th { color: var(--text-faint); font-weight: 600; }
+    details summary { cursor: pointer; color: var(--text-muted); font-size: 0.85rem; margin-top: 10px; }
+    .pozn { color: var(--text-faint); font-size: 0.78rem; line-height: 1.55; max-width: 1240px; margin-top: 18px; }
+    .pozn a, .napoveda a { color: var(--accent); }
+    .kompas { display: flex; align-items: center; gap: 10px; }
+    .kompas svg { flex: 0 0 auto; }
+  </style>
+</head>
+<body>
+  <h1>☀️ Výroba fotovoltaiky</h1>
+  <p class="podtitul">Odhad měsíční a roční výroby FVE podle polohy, sklonu a orientace panelů – z hodinových
+    satelitních dat ozáření za posledních 5 let. K tomu ekonomika: kolik vyrobené energie spotřebujete sami,
+    kolik prodáte, roční úspora a návratnost.</p>
+
+  <div class="rozlozeni">
+    <div class="sloupec">
+      <div class="karta">
+        <h2>📍 Poloha</h2>
+        <div class="mrizka2">
+          <div><label for="lat">Zeměpisná šířka (°)</label><input type="number" id="lat" step="0.0001" min="-70" max="70"></div>
+          <div><label for="lon">Zeměpisná délka (°)</label><input type="number" id="lon" step="0.0001" min="-180" max="180"></div>
+        </div>
+        <div class="tlacitka">
+          <button id="btnGeo">📍 Moje poloha</button>
+        </div>
+        <div id="mapa" role="application" aria-label="Mapa – kliknutím zvolíte místo instalace"></div>
+        <p class="napoveda">Klikněte do mapy nebo přetáhněte značku. Vrstva „Satelit“ pomůže najít střechu.</p>
+      </div>
+
+      <div class="karta">
+        <h2>🔆 Panely</h2>
+        <div class="mrizka2">
+          <div><label for="kwp">Instalovaný výkon (kWp)</label><input type="number" id="kwp" step="0.1" min="0.1" max="1000"></div>
+          <div><label for="ztraty">Systémové ztráty (%)</label><input type="number" id="ztraty" step="1" min="0" max="50"></div>
+          <div><label for="sklon">Sklon panelů (°)</label><input type="number" id="sklon" step="1" min="0" max="90"></div>
+          <div><label for="azimut">Azimut (°)</label><input type="number" id="azimut" step="1" min="-180" max="180"></div>
+        </div>
+        <div class="kompas">
+          <svg id="kompas" width="64" height="64" viewBox="-32 -32 64 64" aria-hidden="true">
+            <circle r="28" fill="none" stroke="var(--border-strong)" stroke-width="2"/>
+            <text y="-18" text-anchor="middle" font-size="9" fill="var(--text-faint)">S</text>
+            <text y="25" text-anchor="middle" font-size="9" fill="var(--text-faint)">J</text>
+            <text x="-22" y="3" text-anchor="middle" font-size="9" fill="var(--text-faint)">Z</text>
+            <text x="22" y="3" text-anchor="middle" font-size="9" fill="var(--text-faint)">V</text>
+            <line id="kompasRucka" x1="0" y1="0" x2="0" y2="20" stroke="var(--accent)" stroke-width="3" stroke-linecap="round"/>
+          </svg>
+          <div class="tlacitka" id="smery">
+            <button class="male" data-az="-90">V</button>
+            <button class="male" data-az="-45">JV</button>
+            <button class="male" data-az="0">J</button>
+            <button class="male" data-az="45">JZ</button>
+            <button class="male" data-az="90">Z</button>
+          </div>
+        </div>
+        <p class="napoveda">Azimut: 0° = jih, −90° = východ, +90° = západ, ±180° = sever. Sklon 0° = vodorovně.
+          Ztráty zahrnují kabely, střídač, nečistoty a stárnutí (běžně 10–16 %); teplotní ztráty a odrazy počítá model zvlášť.
+          Pro orientaci V–Z rozdělte výkon na dvě poloviny a spočítejte každou zvlášť, nebo zadejte jih se sklonem ~15°.</p>
+        <div class="tlacitka" style="margin-top:14px">
+          <button class="hlavni" id="btnVypocet">☀️ Spočítat výrobu</button>
+        </div>
+        <div class="stav" id="stav" aria-live="polite"></div>
+      </div>
+
+      <div class="karta">
+        <h2>💰 Spotřeba a ceny</h2>
+        <div class="mrizka2">
+          <div><label for="spotreba">Roční spotřeba domácnosti (kWh)</label><input type="number" id="spotreba" step="100" min="0"></div>
+          <div><label for="podil">Podíl vlastní spotřeby výroby (%)</label><input type="number" id="podil" step="1" min="0" max="100"></div>
+        </div>
+        <div class="tlacitka" id="podilPresety">
+          <button class="male" data-p="30" title="Bez baterie, přes den nikdo doma">bez baterie ~30 %</button>
+          <button class="male" data-p="45" title="Bez baterie, řízený ohřev vody / TČ, home office">s ohřevem vody ~45 %</button>
+          <button class="male" data-p="65" title="S baterií cca 1–1,5 kWh na 1 kWp">s baterií ~65 %</button>
+        </div>
+        <p class="napoveda">Kolik procent vyrobené energie spotřebujete hned (nebo z baterie). Zbytek jde do sítě jako přetok.
+          Vlastní spotřeba se omezí roční spotřebou domácnosti.</p>
+        <div class="mrizka2">
+          <div><label for="nakup">Cena nákupu (Kč/kWh vč. distribuce a DPH)</label><input type="number" id="nakup" step="0.1" min="0"></div>
+          <div><label for="vykup">Výkupní cena přetoků (Kč/kWh)</label><input type="number" id="vykup" step="0.05" min="-5"></div>
+          <div><label for="instalace">Cena instalace (Kč)</label><input type="number" id="instalace" step="1000" min="0"></div>
+          <div><label for="dotace">Dotace (Kč)</label><input type="number" id="dotace" step="1000" min="0"></div>
+          <div><label for="rust">Růst cen elektřiny (% / rok)</label><input type="number" id="rust" step="0.5" min="-10" max="20"></div>
+          <div><label for="degradace">Degradace panelů (% / rok)</label><input type="number" id="degradace" step="0.1" min="0" max="5"></div>
+        </div>
+        <p class="napoveda">Stav k říjnu 2026: cena elektřiny pro domácnosti vč. všech poplatků ~4,5–7,5 Kč/kWh (průměr ~6 Kč);
+          fixní výkup přetoků u velkých obchodníků ~1–1,9 Kč/kWh, spotový výkup kolísá (v poledne často kolem nuly).
+          Nová zelená úsporám dává na FVE běžným domácnostem zvýhodněný úvěr (až 25 000 Kč/kWp), přímou dotaci
+          jen NZÚ Light pro nízkopříjmové domácnosti. Hodnoty si upravte podle své smlouvy a nabídky.</p>
+      </div>
+    </div>
+
+    <div class="sloupec">
+      <div class="karta">
+        <h2>📈 Výroba po měsících</h2>
+        <div class="vysledky">
+          <div class="box hlavni"><div class="popis">Roční výroba</div><div class="cislo" id="vRok">–</div><div class="dalsi" id="vRokRozsah"></div></div>
+          <div class="box"><div class="popis">Měrná výroba</div><div class="cislo" id="vMerna">–</div><div class="dalsi">kWh na 1 kWp za rok</div></div>
+          <div class="box"><div class="popis">Ozáření roviny panelů</div><div class="cislo" id="vOzar">–</div><div class="dalsi">kWh/m² za rok</div></div>
+        </div>
+        <div class="graf-obal"><canvas id="graf" aria-label="Graf měsíční výroby a spotřeby"></canvas></div>
+        <details>
+          <summary>Tabulka po měsících</summary>
+          <table id="tabulka"><thead><tr><th>Měsíc</th><th>Výroba kWh</th><th>Min–max (roky)</th><th>Spotřeba kWh</th></tr></thead><tbody></tbody></table>
+        </details>
+      </div>
+
+      <div class="karta">
+        <h2>💡 Ekonomika</h2>
+        <div class="vysledky">
+          <div class="box"><div class="popis">Vlastní spotřeba</div><div class="cislo" id="eVlastni">–</div><div class="dalsi" id="eVlastniKc"></div></div>
+          <div class="box"><div class="popis">Přetoky do sítě</div><div class="cislo" id="ePretok">–</div><div class="dalsi" id="ePretokKc"></div></div>
+          <div class="box"><div class="popis">Pokrytí spotřeby</div><div class="cislo" id="ePokryti">–</div><div class="dalsi">z roční spotřeby domácnosti</div></div>
+          <div class="box hlavni"><div class="popis">Úspora 1. rok</div><div class="cislo" id="eUspora">–</div><div class="dalsi" id="eUsporaMes"></div></div>
+          <div class="box hlavni"><div class="popis">Prostá návratnost</div><div class="cislo" id="eNavrat">–</div><div class="dalsi" id="eNavrat2"></div></div>
+          <div class="box"><div class="popis">Čistý zisk za 25 let</div><div class="cislo" id="eZisk">–</div><div class="dalsi" id="eZisk2"></div></div>
+        </div>
+        <p class="napoveda" style="margin-top:12px">Prostá návratnost = (cena instalace − dotace) / úspora v 1. roce.
+          Druhý údaj počítá rok po roku s růstem cen a degradací panelů. Bez započtení výměny střídače (obvykle po 10–15 letech),
+          úroků a údržby.</p>
+      </div>
+    </div>
+  </div>
+
+  <p class="pozn">
+    <strong>Jak počítáme:</strong> evropský nástroj <a href="https://re.jrc.ec.europa.eu/pvg_tools/cs/" target="_blank" rel="noopener">PVGIS</a>
+    nepovoluje volání z cizích webových stránek (chybí hlavička CORS), proto stránka používá vlastní model:
+    hodinové globální ozáření skloněné roviny panelů a teplotu vzduchu z historického archivu
+    <a href="https://open-meteo.com/en/docs/historical-weather-api" target="_blank" rel="noopener">Open-Meteo</a> (reanalýza ERA5, posledních 5 celých let).
+    Výkon v každé hodině = kWp × G/1000 × (1 + γ·(T<sub>čl</sub> − 25 °C)) × 0,97 (odrazy) × (1 − ztráty),
+    kde T<sub>čl</sub> = T<sub>vzduch</sub> + 0,025·G a γ = −0,37 %/°C (krystalický křemík).
+    Model nepočítá se stíněním okolím. Výsledek bývá do ±10 % od PVGIS; pro ověření zadejte stejné hodnoty
+    přímo v PVGIS. Jde o orientační výpočet, ne nabídku dodavatele.
+    Zdroje cen: <a href="https://www.usetreno.cz/energie-elektrina/cena-za-1-kwh/" target="_blank" rel="noopener">usetreno.cz</a>,
+    <a href="https://www.ekvproject.cz/clanky/vykupni-ceny-pretoku-2026-jak-vydelat" target="_blank" rel="noopener">výkupní ceny přetoků 2026</a>,
+    <a href="https://www.memodo.cz/m/nova-zelena-usporam-2026/" target="_blank" rel="noopener">NZÚ 2026</a>.
+  </p>
+
+<script>
+/* ==JADRO== výpočetní logika bez DOM (testuje _test/fve_kalk_test.js) */
+const FVE = (function () {
+  const MESICE = ['leden', 'únor', 'březen', 'duben', 'květen', 'červen', 'červenec', 'srpen', 'září', 'říjen', 'listopad', 'prosinec'];
+  // typické rozložení spotřeby domácnosti během roku (zima víc svítí a topí), součet 12
+  const PROFIL = [1.22, 1.08, 1.04, 0.94, 0.88, 0.82, 0.82, 0.84, 0.88, 1.0, 1.12, 1.36];
+  const GAMMA = -0.0037;      // teplotní koeficient výkonu c-Si (1/°C)
+  const K_OHREV = 0.025;      // ohřev článku nad teplotu vzduchu (°C na W/m²)
+  const ODRAZY = 0.97;        // ztráty odrazem při šikmém dopadu
+
+  /* Z hodinových dat Open-Meteo spočítá výrobu 1 kWp bez systémových ztrát.
+     h = { time: ['2021-01-01T00:00', …], global_tilted_irradiance: [W/m²], temperature_2m: [°C] }
+     Vrací průměr přes celé roky + rozsah min–max každého měsíce. */
+  function vyrobaZHodin(h) {
+    const roky = {};                       // rok → {e:[12], g:[12], n:[12]}
+    const cas = h.time, G = h.global_tilted_irradiance, T = h.temperature_2m;
+    for (let i = 0; i < cas.length; i++) {
+      const rok = cas[i].slice(0, 4), m = +cas[i].slice(5, 7) - 1;
+      if (!roky[rok]) roky[rok] = { e: new Array(12).fill(0), g: new Array(12).fill(0), n: new Array(12).fill(0) };
+      const r = roky[rok];
+      const g = G[i];
+      if (g == null) continue;             // chybějící hodnota
+      r.n[m]++;
+      if (g <= 0) continue;
+      const t = T[i] == null ? 15 : T[i];
+      const tc = t + K_OHREV * g;
+      const f = Math.max(0, 1 + GAMMA * (tc - 25));
+      r.e[m] += g / 1000 * f * ODRAZY;     // kWh na 1 kWp
+      r.g[m] += g / 1000;                  // kWh/m²
+    }
+    // použij jen roky, kde má každý měsíc aspoň 90 % hodin
+    const hodinVMesici = (rok, m) => new Date(Date.UTC(+rok, m + 1, 0)).getUTCDate() * 24;
+    const plne = Object.keys(roky).filter(rok => roky[rok].n.every((n, m) => n >= 0.9 * hodinVMesici(rok, m)));
+    if (!plne.length) throw new Error('V datech není žádný úplný rok.');
+    const prumer = new Array(12).fill(0), ozar = new Array(12).fill(0);
+    const min = new Array(12).fill(Infinity), max = new Array(12).fill(-Infinity);
+    for (const rok of plne) {
+      const r = roky[rok];
+      for (let m = 0; m < 12; m++) {
+        // doplnění chybějících hodin poměrem
+        const k = hodinVMesici(rok, m) / r.n[m];
+        const e = r.e[m] * k;
+        prumer[m] += e / plne.length;
+        ozar[m] += r.g[m] * k / plne.length;
+        min[m] = Math.min(min[m], e); max[m] = Math.max(max[m], e);
+      }
+    }
+    const rocni = plne.map(rok => roky[rok].e.reduce((a, b) => a + b, 0));
+    return { mesice: prumer, ozareni: ozar, min, max, roky: plne, rocniMin: Math.min(...rocni), rocniMax: Math.max(...rocni) };
+  }
+
+  /* přepočet 1 kWp → zadaný systém */
+  function naSystem(zaklad, kwp, ztratyPct) {
+    const k = kwp * (1 - ztratyPct / 100);
+    const mesice = zaklad.mesice.map(e => e * k);
+    return {
+      mesice,
+      min: zaklad.min.map(e => e * k), max: zaklad.max.map(e => e * k),
+      rok: mesice.reduce((a, b) => a + b, 0),
+      rokMin: zaklad.rocniMin * k, rokMax: zaklad.rocniMax * k,
+      merna: kwp > 0 ? mesice.reduce((a, b) => a + b, 0) / kwp : 0,
+      ozareni: zaklad.ozareni.reduce((a, b) => a + b, 0),
+    };
+  }
+
+  function spotrebaPoMesicich(rocni) {
+    return PROFIL.map(p => rocni * p / 12);
+  }
+
+  /* ekonomika: p = { vyroba, spotreba, podil (%), nakup, vykup, instalace, dotace, rust (%), degradace (%), let } */
+  function ekonomika(p) {
+    const let_ = p.let || 25;
+    const vlastni = Math.min(p.vyroba * p.podil / 100, p.spotreba);
+    const pretok = Math.max(0, p.vyroba - vlastni);
+    const usporaVlastni = vlastni * p.nakup, prijemPretok = pretok * p.vykup;
+    const uspora = usporaVlastni + prijemPretok;
+    const cista = Math.max(0, p.instalace - p.dotace);
+    const prosta = uspora > 0 ? cista / uspora : Infinity;
+    // rok po roku: degradace výroby (podíl vlastní spotřeby stejný) a růst cen
+    let kum = 0, navrat = Infinity, celkem = 0;
+    for (let r = 0; r < let_; r++) {
+      const deg = Math.pow(1 - p.degradace / 100, r), ceny = Math.pow(1 + p.rust / 100, r);
+      const v = p.vyroba * deg;
+      const vl = Math.min(v * p.podil / 100, p.spotreba);
+      const u = (vl * p.nakup + (v - vl) * p.vykup) * ceny;
+      if (navrat === Infinity && kum + u >= cista && u > 0) navrat = r + (cista - kum) / u;
+      kum += u; celkem += u;
+    }
+    if (cista === 0) navrat = 0;
+    return {
+      vlastni, pretok, usporaVlastni, prijemPretok, uspora, cista, prosta, navrat,
+      celkem, zisk: celkem - cista,
+      pokryti: p.spotreba > 0 ? vlastni / p.spotreba : 0,
+    };
+  }
+
+  return { MESICE, PROFIL, vyrobaZHodin, naSystem, spotrebaPoMesicich, ekonomika };
+})();
+/* ==KONEC JADRA== */
+if (typeof module !== 'undefined') module.exports = FVE;
+</script>
+
+<script>
+(function () {
+  const $ = id => document.getElementById(id);
+  const KLIC = 'webapp_fve_kalk_vstupy', KLIC_CACHE = 'webapp_fve_kalk_data';
+  const VYCHOZI = { lat: 50.0755, lon: 14.4378, kwp: 5, ztraty: 14, sklon: 35, azimut: 0,
+    spotreba: 4500, podil: 30, nakup: 6, vykup: 1, instalace: 190000, dotace: 0, rust: 2, degradace: 0.5 };
+  const POLE = Object.keys(VYCHOZI);
+  const fmt = (n, d = 0) => n.toLocaleString('cs-CZ', { minimumFractionDigits: d, maximumFractionDigits: d });
+  const kc = n => fmt(Math.round(n)) + ' Kč';
+
+  let ulozene = {};
+  try { ulozene = JSON.parse(localStorage.getItem(KLIC)) || {}; } catch (e) { ulozene = {}; }
+  for (const k of POLE) $(k).value = (typeof ulozene[k] === 'number' && isFinite(ulozene[k])) ? ulozene[k] : VYCHOZI[k];
+
+  const cti = k => { const v = parseFloat($(k).value); return isFinite(v) ? v : VYCHOZI[k]; };
+  function uloz() {
+    const o = {}; POLE.forEach(k => o[k] = cti(k));
+    try { localStorage.setItem(KLIC, JSON.stringify(o)); } catch (e) { /* úložiště nedostupné */ }
+  }
+
+  /* ---------- mezipaměť stažených dat (výroba 1 kWp) ---------- */
+  function klicDat(lat, lon, sklon, az) { return [lat.toFixed(2), lon.toFixed(2), Math.round(sklon), Math.round(az)].join('|'); }
+  function nactiCache() { try { return JSON.parse(localStorage.getItem(KLIC_CACHE)) || {}; } catch (e) { return {}; } }
+  function ulozCache(klic, data) {
+    const c = nactiCache(); c[klic] = { t: Date.now(), d: data };
+    const klice = Object.keys(c).sort((a, b) => c[b].t - c[a].t);
+    klice.slice(12).forEach(k => delete c[k]);           // nejvýš 12 míst
+    try { localStorage.setItem(KLIC_CACHE, JSON.stringify(c)); } catch (e) { /* plné úložiště */ }
+  }
+
+  /* ---------- mapa ---------- */
+  const ESRI = 'https://server.arcgisonline.com/ArcGIS/rest/services/';
+  const mapa = L.map('mapa', { zoomControl: true }).setView([cti('lat'), cti('lon')], 12);
+  const ulice = L.tileLayer(ESRI + 'World_Street_Map/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19, attribution: 'Podklad © Esri, HERE, Garmin, © OpenStreetMap' });
+  const satelit = L.tileLayer(ESRI + 'World_Imagery/MapServer/tile/{z}/{y}/{x}', { maxZoom: 19, attribution: 'Podklad © Esri, Maxar, Earthstar Geographics' });
+  ulice.addTo(mapa);
+  L.control.layers({ 'Mapa': ulice, 'Satelit': satelit }, null, { position: 'topright' }).addTo(mapa);
+  const znacka = L.marker([cti('lat'), cti('lon')], { draggable: true }).addTo(mapa);
+
+  function nastavPolohu(lat, lon, posun) {
+    $('lat').value = lat.toFixed(4); $('lon').value = lon.toFixed(4);
+    znacka.setLatLng([lat, lon]);
+    if (posun) mapa.setView([lat, lon], Math.max(mapa.getZoom(), 13));
+    uloz(); oznacZastarale();
+  }
+  mapa.on('click', e => nastavPolohu(e.latlng.lat, e.latlng.lng, false));
+  znacka.on('dragend', () => { const p = znacka.getLatLng(); nastavPolohu(p.lat, p.lng, false); });
+  ['lat', 'lon'].forEach(k => $(k).addEventListener('change', () => {
+    const lat = cti('lat'), lon = cti('lon');
+    znacka.setLatLng([lat, lon]); mapa.panTo([lat, lon]); uloz(); oznacZastarale();
+  }));
+
+  $('btnGeo').addEventListener('click', () => {
+    if (!navigator.geolocation) { zprava('Prohlížeč neumí zjistit polohu.', true); return; }
+    zprava('Zjišťuji polohu…');
+    navigator.geolocation.getCurrentPosition(
+      p => { nastavPolohu(p.coords.latitude, p.coords.longitude, true); zprava('Poloha nastavena (přesnost ~' + Math.round(p.coords.accuracy) + ' m).'); },
+      e => zprava('Polohu se nepodařilo zjistit: ' + (e.code === 1 ? 'přístup zamítnut.' : e.message), true),
+      { enableHighAccuracy: true, timeout: 15000 });
+  });
+
+  /* ---------- kompas + směry ---------- */
+  function kresliKompas() {
+    const az = cti('azimut') * Math.PI / 180;
+    // 0 = jih (dolů), +90 = západ (vlevo), −90 = východ (vpravo)
+    $('kompasRucka').setAttribute('x2', (-Math.sin(az) * 20).toFixed(1));
+    $('kompasRucka').setAttribute('y2', (Math.cos(az) * 20).toFixed(1));
+    document.querySelectorAll('#smery button').forEach(b => b.classList.toggle('active', +b.dataset.az === cti('azimut')));
+  }
+  $('smery').addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    $('azimut').value = b.dataset.az; kresliKompas(); uloz(); oznacZastarale();
+  });
+  $('podilPresety').addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    $('podil').value = b.dataset.p; uloz(); prepocti();
+  });
+
+  /* ---------- stažení dat ---------- */
+  let zaklad = null, zakladKlic = null;
+  function zprava(t, chyba) { $('stav').textContent = t; $('stav').classList.toggle('chyba', !!chyba); }
+  function oznacZastarale() {
+    const k = klicDat(cti('lat'), cti('lon'), cti('sklon'), cti('azimut'));
+    if (zaklad && k !== zakladKlic) zprava('Poloha nebo orientace se změnila – klikněte na „Spočítat výrobu“.');
+  }
+
+  async function stahni() {
+    const lat = cti('lat'), lon = cti('lon'), sklon = Math.min(90, Math.max(0, cti('sklon')));
+    let az = cti('azimut'); az = ((az + 180) % 360 + 360) % 360 - 180;
+    const klic = klicDat(lat, lon, sklon, az);
+    const c = nactiCache()[klic];
+    if (c) { zaklad = c.d; zakladKlic = klic; zprava('Data z mezipaměti (' + c.d.roky.join(', ') + ').'); prepocti(); return; }
+    const rokDo = new Date().getFullYear() - 1, rokOd = rokDo - 4;
+    const url = 'https://archive-api.open-meteo.com/v1/archive?latitude=' + lat.toFixed(4) + '&longitude=' + lon.toFixed(4) +
+      '&start_date=' + rokOd + '-01-01&end_date=' + rokDo + '-12-31' +
+      '&hourly=global_tilted_irradiance,temperature_2m&tilt=' + Math.round(sklon) + '&azimuth=' + Math.round(az) + '&timezone=GMT';
+    $('btnVypocet').disabled = true;
+    zprava('Stahuji hodinová data ozáření ' + rokOd + '–' + rokDo + ' (~1 MB)…');
+    try {
+      const odp = await fetch(url);
+      if (!odp.ok) {
+        let duvod = 'HTTP ' + odp.status;
+        try { const j = await odp.json(); if (j.reason) duvod = j.reason; } catch (e) { /* bez těla */ }
+        throw new Error(duvod);
+      }
+      const j = await odp.json();
+      if (!j.hourly || !j.hourly.global_tilted_irradiance) throw new Error('Neočekávaná odpověď serveru.');
+      zaklad = FVE.vyrobaZHodin(j.hourly); zakladKlic = klic;
+      ulozCache(klic, zaklad);
+      zprava('Hotovo – průměr let ' + zaklad.roky.join(', ') + ' (Open-Meteo, nadm. výška ' + Math.round(j.elevation) + ' m).');
+      prepocti();
+    } catch (e) {
+      zprava('Data se nepodařilo stáhnout (' + e.message + '). Zkontrolujte připojení a zkuste to znovu; ' +
+        'ekonomiku můžete zatím počítat s odhadem 1000 kWh/kWp.', true);
+      if (!zaklad) prepocti();
+    } finally { $('btnVypocet').disabled = false; }
+  }
+  $('btnVypocet').addEventListener('click', () => { uloz(); stahni(); });
+
+  /* ---------- graf ---------- */
+  let graf = null;
+  function barvy() {
+    const s = getComputedStyle(document.documentElement);
+    const v = n => s.getPropertyValue(n).trim();
+    return { accent: v('--accent') || '#6aa6fd', warn: v('--warn') || '#e0a63f', text: v('--text-muted') || '#b0b0b0', mrizka: v('--border') || '#404040', soft: v('--accent-soft') || 'rgba(106,166,253,.15)' };
+  }
+  function kresliGraf(vyroba, spotreba) {
+    const b = barvy();
+    const data = {
+      labels: FVE.MESICE.map(m => m.slice(0, 3)),
+      datasets: [
+        { type: 'bar', label: 'Výroba (kWh)', data: vyroba.map(v => Math.round(v)), backgroundColor: b.accent, borderRadius: 4, order: 2 },
+        { type: 'line', label: 'Spotřeba (kWh)', data: spotreba.map(v => Math.round(v)), borderColor: b.warn, backgroundColor: b.warn,
+          pointRadius: 3, tension: 0.3, borderWidth: 2, order: 1 },
+      ],
+    };
+    if (graf) {
+      graf.data = data;
+      graf.options.scales.x.ticks.color = graf.options.scales.y.ticks.color = b.text;
+      graf.options.scales.y.grid.color = b.mrizka;
+      graf.options.plugins.legend.labels.color = b.text;
+      graf.update();
+      return;
+    }
+    graf = new Chart($('graf'), {
+      type: 'bar', data,
+      options: {
+        responsive: true, maintainAspectRatio: false, animation: { duration: 300 },
+        interaction: { mode: 'index', intersect: false },
+        scales: {
+          x: { ticks: { color: b.text }, grid: { display: false } },
+          y: { beginAtZero: true, ticks: { color: b.text }, grid: { color: b.mrizka }, title: { display: false } },
+        },
+        plugins: {
+          legend: { labels: { color: b.text, boxWidth: 14 } },
+          tooltip: { callbacks: { label: c => ' ' + c.dataset.label.replace(' (kWh)', '') + ': ' + fmt(c.parsed.y) + ' kWh' } },
+        },
+      },
+    });
+  }
+  // přepnutí tématu → přebarvit graf
+  new MutationObserver(() => prepocti()).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+  /* ---------- přepočet ---------- */
+  function prepocti() {
+    const kwp = Math.max(0, cti('kwp')), ztraty = Math.min(50, Math.max(0, cti('ztraty')));
+    const spotrebaRok = Math.max(0, cti('spotreba'));
+    const spotreba = FVE.spotrebaPoMesicich(spotrebaRok);
+    let sys = null;
+    if (zaklad) {
+      sys = FVE.naSystem(zaklad, kwp, ztraty);
+      $('vRok').textContent = fmt(sys.rok) + ' kWh';
+      $('vRokRozsah').textContent = 'roky ' + zaklad.roky[0] + '–' + zaklad.roky[zaklad.roky.length - 1] + ': ' + fmt(sys.rokMin) + '–' + fmt(sys.rokMax) + ' kWh';
+      $('vMerna').textContent = fmt(sys.merna) + ' kWh/kWp';
+      $('vOzar').textContent = fmt(sys.ozareni);
+      kresliGraf(sys.mesice, spotreba);
+      $('tabulka').tBodies[0].innerHTML = FVE.MESICE.map((m, i) =>
+        `<tr><td>${m}</td><td>${fmt(sys.mesice[i])}</td><td>${fmt(sys.min[i])}–${fmt(sys.max[i])}</td><td>${fmt(spotreba[i])}</td></tr>`).join('') +
+        `<tr><th>Celkem</th><th>${fmt(sys.rok)}</th><th></th><th>${fmt(spotrebaRok)}</th></tr>`;
+    } else {
+      ['vRok', 'vMerna', 'vOzar'].forEach(id => $(id).textContent = '–');
+      $('vRokRozsah').textContent = 'zatím odhad 1000 kWh/kWp';
+      kresliGraf(new Array(12).fill(0), spotreba);
+      $('tabulka').tBodies[0].innerHTML = '';
+    }
+    const vyroba = sys ? sys.rok : kwp * 1000 * (1 - ztraty / 100) / 0.86;
+    const e = FVE.ekonomika({
+      vyroba, spotreba: spotrebaRok, podil: Math.min(100, Math.max(0, cti('podil'))),
+      nakup: cti('nakup'), vykup: cti('vykup'), instalace: Math.max(0, cti('instalace')), dotace: Math.max(0, cti('dotace')),
+      rust: cti('rust'), degradace: Math.max(0, cti('degradace')), let: 25,
+    });
+    $('eVlastni').textContent = fmt(e.vlastni) + ' kWh';
+    $('eVlastniKc').textContent = 'ušetří ' + kc(e.usporaVlastni);
+    $('ePretok').textContent = fmt(e.pretok) + ' kWh';
+    $('ePretokKc').textContent = 'výkup ' + kc(e.prijemPretok);
+    $('ePokryti').textContent = fmt(e.pokryti * 100) + ' %';
+    $('eUspora').textContent = kc(e.uspora);
+    $('eUsporaMes').textContent = '≈ ' + kc(e.uspora / 12) + ' měsíčně';
+    $('eNavrat').textContent = isFinite(e.prosta) ? fmt(e.prosta, 1) + ' let' : 'nikdy';
+    $('eNavrat2').textContent = isFinite(e.navrat) ? 's růstem cen a degradací: ' + fmt(e.navrat, 1) + ' let' : 'během 25 let se nezaplatí';
+    $('eZisk').textContent = kc(e.zisk);
+    $('eZisk2').textContent = 'úspory ' + kc(e.celkem) + ' − investice ' + kc(e.cista);
+  }
+
+  POLE.forEach(k => $(k).addEventListener('input', () => {
+    uloz();
+    if (k === 'azimut') kresliKompas();
+    if (['lat', 'lon', 'sklon', 'azimut'].includes(k)) oznacZastarale(); else prepocti();
+  }));
+
+  kresliKompas();
+  // po načtení: pokud jsou data v mezipaměti, rovnou je ukaž
+  const c0 = nactiCache()[klicDat(cti('lat'), cti('lon'), cti('sklon'), cti('azimut'))];
+  if (c0) { zaklad = c0.d; zakladKlic = klicDat(cti('lat'), cti('lon'), cti('sklon'), cti('azimut')); zprava('Data z mezipaměti (' + zaklad.roky.join(', ') + ').'); }
+  else zprava('Zvolte místo a parametry a klikněte na „Spočítat výrobu“.');
+  prepocti();
+})();
+</script>
+</body>
+</html>

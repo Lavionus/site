@@ -1,0 +1,927 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🕸️ Analýza vazeb</title>
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../podpis.js" defer></script>
+<script src="../dialog.js" defer></script>
+<style>
+body{background:var(--bg);color:var(--text);min-height:100vh;padding:16px clamp(8px,2vw,20px)}
+.container{max-width:1280px;margin:0 auto}
+h1{font-size:1.5rem;margin-bottom:4px;font-weight:600;text-align:center}
+.sub{text-align:center;color:var(--text-faint);font-size:.84rem;margin-bottom:12px}
+.lista{display:flex;flex-wrap:wrap;gap:6px;align-items:center;background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius);padding:8px;margin-bottom:10px}
+.lista select{width:auto;max-width:220px}
+.lista .sep{width:1px;align-self:stretch;background:var(--border);margin:0 2px}
+button.b{background:var(--bg-control);border:1px solid var(--border-strong);color:var(--text);border-radius:6px;padding:6px 10px;font-size:.8rem;cursor:pointer;white-space:nowrap}
+button.b:hover{background:var(--bg-hover)}
+button.b.hl{background:var(--accent);border-color:var(--accent);color:#fff;font-weight:600}
+button.b.akt{outline:2px solid var(--accent);outline-offset:1px}
+button.b.nebezp{color:var(--danger)}
+input,select,textarea{background:var(--bg-input);border:1px solid var(--border-strong);border-radius:6px;color:var(--text);padding:6px 8px;font-size:.88rem;font-family:inherit;width:100%}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--accent)}
+.rozvrh{display:grid;grid-template-columns:1fr 320px;gap:10px}
+@media(max-width:860px){.rozvrh{grid-template-columns:1fr}}
+.platno{position:relative;background:var(--bg-deep);border:1px solid var(--border);border-radius:var(--radius);height:min(68vh,680px);min-height:320px;overflow:hidden;touch-action:none}
+.platno canvas{position:absolute;inset:0;width:100%;height:100%;display:block;cursor:grab}
+.platno canvas.tahne{cursor:grabbing}
+.platno .zoom{position:absolute;right:8px;bottom:8px;display:flex;flex-direction:column;gap:4px}
+.platno .zoom button{width:32px;height:32px;padding:0;font-size:1rem}
+.platno .rezim{position:absolute;left:8px;top:8px;background:var(--bg-elevated);border:1px solid var(--accent);border-radius:6px;padding:5px 9px;font-size:.78rem;display:none}
+.platno .prazdne{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--text-faint);font-size:.9rem;text-align:center;padding:20px;pointer-events:none}
+.bok{display:flex;flex-direction:column;gap:10px;min-width:0}
+.karta{background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius);padding:12px}
+.karta h2{font-size:.9rem;color:var(--accent);margin-bottom:8px}
+.karta label{display:block;font-size:.74rem;color:var(--text-faint);margin:8px 0 3px}
+.filtry{display:flex;flex-wrap:wrap;gap:4px}
+.filtry label{display:flex;align-items:center;gap:4px;margin:0;font-size:.78rem;color:var(--text-muted);background:var(--bg-panel);border:1px solid var(--border);border-radius:12px;padding:3px 8px;cursor:pointer}
+.filtry input{width:auto}
+.detail{font-size:.84rem;line-height:1.5}
+.detail .nadpis{font-weight:700;font-size:1rem;word-break:break-word}
+.detail .typ{font-size:.72rem;color:var(--text-faint);text-transform:uppercase;letter-spacing:.5px}
+.detail ul{list-style:none;margin-top:6px;max-height:220px;overflow:auto}
+.detail li{padding:4px 0;border-bottom:1px solid var(--border);cursor:pointer;font-size:.8rem}
+.detail li:hover{color:var(--accent)}
+.detail .akce{display:flex;flex-wrap:wrap;gap:4px;margin-top:8px}
+.pozn{font-size:.75rem;color:var(--text-faint);line-height:1.5;margin-top:6px}
+.cesta-vysl{font-size:.8rem;margin-top:6px;line-height:1.6;word-break:break-word}
+.metriky{width:100%;border-collapse:collapse;font-size:.78rem}
+.metriky th,.metriky td{padding:4px 5px;border-bottom:1px solid var(--border);text-align:left}
+.metriky th{color:var(--text-faint);font-weight:600;cursor:pointer;user-select:none}
+.metriky td.n{text-align:right;font-variant-numeric:tabular-nums}
+.metriky tr.radek{cursor:pointer}
+.metriky tr.radek:hover td{background:var(--bg-hover)}
+.metriky tr.zvolen td{background:var(--accent-soft)}
+.tabwrap{max-height:300px;overflow:auto}
+.radek2{display:flex;gap:6px}
+.radek2>*{flex:1;min-width:0}
+dialog.formular{border:1px solid var(--border);border-radius:10px;background:var(--bg-elevated);color:var(--text);padding:16px;width:min(92vw,420px)}
+dialog.formular::backdrop{background:rgba(0,0,0,.5)}
+dialog.formular h3{font-size:1rem;margin-bottom:6px}
+dialog.formular label{display:block;font-size:.76rem;color:var(--text-faint);margin:8px 0 3px}
+dialog.formular .tl{display:flex;justify-content:flex-end;gap:6px;margin-top:14px}
+.sila-hodn{font-weight:700;color:var(--accent)}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>🕸️ Analýza vazeb</h1>
+  <p class="sub">Graf osob, telefonů, vozidel, adres, firem, účtů, e-mailů a událostí. Data zůstávají jen v tomto prohlížeči (localStorage) – pro zálohu použij export JSON.</p>
+
+  <div class="lista">
+    <select id="pripad" aria-label="Případ"></select>
+    <button class="b" id="novyPripad" title="Nový případ">➕ Případ</button>
+    <button class="b" id="prejmenuj" title="Přejmenovat případ">✏️</button>
+    <button class="b nebezp" id="smazPripad" title="Smazat případ">🗑️</button>
+    <span class="sep"></span>
+    <button class="b hl" id="pridatEnt">+ Entita</button>
+    <button class="b" id="pridatVaz">🔗 Vazba</button>
+    <button class="b" id="rezimSpoj" title="Klikni postupně na dvě entity">🖱️ Propojit klikem</button>
+    <span class="sep"></span>
+    <button class="b" id="simulace" title="Spustit / zastavit silové rozvržení">⏸️ Rozvržení</button>
+    <button class="b" id="zamichat" title="Znovu rozmístit nepřipnuté entity">🔀</button>
+    <span class="sep"></span>
+    <button class="b" id="impCsv">📥 CSV</button>
+    <button class="b" id="impJson">📂 JSON</button>
+    <button class="b" id="expJson">💾 JSON</button>
+    <button class="b" id="expPng">🖼️ PNG</button>
+    <input type="file" id="soubor" hidden>
+  </div>
+
+  <div class="rozvrh">
+    <div class="platno" id="obal">
+      <canvas id="cv" aria-label="Graf vazeb"></canvas>
+      <div class="rezim" id="rezimInfo"></div>
+      <div class="prazdne" id="prazdne">Případ je prázdný. Přidej entitu, nebo načti CSV se seznamem vazeb.</div>
+      <div class="zoom">
+        <button class="b" id="zoomPlus" aria-label="Přiblížit">+</button>
+        <button class="b" id="zoomMinus" aria-label="Oddálit">−</button>
+        <button class="b" id="zoomFit" aria-label="Zobrazit vše" title="Zobrazit vše">⤢</button>
+      </div>
+    </div>
+
+    <div class="bok">
+      <div class="karta">
+        <h2>Hledat a filtrovat</h2>
+        <input id="hledat" placeholder="Hledat v názvech a poznámkách…">
+        <label>Zobrazené typy</label>
+        <div class="filtry" id="filtry"></div>
+        <label>Velikost uzlu podle</label>
+        <select id="velikost"><option value="">stejná</option><option value="stupen">stupně (počtu vazeb)</option><option value="mezi">centrality mezilehlosti</option></select>
+        <label style="display:flex;gap:6px;align-items:center;margin-top:8px"><input type="checkbox" id="popisky" style="width:auto" checked> popisky vazeb</label>
+      </div>
+
+      <div class="karta">
+        <h2>Detail</h2>
+        <div class="detail" id="detail"><span class="pozn">Klikni na entitu nebo vazbu v grafu.</span></div>
+      </div>
+
+      <div class="karta">
+        <h2>Nejkratší cesta</h2>
+        <div class="radek2"><select id="cestaA" aria-label="Od"></select><select id="cestaB" aria-label="Do"></select></div>
+        <label>Kritérium</label>
+        <select id="cestaRezim"><option value="kroky">nejméně kroků</option><option value="sila">přes nejsilnější vazby (cena = 1/síla)</option></select>
+        <div class="radek2" style="margin-top:8px"><button class="b hl" id="najdiCestu">Najít</button><button class="b" id="zrusCestu">Zrušit</button></div>
+        <div class="cesta-vysl" id="cestaVysl"></div>
+      </div>
+
+      <div class="karta">
+        <h2>Metriky (zobrazené entity)</h2>
+        <div class="tabwrap"><table class="metriky" id="metriky"></table></div>
+        <p class="pozn"><b>Stupeň</b> = počet vazeb, <b>Σ síla</b> = součet sil vazeb, <b>mezilehlost</b> = podíl nejkratších cest mezi ostatními dvojicemi, které vedou přes entitu (0–1). Vysoká mezilehlost = prostředník, „most“ mezi skupinami.</p>
+      </div>
+    </div>
+  </div>
+  <p class="pozn">Ovládání: táhni entitu (připne se na místo), táhni pozadí = posun, kolečko / dva prsty = zoom, dvojklik na entitu = uvolnit připnutí. CSV: řádky <code>zdroj;typ_zdroje;cíl;typ_cíle;popis;datum;síla</code> (oddělovač ; , nebo tabulátor, hlavička nepovinná; stačí i jen <code>zdroj;cíl</code> – typ se odhadne z tvaru: telefon, e-mail, účet, SPZ).</p>
+</div>
+
+<dialog class="formular" id="dlgEnt">
+  <form method="dialog" id="formEnt">
+    <h3 id="dlgEntNadpis">Nová entita</h3>
+    <label>Typ</label><select id="feTyp"></select>
+    <label>Název / identifikátor</label><input id="feNazev" required maxlength="120">
+    <label>Poznámka</label><textarea id="fePozn" rows="3" maxlength="2000"></textarea>
+    <div class="tl"><button class="b" value="zrusit" formnovalidate>Zrušit</button><button class="b hl" value="ok">Uložit</button></div>
+  </form>
+</dialog>
+<dialog class="formular" id="dlgVaz">
+  <form method="dialog" id="formVaz">
+    <h3 id="dlgVazNadpis">Nová vazba</h3>
+    <label>Od</label><select id="fvZ"></select>
+    <label>Do</label><select id="fvDo"></select>
+    <label>Popis (např. volal, vlastní, bydlí, platba)</label><input id="fvPopis" maxlength="200">
+    <label>Datum</label><input id="fvDatum" type="date">
+    <label>Síla vazby: <span class="sila-hodn" id="fvSilaH">3</span> (1 = slabá / nepotvrzená, 5 = silná / doložená)</label><input id="fvSila" type="range" min="1" max="5" step="1" value="3">
+    <div class="tl"><button class="b" value="zrusit" formnovalidate>Zrušit</button><button class="b hl" value="ok">Uložit</button></div>
+  </form>
+</dialog>
+
+<script id="logika">
+/* ===== Grafová logika (bez DOM – testovatelná v node) ===== */
+(function (g) {
+  const TYPY = {
+    osoba:   { nazev: 'Osoba',   ikona: '👤', tvar: 'kruh',     barva: '#6aa6fd' },
+    telefon: { nazev: 'Telefon', ikona: '📱', tvar: 'telefon',  barva: '#4caf7d' },
+    vozidlo: { nazev: 'Vozidlo', ikona: '🚗', tvar: 'sestiuh',  barva: '#e0a63f' },
+    adresa:  { nazev: 'Adresa',  ikona: '🏠', tvar: 'dum',      barva: '#b48cf0' },
+    firma:   { nazev: 'Firma',   ikona: '🏢', tvar: 'ctverec',  barva: '#e07a5f' },
+    ucet:    { nazev: 'Účet',    ikona: '💳', tvar: 'kosoctverec', barva: '#2bb5a8' },
+    email:   { nazev: 'E-mail',  ikona: '✉️', tvar: 'obalka',   barva: '#d66bb0' },
+    udalost: { nazev: 'Událost', ikona: '⚡', tvar: 'hvezda',   barva: '#e05d5d' }
+  };
+  const ALIASY = { osoba: 'osoba', person: 'osoba', clovek: 'osoba', podezrely: 'osoba', telefon: 'telefon', tel: 'telefon', mobil: 'telefon', phone: 'telefon', cislo: 'telefon',
+    vozidlo: 'vozidlo', auto: 'vozidlo', spz: 'vozidlo', rz: 'vozidlo', car: 'vozidlo', vehicle: 'vozidlo', adresa: 'adresa', address: 'adresa', misto: 'adresa',
+    firma: 'firma', spolecnost: 'firma', company: 'firma', ico: 'firma', ucet: 'ucet', account: 'ucet', iban: 'ucet', bankovniucet: 'ucet',
+    email: 'email', mail: 'email', udalost: 'udalost', event: 'udalost', incident: 'udalost', cin: 'udalost' };
+  const bezDiak = s => String(s).normalize('NFD').replace(/[̀-ͯ]/g, '');
+  const klicNazvu = s => bezDiak(s).toLowerCase().replace(/\s+/g, ' ').trim();
+  function typZNazvu(t) { const k = bezDiak(t || '').toLowerCase().replace(/[^a-z]/g, ''); return ALIASY[k] || null; }
+  function odhadTypu(n) {
+    const s = String(n).trim();
+    if (/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(s)) return 'email';
+    if (/^[A-Z]{2}\d{2}[A-Z0-9 ]{10,30}$/i.test(s.replace(/\s/g, '')) && /^[A-Z]{2}\d{2}/i.test(s)) return 'ucet';
+    if (/^(\d{1,6}-)?\d{2,10}\/\d{4}$/.test(s.replace(/\s/g, ''))) return 'ucet';
+    if (/^\+?[\d\s()-]{9,}$/.test(s) && s.replace(/\D/g, '').length >= 9) return 'telefon';
+    if (/^\d[A-Z][A-Z0-9]\s?\d{4}$/i.test(s)) return 'vozidlo'; // česká SPZ/RZ, např. 1AB 2345
+    if (/(^|\s)(s\.\s?r\.\s?o\.?|a\.\s?s\.?|spol\.|k\.\s?s\.?|v\.\s?o\.\s?s\.?|z\.\s?s\.?|gmbh|ltd\.?|inc\.?)(?=\s|,|$)/i.test(s)) return 'firma';
+    if ((/\p{L}/u.test(s) && /\b\d{3}\s?\d{2}\b/.test(s)) || /^[^\d,]+\s\d+(\/\d+)?[a-z]?\s*,/i.test(s) || /(^|\s)(ul\.|ulice|nám\.|náměstí|č\.\s?p\.)/i.test(s)) return 'adresa';
+    return 'osoba';
+  }
+  let citac = 0;
+  const noveId = p => p + Date.now().toString(36) + (citac++).toString(36) + Math.random().toString(36).slice(2, 5);
+
+  function prazdnyGraf() { return { entity: [], vazby: [] }; }
+  function najdiEntitu(gr, nazev) { const k = klicNazvu(nazev); return gr.entity.find(e => klicNazvu(e.nazev) === k); }
+  function pridejEntitu(gr, typ, nazev, pozn) {
+    const ex = najdiEntitu(gr, nazev); if (ex) return ex;
+    const e = { id: noveId('e'), typ: TYPY[typ] ? typ : 'osoba', nazev: String(nazev).trim(), pozn: pozn || '' };
+    gr.entity.push(e); return e;
+  }
+  function pridejVazbu(gr, z, d, popis, datum, sila) {
+    const v = { id: noveId('v'), z, do: d, popis: popis || '', datum: datum || '', sila: Math.max(1, Math.min(5, Math.round(+sila || 3))) };
+    gr.vazby.push(v); return v;
+  }
+  function smazEntitu(gr, id) { gr.entity = gr.entity.filter(e => e.id !== id); gr.vazby = gr.vazby.filter(v => v.z !== id && v.do !== id); }
+
+  // podgraf podle viditelných typů
+  function podgraf(gr, viditelne) {
+    if (!viditelne) return gr;
+    const ent = gr.entity.filter(e => viditelne.has(e.typ)), ids = new Set(ent.map(e => e.id));
+    return { entity: ent, vazby: gr.vazby.filter(v => ids.has(v.z) && ids.has(v.do)) };
+  }
+  // seznam sousedů: id → [{id, vazba}]
+  function sousede(gr) {
+    const m = new Map(gr.entity.map(e => [e.id, []]));
+    for (const v of gr.vazby) {
+      if (!m.has(v.z) || !m.has(v.do) || v.z === v.do) continue;
+      m.get(v.z).push({ id: v.do, vazba: v }); m.get(v.do).push({ id: v.z, vazba: v });
+    }
+    return m;
+  }
+  function stupne(gr) {
+    const s = sousede(gr), r = {};
+    for (const [id, l] of s) r[id] = { stupen: l.length, sila: l.reduce((a, x) => a + x.vazba.sila, 0), sousedu: new Set(l.map(x => x.id)).size };
+    return r;
+  }
+  // Brandesův algoritmus (neorientovaný, neohodnocený; souběžné vazby se slučují); normalizováno na 0–1
+  function mezilehlost(gr) {
+    const s = sousede(gr), ids = [...s.keys()], n = ids.length, CB = Object.fromEntries(ids.map(i => [i, 0]));
+    const sous = new Map(ids.map(i => [i, [...new Set(s.get(i).map(x => x.id))]]));
+    for (const src of ids) {
+      const zasobnik = [], pred = new Map(ids.map(i => [i, []])), sigma = new Map(ids.map(i => [i, 0])), dist = new Map(ids.map(i => [i, -1]));
+      sigma.set(src, 1); dist.set(src, 0);
+      const fronta = [src]; let h = 0;
+      while (h < fronta.length) {
+        const v = fronta[h++]; zasobnik.push(v);
+        for (const w of sous.get(v)) {
+          if (dist.get(w) < 0) { dist.set(w, dist.get(v) + 1); fronta.push(w); }
+          if (dist.get(w) === dist.get(v) + 1) { sigma.set(w, sigma.get(w) + sigma.get(v)); pred.get(w).push(v); }
+        }
+      }
+      const delta = new Map(ids.map(i => [i, 0]));
+      while (zasobnik.length) {
+        const w = zasobnik.pop();
+        for (const v of pred.get(w)) delta.set(v, delta.get(v) + sigma.get(v) / sigma.get(w) * (1 + delta.get(w)));
+        if (w !== src) CB[w] += delta.get(w);
+      }
+    }
+    const norm = n > 2 ? (n - 1) * (n - 2) : 1; // součet přes obě orientace / 2, dělený (n-1)(n-2)/2
+    for (const i of ids) CB[i] = CB[i] / norm;
+    return CB;
+  }
+  // nejkratší cesta: rezim 'kroky' (BFS) nebo 'sila' (Dijkstra, cena 1/síla); vrací {uzly, vazby, cena} nebo null
+  function nejkratsiCesta(gr, a, b, rezim) {
+    const s = sousede(gr);
+    if (!s.has(a) || !s.has(b)) return null;
+    if (a === b) return { uzly: [a], vazby: [], cena: 0 };
+    const cena = v => rezim === 'sila' ? 1 / v.sila : 1;
+    const dist = new Map([[a, 0]]), odkud = new Map(), hotovo = new Set();
+    const otevrene = [a];
+    while (otevrene.length) {
+      let bi = 0; for (let i = 1; i < otevrene.length; i++) if (dist.get(otevrene[i]) < dist.get(otevrene[bi])) bi = i;
+      const u = otevrene.splice(bi, 1)[0];
+      if (hotovo.has(u)) continue; hotovo.add(u);
+      if (u === b) break;
+      for (const { id, vazba } of s.get(u)) {
+        const nd = dist.get(u) + cena(vazba);
+        if (!dist.has(id) || nd < dist.get(id) - 1e-12) { dist.set(id, nd); odkud.set(id, { z: u, vazba }); otevrene.push(id); }
+      }
+    }
+    if (!dist.has(b)) return null;
+    const uzly = [b], vazby = [];
+    let c = b; while (c !== a) { const o = odkud.get(c); vazby.unshift(o.vazba); c = o.z; uzly.unshift(c); }
+    return { uzly, vazby, cena: dist.get(b) };
+  }
+  function komponenty(gr) {
+    const s = sousede(gr), vid = new Set(), r = [];
+    for (const id of s.keys()) {
+      if (vid.has(id)) continue;
+      const k = [], f = [id]; vid.add(id);
+      while (f.length) { const u = f.pop(); k.push(u); for (const x of s.get(u)) if (!vid.has(x.id)) { vid.add(x.id); f.push(x.id); } }
+      r.push(k);
+    }
+    return r;
+  }
+
+  // ---- silové rozvržení ----
+  // entity bez polohy: každá souvislá skupina dostane vlastní místo (jinak se malé skupiny
+  // zachytí uvnitř velkých), uvnitř skupiny spirála se zlatým úhlem – deterministické
+  function vychoziPozice(gr) {
+    if (gr.entity.every(e => Number.isFinite(e.x) && Number.isFinite(e.y))) return;
+    const idx = new Map(gr.entity.map(e => [e.id, e]));
+    const komp = komponenty(gr).sort((a, b) => b.length - a.length);
+    let polomer = 0;
+    komp.forEach((k, ki) => {
+      const velikost = 60 * Math.sqrt(k.length);
+      let cx = 0, cy = 0;
+      if (ki) { polomer += velikost + 40; const u = ki * 2.39996; cx = polomer * Math.cos(u); cy = polomer * Math.sin(u); }
+      else polomer = velikost;
+      k.forEach((id, i) => {
+        const e = idx.get(id); if (Number.isFinite(e.x) && Number.isFinite(e.y)) return;
+        const r = 45 * Math.sqrt(i), u = i * 2.39996;
+        e.x = cx + r * Math.cos(u); e.y = cy + r * Math.sin(u);
+      });
+    });
+  }
+  // jeden krok simulace; alpha = „teplota“ (1 → 0)
+  function silovyKrok(gr, alpha, o = {}) {
+    const E = gr.entity, n = E.length; if (!n) return;
+    const odpuz = o.odpuz || 9000, delka = o.delka || 120, tuhost = o.tuhost || 0.06, stred = o.stred || 0.012;
+    vychoziPozice(gr);
+    for (const e of E) { e.vx = e.vx || 0; e.vy = e.vy || 0; }
+    for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) {
+      const a = E[i], b = E[j];
+      let dx = b.x - a.x, dy = b.y - a.y, d2 = dx * dx + dy * dy;
+      if (d2 < 1) { dx = (i - j) * 0.5 + 0.3; dy = 0.7; d2 = dx * dx + dy * dy; }
+      if (d2 > 640000) continue;
+      const f = odpuz * alpha / d2, d = Math.sqrt(d2);
+      a.vx -= f * dx / d; a.vy -= f * dy / d; b.vx += f * dx / d; b.vy += f * dy / d;
+    }
+    const idx = new Map(E.map(e => [e.id, e]));
+    for (const v of gr.vazby) {
+      const a = idx.get(v.z), b = idx.get(v.do); if (!a || !b || a === b) continue;
+      const dx = b.x - a.x, dy = b.y - a.y, d = Math.sqrt(dx * dx + dy * dy) || 0.01;
+      const L = delka * (1.25 - v.sila * 0.08);
+      const f = (d - L) * tuhost * alpha * (0.6 + v.sila * 0.12);
+      a.vx += f * dx / d; a.vy += f * dy / d; b.vx -= f * dx / d; b.vy -= f * dy / d;
+    }
+    for (const e of E) {
+      e.vx -= e.x * stred * alpha; e.vy -= e.y * stred * alpha;
+      if (e.pevny || e === o.tazeny) { e.vx = e.vy = 0; continue; }
+      const rych = Math.hypot(e.vx, e.vy), max = 40;
+      if (rych > max) { e.vx *= max / rych; e.vy *= max / rych; }
+      e.x += e.vx; e.y += e.vy; e.vx *= 0.55; e.vy *= 0.55;
+    }
+  }
+
+  // ---- CSV ----
+  function rozdelCsv(text) {
+    text = String(text).replace(/^﻿/, '');
+    const prvni = text.split(/\r?\n/).find(r => r.trim()) || '';
+    const odd = [';', '\t', ','].map(c => [c, prvni.split(c).length]).sort((a, b) => b[1] - a[1])[0][0];
+    const radky = []; let pole = [], hodn = '', uvoz = false;
+    for (let i = 0; i < text.length; i++) {
+      const ch = text[i];
+      if (uvoz) { if (ch === '"') { if (text[i + 1] === '"') { hodn += '"'; i++; } else uvoz = false; } else hodn += ch; continue; }
+      if (ch === '"' && hodn === '') { uvoz = true; continue; }
+      if (ch === odd) { pole.push(hodn); hodn = ''; continue; }
+      if (ch === '\n' || ch === '\r') { if (ch === '\r' && text[i + 1] === '\n') i++; pole.push(hodn); radky.push(pole); pole = []; hodn = ''; continue; }
+      hodn += ch;
+    }
+    if (hodn !== '' || pole.length) { pole.push(hodn); radky.push(pole); }
+    return radky.map(r => r.map(x => x.trim())).filter(r => r.some(x => x));
+  }
+  const SLOUPCE = { zdroj: ['zdroj', 'od', 'source', 'from', 'entita1'], typ_zdroje: ['typzdroje', 'typod', 'typ1', 'sourcetype', 'typa'],
+    cil: ['cil', 'do', 'target', 'to', 'entita2'], typ_cile: ['typcile', 'typdo', 'typ2', 'targettype', 'typb'],
+    popis: ['popis', 'vazba', 'vztah', 'label', 'description', 'typvazby'], datum: ['datum', 'date', 'cas', 'kdy'], sila: ['sila', 'vaha', 'weight', 'strength'] };
+  // naimportuje vazby z CSV do grafu; vrací {entit, vazeb, chyby}
+  function importCsv(gr, text) {
+    const r = rozdelCsv(text); if (!r.length) return { entit: 0, vazeb: 0, chyby: ['Soubor je prázdný.'] };
+    const norm = s => bezDiak(s).toLowerCase().replace(/[^a-z0-9]/g, '');
+    let mapa = null;
+    const hl = r[0].map(norm);
+    if (hl.some(h => SLOUPCE.zdroj.includes(h)) && hl.some(h => SLOUPCE.cil.includes(h))) {
+      mapa = {}; for (const k in SLOUPCE) { const i = hl.findIndex(h => SLOUPCE[k].includes(h)); if (i >= 0) mapa[k] = i; }
+      r.shift();
+    } else {
+      // bez hlavičky: 2 sloupce = zdroj;cíl, 3 = zdroj;cíl;popis, jinak plné pořadí
+      const n = Math.max(...r.map(x => x.length));
+      mapa = n <= 2 ? { zdroj: 0, cil: 1 } : n === 3 ? { zdroj: 0, cil: 1, popis: 2 } : { zdroj: 0, typ_zdroje: 1, cil: 2, typ_cile: 3, popis: 4, datum: 5, sila: 6 };
+    }
+    const predE = gr.entity.length, chyby = []; let vazeb = 0;
+    r.forEach((radek, i) => {
+      const val = k => mapa[k] != null ? (radek[mapa[k]] || '') : '';
+      const a = val('zdroj'), b = val('cil');
+      if (!a || !b) { chyby.push(`Řádek ${i + 1}: chybí zdroj nebo cíl.`); return; }
+      const ea = pridejEntitu(gr, typZNazvu(val('typ_zdroje')) || odhadTypu(a), a);
+      const eb = pridejEntitu(gr, typZNazvu(val('typ_cile')) || odhadTypu(b), b);
+      pridejVazbu(gr, ea.id, eb.id, val('popis'), normDatum(val('datum')), val('sila') || 3); vazeb++;
+    });
+    return { entit: gr.entity.length - predE, vazeb, chyby };
+  }
+  function normDatum(s) {
+    s = String(s || '').trim(); let m;
+    if ((m = s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/))) return `${m[1]}-${m[2].padStart(2, '0')}-${m[3].padStart(2, '0')}`;
+    if ((m = s.match(/^(\d{1,2})\.\s*(\d{1,2})\.\s*(\d{4})/))) return `${m[3]}-${m[2].padStart(2, '0')}-${m[1].padStart(2, '0')}`;
+    return s;
+  }
+  // kontrola a oprava importovaného JSON
+  function zkontrolujGraf(d) {
+    if (!d || !Array.isArray(d.entity) || !Array.isArray(d.vazby)) throw new Error('Soubor neobsahuje entity a vazby.');
+    const ent = d.entity.filter(e => e && e.id && e.nazev).map(e => ({ id: String(e.id), typ: TYPY[e.typ] ? e.typ : 'osoba', nazev: String(e.nazev), pozn: String(e.pozn || ''),
+      x: Number.isFinite(e.x) ? e.x : undefined, y: Number.isFinite(e.y) ? e.y : undefined, pevny: !!e.pevny }));
+    const ids = new Set(ent.map(e => e.id));
+    const vaz = d.vazby.filter(v => v && ids.has(String(v.z)) && ids.has(String(v.do))).map(v => ({ id: String(v.id || noveId('v')), z: String(v.z), do: String(v.do),
+      popis: String(v.popis || ''), datum: String(v.datum || ''), sila: Math.max(1, Math.min(5, Math.round(+v.sila || 3))) }));
+    return { entity: ent, vazby: vaz };
+  }
+
+  g.VAZBY = { TYPY, typZNazvu, odhadTypu, klicNazvu, prazdnyGraf, najdiEntitu, pridejEntitu, pridejVazbu, smazEntitu, podgraf, sousede, stupne,
+    mezilehlost, nejkratsiCesta, komponenty, vychoziPozice, silovyKrok, rozdelCsv, importCsv, normDatum, zkontrolujGraf, noveId };
+})(typeof window !== 'undefined' ? window : globalThis);
+</script>
+
+<script>
+(function () {
+  const V = window.VAZBY, $ = id => document.getElementById(id);
+  const KLIC = 'webapp_vazby_analyza_';
+  const dlg = window.Dialog || { info: m => console.log(m), chyba: m => console.warn(m), potvrd: async () => true, zeptej: async (t, d) => d };
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+  // ---------- případy a ukládání ----------
+  let pripady = [], aktivni = null;
+  function ukazka() {
+    const g = V.prazdnyGraf(), E = (t, n, p) => V.pridejEntitu(g, t, n, p).id, L = (a, b, p, d, s) => V.pridejVazbu(g, a, b, p, d, s);
+    const novak = E('osoba', 'Jan Novák', 'majitel firmy'), svob = E('osoba', 'Petr Svoboda'), dvor = E('osoba', 'Eva Dvořáková'), kral = E('osoba', 'Tomáš Král', 'neznámý pachatel?');
+    const t1 = E('telefon', '+420 601 234 567'), t2 = E('telefon', '+420 777 888 999'), t3 = E('telefon', '+420 720 111 222');
+    const auto = E('vozidlo', '5AB 1234', 'Škoda Octavia, stříbrná'), adr = E('adresa', 'Lipová 12, Brno 602 00'), sklad = E('adresa', 'Průmyslová 5, Kuřim');
+    const firma = E('firma', 'Alfa Trading s.r.o.'), ucet = E('ucet', '123456789/0100'), ucet2 = E('ucet', '2900112233/2010'), mail = E('email', 'alfa.obchod@example.com');
+    const ud = E('udalost', 'Vloupání do skladu', '12. 3. 2026, 2:10'), ud2 = E('udalost', 'Převod 480 000 Kč');
+    L(novak, firma, 'jednatel', '2019-05-01', 5); L(novak, t1, 'používá', '', 5); L(svob, t2, 'používá', '', 4); L(t1, t2, 'hovor 4 min', '2026-03-11', 3);
+    L(t2, t3, 'SMS', '2026-03-12', 2); L(kral, t3, 'předplacená karta?', '', 1); L(auto, ud, 'zachyceno kamerou', '2026-03-12', 3); L(svob, auto, 'vlastník', '', 5);
+    L(ud, sklad, 'místo činu', '2026-03-12', 5); L(firma, sklad, 'nájemce', '2024-01-01', 4); L(svob, adr, 'trvalý pobyt', '', 4); L(dvor, adr, 'bydlí', '', 4);
+    L(dvor, ucet2, 'majitelka účtu', '', 5); L(firma, ucet, 'firemní účet', '', 5); L(ucet, ud2, 'odchozí platba', '2026-03-14', 4); L(ud2, ucet2, 'příjemce', '2026-03-14', 4);
+    L(firma, mail, 'kontakt', '', 4); L(mail, dvor, 'přihlášení z IP domácnosti', '2026-03-10', 2);
+    return { id: V.noveId('p'), nazev: 'Ukázkový případ', ...g };
+  }
+  function nactiVse() {
+    try { pripady = JSON.parse(localStorage.getItem(KLIC + 'pripady') || '[]'); } catch (e) { pripady = []; }
+    if (!Array.isArray(pripady)) pripady = [];
+    pripady = pripady.map(p => { try { return { id: p.id, nazev: p.nazev || 'Případ', ...V.zkontrolujGraf(p) }; } catch (e) { return null; } }).filter(Boolean);
+    if (!pripady.length) pripady.push(ukazka());
+    let a = null; try { a = localStorage.getItem(KLIC + 'aktivni'); } catch (e) { }
+    aktivni = pripady.find(p => p.id === a) || pripady[0];
+  }
+  let casUlozeni = null;
+  function uloz(hned) {
+    clearTimeout(casUlozeni);
+    const f = () => {
+      try {
+        localStorage.setItem(KLIC + 'pripady', JSON.stringify(pripady.map(p => ({ id: p.id, nazev: p.nazev,
+          entity: p.entity.map(e => ({ id: e.id, typ: e.typ, nazev: e.nazev, pozn: e.pozn, x: Math.round(e.x * 10) / 10, y: Math.round(e.y * 10) / 10, pevny: !!e.pevny })),
+          vazby: p.vazby }))));
+        localStorage.setItem(KLIC + 'aktivni', aktivni.id);
+      } catch (e) { dlg.chyba('Uložení se nepovedlo (plné úložiště?).'); }
+    };
+    if (hned) f(); else casUlozeni = setTimeout(f, 400);
+  }
+
+  // ---------- stav zobrazení ----------
+  const cv = $('cv'), ctx = cv.getContext('2d');
+  let W = 0, H = 0, dpr = 1;
+  const pohled = { s: 1, x: 0, y: 0 }; // obrazovka = svět * s + (x, y)
+  let vybrano = null; // {druh:'e'|'v', id}
+  let cesta = null, hledat = '', viditelne = new Set(Object.keys(V.TYPY));
+  let metriky = { stupne: {}, mezi: {} }, alpha = 1, bezi = true, tazeny = null, rezimSpoj = null;
+  try { const f = JSON.parse(localStorage.getItem(KLIC + 'filtr') || 'null'); if (Array.isArray(f)) viditelne = new Set(f.filter(t => V.TYPY[t])); } catch (e) { }
+
+  const graf = () => V.podgraf(aktivni, viditelne);
+  const entita = id => aktivni.entity.find(e => e.id === id);
+  const barva = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim() || '#888';
+
+  function velikostPlatna() {
+    const r = $('obal').getBoundingClientRect();
+    dpr = window.devicePixelRatio || 1; W = r.width; H = r.height;
+    cv.width = Math.max(1, Math.round(W * dpr)); cv.height = Math.max(1, Math.round(H * dpr));
+  }
+  function polomer(e) {
+    const z = $('velikost').value;
+    if (z === 'stupen') return 14 + Math.min(18, 3 * Math.sqrt((metriky.stupne[e.id] || {}).stupen || 0));
+    if (z === 'mezi') return 14 + 26 * Math.sqrt(metriky.mezi[e.id] || 0);
+    return 18;
+  }
+
+  // ---------- kreslení ----------
+  function cestaTvaru(c, tvar, x, y, r) {
+    c.beginPath();
+    const mnohouh = (n, rot, rr = r) => { for (let i = 0; i < n; i++) { const u = rot + i * 2 * Math.PI / n; i ? c.lineTo(x + rr * Math.cos(u), y + rr * Math.sin(u)) : c.moveTo(x + rr * Math.cos(u), y + rr * Math.sin(u)); } c.closePath(); };
+    const zaobl = (w, h, rad) => { if (c.roundRect) c.roundRect(x - w, y - h, 2 * w, 2 * h, rad); else c.rect(x - w, y - h, 2 * w, 2 * h); };
+    switch (tvar) {
+      case 'kruh': c.arc(x, y, r, 0, Math.PI * 2); break;
+      case 'telefon': zaobl(r * 0.72, r * 1.05, r * 0.25); break;
+      case 'sestiuh': mnohouh(6, 0, r * 1.08); break;
+      case 'dum': c.moveTo(x, y - r * 1.1); c.lineTo(x + r, y - r * 0.15); c.lineTo(x + r * 0.8, y - r * 0.15); c.lineTo(x + r * 0.8, y + r * 0.9); c.lineTo(x - r * 0.8, y + r * 0.9); c.lineTo(x - r * 0.8, y - r * 0.15); c.lineTo(x - r, y - r * 0.15); c.closePath(); break;
+      case 'ctverec': zaobl(r * 0.9, r * 0.9, 2); break;
+      case 'kosoctverec': mnohouh(4, -Math.PI / 2, r * 1.2); break;
+      case 'obalka': zaobl(r * 1.15, r * 0.78, 3); break;
+      case 'hvezda': for (let i = 0; i < 10; i++) { const u = -Math.PI / 2 + i * Math.PI / 5, rr = i % 2 ? r * 0.55 : r * 1.2; i ? c.lineTo(x + rr * Math.cos(u), y + rr * Math.sin(u)) : c.moveTo(x + rr * Math.cos(u), y + rr * Math.sin(u)); } c.closePath(); break;
+      default: c.arc(x, y, r, 0, Math.PI * 2);
+    }
+  }
+  // geometrie hran: souběžné vazby se rozloží do oblouků
+  function geometrieHran(gr, idx) {
+    const skup = new Map();
+    for (const v of gr.vazby) { const k = v.z < v.do ? v.z + '|' + v.do : v.do + '|' + v.z; if (!skup.has(k)) skup.set(k, []); skup.get(k).push(v); }
+    const r = [];
+    for (const l of skup.values()) l.forEach((v, i) => {
+      const a = idx.get(v.z), b = idx.get(v.do); if (!a || !b) return;
+      const dx = b.x - a.x, dy = b.y - a.y, d = Math.hypot(dx, dy) || 1;
+      const sm = v.z < v.do ? 1 : -1, off = (i - (l.length - 1) / 2) * 26 * sm;
+      r.push({ v, a, b, cx: (a.x + b.x) / 2 - dy / d * off, cy: (a.y + b.y) / 2 + dx / d * off });
+    });
+    return r;
+  }
+  function bodKrivky(h, t) { const u = 1 - t; return [u * u * h.a.x + 2 * u * t * h.cx + t * t * h.b.x, u * u * h.a.y + 2 * u * t * h.cy + t * t * h.b.y]; }
+
+  function vykresli(c, w, h, pv, proExport) {
+    const gr = graf(), idx = new Map(gr.entity.map(e => [e.id, e]));
+    c.save();
+    c.fillStyle = barva('--bg-deep'); c.fillRect(0, 0, w, h);
+    c.translate(pv.x, pv.y); c.scale(pv.s, pv.s);
+    // zvýraznění: vybraná entita + sousedé, nebo cesta
+    let svetla = null, svetlaVaz = null;
+    if (cesta) { svetla = new Set(cesta.uzly); svetlaVaz = new Set(cesta.vazby.map(v => v.id)); }
+    else if (vybrano && vybrano.druh === 'e' && idx.has(vybrano.id)) {
+      svetla = new Set([vybrano.id]); svetlaVaz = new Set();
+      for (const v of gr.vazby) if (v.z === vybrano.id || v.do === vybrano.id) { svetla.add(v.z); svetla.add(v.do); svetlaVaz.add(v.id); }
+    } else if (vybrano && vybrano.druh === 'v') {
+      const v = gr.vazby.find(x => x.id === vybrano.id); if (v) { svetla = new Set([v.z, v.do]); svetlaVaz = new Set([v.id]); }
+    }
+    const hq = hledat ? V.klicNazvu(hledat) : '';
+    const shoda = e => hq && (V.klicNazvu(e.nazev).includes(hq) || V.klicNazvu(e.pozn || '').includes(hq));
+    const txt = barva('--text'), txtF = barva('--text-faint'), hrana = barva('--border-strong'), akc = barva('--accent'), warn = barva('--warn'), pozadi = barva('--bg-deep');
+    const hrany = geometrieHran(gr, idx);
+    // hrany
+    for (const hr of hrany) {
+      const sv = !svetlaVaz || svetlaVaz.has(hr.v.id);
+      c.globalAlpha = sv ? 1 : 0.12;
+      c.strokeStyle = cesta && sv ? warn : (vybrano && vybrano.druh === 'v' && vybrano.id === hr.v.id) ? akc : sv && svetlaVaz ? akc : hrana;
+      c.lineWidth = Math.max((0.8 + hr.v.sila * 0.7) * (cesta && sv ? 1.6 : 1), 1 / pv.s);
+      if (hr.v.sila <= 1) c.setLineDash([6, 5]); else c.setLineDash([]);
+      c.beginPath(); c.moveTo(hr.a.x, hr.a.y); c.quadraticCurveTo(hr.cx, hr.cy, hr.b.x, hr.b.y); c.stroke();
+    }
+    c.setLineDash([]);
+    // popisky hran
+    if ($('popisky').checked && pv.s > 0.55) {
+      c.font = `${11}px system-ui,sans-serif`; c.textAlign = 'center'; c.textBaseline = 'middle';
+      for (const hr of hrany) {
+        const sv = !svetlaVaz || svetlaVaz.has(hr.v.id); if (!sv && svetlaVaz) continue;
+        const t = [hr.v.popis, hr.v.datum ? hr.v.datum.split('-').reverse().join('. ').replace(/^0/, '') : ''].filter(Boolean).join(' · ');
+        if (!t) continue;
+        const [mx, my] = bodKrivky(hr, 0.5), tw = c.measureText(t).width;
+        c.globalAlpha = 0.85; c.fillStyle = pozadi; c.fillRect(mx - tw / 2 - 3, my - 8, tw + 6, 16);
+        c.globalAlpha = 1; c.fillStyle = txtF; c.fillText(t, mx, my);
+      }
+    }
+    // uzly
+    c.textAlign = 'center'; c.textBaseline = 'middle';
+    for (const e of gr.entity) {
+      const T = V.TYPY[e.typ], r = polomer(e), sv = !svetla || svetla.has(e.id);
+      c.globalAlpha = sv ? 1 : 0.18;
+      cestaTvaru(c, T.tvar, e.x, e.y, r);
+      c.fillStyle = T.barva; c.fill();
+      const jeVyb = vybrano && vybrano.druh === 'e' && vybrano.id === e.id;
+      if (jeVyb || shoda(e) || (cesta && (e.id === cesta.uzly[0] || e.id === cesta.uzly[cesta.uzly.length - 1]))) {
+        c.lineWidth = 3; c.strokeStyle = shoda(e) && !jeVyb ? warn : txt; c.stroke();
+      } else { c.lineWidth = 1.5; c.strokeStyle = pozadi; c.stroke(); }
+      if (e.pevny) { c.fillStyle = txt; c.beginPath(); c.arc(e.x + r * 0.8, e.y - r * 0.8, 3, 0, 7); c.fill(); }
+      c.font = `${Math.round(r * 0.95)}px system-ui,"Segoe UI Emoji","Noto Color Emoji",sans-serif`; c.fillStyle = '#fff';
+      c.fillText(T.ikona, e.x, e.y + 1);
+      if (pv.s > 0.35 || sv && svetla) {
+        c.font = `${jeVyb ? 'bold ' : ''}12px system-ui,sans-serif`;
+        const t = e.nazev.length > 32 ? e.nazev.slice(0, 30) + '…' : e.nazev, tw = c.measureText(t).width, ty = e.y + r + 11;
+        c.globalAlpha = sv ? 0.8 : 0.1; c.fillStyle = pozadi; c.fillRect(e.x - tw / 2 - 3, ty - 8, tw + 6, 16);
+        c.globalAlpha = sv ? 1 : 0.25; c.fillStyle = txt; c.fillText(t, e.x, ty);
+      }
+    }
+    c.globalAlpha = 1; c.restore();
+    if (proExport) {
+      c.fillStyle = barva('--text-faint'); c.font = '12px system-ui,sans-serif'; c.textAlign = 'left'; c.textBaseline = 'alphabetic';
+      c.fillText(aktivni.nazev + ' · ' + new Date().toLocaleString('cs-CZ'), 10, h - 10);
+    }
+  }
+  function kresli() { ctx.setTransform(dpr, 0, 0, dpr, 0, 0); vykresli(ctx, W, H, pohled); }
+
+  // ---------- smyčka simulace ----------
+  let animuje = false;
+  function smycka() {
+    if (bezi && alpha > 0.005) { for (let i = 0; i < 2; i++) { V.silovyKrok(aktivni, alpha, { tazeny }); alpha *= 0.985; } }
+    kresli();
+    if ((bezi && alpha > 0.005) || tazeny) requestAnimationFrame(smycka);
+    else { animuje = false; uloz(); }
+  }
+  function spust(a) { if (a != null) alpha = Math.max(alpha, a); if (!animuje) { animuje = true; requestAnimationFrame(smycka); } }
+  function prekresli() { if (!animuje) kresli(); }
+
+  // ---------- souřadnice, výběr ----------
+  const naSvet = (sx, sy) => [(sx - pohled.x) / pohled.s, (sy - pohled.y) / pohled.s];
+  function entitaNa(sx, sy) {
+    const [x, y] = naSvet(sx, sy), gr = graf();
+    for (let i = gr.entity.length - 1; i >= 0; i--) { const e = gr.entity[i], r = polomer(e) + 4 / pohled.s; if ((e.x - x) ** 2 + (e.y - y) ** 2 <= r * r) return e; }
+    return null;
+  }
+  function vazbaNa(sx, sy) {
+    const [x, y] = naSvet(sx, sy), gr = graf(), idx = new Map(gr.entity.map(e => [e.id, e]));
+    let nej = null, nd = 8 / pohled.s;
+    for (const h of geometrieHran(gr, idx)) {
+      let p = bodKrivky(h, 0);
+      for (let i = 1; i <= 16; i++) {
+        const q = bodKrivky(h, i / 16), dx = q[0] - p[0], dy = q[1] - p[1], l2 = dx * dx + dy * dy || 1;
+        const t = Math.max(0, Math.min(1, ((x - p[0]) * dx + (y - p[1]) * dy) / l2));
+        const d = Math.hypot(x - p[0] - t * dx, y - p[1] - t * dy);
+        if (d < nd) { nd = d; nej = h.v; }
+        p = q;
+      }
+    }
+    return nej;
+  }
+  function priblizit(f, sx = W / 2, sy = H / 2) {
+    const s = Math.max(0.1, Math.min(5, pohled.s * f)); f = s / pohled.s;
+    pohled.x = sx - (sx - pohled.x) * f; pohled.y = sy - (sy - pohled.y) * f; pohled.s = s; prekresli();
+  }
+  function zobrazVse() {
+    const E = graf().entity; if (!E.length) { pohled.s = 1; pohled.x = W / 2; pohled.y = H / 2; prekresli(); return; }
+    V.vychoziPozice(aktivni);
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    for (const e of E) { x0 = Math.min(x0, e.x); y0 = Math.min(y0, e.y); x1 = Math.max(x1, e.x); y1 = Math.max(y1, e.y); }
+    const okraj = 60, s = Math.max(0.15, Math.min(1.6, Math.min((W - 2 * okraj) / Math.max(1, x1 - x0), (H - 2 * okraj) / Math.max(1, y1 - y0))));
+    pohled.s = s; pohled.x = W / 2 - (x0 + x1) / 2 * s; pohled.y = H / 2 - (y0 + y1) / 2 * s; prekresli();
+  }
+
+  // ---------- ukazatel (myš i dotyk) ----------
+  const ukazatele = new Map(); let gesto = null, posledniKlik = { t: 0, id: null };
+  const pozice = ev => { const r = cv.getBoundingClientRect(); return [ev.clientX - r.left, ev.clientY - r.top]; };
+  cv.addEventListener('pointerdown', ev => {
+    try { cv.setPointerCapture(ev.pointerId); } catch (e) { }
+    const [sx, sy] = pozice(ev); ukazatele.set(ev.pointerId, [sx, sy]);
+    if (ukazatele.size === 2) { // pinch
+      const [a, b] = [...ukazatele.values()];
+      if (tazeny) { tazeny.pevny = tazeny._bylPevny; tazeny = null; }
+      gesto = { druh: 'pinch', d: Math.hypot(a[0] - b[0], a[1] - b[1]), s: pohled.s, px: pohled.x, py: pohled.y, m: [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2] };
+      return;
+    }
+    if (ukazatele.size > 2) return;
+    const e = entitaNa(sx, sy);
+    if (e) {
+      if (rezimSpoj) { klikVRezimuSpoj(e); gesto = null; return; }
+      const [wx, wy] = naSvet(sx, sy);
+      gesto = { druh: 'uzel', e, dx: e.x - wx, dy: e.y - wy, start: [sx, sy], pohnul: false };
+      vyber({ druh: 'e', id: e.id });
+    } else {
+      gesto = { druh: 'posun', start: [sx, sy], px: pohled.x, py: pohled.y, pohnul: false };
+    }
+    cv.classList.add('tahne');
+  });
+  cv.addEventListener('pointermove', ev => {
+    if (!ukazatele.has(ev.pointerId)) return;
+    const [sx, sy] = pozice(ev); ukazatele.set(ev.pointerId, [sx, sy]);
+    if (!gesto) return;
+    if (gesto.druh === 'pinch' && ukazatele.size >= 2) {
+      const [a, b] = [...ukazatele.values()], d = Math.hypot(a[0] - b[0], a[1] - b[1]);
+      const s = Math.max(0.1, Math.min(5, gesto.s * d / Math.max(10, gesto.d))), m = [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2];
+      pohled.s = s; pohled.x = m[0] - (gesto.m[0] - gesto.px) * s / gesto.s; pohled.y = m[1] - (gesto.m[1] - gesto.py) * s / gesto.s; prekresli();
+      return;
+    }
+    const posunuto = Math.hypot(sx - gesto.start[0], sy - gesto.start[1]) > 4;
+    if (gesto.druh === 'uzel') {
+      if (!gesto.pohnul && !posunuto) return;
+      if (!gesto.pohnul) { gesto.pohnul = true; tazeny = gesto.e; tazeny._bylPevny = tazeny.pevny; spust(0.3); }
+      const [wx, wy] = naSvet(sx, sy); gesto.e.x = wx + gesto.dx; gesto.e.y = wy + gesto.dy; alpha = Math.max(alpha, 0.15);
+    } else if (gesto.druh === 'posun') {
+      if (posunuto) gesto.pohnul = true;
+      pohled.x = gesto.px + sx - gesto.start[0]; pohled.y = gesto.py + sy - gesto.start[1]; prekresli();
+    }
+  });
+  function konecUkazatele(ev) {
+    ukazatele.delete(ev.pointerId);
+    try { cv.releasePointerCapture(ev.pointerId); } catch (e) { }
+    if (!gesto) return;
+    if (gesto.druh === 'pinch') { if (ukazatele.size < 2) gesto = null; return; }
+    const [sx, sy] = pozice(ev);
+    if (gesto.druh === 'uzel') {
+      if (gesto.pohnul) { gesto.e.pevny = true; tazeny = null; uloz(); obnovDetail(); }
+      else { // dvojklik / dvojí ťuknutí = uvolnit
+        const t = performance.now();
+        if (posledniKlik.id === gesto.e.id && t - posledniKlik.t < 350) { gesto.e.pevny = false; spust(0.3); obnovDetail(); uloz(); }
+        posledniKlik = { t, id: gesto.e.id };
+      }
+    } else if (gesto.druh === 'posun' && !gesto.pohnul && ev.type === 'pointerup') {
+      const v = vazbaNa(sx, sy); vyber(v ? { druh: 'v', id: v.id } : null);
+    }
+    gesto = null; cv.classList.remove('tahne'); prekresli();
+  }
+  cv.addEventListener('pointerup', konecUkazatele);
+  cv.addEventListener('pointercancel', konecUkazatele);
+  cv.addEventListener('wheel', ev => { ev.preventDefault(); const [sx, sy] = pozice(ev); priblizit(Math.exp(-ev.deltaY * 0.0015), sx, sy); }, { passive: false });
+  $('zoomPlus').onclick = () => priblizit(1.25); $('zoomMinus').onclick = () => priblizit(0.8); $('zoomFit').onclick = zobrazVse;
+
+  // ---------- výběr a detail ----------
+  function vyber(v) { vybrano = v; obnovDetail(); oznacMetriky(); prekresli(); }
+  const datumCz = d => d ? d.split('-').reverse().join('. ').replace(/^0/, '') : '';
+  function obnovDetail() {
+    const el = $('detail');
+    if (!vybrano) { el.innerHTML = '<span class="pozn">Klikni na entitu nebo vazbu v grafu.</span>'; return; }
+    if (vybrano.druh === 'e') {
+      const e = entita(vybrano.id); if (!e) { vybrano = null; obnovDetail(); return; }
+      const T = V.TYPY[e.typ], m = metriky.stupne[e.id], mz = metriky.mezi[e.id];
+      const vaz = aktivni.vazby.filter(v => v.z === e.id || v.do === e.id);
+      el.innerHTML = `<div class="typ">${T.ikona} ${T.nazev}${e.pevny ? ' · 📌 připnuto' : ''}</div><div class="nadpis">${esc(e.nazev)}</div>
+        ${e.pozn ? `<div style="white-space:pre-wrap;color:var(--text-muted)">${esc(e.pozn)}</div>` : ''}
+        <div class="pozn">Vazeb: ${vaz.length}${m ? ` · Σ síla ${m.sila}` : ''}${mz != null ? ` · mezilehlost ${mz.toFixed(3)}` : ''}</div>
+        <ul>${vaz.map(v => { const o = entita(v.z === e.id ? v.do : v.z); return `<li data-e="${o.id}" data-v="${v.id}">${V.TYPY[o.typ].ikona} ${esc(o.nazev)} <span style="color:var(--text-faint)">— ${esc(v.popis || 'vazba')}${v.datum ? ', ' + datumCz(v.datum) : ''} · síla ${v.sila}</span></li>`; }).join('')}</ul>
+        <div class="akce"><button class="b" data-a="upr">✏️ Upravit</button><button class="b" data-a="spoj">🔗 Propojit…</button><button class="b" data-a="pin">${e.pevny ? '📍 Uvolnit' : '📌 Připnout'}</button><button class="b" data-a="stred">🎯 Na střed</button><button class="b nebezp" data-a="smaz">🗑️</button></div>`;
+    } else {
+      const v = aktivni.vazby.find(x => x.id === vybrano.id); if (!v) { vybrano = null; obnovDetail(); return; }
+      const a = entita(v.z), b = entita(v.do);
+      el.innerHTML = `<div class="typ">Vazba · síla ${v.sila}/5</div><div class="nadpis">${esc(v.popis || '(bez popisu)')}</div>
+        <div>${V.TYPY[a.typ].ikona} ${esc(a.nazev)} ⟷ ${V.TYPY[b.typ].ikona} ${esc(b.nazev)}</div>${v.datum ? `<div class="pozn">Datum: ${datumCz(v.datum)}</div>` : ''}
+        <div class="akce"><button class="b" data-a="uprv">✏️ Upravit</button><button class="b" data-a="otoc">⇄ Otočit</button><button class="b nebezp" data-a="smazv">🗑️ Smazat</button></div>`;
+    }
+  }
+  $('detail').addEventListener('click', async ev => {
+    const li = ev.target.closest('li[data-e]'); if (li) { vyber({ druh: 'e', id: li.dataset.e }); return; }
+    const b = ev.target.closest('button[data-a]'); if (!b) return;
+    const a = b.dataset.a;
+    if (a === 'upr') formularEntity(entita(vybrano.id));
+    else if (a === 'spoj') zapniSpoj(entita(vybrano.id));
+    else if (a === 'pin') { const e = entita(vybrano.id); e.pevny = !e.pevny; if (!e.pevny) spust(0.3); uloz(); obnovDetail(); prekresli(); }
+    else if (a === 'stred') { const e = entita(vybrano.id); pohled.x = W / 2 - e.x * pohled.s; pohled.y = H / 2 - e.y * pohled.s; prekresli(); }
+    else if (a === 'smaz') { const e = entita(vybrano.id); if (await dlg.potvrd(`Smazat entitu „${e.nazev}“ i se všemi jejími vazbami?`)) { V.smazEntitu(aktivni, e.id); vybrano = null; zmena(); } }
+    else if (a === 'uprv') formularVazby(aktivni.vazby.find(x => x.id === vybrano.id));
+    else if (a === 'otoc') { const v = aktivni.vazby.find(x => x.id === vybrano.id); [v.z, v.do] = [v.do, v.z]; zmena(); }
+    else if (a === 'smazv') { if (await dlg.potvrd('Smazat tuto vazbu?')) { aktivni.vazby = aktivni.vazby.filter(x => x.id !== vybrano.id); vybrano = null; zmena(); } }
+  });
+
+  // ---------- formuláře ----------
+  $('feTyp').innerHTML = Object.entries(V.TYPY).map(([k, t]) => `<option value="${k}">${t.ikona} ${t.nazev}</option>`).join('');
+  function otevri(d) { try { d.showModal(); } catch (e) { d.setAttribute('open', ''); } }
+  let upravovana = null, upravovanaV = null;
+  function formularEntity(e, typ) {
+    upravovana = e || null;
+    $('dlgEntNadpis').textContent = e ? 'Upravit entitu' : 'Nová entita';
+    $('feTyp').value = e ? e.typ : (typ || 'osoba'); $('feNazev').value = e ? e.nazev : ''; $('fePozn').value = e ? e.pozn : '';
+    $('dlgEnt').returnValue = ''; otevri($('dlgEnt')); $('feNazev').focus();
+  }
+  $('feNazev').addEventListener('input', () => { if (!upravovana && $('feNazev').value.length > 5) $('feTyp').value = V.odhadTypu($('feNazev').value) === 'osoba' ? $('feTyp').value : V.odhadTypu($('feNazev').value); });
+  $('dlgEnt').addEventListener('close', () => {
+    if ($('dlgEnt').returnValue !== 'ok') return;
+    const n = $('feNazev').value.trim(); if (!n) return;
+    if (upravovana) { Object.assign(upravovana, { typ: $('feTyp').value, nazev: n, pozn: $('fePozn').value.trim() }); vybrano = { druh: 'e', id: upravovana.id }; }
+    else {
+      if (V.najdiEntitu(aktivni, n)) { dlg.info('Entita s tímto názvem už existuje – vybrána.'); vyber({ druh: 'e', id: V.najdiEntitu(aktivni, n).id }); return; }
+      const e = V.pridejEntitu(aktivni, $('feTyp').value, n, $('fePozn').value.trim());
+      const [wx, wy] = naSvet(W / 2 + (Math.random() - 0.5) * 80, H / 2 + (Math.random() - 0.5) * 80); e.x = wx; e.y = wy;
+      viditelne.add(e.typ); vybrano = { druh: 'e', id: e.id };
+    }
+    zmena();
+  });
+  function naplnVyber(sel, hodn) {
+    const E = [...aktivni.entity].sort((a, b) => a.nazev.localeCompare(b.nazev, 'cs'));
+    sel.innerHTML = E.map(e => `<option value="${e.id}">${V.TYPY[e.typ].ikona} ${esc(e.nazev)}</option>`).join('');
+    if (hodn) sel.value = hodn;
+  }
+  function formularVazby(v, z, d) {
+    if (aktivni.entity.length < 2) { dlg.info('Nejdřív přidej aspoň dvě entity.'); return; }
+    upravovanaV = v || null;
+    $('dlgVazNadpis').textContent = v ? 'Upravit vazbu' : 'Nová vazba';
+    naplnVyber($('fvZ'), v ? v.z : z || (vybrano && vybrano.druh === 'e' ? vybrano.id : null)); naplnVyber($('fvDo'), v ? v.do : d);
+    if (!v && !d && $('fvDo').value === $('fvZ').value && $('fvDo').options.length > 1) $('fvDo').selectedIndex = $('fvZ').selectedIndex ? 0 : 1;
+    $('fvPopis').value = v ? v.popis : ''; $('fvDatum').value = v ? v.datum : ''; $('fvSila').value = v ? v.sila : 3; $('fvSilaH').textContent = $('fvSila').value;
+    $('dlgVaz').returnValue = ''; otevri($('dlgVaz')); $('fvPopis').focus();
+  }
+  $('fvSila').oninput = () => { $('fvSilaH').textContent = $('fvSila').value; };
+  $('dlgVaz').addEventListener('close', () => {
+    if ($('dlgVaz').returnValue !== 'ok') return;
+    const z = $('fvZ').value, d = $('fvDo').value;
+    if (z === d) { dlg.chyba('Vazba musí spojovat dvě různé entity.'); return; }
+    if (upravovanaV) Object.assign(upravovanaV, { z, do: d, popis: $('fvPopis').value.trim(), datum: $('fvDatum').value, sila: +$('fvSila').value });
+    else { const v = V.pridejVazbu(aktivni, z, d, $('fvPopis').value.trim(), $('fvDatum').value, $('fvSila').value); vybrano = { druh: 'v', id: v.id }; }
+    zmena(true);
+  });
+  $('pridatEnt').onclick = () => formularEntity(null);
+  $('pridatVaz').onclick = () => formularVazby(null);
+
+  // režim „propojit klikem“
+  function zapniSpoj(prvni) {
+    rezimSpoj = { prvni: prvni || null };
+    $('rezimSpoj').classList.add('akt');
+    $('rezimInfo').style.display = 'block';
+    $('rezimInfo').textContent = prvni ? `Propojit „${prvni.nazev}“ s… (klikni na druhou entitu, Esc = zrušit)` : 'Klikni na první entitu (Esc = zrušit)';
+  }
+  function vypniSpoj() { rezimSpoj = null; $('rezimSpoj').classList.remove('akt'); $('rezimInfo').style.display = 'none'; }
+  function klikVRezimuSpoj(e) {
+    if (!rezimSpoj.prvni) { zapniSpoj(e); vyber({ druh: 'e', id: e.id }); return; }
+    if (rezimSpoj.prvni.id === e.id) return;
+    const a = rezimSpoj.prvni; vypniSpoj(); formularVazby(null, a.id, e.id);
+  }
+  $('rezimSpoj').onclick = () => rezimSpoj ? vypniSpoj() : zapniSpoj(vybrano && vybrano.druh === 'e' ? entita(vybrano.id) : null);
+  document.addEventListener('keydown', ev => {
+    if (ev.key === 'Escape' && rezimSpoj) vypniSpoj();
+    if (ev.key === 'Escape' && cesta) { cesta = null; $('cestaVysl').innerHTML = ''; prekresli(); }
+  });
+
+  // ---------- filtry, hledání, metriky, cesta ----------
+  function filtryUI() {
+    const pocty = {}; aktivni.entity.forEach(e => pocty[e.typ] = (pocty[e.typ] || 0) + 1);
+    $('filtry').innerHTML = Object.entries(V.TYPY).map(([k, t]) => `<label style="border-color:${t.barva}"><input type="checkbox" data-t="${k}" ${viditelne.has(k) ? 'checked' : ''}>${t.ikona} ${t.nazev} <span style="color:var(--text-faint)">${pocty[k] || 0}</span></label>`).join('');
+  }
+  $('filtry').addEventListener('change', ev => {
+    const t = ev.target.dataset.t; if (!t) return;
+    ev.target.checked ? viditelne.add(t) : viditelne.delete(t);
+    try { localStorage.setItem(KLIC + 'filtr', JSON.stringify([...viditelne])); } catch (e) { }
+    cesta = null; $('cestaVysl').innerHTML = ''; spoctiMetriky(); prekresli();
+  });
+  $('hledat').addEventListener('input', () => { hledat = $('hledat').value.trim(); prekresli(); });
+  $('hledat').addEventListener('keydown', ev => {
+    if (ev.key !== 'Enter') return;
+    const q = V.klicNazvu(hledat); if (!q) return;
+    const e = graf().entity.find(e => V.klicNazvu(e.nazev).includes(q) || V.klicNazvu(e.pozn || '').includes(q));
+    if (e) { vyber({ druh: 'e', id: e.id }); pohled.x = W / 2 - e.x * pohled.s; pohled.y = H / 2 - e.y * pohled.s; prekresli(); } else dlg.info('Nic nenalezeno.');
+  });
+  $('velikost').onchange = prekresli; $('popisky').onchange = prekresli;
+
+  let razeni = 'mezi';
+  function spoctiMetriky() {
+    const gr = graf();
+    metriky = { stupne: V.stupne(gr), mezi: V.mezilehlost(gr) };
+    const radky = gr.entity.map(e => ({ e, st: metriky.stupne[e.id].stupen, si: metriky.stupne[e.id].sila, mz: metriky.mezi[e.id] }));
+    radky.sort((a, b) => razeni === 'nazev' ? a.e.nazev.localeCompare(b.e.nazev, 'cs') : razeni === 'stupen' ? b.st - a.st || b.mz - a.mz : razeni === 'sila' ? b.si - a.si : b.mz - a.mz || b.st - a.st);
+    const komp = V.komponenty(gr).length;
+    $('metriky').innerHTML = `<thead><tr><th data-r="nazev">Entita</th><th data-r="stupen">Stupeň</th><th data-r="sila">Σ síla</th><th data-r="mezi">Mezilehlost</th></tr></thead><tbody>` +
+      radky.map(r => `<tr class="radek" data-e="${r.e.id}"><td>${V.TYPY[r.e.typ].ikona} ${esc(r.e.nazev)}</td><td class="n">${r.st}</td><td class="n">${r.si}</td><td class="n">${r.mz.toFixed(3)}</td></tr>`).join('') +
+      `</tbody><tfoot><tr><td colspan="4" class="pozn">${gr.entity.length} entit, ${gr.vazby.length} vazeb, ${komp} ${komp === 1 ? 'souvislá skupina' : komp < 5 ? 'oddělené skupiny' : 'oddělených skupin'}</td></tr></tfoot>`;
+    oznacMetriky();
+  }
+  function oznacMetriky() { document.querySelectorAll('#metriky tr.radek').forEach(r => r.classList.toggle('zvolen', !!vybrano && vybrano.druh === 'e' && r.dataset.e === vybrano.id)); }
+  $('metriky').addEventListener('click', ev => {
+    const th = ev.target.closest('th[data-r]'); if (th) { razeni = th.dataset.r; spoctiMetriky(); return; }
+    const tr = ev.target.closest('tr.radek'); if (tr) { const e = entita(tr.dataset.e); vyber({ druh: 'e', id: e.id }); pohled.x = W / 2 - e.x * pohled.s; pohled.y = H / 2 - e.y * pohled.s; prekresli(); }
+  });
+  function vyberyCesty() { const a = $('cestaA').value, b = $('cestaB').value; naplnVyber($('cestaA'), a); naplnVyber($('cestaB'), b); if (!b && $('cestaB').options.length > 1) $('cestaB').selectedIndex = 1; }
+  $('najdiCestu').onclick = () => {
+    const a = $('cestaA').value, b = $('cestaB').value; if (!a || !b) return;
+    const gr = graf();
+    if (!gr.entity.some(e => e.id === a) || !gr.entity.some(e => e.id === b)) { $('cestaVysl').textContent = 'Jedna z entit je skrytá filtrem typů.'; return; }
+    const r = V.nejkratsiCesta(gr, a, b, $('cestaRezim').value);
+    if (!r) { cesta = null; $('cestaVysl').innerHTML = '<span style="color:var(--warn)">Mezi entitami nevede žádná cesta (v zobrazených typech).</span>'; prekresli(); return; }
+    cesta = r; vybrano = null; obnovDetail();
+    $('cestaVysl').innerHTML = `<b>${r.vazby.length} ${r.vazby.length === 1 ? 'krok' : r.vazby.length < 5 ? 'kroky' : 'kroků'}</b>${$('cestaRezim').value === 'sila' ? ` (cena ${r.cena.toFixed(2)})` : ''}:<br>` +
+      r.uzly.map((id, i) => { const e = entita(id); return (i ? ` <span style="color:var(--text-faint)">—${esc(r.vazby[i - 1].popis || '')}→</span> ` : '') + `${V.TYPY[e.typ].ikona} ${esc(e.nazev)}`; }).join('');
+    prekresli();
+  };
+  $('zrusCestu').onclick = () => { cesta = null; $('cestaVysl').innerHTML = ''; prekresli(); };
+
+  // ---------- případy ----------
+  function seznamPripadu() { $('pripad').innerHTML = pripady.map(p => `<option value="${p.id}">${esc(p.nazev)} (${p.entity.length})</option>`).join(''); $('pripad').value = aktivni.id; }
+  // nové entity bez uložené polohy: rozvrhnout předem, ať se graf při otevření „nerozbaluje“
+  function predpocitej(p) {
+    const nove = p.entity.filter(e => !Number.isFinite(e.x)).length;
+    V.vychoziPozice(p);
+    if (nove > p.entity.length / 3) for (let i = 0; i < 300; i++) V.silovyKrok(p, Math.max(0.02, 1 - i / 300));
+  }
+  function prepniPripad(p) { aktivni = p; vybrano = null; cesta = null; $('cestaVysl').innerHTML = ''; predpocitej(aktivni); zmena(false); zobrazVse(); }
+  $('pripad').onchange = () => prepniPripad(pripady.find(p => p.id === $('pripad').value));
+  $('novyPripad').onclick = async () => { const n = await dlg.zeptej('Název nového případu', 'Případ ' + (pripady.length + 1)); if (!n) return; const p = { id: V.noveId('p'), nazev: n.trim(), ...V.prazdnyGraf() }; pripady.push(p); prepniPripad(p); };
+  $('prejmenuj').onclick = async () => { const n = await dlg.zeptej('Nový název případu', aktivni.nazev); if (!n) return; aktivni.nazev = n.trim(); seznamPripadu(); uloz(true); };
+  $('smazPripad').onclick = async () => {
+    if (!(await dlg.potvrd(`Smazat celý případ „${aktivni.nazev}“? Tuto akci nelze vrátit.`))) return;
+    pripady = pripady.filter(p => p !== aktivni); if (!pripady.length) pripady.push({ id: V.noveId('p'), nazev: 'Nový případ', ...V.prazdnyGraf() });
+    prepniPripad(pripady[0]);
+  };
+
+  // ---------- import / export ----------
+  let typSouboru = null;
+  $('impCsv').onclick = () => { typSouboru = 'csv'; $('soubor').accept = '.csv,.txt,.tsv,text/csv'; $('soubor').value = ''; $('soubor').click(); };
+  $('impJson').onclick = () => { typSouboru = 'json'; $('soubor').accept = '.json,application/json'; $('soubor').value = ''; $('soubor').click(); };
+  $('soubor').onchange = () => {
+    const f = $('soubor').files[0]; if (!f) return;
+    const r = new FileReader();
+    r.onload = () => {
+      try {
+        if (typSouboru === 'csv') {
+          const v = V.importCsv(aktivni, r.result);
+          dlg.info(`Načteno ${v.vazeb} vazeb, přibylo ${v.entit} entit.` + (v.chyby.length ? ` Přeskočeno ${v.chyby.length} řádků.` : ''));
+          aktivni.entity.forEach(e => viditelne.add(e.typ));
+          predpocitej(aktivni); zmena(true); zobrazVse();
+        } else {
+          const d = JSON.parse(r.result), pole = Array.isArray(d.pripady) ? d.pripady : [d];
+          const nove = pole.map(p => ({ id: V.noveId('p'), nazev: String(p.nazev || f.name.replace(/\.json$/i, '')), ...V.zkontrolujGraf(p) }));
+          pripady.push(...nove); prepniPripad(nove[0]); dlg.info(`Naimportováno: ${nove.map(p => p.nazev).join(', ')}`);
+        }
+      } catch (e) { dlg.chyba('Soubor se nepodařilo načíst: ' + e.message); }
+    };
+    r.readAsText(f);
+  };
+  const jmenoSouboru = p => (aktivni.nazev || 'pripad').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^\w-]+/g, '_') + p;
+  function stahni(blob, jmeno) { const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = jmeno; document.body.appendChild(a); a.click(); a.remove(); setTimeout(() => URL.revokeObjectURL(a.href), 2000); }
+  $('expJson').onclick = () => {
+    const d = { nazev: aktivni.nazev, exportovano: new Date().toISOString(), entity: aktivni.entity.map(({ vx, vy, _bylPevny, ...e }) => e), vazby: aktivni.vazby };
+    stahni(new Blob([JSON.stringify(d, null, 2)], { type: 'application/json' }), jmenoSouboru('.json'));
+  };
+  $('expPng').onclick = () => {
+    const E = graf().entity; if (!E.length) { dlg.info('Graf je prázdný.'); return; }
+    let x0 = Infinity, y0 = Infinity, x1 = -Infinity, y1 = -Infinity;
+    for (const e of E) { const r = polomer(e) + 30; x0 = Math.min(x0, e.x - r - 60); y0 = Math.min(y0, e.y - r); x1 = Math.max(x1, e.x + r + 60); y1 = Math.max(y1, e.y + r + 20); }
+    const meritko = 2, w = Math.min(6000, (x1 - x0 + 40)), h = Math.min(6000, (y1 - y0 + 60));
+    const c = document.createElement('canvas'); c.width = Math.round(w * meritko); c.height = Math.round(h * meritko);
+    const x = c.getContext('2d'); x.scale(meritko, meritko);
+    vykresli(x, w, h, { s: 1, x: -x0 + 20, y: -y0 + 20 }, true);
+    c.toBlob(b => b && stahni(b, jmenoSouboru('.png')), 'image/png');
+  };
+
+  // ---------- simulace ovládání ----------
+  function stavSim() { $('simulace').textContent = bezi ? '⏸️ Rozvržení' : '▶️ Rozvržení'; }
+  $('simulace').onclick = () => { bezi = !bezi; stavSim(); if (bezi) spust(0.5); };
+  $('zamichat').onclick = () => { aktivni.entity.forEach(e => { if (!e.pevny) { e.x = (Math.random() - 0.5) * 400; e.y = (Math.random() - 0.5) * 400; } }); bezi = true; stavSim(); spust(1); setTimeout(zobrazVse, 1200); };
+
+  // ---------- změna dat ----------
+  function zmena(reheat) {
+    seznamPripadu(); filtryUI(); spoctiMetriky(); vyberyCesty(); obnovDetail();
+    $('prazdne').style.display = aktivni.entity.length ? 'none' : 'flex';
+    uloz(); if (reheat !== false) spust(reheat ? 0.6 : 0.25); prekresli();
+  }
+
+  if (window.ResizeObserver) new ResizeObserver(() => { velikostPlatna(); prekresli(); }).observe($('obal'));
+  nactiVse();
+  velikostPlatna();
+  predpocitej(aktivni);
+  alpha = 0.05;
+  zmena(false); zobrazVse(); stavSim(); spust();
+  window.addEventListener('resize', () => { velikostPlatna(); prekresli(); });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,448 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>🔭 Astronomický kalendář úkazů</title>
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../podpis.js" defer></script>
+<script src="lib/suncalc.min.js"></script>
+<script src="sky_events/astro.js"></script>
+<style>
+body { background: var(--bg-deep); padding: 24px clamp(12px, 3vw, 40px); min-height: 100vh; }
+.obal { max-width: 980px; margin: 0 auto; }
+h1 { font-size: 1.5rem; margin-bottom: 4px; }
+.podtitul { color: var(--text-muted); font-size: .9rem; margin-bottom: 16px; line-height: 1.5; }
+.karta { background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 16px; }
+.radek { display: flex; flex-wrap: wrap; gap: 12px 22px; align-items: flex-end; }
+.pole > .nadpis { font-size: .72rem; text-transform: uppercase; letter-spacing: .5px; color: var(--text-faint); margin-bottom: 6px; }
+.rok { display: flex; align-items: center; gap: 4px; }
+.rok input { width: 84px; text-align: center; font-size: 1.15rem; font-weight: 700; }
+input[type="number"], select { background: var(--bg-input); border: 1px solid var(--border); border-radius: 6px; color: var(--text); padding: 7px 9px; font-size: .9rem; font-family: inherit; }
+input:focus, select:focus { outline: none; border-color: var(--accent); }
+.btn { background: var(--bg-control); border: 1px solid var(--border-strong); color: var(--text); border-radius: 6px; padding: 7px 12px; cursor: pointer; font-size: .85rem; font-family: inherit; }
+.btn:hover { background: var(--bg-hover); }
+.btn.hlavni { background: var(--accent); border-color: var(--accent); color: #fff; font-weight: 600; }
+.misto { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+.souradnice { font-size: .78rem; color: var(--text-faint); font-variant-numeric: tabular-nums; }
+.filtry { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 14px; }
+.filtry button { background: var(--bg-control); border: 1px solid var(--border-strong); color: var(--text-muted); border-radius: 16px; padding: 5px 11px; cursor: pointer; font-size: .82rem; font-family: inherit; }
+.filtry button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--text); }
+.filtry button .pocet { color: var(--text-faint); font-size: .74rem; margin-left: 3px; }
+.volby { display: flex; flex-wrap: wrap; gap: 6px 18px; margin-top: 10px; font-size: .84rem; color: var(--text-muted); }
+.volby label { display: flex; gap: 6px; align-items: center; cursor: pointer; }
+.volby input { accent-color: var(--accent); }
+
+.vrcholy { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-bottom: 16px; }
+.vrcholy > div { background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 12px; min-width: 0; }
+.vrcholy .popis { font-size: .7rem; color: var(--text-faint); text-transform: uppercase; letter-spacing: .4px; }
+.vrcholy .hodnota { font-size: 1.05rem; font-weight: 700; margin-top: 3px; }
+.vrcholy .detail { font-size: .78rem; color: var(--text-muted); margin-top: 2px; line-height: 1.35; }
+
+.mesic-blok { margin-bottom: 14px; }
+.mesic-blok h2 { font-size: 1.05rem; color: var(--accent); margin: 0 0 6px; padding: 0 2px; display: flex; justify-content: space-between; align-items: baseline; gap: 10px; }
+.mesic-blok h2 small { font-size: .74rem; color: var(--text-faint); font-weight: 400; }
+.udalosti { list-style: none; background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius); overflow: hidden; }
+.udalosti li { display: grid; grid-template-columns: 58px 30px minmax(0, 1fr); gap: 4px 10px; padding: 9px 12px; border-bottom: 1px solid var(--border); align-items: start; }
+.udalosti li:last-child { border-bottom: 0; }
+.udalosti li.probehlo { opacity: .55; }
+.udalosti li.dnes { background: var(--accent-soft); }
+.udalosti li.dulezite .nazev { color: var(--text); font-weight: 700; }
+.den { text-align: center; line-height: 1.1; }
+.den b { display: block; font-size: 1.2rem; font-variant-numeric: tabular-nums; }
+.den span { font-size: .72rem; color: var(--text-faint); }
+.ikona { font-size: 1.35rem; line-height: 1.6rem; text-align: center; }
+.nazev { font-size: .92rem; font-weight: 600; color: var(--text); }
+.nazev .cas { font-weight: 400; color: var(--text-muted); font-variant-numeric: tabular-nums; margin-left: 4px; font-size: .84rem; }
+.text { font-size: .8rem; color: var(--text-muted); line-height: 1.5; margin-top: 2px; }
+.stitek { display: inline-block; font-size: .7rem; font-weight: 600; padding: 1px 7px; border-radius: 10px; border: 1px solid; margin-left: 4px; vertical-align: 1px; white-space: nowrap; }
+.s-ano { color: var(--ok); border-color: var(--ok); }
+.s-ne { color: var(--text-faint); border-color: var(--border-strong); }
+.s-pozor { color: var(--warn); border-color: var(--warn); }
+@media (max-width: 480px) {
+  .udalosti li { grid-template-columns: 44px minmax(0, 1fr); }
+  .udalosti .ikona { display: none; }
+}
+.prazdno { color: var(--text-faint); font-size: .86rem; padding: 14px; }
+.pozn { color: var(--text-faint); font-size: .78rem; line-height: 1.55; margin-top: 16px; }
+.pozn a { color: var(--accent); }
+.hlaska { font-size: .82rem; color: var(--text-muted); margin-top: 8px; min-height: 1em; }
+</style>
+</head>
+<body>
+<div class="obal">
+  <h1>🔭 Astronomický kalendář úkazů</h1>
+  <p class="podtitul">
+    Fáze Měsíce a superúplňky, zatmění Slunce a Měsíce s&nbsp;viditelností z&nbsp;vašeho místa, meteorické roje
+    s&nbsp;posouzením rušení Měsícem, rovnodennosti a slunovraty, opozice, konjunkce a elongace planet.
+    Vše se počítá přímo v&nbsp;prohlížeči pro zvolený rok a místo.
+  </p>
+
+  <div class="karta">
+    <div class="radek">
+      <div class="pole">
+        <div class="nadpis">Rok</div>
+        <div class="rok">
+          <button class="btn" id="rokMinus" aria-label="Předchozí rok">‹</button>
+          <input type="number" id="rok" min="1950" max="2050" step="1" aria-label="Rok">
+          <button class="btn" id="rokPlus" aria-label="Další rok">›</button>
+        </div>
+      </div>
+      <div class="pole">
+        <div class="nadpis">Místo pozorování</div>
+        <div class="misto">
+          <select id="mesto" aria-label="Místo pozorování"></select>
+          <button class="btn" id="btnPoloha" title="Poloha zůstane jen ve vašem prohlížeči">📍 Moje poloha</button>
+          <span class="souradnice" id="souradnice"></span>
+        </div>
+      </div>
+      <div class="pole" style="margin-left:auto">
+        <button class="btn hlavni" id="btnIcs" title="Stáhnout zobrazené úkazy jako soubor .ics pro kalendář">📅 Export do kalendáře (.ics)</button>
+      </div>
+    </div>
+    <div class="filtry" id="filtry" role="group" aria-label="Typy úkazů"></div>
+    <div class="volby">
+      <label><input type="checkbox" id="ctvrti"> zobrazit i čtvrti Měsíce</label>
+      <label><input type="checkbox" id="skrytProbehle"> skrýt proběhlé</label>
+      <label><input type="checkbox" id="jenViditelne"> zatmění jen viditelná z místa</label>
+    </div>
+    <div class="hlaska" id="hlaska" role="status"></div>
+  </div>
+
+  <div class="vrcholy" id="vrcholy"></div>
+  <div id="kalendar"></div>
+
+  <p class="pozn">
+    <b>Jak se počítá:</b> fáze Měsíce, rovnodennosti, slunovraty a zatmění podle algoritmů J.&nbsp;Meeuse
+    (<i>Astronomical Algorithms</i>, kap. 27, 47, 49, 54), poloha Měsíce z&nbsp;plných řad kapitoly 47, zatmění Měsíce
+    dopočítána z&nbsp;geometrie zemského stínu (jako katalog NASA), místní průběh zatmění Slunce krokováním po minutách
+    s&nbsp;paralaxou pro zvolené místo. Planety z&nbsp;Keplerových elementů JPL (E.&nbsp;M.&nbsp;Standish, platí 1800–2050) –
+    data opozic a konjunkcí jsou přesná zhruba na hodiny, u těsných konjunkcí pomalých planet na den.
+    Maxima meteorických rojů podle délky Slunce λ☉ z&nbsp;pracovního seznamu
+    <a href="https://www.imo.net/" target="_blank" rel="noopener">IMO</a>; skutečná aktivita se může lišit.
+    Superúplněk = úplněk blíž než 362&nbsp;600&nbsp;km (definice R.&nbsp;Nolla, 90&nbsp;% cesty k&nbsp;perigeu).
+    <br><b>Ověřeno</b> (stav k&nbsp;7.&nbsp;10.&nbsp;2026): úplňky a novy 2026 na ±2&nbsp;min proti USNO, rovnodennosti a slunovraty 2026 na ±2&nbsp;min,
+    všech 53 zatmění 2024–2035 proti katalogu <a href="https://eclipse.gsfc.nasa.gov/" target="_blank" rel="noopener">NASA (F.&nbsp;Espenak)</a>,
+    místní okolnosti zatmění Slunce pro ČR proti <a href="https://www.astro.cz/na-obloze/slunce/zatmeni-slunce/zatmeni-slunce-v-letech-2021-2030.html" target="_blank" rel="noopener">astro.cz</a>,
+    opozice a elongace planet 2026 na ±1&nbsp;den.
+    Časy jsou v&nbsp;časovém pásmu vašeho zařízení (<span id="pasmo"></span>).
+    <br>⚠️ Do Slunce se nikdy nedívejte bez certifikovaného filtru – ani během částečného zatmění.
+  </p>
+</div>
+
+<script>
+'use strict';
+(() => {
+  const A = window.ASTRO;
+  const $ = id => document.getElementById(id);
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const cislo = (x, d = 0) => x.toLocaleString('cs-CZ', { minimumFractionDigits: d, maximumFractionDigits: d });
+  const cas = d => d.toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' });
+  const datumKratke = d => d.toLocaleDateString('cs-CZ', { day: 'numeric', month: 'numeric' });
+  const datumDlouhe = d => d.toLocaleDateString('cs-CZ', { day: 'numeric', month: 'long' });
+  const MESICE = ['Leden', 'Únor', 'Březen', 'Duben', 'Květen', 'Červen', 'Červenec', 'Srpen', 'Září', 'Říjen', 'Listopad', 'Prosinec'];
+  const DNY = ['ne', 'po', 'út', 'st', 'čt', 'pá', 'so'];
+  const PL = { merkur: 'Merkur', venuse: 'Venuše', mars: 'Mars', jupiter: 'Jupiter', saturn: 'Saturn', uran: 'Uran', neptun: 'Neptun' };
+  const PL2 = { merkur: 'Merkuru', venuse: 'Venuše', mars: 'Marsu', jupiter: 'Jupiteru', saturn: 'Saturnu' };
+  try { $('pasmo').textContent = Intl.DateTimeFormat().resolvedOptions().timeZone; } catch { }
+
+  const MESTA = [
+    ['Praha', 50.0875, 14.4214, 250], ['Brno', 49.1951, 16.6068, 230], ['Ostrava', 49.8209, 18.2625, 220], ['Plzeň', 49.7384, 13.3736, 320],
+    ['Liberec', 50.7663, 15.0543, 380], ['Olomouc', 49.5938, 17.2509, 220], ['České Budějovice', 48.9745, 14.4743, 390],
+    ['Hradec Králové', 50.2092, 15.8328, 240], ['Ústí nad Labem', 50.6607, 14.0323, 150], ['Karlovy Vary', 50.2319, 12.8720, 380],
+    ['Jihlava', 49.3961, 15.5912, 520], ['Zlín', 49.2265, 17.6707, 230], ['Bratislava', 48.1486, 17.1077, 140],
+  ];
+  const TYPY = [
+    { k: 'mesic', n: '🌕 Fáze Měsíce' }, { k: 'zatmeni', n: '🌑 Zatmění' }, { k: 'roj', n: '☄️ Meteorické roje' },
+    { k: 'slunce', n: '🌍 Rovnodennosti a slunovraty' }, { k: 'planety', n: '🪐 Planety' }, { k: 'mesicPlaneta', n: '🌙 Měsíc u planet' },
+  ];
+
+  /* ---------- nastavení ---------- */
+  const KLIC = 'webapp_sky_events_nastaveni';
+  const nast = { misto: { nazev: 'Praha', lat: 50.0875, lon: 14.4214, vyska: 250 }, filtry: {}, ctvrti: false, skrytProbehle: false, jenViditelne: false };
+  try { Object.assign(nast, JSON.parse(localStorage.getItem(KLIC) || '{}')); } catch { }
+  const uloz = () => { try { localStorage.setItem(KLIC, JSON.stringify(nast)); } catch { } };
+  let rok = new Date().getFullYear();
+  if (rok < 1950 || rok > 2050) rok = 2026;
+  const filtrZapnut = k => nast.filtry[k] !== false;
+
+  /* ---------- sestavení úkazů roku ---------- */
+  const cache = new Map();
+  function ukazyRoku(r, misto) {
+    const klic = `${r}|${misto.lat.toFixed(3)}|${misto.lon.toFixed(3)}`;
+    if (cache.has(klic)) return cache.get(klic);
+    const u = [];
+    const pridej = o => u.push({ dulezite: false, ...o, id: `${o.typ}-${o.datum.toISOString()}-${o.podtyp || ''}` });
+
+    // Měsíc
+    const faze = A.mesicVRoce(r);
+    const uplnkyVMesici = {};
+    for (const f of faze) if (f.faze === 2) { const m = f.datum.getMonth(); uplnkyVMesici[m] = (uplnkyVMesici[m] || 0) + 1; f.poradi = uplnkyVMesici[m]; }
+    const NAZ = ['Nov', 'První čtvrť', 'Úplněk', 'Poslední čtvrť'], IK = ['🌑', '🌓', '🌕', '🌗'];
+    for (const f of faze) {
+      let nazev = NAZ[f.faze], popis = '', dul = false;
+      if (f.faze === 2) {
+        popis = `vzdálenost Měsíce ${cislo(Math.round(f.dist))} km`;
+        if (f.super) { nazev = 'Úplněk – superúplněk'; popis += ' · Měsíc je blízko perigea, o něco větší a jasnější než obvykle'; dul = true; }
+        else if (f.mikro) { nazev = 'Úplněk – mikroúplněk'; popis += ' · Měsíc u apogea, nejmenší úplněk'; }
+        if (f.poradi === 2) { nazev += ' (modrý měsíc)'; popis += ' · druhý úplněk v jednom kalendářním měsíci'; }
+      } else if (f.faze === 0) popis = `vzdálenost ${cislo(Math.round(f.dist))} km · nejlepší čas pro pozorování slabých objektů`;
+      pridej({ typ: 'mesic', podtyp: 'f' + f.faze, ctvrt: f.faze % 2 === 1, datum: f.datum, ikona: IK[f.faze], nazev, popis, dulezite: dul, trvaniMin: 15 });
+    }
+
+    // zatmění
+    for (const z of A.zatmeniVRoce(r)) {
+      if (z.slunecni) {
+        const m = A.mistniZatmeniSlunce(z, misto);
+        const glob = { 'úplné': 'Úplné', 'prstencové': 'Prstencové', 'hybridní': 'Hybridní', 'částečné': 'Částečné' }[z.typ] + ' zatmění Slunce';
+        let popis, vid = m.viditelne;
+        if (m.viditelne) {
+          const mag = m.mag >= 1 ? 'úplné' : 'částečné';
+          popis = `Z místa ${misto.nazev} ${mag}: ${m.vychodBehem ? 'Slunce vychází zatmělé, ' : `začátek ${cas(m.zacatek)}, `}maximum ${cas(m.max)} `
+            + `(Slunce ${cislo(m.vyskaSlunce, 0)}° nad obzorem), ${m.zapadBehem ? `Slunce zapadá zatmělé v ${cas(m.konecViditelny)}` : `konec ${cas(m.konec)}`}. `
+            + `Velikost ${cislo(m.mag, 2)}, zakryto ${cislo(m.zakryti * 100, 0)} % plochy Slunce.`;
+        } else popis = `Z místa ${misto.nazev} není vidět${m.castecne ? ' (probíhá, když je Slunce pod obzorem)' : ''}.`;
+        if (z.typ === 'částečné') popis += ` Největší fáze na Zemi ${cislo(z.mag, 2)}.`;
+        pridej({
+          typ: 'zatmeni', podtyp: 's', datum: m.viditelne ? m.max : z.datum, ikona: '🌘', nazev: glob, popis, viditelne: vid,
+          kratce: vid ? `Slunce (${cislo(m.zakryti * 100, 0)} %)` : 'Slunce',
+          dulezite: vid && m.mag > 0.3, konec: m.viditelne ? m.konecViditelny : null, zacatek: m.viditelne ? m.zacatekViditelny : null,
+          stitek: vid ? ['s-ano', `odsud zakryto ${cislo(m.zakryti * 100, 0)} %`] : ['s-ne', 'odsud není vidět'],
+        });
+      } else {
+        const m = A.mistniZatmeniMesice(z, misto);
+        const glob = { 'úplné': 'Úplné', 'částečné': 'Částečné', 'polostínové': 'Polostínové' }[z.typ] + ' zatmění Měsíce';
+        const k = m.kontakty, casti = [];
+        if (z.typ === 'polostínové') casti.push(`začátek ${cas(k.P1)}, maximum ${cas(k.max)}, konec ${cas(k.P4)} – jen nepatrné ztmavnutí okraje`);
+        else {
+          casti.push(`částečná fáze ${cas(k.U1)}–${cas(k.U4)}`);
+          if (k.U2) casti.push(`úplná ${cas(k.U2)}–${cas(k.U3)}`);
+          casti.push(`maximum ${cas(k.max)}`);
+        }
+        let vid = { 'celé': 'celé viditelné', 'částečně': 'viditelné částečně', 'jen polostín': 'vidět jen polostínová fáze', 'ne': 'odsud není vidět' }[m.viditelnost];
+        let pozn = '';
+        if (m.mesicVychazi) pozn += ` Měsíc vychází v ${cas(m.mesicVychazi)}.`;
+        if (m.mesicZapada) pozn += ` Měsíc zapadá v ${cas(m.mesicZapada)}.`;
+        if (m.viditelnost !== 'ne' && m.zaSoumraku) pozn += ' Část úkazu probíhá za světla (soumrak).';
+        const popis = `${casti.join(', ')}. Magnituda ${cislo(z.mag > 0 ? z.mag : z.magPen, 2)}${z.mag > 0 ? '' : ' (polostínová)'}.${pozn}`;
+        const viditelne = m.viditelnost !== 'ne';
+        pridej({
+          typ: 'zatmeni', podtyp: 'm', datum: k.max, ikona: '🌕', nazev: glob, popis, viditelne,
+          kratce: `Měsíc (${z.typ}${m.viditelnost === 'celé' ? '' : m.mesicZapada ? ', do západu Měsíce' : m.mesicVychazi ? ', od východu Měsíce' : ''})`,
+          dulezite: viditelne && z.mag > 0, zacatek: k.P1, konec: k.P4,
+          stitek: viditelne ? [m.viditelnost === 'celé' ? 's-ano' : 's-pozor', vid] : ['s-ne', vid],
+        });
+      }
+    }
+
+    // meteorické roje
+    for (const roj of A.rojeVRoce(r)) {
+      const k = roj.mesicK;
+      const verdikt = k < 0.3 ? ['s-ano', 'Měsíc neruší'] : k < 0.65 ? ['s-pozor', 'Měsíc částečně ruší'] : ['s-ne', 'silně ruší Měsíc'];
+      let mesicTxt = `Měsíc osvětlen z ${cislo(k * 100, 0)} %`;
+      if (window.SunCalc) {
+        try {
+          // noc maxima: od poledne dne maxima
+          const den = new Date(roj.datum.getFullYear(), roj.datum.getMonth(), roj.datum.getDate(), roj.datum.getHours() < 12 ? -12 : 12);
+          const t = SunCalc.getMoonTimes(den, misto.lat, misto.lon);
+          const t2 = SunCalc.getMoonTimes(new Date(den.getTime() + 864e5), misto.lat, misto.lon);
+          const vychod = [t.rise, t2.rise].find(x => x && x > den), zapad = [t.set, t2.set].find(x => x && x > den);
+          const casy = [zapad && [zapad, 'zapadá'], vychod && [vychod, 'vychází']].filter(Boolean).sort((a, b) => a[0] - b[0]);
+          if (k > 0.05 && casy.length) mesicTxt += ` (${casy.map(([t, co]) => `${co} ${cas(t)}`).join(', ')})`;
+        } catch { }
+      }
+      pridej({
+        typ: 'roj', datum: roj.datum, ikona: '☄️', nazev: `${roj.nazev} – maximum`, trvaniMin: 60,
+        popis: [`ZHR ≈ ${roj.zhr} meteorů/h (za ideálních podmínek)`, `rychlost ${roj.v} km/s`, `radiant: ${roj.radiant}`, `aktivní ${roj.aktivita}`, mesicTxt, roj.pozn].filter(Boolean).join(' · '),
+        dulezite: roj.zhr >= 50 && k < 0.5, stitek: verdikt,
+      });
+    }
+
+    // rovnodennosti a slunovraty
+    const RS = [['Jarní rovnodennost', '🌱', 'začátek astronomického jara, den a noc jsou zhruba stejně dlouhé'],
+      ['Letní slunovrat', '☀️', 'začátek astronomického léta, nejdelší den roku'],
+      ['Podzimní rovnodennost', '🍂', 'začátek astronomického podzimu'],
+      ['Zimní slunovrat', '❄️', 'začátek astronomické zimy, nejkratší den roku']];
+    for (let i = 0; i < 4; i++) {
+      const d = A.jdeNaDatum(A.rovnodennost(r, i));
+      let popis = RS[i][2];
+      if (window.SunCalc) {
+        try {
+          const t = SunCalc.getTimes(new Date(d.getFullYear(), d.getMonth(), d.getDate(), 12), misto.lat, misto.lon);
+          const delka = (t.sunset - t.sunrise) / 60000;
+          if (Number.isFinite(delka)) popis += ` · ${misto.nazev}: východ ${cas(t.sunrise)}, západ ${cas(t.sunset)}, den ${Math.floor(delka / 60)} h ${Math.round(delka % 60)} min`;
+        } catch { }
+      }
+      pridej({ typ: 'slunce', datum: d, ikona: RS[i][1], nazev: RS[i][0], popis, dulezite: true, trvaniMin: 15 });
+    }
+
+    // planety
+    for (const p of A.planetyVRoce(r)) {
+      const jm = PL[p.planeta];
+      const kdy = el => el < 15 ? 'blízko Slunce, prakticky nepozorovatelné' : p.vychodne ? 'večer na západě po západu Slunce' : 'ráno na východě před východem Slunce';
+      let o = null;
+      switch (p.druh) {
+        case 'opozice':
+          o = { ikona: '🪐', nazev: `${jm} v opozici se Sluncem`, popis: `nejblíž Zemi (${cislo(p.dist, 2)} au) a nejjasnější, viditelný celou noc – od soumraku do svítání.`, dulezite: ['mars', 'jupiter', 'saturn'].includes(p.planeta) };
+          break;
+        case 'konjunkce-slunce':
+          o = { ikona: '☀️', nazev: `${jm} v konjunkci se Sluncem`, popis: 'planeta je za Sluncem a několik týdnů ji nelze pozorovat.' };
+          break;
+        case 'dolni-konjunkce':
+          o = { ikona: '☀️', nazev: `${jm} v dolní konjunkci`, popis: `mezi Zemí a Sluncem (${cislo(p.dist, 2)} au), přechází z večerní oblohy na ranní; nepozorovatelná.` };
+          break;
+        case 'horni-konjunkce':
+          o = { ikona: '☀️', nazev: `${jm} v horní konjunkci`, popis: 'za Sluncem, přechází z ranní oblohy na večerní; nepozorovatelná.' };
+          break;
+        case 'elongace':
+          o = { ikona: p.planeta === 'venuse' ? '✨' : '☿', nazev: `${jm} v největší ${p.vychodne ? 'východní' : 'západní'} elongaci (${cislo(p.elong, 1)}°)`,
+            popis: `nejdál od Slunce – nejlepší příležitost k pozorování ${p.vychodne ? 'večer nad západním obzorem' : 'ráno nad východním obzorem'}.`, dulezite: p.planeta === 'venuse' };
+          break;
+        case 'konjunkce':
+          o = { ikona: '🔭', nazev: `${jm} ${cislo(p.sep, 1)}° od ${PL2[p.planeta2] || PL[p.planeta2]}`, popis: `těsné přiblížení planet (konjunkce v délce), ${kdy(p.elong)}.`, dulezite: p.sep < 1.5 && p.elong > 20 };
+          break;
+      }
+      if (o) pridej({ typ: 'planety', datum: p.datum, celodenni: true, ...o });
+    }
+    for (const m of A.mesicPlanetyVRoce(r, 4)) {
+      const zakryt = m.sep < 0.55;
+      pridej({
+        typ: 'mesicPlaneta', datum: m.datum, celodenni: true, ikona: '🌙',
+        nazev: `Měsíc ${cislo(m.sep, 1)}° ${m.sever ? 'jižně' : 'severně'} od ${PL2[m.planeta]}`,
+        popis: `${zakryt ? 'velmi těsné přiblížení, z části Země zákryt planety Měsícem; ' : ''}Měsíc osvětlen z ${cislo(m.k * 100, 0)} %, ${m.elong < 20 ? 'nízko u Slunce' : m.vychodne ? 'večerní obloha' : 'ranní obloha'}. Úhel je geocentrický, z ČR se může lišit až o 1°.`,
+        dulezite: zakryt,
+      });
+    }
+    u.sort((a, b) => a.datum - b.datum);
+    cache.set(klic, u);
+    return u;
+  }
+
+  /* ---------- vykreslení ---------- */
+  let zobrazene = [];
+  function vykresli() {
+    const t0 = performance.now();
+    $('rok').value = rok;
+    const m = nast.misto;
+    $('souradnice').textContent = `${Math.abs(m.lat).toFixed(2)}° ${m.lat >= 0 ? 's' : 'j'}. š., ${Math.abs(m.lon).toFixed(2)}° ${m.lon >= 0 ? 'v' : 'z'}. d.`;
+    let vse;
+    try { vse = ukazyRoku(rok, m); }
+    catch (e) { $('kalendar').innerHTML = `<div class="karta prazdno">Výpočet selhal: ${esc(e.message)}</div>`; return; }
+    const ted = new Date();
+    const pocty = {};
+    for (const u of vse) if (!(u.typ === 'mesic' && u.ctvrt && !nast.ctvrti)) pocty[u.typ] = (pocty[u.typ] || 0) + 1;
+    $('filtry').innerHTML = TYPY.map(t => `<button data-k="${t.k}" aria-pressed="${filtrZapnut(t.k)}">${t.n}<span class="pocet">${pocty[t.k] || 0}</span></button>`).join('');
+
+    zobrazene = vse.filter(u => filtrZapnut(u.typ)
+      && !(u.typ === 'mesic' && u.ctvrt && !nast.ctvrti)
+      && !(nast.skrytProbehle && (u.konec || u.datum) < ted && !(u.celodenni && stejnyDen(u.datum, ted)))
+      && !(nast.jenViditelne && u.typ === 'zatmeni' && !u.viditelne));
+    // po měsících
+    const kal = $('kalendar'); kal.innerHTML = '';
+    if (!zobrazene.length) kal.innerHTML = '<div class="karta prazdno">Žádné úkazy pro zvolené filtry.</div>';
+    for (let mi = 0; mi < 12; mi++) {
+      const pol = zobrazene.filter(u => u.datum.getMonth() === mi && u.datum.getFullYear() === rok);
+      if (!pol.length) continue;
+      const blok = document.createElement('section'); blok.className = 'mesic-blok';
+      const ploch = pol.filter(u => u.dulezite).length;
+      blok.innerHTML = `<h2>${MESICE[mi]} ${rok}<small>${pol.length} ${pol.length === 1 ? 'úkaz' : pol.length < 5 ? 'úkazy' : 'úkazů'}${ploch ? ` · ${ploch} výrazn${ploch === 1 ? 'ý' : 'é'}` : ''}</small></h2>`;
+      const ul = document.createElement('ul'); ul.className = 'udalosti';
+      for (const u of pol) {
+        const li = document.createElement('li');
+        const konec = u.konec || u.datum;
+        if (stejnyDen(u.datum, ted)) li.classList.add('dnes');
+        else if (konec < ted) li.classList.add('probehlo');
+        if (u.dulezite) li.classList.add('dulezite');
+        li.innerHTML = `<div class="den"><b>${u.datum.getDate()}.</b><span>${DNY[u.datum.getDay()]}</span></div>
+          <div class="ikona" aria-hidden="true">${u.ikona}</div>
+          <div><div class="nazev">${esc(u.nazev)}${u.celodenni ? '' : `<span class="cas">${cas(u.datum)}</span>`}${u.stitek ? `<span class="stitek ${u.stitek[0]}">${esc(u.stitek[1])}</span>` : ''}</div>
+          ${u.popis ? `<div class="text">${esc(u.popis)}</div>` : ''}</div>`;
+        ul.appendChild(li);
+      }
+      blok.appendChild(ul); kal.appendChild(blok);
+    }
+    vykresliVrcholy(vse, ted);
+    $('hlaska').textContent = `${zobrazene.length} úkazů · spočteno za ${Math.round(performance.now() - t0)} ms`;
+  }
+  const stejnyDen = (a, b) => a.getFullYear() === b.getFullYear() && a.getMonth() === b.getMonth() && a.getDate() === b.getDate();
+
+  function vykresliVrcholy(vse, ted) {
+    const dlazdice = [];
+    const budouci = vse.filter(u => (u.konec || u.datum) >= ted && !(u.typ === 'mesic' && u.ctvrt));
+    if (budouci.length && rok === ted.getFullYear()) {
+      const u = budouci[0];
+      const dni = Math.round((new Date(u.datum.getFullYear(), u.datum.getMonth(), u.datum.getDate()) - new Date(ted.getFullYear(), ted.getMonth(), ted.getDate())) / 864e5);
+      dlazdice.push(['Nejbližší úkaz', `${u.ikona} ${u.nazev}`, `${dni === 0 ? 'dnes' : dni === 1 ? 'zítra' : `za ${dni} ${dni < 5 ? 'dny' : 'dní'}`}, ${datumDlouhe(u.datum)}${u.celodenni ? '' : ' v ' + cas(u.datum)}`]);
+    }
+    const zat = vse.filter(u => u.typ === 'zatmeni' && u.viditelne);
+    dlazdice.push(['Zatmění viditelná odsud', zat.length ? zat.map(u => u.ikona).join(' ') + ` ${zat.length}×` : 'žádné',
+      zat.length ? zat.map(u => `${datumKratke(u.datum)} ${u.kratce}`).join(' · ') : `v roce ${rok} z místa ${nast.misto.nazev} žádné`]);
+    const roje = vse.filter(u => u.typ === 'roj' && u.stitek[0] === 's-ano').map(u => u.nazev.replace(' – maximum', ''));
+    dlazdice.push(['Roje bez rušení Měsícem', roje.length ? `☄️ ${roje.length}` : '–', roje.join(', ') || 'všechna maxima ruší Měsíc']);
+    const sup = vse.filter(u => u.typ === 'mesic' && /superúplněk/.test(u.nazev));
+    dlazdice.push(['Superúplňky', sup.length ? `🌕 ${sup.length}×` : 'žádný', sup.map(u => datumKratke(u.datum)).join(', ') || '–']);
+    $('vrcholy').innerHTML = dlazdice.map(([p, h, d]) => `<div><div class="popis">${esc(p)}</div><div class="hodnota">${esc(h)}</div><div class="detail">${esc(d)}</div></div>`).join('');
+  }
+
+  /* ---------- ovládání ---------- */
+  function nastavRok(r) {
+    r = Math.round(+r);
+    if (!Number.isFinite(r)) return;
+    rok = Math.max(1950, Math.min(2050, r));
+    vykresli();
+  }
+  $('rok').addEventListener('change', e => nastavRok(e.target.value));
+  $('rokMinus').addEventListener('click', () => nastavRok(rok - 1));
+  $('rokPlus').addEventListener('click', () => nastavRok(rok + 1));
+  $('filtry').addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    nast.filtry[b.dataset.k] = !filtrZapnut(b.dataset.k); uloz(); vykresli();
+  });
+  for (const id of ['ctvrti', 'skrytProbehle', 'jenViditelne']) {
+    $(id).checked = !!nast[id];
+    $(id).addEventListener('change', e => { nast[id] = e.target.checked; uloz(); vykresli(); });
+  }
+  const sel = $('mesto');
+  function naplnMesta() {
+    sel.innerHTML = MESTA.map(([n]) => `<option>${n}</option>`).join('') + (MESTA.some(([n]) => n === nast.misto.nazev) ? '' : `<option>${esc(nast.misto.nazev)}</option>`);
+    sel.value = nast.misto.nazev;
+  }
+  naplnMesta();
+  sel.addEventListener('change', () => {
+    const m = MESTA.find(([n]) => n === sel.value); if (!m) return;
+    nast.misto = { nazev: m[0], lat: m[1], lon: m[2], vyska: m[3] }; uloz(); vykresli();
+  });
+  $('btnPoloha').addEventListener('click', () => {
+    if (!navigator.geolocation) { $('hlaska').textContent = 'Prohlížeč nepodporuje zjištění polohy.'; return; }
+    $('hlaska').textContent = 'Zjišťuji polohu…';
+    navigator.geolocation.getCurrentPosition(p => {
+      nast.misto = { nazev: 'vaše poloha', lat: p.coords.latitude, lon: p.coords.longitude, vyska: Math.max(0, p.coords.altitude || 0) };
+      uloz(); naplnMesta(); vykresli();
+    }, err => { $('hlaska').textContent = 'Polohu se nepodařilo zjistit (' + (err.code === 1 ? 'přístup zamítnut' : 'nedostupná') + ').'; },
+    { timeout: 15000, maximumAge: 3600000 });
+  });
+  $('btnIcs').addEventListener('click', () => {
+    if (!zobrazene.length) { $('hlaska').textContent = 'Není co exportovat – zapněte nějaký typ úkazů.'; return; }
+    const sMistem = zobrazene.map(u => ({
+      ...u,
+      // celodenní úkaz → místní datum (bez posunu přes UTC)
+      denMistni: u.celodenni ? new Date(Date.UTC(u.datum.getFullYear(), u.datum.getMonth(), u.datum.getDate())) : null,
+      datum: u.zacatek && u.typ === 'zatmeni' ? u.zacatek : u.datum,
+      popis: (u.stitek ? u.stitek[1] + '. ' : '') + (u.popis || '') + ` (spočteno pro ${nast.misto.nazev})`,
+    }));
+    const txt = window.ASTRO.ics(sMistem, `Astronomické úkazy ${rok}`);
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(new Blob([txt], { type: 'text/calendar;charset=utf-8' }));
+    a.download = `astronomicke-ukazy-${rok}.ics`;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+    $('hlaska').textContent = `Staženo ${sMistem.length} úkazů do souboru ${a.download}.`;
+  });
+
+  if (!A) { $('kalendar').innerHTML = '<div class="karta prazdno">Nepodařilo se načíst výpočetní knihovnu (sky_events/astro.js).</div>'; return; }
+  vykresli();
+})();
+</script>
+</body>
+</html>

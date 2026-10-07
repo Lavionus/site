@@ -1,0 +1,334 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🌡️ Odhad doby smrti</title>
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../podpis.js" defer></script>
+<style>
+body{background:var(--bg);color:var(--text);min-height:100vh;padding:20px clamp(10px,3vw,24px)}
+.container{max-width:960px;margin:0 auto}
+h1{font-size:1.6rem;margin-bottom:6px;font-weight:600;text-align:center}
+.sub{text-align:center;color:var(--text-faint);font-size:.85rem;margin-bottom:14px}
+.varovani{border:1px solid var(--warn);border-left:4px solid var(--warn);background:var(--bg-elevated);color:var(--text-muted);border-radius:var(--radius);padding:10px 14px;font-size:.82rem;line-height:1.5;margin-bottom:16px}
+.card{background:var(--bg-elevated);border:1px solid var(--border);border-radius:var(--radius);padding:18px;margin-bottom:16px}
+h2{font-size:1.05rem;color:var(--accent);margin-bottom:10px}
+label{display:block;font-size:.78rem;color:var(--text-faint);margin:10px 0 4px}
+input,select{width:100%;background:var(--bg-input);border:1px solid var(--border-strong);border-radius:6px;color:var(--text);padding:8px 10px;font-size:.95rem;font-family:inherit}
+input:focus,select:focus{outline:none;border-color:var(--accent)}
+.row{display:flex;gap:12px;flex-wrap:wrap}
+.row>div{flex:1;min-width:140px}
+.vysledky{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:10px;margin-top:14px}
+.box{background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius);padding:12px}
+.box .popis{font-size:.7rem;text-transform:uppercase;letter-spacing:.5px;color:var(--text-faint);margin-bottom:4px}
+.box .cislo{font-size:1.3rem;font-weight:700}
+.box.hlavni .cislo{color:var(--accent)}
+.box .mini{font-size:.78rem;color:var(--text-muted);margin-top:3px}
+.hlaska{margin-top:10px;font-size:.85rem;color:var(--warn)}
+.graf{width:100%;height:280px;display:block;margin-top:12px}
+table{width:100%;border-collapse:collapse;font-size:.82rem}
+th,td{border-bottom:1px solid var(--border);padding:6px;text-align:left;vertical-align:top}
+th{color:var(--text-faint);font-weight:600}
+td.f{font-weight:700;white-space:nowrap;font-family:ui-monospace,monospace}
+tbody.vyber tr{cursor:pointer}
+tbody.vyber tr:hover td{background:var(--bg-hover)}
+tbody.vyber tr.zvolen td{background:var(--accent-soft)}
+.tabwrap{overflow-x:auto}
+.pozn{font-size:.78rem;color:var(--text-faint);margin-top:8px;line-height:1.5}
+.osa{position:relative;height:auto;margin-top:12px}
+.osa .radek{display:flex;align-items:center;gap:8px;margin:5px 0;font-size:.78rem}
+.osa .jm{width:150px;flex-shrink:0;color:var(--text-muted)}
+.osa .draha{flex:1;position:relative;height:14px;background:var(--bg-input);border-radius:7px;border:1px solid var(--border)}
+.osa .usek{position:absolute;top:1px;bottom:1px;border-radius:6px;background:var(--accent);opacity:.75}
+.osa .usek.t{background:var(--warn)}
+.osa .usek.p{background:var(--ok)}
+@media(max-width:480px){.osa .jm{width:96px}}
+.zdroje{font-size:.75rem;color:var(--text-faint);line-height:1.6}
+.zdroje a{color:var(--accent)}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>🌡️ Odhad doby smrti</h1>
+  <p class="sub">Teplotní metoda podle Henssgeho (nomogram rektální teploty) s korekčními faktory, doplněná o posmrtné skvrny a ztuhlost.</p>
+  <div class="varovani">⚠️ <b>Orientační výpočet pro výuku a představu.</b> Skutečný odhad doby smrti stanovuje soudní lékař na místě s ohledem na všechny okolnosti (horečka, podchlazení, změna teploty okolí, slunce, poloha těla…). Výsledek nenahrazuje znalecké vyšetření.</div>
+
+  <div class="card">
+    <h2>Měření na místě</h2>
+    <div class="row">
+      <div><label>Rektální teplota (°C, hloubka ≥ 8 cm)</label><input id="tr" type="number" step="0.1" value="26.4"></div>
+      <div><label>Teplota okolí (°C)</label><input id="ta" type="number" step="0.1" value="12"></div>
+      <div><label>Hmotnost těla (kg)</label><input id="m" type="number" step="1" min="1" value="90"></div>
+    </div>
+    <div class="row">
+      <div><label>Korekční faktor c (vyber v tabulce níže nebo zadej)</label><input id="c" type="number" step="0.05" min="0.3" max="3" value="1"></div>
+      <div><label>Podklad těla</label>
+        <select id="podklad">
+          <option value="0">neutrální (podlaha, tráva, suchá zem)</option>
+          <option value="0.1">matrace, silný koberec (+0,1)</option>
+          <option value="0.2">silně izolující podložka, polstrování (+0,1 až +0,3)</option>
+        </select></div>
+      <div><label>Čas měření (pro převod na hodiny)</label><input id="cas" type="datetime-local"></div>
+    </div>
+    <div class="vysledky" id="vysl"></div>
+    <div class="hlaska" id="hlaska"></div>
+    <canvas class="graf" id="graf" aria-label="Křivka chladnutí těla"></canvas>
+    <p class="pozn">Graf: modelová křivka rektální teploty od smrti (37,2 °C) při zadaných podmínkách, změřená hodnota a 95% interval. Výpočet řeší rovnici numericky (bisekcí) místo odečtu z nomogramu.</p>
+  </div>
+
+  <div class="card">
+    <h2>Model</h2>
+    <p style="font-size:.88rem;line-height:1.6">Normovaná teplota <i>Q</i> = (<i>T</i><sub>r</sub> − <i>T</i><sub>o</sub>) / (37,2 − <i>T</i><sub>o</sub>)<br>
+    okolí ≤ 23,2 °C: <i>Q</i> = 1,25·e<sup>B·t</sup> − 0,25·e<sup>5·B·t</sup><br>
+    okolí &gt; 23,2 °C: <i>Q</i> = 1,11·e<sup>B·t</sup> − 0,11·e<sup>10·B·t</sup><br>
+    <i>B</i> = −1,2815·(<i>c</i>·<i>m</i>)<sup>−0,625</sup> + 0,0284 &nbsp;(<i>m</i> hmotnost v kg, <i>c</i> korekční faktor)</p>
+    <h2 style="margin-top:14px">95% tolerance (podle vnějšího prstence nomogramu)</h2>
+    <div class="tabwrap"><table>
+      <thead><tr><th>Normovaná teplota Q</th><th>standard (c = 1)</th><th>s korekčním faktorem (c ≠ 1)</th></tr></thead>
+      <tbody><tr><td>Q ≥ 0,5 (časná fáze)</td><td>± 2,8 h</td><td>± 2,8 h</td></tr>
+      <tr><td>0,3 ≤ Q &lt; 0,5</td><td>± 3,2 h</td><td>± 4,5 h</td></tr>
+      <tr><td>Q &lt; 0,3 (pozdní fáze)</td><td>± 4,5 h</td><td>± 7,0 h</td></tr></tbody>
+    </table></div>
+    <p class="pozn">Hranice oblastí jsou odečteny z vnějšího prstence nomogramu pro okolí do 23 °C (šipky na prstenci odpovídají Q ≈ 0,5 a 0,3). Pro teploty nad 23 °C používá stránka stejné pásy – berte je orientačně.</p>
+  </div>
+
+  <div class="card">
+    <h2>Korekční faktory (Henssge) – klikni na řádek</h2>
+    <div class="tabwrap"><table>
+      <thead><tr><th>c</th><th>Suché oblečení / pokrývka, na vzduchu</th><th>Mokré oblečení / mokrý povrch těla</th></tr></thead>
+      <tbody class="vyber" id="faktory"></tbody>
+    </table></div>
+    <p class="pozn">Hodnoty platí pro tělo o hmotnosti ~70 kg. U výrazně lehčích či těžších těl a silné izolace (c &gt; 1,4) Henssge doporučuje faktor upravit podle hmotnosti (u těžkých těl je skutečný faktor nižší, u lehkých vyšší) – stránka tuto úpravu nedělá. Proudící vzduch = průvan, vítr, ventilátor. „Tenká vrstva“ = košile, tričko; „silnější“ = svetr, bunda.</p>
+  </div>
+
+  <div class="card">
+    <h2>Doplňkové znaky (posmrtné skvrny, ztuhlost)</h2>
+    <div class="row">
+      <div><label>Posmrtné skvrny (livores)</label><select id="livor"></select></div>
+      <div><label>Na tlak palcem</label><select id="tlak"></select></div>
+      <div><label>Po otočení těla</label><select id="presun"></select></div>
+      <div><label>Posmrtná ztuhlost (rigor)</label><select id="rigor"></select></div>
+    </div>
+    <div class="osa" id="osa"></div>
+    <div class="hlaska" id="prunik"></div>
+    <h2 style="margin-top:16px">Časové údaje (h po smrti)</h2>
+    <div class="tabwrap"><table>
+      <thead><tr><th>Posmrtné skvrny</th><th>průměr</th><th>SD</th><th>rozmezí</th></tr></thead>
+      <tbody>
+        <tr><td>začátek (první skvrny)</td><td>0,75</td><td>0,5</td><td>0,25 – 3</td></tr>
+        <tr><td>splývání</td><td>2,5</td><td>1</td><td>1 – 4</td></tr>
+        <tr><td>maximum</td><td>9,5</td><td>4,5</td><td>3 – 16</td></tr>
+        <tr><td>úplné vymizení na tlak palcem (ještě možné)</td><td>5,5</td><td>6</td><td>1 – 20</td></tr>
+        <tr><td>úplné přemístění po otočení (ještě možné)</td><td>3,75</td><td>1</td><td>2 – 6</td></tr>
+        <tr><td>neúplné přemístění (ještě možné)</td><td>11</td><td>4,5</td><td>4 – 24</td></tr>
+      </tbody>
+    </table></div>
+    <div class="tabwrap" style="margin-top:10px"><table>
+      <thead><tr><th>Posmrtná ztuhlost</th><th>průměr ± SD</th><th>95,5 % (2 SD)</th><th>pozorované rozmezí</th></tr></thead>
+      <tbody>
+        <tr><td>doba do nástupu</td><td>3 ± 2</td><td>– 7</td><td>&lt; 0,5 – 7</td></tr>
+        <tr><td>po zlomení se znovu vytvoří</td><td>do 5</td><td>–</td><td>2 – 8</td></tr>
+        <tr><td>plně vyvinutá</td><td>8 ± 1</td><td>6 – 10</td><td>2 – 20</td></tr>
+        <tr><td>přetrvává</td><td>57 ± 14</td><td>29 – 85</td><td>24 – 96</td></tr>
+        <tr><td>povolení (rozpad)</td><td>76 ± 32</td><td>12 – 140</td><td>24 – 192</td></tr>
+      </tbody>
+    </table></div>
+    <p class="pozn">Skvrny a ztuhlost jsou silně ovlivněny teplotou, svalovou hmotou, příčinou smrti i fyzickou námahou před smrtí – jejich rozptyl je velký a slouží hlavně ke kontrole, zda teplotní odhad „nesedí“.</p>
+  </div>
+
+  <p class="zdroje">Zdroje (stav k říjnu 2026): C. Henßge, B. Madea: <i>Estimation of the time since death in the early post-mortem period</i>, Forensic Sci. Int. 144 (2004) 167–175 – rovnice, tabulky skvrn a ztuhlosti (Mallach 1964, upr. Krompecher 2002); C. Henßge: <i>Death time estimation in case work I. The rectal temperature time of death nomogram</i>, Forensic Sci. Int. 38 (1988) 209–236 – korekční faktory a tolerance; formulář Henssge-Nomogramm, Institut für Rechtsmedizin St. Gallen. Kontrolní příklad z nomogramu: 26,4 °C rektálně, okolí 12 °C, 90 kg → 16 ± 2,8 h.</p>
+</div>
+
+<script id="logika">
+/* ===== Výpočet podle Henssgeho (bez DOM – testovatelné v node) ===== */
+(function (g) {
+  const T0 = 37.2;
+  function konstantaB(m, c) { return -1.2815 * Math.pow(c * m, -0.625) + 0.0284; }
+  // normovaná teplota v čase t (h)
+  function Q(t, ta, m, c) {
+    const B = konstantaB(m, c);
+    return ta <= 23.2 ? 1.25 * Math.exp(B * t) - 0.25 * Math.exp(5 * B * t)
+                      : 1.11 * Math.exp(B * t) - 0.11 * Math.exp(10 * B * t);
+  }
+  function teplota(t, ta, m, c) { return ta + (T0 - ta) * Q(t, ta, m, c); }
+  // 95% tolerance (h) podle Q a toho, zda se použil korekční faktor
+  function tolerance(q, c) {
+    const korekce = Math.abs(c - 1) > 1e-9;
+    if (q >= 0.5) return 2.8;
+    if (q >= 0.3) return korekce ? 4.5 : 3.2;
+    return korekce ? 7.0 : 4.5;
+  }
+  // vyřeší t z naměřené rektální teploty; vrací {t, q, tol, od, do} nebo {chyba}
+  function odhad(tr, ta, m, c) {
+    if (![tr, ta, m, c].every(Number.isFinite)) return { chyba: 'Vyplň všechna čísla.' };
+    if (m <= 0 || c <= 0) return { chyba: 'Hmotnost i korekční faktor musí být kladné.' };
+    if (ta >= T0) return { chyba: 'Teplota okolí ≥ 37,2 °C – tělo nechladne, metodu nelze použít.' };
+    if (tr > T0) return { chyba: 'Rektální teplota je vyšší než 37,2 °C (horečka, přehřátí?) – metoda předpokládá 37,2 °C v okamžiku smrti.' };
+    if (tr <= ta) return { chyba: 'Rektální teplota je na úrovni okolí – tělo je vychladlé, teplotní metoda už nic neřekne.' };
+    const q = (tr - ta) / (T0 - ta);
+    if (q >= 1) return { t: 0, q, tol: 2.8, od: 0, do: 2.8 };
+    let a = 0, b = 1;
+    while (Q(b, ta, m, c) > q && b < 2000) b *= 2;
+    if (b >= 2000) return { chyba: 'Řešení nenalezeno.' };
+    for (let i = 0; i < 80; i++) { const s = (a + b) / 2; if (Q(s, ta, m, c) > q) a = s; else b = s; }
+    const t = (a + b) / 2, tol = tolerance(q, c);
+    return { t, q, tol, od: Math.max(0, t - tol), do: t + tol, B: konstantaB(m, c) };
+  }
+
+  const FAKTORY = [
+    { c: 0.35, sucho: '', mokro: 'nahé tělo v proudící vodě' },
+    { c: 0.5, sucho: '', mokro: 'nahé tělo ve stojaté vodě' },
+    { c: 0.7, sucho: '', mokro: 'nahé mokré tělo nebo 1–2 tenké mokré vrstvy, proudící vzduch' },
+    { c: 0.75, sucho: 'nahé tělo, proudící vzduch', mokro: '' },
+    { c: 0.9, sucho: '1–2 tenké vrstvy, proudící vzduch', mokro: '2 a více silnějších mokrých vrstev, proudící vzduch' },
+    { c: 1.0, sucho: 'nahé tělo, klidný vzduch (standard)', mokro: '' },
+    { c: 1.1, sucho: '1–2 tenké vrstvy, klidný vzduch', mokro: '2 silnější mokré vrstvy, klidný vzduch' },
+    { c: 1.2, sucho: '2–3 tenké vrstvy; 1–2 silnější vrstvy (klidný i proudící vzduch)', mokro: 'více než 2 silnější mokré vrstvy, klidný vzduch' },
+    { c: 1.3, sucho: '3–4 tenké vrstvy', mokro: '' },
+    { c: 1.4, sucho: 'více tenkých i silnějších vrstev', mokro: '' },
+    { c: 1.8, sucho: 'silná přikrývka (peřina)', mokro: '' },
+    { c: 2.4, sucho: 'silná přikrývka + oblečení', mokro: '' },
+    { c: 2.8, sucho: 'velmi silná pokrývka (několik přikrývek + oblečení)', mokro: '' }
+  ];
+
+  // Doplňkové znaky → časové okno [od, do] v hodinách (rozmezí podle Henssge & Madea 2004)
+  const ZNAKY = {
+    livor: [
+      ['', '— neposuzováno —', null],
+      ['zadne', 'ještě nevytvořeny', [0, 3]],
+      ['zacatek', 'první, ojedinělé skvrny', [0.25, 3]],
+      ['splyvaji', 'splývají', [1, 16]],
+      ['maximum', 'plně vyvinuté (maximum)', [3, Infinity]]
+    ],
+    tlak: [
+      ['', '— neposuzováno —', null],
+      ['mizi', 'úplně vymizí', [0, 20]],
+      ['nemizi', 'už nevymizí úplně', [1, Infinity]]
+    ],
+    presun: [
+      ['', '— neposuzováno —', null],
+      ['uplne', 'úplně se přemístí', [0, 6]],
+      ['neuplne', 'přemístí se jen částečně', [2, 24]],
+      ['vubec', 'nepřemístí se', [4, Infinity]]
+    ],
+    rigor: [
+      ['', '— neposuzováno —', null],
+      ['zadna', 'ještě nenastoupila', [0, 7]],
+      ['castecna', 'nastupuje (drobné klouby, čelist)', [0.5, 20]],
+      ['obnovi', 'plná, po zlomení se znovu vytvoří', [2, 8]],
+      ['plna', 'plně vyvinutá', [2, 96]],
+      ['povoluje', 'povoluje / vymizelá', [24, 192]]
+    ]
+  };
+  // průnik intervalů; vrací [od, do] nebo null (rozpor)
+  function prunik(intervaly) {
+    let od = 0, dO = Infinity;
+    for (const i of intervaly) if (i) { od = Math.max(od, i[0]); dO = Math.min(dO, i[1]); }
+    return od <= dO ? [od, dO] : null;
+  }
+
+  g.SMRT = { T0, konstantaB, Q, teplota, tolerance, odhad, FAKTORY, ZNAKY, prunik };
+})(typeof window !== 'undefined' ? window : globalThis);
+</script>
+
+<script>
+(function () {
+  const S = window.SMRT, $ = id => document.getElementById(id);
+  const KLIC = 'webapp_doba_smrti_';
+  const POLE = ['tr', 'ta', 'm', 'c', 'podklad', 'cas', 'livor', 'tlak', 'presun', 'rigor'];
+  const cz = (x, d = 1) => x.toLocaleString('cs-CZ', { minimumFractionDigits: d, maximumFractionDigits: d });
+  const hm = h => { if (!isFinite(h)) return '∞'; const H = Math.floor(h), M = Math.round((h - H) * 60); return M === 60 ? (H + 1) + ' h 00 min' : H + ' h ' + String(M).padStart(2, '0') + ' min'; };
+
+  // tabulka faktorů
+  $('faktory').innerHTML = S.FAKTORY.map(f => `<tr data-c="${f.c}"><td class="f">${String(f.c).replace('.', ',')}</td><td>${f.sucho || '–'}</td><td>${f.mokro || '–'}</td></tr>`).join('');
+  $('faktory').onclick = e => { const r = e.target.closest('tr'); if (!r) return; $('c').value = r.dataset.c; prepocet(); };
+  for (const k in S.ZNAKY) $(k).innerHTML = S.ZNAKY[k].map(z => `<option value="${z[0]}">${z[1]}</option>`).join('');
+
+  try { const u = JSON.parse(localStorage.getItem(KLIC + 'vstup') || 'null'); if (u) POLE.forEach(id => { if (u[id] != null) $(id).value = u[id]; }); } catch (e) { }
+  POLE.forEach(id => $(id).addEventListener('input', prepocet));
+  POLE.forEach(id => $(id).addEventListener('change', prepocet));
+
+  let posledni = null;
+  function prepocet() {
+    try { localStorage.setItem(KLIC + 'vstup', JSON.stringify(Object.fromEntries(POLE.map(id => [id, $(id).value])))); } catch (e) { }
+    const tr = parseFloat($('tr').value), ta = parseFloat($('ta').value), m = parseFloat($('m').value);
+    const c = Math.round(((parseFloat($('c').value) || 0) + parseFloat($('podklad').value)) * 100) / 100;
+    document.querySelectorAll('#faktory tr').forEach(r => r.classList.toggle('zvolen', +r.dataset.c === parseFloat($('c').value)));
+    const r = S.odhad(tr, ta, m, c);
+    posledni = Object.assign({ tr, ta, m, c }, r);
+    $('hlaska').textContent = r.chyba || (r.t > 30 ? 'Pozor: odhad přes ~30 h je u teplotní metody velmi nejistý.' : '') +
+      (ta > 23.2 && !r.chyba ? ' Okolí nad 23,2 °C – použita druhá varianta rovnice.' : '');
+    if (r.chyba) { $('vysl').innerHTML = ''; kresli(); znaky(); return; }
+    let casy = '';
+    const casMer = $('cas').value ? new Date($('cas').value) : null;
+    if (casMer && !isNaN(casMer)) {
+      const f = h => new Date(casMer.getTime() - h * 3600e3).toLocaleString('cs-CZ', { day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit' });
+      casy = `<div class="box"><div class="popis">Smrt nastala asi</div><div class="cislo" style="font-size:1.05rem">${f(r.t)}</div><div class="mini">mezi ${f(r.do)} a ${f(r.od)}</div></div>`;
+    }
+    $('vysl').innerHTML = `
+      <div class="box hlavni"><div class="popis">Doba od smrti</div><div class="cislo">${cz(r.t)} h</div><div class="mini">${hm(r.t)}</div></div>
+      <div class="box"><div class="popis">95% interval</div><div class="cislo">${cz(r.od)} – ${cz(r.do)} h</div><div class="mini">± ${cz(r.tol)} h</div></div>
+      <div class="box"><div class="popis">Parametry</div><div class="cislo" style="font-size:1rem">Q = ${cz(r.q, 3)}</div><div class="mini">B = ${r.B.toFixed(4)} · c = ${cz(c, 2)} · c·m = ${cz(c * m, 0)} kg</div></div>` + casy;
+    kresli(); znaky();
+  }
+
+  function barva(v) { return getComputedStyle(document.documentElement).getPropertyValue(v).trim() || '#888'; }
+  function kresli() {
+    const cv = $('graf'), w = cv.clientWidth, h = cv.clientHeight; if (!w) return;
+    const dpr = window.devicePixelRatio || 1; cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
+    const x = cv.getContext('2d'); x.setTransform(dpr, 0, 0, dpr, 0, 0); x.clearRect(0, 0, w, h);
+    const p = posledni; if (!p || !isFinite(p.ta) || !isFinite(p.m) || !(p.c > 0) || p.ta >= 37.2) return;
+    const tMax = Math.max(24, Math.ceil(((p.do || 0) + 6) / 6) * 6);
+    const yMin = Math.floor(Math.min(p.ta, isFinite(p.tr) ? p.tr : p.ta) - 1), yMax = 38;
+    const L = 40, R = 12, T = 10, D = 28;
+    const X = t => L + t / tMax * (w - L - R), Y = v => T + (yMax - v) / (yMax - yMin) * (h - T - D);
+    x.font = '11px system-ui,sans-serif'; x.fillStyle = barva('--text-faint'); x.strokeStyle = barva('--border');
+    x.lineWidth = 1;
+    const krokT = tMax > 48 ? 12 : 6;
+    x.textAlign = 'center';
+    for (let t = 0; t <= tMax; t += krokT) { x.beginPath(); x.moveTo(X(t), T); x.lineTo(X(t), h - D); x.stroke(); x.fillText(t + ' h', X(t), h - 10); }
+    x.textAlign = 'right';
+    const krokY = (yMax - yMin) > 24 ? 10 : 5;
+    for (let v = Math.ceil(yMin / krokY) * krokY; v <= yMax; v += krokY) { x.beginPath(); x.moveTo(L, Y(v)); x.lineTo(w - R, Y(v)); x.stroke(); x.fillText(v + '°', L - 4, Y(v) + 4); }
+    if (p.t != null && !p.chyba) {
+      x.fillStyle = barva('--accent-soft'); x.fillRect(X(p.od), T, X(Math.min(p.do, tMax)) - X(p.od), h - T - D);
+    }
+    // okolí
+    x.setLineDash([4, 4]); x.strokeStyle = barva('--text-faint'); x.beginPath(); x.moveTo(L, Y(p.ta)); x.lineTo(w - R, Y(p.ta)); x.stroke(); x.setLineDash([]);
+    // křivka
+    x.strokeStyle = barva('--accent'); x.lineWidth = 2; x.beginPath();
+    for (let i = 0; i <= 200; i++) { const t = i / 200 * tMax, v = S.teplota(t, p.ta, p.m, p.c); i ? x.lineTo(X(t), Y(v)) : x.moveTo(X(t), Y(v)); }
+    x.stroke();
+    if (p.t != null && !p.chyba) {
+      x.fillStyle = barva('--warn'); x.beginPath(); x.arc(X(p.t), Y(p.tr), 5, 0, Math.PI * 2); x.fill();
+      x.textAlign = p.t > tMax * 0.7 ? 'right' : 'left'; x.fillStyle = barva('--text');
+      x.fillText(`${cz(p.tr)} °C → ${cz(p.t)} h`, X(p.t) + (p.t > tMax * 0.7 ? -9 : 9), Y(p.tr) - 8);
+    }
+    x.textAlign = 'left'; x.fillStyle = barva('--text-faint'); x.fillText('okolí ' + cz(p.ta) + ' °C', L + 4, Y(p.ta) - 4);
+  }
+
+  function znaky() {
+    const radky = [];
+    const p = posledni;
+    if (p && !p.chyba && p.t != null) radky.push(['Teplota (Henssge)', [p.od, p.do], 't']);
+    const nazvy = { livor: 'Skvrny', tlak: 'Tlak palcem', presun: 'Po otočení', rigor: 'Ztuhlost' };
+    for (const k in S.ZNAKY) { const z = S.ZNAKY[k].find(z => z[0] === $(k).value); if (z && z[2]) radky.push([nazvy[k] + ': ' + z[1], z[2], '']); }
+    if (!radky.length) { $('osa').innerHTML = ''; $('prunik').textContent = ''; return; }
+    const pr = S.prunik(radky.map(r => r[1]));
+    if (pr && radky.length > 1) radky.push(['Průnik', pr, 'p']);
+    const konec = Math.min(200, Math.max(24, ...radky.map(r => isFinite(r[1][1]) ? r[1][1] : r[1][0] + 12)) * 1.05);
+    const pct = v => Math.min(100, v / konec * 100);
+    $('osa').innerHTML = radky.map(r => `<div class="radek"><span class="jm">${r[0]}</span><span class="draha"><span class="usek ${r[2]}" style="left:${pct(r[1][0])}%;width:${Math.max(1, pct(isFinite(r[1][1]) ? r[1][1] : konec) - pct(r[1][0]))}%"></span></span></div>`).join('') +
+      `<div class="radek"><span class="jm"></span><span style="flex:1;display:flex;justify-content:space-between;color:var(--text-faint)"><span>0 h</span><span>${Math.round(konec / 2)} h</span><span>${Math.round(konec)} h</span></span></div>`;
+    $('prunik').textContent = radky.length < 2 ? '' : pr ? `Všechny znaky jsou slučitelné s intervalem ${cz(pr[0])} – ${isFinite(pr[1]) ? cz(pr[1]) : '∞'} h.` : 'Znaky si odporují – zkontroluj vstupy (nebo jde o neobvyklé podmínky: chlad, horko, námaha, otrava…).';
+  }
+
+  window.addEventListener('resize', kresli);
+  if (!$('cas').value) { const d = new Date(); d.setMinutes(d.getMinutes() - d.getTimezoneOffset()); $('cas').value = d.toISOString().slice(0, 16); }
+  prepocet();
+})();
+</script>
+</body>
+</html>

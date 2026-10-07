@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>⚡ Bouřky a blesky živě</title>
+<link rel="stylesheet" href="lib/leaflet/leaflet.css">
+<script src="lib/leaflet/leaflet.js"></script>
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../podpis.js" defer></script>
+<style>
+:root { --b0: #fff6a0; --b1: #ffd23f; --b2: #ff8c1a; --b3: #e8402a; --b4: #9b2048; }
+body { background: var(--bg-deep); padding: 24px clamp(12px, 3vw, 40px); min-height: 100vh; }
+.obal { max-width: 1200px; margin: 0 auto; }
+h1 { font-size: 1.5rem; margin-bottom: 4px; }
+.podtitul { color: var(--text-muted); font-size: .9rem; margin-bottom: 16px; line-height: 1.5; }
+.podtitul a, .pozn a, .zdroje a, .info a { color: var(--accent); }
+.karta { background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 16px; }
+
+.ovladani { display: flex; flex-wrap: wrap; gap: 12px 26px; align-items: flex-end; }
+.skupina > .nadpis { font-size: .72rem; text-transform: uppercase; letter-spacing: .5px; color: var(--text-faint); margin-bottom: 6px; }
+.prepinac { display: flex; gap: 5px; flex-wrap: wrap; }
+.prepinac button, .tlacitko { background: var(--bg-control); border: 1px solid var(--border-strong); color: var(--text-muted); border-radius: 6px; padding: 6px 11px; cursor: pointer; font-size: .82rem; }
+.prepinac button:hover, .tlacitko:hover { background: var(--bg-hover); color: var(--text); }
+.prepinac button.aktivni { background: var(--accent); border-color: var(--accent); color: #fff; }
+.vrstvy { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: .86rem; }
+.vrstvy label { display: flex; align-items: center; gap: 6px; cursor: pointer; }
+.vrstvy input { accent-color: var(--accent); width: 16px; height: 16px; }
+
+.dlazdice { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; margin-bottom: 16px; }
+.dlazdice > div { background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 12px; min-width: 0; }
+.dlazdice .popis { font-size: .7rem; color: var(--text-faint); text-transform: uppercase; letter-spacing: .4px; }
+.dlazdice .hodnota { font-size: 1.4rem; font-weight: 700; margin-top: 3px; font-variant-numeric: tabular-nums; }
+.dlazdice .detail { font-size: .78rem; color: var(--text-muted); margin-top: 2px; line-height: 1.35; }
+.dlazdice .blizko .hodnota { color: var(--danger); }
+#trend { width: 100%; height: 42px; display: block; margin-top: 4px; }
+
+#mapa { height: 600px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-input); }
+@media (max-width: 600px) { #mapa { height: 440px; } }
+.leaflet-container { font-family: var(--font); }
+.volba-podkladu { font: inherit; font-size: 12px; padding: 3px 4px; border-radius: 4px; border: 1px solid var(--border); background: var(--bg-input); color: var(--text); cursor: pointer; box-shadow: 0 1px 4px rgba(0,0,0,.3); }
+.casovka { position: absolute; left: 50%; transform: translateX(-50%); bottom: 22px; z-index: 800; background: var(--bg-panel); color: var(--text); border: 1px solid var(--border); border-radius: 6px; padding: 3px 10px; font-size: .85rem; font-weight: 600; font-variant-numeric: tabular-nums; box-shadow: var(--shadow); pointer-events: none; white-space: nowrap; }
+.obal-mapy { position: relative; }
+
+.animace { display: flex; gap: 8px; align-items: center; margin-top: 10px; }
+.animace button { background: var(--bg-control); border: 1px solid var(--border-strong); color: var(--text); border-radius: 6px; min-width: 42px; height: 34px; cursor: pointer; font-size: .9rem; }
+.animace button.hlavni { background: var(--accent); border-color: var(--accent); color: #fff; }
+.animace input { flex: 1; min-width: 0; accent-color: var(--accent); }
+
+.legenda { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: .78rem; color: var(--text-muted); margin-top: 8px; align-items: center; }
+.legenda i { display: inline-block; width: 14px; height: 10px; border-radius: 2px; margin-right: 5px; vertical-align: -1px; }
+.radar-skala { display: inline-block; width: 110px; height: 10px; border-radius: 2px; vertical-align: -1px; margin: 0 4px;
+  background: linear-gradient(90deg, #88ddee, #0099cc, #0077aa, #005588, #ffee00, #ffaa00, #ff4400, #c10000, #ffaaff); }
+
+.zdroje { display: grid; gap: 4px; font-size: .8rem; color: var(--text-muted); margin-top: 12px; }
+.zdroje .stav-ok::before { content: '● '; color: var(--ok); }
+.zdroje .stav-ceka::before { content: '● '; color: var(--warn); }
+.zdroje .stav-chyba { color: var(--danger); }
+.zdroje .stav-chyba::before { content: '● '; }
+.zdroje button { background: var(--bg-control); border: 1px solid var(--border-strong); color: var(--text); border-radius: 5px; padding: 1px 8px; font-size: .76rem; cursor: pointer; margin-left: 6px; }
+.info { font-size: .84rem; color: var(--text-muted); line-height: 1.6; }
+.info h2 { font-size: 1rem; color: var(--text); margin-bottom: 6px; }
+.info ul { margin: 6px 0 0 20px; }
+.upozorneni { border-left: 4px solid var(--warn); background: var(--bg-input); padding: 8px 12px; border-radius: 4px; font-size: .82rem; color: var(--text-muted); margin-top: 12px; line-height: 1.5; }
+</style>
+</head>
+<body>
+<div class="obal">
+  <h1>⚡ Bouřky a blesky živě</h1>
+  <p class="podtitul">
+    Blesky nad střední Evropou z&nbsp;meteorologické družice <b>MTG-I1</b> (přístroj Lightning Imager, EUMETSAT)
+    a srážkový radar (RainViewer). Družice pokrývá Evropu, Afriku a Atlantik. Stopa blesků bledne podle stáří, stránka spočítá, jak daleko je nejbližší blesk
+    od vás, a zda bouřková činnost sílí nebo slábne.
+  </p>
+
+  <div class="karta">
+    <div class="ovladani">
+      <div class="skupina">
+        <div class="nadpis">Vrstvy</div>
+        <div class="vrstvy" id="vrstvy">
+          <label><input type="checkbox" data-v="blesky" checked> ⚡ Blesky</label>
+          <label><input type="checkbox" data-v="radar" checked> 🌧️ Radar srážek</label>
+        </div>
+      </div>
+      <div class="skupina">
+        <div class="nadpis">Stopa blesků</div>
+        <div class="prepinac" id="okno" role="group" aria-label="Délka stopy blesků">
+          <button data-o="30">30 min</button><button data-o="60">1 h</button><button data-o="120">2 h</button>
+        </div>
+      </div>
+      <div class="skupina">
+        <div class="nadpis">Vaše poloha</div>
+        <div class="prepinac">
+          <button class="tlacitko" id="btnPoloha" title="Polohu použije jen tato stránka ve vašem prohlížeči">📍 Zjistit polohu</button>
+          <button class="tlacitko" id="btnPraha">Praha</button>
+        </div>
+      </div>
+      <div class="skupina">
+        <button class="tlacitko" id="btnObnovit">⟳ Obnovit</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="dlazdice">
+    <div id="dlNejblizsi"><div class="popis">Nejbližší blesk</div><div class="hodnota" id="dNejblizsi">–</div><div class="detail" id="dNejblizsiDetail">načítám…</div></div>
+    <div><div class="popis">Do 100 km od vás</div><div class="hodnota" id="dOkoli">–</div><div class="detail" id="dOkoliDetail"></div></div>
+    <div><div class="popis">Aktivita v oblasti (2 h)</div><canvas id="trend" aria-label="Vývoj bleskové činnosti za 2 hodiny"></canvas><div class="detail" id="dTrend"></div></div>
+    <div><div class="popis">Data</div><div class="hodnota" id="dCas">–</div><div class="detail" id="dCasDetail"></div></div>
+  </div>
+
+  <div class="obal-mapy">
+    <div id="mapa" role="application" aria-label="Mapa blesků a srážek"></div>
+    <div class="casovka" id="casovka" hidden></div>
+  </div>
+  <div class="animace">
+    <button id="btnPrehrat" class="hlavni" title="Přehrát vývoj za poslední 2 hodiny">▶</button>
+    <input type="range" id="posuvnik" min="0" max="0" value="0" aria-label="Čas snímku">
+    <button id="btnTed" title="Zpět na souhrnnou stopu">⏭</button>
+  </div>
+  <div class="legenda" id="legendaBlesky"></div>
+  <div class="legenda"><span>Radar:</span><span>slabé<span class="radar-skala"></span>přívalové / kroupy</span><span>· ◯ kruhy 15 km (hrom ještě slyšet) a 50 km</span></div>
+  <div class="zdroje" id="zdroje"></div>
+
+  <div class="karta info" style="margin-top:16px">
+    <h2>Odkud jsou data</h2>
+    <ul>
+      <li><b>Blesky:</b> produkt <i>LI Accumulated Flash Area</i> z&nbsp;družice MTG-I1 (Meteosat-12) přes veřejnou mapovou službu
+        <a href="https://view.eumetsat.int/" target="_blank" rel="noopener">EUMETView</a> (WMS, bez poplatků a bez omezení přístupu).
+        Každý snímek souhrnně ukazuje blesky za 5 minut v&nbsp;síti ~2 km. Družice vidí záblesky shora v&nbsp;oblacích, tedy
+        i blesky mezi mraky, nejen údery do země. Data přicházejí se zpožděním zhruba 15–25 minut.</li>
+      <li><b>Radar:</b> <a href="https://www.rainviewer.com/api.html" target="_blank" rel="noopener">RainViewer API</a> – složený radarový obraz
+        po 10 minutách, posledních ~2 hodin (bezplatná verze nabízí dlaždice jen do přiblížení 7, při větším přiblížení se zvětšují).</li>
+      <li><b>Proč ne Blitzortung:</b> komunitní síť <a href="https://www.blitzortung.org/" target="_blank" rel="noopener">Blitzortung.org</a>
+        má blesky v&nbsp;řádu sekund, ale podle jejích pravidel smí přímé připojení k&nbsp;serverům používat jen vlastní mapa projektu
+        (aplikace třetích stran musí mít vlastní server) a data se nesmí používat k&nbsp;varování před bouřkou.
+        Živě po sekundách je proto sledujte přímo na <a href="https://www.lightningmaps.org/" target="_blank" rel="noopener">LightningMaps.org</a>.</li>
+      <li><b>Výstrahy:</b> oficiální výstrahy před bouřkami vydává
+        <a href="https://www.chmi.cz/predpovedi/vystrahy-a-informace/" target="_blank" rel="noopener">ČHMÚ</a>
+        (veřejná data ČHMÚ ani MeteoAlarm nepovolují načtení z&nbsp;cizí webové stránky, proto zde jen odkaz).</li>
+    </ul>
+    <div class="upozorneni">
+      ⚠️ Orientační přehled, ne bezpečnostní systém. Data jsou o desítky minut zpožděná a bouřka se mezitím mohla posunout.
+      Zaslechnete-li hrom, jste v&nbsp;dosahu blesku – vyhledejte budovu nebo auto a vyčkejte 30 minut po posledním zahřmění.
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+/* ============================================================
+   Výpočetní jádro (bez DOM) – testuje _test/bourky_test.js
+   ============================================================ */
+const BOURKY = (() => {
+  const R = 6378137;                       // poloměr Web Mercatoru
+  const RZ = 6371.0088;                    // střední poloměr Země v km
+  const rad = Math.PI / 180;
+  function merc(lat, lon) { return { x: R * lon * rad, y: R * Math.log(Math.tan(Math.PI / 4 + lat * rad / 2)) }; }
+  function invMerc(x, y) { return { lat: (2 * Math.atan(Math.exp(y / R)) - Math.PI / 2) / rad, lon: x / R / rad }; }
+
+  // Analyzovaná oblast: obdélník v Mercatoru kolem středu, pixel ≈ 1,5–2 km
+  function oblast(lat, lon, sirka = 26, vyska = 12, px = 1200) {
+    const jih = Math.max(-80, lat - vyska / 2), sever = Math.min(80, lat + vyska / 2);
+    const zapad = lon - sirka / 2, vychod = lon + sirka / 2;
+    const a = merc(jih, zapad), b = merc(sever, vychod);
+    const w = px, h = Math.round(px * (b.y - a.y) / (b.x - a.x));
+    return { jih, sever, zapad, vychod, bbox: [a.x, a.y, b.x, b.y], w, h, stred: { lat, lon } };
+  }
+  function pixelNaLatLon(o, i, j) {          // i = sloupec, j = řádek (shora), střed pixelu
+    const [x0, y0, x1, y1] = o.bbox;
+    return invMerc(x0 + (i + .5) * (x1 - x0) / o.w, y1 - (j + .5) * (y1 - y0) / o.h);
+  }
+  function latLonNaPixel(o, lat, lon) {
+    const [x0, y0, x1, y1] = o.bbox, m = merc(lat, lon);
+    return { i: (m.x - x0) / (x1 - x0) * o.w - .5, j: (y1 - m.y) / (y1 - y0) * o.h - .5 };
+  }
+  // plocha jednoho pixelu v km² (Mercator zkresluje měřítko 1/cos φ)
+  function plochaPixelu(o, j) {
+    const [x0, , x1] = o.bbox;
+    const s = (x1 - x0) / o.w / 1000;
+    const lat = pixelNaLatLon(o, 0, j).lat;
+    return (s * Math.cos(lat * rad)) ** 2;
+  }
+  function vzdalenost(a, b) {
+    const dla = (b.lat - a.lat) * rad, dlo = (b.lon - a.lon) * rad;
+    const h = Math.sin(dla / 2) ** 2 + Math.cos(a.lat * rad) * Math.cos(b.lat * rad) * Math.sin(dlo / 2) ** 2;
+    return 2 * RZ * Math.asin(Math.min(1, Math.sqrt(h)));
+  }
+  function azimut(a, b) {
+    const y = Math.sin((b.lon - a.lon) * rad) * Math.cos(b.lat * rad);
+    const x = Math.cos(a.lat * rad) * Math.sin(b.lat * rad) - Math.sin(a.lat * rad) * Math.cos(b.lat * rad) * Math.cos((b.lon - a.lon) * rad);
+    return (Math.atan2(y, x) / rad + 360) % 360;
+  }
+  const SMERY = ['S', 'SV', 'V', 'JV', 'J', 'JZ', 'Z', 'SZ'];
+  const SMERY_SLOVY = ['na severu', 'na severovýchodě', 'na východě', 'na jihovýchodě', 'na jihu', 'na jihozápadě', 'na západě', 'na severozápadě'];
+  const smer = az => SMERY[Math.round(az / 45) % 8];
+  const smerSlovy = az => SMERY_SLOVY[Math.round(az / 45) % 8];
+
+  // poslední čas z <Dimension name="time" …>začátek/konec/PT5M</Dimension>
+  function konecDimenze(xml) {
+    const m = /<Dimension[^>]*name="time"[^>]*>([^<]+)</.exec(xml);
+    if (!m) return null;
+    const casti = m[1].trim().split(',').pop().split('/');
+    const t = Date.parse(casti.length >= 2 ? casti[1] : casti[0]);
+    return Number.isFinite(t) ? t : null;
+  }
+  function casySnimku(konec, oknoMin, krokMin = 5) {
+    const n = Math.round(oknoMin / krokMin);
+    const r = [];
+    for (let k = n - 1; k >= 0; k--) r.push(konec - k * krokMin * 60000);
+    return r;                                // od nejstaršího
+  }
+  // RGBA → maska blesků (1 B na pixel); poloprůhledné okraje vyhlazení ignorujeme
+  function maska(rgba, prah = 128) {
+    const n = rgba.length >> 2, m = new Uint8Array(n);
+    let pocet = 0;
+    for (let p = 0; p < n; p++) if (rgba[p * 4 + 3] >= prah) { m[p] = 1; pocet++; }
+    return { m, pocet };
+  }
+  // Pro každý pixel stáří nejnovějšího blesku v minutách před tKonec (65535 = nic).
+  function slozeni(snimky, tKonec, oknoMin, delka) {
+    const vek = new Uint16Array(delka).fill(65535);
+    const platne = snimky.filter(s => s && s.m && s.t <= tKonec && s.t > tKonec - oknoMin * 60000).sort((a, b) => a.t - b.t);
+    for (const s of platne) {           // od nejstaršího – novější přepíše
+      const v = Math.round((tKonec - s.t) / 60000), m = s.m;
+      for (let p = 0; p < delka; p++) if (m[p]) vek[p] = v;
+    }
+    return vek;
+  }
+  // Nejbližší blesk a plochy v okruzích; poloha {lat, lon}
+  function analyza(o, vek, poloha) {
+    let nejbl = null, plocha = 0, plocha50 = 0, plocha100 = 0;
+    const cosP = Math.cos(poloha.lat * rad);
+    for (let j = 0; j < o.h; j++) {
+      const radek = j * o.w;
+      let ap = -1, lat = 0;
+      for (let i = 0; i < o.w; i++) {
+        const v = vek[radek + i];
+        if (v === 65535) continue;
+        if (ap < 0) { ap = plochaPixelu(o, j); lat = pixelNaLatLon(o, 0, j).lat; }
+        plocha += ap;
+        const lon = pixelNaLatLon(o, i, j).lon;
+        // rychlý odhad, přesná vzdálenost jen pro blízké
+        const dx = (lon - poloha.lon) * cosP * 111.2, dy = (lat - poloha.lat) * 111.2;
+        const priblizne = Math.hypot(dx, dy);
+        if (priblizne > 110 && nejbl && priblizne > nejbl.km * 1.03 + 5) continue;
+        const km = vzdalenost(poloha, { lat, lon });
+        if (km <= 50) plocha50 += ap;
+        if (km <= 100) plocha100 += ap;
+        if (!nejbl || km < nejbl.km || (Math.abs(km - nejbl.km) < 1e-9 && v < nejbl.vek)) nejbl = { km, vek: v, lat, lon };
+      }
+    }
+    if (nejbl) nejbl.az = azimut(poloha, nejbl);
+    return { nejbl, plocha, plocha50, plocha100 };
+  }
+  // třída barvy podle stáří v minutách před nejnovějším snímkem
+  const TRIDY = [0, 10, 25, 55, 85];               // dolní meze tříd (min)
+  function trida(vekMin) { let k = 0; for (let i = 0; i < TRIDY.length; i++) if (vekMin >= TRIDY[i]) k = i; return k; }
+  // trend: poslední půlhodina proti předchozí
+  function trend(rada) {        // rada = plochy po snímcích od nejstaršího
+    if (rada.length < 12) return null;
+    const sum = a => a.reduce((s, x) => s + x, 0);
+    const nove = sum(rada.slice(-6)), stare = sum(rada.slice(-12, -6));
+    if (nove + stare < 50) return { slovo: 'klid', pomer: 1 };
+    const pomer = (nove + 1) / (stare + 1);
+    return { slovo: pomer > 1.3 ? 'sílí' : pomer < 0.77 ? 'slábne' : 'drží se', pomer };
+  }
+  // čas zvuku hromu: ~3 s na km
+  const hromSekund = km => Math.round(km * 1000 / 343);
+
+  return { merc, invMerc, oblast, pixelNaLatLon, latLonNaPixel, plochaPixelu, vzdalenost, azimut, smer, smerSlovy, konecDimenze, casySnimku, maska, slozeni, analyza, trida, TRIDY, trend, hromSekund };
+})();
+window.BOURKY = BOURKY;
+
+/* ============================================================
+   Stránka
+   ============================================================ */
+(() => {
+  if (typeof L === 'undefined' || !document.getElementById('mapa')) return;
+  const B = BOURKY;
+  const $ = id => document.getElementById(id);
+  const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+  const hhmm = t => new Date(t).toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' });
+  const cislo = (x, d = 0) => x.toLocaleString('cs-CZ', { maximumFractionDigits: d, minimumFractionDigits: d });
+  const PRAHA = { lat: 50.0875, lon: 14.4214, nazev: 'Praha' };
+  const WMS = 'https://view.eumetsat.int/geoserver/wms';
+  const VRSTVA = 'mtg_fd:li_afa';
+
+  /* ---------- nastavení ---------- */
+  const KLIC = 'webapp_bourky_nastaveni';
+  const nast = { okno: 60, vrstvy: { blesky: true, radar: true }, podklad: 'sedy' };
+  try { Object.assign(nast, JSON.parse(localStorage.getItem(KLIC) || '{}')); } catch { }
+  const uloz = () => { try { localStorage.setItem(KLIC, JSON.stringify(nast)); } catch { } };
+  let poloha = { ...PRAHA };
+
+  async function nacti(url, typ = 'json', ms = 20000) {
+    const ac = new AbortController(); const t = setTimeout(() => ac.abort(), ms);
+    try {
+      const r = await fetch(url, { signal: ac.signal, cache: 'no-cache' });
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      return typ === 'json' ? await r.json() : typ === 'text' ? await r.text() : await r.blob();
+    } catch (e) { throw new Error(e.name === 'AbortError' ? 'vypršel časový limit' : (e.message || 'síťová chyba')); }
+    finally { clearTimeout(t); }
+  }
+
+  /* ---------- stav zdrojů ---------- */
+  const zdroje = { blesky: { nazev: 'Blesky (EUMETSAT MTG LI)' }, radar: { nazev: 'Radar (RainViewer)' } };
+  function stavZdroje(k, typ, text, znovu) {
+    Object.assign(zdroje[k], { typ, text, znovu });
+    const el = $('zdroje'); el.innerHTML = '';
+    for (const z of Object.values(zdroje)) {
+      if (!z.typ) continue;
+      const d = document.createElement('div'); d.className = 'stav-' + z.typ; d.textContent = `${z.nazev}: ${z.text}`;
+      if (z.typ === 'chyba' && z.znovu) { const b = document.createElement('button'); b.textContent = 'zkusit znovu'; b.addEventListener('click', z.znovu); d.appendChild(b); }
+      el.appendChild(d);
+    }
+  }
+
+  /* ---------- mapa ---------- */
+  const ESRI = 'https://server.arcgisonline.com/ArcGIS/rest/services/';
+  const svetle = () => document.documentElement.dataset.theme === 'light';
+  const PODKLADY = {
+    sedy: { nazev: 'Šedý (dle tématu)', max: 16, atr: 'Podklad © Esri, HERE, Garmin, © OpenStreetMap',
+      url: () => ESRI + `Canvas/World_${svetle() ? 'Light' : 'Dark'}_Gray_Base/MapServer/tile/{z}/{y}/{x}`,
+      popisky: () => ESRI + `Canvas/World_${svetle() ? 'Light' : 'Dark'}_Gray_Reference/MapServer/tile/{z}/{y}/{x}` },
+    osm: { nazev: 'OSM – humanitární', max: 19, url: () => 'https://{s}.tile.openstreetmap.fr/hot/{z}/{x}/{y}.png',
+      atr: 'Podklad © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a>, styl HOT, server OSM France' },
+    teren: { nazev: 'Topografická', max: 18, atr: 'Podklad © Esri, HERE, Garmin, FAO, NOAA, USGS, © OpenStreetMap',
+      url: () => ESRI + 'World_Topo_Map/MapServer/tile/{z}/{y}/{x}' },
+    satelit: { nazev: 'Satelitní', max: 18, atr: 'Podklad © Esri, Maxar, Earthstar Geographics',
+      url: () => ESRI + 'World_Imagery/MapServer/tile/{z}/{y}/{x}',
+      popisky: () => ESRI + 'Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}' },
+  };
+  if (!PODKLADY[nast.podklad]) nast.podklad = 'sedy';
+  const mapa = L.map('mapa', { preferCanvas: true, zoomSnap: .5, minZoom: 4, maxZoom: 12 }).setView([49.8, 15.5], 7);
+  mapa.createPane('radar').style.zIndex = 300;
+  mapa.createPane('blesky').style.zIndex = 420;
+  mapa.getPane('blesky').style.pointerEvents = 'none';
+  mapa.createPane('popisky').style.zIndex = 430;
+  mapa.getPane('popisky').style.pointerEvents = 'none';
+  const ATR = 'Blesky © EUMETSAT (MTG LI) · Radar © RainViewer';
+  let vrstvaPodkladu = null, vrstvaPopisku = null, volba = null;
+  function nastavPodklad() {
+    vrstvaPodkladu?.remove(); vrstvaPopisku?.remove(); vrstvaPopisku = null;
+    const p = PODKLADY[nast.podklad];
+    vrstvaPodkladu = L.tileLayer(p.url(), { maxZoom: p.max, attribution: `${p.atr} · ${ATR}` }).addTo(mapa);
+    if (p.popisky) vrstvaPopisku = L.tileLayer(p.popisky(), { maxZoom: p.max, pane: 'popisky' }).addTo(mapa);
+    if (volba) volba.value = nast.podklad;
+  }
+  const VolbaPodkladu = L.Control.extend({
+    options: { position: 'topright' },
+    onAdd() {
+      const sel = L.DomUtil.create('select', 'volba-podkladu');
+      sel.title = 'Mapový podklad'; sel.setAttribute('aria-label', 'Mapový podklad');
+      sel.innerHTML = Object.entries(PODKLADY).map(([k, p]) => `<option value="${k}">${p.nazev}</option>`).join('');
+      L.DomEvent.disableClickPropagation(sel); L.DomEvent.disableScrollPropagation(sel);
+      sel.addEventListener('change', () => { nast.podklad = sel.value; uloz(); nastavPodklad(); });
+      volba = sel; return sel;
+    },
+  });
+  new VolbaPodkladu().addTo(mapa);
+  nastavPodklad();
+
+  // poloha uživatele + kruhy
+  const skupinaPolohy = L.layerGroup().addTo(mapa);
+  function kresliPolohu() {
+    skupinaPolohy.clearLayers();
+    const ll = [poloha.lat, poloha.lon], a = css('--accent');
+    L.circle(ll, { radius: 15000, color: a, weight: 1.5, fill: false, dashArray: '3 4', interactive: false }).addTo(skupinaPolohy);
+    L.circle(ll, { radius: 50000, color: a, weight: 1, fill: false, opacity: .6, interactive: false }).addTo(skupinaPolohy);
+    L.circleMarker(ll, { radius: 6, color: '#fff', weight: 2, fillColor: a, fillOpacity: 1 }).bindTooltip(poloha.nazev).addTo(skupinaPolohy);
+  }
+  kresliPolohu();
+
+  /* ---------- blesky ---------- */
+  let obl = B.oblast(49.8, 15.5);
+  let obrysOblasti = null;
+  const snimky = new Map();          // čas → { t, m, pocet } nebo { t, chyba }
+  let casy = [];                     // časy posledních 2 h (od nejstaršího)
+  let posledni = null;               // nejnovější dostupný čas
+  let prekryv = null;
+  const platno = document.createElement('canvas');
+
+  function urlSnimku(t) {
+    const [x0, y0, x1, y1] = obl.bbox.map(v => Math.round(v));
+    return `${WMS}?service=WMS&version=1.3.0&request=GetMap&layers=${VRSTVA}&styles=&crs=EPSG:3857&bbox=${x0},${y0},${x1},${y1}`
+      + `&width=${obl.w}&height=${obl.h}&format=image/png&transparent=true&time=${new Date(t).toISOString().replace('.000', '')}`;
+  }
+  function nactiObrazek(url) {
+    return new Promise((ok, chyba) => {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      const t = setTimeout(() => { img.src = ''; chyba(new Error('vypršel časový limit')); }, 25000);
+      img.onload = () => { clearTimeout(t); ok(img); };
+      img.onerror = () => { clearTimeout(t); chyba(new Error('obrázek se nenačetl')); };
+      img.src = url;
+    });
+  }
+  const pomocne = document.createElement('canvas');
+  async function nactiSnimek(t, pokus = 0) {
+    try {
+      const img = await nactiObrazek(urlSnimku(t));
+      pomocne.width = obl.w; pomocne.height = obl.h;
+      const c = pomocne.getContext('2d', { willReadFrequently: true });
+      c.clearRect(0, 0, obl.w, obl.h); c.drawImage(img, 0, 0, obl.w, obl.h);
+      const { m, pocet } = B.maska(c.getImageData(0, 0, obl.w, obl.h).data);
+      return { t, m, pocet };
+    } catch (e) {
+      // server občas vrátí chybu 500 → zkusit ještě dvakrát
+      if (pokus < 2) { await new Promise(r => setTimeout(r, 800 * (pokus + 1))); return nactiSnimek(t, pokus + 1); }
+      return { t, chyba: e.message };
+    }
+  }
+  let generace = 0;
+  async function nactiBlesky() {
+    const g = ++generace;
+    stavZdroje('blesky', 'ceka', 'zjišťuji nejnovější snímek…');
+    try {
+      const xml = await nacti(`https://view.eumetsat.int/geoserver/mtg_fd/li_afa/ows?service=WMS&request=GetCapabilities&version=1.3.0`, 'text');
+      const k = B.konecDimenze(xml);
+      if (!k) throw new Error('nečitelný seznam časů');
+      posledni = k;
+    } catch (e) {
+      if (!posledni) {
+        stavZdroje('blesky', 'chyba', `služba EUMETSAT neodpovídá (${e.message}).`, nactiBlesky);
+        $('dNejblizsi').textContent = '–'; $('dNejblizsiDetail').textContent = 'data blesků nejsou dostupná';
+        return;
+      }
+    }
+    casy = B.casySnimku(posledni, 120);
+    for (const t of [...snimky.keys()]) if (!casy.includes(t)) snimky.delete(t);
+    const chybi = casy.filter(t => !snimky.has(t) || snimky.get(t).chyba).reverse();   // nejnovější napřed
+    let hotovo = casy.length - chybi.length;
+    // 4 souběžné požadavky
+    const fronta = [...chybi];
+    const pracovnik = async () => {
+      while (fronta.length && g === generace) {
+        const t = fronta.shift();
+        const s = await nactiSnimek(t);
+        if (g !== generace) return;
+        snimky.set(t, s); hotovo++;
+        stavZdroje('blesky', 'ceka', `načítám snímky ${hotovo}/${casy.length}…`);
+        if (hotovo % 4 === 0 || !fronta.length) prekresli();
+      }
+    };
+    await Promise.all([pracovnik(), pracovnik(), pracovnik(), pracovnik()]);
+    if (g !== generace) return;
+    const chyb = casy.filter(t => snimky.get(t)?.chyba).length;
+    if (chyb === casy.length) stavZdroje('blesky', 'chyba', 'snímky blesků se nepodařilo stáhnout.', nactiBlesky);
+    else stavZdroje('blesky', 'ok', `nejnovější snímek ${hhmm(posledni)} (zpoždění ${Math.round((Date.now() - posledni) / 60000)} min)${chyb ? `, ${chyb} snímků chybí` : ''}`);
+    nastavPosuvnik();
+    prekresli();
+  }
+
+  /* ---------- vykreslení stopy ---------- */
+  const BARVY_TRID = () => [0, 1, 2, 3, 4].map(i => css('--b' + i));
+  const ALFA_TRID = [255, 235, 200, 160, 115];
+  function hexNaRgb(h) { const n = parseInt(h.replace('#', ''), 16); return [n >> 16 & 255, n >> 8 & 255, n & 255]; }
+  let rezim = 'stopa', indexAnimace = 0;
+
+  function prekresli() {
+    if (!posledni) return;
+    const tKonec = rezim === 'stopa' ? posledni : casy[indexAnimace];
+    const okno = rezim === 'stopa' ? nast.okno : 15;
+    const vek = B.slozeni([...snimky.values()], tKonec, okno, obl.w * obl.h);
+    // obrázek
+    platno.width = obl.w; platno.height = obl.h;
+    const c = platno.getContext('2d');
+    if (c) {
+      const img = c.createImageData(obl.w, obl.h), d = img.data;
+      const barvy = BARVY_TRID().map(hexNaRgb);
+      const tabulka = new Array(256);
+      for (let p = 0; p < vek.length; p++) {
+        const v = vek[p]; if (v === 65535) continue;
+        const k = tabulka[v] ?? (tabulka[v] = B.trida(v));
+        const [r, g, b] = barvy[k];
+        d[p * 4] = r; d[p * 4 + 1] = g; d[p * 4 + 2] = b; d[p * 4 + 3] = ALFA_TRID[k];
+      }
+      c.putImageData(img, 0, 0);
+      const url = platno.toDataURL('image/png');
+      const meze = [[obl.jih, obl.zapad], [obl.sever, obl.vychod]];
+      if (!prekryv) prekryv = L.imageOverlay(url, meze, { pane: 'blesky', opacity: 1, interactive: false });
+      else { prekryv.setUrl(url); prekryv.setBounds(L.latLngBounds(meze)); }
+      if (nast.vrstvy.blesky) prekryv.addTo(mapa); else prekryv.remove();
+    }
+    if (!obrysOblasti) obrysOblasti = L.rectangle([[obl.jih, obl.zapad], [obl.sever, obl.vychod]], { color: css('--text-faint'), weight: 1, dashArray: '6 6', fill: false, interactive: false }).addTo(mapa);
+    else obrysOblasti.setBounds([[obl.jih, obl.zapad], [obl.sever, obl.vychod]]);
+    // analýza
+    const a = B.analyza(obl, vek, poloha);
+    const tile = $('dlNejblizsi');
+    if (a.nejbl) {
+      const stari = Math.round((Date.now() - (tKonec - a.nejbl.vek * 60000)) / 60000);
+      $('dNejblizsi').textContent = `${cislo(a.nejbl.km, a.nejbl.km < 10 ? 1 : 0)} km ${B.smer(a.nejbl.az)}`;
+      $('dNejblizsiDetail').textContent = `${B.smerSlovy(a.nejbl.az)} od místa ${poloha.nazev}, před ~${stari} min`
+        + (a.nejbl.km < 15 ? ` – hrom by byl slyšet (zvuk letí ~${B.hromSekund(a.nejbl.km)} s)` : '');
+      tile.classList.toggle('blizko', a.nejbl.km < 30);
+    } else {
+      $('dNejblizsi').textContent = 'žádný';
+      $('dNejblizsiDetail').textContent = `v analyzované oblasti (${rezim === 'stopa' ? 'posledních ' + nast.okno + ' min' : 'zvolený čas'}) nebyl zaznamenán blesk`;
+      tile.classList.remove('blizko');
+    }
+    $('dOkoli').textContent = a.plocha100 > 0 ? `${cislo(a.plocha100)} km²` : 'klid';
+    $('dOkoliDetail').textContent = a.plocha100 > 0 ? `plocha s blesky, z toho do 50 km ${cislo(a.plocha50)} km²` : 'do 100 km žádné blesky';
+    // časovka
+    const cas = $('casovka');
+    if (rezim === 'animace') { cas.hidden = false; cas.textContent = `⚡ ${hhmm(tKonec - 10 * 60000)}–${hhmm(tKonec)}` + (radarAktualni ? ` · 🌧️ ${hhmm(radarAktualni.time * 1000)}` : ''); }
+    else cas.hidden = true;
+    $('dCas').textContent = hhmm(tKonec);
+    $('dCasDetail').textContent = rezim === 'stopa' ? `čas nejnovějšího 5min snímku blesků · stopa ${nast.okno} min` : 'přehrávání historie';
+    kresliTrend();
+    kresliLegendu();
+  }
+  function kresliLegendu() {
+    if (!posledni) return;
+    const barvy = BARVY_TRID();
+    const casti = [];
+    if (rezim === 'stopa') {
+      // stáří vůči skutečnému času = zpoždění dat + stáří snímku
+      const zpozdeni = Math.max(0, Math.round((Date.now() - posledni) / 60000));
+      for (let k = 0; k < B.TRIDY.length && B.TRIDY[k] < nast.okno; k++) {
+        const od = zpozdeni + B.TRIDY[k], doo = zpozdeni + Math.min(B.TRIDY[k + 1] ?? Infinity, nast.okno);
+        casti.push(`<span><i style="background:${barvy[k]}"></i>před ${od}–${doo} min</span>`);
+      }
+    } else {
+      casti.push(`<span><i style="background:${barvy[0]}"></i>zobrazený čas</span>`, `<span><i style="background:${barvy[1]}"></i>o 10 min dříve</span>`);
+    }
+    $('legendaBlesky').innerHTML = '<span>Blesky:</span>' + casti.join('');
+  }
+
+  // graf aktivity: plocha s blesky v oblasti po snímcích
+  function kresliTrend() {
+    const cv = $('trend');
+    const dpr = window.devicePixelRatio || 1;
+    const w = cv.clientWidth || 160, h = cv.clientHeight || 42;
+    cv.width = Math.round(w * dpr); cv.height = Math.round(h * dpr);
+    const c = cv.getContext('2d'); if (!c) return;
+    c.setTransform(dpr, 0, 0, dpr, 0, 0); c.clearRect(0, 0, w, h);
+    const rada = casy.map(t => snimky.get(t)?.pocet ?? 0);
+    const plochaPx = B.plochaPixelu(obl, Math.round(obl.h / 2));
+    const max = Math.max(1, ...rada);
+    const bw = w / Math.max(1, rada.length);
+    rada.forEach((v, i) => {
+      const bh = Math.max(v ? 2 : 1, v / max * (h - 4));
+      const s = snimky.get(casy[i]);
+      c.fillStyle = s?.chyba ? css('--danger') : !s ? css('--border') : (rezim === 'animace' && i === indexAnimace) ? css('--accent') : css('--b2');
+      c.fillRect(i * bw + .5, h - bh, Math.max(1, bw - 1), bh);
+    });
+    const tr = B.trend(rada.map(v => v * plochaPx));
+    const posl = (rada[rada.length - 1] || 0) * plochaPx;
+    $('dTrend').textContent = tr ? `${tr.slovo === 'klid' ? 'téměř bez blesků' : 'činnost ' + tr.slovo} · poslední snímek ${cislo(posl)} km²` : 'načítám…';
+  }
+
+  /* ---------- radar (RainViewer) ---------- */
+  let radarSnimky = [], radarHost = '', radarVrstvy = new Map(), radarAktualni = null;
+  function radarVrstva(f) {
+    if (!radarVrstvy.has(f.time)) {
+      radarVrstvy.set(f.time, L.tileLayer(`${radarHost}${f.path}/256/{z}/{x}/{y}/2/1_1.png`, {
+        pane: 'radar', opacity: 0, maxNativeZoom: 7, maxZoom: 12, attribution: '', className: 'radar',
+      }));
+    }
+    return radarVrstvy.get(f.time);
+  }
+  // RainViewer povoluje ~500 dlaždic za minutu → v mapě držíme jen aktuální a následující snímek
+  function ukazRadar(t) {
+    if (!radarSnimky.length) return;
+    let i = radarSnimky.length - 1;
+    while (i > 0 && radarSnimky[i].time * 1000 > t) i--;
+    const f = radarSnimky[i], dalsi = radarSnimky[i + 1];
+    radarAktualni = f;
+    const ponechat = new Set([f.time, dalsi?.time]);
+    for (const [k, v] of radarVrstvy) if (!ponechat.has(k)) { v.remove(); radarVrstvy.delete(k); }
+    const v = radarVrstva(f);
+    if (nast.vrstvy.radar) { v.addTo(mapa); v.setOpacity(.65); } else v.remove();
+    if (dalsi && nast.vrstvy.radar) { const d = radarVrstva(dalsi); d.addTo(mapa); d.setOpacity(0); }
+  }
+  async function nactiRadar() {
+    stavZdroje('radar', 'ceka', 'načítám…');
+    try {
+      const d = await nacti('https://api.rainviewer.com/public/weather-maps.json');
+      radarHost = d.host; radarSnimky = d.radar?.past || [];
+      if (!radarSnimky.length) throw new Error('žádné snímky');
+      for (const v of radarVrstvy.values()) v.remove();
+      radarVrstvy.clear();
+      ukazRadar(rezim === 'stopa' ? Infinity : casy[indexAnimace]);
+      const p = radarSnimky[radarSnimky.length - 1].time * 1000;
+      stavZdroje('radar', 'ok', `nejnovější snímek ${hhmm(p)} (${radarSnimky.length} snímků po 10 min)`);
+    } catch (e) {
+      stavZdroje('radar', 'chyba', `nepodařilo se načíst (${e.message}).`, nactiRadar);
+    }
+  }
+
+  /* ---------- animace ---------- */
+  let prehravac = null;
+  function nastavPosuvnik() {
+    const p = $('posuvnik'); p.max = Math.max(0, casy.length - 1);
+    if (rezim === 'stopa') p.value = p.max;
+  }
+  function krokAnimace(i) {
+    rezim = 'animace';
+    indexAnimace = Math.max(0, Math.min(casy.length - 1, i));
+    $('posuvnik').value = indexAnimace;
+    ukazRadar(casy[indexAnimace]);
+    prekresli();
+  }
+  function zastav() { clearInterval(prehravac); prehravac = null; $('btnPrehrat').textContent = '▶'; }
+  $('btnPrehrat').addEventListener('click', () => {
+    if (!casy.length) return;
+    if (prehravac) { zastav(); return; }
+    $('btnPrehrat').textContent = '⏸';
+    if (rezim !== 'animace' || indexAnimace >= casy.length - 1) krokAnimace(0);
+    prehravac = setInterval(() => {
+      if (indexAnimace >= casy.length - 1) { zastav(); return; }
+      krokAnimace(indexAnimace + 1);
+    }, 700);
+  });
+  $('posuvnik').addEventListener('input', e => { zastav(); krokAnimace(+e.target.value); });
+  $('btnTed').addEventListener('click', () => { zastav(); rezim = 'stopa'; nastavPosuvnik(); ukazRadar(Infinity); prekresli(); });
+
+  /* ---------- ovládání ---------- */
+  function oznac(id, attr, h) { document.querySelectorAll(`#${id} button`).forEach(b => { const a = b.dataset[attr] === String(h); b.classList.toggle('aktivni', a); b.setAttribute('aria-pressed', a); }); }
+  $('okno').addEventListener('click', e => {
+    const o = e.target.dataset.o; if (!o) return;
+    nast.okno = +o; uloz(); oznac('okno', 'o', o);
+    zastav(); rezim = 'stopa'; nastavPosuvnik(); ukazRadar(Infinity); prekresli();
+  });
+  oznac('okno', 'o', nast.okno);
+  document.querySelectorAll('#vrstvy input').forEach(i => { i.checked = nast.vrstvy[i.dataset.v] !== false; });
+  $('vrstvy').addEventListener('change', e => {
+    nast.vrstvy[e.target.dataset.v] = e.target.checked; uloz();
+    if (e.target.dataset.v === 'radar') ukazRadar(rezim === 'stopa' ? Infinity : casy[indexAnimace]);
+    else if (prekryv) { if (e.target.checked) prekryv.addTo(mapa); else prekryv.remove(); }
+  });
+  function presunOblast(lat, lon) {
+    const nova = B.oblast(lat, lon);
+    obl = nova; snimky.clear(); prekryv?.remove(); prekryv = null;
+    nactiBlesky();
+  }
+  function nastavPolohu(p) {
+    poloha = p; kresliPolohu();
+    const uvnitr = p.lat > obl.jih + 2 && p.lat < obl.sever - 2 && p.lon > obl.zapad + 3 && p.lon < obl.vychod - 3;
+    if (!uvnitr) presunOblast(p.lat, p.lon); else prekresli();
+  }
+  $('btnPoloha').addEventListener('click', () => {
+    if (!navigator.geolocation) { $('dNejblizsiDetail').textContent = 'Prohlížeč nepodporuje zjištění polohy.'; return; }
+    $('btnPoloha').textContent = '📍 Zjišťuji…';
+    navigator.geolocation.getCurrentPosition(pos => {
+      $('btnPoloha').textContent = '📍 Zjistit polohu';
+      nastavPolohu({ lat: pos.coords.latitude, lon: pos.coords.longitude, nazev: 'vaše poloha' });
+      mapa.setView([pos.coords.latitude, pos.coords.longitude], 8);
+    }, err => {
+      $('btnPoloha').textContent = '📍 Zjistit polohu';
+      $('dNejblizsiDetail').textContent = 'Polohu se nepodařilo zjistit (' + (err.code === 1 ? 'přístup zamítnut' : 'nedostupná') + '), počítám od Prahy.';
+    }, { enableHighAccuracy: false, timeout: 15000, maximumAge: 600000 });
+  });
+  $('btnPraha').addEventListener('click', () => { nastavPolohu({ ...PRAHA }); mapa.setView([49.8, 15.5], 7); });
+  $('btnObnovit').addEventListener('click', () => { nactiBlesky(); nactiRadar(); });
+  // posun mapy daleko od analyzované oblasti → nová oblast kolem středu mapy
+  let casovacPosunu = null;
+  mapa.on('moveend', () => {
+    clearTimeout(casovacPosunu);
+    casovacPosunu = setTimeout(() => {
+      const s = mapa.getCenter();
+      const uvnitr = s.lat > obl.jih + 2 && s.lat < obl.sever - 2 && s.lng > obl.zapad + 4 && s.lng < obl.vychod - 4;
+      if (!uvnitr) presunOblast(Math.max(-60, Math.min(70, s.lat)), ((s.lng + 540) % 360) - 180);
+    }, 1500);
+  });
+
+  let tema = document.documentElement.dataset.theme;
+  new MutationObserver(() => {
+    if (document.documentElement.dataset.theme === tema) return;
+    tema = document.documentElement.dataset.theme;
+    nastavPodklad(); kresliPolohu(); obrysOblasti?.setStyle({ color: css('--text-faint') }); prekresli();
+  }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+  window.addEventListener('resize', () => kresliTrend());
+
+  // obnova každých 5 minut (jen v zobrazené záložce a mimo přehrávání)
+  setInterval(() => { if (!document.hidden && rezim === 'stopa') { nactiBlesky(); nactiRadar(); } }, 5 * 60000);
+
+  nactiBlesky();
+  nactiRadar();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,701 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>🌋 Živá Země</title>
+<link rel="stylesheet" href="lib/leaflet/leaflet.css">
+<script src="lib/leaflet/leaflet.js"></script>
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../podpis.js" defer></script>
+<style>
+:root {
+  --q1: #ff3b30; --q2: #ff9500; --q3: #f5c400; --q4: #7a8ca3;
+  }
+:root[data-theme="light"] { --q3: #d4a800; --q4: #6b7a8f; }
+body { background: var(--bg-deep); padding: 24px clamp(12px, 3vw, 40px); min-height: 100vh; }
+.obal { max-width: 1200px; margin: 0 auto; }
+h1 { font-size: 1.5rem; margin-bottom: 4px; }
+.podtitul { color: var(--text-muted); font-size: .9rem; margin-bottom: 16px; line-height: 1.5; }
+.podtitul a, .pozn a, .zdroje a { color: var(--accent); }
+.karta { background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; margin-bottom: 18px; }
+
+/* ovládání */
+.ovladani { display: flex; flex-wrap: wrap; gap: 12px 26px; align-items: flex-start; }
+.skupina { min-width: 0; }
+.skupina > .nadpis { font-size: .72rem; text-transform: uppercase; letter-spacing: .5px; color: var(--text-faint); margin-bottom: 6px; }
+.prepinac { display: flex; gap: 5px; flex-wrap: wrap; }
+.prepinac button { background: var(--bg-control); border: 1px solid var(--border-strong); color: var(--text-muted); border-radius: 6px; padding: 6px 11px; cursor: pointer; font-size: .82rem; }
+.prepinac button:hover { background: var(--bg-hover); color: var(--text); }
+.prepinac button.aktivni { background: var(--accent); border-color: var(--accent); color: #fff; }
+.vrstvy { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: .86rem; }
+.vrstvy label { display: flex; align-items: center; gap: 6px; cursor: pointer; color: var(--text); }
+.vrstvy input { accent-color: var(--accent); width: 16px; height: 16px; }
+
+/* dlaždice */
+.dlazdice { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-bottom: 18px; }
+.dlazdice > div { background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 12px; min-width: 0; }
+.dlazdice .popis { font-size: .7rem; color: var(--text-faint); text-transform: uppercase; letter-spacing: .4px; }
+.dlazdice .hodnota { font-size: 1.35rem; font-weight: 700; margin-top: 3px; font-variant-numeric: tabular-nums; }
+.dlazdice .detail { font-size: .78rem; color: var(--text-muted); margin-top: 2px; line-height: 1.35; overflow-wrap: anywhere; }
+
+/* mapa + seznam */
+.telo { display: grid; grid-template-columns: minmax(0, 1fr) 340px; gap: 14px; }
+@media (max-width: 900px) { .telo { grid-template-columns: minmax(0, 1fr); } }
+#mapa { height: 600px; border-radius: 6px; border: 1px solid var(--border); background: var(--bg-input); }
+@media (max-width: 600px) { #mapa { height: 420px; } }
+.leaflet-container { font-family: var(--font); }
+.leaflet-popup-content { font-size: .84rem; line-height: 1.45; }
+.leaflet-popup-content b { font-size: .95rem; }
+.volba-podkladu { font: inherit; font-size: 12px; padding: 3px 4px; border-radius: 4px; border: 1px solid var(--border); background: var(--bg-input); color: var(--text); cursor: pointer; box-shadow: 0 1px 4px rgba(0,0,0,.3); }
+.ikona-udalost { font-size: 18px; line-height: 22px; text-align: center; filter: drop-shadow(0 1px 1px rgba(0,0,0,.6)); }
+.ikona-iss { font-size: 26px; line-height: 30px; text-align: center; filter: drop-shadow(0 0 3px rgba(255,255,255,.8)); }
+
+.legenda { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: .78rem; color: var(--text-muted); margin-top: 8px; align-items: center; }
+.legenda i { display: inline-block; width: 11px; height: 11px; border-radius: 50%; margin-right: 5px; vertical-align: -1px; border: 1px solid rgba(0,0,0,.35); }
+
+.panel { background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius); display: flex; flex-direction: column; min-width: 0; max-height: 640px; }
+@media (max-width: 900px) { .panel { max-height: 520px; } }
+.panel-hlava { padding: 10px 12px; border-bottom: 1px solid var(--border); }
+.panel-hlava h2 { font-size: 1rem; margin-bottom: 8px; }
+.panel-hlava .prepinac button { padding: 4px 9px; font-size: .78rem; }
+#seznam { overflow-y: auto; flex: 1; list-style: none; }
+#seznam li { display: grid; grid-template-columns: 44px minmax(0, 1fr); gap: 8px; padding: 8px 12px; border-bottom: 1px solid var(--border); cursor: pointer; align-items: center; }
+#seznam li:hover, #seznam li:focus { background: var(--bg-hover); outline: none; }
+#seznam .znak { font-weight: 700; font-size: 1rem; text-align: center; border-radius: 6px; padding: 4px 0; color: #111; font-variant-numeric: tabular-nums; }
+#seznam .znak.emoji { background: none !important; font-size: 1.3rem; }
+#seznam .misto { font-size: .84rem; color: var(--text); overflow-wrap: anywhere; }
+#seznam .kdy { font-size: .74rem; color: var(--text-faint); }
+#seznam .prazdne { display: block; color: var(--text-faint); font-size: .84rem; cursor: default; }
+
+.zdroje { display: grid; gap: 4px; font-size: .8rem; color: var(--text-muted); margin-top: 12px; }
+.zdroje .stav-ok::before { content: '● '; color: var(--ok); }
+.zdroje .stav-ceka::before { content: '● '; color: var(--warn); }
+.zdroje .stav-chyba { color: var(--danger); }
+.zdroje .stav-chyba::before { content: '● '; }
+.zdroje button { background: var(--bg-control); border: 1px solid var(--border-strong); color: var(--text); border-radius: 5px; padding: 1px 8px; font-size: .76rem; cursor: pointer; margin-left: 6px; }
+.pozn { color: var(--text-faint); font-size: .78rem; line-height: 1.55; margin-top: 14px; }
+</style>
+</head>
+<body>
+<div class="obal">
+  <h1>🌋 Živá Země</h1>
+  <p class="podtitul">
+    Co se právě děje na planetě: zemětřesení z&nbsp;celého světa (USGS), probíhající přírodní události –
+    požáry, sopky, bouře a ledovce (NASA EONET) – a kde zrovna letí Mezinárodní vesmírná stanice.
+    Data se načítají živě a sama se obnovují.
+  </p>
+
+  <div class="karta">
+    <div class="ovladani">
+      <div class="skupina">
+        <div class="nadpis">Vrstvy</div>
+        <div class="vrstvy" id="vrstvy">
+          <label><input type="checkbox" data-v="zemetreseni" checked> 🌐 Zemětřesení</label>
+          <label><input type="checkbox" data-v="udalosti" checked> 🔥 Přírodní události</label>
+          <label><input type="checkbox" data-v="iss" checked> 🛰️ ISS</label>
+          <label><input type="checkbox" data-v="noc" checked> 🌙 Noc</label>
+        </div>
+      </div>
+      <div class="skupina">
+        <div class="nadpis">Zemětřesení za</div>
+        <div class="prepinac" id="obdobi" role="group" aria-label="Období zemětřesení">
+          <button data-o="hour">hodinu</button><button data-o="day">den</button><button data-o="week">týden</button><button data-o="month">měsíc</button>
+        </div>
+      </div>
+      <div class="skupina">
+        <div class="nadpis">Nejmenší magnituda</div>
+        <div class="prepinac" id="minM" role="group" aria-label="Nejmenší magnituda">
+          <button data-m="0">vše</button><button data-m="1">1+</button><button data-m="2.5">2,5+</button><button data-m="4.5">4,5+</button><button data-m="6">6+</button>
+        </div>
+      </div>
+      <div class="skupina">
+        <div class="nadpis">Události</div>
+        <div class="vrstvy" id="kategorie"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="dlazdice" id="dlazdice">
+    <div><div class="popis">Zemětřesení</div><div class="hodnota" id="dPocet">–</div><div class="detail" id="dPocetDetail">načítám…</div></div>
+    <div><div class="popis">Nejsilnější</div><div class="hodnota" id="dMax">–</div><div class="detail" id="dMaxDetail"></div></div>
+    <div><div class="popis">Přírodní události</div><div class="hodnota" id="dUdalosti">–</div><div class="detail" id="dUdalostiDetail">načítám…</div></div>
+    <div><div class="popis">ISS</div><div class="hodnota" id="dIss">–</div><div class="detail" id="dIssDetail">načítám…</div></div>
+  </div>
+
+  <div class="telo">
+    <div>
+      <div id="mapa" role="application" aria-label="Mapa světa se zemětřeseními, přírodními událostmi a polohou ISS"></div>
+      <div class="legenda">
+        <span>Stáří otřesu:</span>
+        <span><i style="background:var(--q1)"></i>do 1 h</span>
+        <span><i style="background:var(--q2)"></i>do 24 h</span>
+        <span><i style="background:var(--q3)"></i>do 7 dní</span>
+        <span><i style="background:var(--q4)"></i>starší</span>
+        <span>· velikost kroužku = magnituda</span>
+      </div>
+      <div class="legenda" id="legendaUdalosti"></div>
+      <div class="zdroje" id="zdroje"></div>
+    </div>
+    <aside class="panel">
+      <div class="panel-hlava">
+        <h2>Poslední události</h2>
+        <div class="prepinac" id="razeni" role="group" aria-label="Řazení seznamu">
+          <button data-r="cas" class="aktivni">nejnovější</button><button data-r="mag">nejsilnější</button><button data-r="udalosti">požáry, sopky, bouře</button>
+        </div>
+      </div>
+      <ul id="seznam"><li class="prazdne">Načítám…</li></ul>
+    </aside>
+  </div>
+
+  <p class="pozn">
+    <b>Zdroje:</b>
+    <a href="https://earthquake.usgs.gov/earthquakes/feed/v1.0/geojson.php" target="_blank" rel="noopener">USGS Earthquake Hazards Program</a> (GeoJSON feed, obnova každých 60 s, data veřejná) ·
+    <a href="https://eonet.gsfc.nasa.gov/" target="_blank" rel="noopener">NASA EONET v3</a> (otevřené přírodní události; požáry pocházejí hlavně z&nbsp;hlášení IRWIN/InciWeb a GDACS, proto pokrývají jen větší požáry) ·
+    <a href="https://wheretheiss.at/w/developer" target="_blank" rel="noopener">wheretheiss.at</a> (poloha ISS, obnova každých 5 s).
+    Bodová data o všech aktivních požárech (NASA FIRMS) vyžadují osobní API klíč, a proto je stránka nepoužívá – podrobnou mapu požárů najdete na
+    <a href="https://firms.modaps.eosdis.nasa.gov/map/" target="_blank" rel="noopener">FIRMS Fire Map</a>.
+    Hranice dne a noci je vypočtena z&nbsp;polohy Slunce (přesnost asi 0,1°). Časy jsou v&nbsp;místním čase vašeho zařízení.
+  </p>
+</div>
+
+<script>
+'use strict';
+/* ============================================================
+   Výpočetní jádro (bez DOM) – testuje _test/ziva_zeme_test.js
+   ============================================================ */
+const ZIVA_ZEME = (() => {
+  // USGS nabízí hotové soubory jen pro prahy all / 1.0 / 2.5 / 4.5 → vybereme
+  // nejužší soubor, který zvolený práh ještě pokryje, a zbytek dofiltrujeme.
+  function vyberFeed(obdobi, minM) {
+    const prah = minM >= 4.5 ? '4.5' : minM >= 2.5 ? '2.5' : minM >= 1 ? '1.0' : 'all';
+    return `https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/${prah}_${obdobi}.geojson`;
+  }
+  // poloměr kroužku v px – roste zhruba s druhou mocninou magnitudy
+  function polomer(m) {
+    const mm = Math.max(0, Number.isFinite(m) ? m : 0);
+    return Math.round((2.5 + mm * mm * 0.55) * 10) / 10;
+  }
+  // třída stáří: 0 = do hodiny, 1 = do dne, 2 = do týdne, 3 = starší
+  function tridaStari(casMs, ted) {
+    const h = (ted - casMs) / 3.6e6;
+    return h < 1 ? 0 : h < 24 ? 1 : h < 168 ? 2 : 3;
+  }
+  function filtrujOtresy(features, minM) {
+    return features.filter(f => f && f.geometry && f.properties && (f.properties.mag ?? -9) >= minM);
+  }
+  // „před 5 min“
+  function predCasem(ms, ted) {
+    const s = Math.max(0, (ted - ms) / 1000);
+    if (s < 60) return 'před chvílí';
+    if (s < 3600) return `před ${Math.floor(s / 60)} min`;
+    if (s < 86400) return `před ${Math.floor(s / 3600)} h`;
+    const d = Math.floor(s / 86400);
+    return `před ${d} ${d === 1 ? 'dnem' : 'dny'}`;
+  }
+
+  /* ---- Slunce: subsolární bod (NOAA, přesnost ~0,01°) ---- */
+  function subsolarniBod(datum) {
+    const jd = datum.getTime() / 86400000 + 2440587.5;
+    const T = (jd - 2451545) / 36525;
+    const L0 = (280.46646 + T * (36000.76983 + T * 0.0003032)) % 360;
+    const M = 357.52911 + T * (35999.05029 - 0.0001537 * T);
+    const Mr = M * Math.PI / 180;
+    const C = Math.sin(Mr) * (1.914602 - T * (0.004817 + 0.000014 * T)) + Math.sin(2 * Mr) * (0.019993 - 0.000101 * T) + Math.sin(3 * Mr) * 0.000289;
+    const om = (125.04 - 1934.136 * T) * Math.PI / 180;
+    const lam = (L0 + C - 0.00569 - 0.00478 * Math.sin(om)) * Math.PI / 180;
+    const eps = (23.439291 - 0.0130042 * T + 0.00256 * Math.cos(om)) * Math.PI / 180;
+    const dekl = Math.asin(Math.sin(eps) * Math.sin(lam));
+    const ra = Math.atan2(Math.cos(eps) * Math.sin(lam), Math.cos(lam));
+    // hvězdný čas v Greenwichi
+    const gmst = (280.46061837 + 360.98564736629 * (jd - 2451545) + T * T * 0.000387933) % 360;
+    let lon = (ra * 180 / Math.PI - gmst) % 360;
+    if (lon > 180) lon -= 360; if (lon < -180) lon += 360;
+    return { lat: dekl * 180 / Math.PI, lon };
+  }
+  // Polygon noční polokoule (pro Leaflet: [lat, lon]), lon −180…180
+  function nocniPolygon(datum, krok = 2) {
+    const s = subsolarniBod(datum);
+    const d = s.lat * Math.PI / 180;
+    const body = [];
+    for (let lon = -180; lon <= 180; lon += krok) {
+      const H = (lon - s.lon) * Math.PI / 180;      // hodinový úhel Slunce
+      // terminátor: cos(z) = 0 → tan(lat) = −cos(H) / tan(d)
+      const t = Math.abs(d) < 1e-6 ? 1e-6 : d;
+      const lat = Math.atan(-Math.cos(H) / Math.tan(t)) * 180 / Math.PI;
+      body.push([lat, lon]);
+    }
+    const pol = s.lat > 0 ? -90 : 90;  // noc je kolem pólu odvráceného od Slunce
+    return [[pol, -180], ...body, [pol, 180]];
+  }
+
+  // Rozdělí dráhu [{lat, lon}] na úseky, kde nepřeskakuje datovou hranici.
+  function rozdelDrahu(body) {
+    const useky = []; let akt = [];
+    for (let i = 0; i < body.length; i++) {
+      const b = body[i];
+      if (akt.length && Math.abs(b.lon - akt[akt.length - 1][1]) > 180) {
+        // dopočítat průsečík s ±180°, ať čára dojde až k okraji
+        const p = akt[akt.length - 1];
+        const lon2 = b.lon + (b.lon < p[1] ? 360 : -360);
+        const okraj = p[1] > 0 ? 180 : -180;
+        const f = (okraj - p[1]) / (lon2 - p[1]);
+        const lat = p[0] + (b.lat - p[0]) * f;
+        akt.push([lat, okraj]); useky.push(akt);
+        akt = [[lat, -okraj]];
+      }
+      akt.push([b.lat, b.lon]);
+    }
+    if (akt.length) useky.push(akt);
+    return useky;
+  }
+
+  // Bod události EONET – poslední bod geometrie, u polygonu těžiště vrcholů
+  function bodUdalosti(geom) {
+    if (!geom) return null;
+    if (geom.type === 'Point') return { lat: geom.coordinates[1], lon: geom.coordinates[0] };
+    if (geom.type === 'Polygon') {
+      const k = geom.coordinates[0]; let x = 0, y = 0;
+      for (const [lo, la] of k) { x += lo; y += la; }
+      return { lat: y / k.length, lon: x / k.length };
+    }
+    return null;
+  }
+
+  const KATEGORIE = {
+    wildfires: { ikona: '🔥', nazev: 'Požáry' },
+    volcanoes: { ikona: '🌋', nazev: 'Sopky' },
+    severeStorms: { ikona: '🌀', nazev: 'Bouře' },
+    floods: { ikona: '🌊', nazev: 'Povodně' },
+    seaLakeIce: { ikona: '🧊', nazev: 'Ledovce a led' },
+    earthquakes: { ikona: '🌐', nazev: 'Zemětřesení' },
+    landslides: { ikona: '⛰️', nazev: 'Sesuvy' },
+    dustHaze: { ikona: '🌫️', nazev: 'Prach a kouř' },
+    tempExtremes: { ikona: '🌡️', nazev: 'Teplotní extrémy' },
+    snow: { ikona: '❄️', nazev: 'Sníh' },
+    drought: { ikona: '🏜️', nazev: 'Sucho' },
+    waterColor: { ikona: '💧', nazev: 'Zbarvení vody' },
+    manmade: { ikona: '🏭', nazev: 'Způsobené člověkem' },
+  };
+
+  return { vyberFeed, polomer, tridaStari, filtrujOtresy, predCasem, subsolarniBod, nocniPolygon, rozdelDrahu, bodUdalosti, KATEGORIE };
+})();
+window.ZIVA_ZEME = ZIVA_ZEME;
+
+/* ============================================================
+   Stránka
+   ============================================================ */
+(() => {
+  if (typeof L === 'undefined' || !document.getElementById('mapa')) return;
+  const Z = ZIVA_ZEME;
+  const $ = id => document.getElementById(id);
+  const css = v => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+  const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+  const fmtCas = ms => new Date(ms).toLocaleString('cs-CZ', { day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit' });
+  const fmtM = m => (m == null ? '?' : m.toFixed(1).replace('.', ','));
+
+  /* ---------- nastavení ---------- */
+  const KLIC = 'webapp_ziva_zeme_nastaveni';
+  const nast = { obdobi: 'day', minM: 2.5, vrstvy: { zemetreseni: true, udalosti: true, iss: true, noc: true }, kategorie: {}, podklad: 'sedy', razeni: 'cas' };
+  try { Object.assign(nast, JSON.parse(localStorage.getItem(KLIC) || '{}')); } catch { }
+  const uloz = () => { try { localStorage.setItem(KLIC, JSON.stringify(nast)); } catch { } };
+
+  /* ---------- fetch s časovým limitem ---------- */
+  async function nacti(url, ms = 20000) {
+    const ac = new AbortController();
+    const t = setTimeout(() => ac.abort(), ms);
+    try {
+      const r = await fetch(url, { signal: ac.signal, cache: 'no-cache' });
+      if (!r.ok) throw new Error(`HTTP ${r.status}`);
+      return await r.json();
+    } catch (e) {
+      throw new Error(e.name === 'AbortError' ? 'vypršel časový limit' : (e.message || 'síťová chyba'));
+    } finally { clearTimeout(t); }
+  }
+
+  /* ---------- stav zdrojů ---------- */
+  const zdroje = {
+    usgs: { nazev: 'Zemětřesení (USGS)' }, eonet: { nazev: 'Přírodní události (NASA EONET)' }, iss: { nazev: 'ISS (wheretheiss.at)' },
+  };
+  function stavZdroje(k, typ, text, znovu) {
+    Object.assign(zdroje[k], { typ, text, znovu });
+    const el = $('zdroje'); el.innerHTML = '';
+    for (const [kk, z] of Object.entries(zdroje)) {
+      if (!z.typ) continue;
+      const d = document.createElement('div');
+      d.className = 'stav-' + z.typ;
+      d.textContent = `${z.nazev}: ${z.text}`;
+      if (z.typ === 'chyba' && z.znovu) {
+        const b = document.createElement('button'); b.textContent = 'zkusit znovu';
+        b.addEventListener('click', z.znovu); d.appendChild(b);
+      }
+      el.appendChild(d);
+    }
+  }
+
+  /* ---------- mapa a podklady ---------- */
+  const ESRI = 'https://server.arcgisonline.com/ArcGIS/rest/services/';
+  const svetle = () => document.documentElement.dataset.theme === 'light';
+  const PODKLADY = {
+    sedy: { nazev: 'Šedý (dle tématu)', max: 16, atr: 'Podklad © Esri, HERE, Garmin, © OpenStreetMap',
+      url: () => ESRI + `Canvas/World_${svetle() ? 'Light' : 'Dark'}_Gray_Base/MapServer/tile/{z}/{y}/{x}`,
+      popisky: () => ESRI + `Canvas/World_${svetle() ? 'Light' : 'Dark'}_Gray_Reference/MapServer/tile/{z}/{y}/{x}` },
+    teren: { nazev: 'Topografická', max: 18, atr: 'Podklad © Esri, HERE, Garmin, FAO, NOAA, USGS, © OpenStreetMap',
+      url: () => ESRI + 'World_Topo_Map/MapServer/tile/{z}/{y}/{x}' },
+    oceany: { nazev: 'Oceány a dno', max: 13, atr: 'Podklad © Esri, GEBCO, NOAA, National Geographic, Garmin',
+      url: () => ESRI + 'Ocean/World_Ocean_Base/MapServer/tile/{z}/{y}/{x}',
+      popisky: () => ESRI + 'Ocean/World_Ocean_Reference/MapServer/tile/{z}/{y}/{x}' },
+    satelit: { nazev: 'Satelitní', max: 18, atr: 'Podklad © Esri, Maxar, Earthstar Geographics',
+      url: () => ESRI + 'World_Imagery/MapServer/tile/{z}/{y}/{x}',
+      popisky: () => ESRI + 'Reference/World_Boundaries_and_Places/MapServer/tile/{z}/{y}/{x}' },
+  };
+  if (!PODKLADY[nast.podklad]) nast.podklad = 'sedy';
+
+  const mapa = L.map('mapa', { preferCanvas: true, worldCopyJump: true, minZoom: 1, zoomSnap: .5 }).setView([20, 15], 2);
+  mapa.createPane('noc').style.zIndex = 350;
+  mapa.getPane('noc').style.pointerEvents = 'none';
+  mapa.createPane('popisky').style.zIndex = 380;
+  mapa.getPane('popisky').style.pointerEvents = 'none';
+  mapa.createPane('udalosti').style.zIndex = 610;
+  mapa.createPane('iss').style.zIndex = 640;
+  const ATR = 'USGS · NASA EONET · wheretheiss.at';
+  let vrstvaPodkladu = null, vrstvaPopisku = null, volba = null;
+  // Vrstvy podkladu se tvoří znovu (setUrl při necelém zoomu dosadí do URL desetinný zoom).
+  function nastavPodklad() {
+    vrstvaPodkladu?.remove(); vrstvaPopisku?.remove(); vrstvaPopisku = null;
+    const p = PODKLADY[nast.podklad];
+    vrstvaPodkladu = L.tileLayer(p.url(), { maxZoom: p.max, attribution: `${p.atr} · ${ATR}` }).addTo(mapa);
+    if (p.popisky) vrstvaPopisku = L.tileLayer(p.popisky(), { maxZoom: p.max, pane: 'popisky' }).addTo(mapa);
+    if (volba) volba.value = nast.podklad;
+  }
+  const VolbaPodkladu = L.Control.extend({
+    options: { position: 'topright' },
+    onAdd() {
+      const sel = L.DomUtil.create('select', 'volba-podkladu');
+      sel.title = 'Mapový podklad'; sel.setAttribute('aria-label', 'Mapový podklad');
+      sel.innerHTML = Object.entries(PODKLADY).map(([k, p]) => `<option value="${k}">${p.nazev}</option>`).join('');
+      L.DomEvent.disableClickPropagation(sel); L.DomEvent.disableScrollPropagation(sel);
+      sel.addEventListener('change', () => { nast.podklad = sel.value; uloz(); nastavPodklad(); });
+      volba = sel; return sel;
+    },
+  });
+  new VolbaPodkladu().addTo(mapa);
+  nastavPodklad();
+
+  const skupiny = {
+    zemetreseni: L.layerGroup(), udalosti: L.layerGroup(), iss: L.layerGroup(), noc: L.layerGroup(),
+  };
+
+  /* ---------- noc ---------- */
+  let polygonNoci = null;
+  function kresliNoc() {
+    const body = Z.nocniPolygon(new Date());
+    const styl = { pane: 'noc', stroke: false, fillColor: '#04102a', fillOpacity: svetle() ? .2 : .35, interactive: false };
+    if (!polygonNoci) polygonNoci = L.polygon(body, styl).addTo(skupiny.noc);
+    else { polygonNoci.setLatLngs(body); polygonNoci.setStyle(styl); }
+  }
+  kresliNoc();
+  setInterval(kresliNoc, 60000);
+
+  /* ---------- zemětřesení ---------- */
+  let otresy = [];          // vyfiltrované features
+  const markeryOtresu = new Map();
+  function barvaStari(t) { return css(['--q1', '--q2', '--q3', '--q4'][t]); }
+  function popupOtresu(f) {
+    const p = f.properties, [lon, lat, hl] = f.geometry.coordinates;
+    const misto = p.place || p.title || 'neznámé místo';
+    const radky = [
+      `<b>M ${fmtM(p.mag)}</b> <span style="opacity:.7">(${esc(p.magType || '')})</span>`,
+      esc(misto),
+      `🕒 ${new Date(p.time).toLocaleString('cs-CZ')} · ${Z.predCasem(p.time, Date.now())}`,
+      `↧ hloubka ${hl != null ? hl.toFixed(0) : '?'} km · ${lat.toFixed(2)}°, ${lon.toFixed(2)}°`,
+    ];
+    if (p.felt) radky.push(`👥 pocítilo ${p.felt} hlášení`);
+    if (p.alert) radky.push(`⚠️ PAGER: <b>${esc({ green: 'zelená', yellow: 'žlutá', orange: 'oranžová', red: 'červená' }[p.alert] || p.alert)}</b>`);
+    if (p.tsunami) radky.push('🌊 oblast s možným vznikem tsunami (informace NOAA)');
+    if (p.type && p.type !== 'earthquake') radky.push(`typ: ${esc(p.type)}`);
+    radky.push(`<a href="${esc(p.url)}" target="_blank" rel="noopener">Detail na USGS ↗</a>`);
+    return radky.join('<br>');
+  }
+  function kresliOtresy() {
+    skupiny.zemetreseni.clearLayers(); markeryOtresu.clear();
+    const ted = Date.now();
+    // slabší a starší dospod, silné navrch
+    const serazene = [...otresy].sort((a, b) => (a.properties.mag ?? 0) - (b.properties.mag ?? 0));
+    for (const f of serazene) {
+      const [lon, lat] = f.geometry.coordinates;
+      const b = barvaStari(Z.tridaStari(f.properties.time, ted));
+      const m = L.circleMarker([lat, lon], {
+        radius: Z.polomer(f.properties.mag), color: svetle() ? '#333' : '#000', weight: .8, opacity: .7,
+        fillColor: b, fillOpacity: .7,
+      }).bindPopup(() => popupOtresu(f), { maxWidth: 280 });
+      m.addTo(skupiny.zemetreseni);
+      markeryOtresu.set(f.id, m);
+    }
+    // dlaždice
+    const n = otresy.length;
+    $('dPocet').textContent = n.toLocaleString('cs-CZ');
+    const o = { hour: 'za poslední hodinu', day: 'za posledních 24 h', week: 'za posledních 7 dní', month: 'za posledních 30 dní' }[nast.obdobi];
+    $('dPocetDetail').textContent = `${o}, M ${nast.minM > 0 ? '≥ ' + String(nast.minM).replace('.', ',') : 'vše'}`;
+    const max = otresy.reduce((a, f) => (!a || (f.properties.mag ?? -9) > (a.properties.mag ?? -9) ? f : a), null);
+    $('dMax').textContent = max ? 'M ' + fmtM(max.properties.mag) : '–';
+    $('dMaxDetail').textContent = max ? `${max.properties.place || ''} · ${Z.predCasem(max.properties.time, ted)}` : 'žádný otřes';
+  }
+  let casovacUsgs = null, pozadavekUsgs = 0;
+  async function nactiOtresy() {
+    clearTimeout(casovacUsgs);
+    const c = ++pozadavekUsgs;
+    stavZdroje('usgs', 'ceka', 'načítám…');
+    try {
+      const data = await nacti(Z.vyberFeed(nast.obdobi, nast.minM), 30000);
+      if (c !== pozadavekUsgs) return;
+      otresy = Z.filtrujOtresy(data.features || [], nast.minM);
+      kresliOtresy(); kresliSeznam();
+      stavZdroje('usgs', 'ok', `${otresy.length} otřesů, aktualizováno ${new Date().toLocaleTimeString('cs-CZ', { hour: '2-digit', minute: '2-digit' })}`);
+    } catch (e) {
+      if (c !== pozadavekUsgs) return;
+      stavZdroje('usgs', 'chyba', `nepodařilo se načíst (${e.message}).${otresy.length ? ' Zobrazuji poslední načtená data.' : ' Další pokus za minutu.'}`, nactiOtresy);
+      if (!otresy.length) {
+        $('dPocet').textContent = '–'; $('dPocetDetail').textContent = 'zdroj nedostupný';
+        if (nast.razeni !== 'udalosti') $('seznam').innerHTML = '<li class="prazdne">Zemětřesení se nepodařilo načíst – zkuste to za chvíli znovu.</li>';
+      }
+    }
+    casovacUsgs = setTimeout(nactiOtresy, 60000);
+  }
+
+  /* ---------- přírodní události (EONET) ---------- */
+  let udalosti = [];
+  const markeryUdalosti = new Map();
+  function katUdalosti(u) { return u.categories?.[0]?.id || 'manmade'; }
+  function ikonaKat(k) { return (Z.KATEGORIE[k] || { ikona: '❗' }).ikona; }
+  function nazevKat(k) { return (Z.KATEGORIE[k] || { nazev: k }).nazev; }
+  function popupUdalosti(u) {
+    const g = u.geometry || [];
+    const posl = g[g.length - 1] || {};
+    const radky = [`<b>${ikonaKat(katUdalosti(u))} ${esc(u.title)}</b>`, esc(nazevKat(katUdalosti(u)))];
+    if (g.length) radky.push(`🕒 ${g.length > 1 ? 'od ' + new Date(g[0].date).toLocaleDateString('cs-CZ') + ', ' : ''}poslední záznam ${new Date(posl.date).toLocaleString('cs-CZ')}`);
+    if (posl.magnitudeValue != null) {
+      const jed = posl.magnitudeUnit === 'kts' ? `uzlů (${Math.round(posl.magnitudeValue * 1.852)} km/h)` : posl.magnitudeUnit === 'acres' ? `akrů (${Math.round(posl.magnitudeValue * 0.4047).toLocaleString('cs-CZ')} ha)` : esc(posl.magnitudeUnit || '');
+      radky.push(`📏 ${posl.magnitudeValue.toLocaleString('cs-CZ')} ${jed}`);
+    }
+    for (const s of u.sources || []) radky.push(`<a href="${esc(s.url)}" target="_blank" rel="noopener">Zdroj ${esc(s.id)} ↗</a>`);
+    return radky.join('<br>');
+  }
+  function kategorieZapnuta(k) { return nast.kategorie[k] !== false; }
+  function kresliUdalosti() {
+    skupiny.udalosti.clearLayers(); markeryUdalosti.clear();
+    const pocty = {};
+    for (const u of udalosti) {
+      const k = katUdalosti(u);
+      pocty[k] = (pocty[k] || 0) + 1;
+      if (!kategorieZapnuta(k)) continue;
+      const g = (u.geometry || []).filter(x => Z.bodUdalosti(x));
+      if (!g.length) continue;
+      if (g.length > 1 && k === 'severeStorms') {
+        const draha = Z.rozdelDrahu(g.map(x => Z.bodUdalosti(x)));
+        for (const usek of draha) L.polyline(usek, { pane: 'udalosti', color: css('--accent'), weight: 2, opacity: .75, dashArray: '4 4', interactive: false }).addTo(skupiny.udalosti);
+      }
+      const b = Z.bodUdalosti(g[g.length - 1]);
+      const m = L.marker([b.lat, b.lon], {
+        pane: 'udalosti', title: u.title,
+        icon: L.divIcon({ className: 'ikona-udalost', html: ikonaKat(k), iconSize: [22, 22], iconAnchor: [11, 11] }),
+      }).bindPopup(() => popupUdalosti(u), { maxWidth: 280 }).addTo(skupiny.udalosti);
+      markeryUdalosti.set(u.id, m);
+    }
+    // přepínače kategorií – jen ty, které se v datech vyskytují
+    const el = $('kategorie');
+    el.innerHTML = Object.keys(pocty).sort((a, b) => pocty[b] - pocty[a]).map(k =>
+      `<label><input type="checkbox" data-k="${esc(k)}" ${kategorieZapnuta(k) ? 'checked' : ''}> ${ikonaKat(k)} ${esc(nazevKat(k))} (${pocty[k]})</label>`).join('') || '<span style="color:var(--text-faint);font-size:.82rem">žádné otevřené události</span>';
+    $('legendaUdalosti').innerHTML = Object.keys(pocty).length
+      ? '<span>Události:</span>' + Object.keys(pocty).map(k => `<span>${ikonaKat(k)} ${esc(nazevKat(k))}</span>`).join('') + (pocty.severeStorms ? '<span>· čárkovaně dráha bouře</span>' : '') : '';
+    $('dUdalosti').textContent = udalosti.length;
+    $('dUdalostiDetail').textContent = Object.keys(pocty).map(k => `${ikonaKat(k)} ${pocty[k]}`).join('  ') || 'žádné otevřené';
+  }
+  $('kategorie').addEventListener('change', e => {
+    const k = e.target.dataset.k; if (!k) return;
+    nast.kategorie[k] = e.target.checked; uloz(); kresliUdalosti(); kresliSeznam();
+  });
+  let casovacEonet = null;
+  async function nactiUdalosti() {
+    clearTimeout(casovacEonet);
+    stavZdroje('eonet', 'ceka', 'načítám…');
+    try {
+      const data = await nacti('https://eonet.gsfc.nasa.gov/api/v3/events?status=open&days=60', 40000);
+      udalosti = (data.events || []).filter(u => (u.geometry || []).length);
+      kresliUdalosti(); kresliSeznam();
+      stavZdroje('eonet', 'ok', `${udalosti.length} otevřených událostí (posledních 60 dní)`);
+    } catch (e) {
+      stavZdroje('eonet', 'chyba', `nepodařilo se načíst (${e.message}).`, nactiUdalosti);
+      if (!udalosti.length) {
+        $('dUdalosti').textContent = '–'; $('dUdalostiDetail').textContent = 'zdroj nedostupný';
+        if (nast.razeni === 'udalosti') $('seznam').innerHTML = '<li class="prazdne">Přírodní události se nepodařilo načíst.</li>';
+      }
+    }
+    casovacEonet = setTimeout(nactiUdalosti, 15 * 60000);
+  }
+
+  /* ---------- ISS ---------- */
+  const ISS_URL = 'https://api.wheretheiss.at/v1/satellites/25544';
+  let casovacIss = null;
+  let markerIss = null, kruhIss = null, drahaMinula = null, drahaBudouci = null, posledniIss = null, chybIss = 0;
+  let sledovat = false;
+  const ovladaniIss = L.Control.extend({
+    options: { position: 'topleft' },
+    onAdd() {
+      const b = L.DomUtil.create('button', 'volba-podkladu');
+      b.textContent = '🛰️ sledovat ISS'; b.title = 'Držet ISS uprostřed mapy';
+      L.DomEvent.disableClickPropagation(b);
+      b.addEventListener('click', () => {
+        sledovat = !sledovat;
+        b.style.background = sledovat ? css('--accent') : ''; b.style.color = sledovat ? '#fff' : '';
+        if (sledovat && posledniIss) mapa.panTo([posledniIss.latitude, posledniIss.longitude]);
+      });
+      return b;
+    },
+  });
+  new ovladaniIss().addTo(mapa);
+  mapa.on('dragstart', () => {
+    if (!sledovat) return;
+    sledovat = false;
+    const b = document.querySelector('.leaflet-top.leaflet-left button.volba-podkladu');
+    if (b) { b.style.background = ''; b.style.color = ''; }
+  });
+  function popupIss() {
+    const p = posledniIss; if (!p) return '';
+    return `<b>🛰️ Mezinárodní vesmírná stanice</b><br>${p.latitude.toFixed(2)}°, ${p.longitude.toFixed(2)}°<br>výška ${p.altitude.toFixed(0)} km · rychlost ${Math.round(p.velocity).toLocaleString('cs-CZ')} km/h<br>${p.visibility === 'daylight' ? '☀️ na denní straně' : '🌑 ve stínu Země'}<br>oblast viditelnosti Ø ${Math.round(p.footprint).toLocaleString('cs-CZ')} km`;
+  }
+  let issBezi = false;
+  async function nactiIss() {
+    clearTimeout(casovacIss);
+    if (issBezi) return;
+    issBezi = true;
+    try {
+      const p = await nacti(ISS_URL, 8000);
+      posledniIss = p; chybIss = 0;
+      const ll = [p.latitude, p.longitude];
+      if (!markerIss) {
+        markerIss = L.marker(ll, { pane: 'iss', title: 'ISS', icon: L.divIcon({ className: 'ikona-iss', html: '🛰️', iconSize: [30, 30], iconAnchor: [15, 15] }) })
+          .bindPopup(popupIss).addTo(skupiny.iss);
+        kruhIss = L.circle(ll, { pane: 'iss', radius: p.footprint * 500, color: css('--accent'), weight: 1, fillOpacity: .06, interactive: false }).addTo(skupiny.iss);
+      } else {
+        markerIss.setLatLng(ll); kruhIss.setLatLng(ll); kruhIss.setRadius(p.footprint * 500);
+        if (markerIss.isPopupOpen()) markerIss.setPopupContent(popupIss());
+      }
+      if (sledovat) mapa.panTo(ll, { animate: true });
+      const st = x => Math.abs(x).toFixed(1).replace('.', ',');
+      $('dIss').textContent = `${st(p.latitude)}° ${p.latitude >= 0 ? 's' : 'j'}. š., ${st(p.longitude)}° ${p.longitude >= 0 ? 'v' : 'z'}. d.`;
+      $('dIssDetail').textContent = `${p.altitude.toFixed(0)} km nad Zemí · ${Math.round(p.velocity).toLocaleString('cs-CZ')} km/h · ${p.visibility === 'daylight' ? 'na slunci' : 've stínu'}`;
+      stavZdroje('iss', 'ok', `poloha z ${new Date(p.timestamp * 1000).toLocaleTimeString('cs-CZ')}`);
+    } catch (e) {
+      chybIss++;
+      stavZdroje('iss', chybIss > 2 ? 'chyba' : 'ceka', `poloha se nepodařila obnovit (${e.message})`, nactiIss);
+      if (!posledniIss) $('dIssDetail').textContent = 'zdroj nedostupný';
+    }
+    issBezi = false;
+    if (document.hidden) return;
+    // při výpadku zpomalit, ať server nezahltíme
+    casovacIss = setTimeout(nactiIss, chybIss ? Math.min(60000, 5000 * 2 ** chybIss) : 5000);
+  }
+  // dráha −45 … +90 min po 3 min; API bere nejvýš 10 časů na dotaz
+  async function nactiDrahu() {
+    const ted = Math.floor(Date.now() / 1000);
+    const casy = []; for (let m = -45; m <= 90; m += 3) casy.push(ted + m * 60);
+    const body = [];
+    try {
+      for (let i = 0; i < casy.length; i += 10) {
+        const d = await nacti(`${ISS_URL}/positions?timestamps=${casy.slice(i, i + 10).join(',')}&units=kilometers`, 10000);
+        body.push(...d.map(x => ({ lat: x.latitude, lon: x.longitude, t: x.timestamp })));
+        await new Promise(r => setTimeout(r, 1200));   // limit API ~1 dotaz/s
+      }
+    } catch { /* dráha je jen doplněk */ }
+    if (body.length) {
+      drahaMinula?.remove(); drahaBudouci?.remove();
+      const minule = body.filter(b => b.t <= ted), budouci = body.filter(b => b.t >= ted);
+      if (posledniIss) { const p = { lat: posledniIss.latitude, lon: posledniIss.longitude, t: ted }; minule.push(p); budouci.unshift(p); }
+      drahaMinula = L.layerGroup(Z.rozdelDrahu(minule).map(u => L.polyline(u, { pane: 'iss', color: css('--accent'), weight: 2.5, opacity: .9, interactive: false }))).addTo(skupiny.iss);
+      drahaBudouci = L.layerGroup(Z.rozdelDrahu(budouci).map(u => L.polyline(u, { pane: 'iss', color: css('--accent'), weight: 2, opacity: .7, dashArray: '2 6', interactive: false }))).addTo(skupiny.iss);
+    }
+    setTimeout(nactiDrahu, 10 * 60000);
+  }
+
+  /* ---------- seznam ---------- */
+  function kresliSeznam() {
+    const ul = $('seznam'); ul.innerHTML = '';
+    const ted = Date.now();
+    let polozky;
+    if (nast.razeni === 'udalosti') {
+      polozky = udalosti.filter(u => kategorieZapnuta(katUdalosti(u))).map(u => {
+        const g = u.geometry; const posl = g[g.length - 1];
+        return { id: u.id, typ: 'u', cas: Date.parse(posl.date), znak: ikonaKat(katUdalosti(u)), misto: u.title, emoji: true };
+      }).sort((a, b) => b.cas - a.cas);
+    } else {
+      polozky = otresy.map(f => ({ id: f.id, typ: 'z', cas: f.properties.time, mag: f.properties.mag ?? -9, znak: fmtM(f.properties.mag), misto: f.properties.place || f.properties.title, barva: barvaStari(Z.tridaStari(f.properties.time, ted)) }))
+        .sort((a, b) => nast.razeni === 'mag' ? b.mag - a.mag : b.cas - a.cas);
+    }
+    if (!polozky.length) {
+      const zdroj = zdroje[nast.razeni === 'udalosti' ? 'eonet' : 'usgs'];
+      ul.innerHTML = `<li class="prazdne">${zdroj.typ === 'chyba' ? 'Data se nepodařilo načíst – další pokus proběhne automaticky.'
+        : zdroj.typ === 'ceka' ? 'Načítám…' : nast.razeni === 'udalosti' ? 'Žádné otevřené události ve zvolených kategoriích.' : 'Nic k zobrazení – zkuste delší období nebo nižší magnitudu.'}</li>`;
+      return;
+    }
+    for (const p of polozky.slice(0, 80)) {
+      const li = document.createElement('li');
+      li.tabIndex = 0;
+      li.innerHTML = `<span class="znak${p.emoji ? ' emoji' : ''}" style="background:${p.barva || 'none'}">${esc(p.znak)}</span><span><div class="misto">${esc(p.misto)}</div><div class="kdy">${fmtCas(p.cas)} · ${Z.predCasem(p.cas, ted)}</div></span>`;
+      const otevri = () => {
+        const m = (p.typ === 'z' ? markeryOtresu : markeryUdalosti).get(p.id);
+        if (!m) return;
+        const sk = p.typ === 'z' ? 'zemetreseni' : 'udalosti';
+        if (!nast.vrstvy[sk]) { nast.vrstvy[sk] = true; uloz(); synchronizujVrstvy(); }
+        mapa.setView(m.getLatLng(), Math.max(mapa.getZoom(), 5));
+        m.openPopup();
+        if (window.matchMedia('(max-width: 900px)').matches) $('mapa').scrollIntoView({ behavior: 'smooth', block: 'center' });
+      };
+      li.addEventListener('click', otevri);
+      li.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); otevri(); } });
+      ul.appendChild(li);
+    }
+    if (polozky.length > 80) ul.insertAdjacentHTML('beforeend', `<li class="prazdne">… a dalších ${polozky.length - 80}, jsou na mapě.</li>`);
+  }
+
+  /* ---------- ovládání ---------- */
+  function synchronizujVrstvy() {
+    for (const [k, g] of Object.entries(skupiny)) {
+      if (nast.vrstvy[k] !== false) g.addTo(mapa); else g.remove();
+    }
+    document.querySelectorAll('#vrstvy input').forEach(i => { i.checked = nast.vrstvy[i.dataset.v] !== false; });
+  }
+  $('vrstvy').addEventListener('change', e => { nast.vrstvy[e.target.dataset.v] = e.target.checked; uloz(); synchronizujVrstvy(); });
+  function oznac(id, attr, hodnota) {
+    document.querySelectorAll(`#${id} button`).forEach(b => { const a = b.dataset[attr] === String(hodnota); b.classList.toggle('aktivni', a); b.setAttribute('aria-pressed', a); });
+  }
+  $('obdobi').addEventListener('click', e => { const o = e.target.dataset.o; if (!o) return; nast.obdobi = o; uloz(); oznac('obdobi', 'o', o); nactiOtresy(); });
+  $('minM').addEventListener('click', e => { const m = e.target.dataset.m; if (m == null) return; nast.minM = +m; uloz(); oznac('minM', 'm', m); nactiOtresy(); });
+  $('razeni').addEventListener('click', e => { const r = e.target.dataset.r; if (!r) return; nast.razeni = r; uloz(); oznac('razeni', 'r', r); kresliSeznam(); });
+  oznac('obdobi', 'o', nast.obdobi); oznac('minM', 'm', nast.minM); oznac('razeni', 'r', nast.razeni);
+  synchronizujVrstvy();
+
+  // téma: podklad a barvy znovu
+  let tema = document.documentElement.dataset.theme;
+  new MutationObserver(() => {
+    if (document.documentElement.dataset.theme === tema) return;
+    tema = document.documentElement.dataset.theme;
+    nastavPodklad(); kresliNoc(); kresliOtresy(); kresliUdalosti(); kresliSeznam();
+  }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+  // stáří otřesů se mění i bez nových dat → barvy a „před x min“ přepočítat
+  setInterval(() => { if (otresy.length) { kresliOtresy(); kresliSeznam(); } }, 5 * 60000);
+  // skrytá záložka: ISS nedotazovat zbytečně
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) clearTimeout(casovacIss);
+    else nactiIss();
+  });
+
+  nactiOtresy();
+  nactiUdalosti();
+  nactiIss().then(nactiDrahu);
+})();
+</script>
+</body>
+</html>
