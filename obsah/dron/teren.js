@@ -25,7 +25,9 @@
 //          drát: y(t) = lerp(yA + v, yB + v, t) − 4·pruves·t·(1−t), v = vyskaSloupu + draty[k][1].
 //   vedeni[i].draty   [[dx, dy], …] příčné a svislé odsazení vodičů od vrcholu stožáru.
 //   trate[i].branky[j]: uhel = kurz průletu (0 = letí se k −Z, kladný doleva), otvor leží v rovině
-//          lokálních os x (sirka) a y (vyska); y = terén, nad vodou hladina (pak naVode: true).
+//          lokálních os x (sirka) a y (vyska); y = terén, nad vodou hladina (pak naVode: true); otvor je
+//          od y + D.BRANKA.dole (0.3) do y + 0.3 + vyska (rám 0.3). Start závodu 22 m před brankou 0
+//          (bod branka + (sin uhel, cos uhel)·22) je s náletem volný od stromů a staveb.
 //          oblouk [m]: úsek k další brance je volný po přímce mezi středy otvorů zvednuté o
 //          oblouk·sin(π·t) (t = 0..1 podél úseku) — kvůli terénu; 0 = stačí přímka. okruh: true → za
 //          poslední brankou se letí znovu k první.
@@ -1640,15 +1642,28 @@
         if (R > 0 && Math.hypot(tx - x, tz - z) < R + r0) kaceni.add(j);
       });
     };
+    const DOLE = (D.BRANKA && D.BRANKA.dole != null) ? D.BRANKA.dole : 0.3;   // otvor od y + DOLE do y + DOLE + vyska
+    // nálet na první branku: start závodu 22 m před ní (proti směru průletu) → volno od stromů a staveb
+    {
+      const b = branky[0], sx = b.x + Math.sin(b.uhel) * 22, sz = b.z + Math.cos(b.uhel) * 22;
+      const yc = b.y + DOLE + b.vyska / 2;
+      for (let s = 0; s <= 22; s += 1) {
+        const t = s / 22, x = lerp(sx, b.x, t), z = lerp(sz, b.z, t), zem = Math.max(vys(G, x, z), hladinaBil(G.W, x, z));
+        for (let y = zem + 0.5; y <= Math.max(yc, zem + 0.5) + 0.01; y += 1) {
+          const dv = bodVolny(x, y, z, rez); if (dv) return { ok: false, duvod: 'nálet: ' + dv };
+          stromyKolem(x, y, z, rez);
+        }
+      }
+    }
     for (let k = 0; k < branky.length; k++) {
       const b = branky[k], ax = Math.cos(b.uhel), az = -Math.sin(b.uhel);
-      for (let a = -b.sirka / 2 - 0.3; a <= b.sirka / 2 + 0.31; a += 0.75) for (let h = 0.3; h <= b.vyska + 0.01; h += (b.vyska - 0.3) / 4) {
+      for (let a = -b.sirka / 2 - 0.3; a <= b.sirka / 2 + 0.31; a += 0.75) for (let h = DOLE; h <= DOLE + b.vyska + 0.01; h += b.vyska / 4) {
         const x = b.x + ax * a, z = b.z + az * a, y = b.y + h;
         const dv = bodVolny(x, y, z, rez); if (dv) return { ok: false, duvod: 'branka ' + k + ': ' + dv };
         stromyKolem(x, y, z, rez);
       }
       if (k === branky.length - 1) break;
-      const c = branky[k + 1], ya = b.y + b.vyska / 2, yb = c.y + c.vyska / 2, L = Math.hypot(c.x - b.x, c.z - b.z);
+      const c = branky[k + 1], ya = b.y + DOLE + b.vyska / 2, yb = c.y + DOLE + c.vyska / 2, L = Math.hypot(c.x - b.x, c.z - b.z);
       // přímka mezi středy branek; kde překáží terén, smí se letět obloukem nahoru (nejvýš 4 m)
       let A = 0;
       for (let s = 1; s < L; s += 1) {
@@ -1912,6 +1927,7 @@
       return (a + (b - a) * tx) * (1 - tz) + (c + (d - c) * tx) * tz;
     }
     const t = Object.assign({}, data);
+    t.maskaData = data.maska;                                      // surové pole (metoda maska ho zakryje)
     t.vyska = (x, z) => bl(V, x, z);
     t.normala = (x, z, out) => {
       const e = krok, hx = bl(V, x + e, z) - bl(V, x - e, z), hz = bl(V, x, z + e) - bl(V, x, z - e);

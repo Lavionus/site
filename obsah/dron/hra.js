@@ -11,7 +11,7 @@
     dron: null, dronModel: null,
     cas: 0, hodina: P.cas != null ? +P.cas : 10.5,
     pocasi: { oblacnost: P.oblacnost != null ? +P.oblacnost : 0.35, vitr: P.vitr != null ? +P.vitr : 3, smerVetru: 0.8, dest: 0, mlha: 0 },
-    kvalita: P.kvalita != null ? +P.kvalita : 2,
+    kvalita: P.kvalita != null ? +P.kvalita : 1,      // Střední: na ni je dělaný rozpočet výkonu
     seed: P.seed || 'udoli', mapa: P.mapa || 'udoli',
     pauza: false, vstup: null, fps: 60,
     nastaveni: {},
@@ -74,14 +74,15 @@
   async function start() {
     const Q = D.KVALITY[ctx.kvalita];
     const canvas = document.getElementById('scena');
-    const r = ctx.renderer = new THREE.WebGLRenderer({ canvas, antialias: Q.antialias, powerPreference: 'high-performance' });
+    const r = ctx.renderer = new THREE.WebGLRenderer({ canvas, antialias: false, powerPreference: 'high-performance' });   // vyhlazuje post.js (MSAA v HDR cíli)
     r.outputColorSpace = THREE.SRGBColorSpace;
     r.toneMapping = THREE.ACESFilmicToneMapping;
     r.toneMappingExposure = 1.0;
     r.shadowMap.enabled = Q.stiny;
     r.shadowMap.type = THREE.PCFSoftShadowMap;
     ctx.scene = new THREE.Scene();
-    ctx.kamera = new THREE.PerspectiveCamera(70, 1, 0.05, 9000);
+    ctx.kamera = new THREE.PerspectiveCamera(70, 1, 0.06, 16000)   // daleký prstenec terénu sahá do 16 km;
+    ctx.kamera.layers.enable(D.VRSTVY.NEODRAZET);
     ctx.vykresli = () => r.render(ctx.scene, ctx.kamera);
     rozmer();
     addEventListener('resize', rozmer);
@@ -92,7 +93,7 @@
     ctx.prostredi = D.vytvorProstredi(ctx.teren, ctx.pocasi, ctx.seed);
 
     const dpos = D.paramCisla('dron');                 // x,z[,výška nad terénem[,kurz]]; typ dronu je v parametru typ=
-    const st = dpos ? { x: dpos[0], z: dpos[1], y: ctx.teren.vyska(dpos[0], dpos[1]), smer: (dpos[3] || 0) } : null;
+    const st = dpos ? { x: dpos[0], z: dpos[1], y: Math.max(ctx.teren.vyska(dpos[0], dpos[1]), ctx.teren.hladina(dpos[0], dpos[1])), smer: (dpos[3] || 0) } : null;
     D.novyLet(P.typ || 'kamera', st);
     if (dpos && dpos[2] > 0.5) { const d = ctx.dron; d.p[1] += dpos[2]; d.armed = true; d.stav = 'leti'; d.naZemi = false; }
 
@@ -113,8 +114,17 @@
 
   let akum = 0, fpsCas = 0, fpsSn = 0;
   const NULA = { plyn: 0, yaw: 0, pitch: 0, roll: 0, prepinace: {}, udalosti: [] };
+  // zastavení smyčky po N snímcích (snímky obrazovky v pomalém softwarovém WebGL)
+  let zastavPo = P.zastav ? +P.zastav : 0, priZastaveni = null, bezi = true;
+  D.dalsiSnimky = n => new Promise(ok => {
+    zastavPo = window.DRON_STAV.snimky + (n || 1); priZastaveni = ok;
+    if (!bezi) { bezi = true; window.DRON_STAV.zastaveno = false; smycka.posledni = performance.now(); requestAnimationFrame(smycka); }
+  });
   function smycka(ted) {
-    requestAnimationFrame(smycka);
+    if (zastavPo && window.DRON_STAV.snimky + 1 >= zastavPo) {
+      bezi = false; window.DRON_STAV.zastaveno = true;
+      const ok = priZastaveni; priZastaveni = null; if (ok) setTimeout(ok, 0);
+    } else requestAnimationFrame(smycka);
     let dt = (ted - smycka.posledni) / 1000; smycka.posledni = ted;
     if (!(dt > 0)) dt = 0; if (dt > 0.1) dt = 0.1;
     if (P.krok) dt = +P.krok;                            // pevný krok (testy, snímky)

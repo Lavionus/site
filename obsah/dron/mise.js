@@ -336,7 +336,7 @@
 
   function konec(tise) {
     vycistiZnacky(); duch = null;
-    if (D.stavby && D.stavby.zvyrazniBranku) D.stavby.zvyrazniBranku(-1, -1);
+    if (D.stavby && D.stavby.zvyrazniBranku) D.stavby.zvyrazniBranku(null);
     panel(''); if (D.osd) D.osd.nadpis('');
     aktivni = null;
   }

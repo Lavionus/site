@@ -95,6 +95,8 @@ s `nad=1` je y nad terénem), `dron=x,z,výškaNadTerénem,kurz` (výška > 0,5 
 - Slunce: OBLOHA vlastní `THREE.DirectionalLight` (`ctx.slunce.svetlo`) se stínem, který jede s kamerou
   (2–3 kaskády nebo jedna mapa + měkké vzdálené stíny z terénu). Ostatní moduly jen nastavují
   `castShadow` / `receiveShadow`.
+- Vrstvy: objekty jen na vrstvě `D.VRSTVY.NEODRAZET` (1) se nekreslí do odrazu vody (tráva, částice);
+  hlavní kamera má vrstvu 1 zapnutou. Při kreslení odrazu je `D.voda.vOdrazu = true`.
 - Rozpočet (kvalita Střední, notebook s integrovanou grafikou, 60 fps): celkem ≤ ~1,5 M trojúhelníků,
   ≤ ~150 draw callů. Instancování všude, kde je víc kusů stejného.
 
@@ -123,7 +125,13 @@ data.cile    [{ id, jmeno, typ, x, y, z }]   zajímavá místa pro fotomise (kos
 data.start   { x, y, z, smer }              startovní plocha (y = terén), smer = kurz
 ```
 
-Metody `teren`: `vyska(x,z)`, `normala(x,z,out?) → [nx,ny,nz]`, `sklon(x,z)` (rad),
+Doplněno generátorem (podrobně v hlavičce `teren.js`): `vodstvo` (`reky[].body` = [x, hladina, z, šířka]
+po proudu, `jezera[]` s volitelnou `hraz`), `vesnice`, `pastviny`, `info`; `vedeni[].pruves`, `vedeni[].draty`;
+branky `naVode`, `oblouk`, trať `okruh`; most: y = horní plocha mostovky, `hladina`; maska G = druh plodiny,
+B = 255 silnice / 150 polní cesta. Seno = válec podél lokální osy z. Branka: `uhel` = kurz průletu, otvor od
+y+0,3, nálet 22 m před brankou 0 je volný.
+
+Metody `teren`: `vyska(x,z)`, `povrch`, `stromyBlizko(x,z,r,f)`, `polomerStromu(j,y)`,, `normala(x,z,out?) → [nx,ny,nz]`, `sklon(x,z)` (rad),
 `hladina(x,z)` (výška hladiny nebo −Infinity), `maska(x,z,out?) → [les,pole,cesta,vlhkost]`, `vMape(x,z)`.
 
 ## Fyzika (`fyzika.js`, `rizeni.js`, `kolize.js`, `autopilot.js` — FYZIKA)
@@ -163,9 +171,18 @@ rychlost, `ctx.kam.rezim` (LOS = zeslabit podle vzdálenosti), počasí, denní 
 update(dron, dt, ctx) }` — vrtule se točí podle `dron.motory`, při rychlé rotaci průhledný disk,
 LED, v FPV pohledu se nesmí model vykreslit přes kameru (vrtule smí být vidět na okraji).
 
+## Poznámky z integrace
+
+- Obloha počítá s výchozím dnem 232 (20. 8.), aby časy 6–20 h dávaly smysl; `?den=dnes` / `?den=N`.
+- Ambient pro vlastní shadery: `uSkyUp`, `uSkyHorizon`, `uGroundColor` (×π = ozáření); `uSkyColor` odpovídá PMREM.
+- Stín kopců (`dronTerenSvetlo` z `D.GLSL.teren`) přidává `D.upravMaterial` všem standardním materiálům.
+- Kdo přepisuje `scene.onBeforeRender`, musí volat předchozí obsluhu (terén v ní vybírá LOD).
+- Snímky v softwarovém WebGL: smyčka se po `zastav=N` snímcích zastaví (`DRON.dalsiSnimky(n)`).
+
 ## Etapy
 
 - [x] 1. Kostra (hlavní) — stránka, smyčka, sdílené uniformy, zástupné moduly, snímkovač se zámkem
-- [ ] 2. Souběžně (agenti): ~~fyzika~~ ✔ (95 testů) · ~~zvuk+vstup~~ ✔ (424 testů) · · terén · vykreslení terénu · obloha+post · voda · vegetace · stavby+model · zvuk+vstup
-- [ ] 3. Integrace — kamery, OSD, menu, mise, letová škola, závody, přehrávání
-- [ ] 4. Ladění — výkon a kvalita, bot, nápověda, offline (`sw.js`), katalog (`apps.js`), revize
+- [x] 2. Souběžně (agenti): ~~fyzika~~ ✔ (95 testů) · ~~zvuk+vstup~~ ✔ (424 testů) · ~~terén~~ ✔ (9 map, ~2 s) · ~~stavby+modely+zvířata~~ ✔ · ~~voda~~ ✔ · ~~vykreslení terénu~~ ✔ (CDLOD, 8 CC0 textur 2,5 MB) · ~~vegetace~~ ✔ · ~~obloha+post+počasí~~ ✔
+- [x] 3. Integrace — kamery, OSD, menu, mise, letová škola, závody, přehrávání
+- [~] 4. Ladění — nápověda ✔, katalog (`apps.js`) ✔, offline (`sw.js` webapp-v296, SWR) ✔; **výkon na skutečné
+      grafice neověřen** (testy jen se softwarovým WebGL), skutečná vysílačka/gamepad neověřeny

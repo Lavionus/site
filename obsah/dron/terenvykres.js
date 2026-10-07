@@ -361,7 +361,7 @@ void terVz(float L, float m, vec2 p, vec2 gx, vec2 gy, float sm, out vec4 c, out
   float jasLouky = (0.82 + 0.36 * par.z) * (1.0 + 0.12 * posekana);
   tB[0] = mix(vec3(0.045, 0.085, 0.018), vec3(0.075, 0.115, 0.025), sB.g) * (0.85 + 0.3 * sA.b) * jasLouky;
   tB[1] = mix(vec3(0.095, 0.10, 0.036), vec3(0.07, 0.095, 0.03), sB.b) * (0.9 + 0.2 * sA.r) * jasLouky;
-  tB[2] = vec3(0.05, 0.045, 0.026);
+  tB[2] = mix(vec3(0.055, 0.047, 0.027), vec3(0.045, 0.06, 0.025), sB.g);   // hrabanka, místy mech
   float plodina = 0.0; vec3 tPole;
   if (tonP < 0.26)      { tPole = vec3(0.30, 0.22, 0.085); plodina = 1.0; }   // zralé obilí
   else if (tonP < 0.47) { tPole = vec3(0.06, 0.11, 0.022); plodina = 1.0; }   // zelená plodina
@@ -584,6 +584,7 @@ void terVz(float L, float m, vec2 p, vec2 gx, vec2 gy, float sm, out vec4 c, out
       const U = this.mat.userData.U;
       U.uLodRozsah.value = this.kv.R * this.kv.leaf;
       U.uMorphOd.value = (this.kv.R + 1.6) / (2 * this.kv.R) + 0.03;
+      this.hrubeMinule = null;
     },
 
     // CDLOD výběr uzlů
@@ -594,7 +595,17 @@ void terVz(float L, float m, vec2 p, vec2 gx, vec2 gy, float sm, out vec4 c, out
       const A = this.sitA.geometry, B = this.sitB.geometry;
       const bufA = A.attributes.aUzel, bufB = B.attributes.aUzel, kapA = bufA.count, kapB = bufB.count;
       let nA = 0, nB = 0;
-      const P = this.P, R = this.rozsahy, cx = kamPoz.x, cy = kamPoz.y, cz = kamPoz.z;
+      // odraz vody (D.voda.vOdrazu) kreslí terén hruběji: poloviční rozsahy úrovní (uniforma se nastaví
+      // pro každé vykreslení zvlášť, takže morfování odpovídá výběru)
+      const hrube = D.voda && D.voda.vOdrazu ? 0.5 : 1;
+      if (hrube !== this.hrubeMinule) {
+        this.hrubeMinule = hrube;
+        this.rozsahyAkt = this.rozsahy.map(r => r * hrube);
+        const Ref = this.kv.R * hrube;
+        this.mat.userData.U.uLodRozsah.value = Ref * this.kv.leaf;
+        this.mat.userData.U.uMorphOd.value = Math.min(0.9, (Ref + 1.6) / (2 * Ref) + 0.03);
+      }
+      const P = this.P, R = this.rozsahyAkt, cx = kamPoz.x, cy = kamPoz.y, cz = kamPoz.z;
       const vKouli = (r) => {                          // box ∩ koule(kamera, r)
         const dx = Math.max(box.min.x - cx, 0, cx - box.max.x), dy = Math.max(box.min.y - cy, 0, cy - box.max.y), dz = Math.max(box.min.z - cz, 0, cz - box.max.z);
         return dx * dx + dy * dy + dz * dz <= r * r;

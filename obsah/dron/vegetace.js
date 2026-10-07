@@ -33,14 +33,14 @@
   // r0 = konec LOD0, r1 = konec LOD1 (dál impostory), p0/p1 = šířka pásma prolnutí
   const NAST = [
     { r0: 0, p0: 8, r1: 140, p1: 24, imp: 64, ramce4: false, stinLod1: false, kamenyR: 160, kamenyBlizko: 0, trava: null },
-    { r0: 55, p0: 10, r1: 190, p1: 30, imp: 96, ramce4: true, stinLod1: false, kamenyR: 220, kamenyBlizko: 40,
-      trava: [{ rIn: 0, rOut: 10, s: 0.42, B: 6, S: 3, kvety: 2, T: 3, sir: 1.1 },
+    { r0: 50, p0: 10, r1: 170, p1: 30, imp: 96, ramce4: true, stinLod1: false, kamenyR: 220, kamenyBlizko: 40,
+      trava: [{ rIn: 0, rOut: 10, s: 0.4, B: 9, S: 3, kvety: 2, T: 3, sir: 1.1 },
               { rIn: 10, rOut: 36, s: 1.15, B: 5, S: 2, kvety: 1, T: 4, sir: 2.3 }] },
-    { r0: 85, p0: 12, r1: 270, p1: 36, imp: 112, ramce4: true, stinLod1: false, kamenyR: 300, kamenyBlizko: 60,
-      trava: [{ rIn: 0, rOut: 14, s: 0.38, B: 7, S: 3, kvety: 2, T: 3, sir: 1 },
+    { r0: 80, p0: 12, r1: 200, p1: 34, imp: 112, ramce4: true, stinLod1: false, kamenyR: 300, kamenyBlizko: 60,
+      trava: [{ rIn: 0, rOut: 14, s: 0.36, B: 10, S: 3, kvety: 2, T: 3, sir: 1 },
               { rIn: 14, rOut: 50, s: 1.0, B: 6, S: 2, kvety: 1, T: 4, sir: 2.2 }] },
-    { r0: 130, p0: 15, r1: 380, p1: 44, imp: 128, ramce4: true, stinLod1: true, kamenyR: 400, kamenyBlizko: 90,
-      trava: [{ rIn: 0, rOut: 20, s: 0.33, B: 7, S: 4, kvety: 2, T: 4, sir: 1 },
+    { r0: 120, p0: 15, r1: 300, p1: 44, imp: 128, ramce4: true, stinLod1: false, kamenyR: 400, kamenyBlizko: 90,
+      trava: [{ rIn: 0, rOut: 20, s: 0.32, B: 11, S: 4, kvety: 2, T: 4, sir: 1 },
               { rIn: 20, rOut: 70, s: 0.9, B: 6, S: 2, kvety: 1, T: 4, sir: 2.1 }] },
   ];
 
@@ -281,7 +281,7 @@
       const vetv = [osa];
       for (let k = 0; k < 3; k++) { const p = bodNa(osa, 0.25 + 0.4 * r()); const str = k % 2 ? 1 : -1; vetv.push(krivka(p[0], p[1], p[2] + str * (0.3 + 0.3 * r()), h * (0.25 + 0.2 * r()), -str * 0.003, 16)); }
       for (const v of vetv) prut(g, v, v === osa ? 2.2 : 1.4, 0.8, '#4a2e22');
-      const bb = ['#79a446', '#6c983c', '#88b253', '#5f8c36', '#93b85c'];
+      const bb = ['#6c9640', '#5f8a37', '#7aa24a', '#547e32', '#84a852'];
       for (const v of vetv) {
         let str = 1;
         for (let i = 2; i < v.length; i += 2 + (r() < 0.5 ? 1 : 0)) {
@@ -327,9 +327,9 @@
     }
   }
   const SHLUKY = {
-    buk: { vetvi: 5, krok: 2, delka: [32, 44], pomer: 0.58, tvar: 'oval', navic: 16, prut: '#5a4a3a', barvy: ['#4f7d30', '#5b8c36', '#45722a', '#689a3f', '#3d6726'] },
+    buk: { vetvi: 5, krok: 2, delka: [32, 44], pomer: 0.58, tvar: 'oval', navic: 16, prut: '#5a4a3a', barvy: ['#45702c', '#4f7a31', '#3c6426', '#598536', '#345a22'] },
     dub: { vetvi: 6, krok: 3, delka: [38, 52], pomer: 0.55, tvar: 'dub', navic: 10, ruzice: true, prut: '#4a3c30', barvy: ['#41652a', '#4b712d', '#395c25', '#557b34'] },
-    briza: { vetvi: 6, krok: 2, delka: [17, 25], pomer: 0.72, tvar: 'briza', navic: 18, prut: '#4a2e22', barvy: ['#79a446', '#6c983c', '#88b253', '#5f8c36'] },
+    briza: { vetvi: 6, krok: 2, delka: [17, 25], pomer: 0.72, tvar: 'briza', navic: 18, prut: '#4a2e22', barvy: ['#6c9640', '#5f8a37', '#7aa24a', '#547e32'] },
     ker: { vetvi: 6, krok: 2, delka: [18, 28], pomer: 0.6, tvar: 'oval', navic: 40, prut: '#4f4033', barvy: ['#4b7432', '#3f6629', '#58823a', '#6a8f3f', '#365a24'] },
   };
 
@@ -691,7 +691,7 @@ vec4 vegAtlas(sampler2D t, vec2 uv, vec4 rect, float list) {
 }
 float vegDither() { return fract(52.9829189 * fract(dot(gl_FragCoord.xy, vec2(0.06711056, 0.00583715)))); }
 vec3 vegTon(float b, float j, float list) {
-  vec3 t = mix(vec3(0.86, 0.97, 0.80), vec3(1.12, 1.04, 0.84), b) * (0.84 + 0.32 * j);
+  vec3 t = mix(vec3(0.84, 0.93, 0.80), vec3(1.08, 0.98, 0.80), b) * (0.8 + 0.32 * j);
   return mix(vec3(0.9 + 0.2 * j), t, list);
 }
 `;
@@ -710,7 +710,12 @@ vec3 vegOsvetli(vec3 alb, vec3 nW, vec3 wp, float ao, float list, float stin) {
   #if defined( USE_LIGHT_PROBES )
   irr += getLightProbeIrradiance(lightProbe, n);
   #endif
-  irr = mix(irr, uSkyColor * (0.7 + 0.3 * nW.y) * PI, uAmbZaloha);
+  vec3 zaloha = uSkyColor * (0.7 + 0.3 * nW.y) * PI;
+  #if NUM_DIR_LIGHTS > 0
+  // odraz od země (bez ambientních světel ho jinak nikdo nedodá)
+  for (int i = 0; i < NUM_DIR_LIGHTS; i++) zaloha += directionalLights[i].color * max(inverseTransformDirection(directionalLights[i].direction, viewMatrix).y, 0.0) * 0.14 * (0.6 - 0.4 * nW.y);
+  #endif
+  irr = mix(irr, zaloha, uAmbZaloha);
   vec3 c = alb * irr * ao * RECIPROCAL_PI;
   #if NUM_DIR_LIGHTS > 0
   float s = stin * dronMraky(wp);
@@ -719,9 +724,9 @@ vec3 vegOsvetli(vec3 alb, vec3 nW, vec3 wp, float ao, float list, float stin) {
     vec3 sc = directionalLights[i].color * s * RECIPROCAL_PI;
     float w = 0.2 + list * 0.3;
     float dif = max((dot(n, l) + w) / (1.0 + w), 0.0);
-    c += alb * sc * dif * mix(1.0, ao, 0.45);
+    c += alb * sc * dif * mix(1.0, ao, 0.6);
     float pr = pow(max(dot(-v, l), 0.0), 5.0) * list;
-    c += alb * sc * pr * vec3(1.15, 1.3, 0.55) * (0.35 + 0.65 * ao) * 1.3;
+    c += alb * sc * pr * vec3(1.0, 1.12, 0.5) * (0.3 + 0.7 * ao) * 0.75;
   }
   #endif
   return c;
@@ -908,7 +913,8 @@ void main() {
   float list = step(0.5, nr.a), ao = list > 0.5 ? (nr.a - 0.5) * 2.0 : nr.a * 2.0;
   float j = vegHash(vInst.xy * 13.7);
   vec3 alb = pow(a.rgb, vec3(2.2)) * vegTon(vInst.w, j, list);
-  float stin = vegTerenStin(vWp) * (0.72 + 0.28 * ao);
+  alb = mix(vec3(dot(alb, vec3(0.3, 0.59, 0.11))), alb, 0.9);   // vzdálené koruny méně syté (vzájemné stínění v porostu)
+  float stin = vegTerenStin(vWp) * (0.8 + 0.2 * ao);
   vec3 c = vegOsvetli(alb, nW, vWp, ao, list, stin);
   gl_FragColor = vec4(dronAtmo(c, vWp, cameraPosition), 1.0);
   #include <tonemapping_fragment>
@@ -971,9 +977,9 @@ void main() {
   float vys, sir, rozp, nakl, kvety = 0.0, hlava = 0.035, klas = 0.0;
   vec3 cDol, cHor, cKvet = vec3(1.0), cTerc = vec3(0.9, 0.6, 0.03);
   if (druh < 0.5) {
-    vys = mix(0.16, 0.55, smoothstep(0.2, 0.8, pat2)); sir = 0.028; rozp = 0.2; nakl = 0.35;
+    vys = mix(0.14, 0.42, smoothstep(0.2, 0.8, pat2)); sir = 0.04; rozp = 0.22; nakl = 0.55;
     float sucho = smoothstep(0.55, 0.85, vegSum(zakl * 0.02 + 9.0));
-    cDol = vec3(0.022, 0.04, 0.01); cHor = mix(vec3(0.12, 0.21, 0.04), vec3(0.30, 0.27, 0.10), sucho * 0.65);
+    cDol = vec3(0.05, 0.08, 0.02); cHor = mix(vec3(0.15, 0.25, 0.05), vec3(0.30, 0.30, 0.10), sucho * 0.4);
     float kv = vegSum(zakl * 0.07 + 21.0);
     kvety = smoothstep(0.6, 0.7, kv) * step(h2.x, 0.85);
     float kd = vegSum(zakl * 0.031 + 40.0);
@@ -987,7 +993,7 @@ void main() {
     else { vys = 0.12; cDol = vec3(0.25, 0.2, 0.09); cHor = vec3(0.45, 0.38, 0.18); sir = 0.01; }
   } else if (druh < 2.5) {
     vys = 0.55; sir = 0.075; rozp = 0.16; nakl = 1.0;
-    cDol = vec3(0.02, 0.05, 0.01); cHor = vec3(0.09, 0.2, 0.04);
+    cDol = vec3(0.04, 0.07, 0.015); cHor = vec3(0.12, 0.24, 0.05);
   } else {
     vys = 1.6; sir = 0.022; rozp = 0.12; nakl = 0.12;
     cDol = vec3(0.07, 0.08, 0.03); cHor = vec3(0.28, 0.3, 0.12);
@@ -1373,6 +1379,7 @@ void main() {
       for (let k = 0; k < c.T * c.T; k++) {
         const m = new THREE.Mesh(geo, mat);
         m.frustumCulled = true; m.receiveShadow = true; m.castShadow = false; m.matrixAutoUpdate = true; m.name = 'vegetace-trava';
+        m.layers.set(D.VRSTVY && D.VRSTVY.NEODRAZET != null ? D.VRSTVY.NEODRAZET : 1);   // tráva se ve vodě neodráží
         meshe.push(m); S.travaSkupina.add(m);
       }
       S.trava.push({ c, geo, mat, meshe, n, dlazdice, troj: sh.idx.length / 3 });
@@ -1390,7 +1397,7 @@ void main() {
       }
       maxR = Math.max(maxR, c.rOut);
     }
-    S.travaSkupina.visible = S.trava.length > 0 && k.y - t.vyska(k.x, k.z) < maxR;
+    S.travaSkupina.visible = S.trava.length > 0 && k.y - t.vyska(k.x, k.z) < maxR * 0.8;
   }
 
   // ---------- kameny ----------

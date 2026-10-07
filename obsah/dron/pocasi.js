@@ -20,7 +20,7 @@ void main() {
   vec3 p = aNah.xyz * box + uRychl * uCasP * (0.85 + 0.3 * aNah.w);
   p = uKam + mod(p - uKam + box * 0.5, box) - box * 0.5;
   vec3 vr = uRychl * (0.85 + 0.3 * aNah.w) - uKamRychl;
-  vec3 ocas = p - vr * (0.018 + 0.012 * aNah.w);
+  vec3 ocas = p - vr * (0.035 + 0.02 * aNah.w);              // ~1/40 s závěrky
   vec4 c0 = projectionMatrix * viewMatrix * vec4(p, 1.0);
   vec4 c1 = projectionMatrix * viewMatrix * vec4(ocas, 1.0);
   if (c0.w < 0.1 || c1.w < 0.1) { gl_Position = vec4(2.0, 2.0, 2.0, 1.0); return; }
@@ -29,7 +29,7 @@ void main() {
   dir = ld > 1e-3 ? dir / ld : vec2(0.0, 1.0);
   vec2 n = vec2(-dir.y, dir.x);
   vec4 c = aRoh.y < 0.5 ? c0 : c1;
-  float sirka = clamp(18.0 / c.w, 0.6, 2.5);                 // px (kapka ~ 1,5 mm, rozostřená)
+  float sirka = clamp(12.0 / c.w, 0.5, 1.6);                // px (kapka ~ 1,5 mm, rozostřená)
   c.xy += n * aRoh.x * sirka / uRozl * c.w;
   float d = length(p - uKam);
   vSila = smoothstep(0.4, 1.5, d) * (1.0 - smoothstep(${(BOX * 0.3).toFixed(1)}, ${(BOX * 0.5).toFixed(1)}, d)) * clamp(1.6 / max(sirka, 0.6), 0.4, 1.0);
@@ -42,7 +42,7 @@ varying float vStrana; varying float vOcas; varying float vSila;
 void main() {
   float a = (1.0 - abs(vStrana)) * (1.0 - vOcas * 0.7) * vSila * uSilaD;
   if (a < 0.003) discard;
-  vec3 col = uSkyColor * 1.4 + uFogColor * 0.4 + uSunColor * 0.03;
+  vec3 col = uFogColor * 1.3 + uSkyColor * 0.8 + uSunColor * 0.03;   // kapky lámou světlo z obzoru
   gl_FragColor = vec4(col, a);
   #include <tonemapping_fragment>
   #include <colorspace_fragment>
@@ -81,7 +81,7 @@ void main() {
         uSilaD: { value: 0 }, uSkyColor: D.U.uSkyColor, uSunColor: D.U.uSunColor, uFogColor: D.U.uFogColor,
       };
       const mat = new THREE.ShaderMaterial({ uniforms: this.U, vertexShader: VS, fragmentShader: FS,
-        transparent: true, depthWrite: false });
+        transparent: true, depthWrite: false, side: THREE.DoubleSide });   // natočení pásku je podle obrazovky
       const m = this.mesh = new THREE.Mesh(g, mat);
       m.frustumCulled = false; m.renderOrder = 10;
       if (D.VRSTVY && D.VRSTVY.NEODRAZET != null) {             // déšť se neodráží ve vodě
@@ -134,7 +134,7 @@ void main() {
       this.casP = (this.casP + dt) % 600;
       U.uCasP.value = this.casP;
       ctx.renderer.getDrawingBufferSize(_vel); U.uRozl.value.set(_vel.x * 0.5, _vel.y * 0.5);
-      U.uSilaD.value = 0.22 + 0.25 * dest;
+      U.uSilaD.value = 0.12 + 0.18 * dest;
     },
   });
 })(globalThis.DRON = globalThis.DRON || {});

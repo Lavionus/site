@@ -115,9 +115,11 @@
           const sM = S.betaM * dM;
           // jednonásobný + izotropní odhad vícenásobného rozptylu
           const ms = 1.0 / (4 * Math.PI);
-          lr += tv0 * ((BETA_R[0] * dR * pR + sM * pM) * T[0] + (BETA_R[0] * dR + sM) * ms * T2[0]) * ds;
-          lg += tv1 * ((BETA_R[1] * dR * pR + sM * pM) * T[1] + (BETA_R[1] * dR + sM) * ms * T2[1]) * ds;
-          lb += tv2 * ((BETA_R[2] * dR * pR + sM * pM) * T[2] + (BETA_R[2] * dR + sM) * ms * T2[2]) * ds;
+          // vícenásobně rozptýlené světlo prošlo modrým nebem → jas z T2, barva namodralá
+          const m2 = (0.2126 * T2[0] + 0.7152 * T2[1] + 0.0722 * T2[2]) * ms;
+          lr += tv0 * ((BETA_R[0] * dR * pR + sM * pM) * T[0] + (BETA_R[0] * dR + sM) * m2 * 0.8) * ds;
+          lg += tv1 * ((BETA_R[1] * dR * pR + sM * pM) * T[1] + (BETA_R[1] * dR + sM) * m2 * 0.92) * ds;
+          lb += tv2 * ((BETA_R[2] * dR * pR + sM * pM) * T[2] + (BETA_R[2] * dR + sM) * m2 * 1.12) * ds;
         }
         const o = (j * NU + i) * 4;
         nebeData[o] = lr * E0[0]; nebeData[o + 1] = lg * E0[1]; nebeData[o + 2] = lb * E0[2]; nebeData[o + 3] = 1;
@@ -272,8 +274,8 @@ vec3 dronAtmo(vec3 barva, vec3 wp, vec3 cam) {
   // výšková mlha (údolí, ráno) — hustota uObMlha.x * exp(-(y - uObMlha.y) * uObMlha.z), omezená
   if (uObMlha.x > 1e-7) {
     float k = uObMlha.z;
-    float y0 = max(cam.y - uObMlha.y, -3.0 / k);
-    float y1 = max(wp.y - uObMlha.y, -3.0 / k);
+    float y0 = max(cam.y - uObMlha.y, -1.5 / k);     // pod vrstvou hustota nanejvýš e^1,5 ×
+    float y1 = max(wp.y - uObMlha.y, -1.5 / k);
     float dy = (y1 - y0) / dist;
     float of = uObMlha.x * dronExpInt(y0, dy, dist, k);
     float tf = exp(-of);
@@ -381,7 +383,7 @@ void main() {
     if (d.y < 0.0) col = dronNebe(vec3(d.x, 0.0, d.z));
     vec4 m;
     if (uObRezim > 0.5) {          // 4 bilineární vzorky ≈ stanový filtr (tlumí šum z raymarchingu)
-      vec2 uv = gl_FragCoord.xy / uObVelRT, tx = uObMrakTexel * 0.75;
+      vec2 uv = gl_FragCoord.xy / uObVelRT, tx = uObMrakTexel * 0.45;
       m = 0.25 * (texture2D(uObMrakRT, uv + vec2(tx.x, tx.y)) + texture2D(uObMrakRT, uv - vec2(tx.x, tx.y))
                 + texture2D(uObMrakRT, uv + vec2(tx.x, -tx.y)) + texture2D(uObMrakRT, uv - vec2(tx.x, -tx.y)));
     }
@@ -402,6 +404,7 @@ precision highp sampler3D;
 uniform sampler3D uObSum3D;
 uniform mat4 uObInvProj; uniform mat4 uObKamSvet; uniform vec3 uObKamPos;
 uniform float uObKroky; uniform float uObDetail;
+uniform sampler2D uObHist; uniform float uObHistVaha; uniform mat4 uObPredVP; uniform float uObSnimek; uniform vec2 uObTexel;
 varying vec2 vUv;
 ${D.GLSL.atmo}
 ${GLSL_MRAKY}
@@ -417,14 +420,27 @@ float hustota(vec3 p, bool detail, out float hRel) {
   float dd = prof * smoothstep(0.0, 0.35, m);
   if (detail && dd > 0.0) {
     vec3 q = p + vec3(uObMrakPosun.x, 0.0, uObMrakPosun.y);
-    float n = texture(uObSum3D, q * (1.0 / 900.0)).r;
-    if (uObDetail > 1.5) n = n * 0.7 + 0.3 * texture(uObSum3D, q * (1.0 / 260.0) + vec3(0.0, uTime * 0.002, 0.0)).r;
-    dd = clamp((dd - (1.0 - n) * (0.55 + 0.3 * h)) / max(1.0 - (1.0 - n) * 0.6, 0.1), 0.0, 1.0);
+    float n = texture(uObSum3D, q * (1.0 / 650.0)).r;
+    if (uObDetail > 1.5) n = n * 0.65 + 0.35 * texture(uObSum3D, q * (1.0 / 190.0) + vec3(0.0, uTime * 0.003, 0.0)).r;
+    // eroze: víc na okrajích a nahoře (květákové kupy), jádro zůstane husté
+    float er = (1.0 - n) * (0.5 + 0.35 * h) * (1.2 - 0.5 * dd);
+    dd = clamp((dd - er) / max(1.0 - er * 0.5, 0.1), 0.0, 1.0);
   }
   return dd;
 }
+vec4 dronHistorie(vec4 c, vec3 d) {
+  if (uObHistVaha <= 0.0) return c;
+  vec4 pp = uObPredVP * vec4(d, 0.0);
+  if (pp.w <= 1e-4) return c;
+  vec2 uv = pp.xy / pp.w * 0.5 + 0.5;
+  if (any(lessThan(uv, vec2(0.0))) || any(greaterThan(uv, vec2(1.0)))) return c;
+  return mix(c, texture2D(uObHist, uv), uObHistVaha);
+}
+float dronH12(vec2 p) { vec3 p3 = fract(vec3(p.xyx) * 0.1031); p3 += dot(p3, p3.yzx + 33.33); return fract((p3.x + p3.y) * p3.z); }
 void main() {
-  vec4 vp = uObInvProj * vec4(vUv * 2.0 - 1.0, 1.0, 1.0);
+  // posun uvnitř pixelu mění se snímkem → s historií vyhlazené okraje
+  vec2 sub = (vec2(dronH12(vec2(uObSnimek, 1.7)), dronH12(vec2(uObSnimek, 9.3))) - 0.5) * uObTexel;
+  vec4 vp = uObInvProj * vec4((vUv + sub) * 2.0 - 1.0, 1.0, 1.0);
   vec3 d = normalize((uObKamSvet * vec4(normalize(vp.xyz / vp.w), 0.0)).xyz);
   vec3 cam = uObKamPos;
   float hb = uObMrak.x, ht = uObMrak.y;
@@ -438,7 +454,7 @@ void main() {
   if (t0 > 70000.0) { gl_FragColor = vec4(0.0, 0.0, 0.0, 1.0); return; }
   t1 = min(t1, t0 + 9000.0);
   float n = uObKroky, ds = (t1 - t0) / n;
-  float jit = fract(52.9829189 * fract(dot(gl_FragCoord.xy, vec2(0.06711056, 0.00583715))));
+  float jit = fract(dronH12(gl_FragCoord.xy) + uObSnimek * 0.618034);
   float t = t0 + ds * jit;
   vec3 L = uSunDir;
   float c = dot(d, L);
@@ -485,7 +501,7 @@ void main() {
   vec3 obl = dronNebe(normalize(vec3(d.x, max(d.y, 0.0), d.z)));
   vec3 ex = exp(-dist * vec3(1.8e-5, 2.4e-5, 3.6e-5) * (1.0 + uHaze * 9000.0));
   Sc = Sc * ex + obl * (1.0 - T) * (1.0 - ex);
-  gl_FragColor = vec4(Sc, T);
+  gl_FragColor = dronHistorie(vec4(Sc, T), d);
 }`;
 
   const PRES_VS = /* glsl */`varying vec2 vUv; void main() { vUv = uv; gl_Position = vec4(position.xy, 0.0, 1.0); }`;
@@ -497,7 +513,7 @@ void main() {
   }
 
   const _v = new THREE.Vector3(), _v2 = new THREE.Vector3(), _x = new THREE.Vector3(), _y = new THREE.Vector3();
-  const _mesic = new THREE.Color();
+  const _mesic = new THREE.Color(), _m4 = new THREE.Matrix4();
   const _c = [0, 0, 0], _c2 = [0, 0, 0], _vv = [0, 0];
 
   const O = D.obloha = {
@@ -544,6 +560,10 @@ void main() {
         uObMlha:      { value: new THREE.Vector4(0, 200, 1 / 30, 1) },
         uObZatazeno:  { value: new THREE.Color(0.5, 0.52, 0.55) },
         uObNocNebe:   { value: new THREE.Color(0, 0, 0) },
+        // polokoulové okolní světlo pro vlastní shadery (záře, × π = ozáření): shodné s PMREM
+        uSkyUp:       { value: new THREE.Color() },   // průměr horní polokoule (kosinově vážený) = uSkyColor
+        uSkyHorizon:  { value: new THREE.Color() },   // u obzoru (= uFogColor)
+        uGroundColor: { value: new THREE.Color() },   // záře země zespodu (albedo ~0,11 osvětlené sluncem a oblohou)
       });
       D.U.uHaze.value = S.betaM; D.U.uHazeFalloff.value = 1 / S.hM;
       D.GLSL.atmo = GLSL_ATMO;
@@ -593,6 +613,8 @@ void main() {
       this.mrakyU = Object.assign({
         uObSum3D: { value: this.sum3D }, uObInvProj: { value: new THREE.Matrix4() }, uObKamSvet: { value: new THREE.Matrix4() },
         uObKamPos: { value: new THREE.Vector3() }, uObKroky: { value: 32 }, uObDetail: { value: 1 },
+        uObHist: { value: null }, uObHistVaha: { value: 0 }, uObPredVP: { value: new THREE.Matrix4() },
+        uObSnimek: { value: 0 }, uObTexel: { value: new THREE.Vector2(1, 1) },
       }, D.U);
       this.mrakyMat = new THREE.ShaderMaterial({ uniforms: this.mrakyU, vertexShader: PRES_VS, fragmentShader: MRAKY_FS(), depthTest: false, depthWrite: false });
       this.mrakyScena = new THREE.Scene();
@@ -628,17 +650,20 @@ void main() {
       const automat = typeof navigator !== 'undefined' && navigator.webdriver;   // headless test: šetři GPU
       this.mrakyMeritko = automat ? (q ? 4 : 0) : [0, 4, 3, 2][q];
       this.mrakyU.uObKroky.value = automat ? Math.min([0, 22, 32, 44][q], 28) : [0, 22, 32, 44][q];
-      this.mrakyU.uObDetail.value = q >= 3 ? 2 : q >= 2 ? 1 : 0;
+      this.mrakyU.uObDetail.value = q >= 2 ? 2 : q >= 1 ? 1 : 0;
       this.pripravRT(ctx);
     },
 
     pripravRT(ctx) {
       const r = ctx.renderer, vel = r.getDrawingBufferSize(_v2);
-      if (!this.mrakyMeritko) { if (this.mrakyRT) { this.mrakyRT.dispose(); this.mrakyRT = null; } this.rtPlatne = false; return; }
+      if (!this.mrakyMeritko) { if (this.mrakyRT) { this.mrakyRT.dispose(); this.mrakyRT2.dispose(); this.mrakyRT = null; } this.rtPlatne = false; return; }
       const w = Math.max(1, Math.ceil(vel.x / this.mrakyMeritko)), h = Math.max(1, Math.ceil(vel.y / this.mrakyMeritko));
       if (this.mrakyRT && this.mrakyRT.width === w && this.mrakyRT.height === h) return;
-      if (this.mrakyRT) this.mrakyRT.dispose();
-      this.mrakyRT = new THREE.WebGLRenderTarget(w, h, { type: THREE.HalfFloatType, depthBuffer: false, minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter });
+      if (this.mrakyRT) { this.mrakyRT.dispose(); this.mrakyRT2.dispose(); }
+      const opt = { type: THREE.HalfFloatType, depthBuffer: false, minFilter: THREE.LinearFilter, magFilter: THREE.LinearFilter };
+      this.mrakyRT = new THREE.WebGLRenderTarget(w, h, opt);
+      this.mrakyRT2 = new THREE.WebGLRenderTarget(w, h, opt);          // historie (časové sčítání)
+      this.historie = false;
       this.U.uObMrakRT.value = this.mrakyRT.texture; this.U.uObMrakTexel.value.set(1 / w, 1 / h);
       this.rtPlatne = false;
     },
@@ -655,10 +680,21 @@ void main() {
         U.uObInvProj.value.copy(k.projectionMatrixInverse);
         U.uObKamSvet.value.copy(k.matrixWorld);
         k.getWorldPosition(U.uObKamPos.value);
+        // časové sčítání: minulý snímek je v mrakyRT → prohodit, nový kreslit do druhého
+        const t = this.mrakyRT; this.mrakyRT = this.mrakyRT2; this.mrakyRT2 = t;
+        U.uObHist.value = this.mrakyRT2.texture;
+        U.uObHistVaha.value = this.historie ? 0.85 : 0;
+        U.uObSnimek.value = (U.uObSnimek.value + 1) % 64;
+        U.uObTexel.value.set(1 / this.mrakyRT.width, 1 / this.mrakyRT.height);
         const puv = r.getRenderTarget();
         r.setRenderTarget(this.mrakyRT);
         r.render(this.mrakyScena, this.ortho);
         r.setRenderTarget(puv);
+        this.U.uObMrakRT.value = this.mrakyRT.texture;
+        // předchozí pohled jen s rotací (mraky jsou km daleko, posun kamery zanedbatelný)
+        _m4.copy(k.matrixWorldInverse).setPosition(0, 0, 0);
+        U.uObPredVP.value.multiplyMatrices(k.projectionMatrix, _m4);
+        this.historie = true;
         this.rtPlatne = true;
       }
       // stín: ortho mapa kolem kamery (posunutá dopředu), přichycená na texely → bez mihotání
@@ -765,8 +801,8 @@ void main() {
       const h = ctx.hodina;
       const ranni = D.smooth(3.5, 5.5, h) * (1 - D.smooth(7.6, 9.8, h)) * (1 - D.smooth(2, 6, P.vitr || 0)) * (1 - 0.6 * c);
       S.mlha = Math.max(mlha, ranni * 0.85);
-      const mlhaY = S.udoli + D.lerp(25, 60, S.mlha);
-      U.uObMlha.value.set(S.mlha * 0.012, mlhaY, 1 / D.lerp(14, 30, S.mlha), 1);
+      const mlhaY = S.udoli + D.lerp(10, 40, S.mlha);
+      U.uObMlha.value.set(S.mlha * 0.008, mlhaY, 1 / D.lerp(10, 22, S.mlha), 1);
 
       // --- průměrné barvy pro ostatní (ambient, opar) ---
       this.prumeryPocasi(ctx);
@@ -810,6 +846,10 @@ void main() {
       U.uSkyColor.value.setRGB(D.lerp(nj[0], zat[0], k), D.lerp(nj[1], zat[1], k), D.lerp(nj[2], zat[2], k)).add(U.uObNocNebe.value);
       const oj = S.obzorJasne, k2 = D.smooth(0.55, 0.95, c);
       U.uFogColor.value.setRGB(D.lerp(oj[0], zat[0], k2), D.lerp(oj[1], zat[1], k2), D.lerp(oj[2], zat[2], k2)).add(U.uObNocNebe.value);
+      U.uSkyUp.value.copy(U.uSkyColor.value);
+      U.uSkyHorizon.value.copy(U.uFogColor.value);
+      const sc = U.uSunColor.value, sl = Math.max(S.svetloDir.y, 0) * (1 - 0.9 * c) / Math.PI, a = 0.11;
+      U.uGroundColor.value.setRGB(a * (sc.r * sl + U.uSkyColor.value.r), a * 1.1 * (sc.g * sl + U.uSkyColor.value.g), a * 0.75 * (sc.b * sl + U.uSkyColor.value.b));
     },
   });
 })(globalThis.DRON = globalThis.DRON || {});

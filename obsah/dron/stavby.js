@@ -9,13 +9,14 @@
   //  Část bez grafiky (běží i v node) — rozměry, které musí sedět s kolizemi (kolize.js)
   // ======================================================================================
   const G = D.STAVBY_GEOM = {};
-  G.TL_BRANKY = 0.3;          // tloušťka rámu branky (čtvercový průřez 0.3 × 0.3 m, rám leží VNĚ otvoru)
-  G.ZDVIH_BRANKY = 0.3;       // spodní hrana otvoru je b.y + 0.3 (spodní lať leží na zemi) — = BRANKA.dole v kolize.js
+  G.TL_BRANKY = (D.BRANKA && D.BRANKA.ram) || 0.3;          // tloušťka rámu branky (čtvercový průřez 0.3 × 0.3 m, rám leží VNĚ otvoru)
+  G.ZDVIH_BRANKY = (D.BRANKA && D.BRANKA.dole) || 0.3;       // spodní hrana otvoru je b.y + 0.3 (spodní lať leží na zemi) — = BRANKA.dole v kolize.js
   G.PRUMER_DRATU = 0.02;      // průměr vodiče (m) — vykresluje se nejméně 1.3 px široký
 
   // Kde visí vodiče: [[příčný posun (m, podél lokální x stožáru), výška nad patou], …]. Bere ved.draty
   // ([[dx, dy]] od vrcholu, jako generátor a kolize), jinak výchozí podle výšky sloupu.
   G.uchyceni = function (H, draty) {
+    if (!(draty && draty.length) && D.VEDENI) draty = D.VEDENI.draty;          // výchozí z kolize.js
     if (draty && draty.length) return draty.map(d => [d[0], H + d[1]]);
     if (H < 16) return [[-1.5, H - 0.45], [0, H + 0.35], [1.5, H - 0.45]];
     return [[0, H], [-2.6, H - 2.2], [2.6, H - 2.2]];
@@ -32,6 +33,18 @@
   G.draty = function (ved) {
     const B = ved.body, H = ved.vyskaSloupu || 12, vys = [];
     if (!B || B.length < 2) return vys;
+    if (D.bodVodice) {                         // přesně podle kolizí (kolize.js)
+      const DR = ved.draty || (D.VEDENI && D.VEDENI.draty) || [[0, 0]];
+      for (let k = 0; k < DR.length; k++) {
+        const body = [];
+        for (let i = 0; i + 1 < B.length; i++) {
+          const n = Math.max(2, Math.ceil(Math.hypot(B[i + 1][0] - B[i][0], B[i + 1][2] - B[i][2]) / 8));
+          for (let m = (i === 0 ? 0 : 1); m <= n; m++) body.push(D.bodVodice(ved, i, k, m / n, [0, 0, 0]));
+        }
+        vys.push({ body, r: G.PRUMER_DRATU / 2 });
+      }
+      return vys;
+    }
     const kolm = B.map((p, j) => G.kolmice(B, j));
     for (const [o, h] of G.uchyceni(H, ved.draty)) {
       const body = [];

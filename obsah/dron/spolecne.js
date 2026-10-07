@@ -48,6 +48,9 @@
     { jmeno: 'keř',      vyska: 2.5, kmenR: 0,   korunaOd: 0,  korunaR: 1.6, tvar: 'koule' },
   ];
 
+  // vrstvy kamery: objekty jen na vrstvě 1 se nekreslí do odrazu vody (hlavní kamera ji má zapnutou)
+  D.VRSTVY = { NEODRAZET: 1 };
+
   if (typeof THREE === 'undefined') return;   // node / Worker: dál už jen grafika
 
   // ---------- sdílené uniformy (jeden objekt na uniformu, sdílený všemi materiály) ----------
@@ -110,10 +113,12 @@ float dronMraky(vec3 wp) { return 1.0; }
     dwp = instanceMatrix * dwp;
   #endif
     vDronWp = (modelMatrix * dwp).xyz; }`);
+      // stín kopců z terenvykres.js (D.GLSL.teren), pokud ho shader už sám nemá
+      const stinKopcu = D.GLSL.teren && !/dronTerenSvetlo/.test(shader.fragmentShader);
       shader.fragmentShader = shader.fragmentShader
-        .replace('#include <common>', '#include <common>\nvarying vec3 vDronWp;\n' + D.GLSL.atmo)
+        .replace('#include <common>', '#include <common>\nvarying vec3 vDronWp;\n' + D.GLSL.atmo + (stinKopcu ? D.GLSL.teren : ''))
         .replace('#include <lights_fragment_end>', `#include <lights_fragment_end>
-  { float dm = dronMraky(vDronWp); reflectedLight.directDiffuse *= dm; reflectedLight.directSpecular *= dm; }`)
+  { float dm = dronMraky(vDronWp)${stinKopcu ? ' * dronTerenSvetlo(vDronWp)' : ''}; reflectedLight.directDiffuse *= dm; reflectedLight.directSpecular *= dm; }`)
         .replace('#include <opaque_fragment>', `#include <opaque_fragment>
   gl_FragColor.rgb = dronAtmo(gl_FragColor.rgb, vDronWp, cameraPosition);`);
     };

@@ -391,7 +391,7 @@ void main() {
     float pas = (1.0 - smoothstep(0.03, 0.30, hloubka)) * smoothstep(-0.02, 0.04, hloubka);
     float pena = pas * smoothstep(0.62, 0.85, sumP + 0.18 * sin(uTime * 1.1 + hloubka * 25.0 + sumP * 6.0)) * (0.35 + 0.4 * uVitrSila);
     float rych = length(vProud);
-    pena += smoothstep(1.4, 2.6, rych) * smoothstep(0.55, 0.8, texture2D(uVlnyTex, (vWp.xz - vProud * uTime * 0.5) / 4.0).b) * 0.35;
+    pena += smoothstep(1.7, 2.8, rych) * smoothstep(0.6, 0.85, texture2D(uVlnyTex, (vWp.xz - vProud * uTime * 0.5) / 4.0).b * 0.7 + texture2D(uVlnyTex, (vWp.zx - vProud * uTime * 0.6) / 1.7).b * 0.4) * 0.2;
     pena = clamp(pena + sprej * 0.85, 0.0, 1.0);
 
     // skládání s předem vynásobenou alfou: výsledek = C + pozadí·(1−A)

@@ -1964,6 +1964,11 @@ const KATALOG_SEKCE = [
         "tagy": ["obrana věží", "tower defense", "ostrov", "lodě", "piráti", "kraken", "wyverny", "fantasy", "strategie", "procedurální mapa", "seed", "kampaň"]
       },
       {
+        "soubor": "obsah/dron.html",
+        "nazev": "🚁 Nad krajinou",
+        "tagy": ["dron", "simulátor", "let", "fpv", "kvadrokoptéra", "krajina", "3d", "focení", "závody", "letová škola", "vysílačka", "hra"]
+      },
+      {
         "soubor": "obsah/pong.html",
         "nazev": "🏓 Pong",
         "tagy": ["pong", "pálky", "retro", "arkáda"]
