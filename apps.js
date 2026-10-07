@@ -800,7 +800,7 @@ const KATALOG_SEKCE = [
       {
         "soubor": "obsah/dvere_do_sveta.html",
         "nazev": "🚪 Dveře do světa",
-        "tagy": ["webkamera", "webkamery", "živě", "live", "kamera", "výhled", "cestování", "svět", "náhodné místo", "příroda", "zvířata", "hory", "moře", "sopky", "polární záře"]
+        "tagy": ["webkamera", "webkamery", "živě", "live", "kamera", "výhled", "cestování", "svět", "náhodné místo", "příroda", "zvířata", "hory", "moře", "sopky", "polární záře", "přístavy", "lodě", "street view"]
       },
       {
         "soubor": "obsah/trip_planner.html",
