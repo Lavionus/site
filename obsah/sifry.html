@@ -8,6 +8,7 @@
 <script src="../theme.js"></script>
 <script src="../podpis.js" defer></script>
 <script src="../dialog.js" defer></script>
+<script src="../rekord.js"></script>
 <style>
 body{background:var(--bg);color:var(--text);min-height:100vh;padding:20px clamp(10px,3vw,24px)}
 .container{max-width:1000px;margin:0 auto}
@@ -70,14 +71,53 @@ tr.nej td{background:var(--accent-soft)}
 @media(max-width:400px){.klavesnice button,.lampy span{width:24px;height:24px;font-size:.72rem}.klavesnice .rada,.lampy .rada{gap:3px}}
 .cesta{font-family:ui-monospace,monospace;font-size:.78rem;color:var(--text-muted);text-align:center;margin-top:6px;word-break:break-all}
 .hodnoceni{font-size:.72rem;color:var(--text-faint)}
+/* Výzva a rozbor */
+[hidden]{display:none!important}
+.taby button.zvl{border-color:var(--accent);color:var(--text)}
+.taby button.zvl.active{color:#fff}
+.vy-hlava{display:flex;justify-content:space-between;align-items:baseline;flex-wrap:wrap;gap:6px;margin-top:16px}
+.vy-hlava h3{margin:0}
+.vy-typ{font-size:.85rem;color:var(--text-muted);margin-top:4px}
+.vy-sifra{font-size:1rem;letter-spacing:.04em;line-height:1.6}
+.vy-sifra.hex{letter-spacing:0}
+.vy-nastroj{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin-top:10px}
+.vy-nastroj select{width:auto}
+.vy-nastroj .btn{margin:0}
+.napovedy{margin:10px 0 0 18px;font-size:.85rem;line-height:1.6}
+.napovedy:empty{display:none}
+.vysledek{margin-top:10px;padding:10px 12px;border-radius:6px;font-size:.9rem;line-height:1.5}
+.vysledek:empty{display:none}
+.vysledek.ok{background:var(--accent-soft);border:1px solid var(--accent)}
+.vysledek.ne{background:var(--bg-input);border:1px solid var(--warn)}
+.vy-stat{display:flex;flex-wrap:wrap;gap:8px 18px;font-size:.82rem;color:var(--text-muted);margin-top:14px;padding-top:10px;border-top:1px solid var(--border)}
+.vy-stat b{color:var(--text)}
+.ro-dop{margin-top:10px;display:flex;flex-direction:column;gap:8px}
+.ro-dop div{background:var(--bg-input);border:1px solid var(--border);border-left:3px solid var(--accent);border-radius:6px;padding:8px 10px;font-size:.88rem;line-height:1.5}
+.ro-dop .btn{margin:6px 0 0}
+.ro-druh{font-size:1.1rem;font-weight:600;margin-top:10px}
+.ro-navrhy{display:flex;flex-direction:column;gap:8px}
+.navrh{background:var(--bg-input);border:1px solid var(--border);border-radius:6px;padding:8px 10px}
+.navrh.cesky{border-color:var(--accent);background:var(--accent-soft)}
+.navrh-hlava{display:flex;flex-wrap:wrap;align-items:baseline;gap:6px;font-size:.88rem}
+.navrh .stitek{margin-left:auto;font-size:.72rem;padding:1px 8px;border-radius:999px;border:1px solid var(--border-strong);color:var(--text-muted)}
+.navrh.cesky .stitek{border-color:var(--accent);color:var(--text)}
+.navrh-text{font-family:ui-monospace,Consolas,monospace;font-size:.88rem;margin-top:4px;word-break:break-word;white-space:pre-wrap}
+.navrh .btn{margin:6px 6px 0 0}
+tr.klik{cursor:pointer}
+tr.klik:hover td{background:var(--bg-hover)}
+.kriz-klic{display:grid;grid-template-columns:repeat(3,auto);width:max-content;margin-top:8px;font-family:ui-monospace,monospace;font-size:.85rem}
+.kriz-klic div{padding:6px 10px;border-color:var(--text-muted);border-style:solid;border-width:0}
+.kriz-klic sub{color:var(--text-faint);font-size:.7em}
 </style>
 </head>
 <body>
 <div class="container">
   <h1>🔏 Šifry</h1>
-  <p class="sub">Klasické šifry, jejich luštění a simulátor Enigmy. Vše běží jen v prohlížeči, nic se neodesílá.</p>
+  <p class="sub">Klasické šifry, jejich luštění a simulátor Enigmy. Ve „Výzvě“ dostaneš zašifrovanou zprávu a luštíš ji sám. Vše běží jen v prohlížeči, nic se neodesílá.</p>
 
   <div class="taby" id="taby">
+    <button data-p="vyzva" class="zvl">🕵️ Výzva</button>
+    <button data-p="rozbor" class="zvl">🔎 Rozbor</button>
     <button data-p="caesar" class="active">Caesar</button>
     <button data-p="vigenere">Vigenère</button>
     <button data-p="jednoduche">Atbash · ROT13/47</button>
@@ -87,6 +127,44 @@ tr.nej td{background:var(--accent-soft)}
     <button data-p="transpozice">Transpozice</button>
     <button data-p="xor">XOR / hex</button>
     <button data-p="enigma">Enigma</button>
+  </div>
+
+  <!-- VÝZVA -->
+  <div class="card panel" id="p-vyzva">
+    <h2>🕵️ Výzva – rozlušti tajnou zprávu</h2>
+    <p class="pozn" style="margin-top:0">Stránka zašifruje náhodnou zprávu a ty ji luštíš nástroji z ostatních záložek. U neznámé šifry začni „Rozborem“. Rozluštěný text napiš nebo vlož dolů – na diakritice, mezerách ani velikosti písmen nezáleží a drobný překlep se odpustí.</p>
+    <div class="row">
+      <div><label>Obtížnost</label><select id="vyUroven"></select></div>
+      <div><label>Šifra</label><select id="vyTyp"></select></div>
+    </div>
+    <button class="btn" id="vyNova">🎲 Nová výzva</button>
+    <div id="vyZadani" hidden>
+      <div class="vy-hlava"><h3 id="vyHlavicka"></h3><span class="hodnoceni" id="vyBody"></span></div>
+      <div class="vy-typ" id="vyTypText"></div>
+      <div class="vystup vy-sifra" id="vySifra"></div>
+      <div class="kriz" id="vyKriz"></div>
+      <div class="vy-nastroj">
+        <button class="btn sec" id="vyKopiruj">📋 Kopírovat</button>
+        <select id="vyNastroj" aria-label="Nástroj"></select><button class="btn sec" id="vyVloz">→ Vložit do nástroje</button>
+      </div>
+      <ul class="napovedy" id="vyNapovedy"></ul>
+      <label for="vyOdpoved">Tvoje rozluštění</label>
+      <textarea id="vyOdpoved" placeholder="Sem napiš otevřený text…"></textarea>
+      <button class="btn" id="vyOver">✔ Ověřit</button><button class="btn sec" id="vyVezmi">📥 Vzít výstup z nástroje</button><button class="btn sec" id="vyNapoveda">💡 Nápověda</button><button class="btn sec" id="vyVzdat">🏳 Vzdát se</button>
+      <div class="vysledek" id="vyVysledek"></div>
+    </div>
+    <div class="vy-stat" id="vyStat"></div>
+    <div id="vyRekord" style="margin-top:6px"></div>
+  </div>
+
+  <!-- ROZBOR -->
+  <div class="card panel" id="p-rozbor">
+    <h2>🔎 Rozbor neznámé šifry</h2>
+    <label for="roText">Šifrový text</label>
+    <textarea id="roText" placeholder="Vlož šifru, kterou neznáš…"></textarea>
+    <button class="btn" id="roRozbor">🔎 Rozebrat</button>
+    <div id="roVysledek"></div>
+    <p class="pozn">Rozbor se dívá na použité znaky (tečky a čárky, čísla, šestnáctkové bajty), na index koincidence a na to, jestli text po jednoduché úpravě (posun, zrcadlení abecedy) „zní česky“ – to se pozná podle četností trojic písmen. Je to odhad, ne jistota.</p>
   </div>
 
   <!-- CAESAR -->
@@ -137,13 +215,13 @@ tr.nej td{background:var(--accent-soft)}
       <div><label>Jazyk</label><select id="suJazyk"><option value="cs">čeština</option><option value="en">angličtina</option></select></div>
       <div><label>Šifrovací klíč (26 písmen – obraz A…Z)</label><input id="suKlic" placeholder="např. QWERTYUIOPASDFGHJKLZXCVBNM"></div>
     </div>
-    <button class="btn" id="suSif">🔒 Zašifrovat klíčem</button><button class="btn sec" id="suNahodny">🎲 Náhodný klíč</button><button class="btn sec" id="suOdhad">📊 Odhad podle četností</button><button class="btn sec" id="suVymaz">Vymazat přiřazení</button>
+    <button class="btn" id="suSif">🔒 Zašifrovat klíčem</button><button class="btn sec" id="suNahodny">🎲 Náhodný klíč</button><button class="btn sec" id="suOdhad">📊 Odhad podle četností</button><button class="btn sec" id="suAuto">🧗 Automaticky</button><button class="btn sec" id="suVymaz">Vymazat přiřazení</button>
     <canvas class="graf" id="suGraf"></canvas>
     <p class="pozn" style="margin-top:2px">Sloupce: četnost písmen v šifrovém textu (akcent) vs. typická četnost jazyka (šedě, seřazeno stejně podle pořadí).</p>
     <h3>Přiřazení šifra → otevřený text (pište do políček)</h3>
     <div class="mapa" id="suMapa"></div>
     <div class="vystup" id="suVystup"></div>
-    <p class="pozn">Malá písmena ve výstupu = ještě nepřiřazená šifrová písmena. Odhad podle četností je jen start – pak pomůžou krátká slova (a, i, v, se, na, je / the, and, of).</p>
+    <p class="pozn">Malá písmena ve výstupu = ještě nepřiřazená šifrová písmena. Odhad podle četností je jen start – pak pomůžou krátká slova (a, i, v, se, na, je / the, and, of). „Automaticky“ zkouší prohazovat písmena, dokud text nezní co nejvíc česky (horolezení nad četnostmi trojic písmen); u delšího textu trefí většinu, zbytek oprav ručně.</p>
   </div>
 
   <!-- MORSE -->
@@ -176,6 +254,7 @@ tr.nej td{background:var(--accent-soft)}
     <label>Text nebo zápis čísly (např. 3.2 1.2 4.3)</label>
     <input id="pkText" value="Ahoj Pepo">
     <button class="btn" id="pkSif">✚ Zašifrovat</button><button class="btn sec" id="pkDes">Přečíst čísla</button>
+    <div class="kriz-klic" id="pkKlic" aria-label="Klíč polského kříže"></div>
     <div class="kriz" id="pkObr"></div>
     <div class="vystup" id="pkVystup"></div>
   </div>
@@ -189,10 +268,12 @@ tr.nej td{background:var(--accent-soft)}
       <div><label>Klíč (slovo)</label><input id="trKlic" value="HRAD"></div>
       <div><label>Doplnit poslední řádek</label><select id="trDopln"><option value="">nedoplňovat</option><option value="X">X</option></select></div>
     </div>
-    <button class="btn" id="trSif">🔒 Zašifrovat</button><button class="btn sec" id="trDes">🔓 Dešifrovat</button>
+    <button class="btn" id="trSif">🔒 Zašifrovat</button><button class="btn sec" id="trDes">🔓 Dešifrovat</button><button class="btn sec" id="trLust">🕵️ Vyzkoušet všechna pořadí</button>
+    <select id="trLustDelka" style="width:auto;margin-top:10px" aria-label="Délka klíče pro luštění"><option value="">klíč 2–7 písmen</option><option>2</option><option>3</option><option>4</option><option>5</option><option>6</option><option>7</option></select>
     <div class="tabwrap" id="trTabulka"></div>
     <div class="vystup" id="trVystup"></div>
-    <p class="pozn">Text se zapíše do řádků pod klíč a čte se po sloupcích v abecedním pořadí písmen klíče (shodná písmena zleva doprava). Mezery a diakritika se odstraní.</p>
+    <div class="tabwrap" id="trVysledky"></div>
+    <p class="pozn">Text se zapíše do řádků pod klíč a čte se po sloupcích v abecedním pořadí písmen klíče (shodná písmena zleva doprava). Mezery a diakritika se odstraní. „Vyzkoušet všechna pořadí“ projde všechny klíče do 7 písmen (přes 5 900 pořadí sloupců) a ukáže deset výsledků, které nejvíc zní česky – kliknutím na řádek se klíč použije. Když znáš délku klíče, vyber ji – kandidátů bude mnohem míň.</p>
   </div>
 
   <!-- XOR -->
@@ -205,8 +286,9 @@ tr.nej td{background:var(--accent-soft)}
       <div><label>Klíč</label><input id="xoKlic" value="klic"></div>
       <div><label>Klíč je</label><select id="xoKlicTyp"><option value="text">text (UTF-8)</option><option value="hex">hex</option></select></div>
     </div>
-    <button class="btn" id="xoXor">⊕ XOR</button><button class="btn sec" id="xoNaHex">Text → hex</button><button class="btn sec" id="xoNaText">Hex → text</button>
+    <button class="btn" id="xoXor">⊕ XOR</button><button class="btn sec" id="xoLust">🔨 Všechny jednobajtové klíče</button><button class="btn sec" id="xoNaHex">Text → hex</button><button class="btn sec" id="xoNaText">Hex → text</button>
     <div class="vystup" id="xoVystup"></div>
+    <div class="tabwrap" id="xoVysledky"></div>
     <p class="pozn">XOR s opakovaným klíčem: výsledek je hex, druhé použití stejného klíče (vstup jako hex) vrátí původní bajty. Krátký opakovaný klíč není bezpečný – jen jednorázový náhodný klíč délky zprávy (one-time pad) je.</p>
   </div>
 
@@ -441,13 +523,19 @@ tr.nej td{background:var(--accent-soft)}
   function transpoziceDesifruj(text, klic) {
     const s = jenPismena(text), n = jenPismena(klic).length;
     if (!n) return s;
-    const radku = Math.ceil(s.length / n), plnych = s.length % n || n;
+    return transpoziceDesifrujPoradi(s, poradiKlice(klic));
+  }
+  // por[i] = index sloupce, který se čte jako i-tý
+  function transpoziceDesifrujPoradi(s, por) {
+    const n = por.length, radku = Math.ceil(s.length / n), plnych = s.length % n || n;
     const sl = new Array(n); let pos = 0;
-    for (const c of poradiKlice(klic)) { const d = radku - (c < plnych ? 0 : 1); sl[c] = s.substr(pos, d); pos += d; }
+    for (const c of por) { const d = radku - (c < plnych ? 0 : 1); sl[c] = s.substr(pos, d); pos += d; }
     let r = '';
     for (let i = 0; i < radku; i++) for (let c = 0; c < n; c++) if (sl[c][i]) r += sl[c][i];
     return r;
   }
+  // nejkratší klíč (A, B, C…), který dá dané pořadí sloupců
+  function poradiNaKlic(por) { const k = []; por.forEach((c, i) => { k[c] = ABC[i]; }); return k.join(''); }
 
   // XOR / hex
   const utf8 = s => new TextEncoder().encode(s);
@@ -540,10 +628,405 @@ tr.nej td{background:var(--accent-soft)}
     return { stiskni, zpracuj, poloha, krok, oknaText: () => poloha.map(x => ABC[x]).join('') };
   }
 
+  // ===== Jazykový model: četnosti dvojic písmen z ukázkového českého textu =====
+  // (Záměrně jiný text než zprávy ve výzvách – luštič nesmí „znát“ odpověď.)
+  const KORPUS = `Když jsme přijeli na chalupu, bylo už pozdě odpoledne a nad lesem se stahovaly mraky. Táta odemkl dveře,
+    otevřel okenice a hned začal nosit dříví ke kamnům. Máma vybalovala jídlo a my jsme s bratrem běželi k potoku, jestli tam ještě
+    stojí ta stará lávka, kterou jsme loni opravovali. Lávka stála, jen jedno prkno bylo prasklé a voda byla vyšší než obvykle.
+    Večer jsme seděli u kamen, poslouchali déšť na střeše a hráli karty. Děda vyprávěl o tom, jak se za jeho mládí chodilo do školy
+    pěšky přes kopec, v zimě po kolena ve sněhu, a jak jednou potkal v lese jelena, který se ho vůbec nebál. Nevěděli jsme, jestli
+    si to celé nevymyslel, ale poslouchali jsme rádi. Ráno bylo jasné a studené. Po snídani jsme se vydali na houby a vrátili jsme se
+    s plným košíkem hříbků. Odpoledne přišel soused a přinesl čerstvé vejce a kus domácího sýra. Povídal, že v obci budou stavět
+    nový most a že se opraví i silnice k nádraží, která je plná děr. Všichni dospělí o tom dlouho mluvili, protože autobus tudy jezdí
+    jen dvakrát denně a v zimě často nepřijede vůbec. Ve městě je život úplně jiný. Lidé spěchají do práce, tramvaje jsou plné a na
+    ulicích je slyšet hluk aut. Přesto má město své kouzlo: staré domy s ozdobnými fasádami, malé kavárny, knihovny a parky, kde si
+    můžete sednout na lavičku a číst. Moje sestra studuje na univerzitě medicínu a každý týden se musí učit spoustu nových věcí.
+    Říká, že nejtěžší je anatomie, protože si musí pamatovat názvy všech kostí a svalů. Bratr pracuje jako programátor a většinu dne
+    tráví u počítače. Občas mi ukazuje, co vytvořil, ale moc tomu nerozumím. Já bych chtěl být jednou lesníkem nebo veterinářem,
+    protože mám rád přírodu a zvířata. Naše škola stojí na kraji města hned vedle hřiště. Učitelka češtiny nám zadala úkol napsat
+    povídku o tom, co jsme zažili o prázdninách. Většina spolužáků psala o moři, o koupání a o výletech do hor. Já jsem psal o chalupě
+    a o tom, jak jsme s dědou opravovali plot, který spadl při velké bouřce. Paní učitelka mi za to dala jedničku a přečetla povídku
+    celé třídě. Byl jsem trochu nervózní, ale nakonec jsem měl radost. Na podzim chodíme do lesa sbírat kaštany a žaludy pro zvířata
+    v oboře. Myslivec nám vždy poděkuje a ukáže nám krmelec, kam se v zimě sype seno. Jednou jsme tam viděli celé stádo srnek, které
+    se pásly na louce a vůbec si nás nevšímaly. Bylo to krásné a dlouho jsme stáli bez hnutí, abychom je nevyplašili. Když se setmí,
+    rozsvítí se nad vesnicí hvězdy a je vidět i Mléčná dráha. Ve městě kvůli světlům lamp nic takového neuvidíte. Proto se vždycky
+    těšíme na léto, kdy můžeme ležet v trávě a počítat padající hvězdy. Každý si přitom něco přeje, ale nikomu to neřekne, protože
+    jinak by se přání nesplnilo. Babička tvrdí, že to platí, a já jí věřím. V neděli dopoledne vařila máma polévku a pekla buchty
+    s tvarohem. Celý dům voněl a my jsme nemohli dočkat oběda. Po jídle jsme pomáhali umýt nádobí a pak jsme šli s tátou na procházku
+    k rybníku. Na hrázi rostou staré lípy a pod nimi je lavička, ze které je vidět na celou vesnici. Táta vyprávěl, že rybník založili
+    mniši před mnoha sty lety a že se v něm chovali kapři pro klášter. Dnes tam rybáři loví hlavně v podzimních měsících, kdy se rybník
+    vypouští. Lidé se chodí dívat, jak se ryby vytahují sítěmi, a děti dostanou malé rybky do kbelíku. Historie našeho kraje je velmi
+    zajímavá. Na kopci nad řekou stával hrad, ze kterého dnes zbyla jen část zdi a hluboký příkop. Podle pověsti tam žil rytíř, který
+    pomáhal chudým a bránil vesnici před loupežníky. Když zemřel, jeho meč prý zakopali pod velkým kamenem, ale nikdo ho nikdy nenašel.
+    Kronikář z městečka napsal, že hrad vyhořel za války a kameny si pak sousedé rozebrali na stavbu domů. Některé domy ve vesnici proto
+    mají ve zdech opracované kvádry s vytesanými znaky. Počasí bývá u nás proměnlivé. Na jaře často prší a fouká studený vítr od hor,
+    v létě jsou dny horké a večer přicházejí bouřky. Podzim je nejkrásnější, protože se listí na stromech zbarví dožluta a dočervena a
+    ráno leží v údolí mlha. V zimě napadne sníh a děti se sáňkují na stráni za kostelem. Když mrzne, zamrzne i rybník a celá vesnice
+    tam bruslí. Dědeček má dílnu plnou nářadí a rád vyrábí věci ze dřeva. Udělal nám ptačí budku, stůl na zahradu a dřevěného koně na
+    houpání. Naučil mě, jak správně držet pilku a jak zatlouct hřebík, aby se neohnul. Říká, že každá práce chce trpělivost a že
+    spěchat se nevyplácí. Když něco nejde, máme si odpočinout a zkusit to znovu. Moc jsem se od něj naučil a doufám, že mi ještě dlouho
+    bude ukazovat, jak se dělají všechny ty užitečné věci.`;
+  // Trojice písmen: log P(c | a, b), vyhlazeno směsí s dvojicemi a jednotlivými písmeny.
+  // Symbol 26 = mezera (model „se slovy“ pro substituci, kde zůstávají mezery mezi slovy).
+  const sMezerami = t => ' ' + bezDiakritiky(t).toUpperCase().replace(/[^A-Z]+/g, ' ').trim() + ' ';
+  const kodyZnaku = s => Uint8Array.from(s, c => c === ' ' ? 26 : c.charCodeAt(0) - 65);
+  function trigramy(c, N) {
+    const uni = new Float64Array(N).fill(1), bi = new Float64Array(N * N), tri = new Float64Array(N * N * N), L = new Float64Array(N * N * N);
+    for (let i = 0; i < c.length; i++) {
+      uni[c[i]]++;
+      if (i + 1 < c.length) bi[c[i] * N + c[i + 1]]++;
+      if (i + 2 < c.length) tri[(c[i] * N + c[i + 1]) * N + c[i + 2]]++;
+    }
+    const U = uni.reduce((a, b) => a + b, 0);
+    for (let a = 0; a < N; a++) for (let b = 0; b < N; b++) {
+      let sb = 0, st = 0;
+      for (let x = 0; x < N; x++) { sb += bi[b * N + x]; st += tri[(a * N + b) * N + x]; }
+      for (let x = 0; x < N; x++) {
+        const pu = uni[x] / U, pb = sb ? bi[b * N + x] / sb : pu, pt = st ? tri[(a * N + b) * N + x] / st : pb;
+        L[(a * N + b) * N + x] = Math.log(0.6 * pt + 0.3 * pb + 0.1 * pu);
+      }
+    }
+    return L;
+  }
+  const TRI = trigramy(kodyZnaku(jenPismena(KORPUS)), 26), TRI_MEZ = trigramy(kodyZnaku(sMezerami(KORPUS)), 27);
+  // průměrný log. pravděpodobnosti trojic písmen – vyšší = víc „jako čeština“
+  function skoreTextu(text) {
+    const c = kodyZnaku(jenPismena(text)); if (c.length < 3) return -Infinity;
+    let x = 0;
+    for (let i = 0; i + 2 < c.length; i++) x += TRI[(c[i] * 26 + c[i + 1]) * 26 + c[i + 2]];
+    return x / (c.length - 2);
+  }
+
+  // Vigenère: u češtiny vybere délku klíče podle toho, jak česky zní výsledek (index koincidence
+  // u kratších textů rád ujede na násobek délky); nejkratší délka, která je skoro nejlepší.
+  function vigenereLust(text, jazyk, maxDelka = 20) {
+    if (jazyk !== 'cs') { const d = odhadDelky(text, jazyk, maxDelka); return { delka: d, klic: odhadKlice(text, d, jazyk) }; }
+    const s = jenPismena(text), r = [];
+    for (let d = 1; d <= maxDelka && d <= s.length / 4; d++) {
+      const klic = odhadKlice(s, d, jazyk);
+      r.push({ delka: d, klic, skore: skoreTextu(vigenere(s, klic, true)) });
+    }
+    if (!r.length) return { delka: 1, klic: odhadKlice(s, 1, jazyk) };
+    const max = Math.max(...r.map(x => x.skore));
+    return r.find(x => x.skore >= max - 0.05);
+  }
+
+  // Luštění transpozice hrubou silou: všechna pořadí sloupců pro klíč délky 2..maxDelka
+  function permutace(n) {
+    const r = [], a = [...Array(n).keys()];
+    (function p(k) { if (k === n) { r.push(a.slice()); return; } for (let i = k; i < n; i++) { [a[k], a[i]] = [a[i], a[k]]; p(k + 1); [a[k], a[i]] = [a[i], a[k]]; } })(0);
+    return r;
+  }
+  function transpoziceLust(text, maxDelka = 7, kolik = 10, minDelka = 2) {
+    const s = jenPismena(text), r = [], videno = new Set();
+    for (let n = minDelka; n <= Math.min(maxDelka, s.length); n++) for (const p of permutace(n)) {
+      const t = transpoziceDesifrujPoradi(s, p);
+      if (videno.has(t)) continue; videno.add(t);
+      r.push({ delka: n, poradi: p, text: t, skore: skoreTextu(t) });
+    }
+    return r.sort((a, b) => b.skore - a.skore).slice(0, kolik).map(x => Object.assign(x, { klic: poradiNaKlic(x.poradi) }));
+  }
+
+  // Luštění XOR s jednobajtovým klíčem: hodnotí, jak moc výsledek vypadá jako text
+  function xorLust(data, kolik = 5) {
+    const r = [];
+    for (let k = 0; k < 256; k++) {
+      let sk = 0;
+      for (const x of data) {
+        const y = x ^ k;
+        if (y === 32) sk += 2;
+        else if ((y >= 65 && y <= 90) || (y >= 97 && y <= 122)) sk += 1.5;
+        else if ((y >= 48 && y <= 57) || '.,!?;:\'"()-'.includes(String.fromCharCode(y))) sk += 0.5;
+        else if (y >= 0x80) sk += 0.2;      // část vícebajtového znaku UTF-8 (diakritika)
+        else sk -= 3;                       // řídicí znak – skoro jistě špatný klíč
+      }
+      r.push({ klic: k, text: zUtf8(data.map(x => x ^ k)), skore: sk / (data.length || 1) });
+    }
+    return r.sort((a, b) => b.skore - a.skore).slice(0, kolik);
+  }
+
+  // Luštění monoalfabetické substituce horolezením nad trojicemi písmen.
+  // Mezery mezi slovy (pokud jsou skutečné, ne skupiny po pěti) se berou jako nápověda.
+  // Vrací mapu {šifrové písmeno: otevřené} pro písmena, která se v textu vyskytují.
+  function substituceLust(text, rng = Math.random, restartu = 12) {
+    const t = bezDiakritiky(text || '').toUpperCase().trim();
+    const slova = !/^([A-Z]{5}\s+)*[A-Z]{1,5}$/.test(t);
+    const c = slova ? kodyZnaku(sMezerami(t)) : kodyZnaku(jenPismena(t)), N = slova ? 27 : 26, L = slova ? TRI_MEZ : TRI;
+    if (c.length < 3) return {};
+    const skore = k => { let x = 0; for (let i = 0; i + 2 < c.length; i++) x += L[(k[c[i]] * N + k[c[i + 1]]) * N + k[c[i + 2]]]; return x; };
+    const odhad = odhadMapy(t, 'cs');
+    let nejK = null, nejS = -Infinity;
+    for (let r = 0; r < restartu; r++) {
+      let k;
+      if (r === 0) {   // start z frekvenční analýzy, chybějící písmena doplnit
+        k = new Array(26).fill(-1);
+        for (const [a, b] of Object.entries(odhad)) k[a.charCodeAt(0) - 65] = b.charCodeAt(0) - 65;
+        const volna = [...Array(26).keys()].filter(x => !k.includes(x));
+        for (let i = 0; i < 26; i++) if (k[i] < 0) k[i] = volna.shift();
+      } else {
+        k = [...Array(26).keys()];
+        for (let i = 25; i > 0; i--) { const j = Math.floor(rng() * (i + 1)); [k[i], k[j]] = [k[j], k[i]]; }
+      }
+      k[26] = 26;   // mezera zůstává mezerou
+      let sk = skore(k), bez = 0;
+      while (bez < 2000) {
+        const a = Math.floor(rng() * 26), b = Math.floor(rng() * 26); if (a === b) continue;
+        [k[a], k[b]] = [k[b], k[a]];
+        const n = skore(k);
+        if (n > sk) { sk = n; bez = 0; } else { [k[a], k[b]] = [k[b], k[a]]; bez++; }
+      }
+      if (sk > nejS) { nejS = sk; nejK = k.slice(); }
+    }
+    const m = {};
+    for (const x of new Set(c)) if (x < 26) m[ABC[x]] = ABC[nejK[x]];
+    return m;
+  }
+
+  // Rozbor neznámého šifrového textu – co to asi je a čím to zkusit
+  function rozbor(text) {
+    const t = (text || '').trim(), bez = t.replace(/\s/g, '');
+    const r = { znaku: t.length, doporuceni: [] };
+    const dop = (nastroj, popis) => r.doporuceni.push({ nastroj, popis });
+    if (!bez) return r;
+    if (/^[.\-\/|·•–—_]+$/.test(bez)) { r.druh = 'Morseova abeceda'; dop('morse', 'Jen tečky, čárky a oddělovače → Morseova abeceda. Použij „→ Text“.'); return r; }
+    if (/^([1-9][.,:][1-3]|\/)+$/.test(bez)) { r.druh = 'Polský kříž (čísly)'; dop('polybius', 'Dvojice „políčko.tečky“ → Polský kříž. Použij „Přečíst čísla“.'); return r; }
+    if (/^[1-5\/]+$/.test(bez) && bez.replace(/\//g, '').length % 2 === 0) {
+      r.druh = 'Polybiův čtverec';
+      const ot = polybiusDesifruj(t, '');
+      r.pismen = jenPismena(ot).length;
+      if (r.pismen >= 30 && indexKoincidence(ot) > 0.05 && chi2(ot, 'cs') / r.pismen > 1.2) {
+        dop('polybius', 'Dvojice číslic 1–5 → Polybiův čtverec. Běžný čtverec ale nedává smysl – čtverec je asi zamíchaný klíčovým slovem.');
+        dop('substituce', 'Převeď čísla běžným čtvercem na písmena a výsledek luš jako substituci (každé písmeno odpovídá jinému).');
+      } else dop('polybius', 'Dvojice číslic 1–5 (řádek, sloupec) → Polybiův čtverec. Použij „Na text“.');
+      return r;
+    }
+    const hex = bez.replace(/0x/gi, '');
+    if (/^[0-9a-f]+$/i.test(hex) && hex.length % 2 === 0 && /[0-9]/.test(hex) && hex.length >= 8) {
+      r.druh = 'Šestnáctková čísla (bajty)';
+      const nej = xorLust(hexNaBajty(hex), 1)[0], primo = xorLust(hexNaBajty(hex), 256).find(x => x.klic === 0);
+      if (primo && primo.skore > 0.9) dop('xor', 'Bajty už samy dávají čitelný text → stačí „Hex → text“.');
+      else dop('xor', `Bajty v hex → nejspíš XOR. Zkus „Všechny jednobajtové klíče“ (nejlépe vychází klíč ${nej.klic.toString(16).padStart(2, '0')}).`);
+      return r;
+    }
+    const s = jenPismena(t), n = s.length;
+    r.pismen = n;
+    if (n < 10) { dop('caesar', 'Příliš krátký text na rozbor – zkus ručně Caesara a Atbash.'); return r; }
+    r.ic = indexKoincidence(s);
+    r.chiPrimo = chi2(s, 'cs') / n;
+    r.skore = skoreTextu(s);
+    // Caesar: posun, po kterém text nejvíc „zní česky“ (trojice písmen)
+    let nej = { posun: 0, skore: -Infinity };
+    for (let k = 0; k < 26; k++) { const x = skoreTextu(caesar(s, -k)); if (x > nej.skore) nej = { posun: k, skore: x }; }
+    r.caesar = nej;
+    r.skoreAtbash = skoreTextu(atbash(s));
+    const CESKY = -3.0;   // změřeno: čeština ≥ −2,96, přeházená písmena ≤ −3,08
+    if (r.skore >= CESKY) {
+      r.druh = 'Nezašifrovaný text?';
+      dop('rozbor', 'Písmena i jejich trojice odpovídají češtině – text nejspíš není zašifrovaný (nebo je to otevřený text po luštění).');
+    } else if (r.skoreAtbash >= CESKY && r.skoreAtbash >= nej.skore) {
+      r.druh = 'Atbash'; dop('jednoduche', 'Po zrcadlení abecedy (A↔Z) vznikne česky znějící text → Atbash.');
+    } else if (nej.skore >= CESKY) {
+      if (nej.posun === 13) { r.druh = 'ROT13'; dop('jednoduche', 'Posun o 13 dá česky znějící text → ROT13.'); }
+      else { r.druh = 'Caesarova šifra'; dop('caesar', `Celá abeceda je posunutá – česky to zní při posunu ${nej.posun}. Použij „Všechny posuny“.`); }
+    } else if (r.chiPrimo < 0.9) {
+      r.druh = 'Transpozice (přeházená písmena)';
+      dop('transpozice', 'Četnosti písmen sedí na češtinu, ale jejich sousedství ne → písmena jsou jen přeházená. Zkus „Vyzkoušet všechna pořadí“.');
+    } else if (r.ic >= 0.05) {
+      r.druh = 'Jednoduchá substituce';
+      const mezery = !/^([A-Za-z]{5}\s+)*[A-Za-z]{1,5}$/.test(bezDiakritiky(t)) && /[A-Za-z]\s+[A-Za-z]/.test(bezDiakritiky(t));
+      dop('substituce', 'Index koincidence odpovídá jazyku, ale písmena jsou zaměněná → monoalfabetická substituce. Zkus „Automaticky“ a pak oprav zbytek ručně' + (mezery ? ' – pomůžou krátká slova (a, i, v, se, na, je).' : '.'));
+      if (n < 120) dop('vigenere', 'Text je ale krátký, index koincidence nemusí být spolehlivý – může to být i Vigenère.');
+    } else {
+      r.druh = 'Polyalfabetická šifra (Vigenère)';
+      r.delkaKlice = vigenereLust(s, 'cs').delka;
+      dop('vigenere', `Nízký index koincidence → stejné písmeno se šifruje různě podle pozice. Nejspíš Vigenère s klíčem o ${r.delkaKlice} písmenech – použij „Odhadnout klíč“.`);
+    }
+    return r;
+  }
+
+  // Návrhy rozluštění: zkusí všechny luštiče a seřadí výsledky podle toho, jak česky zní.
+  // Každý návrh: {metoda, klic, text, skore, nastroj}. Duplicitní texty se slučují.
+  function navrhy(text, rng = Math.random, kolik = 6) {
+    const t = (text || '').trim(), bez = t.replace(/\s/g, ''), r = [];
+    // pena = přirážka za složitost: metoda, která zkouší tisíce klíčů (transpozice, substituce),
+    // najde „česky znějící“ nesmysl snáz než Caesar s 25 posuny – u krátkých textů by jinak vyhrála
+    const pridej = (metoda, klic, ot, nastroj, pena = 0) => { if (ot && jenPismena(ot).length >= 2) { const sk = skoreTextu(ot); r.push({ metoda, klic, text: ot, skore: sk, poradi: sk - pena, nastroj }); } };
+    if (!bez) return r;
+    if (/^[.\-\/|·•–—_]+$/.test(bez)) pridej('Morseova abeceda', '', zMorse(t), 'morse');
+    else if (/^([1-9][.,:][1-3]|\/)+$/.test(bez)) pridej('Polský kříž', '', polskyKrizDesifruj(t), 'polybius');
+    else if (/^[1-5\/]+$/.test(bez) && bez.replace(/\//g, '').length % 2 === 0) {
+      const p = polybiusDesifruj(t, '');
+      pridej('Polybiův čtverec', 'bez klíče', p, 'polybius');
+      if (jenPismena(p).length >= 60) pridej('Polybiův čtverec s klíčem (převod + substituce)', 'automaticky', aplikujMapu(p, substituceLust(p, rng)), 'substituce');
+    } else if (/^(0x)?[0-9a-f\s]+$/i.test(t) && bez.replace(/0x/gi, '').length % 2 === 0 && /[0-9]/.test(bez) && bez.length >= 8) {
+      const d = hexNaBajty(bez);
+      pridej('Hex → text', '', zUtf8(d), 'xor');
+      for (const x of xorLust(d, 3)) pridej('XOR jedním bajtem', x.klic.toString(16).padStart(2, '0'), x.text, 'xor');
+    } else {
+      const s = jenPismena(t), n = s.length;
+      pridej('Nezašifrováno', '', t, 'rozbor');
+      pridej('Pozpátku', '', [...t].reverse().join(''), 'rozbor', 0.02);
+      // Transpozice nemění četnosti písmen, záměnné šifry ano – podle χ² se zkouší jen jedna skupina
+      // (jinak luštič s tisíci klíči najde „česky znějící“ nesmysl i tam, kde nemá co hledat).
+      const ceskeCetnosti = chi2(s, 'cs') / n < 0.9;
+      if (ceskeCetnosti) {
+        if (n >= 12 && n <= 1500) transpoziceLust(s, 7, 2).forEach(x => pridej('Transpozice', 'klíč ' + x.klic, x.text, 'transpozice', 0.3));
+      } else {
+        const cs = []; for (let k = 1; k < 26; k++) cs.push({ k, x: skoreTextu(caesar(s, -k)) });
+        cs.sort((a, b) => b.x - a.x).slice(0, 2).forEach(c => pridej(c.k === 13 ? 'ROT13' : 'Caesar', c.k === 13 ? '' : 'posun ' + c.k, caesar(t, -c.k).toUpperCase(), c.k === 13 ? 'jednoduche' : 'caesar', 0.02));
+        pridej('Atbash', '', atbash(t).toUpperCase(), 'jednoduche', 0.02);
+        if (n >= 40) { const v = vigenereLust(s, 'cs'); if (v.delka > 1) pridej('Vigenère', 'klíč ' + v.klic, vigenere(t, v.klic, true).toUpperCase(), 'vigenere', 0.03 * v.delka); }
+        if (n >= 60) pridej('Substituce', 'automaticky', aplikujMapu(t, substituceLust(t, rng)), 'substituce', 0.15);
+      }
+      // text, který už sám zní česky, je nejspíš nezašifrovaný – přeházením se „správnějším“ nestane
+      if (r[0].skore >= -3.0) r[0].poradi = Infinity;
+    }
+    const videno = new Set();
+    return r.filter(x => { const k = jenPismena(x.text); if (videno.has(k)) return false; videno.add(k); return true; })
+      .sort((a, b) => b.poradi - a.poradi).slice(0, kolik)
+      .map(x => Object.assign(x, { jistota: !isFinite(x.skore) ? 'nejasné' : x.skore >= -3.0 ? 'zní česky' : x.skore >= -3.4 ? 'možná' : 'spíš ne' }));
+  }
+
+  // ===== Výzvy: stránka zašifruje zprávu, uživatel ji luští =====
+  const ZPRAVY = [
+    'Sejdeme se o půlnoci u starého mlýna, přines lucernu a provaz.',
+    'Klíč od sklepa je schovaný pod třetím schodem vlevo.',
+    'Zítra ráno vyplouvá loď z přístavu, kapitán o ničem neví.',
+    'Mapa pokladu leží v knihovně mezi atlasy a starými kronikami.',
+    'Pozor, ve vesnici se ptají cizí lidé na naše jména.',
+    'Heslo pro dnešní noc zní modrá sova a odpověď je tichý les.',
+    'Vlak přijede na nádraží v sedm hodin, čekej u pokladny.',
+    'Dopis spal hned po přečtení, nikdo nesmí znát naše plány.',
+    'Pod velkým dubem na kraji lesa najdeš plechovou krabičku.',
+    'Hlídka mění stráž každé dvě hodiny, nejlepší čas je před svítáním.',
+    'Most přes řeku je zavřený, musíme jít brodem u vrby.',
+    'Až zvon na věži udeří dvanáctkrát, otevři okno.',
+    'Poklad není zlato, ale stará kniha s recepty na lektvary.',
+    'Zítra odpoledne prší, výlet na hrad proto posuneme na sobotu.',
+    'Kočka sousedů zná cestu do sklepa lépe než my.',
+    'Tajná chodba začíná za regálem s nakládanými okurkami.',
+    'Na kopci za vesnicí stojí rozhledna, odtud uvidíš světlo signálu.',
+    'Kdo vyluští tuto zprávu, dostane kousek čokoládového dortu.',
+    'Ztratil jsem kompas, vracím se podle hvězd a mechu na stromech.',
+    'Balík s mapami pošli na poštu ve městě, adresu napíšu později.',
+    'Stará studna na náměstí není suchá, je v ní žebřík dolů.',
+    'Kapitán říká, že bouře přijde večer, uvažte lodě pevně.',
+    'Nenechávej svítit lampu v okně, hlídač by si všiml.',
+    'Schůzka se ruší, nový termín bude v pátek po setmění.',
+    'V jeskyni za vodopádem je suché místo na přespání.',
+    'Pekař na rohu peče chleba s tajnou zprávou uvnitř.',
+    'Každý třetí strom v aleji má na kůře vyřezaný znak.',
+    'Pošta přijde holubem, nezapomeň mu nasypat zrní.',
+    'Vlk byl viděn u potoka, do lesa choďte jen ve skupině.',
+    'Klíčové slovo pro další šifru najdeš na náhrobku u brány.',
+    'Lodní deník zmizel z kajuty, podezřelý je kuchař.',
+    'Stan postavíme na louce u jezera, oheň rozděláme za soumraku.',
+    'Profesor schoval vynález do sejfu a kombinaci zná jen jeho pes.',
+    'Nikomu neříkej, že jsme našli starou minci s orlem.',
+    'Balón vzlétne za úsvitu, pokud nebude foukat silný vítr.',
+    'Na půdě je truhla, v ní dopis od praděda a mapa ostrova.',
+    'Rádio vysílá každý večer v devět hodin na krátkých vlnách.',
+    'Hledej červené dveře v ulici, kde prodávají staré hodiny.',
+    'Kdo pozdě chodí, sám sobě škodí, buď tam včas.',
+    'Na ostrově žijí papoušci, kteří opakují heslo strážců.',
+    'Zámek na bráně má číselný kód, je to rok založení města.',
+    'Stopy vedou k řece a pak mizí ve vodě.',
+    'Z věže je vidět až k horám, za jasného dne i k moři.',
+    'Lékárník prodává modré lahvičky jen tomu, kdo zná heslo.',
+    'V kabinetu fyziky leží krabice s nápisem neotvírat.',
+    'Hvězdárna bude otevřená celou noc, uvidíme kometu.',
+    'Rozdělíme se u křižovatky, sejdeme se zase u kapličky.',
+    'Kovář ukoval nový klíč, starý byl ukraden minulý týden.',
+    'Až uslyšíš třikrát houkat sovu, vyjdi potichu ven.',
+    'Mlynář ví víc, než říká, zeptej se ho na staré časy.'
+  ];
+  const KLICOVA_SLOVA = ['VEZ', 'LES', 'OREL', 'SOVA', 'MAPA', 'MLYN', 'HRAD', 'LISKA', 'KAMEN', 'STOPA', 'ZAMEK', 'SKALA', 'BOUDA', 'KOMPAS', 'PRAMEN', 'JEZERO', 'LUCERNA', 'POKLAD'];
+  const TYPY_VYZEV = {
+    morse:        { nazev: 'Morseova abeceda', nastroj: 'morse' },
+    atbash:       { nazev: 'Atbash', nastroj: 'jednoduche' },
+    rot13:        { nazev: 'ROT13', nastroj: 'jednoduche' },
+    polybius:     { nazev: 'Polybiův čtverec', nastroj: 'polybius' },
+    kriz:         { nazev: 'Polský kříž', nastroj: 'polybius' },
+    caesar:       { nazev: 'Caesarova šifra', nastroj: 'caesar' },
+    transpozice:  { nazev: 'Sloupcová transpozice', nastroj: 'transpozice' },
+    vigenere:     { nazev: 'Vigenèrova šifra', nastroj: 'vigenere' },
+    xor:          { nazev: 'XOR s jednobajtovým klíčem', nastroj: 'xor' },
+    substituce:   { nazev: 'Monoalfabetická substituce', nastroj: 'substituce' },
+    polybiusKlic: { nazev: 'Polybiův čtverec s klíčovým slovem', nastroj: 'polybius' }
+  };
+  const UROVNE = {
+    1: { nazev: 'Lehká', body: 10, typZnamy: true, typy: ['morse', 'atbash', 'rot13', 'polybius', 'kriz', 'caesar'] },
+    2: { nazev: 'Střední', body: 25, typZnamy: false, typy: ['caesar', 'atbash', 'kriz', 'transpozice', 'vigenere', 'xor'] },
+    3: { nazev: 'Těžká', body: 50, typZnamy: false, typy: ['substituce', 'vigenere', 'transpozice', 'polybiusKlic'] }
+  };
+  const skupiny5 = s => jenPismena(s).replace(/(.{5})/g, '$1 ').trim();
+  function vytvorVyzvu(uroven, typ, rng = Math.random) {
+    const U = UROVNE[uroven] || UROVNE[1];
+    const zvolen = U.typy.includes(typ);
+    if (!zvolen) typ = U.typy[Math.floor(rng() * U.typy.length)];
+    const nah = n => Math.floor(rng() * n);
+    const zpravy = n => { const p = ZPRAVY.slice(); for (let i = p.length - 1; i > 0; i--) { const j = nah(i + 1); [p[i], p[j]] = [p[j], p[i]]; } return p.slice(0, n).join(' '); };
+    const slovo = (min, max) => { const k = KLICOVA_SLOVA.filter(w => w.length >= min && w.length <= max); return k[nah(k.length)]; };
+    let ot, sifra, parametr, zobrazeni = 'text';
+    switch (typ) {
+      case 'morse': ot = zpravy(1); sifra = naMorse(ot); parametr = 'Písmena odděluje mezera, slova lomítko. Tečka = krátký signál, čárka = dlouhý.'; break;
+      case 'atbash': ot = zpravy(1); sifra = atbash(ot).toUpperCase(); parametr = 'A se mění na Z, B na Y… a naopak.'; break;
+      case 'rot13': ot = zpravy(1); sifra = rot13(ot).toUpperCase(); parametr = 'Každé písmeno je posunuté o 13 míst.'; break;
+      case 'polybius': ot = zpravy(1); sifra = polybiusSifruj(ot, ''); parametr = 'Čtverec 5×5 bez klíče, první číslice je řádek, druhá sloupec (J = I).'; break;
+      case 'kriz': ot = zpravy(1); sifra = polskyKrizSifruj(ot).map(sl => sl.map(z => z.pole + '.' + z.tecky).join(' ')).join(' / ');
+        zobrazeni = 'kriz'; parametr = 'Mřížka # má 9 políček po třech písmenech (ABC, DEF, GHI…), počet teček je pořadí písmene v políčku.'; break;
+      case 'caesar': { const k = 1 + nah(25) || 3; const p = k === 13 ? 7 : k; ot = zpravy(1); sifra = caesar(ot, p).toUpperCase(); parametr = `Posun je ${p}.`; break; }
+      case 'transpozice': {
+        const n = uroven >= 3 ? 5 + nah(3) : 3 + nah(2), p = [...Array(n).keys()];
+        for (let i = n - 1; i > 0; i--) { const j = nah(i + 1); [p[i], p[j]] = [p[j], p[i]]; }
+        ot = zpravy(uroven >= 3 ? 2 : 1);
+        if (jenPismena(ot).length < 50) ot = zpravy(2);   // u krátké zprávy dává česky znějících pořadí víc
+        sifra = skupiny5(transpoziceSifruj(ot, poradiNaKlic(p)));
+        parametr = `Klíč má ${n} písmen.`; break;
+      }
+      case 'vigenere': {
+        const k = uroven >= 3 ? slovo(5, 7) : slovo(3, 4);
+        ot = zpravy(uroven >= 3 ? 7 : 5); sifra = vigenere(ot, k, false).toUpperCase();
+        if (uroven >= 3) sifra = skupiny5(sifra);
+        parametr = `Klíč má ${k.length} písmen a je to české slovo.`; break;
+      }
+      case 'xor': { const k = 1 + nah(255); ot = zpravy(1); sifra = bajtyNaHex(xor(utf8(ot), [k])); parametr = 'Klíč je jediný bajt, opakuje se pro každý bajt zprávy.'; break; }
+      case 'substituce': {
+        const k = ABC.split(''); for (let i = 25; i > 0; i--) { const j = nah(i + 1); [k[i], k[j]] = [k[j], k[i]]; }
+        ot = zpravy(6); sifra = substituce(ot, k.join('')).toUpperCase();
+        const c = pocty(sifra), por = ABC.split('').map((x, i) => [x, c[i]]).sort((a, b) => b[1] - a[1]).slice(0, 3);
+        parametr = 'Nejčastější šifrová písmena: ' + por.map(([x]) => `${x} = ${ABC[k.join('').indexOf(x)]}`).join(', ') + '.'; break;
+      }
+      case 'polybiusKlic': {
+        const k = slovo(5, 7); ot = zpravy(6); sifra = polybiusSifruj(ot, k);
+        parametr = `Čtverec začíná klíčovým slovem o ${k.length} písmenech (${k[0]}…), zbytek abecedy následuje v pořadí.`; break;
+      }
+    }
+    const prvni = jenPismena(ot.split(/\s+/)[0]);
+    return {
+      uroven: +uroven in UROVNE ? +uroven : 1, typ, ot, sifra, zobrazeni, body: U.body, typZnamy: U.typZnamy || zvolen,
+      napovedy: [`Šifra: ${TYPY_VYZEV[typ].nazev}.`, parametr, `Zpráva začíná slovem „${prvni}“.`]
+    };
+  }
+  // shoda odpovědi s otevřeným textem 0..1 (jen písmena, J = I, Levenshteinova vzdálenost)
+  function shodaOdpovedi(odpoved, ot) {
+    const a = jenPismena(odpoved).replace(/J/g, 'I'), b = jenPismena(ot).replace(/J/g, 'I');
+    if (!b.length) return 0;
+    let pred = Array.from({ length: b.length + 1 }, (_, i) => i);
+    for (let i = 1; i <= a.length; i++) {
+      const akt = [i];
+      for (let j = 1; j <= b.length; j++) akt[j] = Math.min(pred[j] + 1, akt[j - 1] + 1, pred[j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1));
+      pred = akt;
+    }
+    return Math.max(0, 1 - pred[b.length] / Math.max(a.length, b.length));
+  }
+
   g.SIFRY = { ABC, bezDiakritiky, jenPismena, CETNOSTI, pocty, chi2, indexKoincidence, caesar, caesarVse, vigenere, kasiski, icProDelky,
     odhadKlice, odhadDelky, atbash, rot13, rot47, substituce, aplikujMapu, odhadMapy, MORSE, naMorse, zMorse, morseCasovani,
     polybiusCtverec, polybiusSifruj, polybiusDesifruj, polskyKrizSifruj, polskyKrizDesifruj, poradiKlice, transpoziceSifruj,
-    transpoziceDesifruj, utf8, zUtf8, hexNaBajty, bajtyNaHex, xor, ROTORY, REFLEKTORY, parsujTrojici, parsujDesku, vytvorEnigmu };
+    transpoziceDesifruj, transpoziceDesifrujPoradi, poradiNaKlic, utf8, zUtf8, hexNaBajty, bajtyNaHex, xor, ROTORY, REFLEKTORY,
+    parsujTrojici, parsujDesku, vytvorEnigmu, skoreTextu, vigenereLust, transpoziceLust, navrhy, xorLust, substituceLust, rozbor,
+    ZPRAVY, TYPY_VYZEV, UROVNE, vytvorVyzvu, shodaOdpovedi };
 })(typeof window !== 'undefined' ? window : globalThis);
 </script>
 
@@ -562,20 +1045,28 @@ tr.nej td{background:var(--accent-soft)}
     document.querySelectorAll('#taby button').forEach(b => b.classList.toggle('active', b.dataset.p === p));
     document.querySelectorAll('.panel').forEach(x => x.classList.toggle('active', x.id === 'p-' + p));
     uloz('tab', p);
+    if (p !== 'vyzva' && p !== 'rozbor') posledniNastroj = p;
     if (p === 'substituce') kresliGraf();
   }
+  let posledniNastroj = null;
   $('taby').onclick = e => { const b = e.target.closest('button'); if (b) prepni(b.dataset.p); };
 
   // Caesar
   const posun = () => ((parseInt($('caPosun').value, 10) || 0) % 26 + 26) % 26;
   $('caSif').onclick = () => { $('caVystup').textContent = S.caesar($('caText').value, posun()); $('caTabulka').innerHTML = ''; };
   $('caDes').onclick = () => { $('caVystup').textContent = S.caesar($('caText').value, -posun()); $('caTabulka').innerHTML = ''; };
+  let caVse = [];
   $('caBrute').onclick = () => {
-    const r = S.caesarVse($('caText').value, $('caJazyk').value);
+    const r = caVse = S.caesarVse($('caText').value, $('caJazyk').value);
     const min = Math.min(...r.map(x => x.skore));
     $('caVystup').textContent = '';
     $('caTabulka').innerHTML = '<table><tr><th>Posun</th><th>Text</th><th>χ²</th></tr>' + r.map(x =>
-      `<tr class="${x.skore === min ? 'nej' : ''}"><td>${x.posun}</td><td class="mono">${esc(x.text.slice(0, 160))}</td><td>${isFinite(x.skore) ? x.skore.toFixed(0) : '–'}</td></tr>`).join('') + '</table>';
+      `<tr class="klik ${x.skore === min ? 'nej' : ''}" data-posun="${x.posun}"><td>${x.posun}</td><td class="mono">${esc(x.text.slice(0, 160))}</td><td>${isFinite(x.skore) ? x.skore.toFixed(0) : '–'}</td></tr>`).join('') + '</table>' +
+      '<p class="pozn">Kliknutím na řádek se posun použije.</p>';
+  };
+  $('caTabulka').onclick = e => {
+    const tr = e.target.closest('tr[data-posun]'); if (!tr) return;
+    $('caPosun').value = tr.dataset.posun; $('caDes').onclick();
   };
 
   // Vigenère
@@ -587,8 +1078,7 @@ tr.nej td{background:var(--accent-soft)}
     const t = $('viText').value, jaz = $('viJazyk').value;
     const n = S.jenPismena(t).length;
     if (n < 40) { chyba('Na odhad klíče je text příliš krátký (aspoň ~100 písmen).'); return; }
-    const kas = S.kasiski(t), ic = S.icProDelky(t), d = S.odhadDelky(t, jaz);
-    const klic = S.odhadKlice(t, d, jaz);
+    const kas = S.kasiski(t), ic = S.icProDelky(t), { delka: d, klic } = S.vigenereLust(t, jaz);
     $('viKlic').value = klic;
     $('viVystup').textContent = S.vigenere(t, klic, true);
     const maxIc = Math.max(...ic.map(x => x.ic));
@@ -627,6 +1117,11 @@ tr.nej td{background:var(--accent-soft)}
   $('suNahodny').onclick = () => { const a = S.ABC.split(''); for (let i = 25; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [a[i], a[j]] = [a[j], a[i]]; } $('suKlic').value = a.join(''); };
   $('suOdhad').onclick = () => { mapa = S.odhadMapy($('suText').value, $('suJazyk').value); mapaUI(); obnovSub(); };
   $('suVymaz').onclick = () => { mapa = {}; mapaUI(); obnovSub(); };
+  $('suAuto').onclick = () => {
+    if (S.jenPismena($('suText').value).length < 60) { chyba('Na automatické luštění je text krátký (aspoň ~60 písmen, lépe stovky).'); return; }
+    $('suJazyk').value = 'cs';
+    mapa = S.substituceLust($('suText').value); mapaUI(); obnovSub();
+  };
   function barva(v) { return getComputedStyle(document.documentElement).getPropertyValue(v).trim(); }
   function kresliGraf() {
     const cv = $('suGraf'); if (!cv.offsetWidth) return;
@@ -702,6 +1197,10 @@ tr.nej td{background:var(--accent-soft)}
   function ukazKriz(slova) {
     $('pkObr').innerHTML = slova.map(sl => sl.map(z => krizSvg(z.pole, z.tecky)).join('')).join('<span class="mezera"></span>');
   }
+  $('pkKlic').innerHTML = [...Array(9).keys()].map(i => {
+    const r = Math.floor(i / 3), c = i % 3, b = `border-top-width:${r ? 2 : 0}px;border-left-width:${c ? 2 : 0}px`;
+    return `<div style="${b}">${[0, 1, 2].map(j => S.ABC[i * 3 + j] ? S.ABC[i * 3 + j] + '<sub>' + '•'.repeat(j + 1) + '</sub>' : '').join(' ')}</div>`;
+  }).join('');
   $('pkSif').onclick = () => {
     const s = S.polskyKrizSifruj($('pkText').value); ukazKriz(s);
     $('pkVystup').textContent = s.map(sl => sl.map(z => z.pole + '.' + z.tecky).join(' ')).join(' / ');
@@ -724,6 +1223,19 @@ tr.nej td{background:var(--accent-soft)}
     ukazMrizku(s, $('trKlic').value); $('trVystup').textContent = S.transpoziceSifruj($('trText').value, $('trKlic').value, d);
   };
   $('trDes').onclick = () => { const r = S.transpoziceDesifruj($('trText').value, $('trKlic').value); ukazMrizku(r, $('trKlic').value); $('trVystup').textContent = r; };
+  $('trLust').onclick = () => {
+    const t = $('trText').value;
+    if (S.jenPismena(t).length < 12) { chyba('Text je na luštění příliš krátký.'); return; }
+    const d = +$('trLustDelka').value, r = d ? S.transpoziceLust(t, d, 10, d) : S.transpoziceLust(t, 7, 10);
+    $('trVysledky').innerHTML = '<h3>Pořadí sloupců, která nejvíc zní česky</h3><table><tr><th>Klíč</th><th>Text</th><th>Skóre</th></tr>' + r.map((x, i) =>
+      `<tr class="klik ${i ? '' : 'nej'}" data-klic="${x.klic}"><td class="mono">${x.klic}</td><td class="mono">${esc(x.text.slice(0, 90))}${x.text.length > 90 ? '…' : ''}</td><td>${x.skore.toFixed(2)}</td></tr>`).join('') + '</table>' +
+      '<p class="pozn">Klíč je zapsaný nejkratšími písmeny (A, B, C…) – skutečné klíčové slovo mělo písmena ve stejném pořadí. Kliknutím na řádek se klíč použije.</p>';
+    $('trKlic').value = r[0].klic; $('trDes').onclick();
+  };
+  $('trVysledky').onclick = e => {
+    const tr = e.target.closest('tr[data-klic]'); if (!tr) return;
+    $('trKlic').value = tr.dataset.klic; $('trDes').onclick();
+  };
 
   // XOR
   const bajty = (s, typ) => typ === 'hex' ? S.hexNaBajty(s) : S.utf8(s);
@@ -733,8 +1245,186 @@ tr.nej td{background:var(--accent-soft)}
       $('xoVystup').textContent = S.bajtyNaHex(v) + '\n\nJako text: ' + S.zUtf8(v);
     } catch (e) { chyba(e.message); }
   };
+  $('xoLust').onclick = () => {
+    try {
+      const d = bajty($('xoText').value, $('xoVstupTyp').value);
+      if (!d.length) return;
+      const r = S.xorLust(d, 6);
+      $('xoVysledky').innerHTML = '<h3>Nejlépe vypadající jednobajtové klíče</h3><table><tr><th>Klíč</th><th>Text</th><th>Skóre</th></tr>' + r.map((x, i) =>
+        `<tr class="klik ${i ? '' : 'nej'}" data-klic="${x.klic.toString(16).padStart(2, '0')}"><td class="mono">${x.klic.toString(16).padStart(2, '0')}</td><td class="mono">${esc(x.text.slice(0, 90))}</td><td>${x.skore.toFixed(2)}</td></tr>`).join('') + '</table>' +
+        '<p class="pozn">Skóre: kolik bajtů po XORu vypadá jako písmena a mezery. Kliknutím na řádek se klíč použije.</p>';
+      pouzijXorKlic(r[0].klic.toString(16).padStart(2, '0'));
+    } catch (e) { chyba(e.message); }
+  };
+  function pouzijXorKlic(hex) { $('xoKlic').value = hex; $('xoKlicTyp').value = 'hex'; $('xoXor').onclick(); }
+  $('xoVysledky').onclick = e => { const tr = e.target.closest('tr[data-klic]'); if (tr) pouzijXorKlic(tr.dataset.klic); };
   $('xoNaHex').onclick = () => { $('xoVystup').textContent = S.bajtyNaHex(S.utf8($('xoText').value)); };
   $('xoNaText').onclick = () => { try { $('xoVystup').textContent = S.zUtf8(S.hexNaBajty($('xoText').value)); } catch (e) { chyba(e.message); } };
+
+  // ===== Vložení textu do nástroje / převzetí výstupu =====
+  const NASTROJE = { rozbor: '🔎 Rozbor', caesar: 'Caesar', vigenere: 'Vigenère', jednoduche: 'Atbash · ROT', substituce: 'Substituce',
+    morse: 'Morseovka', polybius: 'Polybius', transpozice: 'Transpozice', xor: 'XOR / hex' };
+  function vlozDoNastroje(n, text) {
+    if (n === 'rozbor') { $('roText').value = text; prepni('rozbor'); rozeber(); return; }
+    const [pole, vystup] = { caesar: ['caText', 'caVystup'], vigenere: ['viText', 'viVystup'], jednoduche: ['jeText', 'jeVystup'], substituce: ['suText'],
+      morse: ['moText', 'moVystup'], polybius: ['poText', 'poVystup'], transpozice: ['trText', 'trVystup'], xor: ['xoText', 'xoVystup'] }[n];
+    $(pole).value = text;
+    if (vystup) $(vystup).textContent = '';
+    if (n === 'substituce') { mapa = {}; mapaUI(); obnovSub(); }
+    if (n === 'polybius') { $('poKlic').value = ''; ukazCtverec(); }
+    if (n === 'xor') { $('xoVstupTyp').value = /^[\s0-9a-fx]+$/i.test(text) ? 'hex' : 'text'; $('xoVysledky').innerHTML = ''; }
+    if (n === 'transpozice') $('trVysledky').innerHTML = '';
+    if (n === 'caesar') $('caTabulka').innerHTML = '';
+    prepni(n);
+    $(pole).scrollIntoView({ block: 'center', behavior: 'smooth' });
+  }
+  function vystupNastroje(n) {
+    const t = id => $(id).textContent.trim();
+    switch (n) {
+      case 'caesar': if (t('caVystup')) return t('caVystup');
+        return caVse.length && $('caTabulka').innerHTML ? caVse.reduce((a, b) => a.skore < b.skore ? a : b).text : '';
+      case 'vigenere': return t('viVystup');
+      case 'jednoduche': return t('jeVystup');
+      case 'substituce': return t('suVystup');
+      case 'morse': return t('moVystup');
+      case 'polybius': { const a = t('poVystup'), b = t('pkVystup'); if (!a || !b) return a || b; return S.skoreTextu(a) >= S.skoreTextu(b) ? a : b; }
+      case 'transpozice': return t('trVystup');
+      case 'xor': { const v = $('xoVystup').textContent, i = v.indexOf('Jako text: '); return (i >= 0 ? v.slice(i + 11) : v).trim(); }
+    }
+    return '';
+  }
+
+  // ===== Rozbor =====
+  function rozeber() {
+    const t = $('roText').value;
+    if (!t.trim()) { $('roVysledek').innerHTML = ''; return; }
+    const r = S.rozbor(t);
+    const radky = [['Znaků', r.znaku], ['Písmen A–Z', r.pismen]];
+    if (r.ic != null) radky.push(['Index koincidence', r.ic.toFixed(4) + ' <span class="hodnoceni">(čeština ≈ 0,06; náhodně ≈ 0,038)</span>']);
+    if (r.chiPrimo != null) radky.push(['χ² na písmeno vůči češtině', r.chiPrimo.toFixed(2) + ' <span class="hodnoceni">(čeština &lt; 0,9)</span>']);
+    if (r.skore != null) radky.push(['„Češtinovost“ trojic', r.skore.toFixed(2) + ' <span class="hodnoceni">(čeština ≥ −3,0)</span>']);
+    if (r.caesar) radky.push(['Nejlepší Caesarův posun', r.caesar.posun + ' → ' + r.caesar.skore.toFixed(2)]);
+    if (r.skoreAtbash != null) radky.push(['Po Atbashi', r.skoreAtbash.toFixed(2)]);
+    if (r.delkaKlice) radky.push(['Odhad délky klíče', r.delkaKlice]);
+    $('roVysledek').innerHTML = `<div class="ro-druh">Nejspíš: ${esc(r.druh || '?')}</div>` +
+      '<div class="tabwrap"><table style="width:auto">' + radky.filter(x => x[1] != null).map(([a, b]) => `<tr><th>${a}</th><td>${b}</td></tr>`).join('') + '</table></div>' +
+      '<div class="ro-dop">' + r.doporuceni.map(d => `<div>${esc(d.popis)}${d.nastroj !== 'rozbor' ? `<br><button class="btn sec" data-nastroj="${d.nastroj}">→ Otevřít v nástroji ${NASTROJE[d.nastroj]}</button>` : ''}</div>`).join('') + '</div>' +
+      '<h3>Co by to mohlo znamenat</h3><div class="ro-navrhy" id="roNavrhy"><p class="pozn">Zkouším luštit…</p></div>';
+    // luštiče běží až po vykreslení, ať je vidět „Zkouším…“ (substituce a Vigenère trvají desetiny sekundy)
+    const verze = ++roVerze;
+    setTimeout(() => {
+      if (verze !== roVerze) return;
+      roNavrhy = S.navrhy(t);
+      const hraje = vyzva && vyzva.stav === 'hraje';
+      $('roNavrhy').innerHTML = roNavrhy.length ? roNavrhy.map((n, i) => `<div class="navrh ${n.jistota === 'zní česky' ? 'cesky' : ''}">
+          <div class="navrh-hlava"><b>${i + 1}. ${esc(n.metoda)}</b>${n.klic ? ` <span class="hodnoceni">${esc(n.klic)}</span>` : ''}<span class="stitek">${n.jistota}</span></div>
+          <div class="navrh-text">${esc(n.text.length > 400 ? n.text.slice(0, 400) + '…' : n.text)}</div>
+          ${n.nastroj !== 'rozbor' ? `<button class="btn sec" data-nastroj="${n.nastroj}">→ Otevřít v nástroji ${NASTROJE[n.nastroj]}</button>` : ''}
+          ${hraje ? `<button class="btn sec" data-odpoved="${i}">📥 Použít jako odpověď ve výzvě</button>` : ''}
+        </div>`).join('') +
+        '<p class="pozn">Návrhy jsou seřazené podle toho, jak moc výsledek zní česky (četnosti trojic písmen). „Zní česky“ = skoro jistě správně; u substituce a transpozice může být návrh jen přibližný – doladíš ho v nástroji.</p>'
+        : '<p class="pozn">Žádný luštič nedal použitelný výsledek.</p>';
+    }, 30);
+  }
+  let roVerze = 0, roNavrhy = [];
+  $('roRozbor').onclick = rozeber;
+  $('roVysledek').onclick = e => {
+    const b = e.target.closest('button[data-nastroj]'); if (b) { vlozDoNastroje(b.dataset.nastroj, $('roText').value); return; }
+    const o = e.target.closest('button[data-odpoved]');
+    if (o && roNavrhy[+o.dataset.odpoved]) { $('vyOdpoved').value = roNavrhy[+o.dataset.odpoved].text; prepni('vyzva'); $('vyOdpoved').focus(); }
+  };
+
+  // ===== Výzva =====
+  let vyzva = null, stat = { vyreseno: 0, body: 0, serie: 0, vzdano: 0 };
+  try { vyzva = JSON.parse(nacti('vyzva', 'null')); } catch (e) { vyzva = null; }
+  try { stat = Object.assign(stat, JSON.parse(nacti('vyzvaStat', '{}'))); } catch (e) { }
+  const rekord = window.Rekord ? Rekord.sleduj('webapp_hra_sifry_serie', { popisek: 'Nejdelší série vyluštěných výzev', format: v => v + '×' }) : null;
+  if (rekord) rekord.prvek($('vyRekord'));
+  $('vyUroven').innerHTML = Object.entries(S.UROVNE).map(([k, u]) => `<option value="${k}">${u.nazev} – ${u.typZnamy ? 'víš, jaká je to šifra' : 'šifru musíš poznat'} (${u.body} b.)</option>`).join('');
+  $('vyUroven').value = nacti('vyUroven', '1');
+  function typyUrovne() {
+    const u = S.UROVNE[$('vyUroven').value];
+    $('vyTyp').innerHTML = '<option value="">náhodná</option>' + u.typy.map(t => `<option value="${t}">${S.TYPY_VYZEV[t].nazev}</option>`).join('');
+  }
+  typyUrovne();
+  $('vyUroven').onchange = () => { uloz('vyUroven', $('vyUroven').value); typyUrovne(); };
+  $('vyNastroj').innerHTML = Object.entries(NASTROJE).map(([k, v]) => `<option value="${k}">${v}</option>`).join('');
+
+  const zdarma = v => v.typZnamy ? 1 : 0;   // u známé šifry je první nápověda (typ) vidět hned
+  const bodyZa = v => Math.round(v.body * Math.max(0.25, 1 - 0.25 * (v.ukazano - zdarma(v))));
+  function ulozVyzvu() { uloz('vyzva', JSON.stringify(vyzva)); uloz('vyzvaStat', JSON.stringify(stat)); }
+  function ukazStat() {
+    $('vyStat').innerHTML = `<span>Vyluštěno: <b>${stat.vyreseno}</b></span><span>Body: <b>${stat.body}</b></span><span>Série: <b>${stat.serie}</b></span><span>Vzdáno: <b>${stat.vzdano}</b></span>`;
+  }
+  function ukazVyzvu() {
+    ukazStat();
+    if (!vyzva) { $('vyZadani').hidden = true; return; }
+    const v = vyzva, T = S.TYPY_VYZEV[v.typ], hotovo = v.stav !== 'hraje';
+    $('vyZadani').hidden = false;
+    $('vyHlavicka').textContent = `Výzva č. ${v.cislo} · ${S.UROVNE[v.uroven].nazev}`;
+    $('vyBody').textContent = hotovo ? (v.stav === 'vyreseno' ? `získáno ${v.ziskano} b.` : 'vzdáno') : `za vyluštění ${bodyZa(v)} b.`;
+    $('vyTypText').textContent = v.typZnamy || v.ukazano > 0 || hotovo ? 'Šifra: ' + T.nazev : 'Šifra: neznámá – zkus ji poznat (třeba v záložce Rozbor).';
+    const kriz = v.zobrazeni === 'kriz';
+    $('vySifra').hidden = kriz; $('vyKriz').hidden = !kriz;
+    $('vySifra').textContent = kriz ? '' : v.sifra;
+    $('vySifra').classList.toggle('hex', v.typ === 'xor');
+    $('vyKriz').innerHTML = kriz ? v.sifra.split(' / ').map(sl => sl.split(' ').map(z => { const [a, b] = z.split('.'); return krizSvg(+a, +b); }).join('')).join('<span class="mezera"></span>') : '';
+    $('vyKopiruj').hidden = $('vyNastroj').hidden = $('vyVloz').hidden = kriz;
+    const nap = v.napovedy.slice(1, v.ukazano);   // typ šifry (1. nápověda) se ukazuje v řádku nad šifrou
+    if (hotovo) nap.push('Otevřený text: ' + v.ot);
+    $('vyNapovedy').innerHTML = nap.map(n => `<li>${esc(n)}</li>`).join('');
+    $('vyNapoveda').hidden = $('vyVzdat').hidden = $('vyOver').hidden = $('vyVezmi').hidden = hotovo;
+    $('vyNapoveda').disabled = v.ukazano >= v.napovedy.length;
+    $('vyNapoveda').textContent = v.ukazano >= v.napovedy.length ? '💡 Další nápověda není' : `💡 Nápověda (−${Math.round(v.body * 0.25)} b.)`;
+    $('vyOdpoved').readOnly = hotovo;
+  }
+  function novaVyzva() {
+    vyzva = S.vytvorVyzvu(+$('vyUroven').value, $('vyTyp').value);
+    vyzva.cislo = (+nacti('vyzvaCislo', '0') || 0) + 1; uloz('vyzvaCislo', vyzva.cislo);
+    vyzva.ukazano = zdarma(vyzva); vyzva.stav = 'hraje';
+    $('vyOdpoved').value = ''; $('vyVysledek').textContent = ''; $('vyVysledek').className = 'vysledek';
+    $('vyNastroj').value = vyzva.typZnamy ? S.TYPY_VYZEV[vyzva.typ].nastroj : 'rozbor';
+    ulozVyzvu(); ukazVyzvu();
+  }
+  function vysledek(trida, html) { const e = $('vyVysledek'); e.className = 'vysledek ' + trida; e.innerHTML = html; }
+  $('vyNova').onclick = novaVyzva;
+  $('vyNapoveda').onclick = () => { if (!vyzva || vyzva.stav !== 'hraje' || vyzva.ukazano >= vyzva.napovedy.length) return; vyzva.ukazano++; ulozVyzvu(); ukazVyzvu(); };
+  $('vyVzdat').onclick = async () => {
+    if (!vyzva || vyzva.stav !== 'hraje') return;
+    if (window.Dialog && !(await Dialog.potvrd('Opravdu se vzdát? Série vyluštěných výzev se přeruší.'))) return;
+    vyzva.stav = 'vzdano'; stat.vzdano++; stat.serie = 0;
+    vysledek('ne', 'Nevadí, příště to vyjde. Řešení je v nápovědách nahoře.');
+    ulozVyzvu(); ukazVyzvu();
+  };
+  $('vyOver').onclick = () => {
+    if (!vyzva || vyzva.stav !== 'hraje') return;
+    const odp = $('vyOdpoved').value;
+    if (!S.jenPismena(odp)) { chyba('Napiš nejdřív rozluštěný text.'); return; }
+    const sh = S.shodaOdpovedi(odp, vyzva.ot);
+    if (sh >= 0.92) {
+      vyzva.stav = 'vyreseno'; vyzva.ziskano = bodyZa(vyzva);
+      stat.vyreseno++; stat.body += vyzva.ziskano; stat.serie++;
+      const novy = rekord && rekord.zapis(stat.serie);
+      vysledek('ok', `🎉 <b>Vyluštěno!</b> +${vyzva.ziskano} b.` + (Math.round(sh * 100) < 100 ? ` (shoda ${Math.round(sh * 100)} %, drobné chyby se odpouštějí)` : '') +
+        (novy && stat.serie > 1 ? ' Nový rekord série!' : ''));
+    } else {
+      vysledek('ne', `Ještě to není ono – shoda s tajnou zprávou ${Math.round(sh * 100)} %. ` +
+        (sh > 0.7 ? 'Jsi blízko, zkontroluj zbývající písmena.' : sh > 0.4 ? 'Něco sedí, ale velká část ještě ne.' : 'Zkus jiný postup nebo si vezmi nápovědu.'));
+    }
+    ulozVyzvu(); ukazVyzvu();
+  };
+  $('vyKopiruj').onclick = async () => {
+    if (!vyzva) return;
+    try { await navigator.clipboard.writeText(vyzva.sifra); window.Dialog && Dialog.info('Zkopírováno'); }
+    catch (e) { chyba('Kopírování se nepovedlo – označ text ručně.'); }
+  };
+  $('vyVloz').onclick = () => { if (vyzva) vlozDoNastroje($('vyNastroj').value, vyzva.sifra); };
+  $('vyVezmi').onclick = () => {
+    const n = posledniNastroj, v = n ? vystupNastroje(n) : '';
+    if (!v) { chyba(n ? `Nástroj ${NASTROJE[n]} zatím nemá žádný výstup.` : 'Nejdřív šifru rozlušti v některém nástroji.'); return; }
+    $('vyOdpoved').value = v;
+  };
+  ukazVyzvu();
 
   // ===== Enigma =====
   const RN = Object.keys(S.ROTORY);

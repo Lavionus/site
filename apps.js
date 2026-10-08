@@ -1353,6 +1353,11 @@ const KATALOG_SEKCE = [
         "tagy": ["3d tisk", "stl", "3mf", "svg", "číslo domu", "popisné číslo", "cedulka", "jmenovka", "nápis", "písmena", "font", "písmo", "reliéf", "rytina", "šablona", "sprej", "tengwar", "elfí písmo", "runy", "braille", "hieroglyfy", "podložka", "tiskárna", "vlastní font"]
       },
       {
+        "soubor": "obsah/povrch3d.html",
+        "nazev": "🧱 Struktury a hrany 3D modelu",
+        "tagy": ["3d tisk", "stl", "obj", "3mf", "struktura", "textura", "reliéf", "cihly", "kámen", "dlažba", "prkna", "šupiny", "vroubkování", "slzičkový plech", "výšková mapa", "displacement", "sražení", "fazeta", "zaoblení", "rádius", "hrany", "úprava modelu", "vlastní vzor", "nápis", "logo", "gravírování", "šindel", "palisáda", "bosáž", "měření tloušťky"]
+      },
+      {
         "soubor": "obsah/turbina_navrhar.html",
         "nazev": "🌀 Návrhář turbín a proudění",
         "tagy": ["turbína", "vrtule", "proudění", "cfd", "lbm", "větrná elektrárna", "savonius", "darrieus", "gorlov", "tesla", "pelton", "kaplan", "bánki", "cross-flow", "lopatka", "naca", "bem", "aerodynamika", "hydrodynamika", "stl"]
@@ -2437,7 +2442,7 @@ const KATALOG_SEKCE = [
       {
         "soubor": "obsah/sifry.html",
         "nazev": "🔏 Šifry",
-        "tagy": ["šifra", "Caesar", "Vigenère", "Enigma", "Morseovka", "frekvenční analýza", "kryptografie"]
+        "tagy": ["šifra", "Caesar", "Vigenère", "Enigma", "Morseovka", "frekvenční analýza", "kryptografie", "luštění", "výzva", "hra", "transpozice", "substituce"]
       }
     ]
   },
@@ -2469,7 +2474,7 @@ const KATALOG_SEKCE = [
       {
         "soubor": "obsah/scene_sketch.html",
         "nazev": "📐 Náčrt místa činu",
-        "tagy": ["místo činu", "plánek", "skica", "měřítko", "značky důkazů"]
+        "tagy": ["místo činu", "plánek", "skica", "měřítko", "značky důkazů", "kóty", "půdorys", "fotka jako podklad", "fotopozice", "kriminalistika"]
       }
     ]
   },
