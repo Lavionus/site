@@ -29,27 +29,36 @@ function povrchJadro(G) {
   const mul = (a, s) => [a[0] * s, a[1] * s, a[2] * s];
   const dot = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
   const cross = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
-  const len = a => Math.hypot(a[0], a[1], a[2]);
+  const dist2 = (a, b) => (a[0] - b[0]) ** 2 + (a[1] - b[1]) ** 2 + (a[2] - b[2]) ** 2;
+  const len = a => Math.sqrt(a[0] * a[0] + a[1] * a[1] + a[2] * a[2]);   // Math.hypot je ve V8 několikrát pomalejší
   const norm = a => { const l = len(a); return l > 1e-300 ? [a[0] / l, a[1] / l, a[2] / l] : [0, 0, 0]; };
 
   /* =====================================================================
      NAČTENÍ
      ===================================================================== */
+  /* STL: textové poznáme podle „solid … facet … vertex“, jinak binární.
+     Binární s useknutým koncem (přerušený přenos) se načte po poslední celý
+     trojúhelník a počet chybějících se poznamená v .useknuto. */
   function parseSTL(buf) {
-    const dv = new DataView(buf);
-    if (buf.byteLength >= 84) {
+    const u8 = new Uint8Array(buf);
+    const zacatek = new TextDecoder().decode(u8.subarray(0, Math.min(u8.length, 1024)));
+    const textove = /^\s*solid/i.test(zacatek) && /facet|vertex/i.test(zacatek);
+    if (!textove && buf.byteLength >= 84) {
+      const dv = new DataView(buf);
       const n = dv.getUint32(80, true);
-      if (84 + n * 50 === buf.byteLength) {
-        const out = new Float32Array(n * 9);
-        for (let i = 0; i < n; i++) {
+      const k = Math.min(n, Math.floor((buf.byteLength - 84) / 50));
+      if (k > 0) {
+        const out = new Float32Array(k * 9);
+        for (let i = 0; i < k; i++) {
           const o = 84 + i * 50 + 12;
-          for (let k = 0; k < 9; k++) out[i * 9 + k] = dv.getFloat32(o + k * 4, true);
+          for (let q = 0; q < 9; q++) out[i * 9 + q] = dv.getFloat32(o + q * 4, true);
         }
+        if (k < n) out.useknuto = n - k;
         return out;
       }
     }
-    const text = new TextDecoder().decode(new Uint8Array(buf));
-    const re = /vertex\s+([-+\d.eE]+)\s+([-+\d.eE]+)\s+([-+\d.eE]+)/g;
+    const text = new TextDecoder().decode(u8);
+    const re = /vertex\s+([-+\d.eE]+|nan|inf)\s+([-+\d.eE]+|nan|inf)\s+([-+\d.eE]+|nan|inf)/gi;
     const v = [];
     let m;
     while ((m = re.exec(text))) v.push(+m[1], +m[2], +m[3]);
@@ -61,8 +70,9 @@ function povrchJadro(G) {
     const v = [], out = [];
     for (const radek of text.split(/\r?\n/)) {
       const s = radek.trim();
-      if (s.startsWith('v ')) { const q = s.split(/\s+/); v.push([+q[1], +q[2], +q[3]]); }
-      else if (s.startsWith('f ')) {
+      // oddělovač může být mezera i tabulátor
+      if (/^v\s/.test(s)) { const q = s.split(/\s+/); v.push([+q[1], +q[2], +q[3]]); }
+      else if (/^f\s/.test(s)) {
         const idx = s.split(/\s+/).slice(1).map(t => { const i = parseInt(t, 10); return i < 0 ? v.length + i : i - 1; });
         for (let k = 1; k + 1 < idx.length; k++) {
           const a = v[idx[0]], b = v[idx[k]], c = v[idx[k + 1]];
@@ -172,14 +182,31 @@ function povrchJadro(G) {
   }
 
   /* Svaření „polévky“ na indexovanou síť; degenerované trojúhelníky pryč. */
+  /* Svaření „polévky“ na indexovanou síť; degenerované trojúhelníky pryč.
+     Tolerance se bere z rozměru „většiny“ modelu (1.–99. percentil), aby jeden
+     ulétlý vrchol (poškozený soubor) nezvětšil toleranci tak, že by se celý
+     model slil do bodu. Trojúhelníky s neplatnými nebo hrubě ulétlými
+     souřadnicemi se vyhodí – jejich počet je ve .vyhozeno. */
   function svar(soup) {
-    let mn = [Infinity, Infinity, Infinity], mx = [-Infinity, -Infinity, -Infinity];
-    for (let i = 0; i < soup.length; i += 3) for (let k = 0; k < 3; k++) {
-      if (soup[i + k] < mn[k]) mn[k] = soup[i + k];
-      if (soup[i + k] > mx[k]) mx[k] = soup[i + k];
+    const nV = soup.length / 3;
+    const krok = Math.max(1, Math.floor(nV / 30000));
+    const osy = [[], [], []];
+    for (let i = 0; i < nV; i += krok) for (let k = 0; k < 3; k++) { const c = soup[3 * i + k]; if (isFinite(c)) osy[k].push(c); }
+    const lo = [], hi = [];
+    for (let k = 0; k < 3; k++) {
+      const a = osy[k].sort((x, y) => x - y);
+      lo.push(a.length ? a[Math.floor(a.length * 0.01)] : 0);
+      hi.push(a.length ? a[Math.min(a.length - 1, Math.floor(a.length * 0.99))] : 0);
     }
-    const tol = Math.max(1e-9, len(sub(mx, mn)) * 1e-7);
+    const diag = Math.max(1e-9, len(sub(hi, lo)));
+    const okraj = diag * 100;            // dál než 100× rozměr modelu = nesmysl
+    const platny = i => {
+      for (let k = 0; k < 3; k++) { const c = soup[i + k]; if (!isFinite(c) || c < lo[k] - okraj || c > hi[k] + okraj) return false; }
+      return true;
+    };
+    const tol = Math.max(1e-9, diag * 1e-7);
     const mapa = new Map(), pos = [], tri = [];
+    let vyhozeno = 0;
     const id = i => {
       const k = Math.round(soup[i] / tol) + ',' + Math.round(soup[i + 1] / tol) + ',' + Math.round(soup[i + 2] / tol);
       let v = mapa.get(k);
@@ -187,10 +214,130 @@ function povrchJadro(G) {
       return v;
     };
     for (let i = 0; i < soup.length; i += 9) {
+      if (!platny(i) || !platny(i + 3) || !platny(i + 6)) { vyhozeno++; continue; }
       const a = id(i), b = id(i + 3), c = id(i + 6);
       if (a !== b && b !== c && a !== c) tri.push(a, b, c);
     }
-    return { pos: Float64Array.from(pos), tri: Uint32Array.from(tri) };
+    return { pos: Float64Array.from(pos), tri: Uint32Array.from(tri), vyhozeno };
+  }
+
+  /* =====================================================================
+     ZJEDNODUŠENÍ SÍTĚ (slučování hran podle kvadrik – Garland & Heckbert)
+     Hrana s nejmenší chybou se stáhne do bodu (konec nebo střed). Okraje
+     otevřených sítí a hrany sdílené víc než dvěma trojúhelníky zůstávají;
+     stažení, které by porušilo topologii (podmínka spojení) nebo převrátilo
+     trojúhelník, se přeskočí – uzavřená síť zůstane uzavřená.
+     ===================================================================== */
+  function zjednodus(pos0, tri0, cil, prubeh) {
+    const nV = pos0.length / 3, nT0 = tri0.length / 3;
+    const pos = Float64Array.from(pos0), tri = Int32Array.from(tri0);
+    const ziva = new Uint8Array(nT0).fill(1), zivy = new Uint8Array(nV).fill(1), verze = new Int32Array(nV);
+    let nT = nT0;
+    // vrchol → trojúhelníky
+    const okolo = Array.from({ length: nV }, () => []);
+    for (let t = 0; t < nT0; t++) for (let k = 0; k < 3; k++) okolo[tri[3 * t + k]].push(t);
+    // kvadriky (a² ab ac ad b² bc bd c² cd d²), váha = plocha
+    const Q = new Float64Array(nV * 10);
+    for (let t = 0; t < nT0; t++) {
+      const a = P(pos, tri[3 * t]), b = P(pos, tri[3 * t + 1]), c = P(pos, tri[3 * t + 2]);
+      const n = cross(sub(b, a), sub(c, a)), l = len(n);
+      if (l < 1e-20) continue;
+      const nx = n[0] / l, ny = n[1] / l, nz = n[2] / l, d = -(nx * a[0] + ny * a[1] + nz * a[2]), w = l / 2;
+      const q = [nx * nx, nx * ny, nx * nz, nx * d, ny * ny, ny * nz, ny * d, nz * nz, nz * d, d * d];
+      for (let k = 0; k < 3; k++) { const o = 10 * tri[3 * t + k]; for (let i = 0; i < 10; i++) Q[o + i] += q[i] * w; }
+    }
+    // okrajové a nejednoznačné hrany → jejich vrcholy se nehýbou
+    const hrany = new Map();
+    for (let t = 0; t < nT0; t++) for (let k = 0; k < 3; k++) { const kk = klic(tri[3 * t + k], tri[3 * t + (k + 1) % 3]); hrany.set(kk, (hrany.get(kk) || 0) + 1); }
+    const pevny = new Uint8Array(nV);
+    for (const [kk, n] of hrany) if (n !== 2) { pevny[Math.floor(kk / KL)] = 1; pevny[kk % KL] = 1; }
+    const chyba = (q, x, y, z) => q[0] * x * x + 2 * q[1] * x * y + 2 * q[2] * x * z + 2 * q[3] * x + q[4] * y * y + 2 * q[5] * y * z + 2 * q[6] * y + q[7] * z * z + 2 * q[8] * z + q[9];
+    // halda (min) nad hranami: cena, vrcholy, verze vrcholů v době výpočtu
+    let hc = new Float64Array(1 << 16), ha = new Int32Array(1 << 16), hb = new Int32Array(1 << 16), hva = new Int32Array(1 << 16), hvb = new Int32Array(1 << 16), hn = 0;
+    const nahoru = i => { while (i > 0) { const p = (i - 1) >> 1; if (hc[p] <= hc[i]) break; prohod(i, p); i = p; } };
+    const dolu = i => { for (;;) { const l = 2 * i + 1, r = l + 1; let m = i; if (l < hn && hc[l] < hc[m]) m = l; if (r < hn && hc[r] < hc[m]) m = r; if (m === i) break; prohod(i, m); i = m; } };
+    const prohod = (i, j) => { for (const A of [hc, ha, hb, hva, hvb]) { const t = A[i]; A[i] = A[j]; A[j] = t; } };
+    const q = new Float64Array(10);
+    const cilovyBod = (a, b) => {
+      for (let i = 0; i < 10; i++) q[i] = Q[10 * a + i] + Q[10 * b + i];
+      const kand = pevny[a] ? [a] : pevny[b] ? [b] : null;
+      let best = Infinity, bx = 0, by = 0, bz = 0;
+      const zkus = (x, y, z) => { const e = chyba(q, x, y, z); if (e < best) { best = e; bx = x; by = y; bz = z; } };
+      if (kand) zkus(pos[3 * kand[0]], pos[3 * kand[0] + 1], pos[3 * kand[0] + 2]);
+      else {
+        zkus(pos[3 * a], pos[3 * a + 1], pos[3 * a + 2]); zkus(pos[3 * b], pos[3 * b + 1], pos[3 * b + 2]);
+        zkus((pos[3 * a] + pos[3 * b]) / 2, (pos[3 * a + 1] + pos[3 * b + 1]) / 2, (pos[3 * a + 2] + pos[3 * b + 2]) / 2);
+      }
+      return [best, bx, by, bz];
+    };
+    const vloz = (a, b) => {
+      if (pevny[a] && pevny[b]) return;
+      if (hn === hc.length) {
+        const r = A => { const n = new A.constructor(A.length * 2); n.set(A); return n; };
+        hc = r(hc); ha = r(ha); hb = r(hb); hva = r(hva); hvb = r(hvb);
+      }
+      hc[hn] = cilovyBod(a, b)[0]; ha[hn] = a; hb[hn] = b; hva[hn] = verze[a]; hvb[hn] = verze[b];
+      nahoru(hn++);
+    };
+    for (const [kk, n] of hrany) if (n === 2) vloz(Math.floor(kk / KL), kk % KL);
+    hrany.clear();
+    const sousede = v => { const s = new Set(); for (const t of okolo[v]) if (ziva[t]) for (let k = 0; k < 3; k++) if (tri[3 * t + k] !== v) s.add(tri[3 * t + k]); return s; };
+    const normala = (t, v, x, y, z) => {
+      const p = [0, 1, 2].map(k => { const i = tri[3 * t + k]; return i === v ? [x, y, z] : P(pos, i); });
+      return cross(sub(p[1], p[0]), sub(p[2], p[0]));
+    };
+    let kroku = 0;
+    while (nT > cil && hn > 0) {
+      const a0 = ha[0], b0 = hb[0], va = hva[0], vb = hvb[0];
+      hn--; if (hn > 0) { for (const A of [hc, ha, hb, hva, hvb]) A[0] = A[hn]; dolu(0); }
+      if (!zivy[a0] || !zivy[b0] || verze[a0] !== va || verze[b0] !== vb) continue;
+      // b se stáhne do a (pevný vrchol zůstává na místě)
+      let a = a0, b = b0;
+      if (pevny[b] && !pevny[a]) { a = b0; b = a0; }
+      const [, x, y, z] = cilovyBod(a, b);
+      const spolecne = okolo[a].filter(t => ziva[t] && (tri[3 * t] === b || tri[3 * t + 1] === b || tri[3 * t + 2] === b));
+      if (spolecne.length !== 2) continue;
+      // podmínka spojení: společní sousedé jen dva (protější vrcholy)
+      const sa = sousede(a), sb = sousede(b);
+      let spol = 0;
+      for (const w of sa) if (sb.has(w)) spol++;
+      if (spol !== 2) continue;
+      // žádný trojúhelník se nesmí převrátit ani zdegenerovat
+      let ok = true;
+      for (const v of [a, b]) {
+        for (const t of okolo[v]) {
+          if (!ziva[t] || spolecne.includes(t)) continue;
+          const n0 = normala(t, -1, 0, 0, 0), n1 = normala(t, v, x, y, z);
+          const l0 = len(n0), l1 = len(n1);
+          if (l1 < l0 * 1e-3 || dot(n0, n1) < 0.2 * l0 * l1) { ok = false; break; }
+        }
+        if (!ok) break;
+      }
+      if (!ok) continue;
+      // provést
+      for (const t of spolecne) { ziva[t] = 0; nT--; }
+      for (const t of okolo[b]) {
+        if (!ziva[t]) continue;
+        for (let k = 0; k < 3; k++) if (tri[3 * t + k] === b) tri[3 * t + k] = a;
+        okolo[a].push(t);
+      }
+      okolo[a] = okolo[a].filter(t => ziva[t]);
+      okolo[b] = [];
+      zivy[b] = 0;
+      pos[3 * a] = x; pos[3 * a + 1] = y; pos[3 * a + 2] = z;
+      for (let i = 0; i < 10; i++) Q[10 * a + i] += Q[10 * b + i];
+      verze[a]++;
+      for (const w of sousede(a)) vloz(a, w);
+      if (prubeh && ++kroku % 20000 === 0) prubeh(1 - (nT - cil) / Math.max(1, nT0 - cil));
+    }
+    // zhustit
+    const mapa = new Int32Array(nV).fill(-1), np = [], nt = [];
+    for (let t = 0; t < nT0; t++) if (ziva[t]) for (let k = 0; k < 3; k++) {
+      const v = tri[3 * t + k];
+      if (mapa[v] < 0) { mapa[v] = np.length / 3; np.push(pos[3 * v], pos[3 * v + 1], pos[3 * v + 2]); }
+      nt.push(mapa[v]);
+    }
+    return { pos: Float64Array.from(np), tri: Uint32Array.from(nt) };
   }
 
   /* =====================================================================
@@ -434,7 +581,7 @@ function povrchJadro(G) {
       this.o = new Int32Array(Math.max(16, nT * 2));
       if (puvod) this.o.set(puvod); else for (let i = 0; i < nT; i++) this.o[i] = i;
       this.zivy = new Uint8Array(Math.max(16, nT * 2)); this.zivy.fill(1, 0, nT);
-      this.h = new Map();
+      this._hranyInit(Math.max(1024, nT * 4));
       for (let i = 0; i < nT; i++) this._registruj(i);
     }
     get pocetV() { return this.nV; }
@@ -446,30 +593,78 @@ function povrchJadro(G) {
       this.p[3 * i] = x; this.p[3 * i + 1] = y; this.p[3 * i + 2] = z;
       return i;
     }
-    _registruj(ti) {
-      for (let k = 0; k < 3; k++) {
-        const kk = klic(this.t[3 * ti + k], this.t[3 * ti + (k + 1) % 3]);
-        const e = this.h.get(kk);
-        if (e === undefined) this.h.set(kk, ti);
-        else if (typeof e === 'number') this.h.set(kk, [e, ti]);
-        else e.push(ti);
+    /* Mapa hran → trojúhelníky: typovaná hašovací tabulka s otevřeným
+       adresováním (klíč = dvojice vrcholů a < b, nejvýš dva trojúhelníky;
+       třetí a další u nemanifoldních hran v `hX`). Map s číselnými klíči
+       a·KL + b (mimo malá celá čísla) byla nejpomalejší částí zjemnění. */
+    _hranyInit(min) {
+      let vel = 1024; while (vel < min * 2) vel *= 2;
+      this.hA = new Int32Array(vel).fill(-1);        // -1 prázdno, -2 smazáno
+      this.hB = new Int32Array(vel);
+      this.h1 = new Int32Array(vel); this.h2 = new Int32Array(vel);
+      this.hMaska = vel - 1; this.hPlno = 0; this.hX = null;
+    }
+    _hSlot(a, b) {
+      const A = this.hA, B = this.hB, m = this.hMaska;
+      let h = (Math.imul(a, 73856093) ^ Math.imul(b, 19349663)) & m;
+      while (A[h] !== -1) { if (A[h] === a && B[h] === b) return h; h = (h + 1) & m; }
+      return -1 - h;                                  // nenalezeno: -1 - první prázdné místo
+    }
+    _hRozsir() {
+      const A = this.hA, B = this.hB, T1 = this.h1, T2 = this.h2, n = A.length;
+      let zive = 0; for (let i = 0; i < n; i++) if (A[i] >= 0) zive++;
+      this._hranyInit(Math.max(zive * 2, n / 4));
+      const hX = this.hX;
+      for (let i = 0; i < n; i++) if (A[i] >= 0) {
+        const s = -1 - this._hSlot(A[i], B[i]);
+        this.hA[s] = A[i]; this.hB[s] = B[i]; this.h1[s] = T1[i]; this.h2[s] = T2[i]; this.hPlno++;
       }
+      this.hX = hX;
+    }
+    _hPridej(a, b, ti) {
+      if (a > b) { const x = a; a = b; b = x; }
+      let s = this._hSlot(a, b);
+      if (s >= 0) {
+        if (this.h1[s] < 0) this.h1[s] = ti;
+        else if (this.h2[s] < 0) this.h2[s] = ti;
+        else { if (!this.hX) this.hX = new Map(); const k = a * KL + b, l = this.hX.get(k); if (l) l.push(ti); else this.hX.set(k, [ti]); }
+        return;
+      }
+      if ((this.hPlno + 1) * 2 > this.hA.length) { this._hRozsir(); s = this._hSlot(a, b); }
+      s = -1 - s;
+      this.hA[s] = a; this.hB[s] = b; this.h1[s] = ti; this.h2[s] = -1; this.hPlno++;
+    }
+    _hOdeber(a, b, ti) {
+      if (a > b) { const x = a; a = b; b = x; }
+      const s = this._hSlot(a, b);
+      if (s < 0) return;
+      const k = a * KL + b, l = this.hX && this.hX.get(k);
+      if (l) {
+        const i = l.indexOf(ti);
+        if (i >= 0) { l.splice(i, 1); if (!l.length) this.hX.delete(k); return; }
+      }
+      const nahrada = l && l.length ? l.pop() : -1;
+      if (l && !l.length) this.hX.delete(k);
+      if (this.h1[s] === ti) { this.h1[s] = this.h2[s]; this.h2[s] = nahrada; }
+      else if (this.h2[s] === ti) this.h2[s] = nahrada;
+      if (this.h1[s] < 0) this.hA[s] = -2;            // smazáno (sondování jde přes ně dál)
+    }
+    _registruj(ti) {
+      const t = this.t, a = t[3 * ti], b = t[3 * ti + 1], c = t[3 * ti + 2];
+      this._hPridej(a, b, ti); this._hPridej(b, c, ti); this._hPridej(c, a, ti);
     }
     _odregistruj(ti) {
-      for (let k = 0; k < 3; k++) {
-        const kk = klic(this.t[3 * ti + k], this.t[3 * ti + (k + 1) % 3]);
-        const e = this.h.get(kk);
-        if (e === ti) this.h.delete(kk);
-        else if (Array.isArray(e)) {
-          const i = e.indexOf(ti);
-          if (i >= 0) e.splice(i, 1);
-          if (e.length === 1) this.h.set(kk, e[0]); else if (!e.length) this.h.delete(kk);
-        }
-      }
+      const t = this.t, a = t[3 * ti], b = t[3 * ti + 1], c = t[3 * ti + 2];
+      this._hOdeber(a, b, ti); this._hOdeber(b, c, ti); this._hOdeber(c, a, ti);
     }
     trojuhelnikyHrany(kk) {
-      const e = this.h.get(kk);
-      return e === undefined ? [] : typeof e === 'number' ? [e] : e.slice();
+      const a = Math.floor(kk / KL), b = kk % KL, s = this._hSlot(a, b);
+      if (s < 0 || this.h1[s] < 0) return [];
+      const r = [this.h1[s]];
+      if (this.h2[s] >= 0) r.push(this.h2[s]);
+      const l = this.hX && this.hX.get(kk);
+      if (l) for (const x of l) r.push(x);
+      return r;
     }
     pridejT(a, b, c, o) {
       if (this.nT + 1 > this.o.length) {
@@ -543,9 +738,15 @@ function povrchJadro(G) {
         const a = v[(k + 1) % 3], b = v[(k + 2) % 3], c = v[k];
         const p = s[(k + 1) % 3], q = s[(k + 2) % 3];     // p na a→b, q na b→c
         this.pridejT(p, b, q, o);
-        // čtyřúhelník a, p, q, c – kratší úhlopříčka
-        const dAQ = len(sub(this.bod(a), this.bod(q))), dPC = len(sub(this.bod(p), this.bod(c)));
-        if (dAQ <= dPC) { this.pridejT(a, p, q, o); this.pridejT(a, q, c, o); }
+        // čtyřúhelník a, p, q, c: úhlopříčka, po které oba trojúhelníky zachovají
+        // orientaci (u nekonvexního čtyřúhelníku – řez těsně u vrcholu – by
+        // kratší úhlopříčka dala trojúhelník přeložený naruby); z platných kratší
+        const A = this.bod(a), Pp = this.bod(p), Q = this.bod(q), C = this.bod(c);
+        const n0 = cross(sub(this.bod(b), A), sub(C, A));
+        const kladny = (x, y, z) => dot(cross(sub(y, x), sub(z, x)), n0) > 0;
+        const v1 = kladny(A, Pp, Q) && kladny(A, Q, C), v2 = kladny(A, Pp, C) && kladny(Pp, Q, C);
+        const prvni = v1 && v2 ? len(sub(A, Q)) <= len(sub(Pp, C)) : v1 || !v2 && len(sub(A, Q)) <= len(sub(Pp, C));
+        if (prvni) { this.pridejT(a, p, q, o); this.pridejT(a, q, c, o); }
         else { this.pridejT(a, p, c, o); this.pridejT(p, q, c, o); }
       }
     }
@@ -554,10 +755,14 @@ function povrchJadro(G) {
        `delit(a, b, delka)`; trojúhelník s označenou hranou si vždy rozpůlí
        i svou nejdelší, takže tvar trojúhelníků zůstává rozumný. */
     zjemni(delit, maxKol, limitT, kandidat) {
+      // Podmínka dělení závisí jen na hraně a jejím původním trojúhelníku:
+      // trojúhelník, který kolo přežil beze změny, se už dělit nebude –
+      // další kola tedy procházejí jen nově vzniklé (indexy od `od`).
+      let od = 0;
       for (let kolo = 0; kolo < (maxKol || 40); kolo++) {
         const oznac = new Set();
         const nT = this.pocetT;
-        for (let ti = 0; ti < nT; ti++) {
+        for (let ti = od; ti < nT; ti++) {
           if (!this.zivy[ti] || (kandidat && !kandidat(ti))) continue;
           for (let k = 0; k < 3; k++) {
             const a = this.t[3 * ti + k], b = this.t[3 * ti + (k + 1) % 3];
@@ -580,6 +785,7 @@ function povrchJadro(G) {
           const a = Math.floor(kk / KL), b = kk % KL;
           deleni.set(kk, this.pridejV((this.p[3 * a] + this.p[3 * b]) / 2, (this.p[3 * a + 1] + this.p[3 * b + 1]) / 2, (this.p[3 * a + 2] + this.p[3 * b + 2]) / 2));
         }
+        od = this.pocetT;
         this.rozdel(deleni);
         if (limitT && this.pocetZivych() > limitT * 1.3) return false;
       }
@@ -587,7 +793,8 @@ function povrchJadro(G) {
     }
     _delka(a, b) {
       const p = this.p;
-      return Math.hypot(p[3 * a] - p[3 * b], p[3 * a + 1] - p[3 * b + 1], p[3 * a + 2] - p[3 * b + 2]);
+      const x = p[3 * a] - p[3 * b], y = p[3 * a + 1] - p[3 * b + 1], z = p[3 * a + 2] - p[3 * b + 2];
+      return Math.sqrt(x * x + y * y + z * z);
     }
     _nejdelsi(ti) {
       let best = -1, kk = 0;
@@ -646,8 +853,48 @@ function povrchJadro(G) {
         const fiC = Math.min(fi, 170 * Math.PI / 180);
         const R = op.velikost;
         const t = op.typ === 'zaobl' ? R * Math.tan(fiC / 2) : R;   // odstup tečné čáry
-        out.push({ rid, op, P0, P1, L, d, nA, nB, a, b, cA: dot(nA, P0), cB: dot(nB, P0), fi: fiC, t, R, konv, rA: s.rA, rB: s.rB, va: s.a, vb: s.b, i: out.length });
+        // dílky oblouku: kolik chce uživatel, ale dílek ne kratší než 0,05 mm
+        // (menší tiskárna nerozliší a síť by zbytečně narostla)
+        const M = op.typ === 'zaobl' ? Math.max(1, Math.min(Math.ceil((op.segmenty || 8) / 2), Math.ceil(R * fiC / 0.1))) : 1;
+        out.push({ rid, op, P0, P1, L, d, nA, nB, a, b, cA: dot(nA, P0), cB: dot(nB, P0), fi: fiC, t, R, M, konv, rA: s.rA, rB: s.rB, va: s.a, vb: s.b, i: out.length });
       }
+    }
+    /* Rohy, kde se potkají hrany s různou úpravou (jiný poloměr nebo
+       zaoblení × sražení): větší úprava se k takovému rohu plynule zúží na
+       nejmenší z nich (při různém typu na nulu) na délce 2× šířka úpravy.
+       V rohu pak mají všechny hrany stejnou úpravu a hladce se potkají –
+       průsečnice dvou různých zaoblení by v síti nebyla a plochy by se
+       prořízly. */
+    {
+      const uVrcholu = new Map();
+      for (const q of out) for (const v of [q.va, q.vb]) { if (!uVrcholu.has(v)) uVrcholu.set(v, []); uVrcholu.get(v).push(q); }
+      const konflikty = [];
+      for (const [v, l] of uVrcholu) {
+        const typy = new Set(l.map(q => q.op.typ)), Rs = new Set(l.map(q => q.R));
+        if (typy.size === 1 && Rs.size === 1) continue;
+        konflikty.push({ bod: P(pos, v), Rmin: typy.size > 1 ? 0 : Math.min(...l.map(q => q.R)) });
+      }
+      for (const q of out) {
+        q.Ltr = 2 * q.t;
+        q.konf = konflikty.filter(c => c.Rmin < q.R && vzdalenostKSegmentu(c.bod, q) < q.Ltr + q.t);
+      }
+    }
+    // příliš velká úprava: odstup tečné čáry přes půl stěny (sražení/zaoblení
+    // z protější hrany se potkají a stěna zmizí)
+    const rozsah = (rid, P0, smer) => {
+      const o = model.oblasti[rid];
+      if (!o._vrcholy) {
+        const vv = new Set();
+        const krok = Math.max(1, Math.floor(o.tri.length / 4000));
+        for (let i = 0; i < o.tri.length; i += krok) for (let k = 0; k < 3; k++) vv.add(tri[3 * o.tri[i] + k]);
+        o._vrcholy = [...vv];
+      }
+      let m = 0;
+      for (const v of o._vrcholy) m = Math.max(m, dot(sub(P(pos, v), P0), smer));
+      return m;
+    };
+    for (const s of out) {
+      s.prilis = s.t > 0.5 * rozsah(s.rA, s.P0, s.a) + 1e-9 || s.t > 0.5 * rozsah(s.rB, s.P0, s.b) + 1e-9;
     }
     // návaznost: přesah řezu za konec segmentu podle zatočení řetězce
     const podleV = new Map();
@@ -666,11 +913,28 @@ function povrchJadro(G) {
     return out;
   }
 
+  const krokZaobleni = s => s.op.typ === 'zaobl' ? s.t / s.M * 1.6 : s.t * 0.75;
+  /* Odhad počtu trojúhelníků, které přidá sražení/zaoblení (pásy podél hran
+     a kulové rohy). Kalibrováno na kostkách a válcích. */
+  function odhadZaobleni(segs) {
+    let n = 0;
+    const vRohu = new Map();
+    for (const s of segs) {
+      const krok = krokZaobleni(s);
+      const podel = Math.max(krok, Math.min(Math.max(krok * 6, s.t * 2), s.L * 1.5));
+      n += Math.ceil(s.L / podel) * Math.ceil(3 * s.t / krok) * 2;
+      for (const v of [s.va, s.vb]) vRohu.set(v, Math.max(vRohu.get(v) || 0, Math.pow(2 * s.t / krok, 2) * 2));
+    }
+    for (const [, k] of vRohu) n += k;
+    return n * ODHAD_ZAOBLENI;
+  }
+  let ODHAD_ZAOBLENI = 5;            // vzorec podhodnocuje 1,4–7,7× (rohy, okolí pásů)
+
   /* Řezy: v každé ze dvou stěn segmentu se síť rozřízne rovinami
      rovnoběžnými s hranou ve vzdálenostech s (tečná čára + řady oblouku). */
   function odstupyRad(s) {
     if (s.op.typ !== 'zaobl') return [s.t];
-    const M = Math.max(1, Math.ceil((s.op.segmenty || 8) / 2));
+    const M = s.M;
     const r = [];
     for (let k = 0; k < M; k++) {
       const beta = (s.fi / 2) * k / M;
@@ -793,19 +1057,19 @@ function povrchJadro(G) {
     for (let vi = 0; vi < sit.pocetV; vi++) {
       let x = sit.bod(vi);
       const kand = najdi(x).filter(s =>
-        vzdalenostKSegmentu(x, s) <= s.t * 1.0005 + tol &&
+        vzdalenostKSegmentu(x, s) <= tEf(s, Ref(s, x)) * 1.0005 + tol &&
         dot(s.nA, x) - s.cA <= tol * 4 && dot(s.nB, x) - s.cB <= tol * 4);
       if (!kand.length) continue;
       // skupiny podle druhu (vypouklé zvlášť, vyduté zvlášť) a operace
       const skup = new Map();
       for (const s of kand) {
-        const k = (s.konv ? 'k' : 'v') + s.op.typ + s.R;
+        const k = (s.konv ? 'k' : 'v') + s.op.typ;     // poloměr se v rohu sjednotí (Ref)
         if (!skup.has(k)) skup.set(k, []);
         skup.get(k).push(s);
       }
       const poradi = [...skup.values()].sort((p, q) => (q[0].konv - p[0].konv) || (q[0].R - p[0].R));
-      // Roh s různými poloměry: vrchol v dosahu obou dostane jen ten větší
-      // (dvojí promítnutí za sebou by trojúhelníky v rohu přeložilo).
+      // Zaoblení i sražení u téhož vrcholu (jen v pásu přechodu, kde se obě
+      // ztenčují k nule): vezme se to, které posune víc.
       const hotovo = new Set();
       for (const g of poradi) {
         if (hotovo.has(g[0].konv)) continue;
@@ -818,8 +1082,22 @@ function povrchJadro(G) {
     }
     return { pohnuto, neslo };
   }
+  /* Poloměr (šířka) úpravy segmentu v bodě x – u konfliktního rohu zúžený. */
+  function Ref(s, x) {
+    let R = s.R;
+    if (s.konf) for (const c of s.konf) {
+      const d = len(sub(x, c.bod));
+      if (d < s.Ltr) R = Math.min(R, c.Rmin + (s.R - c.Rmin) * hladce(d / s.Ltr));
+    }
+    return R;
+  }
+  const tEf = (s, R) => s.op.typ === 'zaobl' ? R * Math.tan(s.fi / 2) : R;
   function posunNaHranu(x, g, tol) {
-    const typ = g[0].op.typ, R = g[0].R;
+    const typ = g[0].op.typ;
+    // společný poloměr skupiny v tomto bodě (u konfliktních rohů zúžený)
+    let R = Infinity;
+    for (const s of g) R = Math.min(R, Ref(s, x));
+    if (!(R > 1e-9)) return x;
     // roviny stěn (bez duplicit)
     const roviny = [];
     const pridej = (n, c) => {
@@ -838,7 +1116,7 @@ function povrchJadro(G) {
     for (const s of g) { pridej(s.nA, s.cA); pridej(s.nB, s.cB); }
     for (const s of g) {
       const m = norm(add(s.nA, s.nB));
-      pridej(m, dot(m, add(s.P0, mul(s.a, s.t))));
+      pridej(m, dot(m, add(s.P0, mul(s.a, tEf(s, R)))));
     }
     return promitni(x, roviny, tol * 0.01);
   }
@@ -972,9 +1250,19 @@ function povrchJadro(G) {
       if (x <= 0 || x >= 1 || y <= 0 || y >= 1) return 0;
       return vzorekBezOpak(d.mapa, x, y);
     };
-    let fce, nC;
+    // bod mapy (x, y ∈ 0..1) → poloha v mm na ploše (u, v), opak naMape
+    const zMapy = (x, y) => {
+      const ru = (x - 0.5) * w, rv = (y - 0.5) * h;
+      return [ru * cr - rv * sr, ru * sr + rv * cr];
+    };
+    let fce, nC, naPovrch;
     if (o.tvar === 'valec' && (d.projekce || 'auto') !== 'rovina') {
       const dc = sub(c, o.osaBod), thc = Math.atan2(dot(dc, o.e2), dot(dc, o.e1)), vc = dot(dc, o.osa);
+      naPovrch = (x, y) => {
+        const [u, v] = zMapy(x, y), th = thc + u / o.polomer;
+        const rad = add(mul(o.e1, Math.cos(th)), mul(o.e2, Math.sin(th)));
+        return { bod: add(add(o.osaBod, mul(rad, o.polomer)), mul(o.osa, vc + v)), n: rad };
+      };
       fce = x => {
         const dx = sub(x, o.osaBod);
         let dth = Math.atan2(dot(dx, o.e2), dot(dx, o.e1)) - thc;
@@ -984,13 +1272,30 @@ function povrchJadro(G) {
     } else {
       nC = d.normala || o.normala;
       const { u, v } = zakladRoviny(nC);
+      naPovrch = (x, y) => { const [a, b] = zMapy(x, y); return { bod: add(add(c, mul(u, a)), mul(v, b)), n: nC }; };
       fce = (x, n) => {
         if (n && dot(n, nC) < 0.25) return 0;            // neprosvítit na odvrácenou stranu
         const dx = sub(x, c);
         return naMape(dot(dx, u), dot(dx, v));
       };
     }
-    return { h: fce, smer: d.smer || 'ven', hloubka: d.hloubka, bod: c, R: Math.hypot(w, h) / 2 };
+    return { h: fce, smer: d.smer || 'ven', hloubka: d.hloubka, bod: c, R: Math.hypot(w, h) / 2, naPovrch, mapa: d.mapa, plocha: d.plocha };
+  }
+  /* Kolik „inkoustu“ obtisku leží mimo jeho plochu (0..1): vzorky mapy, kde
+     je písmo, se promítnou na povrch a paprskem se zjistí, na kterou plochu
+     dopadnou. Mimo plochu se obtisk ořízne (plochy se vzorem stojí na hranici). */
+  function presahObtisku(model, ob) {
+    const eps = model.box.uhlopricka * 0.01;
+    let vse = 0, mimo = 0;
+    for (let j = 0; j < 10; j++) for (let i = 0; i < 24; i++) {
+      const x = (i + 0.5) / 24, y = (j + 0.5) / 10;
+      if (vzorekBezOpak(ob.mapa, x, y) < 0.4) continue;
+      vse++;
+      const p = ob.naPovrch(x, y);
+      const z = paprsek(model, add(p.bod, mul(p.n, eps)), mul(p.n, -1), eps * 3);
+      if (z.trojuhelnik < 0 || model.oblast[z.trojuhelnik] !== ob.plocha || Math.abs(z.vzdalenost - eps) > eps * 0.5) mimo++;
+    }
+    return vse ? mimo / vse : 0;
   }
   function vzorekBezOpak(m, u, v) {
     const x = Math.min(m.N - 1, Math.max(0, u * m.N - 0.5)), y = Math.min(m.M - 1, Math.max(0, v * m.M - 0.5));
@@ -1003,6 +1308,25 @@ function povrchJadro(G) {
 
   /* Vše, co určuje posun povrchu: struktury (opakovaný vzor) a obtisky.
      posun(plocha, x, n) → posun v mm po normále (bez náběhu u okrajů). */
+  /* Výřez = konvexní čtyřúhelník (4 body v rovině plochy) → hrany jako
+     poloroviny v rovině: m = jednotková normála dovnitř, k = m·bod. */
+  function hranyVyrezu(s) {
+    const b = s && s.vyrez;
+    if (!Array.isArray(b) || b.length < 3) return null;
+    if (s._vyrezH && s._vyrezZ === b) return s._vyrezH;
+    const n = norm(cross(sub(b[2], b[0]), sub(b[b.length - 1], b[1])));
+    const c = mul(b.reduce((a, p) => add(a, p), [0, 0, 0]), 1 / b.length);
+    const h = [];
+    for (let i = 0; i < b.length; i++) {
+      const p = b[i], q = b[(i + 1) % b.length];
+      let m = norm(cross(n, sub(q, p)));
+      if (dot(m, sub(c, p)) < 0) m = mul(m, -1);
+      if (len(m) > 0.5) h.push({ m, k: dot(m, p) });
+    }
+    Object.defineProperty(s, '_vyrezH', { value: h, writable: true, configurable: true, enumerable: false });
+    Object.defineProperty(s, '_vyrezZ', { value: b, writable: true, configurable: true, enumerable: false });
+    return h;
+  }
   function pripravVysky(model, zadani, volby) {
     const struktury = zadani.struktury || new Map(), obtisky = zadani.obtisky || [];
     const obt = obtoceni(model, struktury);
@@ -1022,12 +1346,19 @@ function povrchJadro(G) {
     }
     const zMin = model.box.min[2];
     // pás výšky: 1 uvnitř, 0 venku, s náběhem `okraj`
+    // pás výšky a výřez (čtyřúhelník v rovině plochy): vzdálenost dovnitř,
+    // < 0 = venku; náběh přes `okraj`
     const pas = (s, x) => {
-      const od = s.pasOd, doo = s.pasDo;
-      if (!(od > 0 || doo > 0)) return 1;
-      const z = x[2] - zMin;
-      const dolni = od > 0 ? z - od : Infinity, horni = doo > 0 ? doo - z : Infinity;
-      const dz = Math.min(dolni, horni);
+      let dz = Infinity;
+      let od = s.pasOd, doo = s.pasDo;
+      if (od > 0 || doo > 0) {
+        if (od > 0 && doo > 0 && od > doo) [od, doo] = [doo, od];     // prohozené meze
+        const z = x[2] - zMin;
+        dz = Math.min(od > 0 ? z - od : Infinity, doo > 0 ? doo - z : Infinity);
+      }
+      const vr = hranyVyrezu(s);
+      if (vr) for (const h of vr) dz = Math.min(dz, dot(h.m, x) - h.k);
+      if (dz === Infinity) return 1;
       if (dz < 0) return 0;
       if (!(s.okraj > 0)) return 1;
       const t = Math.min(1, dz / s.okraj);
@@ -1145,19 +1476,23 @@ function povrchJadro(G) {
     return x => {
       const i0 = Math.floor(x[0] / r), j0 = Math.floor(x[1] / r), k0 = Math.floor(x[2] / r);
       let best = Infinity;
+      const p = sit.p, x0 = x[0], x1 = x[1], x2 = x[2];
       for (let i = i0 - 1; i <= i0 + 1; i++) for (let j = j0 - 1; j <= j0 + 1; j++) for (let k = k0 - 1; k <= k0 + 1; k++) {
         const l = m.get(hashBunky(i, j, k));
-        if (l) for (const w of l) {
-          const d = Math.hypot(sit.p[3 * w] - x[0], sit.p[3 * w + 1] - x[1], sit.p[3 * w + 2] - x[2]);
+        if (l) for (let q = 0; q < l.length; q++) {
+          const w = l[q], dx = p[3 * w] - x0, dy = p[3 * w + 1] - x1, dz = p[3 * w + 2] - x2, d = dx * dx + dy * dy + dz * dz;
           if (d < best) best = d;
         }
       }
-      return best;
+      return Math.sqrt(best);
     };
   }
   const hladce = t => { t = Math.min(1, Math.max(0, t)); return t * t * (3 - 2 * t); };
 
-  function aplikujStruktury(sit, model, VY, pohnuto) {
+  /* tlum(x) ∈ [0,1]: 1 = roh obtočeného vzoru se posouvá do průsečíku obou
+     reliéfů, 0 = vzor k rohové hraně plynule nabíhá (dokázaně bez průniku,
+     viz rHr níže). Sestav() ho sníží tam, kde kontrola našla průnik. */
+  function aplikujStruktury(sit, model, VY, pohnuto, tlum) {
     const nV = sit.pocetV;
     // vrcholy → plochy (nejvýš dvě si pamatujeme, -3 = tři a víc)
     const reg = new Int32Array(nV).fill(-1), reg2 = new Int32Array(nV).fill(-1);
@@ -1177,21 +1512,31 @@ function povrchJadro(G) {
     const pevny = new Uint8Array(nV), rohovy = new Uint8Array(nV);
     for (let v = 0; v < nV; v++) {
       if (reg[v] < 0 || reg2[v] === -1) continue;
-      // hranice dvou ploch, které obě mají vzor: vrchol se posune do průsečíku
-      // obou posunutých ploch; jinak (soused bez vzoru, 3+ ploch) stojí
-      if (reg2[v] >= 0 && VY.maPlochu(reg[v]) && VY.maPlochu(reg2[v])) rohovy[v] = 1;
+      // Roh dvou stěn s obtočeným vzorem (vzor na hraně navazuje): vrchol se
+      // posune do průsečíku obou posunutých ploch. Jinde (soused bez vzoru,
+      // jiný vzor, vodorovná plocha, 3+ ploch) hranice stojí a vzor k ní
+      // plynule nabíhá – průsečík dvou nesouvisejících reliéfů by se přeložil.
+      const qa = VY.proj.get(reg[v]), qb = reg2[v] >= 0 ? VY.proj.get(reg2[v]) : null;
+      if (qa && qb && qa.skupina >= 0 && qa.skupina === qb.skupina) rohovy[v] = 1;
       else if (VY.maPlochu(reg[v]) || (reg2[v] >= 0 && VY.maPlochu(reg2[v]))) pevny[v] = 1;
     }
     let maxOkraj = 0, maxHl = 0;
     for (const [, q] of VY.proj) { maxOkraj = Math.max(maxOkraj, q.s.okraj || 0); maxHl = Math.max(maxHl, q.s.hloubka); }
-    const vzdHr = maxOkraj > 0 ? mrizkaBodu(sit, pevny, maxOkraj) : null;
+    for (const [, l] of VY.obtPodle) for (const d of l) maxHl = Math.max(maxHl, d.hloubka);
+    // Náběh k pevné hranici: aspoň 2× hloubka. Pak posun u hrany nikdy
+    // nepřesáhne vzdálenost od ní (smoothstep: d·f(s)/s ≤ 1,125·d/r, a rohový
+    // vrchol obtočeného vzoru se posouvá až √2× víc → r ≥ 1,6·d) a reliéfy
+    // dvou sousedních ploch se nemůžou protnout.
+    const rHr = Math.max(maxOkraj, 2 * maxHl);
+    const vzdHr = rHr > 0 ? mrizkaBodu(sit, pevny, rHr) : null;
     // plynulý náběh k zaoblení/sražení: aspoň 1,5× hloubka vzoru
     const rZaobl = Math.max(maxOkraj, 1.5 * maxHl);
     const vzdZa = pohnuto && rZaobl > 0 ? mrizkaBodu(sit, pohnuto, rZaobl) : null;
     const rohN = normalyRohu(model);
+    const vzdRoh = tlum ? mrizkaBodu(sit, rohovy, rHr) : null;
     const posun = new Float64Array(nV * 3);
     const uRohu = new Uint8Array(nV);          // vrcholy u rohu obtočeného vzoru (úklid jehel)
-    const pritlaceny = new Uint8Array(nV);     // přitlačené na rovinu sousední stěny
+    const pritlaceny = new Float64Array(nV);   // o kolik byl vrchol přitlačen na rovinu sousední stěny
     for (let v = 0; v < nV; v++) {
       const r = reg[v];
       if (r < 0 || pevny[v] || (pohnuto && pohnuto[v]) || !VY.maPlochu(r)) continue;
@@ -1200,7 +1545,7 @@ function povrchJadro(G) {
       if (rohovy[v] && !VY.maPlochu(r)) continue;
       const q = VY.proj.get(r);
       let f = 1;
-      if (q && q.s.okraj > 0 && vzdHr) f *= hladce(vzdHr(x) / q.s.okraj);
+      if (vzdHr) { const rr = Math.max(q ? q.s.okraj || 0 : 0, 2 * VY.hRef(r)); if (rr > 0) f *= hladce(vzdHr(x) / rr); }
       if (vzdZa) {
         const rr = Math.max(q ? q.s.okraj || 0 : 0, 1.5 * VY.hRef(r));
         if (rr > 0) f *= hladce(vzdZa(x) / rr);
@@ -1224,12 +1569,30 @@ function povrchJadro(G) {
         // U rohu nesmí vrchol přejít za (posunutou) rovinu sousední stěny –
         // jinak by se vzor na rohu přeložil přes sebe.
         for (const sb of VY.sousede.get(r) || []) {
+          // jen sousední stěna téhož obtočeného vzoru (jinde stačí náběh)
+          const qs = VY.proj.get(sb.rid);
+          if (!q || !qs || q.skupina < 0 || qs.skupina !== q.skupina) continue;
           const sd = dot(sb.n, x) - sb.c;
           if (Math.abs(sd) > 2.5 * VY.hRef(r) + 1e-9 || Math.abs(sd) < 1e-9) continue;
           // hloubka sousední stěny v průmětu bodu na její rovinu (u rohu = na hraně)
           const offS = VY.maPlochu(sb.rid) ? VY.posun(sb.rid, sub(x, mul(sb.n, sd)), sb.n) : 0;
           const val = dot(sb.n, add(x, w)) - (sb.c + offS);
-          if ((sd < 0 && val > 0) || (sd > 0 && val < 0)) { w = sub(w, mul(sb.n, val)); uRohu[v] = 1; pritlaceny[v] = 1; }
+          if ((sd < 0 && val > 0) || (sd > 0 && val < 0)) {
+            w = sub(w, mul(sb.n, val)); uRohu[v] = 1;
+            // přichytávat jen mimo pás náběhu (tam jsou posuny malé a přichycení
+            // na řídké rohové vrcholy by trojúhelníky přetáhlo přes sebe)
+            if (f > 0.98) pritlaceny[v] = Math.max(pritlaceny[v], Math.abs(val));
+          }
+        }
+      }
+      if (tlum) {
+        const l = tlum(x);
+        if (l < 1) {
+          // bezpečná varianta: rohová hrana stojí, vzor k ní nabíhá na 2× hloubku
+          let fs = 0;
+          if (!rohovy[v]) { fs = 1; const rr = 2 * VY.hRef(r); if (vzdRoh && rr > 0) fs = hladce(vzdRoh(x) / rr); }
+          w = add(mul(w, l), mul(nA, off * fs * (1 - l)));
+          pritlaceny[v] = 0;
         }
       }
       posun[3 * v] = w[0]; posun[3 * v + 1] = w[1]; posun[3 * v + 2] = w[2];
@@ -1256,10 +1619,151 @@ function povrchJadro(G) {
           const l = m.get(hashBunky(i, j, k));
           if (l) for (const w of l) { const d = len(sub(sit.bod(w), x)); if (d < best) { best = d; bw = w; } }
         }
-        if (bw >= 0 && best < rr) { sit.p[3 * v] = sit.p[3 * bw]; sit.p[3 * v + 1] = sit.p[3 * bw + 1]; sit.p[3 * v + 2] = sit.p[3 * bw + 2]; }
+        // přichytit jen na blízký rohový vrchol (o tolik, o kolik se přitlačil)
+        if (bw >= 0 && best < Math.min(rr, 8 * pritlaceny[v] + 1e-6)) { sit.p[3 * v] = sit.p[3 * bw]; sit.p[3 * v + 1] = sit.p[3 * bw + 1]; sit.p[3 * v + 2] = sit.p[3 * bw + 2]; }
       }
     }
+    uRohu.rohove = [];
+    for (let v = 0; v < nV; v++) if (rohovy[v]) uRohu.rohove.push(sit.p[3 * v] - posun[3 * v], sit.p[3 * v + 1] - posun[3 * v + 1], sit.p[3 * v + 2] - posun[3 * v + 2]);
     return uRohu;
+  }
+
+  /* Průniky trojúhelníků (bez společného vrcholu) mezi těmi, které mají
+     vrchol blízko některého z bodů `kolem` (do vzdálenosti r). Vrací středy
+     protínajících se dvojic. Obecná poloha: hrana prochází vnitřkem druhého;
+     ve stejné rovině: hrany se ostře kříží nebo vrchol leží uvnitř. */
+  function prunikyKolem(v, kolem, r, model) {
+    const P = v.pos, T = v.tri, nT = T.length / 3;
+    if (!kolem.length) return [];
+    const blizko = new Map();
+    for (let i = 0; i < kolem.length; i += 3) {
+      const k = hashBunky(Math.floor(kolem[i] / r), Math.floor(kolem[i + 1] / r), Math.floor(kolem[i + 2] / r));
+      const l = blizko.get(k); if (l) l.push(i); else blizko.set(k, [i]);
+    }
+    const jeBlizko = (x, y, z) => {
+      const i0 = Math.floor(x / r), j0 = Math.floor(y / r), k0 = Math.floor(z / r);
+      for (let i = i0 - 1; i <= i0 + 1; i++) for (let j = j0 - 1; j <= j0 + 1; j++) for (let k = k0 - 1; k <= k0 + 1; k++) {
+        const l = blizko.get(hashBunky(i, j, k));
+        if (l) for (const q of l) { const dx = kolem[q] - x, dy = kolem[q + 1] - y, dz = kolem[q + 2] - z; if (dx * dx + dy * dy + dz * dz < r * r) return true; }
+      }
+      return false;
+    };
+    const vyb = [];
+    let delka = 0;
+    const blizV = new Uint8Array(P.length / 3);
+    for (let i = 0; i < blizV.length; i++) if (jeBlizko(P[3 * i], P[3 * i + 1], P[3 * i + 2])) blizV[i] = 1;
+    for (let t = 0; t < nT; t++) if (blizV[T[3 * t]] || blizV[T[3 * t + 1]] || blizV[T[3 * t + 2]]) vyb.push(t);
+    if (!vyb.length) return [];
+    const bod = t => [0, 1, 2].map(k => P.subarray(3 * T[3 * t + k], 3 * T[3 * t + k] + 3));
+    const vysl = [];
+    // převrácené trojúhelníky (normála víc než 120° proti původní ploše)
+    if (model && v.puvod) for (const t of vyb) {
+      const q = bod(t), n = cross(sub(q[1], q[0]), sub(q[2], q[0])), l = len(n), o = v.puvod[t];
+      if (l > 2e-3 && dot(n, Nt(model.N, o)) < -0.5 * l) vysl.push(mul(add(add(q[0], q[1]), q[2]), 1 / 3));
+    }
+    const bb = new Float64Array(vyb.length * 6);
+    vyb.forEach((t, i) => {
+      for (let o = 0; o < 3; o++) {
+        const a = P[3 * T[3 * t] + o], b = P[3 * T[3 * t + 1] + o], c = P[3 * T[3 * t + 2] + o];
+        bb[6 * i + o] = Math.min(a, b, c); bb[6 * i + 3 + o] = Math.max(a, b, c);
+      }
+      delka += bb[6 * i + 3] - bb[6 * i] + bb[6 * i + 4] - bb[6 * i + 1] + bb[6 * i + 5] - bb[6 * i + 2];
+    });
+    const h = Math.max(delka / vyb.length / 2, 1e-6);
+    const g = new Map();
+    const bunky = (i, f) => {
+      for (let a = Math.floor(bb[6 * i] / h); a <= Math.floor(bb[6 * i + 3] / h); a++)
+        for (let b = Math.floor(bb[6 * i + 1] / h); b <= Math.floor(bb[6 * i + 4] / h); b++)
+          for (let c = Math.floor(bb[6 * i + 2] / h); c <= Math.floor(bb[6 * i + 5] / h); c++) f(hashBunky(a, b, c));
+    };
+    for (let i = 0; i < vyb.length; i++) bunky(i, k => { const l = g.get(k); if (l) l.push(i); else g.set(k, [i]); });
+    // souřadnice a normály vybraných trojúhelníků v typovaných polích – test
+    // dvojic bez alokací (kontrola běží v každém kole opravy rohů)
+    const X = new Float64Array(vyb.length * 9), NX = new Float64Array(vyb.length * 4);
+    vyb.forEach((t, i) => {
+      for (let k = 0; k < 3; k++) for (let o = 0; o < 3; o++) X[9 * i + 3 * k + o] = P[3 * T[3 * t + k] + o];
+      const o = 9 * i, ux = X[o + 3] - X[o], uy = X[o + 4] - X[o + 1], uz = X[o + 5] - X[o + 2];
+      const wx = X[o + 6] - X[o], wy = X[o + 7] - X[o + 1], wz = X[o + 8] - X[o + 2];
+      const nx = uy * wz - uz * wy, ny = uz * wx - ux * wz, nz = ux * wy - uy * wx;
+      NX[4 * i] = nx; NX[4 * i + 1] = ny; NX[4 * i + 2] = nz; NX[4 * i + 3] = Math.sqrt(nx * nx + ny * ny + nz * nz);
+    });
+    // úsečka (a, b) prochází vnitřkem trojúhelníku j (Möller–Trumbore, tolerance jako v testu)
+    const segTriS = (ax, ay, az, bx, by, bz, j) => {
+      const o = 9 * j, qx = X[o], qy = X[o + 1], qz = X[o + 2];
+      const e1x = X[o + 3] - qx, e1y = X[o + 4] - qy, e1z = X[o + 5] - qz, e2x = X[o + 6] - qx, e2y = X[o + 7] - qy, e2z = X[o + 8] - qz;
+      const dx = bx - ax, dy = by - ay, dz = bz - az;
+      const px = dy * e2z - dz * e2y, py = dz * e2x - dx * e2z, pz = dx * e2y - dy * e2x, det = e1x * px + e1y * py + e1z * pz;
+      if (Math.abs(det) < 1e-9 * Math.sqrt((dx * dx + dy * dy + dz * dz) * (e1x * e1x + e1y * e1y + e1z * e1z) * (e2x * e2x + e2y * e2y + e2z * e2z))) return false;
+      const tx = ax - qx, ty = ay - qy, tz = az - qz, u = (tx * px + ty * py + tz * pz) / det;
+      if (u < 1e-7 || u > 1 - 1e-7) return false;
+      const cx = ty * e1z - tz * e1y, cy = tz * e1x - tx * e1z, cz = tx * e1y - ty * e1x, w = (dx * cx + dy * cy + dz * cz) / det;
+      if (w < 1e-7 || u + w > 1 - 1e-7) return false;
+      const s = (e2x * cx + e2y * cy + e2z * cz) / det;
+      return s > 1e-7 && s < 1 - 1e-7;
+    };
+    // všechny vrcholy trojúhelníku j ostře na jedné straně roviny i → nemůžou se protnout
+    const strana = (i, j) => {
+      const nx = NX[4 * i], ny = NX[4 * i + 1], nz = NX[4 * i + 2], c = nx * X[9 * i] + ny * X[9 * i + 1] + nz * X[9 * i + 2];
+      const eps = 1e-12 * NX[4 * i + 3] * (1 + Math.abs(X[9 * i]) + Math.abs(X[9 * i + 1]) + Math.abs(X[9 * i + 2]));
+      let kl = 0, zp = 0;
+      for (let k = 0; k < 3; k++) {
+        const d = nx * X[9 * j + 3 * k] + ny * X[9 * j + 3 * k + 1] + nz * X[9 * j + 3 * k + 2] - c;
+        if (d > eps) kl++; else if (d < -eps) zp++;
+      }
+      return kl === 3 || zp === 3;
+    };
+    const segTri = (a, b, q) => {
+      const d = sub(b, a), e1 = sub(q[1], q[0]), e2 = sub(q[2], q[0]), pv = cross(d, e2), det = dot(e1, pv);
+      if (Math.abs(det) < 1e-9 * len(d) * len(e1) * len(e2)) return false;
+      const tv = sub(a, q[0]), u = dot(tv, pv) / det; if (u < 1e-7 || u > 1 - 1e-7) return false;
+      const qv = cross(tv, e1), w = dot(d, qv) / det; if (w < 1e-7 || u + w > 1 - 1e-7) return false;
+      const s = dot(e2, qv) / det; return s > 1e-7 && s < 1 - 1e-7;
+    };
+    const v2 = (n, x) => { const ax = Math.abs(n[0]) > Math.abs(n[1]) ? (Math.abs(n[0]) > Math.abs(n[2]) ? 0 : 2) : (Math.abs(n[1]) > Math.abs(n[2]) ? 1 : 2); return ax === 0 ? [x[1], x[2]] : ax === 1 ? [x[0], x[2]] : [x[0], x[1]]; };
+    const o2 = (a, b, c) => (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0]);
+    const koplanarni = (qa, qb, n) => {
+      const A = qa.map(x => v2(n, x)), B = qb.map(x => v2(n, x));
+      let mer = 1; for (const x of [...A, ...B]) mer = Math.max(mer, Math.abs(x[0]), Math.abs(x[1]));
+      const eps = 1e-9 * mer * mer;
+      for (let i = 0; i < 3; i++) for (let j = 0; j < 3; j++) {
+        const a1 = A[i], a2 = A[(i + 1) % 3], b1 = B[j], b2 = B[(j + 1) % 3];
+        const d1 = o2(a1, a2, b1), d2 = o2(a1, a2, b2), d3 = o2(b1, b2, a1), d4 = o2(b1, b2, a2);
+        if (((d1 > eps && d2 < -eps) || (d1 < -eps && d2 > eps)) && ((d3 > eps && d4 < -eps) || (d3 < -eps && d4 > eps))) return true;
+      }
+      const uvnitr = (x, T3) => { const s = Math.sign(o2(T3[0], T3[1], T3[2])); return [0, 1, 2].every(k => s * o2(T3[k], T3[(k + 1) % 3], x) > eps); };
+      return A.some(x => uvnitr(x, B)) || B.some(x => uvnitr(x, A));
+    };
+    // kandidáti z buněk, které trojúhelník i překrývá; každá dvojice jednou (j > i,
+    // razítko), kolize hašů buněk přidají jen pár kandidátů navíc
+    const razitko = new Int32Array(vyb.length).fill(-1);
+    for (let i = 0; i < vyb.length; i++) {
+      const kand = [];
+      bunky(i, k => { const l = g.get(k); if (l) for (const j of l) if (j > i && razitko[j] !== i) { razitko[j] = i; kand.push(j); } });
+      for (const j of kand) {
+        if (bb[6 * i] > bb[6 * j + 3] || bb[6 * j] > bb[6 * i + 3] || bb[6 * i + 1] > bb[6 * j + 4] || bb[6 * j + 1] > bb[6 * i + 4] || bb[6 * i + 2] > bb[6 * j + 5] || bb[6 * j + 2] > bb[6 * i + 5]) continue;
+        const a = vyb[i], b = vyb[j];
+        const ta = T[3 * a], tb = T[3 * a + 1], tc = T[3 * a + 2], ua = T[3 * b], ub = T[3 * b + 1], uc = T[3 * b + 2];
+        if (ta === ua || ta === ub || ta === uc || tb === ua || tb === ub || tb === uc || tc === ua || tc === ub || tc === uc) continue;
+        const la = NX[4 * i + 3], lb = NX[4 * j + 3];
+        if (la < 1e-18 || lb < 1e-18) continue;
+        const nn = NX[4 * i] * NX[4 * j] + NX[4 * i + 1] * NX[4 * j + 1] + NX[4 * i + 2] * NX[4 * j + 2];
+        const rovnob = Math.abs(nn) > (1 - 1e-9) * la * lb;
+        let hit = false;
+        if (rovnob) {
+          const qa = bod(a), qb = bod(b), na = [NX[4 * i], NX[4 * i + 1], NX[4 * i + 2]];
+          if (Math.abs(dot(sub(qb[0], qa[0]), na)) / la < 1e-6 * Math.max(1, Math.abs(qa[0][0]), Math.abs(qa[0][1]), Math.abs(qa[0][2]))) hit = koplanarni(qa, qb, na);
+          else for (let k = 0; k < 3 && !hit; k++) if (segTri(qa[k], qa[(k + 1) % 3], qb) || segTri(qb[k], qb[(k + 1) % 3], qa)) hit = true;
+        } else if (!strana(i, j) && !strana(j, i)) {
+          for (let k = 0; k < 3 && !hit; k++) {
+            const k2 = (k + 1) % 3, oi = 9 * i, oj = 9 * j;
+            if (segTriS(X[oi + 3 * k], X[oi + 3 * k + 1], X[oi + 3 * k + 2], X[oi + 3 * k2], X[oi + 3 * k2 + 1], X[oi + 3 * k2 + 2], j) ||
+                segTriS(X[oj + 3 * k], X[oj + 3 * k + 1], X[oj + 3 * k + 2], X[oj + 3 * k2], X[oj + 3 * k2 + 1], X[oj + 3 * k2 + 2], i)) hit = true;
+          }
+        }
+        if (hit) { const qa = bod(a), qb = bod(b); vysl.push(mul(add(add(qa[0], qa[1]), add(qa[2], add(add(qb[0], qb[1]), qb[2]))), 1 / 6)); }
+      }
+    }
+    return vysl;
   }
 
   /* Tloušťka stěny pod bodem x (paprsek proti normále n k protější stěně).
@@ -1313,6 +1817,34 @@ function povrchJadro(G) {
     const eps = model.box.uhlopricka * 1e-5;
     return paprsek(model, sub(x, mul(n, eps)), mul(n, -1), model.box.uhlopricka * 1.5).vzdalenost + eps;
   }
+  /* Nejmenší zbytek stěny pod plochou, když se do ní ryje z obou stran:
+     tloušťka − hloubka(rid, bod) − hloubka(protější plochy, protější bod).
+     hl(rid, x) → mm v tom místě (0 mimo výřez / pás / nápis). Vzorky: zadané
+     body (výřez) nebo ~80 těžišť trojúhelníků plochy. */
+  function zbytekSteny(model, rid, hl, vzorky) {
+    const o = model.oblasti[rid];
+    const eps = model.box.uhlopricka * 1e-5;
+    if (!vzorky) {
+      vzorky = [];
+      const krok = Math.max(1, Math.floor(o.tri.length / 80));
+      for (let i = 0; i < o.tri.length; i += krok) {
+        const t = o.tri[i];
+        vzorky.push({ c: mul(add(add(P(model.pos, model.tri[3 * t]), P(model.pos, model.tri[3 * t + 1])), P(model.pos, model.tri[3 * t + 2])), 1 / 3), n: Nt(model.N, t) });
+      }
+    }
+    let best = null;
+    for (const { c, n } of vzorky) {
+      const h = hl(rid, c);
+      if (!(h > 0)) continue;
+      const r = paprsek(model, sub(c, mul(n, eps)), mul(n, -1), model.box.uhlopricka * 1.5);
+      if (!isFinite(r.vzdalenost)) continue;
+      const tl = r.vzdalenost + eps, protejsi = model.oblast[r.trojuhelnik];
+      const h2 = protejsi !== rid ? hl(protejsi, sub(c, mul(n, tl))) : 0;
+      const z = tl - h - h2;
+      if (!best || z < best.zbytek) best = { zbytek: z, tloustka: tl, protejsi, obe: h2 > 0 };
+    }
+    return best;
+  }
   /* Nejtenčí místo pod plochou (vzorek ~60 trojúhelníků). */
   function nejtensi(model, rid) {
     const o = model.oblasti[rid];
@@ -1356,19 +1888,106 @@ function povrchJadro(G) {
     const prubeh = volby.prubeh || (() => {});
     const sit = new Sit(model.pos, model.tri);
     const varovani = [];
+    let omezeno = false;                 // síť zhrubla kvůli limitu trojúhelníků
     const struktury = zadani.struktury || new Map();
     const hrany = zadani.hrany || new Map();
     const VY = pripravVysky(model, zadani, volby);
     const segs = pripravSegmenty(model, hrany);
-    // 0) kontrola tloušťky stěny pod vzorem, který se do ní ryje
-    for (const rid of new Set([...VY.proj.keys(), ...VY.obtPodle.keys()])) {
-      const q = VY.proj.get(rid);
-      let hl = q && q.s.smer !== 'ven' ? q.s.hloubka : 0;
-      for (const d of VY.obtPodle.get(rid) || []) if (d.smer !== 'ven') hl = Math.max(hl, d.hloubka);
-      if (!hl) continue;
-      const t = nejtensi(model, rid);
-      if (isFinite(t) && hl > t * 0.6) varovani.push(`Pozor: na ploše ${rid + 1} je stěna silná jen ${t.toFixed(1)} mm a vzor se ryje ${hl.toFixed(1)} mm hluboko – ` + (hl >= t ? 'stěnu prorazí!' : 'zůstane velmi tenká.') + ' Zmenšete hloubku nebo zvolte „Vystoupit“.');
+    // příliš velké sražení / zaoblení (přes půl stěny)
+    {
+      const r = new Set(segs.filter(q => q.prilis).map(q => q.rid));
+      if (r.size) varovani.push(`${r.size} ${r.size === 1 ? 'hrana má' : r.size < 5 ? 'hrany mají' : 'hran má'} sražení nebo zaoblení větší než polovina sousední stěny – úpravy z protějších hran se potkají a tvar se změní víc, než asi chcete. Zmenšete velikost.`);
     }
+    // limit trojúhelníků i pro zaoblení: když by síť přesáhla limit, dílky
+    // oblouku se rovnoměrně zhrubí (a dá se vědět)
+    if (segs.length && volby.limitT) {
+      const rozpocet = Math.max(volby.limitT * 0.8 - model.tri.length / 3, volby.limitT * 0.1);
+      let odh = odhadZaobleni(segs);
+      if (odh > rozpocet) {
+        const q = Math.sqrt(rozpocet / odh);
+        const puv = Math.max(...segs.map(s => s.M));
+        for (const s of segs) if (s.op.typ === 'zaobl') s.M = Math.max(1, Math.floor(s.M * q));
+        odh = odhadZaobleni(segs);
+        const nove = Math.max(...segs.map(s => s.M));
+        varovani.push(odh > rozpocet
+          ? `Hran se zaoblením je na limit ${Math.round(volby.limitT / 1000)} tisíc trojúhelníků příliš mnoho – zaoblení je zjednodušené a může být nepřesné.`
+          : `Zaoblení zhrubeno na ${2 * nove} ${2 * nove < 5 ? 'dílky' : 'dílků'} oblouku (místo ${2 * puv}), aby se síť vešla do limitu ${Math.round(volby.limitT / 1000)} tisíc trojúhelníků.`);
+        omezeno = true;
+        if (odh > rozpocet) segs.zjednodusit = true;
+      }
+    }
+    // 0) kontrola tloušťky stěny pod vzorem, který se do ní ryje – i z obou
+    //    stran (vnější a vnitřní stěna hrnku se vzorem: hloubky se sčítají)
+    {
+      const hlR = rid => {
+        const q = VY.proj.get(rid);
+        let h = q && q.s.smer !== 'ven' ? q.s.hloubka : 0;
+        for (const d of VY.obtPodle.get(rid) || []) if (d.smer !== 'ven') h = Math.max(h, d.hloubka);
+        return h;
+      };
+      // hloubka v konkrétním bodě: vzor jen uvnitř výřezu / pásu, nápis jen pod sebou
+      const hlBod = (rid, x) => {
+        const q = VY.proj.get(rid), o = model.oblasti[rid];
+        let h = q && q.s.smer !== 'ven' && VY.pas(q.s, x) > 0 ? q.s.hloubka : 0;
+        for (const d of VY.obtPodle.get(rid) || []) if (d.smer !== 'ven' && d.h(x, o.normala) > 0) h = Math.max(h, d.hloubka);
+        return h;
+      };
+      // vzorky uvnitř výřezu (mřížka 7 × 7 přes čtyřúhelník), jinak po ploše
+      const vzorkyVyrezu = rid => {
+        const q = VY.proj.get(rid), b = q && q.s.vyrez;
+        if (!Array.isArray(b) || b.length !== 4) return null;
+        const n = model.oblasti[rid].normala, out = [];
+        for (let i = 0; i <= 6; i++) for (let j = 0; j <= 6; j++) {
+          const u = (i + 0.5) / 7.5, v = (j + 0.5) / 7.5;
+          const c = add(mul(add(mul(b[0], 1 - u), mul(b[1], u)), 1 - v), mul(add(mul(b[3], 1 - u), mul(b[2], u)), v));
+          out.push({ c, n });
+        }
+        return out;
+      };
+      const hotovo = new Set();
+      for (const rid of new Set([...VY.proj.keys(), ...VY.obtPodle.keys()])) {
+        const hl = hlR(rid);
+        if (!hl || hotovo.has(rid)) continue;
+        const z = zbytekSteny(model, rid, hlBod, vzorkyVyrezu(rid));
+        if (!z) continue;
+        const obe = z.obe;
+        const celkem = z.tloustka - z.zbytek;
+        if (obe) hotovo.add(z.protejsi);
+        // zbytek pod 0,8 mm (dva obvody trysky 0,4) nebo pod pětinu stěny
+        if (z.zbytek < Math.max(0.8, 0.2 * z.tloustka)) varovani.push(`Pozor: na ploše ${rid + 1} je stěna silná jen ${z.tloustka.toFixed(1)} mm a ` + (obe ? `vzor se do ní ryje z obou stran (s plochou ${z.protejsi + 1}) celkem ${celkem.toFixed(1)} mm` : `vzor se ryje ${celkem.toFixed(1)} mm hluboko`) + ' – ' + (z.zbytek <= 0 ? 'stěnu prorazí!' : `zůstane jen ${z.zbytek.toFixed(1)} mm.`) + ' Zmenšete hloubku nebo zvolte „Vystoupit“.');
+      }
+    }
+    // tisk v této poloze: spodní plocha leží na podložce
+    {
+      const dno = model.oblasti.filter(o => o.tvar === 'rovina' && o.normala[2] < -0.99 && Math.abs(o.stred[2] - model.box.min[2]) < model.box.uhlopricka * 1e-4).map(o => o.id);
+      const naDne = dno.filter(rid => VY.maPlochu(rid));
+      if (naDne.length) varovani.push(`Tip pro tisk: ${naDne.length > 1 ? 'plochy ' + naDne.map(r => r + 1).join(', ') + ' leží' : 'plocha ' + (naDne[0] + 1) + ' leží'} na podložce a ${naDne.length > 1 ? 'mají' : 'má'} vzor nebo nápis – první vrstva nebude rovná a model se hůř přichytí. Spodní plochu nechte hladkou, nebo model otočte.`);
+      let zaobleneDno = 0;
+      for (const r of model.retezy) {
+        const u = hrany.get(r.id);
+        if (u && u.typ === 'zaobl' && u.velikost >= 1 && (dno.includes(r.rA) || dno.includes(r.rB))) zaobleneDno++;
+      }
+      if (zaobleneDno) varovani.push(`Tip pro tisk: ${zaobleneDno} ${zaobleneDno === 1 ? 'hrana u podložky je zaoblená' : zaobleneDno < 5 ? 'hrany u podložky jsou zaoblené' : 'hran u podložky je zaoblených'} – spodek oblouku se tiskne jako převis a okraj se může zvlnit. U podložky je lepší sražení (fazeta 45°).`);
+    }
+    // spáry užší než tryska (0,4 mm) se nevytisknou
+    {
+      const uzke = [];
+      for (const [rid, q] of VY.proj) {
+        const inf = G.VZORY && G.VZORY.podleId(q.s.vzor);
+        const def = inf && inf.parametry.find(x => x.id === 'spara');
+        if (!def) continue;
+        const sp = ((q.s.parametry && q.s.parametry.spara) ?? def.vych) * q.s.sirka;
+        if (sp < 0.4 && !uzke.some(x => x.vzor === q.s.vzor && Math.abs(x.sp - sp) < 1e-6)) uzke.push({ vzor: q.s.vzor, nazev: inf.nazev, sp, rid });
+      }
+      for (const u of uzke) varovani.push(`Tip pro tisk: spáry vzoru „${u.nazev}“ jsou široké jen ${u.sp.toFixed(2).replace('.', ',')} mm – tryska 0,4 mm je nevykreslí a svislé spáry zmizí. Zvětšete vzor nebo spáru (aspoň 0,4–0,5 mm).`);
+    }
+    // obtisky, které přesahují svou plochu (na hraně se oříznou)
+    (zadani.obtisky || []).forEach((d, i) => {
+      const ob = (VY.obtPodle.get(d.plocha) || []).find(q => q.bod === d.bod);
+      if (!ob) return;
+      const f = presahObtisku(model, ob);
+      if (f > 0.03) varovani.push(`Nápis ${d.popis ? '„' + d.popis + '“ ' : (i + 1) + ' '}přesahuje plochu, na které je (asi ${Math.round(f * 100)} % mimo) – na hraně se ořízne. Zmenšete ho nebo posuňte.`);
+    });
     prubeh(0.05, 'Zjemňuji síť');
     // 1) zjemnění ploch se strukturou – na původní síti vyjdou rovnoměrné
     //    trojúhelníky; na síti rozřezané pro zaoblení by tenké vějíře
@@ -1391,11 +2010,14 @@ function povrchJadro(G) {
         }
         if (!best) return false;
         const s = best;
-        const krok = s.op.typ === 'zaobl' ? s.t / Math.max(1, Math.ceil((s.op.segmenty || 8) / 2)) * 1.6 : s.t * 0.75;
+        let krok = krokZaobleni(s);
         const e = sub(B, A), podel = Math.abs(dot(e, s.d)), napric = len(sub(e, mul(s.d, dot(e, s.d))));
+        // pás přechodu u rohu s různými úpravami: úprava se tu zužuje, síť musí
+        // být jemná ve všech směrech, jinak velké trojúhelníky zúžení nesledují
+        if (s.konf && s.konf.some(c => len(sub(M, c.bod)) < s.Ltr + s.t)) { krok = Math.min(krok, s.t * 0.3); return l > krok; }
         // na zakřiveném řetězci (krátké segmenty) se nesmí překlenout oblouk
         return napric > krok || podel > Math.max(krok, Math.min(Math.max(krok * 6, s.t * 2), s.L * 1.5));
-      }, 14, volby.limitT);
+      }, segs.zjednodusit ? 4 : 14, volby.limitT);
     }
     function zjemniStruktury() {
       if (!VY.proj.size && !VY.obtPodle.size) return;
@@ -1406,10 +2028,10 @@ function povrchJadro(G) {
       // Jemnost se předem zvětší, aby se síť vešla do limitu – zjemnění
       // utnuté v půlce by bylo nerovnoměrné (viditelné švy).
       if (volby.limitT) {
-        const jLim = Math.sqrt(plochaStruktur(model, struktury, zadani.obtisky) / (HUSTOTA * volby.limitT));
-        if (jLim > jd) {
+        const jLim = jemnostProLimit(model, struktury, zadani.obtisky, jd, volby.limitT);
+        if (jLim > jd * 1.001) {
           varovani.push(`Jemnost zvětšena na ${jLim.toFixed(2)} mm, aby síť nepřesáhla ${Math.round(volby.limitT / 1000)} tisíc trojúhelníků.`);
-          jd = jLim;
+          jd = jLim; omezeno = true;
         }
       }
       const j = ostr ? jd * 3 : jd;
@@ -1425,13 +2047,15 @@ function povrchJadro(G) {
         return VY.proj.has(r) || blizko(r, mul(add(sit.bod(a), sit.bod(b)), 0.5));
       };
       const ok = sit.zjemni((a, b, l, ti) => l > j && vZone(a, b, ti), 40, volby.limitT, maStr);
-      if (!ok) { varovani.push('Síť narazila na limit počtu trojúhelníků – struktura je hrubší. Zvětšete „Jemnost“ nebo zmenšete plochu.'); return; }
+      if (!ok) { omezeno = true; varovani.push('Síť narazila na limit počtu trojúhelníků – struktura je hrubší. Zvětšete „Jemnost“ nebo zmenšete plochu.'); return; }
       prubeh(0.3, 'Doostřuji vzor');
       // hranice pásů výšky rovně (řez rovinou)
       const zMin = model.box.min[2];
       for (const [rid, q] of VY.proj) for (const z of [q.s.pasOd, q.s.pasDo]) {
         if (z > 0) rezRovinou(sit, [0, 0, 1], zMin + z, ti => model.oblast[sit.o[ti]] === rid, tol);
       }
+      // hranice výřezu rovně (řez rovinou kolmou na plochu podél každé hrany)
+      for (const [rid, q] of VY.proj) for (const h of hranyVyrezu(q.s) || []) rezRovinou(sit, h.m, h.k, ti => model.oblast[sit.o[ti]] === rid, tol);
       if (!ostr) return;
       const posunV = (x, t) => VY.posun(model.oblast[t], x, Nt(model.N, t));
       const cache = new Map();
@@ -1452,23 +2076,79 @@ function povrchJadro(G) {
     if (segs.length) {
       const r = promitniVrcholy(sit, segs, tol);
       pohnuto = r.pohnuto;
-      if (r.neslo) varovani.push(`U ${r.neslo} vrcholů se zaoblení nevešlo (poloměr je větší než stěna) – zkuste menší rozměr.`);
+      if (r.neslo) varovani.push(model.nemanif
+        ? `Model má ${model.nemanif} ${model.nemanif === 1 ? 'hranu' : 'hran'}, kde se stýkají víc než dvě plochy (např. dvě tělesa dotýkající se hranou) – tam zaoblení ani sražení nejde. Upravte model tak, aby tělesa byla oddělená nebo spojená.`
+        : `U ${r.neslo} vrcholů se zaoblení nevešlo (poloměr je větší než stěna) – zkuste menší rozměr.`);
     }
     prubeh(0.75, 'Vtlačuji vzor');
     // 4) struktura a obtisky
-    let uRohu = null;
-    if (VY.proj.size || VY.obtPodle.size) uRohu = aplikujStruktury(sit, model, VY, pohnuto);
-    prubeh(0.9, 'Uklízím síť');
-    let v = sit.vystup();
-    // úklid přeložených drobných trojúhelníků u zaoblení a rohů vzoru
-    let maxR = 0;
+    let maxR = 0, maxHl = 0;
     for (const q of segs) maxR = Math.max(maxR, q.t);
-    for (const [, q] of VY.proj) maxR = Math.max(maxR, q.s.hloubka);
-    let maska = null;
-    for (const m of [pohnuto, uRohu]) if (m) { if (!maska) maska = new Uint8Array(sit.pocetV); for (let i = 0; i < m.length; i++) if (m[i]) maska[i] = 1; }
-    if (maska) v = uklidPrelozene(v, tol, model, maxR, maska);
-    v = vycisti(v, tol * 0.05);
-    v.varovani = varovani;
+    for (const [, q] of VY.proj) { maxR = Math.max(maxR, q.s.hloubka); maxHl = Math.max(maxHl, q.s.hloubka); }
+    const maStruktury = VY.proj.size || VY.obtPodle.size;
+    const p0 = maStruktury ? sit.p.slice(0, sit.pocetV * 3) : null;
+    let v, tlum = null;
+    // Roh obtočeného vzoru: vrcholy se posunou do průsečíku obou reliéfů. U
+    // hlubokého reliéfu by správně drážka jedné stěny prošla skrz druhou, což
+    // výšková mapa stěny neumí – síť se tam může protnout. Proto kontrola:
+    // kde se najde průnik, nastoupí v okolí plynulý náběh k hraně (dokázaně
+    // bez průniku); okolí 2·h, pak 6·h, nakonec náběh na všech obtočených rozích.
+    const body = [];
+    let rohove = null;
+    for (let kolo = 0; ; kolo++) {
+      let uRohu = null;
+      if (maStruktury) uRohu = aplikujStruktury(sit, model, VY, pohnuto, tlum);
+      prubeh(0.9, 'Uklízím síť');
+      v = sit.vystup();
+      // úklid přeložených drobných trojúhelníků u zaoblení a rohů vzoru
+      let maska = null;
+      for (const m of [pohnuto, uRohu]) if (m) { if (!maska) maska = new Uint8Array(sit.pocetV); for (let i = 0; i < m.length; i++) if (m[i]) maska[i] = 1; }
+      if (maska) v = uklidPrelozene(v, tol, model, maxR, maska);
+      v = vycisti(v, tol * 0.05);
+      if (uRohu && uRohu.rohove.length) rohove = uRohu.rohove;
+      if (!uRohu || !uRohu.rohove.length || volby.kontrolaRohu === false || kolo === 3) break;
+      const pr = prunikyKolem(v, uRohu.rohove, 3 * maxHl + volby.jemnost * 2, model);
+      if (!pr.length) break;
+      prubeh(0.92, 'Opravuji rohy vzoru');
+      for (const x of pr) body.push(x);
+      if (kolo === 2) { tlum = () => 0; tlum.vsude = true; }         // nakonec náběh na všech obtočených rozích (bez kontroly – dokázané)
+      else {
+        const rho = 2 * maxHl * (kolo ? 3 : 1), m = new Map();
+        // problémové body se slijí po buňkách rho/8 (průniky jdou v hloučcích po
+        // stovkách – útlum počítaný přes všechny trval u hlubokého kamene 4 s)
+        const jemne = new Set(), q = rho / 8;
+        for (const x of body) {
+          const fi = Math.floor(x[0] / q), fj = Math.floor(x[1] / q), fk = Math.floor(x[2] / q), kf = fi + ',' + fj + ',' + fk;
+          if (jemne.has(kf)) continue;
+          jemne.add(kf);
+          const c = [(fi + 0.5) * q, (fj + 0.5) * q, (fk + 0.5) * q];
+          const k = hashBunky(Math.floor(c[0] / rho), Math.floor(c[1] / rho), Math.floor(c[2] / rho)); const l = m.get(k); if (l) l.push(c); else m.set(k, [c]);
+        }
+        const rho2 = rho * rho;
+        tlum = x => {
+          const i0 = Math.floor(x[0] / rho), j0 = Math.floor(x[1] / rho), k0 = Math.floor(x[2] / rho);
+          let d2 = Infinity;
+          for (let i = i0 - 2; i <= i0 + 2; i++) for (let j = j0 - 2; j <= j0 + 2; j++) for (let k = k0 - 2; k <= k0 + 2; k++) {
+            const l = m.get(hashBunky(i, j, k));
+            if (l) for (const b of l) {
+              const dx = b[0] - x[0], dy = b[1] - x[1], dz = b[2] - x[2], e = dx * dx + dy * dy + dz * dz;
+              if (e < d2) { d2 = e; if (d2 <= rho2) return 0; }
+            }
+          }
+          const d = Math.sqrt(d2);
+          return hladce((d - rho) / rho);   // do rho náběh, za 2·rho původní roh
+        };
+      }
+      sit.p.set(p0);
+    }
+    // hlásit, jen když náběh zasáhl podstatnou část rohů (drobné opravy pár
+    // míst by byly jen planý poplach)
+    let podil = 0;
+    if (tlum && rohove) { let n = 0; for (let i = 0; i < rohove.length; i += 3) if (tlum([rohove[i], rohove[i + 1], rohove[i + 2]]) < 0.5) n++; podil = n / (rohove.length / 3); }
+    if (tlum && (tlum.vsude || podil > 0.15)) varovani.push(tlum.vsude
+      ? 'Reliéf je na obtočení kolem rohů moc hluboký – vzor na rozích plynule nabíhá k hraně místo obtočení (jinak by se roh sám protnul). Mělčí vzor se obtočí celý.'
+      : 'Na některých místech rohů je reliéf na obtočení moc hluboký – vzor tam k hraně plynule nabíhá (jinak by se roh sám protnul). Mělčí vzor se obtočí celý.');
+    v.varovani = varovani; v.omezeno = omezeno;
     prubeh(1, 'Hotovo');
     return v;
   }
@@ -1484,7 +2164,7 @@ function povrchJadro(G) {
     {
       const r = vycisti(v, tol * 0.05, true);
       const np = new Uint8Array(r.pos.length / 3);
-      for (let i = 0; i < pohnuto.length; i++) if (pohnuto[i]) np[r.mapa[i]] = 1;
+      for (let i = 0; i < pohnuto.length; i++) if (pohnuto[i] && r.mapa[i] >= 0) np[r.mapa[i]] = 1;
       pohnuto = np; v = r;
     }
     for (let kolo = 0; kolo < 12; kolo++) {
@@ -1548,25 +2228,41 @@ function povrchJadro(G) {
      (klíč buňky) + kontrola sousedních buněk, ne textové klíče. */
   function vycisti(v, tol, sMapou) {
     const { pos, tri, puvod } = v;
-    const nV = pos.length / 3, mapa = new Int32Array(nV);
-    const bunky = new Map();
-    const novePos = new Float64Array(nV * 3);
+    const nV = pos.length / 3, mapa = new Int32Array(nV).fill(-1);
+    const pouzity = new Uint8Array(nV);
+    for (let i = 0; i < tri.length; i++) pouzity[tri[i]] = 1;   // nepoužité vrcholy se nepřenesou (OBJ by je vypsal)
+    // buňky v typované hašovací tabulce (otevřené adresování): klíč = souřadnice
+    // buňky, hodnota = první vrchol; další vrcholy buňky v řetězu `dalsi`
+    let vel = 1024; while (vel < nV * 2) vel *= 2;
+    const KI = new Int32Array(vel * 3), hlava = new Int32Array(vel).fill(-1), dalsi = new Int32Array(nV);
+    const maska = vel - 1;
+    const slot = (i, j, k) => {
+      let h = hashBunky(i, j, k) & maska;
+      while (hlava[h] >= 0 && (KI[3 * h] !== i || KI[3 * h + 1] !== j || KI[3 * h + 2] !== k)) h = (h + 1) & maska;
+      return h;
+    };
+    const novePos = new Float64Array(nV * 3), c2 = 2 * tol;
     let n = 0;
     for (let i = 0; i < nV; i++) {
+      if (!pouzity[i]) continue;
       const x = pos[3 * i], y = pos[3 * i + 1], z = pos[3 * i + 2];
-      const bi = Math.floor(x / tol), bj = Math.floor(y / tol), bk = Math.floor(z / tol);
+      // buňka 2·tol: soused do tol leží jen v buňce na bližší straně → 8 buněk místo 27
+      const fx = x / c2, fy = y / c2, fz = z / c2;
+      const bi = Math.floor(fx), bj = Math.floor(fy), bk = Math.floor(fz);
+      const si = fx - bi < 0.5 ? -1 : 1, sj = fy - bj < 0.5 ? -1 : 1, sk = fz - bk < 0.5 ? -1 : 1;
       let j = -1;
-      for (let di = -1; di <= 1 && j < 0; di++) for (let dj = -1; dj <= 1 && j < 0; dj++) for (let dk = -1; dk <= 1 && j < 0; dk++) {
-        const l = bunky.get(hashBunky(bi + di, bj + dj, bk + dk));
-        if (l) for (const q of l) {
+      for (let di = 0; di <= 1 && j < 0; di++) for (let dj = 0; dj <= 1 && j < 0; dj++) for (let dk = 0; dk <= 1 && j < 0; dk++) {
+        const h = slot(bi + di * si, bj + dj * sj, bk + dk * sk);
+        for (let q = hlava[h]; q >= 0; q = dalsi[q]) {
           if (Math.abs(novePos[3 * q] - x) <= tol && Math.abs(novePos[3 * q + 1] - y) <= tol && Math.abs(novePos[3 * q + 2] - z) <= tol) { j = q; break; }
         }
       }
       if (j < 0) {
         j = n++;
         novePos[3 * j] = x; novePos[3 * j + 1] = y; novePos[3 * j + 2] = z;
-        const h = hashBunky(bi, bj, bk), l = bunky.get(h);
-        if (l) l.push(j); else bunky.set(h, [j]);
+        const h = slot(bi, bj, bk);
+        if (hlava[h] < 0) { KI[3 * h] = bi; KI[3 * h + 1] = bj; KI[3 * h + 2] = bk; }
+        dalsi[j] = hlava[h]; hlava[h] = j;
       }
       mapa[i] = j;
     }
@@ -1582,21 +2278,293 @@ function povrchJadro(G) {
     return out;
   }
 
-  // průměrná plocha trojúhelníku po zjemnění ≈ HUSTOTA · jemnost² (změřeno)
+  // průměrná plocha trojúhelníku po zjemnění ≈ HUSTOTA · jemnost² (změřeno;
+  // dnes jen pro okolí obtisků – vzor na ploše odhaduje simulace půlení)
   const HUSTOTA = 0.2;
-  function plochaStruktur(model, struktury, obtisky) {
-    let plocha = 0;
-    for (const [rid] of struktury) if (model.oblasti[rid]) plocha += model.oblasti[rid].plocha;
-    for (const d of obtisky || []) if (d.sirka > 0) plocha += Math.pow(d.sirka * 1.3, 2);
-    return plocha;
+  /* Kolik trojúhelníků dá půlení nejdelší hrany, dokud nejsou všechny hrany
+     ≤ l (jeden trojúhelník zvlášť). Tenké trojúhelníky (pruhy válců, vějíře
+     víček) se půlí doopravdy – dají mnohonásobně víc, než odpovídá ploše;
+     dobře tvarované se dopočítají (≈ 6·A/l², změřeno). */
+  // Počet závisí jen na tvaru a poměru velikosti k l a půlení vyrábí pořád
+  // tytéž tvary – výsledek se pamatuje podle (seřazené poměry hran, log₂ m/l²).
+  const pametListu = new Map();
+  function listyTroj(p, q, r, l2) {
+    const x = dist2(p, q), y = dist2(q, r), z = dist2(r, p), m = Math.max(x, y, z);
+    if (m <= l2) return 1;
+    const A = len(cross(sub(q, p), sub(r, p))) / 2;
+    if (m < 6 * A) return Math.max(1, 6 * A / l2);
+    const ser = [x / m, y / m, z / m].sort((u, v) => u - v);
+    const kl = ser[0].toFixed(4) + ',' + ser[1].toFixed(4) + ',' + Math.round(Math.log2(m / l2) * 16);
+    const zn = pametListu.get(kl);
+    if (zn !== undefined) return zn;
+    let n;
+    if (m === x) { const s = mul(add(p, q), 0.5); n = listyTroj(p, s, r, l2) + listyTroj(s, q, r, l2); }
+    else if (m === y) { const s = mul(add(q, r), 0.5); n = listyTroj(q, s, p, l2) + listyTroj(s, r, p, l2); }
+    else { const s = mul(add(r, p), 0.5); n = listyTroj(r, s, q, l2) + listyTroj(s, p, q, l2); }
+    if (pametListu.size > 200000) pametListu.clear();
+    pametListu.set(kl, n);
+    return n;
   }
+  function listyPuleni(model, t, l2) {
+    const { pos, tri } = model;
+    return listyTroj(P(pos, tri[3 * t]), P(pos, tri[3 * t + 1]), P(pos, tri[3 * t + 2]), l2);
+  }
+  // skutečný počet po zjemnění a doostření je 0,5–1× počet listů (změřeno na
+  // ukázkách 0,4–1,5 mm, cihly/kámen) – bere se horní polovina
+  const PODIL_LISTU = 0.8;
   function odhadTrojuhelniku(model, struktury, jemnost, obtisky) {
-    return Math.round(plochaStruktur(model, struktury, obtisky) / (HUSTOTA * jemnost * jemnost)) + model.tri.length / 3;
+    const l2 = jemnost * jemnost;
+    let n = 0, sVzorem = 0;
+    for (const [rid, s] of struktury) {
+      const o = model.oblasti[rid];
+      if (!o) continue;
+      let m = 0;
+      for (const t of o.tri) m += PODIL_LISTU * listyPuleni(model, t, l2);
+      // výřez: jen jeho část plochy (s rezervou na zjemnění podél okraje)
+      const b = s && Array.isArray(s.vyrez) && s.vyrez.length >= 3 ? s.vyrez : null;
+      if (b && o.plocha > 0) {
+        let a = [0, 0, 0];
+        for (let i = 1; i + 1 < b.length; i++) a = add(a, cross(sub(b[i], b[0]), sub(b[i + 1], b[0])));
+        m *= Math.min(1, 1.3 * len(a) / 2 / o.plocha);
+      }
+      n += m;
+      sVzorem += o.tri.length;
+    }
+    let pl = 0;
+    for (const d of obtisky || []) if (d.sirka > 0) pl += Math.pow(d.sirka * 1.3, 2);
+    return Math.round(n + pl / (HUSTOTA * l2) + model.tri.length / 3 - sVzorem);
+  }
+  /* Nejmenší jemnost ≥ j, při které odhad nepřesáhne limit. */
+  function jemnostProLimit(model, struktury, obtisky, j, limit) {
+    if (odhadTrojuhelniku(model, struktury, j, obtisky) <= limit) return j;
+    let lo = j, hi = j * 2;
+    while (odhadTrojuhelniku(model, struktury, hi, obtisky) > limit && hi < model.box.uhlopricka) { lo = hi; hi *= 2; }
+    for (let i = 0; i < 12; i++) { const m = Math.sqrt(lo * hi); if (odhadTrojuhelniku(model, struktury, m, obtisky) > limit) lo = m; else hi = m; }
+    return hi;
   }
 
   /* =====================================================================
      KONTROLY A EXPORT
      ===================================================================== */
+  /* =====================================================================
+     ROZDĚLENÍ ROVINOU (velký model na dva díly pro tisk)
+     ===================================================================== */
+  /* Triangulace mnohoúhelníků s dírami ve 2D (ořezávání uší). smycky = pole
+     smyček indexů do xy (Float64Array 2·n); vnější smyčky jsou proti směru
+     hodinových ručiček, díry po směru. Díry se napojí „mostem“ na nejbližší
+     viditelný vrchol vnější smyčky. Vrací trojice indexů. */
+  function triangulujSDirami(xy, smycky) {
+    const X = i => xy[2 * i], Y = i => xy[2 * i + 1];
+    const plocha = l => { let a = 0; for (let i = 0; i < l.length; i++) { const p = l[i], q = l[(i + 1) % l.length]; a += X(p) * Y(q) - X(q) * Y(p); } return a / 2; };
+    const uvnitr = (x, y, l) => {
+      let c = false;
+      for (let i = 0, j = l.length - 1; i < l.length; j = i++) {
+        const xi = X(l[i]), yi = Y(l[i]), xj = X(l[j]), yj = Y(l[j]);
+        if ((yi > y) !== (yj > y) && x < (xj - xi) * (y - yi) / (yj - yi) + xi) c = !c;
+      }
+      return c;
+    };
+    const o2 = (a, b, c) => (X(b) - X(a)) * (Y(c) - Y(a)) - (Y(b) - Y(a)) * (X(c) - X(a));
+    const krizi = (a, b, c, d) => {                      // úsečky ab a cd se ostře kříží
+      const d1 = o2(a, b, c), d2 = o2(a, b, d), d3 = o2(c, d, a), d4 = o2(c, d, b);
+      return ((d1 > 0 && d2 < 0) || (d1 < 0 && d2 > 0)) && ((d3 > 0 && d4 < 0) || (d3 < 0 && d4 > 0));
+    };
+    const vnejsi = smycky.filter(l => l.length >= 3 && plocha(l) > 0).map(l => ({ l, A: plocha(l), diry: [] }));
+    for (const l of smycky) {
+      if (l.length < 3 || plocha(l) >= 0) continue;
+      // nejmenší vnější smyčka, která díru obsahuje
+      let best = null;
+      for (const o of vnejsi) if (uvnitr(X(l[0]), Y(l[0]), o.l) && (!best || o.A < best.A)) best = o;
+      if (best) best.diry.push(l);
+    }
+    const vysl = [];
+    for (const o of vnejsi) {
+      let poly = o.l.slice();
+      // díry od té nejvíc vpravo
+      o.diry.sort((a, b) => Math.max(...b.map(X)) - Math.max(...a.map(X)));
+      for (const d of o.diry) {
+        let mi = 0;
+        for (let i = 1; i < d.length; i++) if (X(d[i]) > X(d[mi])) mi = i;
+        const M = d[mi];
+        const hrany = [];
+        for (let i = 0; i < poly.length; i++) hrany.push([poly[i], poly[(i + 1) % poly.length]]);
+        for (const e of o.diry) for (let i = 0; i < e.length; i++) hrany.push([e[i], e[(i + 1) % e.length]]);
+        const kand = poly.map((p, i) => ({ i, d: (X(p) - X(M)) ** 2 + (Y(p) - Y(M)) ** 2 })).sort((a, b) => a.d - b.d);
+        let pi = kand[0].i;
+        for (const k of kand) {
+          const P2 = poly[k.i];
+          if (!hrany.some(([a, b]) => a !== P2 && b !== P2 && a !== M && b !== M && krizi(M, P2, a, b))) { pi = k.i; break; }
+        }
+        const dr = d.slice(mi).concat(d.slice(0, mi));
+        poly = poly.slice(0, pi + 1).concat(dr, [M, poly[pi]], poly.slice(pi + 1));
+      }
+      // ořezávání uší
+      const zbyva = poly.slice();
+      let pojistka = zbyva.length * zbyva.length + 10;
+      while (zbyva.length > 3 && pojistka-- > 0) {
+        let nasel = false;
+        for (let i = 0; i < zbyva.length; i++) {
+          const a = zbyva[(i + zbyva.length - 1) % zbyva.length], b = zbyva[i], c = zbyva[(i + 1) % zbyva.length];
+          if (o2(a, b, c) <= 1e-14) continue;              // nekonvexní nebo plochý vrchol
+          let ucho = true;
+          for (const q of zbyva) {
+            if (q === a || q === b || q === c) continue;
+            if (X(q) === X(a) && Y(q) === Y(a) || X(q) === X(b) && Y(q) === Y(b) || X(q) === X(c) && Y(q) === Y(c)) continue;
+            if (o2(a, b, q) >= 0 && o2(b, c, q) >= 0 && o2(c, a, q) >= 0) { ucho = false; break; }
+          }
+          if (!ucho) continue;
+          vysl.push(a, b, c); zbyva.splice(i, 1); nasel = true; break;
+        }
+        if (!nasel) {                                     // degenerovaný zbytek: vyhodit plochý vrchol
+          let k = 0, m = Infinity;
+          for (let i = 0; i < zbyva.length; i++) { const v = Math.abs(o2(zbyva[(i + zbyva.length - 1) % zbyva.length], zbyva[i], zbyva[(i + 1) % zbyva.length])); if (v < m) { m = v; k = i; } }
+          zbyva.splice(k, 1);
+        }
+      }
+      if (zbyva.length === 3 && o2(zbyva[0], zbyva[1], zbyva[2]) > 0) vysl.push(zbyva[0], zbyva[1], zbyva[2]);
+    }
+    return vysl;
+  }
+
+  /* Rozdělí uzavřenou síť rovinou x[osa] = c na dva uzavřené díly (řez se
+     zavře víčkem). Vrací { dolni, horni } – každý { pos, tri } (svařené),
+     nebo null, když je některý díl prázdný. */
+  function rozdelRovinou(pos, tri, osa, c) {
+    const nV = pos.length / 3;
+    let rozsah = 0;
+    for (let i = 0; i < nV; i++) rozsah = Math.max(rozsah, Math.abs(pos[3 * i + osa] - c));
+    const eps = Math.max(1e-9, rozsah * 1e-7);
+    const d = new Float64Array(nV), st = new Int8Array(nV);
+    for (let i = 0; i < nV; i++) { d[i] = pos[3 * i + osa] - c; st[i] = d[i] > eps ? 1 : d[i] < -eps ? -1 : 0; }
+    const P = Array.from(pos);
+    for (let i = 0; i < nV; i++) if (!st[i]) P[3 * i + osa] = c;   // vrcholy u roviny přesně na ni
+    const body = new Map();                            // průsečík hrany s rovinou (sdílený)
+    const bod = (a, b) => {
+      const k = a < b ? a * nV + b : b * nV + a;
+      let i = body.get(k);
+      if (i === undefined) {
+        const t = d[a] / (d[a] - d[b]);
+        i = P.length / 3;
+        for (let q = 0; q < 3; q++) P.push(q === osa ? c : P[3 * a + q] + t * (P[3 * b + q] - P[3 * a + q]));
+        body.set(k, i);
+      }
+      return i;
+    };
+    const dily = [[], []];                              // 0 = dolní (≤ c), 1 = horní
+    const pridejPoly = (dil, l) => { for (let i = 1; i + 1 < l.length; i++) dily[dil].push(l[0], l[i], l[i + 1]); };
+    for (let t = 0; t < tri.length / 3; t++) {
+      const v = [tri[3 * t], tri[3 * t + 1], tri[3 * t + 2]], s = v.map(i => st[i]);
+      if (!s.some(x => x > 0)) { if (s.some(x => x < 0)) dily[0].push(...v); continue; }   // celý dole (trojúhelník v rovině se zahodí)
+      if (!s.some(x => x < 0)) { dily[1].push(...v); continue; }
+      const dole = [], nahore = [];
+      for (let k = 0; k < 3; k++) {
+        const a = v[k], b = v[(k + 1) % 3];
+        if (s[k] <= 0) dole.push(a);
+        if (s[k] >= 0) nahore.push(a);
+        if (s[k] * s[(k + 1) % 3] < 0) { const m = bod(a, b); dole.push(m); nahore.push(m); }
+      }
+      pridejPoly(0, dole); pridejPoly(1, nahore);
+    }
+    if (!dily[0].length || !dily[1].length) return null;
+    const vystup = dil => {
+      const T = dily[dil];
+      // okrajové hrany dílu (použité jednou) leží v rovině řezu; víčko má hranu obráceně
+      const pocet = new Map();
+      for (let t = 0; t < T.length; t += 3) for (let k = 0; k < 3; k++) {
+        const a = T[t + k], b = T[t + (k + 1) % 3], kl = a < b ? a * 1e7 + b : b * 1e7 + a;
+        pocet.set(kl, (pocet.get(kl) || 0) + 1);
+      }
+      const dalsi = new Map();                         // obrácená okrajová hrana b → a
+      for (let t = 0; t < T.length; t += 3) for (let k = 0; k < 3; k++) {
+        const a = T[t + k], b = T[t + (k + 1) % 3], kl = a < b ? a * 1e7 + b : b * 1e7 + a;
+        // jen hrany v rovině řezu (u otevřeného modelu zůstanou jeho díry dírami)
+        if (pocet.get(kl) === 1 && Math.abs(P[3 * a + osa] - c) <= eps && Math.abs(P[3 * b + osa] - c) <= eps) { if (!dalsi.has(b)) dalsi.set(b, []); dalsi.get(b).push(a); }
+      }
+      const smycky = [];
+      for (const [z] of dalsi) {
+        while (dalsi.get(z) && dalsi.get(z).length) {
+          const l = [z];
+          let x = dalsi.get(z).pop();
+          while (x !== z && x !== undefined && l.length < 1e7) { l.push(x); const n = dalsi.get(x); x = n && n.length ? n.pop() : undefined; }
+          if (x === z && l.length >= 3) smycky.push(l);
+        }
+      }
+      // 2D souřadnice v rovině řezu; víčko dolního dílu míří nahoru (+osa)
+      const u = (osa + 1) % 3, w = (osa + 2) % 3;
+      const xy = new Float64Array(P.length / 3 * 2);
+      for (let i = 0; i < P.length / 3; i++) { xy[2 * i] = P[3 * i + u]; xy[2 * i + 1] = P[3 * i + w]; }
+      // u horního dílu víčko míří dolů: zrcadlit 2D, aby vnější smyčky vyšly kladně
+      if (dil === 1) for (let i = 0; i < P.length / 3; i++) xy[2 * i] = -xy[2 * i];
+      const vicko = triangulujSDirami(xy, smycky);
+      const vse = T.concat(vicko);
+      return { tri: vse, smycek: smycky.length };
+    };
+    const dl = vystup(0), hr = vystup(1);
+    const sbal = T => {                                // jen použité vrcholy
+      const mapa = new Map(), p = [], t = [];
+      for (const i of T) { let j = mapa.get(i); if (j === undefined) { j = p.length / 3; mapa.set(i, j); p.push(P[3 * i], P[3 * i + 1], P[3 * i + 2]); } t.push(j); }
+      return { pos: Float64Array.from(p), tri: Uint32Array.from(t) };
+    };
+    return { dolni: sbal(dl.tri), horni: sbal(hr.tri), smycek: dl.smycek };
+  }
+
+  /* =====================================================================
+     POLOHA PRO TISK
+     ===================================================================== */
+  // otočení, které pošle jednotkový vektor n dolů (na −Z): Rodrigues
+  function rotaceDolu(n) {
+    const c = -n[2];
+    if (c > 1 - 1e-9) return [[1, 0, 0], [0, 1, 0], [0, 0, 1]];
+    if (c < -1 + 1e-9) return [[1, 0, 0], [0, -1, 0], [0, 0, -1]];
+    const v = [-n[1], n[0], 0];
+    const K = [[0, -v[2], v[1]], [v[2], 0, -v[0]], [-v[1], v[0], 0]];
+    return [0, 1, 2].map(i => [0, 1, 2].map(j => (i === j ? 1 : 0) + K[i][j] + (K[i][0] * K[0][j] + K[i][1] * K[1][j] + K[i][2] * K[2][j]) / (1 + c)));
+  }
+  /* Převisy sítě při tisku po otočení R: plocha trojúhelníků, které hledí
+     dolů víc než 45° od svislice a neleží na podložce; zároveň plocha na
+     podložce a z toho plocha „se vzorem“ (vzor(t) → true). */
+  function previsy(pos, tri, R, vzor) {
+    const nV = pos.length / 3, nT = tri.length / 3, r = R[2];
+    const z = new Float64Array(nV);
+    let zMin = Infinity, zMax = -Infinity;
+    for (let i = 0; i < nV; i++) { const q = r[0] * pos[3 * i] + r[1] * pos[3 * i + 1] + r[2] * pos[3 * i + 2]; z[i] = q; if (q < zMin) zMin = q; if (q > zMax) zMax = q; }
+    const tolZ = Math.max(0.05, (zMax - zMin) * 1e-3);
+    let previs = 0, podlozka = 0, podlozkaVzor = 0;
+    for (let t = 0; t < nT; t++) {
+      const a = tri[3 * t], b = tri[3 * t + 1], c = tri[3 * t + 2];
+      const ux = pos[3 * b] - pos[3 * a], uy = pos[3 * b + 1] - pos[3 * a + 1], uz = pos[3 * b + 2] - pos[3 * a + 2];
+      const vx = pos[3 * c] - pos[3 * a], vy = pos[3 * c + 1] - pos[3 * a + 1], vz = pos[3 * c + 2] - pos[3 * a + 2];
+      const nx = uy * vz - uz * vy, ny = uz * vx - ux * vz, nz = ux * vy - uy * vx, l = Math.sqrt(nx * nx + ny * ny + nz * nz);
+      if (!(l > 0)) continue;
+      const nz2 = r[0] * nx + r[1] * ny + r[2] * nz;            // z-složka otočené normály
+      if (nz2 > -0.7071 * l) continue;
+      if (z[a] < zMin + tolZ && z[b] < zMin + tolZ && z[c] < zMin + tolZ) { podlozka += l / 2; if (vzor && vzor(t)) podlozkaVzor += l / 2; }
+      else previs += l / 2;
+    }
+    return { previs, podlozka, podlozkaVzor, vyska: zMax - zMin };
+  }
+  /* Nejlepší poloha: kandidáti = „plocha dolů“ pro největší rovné plochy
+     modelu (do 40) a šest směrů os. Skóre = převisy + 3 × vzor na podložce
+     − 20 % opěrné plochy (1 cm² převisu = 5 cm² opory; při shodě nejmenší otočení). Počítá se na
+     síti `vysledek` (se vzorem a hranami), plochy bere z modelu. */
+  function nejlepsiPoloha(model, vysledek, sVzorem) {
+    const v = vysledek || model;
+    const kand = [];
+    const ploch = model.oblasti.filter(o => o.tvar === 'rovina').sort((a, b) => b.plocha - a.plocha).slice(0, 40);
+    for (const o of ploch) kand.push({ n: o.normala, plocha: o.id });
+    for (const n of [[0, 0, -1], [0, 0, 1], [1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0]]) if (!kand.some(k => dot(k.n, n) > 0.999)) kand.push({ n, plocha: -1 });
+    const vzor = !sVzorem || !sVzorem.size ? null : v.puvod ? t => sVzorem.has(model.oblast[v.puvod[t]]) : t => sVzorem.has(model.oblast[t]);
+    const vys = kand.map(k => {
+      const n = norm(k.n), R = rotaceDolu(n), p = previsy(v.pos, v.tri, R, vzor);
+      return { ...k, n, R, ...p, skore: p.previs + 3 * p.podlozkaVzor - 0.2 * p.podlozka + 1e-4 * p.vyska };
+    });
+    // při shodě (do 0,5 % povrchu) vyhraje nejmenší otočení – nepřeklápět zbytečně
+    let povrch = 0;
+    for (const o of model.oblasti) povrch += o.plocha;
+    const min = Math.min(...vys.map(x => x.skore)), tol = 0.005 * povrch + 1e-9;
+    return vys.filter(x => x.skore <= min + tol).sort((a, b) => b.n[2] * -1 - a.n[2] * -1)[0];
+  }
+
   function kontrola(sit) {
     const { pos, tri } = sit;
     const m = new Map();
@@ -1781,9 +2749,10 @@ function povrchJadro(G) {
   function ukazka(id) { return new Float32Array(UKAZKY[id].fce()); }
 
   G.POVRCH = {
-    parseSTL, parseOBJ, parse3MF, nactiSoubor, svar, priprav, sestav, odhadTrojuhelniku,
-    kontrola, exportSTL, exportOBJ, export3MF, zip, ukazka, UKAZKY, Sit, klic, projektor, plochaStruktur, HUSTOTA,
-    tloustka, paprsek, nejtensi,
+    parseSTL, parseOBJ, parse3MF, nactiSoubor, svar, priprav, sestav, odhadTrojuhelniku, jemnostProLimit,
+    kontrola, zakladRoviny, rotaceDolu, previsy, nejlepsiPoloha, rozdelRovinou, triangulujSDirami, exportSTL, exportOBJ, export3MF, zip, ukazka, UKAZKY, Sit, klic, projektor, HUSTOTA,
+    tloustka, paprsek, nejtensi, presahObtisku, pripravObtisk, zjednodus,
+    _ladeni: { pripravSegmenty, odhadZaobleni, nastavOdhad: k => { ODHAD_ZAOBLENI = k; }, rozrizni, promitniVrcholy, mrizkaSegmentu, uklidPrelozene, vycisti },
   };
 }
 povrchJadro(typeof window !== 'undefined' ? window : globalThis);

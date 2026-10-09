@@ -197,7 +197,7 @@
       background-color: var(--bg-control); border-left: 3px solid var(--warn); border-radius: 4px;
       padding: 8px 12px; margin-top: 8px; font-size: .82rem; line-height: 1.5; color: var(--text);
     }
-    #hlaseni:empty, #hlaseniVzor:empty { display: none; }
+    #hlaseni:empty, #hlaseniVzor:empty, #hlaseniNapis:empty { display: none; }
     .dalsi { margin-top: 14px; }
 
     .preview-section {
@@ -205,10 +205,12 @@
       border-radius: var(--radius, 8px); overflow: hidden; position: relative;
       display: flex; flex-direction: column; min-height: 0;
     }
-    .preview-lista { display: flex; align-items: center; gap: 6px; padding: 8px 10px; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+    .preview-lista { display: flex; align-items: center; gap: 4px; padding: 8px 10px; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
     .lista-mezera { flex: 1; }
-    .preview-lista .btn { flex: 0 0 auto; padding: 6px 11px; font-size: .84rem; }
+    .preview-lista .btn { flex: 0 0 auto; padding: 6px 9px; font-size: .84rem; }
     .preview-lista .segment button { flex: 0 0 auto; padding: 6px 10px; }
+    /* méně důležité přepínače při užším náhledu jen ikonou (popisek v title) */
+    @media (max-width: 1500px) { .preview-lista .btn .t { display: none; } }
     .preview-lista .btn[aria-pressed="true"] { border-color: var(--accent); color: var(--accent); background: var(--accent-soft); }
     #preview-container { width: 100%; flex: 1; min-height: 0; touch-action: none; position: relative; }
     #preview-container.miri { cursor: pointer; }
@@ -237,6 +239,17 @@
       background: var(--bg-panel); border: 1px solid var(--border); border-radius: 4px; padding: 5px 9px;
       line-height: 1.5; pointer-events: none; opacity: .9; text-align: right;
     }
+    .vyrez-ram { position: absolute; border: 2px dashed var(--accent); background: var(--accent-soft); pointer-events: none; z-index: 2; }
+    .vyrez-ram[hidden] { display: none; }
+    /* náhled vrstev: svislý posuvník vpravo */
+    .vrstvy {
+      position: absolute; top: 60px; right: 10px; bottom: 90px; width: 92px; display: flex; flex-direction: column; align-items: center; gap: 6px;
+      background: var(--bg-panel); border: 1px solid var(--border); border-radius: 6px; padding: 8px 6px; font-size: .74rem; color: var(--text-muted); z-index: 3;
+    }
+    .vrstvy[hidden] { display: none; }
+    .vrstvy input[type=range] { writing-mode: vertical-lr; direction: rtl; flex: 1; width: 28px; margin: 0; accent-color: var(--accent); }
+    .vrstvy input[type=number] { width: 64px; padding: 3px 4px; font-size: .78rem; }
+    .vrstvy .cislo { color: var(--accent); font-weight: 600; text-align: center; line-height: 1.3; }
     .pocitam {
       position: absolute; top: 54px; left: 50%; transform: translateX(-50%); background: var(--bg-panel);
       border: 1px solid var(--warn); color: var(--text); border-radius: 18px; padding: 5px 6px 5px 16px; font-size: .84rem;
@@ -276,18 +289,16 @@
     <div class="main-content">
       <div class="controls-section">
         <div class="kroky" role="tablist" id="kroky">
-          <button role="tab" data-k="model" aria-selected="true"><span class="c">1</span>Model</button>
-          <button role="tab" data-k="struktura" aria-selected="false" disabled><span class="c">2</span>Povrch</button>
-          <button role="tab" data-k="hrany" aria-selected="false" disabled><span class="c">3</span>Hrany</button>
-          <button role="tab" data-k="export" aria-selected="false" disabled><span class="c">4</span>Stáhnout</button>
+          <button role="tab" data-k="model" id="tab-model" aria-controls="krok-model" aria-selected="true"><span class="c">1</span>Model</button>
+          <button role="tab" data-k="struktura" id="tab-struktura" aria-controls="krok-struktura" aria-selected="false" disabled><span class="c">2</span>Povrch</button>
+          <button role="tab" data-k="hrany" id="tab-hrany" aria-controls="krok-hrany" aria-selected="false" disabled><span class="c">3</span>Hrany</button>
+          <button role="tab" data-k="export" id="tab-export" aria-controls="krok-export" aria-selected="false" disabled><span class="c">4</span>Stáhnout</button>
         </div>
 
         <!-- ============ 1 MODEL ============ -->
-        <div class="krok" id="krok-model" role="tabpanel">
+        <div class="krok" id="krok-model" role="tabpanel" aria-labelledby="tab-model">
           <div class="rozdelane skryto" id="rozdelane">
-            <span id="rozdelaneText"></span>
-            <button class="btn btn-primary" id="rozdelanePokracovat">Pokračovat</button>
-            <button class="btn" id="rozdelaneZahodit">Zahodit</button>
+            <div id="rozdelaneText" style="flex:1 1 100%"></div>
           </div>
           <h2>Z čeho začnete?</h2>
           <div class="button-group" style="margin-top:0;margin-bottom:12px">
@@ -317,12 +328,41 @@
                   <button data-osa="1">↻ kolem Y</button>
                   <button data-osa="2">↻ kolem Z</button>
                 </div>
+                <div class="button-group" style="margin-top:6px">
+                  <button class="btn btn-mala" id="polozit" aria-pressed="false">⤓ Položit na plochu…</button>
+                  <button class="btn btn-mala" id="nejlepsiPoloha" title="Otočit model tak, aby měl při tisku co nejméně převisů a hladký spodek">🧭 Nejlepší poloha</button>
+                </div>
+                <div class="pozn">„Položit“: pak klikněte na plochu, která má při tisku ležet na podložce. „Nejlepší“ vybere polohu s nejmenšími převisy, bez vzoru na spodku a s velkou opěrnou plochou.</div>
+              </div>
+              <div class="form-group">
+                <div class="popisek">Rozdělit rovinou na dva díly</div>
+                <div class="segment" id="rezOsa" role="group" aria-label="Směr řezu">
+                  <button data-osa="2" aria-pressed="true">vodorovně</button>
+                  <button data-osa="0" aria-pressed="false">svisle X</button>
+                  <button data-osa="1" aria-pressed="false">svisle Y</button>
+                </div>
+                <label for="rezPoloha" style="margin-top:6px">Poloha řezu <span class="slider-value" id="rezPolohaVal">50 %</span></label>
+                <input type="range" id="rezPoloha" min="1" max="99" step="1" value="50">
+                <label class="prepinac"><input type="checkbox" id="rezRozlozit" checked> Díly položit řezem dolů vedle sebe</label>
+                <button class="btn btn-mala" id="rozdelit" style="width:100%;margin-top:6px">✂ Rozdělit na dva díly</button>
+                <div class="pozn">Pro modely větší než tisková plocha. Řez se zavře rovným víčkem, díly se pak slepí. Rozdělte nejdřív a vzory přidejte až potom.</div>
               </div>
               <div class="form-group">
                 <label for="uhel">Rozdělení na plochy <span class="slider-value" id="uhelVal">30°</span></label>
                 <input type="range" id="uhel" min="5" max="75" step="1" value="30">
                 <div class="pozn">Sousední trojúhelníky s menším úhlem tvoří jednu plochu. Menší číslo = víc menších ploch (např. když je zaoblený roh slitý se stěnou).</div>
               </div>
+              <div class="inline-group">
+                <div class="form-group">
+                  <label for="zjednodusitNa">Zjednodušit síť na <span class="jednotka">trojúhelníků</span></label>
+                  <input type="number" id="zjednodusitNa" min="100" step="1000">
+                </div>
+                <div class="form-group">
+                  <label>&nbsp;</label>
+                  <button class="btn btn-mala" id="zjednodusit" style="width:100%">Zjednodušit</button>
+                </div>
+              </div>
+              <div class="pozn" style="margin-top:-6px">Pro velké modely (skeny): méně trojúhelníků = rychlejší práce. Tvar i ostré hrany zůstanou, síť zůstane uzavřená.</div>
             </details>
             <details class="vice">
               <summary>Projekt (uložit / načíst rozdělanou práci)</summary>
@@ -337,7 +377,7 @@
         </div>
 
         <!-- ============ 2 POVRCH ============ -->
-        <div class="krok" id="krok-struktura" role="tabpanel" hidden>
+        <div class="krok" id="krok-struktura" role="tabpanel" aria-labelledby="tab-struktura" hidden>
           <div class="form-group">
             <div class="segment velky" id="druhPovrchu">
               <button data-v="vzor" aria-pressed="true">🧱 Opakovaný vzor</button>
@@ -389,6 +429,8 @@
                 <div class="form-group"><input type="number" id="pasOd" placeholder="od" min="0" step="1" aria-label="Pás výšky od"></div>
                 <div class="form-group"><input type="number" id="pasDo" placeholder="do" min="0" step="1" aria-label="Pás výšky do"></div>
               </div>
+              <button class="btn btn-mala" id="vyrezBtn" aria-pressed="false" style="width:100%;margin-bottom:4px">▭ Vzor jen na části plochy…</button>
+              <div class="pozn" style="margin-bottom:10px">Pak na rovné ploše tažením myši nakreslete obdélník – vzor bude jen v něm. Klik na plochu vzor zase odebere.</div>
               <div class="inline-group">
                 <div class="form-group">
                   <label for="vyska">Výška opakování <span class="jednotka">mm</span></label>
@@ -447,7 +489,7 @@
             <div class="navod">
               <ol>
                 <li>Napište text nebo vyberte obrázek.</li>
-                <li><strong>Klikněte na místo na modelu</strong> – nápis se tam umístí. Klik na existující nápis ho vybere.</li>
+                <li><strong>Klikněte na místo na modelu</strong> – průsvitný náhled pod kurzorem ukáže, kam se nápis umístí. Umístěný nápis jde <strong>přetáhnout</strong> myší, klik ho vybere.</li>
               </ol>
               <small>Úpravy vpravo se projeví na vybraném nápisu.</small>
             </div>
@@ -494,7 +536,8 @@
               <label for="napisRotace">Natočení <span class="slider-value" id="napisRotaceVal">0°</span></label>
               <input type="range" id="napisRotace" min="-180" max="180" step="5" value="0">
             </div>
-            <div class="popisek">Umístěné nápisy</div>
+            <div id="hlaseniNapis"></div>
+            <div class="popisek" style="margin-top:10px">Umístěné nápisy</div>
             <div class="seznam" id="seznamObtisku"></div>
             <div class="button-group">
               <button class="btn btn-mala" id="napisPresun" disabled>📍 Přesunout vybraný</button>
@@ -506,7 +549,7 @@
         </div>
 
         <!-- ============ 3 HRANY ============ -->
-        <div class="krok" id="krok-hrany" role="tabpanel" hidden>
+        <div class="krok" id="krok-hrany" role="tabpanel" aria-labelledby="tab-hrany" hidden>
           <div class="navod">
             <ol>
               <li>Vyberte nástroj: zaoblení nebo sražení a jeho velikost.</li>
@@ -550,7 +593,7 @@
         </div>
 
         <!-- ============ 4 EXPORT ============ -->
-        <div class="krok" id="krok-export" role="tabpanel" hidden>
+        <div class="krok" id="krok-export" role="tabpanel" aria-labelledby="tab-export" hidden>
           <h2>Stáhnout model pro tisk</h2>
           <div class="info-box" id="souhrn"></div>
           <div class="form-group">
@@ -582,13 +625,16 @@
             <button data-v="vysledek" aria-pressed="true">Výsledek</button>
             <button data-v="original" aria-pressed="false">Původní</button>
           </div>
-          <button class="btn" id="barvyPloch" aria-pressed="false" title="Obarvit každou rozpoznanou plochu jinou barvou">🎨 Plochy</button>
-          <button class="btn" id="sit" aria-pressed="false" title="Zobrazit trojúhelníky sítě">△ Síť</button>
-          <button class="btn" id="rychly" aria-pressed="true" title="Náhled počítat rychle s hrubší sítí (stažený soubor je vždy v plné jemnosti)">⚡ Rychle</button>
+          <button class="btn" id="barvyPloch" aria-pressed="false" title="Obarvit každou rozpoznanou plochu jinou barvou">🎨<span class="t"> Plochy</span></button>
+          <button class="btn" id="sit" aria-pressed="false" title="Zobrazit trojúhelníky sítě">△<span class="t"> Síť</span></button>
+          <button class="btn" id="vrstvyBtn" aria-pressed="false" title="Náhled vrstev: model se ořízne v zvolené výšce jako při tisku">≡ Vrstvy</button>
+          <button class="btn" id="previsy" aria-pressed="false" title="Červeně plochy, které při tisku v této poloze visí víc než 45° a bez podpěr se prověsí">⚠ Převisy</button>
+          <button class="btn" id="rychly" aria-pressed="true" title="Náhled počítat rychle s hrubší sítí (stažený soubor je vždy v plné jemnosti)">⚡<span class="t"> Rychle</span></button>
           <button class="btn" id="meritkoBtn" aria-pressed="false" title="Měřit vzdálenost dvou bodů a tloušťku stěny">📏 Měřit</button>
           <span class="lista-mezera"></span>
           <button class="btn" id="zpet" title="Zpět (Ctrl+Z)" aria-label="Zpět" disabled>↶</button>
           <button class="btn" id="znovu" title="Znovu (Ctrl+Y)" aria-label="Znovu" disabled>↷</button>
+          <button class="btn" id="snimek" title="Uložit obrázek náhledu (PNG)" aria-label="Uložit obrázek náhledu">📷</button>
           <button class="btn" id="pohledIso" title="Celý model, šikmý pohled (zruší posun)" aria-label="Celý model">⟲</button>
           <button class="btn" id="pohledShora" title="Pohled shora">⊤</button>
           <button class="btn" id="pohledZepredu" title="Pohled zepředu">▭</button>
@@ -596,9 +642,16 @@
         </div>
         <div id="preview-container">
           <div class="prazdno" id="prazdno"><div style="font-size:2.4rem">🧊</div>Přetáhněte sem soubor STL, OBJ nebo 3MF<br>nebo vlevo zvolte ukázku.</div>
-          <div class="pokyn" id="pokyn"></div>
+          <div class="pokyn" id="pokyn" role="status" aria-live="polite"></div>
           <div class="pocitam" id="pocitam" role="status"><span id="pocitamText">⏳ Počítám…</span><span class="pruh"><i id="pocitamPruh"></i></span><button id="pocitamZrusit" type="button">Zrušit</button></div>
           <div class="tip" id="tip"></div>
+          <div class="vyrez-ram" id="vyrezRam" hidden></div>
+          <div class="vrstvy" id="vrstvy" hidden>
+            <div class="cislo" id="vrstvaText"></div>
+            <input type="range" id="vrstvaZ" min="1" max="100" step="1" value="100" aria-label="Výška řezu (vrstva)">
+            <label for="vrstvaH">vrstva mm</label>
+            <input type="number" id="vrstvaH" value="0.2" min="0.04" max="1" step="0.04">
+          </div>
           <div class="info-panel" id="infoPanel"></div>
           <div class="ovladani-napoveda" id="ovlNapoveda">táhnout = otáčet · pravé tl. / Shift = posouvat · kolečko = přiblížit</div>
         </div>
@@ -618,6 +671,8 @@
     const fmt = (v, d = 1) => (+v.toFixed(d)).toLocaleString('cs-CZ');
     const sklon = (n, f1, f2, f5) => n === 1 ? f1 : n >= 2 && n <= 4 ? f2 : f5;
     const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+    // texty od uživatele (názvy obrázků, písem, projektu) jen přes esc() – mohou přijít z cizího souboru
+    const esc = t => String(t).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
     const DOTYK = matchMedia('(pointer: coarse)').matches;
     const BARVY_SKUPIN = ['#4caf7d', '#e0a63f', '#c77dff', '#4fc3f7', '#ff8a65', '#aed581', '#f06292', '#90a4ae'];
 
@@ -627,12 +682,12 @@
        hrany:     řetězec → vlastní úprava { typ, velikost, segmenty }; nastroj = co dá klik
        obtisky:   nápisy a loga { id, plocha, bod, normala, druh, text, font, obrazek, velikost, hloubka, smer, rotace } */
     const stav = {
-      soup: null, jmeno: 'model', model: null, krok: 'model', povrch: 'vzor',
+      soup: null, jmeno: 'model', model: null, krok: 'model', modelIdx: 0, povrch: 'vzor', maPraci: false, zDb: false,
       struktury: new Map(), vzory: {}, vzor: 'cihly',
       hrany: new Map(), nastroj: { typ: 'zaobl', velikost: 2, segmenty: 8 },
       obtisky: [], vybranyObtisk: null, presouvam: false,
       napis: { druh: 'text', text: 'Ahoj', font: '', obrazek: '', velikost: 8, hloubka: 0.8, smer: 'ven', rotace: 0 },
-      zobrazeni: 'vysledek', barvyPloch: false, sit: false, meri: false,
+      zobrazeni: 'vysledek', barvyPloch: false, sit: false, meri: false, polozit: false, previsy: false, vrstvy: false, vyrezRezim: false, plochaPrevisu: 0,
       vysledek: null, vysledekJemnost: null, jemnost: 0.4, rychly: true, panel: true,
     };
     try {
@@ -668,8 +723,10 @@
       }));
       return {
         uloz: data => tx('readwrite', s => s.put(data, 'posledni')).catch(() => {}),
-        nacti: () => tx('readonly', s => s.get('posledni')).catch(() => null),
-        smaz: () => tx('readwrite', s => s.delete('posledni')).catch(() => {}),
+        nacti: (k = 'posledni') => tx('readonly', s => s.get(k)).catch(() => null),
+        smaz: (k = 'posledni') => tx('readwrite', s => s.delete(k)).catch(() => {}),
+        // před prvním přepsáním v této relaci se dosavadní práce odloží jako „předchozí“
+        zalohuj: () => tx('readonly', s => s.get('posledni')).then(d => d ? tx('readwrite', s => s.put(d, 'predchozi')) : null).catch(() => {}),
       };
     })();
     function dataProjektu() {
@@ -680,36 +737,72 @@
       };
     }
     let casUlozeni = null;
+    /* Ukládá se až po první skutečné úpravě – samotné otevření modelu nebo
+       ukázky rozdělanou práci nepřepíše. Před prvním přepsáním v relaci se
+       dosavadní uložená práce odloží jako „předchozí“ (jde obnovit). */
+    let zalohovano = false;
     function autoUloz() {
-      if (!stav.model) return;
+      if (!stav.model || !stav.maPraci) return;
       clearTimeout(casUlozeni);
-      casUlozeni = setTimeout(() => DB.uloz(Object.assign(dataProjektu(), { soup: stav.soup })), 1200);
+      casUlozeni = setTimeout(async () => {
+        if (!zalohovano && !stav.zDb) { zalohovano = true; await DB.zalohuj(); }
+        zalohovano = true;
+        DB.uloz(Object.assign(dataProjektu(), { soup: stav.soup }));
+      }, 1200);
     }
     function obnovProjekt(d) {
+      stav.maPraci = true;
       stav.vzory = d.vzory || {};
       stav.struktury = new Map(d.struktury || []);
+      // výřez z cizího souboru jen jako 3–8 bodů s konečnými čísly
+      for (const [, s] of stav.struktury) if (s && s.vyrez !== undefined && !(Array.isArray(s.vyrez) && s.vyrez.length >= 3 && s.vyrez.length <= 8 &&
+        s.vyrez.every(b => Array.isArray(b) && b.length === 3 && b.every(Number.isFinite)))) delete s.vyrez;
       stav.hrany = hranyZeStarych(d.hrany, d.skupiny);
       if (d.nastroj) stav.nastroj = d.nastroj;
       stav.obtisky = d.obtisky || [];
       if (d.jemnost) el('jemnost').value = d.jemnost;
     }
-    async function nabidniRozdelane() {
-      const d = await DB.nacti();
-      if (!d || !d.soup || stav.model) return;
+    function popisUlozeneho(d) {
       const min = Math.round((Date.now() - d.cas) / 60000);
       const kdy = min < 1 ? 'před chvílí' : min < 60 ? `před ${min} min` : min < 1440 ? `před ${Math.round(min / 60)} h` : `před ${Math.round(min / 1440)} dny`;
       const n = (d.struktury || []).length, h = (d.hrany || []).length, o = (d.obtisky || []).length;
-      el('rozdelaneText').innerHTML = `<b>Rozdělaná práce:</b> ${d.jmeno} (${kdy}) – vzor na ${n} ${sklon(n, 'ploše', 'plochách', 'plochách')}, ${h} ${sklon(h, 'hrana', 'hrany', 'hran')}` + (o ? `, ${o} ${sklon(o, 'nápis', 'nápisy', 'nápisů')}` : '');
-      el('rozdelane').classList.remove('skryto');
-      el('rozdelanePokracovat').onclick = () => {
-        el('rozdelane').classList.add('skryto');
+      return `${d.jmeno} (${kdy}) – vzor na ${n} ${sklon(n, 'ploše', 'plochách', 'plochách')}, ${h} ${sklon(h, 'hrana', 'hrany', 'hran')}` + (o ? `, ${o} ${sklon(o, 'nápis', 'nápisy', 'nápisů')}` : '');
+    }
+    function otevriUlozene(d, zDb) {
+      try {
         el('uhel').value = d.uhel || 30; el('uhelVal').textContent = el('uhel').value + '°';
         nastavModel(new Float32Array(d.soup), d.jmeno, false);
         obnovProjekt(d);
+        stav.zDb = zDb;
         poZmeneProjektu();
         vycentruj(0.7, 1.05);
+        el('rozdelane').classList.add('skryto');
+      } catch (e) {
+        console.error(e);
+        Dialog.chyba('Uloženou práci se nepodařilo otevřít (' + e.message + '). Můžete ji zahodit.');
+      }
+    }
+    async function nabidniRozdelane() {
+      const d = await DB.nacti(), p = await DB.nacti('predchozi');
+      if ((!d || !d.soup) && (!p || !p.soup)) return;
+      if (stav.model) return;
+      const box = el('rozdelaneText');
+      box.innerHTML = '';
+      const radek = (popisek, z, klic) => {
+        const div = document.createElement('div');
+        div.style.cssText = 'display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:2px 0';
+        const t = document.createElement('span'); t.style.flex = '1 1 180px';
+        t.innerHTML = `<b>${popisek}:</b> `; t.append(document.createTextNode(popisUlozeneho(z)));
+        const ok = document.createElement('button'); ok.className = 'btn btn-mala'; ok.style.flex = '0 0 auto'; ok.textContent = 'Pokračovat';
+        ok.addEventListener('click', () => otevriUlozene(z, klic === 'posledni'));
+        const x = document.createElement('button'); x.className = 'btn btn-mala'; x.style.flex = '0 0 auto'; x.textContent = 'Zahodit';
+        x.addEventListener('click', () => { DB.smaz(klic); div.remove(); if (!box.children.length) el('rozdelane').classList.add('skryto'); });
+        div.append(t, ok, x);
+        box.appendChild(div);
       };
-      el('rozdelaneZahodit').onclick = () => { DB.smaz(); el('rozdelane').classList.add('skryto'); };
+      if (d && d.soup) radek('Rozdělaná práce', d, 'posledni');
+      if (p && p.soup) radek('Předchozí práce', p, 'predchozi');
+      el('rozdelane').classList.remove('skryto');
     }
     // projekt v souboru: JSON se sítí v base64 a s použitými vlastními obrázky
     function naBase64(buf) {
@@ -730,7 +823,10 @@
     async function nactiProjektZeSouboru(f) {
       const d = JSON.parse(await f.text());
       if (!d || d.verze !== 1 || !d.soup) throw new Error('Soubor není projekt této stránky.');
-      for (const o of d.obrazky || []) if (!vlastni.has(o.id)) {
+      // obrázky z cizího souboru: jen platné id a obrázek jako data: URL
+      d.obrazky = (d.obrazky || []).filter(o => o && /^vlastni:[a-z0-9]{1,20}$/.test(o.id) && /^data:image\/(png|jpeg|webp|gif);base64,/.test(o.url || ''))
+        .map(o => ({ id: o.id, url: o.url, nazev: String(o.nazev || 'Obrázek').slice(0, 40) }));
+      for (const o of d.obrazky) if (!vlastni.has(o.id)) {
         const r = await obrazekNaJas(o.url);
         vlastni.set(o.id, Object.assign(r, { nazev: o.nazev }));
       }
@@ -738,6 +834,7 @@
       el('uhel').value = d.uhel || 30; el('uhelVal').textContent = el('uhel').value + '°';
       nastavModel(new Float32Array(zBase64(d.soup)), d.jmeno, false);
       obnovProjekt(d);
+      stav.zDb = false;
       poZmeneProjektu();
       vycentruj(0.7, 1.05);
       Dialog.info('Projekt načten.');
@@ -901,7 +998,10 @@
         }
         b.addEventListener('click', () => vyberVzor(id));
         gal.appendChild(b);
-        setTimeout(() => { const m = mapaPro(strukturaZ(id)); if (m) kresliNahled(c, m, barva); }, 0);
+        // náhled 72 px stačí mapa 128² (čtvrtina práce proti 256², galerie
+        // u Voronoi vzorů blokovala start); kreslí se, až má prohlížeč volno
+        const kresli = () => { const st = strukturaZ(id); const m = /^vlastni:/.test(id) ? mapaPro(st) : V.mapa(st.vzor, st.parametry, 128); if (m) kresliNahled(c, m, barva); };
+        if (window.requestIdleCallback) requestIdleCallback(kresli, { timeout: 1500 }); else setTimeout(kresli, 0);
       };
       for (const v of V.SEZNAM) pridej(v.id, v.ikona + ' ' + v.nazev, v.barva, false);
       for (const [id, v] of vlastni) pridej(id, '🖼 ' + v.nazev, '#8a7fb0', true);
@@ -960,7 +1060,7 @@
     function popisVzoru() {
       const pocet = [...stav.struktury.values()].filter(s => s.vzor === stav.vzor).length;
       const info = infoVzoru(stav.vzor);
-      el('vzorPopis').innerHTML = `<strong>${info.ikona || ''} ${info.nazev}</strong>${info.popis}<br>`
+      el('vzorPopis').innerHTML = `<strong>${info.ikona || ''} ${esc(info.nazev)}</strong>${esc(info.popis)}<br>`
         + (pocet ? `<b style="color:var(--ok)">Je na ${pocet} ${sklon(pocet, 'ploše', 'plochách', 'plochách')}.</b>` : 'Zatím není na žádné ploše.');
     }
 
@@ -984,13 +1084,20 @@
       n.rotace = +el('rotace').value;
       n.posunU = +el('posunU').value / 100; n.posunV = +el('posunV').value / 100;
       n.projekce = el('projekce').value; n.invert = el('invert').checked; n.obtocit = el('obtocit').checked;
-      const od = cislo(el('pasOd').value, NaN), doo = cislo(el('pasDo').value, NaN);
+      let od = cislo(el('pasOd').value, NaN), doo = cislo(el('pasDo').value, NaN);
+      if (od > 0 && doo > 0 && od > doo) {
+        [od, doo] = [doo, od];
+        el('pasOd').value = od; el('pasDo').value = doo;
+        Dialog.info(`Meze pásu byly prohozené – vzor bude od ${fmt(od, 1)} do ${fmt(doo, 1)} mm.`);
+      }
+      const vyska = stav.model ? stav.model.box.rozmer[2] : Infinity;
+      if (od > 0 && od >= vyska) Dialog.info(`Pás začíná nad modelem (model je vysoký ${fmt(vyska, 1)} mm) – vzor nebude vidět.`);
       n.pasOd = od > 0 ? od : null; n.pasDo = doo > 0 ? doo : null;
     }
     /* Změna nastavení vzoru se hned promítne do všech ploch s tímto vzorem. */
     function prenesNastaveni() {
       let zmena = false;
-      for (const [r, s] of stav.struktury) if (s.vzor === stav.vzor) { stav.struktury.set(r, strukturaZ(stav.vzor)); zmena = true; }
+      for (const [r, s] of stav.struktury) if (s.vzor === stav.vzor) { stav.struktury.set(r, Object.assign(strukturaZ(stav.vzor), s.vyrez ? { vyrez: s.vyrez } : {})); zmena = true; }
       if (zmena) { zapisHistorii(); naplanuj(); }
       kontrolaHloubky(); odhad();
     }
@@ -1070,7 +1177,7 @@
       document.querySelectorAll('#druhPovrchu button').forEach(x => x.setAttribute('aria-pressed', x === b));
       el('panelVzor').hidden = stav.povrch !== 'vzor';
       el('panelNapis').hidden = stav.povrch !== 'napis';
-      najeto.plocha = -1; zvyrazniPlochu(-1); pokyn();
+      najeto.plocha = -1; zvyrazniPlochu(-1); pokyn(); skryjNahledObtisku();
     });
 
     /* =====================================================================
@@ -1080,13 +1187,13 @@
     async function naplnFonty() {
       const sel = el('napisFont');
       try { fonty = (await FONTY.seznam()).filter(f => (f.pismo || 'latinka') === 'latinka' && f.druh !== 'historicke'); } catch (e) { fonty = []; }
-      sel.innerHTML = '<option value="">Systémové bezpatkové (tučné)</option>' + fonty.map(f => `<option value="${f.id}">${f.nazev}</option>`).join('');
+      sel.innerHTML = '<option value="">Systémové bezpatkové (tučné)</option>' + fonty.map(f => `<option value="${esc(f.id)}">${esc(f.nazev)}</option>`).join('');
       sel.value = stav.napis.font && fonty.some(f => f.id === stav.napis.font) ? stav.napis.font : (fonty.some(f => f.id === 'archivo') ? 'archivo' : '');
       stav.napis.font = sel.value;
     }
     function naplnObrazky() {
       const sel = el('napisObrazek');
-      sel.innerHTML = [...vlastni].map(([id, v]) => `<option value="${id}">${v.nazev}</option>`).join('') || '<option value="">(žádný – nahrajte obrázek)</option>';
+      sel.innerHTML = [...vlastni].map(([id, v]) => `<option value="${esc(id)}">${esc(v.nazev)}</option>`).join('') || '<option value="">(žádný – nahrajte obrázek)</option>';
       if (stav.napis.obrazek && vlastni.has(stav.napis.obrazek)) sel.value = stav.napis.obrazek;
       stav.napis.obrazek = sel.value;
     }
@@ -1144,7 +1251,8 @@
         const mapa = await pripravMapuObtisku(d);
         if (!mapa) continue;
         const r = rozmeryObtisku(d, mapa);
-        out.push({ plocha: d.plocha, bod: d.bod, normala: d.normala, mapa, sirka: r.sirka, vyska: r.vyska, hloubka: d.hloubka, smer: d.smer, rotace: d.rotace });
+        out.push({ plocha: d.plocha, bod: d.bod, normala: d.normala, mapa, sirka: r.sirka, vyska: r.vyska, hloubka: d.hloubka, smer: d.smer, rotace: d.rotace,
+          popis: d.druh === 'text' ? d.text : ((vlastni.get(d.obrazek) || {}).nazev || 'logo') });
       }
       return out;
     }
@@ -1190,7 +1298,22 @@
       zmenaNapisu();
     });
     el('napisNahrat').addEventListener('click', () => { poNahrani = 'logo'; el('obrazek').click(); });
-    function zmenaObtisku() { zapisHistorii(); naplanuj(); obnovSeznamObtisku(); stavKroku(); }
+    function zmenaObtisku() { zapisHistorii(); naplanuj(); obnovSeznamObtisku(); stavKroku(); kontrolaNapisu(); }
+    /* Nápis, který se ryje dovnitř, nesmí prorazit stěnu (tloušťka pod jeho
+       středem) a nemá přesahovat plochu (hlásí výpočet). */
+    function kontrolaNapisu() {
+      const box = el('hlaseniNapis');
+      box.innerHTML = '';
+      if (!stav.model) return;
+      const pridej = t => { const d = document.createElement('div'); d.className = 'varovani'; d.textContent = t; box.appendChild(d); };
+      for (const d of stav.obtisky) {
+        if (d.smer === 'ven' || !d.normala) continue;
+        const tl = J.tloustka(stav.model, d.bod, d.normala);
+        if (isFinite(tl) && d.hloubka > tl * 0.6)
+          pridej(`⚠ ${d.druh === 'text' ? 'Nápis „' + d.text + '“' : 'Logo'}: stěna je tu silná jen ${fmt(tl, 1)} mm – hloubka ${fmt(d.hloubka, 1)} mm ji ${d.hloubka >= tl ? 'prorazí' : 'nebezpečně ztenčí'}.`);
+      }
+      for (const t of stav.presahy || []) pridej('⚠ ' + t);
+    }
     function umistiObtisk(hit) {
       const r = stav.model.oblast[zobrazena.puvod[hit.faceIndex]];
       const p = hit.point.clone();
@@ -1214,8 +1337,96 @@
       const d = Object.assign({}, stav.napis, { id: Date.now().toString(36) + Math.random().toString(36).slice(2, 5), plocha: r, bod, normala: n });
       stav.obtisky.push(d);
       stav.vybranyObtisk = d.id;
+      skryjNahledObtisku();
       nactiNapisPanel();
       zmenaObtisku();
+    }
+    /* ---------- náhled nápisu pod kurzorem a tažení ----------
+       Průsvitná rovinná kopie nápisu v místě kurzoru (na válci jen přibližně –
+       skutečný nápis se po něm obtočí). Stejná báze jako v jádře
+       (zakladRoviny), takže sedí natočení i orientace. */
+    let tahObtisku = null, nahledObt = null, nahledKlic = '', tahVyrezu = null;
+    const texturyObtisku = new Map();
+    function texturaObtisku(mapa) {
+      if (texturyObtisku.has(mapa)) return texturyObtisku.get(mapa);
+      const c = document.createElement('canvas'); c.width = mapa.N; c.height = mapa.M;
+      const g = c.getContext('2d'), img = g.createImageData(mapa.N, mapa.M);
+      const barva = new THREE.Color(css('--accent') || '#6aa6fd');
+      for (let j = 0; j < mapa.M; j++) for (let i = 0; i < mapa.N; i++) {
+        const h = mapa.data[j * mapa.N + i], o = 4 * ((mapa.M - 1 - j) * mapa.N + i);
+        img.data[o] = barva.r * 255; img.data[o + 1] = barva.g * 255; img.data[o + 2] = barva.b * 255;
+        img.data[o + 3] = 40 + 215 * h;         // podklad slabě, písmo silně
+      }
+      g.putImageData(img, 0, 0);
+      const t = new THREE.CanvasTexture(c);
+      texturyObtisku.set(mapa, t);
+      return t;
+    }
+    function skryjNahledObtisku() { prekresli();
+      if (nahledObt) { skupina.remove(nahledObt); nahledObt.geometry.dispose(); nahledObt.material.dispose(); nahledObt = null; }
+      nahledKlic = '';
+    }
+    async function ukazNahledObtisku(x, y, d) {
+      const h = zasah(x, y);
+      if (!h || !d) { skryjNahledObtisku(); return; }
+      const mapa = await pripravMapuObtisku(d);
+      if (!mapa) { skryjNahledObtisku(); return; }
+      const t = zobrazena.puvod[h.faceIndex];
+      const n = new THREE.Vector3(stav.model.N[3 * t], stav.model.N[3 * t + 1], stav.model.N[3 * t + 2]);
+      const p = h.point.clone(); skupina.worldToLocal(p);
+      const rz = rozmeryObtisku(d, mapa);
+      // báze roviny jako v jádře: v = svislice v rovině (u vodorovné osa Y), u = v × n
+      const v = Math.abs(n.z) < 0.9 ? new THREE.Vector3(0, 0, 1).addScaledVector(n, -n.z).normalize() : new THREE.Vector3(0, 1, 0).addScaledVector(n, -n.y).normalize();
+      const u = new THREE.Vector3().crossVectors(v, n);
+      const f = (d.rotace || 0) * Math.PI / 180, cr = Math.cos(f), sr = Math.sin(f);
+      const dx = u.clone().multiplyScalar(cr).addScaledVector(v, sr), dy = u.clone().multiplyScalar(-sr).addScaledVector(v, cr);
+      const klic = mapa.N + 'x' + mapa.M + '|' + rz.sirka.toFixed(3) + '|' + rz.vyska.toFixed(3);
+      if (!nahledObt || nahledKlic !== klic || nahledObt.material.map !== texturaObtisku(mapa)) {
+        skryjNahledObtisku();
+        nahledObt = new THREE.Mesh(new THREE.PlaneGeometry(rz.sirka, rz.vyska),
+          new THREE.MeshBasicMaterial({ map: texturaObtisku(mapa), transparent: true, depthWrite: false, side: THREE.DoubleSide, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }));
+        nahledObt.renderOrder = 3;
+        nahledKlic = klic;
+        skupina.add(nahledObt);
+        prekresli();
+      }
+      nahledObt.matrixAutoUpdate = false;
+      nahledObt.matrix.makeBasis(dx, dy, n).setPosition(p.clone().addScaledVector(n, stav.model.box.uhlopricka * 0.002));
+      nahledObt.matrixWorldNeedsUpdate = true;
+    }
+    function obtiskPod(x, y) {
+      const h = zasah(x, y);
+      if (!h) return null;
+      const p = h.point.clone(); skupina.worldToLocal(p);
+      const o = stav.obtisky.find(q => Math.hypot(q.bod[0] - p.x, q.bod[1] - p.y, q.bod[2] - p.z) < Math.max(1.5, q.velikost * 0.6));
+      return o ? o.id : null;
+    }
+    function najetiNapis(x, y) {
+      const rc = box.getBoundingClientRect();
+      const id = obtiskPod(x, y);
+      if (id) {
+        skryjNahledObtisku();
+        ukazTip(x - rc.left, y - rc.top, 'nápis · klik = vybrat · táhnout = přesunout');
+        return;
+      }
+      const d = stav.presouvam ? stav.obtisky.find(o => o.id === stav.vybranyObtisk) : stav.napis;
+      if (!zasah(x, y)) { skryjNahledObtisku(); skryjTip(); return; }
+      ukazNahledObtisku(x, y, d);
+      ukazTip(x - rc.left, y - rc.top, stav.presouvam ? 'klik = přesunout sem' : 'klik = umístit sem');
+    }
+    function vyberObtisk(id) {
+      const d = stav.obtisky.find(o => o.id === id);
+      if (!d) return;
+      stav.vybranyObtisk = id; Object.assign(stav.napis, d); nactiNapisPanel(); obnovSeznamObtisku(); pokyn();
+    }
+    function presunObtisk(id, x, y) {
+      const h = zasah(x, y), d = stav.obtisky.find(o => o.id === id);
+      if (!h || !d) return;
+      const p = h.point.clone(); skupina.worldToLocal(p);
+      const t = zobrazena.puvod[h.faceIndex];
+      Object.assign(d, { plocha: stav.model.oblast[t], bod: [p.x, p.y, p.z], normala: [stav.model.N[3 * t], stav.model.N[3 * t + 1], stav.model.N[3 * t + 2]] });
+      stav.vybranyObtisk = id;
+      nactiNapisPanel(); zmenaObtisku();
     }
     el('napisPresun').addEventListener('click', () => { stav.presouvam = true; pokyn(); });
     el('napisSmaz').addEventListener('click', () => {
@@ -1335,17 +1546,26 @@
       if (!stav.model || !el('seznamPlochObal').open) return;
       box.innerHTML = '';
       const pl = [...stav.model.oblasti].sort((a, b) => b.plocha - a.plocha).slice(0, 300);
+      if (stav.model.oblasti.length > 300) box.insertAdjacentHTML('beforeend', `<div class="pozn">Zobrazeno 300 největších z ${stav.model.oblasti.length} ploch – ostatní vyberte kliknutím v náhledu.</div>`);
       for (const o of pl) {
         const s = stav.struktury.get(o.id);
         const b = document.createElement('button'); b.type = 'button';
         b.setAttribute('aria-pressed', !!(s && s.vzor === stav.vzor));
         const tvar = o.tvar === 'rovina' ? 'rovná' : o.tvar === 'valec' ? 'válcová' : 'zakřivená';
-        b.innerHTML = `<span class="tecka" style="background:${s ? infoVzoru(s.vzor).barva : 'var(--border-strong)'}"></span><span class="t">Plocha ${o.id + 1} · ${tvar}</span><span class="s">${fmt(o.plocha / 100)} cm²${s ? ' · ' + infoVzoru(s.vzor).nazev : ''}</span>`;
+        b.innerHTML = `<span class="tecka" style="background:${s ? infoVzoru(s.vzor).barva : 'var(--border-strong)'}"></span><span class="t">Plocha ${o.id + 1} · ${tvar}</span><span class="s">${fmt(o.plocha / 100)} cm²${s ? ' · ' + esc(infoVzoru(s.vzor).nazev) : ''}</span>`;
         b.addEventListener('click', () => prepniPlochu(o.id));
         b.addEventListener('mouseenter', () => zvyrazniPlochu(o.id));
         b.addEventListener('focus', () => zvyrazniPlochu(o.id));
         b.addEventListener('mouseleave', () => zvyrazniPlochu(-1));
-        box.appendChild(b);
+        if (s && o.tvar === 'rovina') {
+          // výřez zadaný čísly – z klávesnice a přesně (tažení myší jde jen v náhledu)
+          const r = document.createElement('div'); r.className = 'radek-obtisku';
+          const v = document.createElement('button'); v.type = 'button';
+          v.textContent = s.vyrez ? '▭ část ✓' : '▭ část'; v.title = 'Vzor jen na části plochy – zadat v procentech';
+          v.setAttribute('aria-label', `Plocha ${o.id + 1}: vzor jen na části plochy`);
+          v.addEventListener('click', () => vyrezCisly(o.id));
+          r.append(b, v); box.appendChild(r);
+        } else box.appendChild(b);
       }
     }
     el('seznamPlochObal').addEventListener('toggle', obnovSeznamPloch);
@@ -1353,7 +1573,8 @@
       const box = el('seznamHran');
       if (!stav.model) return;
       box.innerHTML = '';
-      for (const r of stav.model.retezy.slice(0, 400)) {
+      if (stav.model.retezy.length > 400) box.insertAdjacentHTML('beforeend', `<div class="pozn">Zobrazeno 400 nejdelších z ${stav.model.retezy.length} hran – ostatní vyberte kliknutím v náhledu.</div>`);
+      for (const r of [...stav.model.retezy].sort((a, b) => b.delka - a.delka).slice(0, 400)) {
         const g = stav.hrany.get(r.id);
         const b = document.createElement('button'); b.type = 'button';
         b.setAttribute('aria-pressed', !!g);
@@ -1370,14 +1591,26 @@
     /* ---------- kroky ---------- */
     function nastavKrok(k) {
       if (k !== 'model' && !stav.model) return;
+      if (rovinaNahled) ukazRovinuRezu(false);
+      if (stav.vyrezRezim && k !== 'struktura') prepniVyrez(false);
       stav.krok = k;
-      document.querySelectorAll('#kroky button').forEach(b => b.setAttribute('aria-selected', b.dataset.k === k));
+      document.querySelectorAll('#kroky button').forEach(b => { b.setAttribute('aria-selected', b.dataset.k === k); b.tabIndex = b.dataset.k === k ? 0 : -1; });
       ['model', 'struktura', 'hrany', 'export'].forEach(x => { el('krok-' + x).hidden = x !== k; });
       if (k === 'export') { odhad(); souhrn(); }
       najeto = { plocha: -1, hrana: -1 }; cekaPotvrzeni = null;
-      zvyrazniPlochu(-1); obnovHrany(); pokyn(); skryjTip(); stavKroku(); kurzor();
+      zvyrazniPlochu(-1); obnovHrany(); pokyn(); skryjTip(); stavKroku(); kurzor(); skryjNahledObtisku();
     }
     el('kroky').addEventListener('click', e => { const b = e.target.closest('button'); if (b && !b.disabled) nastavKrok(b.dataset.k); });
+    // záložky šipkami (vzor ARIA tablist): ← → Home End
+    el('kroky').addEventListener('keydown', e => {
+      const tl = [...document.querySelectorAll('#kroky button')].filter(b => !b.disabled);
+      const i = tl.findIndex(b => b.dataset.k === stav.krok);
+      let j = -1;
+      if (e.key === 'ArrowRight') j = (i + 1) % tl.length; else if (e.key === 'ArrowLeft') j = (i - 1 + tl.length) % tl.length;
+      else if (e.key === 'Home') j = 0; else if (e.key === 'End') j = tl.length - 1;
+      if (j < 0) return;
+      e.preventDefault(); nastavKrok(tl[j].dataset.k); tl[j].focus();
+    });
     document.querySelectorAll('[data-dalsi]').forEach(b => b.addEventListener('click', () => nastavKrok(b.dataset.dalsi)));
     function stavKroku() {
       const m = !!stav.model;
@@ -1394,7 +1627,9 @@
     function pokyn() {
       let t = '';
       const kl = DOTYK ? 'Ťukněte' : 'Klikněte';
-      if (stav.meri) t = mereni.text || `📏 ${kl} na první bod (měří se vzdálenost a tloušťka stěny)`;
+      if (stav.vyrezRezim) t = `▭ Táhněte obdélník na rovné ploše – vzor „${infoVzoru(stav.vzor).nazev}“ bude jen v něm (Esc = zrušit)`;
+      else if (stav.polozit) t = `⤓ ${kl} na plochu, která má ležet na podložce (Esc = zrušit)`;
+      else if (stav.meri) t = mereni.text || `📏 ${kl} na první bod (měří se vzdálenost a tloušťka stěny)`;
       else if (!stav.model) t = '';
       else if (stav.krok === 'model') t = 'Model je načtený. Pokračujte krokem ② Povrch.';
       else if (stav.krok === 'struktura' && stav.povrch === 'napis') {
@@ -1411,11 +1646,18 @@
     /* ---------- historie ---------- */
     const historie = [], budoucnost = [];
     let posledniSnimek = null;
-    const snimek = () => JSON.stringify({ s: [...stav.struktury], h: [...stav.hrany], v: stav.vzory, o: stav.obtisky });
+    /* Stavy modelu (otočení, měřítko, rozdělení na plochy, zjednodušení): síť
+       se do JSON snímku nedává, snímek nese jen pořadí stavu v `modely`. */
+    const modely = [];
+    function novyStavModelu(soup) {
+      modely.push({ soup, uhel: +el('uhel').value });
+      stav.modelIdx = modely.length - 1;
+    }
+    const snimek = () => JSON.stringify({ s: [...stav.struktury], h: [...stav.hrany], v: stav.vzory, o: stav.obtisky, m: stav.modelIdx });
     function zapisHistorii() {
       const s = snimek();
       if (s === posledniSnimek) return;
-      if (posledniSnimek !== null) historie.push(posledniSnimek);
+      if (posledniSnimek !== null) { historie.push(posledniSnimek); stav.maPraci = true; }
       if (historie.length > 80) historie.shift();
       posledniSnimek = s;
       budoucnost.length = 0;
@@ -1425,6 +1667,13 @@
     function obnov(s) {
       const d = JSON.parse(s);
       stav.struktury = new Map(d.s); stav.hrany = new Map(d.h); stav.vzory = d.v; stav.obtisky = d.o;
+      if (d.m !== undefined && d.m !== stav.modelIdx && modely[d.m]) {
+        // vrátit i model (otočení, měřítko, rozdělení…)
+        stav.modelIdx = d.m;
+        el('uhel').value = modely[d.m].uhel; el('uhelVal').textContent = modely[d.m].uhel + '°';
+        nastavModel(modely[d.m].soup, stav.jmeno, true);
+        vycentruj();
+      }
       if (stav.vybranyObtisk && !stav.obtisky.some(o => o.id === stav.vybranyObtisk)) stav.vybranyObtisk = null;
       posledniSnimek = s;
       obnovTlacitkaHistorie(); naplanuj(); obarvi(); obnovHrany(); pocetVGalerii();
@@ -1436,7 +1685,7 @@
     el('zpet').addEventListener('click', zpet);
     el('znovu').addEventListener('click', znovu);
     document.addEventListener('keydown', e => {
-      if (e.key === 'Escape') { if (stav.meri) prepniMereni(false); else if (stav.presouvam) { stav.presouvam = false; pokyn(); } }
+      if (e.key === 'Escape') { if (stav.vyrezRezim) prepniVyrez(false); else if (stav.polozit) prepniPolozit(false); else if (stav.meri) prepniMereni(false); else if (stav.presouvam) { stav.presouvam = false; pokyn(); } }
       if (!(e.ctrlKey || e.metaKey) || /INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) return;
       if (e.key === 'z' && !e.shiftKey) { e.preventDefault(); zpet(); }
       else if (e.key === 'y' || ((e.key === 'Z' || e.key === 'z') && e.shiftKey)) { e.preventDefault(); znovu(); }
@@ -1470,11 +1719,11 @@
     const pohled = { cil: new THREE.Vector3(), r: 100, azimut: 0.7, sklon: 1.05, px: 0, py: 0 };   // cil = vždy střed modelu
     let polomer = 50;
 
-    function barvaPozadi() { renderer.setClearColor(new THREE.Color(css('--bg-deep') || '#121212')); }
+    function barvaPozadi() { prekresli(); renderer.setClearColor(new THREE.Color(css('--bg-deep') || '#121212')); }
     barvaPozadi();
     new MutationObserver(() => { barvaPozadi(); obarvi(); obnovHrany(); }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
 
-    function velikost() {
+    function velikost() { prekresli();
       const w = box.clientWidth, h = box.clientHeight;
       if (!w || !h) return;
       renderer.setSize(w, h, true);
@@ -1488,7 +1737,7 @@
       const vod = 2 * Math.atan(Math.tan(sv / 2) * kamera.aspect);
       return r * 1.15 / Math.sin(Math.min(sv, vod) / 2);
     }
-    function umistiKameru() {
+    function umistiKameru() { prekresli();
       const sp = Math.sin(pohled.sklon), cp = Math.cos(pohled.sklon);
       kamera.position.set(pohled.cil.x + pohled.r * sp * Math.sin(pohled.azimut), pohled.cil.y + pohled.r * cp, pohled.cil.z + pohled.r * sp * Math.cos(pohled.azimut));
       kamera.lookAt(pohled.cil);
@@ -1522,6 +1771,17 @@
         posouvam = e.button === 2 || e.button === 1 || e.shiftKey;
         minula = 0;
         start = prsty.size === 1 && e.button === 0 ? { x: e.clientX, y: e.clientY, t: Date.now(), moc: false, typ: e.pointerType } : null;
+        // stisk na umístěném nápisu = tažení nápisu (ne otáčení)
+        tahObtisku = null; tahVyrezu = null;
+        // režim výřezu: tažení na ploše kreslí obdélník (ne otáčení)
+        if (start && !e.shiftKey && stav.vyrezRezim && stav.krok === 'struktura' && stav.povrch === 'vzor') {
+          const r = plochaPod(e.clientX, e.clientY);
+          if (r >= 0) tahVyrezu = { r, x0: e.clientX, y0: e.clientY, x1: e.clientX, y1: e.clientY };
+        }
+        if (start && !e.shiftKey && !stav.meri && stav.krok === 'struktura' && stav.povrch === 'napis') {
+          const id = obtiskPod(e.clientX, e.clientY);
+          if (id) tahObtisku = { id, x: e.clientX, y: e.clientY, moc: false };
+        }
       });
       box.addEventListener('pointermove', e => {
         const p = prsty.get(e.pointerId);
@@ -1534,6 +1794,19 @@
         }
         const dx = e.clientX - p.x, dy = e.clientY - p.y;
         p.x = e.clientX; p.y = e.clientY;
+        if (tahVyrezu && prsty.size === 1) {
+          tahVyrezu.x1 = e.clientX; tahVyrezu.y1 = e.clientY;
+          const rc = box.getBoundingClientRect(), t = tahVyrezu, ram = el('vyrezRam');
+          ram.hidden = false;
+          ram.style.left = Math.min(t.x0, t.x1) - rc.left + 'px'; ram.style.top = Math.min(t.y0, t.y1) - rc.top + 'px';
+          ram.style.width = Math.abs(t.x1 - t.x0) + 'px'; ram.style.height = Math.abs(t.y1 - t.y0) + 'px';
+          return;
+        }
+        if (tahObtisku && prsty.size === 1) {
+          if (Math.hypot(e.clientX - tahObtisku.x, e.clientY - tahObtisku.y) > 4) tahObtisku.moc = true;
+          if (tahObtisku.moc) ukazNahledObtisku(e.clientX, e.clientY, stav.obtisky.find(o => o.id === tahObtisku.id));
+          return;
+        }
         if (start && !start.moc) {
           if (Math.hypot(e.clientX - start.x, e.clientY - start.y) <= (start.typ === 'mouse' ? 5 : 10)) return;
           start.moc = true;
@@ -1555,6 +1828,21 @@
         }
       });
       const konec = e => {
+        if (tahVyrezu) {
+          const t = tahVyrezu; tahVyrezu = null;
+          el('vyrezRam').hidden = true;
+          if (e.type === 'pointerup' && Math.abs(t.x1 - t.x0) > 8 && Math.abs(t.y1 - t.y0) > 8) dokonciVyrez(t);
+          prsty.delete(e.pointerId); minula = 0; posouvam = false; start = null;
+          return;
+        }
+        if (tahObtisku) {
+          const t = tahObtisku; tahObtisku = null;
+          if (e.type === 'pointerup' && t.moc) presunObtisk(t.id, e.clientX, e.clientY);
+          else if (e.type === 'pointerup') vyberObtisk(t.id);
+          skryjNahledObtisku();
+          prsty.delete(e.pointerId); minula = 0; posouvam = false; start = null;
+          return;
+        }
         if (start && !start.moc && prsty.size === 1 && Date.now() - start.t < 700 && e.type === 'pointerup') klik(e.clientX, e.clientY, start.typ);
         prsty.delete(e.pointerId); minula = 0; posouvam = false; start = null;
       };
@@ -1563,7 +1851,7 @@
       box.addEventListener('pointerleave', e => {
         if (e.pointerType !== 'mouse') return;
         mys = null;
-        if (!prsty.size) { const bylo = najeto.hrana >= 0; najeto = { plocha: -1, hrana: -1 }; zvyrazniPlochu(-1); if (bylo) obnovHrany(); skryjTip(); }
+        if (!prsty.size) { const bylo = najeto.hrana >= 0; najeto = { plocha: -1, hrana: -1 }; zvyrazniPlochu(-1); if (bylo) obnovHrany(); skryjTip(); skryjNahledObtisku(); }
       });
       box.addEventListener('wheel', e => { e.preventDefault(); zoom(Math.exp(e.deltaY * 0.0012)); }, { passive: false });
     })();
@@ -1580,7 +1868,7 @@
       pohled.py = Math.max(-h, Math.min(h, pohled.py + dy));
       posunObrazu();
     }
-    function posunObrazu() {
+    function posunObrazu() { prekresli();
       const w = box.clientWidth, h = box.clientHeight;
       if (!w || !h) return;
       if (pohled.px || pohled.py) kamera.setViewOffset(w, h, -pohled.px, -pohled.py, w, h);
@@ -1588,10 +1876,26 @@
       kamera.updateProjectionMatrix();
       skryjTip();
     }
+    /* Kreslí se jen při změně: pohyb kamery se pozná porovnáním polohy,
+       natočení a projekce, ostatní změny scény ohlásí prekresli() (volají ho
+       funkce, které scénu mění, a vstup uživatele). Dřív se scéna kreslila
+       60× za sekundu i v klidu – zbytečná práce grafiky a baterie. */
+    var kreslit = 2;           // var: prekresli() se volá i z kódu nad touto řádkou
+    const posledniKamera = new Float64Array(23);
+    function prekresli() { kreslit = 2; }
     function smycka() {
       requestAnimationFrame(smycka);
+      const p = kamera.position, q = kamera.quaternion, m = kamera.projectionMatrix.elements;
+      let zmena = false;
+      const zapis = (i, x) => { if (posledniKamera[i] !== x) { posledniKamera[i] = x; zmena = true; } };
+      zapis(0, p.x); zapis(1, p.y); zapis(2, p.z); zapis(3, q.x); zapis(4, q.y); zapis(5, q.z); zapis(6, q.w);
+      for (let i = 0; i < 16; i++) zapis(7 + i, m[i]);
+      if (!zmena && kreslit <= 0) return;
+      if (kreslit > 0) kreslit--;
       renderer.render(scena, kamera);
     }
+    for (const t of ['pointerdown', 'pointerup', 'wheel', 'keydown', 'keyup', 'click', 'input', 'change'])
+      addEventListener(t, prekresli, { capture: true, passive: true });
 
     /* ---------- co je pod myší ---------- */
     const paprsek = new THREE.Raycaster();
@@ -1609,7 +1913,37 @@
       const h = zasah(x, y);
       return h ? stav.model.oblast[zobrazena.puvod[h.faceIndex]] : -1;
     }
-    /* Nejbližší viditelná hrana do 16 px (prstem 28 px) od místa. */
+    /* Nejbližší viditelná hrana do 16 px (prstem 28 px) od místa. U modelů
+       s mnoha hranami se procházejí jen úseky z mřížky kolem bodu povrchu
+       pod kurzorem (mimo model všechny – hrany na obrysu). */
+    let mrizkaSeg = null;
+    function postavMrizkuSeg() {
+      mrizkaSeg = null;
+      if (carySeg.length < 3000) return;
+      const h = stav.model.box.uhlopricka / 40, m = new Map();
+      const kl = (i, j, k) => i + ',' + j + ',' + k;
+      for (const s of carySeg) {
+        const mn = [0, 1, 2].map(q => Math.floor(Math.min(s[q], s[q + 3]) / h)), mx = [0, 1, 2].map(q => Math.floor(Math.max(s[q], s[q + 3]) / h));
+        for (let i = mn[0]; i <= mx[0]; i++) for (let j = mn[1]; j <= mx[1]; j++) for (let k = mn[2]; k <= mx[2]; k++) {
+          const key = kl(i, j, k); let l = m.get(key); if (!l) m.set(key, l = []); l.push(s);
+        }
+      }
+      mrizkaSeg = { h, m, kl };
+    }
+    function useckyKolem(hit, dosah) {
+      if (!mrizkaSeg || !hit) return carySeg;
+      const p = hit.point.clone(); skupina.worldToLocal(p);
+      const rc = renderer.domElement.getBoundingClientRect();
+      const naPx = 2 * hit.distance * Math.tan(kamera.fov * Math.PI / 360) / rc.height;   // mm na pixel
+      const r = Math.max(mrizkaSeg.h, dosah * naPx * 1.5);
+      const { h, m, kl } = mrizkaSeg, out = new Set();
+      for (let i = Math.floor((p.x - r) / h); i <= Math.floor((p.x + r) / h); i++)
+        for (let j = Math.floor((p.y - r) / h); j <= Math.floor((p.y + r) / h); j++)
+          for (let k = Math.floor((p.z - r) / h); k <= Math.floor((p.z + r) / h); k++) {
+            const l = m.get(kl(i, j, k)); if (l) for (const s of l) out.add(s);
+          }
+      return out;
+    }
     function hranaPod(x, y, dosah) {
       if (!carySeg.length) return -1;
       dosah = dosah || 16;
@@ -1621,7 +1955,7 @@
       const mat = skupina.matrixWorld;
       const a = new THREE.Vector3(), b = new THREE.Vector3();
       const kand = [];
-      for (const s of carySeg) {
+      for (const s of useckyKolem(h, dosah)) {
         a.set(s[0], s[1], s[2]).applyMatrix4(mat); b.set(s[3], s[4], s[5]).applyMatrix4(mat);
         const pa = a.clone().project(kamera), pb = b.clone().project(kamera);
         if (pa.z > 1 || pb.z > 1) continue;
@@ -1649,6 +1983,7 @@
     let cekaPotvrzeni = null;
     function klik(x, y, typ) {
       if (!stav.model) return;
+      if (stav.polozit) { const r = plochaPod(x, y); if (r >= 0) polozNaPlochu(r); return; }
       if (stav.meri) { meritBod(x, y); return; }
       const prstem = typ && typ !== 'mouse';
       const cil = stav.krok === 'struktura' && stav.povrch === 'vzor' ? 'p' + plochaPod(x, y) : stav.krok === 'hrany' ? 'h' + hranaPod(x, y, prstem ? 28 : 16) : null;
@@ -1678,7 +2013,16 @@
       }
     }
     function najeti(x, y, prstem, cekam) {
-      if (stav.meri || !stav.model || (stav.krok !== 'struktura' && stav.krok !== 'hrany') || (stav.krok === 'struktura' && stav.povrch === 'napis')) { skryjTip(); return; }
+      if (!stav.meri && stav.model && stav.krok === 'struktura' && stav.povrch === 'napis') { najetiNapis(x, y); return; }
+      skryjNahledObtisku();
+      if (stav.polozit && stav.model) {
+        const r = plochaPod(x, y), rc = box.getBoundingClientRect();
+        if (r !== najeto.plocha) { najeto.plocha = r; zvyrazniPlochu(r); }
+        if (r < 0) { skryjTip(); return; }
+        ukazTip(x - rc.left, y - rc.top, `${prstem ? 'ťuk' : 'klik'} = položit tuto plochu na podložku`);
+        return;
+      }
+      if (stav.meri || !stav.model || (stav.krok !== 'struktura' && stav.krok !== 'hrany')) { skryjTip(); return; }
       const rc = box.getBoundingClientRect();
       const dalsi = cekam ? ' (ťukněte znovu)' : '';
       const kl = prstem ? 'ťuk' : 'klik';
@@ -1689,6 +2033,7 @@
         const o = stav.model.oblasti[r], s = stav.struktury.get(r);
         const tvar = o.tvar === 'rovina' ? 'rovná plocha' : o.tvar === 'valec' ? 'válcová plocha' : 'zakřivená plocha';
         const nv = infoVzoru(stav.vzor).nazev;
+        if (stav.vyrezRezim) { ukazTip(x - rc.left, y - rc.top, o.tvar === 'rovina' ? `${tvar} · táhněte = ${nv} jen v obdélníku` : `${tvar} · výřez jde jen na rovné ploše`); return; }
         const co = s && s.vzor === stav.vzor ? `${kl} = odebrat ${nv}`
           : s ? `má ${infoVzoru(s.vzor).nazev} · ${kl} = změnit na ${nv}` : `${kl} = přidat ${nv}`;
         ukazTip(x - rc.left, y - rc.top, `${tvar} · ${co}${dalsi}`);
@@ -1714,7 +2059,8 @@
 
     /* ---------- měření ---------- */
     const mereni = { body: [], text: '', objekt: null };
-    function prepniMereni(zap) {
+    function prepniMereni(zap) { prekresli();
+      if (zap && stav.polozit) { stav.polozit = false; el('polozit').setAttribute('aria-pressed', false); }
       stav.meri = zap;
       el('meritkoBtn').setAttribute('aria-pressed', zap);
       mereni.body = []; mereni.text = '';
@@ -1722,7 +2068,7 @@
       skryjTip(); zvyrazniPlochu(-1); kurzor(); pokyn();
     }
     el('meritkoBtn').addEventListener('click', () => { if (stav.model) prepniMereni(!stav.meri); });
-    function meritBod(x, y) {
+    function meritBod(x, y) { prekresli();
       const h = zasah(x, y);
       if (!h) return;
       const p = h.point.clone(); skupina.worldToLocal(p);
@@ -1757,7 +2103,7 @@
     }
 
     /* Zvýraznění plochy pod myší: průhledná kopie jejích trojúhelníků. */
-    function zvyrazniPlochu(r) {
+    function zvyrazniPlochu(r) { prekresli();
       if (najetiMesh) { skupina.remove(najetiMesh); najetiMesh.geometry.dispose(); najetiMesh = null; }
       if (r < 0 || !sitMesh || !trojOblasti || !trojOblasti[r]) return;
       const src = sitMesh.geometry.getAttribute('position').array, list = trojOblasti[r];
@@ -1773,7 +2119,7 @@
 
     /* ---------- barvy ---------- */
     const SEDA = new THREE.Color(0xb9bdc4);
-    function obarvi() {
+    function obarvi() { prekresli();
       if (!sitMesh || !stav.model) return;
       const m = stav.model, n = m.oblasti.length;
       const bo = new Float32Array(n * 3);
@@ -1793,13 +2139,33 @@
         const r = ob[pv[t]] * 3;
         for (let k = 0; k < 3; k++) { const o = 9 * t + 3 * k; a[o] = bo[r]; a[o + 1] = bo[r + 1]; a[o + 2] = bo[r + 2]; }
       }
+      // převisy při tisku v této poloze: trojúhelník hledí dolů víc než 45°
+      // od svislice a neleží na podložce → červeně
+      stav.plochaPrevisu = 0;
+      if (stav.previsy) {
+        const P = sitMesh.geometry.getAttribute('position').array;
+        let zMin = Infinity;
+        for (let i = 2; i < P.length; i += 3) if (P[i] < zMin) zMin = P[i];
+        const tolZ = Math.max(0.05, m.box.uhlopricka * 1e-3), cerv = [1, 0.22, 0.16];
+        for (let t = 0; t < pv.length; t++) {
+          const o = 9 * t;
+          const ux = P[o + 3] - P[o], uy = P[o + 4] - P[o + 1], uz = P[o + 5] - P[o + 2];
+          const vx = P[o + 6] - P[o], vy = P[o + 7] - P[o + 1], vz = P[o + 8] - P[o + 2];
+          const nx = uy * vz - uz * vy, ny = uz * vx - ux * vz, nz = ux * vy - uy * vx, l = Math.sqrt(nx * nx + ny * ny + nz * nz);
+          if (!(l > 0) || nz > -0.7071 * l) continue;
+          if (P[o + 2] < zMin + tolZ && P[o + 5] < zMin + tolZ && P[o + 8] < zMin + tolZ) continue;   // na podložce
+          stav.plochaPrevisu += l / 2;
+          for (let k = 0; k < 9; k += 3) { a[o + k] = cerv[0]; a[o + k + 1] = cerv[1]; a[o + k + 2] = cerv[2]; }
+        }
+      }
       col.needsUpdate = true;
+      infoPanel();
     }
 
     /* ---------- vykreslení sítě ----------
        Neindexovaná geometrie (barvy po trojúhelnících); normály se vyhlazují
        jen mezi trojúhelníky s úhlem pod 40° – ostré hrany zůstanou ostré. */
-    function vykresli(sit) {
+    function vykresli(sit) { prekresli();
       zobrazena = sit;
       const { pos, tri } = sit;
       const nT = tri.length / 3, nV = pos.length / 3;
@@ -1809,7 +2175,7 @@
         const ux = pos[b] - pos[a], uy = pos[b + 1] - pos[a + 1], uz = pos[b + 2] - pos[a + 2];
         const vx = pos[c] - pos[a], vy = pos[c + 1] - pos[a + 1], vz = pos[c + 2] - pos[a + 2];
         const x = uy * vz - uz * vy, y = uz * vx - ux * vz, z = ux * vy - uy * vx;
-        const l = Math.hypot(x, y, z) || 1;
+        const l = Math.sqrt(x * x + y * y + z * z) || 1;
         N[3 * t] = x / l; N[3 * t + 1] = y / l; N[3 * t + 2] = z / l; A[t] = l;
       }
       const start = new Int32Array(nV + 1);
@@ -1828,7 +2194,7 @@
           if (N[3 * u] * N[3 * t] + N[3 * u + 1] * N[3 * t + 1] + N[3 * u + 2] * N[3 * t + 2] < cosH) continue;
           x += N[3 * u] * A[u]; y += N[3 * u + 1] * A[u]; z += N[3 * u + 2] * A[u];
         }
-        const l = Math.hypot(x, y, z) || 1;
+        const l = Math.sqrt(x * x + y * y + z * z) || 1;
         NN[o] = x / l; NN[o + 1] = y / l; NN[o + 2] = z / l;
       }
       // trojúhelníky podle ploch (pro zvýraznění pod myší)
@@ -1851,12 +2217,122 @@
       obarvi();
       zvyrazniPlochu(najeto.plocha);
       infoPanel();
+      if (stav.vrstvy) vrstvy();
     }
     el('sit').addEventListener('click', () => {
       stav.sit = !stav.sit;
       el('sit').setAttribute('aria-pressed', stav.sit);
       if (sitDrat) { skupina.remove(sitDrat); sitDrat = null; }
       if (stav.sit && sitMesh) { sitDrat = new THREE.Mesh(sitMesh.geometry, materialSit); skupina.add(sitDrat); }
+    });
+    /* Náhled vrstev: globální ořezová rovina rendereru (model nad zvolenou
+       vrstvou zmizí) a řez vyplní plná barva – zadní strany sítě se kreslí
+       neosvětlenou oranžovou, hlavní materiál jen přední strany. */
+    const rovinaRezu = new THREE.Plane(new THREE.Vector3(0, 0, -1), 0);
+    const materialRez = new THREE.MeshBasicMaterial({ color: 0xff8a3d, side: THREE.BackSide });
+    let rezMesh = null;
+    function vrstvy() { prekresli();
+      const zap = stav.vrstvy && !!sitMesh && !!stav.model;
+      el('vrstvy').hidden = !zap;
+      if (rezMesh) { skupina.remove(rezMesh); rezMesh = null; }
+      renderer.clippingPlanes = zap ? [rovinaRezu] : [];
+      material.side = zap ? THREE.FrontSide : THREE.DoubleSide; material.needsUpdate = true;
+      if (!zap) return;
+      rezMesh = new THREE.Mesh(sitMesh.geometry, materialRez);
+      skupina.add(rezMesh);
+      const b = stav.model.box, h = Math.max(0.04, cislo(el('vrstvaH').value, 0.2));
+      const n = Math.max(1, Math.ceil((b.max[2] - b.min[2]) / h - 1e-9));
+      const z = el('vrstvaZ');
+      if (+z.max !== n) { const bylo = +z.value >= +z.max; z.max = n; if (bylo || +z.value > n) z.value = n; }
+      const k = +z.value, zz = Math.min(b.max[2], b.min[2] + k * h);
+      // rovina v souřadnicích modelu (z ≤ zz zůstane) → do světa přes skupinu
+      skupina.updateMatrixWorld();
+      rovinaRezu.set(new THREE.Vector3(0, 0, -1), zz + 1e-6).applyMatrix4(skupina.matrixWorld);
+      el('vrstvaText').innerHTML = `${k} / ${n}<br>${fmt(zz - b.min[2], 2)} mm`;
+    }
+    el('vrstvyBtn').addEventListener('click', () => {
+      stav.vrstvy = !stav.vrstvy;
+      el('vrstvyBtn').setAttribute('aria-pressed', stav.vrstvy);
+      vrstvy();
+    });
+    el('vrstvaZ').addEventListener('input', vrstvy);
+    el('vrstvaH').addEventListener('change', vrstvy);
+    /* Vzor jen na části plochy: obdélník z obrazovky se promítne paprsky na
+       rovinu plochy (4 body v souřadnicích modelu) – jádro vzor ořízne
+       a síť podél hran výřezu rozřízne. */
+    function prepniVyrez(zap) {
+      stav.vyrezRezim = zap;
+      el('vyrezBtn').setAttribute('aria-pressed', zap);
+      if (zap && stav.polozit) prepniPolozit(false);
+      if (zap && stav.meri) prepniMereni(false);
+      pokyn();
+    }
+    function dokonciVyrez(t) {
+      const o = stav.model.oblasti[t.r];
+      if (o.tvar !== 'rovina') { Dialog.info('Část plochy jde vybrat jen na rovné ploše.'); return; }
+      skupina.updateMatrixWorld();
+      const nW = new THREE.Vector3(...o.normala).transformDirection(skupina.matrixWorld);
+      const rovina = new THREE.Plane().setFromNormalAndCoplanarPoint(nW, new THREE.Vector3(...o.stred).applyMatrix4(skupina.matrixWorld));
+      const body = [];
+      for (const [x, y] of [[t.x0, t.y0], [t.x1, t.y0], [t.x1, t.y1], [t.x0, t.y1]]) {
+        paprsek.setFromCamera(mysNaNdc(x, y), kamera);
+        const h = new THREE.Vector3();
+        if (!paprsek.ray.intersectPlane(rovina, h)) { Dialog.info('Na plochu je vidět moc šikmo – natočte model víc čelem k ní.'); return; }
+        skupina.worldToLocal(h);
+        body.push([h.x, h.y, h.z].map(v => +v.toFixed(4)));
+      }
+      stav.struktury.set(t.r, Object.assign(strukturaZ(stav.vzor), { vyrez: body }));
+      prepniVyrez(false);
+      zmenaStruktur();
+    }
+    /* Výřez čísly: obdélník v % rozměru plochy v její rovině (vodorovně =
+       osa u, svisle = osa v, stejná báze jako vzor v jádře). */
+    async function vyrezCisly(rid) {
+      const m = stav.model, o = m.oblasti[rid], s = stav.struktury.get(rid);
+      if (!s || o.tvar !== 'rovina') return;
+      const { u, v } = J.zakladRoviny(o.normala);
+      const d = o.normala[0] * o.stred[0] + o.normala[1] * o.stred[1] + o.normala[2] * o.stred[2];
+      const uv = p => [p[0] * u[0] + p[1] * u[1] + p[2] * u[2], p[0] * v[0] + p[1] * v[1] + p[2] * v[2]];
+      let mn = [Infinity, Infinity], mx = [-Infinity, -Infinity];
+      for (const t of o.tri) for (let k = 0; k < 3; k++) {
+        const i = m.tri[3 * t + k], q = uv([m.pos[3 * i], m.pos[3 * i + 1], m.pos[3 * i + 2]]);
+        for (let a = 0; a < 2; a++) { mn[a] = Math.min(mn[a], q[a]); mx[a] = Math.max(mx[a], q[a]); }
+      }
+      const roz = [mx[0] - mn[0], mx[1] - mn[1]];
+      let vych = '25 75 25 75';
+      if (s.vyrez) {
+        const q = s.vyrez.map(uv), pr = (a, x) => Math.round((x - mn[a]) / roz[a] * 100);
+        vych = [pr(0, Math.min(...q.map(x => x[0]))), pr(0, Math.max(...q.map(x => x[0]))), pr(1, Math.min(...q.map(x => x[1]))), pr(1, Math.max(...q.map(x => x[1])))].join(' ');
+      }
+      const t = await Dialog.zeptej(`Vzor jen na části plochy ${rid + 1} (${fmt(roz[0])} × ${fmt(roz[1])} mm): zadejte v procentech vodorovně od a do, svisle od a do – např. „25 75 25 75“. Prázdné = celá plocha.`, vych);
+      if (t === null) return;
+      const c = (t.match(/-?\d+(?:[.,]\d+)?/g) || []).map(x => cislo(x, NaN));
+      if (!t.trim()) { const n = Object.assign({}, s); delete n.vyrez; stav.struktury.set(rid, n); }
+      else if (c.length === 4 && c.every(x => x >= 0 && x <= 100) && c[1] > c[0] && c[3] > c[2]) {
+        const bod = (pu, pv) => { const a = mn[0] + roz[0] * pu / 100, b = mn[1] + roz[1] * pv / 100; return [0, 1, 2].map(k => +(a * u[k] + b * v[k] + d * o.normala[k]).toFixed(4)); };
+        stav.struktury.set(rid, Object.assign({}, s, { vyrez: [bod(c[0], c[2]), bod(c[1], c[2]), bod(c[1], c[3]), bod(c[0], c[3])] }));
+      } else return Dialog.chyba('Zadejte čtyři čísla 0–100: vodorovně od, do, svisle od, do (od < do).');
+      zmenaStruktur();
+    }
+    el('vyrezBtn').addEventListener('click', () => {
+      if (!stav.model) return;
+      if (stav.krok !== 'struktura') nastavKrok('struktura');
+      if (stav.povrch !== 'vzor') document.querySelector('#druhPovrchu [data-v=vzor]').click();
+      prepniVyrez(!stav.vyrezRezim);
+    });
+    el('previsy').addEventListener('click', () => {
+      stav.previsy = !stav.previsy;
+      el('previsy').setAttribute('aria-pressed', stav.previsy);
+      obarvi();
+    });
+    el('snimek').addEventListener('click', () => {
+      if (!stav.model) return;
+      skryjTip();
+      renderer.render(scena, kamera);              // obraz z plátna jde číst jen hned po vykreslení
+      const a = document.createElement('a');
+      a.href = renderer.domElement.toDataURL('image/png');
+      a.download = (el('nazev').value.trim() || stav.jmeno.replace(/\.[^.]+$/, '') || 'model').replace(/[\\/:*?"<>|]+/g, '_') + '.png';
+      document.body.appendChild(a); a.click(); a.remove();
     });
     el('barvyPloch').addEventListener('click', () => {
       stav.barvyPloch = !stav.barvyPloch;
@@ -1869,7 +2345,7 @@
       document.querySelectorAll('#zobrazeni button').forEach(x => x.setAttribute('aria-pressed', x === b));
       zobraz();
     });
-    function zobraz() {
+    function zobraz() { prekresli();
       if (!stav.model) return;
       if (stav.zobrazeni === 'original' || !stav.vysledek) vykresli({ pos: stav.model.pos, tri: stav.model.tri, puvod: Int32Array.from({ length: stav.model.tri.length / 3 }, (_, i) => i) });
       else vykresli(stav.vysledek);
@@ -1906,7 +2382,7 @@
       g.setAttribute('color', new THREE.Float32BufferAttribute(C, 3));
       return g;
     }
-    function obnovHrany() {
+    function obnovHrany() { prekresli();
       if (cary) { skupina.remove(cary); cary.geometry.dispose(); cary = null; }
       if (trubky) { skupina.remove(trubky); trubky.traverse(o => o.geometry && o.geometry.dispose()); trubky = null; }
       carySeg = [];
@@ -1929,6 +2405,7 @@
         cary = new THREE.LineSegments(g, new THREE.LineBasicMaterial({ vertexColors: true }));
         skupina.add(cary);
       }
+      if (!mrizkaSeg || mrizkaSeg.model !== m || mrizkaSeg.n !== carySeg.length) { postavMrizkuSeg(); if (mrizkaSeg) Object.assign(mrizkaSeg, { model: m, n: carySeg.length }); }
       trubky = new THREE.Group();
       const rT = m.box.uhlopricka * 0.0035;
       // upravené hrany = původní linie hrany, slabě a poloprůhledně (skutečná hrana je už zaoblená/sražená)
@@ -1953,6 +2430,7 @@
       if (stav.obtisky.length) pl.push(`Nápisy <span>${stav.obtisky.length}</span>`);
       if (stav.hrany.size) pl.push(`Upravené hrany <span>${stav.hrany.size}</span>`);
       pl.push(`Trojúhelníků <span>${nT.toLocaleString('cs-CZ')}</span>`);
+      if (stav.previsy) pl.push(stav.plochaPrevisu > 0.5 ? `⚠ Převisy <span>${fmt(stav.plochaPrevisu / 100, 1)} cm²</span>` : '✓ <span>bez převisů</span>');
       if (stav.zobrazeni === 'original') pl.push('<span>zobrazen původní model</span>');
       else if (stav.vysledek && stav.rychly && stav.vysledekJemnost > stav.jemnost * 1.01) pl.push(`⚡ náhled <span>${fmt(stav.vysledekJemnost, 2)} mm</span>`);
       p.innerHTML = pl.map(x => `<div>${x}</div>`).join('');
@@ -1967,14 +2445,36 @@
     const PRACE = (function () {
       const KOD = `${window.povrchVzory}\n${window.povrchJadro}\npovrchVzory(self); povrchJadro(self);
 let model = null;
+// Model se do workeru NEposílá hotový: objekty z postMessage (klon) rozbily
+// optimalizace V8 tak, že výpočet byl 3–4× pomalejší – a to i u všech dalších
+// výpočtů. Přijde jen svařená síť a úhel; priprav() je deterministická, takže
+// čísla ploch a hran vyjdou stejně jako v hlavním vlákně.
+const cerstvy = o => Object.assign({}, o);
+const mapaZ = m => m && { N: m.N, M: m.M, data: m.data, pomer: m.pomer, vyskaPisma: m.vyskaPisma };
 self.onmessage = e => {
   const d = e.data;
-  if (d.typ === 'model') { model = d.model; return; }
+  if (d.typ === 'model') {
+    model = POVRCH.priprav({ pos: new Float64Array(d.pos), tri: new Uint32Array(d.tri) }, d.uhel);
+    return;
+  }
+  if (d.typ === 'zjednodus') {
+    try {
+      const r = POVRCH.zjednodus(d.pos, d.tri, d.cil, f => self.postMessage({ typ: 'prubeh', id: d.id, f, t: 'Zjednodušuji' }));
+      self.postMessage({ typ: 'hotovo', id: d.id, v: r }, [r.pos.buffer, r.tri.buffer]);
+    } catch (er) { self.postMessage({ typ: 'chyba', id: d.id, chyba: String(er && er.message || er) }); }
+    return;
+  }
   try {
-    const mapy = d.mapy;
-    const v = POVRCH.sestav(model, { struktury: new Map(d.struktury), hrany: new Map(d.hrany), obtisky: d.obtisky },
+    const mapy = {};
+    for (const k in d.mapy) mapy[k] = mapaZ(d.mapy[k]);
+    const struktury = new Map(d.struktury.map(([r, x]) => [r, Object.assign(cerstvy(x), { parametry: cerstvy(x.parametry) })]));
+    const hrany = new Map(d.hrany.map(([id, u]) => [id, cerstvy(u)]));
+    const obtisky = d.obtisky.map(o => Object.assign(cerstvy(o), { mapa: mapaZ(o.mapa) }));
+    const t0 = performance.now();
+    const v = POVRCH.sestav(model, { struktury, hrany, obtisky },
       { jemnost: d.jemnost, limitT: d.limitT, mapa: s => mapy[s._klic] || null, vzorek: VZORY.vzorek,
         prubeh: (f, t) => self.postMessage({ typ: 'prubeh', id: d.id, f, t }) });
+    v.ms = Math.round(performance.now() - t0);
     self.postMessage({ typ: 'hotovo', id: d.id, v }, [v.pos.buffer, v.tri.buffer, v.puvod.buffer]);
   } catch (er) { self.postMessage({ typ: 'chyba', id: d.id, chyba: String(er && er.message || er) }); }
 };`;
@@ -2000,8 +2500,8 @@ self.onmessage = e => {
       function posliModel() {
         if (modelV === stav.model) return;
         const m = stav.model;
-        // jen data potřebná pro výpočet (mezipaměti se dopočítají ve workeru)
-        w.postMessage({ typ: 'model', model: { pos: m.pos, tri: m.tri, N: m.N, A: m.A, oblast: m.oblast, oblasti: m.oblasti, retezy: m.retezy, box: m.box, uhel: m.uhel, objem: m.objem } });
+        // jen svařená síť a úhel – model si worker postaví sám (viz KOD)
+        w.postMessage({ typ: 'model', pos: m.pos, tri: m.tri, uhel: m.uhel });
         modelV = m;
       }
       function zrus() {
@@ -2032,14 +2532,24 @@ self.onmessage = e => {
           w.postMessage({ typ: 'sestav', id, struktury, hrany: [...zadani.hrany], obtisky, mapy, jemnost, limitT });
         });
       }
-      return { sestav, zrus, bezi: () => !!cekajici, jeWorker: () => !nejde };
+      async function zjednodus(pos, tri, cil, prubeh) {
+        zrus();
+        if (!w) novy();
+        if (!w) { await new Promise(r => setTimeout(r, 0)); return J.zjednodus(pos, tri, cil); }
+        const id = ++citac;
+        return new Promise((ok, chyba) => {
+          cekajici = { id, ok, chyba, prubeh: prubeh || (() => {}) };
+          w.postMessage({ typ: 'zjednodus', id, pos, tri, cil });
+        });
+      }
+      return { sestav, zjednodus, zrus, bezi: () => !!cekajici, jeWorker: () => !nejde };
     })();
 
     const LIMIT_NAHLED = 350000, LIMIT_EXPORT = 3000000;
     function jemnostNahledu(obt) {
       const j = stav.jemnost = Math.max(0.05, cislo(el('jemnost').value, 0.4));
       if (!stav.rychly || !stav.model || (!stav.struktury.size && !obt.length)) return j;
-      return Math.max(j, Math.sqrt(J.plochaStruktur(stav.model, stav.struktury, obt) / (J.HUSTOTA * LIMIT_NAHLED)));
+      return J.jemnostProLimit(stav.model, stav.struktury, obt, j, LIMIT_NAHLED);
     }
     function odhad() {
       if (!stav.model) { el('odhad').textContent = ''; return; }
@@ -2056,7 +2566,6 @@ self.onmessage = e => {
       const r = Object.entries(vz).map(([id, n]) => `${infoVzoru(id).nazev} na ${n} ${sklon(n, 'ploše', 'plochách', 'plochách')}`);
       for (const d of stav.obtisky) r.push(d.druh === 'text' ? `nápis „${d.text}“` : 'logo / obrázek');
       for (const [, { u, n }] of pouziteUpravy()) r.push(`${popisUpravy(u)} na ${n} ${sklon(n, 'hraně', 'hranách', 'hranách')}`);
-      const esc = t => t.replace(/[<&]/g, c => c === '<' ? '&lt;' : '&amp;');
       el('souhrn').innerHTML = `<b>${esc(stav.jmeno)}</b><br>` + (r.length ? r.map(x => '• ' + esc(x)).join('<br>') : '<span class="pozor">Zatím bez úprav – stáhnete původní model.</span>');
     }
     function ukazPrubeh(zap, text, f) {
@@ -2065,14 +2574,27 @@ self.onmessage = e => {
       el('pocitamPruh').style.width = Math.round((f || 0) * 100) + '%';
     }
     el('pocitamZrusit').addEventListener('click', () => PRACE.zrus());
-    let casovac = null, posledniHlaseni = '';
+    /* Náhled a export se střídají na jednom workeru: export nejdřív počká na
+       rozpočítaný (nebo naplánovaný) náhled, aby stáhl aktuální stav, a náhled
+       vyžádaný během exportu se spustí až po něm – nic se navzájem neruší. */
+    let casovac = null, posledniHlaseni = new Set(), nahled = null, exportBezi = false, nahledCeka = false;
     function naplanuj() {
       clearTimeout(casovac);
       ukazPrubeh(true, '⏳ Počítám…', 0);
-      casovac = setTimeout(prepocitej, 150);
+      casovac = setTimeout(() => { casovac = null; nahled = prepocitej(); }, 150);
+    }
+    async function dokonciNahled() {
+      for (let i = 0; i < 20; i++) {
+        if (casovac) { clearTimeout(casovac); casovac = null; nahled = prepocitej(); }
+        if (!nahled) return;
+        const p = nahled;
+        await p;
+        if (p === nahled && !casovac) return;
+      }
     }
     async function prepocitej() {
       if (!stav.model) return;
+      if (exportBezi) { nahledCeka = true; return; }
       try {
         if (!stav.struktury.size && !stav.hrany.size && !stav.obtisky.length) { PRACE.zrus(); stav.vysledek = null; stav.vysledekJemnost = null; hlaseni([]); }
         else {
@@ -2082,6 +2604,8 @@ self.onmessage = e => {
             (f, t) => ukazPrubeh(true, '⏳ ' + t + '…', f));
           stav.vysledek = v; stav.vysledekJemnost = j;
           hlaseni(stav.rychly ? v.varovani.filter(t => !/^Jemnost zvětšena/.test(t)) : v.varovani);
+          stav.presahy = v.varovani.filter(t => /přesahuje plochu/.test(t));
+          kontrolaNapisu();
         }
         if (stav.zobrazeni === 'original' && (stav.struktury.size || stav.hrany.size || stav.obtisky.length)) {
           stav.zobrazeni = 'vysledek';
@@ -2089,7 +2613,7 @@ self.onmessage = e => {
         }
         zobraz(); odhad();
         if (stav.krok === 'export') souhrn();
-        ukazPrubeh(false);
+        if (!casovac) ukazPrubeh(false);
       } catch (e) {
         if (e.zruseno) { if (!PRACE.bezi()) ukazPrubeh(false); return; }      // zrušeno uživatelem nebo novějším požadavkem
         console.error(e);
@@ -2100,10 +2624,15 @@ self.onmessage = e => {
     function hlaseni(v) {
       el('hlaseni').innerHTML = '';
       for (const t of v || []) { const d = document.createElement('div'); d.className = 'varovani'; d.textContent = t; el('hlaseni').appendChild(d); }
-      // varování ukázat i mimo krok ④, ale stejné jen jednou
-      const k = (v || []).join('|');
-      if (k && k !== posledniHlaseni && stav.krok !== 'export') Dialog.info('⚠ ' + v[0]);
-      posledniHlaseni = k;
+      // mimo krok ④ ukázat jen hlášení nová proti minulému výpočtu (tip pro tisk,
+      // který tam už byl, se při každé změně hloubky znovu nevyskakuje) –
+      // skutečné varování má přednost před tipem
+      const nova = (v || []).filter(t => !posledniHlaseni.has(t));
+      if (nova.length && stav.krok !== 'export') {
+        const prvni = nova.find(t => !/^Tip pro tisk/.test(t)) || nova[0];
+        Dialog.info('⚠ ' + prvni + (nova.length > 1 ? ` (další ${nova.length - 1} v kroku ④ Stáhnout)` : ''));
+      }
+      posledniHlaseni = new Set(v || []);
     }
     el('jemnost').addEventListener('change', () => { odhad(); autoUloz(); if (stav.struktury.size || stav.obtisky.length) naplanuj(); });
     el('rychly').addEventListener('click', () => {
@@ -2124,24 +2653,37 @@ self.onmessage = e => {
       const j = Math.max(0.05, cislo(el('jemnost').value, 0.4));
       const obt = await obtiskyProJadro();
       const n = J.odhadTrojuhelniku(stav.model, stav.struktury, j, obt);
-      if (n > LIMIT_EXPORT && !(await Dialog.potvrd(`Výsledek bude mít asi ${Math.round(n).toLocaleString('cs-CZ')} trojúhelníků. Výpočet může trvat dlouho a prohlížeč může ohlásit nedostatek paměti. Pokračovat?`, { ok: 'Pokračovat' }))) return;
+      const velky = n > LIMIT_EXPORT;
+      if (velky && !(await Dialog.potvrd(`Výsledek bude mít asi ${Math.round(n).toLocaleString('cs-CZ')} trojúhelníků. Výpočet může trvat dlouho a prohlížeč může ohlásit nedostatek paměti. Pokračovat?`, { ok: 'Pokračovat' }))) return;
+      if (exportBezi) return;
+      ukazPrubeh(true, '⏳ Dokončuji náhled…', 0);
+      await dokonciNahled();               // stáhne se přesně to, co je vidět
+      exportBezi = true;
       ukazPrubeh(true, '⏳ Připravuji soubor…', 0);
       try {
         let v;
         if (!stav.struktury.size && !stav.hrany.size && !obt.length) v = { pos: stav.model.pos, tri: stav.model.tri };
-        else if (stav.vysledek && Math.abs(stav.vysledekJemnost - j) < 1e-9) v = stav.vysledek;
-        else v = await PRACE.sestav({ struktury: stav.struktury, hrany: hranyProJadro(), obtisky: obt }, j, LIMIT_EXPORT * 1.2, (f, t) => ukazPrubeh(true, '⏳ Soubor: ' + t + '…', f));
+        // náhled jde použít, jen když je ve stejné jemnosti a limit ho nezhrubil
+        else if (stav.vysledek && !stav.vysledek.omezeno && Math.abs(stav.vysledekJemnost - j) < 1e-9) v = stav.vysledek;
+        // po potvrzení velkého souboru se limit posune nad odhad – uživatel
+        // souhlasil s čekáním, nesmí dostat potichu hrubší síť
+        else v = await PRACE.sestav({ struktury: stav.struktury, hrany: hranyProJadro(), obtisky: await obtiskyProJadro() }, j, velky ? Math.max(LIMIT_EXPORT * 1.2, n * 1.6) : LIMIT_EXPORT * 1.2, (f, t) => ukazPrubeh(true, '⏳ Soubor: ' + t + '…', f));
         const k = J.kontrola(v);
         const jm = (el('nazev').value.trim() || 'model').replace(/[\\/:*?"<>|]+/g, '_');
         if (format === 'stl') stahni(J.exportSTL(v, jm), jm + '.stl', 'model/stl');
         else if (format === '3mf') stahni(J.export3MF(v, jm), jm + '.3mf', 'model/3mf');
         else stahni(J.exportOBJ(v, jm), jm + '.obj', 'text/plain');
         const tes = k.otevrene === 0 && k.spatne === 0;
-        Dialog.info(`Staženo: ${k.trojuhelniku.toLocaleString('cs-CZ')} trojúhelníků, objem ${fmt(k.objem / 1000, 2)} cm³` + (tes ? ', síť je uzavřená ✓' : ` – pozor, síť má ${k.otevrene} otevřených hran (nejspíš už původní model).`));
+        const pozn = (v.varovani || []).filter(t => /limit|Jemnost zvětšena|zhrubeno/.test(t));
+        Dialog.info(`Staženo: ${k.trojuhelniku.toLocaleString('cs-CZ')} trojúhelníků, objem ${fmt(k.objem / 1000, 2)} cm³` + (tes ? ', síť je uzavřená ✓' : ` – pozor, síť má ${k.otevrene} otevřených hran (nejspíš už původní model).`)
+          + (pozn.length ? ' ⚠ ' + pozn.join(' ⚠ ') : ''));
+        if (pozn.length) hlaseni(v.varovani);          // zůstane vidět i v kroku ④
       } catch (e) {
         if (!e.zruseno) { console.error(e); Dialog.chyba('Export selhal: ' + e.message); }
       } finally {
+        exportBezi = false;
         ukazPrubeh(false);
+        if (nahledCeka) { nahledCeka = false; naplanuj(); }
       }
     }
     el('exportStl').addEventListener('click', () => exportuj('stl'));
@@ -2154,22 +2696,31 @@ self.onmessage = e => {
     function nastavModel(soup, jmeno, zachovat) {
       const sit = J.svar(soup);
       if (!sit.tri.length) throw new Error('Model neobsahuje žádné trojúhelníky.');
+      if (!zachovat) {
+        const poskozeni = [];
+        if (soup.useknuto) poskozeni.push(`soubor je useknutý – chybí ${soup.useknuto} ${sklon(soup.useknuto, 'trojúhelník', 'trojúhelníky', 'trojúhelníků')} na konci`);
+        if (sit.vyhozeno) poskozeni.push(`${sit.vyhozeno} ${sklon(sit.vyhozeno, 'trojúhelník měl', 'trojúhelníky měly', 'trojúhelníků mělo')} neplatné nebo ulétlé souřadnice a ${sit.vyhozeno === 1 ? 'byl vynechán' : 'byly vynechány'}`);
+        if (poskozeni.length) setTimeout(() => Dialog.chyba('⚠ Model je poškozený: ' + poskozeni.join('; ') + '. Zkontrolujte ho v náhledu.'), 300);
+      }
       PRACE.zrus();
       stav.soup = soup; stav.jmeno = jmeno;
       stav.model = J.priprav(sit, +el('uhel').value);
       tloustky.clear();
       if (!zachovat) {
         stav.struktury.clear(); stav.hrany.clear(); stav.vzory = {}; stav.obtisky = []; stav.vybranyObtisk = null;
+        stav.maPraci = false; stav.zDb = false;
         const d = stav.model.box.uhlopricka;
         stav.nastroj = { typ: stav.nastroj.typ, velikost: Math.max(0.2, +(pekne(d / 30)).toFixed(2)), segmenty: stav.nastroj.segmenty || 8 };
         stav.napis.velikost = Math.max(2, Math.round(d / 8));
         stav.napis.hloubka = Math.max(0.2, Math.min(3, +(pekne(d / 70)).toFixed(2)));
+        modely.length = 0; novyStavModelu(soup);
         historie.length = 0; budoucnost.length = 0; posledniSnimek = null; zapisHistorii(); obnovTlacitkaHistorie();
         el('jemnost').value = Math.max(0.1, Math.min(2, Math.round(d / 220 / 0.05) * 0.05)).toFixed(2);
         el('nazev').value = jmeno.replace(/\.[^.]+$/, '') + '_povrch';
         el('rozdelane').classList.add('skryto');
       }
       if (stav.meri) prepniMereni(false);
+      if (stav.polozit) { stav.polozit = false; el('polozit').setAttribute('aria-pressed', false); }
       el('prazdno').classList.add('skryto');
       el('upravyModelu').classList.remove('skryto');
       infoModel();
@@ -2195,8 +2746,65 @@ self.onmessage = e => {
         + `${m.oblasti.length} ${sklon(m.oblasti.length, 'plocha', 'plochy', 'ploch')} (rovných ${typy.rovina}, válcových ${typy.valec}, zakřivených ${typy.obecna}) · ${m.retezy.length} ostrých hran<br>`
         + (tes ? `<span class="ok">✓ uzavřená síť</span>, objem ${fmt(m.objem / 1000, 2)} cm³`
           : `<span class="pozor">⚠ síť není uzavřená (${m.otevrene} otevřených, ${m.nemanif} nejednoznačných hran) – zaoblení může selhat</span>`)
-        + (m.tri.length / 3 > 300000 ? '<br><span class="pozor">Velký model – výpočty budou pomalejší.</span>' : ''));
+        + (m.tri.length / 3 > 300000 ? '<br><span class="pozor">Velký model – výpočty budou pomalejší a prohlížeč potřebuje hodně paměti.</span> ' : ''));
+      if (m.tri.length / 3 > 300000) {
+        const b2 = document.createElement('button');
+        b2.className = 'btn btn-mala'; b2.style.marginTop = '6px'; b2.textContent = '⬇ Zjednodušit na 300 tisíc trojúhelníků';
+        b2.addEventListener('click', () => zjednodusModel(300000));
+        el('infoModel').append(document.createElement('br'), b2);
+      }
+      // Jednotky: STL/OBJ je nenese – model v metrech, centimetrech nebo palcích
+      // se načte jako drobeček (nebo obr) a vzory i hrany pak nedávají smysl.
+      const dMax = Math.max(b[0], b[1], b[2]);
+      const nabidka = dMax < 8 ? [['centimetrech', 10], ['palcích', 25.4], ['metrech', 1000]]
+        : dMax > 3000 ? [['desetinách milimetru', 0.1], ['mikrometrech', 0.001]] : null;
+      if (nabidka) {
+        const d = document.createElement('div');
+        d.className = 'pozor'; d.style.marginTop = '6px';
+        d.textContent = `Model je ${dMax < 8 ? 'velmi malý' : 'velmi velký'} (${fmt(dMax)} mm). Není v jiných jednotkách?`;
+        el('infoModel').append(d);
+        const r = document.createElement('div'); r.className = 'button-group'; r.style.marginTop = '4px';
+        for (const [nazev, k] of nabidka) {
+          const t = document.createElement('button');
+          t.className = 'btn btn-mala'; t.textContent = `je v ${nazev} (×${String(k).replace('.', ',')})`;
+          t.addEventListener('click', () => prevedJednotky(k));
+          r.append(t);
+        }
+        el('infoModel').append(r);
+      }
+      el('zjednodusitNa').value = Math.max(100, Math.round(m.tri.length / 3 / 2 / 100) * 100);
     }
+    function prevedJednotky(k) {
+      if (!stav.soup) return;
+      // bez rozdělané práce jako nové načtení (výchozí velikosti podle nového
+      // rozměru), jinak jako změna měřítka se Zpět
+      if (stav.maPraci) return transformuj((x, y, z) => [x * k, y * k, z * k], (x, y, z) => [x, y, z]);
+      const s = Float32Array.from(stav.soup, x => x * k);
+      nastavModel(s, stav.jmeno);
+      vycentruj();
+    }
+    /* Zjednodušení sítě (ve workeru). Mění plochy, takže zruší vzory a úpravy;
+       do historie se zapíše jako nový stav modelu (Zpět ho vrátí). */
+    async function zjednodusModel(cil) {
+      const m = stav.model;
+      if (!m || !(cil > 3) || cil >= m.tri.length / 3) return Dialog.info('Zadejte menší počet trojúhelníků, než má model teď (' + (m ? (m.tri.length / 3).toLocaleString('cs-CZ') : 0) + ').');
+      if ((stav.struktury.size || stav.hrany.size || stav.obtisky.length) && !(await Dialog.potvrd('Zjednodušení změní plochy modelu a zruší vzory, nápisy i úpravy hran (Zpět je vrátí). Pokračovat?', { ok: 'Zjednodušit' }))) return;
+      ukazPrubeh(true, '⏳ Zjednodušuji síť…', 0);
+      try {
+        const z = await PRACE.zjednodus(m.pos, m.tri, Math.round(cil), f => ukazPrubeh(true, '⏳ Zjednodušuji síť…', f));
+        const soup = new Float32Array(z.tri.length * 3);
+        for (let i = 0; i < z.tri.length; i++) { const v = z.tri[i]; soup[3 * i] = z.pos[3 * v]; soup[3 * i + 1] = z.pos[3 * v + 1]; soup[3 * i + 2] = z.pos[3 * v + 2]; }
+        stav.struktury.clear(); stav.hrany.clear(); stav.obtisky = []; stav.vybranyObtisk = null;
+        novyStavModelu(soup);
+        nastavModel(soup, stav.jmeno, true);
+        zapisHistorii();
+        const k = J.kontrola(stav.model);
+        Dialog.info(`Zjednodušeno na ${(stav.model.tri.length / 3).toLocaleString('cs-CZ')} trojúhelníků` + (k.otevrene === 0 ? ', síť je uzavřená ✓' : '.'));
+      } catch (e) {
+        if (!e.zruseno) { console.error(e); Dialog.chyba('Zjednodušení selhalo: ' + e.message); }
+      } finally { ukazPrubeh(false); }
+    }
+    el('zjednodusit').addEventListener('click', () => zjednodusModel(cislo(el('zjednodusitNa').value, 0)));
     async function nactiSoubor(f) {
       if (!f) return;
       if (/\.json$/i.test(f.name)) {
@@ -2247,6 +2855,7 @@ self.onmessage = e => {
         return;
       }
       stav.struktury.clear(); stav.hrany.clear(); stav.obtisky = []; stav.vybranyObtisk = null;
+      novyStavModelu(stav.soup);
       nastavModel(stav.soup, stav.jmeno, true);
       zapisHistorii();
     });
@@ -2256,9 +2865,135 @@ self.onmessage = e => {
       const s = Float32Array.from(stav.soup);
       for (let i = 0; i < s.length; i += 3) { const p = f(s[i], s[i + 1], s[i + 2]); s[i] = p[0]; s[i + 1] = p[1]; s[i + 2] = p[2]; }
       for (const d of stav.obtisky) { d.bod = f(d.bod[0], d.bod[1], d.bod[2]); if (d.normala) d.normala = fn(d.normala[0], d.normala[1], d.normala[2]); }
+      // výřezy vzoru jsou v souřadnicích modelu – otočit / zvětšit s ním (nový objekt: historie drží staré)
+      for (const [r, st] of stav.struktury) if (st.vyrez) stav.struktury.set(r, Object.assign({}, st, { vyrez: st.vyrez.map(b => f(b[0], b[1], b[2])) }));
+      novyStavModelu(s);
       nastavModel(s, stav.jmeno, true);
+      zapisHistorii();            // Zpět vrátí i otočení / měřítko
       vycentruj();
     }
+    /* Položit na plochu: model se otočí tak, aby zvolená plocha (její průměrná
+       normála) mířila dolů na podložku. Jde přes transformuj → Zpět ho vrátí. */
+    function prepniPolozit(zap) {
+      stav.polozit = zap;
+      el('polozit').setAttribute('aria-pressed', zap);
+      if (zap && stav.meri) prepniMereni(false);
+      najeto = { plocha: -1, hrana: -1 }; zvyrazniPlochu(-1); skryjTip();
+      pokyn();
+    }
+    function polozNaPlochu(r) {
+      const m = stav.model, o = m.oblasti[r];
+      let n = [0, 0, 0];
+      for (const t of o.tri) for (let k = 0; k < 3; k++) n[k] += m.N[3 * t + k] * m.A[t];
+      const l = Math.hypot(n[0], n[1], n[2]);
+      prepniPolozit(false);
+      if (!(l > 0)) return;
+      n = n.map(x => x / l);
+      const c = -n[2];                                // cos úhlu mezi normálou a směrem dolů
+      if (c > 0.9999) { Dialog.info('Tahle plocha už leží dole.'); return; }
+      let R;
+      if (c < -0.9999) R = [[1, 0, 0], [0, -1, 0], [0, 0, -1]];        // míří nahoru → o 180° kolem X
+      else {
+        // Rodrigues: osa v = n × (0,0,-1), R = I + K + K²/(1 + c)
+        const v = [-n[1], n[0], 0];
+        const K = [[0, -v[2], v[1]], [v[2], 0, -v[0]], [-v[1], v[0], 0]];
+        const K2 = K.map((row, i) => row.map((_, j) => K[i][0] * K[0][j] + K[i][1] * K[1][j] + K[i][2] * K[2][j]));
+        R = [0, 1, 2].map(i => [0, 1, 2].map(j => (i === j ? 1 : 0) + K[i][j] + K2[i][j] / (1 + c)));
+      }
+      const f = (x, y, z) => [R[0][0] * x + R[0][1] * y + R[0][2] * z, R[1][0] * x + R[1][1] * y + R[1][2] * z, R[2][0] * x + R[2][1] * y + R[2][2] * z];
+      transformuj(f, f);
+      Dialog.info(`Plocha ${r + 1} teď leží na podložce.`);
+    }
+    el('polozit').addEventListener('click', () => { if (stav.model) prepniPolozit(!stav.polozit); });
+    el('nejlepsiPoloha').addEventListener('click', () => {
+      if (!stav.model) return;
+      if (stav.polozit) prepniPolozit(false);
+      // hodnotí se zobrazená síť (se vzorem a hranami), plochy podle modelu
+      const v = stav.zobrazeni === 'vysledek' && stav.vysledek ? stav.vysledek : null;
+      const sVzorem = new Set([...stav.struktury.keys(), ...stav.obtisky.map(d => d.plocha)]);
+      const b = J.nejlepsiPoloha(stav.model, v, sVzorem);
+      const ted = J.previsy((v || stav.model).pos, (v || stav.model).tri, [[1, 0, 0], [0, 1, 0], [0, 0, 1]]);
+      const cm = x => fmt(x / 100, 1) + ' cm²';
+      if (!b || b.n[2] < -0.9999) { Dialog.info(`Současná poloha je nejlepší – převisy ${cm(ted.previs)}.`); return; }
+      const R = b.R;
+      const f = (x, y, z) => [R[0][0] * x + R[0][1] * y + R[0][2] * z, R[1][0] * x + R[1][1] * y + R[1][2] * z, R[2][0] * x + R[2][1] * y + R[2][2] * z];
+      transformuj(f, f);
+      Dialog.info(`Otočeno: převisy ${cm(ted.previs)} → ${cm(b.previs)}, opěrná plocha ${cm(b.podlozka)}` + (b.podlozkaVzor > 0.5 ? ' (pozor, i na ní je vzor)' : '') + '. Zpět vrátí původní polohu.');
+    });
+    /* Rozdělení rovinou: náhled roviny ve scéně, pak jádro rozřízne síť a
+       zavře víčky; díly se volitelně položí řezem dolů vedle sebe. Vzory,
+       nápisy a hrany se zruší (topologie je jiná) – Zpět vrátí všechno. */
+    var rezOsa = 2, rovinaNahled = null, rovinaCas = null;    // var: nastavKrok je volá i dřív
+    function rezHodnota() {
+      const b = stav.model.box, p = cislo(el('rezPoloha').value, 50) / 100;
+      return b.min[rezOsa] + (b.max[rezOsa] - b.min[rezOsa]) * p;
+    }
+    function ukazRovinuRezu(zap) { prekresli();
+      if (rovinaNahled) { skupina.remove(rovinaNahled); rovinaNahled.geometry.dispose(); rovinaNahled = null; }
+      clearTimeout(rovinaCas);
+      if (!zap || !stav.model) return;
+      const b = stav.model.box, c = rezHodnota(), u = (rezOsa + 1) % 3, w = (rezOsa + 2) % 3, k = 0.08;
+      const r0 = [b.min[u] - k * b.rozmer[u], b.max[u] + k * b.rozmer[u]], r1 = [b.min[w] - k * b.rozmer[w], b.max[w] + k * b.rozmer[w]];
+      const P = [];
+      for (const [a, bb] of [[0, 0], [1, 0], [1, 1], [0, 0], [1, 1], [0, 1]]) { const q = [0, 0, 0]; q[rezOsa] = c; q[u] = r0[a]; q[w] = r1[bb]; P.push(...q); }
+      const g = new THREE.BufferGeometry(); g.setAttribute('position', new THREE.Float32BufferAttribute(P, 3));
+      rovinaNahled = new THREE.Mesh(g, new THREE.MeshBasicMaterial({ color: 0xff8a3d, transparent: true, opacity: 0.35, side: THREE.DoubleSide, depthWrite: false }));
+      skupina.add(rovinaNahled);
+      rovinaCas = setTimeout(() => ukazRovinuRezu(false), 4000);
+    }
+    el('rezOsa').addEventListener('click', e => {
+      const b = e.target.closest('button'); if (!b) return;
+      rezOsa = +b.dataset.osa;
+      document.querySelectorAll('#rezOsa button').forEach(x => x.setAttribute('aria-pressed', x === b));
+      ukazRovinuRezu(true);
+    });
+    el('rezPoloha').addEventListener('input', () => { el('rezPolohaVal').textContent = el('rezPoloha').value + ' %'; ukazRovinuRezu(true); });
+    el('rozdelit').addEventListener('click', async () => {
+      if (!stav.model) return;
+      if ((stav.struktury.size || stav.hrany.size || stav.obtisky.length) &&
+          !(await Dialog.potvrd('Rozdělení zruší vzory, nápisy a úpravy hran (model bude mít nové plochy). Tlačítkem Zpět se dají vrátit. Pokračovat?', { ok: 'Rozdělit' }))) return;
+      ukazRovinuRezu(false);
+      // u velkých modelů trvá řez chvíli – nejdřív ukázat, že se pracuje
+      ukazPrubeh(true, '⏳ Rozděluji…', 0.3);
+      await new Promise(ok => setTimeout(ok, 30));
+      const m = stav.model, r = J.rozdelRovinou(m.pos, m.tri, rezOsa, rezHodnota());
+      ukazPrubeh(false);
+      if (!r) return Dialog.chyba('Rovina řezu model neprotíná – posuňte ji.');
+      const dily = [r.dolni, r.horni].map(d => ({ pos: Array.from(d.pos), tri: d.tri }));
+      if (el('rezRozlozit').checked) {
+        // každý díl otočit víčkem dolů (dolní díl má víčko ve směru +osa) a položit vedle sebe
+        dily.forEach((d, i) => {
+          const n = [0, 0, 0]; n[rezOsa] = i ? -1 : 1;
+          const R = J.rotaceDolu(n), p = d.pos;
+          for (let q = 0; q < p.length; q += 3) { const x = p[q], y = p[q + 1], z = p[q + 2]; for (let k = 0; k < 3; k++) p[q + k] = R[k][0] * x + R[k][1] * y + R[k][2] * z; }
+        });
+        const mez = Math.max(3, m.box.uhlopricka * 0.05);
+        let x0 = 0;
+        for (const d of dily) {
+          const mn = [Infinity, Infinity, Infinity], mx = [-Infinity, -Infinity, -Infinity];
+          for (let q = 0; q < d.pos.length; q += 3) for (let k = 0; k < 3; k++) { mn[k] = Math.min(mn[k], d.pos[q + k]); mx[k] = Math.max(mx[k], d.pos[q + k]); }
+          const posun = [x0 - mn[0], -(mn[1] + mx[1]) / 2, -mn[2]];
+          for (let q = 0; q < d.pos.length; q += 3) for (let k = 0; k < 3; k++) d.pos[q + k] += posun[k];
+          x0 += mx[0] - mn[0] + mez;
+        }
+      } else {
+        // jen oddálit horní díl od řezu
+        const mez = Math.max(2, m.box.uhlopricka * 0.03);
+        for (let q = rezOsa; q < dily[1].pos.length; q += 3) dily[1].pos[q] += mez;
+      }
+      let n = 0;
+      for (const d of dily) n += d.tri.length;
+      const soup = new Float32Array(n * 3);
+      let o = 0;
+      for (const d of dily) for (const i of d.tri) { soup[o++] = d.pos[3 * i]; soup[o++] = d.pos[3 * i + 1]; soup[o++] = d.pos[3 * i + 2]; }
+      stav.struktury.clear(); stav.hrany.clear(); stav.obtisky = []; stav.vybranyObtisk = null;
+      novyStavModelu(soup);
+      nastavModel(soup, stav.jmeno, true);
+      zapisHistorii();
+      vycentruj();
+      const kd = J.kontrola(r.dolni), kh = J.kontrola(r.horni);
+      Dialog.info(`Rozděleno na dva díly: ${fmt(kd.objem / 1000, 1)} + ${fmt(kh.objem / 1000, 1)} cm³, oba uzavřené.`);
+    });
     el('meritkoPouzit').addEventListener('click', () => {
       const k = cislo(el('meritko').value, 1);
       if (!(k > 0) || k === 1) return;
@@ -2308,9 +3043,23 @@ self.onmessage = e => {
     obnovSeznamObtisku();
     stavKroku();
     nabidniRozdelane();
+    // stránka otevřená ve dvou záložkách: obě ukládají rozdělanou práci na
+    // stejné místo – upozornit (oznámí se navzájem přes BroadcastChannel)
+    try {
+      const kanal = new BroadcastChannel('webapp_povrch3d');
+      let varovano = false;
+      kanal.onmessage = e => {
+        if (e.data === 'ahoj') kanal.postMessage('jsem');
+        if (!varovano && (e.data === 'ahoj' || e.data === 'jsem')) {
+          varovano = true;
+          Dialog.chyba('Tato stránka je otevřená i v jiné záložce. Rozdělaná práce se z obou ukládá na stejné místo a poslední uložení vyhraje – pracujte raději jen v jedné.');
+        }
+      };
+      kanal.postMessage('ahoj');
+    } catch (e) { /* starý prohlížeč – bez varování */ }
 
     // rozhraní pro testy
-    window.POVRCH3D = { stav, nastavModel, klik, najeti, nastavKrok, vycentruj, naplanuj, vyberVzor, exportuj, plochaPod, hranaPod, zobrazena: () => zobrazena, kamera, pohled, skupina, PRACE, DB };
+    window.POVRCH3D = { nahledNapisu: () => nahledObt, stav, nastavModel, klik, najeti, nastavKrok, vycentruj, naplanuj, vyberVzor, exportuj, plochaPod, hranaPod, zobrazena: () => zobrazena, kamera, pohled, skupina, PRACE, DB, renderer };
   })();
   </script>
 </body>
