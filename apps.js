@@ -2441,8 +2441,11 @@ const KATALOG_SEKCE = [
       },
       {
         "soubor": "obsah/sifry.html",
-        "nazev": "🔏 Šifry",
-        "tagy": ["šifra", "Caesar", "Vigenère", "Enigma", "Morseovka", "frekvenční analýza", "kryptografie", "luštění", "výzva", "hra", "transpozice", "substituce"]
+        "nazev": "🔏 Šifry – kryptologická dílna",
+        "tagy": ["šifra", "Caesar", "Vigenère", "Enigma", "Morseovka", "frekvenční analýza", "kryptografie", "kryptoanalýza", "luštění", "výzva", "hra", "transpozice", "substituce",
+          "afinní", "Beaufort", "Playfair", "Bifid", "ADFGVX", "Hill", "Bacon", "plotová šifra", "Base64", "hash", "SHA-256", "MD5", "HMAC", "AES", "RSA", "teorie čísel", "XOR", "index koincidence", "Kasiski", "CyberChef", "recept",
+          "šifrovačky", "zednářská šifra", "pigpen", "A1Z26", "ťukací kód", "Braille", "semafor", "čtyřčtverec", "Trifid", "nihilistická", "Myszkowski", "skytale", "Chaocipher", "luštění bez klíče",
+          "crib", "známý otevřený text", "Turingova bomba", "M-209", "Lorenz", "Tunny", "Jeffersonův válec", "deník", "hex výpis", "kampaň", "šifra dne", "Voynichův rukopis", "Bealovy šifry", "Zodiac", "Kryptos"]
       }
     ]
   },
