@@ -44,7 +44,7 @@ const Dialog = (function () {
 .dlg-tlacitka button{padding:8px 16px;border-radius:6px;cursor:pointer;font-size:.9rem;
   font-family:inherit;border:1px solid var(--border-strong,#4a4a4a);
   background:var(--bg-control,#383838);color:var(--text,#e0e0e0)}
-.dlg-tlacitka button.hlavni{background:var(--accent,#6aa6fd);border-color:var(--accent,#6aa6fd);color:#fff;font-weight:600}
+.dlg-tlacitka button.hlavni{background:var(--accent,#6aa6fd);border-color:var(--accent,#6aa6fd);color:var(--on-accent,#fff);font-weight:600}
 .dlg-tlacitka button:hover{filter:brightness(1.12)}
 @media (prefers-reduced-motion: reduce){.dlg-toast,.dlg-toast.odchazi{animation:none}}`;
     (document.head || document.documentElement).appendChild(st);

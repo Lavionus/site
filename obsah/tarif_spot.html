@@ -1,0 +1,1889 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Fixní, nebo spotový tarif?</title>
+  <link rel="stylesheet" href="../common.css">
+  <script src="../theme.js"></script>
+  <script src="../podpis.js" defer></script>
+  <script src="../dialog.js"></script>
+  <script src="lib/chart.min.js"></script>
+  <script src="tarif_spot/jadro.js"></script>
+  <style>
+    :root { --chyba-text: var(--danger); }
+    body { background-color: var(--bg-deep); padding: 24px clamp(12px, 3vw, 40px); min-height: 100vh; }
+    h1 { font-size: 1.4rem; margin-bottom: 4px; }
+    h2 { font-size: 1rem; margin-bottom: 6px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    h3 { font-size: 0.86rem; margin: 14px 0 4px; color: var(--text-muted); }
+    .podtitul { color: var(--text-muted); font-size: 0.88rem; margin-bottom: 20px; max-width: 980px; line-height: 1.5; }
+    .obal { max-width: 1320px; }
+    .rozlozeni { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); gap: 18px; }
+    @media (max-width: 960px) { .rozlozeni { grid-template-columns: minmax(0, 1fr); } }
+    .sloupec { display: flex; flex-direction: column; gap: 18px; min-width: 0; }
+    .karta { background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 18px; min-width: 0; position: relative; }
+    .plna { margin-top: 18px; }
+    label { display: block; font-size: 0.8rem; color: var(--text-muted); margin: 12px 0 5px; }
+    label.inline { display: inline-flex; align-items: center; gap: 6px; margin: 8px 12px 0 0; color: var(--text); font-size: 0.85rem; }
+    input[type="text"], select {
+      width: 100%; background: var(--bg-input); border: 1px solid var(--border); border-radius: 6px;
+      color: var(--text); padding: 8px 10px; font-size: 0.95rem; min-width: 0; font-family: inherit;
+    }
+    input:focus, select:focus { outline: none; border-color: var(--accent); }
+    :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    input:focus-visible, select:focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+    input[aria-invalid="true"] { border-color: var(--danger); }
+    .chyba-pole { color: var(--chyba-text); font-size: 0.74rem; margin-top: 3px; line-height: 1.35; }
+    input[type="checkbox"], input[type="radio"] { accent-color: var(--accent); }
+    .mrizka2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 0 12px; }
+    .mrizka3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 0 10px; }
+    .napoveda { font-size: 0.74rem; color: var(--text-muted); margin-top: 5px; line-height: 1.45; }
+    .napoveda a, .pozn a, .vysvetlivky a { color: var(--accent); }
+    .tlacitka { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; align-items: center; }
+    button {
+      background: var(--bg-control); border: 1px solid var(--border-strong); color: var(--text);
+      border-radius: 6px; padding: 7px 12px; font-size: 0.85rem; cursor: pointer; font-family: inherit;
+    }
+    button:hover { background: var(--bg-hover); }
+    button.male { padding: 4px 9px; font-size: 0.78rem; }
+    button.hlavni { background: var(--accent); border-color: var(--accent); color: var(--on-accent); font-weight: 600; }
+    button.active, button[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); }
+    .prepinac { display: inline-flex; flex-wrap: wrap; max-width: 100%; border: 1px solid var(--border-strong); border-radius: 6px; overflow: hidden; }
+    .prepinac button { border: none; border-radius: 0; padding: 5px 10px; font-size: 0.78rem; }
+    .prepinac button + button { border-left: 1px solid var(--border-strong); }
+    .prepinac.dvoj { display: grid; grid-template-columns: 1fr 1fr; width: 100%; }
+    .prepinac.dvoj button { padding: 7px 6px; }
+    .vysledky { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; margin-top: 10px; }
+    .box { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px; min-width: 0; }
+    .box .popis { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.4px; color: var(--text-muted); margin-bottom: 5px; }
+    .box .cislo { font-size: 1.3rem; font-weight: 700; overflow-wrap: anywhere; font-variant-numeric: tabular-nums; }
+    .box .dalsi { font-size: 0.75rem; color: var(--text-muted); margin-top: 3px; line-height: 1.4; }
+    .vysledky.druha .box .cislo { font-size: 1.08rem; }
+    .box.vitez { border-color: var(--ok); }
+    .box.vitez .cislo::after { content: ' ✓'; color: var(--ok); font-size: 0.9rem; }
+    .znacka { display: inline-block; width: 10px; height: 10px; border-radius: 2px; margin-right: 6px; vertical-align: baseline; }
+    .stav { font-size: 0.84rem; margin-top: 10px; color: var(--text-muted); min-height: 1.2em; line-height: 1.45; }
+    .stav.chyba { color: var(--chyba-text); }
+    .stav.varovani { color: var(--warn); }
+    .stav button { margin-left: 8px; }
+    .verdikt { font-size: 1rem; line-height: 1.45; margin-top: 8px; font-weight: 600; }
+    .citlivost { font-size: 0.78rem; color: var(--text-muted); margin-top: 4px; }
+    .pas { margin-top: 10px; }
+    .pas-osa { position: relative; height: 26px; border-radius: 4px; background: var(--bg-elevated); border: 1px solid var(--border); }
+    .pas-rozsah { position: absolute; top: 5px; bottom: 5px; background: var(--c-spot); opacity: 0.35; border-radius: 3px; }
+    .pas-bod { position: absolute; top: 2px; bottom: 2px; width: 3px; margin-left: -1px; border-radius: 2px; }
+    .pas-popisky { display: flex; justify-content: space-between; font-size: 0.72rem; color: var(--text-muted); margin-top: 3px; gap: 8px; flex-wrap: wrap; }
+    .neplatne > :not(h2):not(.stav):not(.verdikt) { opacity: 0.25; filter: grayscale(1); pointer-events: none; }
+    .neplatne::after { content: 'výsledek neplatí'; position: absolute; top: 14px; right: 16px; font-size: 0.72rem; color: var(--chyba-text);
+      border: 1px solid var(--chyba-text); border-radius: 4px; padding: 1px 6px; }
+    .prepocet { opacity: 0.55; transition: opacity 0.2s; }
+    .graf-obal { position: relative; height: 290px; margin-top: 10px; }
+    .graf-obal.nizky { height: 220px; }
+    .tabulka-obal { overflow-x: auto; margin-top: 8px;
+      background:
+        linear-gradient(to right, var(--bg-panel) 30%, transparent) left / 32px 100% no-repeat local,
+        linear-gradient(to left, var(--bg-panel) 30%, transparent) right / 32px 100% no-repeat local,
+        radial-gradient(farthest-side at 0 50%, rgba(0, 0, 0, 0.35), transparent) left / 12px 100% no-repeat scroll,
+        radial-gradient(farthest-side at 100% 50%, rgba(0, 0, 0, 0.35), transparent) right / 12px 100% no-repeat scroll; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.82rem; font-variant-numeric: tabular-nums; }
+    th, td { padding: 5px 7px; border-bottom: 1px solid var(--border); text-align: right; white-space: nowrap; }
+    th:first-child, td:first-child { text-align: left; white-space: normal; }
+    th { color: var(--text-muted); font-weight: 600; }
+    tr.soucet td { font-weight: 700; border-top: 2px solid var(--border-strong); }
+    tr.skupina td { color: var(--text-muted); font-size: 0.76rem; padding-top: 10px; }
+    tr.nejlepsi td { font-weight: 700; }
+    details summary { cursor: pointer; color: var(--text-muted); font-size: 0.85rem; margin-top: 10px; }
+    .pozn { color: var(--text-muted); font-size: 0.78rem; line-height: 1.6; margin-top: 18px; }
+    .pozn p + p { margin-top: 8px; }
+    .hodiny { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 3px; margin-top: 6px; }
+    .hodiny button { padding: 5px 0; font-size: 0.72rem; font-variant-numeric: tabular-nums; }
+    .hodiny button.nt { background: var(--accent-soft); border-color: var(--accent); color: var(--text); font-weight: 600; }
+    .zona { position: relative; border: 2px dashed var(--border-strong); border-radius: var(--radius); padding: 14px; text-align: center; color: var(--text-muted); font-size: 0.85rem; margin-top: 10px; cursor: pointer; display: block; }
+    .zona.nad { border-color: var(--accent); background: var(--accent-soft); }
+    .zona:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; border: 0; opacity: 0; }
+    .skryt { display: none !important; }
+    .spotrebic { border-top: 1px solid var(--border); padding-top: 8px; margin-top: 10px; }
+    .spotrebic > label.inline { font-weight: 600; }
+    .nabidka { border: 1px solid var(--border); border-radius: var(--radius); background: var(--bg-elevated); padding: 8px 10px; margin-top: 8px; }
+    .nab-hlava { display: flex; align-items: center; gap: 8px; }
+    .nab-hlava input { flex: 1 1 auto; min-width: 0; }
+    .nab-hlava button { flex: 0 0 auto; padding: 6px 10px; }
+    .stitek { flex: 0 0 auto; font-size: 0.7rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.4px; padding: 2px 7px; border-radius: 10px; color: var(--text); border: 1px solid; }
+    .stitek.fix { border-color: var(--c-fix); background: color-mix(in srgb, var(--c-fix) 18%, transparent); }
+    .stitek.spot { border-color: var(--c-spot); background: color-mix(in srgb, var(--c-spot) 18%, transparent); }
+    .nab-ceny { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 0 8px; }
+    .nab-ceny label { margin: 6px 0 3px; font-size: 0.72rem; }
+    @media (max-width: 600px) { .nab-ceny { grid-template-columns: 1fr 1fr; } }
+    .mapa-obal { position: relative; margin-top: 10px; }
+    #mapaPlatno { width: 100%; height: 300px; display: block; border-radius: 6px; background: var(--bg-elevated); cursor: crosshair; touch-action: pan-y; }
+    .legenda-mapy { display: flex; align-items: center; gap: 8px; font-size: 0.74rem; color: var(--text-muted); margin-top: 6px; flex-wrap: wrap; }
+    .legenda-mapy canvas { width: 160px; height: 10px; border-radius: 3px; }
+    .tip { position: absolute; pointer-events: none; background: var(--bg-elevated); border: 1px solid var(--border-strong); border-radius: 6px;
+      padding: 6px 9px; font-size: 0.78rem; box-shadow: var(--shadow); white-space: nowrap; z-index: 5; }
+    .rada { display: flex; gap: 10px; flex-wrap: wrap; align-items: end; }
+    .rada > div { flex: 1 1 140px; min-width: 0; }
+    .rada label { margin-top: 6px; }
+    .okna { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px; margin-top: 10px; }
+    .vysvetlivky dt { font-weight: 600; margin-top: 10px; font-size: 0.86rem; }
+    .vysvetlivky dd { color: var(--text-muted); font-size: 0.82rem; line-height: 1.5; margin-left: 0; }
+    .nahled { font-size: 0.72rem; }
+    .nahled td, .nahled th { white-space: nowrap; }
+    .mala-tab { font-size: 0.7rem; }
+    .mala-tab td, .mala-tab th { padding: 2px 4px; }
+    .tisk-jen { display: none; }
+    /* pole s jednotkou a krokovými tlačítky */
+    .pole { display: flex; align-items: stretch; min-width: 0; }
+    .pole input { border-radius: 6px 0 0 6px; flex: 1 1 auto; min-width: 0; }
+    .pole .jedn { display: flex; align-items: center; padding: 0 8px; background: var(--bg-control); border: 1px solid var(--border); border-left: none;
+      border-radius: 0 6px 6px 0; font-size: 0.74rem; color: var(--text-muted); white-space: nowrap; }
+    .pole.s-kroky input { border-radius: 0; }
+    .pole.s-kroky .jedn { border-radius: 0; }
+    .pole .krok { flex: 0 0 auto; width: 34px; padding: 0; font-size: 1.05rem; border-radius: 6px 0 0 6px; }
+    .pole .krok + input { border-left: none; }
+    .pole .jedn + .krok { border-radius: 0 6px 6px 0; border-left: none; }
+    .chipy { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+    .chipy:empty { display: none; }
+    .chip { padding: 4px 10px; border-radius: 14px; font-size: 0.78rem; }
+    .chip.historie { border-style: dashed; }
+    .chip[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); }
+    .nastroje { display: flex; flex-wrap: wrap; gap: 8px 16px; align-items: center; justify-content: space-between; margin: -8px 0 14px; }
+    .sekce-nav { display: flex; gap: 4px; overflow-x: auto; max-width: 100%; scrollbar-width: thin; }
+    .sekce-nav a { flex: 0 0 auto; padding: 5px 10px; border-radius: 14px; border: 1px solid var(--border); color: var(--text-muted); text-decoration: none; font-size: 0.8rem; }
+    .sekce-nav a:hover { background: var(--bg-hover); color: var(--text); }
+    .akce { display: flex; gap: 6px; flex-wrap: wrap; }
+    .akce button[disabled] { opacity: 0.45; cursor: default; }
+    .karta h2 .sbalit { margin-left: auto; padding: 2px 8px; font-size: 0.8rem; background: transparent; border-color: transparent; color: var(--text-muted); }
+    .karta.sbaleno > :not(h2) { display: none !important; }
+    .karta.sbaleno .sbalit { transform: rotate(-90deg); }
+    .pocitam { font-size: 0.74rem; color: var(--text-muted); visibility: hidden; margin-left: auto; }
+    .bezi .pocitam { visibility: visible; }
+    .box .cislo { min-height: 1.35em; }
+    .box .dalsi { min-height: 2.8em; }
+    .stav { min-height: 2.6em; }
+    .verdikt { min-height: 2.9em; }
+    @keyframes blik { from { background: var(--accent-soft); } to { background: transparent; } }
+    .blik { animation: blik 0.9s ease-out; border-radius: 4px; }
+    .skok { position: fixed; right: 16px; bottom: calc(var(--podpis-vyska, 22px) + 14px); z-index: 40; box-shadow: var(--shadow); background: var(--accent); color: var(--on-accent); border-color: var(--accent); font-weight: 600; }
+    .zkratky { position: fixed; inset: 0; z-index: 50; background: rgba(0, 0, 0, 0.5); display: flex; align-items: center; justify-content: center; padding: 16px; }
+    .zkratky-obsah { background: var(--bg-panel); border: 1px solid var(--border-strong); border-radius: var(--radius); padding: 18px; max-width: 520px; width: 100%; max-height: 90vh; overflow: auto; box-shadow: var(--shadow); }
+    .zkratky td { text-align: left; white-space: normal; }
+    kbd { display: inline-block; padding: 1px 6px; border: 1px solid var(--border-strong); border-bottom-width: 2px; border-radius: 4px; font-size: 0.78rem; background: var(--bg-elevated); font-family: inherit; }
+    .chyba-pole button { margin-left: 6px; padding: 2px 8px; font-size: 0.74rem; }
+    @media (pointer: coarse) {
+      button, select, input[type="text"], .sekce-nav a { min-height: 44px; }
+      .pole .krok { width: 44px; }
+      .chip { min-height: 40px; padding: 6px 14px; }
+      .hodiny { grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px; }
+      .karta h2 .sbalit { min-width: 44px; }
+      .sekce-nav a { display: inline-flex; align-items: center; }
+    }
+    .cely { grid-column: 1 / -1; }
+    .kr { display: none; }
+    .lista { display: none; position: sticky; top: 0; z-index: 30; margin: -8px 0 12px; padding: 8px 12px; border-radius: var(--radius);
+      background: var(--bg-elevated); border: 1px solid var(--border-strong); box-shadow: var(--shadow); font-size: 0.84rem; gap: 12px; flex-wrap: wrap; align-items: center; }
+    .lista b { font-variant-numeric: tabular-nums; }
+    @media (max-width: 960px) { .lista.ma { display: flex; } }
+    @media (max-width: 600px) {
+      .dl { display: none; } .kr { display: inline; }
+      .sir { display: none; }
+      table { font-size: 0.74rem; }
+      th, td { padding: 4px 4px; }
+      .box .cislo { font-size: 1.12rem; }
+      .verdikt { font-size: 0.92rem; }
+    }
+    @media print {
+      :root { --bg: #fff; --bg-deep: #fff; --bg-panel: #fff; --bg-elevated: #fff; --text: #111; --text-muted: #333; --text-faint: #444; --border: #bbb; --border-strong: #999; }
+      body { background: #fff; color: #000; padding: 0; }
+      .karta { border: 1px solid #bbb; break-inside: avoid; background: #fff; }
+      .vstupy, .tlacitka, .zona, #kartaZivo, .neprint, .lista { display: none !important; }
+      .rozlozeni { grid-template-columns: 1fr; }
+      .tisk-jen { display: block; }
+      .graf-obal { height: 240px; }
+      .tabulka-obal { background: none; }
+      a { color: #000; }
+    }
+  </style>
+</head>
+<body>
+<div class="obal">
+  <h1>⚡ Fixní, nebo spotový tarif?</h1>
+  <p class="podtitul">Kolik by vás za rok stála elektřina u fixní nabídky a kolik u spotové – podle vaší spotřeby, sazby
+    a toho, <em>kdy</em> elektřinu odebíráte. Výpočet používá skutečné hodinové a čtvrthodinové ceny denního trhu OTE od roku 2019,
+    regulované ceny ERÚ pro rok 2026 a normalizované typové diagramy dodávky (TDD). Můžete nahrát i vlastní čtvrthodinová data
+    z portálu distributora.</p>
+
+  <div class="nastroje neprint">
+    <nav class="sekce-nav" aria-label="Sekce stránky">
+      <a href="#kartaSpotreba" title="Spotřeba (S)">Spotřeba</a><a href="#kartaDistribuce" title="Distribuce (D)">Sazba</a><a href="#kartaNabidky" title="Nabídky (N)">Nabídky</a>
+      <a href="#kartaVysledek" title="Výsledek (V)">Výsledek</a><a href="#kartaMesice">Měsíce</a><a href="#kartaRiziko" title="Riziko (R)">Riziko</a>
+      <a href="#kartaMapa" title="Teplotní mapa (M)">Mapa</a><a href="#kartaZivo" title="Dnes a zítra (Z)">Dnes/zítra</a><a href="#kartaFlex">Úspora</a>
+    </nav>
+    <div class="akce">
+      <button type="button" id="btnZpet" title="Zpět (Ctrl+Z)" aria-label="Zpět" disabled>↶</button>
+      <button type="button" id="btnVpred" title="Znovu (Ctrl+Shift+Z)" aria-label="Znovu" disabled>↷</button>
+      <button type="button" id="btnSdilet" title="Zkopírovat odkaz se zadáním (L)">🔗 Sdílet</button>
+      <button type="button" id="btnVychozi" title="Vrátit výchozí hodnoty">Výchozí</button>
+      <button type="button" id="btnZkratky" title="Klávesové zkratky (?)" aria-label="Klávesové zkratky">?</button>
+    </div>
+  </div>
+
+  <div class="lista" id="lista"></div>
+  <button type="button" class="skok skryt" id="skokVysledek">↓ výsledek</button>
+
+  <div class="zkratky skryt" id="napovedaZkratek" role="dialog" aria-modal="false" aria-labelledby="zkratkyNadpis">
+    <div class="zkratky-obsah">
+      <h2 id="zkratkyNadpis">⌨️ Klávesové zkratky</h2>
+      <table>
+        <tr><td><kbd>?</kbd></td><td>tento přehled (Esc zavře)</td></tr>
+        <tr><td><kbd>V</kbd> <kbd>S</kbd> <kbd>D</kbd> <kbd>N</kbd></td><td>skok na výsledek / spotřebu / sazbu / nabídky</td></tr>
+        <tr><td><kbd>R</kbd> <kbd>M</kbd> <kbd>Z</kbd></td><td>riziko / teplotní mapa / dnes a zítra</td></tr>
+        <tr><td><kbd>O</kbd></td><td>nahrát CSV z portálu distributora</td></tr>
+        <tr><td><kbd>E</kbd> <kbd>T</kbd> <kbd>L</kbd></td><td>export CSV / tisk / zkopírovat odkaz</td></tr>
+        <tr><td><kbd>Ctrl</kbd>+<kbd>Z</kbd>, <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>Z</kbd></td><td>zpět / znovu (mimo textová pole)</td></tr>
+        <tr><td colspan="2"><b>V číselném poli</b></td></tr>
+        <tr><td><kbd>↑</kbd> <kbd>↓</kbd>, kolečko</td><td>krok (<kbd>Shift</kbd> ×10, <kbd>Alt</kbd> ×0,1)</td></tr>
+        <tr><td><kbd>Enter</kbd> / <kbd>Esc</kbd></td><td>přepočítat hned / vrátit původní hodnotu</td></tr>
+        <tr><td colspan="2"><b>Mřížka nízkého tarifu</b>: šipky pohyb, mezerník přepne hodinu</td></tr>
+      </table>
+      <div class="tlacitka"><button type="button" id="btnZkratkyZavrit">Zavřít</button></div>
+    </div>
+  </div>
+
+  <div class="rozlozeni">
+    <div class="sloupec vstupy">
+      <!-- SPOTŘEBA -->
+      <div class="karta" id="kartaSpotreba">
+        <h2>📊 Spotřeba</h2>
+        <div class="prepinac dvoj" role="group" aria-label="Zdroj profilu spotřeby">
+          <button type="button" data-profil="tdd" aria-pressed="true"><span class="dl">Typový diagram (TDD)</span><span class="kr">Typový (TDD)</span></button>
+          <button type="button" data-profil="csv" aria-pressed="false"><span class="dl">Moje naměřená data (CSV)</span><span class="kr">Moje data (CSV)</span></button>
+        </div>
+        <div id="panelTDD">
+          <div class="mrizka2">
+            <div><label for="kwhVT" id="lblKwhVT">Roční spotřeba</label><div class="pole s-kroky"><button type="button" class="krok" data-pole="kwhVT" data-smer="-1" tabindex="-1" aria-label="Snížit spotřebu VT">−</button><input type="text" inputmode="decimal" id="kwhVT" autocomplete="off"><span class="jedn" id="kwhVT_j">kWh</span><button type="button" class="krok" data-pole="kwhVT" data-smer="1" tabindex="-1" aria-label="Zvýšit spotřebu VT">+</button></div></div>
+            <div id="boxKwhNT"><label for="kwhNT">Roční spotřeba v NT</label><div class="pole s-kroky"><button type="button" class="krok" data-pole="kwhNT" data-smer="-1" tabindex="-1" aria-label="Snížit spotřebu NT">−</button><input type="text" inputmode="decimal" id="kwhNT" autocomplete="off"><span class="jedn" id="kwhNT_j">kWh</span><button type="button" class="krok" data-pole="kwhNT" data-smer="1" tabindex="-1" aria-label="Zvýšit spotřebu NT">+</button></div></div>
+          </div>
+          <div class="chipy" id="chipyKwh" role="group" aria-label="Rychlá volba roční spotřeby"></div>
+          <div id="boxKraj" class="skryt"><label for="kraj5">Kraj pro TDD5 (podle HDO)</label><select id="kraj5"></select></div>
+          <p class="napoveda" id="infoTDD"></p>
+        </div>
+        <div id="panelCSV" class="skryt">
+          <label class="zona" id="zona" title="Nahrát CSV (O)">
+            <input type="file" id="csvSoubor" class="sr-only" accept=".csv,.txt,.json,text/csv,application/json">
+            📂 Přetáhněte sem CSV z portálu distributora, nebo klikněte a vyberte soubor
+          </label>
+          <div class="stav" id="csvStav"></div>
+          <details id="csvMapovani">
+            <summary>Nastavení načtení (sloupce, jednotky, čas)</summary>
+            <div class="mrizka3">
+              <div><label for="mSep">Oddělovač</label><select id="mSep"><option value=";">středník ;</option><option value=",">čárka ,</option><option value="&#9;">tabulátor</option><option value="|">svislítko |</option></select></div>
+              <div><label for="mDes">Desetinná značka</label><select id="mDes"><option value=",">čárka</option><option value=".">tečka</option></select></div>
+              <div><label for="mDatum">Sloupec data</label><select id="mDatum"></select></div>
+              <div><label for="mCas">Sloupec času</label><select id="mCas"></select></div>
+              <div><label for="mHodnota">Sloupec hodnoty</label><select id="mHodnota"></select></div>
+              <div><label for="mJednotka">Jednotka</label><select id="mJednotka"><option>kWh</option><option>kW</option><option>Wh</option><option>W</option></select></div>
+              <div><label for="mZnacka">Čas v souboru</label><select id="mZnacka"><option value="auto">rozpoznat</option><option value="zacatek">začátek intervalu</option><option value="konec">konec intervalu</option></select></div>
+              <div><label for="mZimni">Časové pásmo</label><select id="mZimni"><option value="0">místní (SEČ/SELČ)</option><option value="1">celý rok SEČ (zimní)</option></select></div>
+            </div>
+            <div class="tlacitka"><button type="button" id="btnPrecist">Načíst znovu s tímto nastavením</button><button type="button" id="btnSmazatCSV">Zahodit data</button></div>
+            <div class="tabulka-obal"><table class="nahled" id="csvNahled"></table></div>
+            <p class="napoveda">kW = průměrný výkon za interval (přepočte se na kWh podle délky intervalu). Bere se odběr (+A),
+              dodávka do sítě (−A) se ignoruje. Řádky se stavem „neznámá/neplatná hodnota“ se vynechají jako mezery.
+              Časy s pásmem (např. <code>2025-01-01T10:00Z</code>, <code>+01:00</code>) se převádějí správně.</p>
+          </details>
+          <p class="napoveda">Data zůstávají jen ve vašem prohlížeči. Profil se přenese na zvolené období cen podle data a dne v týdnu
+            (svátky jako neděle); dny bez dat se doplní podobným dnem.</p>
+        </div>
+      </div>
+
+      <!-- DISTRIBUCE -->
+      <div class="karta" id="kartaDistribuce">
+        <h2>🔌 Distribuce a sazba</h2>
+        <div class="mrizka2">
+          <div><label for="uzemi">Distribuční území</label><select id="uzemi"></select></div>
+          <div class="cely"><label for="sazba">Distribuční sazba</label><select id="sazba"></select><p class="napoveda" id="sazbaPopis"></p></div>
+          <div><label for="faze">Hlavní jistič – fáze</label><select id="faze"><option value="3">3 fáze</option><option value="1">1 fáze</option></select></div>
+          <div><label for="ampery">Jmenovitý proud (A)</label><select id="ampery"></select></div>
+        </div>
+        <div class="chipy" id="chipyJistic" role="group" aria-label="Rychlá volba jističe"></div>
+        <div id="boxNT">
+          <label id="lblNT">Časy nízkého tarifu (kliknutím přepnete hodinu) – <span id="pocetNT"></span></label>
+          <div class="hodiny" id="hodinyNT" role="group" aria-labelledby="lblNT"></div>
+          <div class="tlacitka"><button type="button" class="male" id="btnNTvychozi">Výchozí typické časy</button></div>
+          <p class="napoveda">Skutečné časy NT určuje distributor signálem HDO a liší se místo od místa (najdete je na webu
+            distributora podle kódu HDO). Zde jen model – výchozí časy jsou ilustrativní. Šipkami se lze v mřížce pohybovat, mezerníkem přepnout.</p>
+        </div>
+        <p class="napoveda skryt" id="infoVikend">D61d: nízký tarif platí celoročně od pátku 12:00 do neděle 22:00 (cenový výměr ERÚ).</p>
+        <details id="pokrocile">
+          <summary>Pokročilé – regulované ceny 2026 (bez DPH)</summary>
+          <label class="inline"><input type="checkbox" id="regPrepis"> Přepsat ručně</label>
+          <div class="mrizka3">
+            <div><label for="rDistVT">Distribuce VT (Kč/MWh)</label><div class="pole"><input type="text" inputmode="decimal" id="rDistVT"><span class="jedn" id="rDistVT_j">Kč/MWh</span></div></div>
+            <div><label for="rDistNT">Distribuce NT (Kč/MWh)</label><div class="pole"><input type="text" inputmode="decimal" id="rDistNT"><span class="jedn" id="rDistNT_j">Kč/MWh</span></div></div>
+            <div><label for="rJistic">Plat za jistič (Kč/měs.)</label><div class="pole"><input type="text" inputmode="decimal" id="rJistic"><span class="jedn" id="rJistic_j">Kč/měs.</span></div></div>
+            <div><label for="rSys">Systémové služby (Kč/MWh)</label><div class="pole"><input type="text" inputmode="decimal" id="rSys"><span class="jedn" id="rSys_j">Kč/MWh</span></div></div>
+            <div><label for="rPoze">POZE (Kč/MWh)</label><div class="pole"><input type="text" inputmode="decimal" id="rPoze"><span class="jedn" id="rPoze_j">Kč/MWh</span></div></div>
+            <div><label for="rNes">Nesíťová infrastr. (Kč/měs.)</label><div class="pole"><input type="text" inputmode="decimal" id="rNes"><span class="jedn" id="rNes_j">Kč/měs.</span></div></div>
+            <div><label for="rDan">Daň z elektřiny (Kč/MWh)</label><div class="pole"><input type="text" inputmode="decimal" id="rDan"><span class="jedn" id="rDan_j">Kč/MWh</span></div></div>
+            <div><label for="rDph">DPH (%)</label><div class="pole"><input type="text" inputmode="decimal" id="rDph"><span class="jedn" id="rDph_j">%</span></div></div>
+          </div>
+          <p class="napoveda" id="regZdroj"></p>
+        </details>
+      </div>
+
+      <!-- NABÍDKY -->
+      <div class="karta" id="kartaNabidky">
+        <h2>💼 Nabídky obchodníků</h2>
+        <div class="tlacitka">
+          <span class="napoveda" style="margin:0">Zadávám ceny v</span>
+          <div class="prepinac" role="group" aria-label="Jednotka ceny">
+            <button type="button" data-jedn="mwh" aria-pressed="true">Kč/MWh</button>
+            <button type="button" data-jedn="kwh" aria-pressed="false">Kč/kWh</button>
+          </div>
+          <div class="prepinac" role="group" aria-label="DPH">
+            <button type="button" data-dph="bez" aria-pressed="true">bez DPH</button>
+            <button type="button" data-dph="s" aria-pressed="false">s DPH</button>
+          </div>
+        </div>
+        <h3><span class="znacka" style="background:var(--c-fix)"></span>Fixní cena</h3>
+        <div class="mrizka3">
+          <div><label for="fixVT" id="lblFixVT">Silová elektřina VT</label><div class="pole s-kroky"><button type="button" class="krok" data-pole="fixVT" data-smer="-1" tabindex="-1" aria-label="Snížit cenu VT">−</button><input type="text" inputmode="decimal" id="fixVT"><span class="jedn" id="fixVT_j">Kč/MWh</span><button type="button" class="krok" data-pole="fixVT" data-smer="1" tabindex="-1" aria-label="Zvýšit cenu VT">+</button></div></div>
+          <div id="boxFixNT"><label for="fixNT" id="lblFixNT">Silová elektřina NT</label><div class="pole s-kroky"><button type="button" class="krok" data-pole="fixNT" data-smer="-1" tabindex="-1" aria-label="Snížit cenu NT">−</button><input type="text" inputmode="decimal" id="fixNT"><span class="jedn" id="fixNT_j">Kč/MWh</span><button type="button" class="krok" data-pole="fixNT" data-smer="1" tabindex="-1" aria-label="Zvýšit cenu NT">+</button></div></div>
+          <div><label for="fixPlat" id="lblFixPlat">Stálý plat (Kč/měs.)</label><div class="pole"><input type="text" inputmode="decimal" id="fixPlat"><span class="jedn" id="fixPlat_j">Kč/měs.</span></div></div>
+        </div>
+        <h3><span class="znacka" style="background:var(--c-spot)"></span>Spotová cena</h3>
+        <div class="mrizka3">
+          <div><label for="spotPrir" id="lblSpotPrir">Přirážka ke spotu</label><div class="pole s-kroky"><button type="button" class="krok" data-pole="spotPrir" data-smer="-1" tabindex="-1" aria-label="Snížit přirážku">−</button><input type="text" inputmode="decimal" id="spotPrir"><span class="jedn" id="spotPrir_j">Kč/MWh</span><button type="button" class="krok" data-pole="spotPrir" data-smer="1" tabindex="-1" aria-label="Zvýšit přirážku">+</button></div></div>
+          <div><label for="spotPlat" id="lblSpotPlat">Stálý plat (Kč/měs.)</label><div class="pole"><input type="text" inputmode="decimal" id="spotPlat"><span class="jedn" id="spotPlat_j">Kč/měs.</span></div></div>
+        </div>
+        <div class="chipy" id="chipyPrir" role="group" aria-label="Typické přirážky"></div>
+        <label for="spotRezim">Jak obchodník spot účtuje</label>
+        <select id="spotRezim">
+          <option value="prubeh">podle průběhu (čtvrthodiny, smart metr)</option>
+          <option value="tdd">měsíční cena vážená TDD</option>
+          <option value="prumer">měsíční průměr spotu</option>
+        </select>
+        <p class="napoveda" id="infoRezim"></p>
+        <h3>Další nabídky k porovnání</h3>
+        <div id="nabidkyDalsi"></div>
+        <div class="tlacitka"><button type="button" class="male" id="btnPridatFix">+ fixní nabídka</button><button type="button" class="male" id="btnPridatSpot">+ spotová nabídka</button></div>
+        <p class="napoveda">Až 3 další nabídky (celkem 5). Spotové nabídky se účtují stejným způsobem jako hlavní spot.</p>
+        <label for="obdobi">Ceny spotu za období</label>
+        <select id="obdobi"></select>
+        <p class="napoveda">Výchozí čísla jsou jen příklad – opište si cenu a přirážku ze své smlouvy nebo nabídky. Regulované složky se
+          u všech nabídek počítají stejně (ceny 2026), liší se jen silová elektřina a stálý plat obchodníka.</p>
+      </div>
+
+      <!-- FLEXIBILNÍ SPOTŘEBA -->
+      <div class="karta" id="kartaSpotrebice">
+        <h2>🔁 Posunutelná spotřeba <span class="napoveda" style="margin:0">(volitelné, přičte se k roční spotřebě)</span></h2>
+        <label class="inline"><input type="checkbox" id="flexRidit" checked> Řídit podle cen (spot: nejlevnější hodiny dne; fix: NT)</label>
+        <div class="spotrebic">
+          <label class="inline"><input type="checkbox" id="ohrevOn"> 🚿 Ohřev vody</label>
+          <div class="mrizka3" id="ohrevPar">
+            <div><label for="ohrevKwh">kWh/den</label><div class="pole"><input type="text" inputmode="decimal" id="ohrevKwh"><span class="jedn" id="ohrevKwh_j">kWh/den</span></div></div>
+            <div><label for="ohrevP">Příkon (kW)</label><div class="pole"><input type="text" inputmode="decimal" id="ohrevP"><span class="jedn" id="ohrevP_j">kW</span></div></div>
+            <div><label for="ohrevOd">Povoleno od (h)</label><div class="pole"><input type="text" inputmode="numeric" id="ohrevOd"><span class="jedn" id="ohrevOd_j">h</span></div></div>
+            <div><label for="ohrevDo">do (h)</label><div class="pole"><input type="text" inputmode="numeric" id="ohrevDo"><span class="jedn" id="ohrevDo_j">h</span></div></div>
+          </div>
+          <p class="napoveda skryt" id="ohrevBlok">U D25d/D26d musí být akumulační ohřev ve VT blokován (cenový výměr ERÚ) – ohřev se plánuje jen do hodin NT.</p>
+        </div>
+        <div class="spotrebic">
+          <label class="inline"><input type="checkbox" id="evOn"> 🚗 Elektromobil</label>
+          <div class="mrizka3" id="evPar">
+            <div><label for="evKwh">kWh/týden</label><div class="pole"><input type="text" inputmode="decimal" id="evKwh"><span class="jedn" id="evKwh_j">kWh/týd.</span></div></div>
+            <div><label for="evP">Nabíjení (kW)</label><div class="pole"><input type="text" inputmode="decimal" id="evP"><span class="jedn" id="evP_j">kW</span></div></div>
+            <div><label for="evOd">Připojen od (h)</label><div class="pole"><input type="text" inputmode="numeric" id="evOd"><span class="jedn" id="evOd_j">h</span></div></div>
+            <div><label for="evDo">do (h)</label><div class="pole"><input type="text" inputmode="numeric" id="evDo"><span class="jedn" id="evDo_j">h</span></div></div>
+          </div>
+        </div>
+        <div class="spotrebic">
+          <label class="inline"><input type="checkbox" id="tcOn"> ♨️ Tepelné čerpadlo – posunutelná část</label>
+          <div class="mrizka3" id="tcPar">
+            <div><label for="tcKwh">kWh/den (říjen–duben)</label><div class="pole"><input type="text" inputmode="decimal" id="tcKwh"><span class="jedn" id="tcKwh_j">kWh/den</span></div></div>
+            <div><label for="tcP">Max. příkon (kW)</label><div class="pole"><input type="text" inputmode="decimal" id="tcP"><span class="jedn" id="tcP_j">kW</span></div></div>
+          </div>
+        </div>
+        <div class="spotrebic">
+          <label class="inline"><input type="checkbox" id="batOn"> 🔋 Domácí baterie</label>
+          <div class="mrizka3" id="batPar">
+            <div><label for="batC">Kapacita (kWh)</label><div class="pole s-kroky"><button type="button" class="krok" data-pole="batC" data-smer="-1" tabindex="-1" aria-label="Snížit kapacitu">−</button><input type="text" inputmode="decimal" id="batC"><span class="jedn" id="batC_j">kWh</span><button type="button" class="krok" data-pole="batC" data-smer="1" tabindex="-1" aria-label="Zvýšit kapacitu">+</button></div></div>
+            <div><label for="batP">Výkon (kW)</label><div class="pole"><input type="text" inputmode="decimal" id="batP"><span class="jedn" id="batP_j">kW</span></div></div>
+            <div><label for="batEta">Účinnost cyklu (%)</label><div class="pole"><input type="text" inputmode="decimal" id="batEta"><span class="jedn" id="batEta_j">%</span></div></div>
+            <div><label for="batCena">Cena baterie</label><div class="pole"><input type="text" inputmode="decimal" id="batCena"><span class="jedn" id="batCena_j">Kč</span></div></div>
+          </div>
+          <div class="chipy" id="chipyBat" role="group" aria-label="Typické baterie"></div>
+        </div>
+        <p class="napoveda">Rozvrh se plánuje po dnech (12:00–12:00, ceny na zítřek jsou známé od ~13 h): spotřeba se přesune do
+          nejlevnějších povolených hodin, počítá se i s distribucí VT/NT. Neřízený stav = ohřev rovnoměrně v povoleném okně,
+          auto nabíjí hned po připojení, TČ rovnoměrně. Baterie (jen v řízeném stavu) nabíjí v levných a vybíjí v drahých hodinách
+          jen do výše spotřeby domácnosti (bez přetoků) – plán je pro daný den optimální. Při účtování měsíční cenou (TDD, průměr)
+          posun silovku nezlevní, šetří jen distribuci VT/NT.</p>
+      </div>
+    </div>
+
+    <!-- VÝSLEDKY -->
+    <div class="sloupec">
+      <div class="karta" id="kartaVysledek">
+        <h2>💰 Roční náklad <span class="napoveda" style="margin:0" id="obdobiText"></span><span class="pocitam" id="pocitam" aria-hidden="true">⏳ počítám…</span></h2>
+        <p class="verdikt" id="verdikt" aria-live="polite"></p>
+        <p class="citlivost" id="citlivost"></p>
+        <div class="stav" id="stav">Načítám data…</div>
+        <p class="tisk-jen napoveda" id="tiskVstupy"></p>
+        <div class="vysledky">
+          <div class="box" id="boxFix"><div class="popis"><span class="znacka" style="background:var(--c-fix)"></span>Fixní (s DPH)</div><div class="cislo" id="vFix">–</div><div class="dalsi" id="vFix2"></div></div>
+          <div class="box" id="boxSpot"><div class="popis"><span class="znacka" style="background:var(--c-spot)"></span>Spot (s DPH)</div><div class="cislo" id="vSpot">–</div><div class="dalsi" id="vSpot2"></div></div>
+          <div class="box"><div class="popis">Rozdíl</div><div class="cislo" id="vRozdil">–</div><div class="dalsi" id="vRozdil2"></div></div>
+        </div>
+        <div class="pas" id="pasRiziko"></div>
+        <div class="vysledky druha">
+          <div class="box"><div class="popis">Profilový faktor</div><div class="cislo" id="vFaktor">–</div><div class="dalsi" id="vFaktor2"></div></div>
+          <div class="box"><div class="popis">Bod zvratu – fixní silovka</div><div class="cislo" id="vZvratFix">–</div><div class="dalsi" id="vZvratFix2"></div></div>
+          <div class="box"><div class="popis">Bod zvratu – přirážka spotu</div><div class="cislo" id="vZvratPrir">–</div><div class="dalsi" id="vZvratPrir2"></div></div>
+        </div>
+        <div class="vysledky druha skryt" id="boxyBaterie">
+          <div class="box"><div class="popis">🔋 Baterie – úspora za rok</div><div class="cislo" id="vBat">–</div><div class="dalsi" id="vBat2"></div></div>
+          <div class="box"><div class="popis">Návratnost baterie</div><div class="cislo" id="vBatNavrat">–</div><div class="dalsi" id="vBatNavrat2"></div></div>
+        </div>
+        <div id="zebricekObal" class="skryt"><h3>Žebříček nabídek</h3><div class="tabulka-obal"><table id="tabZebricek"></table></div></div>
+        <div class="graf-obal nizky"><canvas id="grafRozpad" role="img" aria-label="Skládaný sloupcový graf ročních nákladů podle složek ceny"></canvas></div>
+        <div class="tabulka-obal"><table id="tabRozpad"></table></div>
+        <div class="tlacitka neprint">
+          <button type="button" id="btnCSV" title="Export CSV (E)">⬇️ Export CSV</button>
+          <button type="button" id="btnTisk" title="Tisk (T)">🖨️ Tisk</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="karta plna" id="kartaMesice">
+    <h2>📅 Náklady po měsících</h2>
+    <div class="graf-obal"><canvas id="grafMesice" role="img" aria-label="Měsíční náklady fixní a spotové varianty"></canvas></div>
+    <h3>Kumulativní rozdíl (spot − fix, s DPH) – nad nulou je dražší spot</h3>
+    <div class="graf-obal nizky"><canvas id="grafKumul" role="img" aria-label="Kumulativní rozdíl nákladů"></canvas></div>
+    <details id="detMesice"><summary>Tabulka po měsících</summary><div class="tabulka-obal"><table id="tabMesice"></table></div></details>
+  </div>
+
+  <div class="karta plna" id="kartaFaktor">
+    <h2>⚖️ Proč platíte jinou cenu než „průměrný spot“</h2>
+    <p class="napoveda" id="faktorText" style="font-size:0.84rem"></p>
+    <div class="graf-obal"><canvas id="grafDen" role="img" aria-label="Průměrný denní průběh ceny a spotřeby"></canvas></div>
+    <p class="napoveda">Obě křivky jsou v procentech svého denního průměru (100 % = průměr), aby šly porovnat na jedné ose.
+      Když vaše spotřeba roste tam, kde je cena nad průměrem (večerní špička), platíte víc než aritmetický průměr spotu.</p>
+    <details><summary>Tabulka po hodinách</summary><div class="tabulka-obal"><table id="tabDen" class="mala-tab"></table></div></details>
+  </div>
+
+  <div class="karta plna" id="kartaRiziko">
+    <h2>🎢 Riziko: kolik by vás spot stál v jiných letech</h2>
+    <p class="napoveda">Stejná spotřeba (přenesená podle dne v týdnu) a stejné regulované ceny 2026 – mění se jen spotové ceny
+      a kurz. Fixní varianta je pro srovnání se stejnou cenou ve všech letech.</p>
+    <div class="vysledky" id="rizikoBoxy"></div>
+    <div class="graf-obal"><canvas id="grafRiziko" role="img" aria-label="Roční náklad spotu v jednotlivých letech"></canvas></div>
+    <div class="tabulka-obal"><table id="tabRiziko"></table></div>
+  </div>
+
+  <div class="karta plna" id="kartaMapa">
+    <h2>🌡️ Teplotní mapa cen</h2>
+    <div class="rada neprint">
+      <div><label for="mapaRok">Rok</label><select id="mapaRok"></select></div>
+      <div><label for="mapaRezim">Zobrazit</label><select id="mapaRezim"><option value="cena">spotová cena</option><option value="spotreba">moje spotřeba</option><option value="naklad">náklad (cena × spotřeba)</option></select></div>
+    </div>
+    <div class="mapa-obal"><canvas id="mapaPlatno" role="img" aria-label="Teplotní mapa: dny v roce na vodorovné ose, hodiny dne na svislé"></canvas><div class="tip skryt" id="mapaTip"></div></div>
+    <div class="legenda-mapy" id="mapaLegenda"></div>
+    <details><summary>Tabulka: průměr po měsících a hodinách</summary><div class="tabulka-obal"><table id="tabMapa" class="mala-tab"></table></div></details>
+  </div>
+
+  <div class="karta plna" id="kartaZivo">
+    <h2>🕐 Dnes a zítra – kdy pustit pračku</h2>
+    <div class="rada">
+      <div><label for="oknoDelka">Délka programu</label><select id="oknoDelka"><option value="1">1 h</option><option value="2" selected>2 h</option><option value="3">3 h</option><option value="4">4 h</option></select></div>
+      <div><label for="zivoTarif">Ceny pro tarif</label><select id="zivoTarif"><option value="spot">spotový</option><option value="fix">fixní</option></select></div>
+      <div style="flex:0 0 auto"><button type="button" id="btnZivo">↻ Načíst znovu</button></div>
+    </div>
+    <div class="stav" id="zivoStav"></div>
+    <div class="okna" id="zivoOkna"></div>
+    <div class="graf-obal"><canvas id="grafZivo" role="img" aria-label="Konečná cena elektřiny dnes a zítra"></canvas></div>
+    <p class="napoveda" id="zivoPopis"></p>
+  </div>
+
+  <div class="karta plna" id="kartaFlex">
+    <h2>🔁 Úspora z posunu spotřeby</h2>
+    <div id="flexVystup" class="napoveda" style="font-size:0.84rem">Zapněte některý spotřebič v kartě „Posunutelná spotřeba“.</div>
+  </div>
+
+  <div class="karta plna">
+    <h2>📖 Pojmy</h2>
+    <dl class="vysvetlivky">
+      <dt>Silová elektřina × regulované složky</dt>
+      <dd>Účet má dvě části. <b>Silovou elektřinu</b> (energii) a stálý plat prodává obchodník – tady se fix a spot liší.
+        <b>Regulované složky</b> (distribuce, systémové služby, POZE, nesíťová infrastruktura) stanovuje ERÚ a platíte je stejně
+        u každého obchodníka. K tomu daň z elektřiny a 21 % DPH ze všeho.</dd>
+      <dt>VT / NT</dt>
+      <dd>Vysoký a nízký tarif distribuce. Ve dvoutarifových sazbách (D25d–D61d) je distribuce v NT výrazně levnější; časy NT přepíná
+        distributor signálem HDO. Fixní nabídky mívají i dvě ceny silové elektřiny, u spotu je cena silovky v každé čtvrthodině jiná.</dd>
+      <dt>Spot a přirážka</dt>
+      <dd>Spotová cena je výsledek denního trhu OTE – den předem se vydraží cena pro každou čtvrthodinu (od 1. 10. 2025, dříve pro
+        každou hodinu) v EUR/MWh; přepočítává se kurzem ČNB. Obchodník k ní připočte svou <b>přirážku</b> (Kč/MWh) a stálý měsíční plat.
+        Cena může být i záporná.</dd>
+      <dt>TDD – typový diagram dodávky</dt>
+      <dd>Normalizovaný průběh spotřeby skupiny odběratelů, který zveřejňuje OTE (TDD4 = domácnosti bez tepelného využití – D01d, D02d,
+        D61d; TDD5 = akumulace 8 h – D25d, D26d, D27d, krajové podle HDO; TDD6 = hybridní vytápění D35d; TDD7 = přímotopy a tepelná čerpadla –
+        D45d, D56d, D57d). Používá se u domácností bez průběhového měření.</dd>
+      <dt>Profilový faktor</dt>
+      <dd>Poměr vážené průměrné ceny (váhou je vaše spotřeba v každé hodině) a prostého průměru spotu. 1,05 znamená, že kvůli tomu,
+        <em>kdy</em> elektřinu berete, platíte o 5 % víc, než kolik je průměrný spot.</dd>
+      <dt>Bod zvratu</dt>
+      <dd>Jednotná fixní cena silovky (VT = NT), při které by obě nabídky vyšly nastejno, a přirážka spotu, při které by vyšly nastejno.</dd>
+    </dl>
+  </div>
+
+  <div class="pozn">
+    <p><strong>Zdroje dat.</strong> Ceny denního trhu ČR: <a href="https://www.ote-cr.cz/cs/kratkodobe-trhy/elektrina/denni-trh" target="_blank" rel="noopener">OTE, a.s.</a>,
+      přibalené hodnoty staženy přes <a href="https://api.energy-charts.info/" target="_blank" rel="noopener">Energy-Charts API</a> (Fraunhofer ISE, licence
+      <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>) a ověřeny proti OTE; roky 2019–2025 celé,
+      rok 2026 do <span id="stavDat">–</span>. Kurz EUR/CZK: <a href="https://www.cnb.cz/cs/financni-trhy/devizovy-trh/kurzy-devizoveho-trhu/" target="_blank" rel="noopener">ČNB</a>,
+      kurz platný pro den dodávky (shodně s kurzovním lístkem na webu OTE). Dnešní a zítřejší ceny živě ze
+      <a href="https://spotovaelektrina.cz/" target="_blank" rel="noopener">spotovaelektrina.cz</a> (veřejné API; OTE ani Energy-Charts volání z cizích stránek nepovolují).
+      Typové diagramy: <a href="https://www.ote-cr.cz/cs/statistika/typove-diagramy-dodavek-elektriny" target="_blank" rel="noopener">OTE – normalizované TDD 2025</a>,
+      třídy podle přílohy č. 6 vyhlášky č. 408/2015 Sb.</p>
+    <p><strong>Regulované ceny 2026</strong> (stav k <span id="regStav"></span>): <a href="https://www.tzb-info.cz/download.py?file=docu/predpisy/download/CV14-2025.pdf" target="_blank" rel="noopener">cenový výměr ERÚ č. 14/2025</a>
+      (distribuce NN, kategorie D), <a href="https://www.tzb-info.cz/download.py?file=docu/predpisy/download/CV13-2025.pdf" target="_blank" rel="noopener">č. 13/2025</a> ve znění č. 15/2025 a 1/2026
+      (systémové služby 164,24 Kč/MWh; nesíťová infrastruktura 12,87 Kč/měsíc). Příspěvek na POZE je od 1. 1. 2026 nulový – podporu
+      obnovitelných zdrojů hradí stát (<a href="https://eru.gov.cz/sites/default/files/obsah/prilohy/20251229tzzmenovycenovyvymer.docx" target="_blank" rel="noopener">tisková zpráva ERÚ 29. 12. 2025</a>).
+      Daň z elektřiny 28,30 Kč/MWh, DPH 21 %. Smlouvu s dynamickou (spotovou) cenou lze podle ERÚ uzavřít jen s průběhovým měřením;
+      výjimkou jsou tzv. kvazidynamické produkty s měsíční cenou odvozenou z trhu
+      (<a href="https://www.seznamzpravy.cz/clanek/ekonomika-firmy-uctovani-elektriny-po-hodinach-skulina-v-zakone-ohrozuje-zakazniky-296340" target="_blank" rel="noopener">Seznam Zprávy, 16. 1. 2026</a>).</p>
+    <p><strong>Omezení.</strong> TDD se nepřepočítávají na skutečné teploty (to vyžaduje teplotní data OTE) – použitý je normalizovaný
+      průběh roku 2025 přenesený na zvolený rok podle dne v týdnu a svátků. Časy NT jsou model, skutečné HDO se liší. Spot se pro TDD
+      a hodinové spotřebiče počítá s hodinovým průměrem čtvrthodinových cen (uvnitř hodiny se spotřeba bere jako rovnoměrná);
+      s vlastními čtvrthodinovými daty se počítá po čtvrthodinách, denní data se uvnitř dne rozloží tvarem TDD. Regulované ceny 2026
+      se pro porovnání použijí ve všech letech. Nezahrnuje odchylky, slevy, bonusy ani smluvní pokuty; jde o orientační výpočet, ne o nabídku.</p>
+  </div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+  const $ = id => document.getElementById(id);
+  const T = TARIF, REG = T.REG;
+  const KLIC = 'webapp_tarif_spot_vstupy', KLIC_CSV = 'webapp_tarif_spot_csv';
+  /* čísla: NaN/∞ → „–“, záporná s typografickým minus */
+  const fmt = (n, d = 0) => {
+    if (typeof n !== 'number' || !isFinite(n)) return '–';
+    const s = n.toLocaleString('cs-CZ', { minimumFractionDigits: d, maximumFractionDigits: d });
+    return /^-0([,.]0+)?$/.test(s) ? s.slice(1) : s.replace(/^-/, '\u2212');
+  };
+  const kc = n => (typeof n === 'number' && isFinite(n)) ? fmt(Math.round(n)) + ' Kč' : '–';
+  const MESICE_ZKR = ['led', 'úno', 'bře', 'dub', 'kvě', 'čvn', 'čvc', 'srp', 'zář', 'říj', 'lis', 'pro'];   // jednoznačné zkratky
+  const MESICE = ['leden', 'únor', 'březen', 'duben', 'květen', 'červen', 'červenec', 'srpen', 'září', 'říjen', 'listopad', 'prosinec'];
+  const datumText = t => { const x = T.mistni(t); return x.d + '. ' + (x.m + 1) + '. ' + x.r; };
+  const esc = s => String(s).replace(/[<&"]/g, c => ({ '<': '&lt;', '&': '&amp;', '"': '&quot;' }[c]));
+
+  /* ---------------- výchozí hodnoty, ukládání a kontrola uloženého stavu ---------------- */
+  const VYCHOZI = {
+    profil: 'tdd', kwhVT: 3000, kwhNT: 0, kraj5: '', uzemi: 'CEZ', sazba: 'D02d', faze: 3, ampery: 25, ntHodiny: null,
+    regPrepis: false, regRucne: null,
+    jedn: 'mwh', dphZad: 'bez',
+    fixVT: 2900, fixNT: 2900, fixPlat: 120, spotPrir: 350, spotPlat: 120, spotRezim: 'tdd', obdobi: '2025',
+    flexRidit: true, ohrevOn: false, ohrevKwh: 6, ohrevP: 2, ohrevOd: 0, ohrevDo: 24,
+    evOn: false, evKwh: 70, evP: 7.4, evOd: 18, evDo: 7, tcOn: false, tcKwh: 10, tcP: 3,
+    batOn: false, batC: 10, batP: 5, batEta: 90, batCena: 120000,
+    nabidky: [], sbalene: [], histKwh: [],
+  };
+  /* meze vstupů (vnitřní jednotky: Kč/MWh bez DPH, Kč/měsíc bez DPH) */
+  const MEZE = {
+    kwhVT: [0, 1e6], kwhNT: [0, 1e6], fixVT: [0, 50000], fixNT: [0, 50000], fixPlat: [0, 5000], spotPrir: [-2000, 20000], spotPlat: [0, 5000],
+    ohrevKwh: [0, 200], ohrevP: [0.1, 50], ohrevOd: [0, 23], ohrevDo: [0, 24], evKwh: [0, 2000], evP: [0.5, 50], evOd: [0, 23], evDo: [0, 24],
+    tcKwh: [0, 500], tcP: [0.1, 50], batC: [0, 500], batP: [0.1, 100], batEta: [50, 100], batCena: [0, 5e6],
+  };
+  const CELA = new Set(['ohrevOd', 'ohrevDo', 'evOd', 'evDo']);
+  const POVOLENE = { profil: ['tdd', 'csv'], uzemi: Object.keys(REG.UZEMI), sazba: Object.keys(REG.sazby), faze: [1, 3], kraj5: REG.TDD5_KRAJE.concat(['']),
+    jedn: ['mwh', 'kwh'], dphZad: ['bez', 's'], spotRezim: ['prubeh', 'tdd', 'prumer'], ampery: [10, 16, 20, 25, 32, 40, 50, 63, 80, 100, 125, 160] };
+  function ocisti(u) {
+    const S2 = Object.assign({}, VYCHOZI);
+    if (!u || typeof u !== 'object') return S2;
+    for (const k of Object.keys(VYCHOZI)) {
+      const v = u[k]; if (v === undefined || v === null) continue;
+      if (POVOLENE[k]) { if (POVOLENE[k].includes(v)) S2[k] = v; continue; }
+      if (MEZE[k]) { if (typeof v === 'number' && isFinite(v) && v >= MEZE[k][0] && v <= MEZE[k][1]) S2[k] = v; continue; }
+      if (typeof VYCHOZI[k] === 'boolean') { S2[k] = !!v; continue; }
+      if (k === 'ntHodiny') { if (Array.isArray(v) && v.length === 24) S2[k] = v.map(Boolean); continue; }
+      if (k === 'regRucne') { if (typeof v === 'object') { const o = {}; for (const [a, b] of Object.entries(v)) if (typeof b === 'number' && isFinite(b) && b >= 0) o[a] = b; S2[k] = o; } continue; }
+      if (k === 'nabidky') { if (Array.isArray(v)) S2[k] = v.slice(0, 3).filter(n => n && (n.typ === 'fix' || n.typ === 'spot')).map(n => ({ nazev: String(n.nazev || '').slice(0, 40), typ: n.typ, a: +n.a || 0, b: +n.b || 0, plat: Math.max(0, +n.plat || 0) })); continue; }
+      if (k === 'sbalene') { if (Array.isArray(v)) S2[k] = v.filter(x => typeof x === 'string' && /^karta\w+$/.test(x)).slice(0, 20); continue; }
+      if (k === 'histKwh') { if (Array.isArray(v)) S2[k] = v.filter(x => typeof x === 'number' && x > 0 && x <= 1e6).slice(0, 3); continue; }
+      if (k === 'obdobi') { if (typeof v === 'string' && /^(\d{4}|posl12)$/.test(v)) S2[k] = v; continue; }
+    }
+    if (S2.faze === 1 && S2.ampery > 63) S2.ampery = 25;
+    return S2;
+  }
+  let S;
+  try { S = ocisti(JSON.parse(localStorage.getItem(KLIC))); } catch (e) { S = ocisti(null); }
+  function uloz() { try { localStorage.setItem(KLIC, JSON.stringify(S)); } catch (e) { /* plné nebo zakázané úložiště */ } }
+
+  /* ---------------- barvy ---------------- */
+  let tiskSvetle = false;
+  function svetleTema() { return tiskSvetle || document.documentElement.getAttribute('data-theme') === 'light'; }
+  function barvy() {
+    const cs = getComputedStyle(document.documentElement), v = n => cs.getPropertyValue(n).trim();
+    const svetle = svetleTema();
+    if (tiskSvetle) return { text: '#333333', textSilny: '#111111', mrizka: '#cccccc', povrch: '#ffffff', ok: '#177540', danger: '#c0392b', fix: '#2a78d6', spot: '#eb6834', s3: '#1baf7a', s4: '#eda100', svetle };
+    return {
+      text: v('--text-muted') || '#b0b0b0', textSilny: v('--text') || '#e0e0e0', mrizka: v('--border') || '#404040',
+      povrch: v('--bg-panel') || '#242424', ok: v('--ok') || '#4caf7d', danger: v('--danger') || '#e05d5d',
+      fix: svetle ? '#2a78d6' : '#3987e5', spot: svetle ? '#eb6834' : '#d95926', s3: svetle ? '#1baf7a' : '#199e70', s4: svetle ? '#eda100' : '#c98500',
+      svetle,
+    };
+  }
+  function nastavCSSBarvy() {
+    const b = barvy();
+    document.documentElement.style.setProperty('--c-fix', b.fix);
+    document.documentElement.style.setProperty('--c-spot', b.spot);
+  }
+
+  /* ---------------- formulář: plnění selectů ---------------- */
+  for (const [k, n] of Object.entries(REG.UZEMI)) $('uzemi').add(new Option(n, k));
+  for (const [k, s] of Object.entries(REG.sazby)) $('sazba').add(new Option(s.nazev, k));
+  const POPIS_SAZBY = { D01d: 'Jednotarif pro malou spotřebu (byt, bez ohřevu). Nově jen bez výrobny.', D02d: 'Jednotarif pro běžnou spotřebu domácnosti.',
+    D25d: 'Dvoutarif s NT aspoň 8 h denně – akumulační ohřev vody (ve VT blokován).', D26d: 'Dvoutarif s NT 8 h – akumulační vytápění (ve VT blokováno).',
+    D27d: 'Dvoutarif s NT 8 h v době 18–8 h – nabíjení elektromobilu.', D35d: 'NT 20 h – hybridní vytápění (nelze nově přiznat po 31. 3. 2016).',
+    D45d: 'NT 20 h – přímotopné vytápění (nelze nově přiznat po 31. 3. 2016).', D56d: 'NT 20 h – tepelné čerpadlo uvedené do provozu do 31. 3. 2016.',
+    D57d: 'NT 20 h – vytápění tepelným čerpadlem nebo přímotopy (od 1. 4. 2016).', D61d: 'Víkendová sazba: NT od pátku 12:00 do neděle 22:00 (35 % hodin týdne).' };
+  REG.TDD5_KRAJE.forEach(k => $('kraj5').add(new Option(k, k)));
+  function naplnAmpery() {
+    const f = +$('faze').value, akt = +S.ampery;
+    const hodn = f === 1 ? [10, 16, 20, 25, 32, 40, 50, 63] : POVOLENE.ampery;
+    $('ampery').innerHTML = '';
+    hodn.forEach(a => $('ampery').add(new Option((f === 1 ? '1 × ' : '3 × ') + a + ' A', a)));
+    $('ampery').value = hodn.includes(akt) ? akt : 25;
+    S.ampery = +$('ampery').value;
+  }
+  const hodinyEl = $('hodinyNT');
+  for (let h = 0; h < 24; h++) {
+    const b = document.createElement('button'); b.type = 'button'; b.textContent = h; b.dataset.h = h;
+    b.tabIndex = h === 0 ? 0 : -1; hodinyEl.appendChild(b);
+  }
+
+  /* ---------------- vstupy: čtení, kontrola, jednotky ---------------- */
+  const cteniCisla = s => { const x = String(s).trim().replace(/\s| /g, '').replace(',', '.').replace('−', '-'); return x === '' || !/^[-+]?\d*\.?\d+$/.test(x) ? NaN : parseFloat(x); };
+  const dphK = () => 1 + (aktReg ? aktReg.dph : REG.dph) / 100;
+  const naZobr = (v, plat) => { let x = v * (S.dphZad === 's' ? dphK() : 1); if (!plat && S.jedn === 'kwh') x /= 1000; return String(+x.toFixed(plat || S.jedn === 'mwh' ? 2 : 4)).replace('.', ','); };
+  const zeZobr = (x, plat) => { let v = x / (S.dphZad === 's' ? dphK() : 1); if (!plat && S.jedn === 'kwh') v *= 1000; return v; };
+  const CENOVA = [['fixVT', 0], ['fixNT', 0], ['fixPlat', 1], ['spotPrir', 0], ['spotPlat', 1]];
+  const neplatna = new Set();
+  /* chyba u pole; navrh = text hodnoty, kterou lze jedním klikem použít */
+  function oznacPole(el, chyba, navrh) {
+    let m = document.getElementById(el.id + 'Chyba');
+    if (chyba) {
+      el.setAttribute('aria-invalid', 'true');
+      if (!m) {
+        m = document.createElement('div'); m.id = el.id + 'Chyba'; m.className = 'chyba-pole';
+        const obal = el.closest && el.closest('.pole') && el.closest('.pole') !== el ? el.closest('.pole') : el;
+        (obal.parentNode || el.parentNode).appendChild(m); el.setAttribute('aria-describedby', m.id);
+      }
+      m.textContent = '⚠ ' + chyba;
+      if (navrh !== undefined && navrh !== null) {
+        const b = document.createElement('button'); b.type = 'button'; b.className = 'male'; b.textContent = 'použít ' + navrh;
+        b.addEventListener('click', () => { el.value = navrh; el.dispatchEvent(new Event('input')); el.focus(); });
+        m.appendChild(b);
+      }
+      neplatna.add(el.id);
+    } else {
+      el.removeAttribute('aria-invalid');
+      if (m) m.textContent = '';
+      neplatna.delete(el.id);
+    }
+  }
+  /* zkontroluje text pole; vrátí hodnotu ve vnitřních jednotkách, nebo null (a označí pole) */
+  function zkontroluj(id, plat, cena) {
+    const el = $(id), x = cteniCisla(el.value);
+    if (!isFinite(x)) {
+      const cislo = /[-−]?\d[\d\s]*(?:[.,]\d+)?/.exec(el.value);
+      oznacPole(el, el.value.trim() === '' ? 'Zadejte hodnotu.' : 'Zadejte číslo (desetinná čárka i tečka).',
+        el.value.trim() === '' ? zobrazVnitrni(id, plat, cena, S[id]) : cislo ? cislo[0].replace(/\s/g, '').replace('.', ',') : undefined);
+      return null;
+    }
+    const v = cena ? zeZobr(x, plat) : x;
+    const [lo, hi] = MEZE[id] || [0, 1e9];
+    if (v < lo - 1e-9 || v > hi + 1e-9) {
+      const z = cena ? (plat ? 'Kč/měs.' : 'Kč/MWh bez DPH') : '';
+      oznacPole(el, 'Povolený rozsah ' + fmt(lo) + ' až ' + fmt(hi) + (z ? ' ' + z : '') + '.', zobrazVnitrni(id, plat, cena, Math.min(hi, Math.max(lo, v)))); return null;
+    }
+    if (CELA.has(id) && Math.round(v) !== v) { oznacPole(el, 'Zadejte celou hodinu.', String(Math.round(v))); return null; }
+    oznacPole(el, null);
+    return v;
+  }
+  function zobrazVnitrni(id, plat, cena, v) { return cena ? naZobr(v, plat) : String(+(+v).toFixed(4)).replace('.', ','); }
+  function zobrazCeny() {
+    CENOVA.forEach(([k, plat]) => { $(k).value = naZobr(S[k], plat); oznacPole($(k), null); });
+    const j = (S.jedn === 'mwh' ? 'Kč/MWh' : 'Kč/kWh') + (S.dphZad === 's' ? ' s DPH' : ' bez DPH');
+    const dphT = S.dphZad === 's' ? ' (s DPH)' : ' (bez DPH)', jc = S.jedn === 'mwh' ? 'Kč/MWh' : 'Kč/kWh';
+    void j;
+    $('lblFixVT').textContent = 'Silová elektřina VT' + dphT; $('lblFixNT').textContent = 'Silová elektřina NT' + dphT;
+    $('lblSpotPrir').textContent = 'Přirážka ke spotu' + dphT;
+    $('lblFixPlat').textContent = 'Stálý plat' + dphT; $('lblSpotPlat').textContent = 'Stálý plat' + dphT;
+    ['fixVT', 'fixNT', 'spotPrir'].forEach(id => { $(id + '_j').textContent = jc; });
+    kresliChipy();
+    document.querySelectorAll('[data-jedn]').forEach(b => b.setAttribute('aria-pressed', b.dataset.jedn === S.jedn));
+    document.querySelectorAll('[data-dph]').forEach(b => b.setAttribute('aria-pressed', b.dataset.dph === S.dphZad));
+    kresliNabidky();
+  }
+  const CISELNE = ['kwhVT', 'kwhNT', 'ohrevKwh', 'ohrevP', 'ohrevOd', 'ohrevDo', 'evKwh', 'evP', 'evOd', 'evDo', 'tcKwh', 'tcP', 'batC', 'batP', 'batEta', 'batCena'];
+  const BOOL = ['flexRidit', 'ohrevOn', 'evOn', 'tcOn', 'batOn', 'regPrepis'];
+  function naplnFormular() {
+    CISELNE.forEach(k => { $(k).value = String(S[k]).replace('.', ','); oznacPole($(k), null); });
+    BOOL.forEach(k => { $(k).checked = !!S[k]; });
+    $('uzemi').value = S.uzemi; $('sazba').value = S.sazba; $('faze').value = S.faze; naplnAmpery();
+    $('spotRezim').value = S.spotRezim;
+    zobrazCeny();
+    document.querySelectorAll('[data-profil]').forEach(b => b.setAttribute('aria-pressed', b.dataset.profil === S.profil));
+    $('panelTDD').classList.toggle('skryt', S.profil !== 'tdd'); $('panelCSV').classList.toggle('skryt', S.profil !== 'csv');
+    if (!S.kraj5) S.kraj5 = REG.TDD5_VYCHOZI[S.uzemi];
+    $('kraj5').value = S.kraj5;
+  }
+  function ntHodiny() {
+    if (!Array.isArray(S.ntHodiny) || S.ntHodiny.length !== 24) S.ntHodiny = T.vychoziNT(S.sazba);
+    return S.ntHodiny;
+  }
+  function aktualizujSazbu() {
+    const s = REG.sazby[S.sazba], dvou = !!s.nt;
+    $('sazbaPopis').textContent = POPIS_SAZBY[S.sazba] + ' Typový diagram ' + s.tdd + '.' +
+      (s.ntHodin >= 20 ? ' Výsledek citlivě závisí na časech HDO – zadejte své skutečné časy NT.' : s.ntHodin < 0 ? ' Podíl NT bývá kolem 50 % (chata s víkendovým provozem víc).' : '');
+    $('boxKwhNT').classList.toggle('skryt', !dvou);
+    $('lblKwhVT').textContent = dvou ? 'Roční spotřeba ve VT (kWh)' : 'Roční spotřeba (kWh)';
+    $('boxFixNT').classList.toggle('skryt', !dvou);
+    $('boxNT').classList.toggle('skryt', !dvou || s.ntHodin < 0);
+    $('infoVikend').classList.toggle('skryt', s.ntHodin >= 0);
+    $('boxKraj').classList.toggle('skryt', s.tdd !== 'TDD5');
+    $('ohrevBlok').classList.toggle('skryt', !(S.sazba === 'D25d' || S.sazba === 'D26d'));
+    const h = ntHodiny(); let n = 0;
+    hodinyEl.querySelectorAll('button').forEach(b => {
+      const x = !!h[+b.dataset.h], hh = +b.dataset.h;
+      b.classList.toggle('nt', x); b.setAttribute('aria-pressed', x); if (x) n++;
+      b.setAttribute('aria-label', hh + ':00–' + (hh + 1) + ':00, ' + (x ? 'nízký tarif' : 'vysoký tarif'));
+      b.title = b.getAttribute('aria-label');
+    });
+    $('pocetNT').textContent = n + ' h NT' + (s.ntHodin > 0 && n < s.ntHodin ? ' (sazba zaručuje aspoň ' + s.ntHodin + ' h)' : '');
+    const tdd = s.tdd === 'TDD5' ? 'TDD5 – ' + S.kraj5 : s.tdd;
+    $('infoTDD').textContent = 'Průběh spotřeby: normalizovaný ' + tdd + ' (OTE, 2025) pro sazbu ' + S.sazba + '. ' +
+      (dvou ? 'Spotřeba ve VT a NT se rozloží do hodin VT a NT podle časů NT níže.' : '');
+  }
+
+  /* ---------------- další nabídky ---------------- */
+  function kresliNabidky() {
+    const el = $('nabidkyDalsi'), j = (S.jedn === 'mwh' ? 'Kč/MWh' : 'Kč/kWh') + (S.dphZad === 's' ? ' s DPH' : '');
+    el.innerHTML = '';
+    S.nabidky.forEach((n, i) => {
+      const r = document.createElement('div'); r.className = 'nabidka'; r.dataset.i = i;
+      const pole = (id, lbl, val, extra) => '<div' + (extra || '') + '><label for="' + id + '">' + lbl + '</label><input type="text" ' + (id.startsWith('nN') ? '' : 'inputmode="decimal" ') + 'id="' + id + '" value="' + esc(val) + '"></div>';
+      const typ = n.typ === 'fix' ? 'fix' : 'spot';
+      r.innerHTML = '<div class="nab-hlava"><span class="stitek ' + typ + '">' + typ + '</span>' +
+        '<label for="nNazev' + i + '" class="sr-only">Název ' + (typ === 'fix' ? 'fixní' : 'spotové') + ' nabídky</label><input type="text" id="nNazev' + i + '" value="' + esc(n.nazev) + '" placeholder="název nabídky">' +
+        '<button type="button" class="male" data-smaz="' + i + '" aria-label="Odebrat nabídku ' + esc(n.nazev || i + 1) + '">✕</button></div>' +
+        '<div class="nab-ceny">' +
+        (typ === 'fix'
+          ? pole('nA' + i, 'VT (' + j + ')', naZobr(n.a, 0)) + (REG.sazby[S.sazba].nt ? pole('nB' + i, 'NT (' + j + ')', naZobr(n.b, 0)) : '')
+          : pole('nA' + i, 'Přirážka (' + j + ')', naZobr(n.a, 0))) +
+        pole('nP' + i, 'Plat (Kč/měs.)', naZobr(n.plat, 1)) + '</div>';
+      el.appendChild(r);
+    });
+    $('btnPridatFix').disabled = $('btnPridatSpot').disabled = S.nabidky.length >= 3;
+  }
+  $('nabidkyDalsi').addEventListener('input', e => {
+    const m = /^n(Nazev|A|B|P)(\d)$/.exec(e.target.id); if (!m) return;
+    const n = S.nabidky[+m[2]]; if (!n) return;
+    if (m[1] === 'Nazev') { n.nazev = e.target.value.slice(0, 40); uloz(); prepocti(); return; }
+    const x = cteniCisla(e.target.value), plat = m[1] === 'P';
+    if (!isFinite(x)) { oznacPole(e.target, 'Zadejte číslo.'); return; }
+    const v = zeZobr(x, plat);
+    if ((m[1] !== 'A' || n.typ === 'fix') && v < 0) { oznacPole(e.target, 'Nesmí být záporné.'); return; }
+    oznacPole(e.target, null);
+    n[{ A: 'a', B: 'b', P: 'plat' }[m[1]]] = v; uloz(); prepocti();
+  });
+  $('nabidkyDalsi').addEventListener('click', e => {
+    const b = e.target.closest('[data-smaz]'); if (!b) return;
+    S.nabidky.splice(+b.dataset.smaz, 1); kresliNabidky(); uloz(); prepocti();
+  });
+  $('btnPridatFix').addEventListener('click', () => { if (S.nabidky.length < 3) { S.nabidky.push({ nazev: 'Fix ' + (S.nabidky.length + 2), typ: 'fix', a: S.fixVT, b: S.fixNT, plat: S.fixPlat }); kresliNabidky(); uloz(); prepocti(); } });
+  $('btnPridatSpot').addEventListener('click', () => { if (S.nabidky.length < 3) { S.nabidky.push({ nazev: 'Spot ' + (S.nabidky.length + 2), typ: 'spot', a: S.spotPrir, b: 0, plat: S.spotPlat }); kresliNabidky(); uloz(); prepocti(); } });
+
+  /* ---------------- regulované ceny (s ručním přepisem) ---------------- */
+  let aktReg = null;
+  const REG_POLE = [['rDistVT', 'distVT'], ['rDistNT', 'distNT'], ['rJistic', 'jisticMes'], ['rSys', 'systemove'], ['rPoze', 'poze'], ['rNes', 'nesitovaMes'], ['rDan', 'dan'], ['rDph', 'dph']];
+  function regulovane() {
+    let r = T.regulovaneCeny(S.sazba, S.uzemi, +S.faze, +S.ampery);
+    if (S.regPrepis && S.regRucne) r = T.regulovaneCeny(S.sazba, S.uzemi, +S.faze, +S.ampery, S.regRucne);
+    REG_POLE.forEach(([id, k]) => { $(id).disabled = !S.regPrepis; if (!S.regPrepis || document.activeElement !== $(id)) { $(id).value = String(+r[k].toFixed(2)).replace('.', ','); oznacPole($(id), null); } });
+    $('regZdroj').innerHTML = 'Zdroj: ' + REG.zdroj + '. Stav k ' + REG.stavK + '.' + (S.regPrepis ? ' <b>Používáte ruční hodnoty.</b>' : '');
+    aktReg = r;
+    return r;
+  }
+  function zrusRucniReg(proc) {
+    if (S.regPrepis && S.regRucne && Object.keys(S.regRucne).length) Dialog.info('Ruční regulované ceny byly zrušeny (' + proc + ') – platí tabulka ERÚ.');
+    S.regRucne = null; S.regPrepis = false; $('regPrepis').checked = false;
+  }
+
+  /* ---------------- načítání dat ---------------- */
+  const cacheJSON = {};
+  function nactiJSON(nazev) {
+    if (!cacheJSON[nazev]) {
+      const ctrl = typeof AbortController !== 'undefined' ? new AbortController() : null;
+      const to = ctrl ? setTimeout(() => ctrl.abort(), 25000) : 0;
+      cacheJSON[nazev] = fetch('tarif_spot/' + nazev, ctrl ? { signal: ctrl.signal } : undefined)
+        .then(o => { clearTimeout(to); if (!o.ok) throw new Error('HTTP ' + o.status + ' u souboru ' + nazev); return o.json(); })
+        .catch(e => { clearTimeout(to); delete cacheJSON[nazev]; throw e; });
+    }
+    return cacheJSON[nazev];
+  }
+  function popisChybyNacteni(e) {
+    if (typeof location !== 'undefined' && location.protocol === 'file:') return 'Stránka je otevřená jako soubor z disku – prohlížeč nedovolí načíst přibalená data. Otevřete ji přes web.';
+    if (e && e.name === 'AbortError') return 'Načítání dat trvalo příliš dlouho (pomalé nebo přerušené připojení).';
+    if (e && /HTTP/.test(e.message)) return 'Server data nevrátil (' + e.message + ').';
+    if (e instanceof SyntaxError) return 'Přibalená data jsou poškozená (' + e.message + ').';
+    return 'Data se nepodařilo načíst (' + (e && e.message || 'neznámá chyba') + ') – zkontrolujte připojení.';
+  }
+  let INDEX = null, KURZY = null, TDD = null;
+  const cacheCen = {};
+  async function cenyRoku(rok) {
+    if (!cacheCen[rok]) { const j = await nactiJSON('spot_' + rok + '.json'); cacheCen[rok] = T.radaZUseku(j.useky, KURZY); }
+    return cacheCen[rok];
+  }
+  async function cenyObdobi(od, do_) {
+    const r1 = T.mistni(od).r, r2 = T.mistni(do_ - 1).r, rady = [];
+    for (let r = r1; r <= r2; r++) if (INDEX.roky.some(x => x.rok === r)) rady.push(await cenyRoku(r));
+    return T.vyrez(T.spojRady(rady), od, do_);
+  }
+  function konecDat() { return INDEX.roky[INDEX.roky.length - 1].do; }
+  function obdobi(klic) {
+    if (klic === 'posl12') {
+      const posl = konecDat(), x = T.mistni(posl);
+      return { od: T.zacatekDne(x.r - 1, x.m, x.d), do: posl, text: 'posledních 12 měsíců' };
+    }
+    const r = +klic; return { od: T.zacatekDne(r, 0, 1), do: T.zacatekDne(r + 1, 0, 1), text: 'rok ' + r };
+  }
+  const mapyTDD = {};
+  function radaTDD(trida) {
+    const k = TDD.tridy[trida]; if (!k) throw new Error('V datech chybí ' + trida);
+    const t = new Array(k.length); for (let i = 0; i < k.length; i++) t[i] = TDD.od + i * TDD.krok;
+    return T.radaZPoli(t, TDD.krok, k);
+  }
+  function mapaTDD(trida) { if (!mapyTDD[trida]) mapyTDD[trida] = T.mapaDnu(radaTDD(trida), 24); return mapyTDD[trida]; }
+  function tridaTDD() { const s = REG.sazby[S.sazba]; return s.tdd === 'TDD5' ? 'TDD5_' + S.kraj5.replace(/ /g, '_') : s.tdd; }
+
+  /* ---------------- CSV ---------------- */
+  let CSV = null, csvText = null, csvMapa = null;
+  function ulozCSV() {
+    if (!CSV) { try { localStorage.removeItem(KLIC_CSV); } catch (e) { /* nic */ } return; }
+    const r = CSV.rada, useky = []; let u = null;
+    for (let i = 0; i < r.t.length; i++) {
+      if (!u || u.od + u.krok * u.v.length !== r.t[i] || u.krok !== r.k[i]) { u = { od: r.t[i], krok: r.k[i], v: [] }; useky.push(u); }
+      u.v.push(Math.round(r.v[i] * 10000) / 10000);
+    }
+    const info = Object.assign({}, CSV); delete info.rada;
+    try { localStorage.setItem(KLIC_CSV, JSON.stringify({ useky, info })); } catch (e) { csvZprava('Data jsou příliš velká na uložení v prohlížeči – po obnovení stránky je nahrajte znovu.', 'varovani', true); }
+  }
+  function nactiUlozeneCSV() {
+    try {
+      const j = JSON.parse(localStorage.getItem(KLIC_CSV)); if (!j || !Array.isArray(j.useky)) return;
+      const tt = [], kk = [], vv = [];
+      j.useky.forEach(u => u.v.forEach((x, i) => { tt.push(u.od + i * u.krok); kk.push(u.krok); vv.push(+x || 0); }));
+      if (tt.length < 2) return;
+      CSV = Object.assign({ varovani: [] }, j.info, { rada: T.radaZPoli(tt, kk, vv) }); csvMapa = null;
+    } catch (e) { CSV = null; }
+  }
+  function csvZprava(t, typ, pridat) {
+    const el = $('csvStav');
+    if (pridat) el.innerHTML += '<br>' + t; else el.innerHTML = t;
+    el.className = 'stav' + (typ ? ' ' + typ : '');
+    el.setAttribute('role', typ === 'chyba' ? 'alert' : 'status');
+  }
+  function popisCSV() {
+    if (!CSV) { csvZprava('Zatím nejsou nahraná žádná data – počítá se s typovým diagramem.'); return; }
+    const dni = (CSV.do - CSV.od) / 86400;
+    const krokText = CSV.denni ? '1 den' : (CSV.krok / 60) + ' min';
+    let t = '✅ Načteno <b>' + fmt(CSV.pocet) + '</b> hodnot po ' + krokText + ', ' + datumText(CSV.od) + ' – ' + datumText(CSV.do - 1) +
+      ' (' + fmt(dni, 0) + ' dní), celkem <b>' + fmt(CSV.kwh) + ' kWh</b>' + (dni > 0 ? ' (≈ ' + fmt(CSV.kwh / dni * 365) + ' kWh/rok)' : '') + '.';
+    t += '<br>' + (CSV.format ? 'Formát ' + esc(CSV.format) + ', j' : 'J') + 'ednotka ' + CSV.jednotka + (CSV.obratit ? ' (záporné hodnoty odběru obráceny)' : '') +
+      ', čas = ' + (CSV.znacka === 'konec' ? 'konec' : 'začátek') + ' intervalu.';
+    let typ = '';
+    if (CSV.chybiIntervalu) { t += '<br>⚠️ Mezery: chybí ' + fmt(CSV.chybiIntervalu) + ' intervalů (' + CSV.mezery.slice(0, 3).map(m => datumText(m.od) + ' – ' + fmt(m.intervalu) + '×').join('; ') + (CSV.mezery.length > 3 ? '; …' : '') + '). Doplní se podobnými dny.'; typ = 'varovani'; }
+    if (CSV.chybnych) t += '<br>Přeskočeno ' + fmt(CSV.chybnych) + ' řádků bez platného data/hodnoty.';
+    if (CSV.duplicit) t += '<br>Odstraněno ' + fmt(CSV.duplicit) + ' duplicitních časů.';
+    if (CSV.zapornych) { t += '<br>⚠️ ' + fmt(CSV.zapornych) + ' záporných hodnot – nejde o sloupec dodávky? Zkontrolujte nastavení.'; typ = 'varovani'; }
+    (CSV.varovani || []).forEach(v => { t += '<br>⚠️ ' + esc(v); typ = 'varovani'; });
+    if (dni < 300) { t += '<br>Data pokrývají méně než rok – chybějící dny se doplní podobnými dny z vašich dat.'; typ = 'varovani'; }
+    csvZprava(t, typ);
+  }
+  function plnSloupce(det) {
+    const hl = det.hlavicka || [], n = det.ncol || hl.length;
+    const nazev = c => (c + 1) + (hl[c] ? ' – ' + hl[c] : '');
+    for (const id of ['mDatum', 'mCas', 'mHodnota']) {
+      const el = $(id); el.innerHTML = '';
+      if (id === 'mCas') el.add(new Option('(čas je u data)', -1));
+      for (let c = 0; c < n; c++) el.add(new Option(nazev(c), c));
+    }
+    $('mDatum').value = det.colDatum; $('mCas').value = det.colCas; $('mHodnota').value = det.colHodnota;
+    $('mSep').value = det.sep; $('mDes').value = det.des; $('mJednotka').value = det.jednotka;
+    if (det.nahled) $('csvNahled').innerHTML = det.nahled.map((r, i) => '<tr>' + r.slice(0, 10).map(c => (i === 0 && det.prvni > 0 ? '<th>' : '<td>') + esc(c) + (i === 0 && det.prvni > 0 ? '</th>' : '</td>')).join('') + '</tr>').join('');
+  }
+  const jeJSONText = text => /^\s*[{[]/.test(text.replace(/^﻿/, ''));
+  function zpracujCSV(text, volby) {
+    try {
+      if (!volby && !jeJSONText(text)) plnSloupce(T.detekujCSV(text));
+      CSV = T.parsujCSV(text, volby); csvMapa = null;
+      $('mZnacka').value = volby && volby.znacka ? volby.znacka : 'auto';
+      if (!CSV.jednotkaJista) $('csvMapovani').open = true;
+      popisCSV();
+      if (CSV.krok <= 900 && !CSV.denni && S.spotRezim !== 'prubeh') {
+        S.spotRezim = 'prubeh'; $('spotRezim').value = 'prubeh'; infoRezim(); uloz();
+        csvZprava('Máte čtvrthodinová data – účtování spotu přepnuto na „podle průběhu“.', 'varovani', true);
+      }
+      ulozCSV(); prepocti();
+    } catch (e) {
+      CSV = null; csvMapa = null;
+      csvZprava('❌ ' + esc(e.message) + ' Otevřete „Nastavení načtení“ a vyberte sloupce ručně.', 'chyba');
+      $('csvMapovani').open = true;
+      try { if (!jeJSONText(text)) plnSloupce(T.detekujCSV(text)); } catch (e2) { /* nic */ }
+      prepocti();
+    }
+  }
+  const MAX_CSV = 30 * 1024 * 1024;
+  async function nactiSoubor(f) {
+    try {
+      if (f.size > MAX_CSV) { csvZprava('❌ Soubor má ' + fmt(f.size / 1048576, 1) + ' MB – nejvýš 30 MB. Exportujte kratší období.', 'chyba'); return; }
+      const buf = await f.arrayBuffer();
+      let text;
+      try { text = new TextDecoder('utf-8', { fatal: true }).decode(buf); }
+      catch (e) { try { text = new TextDecoder('windows-1250').decode(buf); } catch (e2) { text = new TextDecoder('utf-8').decode(buf); } }
+      csvText = text;
+      zpracujCSV(text);
+    } catch (e) {
+      csvZprava('❌ Soubor se nepodařilo přečíst (' + esc(e.message) + ').', 'chyba');
+    }
+  }
+  $('csvSoubor').addEventListener('change', e => { if (e.target.files && e.target.files[0]) nactiSoubor(e.target.files[0]); });
+  const zona = $('zona');
+  ['dragenter', 'dragover'].forEach(ev => zona.addEventListener(ev, e => { e.preventDefault(); zona.classList.add('nad'); }));
+  ['dragleave', 'drop'].forEach(ev => zona.addEventListener(ev, e => { e.preventDefault(); zona.classList.remove('nad'); }));
+  zona.addEventListener('drop', e => { const f = e.dataTransfer && e.dataTransfer.files[0]; if (f) nactiSoubor(f); });
+  $('btnPrecist').addEventListener('click', () => {
+    if (!csvText) { csvZprava('Nejdřív nahrajte soubor.', 'varovani'); return; }
+    if (jeJSONText(csvText)) { zpracujCSV(csvText, { jednotka: $('mJednotka').value, znacka: $('mZnacka').value }); return; }
+    let det; try { det = T.detekujCSV(csvText); } catch (e) { csvZprava('❌ ' + esc(e.message), 'chyba'); return; }
+    zpracujCSV(csvText, { sep: $('mSep').value, des: $('mDes').value, colDatum: +$('mDatum').value, colCas: +$('mCas').value,
+      colHodnota: +$('mHodnota').value, jednotka: $('mJednotka').value, znacka: $('mZnacka').value, zimni: $('mZimni').value === '1', prvni: det.prvni });
+  });
+  $('btnSmazatCSV').addEventListener('click', async () => {
+    if (!CSV && !csvText) return;
+    if (!(await Dialog.potvrd('Zahodit nahraná naměřená data? Výpočet se vrátí k typovému diagramu.'))) return;
+    CSV = null; csvText = null; csvMapa = null; ulozCSV(); popisCSV(); prepocti();
+  });
+
+  /* ---------------- výpočet ---------------- */
+  function spotrebiceZeVstupu(plan) {
+    const okno = (od, do_) => { const o = new Array(24).fill(false); od = Math.max(0, Math.min(23, Math.round(od))); do_ = Math.max(0, Math.min(24, Math.round(do_)));
+      if (od === do_ || (od === 0 && do_ === 24)) return o.fill(true);
+      for (let h = od; h !== do_ % 24; h = (h + 1) % 24) o[h] = true; return o; };
+    const sp = {};
+    if (S.ohrevOn && S.ohrevKwh > 0) {
+      let ok = okno(S.ohrevOd, S.ohrevDo);
+      // D25d/D26d: akumulační spotřebič je ve VT blokován – ohřev jen v NT
+      if ((S.sazba === 'D25d' || S.sazba === 'D26d') && plan && plan.typ === 'denni') ok = ok.map((x, h) => x && !!plan.h[h]);
+      sp.ohrev = { kwhDen: +S.ohrevKwh, pmax: Math.max(0.1, +S.ohrevP), okno: ok };
+    }
+    if (S.evOn && S.evKwh > 0) sp.ev = { kwhTyden: +S.evKwh, pmax: Math.max(0.1, +S.evP), okno: okno(S.evOd, S.evDo) };
+    if (S.tcOn && S.tcKwh > 0) sp.tc = { kwhDen: +S.tcKwh, pmax: Math.max(0.1, +S.tcP), mesice: [1, 1, 1, 1, 0, 0, 0, 0, 0, 1, 1, 1].map(Boolean) };
+    if (S.batOn && S.batC > 0) sp.baterie = { C: +S.batC, P: Math.max(0.1, +S.batP), eta: Math.min(1, Math.max(0.5, S.batEta / 100)) };
+    return sp;
+  }
+  function posunutyPlan(plan, posun) {
+    if (!posun || !plan || plan.typ !== 'denni') return plan;
+    return { typ: 'denni', h: plan.h.map((_, h) => plan.h[((h - posun) % 24 + 24) % 24]) };
+  }
+
+  /* jeden kompletní výpočet pro období; uprava = {kwh: faktor, ntPosun: h} pro citlivost */
+  async function spocitej(od, do_, uprava) {
+    uprava = uprava || {};
+    const reg = aktReg, plan = posunutyPlan(T.planProSazbu(S.sazba, ntHodiny()), uprava.ntPosun);
+    const ceny = await cenyObdobi(od, do_);
+    if (!ceny.t.length) throw new Error('Pro zvolené období nejsou ceny.');
+    const profTDD = T.prenesProfil(mapaTDD(tridaTDD()), 24, od, do_);
+    let zaklad, info = '', mereno = null;
+    if (S.profil === 'csv' && CSV) {
+      if (!csvMapa) {
+        let rada = CSV.rada, slotu = CSV.krok <= 900 ? 96 : 24;
+        if (CSV.krok > 3600 || CSV.denni) {
+          // denní (hrubá) data: uvnitř dne tvar TDD sazby
+          const x = T.mistni(CSV.od), y = T.mistni(CSV.do - 1), [r2, m2, d2] = T.pricistDny(y.r, y.m, y.d, 1);
+          const tvar = T.prenesProfil(mapaTDD(tridaTDD()), 24, T.zacatekDne(x.r, x.m, x.d), T.zacatekDne(r2, m2, d2));
+          rada = T.rozlozDleTvaru(CSV.rada, tvar); slotu = 24;
+        }
+        csvMapa = { mapa: T.mapaDnu(rada, slotu), slotu, hrube: CSV.krok > 3600 || CSV.denni };
+      }
+      zaklad = T.prenesProfil(csvMapa.mapa, csvMapa.slotu, od, do_);
+      const dni = Math.round((do_ - od) / 86400);
+      mereno = zaklad.info.presnych / dni;
+      info = 'Vlastní data: ' + fmt(mereno * 100) + ' % dní období přesně podle data, ostatní dny přenesené podobným dnem.' +
+        (csvMapa.hrube ? ' Data bez čtvrthodinového průběhu – profil uvnitř dne podle TDD.' : CSV.krok === 3600 ? ' Hodinová data – uvnitř hodiny se počítá s průměrnou cenou.' : '');
+    } else {
+      const dvou = !!REG.sazby[S.sazba].nt;
+      zaklad = T.skalujVTNT(profTDD, plan, Math.max(0, +S.kwhVT), dvou ? Math.max(0, +S.kwhNT) : 0);
+    }
+    if (uprava.kwh && uprava.kwh !== 1) zaklad = { t: zaklad.t, k: zaklad.k, v: zaklad.v.map(x => x * uprava.kwh) };
+    if (!(T.soucet(zaklad) > 0)) throw Object.assign(new Error('Zadejte spotřebu – roční spotřeba je nulová.'), { vstup: true });
+    const vahy = profTDD;
+    const obchodFix = { typ: 'fix', cenaVT: S.fixVT, cenaNT: S.fixNT, platMes: S.fixPlat };
+    const obchodSpot = { typ: 'spot', ceny, prirazka: S.spotPrir, platMes: S.spotPlat, rezim: S.spotRezim, vahy };
+    const sp = spotrebiceZeVstupu(plan), maFlex = Object.keys(sp).length > 0;
+    let spotrebaFix = zaklad, spotrebaSpot = zaklad, flex = null;
+    if (maFlex) {
+      const hodCeny = T.naHodiny(ceny, true), hodZat = T.naHodiny(zaklad, false);
+      const mapZ = new Map(); for (let i = 0; i < hodZat.t.length; i++) mapZ.set(hodZat.t[i], hodZat.v[i]);
+      const zat = Float64Array.from(hodCeny.t, t => mapZ.get(t) || 0);
+      const fFix = T.flexibilni(T.promennaCena(hodCeny, plan, reg, obchodFix, null), zat, sp);
+      const fSpot = T.flexibilni(T.promennaCena(hodCeny, plan, reg, obchodSpot, null), zat, sp);
+      const pricti = f => S.flexRidit ? T.prictiHodinovou(zaklad, f.optPlus, f.vybito) : T.prictiHodinovou(zaklad, f.zaklad);
+      spotrebaFix = pricti(fFix); spotrebaSpot = pricti(fSpot);
+      flex = { fix: fFix, spot: fSpot };
+    }
+    const fix = T.vypoctiScenar({ spotreba: spotrebaFix, od, do: do_, plan, reg, obchod: obchodFix });
+    const spot = T.vypoctiScenar({ spotreba: spotrebaSpot, od, do: do_, plan, reg, obchod: obchodSpot });
+    // další nabídky (spotřeba stejná jako u hlavní nabídky téhož typu)
+    const dalsi = S.nabidky.map((n, i) => {
+      const o = n.typ === 'fix' ? { typ: 'fix', cenaVT: n.a, cenaNT: REG.sazby[S.sazba].nt ? n.b : n.a, platMes: n.plat }
+        : { typ: 'spot', ceny, prirazka: n.a, platMes: n.plat, rezim: S.spotRezim, vahy };
+      return { nazev: n.nazev || (n.typ === 'fix' ? 'Fix ' : 'Spot ') + (i + 2), typ: n.typ, v: T.vypoctiScenar({ spotreba: n.typ === 'fix' ? spotrebaFix : spotrebaSpot, od, do: do_, plan, reg, obchod: o }) };
+    });
+    return { od, do: do_, ceny, zaklad, spotrebaSpot, fix, spot, flex, dalsi, info, mereno, zvrat: T.bodZvratu(fix, spot) };
+  }
+
+  let posledni = null, cisloVypoctu = 0, casovac = null, rizikoData = null, citlivostData = null;
+  function prepocti() { clearTimeout(casovac); casovac = setTimeout(prepoctiHned, 150); }
+  const KARTY_VYSL = ['kartaVysledek', 'kartaMesice', 'kartaFaktor', 'kartaRiziko', 'kartaMapa', 'kartaFlex'];
+  function zneplatni(text, opakovat) {
+    posledni = null; rizikoData = null; citlivostData = null;
+    ['vFix', 'vSpot', 'vRozdil', 'vFaktor', 'vZvratFix', 'vZvratPrir'].forEach(id => { $(id).textContent = '–'; });
+    ['vFix2', 'vSpot2', 'vRozdil2', 'vFaktor2', 'vZvratFix2', 'vZvratPrir2'].forEach(id => { $(id).textContent = ''; });
+    $('verdikt').textContent = ''; $('citlivost').textContent = ''; $('pasRiziko').innerHTML = ''; $('lista').classList.remove('ma');
+    $('boxFix').classList.remove('vitez'); $('boxSpot').classList.remove('vitez');
+    KARTY_VYSL.forEach(id => $(id).classList.add('neplatne'));
+    zprava(text, 'chyba', opakovat);
+  }
+  function platne() { KARTY_VYSL.forEach(id => $(id).classList.remove('neplatne')); }
+  async function prepoctiHned() {
+    const moje = ++cisloVypoctu;
+    if (!INDEX) return;
+    regulovane(); aktualizujSazbu(); kresliChipy();
+    if (neplatna.size) { zneplatni('Opravte zvýrazněná pole – výsledek neodpovídá zadání. U pole je návrh opravy.'); return; }
+    if (!obnovuji) zapisHistorii();
+    rizikoData = null; citlivostData = null;
+    $('kartaVysledek').classList.add('bezi');
+    $('kartaRiziko').classList.add('prepocet'); $('tabRiziko').innerHTML = '<tbody><tr><td>Přepočítávám…</td></tr></tbody>';
+    try {
+      const o = obdobi(S.obdobi);
+      $('obdobiText').textContent = '– ' + o.text + ' (' + datumText(o.od) + ' – ' + datumText(o.do - 1) + '); ceny do ' + datumText(konecDat() - 1);
+      const v = await spocitej(o.od, o.do);
+      if (moje !== cisloVypoctu) return;
+      posledni = v; platne(); $('kartaVysledek').classList.remove('bezi');
+      let t = '';
+      if (v.spot.chybiKwh > 0.5) t += '⚠️ Pro ' + fmt(v.spot.chybiKwh) + ' kWh chybí spotová cena (mimo rozsah dat). ';
+      if (v.info) t += v.info + ' ';
+      if (S.profil === 'csv' && !CSV) t += 'Nahrajte CSV – zatím se počítá s typovým diagramem. ';
+      zprava(t, t.includes('⚠️') ? 'varovani' : '');
+      vykresliVse();
+      setTimeout(() => { if (moje === cisloVypoctu) spocitejDoplnky(moje); }, 300);   // citlivost a riziko líně po hlavním výsledku
+    } catch (e) {
+      if (moje !== cisloVypoctu) return;
+      $('kartaVysledek').classList.remove('bezi');
+      zneplatni('❌ ' + (e.vstup ? e.message : 'Výpočet selhal: ' + e.message), !e.vstup);
+    }
+  }
+  function zprava(t, typ, opakovat) {
+    const el = $('stav');
+    el.textContent = t;
+    el.className = 'stav' + (typ ? ' ' + typ : '');
+    if (typ === 'chyba') el.setAttribute('role', 'alert'); else el.removeAttribute('role');
+    if (opakovat) {
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'male'; b.textContent = '↻ Zkusit znovu';
+      b.addEventListener('click', () => (INDEX ? prepoctiHned() : start()));
+      el.appendChild(b);
+    }
+  }
+
+  /* ---------------- vykreslení ---------------- */
+  const grafy = {};
+  function graf(id, cfg, popis) {
+    if (grafy[id]) grafy[id].destroy();
+    grafy[id] = new Chart($(id), cfg);
+    if (popis) $(id).setAttribute('aria-label', popis);
+    return grafy[id];
+  }
+  function osaX(b) { return { ticks: { color: b.text, maxRotation: 0, autoSkip: true, autoSkipPadding: 10 }, grid: { display: false } }; }
+  function zakladniOsy(b, jedn) {
+    return { x: osaX(b), y: { ticks: { color: b.text, callback: v => fmt(v) + (jedn || '') }, grid: { color: b.mrizka } } };
+  }
+  function vykresliVse() {
+    if (!posledni) return;
+    nastavCSSBarvy();
+    vykresliSouhrn(); vykresliMesice(); vykresliDen(); vykresliFlex(); vykresliMapu(); vykresliZivo();
+    if (rizikoData) vykresliRiziko();
+  }
+
+  function verdikt() {
+    const v = posledni; if (!v) return;
+    const F = v.fix.soucet.sDPH, P = v.spot.soucet.sDPH, d = P - F;
+    let t = (S.obdobi === 'posl12' ? 'Za posledních 12 měsíců' : 'V roce ' + S.obdobi) + ' by vás spot stál o ' + kc(Math.abs(d)) + ' (' + fmt(Math.abs(d) / F * 100, 1) + ' %) ' +
+      (Math.abs(d) < 1 ? 'stejně jako fix' : d < 0 ? 'méně' : 'více') + ' než fixní nabídka';
+    if (rizikoData && rizikoData.length) {
+      const drazsi = rizikoData.filter(x => x.spot > x.fix), nej = rizikoData.reduce((a, x) => (x.spot - x.fix > a.spot - a.fix ? x : a), rizikoData[0]);
+      t += '; v letech ' + rizikoData[0].rok + '–' + rizikoData[rizikoData.length - 1].rok + ' byl spot dražší ' + drazsi.length + '× ze ' + rizikoData.length +
+        (nej.spot > nej.fix ? ', nejhůř o ' + kc(nej.spot - nej.fix) + ' v roce ' + nej.rok : '');
+    }
+    blikni('verdikt', t + '.');
+    // lepivá lišta pro mobil
+    $('lista').innerHTML = '<a href="#kartaVysledek" class="lista-odkaz">Výsledek:</a> <span><span class="znacka" style="background:var(--c-fix)"></span>Fix <b>' + kc(F) + '</b></span><span><span class="znacka" style="background:var(--c-spot)"></span>Spot <b>' + kc(P) + '</b></span><span>' + (d < 0 ? 'spot levnější o ' : 'spot dražší o ') + '<b>' + kc(Math.abs(d)) + '</b></span>';
+    $('lista').classList.add('ma');
+    // pás min–medián–max
+    const pas = $('pasRiziko');
+    if (!rizikoData || !rizikoData.length) { pas.innerHTML = ''; return; }
+    const st = T.statistika(rizikoData.map(x => x.spot)), lo = Math.min(st.min, F, P), hi = Math.max(st.max, F, P), x = q => ((q - lo) / (hi - lo || 1) * 100).toFixed(2) + '%';
+    const b = barvy();
+    pas.innerHTML = '<div class="pas-osa" role="img" aria-label="Spot v letech ' + rizikoData[0].rok + '–' + rizikoData[rizikoData.length - 1].rok + ': minimum ' + kc(st.min) + ', medián ' + kc(st.median) + ', maximum ' + kc(st.max) + '; fix ' + kc(F) + '">' +
+      '<div class="pas-rozsah" style="left:' + x(st.min) + ';width:calc(' + x(st.max) + ' - ' + x(st.min) + ')"></div>' +
+      '<div class="pas-bod" style="left:' + x(st.median) + ';background:' + b.spot + '" title="medián spotu"></div>' +
+      '<div class="pas-bod" style="left:' + x(F) + ';background:' + b.fix + ';width:4px" title="fix"></div></div>' +
+      '<div class="pas-popisky"><span>spot ' + rizikoData[0].rok + '–' + rizikoData[rizikoData.length - 1].rok + ': min ' + kc(st.min) + '</span><span>medián ' + kc(st.median) + '</span><span>max ' + kc(st.max) + '</span><span><span class="znacka" style="background:var(--c-fix)"></span>fix ' + kc(F) + '</span></div>';
+  }
+
+  function vykresliSouhrn() {
+    const v = posledni, F = v.fix.soucet, P = v.spot.soucet, b = barvy(), k = 1 + aktReg.dph / 100;
+    blikni('vFix', kc(F.sDPH));
+    $('vFix2').textContent = '≈ ' + kc(F.sDPH / Math.max(1, F.mesicu)) + ' měsíčně · ' + fmt(F.sDPH / F.kwh, 2) + ' Kč/kWh vč. všeho';
+    blikni('vSpot', kc(P.sDPH));
+    $('vSpot2').textContent = '≈ ' + kc(P.sDPH / Math.max(1, P.mesicu)) + ' měsíčně · ' + fmt(P.sDPH / P.kwh, 2) + ' Kč/kWh vč. všeho';
+    const d = P.sDPH - F.sDPH;
+    blikni('vRozdil', (d > 0 ? '+' : d < 0 ? '−' : '') + kc(Math.abs(d)));
+    $('vRozdil2').textContent = Math.abs(d) < 1 ? 'vychází nastejno' : (d > 0 ? 'spot je dražší o ' : 'spot je levnější o ') + fmt(Math.abs(d) / F.sDPH * 100, 1) + ' %';
+    $('tiskVstupy').textContent = 'Vstupy: ' + REG.sazby[S.sazba].nazev + ', ' + REG.UZEMI[S.uzemi] + ', jistič ' + S.faze + ' × ' + S.ampery + ' A; spotřeba ' +
+      fmt(F.kwh) + ' kWh (' + (S.profil === 'csv' && CSV ? 'naměřená data' : 'TDD') + '); fix ' + fmt(S.fixVT) + (REG.sazby[S.sazba].nt ? '/' + fmt(S.fixNT) : '') + ' Kč/MWh + ' + fmt(S.fixPlat) +
+      ' Kč/měs.; spot přirážka ' + fmt(S.spotPrir) + ' Kč/MWh + ' + fmt(S.spotPlat) + ' Kč/měs. (bez DPH); účtování: ' + ($('spotRezim').options[$('spotRezim').selectedIndex] || {}).text + '.';
+    $('boxFix').classList.toggle('vitez', d > 1); $('boxSpot').classList.toggle('vitez', d < -1);
+    $('vFaktor').textContent = fmt(v.spot.profilovyFaktor, 3);
+    $('vFaktor2').textContent = 'vážená ' + fmt(v.spot.vazena) + ' vs. průměr ' + fmt(v.spot.aritm) + ' Kč/MWh';
+    const z = v.zvrat;
+    $('vZvratFix').textContent = fmt(z.cenaFix) + ' Kč/MWh';
+    $('vZvratFix2').textContent = 'bez DPH (' + fmt(z.cenaFix * k / 1000, 2) + ' Kč/kWh s DPH); zadáno ' + fmt(S.fixVT) + (REG.sazby[S.sazba].nt ? ' / ' + fmt(S.fixNT) : '');
+    const prirZ = S.spotPrir + z.deltaPrirazka;
+    $('vZvratPrir').textContent = fmt(prirZ) + ' Kč/MWh';
+    $('vZvratPrir2').textContent = 'bez DPH; zadáno ' + fmt(S.spotPrir) + ' Kč/MWh' + (prirZ < 0 ? ' – ani nulová přirážka spot nezachrání' : '');
+    verdikt();
+    const sp0 = spotrebiceZeVstupu(T.planProSazbu(S.sazba, ntHodiny()));
+    $('boxyBaterie').classList.toggle('skryt', !(v.flex && sp0.baterie));
+    if (v.flex && sp0.baterie) {
+      const roku = (v.do - v.od) / (365.25 * 86400), usp = v.flex.spot.usporaBaterie * k / roku, uspF = v.flex.fix.usporaBaterie * k / roku;
+      blikni('vBat', kc(usp)); $('vBat2').textContent = 'spot (u fixu ' + kc(uspF) + '); ' + fmt(usp / sp0.baterie.C) + ' Kč na 1 kWh kapacity';
+      blikni('vBatNavrat', S.batCena > 0 && usp > 0 ? fmt(S.batCena / usp, 1) + ' let' : '–');
+      $('vBatNavrat2').textContent = 'při ceně ' + kc(S.batCena) + ' a úspoře u spotu; bez stárnutí a údržby';
+    }
+    // žebříček nabídek
+    const vse = [{ nazev: 'Fixní (hlavní)', typ: 'fix', v: v.fix }, { nazev: 'Spot (hlavní)', typ: 'spot', v: v.spot }].concat(v.dalsi);
+    $('zebricekObal').classList.toggle('skryt', vse.length <= 2);
+    if (vse.length > 2) {
+      const ser = vse.slice().sort((a, c) => a.v.soucet.sDPH - c.v.soucet.sDPH), min = ser[0].v.soucet.sDPH;
+      $('tabZebricek').innerHTML = '<thead><tr><th>#</th><th>Nabídka</th><th class="sir">Typ</th><th>Kč/rok s DPH</th><th>Proti nejlevnější</th><th class="sir">Kč/kWh</th></tr></thead><tbody>' +
+        ser.map((n, i) => '<tr' + (i === 0 ? ' class="nejlepsi"' : '') + '><td>' + (i + 1) + '.</td><td>' + esc(n.nazev) + '</td><td class="sir">' + (n.typ === 'fix' ? 'fix' : 'spot') + '</td><td>' + kc(n.v.soucet.sDPH) +
+          '</td><td>' + (i === 0 ? '—' : '+' + kc(n.v.soucet.sDPH - min)) + '</td><td class="sir">' + fmt(n.v.soucet.sDPH / n.v.soucet.kwh, 2) + '</td></tr>').join('') + '</tbody>';
+    }
+    // tabulka rozpadu
+    const dk = (d2, k2) => '<span class="dl">' + d2 + '</span><span class="kr">' + k2 + '</span>';
+    const radky = [
+      [dk('Silová elektřina – energie', 'Silovka'), 'silova'], [dk('Stálý plat obchodníka', 'Plat obchodníka'), 'platObchod'],
+      [dk('Distribuce – za energii (VT/NT)', 'Distribuce kWh'), 'distribuce'], [dk('Distribuce – plat za jistič', 'Jistič'), 'jistic'], [dk('Systémové služby', 'Syst. služby'), 'systemove'],
+      [dk('POZE' + (aktReg.poze === 0 ? ' (od 2026 hradí stát)' : ''), 'POZE' + (aktReg.poze === 0 ? ' (stát)' : '')), 'poze'], [dk('Provoz nesíťové infrastruktury', 'Nesíťová infr.'), 'nesitova'], [dk('Daň z elektřiny', 'Daň z el.'), 'dan'], ['DPH ' + fmt(aktReg.dph) + ' %', 'dph'],
+    ];
+    const bunky = (x) => '<td>' + kc(x) + '</td>';
+    $('tabRozpad').innerHTML = '<thead><tr><th>Složka<span class="dl"> (za období)</span></th><th>Fixní</th><th>Spot</th><th>Rozdíl</th></tr></thead><tbody>' +
+      '<tr class="skupina"><td colspan="4">Obchodník</td></tr>' +
+      radky.map(([n, k2], i) => (i === 2 ? '<tr class="skupina"><td colspan="4">' + dk('Regulované složky (ERÚ) – u obou stejné při stejné spotřebě', 'Regulované (ERÚ)') + '</td></tr>' : i === 7 ? '<tr class="skupina"><td colspan="4">Daně</td></tr>' : '') +
+        '<tr><td>' + n + '</td>' + bunky(F[k2]) + bunky(P[k2]) + bunky(P[k2] - F[k2]) + '</tr>').join('') +
+      '<tr class="soucet"><td>Celkem s DPH</td>' + bunky(F.sDPH) + bunky(P.sDPH) + bunky(P.sDPH - F.sDPH) + '</tr>' +
+      '<tr><td>' + dk('Spotřeba (kWh) – VT / NT', 'kWh VT / NT') + '</td><td>' + fmt(F.kwh) + '<br><span class="napoveda">' + fmt(F.kwhVT) + ' / ' + fmt(F.kwhNT) + '</span></td><td>' + fmt(P.kwh) + '<br><span class="napoveda">' + fmt(P.kwhVT) + ' / ' + fmt(P.kwhNT) + '</span></td><td></td></tr>' +
+      '<tr><td>' + dk('Průměrná silovka (Kč/MWh bez DPH, vč. přirážky)', 'Silovka ⌀ Kč/MWh') + '</td><td>' + fmt(F.silova / F.kwh * 1000) + '</td><td>' + fmt(P.silova / P.kwhSpot * 1000) + '</td><td></td></tr></tbody>';
+    const sk = [['Silová elektřina', 'silova', b.fix], ['Stálé platy (obchodník, jistič, OTE/ERÚ)', 'stale', b.spot], ['Regulované za energii (distribuce, syst. služby, POZE)', 'regulEnergie', b.s3], ['Daň z elektřiny a DPH', 'dane', b.s4]];
+    graf('grafRozpad', {
+      type: 'bar',
+      data: { labels: ['Fixní', 'Spot'], datasets: sk.map(([n, k2, c]) => ({ label: n, data: [F.skupiny[k2], P.skupiny[k2]], backgroundColor: c, borderColor: b.povrch, borderWidth: { right: 2 }, borderSkipped: false, borderRadius: 3 })) },
+      options: {
+        indexAxis: 'y', responsive: true, maintainAspectRatio: false, animation: { duration: 250 },
+        scales: { x: { stacked: true, ticks: { color: b.text, callback: x => fmt(x / 1000) + ' tis.' }, grid: { color: b.mrizka } }, y: { stacked: true, ticks: { color: b.textSilny }, grid: { display: false } } },
+        plugins: { legend: { position: 'bottom', labels: { color: b.text, boxWidth: 12, font: { size: 11 } } },
+          tooltip: { callbacks: { label: c => ' ' + c.dataset.label + ': ' + kc(c.parsed.x) } } },
+      },
+    }, 'Roční náklad podle složek: fixní ' + kc(F.sDPH) + ', spot ' + kc(P.sDPH) + ' s DPH. Podrobně v tabulce pod grafem.');
+  }
+
+  function vykresliMesice() {
+    const v = posledni, b = barvy();
+    const M = v.fix.mesice, N = v.spot.mesice;
+    const labels = M.map(m => MESICE_ZKR[m.m] + (M.length > 12 || S.obdobi === 'posl12' ? ' ' + String(m.r).slice(2) : ''));
+    const nejM = N.reduce((a, m, i) => (m.sDPH > N[a].sDPH ? i : a), 0);
+    graf('grafMesice', {
+      type: 'bar',
+      data: { labels, datasets: [
+        { label: 'Fixní', data: M.map(m => m.sDPH), backgroundColor: b.fix, borderRadius: 3 },
+        { label: 'Spot', data: N.map(m => m.sDPH), backgroundColor: b.spot, borderRadius: 3 },
+      ] },
+      options: { responsive: true, maintainAspectRatio: false, animation: { duration: 250 }, interaction: { mode: 'index', intersect: false },
+        scales: zakladniOsy(b, ' Kč'),
+        plugins: { legend: { labels: { color: b.text, boxWidth: 12 } },
+          tooltip: { callbacks: { label: c => ' ' + c.dataset.label + ': ' + kc(c.parsed.y), afterBody: it => { const i = it[0].dataIndex; return 'Spotřeba ' + fmt(N[i].kwh) + ' kWh, spot ' + fmt(N[i].cenaMesice) + ' Kč/MWh (vč. přirážky)'; } } } } },
+    }, 'Měsíční náklady s DPH; nejdražší měsíc u spotu ' + MESICE[N[nejM].m] + ' ' + N[nejM].r + ' (' + kc(N[nejM].sDPH) + '). Podrobně v tabulce po měsících.');
+    let kum = 0; const kumul = M.map((m, i) => (kum += N[i].sDPH - m.sDPH));
+    graf('grafKumul', {
+      type: 'line',
+      data: { labels, datasets: [{ label: 'Spot − fix (kumulativně)', data: kumul, borderColor: b.spot, backgroundColor: b.spot, borderWidth: 2, pointRadius: 3, tension: 0.2 }] },
+      options: { responsive: true, maintainAspectRatio: false, animation: { duration: 250 },
+        scales: zakladniOsy(b, ' Kč'), plugins: { legend: { display: false }, tooltip: { callbacks: { label: c => ' ' + (c.parsed.y > 0 ? 'spot dražší o ' : 'spot levnější o ') + kc(Math.abs(c.parsed.y)) } } } },
+    }, 'Kumulativní rozdíl spot minus fix na konci období ' + kc(kum) + '.');
+    $('tabMesice').innerHTML = '<thead><tr><th>Měsíc</th><th class="sir">kWh</th><th class="sir">Spot ⌀ Kč/MWh</th><th class="sir">Vážená vč. přirážky</th><th>Fixní s DPH</th><th>Spot s DPH</th><th>Rozdíl</th></tr></thead><tbody>' +
+      M.map((m, i) => '<tr><td>' + MESICE_ZKR[m.m] + ' ' + m.r + (m.podil < 0.999 ? ' (část)' : '') + '</td><td class="sir">' + fmt(N[i].kwh) + '</td><td class="sir">' + fmt(N[i].aritm) + '</td><td class="sir">' + fmt(N[i].cenaMesice) + '</td><td>' + kc(m.sDPH) + '</td><td>' + kc(N[i].sDPH) + '</td><td>' + kc(N[i].sDPH - m.sDPH) + '</td></tr>').join('') + '</tbody>';
+  }
+
+  function vykresliDen() {
+    const v = posledni, b = barvy();
+    const c = v.ceny, s = v.spotrebaSpot;
+    const pc = new Float64Array(24), pk = new Float64Array(24), sc = new Float64Array(24), sn = new Float64Array(24);
+    for (let i = 0; i < c.t.length; i++) { const h = T.mistni(c.t[i]).h; pc[h] += c.v[i] * c.k[i]; pk[h] += c.k[i]; }
+    for (let i = 0; i < s.t.length; i++) { const h = T.mistni(s.t[i]).h; sc[h] += s.v[i]; sn[h] += s.k[i] / 3600; }
+    const ceny = Array.from(pc, (x, h) => x / pk[h]), spotr = Array.from(sc, (x, h) => sn[h] ? x / sn[h] : 0);
+    const pC = ceny.reduce((a, x) => a + x, 0) / 24, pS = spotr.reduce((a, x) => a + x, 0) / 24;
+    const maxC = ceny.indexOf(Math.max(...ceny)), maxS = spotr.indexOf(Math.max(...spotr));
+    graf('grafDen', {
+      type: 'line',
+      data: { labels: Array.from({ length: 24 }, (_, h) => h + ':00'), datasets: [
+        { label: 'Spotová cena (% denního průměru)', data: ceny.map(x => x / pC * 100), borderColor: b.fix, backgroundColor: b.fix, borderWidth: 2, pointRadius: 2, tension: 0.25 },
+        { label: 'Vaše spotřeba (% denního průměru)', data: spotr.map(x => pS ? x / pS * 100 : 0), borderColor: b.spot, backgroundColor: b.spot, borderWidth: 2, pointRadius: 2, tension: 0.25 },
+      ] },
+      options: { responsive: true, maintainAspectRatio: false, animation: { duration: 250 }, interaction: { mode: 'index', intersect: false },
+        scales: zakladniOsy(b, ' %'),
+        plugins: { legend: { labels: { color: b.text, boxWidth: 12 } }, tooltip: { callbacks: { label: c2 => ' ' + c2.dataset.label.split(' (')[0] + ': ' + fmt(c2.parsed.y) + ' %' + (c2.datasetIndex === 0 ? ' (' + fmt(ceny[c2.dataIndex]) + ' Kč/MWh)' : ' (' + fmt(spotr[c2.dataIndex], 2) + ' kWh/h)') } } } },
+    }, 'Denní průběh: cena nejvyšší v ' + maxC + ':00 (' + fmt(ceny[maxC] / pC * 100) + ' % průměru), spotřeba nejvyšší v ' + maxS + ':00 (' + fmt(spotr[maxS] / pS * 100) + ' % průměru). Tabulka po hodinách pod grafem.');
+    $('tabDen').innerHTML = '<thead><tr><th>Hodina</th><th>Cena Kč/MWh</th><th>Cena % průměru</th><th>Spotřeba kWh/h</th><th>Spotřeba % průměru</th></tr></thead><tbody>' +
+      ceny.map((x, h) => '<tr><td>' + h + ':00–' + (h + 1) + ':00</td><td>' + fmt(x) + '</td><td>' + fmt(x / pC * 100) + '</td><td>' + fmt(spotr[h], 3) + '</td><td>' + fmt(pS ? spotr[h] / pS * 100 : NaN) + '</td></tr>').join('') + '</tbody>';
+    const f = v.spot.profilovyFaktor, rozdil = (v.spot.vazena - v.spot.aritm) * v.spot.soucet.kwhSpot / 1000;
+    $('faktorText').innerHTML = 'Aritmetický průměr spotu za období: <b>' + fmt(v.spot.aritm) + ' Kč/MWh</b>. Vážený vaší spotřebou: <b>' + fmt(v.spot.vazena) +
+      ' Kč/MWh</b> → profilový faktor <b>' + fmt(f, 3) + '</b>. ' + (f > 1.005 ? 'Spotřebu máte víc v dražších hodinách – oproti „průměrnému spotu“ zaplatíte navíc asi ' + kc(rozdil) + ' bez DPH.' :
+        f < 0.995 ? 'Spotřebu máte víc v levnějších hodinách – oproti „průměrnému spotu“ ušetříte asi ' + kc(-rozdil) + ' bez DPH.' : 'Spotřeba kopíruje průměr – faktor je téměř 1.') +
+      (S.spotRezim !== 'prubeh' ? ' Pozor: při účtování ' + (S.spotRezim === 'tdd' ? 'podle TDD' : 'měsíčním průměrem') + ' se váš skutečný průběh v ceně neprojeví – platíte měsíční cenu za všechny kWh.' : '');
+  }
+
+  function vykresliFlex() {
+    const v = posledni, el = $('flexVystup');
+    if (!v.flex) { el.textContent = 'Zapněte některý spotřebič v kartě „Posunutelná spotřeba“.'; return; }
+    const k = 1 + aktReg.dph / 100, F = v.flex.fix, P = v.flex.spot, sp = spotrebiceZeVstupu(T.planProSazbu(S.sazba, ntHodiny()));
+    const r = (n, x) => '<tr><td>' + n + '</td><td>' + x(F) + '</td><td>' + x(P) + '</td></tr>';
+    const roku = (v.do - v.od) / (365.25 * 86400);
+    let bat = '';
+    if (sp.baterie) {
+      const usp = o => o.usporaBaterie * k / roku;
+      const navrat = o => (S.batCena > 0 && usp(o) > 0) ? fmt(S.batCena / usp(o), 1) + ' let' : '–';
+      bat = r('<b>Baterie</b> – úspora za rok (s DPH)', o => kc(usp(o))) +
+        r('na 1 kWh kapacity za rok', o => fmt(usp(o) / sp.baterie.C) + ' Kč') +
+        r('nabito / dodáno do domácnosti (kWh)', o => fmt(o.nabito) + ' / ' + fmt(o.dodano)) +
+        r('ekvivalent plných cyklů za rok', o => fmt(o.nabito / sp.baterie.C / roku)) +
+        r('prostá návratnost (cena ' + kc(S.batCena) + ')', navrat);
+    }
+    el.innerHTML = '<div class="tabulka-obal"><table><thead><tr><th>Posunutelná spotřeba za období</th><th>Fixní</th><th>Spot</th></tr></thead><tbody>' +
+      r('Energie spotřebičů (kWh)', o => fmt(o.energie)) +
+      r('Náklad neřízeně (proměnné složky, s DPH)', o => kc(o.nakladZaklad * k)) +
+      r('Náklad řízeně (s DPH)', o => kc(o.nakladOpt * k)) +
+      r('<b>Úspora řízením celkem</b>', o => '<b>' + kc(o.uspora * k) + '</b>') + bat +
+      (F.nesplneno > 0.5 || P.nesplneno > 0.5 ? r('⚠️ Nevešlo se do okna (kWh)', o => fmt(o.nesplneno)) : '') +
+      '</tbody></table></div><p class="napoveda">Úspora = rozdíl proměnných nákladů (silovka, distribuce VT/NT, systémové služby, daň, DPH) mezi neřízeným a řízeným rozvrhem. ' +
+      (S.flexRidit ? 'Hlavní výsledek počítá s řízeným rozvrhem.' : 'Hlavní výsledek počítá s neřízeným rozvrhem (řízení je vypnuté).') +
+      (S.spotRezim !== 'prubeh' ? ' Bez účtování podle průběhu nemá u spotu posun na silovku vliv – šetří jen distribuce VT/NT.' : '') +
+      ((S.sazba === 'D25d' || S.sazba === 'D26d') && sp.ohrev ? ' Ohřev vody je omezen na hodiny NT (blokování ve VT).' : '') +
+      (sp.baterie ? ' Návratnost nezahrnuje stárnutí baterie, údržbu ani financování.' : '') + '</p>';
+  }
+
+  /* ---------------- citlivost a riziko (líně po hlavním výsledku) ---------------- */
+  async function spocitejDoplnky(moje) {
+    // citlivost: ±10 % spotřeby, NT ±2 h
+    try {
+      const o = obdobi(S.obdobi), rozdily = [];
+      const varianty = [{ kwh: 0.9 }, { kwh: 1.1 }];
+      const plan = T.planProSazbu(S.sazba, ntHodiny());
+      if (plan.typ === 'denni' && S.profil === 'tdd') varianty.push({ ntPosun: -2 }, { ntPosun: 2 });
+      for (const u of varianty) {
+        const v = await spocitej(o.od, o.do, u);
+        if (moje !== cisloVypoctu) return;
+        rozdily.push(v.spot.soucet.sDPH - v.fix.soucet.sDPH);
+        await new Promise(r => setTimeout(r, 0));
+      }
+      const d0 = posledni.spot.soucet.sDPH - posledni.fix.soucet.sDPH, lo = Math.min(d0, ...rozdily), hi = Math.max(d0, ...rozdily);
+      citlivostData = { lo, hi };
+      const z = x => (x > 0 ? '+' : x < 0 ? '−' : '') + kc(Math.abs(x));
+      $('citlivost').textContent = 'Citlivost rozdílu (spot − fix): od ' + z(lo) + ' do ' + z(hi) + ' při spotřebě ±10 %' + (varianty.length > 2 ? ' a posunu NT o ±2 h' : '') + '.';
+    } catch (e) { $('citlivost').textContent = ''; }
+    await spocitejRiziko(moje);
+  }
+  async function spocitejRiziko(moje) {
+    const roky = INDEX.roky.filter(r => r.uplny).map(r => r.rok);
+    const out = [];
+    for (const r of roky) {
+      try {
+        const v = await spocitej(T.zacatekDne(r, 0, 1), T.zacatekDne(r + 1, 0, 1));
+        if (moje !== cisloVypoctu) return;
+        const nm = v.spot.mesice.reduce((a, m) => (m.sDPH > a.sDPH ? m : a), v.spot.mesice[0]);
+        out.push({ rok: r, spot: v.spot.soucet.sDPH, fix: v.fix.soucet.sDPH, vazena: v.spot.vazena, aritm: v.spot.aritm, faktor: v.spot.profilovyFaktor, nejMes: nm, v });
+      } catch (e) { /* rok bez dat přeskočit */ }
+      await new Promise(res => setTimeout(res, 0));
+    }
+    if (moje !== cisloVypoctu) return;
+    $('kartaRiziko').classList.remove('prepocet');
+    if (!out.length) {
+      rizikoData = null;
+      $('tabRiziko').innerHTML = '<tbody><tr><td>Riziko se nepodařilo spočítat – pro žádný rok nejsou data.</td></tr></tbody>';
+      $('rizikoBoxy').innerHTML = '';
+      return;
+    }
+    rizikoData = out;
+    vykresliRiziko(); verdikt(); vykresliMapu();
+  }
+  function vykresliRiziko() {
+    const b = barvy(), d = rizikoData; if (!d || !d.length) return;
+    const st = T.statistika(d.map(x => x.spot)), fix = posledni ? posledni.fix.soucet.sDPH : d[0].fix;
+    const nej = d.reduce((a, x) => (x.nejMes.sDPH > a.nejMes.sDPH ? x : a), d[0]);
+    const roky = d.filter(x => x.spot > x.fix).length;
+    $('rizikoBoxy').innerHTML = [
+      ['Minimum', kc(st.min), 'rok ' + d.find(x => x.spot === st.min).rok],
+      ['Medián', kc(st.median), d.length + ' let'],
+      ['Maximum', kc(st.max), 'rok ' + d.find(x => x.spot === st.max).rok],
+      ['Nejdražší měsíc', kc(nej.nejMes.sDPH), MESICE[nej.nejMes.m] + ' ' + nej.nejMes.r],
+      ['Spot dražší než fix', roky + ' z ' + d.length + ' let', 'fix ' + kc(fix) + ' / rok'],
+    ].map(([p, c, x]) => '<div class="box"><div class="popis">' + p + '</div><div class="cislo">' + c + '</div><div class="dalsi">' + x + '</div></div>').join('');
+    graf('grafRiziko', {
+      type: 'bar',
+      data: { labels: d.map(x => String(x.rok)), datasets: [
+        { type: 'bar', label: 'Spot (s DPH)', data: d.map(x => x.spot), backgroundColor: b.spot, borderRadius: 3, order: 2, pointStyle: 'rect' },
+        // čára fixu se kreslí přes celou šířku pluginem níže; dataset slouží legendě, tooltipu a rozsahu osy
+        { type: 'line', label: 'Fixní (s DPH)', data: d.map(() => fix), borderColor: b.fix, backgroundColor: b.fix, borderWidth: 2, pointRadius: 0, pointHoverRadius: 0, showLine: false, pointStyle: 'line', order: 1 },
+      ] },
+      plugins: [{ id: 'caraFixu', afterDatasetsDraw(ch) {
+        const y = ch.scales.y.getPixelForValue(fix), a = ch.chartArea, c = ch.ctx;
+        c.save(); c.strokeStyle = b.fix; c.lineWidth = 2; c.setLineDash([6, 4]);
+        c.beginPath(); c.moveTo(a.left, y); c.lineTo(a.right, y); c.stroke(); c.restore();
+      } }],
+      options: { responsive: true, maintainAspectRatio: false, animation: { duration: 250 }, interaction: { mode: 'index', intersect: false },
+        scales: zakladniOsy(b, ' Kč'), plugins: { legend: { labels: { color: b.text, boxWidth: 18, usePointStyle: true } }, tooltip: { callbacks: { label: c => ' ' + c.dataset.label + ': ' + kc(c.parsed.y) } } } },
+    }, 'Spot v letech ' + d[0].rok + '–' + d[d.length - 1].rok + ': minimum ' + kc(st.min) + ', maximum ' + kc(st.max) + '; fix ' + kc(fix) + '. Podrobně v tabulce.');
+    const zn = x => (x > 0 ? '+' : x < 0 ? '−' : '') + kc(Math.abs(x));
+    $('tabRiziko').innerHTML = '<thead><tr><th>Rok</th><th class="sir">Spot ⌀ Kč/MWh</th><th class="sir">Vážená</th><th class="sir">Faktor</th><th>Spot s DPH</th><th><span class="dl">Rozdíl proti fixu</span><span class="kr">Rozdíl</span></th><th class="sir">Nejdražší měsíc</th></tr></thead><tbody>' +
+      d.map(x => '<tr><td>' + x.rok + '</td><td class="sir">' + fmt(x.aritm) + '</td><td class="sir">' + fmt(x.vazena) + '</td><td class="sir">' + fmt(x.faktor, 3) + '</td><td>' + kc(x.spot) + '</td><td>' + zn(x.spot - x.fix) + '</td><td class="sir">' + MESICE[x.nejMes.m] + ' (' + kc(x.nejMes.sDPH) + ')</td></tr>').join('') + '</tbody>';
+  }
+
+  /* ---------------- teplotní mapa ---------------- */
+  let mapaStav = null;
+  /* sekvenční škála viridis (perceptuálně rovnoměrná, nezávislá na tématu): levno = tmavá chladná → draho = světlá teplá */
+  const VIRIDIS = [[68, 1, 84], [71, 45, 123], [59, 82, 139], [44, 114, 142], [33, 145, 140], [40, 174, 128], [94, 201, 98], [173, 220, 48], [253, 231, 37]];
+  const BARVA_ZAPORNA = '#ff3fbf';
+  function barvaSkaly(x) {
+    const k = Math.max(0, Math.min(1, x)) * (VIRIDIS.length - 1), i = Math.min(VIRIDIS.length - 2, Math.floor(k)), f = k - i;
+    return 'rgb(' + VIRIDIS[i].map((a, j) => Math.round(a + (VIRIDIS[i + 1][j] - a) * f)).join(',') + ')';
+  }
+  function vykresliMapu() {
+    const cv = $('mapaPlatno'); if (!posledni) return;
+    const rokSel = $('mapaRok').value;
+    let v = posledni;
+    if (rokSel !== 'aktualni' && rizikoData) { const x = rizikoData.find(r => String(r.rok) === rokSel); if (x) v = x.v; }
+    const rezim = $('mapaRezim').value, b = barvy();
+    const M = T.maticeCen(v.ceny, v.od, v.do);
+    let hodnoty = M.hodnoty, jednotka = 'Kč/MWh';
+    if (rezim !== 'cena') {
+      const S2 = T.maticeDenHodina(v.spotrebaSpot, v.od, v.do);
+      const idx = new Map(S2.dny.map((k, i) => [k, i]));
+      hodnoty = new Float64Array(M.hodnoty.length).fill(NaN);
+      M.dny.forEach((k, i) => { const j = idx.get(k); if (j === undefined) return; for (let h = 0; h < 24; h++) { const s = S2.hodnoty[j * 24 + h]; hodnoty[i * 24 + h] = rezim === 'spotreba' ? s : s * M.hodnoty[i * 24 + h] / 1000; } });
+      jednotka = rezim === 'spotreba' ? 'kWh' : 'Kč';
+    }
+    const dpr = window.devicePixelRatio || 1, W = cv.clientWidth || 600, H = cv.clientHeight || 300;
+    const L = 34, B = 18;
+    // úzký displej: méně než 1,5 px na den → agregace po týdnech
+    const tydny = (W - L - 4) / M.dny.length < 1.5;
+    let sloupce = M.dny.map((k, i) => ({ od: k, do: k, idx: [i] }));
+    if (tydny) { sloupce = []; for (let i = 0; i < M.dny.length; i += 7) { const idx = []; for (let j = i; j < Math.min(i + 7, M.dny.length); j++) idx.push(j); sloupce.push({ od: M.dny[i], do: M.dny[idx[idx.length - 1]], idx }); } }
+    const hod = new Float64Array(sloupce.length * 24).fill(NaN);
+    sloupce.forEach((s, c) => { for (let h = 0; h < 24; h++) { let a = 0, n = 0; for (const i of s.idx) { const x = hodnoty[i * 24 + h]; if (isFinite(x)) { a += x; n++; } } if (n) hod[c * 24 + h] = a / n; } });
+    const fin = Array.from(hod).filter(isFinite).sort((a, c) => a - c);
+    const skMin = fin.length ? fin[0] : 0, skMax = fin.length ? fin[fin.length - 1] : 1;
+    // dolní mez = skutečné minimum (u cen nejvýš 0 – záporné ceny mají vlastní barvu), horní = 98. percentil (ojedinělé špičky nepřebarví mapu)
+    const lo = rezim === 'cena' ? Math.max(0, skMin) : Math.min(0, skMin), hi = Math.max(lo + 1e-9, fin[Math.floor((fin.length - 1) * 0.98)] || 1);
+    const zapornych = rezim === 'cena' ? Array.from(hodnoty).filter(x => x < 0).length : 0;
+    cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+    const ctx = cv.getContext('2d'); ctx.setTransform(dpr, 0, 0, dpr, 0, 0); ctx.clearRect(0, 0, W, H);
+    const w = (W - L - 4) / sloupce.length, hh = (H - B - 4) / 24;
+    for (let i = 0; i < sloupce.length; i++) for (let h = 0; h < 24; h++) {
+      const x = hod[i * 24 + h]; if (!isFinite(x)) continue;
+      ctx.fillStyle = (rezim === 'cena' && x < 0) ? BARVA_ZAPORNA : barvaSkaly((x - lo) / (hi - lo || 1));
+      ctx.fillRect(L + i * w, 2 + h * hh, Math.ceil(w + 0.5), Math.ceil(hh + 0.5));
+    }
+    ctx.fillStyle = b.text; ctx.font = '11px ' + getComputedStyle(document.body).fontFamily; ctx.textAlign = 'right'; ctx.textBaseline = 'middle';
+    for (let h = 0; h < 24; h += 3) ctx.fillText(h + ' h', L - 4, 2 + (h + 0.5) * hh);
+    ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+    const krokPopisku = W < 420 ? 2 : 1;
+    let mi = 0;
+    sloupce.forEach((s, i) => {
+      const prvni = s.idx.find(j => M.dny[j].endsWith('-01')); if (prvni === undefined) return;
+      const m = +M.dny[prvni].slice(5, 7) - 1;
+      if (mi++ % krokPopisku === 0) ctx.fillText(MESICE_ZKR[m], L + (i + (tydny ? 2 : 15)) * w, H - B + 3);
+      ctx.fillRect(L + i * w, H - B, 1, 3);
+    });
+    mapaStav = { M, sloupce, hod, L, w, hh, jednotka, rezim, tydny };
+    const des = rezim === 'cena' ? 0 : 2;
+    const lg = $('mapaLegenda');
+    lg.innerHTML = '<span>' + fmt(lo, des) + '</span><canvas width="160" height="10"></canvas><span>' + fmt(hi, des) + ' ' + jednotka + ' (98. percentil; vše nad ním nejsvětlejší)</span>' +
+      '<span>· skutečné min ' + fmt(skMin, des) + ', max ' + fmt(skMax, des) + ' ' + jednotka + (tydny ? ' (týdenní průměry)' : '') + '</span>' +
+      (rezim === 'cena' ? '<span><span class="znacka" style="background:' + BARVA_ZAPORNA + '"></span>záporná cena (' + fmt(zapornych) + ' h)</span>' : '') +
+      '<span>· ' + datumText(v.od) + ' – ' + datumText(v.do - 1) + ', ' + M.dny.length + ' dní' + (tydny ? ' po týdnech' : '') + ', místní čas</span>';
+    const lc = lg.querySelector('canvas').getContext('2d');
+    for (let x = 0; x < 160; x++) { lc.fillStyle = barvaSkaly(x / 159); lc.fillRect(x, 0, 1, 10); }
+    cv.setAttribute('aria-label', 'Teplotní mapa (' + ({ cena: 'cena', spotreba: 'spotřeba', naklad: 'náklad' })[rezim] + ') ' + datumText(v.od) + ' – ' + datumText(v.do - 1) +
+      ': rozsah ' + fmt(skMin, des) + ' až ' + fmt(skMax, des) + ' ' + jednotka + '. Průměry po měsících a hodinách jsou v tabulce pod mapou.');
+    // tabulka 12 × 24 (průměr po měsících a hodinách)
+    const mes = new Map();
+    M.dny.forEach((k, i) => { const m = k.slice(0, 7); let a = mes.get(m); if (!a) { a = { s: new Float64Array(24), n: new Float64Array(24) }; mes.set(m, a); } for (let h = 0; h < 24; h++) { const x = hodnoty[i * 24 + h]; if (isFinite(x)) { a.s[h] += x; a.n[h]++; } } });
+    $('tabMapa').innerHTML = '<thead><tr><th>Měsíc</th>' + Array.from({ length: 24 }, (_, h) => '<th>' + h + '</th>').join('') + '</tr></thead><tbody>' +
+      [...mes.entries()].map(([m, a]) => '<tr><td>' + MESICE_ZKR[+m.slice(5) - 1] + ' ' + m.slice(2, 4) + '</td>' + Array.from(a.s, (s, h) => '<td>' + fmt(a.n[h] ? s / a.n[h] : NaN, des) + '</td>').join('') + '</tr>').join('') + '</tbody>';
+  }
+  function ukazTip(e) {
+    const tip = $('mapaTip'); if (!mapaStav) return;
+    const r = e.currentTarget.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top;
+    const i = Math.floor((x - mapaStav.L) / mapaStav.w), h = Math.floor((y - 2) / mapaStav.hh);
+    if (i < 0 || i >= mapaStav.sloupce.length || h < 0 || h > 23) { tip.classList.add('skryt'); return; }
+    const s = mapaStav.sloupce[i], val = mapaStav.hod[i * 24 + h];
+    const den = k => +k.slice(8) + '. ' + +k.slice(5, 7) + '. ' + k.slice(0, 4);
+    tip.innerHTML = (s.od === s.do ? den(s.od) : den(s.od) + ' – ' + den(s.do)) + ', ' + h + ':00–' + (h + 1) + ':00<br>' +
+      (isFinite(val) ? '<b>' + fmt(val, mapaStav.rezim === 'cena' ? 0 : 3) + ' ' + mapaStav.jednotka + '</b>' : '–');
+    tip.classList.remove('skryt');
+    tip.style.left = Math.max(0, Math.min(x + 12, r.width - tip.offsetWidth - 4)) + 'px'; tip.style.top = Math.max(0, y - 40) + 'px';
+  }
+  $('mapaPlatno').addEventListener('mousemove', ukazTip);
+  $('mapaPlatno').addEventListener('click', ukazTip);            // dotyk: klepnutí ukáže hodnotu
+  $('mapaPlatno').addEventListener('mouseleave', () => $('mapaTip').classList.add('skryt'));
+
+  /* ---------------- dnes / zítra (živě) ---------------- */
+  let zivo = null, zivoNacteno = 0;
+  async function nactiZivo() {
+    const dnes = T.mistni(Date.now() / 1000);
+    zivoNacteno = Date.now();
+    try {
+      const ctrl = new AbortController(), to = setTimeout(() => ctrl.abort(), 12000);
+      const o = await fetch('https://spotovaelektrina.cz/api/v1/price/get-prices-json-qh', { signal: ctrl.signal, cache: 'no-store' });
+      clearTimeout(to);
+      if (!o.ok) throw new Error('HTTP ' + o.status);
+      const j = T.parsujZivaData(await o.json(), dnes);
+      if (!j.dnes.length) throw new Error('prázdná odpověď');
+      zivo = { zdroj: 'živě', den: T.zacatekDne(dnes.r, dnes.m, dnes.d), dnes: j.dnes, zitra: j.zitra };
+    } catch (e) {
+      try {
+        const posl = INDEX.roky[INDEX.roky.length - 1], r = await cenyRoku(posl.rok);
+        const x = T.mistni(posl.do - 1), od = T.zacatekDne(x.r, x.m, x.d);
+        const c = T.vyrez(r, od, posl.do);
+        zivo = { zdroj: 'zaloha', chyba: e.name === 'AbortError' ? 'vypršel čas' : e.message, den: od, dnes: Array.from(c.t, (t, i) => ({ t, k: c.k[i], czk: c.v[i] })), zitra: [] };
+      } catch (e2) { zivo = null; }
+    }
+    vykresliZivo();
+  }
+  /* obnova: po půlnoci a po 13:15, když ještě nejsou zítřejší ceny */
+  function zkontrolujObnovuZivo() {
+    if (typeof document !== 'undefined' && document.hidden) return;
+    const ted = T.mistni(Date.now() / 1000), den = T.zacatekDne(ted.r, ted.m, ted.d);
+    const stare = Date.now() - zivoNacteno > 10 * 60000;
+    if (!zivo || (zivo.zdroj === 'živě' && zivo.den !== den) || (stare && zivo.zdroj !== 'živě') ||
+        (stare && !zivo.zitra.length && (ted.h > 13 || (ted.h === 13 && ted.min >= 15)))) nactiZivo();
+  }
+  function vykresliZivo() {
+    const b = barvy();
+    if (!zivo) { $('zivoStav').textContent = 'Živá data nejsou dostupná a přibalená se nepodařilo načíst.'; $('zivoStav').className = 'stav chyba'; return; }
+    const reg = aktReg || T.regulovaneCeny(S.sazba, S.uzemi, +S.faze, +S.ampery), plan = T.planProSazbu(S.sazba, ntHodiny());
+    const tarif = $('zivoTarif').value, k = 1 + reg.dph / 100, ted = Date.now() / 1000, delka = +$('oknoDelka').value;
+    const vse = zivo.dnes.concat(zivo.zitra);
+    const rada = T.radaZPoli(vse.map(p => p.t), vse.map(p => p.k), vse.map(p => p.czk));
+    const obchod = tarif === 'fix' ? { typ: 'fix', cenaVT: S.fixVT, cenaNT: S.fixNT } : { typ: 'spot', prirazka: S.spotPrir, rezim: S.spotRezim };
+    const pc = T.promennaCena(rada, plan, reg, obchod, null);
+    const hodnoty = Array.from(pc.v, x => x * k / 1000);
+    const okna = [];
+    const najdi = (od, do_, popis, odT) => {
+      const idx = []; for (let i = od; i < do_; i++) if (vse[i].t + vse[i].k > odT) idx.push(i);
+      if (!idx.length) return;
+      const kroku = Math.max(1, Math.round(delka * 3600 / vse[idx[0]].k));
+      const sub = idx.map(i => hodnoty[i]);
+      const w = T.nejlevnejsiOkno(sub, kroku); if (!w) return;
+      const a = vse[idx[w.start]], z = vse[idx[w.start + kroku - 1]];
+      okna.push({ popis, od: a.t, do: z.t + z.k, prumer: w.prumer, maxDne: Math.max(...sub) });
+    };
+    const nD = zivo.dnes.length;
+    if (zivo.zdroj === 'živě') {
+      najdi(0, nD, 'Dnes (od teď)', ted);
+      if (zivo.zitra.length) najdi(nD, vse.length, 'Zítra', 0);
+      $('zivoStav').textContent = 'Ceny OTE přes spotovaelektrina.cz' + (zivo.zitra.length ? ' – dnes i zítra.' : ' – zítřejší ceny vyjdou po 13. hodině (stránka je načte sama).');
+      $('zivoStav').className = 'stav';
+    } else {
+      najdi(0, nD, 'Poslední den v datech (' + datumText(zivo.den) + ')', 0);
+      $('zivoStav').textContent = 'Živá data se nepodařilo načíst (' + zivo.chyba + ') – ukazuji poslední den z přibalených dat.';
+      $('zivoStav').className = 'stav varovani';
+    }
+    const popisTarifu = tarif === 'fix' ? 'fixní nabídku (liší se jen VT/NT)' : S.spotRezim === 'prubeh' ? 'spot účtovaný podle průběhu' :
+      'spot s měsíční cenou – silovka je v rámci měsíce stejná, okno určuje jen distribuce VT/NT (spot zobrazen jako průměr dne)';
+    $('zivoPopis').textContent = 'Konečná cena za kWh pro ' + popisTarifu + ' = silová elektřina + distribuce (VT/NT podle nastavených časů) + systémové služby + daň, vč. DPH – bez stálých měsíčních platů. Zvýrazněné sloupce = nejlevnější souvislé okno.';
+    const cas = t => { const x = T.mistni(t); return x.h + ':' + String(x.min).padStart(2, '0'); };
+    $('zivoOkna').innerHTML = okna.map(o => '<div class="box"><div class="popis">' + o.popis + ' – nejlevnější ' + delka + ' h</div><div class="cislo">' + cas(o.od) + '–' + cas(o.do) +
+      '</div><div class="dalsi">⌀ ' + fmt(o.prumer, 2) + ' Kč/kWh s DPH (nejdražší chvíle ' + fmt(o.maxDne, 2) + ' Kč/kWh)</div></div>').join('');
+    const zvyr = new Set();
+    okna.forEach(o => vse.forEach((p, i) => { if (p.t >= o.od && p.t < o.do) zvyr.add(i); }));
+    const labels = vse.map((p, i) => { const x = T.mistni(p.t); return x.min === 0 ? x.h + ':00' + (x.h === 0 && i >= nD ? ' zítra' : '') : ''; });
+    graf('grafZivo', {
+      type: 'bar',
+      data: { labels, datasets: [{ label: 'Konečná cena (Kč/kWh s DPH)', data: hodnoty, backgroundColor: hodnoty.map((_, i) => zvyr.has(i) ? b.s3 : (vse[i].t + vse[i].k <= ted ? b.mrizka : b.fix)), borderRadius: 2, barPercentage: 1, categoryPercentage: 0.9 }] },
+      options: { responsive: true, maintainAspectRatio: false, animation: { duration: 200 },
+        scales: { x: { ticks: { color: b.text, autoSkip: false, maxRotation: 0, callback: function (v2, i) {
+            const sirka = this.chart ? this.chart.width : 800, krokH = sirka < 520 ? 6 : 3;
+            return labels[i] && (T.mistni(vse[i].t).h % krokH === 0) ? (sirka < 520 ? labels[i].replace(' zítra', '') : labels[i]) : ''; } }, grid: { display: false } },
+          y: { ticks: { color: b.text, callback: v2 => fmt(v2, 1) }, grid: { color: b.mrizka } } },
+        plugins: { legend: { display: false }, tooltip: { callbacks: { title: it => { const p = vse[it[0].dataIndex]; return datumText(p.t) + ' ' + cas(p.t) + '–' + cas(p.t + p.k); },
+          label: c => ' ' + fmt(c.parsed.y, 2) + ' Kč/kWh s DPH (spot ' + fmt(vse[c.dataIndex].czk / 1000, 2) + ' Kč/kWh bez DPH)' } } } },
+    }, 'Konečná cena dnes' + (zivo.zitra.length ? ' a zítra' : '') + '; ' + okna.map(o => o.popis + ' nejlevnější ' + cas(o.od) + '–' + cas(o.do) + ' za ' + fmt(o.prumer, 2) + ' Kč/kWh').join('; ') + '.');
+  }
+  $('oknoDelka').addEventListener('change', vykresliZivo);
+  $('zivoTarif').addEventListener('change', vykresliZivo);
+  $('btnZivo').addEventListener('click', nactiZivo);
+
+  /* ---------------- export a tisk ---------------- */
+  $('btnCSV').addEventListener('click', () => {
+    if (!posledni) return;
+    const c = (x, d) => (typeof x === 'number' && isFinite(x) ? (d === undefined ? Math.round(x * 100) / 100 : +x.toFixed(d)).toString().replace('.', ',') : '');
+    const F = posledni.fix, P = posledni.spot, o = obdobi(S.obdobi);
+    const r = [['Porovnání fixního a spotového tarifu', o.text, datumText(o.od) + ' – ' + datumText(o.do - 1)], ['Sazba', S.sazba, REG.UZEMI[S.uzemi], (S.faze == 1 ? '1×' : '3×') + S.ampery + ' A'],
+      ['Fixní silovka VT / NT (Kč/MWh bez DPH)', c(S.fixVT), c(S.fixNT)], ['Fixní stálý plat (Kč/měs. bez DPH)', c(S.fixPlat)],
+      ['Spot – přirážka (Kč/MWh bez DPH)', c(S.spotPrir)], ['Spot – stálý plat (Kč/měs. bez DPH)', c(S.spotPlat)], ['Spot – účtování', ($('spotRezim').options[$('spotRezim').selectedIndex] || {}).text], [],
+      ['Složka (Kč za období)', 'Fixní', 'Spot']];
+    const NAZVY = { silova: 'Silová elektřina (Kč)', platObchod: 'Stálý plat obchodníka (Kč)', distribuce: 'Distribuce za energii VT/NT (Kč)', jistic: 'Plat za jistič (Kč)',
+      systemove: 'Systémové služby (Kč)', poze: 'POZE (Kč)', nesitova: 'Nesíťová infrastruktura (Kč)', dan: 'Daň z elektřiny (Kč)', bezDPH: 'Celkem bez DPH (Kč)', dph: 'DPH (Kč)',
+      sDPH: 'Celkem s DPH (Kč)', kwh: 'Spotřeba (kWh)', kwhVT: 'Spotřeba VT (kWh)', kwhNT: 'Spotřeba NT (kWh)' };
+    Object.entries(NAZVY).forEach(([k, n]) => r.push([n, c(F.soucet[k]), c(P.soucet[k])]));
+    r.push(['Vážená cena spotu (Kč/MWh bez DPH)', '', c(P.vazena)], ['Aritmetický průměr spotu (Kč/MWh bez DPH)', '', c(P.aritm)], ['Profilový faktor', '', c(P.profilovyFaktor, 3)],
+      ['Bod zvratu – fixní silovka (Kč/MWh bez DPH)', c(posledni.zvrat.cenaFix)], ['Bod zvratu – přirážka spotu (Kč/MWh bez DPH)', '', c(S.spotPrir + posledni.zvrat.deltaPrirazka)]);
+    if (posledni.dalsi.length) { r.push([], ['Nabídka', 'Typ', 'Celkem s DPH (Kč)']); [{ nazev: 'Fixní (hlavní)', typ: 'fix', v: F }, { nazev: 'Spot (hlavní)', typ: 'spot', v: P }].concat(posledni.dalsi).forEach(n => r.push([n.nazev, n.typ, c(n.v.soucet.sDPH)])); }
+    r.push([], ['Měsíc', 'Spotřeba (kWh)', 'Fixní s DPH (Kč)', 'Spot s DPH (Kč)', 'Spot vč. přirážky (Kč/MWh bez DPH)']);
+    F.mesice.forEach((m, i) => r.push([MESICE[m.m] + ' ' + m.r, c(P.mesice[i].kwh), c(m.sDPH), c(P.mesice[i].sDPH), c(P.mesice[i].cenaMesice)]));
+    if (rizikoData) { r.push([], ['Rok', 'Spot s DPH (Kč)', 'Fixní s DPH (Kč)', 'Vážená cena (Kč/MWh)', 'Průměr spotu (Kč/MWh)', 'Profilový faktor']); rizikoData.forEach(x => r.push([x.rok, c(x.spot), c(x.fix), c(x.vazena), c(x.aritm), c(x.faktor, 3)])); }
+    const text = '﻿' + r.map(x => x.map(y => /[;"\n]/.test(String(y)) ? '"' + String(y).replace(/"/g, '""') + '"' : y).join(';')).join('\r\n');
+    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([text], { type: 'text/csv;charset=utf-8' }));
+    a.download = 'tarif_spot_' + S.obdobi + '.csv'; document.body.appendChild(a); a.click(); setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 500);
+  });
+  let detMesiceOtevrene = false;
+  function predTiskem() {
+    tiskSvetle = true; detMesiceOtevrene = $('detMesice').open; $('detMesice').open = true;
+    vykresliVse(); Object.values(grafy).forEach(g => { try { g.resize(); } catch (e) { /* nic */ } });
+  }
+  function poTisku() {
+    tiskSvetle = false; $('detMesice').open = detMesiceOtevrene;
+    vykresliVse(); Object.values(grafy).forEach(g => { try { g.resize(); } catch (e) { /* nic */ } });
+  }
+  window.addEventListener('beforeprint', predTiskem);
+  window.addEventListener('afterprint', poTisku);
+  $('btnTisk').addEventListener('click', () => window.print());
+
+  /* ---------------- události formuláře ---------------- */
+  document.querySelectorAll('[data-profil]').forEach(b => b.addEventListener('click', () => { S.profil = b.dataset.profil; naplnFormular(); uloz(); popisCSV(); prepocti(); }));
+  document.querySelectorAll('[data-jedn]').forEach(b => b.addEventListener('click', () => { S.jedn = b.dataset.jedn; zobrazCeny(); uloz(); }));
+  document.querySelectorAll('[data-dph]').forEach(b => b.addEventListener('click', () => { S.dphZad = b.dataset.dph; zobrazCeny(); uloz(); }));
+  CENOVA.forEach(([k, plat]) => $(k).addEventListener('input', () => { const v = zkontroluj(k, plat, true); if (v !== null) { S[k] = v; uloz(); } prepocti(); }));
+  CISELNE.forEach(k => $(k).addEventListener('input', () => { const v = zkontroluj(k, 0, false); if (v !== null) { S[k] = v; uloz(); } prepocti(); }));
+  BOOL.forEach(k => $(k).addEventListener('change', () => { S[k] = $(k).checked; if (k === 'regPrepis' && S.regPrepis && !S.regRucne) S.regRucne = {}; uloz(); prepocti(); }));
+  REG_POLE.forEach(([id, k]) => $(id).addEventListener('input', () => {
+    if (!S.regPrepis) return;
+    const x = cteniCisla($(id).value);
+    if (!isFinite(x) || x < 0 || (k === 'dph' && x > 100)) { oznacPole($(id), 'Zadejte nezáporné číslo.'); prepocti(); return; }
+    oznacPole($(id), null); S.regRucne = S.regRucne || {}; S.regRucne[k] = x; uloz(); prepocti();
+  }));
+  $('uzemi').addEventListener('change', () => { S.uzemi = $('uzemi').value; S.kraj5 = REG.TDD5_VYCHOZI[S.uzemi]; $('kraj5').value = S.kraj5; zrusRucniReg('změna území'); uloz(); prepocti(); });
+  $('sazba').addEventListener('change', () => {
+    S.sazba = $('sazba').value; S.ntHodiny = T.vychoziNT(S.sazba); zrusRucniReg('změna sazby');
+    const s = REG.sazby[S.sazba];
+    if (!s.nt) { S.kwhVT += S.kwhNT; S.kwhNT = 0; }
+    else if (!(S.kwhNT > 0)) { const c = S.kwhVT; const podil = s.ntHodin < 0 ? 0.5 : s.ntHodin >= 20 ? 0.85 : 0.6; S.kwhNT = Math.round(c * podil); S.kwhVT = c - S.kwhNT; }
+    $('kwhVT').value = String(S.kwhVT); $('kwhNT').value = String(S.kwhNT); kresliNabidky(); uloz(); prepocti();
+  });
+  $('faze').addEventListener('change', () => { S.faze = +$('faze').value; naplnAmpery(); zrusRucniReg('změna jističe'); uloz(); prepocti(); });
+  $('ampery').addEventListener('change', () => { S.ampery = +$('ampery').value; zrusRucniReg('změna jističe'); uloz(); prepocti(); });
+  $('kraj5').addEventListener('change', () => { S.kraj5 = $('kraj5').value; uloz(); prepocti(); });
+  $('spotRezim').addEventListener('change', () => { S.spotRezim = $('spotRezim').value; uloz(); infoRezim(); prepocti(); });
+  $('obdobi').addEventListener('change', () => { S.obdobi = $('obdobi').value; $('mapaRok').value = 'aktualni'; uloz(); prepocti(); });
+  function prepniHodinu(b) { const h = ntHodiny(); h[+b.dataset.h] = !h[+b.dataset.h]; uloz(); aktualizujSazbu(); prepocti(); }
+  hodinyEl.addEventListener('click', e => { const b = e.target.closest('button'); if (b) prepniHodinu(b); });
+  hodinyEl.addEventListener('keydown', e => {
+    const b = e.target.closest && e.target.closest('button'); if (!b) return;
+    const h = +b.dataset.h, posun = { ArrowRight: 1, ArrowLeft: -1, ArrowDown: 12, ArrowUp: -12, Home: -h, End: 23 - h }[e.key];
+    if (posun === undefined) return;
+    e.preventDefault();
+    const n = ((h + posun) % 24 + 24) % 24, tl = hodinyEl.querySelectorAll('button');
+    tl.forEach(x => { x.tabIndex = -1; }); tl[n].tabIndex = 0; tl[n].focus();
+  });
+  $('btnNTvychozi').addEventListener('click', () => { S.ntHodiny = T.vychoziNT(S.sazba); uloz(); aktualizujSazbu(); prepocti(); });
+  $('mapaRok').addEventListener('change', vykresliMapu);
+  $('mapaRezim').addEventListener('change', vykresliMapu);
+  function infoRezim() {
+    $('infoRezim').textContent = {
+      prubeh: 'Každá čtvrthodina se násobí svou cenou. Smlouvu s dynamickou (spotovou) cenou lze podle ERÚ uzavřít jen s elektroměrem s průběhovým měřením (smart metr).',
+      tdd: 'Měsíční cena = průměr spotu vážený typovým diagramem vaší sazby. Tak fungují tzv. kvazidynamické produkty, které podle ERÚ průběhové měření nevyžadují. Posun spotřeby v rámci měsíce silovku nezlevní.',
+      prumer: 'Měsíční cena = prostý průměr všech čtvrthodin měsíce (base). Nezávisí na tom, kdy spotřebováváte; průběhové měření není potřeba.',
+    }[S.spotRezim];
+  }
+  new MutationObserver(() => { nastavCSSBarvy(); vykresliVse(); if (!posledni) vykresliZivo(); }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+  let sirka = window.innerWidth;
+  window.addEventListener('resize', () => {
+    if (Math.abs(window.innerWidth - sirka) > 20) { sirka = window.innerWidth; vykresliMapu(); if (grafy.grafZivo) grafy.grafZivo.update(); }
+  });
+
+  /* ================= ergonomie ovládání ================= */
+  /* zvýraznění změněné hodnoty bez posunu rozvržení */
+  function blikni(id, text) {
+    const el = $(id); if (el.textContent === text) return;
+    el.textContent = text; el.classList.remove('blik'); void el.offsetWidth; el.classList.add('blik');
+  }
+  /* --- krokování číselných polí: šipky, kolečko, −/+; Enter, Esc; výběr obsahu při fokusu --- */
+  const KROK = { kwhVT: 100, kwhNT: 100, fixPlat: 10, spotPlat: 10, ohrevKwh: 0.5, ohrevP: 0.1, ohrevOd: 1, ohrevDo: 1, evKwh: 5, evP: 0.1, evOd: 1, evDo: 1,
+    tcKwh: 1, tcP: 0.1, batC: 0.5, batP: 0.1, batEta: 1, batCena: 5000, rDistVT: 10, rDistNT: 10, rJistic: 1, rSys: 1, rPoze: 10, rNes: 0.1, rDan: 0.1, rDph: 1 };
+  const krokPole = id => (['fixVT', 'fixNT', 'spotPrir'].includes(id) ? (S.jedn === 'mwh' ? 10 : 0.01) : KROK[id] || 1);
+  function krokuj(el, smer, nasobek) {
+    const id = el.id, krok = krokPole(id) * (nasobek || 1), zaokr = krokPole(id) * Math.min(1, nasobek || 1);
+    let x = cteniCisla(el.value); if (!isFinite(x)) x = 0;
+    let n = Math.round((x + smer * krok) / zaokr) * zaokr;
+    const cena = CENOVA.find(c => c[0] === id), mez = MEZE[id];
+    if (mez) {
+      const lo = cena ? +naZobr(mez[0], cena[1]).replace(',', '.') : mez[0], hi = cena ? +naZobr(mez[1], cena[1]).replace(',', '.') : mez[1];
+      n = Math.min(hi, Math.max(lo, n));
+    } else if (n < 0 && !/^r/.test(id)) n = 0;
+    const des = Math.max(0, -Math.floor(Math.log10(zaokr) + 1e-9));
+    el.value = String(+n.toFixed(Math.min(4, des))).replace('.', ',');
+    el.dispatchEvent(new Event('input'));
+  }
+  const nasobek = e => (e.shiftKey ? 10 : e.altKey ? 0.1 : 1);
+  function vylepsiPole(el) {
+    if (el._vylepseno) return; el._vylepseno = true;
+    el.setAttribute('autocomplete', 'off');
+    if (!el.title) el.title = '↑/↓ krok (Shift ×10, Alt ×0,1), Enter přepočítat, Esc vrátit';
+    el.addEventListener('focus', () => { el._puvodni = el.value; setTimeout(() => { try { if (document.activeElement === el) el.select(); } catch (e) { /* nic */ } }, 0); });
+    el.addEventListener('keydown', e => {
+      if (e.key === 'ArrowUp' || e.key === 'ArrowDown') { e.preventDefault(); krokuj(el, e.key === 'ArrowUp' ? 1 : -1, nasobek(e)); }
+      else if (e.key === 'Enter') { e.preventDefault(); clearTimeout(casovac); el._puvodni = el.value; prepoctiHned(); }   // potvrzená hodnota je nový bod pro Esc
+      else if (e.key === 'Escape' && el._puvodni !== undefined && el.value !== el._puvodni) { e.preventDefault(); el.value = el._puvodni; el.dispatchEvent(new Event('input')); }
+    });
+    el.addEventListener('wheel', e => { if (document.activeElement !== el) return; e.preventDefault(); krokuj(el, e.deltaY < 0 ? 1 : -1, nasobek(e)); }, { passive: false });
+  }
+  /* --- rychlé volby (chipy) --- */
+  const CHIP_KWH = [2000, 3000, 3500, 5000, 8000], CHIP_JISTIC = [[3, 16], [3, 20], [3, 25], [3, 32], [1, 25]], CHIP_PRIR_SDPH = [0.2, 0.3, 0.4, 0.5], CHIP_BAT = [5, 10, 15];
+  const tisice = n => fmt(n);
+  function kresliChipy() {
+    const kw = $('chipyKwh'); if (!kw) return;
+    const dvou = !!REG.sazby[S.sazba].nt, celkem = S.kwhVT + (dvou ? S.kwhNT : 0);
+    const hist = (S.histKwh || []).filter(x => !CHIP_KWH.includes(x));
+    kw.innerHTML = CHIP_KWH.map(x => '<button type="button" class="chip" data-kwh="' + x + '" aria-pressed="' + (Math.abs(celkem - x) < 0.5) + '">' + tisice(x) + ' kWh</button>').join('') +
+      hist.map(x => '<button type="button" class="chip historie" data-kwh="' + x + '" title="naposledy použito" aria-pressed="' + (Math.abs(celkem - x) < 0.5) + '">↺ ' + tisice(x) + '</button>').join('');
+    $('chipyJistic').innerHTML = CHIP_JISTIC.map(([f, a]) => '<button type="button" class="chip" data-faze="' + f + '" data-a="' + a + '" aria-pressed="' + (+S.faze === f && +S.ampery === a) + '">' + f + ' × ' + a + ' A</button>').join('');
+    $('chipyPrir').innerHTML = '<span class="napoveda" style="margin:4px 4px 0 0">Typická přirážka:</span>' + CHIP_PRIR_SDPH.map(x => {
+      const vnitrni = x / dphK() * 1000;
+      return '<button type="button" class="chip" data-prir="' + vnitrni + '" aria-pressed="' + (Math.abs(S.spotPrir - vnitrni) < 0.5) + '" title="' + fmt(x, 2) + ' Kč/kWh s DPH">' + naZobr(vnitrni, 0) + '</button>';
+    }).join('');
+    $('chipyBat').innerHTML = CHIP_BAT.map(c => '<button type="button" class="chip" data-bat="' + c + '" aria-pressed="' + (S.batOn && +S.batC === c) + '">' + c + ' kWh / ' + (c / 2) + ' kW</button>').join('');
+  }
+  function nastavSpotrebu(celkem) {
+    const s = REG.sazby[S.sazba];
+    if (!s.nt) { S.kwhVT = celkem; S.kwhNT = 0; }
+    else { const podil = (S.kwhVT + S.kwhNT) > 0 ? S.kwhNT / (S.kwhVT + S.kwhNT) : (s.ntHodin < 0 ? 0.5 : s.ntHodin >= 20 ? 0.85 : 0.6); S.kwhNT = Math.round(celkem * podil); S.kwhVT = celkem - S.kwhNT; }
+    $('kwhVT').value = String(S.kwhVT); $('kwhNT').value = String(S.kwhNT); oznacPole($('kwhVT'), null); oznacPole($('kwhNT'), null);
+  }
+  function pamatujKwh() {
+    const c = S.kwhVT + (REG.sazby[S.sazba].nt ? S.kwhNT : 0);
+    if (!(c > 0)) return;
+    S.histKwh = [c].concat((S.histKwh || []).filter(x => x !== c)).slice(0, 3);
+  }
+  /* --- zpět / znovu --- */
+  const historie = [], budouci = [];
+  let posledniSnap = null, obnovuji = false;
+  const snimek = () => { const o = Object.assign({}, S); delete o.sbalene; delete o.histKwh; return JSON.stringify(o); };
+  function zapisHistorii() {
+    const s = snimek();
+    if (posledniSnap === null) { posledniSnap = s; return; }
+    if (s === posledniSnap) return;
+    historie.push(posledniSnap); if (historie.length > 60) historie.shift();
+    budouci.length = 0; posledniSnap = s; tlacitkaHistorie();
+  }
+  function tlacitkaHistorie() { $('btnZpet').disabled = !historie.length; $('btnVpred').disabled = !budouci.length; }
+  function obnov(snap) {
+    const zachovat = { sbalene: S.sbalene, histKwh: S.histKwh };
+    S = Object.assign(ocisti(JSON.parse(snap)), zachovat);
+    posledniSnap = snap; obnovuji = true;
+    neplatna.clear(); naplnFormular(); kresliNabidky(); infoRezim(); uloz();
+    const r = prepoctiHned(); obnovuji = false; tlacitkaHistorie(); return r;
+  }
+  function zpet() { if (!historie.length) return null; budouci.push(posledniSnap); return obnov(historie.pop()); }
+  function vpred() { if (!budouci.length) return null; historie.push(posledniSnap); return obnov(budouci.pop()); }
+  /* --- sdílení odkazem a výchozí hodnoty --- */
+  function sdilenyOdkaz() {
+    const o = Object.assign({}, S); delete o.sbalene; delete o.histKwh;
+    const kod = btoa(unescape(encodeURIComponent(JSON.stringify(o)))).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+    const zaklad = typeof location !== 'undefined' ? location.href.split('#')[0] : 'tarif_spot.html';
+    return zaklad + '#s=' + kod;
+  }
+  function nactiZOdkazu(hash) {
+    const m = /#s=([A-Za-z0-9_-]+)/.exec(hash || ''); if (!m) return false;
+    try {
+      const b = m[1].replace(/-/g, '+').replace(/_/g, '/');
+      const u = JSON.parse(decodeURIComponent(escape(atob(b + '='.repeat((4 - b.length % 4) % 4)))));
+      const zachovat = { sbalene: S.sbalene, histKwh: S.histKwh };
+      S = Object.assign(ocisti(u), zachovat); uloz(); return true;
+    } catch (e) { return false; }
+  }
+  async function sdilet() {
+    const url = sdilenyOdkaz();
+    try { await navigator.clipboard.writeText(url); Dialog.info('🔗 Odkaz se zadáním je zkopírovaný do schránky.'); }
+    catch (e) { await Dialog.zeptej('Zkopírujte odkaz (Ctrl+C):', url); }
+  }
+  async function vychozi() {
+    if (!(await Dialog.potvrd('Vrátit všechna zadání na výchozí hodnoty? (Nahraná naměřená data zůstanou.) Akci jde vrátit tlačítkem ↶.'))) return;
+    const zachovat = { sbalene: S.sbalene, histKwh: S.histKwh };
+    S = Object.assign(ocisti(null), zachovat); neplatna.clear(); naplnFormular(); kresliNabidky(); infoRezim(); uloz(); prepoctiHned();
+  }
+  /* --- sbalitelné karty (stav se pamatuje) --- */
+  function sbalovani() {
+    document.querySelectorAll('.karta[id]').forEach(k => {
+      const h = k.querySelector('h2'); if (!h || h.querySelector('.sbalit')) return;
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'sbalit neprint'; b.textContent = '▾';
+      const nazev = (h.textContent || '').replace(/\s+/g, ' ').trim().slice(0, 40);
+      const nastav = () => { const s = k.classList.contains('sbaleno'); b.setAttribute('aria-expanded', String(!s)); b.setAttribute('aria-label', (s ? 'Rozbalit: ' : 'Sbalit: ') + nazev); b.title = s ? 'Rozbalit' : 'Sbalit'; };
+      if ((S.sbalene || []).includes(k.id)) k.classList.add('sbaleno');
+      nastav();
+      b.addEventListener('click', () => {
+        k.classList.toggle('sbaleno');
+        const set = new Set(S.sbalene || []); if (k.classList.contains('sbaleno')) set.add(k.id); else set.delete(k.id);
+        S.sbalene = [...set]; nastav(); uloz();
+        if (!k.classList.contains('sbaleno') && k.id === 'kartaMapa') vykresliMapu();
+      });
+      h.appendChild(b);
+    });
+  }
+  function rozbalAPrejdi(id) {
+    const k = $(id); if (!k) return;
+    if (k.classList.contains('sbaleno')) { const b = k.querySelector('.sbalit'); if (b) b.click(); }
+    if (k.scrollIntoView) k.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+  /* --- „↓ výsledek“, když se výsledek změní mimo obrazovku --- */
+  let skokCasovac = null;
+  function nabidniSkok() {
+    const k = $('kartaVysledek'); if (!k.getBoundingClientRect) return;
+    const r = k.getBoundingClientRect(), vyska = window.innerHeight || 800;
+    const mimo = r.bottom < 60 || r.top > vyska - 60, listaVidet = window.innerWidth <= 960;
+    if (!mimo || listaVidet) return;
+    $('skokVysledek').classList.remove('skryt'); clearTimeout(skokCasovac);
+    skokCasovac = setTimeout(() => $('skokVysledek').classList.add('skryt'), 5000);
+  }
+  /* --- klávesové zkratky (ne v textových polích, ne s Ctrl/Meta kromě zpět/znovu) --- */
+  function napovedaZkratek(ukaz) {
+    const d = $('napovedaZkratek'), uz = !d.classList.contains('skryt');
+    const ma = ukaz === undefined ? !uz : ukaz;
+    d.classList.toggle('skryt', !ma);
+    if (ma) $('btnZkratkyZavrit').focus(); else if (uz) $('btnZkratky').focus();
+  }
+  function klavesy(e) {
+    const t = e.target || {}, tag = (t.tagName || '').toUpperCase();
+    const vPoli = tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || t.isContentEditable;
+    if ((e.ctrlKey || e.metaKey) && !e.altKey && (e.key === 'z' || e.key === 'Z' || e.key === 'y')) {
+      if (vPoli) return;                                             // v poli nechá prohlížeči vlastní zpět
+      e.preventDefault();
+      if (e.key === 'y' || e.shiftKey) vpred(); else zpet();
+      return;
+    }
+    if (e.key === 'Escape' && !$('napovedaZkratek').classList.contains('skryt')) { e.preventDefault(); napovedaZkratek(false); return; }
+    if (vPoli || e.ctrlKey || e.metaKey || e.altKey) return;
+    const akce = {
+      '?': () => napovedaZkratek(), v: () => rozbalAPrejdi('kartaVysledek'), s: () => rozbalAPrejdi('kartaSpotreba'), d: () => rozbalAPrejdi('kartaDistribuce'),
+      n: () => rozbalAPrejdi('kartaNabidky'), r: () => rozbalAPrejdi('kartaRiziko'), m: () => rozbalAPrejdi('kartaMapa'), z: () => rozbalAPrejdi('kartaZivo'),
+      o: () => { if (S.profil !== 'csv') { S.profil = 'csv'; naplnFormular(); uloz(); popisCSV(); prepocti(); } rozbalAPrejdi('kartaSpotreba'); $('csvSoubor').click(); },
+      e: () => $('btnCSV').click(), t: () => window.print(), l: () => sdilet(),
+    }[e.key.length === 1 ? e.key.toLowerCase() : e.key];
+    if (akce) { e.preventDefault(); akce(); }
+  }
+  function inicializujErgonomii() {
+    if (typeof location !== 'undefined' && nactiZOdkazu(location.hash)) {
+      naplnFormular(); kresliNabidky(); infoRezim();
+      setTimeout(() => Dialog.info('Načteno zadání z odkazu.'), 0);
+      try { history.replaceState(null, '', location.pathname + location.search); } catch (e) { /* nic */ }
+    }
+    document.querySelectorAll('input[inputmode]').forEach(vylepsiPole);
+    $('nabidkyDalsi').addEventListener('focusin', e => { if (e.target && e.target.getAttribute && e.target.getAttribute('inputmode')) vylepsiPole(e.target); });
+    document.querySelectorAll('.krok').forEach(b => b.addEventListener('click', e => { krokuj($(b.dataset.pole), +b.dataset.smer, nasobek(e)); }));
+    $('chipyKwh').addEventListener('click', e => { const b = e.target.closest('[data-kwh]'); if (!b) return; nastavSpotrebu(+b.dataset.kwh); pamatujKwh(); kresliChipy(); uloz(); prepocti(); });
+    $('chipyJistic').addEventListener('click', e => {
+      const b = e.target.closest('[data-faze]'); if (!b) return;
+      S.faze = +b.dataset.faze; $('faze').value = S.faze; S.ampery = +b.dataset.a; naplnAmpery(); zrusRucniReg('změna jističe'); kresliChipy(); uloz(); prepocti();
+    });
+    $('chipyPrir').addEventListener('click', e => { const b = e.target.closest('[data-prir]'); if (!b) return; S.spotPrir = +b.dataset.prir; $('spotPrir').value = naZobr(S.spotPrir, 0); oznacPole($('spotPrir'), null); kresliChipy(); uloz(); prepocti(); });
+    $('chipyBat').addEventListener('click', e => {
+      const b = e.target.closest('[data-bat]'); if (!b) return;
+      const c = +b.dataset.bat; Object.assign(S, { batOn: true, batC: c, batP: c / 2 }); ['batC', 'batP'].forEach(k => { $(k).value = String(S[k]).replace('.', ','); oznacPole($(k), null); });
+      $('batOn').checked = true; kresliChipy(); uloz(); prepocti();
+    });
+    ['kwhVT', 'kwhNT'].forEach(k => $(k).addEventListener('change', () => { pamatujKwh(); kresliChipy(); uloz(); }));
+    $('btnZpet').addEventListener('click', zpet); $('btnVpred').addEventListener('click', vpred);
+    $('btnSdilet').addEventListener('click', sdilet); $('btnVychozi').addEventListener('click', vychozi);
+    $('btnZkratky').addEventListener('click', () => napovedaZkratek()); $('btnZkratkyZavrit').addEventListener('click', () => napovedaZkratek(false));
+    $('napovedaZkratek').addEventListener('click', e => { if (e.target === $('napovedaZkratek')) napovedaZkratek(false); });
+    $('skokVysledek').addEventListener('click', () => { $('skokVysledek').classList.add('skryt'); rozbalAPrejdi('kartaVysledek'); });
+    document.addEventListener('keydown', klavesy);
+    document.querySelectorAll('.vstupy input, .vstupy select').forEach(el => el.addEventListener('change', () => setTimeout(nabidniSkok, 400)));
+    sbalovani(); kresliChipy(); tlacitkaHistorie();
+  }
+
+  /* ---------------- start ---------------- */
+  nastavCSSBarvy();
+  naplnFormular(); infoRezim(); regulovane(); aktualizujSazbu();
+  $('regStav').textContent = REG.stavK;
+  nactiUlozeneCSV(); popisCSV();
+  inicializujErgonomii();
+  let mapaRokNaplnen = false;
+  async function start() {
+    zprava('Načítám data…');
+    try {
+      [INDEX, KURZY, TDD] = await Promise.all([nactiJSON('index.json'), nactiJSON('kurzy.json'), nactiJSON('tdd_2025.json')]);
+    } catch (e) {
+      INDEX = null;
+      zneplatni('❌ ' + popisChybyNacteni(e), true);
+      return;
+    }
+    const posl = INDEX.roky[INDEX.roky.length - 1];
+    $('stavDat').textContent = datumText(posl.do - 1);
+    if (!mapaRokNaplnen) {
+      mapaRokNaplnen = true;
+      INDEX.roky.filter(r => r.uplny).slice().reverse().forEach(r => $('obdobi').add(new Option('rok ' + r.rok + (r.rok === 2022 ? ' (energetická krize)' : ''), String(r.rok))));
+      $('obdobi').add(new Option('posledních 12 měsíců (do ' + datumText(posl.do - 1) + ')', 'posl12'));
+      $('mapaRok').add(new Option('zvolené období výpočtu', 'aktualni'));
+      INDEX.roky.filter(r => r.uplny).slice().reverse().forEach(r => $('mapaRok').add(new Option(String(r.rok), String(r.rok))));
+    }
+    if (![...$('obdobi').options].some(o => o.value === S.obdobi)) S.obdobi = String(INDEX.roky.filter(r => r.uplny).pop().rok);
+    $('obdobi').value = S.obdobi;
+    prepoctiHned();
+    nactiZivo();
+    setInterval(zkontrolujObnovuZivo, 5 * 60000);
+    document.addEventListener('visibilitychange', zkontrolujObnovuZivo);
+  }
+  start();
+  window.TARIF_UI_ERG = { odkaz: () => sdilenyOdkaz(), zpet: () => zpet(), vpred: () => vpred(), historie: () => historie.length };
+  window.TARIF_UI = { stav: () => S, vysledek: () => posledni, riziko: () => rizikoData, citlivost: () => citlivostData, prepocti: prepoctiHned,
+    nastav: (k, v) => { S[k] = v; if (k === 'sazba') S.ntHodiny = null; naplnFormular(); uloz(); return prepoctiHned(); } };
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,1501 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Návrh schodiště</title>
+  <link rel="stylesheet" href="../common.css">
+  <script src="../theme.js"></script>
+  <script src="../dialog.js"></script>
+  <script src="../podpis.js" defer></script>
+  <script src="schodiste/jadro.js"></script>
+  <script src="schodiste/vykresy.js"></script>
+  <style>
+    :root { --text-chyba: #ff8f85; --text-mez: #f0bd5e; }
+    :root[data-theme="light"] { --text-chyba: var(--danger); --text-mez: var(--warn); }
+    body { background-color: var(--bg-deep); padding: 24px clamp(12px, 3vw, 40px); min-height: 100vh; }
+    h1 { font-size: 1.4rem; margin-bottom: 4px; }
+    h2 { font-size: 1rem; margin-bottom: 6px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    h3 { font-size: 0.82rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: .4px; margin: 14px 0 6px; }
+    .podtitul { color: var(--text-muted); font-size: 0.88rem; margin-bottom: 12px; max-width: 980px; line-height: 1.5; }
+    .upozorneni { max-width: 1320px; border: 1px solid var(--warn); border-left-width: 4px; background: var(--bg-panel); color: var(--text); border-radius: var(--radius); padding: 10px 14px; font-size: 0.84rem; line-height: 1.5; margin-bottom: 16px; }
+    .upozorneni b { color: var(--text-mez); }
+    .rozlozeni { display: grid; grid-template-columns: minmax(0, 400px) minmax(0, 1fr); gap: 18px; max-width: 1320px; }
+    @media (max-width: 980px) { .rozlozeni { grid-template-columns: minmax(0, 1fr); } }
+    .sloupec { display: flex; flex-direction: column; gap: 16px; min-width: 0; }
+    .karta { background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 16px; min-width: 0; }
+    .karta[hidden] { display: none; }
+    label, .popisek { display: block; font-size: 0.78rem; color: var(--text-muted); margin: 10px 0 4px; }
+    input[type="number"], input[type="text"], select {
+      width: 100%; background: var(--bg-input); border: 1px solid var(--border); border-radius: 6px;
+      color: var(--text); padding: 8px 10px; font-size: 0.95rem; min-width: 0; font-family: inherit;
+    }
+    input::placeholder { color: var(--text-muted); font-style: italic; }
+    input:focus, select:focus { outline: none; border-color: var(--accent); }
+    input.chyba, select.chyba { border-color: var(--danger); }
+    input.mez, select.mez { border-color: var(--warn); }
+    .zaskrt { display: flex; align-items: center; gap: 8px; font-size: 0.85rem; color: var(--text); margin: 10px 0 2px; cursor: pointer; }
+    .zaskrt input { width: 18px; height: 18px; accent-color: var(--accent); }
+    .mrizka2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 0 12px; }
+    .pole { min-width: 0; }
+    .pole[hidden] { display: none; }
+    .pole-stav { font-size: 0.74rem; line-height: 1.35; margin-top: 3px; color: var(--text-muted); }
+    .pole-stav.chyba { color: var(--text-chyba); }
+    .pole-stav.mez { color: var(--text-mez); }
+    .pomoc { display: inline-block; width: 16px; height: 16px; line-height: 16px; text-align: center; border-radius: 50%; border: 1px solid var(--text-muted); color: var(--text-muted); font-size: 0.68rem; margin-left: 4px; cursor: help; }
+    .napoveda { font-size: 0.74rem; color: var(--text-muted); margin-top: 4px; line-height: 1.45; }
+    .napoveda a, .pozn a, .kontroly a { color: var(--accent); }
+    button {
+      background: var(--bg-control); border: 1px solid var(--border-strong); color: var(--text);
+      border-radius: 6px; padding: 7px 12px; font-size: 0.85rem; cursor: pointer; font-family: inherit;
+    }
+    button:hover { background: var(--bg-hover); }
+    button:disabled { opacity: 0.45; cursor: not-allowed; }
+    button.hlavni { background: var(--accent); border-color: var(--accent); color: var(--on-accent); font-weight: 600; }
+    button.hlavni:hover { background: var(--accent-hover); }
+    button.male { padding: 4px 9px; font-size: 0.78rem; }
+    button[aria-pressed="true"], button.aktivni { background: var(--accent-soft); border-color: var(--accent); }
+    .tlacitka { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+    .rezim { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+    .rezim .napoveda { margin: 0; }
+    .typy { display: grid; grid-template-columns: repeat(auto-fill, minmax(104px, 1fr)); gap: 6px; }
+    .typy button { display: flex; flex-direction: column; align-items: center; gap: 4px; padding: 8px 4px; font-size: 0.74rem; line-height: 1.2; text-align: center; min-height: 92px; }
+    .typy svg { width: 64px; height: 46px; color: var(--text-muted); }
+    .typy button[aria-pressed="true"] svg { color: var(--accent); }
+    .vysledky { display: grid; grid-template-columns: repeat(auto-fit, minmax(128px, 1fr)); gap: 8px; margin-top: 8px; }
+    .box { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px; min-width: 0; }
+    .box .popis { font-size: 0.66rem; text-transform: uppercase; letter-spacing: 0.4px; color: var(--text-muted); margin-bottom: 4px; }
+    .box .cislo { font-size: 1.15rem; font-weight: 700; overflow-wrap: anywhere; }
+    .box .dalsi { font-size: 0.72rem; color: var(--text-muted); margin-top: 3px; }
+    .box.hlavni .cislo { color: var(--accent); }
+    .box.spatne .cislo { color: var(--text-chyba); }
+    .stav-souhrn { margin-top: 10px; padding: 8px 12px; border-radius: 6px; font-size: 0.86rem; border: 1px solid var(--border); background: var(--bg-elevated); line-height: 1.45; }
+    .stav-souhrn.ok { border-color: var(--ok); }
+    .stav-souhrn.mez { border-color: var(--warn); }
+    .stav-souhrn.chyba { border-color: var(--danger); }
+    .obal-tab { overflow-x: auto; -webkit-overflow-scrolling: touch; margin-top: 6px; }
+    table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+    th, td { padding: 5px 6px; border-bottom: 1px solid var(--border); text-align: right; white-space: nowrap; }
+    th:first-child, td:first-child { text-align: left; }
+    td.vlevo, th.vlevo { text-align: left; white-space: normal; }
+    th { color: var(--text-muted); font-weight: 600; }
+    .varianty tbody tr { cursor: pointer; }
+    .varianty tbody tr:hover { background: var(--bg-hover); }
+    .varianty tbody tr.zvolena { background: var(--accent-soft); }
+    .varianty tbody tr:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+    .stitek { display: inline-block; font-size: 0.66rem; padding: 1px 6px; border-radius: 9px; border: 1px solid var(--accent); color: var(--accent); margin-left: 4px; vertical-align: 1px; }
+    .tecka { display: inline-block; width: 15px; height: 15px; line-height: 15px; border-radius: 50%; margin: 0 1px; text-align: center; font-size: 0.6rem; font-weight: 700; color: #111; vertical-align: -2px; }
+    .tecka.ok, .znak.ok { background: var(--ok); }
+    .tecka.mez, .znak.mez { background: var(--warn); }
+    .tecka.chyba, .znak.chyba { background: var(--danger); }
+    .tecka.info, .znak.info { background: var(--text-faint); }
+    .tecka.nic { background: transparent; border: 1px solid var(--text-muted); color: var(--text-muted); }
+    :root[data-theme="light"] .tecka:not(.nic) { color: #fff; }
+    .znak { display: inline-block; min-width: 76px; text-align: center; padding: 2px 6px; border-radius: 4px; color: #111; font-size: 0.72rem; font-weight: 600; }
+    :root[data-theme="light"] .znak { color: #fff; }
+    .kontroly td { vertical-align: top; }
+    .kontroly .pozn-k { display: block; color: var(--text-muted); font-size: 0.72rem; white-space: normal; margin-top: 2px; }
+    .kontroly details { font-size: 0.72rem; color: var(--text-muted); white-space: normal; }
+    .kontroly .oprava { margin-top: 4px; }
+    .zalozky { display: flex; flex-wrap: wrap; gap: 4px; border-bottom: 1px solid var(--border); margin-bottom: 10px; }
+    .zalozky button { border-radius: 6px 6px 0 0; border-bottom: 0; }
+    .zalozky button[aria-selected="true"] { background: var(--accent-soft); border-color: var(--accent); }
+    .vykres { background: var(--bg-input); border: 1px solid var(--border); border-radius: 6px; min-height: 260px; display: flex; align-items: center; justify-content: center; overflow: hidden; }
+    .vykres svg { width: 100%; height: auto; max-height: 72vh; display: block; }
+    #platno3d { width: 100%; height: min(70vh, 560px); min-height: 300px; border-radius: 6px; overflow: hidden; background: var(--bg-input); border: 1px solid var(--border); position: relative; }
+    #platno3d .info3d { position: absolute; left: 8px; bottom: 6px; font-size: 0.72rem; color: var(--text-muted); pointer-events: none; }
+    .nahled-list { background: #888; padding: 8px; border-radius: 6px; }
+    .nahled-list svg { width: 100%; height: auto; display: block; background: #fff; box-shadow: 0 2px 10px rgba(0,0,0,.4); }
+    .exporty { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; margin-top: 10px; }
+    .exporty select { width: auto; }
+    .legenda { display: flex; gap: 12px; flex-wrap: wrap; font-size: 0.74rem; color: var(--text-muted); margin-top: 6px; align-items: center; }
+    .legenda i { display: inline-block; width: 14px; height: 10px; border-radius: 2px; vertical-align: -1px; margin-right: 4px; }
+    .pozn { color: var(--text-muted); font-size: 0.78rem; line-height: 1.55; max-width: 1320px; margin-top: 20px; }
+    .pozn h2 { color: var(--text-muted); margin-top: 6px; }
+    .pozn table td, .pozn table th { white-space: normal; text-align: left; vertical-align: top; }
+    .pozn ol { padding-left: 20px; }
+    .pojmy dt { font-weight: 600; margin-top: 6px; font-size: 0.8rem; }
+    .pojmy dd { font-size: 0.78rem; color: var(--text-muted); margin-left: 0; }
+    .chybovy { color: var(--text-chyba); font-size: 0.86rem; padding: 10px; }
+    #tiskovyList { display: none; }
+    .pruh { display: none; }
+    .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+    @media (max-width: 980px) {
+      .pruh { display: flex; position: sticky; top: 0; z-index: 20; gap: 8px; align-items: center; justify-content: space-between; flex-wrap: wrap;
+        background: var(--bg-elevated); border: 1px solid var(--border-strong); border-radius: var(--radius); padding: 8px 12px; margin-bottom: 12px;
+        color: var(--text); text-decoration: none; font-size: 0.86rem; box-shadow: var(--shadow); }
+      .pruh b { font-weight: 700; }
+      .pruh .ok { color: var(--ok); } .pruh .mez { color: var(--text-mez); } .pruh .chyba { color: var(--text-chyba); }
+    }
+    .radek-chyba td { color: var(--text-chyba); }
+    @media (max-width: 600px) {
+      .kontroly thead { display: none; }
+      .kontroly tr { display: grid; grid-template-columns: 1fr auto; gap: 3px 8px; padding: 8px 0; border-bottom: 1px solid var(--border); }
+      .kontroly td { border: 0; padding: 0; white-space: normal; text-align: left; }
+      .kontroly .k-nazev { grid-column: 1; grid-row: 1; font-weight: 600; }
+      .kontroly .k-stav { grid-column: 2; grid-row: 1; }
+      .kontroly .k-hod, .kontroly .k-poz, .kontroly .k-zdroj { grid-column: 1 / -1; }
+      .kontroly .k-poz { color: var(--text-muted); }
+      .kontroly .k-poz::before { content: "požadavek: "; }
+      .kontroly .k-zdroj { font-size: 0.72rem; }
+      .varianty .sk { display: none; }
+      .varianty tr { display: grid; grid-template-columns: 1.3fr repeat(4, 1fr); align-items: center; border-bottom: 1px solid var(--border); }
+      .varianty td, .varianty th { border: 0; }
+      .varianty .pravidla { grid-column: 1 / -1; text-align: left; padding-top: 0; }
+      .varianty thead .pravidla { display: none; }
+      #vykaz thead { display: none; }
+      #vykaz tr { display: grid; grid-template-columns: 1fr auto; gap: 2px 8px; padding: 6px 0; border-bottom: 1px solid var(--border); }
+      #vykaz td, #vykaz th { border: 0; padding: 0; white-space: normal; text-align: left; }
+      #vykaz td:nth-child(1) { grid-column: 1; }
+      #vykaz td:nth-child(2) { grid-column: 2; grid-row: 1; }
+      #vykaz td:nth-child(3), #vykaz td:nth-child(4) { grid-column: 1 / -1; color: var(--text-muted); }
+      #tabSirky .sk { display: none; }
+    }
+    .skryt { display: none !important; }
+    /* --- ergonomie: lišta, vstupy s jednotkou, kroky, předvolby, sbalování --- */
+    .lista { position: sticky; top: 0; z-index: 30; display: flex; flex-wrap: wrap; gap: 6px 10px; align-items: center; justify-content: space-between;
+      max-width: 1320px; background: var(--bg-elevated); border: 1px solid var(--border-strong); border-radius: var(--radius); padding: 6px 10px; margin-bottom: 14px; box-shadow: var(--shadow); }
+    .lista .pruh { display: flex !important; position: static; box-shadow: none; border: 0; margin: 0; padding: 0; background: none; gap: 10px; flex-wrap: wrap; font-size: 0.86rem; color: var(--text); text-decoration: none; }
+    .lista .pruh .ok { color: var(--ok); } .lista .pruh .mez { color: var(--text-mez); } .lista .pruh .chyba { color: var(--text-chyba); }
+    .lista .akce { display: flex; gap: 4px; flex-wrap: wrap; align-items: center; }
+    .lista .akce button { padding: 5px 9px; }
+    .kotvy { display: flex; flex-wrap: wrap; gap: 4px 12px; max-width: 1320px; margin: -6px 0 12px; font-size: 0.8rem; }
+    .kotvy a { color: var(--accent); }
+    .s-jednotkou { position: relative; flex: 1; min-width: 0; }
+    .s-jednotkou input { padding-right: 34px; }
+    .jednotka { position: absolute; right: 10px; top: 50%; transform: translateY(-50%); color: var(--text-muted); font-size: 0.8rem; pointer-events: none; }
+    .vstup-radek { display: flex; gap: 4px; align-items: stretch; }
+    .vstup-radek .krok { width: 38px; padding: 0; font-size: 1.1rem; flex: 0 0 auto; }
+    .chipy { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+    .chip { padding: 2px 9px; border-radius: 12px; font-size: 0.74rem; background: var(--bg-elevated); }
+    .chip.posledni { border-style: dashed; }
+    .chip[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); }
+    .pole-stav { min-height: 1em; }
+    .pole-stav button { margin: 3px 0 0; padding: 2px 8px; font-size: 0.74rem; }
+    .pomoc { padding: 0; background: none; }
+    .pomoc-text { font-size: 0.74rem; color: var(--text-muted); background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 6px; padding: 6px 8px; margin-top: 4px; }
+    .sbal { margin-left: auto; padding: 2px 8px; font-size: 0.8rem; background: none; border-color: var(--border); }
+    .karta.sbalena > :not(h2) { display: none !important; }
+    .box { min-height: 88px; transition: box-shadow .2s; }
+    .box.zmena { animation: blik 1s ease-out; }
+    @keyframes blik { from { box-shadow: 0 0 0 2px var(--accent); background: var(--accent-soft); } to { box-shadow: 0 0 0 0 transparent; } }
+    :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .vykres { touch-action: pan-y; cursor: grab; position: relative; }
+    .vykres.priblizeno { touch-action: none; }
+    .vykres:focus-visible { outline: 2px solid var(--accent); }
+    .zoom-info { font-size: 0.72rem; color: var(--text-muted); margin-top: 4px; }
+    .porovnani td, .porovnani th { white-space: normal; }
+    .porovnani td.lisi { background: var(--accent-soft); font-weight: 600; }
+    .porovnani th[scope="row"] { text-align: left; color: var(--text-muted); font-weight: 600; }
+    dialog.zkratky { border: 1px solid var(--border); border-radius: 10px; background: var(--bg-elevated); color: var(--text); padding: 16px 20px; max-width: min(92vw, 520px); }
+    dialog.zkratky::backdrop { background: rgba(0,0,0,.5); }
+    dialog.zkratky kbd, .napoveda kbd { background: var(--bg-control); border: 1px solid var(--border-strong); border-radius: 4px; padding: 0 5px; font-size: 0.8rem; }
+    dialog.zkratky td { white-space: normal; text-align: left; }
+    .stavba { position: fixed; inset: 0; z-index: 200; background: var(--bg); color: var(--text); overflow: auto; padding: 14px clamp(12px, 4vw, 32px) 40px; font-size: 1.15rem; line-height: 1.45; }
+    .stavba h2 { font-size: 1.3rem; margin: 18px 0 8px; }
+    .stavba .velke { font-size: 2rem; font-weight: 700; color: var(--accent); }
+    .stavba table { font-size: 1.1rem; }
+    .stavba td, .stavba th { padding: 8px 6px; white-space: normal; }
+    .stavba .horni { position: sticky; top: -14px; background: var(--bg); padding: 8px 0; display: flex; gap: 8px; align-items: center; justify-content: space-between; flex-wrap: wrap; border-bottom: 1px solid var(--border); }
+    .stavba button { min-height: 48px; font-size: 1rem; }
+    @media (pointer: coarse) {
+      button, select, input[type="text"] { min-height: 44px; }
+      .chip { padding: 8px 12px; font-size: 0.82rem; }
+      .vstup-radek .krok { width: 46px; }
+      .zaskrt input { width: 24px; height: 24px; }
+      .tecka { width: 18px; height: 18px; line-height: 18px; }
+    }
+    @media (max-width: 520px) { .box .cislo { font-size: 1rem; } th, td { padding: 4px; } }
+    @media print {
+      body { padding: 0; background: #fff; }
+      body > *:not(#tiskovyList) { display: none !important; }
+      #tiskovyList { display: block !important; }
+      #tiskovyList svg { display: block; }
+    }
+  </style>
+  <style id="tiskStranka">@page { size: A4 landscape; margin: 0; }</style>
+</head>
+<body>
+  <h1>🪜 Návrh schodiště</h1>
+  <p class="podtitul">Schodiště pro rodinný dům i jiné stavby podle ČSN 73 4130: počet a výška stupňů, šířka podle
+    krokového vzorce, varianty s vyhodnocením normy, kosé (vyrovnávané) a točité stupně, podchodná výška a potřebný stropní
+    otvor, dřevěné schodnice s úhly řezů, výkaz materiálu. Výkresy půdorysu a řezu, 3D náhled, výkresový list k tisku, SVG a DXF.</p>
+  <div class="upozorneni" role="note"><b>⚠️ Orientační pomůcka, ne projekt.</b> Stránka nenahrazuje projektanta ani statika:
+    schodiště je součást stavby, jeho návrh patří do projektové dokumentace a nosné prvky musí posoudit autorizovaná osoba.
+    Normové hodnoty jsou převzaté z veřejných výtahů ČSN 73 4130 a souvisejících předpisů (viz zdroje dole) – před realizací je
+    ověřte v platném znění normy.</div>
+
+  <div class="lista" role="region" aria-label="Výsledek a hlavní akce">
+    <a class="pruh" id="pruh" href="#vysledek"></a>
+    <div class="akce">
+      <button id="btnZpet" title="Zpět (Ctrl+Z)" aria-label="Zpět" disabled>↶</button>
+      <button id="btnZnovu" title="Znovu (Ctrl+Shift+Z)" aria-label="Znovu" disabled>↷</button>
+      <button id="btnPripnout" title="Připnout návrh k porovnání (P)">📌</button>
+      <button id="btnStavba" title="Režim u stavby – rozměry pro tesaře na telefonu (U)">👷 U stavby</button>
+      <button id="btnZkratky" title="Klávesové zkratky (?)" aria-label="Klávesové zkratky">⌨ ?</button>
+    </div>
+  </div>
+  <nav class="kotvy" aria-label="Části stránky"><a href="#vstupy">Zadání</a><a href="#vysledek">Výsledek</a><a href="#kartaVarianty">Varianty</a><a href="#kartaPorovnani">Porovnání</a><a href="#kartaKontroly">Kontroly</a><a href="#kartaVykresy">Výkresy</a><a href="#kartaVykaz">Výkaz</a><a href="#kartaVysky">Výšky</a></nav>
+  <div class="rozlozeni">
+    <div class="sloupec">
+      <div class="karta">
+        <div class="rezim" role="group" aria-label="Rozsah zadání">
+          <button type="button" id="btnZakladni" aria-pressed="true">Základní</button>
+          <button type="button" id="btnPokrocile" aria-pressed="false">Pokročilé</button>
+          <span class="napoveda" id="rezimInfo"></span>
+        </div>
+      </div>
+      <div class="sloupec" id="vstupy"></div>
+    </div>
+
+    <div class="sloupec">
+      <div class="karta" id="vysledek">
+        <h2>📋 Výsledek <span id="nazevNavrhu" class="stitek"></span></h2>
+        <div class="vysledky" id="boxy"></div>
+        <div class="stav-souhrn" id="souhrn" role="status" aria-live="polite"></div>
+        <details class="napoveda"><summary>Pojmy</summary><dl class="pojmy" id="pojmy"></dl></details>
+      </div>
+
+      <div class="karta" id="kartaVarianty">
+        <h2>🔢 Varianty počtu stupňů</h2>
+        <p class="napoveda">Kliknutím (nebo Enter) zvolíte variantu. Doporučená podle cíle: <span id="cilPopis"></span>.
+          Značky: výška · šířka · 2h+b · sklon · počet v rameni · podchodná výška · kosé stupně · půdorys (✓ vyhovuje, ! mezní, ✕ nevyhovuje, – netýká se).</p>
+        <div class="obal-tab"><table class="varianty" id="varianty"><thead><tr>
+          <th>n</th><th>h</th><th>b</th><th>α</th><th>2h+b</th><th class="sk">délka</th><th class="sk">půdorys</th><th class="vlevo pravidla">pravidla</th></tr></thead><tbody></tbody></table></div>
+        <div class="tlacitka"><button class="male" id="btnAutoN" title="Automaticky doporučená (A)">↺ automaticky doporučená</button><button class="male" id="btnPredN" title="Méně výšek ([)">[ − výška</button><button class="male" id="btnDalN" title="Víc výšek (])">+ výška ]</button></div>
+      </div>
+
+      <div class="karta" id="kartaPorovnani">
+        <h2>⚖️ Porovnání návrhů</h2>
+        <p class="napoveda">Připněte až 3 návrhy (📌 nebo klávesa P) a porovnejte je vedle sebe; kliknutím na název návrh načtete.</p>
+        <div class="obal-tab"><table class="porovnani" id="porovnani"><tbody></tbody></table></div>
+      </div>
+
+      <div class="karta" id="kartaKontroly">
+        <h2>✅ Kontroly podle normy</h2>
+        <div class="obal-tab"><table class="kontroly" id="kontroly"><thead><tr>
+          <th>Kontrola</th><th>Hodnota</th><th class="vlevo">Požadavek</th><th>Stav</th><th>Zdroj</th></tr></thead><tbody></tbody></table></div>
+      </div>
+
+      <div class="karta" id="kartaVykresy">
+        <h2>📐 Výkresy</h2>
+        <div class="zalozky" role="tablist" id="zalozky" aria-label="Výkresy">
+          <button role="tab" id="tab-pudorys" data-z="pudorys" aria-controls="panel-pudorys" aria-selected="true" tabindex="0">Půdorys</button>
+          <button role="tab" id="tab-rez" data-z="rez" aria-controls="panel-rez" aria-selected="false" tabindex="-1">Řez</button>
+          <button role="tab" id="tab-3d" data-z="3d" aria-controls="panel-3d" aria-selected="false" tabindex="-1">3D</button>
+          <button role="tab" id="tab-schodnice" data-z="schodnice" aria-controls="panel-schodnice" aria-selected="false" tabindex="-1">Schodnice</button>
+          <button role="tab" id="tab-list" data-z="list" aria-controls="panel-list" aria-selected="false" tabindex="-1">List k tisku</button>
+        </div>
+        <div id="panel-pudorys" role="tabpanel" aria-labelledby="tab-pudorys">
+          <div class="vykres" id="vykresPudorys" tabindex="0" aria-label="Půdorys – kolečkem (s fokusem nebo Ctrl) přiblížit, táhnout = posun, dvojklik = celý výkres"></div>
+          <div class="legenda"><label class="zaskrt" style="margin:0"><input type="checkbox" id="mapaPodchodu" checked> mapa podchodné výšky</label>
+            <span id="legendaMapy"><i style="background:rgba(76,175,125,.45)"></i>vyhovuje <i style="background:rgba(224,93,93,.6)"></i>nízko nad hlavou</span></div>
+        </div>
+        <div id="panel-rez" class="skryt" role="tabpanel" aria-labelledby="tab-rez"><div class="vykres" id="vykresRez" tabindex="0" aria-label="Řez – kolečkem (s fokusem nebo Ctrl) přiblížit, táhnout = posun, dvojklik = celý výkres"></div></div>
+        <div id="panel-3d" class="skryt" role="tabpanel" aria-labelledby="tab-3d">
+          <div id="platno3d"><span class="info3d">táhnutím otáčet · kolečkem / dvěma prsty přiblížit</span></div>
+          <p class="chybovy skryt" id="chyba3d" role="alert"></p>
+          <div class="tlacitka"><button class="male" id="btnPohled3d">↺ Výchozí pohled</button></div>
+        </div>
+        <div id="panel-schodnice" class="skryt" role="tabpanel" aria-labelledby="tab-schodnice"></div>
+        <div id="panel-list" class="skryt" role="tabpanel" aria-labelledby="tab-list"><div class="nahled-list" id="nahledListu"></div></div>
+        <p class="zoom-info">🔍 Kolečko po kliknutí do výkresu (nebo Ctrl + kolečko, sevření prstů) přibližuje, tažení posouvá, dvojklik nebo <kbd>0</kbd> ukáže celý výkres; klávesy <kbd>1</kbd>–<kbd>5</kbd> přepínají výkresy.</p>
+        <p class="napoveda" id="popisVykresu"></p>
+        <div class="exporty">
+          <label for="papir" style="margin:0">List:</label>
+          <select id="papir"><option value="a4">A4 na šířku</option><option value="a3">A3 na šířku</option></select>
+          <button class="hlavni vystup" id="btnTisk">🖨️ Tisk / PDF</button>
+          <button class="vystup" id="btnSvgList">SVG list</button>
+          <button class="vystup" id="btnSvgPud">SVG půdorys</button>
+          <button class="vystup" id="btnSvgRez">SVG řez</button>
+          <button class="vystup" id="btnDxf">DXF (R12)</button>
+        </div>
+        <p class="napoveda">Tisk vytvoří výkresový list ve standardním měřítku (1:10 až 1:200 podle velikosti, půdorys a řez každý ve svém) –
+          v dialogu tisku zvolte „Uložit jako PDF“, velikost papíru podle listu a měřítko 100 % (bez přizpůsobení). Funguje i tisk z menu
+          prohlížeče. DXF (R12) obsahuje půdorys a vedle něj řez, souřadnice v milimetrech (při importu zvolte mm), hladiny podle prvků.</p>
+      </div>
+
+      <div class="karta" id="kartaKose">
+        <h2>📏 Šířky stupňů</h2>
+        <p class="napoveda" id="koseInfo"></p>
+        <div class="obal-tab"><table id="tabSirky"><thead></thead><tbody></tbody></table></div>
+      </div>
+
+      <div class="karta" id="kartaVykaz">
+        <h2>🧾 Výkaz materiálu</h2>
+        <div class="obal-tab"><table id="vykaz"><thead><tr><th>Položka</th><th>Ks</th><th class="vlevo">Rozměr</th><th>Množství</th></tr></thead><tbody></tbody></table></div>
+        <p class="napoveda">Množství jsou čisté (bez prořezu a rezervy, u dřeva počítejte 10–15 %). Statiku, kotvení a detaily řeší projektant / výrobce.</p>
+      </div>
+
+      <div class="karta" id="kartaVysky">
+        <h2>📊 Výšky stupňů</h2>
+        <p class="napoveda" id="vyskyInfo"></p>
+        <div class="obal-tab"><table id="vysky"><thead></thead><tbody></tbody></table></div>
+      </div>
+    </div>
+  </div>
+
+  <section class="pozn" id="poznamka"></section>
+  <dialog class="zkratky" id="dlgZkratky" aria-labelledby="zkrNadpis">
+    <h2 id="zkrNadpis">⌨ Klávesové zkratky</h2>
+    <table><tbody id="tabZkratky"></tbody></table>
+    <p class="napoveda">V číselném poli: <kbd>↑</kbd>/<kbd>↓</kbd> krok (s <kbd>Shift</kbd> ×10, s <kbd>Alt</kbd> ×0,1), kolečko myši krokuje jen když má pole fokus, <kbd>Enter</kbd> přepočítá, <kbd>Esc</kbd> vrátí hodnotu. Ostatní zkratky v polích nefungují.</p>
+    <div class="tlacitka"><button id="btnZavritZkratky" class="hlavni">Zavřít</button></div>
+  </dialog>
+  <div class="stavba skryt" id="stavba" role="dialog" aria-modal="true" aria-label="Režim u stavby"></div>
+  <div id="tiskovyList" aria-hidden="true"></div>
+
+<script>
+'use strict';
+const $ = id => document.getElementById(id);
+const V = SCHOD_VYKRESY;
+const cz = V.cz, esc = V.esc;
+const KLIC_NAVRHY = 'webapp_schodiste_navrhy', KLIC_POSLEDNI = 'webapp_schodiste_posledni', KLIC_REZIM = 'webapp_schodiste_rezim';
+const VERZE = 1;
+const ls = {
+  cti(k) { try { return JSON.parse(localStorage.getItem(k)); } catch (e) { return null; } },
+  zapis(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); return true; } catch (e) { return false; } },
+};
+const toast = (t, chyba) => { if (window.Dialog) (chyba ? Dialog.chyba : Dialog.info)(t); };
+const maVlastni = (o, k) => Object.prototype.hasOwnProperty.call(o, k);
+
+/* ---------------- formulář ----------------
+   zakl: pole režimu Základní; auto: hodnota „automaticky“ (pole prázdné s placeholderem), pouzito: popis použité hodnoty;
+   pomoc: krátké vysvětlení pojmu */
+const TYP_PODESTA = ['dvouramenne', 'L_podesta', 'U_podesta'], TYP_KOSE = ['L_kose', 'U_kose'];
+const FORM = [
+  { karta: 'typ', nadpis: '🪜 Typ schodiště' },
+  { karta: 'ucel', nadpis: '🏠 Účel a norma', pole: [
+    { id: 'ucel', typ: 'select', zakl: true, label: 'Účel schodiště', moznosti: Object.entries(SCHOD.KATEGORIE).map(([k, v]) => [k, v.nazev]) },
+    { id: 'bezbar', typ: 'check', zakl: true, label: 'bezbariérově užívané (sklon ≤ 28°, h ≤ 160 mm)', kdy: s => s.ucel === 'domovni' },
+    { id: 'katPozn', typ: 'info', zakl: true },
+  ] },
+  { karta: 'vyska', nadpis: '📏 Výška', pole: [
+    { id: 'vyskaRezim', typ: 'select', label: 'Zadávám výšku', moznosti: [['cista', 'konstrukční (čistá podlaha – čistá podlaha)'], ['hruba', 'hrubou (nosná konstrukce) + skladby podlah']] },
+    { id: 'H', zakl: true, krokBtn: 10, chipy: [2600, 2750, 2800, 3000, 3200], label: 'Konstrukční výška H (mm)', min: 1000, max: 12000, step: 10, kdy: s => s.vyskaRezim === 'cista', pomoc: 'Svislá vzdálenost čisté podlahy dole a čisté podlahy nahoře.' },
+    { id: 'Hhruba', zakl: true, krokBtn: 10, label: 'Hrubá výška – líc nosných konstrukcí (mm)', min: 1000, max: 12000, step: 10, kdy: s => s.vyskaRezim === 'hruba' },
+    { id: 'podlahaDole', label: 'Skladba podlahy dole (mm)', min: 0, max: 600, step: 5 },
+    { id: 'podlahaNahore', label: 'Skladba podlahy nahoře (mm)', min: 0, max: 600, step: 5 },
+    { id: 'Hinfo', typ: 'info', zakl: true },
+  ] },
+  { karta: 'pudorys', nadpis: '📐 Půdorys', pole: [
+    { id: 'dostDelka', zakl: true, krokBtn: 100, chipy: [3000, 4000, 4600, 5000], label: 'Dostupná délka (mm)', min: 500, max: 30000, step: 10, kdy: s => s.typ !== 'tocite' },
+    { id: 'dostSirka', zakl: true, krokBtn: 100, chipy: [1000, 2000, 3000], label: 'Dostupná šířka (mm)', min: 500, max: 30000, step: 10, kdy: s => s.typ !== 'tocite' },
+    { id: 'dostPrumer', zakl: true, label: 'Dostupný průměr / strana (mm)', min: 800, max: 6000, step: 10, kdy: s => s.typ === 'tocite' },
+    { id: 'B', zakl: true, krokBtn: 50, chipy: [800, 900, 1000, 1100, 1200], label: 'Průchodná šířka ramene B (mm)', min: 500, max: 4000, step: 10, kdy: s => s.typ !== 'tocite', pomoc: 'Vodorovná vzdálenost mezi stěnami nebo vnějšími okraji ramene. Schodnice do ní smí zasahovat nejvýš 200 mm, madlo a zábradlí 100 mm.' },
+    { id: 'Bp', label: 'Hloubka podesty (mm)', min: 500, max: 6000, step: 10, kdy: s => s.typ === 'L_podesta' || s.typ === 'U_podesta' },
+    { id: 'Lp', label: 'Délka mezipodesty (mm)', min: 0, max: 10000, step: 10, auto: 0, kdy: s => s.typ === 'dvouramenne', pouzito: v => cz(v.p.Lp) + ' mm (630 + b)' },
+    { id: 'zrcadlo', label: 'Šířka zrcadla (mm)', min: 0, max: 3000, step: 10, kdy: s => s.typ === 'U_podesta' || s.typ === 'U_kose', pomoc: 'Volný prostor mezi rameny (u U schodiště).' },
+    { id: 'rozdeleni', typ: 'select', zakl: true, label: 'Délky ramen', moznosti: [['auto', 'automaticky (stejně; nevejde-li se, podle prostoru)'], ['prostor', 'podle prostoru (vejít se do délky × šířky)'], ['stejne', 'stejně dlouhá'], ['prvni', 'delší 1. rameno (2 : 1)'], ['druhe', 'delší 2. rameno (1 : 2)'], ['vlastni', 'vlastní – počet výšek nebo délka 1. ramene']], kdy: s => SCHOD.TYPY_ROZDELENI.includes(s.typ),
+      pomoc: 'Jak rozdělit výšky mezi ramena. U L je dostupná délka ve směru 1. ramene a šířka ve směru 2. ramene. Rozdělení můžete měnit i přetažením úchytu ⇔ v půdorysu nebo klávesami < >.' },
+    { id: 'n1', zakl: true, krokBtn: 1, label: 'Výšek v 1. rameni', min: 1, max: 60, step: 1, kdy: s => SCHOD.TYPY_ROZDELENI.includes(s.typ) && s.rozdeleni === 'vlastni' },
+    { id: 'delka1', zakl: true, label: 'nebo délka 1. ramene (mm)', min: 0, max: 30000, step: 10, auto: 0, kdy: s => SCHOD.TYPY_ROZDELENI.includes(s.typ) && s.rozdeleni === 'vlastni', pouzito: v => v.rozdeleni ? cz(v.rozdeleni.delky[0]) + ' mm' : '–' },
+    { id: 'ramenaInfo', typ: 'info', zakl: true, kdy: s => SCHOD.TYPY_ROZDELENI.includes(s.typ) },
+    { id: 'ext', label: 'Vyrovnávaných stupňů navíc na stranu', min: -1, max: 20, step: 1, auto: -1, kdy: s => TYP_KOSE.includes(s.typ), pouzito: v => v.g.kose ? String(v.g.kose.ext) : '–' },
+    { id: 'vystupni', label: 'Výstupní čára od vnějšího okraje (mm)', min: 0, max: 3000, step: 10, auto: 0, kdy: s => TYP_KOSE.includes(s.typ) || s.typ === 'tocite', pouzito: v => v.g.kose ? cz(v.g.kose.e) + ' mm podle normy' : '–', pomoc: 'Myšlená čára, na které mají všechny stupně stejnou šířku b; u zakřivených ramen leží blíž vnějšímu okraji.' },
+    { id: 'metoda', typ: 'select', label: 'Metoda vyrovnání kosých stupňů', moznosti: [['rozvinuti', 'rozvinutí (plynulý přechod)'], ['umernost', 'úměrnost (lineární řada)']], kdy: s => TYP_KOSE.includes(s.typ) },
+    { id: 'prumer', zakl: true, krokBtn: 100, chipy: [2000, 2400, 2800], label: 'Průměr schodiště (mm)', min: 1000, max: 6000, step: 10, kdy: s => s.typ === 'tocite' },
+    { id: 'vreteno', zakl: true, krokBtn: 50, label: 'Průměr vřetena / zrcadla (mm)', min: 0, max: 3000, step: 10, kdy: s => s.typ === 'tocite', pomoc: 'Nosný sloup nebo volný prostor uprostřed; musí být aspoň o 200 mm menší než průměr.' },
+    { id: 'uhel', zakl: true, krokBtn: 15, chipy: [180, 270, 360], label: 'Úhel otočení (°)', min: 90, max: 720, step: 5, kdy: s => s.typ === 'tocite' },
+    { id: 'plosina', label: 'Výstupní plošina (°, 0 = bez)', min: 0, max: 180, step: 5, kdy: s => s.typ === 'tocite' },
+    { id: 'smer', typ: 'select', zakl: true, label: 'Směr otáčení', moznosti: [['L', 'levotočivé (doleva)'], ['P', 'pravotočivé (doprava)']], kdy: s => s.typ !== 'primo' && s.typ !== 'dvouramenne' },
+    { id: 'pudInfo', typ: 'info', zakl: true },
+  ] },
+  { karta: 'stupne', nadpis: '🧱 Stupně', pole: [
+    { id: 'cil', typ: 'select', label: 'Šířka stupně b – cíl', moznosti: [['pohodli', 'pohodlí (2h + b = 630 mm)'], ['uspora', 'úspora místa (nejkratší vyhovující)'], ['pudorys', 'vyplnit dostupný půdorys'], ['vlastni', 'vlastní šířka b']] },
+    { id: 'bVlastni', label: 'Vlastní šířka b (mm)', min: 150, max: 450, step: 1, kdy: s => s.cil === 'vlastni' },
+    { id: 'nos', label: 'Přesah stupnice – nos (mm)', min: 0, max: 80, step: 1, kdy: s => s.material !== 'zb' },
+    { id: 'tlStupnice', label: 'Tloušťka stupnice (mm)', min: 0, max: 120, step: 1, kdy: s => s.material !== 'zb' },
+    { id: 'tlStupniceZb', alias: 'tlStupnice', label: 'Nášlapná vrstva stupňů (mm)', min: 0, max: 120, step: 1, kdy: s => s.material === 'zb' },
+    { id: 'podstupnice', typ: 'check', label: 's podstupnicemi (jinak otevřené)', kdy: s => s.material !== 'zb' },
+    { id: 'tlPodstupnice', label: 'Tloušťka podstupnice (mm)', min: 0, max: 60, step: 1, kdy: s => s.material === 'drevo' && s.podstupnice },
+  ] },
+  { karta: 'strop', nadpis: '🏗️ Strop a otvor', pole: [
+    { id: 'tlStropu', chipy: [200, 250, 300], label: 'Tloušťka stropu vč. podhledu (mm)', min: 0, max: 1500, step: 5 },
+    { id: 'otvorAuto', typ: 'check', label: 'otvor navrhnout automaticky (nejmenší vyhovující)' },
+    { id: 'otvorH2', typ: 'check', label: 'automatický otvor i pro průchodnou výšku (stěhování)', kdy: s => s.otvorAuto },
+    { id: 'otvorX', label: 'Otvor – x od rohu (mm)', min: -20000, max: 20000, step: 10, kdy: s => !s.otvorAuto },
+    { id: 'otvorY', label: 'Otvor – y od rohu (mm)', min: -20000, max: 20000, step: 10, kdy: s => !s.otvorAuto },
+    { id: 'otvorDx', label: 'Otvor – délka (mm)', min: 0, max: 30000, step: 10, kdy: s => !s.otvorAuto },
+    { id: 'otvorDy', label: 'Otvor – šířka (mm)', min: 0, max: 30000, step: 10, kdy: s => !s.otvorAuto },
+    { id: 'otvorInfo', typ: 'info' },
+  ] },
+  { karta: 'material', nadpis: '🪵 Materiál a konstrukce', pole: [
+    { id: 'material', typ: 'select', zakl: true, label: 'Materiál', moznosti: [['drevo', 'dřevo – schodnice + stupnice'], ['zb', 'železobeton – monolit'], ['ocel', 'ocel – schodnice z profilů']] },
+    { id: 'schodnice', typ: 'select', label: 'Schodnice', moznosti: [['zapustena', 'se zapuštěnými stupni (drážky)'], ['zubata', 'zubatá (sedlová) – stupně nahoře']], kdy: s => s.material === 'drevo', pomoc: 'Šikmý nosník, který nese stupně.' },
+    { id: 'schodniceTl', label: 'Tloušťka schodnice (mm)', min: 20, max: 200, step: 1, kdy: s => s.material !== 'zb' },
+    { id: 'schodniceVys', label: 'Výška (šířka) schodnice (mm)', min: 100, max: 600, step: 5, kdy: s => s.material !== 'zb' },
+    { id: 'drazka', label: 'Hloubka drážky (mm)', min: 0, max: 40, step: 1, kdy: s => s.material === 'drevo' && s.schodnice === 'zapustena' },
+    { id: 'ocelProfil', typ: 'select', label: 'Profil schodnice', moznosti: Object.keys(SCHOD.OCEL_PROFILY).map(k => [k, k + ' (' + SCHOD.OCEL_PROFILY[k] + ' kg/m)']), kdy: s => s.material === 'ocel' },
+    { id: 'deskaTl', label: 'Tloušťka desky (mm)', min: 80, max: 400, step: 5, kdy: s => s.material === 'zb' },
+  ] },
+  { karta: 'zabradli', nadpis: '🛡️ Zábradlí a madlo', pole: [
+    { id: 'zabradliStrany', typ: 'select', label: 'Volný okraj (zábradlí)', moznosti: [['vnitrni', 'vnitřní / levá strana'], ['vnejsi', 'vnější / pravá strana'], ['obe', 'obě strany'], ['zadna', 'žádná – mezi stěnami']] },
+    { id: 'hloubkaPadu', label: 'Hloubka volného prostoru (mm)', min: 0, max: 100000, step: 10, auto: 0, pouzito: v => cz(SCHOD.zabradli(v).hloubka) + ' mm (konstrukční výška)' },
+    { id: 'deti', typ: 'check', label: 'provoz určený pro děti (mezery 80 mm)' },
+    { id: 'prickaTl', label: 'Tloušťka svislé příčle (mm)', min: 5, max: 100, step: 1 },
+    { id: 'sloupkyRozestup', label: 'Největší rozestup sloupků (mm)', min: 300, max: 3000, step: 50 },
+  ] },
+  { karta: 'navrhy', nadpis: '💾 Návrhy' },
+];
+const POJMY = [
+  ['Konstrukční výška H', 'svislá vzdálenost čistých podlah, kterou schodiště překonává'],
+  ['Výstupní čára', 'myšlená čára v ose výstupu; na ní se měří šířka stupně b (u zakřivených ramen blíž vnějšímu okraji)'],
+  ['Zrcadlo', 'volný prostor mezi rameny nebo uprostřed točitého schodiště'],
+  ['Podchodná výška', 'svislá světlost nad spojnicí hran stupňů (RD 2 100 mm, jinak 1 500 + 750 / cos α)'],
+  ['Průchodná výška', 'světlost kolmo ke spojnici hran (750 + 1 500 · cos α, nejméně 1 950 mm)'],
+  ['Schodnice', 'šikmý nosník nesoucí stupně – se zapuštěnými stupni v drážkách nebo zubatá (stupně leží na zubech)'],
+  ['Kosé stupně', 'stupně se sbíhavými hranami v otočce; u vnitřního okraje nejméně 130 mm'],
+  ['Krokový vzorec', '2h + b = 630 mm (připouští se 600–650 mm)'],
+];
+
+let stav = SCHOD.normalizuj(nactiPocatecni());
+const KLIC_ZALOZKA = 'webapp_schodiste_zalozka', KLIC_SBALENO = 'webapp_schodiste_sbaleno', KLIC_HODNOTY = 'webapp_schodiste_hodnoty', KLIC_PRIPNUTE = 'webapp_schodiste_pripnute', KLIC_MAPA = 'webapp_schodiste_mapa';
+let vysledek = null, zvolenaZalozka = ['pudorys', 'rez', '3d', 'schodnice', 'list'].includes(ls.cti(KLIC_ZALOZKA)) ? ls.cti(KLIC_ZALOZKA) : 'pudorys', rezim = ls.cti(KLIC_REZIM) === 'pokrocile' ? 'pokrocile' : 'zakladni';
+const upravy = {};          // id pole → text o úpravě hodnoty (ořez, prázdné pole)
+let chybaNavrhu = null;     // chyba ze SCHOD.navrh (pole + text)
+
+function nactiPocatecni() {
+  if (location.hash.length > 2) {
+    try {
+      const p = new URLSearchParams(location.hash.slice(1)), o = {};
+      for (const [k, v] of p) {
+        if (!maVlastni(SCHOD.VYCHOZI, k)) continue;
+        const vz = SCHOD.VYCHOZI[k];
+        o[k] = typeof vz === 'number' ? +v : typeof vz === 'boolean' ? v === '1' : String(v);
+      }
+      return Object.assign({}, SCHOD.VYCHOZI, o);
+    } catch (e) { /* neplatný odkaz – výchozí */ }
+  }
+  const ul = ls.cti(KLIC_POSLEDNI);
+  if (ul && typeof ul === 'object') return ul.v ? ul.stav : ul;
+  return SCHOD.VYCHOZI;
+}
+
+function vytvorFormular() {
+  const kont = $('vstupy');
+  for (const k of FORM) {
+    const el = document.createElement('div'); el.className = 'karta'; el.id = 'karta-' + k.karta;
+    el.innerHTML = '<h2>' + k.nadpis + '</h2>';
+    pridejSbalovani(el);
+    if (k.karta === 'typ') {
+      const t = document.createElement('div'); t.className = 'typy'; t.id = 'typy'; t.setAttribute('role', 'group'); t.setAttribute('aria-label', 'Typ schodiště');
+      for (const [id, d] of Object.entries(SCHOD.TYPY)) t.insertAdjacentHTML('beforeend', '<button type="button" data-typ="' + id + '" aria-pressed="false">' + ikonaTypu(id) + '<span>' + esc(d.nazev) + '</span></button>');
+      el.appendChild(t);
+    } else if (k.karta === 'navrhy') {
+      el.insertAdjacentHTML('beforeend',
+        '<label for="nazev">Název návrhu</label><input type="text" id="nazev" maxlength="60">' +
+        '<div class="tlacitka"><button id="btnUlozit" class="hlavni">💾 Uložit</button><button id="btnSdilet">🔗 Sdílet odkazem</button><button id="btnVychozi">↺ Výchozí</button></div>' +
+        '<label for="ulozene">Uložené návrhy (v tomto prohlížeči)</label><select id="ulozene"></select>' +
+        '<div class="tlacitka"><button id="btnNacist">📂 Načíst</button><button id="btnSmazat">🗑️ Smazat</button></div>' +
+        '<p class="napoveda">Návrhy se ukládají do localStorage tohoto prohlížeče. Odkaz obsahuje celý návrh v adrese (za #).</p>');
+    } else {
+      const m = document.createElement('div'); m.className = 'mrizka2';
+      for (const p of k.pole) {
+        const w = document.createElement('div'); w.className = 'pole'; w.dataset.pole = p.alias || p.id; w.id = 'w-' + p.id;
+        const pomoc = p.pomoc ? '<button type="button" class="pomoc" data-pomoc="' + p.id + '" title="' + esc(p.pomoc) + '" aria-expanded="false" aria-label="Vysvětlení">?</button>' : '';
+        const pomocText = p.pomoc ? '<div class="pomoc-text skryt" id="pt-' + p.id + '">' + esc(p.pomoc) + '</div>' : '';
+        const st = '<div class="pole-stav" id="st-' + p.id + '"></div>';
+        if (p.typ === 'info') { w.style.gridColumn = '1 / -1'; w.innerHTML = '<p class="napoveda" id="' + p.id + '"></p>'; }
+        else if (p.typ === 'select') {
+          w.innerHTML = '<label for="' + p.id + '">' + esc(p.label) + pomoc + '</label><select id="' + p.id + '" aria-describedby="st-' + p.id + '">' + p.moznosti.map(o => '<option value="' + esc(o[0]) + '">' + esc(o[1]) + '</option>').join('') + '</select>' + st;
+          w.style.gridColumn = '1 / -1';
+        } else if (p.typ === 'check') { w.style.gridColumn = '1 / -1'; w.innerHTML = '<label class="zaskrt"><input type="checkbox" id="' + p.id + '" aria-describedby="st-' + p.id + '"> ' + esc(p.label) + pomoc + '</label>' + st; }
+        else {
+          const [label, jedn] = rozdelJednotku(p.label);
+          const input = '<span class="s-jednotkou"><input type="text" inputmode="decimal" autocomplete="off" id="' + p.id + '" aria-describedby="st-' + p.id + '"' + (p.auto !== undefined ? ' placeholder="auto"' : '') + '>' + (jedn ? '<span class="jednotka" aria-hidden="true">' + jedn + '</span>' : '') + '</span>';
+          const kroky = p.krokBtn ? '<button type="button" class="krok" data-krok="-1" data-pole="' + p.id + '" aria-label="Zmenšit o ' + p.krokBtn + '" title="−' + p.krokBtn + '">−</button>' + input + '<button type="button" class="krok" data-krok="1" data-pole="' + p.id + '" aria-label="Zvětšit o ' + p.krokBtn + '" title="+' + p.krokBtn + '">+</button>' : input;
+          w.innerHTML = '<label for="' + p.id + '">' + esc(label) + (jedn ? ' (' + jedn + ')' : '') + pomoc + '</label><div class="vstup-radek">' + kroky + '</div>' + pomocText + '<div class="chipy" id="ch-' + p.id + '"></div>' + st;
+        }
+        if (p.typ !== 'info' && p.typ !== undefined && pomocText) w.insertAdjacentHTML('beforeend', pomocText);
+        m.appendChild(w);
+      }
+      el.appendChild(m);
+    }
+    kont.appendChild(el);
+  }
+  document.querySelectorAll('#vysledek ~ .karta, #vysledek').forEach(k => { if (k.id !== 'vysledek') pridejSbalovani(k); });
+  $('pojmy').innerHTML = POJMY.map(([a, b]) => '<dt>' + esc(a) + '</dt><dd>' + esc(b) + '</dd>').join('');
+}
+
+/* ikony typů – kreslené přímo jádrem z typického návrhu */
+function ikonaTypu(typ) {
+  const nast = { typ, H: 2800, B: 900, Bp: 900, zrcadlo: 250, prumer: 2000, vreteno: 400, uhel: 300, plosina: 60, dostDelka: 99999, dostSirka: 99999, dostPrumer: 99999, otvorAuto: true };
+  try {
+    const v = SCHOD.navrh(nast, 14);
+    const bb = v.g.bbox, k = Math.min(60 / bb.w, 42 / bb.h), ox = (64 - bb.w * k) / 2, oy = (46 - bb.h * k) / 2;
+    const T = p => (ox + p[0] * k).toFixed(1) + ' ' + (46 - oy - p[1] * k).toFixed(1);
+    let d = '';
+    for (const st of v.g.stupne) d += 'M' + st.poly.map(T).join('L') + 'Z';
+    return '<svg viewBox="0 0 64 46" aria-hidden="true"><path d="' + d + '" fill="none" stroke="currentColor" stroke-width="0.9" stroke-linejoin="round"/></svg>';
+  } catch (e) { return '<svg viewBox="0 0 64 46" aria-hidden="true"></svg>'; }
+}
+
+const vsechnaPole = () => FORM.flatMap(k => k.pole || []);
+const cisloCz = x => String(Math.round(x * 1000) / 1000).replace('.', ',');
+
+function zapisPole(p, vynutit) {
+  const el = $(p.id), klic = p.alias || p.id;
+  if (!el || p.typ === 'info') return;
+  if (p.typ === 'check') el.checked = !!stav[klic];
+  else if (p.typ === 'select') el.value = stav[klic];
+  else if (p.id === 'n1' && stav.rozdeleni !== 'vlastni' && vysledek && vysledek.rozdeleni) el.value = cisloCz(vysledek.rozdeleni.n1);
+  else if (p.id === 'n1' && stav.rozdeleni === 'vlastni' && stav.n1Pro >= 3 && vysledek && vysledek.rozdeleni && !vynutit && document.activeElement !== el) el.value = cisloCz(vysledek.rozdeleni.n1);
+  else if (vynutit || document.activeElement !== el) el.value = p.auto !== undefined && stav[klic] === p.auto ? '' : cisloCz(stav[klic]);
+}
+function zapisFormular() {
+  for (const p of vsechnaPole()) zapisPole(p);
+  $('nazev').value = stav.nazev || '';
+  oznacTypy();
+  viditelnost();
+}
+function oznacTypy() { document.querySelectorAll('#typy button').forEach(b => b.setAttribute('aria-pressed', String(b.dataset.typ === stav.typ))); }
+function viditelnost() {
+  const zakl = rezim === 'zakladni';
+  for (const k of FORM) {
+    if (!k.pole) continue;
+    let nejakeViditelne = false;
+    for (const p of k.pole) {
+      const w = $('w-' + p.id); if (!w) continue;
+      const skryt = (p.kdy ? !p.kdy(stav) : false) || (zakl && !p.zakl);
+      w.hidden = skryt;
+      if (!skryt && p.typ !== 'info') nejakeViditelne = true;
+    }
+    const karta = $('karta-' + k.karta); if (karta) karta.hidden = !nejakeViditelne;
+  }
+  $('btnZakladni').setAttribute('aria-pressed', String(zakl));
+  $('btnPokrocile').setAttribute('aria-pressed', String(!zakl));
+  $('rezimInfo').textContent = zakl ? 'Ostatní volby mají výchozí hodnoty (strop 250 mm, schodnice 300 × 60 mm, zábradlí na vnitřní straně…).' : 'Zobrazeny všechny volby.';
+}
+/* přečte pole; mimo rozsah ořízne a zapamatuje hlášku; prázdné pole = auto nebo ponechaná hodnota */
+function prepniNaVlastni(p) {
+  if (p.id !== 'n1' && p.id !== 'delka1') return;
+  stav.rozdeleni = 'vlastni';
+  if (p.id === 'n1') { stav.n1Pro = vysledek ? vysledek.n : 0; stav.delka1 = 0; }
+  else if (stav.delka1 > 0) stav.n1Pro = 0;
+}
+function ctiPole(p) {
+  const el = $(p.id); if (!el) return;
+  const klic = p.alias || p.id;
+  delete upravy[p.id];
+  try { ctiPoleVnitrne(p, el, klic); } finally { prepniNaVlastni(p); }
+}
+function ctiPoleVnitrne(p, el, klic) {
+  if (p.typ === 'check') { stav[klic] = el.checked; return; }
+  if (p.typ === 'select') {
+    if (p.id === 'rozdeleni' && el.value === 'vlastni' && stav.rozdeleni !== 'vlastni' && vysledek && vysledek.rozdeleni) { stav.n1 = vysledek.rozdeleni.n1; stav.n1Pro = vysledek.n; stav.delka1 = 0; }
+    stav[klic] = el.value; return;
+  }
+  const txt = String(el.value).trim().replace(/\s/g, '').replace(',', '.');
+  if (txt === '') {
+    if (p.auto !== undefined) stav[klic] = p.auto;
+    else upravy[p.id] = 'Pole je prázdné – počítá se s předchozí hodnotou ' + cisloCz(stav[klic]) + '.';
+    return;
+  }
+  const v = parseFloat(txt);
+  if (!isFinite(v)) { upravy[p.id] = 'Neplatné číslo – počítá se s předchozí hodnotou ' + cisloCz(stav[klic]) + '.'; return; }
+  const c = Math.min(p.max, Math.max(p.min, v));
+  if (c !== v) upravy[p.id] = 'Upraveno na ' + cisloCz(c) + ' (' + (v > p.max ? 'max.' : 'min.') + ' povolená hodnota).';
+  stav[klic] = c;
+}
+
+/* přednastavení při změně typu – rozumné rozměry pro daný tvar */
+function prednastavTyp(typ) {
+  const H = SCHOD.konstrukcniVyska(stav);
+  stav.typ = typ; stav.n = 0;
+  if (typ === 'tocite') { if (stav.prumer < 1600) stav.prumer = 2800; if (stav.dostPrumer < stav.prumer) stav.dostPrumer = stav.prumer + 200; if (stav.vreteno > stav.prumer - 400) stav.vreteno = Math.max(0, stav.prumer - 1900); }
+  if (typ === 'L_podesta' || typ === 'L_kose') { stav.dostDelka = Math.max(stav.dostDelka, 3000); stav.dostSirka = Math.max(stav.dostSirka, 3000); }
+  if (typ === 'U_podesta' || typ === 'U_kose') { stav.dostSirka = Math.max(stav.dostSirka, 2 * stav.B + stav.zrcadlo + 50); stav.dostDelka = Math.max(stav.dostDelka, 3000); if (typ === 'U_kose' && stav.zrcadlo < 300) stav.zrcadlo = 300; }
+  if (typ === 'dvouramenne') stav.dostDelka = Math.max(stav.dostDelka, Math.round(H / 175) * 280 + 900);
+  if (typ === 'primo' || typ === 'dvouramenne') stav.dostSirka = Math.max(stav.dostSirka, stav.B + 50);
+  stav.m1 = 0; stav.n1 = 0; stav.n1Pro = 0; stav.delka1 = 0; stav.ext = -1;
+}
+
+/* ---------------- přepočet ----------------
+   Návrh zvolené varianty se kreslí hned; tabulka variant (projde celý rozsah n) se počítá v době nečinnosti
+   a ukládá do mezipaměti podle stavu bez n a názvu. */
+let casovac = 0, idle = 0, casovacUlozeni = 0;
+function naplanuj(zpozdeni) { clearTimeout(casovac); casovac = setTimeout(prepocet, zpozdeni == null ? 150 : zpozdeni); }
+const cacheVariant = { klic: null, radky: null };
+const klicVariant = s => { const o = Object.assign({}, s); delete o.n; delete o.nazev; return JSON.stringify(o); };
+const naCas = typeof window.requestIdleCallback === 'function' ? f => window.requestIdleCallback(f, { timeout: 400 }) : null;
+
+function prepocet() {
+  clearTimeout(casovac);
+  stav = SCHOD.normalizuj(stav);
+  const H = SCHOD.konstrukcniVyska(stav);
+  const [nMin, nMax] = SCHOD.rozsahVariant(stav, H);
+  if (stav.n && (stav.n < nMin || stav.n > nMax)) stav.n = 0;        // nesmyslné n (např. z odkazu) zahodit
+  viditelnost();
+  const klic = klicVariant(stav);
+  let varianty = cacheVariant.klic === klic ? cacheVariant.radky : null;
+  if (!varianty && !naCas) { varianty = spocitejVarianty(klic); }
+  const dop = varianty && varianty.find(r => r.doporucena);
+  const n = stav.n >= 3 ? stav.n : (dop && !dop.chyba ? dop.n : SCHOD.doporuceneN(stav, H));
+  try {
+    vysledek = SCHOD.navrh(stav, n);
+    chybaNavrhu = null;
+  } catch (e) {
+    vysledek = null;
+    chybaNavrhu = { text: e.message, pole: e.pole || null };
+  }
+  if (varianty) kresliVarianty(varianty, n);
+  else {
+    $('cilPopis').textContent = 'počítám varianty…';
+    if (idle && window.cancelIdleCallback) window.cancelIdleCallback(idle);
+    idle = naCas(() => {
+      idle = 0;
+      if (klicVariant(stav) !== klic) return;
+      const vs = spocitejVarianty(klic), d = vs.find(r => r.doporucena);
+      if (!stav.n && d && !d.chyba && d.n !== n) prepocet();      // doporučená se liší od odhadu – překreslit
+      else kresliVarianty(vs, vysledek ? vysledek.n : n);
+    });
+  }
+  zapisHistorii();
+  if (!vysledek) { kresliChybu(); return; }
+  document.querySelectorAll('.vystup').forEach(b => { b.disabled = false; });
+  kresliVysledek(); kresliKontroly(); kresliVarovaniPoli();
+  kresliVykresy(); kresliVykaz(); kresliSirky(); kresliVysky(); infoTexty(); kresliPredvolby(); kresliPorovnani();
+  if (!$('stavba').classList.contains('skryt')) kresliStavbu();
+  clearTimeout(casovacUlozeni);
+  casovacUlozeni = setTimeout(() => ls.zapis(KLIC_POSLEDNI, { v: VERZE, stav }), 600);
+  ulozHash();
+}
+function spocitejVarianty(klic) {
+  let vs = [];
+  try { vs = SCHOD.varianty(stav); } catch (e) { vs = []; }
+  cacheVariant.klic = klic; cacheVariant.radky = vs;
+  return vs;
+}
+
+/* chybový stav: žádné staré výsledky, výstupy zakázané, hláška u pole */
+function kresliChybu() {
+  const t = chybaNavrhu.text;
+  nastavSouhrn('chyba', '⛔ Návrh nelze sestavit: ' + esc(t));
+  $('pruh').innerHTML = '<span><b>Návrh nelze sestavit</b></span><span class="chyba">⛔ opravte zadání ↓</span>';
+  $('boxy').innerHTML = '';
+  for (const id of ['kontroly', 'vykaz', 'tabSirky', 'vysky']) $(id).tBodies[0].innerHTML = '';
+  for (const id of ['vykresPudorys', 'vykresRez', 'panel-schodnice', 'nahledListu']) $(id).innerHTML = '<p class="chybovy">Návrh nelze sestavit: ' + esc(t) + '</p>';
+  $('popisVykresu').textContent = '';
+  document.querySelectorAll('.vystup').forEach(b => { b.disabled = true; });
+  kresliVarovaniPoli();
+}
+function nastavSouhrn(stavTridy, html) {
+  const el = $('souhrn');
+  el.className = 'stav-souhrn ' + stavTridy;
+  if (el.innerHTML !== html) el.innerHTML = html;      // aria-live jen při skutečné změně
+}
+
+function infoTexty() {
+  const v = vysledek, s = v.s;
+  $('katPozn').textContent = v.kat.pozn;
+  $('Hinfo').textContent = 'Konstrukční výška H = ' + cz(v.H) + ' mm' + (s.vyskaRezim === 'hruba' ? ' (hrubá ' + cz(s.Hhruba) + ' − dole ' + cz(s.podlahaDole) + ' + nahoře ' + cz(s.podlahaNahore) + ')' : '') + '.';
+  const pv = v.podchod, on = pv.otvorNavrh;
+  $('otvorInfo').textContent = 'Nejmenší otvor pro podchodnou výšku ' + cz(pv.h1Pozad) + ' mm: ' + (on.tvarL ? 'tvar L složený z obdélníků ' + on.obdelniky.map(r => cz(r.dx) + ' × ' + cz(r.dy) + ' (x ' + cz(r.x) + ', y ' + cz(r.y) + ')').join(' + ') : cz(on.dx) + ' × ' + cz(on.dy) + ' mm (x ' + cz(on.x) + ', y ' + cz(on.y) + ')') +
+    '. I pro průchodnou výšku: ' + cz(pv.otvorNavrhH2.dx) + ' × ' + cz(pv.otvorNavrhH2.dy) + ' mm. Spodní líc stropu ' + cz(SCHOD.stropSpodni(v)) + ' mm nad podlahou. Ruční otvor se zadává jako obdélník.';
+  const g = v.g;
+  let t = s.typ === 'tocite' ? 'Šířka ramene ' + cz(g.tocite.B) + ' mm, výstupní čára na poloměru ' + cz(g.tocite.rw) + ' mm (' + cz(g.tocite.e) + ' mm od vnějšího okraje).' : 'Půdorys schodiště ' + cz(g.bbox.w) + ' × ' + cz(g.bbox.h) + ' mm.';
+  if (g.kose && !g.tocite) t += ' Výstupní čára ' + cz(g.kose.e) + ' mm od vnějšího okraje; kosých stupňů ' + g.kose.pocet + '.';
+  $('pudInfo').textContent = t;
+  const r = v.rozdeleni;
+  $('ramenaInfo').innerHTML = r ? r.delky.map((d, i) => '<b>' + (i + 1) + '. rameno ' + cz(d) + ' mm</b> (' + String(Math.round(r.vysek[i] * 2) / 2).replace('.', ',') + ' výšek)').join(' · ') +
+    (r.auto ? ' – zvoleno automaticky ' + (r.rezim === 'prostor' ? 'podle prostoru' : '(stejně dlouhá)') : '') + (r.vynuceno ? ' – bezbariérově vynuceně stejně' : '') + '. Úchyt ⇔ v půdorysu nebo klávesy &lt; &gt; posunou zalomení.' : '';
+}
+
+/* ---------------- výsledek ---------------- */
+function kresliVysledek() {
+  const v = vysledek, s = v.s, g = v.g;
+  $('nazevNavrhu').textContent = s.nazev || '';
+  const box = (popis, cislo, dalsi, tr) => '<div class="box' + (tr ? ' ' + tr : '') + '"><div class="popis">' + popis + '</div><div class="cislo">' + cislo + '</div><div class="dalsi">' + (dalsi || '') + '</div></div>';
+  const pv = v.podchod;
+  const predtim = [...document.querySelectorAll('#boxy .cislo')].map(e => e.textContent);
+  $('boxy').innerHTML =
+    box('Výšky stupňů', v.n + ' × ' + cz(v.h, 1), 'mm, H = ' + cz(v.H) + ' mm', 'hlavni') +
+    box('Šířka stupně b', cz(v.b, 1) + ' mm', 'stupnice ' + cz(v.b + (s.material === 'zb' ? 0 : s.nos)) + ' mm', 'hlavni') +
+    box('Sklon', cz(v.alfa, 1) + '°', SCHOD.sklonTrida(v.alfa)) +
+    box('2h + b', cz(2 * v.h + v.b, 1), 'b − h = ' + cz(v.b - v.h) + ' · h + b = ' + cz(v.h + v.b)) +
+    box('Délka (výst. čára)', cz(g.nosy[v.n - 1].t) + ' mm', g.ramena.map(r => r.k1 - r.k0 + 1).join(' + ') + ' výšek') +
+    box('Půdorys', s.typ === 'tocite' ? '⌀ ' + cz(s.prumer) : cz(g.bbox.w) + ' × ' + cz(g.bbox.h), 'mm' + (v.vejde.ok ? '' : ' – nevejde se'), v.vejde.ok ? '' : 'spatne') +
+    box('Podchodná výška', !isFinite(pv.min) ? 'volná' : pv.min <= 0 ? 'kolize' : cz(pv.min) + ' mm', pv.min <= 0 ? 'schodiště naráží do stropu – chybí ' + cz(pv.h1Pozad - pv.min) + ' mm' : 'požadováno ' + cz(pv.h1Pozad) + ' mm (min. přes celou šířku)', pv.min < pv.h1Pozad - 0.5 ? 'spatne' : '') +
+    box('Stropní otvor', cz(pv.otvor.dx) + ' × ' + cz(pv.otvor.dy), (pv.otvor.tvarL ? 'tvar L, ' : '') + (s.otvorAuto ? 'navržen automaticky' : 'zadaný'));
+  document.querySelectorAll('#boxy .box').forEach((b, i) => { const c = b.querySelector('.cislo'); if (predtim.length && c && predtim[i] !== c.textContent) b.classList.add('zmena'); });
+  const sh = v.souhrn;
+  const meze = v.kontroly.filter(k => k.stav === 'mez');
+  const mezTxt = meze.length ? ' Upozornění: ' + meze.map(k => esc(k.nazev.toLowerCase()) + (/^statika|^deska/.test(k.id) ? ' (orientační, ne normová)' : '')).join(', ') + '.' : '';
+  nastavSouhrn(sh.stav, sh.stav === 'ok' ? '✅ Návrh vyhovuje všem kontrolovaným požadavkům.' :
+    sh.stav === 'mez' ? '⚠️ Návrh vyhovuje normě, ale ' + sh.meze + ' ' + (sh.meze === 1 ? 'hodnota je' : 'hodnot je') + ' na hranici nebo mimo doporučení.' + mezTxt :
+    '⛔ Návrh nevyhovuje: ' + v.kontroly.filter(k => k.stav === 'chyba').map(k => esc(k.nazev.toLowerCase())).join(', ') + '.' + mezTxt);
+  const ikona = { ok: '✅ vyhovuje', mez: '⚠️ ' + sh.meze + ' upozornění', chyba: '⛔ ' + sh.chyby + ' nevyhovuje' }[sh.stav];
+  $('pruh').innerHTML = '<span><b>' + v.n + ' × ' + cz(v.h, 1) + ' / ' + cz(v.b) + '</b> · ' + cz(v.alfa, 1) + '° · ' + (s.typ === 'tocite' ? '⌀ ' + cz(s.prumer) : cz(g.bbox.w) + ' × ' + cz(g.bbox.h)) + '</span><span class="' + sh.stav + '">' + ikona + ' ↓</span>';
+}
+
+const PRAVIDLA_TECKY = [['h', 'výška stupně'], ['b', 'šířka stupně'], ['krok', '2h + b'], ['sklon', 'sklon'], ['pocet', 'počet výšek v rameni'], ['h1', 'podchodná výška'], ['koseMin', 'kosé stupně'], ['pudorys', 'půdorys']];
+const ZNAK = { ok: '✓', mez: '!', chyba: '✕', info: 'i' }, SLOVNE = { ok: 'vyhovuje', mez: 'mezní', chyba: 'nevyhovuje', info: 'informace' };
+function kresliVarianty(vs, n) {
+  const cilTxt = { pohodli: 'pohodlí (2h + b ≈ 630 mm)', uspora: 'úspora místa', pudorys: 'vyplnění půdorysu', vlastni: 'vlastní šířka b' }[stav.cil];
+  const dop = vs.find(r => r.doporucena);
+  $('cilPopis').textContent = cilTxt + (dop && dop.souhrn && dop.souhrn.chyby ? ' – žádná varianta nevyhovuje všem pravidlům, doporučena ta s nejmenším počtem chyb (změňte tvar, úhel, šířku nebo rozdělte schodiště podestou)' : '');
+  const tb = $('varianty').tBodies[0];
+  /* všechny varianty selhaly se stejnou chybou → jedna hláška přes celou tabulku */
+  if (vs.length && vs.every(r => r.chyba) && new Set(vs.map(r => r.chyba)).size === 1) {
+    tb.innerHTML = '<tr><td colspan="8" class="vlevo pravidla">Žádnou variantu nelze sestavit: ' + esc(vs[0].chyba) + '</td></tr>';
+    return;
+  }
+  const melFokus = document.activeElement && document.activeElement.closest && document.activeElement.closest('#varianty');
+  tb.innerHTML = vs.map(r => {
+    const zv = r.n === n, atr = ' data-n="' + r.n + '" tabindex="0" class="' + (zv ? 'zvolena' : '') + '"' + (zv ? ' aria-current="true"' : '');
+    if (r.chyba) return '<tr' + atr + '><td>' + r.n + '</td><td colspan="7" class="vlevo pravidla">' + esc(r.chyba) + '</td></tr>';
+    const tecky = PRAVIDLA_TECKY.map(([id, t]) => { const st = r.kontroly[id]; return st ? '<span class="tecka ' + st + '" title="' + t + ': ' + SLOVNE[st] + '"><span aria-hidden="true">' + ZNAK[st] + '</span><span class="sr-only">' + t + ' ' + SLOVNE[st] + '</span></span>' : '<span class="tecka nic" title="' + t + ': netýká se" aria-hidden="true">–</span>'; }).join('');
+    return '<tr' + atr + '><td>' + r.n + (r.doporucena ? '<span class="stitek">doporučeno</span>' : '') + '</td><td>' + cz(r.h, 1) + '</td><td>' + cz(r.b, 1) + '</td><td>' + cz(r.alfa, 1) + '°</td><td>' + cz(r.krok, 1) + '</td><td class="sk">' + cz(r.delka) + '</td><td class="sk">' + (r.pudorys ? cz(r.pudorys[0]) + ' × ' + cz(r.pudorys[1]) : '–') + '</td><td class="vlevo pravidla">' + tecky + '</td></tr>';
+  }).join('');
+  if (melFokus) { const tr = document.querySelector('#varianty tr[data-n="' + n + '"]'); if (tr) tr.focus(); }
+}
+
+function zdrojOdkazy(z) {
+  return (z || []).map(k => { const i = Object.keys(SCHOD.ZDROJE).indexOf(k); return i < 0 ? '' : '<a href="#zdroj-' + k + '" title="' + esc(SCHOD.ZDROJE[k].nazev) + '">[' + (i + 1) + ']</a>'; }).join(' ');
+}
+function kresliKontroly() {
+  const tx = { ok: 'vyhovuje', mez: 'mezní', chyba: 'nevyhovuje', info: 'info' };
+  $('kontroly').tBodies[0].innerHTML = vysledek.kontroly.map((k, i) => {
+    const pozn = !k.pozn ? '' : k.pozn.length > 170 ? '<details><summary>' + esc(k.pozn.slice(0, 90)) + '…</summary>' + esc(k.pozn) + '</details>' : '<span class="pozn-k">' + esc(k.pozn) + '</span>';
+    const opr = k.oprava ? '<div class="oprava"><button class="male" data-oprava="' + i + '">🔧 ' + esc(k.oprava.text) + '</button></div>' : '';
+    return '<tr><td class="vlevo k-nazev">' + esc(k.nazev) + pozn + opr + '</td><td class="k-hod">' + esc(k.hodnota) + '</td><td class="vlevo k-poz">' + esc(k.pozadavek) + '</td><td class="k-stav"><span class="znak ' + k.stav + '">' + tx[k.stav] + '</span></td><td class="k-zdroj">' + zdrojOdkazy(k.zdroj) + '</td></tr>';
+  }).join('');
+}
+function kresliVarovaniPoli() {
+  document.querySelectorAll('.pole-stav').forEach(e => { e.textContent = ''; e.className = 'pole-stav'; });
+  document.querySelectorAll('#vstupy input, #vstupy select').forEach(e => { e.classList.remove('chyba', 'mez'); e.removeAttribute('aria-invalid'); });
+  const zprava = (pole, st, text, opravy) => {
+    const w = document.querySelector('.pole[data-pole="' + pole + '"]:not([hidden])');
+    if (!w) return false;
+    const el = w.querySelector('.pole-stav');
+    if (el) {
+      el.className = 'pole-stav ' + st; el.textContent = (el.textContent ? el.textContent + ' · ' : '') + text;
+      for (const [i, o] of opravy || []) el.insertAdjacentHTML('beforeend', ' <button type="button" class="male" data-oprava="' + i + '">použít: ' + esc(o.text) + '</button>');
+    }
+    const inp = w.querySelector('input, select');
+    if (inp) { inp.classList.add(st); if (st === 'chyba') inp.setAttribute('aria-invalid', 'true'); }
+    return true;
+  };
+  for (const [id, t] of Object.entries(upravy)) { const p = vsechnaPole().find(x => x.id === id); zprava(p ? (p.alias || p.id) : id, 'mez', '⚠️ ' + t); }
+  if (!vysledek) {
+    if (chybaNavrhu && chybaNavrhu.pole) zprava(chybaNavrhu.pole === 'n1' && stav.rozdeleni !== 'vlastni' ? 'rozdeleni' : chybaNavrhu.pole, 'chyba', '⛔ ' + chybaNavrhu.text);
+    return;
+  }
+  /* „použito“ u automatických hodnot */
+  for (const p of vsechnaPole()) if (p.auto !== undefined && p.pouzito && stav[p.alias || p.id] === p.auto) {
+    const el = $('st-' + p.id); if (el && !el.textContent) { try { el.textContent = 'automaticky: ' + p.pouzito(vysledek); } catch (e) { /* nic */ } }
+  }
+  const poradi = { chyba: 2, mez: 1 }, nejhorsi = {};
+  for (const k of vysledek.kontroly) {
+    if (!poradi[k.stav] || !k.pole) continue;
+    let pole = k.pole;
+    if (pole === 'bVlastni' && stav.cil !== 'vlastni') pole = 'cil';
+    if (pole === 'ext' && !TYP_KOSE.includes(stav.typ)) pole = stav.typ === 'tocite' ? 'vreteno' : 'B';
+    if (pole === 'otvorDx' && stav.otvorAuto) pole = 'tlStropu';
+    if (pole === 'n1' && !SCHOD.TYPY_ROZDELENI.includes(stav.typ)) pole = 'H';
+    else if (pole === 'n1' && stav.rozdeleni !== 'vlastni') pole = 'rozdeleni';
+    (nejhorsi[pole] = nejhorsi[pole] || []).push(k);
+  }
+  for (const [pole, ks] of Object.entries(nejhorsi)) {
+    const st = ks.some(k => k.stav === 'chyba') ? 'chyba' : 'mez';
+    zprava(pole, st, ks.map(k => (k.stav === 'chyba' ? '⛔ ' : '⚠️ ') + k.nazev + ': ' + k.hodnota + ' (' + k.pozadavek + ')').join(' · '),
+      ks.filter(k => k.oprava).map(k => [vysledek.kontroly.indexOf(k), k.oprava]));
+  }
+}
+
+/* ---------------- výkresy ---------------- */
+function barvyTematu() {
+  const cs = getComputedStyle(document.documentElement), g = n => cs.getPropertyValue(n).trim() || '#888';
+  const svetle = document.documentElement.dataset.theme === 'light';
+  return {
+    text: g('--text'), obrys: g('--text'), hrana: g('--text-muted'), tenka: g('--text-faint'), kota: g('--text-muted'), osa: g('--text-faint'),
+    otvor: g('--danger'), vystupni: g('--accent'), cara: g('--accent'), dostupny: g('--text-muted'), podchod: g('--warn'), ok: g('--ok'), danger: g('--danger'),
+    skryta: g('--text-faint'), stupen: g('--bg-panel'), kosy: g('--accent-soft'), podesta: g('--bg-hover'), rez: g('--bg-hover'), rez2: g('--bg-control'), rezBeton: g('--bg-control'),
+    mapaOk: svetle ? 'rgba(23,117,64,0.30)' : 'rgba(76,175,125,0.45)', mapaChyba: svetle ? 'rgba(192,57,43,0.45)' : 'rgba(224,93,93,0.6)',
+    pozadi: g('--bg-input'), strop: svetle ? '#9aa4ae' : '#5c6670', podlaha: svetle ? '#d6d9dc' : '#3a3d40', akcent: g('--accent'),
+  };
+}
+function popisVykresu(v) {
+  const s = v.s, g = v.g, pv = v.podchod;
+  return 'Popis výkresu: ' + SCHOD.TYPY[s.typ].nazev + (s.typ === 'tocite' ? ', průměr ' + cz(s.prumer) + ' mm' : ', půdorys ' + cz(g.bbox.w) + ' × ' + cz(g.bbox.h) + ' mm') +
+    ', ' + v.n + ' výšek po ' + cz(v.h, 1) + ' mm, šířka stupně ' + cz(v.b, 1) + ' mm, sklon ' + cz(v.alfa, 1) + '°; stropní otvor ' + cz(pv.otvor.dx) + ' × ' + cz(pv.otvor.dy) + ' mm; nejmenší podchodná výška ' +
+    (isFinite(pv.min) ? (pv.min <= 0 ? 'kolize' : cz(pv.min) + ' mm') : 'bez překážky') + ' (požadováno ' + cz(pv.h1Pozad) + ' mm).';
+}
+function kresliVykresy() {
+  const v = vysledek; if (!v) return;
+  const b = barvyTematu();
+  const uchytMelFokus = document.activeElement && document.activeElement.getAttribute && document.activeElement.getAttribute('data-uchyt');
+  if (zvolenaZalozka === 'pudorys') { $('vykresPudorys').innerHTML = V.svgObrazovka(V.pudorys(v, { mapa: $('mapaPodchodu').checked, uchyt: true }), b, 'Půdorys schodiště'); obnovZoom($('vykresPudorys')); }
+  if (uchytMelFokus && zvolenaZalozka === 'pudorys') { const u = $('vykresPudorys').querySelector('[data-uchyt]'); if (u && u.focus) u.focus({ preventScroll: true }); }
+  if (zvolenaZalozka === 'rez') { $('vykresRez').innerHTML = V.svgObrazovka(V.rez(v), b, 'Řez schodištěm'); obnovZoom($('vykresRez')); }
+  if (zvolenaZalozka === 'schodnice') kresliSchodnici();
+  if (zvolenaZalozka === 'list') $('nahledListu').innerHTML = V.list(v, { papir: $('papir').value }).svg;
+  if (zvolenaZalozka === '3d') kresli3d();
+  $('popisVykresu').textContent = popisVykresu(v);
+}
+function kresliSchodnici() {
+  const v = vysledek, b = barvyTematu(), p = $('panel-schodnice');
+  if (v.s.material === 'zb') { p.innerHTML = '<p class="napoveda">U železobetonového monolitu se schodnice nekreslí – viz výkaz (beton, bednění), řez a kontrolu štíhlosti desky.</p>'; return; }
+  let html = '';
+  v.g.ramena.forEach((r, i) => {
+    const vy = V.vykresSchodnice(v, i);
+    if (!vy) return;
+    const sch = vy.sch, st = sch.statika, su = st.stupnice;
+    html += '<h3>Rameno ' + (i + 1) + ' – ' + (sch.typ === 'zubata' ? 'zubatá schodnice' : 'schodnice se zapuštěnými stupni') + ' (' + sch.nr + ' výšek)</h3>';
+    html += '<div class="vykres" id="vykresSchodnice' + i + '" tabindex="0" aria-label="Schodnice ramene ' + (i + 1) + ' – přiblížení kolečkem, posun tažením">' + V.svgObrazovka(vy, b, 'Schodnice ramene ' + (i + 1)) + '</div>';
+    html += '<div class="obal-tab"><table><tbody>' + [
+      ['Délka prkna (po ose)', cz(sch.delka) + ' mm'], ['Potřebná šířka prkna', cz(sch.sirkaPrkna) + ' mm × tl. ' + v.s.schodniceTl + ' mm'],
+      ['Pata – vodorovný řez (úhel k hraně schodnice)', cz(sch.uhelPata, 2) + '°'], ['Pata – svislý řez / hlava – svislý řez (úhel k hraně)', cz(sch.uhelHlava, 2) + '°'],
+      ['Výška prvního zubu / odpočet stupnice u paty', sch.typ === 'zubata' ? cz(sch.prvniVyska, 1) + ' mm (h − ' + cz(sch.odpocetPata) + ')' : 'stupně v drážkách hl. ' + v.s.drazka + ' mm'],
+      [sch.typ === 'zubata' ? 'Hloubka zářezu (kolmo k hraně)' : 'Dřevo pod nejnižší drážkou', sch.typ === 'zubata' ? cz(sch.hloubkaZubu, 1) + ' mm' : cz(sch.zbyva, 1) + ' mm'],
+      [sch.typ === 'zubata' ? 'Zbývající nosná výška' : 'Nosná výška průřezu', cz(sch.typ === 'zubata' ? sch.zbyva : st.ucinna, 1) + ' mm'],
+      ['Šablona: krok po hraně (√(h² + b²))', cz(sch.krok, 1) + ' mm – úhelník: ' + cz(v.h, 1) + ' na krátkém, ' + cz(v.b, 1) + ' na dlouhém rameni'],
+      ['Orientační statika (C24, prostý nosník ' + cz(st.Lh) + ' mm) – ohyb', 'σ = ' + cz(st.sigma, 1) + ' / ' + cz(st.fmd, 1) + ' MPa (' + cz(st.vyuziti * 100) + ' %)', st.vyuziti > 1],
+      ['Orientační statika – konečný průhyb s dotvarováním', cz(st.prohyb, 1) + ' / ' + cz(st.limit, 1) + ' mm (L/300)', st.prohyb > st.limit],
+      ['Orientačně doporučená výška schodnice', st.doporucena ? st.doporucena + ' mm (tl. ' + v.s.schodniceTl + ' mm)' : 'větší než 500 mm – změňte koncept (mezipodpora, širší profil)', !st.doporucena],
+      ['Stupnice – břemeno 2 kN, rozpětí ' + cz(su.Ls) + ' mm', 'σ = ' + cz(su.sigma, 1) + ' / ' + cz(su.fmd, 1) + ' MPa (' + cz(su.vyuziti * 100) + ' %)' + (su.vyuziti > 1 && su.doporucena ? ', tl. aspoň ' + su.doporucena + ' mm' : ''), su.vyuziti > 1],
+    ].map(r => '<tr' + (r[2] ? ' class="radek-chyba"' : '') + '><td class="vlevo">' + (r[2] ? '⛔ ' : '') + esc(r[0]) + '</td><td>' + esc(r[1]) + '</td></tr>').join('') + '</tbody></table></div>';
+    if ((st.vyuziti > 1 || st.prohyb > st.limit) && st.doporucena && st.doporucena !== v.s.schodniceVys)
+      html += '<div class="tlacitka"><button class="hlavni" data-zmena=\'' + JSON.stringify({ schodniceVys: st.doporucena }) + '\'>Použít doporučenou výšku schodnice ' + st.doporucena + ' mm</button></div>';
+    if (su.vyuziti > 1 && su.doporucena && i === 0)
+      html += '<div class="tlacitka"><button data-zmena=\'' + JSON.stringify({ tlStupnice: su.doporucena }) + '\'>Stupnice tl. ' + su.doporucena + ' mm</button></div>';
+    html += '<details><summary class="napoveda">Rozteče zubů od prvního zubu po hraně</summary><p class="napoveda">' + sch.sablona.map(z => z.k + ': ' + cz(z.vzdalenost, 1)).join(' · ') + ' mm</p></details>';
+  });
+  html += '<p class="napoveda" style="color:var(--text-mez)">⚠️ Statika je jen hrubý odhad (užitné zatížení 3 kN/m², břemeno 2 kN, prostý nosník, rostlé dřevo C24, dotvarování kdef 0,6, bez vrubů, spojů a kmitání). Průřez, kotvení a spoje musí navrhnout a posoudit statik nebo výrobce schodiště.</p>';
+  if (!html.includes('<h3>')) html = '<p class="napoveda">Schodnice se počítají pro přímá ramena. U kosých a točitých schodišť je vnitřní schodnice zalomená nebo lepená – vyrábí se podle šablony z půdorysu (rozvinuté délky ve výkazu).</p>' + html;
+  p.innerHTML = html;
+  p.querySelectorAll('.vykres').forEach(obnovZoom);
+}
+
+let nacitani3d = null;
+function nacti3d() {
+  if (window.SCHOD_3D && window.THREE) return Promise.resolve();
+  if (nacitani3d) return nacitani3d;
+  const skript = src => new Promise((ok, ko) => { const s = document.createElement('script'); s.src = src; s.onload = ok; s.onerror = () => ko(new Error('Nepodařilo se načíst ' + src + ' – zkuste záložku otevřít znovu.')); document.head.appendChild(s); });
+  nacitani3d = (window.THREE ? Promise.resolve() : skript('lib/three.0.160.0.min.js')).then(() => skript('schodiste/3d.js'));
+  nacitani3d.catch(() => { nacitani3d = null; });
+  return nacitani3d;
+}
+function chyba3d(text) { const el = $('chyba3d'); el.textContent = text || ''; el.classList.toggle('skryt', !text); }
+function kresli3d() {
+  nacti3d().then(() => {
+    if (!SCHOD_3D.init($('platno3d'))) throw new Error('3D knihovna se nenačetla.');
+    chyba3d('');
+    if (vysledek) SCHOD_3D.postav(vysledek, barvyTematu());
+  }).catch(e => chyba3d(e.message));
+}
+
+/* ---------------- tabulky ---------------- */
+function kresliVykaz() {
+  const r = SCHOD.vykaz(vysledek);
+  let sk = '';
+  $('vykaz').tBodies[0].innerHTML = r.map(x => {
+    let h = '';
+    if (x.skupina !== sk) { sk = x.skupina; h += '<tr><th colspan="4" class="vlevo">' + esc(sk) + '</th></tr>'; }
+    return h + '<tr><td class="vlevo">' + esc(x.polozka) + '</td><td>' + (x.pocet != null ? x.pocet + ' ks' : '') + '</td><td class="vlevo">' + esc(x.rozmer || '') + '</td><td>' + (x.mnozstvi != null ? cz(x.mnozstvi, x.jednotka === 'kg' ? 0 : x.jednotka === 'm' ? 2 : 3) + ' ' + x.jednotka : '') + '</td></tr>';
+  }).join('');
+}
+function kresliSirky() {
+  const v = vysledek, g = v.g, k = g.kose;
+  $('kartaKose').classList.toggle('skryt', !k);
+  if (!k) return;
+  $('koseInfo').textContent = (g.tocite ? 'Točité schodiště: ' + (v.n - 1) + ' stupnic po ' + cz(g.tocite.phi, 2) + '° = ' + cz(g.tocite.phi * (v.n - 1), 1) + '°. ' :
+    'Kosé stupně (' + (k.metoda === 'umernost' ? 'metoda úměrnosti' : 'metoda rozvinutí') + '): stupně ' + (k.ka) + '–' + (k.kb - 1) + '. ') +
+    'Šířka na výstupní čáře je u všech stupňů stejná (' + cz(v.b, 1) + ' mm, tětiva). Nejužší místo u vnitřního okraje: ' + cz(k.minVnitrni) + ' mm (nejméně 130 mm).';
+  const N = g.nosy, s400 = k.sirky400.some(x => x != null);
+  $('tabSirky').tHead.innerHTML = '<tr><th>Stupeň</th><th>vnitřní okraj</th><th>výstupní čára</th>' + (s400 ? '<th class="sk">400 mm od vnitř.</th>' : '') + '<th class="sk">vnější okraj</th></tr>';
+  $('tabSirky').tBodies[0].innerHTML = k.sirkyVnitrni.map((w, i) => {
+    const st = g.stupne[i]; if (st.typ === 'podesta') return '';
+    const wl = SCHOD.pom.vzd(N[i].W, N[i + 1].W);
+    const tr = w < SCHOD.NORMA.koseMin.hodnota - 1e-9 ? ' class="radek-chyba"' : '';
+    return '<tr' + tr + '><td>' + (i + 1) + (st.typ === 'kosy' ? ' (kosý)' : '') + '</td><td>' + cz(w) + '</td><td>' + cz(wl, 1) + '</td>' + (s400 ? '<td class="sk">' + (k.sirky400[i] != null ? cz(k.sirky400[i]) : '–') + '</td>' : '') + '<td class="sk">' + cz(k.sirkyVnejsi[i]) + '</td></tr>';
+  }).join('');
+}
+function kresliVysky() {
+  const v = vysledek, rows = SCHOD.tabulkaVysek(v), zb = v.s.material === 'zb';
+  $('vyskyInfo').textContent = 'Výška každého stupně ' + cz(v.h, 2) + ' mm; kóty hran stupňů od čisté podlahy dole. Při výrobě rozměřujte kumulativně (zaokrouhlení se nesčítá), poslední hrana = ' + cz(v.H) + ' mm.' +
+    (zb ? ' U monolitu jsou uvedeny i hrubé kóty betonových stupňů (bez nášlapné vrstvy ' + v.s.tlStupnice + ' mm, od hrubé podlahy dole).' : '');
+  $('vysky').tHead.innerHTML = '<tr><th>Hrana</th><th>kóta čistá</th>' + (zb ? '<th>kóta hrubá</th><th>hrubá výška stupně</th>' : '') + '<th>po výstupní čáře</th></tr>';
+  let pred = 0;
+  $('vysky').tBodies[0].innerHTML = rows.map((r, i) => {
+    const hr = zb ? '<td>' + cz(r.hruba, 1) + '</td><td>' + cz(r.hruba - pred, 1) + '</td>' : '';
+    if (zb) pred = r.hruba;
+    return '<tr><td>' + r.k + '</td><td>' + cz(r.z, 1) + '</td>' + hr + '<td>' + cz(v.g.nosy[i].t) + '</td></tr>';
+  }).join('');
+}
+
+function kresliPoznamku() {
+  const Z = SCHOD.ZDROJE, N = SCHOD.NORMA, K = SCHOD.KATEGORIE;
+  const radky = [
+    ['Krokový vzorec', N.krok.pozn, N.krok.zdroj], ['Šířka stupně', N.bMin.pozn, N.bMin.zdroj], ['Šířka stupnice', N.stupniceMin.pozn, N.stupniceMin.zdroj],
+    ['Kosé stupně', N.koseMin.pozn + ' ' + N.kose400.pozn, N.koseMin.zdroj.concat(N.kose400.zdroj)], ['Výstupní čára', N.vystupniCara.pozn + ' ' + N.vystupniCara.citace, N.vystupniCara.zdroj],
+    ['Počet výšek', N.pMin.pozn, N.pMin.zdroj], ['Mezipodesta, podesty', N.mezipodesta.pozn + ' ' + N.podlazniPodesta.pozn, N.mezipodesta.zdroj.concat(N.podlazniPodesta.zdroj)],
+    ['Podchodná výška', N.h1.pozn, N.h1.zdroj], ['Průchodná výška', N.h2.pozn, N.h2.zdroj], ['Zábradlí', N.zabradli.pozn, N.zabradli.zdroj], ['Madlo', N.madlo.pozn, N.madlo.zdroj],
+    ['Statika (orientačně)', N.zatizeni.pozn + ' ' + N.deska.pozn, N.zatizeni.zdroj],
+    ['Doplňková pravidla', N.pohodli.pozn + ' ' + N.bezpecnost.pozn, N.pohodli.zdroj.concat(N.bezpecnost.zdroj)],
+  ].concat(Object.values(K).map(k => [k.nazev, k.pozn, k.zdroj]));
+  $('poznamka').innerHTML = '<h2>📚 Normové hodnoty, metodika a zdroje</h2>' +
+    '<p>Hodnoty jsou v kódu na jednom místě (objekt <code>SCHOD.NORMA</code> a <code>SCHOD.KATEGORIE</code> v souboru schodiste/jadro.js), stav k ' + SCHOD.STAV_K + '. ' +
+    'Vyhláška 268/2009 Sb. (s čísly pro rodinné domy: sklon ≤ 35°/41°, 18 výšek, podchodná výška 2 100 mm, šířka 900/750 mm) byla nahrazena vyhláškou 146/2024 Sb. účinnou od 1. 7. 2024; ta požaduje jen stejné výšky stupňů v rameni, bezpečný pohyb a zábradlí a číselné hodnoty přenechává normám – použité hodnoty proto vycházejí z ČSN 73 4130:2010 (výtahy TS ČKAIT, ČVUT a dalších). ' +
+    'Kde se zdroje rozcházejí, je použita přísnější hodnota a v tabulce je to uvedeno. ČSN 74 3305 (zábradlí) prošla v roce 2025 změnami – výšky podle hloubky volného prostoru (900/1 000/1 100/1 200 mm) zůstávají.</p>' +
+    '<div class="obal-tab"><table><thead><tr><th>Pravidlo / kategorie</th><th>Hodnoty a poznámka</th><th>Zdroj</th></tr></thead><tbody>' +
+    radky.map(r => '<tr><td>' + esc(r[0]) + '</td><td>' + esc(r[1]) + '</td><td>' + zdrojOdkazy(r[2]) + '</td></tr>').join('') + '</tbody></table></div>' +
+    '<p><strong>Metodika:</strong> h = H / n (všechny výšky stejné), b podle zvoleného cíle; b se měří na výstupní čáře (u zakřivených ramen jako tětiva). ' +
+    'Kosé stupně: přední hrany procházejí body výstupní čáry se stejnou roztečí b; jejich polohu u vnitřního okraje určuje <em>metoda rozvinutí</em> – rozvinutý vnitřní okraj (délka × výška) se v oblasti otočky nahradí plynulým kubickým přechodem tečně navazujícím na přímá ramena (stejně jako se graficky „vyrovnává“ vnitřní schodnice), nebo <em>metoda úměrnosti</em> – šířky u vnitřního okraje tvoří aritmetickou řadu od nejužšího stupně v ose otočky k plné šířce b. ' +
+    'Podchodná výška se kontroluje svisle nad spojnicí hran po celé výstupní čáře i v síti bodů přes celou průchodnou šířku ramene (mapa v půdorysu) proti spodnímu líci stropu mimo otvor i proti stupňům a podestám nad sebou (točité schodiště po otočce). Stropní otvor se navrhne jako nejmenší obdélník (u schodiště do L tvar L), mimo nějž je podchodná výška splněna. ' +
+    'Schodnice: zubatá – hloubka zářezu h·b/√(h² + b²), první zub snížený o tloušťku stupnice; zapuštěná – horní hrana 50 mm nad spojnicí hran. Zábradlí: svislé příčle rozpočítané po stupních podle skutečné šířky stupně na straně zábradlí.</p>' +
+    '<p><strong>Omezení:</strong> průchodná šířka B se měří mezi stěnami / vnějšími okraji ramene, schodnice leží uvnitř (zásah se kontroluje); požární bezpečnost (únikové cesty), akustika a protiskluznost se nekontrolují. Výkaz je bez prořezu. Kosé stupně u U schodiště bez zrcadla obvykle nesplní 130 mm – zvětšete zrcadlo.</p>' +
+    '<ol>' + Object.entries(Z).map(([k, z]) => '<li id="zdroj-' + k + '">' + (z.url ? '<a href="' + esc(z.url) + '" target="_blank" rel="noopener">' + esc(z.nazev) + '</a>' : esc(z.nazev)) + '</li>').join('') + '</ol>';
+}
+
+/* ---------------- ukládání, sdílení ---------------- */
+function ulozHash() {
+  const p = new URLSearchParams();
+  p.set('v', String(VERZE));
+  for (const k in SCHOD.VYCHOZI) {
+    const v = stav[k];
+    if (v === SCHOD.VYCHOZI[k]) continue;
+    p.set(k, typeof v === 'boolean' ? (v ? '1' : '0') : String(v));
+  }
+  const h = p.toString();
+  try { history.replaceState(null, '', '#' + h); } catch (e) { /* file:// apod. */ }
+}
+function obnovUlozene() {
+  const n = ls.cti(KLIC_NAVRHY) || {};
+  const sel = $('ulozene');
+  const kl = Object.keys(n).filter(k => n[k] && typeof n[k] === 'object').sort((a, b) => a.localeCompare(b, 'cs'));
+  sel.innerHTML = kl.length ? kl.map(k => '<option value="' + esc(k) + '">' + esc(k) + '</option>').join('') : '<option value="">(žádné)</option>';
+}
+const ulozenyStav = z => (z && z.v ? z.stav : z);
+
+/* ---------------- export ---------------- */
+function stahni(obsah, nazev, typ) {
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([obsah], { type: typ }));
+  a.download = nazev; document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(a.href); a.remove(); }, 1000);
+}
+const nazevSouboru = () => (stav.nazev || 'schodiste').normalize('NFD').replace(/[̀-ͯ]/g, '').replace(/[^a-z0-9]+/gi, '_').replace(/^_|_$/g, '').toLowerCase() || 'schodiste';
+function pripravTisk() {
+  if (!vysledek) { $('tiskovyList').innerHTML = ''; return false; }
+  $('tiskovyList').innerHTML = V.list(vysledek, { papir: $('papir').value }).svg;
+  $('tiskStranka').textContent = '@page { size: ' + ($('papir').value === 'a3' ? 'A3' : 'A4') + ' landscape; margin: 0; }';
+  return true;
+}
+function zmen(zmena) { Object.assign(stav, zmena); zapisFormular(); prepocet(); }
+
+/* ---------------- události ---------------- */
+function prepniZalozku(z, fokus) {
+  zvolenaZalozka = z;
+  ls.zapis(KLIC_ZALOZKA, z);
+  document.querySelectorAll('#zalozky [role="tab"]').forEach(x => { const ano = x.dataset.z === z; x.setAttribute('aria-selected', String(ano)); x.tabIndex = ano ? 0 : -1; if (ano && fokus) x.focus(); });
+  for (const p of ['pudorys', 'rez', '3d', 'schodnice', 'list']) $('panel-' + p).classList.toggle('skryt', p !== z);
+  if (vysledek) kresliVykresy();
+}
+function navaz() {
+  document.querySelectorAll('#typy button').forEach(b => b.addEventListener('click', () => { prednastavTyp(b.dataset.typ); zapisFormular(); prepocet(); }));
+  for (const p of vsechnaPole()) {
+    if (p.typ === 'info') continue;
+    const el = $(p.id);
+    const vyska = ['H', 'Hhruba', 'podlahaDole', 'podlahaNahore', 'vyskaRezim', 'ucel', 'bezbar'].includes(p.alias || p.id);
+    if (p.typ === 'check' || p.typ === 'select') el.addEventListener('change', () => { ctiPole(p); if (vyska) stav.n = 0; viditelnost(); prepocet(); });
+    else {
+      el.addEventListener('input', () => { ctiPole(p); if (vyska) stav.n = 0; naplanuj(150); });
+      el.addEventListener('change', () => { ctiPole(p); zapisPole(p); zapamatujHodnotu(p); prepocet(); });
+      el.addEventListener('focus', () => { el.dataset.puvodni = el.value; setTimeout(() => { if (document.activeElement === el && el.select) el.select(); }, 0); });
+      el.addEventListener('keydown', e => klavesaVPoli(e, p, vyska));
+      el.addEventListener('wheel', e => { if (document.activeElement !== el) return; e.preventDefault(); krokuj(p, e.deltaY < 0 ? 1 : -1, e.shiftKey ? 10 : e.altKey ? 0.1 : 1, vyska); }, { passive: false });
+    }
+  }
+  $('vstupy').addEventListener('click', e => {
+    const k = e.target.closest('button.krok');
+    if (k) { const p = vsechnaPole().find(x => x.id === k.dataset.pole); krokuj(p, +k.dataset.krok, p.krokBtn / (p.step || 1), JE_VYSKA(p)); return; }
+    const c = e.target.closest('button.chip');
+    if (c) { const p = vsechnaPole().find(x => x.id === c.dataset.pole); stav[p.alias || p.id] = +c.dataset.hodnota; if (JE_VYSKA(p)) stav.n = 0; zapisPole(p); prepocet(); return; }
+    const h = e.target.closest('button.pomoc');
+    if (h) { const t = $('pt-' + h.dataset.pomoc); const ano = t.classList.contains('skryt'); t.classList.toggle('skryt', !ano); h.setAttribute('aria-expanded', String(ano)); return; }
+    const o = e.target.closest('button[data-oprava]');
+    if (o && vysledek) { const kk = vysledek.kontroly[+o.dataset.oprava]; if (kk && kk.oprava) zmen(kk.oprava.zmena); }
+  });
+  $('btnZpet').addEventListener('click', zpet);
+  $('btnZnovu').addEventListener('click', znovu);
+  $('btnPripnout').addEventListener('click', pripni);
+  $('btnStavba').addEventListener('click', otevriStavbu);
+  $('btnZkratky').addEventListener('click', ukazZkratky);
+  $('btnZavritZkratky').addEventListener('click', () => $('dlgZkratky').close());
+  $('btnPredN').addEventListener('click', () => posunN(-1));
+  $('btnDalN').addEventListener('click', () => posunN(1));
+  $('porovnani').addEventListener('click', e => {
+    const b = e.target.closest('button[data-pripnute]'); if (!b) return;
+    const sez = nactiPripnute(), i = +b.dataset.pripnute;
+    if (b.dataset.akce === 'odepnout') { sez.splice(i, 1); ls.zapis(KLIC_PRIPNUTE, sez); kresliPorovnani(); }
+    else if (sez[i]) { stav = SCHOD.normalizuj(sez[i].stav); zapisFormular(); prepocet(); toast('Načten připnutý návrh „' + sez[i].nazev + '“.'); }
+  });
+  document.addEventListener('keydown', globalniKlavesy);
+  zapniTazeniZalomeni($('vykresPudorys'));
+  for (const id of ['vykresPudorys', 'vykresRez']) zapniZoom($(id));
+  $('panel-schodnice').addEventListener('pointerdown', e => { const v = e.target.closest('.vykres'); if (v && !v.dataset.zoom) zapniZoom(v); }, true);
+  $('panel-schodnice').addEventListener('focusin', e => { const v = e.target.closest('.vykres'); if (v && !v.dataset.zoom) zapniZoom(v); });
+  $('nazev').addEventListener('input', () => { stav.nazev = $('nazev').value.slice(0, 60); naplanuj(400); });
+  $('btnZakladni').addEventListener('click', () => { rezim = 'zakladni'; ls.zapis(KLIC_REZIM, rezim); viditelnost(); if (vysledek) kresliVarovaniPoli(); });
+  $('btnPokrocile').addEventListener('click', () => { rezim = 'pokrocile'; ls.zapis(KLIC_REZIM, rezim); viditelnost(); if (vysledek) kresliVarovaniPoli(); });
+  $('varianty').addEventListener('click', e => { const tr = e.target.closest('tr[data-n]'); if (tr) { stav.n = +tr.dataset.n; prepocet(); } });
+  $('varianty').addEventListener('keydown', e => {
+    const tr = e.target.closest('tr[data-n]'); if (!tr) return;
+    if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); stav.n = +tr.dataset.n; prepocet(); }
+    else if (e.key === 'ArrowDown' || e.key === 'ArrowUp') { e.preventDefault(); const d = e.key === 'ArrowDown' ? tr.nextElementSibling : tr.previousElementSibling; if (d) d.focus(); }
+  });
+  $('btnAutoN').addEventListener('click', () => { stav.n = 0; prepocet(); });
+  $('kontroly').addEventListener('click', e => {
+    const b = e.target.closest('button[data-oprava]'); if (!b || !vysledek) return;
+    const k = vysledek.kontroly[+b.dataset.oprava]; if (k && k.oprava) zmen(k.oprava.zmena);
+  });
+  const tabs = [...document.querySelectorAll('#zalozky [role="tab"]')];
+  tabs.forEach((b, i) => {
+    b.addEventListener('click', () => prepniZalozku(b.dataset.z));
+    b.addEventListener('keydown', e => {
+      let j = null;
+      if (e.key === 'ArrowRight') j = (i + 1) % tabs.length; else if (e.key === 'ArrowLeft') j = (i - 1 + tabs.length) % tabs.length;
+      else if (e.key === 'Home') j = 0; else if (e.key === 'End') j = tabs.length - 1;
+      if (j != null) { e.preventDefault(); prepniZalozku(tabs[j].dataset.z, true); }
+    });
+  });
+  $('mapaPodchodu').addEventListener('change', () => { ls.zapis(KLIC_MAPA, $('mapaPodchodu').checked); $('legendaMapy').classList.toggle('skryt', !$('mapaPodchodu').checked); kresliVykresy(); });
+  $('panel-schodnice').addEventListener('click', e => { const b = e.target.closest('button[data-zmena]'); if (b) zmen(JSON.parse(b.dataset.zmena)); });
+  $('btnPohled3d').addEventListener('click', () => { if (window.SCHOD_3D) SCHOD_3D.resetPohledu(vysledek); });
+  $('platno3d').addEventListener('schod3dchyba', e => chyba3d(e.detail));
+  $('papir').addEventListener('change', () => { if (zvolenaZalozka === 'list' && vysledek) kresliVykresy(); });
+  $('btnTisk').addEventListener('click', () => { if (pripravTisk()) setTimeout(() => window.print(), 50); });
+  window.addEventListener('beforeprint', () => { pripravTisk(); });
+  window.addEventListener('afterprint', () => { $('tiskovyList').innerHTML = ''; });
+  $('btnSvgList').addEventListener('click', () => { if (vysledek) stahni('<?xml version="1.0" encoding="UTF-8"?>\n' + V.list(vysledek, { papir: $('papir').value }).svg, nazevSouboru() + '_list.svg', 'image/svg+xml'); });
+  $('btnSvgPud').addEventListener('click', () => { if (vysledek) stahni(V.svgMeritko(V.pudorys(vysledek, { th: 2.5 * 25 }), 25), nazevSouboru() + '_pudorys_1-25.svg', 'image/svg+xml'); });
+  $('btnSvgRez').addEventListener('click', () => { if (vysledek) stahni(V.svgMeritko(V.rez(vysledek, { th: 2.5 * 25 }), 25), nazevSouboru() + '_rez_1-25.svg', 'image/svg+xml'); });
+  $('btnDxf').addEventListener('click', () => { if (vysledek) stahni(V.dxf(vysledek), nazevSouboru() + '.dxf', 'application/dxf'); });
+  $('btnUlozit').addEventListener('click', async () => {
+    const n = ((stav.nazev || '').trim() || 'Návrh ' + new Date().toLocaleString('cs-CZ')).slice(0, 60);
+    const vse = ls.cti(KLIC_NAVRHY) || {};
+    if (maVlastni(vse, n) && window.Dialog && !(await Dialog.potvrd('Návrh „' + n + '“ už existuje. Přepsat?'))) return;
+    stav.nazev = n; $('nazev').value = n;
+    vse[n] = { v: VERZE, stav: Object.assign({}, stav) };
+    if (ls.zapis(KLIC_NAVRHY, vse)) { obnovUlozene(); $('ulozene').value = n; toast('Návrh „' + n + '“ uložen.'); } else toast('Úložiště prohlížeče není dostupné.', true);
+    prepocet();
+  });
+  $('btnNacist').addEventListener('click', () => {
+    const vse = ls.cti(KLIC_NAVRHY) || {}, n = $('ulozene').value;
+    if (!maVlastni(vse, n)) return;
+    stav = SCHOD.normalizuj(ulozenyStav(vse[n])); zapisFormular(); prepocet(); toast('Načten návrh „' + n + '“.');
+  });
+  $('btnSmazat').addEventListener('click', async () => {
+    const vse = ls.cti(KLIC_NAVRHY) || {}, n = $('ulozene').value;
+    if (!maVlastni(vse, n)) return;
+    if (window.Dialog && !(await Dialog.potvrd('Smazat návrh „' + n + '“?'))) return;
+    delete vse[n]; ls.zapis(KLIC_NAVRHY, vse); obnovUlozene();
+  });
+  $('btnSdilet').addEventListener('click', sdilej);
+  $('btnVychozi').addEventListener('click', async () => {
+    if (window.Dialog && !(await Dialog.potvrd('Vrátit všechny hodnoty na výchozí?'))) return;
+    stav = SCHOD.normalizuj(SCHOD.VYCHOZI); zapisFormular(); prepocet();
+  });
+  window.addEventListener('hashchange', () => { stav = SCHOD.normalizuj(nactiPocatecni()); zapisFormular(); prepocet(); });
+  new MutationObserver(() => { if (vysledek) kresliVykresy(); }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+}
+
+/* ================= ergonomie ================= */
+const JE_VYSKA = p => ['H', 'Hhruba', 'podlahaDole', 'podlahaNahore', 'vyskaRezim', 'ucel', 'bezbar'].includes(p.alias || p.id);
+function rozdelJednotku(label) {
+  const m = /\s*\((mm|°)(?:,\s*([^)]*))?\)\s*$/.exec(label);
+  if (!m) return [label, ''];
+  return [label.slice(0, m.index) + (m[2] ? ' – ' + m[2] : ''), m[1]];
+}
+/* krok pole: znaménko × násobek kroku; ořez do rozsahu, zaokrouhlení na desetiny kroku */
+function krokuj(p, smer, nasobek, vyska) {
+  const klic = p.alias || p.id, krok = (p.step || 1) * (nasobek || 1);
+  let v = stav[klic];
+  if (p.auto !== undefined && v === p.auto) v = p.auto === -1 ? 0 : (p.min || 0);
+  if (p.id === 'n1' && vysledek && vysledek.rozdeleni && stav.rozdeleni !== 'vlastni') v = vysledek.rozdeleni.n1;
+  if (p.id === 'n1' || p.id === 'delka1') prepniNaVlastni(p);
+  v = Math.round((v + smer * krok) / (krok < 1 ? krok : 1)) * (krok < 1 ? krok : 1);
+  stav[klic] = Math.min(p.max, Math.max(p.min, Math.round(v * 1000) / 1000));
+  delete upravy[p.id];
+  if (vyska) stav.n = 0;
+  zapisPole(p, true);
+  naplanuj(120);
+}
+function klavesaVPoli(e, p, vyska) {
+  const el = e.target;
+  if (e.key === 'ArrowUp' || e.key === 'ArrowDown') { e.preventDefault(); krokuj(p, e.key === 'ArrowUp' ? 1 : -1, e.shiftKey ? 10 : e.altKey ? 0.1 : 1, vyska); }
+  else if (e.key === 'Enter') { e.preventDefault(); ctiPole(p); zapisPole(p, true); zapamatujHodnotu(p); prepocet(); el.dataset.puvodni = el.value; }
+  else if (e.key === 'Escape') { if (el.dataset.puvodni != null) { el.value = el.dataset.puvodni; ctiPole(p); prepocet(); } e.stopPropagation(); }
+}
+/* předvolby (chipy) a naposledy použité hodnoty */
+function zapamatujHodnotu(p) {
+  if (!p.chipy) return;
+  const v = stav[p.alias || p.id];
+  if (p.chipy.includes(v)) return;
+  const vse = ls.cti(KLIC_HODNOTY) || {}, s = (Array.isArray(vse[p.id]) ? vse[p.id] : []).filter(x => x !== v && typeof x === 'number');
+  s.unshift(v); vse[p.id] = s.slice(0, 3); ls.zapis(KLIC_HODNOTY, vse);
+}
+function kresliPredvolby() {
+  const posledni = ls.cti(KLIC_HODNOTY) || {};
+  for (const p of vsechnaPole()) {
+    const el = $('ch-' + p.id); if (!el || !p.chipy) continue;
+    const v = stav[p.alias || p.id], dalsi = (Array.isArray(posledni[p.id]) ? posledni[p.id] : []).filter(x => typeof x === 'number' && !p.chipy.includes(x));
+    const chip = (x, tr) => '<button type="button" class="chip' + (tr || '') + '" data-pole="' + p.id + '" data-hodnota="' + x + '" aria-pressed="' + (x === v) + '"' + (tr ? ' title="naposledy použito"' : '') + '>' + cz(x) + '</button>';
+    const html = p.chipy.map(x => chip(x)).join('') + dalsi.map(x => chip(x, ' posledni')).join('');
+    if (el.innerHTML !== html) el.innerHTML = html;
+  }
+}
+/* sbalitelné karty se zapamatovaným stavem */
+function pridejSbalovani(karta) {
+  const h2 = karta.querySelector('h2'); if (!h2 || h2.querySelector('.sbal')) return;
+  const id = karta.id || '';
+  h2.insertAdjacentHTML('beforeend', '<button type="button" class="sbal" aria-expanded="true" title="Sbalit / rozbalit">▾</button>');
+  const b = h2.querySelector('.sbal');
+  const nastav = sbal => { karta.classList.toggle('sbalena', sbal); b.setAttribute('aria-expanded', String(!sbal)); b.textContent = sbal ? '▸' : '▾'; };
+  const ulozene = ls.cti(KLIC_SBALENO) || {};
+  if (ulozene[id]) nastav(true);
+  if (b.addEventListener) b.addEventListener('click', () => { const sbal = !karta.classList.contains('sbalena'); nastav(sbal); const u = ls.cti(KLIC_SBALENO) || {}; if (sbal) u[id] = 1; else delete u[id]; ls.zapis(KLIC_SBALENO, u); });
+}
+/* zpět / znovu: snímky stavu, rychlé změny (< 1 s) se slučují */
+const historie = { seznam: [], index: -1, cas: 0, pauza: false };
+function zapisHistorii() {
+  if (historie.pauza) return;
+  const json = JSON.stringify(stav), ted = Date.now();
+  if (historie.seznam[historie.index] === json) return;
+  historie.seznam.length = historie.index + 1;
+  if (historie.index > 0 && ted - historie.cas < 1000) historie.seznam[historie.index] = json;
+  else { historie.seznam.push(json); historie.index++; }
+  if (historie.seznam.length > 100) { historie.seznam.shift(); historie.index--; }
+  historie.cas = ted;
+  aktualizujZpet();
+}
+function aktualizujZpet() { $('btnZpet').disabled = historie.index <= 0; $('btnZnovu').disabled = historie.index >= historie.seznam.length - 1; }
+function obnovZHistorie(i) {
+  historie.index = i; historie.pauza = true;
+  stav = SCHOD.normalizuj(JSON.parse(historie.seznam[i]));
+  zapisFormular(); prepocet();
+  historie.pauza = false; historie.cas = 0; aktualizujZpet();
+}
+function zpet() { if (historie.index > 0) obnovZHistorie(historie.index - 1); }
+function znovu() { if (historie.index < historie.seznam.length - 1) obnovZHistorie(historie.index + 1); }
+/* varianty klávesami [ ] */
+function posunN(d) {
+  const vs = cacheVariant.radky || [], n = vysledek ? vysledek.n : 0;
+  const nn = n + d, [a, b] = SCHOD.rozsahVariant(stav, SCHOD.konstrukcniVyska(stav));
+  if (nn >= a && nn <= b) { stav.n = nn; prepocet(); }
+  void vs;
+}
+/* globální zkratky – nikdy v textových polích (kromě Esc) a nikdy s Ctrl/Alt (kromě zpět/znovu) */
+const ZKRATKY = [
+  ['Ctrl + Z / Ctrl + Shift + Z (Ctrl + Y)', 'zpět / znovu'], ['1 – 5', 'výkres: půdorys, řez, 3D, schodnice, list'],
+  ['[ / ]', 'o jednu výšku méně / víc'], ['A', 'automaticky doporučená varianta'], ['P', 'připnout návrh k porovnání'],
+  ['< / >', 'posunout zalomení o jeden stupeň (lomená a dvouramenná)'], ['M', 'mapa podchodné výšky zap/vyp'], ['U', 'režim u stavby'], ['S', 'zkopírovat odkaz s návrhem'], ['T', 'tisk / PDF'],
+  ['0', 've výkresu: celý výkres'], ['?', 'tento přehled'], ['Esc', 'zavřít režim u stavby / přehled'],
+];
+function vTextovemPoli(t) { return t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT' || t.isContentEditable); }
+function globalniKlavesy(e) {
+  if (e.key === 'Escape' && !$('stavba').classList.contains('skryt')) { zavriStavbu(); return; }
+  const mod = e.ctrlKey || e.metaKey;
+  if (mod && !e.altKey && (e.key === 'z' || e.key === 'Z' || e.key === 'y' || e.key === 'Y')) {
+    if (vTextovemPoli(e.target)) return;                // v poli nechat zpět prohlížeče
+    e.preventDefault();
+    if (e.key === 'y' || e.key === 'Y' || e.shiftKey) znovu(); else zpet();
+    return;
+  }
+  if (mod || e.altKey || vTextovemPoli(e.target)) return;
+  const k = e.key;
+  if (k === '?') { e.preventDefault(); ukazZkratky(); }
+  // číslice a závorky podle fyzické klávesy – na české klávesnici dává horní řada ě š č ř ž
+  else if (/^(Digit|Numpad)[1-5]$/.test(e.code || '') || (!e.code && /^[1-5]$/.test(k))) prepniZalozku(['pudorys', 'rez', '3d', 'schodnice', 'list'][+(e.code ? e.code.slice(-1) : k) - 1]);
+  else if (k === '<' || k === ',' || e.code === 'Comma') posunZalomeni(-1);
+  else if (k === '>' || k === '.' || e.code === 'Period') posunZalomeni(1);
+  else if (k === '[' || e.code === 'BracketLeft') posunN(-1);
+  else if (k === ']' || e.code === 'BracketRight') posunN(1);
+  else if (k === 'a' || k === 'A') { stav.n = 0; prepocet(); }
+  else if (k === 'p' || k === 'P') pripni();
+  else if (k === 'm' || k === 'M') { $('mapaPodchodu').checked = !$('mapaPodchodu').checked; ls.zapis(KLIC_MAPA, $('mapaPodchodu').checked); kresliVykresy(); }
+  else if (k === 'u' || k === 'U') otevriStavbu();
+  else if (k === 's' || k === 'S') sdilej();
+  else if (k === 't' || k === 'T') { if (pripravTisk()) setTimeout(() => window.print(), 50); }
+  else return;
+  e.preventDefault();
+}
+function ukazZkratky() {
+  $('tabZkratky').innerHTML = ZKRATKY.map(([a, b]) => '<tr><td><kbd>' + esc(a) + '</kbd></td><td>' + esc(b) + '</td></tr>').join('');
+  const d = $('dlgZkratky'); if (d.showModal) d.showModal();
+}
+async function sdilej() {
+  ulozHash();
+  const url = location.href;
+  try { await navigator.clipboard.writeText(url); toast('✓ Odkaz s návrhem je zkopírovaný do schránky.'); }
+  catch (e) { if (window.Dialog) await Dialog.zeptej('Zkopírujte odkaz:', url); }
+}
+/* přiblížení a posun výkresů (SVG viewBox) */
+const zoomy = {};
+function obnovZoom(kont) {
+  const svg = kont && kont.querySelector && kont.querySelector('svg'); if (!svg) return;
+  // výchozí výřez si SVG pamatuje od vykreslení – aktuální viewBox už může být přiblížený
+  if (!svg.dataset.zakl) svg.dataset.zakl = svg.getAttribute('viewBox');
+  const zakl = svg.dataset.zakl.split(/[\s,]+/).map(Number);
+  let z = zoomy[kont.id];
+  if (!z || Math.abs(z.zakl[2] - zakl[2]) > zakl[2] * 0.02 || Math.abs(z.zakl[3] - zakl[3]) > zakl[3] * 0.02) z = zoomy[kont.id] = { zakl, vb: zakl.slice() };
+  else { z.zakl = zakl; z.vb = V.omezVB(z.vb, zakl); }
+  svg.setAttribute('viewBox', z.vb.map(x => Math.round(x * 10) / 10).join(' '));
+  kont.classList.toggle('priblizeno', z.vb[2] < zakl[2] * 0.999);
+}
+function nastavVB(kont, vb) { const z = zoomy[kont.id]; if (!z) return; z.vb = vb; obnovZoom(kont); }
+function bodSvg(svg, x, y) {
+  const m = svg.getScreenCTM && svg.getScreenCTM(); if (!m) return null;
+  const p = svg.createSVGPoint(); p.x = x; p.y = y; return p.matrixTransform(m.inverse());
+}
+function zapniZoom(kont) {
+  if (!kont || kont.dataset.zoom) return;
+  kont.dataset.zoom = '1';
+  const ptr = new Map(); let pinch = null;
+  kont.addEventListener('wheel', e => {
+    if (!(e.ctrlKey || document.activeElement === kont)) return;     // jinak stránka scrolluje normálně
+    const svg = kont.querySelector('svg'), z = zoomy[kont.id]; if (!svg || !z) return;
+    e.preventDefault();
+    const u = bodSvg(svg, e.clientX, e.clientY); if (!u) return;
+    nastavVB(kont, V.zoomVB(z.vb, z.zakl, u.x, u.y, Math.exp(e.deltaY * (e.ctrlKey ? 0.01 : 0.0015))));
+  }, { passive: false });
+  kont.addEventListener('pointerdown', e => { if (e.button !== 0 && e.pointerType === 'mouse') return; kont.focus({ preventScroll: true }); ptr.set(e.pointerId, [e.clientX, e.clientY]); if (kont.setPointerCapture) kont.setPointerCapture(e.pointerId); pinch = null; });
+  kont.addEventListener('pointermove', e => {
+    if (!ptr.has(e.pointerId)) return;
+    const svg = kont.querySelector('svg'), z = zoomy[kont.id]; if (!svg || !z) return;
+    const pred = ptr.get(e.pointerId); ptr.set(e.pointerId, [e.clientX, e.clientY]);
+    if (ptr.size === 1) {
+      const a = bodSvg(svg, pred[0], pred[1]), b = bodSvg(svg, e.clientX, e.clientY); if (!a || !b) return;
+      nastavVB(kont, V.posunVB(z.vb, z.zakl, b.x - a.x, b.y - a.y));
+    } else if (ptr.size === 2) {
+      const [p1, p2] = [...ptr.values()], d = Math.hypot(p1[0] - p2[0], p1[1] - p2[1]);
+      const st = bodSvg(svg, (p1[0] + p2[0]) / 2, (p1[1] + p2[1]) / 2);
+      if (pinch && st) nastavVB(kont, V.zoomVB(z.vb, z.zakl, st.x, st.y, pinch / d));
+      pinch = d;
+    }
+  });
+  const konec = e => { ptr.delete(e.pointerId); pinch = null; };
+  kont.addEventListener('pointerup', konec); kont.addEventListener('pointercancel', konec);
+  kont.addEventListener('dblclick', () => { const z = zoomy[kont.id]; if (z) nastavVB(kont, z.zakl.slice()); });
+  kont.addEventListener('keydown', e => {
+    const z = zoomy[kont.id]; if (!z || e.ctrlKey || e.metaKey || e.altKey) return;
+    const cx = z.vb[0] + z.vb[2] / 2, cy = z.vb[1] + z.vb[3] / 2, krok = z.vb[2] * 0.1;
+    let vb = null;
+    if (e.key === '+' || e.key === '=') vb = V.zoomVB(z.vb, z.zakl, cx, cy, 0.8);
+    else if (e.key === '-') vb = V.zoomVB(z.vb, z.zakl, cx, cy, 1.25);
+    else if (e.key === '0' || e.code === 'Digit0' || e.code === 'Numpad0') vb = z.zakl.slice();
+    else if (e.key === 'ArrowLeft') vb = V.posunVB(z.vb, z.zakl, krok, 0);
+    else if (e.key === 'ArrowRight') vb = V.posunVB(z.vb, z.zakl, -krok, 0);
+    else if (e.key === 'ArrowUp') vb = V.posunVB(z.vb, z.zakl, 0, krok);
+    else if (e.key === 'ArrowDown') vb = V.posunVB(z.vb, z.zakl, 0, -krok);
+    if (vb) { e.preventDefault(); e.stopPropagation(); nastavVB(kont, vb); }
+  });
+}
+/* porovnání: až 3 připnuté návrhy */
+function nactiPripnute() { const x = ls.cti(KLIC_PRIPNUTE); return Array.isArray(x) ? x.filter(p => p && p.stav).slice(0, 3) : []; }
+/* okamžitý přepočet: zruší odložený přepočet i čekání na varianty, aby se připnulo to, co je vidět */
+function vynutPrepocet() {
+  clearTimeout(casovac);
+  if (idle && window.cancelIdleCallback) window.cancelIdleCallback(idle);
+  idle = 0;
+  const k = klicVariant(SCHOD.normalizuj(stav));
+  if (cacheVariant.klic !== k) { stav = SCHOD.normalizuj(stav); spocitejVarianty(klicVariant(stav)); }
+  prepocet();
+}
+function pripni() {
+  vynutPrepocet();
+  if (!vysledek) return;
+  const sez = nactiPripnute();
+  const s = Object.assign({}, stav, { n: vysledek.n });
+  if (sez.some(p => JSON.stringify(SCHOD.normalizuj(p.stav)) === JSON.stringify(SCHOD.normalizuj(s)))) { toast('Tento návrh už je připnutý.'); return; }
+  const g = vysledek.g;
+  const nazev = (stav.nazev || 'Návrh') + ' · ' + SCHOD.TYPY[stav.typ].nazev.split(' ')[0] + ' · B ' + cz(stav.typ === 'tocite' ? g.tocite.B : stav.B) + ' · ' + vysledek.n + ' × ' + cz(vysledek.h, 1) +
+    (vysledek.rozdeleni ? ' · ramena ' + vysledek.rozdeleni.popis : '') + ' · ' + (stav.typ === 'tocite' ? '⌀ ' + cz(stav.prumer) : cz(g.bbox.w) + ' × ' + cz(g.bbox.h));
+  sez.push({ nazev: nazev.slice(0, 70), stav: s });
+  while (sez.length > 3) sez.shift();
+  ls.zapis(KLIC_PRIPNUTE, sez);
+  kresliPorovnani();
+  toast('📌 Návrh připnut k porovnání (' + sez.length + '/3).');
+}
+const cachePorovnani = new Map();
+function kresliPorovnani() {
+  const sez = nactiPripnute(), tb = $('porovnani').tBodies[0];
+  if (!sez.length) { tb.innerHTML = '<tr><td class="vlevo napoveda">Zatím nic nepřipnuto.</td></tr>'; return; }
+  const v = sez.map(p => {
+    const k = JSON.stringify(p.stav);
+    if (!cachePorovnani.has(k)) { let x = null; try { x = SCHOD.navrh(p.stav, p.stav.n >= 3 ? p.stav.n : undefined); } catch (e) { x = null; } cachePorovnani.set(k, x); }
+    return cachePorovnani.get(k);
+  });
+  /* buňky, které se mezi návrhy liší, se zvýrazní */
+  const radek = (nazev, f) => {
+    const b = v.map(x => (x ? f(x) : '–')), lisi = b.length > 1 && new Set(b).size > 1;
+    return '<tr><th scope="row">' + nazev + '</th>' + b.map(t => '<td' + (lisi ? ' class="lisi"' : '') + '>' + t + '</td>').join('') + '</tr>';
+  };
+  const st = x => { const sh = x.souhrn; return '<span class="znak ' + sh.stav + '">' + (sh.stav === 'ok' ? 'vyhovuje' : sh.stav === 'mez' ? sh.meze + ' upozornění' : sh.chyby + ' nevyhovuje') + '</span>'; };
+  tb.innerHTML = '<tr><th scope="row">Návrh</th>' + sez.map((p, i) => '<td><b>' + (i + 1) + '.</b> <button class="male" data-pripnute="' + i + '" title="Načíst tento návrh">' + esc(p.nazev) + '</button> <button class="male" data-pripnute="' + i + '" data-akce="odepnout" aria-label="Odepnout" title="Odepnout">✕</button></td>').join('') + '</tr>' +
+    radek('Typ / účel', x => esc(SCHOD.TYPY[x.s.typ].nazev) + '<br>' + esc(x.kat.kratce)) +
+    radek('Výšky', x => x.n + ' × ' + cz(x.h, 1) + ' mm') +
+    radek('Šířka b / 2h + b', x => cz(x.b, 1) + ' / ' + cz(2 * x.h + x.b, 1) + ' mm') +
+    radek('Sklon', x => cz(x.alfa, 1) + '°') +
+    radek('Rozdělení ramen', x => x.rozdeleni ? x.rozdeleni.popis + ' (' + x.rozdeleni.delky.map(d => cz(d)).join(' / ') + ' mm)' : '–') +
+    radek('Šířka ramene', x => cz(x.s.typ === 'tocite' ? x.g.tocite.B : x.s.B) + ' mm') +
+    radek('Půdorys', x => x.s.typ === 'tocite' ? '⌀ ' + cz(x.s.prumer) : cz(x.g.bbox.w) + ' × ' + cz(x.g.bbox.h)) +
+    radek('Podchodná výška', x => isFinite(x.podchod.min) ? (x.podchod.min <= 0 ? 'kolize' : cz(x.podchod.min) + ' mm') : 'volná') +
+    radek('Stropní otvor', x => cz(x.podchod.otvor.dx) + ' × ' + cz(x.podchod.otvor.dy)) +
+    radek('Kosé – nejužší', x => x.g.kose ? cz(x.g.kose.minVnitrni) + ' mm' : '–') +
+    radek('Kontroly', st);
+}
+/* režim u stavby: jedna obrazovka pro tesaře, velké písmo, nezhasínající displej */
+let wakeLock = null, zadostWL = null, chciDisplej = false;
+async function drzDisplej(ano) {
+  chciDisplej = ano;
+  try {
+    if (ano && !wakeLock && !zadostWL && navigator.wakeLock && document.visibilityState === 'visible') {
+      zadostWL = navigator.wakeLock.request('screen');
+      const z = await zadostWL; zadostWL = null;
+      if (!chciDisplej) { await z.release(); return; }          // mezitím zavřeno
+      wakeLock = z;
+      if (z.addEventListener) z.addEventListener('release', () => { if (wakeLock === z) wakeLock = null; });
+    } else if (!ano && wakeLock) { const z = wakeLock; wakeLock = null; await z.release(); }
+  } catch (e) { wakeLock = null; zadostWL = null; }
+  const el = $('stavbaDispl'); if (el) el.textContent = wakeLock ? '🔆 displej nezhasne' : (navigator.wakeLock ? 'displej může zhasnout' : 'prohlížeč neumí držet displej rozsvícený');
+}
+function obsahStavby(v) {
+  const s = v.s, g = v.g, N = g.nosy;
+  let h = '<div class="horni"><span><b>👷 ' + esc(s.nazev || 'Schodiště') + '</b> · <span id="stavbaDispl"></span></span><span><button id="btnStavbaPisma" title="Větší / menší písmo">A±</button> <button class="hlavni" id="btnStavbaZavrit">✕ Zavřít (Esc)</button></span></div>';
+  h += '<p class="velke">' + v.n + ' × ' + cz(v.h, 1) + ' mm</p><p>výška stupně · šířka b = <b>' + cz(v.b, 1) + ' mm</b> · sklon <b>' + cz(v.alfa, 1) + '°</b> · H = ' + cz(v.H) + ' mm</p>';
+  if (s.material !== 'zb') {
+    g.ramena.forEach((r, i) => {
+      const sch = SCHOD.schodnice(v, i); if (!sch) return;
+      h += '<h2>Schodnice ramene ' + (i + 1) + ' (' + sch.nr + ' výšek, ' + (sch.typ === 'zubata' ? 'zubatá' : 'zapuštěné stupně') + ')</h2><table><tbody>' +
+        '<tr><td>Délka prkna</td><td class="velke">' + cz(sch.delka) + ' mm</td></tr>' +
+        '<tr><td>Prkno</td><td>' + cz(sch.sirkaPrkna) + ' × ' + s.schodniceTl + ' mm</td></tr>' +
+        '<tr><td>Řez u paty (vodorovný) k hraně</td><td class="velke">' + cz(sch.uhelPata, 1) + '°</td></tr>' +
+        '<tr><td>Svislé řezy k hraně</td><td class="velke">' + cz(sch.uhelHlava, 1) + '°</td></tr>' +
+        '<tr><td>Úhelník</td><td><b>' + cz(v.h, 1) + '</b> na krátkém · <b>' + cz(v.b, 1) + '</b> na dlouhém rameni</td></tr>' +
+        '<tr><td>Krok po hraně</td><td><b>' + cz(sch.krok, 1) + ' mm</b></td></tr>' +
+        (sch.typ === 'zubata' ? '<tr><td>První zub (odpočet stupnice)</td><td><b>' + cz(sch.prvniVyska, 1) + ' mm</b></td></tr><tr><td>Hloubka zářezu</td><td>' + cz(sch.hloubkaZubu, 1) + ' mm (zbývá ' + cz(sch.zbyva) + ')</td></tr>' : '<tr><td>Drážky</td><td>hloubka ' + s.drazka + ' mm</td></tr>') +
+        '</tbody></table><p>Rozteče zubů od prvního: ' + sch.sablona.map(z => '<b>' + cz(z.vzdalenost) + '</b>').join(' · ') + ' mm</p>';
+    });
+  }
+  h += '<h2>Výšky hran (od čisté podlahy)</h2><table><tbody>' + N.map(q => '<tr><td>' + q.k + '</td><td><b>' + cz(q.z, 1) + ' mm</b></td><td>' + cz(q.t) + ' mm po výstupní čáře</td></tr>').join('') + '</tbody></table>';
+  const r = SCHOD.vykaz(v).filter(x => /Stupnice –|^Stupnice$|Podstupnice$|^Podstupnice/.test(x.polozka) && x.pocet != null && x.rozmer);
+  if (r.length) h += '<h2>Stupnice a podstupnice</h2><table><tbody>' + r.map(x => '<tr><td>' + esc(x.polozka) + '</td><td><b>' + x.pocet + ' ks</b></td><td>' + esc(x.rozmer) + '</td></tr>').join('') + '</tbody></table>';
+  h += '<h2>Stropní otvor</h2><p><b>' + cz(v.podchod.otvor.dx) + ' × ' + cz(v.podchod.otvor.dy) + ' mm</b>' + (v.podchod.otvor.tvarL ? ' (tvar L)' : '') + ' · podchodná výška ' + (isFinite(v.podchod.min) ? cz(v.podchod.min) + ' mm' : 'volná') + '</p>';
+  return h;
+}
+let pismoStavby = 1;
+function kresliStavbu() {
+  const el = $('stavba');
+  if (!vysledek) { el.innerHTML = '<div class="horni"><b>Návrh nelze sestavit</b><button class="hlavni" id="btnStavbaZavrit">✕ Zavřít</button></div>'; }
+  else el.innerHTML = obsahStavby(vysledek);
+  el.style.fontSize = (1.15 * pismoStavby) + 'rem';
+  const z = $('btnStavbaZavrit'); if (z) z.addEventListener('click', zavriStavbu);
+  const p = $('btnStavbaPisma'); if (p) p.addEventListener('click', () => { pismoStavby = pismoStavby >= 1.4 ? 0.9 : pismoStavby + 0.25; el.style.fontSize = (1.15 * pismoStavby) + 'rem'; });
+  drzDisplej(true);
+}
+function otevriStavbu() { $('stavba').classList.remove('skryt'); kresliStavbu(); const z = $('btnStavbaZavrit'); if (z && z.focus) z.focus(); }
+function zavriStavbu() { $('stavba').classList.add('skryt'); drzDisplej(false); const b = $('btnStavba'); if (b && b.focus) b.focus(); }
+document.addEventListener('visibilitychange', () => { if (!$('stavba').classList.contains('skryt') && document.visibilityState === 'visible') drzDisplej(true); });
+
+/* ---- místo zalomení: přetažení úchytu, šipky na úchytu, klávesy < > ---- */
+function lzeZalomit() { return vysledek && vysledek.rozdeleni && SCHOD.TYPY_ROZDELENI.includes(stav.typ); }
+function nastavZalomeni(n1) {
+  if (!lzeZalomit()) return false;
+  const kose = stav.typ === 'L_kose' || stav.typ === 'U_kose', n = vysledek.n;
+  let [lo, hi] = SCHOD.mezeN1(stav, n, vysledek.b);
+  if (!kose) { lo = Math.max(lo, n >= 6 ? 3 : 2); hi = Math.min(hi, n >= 6 ? n - 3 : n - 1); }
+  const x = Math.min(hi, Math.max(lo, kose ? Math.round(n1 * 2) / 2 : Math.round(n1)));
+  if (stav.rozdeleni === 'vlastni' && stav.n1 === x && stav.n1Pro === n && !stav.delka1) return false;
+  stav.rozdeleni = 'vlastni'; stav.n1 = x; stav.n1Pro = n; stav.delka1 = 0;
+  zapisFormular(); prepocet();
+  return true;
+}
+function posunZalomeni(d) { if (lzeZalomit()) nastavZalomeni(vysledek.rozdeleni.n1 + d); }
+/* bod v půdorysu (mm) → počet výšek v 1. rameni podle nejbližšího místa na výstupní čáře */
+function n1ZBodu(v, P) {
+  const g = v.g;
+  if (g.kose) {
+    let best = null;
+    for (const q of g.vystupniBody) { const d = Math.hypot(q.p[0] - P[0], q.p[1] - P[1]); if (!best || d < best.d) best = { d, t: q.t }; }
+    return best ? best.t / v.b + 0.5 : null;
+  }
+  let best = null;
+  g.nosy.forEach((q, i) => { const d = Math.hypot(q.W[0] - P[0], q.W[1] - P[1]); if (!best || d < best.d) best = { d, k: i + 1 }; });
+  return best ? best.k : null;
+}
+let tazeni = null;
+/* Úchyt u podesty sedí uprostřed podesty, ale tah se převádí na nejbližší náběžnou hranu stupně – bez odstupu by
+   prvních ~půl podesty tahu nic neudělalo. Odstup = referenční bod současného zalomení − bod chycení (mm). */
+function odstupUchytu(kont, e) {
+  const svg = kont.querySelector('svg'); if (!svg || !vysledek || !vysledek.g || vysledek.g.kose) return [0, 0];
+  const u = bodSvg(svg, e.clientX, e.clientY), q = vysledek.g.nosy[vysledek.rozdeleni.n1 - 1];
+  if (!u || !q) return [0, 0];
+  return [q.W[0] - (u.x + +svg.dataset.x0), q.W[1] - (+svg.dataset.y1 - u.y)];
+}
+function zapniTazeniZalomeni(kont) {
+  kont.addEventListener('pointerdown', e => {
+    // úchyt překrývá číslo stupně a popisek – chytit jde kdekoli v jeho okolí (na dotyku s větší rezervou)
+    let u = e.target && e.target.closest && e.target.closest('[data-uchyt]');
+    if (!u) {
+      const c = kont.querySelector('[data-uchyt]');
+      if (c) { const r = c.getBoundingClientRect(), rez = e.pointerType === 'touch' ? 22 : 10;
+        if (Math.hypot(e.clientX - (r.left + r.width / 2), e.clientY - (r.top + r.height / 2)) <= r.width / 2 + rez) u = c; }
+    }
+    if (!u || !lzeZalomit()) return;
+    e.stopPropagation(); e.preventDefault();
+    tazeni = { id: e.pointerId, odstup: odstupUchytu(kont, e) };
+    if (kont.setPointerCapture) kont.setPointerCapture(e.pointerId);
+    if (u.focus) u.focus({ preventScroll: true });
+  }, true);
+  kont.addEventListener('pointermove', e => {
+    if (!tazeni || e.pointerId !== tazeni.id) return;
+    e.stopPropagation();
+    if (tazeni.cekani) { tazeni.posledni = e; return; }
+    const zpracuj = ev => {
+      const svg = kont.querySelector('svg'); if (!svg || !vysledek) return;
+      const u = bodSvg(svg, ev.clientX, ev.clientY); if (!u) return;
+      const o = tazeni && tazeni.odstup || [0, 0];
+      const n1 = n1ZBodu(vysledek, [u.x + +svg.dataset.x0 + o[0], +svg.dataset.y1 - u.y + o[1]]);
+      if (n1 != null) nastavZalomeni(n1);
+    };
+    tazeni.cekani = true;
+    requestAnimationFrame(() => { if (!tazeni) return; tazeni.cekani = false; zpracuj(tazeni.posledni || e); tazeni.posledni = null; });
+  }, true);
+  const konec = e => { if (tazeni && e.pointerId === tazeni.id) { tazeni = null; e.stopPropagation(); } };
+  kont.addEventListener('pointerup', konec, true); kont.addEventListener('pointercancel', konec, true);
+  kont.addEventListener('keydown', e => {
+    if (!(e.target && e.target.getAttribute && e.target.getAttribute('data-uchyt'))) return;
+    const kose = stav.typ === 'L_kose' || stav.typ === 'U_kose', krok = kose && e.shiftKey ? 0.5 : 1;
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowDown') { e.preventDefault(); e.stopPropagation(); posunZalomeni(-krok); }
+    else if (e.key === 'ArrowRight' || e.key === 'ArrowUp') { e.preventDefault(); e.stopPropagation(); posunZalomeni(krok); }
+  }, true);
+}
+
+/* stránkové API pro kontrolu a snímky */
+window.schodiste = {
+  nastav(o) { stav = SCHOD.normalizuj(Object.assign({}, stav, o)); zapisFormular(); prepocet(); return vysledek && vysledek.souhrn; },
+  zalozka(z) { prepniZalozku(z); },
+  rezim(r) { rezim = r === 'pokrocile' ? 'pokrocile' : 'zakladni'; viditelnost(); if (vysledek) kresliVarovaniPoli(); },
+  zalomeni(n1) { return nastavZalomeni(n1); },
+  stavba(ano) { if (ano === false) zavriStavbu(); else otevriStavbu(); },
+  pripni() { pripni(); },
+  zkratky() { ukazZkratky(); },
+  zoom(id, f) { const k = $(id), z = zoomy[id]; if (k && z) nastavVB(k, V.zoomVB(z.vb, z.zakl, z.vb[0] + z.vb[2] / 2, z.vb[1] + z.vb[3] / 2, f)); },
+  get stav() { return Object.assign({}, stav); },
+  get vysledek() { return vysledek; },
+};
+
+vytvorFormular();
+if (ls.cti(KLIC_MAPA) === false) { $('mapaPodchodu').checked = false; $('legendaMapy').classList.add('skryt'); }
+zapisFormular();
+obnovUlozene();
+navaz();
+kresliPoznamku();
+prepniZalozku(zvolenaZalozka);
+prepocet();
+</script>
+</body>
+</html>

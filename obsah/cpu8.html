@@ -1,0 +1,2799 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>CPU 6502 – emulátor a assembler</title>
+  <meta name="description" content="Emulátor 8bitového procesoru MOS 6502 s assemblerem, krokováním, krokem zpět, výukovým vysvětlením instrukcí, displejem 32×32, lekcemi a úlohami s automatickou kontrolou.">
+  <link rel="stylesheet" href="../common.css">
+  <script src="../theme.js"></script>
+  <script src="../podpis.js" defer></script>
+  <script src="../dialog.js"></script>
+  <script src="cpu8/cpu.js"></script>
+  <script src="cpu8/asm.js"></script>
+  <script src="cpu8/disasm.js"></script>
+  <script src="cpu8/vyuka.js"></script>
+  <script src="cpu8/periferie.js"></script>
+  <script src="cpu8/lekce.js"></script>
+  <script src="cpu8/sdileni.js"></script>
+  <style>
+    :root {
+      --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, 'Liberation Mono', 'DejaVu Sans Mono', monospace;
+      --lh: 20px;
+      --syn-mnem: var(--accent);
+      --syn-dir: var(--warn);
+      --syn-cislo: var(--ok);
+      --syn-str: color-mix(in srgb, var(--warn) 55%, var(--text));
+      --syn-kom: var(--text-faint);
+      --syn-reg: color-mix(in srgb, var(--accent) 60%, var(--text));
+    }
+    body { background-color: var(--bg-deep); padding: 14px clamp(8px, 1.6vw, 22px) 24px; min-height: 100vh; }
+    h1 { font-size: 1.3rem; }
+    h2 { font-size: 0.92rem; font-weight: 600; }
+    h3 { font-size: 0.95rem; margin: 18px 0 6px; }
+    a { color: var(--accent); }
+    code, kbd { font-family: var(--mono); font-size: 0.92em; }
+    kbd { background: var(--bg-control); border: 1px solid var(--border-strong); border-radius: 4px; padding: 0 4px; }
+    .hlavicka { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 14px; margin-bottom: 4px; }
+    .podtitul { color: var(--text-muted); font-size: 0.85rem; line-height: 1.5; max-width: 1100px; margin-bottom: 10px; }
+    button, select {
+      background: var(--bg-control); border: 1px solid var(--border-strong); color: var(--text);
+      border-radius: 6px; padding: 6px 10px; font-size: 0.82rem; cursor: pointer; font-family: inherit; line-height: 1.2;
+    }
+    button:hover { background: var(--bg-hover); }
+    button:disabled { opacity: 0.5; cursor: default; }
+    button.hlavni { background: var(--accent); border-color: var(--accent); color: var(--on-accent); font-weight: 600; }
+    button.hlavni:hover { background: var(--accent-hover); }
+    button.male { padding: 3px 7px; font-size: 0.75rem; }
+    input[type="text"], input[type="search"] {
+      background: var(--bg-input); border: 1px solid var(--border); color: var(--text); border-radius: 6px;
+      padding: 5px 8px; font-size: 0.82rem; min-width: 0; font-family: inherit;
+    }
+    input:focus, select:focus, textarea:focus { outline: none; border-color: var(--accent); }
+    :focus-visible { outline: 2px solid var(--accent); outline-offset: 1px; }
+    label.zas { display: inline-flex; align-items: center; gap: 5px; font-size: 0.8rem; color: var(--text-muted); cursor: pointer; }
+
+    /* --- horní karty --- */
+    .karty-hl { display: flex; gap: 4px; border-bottom: 1px solid var(--border); margin-bottom: 10px; flex-wrap: wrap; }
+    .karty-hl button { background: transparent; border: none; border-bottom: 2px solid transparent; border-radius: 0; padding: 7px 12px; color: var(--text-muted); font-size: 0.86rem; }
+    .karty-hl button.akt { color: var(--text); border-bottom-color: var(--accent); font-weight: 600; }
+    .stranka { display: none; }
+    .stranka.akt { display: block; }
+
+    /* --- nástrojová lišta --- */
+    .lista { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; background: var(--bg-panel); border: 1px solid var(--border);
+      border-radius: var(--radius); padding: 7px 8px; margin-bottom: 10px; position: sticky; top: 0; z-index: 20; }
+    .lista .odd { width: 1px; align-self: stretch; background: var(--border); margin: 0 2px; }
+    .lista .citace { font-family: var(--mono); font-size: 0.76rem; color: var(--text-muted); display: flex; gap: 10px; flex-wrap: wrap; }
+    .lista .citace b { color: var(--text); font-weight: 600; }
+    .stav { font-size: 0.8rem; color: var(--text-muted); flex: 1 1 220px; min-width: 0; text-align: right; overflow-wrap: anywhere; }
+    .stav.chyba { color: var(--danger); }
+    .stav.ok { color: var(--ok); }
+    .stav.pozor { color: var(--warn); }
+    #btnBeh { min-width: 92px; }
+
+    /* --- pracoviště --- */
+    .prac { display: grid; column-gap: 0; row-gap: 10px; align-items: start;
+      grid-template-columns: minmax(0, var(--s1, 1.12fr)) 10px minmax(0, var(--s2, 0.92fr)) 10px minmax(0, var(--s3, 1fr)); }
+    .sl1 { grid-column: 1; grid-row: 1; } .roz1 { grid-column: 2; grid-row: 1; } .sl2 { grid-column: 3; grid-row: 1; }
+    .roz2 { grid-column: 4; grid-row: 1; } .sl3 { grid-column: 5; grid-row: 1; }
+    .sl { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+    .rozdelovac { align-self: stretch; cursor: col-resize; position: relative; touch-action: none; border-radius: 4px; }
+    .rozdelovac::after { content: ''; position: absolute; left: 4px; top: 0; bottom: 0; width: 2px; border-radius: 1px; background: transparent; }
+    .rozdelovac:hover::after, .rozdelovac:focus-visible::after, .rozdelovac.tah::after { background: var(--accent); }
+    @media (max-width: 1250px) and (min-width: 901px) {
+      .prac { column-gap: 10px; grid-template-columns: minmax(0, 1.1fr) minmax(0, 1fr); }
+      .rozdelovac { display: none; }
+      .sl1 { grid-column: 1; grid-row: 1 / span 2; }
+      .sl2 { grid-column: 2; grid-row: 1; }
+      .sl3 { grid-column: 2; grid-row: 2; }
+    }
+    .karta { background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px; min-width: 0; }
+    .karta > .zahl { display: flex; align-items: center; gap: 6px; margin-bottom: 8px; flex-wrap: wrap; }
+    .karta > .zahl h2 { margin-right: auto; }
+    .podkarty { display: none; }
+    @media (max-width: 900px) {
+      .prac { grid-template-columns: minmax(0, 1fr); }
+      .rozdelovac { display: none; }
+      .sl1, .sl2, .sl3 { grid-column: 1; grid-row: auto; }
+      .podkarty { display: flex; gap: 4px; margin-bottom: 8px; position: sticky; top: 0; z-index: 19; background: var(--bg-deep); padding: 4px 0; }
+      .podkarty button { flex: 1; }
+      .podkarty button.akt { background: var(--accent-soft); border-color: var(--accent); }
+      .prac { gap: 0; }
+      .prac[data-m="editor"] [data-p]:not([data-p~="editor"]), .prac[data-m="stav"] [data-p]:not([data-p~="stav"]),
+      .prac[data-m="pamet"] [data-p]:not([data-p~="pamet"]), .prac[data-m="displej"] [data-p]:not([data-p~="displej"]) { display: none; }
+      .prac[data-m="displej"] .sl1, .prac[data-m="displej"] .sl2, .prac[data-m="pamet"] .sl1, .prac[data-m="pamet"] .sl2,
+      .prac[data-m="stav"] .sl1, .prac[data-m="stav"] .sl3, .prac[data-m="editor"] .sl2, .prac[data-m="editor"] .sl3 { display: none; }
+      .lista { position: static; }
+    }
+
+    /* --- editor --- */
+    .ed-nastroje { display: flex; flex-wrap: wrap; gap: 5px; align-items: center; margin-bottom: 6px; }
+    .ed-nastroje select { max-width: 190px; }
+    .ulozeni { font-size: 0.74rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 220px; }
+    .ulozeni.ok { color: var(--ok); }
+    .ulozeni.pozor { color: var(--warn); font-weight: 600; }
+    .editor:focus-within { outline: 2px solid var(--accent); outline-offset: 1px; }
+    .editor { position: relative; display: flex; border: 1px solid var(--border); border-radius: 6px; background: var(--bg-input);
+      height: min(70vh, 720px); min-height: 320px; overflow: hidden; }
+    @media (max-width: 900px) {
+      .editor { height: min(60vh, 520px); height: min(60dvh, 520px); min-height: 260px; }
+      :root { --lh: 24px; }
+      .ed-oblast textarea, .ed-oblast pre { font-size: 16px; }     /* iOS jinak při fokusu přiblíží stránku */
+      .gutter { font-size: 14px; width: 46px; }
+      input[type="text"], input[type="search"], select { font-size: 16px; }
+      .chyby { max-height: 10.5em; }
+      .lista button, .podkarty button, .ed-nastroje button, .dpad button, .disp-tl button, .pam-nav button, details.nast > summary { min-height: 44px; min-width: 44px; }
+      body { padding-bottom: 130px; }
+    }
+    .gutter { flex: 0 0 auto; width: 52px; overflow: hidden; background: var(--bg-elevated); border-right: 1px solid var(--border);
+      font-family: var(--mono); font-size: 12px; line-height: var(--lh); color: var(--text-muted); user-select: none; position: relative; }
+    .gutter-in { position: absolute; left: 0; right: 0; top: 0; padding-top: 6px; will-change: transform; }
+    .gutter-in div { height: var(--lh); padding-right: 6px; text-align: right; cursor: pointer; position: relative; }
+    .gutter-in div:hover { color: var(--text); }
+    .gutter-in div.bp::before { content: ''; position: absolute; left: 5px; top: 5px; width: 10px; height: 10px; border-radius: 50%; background: var(--danger); }
+    .gutter-in div.err { background: color-mix(in srgb, var(--danger) 30%, transparent); color: var(--text); }
+    .gutter-in div.pc { background: var(--accent); color: var(--on-accent); }
+    .gutter-in div.wrn { box-shadow: inset 3px 0 0 var(--warn); }
+    .ed-oblast { position: relative; flex: 1; min-width: 0; overflow: hidden; }
+    .ed-oblast textarea, .ed-oblast pre {
+      font-family: var(--mono); font-size: 13px; line-height: var(--lh); tab-size: 8; -moz-tab-size: 8;
+      padding: 6px 10px; margin: 0; border: 0; white-space: pre; letter-spacing: 0; font-variant-ligatures: none;
+    }
+    .ed-oblast pre { position: absolute; left: 0; top: 0; pointer-events: none; color: var(--text); min-width: 100%; will-change: transform; z-index: 1; }
+    .ed-oblast textarea { position: absolute; inset: 0; width: 100%; height: 100%; resize: none; background: transparent; color: transparent;
+      caret-color: var(--text); overflow: auto; z-index: 2; outline: none; }
+    .ed-oblast textarea::selection { background: color-mix(in srgb, var(--accent) 35%, transparent); color: transparent; }
+    .pasmo { position: absolute; left: 0; right: 0; height: var(--lh); background: var(--accent-soft); border-left: 3px solid var(--accent); display: none; z-index: 0; }
+    .t-mn { color: var(--syn-mnem); font-weight: 600; }
+    .t-dir { color: var(--syn-dir); }
+    .t-c { color: var(--syn-cislo); }
+    .t-s { color: var(--syn-str); }
+    .t-k { color: var(--syn-kom); font-style: italic; }
+    .t-n { font-weight: 700; }
+    .t-r { color: var(--syn-reg); }
+    .t-err { text-decoration: underline wavy var(--danger); text-decoration-skip-ink: none; }
+    .chyby { margin-bottom: 6px; font-size: 0.78rem; max-height: 96px; overflow: auto; border-radius: 6px; }
+    .chyby:not(:empty) { border: 1px solid var(--danger); border-left-width: 4px; background: var(--bg-panel); padding: 2px; }
+    .chyby div { padding: 3px 6px; border-radius: 4px; cursor: pointer; line-height: 1.35; }
+    .chyby div:hover { background: var(--bg-hover); }
+    .chyby .e { color: var(--danger); }
+    .chyby .w { color: var(--warn); }
+    .uloha-panel { border: 1px solid var(--accent); background: var(--accent-soft); border-radius: 6px; padding: 8px 10px; margin-bottom: 8px; font-size: 0.82rem; line-height: 1.45; display: none; }
+    .uloha-panel h3 { margin: 0 0 4px; font-size: 0.88rem; }
+    .uloha-panel .tl { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 6px; }
+    .vysl-testu { margin-top: 6px; font-size: 0.78rem; }
+    .vysl-testu div { padding: 1px 0; }
+    .vysl-testu .ok { color: var(--ok); }
+    .vysl-testu .ne { color: var(--danger); }
+
+    /* --- registry --- */
+    .regy { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 6px; }
+    .regy .reg { grid-column: span 2; }
+    .regy #regSP, .regy #regPC { grid-column: span 3; }
+    .reg { background: var(--bg-elevated); border: 1px solid var(--border); border-radius: 6px; padding: 4px 6px; min-width: 0; }
+    .reg label { display: block; font-size: 0.68rem; color: var(--text-muted); font-weight: 600; }
+    .reg input { width: 100%; background: transparent; border: 1px solid transparent; color: var(--text); font-family: var(--mono); font-size: 1rem;
+      font-weight: 600; padding: 1px 2px; border-radius: 4px; }
+    .reg input:focus { border-color: var(--accent); background: var(--bg-input); }
+    .reg .dal { font-family: var(--mono); font-size: 0.68rem; line-height: 1.35; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-height: 2.7em; }
+    .reg .dal div { overflow: hidden; text-overflow: ellipsis; }
+    .reg.zm { border-color: var(--warn); background: color-mix(in srgb, var(--warn) 14%, var(--bg-elevated)); }
+    .priz { display: flex; gap: 4px; margin-top: 8px; flex-wrap: wrap; align-items: center; }
+    .priz button { font-family: var(--mono); width: 34px; padding: 4px 0; text-align: center; font-weight: 700; }
+    .priz button.on { background: var(--accent); border-color: var(--accent); color: var(--on-accent); }
+    .priz button small { display: block; font-size: 0.66rem; font-weight: 600; line-height: 1.1; }
+    .priz button.zm { outline: 2px dashed var(--warn); outline-offset: 1px; }
+    .priz button.nic { cursor: default; background: transparent; border-style: dashed; color: var(--text-muted); }
+    .priz .pbin { font-family: var(--mono); font-size: 0.75rem; color: var(--text-muted); margin-left: 4px; }
+    .citac { font-family: var(--mono); font-size: 0.75rem; color: var(--text-muted); margin-top: 6px; display: flex; flex-wrap: wrap; gap: 4px 14px; }
+
+    /* --- výuka --- */
+    .vyuka { font-size: 0.82rem; line-height: 1.5; max-height: 330px; overflow: auto; }
+    .vyuka p { margin: 0 0 4px; }
+    .vyuka p:first-child { font-size: 0.86rem; }
+    .vyuka code { background: var(--bg-elevated); padding: 0 3px; border-radius: 3px; }
+    .vyuka .pr { color: var(--text-muted); }
+
+    /* --- disassembler, zásobník, paměť --- */
+    .mono { font-family: var(--mono); font-size: 12px; line-height: 18px; }
+    .dis { max-height: 380px; overflow: auto; }
+    .dis div { display: flex; gap: 8px; white-space: pre; padding: 0 4px; border-radius: 3px; cursor: pointer; }
+    .dis div:hover { background: var(--bg-hover); }
+    .dis .a { color: var(--text-muted); width: 40px; flex: none; position: relative; padding-left: 10px; }
+    .dis .b { color: var(--text-muted); width: 66px; flex: none; }
+    .dis .bp .a::before { content: ''; position: absolute; left: 0; top: 5px; width: 8px; height: 8px; border-radius: 50%; background: var(--danger); }
+    .dis .pc { background: var(--accent-soft); box-shadow: inset 3px 0 0 var(--accent); }
+    .dis .lab { color: var(--text); font-weight: 700; cursor: default; }
+    .dis .lab:hover { background: none; }
+    .dis .t { color: var(--text); overflow: hidden; text-overflow: ellipsis; }
+    .dis .ill .t { color: var(--danger); }
+    .dvoj { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.3fr); gap: 10px; }
+    @media (max-width: 520px) { .dvoj { grid-template-columns: minmax(0, 1fr); } }
+    .zas-seznam { max-height: 230px; overflow: auto; }
+    .zas-seznam div { display: flex; gap: 8px; padding: 0 4px; }
+    .zas-seznam .sp { background: var(--accent-soft); box-shadow: inset 3px 0 0 var(--accent); }
+    .zas-seznam .a { color: var(--text-muted); }
+    .zas-seznam .ret { color: var(--text-muted); font-size: 11px; }
+    .zas-seznam .zm { color: var(--warn); font-weight: 700; }
+    .watch-seznam { max-height: 230px; overflow: auto; }
+    .watch-seznam div { display: flex; gap: 6px; align-items: center; padding: 1px 2px; }
+    .watch-seznam .jm { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .watch-seznam .hod { color: var(--text); white-space: nowrap; }
+    .watch-seznam .chyba { color: var(--danger); }
+    .watch-seznam button { padding: 0 6px; }
+    .watch-pridat { display: flex; gap: 4px; margin-top: 6px; }
+    .watch-pridat input { flex: 1; font-family: var(--mono); }
+    .pam-nav { display: flex; gap: 4px; flex-wrap: wrap; align-items: center; }
+    .pam-nav input { width: 92px; font-family: var(--mono); }
+    .pam-obal { overflow-x: auto; margin-top: 6px; }
+    table.pam { border-collapse: collapse; font-family: var(--mono); font-size: 12px; line-height: 17px; white-space: pre; }
+    table.pam td { padding: 0 2px; text-align: center; cursor: text; border-radius: 2px; }
+    table.pam td.ad { color: var(--text-muted); padding-right: 8px; cursor: default; }
+    table.pam td.asc { color: var(--text-muted); padding-left: 8px; text-align: left; cursor: default; letter-spacing: 0.5px; }
+    table.pam td.nul { color: var(--text-muted); }
+    table.pam td.zm { background: color-mix(in srgb, var(--warn) 35%, transparent); color: var(--text); }
+    table.pam td.pc { box-shadow: inset 0 -2px 0 var(--accent); color: var(--text); font-weight: 700; }
+    table.pam td.sp { outline: 1px dashed var(--ok); }
+    table.pam td.mez { padding-left: 7px; }
+    table.pam td input { width: 2.2em; font-family: var(--mono); font-size: 12px; padding: 0 1px; text-align: center; border: 1px solid var(--accent);
+      background: var(--bg-input); color: var(--text); border-radius: 2px; }
+    .sym { max-height: 230px; overflow: auto; }
+    .sym table { width: 100%; border-collapse: collapse; font-family: var(--mono); font-size: 12px; }
+    .sym td { padding: 1px 4px; border-bottom: 1px solid var(--border); cursor: pointer; }
+    .sym tr:hover td { background: var(--bg-hover); }
+    .sym td.typ { color: var(--text-muted); font-family: var(--font); font-size: 0.72rem; }
+    .prazdne { color: var(--text-muted); font-size: 0.78rem; padding: 4px; }
+
+    /* --- displej a konzole --- */
+    .displej-obal { display: flex; flex-direction: column; align-items: center; gap: 6px; }
+    .displej { position: relative; outline: none; border-radius: 4px; line-height: 0; border: 2px solid var(--border-strong); cursor: crosshair; }
+    .displej:focus { border-color: var(--accent); }
+    .displej canvas { display: block; image-rendering: pixelated; }
+    .disp-info { font-family: var(--mono); font-size: 0.72rem; color: var(--text-muted); min-height: 1.2em; text-align: center; }
+    .disp-info.aktivni { color: var(--ok); font-weight: 600; }
+    .dpad { display: grid; grid-template-columns: repeat(3, 40px); gap: 3px; }
+    .dpad button { padding: 6px 0; }
+    .disp-radek { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; justify-content: center; }
+    .paleta-mini { display: grid; grid-template-columns: repeat(8, 14px); gap: 2px; }
+    .paleta-mini span { width: 14px; height: 14px; border-radius: 2px; border: 1px solid var(--border); }
+    .konzole { background: var(--bg-deep); color: color-mix(in srgb, var(--ok) 55%, var(--text)); font-family: var(--mono); font-size: 12.5px; line-height: 17px; border-radius: 6px; padding: 6px 8px;
+      height: 150px; overflow: auto; white-space: pre-wrap; overflow-wrap: anywhere; border: 1px solid var(--border); margin-top: 8px; }
+
+    /* --- lekce --- */
+    .lekce-mrizka { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px; }
+    .lk { background: var(--bg-panel); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px; display: flex; flex-direction: column; gap: 6px; }
+    .lk h3 { margin: 0; font-size: 0.92rem; }
+    .lk p { font-size: 0.8rem; color: var(--text-muted); line-height: 1.45; flex: 1; }
+    .lk .meta { font-size: 0.72rem; color: var(--text-muted); display: flex; gap: 8px; align-items: center; }
+    .lk .splneno { color: var(--ok); font-weight: 700; }
+    .lk .tl { display: flex; gap: 6px; flex-wrap: wrap; }
+    .postup { font-size: 0.85rem; color: var(--text-muted); margin: 4px 0 10px; }
+
+    /* --- příručka --- */
+    .text-sl { max-width: 980px; font-size: 0.86rem; line-height: 1.55; color: var(--text); }
+    .text-sl p, .text-sl ul { margin: 0 0 8px; }
+    .text-sl ul { padding-left: 20px; }
+    .tab-obal { overflow-x: auto; }
+    table.ref { border-collapse: collapse; font-size: 0.8rem; width: 100%; }
+    table.ref th, table.ref td { border-bottom: 1px solid var(--border); padding: 4px 6px; text-align: left; vertical-align: top; }
+    table.ref th { color: var(--text-muted); font-weight: 600; font-size: 0.74rem; background: var(--bg-elevated); position: sticky; top: 0; }
+    table.ref td.mn { font-family: var(--mono); font-weight: 700; color: var(--accent); white-space: nowrap; }
+    table.ref .rez { font-family: var(--mono); font-size: 0.74rem; border-collapse: collapse; }
+    table.ref .rez td { border: none; padding: 0 8px 0 0; white-space: nowrap; }
+    table.ref .rez td.r { font-family: var(--font); color: var(--text-muted); }
+    .fl { font-family: var(--mono); letter-spacing: 1px; white-space: nowrap; }
+    .fl span { color: var(--text-muted); }
+    .fl span.on { color: var(--warn); font-weight: 700; }
+    .ref-filtr { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; margin: 8px 0; }
+    .ref-filtr input { width: 240px; }
+    table.matice { border-collapse: collapse; font-family: var(--mono); font-size: 11px; min-width: 760px; }
+    table.matice th { color: var(--text-muted); font-weight: 600; padding: 3px; }
+    table.matice td { border: 1px solid var(--border); padding: 3px 2px; text-align: center; width: 6%; cursor: pointer; line-height: 1.25; }
+    table.matice td b { display: block; font-size: 12px; }
+    table.matice td small { color: var(--text-muted); font-size: 10px; }
+    table.matice td.vyb { outline: 2px solid var(--accent); outline-offset: -2px; }
+    .g-presun { background: color-mix(in srgb, var(--accent) 18%, transparent); }
+    .g-aritm { background: color-mix(in srgb, var(--ok) 22%, transparent); }
+    .g-logika { background: color-mix(in srgb, var(--warn) 18%, transparent); }
+    .g-posun { background: color-mix(in srgb, var(--warn) 34%, transparent); }
+    .g-porov { background: color-mix(in srgb, var(--accent) 36%, transparent); }
+    .g-skok { background: color-mix(in srgb, var(--danger) 20%, transparent); }
+    .g-vetev { background: color-mix(in srgb, var(--danger) 34%, transparent); }
+    .g-zas { background: color-mix(in srgb, var(--ok) 38%, transparent); }
+    .g-priz { background: color-mix(in srgb, var(--text-faint) 26%, transparent); }
+    .g-ostatni { background: color-mix(in srgb, var(--text-faint) 12%, transparent); }
+    .g-nedok { background: repeating-linear-gradient(135deg, transparent 0 4px, color-mix(in srgb, var(--text-faint) 14%, transparent) 4px 8px); color: var(--text-muted); }
+    .legenda { display: flex; flex-wrap: wrap; gap: 6px 12px; font-size: 0.75rem; color: var(--text-muted); margin: 8px 0; }
+    .legenda span { display: inline-flex; align-items: center; gap: 5px; }
+    .legenda i { width: 14px; height: 14px; border-radius: 3px; border: 1px solid var(--border); display: inline-block; }
+    .detail-op { margin-top: 8px; font-size: 0.84rem; line-height: 1.5; min-height: 2em; }
+    table.mapa { border-collapse: collapse; font-size: 0.82rem; }
+    table.mapa td, table.mapa th { border-bottom: 1px solid var(--border); padding: 4px 8px; text-align: left; vertical-align: top; }
+    table.mapa td:first-child { font-family: var(--mono); white-space: nowrap; }
+    table.mapa th { color: var(--text-muted); font-size: 0.75rem; }
+
+    /* --- okno (výpis) --- */
+    .okno-pozadi { position: fixed; inset: 0; background: rgba(0, 0, 0, 0.45); display: none; align-items: center; justify-content: center; z-index: 60; padding: 12px; }
+    .okno { background: var(--bg-panel); border: 1px solid var(--border-strong); border-radius: var(--radius); box-shadow: var(--shadow);
+      width: min(980px, 100%); max-height: calc(100vh - 24px); display: flex; flex-direction: column; }
+    .okno .hlava { display: flex; align-items: center; gap: 8px; padding: 10px 12px; border-bottom: 1px solid var(--border); flex-wrap: wrap; }
+    .okno .hlava h2 { margin-right: auto; font-size: 1rem; }
+    .okno .telo { padding: 10px 12px; overflow: auto; }
+    .okno pre { font-family: var(--mono); font-size: 12px; line-height: 17px; white-space: pre; }
+    details.nast { position: relative; }
+    details.nast > summary { list-style: none; cursor: pointer; background: var(--bg-control); border: 1px solid var(--border-strong); border-radius: 6px; padding: 6px 10px; font-size: 0.82rem; }
+    details.nast > summary::-webkit-details-marker { display: none; }
+    details.nast .obsah { position: absolute; right: 0; top: calc(100% + 4px); background: var(--bg-elevated); border: 1px solid var(--border-strong); border-radius: var(--radius);
+      box-shadow: var(--shadow); padding: 10px 12px; z-index: 40; width: 300px; max-width: 86vw; display: flex; flex-direction: column; gap: 8px; }
+    details.nast .obsah .napoveda { font-size: 0.72rem; color: var(--text-muted); line-height: 1.4; }
+    .pozn { color: var(--text-muted); font-size: 0.78rem; line-height: 1.55; max-width: 1100px; margin-top: 18px; }
+    .skryt { display: none !important; }
+    .neakt-stitek { display: none; font-size: 0.7rem; color: var(--warn); border: 1px solid var(--warn); border-radius: 10px; padding: 0 7px; white-space: nowrap; }
+    .prac.neakt .neakt-stitek { display: inline-block; }
+    .prac.neakt #dis, .prac.neakt #symboly { opacity: 0.6; }
+
+    @media (max-width: 600px) {
+      .lista button .txt { display: none; }
+      .stav { text-align: left; flex-basis: 100%; }
+    }
+    @media print {
+      body { background: #fff; color: #000; padding: 0; }
+      .lista, .karty-hl, .podkarty, .ed-nastroje, .ref-filtr, button, details.nast { display: none !important; }
+      .stranka { display: none !important; }
+      .stranka.akt { display: block !important; }
+      .karta { border-color: #999; break-inside: avoid; }
+      table.ref th { position: static; }
+    }
+  
+    /* --- historie kroků --- */
+    .hist { max-height: 260px; overflow: auto; }
+    .hist { overflow-x: hidden; }
+    .hist div { display: flex; flex-wrap: wrap; gap: 0 8px; padding: 1px 4px; border-radius: 3px; cursor: pointer; border-bottom: 1px solid var(--border); }
+    .hist div:hover, .hist div:focus-visible { background: var(--bg-hover); }
+    .hist .a { color: var(--text-muted); width: 40px; flex: none; }
+    .hist .t { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: pre; }
+    .hist .c { color: var(--text-muted); white-space: nowrap; }
+    .hist .r { color: var(--text-muted); flex-basis: 100%; padding-left: 48px; white-space: pre; }
+    .hist .ted { background: var(--accent-soft); box-shadow: inset 3px 0 0 var(--accent); cursor: default; }
+    .hist .pre { color: var(--warn); }
+    /* --- watch se zastavením --- */
+    .watch-seznam label { display: inline-flex; align-items: center; cursor: pointer; }
+    .watch-seznam input[type="checkbox"] { width: 16px; height: 16px; }
+    table.pam td.io { text-decoration: underline dotted var(--accent); text-underline-offset: 3px; }
+    /* --- displej: psaní a popis --- */
+    .disp-tl { display: flex; flex-direction: column; gap: 4px; position: relative; }
+    .psani { position: absolute; left: 0; bottom: 0; width: 1px; height: 1px; opacity: 0; border: 0; padding: 0; }
+    .disp-popis { font-size: 0.78rem; color: var(--text-muted); line-height: 1.45; margin-top: 6px; }
+    .disp-popis:empty { display: none; }
+    /* --- dialog výpisu --- */
+    dialog.okno { padding: 0; color: var(--text); margin: auto; }
+    dialog.okno:not([open]) { display: none; }
+    dialog.okno::backdrop { background: rgba(0, 0, 0, 0.45); }
+    /* --- mobilní spodní lišta --- */
+    .mob-lista { display: none; }
+    @media (max-width: 900px) {
+      .mob-lista { display: block; position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; background: var(--bg-panel);
+        border-top: 1px solid var(--border-strong); padding: 6px 8px calc(6px + env(safe-area-inset-bottom)); box-shadow: var(--shadow); }
+      .mob-regy { font-size: 12px; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-bottom: 4px; }
+      .mob-regy b { color: var(--text); font-weight: 600; }
+      .mob-tl { display: grid; grid-template-columns: 1fr 1fr 1fr 1.6fr; gap: 6px; }
+      .mob-tl button { min-height: 44px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 1px; font-size: 1rem; }
+      .mob-tl button small { font-size: 0.68rem; }
+    }
+    @media print { .mob-lista { display: none !important; } }
+    /* --- chipy rychlých voleb --- */
+    .chipy { display: inline-flex; gap: 3px; flex-wrap: wrap; }
+    .chip { padding: 4px 8px; font-size: 0.75rem; border-radius: 12px; }
+    .chip[aria-pressed="true"] { background: var(--accent-soft); border-color: var(--accent); color: var(--text); font-weight: 600; }
+    /* --- kontextová nápověda pod editorem (pevná výška, aby nic neposkakovalo) --- */
+    .kontext { min-height: 2.9em; margin-top: 6px; font-size: 0.78rem; line-height: 1.45; color: var(--text-muted); overflow: hidden; }
+    .kontext b { color: var(--text); }
+    .kontext code { background: var(--bg-elevated); padding: 0 3px; border-radius: 3px; }
+    .kontext button { padding: 2px 8px; font-size: 0.74rem; margin-left: 4px; }
+    .chyby .nic { color: var(--text-muted); padding: 3px 6px; cursor: default; }
+    .chyby:has(> .nic:only-child) { border-color: var(--border); border-left-color: var(--ok); }   /* bez chyb: neutrální rámeček, ne červený */
+    .chyby .nic:hover { background: none; }
+    .chyby button.pouzit { padding: 1px 8px; font-size: 0.74rem; margin-left: 6px; }
+    .chyby { min-height: 1.9em; }
+    .stav { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-height: 1.3em; }
+    /* --- doplňování --- */
+    .doplnovani { position: absolute; z-index: 5; list-style: none; margin: 0; padding: 3px; background: var(--bg-elevated); border: 1px solid var(--border-strong);
+      border-radius: 6px; box-shadow: var(--shadow); max-height: 220px; overflow: auto; min-width: 220px; max-width: 360px; font-family: var(--mono); font-size: 12.5px; }
+    .doplnovani li { padding: 3px 8px; border-radius: 4px; cursor: pointer; display: flex; gap: 10px; justify-content: space-between; white-space: nowrap; }
+    .doplnovani li small { color: var(--text-muted); font-family: var(--font); overflow: hidden; text-overflow: ellipsis; }
+    .doplnovani li[aria-selected="true"] { background: var(--accent-soft); outline: 1px solid var(--accent); }
+    .dis .sym { text-decoration: underline dotted; text-underline-offset: 3px; cursor: pointer; }
+    .dis .sym:hover { color: var(--accent); }
+    /* --- mobilní klávesnice assembleru --- */
+    .asm-klav { position: fixed; left: 0; right: 0; bottom: 0; z-index: 35; background: var(--bg-panel); border-top: 1px solid var(--border-strong);
+      display: flex; gap: 4px; overflow-x: auto; padding: 5px 6px; box-shadow: var(--shadow); }
+    .asm-klav[hidden] { display: none; }
+    .asm-klav button { flex: none; min-width: 44px; min-height: 44px; font-family: var(--mono); font-size: 0.95rem; padding: 4px 8px; }
+    .asm-klav button.zn { min-width: 40px; font-weight: 700; }
+    body.pise .mob-lista { display: none; }
+    @media (max-width: 900px) { .chip { min-height: 36px; } }
+</style>
+</head>
+<body>
+  <div class="hlavicka">
+    <h1>🧮 CPU 6502 – emulátor a assembler</h1>
+  </div>
+  <p class="podtitul">Procesor <b>MOS 6502</b> – srdce počítačů Apple II, Commodore 64, Atari a herní konzole NES. Napište program v assembleru,
+    přeložte ho a krokujte instrukci po instrukci (i zpět), s vysvětlením, co přesně procesor udělal. Navazuje na
+    <a href="logic_gates.html">simulátor logických hradel</a>: z hradel se skládá sčítačka a z ní aritmeticko-logická jednotka – tady je celý procesor kolem ní.</p>
+
+  <nav class="karty-hl" role="tablist" aria-label="Části stránky">
+    <button role="tab" id="tab-prac" data-str="prac" class="akt" aria-selected="true" aria-controls="str-prac" tabindex="0">🛠 Pracoviště</button>
+    <button role="tab" id="tab-lekce" data-str="lekce" aria-selected="false" aria-controls="str-lekce" tabindex="-1">📚 Ukázky a úlohy</button>
+    <button role="tab" id="tab-ref" data-str="ref" aria-selected="false" aria-controls="str-ref" tabindex="-1">📖 Příručka 6502</button>
+    <button role="tab" id="tab-napoveda" data-str="napoveda" aria-selected="false" aria-controls="str-napoveda" tabindex="-1">❔ Nápověda</button>
+  </nav>
+
+  <!-- ===================== PRACOVIŠTĚ ===================== -->
+  <section class="stranka akt" id="str-prac" role="tabpanel" aria-labelledby="tab-prac">
+    <div class="lista" role="toolbar" aria-label="Ovládání procesoru">
+      <button id="btnPreloz" aria-label="Přeložit" title="Přeložit program (Ctrl+Shift+Enter)">🔨 <span class="txt">Přeložit</span></button>
+      <button id="btnBeh" class="hlavni" aria-pressed="false" title="Spustit / pozastavit (Ctrl+Enter, F5)">▶ Spustit</button>
+      <button id="btnKrok" aria-label="Krok" title="Krok – jedna instrukce, vstoupí do podprogramu (Alt+N, F11)">↓ <span class="txt">Krok</span></button>
+      <button id="btnPres" aria-label="Krok přes" title="Krok přes – JSR proběhne celý (Alt+O, F10)">↷ <span class="txt">Přes</span></button>
+      <button id="btnVen" aria-label="Krok ven" title="Krok ven – doběhne do návratu z podprogramu (Alt+U, Shift+F11)">↑ <span class="txt">Ven</span></button>
+      <button id="btnKurzor" aria-label="Běž ke kurzoru" title="Běž ke kurzoru – poběží, dokud nedojde na řádek s kurzorem (Alt+K)">⇥ <span class="txt">Ke kurzoru</span></button>
+      <button id="btnZpet" aria-label="Krok zpět" title="Krok zpět – vrátí registry, paměť i periferie (Alt+Z, F8)">↶ <span class="txt">Zpět</span></button>
+      <button id="btnReset" aria-label="Reset" title="Reset – znovu nahraje přeložený program a nastaví PC na začátek (Alt+R, F6)">⟲ <span class="txt">Reset</span></button>
+      <span class="odd"></span>
+      <select id="rychlost" title="Rychlost běhu" aria-label="Rychlost běhu"></select>
+      <span class="chipy" id="chipyRychl" role="group" aria-label="Rychlé volby rychlosti">
+        <button class="chip" data-r="1" title="1 instrukce za sekundu – s vysvětlením">1/s</button><button class="chip" data-r="10" title="10 instrukcí za sekundu">10/s</button><button class="chip" data-r="1M" title="1 MHz – rychlost skutečného 6502">1 MHz</button><button class="chip" data-r="turbo" title="Co nejrychleji">Turbo</button>
+      </span>
+      <details class="nast" id="nastaveni">
+        <summary title="Nastavení procesoru">⚙ Volby</summary>
+        <div class="obsah">
+          <label class="zas"><input type="checkbox" id="optVyuka" checked> Výukový režim – vysvětlovat každý krok</label>
+          <label class="zas"><input type="checkbox" id="optBrk" checked> BRK ukončí program</label>
+          <div class="napoveda">Jako v easy6502. Když je vypnuto, BRK se chová jako na skutečném 6502 (přerušení přes vektor $FFFE).</div>
+          <label class="zas"><input type="checkbox" id="optSmycka" checked> Zastavit na smyčce „JMP *“</label>
+          <div class="napoveda">Skok sám na sebe se zakázaným přerušením (I=1) znamená konec programu.</div>
+          <label class="zas"><input type="checkbox" id="optIllegal"> Nedokumentované opkódy</label>
+          <div class="napoveda">Vypnuto: neplatný opkód zastaví procesor s chybou. Zapnuto: provede se jako na NMOS 6502 (LAX, SAX, DCP…), assembler je zná.</div>
+          <div style="display:flex;gap:6px;flex-wrap:wrap">
+            <button id="btnIRQ" class="male" title="Vyvolat přerušení IRQ (dokud ho program nepotvrdí, platí jen jedno)">IRQ</button>
+            <button id="btnNMI" class="male" title="Vyvolat nemaskovatelné přerušení">NMI</button>
+            <button id="btnVypis" class="male" title="Výpis překladu (listing)">📄 Výpis</button>
+            <button id="btnZkratky" class="male" title="Přehled klávesových zkratek (?)">⌨ Zkratky</button>
+            <button id="btnVychozi" class="male" title="Vrátit rychlost, volby a rozložení panelů na výchozí">↺ Výchozí</button>
+          </div>
+        </div>
+      </details>
+      <div class="citace" aria-live="off"><span>cykly <b id="cCykly">0</b></span><span>instr. <b id="cInstr">0</b></span><span id="cRychl"></span></div>
+      <div class="stav" id="stav" role="status" aria-live="polite">Připraveno.</div>
+    </div>
+
+    <div class="podkarty" role="tablist" aria-label="Panely">
+      <button role="tab" id="pk-editor" data-m="editor" class="akt" aria-selected="true" aria-controls="prac" tabindex="0">Editor</button>
+      <button role="tab" id="pk-stav" data-m="stav" aria-selected="false" aria-controls="prac" tabindex="-1">Stav</button>
+      <button role="tab" id="pk-pamet" data-m="pamet" aria-selected="false" aria-controls="prac" tabindex="-1">Paměť</button>
+      <button role="tab" id="pk-displej" data-m="displej" aria-selected="false" aria-controls="prac" tabindex="-1">Displej</button>
+    </div>
+
+    <div class="prac" id="prac" data-m="editor" role="tabpanel" aria-labelledby="pk-editor">
+      <!-- sloupec 1: editor -->
+      <div class="sl sl1">
+        <div class="karta" data-p="editor">
+          <div class="uloha-panel" id="ulohaPanel">
+            <h3 id="ulohaNazev"></h3>
+            <div id="ulohaZadani"></div>
+            <div class="tl">
+              <button class="male hlavni" id="ulohaOver" title="Zkontrolovat řešení (Alt+T)">✔ Zkontrolovat</button>
+              <button class="male" id="ulohaNapoveda">💡 Nápověda</button>
+              <button class="male" id="ulohaDalsi" hidden>Další úloha →</button>
+              <button class="male" id="ulohaZavrit">Zavřít úlohu</button>
+            </div>
+            <div class="vysl-testu" id="ulohaVysl"></div>
+          </div>
+          <div class="ed-nastroje">
+            <select id="programy" aria-label="Uložené programy a zálohy"></select>
+            <span class="ulozeni" id="stavUlozeni" aria-live="polite"></span>
+            <button class="male" id="btnUloz" title="Uložit program v prohlížeči">💾 Uložit</button>
+            <button class="male" id="btnSmaz" title="Smazat vybraný uložený program">🗑</button>
+            <button class="male" id="btnNovy" title="Nový prázdný program">+ Nový</button>
+            <button class="male" id="btnImport" title="Načíst soubor .asm">⬆ .asm</button>
+            <button class="male" id="btnExport" title="Uložit zdroják jako .asm">⬇ .asm</button>
+            <button class="male" id="btnBin" title="Uložit přeložený program jako binárku .bin">⬇ .bin</button>
+            <button class="male" id="btnBinImport" title="Nahrát binárku .bin do paměti na zadanou adresu">⬆ .bin</button>
+            <input type="file" id="souborBin" accept=".bin,.prg,.rom,application/octet-stream" hidden>
+            <button class="male" id="btnSdilej" title="Zkopírovat odkaz s programem">🔗 Sdílet</button>
+            <input type="file" id="soubor" accept=".asm,.s,.a65,.txt,text/plain" hidden>
+          </div>
+          <div class="chyby" id="chyby" aria-live="polite"></div>
+          <div class="editor" id="editor">
+            <div class="gutter" id="gutter" title="Klepnutím na číslo řádku přepnete zarážku (F9)"><div class="gutter-in" id="gutterIn"></div></div>
+            <div class="ed-oblast" id="edOblast">
+              <div class="pasmo" id="pasmo"></div>
+              <pre id="zvyr" aria-hidden="true"></pre>
+              <textarea id="zdroj" spellcheck="false" autocapitalize="off" autocomplete="off" autocorrect="off" wrap="off" aria-label="Zdrojový kód v assembleru 6502"
+                aria-autocomplete="list" aria-controls="doplnovani" aria-describedby="kontext"></textarea>
+              <ul class="doplnovani" id="doplnovani" role="listbox" aria-label="Návrhy doplnění" hidden></ul>
+            </div>
+          </div>
+          <div class="kontext" id="kontext" aria-live="polite"></div>
+        </div>
+      </div>
+
+      <div class="rozdelovac roz1" data-i="1" role="separator" tabindex="0" aria-orientation="vertical" aria-label="Šířka editoru a panelu stavu (šipky, dvojklik = výchozí)"></div>
+      <!-- sloupec 2: stav procesoru -->
+      <div class="sl sl2">
+        <div class="karta" data-p="stav">
+          <div class="zahl"><h2>Registry</h2><span class="prazdne" style="padding:0">klepnutím upravíte</span></div>
+          <div class="regy" id="regy"></div>
+          <div class="priz" id="priz" aria-label="Příznaky"></div>
+          <div class="citac" id="citac"></div>
+        </div>
+        <div class="karta" data-p="stav" id="kartaVyuka">
+          <div class="zahl"><h2>🎓 Co se stalo</h2></div>
+          <div class="vyuka" id="vyuka"><p class="pr">Přeložte program a krokujte (<kbd>F11</kbd> nebo tlačítko „Krok“). U každé instrukce se tu objeví vysvětlení: adresní režim, efektivní adresa, načtená hodnota a proč se změnily příznaky.</p></div>
+        </div>
+        <div class="karta" data-p="stav">
+          <div class="zahl"><h2>Disassembler</h2><span class="neakt-stitek">neaktuální – poslední úspěšný překlad</span><span class="prazdne" style="padding:0">klepnutí = zarážka</span></div>
+          <div class="dis mono" id="dis"></div>
+        </div>
+        <div class="dvoj">
+          <div class="karta" data-p="stav">
+            <div class="zahl"><h2>Zásobník</h2></div>
+            <div class="zas-seznam mono" id="zasobnik"></div>
+          </div>
+          <div class="karta" data-p="stav">
+            <div class="zahl"><h2>Sledované</h2></div>
+            <div class="watch-seznam mono" id="watch"></div>
+            <form class="watch-pridat" id="watchForm">
+              <input type="text" id="watchVstup" placeholder="SKORE, $10, w:UKAZ" aria-label="Výraz ke sledování">
+              <button class="male" type="submit">Přidat</button>
+            </form>
+            <div class="prazdne">⏹ = zastavit běh při zápisu na adresu</div>
+          </div>
+        </div>
+        <div class="karta" data-p="stav">
+          <div class="zahl"><h2>Historie kroků</h2><span class="prazdne" style="padding:0">klepnutí = vrátit se</span></div>
+          <div class="hist mono" id="historie" role="list" aria-label="Posledních 200 provedených kroků"></div>
+        </div>
+      </div>
+
+      <div class="rozdelovac roz2" data-i="2" role="separator" tabindex="0" aria-orientation="vertical" aria-label="Šířka panelu stavu a paměti (šipky, dvojklik = výchozí)"></div>
+      <!-- sloupec 3: displej, paměť, symboly -->
+      <div class="sl sl3">
+        <div class="karta" data-p="displej">
+          <div class="zahl"><h2>Displej 32×32 a konzole</h2><button class="male" id="btnSmazKon" title="Smazat konzoli">Smazat konzoli</button></div>
+          <div class="displej-obal" id="displejObal">
+            <div class="displej" id="displej" tabindex="0" role="application" aria-roledescription="displej 32 × 32 pixelů" aria-label="Displej programu" aria-describedby="dispInfo dispPopis">
+              <canvas id="platno" width="320" height="320"></canvas>
+            </div>
+            <div class="disp-info" id="dispInfo">klepněte na displej pro ovládání klávesnicí · $0200–$05FF</div>
+            <div class="disp-radek">
+              <div class="dpad" role="group" aria-label="Klávesy pro program">
+                <button data-k="32" title="mezerník" aria-label="mezerník">␣</button><button data-k="119" title="w" aria-label="nahoru (w)">▲</button><button data-k="13" title="Enter" aria-label="Enter">⏎</button>
+                <button data-k="97" title="a" aria-label="vlevo (a)">◀</button><button data-k="115" title="s" aria-label="dolů (s)">▼</button><button data-k="100" title="d" aria-label="vpravo (d)">▶</button>
+              </div>
+              <div class="disp-tl">
+                <button class="male" id="btnPsat" title="Otevře klávesnici (na mobilu) – znaky jdou programu do fronty $F004 a na $FF">⌨ Psát</button>
+                <button class="male" id="btnPopis" title="Textový popis obsahu displeje (pro čtečky obrazovky)">Popsat displej</button>
+                <input type="text" id="psaniVstup" class="psani" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Psaní pro program (klávesy jdou do fronty $F004)">
+              </div>
+              <div class="paleta-mini" id="paletaMini" title="Paleta 16 barev (dolní 4 bity bajtu)"></div>
+            </div>
+          </div>
+          <div class="disp-popis" id="dispPopis" aria-live="polite"></div>
+          <div class="konzole" id="konzole" role="log" aria-label="Textová konzole ($F001)" aria-live="polite"></div>
+        </div>
+        <div class="karta" data-p="pamet">
+          <div class="zahl"><h2>Paměť</h2><span class="neakt-stitek">program z posledního úspěšného překladu</span>
+            <div class="pam-nav">
+              <button class="male" id="pamPred" title="Předchozí stránka">◀</button>
+              <input type="text" id="pamAdr" value="$0000" aria-label="Přejít na adresu nebo symbol" title="Adresa ($0600) nebo symbol – Enter">
+              <button class="male" id="pamDal" title="Další stránka">▶</button>
+              <select id="pamSled" aria-label="Sledovat" class="skryt" tabindex="-1">
+                <option value="">ručně</option><option value="pc">sledovat PC</option><option value="sp">zásobník</option><option value="zp">nulová stránka</option><option value="disp">displej</option>
+              </select>
+              <span class="chipy" id="chipyPam" role="group" aria-label="Rychlý skok v paměti">
+                <button class="chip" data-s="pc" title="Sledovat PC – okno se posouvá s programem">PC</button><button class="chip" data-s="zp" title="Nulová stránka $0000">ZP</button><button class="chip" data-s="sp" title="Zásobník $0100">Zás.</button><button class="chip" data-s="disp" title="Displej $0200–$05FF">Displej</button>
+              </span>
+            </div>
+          </div>
+          <div class="pam-obal"><table class="pam" id="pamet"></table></div>
+          <div class="prazdne">Klepněte na bajt a přepište ho (šestnáctkově). Žlutě: změněno posledním krokem / během.</div>
+        </div>
+        <div class="karta" data-p="pamet">
+          <div class="zahl"><h2>Symboly</h2><span class="neakt-stitek">neaktuální</span><span class="prazdne" style="padding:0" id="symPocet"></span></div>
+          <div class="sym" id="symboly"><div class="prazdne">Po překladu se tu objeví návěští a konstanty.</div></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ===================== LEKCE ===================== -->
+  <section class="stranka" id="str-lekce" role="tabpanel" aria-labelledby="tab-lekce">
+    <h3 style="margin-top:4px">Ukázky</h3>
+    <p class="postup">Komentované programy od nejjednodušších. „Otevřít“ nahraje program do editoru a přeloží ho – pak krokujte s výukovým režimem.</p>
+    <div class="lekce-mrizka" id="ukazky"></div>
+    <h3>Úlohy s automatickou kontrolou</h3>
+    <p class="postup" id="postup"></p>
+    <div class="lekce-mrizka" id="ulohy"></div>
+  </section>
+
+  <!-- ===================== PŘÍRUČKA ===================== -->
+  <section class="stranka" id="str-ref" role="tabpanel" aria-labelledby="tab-ref">
+    <div class="text-sl">
+      <h3 style="margin-top:4px">Registry a příznaky</h3>
+      <p>6502 má akumulátor <b>A</b> (počítá se v něm), indexové registry <b>X</b> a <b>Y</b> (počítadla a indexy polí), ukazatel zásobníku <b>SP</b>
+        (zásobník leží na $0100–$01FF a roste dolů), čítač instrukcí <b>PC</b> (16 bitů) a registr příznaků <b>P</b>:</p>
+      <div class="tab-obal"><table class="mapa">
+        <tr><th>Bit</th><th>Příznak</th><th>Význam</th></tr>
+        <tr><td>7 N</td><td>Negative</td><td>kopie bitu 7 výsledku (záporné číslo se znaménkem)</td></tr>
+        <tr><td>6 V</td><td>oVerflow</td><td>přetečení se znaménkem u ADC/SBC; BIT sem kopíruje bit 6</td></tr>
+        <tr><td>5 –</td><td>nepoužitý</td><td>při uložení do zásobníku vždy 1</td></tr>
+        <tr><td>4 B</td><td>Break</td><td>není skutečný bit registru – jen v kopii uložené do zásobníku: 1 = BRK/PHP, 0 = IRQ/NMI</td></tr>
+        <tr><td>3 D</td><td>Decimal</td><td>ADC a SBC počítají v BCD</td></tr>
+        <tr><td>2 I</td><td>Interrupt disable</td><td>1 = přerušení IRQ zakázáno</td></tr>
+        <tr><td>1 Z</td><td>Zero</td><td>výsledek je nula (po porovnání: hodnoty se rovnají)</td></tr>
+        <tr><td>0 C</td><td>Carry</td><td>přenos ze sčítání, „nebyla výpůjčka“ u odčítání, vysunutý bit u posunů; po CMP: A ≥ M</td></tr>
+      </table></div>
+
+      <h3>Mapa paměti a periferie</h3>
+      <p>Celých 64 KiB je RAM. Zařízení jsou mapována do paměti – kompatibilně s <a href="https://skilldrick.github.io/easy6502/" target="_blank" rel="noopener">easy6502</a>, takže tamní ukázky fungují i tady:</p>
+      <div class="tab-obal"><table class="mapa">
+        <tr><th>Adresa</th><th>Význam</th></tr>
+        <tr><td>$0000–$00FF</td><td>nulová stránka – rychlé proměnné a ukazatele (adresování (zp),Y)</td></tr>
+        <tr><td>$00FE</td><td>čtení: náhodné číslo 0–255 (při každém čtení jiné)</td></tr>
+        <tr><td>$00FF</td><td>ASCII kód poslední stisknuté klávesy (klepněte na displej, na mobilu „⌨ Psát“); šipky posílají w a s d, Enter 13, Backspace 8; znaky mimo ASCII (č, ř…) přijdou jako bajty UTF-8 a $FF obsahuje poslední z nich</td></tr>
+        <tr><td>$0100–$01FF</td><td>zásobník (SP ukazuje na první volné místo, po resetu $FD)</td></tr>
+        <tr><td>$0200–$05FF</td><td>displej 32×32: bajt na $0200 + y·32 + x, dolní 4 bity = barva z palety (0 černá, 1 bílá, 2 červená, 3 tyrkysová, 4 fialová, 5 zelená, 6 modrá, 7 žlutá, 8 oranžová, 9 hnědá, 10 světle červená, 11 tmavě šedá, 12 šedá, 13 světle zelená, 14 světle modrá, 15 světle šedá)</td></tr>
+        <tr><td>$0600</td><td>výchozí adresa programu (není-li uvedeno <code>*=</code> / <code>.org</code>)</td></tr>
+        <tr><td>$F000</td><td>zápis: smaže konzoli</td></tr>
+        <tr><td>$F001</td><td>zápis: vypíše znak do konzole (ASCII; texty v UTF-8 včetně češtiny; 10 = nový řádek, 8 = backspace, 12 = smazat)</td></tr>
+        <tr><td>$F002</td><td>zápis: vypíše bajt desítkově (0–255)</td></tr>
+        <tr><td>$F003</td><td>zápis: vypíše bajt šestnáctkově (dvě číslice – hodí se pro BCD)</td></tr>
+        <tr><td>$F004</td><td>čtení: další znak z fronty stisknutých kláves (0 = prázdná)</td></tr>
+        <tr><td>$F010/$F011</td><td>perioda časovače v jednotkách 100 cyklů (nižší/vyšší bajt; 0 = 65 536); při 1 MHz je jednotka 0,1 ms</td></tr>
+        <tr><td>$F012</td><td>řízení časovače: bit 0 = běží, bit 1 = vyvolávat IRQ</td></tr>
+        <tr><td>$F013</td><td>čtení: stav časovače (bit 7 = vypršel); čtení stav i požadavek IRQ vynuluje (potvrzení přerušení)</td></tr>
+        <tr><td>$FFFA/$FFFB</td><td>vektor NMI</td></tr>
+        <tr><td>$FFFC/$FFFD</td><td>vektor RESET – když ho program nastaví (<code>.org $FFFC</code> / <code>.word start</code>), začíná se tam</td></tr>
+        <tr><td>$FFFE/$FFFF</td><td>vektor IRQ a BRK</td></tr>
+      </table></div>
+
+      <h3>Adresní režimy</h3>
+      <div class="tab-obal"><table class="mapa" id="tabRezimy"></table></div>
+
+      <h3>Syntaxe assembleru</h3>
+      <ul>
+        <li><code>navesti:</code> nebo návěští v prvním sloupci bez dvojtečky; místní návěští <code>.smycka</code> nebo <code>@smycka</code> platí jen do dalšího globálního návěští (v různých podprogramech se mohou opakovat).</li>
+        <li>Konstanty: <code>JMENO = $10</code>, <code>JMENO .equ 16</code>, <code>define JMENO 16</code> (easy6502).</li>
+        <li>Čísla: <code>$FF</code> šestnáctkově, <code>%1010</code> dvojkově, <code>255</code> desítkově, <code>'A'</code> znak. Výrazy: <code>+ − * / % &amp; | ^ &lt;&lt; &gt;&gt; ~ ( )</code>,
+          <code>&lt;adr</code> nižší a <code>&gt;adr</code> vyšší bajt, <code>*</code> = adresa aktuální instrukce (<code>jmp *</code>).
+          Priorita jako v ca65: nejvyšší mají unární <code>- ~ &lt; &gt; !</code>, pak <code>* / % &amp; ^ &lt;&lt; &gt;&gt;</code>, nejnižší <code>+ - |</code>; stejné úrovně zleva doprava.
+          Proto <code>#&lt;$12FF+1</code> = <code>($FF)+1</code> – pro bajt součtu pište <code>#&lt;($12FF+1)</code>. Maska s vynulovaným bitem: <code>and #&lt;~$80</code> (samotné <code>~$80</code> je záporné číslo).
+          Výraz v závorkách za instrukcí s nepřímým režimem pište v <code>[ ]</code> (<code>lda [1+2]*2</code>), jinak se bere jako nepřímý režim.</li>
+        <li>Direktivy: <code>*= $0600</code> / <code>.org</code>, <code>.byte</code> / <code>.db</code> / <code>dcb</code> (čísla i „řetězce“), <code>.word</code> / <code>.dw</code>, <code>.text</code>, <code>.asciiz</code> (s nulou na konci),
+          <code>.res n[,výplň]</code> / <code>.ds</code>, <code>.align n</code>, <code>.end</code>. Komentář začíná středníkem.</li>
+        <li>Adresa menší než $100 se přeloží jako nulová stránka (kratší, rychlejší), pokud je symbol definován předem; vynutit lze <code>a:$0010</code> (absolutní) a <code>z:</code> (nulová stránka).
+          Akumulátor: <code>asl</code> i <code>asl a</code>.</li>
+      </ul>
+
+      <h3>Instrukce</h3>
+      <div class="ref-filtr">
+        <input type="search" id="refHledat" placeholder="Hledat: LDA, přenos, zásobník, $69…" aria-label="Hledat instrukci">
+        <select id="refSkupina" aria-label="Skupina"><option value="">všechny skupiny</option></select>
+        <label class="zas"><input type="checkbox" id="refIllegal"> i nedokumentované</label>
+        <span class="prazdne" id="refPocet"></span>
+      </div>
+      <p class="prazdne">Cykly: „+“ = o 1 cyklus víc při přechodu přes hranici stránky (256 bajtů); větvení trvá 2 cykly, +1 když se skáče a +1 další, když cíl leží na jiné stránce.</p>
+    </div>
+    <div class="tab-obal"><table class="ref" id="refTab"></table></div>
+
+    <h3>Tabulka opkódů 16 × 16</h3>
+    <p class="prazdne">Řádek = vyšší číslice opkódu, sloupec = nižší. Klepněte na buňku pro detail.</p>
+    <div class="legenda" id="legenda"></div>
+    <div class="tab-obal"><table class="matice" id="matice"></table></div>
+    <div class="detail-op" id="detailOp"></div>
+  </section>
+
+  <!-- ===================== NÁPOVĚDA ===================== -->
+  <section class="stranka" id="str-napoveda" role="tabpanel" aria-labelledby="tab-napoveda">
+    <div class="text-sl">
+      <h3 style="margin-top:4px">Jak začít</h3>
+      <ol style="padding-left:20px;margin-bottom:8px">
+        <li>Otevřete ukázku v záložce <b>Ukázky a úlohy</b>, nebo pište vlastní program do editoru.</li>
+        <li><b>Přeložit</b> (<kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>Enter</kbd>) – chyby se ukážou nad editorem a u řádků červeně, klepnutím na chybu skočíte na řádek.</li>
+        <li><b>Krok</b> (<kbd>Alt</kbd>+<kbd>N</kbd>) provede jednu instrukci, panel „Co se stalo“ ji vysvětlí. <b>Spustit</b> (<kbd>Ctrl</kbd>+<kbd>Enter</kbd>) běží zvolenou rychlostí.</li>
+        <li>Klepnutím na číslo řádku (nebo <kbd>Alt</kbd>+<kbd>P</kbd>) nastavíte zarážku – běh se na ní zastaví. Ve „Sledovaných“ můžete zaškrtnout ⏹ a běh se zastaví při zápisu na danou adresu.</li>
+        <li>„Historie kroků“ ukazuje posledních 200 provedených kroků; klepnutím na řádek se na ten okamžik vrátíte (krok zpět obnoví registry, paměť i periferie).</li>
+      </ol>
+      <h3>Klávesové zkratky</h3>
+      <div class="tab-obal"><table class="mapa" id="tabZkratky">
+        <tr><th>Zkratka</th><th>Alternativa</th><th>Akce</th></tr>
+        <tr><td><kbd>Ctrl</kbd>+<kbd>Enter</kbd></td><td><kbd>F5</kbd></td><td>(přeložit, pokud se zdroják změnil, a) spustit / pozastavit</td></tr>
+        <tr><td><kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>Enter</kbd></td><td></td><td>jen přeložit</td></tr>
+        <tr><td><kbd>Alt</kbd>+<kbd>N</kbd></td><td><kbd>F11</kbd></td><td>krok – jedna instrukce (do podprogramu vstoupí); vstup do přerušení je samostatný krok</td></tr>
+        <tr><td><kbd>Alt</kbd>+<kbd>O</kbd></td><td><kbd>F10</kbd></td><td>krok přes – u JSR proběhne celý podprogram, jinak jedna instrukce</td></tr>
+        <tr><td><kbd>Alt</kbd>+<kbd>U</kbd></td><td><kbd>Shift</kbd>+<kbd>F11</kbd></td><td>krok ven – běží do návratu z aktuálního podprogramu nebo obsluhy přerušení (počítá hloubku JSR/RTS)</td></tr>
+        <tr><td><kbd>Alt</kbd>+<kbd>K</kbd></td><td></td><td>běž ke kurzoru – poběží, dokud nedojde na řádek s kurzorem</td></tr>
+        <tr><td><kbd>Alt</kbd>+<kbd>Z</kbd></td><td><kbd>F8</kbd></td><td>krok zpět (pamatuje si 10 000 kroků: registry, přepsané bajty, stav periferií)</td></tr>
+        <tr><td><kbd>Alt</kbd>+<kbd>P</kbd></td><td><kbd>F9</kbd></td><td>zarážka na řádku s kurzorem</td></tr>
+        <tr><td><kbd>Alt</kbd>+<kbd>R</kbd></td><td><kbd>F6</kbd></td><td>reset (znovu nahraje přeložený program)</td></tr>
+        <tr><td><kbd>Tab</kbd> / <kbd>Shift</kbd>+<kbd>Tab</kbd></td><td></td><td>v editoru odsadí / vrátí odsazení (i více vybraných řádků); <kbd>Esc</kbd> pak pustí fokus dál</td></tr>
+        <tr><td><kbd>Ctrl</kbd>+<kbd>Mezerník</kbd></td><td>2 písmena</td><td>doplnit instrukci, direktivu nebo symbol (šipky vyberou, Tab/Enter přijme, Esc zavře)</td></tr>
+        <tr><td><kbd>Ctrl</kbd>+klik</td><td>klik v disassembleru</td><td>na symbolu: skok na definici a jeho adresu v paměti; pod editorem je stejná nápověda pro řádek s kurzorem (i na dotyk)</td></tr>
+        <tr><td><kbd>Alt</kbd>+<kbd>T</kbd></td><td></td><td>zkontrolovat úlohu</td></tr>
+        <tr><td><kbd>?</kbd></td><td></td><td>tento přehled zkratek (mimo textová pole)</td></tr>
+        <tr><td>šipky</td><td></td><td>v registrech ±1 (Shift ±16); v adrese paměti ±$10 (PgUp/PgDn ±$100); na rozdělovači sloupců šířka (dvojklik/Home = výchozí)</td></tr>
+        <tr><td>šipky</td><td></td><td>v paměti posun po bajtech (Enter nebo číslice = úprava), v tabulce opkódů po buňkách, v záložkách mezi kartami</td></tr>
+      </table></div>
+      <p class="prazdne">Funkční klávesy fungují jen s fokusem v pracovišti (editor, displej, panely) – jinde je dostane prohlížeč (F5 = obnovit stránku).
+        Na Macu použijte kombinace s <kbd>Option</kbd> místo <kbd>Alt</kbd>.
+        „Krok přes“ čeká na návrat za instrukci JSR; podprogram, který po sobě čte vložené parametry (a vrací se jinam), nedoběhne – použijte „Krok ven“.</p>
+      <h3>Rychlost a výkon</h3>
+      <p>Skutečný 6502 v Apple II nebo C64 běžel na zhruba 1 MHz. Volba „1 MHz“ emuluje právě tolik cyklů za sekundu, „Turbo“ tolik, kolik prohlížeč stihne
+        (obvykle desítky MHz). Pomalé rychlosti (1–10 instrukcí za sekundu) při zapnutém výukovém režimu vysvětlují každou instrukci.
+        Displej se překresluje s každým snímkem obrazovky, ostatní panely během rychlého běhu desetkrát za sekundu.</p>
+      <h3>Ukládání a sdílení</h3>
+      <p>Rozepsaný program se průběžně ukládá v prohlížeči; „Uložit“ ho uloží pod jménem. „Sdílet“ zkopíruje odkaz, v němž je celý program
+        zakódovaný (komprimovaný deflate + base64url) – příjemce ho otevře bez serveru. Export „.bin“ uloží přeložené bajty (úsek od začátku programu).</p>
+    </div>
+  </section>
+
+  <dialog class="okno" id="oknoVypis" aria-labelledby="vypisNadpis">
+    <div class="hlava"><h2 id="vypisNadpis">📄 Výpis překladu</h2><button id="vypisStahni">⬇ Stáhnout</button><button id="vypisZavrit" aria-label="Zavřít">✕</button></div>
+    <div class="telo"><pre id="vypisText" tabindex="0"></pre></div>
+  </dialog>
+
+  <dialog class="okno" id="oknoZkratky" aria-labelledby="zkratkyNadpis">
+    <div class="hlava"><h2 id="zkratkyNadpis">⌨ Klávesové zkratky</h2><button id="zkratkyZavrit" aria-label="Zavřít">✕</button></div>
+    <div class="telo" id="zkratkyObsah"></div>
+  </dialog>
+
+  <!-- mobilní lišta pro psaní assembleru (nad klávesnicí, jen při psaní v editoru) -->
+  <div class="asm-klav" id="asmKlav" role="toolbar" aria-label="Rychlé vkládání instrukcí a znaků" hidden></div>
+
+  <!-- mobilní spodní lišta -->
+  <div class="mob-lista" id="mobLista" role="toolbar" aria-label="Rychlé ovládání">
+    <div class="mob-regy mono" id="mRegy" aria-live="off"></div>
+    <div class="mob-tl">
+      <button id="mKrok" aria-label="Krok">↓<small>Krok</small></button>
+      <button id="mPres" aria-label="Krok přes">↷<small>Přes</small></button>
+      <button id="mZpet" aria-label="Krok zpět">↶<small>Zpět</small></button>
+      <button id="mBeh" class="hlavni" aria-label="Spustit nebo pozastavit">▶ Spustit</button>
+    </div>
+  </div>
+
+  <p class="pozn">
+    <b>O emulátoru.</b> Emuluje NMOS 6502 po instrukcích s přesným počtem cyklů (včetně +1 za přechod stránky a za skok větvení), dekadický režim
+    včetně chování příznaků N, V, Z na NMOS čipu, chybu <code>JMP ($xxFF)</code>, přerušení IRQ/NMI/BRK a volitelně všech 105 nedokumentovaných opkódů.
+    Ověřeno testy <a href="https://github.com/Klaus2m5/6502_65C02_functional_tests" target="_blank" rel="noopener">Klause Dormanna</a> (functional test i decimal test
+    Bruce Clarka – všechny příznaky) a vzorkem <a href="https://github.com/SingleStepTests/65x02" target="_blank" rel="noopener">Tom Harte SingleStepTests</a>
+    (stav, paměť a počet cyklů). Neemuluje se přesné časování uvnitř instrukce (pomocná čtení a zápisy na sběrnici), takže čtení periferií
+    s vedlejšími účinky (např. $FE) se v RMW instrukcích neprojeví dvakrát. Krok zpět obnoví i stav periferií (konzoli, frontu kláves, časovač, generátor náhody); klávesu na $FF, kterou mezitím stiskl uživatel, nevrací.
+    Zdroje: <a href="https://www.masswerk.at/6502/6502_instruction_set.html" target="_blank" rel="noopener">6502 Instruction Set (mass:werk)</a>,
+    <a href="http://www.6502.org/tutorials/decimal_mode.html" target="_blank" rel="noopener">Decimal Mode (Bruce Clark, 6502.org)</a>,
+    <a href="https://www.nesdev.org/wiki/CPU_unofficial_opcodes" target="_blank" rel="noopener">nedokumentované opkódy (NESdev)</a>,
+    <a href="http://www.visual6502.org/" target="_blank" rel="noopener">Visual 6502</a>; konvence displeje a paleta podle
+    <a href="https://skilldrick.github.io/easy6502/" target="_blank" rel="noopener">easy6502</a> (Nick Morgan). Ukázky a úlohy jsou vlastní.
+  </p>
+
+<script>
+/* Uživatelské rozhraní emulátoru – jádro je v modulech cpu8/*.js (testuje _test/cpu8_test.js) */
+(function () {
+  'use strict';
+  const $ = id => document.getElementById(id);
+  const ASM = window.CPU8ASM, DIS = window.CPU8DIS, VYUKA = window.CPU8VYUKA, PER = window.CPU8PER, LEKCE = window.CPU8LEKCE, SDIL = window.CPU8SDIL;
+  const { OPS } = CPU8;
+  const KLIC = 'webapp_cpu8_';
+  const h2 = v => (v & 0xFF).toString(16).toUpperCase().padStart(2, '0');
+  const h4 = v => (v & 0xFFFF).toString(16).toUpperCase().padStart(4, '0');
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]);
+  const fmt = n => Math.round(n).toLocaleString('cs-CZ');
+  const DLG = typeof Dialog !== 'undefined' ? Dialog : null;   // dialog.js (const v globálním rozsahu, ne vlastnost window)
+  const toast = (t, chyba) => { if (DLG) (chyba ? DLG.chyba : DLG.info)(t); };
+  const RADA_PLNO = 'Úložiště prohlížeče je plné. Exportujte program jako .asm (⬇ .asm) a smažte staré uložené programy nebo zálohy.';
+  let varovanoPlno = false;
+  const ls = {
+    cti(k, def) { try { const v = localStorage.getItem(KLIC + k); return v === null ? def : JSON.parse(v); } catch (e) { return def; } },
+    /** Vrací true/false. tise: při chybě upozorní jen jednou za relaci (automatické ukládání). */
+    zapis(k, v, tise) {
+      try { localStorage.setItem(KLIC + k, JSON.stringify(v)); return true; }
+      catch (e) {
+        if (!tise || !varovanoPlno) { varovanoPlno = true; setTimeout(() => toast((tise ? 'Rozepsaný program se nepodařilo průběžně uložit. ' : 'Neuloženo! ') + RADA_PLNO, true), 0); }
+        return false;
+      }
+    },
+  };
+
+  // ---------- stav ----------
+  const nast = Object.assign({ vyuka: true, brk: true, smycka: true, illegal: false, rychlost: '1M' }, ls.cti('nastaveni', {}));
+  const cpu = new CPU8.CPU({ brkStops: nast.brk, illegal: nast.illegal, history: 10000 });
+  cpu.bp = new Uint8Array(65536);
+  let konzoleZmena = false;
+  const per = PER.pripoj(cpu, { konzole: () => { konzoleZmena = true; }, poObnove: () => { konzoleZmena = true; } });
+  let preklad = null, prekladZdroj = null, symMapa = new Map();
+  let chyby = [], varovani = [];
+  const bpRadky = new Set(ls.cti('zarazky', []));
+  const bpAdresy = new Set();          // zarážky na adresách bez řádku (z disassembleru)
+  let snimek = cpu.mem.slice();        // paměť před posledním krokem/během – pro zvýraznění změn
+  let regPred = cpu.stav();
+  let vysvetleni = null;
+  let rezim = null;                    // null | 'beh' | 'dobeh'
+  let dobehPodminka = null, dobehPopis = '', dobehStart = null;
+  let pametZac = 0x0000, pametVyb = -1;
+  let watch = (ls.cti('watch', []) || []).map(w => typeof w === 'string' ? { v: w, stop: false } : w).filter(w => w && typeof w.v === 'string');
+  let ulohaAkt = null;
+  let nactenyText = '';                // text při posledním načtení/uložení (pro dotaz před přepsáním)
+  let nazevProgramu = '';
+
+
+  function stav(t, druh) { const e = $('stav'); e.textContent = t; e.className = 'stav' + (druh ? ' ' + druh : ''); }
+
+  // ===================== EDITOR =====================
+  const ed = $('zdroj'), zvyr = $('zvyr'), gutterIn = $('gutterIn'), pasmo = $('pasmo');
+  let LH = 20; const PAD = 6;
+  /** Výška řádku editoru z CSS (na mobilu 24 px kvůli 16px písmu). */
+  function zmerRadek() { const v = parseFloat(getComputedStyle(ed).lineHeight); if (v > 0) LH = v; }
+  zmerRadek();
+  window.addEventListener('resize', () => { const st = LH; zmerRadek(); if (st !== LH) synchronizuj(); });
+  const MNEM = new Set(Object.keys(ASM.MAPA_VSE));
+  const DIR = new Set(Object.keys(ASM.DIREKTIVY));
+  let pcRadek = -1;
+
+  function indexKomentare(s) {
+    let v = null;
+    for (let i = 0; i < s.length; i++) {
+      const ch = s[i];
+      if (v) { if (ch === '\\') { i++; continue; } if (ch === v) v = null; }
+      else if (ch === '"') v = '"';
+      else if (ch === "'" && (s[i + 2] === "'" || (s[i + 1] === '\\' && s[i + 3] === "'"))) i += s[i + 1] === '\\' ? 3 : 2;
+      else if (ch === ';') return i;
+    }
+    return -1;
+  }
+  const TOK = /("(?:[^"\\]|\\.)*"?)|('(?:\\.|[^'\\])')|(\$[0-9a-fA-F]+|%[01]+|\b\d+\b)|([A-Za-z_.@][\w.@]*:?)|(\*=)|(#)|(,\s*[xXyY]\b)|(\s+)|([^\s])/g;
+  function zvyrazniRadek(t) {
+    const k = indexKomentare(t);
+    let kom = '';
+    if (k >= 0) { kom = t.slice(k); t = t.slice(0, k); }
+    let out = '', prvniSlovo = true, m;
+    TOK.lastIndex = 0;
+    while ((m = TOK.exec(t))) {
+      const s = m[0];
+      if (m[1] || m[2]) out += '<span class="t-s">' + esc(s) + '</span>';
+      else if (m[3]) out += '<span class="t-c">' + esc(s) + '</span>';
+      else if (m[4]) {
+        const w = s.replace(/:$/, ''), lw = w.toLowerCase();
+        if (s.endsWith(':') || (m.index === 0 && !MNEM.has(w.toUpperCase()) && !DIR.has(lw))) out += '<span class="t-n">' + esc(s) + '</span>';
+        else if (prvniSlovo && /^[A-Za-z]{3}$/.test(w) && MNEM.has(w.toUpperCase())) { out += '<span class="t-mn">' + esc(s) + '</span>'; prvniSlovo = false; }
+        else if (DIR.has(lw) || /^\.(org|byte|word|text|asciiz|res|ds|db|dw|align|equ|end)$/i.test(w)) { out += '<span class="t-dir">' + esc(s) + '</span>'; prvniSlovo = false; }
+        else { out += esc(s); if (!s.endsWith(':')) prvniSlovo = false; }
+        continue;
+      }
+      else if (m[5]) out += '<span class="t-dir">' + esc(s) + '</span>';
+      else if (m[7]) out += '<span class="t-r">' + esc(s) + '</span>';
+      else out += esc(s);
+    }
+    if (kom) out += '<span class="t-k">' + esc(kom) + '</span>';
+    return out;
+  }
+  let zvyrPlan = 0;
+  function zvyrazni() {
+    zvyrPlan = 0;
+    const radky = ed.value.split('\n');
+    const errRadky = new Set(viditelneChyby().map(e => e.line));
+    let html = '';
+    for (let i = 0; i < radky.length; i++) {
+      const r = zvyrazniRadek(radky[i]);
+      html += (errRadky.has(i + 1) ? '<span class="t-err">' + r + '</span>' : r) + '\n';
+    }
+    zvyr.innerHTML = html;
+    vykresliGutter(radky.length);
+  }
+  function naplanujZvyrazneni() { if (!zvyrPlan) zvyrPlan = requestAnimationFrame(zvyrazni); }
+  function vykresliGutter(n) {
+    if (n === undefined) n = ed.value.split('\n').length;
+    const err = new Map(viditelneChyby().map(e => [e.line, e.msg]));
+    const wrn = new Map(viditelneChyby(varovani).map(e => [e.line, e.msg]));
+    let html = '';
+    for (let i = 1; i <= n; i++) {
+      const cl = [];
+      if (bpRadky.has(i)) cl.push('bp');
+      if (err.has(i)) cl.push('err'); else if (wrn.has(i)) cl.push('wrn');
+      if (i === pcRadek) cl.push('pc');
+      const tit = err.get(i) || wrn.get(i);
+      html += '<div data-r="' + i + '"' + (cl.length ? ' class="' + cl.join(' ') + '"' : '') + (tit ? ' title="' + esc(tit) + '"' : '') + '>' + i + '</div>';
+    }
+    gutterIn.innerHTML = html;
+    synchronizuj();
+  }
+  function synchronizuj() {
+    const st = ed.scrollTop, sl = ed.scrollLeft;
+    zvyr.style.transform = 'translate(' + (-sl) + 'px,' + (-st) + 'px)';
+    gutterIn.style.transform = 'translateY(' + (-st) + 'px)';
+    if (pcRadek > 0) { pasmo.style.display = 'block'; pasmo.style.top = (PAD + (pcRadek - 1) * LH - st) + 'px'; }
+    else pasmo.style.display = 'none';
+  }
+  ed.addEventListener('scroll', synchronizuj);
+
+  let staryText = '';
+  let ulozPlan = null;
+  ed.addEventListener('input', () => {
+    posunRadky(staryText, ed.value);
+    staryText = ed.value;
+    oznacNeaktualni();
+    if (pcRadek > 0 && !jePrelozeno()) { pcRadek = -1; }
+    naplanujZvyrazneni();
+    if (!rezim && preklad) stav(jePrelozeno() ? 'Přeloženo.' : 'Zdroják se změnil – přeložte (Ctrl+Enter).', jePrelozeno() ? '' : 'pozor');
+    clearTimeout(ulozPlan);
+    ulozPlan = setTimeout(ulozRozpracovany, 600);
+    clearTimeout(zivaPlan);
+    zivaPlan = setTimeout(zivaKontrola, 500);
+  });
+  function jePrelozeno() { return preklad && prekladZdroj === ed.value; }
+  // živá kontrola: po 0,5 s bez psaní se zdroják přeloží „naoko“ – ukážou se chyby a symboly pro doplňování, stroj se nemění
+  let zivaPlan = 0, zivaPlatna = false, symbolyZive = [];
+  /**
+   * Chyby a varování k zobrazení: na řádku, který uživatel právě píše, se neukazují, dokud je otevřený
+   * našeptávač, nebo než kurzor řádek opustí či uplyne 1,5 s bez psaní (po ručním překladu vždy všechny).
+   */
+  let psaniRadek = 0, psaniCas = 0, odkladPlan = 0;
+  function viditelneChyby(seznam) {
+    seznam = seznam || chyby;
+    if (!psaniRadek) return seznam;
+    const ted = radekKurzoru();
+    const skryt = ted === psaniRadek && (dopl.otevreno || Date.now() - psaniCas < 1500);
+    return skryt ? seznam.filter(e => e.line !== psaniRadek) : seznam;
+  }
+  function obnovOdlozene() { zvyrazni(); vykresliChyby(); }
+  ed.addEventListener('input', () => {
+    psaniRadek = radekKurzoru(); psaniCas = Date.now();
+    clearTimeout(odkladPlan);
+    odkladPlan = setTimeout(obnovOdlozene, 1550);
+  });
+  ['keyup', 'click'].forEach(t => ed.addEventListener(t, () => {
+    if (psaniRadek && radekKurzoru() !== psaniRadek) { psaniRadek = 0; obnovOdlozene(); }
+  }));
+  function zivaKontrola() {
+    if (jePrelozeno()) { symbolyZive = preklad.symbols; zivaPlatna = true; return; }
+    let r;
+    try { r = ASM.assemble(ed.value, { illegal: nast.illegal }); } catch (e) { return; }
+    chyby = r.errors; varovani = r.warnings; symbolyZive = r.symbols; zivaPlatna = true;
+    zvyrazni(); vykresliChyby();
+  }
+  function oznacNeaktualni() { $('prac').classList.toggle('neakt', !!preklad && prekladZdroj !== ed.value); }
+
+  /** Po úpravě textu posune zarážky a chyby na řádcích za místem změny. */
+  function posunRadky(stary, novy) {
+    if (stary === novy) return;
+    let p = 0; const n = Math.min(stary.length, novy.length);
+    while (p < n && stary.charCodeAt(p) === novy.charCodeAt(p)) p++;
+    const radek = stary.slice(0, p).split('\n').length;   // řádek (1…), kde začíná změna
+    const delta = novy.split('\n').length - stary.split('\n').length;
+    if (!delta) return;
+    const posun = r => {
+      if (r <= radek) return r;
+      if (delta < 0 && r <= radek - delta) return null;
+      return r + delta;
+    };
+    const nb = [];
+    bpRadky.forEach(r => { const x = posun(r); if (x) nb.push(x); });
+    bpRadky.clear(); nb.forEach(r => bpRadky.add(r));
+    chyby = chyby.map(e => ({ line: posun(e.line), msg: e.msg })).filter(e => e.line);
+    varovani = varovani.map(e => ({ line: posun(e.line), msg: e.msg })).filter(e => e.line);
+    ls.zapis('zarazky', [...bpRadky]);
+    aktualizujBP();
+  }
+
+  /** Index začátku řádku, na kterém leží pozice pos (pozor: lastIndexOf s −1 hledá od 0). */
+  const zacatekRadku = (v, pos) => (pos > 0 ? v.lastIndexOf('\n', pos - 1) + 1 : 0);
+  // Tab / Shift+Tab: odsazení, Esc: pustí fokus
+  let tabPast = true;
+  ed.addEventListener('keydown', e => {
+    if (e.key === 'Escape') { tabPast = false; return; }
+    if (e.key !== 'Tab' || !tabPast || e.ctrlKey || e.altKey || e.metaKey) return;
+    e.preventDefault();
+    const v = ed.value, a = ed.selectionStart, b = ed.selectionEnd;
+    const zac = zacatekRadku(v, a);
+    const viceRadku = v.slice(a, b).includes('\n');
+    if (!viceRadku && !e.shiftKey) {
+      const sloupec = a - zac;
+      vloz(' '.repeat(8 - (sloupec % 8)), a, b);
+      return;
+    }
+    const kon = b > a && v[b - 1] === '\n' ? b - 1 : b;
+    let konRadku = v.indexOf('\n', kon); if (konRadku < 0) konRadku = v.length;
+    const blok = v.slice(zac, konRadku).split('\n');
+    const novy = blok.map(r => e.shiftKey ? r.replace(/^( {1,8}|\t)/, '') : '        ' + r).join('\n');
+    ed.setSelectionRange(zac, konRadku);
+    vloz(novy, zac, konRadku);
+    ed.setSelectionRange(zac, zac + novy.length);
+  });
+  ed.addEventListener('focus', () => { tabPast = true; });
+  function vloz(text, a, b) {
+    ed.focus();
+    let ok = false;
+    try { ok = document.execCommand('insertText', false, text); } catch (e) { ok = false; }
+    if (!ok) { ed.setRangeText(text, a, b, 'end'); ed.dispatchEvent(new Event('input')); }
+  }
+
+  gutterIn.addEventListener('click', e => {
+    const d = e.target.closest('div[data-r]'); if (!d) return;
+    prepniBP(+d.dataset.r);
+  });
+  function radekKurzoru() { return ed.value.slice(0, ed.selectionStart).split('\n').length; }
+  function prepniBP(r) {
+    if (bpRadky.has(r)) bpRadky.delete(r); else bpRadky.add(r);
+    ls.zapis('zarazky', [...bpRadky]);
+    aktualizujBP(); vykresliGutter(); vykresliDisasm();
+  }
+  function aktualizujBP() {
+    cpu.bp.fill(0);
+    // zarážka na řádku bez kódu (prázdný, komentář, návěští) platí pro nejbližší další řádek s instrukcí
+    if (preklad) bpRadky.forEach(r => {
+      for (let k = r; k < r + 64 && k < preklad.lineToAddr.length; k++) {
+        const a = preklad.lineToAddr[k];
+        if (a !== undefined && a >= 0) { cpu.bp[a] = 1; break; }
+      }
+    });
+    bpAdresy.forEach(a => { cpu.bp[a] = 1; });
+  }
+  function jdiNaRadek(r, oznac) {
+    const radky = ed.value.split('\n');
+    let pos = 0; for (let i = 0; i < r - 1 && i < radky.length; i++) pos += radky[i].length + 1;
+    ed.focus();
+    ed.setSelectionRange(pos, oznac ? pos + (radky[r - 1] || '').length : pos);
+    posunNaRadek(r);
+  }
+  function posunNaRadek(r) {
+    const top = PAD + (r - 1) * LH, h = ed.clientHeight;
+    if (top < ed.scrollTop + LH || top > ed.scrollTop + h - 2 * LH) ed.scrollTop = Math.max(0, top - h / 3);
+    synchronizuj();
+  }
+  function nastavPCRadek(scroll) {
+    const r = (preklad && jePrelozeno()) ? preklad.addrToLine[cpu.PC] : -1;
+    const novy = r >= 0 ? r : -1;
+    if (novy !== pcRadek) {
+      // jen přesun třídy .pc – bez překreslení celého okraje
+      const st = pcRadek > 0 && gutterIn.children[pcRadek - 1], nv = novy > 0 && gutterIn.children[novy - 1];
+      if (st) st.classList.remove('pc');
+      if (nv) nv.classList.add('pc');
+      pcRadek = novy;
+    }
+    synchronizuj();
+    if (scroll && pcRadek > 0) posunNaRadek(pcRadek);
+  }
+
+  /**
+   * Nastaví text editoru. nacteno = text posledního explicitního uložení / načtení (výchozí: t);
+   * podle něj se pozná neuložená práce.
+   */
+  function nastavText(t, nazev, zachovatZarazky, nacteno) {
+    ed.value = t; staryText = t; nactenyText = nacteno === undefined ? t : nacteno;
+    if (nazev !== undefined) nazevProgramu = nazev;
+    chyby = []; varovani = []; pcRadek = -1;
+    if (!zachovatZarazky) { bpRadky.clear(); ls.zapis('zarazky', [], true); }
+    ed.scrollTop = 0; ed.scrollLeft = 0;
+    zvyrazni(); vykresliChyby();
+    oznacNeaktualni();
+    ulozRozpracovany();
+    ukazUlozeni();
+  }
+  const ZNAME_TEXTY = () => LEKCE.UKAZKY.map(u => u.kod).concat(LEKCE.ULOHY.map(u => u.sablona));
+  /** Je v editoru práce, která není nikde jinde (v uložených programech, ukázkách, šablonách)? */
+  function jeNeulozeno() {
+    const t = ed.value;
+    if (!t.trim() || t === nactenyText) return false;
+    if (Object.values(ls.cti('programy', {})).some(p => p.kod === t)) return false;
+    if (ZNAME_TEXTY().includes(t)) return false;
+    if (ulohaAkt) return false;             // řešení úlohy se ukládá k úloze
+    return true;
+  }
+  async function smimPrepsat() {
+    zalohuj();
+    if (!jeNeulozeno()) return true;
+    return DLG ? DLG.potvrd('V editoru je neuložený program. Opravdu ho nahradit?\n\nRozepsaný text je zálohovaný – najdete ho v seznamu „Uložené programy“ ve skupině „Zálohy“.') : true;
+  }
+  function ulozRozpracovany() {
+    ls.zapis('aktualni', { kod: ed.value, nazev: nazevProgramu, uloha: ulohaAkt ? ulohaAkt.id : null, nacteno: nactenyText }, true);
+    if (ulohaAkt) {
+      const p = ls.cti('ulohy', {}); p[ulohaAkt.id] = Object.assign(p[ulohaAkt.id] || {}, { kod: ed.value }); ls.zapis('ulohy', p, true);
+    }
+    ukazUlozeni();
+  }
+  const MAX_ZALOH = 8;
+  /** Kruhová historie záloh: uloží text editoru, pokud se liší od všech uložených programů, ukázek a záloh. */
+  function zalohuj(text) {
+    const t = text === undefined ? ed.value : text;
+    if (!t.trim()) return;
+    if (Object.values(ls.cti('programy', {})).some(p => p.kod === t) || ZNAME_TEXTY().includes(t)) return;
+    const z = (ls.cti('zalohy', []) || []).filter(x => x && x.kod !== t);
+    const prvni = (t.split('\n').find(r => r.replace(/^[\s;=*-]+/, '').trim()) || 'program').replace(/^[\s;=*-]+/, '').trim().slice(0, 40);
+    z.unshift({ kod: t, cas: Date.now(), nazev: prvni });
+    z.length = Math.min(z.length, MAX_ZALOH);
+    ls.zapis('zalohy', z, true);
+    naplnProgramy();
+  }
+  function ukazUlozeni() {
+    const el = $('stavUlozeni'); if (!el) return;
+    const p = nazevProgramu && ls.cti('programy', {})[nazevProgramu];
+    let t, cl;
+    if (ulohaAkt) { t = '🎯 úloha – ukládá se průběžně'; cl = 'ok'; }
+    else if (p && p.kod === ed.value) { t = '✓ „' + nazevProgramu + '“ uloženo'; cl = 'ok'; }
+    else if (!jeNeulozeno()) { t = nazevProgramu ? '„' + nazevProgramu + '“' : 'beze změn'; cl = ''; }
+    else { t = '● neuloženo' + (nazevProgramu ? ' („' + nazevProgramu + '“)' : ''); cl = 'pozor'; }
+    el.textContent = t; el.className = 'ulozeni ' + cl;
+  }
+
+  // ===================== PŘEKLAD =====================
+  let navrhy = [];
+  function vykresliChyby() {
+    const el = $('chyby');
+    navrhy = [];
+    const tlac = (e) => {
+      const n = navrhOpravy(e);
+      if (!n) return '';
+      navrhy.push(Object.assign({ line: e.line }, n));
+      return '<button class="male pouzit" data-n="' + (navrhy.length - 1) + '" title="Nahradit „' + esc(n.z) + '“ za „' + esc(n.na) + '“ na řádku ' + e.line + '">použít ' + esc(n.na) + '</button>';
+    };
+    const pol = viditelneChyby().map(e => '<div class="e" data-r="' + e.line + '">✖ řádek ' + e.line + ': ' + esc(e.msg) + tlac(e) + '</div>')
+      .concat(viditelneChyby(varovani).map(e => '<div class="w" data-r="' + e.line + '">⚠ řádek ' + e.line + ': ' + esc(e.msg) + '</div>'));
+    if (!pol.length) {
+      el.innerHTML = '<div class="nic">' + (jePrelozeno() ? '✓ Přeloženo bez chyb' : (zivaPlatna ? '✓ Zatím bez chyb (kontroluje se při psaní)' : 'Chyby se ukážou při psaní i po překladu.')) + '</div>';
+      return;
+    }
+    el.innerHTML = pol.slice(0, 60).join('') + (pol.length > 60 ? '<div>… a dalších ' + (pol.length - 60) + '</div>' : '');
+  }
+  $('chyby').addEventListener('click', e => {
+    const b = e.target.closest('button.pouzit');
+    if (b) { e.stopPropagation(); pouzijNavrh(navrhy[+b.dataset.n]); return; }
+    const d = e.target.closest('[data-r]'); if (d) jdiNaRadek(+d.dataset.r, true);
+  });
+
+  function preloz(tise) {
+    zastav();
+    const t = ed.value;
+    const r = ASM.assemble(t, { illegal: nast.illegal });
+    psaniRadek = 0;
+    chyby = r.errors; varovani = r.warnings; symbolyZive = r.symbols; zivaPlatna = true;
+    zvyrazni(); vykresliChyby();
+    if (!r.ok) {
+      oznacNeaktualni();
+      stav('Překlad selhal: ' + r.errors.length + ' ' + (r.errors.length === 1 ? 'chyba' : r.errors.length < 5 ? 'chyby' : 'chyb') + ' – první na řádku ' + r.errors[0].line + '.', 'chyba');
+      if (!tise) jdiNaRadek(r.errors[0].line, true);
+      return false;
+    }
+    preklad = r; prekladZdroj = t; symbolyZive = r.symbols; zivaPlatna = true;
+    oznacNeaktualni();
+    aktualizujWP();
+    symMapa = new Map();
+    r.symbols.forEach(s => { if (s.typ === 'navesti' && !symMapa.has(s.value)) symMapa.set(s.value, s.name); });
+    nahrajProgram();
+    const usek = r.segments.map(s => '$' + h4(s.start) + '–$' + h4(s.end)).slice(0, 3).join(', ');
+    stav('Přeloženo: ' + fmt(r.bytes) + ' B (' + usek + (r.segments.length > 3 ? ', …' : '') + '), start $' + h4(r.start) + (r.warnings.length ? ', varování: ' + r.warnings.length : '') + '.', 'ok');
+    vykresliSymboly();
+    return true;
+  }
+  function nahrajProgram() {
+    cpu.mem.fill(0);
+    if (preklad) cpu.mem.set(preklad.mem);
+    per.reset();
+    cpu.irqLines = 0;
+    cpu.reset(true, preklad ? preklad.start : 0x0600);
+    konzoleZmena = true;
+    vysvetleni = null;
+    snimek = cpu.mem.slice(); regPred = cpu.stav();
+    aktualizujBP();
+    if ($('pamSled').value === '') pametZac = preklad ? (preklad.start & 0xFFF0) : 0;
+    vykresliVse();
+  }
+  function pripravBeh() {
+    if (!jePrelozeno()) { if (!preloz(false)) return false; }
+    return true;
+  }
+
+  // ===================== BĚH =====================
+  const RYCHLOSTI = [
+    { id: '1', t: '1 instrukce/s', ips: 1 }, { id: '2', t: '2 instrukce/s', ips: 2 }, { id: '5', t: '5 instrukcí/s', ips: 5 },
+    { id: '10', t: '10 instrukcí/s', ips: 10 }, { id: '30', t: '30 instrukcí/s', ips: 30 }, { id: '100', t: '100 instrukcí/s', ips: 100 },
+    { id: '1000', t: '1 000 instrukcí/s', ips: 1000 }, { id: '10k', t: '10 kHz', hz: 1e4 }, { id: '100k', t: '100 kHz', hz: 1e5 },
+    { id: '1M', t: '1 MHz (jako C64)', hz: 1e6 }, { id: '2M', t: '2 MHz', hz: 2e6 }, { id: 'turbo', t: 'Turbo (co nejrychleji)', turbo: true },
+  ];
+  const RYCH = {}; RYCHLOSTI.forEach(r => { RYCH[r.id] = r; });
+  $('rychlost').innerHTML = RYCHLOSTI.map(r => '<option value="' + r.id + '">' + r.t + '</option>').join('');
+  if (!RYCH[nast.rychlost]) nast.rychlost = '1M';
+  $('rychlost').value = nast.rychlost;
+  $('rychlost').addEventListener('change', () => { nast.rychlost = $('rychlost').value; ulozNast(); akum = 0; });
+
+  let tPosl = 0, tUI = 0, akum = 0, prvniKrok = false, zmenaUI = false;
+  let mereni = { t: 0, c: 0, mhz: 0 };
+  let snimekMs = 16.7;                 // klouzavý průměr délky snímku – z něj rozpočet práce (~55 %)
+  let behStart = null;                 // stav při spuštění (pro souhrn „program doběhl“)
+
+  async function spust() {
+    if (rezim) { pauza(); return; }
+    if (!pripravBeh()) return;
+    if (cpu.halted) { stav('Procesor je zastavený (' + cpu.haltReason + '). Stiskněte Reset.', 'pozor'); return; }
+    const rc = RYCH[nast.rychlost];
+    if (nast.vyuka && !(rc.ips && rc.ips <= 10) && !ls.cti('nabidnutoPomalu', false) && DLG) {
+      ls.zapis('nabidnutoPomalu', true, true);
+      if (await DLG.potvrd('Výukový režim vysvětluje instrukce jen při krokování nebo při pomalém běhu.\n\nSpustit pomalu (2 instrukce za sekundu) s vysvětlením každé instrukce? (Rychlost jde kdykoli změnit v liště.)')) {
+        nast.rychlost = '2'; $('rychlost').value = '2'; ulozNast();
+      }
+    }
+    snimek = cpu.mem.slice(); regPred = cpu.stav(); behStart = cpu.stav();
+    rezim = 'beh'; prvniKrok = true; akum = 1;
+    tPosl = performance.now(); mereni = { t: tPosl, c: cpu.cycles, mhz: 0 };
+    $('vyuka').setAttribute('aria-live', 'off');
+    tlacitkoBehu();
+    stav('Běží…');
+    priSpusteni();
+    requestAnimationFrame(smycka);
+  }
+  function pauza(zprava, druh) {
+    rezim = null; dobehPodminka = null;
+    tlacitkoBehu();
+    nastavPCRadek(true);
+    vykresliVse();
+    stav(zprava || ('Pozastaveno na $' + h4(cpu.PC) + radekText(cpu.PC) + '.'), druh);
+  }
+  function zastav() { if (rezim) { rezim = null; dobehPodminka = null; tlacitkoBehu(); } }
+  function tlacitkoBehu() {
+    const t = rezim ? '⏸ Pauza' : '▶ Spustit';
+    $('btnBeh').textContent = t; $('mBeh').textContent = t;
+    $('btnBeh').setAttribute('aria-pressed', rezim ? 'true' : 'false');
+    $('cRychl').textContent = '';
+  }
+  function radekText(a) {
+    const r = preklad && jePrelozeno() ? preklad.addrToLine[a] : -1;
+    return r >= 0 ? ' (řádek ' + r + ')' : '';
+  }
+  function smyckaPovolena() { return nast.smycka && (cpu.P & 0x04) !== 0 && !cpu.nmiPending; }
+
+  document.addEventListener('visibilitychange', () => {
+    if (!rezim) return;
+    if (document.hidden) stav('Běh pozastaven – karta je na pozadí.', 'pozor');
+    else { tPosl = performance.now(); mereni = { t: tPosl, c: cpu.cycles, mhz: 0 }; akum = 0; stav('Běží…'); }
+  });
+
+  function smycka(ts) {
+    if (!rezim) return;
+    try {
+      const surove = Math.max(0, ts - tPosl);
+      const dt = Math.min(100, surove); tPosl = ts;
+      if (surove > 0 && surove < 200) snimekMs = snimekMs * 0.9 + surove * 0.1;
+      const prace = Math.max(4, Math.min(30, snimekMs * 0.55));   // ms práce na snímek
+      const rc = RYCH[nast.rychlost];
+      let duvod = null;
+      const t0 = performance.now();
+      if (rezim === 'dobeh') duvod = dobeh(t0, prace);
+      else if (rc.ips) {
+        akum += dt / 1000 * rc.ips;
+        let n = Math.floor(akum); akum -= n; if (n > 3000) n = 3000;
+        const vysv = nast.vyuka && rc.ips <= 10;
+        if (n > 0) zmenaUI = true;
+        for (let k = 0; k < n; k++) {
+          if (!prvniKrok && cpu.bp[cpu.PC]) { duvod = 'bp'; break; }
+          if (n === 1 || k === n - 1) { snimek = cpu.mem.slice(); regPred = cpu.stav(); }
+          prvniKrok = false;
+          const pc = cpu.PC;
+          krokJeden(vysv);
+          if (cpu.halted) { duvod = 'halt'; break; }
+          if (cpu.wpHit >= 0) { duvod = 'wp'; break; }
+          if (smyckaPovolena() && cpu.PC === pc) { duvod = 'loop'; break; }
+        }
+      } else {
+        let rozpocet = rc.turbo ? Infinity : dt / 1000 * rc.hz;
+        for (;;) {
+          const kus = Math.min(rozpocet, 20000);
+          if (kus <= 0) break;
+          const r = cpu.run(kus, { selfLoop: smyckaPovolena(), pokracuj: prvniKrok });
+          prvniKrok = false;
+          rozpocet -= r.cycles;
+          if (r.reason !== 'budget') { duvod = r.reason; break; }
+          if (performance.now() - t0 > prace) break;
+        }
+      }
+      if (ts - mereni.t > 1000) { mereni.mhz = (cpu.cycles - mereni.c) / (ts - mereni.t) / 1000; mereni.t = ts; mereni.c = cpu.cycles; }
+      kresliDisplej(); vykresliKonzoli();
+      if (duvod) { ukonciBeh(duvod); return; }
+      const pomale = rc.ips && rc.ips <= 30;
+      if ((pomale && zmenaUI) || (!pomale && ts - tUI > 100)) {
+        tUI = ts; zmenaUI = false;
+        if (pomale) { nastavPCRadek(true); vykresliVse(); }
+        else { nastavPCRadek(false); vykresliLehce(); }
+        $('cRychl').textContent = mereni.mhz ? (mereni.mhz >= 0.1 ? mereni.mhz.toLocaleString('cs-CZ', { maximumFractionDigits: 2 }) + ' MHz' : fmt(mereni.mhz * 1e6) + ' Hz') : '';
+      }
+      requestAnimationFrame(smycka);
+    } catch (e) {
+      pauza('Vnitřní chyba emulátoru: ' + (e && e.message ? e.message : e) + ' – běh zastaven.', 'chyba');
+    }
+  }
+  function souhrnBehu() {
+    if (!behStart || !nast.vyuka) return;
+    const rc = RYCH[nast.rychlost];
+    if (rc.ips && rc.ips <= 10) return;      // pomalý běh má vlastní vysvětlení posledního kroku
+    vysvetleni = ['<b>Program doběhl</b>: ' + fmt(cpu.instr - behStart.instr) + ' instrukcí za ' + fmt(cpu.cycles - behStart.cycles) + ' cyklů.',
+      '<span class="pr">Vysvětlení jednotlivých instrukcí se ukazuje při krokování (Krok, Alt+N / F11) nebo při rychlosti do 10 instrukcí za sekundu.</span>'];
+  }
+  function ukonciBeh(duvod) {
+    if (duvod === 'bp') pauza('Zarážka na $' + h4(cpu.PC) + radekText(cpu.PC) + '.', 'pozor');
+    else if (duvod === 'wp') {
+      const a = cpu.wpHit;
+      pauza('Sledovaná adresa $' + h4(a) + ' změněna na $' + h2(cpu.mem[a]) + ' – instrukcí před $' + h4(cpu.PC) + radekText(cpu.pc0) + '.', 'pozor');
+    }
+    else if (duvod === 'halt') { souhrnBehu(); pauza(cpu.haltReason + '.', /^BRK/.test(cpu.haltReason) ? 'ok' : 'chyba'); }
+    else if (duvod === 'loop') { souhrnBehu(); pauza('Program skončil v nekonečné smyčce na $' + h4(cpu.PC) + radekText(cpu.PC) + ' (skok sám na sebe, přerušení zakázána).', 'ok'); }
+    else if (duvod === 'cil') {
+      const di = cpu.instr - dobehStart.instr, dc = cpu.cycles - dobehStart.cycles;
+      if (nast.vyuka) vysvetleni = ['<b>' + dobehPopis + '</b>: proběhlo ' + fmt(di) + ' instrukcí za ' + fmt(dc) + ' cyklů. Pokračuje se na $' + h4(cpu.PC) + '.'];
+      pauza(dobehPopis + ' – hotovo (' + fmt(di) + ' instrukcí).');
+    }
+  }
+
+  function krokJeden(vysv) {
+    const pred = vysv ? cpu.stav() : null;
+    const c = cpu.step();
+    if (vysv) vysvetleni = sestavVysvetleni(pred, c);
+    return c;
+  }
+  function sestavVysvetleni(pred, cykly) {
+    if (cpu.halted && cpu.instr === pred.instr) return ['<b>Procesor se zastavil:</b> ' + esc(cpu.haltReason) + '.'];
+    try {
+      if (cpu.irqServed) return VYUKA.vysvetli({ prerus: cpu.irqServed, pred, po: cpu.stav(), cykly });
+      const d = OPS[cpu.op];
+      const bytes = []; for (let i = 0; i < d.bytes; i++) bytes.push(cpu.mem[(cpu.pc0 + i) & 0xFFFF]);
+      const dis = DIS.disasm(a => cpu.mem[a], cpu.pc0, { illegal: true, symbols: symMapa });
+      return VYUKA.vysvetli({
+        op: cpu.op, pc: cpu.pc0, bytes, pred, po: cpu.stav(), ea: cpu.ea, m: cpu.m, base: cpu.base, ptr: cpu.ptr,
+        cross: cpu.cross, taken: cpu.taken, cykly, zapisy: cpu.lastWrites(), prerus: 0, dis: esc(dis.text),
+      });
+    } catch (e) { return ['Vysvětlení se nepodařilo sestavit: ' + esc(e.message)]; }
+  }
+
+  function krok() {
+    if (rezim) pauza();
+    if (!pripravBeh()) return;
+    if (cpu.halted) { stav('Procesor je zastavený (' + cpu.haltReason + '). Reset nebo krok zpět.', 'pozor'); return; }
+    snimek = cpu.mem.slice(); regPred = cpu.stav();
+    $('vyuka').setAttribute('aria-live', 'polite');
+    krokJeden(nast.vyuka);
+    nastavPCRadek(true);
+    vykresliVse();
+    if (cpu.halted) stav(cpu.haltReason + '.', /^BRK/.test(cpu.haltReason) ? 'ok' : 'chyba');
+    else if (cpu.wpHit >= 0) stav('Krok zapsal na sledovanou adresu $' + h4(cpu.wpHit) + '.', 'pozor');
+    else stav((cpu.irqServed ? 'Vstup do přerušení ' + (cpu.irqServed === 2 ? 'NMI' : 'IRQ') : 'Krok') + ': PC = $' + h4(cpu.PC) + radekText(cpu.PC) + '.');
+  }
+  function zacniDobeh(podminka, popis) {
+    if (!pripravBeh()) return;
+    if (cpu.halted) { stav('Procesor je zastavený.', 'pozor'); return; }
+    snimek = cpu.mem.slice(); regPred = cpu.stav();
+    dobehPodminka = podminka; dobehPopis = popis; dobehStart = cpu.stav();
+    rezim = 'dobeh'; prvniKrok = true;
+    tPosl = performance.now();
+    $('vyuka').setAttribute('aria-live', 'off');
+    tlacitkoBehu(); stav(popis + '…');
+    requestAnimationFrame(smycka);
+  }
+  function dobeh(t0, prace) {
+    for (;;) {
+      for (let k = 0; k < 5000; k++) {
+        if (!prvniKrok && cpu.bp[cpu.PC]) return 'bp';
+        prvniKrok = false;
+        cpu.step();
+        if (cpu.halted) return 'halt';
+        if (cpu.wpHit >= 0) return 'wp';
+        if (dobehPodminka()) return 'cil';
+      }
+      if (performance.now() - t0 > prace) return null;
+    }
+  }
+  function krokPres() {
+    if (rezim) pauza();
+    if (!pripravBeh()) return;
+    if (cpu.mem[cpu.PC] === 0x20 && !cpu.halted) {
+      const cil = (cpu.PC + 3) & 0xFFFF, sp = cpu.SP;
+      zacniDobeh(() => cpu.PC === cil && cpu.SP === sp, 'Krok přes podprogram');
+    } else krok();
+  }
+  function krokVen() {
+    if (rezim) pauza();
+    if (!pripravBeh()) return;
+    // hloubka volání: JSR a vstup do přerušení +1, RTS a RTI −1; konec při návratu z aktuální úrovně
+    let hloubka = 0;
+    zacniDobeh(() => { hloubka += CPU8.zmenaHloubky(cpu); return hloubka < 0; }, 'Krok ven z podprogramu');
+  }
+  function bezKeKurzoru() {
+    if (rezim) pauza();
+    if (!pripravBeh()) return;
+    const r = radekKurzoru();
+    let cil = -1;
+    for (let k = r; k < r + 64 && k < preklad.lineToAddr.length; k++) { if (preklad.lineToAddr[k] >= 0 && preklad.kodStart[preklad.lineToAddr[k]] === 1) { cil = preklad.lineToAddr[k]; break; } }
+    if (cil < 0) { stav('Na řádku ' + r + ' ani pod ním není instrukce.', 'pozor'); return; }
+    zacniDobeh(() => cpu.PC === cil && !cpu.irqServed, 'Běh ke kurzoru (řádek ' + preklad.addrToLine[cil] + ')');
+  }
+  function krokZpet(kolik) {
+    if (rezim) pauza();
+    kolik = kolik || 1;
+    const pred = cpu.stav();
+    const vsechny = new Set();
+    let n = 0;
+    for (; n < kolik; n++) { const adr = cpu.stepBack(); if (!adr) break; adr.forEach(a => vsechny.add(a)); }
+    if (!n) { stav('Historie kroků je prázdná.', 'pozor'); return; }
+    const adr = [...vsechny];
+    snimek = cpu.mem.slice(); adr.forEach(a => { snimek[a] = (cpu.mem[a] + 1) & 0xFF; });   // zvýrazní obnovené bajty
+    regPred = pred;
+    if (nast.vyuka) vysvetleni = ['<b>Krok zpět' + (n > 1 ? ' o ' + n + ' kroků' : '') + '</b>: obnoveny registry, stav periferií' +
+      (adr.length ? ' a ' + adr.length + ' ' + (adr.length === 1 ? 'bajt' : adr.length < 5 ? 'bajty' : 'bajtů') + ' paměti (' + adr.slice(0, 12).map(a => '$' + h4(a)).join(', ') + (adr.length > 12 ? ', …' : '') + ')' : '') +
+      '. V historii zbývá ' + fmt(cpu.historyLength()) + ' kroků.'];
+    konzoleZmena = true;
+    nastavPCRadek(true); vykresliVse(); kresliDisplej(true);
+    stav('Krok zpět: PC = $' + h4(cpu.PC) + radekText(cpu.PC) + '.');
+  }
+  function reset() {
+    zastav();
+    if (!jePrelozeno()) { if (!preloz(false)) return; }
+    else nahrajProgram();
+    nastavPCRadek(true);
+    stav('Reset: program znovu nahrán, PC = $' + h4(cpu.PC) + '.');
+  }
+
+  $('btnPreloz').addEventListener('click', () => { if (preloz(false)) nastavPCRadek(true); });
+  $('btnBeh').addEventListener('click', spust);
+  $('btnKrok').addEventListener('click', krok);
+  $('btnPres').addEventListener('click', krokPres);
+  $('btnVen').addEventListener('click', krokVen);
+  $('btnZpet').addEventListener('click', () => krokZpet(1));
+  $('btnReset').addEventListener('click', reset);
+  $('btnKurzor').addEventListener('click', bezKeKurzoru);
+  $('mBeh').addEventListener('click', spust);
+  $('mKrok').addEventListener('click', krok);
+  $('mPres').addEventListener('click', krokPres);
+  $('mZpet').addEventListener('click', () => krokZpet(1));
+  // IRQ z tlačítka trvá, dokud ho procesor nepřijme (cpu.irqPulse)
+  $('btnIRQ').addEventListener('click', () => {
+    cpu.irqPulse();
+    stav('Požadavek IRQ nastaven' + ((cpu.P & 4) ? ' – čeká, až program povolí přerušení (CLI).' : ' – obslouží se jako další krok.'));
+    vykresliRegistry();
+  });
+  $('btnNMI').addEventListener('click', () => { cpu.nmi(); stav('NMI vyvoláno – obslouží se jako další krok.'); });
+
+  // ===================== PANELY =====================
+  const REG = [
+    { k: 'A', w: 2 }, { k: 'X', w: 2 }, { k: 'Y', w: 2 }, { k: 'SP', w: 2 }, { k: 'PC', w: 4 },
+  ];
+  $('regy').innerHTML = REG.map(r => '<div class="reg" id="reg' + r.k + '"><label for="in' + r.k + '">' + r.k + '</label>' +
+    '<input id="in' + r.k + '" maxlength="' + (r.w + 1) + '" spellcheck="false" autocomplete="off" aria-label="Registr ' + r.k + '"><div class="dal" id="dal' + r.k + '"></div></div>').join('');
+  REG.forEach(r => {
+    const inp = $('in' + r.k);
+    const potvrd = () => {
+      const t = inp.value.trim().replace(/^\$/, '');
+      if (!/^[0-9a-fA-F]+$/.test(t)) { vykresliRegistry(); return; }
+      const v = parseInt(t, 16) & (r.w === 4 ? 0xFFFF : 0xFF);
+      cpu[r.k] = v;
+      if (r.k === 'PC') { cpu.halted = false; nastavPCRadek(true); }
+      vykresliVse();
+    };
+    inp.addEventListener('change', potvrd);
+    inp.addEventListener('keydown', e => { if (e.key === 'Enter') { potvrd(); inp.blur(); } if (e.key === 'Escape') { vykresliRegistry(); inp.blur(); } });
+  });
+  const PRIZ = [['N', 0x80], ['V', 0x40], ['–', 0x20], ['B', 0x10], ['D', 0x08], ['I', 0x04], ['Z', 0x02], ['C', 0x01]];
+  const PRIZ_POPIS = { N: 'Negative – bit 7 výsledku', V: 'oVerflow – přetečení se znaménkem', '–': 'nepoužitý bit (vždy 1)', B: 'Break – existuje jen v kopii v zásobníku',
+    D: 'Decimal – BCD režim ADC/SBC', I: 'Interrupt disable – zákaz IRQ', Z: 'Zero – výsledek nula', C: 'Carry – přenos' };
+  $('priz').innerHTML = PRIZ.map(([n, b]) => {
+    const nic = b === 0x20 || b === 0x10;
+    return '<button data-b="' + b + '"' + (nic ? ' class="nic" aria-disabled="true"' : '') + ' title="' + PRIZ_POPIS[n] + '" aria-label="Příznak ' + (n === '–' ? 'bit 5' : n) + '">' + n + '<small>0</small></button>';
+  }).join('') + '<span class="pbin" id="pbin"></span>';
+  $('priz').addEventListener('click', e => {
+    const b = e.target.closest('button'); if (!b) return;
+    const bit = +b.dataset.b; if (bit === 0x20 || bit === 0x10) return;
+    cpu.P ^= bit; vykresliRegistry();
+  });
+
+  function vykresliRegistry() {
+    const s = cpu.stav();
+    REG.forEach(r => {
+      const v = s[r.k], inp = $('in' + r.k);
+      if (document.activeElement !== inp) inp.value = '$' + (r.w === 4 ? h4(v) : h2(v));
+      $('reg' + r.k).classList.toggle('zm', regPred[r.k] !== v);
+      let dal;
+      if (r.k === 'PC') {
+        const ln = preklad && jePrelozeno() ? preklad.addrToLine[v] : -1;
+        dal = [symMapa.get(v) || '', ln >= 0 ? 'řádek ' + ln : ''];
+      } else if (r.k === 'SP') dal = ['vrchol $01' + h2(v), (0xFF - v) + ' B obsazeno'];
+      else dal = [v + (v > 127 ? ' / ' + (v - 256) : ''), '%' + v.toString(2).padStart(8, '0').replace(/^(\d{4})/, '$1 ')];
+      $('dal' + r.k).innerHTML = dal.map(t => '<div>' + (esc(t) || '&nbsp;') + '</div>').join('');
+      $('dal' + r.k).title = dal.filter(Boolean).join(', ');
+    });
+    document.querySelectorAll('#priz button').forEach(b => {
+      const bit = +b.dataset.b, nic = bit === 0x10 || bit === 0x20;
+      const hod = nic ? (bit === 0x20 ? 1 : '–') : ((cpu.P & bit) ? 1 : 0);
+      b.classList.toggle('on', !nic && (cpu.P & bit) !== 0);
+      b.classList.toggle('zm', !nic && ((cpu.P ^ regPred.P) & bit) !== 0);
+      b.lastChild.textContent = hod;
+      if (!nic) b.setAttribute('aria-pressed', (cpu.P & bit) ? 'true' : 'false');
+    });
+    $('mRegy').innerHTML = ['A', 'X', 'Y'].map(k => k + ' <b>' + h2(cpu[k]) + '</b>').join(' · ') + ' · P <b>' +
+      [['N', 0x80], ['V', 0x40], ['D', 0x08], ['I', 0x04], ['Z', 0x02], ['C', 0x01]].map(([f, b]) => (cpu.P & b) ? f : '·').join('') + '</b> · SP <b>' + h2(cpu.SP) + '</b> · PC <b>' + h4(cpu.PC) + '</b>';
+    $('pbin').textContent = '$' + h2(cpu.P);
+    $('cCykly').textContent = fmt(cpu.cycles);
+    $('cInstr').textContent = fmt(cpu.instr);
+    $('citac').innerHTML = '<span>historie: ' + fmt(cpu.historyLength()) + ' kroků</span>' +
+      (cpu.irqLines ? '<span style="color:var(--warn)">IRQ čeká' + ((cpu.P & 4) ? ' (I=1, zakázáno)' : '') + '</span>' : '') +
+      (cpu.halted ? '<span style="color:var(--danger)">zastaveno</span>' : '');
+  }
+
+  function vykresliVyuku() {
+    const el = $('vyuka');
+    if (!nast.vyuka) { el.innerHTML = '<p class="pr">Výukový režim je vypnutý (Volby).</p>'; return; }
+    if (!vysvetleni) return;
+    el.innerHTML = vysvetleni.map(r => '<p>' + r + '</p>').join('');
+  }
+
+  const PRAZDNE = new Uint8Array(65536);
+  function vykresliDisasm() {
+    const el = $('dis');
+    const cteni = a => cpu.mem[a & 0xFFFF];
+    const vol = { illegal: nast.illegal, symbols: symMapa };
+    // bez překladu: prázdná paměť (nuly) jako .byte po 8, ne řádky „00 BRK“
+    const info = preklad ? { used: preklad.used, kodStart: preklad.kodStart, pc: cpu.PC } : { used: PRAZDNE, kodStart: PRAZDNE, pc: cpu.PC };
+    const dek = a => DIS.disasmChytre(cteni, a, vol, info);
+    const zac = DIS.zacatekPred(cteni, cpu.PC, 8, vol, preklad ? (a => preklad.kodStart[a] !== 0 || !preklad.used[a]) : null, dek);
+    let a = zac, html = '';
+    for (let i = 0; i < 26 && a <= 0xFFFF; i++) {
+      const d = dek(a);
+      const jm = symMapa.get(a);
+      if (jm && !/[@.]/.test(jm.slice(1))) html += '<div class="lab">' + esc(jm) + ':</div>';
+      else if (jm) html += '<div class="lab" style="font-weight:400">' + esc(jm.slice(jm.search(/[@.]/))) + ':</div>';
+      const cl = [];
+      if (a === cpu.PC) cl.push('pc');
+      if (cpu.bp[a]) cl.push('bp');
+      if (d.neplatna) cl.push('ill');
+      if (d.data) cl.push('data');
+      html += '<div data-a="' + a + '" tabindex="0" role="button" aria-label="$' + h4(a) + ' ' + esc(d.text) + (cpu.bp[a] ? ', zarážka' : '') + (a === cpu.PC ? ', aktuální instrukce' : '') + '"' +
+        (cl.length ? ' class="' + cl.join(' ') + '"' : '') + '><span class="a">' + h4(a) + '</span><span class="b">' +
+        d.bytes.slice(0, 3).map(h2).join(' ') + (d.bytes.length > 3 ? '…' : '') + '</span><span class="t">' + textSOdkazem(d) + '</span></div>';
+      a += d.len;
+    }
+    if (!preklad) html = '<div class="prazdne" style="cursor:default">Program zatím není přeložený – opravte chyby a přeložte ho (Ctrl+Shift+Enter).</div>' + html;
+    el.innerHTML = html;
+  }
+  $('dis').addEventListener('keydown', e => {
+    if ((e.key === 'Enter' || e.key === ' ') && e.target.closest('div[data-a]')) { e.preventDefault(); e.target.click(); }
+  });
+  /** Text instrukce, v němž je jméno cílového symbolu odkazem (klik = definice + paměť). */
+  function textSOdkazem(d) {
+    const t = esc(d.text);
+    if (d.target === null || d.target === undefined || !symMapa.has(d.target)) return t;
+    const jm = esc(symMapa.get(d.target));
+    const i = t.indexOf(jm, d.mnem.length);
+    if (i < 0) return t;
+    return t.slice(0, i) + '<span class="sym" data-sym="' + jm + '" title="Definice a paměť: ' + jm + '">' + jm + '</span>' + t.slice(i + jm.length);
+  }
+  $('dis').addEventListener('click', e => {
+    const sy = e.target.closest('.sym');
+    if (sy) { e.stopPropagation(); jdiNaSymbol(sy.dataset.sym, { pamet: true, definice: true }); return; }
+    const d = e.target.closest('div[data-a]'); if (!d) return;
+    const fokus = document.activeElement === d;
+    const a = +d.dataset.a;
+    const r = preklad && jePrelozeno() ? preklad.addrToLine[a] : -1;
+    if (r >= 0 && preklad.lineToAddr[r] === a) prepniBP(r);
+    else { if (bpAdresy.has(a)) bpAdresy.delete(a); else bpAdresy.add(a); aktualizujBP(); vykresliDisasm(); }
+    if (fokus) { const n = $('dis').querySelector('div[data-a="' + a + '"]'); if (n) n.focus(); }
+  });
+
+  function vykresliZasobnik() {
+    const el = $('zasobnik');
+    let html = '';
+    const vrch = cpu.SP;
+    const od = Math.min(0xFF, vrch + 24);
+    for (let s = od; s >= Math.max(0, vrch - 1); s--) {
+      const a = 0x100 + s, v = cpu.mem[a];
+      const zm = v !== snimek[a] ? 'zm' : '';
+      let pozn = '';
+      if (s === vrch) pozn = '← SP (volné)';
+      else if (s > vrch && s < 0xFF) {
+        // dvojice bajtů, která vypadá jako návratová adresa z JSR (uložené PC−1 ukazuje na poslední bajt JSR)
+        const ret = cpu.mem[a] | (cpu.mem[a + 1] << 8);
+        if (cpu.mem[(ret - 2) & 0xFFFF] === 0x20) {
+          const kam = (ret + 1) & 0xFFFF, jm = symMapa.get((cpu.mem[(ret - 1) & 0xFFFF] | (cpu.mem[ret] << 8)));
+          pozn = '← návrat na $' + h4(kam) + (jm ? ' (z ' + esc(jm) + ')' : '');
+        }
+      }
+      html += '<div class="' + (s === vrch ? 'sp' : '') + '"><span class="a">$' + h4(a) + '</span><span class="' + zm + '">' + h2(v) + '</span><span class="ret">' + pozn + '</span></div>';
+    }
+    if (vrch === 0xFF) html = '<div class="prazdne">Zásobník je prázdný (SP = $FF).</div>' + html;
+    el.innerHTML = html;
+  }
+
+  // sledované výrazy: „výraz“ = bajt na adrese, „w:výraz“ = slovo, „s:výraz“ = text, „#výraz“ = hodnota výrazu
+  function vyhodnotWatch(t) {
+    let typ = 'b', v = t.trim();
+    const m = /^([wsb#]):?\s*(.*)$/i.exec(v);
+    if (/^#/.test(v)) { typ = '#'; v = v.slice(1); }
+    else if (m && /^[wsb]:/i.test(v)) { typ = m[1].toLowerCase(); v = m[2]; }
+    const adr = ASM.vyraz(v, preklad ? preklad.symbols : [], cpu.PC);
+    if (typ === '#') return { txt: '= $' + (adr > 255 || adr < 0 ? h4(adr) : h2(adr)) + ' (' + adr + ')' };
+    const a = adr & 0xFFFF;
+    if (typ === 'w') { const w = cpu.mem[a] | (cpu.mem[(a + 1) & 0xFFFF] << 8); return { txt: '$' + h4(w) + ' (' + w + ')', a }; }
+    if (typ === 's') {
+      let s = ''; for (let i = 0; i < 24; i++) { const c = cpu.mem[(a + i) & 0xFFFF]; if (!c) break; s += c >= 32 && c < 127 ? String.fromCharCode(c) : '·'; }
+      return { txt: '„' + s + '“', a };
+    }
+    const b = cpu.mem[a];
+    return { txt: '$' + h2(b) + ' (' + b + ')', a };
+  }
+  function vykresliWatch() {
+    const el = $('watch');
+    if (!watch.length) { el.innerHTML = '<div class="prazdne">Výraz = bajt na adrese; w: slovo, s: text, # hodnota výrazu.</div>'; return; }
+    el.innerHTML = watch.map((w, i) => {
+      let hod, cl = 'hod', adresa = null;
+      try { const r = vyhodnotWatch(w.v); hod = r.txt; adresa = r.a; if (r.a !== undefined && cpu.mem[r.a] !== snimek[r.a]) cl += ' zm'; }
+      catch (e) { hod = 'neznámé'; cl = 'chyba'; }
+      return '<div>' + (adresa !== null && adresa !== undefined ? '<label title="Zastavit běh při zápisu na $' + h4(adresa) + '"><input type="checkbox" data-stop="' + i + '"' + (w.stop ? ' checked' : '') +
+        ' aria-label="Zastavit při zápisu na ' + esc(w.v) + '"></label>' : '<span style="width:16px"></span>') +
+        '<span class="jm" title="' + esc(w.v) + '">' + esc(w.v) + '</span><span class="' + cl + '"' + (cl.includes('zm') ? ' style="color:var(--warn)"' : '') + '>' + esc(hod) + '</span><button class="male" data-i="' + i + '" aria-label="Odebrat ' + esc(w.v) + '">×</button></div>';
+    }).join('');
+  }
+  /** Watchpointy: adresy sledovaných výrazů se zaškrtnutým „zastavit“ (slovo = 2 bajty, text = 1. bajt). */
+  function aktualizujWP() {
+    let nic = true; const wp = new Uint8Array(65536);
+    watch.forEach(w => {
+      if (!w.stop) return;
+      try { const r = vyhodnotWatch(w.v); if (r.a === undefined) return; wp[r.a] = 1; if (/^w:/i.test(w.v)) wp[(r.a + 1) & 0xFFFF] = 1; nic = false; } catch (e) { /* neznámý symbol */ }
+    });
+    cpu.wp = nic ? null : wp;
+  }
+  const ulozWatch = () => { ls.zapis('watch', watch, true); aktualizujWP(); vykresliWatch(); };
+  $('watchForm').addEventListener('submit', e => {
+    e.preventDefault();
+    const t = $('watchVstup').value.trim(); if (!t) return;
+    watch.push({ v: t, stop: false }); $('watchVstup').value = ''; ulozWatch();
+  });
+  $('watch').addEventListener('click', e => { const b = e.target.closest('button[data-i]'); if (!b) return; watch.splice(+b.dataset.i, 1); ulozWatch(); });
+  $('watch').addEventListener('change', e => { const c = e.target.closest('input[data-stop]'); if (!c) return; watch[+c.dataset.stop].stop = c.checked; ulozWatch(); });
+
+  // paměť
+  function nastavPametZac() {
+    const sl = $('pamSled').value;
+    if (sl === 'pc') pametZac = Math.max(0, Math.min(0xFF00, (cpu.PC & 0xFFF0) - 0x40));
+    else if (sl === 'sp') pametZac = 0x100;
+    else if (sl === 'zp') pametZac = 0;
+    else if (sl === 'disp') pametZac = Math.max(0x200, Math.min(0x500, pametZac));
+  }
+  const IO_POPIS = { 0xFE: 'periferie – náhodné číslo (čtení)', 0xFF: 'periferie – poslední klávesa', 0xF000: 'konzole – smazat', 0xF001: 'konzole – znak',
+    0xF002: 'konzole – číslo desítkově', 0xF003: 'konzole – šestnáctkově', 0xF004: 'fronta kláves (čtení)', 0xF010: 'časovač – perioda (nižší)',
+    0xF011: 'časovač – perioda (vyšší)', 0xF012: 'časovač – řízení', 0xF013: 'časovač – stav (čtení potvrdí IRQ)' };
+  let pametKurzor = -1;
+  function vykresliPamet() {
+    nastavPametZac();
+    if (pametKurzor < pametZac || pametKurzor >= pametZac + 256) pametKurzor = pametZac;
+    const mel = document.activeElement && document.activeElement.closest && document.activeElement.closest('#pamet td[data-a]');
+    const el = $('pamet');
+    const pcLen = OPS[cpu.mem[cpu.PC]].bytes;
+    let html = '<tr><td class="ad"></td>' + Array.from({ length: 16 }, (_, i) => '<td class="ad' + (i === 8 ? ' mez' : '') + '" style="text-align:center;padding-right:2px">' + i.toString(16).toUpperCase() + '</td>').join('') + '<td></td></tr>';
+    for (let r = 0; r < 16; r++) {
+      const a0 = (pametZac + r * 16) & 0xFFFF;
+      let radek = '<tr><td class="ad">' + h4(a0) + '</td>', asc = '';
+      for (let i = 0; i < 16; i++) {
+        const a = (a0 + i) & 0xFFFF, v = cpu.mem[a];
+        const cl = [];
+        if (v === 0) cl.push('nul');
+        if (v !== snimek[a]) cl.push('zm');
+        if (a >= cpu.PC && a < cpu.PC + pcLen) cl.push('pc');
+        if (a === 0x100 + cpu.SP) cl.push('sp');
+        if (i === 8) cl.push('mez');
+        const io = IO_POPIS[a];
+        if (io) cl.push('io');
+        radek += '<td data-a="' + a + '" tabindex="' + (a === pametKurzor ? 0 : -1) + '"' + (cl.length ? ' class="' + cl.join(' ') + '"' : '') + (io ? ' title="$' + h4(a) + ': ' + io + '"' : '') + '>' + h2(v) + '</td>';
+        asc += v >= 32 && v < 127 ? esc(String.fromCharCode(v)) : '·';
+      }
+      html += radek + '<td class="asc">' + asc + '</td></tr>';
+    }
+    el.innerHTML = html;
+    if (mel) { const n = el.querySelector('td[data-a="' + pametKurzor + '"]'); if (n) n.focus(); }
+    if (document.activeElement !== $('pamAdr')) $('pamAdr').value = '$' + h4(pametZac);
+  }
+  function jdiNaAdresu(t) {
+    try {
+      const v = ASM.vyraz(t.trim().replace(/^0x/i, '$'), preklad ? preklad.symbols : [], cpu.PC);
+      pametZac = (v & 0xFFFF) & 0xFFF0;
+      if (pametZac > 0xFF00) pametZac = 0xFF00;
+      $('pamSled').value = '';
+      vykresliPamet();
+    } catch (e) { toast('Neznámá adresa: ' + e.message, true); }
+  }
+  $('pamAdr').addEventListener('keydown', e => { if (e.key === 'Enter') { jdiNaAdresu($('pamAdr').value); $('pamAdr').blur(); } });
+  $('pamPred').addEventListener('click', () => { $('pamSled').value = ''; pametZac = Math.max(0, pametZac - 0x100); vykresliPamet(); });
+  $('pamDal').addEventListener('click', () => { $('pamSled').value = ''; pametZac = Math.min(0xFF00, pametZac + 0x100); vykresliPamet(); });
+  $('pamSled').addEventListener('change', () => { if ($('pamSled').value === 'disp') pametZac = 0x200; vykresliPamet(); });
+  $('pamet').addEventListener('click', e => {
+    const td = e.target.closest('td[data-a]'); if (!td || td.querySelector('input')) return;
+    pametKurzor = +td.dataset.a;
+    upravBajt(+td.dataset.a);
+  });
+  // klávesnice: šipky posouvají kurzor, Enter / číslice upraví bajt, PageUp/PageDown stránka
+  $('pamet').addEventListener('keydown', e => {
+    const td = e.target.closest('td[data-a]'); if (!td || e.target.tagName === 'INPUT') return;
+    const a = +td.dataset.a;
+    const posun = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -16, ArrowDown: 16, PageUp: -256, PageDown: 256, Home: -(a & 15), End: 15 - (a & 15) }[e.key];
+    if (posun !== undefined) {
+      e.preventDefault();
+      const n = (a + posun) & 0xFFFF;
+      pametKurzor = n;
+      if (n < pametZac || n >= pametZac + 256) {
+        $('pamSled').value = '';
+        pametZac = n < pametZac ? (n & 0xFFF0) : Math.max(0, (n & 0xFFF0) - 0xF0);
+        if (pametZac > 0xFF00) pametZac = 0xFF00;
+      }
+      vykresliPamet();
+      const c = $('pamet').querySelector('td[data-a="' + n + '"]'); if (c) c.focus();
+    } else if (e.key === 'Enter' || /^[0-9a-fA-F]$/.test(e.key)) {
+      e.preventDefault(); upravBajt(a);
+      if (e.key !== 'Enter') { const inp = $('pamet').querySelector('td input'); if (inp) { inp.value = e.key; } }
+    }
+  });
+  function upravBajt(a) {
+    const td = document.querySelector('#pamet td[data-a="' + a + '"]');
+    if (!td) return;
+    pametVyb = a;
+    td.innerHTML = '<input maxlength="2" value="' + h2(cpu.mem[a]) + '" aria-label="Bajt $' + h4(a) + '">';
+    const inp = td.querySelector('input');
+    inp.focus(); inp.select();
+    let hotovo = false;
+    const zapis = (dalsi) => {
+      if (hotovo) return; hotovo = true;
+      const t = inp.value.trim();
+      if (/^[0-9a-fA-F]{1,2}$/.test(t)) {
+        const v = parseInt(t, 16);
+        if (v !== cpu.mem[a]) { cpu.mem[a] = v; if (preklad && a >= 0x200 && a <= 0x5FF) kresliDisplej(true); }
+      }
+      vykresliPamet(); vykresliDisasm(); vykresliWatch();
+      if (dalsi) { const n = (a + dalsi) & 0xFFFF; if (n >= pametZac && n < pametZac + 256) upravBajt(n); }
+    };
+    inp.addEventListener('keydown', e => {
+      if (e.key === 'Enter') { e.preventDefault(); zapis(1); }
+      else if (e.key === 'Tab') { e.preventDefault(); zapis(e.shiftKey ? -1 : 1); }
+      else if (e.key === 'Escape') { hotovo = true; vykresliPamet(); }
+    });
+    inp.addEventListener('input', () => { if (inp.value.length === 2 && /^[0-9a-fA-F]{2}$/.test(inp.value)) zapis(1); });
+    inp.addEventListener('blur', () => zapis(0));
+  }
+
+  function vykresliSymboly() {
+    const el = $('symboly');
+    if (!preklad || !preklad.symbols.length) { el.innerHTML = '<div class="prazdne">Program nemá žádná návěští ani konstanty.</div>'; $('symPocet').textContent = ''; return; }
+    $('symPocet').textContent = preklad.symbols.length + ' ×';
+    el.innerHTML = '<table>' + preklad.symbols.map(s => '<tr tabindex="0" data-v="' + s.value + '" data-r="' + s.line + '"><td>' + esc(s.name) + '</td><td>$' + (s.value > 255 || s.value < 0 ? h4(s.value) : h2(s.value)) +
+      '</td><td class="typ">' + (s.typ === 'navesti' ? 'návěští' : 'konstanta') + ', ř. ' + s.line + '</td></tr>').join('') + '</table>';
+  }
+  $('symboly').addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.closest('tr[data-v]')) { e.preventDefault(); e.target.click(); } });
+  $('symboly').addEventListener('click', e => {
+    const tr = e.target.closest('tr[data-v]'); if (!tr) return;
+    const v = +tr.dataset.v;
+    $('pamSled').value = ''; pametZac = Math.min(0xFF00, (v & 0xFFFF) & 0xFFF0); vykresliPamet();
+    posunNaRadek(+tr.dataset.r);
+  });
+
+  function vykresliLehce() { vykresliRegistry(); vykresliPamet(); vykresliZasobnik(); vykresliWatch(); }
+  function vykresliVse() {
+    vykresliRegistry(); vykresliVyuku(); vykresliDisasm(); vykresliZasobnik(); vykresliWatch(); vykresliPamet(); vykresliHistorii();
+    kresliDisplej(); vykresliKonzoli();
+  }
+
+  // trasovací log: posledních 200 kroků z historie procesoru, klepnutí = vrátit se na ten krok
+  const HIST_RADKU = 200;
+  function vykresliHistorii() {
+    const el = $('historie');
+    const n = Math.min(HIST_RADKU, cpu.historyLength());
+    if (!n) { el.innerHTML = '<div class="prazdne" style="cursor:default">Zatím žádné kroky. Historie pamatuje posledních 10 000 kroků.</div>'; return; }
+    const vol = { illegal: true, symbols: symMapa };
+    let html = '';
+    for (let k = n; k >= 1; k--) {
+      const h = cpu.historyEntry(k);
+      const txt = h.typ ? '→ ' + (h.typ === 2 ? 'NMI' : 'IRQ') : DIS.disasm(a => cpu.mem[a], h.PC, vol).text;
+      html += '<div role="listitem" tabindex="0" data-k="' + k + '" title="Vrátit se o ' + k + ' ' + (k === 1 ? 'krok' : k < 5 ? 'kroky' : 'kroků') + '"' + (h.typ ? ' class="pre"' : '') +
+        '><span class="a">' + h4(h.PC) + '</span><span class="t">' + esc(txt) + '</span><span class="c">' + fmt(h.cycles) + ' c</span>' +
+        '<span class="r">A ' + h2(h.A) + ' X ' + h2(h.X) + ' Y ' + h2(h.Y) + ' P ' + h2(h.P) + ' S ' + h2(h.SP) + '</span></div>';
+    }
+    html += '<div class="ted" role="listitem"><span class="a">' + h4(cpu.PC) + '</span><span class="t">← teď</span><span class="c">' + fmt(cpu.cycles) + ' c</span>' +
+      '<span class="r">A ' + h2(cpu.A) + ' X ' + h2(cpu.X) + ' Y ' + h2(cpu.Y) + ' P ' + h2(cpu.P) + ' S ' + h2(cpu.SP) + '</span></div>';
+    el.innerHTML = html;
+    el.scrollTop = el.scrollHeight;
+  }
+  $('historie').addEventListener('click', e => { const d = e.target.closest('div[data-k]'); if (d) krokZpet(+d.dataset.k); });
+  $('historie').addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.closest('div[data-k]')) { e.preventDefault(); krokZpet(+e.target.dataset.k); } });
+
+  // ===================== DISPLEJ =====================
+  const platno = $('platno'), ctx = platno.getContext('2d', { alpha: false });
+  const posledni = new Int16Array(1024).fill(-1);
+  let meritko = 10;
+  $('paletaMini').innerHTML = PER.PALETA.map((c, i) => '<span style="background:' + c + '" title="' + i + ' ($' + i.toString(16).toUpperCase() + '): ' + PER.NAZVY_BAREV[i] + '"></span>').join('');
+  let velikostKlic = '';
+  function velikostDispleje() {
+    const obal = $('displejObal');
+    const sirka = Math.max(160, Math.min(obal.clientWidth - 8, 384));
+    const dpr = window.devicePixelRatio || 1;
+    const k = Math.max(1, Math.floor(sirka * dpr / 32));
+    const klic = k + '/' + dpr;
+    if (klic === velikostKlic) return;          // beze změny – plátno nemazat
+    velikostKlic = klic;
+    meritko = k;
+    platno.width = platno.height = 32 * k;
+    platno.style.width = platno.style.height = (32 * k / dpr) + 'px';
+    posledni.fill(-1);
+    kresliDisplej(true);
+  }
+  function kresliDisplej(vse) {
+    if (vse) posledni.fill(-1);
+    const k = meritko, m = cpu.mem;
+    for (let i = 0; i < 1024; i++) {
+      const c = m[0x200 + i] & 15;
+      if (posledni[i] === c) continue;
+      posledni[i] = c;
+      ctx.fillStyle = PER.PALETA[c];
+      ctx.fillRect((i & 31) * k, (i >> 5) * k, k, k);
+    }
+  }
+  if (window.ResizeObserver) new ResizeObserver(() => velikostDispleje()).observe($('displejObal'));
+  else window.addEventListener('resize', velikostDispleje);
+  window.addEventListener('resize', () => { if ((window.devicePixelRatio || 1) + '' !== velikostKlic.split('/')[1]) velikostDispleje(); });
+  const disp = $('displej');
+  const KLAVESY = { ArrowUp: 119, ArrowLeft: 97, ArrowDown: 115, ArrowRight: 100, Enter: 13, Backspace: 8, Escape: 27, Tab: 9 };
+  disp.addEventListener('keydown', e => {
+    if (e.ctrlKey || e.metaKey || e.altKey || /^F\d+$/.test(e.key)) return;
+    if (e.key === 'Tab') return;
+    let k = KLAVESY[e.key];
+    if (k === undefined && [...e.key].length === 1) {
+      e.preventDefault();
+      per.pis(e.key);                       // znaky mimo ASCII jako bajty UTF-8
+      $('dispInfo').textContent = 'klávesa „' + e.key + '“ → $FF = $' + h2(cpu.mem[0xFF]);
+      if (!rezim) vykresliPamet();
+      return;
+    }
+    if (k === undefined) return;
+    e.preventDefault();
+    per.stisk(k);
+    $('dispInfo').textContent = 'klávesa „' + e.key + '“ → $FF = $' + h2(k);
+    if (!rezim) vykresliPamet();
+  });
+  disp.addEventListener('mousemove', e => {
+    const r = platno.getBoundingClientRect();
+    const x = Math.floor((e.clientX - r.left) / r.width * 32), y = Math.floor((e.clientY - r.top) / r.height * 32);
+    if (x < 0 || y < 0 || x > 31 || y > 31) return;
+    const a = 0x200 + y * 32 + x, c = cpu.mem[a] & 15;
+    $('dispInfo').textContent = 'x=' + x + ', y=' + y + ' → $' + h4(a) + ' = $' + h2(cpu.mem[a]) + ' (' + PER.NAZVY_BAREV[c] + ')';
+  });
+  function dispPopis() {
+    const akt = document.activeElement === disp;
+    $('dispInfo').textContent = akt ? '⌨ klávesnice aktivní – klávesy jdou na $FF' : 'klepněte na displej pro ovládání klávesnicí · $0200–$05FF';
+    $('dispInfo').classList.toggle('aktivni', akt);
+  }
+  disp.addEventListener('mouseleave', dispPopis);
+  disp.addEventListener('focus', dispPopis);
+  disp.addEventListener('blur', dispPopis);
+  document.querySelector('.dpad').addEventListener('click', e => {
+    const b = e.target.closest('button[data-k]'); if (!b) return;
+    per.stisk(+b.dataset.k);
+    $('dispInfo').textContent = 'klávesa „' + b.title + '“ → $FF = $' + h2(+b.dataset.k);
+  });
+  // psaní z mobilní klávesnice: skryté pole, každý znak jde programu
+  const psani = $('psaniVstup');
+  $('btnPsat').addEventListener('click', () => { psani.focus(); $('dispInfo').textContent = '⌨ pište – znaky jdou do fronty $F004 a na $FF'; $('dispInfo').classList.add('aktivni'); });
+  psani.addEventListener('input', () => { if (psani.value) { per.pis(psani.value); $('dispInfo').textContent = 'napsáno „' + psani.value + '“ → fronta $F004'; psani.value = ''; } });
+  psani.addEventListener('keydown', e => {
+    const k = { Enter: 13, Backspace: 8 }[e.key];
+    if (k !== undefined) { e.preventDefault(); per.stisk(k); $('dispInfo').textContent = 'klávesa „' + e.key + '“ → $FF = $' + h2(k); }
+  });
+  psani.addEventListener('blur', dispPopis);
+  /** Textový souhrn displeje pro čtečky obrazovky. */
+  function popisDispleje() {
+    const pocty = new Array(16).fill(0); let x0 = 32, y0 = 32, x1 = -1, y1 = -1;
+    for (let i = 0; i < 1024; i++) {
+      const c = cpu.mem[0x200 + i] & 15; pocty[c]++;
+      if (c) { const x = i & 31, y = i >> 5; x0 = Math.min(x0, x); y0 = Math.min(y0, y); x1 = Math.max(x1, x); y1 = Math.max(y1, y); }
+    }
+    if (x1 < 0) return 'Displej je celý černý.';
+    const barvy = pocty.map((n, c) => ({ n, c })).filter(o => o.c && o.n).sort((a, b) => b.n - a.n);
+    return 'Rozsvíceno ' + (1024 - pocty[0]) + ' z 1024 pixelů v oblasti x ' + x0 + '–' + x1 + ', y ' + y0 + '–' + y1 + '. Barvy: ' +
+      barvy.slice(0, 6).map(o => PER.NAZVY_BAREV[o.c] + ' ' + o.n + ' px').join(', ') + (barvy.length > 6 ? ' a další' : '') + '.';
+  }
+  $('btnPopis').addEventListener('click', () => { $('dispPopis').textContent = popisDispleje(); });
+
+  function vykresliKonzoli() {
+    if (!konzoleZmena) return;
+    konzoleZmena = false;
+    const el = $('konzole');
+    const dole = el.scrollTop + el.clientHeight >= el.scrollHeight - 4;
+    el.textContent = per.text;
+    if (dole) el.scrollTop = el.scrollHeight;
+  }
+  $('btnSmazKon').addEventListener('click', () => { per.text = ''; konzoleZmena = true; vykresliKonzoli(); });
+
+  // ===================== VOLBY =====================
+  function ulozNast() { ls.zapis('nastaveni', nast); }
+  $('optVyuka').checked = nast.vyuka; $('optBrk').checked = nast.brk; $('optSmycka').checked = nast.smycka; $('optIllegal').checked = nast.illegal;
+  $('optVyuka').addEventListener('change', () => { nast.vyuka = $('optVyuka').checked; ulozNast(); vykresliVyuku(); });
+  $('optBrk').addEventListener('change', () => { nast.brk = cpu.brkStops = $('optBrk').checked; ulozNast(); });
+  $('optSmycka').addEventListener('change', () => { nast.smycka = $('optSmycka').checked; ulozNast(); });
+  $('optIllegal').addEventListener('change', () => {
+    nast.illegal = cpu.illegal = $('optIllegal').checked; ulozNast();
+    prekladZdroj = null;    // vynutí nový překlad
+    stav('Nedokumentované opkódy ' + (nast.illegal ? 'zapnuty' : 'vypnuty') + ' – přeložte znovu.', 'pozor');
+    vykresliDisasm();
+  });
+  document.addEventListener('click', e => { const d = $('nastaveni'); if (d.open && !d.contains(e.target)) d.open = false; });
+
+  // ===================== PROGRAMY, SOUBORY, SDÍLENÍ =====================
+  function naplnProgramy() {
+    const p = ls.cti('programy', {}), z = ls.cti('zalohy', []) || [];
+    const jmena = Object.keys(p).sort((a, b) => a.localeCompare(b, 'cs'));
+    $('programy').innerHTML = '<option value="">📁 Uložené programy (' + jmena.length + ')</option>' +
+      jmena.map(n => '<option value="p:' + esc(n) + '"' + (n === nazevProgramu ? ' selected' : '') + '>' + esc(n) + '</option>').join('') +
+      (z.length ? '<optgroup label="Zálohy (automaticky, posledních ' + MAX_ZALOH + ')">' + z.map((x, i) => '<option value="z:' + i + '">↺ ' +
+        esc(new Date(x.cas).toLocaleString('cs-CZ', { day: 'numeric', month: 'numeric', hour: '2-digit', minute: '2-digit' })) + ' – ' + esc(x.nazev || '') + '</option>').join('') + '</optgroup>' : '');
+  }
+  $('programy').addEventListener('change', async () => {
+    const v = $('programy').value;
+    if (!v) return;
+    let kod, nazev;
+    if (v.startsWith('z:')) { const z = (ls.cti('zalohy', []) || [])[+v.slice(2)]; kod = z && z.kod; nazev = ''; }
+    else { const p = ls.cti('programy', {})[v.slice(2)]; kod = p && p.kod; nazev = v.slice(2); }
+    if (kod === undefined) return;
+    if (!(await smimPrepsat())) { naplnProgramy(); return; }
+    zavriUlohu(true);
+    nastavText(kod, nazev, false, v.startsWith('z:') ? '' : kod); naplnProgramy();
+    preloz(true); nastavPCRadek(true);
+  });
+  $('btnUloz').addEventListener('click', async () => {
+    const jm = DLG ? await DLG.zeptej('Název programu', nazevProgramu || (ulohaAkt ? 'Úloha – ' + ulohaAkt.nazev : 'Můj program')) : 'Můj program';
+    if (!jm || !jm.trim()) return;
+    const p = ls.cti('programy', {});
+    p[jm.trim()] = { kod: ed.value, cas: Date.now() };
+    if (!ls.zapis('programy', p)) return;
+    nazevProgramu = jm.trim(); nactenyText = ed.value;
+    naplnProgramy(); ulozRozpracovany();
+    toast('Uloženo jako „' + nazevProgramu + '“.');
+  });
+  $('btnSmaz').addEventListener('click', async () => {
+    const v = $('programy').value, jm = v && v.startsWith('p:') ? v.slice(2) : nazevProgramu;
+    const p = ls.cti('programy', {});
+    if (!jm || !p[jm]) { toast('Vyberte uložený program v seznamu.', true); return; }
+    if (DLG && !(await DLG.potvrd('Smazat uložený program „' + jm + '“?'))) return;
+    zalohuj(p[jm].kod);
+    delete p[jm]; ls.zapis('programy', p);
+    if (nazevProgramu === jm) { nazevProgramu = ''; }
+    naplnProgramy(); ulozRozpracovany();
+  });
+  $('btnNovy').addEventListener('click', async () => {
+    if (!(await smimPrepsat())) return;
+    zavriUlohu(true);
+    nastavText('; Nový program\n        *= $0600\n\nstart:  \n        brk\n', '');
+    naplnProgramy();
+    jdiNaRadek(4, false); ed.setSelectionRange(ed.value.indexOf('start:') + 8, ed.value.indexOf('start:') + 8);
+  });
+  $('btnImport').addEventListener('click', () => $('soubor').click());
+  // binárka do paměti na zadanou adresu (přepíše se dalším překladem nebo resetem)
+  $('btnBinImport').addEventListener('click', () => $('souborBin').click());
+  $('souborBin').addEventListener('change', async () => {
+    const f = $('souborBin').files[0]; $('souborBin').value = '';
+    if (!f) return;
+    if (f.size > 65536) { toast('Binárka je větší než 64 KiB.', true); return; }
+    const odp = DLG ? await DLG.zeptej('Na jakou adresu nahrát „' + f.name + '“ (' + fmt(f.size) + ' B)?', '$0600') : '$0600';
+    if (odp === null || odp === undefined) return;
+    let adr;
+    try { adr = ASM.vyraz(String(odp).trim(), preklad ? preklad.symbols : [], cpu.PC); } catch (e) { toast('Neplatná adresa: ' + e.message, true); return; }
+    if (adr < 0 || adr > 0xFFFF) { toast('Adresa musí být $0000–$FFFF.', true); return; }
+    const data = new Uint8Array(await f.arrayBuffer());
+    const n = Math.min(data.length, 0x10000 - adr);
+    zastav();
+    cpu.mem.set(data.subarray(0, n), adr);
+    snimek = cpu.mem.slice(); cpu.PC = adr; cpu.halted = false;
+    $('pamSled').value = ''; pametZac = adr & 0xFFF0;
+    nastavPCRadek(false); vykresliVse(); kresliDisplej(true);
+    stav('Nahráno ' + fmt(n) + ' B na $' + h4(adr) + '–$' + h4(adr + n - 1) + ', PC = $' + h4(adr) + (n < data.length ? ' (zbytek se nevešel do paměti)' : '') + '. Překlad nebo Reset binárku přepíše.', 'ok');
+  });
+  $('soubor').addEventListener('change', async () => {
+    const f = $('soubor').files[0]; $('soubor').value = '';
+    if (!f) return;
+    if (f.size > 2e6) { toast('Soubor je příliš velký.', true); return; }
+    const t = await f.text();
+    if (!(await smimPrepsat())) return;
+    zavriUlohu(true);
+    nastavText(t, '', false, t);
+    naplnProgramy(); preloz(true); nastavPCRadek(true);
+  });
+  function stahni(data, jmeno, typ) {
+    const url = URL.createObjectURL(new Blob([data], { type: typ }));
+    const a = document.createElement('a'); a.href = url; a.download = jmeno; document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 2000);
+  }
+  const jmenoSouboru = () => (nazevProgramu || 'program').replace(/[^\p{L}\p{N}_-]+/gu, '_').slice(0, 60) || 'program';
+  $('btnExport').addEventListener('click', () => stahni(ed.value, jmenoSouboru() + '.asm', 'text/plain;charset=utf-8'));
+  $('btnBin').addEventListener('click', () => {
+    if (!pripravBeh()) return;
+    const seg = preklad.segments;
+    if (!seg.length) { toast('Program je prázdný.', true); return; }
+    // úsek od segmentu se startem do konce souvislé části (mezery < 256 B se vyplní nulami)
+    let i = seg.findIndex(s => preklad.start >= s.start && preklad.start <= s.end); if (i < 0) i = 0;
+    let od = seg[i].start, doo = seg[i].end;
+    for (let j = i + 1; j < seg.length && seg[j].start - doo <= 256; j++) doo = seg[j].end;
+    const data = preklad.mem.slice(od, doo + 1);
+    stahni(data, jmenoSouboru() + '_' + h4(od) + '.bin', 'application/octet-stream');
+    stav('Binárka: $' + h4(od) + '–$' + h4(doo) + ' (' + fmt(data.length) + ' B) – načíst na adresu $' + h4(od) + (seg.length > 1 && doo < seg[seg.length - 1].end ? '; vzdálené úseky (např. vektory) nejsou zahrnuty' : '') + '.');
+  });
+  $('btnSdilej').addEventListener('click', async () => {
+    try {
+      const kod = await SDIL.zakoduj(ed.value);
+      const url = location.href.replace(/#.*$/, '') + '#kod=' + kod;
+      let zkop = false;
+      try { await navigator.clipboard.writeText(url); zkop = true; } catch (e) { zkop = false; }
+      if (zkop) toast('Odkaz s programem zkopírován do schránky (' + fmt(url.length) + ' znaků).');
+      else if (DLG) await DLG.zeptej('Zkopírujte odkaz:', url);
+      if (url.length > 8000) toast('Odkaz je dlouhý – některé aplikace ho mohou zkrátit.', true);
+    } catch (e) { toast('Sdílení selhalo: ' + e.message, true); }
+  });
+  $('btnVypis').addEventListener('click', () => {
+    if (!pripravBeh()) return;
+    $('vypisText').textContent = 'Adr   Bajty        Řádek Zdroj\n' + preklad.listing + '\n\nSymboly:\n' +
+      preklad.symbols.map(s => s.name.padEnd(24) + ' $' + h4(s.value) + '  ' + (s.typ === 'navesti' ? 'návěští' : 'konstanta')).join('\n');
+    $('nastaveni').open = false;
+    const d = $('oknoVypis');
+    if (typeof d.showModal === 'function') d.showModal(); else d.setAttribute('open', '');
+    $('vypisText').focus();
+  });
+  const zavriVypis = () => { const d = $('oknoVypis'); if (typeof d.close === 'function') d.close(); else d.removeAttribute('open'); $('btnBeh').focus(); };
+  $('vypisZavrit').addEventListener('click', zavriVypis);
+  $('oknoVypis').addEventListener('click', e => { if (e.target === $('oknoVypis')) zavriVypis(); });
+  $('vypisStahni').addEventListener('click', () => stahni($('vypisText').textContent, jmenoSouboru() + '.lst', 'text/plain;charset=utf-8'));
+
+  // ===================== LEKCE A ÚLOHY =====================
+  function vykresliLekce() {
+    $('ukazky').innerHTML = LEKCE.UKAZKY.map(u => '<div class="lk"><h3>' + esc(u.nazev) + '</h3><div class="meta">' + esc(u.uroven) + ' · ' + u.kod.split('\n').length + ' řádků</div>' +
+      '<p>' + esc(u.popis) + '</p><div class="tl"><button class="male hlavni" data-ukazka="' + u.id + '">Otevřít v editoru</button>' +
+      (u.spustit ? '<button class="male" data-ukazka="' + u.id + '" data-spustit="1" title="Otevřít a hned spustit rychlostí ' + esc(RYCH[u.spustit].t) + '">▶ Spustit</button>' : '') + '</div></div>').join('');
+    const post = ls.cti('ulohy', {});
+    const spl = LEKCE.ULOHY.filter(u => post[u.id] && post[u.id].splneno).length;
+    $('postup').innerHTML = 'Napište program, který splní zadání, a klepněte na „Zkontrolovat“ – kontrola ho spustí v čistém procesoru s několika vstupy a porovná paměť. ' +
+      'Program musí skončit instrukcí <code>BRK</code>. Splněno <b>' + spl + ' z ' + LEKCE.ULOHY.length + '</b>.';
+    $('ulohy').innerHTML = LEKCE.ULOHY.map(u => {
+      const p = post[u.id] || {};
+      return '<div class="lk"><h3>' + esc(u.nazev) + '</h3><div class="meta">obtížnost ' + '★'.repeat(u.uroven) + '☆'.repeat(3 - u.uroven) +
+        (p.splneno ? ' · <span class="splneno">✔ splněno</span>' : p.kod ? ' · rozpracováno' : '') + '</div>' +
+        '<p>' + u.zadani + '</p><div class="tl"><button class="male hlavni" data-uloha="' + u.id + '">' + (p.kod ? 'Pokračovat' : 'Začít') + '</button>' +
+        (p.kod ? '<button class="male" data-znovu="' + u.id + '">Začít znovu</button>' : '') + '</div></div>';
+    }).join('');
+  }
+  $('ukazky').addEventListener('click', async e => {
+    const b = e.target.closest('button[data-ukazka]'); if (!b) return;
+    const u = LEKCE.UKAZKY.find(x => x.id === b.dataset.ukazka);
+    if (!(await smimPrepsat())) return;
+    zavriUlohu(true);
+    nastavText(u.kod, '');
+    naplnProgramy();
+    prepniStranku('prac'); prepniPodkartu('editor');
+    if (preloz(true)) { nastavPCRadek(true); stav('Ukázka „' + u.nazev + '“ přeložena. Krokujte (Alt+N) nebo spusťte (Ctrl+Enter).', 'ok'); }
+    if (b.dataset.spustit && preklad) {
+      const rc = RYCH[nast.rychlost];
+      if (rc.ips && rc.ips <= 1000) { nast.rychlost = u.spustit; $('rychlost').value = u.spustit; ulozNast(); oznacChipy(); }
+      ls.zapis('nabidnutoPomalu', true, true);
+      spust();
+    }
+  });
+  $('ulohy').addEventListener('click', async e => {
+    const b = e.target.closest('button[data-uloha],button[data-znovu]'); if (!b) return;
+    const id = b.dataset.uloha || b.dataset.znovu;
+    const u = LEKCE.ULOHY.find(x => x.id === id);
+    if (b.dataset.znovu && DLG && !(await DLG.potvrd('Začít úlohu „' + u.nazev + '“ znovu? Vaše dosavadní řešení se přepíše šablonou (zůstane v zálohách).'))) return;
+    if (!(await smimPrepsat())) return;
+    const p = ls.cti('ulohy', {});
+    if (b.dataset.znovu && p[id] && p[id].kod) { const ul = ulohaAkt; ulohaAkt = null; zalohuj(p[id].kod); ulohaAkt = ul; }
+    const kod = b.dataset.znovu ? u.sablona : ((p[id] && p[id].kod) || u.sablona);
+    otevriUlohu(u, kod);
+  });
+  function otevriUlohu(u, kod, zachovat) {
+    ulohaAkt = u;
+    nastavText(kod, '', zachovat);
+    $('ulohaNazev').textContent = '🎯 Úloha: ' + u.nazev;
+    $('ulohaZadani').innerHTML = u.zadani;
+    $('ulohaVysl').innerHTML = '';
+    $('ulohaDalsi').hidden = true;
+    $('ulohaPanel').style.display = 'block';
+    naplnProgramy();
+    prepniStranku('prac'); prepniPodkartu('editor');
+    ulozRozpracovany();
+    if (zachovat) return;
+    stav('Úloha „' + u.nazev + '“ – napište řešení a klepněte na „Zkontrolovat“.');
+    const r = ed.value.split('\n'); const i = r.findIndex(x => /^\s*$/.test(x));
+    jdiNaRadek(i >= 0 ? i + 1 : r.length, false);
+  }
+  function zavriUlohu(tise) {
+    if (!ulohaAkt) return;
+    ulohaAkt = null; $('ulohaPanel').style.display = 'none';
+    if (!tise) ulozRozpracovany();
+  }
+  $('ulohaZavrit').addEventListener('click', () => zavriUlohu(false));
+  $('ulohaNapoveda').addEventListener('click', () => { if (ulohaAkt) toast('💡 ' + ulohaAkt.napoveda); });
+  $('ulohaOver').addEventListener('click', () => {
+    if (!ulohaAkt) return;
+    const r = ASM.assemble(ed.value, { illegal: nast.illegal });
+    if (!r.ok) { preloz(false); $('ulohaVysl').innerHTML = '<div class="ne">Program nejde přeložit – opravte chyby.</div>'; return; }
+    let v;
+    try { v = LEKCE.over(ulohaAkt, r, { CPU8, PER }, { illegal: nast.illegal }); }
+    catch (e) { $('ulohaVysl').innerHTML = '<div class="ne">Kontrola selhala: ' + esc(e.message) + '</div>'; return; }
+    $('ulohaVysl').innerHTML = v.vysledky.map(x => '<div class="' + (x.ok ? 'ok' : 'ne') + '">' + (x.ok ? '✔ ' : '✘ ') + esc(x.popis || 'test') +
+      (x.ok ? ' (' + fmt(x.cykly) + ' cyklů)' : ' – ' + esc(x.chyba)) + '</div>').join('') +
+      (v.ok ? '<div class="ok"><b>🎉 Úloha splněna!</b></div>' : '');
+    if (v.ok) {
+      const p = ls.cti('ulohy', {}); p[ulohaAkt.id] = Object.assign(p[ulohaAkt.id] || {}, { kod: ed.value, splneno: true }); ls.zapis('ulohy', p);
+      toast('🎉 Úloha „' + ulohaAkt.nazev + '“ splněna!');
+      vykresliLekce();
+      const dalsi = dalsiUloha();
+      $('ulohaDalsi').hidden = !dalsi;
+      if (dalsi) { $('ulohaDalsi').textContent = 'Další úloha: ' + dalsi.nazev + ' →'; $('ulohaDalsi').focus(); }
+    }
+    if (!jePrelozeno()) preloz(true);
+  });
+
+  // ===================== PŘÍRUČKA =====================
+  const PRIKLAD = { imp: '', acc: 'A', imm: '#$44', zp: '$44', zpx: '$44,X', zpy: '$44,Y', abs: '$4400', absx: '$4400,X', absy: '$4400,Y', ind: '($4400)', indx: '($44,X)', indy: '($44),Y', rel: 'navesti' };
+  function vykresliPrirucku() {
+    $('tabRezimy').innerHTML = '<tr><th>Režim</th><th>Zápis</th><th>Bajty</th><th>Popis</th></tr>' + Object.keys(VYUKA.REZIM_TEXT).map(k => {
+      const r = VYUKA.REZIM_TEXT[k];
+      return '<tr><td>' + esc(r.n) + '</td><td><code>' + (k === 'imp' ? 'CLC' : k === 'acc' ? 'ASL A' : k === 'rel' ? 'BNE navesti' : k === 'ind' ? 'JMP ($4400)' : 'LDA ' + PRIKLAD[k]).replace('LDA $44,Y', 'LDX $44,Y') + '</code></td><td>' + CPU8.DELKA[k] + '</td><td>' + esc(r.p) + '</td></tr>';
+    }).join('');
+    $('refSkupina').innerHTML += Object.keys(VYUKA.SKUPINY).map(k => '<option value="' + k + '">' + VYUKA.SKUPINY[k] + '</option>').join('');
+    vykresliRefTab();
+    // matice
+    let m = '<tr><th></th>' + Array.from({ length: 16 }, (_, i) => '<th>x' + i.toString(16).toUpperCase() + '</th>').join('') + '</tr>';
+    for (let r = 0; r < 16; r++) {
+      m += '<tr><th>' + r.toString(16).toUpperCase() + 'x</th>';
+      for (let c = 0; c < 16; c++) {
+        const o = OPS[r * 16 + c], I = VYUKA.INSTR[o.m];
+        m += '<td data-op="' + (r * 16 + c) + '" tabindex="' + (r + c === 0 ? 0 : -1) + '" class="g-' + (o.ill ? 'nedok' : I.s) + '" title="$' + h2(o.op) + ' ' + o.m + ' ' + VYUKA.REZIM_TEXT[o.mode].n + '"><b>' + o.m + '</b><small>' +
+          (o.mode === 'imp' ? '' : PRIKLAD[o.mode].replace('navesti', 'rel')) + '</small><small> ' + o.cyc + (o.px ? '+' : '') + '</small></td>';
+      }
+      m += '</tr>';
+    }
+    $('matice').innerHTML = m;
+    $('legenda').innerHTML = Object.keys(VYUKA.SKUPINY).map(k => '<span><i class="g-' + k + '"></i>' + VYUKA.SKUPINY[k] + '</span>').join('');
+  }
+  function priznakyHTML(f) {
+    return '<span class="fl" aria-label="' + (f ? 'mění ' + f.split('').join(', ') : 'příznaky nemění') + '">' +
+      'NVDIZC'.split('').map(x => f.includes(x) ? '<span class="on">' + x + '</span>' : '<span aria-hidden="true">·</span>').join('') + '</span>';
+  }
+  function cyklyText(o) {
+    if (VYUKA.INSTR[o.m].s === 'vetev') return '2 (+1/+2)';
+    return o.cyc + (o.px ? '+' : '');
+  }
+  function vykresliRefTab() {
+    const q = $('refHledat').value.trim().toLowerCase().replace(/^\$/, '');
+    const sk = $('refSkupina').value, ill = $('refIllegal').checked;
+    const mapa = VYUKA.prehled(ill);
+    let n = 0;
+    const radky = Object.keys(mapa).sort().filter(mn => {
+      const I = VYUKA.INSTR[mn];
+      if (sk && I.s !== sk) return false;
+      if (!ill && mapa[mn].every(o => o.ill)) return false;
+      if (!q) return true;
+      return mn.toLowerCase().includes(q) || I.n.toLowerCase().includes(q) || I.p.toLowerCase().includes(q) ||
+        mapa[mn].some(o => h2(o.op).toLowerCase() === q);
+    }).map(mn => {
+      n++;
+      const I = VYUKA.INSTR[mn];
+      const rez = mapa[mn].slice().sort((a, b) => CPU8.REZIMY.indexOf(a.mode) - CPU8.REZIMY.indexOf(b.mode)).map(o =>
+        '<tr><td class="r">' + VYUKA.REZIM_TEXT[o.mode].n + '</td><td>' + (mn + ' ' + PRIKLAD[o.mode]).trim() + '</td><td>$' + h2(o.op) + (o.ill ? '*' : '') + '</td><td>' + o.bytes + ' B</td><td>' + cyklyText(o) + '</td></tr>').join('');
+      return '<tr><td class="mn">' + mn + '</td><td><b>' + esc(I.n) + '</b><br>' + esc(I.p) + '<br><code>' + esc(I.o) + '</code></td><td>' + priznakyHTML(I.f) + '</td><td><table class="rez">' + rez + '</table></td></tr>';
+    });
+    $('refTab').innerHTML = '<tr><th>Instrukce</th><th>Popis a operace</th><th>Příznaky</th><th>Adresní režimy · opkód · bajty · cykly</th></tr>' + radky.join('');
+    $('refPocet').textContent = n + ' instrukcí';
+  }
+  ['refHledat', 'refSkupina', 'refIllegal'].forEach(id => $(id).addEventListener('input', vykresliRefTab));
+  $('matice').addEventListener('keydown', e => {
+    const td = e.target.closest('td[data-op]'); if (!td) return;
+    const op = +td.dataset.op;
+    const posun = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -16, ArrowDown: 16, Home: -(op & 15), End: 15 - (op & 15) }[e.key];
+    if (posun !== undefined) {
+      e.preventDefault();
+      const n = Math.max(0, Math.min(255, op + posun));
+      const c = $('matice').querySelector('td[data-op="' + n + '"]');
+      td.tabIndex = -1; c.tabIndex = 0; c.focus();
+    } else if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); td.click(); }
+  });
+  $('matice').addEventListener('click', e => {
+    const td = e.target.closest('td[data-op]'); if (!td) return;
+    document.querySelectorAll('#matice td.vyb').forEach(x => x.classList.remove('vyb'));
+    td.classList.add('vyb');
+    const o = OPS[+td.dataset.op], I = VYUKA.INSTR[o.m];
+    $('detailOp').innerHTML = '<b>$' + h2(o.op) + ' ' + o.m + '</b> ' + (o.mode !== 'imp' ? '<code>' + esc(o.m + ' ' + PRIKLAD[o.mode]) + '</code> ' : '') + '– ' + esc(I.n) +
+      (o.ill ? ' <i>(nedokumentovaná)</i>' : '') + '. ' + esc(I.p) + ' Režim: ' + VYUKA.REZIM_TEXT[o.mode].n + ', ' + o.bytes + ' B, ' + cyklyText(o) + ' cyklů. Příznaky: ' + priznakyHTML(I.f) + '.';
+  });
+
+
+  // ===================== ERGONOMIE: doplňování, kontext, rozdělovače, mobilní psaní =====================
+  const jeTextovePole = el => !!(el && (el.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(el.tagName)) && !(el.type === 'checkbox' || el.type === 'button'));
+  const mobil = () => window.matchMedia && window.matchMedia('(max-width: 900px)').matches;
+  function levenshtein(a, b) {
+    a = a.toUpperCase(); b = b.toUpperCase();
+    const d = Array.from({ length: a.length + 1 }, (_, i) => [i]);
+    for (let j = 1; j <= b.length; j++) d[0][j] = j;
+    for (let i = 1; i <= a.length; i++) for (let j = 1; j <= b.length; j++)
+      d[i][j] = Math.min(d[i - 1][j] + 1, d[i][j - 1] + 1, d[i - 1][j - 1] + (a[i - 1] === b[j - 1] ? 0 : 1),
+        i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1] ? d[i - 2][j - 2] + 1 : Infinity);   // prohození sousedů = 1
+    return d[a.length][b.length];
+  }
+  /** Nejpodobnější kandidát (Damerau–Levenshtein); při shodě má přednost stejné první písmeno. */
+  const nejblizsi = (slovo, kandidati, max) => {
+    let nej = null, nd = max + 1;
+    for (const k of kandidati) {
+      const dd = levenshtein(slovo, k) - (k[0].toUpperCase() === slovo[0].toUpperCase() ? 0.5 : 0);
+      if (dd < nd) { nd = dd; nej = k; }
+    }
+    return nej;
+  };
+  /** Návrh opravy chyby: { z, na } – text na řádku, který se nahradí. */
+  function navrhOpravy(e) {
+    let m = /Neznámá instrukce „([^“]+)“/.exec(e.msg);
+    if (m) {
+      const kand = Object.keys(nast.illegal ? ASM.MAPA_VSE : ASM.MAPA_DOK);
+      if (m[1].length < 3 && kand.filter(k => k.startsWith(m[1].toUpperCase())).length > 1) return null;   // nedopsaný začátek – nic nenavrhovat
+      const n = nejblizsi(m[1], kand, 2);
+      if (n) return { z: m[1], na: m[1] === m[1].toLowerCase() ? n.toLowerCase() : n, slovo: true };
+    }
+    m = /Nedefinovaný symbol „([^“]+)“/.exec(e.msg);
+    if (m) {
+      const jm = [...new Set(aktualniSymboly().map(x => x.jmeno || x.name))];
+      const presne = jm.find(x => x.toLowerCase() === m[1].toLowerCase());
+      const n = presne || nejblizsi(m[1], jm, Math.min(2, Math.floor(m[1].length / 3)));
+      if (n && n !== m[1]) return { z: m[1], na: n, slovo: true };
+    }
+    m = /„([^“]+)“[^?]*myslel jste ([^?]+)\?/.exec(e.msg);
+    if (m) return { z: m[1].replace(/,X$/, ''), na: m[2].replace(/,X\)$/, ',X)'), presne: true, cely: m[1] };
+    return null;
+  }
+  function pouzijNavrh(n) {
+    if (!n) return;
+    const radky = ed.value.split('\n');
+    const t = radky[n.line - 1]; if (t === undefined) return;
+    const kom = indexKomentare(t), kod = kom >= 0 ? t.slice(0, kom) : t;
+    let novy = null;
+    if (n.slovo) {
+      const re = new RegExp('(^|[^\\w.@])' + n.z.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '(?![\\w])');
+      const mm = re.exec(kod);
+      if (mm) { const i = mm.index + mm[1].length; novy = t.slice(0, i) + n.na + t.slice(i + n.z.length); }
+    } else {
+      // „($10)“ → „($10),Y“ / „($10),X“ → „($10,X)“ (velikost písmen se ignoruje)
+      const hl = (n.cely || n.z).toLowerCase(), i = kod.toLowerCase().indexOf(hl);
+      if (i >= 0) novy = t.slice(0, i) + n.na + t.slice(i + hl.length);
+    }
+    if (novy === null) { toast('Text „' + n.z + '“ na řádku ' + n.line + ' už nenacházím.', true); return; }
+    let pos = 0; for (let i = 0; i < n.line - 1; i++) pos += radky[i].length + 1;
+    ed.focus(); ed.setSelectionRange(pos, pos + t.length);
+    vloz(novy, pos, pos + t.length);
+    ed.setSelectionRange(pos, pos);
+    zivaKontrola();
+    stav('Opraveno na řádku ' + n.line + ': „' + n.z + '“ → „' + n.na + '“.', 'ok');
+  }
+
+  /** Symboly k aktuálnímu textu: z překladu, jinak z živé kontroly. */
+  function aktualniSymboly() {
+    if (jePrelozeno()) return preklad.symbols;
+    if (zivaPlatna && symbolyZive.length) return symbolyZive;
+    return preklad ? preklad.symbols : [];
+  }
+  /** Najde symbol podle jména (globální, nebo místní nejblíž nad řádkem r). */
+  function najdiSymbol(jmeno, r) {
+    const seznam = aktualniSymboly();
+    let s = seznam.find(x => x.name === jmeno);
+    if (!s && /^[.@]/.test(jmeno)) {
+      const kand = seznam.filter(x => x.jmeno === jmeno);
+      s = kand.filter(x => !r || x.line <= r + 200).sort((a, b) => Math.abs(a.line - (r || 0)) - Math.abs(b.line - (r || 0)))[0];
+    }
+    return s || null;
+  }
+  /** Skok na symbol: řádek definice v editoru a adresa v paměti. */
+  function jdiNaSymbol(jmeno, co) {
+    const s = najdiSymbol(jmeno, radekKurzoru());
+    if (!s) { toast('Symbol „' + jmeno + '“ neznám – přeložte program.', true); return; }
+    co = co || { pamet: true, definice: true };
+    if (co.pamet && s.value >= 0 && s.value <= 0xFFFF) {
+      $('pamSled').value = ''; pametZac = Math.min(0xFF00, s.value & 0xFFF0); pametKurzor = s.value; vykresliPamet(); oznacChipyPam();
+    }
+    if (co.definice) {
+      const radky = ed.value.split('\n'); let pos = 0; for (let i = 0; i < s.line - 1 && i < radky.length; i++) pos += radky[i].length + 1;
+      ed.setSelectionRange(pos, pos); posunNaRadek(s.line);
+    }
+    if (mobil() && co.pamet && !co.definice) prepniPodkartu('pamet');
+    stav('„' + s.name + '“ = $' + h4(s.value) + ' – definice na řádku ' + s.line + (co.pamet ? ', paměť ukazuje $' + h4(s.value) : '') + '.');
+  }
+
+  /** Slovo kolem pozice v textu: { slovo, zac, kon, radek } */
+  function slovoNa(pos) {
+    const v = ed.value;
+    let a = pos, b = pos;
+    const zn = c => /[\w.@$%]/.test(c);
+    while (a > 0 && zn(v[a - 1])) a--;
+    while (b < v.length && zn(v[b])) b++;
+    const radek = v.slice(0, a).split('\n').length;
+    return { slovo: v.slice(a, b), zac: a, kon: b, radek };
+  }
+  const REZ_KRATKE = { imp: '', acc: 'A', imm: '#', zp: 'zp', zpx: 'zp,X', zpy: 'zp,Y', abs: 'abs', absx: 'abs,X', absy: 'abs,Y', ind: '(abs)', indx: '(zp,X)', indy: '(zp),Y', rel: 'rel' };
+  const POPIS_DIR = { org: 'nastaví adresu dalšího kódu', byte: 'vloží bajty (čísla i „řetězce“)', word: 'vloží 16bitová slova (nižší bajt první)', text: 'vloží text',
+    asciiz: 'vloží text zakončený nulou', res: 'rezervuje n bajtů (volitelně s výplní)', equ: 'definuje konstantu', define: 'definuje konstantu (easy6502)', align: 'zarovná adresu na násobek n', end: 'ukončí překlad' };
+  /** Informace o slově pro kontextový řádek: { html, text } nebo null. */
+  function infoSlova(w) {
+    if (!w.slovo) return null;
+    const sl = w.slovo, vel = sl.toUpperCase();
+    if (/^[A-Za-z]{3}$/.test(sl) && VYUKA.INSTR[vel] && MNEM.has(vel)) {
+      const I = VYUKA.INSTR[vel];
+      const rez = OPS.filter(o => o.m === vel && (!o.ill || nast.illegal)).map(o => (REZ_KRATKE[o.mode] || '–') + ' ' + o.cyc + (o.px ? '+' : '') + 'c');
+      const txt = vel + ' – ' + I.n + '. ' + I.p + ' Příznaky: ' + (I.f || 'nemění') + '. Režimy a cykly: ' + rez.join(', ');
+      return { text: txt, html: '<b>' + vel + '</b> – ' + esc(I.n) + ' · <code>' + esc(I.o) + '</code> · příznaky <b>' + (I.f || '–') + '</b><br>' + esc(rez.join(' · ')) +
+        ' <button data-akce="prirucka" data-m="' + vel + '">Příručka</button>' };
+    }
+    const dir = ASM.DIREKTIVY[sl.toLowerCase()];
+    if (dir) return { text: sl + ' – ' + POPIS_DIR[dir], html: '<b>' + esc(sl) + '</b> – direktiva: ' + esc(POPIS_DIR[dir] || '') };
+    if (/^(\$[0-9A-Fa-f]+|%[01]+|\d+)$/.test(sl)) {
+      const v = sl[0] === '$' ? parseInt(sl.slice(1), 16) : sl[0] === '%' ? parseInt(sl.slice(1), 2) : parseInt(sl, 10);
+      if (!(v >= 0 && v <= 0xFFFF)) return null;
+      const io = IO_POPIS[v];
+      const t = '$' + (v > 255 ? h4(v) : h2(v)) + ' = ' + v + (v < 256 ? ' = %' + v.toString(2).padStart(8, '0') + (v > 127 ? ' (se znaménkem ' + (v - 256) + ')' : '') : '') + (io ? ' · ' + io : '') +
+        (v >= 0x200 && v <= 0x5FF ? ' · displej x=' + ((v - 0x200) & 31) + ', y=' + ((v - 0x200) >> 5) : '');
+      return { text: t, html: esc(t) + ' <button data-akce="pamet" data-v="' + v + '">Paměť</button>' };
+    }
+    const s = najdiSymbol(sl, w.radek);
+    if (s) {
+      const t = s.name + ' = $' + (s.value > 255 ? h4(s.value) : h2(s.value)) + ' (' + s.value + ') · ' + (s.typ === 'navesti' ? 'návěští' : 'konstanta') + ', řádek ' + s.line;
+      return { text: t + ' – Ctrl+klik skočí na definici', html: '<b>' + esc(s.name) + '</b> = <code>$' + (s.value > 255 ? h4(s.value) : h2(s.value)) + '</code> (' + s.value + ') · ' +
+        (s.typ === 'navesti' ? 'návěští' : 'konstanta') + ', ř. ' + s.line + (s.value >= 0 && s.value <= 0xFFFF ? ', v paměti $' + h2(cpu.mem[s.value & 0xFFFF]) : '') +
+        ' <button data-akce="def" data-s="' + esc(s.name) + '">Definice</button><button data-akce="pamet" data-v="' + s.value + '">Paměť</button><button data-akce="sledovat" data-s="' + esc(s.name) + '">Sledovat</button>' };
+    }
+    return null;
+  }
+  let kontextKlic = '';
+  function aktualizujKontext() {
+    if (ed.selectionStart !== ed.selectionEnd) return;
+    const w = slovoNa(ed.selectionStart);
+    const klic = w.slovo + '@' + w.radek + (jePrelozeno() ? 'p' : '');
+    if (klic === kontextKlic) return;
+    kontextKlic = klic;
+    const inf = infoSlova(w);
+    $('kontext').innerHTML = inf ? inf.html : '<span>Tip: Ctrl+Mezerník doplní instrukci nebo symbol, Ctrl+klik na symbol skočí na definici, „?“ ukáže zkratky.</span>';
+  }
+  ['keyup', 'click', 'focus'].forEach(t => ed.addEventListener(t, () => setTimeout(aktualizujKontext, 0)));
+  $('kontext').addEventListener('click', e => {
+    const b = e.target.closest('button[data-akce]'); if (!b) return;
+    const a = b.dataset.akce;
+    if (a === 'def') jdiNaSymbol(b.dataset.s, { definice: true });
+    else if (a === 'pamet') { const v = +b.dataset.v; $('pamSled').value = ''; pametZac = Math.min(0xFF00, v & 0xFFF0); pametKurzor = v; vykresliPamet(); oznacChipyPam(); if (mobil()) prepniPodkartu('pamet'); }
+    else if (a === 'sledovat') { watch.push({ v: b.dataset.s, stop: false }); ulozWatch(); toast('„' + b.dataset.s + '“ přidáno do Sledovaných.'); }
+    else if (a === 'prirucka') { prepniStranku('ref'); $('refHledat').value = b.dataset.m; vykresliRefTab(); if ($('refTab').scrollIntoView) $('refTab').scrollIntoView({ block: 'start' }); }
+  });
+  // Ctrl+klik (Cmd+klik) na symbol = definice + paměť
+  ed.addEventListener('click', e => {
+    if (!(e.ctrlKey || e.metaKey)) return;
+    const w = slovoNa(ed.selectionStart);
+    if (najdiSymbol(w.slovo, w.radek)) { e.preventDefault(); jdiNaSymbol(w.slovo, { pamet: true, definice: true }); }
+  });
+  // nápověda při najetí myší (title textarey)
+  let sirkaZnaku = 0;
+  function zmerZnak() {
+    const sp = document.createElement('span'); sp.textContent = 'M'.repeat(40);
+    sp.style.cssText = 'position:absolute;visibility:hidden;white-space:pre;font:' + getComputedStyle(ed).font;
+    document.body.appendChild(sp); sirkaZnaku = sp.getBoundingClientRect().width / 40; sp.remove();
+  }
+  /** Pozice v textu podle vizuálního sloupce (tabulátor = do násobku 8). */
+  function indexZeSloupce(radekText, sloupec) {
+    let v = 0;
+    for (let i = 0; i < radekText.length; i++) { const sirka = radekText[i] === '\t' ? 8 - (v % 8) : 1; if (v + sirka > sloupec) return i; v += sirka; }
+    return radekText.length;
+  }
+  function sloupecZIndexu(radekText, idx) {
+    let v = 0; for (let i = 0; i < idx; i++) v += radekText[i] === '\t' ? 8 - (v % 8) : 1; return v;
+  }
+  let hoverPlan = 0;
+  ed.addEventListener('mousemove', e => {
+    if (hoverPlan) return;
+    hoverPlan = setTimeout(() => {
+      hoverPlan = 0;
+      if (!sirkaZnaku) zmerZnak();
+      const r = ed.getBoundingClientRect();
+      const y = e.clientY - r.top + ed.scrollTop - PAD, x = e.clientX - r.left + ed.scrollLeft - 10;
+      const radky = ed.value.split('\n'), ri = Math.floor(y / LH);
+      if (ri < 0 || ri >= radky.length || x < 0) { ed.title = ''; return; }
+      let pos = 0; for (let i = 0; i < ri; i++) pos += radky[i].length + 1;
+      const idx = indexZeSloupce(radky[ri], Math.floor(x / sirkaZnaku));
+      if (idx >= radky[ri].length) { ed.title = ''; return; }
+      const inf = infoSlova(slovoNa(pos + idx));
+      ed.title = inf ? inf.text : '';
+    }, 120);
+  });
+
+  // ---------- doplňování (Ctrl+Mezerník nebo po 2 znacích; Tab/Enter přijme, Esc zavře) ----------
+  const dopl = { otevreno: false, polozky: [], vyb: 0, zac: 0 };
+  const dEl = $('doplnovani');
+  function kandidati(slovo, instrukcniPozice) {
+    const q = slovo.toLowerCase(), out = [];
+    if (instrukcniPozice) {
+      Object.keys(nast.illegal ? ASM.MAPA_VSE : ASM.MAPA_DOK).sort().forEach(m => { if (m.toLowerCase().startsWith(q)) out.push({ t: slovo && slovo === slovo.toLowerCase() ? m.toLowerCase() : m, p: (VYUKA.INSTR[m] || {}).n || '', druh: 'mn' }); });
+      ['.org', '.byte', '.word', '.text', '.asciiz', '.res', '.align', '.equ', '.end', 'define', 'dcb'].forEach(d => { if (d.startsWith(q) || d.slice(1).startsWith(q)) out.push({ t: d, p: POPIS_DIR[ASM.DIREKTIVY[d]] || '', druh: 'dir' }); });
+    }
+    const sym = aktualniSymboly();
+    const videno = new Set();
+    sym.forEach(s => {
+      const jm = /^[.@]/.test(s.jmeno || '') ? s.jmeno : s.name;
+      if (videno.has(jm) || !jm.toLowerCase().startsWith(q) || jm === slovo) return;
+      videno.add(jm);
+      out.push({ t: jm, p: '$' + (s.value > 255 ? h4(s.value) : h2(s.value)) + (s.typ === 'navesti' ? ' návěští' : ' konst.'), druh: 'sym' });
+    });
+    return out.slice(0, 14);
+  }
+  function otevriDoplnovani(vynuceno) {
+    const pos = ed.selectionStart;
+    if (pos !== ed.selectionEnd) return zavriDoplnovani();
+    const v = ed.value, zacR = zacatekRadku(v, pos);
+    const pred = v.slice(zacR, pos);
+    if (indexKomentare(pred) >= 0) return zavriDoplnovani();
+    const m = /[A-Za-z_.@][\w.@]*$/.exec(pred);
+    const slovo = m ? m[0] : '';
+    if (!vynuceno && slovo.length < 2) return zavriDoplnovani();
+    const predSlovem = pred.slice(0, pred.length - slovo.length);
+    const instrukcniPozice = /^\s*([A-Za-z_][\w]*:\s*)?$/.test(predSlovem) || /^[A-Za-z_]\w*\s+$/.test(predSlovem) && !MNEM.has(predSlovem.trim().toUpperCase());
+    const pol = kandidati(slovo, instrukcniPozice);
+    if (!pol.length || (!vynuceno && pol.length === 1 && pol[0].t.toLowerCase() === slovo.toLowerCase())) return zavriDoplnovani();
+    dopl.otevreno = true; dopl.polozky = pol; dopl.vyb = 0; dopl.zac = pos - slovo.length;
+    dEl.innerHTML = pol.map((p, i) => '<li role="option" id="dpl' + i + '" data-i="' + i + '" aria-selected="' + (i === 0) + '"><span>' + esc(p.t) + '</span><small>' + esc(p.p) + '</small></li>').join('');
+    // pozice u kurzoru
+    if (!sirkaZnaku) zmerZnak();
+    const radek = v.slice(0, pos).split('\n').length - 1;
+    const sl = sloupecZIndexu(v.slice(zacR, pos), pred.length - slovo.length);
+    const sirka = $('edOblast').clientWidth;
+    let left = 10 + sl * sirkaZnaku - ed.scrollLeft;
+    left = Math.max(4, Math.min(left, sirka - 230));
+    let top = PAD + (radek + 1) * LH - ed.scrollTop + 2;
+    if (top + 200 > ed.clientHeight && top > 230) top = top - LH - 4 - Math.min(220, pol.length * 24 + 8);
+    dEl.style.left = left + 'px'; dEl.style.top = top + 'px';
+    dEl.hidden = false;
+    ed.setAttribute('aria-expanded', 'true'); ed.setAttribute('aria-activedescendant', 'dpl0');
+  }
+  function zavriDoplnovani() {
+    if (!dopl.otevreno && dEl.hidden) return;
+    const bylo = dopl.otevreno;
+    dopl.otevreno = false; dEl.hidden = true; dEl.innerHTML = '';
+    if (bylo && psaniRadek) setTimeout(obnovOdlozene, 0);
+    ed.setAttribute('aria-expanded', 'false'); ed.removeAttribute('aria-activedescendant');
+  }
+  function vyberDoplneni(i) {
+    dopl.vyb = (i + dopl.polozky.length) % dopl.polozky.length;
+    [...dEl.children].forEach((li, k) => li.setAttribute('aria-selected', k === dopl.vyb));
+    const li = dEl.children[dopl.vyb]; if (li) { if (li.scrollIntoView) li.scrollIntoView({ block: 'nearest' }); ed.setAttribute('aria-activedescendant', li.id); }
+  }
+  function prijmiDoplneni(i) {
+    const p = dopl.polozky[i === undefined ? dopl.vyb : i]; if (!p) return;
+    const pos = ed.selectionStart, v = ed.value;
+    let kon = pos; while (kon < v.length && /[\w.@]/.test(v[kon])) kon++;
+    let t = p.t;
+    if ((p.druh === 'mn' || p.druh === 'dir') && v[kon] !== ' ' && v[kon] !== '\t') t += ' ';
+    zavriDoplnovani();
+    ed.setSelectionRange(dopl.zac, kon);
+    vloz(t, dopl.zac, kon);
+    aktualizujKontext();
+  }
+  // zachytávací fáze: běží před odsazováním Tabem
+  ed.addEventListener('keydown', e => {
+    if (e.key === ' ' && (e.ctrlKey || e.metaKey) && !e.altKey) { e.preventDefault(); otevriDoplnovani(true); return; }
+    if (!dopl.otevreno) return;
+    const k = e.key;
+    if (k === 'ArrowDown' || k === 'ArrowUp') { e.preventDefault(); e.stopImmediatePropagation(); vyberDoplneni(dopl.vyb + (k === 'ArrowDown' ? 1 : -1)); }
+    else if ((k === 'Enter' || k === 'Tab') && !e.shiftKey && !e.ctrlKey && !e.altKey) { e.preventDefault(); e.stopImmediatePropagation(); prijmiDoplneni(); }
+    else if (k === 'Escape') { e.preventDefault(); e.stopImmediatePropagation(); zavriDoplnovani(); }
+    else if (k === 'ArrowLeft' || k === 'ArrowRight' || k === 'Home' || k === 'End' || k === 'PageUp' || k === 'PageDown') zavriDoplnovani();
+  }, true);
+  ed.addEventListener('input', e => {
+    if (e.inputType && !/^insert/.test(e.inputType) && !/^delete/.test(e.inputType)) return zavriDoplnovani();
+    if (dopl.otevreno || (e.inputType === 'insertText' && e.data && /[\w.@]/.test(e.data))) otevriDoplnovani(false);
+    else zavriDoplnovani();
+  });
+  ed.addEventListener('blur', () => setTimeout(zavriDoplnovani, 150));
+  ed.addEventListener('scroll', zavriDoplnovani);
+  dEl.addEventListener('mousedown', e => { e.preventDefault(); const li = e.target.closest('li[data-i]'); if (li) prijmiDoplneni(+li.dataset.i); });
+
+  // ---------- rozdělovače sloupců (desktop) ----------
+  const VYCHOZI_SL = [1.12, 0.92, 1];
+  function nastavSloupce(sl) {
+    const pr = $('prac');
+    if (!sl) { ['--s1', '--s2', '--s3'].forEach(v => pr.style.removeProperty(v)); return; }
+    sl.forEach((f, i) => pr.style.setProperty('--s' + (i + 1), f.toFixed(3) + 'fr'));
+  }
+  function sirkySloupcu() { return ['sl1', 'sl2', 'sl3'].map(c => document.querySelector('.' + c).getBoundingClientRect().width); }
+  function posunRozdelovac(i, dx) {
+    const w = sirkySloupcu(), celk = w[0] + w[1] + w[2], min = Math.max(220, celk * 0.15);
+    const a = i - 1, b = i;
+    let wa = w[a] + dx, wb = w[b] - dx;
+    if (wa < min) { wb -= min - wa; wa = min; }
+    if (wb < min) { wa -= min - wb; wb = min; }
+    w[a] = wa; w[b] = wb;
+    const sl = w.map(x => x / celk * 3);
+    nastavSloupce(sl);
+    return sl;
+  }
+  document.querySelectorAll('.rozdelovac').forEach(r => {
+    const i = +r.dataset.i;
+    r.addEventListener('pointerdown', e => {
+      e.preventDefault(); r.setPointerCapture(e.pointerId); r.classList.add('tah');
+      let x0 = e.clientX, posl = null;
+      const pohyb = ev => { posl = posunRozdelovac(i, ev.clientX - x0); x0 = ev.clientX; synchronizuj(); };
+      const konec = () => {
+        r.classList.remove('tah'); r.removeEventListener('pointermove', pohyb); r.removeEventListener('pointerup', konec); r.removeEventListener('pointercancel', konec);
+        if (posl) ls.zapis('sloupce', posl, true);
+        velikostDispleje();
+      };
+      r.addEventListener('pointermove', pohyb); r.addEventListener('pointerup', konec); r.addEventListener('pointercancel', konec);
+    });
+    r.addEventListener('dblclick', () => { nastavSloupce(null); ls.zapis('sloupce', null, true); velikostDispleje(); toast('Výchozí šířky sloupců.'); });
+    r.addEventListener('keydown', e => {
+      const krok = { ArrowLeft: -24, ArrowRight: 24 }[e.key];
+      if (krok) { e.preventDefault(); ls.zapis('sloupce', posunRozdelovac(i, e.shiftKey ? krok * 4 : krok), true); velikostDispleje(); }
+      else if (e.key === 'Home' || e.key === 'Enter') { e.preventDefault(); nastavSloupce(null); ls.zapis('sloupce', null, true); velikostDispleje(); }
+    });
+  });
+
+  // ---------- mobilní lišta pro psaní assembleru ----------
+  const ASM_KLAV = ['⇥', '#', '$', ',', '(', ')', ':', ';', 'LDA', 'STA', 'LDX', 'LDY', 'INX', 'DEX', 'CMP', 'CPX', 'BNE', 'BEQ', 'BCC', 'BCS', 'ADC', 'SBC', 'CLC', 'SEC', 'JMP', 'JSR', 'RTS', 'BRK', 'AND', 'ORA', 'ASL', 'LSR', '⏺'];
+  $('asmKlav').innerHTML = ASM_KLAV.map(k => '<button type="button" class="' + (k.length === 1 && k !== '⇥' && k !== '⏺' ? 'zn' : '') + '" data-k="' + esc(k) + '" aria-label="' +
+    (k === '⇥' ? 'odsazení' : k === '⏺' ? 'zarážka na řádku' : k.length === 1 ? 'znak ' + k : 'instrukce ' + k) + '">' + esc(k) + '</button>').join('');
+  $('asmKlav').addEventListener('pointerdown', e => { if (e.target.closest('button')) e.preventDefault(); });   // fokus zůstane v editoru
+  $('asmKlav').addEventListener('click', e => {
+    const b = e.target.closest('button[data-k]'); if (!b) return;
+    const k = b.dataset.k, pos = ed.selectionStart, v = ed.value, zacR = zacatekRadku(v, pos);
+    if (k === '⏺') { prepniBP(radekKurzoru()); return; }
+    if (k === '⇥') { const sl = sloupecZIndexu(v.slice(zacR, pos), pos - zacR); vloz(' '.repeat(8 - (sl % 8)), pos, ed.selectionEnd); return; }
+    let t = k.length > 1 ? k.toLowerCase() + ' ' : k;
+    if (k.length > 1 && /^\s*$/.test(v.slice(zacR, pos)) && pos - zacR < 8) t = ' '.repeat(8 - (pos - zacR)) + t;
+    vloz(t, pos, ed.selectionEnd);
+  });
+  function umistiAsmKlav() {
+    const vv = window.visualViewport, el = $('asmKlav');
+    if (!vv) return;
+    const dole = window.innerHeight - vv.height - vv.offsetTop;
+    el.style.transform = dole > 0 ? 'translateY(' + (-dole) + 'px)' : '';
+  }
+  ed.addEventListener('focus', () => { if (mobil()) { $('asmKlav').hidden = false; document.body.classList.add('pise'); umistiAsmKlav(); } });
+  ed.addEventListener('blur', () => setTimeout(() => { if (document.activeElement !== ed) { $('asmKlav').hidden = true; document.body.classList.remove('pise'); } }, 120));
+  if (window.visualViewport) { visualViewport.addEventListener('resize', umistiAsmKlav); visualViewport.addEventListener('scroll', umistiAsmKlav); }
+
+  // ---------- rychlé volby (chipy), zapamatovaný stav ----------
+  function oznacChipy() { document.querySelectorAll('#chipyRychl .chip').forEach(c => c.setAttribute('aria-pressed', c.dataset.r === nast.rychlost)); }
+  $('chipyRychl').addEventListener('click', e => {
+    const c = e.target.closest('.chip'); if (!c) return;
+    nast.rychlost = c.dataset.r; $('rychlost').value = c.dataset.r; ulozNast(); akum = 0; oznacChipy();
+  });
+  $('rychlost').addEventListener('change', oznacChipy);
+  function oznacChipyPam() { document.querySelectorAll('#chipyPam .chip').forEach(c => c.setAttribute('aria-pressed', c.dataset.s === $('pamSled').value)); }
+  $('chipyPam').addEventListener('click', e => {
+    const c = e.target.closest('.chip'); if (!c) return;
+    const sl = $('pamSled').value === c.dataset.s && c.dataset.s === 'pc' ? '' : c.dataset.s;   // PC se dá vypnout
+    $('pamSled').value = sl;
+    if (sl === 'disp') pametZac = 0x200;
+    vykresliPamet(); oznacChipyPam(); ulozPametStav();
+  });
+  const ulozPametStav = () => ls.zapis('pametStav', { zac: pametZac, sled: $('pamSled').value }, true);
+  ['pamPred', 'pamDal'].forEach(id => $(id).addEventListener('click', () => { oznacChipyPam(); ulozPametStav(); }));
+  $('pamAdr').addEventListener('keydown', e => {
+    if (e.key === 'Enter') setTimeout(() => { oznacChipyPam(); ulozPametStav(); }, 0);
+    const krok = { ArrowUp: -16, ArrowDown: 16, PageUp: -256, PageDown: 256 }[e.key];
+    if (krok) {
+      e.preventDefault();
+      $('pamSled').value = ''; pametZac = Math.max(0, Math.min(0xFF00, pametZac + (e.shiftKey ? krok * 16 : krok)));
+      vykresliPamet(); oznacChipyPam(); ulozPametStav();
+      $('pamAdr').value = '$' + h4(pametZac); $('pamAdr').select();
+    }
+  });
+  $('pamAdr').addEventListener('focus', () => $('pamAdr').select());
+  // registry: šipky ↑/↓ (Shift = ×16), výběr celého obsahu při fokusu
+  REG.forEach(r => {
+    const inp = $('in' + r.k);
+    inp.setAttribute('inputmode', 'text');
+    inp.addEventListener('focus', () => setTimeout(() => inp.select(), 0));
+    inp.addEventListener('keydown', e => {
+      const d = { ArrowUp: 1, ArrowDown: -1 }[e.key]; if (!d) return;
+      e.preventDefault();
+      const max = r.w === 4 ? 0xFFFF : 0xFF;
+      cpu[r.k] = (cpu[r.k] + d * (e.shiftKey ? 16 : 1)) & max;
+      if (r.k === 'PC') nastavPCRadek(true);
+      vykresliVse(); inp.value = '$' + (r.w === 4 ? h4(cpu[r.k]) : h2(cpu[r.k])); inp.select();
+    });
+  });
+
+  // ---------- přehled zkratek „?“ ----------
+  function otevriZkratky() {
+    $('zkratkyObsah').innerHTML = '<div class="tab-obal">' + $('tabZkratky').outerHTML.replace(' id="tabZkratky"', '') + '</div>' +
+      '<p class="prazdne" style="margin-top:8px">Další: Alt+T zkontroluje úlohu · Ctrl+Mezerník doplní instrukci nebo symbol · Ctrl+klik na symbol = definice a paměť · ' +
+      'v paměti šipky a PgUp/PgDn · rozdělovače sloupců jdou táhnout i šipkami (dvojklik = výchozí) · „?“ tento přehled.</p>';
+    const d = $('oknoZkratky');
+    if (typeof d.showModal === 'function') d.showModal(); else d.setAttribute('open', '');
+    $('zkratkyZavrit').focus();
+  }
+  const zavriZkratky = () => { const d = $('oknoZkratky'); if (typeof d.close === 'function') d.close(); else d.removeAttribute('open'); };
+  $('zkratkyZavrit').addEventListener('click', zavriZkratky);
+  $('oknoZkratky').addEventListener('click', e => { if (e.target === $('oknoZkratky')) zavriZkratky(); });
+  $('btnZkratky').addEventListener('click', () => { $('nastaveni').open = false; otevriZkratky(); });
+
+  // ---------- výchozí nastavení ----------
+  $('btnVychozi').addEventListener('click', async () => {
+    if (DLG && !(await DLG.potvrd('Vrátit rychlost, volby, rozložení panelů a zobrazení paměti na výchozí? Programy, zálohy ani postup v úlohách se nemění.'))) return;
+    Object.assign(nast, { vyuka: true, brk: true, smycka: true, illegal: false, rychlost: '1M' }); ulozNast();
+    cpu.brkStops = true; cpu.illegal = false;
+    $('optVyuka').checked = true; $('optBrk').checked = true; $('optSmycka').checked = true; $('optIllegal').checked = false;
+    $('rychlost').value = '1M'; oznacChipy();
+    nastavSloupce(null); ls.zapis('sloupce', null, true);
+    $('pamSled').value = ''; ls.zapis('pametStav', null, true); oznacChipyPam();
+    ls.zapis('nabidnutoPomalu', false, true);
+    prekladZdroj = null; velikostDispleje(); vykresliVse();
+    $('nastaveni').open = false;
+    toast('Nastavení vráceno na výchozí.');
+  });
+
+  // ---------- běh: automatický fokus displeje / přepnutí na displej ----------
+  /** Používá program klávesnici ($FF, $F004) nebo displej ($0200–$05FF)? (podle operandů přeložených instrukcí) */
+  function pouzitiPeriferii() {
+    const vys = { klavesnice: false, displej: false };
+    if (!preklad) return vys;
+    for (let a = 0; a < 0xFFFE; a++) {
+      if (preklad.kodStart[a] !== 1) continue;
+      const o = OPS[preklad.mem[a]];
+      if (o.mode === 'zp' || o.mode === 'zpx' || o.mode === 'indy' || o.mode === 'indx') { if (preklad.mem[a + 1] === 0xFF) vys.klavesnice = true; }
+      else if (o.mode === 'abs' || o.mode === 'absx' || o.mode === 'absy') {
+        const w = preklad.mem[a + 1] | (preklad.mem[a + 2] << 8);
+        if (w === 0xFF || w === 0xF004) vys.klavesnice = true;
+        if (w >= 0x200 && w <= 0x5FF) vys.displej = true;
+      }
+      if (o.mode === 'indy' || o.mode === 'indx') vys.displej = true;
+    }
+    return vys;
+  }
+  function priSpusteni() {
+    const p = pouzitiPeriferii();
+    if (mobil()) { if ((p.klavesnice || p.displej) && $('prac').dataset.m !== 'displej') prepniPodkartu('displej'); }
+    else if (p.klavesnice && !jeTextovePole(document.activeElement)) { disp.focus({ preventScroll: true }); dispPopis(); }
+    else if (p.klavesnice) { disp.focus({ preventScroll: true }); dispPopis(); }
+  }
+  function dalsiUloha() {
+    const post = ls.cti('ulohy', {});
+    const i = LEKCE.ULOHY.findIndex(u => ulohaAkt && u.id === ulohaAkt.id);
+    for (let k = 1; k <= LEKCE.ULOHY.length; k++) { const u = LEKCE.ULOHY[(i + k) % LEKCE.ULOHY.length]; if (!(post[u.id] && post[u.id].splneno)) return u; }
+    return null;
+  }
+  $('ulohaDalsi').addEventListener('click', async () => {
+    const u = dalsiUloha(); if (!u) return;
+    const p = ls.cti('ulohy', {});
+    otevriUloha_(u, (p[u.id] && p[u.id].kod) || u.sablona);
+  });
+  const otevriUloha_ = (u, kod) => otevriUlohu(u, kod);
+
+  // ===================== KARTY, ZKRATKY =====================
+  function prepniStranku(id) {
+    document.querySelectorAll('.karty-hl button').forEach(b => { const a = b.dataset.str === id; b.classList.toggle('akt', a); b.setAttribute('aria-selected', a); b.tabIndex = a ? 0 : -1; });
+    document.querySelectorAll('.stranka').forEach(s => s.classList.toggle('akt', s.id === 'str-' + id));
+    if (id === 'lekce') vykresliLekce();
+    if (id === 'prac') { velikostDispleje(); synchronizuj(); }
+    ls.zapis('karta', id, true);
+  }
+  function prepniPodkartu(m) {
+    $('prac').dataset.m = m;
+    document.querySelectorAll('.podkarty button').forEach(b => { const a = b.dataset.m === m; b.classList.toggle('akt', a); b.setAttribute('aria-selected', a); b.tabIndex = a ? 0 : -1; });
+    $('prac').setAttribute('aria-labelledby', 'pk-' + m);
+    if (m === 'displej') velikostDispleje();
+    if (m === 'editor') synchronizuj();
+    ls.zapis('podkarta', m, true);
+  }
+  document.querySelector('.karty-hl').addEventListener('click', e => { const b = e.target.closest('button[data-str]'); if (b) prepniStranku(b.dataset.str); });
+  document.querySelector('.podkarty').addEventListener('click', e => { const b = e.target.closest('button[data-m]'); if (b) prepniPodkartu(b.dataset.m); });
+  // vzor tablist: šipky, Home, End přepínají a přesouvají fokus
+  function klavesyKaret(sel, atr, prepni) {
+    document.querySelector(sel).addEventListener('keydown', e => {
+      const tl = [...document.querySelectorAll(sel + ' [role="tab"]')];
+      const i = tl.indexOf(document.activeElement); if (i < 0) return;
+      const j = { ArrowRight: i + 1, ArrowLeft: i - 1, Home: 0, End: tl.length - 1 }[e.key];
+      if (j === undefined) return;
+      e.preventDefault();
+      const b = tl[(j + tl.length) % tl.length];
+      prepni(b.dataset[atr]); b.focus();
+    });
+  }
+  klavesyKaret('.karty-hl', 'str', prepniStranku);
+  klavesyKaret('.podkarty', 'm', prepniPodkartu);
+
+  /**
+   * Klávesové zkratky. Bez kolizí s prohlížečem: Ctrl+Enter, Alt+písmeno (podle e.code, funguje i na Macu).
+   * Funkční klávesy F5–F11 jen s fokusem v pracovišti (editor, displej, panely), jinak je nechá prohlížeči.
+   */
+  function prepniBPZkratka() { if (document.activeElement === ed) prepniBP(radekKurzoru()); else if (pcRadek > 0) prepniBP(pcRadek); }
+  // Alt+písmeno: rozhoduje napsané písmeno (česká QWERTZ má Z a Y prohozené proti fyzické poloze);
+  // když Alt dá jiný znak (Option na Macu), použije se fyzická klávesa
+  const altKlic = e => /^[a-z]$/i.test(e.key) ? 'Key' + e.key.toUpperCase() : e.code;
+  document.addEventListener('keydown', e => {
+    // podržení klávesy opakuje jen krokovací akce
+    if (e.repeat && !['KeyN', 'KeyO', 'KeyZ', 'F8', 'F10', 'F11'].includes(e.altKey ? altKlic(e) : e.key)) return;
+    if (e.target && e.target.closest && e.target.closest('dialog, .dlg-okno')) return;
+    const prac = $('str-prac').classList.contains('akt');
+    if (e.key === '?' && !e.ctrlKey && !e.altKey && !e.metaKey && !jeTextovePole(e.target)) { e.preventDefault(); otevriZkratky(); return; }
+    if (e.key === 'Enter' && (e.ctrlKey || e.metaKey) && !e.altKey) {
+      e.preventDefault();
+      if (e.shiftKey) { if (preloz(false)) nastavPCRadek(true); }
+      else { if (!prac) prepniStranku('prac'); spust(); }
+      return;
+    }
+    if (!prac) return;
+    if (e.altKey && !e.ctrlKey && !e.metaKey) {
+      const akce = { KeyN: krok, KeyO: krokPres, KeyU: krokVen, KeyZ: () => krokZpet(1), KeyR: reset, KeyK: bezKeKurzoru, KeyP: prepniBPZkratka,
+        KeyT: () => { if (ulohaAkt) $('ulohaOver').click(); } }[altKlic(e)];
+      if (!akce) return;
+      e.preventDefault(); akce();
+      return;
+    }
+    if (!/^F\d+$/.test(e.key) || e.ctrlKey || e.altKey || e.metaKey) return;
+    const a = document.activeElement;
+    if (!a || a === document.body || !$('str-prac').contains(a)) return;   // F5 apod. mimo pracoviště patří prohlížeči
+    const akce = {
+      F5: spust, F6: reset, F8: () => krokZpet(1), F10: krokPres, F11: e.shiftKey ? krokVen : krok, F9: prepniBPZkratka,
+    }[e.key];
+    if (!akce) return;
+    e.preventDefault();
+    akce();
+  });
+
+  // ===================== START =====================
+  async function start() {
+    const ulozenaKarta = ls.cti('karta', 'prac'), ulozenaPodkarta = ls.cti('podkarta', 'editor');
+    vykresliPrirucku();
+    const akt = ls.cti('aktualni', null);
+    let kod = null, nazev = '';
+    const m = /[#&]kod=([A-Za-z0-9_-]+)/.exec(location.hash);
+    if (m) {
+      try {
+        const vys = await SDIL.dekodujBezpecne(m[1]);
+        if (vys.velky && DLG && !(await DLG.potvrd('Program v odkazu je velký (' + fmt(vys.text.length / 1024) + ' KiB). Opravdu ho načíst?'))) throw new Error('Načtení zrušeno');
+        kod = vys.text;
+        if (akt && akt.kod && akt.kod !== kod) zalohuj(akt.kod);
+        nazev = 'Sdílený program';
+        try { history.replaceState(null, '', location.href.replace(/#.*$/, '')); } catch (e) { /* nevadí */ }
+        setTimeout(() => toast('Načten program ze sdíleného odkazu.'), 300);
+      } catch (e) {
+        const zprava = e instanceof SDIL.SdileniChyba || /zrušeno/.test(e.message) ? e.message : 'Odkaz je poškozený nebo neúplný.';
+        setTimeout(() => toast('Sdílený program nejde načíst: ' + zprava, true), 300);
+        try { history.replaceState(null, '', location.href.replace(/#.*$/, '')); } catch (e2) { /* nevadí */ }
+        kod = null;
+      }
+    }
+    let hotovo = false;
+    if (kod === null && akt && typeof akt.kod === 'string') {
+      kod = akt.kod; nazev = akt.nazev || '';
+      const u = akt.uloha && LEKCE.ULOHY.find(x => x.id === akt.uloha);
+      if (u) { otevriUlohu(u, kod, true); hotovo = true; }
+      else { nastavText(kod, nazev, true, typeof akt.nacteno === 'string' ? akt.nacteno : ''); hotovo = true; }
+    }
+    if (!hotovo) nastavText(kod === null ? LEKCE.UKAZKY[0].kod : kod, kod === null ? '' : nazev, false);
+    naplnProgramy();
+    // zapamatované rozložení a zobrazení
+    const sl = ls.cti('sloupce', null);
+    if (Array.isArray(sl) && sl.length === 3 && sl.every(x => x > 0.2 && x < 3)) nastavSloupce(sl);
+    const ps = ls.cti('pametStav', null);
+    if (ps && typeof ps.zac === 'number') { pametZac = Math.max(0, Math.min(0xFF00, ps.zac & 0xFFF0)); $('pamSled').value = ['', 'pc', 'sp', 'zp', 'disp'].includes(ps.sled) ? ps.sled : ''; }
+    oznacChipy(); oznacChipyPam();
+    if (['editor', 'stav', 'pamet', 'displej'].includes(ulozenaPodkarta)) prepniPodkartu(ulozenaPodkarta);
+    if (['prac', 'lekce', 'ref', 'napoveda'].includes(ulozenaKarta) && !m) prepniStranku(ulozenaKarta);
+    velikostDispleje();
+    aktualizujWP();
+    if (preloz(true)) { nastavPCRadek(false); stav('Připraveno. Krok: Alt+N (F11), spustit: Ctrl+Enter (F5).'); }
+    vykresliGutter();
+    vykresliVse();
+    zivaKontrola(); vykresliChyby();
+    aktualizujKontext();
+  }
+  start();
+})();
+</script>
+</body>
+</html>

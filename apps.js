@@ -1504,6 +1504,11 @@ const KATALOG_SEKCE = [
         ]
       },
       {
+        "soubor": "obsah/schodiste.html",
+        "nazev": "🪜 Návrh schodiště",
+        "tagy": ["schody", "schodiště", "ČSN 73 4130", "stupně", "kosé stupně", "točité", "vřetenové", "schodnice", "podchodná výška", "stropní otvor", "zábradlí", "DXF", "rodinný dům", "tesařina"]
+      },
+      {
         "soubor": "obsah/rafter_spacing_calc.html",
         "nazev": "📐 Rozteč krokví / trámků",
         "tagy": [
@@ -1649,6 +1654,11 @@ const KATALOG_SEKCE = [
         "tagy": ["fotovoltaika", "FVE", "solár", "výroba elektřiny", "návratnost", "PVGIS", "energie"]
       },
       {
+        "soubor": "obsah/tarif_spot.html",
+        "nazev": "⚡ Fixní, nebo spotový tarif?",
+        "tagy": ["elektřina", "spot", "spotová cena", "OTE", "fixace", "distribuční sazba", "ERÚ", "TDD", "energie", "cena elektřiny"]
+      },
+      {
         "soubor": "obsah/offgrid_baterie.html",
         "nazev": "🔋 Ostrovní systém",
         "tagy": ["off-grid", "baterie", "LiFePO4", "měnič", "solární panel", "MPPT", "chata", "průřez kabelu"]
@@ -1657,6 +1667,11 @@ const KATALOG_SEKCE = [
         "soubor": "obsah/logic_gates.html",
         "nazev": "🔲 Simulátor logických hradel",
         "tagy": ["logika", "hradla", "digitální obvody", "sčítačka", "klopný obvod", "pravdivostní tabulka", "elektronika"]
+      },
+      {
+        "soubor": "obsah/cpu8.html",
+        "nazev": "🧮 CPU 6502 – emulátor a assembler",
+        "tagy": ["6502", "procesor", "assembler", "emulátor", "výuka", "programování", "retro", "C64", "NES", "8bit"]
       }
     ]
   },
