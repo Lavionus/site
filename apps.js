@@ -1338,6 +1338,11 @@ const KATALOG_SEKCE = [
         "tagy": ["trubky", "redukce", "rozvin", "plech", "svařování", "kónus", "sražení", "fazeta"]
       },
       {
+        "soubor": "obsah/tubeRedFlat.html",
+        "nazev": "🔧 Redukce se zploštěním",
+        "tagy": ["trubky", "redukce", "zploštění", "ovál", "obdélník", "elipsa", "plochá trubka", "vzduchotechnika", "odsávání", "3d tisk", "stl", "3mf", "kónus", "sražení", "límec", "příruba", "šrouby", "těsnění", "hadice", "bajonet", "výkres", "šablona"]
+      },
+      {
         "soubor": "obsah/tubeSplit.html",
         "nazev": "🔱 Rozbočka trubek",
         "tagy": ["trubky", "rozbočka", "odsávání", "vývody", "kalhoty", "redukce", "svařování", "kónus", "sražení", "fazeta"]
