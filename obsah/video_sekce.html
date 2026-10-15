@@ -1,0 +1,1714 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🎞️ Dělení videa na sekce</title>
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../podpis.js" defer></script>
+<script src="../dialog.js"></script>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
+  }
+  .container { max-width: 1200px; margin: 0 auto; padding: 24px 16px 40px; }
+  h1 { font-size: 1.7rem; margin: 0 0 6px; }
+  .podnadpis { color: var(--text-muted); margin: 0 0 20px; }
+
+  button, select, input { font: inherit; color: inherit; }
+  button {
+    background: var(--bg-control);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 7px 12px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  button:hover:not(:disabled) { background: var(--bg-hover); border-color: var(--border-strong); }
+  button:disabled { opacity: .45; cursor: not-allowed; }
+  button.hlavni { background: var(--accent); color: var(--on-accent, #fff); border-color: var(--accent); font-weight: 600; }
+  button.hlavni:hover:not(:disabled) { background: var(--accent-hover); color: var(--on-accent, #fff); }
+  button.ikona { padding: 6px 9px; min-width: 38px; }
+  select, input[type=text] {
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 6px 8px;
+  }
+  input[type=text]:focus, select:focus { outline: 2px solid var(--accent); outline-offset: -1px; }
+  kbd {
+    font-family: ui-monospace, Consolas, monospace;
+    font-size: .8em;
+    background: var(--bg-control);
+    border: 1px solid var(--border);
+    border-bottom-width: 2px;
+    border-radius: 4px;
+    padding: 0 5px;
+  }
+
+  .nahrat {
+    background: var(--bg-panel);
+    border: 2px dashed var(--border-strong);
+    border-radius: 12px;
+    padding: 44px 20px;
+    text-align: center;
+    cursor: pointer;
+  }
+  .nahrat:hover, .nahrat.pres { border-color: var(--accent); background: var(--accent-soft); }
+  .nahrat .velka { font-size: 3rem; display: block; margin-bottom: 10px; }
+  .nahrat h3 { margin: 0 0 6px; }
+  .nahrat p { margin: 0; color: var(--text-muted); font-size: .9rem; }
+
+  .panel {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 16px;
+    margin-bottom: 16px;
+  }
+  .editor { display: none; }
+  .meta {
+    display: flex; flex-wrap: wrap; gap: 6px 18px; align-items: center;
+    color: var(--text-muted); font-size: .9rem; margin-bottom: 12px;
+  }
+  .meta .jmeno { color: var(--accent); font-weight: 600; word-break: break-all; }
+  .meta .vpravo { margin-left: auto; }
+  .stav-analyzy { font-size: .85rem; color: var(--text-faint); }
+
+  .video-box {
+    background: #000;
+    border-radius: 8px;
+    overflow: hidden;
+    display: flex; justify-content: center; align-items: center;
+    position: relative;
+  }
+  .video-box video { max-width: 100%; max-height: 52vh; display: block; }
+
+  .odecet {
+    display: flex; flex-wrap: wrap; align-items: baseline; justify-content: center;
+    gap: 6px 22px; margin: 12px 0 8px;
+  }
+  .cas-velky {
+    font-family: ui-monospace, Consolas, monospace;
+    font-size: 1.9rem; font-weight: 600; letter-spacing: .5px;
+    color: var(--warn);
+  }
+  .snimek-info { font-family: ui-monospace, Consolas, monospace; color: var(--text-muted); }
+  .klic-ano { color: var(--ok); }
+
+  .ovladani {
+    display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 6px;
+    margin-bottom: 12px;
+  }
+  .ovladani .oddel { width: 10px; }
+  .ovladani label { font-size: .85rem; color: var(--text-muted); }
+  #tlHrat { min-width: 92px; }
+  .skok { display: flex; gap: 4px; }
+  .skok input { width: 150px; font-family: ui-monospace, Consolas, monospace; }
+
+  .osa-obal { position: relative; }
+  #osa {
+    display: block; width: 100%; height: 132px;
+    border-radius: 8px; background: var(--bg-input);
+    touch-action: none; cursor: crosshair;
+  }
+  #prehled {
+    display: block; width: 100%; height: 18px; margin-top: 6px;
+    border-radius: 4px; background: var(--bg-input);
+    touch-action: none; cursor: grab;
+  }
+  .osa-lista {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin-top: 8px;
+    font-size: .85rem; color: var(--text-muted);
+  }
+  .osa-lista .mezera { flex: 1; }
+
+  .rezy-lista { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0 4px; }
+
+  h2 { font-size: 1.15rem; margin: 0 0 10px; display: flex; align-items: center; gap: 10px; flex-wrap: wrap; }
+  h2 .pocet { font-size: .85rem; font-weight: normal; color: var(--text-muted); }
+
+  .sekce-tab { width: 100%; border-collapse: collapse; font-size: .92rem; }
+  .sekce-tab th {
+    text-align: left; font-weight: 600; color: var(--text-muted); font-size: .8rem;
+    padding: 4px 6px; border-bottom: 1px solid var(--border);
+  }
+  .sekce-tab td { padding: 6px; border-bottom: 1px solid var(--border); vertical-align: middle; }
+  .sekce-tab tr.vypnuta td { opacity: .55; }
+  .sekce-tab tr.aktivni td { background: var(--accent-soft); }
+  .barva { display: inline-block; width: 12px; height: 12px; border-radius: 3px; vertical-align: middle; margin-right: 4px; }
+  .nazev-obal { display: flex; align-items: center; gap: 2px; }
+  .nazev-obal input { width: 100%; min-width: 120px; }
+  .pripona { color: var(--text-faint); font-size: .85rem; }
+  .cas-bunka { display: flex; gap: 3px; align-items: center; }
+  .cas-bunka input { width: 118px; font-family: ui-monospace, Consolas, monospace; font-size: .88rem; }
+  .cas-pevny { font-family: ui-monospace, Consolas, monospace; font-size: .88rem; padding: 0 8px; color: var(--text-muted); }
+  .delka { font-family: ui-monospace, Consolas, monospace; font-size: .88rem; white-space: nowrap; }
+  .akce-bunka { display: flex; gap: 4px; justify-content: flex-end; }
+  .sekce-tab button { padding: 4px 8px; }
+  .poznamka-klic { font-size: .75rem; color: var(--text-faint); display: block; }
+
+  .export-mrizka {
+    display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px 16px;
+    margin-bottom: 12px;
+  }
+  .export-mrizka label { display: flex; flex-direction: column; gap: 4px; font-size: .85rem; color: var(--text-muted); }
+  .export-mrizka .radek { display: flex; gap: 4px; }
+  .export-mrizka .radek input { flex: 1; min-width: 0; }
+  .napoveda-rezim { font-size: .85rem; color: var(--text-muted); margin: 0 0 12px; }
+  .export-akce { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+
+  .avi-panel { margin-top: 16px; }
+  .avi-panel .napoveda { margin: 10px 0; }
+  .prubeh { display: none; margin-top: 12px; }
+  .prubeh.vidit { display: block; }
+  .prubeh-text { font-size: .9rem; margin-bottom: 6px; }
+  .prubeh-pruh { height: 10px; border-radius: 5px; background: var(--bg-input); overflow: hidden; border: 1px solid var(--border); }
+  .prubeh-pruh div { height: 100%; width: 0; background: var(--accent); transition: width .15s; }
+
+  details { margin-top: 4px; }
+  summary { cursor: pointer; color: var(--text-muted); font-size: .92rem; }
+  textarea {
+    width: 100%; min-height: 130px; margin-top: 8px; resize: vertical;
+    background: var(--bg-input); color: var(--text); border: 1px solid var(--border);
+    border-radius: 6px; padding: 8px; font-family: ui-monospace, Consolas, monospace; font-size: .88rem;
+  }
+  .text-akce { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 6px; }
+  .napoveda { font-size: .88rem; color: var(--text-muted); line-height: 1.7; }
+  .napoveda ul { margin: 6px 0 0; padding-left: 20px; }
+
+  .oznameni {
+    position: fixed; top: 16px; right: 16px; max-width: min(420px, calc(100vw - 32px));
+    padding: 12px 18px; border-radius: 8px; z-index: 1000;
+    background: var(--bg-elevated); color: var(--text); border: 1px solid var(--border);
+    border-left: 4px solid var(--accent); box-shadow: var(--shadow);
+    transform: translateX(calc(100% + 40px)); transition: transform .25s;
+  }
+  .oznameni.vidit { transform: none; }
+  .oznameni.ok { border-left-color: var(--ok); }
+  .oznameni.chyba { border-left-color: var(--danger); }
+
+  @media (max-width: 760px) {
+    .sekce-tab thead { display: none; }
+    .sekce-tab, .sekce-tab tbody, .sekce-tab tr, .sekce-tab td { display: block; width: 100%; }
+    .sekce-tab tr { border: 1px solid var(--border); border-radius: 8px; margin-bottom: 8px; padding: 4px; }
+    .sekce-tab td { border: none; padding: 4px 6px; }
+    .sekce-tab td[data-popis]::before {
+      content: attr(data-popis); display: inline-block; min-width: 52px;
+      color: var(--text-faint); font-size: .8rem;
+    }
+    .sekce-tab td.cas-td { display: flex; align-items: center; }
+    .sekce-tab td[data-popis="Délka"] .poznamka-klic { display: inline; margin-left: 8px; }
+    .akce-bunka { justify-content: flex-start; }
+    .cas-velky { font-size: 1.5rem; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>🎞️ Dělení videa na sekce</h1>
+  <p class="podnadpis">Nastavte snímkově přesné řezy a uložte každou sekci jako samostatné video s vlastním názvem. Vše běží v prohlížeči, video se nikam neodesílá.</p>
+
+  <div class="nahrat" id="nahrat" tabindex="0" role="button">
+    <span class="velka">🎥</span>
+    <h3>Klikněte nebo přetáhněte video sem</h3>
+    <p>MP4, MOV, WebM, MKV, AVI · střih přímo v prohlížeči</p>
+    <input type="file" id="soubor" accept="video/*,.mkv,.mov,.avi" hidden>
+  </div>
+
+  <div class="panel avi-panel" id="aviPanel" hidden>
+    <strong>🔄 Převod AVI do MP4</strong>
+    <p class="prubeh-text" id="aviText"></p>
+    <div class="prubeh-pruh"><div id="aviPruh"></div></div>
+    <p class="napoveda">AVI prohlížeč neumí přehrát ani stříhat, proto se video nejdřív jednorázově převede do MP4 (H.264 ve vysoké kvalitě) se zachováním všech snímků. Delší video může převod zabrat i několik minut. Převod běží ve vašem prohlížeči, nic se neodesílá.</p>
+    <button id="tlAviZrusit">✖ Zrušit převod</button>
+  </div>
+
+  <div class="editor" id="editor">
+    <div class="panel">
+      <div class="meta">
+        <span class="jmeno" id="metaJmeno">video.mp4</span>
+        <span id="metaRozliseni">–</span>
+        <span id="metaFps">–</span>
+        <span id="metaDelka">–</span>
+        <span id="metaKodek">–</span>
+        <span class="stav-analyzy" id="stavAnalyzy"></span>
+        <button class="vpravo" id="tlJine">📂 Jiné video</button>
+      </div>
+
+      <div class="video-box"><video id="video" preload="auto" playsinline></video></div>
+
+      <div class="odecet">
+        <span class="cas-velky" id="casVelky">00:00.000</span>
+        <span class="snimek-info" id="snimekInfo">snímek 0 / 0</span>
+        <span class="snimek-info" id="klicInfo"></span>
+      </div>
+
+      <div class="ovladani">
+        <button class="ikona" id="tlZacatek" title="Na začátek (Home)">⏮</button>
+        <button class="ikona" id="tlMinus1s" title="−1 s (Shift+←)">−1 s</button>
+        <button class="ikona" id="tlMinusSnimek" title="O snímek zpět (←)">◀ 1</button>
+        <button class="hlavni" id="tlHrat" title="Přehrát / pozastavit (mezerník)">▶ Přehrát</button>
+        <button class="ikona" id="tlPlusSnimek" title="O snímek vpřed (→)">1 ▶</button>
+        <button class="ikona" id="tlPlus1s" title="+1 s (Shift+→)">+1 s</button>
+        <button class="ikona" id="tlKonec" title="Na konec (End)">⏭</button>
+        <span class="oddel"></span>
+        <label>Rychlost
+          <select id="rychlost">
+            <option value="0.1">0,1×</option>
+            <option value="0.25">0,25×</option>
+            <option value="0.5">0,5×</option>
+            <option value="1" selected>1×</option>
+            <option value="1.5">1,5×</option>
+            <option value="2">2×</option>
+          </select>
+        </label>
+        <span class="oddel"></span>
+        <span class="skok">
+          <input type="text" id="skokVstup" placeholder="čas / #snímek" title="Např. 1:23.456, 83.4 nebo #2087">
+          <button id="tlSkok">Přejít</button>
+        </span>
+      </div>
+
+      <div class="osa-obal">
+        <canvas id="osa"></canvas>
+        <canvas id="prehled"></canvas>
+      </div>
+      <div class="osa-lista">
+        <button class="ikona" id="tlOddalit" title="Oddálit (−)">−</button>
+        <button class="ikona" id="tlPriblizit" title="Přiblížit (+)">+</button>
+        <button id="tlCela" title="Zobrazit celé video (0)">Celé</button>
+        <span id="osaRozsah"></span>
+        <span class="mezera"></span>
+        <span>kolečko = zoom · Shift+kolečko = posun · dvojklik = řez · táhnout řez = přesunout</span>
+      </div>
+
+      <div class="rezy-lista">
+        <button class="hlavni" id="tlRez" title="Přidat řez na aktuální snímek (M)">✂️ Řez zde</button>
+        <button id="tlPresun" title="Přesunout vybraný řez na aktuální snímek (U)">↔ Vybraný řez sem</button>
+        <button id="tlOkoli" title="Přehrát 2 s před a za vybraným řezem (P)">▶ Okolí řezu</button>
+        <button id="tlPredRez" title="Předchozí řez ([)">⇤ Předchozí řez</button>
+        <button id="tlDalsiRez" title="Další řez (])">Další řez ⇥</button>
+        <button id="tlSmazRez" title="Odebrat vybraný řez (Delete)">🗑 Odebrat řez</button>
+        <button id="tlSmazVse">Zrušit všechny řezy</button>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Sekce <span class="pocet" id="pocetSekci"></span></h2>
+      <table class="sekce-tab">
+        <thead><tr>
+          <th style="width:36px">✓</th><th>Název souboru</th><th>Od</th><th>Do</th><th>Délka</th><th></th>
+        </tr></thead>
+        <tbody id="sekceTelo"></tbody>
+      </table>
+      <details>
+        <summary>Řezy jako text (kopírovat / vložit časy)</summary>
+        <textarea id="textRezy" spellcheck="false" placeholder="00:01:23.456 Název další sekce&#10;00:05:00.000&#10;#12000 Závěr"></textarea>
+        <div class="text-akce">
+          <button id="tlTextNacti">⬇ Načíst řezy ze současného stavu</button>
+          <button id="tlTextPouzij" class="hlavni">Použít text jako řezy</button>
+        </div>
+        <p class="napoveda">Každý řádek je jeden řez: čas (<code>h:mm:ss.mmm</code>, <code>m:ss.mmm</code>, sekundy) nebo číslo snímku (<code>#123</code>). Text za časem se použije jako název sekce, která v tom místě začíná. První řádek <code>0</code> pojmenuje první sekci.</p>
+      </details>
+    </div>
+
+    <div class="panel">
+      <h2>Uložení</h2>
+      <div class="export-mrizka">
+        <label>Předpona názvů
+          <span class="radek"><input type="text" id="predpona"><button id="tlPrejmenuj" title="Přepsat názvy všech sekcí podle předpony">Přejmenovat vše</button></span>
+        </label>
+        <label>Formát
+          <select id="format">
+            <option value="stejny">Stejný jako vstup</option>
+            <option value="mp4">MP4</option>
+            <option value="webm">WebM</option>
+            <option value="mkv">MKV</option>
+            <option value="mov">MOV</option>
+          </select>
+        </label>
+        <label>Režim střihu
+          <select id="rezim">
+            <option value="bezztraty">Bez ztráty kvality (rychlé)</option>
+            <option value="prekodovat">Vždy překódovat</option>
+          </select>
+        </label>
+        <label>Kvalita při překódování
+          <select id="kvalita">
+            <option value="VERY_HIGH">Velmi vysoká</option>
+            <option value="HIGH" selected>Vysoká</option>
+            <option value="MEDIUM">Střední</option>
+            <option value="LOW">Nízká (malý soubor)</option>
+          </select>
+        </label>
+      </div>
+      <p class="napoveda-rezim" id="napovedaRezim"></p>
+      <div class="export-akce">
+        <button class="hlavni" id="tlUlozVybrane">⤓ Uložit vybrané sekce</button>
+        <button id="tlUlozSlozka" hidden>📁 Uložit vybrané do složky…</button>
+        <button id="tlZrusit" hidden>✖ Zastavit</button>
+      </div>
+      <div class="prubeh" id="prubeh">
+        <div class="prubeh-text" id="prubehText"></div>
+        <div class="prubeh-pruh"><div id="prubehPruh"></div></div>
+      </div>
+    </div>
+
+    <div class="panel napoveda">
+      <strong>Klávesy</strong>
+      <ul>
+        <li><kbd>mezerník</kbd> přehrát / pozastavit · <kbd>←</kbd> <kbd>→</kbd> o snímek · <kbd>Shift</kbd>+šipka o 1 s · <kbd>Ctrl</kbd>+šipka o 10 s · <kbd>Home</kbd> <kbd>End</kbd> začátek / konec</li>
+        <li><kbd>,</kbd> <kbd>.</kbd> předchozí / další klíčový snímek · <kbd>[</kbd> <kbd>]</kbd> předchozí / další řez</li>
+        <li><kbd>M</kbd> řez zde · <kbd>U</kbd> vybraný řez sem · <kbd>Delete</kbd> odebrat vybraný řez · <kbd>P</kbd> přehrát okolí řezu</li>
+        <li><kbd>+</kbd> <kbd>−</kbd> zoom osy · <kbd>0</kbd> celé video</li>
+      </ul>
+      Řezy se ukládají k souboru (podle jména a velikosti) v tomto prohlížeči, po opětovném otevření stejného videa se obnoví.
+    </div>
+  </div>
+</div>
+
+<div class="oznameni" id="oznameni"></div>
+
+<script src="lib/mediabunny.min.js"></script>
+<script>
+(function () {
+'use strict';
+// Knihovna je klasický skript (ne ES modul) – jinak by stránka přes file:// vůbec neběžela.
+const MB = window.Mediabunny || null;
+
+// ============================================================
+//  STAV
+// ============================================================
+const S = {
+  soubor: null,
+  url: null,
+  input: null,           // mediabunny Input (analýza, náhledy, vlna)
+  vstupFormat: null,     // 'mp4' | 'mov' | 'webm' | 'mkv' | null
+  snimky: new Float64Array(0),  // časy začátků snímků (prezentační pořadí)
+  klice: new Float64Array(0),   // časy klíčových snímků
+  delka: 0,              // konec posledního snímku
+  fps: 25,
+  odhad: false,          // snímky jen dopočítané (analýza selhala)
+  lzeExport: false,
+  rezy: [],              // indexy snímků, kde začíná nová sekce (vzestupně, bez 0)
+  meta: [{ nazev: '', zap: true, auto: true }], // na sekci
+  vybranyRez: -1,        // index do S.rezy
+  akt: 0,                // aktuální snímek
+  hraje: false,
+  stopNa: null,          // čas, kde se má přehrávání zastavit
+  pohled: { od: 0, do: 1 },
+  nahledy: new Map(),    // index snímku -> canvas
+  pomer: 16 / 9,
+  vlna: null,            // Float32Array maxim po 5 ms
+  vlnaKrok: 0.005,
+  vlnaVerze: 0,
+  export: null,          // probíhající Conversion
+  zrusitExport: false,
+  tazeni: null,
+};
+const $ = id => document.getElementById(id);
+const video = $('video');
+const osa = $('osa');
+const prehled = $('prehled');
+
+// ============================================================
+//  POMOCNÉ
+// ============================================================
+const omez = (v, a, b) => Math.max(a, Math.min(b, v));
+
+function fmtCas(t, sHodinami = S.delka >= 3600) {
+  t = Math.max(0, t);
+  let ms = Math.round(t * 1000);
+  const h = Math.floor(ms / 3600000); ms -= h * 3600000;
+  const m = Math.floor(ms / 60000); ms -= m * 60000;
+  const s = Math.floor(ms / 1000); ms -= s * 1000;
+  const p = (n, d = 2) => String(n).padStart(d, '0');
+  return (sHodinami ? h + ':' + p(m) : p(m + h * 60)) + ':' + p(s) + '.' + p(ms, 3);
+}
+
+function fmtDelka(t) {
+  if (t < 60) return t.toFixed(3).replace('.', ',') + ' s';
+  return fmtCas(t, t >= 3600);
+}
+
+// Vrací {cas} nebo {snimek} nebo null.
+function parsujCas(txt) {
+  txt = String(txt).trim().replace(/,/g, '.');
+  if (!txt) return null;
+  let m = txt.match(/^#\s*(\d+)$/) || txt.match(/^(\d+)\s*f$/i);
+  if (m) return { snimek: parseInt(m[1], 10) };
+  const casti = txt.split(':');
+  if (casti.length > 3) return null;
+  let sek = 0;
+  for (const c of casti) {
+    if (!/^\d*\.?\d+$|^\d+\.$/.test(c)) return null;
+    sek = sek * 60 + parseFloat(c);
+  }
+  return isFinite(sek) ? { cas: sek } : null;
+}
+
+// Index snímku, který je zobrazený v čase t (poslední se začátkem ≤ t).
+function snimekVCase(t) {
+  const a = S.snimky;
+  if (!a.length) return 0;
+  let lo = 0, hi = a.length - 1;
+  if (t < a[0]) return 0;
+  while (lo < hi) {
+    const mid = (lo + hi + 1) >> 1;
+    if (a[mid] <= t + 1e-6) lo = mid; else hi = mid - 1;
+  }
+  return lo;
+}
+const pocetSnimku = () => S.snimky.length;
+const casSnimku = i => i >= pocetSnimku() ? S.delka : S.snimky[omez(i, 0, pocetSnimku() - 1)];
+const konecSnimku = i => casSnimku(i + 1);
+
+function naSnimek(vstup) {
+  if (!vstup) return null;
+  if ('snimek' in vstup) return omez(vstup.snimek, 0, pocetSnimku() - 1);
+  return snimekVCase(omez(vstup.cas, 0, S.delka));
+}
+
+function jeKlic(i) {
+  const t = S.snimky[i], a = S.klice;
+  let lo = 0, hi = a.length - 1;
+  while (lo <= hi) {
+    const mid = (lo + hi) >> 1;
+    if (Math.abs(a[mid] - t) < 1e-6) return true;
+    if (a[mid] < t) lo = mid + 1; else hi = mid - 1;
+  }
+  return false;
+}
+
+let casovacOznameni = null;
+function oznam(text, typ = '') {
+  const el = $('oznameni');
+  el.textContent = text;
+  el.className = 'oznameni vidit ' + typ;
+  clearTimeout(casovacOznameni);
+  casovacOznameni = setTimeout(() => el.classList.remove('vidit'), typ === 'chyba' ? 6000 : 3000);
+}
+
+function cistyNazev(n) {
+  return String(n).replace(/[\\/:*?"<>|\u0000-\u001f]+/g, '_').replace(/^\.+/, '').trim().slice(0, 180);
+}
+
+// ============================================================
+//  NAČTENÍ VIDEA
+// ============================================================
+const nahrat = $('nahrat');
+nahrat.addEventListener('click', () => $('soubor').click());
+nahrat.addEventListener('keydown', e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); $('soubor').click(); } });
+nahrat.addEventListener('dragover', e => { e.preventDefault(); nahrat.classList.add('pres'); });
+nahrat.addEventListener('dragleave', () => nahrat.classList.remove('pres'));
+nahrat.addEventListener('drop', e => {
+  e.preventDefault(); nahrat.classList.remove('pres');
+  if (e.dataTransfer.files.length) nactiSoubor(e.dataTransfer.files[0]);
+});
+$('soubor').addEventListener('change', e => { if (e.target.files.length) nactiSoubor(e.target.files[0]); e.target.value = ''; });
+$('tlJine').addEventListener('click', () => $('soubor').click());
+// Přetažení videa kamkoli na stránku, i když už je editor otevřený.
+document.addEventListener('dragover', e => e.preventDefault());
+document.addEventListener('drop', e => {
+  e.preventDefault();
+  if (e.dataTransfer.files.length && !nahrat.contains(e.target)) nactiSoubor(e.dataTransfer.files[0]);
+});
+
+let generace = 0; // zahodí výsledky analýzy předchozího souboru
+
+async function nactiSoubor(soubor, zAvi = null) {
+  if (S.export) return oznam('Počkejte na dokončení ukládání.', 'chyba');
+  zrusAvi();
+  if (!zAvi && await jeAvi(soubor)) {
+    const gen = ++generace;
+    const vysledek = await prevedAvi(soubor);
+    if (vysledek && gen === generace) return nactiSoubor(vysledek.soubor, { puvodni: soubor, ...vysledek });
+    return;
+  }
+  const gen = ++generace;
+  zastav();
+  if (S.input) { try { S.input.dispose(); } catch {} }
+  if (S.url) URL.revokeObjectURL(S.url);
+  Object.assign(S, {
+    soubor, url: URL.createObjectURL(soubor), input: null, vstupFormat: null,
+    snimky: new Float64Array(0), klice: new Float64Array(0), delka: 0, odhad: false, lzeExport: false,
+    rezy: [], meta: [{ nazev: '', zap: true, auto: true }], vybranyRez: -1, akt: 0,
+    nahledy: new Map(), vlna: null, pohled: { od: 0, do: 1 },
+  });
+  $('predpona').value = cistyNazev(soubor.name.replace(/\.[^.]+$/, '')) || 'video';
+  $('metaJmeno').textContent = zAvi ? `${zAvi.puvodni.name} → MP4` : soubor.name;
+  $('metaJmeno').title = zAvi ? `AVI (${zAvi.video}${zAvi.zvuk ? ' + ' + zAvi.zvuk : ''}) převedeno do MP4 (H.264)` : '';
+  $('metaRozliseni').textContent = $('metaFps').textContent = $('metaKodek').textContent = '–';
+  $('stavAnalyzy').textContent = '⏳ analyzuji snímky…';
+
+  video.src = S.url;
+  const metaOk = await new Promise(res => {
+    video.onloadedmetadata = () => res(true);
+    video.onerror = () => res(false);
+  });
+  if (gen !== generace) return;
+
+  try {
+    const input = new MB.Input({ source: new MB.BlobSource(soubor), formats: MB.ALL_FORMATS });
+    S.input = input;
+    const fmt = await input.getFormat();
+    S.vstupFormat = fmt === MB.MP4 ? 'mp4' : fmt === MB.QTFF ? 'mov' : fmt === MB.WEBM ? 'webm' : fmt === MB.MATROSKA ? 'mkv' : null;
+    const vt = await input.getPrimaryVideoTrack();
+    if (!vt) throw new Error('Soubor neobsahuje video stopu.');
+    S.pomer = (vt.displayWidth / vt.displayHeight) || S.pomer;
+    $('metaRozliseni').textContent = `${vt.displayWidth}×${vt.displayHeight}`;
+    const at = await input.getPrimaryAudioTrack();
+    $('metaKodek').textContent = [vt.codec, at && at.codec].filter(Boolean).join(' + ');
+
+    // Seznam všech snímků – jen metadata paketů, data se nečtou.
+    const sink = new MB.EncodedPacketSink(vt);
+    const casy = [], klice = [];
+    let n = 0;
+    for await (const p of sink.packets(undefined, undefined, { metadataOnly: true })) {
+      if (gen !== generace) return;
+      casy.push(p.timestamp);
+      if (p.type === 'key') klice.push(p.timestamp);
+      if (++n % 5000 === 0) $('stavAnalyzy').textContent = `⏳ analyzuji snímky… ${n}`;
+    }
+    if (!casy.length) throw new Error('Video stopa je prázdná.');
+    casy.sort((a, b) => a - b);
+    klice.sort((a, b) => a - b);
+    S.snimky = Float64Array.from(casy);
+    S.klice = Float64Array.from(klice);
+    S.delka = await input.computeDuration([vt]);
+    if (!(S.delka > casy[casy.length - 1])) S.delka = casy[casy.length - 1] + (casy.length > 1 ? casy[casy.length - 1] - casy[casy.length - 2] : 1 / 30);
+    S.fps = casy.length > 1 ? (casy.length - 1) / (casy[casy.length - 1] - casy[0]) : 30;
+    S.lzeExport = true;
+    $('stavAnalyzy').textContent = `${casy.length} snímků · ${klice.length} klíčových`;
+  } catch (err) {
+    if (gen !== generace) return;
+    console.warn('Analýza videa selhala:', err);
+    if (!metaOk) {
+      oznam('Tento soubor se nepodařilo otevřít: ' + (err.message || err), 'chyba');
+      $('stavAnalyzy').textContent = '';
+      return;
+    }
+    // Prohlížeč video přehraje, ale knihovna formát nezná – snímky jen dopočítáme.
+    S.odhad = true;
+    S.delka = video.duration;
+    S.fps = 30;
+    const n = Math.max(1, Math.round(S.delka * S.fps));
+    S.snimky = Float64Array.from({ length: n }, (_, i) => i / S.fps);
+    S.klice = new Float64Array(0);
+    S.pomer = (video.videoWidth / video.videoHeight) || S.pomer;
+    $('metaRozliseni').textContent = `${video.videoWidth}×${video.videoHeight}`;
+    $('stavAnalyzy').textContent = '⚠️ formát nelze analyzovat – snímky odhadnuty (30 fps), ukládání nedostupné';
+  }
+
+  $('metaFps').textContent = (S.odhad ? '~' : '') + S.fps.toFixed(3).replace(/\.?0+$/, '').replace('.', ',') + ' fps';
+  $('metaDelka').textContent = fmtCas(S.delka, S.delka >= 3600) + ` (${pocetSnimku()} snímků)`;
+  S.pohled = { od: 0, do: S.delka };
+  nahrat.style.display = 'none';
+  $('editor').style.display = 'block';
+  obnovUlozeneRezy();
+  nastavKreslicPlochy();
+  prekresliVse();
+  jdiNaSnimek(0);
+  oznam('Video načteno', 'ok');
+  if (S.lzeExport) {
+    nactiVlnu(gen);
+    planujNahledy();
+  }
+}
+
+// ============================================================
+//  AVI → MP4 (ffmpeg.wasm ve workeru)
+// ============================================================
+async function jeAvi(soubor) {
+  if (/\.avi$/i.test(soubor.name) || /x-msvideo|\/avi/i.test(soubor.type)) return true;
+  try {
+    const h = new Uint8Array(await soubor.slice(0, 12).arrayBuffer());
+    const txt = String.fromCharCode(...h);
+    return txt.startsWith('RIFF') && txt.slice(8, 12) === 'AVI ';
+  } catch { return false; }
+}
+
+let aviWorker = null, aviZrusit = null;
+
+function zrusAvi() {
+  if (aviZrusit) aviZrusit();
+}
+
+function prevedAvi(soubor) {
+  const panel = $('aviPanel');
+  if (location.protocol === 'file:') {
+    oznam('AVI se převádí přes ffmpeg, který prohlížeč při otevření stránky ze souboru (file://) nespustí. Otevřete stránku přes web nebo místní server (test_local.sh).', 'chyba');
+    return Promise.resolve(null);
+  }
+  panel.hidden = false;
+  $('aviText').textContent = 'Spouštím převod…';
+  $('aviPruh').style.width = '0';
+  return new Promise(res => {
+    try {
+      if (!aviWorker) aviWorker = new Worker('video_sekce/avi_worker.js');
+    } catch (e) {
+      panel.hidden = true;
+      oznam('Převod AVI se nepodařilo spustit: ' + (e.message || e), 'chyba');
+      return res(null);
+    }
+    const t0 = performance.now();
+    let popis = '';
+    const konec = v => {
+      aviZrusit = null;
+      aviWorker.onmessage = aviWorker.onerror = null;
+      panel.hidden = true;
+      res(v);
+    };
+    aviZrusit = () => {
+      // Jediný způsob, jak ffmpeg zastavit uprostřed, je ukončit worker.
+      aviWorker.terminate();
+      aviWorker = null;
+      konec(null);
+    };
+    aviWorker.onerror = e => {
+      oznam('Převod AVI selhal: ' + (e.message || 'chyba workeru'), 'chyba');
+      aviWorker.terminate(); aviWorker = null;
+      konec(null);
+    };
+    aviWorker.onmessage = ({ data: z }) => {
+      if (z.typ === 'stav') { popis = z.text; $('aviText').textContent = popis; }
+      else if (z.typ === 'prubeh') {
+        const sek = (performance.now() - t0) / 1000;
+        const zbyva = z.podil > 0.02 ? Math.round(sek / z.podil - sek) : null;
+        $('aviText').textContent = `${popis} ${Math.round(z.podil * 100)} %` + (zbyva !== null ? ` · zbývá asi ${zbyva < 90 ? zbyva + ' s' : Math.round(zbyva / 60) + ' min'}` : '');
+        $('aviPruh').style.width = (z.podil * 100).toFixed(1) + '%';
+      } else if (z.typ === 'hotovo') {
+        const jmeno = soubor.name.replace(/\.[^.]+$/, '') + '.mp4';
+        konec({ soubor: new File([z.data], jmeno, { type: 'video/mp4' }), video: z.video, zvuk: z.zvuk });
+      } else if (z.typ === 'chyba') {
+        oznam('Převod AVI selhal: ' + z.text, 'chyba');
+        konec(null);
+      }
+    };
+    aviWorker.postMessage({
+      typ: 'preved', soubor,
+      coreURL: new URL('lib/ffmpeg/ffmpeg-core.js', location.href).href,
+      wasmURL: new URL('lib/ffmpeg/ffmpeg-core.wasm', location.href).href,
+    });
+  });
+}
+$('tlAviZrusit').onclick = () => { zrusAvi(); oznam('Převod zrušen.'); };
+
+// ============================================================
+//  PŘEHRÁVÁNÍ A POHYB PO SNÍMCÍCH
+// ============================================================
+function jdiNaSnimek(i, { drzPohled = false } = {}) {
+  if (!pocetSnimku()) return;
+  zastav();
+  i = omez(i, 0, pocetSnimku() - 1);
+  S.akt = i;
+  // Doprostřed snímku – na hraně by zaokrouhlení mohlo ukázat sousední snímek.
+  video.currentTime = Math.min((casSnimku(i) + konecSnimku(i)) / 2, Math.max(0, S.delka - 1e-4));
+  if (!drzPohled) udrzVPohledu(casSnimku(i));
+  aktualizujOdecet();
+  kresliOsu();
+}
+
+function posun(o) { jdiNaSnimek(S.akt + o); }
+function posunCas(sek) { jdiNaSnimek(snimekVCase(casSnimku(S.akt) + sek)); }
+
+function hraj(odCasu = null, doCasu = null) {
+  if (!pocetSnimku()) return;
+  if (odCasu !== null) video.currentTime = odCasu;
+  else if (S.akt >= pocetSnimku() - 1) video.currentTime = 0;
+  S.stopNa = doCasu;
+  S.hraje = true;
+  video.play().catch(() => { S.hraje = false; aktualizujTlacitkoHrat(); });
+  aktualizujTlacitkoHrat();
+  sledujPrehravani();
+}
+
+function zastav() {
+  if (!S.hraje) return;
+  S.hraje = false;
+  S.stopNa = null;
+  video.pause();
+  aktualizujTlacitkoHrat();
+  // Po pauze srovnat přehrávač přesně na snímek, který byl naposledy vidět.
+  S.akt = snimekVCase(video.currentTime);
+  video.currentTime = Math.min((casSnimku(S.akt) + konecSnimku(S.akt)) / 2, Math.max(0, S.delka - 1e-4));
+  aktualizujOdecet();
+  kresliOsu();
+}
+
+function prepniHrani() { S.hraje ? zastav() : hraj(); }
+
+function aktualizujTlacitkoHrat() {
+  $('tlHrat').textContent = S.hraje ? '⏸ Pauza' : '▶ Přehrát';
+}
+
+// Během přehrávání číst čas po vykreslených snímcích (requestVideoFrameCallback je přesnější než currentTime).
+function sledujPrehravani() {
+  const krok = (cas) => {
+    if (!S.hraje) return;
+    S.akt = snimekVCase(cas);
+    if (S.stopNa !== null && cas >= S.stopNa - 0.5 / S.fps) {
+      const posledni = snimekVCase(S.stopNa - 0.5 / S.fps);
+      zastav();
+      jdiNaSnimek(posledni, { drzPohled: true });
+      return;
+    }
+    aktualizujOdecet();
+    udrzVPohledu(casSnimku(S.akt), true);
+    kresliOsu();
+  };
+  if ('requestVideoFrameCallback' in video) {
+    const smycka = (_, m) => { krok(m.mediaTime); if (S.hraje) video.requestVideoFrameCallback(smycka); };
+    video.requestVideoFrameCallback(smycka);
+  } else {
+    const smycka = () => { krok(video.currentTime); if (S.hraje) requestAnimationFrame(smycka); };
+    requestAnimationFrame(smycka);
+  }
+}
+
+video.addEventListener('ended', () => { if (S.hraje) { S.hraje = false; aktualizujTlacitkoHrat(); S.akt = pocetSnimku() - 1; aktualizujOdecet(); kresliOsu(); } });
+video.addEventListener('pause', () => { if (S.hraje) zastav(); });
+$('rychlost').addEventListener('change', e => { video.playbackRate = parseFloat(e.target.value); });
+
+function aktualizujOdecet() {
+  const i = S.akt;
+  $('casVelky').textContent = fmtCas(casSnimku(i));
+  $('snimekInfo').textContent = `snímek ${i} / ${Math.max(0, pocetSnimku() - 1)}`;
+  $('klicInfo').innerHTML = S.klice.length && jeKlic(i) ? '<span class="klic-ano">🔑 klíčový snímek</span>' : '';
+  zvyrazniAktivniSekci();
+}
+
+$('tlZacatek').onclick = () => jdiNaSnimek(0);
+$('tlKonec').onclick = () => jdiNaSnimek(pocetSnimku() - 1);
+$('tlMinus1s').onclick = () => posunCas(-1);
+$('tlPlus1s').onclick = () => posunCas(1);
+$('tlMinusSnimek').onclick = () => posun(-1);
+$('tlPlusSnimek').onclick = () => posun(1);
+$('tlHrat').onclick = prepniHrani;
+
+function skok() {
+  const i = naSnimek(parsujCas($('skokVstup').value));
+  if (i === null) return oznam('Nerozumím času. Zkuste např. 1:23.456, 83.4 nebo #2087.', 'chyba');
+  jdiNaSnimek(i);
+}
+$('tlSkok').onclick = skok;
+$('skokVstup').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); skok(); } });
+
+function sousedniKlic(smer) {
+  const t = casSnimku(S.akt), a = S.klice;
+  if (!a.length) return oznam('Klíčové snímky nejsou známé.');
+  let cil = null;
+  if (smer > 0) { for (const k of a) if (k > t + 1e-6) { cil = k; break; } }
+  else { for (let j = a.length - 1; j >= 0; j--) if (a[j] < t - 1e-6) { cil = a[j]; break; } }
+  if (cil !== null) jdiNaSnimek(snimekVCase(cil));
+}
+
+// ============================================================
+//  ŘEZY A SEKCE
+// ============================================================
+function hranice() { return [0, ...S.rezy, pocetSnimku()]; }
+function sekce(k) {
+  const h = hranice();
+  return { prvni: h[k], dalsi: h[k + 1], od: casSnimku(h[k]), do: casSnimku(h[k + 1]) };
+}
+const pocetSekci = () => S.rezy.length + 1;
+
+function novaMeta() { return { nazev: '', zap: true, auto: true }; }
+
+function pridejRez(i, nazevNove = null) {
+  if (i <= 0 || i >= pocetSnimku()) { oznam('Řez nelze dát na první snímek ani za konec videa.'); return -1; }
+  if (S.rezy.includes(i)) { S.vybranyRez = S.rezy.indexOf(i); prekresliVse(); return S.vybranyRez; }
+  let pos = S.rezy.findIndex(r => r > i);
+  if (pos < 0) pos = S.rezy.length;
+  S.rezy.splice(pos, 0, i);
+  // Sekce pos se rozdělí: původní metadata zůstanou první polovině, druhá dostane nová.
+  const m = novaMeta();
+  if (nazevNove) { m.nazev = cistyNazev(nazevNove); m.auto = false; }
+  S.meta.splice(pos + 1, 0, m);
+  S.vybranyRez = pos;
+  poZmeneRezu();
+  return pos;
+}
+
+function odeberRez(pos) {
+  if (pos < 0 || pos >= S.rezy.length) return;
+  S.rezy.splice(pos, 1);
+  // Sloučená sekce si nechá metadata první části.
+  S.meta.splice(pos + 1, 1);
+  S.vybranyRez = S.rezy.length ? Math.min(pos, S.rezy.length - 1) : -1;
+  poZmeneRezu();
+}
+
+function presunRez(pos, i) {
+  const min = pos > 0 ? S.rezy[pos - 1] + 1 : 1;
+  const max = pos < S.rezy.length - 1 ? S.rezy[pos + 1] - 1 : pocetSnimku() - 1;
+  const cil = omez(i, min, max);
+  if (cil !== i) oznam('Řez nemůže přeskočit sousední řez – posunut co nejblíž.');
+  S.rezy[pos] = cil;
+  S.vybranyRez = pos;
+  poZmeneRezu();
+}
+
+function vybranyNeboNejblizsi() {
+  if (S.vybranyRez >= 0 && S.vybranyRez < S.rezy.length) return S.vybranyRez;
+  if (!S.rezy.length) return -1;
+  let nej = 0;
+  S.rezy.forEach((r, k) => { if (Math.abs(r - S.akt) < Math.abs(S.rezy[nej] - S.akt)) nej = k; });
+  return nej;
+}
+
+function poZmeneRezu() {
+  precislujAuto();
+  ulozRezy();
+  prekresliVse();
+}
+
+function precislujAuto() {
+  const pred = cistyNazev($('predpona').value) || 'video';
+  const cifry = Math.max(2, String(pocetSekci()).length);
+  S.meta.forEach((m, k) => { if (m.auto) m.nazev = `${pred}_${String(k + 1).padStart(cifry, '0')}`; });
+}
+
+$('tlRez').onclick = () => { zastav(); pridejRez(S.akt); };
+$('tlPresun').onclick = () => {
+  zastav();
+  const p = vybranyNeboNejblizsi();
+  if (p < 0) return oznam('Zatím není žádný řez.');
+  presunRez(p, S.akt);
+};
+$('tlSmazRez').onclick = () => {
+  const p = vybranyNeboNejblizsi();
+  if (p < 0) return oznam('Zatím není žádný řez.');
+  odeberRez(p);
+};
+$('tlSmazVse').onclick = async () => {
+  if (!S.rezy.length) return;
+  if (!(await Dialog.potvrd(`Opravdu zrušit všech ${S.rezy.length} řezů?`))) return;
+  S.rezy = []; S.meta = [S.meta[0]]; S.vybranyRez = -1;
+  poZmeneRezu();
+};
+$('tlOkoli').onclick = () => {
+  const p = vybranyNeboNejblizsi();
+  if (p < 0) return oznam('Zatím není žádný řez.');
+  S.vybranyRez = p;
+  const t = casSnimku(S.rezy[p]);
+  hraj(Math.max(0, t - 2), Math.min(S.delka, t + 2));
+  kresliOsu();
+};
+function skokNaRez(smer) {
+  if (!S.rezy.length) return oznam('Zatím není žádný řez.');
+  let p;
+  if (smer > 0) { p = S.rezy.findIndex(r => r > S.akt); if (p < 0) p = S.rezy.length - 1; }
+  else { p = -1; S.rezy.forEach((r, k) => { if (r < S.akt) p = k; }); if (p < 0) p = 0; }
+  S.vybranyRez = p;
+  jdiNaSnimek(S.rezy[p]);
+  vykresliTabulku();
+}
+$('tlPredRez').onclick = () => skokNaRez(-1);
+$('tlDalsiRez').onclick = () => skokNaRez(1);
+
+// --- Tabulka sekcí ---
+const BARVY = ['#4e8ff0', '#e3893a', '#3fb27f', '#c063d6', '#d9534f', '#2fb3b8', '#c9a227', '#7d7fe0'];
+
+function vykresliTabulku() {
+  const telo = $('sekceTelo');
+  const pripona = '.' + vystupniFormat().pripona;
+  const n = pocetSekci();
+  telo.innerHTML = '';
+  for (let k = 0; k < n; k++) {
+    const s = sekce(k), m = S.meta[k];
+    const tr = document.createElement('tr');
+    tr.dataset.k = k;
+    if (!m.zap) tr.classList.add('vypnuta');
+    const casOd = k === 0
+      ? `<span class="cas-pevny">${fmtCas(s.od)}</span>`
+      : `<span class="cas-bunka"><input type="text" data-k="${k}" data-pole="od" value="${fmtCas(s.od)}" title="Začátek = řez ${k} (snímek ${s.prvni})"><button data-akce="odSem" data-k="${k}" title="Nastavit na aktuální snímek">⇤ sem</button></span>`;
+    const casDo = k === n - 1
+      ? `<span class="cas-pevny">${fmtCas(s.do)}</span>`
+      : `<span class="cas-bunka"><input type="text" data-k="${k}" data-pole="do" value="${fmtCas(s.do)}" title="Konec = řez ${k + 1} (snímek ${s.dalsi})"><button data-akce="doSem" data-k="${k}" title="Nastavit na aktuální snímek">sem ⇥</button></span>`;
+    const klicPozn = S.klice.length && !jeKlic(s.prvni) && $('rezim').value === 'bezztraty'
+      ? '<span class="poznamka-klic" title="Začátek není na klíčovém snímku">začátek mimo klíčový snímek</span>' : '';
+    tr.innerHTML = `
+      <td data-popis="Uložit"><input type="checkbox" data-k="${k}" data-pole="zap" ${m.zap ? 'checked' : ''} title="Uložit tuto sekci"></td>
+      <td data-popis="Název"><span class="nazev-obal"><span class="barva" style="background:${BARVY[k % BARVY.length]}"></span><input type="text" data-k="${k}" data-pole="nazev" value=""><span class="pripona">${pripona}</span></span>${klicPozn}</td>
+      <td class="cas-td" data-popis="Od">${casOd}</td>
+      <td class="cas-td" data-popis="Do">${casDo}</td>
+      <td data-popis="Délka"><span class="delka">${fmtDelka(s.do - s.od)}</span><span class="poznamka-klic">${s.dalsi - s.prvni} sn.</span></td>
+      <td><span class="akce-bunka">
+        <button data-akce="jdi" data-k="${k}" title="Přejít na začátek sekce">⇱</button>
+        <button data-akce="hraj" data-k="${k}" title="Přehrát sekci">▶</button>
+        <button data-akce="uloz" data-k="${k}" title="Uložit jen tuto sekci" ${S.lzeExport ? '' : 'disabled'}>⤓</button>
+      </span></td>`;
+    tr.querySelector('[data-pole="nazev"]').value = m.nazev;
+    telo.appendChild(tr);
+  }
+  aktivniSekce = -1;
+  zvyrazniAktivniSekci();
+  aktualizujPocty();
+}
+
+function aktualizujPocty() {
+  const n = pocetSekci(), vybrano = S.meta.filter(m => m.zap).length;
+  $('pocetSekci').textContent = `${n} ${n < 5 ? 'sekce' : 'sekcí'} · k uložení ${vybrano}`;
+  $('tlUlozVybrane').disabled = !S.lzeExport || !vybrano || !!S.export;
+  $('tlUlozSlozka').disabled = $('tlUlozVybrane').disabled;
+}
+
+// Přepíše názvy v tabulce bez překreslení (kvůli fokusu v rozpracovaném poli).
+function aktualizujNazvy() {
+  document.querySelectorAll('#sekceTelo input[data-pole="nazev"]').forEach(el => {
+    const m = S.meta[+el.dataset.k];
+    if (m && el !== document.activeElement) el.value = m.nazev;
+  });
+}
+
+let aktivniSekce = -1;
+function zvyrazniAktivniSekci() {
+  const h = hranice();
+  let k = 0;
+  while (k < h.length - 2 && S.akt >= h[k + 1]) k++;
+  if (k === aktivniSekce) return;
+  aktivniSekce = k;
+  document.querySelectorAll('#sekceTelo tr').forEach(tr => tr.classList.toggle('aktivni', +tr.dataset.k === k));
+}
+
+$('sekceTelo').addEventListener('click', e => {
+  const b = e.target.closest('button[data-akce]');
+  if (!b) return;
+  const k = +b.dataset.k, s = sekce(k);
+  switch (b.dataset.akce) {
+    case 'jdi': jdiNaSnimek(s.prvni); break;
+    case 'hraj': hraj(casSnimku(s.prvni), s.do); S.akt = s.prvni; break;
+    case 'uloz': ulozSekce([k]); break;
+    case 'odSem': zastav(); presunRez(k - 1, S.akt); break;
+    case 'doSem': zastav(); presunRez(k, S.akt); break;
+  }
+});
+$('sekceTelo').addEventListener('change', e => {
+  const el = e.target, k = +el.dataset.k;
+  if (el.dataset.pole === 'zap') {
+    S.meta[k].zap = el.checked;
+    el.closest('tr').classList.toggle('vypnuta', !el.checked);
+    ulozRezy(); aktualizujPocty(); kresliOsu();
+  } else if (el.dataset.pole === 'nazev') {
+    const n = cistyNazev(el.value);
+    S.meta[k].nazev = n;
+    S.meta[k].auto = !n;
+    if (!n) precislujAuto();
+    ulozRezy(); aktualizujNazvy(); kresliOsu();
+  } else if (el.dataset.pole === 'od' || el.dataset.pole === 'do') {
+    const i = naSnimek(parsujCas(el.value));
+    const pos = el.dataset.pole === 'od' ? k - 1 : k;
+    if (i === null) { oznam('Nerozumím času.', 'chyba'); vykresliTabulku(); return; }
+    if (i <= 0 || i >= pocetSnimku()) { oznam('Řez musí ležet uvnitř videa.', 'chyba'); vykresliTabulku(); return; }
+    presunRez(pos, i);
+    jdiNaSnimek(S.rezy[pos]);
+  }
+});
+$('sekceTelo').addEventListener('keydown', e => {
+  if (e.key === 'Enter' && e.target.matches('input[type=text]')) { e.preventDefault(); e.target.blur(); }
+});
+
+$('predpona').addEventListener('change', () => { precislujAuto(); ulozRezy(); aktualizujNazvy(); kresliOsu(); });
+$('tlPrejmenuj').onclick = () => {
+  S.meta.forEach(m => { m.auto = true; });
+  precislujAuto(); ulozRezy(); aktualizujNazvy(); kresliOsu();
+};
+
+// --- Řezy jako text ---
+$('tlTextNacti').onclick = () => {
+  const radky = [];
+  for (let k = 0; k < pocetSekci(); k++) {
+    const s = sekce(k), m = S.meta[k];
+    radky.push(`${k === 0 ? fmtCas(0) : fmtCas(s.od)}${m.auto ? '' : ' ' + m.nazev}`);
+  }
+  $('textRezy').value = radky.join('\n');
+};
+$('tlTextPouzij').onclick = () => {
+  const radky = $('textRezy').value.split('\n').map(r => r.trim()).filter(Boolean);
+  const nove = new Map(); // index snímku -> název
+  let nazevPrvni = null;
+  for (const r of radky) {
+    const m = r.match(/^(\S+)\s*(.*)$/);
+    const i = naSnimek(parsujCas(m[1]));
+    if (i === null) return oznam(`Nerozumím řádku: „${r}“`, 'chyba');
+    if (i === 0) { if (m[2]) nazevPrvni = m[2]; continue; }
+    nove.set(i, m[2] || '');
+  }
+  const prvni = S.meta[0];
+  S.rezy = []; S.meta = [prvni]; S.vybranyRez = -1;
+  if (nazevPrvni) { prvni.nazev = cistyNazev(nazevPrvni); prvni.auto = false; }
+  for (const i of [...nove.keys()].sort((a, b) => a - b)) pridejRez(i, nove.get(i) || null);
+  S.vybranyRez = -1;
+  poZmeneRezu();
+  oznam(`Nastaveno ${S.rezy.length} řezů → ${pocetSekci()} sekcí.`, 'ok');
+};
+
+// --- Uložení řezů k souboru (localStorage) ---
+const KLIC = 'webapp_videosekce';
+function klicSouboru() { return S.soubor ? `${S.soubor.name}|${S.soubor.size}` : null; }
+function ulozRezy() {
+  const k = klicSouboru();
+  if (!k || S.odhad) return;
+  try {
+    const vse = JSON.parse(localStorage.getItem(KLIC) || '{}');
+    vse[k] = { t: Date.now(), n: pocetSnimku(), rezy: S.rezy, meta: S.meta, predpona: $('predpona').value };
+    // Nejvýš 30 posledních videí.
+    const klice = Object.keys(vse).sort((a, b) => vse[b].t - vse[a].t);
+    for (const x of klice.slice(30)) delete vse[x];
+    localStorage.setItem(KLIC, JSON.stringify(vse));
+  } catch {}
+}
+function obnovUlozeneRezy() {
+  const k = klicSouboru();
+  if (!k || S.odhad) return;
+  try {
+    const z = JSON.parse(localStorage.getItem(KLIC) || '{}')[k];
+    if (!z || z.n !== pocetSnimku() || !Array.isArray(z.rezy) || z.meta.length !== z.rezy.length + 1) return;
+    if (z.rezy.some((r, j) => !(r > 0 && r < pocetSnimku()) || (j && r <= z.rezy[j - 1]))) return;
+    S.rezy = z.rezy.slice();
+    S.meta = z.meta.map(m => ({ nazev: String(m.nazev || ''), zap: m.zap !== false, auto: !!m.auto }));
+    if (z.predpona) $('predpona').value = z.predpona;
+    if (S.rezy.length) setTimeout(() => oznam(`Obnoveno ${S.rezy.length} řezů z minula.`, 'ok'), 1200);
+  } catch {}
+}
+
+// ============================================================
+//  ČASOVÁ OSA (plátno)
+// ============================================================
+const V = { pravitko: 18, pasy: 16, nahledy: 50, vlna: 40, znacky: 8 }; // výšky pásů v CSS px
+const Y = {};
+Y.pasy = V.pravitko; Y.nahledy = Y.pasy + V.pasy; Y.vlna = Y.nahledy + V.nahledy; Y.znacky = Y.vlna + V.vlna;
+const VYSKA = Y.znacky + V.znacky;
+
+let barvy = {};
+function nactiBarvy() {
+  const cs = getComputedStyle(document.documentElement);
+  const g = n => cs.getPropertyValue(n).trim();
+  barvy = {
+    pozadi: g('--bg-input') || '#1e1e1e', text: g('--text') || '#ddd', slaby: g('--text-faint') || '#999',
+    okraj: g('--border') || '#444', akcent: g('--accent') || '#6aa6fd', vlna: g('--text-muted') || '#aaa',
+    hlava: g('--warn') || '#e0a63f', svetly: document.documentElement.dataset.theme === 'light',
+  };
+}
+new MutationObserver(() => { nactiBarvy(); kresliOsu(); }).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+
+function nastavKreslicPlochy() {
+  const dpr = window.devicePixelRatio || 1;
+  for (const [c, v] of [[osa, VYSKA], [prehled, 18]]) {
+    const w = c.clientWidth || 600;
+    c.style.height = v + 'px';
+    c.width = Math.round(w * dpr);
+    c.height = Math.round(v * dpr);
+  }
+}
+
+const sirkaOsy = () => osa.clientWidth || 1;
+const xZCasu = t => (t - S.pohled.od) / (S.pohled.do - S.pohled.od) * sirkaOsy();
+const casZX = x => S.pohled.od + x / sirkaOsy() * (S.pohled.do - S.pohled.od);
+
+function nastavPohled(od, doo) {
+  const minRozsah = Math.min(S.delka, 12 / S.fps); // nejvíc přiblíženo = ~12 snímků přes celou šířku
+  let r = omez(doo - od, minRozsah, S.delka);
+  od = omez(od, 0, S.delka - r);
+  S.pohled = { od, do: od + r };
+  kresliOsu();
+  planujNahledy();
+}
+
+function zoom(faktor, kolemCasu = casSnimku(S.akt)) {
+  const { od, do: doo } = S.pohled;
+  const r = (doo - od) * faktor;
+  const pomer = (kolemCasu - od) / (doo - od);
+  nastavPohled(kolemCasu - r * omez(pomer, 0, 1), kolemCasu - r * omez(pomer, 0, 1) + r);
+}
+
+function udrzVPohledu(t, plynule = false) {
+  const { od, do: doo } = S.pohled, r = doo - od;
+  if (t >= od && t <= doo) return;
+  if (plynule) nastavPohled(t - r * 0.1, t + r * 0.9);
+  else nastavPohled(t - r / 2, t + r / 2);
+}
+
+function krokPravitka(rozsah, sirka) {
+  // Cíl: popisek zhruba po 90 px.
+  const cil = rozsah / Math.max(1, sirka / 90);
+  const kroky = [0.001, 0.002, 0.005, 0.01, 0.02, 0.05, 0.1, 0.2, 0.5, 1, 2, 5, 10, 15, 30, 60, 120, 300, 600, 900, 1800, 3600, 7200];
+  return kroky.find(k => k >= cil) || 7200;
+}
+
+function kresliOsu() {
+  if (!S.delka) return;
+  if (!barvy.text) nactiBarvy();
+  const dpr = osa.width / sirkaOsy();
+  const c = osa.getContext('2d');
+  const W = sirkaOsy();
+  c.setTransform(dpr, 0, 0, dpr, 0, 0);
+  c.clearRect(0, 0, W, VYSKA);
+  c.fillStyle = barvy.pozadi;
+  c.fillRect(0, 0, W, VYSKA);
+  const { od, do: doo } = S.pohled;
+  const rozsah = doo - od;
+  const pxNaSnimek = W / (rozsah * S.fps);
+
+  // --- Náhledy ---
+  const vyskaN = V.nahledy;
+  const sirkaN = vyskaN * S.pomer;
+  if (S.nahledy.size) {
+    const slot = sirkaN / W * rozsah;
+    const prvni = Math.floor(od / slot);
+    for (let j = prvni; j * slot < doo; j++) {
+      const t = Math.max(0, j * slot);
+      const n = nejblizsiNahled(t + slot / 2);
+      if (n) c.drawImage(n, xZCasu(j * slot), Y.nahledy, sirkaN, vyskaN);
+    }
+  } else {
+    c.fillStyle = barvy.svetly ? '#d8dce1' : '#2a2a2a';
+    c.fillRect(0, Y.nahledy, W, vyskaN);
+  }
+
+  // --- Sekce: barevný pás + ztmavení vypnutých ---
+  const h = hranice();
+  for (let k = 0; k < h.length - 1; k++) {
+    const x1 = xZCasu(casSnimku(h[k])), x2 = xZCasu(casSnimku(h[k + 1]));
+    if (x2 < 0 || x1 > W) continue;
+    const barva = BARVY[k % BARVY.length];
+    c.fillStyle = barva;
+    c.globalAlpha = S.meta[k].zap ? 0.85 : 0.3;
+    c.fillRect(x1, Y.pasy, x2 - x1, V.pasy);
+    c.globalAlpha = 1;
+    if (!S.meta[k].zap) {
+      c.fillStyle = 'rgba(0,0,0,0.55)';
+      c.fillRect(x1, Y.nahledy, x2 - x1, vyskaN);
+    }
+    const viditelneX = Math.max(x1, 0) + 4, mistoPx = Math.min(x2, W) - viditelneX - 4;
+    if (mistoPx > 16) {
+      c.save();
+      c.beginPath(); c.rect(viditelneX, Y.pasy, mistoPx, V.pasy); c.clip();
+      c.fillStyle = '#fff';
+      c.font = '600 11px system-ui, sans-serif';
+      c.textBaseline = 'middle';
+      c.fillText(`${k + 1}${mistoPx > 60 ? ' · ' + S.meta[k].nazev : ''}`, viditelneX, Y.pasy + V.pasy / 2 + 0.5);
+      c.restore();
+    }
+  }
+
+  // --- Zvuková vlna ---
+  c.fillStyle = barvy.svetly ? '#eef0f3' : '#161616';
+  c.fillRect(0, Y.vlna, W, V.vlna);
+  if (S.vlna) {
+    const stred = Y.vlna + V.vlna / 2, amp = V.vlna / 2 - 2;
+    c.fillStyle = barvy.vlna;
+    const sloupce = sloupceVlny(W);
+    for (let x = 0; x < W; x++) {
+      const mx = sloupce[x];
+      if (mx > 0) { const hh = Math.max(0.5, Math.min(1, mx) * amp); c.fillRect(x, stred - hh, 1, hh * 2); }
+    }
+  } else {
+    c.fillStyle = barvy.slaby;
+    c.font = '11px system-ui, sans-serif';
+    c.textBaseline = 'middle';
+    c.fillText(S.lzeExport ? 'zvuk se načítá…' : '', 8, Y.vlna + V.vlna / 2);
+  }
+
+  // --- Snímky a klíčové snímky ---
+  if (pxNaSnimek >= 4) {
+    c.fillStyle = barvy.okraj;
+    const i0 = snimekVCase(od), i1 = snimekVCase(doo);
+    for (let i = i0; i <= i1; i++) {
+      const x = Math.round(xZCasu(casSnimku(i))) + 0.5;
+      c.fillRect(x, Y.znacky + 4, 1, V.znacky - 4);
+      if (pxNaSnimek >= 10) { c.globalAlpha = 0.25; c.fillRect(x, Y.nahledy, 1, vyskaN + V.vlna); c.globalAlpha = 1; }
+    }
+  }
+  if (S.klice.length) {
+    c.fillStyle = barvy.svetly ? '#2c8a57' : '#4caf7d';
+    let lo = 0;
+    while (lo < S.klice.length && S.klice[lo] < od) lo++;
+    for (let q = lo; q < S.klice.length && S.klice[q] <= doo; q++) {
+      const x = xZCasu(S.klice[q]);
+      c.fillRect(Math.round(x) - 1, Y.znacky, 2, V.znacky);
+    }
+  }
+
+  // --- Pravítko ---
+  c.fillStyle = barvy.svetly ? '#e4e7eb' : '#202020';
+  c.fillRect(0, 0, W, V.pravitko);
+  const krok = krokPravitka(rozsah, W);
+  c.fillStyle = barvy.slaby;
+  c.strokeStyle = barvy.okraj;
+  c.font = '10px ui-monospace, Consolas, monospace';
+  c.textBaseline = 'middle';
+  const sHod = S.delka >= 3600;
+  for (let j = Math.ceil(od / krok - 1e-9); j * krok <= doo + 1e-9; j++) {
+    const t = j * krok;
+    const x = Math.round(xZCasu(t)) + 0.5;
+    c.fillRect(x, V.pravitko - 6, 1, 6);
+    let popis = fmtCas(t, sHod);
+    if (krok >= 1) popis = popis.replace(/\.000$/, '');
+    else if (krok >= 0.1) popis = popis.replace(/00$/, '');
+    else if (krok >= 0.01) popis = popis.replace(/0$/, '');
+    c.fillText(popis, x + 3, 8);
+  }
+
+  // --- Řezy ---
+  S.rezy.forEach((r, p) => {
+    const x = Math.round(xZCasu(casSnimku(r)));
+    if (x < -10 || x > W + 10) return;
+    const vybrany = p === S.vybranyRez;
+    c.fillStyle = vybrany ? barvy.akcent : barvy.text;
+    c.fillRect(x - (vybrany ? 1 : 0.5), 0, vybrany ? 2 : 1.5, VYSKA);
+    c.beginPath();
+    c.moveTo(x - 6, 0); c.lineTo(x + 6, 0); c.lineTo(x, 9); c.closePath();
+    c.fill();
+  });
+
+  // --- Přehrávací hlava ---
+  const xh = xZCasu(casSnimku(S.akt));
+  const xh2 = xZCasu(konecSnimku(S.akt));
+  if (xh2 - xh >= 3) { // při velkém přiblížení vyznačit celý snímek
+    c.fillStyle = barvy.hlava;
+    c.globalAlpha = 0.18;
+    c.fillRect(xh, 0, xh2 - xh, VYSKA);
+    c.globalAlpha = 1;
+  }
+  c.fillStyle = barvy.hlava;
+  c.fillRect(Math.round(xh) - 1, 0, 2, VYSKA);
+
+  $('osaRozsah').textContent = `${fmtCas(od)} – ${fmtCas(doo)}` + (pxNaSnimek >= 4 ? ' · vidíte jednotlivé snímky' : '');
+  kresliPrehled();
+}
+
+// Maxima vlny po pixelech – přepočítají se jen při změně pohledu nebo dat.
+let vlnaCache = { klic: '' };
+function sloupceVlny(W) {
+  const klic = `${S.pohled.od}|${S.pohled.do}|${W}|${S.vlnaVerze}`;
+  if (vlnaCache.klic === klic) return vlnaCache.data;
+  const data = new Float32Array(W), krok = S.vlnaKrok;
+  for (let x = 0; x < W; x++) {
+    const a = Math.floor(casZX(x) / krok), b = Math.max(a + 1, Math.floor(casZX(x + 1) / krok));
+    let mx = 0;
+    for (let q = Math.max(0, a); q < Math.min(b, S.vlna.length); q++) if (S.vlna[q] > mx) mx = S.vlna[q];
+    data[x] = mx;
+  }
+  vlnaCache = { klic, data };
+  return data;
+}
+
+function kresliPrehled() {
+  const dpr = prehled.width / (prehled.clientWidth || 1);
+  const c = prehled.getContext('2d');
+  const W = prehled.clientWidth || 1, H = 18;
+  c.setTransform(dpr, 0, 0, dpr, 0, 0);
+  c.fillStyle = barvy.pozadi;
+  c.fillRect(0, 0, W, H);
+  const x = t => t / S.delka * W;
+  const h = hranice();
+  for (let k = 0; k < h.length - 1; k++) {
+    c.fillStyle = BARVY[k % BARVY.length];
+    c.globalAlpha = S.meta[k].zap ? 0.6 : 0.2;
+    c.fillRect(x(casSnimku(h[k])), 4, x(casSnimku(h[k + 1])) - x(casSnimku(h[k])), H - 8);
+  }
+  c.globalAlpha = 1;
+  c.fillStyle = barvy.text;
+  for (const r of S.rezy) c.fillRect(Math.round(x(casSnimku(r))), 2, 1, H - 4);
+  c.strokeStyle = barvy.akcent;
+  c.lineWidth = 2;
+  const vx1 = x(S.pohled.od), vx2 = Math.max(vx1 + 4, x(S.pohled.do));
+  c.strokeRect(vx1 + 1, 1, vx2 - vx1 - 2, H - 2);
+  c.fillStyle = barvy.hlava;
+  c.fillRect(Math.round(x(casSnimku(S.akt))) - 1, 0, 2, H);
+}
+
+function prekresliVse() { vykresliTabulku(); kresliOsu(); aktualizujOdecet(); }
+
+// --- Ovládání osy myší / dotykem ---
+function rezPodX(x) {
+  let nej = -1, vzd = 7;
+  S.rezy.forEach((r, p) => { const d = Math.abs(xZCasu(casSnimku(r)) - x); if (d <= vzd) { vzd = d; nej = p; } });
+  return nej;
+}
+function snimekZX(x) { return snimekVCase(omez(casZX(x), 0, S.delka - 1e-9)); }
+
+osa.addEventListener('pointerdown', e => {
+  if (!S.delka || e.button > 0) return;
+  const r = osa.getBoundingClientRect(), x = e.clientX - r.left;
+  try { osa.setPointerCapture(e.pointerId); } catch {}
+  zastav();
+  const p = rezPodX(x);
+  if (p >= 0) {
+    S.tazeni = { typ: 'rez', pos: p, puvodni: S.rezy[p] };
+    S.vybranyRez = p;
+    kresliOsu();
+  } else {
+    S.tazeni = { typ: 'hlava' };
+    jdiNaSnimek(snimekZX(x), { drzPohled: true });
+  }
+});
+osa.addEventListener('pointermove', e => {
+  const r = osa.getBoundingClientRect(), x = e.clientX - r.left;
+  if (!S.tazeni) { osa.style.cursor = rezPodX(x) >= 0 ? 'ew-resize' : 'crosshair'; return; }
+  const i = snimekZX(omez(x, 0, sirkaOsy()));
+  if (S.tazeni.typ === 'rez') {
+    const p = S.tazeni.pos;
+    const min = p > 0 ? S.rezy[p - 1] + 1 : 1;
+    const max = p < S.rezy.length - 1 ? S.rezy[p + 1] - 1 : pocetSnimku() - 1;
+    S.rezy[p] = omez(i, min, max);
+    S.akt = S.rezy[p];
+    video.currentTime = (casSnimku(S.akt) + konecSnimku(S.akt)) / 2;
+    aktualizujOdecet();
+    kresliOsu();
+  } else {
+    jdiNaSnimek(i, { drzPohled: true });
+  }
+});
+function konecTazeni() {
+  if (S.tazeni && S.tazeni.typ === 'rez' && S.rezy[S.tazeni.pos] !== S.tazeni.puvodni) poZmeneRezu();
+  S.tazeni = null;
+}
+osa.addEventListener('pointerup', konecTazeni);
+osa.addEventListener('pointercancel', konecTazeni);
+osa.addEventListener('dblclick', e => {
+  const r = osa.getBoundingClientRect(), x = e.clientX - r.left;
+  if (rezPodX(x) >= 0) return;
+  pridejRez(snimekZX(x));
+});
+osa.addEventListener('wheel', e => {
+  if (!S.delka) return;
+  e.preventDefault();
+  const r = osa.getBoundingClientRect(), x = e.clientX - r.left;
+  const rozsah = S.pohled.do - S.pohled.od;
+  if (e.shiftKey || Math.abs(e.deltaX) > Math.abs(e.deltaY)) {
+    const d = (e.shiftKey ? e.deltaY : e.deltaX) || e.deltaY;
+    nastavPohled(S.pohled.od + d / sirkaOsy() * rozsah, S.pohled.do + d / sirkaOsy() * rozsah);
+  } else {
+    zoom(Math.pow(1.0015, e.deltaY), casZX(x));
+  }
+}, { passive: false });
+
+// Přehled: tažení okna pohledu.
+let tahPrehledu = null;
+prehled.addEventListener('pointerdown', e => {
+  if (!S.delka) return;
+  try { prehled.setPointerCapture(e.pointerId); } catch {}
+  const r = prehled.getBoundingClientRect();
+  const t = (e.clientX - r.left) / r.width * S.delka;
+  const rozsah = S.pohled.do - S.pohled.od;
+  if (t < S.pohled.od || t > S.pohled.do) nastavPohled(t - rozsah / 2, t + rozsah / 2);
+  tahPrehledu = { x: e.clientX, od: S.pohled.od };
+});
+prehled.addEventListener('pointermove', e => {
+  if (!tahPrehledu) return;
+  const r = prehled.getBoundingClientRect();
+  const d = (e.clientX - tahPrehledu.x) / r.width * S.delka;
+  const rozsah = S.pohled.do - S.pohled.od;
+  nastavPohled(tahPrehledu.od + d, tahPrehledu.od + d + rozsah);
+});
+prehled.addEventListener('pointerup', () => { tahPrehledu = null; });
+prehled.addEventListener('pointercancel', () => { tahPrehledu = null; });
+
+$('tlPriblizit').onclick = () => zoom(0.5);
+$('tlOddalit').onclick = () => zoom(2);
+$('tlCela').onclick = () => nastavPohled(0, S.delka);
+
+let casovacVelikosti = null;
+new ResizeObserver(() => {
+  if (!S.delka) return;
+  clearTimeout(casovacVelikosti);
+  casovacVelikosti = setTimeout(() => { nastavKreslicPlochy(); kresliOsu(); planujNahledy(); }, 100);
+}).observe(osa);
+
+// ============================================================
+//  NÁHLEDY (dekódované přes mediabunny, líně podle pohledu)
+// ============================================================
+let nahledySink = null, nahledyBezi = false, nahledyZnovu = false, casovacNahledu = null;
+
+function nejblizsiNahled(t) {
+  // Nejbližší už vygenerovaný náhled; čas = začátek snímku podle klíče.
+  let nej = null, vzd = Infinity;
+  for (const [i, cnv] of S.nahledy) {
+    const d = Math.abs(casSnimku(i) - t);
+    if (d < vzd) { vzd = d; nej = cnv; }
+  }
+  return nej;
+}
+
+function planujNahledy() {
+  clearTimeout(casovacNahledu);
+  casovacNahledu = setTimeout(generujNahledy, 120);
+}
+
+async function generujNahledy() {
+  if (!S.input || !S.lzeExport) return;
+  if (nahledyBezi) { nahledyZnovu = true; return; }
+  nahledyBezi = true;
+  const gen = generace;
+  try {
+    if (!nahledySink || nahledySink._gen !== gen) {
+      const vt = await S.input.getPrimaryVideoTrack();
+      if (!(await vt.canDecode())) { nahledyBezi = false; return; }
+      nahledySink = new MB.CanvasSink(vt, { height: 90, fit: 'contain', poolSize: 0 });
+      nahledySink._gen = gen;
+    }
+    const W = sirkaOsy(), rozsah = S.pohled.do - S.pohled.od;
+    const slot = V.nahledy * S.pomer / W * rozsah;
+    const chci = [];
+    for (let j = Math.floor(S.pohled.od / slot); j * slot < S.pohled.do; j++) {
+      const i = snimekVCase(Math.min(S.delka - 1e-6, Math.max(0, j * slot + slot / 2)));
+      // Stačí, když už existuje náhled bližší než čtvrtina slotu.
+      let blizko = false;
+      for (const k of S.nahledy.keys()) if (Math.abs(casSnimku(k) - casSnimku(i)) < slot / 4) { blizko = true; break; }
+      if (!blizko && !chci.includes(i)) chci.push(i);
+    }
+    if (chci.length) {
+      const casy = chci.map(i => (casSnimku(i) + konecSnimku(i)) / 2);
+      let q = 0;
+      for await (const w of nahledySink.canvasesAtTimestamps(casy)) {
+        if (gen !== generace) return;
+        if (w) {
+          S.nahledy.set(chci[q], w.canvas);
+          if (S.nahledy.size > 400) S.nahledy.delete(S.nahledy.keys().next().value);
+        }
+        q++;
+        if (q % 4 === 0) kresliOsu();
+        if (nahledyZnovu) break;
+      }
+      kresliOsu();
+    }
+  } catch (err) {
+    console.warn('Náhledy:', err);
+  } finally {
+    nahledyBezi = false;
+    if (nahledyZnovu) { nahledyZnovu = false; planujNahledy(); }
+  }
+}
+
+// ============================================================
+//  ZVUKOVÁ VLNA
+// ============================================================
+async function nactiVlnu(gen) {
+  try {
+    const at = await S.input.getPrimaryAudioTrack();
+    if (!at || !(await at.canDecode())) { S.vlna = new Float32Array(0); kresliOsu(); return; }
+    const krok = S.vlnaKrok;
+    const vlna = new Float32Array(Math.ceil(S.delka / krok) + 1);
+    const sink = new MB.AudioBufferSink(at);
+    let posledni = performance.now();
+    for await (const { buffer, timestamp } of sink.buffers()) {
+      if (gen !== generace) return;
+      const sr = buffer.sampleRate, nk = Math.min(2, buffer.numberOfChannels);
+      const naKos = Math.max(1, Math.round(sr * krok));
+      for (let ch = 0; ch < nk; ch++) {
+        const d = buffer.getChannelData(ch);
+        for (let s0 = 0; s0 < d.length; s0 += naKos) {
+          const kos = Math.floor((timestamp + s0 / sr) / krok);
+          if (kos < 0 || kos >= vlna.length) continue;
+          let mx = vlna[kos];
+          const kon = Math.min(d.length, s0 + naKos);
+          for (let s = s0; s < kon; s++) { const v = d[s] < 0 ? -d[s] : d[s]; if (v > mx) mx = v; }
+          vlna[kos] = mx;
+        }
+      }
+      if (performance.now() - posledni > 400) { S.vlna = vlna; S.vlnaVerze++; kresliOsu(); posledni = performance.now(); }
+    }
+    S.vlna = vlna;
+    S.vlnaVerze++;
+    kresliOsu();
+  } catch (err) {
+    console.warn('Zvuková vlna:', err);
+    if (gen === generace) { S.vlna = new Float32Array(0); kresliOsu(); }
+  }
+}
+
+// ============================================================
+//  UKLÁDÁNÍ SEKCÍ
+// ============================================================
+const FORMATY = {
+  mp4: { pripona: 'mp4', vyrob: () => new MB.Mp4OutputFormat() },
+  mov: { pripona: 'mov', vyrob: () => new MB.MovOutputFormat() },
+  webm: { pripona: 'webm', vyrob: () => new MB.WebMOutputFormat() },
+  mkv: { pripona: 'mkv', vyrob: () => new MB.MkvOutputFormat() },
+};
+function vystupniFormat() {
+  const v = $('format').value;
+  return FORMATY[v === 'stejny' ? (S.vstupFormat || 'mp4') : v];
+}
+
+function popisRezimu() {
+  $('napovedaRezim').textContent = $('rezim').value === 'bezztraty'
+    ? 'Obraz i zvuk se zkopírují beze změny tam, kde to jde – je to rychlé a kvalita zůstane původní. Začíná-li sekce mimo klíčový snímek (zelené čárky pod osou), uloží se video od předchozího klíčového snímku a přebytek skryje značka v souboru (MP4/MOV), nebo se úsek překóduje. Kdyby některý přehrávač ukazoval na začátku pár snímků navíc, použijte „Vždy překódovat“.'
+    : 'Každá sekce se znovu zakóduje: začátek i konec sedí na snímek v každém přehrávači, ale převod trvá déle a kvalitu určuje volba vpravo.';
+}
+$('rezim').addEventListener('change', () => { popisRezimu(); vykresliTabulku(); });
+$('format').addEventListener('change', vykresliTabulku);
+popisRezimu();
+
+function unikatniNazvy(seznam) {
+  const pouzite = new Map();
+  return seznam.map(n => {
+    const kl = n.toLowerCase();
+    const c = (pouzite.get(kl) || 0) + 1;
+    pouzite.set(kl, c);
+    return c === 1 ? n : `${n} (${c})`;
+  });
+}
+
+function stahni(blob, nazev) {
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = nazev;
+  document.body.appendChild(a); a.click(); a.remove();
+  setTimeout(() => URL.revokeObjectURL(url), 60000);
+}
+
+async function prevedSekci(k, cil, priPrubehu) {
+  const s = sekce(k);
+  const fmt = vystupniFormat();
+  const kvalita = MB['QUALITY_' + $('kvalita').value];
+  const output = new MB.Output({ format: fmt.vyrob(), target: cil });
+  const input = new MB.Input({ source: new MB.BlobSource(S.soubor), formats: MB.ALL_FORMATS });
+  try {
+    const conv = await MB.Conversion.init({
+      input, output,
+      trim: { start: s.od, end: s.do },
+      copy: $('rezim').value === 'prekodovat' ? false : {},
+      video: { quality: kvalita },
+      audio: { quality: kvalita },
+      showWarnings: false,
+    });
+    if (!conv.isValid) {
+      const duvody = conv.discardedTracks.map(d => `${d.track.type}: ${d.reason}`).join(', ');
+      throw new Error('Tento formát nelze z videa vytvořit (' + duvody + '). Zkuste jiný výstupní formát.');
+    }
+    const zahozeno = conv.discardedTracks.filter(d => d.track.type === 'audio' || d.track.type === 'video');
+    S.export = conv;
+    conv.onProgress = p => priPrubehu(p);
+    await conv.execute();
+    return { output, zahozeno };
+  } finally {
+    S.export = null;
+    try { input.dispose(); } catch {}
+  }
+}
+
+async function ulozSekce(seznam, doSlozky = null) {
+  if (!S.lzeExport) return oznam('Tento soubor nelze v prohlížeči stříhat.', 'chyba');
+  if (S.export) return;
+  zastav();
+  const fmt = vystupniFormat();
+  const nazvy = unikatniNazvy(seznam.map(k => S.meta[k].nazev || `sekce_${k + 1}`)).map(n => `${n}.${fmt.pripona}`);
+  S.zrusitExport = false;
+  $('tlZrusit').hidden = false;
+  $('prubeh').classList.add('vidit');
+  vykresliTabulku();
+  let hotovo = 0, chyby = 0;
+  const varovani = new Set();
+  for (let q = 0; q < seznam.length; q++) {
+    if (S.zrusitExport) break;
+    const k = seznam[q], nazev = nazvy[q];
+    const popis = `(${q + 1}/${seznam.length}) ${nazev}`;
+    const prubeh = p => {
+      $('prubehText').textContent = `Ukládám ${popis} – ${Math.round(p * 100)} %`;
+      $('prubehPruh').style.width = ((q + p) / seznam.length * 100).toFixed(1) + '%';
+    };
+    prubeh(0);
+    try {
+      let cil, zapis = null;
+      if (doSlozky) {
+        const fh = await doSlozky.getFileHandle(nazev, { create: true });
+        zapis = await fh.createWritable();
+        cil = new MB.StreamTarget(zapis, { chunked: true });
+      } else {
+        cil = new MB.BufferTarget();
+      }
+      const { output, zahozeno } = await prevedSekci(k, cil, prubeh);
+      zahozeno.forEach(d => varovani.add(d.track.type === 'audio' ? 'zvuk' : 'obraz'));
+      if (!doSlozky) {
+        stahni(new Blob([output.target.buffer], { type: output.format.mimeType }), nazev);
+        // Prohlížeče blokují rychle za sebou spuštěná stahování – krátká pauza.
+        if (q < seznam.length - 1) await new Promise(r => setTimeout(r, 400));
+      }
+      hotovo++;
+    } catch (err) {
+      if (err instanceof MB.ConversionCanceledError || S.zrusitExport) break;
+      console.error('Uložení sekce', k + 1, err);
+      chyby++;
+      oznam(`Sekci ${nazev} se nepodařilo uložit: ${err.message || err}`, 'chyba');
+    }
+  }
+  $('prubehPruh').style.width = '100%';
+  $('prubehText').textContent = S.zrusitExport
+    ? `Zastaveno – uloženo ${hotovo} z ${seznam.length}.`
+    : `Hotovo – uloženo ${hotovo} z ${seznam.length}${chyby ? `, ${chyby} se nepovedlo` : ''}.`;
+  $('tlZrusit').hidden = true;
+  if (varovani.size) oznam(`Pozor: ${[...varovani].join(' a ')} nešlo do zvoleného formátu převést a ve výstupu chybí.`, 'chyba');
+  else if (hotovo && !chyby && !S.zrusitExport) oznam(`Uloženo ${hotovo} ${hotovo === 1 ? 'video' : hotovo < 5 ? 'videa' : 'videí'}.`, 'ok');
+  vykresliTabulku();
+}
+
+function vybraneSekce() { return S.meta.map((m, k) => m.zap ? k : -1).filter(k => k >= 0); }
+$('tlUlozVybrane').onclick = () => ulozSekce(vybraneSekce());
+if ('showDirectoryPicker' in window) {
+  $('tlUlozSlozka').hidden = false;
+  $('tlUlozSlozka').onclick = async () => {
+    let slozka;
+    try { slozka = await window.showDirectoryPicker({ mode: 'readwrite', id: 'videosekce' }); }
+    catch { return; }
+    ulozSekce(vybraneSekce(), slozka);
+  };
+}
+$('tlZrusit').onclick = () => {
+  S.zrusitExport = true;
+  if (S.export) S.export.cancel();
+};
+window.addEventListener('beforeunload', e => { if (S.export) { e.preventDefault(); e.returnValue = ''; } });
+
+// ============================================================
+//  KLÁVESNICE
+// ============================================================
+document.addEventListener('keydown', e => {
+  if (!S.delka) return;
+  const t = e.target;
+  if (t.closest && t.closest('input, textarea, select')) return;
+  if (e.altKey || e.metaKey) return;
+  const kod = e.code;
+  let hotovo = true;
+  if (kod === 'Space') prepniHrani();
+  else if (kod === 'ArrowLeft' || kod === 'ArrowRight') {
+    const smer = kod === 'ArrowLeft' ? -1 : 1;
+    if (e.ctrlKey) posunCas(10 * smer);
+    else if (e.shiftKey) posunCas(smer);
+    else posun(smer);
+  }
+  else if (e.ctrlKey) hotovo = false;
+  else if (e.key === '+') zoom(0.5);
+  else if (e.key === '-') zoom(2);
+  else if (kod === 'Home') jdiNaSnimek(0);
+  else if (kod === 'End') jdiNaSnimek(pocetSnimku() - 1);
+  else if (kod === 'Comma') sousedniKlic(-1);
+  else if (kod === 'Period') sousedniKlic(1);
+  else if (kod === 'BracketLeft') skokNaRez(-1);
+  else if (kod === 'BracketRight') skokNaRez(1);
+  else if (kod === 'KeyM') $('tlRez').click();
+  else if (kod === 'KeyU') $('tlPresun').click();
+  else if (kod === 'KeyP') $('tlOkoli').click();
+  else if (kod === 'Delete' || kod === 'Backspace') $('tlSmazRez').click();
+  else if (kod === 'Equal' || kod === 'NumpadAdd') zoom(0.5);
+  else if (kod === 'Minus' || kod === 'NumpadSubtract' || kod === 'Slash') zoom(2);
+  else if (kod === 'Digit0' || kod === 'Numpad0') nastavPohled(0, S.delka);
+  else hotovo = false;
+  if (hotovo) e.preventDefault();
+});
+
+// Pro testy.
+window.VIDEO_SEKCE = { S, nactiSoubor, jdiNaSnimek, pridejRez, odeberRez, presunRez, sekce, hranice, ulozSekce, prevedSekci, parsujCas, fmtCas, snimekVCase, nastavPohled, kresliOsu };
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,492 @@
+<div align="center">
+
+# occt-wasm
+
+[![npm](https://img.shields.io/npm/v/occt-wasm)](https://www.npmjs.com/package/occt-wasm)
+[![Crates.io](https://img.shields.io/crates/v/occt-wasm.svg)](https://crates.io/crates/occt-wasm)
+[![CI](https://github.com/andymai/occt-wasm/actions/workflows/ci.yml/badge.svg)](https://github.com/andymai/occt-wasm/actions/workflows/ci.yml)
+[![Last release](https://img.shields.io/github/release-date/andymai/occt-wasm?label=last%20release)](https://github.com/andymai/occt-wasm/releases)
+[![Commit activity](https://img.shields.io/github/commit-activity/m/andymai/occt-wasm?label=commits%2Fmonth)](https://github.com/andymai/occt-wasm/commits/main)
+[![License](https://img.shields.io/badge/tooling-MIT%20OR%20Apache--2.0-blue.svg)](#license) [![WASM License](https://img.shields.io/badge/wasm%20output-LGPL--2.1--only-blue.svg)](#license)
+
+[OpenCascade](https://github.com/Open-Cascade-SAS/OCCT) V8 compiled to WebAssembly with a clean TypeScript API.
+
+Smaller bundles, branded types, arena-based memory, and modern tooling.
+
+</div>
+
+> **Looking for a higher-level CAD library?** [brepjs](https://github.com/andymai/brepjs) builds on occt-wasm with a friendlier API for parametric modeling, sketching, and production CAD applications. Use occt-wasm directly when you need full control over OCCT operations.
+
+## Highlights
+
+- **~4.5 MB brotli** -- roughly 2x smaller than opencascade.js
+- **Comprehensive API** -- primitives, booleans, sweeps, XCAF assemblies, curves, surfaces, STEP/STL/glTF/BREP I/O, topology, shape evolution tracking
+- **Arena-based API** -- u32 shape handles, no manual `.delete()`, `Symbol.dispose` support
+- **TypeScript-first** -- branded `ShapeHandle`, union types for shapes/surfaces/curves, structured returns
+- **Structured error handling** -- `OcctErrorCode` enum for programmatic `switch/case` instead of string parsing
+- **Web Worker support** -- `OcctWorker` class for off-main-thread CAD operations via [Comlink](https://github.com/GoogleChromeLabs/comlink)
+- **Modern browser targets** -- WASM SIMD, tail calls, wasm-exceptions
+
+## Scope
+
+To set expectations, this library deliberately does not:
+
+- **Provide a higher-level CAD modeling API** — parametric sketching, constraints, feature trees, and ergonomic modeling belong in [brepjs](https://github.com/andymai/brepjs), which wraps occt-wasm for that purpose
+- **Manage memory automatically beyond arena handles** — shapes are freed when the kernel is disposed or you call `release()`; there is no per-shape garbage collection
+- **Support non-WASM-SIMD browsers** — the build requires WASM SIMD (baseline `-msimd128`), tail calls, and wasm exceptions, so it needs a recent engine (see [Browser Compatibility](#browser-compatibility)). Relaxed-SIMD is intentionally not used: some Safari/iOS WebKit builds fail to compile relaxed-SIMD modules, and it made geometry non-reproducible across CPUs
+- **Include OCCT visualization or display modules** — TKV3d, TKHLR (except the HLR facade), and the AIS interactive context are excluded; bring your own renderer (Three.js, Babylon.js, etc.)
+- **Support IGES import/export** -- TKDEIGES is excluded from the link; use STEP for interchange
+
+## Install
+
+```bash
+npm install occt-wasm
+```
+
+## Quick Start
+
+```typescript check
+import { OcctKernel } from "occt-wasm";
+
+// Recommended: deterministic cleanup via Symbol.dispose
+{
+  using kernel = await OcctKernel.init();
+
+  // Primitives
+  const box = kernel.makeBox(20, 20, 20);
+  const cyl = kernel.makeCylinder(8, 30);
+
+  // Modeling -- fillet takes a solid, so round the box before combining
+  const edges = kernel.getSubShapes(box, "edge");
+  const filleted = kernel.fillet(box, edges.slice(0, 4), 2.0);
+
+  // Booleans
+  const fused = kernel.fuse(filleted, cyl);
+
+  // Tessellation -> Three.js / Babylon.js
+  const mesh = kernel.tessellate(fused);
+  // mesh.positions (Float32Array), mesh.normals, mesh.indices
+
+  // Edge overlay that shares vertices with that mesh (falls back to
+  // curve sampling for edges that were never meshed)
+  const outline = kernel.wireframe(fused, { source: "triangulation" });
+
+  // STEP I/O
+  const step = kernel.exportStep(fused);
+  const reimported = kernel.importStep(step);
+
+  // Query
+  const vol = kernel.getVolume(fused);
+  const bbox = kernel.getBoundingBox(fused);
+  const com = kernel.getCenterOfMass(fused);
+
+  // kernel is disposed at end of block
+}
+```
+
+> **Boolean results are compounds.** OCCT's `BRepAlgoAPI` operations wrap their
+> output in a `TopoDS_Compound` — a boolean can produce several disjoint solids.
+> The operations that downcast to a solid (`fillet`, `chamfer`, `filletVariable`,
+> `filletBatch`, `healSolid`) reject one, so unwrap first:
+>
+> ```typescript check kernel,fused
+> const [solid] = kernel.getSubShapes(fused, "solid");
+> if (!solid) throw new Error("boolean produced no solid");
+> ```
+>
+> **Not every edge is filletable.** Seam and degenerate edges are not, so on a
+> shape you didn't build yourself, select edges by geometry rather than by index.
+> The `slice(0, 4)` above is safe only because all 12 edges of a plain box round
+> cleanly — on the box-plus-cylinder fusion, only 13 of 20 edges do.
+
+## Rust Crate
+
+The same OCCT WASM is available as a [Rust crate](https://crates.io/crates/occt-wasm) for native targets (servers, CLIs, build scripts) — no C++ toolchain required:
+
+```toml
+[dependencies]
+occt-wasm = "3"
+```
+
+```rust
+use occt_wasm::OcctKernel;
+
+let mut kernel = OcctKernel::new()?;
+let box_shape = kernel.make_box(10.0, 20.0, 30.0)?;
+let sphere = kernel.make_sphere(8.0)?;
+let fused = kernel.fuse(box_shape, sphere)?;
+let mesh = kernel.tessellate(fused, 0.1, 0.5)?;
+let step = kernel.export_step(fused)?;
+```
+
+The crate embeds a brotli-compressed WASM binary (~4.7 MB) and runs it via [wasmtime](https://wasmtime.dev/). Same 170+ facade methods as the TS API. See [`crate/README.md`](./crate/README.md) and [docs.rs/occt-wasm](https://docs.rs/occt-wasm) for full details.
+
+## Initialization
+
+By default, `OcctKernel.init()` auto-locates the `.wasm` file next to the JS module. You can also provide explicit paths or pre-loaded binaries:
+
+```typescript check
+import { OcctKernel } from "occt-wasm";
+
+// Auto-detect (browser, Node.js, or Worker):
+const kernel = await OcctKernel.init();
+
+// ...or point at an explicit URL / path:
+await OcctKernel.init({ wasm: "/assets/occt-wasm.wasm" });
+
+// ...or hand over a pre-fetched binary, skipping the fetch:
+const binary = await fetch("/occt-wasm.wasm").then((r) => r.arrayBuffer());
+await OcctKernel.init({ wasm: binary });
+await OcctKernel.init({ wasm: new Uint8Array(binary) });
+```
+
+## Error Handling
+
+All errors are instances of `OcctError` with a structured `code` field for programmatic handling:
+
+```typescript check kernel,a,b
+import { OcctError, OcctErrorCode } from "occt-wasm";
+
+try {
+  kernel.fuse(a, b);
+} catch (e) {
+  if (e instanceof OcctError) {
+    switch (e.code) {
+      case OcctErrorCode.BooleanFailed:
+        // retry with simpler geometry
+        break;
+      case OcctErrorCode.InvalidShapeId:
+        // shape was already released
+        break;
+      case OcctErrorCode.KernelError:
+        // OCCT internal error (Standard_Failure)
+        console.error(e.message);
+        break;
+    }
+  }
+}
+```
+
+Available error codes:
+
+| Code                 | When                                            |
+| -------------------- | ----------------------------------------------- |
+| `ConstructionFailed` | `Build()`/`IsDone()` returned false             |
+| `BooleanFailed`      | Boolean operation (fuse/cut/common/etc.) failed |
+| `InvalidShapeId`     | Shape ID not found in the arena                 |
+| `InvalidLabelId`     | XCAF label ID not found                         |
+| `TessellationFailed` | Meshing operation failed                        |
+| `ImportExportFailed` | STEP/STL/BREP I/O error                         |
+| `HealingFailed`      | Shape repair failed                             |
+| `DocumentClosed`     | Operation on a closed XCAF document             |
+| `KernelError`        | OCCT `Standard_Failure` (unclassified)          |
+| `Unknown`            | Error from outside the kernel                   |
+
+> **`OcctWorker` is the exception.** Comlink serializes a thrown error down to
+> `{ message, name, stack }`, so an error crossing the worker boundary arrives
+> as a plain `Error`: the message survives intact, but `code`, `operation`, and
+> `instanceof OcctError` do not. Match on `e.message` there, or do the
+> `switch (e.code)` inside the worker.
+
+## Named Enums
+
+Sweep, offset, and boolean operations use self-documenting enums instead of opaque numbers:
+
+```typescript check kernel,profile,spine,wire,shape,face,base,tool1,tool2
+import { TransitionMode, JoinType, BooleanOp } from "occt-wasm";
+
+// Sweep with round-corner transitions
+kernel.sweep(profile, spine, TransitionMode.RoundCorner);
+
+// Offset wire with arc joins
+kernel.offsetWire2D(wire, 2.0, JoinType.Arc);
+
+// Hollow a solid through one face; Intersection keeps the inner corners
+// at concave edges sharp where Arc would round them
+kernel.shell(shape, [face], 2.0, 1e-6, JoinType.Intersection);
+
+// Boolean pipeline
+kernel.booleanPipeline(base, [BooleanOp.Cut, BooleanOp.Fuse], [tool1, tool2]);
+```
+
+Numeric values (0, 1, 2) are still accepted for backwards compatibility.
+
+## Type Predicates
+
+Convenience methods for checking shape topology:
+
+```typescript check kernel,shape
+if (kernel.isSolid(shape)) {
+  /* ... */
+}
+if (kernel.isFace(shape)) {
+  /* ... */
+}
+if (kernel.isEdge(shape)) {
+  /* ... */
+}
+if (kernel.isWire(shape)) {
+  /* ... */
+}
+if (kernel.isVertex(shape)) {
+  /* ... */
+}
+if (kernel.isShell(shape)) {
+  /* ... */
+}
+if (kernel.isCompound(shape)) {
+  /* ... */
+}
+```
+
+## Web Workers
+
+For browser apps, heavy CAD operations can block the main thread. `OcctWorker` runs a full kernel in a Web Worker with the same API:
+
+```typescript check edge
+import { OcctWorker } from "occt-wasm/worker";
+
+// Spawn a worker with its own kernel
+const worker = await OcctWorker.spawn({ wasm: "/occt-wasm.wasm" });
+
+// Same API, every call returns a Promise
+const box = await worker.makeBox(10, 20, 30);
+const cyl = await worker.makeCylinder(5, 40);
+const fused = await worker.fuse(box, cyl);
+const mesh = await worker.tessellate(fused);
+console.log(`${mesh.triangleCount} triangles`);
+
+// Access the full kernel via .kernel for less common methods
+const nurbs = await worker.kernel.getNurbsCurveData(edge);
+
+// Clean up
+worker.terminate();
+```
+
+The worker helper uses [Comlink](https://github.com/GoogleChromeLabs/comlink) (~1.2 KB gzipped) for transparent RPC. Each worker has its own WASM instance and arena -- shape handles are local to the worker.
+
+## XCAF Assemblies
+
+Create assembly documents with colors, names, and component hierarchies:
+
+```typescript check kernel,box,gear,stepData
+// Factory method auto-injects Emscripten FS for glTF export
+const doc = kernel.createXCAFDocument();
+
+const housing = doc.addShape(box, { name: "housing", color: [0.8, 0.2, 0.1] });
+doc.addChild(housing, gear, {
+  name: "gear-1",
+  location: { tx: 10, tz: 5 },
+  color: [0.5, 0.5, 0.5],
+});
+
+// Export
+const step = doc.exportSTEP(); // preserves colors/names
+const glb = doc.exportGLTF(); // no need to pass FS manually
+doc.close();
+
+// Import with preserved metadata
+const imported = kernel.importXCAFFromSTEP(stepData);
+```
+
+Walking an imported assembly: each component is a placed reference to a prototype label (a part or sub-assembly). Resolve it with `getReferredLabel` to reach the prototype's name, named sub-shapes and children. To author the same structure, add a compound with `doc.addShape(compound, { assembly: true })`.
+
+```typescript check doc
+import type { LabelTag } from "occt-wasm";
+
+function walk(label: LabelTag, depth = 0): void {
+  const info = doc.getLabelInfo(label);
+  console.log(`${"  ".repeat(depth)}${info.name}`);
+  const proto = doc.getReferredLabel(label) ?? label;
+  for (const sub of doc.getSubShapes(proto)) {
+    console.log(`${"  ".repeat(depth + 1)}(${doc.getLabelInfo(sub).name})`);
+  }
+  for (const child of doc.getChildren(proto)) walk(child, depth + 1);
+}
+for (const root of doc.getRoots()) walk(root);
+```
+
+`getLocation(label)` returns a component's placement as a 3x4 matrix in the layout `kernel.transform` accepts, so a prototype's geometry can be tessellated once and instanced per component.
+
+## Bundler Configuration
+
+### Vite
+
+```typescript
+// vite.config.ts
+export default defineConfig({
+  optimizeDeps: {
+    exclude: ["occt-wasm"], // Don't pre-bundle WASM
+  },
+  build: {
+    target: "esnext", // Required for WASM features
+  },
+});
+```
+
+### Webpack 5
+
+```javascript
+// webpack.config.js
+module.exports = {
+  experiments: { asyncWebAssembly: true },
+  module: {
+    rules: [{ test: /\.wasm$/, type: "asset/resource" }],
+  },
+};
+```
+
+Webpack bundles the Emscripten glue and emits `occt-wasm.wasm` as a hashed
+asset, rewriting the URL it is loaded from. No manual copy step is needed, and
+`OcctKernel.init()` finds the binary without a `wasm` option.
+
+### Next.js
+
+No configuration needed, under either Turbopack or webpack. Both emit the
+`.wasm` into `_next/static` and rewrite the URL. Initialize from a client
+component (`"use client"`) so the kernel loads in the browser rather than
+during SSR:
+
+```javascript
+"use client";
+import { useEffect } from "react";
+
+export default function Viewer() {
+  useEffect(() => {
+    (async () => {
+      const { OcctKernel } = await import("occt-wasm");
+      const kernel = await OcctKernel.init();
+      // ...
+    })();
+  }, []);
+}
+```
+
+### Node.js
+
+```typescript check
+// Works out of the box with Node.js 18+
+import { OcctKernel } from "occt-wasm";
+const kernel = await OcctKernel.init();
+```
+
+## API Reference
+
+Generate full docs locally: `cd ts && npm run docs` (TypeDoc output).
+
+| Category         | What's covered                                                                                                 |
+| ---------------- | -------------------------------------------------------------------------------------------------------------- |
+| **Primitives**   | Box, cylinder, sphere, cone, torus, ellipsoid, rectangle, half-space                                           |
+| **Booleans**     | Fuse, cut, common, intersect, section (by shape or plane) + multi-shape variants, intersection cells           |
+| **Modeling**     | Extrude, revolve, fillet, chamfer, shell, offset, draft                                                        |
+| **Sweeps**       | Pipe, loft, sweep, oriented sweep (fixed/Frenet/up-axis/auxiliary), draft prism, extrusion laws                |
+| **Construction** | Vertices, edges (line/arc/circle/ellipse/bezier/helix), wires, faces, solids, compounds, sewing                |
+| **Transforms**   | Translate, rotate, scale, mirror, align to bounding box, 3x4 matrix, linear/circular patterns                  |
+| **Topology**     | Shape type queries, type predicates, sub-shape extraction, adjacency, hash codes                               |
+| **Tessellation** | Triangle meshes (absolute or relative deflection), wireframe polylines (curve-sampled or mesh-aligned), per-face groups, batched meshing |
+| **I/O**          | STEP, STL (ASCII + binary), BREP (text + binary) import/export                                                 |
+| **Query**        | Bounding box, volume, surface area, length, center of mass, inertia tensor, point-in-solid, curvature          |
+| **Surfaces**     | Type, normal, UV bounds, point classification, B-spline construction                                           |
+| **Curves**       | Type, point/tangent eval, parameters, NURBS data, interpolation (incl. clamped tangents), project point        |
+| **Projection**   | Hidden line removal (HLR), multiview SVG render (Front/Top/Right/Iso)                                          |
+| **Modifiers**    | Thicken, defeature, reverse, simplify, variable fillet, 2D wire offset                                         |
+| **Evolution**    | Face-tracking history for translate, fuse, cut, fillet, rotate, mirror, scale, chamfer, shell, offset, thicken |
+| **XCAF**         | Assembly documents with colors, names, component hierarchies, STEP/glTF export                                 |
+| **Healing**      | Fix shape, unify domain, heal solid/face/wire, fix orientations, remove degenerate edges                       |
+| **Batch**        | Multi-shape translate, chained boolean pipeline                                                                |
+
+## Architecture
+
+```
+OCCT V8.0.1 C++ (git submodule)
+    -> emcmake cmake (static libs)
+    -> C++ facade (OcctKernel class, arena-based u32 IDs)
+    -> Embind bindings
+    -> emcc link (-O3, -flto, -fwasm-exceptions, SIMD) -> .wasm
+    -> wasm-opt -O4 --converge --gufa -> dist/
+```
+
+Built with Rust xtask (`cargo xtask build`), tested with Vitest.
+
+## Size & Performance
+
+Compared against other OCCT-to-WASM builds (all include STEP, XCAF, glTF):
+
+| Build              | brotli  |
+| ------------------ | ------- |
+| **occt-wasm**      | ~4.5 MB |
+| opencascade.js     | ~9 MB   |
+| brepjs-opencascade | ~5 MB   |
+
+Run benchmarks locally: `npx tsx test/benchmark.ts`
+
+## Development
+
+### Building from Source
+
+```bash
+# Prerequisites: Rust 1.95+, emsdk 5.0.3
+git clone --recurse-submodules https://github.com/andymai/occt-wasm
+cd occt-wasm
+npm install && cd ts && npm install && cd ..
+
+cargo xtask build       # Build OCCT + facade -> WASM
+cargo xtask test        # Run tests
+
+# View the Three.js example
+node scripts/static-server.mjs
+# Open http://localhost:3000/examples/three-js/
+```
+
+### Docker Build
+
+No local emsdk or Rust needed -- everything runs in the container.
+
+```bash
+npm run docker:build    # Build image (OCCT layer cached after first run)
+npm run docker:dist     # Build + copy dist/ artifacts to host
+```
+
+## Browser Compatibility
+
+occt-wasm requires modern browsers with WASM SIMD, tail calls, and exception
+handling. WASM **tail calls** are the newest and therefore binding requirement —
+they gate the minimum versions below. The versions listed are the lowest
+combinations verified to load the kernel:
+
+| Browser | Minimum (verified) | Notes                                       |
+| ------- | ------------------ | ------------------------------------------- |
+| Chrome  | 114+               | Tail calls landed in 112; 114 is verified   |
+| Edge    | 114+               | Same engine as Chrome                       |
+| Safari  | 17.2+              | Earliest WebKit verified to load the kernel |
+| Firefox | 121+               | Tail calls shipped in 121; 146 is verified  |
+
+Node.js 22+ is recommended (tail calls via V8). Node.js 18+ works if your V8 version supports the required WASM features.
+
+## Known Limitations
+
+These are upstream OCCT V8.0.1 issues, not occt-wasm bugs:
+
+- **IGES** -- TKDEIGES excluded from link; no IGES import/export
+- **Zero-length extrusion** -- WASM exception escapes JS catch boundary (1 test skip)
+- **Single WASM thread** -- each kernel instance is single-threaded; use `OcctWorker` (see above) to move work off the main thread
+
+These will be addressed as upstream OCCT and browser support improve.
+
+OCCT V8.0.1 (2026-07) resolved several upstream hangs and crashes that
+affected modeling here: an infinite-loop guard in the boolean section
+algorithm, crash guards in chamfer construction (`ChFi3d_Builder`) and
+`BRep_Tool::CurveOnPlane`, null-pcurve guards in `UnifySameDomain`, and
+an infinite-loop guard in the STEP writer.
+
+## Contributing
+
+This project is open source. Bug reports and feature requests are welcome via GitHub Issues. For pull requests, please open an issue first to discuss the change.
+
+## License
+
+**Build tooling** (xtask, scripts, TypeScript wrapper): MIT OR Apache-2.0
+
+**Compiled WASM output**: LGPL-2.1-only (inherits from [OCCT](https://dev.opencascade.org/resources/download))
+
+The LGPL requires that end users can replace the LGPL component. For web applications, this is satisfied by loading the `.wasm` file from a URL (which users can override via `OcctKernel.init({ wasm: '...' })`). If you ship a desktop app with the WASM embedded, consult the [LGPL-2.1 FAQ](https://www.gnu.org/licenses/old-licenses/lgpl-2.1.html).

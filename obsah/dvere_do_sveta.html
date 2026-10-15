@@ -748,12 +748,7 @@ dialog.vice-sheet[open] { animation: vysun .22s ease-out; }
 /* ===== telefon na výšku: ovládání dole pod palcem =====
    1. řádek: 🚪 název ⛶ · 2. řádek: velká tlačítka ◀ 🎲 ▶ 🔇 📸 ⋯ */
 @media (max-width: 560px) and (orientation: portrait) {
-  .vyhled .plocha { order: 1; }
-  .vyhled .lista {
-    order: 2; flex-wrap: wrap; gap: 6px; min-height: 0;
-    padding: 6px 8px calc(8px + env(safe-area-inset-bottom));
-    border-bottom: 0; border-top: 1px solid #2a2d3a;
-  }
+  .vyhled .lista { flex-wrap: wrap; gap: 6px; min-height: 0; padding: 6px 8px 8px; }
   .lista-tl { display: contents; }
   .lista::after { content: ''; flex-basis: 100%; height: 0; order: 4; }
   .lista-tl > * { order: 5; flex: 1 1 0; min-width: 0; }
@@ -767,6 +762,21 @@ dialog.vice-sheet[open] { animation: vysun .22s ease-out; }
   .tl.hlavni { font-size: 1.35rem; }
   .vice-obal > .tl { width: 100%; }
   .zvuk > .tl { width: 100%; }
+}
+/* ===== lišta dole (data-lista nastavuje skript): výchozí na tabletu a telefonu na výšku,
+   kam dosáhne palec; volba ⬇/⬆ v liště ji přesune kdekoli ===== */
+.vyhled[data-lista="dole"] .plocha { order: 1; }
+.vyhled[data-lista="dole"] .lista {
+  order: 2; border-bottom: 0; border-top: 1px solid #2a2d3a;
+  padding-bottom: calc(7px + env(safe-area-inset-bottom));
+}
+.vyhled[data-lista="dole"] .okno-pruh { top: -1px; bottom: auto; }
+/* nabídky (kvalita, ⋯) se otevírají nahoru, dole by vyjely z obrazovky */
+.vyhled[data-lista="dole"] .lista .nabidka { top: auto; bottom: calc(100% + 6px); }
+.vyhled[data-lista="dole"].klidny .lista, .vyhled[data-lista="dole"].okno-bezi .lista { top: auto; bottom: 0; }
+#tlLista[hidden] { display: none; }
+@media (pointer: coarse) and (min-height: 521px) and (min-width: 561px) {
+  .lista .tl { min-height: 44px; }
 }
 /* ===== telefon na šířku: svislý panel vpravo, obraz co největší ===== */
 @media (pointer: coarse) and (orientation: landscape) and (max-height: 520px) {
@@ -892,6 +902,7 @@ dialog.vice-sheet[open] { animation: vysun .22s ease-out; }
       <button class="tl vedlejsi" id="tlOblibene" type="button" title="Seznam oblíbených">★<span class="txt">Oblíbené</span></button>
       <button class="tl vedlejsi" id="tlMapaV" type="button" title="Mapa všech dveří">🌍<span class="txt">Mapa</span></button>
       <button class="tl vedlejsi" id="tlOdkazyV" type="button" title="Seznam všech odkazů">🔗<span class="txt">Odkazy</span></button>
+      <button class="tl vedlejsi" id="tlLista" type="button" title="Přesunout lištu dolů">⬇<span class="txt">Dolů</span></button>
       <button class="tl vedlejsi" id="tlInfo" type="button" aria-pressed="true" title="Skrýt / ukázat medailonek (I)">ⓘ<span class="txt">Info</span></button>
       <span class="okno-ovl" id="oknoOvl" hidden>
         <button class="tl" id="tlOknoPauza" type="button" title="Pozastavit střídání (mezerník)">⏸</button>
@@ -3504,6 +3515,28 @@ $('tlVice').addEventListener('click', e => {
   $('tlVice').setAttribute('aria-expanded', String(!nab.hidden));
 });
 document.addEventListener('click', zavriVice);
+
+/* ---------- poloha lišty: nahoře / dole ----------
+   Bez volby uživatele platí výchozí podle zařízení (dotyk a telefon na výšku dole, jinak nahoře);
+   telefon na šířku má vlastní svislý panel a volbu nenabízí. */
+const listaDoleVychozi = matchMedia('(pointer: coarse) and (min-height: 521px), (max-width: 560px) and (orientation: portrait)');
+function umistiListu() {
+  const v = telefonNaSirku.matches ? 'bok' : (nastaveni.lista || (listaDoleVychozi.matches ? 'dole' : 'nahore'));
+  $('vyhled').dataset.lista = v;
+  const b = $('tlLista');
+  b.hidden = v === 'bok';
+  b.title = v === 'dole' ? 'Přesunout lištu nahoru' : 'Přesunout lištu dolů';
+  b.firstChild.textContent = v === 'dole' ? '⬆' : '⬇';
+  b.querySelector('.txt').textContent = v === 'dole' ? 'Nahoru' : 'Dolů';
+}
+$('tlLista').addEventListener('click', () => {
+  nastaveni.lista = $('vyhled').dataset.lista === 'dole' ? 'nahore' : 'dole';
+  uloz('nastaveni', nastaveni);
+  umistiListu();
+});
+listaDoleVychozi.addEventListener('change', umistiListu);
+telefonNaSirku.addEventListener('change', umistiListu);
+umistiListu();
 
 /* ---------- telefon: přejetí po kartě, karta na šířku jen na chvíli ---------- */
 let tahKarty = null;

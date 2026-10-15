@@ -5,7 +5,7 @@
 /* Při větší aktualizaci webu zvyš číslo verze — stará cache se u návštěvníků
    smaže a vše se stáhne čerstvé (jinak SWR ukáže novou verzi až na druhé načtení). */
 const PREFIX = 'webapp-';
-const CACHE = PREFIX + 'v328';
+const CACHE = PREFIX + 'v363';
 const JADRO = [
   './',
   './index.html',
@@ -128,6 +128,76 @@ const OBLEHENI = [
   './obsah/obleheni/zvuk.js',
 ];
 
+/* Modelář 3D (obsah/modelar.html) – CAD pro 3D tisk, ~1,5 MB skriptů + jádro manifold (WASM 0,7 MB).
+   Docachuje se celý při prvním otevření, takže pak funguje offline. Přesné jádro OpenCascade
+   (lib/occt, 22 MB) v sadě úmyslně není – stáhne a uloží se samo (SWR), až ho uživatel poprvé použije.
+   Úmyslně chybí i manifold.js (ES modul jen pro node testy) a *.wasm.js / *.gz.js (base64 pro file://).
+   Že seznam sedí se soubory na disku, hlídá _test/sw_modelar_check.js. */
+const MODELAR = [
+  './obsah/modelar-licence.html',
+  './obsah/modelar.html',
+  './obsah/tinkercad.html',
+  './obsah/fonty/LiberationSans-Bold.ttf',
+  './obsah/fonty/fonty.js',
+  './obsah/lib/clipper.min.js',
+  './obsah/lib/jspdf.umd.min.js',
+  './obsah/lib/opentype.min.js',
+  './obsah/lib/three.0.160.0.min.js',
+  './obsah/modelar/deska.js',
+  './obsah/modelar/kamera.js',
+  './obsah/modelar/kostka.js',
+  './obsah/modelar/scena.js',
+  './obsah/modelar/spolecne.js',
+  './obsah/modelar/stav.js',
+  './obsah/modelar/telesa.js',
+  './obsah/modelar/uchyty.js',
+  './obsah/modelar/ui.js',
+  './obsah/modelar/ulozeni.js',
+  './obsah/modelar/vyber.js',
+  './obsah/modelar/vypocty.js',
+  './obsah/modelar/worker.js',
+  './obsah/modelar/worker_occt.js',
+  './obsah/lib/manifold/manifold.klasicky.js',
+  './obsah/lib/manifold/manifold.wasm',
+  './obsah/modelar/jadro/booleany.js',
+  './obsah/modelar/jadro/dilna.js',
+  './obsah/modelar/jadro/dily.js',
+  './obsah/modelar/jadro/historie.js',
+  './obsah/modelar/jadro/model.js',
+  './obsah/modelar/jadro/occt.js',
+  './obsah/modelar/jadro/sit.js',
+  './obsah/modelar/jadro/skica.js',
+  './obsah/modelar/jadro/transformace.js',
+  './obsah/modelar/jadro/tvary.js',
+  './obsah/modelar/jadro/upravy.js',
+  './obsah/modelar/jadro/vykres.js',
+  './obsah/modelar/ui/dilna.js',
+  './obsah/modelar/ui/dily.js',
+  './obsah/modelar/ui/inspektor.js',
+  './obsah/modelar/ui/knihovna.js',
+  './obsah/modelar/ui/napoveda.js',
+  './obsah/modelar/ui/occt.js',
+  './obsah/modelar/ui/prikazy.js',
+  './obsah/modelar/ui/projekty.js',
+  './obsah/modelar/ui/seznam.js',
+  './obsah/modelar/ui/skica.js',
+  './obsah/modelar/ui/soubory.js',
+  './obsah/modelar/ui/upravy.js',
+  './obsah/modelar/ui/zarovnani.js',
+  './obsah/modelar/ui/zrcadleni.js',
+  './obsah/modelar/ui/pivot.js',
+  './obsah/modelar/jadro/tisk.js',
+  './obsah/modelar/ui/tisk.js',
+  './obsah/modelar/ui/koty.js',
+  './obsah/modelar/jadro/soubory/export.js',
+  './obsah/modelar/jadro/soubory/obj.js',
+  './obsah/modelar/jadro/soubory/projekt.js',
+  './obsah/modelar/jadro/soubory/stl.js',
+  './obsah/modelar/jadro/soubory/svg.js',
+  './obsah/modelar/jadro/soubory/trojmf.js',
+  './obsah/modelar/jadro/soubory/zip.js',
+];
+
 // Dotáhne do cache, co z dané sady ještě chybí (po jednom, chyby ignoruje – při
 // příštím otevření se zkusí znovu). Běží jen jednou naráz pro každou sadu.
 const dotahuje = new Map();
@@ -157,6 +227,7 @@ self.addEventListener('message', e => {
   if (e.data && e.data.typ === 'dotahni' && e.data.sada === 'trpaslici') e.waitUntil(dotahniSadu('trpaslici', TRPASLICI));
   if (e.data && e.data.typ === 'dotahni' && e.data.sada === 'sine') e.waitUntil(dotahniSadu('sine', SINE));
   if (e.data && e.data.typ === 'dotahni' && e.data.sada === 'obleheni') e.waitUntil(dotahniSadu('obleheni', OBLEHENI));
+  if (e.data && e.data.typ === 'dotahni' && e.data.sada === 'modelar') e.waitUntil(dotahniSadu('modelar', MODELAR));
 });
 
 self.addEventListener('activate', e => {
@@ -182,6 +253,7 @@ self.addEventListener('fetch', e => {
   if (url.pathname.endsWith('/obsah/trpaslici.html')) e.waitUntil(dotahniSadu('trpaslici', TRPASLICI));
   if (url.pathname.endsWith('/obsah/sine.html')) e.waitUntil(dotahniSadu('sine', SINE));
   if (url.pathname.endsWith('/obsah/obleheni.html')) e.waitUntil(dotahniSadu('obleheni', OBLEHENI));
+  if (url.pathname.endsWith('/obsah/modelar.html')) e.waitUntil(dotahniSadu('modelar', MODELAR));
 
   // navigace s dotazem (trpaslici.html?seed=…&velikost=…) je pořád táž stránka: hledat bez dotazu a ukládat bez něj
   const navigace = e.request.mode === 'navigate';

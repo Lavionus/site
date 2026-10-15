@@ -1,0 +1,296 @@
+/* Modelář 3D – inspektor vybraných těles (plovoucí karta nad plochou).
+   Jedno těleso: název, rozměry, poloha (X, Y střed, Z spodek nad deskou),
+   natočení, parametry tvaru, barva, těleso/díra, skrýt, zamknout, smazat.
+   Víc těles: společná barva, role, skrytí, zámek a smazání.
+   Číselná pole berou desetinnou čárku i tečku, Enter nebo opuštění pole
+   hodnotu potvrdí, šipky ↑/↓ mění o krok (se Shiftem o 10 kroků).
+   Při změně dokumentu se obnoví jen pole, ve kterých uživatel zrovna nepíše. */
+var MDL = globalThis.MDL = globalThis.MDL || {};
+(function (M) {
+  'use strict';
+
+  const PALETA = ['#e5533c', '#f08c2a', '#e8c22a', '#3cae5c', '#1fa5a0', '#2f8fd8',
+                  '#4a6fd9', '#9b59b6', '#d94a8c', '#7a5230', '#7a8b99', '#f2f2f2', '#2b2b2b'];
+  const OSY = ['X', 'Y', 'Z'];
+  const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+  // M.prectiCislo (čárka i tečka, jednotky, výpočty 60/2) je ve spolecne.js
+
+  /** Krátké upozornění u pole (neplatná nebo oříznutá hodnota): červený záblesk a zpráva dole. */
+  M.oznamPole = function (input, text) {
+    if (input && input.classList) {
+      input.classList.remove('pole-chyba'); void input.offsetWidth; input.classList.add('pole-chyba');
+      setTimeout(() => input.classList.remove('pole-chyba'), 1200);
+    }
+    if (typeof Dialog !== 'undefined') Dialog.info(text);
+  };
+
+  M.vytvorInspektor = function (karta) {
+    let pole = [];                 // {input, cti: u → číslo, zapis: (číslo) → void, des, krok}
+    let klicStavby = '';
+
+    let skupinaPoli = '';                    // „Rozměr“, „Poloha“… – předpona přístupného názvu pole X/Y/Z
+    function cislo(popis, cti, zapis, { krok = 1, des = 2, jednotka = '', min = -Infinity, max = Infinity } = {}) {
+      const id = 'insp' + (pole.length + 1);
+      pole.push({ id, cti, zapis, krok, des, min, max });
+      const nazev = (/^[XYZ]$/.test(popis) && skupinaPoli ? skupinaPoli + ' ' : '') + popis + (jednotka ? ' (' + jednotka + ')' : '');
+      return `<label class="ip" for="${id}"><span class="osa">${popis}</span>`
+        + `<input id="${id}" type="text" inputmode="decimal" autocomplete="off" spellcheck="false" aria-label="${esc(nazev)}">`
+        + (jednotka ? `<span class="jed">${jednotka}</span>` : '') + `</label>`;
+    }
+
+    function postav() {
+      const uzly = M.vybraneUzly();
+      pole = [];
+      if (!uzly.length) { karta.hidden = true; karta.innerHTML = ''; klicStavby = ''; return; }
+      karta.hidden = false;
+      const u = uzly[0], jeden = uzly.length === 1;
+      const t = jeden ? M.popisDruhu(u.druh) : null;
+      let h = '';
+      if (jeden) {
+        const ik = M.ikonyTvaru && M.ikonyTvaru[u.druh];
+        h += `<div class="hlava">${ik ? `<img src="${ik}" alt="">` : `<span class="ikona-druhu">${t.ikona}</span>`}
+          <input id="inspNazev" class="nazev" type="text" maxlength="80" aria-label="Název tělesa">
+          <span class="druh">${esc(t.nazev)}</span></div>`;
+        skupinaPoli = 'Rozměr';
+        h += `<div class="skupina"><div class="nadpis">Rozměry</div><div class="trojice">`
+          + OSY.map((o, i) => cislo(o, u => u.rozmer[i], v => zmenRozmer(i, v), { krok: 1, jednotka: '', min: 0.01, max: 10000 })).join('')
+          + `</div></div>`;
+        skupinaPoli = 'Poloha';
+        h += `<div class="skupina"><div class="nadpis">Poloha <span class="pozn">(Z = spodek nad deskou)</span></div><div class="trojice">`
+          + cislo('X', u => u.poloha[0], v => zmenPolohu(0, v))
+          + cislo('Y', u => u.poloha[1], v => zmenPolohu(1, v))
+          + cislo('Z', u => M.spodekUzlu(u), v => zmenPolohu(2, v))
+          + `</div></div>`;
+        skupinaPoli = 'Natočení';
+        h += `<div class="skupina"><div class="nadpis">Natočení (°)</div><div class="trojice">`
+          + OSY.map((o, i) => cislo(o, u => u.rotace[i], v => zmenRotaci(i, v), { krok: 15, des: 1 })).join('')
+          + `</div></div>`;
+        skupinaPoli = '';
+        if (u.druh === 'sit') {
+          const z = M.zdroje.get(u.zdroj);
+          h += `<div class="skupina"><div class="nadpis">Importovaný model</div><div class="pozn">${z ? `${esc(z.nazev || '')} · ${M.pocet(z.idx.length / 3, 'trojúhelník', 'trojúhelníky', 'trojúhelníků').replace(/^\d+/, (z.idx.length / 3).toLocaleString('cs'))} · původně ${u.zaklad.map(x => M.mm(x)).join(' × ')} mm` : 'geometrie chybí'}</div>`
+            + (z && z.paleta && z.paleta.length > 1 ? `<label class="zaskrt"><input type="checkbox" id="inspBarvySouboru"> Barvy ze souboru (${z.paleta.length})</label>` : '') + `</div>`;
+        }
+        if (u.druh === 'skupina') {
+          h += `<div class="skupina"><div class="nadpis">Skupina <span class="pozn">(${M.pocet(u.deti.length, 'část', 'části', 'částí')})</span></div>
+            <div class="role" role="group" aria-label="Operace skupiny">
+              <button type="button" class="tl" data-operace="sjednoceni" title="Sjednocení plných částí, díry se odečtou">∪ Sjednocení</button>
+              <button type="button" class="tl" data-operace="prunik" title="Jen společná část plných částí">∩ Průnik</button></div>
+            <label class="zaskrt"><input type="checkbox" id="inspBarevne"> Barevná (zachovat barvy částí)</label></div>`;
+          if (u.occt) {
+            const o = u.occt, n = o.operace === 'skorepina' ? (o.plochy.length ? `otevřené plochy: ${o.plochy.length}` : 'uzavřená') : `hrany: ${o.hrany.length}`;
+            const co = { zaobleni: 'Zaoblení r', srazeni: 'Sražení', skorepina: 'Skořepina, stěna' }[o.operace];
+            h += `<div class="skupina"><div class="nadpis">Přesná úprava <span class="pozn">(OpenCascade)</span></div>
+              <div class="pozn" id="inspOcct">${co} ${M.mm(o.hodnota)} mm · ${n}</div>
+              <div class="role"><button type="button" class="tl" id="inspOcctUpravit">✎ Upravit…</button>
+              <button type="button" class="tl" id="inspOcctOdebrat" title="Vrátit těleso bez úpravy">✕ Odebrat úpravu</button></div></div>`;
+          }
+        }
+        // parametry tvaru: čísla, volby (seznam), přepínače; u skici jen ty pro zvolený režim
+        const param = t.parametry.filter(d => !d.rezim || d.rezim === u.param.rezim);
+        if (param.length || u.druh === 'skica') {
+          h += `<div class="skupina"><div class="nadpis">${u.druh === 'skica' ? 'Těleso ze skici' : M.DILY && M.DILY[u.druh] ? 'Díl' : 'Tvar'}</div>`
+            + param.map(d => d.volby
+              ? `<label class="ip"><span class="osa">${esc(d.popis)}</span><select data-param="${d.klic}">${d.volby.map(([v, p]) => `<option value="${v}">${esc(p)}</option>`).join('')}</select></label>`
+              : d.prepinac
+                ? `<label class="zaskrt"><input type="checkbox" data-param="${d.klic}"> ${esc(d.popis)}</label>`
+              : d.text
+                ? `<label class="ip"><span class="osa">${esc(d.popis)}</span><input type="text" data-param="${d.klic}" class="text-param" maxlength="200"></label>`
+                : d.odvozeny
+                ? cislo(d.popis, u => d.cti(u.rozmer, Object.assign({}, M.TVARY[u.druh].param, u.param)), v => zmenOdvozeny(d, v),
+                  { krok: d.krok, des: 2, jednotka: d.jednotka || '', min: d.min, max: d.max })
+                : cislo(d.popis, u => u.param[d.klic], v => zmenParam(d.klic, v),
+                  { krok: d.krok, des: d.cele ? 0 : 2, jednotka: d.jednotka || '', min: d.min, max: d.max })).join('')
+            + (u.druh === 'skica' ? `<button type="button" class="tl siroke-tl" id="inspSkica">✏️ Upravit skicu</button>` : '')
+            + `</div>`;
+        }
+      } else {
+        h += `<div class="hlava"><strong>${uzly.length <= 4 ? 'Vybrána' : 'Vybráno'} ${M.pocet(uzly.length, 'těleso', 'tělesa', 'těles')}</strong></div>`;
+      }
+      h += `<div class="skupina"><div class="nadpis">Barva</div><div class="paleta">`
+        + PALETA.map(b => `<button type="button" class="vzorek" data-barva="${b}" style="background:${b}" title="${M.nazevBarvy ? M.nazevBarvy(b) + ' ' + b : b}" aria-label="Barva ${M.nazevBarvy ? M.nazevBarvy(b) : b}" aria-pressed="false"></button>`).join('')
+        + `<label class="vlastni" title="Vlastní barva"><input type="color" id="inspBarva" aria-label="Vlastní barva">🎨</label></div></div>`;
+      h += `<div class="skupina role" role="group" aria-label="Role">
+          <button type="button" class="tl" data-role="teleso">⬛ Těleso</button>
+          <button type="button" class="tl" data-role="dira">▨ Díra</button></div>`;
+      h += `<div class="skupina akce">
+          <button type="button" class="tl" id="inspSkryt">👁 Skrýt</button>
+          <button type="button" class="tl" id="inspZamek">🔓 Zamknout</button>
+          <button type="button" class="tl nebezpeci" id="inspSmazat">🗑 Smazat</button></div>`;
+      karta.innerHTML = h;
+
+      // obsluha
+      for (const p of pole) {
+        const i = karta.querySelector('#' + p.id);
+        p.input = i;
+        const potvrd = () => {
+          // přestavba inspektoru odstraní pole s fokusem a prohlížeč pošle jeho change – už nepatří k ničemu
+          if (!i.isConnected) return;
+          const v = M.prectiCislo(i.value);
+          if (!isFinite(v)) {
+            if (i.value.trim()) M.oznamPole(i, `„${i.value.trim()}“ není číslo – piš třeba 25, 12,5, 60/2 nebo 3 cm.`);
+            obnov(true); return;
+          }
+          // text beze změny (zaokrouhlené zobrazení): nic nezapisovat, jinak by se přesná hodnota zaokrouhlila
+          const u = M.vybraneUzly()[0];
+          if (u && i.value === M.mm(p.cti(u), p.des)) { obnov(true); return; }
+          const o = M.omez(v, p.min, p.max);
+          if (o !== v) M.oznamPole(i, `${M.mm(v, 3)} je mimo rozsah – použito ${M.mm(o, 3)} (${isFinite(p.min) ? 'nejméně ' + M.mm(p.min, 3) : ''}${isFinite(p.min) && isFinite(p.max) ? ', ' : ''}${isFinite(p.max) ? 'nejvýš ' + M.mm(p.max, 3) : ''}).`);
+          p.zapis(o);
+          obnov(true);
+        };
+        i.addEventListener('change', potvrd);
+        i.addEventListener('keydown', e => {
+          if (e.key === 'Enter') { potvrd(); i.select(); }
+          else if (e.key === 'Escape') { obnov(true); i.blur(); }
+          else if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+            e.preventDefault();
+            const u = M.vybraneUzly()[0];
+            const nezmeneno = u && i.value === M.mm(p.cti(u), p.des);
+            const v = (!nezmeneno && isFinite(M.prectiCislo(i.value)) ? M.prectiCislo(i.value) : p.cti(u))
+              + (e.key === 'ArrowUp' ? 1 : -1) * p.krok * (e.shiftKey ? 10 : 1);
+            M.sloucitDalsi = 'insp-' + p.id;        // držení šipky = jeden krok historie
+            p.zapis(M.omez(Math.round(v * 1e6) / 1e6, p.min, p.max));
+            M.sloucitDalsi = null;
+            obnov(true);
+            i.select();
+          }
+        });
+        i.addEventListener('focus', () => i.select());
+      }
+      const nazev = karta.querySelector('#inspNazev');
+      if (nazev) {
+        const ulozNazev = () => { if (nazev.value.trim()) M.upravVybrane({ nazev: nazev.value }, 'Přejmenovat'); obnov(true); };
+        nazev.addEventListener('change', ulozNazev);
+        nazev.addEventListener('keydown', e => { if (e.key === 'Enter') { ulozNazev(); nazev.blur(); } });
+      }
+      // barva u barevné skupiny ji převede na jednobarevnou (jako v Tinkercadu)
+      const nastavBarvu = b => M.upravVybrane(x => x.druh === 'skupina' && x.barevne ? { barva: b, barevne: false } : { barva: b }, 'Barva');
+      karta.querySelectorAll('.vzorek').forEach(b => b.onclick = () => nastavBarvu(b.dataset.barva));
+      const vlastni = karta.querySelector('#inspBarva');
+      // tažení ve výběru barvy posílá desítky událostí – jeden krok historie
+      vlastni.addEventListener('input', () => { M.sloucitDalsi = 'barva'; nastavBarvu(vlastni.value); M.sloucitDalsi = null; });
+      karta.querySelectorAll('[data-param]').forEach(el => el.addEventListener('change', () =>
+        zmenParam(el.dataset.param, el.type === 'checkbox' ? el.checked : el.value)));
+      const tlSkica = karta.querySelector('#inspSkica');
+      if (tlSkica) tlSkica.onclick = () => M.otevriSkicar(M.app.vyber[0]);
+      karta.querySelectorAll('[data-operace]').forEach(b => b.onclick = () => M.upravVybrane({ operace: b.dataset.operace }, b.dataset.operace === 'prunik' ? 'Průnik' : 'Sjednocení'));
+      const tlOcct = karta.querySelector('#inspOcctUpravit');
+      if (tlOcct) {
+        tlOcct.onclick = () => M.otevriUpravuHran(u.occt.operace);
+        karta.querySelector('#inspOcctOdebrat').onclick = () => M.odeberUpravu(u.id);
+      }
+      const barvySouboru = karta.querySelector('#inspBarvySouboru');
+      if (barvySouboru) barvySouboru.addEventListener('change', () => M.upravVybrane({ jednobarevne: !barvySouboru.checked }, barvySouboru.checked ? 'Barvy ze souboru' : 'Jednou barvou'));
+      const barevne = karta.querySelector('#inspBarevne');
+      if (barevne) barevne.addEventListener('change', () => M.upravVybrane({ barevne: barevne.checked }, barevne.checked ? 'Barevná skupina' : 'Jednobarevná skupina'));
+      karta.querySelectorAll('[data-role]').forEach(b => b.onclick = () => M.upravVybrane({ role: b.dataset.role }, b.dataset.role === 'dira' ? 'Na díru' : 'Na těleso'));
+      karta.querySelector('#inspSkryt').onclick = () => M.upravVybrane({ skryto: true }, 'Skrýt');
+      karta.querySelector('#inspZamek').onclick = () => {
+        const zamknout = !M.vybraneUzly().every(u => u.zamceno);
+        M.upravVybrane({ zamceno: zamknout }, zamknout ? 'Zamknout' : 'Odemknout');
+      };
+      karta.querySelector('#inspSmazat').onclick = () => M.smazVybrane();
+      klicStavby = klicInspektoru();
+      obnov(true);
+    }
+
+    /** Přepíše hodnoty polí a stav tlačítek podle dokumentu. */
+    function obnov(i_aktivni = false) {
+      const uzly = M.vybraneUzly();
+      if (!uzly.length) return;
+      const u = uzly[0];
+      const zamceno = uzly.every(x => x.zamceno), nektereZamceno = uzly.some(x => x.zamceno);
+      for (const p of pole) {
+        if (!p.input) continue;                         // pole se právě staví
+        if (!i_aktivni && document.activeElement === p.input) continue;
+        p.input.value = M.mm(p.cti(u), p.des);
+        p.input.disabled = zamceno;
+      }
+      const nazev = karta.querySelector('#inspNazev');
+      if (nazev && (i_aktivni || document.activeElement !== nazev)) { nazev.value = u.nazev; nazev.disabled = zamceno; }
+      const stejnaBarva = uzly.every(x => x.barva === u.barva);
+      const vsechnyDiry = uzly.every(x => x.role === 'dira');
+      karta.querySelectorAll('.vzorek').forEach(b => {
+        b.classList.toggle('aktivni', stejnaBarva && b.dataset.barva === u.barva && !(u.druh === 'skupina' && u.barevne));
+        b.setAttribute('aria-pressed', String(b.classList.contains('aktivni')));
+        b.disabled = zamceno || vsechnyDiry;
+      });
+      const vl = karta.querySelector('#inspBarva');
+      vl.value = u.barva; vl.disabled = zamceno || vsechnyDiry;
+      karta.querySelectorAll('[data-role]').forEach(b => {
+        b.setAttribute('aria-pressed', uzly.every(x => x.role === b.dataset.role) ? 'true' : 'false');
+        b.disabled = zamceno;
+      });
+      const zam = karta.querySelector('#inspZamek');
+      zam.textContent = zamceno ? '🔒 Odemknout' : '🔓 Zamknout';
+      zam.setAttribute('aria-pressed', zamceno ? 'true' : 'false');
+      karta.querySelector('#inspSmazat').disabled = zamceno;
+      karta.querySelector('#inspSmazat').title = nektereZamceno ? 'Zamčená tělesa se nesmažou' : '';
+      karta.querySelectorAll('[data-operace]').forEach(b => {
+        b.setAttribute('aria-pressed', u.operace === b.dataset.operace ? 'true' : 'false');
+        b.disabled = zamceno;
+      });
+      const barvySouboru = karta.querySelector('#inspBarvySouboru');
+      if (barvySouboru) { barvySouboru.checked = !u.jednobarevne; barvySouboru.disabled = zamceno; }
+      const barevne = karta.querySelector('#inspBarevne');
+      if (barevne) { barevne.checked = !!u.barevne; barevne.disabled = zamceno || u.role === 'dira'; }
+      karta.querySelectorAll('[data-param]').forEach(el => {
+        if (el.type === 'checkbox') el.checked = !!u.param[el.dataset.param];
+        else if (document.activeElement !== el) el.value = u.param[el.dataset.param];
+        el.disabled = zamceno;
+      });
+      const tlSkica = karta.querySelector('#inspSkica');
+      if (tlSkica) tlSkica.disabled = zamceno;
+      karta.classList.toggle('zamceno', zamceno);
+    }
+
+    // --- zápisy (jen první vybraný uzel; inspektor polí se ukazuje u jednoho)
+    function zmenRozmer(i, v) {
+      M.upravVybrane(u => {
+        const rozmer = u.rozmer.slice(); rozmer[i] = v;
+        // spodek zůstane na místě, X a Y kolem středu
+        return { rozmer, poloha: M.polohaSeSpodkem(Object.assign({}, u, { rozmer }), M.spodekUzlu(u)) };
+      }, 'Rozměr');
+    }
+    function zmenPolohu(i, v) {
+      M.upravVybrane(u => {
+        if (i === 2) return { poloha: M.polohaSeSpodkem(u, v) };
+        const poloha = u.poloha.slice(); poloha[i] = v; return { poloha };
+      }, 'Posun');
+    }
+    function zmenRotaci(i, v) {
+      M.upravVybrane(u => { const rotace = u.rotace.slice(); rotace[i] = v; return { rotace }; }, 'Natočení');
+    }
+    function zmenParam(klic, v) {
+      // skica: nová obálka a střed, počátek skici ve světě zůstane
+      M.upravVybrane(u => M.maPrirozene(u) ? M.upravPrirozeny(u, { [klic]: v }) : { param: Object.assign({}, u.param, { [klic]: v }) }, 'Tvar');
+    }
+    /** Odvozené pole tvaru (vnitřní průměr, průměr průřezu…): zapíše rozměr i parametry, spodek stojí. */
+    function zmenOdvozeny(d, v) {
+      M.upravVybrane(u => {
+        const z = d.zapis(u.rozmer, Object.assign({}, M.TVARY[u.druh].param, u.param), v) || {};
+        const zmena = {};
+        if (z.param) zmena.param = M.normalizujParam(u.druh, Object.assign({}, u.param, z.param));
+        if (z.rozmer) {
+          zmena.rozmer = z.rozmer.map(x => M.omez(x, 0.01, 10000));
+          zmena.poloha = M.polohaSeSpodkem(Object.assign({}, u, zmena), M.spodekUzlu(u));
+        }
+        return zmena;
+      }, d.popis);
+    }
+    /** Inspektor se staví znovu, když se změní výběr, druh nebo režim skici. */
+    function klicInspektoru() {
+      const u = M.vybraneUzly()[0];
+      return M.app.vyber.join(',') + '|' + (M.app.vyber.length === 1 && u ? u.druh + (u.druh === 'skica' ? u.param.rezim : '') + (u.druh === 'skupina' ? JSON.stringify(u.occt) : '') : '');
+    }
+
+    M.na('vyber', postav);
+    M.na('dokument', () => {
+      if (klicInspektoru() !== klicStavby) postav(); else obnov(false);
+    });
+    postav();
+    return { postav, obnov };
+  };
+})(MDL);

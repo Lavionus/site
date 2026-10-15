@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>📼 Videotéka Nahnoji.cz</title>
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../podpis.js" defer></script>
+<script src="../dialog.js"></script>
+<script src="nahnoji_videa.js"></script>
+<style>
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    font-family: var(--font);
+    background: var(--bg);
+    color: var(--text);
+  }
+  .container { max-width: 1200px; margin: 0 auto; padding: 24px 16px 40px; }
+  h1 { font-size: 1.7rem; margin: 0 0 6px; }
+  .podnadpis { color: var(--text-muted); margin: 0 0 18px; }
+  .podnadpis a { color: var(--accent); }
+
+  button, select, input, textarea { font: inherit; color: inherit; }
+  button {
+    background: var(--bg-control);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 7px 12px;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  button:hover { background: var(--bg-hover); border-color: var(--border-strong); }
+  button.hlavni { background: var(--accent); color: var(--on-accent); border-color: var(--accent); font-weight: 600; }
+  button.hlavni:hover { background: var(--accent-hover); }
+  input[type=search], select, textarea {
+    background: var(--bg-input);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 7px 10px;
+  }
+
+  /* ── ovládací lišta ── */
+  .lista { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; margin-bottom: 12px; }
+  .lista input[type=search] { flex: 1 1 220px; min-width: 0; }
+  .stitky { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 16px; }
+  .stitky button { border-radius: 999px; padding: 4px 12px; font-size: 0.9rem; }
+  .stitky button.aktivni { background: var(--accent-soft); border-color: var(--accent); color: var(--accent); }
+  .pocet { color: var(--text-faint); font-size: 0.9rem; margin-left: auto; }
+
+  /* ── mřížka karet ── */
+  .mrizka {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+    gap: 14px;
+  }
+  .karta {
+    background: var(--bg-elevated);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    cursor: pointer;
+    display: flex; flex-direction: column;
+    text-align: left; padding: 0;
+    white-space: normal;
+    transition: transform .12s, border-color .12s;
+  }
+  .karta:hover, .karta:focus-visible { border-color: var(--accent); transform: translateY(-2px); background: var(--bg-elevated); }
+  .plakat {
+    aspect-ratio: 16 / 9;
+    display: grid; place-items: center;
+    position: relative;
+    color: #fff;
+  }
+  .plakat .ikona {
+    width: 54px; height: 54px; border-radius: 50%;
+    background: rgba(0,0,0,.35);
+    display: grid; place-items: center;
+    font-size: 22px; padding-left: 4px;
+  }
+  .plakat .cislo {
+    position: absolute; right: 8px; bottom: 6px;
+    font-size: .78rem; background: rgba(0,0,0,.45); padding: 1px 7px; border-radius: 4px;
+  }
+  .plakat .mistni {
+    position: absolute; left: 8px; top: 6px;
+    font-size: .72rem; background: rgba(0,0,0,.45); padding: 1px 7px; border-radius: 4px;
+  }
+  .popisek { padding: 10px 12px 12px; display: flex; flex-direction: column; gap: 4px; min-width: 0; }
+  .popisek .nazev { font-weight: 600; overflow-wrap: anywhere; }
+  .popisek .meta { color: var(--text-faint); font-size: .85rem; }
+  .popisek .text { color: var(--text-muted); font-size: .9rem; }
+
+  .prazdno {
+    border: 1px dashed var(--border-strong);
+    border-radius: var(--radius);
+    padding: 28px 20px;
+    text-align: center;
+    color: var(--text-muted);
+  }
+  .prazdno h2 { margin: 0 0 8px; font-size: 1.2rem; color: var(--text); }
+  .prazdno code, .napoveda code { background: var(--bg-panel); padding: 1px 5px; border-radius: 4px; }
+
+  /* ── přehrávač ── */
+  .prekryv {
+    position: fixed; inset: 0;
+    background: rgba(0,0,0,.72);
+    display: none;
+    align-items: center; justify-content: center;
+    padding: 16px;
+    z-index: 50;
+  }
+  .prekryv.otevreno { display: flex; }
+  .okno {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    width: min(960px, 100%);
+    max-height: 100%;
+    overflow: auto;
+  }
+  .okno-hlava { display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-bottom: 1px solid var(--border); }
+  .okno-hlava h2 { margin: 0; font-size: 1.1rem; flex: 1; min-width: 0; overflow-wrap: anywhere; }
+  .platno { aspect-ratio: 4 / 3; max-height: 70vh; width: 100%; background: #000; display: grid; place-items: center; }
+  .platno iframe { width: 100%; height: 100%; border: 0; display: block; }
+  .blokovano { padding: 24px; text-align: center; color: #ddd; max-width: 520px; }
+  .blokovano p { margin: 0 0 14px; line-height: 1.45; }
+  .blokovano .tlacitka { justify-content: center; }
+  .okno-pata { display: flex; flex-wrap: wrap; gap: 8px; padding: 10px 14px; align-items: center; }
+  .tlacitka { display: flex; flex-wrap: wrap; gap: 8px; }
+  .okno-pata .vpravo { margin-left: auto; }
+  .okno-pata .info { color: var(--text-faint); font-size: .85rem; width: 100%; }
+
+  /* ── přidání videí ── */
+  .panel {
+    background: var(--bg-panel);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 14px;
+    margin-bottom: 16px;
+    display: none;
+  }
+  .panel.otevreno { display: block; }
+  .panel textarea { width: 100%; min-height: 140px; font-family: ui-monospace, monospace; font-size: .85rem; resize: vertical; }
+  .napoveda { color: var(--text-muted); font-size: .9rem; margin: 0 0 10px; line-height: 1.45; }
+  .panel .tlacitka { margin-top: 10px; }
+
+  @media (max-width: 520px) {
+    h1 { font-size: 1.4rem; }
+    .mrizka { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 10px; }
+    .okno-pata .vpravo { margin-left: 0; }
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>📼 Videotéka Nahnoji.cz</h1>
+  <p class="podnadpis">Prohlížeč videí nahraných na <a href="http://nahnoji.cz/" target="_blank" rel="noopener">nahnoji.cz</a>.</p>
+
+  <div class="lista">
+    <input type="search" id="hledat" placeholder="Hledat podle názvu, štítku nebo čísla…" autocomplete="off">
+    <select id="razeni" title="Řazení">
+      <option value="nove">Nejnovější</option>
+      <option value="stare">Nejstarší</option>
+      <option value="nazev">Podle názvu</option>
+    </select>
+    <button id="btnPridat">+ Přidat videa</button>
+    <span class="pocet" id="pocet"></span>
+  </div>
+
+  <div class="panel" id="panelPridat">
+    <p class="napoveda">
+      Vlož obsah souboru <code>nahnoji_odkazy.tsv</code> z nahrávače, nebo prostě odkazy na videa – každý na samostatný řádek.
+      Před odkaz můžeš napsat název a oddělit ho svislítkem: <code>Dovolená 2026 | http://nahnoji.cz/video?id=21400&amp;s=wide</code>.
+      Přidaná videa se uloží jen v tomto prohlížeči; pro všechny návštěvníky je zkopíruj do souboru <code>obsah/nahnoji_videa.js</code>.
+    </p>
+    <textarea id="vstup" spellcheck="false" placeholder="http://nahnoji.cz/video?id=…"></textarea>
+    <div class="tlacitka">
+      <button class="hlavni" id="btnNacist">Přidat</button>
+      <button id="btnExport">Kopírovat jako nahnoji_videa.js</button>
+      <button id="btnSmazatMistni">Smazat videa přidaná v prohlížeči</button>
+      <button id="btnZavritPanel">Zavřít</button>
+    </div>
+  </div>
+
+  <div class="stitky" id="stitky"></div>
+  <div class="mrizka" id="mrizka"></div>
+</div>
+
+<div class="prekryv" id="prekryv" role="dialog" aria-modal="true" aria-labelledby="prehNazev">
+  <div class="okno">
+    <div class="okno-hlava">
+      <h2 id="prehNazev"></h2>
+      <button id="btnZavrit" title="Zavřít (Esc)">✕</button>
+    </div>
+    <div class="platno" id="platno"></div>
+    <div class="okno-pata">
+      <div class="tlacitka">
+        <button id="btnPredchozi" title="Předchozí video (←)">◀ Předchozí</button>
+        <button id="btnDalsi" title="Další video (→)">Další ▶</button>
+      </div>
+      <div class="tlacitka vpravo">
+        <button id="btnOkno">Otevřít v okně</button>
+        <button id="btnKopirovat">Kopírovat odkaz</button>
+        <button id="btnNaWebu">Na nahnoji.cz ↗</button>
+      </div>
+      <div class="info" id="prehInfo"></div>
+    </div>
+  </div>
+</div>
+
+<script>
+(function () {
+  'use strict';
+
+  const ZDROJ = 'http://nahnoji.cz';
+  const KLIC = 'webapp_nahnoji_vlastni';
+  // Nahnoji.cz běží jen přes http. Stránka z https (GitHub Pages) nesmí
+  // vložit http rámec ani video – prohlížeč je zablokuje jako „mixed content".
+  // Nové okno (navigace nejvyšší úrovně) blokované není. ?okno vynutí
+  // https režim i lokálně (pro vyzkoušení).
+  const LZE_VLOZIT = location.protocol !== 'https:' && !/[?&]okno\b/.test(location.search);
+
+  const $ = id => document.getElementById(id);
+  const stav = { hledat: '', razeni: 'nove', stitek: '', zobrazena: [], aktualni: -1 };
+
+  const odkazVidea = id => `${ZDROJ}/video?id=${id}&s=wide`;
+  const odkazEmbed = id => `${ZDROJ}/embed?id=${id}`;
+
+  // ── data ──────────────────────────────────────────────────────────────────
+
+  function nactiMistni() {
+    try { return JSON.parse(localStorage.getItem(KLIC)) || []; } catch (e) { return []; }
+  }
+  function ulozMistni(seznam) {
+    try { localStorage.setItem(KLIC, JSON.stringify(seznam)); } catch (e) { Dialog.chyba('Nelze uložit do prohlížeče'); }
+  }
+
+  function vsechnaVidea() {
+    const mapa = new Map();
+    for (const v of (window.NAHNOJI_VIDEA || [])) {
+      const id = parseInt(v.id, 10);
+      if (id) mapa.set(id, Object.assign({}, v, { id, mistni: false }));
+    }
+    for (const v of nactiMistni()) {
+      if (!mapa.has(v.id)) mapa.set(v.id, Object.assign({}, v, { mistni: true }));
+    }
+    return [...mapa.values()];
+  }
+
+  /* Rozpozná řádky z nahnoji_odkazy.tsv (čas, soubor, video, smazání),
+     „název | odkaz" i holé odkazy. */
+  function rozeberVstup(text) {
+    const vysledek = [];
+    for (const radek of text.split(/\r?\n/)) {
+      if (!radek.trim() || radek.startsWith('#')) continue;
+      const m = radek.match(/nahnoji\.cz\/(?:video|embed)\?id=(\d+)/i);
+      if (!m) continue;
+      const id = parseInt(m[1], 10);
+      let nazev = '', datum = '';
+      const sloupce = radek.split('\t');
+      if (sloupce.length >= 3) {
+        datum = (sloupce[0].match(/^\d{4}-\d{2}-\d{2}/) || [''])[0];
+        nazev = sloupce[1].split(/[\\/]/).pop().replace(/\.[^.]+$/, '');
+      } else if (radek.includes('|')) {
+        nazev = radek.split('|')[0].trim();
+      }
+      vysledek.push({ id, nazev: nazev || `Video ${id}`, datum });
+    }
+    return vysledek;
+  }
+
+  // ── vzhled karet ──────────────────────────────────────────────────────────
+
+  function barvy(id) {
+    const h = (id * 137.508) % 360;
+    return `linear-gradient(135deg, hsl(${h} 45% 32%), hsl(${(h + 40) % 360} 55% 18%))`;
+  }
+
+  function formatDatum(d) {
+    const m = /^(\d{4})-(\d{2})-(\d{2})/.exec(d || '');
+    return m ? `${+m[3]}. ${+m[2]}. ${m[1]}` : '';
+  }
+
+  function el(tag, trida, text) {
+    const e = document.createElement(tag);
+    if (trida) e.className = trida;
+    if (text != null) e.textContent = text;
+    return e;
+  }
+
+  function filtrovana() {
+    const q = stav.hledat.trim().toLowerCase();
+    let seznam = vsechnaVidea().filter(v => {
+      if (stav.stitek && !(v.stitky || []).includes(stav.stitek)) return false;
+      if (!q) return true;
+      return [v.nazev, v.popis, String(v.id), ...(v.stitky || [])]
+        .some(t => t && String(t).toLowerCase().includes(q));
+    });
+    const podle = {
+      nove: (a, b) => (b.datum || '').localeCompare(a.datum || '') || b.id - a.id,
+      stare: (a, b) => (a.datum || '').localeCompare(b.datum || '') || a.id - b.id,
+      nazev: (a, b) => a.nazev.localeCompare(b.nazev, 'cs'),
+    }[stav.razeni];
+    return seznam.sort(podle);
+  }
+
+  function vykresliStitky() {
+    const box = $('stitky');
+    box.textContent = '';
+    const vse = new Set();
+    vsechnaVidea().forEach(v => (v.stitky || []).forEach(s => vse.add(s)));
+    if (!vse.size) return;
+    const tl = (text, hodnota) => {
+      const b = el('button', hodnota === stav.stitek ? 'aktivni' : '', text);
+      b.onclick = () => { stav.stitek = hodnota; vykresli(); };
+      box.appendChild(b);
+    };
+    tl('Vše', '');
+    [...vse].sort((a, b) => a.localeCompare(b, 'cs')).forEach(s => tl(s, s));
+  }
+
+  function vykresli() {
+    vykresliStitky();
+    const box = $('mrizka');
+    box.textContent = '';
+    const celkem = vsechnaVidea().length;
+    stav.zobrazena = filtrovana();
+    $('pocet').textContent = !celkem ? '' :
+      stav.zobrazena.length === celkem ? `${celkem} videí` : `${stav.zobrazena.length} z ${celkem}`;
+
+    if (!celkem) {
+      const p = el('div', 'prazdno');
+      p.appendChild(el('h2', '', 'Zatím tu nejsou žádná videa'));
+      p.appendChild(el('p', '', 'Seznam se doplní do souboru obsah/nahnoji_videa.js. Do té doby můžeš videa přidat tlačítkem „+ Přidat videa“ – uloží se jen v tomto prohlížeči.'));
+      box.appendChild(p);
+      return;
+    }
+    if (!stav.zobrazena.length) {
+      box.appendChild(el('div', 'prazdno', 'Hledání neodpovídá žádné video.'));
+      return;
+    }
+
+    stav.zobrazena.forEach((v, i) => {
+      const k = el('button', 'karta');
+      k.type = 'button';
+      k.title = v.nazev;
+      const plakat = el('div', 'plakat');
+      plakat.style.background = barvy(v.id);
+      plakat.appendChild(el('span', 'ikona', '▶'));
+      plakat.appendChild(el('span', 'cislo', '#' + v.id));
+      if (v.mistni) plakat.appendChild(el('span', 'mistni', 'jen v prohlížeči'));
+      const pop = el('div', 'popisek');
+      pop.appendChild(el('span', 'nazev', v.nazev));
+      const meta = [formatDatum(v.datum), (v.stitky || []).join(', ')].filter(Boolean).join(' · ');
+      if (meta) pop.appendChild(el('span', 'meta', meta));
+      if (v.popis) pop.appendChild(el('span', 'text', v.popis));
+      k.append(plakat, pop);
+      k.onclick = () => otevri(i);
+      box.appendChild(k);
+    });
+  }
+
+  // ── přehrávač ─────────────────────────────────────────────────────────────
+
+  function otevri(i) {
+    const v = stav.zobrazena[i];
+    if (!v) return;
+    stav.aktualni = i;
+    $('prehNazev').textContent = v.nazev;
+    const platno = $('platno');
+    platno.textContent = '';
+
+    if (LZE_VLOZIT) {
+      const f = document.createElement('iframe');
+      f.src = odkazEmbed(v.id);
+      f.allowFullscreen = true;
+      f.allow = 'autoplay; fullscreen';
+      f.title = v.nazev;
+      platno.appendChild(f);
+    } else {
+      const b = el('div', 'blokovano');
+      b.appendChild(el('p', '', 'Nahnoji.cz posílá videa jen nezabezpečeně (http), a tahle stránka běží přes https – prohlížeč proto přehrávač přímo sem vložit nedovolí.'));
+      const t = el('div', 'tlacitka');
+      const b1 = el('button', 'hlavni', '▶ Přehrát v okně');
+      b1.onclick = () => oknoPrehravace(v);
+      const b2 = el('button', '', 'Na nahnoji.cz ↗');
+      b2.onclick = () => window.open(odkazVidea(v.id), '_blank', 'noopener');
+      t.append(b1, b2);
+      b.appendChild(t);
+      platno.appendChild(b);
+    }
+
+    $('prehInfo').textContent = [`Video #${v.id}`, formatDatum(v.datum), v.popis].filter(Boolean).join(' · ');
+    $('btnPredchozi').disabled = i <= 0;
+    $('btnDalsi').disabled = i >= stav.zobrazena.length - 1;
+    $('prekryv').classList.add('otevreno');
+    history.replaceState(null, '', '#v=' + v.id);
+  }
+
+  function zavri() {
+    $('prekryv').classList.remove('otevreno');
+    $('platno').textContent = '';   // zastaví přehrávání
+    stav.aktualni = -1;
+    history.replaceState(null, '', location.pathname + location.search);
+  }
+
+  function oknoPrehravace(v) {
+    const w = Math.min(960, screen.availWidth - 40), h = Math.round(w * 0.75);
+    const okno = window.open(odkazEmbed(v.id), 'nahnoji_prehravac', `popup,width=${w},height=${h}`);
+    if (!okno) window.open(odkazVidea(v.id), '_blank', 'noopener');
+  }
+
+  async function kopiruj(text, hlaska) {
+    try { await navigator.clipboard.writeText(text); Dialog.info(hlaska); }
+    catch (e) { await Dialog.zeptej('Zkopíruj ručně:', text); }
+  }
+
+  // ── přidávání ─────────────────────────────────────────────────────────────
+
+  function pridej() {
+    const nove = rozeberVstup($('vstup').value);
+    if (!nove.length) { Dialog.chyba('Nenašel jsem žádný odkaz na nahnoji.cz'); return; }
+    const mistni = nactiMistni();
+    const znama = new Set(vsechnaVidea().map(v => v.id));
+    let pridano = 0;
+    for (const v of nove) {
+      if (znama.has(v.id)) continue;
+      mistni.push(v); znama.add(v.id); pridano++;
+    }
+    ulozMistni(mistni);
+    $('vstup').value = '';
+    Dialog.info(pridano ? `Přidáno videí: ${pridano}` : 'Všechna videa už v seznamu jsou');
+    vykresli();
+  }
+
+  function jsRetezec(s) { return "'" + String(s).replace(/\\/g, '\\\\').replace(/'/g, "\\'") + "'"; }
+
+  function exportJs() {
+    const seznam = vsechnaVidea().sort((a, b) => a.id - b.id);
+    if (!seznam.length) { Dialog.chyba('Seznam je prázdný'); return; }
+    const radky = seznam.map(v => {
+      const casti = [`id: ${v.id}`, `nazev: ${jsRetezec(v.nazev)}`];
+      if (v.datum) casti.push(`datum: ${jsRetezec(v.datum)}`);
+      if (v.stitky && v.stitky.length) casti.push(`stitky: [${v.stitky.map(jsRetezec).join(', ')}]`);
+      if (v.popis) casti.push(`popis: ${jsRetezec(v.popis)}`);
+      return `  { ${casti.join(', ')} },`;
+    });
+    kopiruj(`window.NAHNOJI_VIDEA = [\n${radky.join('\n')}\n];\n`,
+      'Zkopírováno – vlož to do obsah/nahnoji_videa.js místo stávajícího pole');
+  }
+
+  // ── události ──────────────────────────────────────────────────────────────
+
+  $('hledat').addEventListener('input', e => { stav.hledat = e.target.value; vykresli(); });
+  $('razeni').addEventListener('change', e => { stav.razeni = e.target.value; vykresli(); });
+  $('btnPridat').onclick = () => { $('panelPridat').classList.toggle('otevreno'); $('vstup').focus(); };
+  $('btnZavritPanel').onclick = () => $('panelPridat').classList.remove('otevreno');
+  $('btnNacist').onclick = pridej;
+  $('btnExport').onclick = exportJs;
+  $('btnSmazatMistni').onclick = async () => {
+    const n = nactiMistni().length;
+    if (!n) { Dialog.info('V prohlížeči nejsou žádná přidaná videa'); return; }
+    if (await Dialog.potvrd(`Odebrat ${n} videí přidaných v tomto prohlížeči? Na nahnoji.cz zůstanou.`)) {
+      ulozMistni([]); vykresli();
+    }
+  };
+
+  $('btnZavrit').onclick = zavri;
+  $('prekryv').addEventListener('click', e => { if (e.target === e.currentTarget) zavri(); });
+  $('btnPredchozi').onclick = () => otevri(stav.aktualni - 1);
+  $('btnDalsi').onclick = () => otevri(stav.aktualni + 1);
+  $('btnOkno').onclick = () => oknoPrehravace(stav.zobrazena[stav.aktualni]);
+  $('btnNaWebu').onclick = () => window.open(odkazVidea(stav.zobrazena[stav.aktualni].id), '_blank', 'noopener');
+  $('btnKopirovat').onclick = () => kopiruj(odkazVidea(stav.zobrazena[stav.aktualni].id), 'Odkaz zkopírován');
+
+  document.addEventListener('keydown', e => {
+    if (stav.aktualni < 0) return;
+    if (e.key === 'Escape') zavri();
+    else if (e.key === 'ArrowLeft' && stav.aktualni > 0) otevri(stav.aktualni - 1);
+    else if (e.key === 'ArrowRight' && stav.aktualni < stav.zobrazena.length - 1) otevri(stav.aktualni + 1);
+  });
+
+  // Bez vložení jsou tyhle dvě volby přímo v hlášce na plátně.
+  if (!LZE_VLOZIT) { $('btnOkno').hidden = true; $('btnNaWebu').hidden = true; }
+
+  vykresli();
+
+  // Přímý odkaz na video: nahnoji.html#v=21400
+  const m = /^#v=(\d+)/.exec(location.hash);
+  if (m) {
+    const i = stav.zobrazena.findIndex(v => v.id === +m[1]);
+    if (i >= 0) otevri(i);
+  }
+
+  // Pro testy.
+  window.NAHNOJI = { rozeberVstup, vsechnaVidea, otevri, zavri, LZE_VLOZIT };
+})();
+</script>
+</body>
+</html>

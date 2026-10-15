@@ -32,7 +32,7 @@ const Dialog = (function () {
 .dlg-toast.odchazi{animation:dlg-out .2s ease-in forwards}
 @keyframes dlg-in{from{opacity:0;transform:translateY(-8px)}to{opacity:1;transform:none}}
 @keyframes dlg-out{to{opacity:0;transform:translateY(-8px)}}
-.dlg-okno{border:1px solid var(--border,#404040);border-radius:10px;padding:0;
+.dlg-okno{margin:auto;border:1px solid var(--border,#404040);border-radius:10px;padding:0;
   background:var(--bg-elevated,#2d2d2d);color:var(--text,#e0e0e0);
   max-width:min(92vw,440px);box-shadow:0 10px 40px rgba(0,0,0,.5)}
 .dlg-okno::backdrop{background:rgba(0,0,0,.5)}
@@ -52,10 +52,17 @@ const Dialog = (function () {
 
   let stoh = null;
   function toasty() {
-    if (stoh && stoh.isConnected) return stoh;
+    // otevřené modální okno je v horní vrstvě nad vším – oznámení musí být v něm, jinak by bylo schované pod ním
+    let modal = null;
+    try { modal = document.querySelector('dialog:modal'); } catch (e) { /* starší prohlížeč */ }
+    const rodic = modal || document.body;
+    if (stoh && stoh.isConnected) { if (stoh.parentNode !== rodic) rodic.appendChild(stoh); return stoh; }
     stoh = document.createElement('div');
     stoh.className = 'dlg-toasty';
-    document.body.appendChild(stoh);
+    // živá oblast musí existovat dřív než oznámení – čtečky jinak nově vložené už vyplněné prvky často přeskočí
+    stoh.setAttribute('aria-live', 'polite');
+    stoh.setAttribute('aria-relevant', 'additions');
+    rodic.appendChild(stoh);
     return stoh;
   }
 
@@ -63,7 +70,7 @@ const Dialog = (function () {
     vlozStyl();
     const t = document.createElement('div');
     t.className = 'dlg-toast' + (chyba ? ' je-chyba' : '');
-    t.setAttribute('role', chyba ? 'alert' : 'status');
+    if (chyba) t.setAttribute('role', 'alert');            // běžné oznámení přečte živá oblast kontejneru
     t.textContent = String(text);
     toasty().appendChild(t);
     const pryc = () => {

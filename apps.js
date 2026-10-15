@@ -111,6 +111,11 @@ const KATALOG_SEKCE = [
         "soubor": "obsah/print_editor.html",
         "nazev": "🖨️ Editor pro tisk a export",
         "tagy": ["tisk", "markdown", "export", "html editor", "wysiwyg", "formátování"]
+      },
+      {
+        "soubor": "obsah/prompty.html",
+        "nazev": "🤖 Databanka promptů",
+        "tagy": ["prompt", "AI", "ChatGPT", "Claude", "umělá inteligence", "šablony", "proměnné", "knihovna promptů"]
       }
     ]
   },
@@ -1287,6 +1292,16 @@ const KATALOG_SEKCE = [
         ]
       },
       {
+        "soubor": "obsah/video_sekce.html",
+        "nazev": "🎞️ Dělení videa na sekce",
+        "tagy": ["video", "střih", "sekce", "rozdělit", "snímek", "export"]
+      },
+      {
+        "soubor": "obsah/nahnoji.html",
+        "nazev": "📼 Videotéka Nahnoji.cz",
+        "tagy": ["video", "videa", "nahnoji", "přehrávač", "galerie", "videotéka", "sdílení"]
+      },
+      {
         "soubor": "obsah/soundGen.html",
         "nazev": "🎵 Generátor zvuku",
         "tagy": ["zvuk", "tón", "frekvence", "generátor", "sinus"]
@@ -1346,6 +1361,11 @@ const KATALOG_SEKCE = [
         "soubor": "obsah/tubeSplit.html",
         "nazev": "🔱 Rozbočka trubek",
         "tagy": ["trubky", "rozbočka", "odsávání", "vývody", "kalhoty", "redukce", "svařování", "kónus", "sražení", "fazeta"]
+      },
+      {
+        "soubor": "obsah/kleste.html",
+        "nazev": "🗜️ Kleště, pinzety a svorky",
+        "tagy": ["kleště", "pinzeta", "svorka", "peán", "jehelec", "kocher", "reverzní pinzeta", "samosvorná", "rohatka", "kleště na topinky", "kleště na pečivo", "grilovací kleště", "kleště na salát", "kleště na led", "kleště na sklenice", "kleště na cukr", "kolíček", "klip na sáčky", "svorka na hadičky", "čelisti", "zoubkování", "print-in-place", "kloub", "čep", "3d tisk", "stl", "3mf"]
       },
       {
         "soubor": "obsah/cookieCutter.html",
@@ -1547,13 +1567,20 @@ const KATALOG_SEKCE = [
         ]
       },
       {
-        "soubor": "obsah/tinkercad.html",
-        "nazev": "🧊 3D Návrhář",
+        "soubor": "obsah/modelar.html",
+        "nazev": "🧊 Modelář 3D",
         "tagy": [
           "3d",
           "modelování",
           "tinkercad",
-          "tvary"
+          "tvary",
+          "cad",
+          "3d tisk",
+          "stl",
+          "3mf",
+          "step",
+          "závity",
+          "výkres"
         ]
       },
       {
