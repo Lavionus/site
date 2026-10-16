@@ -38,7 +38,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       { id: 'rozdelitRovinou', nazev: 'Rozdělit rovinou', klavesy: [], povoleno: () => M.vybraneVolne().length === 1, akce: () => M.otevriRez() },
       { id: 'vzorDer', nazev: 'Vzor děr na ploše (klikni na plochu)', klavesy: [], povoleno: () => true,
         akce: () => M.nastavRezim(M.app.rezim === 'vzorDer' ? null : 'vzorDer') },
-      { id: 'struktura', nazev: 'Struktura na ploše – vzor do plochy, např. váleček na těsto (klikni na plochu)', klavesy: [], povoleno: () => true,
+      { id: 'struktura', nazev: 'Struktura na ploše – vzor vyrytý nebo vystouplý (klikni na plochu)', klavesy: [], povoleno: () => true,
         akce: () => M.nastavRezim(M.app.rezim === 'struktura' ? null : 'struktura') },
       { id: 'obalSvg', nazev: 'Ovinout SVG kolem válce', klavesy: [], povoleno: () => M.vybraneVolne().length === 1, akce: () => M.otevriObal() },
       { id: 'zaoblitHrany', nazev: 'Zaoblit hrany (přesně)', klavesy: [], povoleno: () => M.vybraneVolne().length === 1, akce: () => M.otevriUpravuHran('zaobleni') },

@@ -27,7 +27,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
 
   /** Výpočet ve workeru; vrátí {sit, varovani}. Bez workeru null (pak se počítá v hlavním vlákně). */
   let urlWorkeru = null;
-  function ve​Workeru(zadani, prubeh) {
+  function veWorkeru(zadani, prubeh) {
     if (typeof globalThis.povrchJadro !== 'function' || typeof globalThis.povrchVzory !== 'function') return null;
     let w;
     try {
@@ -108,7 +108,7 @@ self.onmessage = e => {
       if (!M.app.dok.uzly.some(x => x.id === u.id)) { Dialog.chyba('Strukturu jde nanést jen na samostatné těleso nebo celou skupinu.'); return; }
       const sit = S.telesa.svetovaSit(u.id);
       if (!sit || zasah.trojuhelnik == null) return;
-      try { await M.nactiPovrch(); }
+      try { await M.nactiPovrch(); naplnVzory(); }
       catch (e) { Dialog.chyba('Nepodařilo se načíst výpočet struktury: ' + e.message); return; }
       const svar = POVRCH.svar(M.polevkaSite(sit));
       const model = POVRCH.priprav(svar, M.UHEL_PLOCH);
@@ -117,11 +117,12 @@ self.onmessage = e => {
       st = { id: u.id, nazev: u.nazev, svar, model, oblast };
       // tloušťka tělesa kolmo k ploše (hrubě: nejmenší rozměr obálky) – jen pro varování
       const r = model.box.rozmer;
-      st.tloustka = oblast.tvar === 'valec' ? oblast.polomer : Math.min(...r);
-      const prum = oblast.tvar === 'valec' ? oblast.polomer * 2 : 0;
+      const R = M.polomerOblasti(model, oblast);
+      st.tloustka = oblast.tvar === 'valec' ? R : Math.min(...r);
+      const prum = 2 * R;
       $('strPlocha').textContent = oblast.tvar === 'valec'
         ? `Plášť válce ⌀ ${M.mm(prum, 1)} mm (obvod ${M.mm(Math.PI * prum, 1)} mm) – vzor se ovine dokola.`
-        : oblast.tvar === 'rovina' ? `Rovná plocha ${M.mm(Math.sqrt(oblast.plocha), 0)}² mm (${M.mm(oblast.plocha, 0)} mm²).`
+        : oblast.tvar === 'rovina' ? `Rovná plocha ${M.mm(oblast.plocha, 0)} mm².`
         : 'Zakřivená plocha – vzor se promítne z nejbližšího směru, může být místy zkreslený.';
       // výchozí velikost podle plochy: u válce ať se na obvod vejde celý počet dlaždic
       if (!okno.dataset.nastaveno) {
@@ -136,8 +137,7 @@ self.onmessage = e => {
       aktualizuj();
     };
 
-    // seznam vzorů
-    if (globalThis.VZORY) naplnVzory();
+    /** Seznam vzorů do výběru (po načtení VZORY). */
     function naplnVzory() {
       if ($('strVzor').options.length) return;
       for (const v of VZORY.SEZNAM) {
@@ -146,8 +146,6 @@ self.onmessage = e => {
         $('strVzor').appendChild(o);
       }
     }
-    const puvodniOtevri = M.otevriStrukturu;
-    M.otevriStrukturu = async zasah => { await M.nactiPovrch().then(naplnVzory, () => {}); return puvodniOtevri(zasah); };
 
     okno.addEventListener('input', aktualizuj);
     okno.addEventListener('change', aktualizuj);

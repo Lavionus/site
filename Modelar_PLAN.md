@@ -779,3 +779,22 @@ rozhraní, QA skutečnou myší); opravy:
 - **Témata plochy**: 14 nových (Tyrkysová laguna, Les, Láva, Oceán, Máta, Levandule, Broskev, Retro monitor, Karbon,
   Sníh, Ořech, Měď, Bauhaus, Vysoký kontrast) – celkem 24; výběr i přímo v nabídce Pohled ▾ (dlaždice 4 v řadě).
 - Testy: `modelar_dilna.js` 64 (kružnice, osy, Ø, poloha, řez a šrafy, DXF), `modelar_ui_revize5.py` 44.
+
+### Přání 16. 10. 2026 (závity, šipky, střed otáčení, vzor děr, struktura, stavový řádek)
+
+- **Počet závitů**: odvozené pole „Počet závitů“ u Díry se závitem a Šroubu (délka = počet × stoupání, celé číslo).
+- **Šipky otáčení** decentnější: oblouk 40° místo 55°, tenká bílá čára s průhledností 0,62, hrot max. 11 px, plná
+  sytost až při najetí / tahu; tenčí pás pro zásah myší.
+- **Střed otáčení pohledu**: s výběrem kolem středu obálky vybraných těles (`S.stredOtaceni`), bez výběru kolem
+  počátku desky (`Kamera.otoc(dx, dy, stred)` – rotace kolem bodu, bod zůstane na obrazovce na místě).
+- **Vzor děr**: režim „Počtem děr po celé ploše“ (nx × ny rozložené po obálce plochy); okno ukazuje rozměr plochy
+  a u jediné díry radí, proč se víc nevejde (výchozí kostka 20 mm má po odstupu jen 10 × 10 mm).
+- **Struktura na ploše** (Úpravy ▾, klik na plochu): jádro povrch3d (POVRCH + VZORY, 22 vzorů) načtené líně;
+  `jadro/struktura.js` (výběr plochy, nastavení, výpočet, `M.nahradSiti`) a `ui/struktura.js` (okno s náhledem
+  vzoru, odhad trojúhelníků, výpočet ve workeru z textu modulů – jde i z file://). Rovina i plášť válce (vzor se
+  ovine dokola – váleček na těsto), vyrytá / vystouplá, natočení, náběh u okrajů, převrácení; limit 400 tisíc
+  trojúhelníků (jemnost se zvětší). Těleso se nahradí sítí na stejném místě (Ctrl+Z vrátí). Obrys výběru se
+  u sítí s víc než 25 000 ostrými hranami nekreslí (jemná struktura by těleso jen přebarvila).
+- **Stavový řádek**: souřadnice kurzoru v polích pevné šířky (8ch, zarovnané vpravo) – zbytek řádku neposkakuje.
+- Testy: node `modelar_struktura.js` (20), `modelar_upravy.js` 34, `modelar_jadro.js` 124; prohlížeč
+  `modelar_ui_revize6.py` (52, server i file://).

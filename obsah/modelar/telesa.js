@@ -16,13 +16,15 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     const geometrie = new Map();        // klíč → {geom, hrany, odkazu}
 
     /** Obrysové hrany tělesa (čáry). U obřích sítí se nestaví – EdgesGeometry milionu trojúhelníků
-        zablokuje hlavní vlákno na sekundy a čáry by stejně splynuly. Bez geometrie (díl selhal) prázdné. */
-    const MAX_TROJ_HRANY = 300000;
+        zablokuje hlavní vlákno na sekundy a čáry by stejně splynuly. Bez geometrie (díl selhal) prázdné.
+        Stejně tak u jemné struktury (desítky tisíc ostrých hran): čáry by těleso jen přebarvily. */
+    const MAX_TROJ_HRANY = 300000, MAX_CAR_HRAN = 25000;
     function naplnHrany(cil, geom) {
       const p = geom.getAttribute('position');
       if (!p || p.count / 3 > MAX_TROJ_HRANY) { cil.setAttribute('position', new THREE.BufferAttribute(new Float32Array(0), 3)); return cil; }
       const e = new THREE.EdgesGeometry(geom, 25);
-      cil.setAttribute('position', e.getAttribute('position'));
+      const ep = e.getAttribute('position');
+      cil.setAttribute('position', ep.count / 2 > MAX_CAR_HRAN ? new THREE.BufferAttribute(new Float32Array(0), 3) : ep);
       cil.computeBoundingSphere();
       e.dispose();
       return cil;

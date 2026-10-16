@@ -13,6 +13,42 @@
 <script src="../theme.js"></script>
 <script src="../podpis.js" defer></script>
 <script src="../dialog.js" defer></script>
+<script>
+/* Pojistka: service worker vrací nejdřív soubory z mezipaměti. Když se tam po aktualizaci sejdou soubory
+   z různých verzí, aplikace by nenastartovala – pak se nabídne (nebo sama provede) obnova souborů. */
+window.DENIK_VERZE = '2026-10-16c';
+window.obnovDenik = async function () {
+  // bez sítě by smazání uložených souborů aplikaci úplně odstřihlo
+  if (!navigator.onLine) { alert('Pro obnovu aplikace je potřeba připojení k internetu.'); return; }
+  try {
+    for (const k of await caches.keys()) {
+      if (k.indexOf('webapp-') !== 0) continue;
+      const c = await caches.open(k);
+      for (const r of await c.keys()) if (/\/obsah\/(potraviny|lib\/zxing)/.test(r.url)) await c.delete(r);
+    }
+  } catch (e) { /* bez Cache API */ }
+  try {
+    await Promise.all(['potraviny.html', 'potraviny/jadro.js', 'potraviny/aplikace.js', 'potraviny/grafy.js', 'potraviny/ctecka.js']
+      .map(u => fetch(u, { cache: 'reload' })));
+  } catch (e) { /* offline */ }
+  location.reload();
+};
+(function () {
+  let selhalo = false;
+  const zachran = () => {
+    const el = document.getElementById('dataStav');
+    if (!el || (window.DENIK && window.DENIK.spusteno !== false && !selhalo)) return;
+    el.textContent = 'Aplikace se nespustila – nejspíš se po aktualizaci smíchaly staré a nové soubory. ';
+    const b = document.createElement('button');
+    b.className = 'btn mini'; b.type = 'button'; b.textContent = '↻ Obnovit aplikaci'; b.onclick = window.obnovDenik;
+    el.appendChild(b);
+  };
+  addEventListener('error', e => {
+    if (/\/potraviny\/[a-z]+\.js/.test(e.filename || '') && !(window.DENIK && window.DENIK.spusteno)) { selhalo = true; setTimeout(zachran, 500); }
+  });
+  setTimeout(zachran, 20000);
+})();
+</script>
 <script src="potraviny/jadro.js"></script>
 <script src="potraviny/grafy.js" defer></script>
 <script src="potraviny/ctecka.js" defer></script>

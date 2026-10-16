@@ -1379,7 +1379,7 @@
   }
 
   const API = {
-    FORMAT, VERZE_FORMATU, ZIVINY, ZIV, ZAKLAD, MIKRO, SKUPINY, JIDLA_VYCHOZI, AKTIVITA, EFSA_DOSPELI,
+    VERZE_KODU: '2026-10-16c', FORMAT, VERZE_FORMATU, ZIVINY, ZIV, ZAKLAD, MIKRO, SKUPINY, JIDLA_VYCHOZI, AKTIVITA, EFSA_DOSPELI,
     norm, cislo, zaokrouhli, formatCislo, noveId, hash, tvar, pocet,
     datumKlic, zKlice, posunDen, rozdilDni, popisDne,
     eanKontrola, eanVarianty, eanZeme,

@@ -4,6 +4,7 @@
    plochy (rovina, válec, obecná), na zvolenou plochu se nanese vzor a vznikne
    nová uzavřená síť. Těleso se pak nahradí modelem 'sit' (jeden krok zpět).
    Bez DOM – testuje se v node (_test/modelar_struktura.js). */
+var MDL = globalThis.MDL = globalThis.MDL || {};
 (function (M) {
   'use strict';
 
@@ -46,6 +47,20 @@
 
   /** Nejvíc trojúhelníků výsledku (víc zpomalí zobrazení i booleany; jemnost se zvětší). */
   M.LIMIT_STRUKTURY = 400000;
+
+  /** Poloměr válcové plochy podle vrcholů (nejdál od osy) – fit z těžišť mnohoúhelníku vychází o chlup menší. */
+  M.polomerOblasti = function (model, o) {
+    if (!o || o.tvar !== 'valec') return 0;
+    const P = model.pos, T = model.tri, k = o.osa, c = o.osaBod;
+    let r = 0;
+    for (const t of o.tri) for (let j = 0; j < 3; j++) {
+      const i = T[3 * t + j] * 3;
+      const d = [P[i] - c[0], P[i + 1] - c[1], P[i + 2] - c[2]];
+      const a = d[0] * k[0] + d[1] * k[1] + d[2] * k[2];
+      r = Math.max(r, Math.hypot(d[0] - a * k[0], d[1] - a * k[1], d[2] - a * k[2]));
+    }
+    return r;
+  };
 
   /** Výchozí nastavení struktury pro model (velikost a hloubka podle rozměru). */
   M.vychoziStruktura = function (vzor, uhlopricka) {

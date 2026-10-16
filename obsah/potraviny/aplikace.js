@@ -10,6 +10,26 @@
   const J = window.DENIK_JADRO;
   const G = window.DENIK_GRAFY;
   const KLIC = 'webapp_potraviny';
+  // stránka, jádro a aplikace musí být ze stejné verze (při změně kódu zvýšit i v jadro.js a potraviny.html)
+  const VERZE_KODU = '2026-10-16c';
+  if (!J || J.VERZE_KODU !== VERZE_KODU || window.DENIK_VERZE !== VERZE_KODU) {
+    // jednou za minutu se soubory obnoví samy, jinak (smyčka) jen nabídka tlačítkem
+    let nedavno = false;
+    try { nedavno = Date.now() - (+sessionStorage.getItem(KLIC + '_obnova') || 0) < 60000; sessionStorage.setItem(KLIC + '_obnova', String(Date.now())); } catch (_) { /* nic */ }
+    const obnov = window.obnovDenik || (() => location.reload());
+    const ukaz = () => {
+      const el = document.getElementById('dataStav');
+      if (!el) return;
+      el.textContent = 'Načetla se nekompletní aktualizace aplikace. ';
+      const b = document.createElement('button');
+      b.className = 'btn mini'; b.type = 'button'; b.textContent = '↻ Obnovit aplikaci'; b.onclick = obnov;
+      el.appendChild(b);
+    };
+    if (!nedavno) obnov();
+    else if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', ukaz); else ukaz();
+    window.DENIK = { spusteno: false, verze: VERZE_KODU };
+    return;
+  }
   const DATA = 'potraviny/data/';
   const D = typeof Dialog !== 'undefined' ? Dialog : {
     info: t => console.log(t), chyba: t => console.warn(t),
@@ -2572,8 +2592,24 @@
     if (['denik', 'potraviny', 'statistiky', 'profil', 'data'].includes(hash)) v = hash;
     obnovIndexUzivatele();
     if (porovnani.length) vykresliTlacitkoPorovnani();   // porovnání obnovené ze sessionStorage
-    prepni(v);
-    nactiDatabazi().then(() => {
+    // databáze se stahuje hned – i kdyby vykreslení selhalo, nečeká se na ni zbytečně
+    const db = nactiDatabazi();
+    try {
+      prepni(v);
+    } catch (e) {
+      console.error(e);
+      const ukaz = () => {
+        const el = $('#dataStav');
+        el.textContent = 'Aplikace narazila na chybu (' + e.message + '). ';
+        el.appendChild(h('button', { class: 'btn mini', type: 'button', onclick: () => (window.obnovDenik || (() => location.reload()))() }, '↻ Obnovit aplikaci'));
+      };
+      ukaz();
+      db.then(ukaz);   // hlášku o načtené databázi nepřepsat – aplikace stejně nefunguje
+      window.DENIK.spusteno = false;
+      return;
+    }
+    window.DENIK.spusteno = true;
+    db.then(() => {
       if (hlidaSe() && DB.nacteno) nactiSlozeni().then(() => document.dispatchEvent(new Event('denik-data')), () => { slozeniChyba = true; document.dispatchEvent(new Event('denik-data')); });
     });
     if ('serviceWorker' in navigator && location.protocol.startsWith('http')) {
@@ -2591,6 +2627,7 @@
 
   // pro testy
   window.DENIK = {
+    spusteno: false, verze: VERZE_KODU,
     get stav() { return S; }, DB, prepni, otevriPridani, detailPotraviny, zpracujKod, editorPotraviny, editorReceptu,
     vykresliVse, get aktivniDen() { return aktivniDen; }, set aktivniDen(k) { aktivniDen = k; vykresliDenik(); }, uloz,
     // test: simulace půlnoci – stránka „si myslí“, že je včera, a sleduje včerejšek
