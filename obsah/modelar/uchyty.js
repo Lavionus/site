@@ -87,15 +87,16 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     }
 
     /** Obrys zahnuté dvojité šipky podél lomené čáry (body na obrazovce): pás šířky 2w a hroty na koncích. */
+    const ROZPETI = 40;                 // úhel oblouku šipky otáčení (°)
     function zahnutaSipka(body, w) {
       const n = body.length, nor = body.map((p, i) => {
         const a = body[Math.max(0, i - 1)], b = body[Math.min(n - 1, i + 1)];
         const dx = b[0] - a[0], dy = b[1] - a[1], l = Math.hypot(dx, dy) || 1;
         return [-dy / l, dx / l];
       });
-      // hrot zabere asi pětinu oblouku, nejvýš 18 px
+      // hrot zabere asi pětinu oblouku, nejvýš 11 px
       let k = 1, d = 0;
-      while (k < n / 2 - 1 && d < 18) { d += Math.hypot(body[k][0] - body[k - 1][0], body[k][1] - body[k - 1][1]); k++; }
+      while (k < n / 2 - 1 && d < 11) { d += Math.hypot(body[k][0] - body[k - 1][0], body[k][1] - body[k - 1][1]); k++; }
       const b = (i, s) => `${(body[i][0] + nor[i][0] * s).toFixed(1)},${(body[i][1] + nor[i][1] * s).toFixed(1)}`;
       const L = [], P = [];
       for (let i = k; i <= n - 1 - k; i++) { L.push(b(i, w)); P.push(b(i, -w)); }
@@ -203,7 +204,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
             if (w.dot(n) < -0.2) continue;                       // ne pod desku
             const pts = [];
             for (let j = 0; j <= 8; j++) {
-              const tt = t + (j / 8 - 0.5) * 55 * M.st;
+              const tt = t + (j / 8 - 0.5) * ROZPETI * M.st;
               const q = S.naObrazovku(stred.clone().addScaledVector(b1, R * Math.cos(tt)).addScaledVector(b2, R * Math.sin(tt)));
               if (q) pts.push(q);
             }
@@ -228,7 +229,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
         const c = i === 2 ? stred.clone().addScaledVector(n, minN - stredN) : stred;
         const body = [];
         for (let k = 0; k <= 16; k++) {
-          const t = t0 + (k / 16 - 0.5) * 55 * M.st;
+          const t = t0 + (k / 16 - 0.5) * ROZPETI * M.st;
           const q = S.naObrazovku(c.clone().addScaledVector(b1, R * Math.cos(t)).addScaledVector(b2, R * Math.sin(t)));
           if (!q) { body.length = 0; break; }
           body.push(q.map(x => x.toFixed(1)).join(','));
@@ -237,7 +238,8 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
         const g = el('g', { class: 'oblouk osa' + i + (najeto === i && !tah ? ' najeto' : '') }, vrstvaUchytu);
         el('polyline', { points: body.join(' '), class: 'zasah' }, g);
         // zahnutá dvojitá šipka (pás se dvěma hroty), dobře vidět i chytit
-        el('path', { d: zahnutaSipka(body.map(b => b.split(',').map(Number)), hrubyUkazatel.matches ? 7 : 5), class: 'cara', fill: BARVY_OS[i] }, g);
+        // decentní: úzký pás (zásah je širší neviditelná čára), naplno až pod kurzorem
+        el('path', { d: zahnutaSipka(body.map(b => b.split(',').map(Number)), hrubyUkazatel.matches ? 4.5 : 2.6), class: 'cara', fill: BARVY_OS[i] }, g);
         el('title', {}, g).textContent = `Otočit kolem ${'XYZ'[i]}: táhni (uvnitř úhloměru po 15°, vně po 1°), klikni = zadat úhel`;
         // otáčí se kolem bodu otáčení (pivotu), když je zvolený, jinak kolem středu výběru
         const piv = M.app.pivot ? new V(...M.app.pivot) : null;

@@ -216,8 +216,22 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     if (!vnitrek.length) return [];
     let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
     for (const k of oblast) for (const [x, y] of k) { x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); }
-    const dx = Math.max(v.rozestup, 0.2), dy = v.rozlozeni === 'sachovnice' ? dx * Math.sqrt(3) / 2 : dx;
-    const cx = (x0 + x1) / 2, cy = (y0 + y1) / 2;
+    let dx = Math.max(v.rozestup, 0.2), dy = v.rozlozeni === 'sachovnice' ? dx * Math.sqrt(3) / 2 : dx;
+    let cx = (x0 + x1) / 2, cy = (y0 + y1) / 2;
+    // zadaný počet děr: rozteč dopočítat tak, aby krajní díry ležely na okraji použitelné plochy (vnitřek)
+    if (v.pocet && v.pocet[0] >= 1 && v.pocet[1] >= 1) {
+      let a0 = Infinity, a1 = -Infinity, b0 = Infinity, b1 = -Infinity;
+      for (const k of vnitrek) for (const p of k) { a0 = Math.min(a0, p.X / S); a1 = Math.max(a1, p.X / S); b0 = Math.min(b0, p.Y / S); b1 = Math.max(b1, p.Y / S); }
+      const [nx0, ny0] = v.pocet.map(n => Math.min(200, Math.round(n)));
+      const out = [];
+      for (let j = 0; j < ny0; j++) for (let i = 0; i < nx0; i++) {
+        const x = nx0 === 1 ? (a0 + a1) / 2 : a0 + (a1 - a0) * i / (nx0 - 1), y = ny0 === 1 ? (b0 + b1) / 2 : b0 + (b1 - b0) * j / (ny0 - 1);
+        out.push([x, y]);
+      }
+      // jen ty uvnitř (u nepravoúhlé plochy krajní body mohou padnout ven)
+      const vnitrniP = (x, y) => { let n = 0; for (const k of vnitrek) if (CL.Clipper.PointInPolygon({ X: Math.round(x * S), Y: Math.round(y * S) }, k) !== 0) n += CL.Clipper.Orientation(k) ? 1 : -1; return n > 0; };
+      return out.filter(([x, y]) => vnitrniP(x, y)).map(([x, y]) => [zaokr(x, 1e4), zaokr(y, 1e4)]);
+    }
     const nx = Math.ceil((x1 - x0) / dx) + 2, ny = Math.ceil((y1 - y0) / dy) + 2;
     // statisíce bodů by zamrzly kartu (a tisíce děr stejně nejdou spočítat ani vytisknout)
     if ((2 * nx + 1) * (2 * ny + 1) > 4 * M.MAX_DER) throw new Error(`děr by bylo příliš mnoho (víc než ${M.MAX_DER}) – zvětši rozestup`);

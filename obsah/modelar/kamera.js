@@ -116,11 +116,26 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     return ray.intersectPlane(new THREE.Plane().setFromNormalAndCoplanarPoint(n, this.cil), bod) ? bod : this.cil.clone();
   };
 
-  /** Otočení kolem cíle o posun myši v pixelech. */
-  Kamera.prototype.otoc = function (dx, dy) {
+  /** Otočení o posun myši v pixelech. stred (THREE.Vector3, volitelně) = bod, kolem kterého se scéna točí
+      (vybrané těleso, střed desky): kamera i její cíl se otočí stejně kolem něj, obraz pod ním neujede. */
+  Kamera.prototype.otoc = function (dx, dy, stred) {
     this.zastavAnimaci();
+    const az0 = this.az, el0 = this.el;
     this.az -= dx * 0.008;
-    this.el += dy * 0.008;
+    this.el = M.omez(this.el + dy * 0.008, -MAX_EL, MAX_EL);
+    if (stred) {
+      // rotace, která převede starý směr pohledu na nový: kolem svislé osy o Δaz a kolem vodorovné osy „vpravo“ o Δel
+      const vpravo = new V(Math.cos(az0), Math.sin(az0), 0);
+      const qEl = new THREE.Quaternion().setFromAxisAngle(vpravo, -(this.el - el0));
+      const s0 = M.smerPohledu(az0, el0).applyQuaternion(qEl);
+      const q = new THREE.Quaternion().setFromAxisAngle(new V(0, 0, 1), this.az - az0).multiply(qEl);
+      // znaménko rotace kolem „vpravo“ ověřit podle výsledného směru (číselně robustní)
+      const cil = M.smerPohledu(this.az, this.el);
+      const ok = s0.clone().applyQuaternion(new THREE.Quaternion().setFromAxisAngle(new V(0, 0, 1), this.az - az0)).dot(cil) > 0.9999;
+      const qq = ok ? q : new THREE.Quaternion().setFromAxisAngle(new V(0, 0, 1), this.az - az0)
+        .multiply(new THREE.Quaternion().setFromAxisAngle(vpravo, this.el - el0));
+      this.cil.sub(stred).applyQuaternion(qq).add(stred);
+    }
     this.aktualizuj();
   };
 

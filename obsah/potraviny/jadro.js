@@ -192,11 +192,11 @@
     const porce = [];
     if (r[12]) porce.push({ n: 'porce' + (r[13] && !/^\d+([.,]\d+)?\s*(g|ml)$/i.test(r[13]) ? ' (' + r[13] + ')' : ''), g: r[12] });
     if (r[14] && r[14] !== r[12]) porce.push({ n: 'celé balení', g: r[14] });
-    return {
+    return doplnNapoj({
       id: 'v' + r[0], typ: 'v', ean: r[0], nazev: r[1], znacka: r[2] || '', mnozstvi: r[3] || '',
       n, porce, ml: !!(r[20] & 4), priznaky: r[20] || 0, nutriscore: r[15], nova: r[16],
       skupina: r[17] || 'ostatni', obrazek: r[18], skeny: r[19] || 0, rok: r[21],
-    };
+    });
   }
   function surovinaZRadku(r) {
     // ['id','nazev','skupina','kcal','tuk','nasycene','sacharidy','cukry','vlaknina','bilkoviny','sul','porce','mikro','popis_usda']
@@ -204,13 +204,102 @@
     const kl = ['kcal', 'tuk', 'nasycene', 'sacharidy', 'cukry', 'vlaknina', 'bilkoviny', 'sul'];
     for (let i = 0; i < 8; i++) if (r[3 + i] !== null && r[3 + i] !== undefined) n[kl[i]] = r[3 + i];
     if (r[12]) Object.assign(n, r[12]);
-    // tekutiny se zadávají v ml (hustota se bere 1 g/ml – u mléka a nápojů rozdíl do 3 %)
+    // tekutiny se zadávají v ml; USDA udává hodnoty na 100 g → přepočet hustotou na 100 ml
     const ml = r[2] === 'napoje' || /^(Mléko|Podmáslí|Kefír)|nápoj|džus/i.test(r[1]);
-    return {
+    const f = {
       id: 's' + r[0], typ: 's', nazev: r[1], znacka: '', skupina: r[2],
       n, porce: (r[11] || []).map(p => ({ n: p[0], g: p[1] })), ml,
       priznaky: 0, popis: r[13], skeny: 0,
     };
+    if (ml) {
+      const ro = HUSTOTA[druhNapoje(f)] || 1;
+      if (ro !== 1) for (const k in n) n[k] = zaokrouhli(n[k] * ro, n[k] < 1 ? 3 : 2);
+      // porce USDA jsou v gramech → na ml
+      if (ro !== 1) f.porce = f.porce.map(p => ({ n: p.n, g: zaokrouhli(p.g / ro, 0) }));
+    }
+    return doplnNapoj(f);
+  }
+  /* ---------- nápoje ---------- */
+  // druh nápoje určuje typické porce, pitný režim a sledování alkoholu
+  const DRUHY_NAPOJU = {
+    pivo: { n: 'Pivo, cider', porce: [['velké pivo (0,5 l)', 500], ['malé pivo (0,3 l)', 300], ['plechovka (0,33 l)', 330]] },
+    vino: { n: 'Víno', porce: [['sklenka (0,2 l)', 200], ['deci (0,1 l)', 100], ['láhev (0,75 l)', 750]] },
+    destilat: { n: 'Destilát, likér', porce: [['panák (4 cl)', 40], ['malý panák (2 cl)', 20]] },
+    mleko: { n: 'Mléko, mléčný nápoj', porce: [['sklenice (250 ml)', 250], ['do kávy (30 ml)', 30], ['malá sklenice (150 ml)', 150]] },
+    dzus: { n: 'Džus, smoothie', porce: [['sklenice (250 ml)', 250], ['malá sklenice (150 ml)', 150]] },
+    kava: { n: 'Káva, čaj', porce: [['hrnek (250 ml)', 250], ['šálek (150 ml)', 150], ['espresso (40 ml)', 40]] },
+    voda: { n: 'Voda', porce: [['sklenice (250 ml)', 250], ['láhev (0,5 l)', 500]] },
+    napoj: { n: 'Nealko nápoj', porce: [['sklenice (250 ml)', 250], ['plechovka (0,33 l)', 330], ['láhev (0,5 l)', 500]] },
+  };
+  // hustota (g/ml) – jen pro přepočet surovin USDA (hodnoty na 100 g); výrobky mají údaje z etikety na 100 ml
+  const HUSTOTA = { mleko: 1.03, dzus: 1.04, pivo: 1.01, vino: 0.99, destilat: 0.95 };
+  const SK_NAPOJE = ['napoje', 'alkohol', 'mlecne', 'vlastni'];
+  function druhNapoje(f) {
+    if (!f || !f.ml) return '';
+    if (f.druh && DRUHY_NAPOJU[f.druh]) return f.druh;
+    const pr = f.priznaky || 0, alk = (f.n && f.n.alk) || 0;
+    if (pr & 8) return 'pivo';
+    if (pr & 16) return 'vino';
+    if (pr & 32) return 'destilat';
+    const t = norm(f.nazev || '');
+    const napojova = (pr & 256) || SK_NAPOJE.includes(f.skupina || 'vlastni');
+    if (!napojova && f.typ === 'v') return '';   // výrobek z databáze bez znaku nápoje (olej, omáčka, zmrzlina)
+    if (/\b(pivo|piva|lezak|radler|cider|beer|bier|lager|pils\w*)\b/.test(t)) return 'pivo';
+    if (napojova && /\b(vino|wine|prosecco|sekt|sampanske)\b/.test(t)) return 'vino';
+    if (/\b(vodka|rum|gin|whisk(e)?y|slivovice|becherovka|liker|tequila|brandy|fernet|palenka|borovicka|destilat)\b/.test(t)) return 'destilat';
+    if (f.skupina === 'alkohol' || alk >= 1) return alk > 15 ? 'destilat' : alk > 6 ? 'vino' : 'pivo';
+    if (/\b(kava|caj|espresso|latte|cappuccino|coffee)\b/.test(t) && !/\b(ledov\w*|ice|iced)\b/.test(t)) return 'kava';
+    if (/\b(mleko|mlecny|kefir\w*|podmasli|acidofil\w*|jogurtovy napoj|milk|drink)\b/.test(t) && (f.skupina === 'mlecne' || /mlek|kefir|podmasli|milk/.test(t))) return 'mleko';
+    if (/\b(dzus|nektar|smoothie|most|juice|stava)\b/.test(t)) return 'dzus';
+    if (/\b(voda|water|mattoni|magnesia|ondrasovka|podebradka|rajec|aquila|dobra voda|toma)\b/.test(t) && (f.n.kcal || 0) < 30) return 'voda';
+    if (napojova) return f.skupina === 'mlecne' ? 'mleko' : 'napoj';
+    return '';   // olej, omáčka, sirup bez skupiny… – tekutina, ale ne nápoj
+  }
+  // doplní druh a typické porce nápoje (bez duplicit s porcemi z etikety)
+  function doplnNapoj(f) {
+    const d = druhNapoje(f);
+    if (!d) return f;
+    f.druh = d;
+    const porce = (f.porce || []).map(p => ({ ...p }));
+    const blizko = (a, b) => Math.abs(a - b) <= b * 0.05;
+    for (const [n, g] of DRUHY_NAPOJU[d].porce) {
+      const shoda = porce.find(p => blizko(p.g, g));
+      // „celé balení“ 0,5 l u piva je prostě velké pivo; jinak se typická porce přidá, jen když podobná chybí
+      if (shoda && shoda.n === 'celé balení' && Math.abs(shoda.g - g) < 1) shoda.n = n;
+      else if (!shoda) porce.push({ n, g });
+    }
+    f.porce = porce;
+    return f;
+  }
+  // název výchozí porce nápoje v daném seznamu porcí (typická porce, nebo podobně velká z etikety)
+  function vychoziPorceNapoje(f, porce) {
+    const d = druhNapoje(f);
+    if (!d) return null;
+    const [n, g] = DRUHY_NAPOJU[d].porce[0];
+    const sez = porce || f.porce || [];
+    if (!sez.length || sez.some(p => p.n === n)) return n;
+    const p = sez.find(x => Math.abs(x.g - g) <= g * 0.05);
+    return p ? p.n : n;
+  }
+  // kolik z nápoje se počítá do pitného režimu (0 nebo 1); režim: 'prisny' | 'bezny' | 'vse'
+  // běžně: všechny nápoje včetně piva a mléka; ne víno, destiláty a husté kalorické tekutiny (sirup, likér)
+  function doPitnehoRezimu(f, nastaveni) {
+    if (!f || !f.ml) return 0;
+    const ns = nastaveni || {};
+    const vyj = ns.pitnyVyjimky && ns.pitnyVyjimky[f.id];
+    if (vyj === true) return 1;
+    if (vyj === false) return 0;
+    if (ns.napojeDoVody === false) return 0;
+    const d = druhNapoje(f);
+    if (!d) return 0;
+    const kcal = f.n.kcal || 0, alk = f.n.alk || 0;
+    const rezim = ns.pitnyRezim || 'bezny';
+    if (rezim === 'vse') return 1;
+    if (rezim === 'prisny') return kcal <= 20 && alk < 0.5 ? 1 : 0;
+    // víno a destiláty ne (nealko víno ano); neznámý obsah alkoholu se u nich bere jako běžný
+    const alkZnamy = Number.isFinite(f.n.alk) ? alk : (d === 'vino' || d === 'destilat' ? 10 : 0);
+    if (alkZnamy > 7 || ((d === 'vino' || d === 'destilat') && alkZnamy >= 1.2)) return 0;
+    return kcal <= 150 ? 1 : 0;
   }
   // výrobek z odpovědi API Open Food Facts (product)
   function vyrobekZOff(p, ean) {
@@ -234,18 +323,29 @@
     const porce = [];
     if (sq && sq > 0 && sq <= 2000) porce.push({ n: 'porce' + (p.serving_size ? ' (' + p.serving_size + ')' : ''), g: sq });
     if (pq && pq > 0 && pq <= 20000 && pq !== sq) porce.push({ n: 'celé balení', g: pq });
-    const ml = /\d\s*(ml|l|cl|dl)\b/i.test(p.quantity || '') || /^(ml|l)$/i.test(p.product_quantity_unit || '');
+    const kat = Array.isArray(p.categories_tags) ? p.categories_tags : [];
+    const napojKat = kat.some(x => /^en:(beverages|alcoholic-beverages|juices-and-nectars|waters|sodas|beers|wines|milks|dairy-drinks)$/.test(x));
+    const ml = /\d\s*(ml|l|cl|dl)\b/i.test(p.quantity || '') || /^(ml|l|cl|dl)$/i.test(p.product_quantity_unit || '')
+      || (napojKat && !/\d\s*(g|kg)\b/i.test(p.quantity || '') && !/^(g|kg)$/i.test(p.product_quantity_unit || ''));
+    const alk = cislo(nm.alcohol_100g !== undefined ? nm.alcohol_100g : nm.alcohol);
+    if (ml && alk !== null && alk >= 0 && alk <= 80) n.alk = zaokrouhli(alk * 0.789, 2);   // OFF: % obj.
     const kod = String(p.code || ean || '');
-    return {
+    let priz = n.kcal === undefined ? 2 : 0;
+    if (kat.some(x => /^en:(beers|non-alcoholic-beers|lagers|ciders)$/.test(x))) priz |= 8;
+    else if (kat.some(x => /^en:(wines|red-wines|white-wines|sparkling-wines)$/.test(x))) priz |= 16;
+    else if (kat.some(x => /^en:(spirits|distilled-spirits|liqueurs|vodkas|rums|whiskies|gins)$/.test(x))) priz |= 32;
+    if (ml) priz |= 4;
+    return doplnNapoj({
       id: 'v' + kod, typ: 'o', ean: kod, nazev: nazev.slice(0, 120), znacka: String(p.brands || '').split(',')[0].trim().slice(0, 40),
-      mnozstvi: String(p.quantity || '').slice(0, 30), n, porce, ml, priznaky: n.kcal === undefined ? 2 : 0,
+      mnozstvi: String(p.quantity || '').slice(0, 30), n, porce, ml, priznaky: priz,
       nutriscore: /^[a-e]$/.test(p.nutriscore_grade || '') ? p.nutriscore_grade : null,
       nova: [1, 2, 3, 4].includes(p.nova_group) ? p.nova_group : null, skupina: 'ostatni', skeny: 0,
       slozeni: p.ingredients_text_cs || p.ingredients_text || null,
       alergeny: Array.isArray(p.allergens_tags) ? p.allergens_tags.filter(x => typeof x === 'string').slice(0, 30) : null,
       stopy: Array.isArray(p.traces_tags) ? p.traces_tags.filter(x => typeof x === 'string').slice(0, 30) : null,
       stazeno: datumKlic(new Date()), zdroj: 'Open Food Facts (online)',
-    };
+      ...(napojKat && !kat.includes('en:alcoholic-beverages') ? { skupina: 'napoje' } : kat.includes('en:alcoholic-beverages') ? { skupina: 'alkohol' } : {}),
+    });
   }
 
   // URL obrázku výrobku na serveru Open Food Facts
@@ -576,6 +676,7 @@
     if (f.ml) s.ml = true;
     if (f.porce && f.porce.length) s.porce = f.porce.map(p => ({ n: p.n, g: p.g }));
     if (f.skupina) s.skupina = f.skupina;
+    if (f.druh) s.druh = f.druh;
     return s;
   }
   function den(stav, k) {
@@ -647,15 +748,18 @@
   // souhrn dne: {celkem, jidla:{id:{…}}, pokryti:{kl: podíl energie se známou hodnotou}}
   function souhrnDne(stav, k) {
     const d = stav.dny[k];
-    const vys = { celkem: {}, jidla: {}, pocet: 0, pohyb: 0, voda: 0, napoje: 0, pokryti: {} };
+    const vys = { celkem: {}, jidla: {}, pocet: 0, pohyb: 0, voda: 0, napoje: 0, pokryti: {}, tekute: { kcal: 0, cukry: 0, ml: 0 }, alk: 0 };
     if (!d) return vys;
     const energieZnama = {};
     let energie = 0;
     for (const z of d.z) {
       const v = zivinyZaznamu(stav, z);
-      // nápoje (tekutiny bez většího obsahu alkoholu) se počítají do pitného režimu
+      // nápoje se počítají do pitného režimu podle nastavení; tekuté kalorie zvlášť (i alkohol)
       const f = stav.potraviny[z.p];
-      if (f && f.ml && !z.rychly && ['napoje', 'mlecne', 'vlastni'].includes(f.skupina || 'vlastni') && (f.n.alk || 0) < 2 && (f.n.kcal || 0) < 120) vys.napoje += z.g;
+      if (f && !z.rychly) vys.napoje += z.g * doPitnehoRezimu(f, stav.nastaveni);
+      if (f && !z.rychly && druhNapoje(f)) {
+        vys.tekute.kcal += v.kcal || 0; vys.tekute.cukry += v.cukry || 0; vys.tekute.ml += z.g;
+      }
       secti(vys.celkem, v);
       if (!vys.jidla[z.j]) vys.jidla[z.j] = {};
       secti(vys.jidla[z.j], v);
@@ -668,7 +772,27 @@
     for (const kl of ZIVINY.map(z => z.k)) vys.pokryti[kl] = energie > 0 ? (energieZnama[kl] || 0) / energie : 0;
     vys.pohyb = (d.pohyb || []).reduce((s, p) => s + (cislo(p.kcal) || 0), 0);
     vys.voda = d.voda || 0;
+    vys.alk = vys.celkem.alk || 0;
     return vys;
+  }
+  // standardní nápoj = 10 g čistého alkoholu (malé pivo, deci vína, panák destilátu)
+  function standardniNapoje(gAlk) { return (gAlk || 0) / 10; }
+  // nejčastější nápoje za posledních `dni` dní (pro rychlé tlačítka u pitného režimu)
+  function casteNapoje(stav, k, dni, limit) {
+    const od = posunDen(k, -(dni || 30));
+    const pocet = new Map();
+    for (const den of Object.keys(stav.dny)) {
+      if (den < od || den > k) continue;
+      for (const z of stav.dny[den].z) {
+        const f = stav.potraviny[z.p];
+        if (!f || z.rychly || !druhNapoje(f) || !Number.isFinite(f.n.kcal)) continue;
+        const x = pocet.get(f.id) || { f, n: 0, g: z.g, porce: z.porce, t: -1 };
+        x.n++;
+        if ((z.t || 0) >= x.t) { x.t = z.t || 0; x.g = z.g; x.porce = z.porce; x.f = f; }
+        pocet.set(f.id, x);
+      }
+    }
+    return [...pocet.values()].sort((a, b) => b.n - a.n || b.t - a.t).slice(0, limit || 3);
   }
   // statistika za období [od, do] (klíče dní, včetně)
   function statistika(stav, od, doK) {
@@ -696,7 +820,22 @@
       }
     }
     const top = [...podle.values()].sort((a, b) => b.kcal - a.kcal).slice(0, 15);
-    return { dny, zapsanych: zapsane.length, prumer, top };
+    // nápoje: tekuté kalorie, alkohol, pitný režim
+    const n = zapsane.length || 1;
+    const tekute = { kcal: 0, cukry: 0, ml: 0 };
+    let alkCelkem = 0, dnyBezAlk = 0, alkMax = 0, pitny = 0;
+    for (const d of zapsane) {
+      tekute.kcal += d.s.tekute.kcal; tekute.cukry += d.s.tekute.cukry; tekute.ml += d.s.tekute.ml;
+      alkCelkem += d.s.alk; alkMax = Math.max(alkMax, d.s.alk);
+      if (d.s.alk < 0.5) dnyBezAlk++;
+      pitny += d.s.voda + d.s.napoje;
+    }
+    const napoje = {
+      kcal: tekute.kcal / n, cukry: tekute.cukry / n, ml: tekute.ml / n,
+      podil: prumer.kcal > 0 ? tekute.kcal / n / prumer.kcal : 0,
+      alk: alkCelkem / n, alkMax, alkTydne: alkCelkem / Math.max(1, dny.length) * 7, dnyBezAlk, pitny: pitny / n,
+    };
+    return { dny, zapsanych: zapsane.length, prumer, top, napoje };
   }
   // Odhad skutečného denního výdeje z příjmu a trendu hmotnosti za posledních `dni` dní:
   // výdej ≈ průměrný příjem − změna hmotnosti × 7 700 kcal/kg. Potřebuje dost zapsaných dní a vážení.
@@ -756,13 +895,13 @@
   function exportSouhrnyCsv(stav, od, doK) {
     const kl = ['kcal', 'tuk', 'nasycene', 'sacharidy', 'cukry', 'vlaknina', 'bilkoviny', 'sul'];
     const dny = [...new Set(Object.keys(stav.dny).concat(Object.keys(stav.vahy)))].filter(k => (!od || k >= od) && (!doK || k <= doK)).sort();
-    const radky = [['datum', 'počet položek', ...kl.map(k => ZIV[k].n + ' (' + ZIV[k].j + ')'), 'voda vypitá (ml)', 'nápoje z deníku (ml)', 'pohyb (kcal)', 'hmotnost (kg)', 'poznámka'].join(';')];
+    const radky = [['datum', 'počet položek', ...kl.map(k => ZIV[k].n + ' (' + ZIV[k].j + ')'), 'voda vypitá (ml)', 'nápoje z deníku (ml)', 'alkohol (g)', 'tekuté kalorie (kcal)', 'pohyb (kcal)', 'hmotnost (kg)', 'poznámka'].join(';')];
     for (const k of dny) {
       const s = souhrnDne(stav, k);
       const d = stav.dny[k] || {};
       if (!s.pocet && !s.voda && !s.pohyb && !d.pozn && stav.vahy[k] === undefined) continue;
       radky.push([k, s.pocet, ...kl.map(x => Number.isFinite(s.celkem[x]) ? String(zaokrouhli(s.celkem[x], ZIV[x].d + 1)).replace('.', ',') : ''),
-        s.voda || '', s.napoje || '', s.pohyb || '', stav.vahy[k] !== undefined ? String(stav.vahy[k]).replace('.', ',') : '', d.pozn || ''].map(csvPole).join(';'));
+        s.voda || '', s.napoje || '', s.alk >= 0.05 ? String(zaokrouhli(s.alk, 1)).replace('.', ',') : '', s.tekute.kcal >= 0.5 ? Math.round(s.tekute.kcal) : '', s.pohyb || '', stav.vahy[k] !== undefined ? String(stav.vahy[k]).replace('.', ',') : '', d.pozn || ''].map(csvPole).join(';'));
     }
     return '\ufeff' + radky.join('\r\n');
   }
@@ -1047,6 +1186,7 @@
     if (f.ean) x.ean = String(f.ean).replace(/\D/g, '');
     for (const k in f.n) if (ZIV[k] && Number.isFinite(f.n[k])) x.n[k] = f.n[k];
     if (f.puvod) x.puvod = f.puvod;
+    if (x.ml && f.druh && DRUHY_NAPOJU[f.druh]) x.druh = f.druh;
     stav.vlastni[id] = x;
     return x;
   }
@@ -1121,6 +1261,7 @@
   function overSnimek(f) {
     if (!f || typeof f !== 'object' || typeof f.nazev !== 'string' || !f.nazev) return null;
     const s = { ...f, nazev: f.nazev.slice(0, 160), n: overN(f.n) };
+    if (s.druh !== undefined && !DRUHY_NAPOJU[s.druh]) delete s.druh;
     if (s.porce !== undefined) s.porce = Array.isArray(s.porce) ? s.porce.filter(p => p && typeof p.n === 'string' && cislo(p.g) > 0).map(p => ({ n: p.n, g: cislo(p.g) })) : [];
     return s;
   }
@@ -1154,6 +1295,8 @@
       const jj = Array.isArray(s.nastaveni.jidla) ? s.nastaveni.jidla.filter(j => j && typeof j.id === 'string' && typeof j.nazev === 'string' && j.nazev.trim())
         .map(j => ({ id: j.id, nazev: j.nazev.slice(0, 40), ...(j.skryto ? { skryto: true } : {}) })) : [];
       s.nastaveni.jidla = jj.length ? jj : JIDLA_VYCHOZI.map(j => ({ ...j }));
+      if (!['bezny', 'prisny', 'vse'].includes(s.nastaveni.pitnyRezim)) delete s.nastaveni.pitnyRezim;
+      s.nastaveni.pitnyVyjimky = mapa(s.nastaveni.pitnyVyjimky, v => typeof v === 'boolean' ? v : null);
     }
     s.potraviny = mapa(x.potraviny, overSnimek);
     s.vlastni = mapa(x.vlastni, f => { const v = overSnimek(f); return v && Number.isFinite(v.n.kcal) ? v : null; });
@@ -1245,7 +1388,7 @@
     vytvorIndex, hledej,
     vek, bmr, bmi, bmiPopis, cile,
     novyStav, klicSnimku, snimek, den, pridejZaznam, rychlyZaznam, najdiZaznam, smazZaznam, presunZaznam,
-    kopirujJidlo, kopirujDen, castePrJidlo, zivinyZaznamu, souhrnDne, statistika, odhadVydeje, serie, nedavne, caste, uklid,
+    kopirujJidlo, kopirujDen, castePrJidlo, casteNapoje, DRUHY_NAPOJU, druhNapoje, doplnNapoj, vychoziPorceNapoje, doPitnehoRezimu, standardniNapoje, zivinyZaznamu, souhrnDne, statistika, odhadVydeje, serie, nedavne, caste, uklid,
     overPotravinu, ulozVlastni, spocitejRecept, ulozRecept, receptJakoPotravina,
     exportJson, importJson, normalizujStav, slucStav, exportCsv, exportSouhrnyCsv, zdrojeZiviny,
     ulozSablonu, pouzijSablonu, souhrnSablony, vzdalenost, kontrolaAlergenu, slucAlergeny, ALERGENY, porovnej,

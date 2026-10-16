@@ -213,7 +213,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       if (!tah || e.pointerId !== tah.id) return;
       const dx = e.clientX - tah.x, dy = e.clientY - tah.y;
       tah.x = e.clientX; tah.y = e.clientY;
-      if (tah.druh === 'otoc') kamera.otoc(dx, dy); else kamera.posun(dx, dy);
+      if (tah.druh === 'otoc') kamera.otoc(dx, dy, S.stredOtaceni()); else kamera.posun(dx, dy);
       M.prekresli();
     });
     function konecTahu(e) {
@@ -237,8 +237,13 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     // --- kostka pohledů
     S.kostka = M.vytvorKostku(obal, kamera,
       smer => { kamera.pohledZeSmeru(smer); M.prekresli(); },
-      (dx, dy) => { kamera.otoc(dx, dy); M.prekresli(); });
+      (dx, dy) => { kamera.otoc(dx, dy, S.stredOtaceni()); M.prekresli(); });
 
+    /** Střed otáčení pohledu: střed vybraných těles, bez výběru střed pracovní desky. */
+    S.stredOtaceni = function () {
+      const uzly = M.app && M.app.dok ? M.app.dok.uzly.filter(u => M.app.vyber.includes(u.id) && !u.skryto) : [];
+      return uzly.length ? new THREE.Vector3(...M.obalkaVice(uzly).stred) : new THREE.Vector3(0, 0, 0);
+    };
     /** Pohled „Domů“ na celou desku. */
     /** Šířka plátna zakrytá zleva a zprava panely (inspektor, otevřené nástroje). */
     S.okrajePanelu = function () {

@@ -99,9 +99,10 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     ukazTema();
 
     // --- stavový řádek: poloha kurzoru na desce
-    const stavKurzor = $('stavKurzor');
+    const stavX = $('stavX'), stavY = $('stavY');
     M.na('kurzor', b => {
-      stavKurzor.textContent = b ? `X ${M.mm(b.x)}  Y ${M.mm(b.y)} mm` : '—';
+      stavX.textContent = b ? M.mm(b.x) : '—';
+      stavY.textContent = b ? M.mm(b.y) : '—';
     });
 
     // Enter v okně (mimo tlačítka a víceřádková pole) potvrdí hlavní tlačítko – ovládání jen klávesnicí
@@ -166,6 +167,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       stavRezim.textContent = M.app.rezim === 'rovina' ? 'Klikni na stěnu tělesa pro pracovní rovinu (vedle = deska, Esc = zpět)'
         : M.app.rezim === 'plochou' ? 'Klikni na stěnu, která má ležet dole (Esc = zpět)'
         : M.app.rezim === 'vzorDer' ? 'Klikni na rovnou plochu tělesa, do které se vyvrtají díry (Esc = zpět)'
+        : M.app.rezim === 'struktura' ? 'Klikni na plochu tělesa (rovnou nebo plášť válce), na kterou se nanese struktura (Esc = zpět)'
         : M.app.rezim === 'pivot' ? 'Bod otáčení: klikni na puntík (roh, střed hrany či stěny), na stěnu tělesa nebo na desku (Esc = zpět)'
         : M.app.rezim === 'zrcadleni' ? 'Zrcadlení: najeď na šipku (ukáže výsledek), klikni; Esc nebo klik vedle = konec'
         : M.app.rezim === 'zarovnani' ? 'Zarovnání: najeď na puntík (ukáže výsledek), klikni; klik na vybrané těleso = vztažné; Esc = konec'
@@ -180,6 +182,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     S.knihovna = M.vytvorKnihovnu(S, T, $('knihovna'), $('knihovnaDily'), $('knihovnaRozsirene'));
     M.vytvorDily();
     M.vytvorUpravy(S);
+    M.vytvorStrukturu(S);
     M.vytvorOcctUI(S);
     M.vytvorInspektor($('inspektor'));
     M.vytvorSeznam($('seznam'), $('pocetObjektu'));

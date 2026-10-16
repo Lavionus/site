@@ -101,7 +101,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
               : d.text
                 ? `<label class="ip"><span class="osa">${esc(d.popis)}</span><input type="text" data-param="${d.klic}" class="text-param" maxlength="200"></label>`
                 : d.odvozeny
-                ? cislo(d.popis, u => d.cti(u.rozmer, Object.assign({}, M.TVARY[u.druh].param, u.param)), v => zmenOdvozeny(d, v),
+                ? cislo(d.popis, u => d.cti(u.rozmer, Object.assign({}, (M.TVARY[u.druh] || M.DILY[u.druh]).param, u.param)), v => zmenOdvozeny(d, v),
                   { krok: d.krok, des: 2, jednotka: d.jednotka || '', min: d.min, max: d.max })
                 : cislo(d.popis, u => u.param[d.klic], v => zmenParam(d.klic, v),
                   { krok: d.krok, des: d.cele ? 0 : 2, jednotka: d.jednotka || '', min: d.min, max: d.max })).join('')
@@ -292,7 +292,9 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     /** Odvozené pole tvaru (vnitřní průměr, průměr průřezu…): zapíše rozměr i parametry, spodek stojí. */
     function zmenOdvozeny(d, v) {
       M.upravVybrane(u => {
-        const z = d.zapis(u.rozmer, Object.assign({}, M.TVARY[u.druh].param, u.param), v) || {};
+        const z = d.zapis(u.rozmer, Object.assign({}, (M.TVARY[u.druh] || M.DILY[u.druh]).param, u.param), v) || {};
+        // díl: nové parametry přes upravPrirozeny (nový základ a střed, počátek dílu zůstane)
+        if (M.maPrirozene(u)) return z.param ? M.upravPrirozeny(u, z.param) : {};
         const zmena = {};
         if (z.param) zmena.param = M.normalizujParam(u.druh, Object.assign({}, u.param, z.param));
         if (z.rozmer) {

@@ -460,7 +460,7 @@
       const s = soub.jidla[jid] || {};
       const karta = h('section', { class: 'karta jidlo', 'aria-label': nazevJidla(jid) });
       const hl = h('div', { class: 'jidlo-hl' },
-        h('h2', { text: nazevJidla(jid) }),
+        h('h2', {}, h('span', { class: 'jidlo-ik', 'aria-hidden': 'true', text: IKONY_JIDEL[jid] || '🍽️' }), nazevJidla(jid)),
         zaznamy.length ? h('span', { class: 'jidlo-makra', title: 'bílkoviny / sacharidy / tuky' },
           'B ' + fc(s.bilkoviny, 0) + ' · S ' + fc(s.sacharidy, 0) + ' · T ' + fc(s.tuk, 0)) : null,
         h('span', { class: 'jidlo-kcal', text: zaznamy.length ? fc(s.kcal || 0, 0) + ' kcal' : '' }),
@@ -595,22 +595,34 @@
       lim('Nasycené MK', 'nasycene', c.limity.nasycene),
       lim('Sůl', 'sul', c.limity.sul, null, 1),
       (soub.celkem.kof || 0) > 0 ? lim('Kofein', 'kof', 400, null, 0, 'mg', false, 'EFSA: do 400 mg denně je pro dospělé bezpečné (v těhotenství 200 mg). Kofein je uveden jen u části potravin.') : null,
-      (soub.celkem.alk || 0) > 0 ? lim('Alkohol', 'alk', null, null, 0, 'g', false, 'Čistý alkohol; bezpečná dávka neexistuje.') : null));
+      null));
     // voda
     const cilVoda = Math.round((c.vodaMl || 2000) * 0.8 / 250) * 250; // ~80 % vody z nápojů
-    const napoje = S.nastaveni.napojeDoVody === false ? 0 : (soub.napoje || 0);
+    const napoje = soub.napoje || 0;
     const voda = (soub.voda || 0) + napoje;
+    const casteN = J.casteNapoje(S, aktivniDen, 30, 3);
     const skl = h('div', { class: 'voda-sklenice', 'aria-hidden': 'true' });
     for (let i = 0; i < Math.max(cilVoda, voda) / 250; i++) skl.appendChild(h('span', { class: i < voda / 250 ? 'plna' : '' }));
     const pridejVodu = ml => { const dd = J.den(S, aktivniDen); dd.voda = Math.max(0, (dd.voda || 0) + ml); uloz(); vykresliDenik(); };
     el.appendChild(h('div', { class: 'voda' },
       h('div', { class: 'voda-hl' }, h('span', {}, '💧 Pitný režim'), h('b', { text: fc(voda / 1000, 2) + ' / ' + fc(cilVoda / 1000, 1) + ' l' })),
       skl,
-      napoje ? h('div', { class: 'slabe', style: { margin: '-4px 0 6px' }, text: 'z toho ' + fc(napoje) + ' ml z nápojů v deníku' }) : null,
+      napoje || soub.tekute.kcal >= 1 ? h('div', { class: 'slabe', style: { margin: '-4px 0 6px' }, text: [
+        napoje ? 'z toho ' + fc(napoje) + ' ml z nápojů v deníku' : '',
+        soub.tekute.kcal >= 1 ? 'tekuté kalorie ' + fc(soub.tekute.kcal) + ' kcal' + (soub.tekute.cukry >= 1 ? ' (cukry ' + fc(soub.tekute.cukry) + ' g)' : '') : ''].filter(Boolean).join(' · ') }) : null,
+      soub.alk >= 0.5 ? h('div', { class: 'alk-radek', title: 'Standardní nápoj = 10 g čistého alkoholu (malé pivo, deci vína, panák). Bezpečná dávka alkoholu neexistuje.',
+        text: '🍺 Alkohol ' + fc(soub.alk, 0) + ' g = ' + stdNapoje(soub.alk) }) : null,
       h('div', { class: 'voda-tl' },
         h('button', { class: 'btn mini', type: 'button', onclick: () => pridejVodu(250) }, '+ sklenice 250 ml'),
         h('button', { class: 'btn mini', type: 'button', onclick: () => pridejVodu(500) }, '+ 0,5 l'),
-        h('button', { class: 'btn mini plain', type: 'button', disabled: (soub.voda || 0) <= 0, 'aria-label': 'Ubrat 250 ml', onclick: () => pridejVodu(-250) }, '−250 ml'))));
+        h('button', { class: 'btn mini plain', type: 'button', disabled: (soub.voda || 0) <= 0, 'aria-label': 'Ubrat 250 ml', onclick: () => pridejVodu(-250) }, '−250 ml')),
+      casteN.length ? h('div', { class: 'voda-tl napoje-rychle', role: 'group', 'aria-label': 'Časté nápoje' },
+        ...casteN.map(x => {
+          const ff = potravina(x.f.id) || x.f;
+          const mn = x.porce && x.porce.pocet ? (x.porce.pocet !== 1 ? fc(x.porce.pocet, 2) + ' × ' : '') + x.porce.n.replace(/ \(.*\)$/, '') : fc(x.g) + ' ml';
+          return h('button', { class: 'btn mini', type: 'button', title: 'Přidat ' + ff.nazev + ' (' + mn + ') do jídla ' + nazevJidla(vychoziJidlo()),
+            onclick: () => rychlePridej(ff, x.g, x.porce, aktivniDen, vychoziJidlo()) }, '+ ' + ikonaNapoje(J.druhNapoje(ff)) + ' ', h('span', { class: 'napoj-n', text: ff.nazev }), ' ', h('small', { text: mn }));
+        })) : null));
     el.appendChild(h('div', { class: 'radek', style: { marginTop: '12px' } },
       h('button', { class: 'btn mini', type: 'button', onclick: () => detailDne(aktivniDen) }, '🔬 Všechny živiny'),
       soub.pocet ? h('span', { class: 'slabe', text: J.pocet(soub.pocet, 'položka', 'položky', 'položek') }) : null));
@@ -739,6 +751,42 @@
       uloz(); D.info('Uloženo. Najdeš ho v panelu Přidat → 📋 Uložená jídla.');
       if (pohled === 'potraviny') vykresliPotraviny();
     } catch (e) { D.chyba(e.message); }
+  }
+  const IKONY_JIDEL = { snidane: '🌅', svacina1: '🍎', obed: '🍲', svacina2: '🥨', vecere: '🌙', druha: '🌃' };
+  const IKONY_NAPOJU = { pivo: '🍺', vino: '🍷', destilat: '🥃', mleko: '🥛', dzus: '🧃', kava: '☕', voda: '💧', napoj: '🥤' };
+  function ikonaNapoje(d) { return IKONY_NAPOJU[d] || '🥤'; }
+  // „1 standardní nápoj“, „2 standardní nápoje“, „5 standardních nápojů“, „1,6 standardního nápoje“
+  function stdNapoje(gAlk) {
+    const x = J.zaokrouhli(J.standardniNapoje(gAlk), 1);
+    if (x !== Math.round(x)) return fc(x, 1) + ' standardního nápoje';
+    return x === 1 ? '1 standardní nápoj' : x >= 2 && x <= 4 ? x + ' standardní nápoje' : fc(x, 0) + ' standardních nápojů';
+  }
+  // řádek v detailu: druh, alkohol, odhad energie, přepínač pitného režimu (výjimka u potraviny)
+  function infoNapoje(f, druh) {
+    const box = h('div', { class: 'napoj-info' });
+    const casti = [];
+    if (druh) casti.push(ikonaNapoje(druh) + ' ' + J.DRUHY_NAPOJU[druh].n);
+    if (Number.isFinite(f.n.alk) && (druh === 'pivo' || druh === 'vino' || druh === 'destilat' || f.n.alk > 0)) {
+      const obj = f.n.alk / 0.789;
+      casti.push(f.n.alk < 0.5 ? 'nealkoholické (do ' + fc(Math.max(0.5, obj), 1) + ' % obj.)' : 'alkohol ' + fc(obj, 1) + ' % obj.' + ((f.priznaky & 64) ? ' (odhad)' : ''));
+      const vn = druh && J.DRUHY_NAPOJU[druh].porce[0][0], pv = vn ? J.DRUHY_NAPOJU[druh].porce[0][1] : 0;
+      if (pv && f.n.alk >= 0.5) casti.push(vn.replace(/ \(.*\)$/, '') + ' = ' + fc(J.standardniNapoje(f.n.alk * pv / 100), 1) + ' std. nápoje');
+    }
+    if (casti.length) box.appendChild(h('div', { text: casti.join(' · ') }));
+    if (f.priznaky & 128) box.appendChild(h('div', { class: 'slabe', text: 'Energie v databázi chyběla – je dopočítaná z obsahu alkoholu a typického složení. Přesné hodnoty najdeš na etiketě.' }));
+    const vyj = S.nastaveni.pitnyVyjimky || {};
+    const bezVyjimky = J.doPitnehoRezimu(f, { ...S.nastaveni, pitnyVyjimky: {} });
+    const chk = h('input', { type: 'checkbox', checked: J.doPitnehoRezimu(f, S.nastaveni) ? true : null });
+    const rucne = h('span', { class: 'slabe', text: f.id in vyj ? ' (nastaveno ručně)' : '' });
+    chk.addEventListener('change', () => {
+      const nv = { ...(S.nastaveni.pitnyVyjimky || {}) };
+      if ((chk.checked ? 1 : 0) === bezVyjimky) delete nv[f.id]; else nv[f.id] = chk.checked;
+      S.nastaveni.pitnyVyjimky = nv;
+      rucne.textContent = f.id in nv ? ' (nastaveno ručně)' : '';
+      uloz(); vykresliDenik();
+    });
+    box.appendChild(h('label', { class: 'prepinac', style: { margin: '6px 0 0' } }, chk, ' Počítat do pitného režimu', rucne));
+    return box;
   }
   function zavibruj(ms) { try { if (navigator.vibrate) navigator.vibrate(ms || 12); } catch (_) { /* nic */ } }
   function rychlePridej(f, g, porce, den, jidlo) {
@@ -1126,7 +1174,10 @@
     const j = jedn(f);
     const bezHodnot = !Number.isFinite(f.n && f.n.kcal);
     // jednotky: g/ml + porce
-    const jednotky = [{ n: j, g: 1 }].concat((f.porce || []).map(p => ({ n: p.n + ' (' + fc(p.g, 1) + ' ' + j + ')', g: p.g, nazev: p.n })));
+    // u nápojů i typické porce (půllitr, sklenka, panák) – i u starších záznamů a vlastních potravin
+    const porceVse = f.ml ? J.doplnNapoj({ ...f, porce: (f.porce || []).slice() }).porce : (f.porce || []);
+    const druh = J.druhNapoje(f);
+    const jednotky = [{ n: j, g: 1 }].concat(porceVse.map(p => ({ n: p.n + ' (' + fc(p.g, 1) + ' ' + j + ')', g: p.g, nazev: p.n })));
     let jIdx = 0, mnoz = 100;
     if (z) {
       if (z.porce && z.porce.pocet) {
@@ -1142,7 +1193,9 @@
       else if (rezim !== 'vyber') {
         // výchozí jednotka: malá porce výrobku, u obecné potraviny „kus“; jinak 100 g
         // (americké „hrnky“ ani celé balení se jako výchozí nehodí; v receptech vždy gramy)
-        const i = jednotky.findIndex((x, k) => k > 0 && (
+        const vn = J.vychoziPorceNapoje(f, porceVse);
+        let i = vn ? jednotky.findIndex(x => x.nazev === vn) : -1;
+        if (i < 0) i = jednotky.findIndex((x, k) => k > 0 && (
           (/^porce/.test(x.nazev) && x.g <= 250 && x.g !== 100) || (/^(střední kus|kus)$/.test(x.nazev) && x.g <= 400)));
         if (i > 0) { jIdx = i; mnoz = 1; }
       }
@@ -1153,7 +1206,7 @@
     const gramy = () => (J.cislo(vstupM.value) || 0) * jednotky[+vyberJ.value].g;
     const vypocet = h('div', { class: 'vypocet', 'aria-live': 'polite' });
     const rychle = h('div', { class: 'rychle-g' });
-    for (const g of [25, 50, 100, 150, 200, 250]) {
+    for (const g of (druh ? [100, 200, 250, 330, 500] : [25, 50, 100, 150, 200, 250])) {
       rychle.appendChild(h('button', { class: 'btn mini', type: 'button', onclick: () => { vyberJ.value = '0'; jIdx = 0; vstupM.value = String(g); prepocti(); } }, g + ' ' + j));
     }
     const c = cileDne(volby.den);
@@ -1172,6 +1225,7 @@
       const bunka = (kl, nazev, tr) => h('div', { class: tr || '' }, h('b', { text: kl === 'kcal' ? fc(v.kcal, 0) : fc(v[kl], 1) + ' g' }),
         h('span', { text: nazev + (kl === 'kcal' && c.kcal && Number.isFinite(v.kcal) ? ' · ' + fc(100 * v.kcal / c.kcal, 0) + ' % cíle' : '') }));
       pridat(vypocet, bunka('kcal', 'kcal', 'kc'), bunka('bilkoviny', 'bílkoviny'), bunka('sacharidy', 'sacharidy'), bunka('tuk', 'tuky'));
+      if ((v.alk || 0) >= 0.5) vypocet.appendChild(h('div', { class: 'vypocet-alk', text: ikonaNapoje(druh || 'pivo') + ' ' + fc(v.alk, 1) + ' g alkoholu = ' + stdNapoje(v.alk) }));
       tlacitkoHlavni.disabled = !(g > 0);
     }
     vstupM.addEventListener('input', prepocti);
@@ -1236,6 +1290,7 @@
       telo.appendChild(h('div', { class: 'upozorneni' }, 'Hodnoty si navzájem neodpovídají (energie nesedí s makroživinami nebo cukrů je víc než sacharidů). Ověř je na obalu – ',
         h('button', { class: 'btn mini', type: 'button', onclick: () => doplnHodnoty(f) }, 'opravit ve vlastní kopii')));
     }
+    if (f.ml) telo.appendChild(infoNapoje(f, druh));
     if (f.typ === 's') telo.appendChild(h('div', { class: 'upozorneni info', text: 'Obecná potravina podle americké databáze USDA – u konkrétního výrobku se hodnoty mohou lišit (zejména pečivo a uzeniny).' }));
     if (f.typ === 'o') telo.appendChild(h('div', { class: 'upozorneni info', text: 'Staženo online z Open Food Facts ' + (f.stazeno ? J.zKlice(f.stazeno).toLocaleDateString('cs-CZ') : '') + '. Údaje vkládají dobrovolníci – při pochybnosti porovnej s obalem.' }));
 
@@ -1723,6 +1778,16 @@
     const ean = h('input', { class: 'vstup', type: 'text', inputmode: 'numeric', maxlength: '14', value: f.ean || '' });
     const ml = h('select', { class: 'vstup' }, h('option', { value: '0' }, 'gramy (g)'), h('option', { value: '1' }, 'mililitry (ml)'));
     ml.value = f.ml ? '1' : '0';
+    // nápoj: druh (porce, pitný režim) a alkohol v % obj. jako na etiketě
+    const druhV = h('select', { class: 'vstup' }, h('option', { value: '' }, 'není nápoj / určit podle názvu'),
+      ...Object.entries(J.DRUHY_NAPOJU).map(([k, d]) => h('option', { value: k }, d.n)));
+    druhV.value = f.druh && J.DRUHY_NAPOJU[f.druh] ? f.druh : '';
+    const alkObj = h('input', { class: 'vstup', type: 'text', inputmode: 'decimal', autocomplete: 'off', placeholder: 'např. 4,9',
+      value: Number.isFinite(n.alk) ? String(J.zaokrouhli(n.alk / 0.789, 1)).replace('.', ',') : '' });
+    const napojPole = h('div', { class: 'form', style: { marginTop: '8px' } },
+      h('label', { class: 'pole' }, 'Druh nápoje', druhV), h('label', { class: 'pole' }, 'Alkohol (% obj.)', alkObj));
+    const ukazNapoj = () => { napojPole.hidden = ml.value !== '1'; };
+    ml.addEventListener('change', ukazNapoj); ukazNapoj();
     const kj = h('input', { class: 'vstup', type: 'number', min: '0', step: '1', inputmode: 'numeric', placeholder: 'kJ' });
     if (Number.isFinite(n.kcal)) kj.value = String(Math.round(n.kcal * 4.184));
     const zakl = h('div', { class: 'ziviny-form' },
@@ -1734,6 +1799,11 @@
     kj.addEventListener('input', () => { const v = J.cislo(kj.value); pole.kcal.value = v !== null ? String(Math.round(v / 4.184)) : ''; kontrola(); });
     const mikro = h('div', { class: 'ziviny-form' });
     for (const z of J.ZIVINY) if (z.s !== 'zaklad') mikro.appendChild(vstup(z.k, z.n + ' (' + z.j + ')', z.d >= 2 ? '0.01' : z.d === 1 ? '0.1' : '1'));
+    // % obj. ↔ g alkoholu na 100 ml (1 % obj. = 0,789 g)
+    if (pole.alk) {
+      alkObj.addEventListener('input', () => { const v = J.cislo(alkObj.value); pole.alk.value = v !== null && v >= 0 && v <= 96 ? String(J.zaokrouhli(v * 0.789, 2)) : ''; kontrola(); });
+      pole.alk.addEventListener('input', () => { const v = J.cislo(pole.alk.value); alkObj.value = v !== null ? String(J.zaokrouhli(v / 0.789, 1)).replace('.', ',') : ''; });
+    }
     const porceKont = h('div', {});
     const porce = (f.porce || []).map(p => ({ ...p }));
     function vykresliPorce() {
@@ -1753,7 +1823,7 @@
     const sedi = h('div', { class: 'slabe' });
     function sesbirej() {
       const x = { id: existujici ? f.id : null, nazev: nazev.value.trim(), znacka: znacka.value.trim(), ean: ean.value.replace(/\D/g, ''),
-        ml: ml.value === '1', n: {}, porce: porce.filter(p => p.n && p.g > 0), puvod: f.puvod, skupina: f.skupina };
+        ml: ml.value === '1', n: {}, porce: porce.filter(p => p.n && p.g > 0), puvod: f.puvod, skupina: f.skupina, druh: ml.value === '1' ? druhV.value : '' };
       for (const kl in pole) { const v = J.cislo(pole[kl].value); if (v !== null) x.n[kl] = v; }
       if (!Number.isFinite(x.n.kcal)) { const e = J.energieZMaker(x.n); if (e !== null) x.n.kcal = Math.round(e); }
       return x;
@@ -1771,6 +1841,7 @@
         h('label', { class: 'pole' }, 'Značka', znacka),
         h('label', { class: 'pole' }, 'EAN (čárový kód)', ean),
         h('label', { class: 'pole' }, 'Hodnoty se vztahují na', ml)),
+      napojPole,
       h('h3', { style: { margin: '14px 0 8px' }, text: 'Výživové hodnoty na 100 g / 100 ml' }), zakl, sedi,
       h('details', { style: { marginTop: '12px' } }, h('summary', { style: { cursor: 'pointer', fontSize: '.9rem' }, text: 'Vitaminy, minerály a další (nepovinné)' }), h('div', { style: { marginTop: '8px' } }, mikro)),
       h('h3', { style: { margin: '14px 0 8px' }, text: 'Porce' }), porceKont, chyby);
@@ -1880,6 +1951,31 @@
   }
 
   /* ================= STATISTIKY ================= */
+  // nápoje: pitný režim, tekuté kalorie, alkohol (průměry za zapsané dny)
+  function kartaNapoju(st) {
+    const n = st.napoje;
+    const karta = h('div', { class: 'karta napoje-karta' }, h('h2', { style: { marginBottom: '10px' }, text: '🥤 Nápoje a alkohol' }));
+    karta.appendChild(h('div', { class: 'cisla' },
+      karticka(fc(n.pitny / 1000, 2) + ' l', 'pitný režim denně'),
+      karticka(fc(n.kcal) + ' kcal', 'tekuté kalorie denně' + (n.podil >= 0.005 ? ' (' + fc(100 * n.podil) + ' % energie)' : '')),
+      karticka(fc(n.cukry) + ' g', 'cukrů z nápojů denně'),
+      karticka(fc(n.alk, n.alk < 10 ? 1 : 0) + ' g', 'alkoholu denně · ' + fc(J.standardniNapoje(n.alkTydne), 1) + ' std. nápojů týdně'),
+      karticka(n.dnyBezAlk + ' / ' + st.zapsanych, 'dní bez alkoholu'),
+      karticka(n.alkMax >= 0.5 ? fc(J.standardniNapoje(n.alkMax), 1) : '–', 'nejvíc std. nápojů za den')));
+    if (n.alkTydne >= 0.5) {
+      const ga = h('div', {});
+      karta.appendChild(h('h3', { style: { margin: '14px 0 6px', fontSize: '.95rem' }, text: 'Alkohol po dnech (standardní nápoje)' }));
+      karta.appendChild(ga);
+      const data = st.dny.map(d => {
+        const dt = J.zKlice(d.k);
+        return { k: d.k, v: J.zaokrouhli(J.standardniNapoje(d.s.alk), 1), popis: dt.toLocaleDateString('cs-CZ'), kratce: obdobi <= 31 ? dt.getDate() + '.' + (dt.getMonth() + 1) + '.' : '' };
+      });
+      kresliPozdeji(() => G.sloupce(ga, data, { jednotka: 'std. nápojů', popis: 'Alkohol po dnech ve standardních nápojích' }));
+    }
+    karta.appendChild(h('p', { class: 'slabe', style: { marginTop: '10px' }, text: 'Standardní nápoj = 10 g čistého alkoholu (zhruba malé pivo, deci vína nebo panák). Bezpečná dávka alkoholu podle WHO neexistuje. '
+      + 'Tekuté kalorie zahrnují všechny nápoje z deníku včetně mléka a alkoholu; do pitného režimu se počítají podle nastavení v Profilu.' }));
+    return karta;
+  }
   function vykresliStatistiky() {
     const kont = $('#statistiky');
     kont.textContent = '';
@@ -1927,6 +2023,7 @@
             pe.alk > 0.5 ? (() => { const s = h('span', { text: 'Alkohol: ' + fc(pe.alk) + ' % energie' }); s.style.setProperty('--b', 'var(--c-alk)'); return s; })() : null))));
       G.kolac(kol, [{ v: pe.bilkoviny, barva: 'var(--c-bil)', popis: 'Bílkoviny' }, { v: pe.sacharidy, barva: 'var(--c-sach)', popis: 'Sacharidy' }, { v: pe.tuk, barva: 'var(--c-tuk)', popis: 'Tuky' }, { v: pe.alk, barva: 'var(--c-alk)', popis: 'Alkohol' }],
         { popis: 'Rozložení energie: bílkoviny ' + fc(pe.bilkoviny) + ' %, sacharidy ' + fc(pe.sacharidy) + ' %, tuky ' + fc(pe.tuk) + ' %' + (pe.alk > 0.5 ? ', alkohol ' + fc(pe.alk) + ' %' : '') });
+      kont.appendChild(kartaNapoju(st));
       // průměrné živiny
       const pokryti = {};
       for (const z of J.ZIVINY) {
@@ -2086,6 +2183,8 @@
     $('#nMikro').checked = !!S.nastaveni.mikro;
     $('#nPohyb').checked = !!S.nastaveni.pohybKCili;
     $('#nNapoje').checked = S.nastaveni.napojeDoVody !== false;
+    $('#nPitny').value = S.nastaveni.pitnyRezim || 'bezny';
+    $('#nPitny').disabled = S.nastaveni.napojeDoVody === false;
     const av = $('#alergenyVolby');
     if (!av.children.length) {
       for (const a of J.ALERGENY) {
@@ -2419,7 +2518,8 @@
       uloz(); vykresliJidlaNastaveni();
     });
     const prep = (id, kl, poZmene) => $(id).addEventListener('change', e => { S.nastaveni[kl] = e.target.checked; uloz(); if (poZmene) poZmene(); });
-    prep('#nOnline', 'online'); prep('#nObrazky', 'obrazky'); prep('#nMikro', 'mikro'); prep('#nPohyb', 'pohybKCili'); prep('#nNapoje', 'napojeDoVody');
+    prep('#nOnline', 'online'); prep('#nObrazky', 'obrazky'); prep('#nMikro', 'mikro'); prep('#nPohyb', 'pohybKCili'); prep('#nNapoje', 'napojeDoVody', () => { $('#nPitny').disabled = S.nastaveni.napojeDoVody === false; vykresliDenik(); });
+    $('#nPitny').addEventListener('change', e => { S.nastaveni.pitnyRezim = e.target.value; uloz(); vykresliDenik(); });
     $('#importTl').addEventListener('click', () => $('#importJson').click());
     $('#vyhybat').addEventListener('input', ulozAlergeny);
     $('#tiskStat').addEventListener('click', () => {

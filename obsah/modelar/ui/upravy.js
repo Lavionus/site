@@ -129,9 +129,16 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     const oknoDer = $('oknoDer');
     let der = null;
     const volbyDer = () => ({ tvar: $('derTvar').value, velikost: M.omez(cti('derVelikost') || 3, 0.3, 500), rozestup: M.omez(cti('derRozestup') || 6, 0.3, 2000),
-      rozlozeni: vybrano(oknoDer, 'derRozlozeni'), okraj: Math.max(0, cti('derOkraj') || 0), hloubka: Math.max(0, cti('derHloubka') || 0) });
+      rozlozeni: vybrano(oknoDer, 'derRozlozeni'), okraj: Math.max(0, cti('derOkraj') || 0), hloubka: Math.max(0, cti('derHloubka') || 0),
+      pocet: vybrano(oknoDer, 'derRezim') === 'pocet' ? [M.omez(Math.round(cti('derPocetX') || 1), 1, 200), M.omez(Math.round(cti('derPocetY') || 1), 1, 200)] : null });
     function aktualizujDer() {
       const v = volbyDer();
+      const poctem = vybrano(oknoDer, 'derRezim') === 'pocet';
+      $('derRadekRozestup').hidden = poctem; $('derRadekPocet').hidden = !poctem;
+      // rozměr plochy (obálka oblasti) – ať je jasné, kolik děr se vejde
+      let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
+      for (const k of der.plocha.oblast) for (const [x, y] of k) { x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); }
+      $('derPlocha').textContent = `Plocha ${M.mm(x1 - x0, 1)} × ${M.mm(y1 - y0, 1)} mm`;
       try { der.stredy = M.stredyDer(der.plocha.oblast, v); }
       catch (e) {
         der.stredy = [];
@@ -141,7 +148,9 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
         return;
       }
       nahled2D($('derNahled'), [{ trida: 'oblast', kontury: der.plocha.oblast }, { trida: 'diry', kontury: der.stredy.map(([x, y]) => M.obrysDiry(v.tvar, x, y, v.velikost)) }]);
-      $('derInfo').textContent = der.stredy.length ? M.pocet(der.stredy.length, 'díra', 'díry', 'děr') : '⚠ Na plochu se nevejde žádná díra – zmenši okraj, velikost nebo rozestup.';
+      $('derInfo').textContent = !der.stredy.length ? '⚠ Na plochu se nevejde žádná díra – zmenši okraj, velikost nebo rozestup.'
+        : der.stredy.length === 1 && !v.pocet ? '1 díra – při tomto rozestupu a odstupu od kraje se víc nevejde. Zmenši rozestup nebo odstup, nebo zvol „Počtem děr po celé ploše“.'
+        : M.pocet(der.stredy.length, 'díra', 'díry', 'děr');
       $('derOk').disabled = !der.stredy.length;
     }
     M.otevriVzorDer = function (zasah) {

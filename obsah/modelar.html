@@ -285,8 +285,9 @@
   .uchyty .uchyt:hover, .uchyty .uchyt.aktivni { fill: var(--accent); }
   .uchyty .oblouk { pointer-events: auto; cursor: grab; }
   .uchyty .oblouk .zasah { stroke: transparent; stroke-width: 18; fill: none; pointer-events: stroke; }
-  .uchyty .oblouk .cara { stroke: #fff; stroke-width: 1.5; stroke-linejoin: round; pointer-events: fill; opacity: .95; filter: drop-shadow(0 0 1.2px rgba(0,0,0,.85)); }
-  .uchyty .oblouk:hover .cara, .uchyty .oblouk.najeto .cara, .uchyty .oblouk.aktivni .cara { stroke: #1d1f23; stroke-width: 2; opacity: 1; filter: brightness(1.15); }
+  /* šipky otáčení decentně: tenký světlý obrys, poloprůhledné; naplno pod kurzorem a při tažení */
+  .uchyty .oblouk .cara { stroke: rgba(255,255,255,.85); stroke-width: .8; stroke-linejoin: round; pointer-events: fill; opacity: .62; transition: opacity .12s; filter: drop-shadow(0 0 .8px rgba(0,0,0,.6)); }
+  .uchyty .oblouk:hover .cara, .uchyty .oblouk.najeto .cara, .uchyty .oblouk.aktivni .cara { stroke: #1d1f23; stroke-width: 1.2; opacity: 1; filter: brightness(1.12); }
   .uchyty.tazeni .body > :not(.aktivni) { display: none; }
   .uchyty .uhlomer { fill: none; stroke-width: 1.5; opacity: .85; }
   .uchyty .ryska { stroke-width: 1.3; opacity: .9; }
@@ -397,6 +398,7 @@
   .svg-nahled path { fill: var(--accent); }
   .nahled-der path.oblast { fill: var(--accent-soft); stroke: var(--accent); stroke-width: .3; vector-effect: non-scaling-stroke; }
   .nahled-der path.diry { fill: var(--danger); }
+  .str-nahled { display: block; width: 100%; height: 90px; border-radius: 6px; border: 1px solid var(--border); margin: 4px 0 8px; background: var(--bg-input); }
   .mriz-poli { display: grid; grid-template-columns: auto repeat(3, 72px); gap: 5px; align-items: center; margin-bottom: 8px; }
   .mriz-poli input { width: 100% !important; box-sizing: border-box; }      /* pole se nesmí překrývat */
   dialog.okno .zaskrt { display: flex; gap: 6px; align-items: flex-start; margin: 4px 0; cursor: pointer; }
@@ -530,6 +532,11 @@
     background: var(--bg-elevated); border-top: 1px solid var(--border); flex-shrink: 0;
     font-variant-numeric: tabular-nums; white-space: nowrap; overflow: hidden;
   }
+  /* souřadnice kurzoru: pevná šířka (čísla zarovnaná vpravo) – zbytek řádku při pohybu myši neposkakuje */
+  .stav-kurzor { display: inline-flex; align-items: baseline; gap: 4px; flex: 0 0 auto; }
+  .stav-kurzor .sk-cislo { display: inline-block; width: 8ch; text-align: right; color: var(--text); }
+  .stav-kurzor .sk-osa { color: var(--text-muted); }
+  .stav-kurzor .sk-osa + .sk-cislo { margin-right: 6px; }
   #btnPanel { display: none; }
   /* střední šířka: ☰ Panel schová boční panel (plátno se roztáhne) */
   @media (min-width: 761px) and (max-width: 1250px) {
@@ -696,6 +703,7 @@
   <button class="tl" data-prikaz="pole">▦ Pole (řada, kruh, spirála)…</button>
   <button class="tl" data-prikaz="rozdelitRovinou">✂ Rozdělit rovinou…</button>
   <button class="tl" data-prikaz="vzorDer" data-rezim="vzorDer">⁙ Vzor děr na ploše (klikni na plochu)</button>
+  <button class="tl" data-prikaz="struktura" data-rezim="struktura">▦ Struktura na ploše (klikni na plochu)</button>
   <button class="tl" data-prikaz="obalSvg">🌀 Ovinout SVG kolem válce…</button>
   <hr>
   <button class="tl" data-prikaz="pivot" data-rezim="pivot">⊕ Bod otáčení (P) – klikni do scény</button>
@@ -865,7 +873,13 @@
   <h2 id="derNadpis">⁙ Vzor děr</h2>
   <div class="radek"><label for="derTvar">Tvar díry</label><select id="derTvar"><option value="kruh">Kruh</option><option value="sestiuhelnik">Šestiúhelník</option><option value="ctverec">Čtverec</option><option value="sterbina">Štěrbina</option></select></div>
   <div class="radek"><label for="derVelikost">Velikost</label><input id="derVelikost" value="4"> mm</div>
-  <div class="radek"><label for="derRozestup">Rozestup (střed–střed)</label><input id="derRozestup" value="7"> mm</div>
+  <fieldset><legend>Rozmístění</legend>
+    <label><input type="radio" name="derRezim" value="rozestup" checked> Rozestupem</label>
+    <label><input type="radio" name="derRezim" value="pocet"> Počtem děr po celé ploše</label>
+  </fieldset>
+  <div class="radek" id="derRadekRozestup"><label for="derRozestup">Rozestup (střed–střed)</label><input id="derRozestup" value="7"> mm</div>
+  <div class="radek" id="derRadekPocet" hidden><label for="derPocetX">Počet děr</label><input id="derPocetX" value="3" inputmode="numeric" aria-label="Počet děr ve směru X"> × <input id="derPocetY" value="2" inputmode="numeric" aria-label="Počet děr ve směru Y"></div>
+  <p id="derPlocha" class="poznamka"></p>
   <fieldset><legend>Rozložení</legend>
     <label><input type="radio" name="derRozlozeni" value="mrizka" checked> Mřížka</label>
     <label><input type="radio" name="derRozlozeni" value="sachovnice"> Šachovnice</label>
@@ -875,6 +889,25 @@
   <div id="derNahled" class="svg-nahled nahled-der"></div>
   <p id="derInfo" class="poznamka"></p>
   <div class="tlacitka"><button type="button" class="tl" id="derZrusit">Zrušit</button><button type="button" class="tl hlavni-tl" id="derOk">Vyvrtat díry</button></div>
+</dialog>
+
+<dialog id="oknoStruktura" class="okno" aria-labelledby="strNadpis">
+  <h2 id="strNadpis">▦ Struktura na ploše</h2>
+  <p id="strPlocha" class="poznamka"></p>
+  <div class="radek"><label for="strVzor">Vzor</label><select id="strVzor"></select></div>
+  <canvas id="strNahled" class="str-nahled" width="240" height="90" aria-label="Náhled vzoru"></canvas>
+  <div class="radek"><label for="strVelikost">Velikost dlaždice</label><input id="strVelikost" value="10"> mm</div>
+  <div class="radek"><label for="strHloubka">Hloubka</label><input id="strHloubka" value="1"> mm</div>
+  <fieldset><legend>Směr</legend>
+    <label><input type="radio" name="strSmer" value="dovnitr" checked> Vyrytá (dovnitř)</label>
+    <label><input type="radio" name="strSmer" value="ven"> Vystouplá (ven)</label>
+  </fieldset>
+  <div class="radek"><label for="strRotace">Natočení vzoru</label><input id="strRotace" value="0"> °</div>
+  <div class="radek"><label for="strOkraj">Náběh u okrajů plochy</label><input id="strOkraj" value="0"> mm</div>
+  <label class="zaskrt"><input type="checkbox" id="strInvert"> Převrátit vzor (výstupky ↔ prohlubně)</label>
+  <p id="strInfo" class="poznamka" aria-live="polite"></p>
+  <p id="strChyba" class="chyba-text" role="alert"></p>
+  <div class="tlacitka"><button type="button" class="tl" id="strZrusit">Zrušit</button><button type="button" class="tl hlavni-tl" id="strOk">Nanést strukturu</button></div>
 </dialog>
 
 <dialog id="oknoObal" class="okno" aria-labelledby="obalNadpis">
@@ -1063,7 +1096,7 @@
 </div>
 
 <footer class="stav">
-  <span id="stavKurzor">—</span>
+  <span id="stavKurzor" class="stav-kurzor" aria-label="Poloha kurzoru na desce"><span class="sk-osa">X</span><span id="stavX" class="sk-cislo">—</span><span class="sk-osa">Y</span><span id="stavY" class="sk-cislo">—</span><span class="sk-osa">mm</span></span>
   <span id="stavDeska" class="siroke"></span>
   <span id="stavVyber"></span>
   <span id="stavRezim" class="rezim-text" aria-live="polite"></span>
@@ -1093,6 +1126,7 @@
 <script src="modelar/jadro/dilna.js"></script>
 <script src="modelar/jadro/vykres.js"></script>
 <script src="modelar/jadro/upravy.js"></script>
+<script src="modelar/jadro/struktura.js"></script>
 <script src="modelar/stav.js"></script>
 <script src="modelar/jadro/soubory/zip.js"></script>
 <script src="modelar/jadro/soubory/stl.js"></script>
@@ -1115,6 +1149,7 @@
 <script src="modelar/ui/skica.js"></script>
 <script src="modelar/ui/dily.js"></script>
 <script src="modelar/ui/upravy.js"></script>
+<script src="modelar/ui/struktura.js"></script>
 <script src="modelar/ui/occt.js"></script>
 <script src="modelar/ui/dilna.js"></script>
 <script src="modelar/ui/napoveda.js"></script>

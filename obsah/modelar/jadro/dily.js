@@ -161,6 +161,10 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
   const VULE = { klic: 'vule', popis: 'Vůle pro tisk', jednotka: 'mm', min: 0, max: 2, krok: 0.05 };
   const ZAVIT = { klic: 'velikost', popis: 'Závit', volby: VOLBY_ZAVITU };
   const STOUP = { klic: 'stoupani', popis: 'Stoupání (0 = norma)', jednotka: 'mm', min: 0, max: 10, krok: 0.05 };
+  /** Odvozené pole: počet závitů = délka / stoupání; zápis změní délku (hloubku) na celý počet závitů. */
+  const POCET_ZAVITU = { klic: 'pocetZavitu', odvozeny: true, popis: 'Počet závitů', min: 1, max: 5000, krok: 1,
+    cti: (r, p) => p.delka / zavit(p).p,
+    zapis: (r, p, v) => ({ param: { delka: Math.round(Math.max(1, v) * zavit(p).p * 1e4) / 1e4 } }) };
   const PISMA = [['libsans', 'Liberation Sans Bold'], ['bebas', 'Bebas Neue'], ['anton', 'Anton'], ['archivo', 'Archivo Black'],
     ['russo', 'Russo One'], ['alfaslab', 'Alfa Slab One'], ['bungee', 'Bungee'], ['titan', 'Titan One'], ['righteous', 'Righteous'],
     ['luckiest', 'Luckiest Guy'], ['saira', 'Saira Stencil One'], ['blackops', 'Black Ops One']];
@@ -169,7 +173,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     sroub: {
       nazev: 'Šroub', ikona: '🔩', barva: '#9aa4ae', role: 'teleso',
       param: { velikost: 'M8', stoupani: 0, delka: 20, hlava: 'sestihran', vule: 0.1, segmentu: 64 },
-      parametry: [ZAVIT, { klic: 'delka', popis: 'Délka dříku', jednotka: 'mm', min: 1, max: 500, krok: 1 },
+      parametry: [ZAVIT, { klic: 'delka', popis: 'Délka dříku', jednotka: 'mm', min: 1, max: 500, krok: 1 }, POCET_ZAVITU,
         { klic: 'hlava', popis: 'Hlava', volby: [['sestihran', 'Šestihranná'], ['valcova', 'Válcová s imbusem'], ['zapustna', 'Zápustná 90°'], ['zadna', 'Bez hlavy (tyč)']] },
         STOUP, VULE, SEG],
       obalka(p) {
@@ -215,7 +219,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     zavitDira: {
       nazev: 'Díra se závitem', ikona: '🕳️', barva: '#8f99a6', role: 'dira',
       param: { velikost: 'M8', stoupani: 0, delka: 15, vule: 0.2, segmentu: 64 },
-      parametry: [ZAVIT, { klic: 'delka', popis: 'Hloubka', jednotka: 'mm', min: 1, max: 500, krok: 1 }, STOUP, VULE, SEG],
+      parametry: [ZAVIT, { klic: 'delka', popis: 'Hloubka', jednotka: 'mm', min: 1, max: 500, krok: 1 }, POCET_ZAVITU, STOUP, VULE, SEG],
       obalka(p) {
         const z = zavit(p), R = z.d / 2 + p.vule;
         return { min: [-R, -R, -0.5], max: [R, R, p.delka + 0.5], kruh: true };
@@ -638,6 +642,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     p = p || {};
     for (const [k, v] of Object.entries(d.param)) z[k] = v;
     for (const q of d.parametry) {
+      if (q.odvozeny) continue;                       // odvozené pole (počet závitů) nemá vlastní hodnotu
       if (q.volby) { z[q.klic] = q.volby.some(v => v[0] === p[q.klic]) ? p[q.klic] : d.param[q.klic]; continue; }
       if (q.text) { z[q.klic] = typeof p[q.klic] === 'string' ? p[q.klic].slice(0, 200) : d.param[q.klic]; continue; }
       let v = typeof p[q.klic] === 'number' && isFinite(p[q.klic]) ? p[q.klic] : d.param[q.klic];

@@ -50,6 +50,10 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
         M.nastavRezim(null);
         M.otevriVzorDer(zasah);
         return;
+      } else if (M.app.rezim === 'struktura' && zasah) {
+        M.nastavRezim(null);
+        M.otevriStrukturu(zasah);
+        return;
       } else if (M.app.rezim === 'plochou' && zasah) {
         const u = M.najdiUzel(M.app.dok, zasah.id);
         if (u && !u.zamceno) {
@@ -131,7 +135,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       if (!tah.druh && daleko && !M.app.rezim) {
         if (tah.zasah) zacniPosun(e); else tah.druh = tah.dotyk ? 'otoc' : 'obdelnik';
       } else if (!tah.druh && daleko && tah.dotyk && M.app.rezim) tah.druh = 'otoc';
-      if (tah.druh === 'otoc') { S.kamera.otoc(tah.x - ox, tah.y - oy); M.prekresli(); return; }
+      if (tah.druh === 'otoc') { S.kamera.otoc(tah.x - ox, tah.y - oy, S.stredOtaceni()); M.prekresli(); return; }
       if (tah.druh === 'posun') posun(e);
       else if (tah.druh === 'obdelnik') {
         const x0 = Math.min(tah.px, tah.x), y0 = Math.min(tah.py, tah.y);
