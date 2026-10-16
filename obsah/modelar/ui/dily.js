@@ -26,15 +26,18 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
         const klic = u.id + '|' + klicTextu(u.param);
         if (rozpracovane.has(klic)) continue;
         rozpracovane.add(klic);
-        let kontury = [];
+        let kontury = [], chyba = false;
         try {
           if (typeof FONTY === 'undefined' || typeof opentype === 'undefined') throw new Error('písma nejsou k dispozici');
           kontury = u.param.text.trim() ? M.konturyTextu(await FONTY.opentype(u.param.font), u.param.text, u.param.velikost) : [];
         } catch (e) {
           console.error('Modelář: písmo štítku nejde načíst', e);
-          Dialog.chyba('Písmo štítku nejde načíst: ' + e.message);
+          Dialog.chyba('Písmo štítku nejde načíst: ' + e.message + ' (text se doplní, až písmo půjde načíst – třeba po připojení k síti)');
+          chyba = true;
         }
         rozpracovane.delete(klic);
+        // nenačtené písmo (offline): nic nezapisovat – prázdné obrysy by text smazaly natrvalo
+        if (chyba) continue;
         // mezitím se mohl text změnit nebo štítek zmizet: zapsat jen do odpovídajícího uzlu (nahoře v dokumentu)
         const akt = M.najdiUzel(M.app.dok, u.id);
         if (!akt || akt.druh !== 'stitek' || klicTextu(akt.param) !== klicTextu(u.param)) continue;

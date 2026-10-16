@@ -74,8 +74,10 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
   M.prectiCislo = function (text) {
     let t = String(text == null ? '' : text).trim().toLowerCase()
       .replace(/[\u2212\u2013]/g, '-').replace(/[×·]/g, '*').replace(/÷|:/g, '/').replace(/\s+/g, ' ');
-    if (!t) return NaN;
+    if (!t || t.length > 200) return NaN;
     // desetinná čárka: „1,5“ → 1.5 (čárka mezi číslicemi)
+    // „2x3“ / „2 x 3“ jako násobení (ne v exponentu ani v jednotce)
+    t = t.replace(/(\d)\s*x\s*(?=[\d(.])/g, '$1*');
     t = t.replace(/(\d),(\d)/g, '$1.$2').replace(/(\d) (?=\d{3}(?!\d))/g, '$1');      // a „1 000“ = 1000
     const JEDNOTKY = { mm: 1, cm: 10, m: 1000, in: 25.4, '"': 25.4, '″': 25.4, '°': 1, deg: 1, '%': 1 };
     let i = 0;
@@ -85,24 +87,35 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       const m = /^(\d+\.?\d*|\.\d+)(e[+-]?\d+)?/.exec(t.slice(i));
       if (!m) return NaN;
       i += m[0].length;
-      let v = Number(m[0]);
+      return Number(m[0]);
+    }
+    /** Jednotka za součinem platí pro celý součin („1/2 in“ = 12,7 mm). */
+    function jednotka() {
       mezery();
       const j = /^(mm|cm|deg|in|m|"|″|°|%)(?![a-z])/.exec(t.slice(i));
-      if (j) { v *= JEDNOTKY[j[1]]; i += j[0].length; }
-      return v;
+      if (!j) return null;
+      i += j[0].length;
+      return JEDNOTKY[j[1]];
     }
+    let hloubka = 0;
     function cinitel() {
       mezery();
       if (t[i] === '-') { i++; return -cinitel(); }
       if (t[i] === '+') { i++; return cinitel(); }
-      if (t[i] === '(') { i++; const v = vyraz(); mezery(); if (t[i] !== ')') return NaN; i++; return v; }
+      if (t[i] === '(') {
+        if (++hloubka > 50) return NaN;                // zanoření bez konce: nesmysl, ne přetečení zásobníku
+        i++; const v = vyraz(); mezery(); hloubka--;
+        if (t[i] !== ')') return NaN;
+        i++; return v;
+      }
       return cislo();
     }
     function soucin() {
       let v = cinitel();
       for (;;) {
         mezery();
-        if (t[i] === '*') { i++; v *= cinitel(); } else if (t[i] === '/') { i++; v /= cinitel(); } else return v;
+        if (t[i] === '*') { i++; v *= cinitel(); } else if (t[i] === '/') { i++; v /= cinitel(); }
+        else { const j = jednotka(); if (j == null) return v; v *= j; }
       }
     }
     function vyraz() {
@@ -115,7 +128,25 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     if (t[0] === '=') i = 1;                      // „=60/2“ jako v tabulkách
     const v = vyraz();
     mezery();
-    return i === t.length && isFinite(v) ? v : NaN;
+    if (i !== t.length || !isFinite(v)) return NaN;
+    // součty desetinných čísel (0,1 + 0,2) bez binárního šumu; −0 jako 0
+    const r = Math.abs(v) < 1e6 ? Math.round(v * 1e9) / 1e9 : v;
+    return !isFinite(r) ? NaN : r === 0 ? 0 : r;
+  };
+
+  /** Hlídač snímku: událost 'kamera' chodí s KAŽDÝM vykresleným snímkem. Vrací funkci zmena(dalsi, vynutit),
+      která řekne, jestli se od minula změnila kamera, velikost plátna, dokument, výběr, režim, rovina
+      nebo hodnoty v poli dalsi (porovnání ===) – jinak překreslování SVG vrstvy nemá smysl. */
+  M.hlidacSnimku = function (S) {
+    let klic = '', hodnoty = [];
+    return function (dalsi = [], vynutit = false) {
+      const a = S.kamera.aktivni();
+      const k = a.matrixWorld.elements.join(',') + '|' + a.projectionMatrix.elements.join(',') + '|' + S.kamera.sirka + 'x' + S.kamera.vyska;
+      const h = [M.app.dok, M.app.vyber, M.app.rezim, M.app.rovina, M.app.pivot].concat(dalsi);
+      const zmena = vynutit || k !== klic || h.length !== hodnoty.length || h.some((x, i) => x !== hodnoty[i]);
+      klic = k; hodnoty = h;
+      return zmena;
+    };
   };
 
   /** Číslo s českým tvarem slova: M.pocet(2, 'těleso', 'tělesa', 'těles') → „2 tělesa“. */

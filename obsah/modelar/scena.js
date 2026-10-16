@@ -16,6 +16,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     // scéna jde označit klávesnicí (Tab): šipky pak posouvají vybraná tělesa
     renderer.domElement.tabIndex = 0;
     renderer.domElement.setAttribute('aria-label', 'Pracovní plocha 3D – šipky posouvají vybraná tělesa, Delete maže');
+    renderer.domElement.setAttribute('role', 'application');
     obal.appendChild(renderer.domElement);
 
     const scena = new THREE.Scene();
@@ -239,9 +240,49 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       (dx, dy) => { kamera.otoc(dx, dy); M.prekresli(); });
 
     /** Pohled „Domů“ na celou desku. */
+    /** Šířka plátna zakrytá zleva a zprava panely (inspektor, otevřené nástroje). */
+    S.okrajePanelu = function () {
+      const r = renderer.domElement.getBoundingClientRect(), okraje = { vlevo: 0, vpravo: 0 };
+      for (const el of document.querySelectorAll('#inspektor, dialog.okno.vedle[open]')) {
+        if (!el.offsetParent && el.tagName !== 'DIALOG') continue;
+        const b = el.getBoundingClientRect();
+        if (b.width < 10 || b.width > r.width * 0.6 || b.bottom < r.top + r.height * 0.5 || b.top > r.top + r.height * 0.5) continue;
+        if (b.left - r.left < 40) okraje.vlevo = Math.max(okraje.vlevo, b.right - r.left);
+        else if (r.right - b.right < 40) okraje.vpravo = Math.max(okraje.vpravo, r.right - b.left);
+      }
+      return okraje;
+    };
     S.domu = function (ms = 400) {
-      kamera.domu(new THREE.Vector3(0, 0, 0), deska.rohy(), ms);
+      // panely, které leží přes plátno (inspektor na úzké obrazovce): deska do volné části
+      const r = renderer.domElement.getBoundingClientRect();
+      kamera.domu(new THREE.Vector3(0, 0, 0), deska.rohy(), ms, r.width < 800 ? S.okrajePanelu() : null);     // širší plátno: vpravo leží panely nástrojů
       M.prekresli();
+    };
+    /** Zaměřit výběr: stejný směr pohledu, výběr vyplní volnou část plátna (mimo inspektor a panely nástrojů). */
+    S.zamerit = function (ids, ms = 400) {
+      const uzly = M.app.dok.uzly.filter(u => ids.includes(u.id) && !u.skryto);
+      if (!uzly.length) return false;
+      const ob = M.obalkaVice(uzly), rohy = [];
+      for (let i = 0; i < 8; i++) rohy.push(new THREE.Vector3(i & 1 ? ob.max[0] : ob.min[0], i & 2 ? ob.max[1] : ob.min[1], i & 4 ? ob.max[2] : ob.min[2]));
+      const st = new THREE.Vector3(...ob.stred), ok = S.okrajePanelu();
+      const volno = Math.max(0.3, (kamera.sirka - ok.vlevo - ok.vpravo) / kamera.sirka);
+      // malé těleso nepřiblížit až k nesmyslu: aspoň 60 mm kolem
+      const vzd = Math.max(kamera.vzdalenostProBody(rohy, kamera.az, kamera.el, st, 0.75, 0.75 * volno), kamera.vzdalenostProKouli(30));
+      const c = (ok.vlevo - ok.vpravo) / kamera.sirka;
+      const pul = vzd * Math.tan(kamera.fov * M.st / 2);
+      const vpravo = new THREE.Vector3(Math.cos(kamera.az), Math.sin(kamera.az), 0);
+      kamera.animujNa({ az: kamera.az, el: kamera.el, cil: st.clone().addScaledVector(vpravo, -c * pul * kamera.sirka / kamera.vyska), vzd }, ms);
+      M.prekresli();
+      return true;
+    };
+    /** Je obálka výběru na obrazovce schovaná pod panelem (střed pod ním)? */
+    S.vyberZakryty = function (ids) {
+      const uzly = M.app.dok.uzly.filter(u => ids.includes(u.id) && !u.skryto);
+      if (!uzly.length) return false;
+      const p = S.naObrazovku(new THREE.Vector3(...M.obalkaVice(uzly).stred));
+      if (!p) return true;
+      const r = renderer.domElement.getBoundingClientRect(), ok = S.okrajePanelu();
+      return p[0] < ok.vlevo || p[0] > r.width - ok.vpravo || p[0] < 0 || p[1] < 0 || p[0] > r.width || p[1] > r.height;
     };
     /** Pohled z pojmenovaného směru. */
     const SMERY = {
@@ -275,7 +316,9 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       rt.texture.colorSpace = THREE.SRGBColorSpace;
       const skryte = [deska.objekt, rovina.objekt];
       const ramy = [];
-      model.traverse(o => { if (o.isLineSegments && o.material && o.material.depthTest === false && o.visible) ramy.push(o); });
+      // rámečky výběru a červené převisy do náhledu nepatří
+      model.traverse(o => { if (o.visible && (o.userData.previs || (o.isLineSegments && o.material && o.material.depthTest === false))) ramy.push(o); });
+      scena.children.forEach(o => { if (o.visible && o.userData.prekryv) ramy.push(o); });
       const puvodni = skryte.map(o => o.visible);
       skryte.concat(ramy).forEach(o => { o.visible = false; });
       const pozadi = scena.background, orez = renderer.localClippingEnabled;

@@ -63,10 +63,24 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     if (!uzly.length) throw new Error('není co exportovat (žádné viditelné těleso)');
     let objekty, zdroj = uzly;
     if (volby.sloucit && uzly.length > 1) {
-      // jedna dočasná skupina ze všech těles: sjednocení, barvy se zachovají
-      const r = M.seskupUzly(M.pridejUzly(M.novyDokument(), uzly.map(u => Object.assign({}, u, { zamceno: false }))),
-        uzly.map(u => u.id), { barevne: new Set(uzly.map(u => u.barva)).size > 1, nazev: volby.nazev || 'Model' });
-      zdroj = [M.najdiUzel(r.dok, r.id)];
+      // sloučit jen tělesa, která se překrývají (obálky; i přes řetěz: A×B a B×C = jedna skupina) – samostatné
+      // díly zůstanou samostatnými objekty, ať je slicer může rozmístit a obarvit zvlášť
+      const ob = uzly.map(u => M.obalkaUzlu(u)), tol = 1e-6;
+      const rodic = uzly.map((u, i) => i), koren = i => rodic[i] === i ? i : (rodic[i] = koren(rodic[i]));
+      for (let i = 0; i < uzly.length; i++) for (let j = i + 1; j < uzly.length; j++) {
+        const a = ob[i], b = ob[j];
+        // překryv i dotyk (štítek položený na desce, kostka na kostce) – slicer by jinak díly rozházel
+        if ([0, 1, 2].every(k => a.min[k] <= b.max[k] + 1e-3 && a.max[k] >= b.min[k] - 1e-3)) rodic[koren(i)] = koren(j);
+      }
+      const shluky = new Map();
+      uzly.forEach((u, i) => { const k = koren(i); if (!shluky.has(k)) shluky.set(k, []); shluky.get(k).push(u); });
+      zdroj = [...shluky.values()].map((cast, ci) => {
+        if (cast.length === 1) return cast[0];
+        const r = M.seskupUzly(M.pridejUzly(M.novyDokument(), cast.map(u => Object.assign({}, u, { zamceno: false }))),
+          cast.map(u => u.id), { barevne: new Set(cast.map(u => u.barva)).size > 1 || cast.some(u => !!(M.barvySite && M.barvySite(u))),
+            nazev: shluky.size === 1 ? (volby.nazev || 'Model') : `${volby.nazev || 'Model'} ${ci + 1}` });
+        return M.najdiUzel(r.dok, r.id);
+      });
     }
     if (volby.podleBarev) objekty = await podleBarev(zdroj, sitSkupiny, volby.castiPodleBarev);
     else {
@@ -74,6 +88,14 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       if (volby.sloucit && uzly.length > 1 && !zdroj[0].barevne) objekty[0].barva = uzly[0].barva;
     }
     objekty = objekty.filter(o => o.sit.idx.length);
+    // shluky dotýkajících se / překrývajících se objektů (obálky sítí) – 3MF je zapíše jako jeden objekt z dílů
+    {
+      const ob = objekty.map(o => M.obalkaSite(o.sit));
+      const rodic = objekty.map((o, i) => i), koren = i => rodic[i] === i ? i : (rodic[i] = koren(rodic[i]));
+      for (let i = 0; i < ob.length; i++) for (let j = i + 1; j < ob.length; j++)
+        if ([0, 1, 2].every(k => ob[i].min[k] <= ob[j].max[k] + 1e-3 && ob[i].max[k] >= ob[j].min[k] - 1e-3)) rodic[koren(i)] = koren(j);
+      objekty.forEach((o, i) => { o.shluk = koren(i); o.nazevShluku = volby.nazev || 'Sestava'; });
+    }
     if (!objekty.length) throw new Error('výsledek je prázdný (díry ubraly všechno?)');
     const trojuhelniku = objekty.reduce((s, o) => s + o.sit.idx.length / 3, 0);
     const f = volby.format || 'stl', nazev = volby.nazev || 'model';
@@ -84,7 +106,8 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       mime = 'application/zip'; pripona = '.zip';
     } else if (f === 'stl') { data = M.stl.zapis(objekty.map(o => o.sit), nazev); mime = 'model/stl'; }
     else if (f === 'obj') {
-      const j = jmeno(nazev);
+      // bez mezer: mtllib je seznam oddělený mezerami (mnohé čtečky by „Projekt 1.mtl“ rozdělily)
+      const j = jmeno(nazev).replace(/\s+/g, '_');
       data = await M.zip.zapis([{ nazev: j + '.obj', data: M.obj.zapis(objekty, hlavicka, j + '.mtl') }, { nazev: j + '.mtl', data: M.obj.mtl(objekty, hlavicka) }]);
       mime = 'application/zip'; pripona = '.zip';
     } else if (f === '3mf') { data = await M.trojmf.zapis(objekty); mime = 'model/3mf'; }
@@ -130,8 +153,25 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
   M.uzlyZImportu = function (objekty, dok, kam = [0, 0], format = '') {
     const ob = { min: [Infinity, Infinity, Infinity], max: [-Infinity, -Infinity, -Infinity] };
     for (const o of objekty) { const b = M.obalkaSite(o.sit); for (let k = 0; k < 3; k++) { ob.min[k] = Math.min(ob.min[k], b.min[k]); ob.max[k] = Math.max(ob.max[k], b.max[k]); } }
+    // model mimo rozsah 0,01 mm – 10 m (export v µm nebo v metrech): převést po tisících, jinak by rozměr
+    // v inspektoru nesouhlasil se sítí (rozměr se omezí, síť ne) – volající o tom dá vědět (uzly.meritko)
+    let f = 1;
+    const vel = Math.max(...[0, 1, 2].map(k => ob.max[k] - ob.min[k]));
+    if (!objekty.some(o => o.step) && isFinite(vel) && vel > 0) {
+      while (vel * f > 10000) f /= 1000;
+      while (vel * f < 0.1) f *= 1000;
+    }
+    if (f !== 1) {
+      for (const o of objekty) {
+        const p = new Float32Array(o.sit.poz.length);
+        for (let i = 0; i < p.length; i++) p[i] = o.sit.poz[i] * f;
+        o.sit = { poz: p, idx: o.sit.idx };
+      }
+      for (let k = 0; k < 3; k++) { ob.min[k] *= f; ob.max[k] *= f; }
+    }
     const posun = [kam[0] - (ob.min[0] + ob.max[0]) / 2, kam[1] - (ob.min[1] + ob.max[1]) / 2, -ob.min[2]];
     const uzly = [];
+    uzly.meritko = f;
     let d = dok;
     for (const o of objekty) {
       const b = M.obalkaSite(o.sit);

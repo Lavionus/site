@@ -242,7 +242,8 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
         } else occtMistni(z).then(resolve, reject);
       });
       const hotovo = () => { if (occtStav !== 'pripraveno') { occtStav = 'pripraveno'; M.vysli('occt', 'pripraveno'); } };
-      p.then(hotovo, hotovo);
+      // po pádu jádra (stav „nenačteno“, worker se načte znovu) ho chyba nesmí přepsat na „připraveno“
+      p.then(hotovo, () => { if (occtStav !== 'nenacteno') hotovo(); });
       return p;
     }
 
@@ -291,10 +292,27 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
         await pripravOcct(u);
         const e = M.maticeUzlu(u).elements;
         const matice = [e[0], e[4], e[8], e[12], e[1], e[5], e[9], e[13], e[2], e[6], e[10], e[14]];
-        if (M.maPrirozene(u)) { const r = await pozadej(u, 'sit'); polozky.push({ uzel: u, matice, sit: { poz: r.poz, idx: r.idx } }); }
+        // díly jako síť (závity, kola…); díra pro šroub jde přesně (válce, kužel)
+        if (M.maPrirozene(u) && u.druh !== 'diraSroub' && u.druh !== 'sloupek') { const r = await pozadej(u, 'sit'); polozky.push({ uzel: u, matice, sit: { poz: r.poz, idx: r.idx } }); }
         else polozky.push({ uzel: u, matice, site: await sitePro(u) });
       }
-      return occt({ typ: 'step', polozky }, [...M.zdrojeUzlu(uzly)]);
+      M.posledniStepVarovani = '';
+      try { return await occt({ typ: 'step', polozky }, [...M.zdrojeUzlu(uzly)]); }
+      catch (e) {
+        if (/paměti/.test(e.message)) throw e;
+        // přesné sjednocení nejde (písmo, plošky): skupiny a díly jako síť z manifoldu – soubor vznikne,
+        // jen ty části nebudou přesné plochy
+        const zaloha = [];
+        for (const p of polozky) {
+          if (p.sit || (p.uzel.druh !== 'skupina' && !M.maPrirozene(p.uzel))) { zaloha.push(p); continue; }
+          const r = await pozadejSOcct(p.uzel, 'sit');
+          zaloha.push({ uzel: p.uzel, matice: p.matice, sit: { poz: r.poz, idx: r.idx } });
+        }
+        const text = await occt({ typ: 'step', polozky: zaloha }, [...M.zdrojeUzlu(uzly)]);
+        M.posledniStepVarovani = 'Některé skupiny se přesně sjednotit nepodařilo (třeba písmo vnořené do tělesa) – ve STEP jsou jako síť trojúhelníků.';
+        console.warn('Modelář: STEP přes síť –', e.message);
+        return text;
+      }
     };
     M.occtImportStep = text => occt({ typ: 'importStep', text });
     M.occtStav = () => occtStav;

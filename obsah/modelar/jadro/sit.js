@@ -180,5 +180,26 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     return g;
   };
 
+  /** Leží bod uvnitř uzavřené sítě? Paprsek ve směru +X (mírně šikmo, ať netrefí hranu) a sudost průsečíků. */
+  M.bodVSiti = function (sit, q) {
+    const p = sit.poz, t = sit.idx, d = [1, 0.000123, 0.000071];
+    let n = 0;
+    for (let i = 0; i < t.length; i += 3) {
+      const a = t[i] * 3, b = t[i + 1] * 3, c = t[i + 2] * 3;
+      const e1 = [p[b] - p[a], p[b + 1] - p[a + 1], p[b + 2] - p[a + 2]], e2 = [p[c] - p[a], p[c + 1] - p[a + 1], p[c + 2] - p[a + 2]];
+      const h = [d[1] * e2[2] - d[2] * e2[1], d[2] * e2[0] - d[0] * e2[2], d[0] * e2[1] - d[1] * e2[0]];
+      const det = e1[0] * h[0] + e1[1] * h[1] + e1[2] * h[2];
+      if (Math.abs(det) < 1e-14) continue;
+      const f = 1 / det, s0 = [q[0] - p[a], q[1] - p[a + 1], q[2] - p[a + 2]];
+      const u = f * (s0[0] * h[0] + s0[1] * h[1] + s0[2] * h[2]);
+      if (u < 0 || u > 1) continue;
+      const qq = [s0[1] * e1[2] - s0[2] * e1[1], s0[2] * e1[0] - s0[0] * e1[2], s0[0] * e1[1] - s0[1] * e1[0]];
+      const v = f * (d[0] * qq[0] + d[1] * qq[1] + d[2] * qq[2]);
+      if (v < 0 || u + v > 1) continue;
+      if (f * (e2[0] * qq[0] + e2[1] * qq[1] + e2[2] * qq[2]) > 0) n++;
+    }
+    return n % 2 === 1;
+  };
+
   if (typeof module !== 'undefined') module.exports = M;
 })(MDL);

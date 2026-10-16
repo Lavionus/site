@@ -512,6 +512,12 @@ const KATALOG_SEKCE = [
         ]
       },
       {
+        "soubor": "obsah/potraviny.html",
+        "nazev": "🥗 Deník jídla",
+        "tagy": ["kalorie", "kalorické tabulky", "jídelníček", "výživa", "makroživiny", "bílkoviny", "čárový kód", "EAN", "skenování",
+                 "hubnutí", "potraviny", "nutriční hodnoty", "vitaminy", "recepty", "pitný režim", "hmotnost", "Open Food Facts"]
+      },
+      {
         "soubor": "obsah/bmi_calc.html",
         "nazev": "🩺 BMI & kalorie",
         "tagy": [

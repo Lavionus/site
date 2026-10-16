@@ -53,7 +53,9 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
           <input id="inspNazev" class="nazev" type="text" maxlength="80" aria-label="Název tělesa">
           <span class="druh">${esc(t.nazev)}</span></div>`;
         skupinaPoli = 'Rozměr';
-        h += `<div class="skupina"><div class="nadpis">Rozměry</div><div class="trojice">`
+        // natočené těleso: rozměry jsou podél jeho vlastních os (poloha je ve světě) – říct to
+        const natocene = u.rotace && u.rotace.some(x => Math.abs(x % 360) > 1e-6);
+        h += `<div class="skupina"><div class="nadpis">Rozměry${natocene ? ' <span class="pozn" title="Těleso je natočené: šířka, hloubka a výška se měří podél jeho vlastních os, ne podél os desky">(osy tělesa)</span>' : ''}</div><div class="trojice">`
           + OSY.map((o, i) => cislo(o, u => u.rozmer[i], v => zmenRozmer(i, v), { krok: 1, jednotka: '', min: 0.01, max: 10000 })).join('')
           + `</div></div>`;
         skupinaPoli = 'Poloha';
@@ -79,10 +81,11 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
               <button type="button" class="tl" data-operace="prunik" title="Jen společná část plných částí">∩ Průnik</button></div>
             <label class="zaskrt"><input type="checkbox" id="inspBarevne"> Barevná (zachovat barvy částí)</label></div>`;
           if (u.occt) {
-            const o = u.occt, n = o.operace === 'skorepina' ? (o.plochy.length ? `otevřené plochy: ${o.plochy.length}` : 'uzavřená') : `hrany: ${o.hrany.length}`;
-            const co = { zaobleni: 'Zaoblení r', srazeni: 'Sražení', skorepina: 'Skořepina, stěna' }[o.operace];
+            const o = u.occt, n = o.operace === 'skorepina' ? (o.plochy.length ? `otevřené plochy: ${o.plochy.length}` : 'uzavřená')
+              : o.operace === 'odsazeni' ? (o.hodnota > 0 ? 'zvětšené' : 'zmenšené') : `hrany: ${o.hrany.length}`;
+            const co = { zaobleni: 'Zaoblení r', srazeni: 'Sražení', skorepina: 'Skořepina, stěna', odsazeni: 'Odsazení stěn' }[o.operace];
             h += `<div class="skupina"><div class="nadpis">Přesná úprava <span class="pozn">(OpenCascade)</span></div>
-              <div class="pozn" id="inspOcct">${co} ${M.mm(o.hodnota)} mm · ${n}</div>
+              <div class="pozn" id="inspOcct">${co} ${o.operace === 'odsazeni' && o.hodnota > 0 ? '+' : ''}${M.mm(o.hodnota, 2)} mm · ${n}</div>
               <div class="role"><button type="button" class="tl" id="inspOcctUpravit">✎ Upravit…</button>
               <button type="button" class="tl" id="inspOcctOdebrat" title="Vrátit těleso bez úpravy">✕ Odebrat úpravu</button></div></div>`;
           }
@@ -103,6 +106,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
                 : cislo(d.popis, u => u.param[d.klic], v => zmenParam(d.klic, v),
                   { krok: d.krok, des: d.cele ? 0 : 2, jednotka: d.jednotka || '', min: d.min, max: d.max })).join('')
             + (u.druh === 'skica' ? `<button type="button" class="tl siroke-tl" id="inspSkica">✏️ Upravit skicu</button>` : '')
+            + (u.druh === 'kolo' && u.param.druh !== 'vnitrni' ? `<button type="button" class="tl siroke-tl" id="inspProtikolo" title="Druhé kolo ve správné osové vzdálenosti, natočené tak, aby zuby zapadly">⚙ Přidat protikolo…</button>` : '')
             + `</div>`;
         }
       } else {
@@ -175,10 +179,28 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
         zmenParam(el.dataset.param, el.type === 'checkbox' ? el.checked : el.value)));
       const tlSkica = karta.querySelector('#inspSkica');
       if (tlSkica) tlSkica.onclick = () => M.otevriSkicar(M.app.vyber[0]);
+      const tlKolo = karta.querySelector('#inspProtikolo');
+      if (tlKolo) tlKolo.onclick = async () => {
+        const kolo = M.vybraneUzly()[0];
+        const t = await Dialog.zeptej('Počet zubů protikola (převod = zuby protikola / zuby tohoto kola):', String(kolo.param.zubu));
+        if (t === null) return;
+        const z = M.prectiCislo(t);
+        if (!(z >= 6 && z <= 300)) { Dialog.chyba('Počet zubů musí být 6 až 300.'); return; }
+        const ted = M.najdiUzel(M.app.dok, kolo.id);
+        const k2 = ted && M.protikolo(ted, z, M.app.dok);
+        if (!k2) { Dialog.chyba('Protikolo jde jen ke kolu s vnějším ozubením, které není nerovnoměrně roztažené.'); return; }
+        const o2 = M.obalkaUzlu(k2);
+        const narazi = M.app.dok.uzly.filter(x => x.id !== ted.id && !x.skryto).some(x => { const b = M.obalkaUzlu(x); return [0, 1, 2].every(i => o2.min[i] < b.max[i] - 1e-3 && o2.max[i] > b.min[i] + 1e-3); });
+        M.zmenDokument(M.pridejUzly(M.app.dok, [k2]), 'Přidat protikolo');
+        M.nastavVyber([k2.id]);
+        const m = ted.param.modul * M.meritkoUzlu(ted)[0];
+        Dialog.info(`Protikolo ${Math.round(z)} zubů v osové vzdálenosti ${M.mm(m * (ted.param.zubu + Math.round(z)) / 2, 2)} mm, zuby zapadají (převod ${M.mm(Math.round(z) / ted.param.zubu, 3)}).`
+          + (narazi ? ' Pozor: kolem kola není volné místo – protikolo se překrývá s jiným tělesem, posuň ho.' : ''));
+      };
       karta.querySelectorAll('[data-operace]').forEach(b => b.onclick = () => M.upravVybrane({ operace: b.dataset.operace }, b.dataset.operace === 'prunik' ? 'Průnik' : 'Sjednocení'));
       const tlOcct = karta.querySelector('#inspOcctUpravit');
       if (tlOcct) {
-        tlOcct.onclick = () => M.otevriUpravuHran(u.occt.operace);
+        tlOcct.onclick = () => u.occt.operace === 'odsazeni' ? M.otevriOdsazeni() : M.otevriUpravuHran(u.occt.operace);
         karta.querySelector('#inspOcctOdebrat').onclick = () => M.odeberUpravu(u.id);
       }
       const barvySouboru = karta.querySelector('#inspBarvySouboru');

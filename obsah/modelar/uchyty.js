@@ -461,6 +461,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
           hotovo = true;
           const st = M.prectiCislo(inp.value);
           zavri();
+          if (!isFinite(st) && inp.value.trim()) M.oznamPole(null, `„${inp.value.trim()}“ není úhel – piš třeba 45, −90 nebo 360/8.`);
           if (isFinite(st) && Math.abs(st) > 1e-9) M.zmenDokument(M.otocUzly(M.app.dok, t.ids, t.osa.toArray(), st, t.stred.toArray()), 'Otočení');
         }
       });
@@ -487,6 +488,12 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       if (e.button !== 0) return;
       const h = uchyty.find(x => x.prvek === e.target || x.prvek.contains(e.target));
       if (!h) return;
+      // prst na jiném (nevybraném) tělese pod velkou šipkou otáčení: klepnutí patří tomu tělesu – vybrat ho
+      if (e.pointerType === 'touch' && S.telesa && S.telesa.zasah) {
+        const r = S.renderer.domElement.getBoundingClientRect();
+        const z = S.telesa.zasah(e.clientX - r.left, e.clientY - r.top);
+        if (z && !M.app.vyber.includes(z.id)) { e.preventDefault(); e.stopPropagation(); M.nastavVyber([z.id]); return; }
+      }
       // rozepsané pole inspektoru potvrdit hned (preventDefault by mu vzal blur a hodnota by pak přepsala tažení)
       if (document.activeElement && document.activeElement.matches('input, textarea')) document.activeElement.blur();
       zacni(h, e);
@@ -506,7 +513,8 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     }, { passive: false });
     svg.addEventListener('contextmenu', e => e.preventDefault());
 
-    M.na('kamera', kresli);
+    const zmenaSnimku = M.hlidacSnimku(S);
+    M.na('kamera', () => { if (zmenaSnimku([najeto], !!tah)) kresli(); });
     M.na('vyber', () => M.prekresli());
     M.na('dokument', () => M.prekresli());
     M.na('rovina', () => M.prekresli());

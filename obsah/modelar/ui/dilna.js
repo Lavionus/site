@@ -102,6 +102,22 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       return b ? { bod: [b.x, b.y, 0], druh: 'deska' } : null;
     }
 
+    /** Vůle (nejmenší vzdálenost) mezi dvěma vybranými tělesy – výsledek jako měření v panelu Měření. */
+    M.zmerVuli = function () {
+      const v = M.vybraneUzly().filter(u => !u.skryto);
+      if (v.length !== 2) { Dialog.chyba('Vyber právě dvě tělesa (Shift + klik), mezi kterými chceš změřit vůli.'); return; }
+      const sa = T.svetovaSit(v[0].id), sb = T.svetovaSit(v[1].id);
+      if (!sa || !sb) { Dialog.info('Tělesa se ještě počítají – zkus to za chvíli.'); return; }
+      const oa = M.obalkaUzlu(v[0]), ob = M.obalkaUzlu(v[1]);
+      if (M.sitePrekryvaji(sa, sb, oa, ob)) { Dialog.info(`„${v[0].nazev}“ a „${v[1].nazev}“ se překrývají – vůle je záporná (při tisku splynou).`); return; }
+      const r = M.vuleSiti(sa, sb);
+      if (!isFinite(r.d)) return;
+      if (!oknoMer.open) M.otevriMereni();
+      mer.vysledky.push({ typ: 'vzdalenost', body: [r.a, r.b], text: `vůle ${fmt(r.d)} mm`, detail: `„${v[0].nazev}“ ↔ „${v[1].nazev}“ (nejmenší vzdálenost)` });
+      obnovMereni(); kresli(); M.prekresli();
+      Dialog.info(`Vůle mezi „${v[0].nazev}“ a „${v[1].nazev}“: ${fmt(r.d)} mm`);
+    };
+
     function vyhodnot(typ, body) {
       const b = body.map(x => x.bod);
       if (typ === 'vzdalenost') {
@@ -236,7 +252,8 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     });
 
     function kresli() { kresliPoznamky(); kresliMereni(); }
-    M.na('kamera', kresli);
+    const zmenaSnimku = M.hlidacSnimku(S);
+    M.na('kamera', () => { if (zmenaSnimku([mer, mer.body.length, mer.vysledky.length, ukazPoznamky, M.poznamky(M.app.dok)])) kresli(); });
     // jiný projekt: měření z předchozího nepatří k ničemu
     M.na('dokument', e => { if (e && e.popis === 'Otevřít') { mer = { body: [], vysledky: [] }; if (oknoMer.open) obnovMereni(); } kresli(); });
     // Esc nebo jiný režim ukončí měření (výsledky zůstanou do příštího otevření)
@@ -279,7 +296,11 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     }
     // i nově vzniklá tělesa (snímek se kreslí před událostí kamera – nový materiál chce další snímek)
     M.na('kamera', () => { if (rezAktivni && aplikujRez()) M.prekresli(); });
-    M.na('dokument', () => { if (rezAktivni) M.prekresli(); });
+    M.na('dokument', e => {
+      // jiný projekt: řez pohledem i skryté poznámky patřily k tomu starému
+      if (e && e.popis === 'Otevřít') { if (rezAktivni) zavriRez(); ukazPoznamky = true; $('rpPoloha').dataset.osa = ''; return; }
+      if (rezAktivni) M.prekresli();
+    });
     function obnovRez() {
       const osa = oknoRp.querySelector('input[name="rpOsa"]:checked').value, i = 'xyz'.indexOf(osa);
       const ob = M.app.dok.uzly.length ? M.obalkaVice(M.app.dok.uzly.filter(u => !u.skryto)) : { min: [-50, -50, 0], max: [50, 50, 50] };

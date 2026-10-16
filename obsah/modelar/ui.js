@@ -122,9 +122,17 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     // na úzké obrazovce panel překrývá plochu, proto je schovaný a ukazuje se tlačítkem
     $('btnPanel').setAttribute('aria-expanded', 'false');
     $('btnPanel').setAttribute('aria-controls', 'panelBocni');
-    $('btnPanel').onclick = () => document.body.classList.toggle('panel-ukazany');
+    // telefon: panel se vysouvá přes plátno (panel-ukazany); střední šířka: panel je vedle plátna a jde schovat (panel-skryty)
+    const telefon = () => matchMedia('(max-width: 760px)').matches;
+    $('btnPanel').onclick = () => {
+      if (telefon()) document.body.classList.toggle('panel-ukazany');
+      else { document.body.classList.toggle('panel-skryty'); window.dispatchEvent(new Event('resize')); }
+    };
     // stav tlačítka podle třídy těla (panel schovává i přidání tvaru a tah z knihovny)
-    new MutationObserver(() => $('btnPanel').setAttribute('aria-expanded', String(document.body.classList.contains('panel-ukazany'))))
+    const stavPanelu = () => $('btnPanel').setAttribute('aria-expanded', String(telefon() ? document.body.classList.contains('panel-ukazany') : !document.body.classList.contains('panel-skryty')));
+    stavPanelu();
+    matchMedia('(max-width: 760px)').addEventListener('change', stavPanelu);
+    new MutationObserver(stavPanelu)
       .observe(document.body, { attributes: true, attributeFilter: ['class'] });
 
     // --- tělesa, výběr, knihovna, inspektor, seznam (etapa 2)

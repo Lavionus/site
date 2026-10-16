@@ -17,6 +17,16 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
   const HODNOTA = { zaobleni: 'Poloměr', srazeni: 'Sražení', skorepina: 'Tloušťka stěny' };
   const VYCHOZI = { zaobleni: 2, srazeni: 1, skorepina: 1.6 };
 
+  /** Naposledy použitá velikost úpravy (pamatuje si prohlížeč), jinak výchozí. */
+  const KLIC_HODNOT = 'modelar_occt_hodnoty';
+  function posledni(op) {
+    try { const v = JSON.parse(localStorage.getItem(KLIC_HODNOT) || '{}')[op]; if (v > 0 && v < 1000) return v; } catch (e) { /* bez úložiště */ }
+    return VYCHOZI[op];
+  }
+  function zapamatuj(op, v) {
+    try { const o = JSON.parse(localStorage.getItem(KLIC_HODNOT) || '{}'); o[op] = v; localStorage.setItem(KLIC_HODNOT, JSON.stringify(o)); } catch (e) { /* bez úložiště */ }
+  }
+
   M.vytvorOcctUI = function (S) {
     const okno = $('oknoOcct'), info = $('occtInfo');
     const svg = document.createElementNS(NS, 'svg');
@@ -34,8 +44,10 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     const ramPro = (u, op) => maVrstvu(u, op) ? M.bezUpravy(u) : M.obalUpravou(u, null);
     const matice = () => M.maticeUzlu(ed.ram);
 
-    function zavri() {
+    /** Zavře panel; dokoncit = rozpracovaný výpočet (klik těsně před „Hotovo“) se po doběhnutí ještě zapíše. */
+    function zavri(dokoncit = false) {
       if (!ed) { if (okno.open) okno.close(); return; }      // panel bez úpravy musí jít zavřít vždy
+      if (dokoncit && ed.pocita) { ed.dokoncit = true; Dialog.info('⏳ Poslední úprava se ještě dopočítá a zapíše.'); }
       ed = null; token++;
       svg.hidden = true; svg.innerHTML = '';
       if (okno.open) okno.close();
@@ -46,10 +58,11 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     // Hrana za stěnou (vnitřní hrana skořepiny za přední stěnou) se kreslí tečkovaně a nejde na ni
     // kliknout – jinak by klik na viditelnou hranu mohl vybrat tu skrytou těsně za ní. Viditelnost se
     // zjišťuje paprsky z kamery (vzorky podél hran); počítá se až po zastavení kamery.
-    let vid = null, vidKlic = '', vidCasovac = 0;
+    let vid = null, vidKlic = '', vidCasovac = 0, vidPlan = '';
     let obrHran = [], najeta = null;          // viditelné úseky na obrazovce {i, body: [[x, y, hloubka]]} pro výběr kliknutím
     /** Hrana pod kurzorem: nejbližší viditelný úsek (do 8 px); hrany těsně u sebe (vnější a vnitřní roh
-        skořepiny) rozhodne vzdálenost od kamery – blíž je ta, kterou uživatel vidí navrchu. */
+        skořepiny, čáry přes sebe) rozhodne vzdálenost od kamery – blíž je ta, kterou uživatel vidí navrchu. */
+    const prahZasahu = typeof matchMedia === 'function' && matchMedia('(pointer: coarse)').matches ? 16 : 8;     // prst je širší než myš
     function hranaVBode(x, y) {
       const kand = [];
       for (const u of obrHran) {
@@ -61,13 +74,12 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
           const d = Math.hypot(ax + dx * t - x, ay + dy * t - y);
           if (d < nej) { nej = d; hl = ah + (bh - ah) * t; }
         }
-        if (nej <= 8) kand.push({ i: u.i, d: nej, hl });
+        if (nej <= prahZasahu) kand.push({ i: u.i, d: nej, hl });
       }
       if (!kand.length) return null;
-      const dMin = Math.min(...kand.map(k => k.d));
-      const blizke = kand.filter(k => k.d <= dMin + 3);
-      blizke.sort((a, b) => a.hl - b.hl || a.d - b.d);
-      return blizke[0].i;
+      // rozhoduje vzdálenost od kurzoru; skoro stejně daleko (čáry přes sebe) = ta blíž ke kameře
+      kand.sort((a, b) => Math.abs(a.d - b.d) <= 0.75 ? a.hl - b.hl : a.d - b.d);
+      return kand[0].i;
     }
     /** Body hrany zhuštěné na ~16 úseků (rovná hrana má jen dva body – viditelnost by šla jen po celých hranách). */
     const husteBody = new WeakMap();
@@ -86,13 +98,15 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       b = o; husteBody.set(h, b);
       return b;
     }
+    // totožnost: těleso, jeho hrany a geometrie – viditelnost jiného tělesa (stejné indexy hran!) neplatí ani chvíli
+    let vidTotoznost = '';
+    const totoznost = () => ed ? ed.id + ':' + (ed.hrany ? ed.hrany.length : 0) + ':' + (ed.plochy ? ed.plochy.length : 0) + ':' + M.klicGeometrie(M.najdiUzel(M.app.dok, ed.id) || ed.puvodni) : '';
     const klicPohledu = () => {
       const k = S.kamera.aktivni();
-      return k.matrixWorld.elements.map(x => x.toFixed(4)).join(',') + '|' + k.projectionMatrix.elements[0].toFixed(5) + '|'
-        + (ed ? ed.id + ':' + (ed.hrany ? ed.hrany.length : 0) + ':' + (ed.plochy ? ed.plochy.length : 0) + ':' + M.klicGeometrie(M.najdiUzel(M.app.dok, ed.id) || ed.puvodni) : '');
+      return k.matrixWorld.elements.map(x => x.toFixed(4)).join(',') + '|' + k.projectionMatrix.elements[0].toFixed(5) + '|' + totoznost();
     };
     function spocitejViditelnost() {
-      vidCasovac = 0;
+      vidCasovac = 0; vidPlan = '';
       if (!ed || !S.telesa || !S.telesa.zakryte) return;
       const A = matice();
       const ob = M.obalkaUzlu(M.najdiUzel(M.app.dok, ed.id) || ed.puvodni);
@@ -115,7 +129,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       // hrana → seřazené vzorky [index bodu, zakryto]
       const v = new Map();
       kam.forEach(([i, q], j) => { if (!v.has(i)) v.set(i, []); v.get(i).push([q, z[j]]); });
-      vid = v; vidKlic = klicPohledu();
+      vid = v; vidKlic = klicPohledu(); vidTotoznost = totoznost();
       kresli();
     }
     /** Je bod q hrany i zakrytý (podle nejbližšího vzorku)? */
@@ -130,7 +144,10 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     function kresli() {
       if (!ed) return;
       svg.innerHTML = '';
-      if (klicPohledu() !== vidKlic && !vidCasovac) vidCasovac = setTimeout(spocitejViditelnost, 140);
+      if (vid && vidTotoznost !== totoznost()) vid = null;      // jiné těleso nebo nové hrany: do přepočtu vše viditelné
+      // až po zastavení kamery (každá změna pohledu odloží výpočet znovu)
+      const kp = klicPohledu();
+      if (kp !== vidKlic && kp !== vidPlan) { clearTimeout(vidCasovac); vidPlan = kp; vidCasovac = setTimeout(spocitejViditelnost, 140); }
       const A = matice(), v = new THREE.Vector3();
       const naObr = (x, y, z) => S.naObrazovku(v.set(x, y, z).applyMatrix4(A));
       const oko = S.kamera.aktivni().position;
@@ -224,11 +241,52 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       const bylo = mnozina.has(i);
       if (bylo) mnozina.delete(i); else mnozina.add(i);
       if (mnozina === ed.vybraneP && !bylo) ed.uzavrena = false;
+      // poslední otevřená plocha zavřená: skořepina zůstane jako uzavřená dutina (ne celá pryč)
+      const naDutinu = mnozina === ed.vybraneP && bylo && !mnozina.size;
+      if (naDutinu) { ed.uzavrena = true; Dialog.info('Žádná plocha není otevřená – skořepina je teď uzavřená dutina. Celou ji zruší „Zrušit vše“ nebo Odebrat úpravu v inspektoru.'); }
       kresli();
-      aplikuj(() => { if (bylo) mnozina.add(i); else mnozina.delete(i); });
+      aplikuj(() => { if (bylo) mnozina.add(i); else mnozina.delete(i); if (naDutinu) ed.uzavrena = false; });
     }
     M.occtPrepniHranu = i => { if (ed && ed.hrany) prepni(ed.vybraneH, i); };
     M.occtPrepniPlochu = i => { if (ed && ed.plochy) prepni(ed.vybraneP, i); };
+
+    /** Klik na plochu v režimu hran: přidá všechny hrany, které leží v její rovině (obrys plochy);
+        když už jsou vybrané všechny, odebere je. Jen rovné plochy. */
+    M.klikObrysPlochy = async function (zasah) {
+      if (!ed || !ed.hrany || ed.pocita || !zasah || zasah.id !== ed.id || ed.op === 'skorepina') return;
+      const sit = S.telesa.svetovaSit(ed.id);
+      if (!sit || zasah.trojuhelnik == null) return;
+      // rovná plocha? sousední trojúhelníky ve stejné rovině kolem bodu kliknutí
+      const n = zasah.normala.clone().normalize(), b = zasah.bod;
+      const oblast = M.oblastPlochy ? M.oblastPlochy(sit, zasah.trojuhelnik) : null;
+      if (!oblast || !oblast.oblast.length) { info.textContent = '⚠ Obrys jde vybrat jen u rovné plochy – na zakřivené klikej na jednotlivé hrany.'; return; }
+      const A = matice(), v = new THREE.Vector3();
+      const ob = M.obalkaUzlu(M.najdiUzel(M.app.dok, ed.id) || ed.puvodni);
+      const tol = Math.max(0.01, 1e-4 * Math.hypot(ob.max[0] - ob.min[0], ob.max[1] - ob.min[1], ob.max[2] - ob.min[2]));
+      const vRovine = [];
+      ed.hrany.forEach((h, i) => {
+        for (let j = 0; j < h.body.length; j += 3) {
+          v.set(h.body[j], h.body[j + 1], h.body[j + 2]).applyMatrix4(A);
+          if (Math.abs(v.clone().sub(b).dot(n)) > tol) return;
+        }
+        vRovine.push(i);
+      });
+      if (!vRovine.length) { info.textContent = '⚠ Na téhle ploše nejsou hrany původního tělesa – klikni přímo na hranu.'; return; }
+      const pred = new Set(ed.vybraneH);
+      if (vRovine.every(i => ed.vybraneH.has(i))) vRovine.forEach(i => ed.vybraneH.delete(i));
+      else {
+        const n = new Set([...ed.vybraneH, ...vRovine]).size;
+        if (n > 60 && !await mnohoHran(n)) return;
+        vRovine.forEach(i => ed.vybraneH.add(i));
+      }
+      kresli(); aplikuj(() => { ed.vybraneH = pred; });
+    };
+    /** Hodně hran (plošky skici, oblouk): přesný výpočet může trvat minuty – zeptat se dopředu. */
+    async function mnohoHran(n) {
+      const e0 = ed;
+      const ano = await Dialog.potvrd(`Vybráno ${n} hran – přesný výpočet může trvat i několik minut (plošky zakřivené plochy). Pokračovat?`);
+      return ano && ed === e0 && !!ed;
+    }
 
     /** Klik na stěnu tělesa v režimu 'plochy' (z vyber.js). */
     M.klikOcct = function (zasah) {
@@ -255,14 +313,22 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       if (!ed) return;
       const op = ed.op;
       $('occtHodnotaPopis').textContent = HODNOTA[op];
-      $('occtNadpis').textContent = '◠ ' + POPIS[op];
+      $('occtNadpis').textContent = { zaobleni: '◠ ', srazeni: '◿ ', skorepina: '▢ ' }[op] + POPIS[op];
       $('occtVyberHran').hidden = op === 'skorepina';
       $('occtVyberPloch').hidden = op !== 'skorepina';
       $('occtUzavrena').setAttribute('aria-pressed', ed.uzavrena ? 'true' : 'false');
       // dokud jádro nenačte hrany/plochy, tlačítka nic neumějí – vypnout (klik by se ztratil)
       $('occtUzavrena').disabled = !ed.plochy; $('occtVse').disabled = $('occtNic').disabled = !ed.hrany;
       document.querySelectorAll('[data-hrany]').forEach(b => { b.disabled = !ed.hrany; });
-      if (ed.pocita) { info.textContent = '⏳ počítám přesně…'; return; }
+      if (ed.pocita) {
+        if (!ed.pocitaOd) ed.pocitaOd = Date.now();
+        const sek = Math.round((Date.now() - ed.pocitaOd) / 1000);
+        info.textContent = '⏳ počítám přesně…' + (sek >= 2 ? ` ${sek} s` : '');
+        // u dlouhého výpočtu běží čas, ať je vidět, že se něco děje
+        clearTimeout(ed.casovacInfo); ed.casovacInfo = setTimeout(() => { if (ed && ed.pocita) obnovInfo(); }, 1000);
+        return;
+      }
+      if (ed.pocitaOd) { ed.pocitaOd = 0; clearTimeout(ed.casovacInfo); }
       if (ed.chyba) { info.textContent = '⚠ ' + ed.chyba; return; }
       if (op === 'skorepina') {
         if (!ed.plochy) { info.textContent = '⏳ hledám rovné plochy…'; return; }
@@ -275,7 +341,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
         if (!ed.hrany) { info.textContent = '⏳ hledám hrany…'; return; }
         const n = ed.vybraneH.size;
         info.textContent = n ? `Upraveno hran: ${n} z ${ed.hrany.length}. Klik na další hranu ji přidá, na upravenou ji vrátí.`
-          : 'Nastav velikost a klikni na hranu ve scéně – úprava se hned provede.';
+          : 'Nastav velikost a klikni na hranu ve scéně – úprava se hned provede. Klik na rovnou plochu vybere celý její obrys.';
       }
     }
 
@@ -346,34 +412,38 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       const upravit = x => maVrstvu(x, op) ? M.normalizujUzel(Object.assign({}, x, { occt })) : M.obalUpravou(x, occt);
       const novy = upravit(akt);
       ed.pocita = true; obnovInfo();
+      const e = ed;            // panel se mohl během výpočtu zavřít („Hotovo“): rozpracovaná úprava se pak ještě zapíše
+      const platny = () => t === token ? verze === e.verze : !!e.dokoncit && verze === e.verze;
       try { await M.occtOver(novy); }
-      catch (e) {
-        if (t !== token || verze !== ed.verze) return;
-        ed.pocita = false;
+      catch (err) {
+        if (!platny()) return;
+        e.pocita = false;
+        if (t !== token) { Dialog.chyba(POPIS[op] + ': ' + String(err.message || err)); return; }
         if (vratit) vratit();
-        ed.chyba = String(e.message || e);
-        const ted2 = M.najdiUzel(M.app.dok, ed.id);
-        if (ted2 && ted2 !== ed.puvodni) { const ch = ed.chyba; srovnejSUzlem(ted2); ed.chyba = ch; }
+        e.chyba = String(err.message || err);
+        const ted2 = M.najdiUzel(M.app.dok, e.id);
+        if (ted2 && ted2 !== e.puvodni) { const ch = e.chyba; srovnejSUzlem(ted2); e.chyba = ch; }
         obnovInfo(); kresli();
         return;
       }
-      if (t !== token || verze !== ed.verze) return;      // mezitím přišel další klik – platí ten
-      ed.pocita = false;
+      if (!platny()) return;      // mezitím přišel další klik – platí ten
+      e.pocita = false;
+      const otevreny = t === token;
       // těleso se během výpočtu mohlo posunout nebo přebarvit (tvar stejný): úprava na jeho aktuální stav
-      const ted = M.najdiUzel(M.app.dok, ed.id);
-      if (!ted) { zavri(); return; }
+      const ted = M.najdiUzel(M.app.dok, e.id);
+      if (!ted) { if (otevreny) zavri(); return; }
       // mezitím Zpět/Znovu nebo jiný tvar: výsledek nepatří k aktuálnímu stavu – zahodit (nepřepsat Zpět)
       if (M.historie.index < krokHistorie || M.klicGeometrie(ramPro(ted, op)) !== M.klicGeometrie(ramPro(akt, op))) {
-        if (vratit) vratit();
-        srovnejSUzlem(ted);
+        if (otevreny) { if (vratit) vratit(); srovnejSUzlem(ted); }
         return;
       }
       const vysledek = ted === akt ? novy : upravit(ted);
-      ed.puvodni = vysledek;
+      e.puvodni = vysledek;
+      zapamatuj(op, h);
       const dok = M.app.dok;
       M.zmenDokument(Object.assign({}, dok, { uzly: dok.uzly.map(x => x.id === vysledek.id ? vysledek : x) }), POPIS[op]);
-      M.nastavVyber([vysledek.id]);
-      obnovInfo(); kresli();
+      if (otevreny) M.nastavVyber([vysledek.id]);          // po zavřeném panelu výběr nechat, jak ho uživatel mezitím nastavil
+      if (otevreny) { obnovInfo(); kresli(); }
     }
     M.occtPouzij = () => aplikuj();
 
@@ -401,7 +471,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
         novy = M.najdiUzel(dok, u.id);
       }
       ed.puvodni = novy;
-      M.zmenDokument(dok, 'Odebrat ' + POPIS[ed.op].toLowerCase());
+      M.zmenDokument(dok, { zaobleni: 'Odebrat zaoblení hran', srazeni: 'Odebrat sražení hran', skorepina: 'Odebrat skořepinu' }[ed.op]);
       if (novy) M.nastavVyber([novy.id]);
       kresli();
     }
@@ -419,11 +489,13 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       zavri();
       // ostatní boční panely zavřít dřív, než vznikne rozpracovaná úprava (jejich zavření mění režim a to by ji zrušilo)
       M.otevriPanel(okno);
+      // panel by těleso zakryl (úzké okno, těleso vpravo): pohled na něj do volné části plátna
+      setTimeout(() => { if (ed && ed.id === u.id && S.vyberZakryty && S.vyberZakryty([u.id])) S.zamerit([u.id]); }, 0);
       ed = { id: u.id, op, puvodni: u, zacatek: u, ram: ramPro(u, op), hrany: null, plochy: null, vybraneH: new Set(), vybraneP: new Set(),
         uzavrena: false, chyba: null, pocita: false, verze: 0 };
       okno.querySelector(`input[name="occtOperace"][value="${op}"]`).checked = true;
       okno.querySelector('input[name="occtOperace"][value="skorepina"]').disabled = !M.lzeSkorepinu(u);
-      $('occtHodnota').value = M.mm(maVrstvu(u, op) ? u.occt.hodnota : VYCHOZI[op], 3);   // 0,25 se nesmí zaokrouhlit na 0,3
+      $('occtHodnota').value = M.mm(maVrstvu(u, op) ? u.occt.hodnota : posledni(op), 3);   // 0,25 se nesmí zaokrouhlit na 0,3
       svg.hidden = false;
       ed.rezim = op === 'skorepina' ? 'plochy' : 'hrany';
       M.nastavRezim(ed.rezim);
@@ -445,8 +517,9 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     };
     $('occtHodnota').addEventListener('change', hodnotaZmenena);
     $('occtHodnota').addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); hodnotaZmenena(); } });
-    $('occtVse').onclick = () => {
+    $('occtVse').onclick = async () => {
       if (!ed || !ed.hrany) return;
+      if (ed.hrany.length > 60 && !await mnohoHran(ed.hrany.length)) return;
       const pred = new Set(ed.vybraneH);
       ed.hrany.forEach((h, i) => ed.vybraneH.add(i));
       kresli(); aplikuj(() => { ed.vybraneH = pred; });
@@ -471,10 +544,11 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
         return d.length() > 1e-6 && Math.abs(d.z) / d.length() > 0.9999;
       }).map((ano, i) => ano ? i : -1).filter(i => i >= 0);
     }
-    document.querySelectorAll('[data-hrany]').forEach(b => b.onclick = () => {
+    document.querySelectorAll('[data-hrany]').forEach(b => b.onclick = async () => {
       if (!ed || !ed.hrany) return;
       const nove = skupinaHran(b.dataset.hrany).filter(i => !ed.vybraneH.has(i));
       if (!nove.length) { Dialog.info('Žádné další takové hrany – všechny už jsou vybrané, nebo je těleso nemá.'); return; }
+      if (ed.vybraneH.size + nove.length > 60 && !await mnohoHran(ed.vybraneH.size + nove.length)) return;
       const pred = new Set(ed.vybraneH);
       nove.forEach(i => ed.vybraneH.add(i));
       kresli(); aplikuj(() => { ed.vybraneH = pred; });
@@ -487,7 +561,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       kresli(); aplikuj(() => { ed.vybraneP = pred.p; ed.uzavrena = pred.u; });
     };
     // Hotovo: kliky jsou už zapsané; Zrušit vrátí těleso do stavu před otevřením panelu
-    $('occtOk').onclick = zavri;
+    $('occtOk').onclick = () => zavri(true);
     $('occtZrusit').onclick = () => {
       if (!ed) return;
       const u = M.najdiUzel(M.app.dok, ed.id) || M.najdiUzel(M.app.dok, ed.zacatek.id);
@@ -505,9 +579,9 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
         M.nastavVyber([z.id]);
       }
     };
-    okno.addEventListener('cancel', e => { e.preventDefault(); zavri(); });
+    okno.addEventListener('cancel', e => { e.preventDefault(); zavri(true); });      // Esc = hotovo (rozpracovaná úprava se dopočítá)
     // Esc nebo jiný režim ukončí i panel
-    M.na('rezim', r => { if (ed && r !== ed.rezim) zavri(); });
+    M.na('rezim', r => { if (ed && r !== ed.rezim) zavri(true); });
     // dokument se změnil (Zpět, Znovu, posun, změna velikosti…):
     // výběr hran podle uzlu, jiný tvar = hrany načíst znovu, smazané těleso = konec
     M.na('dokument', () => {
@@ -535,10 +609,45 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     /** Pro testy: rozpracovaná úprava (hrany, plochy, výběr). */
     M.occtEditor = () => ed;
 
+    /** Odsazení stěn (vůle): dotaz na hodnotu, výpočet přesným jádrem, pak jeden krok historie. */
+    M.otevriOdsazeni = async function () {
+      const v = M.vybraneVolne();
+      if (v.length !== 1) { Dialog.chyba('Vyber jedno těleso, jehož stěny chceš odsadit.'); return; }
+      const u = v[0];
+      const ted = u.occt && u.occt.operace === 'odsazeni' ? u.occt.hodnota : 0.2;
+      const text = await Dialog.zeptej('Odsadit všechny stěny o (mm): kladné číslo těleso zvětší (třeba čep o vůli), záporné zmenší (díra o vůli, tenčí stěny). 0 = odsazení odebrat.', M.mm(ted, 3));
+      if (text === null) return;
+      const h = M.prectiCislo(text);
+      if (!isFinite(h)) { Dialog.chyba(`„${text}“ není číslo.`); return; }
+      if (Math.abs(h) > 100) { Dialog.chyba('Odsazení může být nejvýš ±100 mm.'); return; }
+      const u2 = M.najdiUzel(M.app.dok, u.id);
+      if (!u2) return;
+      let novy = M.odsadUzel(u2, h);
+      if (novy === u2) return;
+      // spodek zůstane, kde byl (jako při změně rozměru v inspektoru) – zvětšené těleso by jinak lezlo pod desku;
+      // díra zůstane soustředná (vůle kolem čepu na všechny strany)
+      if (u2.role !== 'dira') novy = M.normalizujUzel(Object.assign({}, novy, { poloha: M.polohaSeSpodkem(novy, M.spodekUzlu(u2)) }));
+      if (novy.occt) {
+        Dialog.info('⏳ Počítám odsazení přesně…');
+        try { await M.occtOver(novy); }
+        catch (e) { Dialog.chyba('Odsazení: ' + e.message); return; }
+      }
+      // mezitím se dokument mohl změnit: jen když těleso pořád stejné
+      if (M.najdiUzel(M.app.dok, u.id) !== u2) { Dialog.info('Těleso se mezitím změnilo – odsazení zkus znovu.'); return; }
+      const dok = Object.assign({}, M.app.dok, { uzly: M.app.dok.uzly.map(x => x.id === u.id ? novy : x) });
+      M.zmenDokument(dok, novy.occt ? `Odsadit stěny ${h > 0 ? '+' : ''}${M.mm(h, 2)} mm` : 'Odebrat odsazení');
+      M.nastavVyber([u.id]);
+    };
+
     /** Odebere přesnou úpravu; obal s jedním dítětem se rozpustí. */
     M.odeberUpravu = function (id) {
       const u = M.najdiUzel(M.app.dok, id);
       if (!u || !u.occt) return;
+      if (u.occt.operace === 'odsazeni') {
+        M.zmenDokument(Object.assign({}, M.app.dok, { uzly: M.app.dok.uzly.map(x => x.id === id ? M.odsadUzel(u, 0) : x) }), 'Odebrat odsazení');
+        M.nastavVyber([id]);
+        return;
+      }
       const dok = M.upravUzly(M.app.dok, [id], { occt: null });
       if (u.deti.length === 1) {
         const r = M.rozdelSkupiny(dok, [id]);

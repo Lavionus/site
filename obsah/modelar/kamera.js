@@ -197,7 +197,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
   /** Nejmenší vzdálenost, ze které jsou všechny body vidět uvnitř podílu
       obrazu `vypln` (0..1), při zadaném az/el a cíli. Hledá se půlením,
       protože v perspektivě nemá úloha jednoduchý vzorec. */
-  Kamera.prototype.vzdalenostProBody = function (body, az, el, cil, vypln = 0.9) {
+  Kamera.prototype.vzdalenostProBody = function (body, az, el, cil, vypln = 0.9, vyplnX = vypln) {
     const platne = (body || []).filter(b => b && isFinite(b.x) && isFinite(b.y) && isFinite(b.z));
     if (!platne.length) return this.vzd;           // není co zobrazit (prázdný výběr): vzdálenost beze změny
     body = platne;
@@ -208,7 +208,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       const k = this.aktivni(), p = new V();
       return body.every(b => {
         p.copy(b).project(k);
-        return Math.abs(p.x) <= vypln && Math.abs(p.y) <= vypln && p.z < 1;
+        return Math.abs(p.x) <= vyplnX && Math.abs(p.y) <= vypln && p.z < 1;
       });
     };
     let lo = this.minVzd, hi = this.vzdalenostProKouli(Math.max(...body.map(b => b.distanceTo(cil)))) * 1.5 + 1;
@@ -223,12 +223,23 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     return Math.min(hi, this.maxVzd);
   };
 
-  /** Pohled „Domů“: šikmo zepředu zleva, body (např. rohy desky) vyplní obraz. */
-  Kamera.prototype.domu = function (stred, body, ms = 400) {
+  /** Pohled „Domů“: šikmo zepředu zleva, body (např. rohy desky) vyplní obraz. okraje = {vlevo, vpravo} v px
+      zakryté panely (inspektor na úzké obrazovce): obraz se vejde a vycentruje do volné části. */
+  Kamera.prototype.domu = function (stred, body, ms = 400, okraje = null) {
     const az = -30 * M.st, el = 30 * M.st;
-    const vzd = Array.isArray(body) ? this.vzdalenostProBody(body, az, el, stred)
-                                    : this.vzdalenostProKouli(body) * 1.05;   // číslo = poloměr koule
-    this.animujNa({ az, el, cil: stred, vzd }, ms);
+    const l = okraje ? Math.max(0, okraje.vlevo || 0) : 0, r = okraje ? Math.max(0, okraje.vpravo || 0) : 0;
+    const volno = Math.max(0.3, (this.sirka - l - r) / this.sirka);           // podíl volné šířky
+    const vzd = Array.isArray(body) ? this.vzdalenostProBody(body, az, el, stred, 0.9, 0.9 * volno)
+                                    : this.vzdalenostProKouli(body) * 1.05 / Math.min(1, volno);   // číslo = poloměr koule
+    let cil = stred;
+    if (l || r) {
+      // střed volné části v NDC; cíl posunout proti směru „vpravo“ kamery, ať se střed scény ukáže tam
+      const c = (l - r) / this.sirka;
+      const pul = this.ortograficka ? this.pulVysky() * vzd / this.vzd : vzd * Math.tan(this.fov * M.st / 2);
+      const vpravo = new V(Math.cos(az), Math.sin(az), 0);
+      cil = stred.clone().addScaledVector(vpravo, -c * pul * this.sirka / this.vyska);
+    }
+    this.animujNa({ az, el, cil, vzd }, ms);
   };
 
   /** Uložitelný stav (pro projekt a pro testy). */

@@ -30,7 +30,9 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       M.historie.nahradAktualni(dok);
     } else if (!volby.docasne && !M.app.uprava && !volby.bezHistorie) {
       // M.sloucitDalsi: jednorázový klíč slučování pro další změnu (šipky a barva v inspektoru)
-      M.historie.zapis({ dok, vyber, popis }, volby.sloucit || M.sloucitDalsi || null);
+      // slučovat jen opakování na týchž tělesech (šipky na krychli a pak na válci = dva kroky Zpět)
+      const sloucit = volby.sloucit || M.sloucitDalsi || null;
+      M.historie.zapis({ dok, vyber, popis }, sloucit ? sloucit + '|' + vyber.join(',') : null);
       M.sloucitDalsi = null;
       M.vysli('historie', M.historie);
     }

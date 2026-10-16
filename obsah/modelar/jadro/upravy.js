@@ -95,9 +95,19 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     const L = Math.min(4 * diag + 100, 10000);
     const n = new V(...rovina.normala).normalize(), b = new V(...rovina.bod);
     // rovina musí těleso protínat, jinak by jedna část byla prázdná
-    const vzd = [];
-    for (let i = 0; i < 8; i++) vzd.push(new V(i & 1 ? ob.max[0] : ob.min[0], i & 2 ? ob.max[1] : ob.min[1], i & 4 ? ob.max[2] : ob.min[2]).sub(b).dot(n));
-    if (Math.max(...vzd) < 1e-3 || Math.min(...vzd) > -1e-3) throw new Error('rovina těleso neprotíná – posuň ji dovnitř tělesa');
+    // skutečné vrcholy (rohy obálky by u koule pustily rovinu, která ji mine)
+    let vMin = Infinity, vMax = -Infinity;
+    {
+      const vr = M.vrcholyUzlu(u), e = M.maticeUzlu(u).elements;
+      for (let i = 0; i < vr.length; i += 3) {
+        const x = vr[i], y = vr[i + 1], z = vr[i + 2];
+        const d = (e[0] * x + e[4] * y + e[8] * z + e[12] - b.x) * n.x + (e[1] * x + e[5] * y + e[9] * z + e[13] - b.y) * n.y + (e[2] * x + e[6] * y + e[10] * z + e[14] - b.z) * n.z;
+        if (d < vMin) vMin = d; if (d > vMax) vMax = d;
+      }
+    }
+    if (vMax < 1e-3 || vMin > -1e-3) throw new Error('rovina těleso neprotíná – posuň ji dovnitř tělesa');
+    // mezera: odsune se díl, který je výš (při normále dolů ten záporný) – spodní zůstane na desce
+    const odsunout = n.z < -1e-6 ? -1 : 1;
     const q = new THREE.Quaternion().setFromUnitVectors(new V(0, 0, 1), n);
     // poloprostor = obří kvádr jednou stěnou na rovině; „kladný“ leží ve směru normály
     const poloprostor = znamenko => M.novyUzel('kvadr', { role: 'teleso', rozmer: [L, L, L], nazev: 'řez',
@@ -113,7 +123,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       for (let i = 0; i < v.length; i += 3) for (let k = 0; k < 3; k++) { mn[k] = Math.min(mn[k], v[i + k]); mx[k] = Math.max(mx[k], v[i + k]); }
       const st = [0, 1, 2].map(k => zaokr((mn[k] + mx[k]) / 2));
       const zaklad = [0, 1, 2].map(k => Math.max(0.01, zaokr(mx[k] - mn[k])));
-      const posun = znamenko > 0 ? mezera : 0;
+      const posun = znamenko === odsunout ? znamenko * mezera : 0;
       g = M.normalizujUzel(Object.assign({}, g, {
         deti: g.deti.map(d => Object.assign({}, d, { poloha: d.poloha.map((x, k) => zaokr(x - st[k])) })),
         poloha: g.poloha.map((x, k) => zaokr(x + st[k] + n.getComponent(k) * posun)),
@@ -121,7 +131,11 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       }));
       return g;
     };
-    const a = cast(1, u.nazev + ' (část 1)'), z = cast(-1, u.nazev + ' (část 2)');
+    // názvy podle polohy: u vodorovného řezu horní a spodní, jinak podle hlavní osy normály
+    const osa = [0, 1, 2].reduce((m, i) => Math.abs(n.getComponent(i)) > Math.abs(n.getComponent(m)) ? i : m, 0);
+    const kladne = n.getComponent(osa) > 0;
+    const jmena = osa === 2 ? ['horní část', 'spodní část'] : osa === 0 ? ['pravá část', 'levá část'] : ['zadní část', 'přední část'];
+    const a = cast(1, `${u.nazev} (${jmena[kladne ? 0 : 1]})`), z = cast(-1, `${u.nazev} (${jmena[kladne ? 1 : 0]})`);
     const uzly = [];
     for (const x of dok.uzly) if (x.id === id) uzly.push(a, z); else uzly.push(x);
     return { dok: Object.assign({}, dok, { uzly }), ids: [a.id, z.id] };
@@ -272,13 +286,48 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     const zaklad = [0, 1, 2].map(k => Math.max(0.01, zaokr(ob.max[k] - ob.min[k])));
     const dite = Object.assign(M.noveIdHluboko(u), { poloha: u.poloha.map((x, k) => zaokr(x - c[k])), skryto: false, zamceno: false });
     // přípona podstatným jménem (bez shody v rodě: „Válec 1 (skořepina)“), další úprava se přidá do téže závorky
-    const NAZ = { zaobleni: 'zaoblení', srazeni: 'sražení', skorepina: 'skořepina' };
-    const nazev = !occt ? u.nazev : /\((?:zaoblení|sražení|skořepina)(?:, (?:zaoblení|sražení|skořepina))*\)$/.test(u.nazev)
+    const NAZ = { zaobleni: 'zaoblení', srazeni: 'sražení', skorepina: 'skořepina', odsazeni: 'odsazení' };
+    const nazev = !occt ? u.nazev : /\((?:zaoblení|sražení|skořepina|odsazení)(?:, (?:zaoblení|sražení|skořepina|odsazení))*\)$/.test(u.nazev)
       ? u.nazev.replace(/\)$/, `, ${NAZ[occt.operace]})`) : `${u.nazev} (${NAZ[occt.operace]})`;
     return M.normalizujUzel({
       druh: 'skupina', id: u.id, nazev, deti: [dite], zaklad, rozmer: zaklad,
       poloha: c, rotace: [0, 0, 0], role: u.role, barva: u.barva, occt,
     });
+  };
+  /** Odsazení stěn (vůle) o h mm (kladné zvětší, záporné zmenší; 0 = odebrat). Uzel, který už má navrchu
+      odsazení, dostane jen novou hodnotu. Základ a rozměr skupiny zahrnou odsazení (inspektor ukazuje skutečnou
+      velikost, položení na desku sedí). Vrací nový uzel (stejné id). */
+  M.odsadUzel = function (u, h) {
+    const sk = u.druh === 'skupina' ? M.meritkoUzlu(u) : [1, 1, 1];
+    let zaklad, rozmer, g;
+    if (u.druh === 'skupina' && u.occt && u.occt.operace === 'odsazeni') {
+      const h0 = u.occt.hodnota;
+      zaklad = u.zaklad.map((z, i) => z - 2 * h0 / sk[i]);
+      if (Math.abs(h) < 1e-9) {
+        // odebrat: obal pryč, dítě zpět na místo obalu (stejné id) – jen obal, který vznikl odsazením
+        // (vlastní skupina s jedním dílem zůstane skupinou, jen bez úpravy)
+        if (u.deti.length === 1 && /\((?:[^()]*, )?odsazení\)$/.test(u.nazev)) {
+          const d = u.deti[0];
+          const W = M.maticeUzlu(Object.assign({}, u, { zaklad, rozmer: zaklad.map((z, i) => z * sk[i]) })).multiply(M.maticeUzlu(d));
+          const p = new THREE.Vector3(), q = new THREE.Quaternion(), s = new THREE.Vector3();
+          W.decompose(p, q, s);
+          return M.normalizujUzel(Object.assign({}, d, { id: u.id, nazev: u.nazev.replace(/ \(odsazení\)$/, '').replace(/, odsazení\)$/, ')'),
+            poloha: p.toArray().map(x => zaokr(x)), rotace: M.rotaceZQuat(q),
+            rozmer: (M.maZaklad(d) ? d.zaklad : d.rozmer).map((r, i) => zaokr(r * Math.abs(s.getComponent(i)))),
+            zrcadlo: [s.x < 0, s.y < 0, s.z < 0], skryto: u.skryto, zamceno: u.zamceno }));
+        }
+        return M.normalizujUzel(Object.assign({}, u, { occt: null, zaklad, rozmer: zaklad.map((z, i) => z * sk[i]) }));
+      }
+      g = u;
+    } else {
+      if (Math.abs(h) < 1e-9) return u;
+      g = M.obalUpravou(u, { operace: 'odsazeni', hodnota: h });
+      zaklad = g.zaklad;
+    }
+    const occt = { operace: 'odsazeni', hodnota: h, hrany: [], plochy: [] };
+    const sg = g.druh === 'skupina' ? M.meritkoUzlu(g) : sk;
+    const z2 = zaklad.map((z, i) => Math.max(0.01, zaokr(z + 2 * h / sg[i])));
+    return M.normalizujUzel(Object.assign({}, g, { occt, zaklad: z2, rozmer: z2.map((z, i) => zaokr(z * sg[i])) }));
   };
   /** Rámec pro výběr hran/ploch skupiny s úpravou: tatáž skupina bez úpravy. */
   M.bezUpravy = g => M.normalizujUzel(Object.assign({}, g, { occt: null }));

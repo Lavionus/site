@@ -8,6 +8,11 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
   M.vytvorSeznam = function (ul, pocitadlo) {
+    // dvojklik na název: zaměřit těleso ve scéně
+    ul.addEventListener('dblclick', e => {
+      const li = e.target.closest && e.target.closest('li[data-id]');
+      if (li && M.scena && M.scena.zamerit) M.scena.zamerit([li.dataset.id]);
+    });
     let podpis = '';
     function vykresli() {
       const dok = M.app.dok, vyber = new Set(M.app.vyber);
@@ -25,7 +30,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       ul.innerHTML = dok.uzly.map(u => `
         <li class="${vyber.has(u.id) ? 'vybrany' : ''}${u.skryto ? ' skryty' : ''}" data-id="${esc(u.id)}">
           <span class="znak${u.role === 'dira' ? ' dira' : ''}${u.druh === 'skupina' && u.barevne ? ' barevny' : ''}" style="${u.role === 'dira' || (u.druh === 'skupina' && u.barevne) ? '' : 'background:' + u.barva}"></span>
-          <button type="button" class="jmeno" title="Vybrat">${u.druh === 'skupina' ? '🧩 ' : ''}${esc(u.nazev)}${u.druh === 'skupina' ? ` <span class="pocet">(${u.deti.length})</span>` : ''}</button>
+          <button type="button" class="jmeno" title="${esc(u.nazev)} – klik vybere, dvojklik zaměří">${u.druh === 'skupina' ? '🧩 ' : ''}${esc(u.nazev)}${u.druh === 'skupina' ? ` <span class="pocet">(${u.deti.length})</span>` : ''}</button>
           <button type="button" class="ikona oko" aria-pressed="${u.skryto}" title="${u.skryto ? 'Ukázat' : 'Skrýt'}" aria-label="Skrýt ${esc(u.nazev)}">${u.skryto ? '◌' : '👁'}</button>
           <button type="button" class="ikona zamek" aria-pressed="${u.zamceno}" title="${u.zamceno ? 'Odemknout' : 'Zamknout'}" aria-label="Zamknout ${esc(u.nazev)}">${u.zamceno ? '🔒' : '🔓'}</button>
         </li>`).join('');

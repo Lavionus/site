@@ -134,7 +134,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
           hotovo = true;
           const text = inp.value.trim(), v = M.prectiCislo(text);
           zavri();
-          if (!isFinite(v)) { if (text) Dialog.info(`„${text}“ není číslo – piš třeba 25, 12,5, 60/2 nebo 3 cm.`); return; }
+          if (!isFinite(v)) { if (text) M.oznamPole(null, `„${text}“ není číslo – piš třeba 25, 12,5, 60/2 nebo 3 cm.`); return; }
           const o = M.omez(v, 0.01, 10000);
           if (o !== v) Dialog.info(`${M.mm(v, 3)} je mimo rozsah – použito ${M.mm(o, 3)} mm.`);
           if (Math.abs(o - u.rozmer[osa]) < 1e-9) return;
@@ -146,13 +146,15 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       });
       inp.addEventListener('blur', () => { if (!hotovo) { hotovo = true; zavri(); } });
       const zrus = () => { if (!hotovo) { hotovo = true; zavri(); } };
-      const k0 = S.kamera.aktivni().matrixWorld.clone();
-      odhlasit = [M.na('kamera', () => { if (!S.kamera.aktivni().matrixWorld.equals(k0)) zrus(); }), M.na('vyber', zrus), M.na('rezim', zrus)];
+      const k0 = S.kamera.aktivni().matrixWorld.clone(), vel0 = S.kamera.sirka + 'x' + S.kamera.vyska;
+      odhlasit = [M.na('kamera', () => { if (!S.kamera.aktivni().matrixWorld.equals(k0) || S.kamera.sirka + 'x' + S.kamera.vyska !== vel0) zrus(); }), M.na('vyber', zrus), M.na('rezim', zrus)];
     }
     svg.addEventListener('pointerdown', e => {
       const s = e.target.closest && e.target.closest('.stitek.upravitelny');
       if (!s || e.button !== 0 || M.app.uprava) return;
       e.stopPropagation(); e.preventDefault();
+      // rozepsané pole inspektoru nejdřív potvrdit (jinak by kóta ukázala starý rozměr)
+      if (document.activeElement && document.activeElement.matches && document.activeElement.matches('#inspektor input')) document.activeElement.blur();
       const k = koty.find(x => x.prvek === s);
       if (k) zadej(k.osa, k.x, k.y);
     });
@@ -171,5 +173,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     M.zadejKotu = (osa) => { const k = koty.find(x => x.osa === osa); if (k) zadej(k.osa, k.x, k.y); };
     document.querySelectorAll('[data-prikaz=koty]').forEach(b => b.setAttribute('aria-pressed', zapnuto ? 'true' : 'false'));
     for (const u of ['kamera', 'vyber', 'dokument', 'rezim']) M.na(u, () => kresli());
+    // zavřené modální okno (dotaz bez změny): kóty zase ukázat – jinak by čekaly na další pohyb
+    document.addEventListener('close', e => { if (e.target && e.target.tagName === 'DIALOG') setTimeout(() => kresli(true), 0); }, true);
   };
 })(MDL);

@@ -35,6 +35,10 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
 
     /** Uint8Array (binární nebo textové STL) → svařená síť {poz, idx}. */
     cti(buf) {
+      // UTF-8 BOM před „solid“ (některé textové exportéry): přeskočit, jinak by se soubor četl jako binární nesmysl –
+      // ale ne u binárního souboru přesné délky (hlavička binárního STL smí začínat čímkoli)
+      const presneBinarni = buf.length >= 84 && 84 + new DataView(buf.buffer, buf.byteOffset, buf.byteLength).getUint32(80, true) * 50 === buf.length;
+      if (!presneBinarni && buf.length >= 3 && buf[0] === 0xEF && buf[1] === 0xBB && buf[2] === 0xBF && /^\s*solid/i.test(new TextDecoder('latin1').decode(buf.subarray(3, 200)))) buf = buf.subarray(3);
       const d = new DataView(buf.buffer, buf.byteOffset, buf.byteLength);
       // binární: velikost přesně sedí s počtem; jinak rozhodne obsah (textové STL má „facet“ a „vertex“).
       // Binární soubory s výplní na konci nebo špatným počtem (některé exportéry) se čtou podle délky.

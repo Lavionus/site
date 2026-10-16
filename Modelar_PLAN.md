@@ -178,6 +178,12 @@ a 9 je technicky nejriskantnější (velké WASM, stabilita OCCT).
 - `python3 _test/modelar_ui_revize3.py [dpi]` (třetí revize: 60 kontrol – skryté hrany se nevyberou, rozdělení se skutečnou
   velikostí dílů, dialogy uprostřed, pohled shora, výpočty v polích, text ve skice, kontrola tisku, kóty, klávesa A,
   skupiny hran, úzká lišta; server i file://).
+- `python3 _test/modelar_ui_revize4.py [dpi]` (čtvrtá revize: 30 kontrol – orientace pro tisk, odsazení, obrys plochy,
+  STEP s dírou pro šroub, Ctrl+Z v panelu, Hotovo během výpočtu, šipky po kliku, normála roztažené skupiny,
+  překryvy v kontrole tisku, protikolo; server i file://).
+- `python3 _test/modelar_ui_revize5.py [dpi]` (pátá revize: 32 kontrol – sloupek a díry pro vložky, tenké stěny,
+  vůle, Backspace na posuvníku, Ctrl+D z inspektoru, Zpět po tělesech, díra na stěnu, zaměření, ☰ Panel na
+  1100 px, panel tisku; server i file://).
 - `node _test/sw_modelar_check.js` – offline seznam MODELAR v `sw.js` sedí se soubory, odkazy stránky a `importScripts` workerů.
 - `python3 _test/modelar_ui_e11.py [dpi]` (etapa 11: 32 kontrol – export po barvách z okna, OBJ + MTL, import OBJ s MTL polem souborů,
   ZIP přetažením, barvy ve scéně a v inspektoru, Zpět, IndexedDB; přes server i z file://).
@@ -679,3 +685,82 @@ Revize třemi pohledy (jádro a OCCT, scéna a panely, QA v prohlížeči skute�
   - klávesa A (a Insert) otevře nabídku Tvary.
 - Testy: `node _test/modelar_tisk.js` (17), `modelar_occt.js` (+12 → 59), `modelar_dilna.js` (+10 → 54),
   `modelar_upravy.js` (+4 → 30), `python3 _test/modelar_ui_revize3.py` (60 kontrol, server i file://).
+
+### Čtvrtá celková revize a vylepšení (16. 10. 2026)
+
+Čtyři revizoři (jádro a OCCT, soubory a ukládání, kód rozhraní, QA jako uživatel skutečnou myší); opravy:
+
+- **Přesné jádro**: skořepina s otevřenou plochou se ověří na síti (paprsek, `M.bodVSiti`) – OCCT u natočeného
+  a roztaženého tělesa vracelo zavřenou dutinu a jeho klasifikátor bodů lhal; natočení po 90° v obalu úpravy
+  přeskládá zvětšení na osy dítěte (skutečná velikost, roviny zůstanou rovinami); mez změny objemu počítá s celým
+  tečným řetězem hran (`delkaRetezu`, jádro vrací pro tutéž hranu různá id – `isSame`); filtr mělkých hran (pod 20°)
+  jen u těles ze sítě a jen mezi malými ploškami (hřeben ploché střechy a 24boký hranol se zase nabízejí, při
+  dohledávání uložených hran se nefiltruje); hrany vybrané při jiném zvětšení se dohledají i v měřítku 1.
+- **Rozdělení rovinou**: kontrola protnutí na skutečných vrcholech (šikmá rovina mimo kouli), mezera odsune horní díl
+  i při normále dolů. **Poznámky** na skice a dílu při změně parametrů zůstanou na místě. **Rozmístit** nehýbe
+  skrytými a zamčenými, hlásí zamčené překážky. **Výrazy**: jednotka platí pro součin (`1/2 in` = 12,7), bez
+  binárního šumu, hluboké závorky = NaN.
+- **Soubory a ukládání**: dvě karty nad jedním projektem – starší karta nepřepíše novější práci (značka karty,
+  verze změn; vlastní změny se uloží jako „(kopie z druhé karty)“); model v µm / v metrech se při importu převede
+  po tisících s hláškou; 3MF: strop 8 M trojúhelníků a vrcholů, 300 MB XML (bomba odmítnuta do 2 s); STL s UTF-8 BOM;
+  klíč barevné skupiny zná „barvy ze souboru vypnuté“; sloučený export zachová barvy souboru a slučuje JEN
+  překrývající se tělesa (samostatné díly zůstanou samostatnými objekty); řídicí znaky v názvech pryč (3MF bylo
+  neplatné XML); OBJ/MTL bez mezer v názvu; projekt z úložiště se ověří dřív, než se načítá geometrie; výpočet
+  spadlý na paměť se při dalším použití zkusí znovu; zablokované otevření databáze nezůstane viset.
+- **STEP**: přesné sjednocení, které selže (písmo vnořené do tělesa), spadne na síť z manifoldu s hláškou místo
+  chyby „fuseAll: operation failed“.
+- **Rozhraní**: normála zásahu inverzní transpozicí (F, W, vzor děr na roztažených skupinách), shader převisů taky,
+  převisy zmizí z díry a respektují řez pohledem, nejsou v náhledu projektu; „Hotovo“/Esc během výpočtu úpravu
+  dopočítá a zapíše; viditelnost hran až po zastavení kamery; úchyty a Dílna se nepřekreslují bez změny
+  (`M.hlidacSnimku`), klíč geometrie v mezipaměti (WeakMap); panel tisku odloženě; dotyk – širší zásah hran;
+  kóty potvrdí rozepsané pole inspektoru, zavřou se při změně velikosti okna; Ctrl+Z funguje i s fokusem na
+  přepínači; klik do scény (i na úchyt) jí vrátí fokus (šipky); řez pohledem a skryté poznámky se s novým projektem
+  vypnou; Ctrl+S/O/E nejdřív zruší náhled; kontrast palety, `aria-live`, `role=application`, fokus barvy;
+  „Domů“ na úzkém okně vycentruje desku do části, kterou nezakrývá inspektor; rozměry natočeného tělesa
+  označené „(osy tělesa)“; varování a běžící čas u výpočtu s víc než 60 hranami; zavření poslední otevřené plochy
+  = uzavřená dutina; panel si pamatuje poslední velikost; „Odebrat skořepinu“; ikony bez duplicit.
+- **Vylepšení**: nejlepší orientace pro tisk (`M.orientaceProTisk` – kandidáti z velkých ploch a os, skóre převisy
+  − ½·plocha na desce + výška; Dílna a panel tisku); odsazení stěn / vůle (operace `odsazeni`, `M.odsadUzel`,
+  základ zahrne vůli, spodek zůstane); přesná díra pro šroub v přesném jádru i STEP (válce, kužel, šestihran);
+  klik na rovnou plochu v panelu zaoblení vybere celý její obrys; kontrola tisku hledá překrývající se tělesa
+  (`M.sitePrekryvaji`, oprava Rozmístit); protikolo k ozubenému kolu (`M.protikolo`: osová vzdálenost m·(z1+z2)/2,
+  fáze 180° + 180°/z2, šikmé zuby zrcadlené v Y).
+- Testy: `modelar_ui_revize4.py` (30 kontrol), node `modelar_occt.js` 73, `modelar_tisk.js` 24, `modelar_soubory.js` 52,
+  `modelar_dily.js` 30, `modelar_upravy.js` 32, `modelar_jadro.js` 121.
+
+### Pátá celková revize a rozšíření (16. 10. 2026)
+
+Čtyři revizoři (jádro a OCCT, soubory a ukládání se dvěma kartami ve fake-indexeddb a PrusaSlicerem, kód
+rozhraní, QA skutečnou myší); opravy:
+
+- **Ukládání a karty**: záznam se sestaví až ve frontě ukládání (při souběhu jedna kopie, ne dvě); karta bez vlastních
+  změn nic nepřepíše ani neoživí smazaný projekt a nepohne s časem úpravy; prázdný „Projekt N“ se maže jen když je
+  prázdný i v úložišti (jiná karta ho mohla naplnit); smazání otevřeného projektu se už neptá nesmyslně; karta se
+  zastaralou verzí ji při otevření načte znovu; BroadcastChannel: po uložení v jedné kartě druhá hned nabídne načtení
+  novější verze (s vlastními změnami upozorní, že se uloží jako kopie).
+- **3MF pro slicery**: dotýkající se tělesa (štítek na desce, kostka na kostce) jdou jako jeden objekt z dílů
+  (síť s barvou na trojúhelníku + `Metadata/Slic3r_PE_model.config` s díly a extrudery) – PrusaSlicer je dřív
+  rozházel na podložku (ověřeno slicováním: vršek 3,95 mm, dva díly s extrudery 1 a 2); Sloučit počítá i dotyk;
+  čtení díly ze `Slic3r_PE_model.config` i komponenty vrátí jako samostatná tělesa na svých místech.
+- **Přesné jádro**: zmizelá rovná hrana se nezamění za sousední (okolí úměrné odchylce měřítka, v měřítku 1 jen
+  na své přímce); zaokrouhlené rovnoměrné zvětšení (1,37) se bere jako rovnoměrné (žádný zbytečný B-spline);
+  odsazení eliptických tvarů přes triangulaci (do 1500 plošek), poctivé hlášky u odsazení i skořepiny oblých ploch
+  po roztažení; mnohostěny (hranol, jehlan, hvězda…) bez filtru mělkých hran; binární STL s BOM v hlavičce; drobnosti
+  (`2x3`, velká čísla, tečny řetězu jednou, odebrání odsazení u vlastní skupiny, české tvary).
+- **Protikolo**: v rámci kola (zrcadla a zvětšení se přenesou), šípové zuby zrcadlené, směr kolem osy volný
+  (řetěz kol nepřistane na prvním), poctivá hláška při kolizi.
+- **Kontrola tisku**: překryvy i podél hran (trubka skrz desku), výsledky dvojic v paměti, sítě až na požádání.
+- **Rozhraní**: Delete/Backspace na posuvníku, přepínači či zaškrtávátku nemaže tělesa; „Hotovo“ během výpočtu
+  nemění výběr; kóty po zavřeném dotazu; Ctrl+D/G/K z pole inspektoru; Zpět slučuje šipky/barvu jen u týchž
+  těles; díra a tvar puštěné na stěnu se natočí podle normály, díra se zanoří s hlavou v rovině stěny;
+  dotyk na jiném tělese pod šipkou otáčení ho vybere; nejlepší orientace srovná natočení kolem Z na nejmenší
+  půdorys a šum ignoruje; panel tisku nepřetéká; „Zaměřit výběr“ (tečka, Pohled, dvojklik v seznamu) a panel úprav
+  sám zaměří těleso, které by zakryl; ☰ Panel schová boční panel i na šířce 761–1250 px; odsazení díry soustředné;
+  díly po rozdělení „(horní / spodní část)“; varování u textu v SVG; písmo štítku, které se nenačte, text nesmaže;
+  stav načítání přesného jádra po pádu.
+- **Rozšíření**: díra pro šroub pro **závitovou vložku** (heat-set, průměry M2–M8) a **samořezný šroub**; díl
+  **Sloupek pro šroub** (pro vložku / samořezný / průchozí, automatická tloušťka stěny, i přesně v OCCT a STEP);
+  **tenké stěny** v kontrole tisku (`M.tenkeSteny`, paprsky dovnitř s mřížkou, červený překryv); **vůle mezi
+  tělesy** (`M.vuleSiti`, Dílna, výsledek v panelu Měření).
+- Testy: `modelar_ui_revize5.py` (32), node `modelar_occt.js` 80, `modelar_dily.js` 45, `modelar_tisk.js` 30,
+  `modelar_dilna.js` 58, `modelar_soubory.js` 54, `modelar_jadro.js` 122.

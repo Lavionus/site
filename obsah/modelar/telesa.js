@@ -29,6 +29,26 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     }
     const hranyZ = geom => naplnHrany(new THREE.BufferGeometry(), geom);
 
+    /** Spustí výpočet geometrie skupiny / dílu ve workeru; výsledek (nebo chybu) zapíše do g. */
+    function spust(gg, klic, uzel) {
+      M.spocitejSkupinu(uzel).then(d => {
+        gg.geom.setAttribute('position', new THREE.BufferAttribute(d.pozice, 3));
+        gg.geom.setAttribute('normal', new THREE.BufferAttribute(d.normaly, 3));
+        if (d.barvy) gg.geom.setAttribute('color', new THREE.BufferAttribute(d.barvy, 3));
+        gg.geom.computeBoundingBox(); gg.geom.computeBoundingSphere();
+        naplnHrany(gg.hrany, gg.geom);
+        Object.assign(gg, { trojuhelniku: d.trojuhelniku, objem: d.objem, ceka: false });
+        T.hotovaGeometrie(klic);
+      }, err => {
+        // zůstane náhled z plných dílů a stavový řádek ukáže chybu
+        Object.assign(gg, { ceka: false, chyba: String(err.message || err), casChyby: Date.now() });
+        naplnHrany(gg.hrany, gg.geom);
+        console.error('Modelář: výpočet skupiny selhal: ' + gg.chyba);
+        M.vysli('chybaVypoctu', gg.chyba);
+        T.hotovaGeometrie(klic);
+      });
+    }
+
     function ziskejGeometrii(klic, uzel) {
       let g = geometrie.get(klic);
       if (!g && M.pocitaWorker(uzel)) {
@@ -42,22 +62,11 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
           gg.geom.setAttribute('normal', new THREE.BufferAttribute(n.normaly, 3));
           gg.geom.computeBoundingBox(); gg.geom.computeBoundingSphere();
         } catch (e) { /* náhled je jen pomůcka */ }
-        M.spocitejSkupinu(uzel).then(d => {
-          gg.geom.setAttribute('position', new THREE.BufferAttribute(d.pozice, 3));
-          gg.geom.setAttribute('normal', new THREE.BufferAttribute(d.normaly, 3));
-          if (d.barvy) gg.geom.setAttribute('color', new THREE.BufferAttribute(d.barvy, 3));
-          gg.geom.computeBoundingBox(); gg.geom.computeBoundingSphere();
-          naplnHrany(gg.hrany, gg.geom);
-          Object.assign(gg, { trojuhelniku: d.trojuhelniku, objem: d.objem, ceka: false });
-          T.hotovaGeometrie(klic);
-        }, err => {
-          // zůstane náhled z plných dílů a stavový řádek ukáže chybu
-          Object.assign(gg, { ceka: false, chyba: String(err.message || err) });
-          naplnHrany(gg.hrany, gg.geom);
-          console.error('Modelář: výpočet skupiny selhal: ' + gg.chyba);
-          M.vysli('chybaVypoctu', gg.chyba);
-          T.hotovaGeometrie(klic);
-        });
+        spust(gg, klic, uzel);
+      } else if (g && g.chyba && /paměti/.test(g.chyba) && Date.now() - (g.casChyby || 0) > 3000 && M.pocitaWorker(uzel)) {
+        // nedostatek paměti bývá přechodný (worker se restartoval): při dalším použití zkusit znovu
+        Object.assign(g, { ceka: true, chyba: null });
+        spust(g, klic, uzel);
       }
       if (!g) {
         const sit = M.sitUzlu(uzel);
@@ -203,7 +212,9 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
         S.model.updateMatrixWorld();
         const z = ray.intersectObjects(meshe, false)[0];
         if (!z) return null;
-        const n = z.face ? z.face.normal.clone().transformDirection(z.object.matrixWorld) : new THREE.Vector3(0, 0, 1);
+        // normálu inverzní transpozicí (skupina, import, skica a díl mají nerovnoměrné měřítko – transformDirection
+        // by ji u roztaženého tělesa odklonila až o desítky stupňů)
+        const n = z.face ? z.face.normal.clone().applyNormalMatrix(new THREE.Matrix3().getNormalMatrix(z.object.matrixWorld)).normalize() : new THREE.Vector3(0, 0, 1);
         return { id: z.object.userData.id, bod: z.point, normala: n, trojuhelnik: z.faceIndex };
       },
 

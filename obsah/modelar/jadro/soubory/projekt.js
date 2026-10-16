@@ -117,8 +117,9 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
 
     /** Kontrola a oprava scény (ze souboru i z úložiště prohlížeče): hloubka vnoření, počet těles,
         normalizace uzlů (neznámý druh = chyba), jedinečná id, geometrie importů, poznámky.
-        zdroje = Map geometrií, které přišly se scénou (jinak se hledají v M.zdroje). */
-    overDok(dokJ, zdroje = new Map()) {
+        zdroje = Map geometrií, které přišly se scénou (jinak se hledají v M.zdroje); bezZdroju = geometrie se
+        teprve načtou (úložiště prohlížeče) – jejich přítomnost se neověřuje. */
+    overDok(dokJ, zdroje = new Map(), bezZdroju = false) {
       if (!dokJ || !Array.isArray(dokJ.uzly)) throw new Error('projekt neobsahuje scénu');
       let pocet = 0;
       const ids = new Set();
@@ -127,7 +128,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
         if (hloubka > MAX_HLOUBKA) throw new Error('projekt má příliš hluboko vnořené skupiny');
         if (ids.has(u.id)) throw new Error('projekt obsahuje dvě tělesa se stejným id');
         ids.add(u.id);
-        if (u.druh === 'sit' && !zdroje.has(u.zdroj) && !M.zdroje.has(u.zdroj)) throw new Error('chybí geometrie modelu „' + u.nazev + '“');
+        if (!bezZdroju && u.druh === 'sit' && !zdroje.has(u.zdroj) && !M.zdroje.has(u.zdroj)) throw new Error('chybí geometrie modelu „' + u.nazev + '“');
         if (u.druh === 'skupina') u.deti.forEach(d => over(d, hloubka + 1));
       };
       // hloubku vnoření ohlídat dřív, než normalizace (rekurzivní) přeteče zásobník

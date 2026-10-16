@@ -99,6 +99,10 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       const t = vzor(druh);
       const krok = Math.max(S.deska.krok, 0.5);
       const r = M.app.rovina;
+      // díra (díra pro šroub, závit) se zanoří do materiálu: hlava v rovině stěny, 0,5 mm přesah nad ni
+      const dira = t.role === 'dira';
+      const odstup = dira ? -(t.rozmer[2] / 2 - 0.5) : t.rozmer[2] / 2;
+      const zaokr = a => a.map(x => Math.round(x * 1e6) / 1e6);         // bez šumu typu 29,99999999
       if (r) {
         const [u, v, n] = r.osy.map(o => new THREE.Vector3(...o));
         const p0 = new THREE.Vector3(...r.puvod);
@@ -106,12 +110,18 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
         if (!p) return null;
         p.sub(p0);
         const a = Math.round(p.dot(u) / krok) * krok, b = Math.round(p.dot(v) / krok) * krok;
-        const poloha = p0.clone().addScaledVector(u, a).addScaledVector(v, b).addScaledVector(n, t.rozmer[2] / 2);
-        return { poloha: poloha.toArray().map(x => Math.round(x * 1e6) / 1e6), rotace: M.rotaceZQuat(M.quatRoviny(r)) };
+        const poloha = p0.clone().addScaledVector(u, a).addScaledVector(v, b).addScaledVector(n, odstup);
+        return { poloha: zaokr(poloha.toArray()), rotace: M.rotaceZQuat(M.quatRoviny(r)) };
       }
       const zasah = T.zasah(px, py);
+      if (zasah && zasah.normala.z <= 0.7) {
+        // šikmá nebo svislá stěna tělesa: tvar natočený podle její normály (osa Z tvaru = normála)
+        const n = zasah.normala.clone().normalize();
+        const q = new THREE.Quaternion().setFromUnitVectors(new THREE.Vector3(0, 0, 1), n);
+        return { poloha: zaokr(zasah.bod.clone().addScaledVector(n, odstup).toArray()), rotace: M.rotaceZQuat(q) };
+      }
       let x, y, z = 0;
-      if (zasah && zasah.normala.z > 0.7) {
+      if (zasah) {
         [x, y, z] = [zasah.bod.x, zasah.bod.y, zasah.bod.z];
       } else {
         const b = S.kamera.bodNaRovine(px, py, 0);
@@ -119,7 +129,8 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
         [x, y] = [b.x, b.y];
       }
       x = Math.round(x / krok) * krok; y = Math.round(y / krok) * krok;
-      return { poloha: [x, y, Math.round((z + t.rozmer[2] / 2) * 1e6) / 1e6], rotace: [0, 0, 0] };   // bez šumu typu 29,99999999
+      // na desce stojí i díra (není do čeho ji zanořit), na tělese se zanoří
+      return { poloha: zaokr([x, y, z + (zasah ? odstup : t.rozmer[2] / 2)]), rotace: [0, 0, 0] };
     }
 
     /** Volné místo poblíž středu pohledu (klik na dlaždici). */

@@ -34,7 +34,8 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       if (M.app.rezim === 'zarovnani') { M.klikZarovnani(zasah); return; }
       if (M.app.rezim === 'zrcadleni') { M.klikZrcadleni(zasah); return; }
       if (M.app.rezim === 'pivot') { M.klikPivot(zasah, px, py); return; }
-      if (M.app.rezim === 'hrany') return;                 // hrany chytá SVG vrstva přesných úprav
+      // hrany chytá SVG vrstva přesných úprav; klik na rovnou plochu vedle hran = celý její obrys
+      if (M.app.rezim === 'hrany') { if (M.klikObrysPlochy) M.klikObrysPlochy(zasah); return; }
       if (M.app.rezim === 'plochy') { M.klikOcct(zasah); return; }
       if (M.app.rezim === 'rovina') {
         if (zasah) {
@@ -107,6 +108,12 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     }
 
     // ------------------------------------------------------------ události
+    // klik do scény (i na úchyt nebo kótu nad plátnem) jí dá fokus: šipky a Delete pak jdou na tělesa
+    // (fokus by jinak zůstal na tlačítku lišty)
+    el.parentNode.addEventListener('pointerdown', () => {
+      const a = document.activeElement;
+      if (a !== el && !M.modalniOkno() && !(a && a.matches && a.matches('input, textarea, select'))) el.focus({ preventScroll: true });
+    }, true);
     el.addEventListener('pointerdown', e => {
       if (e.button !== 0 || M.ovladaniBlokovano || M.gesto) return;
       const [px, py] = pixel(e);

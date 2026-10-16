@@ -230,11 +230,12 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       nazev: 'Díra pro šroub', ikona: '⤓', barva: '#8f99a6', role: 'dira',
       param: { velikost: 'M3', druh: 'zahloubena', delka: 10, vule: 0.2, segmentu: 48 },
       parametry: [{ klic: 'velikost', popis: 'Šroub', volby: VOLBY_ZAVITU.filter(v => v[0][0] === 'M') },
-        { klic: 'druh', popis: 'Hlava', volby: [['zahloubena', 'Válcové zahloubení'], ['kuzelova', 'Kuželová 90°'], ['prosta', 'Jen díra'], ['sestihran', 'Šestihran pro matici']] },
+        { klic: 'druh', popis: 'Hlava', volby: [['zahloubena', 'Válcové zahloubení'], ['kuzelova', 'Kuželová 90°'], ['prosta', 'Jen díra'], ['sestihran', 'Šestihran pro matici'],
+          ['vlozka', 'Závitová vložka (zatavit)'], ['samorez', 'Samořezný šroub (předvrt)']] },
         { klic: 'delka', popis: 'Hloubka', jednotka: 'mm', min: 1, max: 500, krok: 1 }, VULE, SEG],
       obalka(p) {
         const r = rozmeryDiry(p);
-        const R = p.druh === 'prosta' ? r.r : p.druh === 'kuzelova' ? r.R + 0.5 : r.R;   // kužel pokračuje 0,5 mm nad povrch
+        const R = jenDrik(p) ? r.r : p.druh === 'kuzelova' ? r.R + 0.5 : r.R;   // kužel pokračuje 0,5 mm nad povrch
         const Ry = p.druh === 'sestihran' ? r.klic / 2 : R;
         return { min: [-R, -Ry, -0.5], max: [R, Ry, p.delka + 0.5], kruh: p.druh !== 'sestihran' };
       },
@@ -242,12 +243,33 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
         const { Manifold, CrossSection } = w, s = sklad(), r = rozmeryDiry(p);
         // dřík z 0 do hloubky, hlava nahoře (díra se zapouští shora); 0,5 mm přesah
         const drik = s(s(Manifold.cylinder(p.delka + 1, r.r, r.r, p.segmentu)).translate([0, 0, -0.5]));
-        if (p.druh === 'prosta') return s.konec(drik);
+        if (jenDrik(p)) return s.konec(drik);
         let hlava;
         if (p.druh === 'kuzelova') hlava = s(s(Manifold.cylinder(r.hloubka + 0.5, r.r, r.R + 0.5 * 1, p.segmentu)).translate([0, 0, p.delka - r.hloubka]));
         else if (p.druh === 'sestihran') hlava = s(s(sestihran(CrossSection, s, r.klic).extrude(r.hloubka + 0.5)).translate([0, 0, p.delka - r.hloubka]));
         else hlava = s(s(Manifold.cylinder(r.hloubka + 0.5, r.R, r.R, p.segmentu)).translate([0, 0, p.delka - r.hloubka]));
         return s.konec(s(Manifold.union([drik, hlava])));
+      },
+    },
+    sloupek: {
+      nazev: 'Sloupek pro šroub', ikona: '⏺', barva: '#7a8b99', role: 'teleso',
+      param: { velikost: 'M3', druh: 'vlozka', prumer: 0, vyska: 10, dno: 0, segmentu: 48 },
+      parametry: [{ klic: 'velikost', popis: 'Šroub', volby: VOLBY_ZAVITU.filter(v => v[0][0] === 'M') },
+        { klic: 'druh', popis: 'Díra', volby: [['vlozka', 'Pro závitovou vložku'], ['samorez', 'Pro samořezný šroub'], ['prosta', 'Průchozí (šroub s maticí)']] },
+        { klic: 'prumer', popis: 'Průměr (0 = auto)', jednotka: 'mm', min: 0, max: 100, krok: 0.5 },
+        { klic: 'vyska', popis: 'Výška', jednotka: 'mm', min: 1, max: 300, krok: 1 },
+        { klic: 'dno', popis: 'Plné dno', jednotka: 'mm', min: 0, max: 300, krok: 0.5 }, SEG],
+      obalka(p) {
+        const R = rozmerySloupku(p).R;
+        return { min: [-R, -R, 0], max: [R, R, p.vyska], kruh: true };
+      },
+      manifold(w, p) {
+        const { Manifold } = w, s = sklad(), r = rozmerySloupku(p);
+        const telo = s(Manifold.cylinder(p.vyska, r.R, r.R, p.segmentu));
+        const hloubka = Math.max(0, p.vyska - Math.min(p.dno, p.vyska - 0.5));
+        if (hloubka < 0.2) return s.konec(telo);
+        const dira = s(s(Manifold.cylinder(hloubka + 0.5, r.r, r.r, p.segmentu)).translate([0, 0, p.vyska - hloubka]));
+        return s.konec(s(telo.subtract(dira)));
       },
     },
     kolo: {
@@ -512,13 +534,66 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     const rMaj = z.d / 2 + vule, hloubka = hloubkaZavitu(z);
     return zavitovaTyc(w, s, rMaj, hloubka, z.p, delka, z.uhel, seg, false);
   }
+  // závitové vložky do plastu (heat-set, zatavují se pájkou): průměr díry a délka vložky podle velikosti
+  const VLOZKY = { M2: [3.2, 4], 'M2.5': [3.6, 5], M3: [4.0, 5.7], M4: [5.6, 8.1], M5: [6.4, 9.5], M6: [8.0, 12.7], M8: [9.7, 12.7] };
+  M.VLOZKY = VLOZKY;
   function rozmeryDiry(p) {
-    const z = zavit(p), r = z.d / 2 + Math.max(p.vule, 0.1) + 0.1;
+    const z = zavit(p);
+    // díra bez hlavy: pro závitovou vložku (průměr podle vložky) nebo pro samořezný šroub (předvrt ~ 0,85 d)
+    if (p.druh === 'vlozka') { const v = VLOZKY[p.velikost]; const r = (v ? v[0] : z.d * 1.33) / 2; return { r, R: r, hloubka: 0, vlozka: v ? v[1] : z.d * 1.9 }; }
+    if (p.druh === 'samorez') { const r = 0.85 * z.d / 2; return { r, R: r, hloubka: 0 }; }
+    const r = z.d / 2 + Math.max(p.vule, 0.1) + 0.1;
     if (p.druh === 'kuzelova') return { r, R: z.d + p.vule, hloubka: z.d / 2 + p.vule };
     if (p.druh === 'sestihran') return { r, R: (z.s + 2 * p.vule) / Math.cos(PI / 6) / 2, klic: z.s + 2 * p.vule, hloubka: z.m + 0.2 };
     return { r, R: 0.75 * z.d + p.vule + 0.3, hloubka: z.d + 0.4 };
   }
   M.rozmeryDiry = rozmeryDiry;
+  /** Sloupek: díra jako u díry pro šroub (průchozí s vůlí), vnější průměr automaticky – stěna aspoň 1,6 mm
+      a 2,2× průměr díry. */
+  function rozmerySloupku(p) {
+    const r = rozmeryDiry({ velikost: p.velikost, druh: p.druh === 'prosta' ? 'prosta' : p.druh, vule: 0.2 }).r;
+    const auto = Math.max(r + 1.6, 1.1 * 2 * r);
+    return { r, R: Math.max(p.prumer > 0 ? p.prumer / 2 : auto, r + 0.4) };
+  }
+  M.rozmerySloupku = rozmerySloupku;
+  /** Díra bez hlavy (jen válec): prostá, pro vložku, pro samořezný šroub. */
+  const jenDrik = p => p.druh === 'prosta' || p.druh === 'vlozka' || p.druh === 'samorez';
+
+  /** Protikolo k ozubenému kolu u: z2 zubů, stejný modul, úhel záběru, šířka a vůle, v osové vzdálenosti
+      m·(z1 + z2)/2. Počítá se v rámci kola 1 (osa dílu = počátek), takže zrcadlení i zvětšení kola se přenese samo.
+      Směr β kolem osy: první, ve kterém nové kolo nenarazí do jiného tělesa v dokumentu (0°, 90°, 180°…);
+      fáze 180° + 180°/z2 + β·z1/z2 (kolo 1 má zub na 0°), šikmé a šípové zuby protikola zrcadlené (opačné
+      stoupání). Vrací nový uzel, nebo null (vnitřní ozubení, nerovnoměrně roztažené kolo). */
+  M.protikolo = function (u, z2, dok) {
+    if (!u || u.druh !== 'kolo' || u.param.druh === 'vnitrni') return null;
+    const sk = M.meritkoUzlu(u);
+    if (Math.abs(sk[0] - sk[1]) > 1e-6 * Math.max(1, sk[0])) return null;      // eliptické kolo nezabírá
+    const p = u.param, n = Math.max(6, Math.min(300, Math.round(z2)));
+    const a = p.modul * (p.zubu + n) / 2;
+    const vzor = M.novyUzel('kolo', { param: Object.assign({}, p, { zubu: n }), barva: u.barva }, dok);
+    const V3 = THREE.Vector3, M4 = THREE.Matrix4;
+    const F1 = M.maticeUzlu(u).multiply(new M4().makeTranslation(...u.stred.map(x => -x)));   // rámec osy kola 1
+    const zrc = p.druh === 'sikme' || p.druh === 'sipove';
+    const ostatni = dok ? dok.uzly.filter(x => x.id !== u.id && !x.skryto).map(x => M.obalkaUzlu(x)) : [];
+    let nejlepsi = null;
+    for (const beta of [0, 90, 180, 270, 45, 135, 225, 315, 30, 60, 120, 150, 210, 240, 300, 330]) {
+      const L = new M4().makeRotationZ(beta * Math.PI / 180)
+        .multiply(new M4().makeTranslation(a, 0, 0))
+        .multiply(new M4().makeRotationZ((180 + 180 / n + beta * p.zubu / n) * Math.PI / 180))
+        .multiply(new M4().makeScale(1, zrc ? -1 : 1, 1));
+      const W2 = F1.clone().multiply(L).multiply(new M4().makeTranslation(...vzor.stred));
+      const pos = new V3(), q = new THREE.Quaternion(), sc = new V3();
+      W2.decompose(pos, q, sc);
+      const k2 = M.normalizujUzel(Object.assign({}, vzor, {
+        poloha: pos.toArray().map(x => Math.round(x * 1e6) / 1e6), rotace: M.rotaceZQuat(q),
+        zrcadlo: [sc.x < 0, sc.y < 0, sc.z < 0], rozmer: vzor.zaklad.map((r, i) => Math.round(r * Math.abs(sc.getComponent(i)) * 1e6) / 1e6),
+      }));
+      if (!nejlepsi) nejlepsi = k2;
+      const o = M.obalkaUzlu(k2);
+      if (!ostatni.some(b => [0, 1, 2].every(i => o.min[i] < b.max[i] - 1e-3 && o.max[i] > b.min[i] + 1e-3))) return k2;
+    }
+    return nejlepsi;
+  };
   /** Pružina: poloměr osy drátu a stoupání omezené tak, aby se závity nedotýkaly. */
   function rozmeryPruziny(p) {
     const Rs = Math.max(p.prumer / 2 - p.drat / 2, p.drat * 0.6);

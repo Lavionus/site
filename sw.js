@@ -5,7 +5,7 @@
 /* Při větší aktualizaci webu zvyš číslo verze — stará cache se u návštěvníků
    smaže a vše se stáhne čerstvé (jinak SWR ukáže novou verzi až na druhé načtení). */
 const PREFIX = 'webapp-';
-const CACHE = PREFIX + 'v363';
+const CACHE = PREFIX + 'v365';
 const JADRO = [
   './',
   './index.html',
@@ -198,6 +198,24 @@ const MODELAR = [
   './obsah/modelar/jadro/soubory/zip.js',
 ];
 
+/* Deník jídla (obsah/potraviny.html) – databáze potravin (~8 MB nekomprimovaně) a čtečka
+   čárových kódů (wasm) se stahují až za běhu; aby deník fungoval offline i při prvním
+   skenování bez sítě, dotáhne se celá sada na pozadí při prvním otevření stránky. */
+const POTRAVINY = [
+  './obsah/potraviny.html',
+  './obsah/potraviny/jadro.js',
+  './obsah/potraviny/aplikace.js',
+  './obsah/potraviny/grafy.js',
+  './obsah/potraviny/ctecka.js',
+  './obsah/potraviny/manifest.webmanifest',
+  './obsah/potraviny/data/vyrobky.json',
+  './obsah/potraviny/data/suroviny.json',
+  './obsah/potraviny/data/ciselniky.json',
+  './obsah/potraviny/data/slozeni.json',
+  './obsah/lib/zxing/zxing-reader.js',
+  './obsah/lib/zxing/zxing_reader.wasm',
+];
+
 // Dotáhne do cache, co z dané sady ještě chybí (po jednom, chyby ignoruje – při
 // příštím otevření se zkusí znovu). Běží jen jednou naráz pro každou sadu.
 const dotahuje = new Map();
@@ -228,6 +246,7 @@ self.addEventListener('message', e => {
   if (e.data && e.data.typ === 'dotahni' && e.data.sada === 'sine') e.waitUntil(dotahniSadu('sine', SINE));
   if (e.data && e.data.typ === 'dotahni' && e.data.sada === 'obleheni') e.waitUntil(dotahniSadu('obleheni', OBLEHENI));
   if (e.data && e.data.typ === 'dotahni' && e.data.sada === 'modelar') e.waitUntil(dotahniSadu('modelar', MODELAR));
+  if (e.data && e.data.typ === 'dotahni' && e.data.sada === 'potraviny') e.waitUntil(dotahniSadu('potraviny', POTRAVINY));
 });
 
 self.addEventListener('activate', e => {
@@ -254,6 +273,7 @@ self.addEventListener('fetch', e => {
   if (url.pathname.endsWith('/obsah/sine.html')) e.waitUntil(dotahniSadu('sine', SINE));
   if (url.pathname.endsWith('/obsah/obleheni.html')) e.waitUntil(dotahniSadu('obleheni', OBLEHENI));
   if (url.pathname.endsWith('/obsah/modelar.html')) e.waitUntil(dotahniSadu('modelar', MODELAR));
+  if (url.pathname.endsWith('/obsah/potraviny.html')) e.waitUntil(dotahniSadu('potraviny', POTRAVINY));
 
   // navigace s dotazem (trpaslici.html?seed=…&velikost=…) je pořád táž stránka: hledat bez dotazu a ukládat bez něj
   const navigace = e.request.mode === 'navigate';

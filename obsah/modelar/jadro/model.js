@@ -183,6 +183,11 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
   // už ověřené uzly (dokument je neměnný): dítě skupiny se při úpravě skupiny nepřestavuje znovu – historie
   // pak sdílí nezměněné podstromy a velká skupina se při každém posunu nekopíruje celá
   const normalizovane = new WeakSet();
+  /** Název bez řídicích znaků (v 3MF by byl neplatné XML), oříznutý, nejvýš 80 znaků; jinak výchozí. */
+  const cistyNazev = (n, vychozi) => {
+    const c = typeof n === 'string' ? n.replace(/[\x00-\x1F\x7F]/g, ' ').replace(/\s+/g, ' ').trim().slice(0, 80) : '';
+    return c || vychozi;
+  };
   M.normalizujUzel = function (u) {
     const v = normalizuj(u);
     normalizovane.add(v);
@@ -207,7 +212,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       return {
         id: M.idOk(u.id) ? u.id : M.noveId(),
         druh: u.druh,
-        nazev: typeof u.nazev === 'string' && u.nazev.trim() ? u.nazev.trim().slice(0, 80) : t.nazev,
+        nazev: cistyNazev(u.nazev, t.nazev),
         rozmer: trojice(u.rozmer, zaklad, MIN_ROZMER, MAX_ROZMER),
         param,
         poloha: trojice(u.poloha, [0, 0, zaklad[2] / 2], -MAX_POLOHA, MAX_POLOHA),
@@ -226,7 +231,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       return {
         id: M.idOk(u.id) ? u.id : M.noveId(),
         druh: 'sit',
-        nazev: typeof u.nazev === 'string' && u.nazev.trim() ? u.nazev.trim().slice(0, 80) : t.nazev,
+        nazev: cistyNazev(u.nazev, t.nazev),
         rozmer: trojice(u.rozmer, zaklad, MIN_ROZMER, MAX_ROZMER),
         param: {},
         poloha: trojice(u.poloha, [0, 0, zaklad[2] / 2], -MAX_POLOHA, MAX_POLOHA),
@@ -247,7 +252,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       return {
         id: M.idOk(u.id) ? u.id : M.noveId(),
         druh: 'skupina',
-        nazev: typeof u.nazev === 'string' && u.nazev.trim() ? u.nazev.trim().slice(0, 80) : t.nazev,
+        nazev: cistyNazev(u.nazev, t.nazev),
         rozmer: trojice(u.rozmer, zaklad, MIN_ROZMER, MAX_ROZMER),
         param: {},
         poloha: trojice(u.poloha, [0, 0, zaklad[2] / 2], -MAX_POLOHA, MAX_POLOHA),
@@ -267,7 +272,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     return {
       id: M.idOk(u.id) ? u.id : M.noveId(),
       druh: u.druh,
-      nazev: typeof u.nazev === 'string' && u.nazev.trim() ? u.nazev.trim().slice(0, 80) : t.nazev,
+      nazev: cistyNazev(u.nazev, t.nazev),
       rozmer: trojice(u.rozmer, t.rozmer, MIN_ROZMER, MAX_ROZMER),
       param: M.normalizujParam(u.druh, u.param || {}),
       poloha: trojice(u.poloha, [0, 0, t.rozmer[2] / 2], -MAX_POLOHA, MAX_POLOHA),
@@ -280,9 +285,14 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     };
   };
 
-  /** Přesná úprava skupiny (OpenCascade): zaoblení / sražení hran, skořepina; jinak null. */
+  /** Přesná úprava skupiny (OpenCascade): zaoblení / sražení hran, skořepina, odsazení stěn; jinak null. */
   function normalizujOcct(o) {
-    if (!o || !['zaobleni', 'srazeni', 'skorepina'].includes(o.operace)) return null;
+    if (!o || !['zaobleni', 'srazeni', 'skorepina', 'odsazeni'].includes(o.operace)) return null;
+    // odsazení stěn (vůle): kladné zvětší, záporné zmenší – jen hodnota
+    if (o.operace === 'odsazeni') {
+      const h = Math.round(M.omez(cislo(o.hodnota, 0.2), -100, 100) * 1e6) / 1e6;
+      return { operace: 'odsazeni', hodnota: Math.abs(h) < 0.001 ? 0.001 * (h < 0 ? -1 : 1) : h, hrany: [], plochy: [] };
+    }
     const bod = b => Array.isArray(b) && b.length === 3 && b.every(x => typeof x === 'number' && isFinite(x)) ? b.map(x => Math.round(x * 1e6) / 1e6) : null;
     return {
       operace: o.operace,
@@ -424,6 +434,15 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
           let o = 0;
           for (const c of casti) { v.set(c, o); o += c.length; }
         }
+        if (u.occt && u.occt.operace === 'odsazeni') {
+          // odsazení zvětší / zmenší těleso o hodnotu na každou stranu: obálka podle toho (rohy obálky)
+          // (hodnota je ve skutečných mm, vrcholy v přirozených souřadnicích – vydělit měřítkem skupiny)
+          const sk = M.meritkoUzlu(u), h = sk.map(x => u.occt.hodnota / x), mn = [Infinity, Infinity, Infinity], mx = [-Infinity, -Infinity, -Infinity];
+          for (let i = 0; i < v.length; i += 3) for (let j = 0; j < 3; j++) { mn[j] = Math.min(mn[j], v[i + j]); mx[j] = Math.max(mx[j], v[i + j]); }
+          const a = mn.map((x, j) => Math.min(x - h[j], (x + mx[j]) / 2)), b = mx.map((x, j) => Math.max(x + h[j], (x + mn[j]) / 2));
+          v = new Float32Array(24);
+          for (let i = 0; i < 8; i++) for (let j = 0; j < 3; j++) v[i * 3 + j] = (i >> j) & 1 ? b[j] : a[j];
+        }
       } else if (M.maPrirozene(u)) {
         // body obálky bez manifoldu (skica: vrstvy tělesa, díl: analytická obálka), posunuté o střed
         v = (u.druh === 'skica' ? M.bodyObalkySkici(u.param).body : M.bodyObalkyDilu(u.druh, u.param)).slice();
@@ -487,7 +506,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
   /** Popis geometrie podstromu (bez id, názvů a zámků): na něm závisí výsledek booleanu. */
   function popisGeometrie(u, sBarvou) {
     const z = [u.druh, u.rozmer, u.param, u.poloha, u.rotace, u.zrcadlo, u.role];
-    if (u.druh === 'sit') z.push(u.zdroj, u.zaklad);
+    if (u.druh === 'sit') z.push(u.zdroj, u.zaklad, !!u.jednobarevne);      // barvy ze souboru vypnuté = jiná barevná skupina
     if (M.maPrirozene(u)) z.push(u.zaklad, u.stred);
     if (sBarvou) z.push(u.barva);
     if (u.druh === 'skupina') z.push(u.zaklad, u.operace, u.barevne, u.occt, u.deti.map(d => popisGeometrie(d, sBarvou && u.barevne)));
@@ -503,7 +522,10 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
   };
 
   /** Klíč geometrie: uzly se stejným klíčem mají stejnou (přirozenou) síť. */
-  M.klicGeometrie = u => u.druh === 'skupina' ? 'skupina|' + (u.occt ? M.klicOcct(u) : M.klicBooleanu(u))
+  // uzly jsou neměnné: klíč (u skupiny JSON + hash celého podstromu) se počítá jednou na objekt
+  const klicCache = new WeakMap();
+  M.klicGeometrie = u => { let k = klicCache.get(u); if (k === undefined) { k = klicGeometrieVypocet(u); klicCache.set(u, k); } return k; };
+  const klicGeometrieVypocet = u => u.druh === 'skupina' ? 'skupina|' + (u.occt ? M.klicOcct(u) : M.klicBooleanu(u))
     : u.druh === 'sit' ? 'sit|' + u.zdroj + (u.jednobarevne ? '|1' : '')
     : M.maPrirozene(u) ? u.druh + '|' + M.hash(JSON.stringify([u.param, u.stred]))
     : u.druh + '|' + u.rozmer.join(',') + '|' + JSON.stringify(u.param);

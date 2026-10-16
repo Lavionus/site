@@ -42,8 +42,10 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       { id: 'zaoblitHrany', nazev: 'Zaoblit hrany (přesně)', klavesy: [], povoleno: () => M.vybraneVolne().length === 1, akce: () => M.otevriUpravuHran('zaobleni') },
       { id: 'srazitHrany', nazev: 'Srazit hrany (přesně)', klavesy: [], povoleno: () => M.vybraneVolne().length === 1, akce: () => M.otevriUpravuHran('srazeni') },
       // jen plná tělesa (trubka, torus, rámeček… už duté nebo tenké jsou)
+      { id: 'odsadit', nazev: 'Odsadit stěny – vůle (zvětšit / zmenšit těleso o mm, přesně)', klavesy: [], povoleno: () => M.vybraneVolne().length === 1, akce: () => M.otevriOdsazeni() },
       { id: 'skorepina', nazev: 'Skořepina – vyhloubit (přesně, plná tělesa)', klavesy: [], povoleno: () => M.vybraneVolne().length === 1 && M.lzeSkorepinu(M.vybraneVolne()[0]),
         akce: () => M.otevriUpravuHran('skorepina') },
+      { id: 'vule', nazev: 'Vůle mezi dvěma tělesy (nejmenší vzdálenost)', klavesy: [], povoleno: () => M.vybraneUzly().length === 2, akce: () => M.zmerVuli() },
       { id: 'mereni', nazev: 'Měřit (vzdálenost, úhel, poloměr)', klavesy: ['R'], povoleno: () => true,
         akce: () => M.app.rezim === 'mereni' ? M.nastavRezim(null) : M.otevriMereni() },
       { id: 'rezPohledu', nazev: 'Řez pohledem (nahlédnout dovnitř)', klavesy: [], povoleno: () => true, akce: () => M.otevriRezPohledu() },
@@ -63,8 +65,10 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       { id: 'pivotZrusit', nazev: 'Bod otáčení zpět na střed výběru', klavesy: [], povoleno: () => !!M.app.pivot, akce: () => M.nastavPivot(null) },
       { id: 'otocitKolemBodu', nazev: 'Otočit kolem bodu (úhel, osa, bod)', klavesy: [], povoleno: () => true, akce: () => M.otevriOtoceniKolemBodu() },
       { id: 'kontrolaTisku', nazev: 'Kontrola tisku (materiál, hmotnost, převisy, problémy)', klavesy: [], povoleno: () => true, akce: () => M.otevriKontroluTisku() },
+      { id: 'zamerit', nazev: 'Zaměřit výběr (přiblížit vybraná tělesa)', klavesy: ['.'], povoleno: vybrano, akce: () => S.zamerit(M.app.vyber) },
       { id: 'koty', nazev: 'Ukázat / skrýt kóty vybraného tělesa (klik na číslo = nová velikost)', klavesy: [], povoleno: () => true, akce: () => M.prepniKoty() },
       { id: 'prevesy', nazev: 'Ukázat / skrýt převisy (plochy, které potřebují podpěry)', klavesy: [], povoleno: () => true, akce: () => M.prepniPrevesy() },
+      { id: 'orientace', nazev: 'Nejlepší orientace pro tisk (nejméně převisů, velká plocha na desce)', klavesy: [], povoleno: () => M.app.dok.uzly.some(u => !u.skryto && !u.zamceno && u.role !== 'dira'), akce: () => M.orientujProTisk() },
       { id: 'rozmistit', nazev: 'Rozmístit tělesa na desce (vedle sebe pro tisk)', klavesy: [], povoleno: () => M.app.dok.uzly.some(u => !u.skryto && !u.zamceno), akce: () => M.rozmistitNaDesce() },
       { id: 'dira', nazev: 'Na díru', klavesy: ['H'], povoleno: volne, akce: () => M.upravVybrane({ role: 'dira' }, 'Na díru') },
       { id: 'teleso', nazev: 'Na těleso', klavesy: ['S'], povoleno: volne, akce: () => M.upravVybrane({ role: 'teleso' }, 'Na těleso') },
@@ -111,8 +115,22 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       return nej;
     }
 
+    let posledniStisk = 0;
+    document.addEventListener('pointerdown', () => { posledniStisk = performance.now(); }, true);
     document.addEventListener('keydown', e => {
       const cil = e.target;
+      // Ctrl+D / G / K z pole inspektoru: rozepsanou hodnotu potvrdit a příkaz provést (prohlížeč by jinak
+      // otevřel záložky a zkratka by v poli nedělala nic)
+      if (cil && cil.tagName === 'INPUT' && cil.closest('#inspektor') && (e.ctrlKey || e.metaKey) && !e.altKey && ['d', 'g', 'k'].includes(e.key.toLowerCase())) {
+        e.preventDefault();
+        cil.dispatchEvent(new Event('change'));
+        cil.blur();
+        S.renderer.domElement.focus({ preventScroll: true });
+        const id = { d: 'duplikovat', g: e.shiftKey ? 'rozdelit' : 'seskupit', k: 'paleta' }[e.key.toLowerCase()];
+        const p = podleId[id];
+        if (p && p.povoleno()) p.akce();
+        return;
+      }
       // Ctrl+Z/Y v číselném poli inspektoru: zpět v modelu (ne textové zpět prohlížeče, které by vrátilo jiné pole)
       if (cil && cil.tagName === 'INPUT' && cil.closest('#inspektor') && (e.ctrlKey || e.metaKey) && !e.altKey && ['z', 'y'].includes(e.key.toLowerCase())) {
         e.preventDefault();
@@ -121,7 +139,12 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
         if (p.povoleno()) p.akce();
         return;
       }
-      if (cil && (cil.tagName === 'INPUT' || cil.tagName === 'TEXTAREA' || cil.tagName === 'SELECT' || cil.isContentEditable)) return;
+      // textová pole si klávesy nechají; přepínač, zaškrtávátko nebo tlačítko ne (fokus na volbě v panelu úprav
+      // by jinak spolkl Ctrl+Z, i když panel slibuje „Ctrl+Z vrátí“)
+      const textove = cil && ((cil.tagName === 'INPUT' && !['radio', 'checkbox', 'button', 'range', 'color'].includes(cil.type)) || cil.tagName === 'TEXTAREA' || cil.tagName === 'SELECT' || cil.isContentEditable);
+      if (textove) return;
+      // na přepínači, posuvníku či zaškrtávátku projdou jen kombinace s Ctrl (Zpět/Znovu…) – Delete by smazal tělesa
+      if (cil && cil.tagName === 'INPUT' && !(e.ctrlKey || e.metaKey)) return;
       // šipky v otevřené nabídce: pohyb mezi položkami (Home/End na kraj)
       const nab = cil && cil.closest && cil.closest('.nabidka');
       const hledat = nab && nab.querySelector('input[type=search]');
@@ -191,7 +214,9 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       }
       // klik, který je jen koncem přetažení tvaru z nabídky (puštěno nad lištou), nic neotevírá
       const otevri = e.target.closest('[data-nabidka]');
-      if (otevri && e.detail > 0 && performance.now() - (M.posledniTahKnihovny || 0) < 400) return;
+      // puštění taženého tvaru nad lištou vyrobí klik – ten nabídku neotevře (stisk začal ještě během tažení);
+      // nový klik po tažení ano
+      if (otevri && e.detail > 0 && (M.posledniTahKnihovny || 0) > posledniStisk - 1) return;
       document.querySelectorAll('.nabidka').forEach(n => {
         if (otevri && n.id === otevri.dataset.nabidka) {
           n.hidden = !n.hidden;
@@ -265,8 +290,26 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     document.querySelectorAll('[role=menuitemcheckbox]').forEach(b => b.setAttribute('aria-checked', b.getAttribute('aria-pressed') || 'false'));
     const lista = document.querySelector('.lista');
     if (lista) {
+      // zaměřené tlačítko nesmí zajet pod přilepené ❓ / ☰ Panel: odsazení posunu podle jejich skutečné šířky
+      const vpravo = lista.querySelector('.vpravo');
+      if (vpravo && typeof ResizeObserver === 'function') new ResizeObserver(() => { lista.style.scrollPaddingRight = (vpravo.offsetWidth + 16) + 'px'; }).observe(vpravo);
+      // fokus (Tab) na tlačítko zčásti pod ❓ / ☰ Panel: prohlížeč ho neposune – dorovnat
+      lista.addEventListener('focusin', e => {
+        if (!vpravo || vpravo.contains(e.target)) return;
+        const r = e.target.getBoundingClientRect(), l = lista.getBoundingClientRect(), hranice = vpravo.getBoundingClientRect().left - 8;
+        if (r.right > hranice) lista.scrollLeft += r.right - hranice;
+        else if (r.left < l.left + 8) lista.scrollLeft -= l.left + 8 - r.left;
+      });
       // posun lišty (úzké okno) ujede tlačítkům: otevřené nabídky zavřít
-      lista.addEventListener('scroll', () => document.querySelectorAll('.nabidka:not([hidden])').forEach(n => M.zavriNabidku(n)), { passive: true });
+      // nabídka jede s tlačítkem; zavře se, až když tlačítko zajede mimo viditelnou část lišty
+      lista.addEventListener('scroll', () => document.querySelectorAll('.nabidka:not([hidden])').forEach(n => {
+        const b = document.querySelector(`[data-nabidka="${n.id}"]`);
+        if (!b || !lista.contains(b)) return;
+        const r = b.getBoundingClientRect(), l = lista.getBoundingClientRect();
+        const pravy = vpravo ? vpravo.getBoundingClientRect().left : l.right;
+        if (r.right < l.left + 4 || r.left > pravy - 4) { M.zavriNabidku(n); return; }
+        n.style.left = Math.max(8, Math.min(r.left, innerWidth - n.offsetWidth - 8)) + 'px';
+      }), { passive: true });
       // obyčejné kolečko myši posouvá lištu do strany (posuvník je skrytý)
       lista.addEventListener('wheel', e => {
         if (e.ctrlKey || Math.abs(e.deltaX) > Math.abs(e.deltaY) || lista.scrollWidth <= lista.clientWidth + 1) return;

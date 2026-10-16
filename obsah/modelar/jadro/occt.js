@@ -45,7 +45,14 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       const sl = [0, 1, 2].map(c => Math.hypot(e[c * 4], e[c * 4 + 1], e[c * 4 + 2]));
       // tuhá nebo podobnost (stejné měřítko ve všech osách) → transform: roviny zůstanou rovinami, úsečky
       // úsečkami (generalTransform dělá ze všeho B-spline, na kterém pak selžou zaoblení i záložní postupy)
-      const stejne = sl.every(x => Math.abs(x - sl[0]) < 1e-9 * Math.max(1, sl[0]));
+      // (rozdíl pod 1e-6 je zaokrouhlení rozměru na miliontiny, ne skutečné nerovnoměrné zvětšení)
+      const stejne = sl.every(x => Math.abs(x - sl[0]) < 1e-6 * Math.max(1, sl[0]));
+      if (stejne && sl.some(x => x !== sl[0])) {
+        // srovnat na průměrné měřítko – transform chce přesnou podobnost
+        const s0 = (sl[0] + sl[1] + sl[2]) / 3, m2 = mat.clone(), e2 = m2.elements;
+        for (let c = 0; c < 3; c++) for (let r = 0; r < 3; r++) e2[c * 4 + r] *= s0 / sl[c];
+        return preved(id, m2);
+      }
       // zrcadlení se stejným měřítkem: nejdřív přesné zrcadlo přes rovinu x = 0, pak zbytek jako podobnost
       if (stejne && mat.determinant() < 0) {
         const z = occ('zrcadlení', () => k.mirror(id, 0, 0, 0, 1, 0, 0));
@@ -60,7 +67,9 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
 
     // ------------------------------------------------------------ síť → těleso z rovinných ploch
     /** Těleso ze sítě: koplanární trojúhelníky = jedna plocha (s otvory), sešité do tělesa. */
+    let zeSite = 0;              // kolik těles se při stavbě postavilo z trojúhelníků sítě (filtr mělkých hran)
     function zRovinnychPloch(sit, nazev) {
+      zeSite++;
       const p = sit.poz, idx = sit.idx, nt = idx.length / 3;
       if (nt > MAX_TROJ_PLOCH) throw new Error(`${nazev || 'tvar'} je pro přesnou úpravu příliš složitý (${nt} trojúhelníků, nejvýš ${MAX_TROJ_PLOCH})`);
       const CL = globalThis.ClipperLib, S = 1e5;
@@ -222,9 +231,41 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
           return meritko(nat, sx / (2 * r), sy / (2 * r), sz / (h + 2 * r));
         }
       }
-      return zRovinnychPloch(M.sitTvaru(u.druh, u.rozmer, u.param), M.popisDruhu(u.druh).nazev);
+      // mnohostěn (hranol, jehlan, hvězda…): jeho rovné plochy jsou skutečné – mělké hrany mezi nimi se nabízejí
+      const t = zRovinnychPloch(M.sitTvaru(u.druh, u.rozmer, u.param), M.popisDruhu(u.druh).nazev);
+      if (MNOHOSTENY.has(u.druh)) zeSite--;
+      return t;
     }
+    const MNOHOSTENY = new Set(['hranol', 'jehlan', 'strecha', 'klin', 'hvezda', 'sipka', 'kriz', 'schody', 'nosnik', 'brana', 'ramecek']);
 
+    /** Díly, které jde postavit přesně (válce místo plošek sítě): díra pro šroub. V přirozených souřadnicích
+        dílu (síť z manifoldu minus stred). Jinak null – díl půjde jako síť. */
+    function dilPresne(u) {
+      if (u.druh === 'sloupek' && M.rozmerySloupku && u.stred) {
+        const p = Object.assign({}, M.DILY.sloupek.param, u.param), r = M.rozmerySloupku(p);
+        let t = k.makeCylinder(r.R, p.vyska);
+        const hloubka = Math.max(0, p.vyska - Math.min(p.dno, p.vyska - 0.5));
+        if (hloubka >= 0.2) t = occ('sloupek', () => k.cut(t, posun(k.makeCylinder(r.r, hloubka + 0.5), 0, 0, p.vyska - hloubka)));
+        return posun(t, -u.stred[0], -u.stred[1], -u.stred[2]);
+      }
+      if (u.druh !== 'diraSroub' || !M.rozmeryDiry || !u.stred) return null;
+      const p = Object.assign({}, M.DILY && M.DILY.diraSroub ? M.DILY.diraSroub.param : {}, u.param), r = M.rozmeryDiry(p);
+      let t = posun(k.makeCylinder(r.r, p.delka + 1), 0, 0, -0.5);
+      const z0 = p.delka - r.hloubka;
+      let hlava = null;
+      if (p.druh === 'kuzelova') hlava = posun(occ('kužel díry', () => k.makeCone(r.r, r.R + 0.5, r.hloubka + 0.5)), 0, 0, z0);
+      else if (p.druh === 'zahloubena') hlava = posun(k.makeCylinder(r.R, r.hloubka + 0.5), 0, 0, z0);
+      else if (p.druh === 'sestihran') {
+        const R = r.klic / Math.cos(Math.PI / 6) / 2, b = [];
+        for (let i = 0; i < 6; i++) b.push([R * Math.cos(i * Math.PI / 3), R * Math.sin(i * Math.PI / 3)]);
+        const hr = b.map((a, i) => { const c = b[(i + 1) % 6]; return k.makeLineEdge(a[0], a[1], z0, c[0], c[1], z0); });
+        const vh = vec32(hr);
+        try { hlava = occ('šestihran díry', () => k.extrude(k.makeFace(k.makeWire(vh)), 0, 0, r.hloubka + 0.5)); } finally { vh.delete(); }
+      }
+      if (hlava) t = occ('díra pro šroub', () => k.fuse(t, hlava));
+      try { t = k.unifySameDomain(t); } catch (e) { /* nechat */ }
+      return posun(t, -u.stred[0], -u.stred[1], -u.stred[2]);
+    }
     const JEDNA = [1, 1, 1];
     const jeJedna = S => S.every(x => Math.abs(x - 1) < 1e-12);
     const krat = (a, b) => a.map((x, i) => x * b[i]);
@@ -244,6 +285,8 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
           const z = M.zdroje.get(u.zdroj);
           return { t: posun(occ('import STEP', () => k.importStep(z.step)), -z.stredStep[0], -z.stredStep[1], -z.stredStep[2]), z: S };
         }
+        const dil = dilPresne(u);
+        if (dil) return { t: dil, z: S };
         if (M.TVARY[u.druh]) return jeJedna(S) ? { t: tvar(u), z: JEDNA } : { t: tvar(Object.assign({}, u, { rozmer: krat(u.rozmer, S) })), z: JEDNA };
         const s = site[M.klicGeometrie(u)] || (u.druh === 'sit' ? M.zdroje.get(u.zdroj) : null);
         if (!s) throw new Error(`přesné těleso pro „${u.nazev}“ chybí (síť nedodána)`);
@@ -251,7 +294,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
         return { t: zRovinnychPlochNeboTrojuhelniky(s, u.nazev, proStep), z: S };
       }
       const obal = u.deti.length === 1;
-      const stejne = S.every(x => Math.abs(x - S[0]) < 1e-9 * Math.max(1, S[0]));
+      const stejne = S.every(x => Math.abs(x - S[0]) < 1e-6 * Math.max(1, S[0]));
       const plne = [], diry = [];
       let zbyva = S;                                   // měřítko, které výsledek skupiny ještě potřebuje
       for (const d of u.deti) {
@@ -259,10 +302,17 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
         const nenatocene = !d.rotace || d.rotace.every(x => Math.abs(x) < 1e-9);
         const tuha = (poloha, z) => new THREE.Matrix4().compose(new THREE.Vector3(...poloha), M.quatUzlu(d),
           new THREE.Vector3(...z.map((x, i) => x * (zr[i] ? -1 : 1))));
+        // natočení po 90° (osy dítěte leží na osách skupiny): zvětšení jde přeskládat na osy dítěte
+        let Sd = null;
+        if (obal && !nenatocene && !stejne) {
+          const R = new THREE.Matrix4().makeRotationFromQuaternion(M.quatUzlu(d)).elements;
+          const perm = [0, 1, 2].map(j => [0, 1, 2].find(i => Math.abs(Math.abs(R[j * 4 + i]) - 1) < 1e-9));
+          if (perm.every(i => i !== undefined) && new Set(perm).size === 3) Sd = perm.map(i => S[i]);
+        }
         let t;
-        if (obal && (nenatocene || stejne)) {
+        if (obal && (nenatocene || stejne || Sd)) {
           // obal úpravy: dítě ve skutečné velikosti, umístěné v souřadnicích Diag(S)·skupina
-          const r = brepR(d, site, krat(S, sc));
+          const r = brepR(d, site, krat(Sd || S, sc));
           t = preved(r.t, tuha(krat(d.poloha, S), r.z));
           zbyva = JEDNA;
         } else {
@@ -287,10 +337,17 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       // úprava ve skutečné velikosti (stěna 2 mm zůstane 2 mm i po roztažení): hrany a plochy úpravy jsou
       // v přirozených souřadnicích skupiny – do Diag(S)
       if (!jeJedna(zbyva)) t = meritko(t, ...zbyva);
-      if (jeJedna(S)) return { t: uprav(t, u.occt), z: JEDNA };
+      if (jeJedna(S)) {
+        try { return { t: uprav(t, u.occt), z: JEDNA }; }
+        catch (e) {
+          // hrany vybrané při jiném zvětšení (délka oblouku změřená ve 2×): dohledat bez délky
+          if (!/nenašla/.test(e.message) || !(u.occt.hrany || []).length) throw e;
+          return { t: uprav(t, Object.assign({}, u.occt, { hrany: u.occt.hrany.map(h => Object.assign({}, h, { delka: null, bezDelky: true })) })), z: JEDNA };
+        }
+      }
       const o = Object.assign({}, u.occt, {
         hrany: (u.occt.hrany || []).map(h => ({ stred: krat(h.stred, S), delka: null, bod: h.bod ? krat(h.bod, S) : null,
-          konce: h.konce ? h.konce.map(p => krat(p, S)) : null })),
+          konce: h.konce ? h.konce.map(p => krat(p, S)) : null, odchylka: Math.max(...S.map(x => Math.abs(1 - 1 / x))) })),
         plochy: (u.occt.plochy || []).map(f => {
           const n = f.normala.map((x, i) => x / S[i]), l = Math.hypot(...n) || 1;
           return { stred: krat(f.stred, S), normala: n.map(x => x / l) };
@@ -313,7 +370,12 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
 
     // ------------------------------------------------------------ hrany a plochy
     const stredHrany = e => { const c = k.getLinearCenterOfMass(e); const o = [c.get(0), c.get(1), c.get(2)]; c.delete(); return o; };
-    function popisHran(t) {
+    /** filtrUhlu: nenabízet hrany se zlomem pod 20° mezi rovinami – jen u těles s plochami ze sítě (plošky oblouku,
+        přechodu); skutečné mělké hrany (hřeben ploché střechy, 24boký hranol) zůstanou. Při dohledávání uložených
+        hran (uprav) se nefiltruje nikdy – starší projekty by hranu nenašly. */
+    function popisHran(t, filtrUhlu = false) {
+      let povrchT = null;
+      const povrch = () => povrchT != null ? povrchT : (povrchT = pole(k.getSubShapes(t, 'face')).reduce((a, g) => a + k.getSurfaceArea(g), 0));
       // šev (hrana mezi plochou a jí samou – válec, koule) zaoblit ani srazit nejde: nenabízet
       // ani hladký přechod (plochy na hraně tečné – třeba vnitřek skořepiny zaobleného kvádru): už je oblý, OCCT
       // ho zaoblit neumí („no suitable edges“) a jen by mátl
@@ -329,9 +391,12 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
             const v = k.surfaceNormal(g, u[0], u[1]), o = [v.get(0), v.get(1), v.get(2)]; v.delete();
             return o;
           });
-          // zlom pod 20°: plošky zakřivené plochy složené z trojúhelníků (oblouk, přechod) – stovky hran,
+          const cos = n[0][0] * n[1][0] + n[0][1] * n[1][1] + n[0][2] * n[1][2];
+          if (cos > 0.9995) return true;                       // hladký přechod
+          // zlom pod 20° mezi rovinami u těles ze sítě: plošky zakřivené plochy (oblouk, přechod) – stovky hran,
           // na kterých úprava nic viditelného neudělá a OCCT ji počítá sekundy
-          return n[0][0] * n[1][0] + n[0][1] * n[1][1] + n[0][2] * n[1][2] > Math.cos(20 * Math.PI / 180);
+          // (velká rovina – plochá střecha, 24boký hranol – je skutečná plocha, ne ploška)
+          return filtrUhlu && cos > Math.cos(20 * Math.PI / 180) && f.every(jeRovina) && f.every(g => k.getSurfaceArea(g) < 0.05 * povrch());
         } catch (x) { return false; }
       };
       return pole(k.getSubShapes(t, 'edge')).filter(e => !nevhodna(e)).map(e => ({ id: e, stred: stredHrany(e), delka: k.getLength(e), bod: bodHrany(e), konce: jeUsecka(e) ? konceHrany(e) : null }));
@@ -422,9 +487,13 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       // skupina zvětšená po výběru hran a vnořená úprava (zaoblení uvnitř) zůstala ve skutečné velikosti: hrany se
       // posunuly – nejbližší hrana stejného druhu (rovná ve stejném směru / oblá) v okolí do 15 % velikosti tělesa
       if (h.delka != null) return null;
+      // opakování v měřítku 1: rovná hrana jen na své přímce (výše) – soused o kus vedle by se zaoblil místo ní
+      if (h.bezDelky && h.konce) return null;
       let x0 = Infinity, x1 = -Infinity;
       for (const e of vse) for (let i = 0; i < 3; i++) { x0 = Math.min(x0, e.stred[i]); x1 = Math.max(x1, e.stred[i]); }
-      const tol = 0.15 * Math.max(1, x1 - x0);
+      // posun vnitřních hran roste se zvětšením (stěna zůstává ve skutečné velikosti): okolí úměrné odchylce měřítka,
+      // ať se při malém zvětšení nevezme sousední hrana místo zmizelé
+      const tol = 0.15 * Math.max(1, x1 - x0) * Math.min(1, 4 * (h.odchylka != null ? h.odchylka : 1)) + 0.05;
       const smer = h.konce ? (() => { const [A, B] = h.konce, v = [B[0] - A[0], B[1] - A[1], B[2] - A[2]], l = Math.hypot(...v) || 1; return v.map(c => c / l); })() : null;
       nej = null; d0 = Infinity;
       for (const e of vse) {
@@ -492,6 +561,32 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     /** Zaoblení, sražení nebo skořepina – každé těleso výsledku zvlášť, s hranami/plochami, které mu patří. */
     function uprav(t, o) {
       const tl = telesa(t);
+      if (o.operace === 'odsazeni') {
+        // odsazení stěn: kladné zvětší (vypouklé rohy zaoblí), záporné zmenší; objem se musí změnit správným směrem
+        const odsad = x => {
+          const v0 = k.getVolume(x);
+          for (const spoj of [0, 1]) {
+            try {
+              const y = k.offsetWithJoin(x, o.hodnota, 1e-3, spoj), s = telesa(y), v = k.getVolume(y);
+              if (s.length === 1 && isFinite(v) && v > 1e-9 && (o.hodnota > 0 ? v > v0 : v < v0) && k.isValid(s[0])) return s[0];
+            } catch (e) { /* další způsob spojení */ }
+          }
+          return null;
+        };
+        return slozit(tl.map(x => {
+          let y = odsad(x);
+          // B-spline plochy (eliptický válec, roztažená koule…) OCCT odsadit neumí: těleso z jeho triangulace
+          if (!y && pole(k.getSubShapes(x, 'face')).some(f => { try { return k.surfaceType(f) === 'bspline'; } catch (e) { return false; } })) {
+            // (jen u jednoduché triangulace – tisíce plošek by OCCT počítalo desítky sekund a stejně selhalo)
+            try { const sit = sitZTelesa(k.copy(x), undefined); if (sit.idx.length / 3 <= 1500) y = odsad(zRovinnychPlochNeboTrojuhelniky(sit, 'těleso', false)); } catch (e) { y = null; }
+          }
+          if (y) return y;
+          // „tenčí než dvojnásobek“ jen tam, kde to opravdu platí (nejmenší rozměr obálky)
+          const bb = k.getBoundingBox(x, false), nejmensi = Math.min(bb.xmax - bb.xmin, bb.ymax - bb.ymin, bb.zmax - bb.zmin);
+          throw new Error(o.hodnota < 0 && nejmensi <= 2 * Math.abs(o.hodnota) + 1e-6 ? 'zmenšení se nepodařilo – těleso je tenčí než dvojnásobek odsazení'
+            : 'přesné jádro tohle těleso odsadit neumí (oblé plochy po nerovnoměrném roztažení nebo složitý průnik) – zkus menší hodnotu, nebo odsazení udělej před roztažením');
+        }));
+      }
       if (o.operace === 'skorepina') {
         const plochy = tl.map(x => popisPloch(x).filter(f => f.rovina));
         const vybrane = tl.map(() => []);
@@ -526,10 +621,32 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
             }, v0);
           }
           if (!vybrane[i].length) return x;            // těleso bez otevřené plochy zůstane plné
+          // každá otevřená plocha musí být opravdu otevřená: kousek pod jejím středem (v původním materiálu)
+          // je po skořepině prázdno. OCCT u B-spline ploch (natočené a roztažené těleso) občas vrátí zavřenou dutinu.
+          const zkouska = plochy[i].filter(f => vybrane[i].includes(f.id) && f.normala)
+            .map(f => f.stred.map((c, j) => c - f.normala[j] * o.hodnota / 2))
+            .filter(q => { try { return k.containsPoint(x, q[0], q[1], q[2], 1e-6); } catch (e) { return false; } });
+          // ověřuje se na síti (to se zobrazí a exportuje); klasifikátor OCCT u těchto těles sám chybuje
+          const otevrena = y => {
+            if (!zkouska.length) return true;
+            let sit;
+            try { sit = sitZTelesa(k.copy(y)); } catch (e) { return false; }
+            return zkouska.every(q => !M.bodVSiti(sit, q));
+          };
           const v = vec32(vybrane[i]);
-          try { return zkus(spoj => spoj == null ? k.shell(x, v, o.hodnota, 1e-3) : k.shellWithJoin(x, v, o.hodnota, 1e-3, spoj), v0); }
-          catch (e) { return otevrenaDutina(x, vybrane[i], o.hodnota, v0) || (() => { throw e; })(); }
-          finally { v.delete(); }
+          try {
+            return zkus(spoj => {
+              const y = spoj == null ? k.shell(x, v, o.hodnota, 1e-3) : k.shellWithJoin(x, v, o.hodnota, 1e-3, spoj);
+              if (!otevrena(y)) throw new Error('plocha zůstala zavřená');
+              return y;
+            }, v0);
+          } catch (e) {
+            const y = otevrenaDutina(x, vybrane[i], o.hodnota, v0);
+            if (y && otevrena(y)) return y;
+            if (pole(k.getSubShapes(x, 'face')).some(f => { try { return k.surfaceType(f) === 'bspline'; } catch (z) { return false; } }))
+              throw new Error('skořepina u oblých ploch po nerovnoměrném roztažení (eliptický válec, roztažená koule) v přesném jádru nejde – udělej ji před roztažením, nebo použij kruhový tvar');
+            throw e;
+          } finally { v.delete(); }
         }));
       }
       if (!(o.hrany || []).length) return t;
@@ -679,8 +796,45 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
         krát délka hrany, s trojnásobnou rezervou a rohy (r³ na konec). Výsledek nad mezí je rozbitý, i když je
         vodotěsný a isValid ho pustí (zaoblení skoro rovné hrany na plochách z trojúhelníků přidalo 68 mm³ místo
         0,001). Úhel nejde zjistit = bez meze. */
+    /** Konce hrany s tečnami mířícími DO hrany: [{bod, smer}, {bod, smer}] (nebo null). */
+    function konceSTecnou(e) {
+      try {
+        const p = k.curveParameters(e), a = p.get(0), b = p.get(1); p.delete();
+        const bod = t => { const q = k.curvePointAtParam(e, t), o = [q.get(0), q.get(1), q.get(2)]; q.delete(); return o; };
+        const eps = (b - a) * 1e-4;
+        const ven = (P, Q) => { const d = [Q[0] - P[0], Q[1] - P[1], Q[2] - P[2]], l = Math.hypot(...d) || 1; return d.map(x => x / l); };
+        const A = bod(a), B = bod(b);
+        return [{ bod: A, smer: ven(A, bod(a + eps)) }, { bod: B, smer: ven(B, bod(b - eps)) }];
+      } catch (z) { return null; }
+    }
+    /** Délka tečně navazujícího řetězu hran od hrany e (OCCT zaoblí / srazí celý řetěz – třeba okraj
+        kolem už zaoblených rohů). */
+    function delkaRetezu(x, e, vse, kon) {
+      // (jádro vrací pro tutéž hranu při každém dotazu jiné id – vlastní hranu najít přes isSame)
+      const sama = vse.find(f => { try { return k.isSame(f, e); } catch (z) { return false; } });
+      if (sama === undefined) return k.getLength(e);
+      const hotovo = new Set([sama]), fronta = [sama];
+      let L = 0;
+      while (fronta.length) {
+        const f = fronta.pop();
+        L += k.getLength(f);
+        const kf = kon.get(f);
+        if (!kf || hotovo.size > 200) continue;
+        for (const g of vse) {
+          if (hotovo.has(g)) continue;
+          const kg = kon.get(g);
+          if (!kg) continue;
+          // sdílený konec a tečny proti sobě (hrana plynule pokračuje)
+          if (kf.some(a => kg.some(b => Math.hypot(a.bod[0] - b.bod[0], a.bod[1] - b.bod[1], a.bod[2] - b.bod[2]) < 1e-5
+            && a.smer[0] * b.smer[0] + a.smer[1] * b.smer[1] + a.smer[2] * b.smer[2] < -0.999))) { hotovo.add(g); fronta.push(g); }
+        }
+      }
+      return L;
+    }
     function mezZmenyObjemu(x, hrany, op, h) {
       let mez = 0;
+      const vse = pole(k.getSubShapes(x, 'edge'));
+      const kon = new Map(vse.map(f => [f, konceSTecnou(f)]));        // tečny konců jednou pro všechny vybrané hrany
       for (const e of hrany) {
         try {
           const f = pole(k.adjacentFaces(x, e));
@@ -693,7 +847,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
           });
           const fi = Math.min(Math.PI - 0.05, Math.acos(M.omez(n[0][0] * n[1][0] + n[0][1] * n[1][1] + n[0][2] * n[1][2], -1, 1)));
           const prurez = op === 'srazeni' ? 0.5 * h * h * Math.sin(fi) : h * h * (Math.tan(fi / 2) - fi / 2);
-          mez += 3 * prurez * k.getLength(e) + 2 * h * h * h;
+          mez += 3 * prurez * delkaRetezu(x, e, vse, kon) + 2 * h * h * h;
         } catch (z) { return Infinity; }
       }
       return mez + 1e-3;
@@ -878,8 +1032,9 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       kernel: k, modul: m,
       brep: (u, site) => sUklidem(() => { const r = brepSkut(u, site); return { objem: occC(PRAZDNE, () => k.getVolume(r.t)) * r.f[0] * r.f[1] * r.f[2] }; }),
       hrany: (u, site) => sUklidem(() => {
+        zeSite = 0;
         const r = brepSkut(u, site), f = r.f, jedna = jeJedna(f);
-        return popisHran(r.t).map(e => {
+        return popisHran(r.t, zeSite > 0).map(e => {
           const w = occ('drátový model', () => k.wireframe(e.id, 0.02, 0));
           try {
             const body = new Float32Array(m.HEAPF32.buffer.slice(w.getPointsPtr(), w.getPointsPtr() + w.pointCount * 4));
@@ -935,6 +1090,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
 
     /** Pro STEP: síť z rovinných ploch, a když je moc složitá, jako trojúhelníky (STL). */
     function zRovinnychPlochNeboTrojuhelniky(sit, nazev, proStep = true) {
+      zeSite++;
       if (sit.idx.length / 3 <= MAX_TROJ_PLOCH) { try { return zRovinnychPloch(sit, nazev); } catch (e) { /* zkusit trojúhelníky */ } }
       // ve STEP je každý trojúhelník samostatná plocha (~5 kB): šroub se závitem by měl stovky MB
       const n = sit.idx.length / 3;

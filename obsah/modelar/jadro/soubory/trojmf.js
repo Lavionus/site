@@ -8,7 +8,8 @@
 var MDL = globalThis.MDL = globalThis.MDL || {};
 (function (M) {
   'use strict';
-  const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  // řídicí znaky XML 1.0 nedovoluje (slicer by soubor odmítl): pryč
+  const esc = s => String(s).replace(/[\x00-\x08\x0B\x0C\x0E-\x1F]/g, '').replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const cislo = x => { const s = (Math.round(x * 1e6) / 1e6).toString(); return s === '-0' ? '0' : s; };
   const JEDNOTKY = { micron: 0.001, millimeter: 1, centimeter: 10, inch: 25.4, foot: 304.8, meter: 1000 };
 
@@ -67,39 +68,82 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
         ' <metadata name="Application">Modelář 3D</metadata>', ' <resources>', '  <basematerials id="1">'];
       for (const b of barvy) r.push(`   <base name="${esc(b)}" displaycolor="${b.toUpperCase()}FF"/>`);
       r.push('  </basematerials>');
-      objekty.forEach((o, i) => {
-        r.push(`  <object id="${i + 2}" type="model" name="${esc(o.nazev || 'objekt')}" pid="1" pindex="${index(o.barva)}">`, '   <mesh>', '    <vertices>');
-        const p = o.sit.poz, t = o.sit.idx;
+      // shluky dotýkajících se těles (o.shluk) jako JEDEN objekt (díly spojené do jedné sítě, barva u každého
+      // trojúhelníku): slicer by jinak díly ze složeného objektu rozdělil a každý položil na podložku
+      // (štítek na desce, kostka na kostce)
+      const shluky = new Map();
+      objekty.forEach((o, i) => { const k = o.shluk == null ? 'o' + i : 's' + o.shluk; if (!shluky.has(k)) shluky.set(k, []); shluky.get(k).push(o); });
+      let id = 2;
+      const polozky = [];
+      // díly objektu pro PrusaSlicer a odvozené slicery: rozsahy trojúhelníků s názvem a extruderem podle barvy
+      const extruder = new Map();
+      const konfig = ['<?xml version="1.0" encoding="UTF-8"?>', '<config>'];
+      for (const cleny of shluky.values()) {
+        const prvni = cleny[0], vice = cleny.length > 1;
+        const nazev = vice ? prvni.nazevShluku || prvni.nazev : prvni.nazev;
+        r.push(`  <object id="${id}" type="model" name="${esc(nazev || 'objekt')}" pid="1" pindex="${index(prvni.barva)}">`, '   <mesh>', '    <vertices>');
         const v = [];
-        for (let j = 0; j < p.length; j += 3) v.push(`     <vertex x="${cislo(p[j])}" y="${cislo(p[j + 1])}" z="${cislo(p[j + 2])}"/>`);
+        for (const o of cleny) { const p = o.sit.poz; for (let j = 0; j < p.length; j += 3) v.push(`     <vertex x="${cislo(p[j])}" y="${cislo(p[j + 1])}" z="${cislo(p[j + 2])}"/>`); }
         r.push(v.join('\n'), '    </vertices>', '    <triangles>');
         const tr = [];
-        for (let j = 0; j < t.length; j += 3) {
-          const barva = o.barvyTroj && o.paleta ? ` pid="1" p1="${index(o.paleta[o.barvyTroj[j / 3]])}"` : '';
-          tr.push(`     <triangle v1="${t[j]}" v2="${t[j + 1]}" v3="${t[j + 2]}"${barva}/>`);
+        let posun = 0;
+        konfig.push(` <object id="${id}" instances_count="1">`, `  <metadata type="object" key="name" value="${esc(nazev || 'objekt')}"/>`);
+        for (const o of cleny) {
+          const t = o.sit.idx;
+          if (!extruder.has(o.barva)) extruder.set(o.barva, extruder.size + 1);
+          konfig.push(`  <volume firstid="${tr.length}" lastid="${tr.length + t.length / 3 - 1}">`,
+            `   <metadata type="volume" key="name" value="${esc(o.nazev || 'díl')}"/>`,
+            `   <metadata type="volume" key="extruder" value="${Math.min(extruder.get(o.barva), 16)}"/>`, '  </volume>');
+          for (let j = 0; j < t.length; j += 3) {
+            const b = o.barvyTroj && o.paleta ? o.paleta[o.barvyTroj[j / 3]] : o.barva;
+            const barva = (vice || (o.barvyTroj && o.paleta)) ? ` pid="1" p1="${index(b)}"` : '';
+            tr.push(`     <triangle v1="${t[j] + posun}" v2="${t[j + 1] + posun}" v3="${t[j + 2] + posun}"${barva}/>`);
+          }
+          posun += o.sit.poz.length / 3;
         }
         r.push(tr.join('\n'), '    </triangles>', '   </mesh>', '  </object>');
-      });
+        konfig.push(' </object>');
+        polozky.push(id++);
+      }
       r.push(' </resources>', ' <build>');
-      objekty.forEach((o, i) => r.push(`  <item objectid="${i + 2}"/>`));
+      polozky.forEach(i => r.push(`  <item objectid="${i}"/>`));
       r.push(' </build>', '</model>');
+      konfig.push('</config>');
       return M.zip.zapis([
         { nazev: '[Content_Types].xml', data: TYPY },
         { nazev: '_rels/.rels', data: VAZBY },
         { nazev: '3D/3dmodel.model', data: r.join('\n') },
+        { nazev: 'Metadata/Slic3r_PE_model.config', data: konfig.join('\n') },
       ]);
     },
 
     /** Uint8Array (3MF) → Promise<[{nazev, sit (svět, mm), barva}]> pro každou položku build. */
     async cti(buf) {
+      // stejný strop jako STL (300 MB ≈ 6 milionů trojúhelníků): víc prohlížeč stejně neunese
+      const MAX_TROJ = 8e6, MAX_XML = 300e6;
       const soubory = await M.zip.cti(buf);
+      // díly objektů (PrusaSlicer, odvozené slicery, Modelář): rozsahy trojúhelníků s názvem
+      const dilyObjektu = new Map();
+      for (const [jmeno, data] of soubory) {
+        if (!/Slic3r_PE_model\.config$/i.test(jmeno)) continue;
+        let obj = null, svazek = null;
+        znacky(new TextDecoder().decode(data), (n, a, otevira, zavira) => {
+          if (n === 'object' && otevira) { obj = []; dilyObjektu.set(a.id, obj); if (zavira) obj = null; }
+          else if (n === 'object' && !otevira) obj = null;
+          else if (n === 'volume' && obj && otevira) { svazek = { od: +a.firstid, do: +a.lastid, nazev: '' }; if (Number.isInteger(svazek.od) && Number.isInteger(svazek.do) && svazek.do >= svazek.od) obj.push(svazek); }
+          else if (n === 'metadata' && svazek && a.type === 'volume' && a.key === 'name') svazek.nazev = odescapuj(a.value || '');
+          else if (n === 'volume' && !otevira) svazek = null;
+        });
+      }
       const dec = new TextDecoder();
       const modely = new Map();                     // cesta → {objekty, jednotka, build}
       for (const [jmeno, data] of soubory) {
         if (!/\.model$/i.test(jmeno)) continue;
         const cesta = '/' + jmeno.replace(/^\/+/, '');
+        // obří XML (malý ZIP, stovky MB vrcholů) zamrzne kartu dřív, než se dojde k limitu trojúhelníků
+        if (data.length > MAX_XML) throw new Error('3MF je příliš velký (model má po rozbalení víc než 300 MB)');
         const m = { objekty: new Map(), materialy: new Map(), jednotka: 1, build: [] };
-        let obj = null, mat = null, vBuild = false;
+        let obj = null, mat = null, vBuild = false, vrcholu = 0, trojuhelniku = 0;
         // basematerials i colorgroup jsou skupiny barev se stejným id prostorem (pid)
         znacky(dec.decode(data), (n, a, otevira, zavira) => {
           if (n === 'model' && otevira) m.jednotka = JEDNOTKY[a.unit] || 1;
@@ -113,11 +157,13 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
             const x = +a.x, y = +a.y, z = +a.z;
             if (![x, y, z].every(isFinite) || a.x === undefined || a.y === undefined || a.z === undefined) throw new Error('3MF obsahuje neplatný vrchol');
             obj.v.push(x, y, z);
+            if (++vrcholu > MAX_TROJ) throw new Error(`3MF má příliš mnoho vrcholů (víc než ${MAX_TROJ / 1e6} milionů)`);
           }
           else if (n === 'triangle' && obj) {
             const t3 = [+a.v1, +a.v2, +a.v3];
             if (!t3.every(i => Number.isInteger(i) && i >= 0)) throw new Error('3MF obsahuje neplatný trojúhelník');
             obj.t.push(...t3);
+            if (++trojuhelniku > MAX_TROJ) throw new Error(`3MF má příliš mnoho trojúhelníků (víc než ${MAX_TROJ / 1e6} milionů)`);
             obj.tb.push(a.p1 !== undefined || a.pid !== undefined ? [a.pid !== undefined ? a.pid : obj.pid, a.p1 !== undefined ? +a.p1 : obj.pindex] : null);
           }
           else if (n === 'component' && obj && a.objectid) obj.komponenty.push({ id: a.objectid, cesta: a.path || null, matice: matice(a.transform) });
@@ -127,6 +173,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
         modely.set(cesta, m);
       }
       const hlavni = modely.get('/3D/3dmodel.model') || modely.values().next().value;
+      const hlavniModel = hlavni;
       if (!hlavni) throw new Error('3MF neobsahuje model');
       const vysledek = [];
       const barvaObjektu = (m, o) => { const b = o.pid && m.materialy.get(o.pid); return b ? b[o.pindex] || null : null; };
@@ -138,7 +185,6 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
         return (b && b[x[1]]) || barvaObjektu(m, o);
       };
       // komponenty se mohou opakovat v každé úrovni (2^20 kopií z malého souboru) – hlídá se celkový počet trojúhelníků
-      const MAX_TROJ = 20e6;
       let trojCelkem = 0, instanci = 0;
       const rozbal = (m, id, mat, hloubka, site, barvy) => {
         if (hloubka > 20) throw new Error('3MF: příliš hluboko vnořené komponenty');
@@ -147,11 +193,29 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
         if (!o) throw new Error('3MF odkazuje na neexistující objekt ' + id);
         if (o.v.length && o.t.length) {
           trojCelkem += o.t.length / 3;
-          if (trojCelkem > MAX_TROJ) throw new Error('3MF má po rozbalení komponent příliš mnoho trojúhelníků (víc než 20 milionů)');
+          if (trojCelkem > MAX_TROJ) throw new Error(`3MF má po rozbalení komponent příliš mnoho trojúhelníků (víc než ${MAX_TROJ / 1e6} milionů)`);
           const p = new Float32Array(o.v), idx = new Uint32Array(o.t);
           for (const j of idx) if (j >= p.length / 3) throw new Error('3MF: trojúhelník odkazuje mimo vrcholy');
-          site.push(M.prevedSit({ poz: p, idx }, mat));
-          for (let i = 0; i < idx.length / 3; i++) barvy.push(barvaTroj(m, o, i));
+          const svazky = m === hlavniModel ? (dilyObjektu.get(o.id) || []).filter(v => v.do < idx.length / 3) : [];
+          if (svazky.length > 1) {
+            // objekt z dílů: každý díl zvlášť (jen jeho vrcholy)
+            for (const v of svazky) {
+              const mapa = new Map(), pp = [], ii = [];
+              for (let f = v.od; f <= v.do; f++) for (let j = 0; j < 3; j++) {
+                const vi = idx[f * 3 + j];
+                if (!mapa.has(vi)) { mapa.set(vi, pp.length / 3); pp.push(p[vi * 3], p[vi * 3 + 1], p[vi * 3 + 2]); }
+                ii.push(mapa.get(vi));
+              }
+              site.push(M.prevedSit({ poz: new Float32Array(pp), idx: new Uint32Array(ii) }, mat));
+              site[site.length - 1].dil = { nazev: v.nazev || o.nazev, barva: barvaTroj(m, o, v.od) };
+              for (let f = v.od; f <= v.do; f++) barvy.push(barvaTroj(m, o, f));
+            }
+            site.zDilu = true;
+          } else {
+            site.push(M.prevedSit({ poz: p, idx }, mat));
+            site[site.length - 1].dil = { nazev: o.nazev, barva: barvaObjektu(m, o) };
+            for (let i = 0; i < idx.length / 3; i++) barvy.push(barvaTroj(m, o, i));
+          }
         }
         for (const k of o.komponenty) {
           const mm = k.cesta ? modely.get('/' + k.cesta.replace(/^\/+/, '')) : m;
@@ -168,21 +232,32 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
         const site = [], barvy = [];
         const o = rozbal(m, it.id, jednotky.clone().multiply(it.matice), 0, site, barvy);
         if (!site.length) continue;
-        const spojena = M.spojSite(site);
-        const zachovane = [];
-        const v = { nazev: o.nazev, sit: M.svarSit(spojena.poz, spojena.idx, 1e-5, zachovane), barva: barvaObjektu(m, o) };
-        // barvy po trojúhelnících: paleta, index, převládající barva jako barva objektu
-        const bt = zachovane.map(t => barvy[t]);
-        const paleta = [...new Set(bt.filter(Boolean))];
-        if (paleta.length) {
-          const kde = new Map(paleta.map((b, i) => [b, i])), vychozi = v.barva && kde.has(v.barva) ? kde.get(v.barva) : 0;
-          const barvyTroj = Uint16Array.from(bt, b => b ? kde.get(b) : vychozi);
-          const n = new Array(paleta.length).fill(0);
-          for (const b of barvyTroj) n[b]++;
-          v.barva = paleta[n.indexOf(Math.max(...n))];
-          if (paleta.length > 1 && paleta.length < 65536) Object.assign(v, { barvyTroj, paleta });   // víc barev se do Uint16 nevejde
+        // objekt složený z dílů (komponenty, každý vlastní síť): díly jako samostatná tělesa na svých místech
+        // (sestava z Modeláře nebo ze sliceru); jedna síť nebo díly bez jména = jedno těleso
+        const naDily = (site.zDilu || !(o.v.length && o.t.length)) && site.length > 1 && site.length <= 200;
+        const skupiny = naDily ? site.map((x, i) => [i]) : [site.map((x, i) => i)];
+        let odTroj = 0;
+        const zacatky = site.map(x => { const z = odTroj; odTroj += x.idx.length / 3; return z; });
+        for (const sk of skupiny) {
+          const cast = sk.map(i => site[i]);
+          const barvyCasti = sk.flatMap(i => barvy.slice(zacatky[i], zacatky[i] + site[i].idx.length / 3));
+          const spojena = M.spojSite(cast);
+          const zachovane = [];
+          const dil = naDily ? cast[0].dil : null;
+          const v = { nazev: dil && dil.nazev ? dil.nazev : o.nazev, sit: M.svarSit(spojena.poz, spojena.idx, 1e-5, zachovane), barva: dil ? dil.barva || barvaObjektu(m, o) : barvaObjektu(m, o) };
+          // barvy po trojúhelnících: paleta, index, převládající barva jako barva objektu
+          const bt = zachovane.map(t => barvyCasti[t]);
+          const paleta = [...new Set(bt.filter(Boolean))];
+          if (paleta.length) {
+            const kde = new Map(paleta.map((b, i) => [b, i])), vychozi = v.barva && kde.has(v.barva) ? kde.get(v.barva) : 0;
+            const barvyTroj = Uint16Array.from(bt, b => b ? kde.get(b) : vychozi);
+            const n = new Array(paleta.length).fill(0);
+            for (const b of barvyTroj) n[b]++;
+            v.barva = paleta[n.indexOf(Math.max(...n))];
+            if (paleta.length > 1 && paleta.length < 65536) Object.assign(v, { barvyTroj, paleta });   // víc barev se do Uint16 nevejde
+          }
+          vysledek.push(v);
         }
-        vysledek.push(v);
       }
       if (!vysledek.length) throw new Error('3MF neobsahuje žádné těleso');
       return vysledek;

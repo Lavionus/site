@@ -91,6 +91,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       const krok = Math.max(S.deska.krok, 1);
       const kam = [Math.round(S.kamera.cil.x / krok) * krok, Math.round(S.kamera.cil.y / krok) * krok];
       let uzly = M.uzlyZImportu(objekty, M.app.dok, kam, objekty[0].format || '');
+      const meritko = uzly.meritko || 1;
       // když na místě něco stojí, posunout import doprava na první volné místo
       const stojici = M.app.dok.uzly.filter(u => !u.skryto).map(u => M.obalkaUzlu(u));
       const ob = M.obalkaVice(uzly);
@@ -105,6 +106,9 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       // kontrola vodotěsnosti jen u menších sítí (u milionu trojúhelníků by zdržela o sekundy; booleany chybu stejně ohlásí)
       const spatne = objekty.filter(o => o.sit.idx.length / 3 <= 500000 && !M.zkontrolujSit(o.sit).vodotesna).map(o => o.nazev);
       Dialog.info(`Naimportováno: ${uzly.map(u => u.nazev).join(', ')} (${M.pocet(troj, 'trojúhelník', 'trojúhelníky', 'trojúhelníků').replace(/^\d+/, troj.toLocaleString('cs'))})`);
+      if (meritko !== 1) Dialog.info(meritko < 1
+        ? `Model byl větší než 10 m – nejspíš je v mikrometrech: zmenšen ${Math.round(1 / meritko).toLocaleString('cs')}× (rozměr uprav v inspektoru, kdyby nesedělo).`
+        : `Model byl menší než 0,1 mm – nejspíš je v metrech: zvětšen ${Math.round(meritko).toLocaleString('cs')}× (rozměr uprav v inspektoru, kdyby nesedělo).`);
       if (spatne.length) Dialog.chyba(`Model ${spatne.join(', ')} není uzavřený (má díry v síti). Zobrazí se, ale ve skupině s dírami nemusí jít spočítat.`);
     }
 
@@ -168,6 +172,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
           M.stahniSoubor(text, M.jmenoSouboru(M.app.projekt.nazev, '.step'), 'model/step');
           okno.close();
           Dialog.info(`Do STEP ${uzly.length === 1 ? 'exportováno' : uzly.length <= 4 ? 'exportována' : 'exportováno'} ${M.pocet(uzly.length, 'těleso', 'tělesa', 'těles')} (${(text.length / 1024).toFixed(0)} kB)`);
+          if (M.posledniStepVarovani) Dialog.info(M.posledniStepVarovani);
           return;
         }
         const r = await M.exportuj(uzly, M.sitSkupiny, { format: v.format, sloucit: v.sloucit, podleBarev: v.podleBarev, castiPodleBarev: M.castiPodleBarev, nazev: M.app.projekt.nazev });
@@ -209,6 +214,8 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       oknoSvg.querySelector('input[name=svgRezim][value=plocha]').checked = true;
       oknoSvg.showModal();
       nahledSvg();
+      // písmo v SVG (<text>) se nenačte – obrysy písmen zná jen editor, ve kterém vznikl
+      if (/<text[\s>]/i.test(String(text))) Dialog.info('SVG obsahuje text – ten se nenačte. V editoru ho převeď na křivky (Inkscape: Cesta → Objekt na cestu), nebo napiš text přímo ve skice.');
     };
     oknoSvg.addEventListener('change', e => { if (e.target.id === 'svgSirka') e.target.dataset.zmeneno = '1'; nahledSvg(); });
     $('svgZrusit').onclick = () => oknoSvg.close();
@@ -262,7 +269,10 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       if (!akce) return;
       e.preventDefault();
       // ne nad otevřeným oknem (skica, pole…) ani během rozdělané úpravy: import by šel do náhledu a Zrušit by ho smazal
-      if (M.modalniOkno() || M.app.uprava) return;
+      if (M.modalniOkno()) return;
+      // náhled pod myší (zarovnání, zrcadlení) nejdřív zrušit – jinak by zkratka potichu nic neudělala
+      if (M.app.uprava && M.zrusNahledy) M.zrusNahledy();
+      if (M.app.uprava) return;
       prikazy[akce]();
     });
     return { prikazy };

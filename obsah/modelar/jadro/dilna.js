@@ -48,6 +48,82 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     return nej || { bod: bod.slice(), druh: 'plocha' };
   };
 
+  // ------------------------------------------------------------ vůle mezi tělesy
+  /** Nejbližší bod trojúhelníku k bodu q (Ericson, Real-Time Collision Detection 5.1.5). */
+  function nejblizsiNaTrojuhelniku(q, a, b, c) {
+    const ab = sub(b, a), ac = sub(c, a), ap = sub(q, a);
+    const d1 = dot(ab, ap), d2 = dot(ac, ap);
+    if (d1 <= 0 && d2 <= 0) return a;
+    const bp = sub(q, b), d3 = dot(ab, bp), d4 = dot(ac, bp);
+    if (d3 >= 0 && d4 <= d3) return b;
+    const vc = d1 * d4 - d3 * d2;
+    if (vc <= 0 && d1 >= 0 && d3 <= 0) { const v = d1 / (d1 - d3); return [a[0] + ab[0] * v, a[1] + ab[1] * v, a[2] + ab[2] * v]; }
+    const cp = sub(q, c), d5 = dot(ab, cp), d6 = dot(ac, cp);
+    if (d6 >= 0 && d5 <= d6) return c;
+    const vb = d5 * d2 - d1 * d6;
+    if (vb <= 0 && d2 >= 0 && d6 <= 0) { const w = d2 / (d2 - d6); return [a[0] + ac[0] * w, a[1] + ac[1] * w, a[2] + ac[2] * w]; }
+    const va = d3 * d6 - d5 * d4;
+    if (va <= 0 && d4 - d3 >= 0 && d5 - d6 >= 0) { const w = (d4 - d3) / ((d4 - d3) + (d5 - d6)); return [b[0] + (c[0] - b[0]) * w, b[1] + (c[1] - b[1]) * w, b[2] + (c[2] - b[2]) * w]; }
+    const den = 1 / (va + vb + vc), v = vb * den, w = vc * den;
+    return [a[0] + ab[0] * v + ac[0] * w, a[1] + ab[1] * v + ac[1] * w, a[2] + ab[2] * v + ac[2] * w];
+  }
+  /** Nejmenší vzdálenost dvou sítí ve světě: vrcholy jedné proti trojúhelníkům druhé (a naopak), v okolí
+      nejbližších buněk mřížky – přesně tam, kde je nejbližší místo vrchol nebo leží na ploše (běžné tvary;
+      dvě mimoběžné hrany se změří o kousek víc). Vrací {d, a, b} (body na obou tělesech) – d 0 = dotýkají se
+      nebo se překrývají (průnik zjistí M.sitePrekryvaji). */
+  M.vuleSiti = function (sa, sb) {
+    let nej = { d: Infinity, a: null, b: null };
+    const jeden = (body, sit, prohodit) => {
+      const p = sit.poz, t = sit.idx, nt = t.length / 3;
+      const mn = [Infinity, Infinity, Infinity], mx = [-Infinity, -Infinity, -Infinity];
+      for (let i = 0; i < p.length; i += 3) for (let k = 0; k < 3; k++) { mn[k] = Math.min(mn[k], p[i + k]); mx[k] = Math.max(mx[k], p[i + k]); }
+      const vel = Math.max(1e-3, Math.max(mx[0] - mn[0], mx[1] - mn[1], mx[2] - mn[2]) / Math.max(4, Math.cbrt(nt) * 2));
+      const bunka = x => [0, 1, 2].map(k => Math.floor((x[k] - mn[k]) / vel));
+      const mriz = new Map(), klic = (a, b, c) => a + ',' + b + ',' + c;
+      for (let f = 0; f < nt; f++) {
+        const a = t[f * 3] * 3, b = t[f * 3 + 1] * 3, c = t[f * 3 + 2] * 3;
+        const lo = bunka([Math.min(p[a], p[b], p[c]), Math.min(p[a + 1], p[b + 1], p[c + 1]), Math.min(p[a + 2], p[b + 2], p[c + 2])]);
+        const hi = bunka([Math.max(p[a], p[b], p[c]), Math.max(p[a + 1], p[b + 1], p[c + 1]), Math.max(p[a + 2], p[b + 2], p[c + 2])]);
+        for (let i = lo[0]; i <= hi[0]; i++) for (let j = lo[1]; j <= hi[1]; j++) for (let k = lo[2]; k <= hi[2]; k++) {
+          const kk = klic(i, j, k); let l = mriz.get(kk); if (!l) mriz.set(kk, l = []); l.push(f);
+        }
+      }
+      const V = i => [p[i * 3], p[i * 3 + 1], p[i * 3 + 2]];
+      const G = bunka(mx);
+      const kObalce = q => Math.hypot(...[0, 1, 2].map(k => Math.max(0, mn[k] - q[k], q[k] - mx[k])));
+      // vrcholy od nejbližšího k obálce druhé sítě: vzdálenější než dosavadní minimum se už nezkoumají
+      const vp = body.poz, nv = vp.length / 3, krok = Math.max(1, Math.floor(nv / 20000));
+      const poradi = [];
+      for (let i = 0; i < nv; i += krok) poradi.push([i, kObalce([vp[i * 3], vp[i * 3 + 1], vp[i * 3 + 2]])]);
+      poradi.sort((x, y) => x[1] - y[1]);
+      for (const [i, dObalka] of poradi) {
+        if (dObalka >= nej.d) break;
+        const q = [vp[i * 3], vp[i * 3 + 1], vp[i * 3 + 2]], bq = bunka(q);
+        const r0 = Math.max(0, Math.floor(dObalka / vel) - 1);
+        for (let r = r0; r < 4096; r++) {
+          // vrstva buněk ve vzdálenosti r (jen uvnitř mřížky)
+          for (let x = Math.max(-r, -bq[0]); x <= Math.min(r, G[0] - bq[0]); x++)
+            for (let y = Math.max(-r, -bq[1]); y <= Math.min(r, G[1] - bq[1]); y++)
+              for (let z = Math.max(-r, -bq[2]); z <= Math.min(r, G[2] - bq[2]); z++) {
+                if (Math.max(Math.abs(x), Math.abs(y), Math.abs(z)) !== r) continue;
+                const l = mriz.get(klic(bq[0] + x, bq[1] + y, bq[2] + z));
+                if (!l) continue;
+                for (const f of l) {
+                  const c = nejblizsiNaTrojuhelniku(q, V(t[f * 3]), V(t[f * 3 + 1]), V(t[f * 3 + 2]));
+                  const d = Math.hypot(c[0] - q[0], c[1] - q[1], c[2] - q[2]);
+                  if (d < nej.d) nej = prohodit ? { d, a: c, b: q } : { d, a: q, b: c };
+                }
+              }
+          // další vrstvy jsou dál než (r − 1)·buňka; za mřížkou už nic není
+          if ((r - 1) * vel > nej.d || [0, 1, 2].every(k => bq[k] - r <= 0 && bq[k] + r >= G[k])) break;
+        }
+      }
+    };
+    jeden(sa, sb, false);
+    jeden(sb, sa, true);
+    return nej;
+  };
+
   // ------------------------------------------------------------ poznámky a referenční body
   const MAX_POZNAMEK = 500;
   /** Opraví seznam poznámek ze souboru: [{id, bod:[x,y,z], text}] (prázdný text = referenční bod). */
@@ -97,7 +173,9 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
   function stejnyRam(a, b) {
     if (a === b) return true;
     if (a.druh !== b.druh) return false;
-    if (a.druh !== 'skupina') return true;
+    const stejne = (x, y) => (!x && !y) || (x && y && x.every((v, i) => Math.abs(v - y[i]) < 1e-9));
+    // skica a díl: nové parametry = jiná geometrie s jiným základem a středem (jako jiné děti skupiny)
+    if (a.druh !== 'skupina') return !M.maPrirozene(a) || (stejne(a.zaklad, b.zaklad) && stejne(a.stred, b.stred));
     if (a.deti.length !== b.deti.length || a.deti.some((d, i) => d.id !== b.deti[i].id)) return false;
     return !a.zaklad || !b.zaklad || a.zaklad.every((x, i) => Math.abs(x - b.zaklad[i]) < 1e-9);
   }

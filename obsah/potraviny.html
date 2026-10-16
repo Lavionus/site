@@ -1,0 +1,533 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>🥗 Deník jídla</title>
+<meta name="description" content="Deník jídla a kalorií s databází českých výrobků (Open Food Facts) a základních potravin, skenováním čárových kódů, recepty a statistikami.">
+<link rel="manifest" href="potraviny/manifest.webmanifest">
+<meta name="theme-color" content="#121212" media="(prefers-color-scheme: dark)">
+<meta name="theme-color" content="#e8eaed" media="(prefers-color-scheme: light)">
+<link rel="apple-touch-icon" href="../icon-192.png">
+<link rel="stylesheet" href="../common.css">
+<script src="../theme.js"></script>
+<script src="../podpis.js" defer></script>
+<script src="../dialog.js" defer></script>
+<script src="potraviny/jadro.js"></script>
+<script src="potraviny/grafy.js" defer></script>
+<script src="potraviny/ctecka.js" defer></script>
+<script src="potraviny/aplikace.js" defer></script>
+<style>
+:root{--c-bil:#e8833a;--c-sach:#4fa3d9;--c-tuk:#d9b44a;--c-alk:#c39be6;--c-kcal:var(--accent)}
+:root[data-theme="light"]{--c-bil:#b85a12;--c-sach:#1f6fa8;--c-tuk:#8a6a00;--c-alk:#7b45a8}
+body{background:var(--bg-deep);min-height:100vh}
+[hidden]{display:none!important}   /* .btn a další mají vlastní display, který by atribut hidden přebil */
+.wrap{max-width:1180px;margin:0 auto;padding:0 clamp(10px,2.5vw,24px) 40px}
+button,input,select,textarea{font-family:inherit;font-size:inherit}
+.btn{background:var(--bg-control);color:var(--text);border:1px solid var(--border-strong);padding:7px 12px;border-radius:7px;cursor:pointer;font-size:.86rem;white-space:nowrap;line-height:1.25;display:inline-flex;align-items:center;gap:6px;justify-content:center}
+.btn:hover{background:var(--bg-hover)}
+.btn:disabled{opacity:.55;cursor:default}
+.btn.primary{background:var(--accent);color:var(--on-accent,#fff);border-color:var(--accent)}
+.btn.primary:hover{background:var(--accent-hover)}
+.btn.danger{color:var(--danger)}
+.btn.mini{padding:4px 9px;font-size:.78rem}
+.btn.ikona{padding:6px 9px}
+.btn.plain{background:none;border-color:transparent}
+.btn.plain:hover{background:var(--bg-hover)}
+.btn[aria-pressed="true"]{background:var(--accent-soft);border-color:var(--accent)}
+.vstup{background:var(--bg-input);border:1px solid var(--border);color:var(--text);border-radius:7px;padding:7px 10px;font-size:.9rem;min-width:0}
+.vstup:focus,.btn:focus-visible,.tab:focus-visible,[tabindex]:focus-visible{outline:2px solid var(--accent);outline-offset:1px}
+textarea.vstup{resize:vertical;min-height:60px;width:100%}
+.slabe{color:var(--text-faint);font-size:.82rem}
+.chyba-text{color:var(--danger)}
+.ok-text{color:var(--ok)}
+.warn-text{color:var(--warn)}
+h2{font-size:1.05rem;margin:0}
+h3{font-size:.95rem;margin:0}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* hlavička a záložky */
+.hlava{position:sticky;top:0;z-index:30;background:var(--bg-deep);border-bottom:1px solid var(--border);margin:0 calc(-1*clamp(10px,2.5vw,24px)) 14px;padding:10px clamp(10px,2.5vw,24px) 0}
+.hlava-radek{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.hlava h1{font-size:1.25rem;margin-right:auto}
+.data-stav{font-size:.78rem;color:var(--text-faint)}
+.tabs{display:flex;gap:2px;overflow-x:auto;scrollbar-width:none;margin-top:8px}
+.tabs::-webkit-scrollbar{display:none}
+.tab{background:none;border:0;border-bottom:3px solid transparent;color:var(--text-muted);padding:8px 12px 7px;cursor:pointer;font-size:.9rem;white-space:nowrap}
+.tab:hover{color:var(--text)}
+.tab[aria-selected="true"]{color:var(--text);border-bottom-color:var(--accent);font-weight:600}
+
+.karta{background:var(--bg-panel);border:1px solid var(--border);border-radius:var(--radius);padding:14px}
+.mrizka2{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:14px}
+.sloupec-gap{display:flex;flex-direction:column;gap:14px}
+
+/* deník */
+.den-nav{display:flex;align-items:center;gap:8px;margin-bottom:12px;flex-wrap:wrap}
+.den-nav .datum{font-weight:600;font-size:1.02rem;background:none;border:1px solid transparent;color:var(--text);padding:6px 10px;border-radius:7px;cursor:pointer}
+.den-nav .datum:hover{border-color:var(--border)}
+.den-nav input[type=date]{position:absolute;opacity:0;pointer-events:none;width:1px;height:1px}
+.den-nav .serie{margin-left:auto;font-size:.82rem;color:var(--text-muted)}
+.denik{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:16px;align-items:start}
+.souhrn{position:sticky;top:96px}
+.souhrn-hlavni{display:flex;gap:14px;align-items:center}
+.graf-kruh{width:128px;height:128px;flex:none}
+.kruh-pozadi{fill:none;stroke:var(--bg-control);stroke-width:12}
+.kruh-hodnota{fill:none;stroke:var(--c-kcal);stroke-width:12;stroke-linecap:round;transition:stroke-dasharray .4s}
+.kruh-hodnota.nad{stroke:var(--warn)}
+.kruh-preteceni{fill:none;stroke:var(--danger);stroke-width:5;stroke-linecap:round}
+.kruh-cislo{font-size:24px;font-weight:700;fill:var(--text)}
+.kruh-popis{font-size:10.5px;fill:var(--text-muted)}
+.bilance{font-size:.85rem;line-height:1.7;flex:1;min-width:0}
+.bilance b{font-variant-numeric:tabular-nums}
+.zbyva{font-size:1.15rem;font-weight:700}
+.makra{display:flex;flex-direction:column;gap:9px;margin-top:14px}
+.mbar-hl{display:flex;justify-content:space-between;font-size:.82rem;margin-bottom:3px;gap:6px}
+.mbar-hl span:last-child{font-variant-numeric:tabular-nums;color:var(--text-muted)}
+.mbar{height:8px;background:var(--bg-control);border-radius:4px;overflow:hidden;position:relative}
+.mbar i{display:block;height:100%;border-radius:4px;transition:width .4s}
+.mbar.nad i{background-image:repeating-linear-gradient(45deg,transparent 0 4px,rgba(255,255,255,.25) 4px 8px)}
+.limity{display:grid;grid-template-columns:1fr 1fr;gap:6px 14px;margin-top:14px;font-size:.8rem}
+.limity div{display:flex;justify-content:space-between;gap:6px}
+.limity b{font-variant-numeric:tabular-nums;font-weight:600}
+.voda{margin-top:14px;padding-top:12px;border-top:1px solid var(--border)}
+.voda-hl{display:flex;justify-content:space-between;align-items:center;font-size:.85rem;margin-bottom:6px}
+.voda-sklenice{display:flex;gap:3px;flex-wrap:wrap;margin-bottom:8px}
+.voda-sklenice span{width:14px;height:20px;border:1.5px solid var(--c-sach);border-top:0;border-radius:0 0 3px 3px}
+.voda-sklenice span.plna{background:var(--c-sach)}
+.voda-tl{display:flex;gap:6px;flex-wrap:wrap}
+
+.jidlo{margin-bottom:12px;padding:0;overflow:hidden}
+.jidlo-hl{display:flex;align-items:center;gap:8px;padding:11px 14px;border-bottom:1px solid var(--border)}
+.jidlo-hl h2{margin-right:auto}
+.jidlo-kcal{font-weight:700;font-variant-numeric:tabular-nums}
+.jidlo-makra{font-size:.74rem;color:var(--text-faint);font-variant-numeric:tabular-nums}
+.zaznamy{list-style:none;margin:0;padding:0}
+.zaznam{display:flex;align-items:center;gap:10px;padding:8px 14px;border-bottom:1px solid var(--border);cursor:pointer}
+.zaznam:hover{background:var(--bg-hover)}
+.zaznam:last-child{border-bottom:0}
+.zaznam .nazev{flex:1;min-width:0}
+.zaznam .nazev div:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.zaznam .detail{font-size:.76rem;color:var(--text-faint);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.zaznam .kc{font-variant-numeric:tabular-nums;font-weight:600;white-space:nowrap}
+.jidlo-pata{display:flex;gap:6px;padding:8px 10px;flex-wrap:wrap}
+.jidlo-prazdne{padding:10px 14px;color:var(--text-faint);font-size:.84rem}
+.poznamka-dne textarea{margin-top:8px}
+
+/* tabulky živin */
+.tab-ziviny{width:100%;border-collapse:collapse;font-size:.84rem}
+.tab-ziviny td,.tab-ziviny th{padding:5px 6px;border-bottom:1px solid var(--border);text-align:right;font-variant-numeric:tabular-nums}
+.tab-ziviny th{font-size:.74rem;color:var(--text-faint);font-weight:600;text-transform:uppercase;letter-spacing:.03em}
+.tab-ziviny td:first-child,.tab-ziviny th:first-child{text-align:left}
+.tab-ziviny tr.pod td:first-child{padding-left:18px;color:var(--text-muted)}
+.tab-ziviny tr.skup td{background:var(--bg-elevated);font-weight:600;text-align:left;font-size:.78rem;color:var(--text-muted)}
+.procento{display:inline-block;min-width:44px}
+.minibar{display:inline-block;width:60px;height:6px;background:var(--bg-control);border-radius:3px;vertical-align:middle;margin-left:6px;overflow:hidden}
+.minibar i{display:block;height:100%;background:var(--ok)}
+.minibar i.malo{background:var(--warn)}
+.minibar i.moc{background:var(--danger)}
+.pokryti{font-size:.72rem;color:var(--text-faint)}
+
+/* panel přidávání (sheet) */
+.sheet-pozadi{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:100;display:flex;align-items:flex-start;justify-content:center;padding:4vh 12px}
+.sheet{background:var(--bg-panel);border:1px solid var(--border);border-radius:12px;width:min(720px,100%);max-height:92vh;display:flex;flex-direction:column;box-shadow:0 12px 50px rgba(0,0,0,.45);overflow:hidden}
+.sheet-pridani{height:min(760px,92vh)}
+.sheet-hl{display:flex;align-items:center;gap:8px;padding:12px 14px;border-bottom:1px solid var(--border)}
+.sheet-hl h2{margin-right:auto;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.sheet-telo{overflow:auto;padding:14px;flex:1}
+.sheet-pata{display:flex;gap:8px;padding:10px 14px;border-top:1px solid var(--border);flex-wrap:wrap;align-items:center}
+.sheet-pata .vpravo{margin-left:auto;display:flex;gap:8px;flex-wrap:wrap}
+.hledani{display:flex;gap:8px;padding:12px 14px 8px}
+.hledani .vstup{flex:1;font-size:1rem;padding:9px 12px}
+.cipy{display:flex;gap:6px;padding:0 14px 8px;overflow-x:auto;scrollbar-width:thin}
+.cip{background:var(--bg-elevated);border:1px solid var(--border);border-radius:14px;padding:4px 11px;font-size:.8rem;color:var(--text-muted);cursor:pointer;white-space:nowrap}
+.cip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--on-accent,#fff)}
+.vysledky{list-style:none;margin:0;padding:0;overflow:auto;flex:1;border-top:1px solid var(--border)}
+.vysledek{display:flex;align-items:center;gap:10px;padding:9px 14px;border-bottom:1px solid var(--border);cursor:pointer}
+.vysledek:hover,.vysledek.aktivni{background:var(--bg-hover)}
+.vysledek .nazev{flex:1;min-width:0}
+.vysledek .nazev div:first-child{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.vysledek .detail{font-size:.76rem;color:var(--text-faint);overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.vysledek .kc{text-align:right;font-variant-numeric:tabular-nums;font-size:.86rem;white-space:nowrap}
+.vysledek .kc small{display:block;color:var(--text-faint);font-size:.7rem}
+.vysledek mark{background:var(--accent-soft);color:inherit;border-radius:2px}
+.vysledek .plus{flex:none}
+.znak{display:inline-block;font-size:.66rem;font-weight:700;border-radius:4px;padding:1px 5px;margin-right:4px;vertical-align:1px;border:1px solid var(--border-strong);color:var(--text-muted);letter-spacing:.02em}
+.znak.s{border-color:var(--ok);color:var(--ok)}
+.znak.m{border-color:var(--accent);color:var(--accent)}
+.znak.r{border-color:var(--c-alk);color:var(--c-alk)}
+.znak.w{border-color:var(--warn);color:var(--warn)}
+.znak.o{border-color:var(--c-sach);color:var(--c-sach)}
+.prazdny{padding:26px 16px;text-align:center;color:var(--text-muted);font-size:.9rem;line-height:1.6}
+.nutri{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;font-size:.72rem;font-weight:800;color:#fff;text-transform:uppercase}
+.nutri.a{background:#038141}.nutri.b{background:#2f7a17}.nutri.c{background:#7d6000}.nutri.d{background:#b04f08}.nutri.e{background:#c9331a}
+
+/* detail potraviny */
+.detail-hl{display:flex;gap:14px;align-items:flex-start;margin-bottom:12px}
+.detail-obr{width:84px;height:84px;object-fit:contain;border-radius:8px;background:#fff;border:1px solid var(--border);flex:none}
+.detail-info{min-width:0;flex:1}
+.detail-info .zn{color:var(--text-muted);font-size:.86rem}
+.stitky{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px}
+.stitek{font-size:.74rem;border:1px solid var(--border);border-radius:10px;padding:1px 8px;color:var(--text-muted);background:var(--bg-elevated)}
+.mnozstvi{display:grid;grid-template-columns:110px 1fr;gap:8px;margin:6px 0}
+.mnozstvi .vstup{font-size:1.05rem;font-weight:600}
+.rychle-g{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.vyber-radek{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px}
+.vypocet{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:6px;background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;padding:10px;margin-bottom:12px;text-align:center}
+.vypocet b{display:block;font-size:1.08rem;font-variant-numeric:tabular-nums}
+.vypocet span{font-size:.72rem;color:var(--text-muted)}
+.vypocet .kc b{color:var(--accent)}
+.upozorneni{border-left:3px solid var(--warn);background:var(--bg-elevated);padding:8px 10px;border-radius:0 6px 6px 0;font-size:.83rem;margin-bottom:10px;line-height:1.5}
+.upozorneni.info{border-left-color:var(--c-sach)}
+.sekce{margin-top:14px}
+.sekce h3{margin-bottom:6px}
+.slozeni-text{font-size:.84rem;line-height:1.55;color:var(--text-muted)}
+.pruh-makra{display:flex;height:10px;border-radius:5px;overflow:hidden;margin:6px 0 4px;background:var(--bg-control)}
+.pruh-makra i{display:block;height:100%}
+.legenda{display:flex;gap:12px;flex-wrap:wrap;font-size:.76rem;color:var(--text-muted)}
+.legenda span::before{content:"";display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:4px;background:var(--b)}
+.zdroj{font-size:.74rem;color:var(--text-faint);margin-top:14px;line-height:1.5}
+.zdroj a{color:inherit}
+
+/* formuláře */
+.form{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px}
+.pole{display:flex;flex-direction:column;gap:4px;font-size:.8rem;color:var(--text-muted)}
+.pole .vstup{width:100%;color:var(--text)}
+.pole.siroke{grid-column:1/-1}
+.pole small{color:var(--text-faint)}
+.radek{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.prepinac{display:flex;align-items:center;gap:8px;font-size:.88rem;padding:4px 0;cursor:pointer}
+.ziviny-form{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:8px}
+
+/* seznamy (potraviny, recepty) */
+.seznam{list-style:none;margin:0;padding:0}
+.seznam li{display:flex;align-items:center;gap:10px;padding:9px 4px;border-bottom:1px solid var(--border)}
+.seznam li .nazev{flex:1;min-width:0}
+.seznam li:last-child{border-bottom:0}
+.suroviny-receptu .radek{padding:6px 0;border-bottom:1px solid var(--border)}
+.suroviny-receptu .vstup{width:84px}
+
+/* statistiky */
+.graf{width:100%;height:auto;display:block}
+.graf .mrizka{stroke:var(--border);stroke-width:1}
+.graf .osa{fill:var(--text-faint);font-size:10.5px}
+.graf .sloupec{fill:var(--c-kcal);opacity:.85}
+.graf .sloupec.nad{fill:var(--warn)}
+.graf .cil{stroke:var(--danger);stroke-dasharray:5 4;stroke-width:1.5}
+.graf .cil-popis{fill:var(--danger)}
+.graf .cara{fill:none;stroke:var(--c-sach);stroke-width:1.5;opacity:.6}
+.graf .trend{fill:none;stroke:var(--accent);stroke-width:2.5}
+.graf .bod{fill:var(--c-sach)}
+.graf-kolac{width:130px;height:130px;flex:none}
+.cisla{display:grid;grid-template-columns:repeat(auto-fill,minmax(130px,1fr));gap:10px}
+.cislo-karta{background:var(--bg-elevated);border:1px solid var(--border);border-radius:8px;padding:10px}
+.cislo-karta b{display:block;font-size:1.25rem;font-variant-numeric:tabular-nums}
+.cislo-karta span{font-size:.76rem;color:var(--text-muted)}
+.obdobi{display:flex;gap:6px;flex-wrap:wrap}
+
+/* čtečka */
+.ctecka{position:fixed;inset:0;z-index:200;background:#000;color:#fff;display:flex;flex-direction:column}
+.ctecka[hidden]{display:none}
+.ctecka-hlava{display:flex;align-items:center;gap:8px;padding:10px 12px}
+.ctecka-hlava strong{margin-right:auto}
+.ctecka .btn{background:rgba(255,255,255,.12);color:#fff;border-color:rgba(255,255,255,.3)}
+.ctecka .btn.primary{background:#2e7de0;border-color:#2e7de0}
+.ctecka-obraz{position:relative;flex:1;min-height:0;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.ctecka video{width:100%;height:100%;object-fit:cover}
+.ctecka-ramecek{position:absolute;left:7%;right:7%;top:25%;bottom:25%;border:2px solid rgba(255,255,255,.85);border-radius:12px;box-shadow:0 0 0 100vmax rgba(0,0,0,.35)}
+.ctecka-laser{position:absolute;left:4%;right:4%;top:50%;height:2px;background:#ff4d4d;box-shadow:0 0 8px #ff4d4d;animation:laser 1.6s ease-in-out infinite}
+@keyframes laser{0%,100%{transform:translateY(-30px)}50%{transform:translateY(30px)}}
+@media (prefers-reduced-motion:reduce){.ctecka-laser{animation:none}}
+.ctecka-stav{padding:10px 14px;text-align:center;font-size:.92rem;min-height:2.6em}
+.ctecka-stav.chyba{color:#ffb3b3}
+.ctecka-ovladani{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;padding:0 12px 8px}
+.ctecka-rucne{display:flex;gap:8px;padding:6px 12px 16px;max-width:520px;margin:0 auto;width:100%}
+.ctecka-rucne .vstup{flex:1;background:rgba(255,255,255,.1);color:#fff;border-color:rgba(255,255,255,.3)}
+.ctecka-rucne .vstup::placeholder{color:rgba(255,255,255,.6)}
+html.ctecka-otevrena body{overflow:hidden}
+
+.lista-vratit{position:fixed;left:50%;bottom:34px;transform:translateX(-50%);z-index:300;background:var(--bg-elevated);color:var(--text);border:1px solid var(--border-strong);border-radius:10px;box-shadow:var(--shadow);padding:8px 10px 8px 14px;display:flex;gap:12px;align-items:center;font-size:.88rem;max-width:calc(100vw - 24px)}
+.lista-vratit[hidden]{display:none}
+@media (pointer:coarse){.btn.mini{min-height:36px;padding:6px 11px}.btn.ikona{min-width:40px;min-height:40px}.cip{padding:7px 12px}}
+.kalendar{display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:4px;max-width:520px}
+.kalendar .hlavicka{font-size:.72rem;color:var(--text-faint);text-align:center;padding-bottom:2px}
+.kal-den{aspect-ratio:1;border-radius:6px;border:1px solid var(--border);background:var(--bg-elevated);color:var(--text);font-size:.78rem;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;padding:0;line-height:1.1}
+.kal-den small{font-size:.66rem;color:var(--text)}
+.kal-den.prazdny-den{background:var(--bg-panel);border-style:dashed;color:var(--text-muted)}
+.kal-den:disabled{cursor:default;opacity:.5}
+.kal-den.dnes{outline:2px solid var(--accent);outline-offset:1px}
+.kal-den.malo{background:color-mix(in srgb,var(--c-sach) 30%,var(--bg-elevated))}
+.kal-den.ok{background:color-mix(in srgb,var(--ok) 38%,var(--bg-elevated))}
+.kal-den.moc{background:color-mix(in srgb,var(--warn) 40%,var(--bg-elevated))}
+.kal-den.hodne{background:color-mix(in srgb,var(--danger) 42%,var(--bg-elevated))}
+.kal-legenda{display:flex;gap:10px;flex-wrap:wrap;font-size:.74rem;color:var(--text-muted);margin-top:8px}
+.kal-legenda .vzorek{display:inline-block;width:12px;height:12px;border-radius:3px;margin-right:4px;vertical-align:-1px;border:1px solid var(--border-strong);background:var(--bg-elevated)}
+.vzorek.prazdny-den{background:var(--bg-panel);border-style:dashed}
+.vzorek.malo{background:color-mix(in srgb,var(--c-sach) 55%,var(--bg-elevated))}
+.vzorek.ok{background:color-mix(in srgb,var(--ok) 65%,var(--bg-elevated))}
+.vzorek.moc{background:color-mix(in srgb,var(--warn) 70%,var(--bg-elevated))}
+.vzorek.hodne{background:color-mix(in srgb,var(--danger) 70%,var(--bg-elevated))}
+.alergen-varovani{border-left:3px solid var(--danger);background:var(--bg-elevated);padding:8px 10px;border-radius:0 6px 6px 0;font-size:.86rem;margin-bottom:10px;line-height:1.5}
+.alergen-varovani b{color:var(--danger)}
+.znak.a{border-color:var(--danger);color:var(--danger)}
+.porovnani{position:fixed;right:14px;bottom:34px;z-index:90}
+body.ma-porovnani .wrap{padding-bottom:80px}
+body.ma-listu .porovnani{bottom:96px}
+.tisk-hlavicka{display:none}
+.tab-porovnani th,.tab-porovnani td{text-align:right;padding:5px 8px;border-bottom:1px solid var(--border);font-variant-numeric:tabular-nums;font-size:.84rem}
+.tab-porovnani th:first-child,.tab-porovnani td:first-child{text-align:left}
+.tab-porovnani thead th{vertical-align:bottom;font-size:.78rem;max-width:150px}
+.tab-porovnani td.nej{color:var(--ok);font-weight:700}
+.tab-porovnani td.nejhor{color:var(--danger)}
+.nacitani{display:inline-block;width:14px;height:14px;border:2px solid var(--border-strong);border-top-color:var(--accent);border-radius:50%;animation:toc .8s linear infinite;vertical-align:-2px}
+@keyframes toc{to{transform:rotate(360deg)}}
+.pata{margin-top:26px;font-size:.76rem;color:var(--text-faint);line-height:1.6;border-top:1px solid var(--border);padding-top:12px}
+.pata a{color:inherit}
+
+@media (max-width:900px){
+  .denik{grid-template-columns:minmax(0,1fr)}
+  .souhrn{position:static;order:-1}
+  .mrizka2{grid-template-columns:minmax(0,1fr)}
+}
+@media (max-width:560px){
+  .sheet-pozadi{padding:0;align-items:stretch}
+  .sheet,.sheet-pridani{max-height:none;height:100%;border-radius:0;width:100%!important}
+  .vypocet{grid-template-columns:repeat(2,minmax(0,1fr))}
+  .mnozstvi{grid-template-columns:96px 1fr}
+  .vyber-radek{grid-template-columns:1fr}
+  .souhrn-hlavni{gap:10px}
+  .graf-kruh{width:112px;height:112px}
+  .hlava h1{font-size:1.1rem}
+  .tab{padding:8px 9px 7px;font-size:.86rem}
+  .den-nav .serie{margin-left:0;width:100%}
+  .tab-ziviny .minibar{display:none}
+  .tab-ziviny th{font-size:.64rem;letter-spacing:0}
+  .tab-ziviny td,.tab-ziviny th{padding:5px 4px}
+}
+@media print{
+  /* tisk vždy světlou paletou (i z tmavého tématu) */
+  :root,:root[data-theme]{--bg:#fff;--bg-deep:#fff;--bg-panel:#fff;--bg-elevated:#fff;--bg-control:#e9ecef;--bg-input:#fff;--bg-hover:#fff;
+    --text:#000;--text-muted:#333;--text-faint:#555;--border:#bbb;--border-strong:#999;--accent:#2862bb;--ok:#177540;--warn:#7d5800;--danger:#b5352a;
+    --c-bil:#b85a12;--c-sach:#1f6fa8;--c-tuk:#8a6a00;--c-alk:#7b45a8;color-scheme:light}
+  .hlava,.jidlo-pata,.btn,.pata,.lista-vratit,.porovnani,.obdobi,.den-nav .btn,.ctecka{display:none!important}
+  body,.wrap{background:#fff!important;color:#000}
+  .karta{break-inside:avoid;border-color:#bbb;box-shadow:none}
+  .tisk-hlavicka{display:block;margin-bottom:12px}
+  .tisk-hlavicka h1{font-size:1.2rem}
+  .denik{grid-template-columns:minmax(0,1fr) 300px}
+  .souhrn{position:static}
+}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="hlava">
+    <div class="hlava-radek">
+      <h1>🥗 Deník jídla</h1>
+      <span class="data-stav" id="dataStav" aria-live="polite"><span class="nacitani"></span> načítám databázi…</span>
+    </div>
+    <nav class="tabs" role="tablist" aria-label="Části aplikace">
+      <button class="tab" role="tab" id="tab-denik" aria-controls="v-denik" data-v="denik" aria-selected="true">📖 Deník</button>
+      <button class="tab" role="tab" id="tab-potraviny" aria-controls="v-potraviny" data-v="potraviny" aria-selected="false">🍎 Potraviny a recepty</button>
+      <button class="tab" role="tab" id="tab-statistiky" aria-controls="v-statistiky" data-v="statistiky" aria-selected="false">📊 Statistiky</button>
+      <button class="tab" role="tab" id="tab-profil" aria-controls="v-profil" data-v="profil" aria-selected="false">🎯 Profil a cíle</button>
+      <button class="tab" role="tab" id="tab-data" aria-controls="v-data" data-v="data" aria-selected="false">💾 Data</button>
+    </nav>
+  </header>
+
+  <div class="tisk-hlavicka" aria-hidden="true"><h1>🥗 Deník jídla</h1><p id="tiskPopis"></p></div>
+  <main>
+    <!-- DENÍK -->
+    <section id="v-denik" role="tabpanel" aria-labelledby="tab-denik">
+      <div class="den-nav">
+        <button class="btn ikona" id="denPred" aria-label="Předchozí den" title="Předchozí den (←)">◀</button>
+        <button class="datum" id="denPopis" title="Vybrat datum"></button>
+        <input type="date" id="denVyber" aria-label="Vybrat datum" tabindex="-1">
+        <button class="btn ikona" id="denDalsi" aria-label="Další den" title="Další den (→)">▶</button>
+        <button class="btn mini" id="denDnes">Dnes</button>
+        <button class="btn ikona plain" id="denMenu" aria-label="Akce celého dne" aria-haspopup="menu" aria-expanded="false" title="Akce celého dne">⋯</button>
+        <span class="serie" id="serie"></span>
+      </div>
+      <div class="denik">
+        <div id="jidla"></div>
+        <aside class="souhrn karta" id="souhrn" aria-label="Souhrn dne"></aside>
+      </div>
+    </section>
+
+    <!-- POTRAVINY -->
+    <section id="v-potraviny" role="tabpanel" aria-labelledby="tab-potraviny" hidden>
+      <div class="mrizka2">
+        <div class="karta">
+          <div class="radek" style="margin-bottom:10px"><h2 style="margin-right:auto">✎ Moje potraviny</h2>
+            <button class="btn mini primary" id="novaPotravina">+ Nová potravina</button></div>
+          <input type="search" class="vstup" id="hledatVlastni" placeholder="Filtrovat…" aria-label="Filtrovat vlastní potraviny" style="width:100%;margin-bottom:6px">
+          <ul class="seznam" id="seznamVlastni"></ul>
+        </div>
+        <div class="karta">
+          <div class="radek" style="margin-bottom:10px"><h2 style="margin-right:auto">🍲 Recepty</h2>
+            <button class="btn mini primary" id="novyRecept">+ Nový recept</button></div>
+          <ul class="seznam" id="seznamRecepty"></ul>
+        </div>
+      </div>
+      <div class="karta" style="margin-top:14px">
+        <div class="radek" style="margin-bottom:6px"><h2 style="margin-right:auto">📋 Uložená jídla</h2></div>
+        <p class="slabe" style="margin-bottom:6px">Opakující se jídlo (třeba obvyklou snídani) ulož v deníku přes ⋯ u jídla → „Uložit jídlo pro příště…“. Pak ho přidáš jedním klepnutím.</p>
+        <ul class="seznam" id="seznamSablon"></ul>
+      </div>
+      <div class="karta" style="margin-top:14px">
+        <div class="radek" style="margin-bottom:10px"><h2 style="margin-right:auto">🔎 Procházet databázi</h2></div>
+        <div class="radek" style="margin-bottom:10px">
+          <input type="search" class="vstup" id="prochazetDotaz" placeholder="Název, značka nebo EAN…" aria-label="Hledat v databázi" style="flex:1;min-width:180px">
+          <select class="vstup" id="prochazetSkupina" aria-label="Skupina potravin"><option value="">Všechny skupiny</option></select>
+          <select class="vstup" id="prochazetRazeni" aria-label="Řazení">
+            <option value="relevance">Podle relevance</option>
+            <option value="bilkoviny">Nejvíc bílkovin na 100 kcal</option>
+            <option value="vlaknina">Nejvíc vlákniny na 100 kcal</option>
+            <option value="kcal-">Nejméně kcal na 100 g</option>
+            <option value="kcal+">Nejvíc kcal na 100 g</option>
+            <option value="cukry">Nejméně cukrů</option>
+            <option value="sul">Nejméně soli</option>
+          </select>
+        </div>
+        <ul class="vysledky" id="prochazetVysledky" style="max-height:none;border:0"></ul>
+        <p class="slabe" id="prochazetInfo"></p>
+      </div>
+    </section>
+
+    <!-- STATISTIKY -->
+    <section id="v-statistiky" role="tabpanel" aria-labelledby="tab-statistiky" hidden>
+      <div class="radek" style="margin-bottom:12px">
+        <div class="obdobi" role="group" aria-label="Období">
+          <button class="btn mini" data-obdobi="7" aria-pressed="true">7 dní</button>
+          <button class="btn mini" data-obdobi="30" aria-pressed="false">30 dní</button>
+          <button class="btn mini" data-obdobi="90" aria-pressed="false">90 dní</button>
+          <button class="btn mini" data-obdobi="365" aria-pressed="false">Rok</button>
+        </div>
+        <span class="slabe" id="statObdobi"></span>
+        <button class="btn mini" id="tiskStat" style="margin-left:auto">🖨️ Vytisknout přehled</button>
+      </div>
+      <div id="statistiky" class="sloupec-gap"></div>
+    </section>
+
+    <!-- PROFIL -->
+    <section id="v-profil" role="tabpanel" aria-labelledby="tab-profil" hidden>
+      <div class="mrizka2">
+        <form class="karta" id="formProfil" autocomplete="off">
+          <h2 style="margin-bottom:12px">Osobní údaje</h2>
+          <div class="form">
+            <label class="pole">Pohlaví<select class="vstup" name="pohlavi"><option value="m">muž</option><option value="z">žena</option></select></label>
+            <label class="pole">Datum narození<input class="vstup" type="date" name="narozeni"></label>
+            <label class="pole">Výška (cm)<input class="vstup" type="number" name="vyska" min="100" max="250" step="1" inputmode="numeric"></label>
+            <label class="pole">Hmotnost (kg)<input class="vstup" type="text" name="vaha" inputmode="decimal" autocomplete="off"></label>
+            <label class="pole siroke">Pohybová aktivita<select class="vstup" name="pal"></select></label>
+            <label class="pole siroke">Cíl
+              <select class="vstup" name="tempo">
+                <option value="-1">Hubnout rychle (−1 kg týdně)</option>
+                <option value="-0.75">Hubnout (−0,75 kg týdně)</option>
+                <option value="-0.5">Hubnout mírně (−0,5 kg týdně)</option>
+                <option value="-0.25">Hubnout pozvolna (−0,25 kg týdně)</option>
+                <option value="0">Udržet hmotnost</option>
+                <option value="0.25">Přibrat pozvolna (+0,25 kg týdně)</option>
+                <option value="0.5">Přibrat (+0,5 kg týdně)</option>
+              </select></label>
+            <label class="pole">Cílová hmotnost (kg)<input class="vstup" type="text" name="cilVaha" inputmode="decimal" autocomplete="off"></label>
+            <label class="pole">Vlastní cíl energie (kcal)<input class="vstup" type="number" name="kcalRucne" min="800" max="6000" step="10" placeholder="automaticky"><small>prázdné = výpočet</small></label>
+          </div>
+          <h3 style="margin:16px 0 8px">Rozdělení energie</h3>
+          <div class="radek" style="margin-bottom:8px">
+            <button type="button" class="btn mini" data-makra="20,30,50">Vyvážené 20/30/50</button>
+            <button type="button" class="btn mini" data-makra="30,30,40">Víc bílkovin 30/30/40</button>
+            <button type="button" class="btn mini" data-makra="25,45,30">Méně sacharidů 25/45/30</button>
+          </div>
+          <div class="form">
+            <label class="pole">Bílkoviny (% energie)<input class="vstup" type="number" name="mBil" min="10" max="40" step="1"></label>
+            <label class="pole">Tuky (% energie)<input class="vstup" type="number" name="mTuk" min="15" max="60" step="1"></label>
+            <label class="pole">Sacharidy (% energie)<input class="vstup" type="number" name="mSach" readonly tabindex="-1"><small>dopočítá se</small></label>
+            <label class="pole">nebo bílkoviny g/kg<input class="vstup" type="text" name="bilkovinyNaKg" inputmode="decimal" autocomplete="off" placeholder="—"><small>přednost před %</small></label>
+          </div>
+        </form>
+        <div class="sloupec-gap">
+          <div class="karta" id="vypocetCilu"></div>
+          <div class="karta">
+            <h2 style="margin-bottom:10px">Hmotnost</h2>
+            <form class="radek" id="formVaha">
+              <input class="vstup" type="date" name="datum" aria-label="Datum vážení">
+              <input class="vstup" type="text" name="kg" placeholder="kg" inputmode="decimal" autocomplete="off" aria-label="Hmotnost v kg" style="width:100px">
+              <button class="btn primary" type="submit">Zapsat</button>
+            </form>
+            <ul class="seznam" id="seznamVah" style="margin-top:8px"></ul>
+          </div>
+        </div>
+      </div>
+      <div class="karta" style="margin-top:14px">
+        <h2 style="margin-bottom:6px">⚠️ Alergeny a složky, kterým se vyhýbám</h2>
+        <p class="slabe" style="margin-bottom:10px">U výrobků se zaškrtnutým alergenem (nebo jen s možnými stopami) uvidíš výrazné upozornění v detailu i ve výsledcích hledání. Údaje pocházejí ze složení v Open Food Facts – vždy ověř na obalu.</p>
+        <fieldset style="border:0;padding:0;margin:0">
+          <legend class="sr">Hlídané alergeny</legend>
+          <div id="alergenyVolby" class="form" style="grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:2px 12px"></div>
+        </fieldset>
+        <label class="pole siroke" style="margin-top:10px">Další složky, kterým se vyhýbám (oddělené čárkou)
+          <input class="vstup" type="text" id="vyhybat" maxlength="300" placeholder="např. palmový olej, glutaman, aspartam, E250" autocomplete="off"></label>
+        <p class="slabe" style="margin-top:4px">Hledá se ve složení a v názvu na začátku slov. Běžné přídatné látky se najdou i podle E-kódu (glutaman → E621–E625, aspartam → E951, dusitany → E249–E250, fosfáty…).</p>
+      </div>
+      <div class="karta" style="margin-top:14px">
+        <h2 style="margin-bottom:10px">Nastavení</h2>
+        <div class="mrizka2">
+          <div>
+            <h3 style="margin-bottom:8px">Jídla dne</h3>
+            <ul class="seznam" id="seznamJidel"></ul>
+            <button class="btn mini" id="pridatJidlo" style="margin-top:8px">+ Přidat jídlo</button>
+          </div>
+          <div>
+            <h3 style="margin-bottom:8px">Chování</h3>
+            <label class="prepinac"><input type="checkbox" id="nOnline"> Hledat neznámé kódy online v Open Food Facts</label>
+            <label class="prepinac"><input type="checkbox" id="nObrazky"> Zobrazovat fotky výrobků (načítají se z Open Food Facts)</label>
+            <label class="prepinac"><input type="checkbox" id="nMikro"> Sledovat vitaminy a minerály</label>
+            <label class="prepinac"><input type="checkbox" id="nPohyb"> Spálené kalorie z pohybu přičítat k dennímu cíli</label>
+            <label class="prepinac"><input type="checkbox" id="nNapoje"> Započítávat nápoje z deníku do pitného režimu</label>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- DATA -->
+    <section id="v-data" role="tabpanel" aria-labelledby="tab-data" hidden>
+      <div class="mrizka2">
+        <div class="karta">
+          <h2 style="margin-bottom:10px">Záloha a přenos</h2>
+          <p class="slabe" style="margin-bottom:10px">Deník je uložený jen v tomto prohlížeči. Pravidelná záloha chrání před ztrátou při mazání dat prohlížeče a umožní přenos do jiného zařízení.</p>
+          <div class="radek">
+            <button class="btn primary" id="exportJson">⬇️ Stáhnout zálohu (JSON)</button>
+            <button class="btn" type="button" id="importTl">⬆️ Obnovit ze zálohy</button>
+            <input type="file" accept=".json,application/json" id="importJson" class="sr" tabindex="-1" aria-hidden="true">
+          </div>
+          <div class="radek" style="margin-top:10px">
+            <button class="btn" id="exportCsv">📄 Položky deníku (CSV)</button>
+            <button class="btn" id="exportSouhrny" title="Jeden řádek za den: živiny, voda, pohyb, hmotnost, poznámka – např. pro nutričního terapeuta">📄 Denní souhrny (CSV)</button>
+            <button class="btn" id="tisk">🖨️ Vytisknout den</button>
+          </div>
+          <p class="slabe" id="infoUloziste" style="margin-top:12px"></p>
+          <p class="slabe" id="infoZaloha"></p>
+          <ul class="seznam" id="kopie" style="margin-top:6px"></ul>
+          <button class="btn" id="instalovat" hidden style="margin-top:10px">📲 Nainstalovat jako aplikaci</button>
+          <p class="slabe" style="margin-top:6px">Instalace (nebo „Přidat na plochu“ v Safari) otevírá Deník jako samostatnou aplikaci a prohlížeč pak jeho data spolehlivěji chrání.</p>
+          <hr style="border:0;border-top:1px solid var(--border);margin:14px 0">
+          <button class="btn danger" id="smazatVse">🗑️ Smazat všechna data deníku</button>
+        </div>
+        <div class="karta">
+          <h2 style="margin-bottom:10px">O datech</h2>
+          <div id="oDatech" class="slozeni-text"></div>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="pata">
+    Údaje jsou orientační a nenahrazují radu lékaře ani nutričního terapeuta.
+    Výrobky: <a href="https://world.openfoodfacts.org" target="_blank" rel="noopener">Open Food Facts</a> (ODbL) ·
+    potraviny: <a href="https://fdc.nal.usda.gov/" target="_blank" rel="noopener">USDA FoodData Central</a> (CC0) ·
+    referenční hodnoty: <a href="https://multimedia.efsa.europa.eu/drvs/index.htm" target="_blank" rel="noopener">EFSA</a>.
+    <a href="potraviny.html" target="_blank" rel="noopener" id="samostatne">Otevřít v samostatném okně</a>
+  </footer>
+</div>
+</body>
+</html>

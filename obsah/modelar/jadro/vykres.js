@@ -6,7 +6,7 @@
    a odvrácenou). Neviditelné části hran se kreslí čárkovaně; viditelnost se
    zkouší po kouscích hrany proti trojúhelníkům v mřížce promítnuté roviny.
    Výsledek je seznam primitiv v mm listu (počátek vlevo nahoře, y dolů):
-   {typ:'cara', x1,y1,x2,y2, tl:'silna'|'tenka', carkovana} a {typ:'text', x,y,
+   {typ:'cara', x1,y1,x2,y2, tl:'silna'|'tenka', carkovana, osa (čerchovaná)} a {typ:'text', x,y,
    text, vel (mm), zarovnani:'start'|'middle'|'end', otoceni}; M.vykresSvg z nich
    složí SVG, prohlížeč z nich kreslí PDF (jsPDF). */
 var MDL = globalThis.MDL = globalThis.MDL || {};
@@ -233,6 +233,48 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
   /** Text čísla kóty: mm s nejvýš 2 desetinnými místy, čárka. */
   M.textKoty = x => String(Math.round(x * 100) / 100).replace('.', ',');
 
+  /** Kružnice v pohledu: uzavřené smyčky aspoň 8 úseček se stálým poloměrem (díry, válce, čepy).
+      segmenty = [[u1,v1,u2,v2], …] (viditelné i skryté zvlášť). Vrací [{u, v, r}]. */
+  M.kruzniceVPohledu = function (segmenty, velikost = 100) {
+    const tol = Math.max(1e-4, velikost * 1e-5);
+    const klic = (x, y) => Math.round(x / tol) + ',' + Math.round(y / tol);
+    const uzly = new Map();
+    segmenty.forEach((s, i) => {
+      for (const [x, y] of [[s[0], s[1]], [s[2], s[3]]]) { const k = klic(x, y); if (!uzly.has(k)) uzly.set(k, []); uzly.get(k).push(i); }
+    });
+    const pouzito = new Uint8Array(segmenty.length), out = [];
+    for (let i = 0; i < segmenty.length; i++) {
+      if (pouzito[i]) continue;
+      // smyčka: každý uzel cestou má právě dvě úsečky
+      const smycka = [i], body = [[segmenty[i][0], segmenty[i][1]]];
+      let kon = [segmenty[i][2], segmenty[i][3]], zavrena = false, akt = i;
+      const start = klic(segmenty[i][0], segmenty[i][1]);
+      for (let krok = 0; krok < 2000; krok++) {
+        const k = klic(kon[0], kon[1]);
+        body.push(kon);
+        if (k === start) { zavrena = true; break; }
+        const sousede = uzly.get(k) || [];
+        if (sousede.length !== 2) break;
+        const dalsi = sousede[0] === akt ? sousede[1] : sousede[0];
+        if (smycka.includes(dalsi)) break;
+        smycka.push(dalsi); akt = dalsi;
+        const s = segmenty[dalsi];
+        kon = klic(s[0], s[1]) === k ? [s[2], s[3]] : [s[0], s[1]];
+      }
+      if (!zavrena || smycka.length < 8) continue;
+      smycka.forEach(j => { pouzito[j] = 1; });
+      const n = body.length - 1;
+      let cu = 0, cv = 0;
+      for (let j = 0; j < n; j++) { cu += body[j][0]; cv += body[j][1]; }
+      cu /= n; cv /= n;
+      const rr = body.slice(0, n).map(b => Math.hypot(b[0] - cu, b[1] - cv));
+      const r = rr.reduce((a, b) => a + b, 0) / n;
+      if (r < tol * 10 || rr.some(x => Math.abs(x - r) > 0.02 * r + tol)) continue;
+      out.push({ u: cu, v: cv, r });
+    }
+    return out;
+  };
+
   /** Kóta mezi body (x1,y1)–(x2,y2) na listu, odsazená o `odsazeni` mm na stranu
       normály (vlevo od směru). Vrací primitiva: pomocné čáry, kótovací čára se
       šipkami a text nad ní. */
@@ -304,7 +346,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       if (volby.skryte !== false && !skryte && nazev) bezSkrytych.push(nazev);
       if (skryte) for (const s of p.skryte) prim.push({ typ: 'cara', x1: X(s[0]), y1: Y(s[1]), x2: X(s[2]), y2: Y(s[3]), tl: 'tenka', carkovana: true });
       for (const s of p.viditelne) prim.push({ typ: 'cara', x1: X(s[0]), y1: Y(s[1]), x2: X(s[2]), y2: Y(s[3]), tl: 'silna' });
-      return { x0: X(o.umin), y0: Y(o.vmax), x1: X(o.umax), y1: Y(o.vmin) };
+      return { x0: X(o.umin), y0: Y(o.vmax), x1: X(o.umax), y1: Y(o.vmin), X, Y };
     }
     const r = {};
     for (const kk of ['narys', 'pudorys', 'bokorys']) r[kk] = kresliPohled(pohl[kk], umisteni[kk], K, M.POHLEDY[kk].nazev);
@@ -312,8 +354,82 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     prim.push(...M.kota(r.narys.x0, r.narys.y0, r.narys.x1, r.narys.y0, sx, 8));
     prim.push(...M.kota(r.narys.x0, r.narys.y1, r.narys.x0, r.narys.y0, sz, 8));
     prim.push(...M.kota(r.bokorys.x0, r.bokorys.y0, r.bokorys.x1, r.bokorys.y0, sy, 8));
+
+    // díry a válce: kružnice v pohledech → středové kříže, osy v ostatních pohledech, kóty průměrů a poloh
+    const velikost = Math.max(sx, sy, sz, 1);
+    const kruhy = {};
     for (const kk of ['narys', 'pudorys', 'bokorys']) {
-      prim.push({ typ: 'text', x: (r[kk].x0 + r[kk].x1) / 2, y: r[kk].y1 + 6, text: M.POHLEDY[kk].nazev, vel: 2.5, zarovnani: 'middle', sedy: true });
+      const vse = M.kruzniceVPohledu(pohl[kk].viditelne, velikost).concat(M.kruzniceVPohledu(pohl[kk].skryte, velikost));
+      kruhy[kk] = vse.filter((c, i) => !vse.slice(0, i).some(d => Math.hypot(d.u - c.u, d.v - c.v) < 1e-3 * velikost && Math.abs(d.r - c.r) < 1e-3 * velikost));
+    }
+    const pocetPopisuDer = { n: 0 };
+    let dalsiOdsazeniPudorysu = 0;
+    if (volby.osy !== false) {
+      const osa = (x1, y1, x2, y2) => prim.push({ typ: 'cara', x1, y1, x2, y2, tl: 'tenka', osa: true });
+      const prekryvOs = new Set();
+      for (const kk of ['narys', 'pudorys', 'bokorys']) {
+        const P = M.POHLEDY[kk], rk = r[kk];
+        for (const c of kruhy[kk]) {
+          // středový kříž přes kružnici (2 mm přes okraj)
+          const x = rk.X(c.u), y = rk.Y(c.v), rr = c.r * K + 2;
+          osa(x - rr, y, x + rr, y); osa(x, y - rr, x, y + rr);
+          // osa díry v ostatních pohledech: přímka ve směru pohledu tohoto pohledu, v délce stěn díry
+          const C3 = [0, 1, 2].map(i => P.u[i] * c.u + P.v[i] * c.v);
+          for (const jj of ['narys', 'pudorys', 'bokorys']) {
+            if (jj === kk) continue;
+            const Q = M.POHLEDY[jj];
+            const du = dot(P.d, Q.u), dv = dot(P.d, Q.v);
+            if (Math.abs(Math.abs(du) + Math.abs(dv) - 1) > 1e-6) continue;          // osa šikmo – v tomto pohledu nekreslit
+            const pu = dot(C3, Q.u), pv = dot(C3, Q.v), vodorovna = Math.abs(du) > 0.5;
+            const tol = 2e-3 * velikost + 1e-3;
+            let a = Infinity, b = -Infinity;
+            for (const sg of pohl[jj].viditelne.concat(pohl[jj].skryte)) {
+              if (vodorovna ? Math.abs(sg[1] - sg[3]) > tol : Math.abs(sg[0] - sg[2]) > tol) continue;
+              const pos = vodorovna ? sg[1] : sg[0], mid = vodorovna ? pv : pu;
+              if (Math.abs(Math.abs(pos - mid) - c.r) > tol) continue;
+              const t0 = vodorovna ? sg[0] : sg[1], t1 = vodorovna ? sg[2] : sg[3];
+              a = Math.min(a, t0, t1); b = Math.max(b, t0, t1);
+            }
+            if (!(b > a)) continue;
+            const kl = jj + '|' + (vodorovna ? 'h' : 'v') + Math.round((vodorovna ? pv : pu) * 1000);
+            if (prekryvOs.has(kl)) continue;
+            prekryvOs.add(kl);
+            const rj = r[jj], pres = 2 / K;
+            if (vodorovna) osa(rj.X(a - pres), rj.Y(pv), rj.X(b + pres), rj.Y(pv));
+            else osa(rj.X(pu), rj.Y(a - pres), rj.X(pu), rj.Y(b + pres));
+          }
+        }
+      }
+    }
+    if (volby.kotyDer !== false) {
+      for (const kk of ['narys', 'pudorys', 'bokorys']) {
+        // průměry: stejné kružnice v pohledu jedním popisem „n× Ø6“, odkaz šikmo vpravo nahoru
+        const skupiny = new Map();
+        for (const c of kruhy[kk]) { const k = Math.round(c.r * 200); if (!skupiny.has(k)) skupiny.set(k, []); skupiny.get(k).push(c); }
+        for (const sk of skupiny.values()) {
+          const c = sk.reduce((m, x) => (x.u - x.v > m.u - m.v ? x : m), sk[0]);     // nejvíc vpravo nahoře
+          const rk = r[kk], x = rk.X(c.u), y = rk.Y(c.v), rr = c.r * K, q = Math.SQRT1_2;
+          const px = x + rr * q, py = y - rr * q, ex = px + 5, ey = py - 5;
+          const text = (sk.length > 1 ? sk.length + '× ' : '') + 'Ø' + M.textKoty(2 * c.r);
+          prim.push({ typ: 'cara', x1: px, y1: py, x2: ex, y2: ey, tl: 'tenka' },
+            { typ: 'cara', x1: ex, y1: ey, x2: ex + 1.9 * text.length + 1, y2: ey, tl: 'tenka' },
+            { typ: 'sipka', body: [[px, py], [px + 2.4 * q + 0.6 * q, py - 2.4 * q + 0.6 * q], [px + 2.4 * q - 0.6 * q, py - 2.4 * q - 0.6 * q]] },
+            { typ: 'text', x: ex + 0.5, y: ey - 1, text, vel: 3, zarovnani: 'start' });
+          pocetPopisuDer.n++;
+        }
+      }
+      // polohy děr v půdorysu: X od levé hrany (pod pohledem), Y od spodní hrany (vlevo), nejvýš 2 a 3 kóty
+      const pr = r.pudorys, o = pohl.pudorys.obalka;
+      const kruhyP = kruhy.pudorys.filter(c => c.r < 0.45 * Math.min(o.umax - o.umin, o.vmax - o.vmin));
+      const xs = [...new Set(kruhyP.map(c => Math.round((c.u - o.umin) * 100) / 100))].filter(x => x > 1e-6 && x < o.umax - o.umin - 1e-6).sort((a, b) => a - b).slice(0, 2);
+      const ys = [...new Set(kruhyP.map(c => Math.round((c.v - o.vmin) * 100) / 100))].filter(y => y > 1e-6 && y < o.vmax - o.vmin - 1e-6).sort((a, b) => a - b).slice(0, 3);
+      xs.forEach((x, i) => prim.push(...M.kota(pr.X(o.umin + x), pr.y1, pr.x0, pr.y1, x, 7 + 5.5 * i)));
+      ys.forEach((y, i) => prim.push(...M.kota(pr.x0, pr.y1, pr.x0, pr.Y(o.vmin + y), y, 8 + 6 * i)));
+      dalsiOdsazeniPudorysu = xs.length ? 7 + 5.5 * (xs.length - 1) + 2 : 0;
+    }
+    for (const kk of ['narys', 'pudorys', 'bokorys']) {
+      const dy = kk === 'pudorys' ? dalsiOdsazeniPudorysu : 0;
+      prim.push({ typ: 'text', x: (r[kk].x0 + r[kk].x1) / 2, y: r[kk].y1 + 6 + dy, text: M.POHLEDY[kk].nazev, vel: 2.5, zarovnani: 'middle', sedy: true });
     }
 
     // izometrie vpravo dole nad razítkem (vlastní menší měřítko, bez kót)
@@ -359,7 +475,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       `<rect width="${v.sirka}" height="${v.vyska}" fill="#fff"/>`,
       '<g fill="none" stroke="#000" stroke-linecap="round">'];
     for (const p of v.primitiva) {
-      if (p.typ === 'cara') out.push(`<line x1="${f(p.x1)}" y1="${f(p.y1)}" x2="${f(p.x2)}" y2="${f(p.y2)}" stroke-width="${p.tl === 'silna' ? 0.5 : 0.25}"${p.carkovana ? ' stroke-dasharray="2 1"' : ''}/>`);
+      if (p.typ === 'cara') out.push(`<line x1="${f(p.x1)}" y1="${f(p.y1)}" x2="${f(p.x2)}" y2="${f(p.y2)}" stroke-width="${p.tl === 'silna' ? 0.5 : 0.25}"${p.carkovana ? ' stroke-dasharray="2 1"' : p.osa ? ' stroke-dasharray="6 1 1 1" stroke-linecap="butt"' : ''}/>`);
       else if (p.typ === 'sipka') out.push(`<path d="M${p.body.map(b => f(b[0]) + ',' + f(b[1])).join('L')}Z" fill="#000" stroke="none"/>`);
     }
     out.push('</g><g font-family="Liberation Sans, Arial, Helvetica, sans-serif" fill="#000">');
