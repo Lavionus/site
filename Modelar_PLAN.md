@@ -811,3 +811,56 @@ rozhraní, QA skutečnou myší); opravy:
   import souborů (název, pořadí, „Vkládám do scény…“), strukturu (načtení jádra, příprava plochy, zobrazení
   výsledku; v okně kolečko a lišta s % z workeru).
 - Test: `modelar_ui_revize6.py` (66 kontrol).
+
+### Další tvary (16. 10. 2026, přání: „rozšiř databanku předdefinovaných tvarů“)
+
+- Třetí sada knihovny `sada: 'dalsi'` (sekce „Další tvary“ v nabídce Tvary, skok „Další“), 16 tvarů v `jadro/tvary.js`:
+  **Mnohostěn** (čtyřstěn, osmistěn, dvanáctistěn, dvacetistěn, kubooktaedr, kosočtverečný dvanáctistěn, komolý
+  dvacetistěn – míč), **Drahokam** (fasety, horní plocha, korunka), **Sražený kvádr** (sražení všech hran),
+  **Paraboloid**, **Čočka** (dva kulové vrchlíky), **Váza** (hrdlo, dno, stěna – dutá nebo plná), **Drážka (ovál)**,
+  **Půlměsíc**, **Kapka**, **Puzzle dílek** (výstupky / zámky / krajový), **Blesk**, **Plochá spirála** (závity,
+  šířka pásu), **Květ** (plátky, hloubka zářezů, otvor), **Háček** (tloušťka, výška špičky), **Montážní deska**
+  (zaoblení, 4 otvory, odstup), **Krabička** (otevřená: stěna, dno, zaoblení rohů).
+- `M.konvexniObal(body)`: stěny = roviny přes trojice bodů bez bodů za nimi, body v rovině seřazené kolem těžiště
+  (rovná stěna = jedna plocha, i pětiúhelníky a šestiúhelníky), O(n⁴) – pro desítky bodů (míč 60 bodů = 44 ms).
+- Rovinné (mnohostěn, drahokam, sražený kvádr, blesk) jsou v OCCT mezi `MNOHOSTENY` (rovné plochy jsou skutečné).
+- Testy: `modelar_jadro.js` (všech 604 náhodných sítí vodotěsných s přesnou obálkou), `modelar_occt.js` (přesně),
+  `modelar_ui_revize6.py` (88; dlaždice všech sekcí skutečnou myší – obsluha klikání se původně napojila jen na první tři mřížky).
+
+### Přání 16. 10. 2026 (3): úhel otočení, položení skupiny, sada šroubu, háček S, puzzle s vůlí
+
+- **Úhel otočení navazuje**: u jednoho tělesa úchyt ukazuje skutečné natočení a přírůstek („Z 60° (+30°)“),
+  přichycení po 15° / 1° platí pro výsledné natočení (ze 7° tah skočí na 15°, 30°…), rysky úhloměru mají 0° tam,
+  kde je těleso nenatočené. Platí, když otočení mění jen tu jednu složku natočení (ověří se zkušebním otočením
+  o 10°); víc těles nebo obecné natočení = přírůstek jako dřív.
+- **Položit na desku u skupiny**: spodek se bere ze spočítané výsledné sítě (`M.zapisVysledekSkupiny` z telesa.js,
+  `minNadRovinou` v transformace.js) – díra nebo průnik, který odřízne spodní část, už nenechá výsledek viset.
+- **Šroub + matice (sada)** (`DILY.sadaSroub`): jeden díl, šroub a matice vedle sebe, společný závit, celková
+  vůle 0,35 mm (šroub −40 %, matice +60 %), výchozí M10, matice se sraženým vstupem z obou stran (45°).
+  Test: šroub ze sady projde maticí ze sady (M8, M10, M16, přes 24 fází otočení). Oprava: obálka šroubu počítá
+  se zúžením o vůli (tyč bez hlavy).
+- **Háček S** (`hakS`, Další tvary): naplocho (pevnější tisk), tloušťka a délka špiček; pás kolem střednice
+  (`pasKolemCary`).
+- **Puzzle s odsazením** (`odsazeni`, výchozí 0,15 mm): obrys v mm (`M.obrysPuzzle`, `hranaPuzzle`): hrany
+  dovnitř o odsazení, výstupek menší, zámek větší; obálka = rozměr, rozteč dílků vrací `roztec`. Ověřeno:
+  mezera výstupek–zámek ≈ 2 × odsazení, bez překryvu.
+- Testy: `modelar_ui_prani3.py` (28), `modelar_dily.js` 60, `modelar_jadro.js` 124.
+- **Úhloměr od osy** (přání): 0° leží na ose (otáčení kolem Z → směr X, kolem X → Y, kolem Y → Z), čárkovaná
+  osa nuly s popiskem „0° X“, popisky rysek = natočení od osy; výseč od osy k tělesu a ručička ve směru jeho
+  osy (u jednoho tělesa = stejné číslo jako popisek u kurzoru). U víc těles výseč od začátku tahu o přírůstek.
+
+### Přání 16. 10. 2026 (4): šroub a matice zvlášť, šroubovice, háček S na trubky, kvalita
+
+- **Sada šroub + matice** vkládá dva samostatné objekty (`M.uzlySadySroubu`, `M.pridejTvar('sadaSroub')`),
+  díl `sadaSroub` zůstává kvůli uloženým projektům. Matice má přepínač **Sražený vstup závitu** (výchozí zapnutý).
+  Oprava: přepínače (ano/ne) v parametrech dílů se v `normalizujParamDilu` vždy vracely na výchozí hodnotu.
+- **Maticová šroubovice** (`DILY.sroubovice`): trubka s vnitřním závitem, délka / počet závitů, stěna, odvozený
+  vnější průměr (zápis dopočítá stěnu), sražení vstupů – vložit do díry jiného tělesa a seskupit.
+- **Háček S** přesunut z tvarů do dílů (`DILY.hakS`, `sada: 'dalsi'` → v sekci Další tvary; skutečné mm):
+  průměr trubky nahoře / dole, vůle, šířka drátu, síla, rovný krček, délka a zahnutí špiček. Svislý krček tečně
+  k oběma obloukům – předtím šikmý krček zasahoval do horního oblouku a trubka nedosedla. Test: vzdálenost
+  středu trubky od obrysu = poloměr trubky + polovina vůle.
+- **Kvalita oblých ploch** (`M.KVALITY` Hrubá ½× / Střední / Jemná 2× / Velmi jemná 4× výchozích segmentů,
+  v mezích tvaru): inspektor (i víc těles a skupiny), paleta „Kvalita výběru: …“, kvalita nových těles v nabídce
+  Tvary (localStorage). `M.kvalitaUzlu`, `M.sKvalitou`, `M.nastavKvalitu`, `M.nastavKvalituVybranych`.
+- Testy: `modelar_dily.js` 71, `modelar_jadro.js` 129, `modelar_ui_prani3.py` 60.

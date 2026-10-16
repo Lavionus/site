@@ -249,10 +249,32 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       M.stahniSoubor(data, M.jmenoSouboru(zdroj.nazev, M.projekt.PRIPONA), 'application/x-modelar');
     };
 
+    // ------------------------------------------------------------ šablony projektů
+    const oknoSab = document.getElementById('oknoSablony');
+    /** Otevře šablonu jako nový projekt (pro testy volatelné přímo). */
+    M.otevriSablonu = async function (id) {
+      const s = M.SABLONY.find(x => x.id === id);
+      if (!s) return false;
+      const dok = M.dokumentSablony(id);
+      if (!await U.novy(s.nazev)) return false;
+      M.zmenDokument(dok, 'Šablona: ' + s.nazev);
+      M.nastavVyber([]);
+      if (S.domu) S.domu(); else if (M.scena && M.scena.domu) M.scena.domu();
+      return true;
+    };
+    M.otevriSablony = function () {
+      const sez = document.getElementById('sabSeznam');
+      sez.innerHTML = M.SABLONY.map(s => `<button type="button" class="sablona" data-sablona="${s.id}"><span class="ik">${s.ikona}</span><b>${s.nazev}</b><span>${s.popis}</span></button>`).join('');
+      sez.querySelectorAll('[data-sablona]').forEach(b => b.onclick = async () => { oknoSab.close(); await M.otevriSablonu(b.dataset.sablona); });
+      oknoSab.showModal();
+    };
+    document.getElementById('sabZavrit').onclick = () => oknoSab.close();
+
     // ------------------------------------------------------------ příkazy
     const prikazy = {
       novyProjekt: () => U.novy(),
       projekty: () => M.otevriProjekty(),
+      sablony: () => M.otevriSablony(),
       otevritSoubor: () => vstup.click(),
       ulozitSoubor: () => M.ulozDoSouboru(),
       exportovat: () => M.otevriExport(),
@@ -262,6 +284,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     if (M.PRIKAZY) M.PRIKAZY.push(
       { id: 'souborNovy', nazev: 'Nový projekt', klavesy: [], povoleno: () => true, akce: prikazy.novyProjekt },
       { id: 'souborProjekty', nazev: 'Moje projekty (přehled)', klavesy: [], povoleno: () => true, akce: prikazy.projekty },
+      { id: 'souborSablony', nazev: 'Nový projekt ze šablony (krabička, stojánek, jmenovka…)', klavesy: [], povoleno: () => true, akce: prikazy.sablony },
       { id: 'souborOtevrit', nazev: 'Otevřít / importovat soubor (Ctrl+O)', klavesy: [], povoleno: () => true, akce: prikazy.otevritSoubor },
       { id: 'souborUlozit', nazev: 'Uložit projekt do souboru .modelar', klavesy: [], povoleno: () => true, akce: prikazy.ulozitSoubor },
       { id: 'souborExport', nazev: 'Exportovat STL, 3MF, OBJ, STEP (Ctrl+E)', klavesy: [], povoleno: () => true, akce: prikazy.exportovat },

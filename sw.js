@@ -5,7 +5,7 @@
 /* Při větší aktualizaci webu zvyš číslo verze — stará cache se u návštěvníků
    smaže a vše se stáhne čerstvé (jinak SWR ukáže novou verzi až na druhé načtení). */
 const PREFIX = 'webapp-';
-const CACHE = PREFIX + 'v373';
+const CACHE = PREFIX + 'v381';
 const JADRO = [
   './',
   './index.html',
@@ -171,6 +171,7 @@ const MODELAR = [
   './obsah/modelar/jadro/tvary.js',
   './obsah/modelar/jadro/upravy.js',
   './obsah/modelar/jadro/struktura.js',
+  './obsah/modelar/jadro/sablony.js',
   './obsah/modelar/jadro/vykres.js',
   './obsah/modelar/ui/dilna.js',
   './obsah/modelar/ui/dily.js',
@@ -185,6 +186,7 @@ const MODELAR = [
   './obsah/modelar/ui/soubory.js',
   './obsah/modelar/ui/upravy.js',
   './obsah/modelar/ui/struktura.js',
+  './obsah/modelar/ui/reliefy.js',
   './obsah/povrch3d/vzory.js',
   './obsah/povrch3d/jadro.js',
   './obsah/modelar/ui/zarovnani.js',
@@ -211,10 +213,14 @@ const POTRAVINY = [
   './obsah/potraviny/aplikace.js',
   './obsah/potraviny/grafy.js',
   './obsah/potraviny/ctecka.js',
+  './obsah/potraviny/prenos.js',
+  './obsah/potraviny/etiketa.js',
+  './obsah/lib/qrcode/qrcode.js',
   './obsah/potraviny/manifest.webmanifest',
   './obsah/potraviny/data/vyrobky.json',
   './obsah/potraviny/data/suroviny.json',
   './obsah/potraviny/data/ciselniky.json',
+  './obsah/potraviny/data/doplnky.json',
   './obsah/potraviny/data/slozeni.json',
   './obsah/lib/zxing/zxing-reader.js',
   './obsah/lib/zxing/zxing_reader.wasm',
@@ -278,6 +284,14 @@ self.addEventListener('fetch', e => {
   if (url.pathname.endsWith('/obsah/obleheni.html')) e.waitUntil(dotahniSadu('obleheni', OBLEHENI));
   if (url.pathname.endsWith('/obsah/modelar.html')) e.waitUntil(dotahniSadu('modelar', MODELAR));
   if (url.pathname.endsWith('/obsah/potraviny.html')) e.waitUntil(dotahniSadu('potraviny', POTRAVINY));
+
+  // společné doplňky Deníku jídla: nejdřív ze sítě (po nahrání je uvidí všichni hned, bez zvyšování verze cache)
+  if (url.pathname.endsWith('/obsah/potraviny/data/doplnky.json')) {
+    e.respondWith(caches.open(CACHE).then(cache => fetch(e.request)
+      .then(resp => { if (resp.ok) cache.put(e.request.url, resp.clone()); return resp; })
+      .catch(() => cache.match(e.request.url).then(c => c || new Response('{"format":"denik-doplnky","verze":1,"polozky":[]}', { headers: { 'Content-Type': 'application/json' } })))));
+    return;
+  }
 
   // navigace s dotazem (trpaslici.html?seed=…&velikost=…) je pořád táž stránka: hledat bez dotazu a ukládat bez něj
   const navigace = e.request.mode === 'navigate';

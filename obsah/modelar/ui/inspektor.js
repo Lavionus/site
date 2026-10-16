@@ -106,12 +106,18 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
                 : cislo(d.popis, u => u.param[d.klic], v => zmenParam(d.klic, v),
                   { krok: d.krok, des: d.cele ? 0 : 2, jednotka: d.jednotka || '', min: d.min, max: d.max })).join('')
             + (u.druh === 'skica' ? `<button type="button" class="tl siroke-tl" id="inspSkica">✏️ Upravit skicu</button>` : '')
+            + (u.vazba && M.protikusy(M.app.dok, u).length ? `<p class="vazba-info">🔗 Propojeno s: ${M.protikusy(M.app.dok, u).map(x => esc(x.nazev)).join(', ')} – závit / rozměry se mění spolu.
+                <button type="button" class="odkaz-tl" id="inspRozpojit">Zrušit propojení</button></p>` : '')
             + (u.druh === 'kolo' && u.param.druh !== 'vnitrni' ? `<button type="button" class="tl siroke-tl" id="inspProtikolo" title="Druhé kolo ve správné osové vzdálenosti, natočené tak, aby zuby zapadly">⚙ Přidat protikolo…</button>` : '')
             + `</div>`;
         }
       } else {
         h += `<div class="hlava"><strong>${uzly.length <= 4 ? 'Vybrána' : 'Vybráno'} ${M.pocet(uzly.length, 'těleso', 'tělesa', 'těles')}</strong></div>`;
       }
+      // kvalita oblých ploch (počet segmentů) – i pro víc těles a skupiny najednou
+      if (uzly.some(x => M.kvalitaUzlu(x) || x.druh === 'kvadr'))
+        h += `<div class="skupina kvalita"><div class="nadpis">Kvalita oblých ploch</div><div class="kvalita-volby" role="group" aria-label="Kvalita oblých ploch">`
+          + M.KVALITY.map(k => `<button type="button" class="tl" data-kvalita="${k.id}" aria-pressed="false" aria-label="Kvalita ${k.nazev.toLowerCase()}">${k.kratce}</button>`).join('') + `</div><p class="kvalita-odhad" id="inspKvalitaOdhad"></p></div>`;
       h += `<div class="skupina"><div class="nadpis">Barva</div><div class="paleta">`
         + PALETA.map(b => `<button type="button" class="vzorek" data-barva="${b}" style="background:${b}" title="${M.nazevBarvy ? M.nazevBarvy(b) + ' ' + b : b}" aria-label="Barva ${M.nazevBarvy ? M.nazevBarvy(b) : b}" aria-pressed="false"></button>`).join('')
         + `<label class="vlastni" title="Vlastní barva"><input type="color" id="inspBarva" aria-label="Vlastní barva">🎨</label></div></div>`;
@@ -179,6 +185,11 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
         zmenParam(el.dataset.param, el.type === 'checkbox' ? el.checked : el.value)));
       const tlSkica = karta.querySelector('#inspSkica');
       if (tlSkica) tlSkica.onclick = () => M.otevriSkicar(M.app.vyber[0]);
+      const tlRozpojit = karta.querySelector('#inspRozpojit');
+      if (tlRozpojit) tlRozpojit.onclick = () => {
+        const u = M.vybraneUzly()[0];
+        M.zmenDokument(M.nastavVazbu(M.app.dok, [u.id, ...M.protikusy(M.app.dok, u).map(x => x.id)], false), 'Zrušit propojení');
+      };
       const tlKolo = karta.querySelector('#inspProtikolo');
       if (tlKolo) tlKolo.onclick = async () => {
         const kolo = M.vybraneUzly()[0];
@@ -208,6 +219,12 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       const barevne = karta.querySelector('#inspBarevne');
       if (barevne) barevne.addEventListener('change', () => M.upravVybrane({ barevne: barevne.checked }, barevne.checked ? 'Barevná skupina' : 'Jednobarevná skupina'));
       karta.querySelectorAll('[data-role]').forEach(b => b.onclick = () => M.upravVybrane({ role: b.dataset.role }, b.dataset.role === 'dira' ? 'Na díru' : 'Na těleso'));
+      karta.querySelectorAll('[data-kvalita]').forEach(b => b.onclick = async () => {
+        // jemná kvalita na velkém výběru: předem říct, kolik trojúhelníků to dá (výpočet i zobrazení se zpomalí)
+        const odh = odhadKvality(b.dataset.kvalita);
+        if (odh > 1.5e6 && !(await Dialog.potvrd(`Kvalita „${M.KVALITY.find(k => k.id === b.dataset.kvalita).nazev}“ dá u vybraných těles asi ${M.mm(odh / 1e6, 1)} milionu trojúhelníků – výpočet a práce se zpomalí. Pokračovat?`))) return;
+        M.nastavKvalituVybranych(b.dataset.kvalita);
+      });
       karta.querySelector('#inspSkryt').onclick = () => M.upravVybrane({ skryto: true }, 'Skrýt');
       karta.querySelector('#inspZamek').onclick = () => {
         const zamknout = !M.vybraneUzly().every(u => u.zamceno);
@@ -217,6 +234,18 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       klicStavby = klicInspektoru();
       obnov(true);
     }
+
+    /** Trojúhelníky uzlu ve scéně (spočítaná geometrie; tvary rovnou ze sítě). */
+    function trojUzlu(u) {
+      const T = M.scena && M.scena.telesa, g = T && T.geometrieObjektu ? T.geometrieObjektu(u.id) : null;
+      if (g && g.trojuhelniku) return g.trojuhelniku;
+      try { return M.TVARY[u.druh] ? M.sitTvaru(u.druh, u.rozmer, u.param).idx.length / 3 : 0; } catch (e) { return 0; }
+    }
+    /** Odhad trojúhelníků vybraných těles při kvalitě. */
+    function odhadKvality(kv) {
+      return M.vybraneUzly().reduce((s, u) => s + (M.kvalitaUzlu(u) ? M.odhadTrojKvality(u, kv, trojUzlu(u)) : trojUzlu(u)), 0);
+    }
+    const tisice = n => n >= 1e6 ? M.mm(n / 1e6, 1) + ' mil.' : n >= 1000 ? M.mm(n / 1000, n < 10000 ? 1 : 0) + ' tis.' : String(Math.round(n));
 
     /** Přepíše hodnoty polí a stav tlačítek podle dokumentu. */
     function obnov(i_aktivni = false) {
@@ -265,6 +294,20 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       });
       const tlSkica = karta.querySelector('#inspSkica');
       if (tlSkica) tlSkica.disabled = zamceno;
+      // kvalita: zvýrazněná, když ji mají všechna vybraná tělesa (s oblými plochami); popisek = počet segmentů
+      const sKv = uzly.filter(x => M.kvalitaUzlu(x));
+      const odhEl = karta.querySelector('#inspKvalitaOdhad');
+      if (odhEl) {
+        const ted = uzly.reduce((s, x) => s + trojUzlu(x), 0);
+        odhEl.textContent = sKv.length && uzly.length <= 30 ? `Teď ≈ ${tisice(ted)} trojúhelníků` : '';
+      }
+      karta.querySelectorAll('[data-kvalita]').forEach(b => {
+        b.setAttribute('aria-pressed', String(!!sKv.length && sKv.every(x => M.kvalitaUzlu(x) === b.dataset.kvalita)));
+        b.disabled = zamceno || !sKv.length;
+        const seg = sKv.length === 1 && sKv[0].druh !== 'skupina' ? M.segmentyKvality(sKv[0], b.dataset.kvalita) : null;
+        b.title = !sKv.length ? 'Kvádr s ostrými hranami nemá oblé plochy (nastav zaoblení hran)'
+          : `${M.KVALITY.find(k => k.id === b.dataset.kvalita).nazev}${seg ? ` – ${seg} segmentů` : ''}${uzly.length <= 30 ? `, ≈ ${tisice(odhadKvality(b.dataset.kvalita))} trojúhelníků` : ''} (jemnější = hladší, ale pomalejší výpočet)`;
+      });
       karta.classList.toggle('zamceno', zamceno);
     }
 
@@ -286,8 +329,12 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       M.upravVybrane(u => { const rotace = u.rotace.slice(); rotace[i] = v; return { rotace }; }, 'Natočení');
     }
     function zmenParam(klic, v) {
-      // skica: nová obálka a střed, počátek skici ve světě zůstane
-      M.upravVybrane(u => M.maPrirozene(u) ? M.upravPrirozeny(u, { [klic]: v }) : { param: Object.assign({}, u.param, { [klic]: v }) }, 'Tvar');
+      // skica: nová obálka a střed, počátek skici ve světě zůstane; propojené díly (šroub ↔ matice,
+      // krabička ↔ víko) dostanou stejnou změnu sdíleného parametru v jednom kroku historie
+      const vyb = new Set(M.app.vyber), prot = new Map(M.propojeneZmeny(M.app.dok, M.app.vyber, klic, v).map(([u, z]) => [u.id, z]));
+      const zmen = (u, z) => M.maPrirozene(u) ? M.upravPrirozeny(u, z) : { param: Object.assign({}, u.param, z) };
+      M.upravVybrane(u => vyb.has(u.id) ? zmen(u, { [klic]: v }) : zmen(u, prot.get(u.id)), prot.size ? 'Tvar (i propojený díl)' : 'Tvar',
+        M.app.vyber.concat([...prot.keys()]));
     }
     /** Odvozené pole tvaru (vnitřní průměr, průměr průřezu…): zapíše rozměr i parametry, spodek stojí. */
     function zmenOdvozeny(d, v) {
@@ -307,7 +354,8 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     /** Inspektor se staví znovu, když se změní výběr, druh nebo režim skici. */
     function klicInspektoru() {
       const u = M.vybraneUzly()[0];
-      return M.app.vyber.join(',') + '|' + (M.app.vyber.length === 1 && u ? u.druh + (u.druh === 'skica' ? u.param.rezim : '') + (u.druh === 'skupina' ? JSON.stringify(u.occt) : '') : '');
+      return M.app.vyber.join(',') + '|' + (M.app.vyber.length === 1 && u ? u.druh + (u.druh === 'skica' ? u.param.rezim : '') + (u.druh === 'skupina' ? JSON.stringify(u.occt) : '')
+        + (u.vazba ? '|' + u.vazba + M.protikusy(M.app.dok, u).map(x => x.nazev).join(',') : '') : '');
     }
 
     M.na('vyber', postav);

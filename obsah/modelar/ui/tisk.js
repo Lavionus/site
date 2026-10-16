@@ -11,7 +11,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
   const cz = (x, des = 1) => Number(x).toLocaleString('cs', { minimumFractionDigits: des, maximumFractionDigits: des });
 
   M.vytvorTisk = function (S, T) {
-    let nast = { material: 'PLA', prumer: 1.75, vypln: 20, uhel: 45 };
+    let nast = { material: 'PLA', prumer: 1.75, vypln: 20, uhel: 45, cena: 500 };
     try { Object.assign(nast, JSON.parse(localStorage.getItem(KLIC) || '{}')); } catch (e) { /* bez úložiště */ }
     if (!M.MATERIALY[nast.material]) nast.material = 'PLA';
     const uloz = () => { try { localStorage.setItem(KLIC, JSON.stringify(nast)); } catch (e) { /* bez úložiště */ } };
@@ -51,7 +51,8 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       const s = souhrn();
       if (!s.pocet) { stav.textContent = ''; stav.hidden = true; return; }
       stav.hidden = false;
-      stav.textContent = `⚖ ${s.ceka ? '≈' : ''}${cz(s.hmotnost, s.hmotnost < 10 ? 1 : 0)} g · ${cz(s.delka, 2)} m ${M.MATERIALY[nast.material].nazev.split(' ')[0]}`;
+      const kc = M.cenaTisku(s.hmotnost, nast.cena);
+      stav.textContent = `⚖ ${s.ceka ? '≈' : ''}${cz(s.hmotnost, s.hmotnost < 10 ? 1 : 0)} g · ${cz(s.delka, 2)} m ${M.MATERIALY[nast.material].nazev.split(' ')[0]}${nast.cena > 0 ? ` · ${cz(kc, kc < 10 ? 2 : kc < 100 ? 1 : 0)} Kč` : ''}`;
       stav.title = `${s.vyber ? 'Výběr' : 'Celý model'}: objem ${cz(s.objemCm3, 2)} cm³, plné těleso ${cz(s.hmotnostPlna, 1)} g; odhad při výplni ${nast.vypln} % (klik = Kontrola tisku)`;
     }
     const naplanuj = () => { if (!planovano) { planovano = true; setTimeout(obnovStav, 120); } };
@@ -168,6 +169,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
           <tr><th>Objem</th><td>${cz(s.objemCm3, 2)} cm³</td></tr>
           <tr><th>Hmotnost</th><td><b>${cz(s.hmotnost, 1)} g</b> při výplni ${nast.vypln} % <span class="pozn">(plné ${cz(s.hmotnostPlna, 1)} g)</span></td></tr>
           ${s.delka ? `<tr><th>Filament</th><td>${cz(s.delka, 2)} m (⌀ ${cz(nast.prumer, 2)} mm)</td></tr>` : ''}
+          ${nast.cena > 0 ? `<tr><th>Cena materiálu</th><td><b>${cz(M.cenaTisku(s.hmotnost, nast.cena), 2)} Kč</b> <span class="pozn">(cívka ${cz(nast.cena, 0)} Kč/kg)</span></td></tr>` : ''}
         </tbody></table>`;
       // převisy
       let pv = 0, pl = 0;
@@ -193,6 +195,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     M.otevriKontroluTisku = function () {
       if (!okno) return;
       $('tiskMaterial').value = nast.material; $('tiskPrumer').value = String(nast.prumer); $('tiskVypln').value = String(nast.vypln);
+      $('tiskCena').value = cz(nast.cena, 0);
       M.otevriPanel(okno);
       obnovPanel();
     };
@@ -202,9 +205,11 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
         nast.material = $('tiskMaterial').value;
         nast.prumer = parseFloat($('tiskPrumer').value) || 1.75;
         nast.vypln = M.omez(Math.round(M.prectiCislo($('tiskVypln').value)) || 0, 0, 100);
+        const c = M.prectiCislo($('tiskCena').value);
+        nast.cena = isFinite(c) ? M.omez(c, 0, 100000) : nast.cena;
         uloz(); obnovPanel(); obnovStav();
       };
-      ['tiskMaterial', 'tiskPrumer', 'tiskVypln'].forEach(id => $(id).addEventListener('change', zmena));
+      ['tiskMaterial', 'tiskPrumer', 'tiskVypln', 'tiskCena'].forEach(id => $(id).addEventListener('change', zmena));
       $('tiskSeznamZavrit').onclick = () => okno.close();
       okno.addEventListener('cancel', e => { e.preventDefault(); okno.close(); });
       $('tiskPrevesy').onclick = () => M.prepniPrevesy();
@@ -269,7 +274,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       const vyber = M.vybraneVolne().filter(u => !u.skryto);
       const ids = (vyber.length > 1 ? vyber : M.app.dok.uzly.filter(u => !u.skryto && !u.zamceno)).map(u => u.id);
       if (!ids.length) return;
-      const r = M.rozlozNaDesce(M.app.dok, ids, deska(), 5);
+      const r = M.rozlozNaDesce(M.app.dok, ids, deska(), 5, { otacet: true });
       M.zmenDokument(r.dok, 'Rozmístit na desce');
       if (!r.vejde) Dialog.info('Všechna tělesa se na desku nevešla – část leží za okrajem. Zvětši desku, nebo tiskni ve víc dávkách.');
       if (r.prekazi && r.prekazi.length) {

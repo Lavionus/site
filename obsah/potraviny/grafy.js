@@ -45,7 +45,8 @@
       }
     }
     txt(svg, 64, 60, fmt(hodnota), { class: 'kruh-cislo', 'text-anchor': 'middle' });
-    txt(svg, 64, 80, cil ? 'z ' + fmt(cil) + ' kcal' : 'kcal', { class: 'kruh-popis', 'text-anchor': 'middle' });
+    const jed = (volby && volby.jednotka) || 'kcal';
+    txt(svg, 64, 80, cil ? 'z ' + fmt(cil) + ' ' + jed : jed, { class: 'kruh-popis', 'text-anchor': 'middle' });
     return svg;
   }
 

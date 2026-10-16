@@ -111,10 +111,50 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
   // ------------------------------------------------------------ akce
   /** Přidá nový tvar a vybere ho. */
   M.pridejTvar = function (druh, prepis = {}) {
-    const u = M.novyUzel(druh, prepis, M.app.dok);
+    // sada šroub + matice = dva samostatné objekty se sladěnou vůlí
+    const kv = M.kvalitaNovych ? M.kvalitaNovych() : 'stredni';
+    const sKv = u => kv === 'stredni' || (prepis.param && 'segmentu' in prepis.param) ? u : M.sKvalitou(u, kv);
+    if ((druh === 'sadaSroub' && M.uzlySadySroubu) || (druh === 'krabiceSVikem' && M.uzlyKrabice)) {
+      const uzly = (druh === 'sadaSroub' ? M.uzlySadySroubu : M.uzlyKrabice)(prepis, M.app.dok).map(sKv).map(u => M.sMojiVuli ? M.sMojiVuli(u) : u);
+      M.zmenDokument(M.pridejUzly(M.app.dok, uzly), druh === 'sadaSroub' ? 'Přidat šroub a matici' : 'Přidat krabičku s víkem');
+      M.nastavVyber(uzly.map(u => u.id));
+      return uzly[0];
+    }
+    let u = sKv(M.novyUzel(druh, prepis, M.app.dok));
+    if (M.sMojiVuli && !(prepis.param && ('vule' in prepis.param || 'odsazeni' in prepis.param))) u = M.sMojiVuli(u);
     M.zmenDokument(M.pridejUzly(M.app.dok, [u]), 'Přidat ' + u.nazev);
     M.nastavVyber([u.id]);
     return u;
+  };
+
+  /** Kvalita oblých ploch vybraných těles (i částí skupin) – jeden krok historie. */
+  M.nastavKvalituVybranych = function (kvalita) {
+    const k = M.KVALITY.find(x => x.id === kvalita);
+    if (!k) return false;
+    const dok = M.nastavKvalitu(M.app.dok, M.app.vyber, kvalita);
+    if (dok === M.app.dok) return false;
+    M.zmenDokument(dok, 'Kvalita: ' + k.nazev.toLowerCase());
+    return true;
+  };
+
+  /** Moje vůle pro tisk (radiální, mm; z kalibrační destičky), předvolba prohlížeče; null = výchozí vůle dílů. */
+  M.mojeVule = function (nova) {
+    try {
+      if (nova === null) localStorage.removeItem('modelar.vule');
+      else if (nova !== undefined) localStorage.setItem('modelar.vule', String(nova));
+      const v = parseFloat(localStorage.getItem('modelar.vule'));
+      return v >= 0 && v <= 2 ? v : null;
+    } catch (e) { return null; }
+  };
+  M.sMojiVuli = u => { const v = M.mojeVule(); return v == null ? u : M.sVuli(u, v); };
+
+  /** Kvalita nově vkládaných těles (předvolba prohlížeče; 'stredni' = výchozí tvarů). */
+  M.kvalitaNovych = function (nova) {
+    try {
+      if (nova !== undefined) localStorage.setItem('modelar.kvalitaNovych', nova);
+      const v = localStorage.getItem('modelar.kvalitaNovych');
+      return M.KVALITY.some(k => k.id === v) ? v : 'stredni';
+    } catch (e) { return 'stredni'; }
   };
 
   /** Smaže vybrané (zamčené zůstanou). */

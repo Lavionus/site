@@ -776,6 +776,429 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     },
   });
 
+
+  // ------------------------------------------------------------ další tvary (třetí sada knihovny)
+  /** Konvexní obal bodů jako síť (pro mnohostěny, drahokam, sražený kvádr): stěny = roviny přes
+      trojice bodů, za kterými žádný bod neleží; body v rovině seřazené kolem těžiště (víc bodů
+      v jedné rovině = jedna rovná stěna, žádné zbytečné hrany). O(n⁴) – jen pro desítky bodů. */
+  function konvexniObal(body) {
+    const n = body.length;
+    let mer = 0;
+    for (const b of body) mer = Math.max(mer, Math.abs(b[0]), Math.abs(b[1]), Math.abs(b[2]));
+    const eps = 1e-9 * Math.max(1, mer);
+    const sub = (a, b) => [a[0] - b[0], a[1] - b[1], a[2] - b[2]];
+    const kriz = (a, b) => [a[1] * b[2] - a[2] * b[1], a[2] * b[0] - a[0] * b[2], a[0] * b[1] - a[1] * b[0]];
+    const skal = (a, b) => a[0] * b[0] + a[1] * b[1] + a[2] * b[2];
+    const roviny = new Map(), troj = [];
+    for (let i = 0; i < n; i++) for (let j = i + 1; j < n; j++) for (let k = j + 1; k < n; k++) {
+      let nn = kriz(sub(body[j], body[i]), sub(body[k], body[i]));
+      const l = Math.hypot(...nn);
+      if (l < eps * mer) continue;
+      nn = nn.map(v => v / l);
+      let d = skal(nn, body[i]), max = -Infinity, min = Infinity;
+      for (const b of body) { const v = skal(nn, b) - d; if (v > max) max = v; if (v < min) min = v; }
+      if (max > eps && min < -eps) continue;                 // body na obou stranách – není stěna
+      if (max > eps) { nn = nn.map(v => -v); d = -d; }       // normála ven
+      const kl = nn.map(v => Math.round(v * 1e6)).join(',') + '|' + Math.round(d * 1e6 / Math.max(1, mer));
+      if (roviny.has(kl)) continue;
+      const vRovine = [];
+      for (let q = 0; q < n; q++) if (Math.abs(skal(nn, body[q]) - d) <= eps * 10) vRovine.push(q);
+      roviny.set(kl, { nn, vRovine });
+    }
+    for (const { nn, vRovine } of roviny.values()) {
+      const c = [0, 1, 2].map(o => vRovine.reduce((s, q) => s + body[q][o], 0) / vRovine.length);
+      const u0 = sub(body[vRovine[0]], c), lu = Math.hypot(...u0), u = u0.map(v => v / lu), v = kriz(nn, u);
+      const uhel = q => { const w = sub(body[q], c); return Math.atan2(skal(w, v), skal(w, u)); };
+      const kolem = vRovine.slice().sort((a, b) => uhel(a) - uhel(b));
+      for (let q = 1; q + 1 < kolem.length; q++) troj.push([kolem[0], kolem[q], kolem[q + 1]]);
+    }
+    return M.orientujVen(M.sestavSit(body, troj));
+  }
+  M.konvexniObal = konvexniObal;
+
+  /** Body napasované do kvádru rozmer se středem v počátku. */
+  function napasuj3(body, r) {
+    const mn = [Infinity, Infinity, Infinity], mx = [-Infinity, -Infinity, -Infinity];
+    for (const b of body) for (let i = 0; i < 3; i++) { mn[i] = Math.min(mn[i], b[i]); mx[i] = Math.max(mx[i], b[i]); }
+    return body.map(b => b.map((x, i) => (x - (mn[i] + mx[i]) / 2) * r[i] / (mx[i] - mn[i])));
+  }
+
+  const FI = (1 + Math.sqrt(5)) / 2;
+  /** Cyklické permutace (x, y, z) → (y, z, x) → (z, x, y) všech kombinací znamének. */
+  function cyklicky(vzory) {
+    const o = [], vid = new Set();
+    for (const v of vzory) {
+      const zn = v.map(x => x === 0 ? [0] : [x, -x]);
+      for (const a of zn[0]) for (const b of zn[1]) for (const c of zn[2])
+        for (const p of [[a, b, c], [b, c, a], [c, a, b]]) {
+          const k = p.map(x => x.toFixed(9)).join(',');
+          if (!vid.has(k)) { vid.add(k); o.push(p); }
+        }
+    }
+    return o;
+  }
+  const MNOHOSTENY_TYPY = [['ctyrsten', 'Čtyřstěn'], ['osmisten', 'Osmistěn'], ['dvanactisten', 'Dvanáctistěn'], ['dvacetisten', 'Dvacetistěn'],
+    ['kubooktaedr', 'Kubooktaedr'], ['kosoctverecny', 'Kosočtverečný dvanáctistěn'], ['mic', 'Komolý dvacetistěn (míč)']];
+  function vrcholyMnohostenu(typ) {
+    switch (typ) {
+      case 'ctyrsten': return [[1, 1, 1], [1, -1, -1], [-1, 1, -1], [-1, -1, 1]];
+      case 'osmisten': return cyklicky([[1, 0, 0]]);
+      case 'dvanactisten': return cyklicky([[1, 1, 1], [0, 1 / FI, FI]]);
+      case 'kubooktaedr': return cyklicky([[1, 1, 0]]);
+      case 'kosoctverecny': return cyklicky([[1, 1, 1], [2, 0, 0]]);
+      case 'mic': return cyklicky([[0, 1, 3 * FI], [1, 2 + FI, 2 * FI], [FI, 2, 2 * FI + 1]]);
+      default: return cyklicky([[0, 1, FI]]);
+    }
+  }
+
+  /** Krabička otevřená nahoře: vnější stěny, okraj, vnitřní stěny a dno uvnitř (vše jedna uzavřená síť). */
+  function krabicka(r, p) {
+    const [sx, sy, sz] = r, h = sz / 2;
+    const t = M.omez(p.stena, 0.05, 0.45 * Math.min(sx, sy));
+    const dno = M.omez(p.dno, 0.05, 0.95 * sz);
+    const z = Math.min(p.zaobleni, 0.499 * Math.min(sx, sy));
+    const O = zaoblenyObdelnik(sx, sy, z), I = zaoblenyObdelnik(sx - 2 * t, sy - 2 * t, Math.max(0, z - t));
+    const body = [], troj = [], f = -h + dno;
+    const vrstva = (mn, zz) => { const zac = body.length; for (const [x, y] of mn) body.push([x, y, zz]); return zac; };
+    const o0 = vrstva(O, -h), o1 = vrstva(O, h), i1 = vrstva(I, h), i0 = vrstva(I, f);
+    const plocha2 = (a, b, c) => (b[0] - a[0]) * (c[1] - a[1]) - (b[1] - a[1]) * (c[0] - a[0]);
+    const v2 = mn => mn.map(([x, y]) => new THREE.Vector2(x, y));
+    const ccw = (mn, tt) => tt.map(([a, b, c]) => plocha2(mn[a], mn[b], mn[c]) >= 0 ? [a, b, c] : [a, c, b]);
+    for (const [a, b, c] of ccw(O, THREE.ShapeUtils.triangulateShape(v2(O), []))) troj.push([o0 + a, o0 + c, o0 + b]);     // spodek dolů
+    for (const [a, b, c] of ccw(I, THREE.ShapeUtils.triangulateShape(v2(I), []))) troj.push([i0 + a, i0 + b, i0 + c]);     // dno uvnitř nahoru
+    const vse = O.concat(I);
+    for (const [a, b, c] of ccw(vse, THREE.ShapeUtils.triangulateShape(v2(O), [v2(I)])))                                    // okraj nahoru
+      troj.push([a, b, c].map(q => q < O.length ? o1 + q : i1 + q - O.length));
+    for (let q = 0; q < O.length; q++) { const w = (q + 1) % O.length; troj.push([o0 + q, o0 + w, o1 + w], [o0 + q, o1 + w, o1 + q]); }
+    for (let q = 0; q < I.length; q++) { const w = (q + 1) % I.length; troj.push([i0 + q, i1 + w, i0 + w], [i0 + q, i1 + q, i1 + w]); }  // vnitřní stěna ke středu
+    return M.orientujVen(M.sestavSit(body, troj));
+  }
+
+  /** Okraj dílku puzzle po hraně a → b nominálního čtverce (mm, proti hodinám): s = −1 výstupek ven, +1 zámek
+      dovnitř, 0 rovně. k = velikost výstupku (mm), o = odsazení obrysu dovnitř (vůle pro tisk): hrana se posune
+      dovnitř, výstupek se zmenší, zámek zvětší – sousední dílky s odsazením o mají mezi sebou mezeru 2o. */
+  function hranaPuzzle(a, b, s, n, k, o) {
+    const dx = b[0] - a[0], dy = b[1] - a[1], len = Math.hypot(dx, dy), d = [dx / len, dy / len], lev = [-d[1], d[0]];
+    const bod = (x, y) => [a[0] + d[0] * x + lev[0] * y, a[1] + d[1] * x + lev[1] * y];
+    if (!s) return [bod(o, o)];
+    const c = len / 2, w = 0.08 * k + s * o, rad = 0.12 * k + s * o, cy = s * 0.2 * k, dyk = Math.sqrt(rad * rad - w * w);
+    const vys = [bod(o, o), bod(c - w, o)];
+    const a0 = Math.atan2(-s * dyk, -w), roz = 2 * PI - 2 * Math.asin(w / rad);
+    for (let i = 0; i <= n; i++) {
+      const t = a0 - s * roz * i / n;
+      vys.push(bod(c + rad * Math.cos(t), cy + rad * Math.sin(t)));
+    }
+    vys.push(bod(c + w, o));
+    return vys;
+  }
+  M.hranaPuzzle = hranaPuzzle;
+  /** Obrys dílku puzzle (mm, střed v počátku, obálka = r[0] × r[1]) a rozteč dílků [Lx, Ly]:
+      o tolik od sebe kladou sousední dílky (výstupek pak sedí v zámku s mezerou 2 × odsazení). */
+  M.obrysPuzzle = function (r, p) {
+    // hrany proti hodinám: dole, vpravo, nahoře, vlevo; −1 = výstupek ven
+    const zn = p.vystupky === 'vlastni' ? znHranPuzzle(p.hrany)
+      : { smisene: [1, -1, -1, 1], ven: [-1, -1, -1, -1], dovnitr: [1, 1, 1, 1], kraj: [1, -1, 0, 1] }[p.vystupky] || [1, -1, -1, 1];
+    const V = 0.32;                                       // výstupek přečnívá o (0,2 + 0,12)·k
+    const venX = (zn[1] < 0) + (zn[3] < 0), venY = (zn[0] < 0) + (zn[2] < 0);
+    // krček výstupku je 0,16·k široký – odsazení nejvýš zlomek jeho poloviny
+    const o = Math.min(Math.max(0, p.odsazeni || 0), 0.025 * Math.min(r[0], r[1]) / (1 + 2 * V));
+    // nominální čtverec Lx × Ly a velikost výstupku k = min(L) tak, aby obálka po odsazení = rozměr
+    let Lx = r[0], Ly = r[1];
+    for (let i = 0; i < 80; i++) {                        // pevný bod (konverguje: 2·V < 1)
+      const k = Math.min(Lx, Ly);
+      Lx = r[0] + 2 * o - V * venX * k;
+      Ly = r[1] + 2 * o - V * venY * k;
+    }
+    const k = Math.min(Lx, Ly), roh = [[0, 0], [Lx, 0], [Lx, Ly], [0, Ly]], mn = [];
+    for (let i = 0; i < 4; i++) mn.push(...hranaPuzzle(roh[i], roh[(i + 1) % 4], zn[i], 20, k, o));
+    // posun do středu obálky (obálka už vychází na rozměr)
+    let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity;
+    for (const [x, y] of mn) { x0 = Math.min(x0, x); x1 = Math.max(x1, x); y0 = Math.min(y0, y); y1 = Math.max(y1, y); }
+    const cx = (x0 + x1) / 2, cy = (y0 + y1) / 2;
+    return { obrys: napasuj(mn, r[0], r[1]), posun: [-cx, -cy], roztec: [Lx, Ly], odsazeni: o };
+  };
+
+  /** Pás tloušťky t kolem lomené čáry (otevřené): levý okraj tam, pravý zpět; spoje s ostrým
+      zlomem (pokosem) omezeným na 2× polovinu tloušťky. */
+  function pasKolemCary(cara, t) {
+    const n = cara.length, h = t / 2, lev = [], prav = [];
+    const smer = (a, b) => { const dx = b[0] - a[0], dy = b[1] - a[1], l = Math.hypot(dx, dy) || 1; return [dx / l, dy / l]; };
+    for (let i = 0; i < n; i++) {
+      const d0 = i > 0 ? smer(cara[i - 1], cara[i]) : smer(cara[0], cara[1]);
+      const d1 = i < n - 1 ? smer(cara[i], cara[i + 1]) : d0;
+      let nx = -(d0[1] + d1[1]), ny = d0[0] + d1[0];
+      const l = Math.hypot(nx, ny) || 1; nx /= l; ny /= l;
+      const kos = Math.max(0.5, nx * -d0[1] + ny * d0[0]);    // cos poloviny úhlu zlomu
+      lev.push([cara[i][0] + nx * h / kos, cara[i][1] + ny * h / kos]);
+      prav.push([cara[i][0] - nx * h / kos, cara[i][1] - ny * h / kos]);
+    }
+    return lev.concat(prav.reverse());
+  }
+  M.pasKolemCary = pasKolemCary;
+
+  /** Okraje dílku z textu (dole, vpravo, nahoře, vlevo): z = zámek, v = výstupek, r = rovně. */
+  const znHranPuzzle = t => [0, 1, 2, 3].map(i => { const c = String(t || '').toLowerCase()[i]; return c === 'v' ? -1 : c === 'r' ? 0 : c === 'z' ? 1 : [1, -1, -1, 1][i]; });
+
+  /** Celá skládačka nx × ny: uzly dílků, sousední hrany do sebe zapadají (výstupek ↔ zámek), kraje rovné.
+      L = rozteč (velikost dílku bez výstupků), o = odsazení obrysu (mezera mezi dílky 2o), vyska, stred [x, y],
+      rozlozene = dílky od sebe (mezera navíc), jinak složené (tisk vcelku – vůle je mezi nimi). */
+  M.uzlySkladacky = function (v, dok = { uzly: [] }) {
+    const nx = Math.max(1, Math.min(30, Math.round(v.nx))), ny = Math.max(1, Math.min(30, Math.round(v.ny)));
+    const L = Math.max(5, v.L), V = 0.32, vyska = Math.max(0.4, v.vyska || 3);
+    const o = Math.min(Math.max(0, v.odsazeni || 0), 0.025 * (L - 2 * Math.max(0, v.odsazeni || 0)) / (1 + 2 * V) * 0.999);
+    const krok = L + (v.rozlozene ? Math.max(4, L * 0.35) : 0);
+    const prava = (i, j) => (i + j) % 2 ? 'v' : 'z', horni = (i, j) => (i + j + 1) % 2 ? 'v' : 'z', opak = c => c === 'v' ? 'z' : 'v';
+    const uzly = [];
+    let d = dok;
+    for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++) {
+      const dole = j === 0 ? 'r' : opak(horni(i, j - 1)), vlevo = i === 0 ? 'r' : opak(prava(i - 1, j));
+      const vpravo = i === nx - 1 ? 'r' : prava(i, j), nahore = j === ny - 1 ? 'r' : horni(i, j);
+      const hrany = dole + vpravo + nahore + vlevo;
+      const z = znHranPuzzle(hrany), venX = (z[1] < 0) + (z[3] < 0), venY = (z[0] < 0) + (z[2] < 0);
+      const rozmer = [L + V * venX * L - 2 * o, L + V * venY * L - 2 * o, vyska];
+      const op = M.obrysPuzzle(rozmer, { vystupky: 'vlastni', hrany, odsazeni: o });
+      const cx = (v.stred ? v.stred[0] : 0) + (i - (nx - 1) / 2) * krok - op.posun[0] - L / 2;
+      const cy = (v.stred ? v.stred[1] : 0) + (j - (ny - 1) / 2) * krok - op.posun[1] - L / 2;
+      const u = M.novyUzel('puzzle', { rozmer, param: { vystupky: 'vlastni', hrany, odsazeni: o }, poloha: [cx, cy, vyska / 2].map(x => Math.round(x * 1e6) / 1e6),
+        nazev: `Dílek ${String.fromCharCode(65 + Math.min(25, j))}${i + 1}`, barva: v.barva }, d);
+      uzly.push(u); d = M.pridejUzly(d, [u]);
+    }
+    return uzly;
+  };
+
+  const PUZZLE = [['smisene', 'Dva výstupky, dva zámky'], ['ven', 'Všechny výstupky ven'], ['dovnitr', 'Všechny zámky dovnitř'], ['kraj', 'Krajový dílek (rovná horní hrana)'], ['vlastni', 'Vlastní (pole Okraje)']];
+
+  /** Hladký průběh přes body [t, v] (kosinová interpolace – bez překmitů). */
+  function hladce(body, t) {
+    for (let i = 0; i + 1 < body.length; i++) {
+      const [t0, v0] = body[i], [t1, v1] = body[i + 1];
+      if (t <= t1 || i + 2 === body.length) { const f = M.omez((t - t0) / (t1 - t0), 0, 1); return v0 + (v1 - v0) * (1 - Math.cos(PI * f)) / 2; }
+    }
+    return body[body.length - 1][1];
+  }
+
+  const kruh = (cx, cy, r, n) => { const o = []; for (let i = 0; i < n; i++) { const t = 2 * PI * i / n; o.push([cx + r * Math.cos(t), cy + r * Math.sin(t)]); } return o; };
+
+  Object.assign(M.TVARY, {
+    mnohosten: {
+      nazev: 'Mnohostěn', ikona: '🔷', barva: '#5b7fd6', rozmer: [20, 20, 20], sada: 'dalsi',
+      skorepina: true,
+      param: { typ: 'dvacetisten' },
+      parametry: [{ klic: 'typ', popis: 'Těleso', volby: MNOHOSTENY_TYPY }],
+      sit: (r, p) => konvexniObal(napasuj3(vrcholyMnohostenu(p.typ), r)),
+    },
+    drahokam: {
+      nazev: 'Drahokam', ikona: '💎', barva: '#3fb6d9', rozmer: [20, 20, 13], sada: 'dalsi',
+      skorepina: true,
+      param: { faset: 12, tabulka: 55, korunka: 32 },
+      parametry: [
+        { klic: 'faset', popis: 'Počet faset', min: 5, max: 32, krok: 1, cele: true },
+        { klic: 'tabulka', popis: 'Horní plocha', jednotka: '%', min: 10, max: 90, krok: 5 },
+        { klic: 'korunka', popis: 'Výška korunky', jednotka: '%', min: 10, max: 70, krok: 5 }],
+      sit: (r, p) => {
+        const n = Math.round(M.omez(p.faset, 5, 32)), tab = p.tabulka / 100, k = p.korunka / 100, b = [];
+        const z0 = 1 - k;                                   // rondist (nejširší místo)
+        for (let i = 0; i < n; i++) {
+          const a = 2 * PI * i / n, a2 = a + PI / n, rs = 1 - (1 - tab) * 0.42;
+          b.push([Math.cos(a), Math.sin(a), z0], [tab * Math.cos(a2), tab * Math.sin(a2), 1], [rs * Math.cos(a2), rs * Math.sin(a2), z0 + k * 0.55]);
+        }
+        b.push([0, 0, 0]);                                  // špička pavilonu
+        return konvexniObal(napasuj3(b, r));
+      },
+    },
+    srazenyKvadr: {
+      nazev: 'Sražený kvádr', ikona: '🧊', barva: '#d9603b', rozmer: [20, 20, 20], sada: 'dalsi',
+      skorepina: true,
+      param: { srazeni: 3 },
+      parametry: [{ klic: 'srazeni', popis: 'Sražení hran', jednotka: 'mm', min: 0, max: 1000, krok: 0.5 }],
+      sit: (r, p) => {
+        const H = r.map(v => v / 2), c = Math.min(p.srazeni, 0.49 * Math.min(...r));
+        if (c <= 1e-6) return M.zaoblenyKvadr(r, 0, 1);
+        const b = [];
+        for (const x of [-1, 1]) for (const y of [-1, 1]) for (const z of [-1, 1])
+          b.push([x * H[0], y * (H[1] - c), z * (H[2] - c)], [x * (H[0] - c), y * H[1], z * (H[2] - c)], [x * (H[0] - c), y * (H[1] - c), z * H[2]]);
+        return konvexniObal(b);
+      },
+    },
+    paraboloid: {
+      nazev: 'Paraboloid', ikona: '🔔', barva: '#9b59b6', rozmer: [20, 20, 16], sada: 'dalsi',
+      param: { segmentu: 48 }, parametry: [SEG],
+      sit: (r, p) => {
+        const h = r[2] / 2, m = Math.max(6, seg4(p.segmentu) / 4), prof = [{ s: 0, d: 0, z: -h }];
+        for (let i = 0; i < m; i++) { const f = PI / 2 * i / m, s = Math.cos(f); prof.push({ s, d: 0, z: -h + r[2] * (1 - s * s) }); }
+        prof.push({ s: 0, d: 0, z: h });
+        return M.rotacni(r, prof, p.segmentu);
+      },
+    },
+    cocka: {
+      nazev: 'Čočka', ikona: '🥏', barva: '#26a69a', rozmer: [24, 24, 8], sada: 'dalsi',
+      param: { segmentu: 48 }, parametry: [SEG],
+      sit: (r, p) => {
+        // dva kulové vrchlíky (v mm podle menšího z průměrů), napasované na výšku
+        const a = Math.min(r[0], r[1]) / 2, c = r[2] / 2, R = (a * a + c * c) / (2 * c), zc = c - R;
+        const m = Math.max(4, seg4(p.segmentu) / 4), t0 = Math.atan2(a, -zc), prof = [{ s: 0, d: 0, z: -c }];
+        for (let i = 1; i < m; i++) { const t = t0 * i / m; prof.push({ s: R * Math.sin(t) / a, d: 0, z: -(zc + R * Math.cos(t)) }); }
+        prof.push({ s: 1, d: 0, z: 0 });
+        for (let i = m - 1; i >= 1; i--) { const t = t0 * i / m; prof.push({ s: R * Math.sin(t) / a, d: 0, z: zc + R * Math.cos(t) }); }
+        prof.push({ s: 0, d: 0, z: c });
+        // vyšší než široká čočka: vrchlíky jsou víc než polokoule a nejširší místo není na rovníku
+        const smax = Math.max(...prof.map(q => q.s));
+        for (const q of prof) q.s /= smax;
+        return M.rotacni(r, prof, p.segmentu);
+      },
+    },
+    vaza: {
+      nazev: 'Váza', ikona: '🏺', barva: '#c0654a', rozmer: [24, 24, 36], sada: 'dalsi',
+      param: { hrdlo: 55, dno: 65, stena: 1.6, segmentu: 48 },
+      parametry: [
+        { klic: 'hrdlo', popis: 'Hrdlo', jednotka: '%', min: 10, max: 100, krok: 5 },
+        { klic: 'dno', popis: 'Dno', jednotka: '%', min: 10, max: 100, krok: 5 },
+        { klic: 'stena', popis: 'Stěna (0 = plná)', jednotka: 'mm', min: 0, max: 1000, krok: 0.4 }, SEG],
+      sit: (r, p) => {
+        const h = r[2] / 2, hr = p.hrdlo / 100, dn = p.dno / 100;
+        const obrys = [[0, dn], [0.38, 1], [0.82, Math.max(hr * 0.85, 0.05)], [1, hr]];
+        // vzorky rovnoměrně + přesně v řídicích bodech (nejširší místo = rozměr)
+        const ts = [...new Set([...Array.from({ length: 25 }, (_, i) => i / 24), ...obrys.map(b => b[0])].map(x => +x.toFixed(9)))].sort((x, y) => x - y);
+        const m = ts.length - 1, s = i => hladce(obrys, ts[i]), z = i => -h + r[2] * ts[i];
+        const a = Math.min(r[0], r[1]) / 2;
+        const t = Math.min(p.stena || 0, 0.8 * a * Math.min(hr, dn), 0.6 * r[2]);
+        const prof = [{ s: 0, d: 0, z: -h }];
+        for (let i = 0; i <= m; i++) prof.push({ s: s(i), d: 0, z: z(i) });
+        if (t > 1e-6) {
+          // stěna: vnitřní plocha po obrysu zpět dolů k vnitřnímu dnu (tloušťka dna = stěna)
+          const f = -h + t;
+          for (let i = m; i >= 0; i--) { const zz = z(i); if (zz <= f + 1e-9) break; prof.push({ s: s(i), d: t, z: zz }); }
+          prof.push({ s: hladce(obrys, t / r[2]), d: t, z: f }, { s: 0, d: 0, z: f });
+          return M.rotacni(r, prof, p.segmentu);
+        }
+        prof.push({ s: 0, d: 0, z: h });
+        return M.rotacni(r, prof, p.segmentu);
+      },
+    },
+    drazka: {
+      nazev: 'Drážka (ovál)', ikona: '💊', barva: '#7f8c8d', rozmer: [30, 10, 6], sada: 'dalsi',
+      param: { segmentu: 32 }, parametry: [SEG],
+      sit: (r, p) => M.vytahni(zaoblenyObdelnik(r[0], r[1], 0.4999 * Math.min(r[0], r[1]), Math.max(4, seg4(p.segmentu) / 4)), [], r[2]),
+    },
+    pulmesic: {
+      nazev: 'Půlměsíc', ikona: '🌙', barva: '#f2c81e', rozmer: [22, 24, 5], sada: 'dalsi',
+      param: { tloustka: 35, segmentu: 64 },
+      parametry: [{ klic: 'tloustka', popis: 'Šířka srpku', jednotka: '%', min: 5, max: 90, krok: 5 }, SEG],
+      sit: (r, p) => {
+        const d = 2 * p.tloustka / 100, a0 = Math.atan2(Math.sqrt(1 - d * d / 4), d / 2), n = seg4(p.segmentu), mn = [];
+        for (let i = 0; i <= n; i++) { const t = a0 + (2 * PI - 2 * a0) * i / n; mn.push([Math.cos(t), Math.sin(t)]); }
+        for (let i = n - 1; i >= 1; i--) { const t = PI - a0 + 2 * a0 * i / n; mn.push([d + Math.cos(t), Math.sin(t)]); }
+        return M.vytahni(napasuj(mn, r[0], r[1]), [], r[2]);
+      },
+    },
+    kapka: {
+      nazev: 'Kapka', ikona: '💧', barva: '#2f7fd8', rozmer: [16, 24, 5], sada: 'dalsi',
+      param: { spicka: 1.5, segmentu: 64 },
+      parametry: [{ klic: 'spicka', popis: 'Ostrost špičky', min: 0.5, max: 6, krok: 0.5 }, SEG],
+      sit: (r, p) => {
+        const n = seg4(p.segmentu), mn = [];
+        for (let i = 0; i < n; i++) { const t = 2 * PI * i / n; mn.push([Math.sin(t) * Math.pow(Math.abs(Math.sin(t / 2)), p.spicka), Math.cos(t)]); }
+        return M.vytahni(napasuj(mn, r[0], r[1]), [], r[2]);
+      },
+    },
+    puzzle: {
+      nazev: 'Puzzle dílek', ikona: '🧩', barva: '#3cae5c', rozmer: [26, 26, 4], sada: 'dalsi',
+      param: { vystupky: 'smisene', odsazeni: 0.15, hrany: 'zvvz' },
+      parametry: [
+        { klic: 'vystupky', popis: 'Okraje', volby: PUZZLE },
+        { klic: 'hrany', popis: 'Vlastní okraje (dole, vpravo, nahoře, vlevo: z/v/r)', text: true },
+        { klic: 'odsazeni', popis: 'Odsazení obrysu (vůle)', jednotka: 'mm', min: 0, max: 2, krok: 0.05 }],
+      sit: (r, p) => M.vytahni(M.obrysPuzzle(r, p).obrys, [], r[2]),
+    },
+    blesk: {
+      nazev: 'Blesk', ikona: '⚡', barva: '#f5b70a', rozmer: [16, 26, 4], sada: 'dalsi',
+      skorepina: true,
+      param: {}, parametry: [],
+      sit: r => M.vytahni(napasuj([[0.35, 1], [0.78, 1], [0.56, 0.6], [0.82, 0.6], [0.22, 0], [0.42, 0.46], [0.18, 0.46]], r[0], r[1]), [], r[2]),
+    },
+    spirala: {
+      nazev: 'Plochá spirála', ikona: '🌀', barva: '#e84393', rozmer: [30, 30, 3], sada: 'dalsi',
+      param: { zavitu: 3, sirka: 50 },
+      parametry: [
+        { klic: 'zavitu', popis: 'Počet závitů', min: 1, max: 12, krok: 0.5 },
+        { klic: 'sirka', popis: 'Šířka pásu', jednotka: '%', min: 10, max: 90, krok: 5 }],
+      sit: (r, p) => {
+        // Archimédova spirála: střed pásu r = r0 + k·θ, šířka w (podíl stoupání)
+        const N = M.omez(p.zavitu, 0.5, 12), w = M.omez(p.sirka, 5, 90) / 100, r0 = 0.5;
+        const kroku = Math.max(24, Math.round(N * 72)), Tmax = 2 * PI * N, ven = [], dov = [];
+        for (let i = 0; i <= kroku; i++) {
+          const t = Tmax * i / kroku, rr = r0 + t / (2 * PI);
+          ven.push([(rr + w / 2) * Math.cos(t), (rr + w / 2) * Math.sin(t)]);
+          dov.push([(rr - w / 2) * Math.cos(t), (rr - w / 2) * Math.sin(t)]);
+        }
+        return M.vytahni(napasuj(ven.concat(dov.reverse()), r[0], r[1]), [], r[2]);
+      },
+    },
+    kvet: {
+      nazev: 'Květ', ikona: '🌸', barva: '#e86fa8', rozmer: [26, 26, 4], sada: 'dalsi',
+      param: { platku: 6, hloubka: 35, stred: 0, segmentu: 96 },
+      parametry: [
+        { klic: 'platku', popis: 'Počet plátků', min: 3, max: 24, krok: 1, cele: true },
+        { klic: 'hloubka', popis: 'Hloubka zářezů', jednotka: '%', min: 5, max: 80, krok: 5 },
+        { klic: 'stred', popis: 'Otvor uprostřed', jednotka: '%', min: 0, max: 60, krok: 5 }, SEG],
+      sit: (r, p) => {
+        const k = Math.round(p.platku), h = p.hloubka / 100, n = Math.max(seg4(p.segmentu), k * 12), mn = [];
+        for (let i = 0; i < n; i++) {
+          const t = 2 * PI * i / n, q = 1 - h + h * Math.pow(Math.abs(Math.cos(k * t / 2)), 0.7);
+          mn.push([q * Math.cos(t + PI / 2), q * Math.sin(t + PI / 2)]);
+        }
+        const st = p.stred / 100 * (1 - h) * 0.95;
+        const [o, d] = napasujVse(mn, st > 0.01 ? [kruh(0, 0, st, 48)] : [], r[0], r[1]);
+        return M.vytahni(o, d, r[2]);
+      },
+    },
+    hak: {
+      nazev: 'Háček', ikona: '🪝', barva: '#607d8b', rozmer: [20, 6, 40], sada: 'dalsi',
+      param: { tloustka: 3, spicka: 35, segmentu: 32 },
+      parametry: [
+        { klic: 'tloustka', popis: 'Tloušťka', jednotka: 'mm', min: 0.2, max: 1000, krok: 0.5 },
+        { klic: 'spicka', popis: 'Výška špičky', jednotka: '%', min: 0, max: 100, krok: 5 }, SEG],
+      sit: (r, p) => {
+        const W = r[0], ro = W / 2, t = M.omez(p.tloustka, 0.02 * W, 0.45 * W), ri = ro - t;
+        const H = Math.max(r[2], ro + t), cx = ro, cz = ro, tip = cz + (H - cz) * p.spicka / 100;
+        const n = Math.max(4, seg4(p.segmentu) / 2), prof = [[0, H], [0, cz]];
+        for (let i = 1; i < n; i++) { const a = PI + PI * i / n; prof.push([cx + ro * Math.cos(a), cz + ro * Math.sin(a)]); }
+        prof.push([W, cz]);
+        if (tip > cz + 1e-6) prof.push([W, tip], [W - t, tip]);
+        prof.push([W - t, cz]);
+        for (let i = n - 1; i >= 1; i--) { const a = PI + PI * i / n; prof.push([cx + ri * Math.cos(a), cz + ri * Math.sin(a)]); }
+        prof.push([t, cz], [t, H]);
+        const cist = prof.filter((b, i) => Math.hypot(b[0] - prof[(i + 1) % prof.length][0], b[1] - prof[(i + 1) % prof.length][1]) > 1e-9);
+        return vytahniPodelY(cist, r);
+      },
+    },
+    deska: {
+      nazev: 'Montážní deska', ikona: '🔲', barva: '#8a939c', rozmer: [40, 30, 3], sada: 'dalsi',
+      param: { zaobleni: 3, otvor: 3.4, odstup: 4 },
+      parametry: [
+        { klic: 'zaobleni', popis: 'Zaoblení rohů', jednotka: 'mm', min: 0, max: 1000, krok: 0.5 },
+        { klic: 'otvor', popis: 'Průměr otvorů (0 = bez)', jednotka: 'mm', min: 0, max: 1000, krok: 0.1 },
+        { klic: 'odstup', popis: 'Střed otvoru od kraje', jednotka: 'mm', min: 0.1, max: 1000, krok: 0.5 }],
+      sit: (r, p) => {
+        const [sx, sy] = r, m = Math.min(sx, sy);
+        const obrys = zaoblenyObdelnik(sx, sy, Math.min(p.zaobleni, 0.499 * m));
+        const R = p.otvor / 2, o = Math.max(p.odstup, R + 0.02 * m);
+        const diry = R > 1e-3 && o + R < sx / 2 - 1e-3 && o + R < sy / 2 - 1e-3 && 2 * R < Math.min(sx / 2 - o, sy / 2 - o) * 2
+          ? [[-1, -1], [1, -1], [1, 1], [-1, 1]].map(([a, b]) => kruh(a * (sx / 2 - o), b * (sy / 2 - o), R, 32)) : [];
+        return M.vytahni(obrys, diry, r[2]);
+      },
+    },
+    krabicka: {
+      nazev: 'Krabička', ikona: '📦', barva: '#b07d4f', rozmer: [40, 30, 20], sada: 'dalsi',
+      param: { stena: 1.6, dno: 1.6, zaobleni: 3 },
+      parametry: [
+        { klic: 'stena', popis: 'Stěna', jednotka: 'mm', min: 0.1, max: 1000, krok: 0.2 },
+        { klic: 'dno', popis: 'Dno', jednotka: 'mm', min: 0.1, max: 1000, krok: 0.2 },
+        { klic: 'zaobleni', popis: 'Zaoblení rohů', jednotka: 'mm', min: 0, max: 1000, krok: 0.5 }],
+      sit: krabicka,
+    },
+  });
+
   /** Jde těleso vyhloubit skořepinou? Plné základní tvary ano; trubka, torus, oblouk trubky, profil, rámeček
       a tvary s nastavenou stěnou už jsou duté nebo tenké – skořepina by nedávala smysl (nebo selže). Skupiny,
       skici a importované modely ano, díly ne. */

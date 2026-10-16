@@ -236,7 +236,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       if (MNOHOSTENY.has(u.druh)) zeSite--;
       return t;
     }
-    const MNOHOSTENY = new Set(['hranol', 'jehlan', 'strecha', 'klin', 'hvezda', 'sipka', 'kriz', 'schody', 'nosnik', 'brana', 'ramecek']);
+    const MNOHOSTENY = new Set(['hranol', 'jehlan', 'strecha', 'klin', 'hvezda', 'sipka', 'kriz', 'schody', 'nosnik', 'brana', 'ramecek', 'mnohosten', 'drahokam', 'srazenyKvadr', 'blesk']);
 
     /** Díly, které jde postavit přesně (válce místo plošek sítě): díra pro šroub. V přirozených souřadnicích
         dílu (síť z manifoldu minus stred). Jinak null – díl půjde jako síť. */

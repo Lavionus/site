@@ -28,6 +28,10 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       const d = v.rozestup || [0, 0, 0];
       for (let k = 0; k < nz; k++) for (let j = 0; j < ny; j++) for (let i = 0; i < nx; i++)
         if (i || j || k) transformace.push({ posun: [i * d[0], j * d[1], k * d[2]], uhel: 0 });
+    } else if (v.typ === 'krivka') {
+      // kopie rovnoměrně po délce křivky; originál odpovídá jejímu začátku (posun a natočení podle tečny)
+      const n = Math.max(1, Math.round(v.pocet || 1)), body = M.bodyNaCeste(v.cesta || [], n, !v.otevrena);
+      for (let i = 1; i < body.length; i++) transformace.push({ krivka: { P0: body[0], P: body[i], du: body[i].uhel - body[0].uhel } });
     } else {
       const n = Math.max(1, Math.round(v.pocet || 1));
       const c = v.stred || [0, 0];
@@ -45,7 +49,13 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     for (const t of transformace) for (const u of zdroje) {
       let p = new V(...u.poloha), q = M.quatUzlu(u);
       if (t.posun) p.add(new V(...t.posun));
-      else {
+      else if (t.krivka) {
+        const k = t.krivka, du = v.natacet !== false ? k.du : 0;
+        const qa = new THREE.Quaternion().setFromAxisAngle(new V(0, 0, 1), du);
+        const rel = new V(p.x - k.P0.x, p.y - k.P0.y, 0).applyQuaternion(qa);
+        p = new V(k.P.x + rel.x, k.P.y + rel.y, p.z);
+        if (v.natacet !== false) q = qa.clone().multiply(q);
+      } else {
         const c = new V(t.stred[0], t.stred[1], 0), rel = p.clone().sub(c);
         const r = Math.hypot(rel.x, rel.y);
         if (t.dr && r > 1e-9) rel.multiplyScalar(Math.max(0, r + t.dr) / r).setZ(p.z - c.z);
@@ -62,6 +72,123 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     }
     d = M.pridejUzly(d, nove);
     return { dok: d, kopie };
+  };
+
+  // ------------------------------------------------------------ reliéf z obrázku a text po kružnici
+  /** Uzavřená síť reliéfu z jasu jas[w × h] (0…1, řádky shora dolů): v.sirka (mm, rozměr X), v.vyska (mm reliéfu),
+      v.podklad (mm), v.tmaveVys (tmavé místo = vyšší). Vrchní plocha mřížka, spodek rovina, boky svislé. */
+  M.sitReliefu = function (jas, w, h, v) {
+    const dx = v.sirka / (w - 1), H = (h - 1) * dx, podklad = Math.max(0.2, v.podklad), vys = Math.max(0, v.vyska);
+    const poz = new Float32Array(w * h * 2 * 3), idx = [];
+    const vrch = (i, j) => j * w + i, spod = (i, j) => w * h + j * w + i;
+    for (let j = 0; j < h; j++) for (let i = 0; i < w; i++) {
+      let t = jas[j * w + i];
+      if (v.tmaveVys) t = 1 - t;
+      const x = i * dx - v.sirka / 2, y = H / 2 - j * dx;
+      poz.set([x, y, podklad + vys * t], vrch(i, j) * 3);
+      poz.set([x, y, 0], spod(i, j) * 3);
+    }
+    for (let j = 0; j + 1 < h; j++) for (let i = 0; i + 1 < w; i++) {
+      // řádky jdou dolů (y klesá): vrch proti hodinám při pohledu shora
+      idx.push(vrch(i, j), vrch(i, j + 1), vrch(i + 1, j + 1), vrch(i, j), vrch(i + 1, j + 1), vrch(i + 1, j));
+      idx.push(spod(i, j), spod(i + 1, j + 1), spod(i, j + 1), spod(i, j), spod(i + 1, j), spod(i + 1, j + 1));
+    }
+    // boky: obvod mřížky dokola
+    const obvod = [];
+    for (let i = 0; i < w; i++) obvod.push([i, 0]);
+    for (let j = 1; j < h; j++) obvod.push([w - 1, j]);
+    for (let i = w - 2; i >= 0; i--) obvod.push([i, h - 1]);
+    for (let j = h - 2; j >= 1; j--) obvod.push([0, j]);
+    for (let k = 0; k < obvod.length; k++) {
+      const a = obvod[k], b = obvod[(k + 1) % obvod.length];
+      const at = vrch(...a), bt = vrch(...b), ab = spod(...a), bb = spod(...b);
+      idx.push(at, bb, ab, at, bt, bb);
+    }
+    return M.orientujVen({ poz, idx: Uint32Array.from(idx) });
+  };
+
+  /** Obrysy textu po kružnici (pro skicu): znaky = [{kontury (mm, účaří y = 0), sirka (posun na další znak)}],
+      R = poloměr účaří, stred = úhel středu textu (°, 90 = nahoře), zvenku = čte se zvenku (po směru hodin nahoře). */
+  M.textPoKruznici = function (znaky, R, stredUhel = 90, zvenku = true) {
+    const celkem = znaky.reduce((s, z) => s + z.sirka, 0), out = [];
+    const smer = zvenku ? -1 : 1, a0 = stredUhel * PI / 180 - smer * celkem / R / 2;
+    let s = 0;
+    for (const z of znaky) {
+      const a = a0 + smer * (s + z.sirka / 2) / R;
+      // znak vzpřímeně: nahoru = ven (zvenku) nebo dovnitř; střed znaku na úhlu a
+      const rot = zvenku ? a - PI / 2 : a + PI / 2, c = Math.cos(rot), sn = Math.sin(rot);
+      const px = R * Math.cos(a), py = R * Math.sin(a);
+      for (const k of z.kontury) out.push(k.map(([x, y]) => { const xx = x - z.sirka / 2; return [px + xx * c - y * sn, py + xx * sn + y * c]; }));
+      s += z.sirka;
+    }
+    return out;
+  };
+
+  // ------------------------------------------------------------ závit na válec
+  /** Závit na válec id (kruhový průřez): v.typ 'vnejsi' (horní část válce se zúží na jádro závitu a přidá se
+      závitová tyč – průměr = průměr válce) nebo 'vnitrni' (díra se závitem shora, průměr v.prumer).
+      v.delka (mm od horní podstavy), v.stoupani (0 = podle průměru), v.vule. Vrací {dok, id} (skupina). */
+  M.zavitNaValec = function (dok, id, v) {
+    const u = M.najdiUzel(dok, id);
+    if (!u || u.druh !== 'valec') throw new Error('vyber válec');
+    if (Math.abs(u.rozmer[0] - u.rozmer[1]) > 1e-3 * u.rozmer[0]) throw new Error('válec musí mít kruhový průřez (stejný průměr X a Y)');
+    const D = u.rozmer[0], H = u.rozmer[2], L = M.omez(v.delka, 0.5, H);
+    const q = M.quatUzlu(u), osa = h => new V(0, 0, h).applyQuaternion(q).add(new V(...u.poloha)).toArray().map(x => zaokr(x));
+    // dílu (natural z 0 … délka) se poloha udává středem obálky: horní konec v rovině horní podstavy
+    if (v.typ === 'vnitrni') {
+      const Dz = M.omez(v.prumer || D * 0.6, 1, D - 1);
+      const dira = M.novyUzel('zavitDira', { param: { velikost: 'vlastni', prumer: Dz, stoupani: v.stoupani || 0, delka: L, vule: v.vule == null ? 0.2 : v.vule },
+        rotace: u.rotace.slice() }, dok);
+      // díra přesahuje o 0,5 mm nahoře i dole (obálka −0,5 … L + 0,5): střed obálky = horní podstava − L/2
+      const d1 = M.pridejUzly(dok, [Object.assign(dira, { poloha: osa(H / 2 - L / 2) })]);
+      const r = M.seskupUzly(d1, [u.id, dira.id], { nazev: u.nazev + ' se závitem' });
+      return { dok: r.dok, id: r.id };
+    }
+    const vule = v.vule == null ? 0.1 : v.vule;
+    const tyc = M.novyUzel('sroub', { param: { velikost: 'vlastni', prumer: D, stoupani: v.stoupani || 0, delka: L, hlava: 'zadna', vule }, rotace: u.rotace.slice() }, dok);
+    const z = M.udajeZavitu({ velikost: 'vlastni', prumer: D, stoupani: v.stoupani || 0 });
+    const jadro = Math.max(0.2, D / 2 - vule / 2 - M.hloubkaZavitu(z) + 0.05);        // o chlup přes dno závitu (spojí se)
+    // prstenec, který z válce ubere materiál nad jádrem závitu
+    const prsten = M.novyUzel('trubka', { rozmer: [D + 2, D + 2, L + 0.02], param: { stena: (D + 2) / 2 - jadro, segmentu: Math.max(48, u.param.segmentu || 48) },
+      role: 'dira', rotace: u.rotace.slice(), poloha: osa(H / 2 - L / 2 + 0.01) }, dok);
+    let d = M.pridejUzly(dok, [prsten]);
+    const g1 = M.seskupUzly(d, [u.id, prsten.id], { nazev: u.nazev });
+    d = M.pridejUzly(g1.dok, [Object.assign(tyc, { poloha: osa(H / 2 - L / 2) })]);
+    const g2 = M.seskupUzly(d, [g1.id, tyc.id], { nazev: u.nazev + ' se závitem' });
+    return { dok: g2.dok, id: g2.id };
+  };
+
+  /** Nejdelší obrys skici ve světových souřadnicích (rovina XY): [[x, y], …]. */
+  M.cestaZeSkici = function (u, seg = 128) {
+    if (!u || u.druh !== 'skica') return [];
+    let nej = [], delka = -1;
+    for (const t of u.param.tvary || []) for (const k of M.konturyTvaru(t, seg)) {
+      let l = 0;
+      for (let i = 0; i < k.length; i++) l += Math.hypot(k[(i + 1) % k.length][0] - k[i][0], k[(i + 1) % k.length][1] - k[i][1]);
+      if (l > delka) { delka = l; nej = k; }
+    }
+    const m = M.maticeUzlu(u), s = u.stred;
+    return nej.map(([x, y]) => { const w = new V(x - s[0], y - s[1], -s[2]).applyMatrix4(m); return [w.x, w.y]; });
+  };
+  /** n bodů rovnoměrně po délce lomené čáry (uzavřené: po celém obvodu) s úhlem tečny: [{x, y, uhel}]. */
+  M.bodyNaCeste = function (cesta, n, uzavrena = true) {
+    const b = cesta.slice();
+    if (b.length < 2) return [];
+    if (uzavrena) b.push(b[0]);
+    const usek = [], L = [0];
+    for (let i = 0; i + 1 < b.length; i++) { const l = Math.hypot(b[i + 1][0] - b[i][0], b[i + 1][1] - b[i][1]); usek.push(l); L.push(L[i] + l); }
+    const celkem = L[L.length - 1];
+    if (!(celkem > 0)) return [];
+    const krok = uzavrena ? celkem / n : (n > 1 ? celkem / (n - 1) : 0), out = [];
+    let j = 0;
+    for (let i = 0; i < n; i++) {
+      const s = Math.min(celkem, i * krok);
+      while (j < usek.length - 1 && L[j + 1] <= s + 1e-9) j++;
+      while (j < usek.length - 1 && usek[j] < 1e-12) j++;
+      const f = usek[j] > 0 ? (s - L[j]) / usek[j] : 0, a = b[j], c = b[j + 1];
+      out.push({ x: a[0] + (c[0] - a[0]) * f, y: a[1] + (c[1] - a[1]) * f, uhel: Math.atan2(c[1] - a[1], c[0] - a[0]) });
+    }
+    return out;
   };
 
   // ------------------------------------------------------------ rozdělení rovinou

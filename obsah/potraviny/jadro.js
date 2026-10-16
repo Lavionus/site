@@ -404,6 +404,7 @@
     let b = 0;
     if (f.typ === 's') b += 6;          // obecné suroviny – krátké, časté
     if (f.typ === 'm' || f.typ === 'r') b += 14;
+    if (f.typ === 'd') b += 4;          // doplňky správce – ověřené podle etikety
     if (f.priznaky & 2) b -= 15;        // výrobek bez živin
     if (f.priznaky & 1) b -= 3;
     b += Math.min(12, Math.log2(1 + (f.skeny || 0)) * 2);
@@ -663,6 +664,7 @@
       oblibene: [],     // id potravin
       cache: {},        // výrobky stažené online: ean → potravina
       sablony: {},      // uložená jídla: id → {id, nazev, polozky: [{f (snímek), g, porce}]}
+      plan: {},         // jídelníček: den → [{id, j (jídlo), druh 'r' recept | 's' uložené jídlo | 'f' potravina, ref, porci, f, g}]
     };
   }
   // klíč snímku: id + otisk hodnot (změna údajů nepřepíše staré záznamy)
@@ -774,6 +776,355 @@
     vys.voda = d.voda || 0;
     vys.alk = vys.celkem.alk || 0;
     return vys;
+  }
+  // „Co ti chybí“: živiny, kterých je za zapsané dny období dlouhodobě málo (pod 75 % cíle), a potraviny,
+  // které je doplní – nejdřív ty, které už jíš, pak nové z kandidátů (obecné potraviny s ověřenými hodnotami).
+  // U živin se bere jen tam, kde známe hodnoty aspoň u 60 % snědené energie (jinak by tip mohl být falešný).
+  const TIPOVANE = ['vlaknina', 'bilkoviny', 'ca', 'fe', 'mg', 'k', 'zn', 'jod', 'se', 'vitC', 'vitD', 'b9', 'b12'];
+  function tipyNaZiviny(stav, od, doK, cile, kandidati, volby) {
+    volby = volby || {};
+    const dny = [];
+    for (let k = od; k <= doK; k = posunDen(k, 1)) { const s = souhrnDne(stav, k); if (s.pocet && (s.celkem.kcal || 0) >= 400) dny.push(s); }
+    if (dny.length < 3) return { dni: dny.length, tipy: [] };
+    const kcalCil = cile.kcal || dny.reduce((a, s) => a + (s.celkem.kcal || 0), 0) / dny.length;
+    // potraviny z deníku v období (s počtem použití)
+    const pouzite = new Map();
+    for (let k = od; k <= doK; k = posunDen(k, 1)) {
+      const d = stav.dny[k];
+      if (!d) continue;
+      for (const z of d.z) { const f = stav.potraviny[z.p]; if (!f || z.rychly) continue; const x = pouzite.get(f.id) || { f, n: 0, g: 0 }; x.n++; x.g += z.g; x.f = f; pouzite.set(f.id, x); }
+    }
+    const tipy = [];
+    for (const kl of TIPOVANE) {
+      const cil = cile.zivinyCil[kl];
+      if (!cil || (volby.mikro === false && ZIV[kl].s !== 'zaklad')) continue;
+      let e = 0, ez = 0, suma = 0;
+      for (const s of dny) { const ee = s.celkem.kcal || 0; e += ee; ez += ee * (s.pokryti[kl] || 0); suma += s.celkem[kl] || 0; }
+      const pokryti = e ? ez / e : 0;
+      if (pokryti < 0.6) continue;
+      const prumer = suma / dny.length / pokryti;   // dopočet za jídlo bez údaje
+      const podil = prumer / cil;
+      if (podil >= 0.75) continue;
+      const potreba = cil / kcalCil * 100;          // kolik živiny je třeba na 100 kcal
+      const hustota = f => (Number.isFinite(f.n[kl]) && f.n.kcal > 0 ? f.n[kl] / f.n.kcal * 100 : 0);
+      // realistická porce: ne americké „hrnky“; suché luštěniny 50 g, ořechy a semínka hrst 30 g
+      const porce = f => {
+        if (!f.ml && /such|sušen/i.test(f.nazev || '')) return { n: '50 g', g: 50 };
+        if (f.skupina === 'orechy' || /semínk|semen|sezam|mák|ořech/i.test(f.nazev || '')) return { n: 'hrst (30 g)', g: 30 };
+        if (!f.ml && (f.n.kcal || 0) > 350) return { n: '30 g', g: 30 };     // čokoláda, kakao, sušenky…
+        const p = (f.porce || []).find(x => x.g >= 15 && x.g <= 250 && (f.ml || !/hrnek|šálek/i.test(x.n)));
+        return p ? { n: p.n, g: p.g } : { n: '100 ' + (f.ml ? 'ml' : 'g'), g: 100 };
+      };
+      const moje = [...pouzite.values()].filter(x => hustota(x.f) >= potreba * 1.3)
+        .sort((a, b) => hustota(b.f) * Math.log(1 + b.n) - hustota(a.f) * Math.log(1 + a.n)).slice(0, 3)
+        .map(x => { const p = porce(x.f); return { f: x.f, porce: p, mnozstvi: x.f.n[kl] * p.g / 100, pouzito: x.n }; });
+      const jeMoje = new Set(moje.map(x => x.f.id));
+      const nove = (kandidati || []).filter(f => !jeMoje.has(f.id) && !pouzite.has(f.id) && f.skupina !== 'koreni' && hustota(f) >= potreba * 1.5 && (!volby.vyloucit || !volby.vyloucit(f)))
+        .map(f => { const p = porce(f); return { f, porce: p, mnozstvi: f.n[kl] * p.g / 100, h: hustota(f) }; })
+        .filter(x => x.mnozstvi >= cil * 0.08)       // jedna porce pokryje aspoň 8 % denní potřeby
+        .sort((a, b) => b.mnozstvi - a.mnozstvi).slice(0, 3);
+      tipy.push({ k: kl, n: ZIV[kl].n, j: ZIV[kl].j, d: ZIV[kl].d, prumer, cil, podil, pokryti, moje, nove });
+    }
+    tipy.sort((a, b) => a.podil - b.podil);
+    return { dni: dny.length, tipy: tipy.slice(0, volby.limit || 4) };
+  }
+  /* ---------- recept z vloženého textu („200 g mouky, 2 vejce, 1 lžíce oleje“) ---------- */
+  // jednotka → gramy (u objemu 1 ml ≈ 1 g); kus = podle porce potraviny (doplní rozhraní po spárování)
+  const JEDNOTKY_RECEPTU = [
+    [/^(kg|kila?|kilogram\w*)$/, 1000], [/^(dkg|deka|dag)$/, 10], [/^(g|gr|gram\w*)$/, 1], [/^(mg)$/, 0.001],
+    [/^(l|litr\w*)$/, 1000], [/^(dl|decilitr\w*|deci)$/, 100], [/^(cl)$/, 10], [/^(ml|mililitr\w*)$/, 1],
+    [/^(lžíce|lžíc[eíi]?|lžic\w*|pl|polévkov\w*)$/, 15, 'lžíce'], [/^(lžička|lžičk\w*|lžiček|čl|kl|kávov\w*)$/, 5, 'lžička'],
+    [/^(hrn[eí]?[kč]\w*|šál[eo]?k\w*)$/, 250, 'hrnek'], [/^(špet\w*|štipk\w*)$/, 0.5, 'špetka'],
+    [/^(hrst\w*)$/, 30, 'hrst'], [/^(svaz\w*|svazeč\w*)$/, 30, 'svazek'], [/^(plát\w*)$/, 20, 'plátek'],
+    [/^(stroužk?\w*|stroužek)$/, 4, 'stroužek'], [/^(ks|kus\w*|kousk\w*)$/, null, 'kus'],
+    [/^(balení|bal|balíč\w*|sáč\w*|konzerv\w*|plechovk\w*|kostk\w*|kostič\w*)$/, null, 'balení'],
+  ];
+  const ZLOMKY = { '½': 0.5, '¼': 0.25, '¾': 0.75, '⅓': 1 / 3, '⅔': 2 / 3 };
+  function cisloRecept(s) {
+    s = s.trim().replace(/[½¼¾⅓⅔]/g, m => ' ' + ZLOMKY[m]).trim();
+    let m = s.match(/^(\d+)\s+(\d+(?:\.\d+)?)$/);                     // „1 0.5“ ze „1½“
+    if (m) return +m[1] + +m[2];
+    m = s.match(/^(\d+)\s*\/\s*(\d+)$/);
+    if (m) return +m[2] ? +m[1] / +m[2] : null;
+    m = s.match(/^(\d+(?:[.,]\d+)?)\s*[-–]\s*(\d+(?:[.,]\d+)?)$/);   // rozsah „2–3“ → průměr
+    if (m) return (cislo(m[1]) + cislo(m[2])) / 2;
+    return cislo(s);
+  }
+  const RE_CISLO = '(\\d+\\s*\\/\\s*\\d+|\\d+(?:[.,]\\d+)?(?:\\s*[-–]\\s*\\d+(?:[.,]\\d+)?)?\\s*[½¼¾⅓⅔]?|[½¼¾⅓⅔])';
+  function rozeberSuroviny(text) {
+    const vys = [];
+    for (let radek of String(text || '').split(/\r?\n|;|,(?=\s*\d)/)) {
+      radek = radek.replace(/^[\s•*·\-–—▪◦\d]+[.)]\s+/, m => (/\d/.test(m) && !/[.)]\s+$/.test(m) ? m : '')).replace(/^[\s•*·\-–—▪◦]+/, '').trim();
+      if (!radek || /:$/.test(radek) || radek.length > 120) continue;
+      let mn = null, jed = null, g = null, druh = null, nazev = radek;
+      const zkusJednotku = slovo => { const s = norm(slovo).replace(/\.$/, ''); for (const [re, gr, d] of JEDNOTKY_RECEPTU) if (re.test(s) || re.test(slovo.toLowerCase().replace(/\.$/, ''))) return { gr, d: d || null }; return null; };
+      let m = radek.match(new RegExp('^' + RE_CISLO + '\\s*([^\\s\\d]+\\.?)?\\s*(.*)$'));
+      if (!m) m = (() => { const k = radek.match(new RegExp('^(.*?)[\\s,–-]+' + RE_CISLO + '\\s*([^\\s\\d]+\\.?)?$')); return k ? [k[0], k[2], k[3], k[1]] : null; })();
+      if (m) {
+        mn = cisloRecept(m[1]);
+        const j = m[2] ? zkusJednotku(m[2]) : null;
+        if (j) { jed = m[2].replace(/\.$/, ''); druh = j.d; if (j.gr !== null && mn !== null) g = mn * j.gr; nazev = m[3]; }
+        else { nazev = ((m[2] || '') + ' ' + (m[3] || '')).trim(); druh = 'kus'; }   // „2 vejce“
+      }
+      nazev = nazev.replace(/\(.*?\)/g, ' ').replace(/(^|\s)(dle chuti|podle chuti|na ozdobu|na posypání|na vymazání|na smažení|na podlití|cca|asi|trochu|případně)(?=\s|$|,)/gi, ' ')
+        .replace(/^(\s*(of|z|ze)\s+)/i, '').replace(/[,.;:]+$/, '').replace(/\s+/g, ' ').trim();
+      if (!nazev) continue;
+      vys.push({ radek, mnozstvi: mn, jednotka: jed, druh, g: g !== null ? zaokrouhli(g, 1) : null, nazev });
+    }
+    return vys;
+  }
+  // tvary slov ze seznamu surovin (2. pád) → 1. pád; nepravidelné a typické případy zvlášť
+  const NEPRAVIDELNE = { soli: 'sůl', soľ: 'sůl', syra: 'eidam', syru: 'eidam', syr: 'eidam', vajec: 'vejce', vajicek: 'vejce', vejci: 'vejce', masla: 'máslo',
+    rajcat: 'rajče', rajcata: 'rajče', rajcete: 'rajče', brambor: 'brambory', jablek: 'jablko', hrusek: 'hruška', svestek: 'švestky', cibuli: 'cibule',
+    testovin: 'těstoviny', spaget: 'těstoviny', spagety: 'těstoviny', nudli: 'těstoviny', orechu: 'ořechy', mandli: 'mandle', banany: 'banán',
+    oleje: 'řepkový olej', olej: 'řepkový olej', octa: 'ocet', pepre: 'pepř', vody: 'voda', mleka: 'mléko', masa: 'maso', zeli: 'zelí', mrkve: 'mrkev', prsou: 'prsa', medu: 'med',
+    kakaa: 'kakao', zloutku: 'žloutek', zloutky: 'žloutek', bilku: 'bílek', bilky: 'bílek', vlocek: 'vločky', fazoli: 'fazole', cocky: 'čočka', prasku: 'prášek', tvarohu: 'tvaroh', jogurtu: 'jogurt', sadla: 'sádlo', slaniny: 'slanina', sunky: 'šunka' };
+  function tvaryNazvu(nazev) {
+    const slova = norm(nazev).split(' ').filter(Boolean).slice(0, 3);
+    const tvary = s => {
+      const v = new Set([s]);
+      if (NEPRAVIDELNE[s]) v.add(norm(NEPRAVIDELNE[s]));
+      const k = (kon, nah) => { if (s.length > kon.length + 2 && s.endsWith(kon)) v.add(s.slice(0, -kon.length) + nah); };
+      k('ych', 'e'); k('ych', 'y'); k('ich', 'i'); k('eho', 'e'); k('eho', 'y'); k('ou', 'a'); k('ek', 'ky');
+      k('y', 'a'); k('u', ''); k('a', 'o'); k('a', ''); k('e', ''); k('i', 'e'); k('i', 'a');
+      return [...v];
+    };
+    const t0 = tvary(slova[0] || ''), t1 = slova[1] ? tvary(slova[1]) : [''];
+    const vys = new Set([norm(nazev)]);
+    for (const a of t0) for (const b of t1) vys.add((a + ' ' + b).trim());
+    for (const a of t0) vys.add(a);
+    return [...vys].slice(0, 24);
+  }
+  // potravina pro řádek receptu: nejdřív obecné suroviny (a vlastní potraviny), syrové před tepelně upravenými;
+  // když nic nesedí, výrobky z databáze
+  function najdiSurovinu(indexSurovin, indexVse, nazev) {
+    let nej = null, nejB = 0;
+    const slova = norm(nazev).split(' ').filter(Boolean).slice(0, 3);
+    const kmeny = slova.map(w => tvaryNazvu(w).filter(x => !x.includes(' ')).map(x => x.slice(0, Math.max(3, x.length - 2))));
+    // kandidáti: celý název; bez prvního slova (přídavné jméno: „strouhaného sýra“) s malou srážkou
+    const varianty = tvaryNazvu(nazev).map(t => [t, 0]);
+    if (slova.length > 1) for (const t of tvaryNazvu(slova.slice(1).join(' '))) varianty.push([t, 0.3]);
+    const ohodnot = (index, srazka) => {
+      for (const [t, sr] of varianty) {
+        const prvni = t.split(' ')[0];
+        if (prvni.length < 2) continue;
+        for (const f of hledej(index, t, { limit: 8 })) {
+          if (!Number.isFinite(f.n.kcal)) continue;
+          const slovaF = norm(f.nazev).replace(/[()/,.]/g, ' ').split(' ').filter(Boolean);
+          if (!slovaF.length) continue;
+          let b = 0;
+          if (slovaF[0] === prvni) b = 4;
+          else if (slovaF[0].startsWith(prvni) && prvni.length >= 4) b = 3;
+          else if (slovaF.includes(prvni)) b = 2.5;
+          else if (slovaF.some(w => w.startsWith(prvni) && prvni.length >= 4)) b = 2;
+          if (!b) continue;
+          // ostatní slova původního názvu: shoda přidá, chybějící (např. „hladké“, „hrubé“) ubere
+          kmeny.forEach((km, i) => {
+            if (slova[i] && t.split(' ')[0].startsWith(km[0] || '~')) return;
+            const shoda = slovaF.some(x => km.some(k => x.startsWith(k)));
+            b += shoda ? 0.8 : -0.5;
+          });
+          if (/syrov|such|\(syr/.test(norm(f.nazev))) b += 0.4;
+          if (/varen|pecen|smazen|michan|natvrdo|volske|kase|konzerv|tycink|poleva|dezert|cokolad|protein/.test(norm(f.nazev)) && !/varen|pecen|cokolad|protein/.test(t)) b -= 0.8;
+          if (f.typ === 'm') b += 0.3;
+          b -= sr + srazka + (t === norm(nazev) ? 0 : 0.1);
+          if (b > nejB) { nejB = b; nej = f; }
+        }
+      }
+    };
+    ohodnot(indexSurovin, 0);
+    if (!(nej && nejB >= 3.5)) ohodnot(indexVse, 0.5);    // výrobky jen když obecná surovina nesedí dobře
+    if (nej && nejB >= 1.8) return nej;
+    const nal = hledej(indexVse, nazev, { limit: 6 });
+    return nal.find(f => Number.isFinite(f.n.kcal)) || null;
+  }
+  // gramy suroviny podle spárované potraviny (u „kusů“ a balení podle jejích porcí)
+  function gramySuroviny(r, f) {
+    if (r.g !== null && r.g !== undefined) return { g: r.g, odhad: false };
+    const pocet = r.mnozstvi || 1;
+    const porce = (f && f.porce) || [];
+    let p = null;
+    if (r.druh === 'balení') {
+      // běžná balení do pečení (na 1 balení)
+      const typ = [[/kypř|prášek do peč|prášku do peč/i, 12], [/vanilk/i, 20], [/droždí|kvasnic/i, 42], [/želatin/i, 20], [/pudink/i, 40]].find(([re]) => re.test(r.nazev + ' ' + ((f && f.nazev) || '')));
+      if (typ) return { g: zaokrouhli(pocet * typ[1], 1), odhad: false };
+      p = porce.find(x => /balení/.test(x.n));
+    }
+    else if (r.druh === 'stroužek') p = porce.find(x => /stroužek/.test(x.n));
+    else p = porce.find(x => /^(střední kus|kus)\b/.test(x.n)) || porce.find(x => /kus|vejce/.test(x.n));
+    if (p) return { g: zaokrouhli(pocet * p.g, 1), odhad: false };
+    return { g: r.mnozstvi ? zaokrouhli(pocet * 100, 1) : null, odhad: true };
+  }
+  /* ---------- tabulka výživových údajů z textu (OCR fotky etikety) ---------- */
+  // pořadí je důležité: „z toho nasycené…“ a „z toho cukry“ dřív než tuky a sacharidy
+  const ETIKETA = [
+    ['nasycene', /nasycen|nasyten|nasýten|gesatt|gesätt|saturat|nasycon|telit/],
+    ['cukry', /cukr|cukor|zucker|sugar|sucre|cukier/],
+    ['vlaknina', /vlaknin|vláknin|ballast|fibre|fiber|blonnik|błonnik|vlakn/],
+    ['bilkoviny', /bilkovin|bílkovin|bielkovin|eiwei|protein|bialk|białk/],
+    ['sul', /(^|\s)(sul|sůl|sol|soľ|sól|salz|salt|sel)\b/],
+    ['tuk', /(^|\s)(tuk|tuky|tukov|fett|fat|fats|tluszcz|tłuszcz|graisse|zsir)/],
+    ['sacharidy', /sacharid|kohlenhydrat|carbohydrat|weglowodan|węglowodan|glucid|szenhidr/],
+  ];
+  function opravCislaOcr(s) {
+    // O/o → 0 a I/l → 1 jen uvnitř čísel („1O,5 g“, „O,8 g“, „l5 g“)
+    return s.replace(/(?<=[\d,.])[oO](?=[\d,.\s]*(g|kj|kcal|mg)\b)|\b[oO](?=[,.]\d)/gi, '0').replace(/(?<=\s|^)[Il](?=\d)/g, '1');
+  }
+  // ztracené desetinné čárky: u čísel bez čárky zkusí ÷10 a ÷100 a vybere kombinaci, se kterou sedí
+  // energie a pravidla (nasycené ≤ tuky, cukry ≤ sacharidy, sůl do 10 g, součet do 100 g)
+  function opravCarky(n, bezCarky) {
+    const kl = Object.keys(bezCarky).filter(k => n[k] >= (k === 'sul' ? 2 : 10));
+    if (!kl.length) {
+      for (const k of Object.keys(n)) if (k !== 'kcal' && n[k] > 100) delete n[k];
+      return [];
+    }
+    const vol = kl.map(k => [n[k], n[k] / 10, n[k] / 100].filter(v => v <= 100));
+    let nej = null, nejS = Infinity;
+    const zkus = (i, akt) => {
+      if (i === kl.length) {
+        const x = { ...n, ...akt };
+        let s = 0;
+        if (Number.isFinite(x.kcal) && x.kcal > 0) {
+          const vyp = 9 * (x.tuk || 0) + 4 * (x.sacharidy || 0) + 4 * (x.bilkoviny || 0) + 2 * (x.vlaknina || 0);
+          s += Math.abs(vyp - x.kcal) / x.kcal;
+        }
+        if (x.nasycene > (x.tuk ?? Infinity) + 0.1) s += 1;
+        if (x.cukry > (x.sacharidy ?? Infinity) + 0.1) s += 1;
+        if (x.sul > 10) s += 1;
+        if ((x.tuk || 0) + (x.sacharidy || 0) + (x.bilkoviny || 0) + (x.vlaknina || 0) + (x.sul || 0) > 100) s += 2;
+        s += Object.keys(akt).filter(k => akt[k] !== n[k]).length * 0.03;   // změna jen když pomůže
+        if (s < nejS) { nejS = s; nej = akt; }
+        return;
+      }
+      for (const v of vol[i]) zkus(i + 1, { ...akt, [kl[i]]: v });
+    };
+    zkus(0, {});
+    const zmeny = [];
+    for (const k of kl) { if (nej && nej[k] !== undefined && nej[k] !== n[k]) { n[k] = zaokrouhli(nej[k], k === 'sul' ? 2 : 1); zmeny.push(k); } }
+    for (const k of Object.keys(n)) if (k !== 'kcal' && n[k] > 100) delete n[k];
+    return zmeny;
+  }
+  function rozeberEtiketu(text) {
+    const radky = String(text || '').split(/\r?\n/).map(r => opravCislaOcr(r).toLowerCase()).filter(r => r.trim());
+    const n = {}, bezCarky = {};
+    let posledniBezCarky = false;
+    const cislo1 = s => {
+      const m = s.match(/(<\s*)?(\d{1,4}(?:[ \u00a0]\d{3})?(?:[.,]\d{1,3})?)\s*(mg|g)?\b/);
+      if (!m) return null;
+      let c = m[2].replace(/[ \u00a0]/g, '');
+      if (/^0\d+$/.test(c)) c = '0.' + c.slice(1);        // „09 g“ = 0,9 g (čárka se ztratila)
+      let v = cislo(c);
+      if (v === null) return null;
+      posledniBezCarky = !/[.,]/.test(c) && !m[1];
+      if (m[1]) v = 0;                      // „< 0,5 g“ → prakticky nula
+      if (m[3] === 'mg') v /= 1000;
+      return v;
+    };
+    // energie: kJ a kcal kdekoli v řádcích s „energ“/„kj“/„kcal“
+    for (const r of radky) {
+      if (!/energ|kj|kcal|brennwert|wartość/.test(r)) continue;
+      const kcal = r.match(/(\d{1,4}(?:[.,]\d)?)\s*kcal/);
+      const kj = r.match(/(\d{2,5}(?:[.,]\d)?)\s*kj/);
+      const dvojice = r.match(/kj\s*\/\s*kcal\D*(\d{2,5})\s*\/\s*(\d{1,4})/);
+      if (dvojice) { n.kcal = cislo(dvojice[2]); break; }
+      if (kcal) { n.kcal = cislo(kcal[1]); break; }
+      if (kj && n.kcal === undefined) n.kcal = zaokrouhli(cislo(kj[1]) / 4.184, 0);
+    }
+    for (const r of radky) {
+      const nr = norm(r);
+      for (const [kl, re] of ETIKETA) {
+        if (n[kl] !== undefined) continue;
+        const m = re.exec(nr) || re.exec(r);
+        if (!m) continue;
+        if (kl === 'tuk' && ETIKETA[0][1].test(nr)) continue;          // řádek nasycených
+        if (kl === 'sacharidy' && ETIKETA[1][1].test(nr)) continue;     // řádek cukrů
+        if (kl === 'sul' && /sodik|natri|sodium/.test(nr)) continue;
+        const v = cislo1(r.slice(Math.max(0, m.index)).replace(/^[^\d<]*/, ''));
+        // čísla bez čárky si poznamenat – OCR malou desetinnou čárku často ztratí („3,1 g“ → „31 g“)
+        if (v !== null && v >= 0 && (v <= 100 || posledniBezCarky)) { n[kl] = zaokrouhli(v, kl === 'sul' ? 2 : 1); if (posledniBezCarky) bezCarky[kl] = true; }
+        break;
+      }
+      // sodík místo soli
+      if (n.sul === undefined && /sodik|sodík|natrium|sodium/.test(nr)) { const v = cislo1(r.replace(/^[^\d<]*/, '')); if (v !== null && v <= 40) n.sul = zaokrouhli(v * 2.5, 2); }
+    }
+    const opraveno = opravCarky(n, bezCarky);
+    const ml = /100\s*ml/.test(radky.join(' '));
+    const nalezeno = Object.keys(n).length;
+    return { n, ml, nalezeno, sedi: energieSedi(n), opraveno };
+  }
+
+  /* ---------- jídelníček a nákupní seznam ---------- */
+  function pridejDoPlanu(stav, k, jidlo, polozka) {
+    if (!zKlice(k)) throw new Error('Neplatný den');
+    const x = { id: noveId('n'), j: jidlo, druh: polozka.druh };
+    if (polozka.druh === 'r') { if (!stav.recepty[polozka.ref]) throw new Error('Recept neexistuje'); x.ref = polozka.ref; x.porci = cislo(polozka.porci) > 0 ? cislo(polozka.porci) : 1; }
+    else if (polozka.druh === 's') { if (!stav.sablony[polozka.ref]) throw new Error('Uložené jídlo neexistuje'); x.ref = polozka.ref; x.porci = cislo(polozka.porci) > 0 ? cislo(polozka.porci) : 1; }
+    else if (polozka.druh === 'f') { const g = cislo(polozka.g); if (!(g > 0)) throw new Error('Neplatné množství'); x.f = snimek(polozka.f); x.g = zaokrouhli(g, 1); }
+    else throw new Error('Neznámá položka plánu');
+    (stav.plan[k] = stav.plan[k] || []).push(x);
+    return x;
+  }
+  function smazZPlanu(stav, k, id) {
+    if (!stav.plan[k]) return;
+    stav.plan[k] = stav.plan[k].filter(x => x.id !== id);
+    if (!stav.plan[k].length) delete stav.plan[k];
+  }
+  // položka plánu → {nazev, ziviny, suroviny: [{f, g}]} (recept a uložené jídlo se rozloží na suroviny)
+  function rozvinPolozkuPlanu(stav, x) {
+    if (x.druh === 'r') {
+      const r = stav.recepty[x.ref];
+      if (!r) return null;
+      const v = spocitejRecept(r), podil = x.porci / v.porci;
+      const ziv = {}; for (const k in v.celkem) ziv[k] = v.celkem[k] * podil;
+      return { nazev: r.nazev, popis: pocet(x.porci, 'porce', 'porce', 'porcí'), ziviny: ziv, suroviny: r.suroviny.map(s => ({ f: s.f, g: s.g * podil })) };
+    }
+    if (x.druh === 's') {
+      const s = stav.sablony[x.ref];
+      if (!s) return null;
+      const ziv = {}; for (const p of s.polozky) secti(ziv, zivinyZa(p.f.n, p.g * x.porci));
+      return { nazev: s.nazev, popis: x.porci !== 1 ? x.porci + '×' : '', ziviny: ziv, suroviny: s.polozky.filter(p => !p.rychly).map(p => ({ f: p.f, g: p.g * x.porci })) };
+    }
+    if (x.druh === 'f') return { nazev: x.f.nazev, popis: zaokrouhli(x.g, 0) + (x.f.ml ? ' ml' : ' g'), ziviny: zivinyZa(x.f.n, x.g), suroviny: [{ f: x.f, g: x.g }] };
+    return null;
+  }
+  function souhrnPlanuDne(stav, k) {
+    const c = {};
+    for (const x of stav.plan[k] || []) { const p = rozvinPolozkuPlanu(stav, x); if (p) secti(c, p.ziviny); }
+    return c;
+  }
+  // zapsat naplánovaný den do deníku (recept jako porce receptu, uložené jídlo po položkách)
+  function zapisPlanDoDeniku(stav, k) {
+    let n = 0;
+    for (const x of stav.plan[k] || []) {
+      if (x.druh === 'r' && stav.recepty[x.ref]) {
+        const f = receptJakoPotravina(stav.recepty[x.ref]);
+        pridejZaznam(stav, k, x.j, f, f.porce[0].g * x.porci, { porce: { n: f.porce[0].n, pocet: x.porci } }); n++;
+      } else if (x.druh === 's' && stav.sablony[x.ref]) n += pouzijSablonu(stav, x.ref, k, x.j, x.porci).length;
+      else if (x.druh === 'f') { pridejZaznam(stav, k, x.j, x.f, x.g); n++; }
+    }
+    return n;
+  }
+  // nákupní seznam za dny [od, do]: suroviny sečtené podle potraviny, seřazené podle skupiny a názvu
+  function nakupniSeznam(stav, od, doK) {
+    const m = new Map();
+    for (let k = od; k <= doK; k = posunDen(k, 1)) {
+      for (const x of stav.plan[k] || []) {
+        const p = rozvinPolozkuPlanu(stav, x);
+        if (!p) continue;
+        for (const s of p.suroviny) {
+          if (!s.f || !(s.g > 0)) continue;
+          const kl = s.f.id || s.f.nazev;
+          const y = m.get(kl) || { f: s.f, g: 0, pouzito: 0 };
+          y.g += s.g; y.pouzito++;
+          m.set(kl, y);
+        }
+      }
+    }
+    const poradi = Object.keys(SKUPINY);
+    return [...m.values()].map(y => {
+      const kus = (y.f.porce || []).find(p => /^(střední kus|kus)\b/.test(p.n) && p.g >= 20);
+      return { ...y, g: zaokrouhli(y.g, 0), kusu: kus ? Math.ceil(y.g / kus.g - 0.15) : null, skupina: y.f.skupina || 'ostatni' };
+    }).sort((a, b) => (poradi.indexOf(a.skupina) - poradi.indexOf(b.skupina)) || a.f.nazev.localeCompare(b.f.nazev, 'cs'));
   }
   // standardní nápoj = 10 g čistého alkoholu (malé pivo, deci vína, panák destilátu)
   function standardniNapoje(gAlk) { return (gAlk || 0) / 10; }
@@ -1174,6 +1525,78 @@
     if (f.ean && !eanKontrola(f.ean)) chyby.push('EAN nemá platnou kontrolní číslici');
     return chyby;
   }
+  /* ---------- doplňky správce (společná databáze data/doplnky.json) ---------- */
+  // Správce vytvoří potravinu jako vlastní, vyexportuje ji a skript ji sloučí do doplnky.json.
+  // Doplněk má id 'd' + EAN (nebo otisk názvu a značky), takže se nemíchá s vlastními 'm…' uživatelů.
+  const FORMAT_DOPLNKY = 'denik-doplnky';
+  function idDoplnku(f) {
+    const ean = String(f.ean || '').replace(/\D/g, '');
+    const n = s => norm(s || '').replace(/\s+/g, ' ').trim();
+    return 'd' + (ean || hash(n(f.nazev) + '|' + n(f.znacka)));
+  }
+  function doplnekZVlastni(f) {
+    const x = { id: idDoplnku(f), nazev: String(f.nazev || '').trim().slice(0, 120), znacka: String(f.znacka || '').trim().slice(0, 40), n: {} };
+    if (f.ean) x.ean = String(f.ean).replace(/\D/g, '');
+    for (const k in (f.n || {})) if (ZIV[k] && Number.isFinite(f.n[k])) x.n[k] = f.n[k];
+    if (f.ml) x.ml = true;
+    if (f.ml && f.druh && DRUHY_NAPOJU[f.druh]) x.druh = f.druh;
+    if (f.skupina && f.skupina !== 'vlastni' && SKUPINY[f.skupina]) x.skupina = f.skupina;
+    const porce = (f.porce || []).filter(p => p && p.n && cislo(p.g) > 0).map(p => ({ n: String(p.n).slice(0, 40), g: cislo(p.g) }));
+    if (porce.length) x.porce = porce;
+    x.zmeneno = datumKlic(new Date());
+    return x;
+  }
+  // kontrola položky doplňků; vrací seznam chyb (prázdný = v pořádku)
+  function overDoplnek(x) {
+    if (!x || typeof x !== 'object') return ['Položka není objekt'];
+    const chyby = overPotravinu(x);
+    if (typeof x.id !== 'string' || !/^d[0-9a-z]{1,24}$/.test(x.id)) chyby.push('Neplatné id (čekám d + EAN nebo otisk)');
+    if (x.ean && !/^\d{8}$|^\d{12,14}$/.test(x.ean)) chyby.push('EAN musí mít 8 nebo 12–14 číslic');
+    if (x.n && typeof x.n === 'object') for (const k in x.n) if (!ZIV[k]) chyby.push('Neznámá živina „' + k + '“');
+    if (x.porce !== undefined && (!Array.isArray(x.porce) || x.porce.some(p => !p || typeof p.n !== 'string' || !(cislo(p.g) > 0)))) chyby.push('Neplatné porce');
+    if (x.druh !== undefined && !DRUHY_NAPOJU[x.druh]) chyby.push('Neznámý druh nápoje');
+    if (x.skupina !== undefined && !SKUPINY[x.skupina]) chyby.push('Neznámá skupina');
+    if (Number.isFinite(x.n && x.n.kcal) && energieSedi(x.n) === false) chyby.push('Energie nesedí s makroživinami (zkontroluj opis)');
+    return chyby;
+  }
+  // potravina pro aplikaci z položky doplňků (typ 'd')
+  function doplnekZDat(x) {
+    const f = {
+      id: x.id, typ: 'd', nazev: x.nazev, znacka: x.znacka || '', n: { ...x.n }, porce: (x.porce || []).map(p => ({ n: p.n, g: cislo(p.g) })),
+      ml: !!x.ml, skupina: x.skupina || 'ostatni', priznaky: (x.ml ? 4 : 0) | (x.druh ? 256 : 0), skeny: 0, zdroj: 'správce', zmeneno: x.zmeneno || '',
+    };
+    if (x.ean) f.ean = x.ean;
+    if (x.druh) f.druh = x.druh;
+    return doplnNapoj(f);
+  }
+  function exportDoplnku(seznam) {
+    return JSON.stringify({ format: FORMAT_DOPLNKY, verze: 1, vytvoreno: new Date().toISOString(), polozky: seznam.map(doplnekZVlastni) }, null, 1);
+  }
+  // celý nový soubor doplňků: ponechané zveřejněné položky + vlastní potraviny ke sdílení (ty mají přednost)
+  function sestavDoplnky(ponechat, sdilet) {
+    return slucDoplnky({ polozky: ponechat || [] }, { polozky: (sdilet || []).map(doplnekZVlastni) });
+  }
+  // sloučení exportu do stávajících doplňků: stejné id nebo EAN = aktualizace (id zůstane původní)
+  function slucDoplnky(stare, nove) {
+    const polozky = (stare && Array.isArray(stare.polozky) ? stare.polozky : []).map(x => ({ ...x }));
+    const vys = { pridano: [], zmeneno: [], chyby: [] };
+    for (const x of (nove && Array.isArray(nove.polozky) ? nove.polozky : [])) {
+      const ch = overDoplnek(x);
+      if (ch.length) { vys.chyby.push((x && x.nazev ? x.nazev : '?') + ': ' + ch.join('; ')); continue; }
+      const i = polozky.findIndex(p => p.id === x.id || (x.ean && p.ean === x.ean));
+      if (i >= 0) {
+        // beze změny obsahu → ponechat původní datum (a nehlásit jako změnu)
+        const stabil = o => Array.isArray(o) ? '[' + o.map(stabil).join(',') + ']'
+          : o && typeof o === 'object' ? '{' + Object.keys(o).sort().map(k => JSON.stringify(k) + ':' + stabil(o[k])).join(',') + '}' : JSON.stringify(o);
+        const bez = o => stabil({ ...o, id: '', zmeneno: '' });
+        if (bez(polozky[i]) === bez(x)) continue;
+        polozky[i] = { ...x, id: polozky[i].id }; vys.zmeneno.push(x.nazev);
+      }
+      else { polozky.push({ ...x }); vys.pridano.push(x.nazev); }
+    }
+    polozky.sort((a, b) => a.nazev.localeCompare(b.nazev, 'cs'));
+    return { data: { format: FORMAT_DOPLNKY, verze: 1, zmeneno: datumKlic(new Date()), polozky }, ...vys };
+  }
   function ulozVlastni(stav, f) {
     const chyby = overPotravinu(f);
     if (chyby.length) throw new Error(chyby.join('\n'));
@@ -1187,6 +1610,7 @@
     for (const k in f.n) if (ZIV[k] && Number.isFinite(f.n[k])) x.n[k] = f.n[k];
     if (f.puvod) x.puvod = f.puvod;
     if (x.ml && f.druh && DRUHY_NAPOJU[f.druh]) x.druh = f.druh;
+    if (f.sdilet) x.sdilet = true;   // správce: sdílet ve společné databázi
     stav.vlastni[id] = x;
     return x;
   }
@@ -1297,6 +1721,8 @@
       s.nastaveni.jidla = jj.length ? jj : JIDLA_VYCHOZI.map(j => ({ ...j }));
       if (!['bezny', 'prisny', 'vse'].includes(s.nastaveni.pitnyRezim)) delete s.nastaveni.pitnyRezim;
       if (!['100', '112', '125', '140'].includes(s.nastaveni.pismo)) delete s.nastaveni.pismo;
+      if (s.nastaveni.energie !== 'kj') delete s.nastaveni.energie;
+      if (s.nastaveni.spravce !== true) delete s.nastaveni.spravce;
       s.nastaveni.pitnyVyjimky = mapa(s.nastaveni.pitnyVyjimky, v => typeof v === 'boolean' ? v : null);
     }
     s.potraviny = mapa(x.potraviny, overSnimek);
@@ -1310,7 +1736,17 @@
         : null).filter(Boolean);
       return polozky.length ? { ...sb, nazev: sb.nazev.slice(0, 80), polozky } : null;
     });
-    for (const k of Object.keys(s.sablony)) s.sablony[k].id = k;   // id vždy podle klíče (ručně upravené zálohy)
+    for (const k of Object.keys(s.sablony)) s.sablony[k].id = k;
+    s.planNakup = mapa(x.planNakup, (v, k) => zKlice(k) && Array.isArray(v) ? v.filter(z => typeof z === 'string').slice(0, 500) : null);
+    s.plan = mapa(x.plan, (seznam, k) => {
+      if (!zKlice(k) || !Array.isArray(seznam)) return null;
+      const ok = seznam.filter(p => p && typeof p.j === 'string' && (
+        ((p.druh === 'r' || p.druh === 's') && typeof p.ref === 'string' && cislo(p.porci) > 0) ||
+        (p.druh === 'f' && overSnimek(p.f) && cislo(p.g) > 0)))
+        .map(p => p.druh === 'f' ? { id: typeof p.id === 'string' ? p.id : noveId('n'), j: p.j, druh: 'f', f: overSnimek(p.f), g: cislo(p.g) }
+          : { id: typeof p.id === 'string' ? p.id : noveId('n'), j: p.j, druh: p.druh, ref: p.ref, porci: cislo(p.porci) });
+      return ok.length ? ok : null;
+    });   // id vždy podle klíče (ručně upravené zálohy)
     s.vahy = mapa(x.vahy, (v, k) => zKlice(k) && cislo(v) > 0 && cislo(v) < 400 ? cislo(v) : null);
     if (Array.isArray(x.oblibene)) s.oblibene = x.oblibene.filter(v => typeof v === 'string');
     if (x.dny && typeof x.dny === 'object') {
@@ -1344,6 +1780,10 @@
     for (const k in zdroj.recepty) if (!cil.recepty[k]) cil.recepty[k] = zdroj.recepty[k];
     for (const k in zdroj.cache) if (!cil.cache[k]) cil.cache[k] = zdroj.cache[k];
     for (const k in zdroj.sablony) if (!cil.sablony[k]) cil.sablony[k] = zdroj.sablony[k];
+    for (const k in zdroj.plan || {}) {
+      const c = (cil.plan[k] = cil.plan[k] || []);
+      for (const p of zdroj.plan[k]) if (!c.some(x => x.id === p.id)) c.push(p);
+    }
     for (const k in zdroj.vahy) if (cil.vahy[k] === undefined) cil.vahy[k] = zdroj.vahy[k];
     for (const id of zdroj.oblibene) if (!cil.oblibene.includes(id)) cil.oblibene.push(id);
     // jídla, která cíl nezná (vlastní jídla z jiného zařízení), se doplní
@@ -1380,7 +1820,8 @@
   }
 
   const API = {
-    VERZE_KODU: '2026-10-16d', FORMAT, VERZE_FORMATU, ZIVINY, ZIV, ZAKLAD, MIKRO, SKUPINY, JIDLA_VYCHOZI, AKTIVITA, EFSA_DOSPELI,
+    FORMAT_DOPLNKY, sestavDoplnky, idDoplnku, doplnekZVlastni, overDoplnek, doplnekZDat, exportDoplnku, slucDoplnky,
+    VERZE_KODU: '2026-10-16i', FORMAT, VERZE_FORMATU, ZIVINY, ZIV, ZAKLAD, MIKRO, SKUPINY, JIDLA_VYCHOZI, AKTIVITA, EFSA_DOSPELI,
     norm, cislo, zaokrouhli, formatCislo, noveId, hash, tvar, pocet,
     datumKlic, zKlice, posunDen, rozdilDni, popisDne,
     eanKontrola, eanVarianty, eanZeme,
@@ -1389,7 +1830,8 @@
     vytvorIndex, hledej,
     vek, bmr, bmi, bmiPopis, cile,
     novyStav, klicSnimku, snimek, den, pridejZaznam, rychlyZaznam, najdiZaznam, smazZaznam, presunZaznam,
-    kopirujJidlo, kopirujDen, castePrJidlo, casteNapoje, DRUHY_NAPOJU, druhNapoje, doplnNapoj, vychoziPorceNapoje, doPitnehoRezimu, standardniNapoje, zivinyZaznamu, souhrnDne, statistika, odhadVydeje, serie, nedavne, caste, uklid,
+    kopirujJidlo, kopirujDen, castePrJidlo, casteNapoje, tipyNaZiviny, rozeberSuroviny, gramySuroviny, tvaryNazvu, najdiSurovinu,
+    rozeberEtiketu, pridejDoPlanu, smazZPlanu, rozvinPolozkuPlanu, souhrnPlanuDne, zapisPlanDoDeniku, nakupniSeznam, DRUHY_NAPOJU, druhNapoje, doplnNapoj, vychoziPorceNapoje, doPitnehoRezimu, standardniNapoje, zivinyZaznamu, souhrnDne, statistika, odhadVydeje, serie, nedavne, caste, uklid,
     overPotravinu, ulozVlastni, spocitejRecept, ulozRecept, receptJakoPotravina,
     exportJson, importJson, normalizujStav, slucStav, exportCsv, exportSouhrnyCsv, zdrojeZiviny,
     ulozSablonu, pouzijSablonu, souhrnSablony, vzdalenost, kontrolaAlergenu, slucAlergeny, ALERGENY, porovnej,

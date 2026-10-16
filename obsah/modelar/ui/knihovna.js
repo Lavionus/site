@@ -44,7 +44,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     return ikony;
   }
 
-  M.vytvorKnihovnu = function (S, T, mriz, mrizDily, mrizRozsirene) {
+  M.vytvorKnihovnu = function (S, T, mriz, mrizDily, mrizRozsirene, mrizDalsi) {
     // výchozí uzel druhu (rozměry dílů plynou z norem, ne z katalogu tvarů)
     const vychozi = new Map();
     const vzor = druh => { if (!vychozi.has(druh)) vychozi.set(druh, M.novyUzel(druh)); return vychozi.get(druh); };
@@ -53,6 +53,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     const platno = S.renderer.domElement;
     mriz.innerHTML = '';
     if (mrizRozsirene) mrizRozsirene.innerHTML = '';
+    if (mrizDalsi) mrizDalsi.innerHTML = '';
     for (const [druh, t] of Object.entries(M.TVARY)) {
       const b = document.createElement('button');
       b.className = 'dlazdice';
@@ -61,7 +62,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       b.title = `${t.nazev}: přetáhni na desku nebo klikni`;
       b.innerHTML = (ikony[druh] ? `<img src="${ikony[druh]}" alt="" draggable="false">` : `<span class="ik">${t.ikona}</span>`)
         + `<span>${t.nazev}</span>`;
-      (t.sada === 'rozsirene' && mrizRozsirene ? mrizRozsirene : mriz).appendChild(b);
+      (t.sada === 'rozsirene' && mrizRozsirene ? mrizRozsirene : t.sada === 'dalsi' && mrizDalsi ? mrizDalsi : mriz).appendChild(b);
     }
 
     // zvláštní dlaždice: skica (otevře editor) a import SVG
@@ -77,6 +78,18 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       mriz.appendChild(b);
     }
 
+    // další tvary: skládačka z dílků puzzle (okno s počtem a velikostí)
+    if (mrizDalsi) {
+      const b = document.createElement('button');
+      b.className = 'dlazdice zvlastni';
+      b.type = 'button';
+      b.dataset.akce = 'skladacka';
+      b.title = 'Celá skládačka z dílků puzzle – sousední dílky do sebe zapadají';
+      b.innerHTML = `<span class="ik">🧩</span><span>Skládačka…</span>`;
+      b.onclick = () => M.otevriSkladacku();
+      mrizDalsi.appendChild(b);
+    }
+
     // díly: dlaždice s ikonou (geometrie dílu se počítá ve workeru, ikona je znak)
     if (mrizDily) {
       mrizDily.innerHTML = '';
@@ -88,7 +101,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
         b.dataset.druh = druh;
         b.title = `${d.nazev}: přetáhni na desku nebo klikni`;
         b.innerHTML = `<span class="ik">${d.ikona}</span><span>${d.nazev}</span>`;
-        mrizDily.appendChild(b);
+        (d.sada === 'dalsi' && mrizDalsi ? mrizDalsi : mrizDily).appendChild(b);
       }
     }
 
@@ -208,7 +221,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     }
 
     // stejná obsluha pro mřížku tvarů i dílů (arguments: vnitřní proměnná se jmenuje stejně jako parametr)
-    for (const mriz of [arguments[2], arguments[3], arguments[4]].filter(Boolean)) {
+    for (const mriz of [arguments[2], arguments[3], arguments[4], arguments[5]].filter(Boolean)) {
       mriz.addEventListener('pointerdown', e => {
         const b = e.target.closest('.dlazdice:not(.zvlastni)');
         if (!b || e.button !== 0) return;
@@ -279,7 +292,15 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     }
     document.addEventListener('keydown', e => { if (e.key === 'Escape') zrus(); });
 
-    M.mistoProTvar = mistoUprostred;               // i pro paletu příkazů
+    M.mistoProTvar = mistoUprostred;
+
+    // kvalita oblých ploch pro nově vkládaná tělesa (předvolba prohlížeče)
+    const selKv = document.getElementById('kvalitaNovych');
+    if (selKv && M.KVALITY) {
+      selKv.innerHTML = M.KVALITY.map(k => `<option value="${k.id}">${k.nazev}${k.id === 'stredni' ? ' (výchozí)' : ''}</option>`).join('');
+      selKv.value = M.kvalitaNovych();
+      selKv.addEventListener('change', () => { M.kvalitaNovych(selKv.value); });
+    }               // i pro paletu příkazů
 
     // ------------------------------------------------------------ nabídka Tvary v liště
     const nabidka = document.getElementById('nabTvary') || document.createElement('div');

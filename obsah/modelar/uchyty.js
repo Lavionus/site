@@ -304,6 +304,18 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
         Object.assign(tah, { osa: h.osa, b1: h.b1, b2: h.b2, stred: h.stred, kresba: h.kresba, R: h.R, index: h.index, px0: px, py0: py, pohnuto: false });
         tah.a0 = uhelKurzoru(px, py);
         tah.posledni = 0; tah.otoceni = 0;
+        // jedno těleso otáčené kolem osy, kterou má ve svém natočení samostatně (ostatní složky se
+        // nemění): úhel se ukazuje i přichytává absolutně – navazuje na předchozí otočení, ne od nuly
+        tah.zakladUhel = null;
+        if (ids.length === 1) {
+          const u = M.najdiUzel(tah.zaklad, ids[0]);
+          const zk = M.otocUzly(tah.zaklad, ids, h.osa.toArray(), 10, h.stred.toArray());
+          const v = M.najdiUzel(zk, ids[0]);
+          const rozd = (a, b) => ((a - b) % 360 + 540) % 360 - 180;
+          const d = rozd(v.rotace[h.index], u.rotace[h.index]);
+          const jine = [0, 1, 2].every(k => k === h.index || Math.abs(rozd(v.rotace[k], u.rotace[k])) < 1e-6);
+          if (jine && Math.abs(Math.abs(d) - 10) < 1e-6) { tah.zakladUhel = u.rotace[h.index]; tah.znUhlu = Math.sign(d); }
+        }
       }
       // úchyty se každý snímek kreslí znovu (prvek zmizí z DOM), proto se tažení
       // nesleduje zachycením na prvku, ale posluchači na dokumentu
@@ -363,9 +375,18 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
         tah.vne = vneUhlomeru(px, py);
         const kr = e.shiftKey || tah.vne ? 1 : (e.ctrlKey ? 0 : 15);
         let st = tah.otoceni / M.st;
-        if (kr) st = Math.round(st / kr) * kr;
+        if (tah.zakladUhel != null) {
+          // přichytit výsledné natočení (ne přírůstek): 7° + tah → 15°, 30°, …
+          let abs = tah.zakladUhel + tah.znUhlu * st;
+          if (kr) abs = Math.round(abs / kr) * kr;
+          st = (abs - tah.zakladUhel) * tah.znUhlu;
+          const norm = ((abs % 360) + 540) % 360 - 180;
+          text = `${'XYZ'[tah.index]} ${M.mm(norm === -180 ? 180 : norm, 1)}° (${st >= 0 ? '+' : ''}${M.mm(st, 1)}°)`;
+        } else {
+          if (kr) st = Math.round(st / kr) * kr;
+          text = `${'XYZ'[tah.index]} ${st >= 0 ? '+' : ''}${M.mm(st, 1)}°`;
+        }
         dok = M.otocUzly(tah.zaklad, tah.ids, tah.osa.toArray(), st, tah.stred.toArray());
-        text = `${'XYZ'[tah.index]} ${M.mm(st, 1)}°`;
         kresliUhlomer(st);
       }
       M.zmenDokument(dok, '', { docasne: true });
@@ -396,9 +417,11 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       };
       kruh(tah.R, 'uhlomer');
       kruh(tah.R * 1.08, 'uhlomer vnejsi' + (tah.vne ? ' aktivni' : ''));
-      // rysky po 5°, delší po 15°, nejdelší s popisem po 45° (od výchozího úhlu)
+      // rysky po 5°, delší po 15°, nejdelší s popisem po 45°; 0° leží na ose (otáčení kolem Z: směr X,
+      // kolem X: směr Y, kolem Y: směr Z), popisky = natočení měřené od ní
+      const zn = tah.zakladUhel != null ? tah.znUhlu : 1;
       for (let k = 0; k < 72; k++) {
-        const t = tah.a0 + k * 5 * M.st, dlouha = k % 9 === 0, stredni = k % 3 === 0;
+        const t = k * 5 * M.st, dlouha = k % 9 === 0, stredni = k % 3 === 0;
         const smer = tah.b1.clone().multiplyScalar(Math.cos(t)).addScaledVector(tah.b2, Math.sin(t));
         const a = S.naObrazovku(tah.kresba.clone().addScaledVector(smer, tah.R * (dlouha ? 0.84 : stredni ? 0.91 : 0.955)));
         const b = S.naObrazovku(tah.kresba.clone().addScaledVector(smer, tah.R));
@@ -406,20 +429,34 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
         if (dlouha) {
           // popisy vně úhloměru (uvnitř by ležely přes těleso)
           const q = S.naObrazovku(tah.kresba.clone().addScaledVector(smer, tah.R * 1.2));
-          const st = k * 5 > 180 ? k * 5 - 360 : k * 5;
-          if (q) el('text', { x: q[0], y: q[1] + 4, class: 'stupne' }, vrstvaKresby).textContent = st + '°';
+          let st = zn * k * 5;
+          st = ((st % 360) + 540) % 360 - 180;
+          if (st === -180) st = 180;
+          if (q) el('text', { x: q[0], y: q[1] + 4, class: 'stupne' + (k === 0 ? ' nula' : '') }, vrstvaKresby).textContent = k === 0 ? `0° ${'YZX'[tah.index]}` : st + '°';
         }
+      }
+      // osa nuly: čárkovaně od středu za okraj úhloměru
+      {
+        const a = S.naObrazovku(tah.kresba), b = S.naObrazovku(tah.kresba.clone().addScaledVector(tah.b1, tah.R * 1.12));
+        if (a && b) el('line', { x1: a[0], y1: a[1], x2: b[0], y2: b[1], class: 'osa-nuly', stroke: BARVY_OS[tah.index] }, vrstvaKresby);
       }
       const cs = S.naObrazovku(tah.kresba);
       if (cs) el('circle', { cx: cs[0], cy: cs[1], r: 3.5, class: 'stred-uhlomeru', fill: BARVY_OS[tah.index] }, vrstvaKresby);
-      // výseč otočení od počátečního úhlu
-      const pts = [S.naObrazovku(tah.kresba)];
-      const a0 = tah.a0, n = Math.max(2, Math.ceil(Math.abs(stupne) / 5));
+      // výseč: s celkovým natočením od osy nuly k tělesu (čte se na rysce stejně jako popisek),
+      // jinak od místa, kde tah začal, o přírůstek
+      let t0 = tah.a0, dt = stupne * M.st;
+      if (tah.zakladUhel != null) { t0 = 0; dt = (tah.znUhlu * tah.zakladUhel + stupne) * M.st; dt = Math.atan2(Math.sin(dt), Math.cos(dt)); }
+      const pts = [S.naObrazovku(tah.kresba)], n = Math.max(2, Math.ceil(Math.abs(dt / M.st) / 5));
       for (let k = 0; k <= n; k++) {
-        const t = a0 + (stupne * M.st) * k / n;
+        const t = t0 + dt * k / n;
         pts.push(S.naObrazovku(tah.kresba.clone().addScaledVector(tah.b1, tah.R * Math.cos(t)).addScaledVector(tah.b2, tah.R * Math.sin(t))));
       }
       if (pts.every(Boolean)) el('polygon', { points: pts.map(p => p.join(',')).join(' '), class: 'vysec', fill: BARVY_OS[tah.index] }, vrstvaKresby);
+      if (tah.zakladUhel != null) {
+        // ručička: kam teď míří těleso (jeho osa, která byla v nule)
+        const t = t0 + dt, a = S.naObrazovku(tah.kresba), b = S.naObrazovku(tah.kresba.clone().addScaledVector(tah.b1, tah.R * Math.cos(t)).addScaledVector(tah.b2, tah.R * Math.sin(t)));
+        if (a && b) el('line', { x1: a[0], y1: a[1], x2: b[0], y2: b[1], class: 'rucicka', stroke: BARVY_OS[tah.index] }, vrstvaKresby);
+      }
     }
 
     function konec(e, zrusit = false) {

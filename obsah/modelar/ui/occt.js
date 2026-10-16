@@ -525,9 +525,30 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       kresli(); aplikuj(() => { ed.vybraneH = pred; });
     };
     $('occtNic').onclick = () => { if (ed) { ed.vybraneH.clear(); kresli(); aplikuj(); } };
+    /** Vnitřní (vyduté) hrany: kolem středu hrany je materiálu víc než polovina (body na malé kouli kolem
+        středu leží většinou uvnitř tělesa). Typicky spoje sloučených těles – zaoblení je zpevní. */
+    function vnitrniHrany(A) {
+      const sit = S.telesa.svetovaSit(ed.id);
+      if (!sit || ed.hrany.length > 600) return [];
+      const ob = M.obalkaSite(sit), diag = Math.hypot(ob.max[0] - ob.min[0], ob.max[1] - ob.min[1], ob.max[2] - ob.min[2]);
+      const eps = Math.min(0.3, diag * 0.008), smery = [];
+      for (const x of [-1, 0, 1]) for (const y of [-1, 0, 1]) for (const z of [-1, 0, 1]) if (x || y || z) { const l = Math.hypot(x, y, z); smery.push([x / l, y / l, z / l]); }
+      const v = new THREE.Vector3();
+      return ed.hrany.map((h, i) => {
+        // střed hrany: prostřední vzorek (u rovné hrany se dvěma body jejich průměr)
+        const n = h.body.length / 3, a = Math.floor((n - 1) / 2) * 3, b = Math.ceil((n - 1) / 2) * 3;
+        v.set((h.body[a] + h.body[b]) / 2, (h.body[a + 1] + h.body[b + 1]) / 2, (h.body[a + 2] + h.body[b + 2]) / 2).applyMatrix4(A);
+        let uvnitr = 0;
+        for (const d of smery) if (M.bodVSiti(sit, [v.x + d[0] * eps, v.y + d[1] * eps, v.z + d[2] * eps])) uvnitr++;
+        return uvnitr / smery.length > 0.58 ? i : -1;
+      }).filter(i => i >= 0);
+    }
+    M.occtVnitrniHrany = () => ed && ed.hrany ? vnitrniHrany(matice()) : [];
+
     /** Indexy hran skupiny ve světě: svislé (rovné ve směru Z), horní / dolní (celé ve výšce vršku / spodku tělesa). */
     function skupinaHran(druh) {
       const A = matice(), v = new THREE.Vector3();
+      if (druh === 'vnitrni') return vnitrniHrany(A);
       const zz = ed.hrany.map(h => {
         const z = [];
         for (let j = 0; j < h.body.length; j += 3) z.push(v.set(h.body[j], h.body[j + 1], h.body[j + 2]).applyMatrix4(A).z);

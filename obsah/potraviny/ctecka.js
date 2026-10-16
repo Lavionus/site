@@ -60,6 +60,23 @@
         .filter(r => r.isValid !== false).map(r => ({ text: r.text })),
     };
   }
+  // detektor QR kódů (přenos dat mezi zařízeními): nativní, jinak zxing
+  async function qrDetektor() {
+    if ('BarcodeDetector' in window) {
+      try {
+        if ((await window.BarcodeDetector.getSupportedFormats()).includes('qr_code')) {
+          const d = new window.BarcodeDetector({ formats: ['qr_code'] });
+          return { druh: 'nativní', cti: async zdroj => (await d.detect(zdroj)).map(r => ({ text: r.rawValue })) };
+        }
+      } catch (_) { /* zxing */ }
+    }
+    const Z = await nactiZxing();
+    return {
+      druh: 'zxing',
+      cti: async obr => (await Z.readBarcodes(obr, { formats: ['QRCode'], tryHarder: false, maxNumberOfSymbols: 1 }))
+        .filter(r => r.isValid !== false).map(r => ({ text: r.text })),
+    };
+  }
   function pripravDetektor() {
     if (detektor) return Promise.resolve(detektor);
     if (!detektorSlib) {
@@ -382,5 +399,5 @@
   }
   function jeOtevrena() { return !!(okno && !okno.hidden); }
 
-  window.DENIK_CTECKA = { otevri, zavri, zFotky, jeOtevrena, pripravDetektor, sezeni: () => seance };
+  window.DENIK_CTECKA = { otevri, zavri, zFotky, jeOtevrena, pripravDetektor, qrDetektor, sezeni: () => seance };
 })();

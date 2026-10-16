@@ -98,10 +98,21 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     });
   };
 
+  /* Vrcholy spočítaných skupin (klíč geometrie → pozice v souřadnicích skupiny). Spodek skupiny
+     se pak bere ze skutečného výsledku: díra nebo průnik může spodní část odříznout a obálka plných
+     částí by ležela níž než výsledek (položení na desku by nedosedlo). */
+  const vysledkySkupin = new Map();
+  M.zapisVysledekSkupiny = function (klic, pozice) {
+    vysledkySkupin.delete(klic);
+    vysledkySkupin.set(klic, pozice);
+    while (vysledkySkupin.size > 40) vysledkySkupin.delete(vysledkySkupin.keys().next().value);
+  };
+  const vysledekSkupiny = u => u.druh === 'skupina' ? vysledkySkupin.get(M.klicGeometrie(u)) || null : null;
+
   /** Nejmenší vzdálenost geometrie uzlu od roviny (podél normály). */
   const minCache = new WeakMap();           // uzel → Map(rovina → hodnota); uzly jsou neměnné
   function minNadRovinou(u, r) {
-    const klic = r.osy[2].join(',') + '|' + r.puvod.join(',');
+    const klic = r.osy[2].join(',') + '|' + r.puvod.join(',') + (vysledekSkupiny(u) ? '|v' : '');
     let m = minCache.get(u);
     if (!m) { m = new Map(); minCache.set(u, m); }
     if (m.has(klic)) return m.get(klic);
@@ -111,7 +122,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     return v;
   }
   function minNadRovinouVypocet(u, r) {
-    const e = M.maticeUzlu(u).elements, p = M.vrcholyUzlu(u), n = r.osy[2], p0 = r.puvod;
+    const e = M.maticeUzlu(u).elements, p = vysledekSkupiny(u) || M.vrcholyUzlu(u), n = r.osy[2], p0 = r.puvod;
     let min = Infinity;
     for (let i = 0; i < p.length; i += 3) {
       let d = 0;

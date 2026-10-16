@@ -228,7 +228,53 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
 
   /** Rozmístí tělesa vedle sebe na desce (řady od největšího půdorysu, mezera mm), všechna položí na desku.
       Vrací {dok, vejde}: vejde = false, když se na desku nevešla (zbytek je v dalších řadách za okrajem). */
-  M.rozlozNaDesce = function (dok, ids, deska, mezera = 5) {
+  /** Skládání „skyline“: každý obdélník co nejníž a nejvíc vlevo, s otočením o 90°, když je dovolené.
+      polozky [{w, h}] → {mista: [{i, x, y, otoc}], sirka, vyska}. */
+  const PORADI = [
+    p => Math.max(p.w, p.h), p => p.w * p.h, p => p.h, p => p.w,
+  ];
+  function skyline(polozky, W, mezera, otacet, klic = PORADI[0]) {
+    const linie = [{ x: 0, y: 0, w: Infinity }], mista = [];
+    let sirka = 0, vyska = 0;
+    const poradi = polozky.map((p, i) => i).sort((a, b) => klic(polozky[b]) - klic(polozky[a]) || polozky[b].w * polozky[b].h - polozky[a].w * polozky[a].h);
+    for (const i of poradi) {
+      const p = polozky[i];
+      let nej = null;
+      for (const otoc of otacet && Math.abs(p.w - p.h) > 1e-6 ? [false, true] : [false]) {
+        const w = (otoc ? p.h : p.w) + mezera, h = (otoc ? p.w : p.h) + mezera;
+        for (let k = 0; k < linie.length; k++) {
+          const x = linie[k].x;
+          if (x + w - mezera > W + 1e-6 && x > 0) continue;
+          // výška = nejvyšší úsek pod šířkou w
+          let y = 0, sir = 0;
+          for (let j = k; j < linie.length && sir < w; j++) { y = Math.max(y, linie[j].y); sir += linie[j].w; }
+          const skore = (y + h) * 1e6 + x;
+          if (!nej || skore < nej.skore) nej = { x, y, w, h, otoc, skore };
+        }
+      }
+      mista.push({ i, x: nej.x, y: nej.y, otoc: nej.otoc });
+      sirka = Math.max(sirka, nej.x + nej.w - mezera); vyska = Math.max(vyska, nej.y + nej.h - mezera);
+      // nový úsek linie [x, x + w) ve výšce y + h
+      const nova = [], x0 = nej.x, x1 = nej.x + nej.w;
+      for (const u of linie) {
+        const a = u.x, b = u.x + u.w;
+        if (b <= x0 || a >= x1) { nova.push(u); continue; }
+        if (a < x0) nova.push({ x: a, y: u.y, w: x0 - a });
+        if (b > x1) nova.push({ x: x1, y: u.y, w: b - x1 });
+      }
+      nova.push({ x: x0, y: nej.y + nej.h, w: nej.w });
+      nova.sort((a, b) => a.x - b.x);
+      linie.length = 0; linie.push(...nova);
+    }
+    return { mista, sirka, vyska };
+  }
+  M.skladejSkyline = skyline;
+
+  /** Cena materiálu (Kč) z hmotnosti (g) a ceny cívky (Kč/kg). */
+  M.cenaTisku = (g, kcKg) => Math.max(0, g) / 1000 * Math.max(0, kcKg || 0);
+
+  M.rozlozNaDesce = function (dok, ids, deska, mezera = 5, volby = {}) {
+    if (volby.otacet) return rozlozChytre(dok, ids, deska, mezera);
     // jen viditelná a nezamčená (skryté by se jinak položily, zamčené zůstanou, kde jsou)
     const hybaji = ids.filter(id => { const u = M.najdiUzel(dok, id); return u && !u.zamceno && !u.skryto; });
     let d = M.polozNaRovinu(dok, hybaji);
@@ -260,6 +306,45 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     }).map(u => u.id);
     return { dok: d, vejde, prekazi };
   };
+
+  /** Rozložení s otáčením o 90° (skyline): zkusí bez otáčení i s ním, a také řady (původní způsob);
+      vybere variantu, která se vejde, s nejmenší zabranou plochou. */
+  function rozlozChytre(dok, ids, deska, mezera) {
+    const hybaji = ids.filter(id => { const u = M.najdiUzel(dok, id); return u && !u.zamceno && !u.skryto; });
+    const d0 = M.polozNaRovinu(dok, hybaji);
+    const pol = hybaji.map(id => { const u = M.najdiUzel(d0, id), o = M.obalkaUzlu(u); return { u, o, w: o.max[0] - o.min[0], h: o.max[1] - o.min[1] }; });
+    const W = deska.sirka, H = deska.hloubka;
+    const varianty = [];
+    for (const ot of [false, true]) for (const k of PORADI) varianty.push(Object.assign(skyline(pol, W, mezera, ot, k), { ot }));
+    const vejde = v => v.sirka <= W + 1e-6 && v.vyska <= H + 1e-6;
+    varianty.sort((a, b) => (vejde(b) - vejde(a)) || (a.sirka * a.vyska - b.sirka * b.vyska) || (a.ot - b.ot));
+    const radky = M.rozlozNaDesce(dok, ids, deska, mezera);
+    const v = varianty[0];
+    // řady (původní) vyhrají, když se vejdou a zaberou míň
+    if (radky.vejde && (!vejde(v) || plochaRozlozeni(radky.dok, hybaji) <= v.sirka * v.vyska * 1.0001)) return radky;
+    let d = d0;
+    const ox = -Math.min(v.sirka, W) / 2, oy = -Math.min(v.vyska, H) / 2;
+    for (const m of v.mista) {
+      const p = pol[m.i];
+      if (m.otoc) {
+        const c = [(p.o.min[0] + p.o.max[0]) / 2, (p.o.min[1] + p.o.max[1]) / 2, 0];
+        d = M.otocUzly(d, [p.u.id], [0, 0, 1], 90, c);
+      }
+      const o = M.obalkaUzlu(M.najdiUzel(d, p.u.id));
+      const cil = [ox + m.x - o.min[0], oy + m.y - o.min[1], 0];
+      if (Math.abs(cil[0]) > 1e-9 || Math.abs(cil[1]) > 1e-9) d = M.posunUzly(d, [p.u.id], cil);
+    }
+    const ob = pol.map(p0 => M.obalkaUzlu(M.najdiUzel(d, p0.u.id)));
+    const prekazi = dok.uzly.filter(u => u.zamceno && !u.skryto && !hybaji.includes(u.id)).filter(u => {
+      const o = M.obalkaUzlu(u);
+      return ob.some(q => q.min[0] < o.max[0] && q.max[0] > o.min[0] && q.min[1] < o.max[1] && q.max[1] > o.min[1]);
+    }).map(u => u.id);
+    return { dok: d, vejde: vejde(v), prekazi, otoceno: v.mista.filter(m => m.otoc).length };
+  }
+  function plochaRozlozeni(dok, ids) {
+    const o = M.obalkaVice(ids.map(id => M.najdiUzel(dok, id)));
+    return (o.max[0] - o.min[0]) * (o.max[1] - o.min[1]);
+  }
 
   /** Nejlepší orientace pro tisk ze sítě ve světě: kandidáti = směry dolů podle velkých rovných ploch
       (normály shluků trojúhelníků) a šesti os. Pro každý: převisy (plocha nad úhlem, kromě dna), plocha

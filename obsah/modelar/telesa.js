@@ -40,6 +40,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
         gg.geom.computeBoundingBox(); gg.geom.computeBoundingSphere();
         naplnHrany(gg.hrany, gg.geom);
         Object.assign(gg, { trojuhelniku: d.trojuhelniku, objem: d.objem, ceka: false });
+        if (uzel.druh === 'skupina') M.zapisVysledekSkupiny(klic, d.pozice);
         T.hotovaGeometrie(klic);
       }, err => {
         // zůstane náhled z plných dílů a stavový řádek ukáže chybu
