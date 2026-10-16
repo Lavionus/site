@@ -133,11 +133,10 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       }
       return out;
     };
-    // strop práce (body × trojúhelníky druhé sítě) – u obřích sítí vzorkovat řidčeji
+    // test bodů proti druhé síti přes mřížkový index (stovky tisíc bodů za zlomek sekundy); u obřích sítí strop
     const zkus = (s, druha) => {
-      const vse = body(s), nejvic = Math.max(16, Math.floor(3e7 / Math.max(1, druha.idx.length / 3)));
-      const krok = Math.max(1, Math.ceil(vse.length / nejvic));
-      for (let i = 0; i < vse.length; i += krok) if (M.bodVSiti(druha, vse[i])) return true;
+      const vse = body(s), krok = Math.max(1, Math.ceil(vse.length / 300000)), uvnitr = M.indexBodVSiti(druha);
+      for (let i = 0; i < vse.length; i += krok) if (uvnitr(vse[i])) return true;
       return false;
     };
     // střed průniku obálek (souosá tělesa – válec ve válci – nemají vrchol uvnitř druhého)

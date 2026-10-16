@@ -20,8 +20,15 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       Vrací {dok, kopie}. */
   M.poleUzlu = function (dok, ids, v) {
     const set = new Set(ids);
-    const zdroje = dok.uzly.filter(u => set.has(u.id) && !u.zamceno);
+    let zdroje = dok.uzly.filter(u => set.has(u.id) && !u.zamceno);
     if (!zdroje.length) return { dok, kopie: [] };
+    // podél křivky: originál (střed obálky výběru) na začátek křivky – kopie se pak skládají od něj
+    if (v.typ === 'krivka' && v.naZacatek && (v.cesta || []).length >= 2) {
+      const ob = M.obalkaVice(zdroje), dx = v.cesta[0][0] - (ob.min[0] + ob.max[0]) / 2, dy = v.cesta[0][1] - (ob.min[1] + ob.max[1]) / 2;
+      const posunute = new Map(zdroje.map(u => [u.id, M.normalizujUzel(Object.assign({}, u, { poloha: [zaokr(u.poloha[0] + dx), zaokr(u.poloha[1] + dy), u.poloha[2]] }))]));
+      dok = Object.assign({}, dok, { uzly: dok.uzly.map(u => posunute.get(u.id) || u) });
+      zdroje = zdroje.map(u => posunute.get(u.id));
+    }
     const transformace = [];                             // pro každý prvek pole: {posun, uhel (° kolem Z), stred}
     if (v.typ === 'linearni') {
       const [nx, ny, nz] = (v.pocet || [1, 1, 1]).map(n => Math.max(1, Math.round(n)));
@@ -132,21 +139,23 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     const u = M.najdiUzel(dok, id);
     if (!u || u.druh !== 'valec') throw new Error('vyber válec');
     if (Math.abs(u.rozmer[0] - u.rozmer[1]) > 1e-3 * u.rozmer[0]) throw new Error('válec musí mít kruhový průřez (stejný průměr X a Y)');
-    const D = u.rozmer[0], H = u.rozmer[2], L = M.omez(v.delka, 0.5, H);
+    if (u.role === 'dira') throw new Error('válec je díra – závit jde jen na plné těleso');
+    const D = u.rozmer[0], H = u.rozmer[2], L = M.omez(Number.isFinite(v.delka) ? v.delka : H / 2, 0.5, H);
+    const st = Number.isFinite(v.stoupani) && v.stoupani > 0 ? v.stoupani : 0;
     const q = M.quatUzlu(u), osa = h => new V(0, 0, h).applyQuaternion(q).add(new V(...u.poloha)).toArray().map(x => zaokr(x));
     // dílu (natural z 0 … délka) se poloha udává středem obálky: horní konec v rovině horní podstavy
     if (v.typ === 'vnitrni') {
-      const Dz = M.omez(v.prumer || D * 0.6, 1, D - 1);
-      const dira = M.novyUzel('zavitDira', { param: { velikost: 'vlastni', prumer: Dz, stoupani: v.stoupani || 0, delka: L, vule: v.vule == null ? 0.2 : v.vule },
+      const Dz = M.omez(Number.isFinite(v.prumer) && v.prumer > 0 ? v.prumer : D * 0.6, 1, D - 1);
+      const dira = M.novyUzel('zavitDira', { param: { velikost: 'vlastni', prumer: Dz, stoupani: st, delka: L, vule: Number.isFinite(v.vule) ? M.omez(v.vule, 0, 2) : 0.2 },
         rotace: u.rotace.slice() }, dok);
       // díra přesahuje o 0,5 mm nahoře i dole (obálka −0,5 … L + 0,5): střed obálky = horní podstava − L/2
       const d1 = M.pridejUzly(dok, [Object.assign(dira, { poloha: osa(H / 2 - L / 2) })]);
       const r = M.seskupUzly(d1, [u.id, dira.id], { nazev: u.nazev + ' se závitem' });
       return { dok: r.dok, id: r.id };
     }
-    const vule = v.vule == null ? 0.1 : v.vule;
-    const tyc = M.novyUzel('sroub', { param: { velikost: 'vlastni', prumer: D, stoupani: v.stoupani || 0, delka: L, hlava: 'zadna', vule }, rotace: u.rotace.slice() }, dok);
-    const z = M.udajeZavitu({ velikost: 'vlastni', prumer: D, stoupani: v.stoupani || 0 });
+    const vule = Number.isFinite(v.vule) ? M.omez(v.vule, 0, 2) : 0.1;
+    const tyc = M.novyUzel('sroub', { param: { velikost: 'vlastni', prumer: D, stoupani: st, delka: L, hlava: 'zadna', vule }, rotace: u.rotace.slice() }, dok);
+    const z = M.udajeZavitu({ velikost: 'vlastni', prumer: D, stoupani: st });
     const jadro = Math.max(0.2, D / 2 - vule / 2 - M.hloubkaZavitu(z) + 0.05);        // o chlup přes dno závitu (spojí se)
     // prstenec, který z válce ubere materiál nad jádrem závitu
     const prsten = M.novyUzel('trubka', { rozmer: [D + 2, D + 2, L + 0.02], param: { stena: (D + 2) / 2 - jadro, segmentu: Math.max(48, u.param.segmentu || 48) },

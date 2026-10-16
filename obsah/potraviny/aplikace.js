@@ -11,7 +11,7 @@
   const G = window.DENIK_GRAFY;
   const KLIC = 'webapp_potraviny';
   // stránka, jádro a aplikace musí být ze stejné verze (při změně kódu zvýšit i v jadro.js a potraviny.html)
-  const VERZE_KODU = '2026-10-16j';
+  const VERZE_KODU = '2026-10-16k';
   if (!J || J.VERZE_KODU !== VERZE_KODU || window.DENIK_VERZE !== VERZE_KODU) {
     // jednou za minutu se soubory obnoví samy, jinak (smyčka) jen nabídka tlačítkem
     let nedavno = false;
@@ -1101,6 +1101,7 @@
     if (f.typ === 'r') z.push(h('span', { class: 'znak r', title: 'Recept', text: 'RECEPT' }));
     if (f.typ === 'o') z.push(h('span', { class: 'znak o', title: 'Staženo online z Open Food Facts', text: 'ONLINE' }));
     if (f.priznaky & 2) z.push(h('span', { class: 'znak w', title: 'Výrobek nemá nutriční hodnoty', text: 'BEZ HODNOT' }));
+    else if (f.priznaky & 512) z.push(h('span', { class: 'znak w', title: 'Hodnoty v databázi jsou zjevně chybné (např. kJ místo kcal) – použij vlastní kopii podle obalu', text: '⚠ CHYBNÉ HODNOTY' }));
     else if (f.priznaky & 1) z.push(h('span', { class: 'znak w', title: 'Hodnoty si navzájem neodpovídají – ověř je na obalu', text: '?' }));
     return z;
   }
@@ -1388,7 +1389,20 @@
     // text + inputmode: desetinná čárka funguje ve všech prohlížečích (number v cs prostředí ne vždy)
     const vstupM = h('input', { type: 'text', class: 'vstup', inputmode: 'decimal', autocomplete: 'off', 'aria-label': 'Množství', value: String(J.zaokrouhli(mnoz, 2)).replace('.', ',') });
     const vyberJ = h('select', { class: 'vstup', 'aria-label': 'Jednotka' }, ...jednotky.map((x, i) => h('option', { value: String(i), selected: i === jIdx ? true : null }, x.n)));
-    const gramy = () => (J.cislo(vstupM.value) || 0) * jednotky[+vyberJ.value].g;
+    // syrové ↔ hotové: uživatel zvážil opačný stav (80 g syrové rýže, ale zapisuje vařenou)
+    const prevod = J.prevodVahy(f);
+    let vazeno = prevod ? prevod.stav : null;
+    const gramyZadane = () => (J.cislo(vstupM.value) || 0) * jednotky[+vyberJ.value].g;
+    const gramy = () => J.zaokrouhli(J.prepocetVahy(f, gramyZadane(), vazeno), 1);
+    const prevodInfo = h('div', { class: 'slabe prevod-info', 'aria-live': 'polite' });
+    const prevodPrepinac = prevod ? h('div', { class: 'prevod', role: 'group', 'aria-label': 'Jak bylo zváženo' },
+      h('span', { class: 'slabe', text: 'Vážil(a) jsem: ' }),
+      ...['syrove', 'hotove'].map(st => {
+        const b = h('button', { class: 'btn mini', type: 'button', 'data-vazeno': st, 'aria-pressed': String(st === vazeno) },
+          st === 'syrove' ? (/such/.test(J.norm(prevod.stav === 'syrove' ? f.nazev : prevod.protejsek)) ? 'suché / syrové' : 'syrové') : 'hotové (uvařené, upečené)');
+        b.addEventListener('click', () => { vazeno = st; prevodPrepinac.querySelectorAll('[data-vazeno]').forEach(x => x.setAttribute('aria-pressed', String(x.dataset.vazeno === st))); prepocti(); });
+        return b;
+      })) : null;
     const vypocet = h('div', { class: 'vypocet', 'aria-live': 'polite' });
     const rychle = h('div', { class: 'rychle-g' });
     for (const g of (druh ? [100, 200, 250, 330, 500] : [25, 50, 100, 150, 200, 250])) {
@@ -1404,6 +1418,9 @@
       if (+vyberJ.value > 0 && pocet >= 15 && jednotky[+vyberJ.value].g >= 15) {
         pridat(napoveda, 'Myslíš ' + fc(pocet, 1) + ' ' + j + '? ',
           h('button', { class: 'btn mini', type: 'button', onclick: () => { vyberJ.value = '0'; jIdx = 0; prepocti(); vstupM.focus(); } }, 'Ano, ' + fc(pocet, 1) + ' ' + j));
+      }
+      if (prevod) {
+        prevodInfo.textContent = vazeno === prevod.stav ? '' : '= ' + fc(g) + ' ' + j + ' ' + (prevod.stav === 'hotove' ? 'hotové' : 'syrové') + ' (poměr syrové : hotové ≈ 1 : ' + fc(prevod.faktor, 2) + ')';
       }
       const v = J.zivinyZa(f.n || {}, g);
       vypocet.textContent = '';
@@ -1472,6 +1489,9 @@
     if (bezHodnot) {
       telo.appendChild(h('div', { class: 'upozorneni' }, 'Tento výrobek nemá v databázi nutriční hodnoty. ',
         h('button', { class: 'btn mini', type: 'button', onclick: () => doplnHodnoty(f) }, '✎ Doplnit z etikety')));
+    } else if (f.priznaky & 512) {
+      telo.appendChild(h('div', { class: 'upozorneni' }, h('b', { text: 'Hodnoty tohoto výrobku jsou v databázi zjevně chybné' }), ' (energie neodpovídá živinám – často kJ místo kcal). Opiš je z obalu – ',
+        h('button', { class: 'btn mini', type: 'button', onclick: () => doplnHodnoty(f) }, '✎ opravit ve vlastní kopii')));
     } else if (f.priznaky & 1 || J.energieSedi(f.n) === false) {
       telo.appendChild(h('div', { class: 'upozorneni' }, 'Hodnoty si navzájem neodpovídají (energie nesedí s makroživinami nebo cukrů je víc než sacharidů). Ověř je na obalu – ',
         h('button', { class: 'btn mini', type: 'button', onclick: () => doplnHodnoty(f) }, 'opravit ve vlastní kopii')));
@@ -1487,6 +1507,7 @@
     let tlacitkoDalsi = null;
     if (rezim !== 'nahled' && !bezHodnot) {
       telo.appendChild(h('div', { class: 'mnozstvi' }, vstupM, vyberJ));
+      if (prevodPrepinac) { telo.appendChild(prevodPrepinac); telo.appendChild(prevodInfo); }
       telo.appendChild(napoveda);
       telo.appendChild(rychle);
       let vyberJidla = null, vyberDne = null;
@@ -1520,7 +1541,8 @@
         if (g > 3000 && !(await D.potvrd('Opravdu ' + fc(g / 1000, 1) + ' ' + (j === 'ml' ? 'l' : 'kg') + ' (' + fc(J.cislo(vstupM.value), 2) + ' × ' + jednotky[+vyberJ.value].n + ')?', { ok: 'Ano, zapsat', zrus: 'Opravit' }))) {
           vstupM.focus(); vstupM.select(); return;
         }
-        const porce = +vyberJ.value > 0 ? { n: jednotky[+vyberJ.value].nazev, pocet: J.cislo(vstupM.value) } : null;
+        // porce se pamatuje jen u přímého zadání (u přepočtu ze syrové váhy by neseděla)
+        const porce = +vyberJ.value > 0 && (!prevod || vazeno === prevod.stav) ? { n: jednotky[+vyberJ.value].nazev, pocet: J.cislo(vstupM.value) } : null;
         try {
           if (rezim === 'vyber') { v.zavri(); volby.naVyber(f, g); return; }   // nejdřív horní vrstva (fokus se vrací správně)
           const den = J.zKlice(vyberDne.value) ? vyberDne.value : volby.den;

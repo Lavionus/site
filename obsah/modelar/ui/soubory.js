@@ -51,6 +51,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     document.body.appendChild(vstup);
     vstup.addEventListener('change', () => { const f = [...vstup.files]; vstup.value = ''; M.otevriSoubory(f); });
 
+    let citacSouboru = 0;
     /** Otevře soubory: .modelar = nový projekt, ostatní se naimportují do scény. */
     M.otevriSoubory = async function (soubory) {
       const geometrie = [];
@@ -58,13 +59,20 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       const mtl = new Map();
       for (const f of soubory) if (/\.mtl$/i.test(f.name)) mtl.set(f.name, new Uint8Array(await f.arrayBuffer()));
       if (mtl.size && !soubory.some(f => /\.obj$/i.test(f.name))) Dialog.chyba('Soubor MTL obsahuje jen barvy – vyber ho spolu s OBJ.');
+      // SVG se otevírá v okně (jako skica) – víc naráz by se navzájem přepsalo: jen první, o ostatních dát vědět
+      const svg = soubory.filter(f => /\.svg$/i.test(f.name));
+      if (svg.length > 1) {
+        soubory = soubory.filter(f => !/\.svg$/i.test(f.name) || f === svg[0]);
+        Dialog.info(`SVG se otevírají po jednom – otevřeno ${svg[0].name}, ostatní (${svg.length - 1}) otevři potom zvlášť.`);
+      }
       const nacitane = soubory.filter(f => !/\.mtl$/i.test(f.name));
+      const klic = 'soubor' + (++citacSouboru);   // každé otevírání svůj ukazatel (dvě přetažení po sobě)
       let poradi = 0;
       for (const f of soubory) {
         if (/\.mtl$/i.test(f.name)) continue;
         poradi++;
         // velký soubor se čte a převádí i sekundy – ukazatel čekání nad plochou
-        M.cekej('soubor', `Načítám ${f.name}${nacitane.length > 1 ? ` (${poradi} z ${nacitane.length})` : ''}…`, nacitane.length > 1 ? (poradi - 1) / nacitane.length : null, 0);
+        M.cekej(klic, `Načítám ${f.name}${nacitane.length > 1 ? ` (${poradi} z ${nacitane.length})` : ''}…`, nacitane.length > 1 ? (poradi - 1) / nacitane.length : null, 0);
         await M.dejVykreslit();
         try {
           if (f.size > MAX_SOUBOR) throw new Error('soubor je větší než 300 MB');
@@ -92,12 +100,12 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       }
       try {
         if (geometrie.length) {
-          M.cekej('soubor', 'Vkládám do scény…', null, 0);
+          M.cekej(klic, 'Vkládám do scény…', null, 0);
           await M.dejVykreslit();
           importuj(geometrie);
           await M.dejVykreslit();
         }
-      } finally { M.hotovoCekani('soubor'); }
+      } finally { M.hotovoCekani(klic); }
     };
 
     function importuj(objekty) {
@@ -136,6 +144,9 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       if (!maSoubory(e)) return;
       e.preventDefault();
       hloubka = 0; plocha.classList.remove('pretahovani');
+      // rozdělaný náhled (zarovnání, zrcadlení) nejdřív zrušit – jinak by import zmizel spolu s ním
+      if (M.app.uprava && M.zrusNahledy) M.zrusNahledy();
+      if (M.app.uprava) { Dialog.info('Nejdřív dokonči rozdělanou úpravu (Hotovo / Esc), pak soubor přetáhni znovu.'); return; }
       M.otevriSoubory([...e.dataTransfer.files]);
     });
 
@@ -255,9 +266,9 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     M.otevriSablonu = async function (id) {
       const s = M.SABLONY.find(x => x.id === id);
       if (!s) return false;
-      const dok = M.dokumentSablony(id);
-      if (!await U.novy(s.nazev)) return false;
-      M.zmenDokument(dok, 'Šablona: ' + s.nazev);
+      let dok;
+      try { dok = M.dokumentSablony(id); } catch (e) { Dialog.chyba('Šablonu nejde připravit: ' + e.message); return false; }
+      if (!await U.novy(s.nazev, dok)) return false;
       M.nastavVyber([]);
       if (S.domu) S.domu(); else if (M.scena && M.scena.domu) M.scena.domu();
       return true;
@@ -265,7 +276,11 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     M.otevriSablony = function () {
       const sez = document.getElementById('sabSeznam');
       sez.innerHTML = M.SABLONY.map(s => `<button type="button" class="sablona" data-sablona="${s.id}"><span class="ik">${s.ikona}</span><b>${s.nazev}</b><span>${s.popis}</span></button>`).join('');
-      sez.querySelectorAll('[data-sablona]').forEach(b => b.onclick = async () => { oknoSab.close(); await M.otevriSablonu(b.dataset.sablona); });
+      sez.querySelectorAll('[data-sablona]').forEach(b => b.onclick = async () => {
+        oknoSab.close();
+        try { await M.otevriSablonu(b.dataset.sablona); }
+        catch (e) { console.error(e); Dialog.chyba('Šablonu nejde otevřít: ' + e.message); }
+      });
       oknoSab.showModal();
     };
     document.getElementById('sabZavrit').onclick = () => oknoSab.close();

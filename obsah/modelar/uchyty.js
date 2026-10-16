@@ -13,6 +13,8 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
   'use strict';
   const V = THREE.Vector3;
   const NS = 'http://www.w3.org/2000/svg';
+  /** Název osy úchytu: světová X / Y / Z, na natočené pracovní rovině její osy u / v / n. */
+  const nazevOsy = i => M.app && M.app.rovina ? 'uvn'[i] : 'XYZ'[i];
   const BARVY_OS = ['#e2675c', '#4fae6a', '#5b93e0'];
 
   function el(nazev, atributy = {}, rodic) {
@@ -381,10 +383,10 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
           if (kr) abs = Math.round(abs / kr) * kr;
           st = (abs - tah.zakladUhel) * tah.znUhlu;
           const norm = ((abs % 360) + 540) % 360 - 180;
-          text = `${'XYZ'[tah.index]} ${M.mm(norm === -180 ? 180 : norm, 1)}° (${st >= 0 ? '+' : ''}${M.mm(st, 1)}°)`;
+          text = `${nazevOsy(tah.index)} ${M.mm(norm === -180 ? 180 : norm, 1)}° (${st >= 0 ? '+' : ''}${M.mm(st, 1)}°)`;
         } else {
           if (kr) st = Math.round(st / kr) * kr;
-          text = `${'XYZ'[tah.index]} ${st >= 0 ? '+' : ''}${M.mm(st, 1)}°`;
+          text = `${nazevOsy(tah.index)} ${st >= 0 ? '+' : ''}${M.mm(st, 1)}°`;
         }
         dok = M.otocUzly(tah.zaklad, tah.ids, tah.osa.toArray(), st, tah.stred.toArray());
         kresliUhlomer(st);
@@ -432,7 +434,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
           let st = zn * k * 5;
           st = ((st % 360) + 540) % 360 - 180;
           if (st === -180) st = 180;
-          if (q) el('text', { x: q[0], y: q[1] + 4, class: 'stupne' + (k === 0 ? ' nula' : '') }, vrstvaKresby).textContent = k === 0 ? `0° ${'YZX'[tah.index]}` : st + '°';
+          if (q) el('text', { x: q[0], y: q[1] + 4, class: 'stupne' + (k === 0 ? ' nula' : '') }, vrstvaKresby).textContent = k === 0 ? `0° ${nazevOsy((tah.index + 1) % 3)}` : st + '°';
         }
       }
       // osa nuly: čárkovaně od středu za okraj úhloměru
@@ -484,7 +486,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       const box = document.createElement('label');
       box.className = 'zadani-uhlu';
       box.style.borderColor = BARVY_OS[t.index];
-      box.innerHTML = `<span>${'XYZ'[t.index]}</span><input type="text" inputmode="decimal" value="0" aria-label="Otočit kolem ${'XYZ'[t.index]} o úhel (°)"><span>°</span>`;
+      box.innerHTML = `<span>${nazevOsy(t.index)}</span><input type="text" inputmode="decimal" value="0" aria-label="Otočit kolem ${nazevOsy(t.index)} o úhel (°)"><span>°</span>`;
       box.style.left = (t.px0 + r.left - pr.left + 14) + 'px';
       box.style.top = (t.py0 + r.top - pr.top - 16) + 'px';
       plocha.appendChild(box);

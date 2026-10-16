@@ -115,7 +115,8 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     const kv = M.kvalitaNovych ? M.kvalitaNovych() : 'stredni';
     const sKv = u => kv === 'stredni' || (prepis.param && 'segmentu' in prepis.param) ? u : M.sKvalitou(u, kv);
     if ((druh === 'sadaSroub' && M.uzlySadySroubu) || (druh === 'krabiceSVikem' && M.uzlyKrabice)) {
-      const uzly = (druh === 'sadaSroub' ? M.uzlySadySroubu : M.uzlyKrabice)(prepis, M.app.dok).map(sKv).map(u => M.sMojiVuli ? M.sMojiVuli(u) : u);
+      const vlastniVule = prepis.param && 'vule' in prepis.param;
+      const uzly = (druh === 'sadaSroub' ? M.uzlySadySroubu : M.uzlyKrabice)(prepis, M.app.dok).map(sKv).map(u => M.sMojiVuli && !vlastniVule ? M.sMojiVuli(u) : u);
       M.zmenDokument(M.pridejUzly(M.app.dok, uzly), druh === 'sadaSroub' ? 'Přidat šroub a matici' : 'Přidat krabičku s víkem');
       M.nastavVyber(uzly.map(u => u.id));
       return uzly[0];
@@ -137,24 +138,38 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     return true;
   };
 
-  /** Moje vůle pro tisk (radiální, mm; z kalibrační destičky), předvolba prohlížeče; null = výchozí vůle dílů. */
-  M.mojeVule = function (nova) {
+  /* Předvolby prohlížeče (moje vůle, kvalita nových těles): localStorage, a když není (soukromé okno,
+     zakázané úložiště), aspoň v paměti do zavření stránky – volba se nesmí tiše ztratit. Starší klíče
+     s tečkou (modelar.vule) se převezmou. */
+  const pametPredvoleb = {};
+  function predvolba(klic, stary, nova) {
     try {
-      if (nova === null) localStorage.removeItem('modelar.vule');
-      else if (nova !== undefined) localStorage.setItem('modelar.vule', String(nova));
-      const v = parseFloat(localStorage.getItem('modelar.vule'));
-      return v >= 0 && v <= 2 ? v : null;
-    } catch (e) { return null; }
+      if (nova === null) localStorage.removeItem(klic);
+      else if (nova !== undefined) localStorage.setItem(klic, String(nova));
+      let v = localStorage.getItem(klic);
+      if (v == null && stary) { v = localStorage.getItem(stary); if (v != null) { localStorage.setItem(klic, v); localStorage.removeItem(stary); } }
+      if (nova !== undefined) delete pametPredvoleb[klic];
+      return v;
+    } catch (e) {
+      if (nova === null) delete pametPredvoleb[klic];
+      else if (nova !== undefined) pametPredvoleb[klic] = String(nova);
+      return klic in pametPredvoleb ? pametPredvoleb[klic] : null;
+    }
+  }
+  /** Ukládá se předvolba trvale (localStorage funguje)? */
+  M.predvolbyTrvale = function () { try { localStorage.setItem('modelar_test', '1'); localStorage.removeItem('modelar_test'); return true; } catch (e) { return false; } };
+
+  /** Moje vůle pro tisk (radiální, mm; z kalibrační destičky); null = výchozí vůle dílů. */
+  M.mojeVule = function (nova) {
+    const v = parseFloat(predvolba('modelar_vule', 'modelar.vule', nova));
+    return v >= 0 && v <= 2 ? v : null;
   };
   M.sMojiVuli = u => { const v = M.mojeVule(); return v == null ? u : M.sVuli(u, v); };
 
-  /** Kvalita nově vkládaných těles (předvolba prohlížeče; 'stredni' = výchozí tvarů). */
+  /** Kvalita nově vkládaných těles ('stredni' = výchozí tvarů). */
   M.kvalitaNovych = function (nova) {
-    try {
-      if (nova !== undefined) localStorage.setItem('modelar.kvalitaNovych', nova);
-      const v = localStorage.getItem('modelar.kvalitaNovych');
-      return M.KVALITY.some(k => k.id === v) ? v : 'stredni';
-    } catch (e) { return 'stredni'; }
+    const v = predvolba('modelar_kvalitaNovych', 'modelar.kvalitaNovych', nova);
+    return M.KVALITY.some(k => k.id === v) ? v : 'stredni';
   };
 
   /** Smaže vybrané (zamčené zůstanou). */

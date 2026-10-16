@@ -180,25 +180,60 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     return g;
   };
 
+  const SMER_PAPRSKU = [1, 0.000123, 0.000071];
+  /** Protne paprsek z q ve směru SMER_PAPRSKU trojúhelník (indexy od i v idx) před sebou? */
+  function protinaPaprsek(p, t, i, q) {
+    const d = SMER_PAPRSKU, a = t[i] * 3, b = t[i + 1] * 3, c = t[i + 2] * 3;
+    const e10 = p[b] - p[a], e11 = p[b + 1] - p[a + 1], e12 = p[b + 2] - p[a + 2], e20 = p[c] - p[a], e21 = p[c + 1] - p[a + 1], e22 = p[c + 2] - p[a + 2];
+    const h0 = d[1] * e22 - d[2] * e21, h1 = d[2] * e20 - d[0] * e22, h2 = d[0] * e21 - d[1] * e20;
+    const det = e10 * h0 + e11 * h1 + e12 * h2;
+    if (Math.abs(det) < 1e-14) return false;
+    const f = 1 / det, s0 = q[0] - p[a], s1 = q[1] - p[a + 1], s2 = q[2] - p[a + 2];
+    const u = f * (s0 * h0 + s1 * h1 + s2 * h2);
+    if (u < 0 || u > 1) return false;
+    const q0 = s1 * e12 - s2 * e11, q1 = s2 * e10 - s0 * e12, q2 = s0 * e11 - s1 * e10;
+    const v = f * (d[0] * q0 + d[1] * q1 + d[2] * q2);
+    if (v < 0 || u + v > 1) return false;
+    return f * (e20 * q0 + e21 * q1 + e22 * q2) > 0;
+  }
+
   /** Leží bod uvnitř uzavřené sítě? Paprsek ve směru +X (mírně šikmo, ať netrefí hranu) a sudost průsečíků. */
   M.bodVSiti = function (sit, q) {
-    const p = sit.poz, t = sit.idx, d = [1, 0.000123, 0.000071];
+    const p = sit.poz, t = sit.idx;
     let n = 0;
-    for (let i = 0; i < t.length; i += 3) {
-      const a = t[i] * 3, b = t[i + 1] * 3, c = t[i + 2] * 3;
-      const e1 = [p[b] - p[a], p[b + 1] - p[a + 1], p[b + 2] - p[a + 2]], e2 = [p[c] - p[a], p[c + 1] - p[a + 1], p[c + 2] - p[a + 2]];
-      const h = [d[1] * e2[2] - d[2] * e2[1], d[2] * e2[0] - d[0] * e2[2], d[0] * e2[1] - d[1] * e2[0]];
-      const det = e1[0] * h[0] + e1[1] * h[1] + e1[2] * h[2];
-      if (Math.abs(det) < 1e-14) continue;
-      const f = 1 / det, s0 = [q[0] - p[a], q[1] - p[a + 1], q[2] - p[a + 2]];
-      const u = f * (s0[0] * h[0] + s0[1] * h[1] + s0[2] * h[2]);
-      if (u < 0 || u > 1) continue;
-      const qq = [s0[1] * e1[2] - s0[2] * e1[1], s0[2] * e1[0] - s0[0] * e1[2], s0[0] * e1[1] - s0[1] * e1[0]];
-      const v = f * (d[0] * qq[0] + d[1] * qq[1] + d[2] * qq[2]);
-      if (v < 0 || u + v > 1) continue;
-      if (f * (e2[0] * qq[0] + e2[1] * qq[1] + e2[2] * qq[2]) > 0) n++;
-    }
+    for (let i = 0; i < t.length; i += 3) if (protinaPaprsek(p, t, i, q)) n++;
     return n % 2 === 1;
+  };
+
+  /** Rychlý test „bod uvnitř“ pro mnoho dotazů nad jednou sítí: mřížka trojúhelníků v rovině Y–Z (paprsek
+      jde skoro podél X, takže stačí trojúhelníky z buňky dotazu; obálky rozšířené o odklon paprsku).
+      Vrací funkci q → boolean, se stejným výsledkem jako M.bodVSiti. */
+  M.indexBodVSiti = function (sit) {
+    const p = sit.poz, t = sit.idx, nt = t.length / 3;
+    let x0 = Infinity, x1 = -Infinity, y0 = Infinity, y1 = -Infinity, z0 = Infinity, z1 = -Infinity;
+    for (let i = 0; i < p.length; i += 3) {
+      x0 = Math.min(x0, p[i]); x1 = Math.max(x1, p[i]); y0 = Math.min(y0, p[i + 1]); y1 = Math.max(y1, p[i + 1]); z0 = Math.min(z0, p[i + 2]); z1 = Math.max(z1, p[i + 2]);
+    }
+    if (!(nt > 0) || !isFinite(x0)) return () => false;
+    // paprsek z bodu uvnitř obálky se po délce X odkloní o nejvýš (x1 − x0) · 0,000123
+    const okraj = (x1 - x0 + (y1 - y0) + (z1 - z0)) * 2.5e-4 + 1e-6;
+    y0 -= okraj; y1 += okraj; z0 -= okraj; z1 += okraj;
+    const G = Math.max(4, Math.min(256, Math.round(Math.sqrt(nt / 3)))), sy = (y1 - y0) / G || 1, sz = (z1 - z0) / G || 1;
+    const bunky = Array.from({ length: G * G }, () => []);
+    const bunka = (v, v0, s) => Math.max(0, Math.min(G - 1, Math.floor((v - v0) / s)));
+    for (let i = 0; i < t.length; i += 3) {
+      let a0 = Infinity, a1 = -Infinity, b0 = Infinity, b1 = -Infinity;
+      for (let k = 0; k < 3; k++) { const y = p[t[i + k] * 3 + 1], z = p[t[i + k] * 3 + 2]; a0 = Math.min(a0, y); a1 = Math.max(a1, y); b0 = Math.min(b0, z); b1 = Math.max(b1, z); }
+      const i0 = bunka(a0 - okraj, y0, sy), i1 = bunka(a1 + okraj, y0, sy), j0 = bunka(b0 - okraj, z0, sz), j1 = bunka(b1 + okraj, z0, sz);
+      for (let a = i0; a <= i1; a++) for (let b = j0; b <= j1; b++) bunky[a * G + b].push(i);
+    }
+    return q => {
+      if (q[1] < y0 || q[1] > y1 || q[2] < z0 || q[2] > z1 || q[0] > x1 + okraj) return false;
+      const sez = bunky[bunka(q[1], y0, sy) * G + bunka(q[2], z0, sz)];
+      let n = 0;
+      for (const i of sez) if (protinaPaprsek(p, t, i, q)) n++;
+      return n % 2 === 1;
+    };
   };
 
   if (typeof module !== 'undefined') module.exports = M;

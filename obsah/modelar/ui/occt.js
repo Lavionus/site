@@ -529,7 +529,8 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
         středu leží většinou uvnitř tělesa). Typicky spoje sloučených těles – zaoblení je zpevní. */
     function vnitrniHrany(A) {
       const sit = S.telesa.svetovaSit(ed.id);
-      if (!sit || ed.hrany.length > 600) return [];
+      if (!sit) return [];
+      const uvnitrSite = M.indexBodVSiti(sit);
       const ob = M.obalkaSite(sit), diag = Math.hypot(ob.max[0] - ob.min[0], ob.max[1] - ob.min[1], ob.max[2] - ob.min[2]);
       // 26 směrů mírně pootočených (žádný neleží přesně v rovině stěny – bod na povrchu je nejistý)
       const eps = Math.min(0.3, diag * 0.008), smery = [];
@@ -543,7 +544,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
         const n = h.body.length / 3, a = Math.floor((n - 1) / 2) * 3, b = Math.ceil((n - 1) / 2) * 3;
         v.set((h.body[a] + h.body[b]) / 2, (h.body[a + 1] + h.body[b + 1]) / 2, (h.body[a + 2] + h.body[b + 2]) / 2).applyMatrix4(A);
         let uvnitr = 0;
-        for (const d of smery) if (M.bodVSiti(sit, [v.x + d[0] * eps, v.y + d[1] * eps, v.z + d[2] * eps])) uvnitr++;
+        for (const d of smery) if (uvnitrSite([v.x + d[0] * eps, v.y + d[1] * eps, v.z + d[2] * eps])) uvnitr++;
         return uvnitr / smery.length > 0.58 ? i : -1;
       }).filter(i => i >= 0);
     }
@@ -571,8 +572,20 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     }
     document.querySelectorAll('[data-hrany]').forEach(b => b.onclick = async () => {
       if (!ed || !ed.hrany) return;
-      const nove = skupinaHran(b.dataset.hrany).filter(i => !ed.vybraneH.has(i));
-      if (!nove.length) { Dialog.info('Žádné další takové hrany – všechny už jsou vybrané, nebo je těleso nemá.'); return; }
+      let vsechny;
+      if (b.dataset.hrany === 'vnitrni') {
+        M.cekej('spoje', 'Hledám vnitřní hrany…', null, 0);
+        await M.dejVykreslit();
+        try { vsechny = skupinaHran('vnitrni'); } finally { M.hotovoCekani('spoje'); }
+        if (!ed || !ed.hrany) return;
+      } else vsechny = skupinaHran(b.dataset.hrany);
+      const nove = vsechny.filter(i => !ed.vybraneH.has(i));
+      if (!nove.length) {
+        Dialog.info(b.dataset.hrany === 'vnitrni' && !vsechny.length
+          ? 'Těleso nemá žádné vnitřní (vyduté) hrany – vznikají tam, kde se sloučená tělesa potkají.'
+          : 'Žádné další takové hrany – všechny už jsou vybrané, nebo je těleso nemá.');
+        return;
+      }
       if (ed.vybraneH.size + nove.length > 60 && !await mnohoHran(ed.vybraneH.size + nove.length)) return;
       const pred = new Set(ed.vybraneH);
       nove.forEach(i => ed.vybraneH.add(i));

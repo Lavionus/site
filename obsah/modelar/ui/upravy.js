@@ -33,12 +33,18 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
         $('poleOk').disabled = true; return;
       }
       const v = typ === 'krivka'
-        ? { typ, pocet: M.omez(Math.round(cti('polePocet')) || 2, 1, 360), cesta: M.cestaZeSkici(skica), otevrena: $('poleOtevrena').checked, natacet: $('poleNatacet').checked }
+        ? { typ, pocet: M.omez(Math.round(cti('polePocet')) || 2, 1, 360), cesta: M.cestaZeSkici(skica), otevrena: $('poleOtevrena').checked, natacet: $('poleNatacet').checked,
+            naZacatek: $('poleNaZacatek').checked }
         : typ === 'linearni'
         ? { typ, pocet: [cti('poleNx'), cti('poleNy'), cti('poleNz')].map(n => M.omez(Math.round(n) || 1, 1, 100)), rozestup: [cti('poleDx'), cti('poleDy'), cti('poleDz')].map(x => x || 0) }
         : { typ, pocet: M.omez(Math.round(cti('polePocet')) || 2, 1, 360), uhel: M.omez(isFinite(cti('poleUhel')) && cti('poleUhel') !== 0 ? cti('poleUhel') : 360, -3600, 3600),
             uhelKrok: M.omez(isFinite(cti('poleUhelKrok')) && cti('poleUhelKrok') !== 0 ? cti('poleUhelKrok') : 30, -360, 360),
             stoupaniKrok: cti('poleStoupani') || 0, polomerKrok: cti('polePolomer') || 0, stred: [cti('poleSx') || 0, cti('poleSy') || 0], natacet: $('poleNatacet').checked };
+      if (typ === 'krivka' && v.cesta.length < 2) {
+        pole.kopie = []; M.zmenDokument(pole.zaklad, '', { docasne: true });
+        $('poleInfo').textContent = '⚠ Vybraná skica nemá žádný obrys, podél kterého by šlo kopie rozmístit.';
+        $('poleOk').disabled = true; return;
+      }
       const kusu = typ === 'linearni' ? v.pocet[0] * v.pocet[1] * v.pocet[2] : v.pocet;
       if (kusu * pole.ids.length > 2000) {
         // náhled zpět na původní stav a Vytvořit vypnout (jinak by potvrdil starý náhled)
@@ -53,8 +59,11 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       pole.kopie = r.kopie;
       M.zmenDokument(r.dok, '', { docasne: true });
       const omezeno = typ === 'linearni' ? [cti('poleNx'), cti('poleNy'), cti('poleNz')].some(n => n > 100) : cti('polePocet') > 360;
+      // skica na svislé / šikmé pracovní rovině: křivka se promítne do vodorovné roviny (kopie zůstanou ve své výšce)
+      const sikma = skica && new THREE.Vector3(0, 0, 1).applyQuaternion(M.quatUzlu(skica)).z < 0.999;
       $('poleInfo').textContent = `${M.pocet(r.kopie.length, 'kopie', 'kopie', 'kopií')} (celkem ${M.pocet(kusu, 'prvek', 'prvky', 'prvků')} pole)`
-        + (omezeno ? (typ === 'linearni' ? ' – nejvýš 100 v jedné ose' : ' – nejvýš 360 kusů') : '');
+        + (omezeno ? (typ === 'linearni' ? ' – nejvýš 100 v jedné ose' : ' – nejvýš 360 kusů') : '')
+        + (sikma ? ' ⚠ Skica neleží vodorovně – kopie se rozmístí podle jejího půdorysu.' : '');
     }
     M.otevriPole = function () {
       const ids = M.vybraneVolne().map(u => u.id);
@@ -195,24 +204,32 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     const oknoZv = $('oknoZavitValec');
     let zv = null;
     function aktualizujZv() {
-      const typ = vybrano(oknoZv, 'zvTyp'), u = M.najdiUzel(M.app.dok, zv.id), D = u.rozmer[0];
+      const typ = vybrano(oknoZv, 'zvTyp'), u = M.najdiUzel(M.app.dok, zv.id), D = u.rozmer[0], H = u.rozmer[2];
       $('zvRadekPrumer').hidden = typ !== 'vnitrni';
       const d = typ === 'vnitrni' ? (cti('zvPrumer') || D * 0.6) : D;
-      const p = cti('zvStoupani') > 0 ? cti('zvStoupani') : M.stoupaniPro(d), L = cti('zvDelka') || 0;
-      $('zvInfo').textContent = `Válec ⌀ ${M.mm(D, 1)} × ${M.mm(u.rozmer[2], 1)} mm. Závit ⌀ ${M.mm(d, 1)} mm, stoupání ${M.mm(p, 2)} mm, ${M.mm(L / p, 1)} závitů.`
-        + (typ === 'vnejsi' ? ' Matici k němu: díl Matice, Závit = Vlastní průměr, ⌀ ' + M.mm(D, 1) + '.' : ' Šroub k ní: díl Šroub, Závit = Vlastní průměr, ⌀ ' + M.mm(d, 1) + '.');
-      $('zvChyba').textContent = typ === 'vnitrni' && d >= D - 1 ? '⚠ Průměr závitu musí být aspoň o 1 mm menší než válec.' : '';
-      $('zvOk').disabled = !!$('zvChyba').textContent || !(L > 0);
+      const p = cti('zvStoupani') > 0 ? cti('zvStoupani') : M.stoupaniPro(d), L0 = cti('zvDelka'), L = Math.min(L0 || 0, H);
+      const chyby = [];
+      if (!(L0 > 0)) chyby.push('Zadej délku závitu.');
+      if (!isFinite(cti('zvVule')) || cti('zvVule') < 0 || cti('zvVule') > 2) chyby.push('Vůle musí být číslo 0 až 2 mm.');
+      if (typ === 'vnitrni' && d >= D - 1) chyby.push('Průměr závitu musí být aspoň o 1 mm menší než válec.');
+      if ($('zvStoupani').value.trim() && !isFinite(cti('zvStoupani'))) chyby.push('Stoupání není číslo.');
+      $('zvInfo').textContent = `Válec ⌀\u00a0${M.mm(D, 1)} × ${M.mm(H, 1)}\u00a0mm. Závit ⌀\u00a0${M.mm(d, 1)}\u00a0mm, stoupání ${M.mm(p, 2)}\u00a0mm, ${M.mm(L / p, 1)} závitů`
+        + (L0 > H ? ` (délka zkrácena na výšku válce ${M.mm(H, 1)}\u00a0mm)` : '') + '.'
+        + (typ === 'vnejsi' ? ' Matici k němu: díl Matice, Závit = Vlastní průměr, ⌀\u00a0' + M.mm(D, 1) + '.' : ' Šroub k ní: díl Šroub, Závit = Vlastní průměr, ⌀\u00a0' + M.mm(d, 1) + '.');
+      $('zvChyba').textContent = chyby.length ? '⚠ ' + chyby.join(' ') : '';
+      $('zvOk').disabled = !!chyby.length;
     }
     M.otevriZavitNaValec = function () {
       const u = M.vybraneVolne()[0];
-      if (!u || M.vybraneVolne().length !== 1 || u.druh !== 'valec') { Dialog.chyba('Vyber jeden válec (Tvary → Válec), na který se má závit udělat.'); return; }
+      if (!u || M.vybraneVolne().length !== 1 || u.druh !== 'valec') { Dialog.chyba('Vyber jeden Válec (Tvary → Válec). Trubka, kužel ani importovaný model nejdou – závit potřebuje tvar Válec.'); return; }
+      if (u.role === 'dira') { Dialog.chyba('Vybraný válec je díra – závit jde jen na plné těleso. Pro závitovou díru použij díl Díra se závitem.'); return; }
       if (Math.abs(u.rozmer[0] - u.rozmer[1]) > 1e-3 * u.rozmer[0]) { Dialog.chyba('Válec musí mít kruhový průřez (stejný rozměr X a Y).'); return; }
       zv = { id: u.id };
       $('zvDelka').value = M.mm(Math.min(u.rozmer[2], Math.max(5, u.rozmer[2] * 0.4)), 1);
       $('zvPrumer').value = M.mm(Math.round(u.rozmer[0] * 0.6), 1);
       const v = M.mojeVule && M.mojeVule();
       $('zvVule').value = M.mm(v != null ? Math.max(0.1, v) : 0.2, 2);
+      $('zvChyba').textContent = '';
       oknoZv.showModal(); aktualizujZv();
     };
     oknoZv.addEventListener('input', () => { if (zv) aktualizujZv(); });
@@ -221,7 +238,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     $('zvOk').onclick = () => {
       const typ = vybrano(oknoZv, 'zvTyp'), z = zv; zv = null; oknoZv.close();
       try {
-        const r = M.zavitNaValec(M.app.dok, z.id, { typ, prumer: cti('zvPrumer'), delka: cti('zvDelka'), stoupani: cti('zvStoupani') || 0, vule: cti('zvVule') });
+        const r = M.zavitNaValec(M.app.dok, z.id, { typ, prumer: cti('zvPrumer'), delka: cti('zvDelka'), stoupani: cti('zvStoupani') > 0 ? cti('zvStoupani') : 0, vule: cti('zvVule') });
         M.zmenDokument(r.dok, typ === 'vnejsi' ? 'Vnější závit na válec' : 'Vnitřní závit do válce');
         M.nastavVyber([r.id]);
       } catch (e) { Dialog.chyba('Závit nejde udělat: ' + e.message); }
@@ -253,7 +270,14 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       M.nastavVyber(uzly.map(u => u.id));
       return uzly;
     };
-    $('sklOk').onclick = () => { const v = volbySkl(); oknoSkl.close(); M.vlozSkladacku(v); };
+    $('sklOk').onclick = async () => {
+      const v = volbySkl(); oknoSkl.close();
+      M.cekej('skladacka', `Skládám ${M.pocet(v.nx * v.ny, 'dílek', 'dílky', 'dílků')}…`, null, 0);
+      await M.dejVykreslit();
+      try { M.vlozSkladacku(v); await M.dejVykreslit(); }
+      catch (e) { Dialog.chyba('Skládačku nejde vytvořit: ' + e.message); }
+      finally { M.hotovoCekani('skladacka'); }
+    };
 
     // ------------------------------------------------------------ moje vůle pro tisk (kalibrace)
     const oknoVule = $('oknoVule');
@@ -280,9 +304,17 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     $('vuleUlozit').onclick = () => {
       M.mojeVule(vuleSel.value === '' ? null : parseFloat(vuleSel.value));
       oknoVule.close();
-      Dialog.info(vuleSel.value === '' ? 'Díly se vkládají s výchozí vůlí.' : `Uloženo: ${M.mm(parseFloat(vuleSel.value), 2)} mm – použije se u nově vložených dílů.`);
+      const trvale = M.predvolbyTrvale() ? '' : ' Prohlížeč nedovoluje ukládat nastavení (soukromé okno?) – platí jen do zavření stránky.';
+      Dialog.info((vuleSel.value === '' ? 'Díly se vkládají s výchozí vůlí.' : `Uloženo: ${M.mm(parseFloat(vuleSel.value), 2)}\u00a0mm – použije se u nově vložených dílů.`) + trvale);
+      obnovPolozkuVule();
     };
     $('vuleZavrit').onclick = () => oknoVule.close();
+    /** Položka v Dílně ukazuje uloženou vůli. */
+    function obnovPolozkuVule() {
+      const b = document.querySelector('#nabDilna [data-prikaz=mojeVule]'), v = M.mojeVule();
+      if (b) b.textContent = v == null ? '🎯 Moje vůle pro tisk (kalibrace)…' : `🎯 Moje vůle pro tisk: ${M.mm(v, 2)}\u00a0mm…`;
+    }
+    obnovPolozkuVule();
 
     // ------------------------------------------------------------ obalit SVG kolem válce
     const oknoObal = $('oknoObal');

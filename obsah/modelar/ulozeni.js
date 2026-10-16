@@ -254,13 +254,16 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       return p;
     };
 
-    /** Nový prázdný projekt (uloží se při první změně). */
-    U.novy = async function (nazev) {
+    /** Nový projekt (prázdný, nebo s dokumentem dok – šablona; historie začíná jím, Zpět ho nesmaže).
+        Vrací false jen tehdy, když uživatel zůstal v dosavadním projektu; neúspěšné uložení v prohlížeči
+        (soukromé okno, plný disk) projekt nezruší – hlídá ho stav uložení v liště. */
+    U.novy = async function (nazev, dok) {
       if (!await opust()) return false;
       const n = nazev || await dalsiNazev();
-      pouzij({ id: 'p' + M.noveId(), nazev: n, vytvoreno: Date.now(), dok: M.novyDokument(), deska: null, kamera: null });
+      pouzij({ id: 'p' + M.noveId(), nazev: n, vytvoreno: Date.now(), dok: dok || M.novyDokument(), deska: null, kamera: null });
       verzeZmen++;                                   // nový záznam: uložit (bez „změn“ by se neuložil)
-      return U.ulozTed();
+      try { await U.ulozTed(); } catch (e) { console.error('Modelář: nový projekt se neuložil', e); }
+      return true;
     };
 
     /** Projekt z otevřeného souboru (už ověřený M.projekt.cti) jako nový projekt. */

@@ -34,10 +34,12 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
         povoleno: () => M.vybraneVolne().length > 1 },
       { id: 'rozdelit', nazev: 'Zrušit seskupení (rozložit skupinu na části)', klavesy: ['Ctrl+Shift+G'], akce: M.rozdelVybrane,
         povoleno: () => M.vybraneVolne().some(u => u.druh === 'skupina') },
-      { id: 'pole', nazev: 'Pole (řada, kruh, spirála)', klavesy: [], povoleno: volne, akce: () => M.otevriPole() },
+      { id: 'pole', nazev: 'Pole (řada, kruh, spirála, podél křivky)', klavesy: [], povoleno: volne, akce: () => M.otevriPole() },
       { id: 'rozdelitRovinou', nazev: 'Rozdělit rovinou', klavesy: [], povoleno: () => M.vybraneVolne().length === 1, akce: () => M.otevriRez() },
       { id: 'vzorDer', nazev: 'Vzor děr na ploše (klikni na plochu)', klavesy: [], povoleno: () => true,
         akce: () => M.nastavRezim(M.app.rezim === 'vzorDer' ? null : 'vzorDer') },
+      ...M.KVALITY.map(k => ({ id: 'kvalitaNovych_' + k.id, nazev: `Kvalita nových těles: ${k.nazev}`, klavesy: [], povoleno: () => true,
+        akce: () => { M.kvalitaNovych(k.id); const s = document.getElementById('kvalitaNovych'); if (s) s.value = k.id; Dialog.info(`Nová tělesa se budou vkládat v kvalitě „${k.nazev}“.`); } })),
       ...M.KVALITY.map(k => ({ id: 'kvalita_' + k.id, nazev: `Kvalita výběru: ${k.nazev} (segmenty oblých ploch)`, klavesy: [],
         povoleno: () => M.vybraneVolne().some(u => M.kvalitaUzlu(u)), akce: () => M.nastavKvalituVybranych(k.id) })),
       { id: 'zavitNaValec', nazev: 'Závit na válec (vnější nebo vnitřní)', klavesy: [], povoleno: () => { const v = M.vybraneVolne(); return v.length === 1 && v[0].druh === 'valec'; }, akce: () => M.otevriZavitNaValec() },
@@ -46,7 +48,13 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       { id: 'relief', nazev: 'Reliéf z obrázku (výšková mapa, litofanie)', klavesy: [], povoleno: () => true, akce: () => M.otevriRelief() },
       { id: 'mojeVule', nazev: 'Moje vůle pro tisk (kalibrační destička)', klavesy: [], povoleno: () => true, akce: () => M.otevriMojeVule() },
       { id: 'propojit', nazev: 'Propojit díly (šroub ↔ matice, krabička ↔ víko: závit a rozměry se mění spolu)', klavesy: [],
-        povoleno: () => M.lzePropojit(M.vybraneVolne()), akce: () => M.zmenDokument(M.nastavVazbu(M.app.dok, M.vybraneVolne().map(u => u.id), true), 'Propojit díly') },
+        povoleno: () => M.lzePropojit(M.vybraneVolne()), akce: () => {
+          const ids = M.vybraneVolne().map(u => u.id), set = new Set(ids);
+          // dosavadní propojení s díly mimo výběr se zruší – říct, s čím
+          const stara = [...new Set(M.vybraneVolne().flatMap(u => M.protikusy(M.app.dok, u)).filter(x => !set.has(x.id)).map(x => x.nazev))];
+          M.zmenDokument(M.nastavVazbu(M.app.dok, ids, true), 'Propojit díly');
+          if (stara.length) Dialog.info(`Dosavadní propojení s: ${stara.join(', ')} se zrušilo.`);
+        } },
       { id: 'rozpojit', nazev: 'Zrušit propojení dílů', klavesy: [], povoleno: () => M.vybraneVolne().some(u => u.vazba),
         akce: () => { const ids = new Set(); for (const u of M.vybraneVolne()) if (u.vazba) { ids.add(u.id); M.protikusy(M.app.dok, u).forEach(x => ids.add(x.id)); }
           M.zmenDokument(M.nastavVazbu(M.app.dok, [...ids], false), 'Zrušit propojení'); } },

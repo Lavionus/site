@@ -106,7 +106,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
                 : cislo(d.popis, u => u.param[d.klic], v => zmenParam(d.klic, v),
                   { krok: d.krok, des: d.cele ? 0 : 2, jednotka: d.jednotka || '', min: d.min, max: d.max })).join('')
             + (u.druh === 'skica' ? `<button type="button" class="tl siroke-tl" id="inspSkica">✏️ Upravit skicu</button>` : '')
-            + (u.vazba && M.protikusy(M.app.dok, u).length ? `<p class="vazba-info">🔗 Propojeno s: ${M.protikusy(M.app.dok, u).map(x => esc(x.nazev)).join(', ')} – závit / rozměry se mění spolu.
+            + (u.vazba && M.protikusy(M.app.dok, u).length ? `<p class="vazba-info">🔗 Propojeno s: ${M.protikusy(M.app.dok, u).map(x => esc(x.nazev) + (x.zamceno ? ' (🔒 zamčený – nemění se)' : '')).join(', ')} – závit / rozměry se mění spolu.
                 <button type="button" class="odkaz-tl" id="inspRozpojit">Zrušit propojení</button></p>` : '')
             + (u.druh === 'kolo' && u.param.druh !== 'vnitrni' ? `<button type="button" class="tl siroke-tl" id="inspProtikolo" title="Druhé kolo ve správné osové vzdálenosti, natočené tak, aby zuby zapadly">⚙ Přidat protikolo…</button>` : '')
             + `</div>`;
@@ -117,7 +117,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       // kvalita oblých ploch (počet segmentů) – i pro víc těles a skupiny najednou
       if (uzly.some(x => M.kvalitaUzlu(x) || x.druh === 'kvadr'))
         h += `<div class="skupina kvalita"><div class="nadpis">Kvalita oblých ploch</div><div class="kvalita-volby" role="group" aria-label="Kvalita oblých ploch">`
-          + M.KVALITY.map(k => `<button type="button" class="tl" data-kvalita="${k.id}" aria-pressed="false" aria-label="Kvalita ${k.nazev.toLowerCase()}">${k.kratce}</button>`).join('') + `</div><p class="kvalita-odhad" id="inspKvalitaOdhad"></p></div>`;
+          + M.KVALITY.map(k => `<button type="button" class="tl" data-kvalita="${k.id}" aria-pressed="false" aria-label="${k.kratce === k.nazev ? 'Kvalita ' + k.nazev.toLowerCase() : k.kratce + ' (' + k.nazev.toLowerCase() + ' kvalita)'}">${k.kratce}</button>`).join('') + `</div><p class="kvalita-odhad" id="inspKvalitaOdhad"></p></div>`;
       h += `<div class="skupina"><div class="nadpis">Barva</div><div class="paleta">`
         + PALETA.map(b => `<button type="button" class="vzorek" data-barva="${b}" style="background:${b}" title="${M.nazevBarvy ? M.nazevBarvy(b) + ' ' + b : b}" aria-label="Barva ${M.nazevBarvy ? M.nazevBarvy(b) : b}" aria-pressed="false"></button>`).join('')
         + `<label class="vlastni" title="Vlastní barva"><input type="color" id="inspBarva" aria-label="Vlastní barva">🎨</label></div></div>`;
@@ -235,15 +235,29 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       obnov(true);
     }
 
+    // odhady podle geometrie (klíč geometrie + rozměr): posun, otočení ani tažení je nepřepočítávají
+    const pametOdhadu = new Map();
+    const zapamatuj = (k, f) => {
+      if (pametOdhadu.has(k)) return pametOdhadu.get(k);
+      const v = f();
+      if (pametOdhadu.size > 2000) pametOdhadu.clear();
+      pametOdhadu.set(k, v);
+      return v;
+    };
     /** Trojúhelníky uzlu ve scéně (spočítaná geometrie; tvary rovnou ze sítě). */
     function trojUzlu(u) {
       const T = M.scena && M.scena.telesa, g = T && T.geometrieObjektu ? T.geometrieObjektu(u.id) : null;
       if (g && g.trojuhelniku) return g.trojuhelniku;
-      try { return M.TVARY[u.druh] ? M.sitTvaru(u.druh, u.rozmer, u.param).idx.length / 3 : 0; } catch (e) { return 0; }
+      if (!M.TVARY[u.druh]) return 0;
+      return zapamatuj(M.klicGeometrie(u) + '|' + u.rozmer.join(','), () => { try { return M.sitTvaru(u.druh, u.rozmer, u.param).idx.length / 3; } catch (e) { return 0; } });
     }
     /** Odhad trojúhelníků vybraných těles při kvalitě. */
     function odhadKvality(kv) {
-      return M.vybraneUzly().reduce((s, u) => s + (M.kvalitaUzlu(u) ? M.odhadTrojKvality(u, kv, trojUzlu(u)) : trojUzlu(u)), 0);
+      return M.vybraneUzly().reduce((s, u) => {
+        const ted = trojUzlu(u);
+        if (!M.kvalitaUzlu(u)) return s + ted;
+        return s + zapamatuj(M.klicGeometrie(u) + '|' + u.rozmer.join(',') + '|' + kv + '|' + ted, () => M.odhadTrojKvality(u, kv, ted));
+      }, 0);
     }
     const tisice = n => n >= 1e6 ? M.mm(n / 1e6, 1) + ' mil.' : n >= 1000 ? M.mm(n / 1000, n < 10000 ? 1 : 0) + ' tis.' : String(Math.round(n));
 
@@ -355,7 +369,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     function klicInspektoru() {
       const u = M.vybraneUzly()[0];
       return M.app.vyber.join(',') + '|' + (M.app.vyber.length === 1 && u ? u.druh + (u.druh === 'skica' ? u.param.rezim : '') + (u.druh === 'skupina' ? JSON.stringify(u.occt) : '')
-        + (u.vazba ? '|' + u.vazba + M.protikusy(M.app.dok, u).map(x => x.nazev).join(',') : '') : '');
+        + (u.vazba ? '|' + u.vazba + M.protikusy(M.app.dok, u).map(x => x.nazev + (x.zamceno ? '🔒' : '')).join(',') : '') : '');
     }
 
     M.na('vyber', postav);

@@ -32,7 +32,11 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     const u = viditelne[viditelne.length - 1];
     el.hidden = !u;
     if (!u) return;
-    document.getElementById('cekaniText').textContent = u.text + (u.podil != null ? ` ${Math.round(u.podil * 100)} %` : '');
+    // text je v živé oblasti (čtečka ho přečte při změně fáze), procenta mimo ni – jinak by hlásila každé procento
+    const t = document.getElementById('cekaniText');
+    if (t.textContent !== u.text) t.textContent = u.text;
+    const pr = document.getElementById('cekaniProcenta');
+    if (pr) pr.textContent = u.podil != null ? `${Math.round(u.podil * 100)}\u00a0%` : '';
     el.classList.toggle('neurcite', u.podil == null);
     document.getElementById('cekaniLista').style.width = u.podil != null ? (u.podil * 100).toFixed(1) + '%' : '';
   }
@@ -50,7 +54,9 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
   /** Ukončí úlohu klic. */
   M.hotovoCekani = function (klic) { if (ulohy.delete(klic)) prekresliCekani(); };
   /** Počká, až prohlížeč vykreslí (ukazatel čekání se ukáže dřív, než začne těžký výpočet v hlavním vlákně). */
-  M.dejVykreslit = () => new Promise(ok => typeof requestAnimationFrame === 'function' ? requestAnimationFrame(() => setTimeout(ok, 0)) : setTimeout(ok, 0));
+  // karta na pozadí rAF nevolá – tam stačí jen předat řízení (jinak by import / start čekal, než se karta ukáže)
+  M.dejVykreslit = () => new Promise(ok => typeof requestAnimationFrame === 'function' && !(typeof document !== 'undefined' && document.hidden)
+    ? requestAnimationFrame(() => setTimeout(ok, 0)) : setTimeout(ok, 0));
 
   M.st = Math.PI / 180;               // stupeň v radiánech
   M.omez = (x, a, b) => x < a ? a : x > b ? b : x;
