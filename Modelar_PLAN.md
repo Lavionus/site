@@ -798,3 +798,16 @@ rozhraní, QA skutečnou myší); opravy:
 - **Stavový řádek**: souřadnice kurzoru v polích pevné šířky (8ch, zarovnané vpravo) – zbytek řádku neposkakuje.
 - Testy: node `modelar_struktura.js` (20), `modelar_upravy.js` 34, `modelar_jadro.js` 124; prohlížeč
   `modelar_ui_revize6.py` (52, server i file://).
+
+### Ukazatel čekání (16. 10. 2026, přání: „při načítání se tváří, že zamrzla“)
+
+- `#cekani` nad pracovní plochou (pilulka nahoře uprostřed): točící se kolečko a lišta průběhu. Animace přes
+  transform běží v kompozitoru, takže se točí, i když hlavní vlákno počítá. Je přímo v HTML, takže je vidět od
+  prvního vykreslení stránky, ještě než se stáhnou skripty.
+- API ve `spolecne.js`: `M.cekej(klic, text, podil|null, zpozdeni=250)`, `M.hotovoCekani(klic)` a
+  `M.dejVykreslit()` (počká na vykreslení před těžkou prací v hlavním vlákně). Víc souběžných úloh = ukazuje
+  poslední; úlohy kratší než 250 ms se neukážou.
+- Napojeno na: start stránky / otevírání projektu, výpočty skupin (dávka „n z m“ s lištou), načítání OCCT (22 MB),
+  import souborů (název, pořadí, „Vkládám do scény…“), strukturu (načtení jádra, příprava plochy, zobrazení
+  výsledku; v okně kolečko a lišta s % z workeru).
+- Test: `modelar_ui_revize6.py` (66 kontrol).

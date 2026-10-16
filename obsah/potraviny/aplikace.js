@@ -11,7 +11,7 @@
   const G = window.DENIK_GRAFY;
   const KLIC = 'webapp_potraviny';
   // stránka, jádro a aplikace musí být ze stejné verze (při změně kódu zvýšit i v jadro.js a potraviny.html)
-  const VERZE_KODU = '2026-10-16c';
+  const VERZE_KODU = '2026-10-16d';
   if (!J || J.VERZE_KODU !== VERZE_KODU || window.DENIK_VERZE !== VERZE_KODU) {
     // jednou za minutu se soubory obnoví samy, jinak (smyčka) jen nabídka tlačítkem
     let nedavno = false;
@@ -807,6 +807,30 @@
     });
     box.appendChild(h('label', { class: 'prepinac', style: { margin: '6px 0 0' } }, chk, ' Počítat do pitného režimu', rucne));
     return box;
+  }
+  /* ----- velikost písma ----- */
+  const PISMA = [['', 'Automaticky'], ['100', 'Malé'], ['112', 'Střední'], ['125', 'Velké'], ['140', 'Největší']];
+  function pouzijPismo() {
+    const p = S.nastaveni.pismo || '';
+    if (p) document.documentElement.dataset.pismo = p; else delete document.documentElement.dataset.pismo;
+    try { if (p) localStorage.setItem(KLIC + '_pismo', p); else localStorage.removeItem(KLIC + '_pismo'); } catch (_) { /* nic */ }
+    const kont = $('#pismoVolby');
+    if (kont) {
+      kont.textContent = '';
+      for (const [v, n] of PISMA) {
+        kont.appendChild(h('button', { class: 'btn mini', type: 'button', 'aria-pressed': String(p === v), 'data-pismo': v,
+          style: v ? { fontSize: (+v / 100 * 0.8) + 'em' } : null, onclick: () => nastavPismo(v) }, n));
+      }
+    }
+  }
+  function nastavPismo(v) {
+    S.nastaveni.pismo = v || undefined;
+    if (!v) delete S.nastaveni.pismo;
+    uloz(); pouzijPismo();
+    kresliPozdeji(() => vykresliPohled());   // grafy a kruh se přepočítají na nový rozměr
+  }
+  function nabidkaPisma(btn) {
+    nabidka(btn, PISMA.map(([v, n]) => ({ text: (((S.nastaveni.pismo || '') === v) ? '✓ ' : '   ') + n + (v ? ' (' + (v === '112' ? '112,5' : v) + ' %)' : ''), akce: () => nastavPismo(v) })));
   }
   function zavibruj(ms) { try { if (navigator.vibrate) navigator.vibrate(ms || 12); } catch (_) { /* nic */ } }
   function rychlePridej(f, g, porce, den, jidlo) {
@@ -2450,6 +2474,7 @@
     $('#denDalsi').addEventListener('click', () => { aktivniDen = J.posunDen(aktivniDen, 1); vykresliDenik(); });
     $('#denDnes').addEventListener('click', () => { aktivniDen = J.datumKlic(new Date()); vykresliDenik(); });
     $('#denMenu').addEventListener('click', e => nabidkaDne(e.currentTarget));
+    $('#pismoTl').addEventListener('click', e => nabidkaPisma(e.currentTarget));
     $('#fabPridat').addEventListener('click', () => otevriPridani({ jidlo: vychoziJidlo() }));
     $('#fabSken').addEventListener('click', () => skenuj({ jidlo: vychoziJidlo() }));
     // přejetí prstem doleva/doprava po deníku = další/předchozí den
@@ -2585,6 +2610,7 @@
 
   /* ================= start ================= */
   function start() {
+    pouzijPismo();
     nastav();
     let v = 'denik';
     try { v = sessionStorage.getItem(KLIC + '_pohled') || 'denik'; } catch (_) { /* nic */ }

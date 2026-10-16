@@ -58,8 +58,14 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       const mtl = new Map();
       for (const f of soubory) if (/\.mtl$/i.test(f.name)) mtl.set(f.name, new Uint8Array(await f.arrayBuffer()));
       if (mtl.size && !soubory.some(f => /\.obj$/i.test(f.name))) Dialog.chyba('Soubor MTL obsahuje jen barvy – vyber ho spolu s OBJ.');
+      const nacitane = soubory.filter(f => !/\.mtl$/i.test(f.name));
+      let poradi = 0;
       for (const f of soubory) {
         if (/\.mtl$/i.test(f.name)) continue;
+        poradi++;
+        // velký soubor se čte a převádí i sekundy – ukazatel čekání nad plochou
+        M.cekej('soubor', `Načítám ${f.name}${nacitane.length > 1 ? ` (${poradi} z ${nacitane.length})` : ''}…`, nacitane.length > 1 ? (poradi - 1) / nacitane.length : null, 0);
+        await M.dejVykreslit();
         try {
           if (f.size > MAX_SOUBOR) throw new Error('soubor je větší než 300 MB');
           const buf = new Uint8Array(await f.arrayBuffer());
@@ -84,7 +90,14 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
           Dialog.chyba(`${f.name}: ${e.message}`);
         }
       }
-      if (geometrie.length) importuj(geometrie);
+      try {
+        if (geometrie.length) {
+          M.cekej('soubor', 'Vkládám do scény…', null, 0);
+          await M.dejVykreslit();
+          importuj(geometrie);
+          await M.dejVykreslit();
+        }
+      } finally { M.hotovoCekani('soubor'); }
     };
 
     function importuj(objekty) {

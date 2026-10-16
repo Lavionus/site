@@ -143,6 +143,14 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     const T = M.vytvorTelesa(S);
     let chybaVypoctu = '';
     let pocitano = 0;
+    // ukazatel čekání nad plochou: dávka výpočtů skupin (průběh = hotový podíl dávky) a načítání OCCT
+    let davka = 0;
+    M.na('occt', st => st === 'nacita' ? M.cekej('occt', 'Načítám přesné jádro (OpenCascade, 22 MB)…', null, 0) : M.hotovoCekani('occt'));
+    M.na('vypocty', n => {
+      if (!n) { davka = 0; M.hotovoCekani('vypocty'); return; }
+      davka = Math.max(davka, n);
+      M.cekej('vypocty', davka > 1 ? `Počítám skupiny (${davka - n + 1} z ${davka})…` : 'Počítám skupinu…', davka > 1 ? (davka - n) / davka : null);
+    });
     M.na('occt', st => { if (st === 'nacita' || !pocitano) $('stavVypocet').textContent = st === 'nacita' ? '⏳ načítám přesné jádro (OpenCascade, 22 MB)…' : chybaVypoctu; });
     // chyba platí, jen dokud ve scéně je těleso, které spočítat nejde (po Zpět, smazání… zmizí)
     const obnovChybu = () => { if (chybaVypoctu && !T.info().chyby.length) chybaVypoctu = ''; };
@@ -208,7 +216,8 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     M.vytvorPivot(S);
     M.vytvorTisk(S, S.telesa);
     M.vytvorKoty(S);
-    U.start().finally(() => { M.pripraveno = true; M.vysli('pripraveno'); M.pruvodceNaZacatku(); });
+    M.cekej('start', 'Otevírám projekt…', null, 0);
+    U.start().finally(() => { M.hotovoCekani('start'); M.pripraveno = true; M.vysli('pripraveno'); M.pruvodceNaZacatku(); });
 
     // na úzké obrazovce panel po přidání tvaru zmizí, aby bylo vidět na plochu
     M.na('dokument', e => { if (/^Přidat/.test(e.popis)) document.body.classList.remove('panel-ukazany'); });

@@ -16,7 +16,8 @@
 <script>
 /* Pojistka: service worker vrací nejdřív soubory z mezipaměti. Když se tam po aktualizaci sejdou soubory
    z různých verzí, aplikace by nenastartovala – pak se nabídne (nebo sama provede) obnova souborů. */
-window.DENIK_VERZE = '2026-10-16c';
+try { const p = localStorage.getItem('webapp_potraviny_pismo'); if (p) document.documentElement.dataset.pismo = p; } catch (e) { /* nic */ }
+window.DENIK_VERZE = '2026-10-16d';
 window.obnovDenik = async function () {
   // bez sítě by smazání uložených souborů aplikaci úplně odstřihlo
   if (!navigator.onLine) { alert('Pro obnovu aplikace je potřeba připojení k internetu.'); return; }
@@ -57,6 +58,14 @@ window.obnovDenik = async function () {
 :root{--c-bil:#3cc2b0;--c-sach:#f0b44c;--c-tuk:#ef7aa8;--c-alk:#c39be6;--c-voda:#4fa3d9;--c-kcal:var(--accent)}
 :root[data-theme="light"]{--c-bil:#0f766e;--c-sach:#a15c07;--c-tuk:#be185d;--c-alk:#7b45a8;--c-voda:#1f6fa8}
 body{background:var(--bg-deep);min-height:100vh}
+/* velikost písma: automaticky na telefonu o stupeň větší, jinak volba uživatele (vše je v rem) */
+html{font-size:100%}
+@media (max-width:720px){html{font-size:112.5%}}
+html[data-pismo="100"]{font-size:100%}html[data-pismo="112"]{font-size:112.5%}
+html[data-pismo="125"]{font-size:125%}html[data-pismo="140"]{font-size:140%}
+.pismo-tl{font-weight:700;letter-spacing:-.02em;min-width:40px}
+.pismo-volby{display:flex;gap:6px;flex-wrap:wrap}
+.pismo-volby .btn[aria-pressed="true"]{background:var(--accent);color:var(--on-accent);border-color:var(--accent)}
 [hidden]{display:none!important}   /* .btn a další mají vlastní display, který by atribut hidden přebil */
 .wrap{max-width:1180px;margin:0 auto;padding:0 clamp(10px,2.5vw,24px) 40px}
 button,input,select,textarea{font-family:inherit;font-size:inherit}
@@ -355,12 +364,18 @@ body.ma-listu .porovnani{bottom:96px}
   html{-webkit-tap-highlight-color:transparent}
   button,a,.zaznam,.vysledek,.cip,.navrh{touch-action:manipulation}
   /* pole s písmem < 16 px iPhone při fokusu přiblíží – proto 16 px */
-  .vstup,input,select,textarea{font-size:16px!important}
+  .vstup,input,select,textarea{font-size:max(16px,1rem)!important}
   .wrap{padding-bottom:calc(150px + env(safe-area-inset-bottom))}
   body.pohled-denik .wrap{padding-bottom:calc(var(--podpis-vyska,0px) + 160px + env(safe-area-inset-bottom))}
   .hlava{position:static;border-bottom:0;margin-bottom:4px;padding-top:8px}
   .hlava h1{font-size:1.05rem}
   .data-stav{font-size:.7rem}
+  /* hlavička na jeden řádek i při velkém písmu: stav databáze se zkrátí, chybová hláška s tlačítkem smí zalomit */
+  .hlava-radek{flex-wrap:nowrap}
+  .hlava-radek h1{flex:none;white-space:nowrap}
+  .data-stav{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;text-align:right}
+  .data-stav:has(button){white-space:normal;text-align:left}
+  .pismo-tl{flex:none}
   /* záložky = spodní lišta s ikonami */
   .tabs{position:fixed;left:0;right:0;bottom:var(--podpis-vyska,0px);z-index:60;margin:0;display:grid;grid-template-columns:repeat(5,1fr);gap:0;
     background:var(--bg-panel);border-top:1px solid var(--border);padding:0 0 env(safe-area-inset-bottom);box-shadow:0 -2px 10px rgba(0,0,0,.18)}
@@ -375,7 +390,7 @@ body.ma-listu .porovnani{bottom:96px}
   .den-nav .serie{display:none}
   /* souhrn kompaktně */
   .souhrn{padding:12px}
-  .graf-kruh{width:92px;height:92px}
+  .graf-kruh{width:5.75rem;height:5.75rem}
   .kruh-cislo{font-size:26px}
   .bilance{font-size:.8rem;line-height:1.55}
   .zbyva{font-size:1.02rem}
@@ -461,6 +476,7 @@ body.ma-listu .porovnani{bottom:96px}
     <div class="hlava-radek">
       <h1>🥗 Deník jídla</h1>
       <span class="data-stav" id="dataStav" aria-live="polite"><span class="nacitani"></span> načítám databázi…</span>
+      <button type="button" class="btn mini plain pismo-tl" id="pismoTl" aria-haspopup="menu" aria-expanded="false" aria-label="Velikost písma" title="Velikost písma">Aa</button>
     </div>
     <nav class="tabs" role="tablist" aria-label="Části aplikace">
       <button class="tab" role="tab" id="tab-denik" aria-controls="v-denik" data-v="denik" aria-selected="true"><span class="ik">📖</span><span class="tx">Deník</span></button>
@@ -615,6 +631,9 @@ body.ma-listu .porovnani{bottom:96px}
             <button class="btn mini" id="pridatJidlo" style="margin-top:8px">+ Přidat jídlo</button>
           </div>
           <div>
+            <h3 style="margin-bottom:8px">Velikost písma</h3>
+            <div class="pismo-volby" id="pismoVolby" role="group" aria-label="Velikost písma"></div>
+            <p class="slabe" style="margin:6px 0 14px;font-size:.82rem">Automaticky = na telefonu o stupeň větší než na počítači. Volba se pamatuje v tomto prohlížeči.</p>
             <h3 style="margin-bottom:8px">Chování</h3>
             <label class="prepinac"><input type="checkbox" id="nOnline"> Hledat neznámé kódy online v Open Food Facts</label>
             <label class="prepinac"><input type="checkbox" id="nObrazky"> Zobrazovat fotky výrobků (načítají se z Open Food Facts)</label>

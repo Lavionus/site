@@ -1296,6 +1296,7 @@
         .map(j => ({ id: j.id, nazev: j.nazev.slice(0, 40), ...(j.skryto ? { skryto: true } : {}) })) : [];
       s.nastaveni.jidla = jj.length ? jj : JIDLA_VYCHOZI.map(j => ({ ...j }));
       if (!['bezny', 'prisny', 'vse'].includes(s.nastaveni.pitnyRezim)) delete s.nastaveni.pitnyRezim;
+      if (!['100', '112', '125', '140'].includes(s.nastaveni.pismo)) delete s.nastaveni.pismo;
       s.nastaveni.pitnyVyjimky = mapa(s.nastaveni.pitnyVyjimky, v => typeof v === 'boolean' ? v : null);
     }
     s.potraviny = mapa(x.potraviny, overSnimek);
@@ -1379,7 +1380,7 @@
   }
 
   const API = {
-    VERZE_KODU: '2026-10-16c', FORMAT, VERZE_FORMATU, ZIVINY, ZIV, ZAKLAD, MIKRO, SKUPINY, JIDLA_VYCHOZI, AKTIVITA, EFSA_DOSPELI,
+    VERZE_KODU: '2026-10-16d', FORMAT, VERZE_FORMATU, ZIVINY, ZIV, ZAKLAD, MIKRO, SKUPINY, JIDLA_VYCHOZI, AKTIVITA, EFSA_DOSPELI,
     norm, cislo, zaokrouhli, formatCislo, noveId, hash, tvar, pocet,
     datumKlic, zKlice, posunDen, rozdilDni, popisDne,
     eanKontrola, eanVarianty, eanZeme,

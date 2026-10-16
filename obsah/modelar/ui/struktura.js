@@ -108,11 +108,19 @@ self.onmessage = e => {
       if (!M.app.dok.uzly.some(x => x.id === u.id)) { Dialog.chyba('Strukturu jde nanést jen na samostatné těleso nebo celou skupinu.'); return; }
       const sit = S.telesa.svetovaSit(u.id);
       if (!sit || zasah.trojuhelnik == null) return;
-      try { await M.nactiPovrch(); naplnVzory(); }
-      catch (e) { Dialog.chyba('Nepodařilo se načíst výpočet struktury: ' + e.message); return; }
-      const svar = POVRCH.svar(M.polevkaSite(sit));
-      const model = POVRCH.priprav(svar, M.UHEL_PLOCH);
-      const oblast = M.oblastStruktury(model, sit, zasah.trojuhelnik);
+      // načtení jádra (poprvé ~170 kB) a rozdělení sítě na plochy chvíli trvá – ukázat čekání hned
+      M.cekej('struktura', globalThis.POVRCH ? 'Připravuji plochu…' : 'Načítám nástroj struktury…', null, 0);
+      let svar, model, oblast;
+      try {
+        await M.dejVykreslit();
+        await M.nactiPovrch(); naplnVzory();
+        M.cekej('struktura', 'Připravuji plochu…');
+        await M.dejVykreslit();
+        svar = POVRCH.svar(M.polevkaSite(sit));
+        model = POVRCH.priprav(svar, M.UHEL_PLOCH);
+        oblast = M.oblastStruktury(model, sit, zasah.trojuhelnik);
+      } catch (e) { Dialog.chyba('Nepodařilo se načíst výpočet struktury: ' + e.message); return; }
+      finally { M.hotovoCekani('struktura'); }
       if (!oblast) { Dialog.chyba('Plochu pod kliknutím se nepodařilo najít.'); return; }
       st = { id: u.id, nazev: u.nazev, svar, model, oblast };
       // tloušťka tělesa kolmo k ploše (hrubě: nejmenší rozměr obálky) – jen pro varování
@@ -150,11 +158,17 @@ self.onmessage = e => {
     okno.addEventListener('input', aktualizuj);
     okno.addEventListener('change', aktualizuj);
 
+    const konecPrubehu = () => { $('strPrubeh').hidden = true; $('strLista').style.width = ''; };
     $('strOk').onclick = async () => {
       if (!st || bezi) return;
       const d = st, s = d.s;
       $('strOk').disabled = true;
-      const prubeh = (f, t) => { $('strInfo').textContent = `${t || 'Počítám'}… ${Math.round(f * 100)} %`; };
+      $('strPrubeh').hidden = false;
+      const prubeh = (f, t) => {
+        $('strInfo').textContent = `${t || 'Počítám'}… ${Math.round(f * 100)} %`;
+        $('strPrubeh').classList.toggle('neurcite', !(f > 0));
+        $('strLista').style.width = f > 0 ? (f * 100).toFixed(1) + '%' : '';
+      };
       prubeh(0, 'Počítám');
       const mapa = VZORY.mapa(s.vzor, s.parametry, 256);
       const zadani = { pos: d.svar.pos, tri: d.svar.tri, uhel: M.UHEL_PLOCH, rid: d.oblast.id,
@@ -165,31 +179,40 @@ self.onmessage = e => {
         bezi = veWorkeru(zadani, prubeh);
         if (bezi) r = await bezi;
         else {
-          await new Promise(ok => setTimeout(ok, 30));          // ať se ukáže „Počítám…“
+          await M.dejVykreslit();                               // ať se ukáže „Počítám…“ (hlavní vlákno pak stojí, kolečko se točí dál)
           bezi = true;
           r = M.spocitejStrukturu(d.model, d.oblast.id, s, { jemnost: d.jemnost });
         }
       } catch (e) {
         bezi = null;
+        konecPrubehu();
         if (st !== d) return;                                   // zrušeno
         $('strChyba').textContent = '⚠ Výpočet selhal: ' + e.message;
         $('strOk').disabled = false;
         return;
       }
       bezi = null;
+      konecPrubehu();
       if (st !== d) return;
       st = null;
       okno.close();
       posledniVzor = s.vzor;
       const info = VZORY.podleId(s.vzor);
-      const z = M.nahradSiti(M.app.dok, d.id, r.sit, `${d.nazev} – ${info ? info.nazev.toLowerCase() : 'struktura'}`);
-      M.zmenDokument(z.dok, 'Struktura na ploše');
-      M.nastavVyber([z.id]);
+      // zobrazení velké sítě (normály, hrany) zabere chvíli hlavního vlákna
+      M.cekej('struktura', 'Zobrazuji výsledek…', null, 0);
+      await M.dejVykreslit();
+      try {
+        const z = M.nahradSiti(M.app.dok, d.id, r.sit, `${d.nazev} – ${info ? info.nazev.toLowerCase() : 'struktura'}`);
+        M.zmenDokument(z.dok, 'Struktura na ploše');
+        M.nastavVyber([z.id]);
+        await M.dejVykreslit();
+      } finally { M.hotovoCekani('struktura'); }
       Dialog.info(`Struktura nanesena (${Math.round(r.sit.idx.length / 3000)} tisíc trojúhelníků). Těleso je teď síť – rozměry a parametry tvaru už nejdou měnit, Ctrl+Z vrátí původní.`
         + (r.varovani.length ? '\n\n' + r.varovani.join('\n') : ''));
     };
     const zrus = () => {
       if (bezi && bezi.zrus) bezi.zrus();
+      konecPrubehu();
       bezi = null; st = null;
     };
     $('strZrusit').onclick = () => { zrus(); okno.close(); };

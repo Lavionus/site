@@ -19,6 +19,39 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
   };
   M.vysli = function (jmeno, data) { (posluchaci[jmeno] || []).slice().forEach(fn => fn(data)); };     // kopie: posluchač se smí odhlásit za běhu
 
+  /* Ukazatel čekání nad plochou (#cekani). Víc souběžných úloh: ukazuje se poslední
+     přidaná. podil 0–1 = lišta průběhu, null = neurčitý průběh. Krátké úlohy (pod
+     `zpozdeni` ms) se neukážou, ať ukazatel neblikne u každé drobnosti. */
+  const ulohy = new Map();
+  let casovacCekani = null;
+  function prekresliCekani() {
+    if (typeof document === 'undefined') return;
+    const el = document.getElementById('cekani');
+    if (!el) return;
+    const viditelne = [...ulohy.values()].filter(u => u.ukazat);
+    const u = viditelne[viditelne.length - 1];
+    el.hidden = !u;
+    if (!u) return;
+    document.getElementById('cekaniText').textContent = u.text + (u.podil != null ? ` ${Math.round(u.podil * 100)} %` : '');
+    el.classList.toggle('neurcite', u.podil == null);
+    document.getElementById('cekaniLista').style.width = u.podil != null ? (u.podil * 100).toFixed(1) + '%' : '';
+  }
+  /** Začne nebo aktualizuje úlohu klic. */
+  M.cekej = function (klic, text, podil = null, zpozdeni = 250) {
+    const u = ulohy.get(klic);
+    if (u) { u.text = text; u.podil = podil; }
+    else {
+      const n = { text, podil, ukazat: zpozdeni <= 0 };
+      ulohy.set(klic, n);
+      if (!n.ukazat) setTimeout(() => { if (ulohy.get(klic) === n) { n.ukazat = true; prekresliCekani(); } }, zpozdeni);
+    }
+    prekresliCekani();
+  };
+  /** Ukončí úlohu klic. */
+  M.hotovoCekani = function (klic) { if (ulohy.delete(klic)) prekresliCekani(); };
+  /** Počká, až prohlížeč vykreslí (ukazatel čekání se ukáže dřív, než začne těžký výpočet v hlavním vlákně). */
+  M.dejVykreslit = () => new Promise(ok => typeof requestAnimationFrame === 'function' ? requestAnimationFrame(() => setTimeout(ok, 0)) : setTimeout(ok, 0));
+
   M.st = Math.PI / 180;               // stupeň v radiánech
   M.omez = (x, a, b) => x < a ? a : x > b ? b : x;
 
