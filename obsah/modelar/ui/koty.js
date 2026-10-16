@@ -44,9 +44,10 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     }
 
     function kresli(vynutit) {
-      const r = !zapnuto || M.app.rezim || M.modalniOkno() ? null : ramKot();
+      // při otáčení úchytem kóty schovat (úhloměr a jeho čísla by se s nimi překrývaly)
+      const r = !zapnuto || M.app.rezim || M.modalniOkno() || M.otaciUchytem ? null : ramKot();
       const k = S.kamera.aktivni();
-      const novy = r ? k.matrixWorld.elements.join(',') + '|' + k.projectionMatrix.elements[0] + '|' + r.ram.elements.join(',') + '|' + r.vel.join(',') + '|' + (r.uzel ? r.uzel.id + (r.uzel.zamceno ? 'z' : '') : 'v') + '|' + S.kamera.sirka + 'x' + S.kamera.vyska : '';
+      const novy = M.otaciUchytem ? 'otaceni' : r ? k.matrixWorld.elements.join(',') + '|' + k.projectionMatrix.elements[0] + '|' + r.ram.elements.join(',') + '|' + r.vel.join(',') + '|' + (r.uzel ? r.uzel.id + (r.uzel.zamceno ? 'z' : '') : 'v') + '|' + S.kamera.sirka + 'x' + S.kamera.vyska : '';
       if (novy === klic && !vynutit) return;
       klic = novy;
       svg.innerHTML = ''; koty = [];

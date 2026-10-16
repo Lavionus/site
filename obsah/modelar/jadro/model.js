@@ -33,6 +33,9 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
 
   M.novyDokument = () => ({ verze: 1, uzly: [] });
 
+  /** Přepínač (ano/ne) ze vstupu: boolean, 1/0, „true“/„false“; jinak výchozí (stejně u tvarů i dílů). */
+  M.prepinac = (v, vychozi) => typeof v === 'boolean' ? v : v === 1 || v === 'true' ? true : v === 0 || v === 'false' ? false : vychozi;
+
   const cislo = (v, nahr) => (typeof v === 'number' && isFinite(v)) ? v : nahr;
   const barvaOk = b => typeof b === 'string' && /^#[0-9a-f]{6}$/i.test(b);
 
@@ -170,8 +173,8 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     for (const d of t.parametry) {
       if (d.odvozeny) continue;                  // pole jen v inspektoru (zapisuje rozměr a parametry)
       if (d.volby) { const v = param && param[d.klic]; p[d.klic] = d.volby.some(x => x[0] === v) ? v : t.param[d.klic]; continue; }
-      if (d.prepinac) { p[d.klic] = param && d.klic in param ? !!param[d.klic] : !!t.param[d.klic]; continue; }
-      if (d.text) { const v = param && param[d.klic]; p[d.klic] = typeof v === 'string' ? v.slice(0, 200) : t.param[d.klic]; continue; }
+      if (d.prepinac) { p[d.klic] = M.prepinac(param && param[d.klic], !!t.param[d.klic]); continue; }
+      if (d.text) { const v = param && param[d.klic]; p[d.klic] = typeof v === 'string' && (!d.vzor || d.vzor.test(v.trim())) ? (d.vzor ? v.trim().toLowerCase() : v.slice(0, 200)) : t.param[d.klic]; continue; }
       let v = cislo(param && param[d.klic], t.param[d.klic]);
       if (d.cele) v = Math.round(v);
       p[d.klic] = M.omez(v, d.min, d.max);
@@ -203,9 +206,29 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       // střed a velikost tělesa: z uzlu, nebo spočítat z parametrů (nový uzel)
       const r = Array.isArray(u.stred) && Array.isArray(u.zaklad) ? null : M.rozmeryPrirozene(u.druh, param);
       // i spočítané rozměry v mezích (z extrémních parametrů nesmí vzniknout Infinity/NaN)
-      const zaklad = trojice(r ? r.zaklad : u.zaklad, [10, 10, 10], MIN_ROZMER, MAX_ROZMER);
-      const stred = trojice(r ? r.stred : u.stred, [0, 0, 0], -MAX_POLOHA, MAX_POLOHA);
-      const pod = u.podklad && typeof u.podklad.data === 'string' && u.podklad.data.length < 12e6 ? {
+      let zaklad = trojice(r ? r.zaklad : u.zaklad, [10, 10, 10], MIN_ROZMER, MAX_ROZMER);
+      let stred = trojice(r ? r.stred : u.stred, [0, 0, 0], -MAX_POLOHA, MAX_POLOHA);
+      let rozmer0 = u.rozmer, poloha0 = u.poloha;
+      // díl s uloženou obálkou: ověřit proti parametrům (obálka dílu se mezi verzemi může změnit, nebo je
+      // soubor podvržený) – jinak by se síť posunula a roztáhla; měřítko a poloha počátku dílu zůstanou
+      if (!r && jeDil(u.druh)) {
+        const o = M.rozmeryPrirozene(u.druh, param), tol = 1e-4 * Math.max(1, ...o.zaklad);
+        if ([0, 1, 2].some(i => Math.abs(o.zaklad[i] - zaklad[i]) > tol || Math.abs(o.stred[i] - stred[i]) > tol)) {
+          const k = [0, 1, 2].map(i => (Array.isArray(rozmer0) && cislo(rozmer0[i], 0) > 0 ? rozmer0[i] : zaklad[i]) / zaklad[i]);
+          const zr = [0, 1, 2].map(i => Array.isArray(u.zrcadlo) && u.zrcadlo[i] ? -1 : 1);
+          const q = new THREE.Quaternion().setFromEuler(new THREE.Euler(...trojice(u.rotace, [0, 0, 0], -36000, 36000).map(x => x * Math.PI / 180), 'XYZ'));
+          const d = new THREE.Vector3(...o.stred.map((x, i) => (x - stred[i]) * k[i] * zr[i])).applyQuaternion(q);
+          const p0 = trojice(poloha0, [0, 0, zaklad[2] / 2], -MAX_POLOHA, MAX_POLOHA);
+          poloha0 = p0.map((x, i) => Math.round((x + d.getComponent(i)) * 1e6) / 1e6);
+          zaklad = trojice(o.zaklad, [10, 10, 10], MIN_ROZMER, MAX_ROZMER); stred = trojice(o.stred, [0, 0, 0], -MAX_POLOHA, MAX_POLOHA);
+          rozmer0 = zaklad.map((z, i) => z * k[i]);
+        }
+      }
+      // háček S byl krátce tvarem (rozměr bez základu): jeho rozměr k dílu nepatří – díl v přirozené velikosti
+      if (r && u.druh === 'hakS' && Array.isArray(u.rozmer)) rozmer0 = null;
+      // podklad skici jen jako vložený obrázek (data URL) – cizí adresa by při otevření skici prozradila IP (sledovací pixel)
+      const pod = u.podklad && typeof u.podklad.data === 'string' && u.podklad.data.length < 12e6
+        && /^data:image\/[a-z0-9.+-]+;base64,/i.test(u.podklad.data) ? {
         data: u.podklad.data, x: cislo(u.podklad.x, 0), y: cislo(u.podklad.y, 0),
         sirka: M.omez(cislo(u.podklad.sirka, 100), 0.1, 1e5), pruhlednost: M.omez(cislo(u.podklad.pruhlednost, 0.5), 0, 1),
         pomer: M.omez(cislo(u.podklad.pomer, 1), 0.01, 100),          // výška / šířka obrázku
@@ -214,9 +237,9 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
         id: M.idOk(u.id) ? u.id : M.noveId(),
         druh: u.druh,
         nazev: cistyNazev(u.nazev, t.nazev),
-        rozmer: trojice(u.rozmer, zaklad, MIN_ROZMER, MAX_ROZMER),
+        rozmer: trojice(rozmer0, zaklad, MIN_ROZMER, MAX_ROZMER),
         param,
-        poloha: trojice(u.poloha, [0, 0, zaklad[2] / 2], -MAX_POLOHA, MAX_POLOHA),
+        poloha: trojice(poloha0, [0, 0, zaklad[2] / 2], -MAX_POLOHA, MAX_POLOHA),
         rotace: trojice(u.rotace, [0, 0, 0], -36000, 36000),
         zrcadlo: [0, 1, 2].map(i => !!(Array.isArray(u.zrcadlo) && u.zrcadlo[i])),
         role: (u.role || t.role) === 'dira' ? 'dira' : 'teleso',
@@ -312,6 +335,20 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
   }
 
   /** Kopie uzlu s novým id – i u všech dětí skupiny (id musí být v dokumentu jedinečná). */
+  /** Kopie uzlů s novými id; propojení (vazba) zůstane jen mezi kopiemi, když se kopíruje celý pár
+      (šroub i matice, krabička i víko) – dostanou novou společnou vazbu. Kopie jednoho dílu propojená není. */
+  M.kopieSVazbami = function (uzly) {
+    const pocet = new Map();
+    const sber = u => { if (u.vazba) pocet.set(u.vazba, (pocet.get(u.vazba) || 0) + 1); (u.deti || []).forEach(sber); };
+    uzly.forEach(sber);
+    const nova = new Map([...pocet].filter(([, n]) => n >= 2).map(([v]) => [v, 'v' + M.noveId()]));
+    const kopie = u => {
+      const k = Object.assign({}, u, { id: M.noveId() }, u.deti ? { deti: u.deti.map(kopie) } : {});
+      if (u.vazba && nova.has(u.vazba)) k.vazba = nova.get(u.vazba); else delete k.vazba;
+      return k;
+    };
+    return uzly.map(kopie);
+  };
   // kopie dostane nové id a není propojená s protikusem originálu (vazba se nekopíruje)
   M.noveIdHluboko = u => { const k = Object.assign({}, u, { id: M.noveId() }, u.deti ? { deti: u.deti.map(M.noveIdHluboko) } : {}); delete k.vazba; return k; };
 
@@ -586,26 +623,111 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
   /** Parametry, které propojené díly sdílejí (mají-li je oba). */
   M.SPOJENE_KLICE = ['velikost', 'prumer', 'stoupani', 'sx', 'sy', 'stena', 'zaobleni'];
   /** Změna parametru propojeného dílu, když se na jeho protikusu změní klic na v (nebo null). */
-  function zmenaProtikusu(u, klic, v) {
+  function zmenaProtikusu(u, klic, v, zdroj) {
     const d = M.DILY && M.DILY[u.druh];
     if (!d) return null;
+    // výška nebo dno krabičky: lem víka nesmí být hlubší než dutina (jinak víko nedosedne)
+    if (u.druh === 'vicko' && zdroj && zdroj.druh === 'krabice' && (klic === 'sz' || klic === 'dno')) {
+      const p = Object.assign({}, zdroj.param, { [klic]: v });
+      return { lem: Math.round(M.omez(0.8 * (p.sz - p.dno), 1, 4) * 100) / 100 };
+    }
     if (klic === 'sloupky' && u.druh === 'vicko') return { typ: v ? 'sroubky' : 'nasazovaci' };
     if (klic === 'typ' && u.druh === 'krabice') return { sloupky: v === 'sroubky' };
     if (M.SPOJENE_KLICE.includes(klic) && klic in d.param) return { [klic]: v };
     return null;
   }
-  /** Protikusy uzlů ids (stejná vazba, nejsou mezi ids) se změnou parametru: [[uzel, změna param]]. */
+  /** Všechny uzly stromu (i části skupin). */
+  const vsechnyUzly = (uzly, out = []) => { for (const u of uzly) { out.push(u); if (u.deti) vsechnyUzly(u.deti, out); } return out; };
+  /** Protikusy uzlů ids (stejná vazba, nejsou mezi ids; i uvnitř skupin) se změnou parametru: [[uzel, změna param]]. */
   M.propojeneZmeny = function (dok, ids, klic, v) {
-    const vyb = new Set(ids), vazby = new Set(ids.map(id => (M.najdiUzel(dok, id) || {}).vazba).filter(Boolean));
+    const vyb = new Set(ids), vse = vsechnyUzly(dok.uzly);
+    const zdroje = vse.filter(u => vyb.has(u.id) && u.vazba), vazby = new Set(zdroje.map(u => u.vazba));
     if (!vazby.size) return [];
-    return dok.uzly.filter(u => u.vazba && vazby.has(u.vazba) && !vyb.has(u.id) && !u.zamceno)
-      .map(u => [u, zmenaProtikusu(u, klic, v)]).filter(x => x[1]);
+    return vse.filter(u => u.vazba && vazby.has(u.vazba) && !vyb.has(u.id) && !u.zamceno)
+      .map(u => [u, zmenaProtikusu(u, klic, v, zdroje.find(z => z.vazba === u.vazba))]).filter(x => x[1]);
   };
-  /** Protikusy uzlu (stejná vazba). */
-  M.protikusy = (dok, u) => u && u.vazba ? dok.uzly.filter(x => x.vazba === u.vazba && x.id !== u.id) : [];
-  /** Lze uzly propojit? (díly, které sdílejí aspoň jeden společný parametr) */
-  M.lzePropojit = uzly => uzly.length >= 2 && uzly.every(u => M.DILY && M.DILY[u.druh]) &&
-    uzly.every(u => uzly.some(x => x !== u && M.SPOJENE_KLICE.some(k => k in M.DILY[u.druh].param && k in M.DILY[x.druh].param)));
+  /** Protikusy uzlu (stejná vazba, kdekoli ve stromu). */
+  M.protikusy = (dok, u) => u && u.vazba ? vsechnyUzly(dok.uzly).filter(x => x.vazba === u.vazba && x.id !== u.id) : [];
+  /** Povolené dvojice propojení (díly, které spolu opravdu fungují). */
+  const PARY = [['sroub', 'matice'], ['sroub', 'zavitDira'], ['sroub', 'sroubovice'], ['matice', 'zavitDira'], ['matice', 'sroubovice'],
+    ['sroub', 'sroub'], ['matice', 'matice'], ['krabice', 'vicko']];
+  const smiPar = (a, b) => PARY.some(([x, y]) => (x === a && y === b) || (x === b && y === a));
+  /** Lze uzly propojit? (každý má mezi ostatními povoleného partnera: šroub ↔ matice / díra / šroubovice, krabička ↔ víko) */
+  M.lzePropojit = uzly => uzly.length >= 2 && uzly.every(u => uzly.some(x => x !== u && smiPar(u.druh, x.druh)));
+
+  /** Skupina s novými dětmi: obálka a střed se přepočítají z plných částí (děti se posunou do nového středu)
+      a poloha ve světě se upraví tak, aby se nic nepohnulo; měřítko skupiny (rozměr / základ) zůstane. */
+  M.prestavSkupinu = function (g, deti) {
+    const plne = deti.filter(d => d.role !== 'dira'), ob = M.obalkaVice(plne.length ? plne : deti);
+    const c = [0, 1, 2].map(i => Math.round((ob.min[i] + ob.max[i]) / 2 * 1e6) / 1e6);
+    const zaklad = [0, 1, 2].map(i => Math.max(0.01, Math.round((ob.max[i] - ob.min[i]) * 1e6) / 1e6));
+    const k = [0, 1, 2].map(i => g.rozmer[i] / g.zaklad[i]), zr = g.zrcadlo.map(z => z ? -1 : 1);
+    const d = new THREE.Vector3(...c.map((x, i) => x * k[i] * zr[i])).applyQuaternion(M.quatUzlu(g));
+    return M.normalizujUzel(Object.assign({}, g, {
+      deti: deti.map(x => Object.assign({}, x, { poloha: x.poloha.map((p, i) => Math.round((p - c[i]) * 1e6) / 1e6) })),
+      zaklad, rozmer: zaklad.map((z, i) => z * k[i]), poloha: g.poloha.map((p, i) => Math.round((p + d.getComponent(i)) * 1e6) / 1e6),
+    }));
+  };
+  /** Úprava uzlu id kdekoli ve stromu (zmena = objekt nebo funkce uzel → změny); skupiny na cestě se přestaví. */
+  M.upravVnorene = function (dok, id, zmena) {
+    let zmeneno = false;
+    const projdi = uzly => uzly.map(u => {
+      if (u.id === id) {
+        const z = typeof zmena === 'function' ? zmena(u) : zmena;
+        if (!z) return u;
+        const n = M.normalizujUzel(Object.assign({}, u, z, { id: u.id }));
+        if (JSON.stringify(n) === JSON.stringify(u)) return u;
+        zmeneno = true;
+        return n;
+      }
+      if (!u.deti) return u;
+      const deti = projdi(u.deti);
+      return deti.every((d, i) => d === u.deti[i]) ? u : M.prestavSkupinu(u, deti);
+    });
+    const uzly = projdi(dok.uzly);
+    return zmeneno ? Object.assign({}, dok, { uzly }) : dok;
+  };
+  /** Změna parametru klic = v u nezamčených uzlů ids a stejná změna sdíleného parametru u jejich protikusů
+      (i ve skupinách); protikus nejvyšší úrovně, který by pak zasahoval do vybraného dílu, se odsune vedle
+      (mezera 5 mm, jako při vložení). Vrací {dok, propojenych}. */
+  M.dokSeZmenouParametru = function (dok, ids, klic, v) {
+    const zmen = (u, z) => M.maPrirozene(u) ? M.upravPrirozeny(u, z) : { param: Object.assign({}, u.param, z) };
+    const volne = ids.filter(id => { const u = M.najdiVeStromu(dok, id); return u && !u.zamceno; });
+    // přepnutí na vlastní průměr závitu: převzít průměr a stoupání dosavadní normy (závit se nezmění)
+    let zmena = { [klic]: v };
+    const prvni = volne.length && M.najdiVeStromu(dok, volne[0]);
+    if (klic === 'velikost' && v === 'vlastni' && prvni && prvni.param.velikost !== 'vlastni' && M.udajeZavitu) {
+      const z = M.udajeZavitu(prvni.param);
+      zmena = { velikost: 'vlastni', prumer: z.d, stoupani: z.p };
+    }
+    const prot = new Map();
+    for (const [k, h] of Object.entries(zmena))
+      for (const [u, z] of M.propojeneZmeny(dok, volne, k, h)) prot.set(u.id, [u, Object.assign((prot.get(u.id) || [u, {}])[1], z)]);
+    let d = M.upravUzly(dok, volne, u => zmen(u, zmena));
+    for (const [u, z] of prot.values()) d = M.upravVnorene(d, u.id, x => zmen(x, z));
+    // odsunout protikus (nebo skupinu, ve které je), který se teď s vybraným dílem překrývá (šroub M24 vedle matice…)
+    const vrchol = (dd, id) => dd.uzly.find(x => x.id === id || (x.deti && vsechnyUzly(x.deti).some(y => y.id === id)));
+    const posunute = new Set();
+    for (const [u] of prot.values()) {
+      const top = vrchol(d, u.id);
+      if (!top || posunute.has(top.id) || !M.posunUzly) continue;
+      for (const id of volne) {
+        const su = vrchol(d, id);
+        if (!su || su.id === top.id) continue;
+        const a = M.obalkaUzlu(su), b = M.obalkaUzlu(top);
+        const prekryv = a.min[0] < b.max[0] && a.max[0] > b.min[0] && a.min[1] < b.max[1] && a.max[1] > b.min[1];
+        if (!prekryv) continue;
+        const vpravo = (b.min[0] + b.max[0]) >= (a.min[0] + a.max[0]);
+        const dx = vpravo ? a.max[0] + 5 - b.min[0] : a.min[0] - 5 - b.max[0];
+        d = M.posunUzly(d, [top.id], [dx, 0, 0]);
+        posunute.add(top.id);
+        break;
+      }
+    }
+    return { dok: d, propojenych: prot.size };
+  };
+  M.najdiVeStromu = (dok, id) => vsechnyUzly(dok.uzly).find(u => u.id === id) || null;
+
   /** Dokument s uzly ids propojenými (nová společná vazba) nebo rozpojenými (vazba null). */
   M.nastavVazbu = function (dok, ids, propojit) {
     const v = propojit ? 'v' + M.noveId() : null, mn = new Set(ids);
@@ -648,7 +770,8 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       return k.length === 1 ? k[0] : k.length ? 'vlastni' : null;
     }
     if (!poleSegmentu(u)) return null;
-    const hit = M.KVALITY.find(k => M.segmentyKvality(u, k.id) === u.param.segmentu);
+    // od nejjemnější: u tvaru s mezí 128 dají Jemná i Velmi jemná stejný počet – ukázat tu vyšší, kterou uživatel zvolil
+    const hit = M.KVALITY.slice().reverse().find(k => M.segmentyKvality(u, k.id) === u.param.segmentu);
     return hit ? hit.id : 'vlastni';
   };
   /** Uzel s kvalitou (rekurzivně ve skupinách); bez segmentů beze změny (stejný objekt). */

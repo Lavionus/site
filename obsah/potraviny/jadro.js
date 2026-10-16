@@ -205,12 +205,13 @@
     for (let i = 0; i < 8; i++) if (r[3 + i] !== null && r[3 + i] !== undefined) n[kl[i]] = r[3 + i];
     if (r[12]) Object.assign(n, r[12]);
     // tekutiny se zadávají v ml; USDA udává hodnoty na 100 g → přepočet hustotou na 100 ml
-    const ml = r[2] === 'napoje' || /^(Mléko|Podmáslí|Kefír)|nápoj|džus/i.test(r[1]);
+    const ml = r[2] === 'napoje' || r[2] === 'alkohol' || !!r[15] || /^(Mléko|Podmáslí|Kefír)|nápoj|džus/i.test(r[1]);
     const f = {
       id: 's' + r[0], typ: 's', nazev: r[1], znacka: '', skupina: r[2],
       n, porce: (r[11] || []).map(p => ({ n: p[0], g: p[1] })), ml,
-      priznaky: 0, popis: r[13], skeny: 0,
+      priznaky: 0, popis: r[13], skeny: 0, zdroj: r[14] || 'USDA FoodData Central',
     };
+    if (r[15] && DRUHY_NAPOJU[r[15]]) f.druh = r[15];
     if (ml) {
       const ro = HUSTOTA[druhNapoje(f)] || 1;
       if (ro !== 1) for (const k in n) n[k] = zaokrouhli(n[k] * ro, n[k] < 1 ? 3 : 2);
@@ -393,37 +394,67 @@
 
   /* ---------- hledání ---------- */
   // Index: pole záznamů {f: potravina, t: normalizovaný text, nz: normalizovaný název}
-  // syrové ↔ hotové: [syrová, hotová, hmotnost hotové / syrové] – typické poměry při vaření a pečení
+  // syrové ↔ hotové: [syrová, hotová, metoda]. Poměr hmotnosti hotové/syrové se počítá z naměřeného složení
+  // obou potravin v databázi: obiloviny a luštěniny podle sušiny (při vaření přibude jen voda),
+  // maso a ryby podle bílkovin (při tepelné úpravě se neztrácejí). Zelenina a brambory chybí záměrně:
+  // část sušiny se při vaření vyluhuje, poměr by ze složení vyšel nespolehlivě.
   const PREVODY_VAHY = [
-    ['Rýže bílá (syrová)', 'Rýže bílá vařená', 2.5], ['Rýže natural (syrová)', 'Rýže natural vařená', 2.4],
-    ['Těstoviny (suché)', 'Těstoviny vařené', 2.2], ['Kuskus (suchý)', 'Kuskus vařený', 2.5], ['Bulgur (suchý)', 'Bulgur vařený', 2.6],
-    ['Quinoa (suchá)', 'Quinoa vařená', 2.7], ['Jáhly (syrové)', 'Jáhly vařené', 3.0], ['Pohanka (suchá)', 'Pohanka vařená', 2.5],
-    ['Kroupy (syrové)', 'Kroupy vařené', 2.8], ['Čočka (suchá)', 'Čočka vařená', 2.4], ['Fazole červené (suché)', 'Fazole červené vařené', 2.5],
-    ['Fazole bílé (suché)', 'Fazole bílé vařené', 2.5], ['Cizrna (suchá)', 'Cizrna vařená', 2.2],
-    ['Brambory syrové', 'Brambory vařené (loupané)', 1.0], ['Batáty syrové', 'Batáty pečené (sladké brambory)', 0.85],
-    ['Kuřecí prsa (syrová)', 'Kuřecí prsa pečená', 0.75], ['Kuřecí stehna bez kůže (syrová)', 'Kuřecí stehna pečená (bez kůže)', 0.72],
-    ['Kuře s kůží (syrové)', 'Kuře s kůží pečené', 0.72], ['Vepřová plec (syrová)', 'Vepřová plec pečená', 0.7],
-    ['Vepřová panenka / kotleta libová (syrová)', 'Vepřová kotleta smažená (bez obalu)', 0.75], ['Hovězí hrudí (syrové)', 'Hovězí hrudí vařené', 0.65],
-    ['Mleté hovězí 15 % tuku (syrové)', 'Hovězí karbanátek opečený (hamburgerový)', 0.75],
-    ['Kapr (syrový)', 'Kapr pečený', 0.8], ['Losos (syrový)', 'Losos pečený', 0.8], ['Treska (syrová)', 'Treska pečená', 0.8],
-    ['Pstruh duhový (syrový)', 'Pstruh pečený', 0.8], ['Krevety (syrové)', 'Krevety vařené', 0.85],
-    ['Mrkev', 'Mrkev vařená', 0.95], ['Brokolice', 'Brokolice vařená', 0.95], ['Květák', 'Květák vařený', 0.95],
-    ['Špenát', 'Špenát vařený', 0.7], ['Žampiony', 'Žampiony vařené', 0.75],
+    ['Rýže bílá (syrová)', 'Rýže bílá vařená', 'susina'], ['Rýže natural (syrová)', 'Rýže natural vařená', 'susina'],
+    ['Těstoviny (suché)', 'Těstoviny vařené', 'susina'], ['Kuskus (suchý)', 'Kuskus vařený', 'susina'], ['Bulgur (suchý)', 'Bulgur vařený', 'susina'],
+    ['Quinoa (suchá)', 'Quinoa vařená', 'susina'], ['Jáhly (syrové)', 'Jáhly vařené', 'susina'], ['Pohanka (suchá)', 'Pohanka vařená', 'susina'],
+    ['Kroupy (syrové)', 'Kroupy vařené', 'susina'], ['Čočka (suchá)', 'Čočka vařená', 'susina'], ['Fazole červené (suché)', 'Fazole červené vařené', 'susina'],
+    ['Fazole bílé (suché)', 'Fazole bílé vařené', 'susina'], ['Cizrna (suchá)', 'Cizrna vařená', 'susina'],
+    ['Kuřecí prsa (syrová)', 'Kuřecí prsa pečená', 'bilkoviny'], ['Kuřecí stehna bez kůže (syrová)', 'Kuřecí stehna pečená (bez kůže)', 'bilkoviny'],
+    ['Kuře s kůží (syrové)', 'Kuře s kůží pečené', 'bilkoviny'], ['Vepřová plec (syrová)', 'Vepřová plec pečená', 'bilkoviny'],
+    ['Vepřová panenka / kotleta libová (syrová)', 'Vepřová kotleta smažená (bez obalu)', 'bilkoviny'], ['Hovězí hrudí (syrové)', 'Hovězí hrudí vařené', 'bilkoviny'],
+    ['Mleté hovězí 15 % tuku (syrové)', 'Hovězí karbanátek opečený (hamburgerový)', 'bilkoviny'],
+    ['Kapr (syrový)', 'Kapr pečený', 'bilkoviny'], ['Losos (syrový)', 'Losos pečený', 'bilkoviny'], ['Treska (syrová)', 'Treska pečená', 'bilkoviny'],
+    ['Pstruh duhový (syrový)', 'Pstruh pečený', 'bilkoviny'], ['Krevety (syrové)', 'Krevety vařené', 'bilkoviny'],
   ];
-  // pro potravinu z dvojice vrátí {stav: 'syrove'|'hotove', protejsek, faktor (hotové/syrové)}
-  function prevodVahy(f) {
-    if (!f || !f.nazev) return null;
-    for (const [s, v, k] of PREVODY_VAHY) {
-      if (f.nazev === s) return { stav: 'syrove', protejsek: v, faktor: k };
-      if (f.nazev === v) return { stav: 'hotove', protejsek: s, faktor: k };
+  let faktoryVahy = {};   // název → {stav, protejsek, faktor, metoda}; plní nastavPrevody() z databáze
+  // spočítá poměry z naměřeného složení dvojic (potraviny = obecné potraviny z databáze)
+  function nastavPrevody(potraviny) {
+    const podle = new Map(potraviny.map(f => [f.nazev, f]));
+    faktoryVahy = {};
+    for (const [s, v, metoda] of PREVODY_VAHY) {
+      const a = podle.get(s), b = podle.get(v);
+      if (!a || !b) continue;
+      let k = null;
+      if (metoda === 'susina' && Number.isFinite(a.n.voda) && Number.isFinite(b.n.voda) && b.n.voda < 100) k = (100 - a.n.voda) / (100 - b.n.voda);
+      if (metoda === 'bilkoviny' && a.n.bilkoviny > 0 && b.n.bilkoviny > 0) k = a.n.bilkoviny / b.n.bilkoviny;
+      if (!(k > 0.3 && k < 6)) continue;
+      k = zaokrouhli(k, 2);
+      faktoryVahy[s] = { stav: 'syrove', protejsek: v, faktor: k, metoda };
+      faktoryVahy[v] = { stav: 'hotove', protejsek: s, faktor: k, metoda };
     }
-    return null;
+    return Object.keys(faktoryVahy).length / 2;
+  }
+  // pro potravinu z dvojice vrátí {stav: 'syrove'|'hotove', protejsek, faktor (hotové/syrové), metoda}
+  function prevodVahy(f) {
+    return (f && f.nazev && faktoryVahy[f.nazev]) || null;
   }
   // gramy potraviny f, když uživatel zvážil opačný stav (syrové místo hotového nebo naopak)
   function prepocetVahy(f, gramy, vazeno) {
     const p = prevodVahy(f);
     if (!p || !vazeno || vazeno === p.stav) return gramy;
     return p.stav === 'hotove' ? gramy * p.faktor : gramy / p.faktor;
+  }
+  // odhadnutá položka → naměřená obecná potravina téhož jídla (stejný název se páruje sám)
+  const PAROVANI_ODHADU = {   // jen skutečně stejné jídlo / potravina
+    'Tvaroh polotučný': 'Tvaroh polotučný (medián etiket)', 'Tvaroh nízkotučný': 'Tvaroh nízkotučný (medián etiket)',
+    'Tvaroh tučný': 'Tvaroh tučný (kvark, 45 % tuku v sušině)', 'Hermelín': 'Hermelín (medián etiket)', 'Eidam 30 %': 'Eidam 30 % (medián etiket)',
+    'Salám Vysočina': 'Salám Vysočina (medián etiket)', 'Lučina (smetanový tvarohový sýr)': 'Lučina (medián etiket)',
+    'Mléko polotučné 1,5 %': 'Mléko polotučné (medián etiket)', 'Mléko plnotučné 3,5 %': 'Mléko plnotučné (medián etiket)',
+    'Syrovátkový protein (prášek)': 'Syrovátkový protein (medián etiket)', 'Proteinová tyčinka': 'Proteinová tyčinka (medián etiket)',
+    'Ovesná kaše na mléce': 'Ovesná kaše z vloček na polotučném mléce', 'Lasagne boloňské': 'Lasagne s masem',
+    'Sushi maki s lososem': 'Sushi nebo maki s mořskými plody', 'Gyros v pitě': 'Gyros v pitě (sendvič)', 'Palačinky': 'Palačinka bez náplně (balená)',
+    'Palačinky s marmeládou': 'Palačinka s marmeládou (domácí)',
+  };
+  // naměřená varianta pro odhadnutou položku (obecné potraviny = suroviny z databáze), jinak null
+  function namerenaVarianta(f, suroviny) {
+    if (!f || !f.odhad) return null;
+    const cil = PAROVANI_ODHADU[f.nazev] || f.nazev;
+    return (suroviny || []).find(s => s.nazev === cil && s.typ === 's' && Number.isFinite(s.n.kcal)) || null;
   }
   // synonyma obecných potravin (hledají se jako název): jak lidé píší × jak se potravina jmenuje
   const ALIASY = {
@@ -448,12 +479,12 @@
     'Žemle (kaiserka)': 'kaiserka',
     'Chléb konzumní (kmínový)': 'chleba, chléb, konzumní chléb, kmínový chléb',
     'Rohlík tukový': 'rohlík, rohlíky',
-    'Mléko polotučné 1,5 %': 'mléko, polotučné mléko',
-    'Tvaroh polotučný': 'tvaroh, měkký tvaroh',
-    'Eidam 30 %': 'eidam, sýr, plátkový sýr',
+    'Mléko polotučné (medián etiket)': 'mléko, polotučné mléko',
+    'Tvaroh polotučný (medián etiket)': 'tvaroh, měkký tvaroh',
+    'Eidam 30 % (medián etiket)': 'eidam, sýr, plátkový sýr',
     'Párky (vepřové a hovězí)': 'párek, párky, vídeňské párky',
     'Šunka (cca 11 % tuku)': 'šunka, šunka výběrová',
-    'Ovesná kaše na mléce': 'ovesná kaše, kaše, porridge',
+    'Ovesná kaše z vloček na polotučném mléce': 'ovesná kaše, kaše, porridge',
     'Batáty pečené (sladké brambory)': 'sladké brambory, batát',
     'Pizza sýrová (margherita)': 'pizza, pizza margherita',
     'Hamburger': 'burger',
@@ -479,15 +510,17 @@
     'Hrášek zelený': 'hrach, hrášek', 'Cuketa': 'cukina', 'Lilek': 'baklažán', 'Dýně': 'tekvica, tykev', 'Celer bulvový': 'zeler, celer',
     'Pórek': 'pór', 'Červená řepa': 'cvikla, řepa', 'Máslo': 'maslo', 'Cukr krystal': 'cukr, cukor', 'Smetana ke šlehání (cca 36 %)': 'šlehačka, smotana na šľahanie',
     'Zakysaná smetana': 'kyslá smotana', 'Rohlík tukový': 'rožok, rohlíček', 'Houska': 'žemle, žemľa, buchta (pečivo)',
-    'Chléb konzumní (kmínový)': 'chlieb, šumava chléb', 'Vejce celé': 'vajce, vajíčka', 'Tvaroh polotučný': 'tvaroh, tvarôh',
+    'Chléb konzumní (kmínový)': 'chlieb, šumava chléb', 'Vejce celé': 'vajce, vajíčka', 'Tvaroh polotučný (medián etiket)': 'tvaroh, tvarôh',
     'Těstoviny vařené': 'cestoviny', 'Hranolky smažené': 'hranolčeky', 'Kobliha s marmeládou': 'šiška, kobliha, koblížek',
     'Pomazánkové máslo': 'pomazánkové, pomazánka máslová', 'Kuřecí prsa (syrová)': 'kuracie prsia, kuřecí maso syrové',
     'Mleté vepřové (syrové)': 'mleté maso, mleté mäso', 'Káva (černá, bez cukru)': 'káva, kafe, kava', 'Rajčatový protlak': 'paradajkový pretlak, protlak',
     'Jahody': 'jahoda', 'Banán': 'banány', 'Pomeranč': 'pomaranč, pomeranče', 'Mandarinka': 'mandarínka, mandarinky', 'Citron': 'citrón',
     'Brokolice': 'brokolica', 'Květák': 'karfiol', 'Špenát': 'špenát', 'Fazole červené v konzervě': 'fazole, fazuľa',
-    'Caffè latte': 'latte, latté, kafe latte', 'Svařené víno': 'svařák, svařáček, punč vinný', 'Syrovátkový protein (prášek)': 'protein, whey, proteinový prášek',
-    'Sushi maki s lososem': 'sushi, maki', 'Lasagne boloňské': 'lasagne, lasagna, lazaně', 'Vitamin D3 1000 IU (tableta)': 'vitamin d, déčko',
+    'Caffè latte': 'latte, latté, kafe latte', 'Svařené víno': 'svařák, svařáček, punč vinný', 'Syrovátkový protein (medián etiket)': 'protein, whey, proteinový prášek',
+    'Sushi nebo maki s mořskými plody': 'sushi, maki', 'Lasagne s masem': 'lasagne, lasagna, lazaně', 'Vitamin D3 1000 IU (tableta)': 'vitamin d, déčko',
     'Beton (Becherovka s tonikem)': 'beton', 'Cuba libre': 'cuba, rum s colou', 'Vinný střik': 'střik, vinný střik',
+    'Skyr (0,2 % tuku)': 'skyr', 'Tvaroh tučný (kvark, 45 % tuku v sušině)': 'tučný tvaroh, kvark', 'Tvaroh nízkotučný (medián etiket)': 'nízkotučný tvaroh, odtučněný tvaroh',
+    'Hermelín (medián etiket)': 'hermelín', 'Šunka nejvyšší jakosti (medián etiket)': 'šunka nejvyšší jakosti', 'Bílý jogurt (medián etiket)': 'jogurt, bílý jogurt',
     'Sůl': 'soľ', 'Ocet': 'ocot', 'Olivový olej': 'olivový olej', 'Slunečnicový olej': 'olej, slnečnicový olej',
   };
   for (const k in ALIASY_NAREC) ALIASY[k] = ALIASY[k] ? ALIASY[k] + ', ' + ALIASY_NAREC[k] : ALIASY_NAREC[k];
@@ -505,7 +538,7 @@
     let b = 0;
     if (f.typ === 's') b += 6;          // obecné suroviny – krátké, časté
     if (f.typ === 'm' || f.typ === 'r') b += 14;
-    if (f.typ === 'd') b += 4;          // doplňky správce – ověřené podle etikety
+    if (f.typ === 'd') b += f.odhad ? 1 : 4;   // doplňky správce; odhady až za naměřenými
     if (f.priznaky & 2) b -= 15;        // výrobek bez živin
     if (f.priznaky & 1) b -= 3;
     if (f.priznaky & 512) b -= 40;      // zjevně chybné hodnoty – až na konec (kód je pořád najde)
@@ -560,11 +593,13 @@
       if (!ok) continue;
       // obecné potraviny (a vlastní, recepty, doplňky) mají u stejné shody přednost před výrobky:
       // „rýže“ má najít rýži, ne výrobek, který se jmenuje jen „Rýže“
-      const obecna = x.f.typ === 's' || x.f.typ === 'd' || x.f.typ === 'm' || x.f.typ === 'r';
+      // odhady (vypočtené/odhadnuté doplňky) přednost nemají – mají se řadit za hodnoty z databází
+      const obecna = x.f.typ === 's' || (x.f.typ === 'd' && !x.f.odhad) || x.f.typ === 'm' || x.f.typ === 'r';
       const alias = x.a && (x.a === q || x.a.split(/\s*,\s*/).includes(q));
-      if (x.nz.startsWith(tokeny[0]) || alias) skore += obecna ? 18 : 12;
+      const odhad = x.f.typ === 'd' && x.f.odhad;   // odhad: za databázemi, ale před nesouvisejícími výrobky
+      if (x.nz.startsWith(tokeny[0]) || alias) skore += obecna ? 18 : odhad ? 15 : 12;
       else if (kmeny[0] && x.nz.startsWith(kmeny[0])) skore += 9;
-      if (x.nz === q || alias) skore += obecna ? 30 : 12;
+      if (x.nz === q || alias) skore += obecna ? 30 : odhad ? 20 : 12;
       skore += bodyPotraviny(x, volby);
       vys.push({ f: x.f, skore });
     }
@@ -1663,6 +1698,8 @@
     if (x.porce !== undefined && (!Array.isArray(x.porce) || x.porce.some(p => !p || typeof p.n !== 'string' || !(cislo(p.g) > 0)))) chyby.push('Neplatné porce');
     if (x.druh !== undefined && !DRUHY_NAPOJU[x.druh]) chyby.push('Neznámý druh nápoje');
     if (x.skupina !== undefined && !SKUPINY[x.skupina]) chyby.push('Neznámá skupina');
+    if (x.odhad !== undefined && typeof x.odhad !== 'boolean') chyby.push('Příznak odhad musí být true/false');
+    if (x.zdroj !== undefined && typeof x.zdroj !== 'string') chyby.push('Zdroj musí být text');
     if (Number.isFinite(x.n && x.n.kcal) && energieSedi(x.n) === false) chyby.push('Energie nesedí s makroživinami (zkontroluj opis)');
     return chyby;
   }
@@ -1674,6 +1711,8 @@
     };
     if (x.ean) f.ean = x.ean;
     if (x.druh) f.druh = x.druh;
+    if (x.odhad) f.odhad = true;
+    if (typeof x.zdroj === 'string') f.zdrojText = x.zdroj.slice(0, 300);
     return doplnNapoj(f);
   }
   function exportDoplnku(seznam) {
@@ -1928,7 +1967,7 @@
 
   const API = {
     FORMAT_DOPLNKY, sestavDoplnky, idDoplnku, doplnekZVlastni, overDoplnek, doplnekZDat, exportDoplnku, slucDoplnky,
-    VERZE_KODU: '2026-10-16k', FORMAT, VERZE_FORMATU, ZIVINY, ZIV, ZAKLAD, MIKRO, SKUPINY, JIDLA_VYCHOZI, AKTIVITA, EFSA_DOSPELI,
+    VERZE_KODU: '2026-10-16l', FORMAT, VERZE_FORMATU, ZIVINY, ZIV, ZAKLAD, MIKRO, SKUPINY, JIDLA_VYCHOZI, AKTIVITA, EFSA_DOSPELI,
     norm, cislo, zaokrouhli, formatCislo, noveId, hash, tvar, pocet,
     datumKlic, zKlice, posunDen, rozdilDni, popisDne,
     eanKontrola, eanVarianty, eanZeme,
@@ -1938,7 +1977,7 @@
     vek, bmr, bmi, bmiPopis, cile,
     novyStav, klicSnimku, snimek, den, pridejZaznam, rychlyZaznam, najdiZaznam, smazZaznam, presunZaznam,
     kopirujJidlo, kopirujDen, castePrJidlo, casteNapoje, tipyNaZiviny, rozeberSuroviny, gramySuroviny, tvaryNazvu, najdiSurovinu,
-    prevodVahy, prepocetVahy, PREVODY_VAHY, rozeberEtiketu, pridejDoPlanu, smazZPlanu, rozvinPolozkuPlanu, souhrnPlanuDne, zapisPlanDoDeniku, nakupniSeznam, DRUHY_NAPOJU, druhNapoje, doplnNapoj, vychoziPorceNapoje, doPitnehoRezimu, standardniNapoje, zivinyZaznamu, souhrnDne, statistika, odhadVydeje, serie, nedavne, caste, uklid,
+    prevodVahy, prepocetVahy, nastavPrevody, PREVODY_VAHY, namerenaVarianta, PAROVANI_ODHADU, rozeberEtiketu, pridejDoPlanu, smazZPlanu, rozvinPolozkuPlanu, souhrnPlanuDne, zapisPlanDoDeniku, nakupniSeznam, DRUHY_NAPOJU, druhNapoje, doplnNapoj, vychoziPorceNapoje, doPitnehoRezimu, standardniNapoje, zivinyZaznamu, souhrnDne, statistika, odhadVydeje, serie, nedavne, caste, uklid,
     overPotravinu, ulozVlastni, spocitejRecept, ulozRecept, receptJakoPotravina,
     exportJson, importJson, normalizujStav, slucStav, exportCsv, exportSouhrnyCsv, zdrojeZiviny,
     ulozSablonu, pouzijSablonu, souhrnSablony, vzdalenost, kontrolaAlergenu, slucAlergeny, ALERGENY, porovnej,

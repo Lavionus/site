@@ -160,7 +160,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     });
     function obnovOkno() {
       const v = vyberVolby();
-      const vybrane = M.telesaKExportu(M.app.dok, M.app.vyber).length, vse = M.telesaKExportu(M.app.dok).length;
+      const vybrane = M.telesaKExportu(M.potvrzenyDok(), M.app.vyber).length, vse = M.telesaKExportu(M.potvrzenyDok()).length;
       $('exportPocetVyber').textContent = vybrane;
       $('exportPocetVse').textContent = vse;
       okno.querySelector('input[name=rozsah][value=vyber]').disabled = !vybrane;
@@ -186,7 +186,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     $('exportZrusit').onclick = () => okno.close();
     $('exportOk').onclick = async () => {
       const v = vyberVolby();
-      const uzly = M.telesaKExportu(M.app.dok, v.jenVyber ? M.app.vyber : null);
+      const uzly = M.telesaKExportu(M.potvrzenyDok(), v.jenVyber ? M.app.vyber : null);
       const tl = $('exportOk');
       tl.disabled = true; tl.textContent = '⏳ Počítám…';
       try {
@@ -255,7 +255,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
 
     // ------------------------------------------------------------ projekt do souboru
     M.ulozDoSouboru = async function (p = null) {
-      const zdroj = p || { nazev: M.app.projekt.nazev, dok: M.app.dok, deska: { sirka: S.deska.sirka, hloubka: S.deska.hloubka, krok: S.deska.krok }, kamera: S.kamera.stav() };
+      const zdroj = p || { nazev: M.app.projekt.nazev, dok: M.potvrzenyDok(), deska: { sirka: S.deska.sirka, hloubka: S.deska.hloubka, krok: S.deska.krok }, kamera: S.kamera.stav() };
       const data = await M.projekt.zapis(zdroj);
       M.stahniSoubor(data, M.jmenoSouboru(zdroj.nazev, M.projekt.PRIPONA), 'application/x-modelar');
     };
@@ -269,8 +269,10 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       let dok;
       try { dok = M.dokumentSablony(id); } catch (e) { Dialog.chyba('Šablonu nejde připravit: ' + e.message); return false; }
       if (!await U.novy(s.nazev, dok)) return false;
+      // pohled na model (malá jmenovka by na celé desce zanikla)
       M.nastavVyber([]);
-      if (S.domu) S.domu(); else if (M.scena && M.scena.domu) M.scena.domu();
+      const ids = M.app.dok.uzly.map(u => u.id);
+      if (ids.length && S.zamerit) S.zamerit(ids); else if (S.domu) S.domu();
       return true;
     };
     M.otevriSablony = function () {

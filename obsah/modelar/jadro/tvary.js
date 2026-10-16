@@ -248,7 +248,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
   /* parametry: popis pro inspektor. jednotka '%' = procenta, 'mm' = délka.
      Každý tvar: nazev, ikona (emoji pro seznam), barva, rozmer (výchozí),
      param (výchozí), parametry (pole popisů), sit(rozmer, param). */
-  const SEG = { klic: 'segmentu', popis: 'Segmenty', min: 8, max: 128, krok: 4, cele: true };
+  const SEG = { klic: 'segmentu', popis: 'Segmenty', min: 8, max: 256, krok: 4, cele: true };
   M.TVARY = {
     kvadr: {
       nazev: 'Kvádr', ikona: '⬛', barva: '#e5533c', rozmer: [20, 20, 20],
@@ -943,9 +943,11 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       L = rozteč (velikost dílku bez výstupků), o = odsazení obrysu (mezera mezi dílky 2o), vyska, stred [x, y],
       rozlozene = dílky od sebe (mezera navíc), jinak složené (tisk vcelku – vůle je mezi nimi). */
   M.uzlySkladacky = function (v, dok = { uzly: [] }) {
-    const nx = Math.max(1, Math.min(30, Math.round(v.nx))), ny = Math.max(1, Math.min(30, Math.round(v.ny)));
-    const L = Math.max(5, v.L), V = 0.32, vyska = Math.max(0.4, v.vyska || 3);
-    const o = Math.min(Math.max(0, v.odsazeni || 0), 0.025 * (L - 2 * Math.max(0, v.odsazeni || 0)) / (1 + 2 * V) * 0.999);
+    const cis = (x, d) => Number.isFinite(x) ? x : d;
+    const nx = Math.max(1, Math.min(30, Math.round(cis(v.nx, 1)))), ny = Math.max(1, Math.min(30, Math.round(cis(v.ny, 1))));
+    const L = Math.max(5, cis(v.L, 25)), V = 0.32, vyska = Math.max(0.4, cis(v.vyska, 3));
+    const o0 = Math.max(0, Math.min(cis(v.odsazeni, 0), L / 10));
+    const o = Math.min(o0, 0.025 * (L - 2 * o0) / (1 + 2 * V) * 0.999);
     const krok = L + (v.rozlozene ? Math.max(4, L * 0.35) : 0);
     const prava = (i, j) => (i + j) % 2 ? 'v' : 'z', horni = (i, j) => (i + j + 1) % 2 ? 'v' : 'z', opak = c => c === 'v' ? 'z' : 'v';
     const uzly = [];
@@ -1106,7 +1108,8 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       param: { vystupky: 'smisene', odsazeni: 0.15, hrany: 'zvvz' },
       parametry: [
         { klic: 'vystupky', popis: 'Okraje', volby: PUZZLE },
-        { klic: 'hrany', popis: 'Vlastní okraje (dole, vpravo, nahoře, vlevo: z/v/r)', text: true },
+        { klic: 'hrany', popis: 'Vlastní okraje (dole, vpravo, nahoře, vlevo: z/v/r)', text: true, vzor: /^[zvr]{4}$/i,
+          chyba: 'Okraje jsou 4 písmena z / v / r (zámek, výstupek, rovně) v pořadí dole, vpravo, nahoře, vlevo – např. zvvz.' },
         { klic: 'odsazeni', popis: 'Odsazení obrysu (vůle)', jednotka: 'mm', min: 0, max: 2, krok: 0.05 }],
       sit: (r, p) => M.vytahni(M.obrysPuzzle(r, p).obrys, [], r[2]),
     },
@@ -1181,8 +1184,11 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
         { klic: 'odstup', popis: 'Střed otvoru od kraje', jednotka: 'mm', min: 0.1, max: 1000, krok: 0.5 }],
       sit: (r, p) => {
         const [sx, sy] = r, m = Math.min(sx, sy);
-        const obrys = zaoblenyObdelnik(sx, sy, Math.min(p.zaobleni, 0.499 * m));
-        const R = p.otvor / 2, o = Math.max(p.odstup, R + 0.02 * m);
+        const z = Math.min(p.zaobleni, 0.499 * m), obrys = zaoblenyObdelnik(sx, sy, z);
+        const R = p.otvor / 2;
+        let o = Math.max(p.odstup, R + 0.02 * m);
+        // otvor v oblasti zaobleného rohu: posunout po úhlopříčce dovnitř, ať je celý v obrysu (rezerva 0,3 mm)
+        if (o < z) { const potreba = z - (z - 0.3 - R) / Math.SQRT2; if (potreba > o) o = potreba; }
         const diry = R > 1e-3 && o + R < sx / 2 - 1e-3 && o + R < sy / 2 - 1e-3 && 2 * R < Math.min(sx / 2 - o, sy / 2 - o) * 2
           ? [[-1, -1], [1, -1], [1, 1], [-1, 1]].map(([a, b]) => kruh(a * (sx / 2 - o), b * (sy / 2 - o), R, 32)) : [];
         return M.vytahni(obrys, diry, r[2]);

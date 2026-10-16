@@ -5,7 +5,7 @@
 /* Při větší aktualizaci webu zvyš číslo verze — stará cache se u návštěvníků
    smaže a vše se stáhne čerstvé (jinak SWR ukáže novou verzi až na druhé načtení). */
 const PREFIX = 'webapp-';
-const CACHE = PREFIX + 'v383';
+const CACHE = PREFIX + 'v385';
 const JADRO = [
   './',
   './index.html',
@@ -138,6 +138,18 @@ const MODELAR = [
   './obsah/modelar.html',
   './obsah/tinkercad.html',
   './obsah/fonty/LiberationSans-Bold.ttf',
+  // písma štítku a textu (offline i bez předchozího použití, ~1 MB)
+  './obsah/fonty/BebasNeue-Regular.ttf',
+  './obsah/fonty/Anton-Regular.ttf',
+  './obsah/fonty/ArchivoBlack-Regular.ttf',
+  './obsah/fonty/RussoOne-Regular.ttf',
+  './obsah/fonty/AlfaSlabOne-Regular.ttf',
+  './obsah/fonty/Bungee-Regular.ttf',
+  './obsah/fonty/TitanOne-Regular.ttf',
+  './obsah/fonty/Righteous-Regular.ttf',
+  './obsah/fonty/LuckiestGuy-Regular.ttf',
+  './obsah/fonty/SairaStencilOne-Regular.ttf',
+  './obsah/fonty/BlackOpsOne-Regular.ttf',
   './obsah/fonty/fonty.js',
   './obsah/lib/clipper.min.js',
   './obsah/lib/jspdf.umd.min.js',

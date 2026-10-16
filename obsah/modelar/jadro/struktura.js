@@ -86,6 +86,10 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     s.rotace = +v.rotace || 0;
     s.okraj = Math.max(0, +v.okraj || 0);
     s.invert = !!v.invert;
+    // spára vzoru (cihly, kostky, diamanty…) aspoň 0,5 mm – užší tryska 0,4 mm nevykreslí (v mezích vzoru)
+    const sp = info.parametry.find(q => q.id === 'spara');
+    if (sp) s.parametry.spara = Math.min(sp.max, Math.max(s.parametry.spara, 0.5 / s.sirka));
+    s.sparaMm = sp ? s.parametry.spara * s.sirka : null;
     s._klic = 'k';
     return s;
   };
@@ -112,7 +116,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     for (let i = 0; i < poz.length; i += 3) for (let k = 0; k < 3; k++) poz[i + k] = sit.poz[i + k] - c[k];
     const zdroj = M.pridejZdroj({ poz, idx: sit.idx }, nazev, 'struktura');
     const zaklad = [0, 1, 2].map(k => Math.max(0.01, Math.round((b.max[k] - b.min[k]) * 1e6) / 1e6));
-    const n = M.normalizujUzel({ druh: 'sit', zdroj, zaklad, rozmer: zaklad, nazev, barva: u.barva,
+    const n = M.normalizujUzel({ druh: 'sit', zdroj, zaklad, rozmer: zaklad, nazev, barva: u.barva, role: u.role, skryto: u.skryto, zamceno: u.zamceno,
       poloha: c.map(x => Math.round(x * 1e6) / 1e6) });
     // jen tělesa nejvyšší úrovně (síť ze zobrazení je ve světových souřadnicích)
     if (!dok.uzly.some(x => x.id === id)) throw new Error('těleso nenalezeno');

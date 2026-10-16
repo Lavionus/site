@@ -897,3 +897,33 @@ rozhraní, QA skutečnou myší); opravy:
 14. **Šablony projektů** (`jadro/sablony.js`, Soubor → Nový ze šablony): krabička na elektroniku, stojánek na
     telefon, jmenovka, organizér na tužky, věšák na klíče, podtácek.
 - Testy: node `modelar_sablony.js` (41), `modelar_upravy.js` 41, `modelar_dily.js` 71; prohlížeč `modelar_ui_prani4.py`.
+
+### Revize 6 (16. 10. 2026, „kompletní revize, profesionální nástroj“)
+
+Čtyři revizoři paralelně (jádro v node, kód UI staticky, soubory a export v node, QA skutečnou myší v prohlížeči,
+server i file://, DPI 1/2, šířky 420–1920), jen hlásili; opravy jsem dělal já. Nálezy: 0 kritických, 19 závažných,
+~60 drobných. Hlavní opravy:
+- **Propojení přes skupiny**: `M.propojeneZmeny`/`M.protikusy` rekurzivně, `M.upravVnorene` + `M.prestavSkupinu`
+  (skupina přepočítá obálku a zachová polohu ve světě), `M.dokSeZmenouParametru` (jeden krok, odsunutí protikusu
+  nebo jeho skupiny při překryvu, více klíčů – vlastní průměr převezme normu); pole Rozměr u krabičky/víka mění
+  parametry (`rozmerKlice`); lem víka podle dutiny; povolené dvojice propojení; kopie páru (duplikace, vložení,
+  vlastní tvar) dostane novou společnou vazbu (`M.kopieSVazbami`).
+- **Vroubek do STL děravý** (nulové hrany z průniku) – druhé vytažení posunuté; nový test `modelar_stl_svar.js`.
+- **Díly**: příchytka pro tenké kabely, montážní deska s velkým zaoblením, čep (přesah podle prořezu, obálka),
+  otvory klipu/příchytky, opsané kružnice děr (vůle i u velkých průměrů), klip max 150°, vůle omezená vůči průměru
+  závitu, imbus a sražení u malých závitů, sloupky krabičky v zaoblených rozích, zahloubení díry do hloubky,
+  hrubé závity, rozpočet vroubku, háček S – špička nepřejede krček, věšák v šabloně s háčky kolmo z desky.
+- **Soubory**: verze souboru 3, obálka dílu ze souboru ověřená proti parametrům (posun/měřítko zachované),
+  přepínače „false“/0, podklad skici jen data URL, Uložit/Export bez nepotvrzeného náhledu (`M.potvrzenyDok`),
+  STEP vynechá příliš složitá tělesa a zbytek vyexportuje, 12 písem štítku offline.
+- **Výkon**: `M.indexBodVSiti` (mřížka v Y–Z, stejný výsledek, 60–250× rychlejší) – Spoje, překryvy v kontrole tisku;
+  odhady kvality v inspektoru s pamětí.
+- **UI**: šablona bez úložiště i se Zpět, struktura (souběh, změna tělesa během načítání, české chyby, spáry
+  ≥ 0,5 mm, tykání, odklad přepočtu), text po obvodu (dvojí vložení, Esc, výška), reliéf (SVG bez rozměrů, chyby
+  čtení, obrázek zůstane), závit na válec (validace, normovaný závit v radě), pole podél křivky (prázdná skica,
+  originál na začátek, přesná tečna), lišta (posuvná část zvlášť, ❓/☰ nic nezakryjí, stín u okraje), vkládání
+  na desku, otáčení nezanoří těleso, kóty ořezané a při otáčení skryté, pohled Shora vždy stejně natočený,
+  inspektor: tip k dílu, společné parametry víc dílů, kontrola okrajů puzzle, kontrola tisku celého modelu,
+  předvolby s pamětí v soukromém okně (`modelar_vule`, `modelar_kvalitaNovych`), přístupnost (procenta mimo
+  živou oblast, role img, názvy), nápověda Postupy doplněná.
+- Testy: `modelar_stl_svar.js`, `modelar_ui_revize7.py`; úpravy starších testů (počty dlaždic, klíče, segmenty 192).

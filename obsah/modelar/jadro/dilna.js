@@ -251,7 +251,8 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
   };
   /** Vloží vlastní tvar: spodek středu na bod [x, y, z]. Vrací {dok, ids}. */
   M.vlozTvar = function (dok, tvar, bod = [0, 0, 0]) {
-    const nove = tvar.uzly.map(u => M.normalizujUzel(Object.assign(M.noveIdHluboko(u), {
+    const kopie = M.kopieSVazbami(tvar.uzly);
+    const nove = tvar.uzly.map((u, i) => M.normalizujUzel(Object.assign(kopie[i], {
       poloha: u.poloha.map((x, i) => Math.round((x + bod[i]) * 1e6) / 1e6),
     })));
     return { dok: M.pridejUzly(dok, nove), ids: nove.map(u => u.id) };

@@ -286,30 +286,48 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     M.occtOver = async uzel => { await pripravOcct(uzel); return M.zdroje.get(M.klicOcct(uzel)); };
     /** STEP z uzlů ve světových souřadnicích. Co OCCT nepostaví přesně (díly, skici),
         jde jako síť z manifoldu. */
+    // STEP z trojúhelníků je obří (~5 kB na trojúhelník) a OCCT ho nad limitem odmítne – taková tělesa
+    // (závity, jemné struktury, reliéf) se vynechají a zbytek se exportuje (stejná mez jako v jadro/occt.js)
+    const MAX_TROJ_STEP = 12000;
     M.occtStep = async uzly => {
-      const polozky = [];
+      const polozky = [], vynechane = [];
       for (const u of uzly) {
         await pripravOcct(u);
         const e = M.maticeUzlu(u).elements;
         const matice = [e[0], e[4], e[8], e[12], e[1], e[5], e[9], e[13], e[2], e[6], e[10], e[14]];
         // díly jako síť (závity, kola…); díra pro šroub jde přesně (válce, kužel)
-        if (M.maPrirozene(u) && u.druh !== 'diraSroub' && u.druh !== 'sloupek') { const r = await pozadej(u, 'sit'); polozky.push({ uzel: u, matice, sit: { poz: r.poz, idx: r.idx } }); }
-        else polozky.push({ uzel: u, matice, site: await sitePro(u) });
+        if (M.maPrirozene(u) && u.druh !== 'diraSroub' && u.druh !== 'sloupek') {
+          const r = await pozadej(u, 'sit');
+          if (r.idx.length / 3 > MAX_TROJ_STEP) { vynechane.push(u.nazev); continue; }
+          polozky.push({ uzel: u, matice, sit: { poz: r.poz, idx: r.idx } });
+        } else if (u.druh === 'sit' && M.zdroje.get(u.zdroj) && M.zdroje.get(u.zdroj).idx.length / 3 > MAX_TROJ_STEP && !M.zdroje.get(u.zdroj).step) {
+          vynechane.push(u.nazev);
+        } else polozky.push({ uzel: u, matice, site: await sitePro(u) });
       }
+      const varuj = extra => {
+        const t = [extra, vynechane.length ? `Vynecháno (příliš složité pro STEP – exportuj je do STL nebo 3MF): ${vynechane.join(', ')}.` : ''].filter(Boolean).join(' ');
+        M.posledniStepVarovani = t;
+      };
+      const zadne = () => new Error(`Do STEP nejde převést nic z vybraného: ${vynechane.join(', ')} – jsou příliš složitá (závity, jemné struktury, reliéf). Exportuj je do STL nebo 3MF.`);
+      if (!polozky.length) throw zadne();
       M.posledniStepVarovani = '';
-      try { return await occt({ typ: 'step', polozky }, [...M.zdrojeUzlu(uzly)]); }
+      try { const text = await occt({ typ: 'step', polozky }, [...M.zdrojeUzlu(uzly)]); varuj(''); return text; }
       catch (e) {
         if (/paměti/.test(e.message)) throw e;
         // přesné sjednocení nejde (písmo, plošky): skupiny a díly jako síť z manifoldu – soubor vznikne,
-        // jen ty části nebudou přesné plochy
+        // jen ty části nebudou přesné plochy; příliš složité skupiny vynechat
         const zaloha = [];
+        let sit = false;
         for (const p of polozky) {
           if (p.sit || (p.uzel.druh !== 'skupina' && !M.maPrirozene(p.uzel))) { zaloha.push(p); continue; }
           const r = await pozadejSOcct(p.uzel, 'sit');
+          if (r.idx.length / 3 > MAX_TROJ_STEP) { vynechane.push(p.uzel.nazev); continue; }
           zaloha.push({ uzel: p.uzel, matice: p.matice, sit: { poz: r.poz, idx: r.idx } });
+          sit = true;
         }
+        if (!zaloha.length) throw zadne();
         const text = await occt({ typ: 'step', polozky: zaloha }, [...M.zdrojeUzlu(uzly)]);
-        M.posledniStepVarovani = 'Některé skupiny se přesně sjednotit nepodařilo (třeba písmo vnořené do tělesa) – ve STEP jsou jako síť trojúhelníků.';
+        varuj(sit ? 'Některé skupiny se přesně sjednotit nepodařilo (třeba písmo vnořené do tělesa) – ve STEP jsou jako síť trojúhelníků.' : '');
         console.warn('Modelář: STEP přes síť –', e.message);
         return text;
       }

@@ -107,8 +107,9 @@ self.onmessage = e => {
       st.jemnost = j;
       const n = POVRCH.odhadTrojuhelniku(st.model, new Map([[st.oblast.id, s]]), j, []);
       const tl = 2 * s.hloubka;
-      $('strInfo').textContent = `Odhad ${Math.round(n / 1000)} tisíc trojúhelníků, síť po ${M.mm(j, 2)} mm`
+      $('strInfo').textContent = `Odhad ${Math.round(n / 1000)} tisíc trojúhelníků, síť po ${M.mm(j, 2)}\u00a0mm`
         + (j > j0 * 1.01 ? ' (zhrubeno kvůli velikosti)' : '') + '.'
+        + (s.sparaMm != null && s.sparaMm < 0.4 ? ` ⚠ Spáry vzoru vyjdou jen ${M.mm(s.sparaMm, 2)}\u00a0mm – tryska 0,4\u00a0mm je nevykreslí, zvětši dlaždici.` : '')
         + (s.smer === 'dovnitr' && st.tloustka && st.tloustka < tl ? ` ⚠ Stěna je tenká (${M.mm(st.tloustka, 1)} mm) – vzor ji může proříznout.` : '');
       $('strChyba').textContent = '';
       $('strOk').disabled = false;
@@ -233,8 +234,10 @@ self.onmessage = e => {
         await M.dejVykreslit();
       } catch (e) { Dialog.chyba('Strukturu nejde nanést: ' + cesky(e)); return; }
       finally { M.hotovoCekani('struktura'); }
+      // varování jádra povrch3d (stránka vyká) po našem: tykání a bez rad k polím, která tady nejsou
+      const var2 = r.varovani.map(t => t.replace(/Zvětšete vzor nebo spáru[^.]*\./, 'Zvětši velikost dlaždice.').replace(/Zvětšete/g, 'Zvětši').replace(/Zmenšete/g, 'Zmenši').replace(/zvětšete/g, 'zvětši').replace(/zmenšete/g, 'zmenši'));
       Dialog.info(`Struktura nanesena (${Math.round(r.sit.idx.length / 3000)} tisíc trojúhelníků). Těleso je teď síť – rozměry a parametry tvaru už nejdou měnit, Ctrl+Z vrátí původní.`
-        + (r.varovani.length ? '\n\n' + r.varovani.join('\n') : ''));
+        + (var2.length ? '\n\n' + var2.join('\n') : ''));
     };
     const zrus = () => {
       if (bezi && bezi.zrus) bezi.zrus();

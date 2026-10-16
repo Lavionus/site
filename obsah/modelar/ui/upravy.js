@@ -215,7 +215,12 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       if ($('zvStoupani').value.trim() && !isFinite(cti('zvStoupani'))) chyby.push('Stoupání není číslo.');
       $('zvInfo').textContent = `Válec ⌀\u00a0${M.mm(D, 1)} × ${M.mm(H, 1)}\u00a0mm. Závit ⌀\u00a0${M.mm(d, 1)}\u00a0mm, stoupání ${M.mm(p, 2)}\u00a0mm, ${M.mm(L / p, 1)} závitů`
         + (L0 > H ? ` (délka zkrácena na výšku válce ${M.mm(H, 1)}\u00a0mm)` : '') + '.'
-        + (typ === 'vnejsi' ? ' Matici k němu: díl Matice, Závit = Vlastní průměr, ⌀\u00a0' + M.mm(D, 1) + '.' : ' Šroub k ní: díl Šroub, Závit = Vlastní průměr, ⌀\u00a0' + M.mm(d, 1) + '.');
+        + (() => {
+          // průměr a stoupání normovaného závitu (⌀ 20 / 2,5 = M20): poradit normu, jinak vlastní průměr
+          const norma = Object.keys(M.ZAVITY).find(k => /^M/.test(k) && Math.abs(M.ZAVITY[k][0] - d) < 1e-6 && Math.abs(M.ZAVITY[k][1] - p) < 1e-6);
+          const zavitTxt = norma ? `Závit = ${norma.replace('.', ',')}` : `Závit = Vlastní průměr, ⌀\u00a0${M.mm(d, 1)}, stoupání ${M.mm(p, 2)}`;
+          return typ === 'vnejsi' ? ` Matici k němu: díl Matice, ${zavitTxt}.` : ` Šroub k ní: díl Šroub, ${zavitTxt}.`;
+        })();
       $('zvChyba').textContent = chyby.length ? '⚠ ' + chyby.join(' ') : '';
       $('zvOk').disabled = !!chyby.length;
     }
@@ -264,7 +269,9 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     $('sklZrusit').onclick = () => oknoSkl.close();
     /** Vloží skládačku na střed pohledu (pro testy volatelné přímo). */
     M.vlozSkladacku = function (v) {
-      const m = M.mistoProTvar ? M.mistoProTvar('puzzle') : null;
+      // místo pro celou skládačku (ne jen jeden dílek) – ať neskončí přes okraj desky
+      const kr = v.L + (v.rozlozene ? Math.max(4, v.L * 0.35) : 0);
+      const m = M.mistoProTvar ? M.mistoProTvar('puzzle', [v.nx * kr, v.ny * kr, v.vyska || 3]) : null;
       const uzly = M.uzlySkladacky(Object.assign({ stred: m && m.poloha ? m.poloha.slice(0, 2) : [0, 0] }, v), M.app.dok);
       M.zmenDokument(M.pridejUzly(M.app.dok, uzly), 'Skládačka ' + v.nx + ' × ' + v.ny);
       M.nastavVyber(uzly.map(u => u.id));
@@ -296,6 +303,8 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       oknoVule.showModal();
     };
     vuleSel.addEventListener('change', infoVule);
+    // Enter v okně uloží (jako v ostatních oknech)
+    oknoVule.addEventListener('keydown', e => { if (e.key === 'Enter' && !(e.target instanceof HTMLButtonElement)) { e.preventDefault(); $('vuleUlozit').click(); } });
     $('vuleVlozit').onclick = () => {
       oknoVule.close();
       M.pridejTvar('kalibraceVule', M.mistoProTvar ? M.mistoProTvar('kalibraceVule') : {});

@@ -371,7 +371,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     async function spocitej() {
       const c = ++pocitano;
       const jenVyber = oknoV.querySelector('input[name="vykRozsah"]:checked').value === 'vyber';
-      const uzly = M.telesaKExportu(M.app.dok, jenVyber ? M.app.vyber : null);
+      const uzly = M.telesaKExportu(M.potvrzenyDok(), jenVyber ? M.app.vyber : null);
       $('vykChyba').textContent = '';
       $('vykNahled').classList.add('ceka');
       $('vykStahnoutSvg').disabled = $('vykStahnoutPdf').disabled = $('vykStahnoutDxf').disabled = true;

@@ -306,6 +306,9 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
         Object.assign(tah, { osa: h.osa, b1: h.b1, b2: h.b2, stred: h.stred, kresba: h.kresba, R: h.R, index: h.index, px0: px, py0: py, pohnuto: false });
         tah.a0 = uhelKurzoru(px, py);
         tah.posledni = 0; tah.otoceni = 0;
+        M.otaciUchytem = true;
+        // tělesa stojící na desce / rovině na ní při otáčení zůstanou (otočení kolem X / Y by je zanořilo)
+        tah.naRovine = ids.filter(id => Math.abs(M.minNadRovinou(M.najdiUzel(tah.zaklad, id), M.rovina())) < 0.01);
         // jedno těleso otáčené kolem osy, kterou má ve svém natočení samostatně (ostatní složky se
         // nemění): úhel se ukazuje i přichytává absolutně – navazuje na předchozí otočení, ne od nuly
         tah.zakladUhel = null;
@@ -389,6 +392,13 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
           text = `${nazevOsy(tah.index)} ${st >= 0 ? '+' : ''}${M.mm(st, 1)}°`;
         }
         dok = M.otocUzly(tah.zaklad, tah.ids, tah.osa.toArray(), st, tah.stred.toArray());
+        if (tah.naRovine && tah.naRovine.length && tah.index !== 2) {
+          const r = M.rovina(), n = r.osy[2];
+          for (const id of tah.naRovine) {
+            const d = M.minNadRovinou(M.najdiUzel(dok, id), r);
+            if (Math.abs(d) > 1e-9) dok = M.posunUzly(dok, [id], n.map(x => -x * d));
+          }
+        }
         kresliUhlomer(st);
       }
       M.zmenDokument(dok, '', { docasne: true });
@@ -468,6 +478,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       const zadat = !zrusit && tah.druh === 'otoceni' && !tah.pohnuto ? tah : null;
       if (zadat) zrusit = true;
       tah = null;
+      M.otaciUchytem = false;
       M.ovladaniBlokovano = false;
       skryjPopisek();
       vrstvaKresby.textContent = '';
@@ -503,7 +514,12 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
           const st = M.prectiCislo(inp.value);
           zavri();
           if (!isFinite(st) && inp.value.trim()) M.oznamPole(null, `„${inp.value.trim()}“ není úhel – piš třeba 45, −90 nebo 360/8.`);
-          if (isFinite(st) && Math.abs(st) > 1e-9) M.zmenDokument(M.otocUzly(M.app.dok, t.ids, t.osa.toArray(), st, t.stred.toArray()), 'Otočení');
+          if (isFinite(st) && Math.abs(st) > 1e-9) {
+            const r = M.rovina(), naRovine = t.index === 2 ? [] : t.ids.filter(id => Math.abs(M.minNadRovinou(M.najdiUzel(M.app.dok, id), r)) < 0.01);
+            let d = M.otocUzly(M.app.dok, t.ids, t.osa.toArray(), st, t.stred.toArray());
+            for (const id of naRovine) { const h = M.minNadRovinou(M.najdiUzel(d, id), r); if (Math.abs(h) > 1e-9) d = M.posunUzly(d, [id], r.osy[2].map(x => -x * h)); }
+            M.zmenDokument(d, 'Otočení');
+          }
         }
       });
       inp.addEventListener('blur', () => { if (!hotovo) zavri(); });

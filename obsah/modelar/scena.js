@@ -297,7 +297,12 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     S.pohled = function (jmeno, ms = 400) {
       const s = SMERY[jmeno];
       if (!s) return;
-      kamera.pohledZeSmeru(new THREE.Vector3(...s), ms);
+      // pojmenovaný pohled shora / zdola vždy stejně natočený (X doprava, Y nahoru – jako na výkrese),
+      // ne podle předchozího pohledu; kostka pohledů dál zachovává natočení
+      if (jmeno === 'shora' || jmeno === 'zdola') {
+        const azPredni = M.uhlyZeSmeru(new THREE.Vector3(0, -1, 0), 0).az;
+        kamera.animujNa(M.uhlyZeSmeru(new THREE.Vector3(...s), azPredni), ms);
+      } else kamera.pohledZeSmeru(new THREE.Vector3(...s), ms);
       M.prekresli();
     };
     S.projekce = function (orto) {

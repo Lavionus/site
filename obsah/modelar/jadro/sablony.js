@@ -62,7 +62,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     },
     {
       id: 'vesak', nazev: 'Věšák na klíče', ikona: '🔑',
-      popis: 'Deska se dvěma zápustnými dírami na šrouby a čtyřmi háčky.',
+      popis: 'Deska se dvěma zápustnými dírami na šrouby a čtyřmi háčky kolmo z desky (tiskne se naležato).',
       vytvor() {
         const deska = M.novyUzel('deska', { rozmer: [130, 35, 5], poloha: [0, 0, 2.5], param: { zaobleni: 5, otvor: 0 } });
         const uz = [deska];
@@ -70,7 +70,8 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
           const d = M.novyUzel('diraSroub', { param: { velikost: 'M4', druh: 'kuzelova', delka: 5 }, poloha: [x, 0, 3] });
           uz.push(naVysku(d, 5.5, true));
         }
-        for (const x of [-33, -11, 11, 33]) uz.push(naVysku(M.novyUzel('hak', { rozmer: [14, 5, 22], poloha: [x, -2, 0], rotace: [90, 0, 0] }), 4.9));
+        // háček kolmo z desky: rovný krček u desky, oblouk nahoře míří po zdi nahoru (+Y), tloušťka napříč (X)
+        for (const x of [-33, -11, 11, 33]) uz.push(naVysku(M.novyUzel('hak', { rozmer: [14, 5, 22], poloha: [x, -2, 0], rotace: [-180, 0, -90] }), 4.9));
         return dokZ(uz, [uz.map((_, i) => i)], ['Věšák na klíče']);
       },
     },

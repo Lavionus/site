@@ -20,11 +20,19 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
   }
 
   M.vytvorDily = function () {
-    const rozpracovane = new Set();
+    const rozpracovane = new Set(), hlasene = new Set();
     async function dopocitej() {
       for (const u of zastarale(M.app.dok.uzly)) {
         const klic = u.id + '|' + klicTextu(u.param);
         if (rozpracovane.has(klic)) continue;
+        // štítek uvnitř skupiny: přepočet by změnil rozměr části a s ním celou skupinu – poradit (jednou)
+        if (!M.najdiUzel(M.app.dok, u.id)) {
+          if (!hlasene.has(klic)) {
+            hlasene.add(klic);
+            Dialog.info(`Štítek „${u.param.text}“ je ve skupině a jeho text ještě není spočítaný. Zruš seskupení (Ctrl+Shift+G) – text se doplní – a pak skupinu vytvoř znovu.`);
+          }
+          continue;
+        }
         rozpracovane.add(klic);
         let kontury = [], chyba = false;
         try {

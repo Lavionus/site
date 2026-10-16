@@ -310,16 +310,22 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       });
     });
     document.querySelectorAll('[role=menuitemcheckbox]').forEach(b => b.setAttribute('aria-checked', b.getAttribute('aria-pressed') || 'false'));
-    const lista = document.querySelector('.lista');
+    const lista = document.querySelector('.lista-posuv') || document.querySelector('.lista');
     if (lista) {
-      // zaměřené tlačítko nesmí zajet pod přilepené ❓ / ☰ Panel: odsazení posunu podle jejich skutečné šířky
-      const vpravo = lista.querySelector('.vpravo');
-      if (vpravo && typeof ResizeObserver === 'function') new ResizeObserver(() => { lista.style.scrollPaddingRight = (vpravo.offsetWidth + 16) + 'px'; }).observe(vpravo);
-      // fokus (Tab) na tlačítko zčásti pod ❓ / ☰ Panel: prohlížeč ho neposune – dorovnat
+      // náznak dalšího obsahu u okraje (stín), podle posunu a šířky
+      const okraje = () => {
+        const dal = lista.scrollWidth > lista.clientWidth + 1;
+        lista.classList.toggle('dal-vpravo', dal && lista.scrollLeft + lista.clientWidth < lista.scrollWidth - 2);
+        lista.classList.toggle('dal-vlevo', dal && lista.scrollLeft > 2);
+      };
+      lista.addEventListener('scroll', okraje, { passive: true });
+      window.addEventListener('resize', okraje);
+      if (typeof ResizeObserver === 'function') new ResizeObserver(okraje).observe(lista);
+      okraje();
+      // fokus (Tab) na tlačítko zčásti mimo viditelnou část lišty: dorovnat
       lista.addEventListener('focusin', e => {
-        if (!vpravo || vpravo.contains(e.target)) return;
-        const r = e.target.getBoundingClientRect(), l = lista.getBoundingClientRect(), hranice = vpravo.getBoundingClientRect().left - 8;
-        if (r.right > hranice) lista.scrollLeft += r.right - hranice;
+        const r = e.target.getBoundingClientRect(), l = lista.getBoundingClientRect();
+        if (r.right > l.right - 8) lista.scrollLeft += r.right - (l.right - 8);
         else if (r.left < l.left + 8) lista.scrollLeft -= l.left + 8 - r.left;
       });
       // posun lišty (úzké okno) ujede tlačítkům: otevřené nabídky zavřít

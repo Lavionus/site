@@ -172,6 +172,9 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     return M.KVALITY.some(k => k.id === v) ? v : 'stredni';
   };
 
+  /** Dokument bez nepotvrzeného náhledu (rozdělané pole, zarovnání…): pro uložení do souboru, export a výkres. */
+  M.potvrzenyDok = () => M.app.uprava && M.app.uprava.zaklad ? M.app.uprava.zaklad : M.app.dok;
+
   /** Smaže vybrané (zamčené zůstanou). */
   M.smazVybrane = function () {
     const ids = M.vybraneVolne().map(u => u.id);
@@ -253,7 +256,8 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     if (!s) return [];
     s.vlozeno++;
     const nove = [];
-    for (const u of s.uzly) nove.push(M.normalizujUzel(Object.assign(M.noveIdHluboko(u), {
+    const kopie = M.kopieSVazbami(s.uzly);
+    for (const [i, u] of s.uzly.entries()) nove.push(M.normalizujUzel(Object.assign(kopie[i], {
       zamceno: false, skryto: false,
       nazev: M.nazevKopie({ uzly: M.app.dok.uzly.concat(nove) }, u),
       poloha: [u.poloha[0] + posun * s.vlozeno, u.poloha[1] - posun * s.vlozeno, u.poloha[2]],

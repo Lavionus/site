@@ -147,8 +147,9 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     }
 
     /** Volné místo poblíž středu pohledu (klik na dlaždici). */
-    function mistoUprostred(druh) {
-      const t = vzor(druh);
+    /** Místo pro nový tvar u středu pohledu; rozmer = obálka celé vkládané věci (skládačka), jinak tvaru. */
+    function mistoUprostred(druh, rozmer) {
+      const t0 = vzor(druh), t = rozmer ? Object.assign({}, t0, { rozmer }) : t0;
       // s pracovní rovinou padne tvar na ni (nejbližší bod roviny ke středu pohledu), natočený podle ní
       const rv = M.app.rovina;
       if (rv) {
@@ -187,7 +188,14 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
         for (let i = -kruh; i <= kruh; i++) for (let j = -kruh; j <= kruh; j++) {
           if (Math.max(Math.abs(i), Math.abs(j)) !== kruh) continue;
           const cx = x0 + i * rozestup, cy = y0 + j * rozestup;
-          if ((kruh === 0 || naDesce(cx, cy)) && volno(cx, cy)) { x = cx; y = cy; break hledej; }
+          // na desce (střed pohledu u kraje by tvar položil přes okraj); větší než deska = jen doprostřed
+          const vejde = t.rozmer[0] <= S.deska.sirka && t.rozmer[1] <= S.deska.hloubka;
+          if ((naDesce(cx, cy) || (!vejde && kruh === 0)) && volno(cx, cy)) { x = cx; y = cy; break hledej; }
+          if (kruh === 12 && i === kruh && j === kruh) {
+            // nic volného: aspoň celé na desce (posunout dovnitř), větší než deska = na střed
+            const mx = Math.max(0, S.deska.sirka / 2 - t.rozmer[0] / 2), my = Math.max(0, S.deska.hloubka / 2 - t.rozmer[1] / 2);
+            x = vejde ? M.omez(x0, -mx, mx) : 0; y = vejde ? M.omez(y0, -my, my) : 0;
+          }
         }
       }
       return { poloha: [x, y, t.rozmer[2] / 2], rotace: [0, 0, 0] };

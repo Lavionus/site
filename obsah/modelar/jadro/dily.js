@@ -47,6 +47,8 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     return { d: z[0], p: p.stoupani > 0 ? p.stoupani : z[1], uhel: z[2], s: z[3], k: z[4], m: z[5] };
   }
   M.udajeZavitu = zavit;
+  /** Vůle závitu omezená vůči průměru (u malého závitu by velká vůle závit zrušila – prázdný nebo rozbitý díl). */
+  const vuleZ = (p, z) => Math.min(Math.max(0, p.vule || 0), 0.15 * z.d);
 
   /** Radiální hloubka závitu: 0,6134 p (metrický a UN 60°), 0,640 p (Whitworth 55°). */
   // u vlastního velkého stoupání by profil prošel osou (záporný poloměr) – nejvýš 80 % poloměru
@@ -92,7 +94,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     const { CrossSection, Manifold } = w;
     const otacek = delka / stoupani;
     // trojúhelníků ≈ N² · otáčky: dlouhý závit s 256 segmenty by měl 5 milionů (desítky s, GB paměti) – rozpočet 1,5 milionu
-    const N = Math.max(24, Math.min(Math.max(48, seg), Math.floor(Math.sqrt(MAX_TROJ_DILU / Math.max(otacek, 1e-6)))));
+    const N = Math.max(24, Math.min(seg, Math.floor(Math.sqrt(MAX_TROJ_DILU / Math.max(otacek, 1e-6)))));
     if (otacek * N * N > 2 * MAX_TROJ_DILU) throw new Error(`závit má ${Math.round(otacek)} otáček – je na výpočet příliš dlouhý nebo jemný (zvětši stoupání nebo zkrať díl)`);
     const rez = s(new CrossSection([rezZavitu(rMaj, hloubka, uhel, N)], 'NonZero'));
     const tyc = s(rez.extrude(delka, Math.ceil(otacek * N / 2), 360 * otacek));
@@ -188,14 +190,14 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
         STOUP, VULE, SEG],
       obalka(p) {
         const z = zavit(p), hl = rozmeryHlavy(p, z);
-        const rd = z.d / 2 - p.vule / 2;                  // dřík zúžený o vůli
+        const rd = z.d / 2 - vuleZ(p, z) / 2;             // dřík zúžený o vůli
         const R = Math.max(rd, hl.R), Ry = hl.typ === 'sestihran' ? Math.max(rd, z.s / 2) : R;   // šestihran: v Y přes plošky
         return { min: [-R, -Ry, 0], max: [R, Ry, hl.k + p.delka], kruh: hl.typ !== 'sestihran' };
       },
       manifold(w, p) {
         const { CrossSection, Manifold } = w, s = sklad();
         const z = zavit(p), hl = rozmeryHlavy(p, z);
-        const rMaj = z.d / 2 - p.vule / 2, hloubka = hloubkaZavitu(z);
+        const rMaj = z.d / 2 - vuleZ(p, z) / 2, hloubka = hloubkaZavitu(z);
         if (hl.typ === 'zadna') return s.konec(zavitovaTyc(w, s, rMaj, hloubka, z.p, p.delka, z.uhel, p.segmentu));
         // dřík zasunutý 0,5 mm do hlavy (jen dotyk ploch by dal dvě oddělená tělesa), sražený jen nahoře
         const zasun = Math.min(0.5, hl.k / 2);
@@ -224,9 +226,9 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
         const { CrossSection } = w, s = sklad();
         const z = zavit(p), h = p.vyska > 0 ? p.vyska : z.m;
         const telo = srazSestihran(w, s, s(sestihran(CrossSection, s, z.s).extrude(h)), z.s, h, p.segmentu);
-        const otvor = vnitrniZavit(w, s, z, p.vule, h, p.segmentu);
+        const otvor = vnitrniZavit(w, s, z, vuleZ(p, z), h, p.segmentu);
         let m = s(telo.subtract(otvor));
-        if (p.srazeni) m = srazVstupy(w, s, m, z, p.vule, h, p.segmentu);
+        if (p.srazeni) m = srazVstupy(w, s, m, z, vuleZ(p, z), h, p.segmentu, 0.95 * z.s / 2);
         return s.konec(m);
       },
     },
@@ -253,6 +255,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     },
     sroubovice: {
       nazev: 'Maticová šroubovice', ikona: '🌀', barva: '#8f9cab', role: 'teleso',
+      tip: 'Do jiného tělesa: nejdřív do něj vyvrtej díru o vnějším průměru šroubovice a seskup (Ctrl+G), pak k výsledku přidej šroubovici a seskup znovu – v jedné skupině by díra smazala i šroubovici.',
       // trubka s vnitřním závitem: vlož ji do díry jiného tělesa (stejný vnější průměr) a seskup – těleso
       // pak má závit pro šroub. Délka = počet závitů × stoupání.
       param: { prumer: 20, velikost: 'M10', stoupani: 0, delka: 10, stena: 1.6, vule: 0.2, srazeni: true, segmentu: 64 },
@@ -271,7 +274,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
         const trubka = s(Manifold.cylinder(p.delka, R, R, p.segmentu));
         const otvor = s(vnitrniZavit(w, s, z, p.vule, p.delka + 1, p.segmentu).translate([0, 0, -0.5]));
         let m = s(trubka.subtract(otvor));
-        if (p.srazeni) m = srazVstupy(w, s, m, z, p.vule, p.delka, p.segmentu);
+        if (p.srazeni) m = srazVstupy(w, s, m, z, p.vule, p.delka, p.segmentu, 0.95 * R);
         return s.konec(m);
       },
     },
@@ -307,7 +310,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
         { klic: 'vule', popis: 'Vůle k trubce', jednotka: 'mm', min: 0, max: 5, krok: 0.1 },
         { klic: 'stena', popis: 'Stěna', jednotka: 'mm', min: 0.6, max: 30, krok: 0.2 },
         { klic: 'sirka', popis: 'Šířka', jednotka: 'mm', min: 1, max: 200, krok: 1 },
-        { klic: 'otevreni', popis: 'Otevření', jednotka: '°', min: 30, max: 170, krok: 5 },
+        { klic: 'otevreni', popis: 'Otevření', jednotka: '°', min: 30, max: 150, krok: 5 },
         { klic: 'patka', popis: 'Patka na šrouby', prepinac: true },
         { klic: 'delkaPatky', popis: 'Délka patky', jednotka: 'mm', min: 3, max: 100, krok: 1 },
         { klic: 'otvor', popis: 'Díra na šroub ⌀', jednotka: 'mm', min: 0, max: 20, krok: 0.1 }, SEG],
@@ -317,14 +320,16 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       },
       manifold(w, p) {
         const { CrossSection, Manifold } = w, s = sklad(), g = geomKlipu(p), n = p.segmentu;
-        let c = s(s(CrossSection.circle(g.Ro, n)).subtract(s(CrossSection.circle(g.Ri, n))));
+        // vnitřní kružnice opsaná (mnohoúhelník nesmí ubrat vůli ani u velké trubky a hrubé kvality)
+        let c = s(s(CrossSection.circle(g.Ro, n)).subtract(s(CrossSection.circle(g.Ri / Math.cos(PI / n), n))));
         const a = g.a, B = 4 * g.Ro;
         c = s(c.subtract(s(new CrossSection([[[0, 0], [B * Math.cos(a), B * Math.sin(a)], [0, B], [-B * Math.cos(a), B * Math.sin(a)]]]))));
         // zaoblené konce oblouku
         for (const z of [1, -1]) c = s(c.add(s(s(CrossSection.circle(p.stena / 2, 24)).translate([z * g.rc * Math.cos(a), g.rc * Math.sin(a)]))));
         if (p.patka) c = s(c.add(s(s(CrossSection.square([2 * (g.Ro + p.delkaPatky), p.stena])).translate([-(g.Ro + p.delkaPatky), -g.Ro]))));
         let m = s(c.extrude(p.sirka));
-        if (p.patka && p.otvor > 0) for (const z of [1, -1]) {
+        // díra jen když se do patky vejde (širší by patku rozpůlila)
+        if (p.patka && p.otvor > 0 && p.otvor <= Math.min(p.sirka, p.delkaPatky) - 1) for (const z of [1, -1]) {
           const d = s(s(s(Manifold.cylinder(p.stena + 2, p.otvor / 2, p.otvor / 2, 24)).rotate([-90, 0, 0])).translate([z * (g.Ro + p.delkaPatky / 2), -g.Ro - 1, p.sirka / 2]));
           m = s(m.subtract(d));
         }
@@ -349,16 +354,17 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       manifold(w, p) {
         const { CrossSection, Manifold } = w, s = sklad(), n = p.segmentu;
         const ri = (p.prumer + p.vule) / 2, ro = ri + p.stena, h0 = p.prumer / 2, X = ro + p.delkaPatky;
-        const obl = r => s(s(s(CrossSection.square([2 * r, h0 + 0.001])).translate([-r, -0.001])).add(s(s(CrossSection.circle(r, n)).translate([0, h0]))));
-        let c = s(obl(ro).subtract(obl(ri)));
+        const obl = (r, vnitrni) => s(s(s(CrossSection.square([2 * r, h0 + 0.001])).translate([-r, -0.001])).add(s(s(CrossSection.circle(vnitrni ? r / Math.cos(PI / n) : r, n)).translate([0, h0]))));
+        let c = s(obl(ro).subtract(obl(ri, true)));
         c = s(c.add(s(s(CrossSection.square([2 * X, p.stena])).translate([-X, 0]))));
-        c = s(c.subtract(s(s(CrossSection.square([2 * ri, h0 + 0.002])).translate([-ri, -0.001]))));
+        // kanál pro kabel celý (i u kabelu tenčího než 2× stěna, kde by ho jinak patka zaplnila)
+        c = s(c.subtract(obl(ri, true)));
         c = s(c.intersect(s(s(CrossSection.square([2 * X + 2, h0 + ro + 1])).translate([-X - 1, 0]))));
         let m = s(s(s(c.extrude(p.sirka)).rotate([90, 0, 0])).translate([0, p.sirka, 0]));
-        if (p.otvor > 0) for (const z of [1, -1]) {
-          const x = z * (ro + p.delkaPatky / 2);
+        if (p.otvor > 0 && p.otvor <= Math.min(p.sirka, p.delkaPatky) - 1) for (const z of [1, -1]) {
+          const x = z * (ro + p.delkaPatky / 2), hk = Math.min(p.otvor / 2, p.stena * 0.6);   // zahloubení jen do patky
           const d = s(s(Manifold.cylinder(p.stena + 2, p.otvor / 2, p.otvor / 2, 24)).translate([x, p.sirka / 2, -1]));
-          const k = s(s(Manifold.cylinder(p.otvor / 2 + 0.01, p.otvor / 2, p.otvor + 0.01, 24)).translate([x, p.sirka / 2, p.stena - p.otvor / 2]));
+          const k = s(s(Manifold.cylinder(hk + 0.01, p.otvor / 2, p.otvor / 2 + hk + 0.01, 24)).translate([x, p.sirka / 2, p.stena - hk]));
           m = s(s(m.subtract(d)).subtract(k));
         }
         return s.konec(m);
@@ -406,6 +412,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     },
     cepZacvak: {
       nazev: 'Zacvakávací čep', ikona: '📌', barva: '#e5533c', role: 'teleso',
+      tip: 'Tiskni hlavou dolů; ozub se při zasouvání stlačí do prořezu a za deskou zacvakne.',
       // hlava, dřík na tloušťku desky a ozub s prořezem – stlačí se, projde dírou a zacvakne za deskou
       param: { prumerDiry: 5, tloustkaDesky: 6, vule: 0.2, hlava: 2, presah: 0.5, segmentu: 48 },
       parametry: [
@@ -413,7 +420,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
         { klic: 'tloustkaDesky', popis: 'Tloušťka spojovaných desek', jednotka: 'mm', min: 0.5, max: 100, krok: 0.5 },
         { klic: 'vule', popis: 'Vůle v díře', jednotka: 'mm', min: 0, max: 2, krok: 0.05 },
         { klic: 'hlava', popis: 'Výška hlavy', jednotka: 'mm', min: 0.6, max: 20, krok: 0.2 },
-        { klic: 'presah', popis: 'Přesah ozubu', jednotka: 'mm', min: 0.1, max: 3, krok: 0.1 }, SEG],
+        { klic: 'presah', popis: 'Přesah ozubu (omezí se podle průměru)', jednotka: 'mm', min: 0.1, max: 3, krok: 0.1 }, SEG],
       obalka(p) {
         const g = geomCepu(p);
         return { min: [-g.rh, -g.rh, 0], max: [g.rh, g.rh, g.Z], kruh: true };
@@ -422,7 +429,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
         const { CrossSection, Manifold } = w, s = sklad(), g = geomCepu(p);
         let m = s(s(new CrossSection([g.prof])).revolve(p.segmentu));
         // prořez ozubu (stlačí se při zasouvání)
-        const sl = Math.min(g.rs * 0.9, 2 * p.presah + 0.6);
+        const sl = g.sl;
         m = s(m.subtract(s(s(Manifold.cube([sl, 2 * g.rh + 2, g.Z - g.zs + 1])).translate([-sl / 2, -g.rh - 1, g.zs]))));
         return s.konec(m);
       },
@@ -452,6 +459,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     },
     krabice: {
       nazev: 'Krabička', ikona: '🗃️', barva: '#b07d4f', role: 'teleso', skryty: true,
+      rozmerKlice: ['sx', 'sy', 'sz'],                   // pole Rozměr v inspektoru mění parametry (ne měřítko)
       param: { sx: 60, sy: 40, sz: 30, stena: 2, dno: 2, zaobleni: 3, sloupky: false, otvor: 2.5, segmentu: 32 },
       parametry: [
         { klic: 'sx', popis: 'Délka', jednotka: 'mm', min: 10, max: 500, krok: 1 },
@@ -483,6 +491,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     },
     vicko: {
       nazev: 'Víko', ikona: '🗃️', barva: '#c8946a', role: 'teleso', skryty: true,
+      rozmerKlice: ['sx', 'sy', null],
       // tiskne se vnější plochou dolů: deska z = 0…tloušťka, lem (nasazovací) nahoře zasahuje do krabičky
       param: { sx: 60, sy: 40, stena: 2, zaobleni: 3, tloustka: 2, typ: 'nasazovaci', lem: 4, vule: 0.25, otvor: 3.2, segmentu: 32 },
       parametry: [
@@ -520,6 +529,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     },
     kalibraceVule: {
       nazev: 'Kalibrace vůlí', ikona: '🎯', barva: '#3cae5c', role: 'teleso',
+      tip: 'Vytiskni a zkus kolíky vytlačit; číslo pod dírou je vůle v setinách mm (15 = 0,15 mm). Nejmenší, která povolí, ulož v Dílna → Moje vůle pro tisk.',
       // destička s dírami a kolíky tištěnými rovnou v nich (každý s jinou vůlí, hodnota vyrytá v setinách mm):
       // nejmenší vůle, u které se kolík uvolní, je ta pravá pro tvou tiskárnu (Dílna → Moje vůle pro tisk)
       param: { od: 0.1, do: 0.5, krok: 0.1, prumer: 6, tloustka: 4, segmentu: 48 },
@@ -536,7 +546,8 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
         const koliky = [];
         g.vule.forEach((v, i) => {
           const cx = g.okraj + g.roztec * (i + 0.5), cy = g.okraj + g.Dmax / 2;
-          deska = s(deska.subtract(s(s(Manifold.cylinder(p.tloustka + 2, p.prumer / 2 + v, p.prumer / 2 + v, p.segmentu)).translate([cx, cy, -1]))));
+          const rd = (p.prumer / 2 + v) / Math.cos(PI / p.segmentu);   // opsaný mnohoúhelník: vůle platí i mezi vrcholy
+          deska = s(deska.subtract(s(s(Manifold.cylinder(p.tloustka + 2, rd, rd, p.segmentu)).translate([cx, cy, -1]))));
           // kolík se sraženou spodní hranou (sloní noha by ho přilepila ke stěně díry)
           const k = s(s(new CrossSection([[[0, 0], [p.prumer / 2 - 0.4, 0], [p.prumer / 2, 0.4], [p.prumer / 2, p.tloustka + 2], [0, p.tloustka + 2]]])).revolve(p.segmentu));
           koliky.push(s(k.translate([cx, cy, 0])));
@@ -735,10 +746,13 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
         const rez = s(new CrossSection([b]));
         if (p.vzor === 'primy') return s.konec(s(rez.extrude(p.vyska)));
         // dělení po výšce podle zkroucení, ale v rozpočtu trojúhelníků (tenký vroubek s 300 drážkami by počítal minuty)
-        const zk = p.vyska * Math.tan(p.uhel * ST) / R / ST, del = Math.max(2, Math.min(Math.ceil(Math.abs(zk) / 2) + 1, Math.floor(MAX_TROJ_DILU / (4 * N))));
+        const zk = p.vyska * Math.tan(p.uhel * ST) / R / ST, del = Math.max(2, Math.min(Math.ceil(Math.abs(zk) / 2) + 1, Math.floor(MAX_TROJ_DILU / ((p.vzor === 'krizovy' ? 10 : 4) * N))));
         const a = s(rez.extrude(p.vyska, del, zk));
         if (p.vzor === 'sikmy') return s.konec(a);
-        return s.konec(s(a.intersect(s(rez.extrude(p.vyska, del, -zk)))));
+        // druhé vytažení o chlup delší a s jiným dělením: vrcholy obou těles se nepotkají (jinak by průnik měl
+        // nulové hrany a STL – trojúhelníky bez sdílených vrcholů – by po svaření bylo děravé)
+        const e = 0.01, druhe = s(s(rez.extrude(p.vyska + 2 * e, del + 1, -zk * (p.vyska + 2 * e) / p.vyska)).translate([0, 0, -e]));
+        return s.konec(s(a.intersect(druhe)));
       },
     },
     plastev: {
@@ -861,28 +875,35 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
   }
   M.rozmeryObalu = rozmeryObalu;
   function rozmeryHlavy(p, z) {
-    if (p.hlava === 'zadna') return { typ: 'zadna', k: 0, R: z.d / 2 - (p.vule || 0) / 2 };
-    if (p.hlava === 'valcova') return { typ: 'valcova', k: z.d, R: 0.75 * z.d, imbus: Math.max(1.5, Math.round(z.d) / 2) };
+    if (p.hlava === 'zadna') return { typ: 'zadna', k: 0, R: z.d / 2 - vuleZ(p, z) / 2 };
+    // imbus musí zůstat uvnitř hlavy (malý vlastní průměr)
+    if (p.hlava === 'valcova') return { typ: 'valcova', k: z.d, R: 0.75 * z.d, imbus: Math.min(Math.max(1.5, Math.round(z.d) / 2), 1.2 * z.d) };
     if (p.hlava === 'zapustna') return { typ: 'zapustna', k: z.d / 2, R: z.d };          // kužel 90°: průměr 2d → d
     return { typ: 'sestihran', k: z.k, R: z.s / Math.cos(PI / 6) / 2 };
   }
   /** Klip na trubku: poloměry, úhel konce oblouku a horní mez obálky. */
   function geomKlipu(p) {
-    const Ri = (p.prumer + p.vule) / 2, Ro = Ri + p.stena, rc = Ri + p.stena / 2, a = (90 - p.otevreni / 2) * ST;
+    // otevření nejvýš 150° (širší ústí trubku nesevře)
+    const Ri = (p.prumer + p.vule) / 2, Ro = Ri + p.stena, rc = Ri + p.stena / 2, a = (90 - Math.min(p.otevreni, 150) / 2) * ST;
     return { Ri, Ro, rc, a, ymax: rc * Math.sin(a) + p.stena / 2 };
   }
   /** Zacvakávací čep: profil (r, z) pro rotaci, poloměry a výšky. */
   function geomCepu(p) {
-    const D = p.prumerDiry, rh = D / 2 + Math.max(1.2, D * 0.3), rs = D / 2 - p.vule, hh = p.hlava, T = p.tloustkaDesky;
-    const rb = D / 2 + p.presah, rt = Math.max(0.4, D / 2 * 0.65), bl = Math.max(1.5, D * 0.9), Z = hh + T + bl;
+    const D = p.prumerDiry, rs = D / 2 - Math.min(p.vule, 0.4 * D / 2), hh = p.hlava, T = p.tloustkaDesky;
+    // přesah ozubu jen takový, aby ho prořez dovolil stlačit (prořez nejvýš 0,9 dříku)
+    const sl = Math.min(rs * 0.9, 2 * p.presah + 0.6), presah = Math.max(0.05, Math.min(p.presah, (sl - 0.3) / 2));
+    const rb = D / 2 + presah, rh = Math.max(D / 2 + Math.max(1.2, D * 0.3), rb), rt = Math.max(0.4, D / 2 * 0.65), bl = Math.max(1.5, D * 0.9), Z = hh + T + bl;
     const prof = [[0, 0], [rh, 0], [rh, hh], [rs, hh], [rs, hh + T + 0.1], [rb, hh + T + 0.25], [rt, Z], [0, Z]];
-    return { prof, rh, rs, Z, zs: hh + T * 0.35 };
+    return { prof, rh, rs, Z, zs: hh + T * 0.35, sl };
   }
   /** Krabička / víko: zaoblení, stěna, dno a středy sloupků (sloupek poloměru SLOUPEK_R zapuštěný do rohu). */
   const SLOUPEK_R = 3;
+  M.geomKrabice = p => geomKrabice(p);
   function geomKrabice(p) {
     const t = Math.min(p.stena, 0.3 * Math.min(p.sx, p.sy)), z = Math.min(p.zaobleni, 0.499 * Math.min(p.sx, p.sy));
-    const c = t + SLOUPEK_R * 0.75;                      // střed sloupku od vnějšího kraje
+    let c = t + SLOUPEK_R * 0.75;                        // střed sloupku od vnějšího kraje
+    // velké zaoblení rohu: sloupek po úhlopříčce dovnitř, ať je celý uvnitř zaoblené stěny
+    if (z > c) c = Math.max(c, z - (z - t - SLOUPEK_R * 0.75) / Math.SQRT2);
     const sloupky = [[1, 1], [-1, 1], [-1, -1], [1, -1]].map(([a, b]) => [a * (p.sx / 2 - c), b * (p.sy / 2 - c)]);
     return { t, z, dno: Math.min(p.dno == null ? 2 : p.dno, (p.sz || 10) * 0.8), sloupky };
   }
@@ -915,7 +936,8 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
   function rozlozeniKrabice(p) {
     const spol = { sx: p.sx, sy: p.sy, stena: p.stena, zaobleni: p.zaobleni, segmentu: p.segmentu };
     const krabice = Object.assign({}, M.DILY.krabice.param, spol, { sz: p.sz, dno: p.dno, sloupky: p.typ === 'sroubky' });
-    const vicko = Object.assign({}, M.DILY.vicko.param, spol, { typ: p.typ, vule: p.vule });
+    // lem víka nejvýš do 80 % dutiny (nízká krabička by jinak víko nepustila dosednout)
+    const vicko = Object.assign({}, M.DILY.vicko.param, spol, { typ: p.typ, vule: p.vule, lem: Math.round(M.omez(0.8 * (p.sz - p.dno), 1, 4) * 100) / 100 });
     return { krabice, vicko, dx: p.sx + 8 };
   }
   M.rozlozeniKrabice = rozlozeniKrabice;
@@ -927,14 +949,19 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     const rc1 = (p.prumerHorni + p.vule) / 2 + t / 2, rc2 = (p.prumerDolni + p.vule) / 2 + t / 2;
     const th = p.zahnuti * ST, yt = p.rovna, n1 = Math.max(8, Math.ceil(seg / 2 * (PI + th) / PI)), cara = [];
     // horní špička (rovně ve směru oblouku), oblouk od −zahnutí přes vršek k levé straně (x = 0)
-    const L1 = (p.spicka / 100) * (rc1 - t / 2), a1 = -th;
+    const a1 = -th;
     const P1 = [rc1 + rc1 * Math.cos(a1), yt + rc1 * Math.sin(a1)], d1 = [-Math.sin(a1), Math.cos(a1)];
+    // zahnutá špička míří ke krčku: nejvýš tak dlouhá, aby mezi ní a krčkem zůstala aspoň šířka drátu
+    const maxL = th > 1e-6 ? Math.max(0, (P1[0] - 1.5 * t) / Math.sin(th)) : Infinity;
+    const L1 = Math.min((p.spicka / 100) * (rc1 - t / 2), maxL);
     if (L1 > 1e-6) cara.push([P1[0] - d1[0] * L1, P1[1] - d1[1] * L1]);
     for (let i = 0; i <= n1; i++) { const a = a1 + (PI - a1) * i / n1; cara.push([rc1 + rc1 * Math.cos(a), yt + rc1 * Math.sin(a)]); }
     // dolní oblouk od pravé strany (x = 0) dolů a doleva nahoru až za vodorovnou o zahnutí
     const a2 = -PI - th, n2 = Math.max(8, Math.ceil(seg / 2 * (PI + th) / PI));
     for (let i = p.rovna > 1e-6 ? 0 : 1; i <= n2; i++) { const a = a2 * i / n2; cara.push([-rc2 + rc2 * Math.cos(a), rc2 * Math.sin(a)]); }
-    const L2 = (p.spicka / 100) * (rc2 - t / 2), d2 = [Math.sin(a2), -Math.cos(a2)], P2 = cara[cara.length - 1];
+    const d2 = [Math.sin(a2), -Math.cos(a2)], P2 = cara[cara.length - 1];
+    const maxL2 = th > 1e-6 ? Math.max(0, (-P2[0] - 1.5 * t) / Math.sin(th)) : Infinity;
+    const L2 = Math.min((p.spicka / 100) * (rc2 - t / 2), maxL2);
     if (L2 > 1e-6) cara.push([P2[0] + d2[0] * L2, P2[1] + d2[1] * L2]);
     const body = M.pasKolemCary(cara, t);
     let pl = 0;
@@ -947,9 +974,9 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
   M.obrysHakuS = obrysHakuS;
 
   /** Sražení vstupu vnitřního závitu z obou stran (45° kužel do hloubky závitu): šroub chytí bez hledání. */
-  function srazVstupy(w, s, m, z, vule, h, seg) {
+  function srazVstupy(w, s, m, z, vule, h, seg, rMax = Infinity) {
     const { Manifold } = w;
-    const rn = z.d / 2 + vule, rf = rn + 0.25, rv = Math.max(0.1, rn - hloubkaZavitu(z)), hc = Math.min(rf - rv, h * 0.3);
+    const rn = z.d / 2 + vule, rf = Math.min(rn + 0.25, rMax), rv = Math.max(0.1, rn - hloubkaZavitu(z)), hc = Math.min(rf - rv, h * 0.3);
     const dole = s(s(Manifold.cylinder(hc + 0.02, rf + 0.02, rf - hc, seg)).translate([0, 0, -0.02]));
     const nahore = s(s(Manifold.cylinder(hc + 0.02, rf - hc, rf + 0.02, seg)).translate([0, 0, h - hc]));
     return s(s(m.subtract(dole)).subtract(nahore));
@@ -1015,9 +1042,11 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     if (p.druh === 'vlozka') { const v = VLOZKY[p.velikost]; const r = (v ? v[0] : z.d * 1.33) / 2; return { r, R: r, hloubka: 0, vlozka: v ? v[1] : z.d * 1.9 }; }
     if (p.druh === 'samorez') { const r = 0.85 * z.d / 2; return { r, R: r, hloubka: 0 }; }
     const r = z.d / 2 + Math.max(p.vule, 0.1) + 0.1;
-    if (p.druh === 'kuzelova') return { r, R: z.d + p.vule, hloubka: z.d / 2 + p.vule };
-    if (p.druh === 'sestihran') return { r, R: (z.s + 2 * p.vule) / Math.cos(PI / 6) / 2, klic: z.s + 2 * p.vule, hloubka: z.m + 0.2 };
-    return { r, R: 0.75 * z.d + p.vule + 0.3, hloubka: z.d + 0.4 };
+    // hlava nejvýš do hloubky díry (jinak by zahloubení prořízlo těleso pod zadanou hloubkou)
+    const h = x => p.delka > 0 ? Math.min(x, p.delka) : x;
+    if (p.druh === 'kuzelova') { const hl = h(z.d / 2 + p.vule); return { r, R: Math.min(z.d + p.vule, r + hl), hloubka: hl }; }
+    if (p.druh === 'sestihran') return { r, R: (z.s + 2 * p.vule) / Math.cos(PI / 6) / 2, klic: z.s + 2 * p.vule, hloubka: h(z.m + 0.2) };
+    return { r, R: 0.75 * z.d + p.vule + 0.3, hloubka: h(z.d + 0.4) };
   }
   M.rozmeryDiry = rozmeryDiry;
   /** Sloupek: díra jako u díry pro šroub (průchozí s vůlí), vnější průměr automaticky – stěna aspoň 1,6 mm
@@ -1113,7 +1142,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       if (q.odvozeny) continue;                       // odvozené pole (počet závitů) nemá vlastní hodnotu
       if (q.volby) { z[q.klic] = q.volby.some(v => v[0] === p[q.klic]) ? p[q.klic] : d.param[q.klic]; continue; }
       if (q.text) { z[q.klic] = typeof p[q.klic] === 'string' ? p[q.klic].slice(0, 200) : d.param[q.klic]; continue; }
-      if (q.prepinac) { z[q.klic] = typeof p[q.klic] === 'boolean' ? p[q.klic] : !!d.param[q.klic]; continue; }
+      if (q.prepinac) { z[q.klic] = M.prepinac ? M.prepinac(p[q.klic], !!d.param[q.klic]) : typeof p[q.klic] === 'boolean' ? p[q.klic] : !!d.param[q.klic]; continue; }
       let v = typeof p[q.klic] === 'number' && isFinite(p[q.klic]) ? p[q.klic] : d.param[q.klic];
       if (q.cele) v = Math.round(v);
       z[q.klic] = M.omez(v, q.min, q.max);

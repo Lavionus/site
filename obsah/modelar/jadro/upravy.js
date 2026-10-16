@@ -140,6 +140,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     if (!u || u.druh !== 'valec') throw new Error('vyber válec');
     if (Math.abs(u.rozmer[0] - u.rozmer[1]) > 1e-3 * u.rozmer[0]) throw new Error('válec musí mít kruhový průřez (stejný průměr X a Y)');
     if (u.role === 'dira') throw new Error('válec je díra – závit jde jen na plné těleso');
+    if (u.rozmer[0] > 500) throw new Error('závit jde udělat na válec do průměru 500 mm');
     const D = u.rozmer[0], H = u.rozmer[2], L = M.omez(Number.isFinite(v.delka) ? v.delka : H / 2, 0.5, H);
     const st = Number.isFinite(v.stoupani) && v.stoupani > 0 ? v.stoupani : 0;
     const q = M.quatUzlu(u), osa = h => new V(0, 0, h).applyQuaternion(q).add(new V(...u.poloha)).toArray().map(x => zaokr(x));
@@ -189,13 +190,20 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     const celkem = L[L.length - 1];
     if (!(celkem > 0)) return [];
     const krok = uzavrena ? celkem / n : (n > 1 ? celkem / (n - 1) : 0), out = [];
-    let j = 0;
-    for (let i = 0; i < n; i++) {
-      const s = Math.min(celkem, i * krok);
-      while (j < usek.length - 1 && L[j + 1] <= s + 1e-9) j++;
-      while (j < usek.length - 1 && usek[j] < 1e-12) j++;
+    /** Bod ve vzdálenosti s po křivce (uzavřená dokola). */
+    const bod = s => {
+      if (uzavrena) s = ((s % celkem) + celkem) % celkem; else s = Math.max(0, Math.min(celkem, s));
+      let j = 0;
+      while (j < usek.length - 1 && L[j + 1] < s) j++;
       const f = usek[j] > 0 ? (s - L[j]) / usek[j] : 0, a = b[j], c = b[j + 1];
-      out.push({ x: a[0] + (c[0] - a[0]) * f, y: a[1] + (c[1] - a[1]) * f, uhel: Math.atan2(c[1] - a[1], c[0] - a[0]) });
+      return [a[0] + (c[0] - a[0]) * f, a[1] + (c[1] - a[1]) * f];
+    };
+    // tečna z bodů kousek před a za (u kruhu z mnohoúhelníku přesná – úsečka u vrcholu by dala chybu ± půl úseku)
+    const e = Math.min(celkem / 4, Math.max(...usek) * 0.75);
+    for (let i = 0; i < n; i++) {
+      const s = Math.min(celkem, i * krok), p = bod(s);
+      const p0 = bod(uzavrena ? s - e : Math.max(0, s - e)), p1 = bod(uzavrena ? s + e : Math.min(celkem, s + e));
+      out.push({ x: p[0], y: p[1], uhel: Math.atan2(p1[1] - p0[1], p1[0] - p0[0]) });
     }
     return out;
   };

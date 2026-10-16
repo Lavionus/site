@@ -9,7 +9,8 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
 (function (M) {
   'use strict';
   // 2: přesné úpravy s body hran, rozšířené tvary a nové parametry (starší Modelář by je potichu zahodil)
-  const VERZE = 2;
+  // 3: vlastní průměr závitu, propojené díly (vazba), puzzle s vlastními okraji – starší Modelář by je potichu změnil
+  const VERZE = 3;
   const MAX_ROZBALENO = 512 * 1024 * 1024, MAX_UZLU = 100000, MAX_HLOUBKA = 200;
 
   /** Typované pole → base64 (po kusech, ať nepřeteče zásobník). */

@@ -31,12 +31,13 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       return v;
     }
     /** Tisknutelná tělesa: vybraná, nebo všechna (bez skrytých a samostatných děr). */
-    const telesa = () => {
-      const vyber = M.vybraneUzly().filter(u => !u.skryto && u.role !== 'dira');
+    const telesa = (sVyberem = true) => {
+      const vyber = sVyberem ? M.vybraneUzly().filter(u => !u.skryto && u.role !== 'dira') : [];
       return { uzly: vyber.length ? vyber : M.telesaKExportu(M.app.dok), vyber: vyber.length > 0 };
     };
-    function souhrn() {
-      const { uzly, vyber } = telesa();
+    /** Souhrn: stavový řádek bere výběr (je-li), panel Kontroly tisku celý model – nebo výběr, když je zaškrtnuto. */
+    function souhrn(proPanel = false) {
+      const { uzly, vyber } = telesa(!proPanel || !!nast.jenVyber);
       let V = 0, ceka = false;
       for (const u of uzly) { const v = objemUzlu(u); if (v == null) ceka = true; else V += v; }
       return { V, ceka, vyber, pocet: uzly.length, ...M.udajeTisku(V, nast.material, nast.prumer, nast.vypln) };
@@ -162,7 +163,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     const pametPrekryvu = new Map();
     function obnovPanel() {
       if (!okno || !okno.open) return;
-      const s = souhrn();
+      const s = souhrn(true);
       $('tiskSouhrn').innerHTML = !s.pocet ? '<p class="poznamka">Na desce není nic k tisku.</p>' : `
         <table class="tisk-tab"><tbody>
           <tr><th>${s.vyber ? 'Výběr' : 'Celý model'}</th><td>${M.pocet(s.pocet, 'těleso', 'tělesa', 'těles')}${s.ceka ? ' (některá se ještě počítají)' : ''}</td></tr>
@@ -196,6 +197,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       if (!okno) return;
       $('tiskMaterial').value = nast.material; $('tiskPrumer').value = String(nast.prumer); $('tiskVypln').value = String(nast.vypln);
       $('tiskCena').value = cz(nast.cena, 0);
+      $('tiskJenVyber').checked = !!nast.jenVyber;
       M.otevriPanel(okno);
       obnovPanel();
     };
@@ -205,11 +207,12 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
         nast.material = $('tiskMaterial').value;
         nast.prumer = parseFloat($('tiskPrumer').value) || 1.75;
         nast.vypln = M.omez(Math.round(M.prectiCislo($('tiskVypln').value)) || 0, 0, 100);
+        nast.jenVyber = $('tiskJenVyber').checked;
         const c = M.prectiCislo($('tiskCena').value);
         nast.cena = isFinite(c) ? M.omez(c, 0, 100000) : nast.cena;
         uloz(); obnovPanel(); obnovStav();
       };
-      ['tiskMaterial', 'tiskPrumer', 'tiskVypln', 'tiskCena'].forEach(id => $(id).addEventListener('change', zmena));
+      ['tiskMaterial', 'tiskPrumer', 'tiskVypln', 'tiskCena', 'tiskJenVyber'].forEach(id => $(id).addEventListener('change', zmena));
       $('tiskSeznamZavrit').onclick = () => okno.close();
       okno.addEventListener('cancel', e => { e.preventDefault(); okno.close(); });
       $('tiskPrevesy').onclick = () => M.prepniPrevesy();

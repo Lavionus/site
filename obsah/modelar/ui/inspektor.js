@@ -91,7 +91,10 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
           }
         }
         // parametry tvaru: čísla, volby (seznam), přepínače; u skici jen ty pro zvolený režim
-        const param = t.parametry.filter(d => !d.rezim || d.rezim === u.param.rezim);
+        // průměr vlastního závitu jen u volby „Vlastní průměr“; vlastní okraje puzzle jen u volby „Vlastní“
+        const param = t.parametry.filter(d => (!d.rezim || d.rezim === u.param.rezim)
+          && !(d.klic === 'prumer' && 'velikost' in u.param && u.param.velikost !== 'vlastni')
+          && !(d.klic === 'hrany' && u.druh === 'puzzle' && u.param.vystupky !== 'vlastni'));
         if (param.length || u.druh === 'skica') {
           h += `<div class="skupina"><div class="nadpis">${u.druh === 'skica' ? 'Těleso ze skici' : M.DILY && M.DILY[u.druh] ? 'Díl' : 'Tvar'}</div>`
             + param.map(d => d.volby
@@ -99,13 +102,14 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
               : d.prepinac
                 ? `<label class="zaskrt"><input type="checkbox" data-param="${d.klic}"> ${esc(d.popis)}</label>`
               : d.text
-                ? `<label class="ip"><span class="osa">${esc(d.popis)}</span><input type="text" data-param="${d.klic}" class="text-param" maxlength="200"></label>`
+                ? `<label class="ip"><span class="osa">${esc(d.popis)}</span><input type="text" data-param="${d.klic}" class="text-param" maxlength="200" aria-label="${esc(d.popis)}"></label>`
                 : d.odvozeny
                 ? cislo(d.popis, u => d.cti(u.rozmer, Object.assign({}, (M.TVARY[u.druh] || M.DILY[u.druh]).param, u.param)), v => zmenOdvozeny(d, v),
                   { krok: d.krok, des: 2, jednotka: d.jednotka || '', min: d.min, max: d.max })
                 : cislo(d.popis, u => u.param[d.klic], v => zmenParam(d.klic, v),
                   { krok: d.krok, des: d.cele ? 0 : 2, jednotka: d.jednotka || '', min: d.min, max: d.max })).join('')
             + (u.druh === 'skica' ? `<button type="button" class="tl siroke-tl" id="inspSkica">✏️ Upravit skicu</button>` : '')
+            + (M.DILY && M.DILY[u.druh] && M.DILY[u.druh].tip ? `<p class="dil-tip">💡 ${esc(M.DILY[u.druh].tip)}</p>` : '')
             + (u.vazba && M.protikusy(M.app.dok, u).length ? `<p class="vazba-info">🔗 Propojeno s: ${M.protikusy(M.app.dok, u).map(x => esc(x.nazev) + (x.zamceno ? ' (🔒 zamčený – nemění se)' : '')).join(', ')} – závit / rozměry se mění spolu.
                 <button type="button" class="odkaz-tl" id="inspRozpojit">Zrušit propojení</button></p>` : '')
             + (u.druh === 'kolo' && u.param.druh !== 'vnitrni' ? `<button type="button" class="tl siroke-tl" id="inspProtikolo" title="Druhé kolo ve správné osové vzdálenosti, natočené tak, aby zuby zapadly">⚙ Přidat protikolo…</button>` : '')
@@ -113,6 +117,18 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
         }
       } else {
         h += `<div class="hlava"><strong>${uzly.length <= 4 ? 'Vybrána' : 'Vybráno'} ${M.pocet(uzly.length, 'těleso', 'tělesa', 'těles')}</strong></div>`;
+        // víc těles stejného druhu (dílky skládačky, šrouby…): společné parametry – změna platí pro všechna
+        const druh = uzly[0].druh, td = uzly.every(x => x.druh === druh) && druh !== 'skica' && (M.TVARY[druh] || (M.DILY && M.DILY[druh]));
+        if (td) {
+          const spol = td.parametry.filter(d => !d.odvozeny && !d.text && d.klic !== 'segmentu'
+            && !(d.klic === 'prumer' && 'velikost' in uzly[0].param && uzly.some(x => x.param.velikost !== 'vlastni')));
+          if (spol.length) h += `<div class="skupina"><div class="nadpis">Společné parametry (${esc(td.nazev)})</div>`
+            + spol.map(d => d.volby
+              ? `<label class="ip"><span class="osa">${esc(d.popis)}</span><select data-param="${d.klic}">${d.volby.map(([v, p]) => `<option value="${v}">${esc(p)}</option>`).join('')}</select></label>`
+              : d.prepinac ? `<label class="zaskrt"><input type="checkbox" data-param="${d.klic}"> ${esc(d.popis)}</label>`
+              : cislo(d.popis, u => u.param[d.klic], v => zmenParam(d.klic, v), { krok: d.krok, des: d.cele ? 0 : 2, jednotka: d.jednotka || '', min: d.min, max: d.max })).join('')
+            + `<p class="dil-tip">Hodnoty ukazuje první vybrané těleso; změna platí pro všechna.</p></div>`;
+        }
       }
       // kvalita oblých ploch (počet segmentů) – i pro víc těles a skupiny najednou
       if (uzly.some(x => M.kvalitaUzlu(x) || x.druh === 'kvadr'))
@@ -181,8 +197,13 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       const vlastni = karta.querySelector('#inspBarva');
       // tažení ve výběru barvy posílá desítky událostí – jeden krok historie
       vlastni.addEventListener('input', () => { M.sloucitDalsi = 'barva'; nastavBarvu(vlastni.value); M.sloucitDalsi = null; });
-      karta.querySelectorAll('[data-param]').forEach(el => el.addEventListener('change', () =>
-        zmenParam(el.dataset.param, el.type === 'checkbox' ? el.checked : el.value)));
+      karta.querySelectorAll('[data-param]').forEach(el => el.addEventListener('change', () => {
+        // textový parametr s pevným tvarem (okraje puzzle): neplatný zápis ohlásit, ne tiše zahodit
+        const u0 = M.vybraneUzly()[0], t0 = u0 && (M.TVARY[u0.druh] || (M.DILY && M.DILY[u0.druh]));
+        const d = t0 && t0.parametry.find(x => x.klic === el.dataset.param);
+        if (d && d.vzor && !d.vzor.test(el.value.trim())) { M.oznamPole(el, d.chyba || 'Neplatná hodnota.'); el.value = u0.param[d.klic]; return; }
+        zmenParam(el.dataset.param, el.type === 'checkbox' ? el.checked : el.value);
+      }));
       const tlSkica = karta.querySelector('#inspSkica');
       if (tlSkica) tlSkica.onclick = () => M.otevriSkicar(M.app.vyber[0]);
       const tlRozpojit = karta.querySelector('#inspRozpojit');
@@ -327,6 +348,14 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
 
     // --- zápisy (jen první vybraný uzel; inspektor polí se ukazuje u jednoho)
     function zmenRozmer(i, v) {
+      // díl, jehož rozměr dávají parametry (krabička, víko): pole Rozměr mění parametr – stěny, sloupky
+      // a díry se nedeformují a změna platí i pro propojený protikus
+      const uz = M.vybraneUzly(), u0 = uz[0], d = uz.length === 1 && M.DILY && M.DILY[u0.druh];
+      if (d && d.rozmerKlice && d.rozmerKlice[i] && Math.abs(u0.rozmer[i] - u0.zaklad[i]) < 1e-6 * u0.zaklad[i]) {
+        const q = d.parametry.find(x => x.klic === d.rozmerKlice[i]);
+        zmenParam(d.rozmerKlice[i], q ? M.omez(v, q.min, q.max) : v);
+        return;
+      }
       M.upravVybrane(u => {
         const rozmer = u.rozmer.slice(); rozmer[i] = v;
         // spodek zůstane na místě, X a Y kolem středu
@@ -344,11 +373,10 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     }
     function zmenParam(klic, v) {
       // skica: nová obálka a střed, počátek skici ve světě zůstane; propojené díly (šroub ↔ matice,
-      // krabička ↔ víko) dostanou stejnou změnu sdíleného parametru v jednom kroku historie
-      const vyb = new Set(M.app.vyber), prot = new Map(M.propojeneZmeny(M.app.dok, M.app.vyber, klic, v).map(([u, z]) => [u.id, z]));
-      const zmen = (u, z) => M.maPrirozene(u) ? M.upravPrirozeny(u, z) : { param: Object.assign({}, u.param, z) };
-      M.upravVybrane(u => vyb.has(u.id) ? zmen(u, { [klic]: v }) : zmen(u, prot.get(u.id)), prot.size ? 'Tvar (i propojený díl)' : 'Tvar',
-        M.app.vyber.concat([...prot.keys()]));
+      // krabička ↔ víko, i uvnitř skupin) dostanou stejnou změnu sdíleného parametru v jednom kroku historie
+      if (M.app.uprava && M.zrusNahledy) M.zrusNahledy();
+      const r = M.dokSeZmenouParametru(M.app.dok, M.app.vyber, klic, v);
+      if (r.dok !== M.app.dok) M.zmenDokument(r.dok, r.propojenych ? 'Tvar (i propojený díl)' : 'Tvar');
     }
     /** Odvozené pole tvaru (vnitřní průměr, průměr průřezu…): zapíše rozměr i parametry, spodek stojí. */
     function zmenOdvozeny(d, v) {
@@ -368,11 +396,15 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     /** Inspektor se staví znovu, když se změní výběr, druh nebo režim skici. */
     function klicInspektoru() {
       const u = M.vybraneUzly()[0];
-      return M.app.vyber.join(',') + '|' + (M.app.vyber.length === 1 && u ? u.druh + (u.druh === 'skica' ? u.param.rezim : '') + (u.druh === 'skupina' ? JSON.stringify(u.occt) : '')
+      return M.app.vyber.join(',') + '|' + (M.app.vyber.length > 1 ? M.vybraneUzly().map(x => x.druh + (x.param && x.param.velikost === 'vlastni' ? 'v' : '')).join(',') : '') + '|' + (M.app.vyber.length === 1 && u ? u.druh + (u.druh === 'skica' ? u.param.rezim : '')
+        + (u.param && u.param.velikost === 'vlastni' ? '|vlastni' : '') + (u.param && u.param.vystupky === 'vlastni' ? '|vlastniOkraje' : '') + (u.druh === 'skupina' ? JSON.stringify(u.occt) : '')
         + (u.vazba ? '|' + u.vazba + M.protikusy(M.app.dok, u).map(x => x.nazev + (x.zamceno ? '🔒' : '')).join(',') : '') : '');
     }
 
     M.na('vyber', postav);
+    // dopočítaná geometrie (díly, skupiny): obnovit odhad trojúhelníků (dřív by zůstalo „Teď ≈ 0“)
+    let planObnovy = null;
+    M.na('geometrie', () => { if (karta.hidden || planObnovy) return; planObnovy = setTimeout(() => { planObnovy = null; if (!karta.hidden) obnov(false); }, 100); });
     M.na('dokument', () => {
       if (klicInspektoru() !== klicStavby) postav(); else obnov(false);
     });

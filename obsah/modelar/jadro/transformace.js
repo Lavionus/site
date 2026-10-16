@@ -194,8 +194,9 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
   /** Kopie uzlů na stejném místě (přidají se na konec seznamu). Vrací {dok, kopie}. */
   M.duplikujUzly = function (dok, ids) {
     const set = new Set(ids), kopie = [], uzly = dok.uzly.slice();
-    for (const u of dok.uzly) if (set.has(u.id)) {
-      const k = Object.assign(M.noveIdHluboko(u), { zamceno: false, nazev: M.nazevKopie({ uzly }, u) });
+    const zdroje = dok.uzly.filter(u => set.has(u.id)), nove = M.kopieSVazbami(zdroje);
+    for (const [i, u] of zdroje.entries()) {
+      const k = Object.assign(nove[i], { zamceno: false, nazev: M.nazevKopie({ uzly }, u) });
       kopie.push(k);
       uzly.push(k);
     }

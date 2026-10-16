@@ -11,7 +11,7 @@
   const G = window.DENIK_GRAFY;
   const KLIC = 'webapp_potraviny';
   // stránka, jádro a aplikace musí být ze stejné verze (při změně kódu zvýšit i v jadro.js a potraviny.html)
-  const VERZE_KODU = '2026-10-16k';
+  const VERZE_KODU = '2026-10-16l';
   if (!J || J.VERZE_KODU !== VERZE_KODU || window.DENIK_VERZE !== VERZE_KODU) {
     // jednou za minutu se soubory obnoví samy, jinak (smyčka) jen nabídka tlačítkem
     let nedavno = false;
@@ -385,6 +385,7 @@
       DB.podleEan.clear(); DB.podleId.clear();
       for (const f of DB.vyrobky) { DB.podleEan.set(f.ean, f); DB.podleId.set(f.id, f); }
       for (const f of DB.suroviny) DB.podleId.set(f.id, f);
+      J.nastavPrevody(DB.suroviny);   // poměry syrové/hotové z naměřeného složení
       nactiDoplnky(d);
       DB.nacteno = true;
       obnovIndexUzivatele();
@@ -1097,7 +1098,8 @@
     }
     if (f.typ === 's') z.push(h('span', { class: 'znak s', title: 'Obecná potravina (USDA)', text: 'OBECNÉ' }));
     if (f.typ === 'm') z.push(h('span', { class: 'znak m', title: 'Moje potravina', text: 'MOJE' }));
-    if (f.typ === 'd') z.push(h('span', { class: 'znak d', title: 'Doplněno správcem webu do společné databáze', text: 'SPRÁVCE' }));
+    if (f.typ === 'd' && f.odhad) z.push(h('span', { class: 'znak w', title: 'Vypočtené nebo odhadnuté hodnoty – nejsou naměřené', text: 'ODHAD' }));
+    else if (f.typ === 'd') z.push(h('span', { class: 'znak d', title: 'Doplněno správcem webu do společné databáze', text: 'SPRÁVCE' }));
     if (f.typ === 'r') z.push(h('span', { class: 'znak r', title: 'Recept', text: 'RECEPT' }));
     if (f.typ === 'o') z.push(h('span', { class: 'znak o', title: 'Staženo online z Open Food Facts', text: 'ONLINE' }));
     if (f.priznaky & 2) z.push(h('span', { class: 'znak w', title: 'Výrobek nemá nutriční hodnoty', text: 'BEZ HODNOT' }));
@@ -1114,7 +1116,7 @@
     else if (ai && (ai.stopy.length || (ai.slovaStopy && ai.slovaStopy.length))) c.push('může obsahovat stopy: ' + textAlergenu(ai).st.join(', '));
     if (f.typ === 's') c.push('obecná potravina');
     if (f.typ === 'm') c.push('moje potravina');
-    if (f.typ === 'd') c.push('doplněno správcem');
+    if (f.typ === 'd') c.push(f.odhad ? 'odhadnuté hodnoty, nenaměřené' : 'doplněno správcem');
     if (f.typ === 'r') c.push('recept');
     if (f.priznaky & 1) c.push('hodnoty si neodpovídají');
     return c.length ? '. ' + c.join('. ') : '';
@@ -1420,7 +1422,8 @@
           h('button', { class: 'btn mini', type: 'button', onclick: () => { vyberJ.value = '0'; jIdx = 0; prepocti(); vstupM.focus(); } }, 'Ano, ' + fc(pocet, 1) + ' ' + j));
       }
       if (prevod) {
-        prevodInfo.textContent = vazeno === prevod.stav ? '' : '= ' + fc(g) + ' ' + j + ' ' + (prevod.stav === 'hotove' ? 'hotové' : 'syrové') + ' (poměr syrové : hotové ≈ 1 : ' + fc(prevod.faktor, 2) + ')';
+        prevodInfo.textContent = vazeno === prevod.stav ? '' : '= ' + fc(g) + ' ' + j + ' ' + (prevod.stav === 'hotove' ? 'hotové' : 'syrové') +
+          ' (syrové : hotové ≈ 1 : ' + fc(prevod.faktor, 2) + ', spočteno z naměřeného obsahu ' + (prevod.metoda === 'susina' ? 'sušiny' : 'bílkovin') + ' obou potravin; skutečnost závisí na době vaření)';
       }
       const v = J.zivinyZa(f.n || {}, g);
       vypocet.textContent = '';
@@ -1447,7 +1450,8 @@
     if (f.nutriscore) stitky.appendChild(h('span', { class: 'stitek' }, 'Nutri-Score ', h('span', { class: 'nutri ' + f.nutriscore, text: f.nutriscore })));
     if (f.nova) stitky.appendChild(h('span', { class: 'stitek', title: 'Míra průmyslového zpracování (1 = nezpracované, 4 = ultrazpracované)', text: 'NOVA ' + f.nova }));
     if (f.skupina && J.SKUPINY[f.skupina]) stitky.appendChild(h('span', { class: 'stitek', text: J.SKUPINY[f.skupina] }));
-    if (f.typ === 'd') stitky.appendChild(h('span', { class: 'stitek', title: 'Položka společné databáze, kterou doplnil správce webu', text: '🛠️ Doplněno správcem' + (f.zmeneno && J.zKlice(f.zmeneno) ? ' ' + J.zKlice(f.zmeneno).toLocaleDateString('cs-CZ') : '') }));
+    if (f.typ === 'd' && f.odhad) stitky.appendChild(h('span', { class: 'stitek', title: 'Vypočtené nebo odhadnuté hodnoty – nejsou naměřené', text: '⚠ Odhad, nenaměřeno' }));
+    else if (f.typ === 'd') stitky.appendChild(h('span', { class: 'stitek', title: 'Položka společné databáze, kterou doplnil správce webu', text: '🛠️ Doplněno správcem' + (f.zmeneno && J.zKlice(f.zmeneno) ? ' ' + J.zKlice(f.zmeneno).toLocaleDateString('cs-CZ') : '') }));
     if (f.ean) stitky.appendChild(h('span', { class: 'stitek', title: 'Čárový kód' + (J.eanZeme(f.ean) ? ' – registrován: ' + J.eanZeme(f.ean) : ''), text: 'EAN ' + f.ean }));
     const oblibena = S.oblibene.includes(f.id);
     const srdce = h('button', { class: 'btn ikona plain', type: 'button', 'aria-pressed': String(oblibena), 'aria-label': 'Oblíbená', title: 'Oblíbená', text: oblibena ? '♥' : '♡' });
@@ -1496,6 +1500,15 @@
       telo.appendChild(h('div', { class: 'upozorneni' }, 'Hodnoty si navzájem neodpovídají (energie nesedí s makroživinami nebo cukrů je víc než sacharidů). Ověř je na obalu – ',
         h('button', { class: 'btn mini', type: 'button', onclick: () => doplnHodnoty(f) }, 'opravit ve vlastní kopii')));
     }
+    if (f.typ === 'd' && f.odhad) telo.appendChild(h('div', { class: 'upozorneni' }, h('b', { text: 'Odhad – hodnoty nejsou naměřené. ' }),
+      f.znacka === 'odhad z receptury' ? 'Jsou vypočtené z typické receptury, skutečné jídlo se může výrazně lišit.' : 'Jde o odhad podle běžných výrobků; konkrétní výrobek najdeš podle čárového kódu nebo etikety.',
+      (() => {
+        const m = J.namerenaVarianta(f, DB.suroviny);
+        if (!m || !Number.isFinite(f.n.kcal)) return null;
+        const roz = Math.round((f.n.kcal - m.n.kcal) / m.n.kcal * 100);
+        return h('div', { style: { marginTop: '6px' } }, 'Hodnota z databáze: ', h('b', { text: m.nazev }), ' – ' + en(m.n.kcal) + '/100 ' + jedn(m) + ' (' + (m.zdroj || 'USDA') + '), odhad se liší o ' + (roz > 0 ? '+' : '') + roz + ' %. ',
+          h('button', { class: 'btn mini', type: 'button', onclick: () => detailPotraviny(m, volby.rezim === 'nahled' ? { rezim: 'nahled' } : { ...volby }) }, 'Použít tuto'));
+      })()));
     if (f.ml) telo.appendChild(infoNapoje(f, druh));
     const spolecna = f.typ === 'm' && f.ean ? DB.doplnky.find(x => x.ean === f.ean) : null;
     if (spolecna) telo.appendChild(h('div', { class: 'upozorneni info' }, 'Ve společné databázi je teď i „' + spolecna.nazev + '“ od správce. Při skenování se dál používá tvoje verze. ',
@@ -1834,13 +1847,24 @@
       pridat(sek, h('div', { class: 'stitky', style: { marginTop: '6px' } }, ...[...new Set(stit.map(s => st[s] || s))].map(s => h('span', { class: 'stitek', text: '✓ ' + s }))));
     }
   }
+  // zdroj obecné potraviny s licencí (uvedení zdroje je podmínkou licencí)
+  function ZDROJE_SUROVIN(f) {
+    const z = f.zdroj || 'USDA FoodData Central';
+    const pozn = ' – oficiální národní databáze; základní potraviny převážně naměřené, složená jídla často vypočtená z receptury';
+    if (/^CIQUAL/.test(z)) return 'ANSES, tabulka složení potravin Ciqual 2025 (Licence Ouverte / Etalab 2.0)' + pozn;
+    if (/CoFID/.test(z)) return 'McCance and Widdowson\'s Composition of Foods Integrated Dataset 2021 (contains public sector information licensed under the Open Government Licence v3.0)' + pozn;
+    if (/Frida/.test(z)) return '© Food Data (frida.fooddata.dk), verze 5.5, listopad 2025, DTU Food (CC BY 4.0)' + pozn;
+    if (/medián etiket/.test(z)) return 'medián údajů z etiket výrobků na českém trhu (Open Food Facts, ODbL)';
+    if (/FNDDS/.test(z)) return 'USDA FNDDS 2021–2023 (CC0) – hodnoty vypočtené USDA z typické receptury, ne laboratorně naměřené';
+    return 'USDA FoodData Central (CC0)';
+  }
   function zdrojPotraviny(f) {
     if (f.typ === 'v') return ['Zdroj: ', h('a', { href: 'https://world.openfoodfacts.org/product/' + encodeURIComponent(f.ean), target: '_blank', rel: 'noopener', text: 'Open Food Facts' }),
       ' (ODbL), údaje k ' + (DB.meta.vyrobky ? DB.meta.vyrobky.stazeno : '') + (f.rok ? ', poslední úprava výrobku ' + f.rok : '') + '. Údaje vkládají dobrovolníci.'];
     if (f.typ === 'o') return ['Zdroj: Open Food Facts (ODbL), staženo online.'];
-    if (f.typ === 'd' && f.znacka === 'odhad z receptury') return ['Odhad z typické receptury (suroviny z USDA FoodData Central, CC0) – skutečné jídlo se liší podle receptu a porce. Přesnější je zapsat vlastní recept.'];
+    if (f.typ === 'd' && f.zdrojText) return [f.zdrojText + (f.odhad ? ' Přesnější je zapsat vlastní recept nebo hodnoty z etikety.' : '')];
     if (f.typ === 'd') return ['Zdroj: doplnil správce webu podle etikety' + (f.zmeneno ? ' (' + J.zKlice(f.zmeneno).toLocaleDateString('cs-CZ') + ')' : '') + '. Chybu můžeš nahlásit správci.'];
-    if (f.typ === 's') return ['Zdroj: USDA FoodData Central (CC0) – „' + (f.popis || '') + '“. Výběr a český název: autor aplikace.'];
+    if (f.typ === 's') return ['Zdroj: ' + ZDROJE_SUROVIN(f) + ' – „' + (f.popis || '') + '“. Výběr a český název: autor aplikace.'];
     if (f.typ === 'm') return ['Tvoje vlastní potravina' + (f.puvod ? ' (upravená kopie)' : '') + '.'];
     if (f.typ === 'r') return ['Tvůj recept – hodnoty spočítané ze surovin.'];
     if (f.typ === 'q') return ['Rychlý záznam.'];
@@ -3146,8 +3170,15 @@
       DB.doplnky.length ? h('p', {}, fc(DB.doplnky.length) + ' potravin doplnil nebo opravil správce webu podle etiket' + (DB.meta.doplnky && DB.meta.doplnky.zmeneno ? ' (naposledy ' + J.zKlice(DB.meta.doplnky.zmeneno).toLocaleDateString('cs-CZ') + ')' : '') + ': ',
         h('a', { href: DATA + 'doplnky.json', download: '', text: 'doplnky.json' }), '. Výrobek se stejným kódem z Open Food Facts nahrazují.') : null,
       h('h3', { style: { marginTop: '12px' }, text: '🥕 Obecné potraviny' }),
-      h('p', {}, fc(DB.suroviny.length) + ' základních potravin z ', h('a', { href: 'https://fdc.nal.usda.gov/', target: '_blank', rel: 'noopener', text: 'USDA FoodData Central' }),
-        ' (SR Legacy, Foundation Foods; volné dílo CC0). Výběr a české názvy připravil autor aplikace. Hodnoty odpovídají americkým potravinám – u pečiva, uzenin a mléčných výrobků je přesnější konkrétní výrobek.'),
+      h('p', {}, fc(DB.suroviny.length) + ' obecných potravin z oficiálních databází; výběr a české názvy připravil autor aplikace:'),
+      h('ul', { style: { margin: '4px 0 0 18px' } },
+        h('li', {}, h('a', { href: 'https://fdc.nal.usda.gov/', target: '_blank', rel: 'noopener', text: 'USDA FoodData Central' }), ' – SR Legacy, Foundation Foods a FNDDS 2021–2023 (volné dílo CC0). FNDDS = hotová jídla, hodnoty USDA vypočtené z receptur.'),
+        h('li', {}, 'ANSES. 2025. ', h('a', { href: 'https://doi.org/10.57745/RDMHWY', target: '_blank', rel: 'noopener', text: 'Table de composition nutritionnelle des aliments Ciqual 2025' }), ' (Licence Ouverte / Etalab 2.0).'),
+        h('li', {}, 'McCance and Widdowson\'s ', h('a', { href: 'https://www.gov.uk/government/publications/composition-of-foods-integrated-dataset-cofid', target: '_blank', rel: 'noopener', text: 'Composition of Foods Integrated Dataset 2021' }),
+          ' – contains public sector information licensed under the Open Government Licence v3.0.'),
+        h('li', {}, '© Food Data (', h('a', { href: 'https://frida.fooddata.dk', target: '_blank', rel: 'noopener', text: 'frida.fooddata.dk' }), '), version 5.5, November 2025, DTU National Food Institute (CC BY 4.0).'),
+        h('li', {}, 'Mediány z etiket výrobků na českém trhu (Open Food Facts, ODbL) – jen při ≥ 5 výrobcích a malém rozptylu.')),
+      h('p', { class: 'slabe', style: { marginTop: '4px' }, text: 'Hodnoty odpovídají potravinám v zemi původu databáze; u konkrétního výrobku je přesnější jeho etiketa. Položky se značkou ODHAD (vypočtené z receptury nebo odhadnuté) nejsou naměřené.' }),
       h('h3', { style: { marginTop: '12px' }, text: '🎯 Referenční hodnoty' }),
       h('p', {}, 'Vitaminy a minerály: ', h('a', { href: 'https://multimedia.efsa.europa.eu/drvs/index.htm', target: '_blank', rel: 'noopener', text: 'EFSA – Dietary Reference Values' }),
         ' (zdroj: Evropský úřad pro bezpečnost potravin). Energie: rovnice Mifflin–St Jeor. Limity cukrů, nasycených tuků a soli: doporučení WHO. Názvy přídatných látek a alergenů: taxonomie Open Food Facts (ODbL).'),

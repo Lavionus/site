@@ -62,7 +62,14 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     const sx = deska.sirka / 2, sy = deska.hloubka / 2;
     const viditelne = dok.uzly.filter(u => !u.skryto);
     const telesa = viditelne.filter(u => u.role !== 'dira');
-    const obalky = new Map(telesa.map(u => [u.id, M.obalkaUzlu(u)]));
+    // spodek skupiny ze spočítaného výsledku (díra může spodek odříznout – obálka plných částí by ležela níž)
+    const obalka = u => {
+      const o = M.obalkaUzlu(u);
+      if (u.druh !== 'skupina' || !M.minNadRovinou || !M.ROVINA_DESKY) return o;
+      const z = M.minNadRovinou(u, M.ROVINA_DESKY);
+      return isFinite(z) ? { min: [o.min[0], o.min[1], z], max: o.max, stred: o.stred } : o;
+    };
+    const obalky = new Map(telesa.map(u => [u.id, obalka(u)]));
     const jmena = ids => ids.slice(0, 3).map(id => '„' + M.najdiUzel(dok, id).nazev + '“').join(', ') + (ids.length > 3 ? ` a ${ids.length - 3} dalších` : '');
     // samostatné díry: netisknou se, nic neodečítají
     const diry = viditelne.filter(u => u.role === 'dira').map(u => u.id);
@@ -270,7 +277,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
   M.skladejSkyline = skyline;
 
   /** Cena materiálu (Kč) z hmotnosti (g) a ceny cívky (Kč/kg). */
-  M.cenaTisku = (g, kcKg) => Math.max(0, g) / 1000 * Math.max(0, kcKg || 0);
+  M.cenaTisku = (g, kcKg) => (Number.isFinite(g) && g > 0 ? g : 0) / 1000 * (Number.isFinite(kcKg) && kcKg > 0 ? kcKg : 0);
 
   M.rozlozNaDesce = function (dok, ids, deska, mezera = 5, volby = {}) {
     if (volby.otacet) return rozlozChytre(dok, ids, deska, mezera);
