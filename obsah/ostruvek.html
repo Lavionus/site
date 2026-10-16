@@ -1,0 +1,405 @@
+<!DOCTYPE html>
+<html lang="cs">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no">
+<title>Ostrůvek – demo three.js + Blender</title>
+<script src="../podpis.js" defer></script>
+<script src="../rekord.js"></script>
+<style>
+  :root { --bg: #0f2a3d; --panel: rgba(10, 30, 45, .78); --text: #f2f7fa; --muted: #b9cfdc; --accent: #7ff3ff; }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; height: 100%; overflow: hidden; background: var(--bg); color: var(--text);
+    font: 15px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif; touch-action: none; user-select: none; }
+  canvas { display: block; }
+  #hud { position: fixed; top: 10px; left: 10px; display: flex; gap: 8px; flex-wrap: wrap; pointer-events: none; }
+  .stitek { background: var(--panel); padding: 6px 12px; border-radius: 10px; font-weight: 600; }
+  .stitek b { color: var(--accent); }
+  #napoveda { position: fixed; top: 10px; right: 10px; max-width: 290px; background: var(--panel); padding: 8px 12px;
+    border-radius: 10px; color: var(--muted); font-size: 13px; }
+  #napoveda kbd { background: #24465c; color: var(--text); border-radius: 4px; padding: 0 5px; font: 12px monospace; }
+  #napoveda button { all: unset; cursor: pointer; float: right; color: var(--text); padding: 0 4px; }
+  #obrazovka { position: fixed; inset: 0; display: flex; align-items: center; justify-content: center;
+    background: rgba(8, 24, 36, .55); }
+  #obrazovka .karta { display: flex; flex-direction: column; align-items: center; background: var(--panel); border-radius: 16px; padding: 22px 26px; text-align: center; max-width: 380px; margin: 16px; }
+  #obrazovka h1 { margin: 0 0 6px; font-size: 26px; }
+  #obrazovka p { margin: 6px 0 14px; color: var(--muted); }
+  #obrazovka button { font: inherit; font-weight: 700; border: 0; border-radius: 10px; padding: 10px 22px; cursor: pointer;
+    background: var(--accent); color: #0b2a33; }
+  #rekordBox { margin-top: 10px; color: var(--muted); font-size: 13px; }
+  #paka { position: fixed; width: 120px; height: 120px; border-radius: 50%; border: 2px solid rgba(255,255,255,.35);
+    background: rgba(255,255,255,.08); display: none; pointer-events: none; transform: translate(-50%, -50%); }
+  #paka i { position: absolute; left: 50%; top: 50%; width: 46px; height: 46px; margin: -23px 0 0 -23px; border-radius: 50%;
+    background: rgba(255,255,255,.45); }
+  .skryt { display: none !important; }
+  @media (max-width: 600px) { #napoveda { display: none; } }
+</style>
+<script type="importmap">
+{ "imports": {
+    "three": "./lib/three-0.160/three.module.min.js",
+    "three/addons/": "./lib/three-0.160/jsm/"
+} }
+</script>
+</head>
+<body>
+<div id="hud">
+  <div class="stitek">💎 <b id="pocet">0</b> / <span id="celkem">12</span></div>
+  <div class="stitek">⏱ <span id="cas">0,0</span> s</div>
+</div>
+<div id="napoveda"><button id="zavritNap" aria-label="Zavřít">✕</button>
+  <kbd>W A S D</kbd> / šipky – chůze, <kbd>Shift</kbd> – běh<br>
+  tažení myší nebo <kbd>Q</kbd> <kbd>E</kbd> – otáčení kamery, kolečko – přiblížení<br>
+  Na dotyku: levá půlka = páčka, pravá = kamera.<br>
+  Modely, materiály i animace postavičky vznikly skriptem v Blenderu.
+</div>
+<div id="obrazovka">
+  <div class="karta">
+    <h1 id="titulek">🏝️ Ostrůvek</h1>
+    <p id="text">Načítám modely z Blenderu…</p>
+    <button id="start" class="skryt">Hrát</button>
+    <div id="rekordBox"></div>
+  </div>
+</div>
+<div id="paka"><i></i></div>
+
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+
+const POCET_KRYSTALU = 12;
+const $ = id => document.getElementById(id);
+const rek = Rekord.sleduj('webapp_hra_ostruvek', { vyssiLepsi: false, format: v => v.toFixed(1).replace('.', ',') + ' s', popisek: 'Nejlepší čas' });
+rek.prvek($('rekordBox'));
+
+// ------------------------------------------------------------ scéna
+const renderer = new THREE.WebGLRenderer({ antialias: true });
+renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
+renderer.setSize(innerWidth, innerHeight);
+renderer.shadowMap.enabled = true;
+renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+renderer.toneMapping = THREE.ACESFilmicToneMapping;
+renderer.toneMappingExposure = 1.05;
+document.body.prepend(renderer.domElement);
+
+const scena = new THREE.Scene();
+const OBLOHA = new THREE.Color('#9fd6f5');
+scena.background = OBLOHA;
+scena.fog = new THREE.Fog(OBLOHA, 45, 120);
+const kamera = new THREE.PerspectiveCamera(55, innerWidth / innerHeight, 0.1, 300);
+
+scena.add(new THREE.HemisphereLight('#dff2ff', '#5d7a3a', 1.3));
+const slunce = new THREE.DirectionalLight('#fff3d6', 2.4);
+slunce.castShadow = true;
+slunce.shadow.mapSize.set(2048, 2048);
+Object.assign(slunce.shadow.camera, { left: -22, right: 22, top: 22, bottom: -22, near: 1, far: 90 });
+slunce.shadow.bias = -0.0008;
+scena.add(slunce, slunce.target);
+const SMER_SLUNCE = new THREE.Vector3(18, 32, 12);
+
+// voda: rovina s jemně vlnícími se vrcholy
+const vodaGeo = new THREE.PlaneGeometry(260, 260, 90, 90);
+vodaGeo.rotateX(-Math.PI / 2);
+const vodaZaklad = vodaGeo.attributes.position.array.slice();
+const voda = new THREE.Mesh(vodaGeo, new THREE.MeshStandardMaterial({
+  color: '#2f8fd0', roughness: 0.25, metalness: 0.1, transparent: true, opacity: 0.82, flatShading: true }));
+voda.receiveShadow = true;
+scena.add(voda);
+
+addEventListener('resize', () => {
+  renderer.setSize(innerWidth, innerHeight);
+  kamera.aspect = innerWidth / innerHeight;
+  kamera.updateProjectionMatrix();
+});
+
+// ------------------------------------------------------------ pomocníci
+function nahoda(seed) {          // mulberry32 – rozmístění je pokaždé stejné
+  return () => {
+    seed |= 0; seed = seed + 0x6D2B79F5 | 0;
+    let t = Math.imul(seed ^ seed >>> 15, 1 | seed);
+    t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t;
+    return ((t ^ t >>> 14) >>> 0) / 4294967296;
+  };
+}
+
+let teren = null;
+const paprsek = new THREE.Raycaster();
+const DOLU = new THREE.Vector3(0, -1, 0);
+function povrch(x, z) {          // výška a normála terénu pod bodem
+  paprsek.set(new THREE.Vector3(x, 60, z), DOLU);
+  const z0 = paprsek.intersectObject(teren, true)[0];
+  return z0 ? { y: z0.point.y, n: z0.face.normal } : { y: -10, n: new THREE.Vector3(0, 1, 0) };
+}
+
+// ------------------------------------------------------------ načtení GLB z Blenderu
+const svet = { prekazky: [], krystaly: [], postava: null, mixer: null, akce: {} };
+
+new GLTFLoader().load('ostruvek/ostruvek.glb', gltf => {
+  const g = gltf.scene;
+  g.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
+
+  teren = g.getObjectByName('Ostrov');
+  teren.traverse(o => { o.castShadow = false; });
+  scena.add(teren);
+
+  const predloha = jm => { const o = g.getObjectByName(jm); o.removeFromParent(); return o; };
+  const P = Object.fromEntries(['StromJehl', 'StromList', 'Ker', 'Kamen', 'Krystal', 'Houba'].map(j => [j, predloha(j)]));
+
+  // postava (kostra + skinned mesh) a její akce
+  const postava = g.getObjectByName('Postava');
+  postava.removeFromParent();
+  scena.add(postava);
+  postava.position.set(0, povrch(0, -16).y, -16);
+  svet.postava = postava;
+  svet.mixer = new THREE.AnimationMixer(postava);
+  for (const klip of gltf.animations) svet.akce[klip.name] = svet.mixer.clipAction(klip);
+  svet.akce.Radost.setLoop(THREE.LoopOnce, 1);
+  svet.akce.Radost.clampWhenFinished = false;
+  svet.akce.Stani.play();
+  svet.mixer.addEventListener('finished', e => { if (e.action === svet.akce.Radost) prepniAkci(stav.pohyb > 0.1 ? 'Chuze' : 'Stani'); });
+
+  rozmisti(P);
+  $('text').textContent = 'Posbírej všech 12 svítících krystalů na ostrově co nejrychleji.';
+  $('start').classList.remove('skryt');
+  $('start').focus();
+  window.__ostruvek.nacteno = true;
+}, undefined, chyba => {
+  $('text').textContent = 'Model se nepodařilo načíst: ' + (chyba.message || chyba);
+});
+
+function rozmisti(P) {
+  const r = nahoda(2026);
+  const volno = (x, z, d) => svet.prekazky.every(p => Math.hypot(p.x - x, p.z - z) > p.r + d)
+    && Math.hypot(x, z + 16) > 4;
+  function poloz(predl, kolik, { rMin = 0.8, yMin = 0.7, yMax = 9, svah = 0.8, kolize = 0, meritko = [0.8, 1.3], odstup = 1 }) {
+    for (let i = 0, pokus = 0; i < kolik && pokus < kolik * 60; pokus++) {
+      const u = r() * Math.PI * 2, d = Math.sqrt(r()) * 30;
+      const x = Math.cos(u) * d, z = Math.sin(u) * d;
+      const p = povrch(x, z);
+      if (p.y < yMin || p.y > yMax || p.n.y < svah || !volno(x, z, odstup)) continue;
+      const o = predl.clone();
+      const m = meritko[0] + r() * (meritko[1] - meritko[0]);
+      o.position.set(x, p.y - 0.05, z);
+      o.rotation.y = r() * Math.PI * 2;
+      o.scale.setScalar(m);
+      scena.add(o);
+      if (kolize) svet.prekazky.push({ x, z, r: kolize * m });
+      i++;
+      if (predl === P.Krystal) svet.krystaly.push({ o, y0: p.y + 0.25, faze: r() * 6, sebrany: false });
+    }
+  }
+  poloz(P.StromJehl, 34, { kolize: 0.45, meritko: [0.8, 1.5], odstup: 1.4 });
+  poloz(P.StromList, 26, { kolize: 0.4, meritko: [0.8, 1.3], odstup: 1.6 });
+  poloz(P.Kamen, 26, { yMin: 0.2, svah: 0.6, kolize: 0.6, meritko: [0.6, 1.8] });
+  poloz(P.Ker, 30, { meritko: [0.7, 1.3], odstup: 0.6 });
+  poloz(P.Houba, 24, { meritko: [0.8, 1.5], odstup: 0.3 });
+  poloz(P.Krystal, POCET_KRYSTALU, { yMin: 0.1, yMax: 12, svah: 0.55, meritko: [1, 1], odstup: 2.5 });
+  $('celkem').textContent = svet.krystaly.length;
+}
+
+// ------------------------------------------------------------ ovládání
+const klavesy = new Set();
+addEventListener('keydown', e => {
+  klavesy.add(e.code);
+  if (e.code.startsWith('Arrow') || e.code === 'Space') e.preventDefault();
+});
+addEventListener('keyup', e => klavesy.delete(e.code));
+addEventListener('blur', () => klavesy.clear());
+
+const kam = { uhel: 0, vyska: 0.42, vzdal: 9 };
+const paka = { id: null, x0: 0, y0: 0, dx: 0, dy: 0 };
+let tahKamery = null;
+const platno = renderer.domElement;
+platno.addEventListener('pointerdown', e => {
+  if (e.pointerType === 'touch' && e.clientX < innerWidth / 2 && paka.id === null) {
+    Object.assign(paka, { id: e.pointerId, x0: e.clientX, y0: e.clientY, dx: 0, dy: 0 });
+    const el = $('paka'); el.style.display = 'block'; el.style.left = e.clientX + 'px'; el.style.top = e.clientY + 'px';
+    el.firstElementChild.style.transform = '';
+  } else if (!tahKamery) tahKamery = { id: e.pointerId, x: e.clientX, y: e.clientY };
+  try { platno.setPointerCapture(e.pointerId); } catch { /* syntetická událost */ }
+});
+platno.addEventListener('pointermove', e => {
+  if (e.pointerId === paka.id) {
+    let dx = e.clientX - paka.x0, dy = e.clientY - paka.y0;
+    const d = Math.hypot(dx, dy), max = 50;
+    if (d > max) { dx *= max / d; dy *= max / d; }
+    paka.dx = dx / max; paka.dy = dy / max;
+    $('paka').firstElementChild.style.transform = `translate(${dx}px, ${dy}px)`;
+  } else if (tahKamery && e.pointerId === tahKamery.id) {
+    kam.uhel -= (e.clientX - tahKamery.x) * 0.006;
+    kam.vyska = THREE.MathUtils.clamp(kam.vyska + (e.clientY - tahKamery.y) * 0.004, 0.12, 1.2);
+    tahKamery.x = e.clientX; tahKamery.y = e.clientY;
+  }
+});
+function pustit(e) {
+  if (e.pointerId === paka.id) { paka.id = null; paka.dx = paka.dy = 0; $('paka').style.display = 'none'; }
+  if (tahKamery && e.pointerId === tahKamery.id) tahKamery = null;
+}
+platno.addEventListener('pointerup', pustit);
+platno.addEventListener('pointercancel', pustit);
+platno.addEventListener('wheel', e => { kam.vzdal = THREE.MathUtils.clamp(kam.vzdal + e.deltaY * 0.01, 4, 18); }, { passive: true });
+
+$('zavritNap').addEventListener('click', () => $('napoveda').classList.add('skryt'));
+
+// ------------------------------------------------------------ hra
+const stav = { hraje: false, cas: 0, sebrano: 0, pohyb: 0, akce: 'Stani', smer: 0 };
+
+function prepniAkci(jm) {
+  if (stav.akce === jm) return;
+  const z = svet.akce[stav.akce], na = svet.akce[jm];
+  na.reset().play();
+  z.crossFadeTo(na, jm === 'Radost' ? 0.12 : 0.25, false);
+  stav.akce = jm;
+}
+
+function novaHra() {
+  stav.hraje = true; stav.cas = 0; stav.sebrano = 0;
+  for (const k of svet.krystaly) { k.sebrany = false; k.o.visible = true; }
+  svet.postava.position.set(0, povrch(0, -16).y, -16);
+  stav.smer = 0; svet.postava.rotation.y = stav.smer;
+  kam.uhel = 0;
+  $('pocet').textContent = 0;
+  $('obrazovka').classList.add('skryt');
+  platno.focus();
+}
+$('start').addEventListener('click', novaHra);
+
+function konec() {
+  stav.hraje = false;
+  const novy = rek.zapis(Math.round(stav.cas * 10) / 10);
+  $('titulek').textContent = novy ? '🏆 Nový rekord!' : '🎉 Hotovo!';
+  $('text').textContent = `Všech ${svet.krystaly.length} krystalů za ${stav.cas.toFixed(1).replace('.', ',')} s.`;
+  $('start').textContent = 'Znovu';
+  $('obrazovka').classList.remove('skryt');
+  $('start').focus();
+}
+
+// jiskry při sebrání krystalu
+const jiskry = [];
+const jiskraGeo = new THREE.OctahedronGeometry(0.07);
+const jiskraMat = new THREE.MeshBasicMaterial({ color: '#bffaff' });
+function vybuch(pozice) {
+  for (let i = 0; i < 18; i++) {
+    const m = new THREE.Mesh(jiskraGeo, jiskraMat);
+    m.position.copy(pozice);
+    const u = Math.random() * Math.PI * 2;
+    m.userData.v = new THREE.Vector3(Math.cos(u) * 2.5, 2 + Math.random() * 3, Math.sin(u) * 2.5);
+    m.userData.t = 0.8;
+    scena.add(m); jiskry.push(m);
+  }
+}
+
+const RYCHLOST = 4.2, BEH = 7.5;
+const v = new THREE.Vector3();
+
+function krokHry(dt) {
+  const p = svet.postava;
+  // vstup → směr v rovině kamery
+  let fx = 0, fz = 0;
+  if (klavesy.has('KeyW') || klavesy.has('ArrowUp')) fz += 1;
+  if (klavesy.has('KeyS') || klavesy.has('ArrowDown')) fz -= 1;
+  if (klavesy.has('KeyA') || klavesy.has('ArrowLeft')) fx -= 1;
+  if (klavesy.has('KeyD') || klavesy.has('ArrowRight')) fx += 1;
+  if (klavesy.has('KeyQ')) kam.uhel += 1.8 * dt;
+  if (klavesy.has('KeyE')) kam.uhel -= 1.8 * dt;
+  if (paka.id !== null) { fx += paka.dx; fz -= paka.dy; }
+  const sila = Math.min(1, Math.hypot(fx, fz));
+  stav.pohyb = stav.hraje ? sila : 0;
+
+  if (stav.pohyb > 0.1) {
+    // kamera se dívá ve směru (sin uhel, cos uhel) – dopředu je od kamery k postavě
+    const s = Math.sin(kam.uhel), c = Math.cos(kam.uhel);
+    const dx = (fz * s - fx * c), dz = (fz * c + fx * s);
+    const delka = Math.hypot(dx, dz) || 1;
+    const rychl = (klavesy.has('ShiftLeft') || klavesy.has('ShiftRight') || sila > 0.95 && paka.id !== null) ? BEH : RYCHLOST;
+    const krok = rychl * sila * dt;
+    let nx = p.position.x + dx / delka * krok, nz = p.position.z + dz / delka * krok;
+    // překážky: odsunout ven z kruhu
+    for (const o of svet.prekazky) {
+      const ddx = nx - o.x, ddz = nz - o.z, d = Math.hypot(ddx, ddz), min = o.r + 0.3;
+      if (d < min && d > 1e-4) { nx = o.x + ddx / d * min; nz = o.z + ddz / d * min; }
+    }
+    const pv = povrch(nx, nz);
+    if (pv.y > -0.35) { p.position.x = nx; p.position.z = nz; }   // do hluboké vody nejde
+    const cil = Math.atan2(dx, dz);
+    let rozdil = (cil - stav.smer + Math.PI * 3) % (Math.PI * 2) - Math.PI;
+    stav.smer += rozdil * Math.min(1, dt * 12);
+    p.rotation.y = stav.smer;
+    if (stav.akce !== 'Radost') prepniAkci('Chuze');
+    svet.akce.Chuze.timeScale = rychl === BEH ? 1.7 : 1.05 * Math.max(0.5, sila);
+  } else if (stav.akce === 'Chuze') prepniAkci('Stani');
+
+  const cilY = povrch(p.position.x, p.position.z).y;
+  p.position.y += (cilY - p.position.y) * Math.min(1, dt * 15);
+
+  if (stav.hraje) {
+    stav.cas += dt;
+    $('cas').textContent = stav.cas.toFixed(1).replace('.', ',');
+    for (const k of svet.krystaly) {
+      if (k.sebrany) continue;
+      if (Math.hypot(k.o.position.x - p.position.x, k.o.position.z - p.position.z) < 0.9) {
+        k.sebrany = true; k.o.visible = false; stav.sebrano++;
+        $('pocet').textContent = stav.sebrano;
+        vybuch(k.o.position.clone().setY(k.o.position.y + 0.6));
+        prepniAkci('Radost');
+        if (stav.sebrano === svet.krystaly.length) konec();
+      }
+    }
+  }
+}
+
+function krokKamery(dt) {
+  const p = svet.postava.position;
+  const vod = Math.cos(kam.vyska) * kam.vzdal, svis = Math.sin(kam.vyska) * kam.vzdal;
+  v.set(p.x - Math.sin(kam.uhel) * vod, p.y + 1 + svis, p.z - Math.cos(kam.uhel) * vod);
+  const zem = povrch(v.x, v.z).y + 0.6;
+  if (v.y < zem) v.y = zem;
+  kamera.position.lerp(v, Math.min(1, dt * 6));
+  kamera.lookAt(p.x, p.y + 0.9, p.z);
+  slunce.position.copy(p).add(SMER_SLUNCE);
+  slunce.target.position.copy(p);
+}
+
+const hodiny = new THREE.Clock();
+let t = 0;
+function snimek() {
+  requestAnimationFrame(snimek);
+  const dt = Math.min(hodiny.getDelta(), 0.05);
+  t += dt;
+  // vlny
+  const pos = vodaGeo.attributes.position;
+  for (let i = 0; i < pos.count; i++) {
+    const x = vodaZaklad[i * 3], z = vodaZaklad[i * 3 + 2];
+    pos.array[i * 3 + 1] = Math.sin(x * 0.35 + t * 1.3) * 0.08 + Math.cos(z * 0.3 + t) * 0.08;
+  }
+  pos.needsUpdate = true;
+  vodaGeo.computeVertexNormals();
+
+  if (svet.postava) {
+    krokHry(dt);
+    krokKamery(dt);
+    svet.mixer.update(dt);
+    for (const k of svet.krystaly) {
+      k.o.rotation.y += dt * 1.5;
+      k.o.position.y = k.y0 + Math.sin(t * 2 + k.faze) * 0.15;
+    }
+  } else {
+    kamera.position.set(Math.sin(t * 0.1) * 55, 30, Math.cos(t * 0.1) * 55);
+    kamera.lookAt(0, 0, 0);
+  }
+  for (let i = jiskry.length - 1; i >= 0; i--) {
+    const j = jiskry[i];
+    j.userData.t -= dt;
+    j.userData.v.y -= 9 * dt;
+    j.position.addScaledVector(j.userData.v, dt);
+    j.scale.setScalar(Math.max(0, j.userData.t / 0.8));
+    if (j.userData.t <= 0) { scena.remove(j); jiskry.splice(i, 1); }
+  }
+  renderer.render(scena, kamera);
+}
+
+// sonda pro testy
+window.__ostruvek = { nacteno: false, stav, svet, kam, klavesy, novaHra };
+snimek();
+</script>
+</body>
+</html>

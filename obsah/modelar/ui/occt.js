@@ -531,8 +531,12 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       const sit = S.telesa.svetovaSit(ed.id);
       if (!sit || ed.hrany.length > 600) return [];
       const ob = M.obalkaSite(sit), diag = Math.hypot(ob.max[0] - ob.min[0], ob.max[1] - ob.min[1], ob.max[2] - ob.min[2]);
+      // 26 směrů mírně pootočených (žádný neleží přesně v rovině stěny – bod na povrchu je nejistý)
       const eps = Math.min(0.3, diag * 0.008), smery = [];
-      for (const x of [-1, 0, 1]) for (const y of [-1, 0, 1]) for (const z of [-1, 0, 1]) if (x || y || z) { const l = Math.hypot(x, y, z); smery.push([x / l, y / l, z / l]); }
+      const qq = new THREE.Quaternion().setFromEuler(new THREE.Euler(0.1731, 0.2417, 0.0893));
+      for (const x of [-1, 0, 1]) for (const y of [-1, 0, 1]) for (const z of [-1, 0, 1]) if (x || y || z) {
+        const d = new THREE.Vector3(x, y, z).normalize().applyQuaternion(qq); smery.push([d.x, d.y, d.z]);
+      }
       const v = new THREE.Vector3();
       return ed.hrany.map((h, i) => {
         // střed hrany: prostřední vzorek (u rovné hrany se dvěma body jejich průměr)

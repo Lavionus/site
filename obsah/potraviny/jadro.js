@@ -393,8 +393,54 @@
 
   /* ---------- hledání ---------- */
   // Index: pole záznamů {f: potravina, t: normalizovaný text, nz: normalizovaný název}
+  // synonyma obecných potravin (hledají se jako název): jak lidé píší × jak se potravina jmenuje
+  const ALIASY = {
+    'Volské oko': 'sázené vejce, smažené vejce, vejce na oko, vajíčko na oko',
+    'Míchaná vejce': 'vaječina, míchaná vajíčka',
+    'Vejce vařené natvrdo': 'vajíčko natvrdo, vařené vejce, vejce natvrdo',
+    'Vejce celé': 'vejce, vajíčko, vajíčka, vejce syrové',
+    'Jogurt bílý plnotučný': 'jogurt, bílý jogurt',
+    'Houskový knedlík': 'knedlík, knedlíky, houskové knedlíky',
+    'Bramborový knedlík': 'bramborové knedlíky',
+    'Losos pečený': 'losos',
+    'Svíčková na smetaně s knedlíkem': 'svíčková',
+    'Hovězí guláš s knedlíkem': 'guláš',
+    'Vepřový řízek smažený': 'řízek, smažený řízek',
+    'Vepřo knedlo zelo': 'vepřo knedlo, vepřová s knedlíkem a zelím',
+    'Bramborová kaše': 'kaše bramborová, šťouchané brambory',
+    'Rýže bílá vařená': 'vařená rýže, rýže',
+    'Těstoviny vařené': 'těstoviny, vařené těstoviny, špagety, makarony, nudle, kolínka, penne',
+    'Brambory vařené (loupané)': 'vařené brambory, brambory',
+    'Hranolky smažené': 'hranolky, hranolky z fritézy, french fries',
+    'Hranolky (mražené, pečené v troubě)': 'hranolky z trouby',
+    'Žemle (kaiserka)': 'kaiserka',
+    'Chléb konzumní (kmínový)': 'chleba, chléb, konzumní chléb, kmínový chléb',
+    'Rohlík tukový': 'rohlík, rohlíky',
+    'Mléko polotučné 1,5 %': 'mléko, polotučné mléko',
+    'Tvaroh polotučný': 'tvaroh, měkký tvaroh',
+    'Eidam 30 %': 'eidam, sýr, plátkový sýr',
+    'Párky (vepřové a hovězí)': 'párek, párky, vídeňské párky',
+    'Šunka (cca 11 % tuku)': 'šunka, šunka výběrová',
+    'Ovesná kaše na mléce': 'ovesná kaše, kaše, porridge',
+    'Batáty pečené (sladké brambory)': 'sladké brambory, batát',
+    'Pizza sýrová (margherita)': 'pizza, pizza margherita',
+    'Hamburger': 'burger',
+    'Oříšková pomazánka s kakaem': 'nutella, nugeta',
+    'Kobliha glazovaná (donut)': 'donut, kobliha',
+    'Kuřecí prsa pečená': 'kuřecí maso, kuřecí plátek, kuře pečené',
+    'Hummus': 'humus, cizrnová pomazánka',
+    'Gyros v pitě': 'gyros',
+    'Kebab v tortille': 'kebab, wrap',
+    'Smažený sýr': 'smažák',
+    'Krabí tyčinky (surimi)': 'krabí tyčinky',
+    'Espresso': 'káva espresso, presso',
+    'Káva (černá, bez cukru)': 'káva, kafe, turek',
+  };
   function vytvorIndex(potraviny) {
-    return potraviny.map(f => ({ f, nz: norm(f.nazev), t: norm(f.nazev + ' ' + (f.znacka || '') + ' ' + (f.ean || '')) }));
+    return potraviny.map(f => {
+      const al = f.aliasy || ALIASY[f.nazev];
+      return { f, nz: norm(f.nazev), t: norm(f.nazev + ' ' + (f.znacka || '') + ' ' + (f.ean || '')), a: al ? norm(al) : '' };
+    });
   }
   function slova(t) { return t.split(/[^a-z0-9%]+/).filter(Boolean); }
 
@@ -442,7 +488,8 @@
       for (let ti = 0; ti < tokeny.length; ti++) {
         const tk = tokeny[ti];
         // shoda v názvu má jasnou přednost před shodou jen ve značce (např. „rohlík“ × značka Rohlík.cz)
-        const iN = x.nz.indexOf(tk);
+        let iN = x.nz.indexOf(tk);
+        if (iN < 0 && x.a) { const iA = x.a.indexOf(tk); if (iA >= 0 && (iA === 0 || /[^a-z0-9]/.test(x.a[iA - 1]))) { skore += 14; continue; } }
         if (iN >= 0) {
           skore += (iN === 0 || /[^a-z0-9]/.test(x.nz[iN - 1])) ? 14 : 5;
           continue;
@@ -455,9 +502,13 @@
         ok = false; break;
       }
       if (!ok) continue;
-      if (x.nz.startsWith(tokeny[0])) skore += 12;
+      // obecné potraviny (a vlastní, recepty, doplňky) mají u stejné shody přednost před výrobky:
+      // „rýže“ má najít rýži, ne výrobek, který se jmenuje jen „Rýže“
+      const obecna = x.f.typ === 's' || x.f.typ === 'd' || x.f.typ === 'm' || x.f.typ === 'r';
+      const alias = x.a && (x.a === q || x.a.split(/\s*,\s*/).includes(q));
+      if (x.nz.startsWith(tokeny[0]) || alias) skore += obecna ? 18 : 12;
       else if (kmeny[0] && x.nz.startsWith(kmeny[0])) skore += 9;
-      if (x.nz === q) skore += 30;
+      if (x.nz === q || alias) skore += obecna ? 30 : 12;
       skore += bodyPotraviny(x, volby);
       vys.push({ f: x.f, skore });
     }
@@ -1821,7 +1872,7 @@
 
   const API = {
     FORMAT_DOPLNKY, sestavDoplnky, idDoplnku, doplnekZVlastni, overDoplnek, doplnekZDat, exportDoplnku, slucDoplnky,
-    VERZE_KODU: '2026-10-16i', FORMAT, VERZE_FORMATU, ZIVINY, ZIV, ZAKLAD, MIKRO, SKUPINY, JIDLA_VYCHOZI, AKTIVITA, EFSA_DOSPELI,
+    VERZE_KODU: '2026-10-16j', FORMAT, VERZE_FORMATU, ZIVINY, ZIV, ZAKLAD, MIKRO, SKUPINY, JIDLA_VYCHOZI, AKTIVITA, EFSA_DOSPELI,
     norm, cislo, zaokrouhli, formatCislo, noveId, hash, tvar, pocet,
     datumKlic, zKlice, posunDen, rozdilDni, popisDne,
     eanKontrola, eanVarianty, eanZeme,

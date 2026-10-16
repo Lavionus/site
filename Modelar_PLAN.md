@@ -864,3 +864,36 @@ rozhraní, QA skutečnou myší); opravy:
   v mezích tvaru): inspektor (i víc těles a skupiny), paleta „Kvalita výběru: …“, kvalita nových těles v nabídce
   Tvary (localStorage). `M.kvalitaUzlu`, `M.sKvalitou`, `M.nastavKvalitu`, `M.nastavKvalituVybranych`.
 - Testy: `modelar_dily.js` 71, `modelar_jadro.js` 129, `modelar_ui_prani3.py` 60.
+
+### Rozšíření 16. 10. 2026 (návrhy 1–12 a 14)
+
+1. **Propojené díly** (`vazba` v uzlu dílu; `M.propojeneZmeny`, `M.nastavVazbu`, `M.protikusy`, `M.lzePropojit`):
+   šroub ↔ matice ze sady, krabička ↔ víko – sdílené parametry (`M.SPOJENE_KLICE`: závit, průměr, stoupání, rozměry,
+   stěna, zaoblení; víko na šroubky ↔ sloupky). Inspektor mění oba v jednom kroku, ukazuje „Propojeno s…“ a umí
+   propojení zrušit; paleta Propojit / Zrušit propojení. Kopie se nepropojují.
+2. **Moje vůle pro tisk** (Dílna): kalibrační destička (`DILY.kalibraceVule` – kolíky v dírách 0,1–0,5 mm, hodnota
+   vyrytá sedmisegmentovými číslicemi), uložená vůle (`M.mojeVule`, localStorage) se použije u nových dílů podle
+   `M.vulePro` (matice/šroubovice/díra: v − 0,05; sada a víko: v; háček, klip, příchytka: 2v; puzzle odsazení: v/2).
+3. **Skládačka** (Další tvary → Skládačka…, `M.uzlySkladacky`): N × M dílků, okraje `vlastni` + `hrany` (z/v/r),
+   rozměr dílků dopočítaný na stejnou rozteč; složená (tisk vcelku) nebo od sebe. Textové parametry tvarů.
+4. **Odhad kvality** v inspektoru („Teď ≈ … trojúhelníků“, odhad v nápovědě tlačítek, `M.odhadTrojKvality`);
+   nad 1,5 milionu se zeptá.
+5. **Nové díly**: klip na trubku, kabelová příchytka (zahloubené díry), držák na zeď (žebro, zápustné díry),
+   zacvakávací čep; přepínače (bool) v dílech.
+6. **Krabička s víkem** (`krabiceSVikem` → dva propojené uzly `krabice` + `vicko`): nasazovací lem s vůlí, nebo
+   víko na šroubky se sloupky v rozích (zahloubené díry).
+7. **Text po obvodu** (`ui/reliefy.js`): kolem válce (ovinutí `obalitVzorem`) nebo po kružnici (skica z písmen
+   po oblouku, `M.textPoKruznici`); **reliéf z obrázku** (`M.sitReliefu` – výšková mapa, podklad, boky; tmavé = vyšší
+   pro litofanii).
+8. **Závit na válec** (`M.zavitNaValec`): vnější (horní část válce zúžená prstencem na jádro + závitová tyč, vnořené
+   skupiny) nebo vnitřní (díra se závitem shora); závity s **vlastním průměrem** (`velikost: 'vlastni'`, `prumer`,
+   stoupání podle průměru `M.stoupaniPro`). Oprava: `map(zaokr)` předával index jako počet desetinných míst.
+9. **Zaoblení spojů**: v úpravě hran tlačítko „⌒ Spoje“ vybere vyduté hrany (materiál kolem středu hrany > 58 %
+   z 26 mírně pootočených směrů, `M.bodVSiti`).
+10. **Pole podél křivky** (typ `krivka` v `M.poleUzlu`, `M.cestaZeSkici`, `M.bodyNaCeste`): nejdelší obrys skici,
+    rovnoměrně po délce, natáčení podle tečny, otevřená / uzavřená.
+11. **Cena** materiálu (Kontrola tisku: cena cívky Kč/kg; stavový řádek „· 2,97 Kč“, `M.cenaTisku`).
+12. **Rozmístění na desku** s otáčením o 90° (skyline, 4 pořadí × s/bez otočení, původní řady jako záloha).
+14. **Šablony projektů** (`jadro/sablony.js`, Soubor → Nový ze šablony): krabička na elektroniku, stojánek na
+    telefon, jmenovka, organizér na tužky, věšák na klíče, podtácek.
+- Testy: node `modelar_sablony.js` (41), `modelar_upravy.js` 41, `modelar_dily.js` 71; prohlížeč `modelar_ui_prani4.py`.

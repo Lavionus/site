@@ -1980,6 +1980,11 @@ const KATALOG_SEKCE = [
         "tagy": ["tank a 1990", "battle city", "tanky", "nes", "famiclone", "retro", "arkáda", "dva hráči", "orel", "editor map"]
       },
       {
+        "soubor": "obsah/ostruvek.html",
+        "nazev": "🏝️ Ostrůvek (three.js + Blender)",
+        "tagy": ["ostrov", "skřítek", "krystaly", "3d", "three.js", "blender", "gltf", "low-poly", "demo", "hra"]
+      },
+      {
         "soubor": "obsah/breakout.html",
         "nazev": "🧱 Breakout",
         "tagy": ["arkanoid", "cihly", "pálka", "míček", "arkáda"]
