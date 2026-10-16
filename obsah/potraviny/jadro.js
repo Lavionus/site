@@ -2100,7 +2100,7 @@
       if (!['100', '112', '125', '140'].includes(s.nastaveni.pismo)) delete s.nastaveni.pismo;
       if (s.nastaveni.energie !== 'kj') delete s.nastaveni.energie;
       if (s.nastaveni.spravce !== true) delete s.nastaveni.spravce;
-      for (const k of ['online', 'obrazky', 'mikro', 'pohybKCili', 'napojeDoVody', 'infoOnline']) {
+      for (const k of ['online', 'obrazky', 'mikro', 'pohybKCili', 'napojeDoVody', 'infoOnline', 'infoPlocha']) {
         if (k in s.nastaveni && typeof s.nastaveni[k] !== 'boolean') { if (k in novyStav().nastaveni) s.nastaveni[k] = novyStav().nastaveni[k]; else delete s.nastaveni[k]; }
       }
       for (const k of ['zaloha', 'uklid']) if (k in s.nastaveni && !(typeof s.nastaveni[k] === 'string' && zKlice(s.nastaveni[k]))) delete s.nastaveni[k];
@@ -2207,7 +2207,7 @@
 
   const API = {
     FORMAT_DOPLNKY, sestavDoplnky, idDoplnku, doplnekZVlastni, overDoplnek, doplnekZDat, exportDoplnku, slucDoplnky,
-    VERZE_KODU: '2026-10-16n', FORMAT, VERZE_FORMATU, ZIVINY, ZIV, ZAKLAD, MIKRO, SKUPINY, JIDLA_VYCHOZI, AKTIVITA, EFSA_DOSPELI,
+    VERZE_KODU: '2026-10-16p', FORMAT, VERZE_FORMATU, ZIVINY, ZIV, ZAKLAD, MIKRO, SKUPINY, JIDLA_VYCHOZI, AKTIVITA, EFSA_DOSPELI,
     norm, cislo, zaokrouhli, formatCislo, noveId, hash, tvar, pocet,
     datumKlic, zKlice, posunDen, rozdilDni, popisDne,
     eanKontrola, eanVarianty, eanZeme,

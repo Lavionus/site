@@ -5,7 +5,7 @@
 /* Při větší aktualizaci webu zvyš číslo verze — stará cache se u návštěvníků
    smaže a vše se stáhne čerstvé (jinak SWR ukáže novou verzi až na druhé načtení). */
 const PREFIX = 'webapp-';
-const CACHE = PREFIX + 'v387';
+const CACHE = PREFIX + 'v389';
 const JADRO = [
   './',
   './index.html',
@@ -230,6 +230,10 @@ const POTRAVINY = [
   './obsah/potraviny/etiketa.js',
   './obsah/lib/qrcode/qrcode.js',
   './obsah/potraviny/manifest.webmanifest',
+  './obsah/potraviny/ikona-192.png',
+  './obsah/potraviny/ikona-512.png',
+  './obsah/potraviny/ikona-maskovatelna-512.png',
+  './obsah/potraviny/ikona-apple-180.png',
   './obsah/potraviny/data/vyrobky.json',
   './obsah/potraviny/data/suroviny.json',
   './obsah/potraviny/data/ciselniky.json',

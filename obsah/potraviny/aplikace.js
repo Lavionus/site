@@ -11,7 +11,7 @@
   const G = window.DENIK_GRAFY;
   const KLIC = 'webapp_potraviny';
   // stránka, jádro a aplikace musí být ze stejné verze (při změně kódu zvýšit i v jadro.js a potraviny.html)
-  const VERZE_KODU = '2026-10-16n';
+  const VERZE_KODU = '2026-10-16p';
   if (!J || J.VERZE_KODU !== VERZE_KODU || window.DENIK_VERZE !== VERZE_KODU) {
     // jednou za minutu se soubory obnoví samy, jinak (smyčka) jen nabídka tlačítkem
     let nedavno = false;
@@ -216,8 +216,11 @@
     const predFokus = document.activeElement;
     const pozadi = h('div', { class: 'sheet-pozadi' });
     const titulekEl = h('h2', { text: titulek || '' });
-    const zavrit = h('button', { class: 'btn ikona plain', type: 'button', 'aria-label': 'Zavřít', title: 'Zavřít (Esc)', text: '✕' });
-    const sheet = h('div', { class: 'sheet ' + (trida || ''), role: 'dialog', 'aria-modal': 'true', 'aria-label': String(titulek || '').replace(/^[^\p{L}\p{N}]+/u, '') },
+    const zavrit = h('button', { class: 'btn ikona plain zavrit', type: 'button', 'aria-label': 'Zavřít', title: 'Zavřít (Esc)' },
+      h('span', { class: 'ik-x', 'aria-hidden': 'true', text: '✕' }), h('span', { class: 'ik-zpet', 'aria-hidden': 'true', text: '←' }));
+    // na telefonu: menší vrstvy jako vysouvací panel zdola, velké přes celou obrazovku
+    const spodni = !trida && sirka && parseInt(sirka, 10) <= 520;
+    const sheet = h('div', { class: 'sheet ' + (trida || '') + (spodni ? ' spodni' : ''), role: 'dialog', 'aria-modal': 'true', 'aria-label': String(titulek || '').replace(/^[^\p{L}\p{N}]+/u, '') },
       h('div', { class: 'sheet-hl' }, titulekEl, hlavickaNavic || null, zavrit),
       telo, pata || null);
     if (sirka) sheet.style.width = 'min(' + sirka + ',100%)';
@@ -238,7 +241,7 @@
         pozadi.remove();
         const horni = vrstvy.length ? vrstvy[vrstvy.length - 1].pozadi : $('.wrap');
         horni.inert = false;
-        if (!vrstvy.length) { document.documentElement.style.overflow = ''; if (lista && listaVraceni) zobrazListu(true); }
+        if (!vrstvy.length) { document.documentElement.style.overflow = ''; if (lista && listaVraceni) zobrazListu(true); historiePoZavreni(); }
         if (priZavreni) priZavreni();
         if (predFokus && document.contains(predFokus)) try { predFokus.focus(); } catch (_) { /* nic */ }
         if (!vrstvy.length) zkontrolujDen();
@@ -257,9 +260,74 @@
       else if (!e.shiftKey && i === prvky.length - 1) { e.preventDefault(); prvky[0].focus(); }
     });
     vrstvy.push(v);
+    historieVrstvy();
+    if (spodni) tahniDolu(sheet, sheet.querySelector('.sheet-hl'), () => v.zavri());
     // výchozí fokus: volající ho obvykle nastaví sám (pole); jinak zavírací tlačítko, aby se dialog ohlásil
     setTimeout(() => { if (vrstvy.includes(v) && !sheet.contains(document.activeElement)) zavrit.focus(); }, 60);
     return v;
+  }
+  /* ----- systémové „Zpět“ (Android, gesto, tlačítko prohlížeče): zavře vrstvu, z jiné sekce vrátí do Deníku ----- */
+  // V historii je nejvýš jeden záznam pro otevřené vrstvy a jeden pro sekci mimo Deník.
+  // history.back() je asynchronní: dokud nedoběhne, další záznamy se jen řadí do fronty (jinak by se pomíchaly)
+  const hist = { vrstva: false, sekce: false, ceka: 0, fronta: [], pojistka: null };
+  function pridejZaznam(stav) {
+    if (hist.ceka) { hist.fronta.push(stav); return; }
+    try { history.pushState({ denik: stav }, ''); } catch (_) { /* nic */ }
+  }
+  function odeberZaznam() {
+    hist.ceka++;
+    try { history.back(); } catch (_) { hist.ceka--; return; }
+    clearTimeout(hist.pojistka);   // kdyby popstate nepřišel (žádný záznam), fronta se neucpe
+    hist.pojistka = setTimeout(() => { if (hist.ceka) { hist.ceka = 0; vyprazdniFrontu(); } }, 600);
+  }
+  function vyprazdniFrontu() {
+    while (hist.fronta.length && !hist.ceka) { try { history.pushState({ denik: hist.fronta.shift() }, ''); } catch (_) { /* nic */ } }
+  }
+  function historieVrstvy() {
+    if (hist.vrstva) return;
+    hist.vrstva = true;
+    pridejZaznam('vrstva');
+  }
+  function historiePoZavreni() {
+    // zavření tlačítkem: záznam z historie odebrat – až v dalším kroku (hned se může otevřít jiná vrstva)
+    setTimeout(() => {
+      if (vrstvy.length || !hist.vrstva) return;
+      hist.vrstva = false;
+      const i = hist.fronta.lastIndexOf('vrstva');
+      if (i >= 0) hist.fronta.splice(i, 1); else odeberZaznam();
+    }, 0);
+  }
+  addEventListener('popstate', () => {
+    if (hist.ceka) { hist.ceka--; if (!hist.ceka) { clearTimeout(hist.pojistka); vyprazdniFrontu(); } return; }
+    if (hist.vrstva) {
+      hist.vrstva = false;
+      if (otevrenaNabidka) zavriNabidku(true);
+      if (vrstvy.length) {
+        vrstvy[vrstvy.length - 1].zavri();
+        if (vrstvy.length) historieVrstvy();   // pod ní je další vrstva – Zpět ji zavře příště
+      }
+      return;
+    }
+    if (hist.sekce) { hist.sekce = false; prepni('denik', true); }
+  });
+  // stažení vysouvacího panelu prstem dolů ho zavře
+  function tahniDolu(sheet, uchyt, zavri) {
+    let y0 = null, dy = 0;
+    uchyt.addEventListener('touchstart', e => { if (e.touches.length !== 1 || e.target.closest('button,select,input,a')) return; y0 = e.touches[0].clientY; dy = 0; sheet.classList.add('tazeny'); }, { passive: true });
+    uchyt.addEventListener('touchmove', e => {
+      if (y0 === null) return;
+      dy = Math.max(0, e.touches[0].clientY - y0);
+      sheet.style.transform = dy ? 'translateY(' + dy + 'px)' : '';
+    }, { passive: true });
+    const konec = () => {
+      if (y0 === null) return;
+      y0 = null; sheet.classList.remove('tazeny');
+      if (dy > Math.min(120, sheet.offsetHeight * 0.25)) { zavri(); return; }
+      sheet.classList.add('vraci'); sheet.style.transform = '';
+      setTimeout(() => sheet.classList.remove('vraci'), 220);
+    };
+    uchyt.addEventListener('touchend', konec);
+    uchyt.addEventListener('touchcancel', konec);
   }
   function zavriVsechnyVrstvy() { while (vrstvy.length) vrstvy[vrstvy.length - 1].zavri(); }
   document.addEventListener('keydown', e => {
@@ -531,10 +599,24 @@
   }
 
   /* ================= přepínání pohledů ================= */
-  function prepni(v) {
+  const TITULY = { denik: 'Deník', potraviny: 'Potraviny a recepty', statistiky: 'Statistiky', profil: 'Profil a cíle', data: 'Data' };
+  function prepni(v, zHistorie) {
     if (v === 'statistiky' && pohled !== 'statistiky') kalendarMesic = null;   // kalendář po příchodu na záložku od aktuálního měsíce
+    // Zpět ze sekce mimo Deník vrací do Deníku (jako v aplikaci), z Deníku teprve opouští stránku
+    if (!zHistorie && !hist.vrstva) {
+      try {
+        if (v !== 'denik' && !hist.sekce) { hist.sekce = true; pridejZaznam('sekce'); }
+        else if (v === 'denik' && hist.sekce) {
+          hist.sekce = false;
+          const i = hist.fronta.lastIndexOf('sekce');
+          if (i >= 0) hist.fronta.splice(i, 1); else odeberZaznam();
+        }
+      } catch (_) { /* nic */ }
+    }
     pohled = v;
     document.body.classList.toggle('pohled-denik', v === 'denik');
+    document.body.dataset.pohled = v;
+    const ts = $('#titulSekce'); if (ts) ts.textContent = TITULY[v] || '';
     document.querySelectorAll('.tab').forEach(t => { t.setAttribute('aria-selected', String(t.dataset.v === v)); t.tabIndex = t.dataset.v === v ? 0 : -1; });
     document.querySelectorAll('main > section').forEach(s => { s.hidden = s.id !== 'v-' + v; });
     try { sessionStorage.setItem(KLIC + '_pohled', v); } catch (_) { /* nic */ }
@@ -579,6 +661,7 @@
     } else if (poskozeno) kont.appendChild(h('div', { class: 'upozorneni' }, 'Uložená data deníku byla poškozená a nešla načíst. Kopie byla odložena v úložišti prohlížeče (Data → Odložené kopie); začínáš s prázdným deníkem.'));
     upozorneniOnline(kont);
     pripomenutiZalohy(kont);
+    nabidkaPlochy(kont);
     const viditelna = jidla().map(j => j.id);
     // jídla se záznamy, která jsou skrytá nebo smazaná, se zobrazí také
     for (const z of d.z) if (!viditelna.includes(z.j)) viditelna.push(z.j);
@@ -3715,6 +3798,97 @@
       h('p', {}, 'Deník, profil a vlastní potraviny jsou uložené jen v tomto prohlížeči a nikam se neodesílají. Online se posílá jen čárový kód při hledání neznámého výrobku v Open Food Facts a načítají se fotky výrobků – obojí lze vypnout v nastavení.'));
   }
 
+  /* ================= přidání na plochu ================= */
+  let instalacePrompt = null;
+  function zarizeni() {
+    const ua = navigator.userAgent || '';
+    const ios = /iPhone|iPad|iPod/.test(ua) || (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1);
+    return {
+      ios, android: /Android/.test(ua),
+      safari: ios && !/CriOS|FxiOS|EdgiOS|OPiOS|YaBrowser/.test(ua),
+      firefox: /Firefox|FxiOS/.test(ua), samsung: /SamsungBrowser/.test(ua), edge: /Edg\//.test(ua),
+      dotyk: !!(window.matchMedia && matchMedia('(pointer:coarse)').matches),
+    };
+  }
+  function jeNaPlose() {
+    return !!((window.matchMedia && (matchMedia('(display-mode: standalone)').matches || matchMedia('(display-mode: fullscreen)').matches || matchMedia('(display-mode: minimal-ui)').matches)) || navigator.standalone === true);
+  }
+  function ukazTlacitkaPlochy() {
+    const na = jeNaPlose();
+    $('#plochaTl').hidden = na || !zarizeni().dotyk;   // v hlavičce jen na telefonu a tabletu
+    $('#instalovat').hidden = na;
+    const info = $('#instalovatInfo');
+    if (info && na) info.textContent = 'Deník máš otevřený jako aplikaci z plochy.';
+  }
+  async function pridatNaPlochu() {
+    // v rozcestníku (iframe) prohlížeč přidat na plochu nedovolí – otevřít Deník samostatně a návod ukázat tam
+    if (window.top !== window) {
+      const telo = h('div', { class: 'sheet-telo' },
+        h('p', { text: 'Deník je teď otevřený uvnitř rozcestníku webu a odtud ho prohlížeč na plochu přidat neumí. Otevři ho samostatně – návod se ukáže hned. Data zůstanou stejná.' }));
+      const pata = h('div', { class: 'sheet-pata' }, h('div', { class: 'vpravo' },
+        h('button', { class: 'btn', type: 'button', onclick: () => v.zavri() }, 'Zrušit'),
+        h('a', { class: 'btn primary', href: 'potraviny.html#plocha', target: '_blank', rel: 'noopener', onclick: () => v.zavri() }, 'Otevřít Deník samostatně')));
+      const v = otevriVrstvu({ titulek: '📲 Přidat na plochu', telo, pata, sirka: '460px' });
+      return;
+    }
+    if (instalacePrompt) {
+      const p = instalacePrompt;
+      instalacePrompt = null;
+      // prompt() bez gesta uživatele (nebo podruhé) se odmítne – pak návod
+      try { await p.prompt(); const v = await p.userChoice; if (v && v.outcome === 'accepted') return; if (v && v.outcome === 'dismissed') return; } catch (_) { /* návod níž */ }
+    }
+    navodPlocha();
+  }
+  function navodPlocha() {
+    const z = zarizeni();
+    const kroky = (...k) => h('ol', { class: 'navod-kroky' }, ...k.map(x => h('li', {}, ...[].concat(x))));
+    const b = t => h('b', { text: t });
+    const telo = h('div', { class: 'sheet-telo navod-plocha' });
+    if (z.ios) {
+      telo.appendChild(h('h3', { text: z.safari ? 'iPhone / iPad – Safari' : 'iPhone / iPad' }));
+      telo.appendChild(kroky(
+        ['Klepni na tlačítko ', b('Sdílet'), ' (čtvereček se šipkou nahoru) – v Safari dole uprostřed, na iPadu nahoře vpravo' + (z.safari ? '' : '; v Chromu a Edge je vpravo v adresním řádku') + '.'],
+        ['V nabídce sjeď níž a vyber ', b('Přidat na plochu'), '.'],
+        ['Potvrď ', b('Přidat'), ' vpravo nahoře. Na ploše se objeví ikona 🥗 Deník jídla.']));
+      if (!z.safari) telo.appendChild(h('p', { class: 'slabe', text: 'Ve starších verzích iOS (před 16.4) jde přidat na plochu jen ze Safari – otevři tuto stránku tam.' }));
+      telo.appendChild(h('div', { class: 'upozorneni' }, h('b', { text: 'Pozor na data: ' }),
+        'Deník na ploše má na iPhonu vlastní úložiště, oddělené od Safari – co máš zapsané tady, se tam samo nepřenese. ',
+        'Stáhni si zálohu a po prvním otevření z plochy ji obnov (Data → Obnovit ze zálohy), nebo použij přenos přes QR.',
+        h('div', { style: { marginTop: '8px' } }, h('button', { class: 'btn mini', type: 'button', onclick: posliZalohu }, '📤 Uložit zálohu'))));
+    } else if (z.android) {
+      if (z.samsung) {
+        telo.appendChild(h('h3', { text: 'Android – Samsung Internet' }));
+        telo.appendChild(kroky(['Klepni na nabídku ', b('☰'), ' dole vpravo.'], ['Vyber ', b('Přidat stránku na'), ' → ', b('Domovská obrazovka'), '.'], ['Potvrď ', b('Přidat'), '.']));
+      } else if (z.firefox) {
+        telo.appendChild(h('h3', { text: 'Android – Firefox' }));
+        telo.appendChild(kroky(['Klepni na nabídku ', b('⋮'), ' (tři tečky).'], ['Vyber ', b('Přidat na domovskou obrazovku'), ' (nebo ', b('Nainstalovat'), ').'], ['Potvrď ', b('Přidat'), '.']));
+      } else {
+        telo.appendChild(h('h3', { text: 'Android – Chrome' + (z.edge ? ' / Edge' : '') }));
+        telo.appendChild(kroky(['Klepni na nabídku ', b('⋮'), ' (tři tečky vpravo nahoře).'], ['Vyber ', b('Přidat na plochu'), ' nebo ', b('Nainstalovat aplikaci'), '.'], ['Potvrď ', b('Instalovat'), ' / ', b('Přidat'), '.']));
+      }
+      telo.appendChild(h('p', { class: 'slabe', text: 'Na Androidu sdílí aplikace z plochy data s prohlížečem – zápisy zůstanou.' }));
+    } else {
+      telo.appendChild(h('h3', { text: 'Počítač' }));
+      telo.appendChild(kroky(
+        ['V Chromu nebo Edge klepni na ikonu ', b('instalace'), ' vpravo v adresním řádku (monitor se šipkou), případně nabídka ⋮ → ', b('Uložit a sdílet'), ' → ', b('Nainstalovat stránku jako aplikaci'), '.'],
+        ['V ostatních prohlížečích si stránku ulož do záložek: ', b('Ctrl + D'), ' (na Macu ⌘ + D).']));
+      telo.appendChild(h('p', { class: 'slabe', text: 'Na telefon se Deník dostane stejně: otevři na něm tuto stránku a dej Přidat na plochu. Data přeneseš přes Data → Přenos přes QR.' }));
+    }
+    telo.appendChild(h('p', { class: 'slabe', style: { marginTop: '10px' }, text: 'Deník z plochy se otevírá jako samostatná aplikace, funguje i bez internetu a prohlížeč jeho data spolehlivěji chrání před smazáním.' }));
+    const pata = h('div', { class: 'sheet-pata' }, h('div', { class: 'vpravo' }, h('button', { class: 'btn primary', type: 'button', onclick: () => v.zavri() }, 'Rozumím')));
+    const v = otevriVrstvu({ titulek: '📲 Přidat Deník na plochu', telo, pata, sirka: '480px' });
+    S.nastaveni.infoPlocha = true; uloz();
+  }
+  // jednorázová nabídka v deníku: na telefonu, po pár dnech používání
+  function nabidkaPlochy(kont) {
+    if (S.nastaveni.infoPlocha || jeNaPlose() || !zarizeni().dotyk) return;
+    if (Object.values(S.dny).filter(d => d.z.length).length < 3) return;
+    const box = h('div', { class: 'upozorneni info' }, '📲 Přidej si Deník na plochu – otevřeš ho jedním klepnutím jako aplikaci, i bez internetu. ',
+      h('button', { class: 'btn mini', type: 'button', onclick: () => { box.remove(); pridatNaPlochu(); } }, 'Přidat na plochu'), ' ',
+      h('button', { class: 'btn mini plain', type: 'button', onclick: () => { S.nastaveni.infoPlocha = true; uloz(); box.remove(); } }, 'Ne, díky'));
+    kont.appendChild(box);
+  }
+
   /* ================= navázání událostí ================= */
   function nastav() {
     document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => prepni(t.dataset.v)));
@@ -3844,16 +4018,12 @@
       if (!Object.keys(S.dny).length) { D.info('Deník je zatím prázdný.'); return; }
       stahniSoubor('denik-jidla-souhrny-' + J.datumKlic(new Date()) + '.csv', J.exportSouhrnyCsv(S), 'text/csv;charset=utf-8');
     });
-    // instalace jako aplikace (PWA) – tlačítko jen tam, kde to prohlížeč nabízí
-    let instalace = null;
-    addEventListener('beforeinstallprompt', e => { e.preventDefault(); instalace = e; $('#instalovat').hidden = false; });
-    addEventListener('appinstalled', () => { $('#instalovat').hidden = true; D.info('Deník je nainstalovaný jako aplikace.'); });
-    $('#instalovat').addEventListener('click', async () => {
-      if (!instalace) return;
-      instalace.prompt();
-      try { await instalace.userChoice; } catch (_) { /* nic */ }
-      instalace = null; $('#instalovat').hidden = true;
-    });
+    // přidání na plochu / instalace (PWA): systémová nabídka, kde ji prohlížeč má, jinak návod pro dané zařízení
+    addEventListener('beforeinstallprompt', e => { e.preventDefault(); instalacePrompt = e; });
+    addEventListener('appinstalled', () => { instalacePrompt = null; S.nastaveni.infoPlocha = true; uloz(); ukazTlacitkaPlochy(); D.info('Deník je na ploše. Otevírej ho ikonou 🥗 Deník jídla.'); });
+    $('#instalovat').addEventListener('click', pridatNaPlochu);
+    $('#plochaTl').addEventListener('click', pridatNaPlochu);
+    ukazTlacitkaPlochy();
     $('#exportCsv').addEventListener('click', () => {
       if (!Object.keys(S.dny).length) { D.info('Deník je zatím prázdný.'); return; }
       stahniSoubor('denik-jidla-' + priponaProfilu() + J.datumKlic(new Date()) + '.csv', J.exportCsv(S), 'text/csv;charset=utf-8');
@@ -3876,6 +4046,9 @@
 
   /* ================= start ================= */
   function start() {
+    // výška horní lišty – datum deníku se přilepí těsně pod ni
+    const hl = $('.hlava');
+    if (hl && window.ResizeObserver) new ResizeObserver(() => document.documentElement.style.setProperty('--hlava-v', hl.offsetHeight + 'px')).observe(hl);
     vykresliProfily();
     pouzijPismo();
     pouzijEnergii();
@@ -3884,6 +4057,7 @@
     try { v = sessionStorage.getItem(KLIC + '_pohled') || 'denik'; } catch (_) { /* nic */ }
     const hash = location.hash.slice(1);
     if (['denik', 'potraviny', 'statistiky', 'profil', 'data'].includes(hash)) v = hash;
+    if (hash === 'plocha') setTimeout(() => { history.replaceState(null, '', location.pathname); pridatNaPlochu(); }, 300);
     if (hash === 'spravce') { v = 'data'; setTimeout(() => { const s = $('#sekceSpravce'); if (s) s.open = true; }, 0); }
     obnovIndexUzivatele();
     if (porovnani.length) vykresliTlacitkoPorovnani();   // porovnání obnovené ze sessionStorage

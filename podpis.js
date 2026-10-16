@@ -29,6 +29,8 @@
   const KOREN = new URL('.', document.currentScript.src);
 
   if (window.self !== window.top) return;   // v rámu podpis patří nadřazené stránce
+  // stránka spuštěná z plochy jako aplikace (PWA) podpis neukazuje – autora uvádí sama v sekci o aplikaci
+  if (window.matchMedia && matchMedia('(display-mode: standalone), (display-mode: fullscreen)').matches) return;
 
   const CSS = `
 :root { --podpis-vyska: ${VYSKA}px; }
