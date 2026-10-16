@@ -53,7 +53,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
         akce: () => M.nastavRezim(M.app.rezim === 'poznamka' ? null : 'poznamka') },
       { id: 'poznamkySkryt', nazev: 'Ukázat / skrýt poznámky', klavesy: [], povoleno: () => M.poznamky(M.app.dok).length > 0, akce: () => M.prepniPoznamky() },
       { id: 'historie', nazev: 'Historie úprav (posuvník)', klavesy: [], povoleno: () => true, akce: () => M.otevriHistorii() },
-      { id: 'vykres', nazev: 'Výkres – tři pohledy s kótami (PDF, SVG)', klavesy: [], povoleno: () => M.telesaKExportu(M.app.dok).length > 0, akce: () => M.otevriVykres() },
+      { id: 'vykres', nazev: 'Výkres – pohledy, řez, osy a kóty děr (PDF, SVG, DXF)', klavesy: [], povoleno: () => M.telesaKExportu(M.app.dok).length > 0, akce: () => M.otevriVykres() },
       { id: 'ulozitTvar', nazev: 'Uložit výběr jako vlastní tvar (Tvary → Moje tvary)', klavesy: [], povoleno: vybrano, akce: () => M.ulozitVlastniTvar() },
       { id: 'paleta', nazev: 'Paleta příkazů', klavesy: ['Ctrl+K'], povoleno: () => true, akce: () => M.otevriPaletu() },
       { id: 'zarovnat', nazev: 'Zarovnat (puntíky ve scéně)', klavesy: ['L'], povoleno: () => M.app.rezim === 'zarovnani' || (M.vybraneUzly().length > 1 && volne()),

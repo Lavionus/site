@@ -77,13 +77,15 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     zmenaDesky(false);
 
     // --- téma plochy: dlaždice s náhledem barev (deska na pozadí s přechodem)
-    const temata = $('deskaTemata');
+    const temata = $('deskaTemata'), temataPohled = $('pohledTemata');
     temata.innerHTML = Object.entries(M.TEMATA_DESKY).map(([id, t]) => {
       const vz = t.deska ? `background:linear-gradient(${t.pozadi[0]},${t.pozadi[1]})` : 'background:linear-gradient(135deg,#f7f9fc 0 50%,#2b3038 50% 100%)';
       const d = t.deska ? `<span class="tema-deska" style="background:${t.deska};border-color:${t.hlavni}"></span>` : '';
       return `<button type="button" class="tema" data-tema="${id}" aria-pressed="false" title="Téma plochy: ${t.nazev}"><span class="tema-vzor" style="${vz}">${d}</span><span class="tema-nazev">${t.nazev}</span></button>`;
     }).join('');
-    const ukazTema = () => temata.querySelectorAll('[data-tema]').forEach(b => b.setAttribute('aria-pressed', b.dataset.tema === M.idTematuDesky() ? 'true' : 'false'));
+    // stejné dlaždice i v nabídce Pohled (tam je uživatel najde, boční panel bývá sbalený)
+    if (temataPohled) temataPohled.innerHTML = temata.innerHTML;
+    const ukazTema = () => document.querySelectorAll('[data-tema]').forEach(b => b.setAttribute('aria-pressed', b.dataset.tema === M.idTematuDesky() ? 'true' : 'false'));
     M.zmenTemaDesky = id => {
       M.nastavTemaDesky(id);
       nast.tema = M.idTematuDesky();
@@ -93,7 +95,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       ukazTema();
       M.vysli('temaDesky', nast.tema);
     };
-    temata.addEventListener('click', e => { const b = e.target.closest('[data-tema]'); if (b) M.zmenTemaDesky(b.dataset.tema); });
+    for (const mriz of [temata, temataPohled]) if (mriz) mriz.addEventListener('click', e => { const b = e.target.closest('[data-tema]'); if (b) M.zmenTemaDesky(b.dataset.tema); });
     ukazTema();
 
     // --- stavový řádek: poloha kurzoru na desce

@@ -358,9 +358,12 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     let vykres = null, pocitano = 0;
     const volbyVykresu = () => {
       const m = $('vykMeritko').value;
+      const mat = M.MATERIALY && M.MATERIALY[$('vykMaterial').value];
       return {
         papir: $('vykPapir').value, meritko: m === 'auto' ? null : m.split(':').map(Number),
-        skryte: $('vykSkryte').checked, izometrie: $('vykIzo').checked,
+        skryte: $('vykSkryte').checked, izometrie: $('vykPravy').value === 'izometrie', pravyDolni: $('vykPravy').value,
+        osy: $('vykOsy').checked, kotyDer: $('vykOsy').checked,
+        material: mat ? mat.nazev.split(' ')[0] : '', hustota: mat ? mat.hustota : 0,
         nazev: $('vykNazev').value.trim() || M.app.projekt.nazev, autor: $('vykAutor').value.trim(),
         datum: new Date().toLocaleDateString('cs'),
       };
@@ -371,7 +374,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       const uzly = M.telesaKExportu(M.app.dok, jenVyber ? M.app.vyber : null);
       $('vykChyba').textContent = '';
       $('vykNahled').classList.add('ceka');
-      $('vykStahnoutSvg').disabled = $('vykStahnoutPdf').disabled = true;
+      $('vykStahnoutSvg').disabled = $('vykStahnoutPdf').disabled = $('vykStahnoutDxf').disabled = true;
       try {
         if (!uzly.length) throw new Error('není co kreslit – žádné viditelné těleso');
         const site = (await Promise.all(uzly.map(u => M.svetovaSit(u, M.sitSkupiny)))).map(o => o.sit);
@@ -383,7 +386,9 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
         if (v.zmenseno) pozn.push('⚠ V tomto měřítku se pohledy na list nevejdou – zvol menší měřítko nebo větší papír');
         if (v.bezSkrytych.length) pozn.push('Skryté hrany vynechány (příliš složité): ' + v.bezSkrytych.join(', '));
         $('vykInfo').textContent = `Měřítko ${v.meritko[0]} : ${v.meritko[1]} · rozměry ${v.rozmery.map(x => M.textKoty(x)).join(' × ')} mm` + (pozn.length ? ' · ' + pozn.join(' · ') : '');
-        $('vykStahnoutSvg').disabled = $('vykStahnoutPdf').disabled = false;
+        if (v.rezNevesel) pozn.push('Řez se do pravého dolního rohu v tomto měřítku nevejde – zvol větší papír nebo menší měřítko');
+        $('vykInfo').textContent = $('vykInfo').textContent + (v.rezNevesel ? ' · ' + pozn[pozn.length - 1] : '');
+        $('vykStahnoutSvg').disabled = $('vykStahnoutPdf').disabled = $('vykStahnoutDxf').disabled = false;
       } catch (e) {
         if (c !== pocitano) return;
         vykres = null;
@@ -397,6 +402,11 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       oknoV.querySelector(`input[name="vykRozsah"][value="${lzeVyber ? 'vyber' : 'vse'}"]`).checked = true;
       oknoV.querySelector('input[name="vykRozsah"][value="vyber"]').disabled = !lzeVyber;
       $('vykNazev').value = M.app.projekt.nazev;
+      // materiál podle Kontroly tisku (stejné nastavení)
+      if (!$('vykMaterial').options.length && M.MATERIALY) {
+        $('vykMaterial').innerHTML = '<option value="">— (jen objem)</option>' + Object.entries(M.MATERIALY).map(([k, m2]) => `<option value="${k}">${esc(m2.nazev)}</option>`).join('');
+        try { const t = JSON.parse(localStorage.getItem('modelar_tisk') || '{}'); if (t.material && M.MATERIALY[t.material]) $('vykMaterial').value = t.material; } catch (e) { /* bez úložiště */ }
+      }
       if (!oknoV.open) oknoV.showModal();
       spocitej();
     };
@@ -405,6 +415,10 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     $('vykStahnoutSvg').onclick = () => {
       if (!vykres) return;
       M.stahniSoubor(M.vykresSvg(vykres), M.jmenoSouboru(volbyVykresu().nazev, '.svg'), 'image/svg+xml');
+    };
+    $('vykStahnoutDxf').onclick = () => {
+      if (!vykres) return;
+      M.stahniSoubor(M.vykresDxf(vykres), M.jmenoSouboru(volbyVykresu().nazev, '.dxf'), 'image/vnd.dxf');
     };
     $('vykStahnoutPdf').onclick = async () => {
       if (!vykres) return;
@@ -444,14 +458,20 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       if (b64) { doc.addFileToVFS('LiberationSans-Bold.ttf', b64); doc.addFont('LiberationSans-Bold.ttf', 'LS', 'normal'); doc.setFont('LS', 'normal'); }
       const txt = s => b64 ? String(s) : bezDiakritiky(s);
       doc.setLineCap('round');
-      let carkovane = false, tl = null;
+      // druh čáry: plná, čárkovaná (skryté hrany), čerchovaná (osy)
+      let vzor = '', tl = null;
+      const nastavVzor = v2 => { if (vzor !== v2) { vzor = v2; doc.setLineDashPattern(v2 === 'c' ? [2, 1] : v2 === 'o' ? [6, 1, 1, 1] : [], 0); doc.setLineCap(v2 === 'o' ? 'butt' : 'round'); } };
       for (const p of v.primitiva) {
         if (p.typ === 'cara') {
           if (tl !== p.tl) { tl = p.tl; doc.setLineWidth(p.tl === 'silna' ? 0.5 : 0.25); }
-          if (carkovane !== !!p.carkovana) { carkovane = !!p.carkovana; doc.setLineDashPattern(carkovane ? [2, 1] : [], 0); }
+          nastavVzor(p.carkovana ? 'c' : p.osa ? 'o' : '');
           doc.line(p.x1, p.y1, p.x2, p.y2);
+        } else if (p.typ === 'kruh') {
+          nastavVzor('');
+          if (tl !== 'tenka') { tl = 'tenka'; doc.setLineWidth(0.25); }
+          doc.circle(p.x, p.y, p.r, 'S');
         } else if (p.typ === 'sipka') {
-          if (carkovane) { carkovane = false; doc.setLineDashPattern([], 0); }
+          nastavVzor('');
           doc.setFillColor(0);
           doc.triangle(p.body[0][0], p.body[0][1], p.body[1][0], p.body[1][1], p.body[2][0], p.body[2][1], 'F');
         }

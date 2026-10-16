@@ -764,3 +764,18 @@ rozhraní, QA skutečnou myší); opravy:
   tělesy** (`M.vuleSiti`, Dílna, výsledek v panelu Měření).
 - Testy: `modelar_ui_revize5.py` (32), node `modelar_occt.js` 80, `modelar_dily.js` 45, `modelar_tisk.js` 30,
   `modelar_dilna.js` 58, `modelar_soubory.js` 54, `modelar_jadro.js` 122.
+
+### Výkresy a témata plochy (16. 10. 2026, přání)
+
+- **Výkres** (`jadro/vykres.js`): rozpoznání kružnic v pohledech (`M.kruzniceVPohledu` – uzavřené smyčky ≥ 8 úseček
+  se stálým poloměrem); čerchované **středové kříže** a **osy děr** v ostatních pohledech (v délce stěn díry, bez
+  duplicit); **kóty průměrů** odkazem „Ø6“ / „2× Ø6“ (stejné díry jedním popisem); **polohy děr** v půdorysu od levé
+  a spodní hrany; kóty s textem nad čarou a u krátkých kót šipky zvenku s textem vedle; **řez A–A** (`M.rezSiti` –
+  ořez sítě rovinou a průnik, `M.srafy` – šrafy 45° sudá/lichá, díry zůstanou prázdné) rovinou přes největší díru,
+  stopa řezu v půdorysu se šipkami a písmeny A; razítko s **materiálem a hmotností** (objem ze sítí × hustota podle
+  Kontroly tisku) a značkou promítání ISO E; **export DXF** (`M.vykresDxf`, R12, hladiny OBRYS/SKRYTE/OSY/KOTY/TEXT,
+  typy čar ČÁRKOVANÁ a ČERCHOVANÁ, diakritika \U+XXXX – ověřeno ezdxf: 0 chyb). PDF kreslí čerchované osy a kružnice.
+  Okno výkresu: Vpravo dole (izometrie / řez / nic), Osy a kóty děr, Materiál, tlačítko DXF.
+- **Témata plochy**: 14 nových (Tyrkysová laguna, Les, Láva, Oceán, Máta, Levandule, Broskev, Retro monitor, Karbon,
+  Sníh, Ořech, Měď, Bauhaus, Vysoký kontrast) – celkem 24; výběr i přímo v nabídce Pohled ▾ (dlaždice 4 v řadě).
+- Testy: `modelar_dilna.js` 64 (kružnice, osy, Ø, poloha, řez a šrafy, DXF), `modelar_ui_revize5.py` 44.

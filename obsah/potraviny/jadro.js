@@ -802,6 +802,25 @@
     }
     return [...pocet.values()].sort((a, b) => b.n - a.n).slice(0, limit || 40);
   }
+  // nejčastější potraviny v daném jídle (snídaně → vločky, mléko…) za posledních `dni` dní;
+  // vrací [{f (snímek), g, porce, n}] – g a porce z posledního použití
+  function castePrJidlo(stav, jidlo, k, dni, limit) {
+    const od = posunDen(k, -(dni || 60));
+    const pocet = new Map();
+    for (const den of Object.keys(stav.dny)) {
+      if (den < od || den > k) continue;
+      for (const z of stav.dny[den].z) {
+        if (z.j !== jidlo || z.rychly) continue;
+        const f = stav.potraviny[z.p];
+        if (!f || !Number.isFinite(f.n.kcal)) continue;
+        const x = pocet.get(f.id) || { f, n: 0, g: z.g, porce: z.porce, t: 0 };
+        x.n++;
+        if ((z.t || 0) >= x.t) { x.t = z.t || 0; x.g = z.g; x.porce = z.porce; x.f = f; }
+        pocet.set(f.id, x);
+      }
+    }
+    return [...pocet.values()].filter(x => x.n >= 2).sort((a, b) => b.n - a.n || b.t - a.t).slice(0, limit || 4);
+  }
   // úklid snímků potravin, na které už žádný záznam neodkazuje
   function uklid(stav) {
     const pouzite = new Set();
@@ -1226,7 +1245,7 @@
     vytvorIndex, hledej,
     vek, bmr, bmi, bmiPopis, cile,
     novyStav, klicSnimku, snimek, den, pridejZaznam, rychlyZaznam, najdiZaznam, smazZaznam, presunZaznam,
-    kopirujJidlo, kopirujDen, zivinyZaznamu, souhrnDne, statistika, odhadVydeje, serie, nedavne, caste, uklid,
+    kopirujJidlo, kopirujDen, castePrJidlo, zivinyZaznamu, souhrnDne, statistika, odhadVydeje, serie, nedavne, caste, uklid,
     overPotravinu, ulozVlastni, spocitejRecept, ulozRecept, receptJakoPotravina,
     exportJson, importJson, normalizujStav, slucStav, exportCsv, exportSouhrnyCsv, zdrojeZiviny,
     ulozSablonu, pouzijSablonu, souhrnSablony, vzdalenost, kontrolaAlergenu, slucAlergeny, ALERGENY, porovnej,

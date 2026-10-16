@@ -417,6 +417,7 @@
   function prepni(v) {
     if (v === 'statistiky' && pohled !== 'statistiky') kalendarMesic = null;   // kalendář po příchodu na záložku od aktuálního měsíce
     pohled = v;
+    document.body.classList.toggle('pohled-denik', v === 'denik');
     document.querySelectorAll('.tab').forEach(t => t.setAttribute('aria-selected', String(t.dataset.v === v)));
     document.querySelectorAll('main > section').forEach(s => { s.hidden = s.id !== 'v-' + v; });
     try { sessionStorage.setItem(KLIC + '_pohled', v); } catch (_) { /* nic */ }
@@ -463,6 +464,9 @@
         zaznamy.length ? h('span', { class: 'jidlo-makra', title: 'bílkoviny / sacharidy / tuky' },
           'B ' + fc(s.bilkoviny, 0) + ' · S ' + fc(s.sacharidy, 0) + ' · T ' + fc(s.tuk, 0)) : null,
         h('span', { class: 'jidlo-kcal', text: zaznamy.length ? fc(s.kcal || 0, 0) + ' kcal' : '' }),
+        // na telefonu jsou přidání a skenování přímo v záhlaví (patička jídla je skrytá)
+        h('button', { class: 'btn ikona plain jen-mobil', type: 'button', 'aria-label': 'Naskenovat do jídla ' + nazevJidla(jid), onclick: () => skenuj({ jidlo: jid }) }, '📷'),
+        h('button', { class: 'btn ikona plain jen-mobil', type: 'button', 'aria-label': 'Přidat do jídla ' + nazevJidla(jid), style: { fontSize: '1.5rem', color: 'var(--accent)' }, onclick: () => otevriPridani({ jidlo: jid }) }, '+'),
         h('button', { class: 'btn ikona plain', type: 'button', 'aria-label': 'Další akce – ' + nazevJidla(jid), 'aria-haspopup': 'menu', 'aria-expanded': 'false', text: '⋯',
           onclick: e => nabidkaJidla(e.currentTarget, jid, zaznamy) }));
       karta.appendChild(hl);
@@ -472,18 +476,32 @@
           const f = S.potraviny[z.p];
           if (!f) continue;
           const v = J.zivinyZa(f.n, z.g);
-          ul.appendChild(h('li', {
+          const li = h('li', {
             class: 'zaznam', tabindex: '0', role: 'button', 'aria-label': f.nazev + ', ' + popisMnozstvi(z, f) + ', ' + kcalText(v.kcal),
-            onclick: () => upravZaznam(aktivniDen, z.id),
+            onclick: () => { if (!li._potlacitKlik) upravZaznam(aktivniDen, z.id); },
             onkeydown: e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); upravZaznam(aktivniDen, z.id); } },
           },
           h('div', { class: 'nazev' },
             h('div', {}, f.nazev),
             h('div', { class: 'detail' }, [f.znacka, popisMnozstvi(z, f)].filter(Boolean).join(' · '))),
-          h('span', { class: 'kc', text: kcalText(v.kcal) })));
+          h('span', { class: 'kc', text: kcalText(v.kcal) }));
+          prejetiSmazat(li, () => { const den = aktivniDen; sVracenim('Smazáno: ' + f.nazev, () => J.smazZaznam(S, den, z.id)); });
+          ul.appendChild(li);
         }
         karta.appendChild(ul);
       } else karta.appendChild(h('div', { class: 'jidlo-prazdne', text: 'Zatím nic.' }));
+      // „obvykle“: časté potraviny tohoto jídla, které tu dnes ještě nejsou – přidání jedním klepnutím
+      const uz = new Set(zaznamy.map(z => (S.potraviny[z.p] || {}).id));
+      const navrhy = J.castePrJidlo(S, jid, aktivniDen, 60, 4).filter(x => !uz.has(x.f.id));
+      if (navrhy.length) {
+        karta.appendChild(h('div', { class: 'navrhy', role: 'group', 'aria-label': 'Obvykle v jídle ' + nazevJidla(jid) },
+          ...navrhy.map(x => {
+            const ff = potravina(x.f.id) || x.f;
+            const mn = x.porce && x.porce.pocet ? fc(x.porce.pocet, 2) + ' × ' + x.porce.n : fc(x.g) + ' ' + jedn(ff);
+            return h('button', { class: 'navrh', type: 'button', title: 'Přidat ' + ff.nazev + ' (' + mn + ')', 'aria-label': 'Přidat ' + ff.nazev + ', ' + mn,
+              onclick: () => rychlePridej(ff, x.g, x.porce, aktivniDen, jid) }, '+ ', h('span', { text: ff.nazev }), h('small', { text: mn }));
+          })));
+      }
       karta.appendChild(h('div', { class: 'jidlo-pata' },
         h('button', { class: 'btn mini', type: 'button', onclick: () => otevriPridani({ jidlo: jid }) }, '+ Přidat'),
         h('button', { class: 'btn mini', type: 'button', title: 'Naskenovat čárový kód', onclick: () => skenuj({ jidlo: jid }) }, '📷 Skenovat'),
@@ -491,7 +509,7 @@
       kont.appendChild(karta);
     }
     // pohyb a poznámka
-    const pohybKarta = h('section', { class: 'karta jidlo', 'aria-label': 'Pohyb' },
+    const pohybKarta = h('section', { class: 'karta jidlo pohyb-karta', 'aria-label': 'Pohyb' },
       h('div', { class: 'jidlo-hl' }, h('h2', { text: '🏃 Pohyb' }),
         h('span', { class: 'jidlo-kcal', text: soub.pohyb ? '−' + fc(soub.pohyb) + ' kcal' : '' })));
     if (d.pohyb && d.pohyb.length) {
@@ -605,6 +623,7 @@
     const vceraPocet = (S.dny[vcera] ? S.dny[vcera].z.filter(z => z.j === jid).length : 0);
     const sablony = Object.values(S.sablony);
     const pol = [
+      { text: '⚡ Rychlý záznam (jen kalorie)', akce: () => rychlyZaznam(jid) },
       ...(sablony.length ? [{ text: '📋 Přidat uložené jídlo…', akce: () => vyberSablonu(den, jid) }] : []),
       { text: '📋 Zkopírovat ze včerejška' + (vceraPocet ? ' (' + vceraPocet + ')' : ''), akce: () => {
         if (!vceraPocet) { D.info('Včera v tomto jídle nic nebylo.'); return; }
@@ -720,6 +739,56 @@
       uloz(); D.info('Uloženo. Najdeš ho v panelu Přidat → 📋 Uložená jídla.');
       if (pohled === 'potraviny') vykresliPotraviny();
     } catch (e) { D.chyba(e.message); }
+  }
+  function zavibruj(ms) { try { if (navigator.vibrate) navigator.vibrate(ms || 12); } catch (_) { /* nic */ } }
+  function rychlePridej(f, g, porce, den, jidlo) {
+    try {
+      const z = J.pridejZaznam(S, den, jidlo, f, g, { porce });
+      zavibruj();
+      vykresliDenik();
+      ulozSListou(nazevJidla(jidlo) + ': ' + f.nazev + ' (' + fc(g) + ' ' + jedn(f) + ')', () => vratPridani(den, z.id));
+    } catch (e) { D.chyba(e.message); }
+  }
+  // přejetí položky doleva (dotyk) = smazat; krátký pohyb nebo svislý posun stránky nic nedělá
+  function prejetiSmazat(li, naSmazani) {
+    let x0 = 0, y0 = 0, dx = 0, aktivni = false, rozhodnuto = false;
+    li.addEventListener('touchstart', e => {
+      if (e.touches.length !== 1) return;
+      x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; dx = 0; aktivni = true; rozhodnuto = false; li._potlacitKlik = false;
+    }, { passive: true });
+    li.addEventListener('touchmove', e => {
+      if (!aktivni) return;
+      const mx = e.touches[0].clientX - x0, my = e.touches[0].clientY - y0;
+      if (!rozhodnuto) {
+        if (Math.abs(mx) < 10 && Math.abs(my) < 10) return;
+        rozhodnuto = true;
+        if (Math.abs(my) > Math.abs(mx) || mx > 0) { aktivni = false; return; }   // svisle nebo doprava = posun/den
+        li.classList.add('tazeny');
+        if (!li.querySelector('.smazat-pod')) li.prepend(h('span', { class: 'smazat-pod', 'aria-hidden': 'true', text: '🗑️ Smazat' }));
+      }
+      dx = Math.min(0, mx);
+      li.style.transform = 'translateX(' + dx + 'px)';
+      li._prejeti = true;
+    }, { passive: true });
+    li.addEventListener('touchend', () => {
+      if (!aktivni) return;
+      aktivni = false;
+      if (!li._prejeti) return;
+      li._prejeti = false;
+      li._potlacitKlik = true;
+      setTimeout(() => { li._potlacitKlik = false; }, 350);
+      li.classList.remove('tazeny');
+      if (dx < -Math.min(120, li.offsetWidth * 0.35)) {
+        li.style.transition = 'transform .15s ease-in';
+        li.style.transform = 'translateX(-100%)';
+        zavibruj(20);
+        setTimeout(naSmazani, 140);
+      } else {
+        li.style.transition = 'transform .15s ease-out';
+        li.style.transform = '';
+        setTimeout(() => { li.style.transition = ''; const pod = li.querySelector('.smazat-pod'); if (pod) pod.remove(); }, 160);
+      }
+    });
   }
   function jidloJakoRecept(zaznamy) {
     // rychlé záznamy nemají hmotnost – do receptu by se započítaly jako fiktivních 100 g
@@ -2262,6 +2331,26 @@
     $('#denDalsi').addEventListener('click', () => { aktivniDen = J.posunDen(aktivniDen, 1); vykresliDenik(); });
     $('#denDnes').addEventListener('click', () => { aktivniDen = J.datumKlic(new Date()); vykresliDenik(); });
     $('#denMenu').addEventListener('click', e => nabidkaDne(e.currentTarget));
+    $('#fabPridat').addEventListener('click', () => otevriPridani({ jidlo: vychoziJidlo() }));
+    $('#fabSken').addEventListener('click', () => skenuj({ jidlo: vychoziJidlo() }));
+    // přejetí prstem doleva/doprava po deníku = další/předchozí den
+    let tx = null, ty = 0, tcas = 0;
+    $('#v-denik').addEventListener('touchstart', e => {
+      if (e.touches.length !== 1 || e.target.closest('.zaznam, input, textarea, select, .navrhy, .voda-tl')) { tx = null; return; }
+      tx = e.touches[0].clientX; ty = e.touches[0].clientY; tcas = Date.now();
+    }, { passive: true });
+    $('#v-denik').addEventListener('touchend', e => {
+      if (tx === null) return;
+      const dx = e.changedTouches[0].clientX - tx, dy = e.changedTouches[0].clientY - ty;
+      tx = null;
+      if (Date.now() - tcas > 600 || Math.abs(dx) < 70 || Math.abs(dy) > 50) return;
+      const jidla = $('#jidla');
+      jidla.classList.remove('posun-vlevo', 'posun-vpravo');
+      void jidla.offsetWidth;
+      if (dx < 0) { aktivniDen = J.posunDen(aktivniDen, 1); jidla.classList.add('posun-vlevo'); }
+      else { aktivniDen = J.posunDen(aktivniDen, -1); jidla.classList.add('posun-vpravo'); }
+      vykresliDenik();
+    }, { passive: true });
     $('#denPopis').addEventListener('click', () => {
       const i = $('#denVyber');
       if (i.showPicker) { try { i.showPicker(); return; } catch (_) { /* záloha níže */ } }

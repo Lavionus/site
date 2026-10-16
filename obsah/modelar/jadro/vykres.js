@@ -70,6 +70,73 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
   }
 
   M.sitProVykres = site => pripravSit(site);
+  /** Objem sítě (mm³) – výkres jde i bez ostatních modulů jádra. */
+  function objemSite(s) {
+    const p = s.poz, t = s.idx;
+    let v = 0;
+    for (let i = 0; i < t.length; i += 3) {
+      const a = t[i] * 3, b = t[i + 1] * 3, c = t[i + 2] * 3;
+      v += p[a] * (p[b + 1] * p[c + 2] - p[b + 2] * p[c + 1]) - p[a + 1] * (p[b] * p[c + 2] - p[b + 2] * p[c]) + p[a + 2] * (p[b] * p[c + 1] - p[b + 1] * p[c]);
+    }
+    return v / 6;
+  }
+
+  /** Řez rovinou y = y0 (rovnoběžně s nárysem): {za: síť části za rovinou (y ≥ y0, kterou nárys z řezu vidí),
+      usecky: [[x1, z1, x2, z2], …] průnik s rovinou}. */
+  M.rezSiti = function (site, y0) {
+    const poz = [], idx = [], usecky = [];
+    for (const sit of site) {
+      const p = sit.poz, t = sit.idx;
+      for (let i = 0; i < t.length; i += 3) {
+        const V = [t[i], t[i + 1], t[i + 2]].map(j => [p[j * 3], p[j * 3 + 1], p[j * 3 + 2]]);
+        const d = V.map(v => v[1] - y0);
+        // průnik trojúhelníku s rovinou
+        const body = [];
+        for (let k = 0; k < 3; k++) {
+          const a = V[k], b = V[(k + 1) % 3], da = d[k], db = d[(k + 1) % 3];
+          if ((da < 0 && db > 0) || (da > 0 && db < 0)) { const u = da / (da - db); body.push([a[0] + (b[0] - a[0]) * u, a[2] + (b[2] - a[2]) * u]); }
+        }
+        if (body.length === 2) usecky.push([body[0][0], body[0][1], body[1][0], body[1][1]]);
+        // část za rovinou (y ≥ y0): Sutherland–Hodgman pro jednu rovinu, pak vějíř
+        const mn = [];
+        for (let k = 0; k < 3; k++) {
+          const a = V[k], b = V[(k + 1) % 3], da = d[k], db = d[(k + 1) % 3];
+          if (da >= 0) mn.push(a);
+          if ((da >= 0) !== (db >= 0)) { const u = da / (da - db); mn.push([a[0] + (b[0] - a[0]) * u, y0, a[2] + (b[2] - a[2]) * u]); }
+        }
+        if (mn.length < 3) continue;
+        const z0 = poz.length / 3;
+        for (const v of mn) poz.push(v[0], v[1], v[2]);
+        for (let k = 1; k + 1 < mn.length; k++) idx.push(z0, z0 + k, z0 + k + 1);
+      }
+    }
+    return { za: { poz: new Float32Array(poz), idx: new Uint32Array(idx) }, usecky };
+  };
+
+  /** Šrafování pod 45° oblasti ohraničené úsečkami (pravidlo sudá/lichá – díry zůstanou prázdné), rozteč v mm listu.
+      usecky v souřadnicích listu. Vrací úsečky šraf [[x1, y1, x2, y2], …]. */
+  M.srafy = function (usecky, roztec = 2) {
+    if (!usecky.length) return [];
+    // otočené souřadnice: s = (x − y)/√2 (konstanta podél šrafy), t = (x + y)/√2
+    const q = Math.SQRT1_2, hr = usecky.map(u => [(u[0] - u[1]) * q, (u[0] + u[1]) * q, (u[2] - u[3]) * q, (u[2] + u[3]) * q]);
+    let s0 = Infinity, s1 = -Infinity;
+    for (const h of hr) { s0 = Math.min(s0, h[0], h[2]); s1 = Math.max(s1, h[0], h[2]); }
+    const out = [];
+    for (let sv = Math.ceil(s0 / roztec) * roztec + roztec / 2; sv < s1; sv += roztec) {
+      const ts = [];
+      for (const h of hr) {
+        if ((h[0] < sv) === (h[2] < sv)) continue;
+        ts.push(h[1] + (h[3] - h[1]) * (sv - h[0]) / (h[2] - h[0]));
+      }
+      ts.sort((a, b) => a - b);
+      for (let i = 0; i + 1 < ts.length; i += 2) {
+        const [ta, tb] = [ts[i], ts[i + 1]];
+        if (tb - ta < 1e-6) continue;
+        out.push([(sv + ta) * q, (ta - sv) * q, (sv + tb) * q, (tb - sv) * q]);
+      }
+    }
+    return out;
+  };
 
   /** Mřížka promítnutých trojúhelníků pro test zakrytí. */
   function mrizka(sit, P) {
@@ -278,7 +345,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
   /** Kóta mezi body (x1,y1)–(x2,y2) na listu, odsazená o `odsazeni` mm na stranu
       normály (vlevo od směru). Vrací primitiva: pomocné čáry, kótovací čára se
       šipkami a text nad ní. */
-  M.kota = function (x1, y1, x2, y2, hodnota, odsazeni = 8, vel = 3.5) {
+  M.kota = function (x1, y1, x2, y2, hodnota, odsazeni = 8, vel = 3.5, predpona = '', textUZacatku = false) {
     const L = Math.hypot(x2 - x1, y2 - y1) || 1;
     const tx = (x2 - x1) / L, ty = (y2 - y1) / L, nx = ty, ny = -tx;     // normála vlevo (na listu y dolů = „nahoru“)
     const o = odsazeni, pres = 2;
@@ -288,14 +355,28 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       { typ: 'cara', x1: x2 + nx * 1, y1: y2 + ny * 1, x2: x2 + nx * (o + pres), y2: y2 + ny * (o + pres), tl: 'tenka' },
       { typ: 'cara', x1: a[0], y1: a[1], x2: b[0], y2: b[1], tl: 'tenka' },
     ];
+    const text = predpona + M.textKoty(hodnota);
+    const sirkaTextu = 0.55 * vel * text.length;
     const s = 2.5, w = 0.9;                                          // šipka: délka, polovina šířky
+    // krátká kóta: šipky zvenku (z prodloužené kótovací čáry), text vedle za druhou šipkou
+    const kratka = L < sirkaTextu + 2 * s + 2;
     for (const [p, smer] of [[a, 1], [b, -1]]) {
-      out.push({ typ: 'sipka', body: [p, [p[0] + tx * s * smer + nx * w, p[1] + ty * s * smer + ny * w], [p[0] + tx * s * smer - nx * w, p[1] + ty * s * smer - ny * w]] });
+      const sm = kratka ? -smer : smer;
+      out.push({ typ: 'sipka', body: [p, [p[0] + tx * s * sm + nx * w, p[1] + ty * s * sm + ny * w], [p[0] + tx * s * sm - nx * w, p[1] + ty * s * sm - ny * w]] });
+    }
+    if (kratka) {
+      // prodloužení kótovací čáry: u konce s textem delší (text leží na něm)
+      const [kt, kb] = textUZacatku ? [s + 3 + sirkaTextu, s + 2] : [s + 2, s + 3 + sirkaTextu];
+      out.push({ typ: 'cara', x1: a[0] - tx * kt, y1: a[1] - ty * kt, x2: a[0], y2: a[1], tl: 'tenka' },
+        { typ: 'cara', x1: b[0], y1: b[1], x2: b[0] + tx * kb, y2: b[1] + ty * kb, tl: 'tenka' });
     }
     let uhel = Math.atan2(ty, tx) * 180 / Math.PI;
     if (uhel > 90.01 || uhel < -90.01) uhel += 180;                     // text čitelný zdola nebo zprava
-    const sx = (a[0] + b[0]) / 2 + nx * 1.2, sy = (a[1] + b[1]) / 2 + ny * 1.2;
-    out.push({ typ: 'text', x: sx, y: sy, text: M.textKoty(hodnota), vel, zarovnani: 'middle', otoceni: uhel });
+    // text NAD kótovací čarou (ve směru čtení), ne přes ni
+    const th = uhel * Math.PI / 180, nahoru = [Math.sin(th), -Math.cos(th)];
+    const za = s + 1.5 + sirkaTextu / 2;
+    const st = !kratka ? [(a[0] + b[0]) / 2, (a[1] + b[1]) / 2] : textUZacatku ? [a[0] - tx * za, a[1] - ty * za] : [b[0] + tx * za, b[1] + ty * za];
+    out.push({ typ: 'text', x: st[0] + nahoru[0] * 0.9, y: st[1] + nahoru[1] * 0.9, text, vel, zarovnani: 'middle', otoceni: uhel });
     return out;
   };
 
@@ -423,7 +504,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       const kruhyP = kruhy.pudorys.filter(c => c.r < 0.45 * Math.min(o.umax - o.umin, o.vmax - o.vmin));
       const xs = [...new Set(kruhyP.map(c => Math.round((c.u - o.umin) * 100) / 100))].filter(x => x > 1e-6 && x < o.umax - o.umin - 1e-6).sort((a, b) => a - b).slice(0, 2);
       const ys = [...new Set(kruhyP.map(c => Math.round((c.v - o.vmin) * 100) / 100))].filter(y => y > 1e-6 && y < o.vmax - o.vmin - 1e-6).sort((a, b) => a - b).slice(0, 3);
-      xs.forEach((x, i) => prim.push(...M.kota(pr.X(o.umin + x), pr.y1, pr.x0, pr.y1, x, 7 + 5.5 * i)));
+      xs.forEach((x, i) => prim.push(...M.kota(pr.X(o.umin + x), pr.y1, pr.x0, pr.y1, x, 7 + 5.5 * i, 3.5, '', true)));
       ys.forEach((y, i) => prim.push(...M.kota(pr.x0, pr.y1, pr.x0, pr.Y(o.vmin + y), y, 8 + 6 * i)));
       dalsiOdsazeniPudorysu = xs.length ? 7 + 5.5 * (xs.length - 1) + 2 : 0;
     }
@@ -432,8 +513,40 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       prim.push({ typ: 'text', x: (r[kk].x0 + r[kk].x1) / 2, y: r[kk].y1 + 6 + dy, text: M.POHLEDY[kk].nazev, vel: 2.5, zarovnani: 'middle', sedy: true });
     }
 
+    // vpravo dole: řez A–A (v měřítku listu), nebo izometrie
+    let rezNakreslen = false;
+    if (volby.pravyDolni === 'rez') {
+      // rovina řezu středem největší díry v půdorysu (ukáže díry), jinak středem dílu
+      const op = pohl.pudorys.obalka;
+      const nej = kruhy.pudorys.slice().sort((a, b) => b.r - a.r)[0];
+      const y0 = nej ? nej.v : (op.vmin + op.vmax) / 2;
+      const rz = M.rezSiti(site, y0);
+      const bx0 = umisteni.bokorys.x, by0 = umisteni.pudorys.y;
+      const bw = R.x1 - 8 - bx0, bh = R.y1 - razitko.h - 8 - by0;
+      if (rz.usecky.length && rz.za.idx.length && sx * K <= bw && sz * K <= bh) {
+        const pz = M.hranyPohledu(pripravSit([rz.za]), M.POHLEDY.narys, Object.assign({}, volby, { skryte: false }));
+        // stejná obálka jako nárys (řez leží přesně pod ním v ose)
+        pz.obalka = pohl.narys.obalka;
+        const mist = { x: bx0 + (bw - sx * K) / 2, y: by0 + (bh - sz * K) / 2 };
+        const rr = kresliPohled({ viditelne: pz.viditelne, skryte: [], obalka: pz.obalka }, mist, K);
+        const naList = rz.usecky.map(u => [rr.X(u[0]), rr.Y(u[1]), rr.X(u[2]), rr.Y(u[3])]);
+        for (const u of naList) prim.push({ typ: 'cara', x1: u[0], y1: u[1], x2: u[2], y2: u[3], tl: 'silna' });
+        for (const h of M.srafy(naList, 1.8)) prim.push({ typ: 'cara', x1: h[0], y1: h[1], x2: h[2], y2: h[3], tl: 'tenka' });
+        prim.push({ typ: 'text', x: (rr.x0 + rr.x1) / 2, y: rr.y1 + 6, text: 'Řez A–A', vel: 3, zarovnani: 'middle' });
+        // stopa řezu v půdorysu: čerchovaná se silnými konci, šipky ve směru pohledu (k +Y = nahoru) a písmena A
+        const pr = r.pudorys, yy = pr.Y(y0), xa = pr.x0 - 6, xb = pr.x1 + 6;
+        prim.push({ typ: 'cara', x1: xa, y1: yy, x2: xb, y2: yy, tl: 'tenka', osa: true },
+          { typ: 'cara', x1: xa, y1: yy, x2: xa + 5, y2: yy, tl: 'silna' }, { typ: 'cara', x1: xb - 5, y1: yy, x2: xb, y2: yy, tl: 'silna' });
+        for (const x of [xa + 1.5, xb - 1.5]) {
+          prim.push({ typ: 'cara', x1: x, y1: yy, x2: x, y2: yy - 5, tl: 'tenka' },
+            { typ: 'sipka', body: [[x, yy - 6.5], [x - 0.9, yy - 4], [x + 0.9, yy - 4]] },
+            { typ: 'text', x: x + (x < pr.x0 ? -2.5 : 2.5), y: yy - 4, text: 'A', vel: 3.5, zarovnani: 'middle' });
+        }
+        rezNakreslen = true;
+      }
+    }
     // izometrie vpravo dole nad razítkem (vlastní menší měřítko, bez kót)
-    if (iso) {
+    if (iso && !rezNakreslen && volby.pravyDolni !== 'nic') {
       const bx0 = umisteni.bokorys.x, by0 = umisteni.pudorys.y;
       const bw = R.x1 - 8 - bx0, bh = R.y1 - razitko.h - 8 - by0;
       const iw = iso.obalka.umax - iso.obalka.umin, ih = iso.obalka.vmax - iso.obalka.vmin;
@@ -457,13 +570,25 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       prim.push({ typ: 'text', x: x + 1.5, y: y + 7.6, text, vel, zarovnani: 'start' });
     };
     pole(rx, radky[0], 'Název', String(volby.nazev || 'Model').slice(0, 60), 5);
+    // promítání vpravo v řádku názvu: značka 1. kvadrantu (komolý kužel – bokorys vlevo od nárysu) a text
+    {
+      // malý konec vlevo, kružnice (pohled od malého konce) vpravo
+      const zx = R.x1 - 44, zy = ry + 2.2;
+      prim.push({ typ: 'text', x: R.x1 - 1.5, y: ry + 6.2, text: 'ISO E', vel: 2.2, zarovnani: 'end', sedy: true });
+      const c = [zx + 14.5, zy + 2.8];
+      prim.push({ typ: 'cara', x1: zx, y1: zy + 1, x2: zx + 8, y2: zy, tl: 'tenka' }, { typ: 'cara', x1: zx + 8, y1: zy, x2: zx + 8, y2: zy + 5.6, tl: 'tenka' },
+        { typ: 'cara', x1: zx + 8, y1: zy + 5.6, x2: zx, y2: zy + 4.6, tl: 'tenka' }, { typ: 'cara', x1: zx, y1: zy + 4.6, x2: zx, y2: zy + 1, tl: 'tenka' },
+        { typ: 'kruh', x: c[0], y: c[1], r: 2.8 }, { typ: 'kruh', x: c[0], y: c[1], r: 1.8 });
+    }
     pole(sl[0], radky[1], 'Vypracoval', String(volby.autor || '—').slice(0, 40));
     pole(sl[1], radky[1], 'Měřítko', meritko[0] + ' : ' + meritko[1]);
     pole(sl[2], radky[1], 'Formát', (volby.papir || 'A4') + ', mm');
     pole(sl[0], radky[2], 'Datum', volby.datum || '');
-    pole(sl[1], radky[2], 'Promítání', 'ISO E (1. kvadrant)');
-    pole(sl[2], radky[2], 'Program', 'Modelář 3D');
-    return { sirka: W, vyska: H, meritko, zmenseno, bezSkrytych, rozmery: [sx, sy, sz], primitiva: prim };
+    pole(sl[1], radky[2], 'Materiál', String(volby.material || '—').slice(0, 24));
+    // objem z výkresových sítí, hmotnost podle hustoty materiálu
+    const objem = site.reduce((a, s2) => a + Math.abs(objemSite(s2)), 0) / 1000;
+    pole(sl[2], radky[2], volby.hustota ? 'Hmotnost (plné)' : 'Objem', volby.hustota ? M.textKoty(objem * volby.hustota) + ' g' : M.textKoty(objem) + ' cm³');
+    return { sirka: W, vyska: H, meritko, zmenseno, bezSkrytych, rozmery: [sx, sy, sz], primitiva: prim, rez: rezNakreslen, rezNevesel: volby.pravyDolni === 'rez' && !rezNakreslen };
   };
 
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -476,6 +601,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       '<g fill="none" stroke="#000" stroke-linecap="round">'];
     for (const p of v.primitiva) {
       if (p.typ === 'cara') out.push(`<line x1="${f(p.x1)}" y1="${f(p.y1)}" x2="${f(p.x2)}" y2="${f(p.y2)}" stroke-width="${p.tl === 'silna' ? 0.5 : 0.25}"${p.carkovana ? ' stroke-dasharray="2 1"' : p.osa ? ' stroke-dasharray="6 1 1 1" stroke-linecap="butt"' : ''}/>`);
+      else if (p.typ === 'kruh') out.push(`<circle cx="${f(p.x)}" cy="${f(p.y)}" r="${f(p.r)}" stroke-width="0.25"/>`);
       else if (p.typ === 'sipka') out.push(`<path d="M${p.body.map(b => f(b[0]) + ',' + f(b[1])).join('L')}Z" fill="#000" stroke="none"/>`);
     }
     out.push('</g><g font-family="Liberation Sans, Arial, Helvetica, sans-serif" fill="#000">');
@@ -485,6 +611,56 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     }
     out.push('</g></svg>');
     return out.join('\n');
+  };
+
+  /** Výkres → text DXF (R12 – bez úchytů, přečte ho každý CAD; mm): hladiny OBRYS, SKRYTE, OSY, KOTY, TEXT, RAMECEK; typy čar
+      CARKOVANA a CERCHOVANA; šipky jako SOLID; diakritika jako \U+XXXX (rozumí AutoCAD, LibreCAD, QCAD).
+      DXF má osu Y nahoru – list se převrátí. */
+  M.vykresDxf = function (v) {
+    const H = v.vyska, o = [];
+    const g = (kod, hod) => o.push(String(kod), String(hod));
+    const c = x => (Math.round(x * 1e4) / 1e4).toString();
+    const txt = t => String(t).replace(/[^\x20-\x7e]/g, ch => '\\U+' + ch.codePointAt(0).toString(16).toUpperCase().padStart(4, '0'));
+    g(0, 'SECTION'); g(2, 'HEADER');
+    g(9, '$ACADVER'); g(1, 'AC1009'); g(9, '$INSUNITS'); g(70, 4); g(9, '$MEASUREMENT'); g(70, 1);
+    g(9, '$EXTMIN'); g(10, 0); g(20, 0); g(30, 0); g(9, '$EXTMAX'); g(10, c(v.sirka)); g(20, c(H)); g(30, 0);
+    g(0, 'ENDSEC');
+    g(0, 'SECTION'); g(2, 'TABLES');
+    g(0, 'TABLE'); g(2, 'LTYPE'); g(70, 3);
+    const ltyp = (jm, popis, vzor) => {
+      g(0, 'LTYPE'); g(2, jm); g(70, 0); g(3, popis); g(72, 65); g(73, vzor.length); g(40, c(vzor.reduce((a, b) => a + Math.abs(b), 0)));
+      for (const d of vzor) { g(49, c(d)); g(74, 0); }
+    };
+    ltyp('CONTINUOUS', 'Solid line', []);
+    ltyp('CARKOVANA', 'Skryte hrany __ __ __', [2, -1]);
+    ltyp('CERCHOVANA', 'Osy ____ . ____', [6, -1, 1, -1]);
+    g(0, 'ENDTAB');
+    g(0, 'TABLE'); g(2, 'LAYER'); g(70, 6);
+    for (const [jm, barva, typ, sila] of [['OBRYS', 7, 'CONTINUOUS', 50], ['SKRYTE', 8, 'CARKOVANA', 25], ['OSY', 1, 'CERCHOVANA', 25], ['KOTY', 3, 'CONTINUOUS', 25], ['TEXT', 7, 'CONTINUOUS', 25], ['RAMECEK', 7, 'CONTINUOUS', 50]]) {
+      g(0, 'LAYER'); g(2, jm); g(70, 0); g(62, barva); g(6, typ); g(370, sila);
+    }
+    g(0, 'ENDTAB'); g(0, 'ENDSEC');
+    g(0, 'SECTION'); g(2, 'ENTITIES');
+    for (const p of v.primitiva) {
+      if (p.typ === 'cara') {
+        const vrstva = p.carkovana ? 'SKRYTE' : p.osa ? 'OSY' : p.tl === 'silna' ? 'OBRYS' : 'KOTY';
+        g(0, 'LINE'); g(8, vrstva); g(10, c(p.x1)); g(20, c(H - p.y1)); g(30, 0); g(11, c(p.x2)); g(21, c(H - p.y2)); g(31, 0);
+      } else if (p.typ === 'kruh') {
+        g(0, 'CIRCLE'); g(8, 'TEXT'); g(10, c(p.x)); g(20, c(H - p.y)); g(30, 0); g(40, c(p.r));
+      } else if (p.typ === 'sipka') {
+        const b = p.body;
+        g(0, 'SOLID'); g(8, 'KOTY');
+        [[10, 20, b[0]], [11, 21, b[1]], [12, 22, b[2]], [13, 23, b[2]]].forEach(([kx, ky, q]) => { g(kx, c(q[0])); g(ky, c(H - q[1])); });
+        g(30, 0); g(31, 0); g(32, 0); g(33, 0);
+      } else if (p.typ === 'text') {
+        const zar = p.zarovnani === 'middle' ? 1 : p.zarovnani === 'end' ? 2 : 0;
+        g(0, 'TEXT'); g(8, 'TEXT'); g(10, c(p.x)); g(20, c(H - p.y)); g(30, 0); g(40, c(p.vel * 0.72)); g(1, txt(p.text));
+        if (p.otoceni) g(50, c(-p.otoceni));
+        if (zar) { g(72, zar); g(11, c(p.x)); g(21, c(H - p.y)); g(31, 0); }
+      }
+    }
+    g(0, 'ENDSEC'); g(0, 'EOF');
+    return o.join('\r\n') + '\r\n';
   };
 
   if (typeof module !== 'undefined') module.exports = M;
