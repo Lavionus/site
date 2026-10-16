@@ -281,7 +281,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       const v = volbySkl(); oknoSkl.close();
       M.cekej('skladacka', `Skládám ${M.pocet(v.nx * v.ny, 'dílek', 'dílky', 'dílků')}…`, null, 0);
       await M.dejVykreslit();
-      try { M.vlozSkladacku(v); await M.dejVykreslit(); }
+      try { const uz = M.vlozSkladacku(v); if (S.zamerit) S.zamerit(uz.map(u => u.id)); await M.dejVykreslit(); }
       catch (e) { Dialog.chyba('Skládačku nejde vytvořit: ' + e.message); }
       finally { M.hotovoCekani('skladacka'); }
     };

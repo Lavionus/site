@@ -11,7 +11,7 @@
   const G = window.DENIK_GRAFY;
   const KLIC = 'webapp_potraviny';
   // stránka, jádro a aplikace musí být ze stejné verze (při změně kódu zvýšit i v jadro.js a potraviny.html)
-  const VERZE_KODU = '2026-10-16l';
+  const VERZE_KODU = '2026-10-16n';
   if (!J || J.VERZE_KODU !== VERZE_KODU || window.DENIK_VERZE !== VERZE_KODU) {
     // jednou za minutu se soubory obnoví samy, jinak (smyčka) jen nabídka tlačítkem
     let nedavno = false;
@@ -54,17 +54,28 @@
   let PROF = nactiProfily();
   const klicProfilu = id => (id === 'hlavni' ? KLIC : KLIC + '__' + id);
   let klicStavu = klicProfilu(PROF.aktivni);
-  function ulozProfily() { try { localStorage.setItem(KLIC_PROFILY, JSON.stringify(PROF)); } catch (_) { /* nic */ } }
+  const smazaneProfily = new Set();
+  // seznam profilů sdílí všechny záložky: před zápisem doplnit profily přidané jinde (smazané tady vynechat)
+  function ulozProfily() {
+    try {
+      const ulozene = nactiProfily();
+      for (const p of ulozene.seznam) if (!smazaneProfily.has(p.id) && !PROF.seznam.some(x => x.id === p.id)) PROF.seznam.push(p);
+      localStorage.setItem(KLIC_PROFILY, JSON.stringify(PROF));
+    } catch (_) { /* nic */ }
+  }
 
   /* ================= stav ================= */
   let poskozeno = false;
+  let poskozenyText = null;   // poškozená data, jejichž kopii se nepodařilo odložit – do jejich klíče se zatím nezapisuje
   function nactiStav(klic) {
+    poskozeno = false; poskozenyText = null;
+    let t = null;
     try {
-      const t = localStorage.getItem(klic);
+      t = localStorage.getItem(klic);
       return t ? J.normalizujStav(JSON.parse(t)) : J.novyStav();
     } catch (e) {
       poskozeno = true;
-      try { localStorage.setItem(klic + '_poskozeno_' + Date.now(), localStorage.getItem(klic) || ''); } catch (_) { /* nic */ }
+      try { localStorage.setItem(klic + '_poskozeno_' + Date.now(), t || ''); } catch (_) { poskozenyText = t; }
       return J.novyStav();
     }
   }
@@ -77,13 +88,24 @@
     clearTimeout(ulozTimer); ulozTimer = null;
     const proved = () => {
       ulozTimer = null;
+      if (poskozenyText !== null) return;   // nepřepsat poškozená data, dokud je uživatel nestáhne nebo nezahodí
+      const zapis = () => localStorage.setItem(klicStavu, JSON.stringify(S));
       try {
-        localStorage.setItem(klicStavu, JSON.stringify(S));
-        chybaUlozeniHlasena = false;
+        try { zapis(); } catch (e) {
+          // plné úložiště: uvolnit, co jde obnovit (mezipaměť výrobků, kopie před importem), a zkusit znovu
+          S.cache = {};
+          try { for (let i = localStorage.length - 1; i >= 0; i--) { const k = localStorage.key(i); if (k && k.startsWith(klicStavu + '_pred_importem')) localStorage.removeItem(k); } } catch (_) { /* nic */ }
+          zapis();
+        }
+        if (chybaUlozeniHlasena) { chybaUlozeniHlasena = false; D.info('Deník se zase ukládá.'); if (typeof vykresliDenik === 'function') vykresliDenik(); }
         if (!trvaleZadano) { trvaleZadano = true; pozadejTrvaleUloziste(); }
       } catch (e) {
-        if (!chybaUlozeniHlasena) D.chyba('Deník se nepodařilo uložit – úložiště prohlížeče je plné nebo zakázané. Stáhni si zálohu (záložka Data).');
-        chybaUlozeniHlasena = true;
+        // hlásit opakovaně (nejvýš jednou za minutu) a trvale ukázat pruh v deníku – jinak se práce tiše ztrácí
+        const ted = Date.now();
+        if (!chybaUlozeniHlasena || ted - chybaUlozeniHlasena > 60000) D.chyba('Deník se nepodařilo uložit – úložiště prohlížeče je plné nebo zakázané. Stáhni si zálohu (záložka Data).');
+        const poprve = !chybaUlozeniHlasena;
+        chybaUlozeniHlasena = ted;
+        if (poprve && typeof vykresliDenik === 'function') vykresliDenik();
       }
     };
     if (hned) proved(); else ulozTimer = setTimeout(proved, 250);
@@ -100,11 +122,35 @@
   document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'hidden' && ulozTimer) uloz(true); });
   // změna v jiné záložce: rozepsanou vlastní změnu nepřepisovat; jinak převzít stav a zavřít rozdělané vrstvy
   addEventListener('storage', e => {
-    if (e.key !== klicStavu || !e.newValue) return;
-    if (ulozTimer) { uloz(true); return; }
+    if (e.key === KLIC_PROFILY) {
+      const a = PROF.aktivni;   // aktivní profil je věc této záložky
+      PROF = nactiProfily();
+      if (PROF.seznam.some(p => p.id === a)) PROF.aktivni = a;
+      vykresliProfily();
+      return;
+    }
+    if (e.key !== klicStavu) return;
+    if (!e.newValue) {   // jiná záložka tento profil smazala
+      if (klicStavu !== KLIC) {
+        clearTimeout(ulozTimer); ulozTimer = null;   // smazaný profil znovu nezakládat
+        smazaneProfily.add(PROF.aktivni);
+        PROF.seznam = PROF.seznam.filter(p => p.id !== PROF.aktivni);
+        PROF.aktivni = '';
+        prepniProfil('hlavni');
+        D.info('Tento profil byl smazán v jiné záložce – zobrazuji hlavní profil.');
+      }
+      return;
+    }
     schovejListu();
     try {
-      S = J.normalizujStav(JSON.parse(e.newValue));
+      const novy = J.normalizujStav(JSON.parse(e.newValue));
+      if (ulozTimer) {
+        // vlastní změna ještě není uložená: převzít cizí stav a vlastní doplnit sloučením (nic se neztratí)
+        clearTimeout(ulozTimer); ulozTimer = null;
+        J.slucStav(novy, S);
+        S = novy;
+        uloz(true);
+      } else S = novy;
       obnovIndexUzivatele();
       if (vrstvy.length) { zavriVsechnyVrstvy(); D.info('Deník byl změněn v jiné záložce – zobrazuji aktuální stav.'); }
       // rozepsanou poznámku zachovat (text i kurzor) – zbytek deníku překreslit
@@ -171,7 +217,7 @@
     const pozadi = h('div', { class: 'sheet-pozadi' });
     const titulekEl = h('h2', { text: titulek || '' });
     const zavrit = h('button', { class: 'btn ikona plain', type: 'button', 'aria-label': 'Zavřít', title: 'Zavřít (Esc)', text: '✕' });
-    const sheet = h('div', { class: 'sheet ' + (trida || ''), role: 'dialog', 'aria-modal': 'true', 'aria-label': titulek || '' },
+    const sheet = h('div', { class: 'sheet ' + (trida || ''), role: 'dialog', 'aria-modal': 'true', 'aria-label': String(titulek || '').replace(/^[^\p{L}\p{N}]+/u, '') },
       h('div', { class: 'sheet-hl' }, titulekEl, hlavickaNavic || null, zavrit),
       telo, pata || null);
     if (sirka) sheet.style.width = 'min(' + sirka + ',100%)';
@@ -291,8 +337,8 @@
     const fv = document.getElementById('formVaha');
     if (fv && fv.datum.value === znamyDnes) fv.datum.value = dnes;
     const sledovalDnes = aktivniDen === znamyDnes;
+    if (vrstvy.length) return;   // znamyDnes zůstává – zkusí se znovu po zavření vrstvy (i po spánku přes víc dní)
     znamyDnes = dnes;
-    if (vrstvy.length) { znamyDnes = J.posunDen(dnes, -1); return; }  // zkusí se znovu po zavření vrstvy
     if (sledovalDnes) aktivniDen = dnes;
     vykresliPohled();
   }
@@ -489,7 +535,7 @@
     if (v === 'statistiky' && pohled !== 'statistiky') kalendarMesic = null;   // kalendář po příchodu na záložku od aktuálního měsíce
     pohled = v;
     document.body.classList.toggle('pohled-denik', v === 'denik');
-    document.querySelectorAll('.tab').forEach(t => t.setAttribute('aria-selected', String(t.dataset.v === v)));
+    document.querySelectorAll('.tab').forEach(t => { t.setAttribute('aria-selected', String(t.dataset.v === v)); t.tabIndex = t.dataset.v === v ? 0 : -1; });
     document.querySelectorAll('main > section').forEach(s => { s.hidden = s.id !== 'v-' + v; });
     try { sessionStorage.setItem(KLIC + '_pohled', v); } catch (_) { /* nic */ }
     vykresliPohled();
@@ -521,7 +567,17 @@
     const soub = J.souhrnDne(S, aktivniDen);
     const kont = $('#jidla');
     kont.textContent = '';
-    if (poskozeno) kont.appendChild(h('div', { class: 'upozorneni' }, 'Uložená data deníku byla poškozená a nešla načíst. Kopie byla odložena v úložišti prohlížeče; začínáš s prázdným deníkem.'));
+    if (chybaUlozeniHlasena) kont.appendChild(h('div', { class: 'upozorneni', role: 'alert' }, 'Deník se teď neukládá (úložiště prohlížeče je plné nebo zakázané) – změny po obnovení stránky zmizí. ',
+      h('button', { class: 'btn mini', type: 'button', onclick: stahniZalohu }, 'Stáhnout zálohu')));
+    if (poskozeno && poskozenyText !== null) {
+      kont.appendChild(h('div', { class: 'upozorneni', role: 'alert' }, 'Uložená data deníku jsou poškozená a pro jejich kopii není v prohlížeči místo. Dokud je nestáhneš nebo nezahodíš, nic se neukládá. ',
+        h('button', { class: 'btn mini', type: 'button', onclick: () => stahniSoubor('denik-poskozena-data.json', poskozenyText, 'application/json') }, 'Stáhnout poškozená data'), ' ',
+        h('button', { class: 'btn mini plain', type: 'button', onclick: async () => {
+          if (!(await D.potvrd('Zahodit poškozená data a začít s prázdným deníkem?', { ok: 'Zahodit' }))) return;
+          poskozenyText = null; uloz(true); vykresliVse();
+        } }, 'Zahodit a začít znovu')));
+    } else if (poskozeno) kont.appendChild(h('div', { class: 'upozorneni' }, 'Uložená data deníku byla poškozená a nešla načíst. Kopie byla odložena v úložišti prohlížeče (Data → Odložené kopie); začínáš s prázdným deníkem.'));
+    upozorneniOnline(kont);
     pripomenutiZalohy(kont);
     const viditelna = jidla().map(j => j.id);
     // jídla se záznamy, která jsou skrytá nebo smazaná, se zobrazí také
@@ -542,7 +598,7 @@
           onclick: e => nabidkaJidla(e.currentTarget, jid, zaznamy) }));
       karta.appendChild(hl);
       if (zaznamy.length) {
-        const ul = h('ul', { class: 'zaznamy' });
+        const ul = h('ul', { class: 'zaznamy', role: 'group', 'aria-label': 'Záznamy jídla' });
         for (const z of zaznamy) {
           const f = S.potraviny[z.p];
           if (!f) continue;
@@ -582,18 +638,28 @@
     // pohyb a poznámka
     const pohybKarta = h('section', { class: 'karta jidlo pohyb-karta', 'aria-label': 'Pohyb' },
       h('div', { class: 'jidlo-hl' }, h('h2', { text: '🏃 Pohyb' }),
-        h('span', { class: 'jidlo-kcal', text: soub.pohyb ? '−' + en(soub.pohyb) : '' })));
+        h('span', { class: 'jidlo-kcal', title: 'Energie navíc nad klidový výdej', text: soub.pohyb ? '+' + en(soub.pohyb) : '' })));
     if (d.pohyb && d.pohyb.length) {
-      const ul = h('ul', { class: 'zaznamy' });
+      const ul = h('ul', { class: 'zaznamy', role: 'group', 'aria-label': 'Záznamy pohybu' });
       for (const p of d.pohyb) {
+        const det = popisPohybu(p);
         ul.appendChild(h('li', { class: 'zaznam', tabindex: '0', role: 'button', onclick: () => upravPohyb(p.id),
           onkeydown: e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); upravPohyb(p.id); } } },
-        h('div', { class: 'nazev' }, h('div', {}, p.nazev || 'Aktivita'), p.minuty ? h('div', { class: 'detail', text: p.minuty + ' min' }) : null),
+        h('div', { class: 'nazev' }, h('div', {}, p.nazev || 'Aktivita'), det ? h('div', { class: 'detail', text: det }) : null),
         h('span', { class: 'kc', text: en(p.kcal) })));
       }
       pohybKarta.appendChild(ul);
     }
-    pohybKarta.appendChild(h('div', { class: 'jidlo-pata' }, h('button', { class: 'btn mini', type: 'button', onclick: () => upravPohyb(null) }, '+ Přidat pohyb')));
+    const nedPohyby = J.nedavnePohyby(S, 3).filter(z => !(d.pohyb || []).some(q => (q.kod || q.nazev) === (z.kod || z.nazev)));
+    if (nedPohyby.length && !(d.pohyb && d.pohyb.length)) {
+      pohybKarta.appendChild(h('div', { class: 'navrhy pohyb-navrhy', role: 'group', 'aria-label': 'Nedávné pohyby' },
+        ...nedPohyby.map(z => h('button', { class: 'navrh', type: 'button', title: 'Zapsat znovu – doba a energie se dají upravit', onclick: () => zopakujPohyb(z) },
+          '↻ ' + z.nazev + (z.minuty ? ' · ' + fc(z.minuty) + ' min' : '')))));
+    }
+    if (J.nedavnePohyby(S, 1).length) pohybKarta.appendChild(prehledTydnePohybu(aktivniDen));
+    pohybKarta.appendChild(h('div', { class: 'jidlo-pata' },
+      h('button', { class: 'btn mini', type: 'button', onclick: () => vyberPohybu(aktivniDen) }, '+ Přidat pohyb'),
+      h('button', { class: 'btn mini plain', type: 'button', onclick: () => upravPohybRucne(null, aktivniDen) }, '✎ Ručně (z hodinek)')));
     kont.appendChild(pohybKarta);
     const pozn = h('textarea', { class: 'vstup', placeholder: 'Poznámka ke dni (jak ses cítil, hlad, spánek…)', 'aria-label': 'Poznámka ke dni', maxlength: '2000' });
     pozn.value = d.pozn || '';
@@ -602,6 +668,15 @@
     vykresliSouhrn(soub);
   }
 
+  // jednorázové upozornění, co aplikace posílá na internet (soukromí)
+  function upozorneniOnline(kont) {
+    if (S.nastaveni.infoOnline || (!S.nastaveni.online && !S.nastaveni.obrazky)) return;
+    const box = h('div', { class: 'upozorneni info' },
+      'Deník zůstává jen v tomto prohlížeči. Fotky výrobků se ale načítají z Open Food Facts a neznámý čárový kód se tam při hledání odešle (služba vidí tvou IP adresu a kód). ',
+      h('button', { class: 'btn mini', type: 'button', onclick: () => { S.nastaveni.infoOnline = true; uloz(); box.remove(); } }, 'Rozumím'), ' ',
+      h('button', { class: 'btn mini plain', type: 'button', onclick: () => { S.nastaveni.infoOnline = true; S.nastaveni.online = false; S.nastaveni.obrazky = false; uloz(); vykresliVse(); D.info('Fotky i online hledání jsou vypnuté. Zapnout je lze v Profilu.'); } }, 'Vypnout obojí'));
+    kont.appendChild(box);
+  }
   function pripomenutiZalohy(kont) {
     const dny = Object.values(S.dny).filter(d => d.z.length).length;
     const posl = S.nastaveni.zaloha ? J.rozdilDni(S.nastaveni.zaloha, J.datumKlic(new Date())) : null;
@@ -665,7 +740,7 @@
         'Orientační: WHO doporučuje volné (přidané) cukry pod 10 % energie. Etikety uvádějí všechny cukry včetně přirozených z ovoce a mléka, proto se limit jen zvýrazní.'),
       lim('Nasycené MK', 'nasycene', c.limity.nasycene),
       lim('Sůl', 'sul', c.limity.sul, null, 1),
-      (soub.celkem.kof || 0) > 0 ? lim('Kofein', 'kof', 400, null, 0, 'mg', false, 'EFSA: do 400 mg denně je pro dospělé bezpečné (v těhotenství 200 mg). Kofein je uveden jen u části potravin.') : null,
+      (soub.celkem.kof || 0) > 0 ? lim('Kofein', 'kof', c.kofeinLimit || 400, null, 0, 'mg', false, 'EFSA: do 400 mg denně je pro dospělé bezpečné, v těhotenství a při kojení do 200 mg. Kofein je uveden jen u části potravin.') : null,
       null));
     // voda
     const cilVoda = Math.round((c.vodaMl || 2000) * 0.8 / 250) * 250; // ~80 % vody z nápojů
@@ -729,7 +804,7 @@
     nabidka(btn, pol);
   }
   function vyberSablonu(den, jid) {
-    const ul = h('ul', { class: 'vysledky', style: { border: '0' } });
+    const ul = h('ul', { class: 'vysledky', role: 'group', 'aria-label': 'Uložená jídla', style: { border: '0' } });
     const v = otevriVrstvu({ titulek: 'Uložené jídlo → ' + nazevJidla(jid), telo: h('div', { class: 'sheet-telo', style: { padding: '0' } }, ul), sirka: '520px' });
     for (const s of Object.values(S.sablony).sort((a, b) => a.nazev.localeCompare(b.nazev, 'cs'))) ul.appendChild(radekSablony(s, () => { v.zavri(); pouzijSablonu(s, den, jid); }));
     const prvni = ul.querySelector('li'); if (prvni) setTimeout(() => prvni.focus(), 30);
@@ -898,6 +973,7 @@
     if (!p || id === 'hlavni') return;
     if (!(await D.potvrd('Smazat profil „' + p.jmeno + '“ včetně jeho deníku, vlastních potravin a receptů? (Stáhni si předtím zálohu.)', { ok: 'Smazat profil' }))) return;
     if (PROF.aktivni === id) prepniProfil('hlavni');
+    smazaneProfily.add(id);
     PROF.seznam = PROF.seznam.filter(x => x.id !== id); ulozProfily();
     try {
       const pryc = [];
@@ -1507,7 +1583,22 @@
         if (!m || !Number.isFinite(f.n.kcal)) return null;
         const roz = Math.round((f.n.kcal - m.n.kcal) / m.n.kcal * 100);
         return h('div', { style: { marginTop: '6px' } }, 'Hodnota z databáze: ', h('b', { text: m.nazev }), ' – ' + en(m.n.kcal) + '/100 ' + jedn(m) + ' (' + (m.zdroj || 'USDA') + '), odhad se liší o ' + (roz > 0 ? '+' : '') + roz + ' %. ',
-          h('button', { class: 'btn mini', type: 'button', onclick: () => detailPotraviny(m, volby.rezim === 'nahled' ? { rezim: 'nahled' } : { ...volby }) }, 'Použít tuto'));
+          h('button', { class: 'btn mini', type: 'button', onclick: () => {
+            if (volby.rezim === 'upravit' && volby.zaznam) {
+              // v upravovaném záznamu odhad nahradit naměřenou potravinou (stejné jídlo, den a množství)
+              const z0 = volby.zaznam, den = volby.den;
+              v.zavri();
+              sVracenim('Nahrazeno: ' + m.nazev, () => {
+                const zz = J.najdiZaznam(S, den, z0.id);
+                if (!zz) return;
+                J.smazZaznam(S, den, zz.id);
+                J.pridejZaznam(S, den, zz.j, m, zz.g);
+              });
+              return;
+            }
+            v.zavri();
+            detailPotraviny(m, volby.rezim === 'nahled' ? { rezim: 'nahled' } : { ...volby });
+          } }, 'Použít tuto'));
       })()));
     if (f.ml) telo.appendChild(infoNapoje(f, druh));
     const spolecna = f.typ === 'm' && f.ean ? DB.doplnky.find(x => x.ean === f.ean) : null;
@@ -1907,36 +1998,407 @@
   }
 
   /* ----- pohyb ----- */
-  function upravPohyb(id) {
-    const den = aktivniDen;
-    const d = J.den(S, den);
-    const p = id ? d.pohyb.find(x => x.id === id) : null;
-    const nazev = h('input', { class: 'vstup', type: 'text', maxlength: '60', placeholder: 'např. Běh, kolo, posilovna', value: p ? p.nazev : '' });
-    const minuty = h('input', { class: 'vstup', type: 'number', min: '0', max: '1440', step: '1', inputmode: 'numeric', value: p && p.minuty ? String(p.minuty) : '' });
-    const kcal = h('input', { class: 'vstup', type: 'number', min: '0', max: '10000', step: '1', inputmode: 'numeric', value: p ? String(Math.round(E(p.kcal))) : '' });
-    if (jeKJ()) kcal.max = String(Math.round(10000 * KJ));
-    const telo = h('div', { class: 'sheet-telo' },
-      h('div', { class: 'form' }, h('label', { class: 'pole siroke' }, 'Aktivita', nazev),
-        h('label', { class: 'pole' }, 'Doba (min)', minuty), h('label', { class: 'pole' }, 'Spáleno (' + ej() + ')', kcal)),
-      h('p', { class: 'slabe', style: { marginTop: '10px' }, text: 'Hodnotu spálené energie převezmi ze sporttesteru nebo aplikace. Odhady bývají nadsazené – proto lze přičítání k cíli vypnout v nastavení profilu.' }));
-    const ulozit = h('button', { class: 'btn primary', type: 'button' }, p ? 'Uložit' : 'Přidat');
+  // katalog přednastavených pohybů (2024 Adult Compendium) se načte až při prvním použití
+  let pohybyKatalog = null, pohybySlib = null;
+  function nactiPohyby() {
+    if (pohybyKatalog) return Promise.resolve(pohybyKatalog);
+    if (!pohybySlib) pohybySlib = stahni('pohyby.json').then(d => (pohybyKatalog = J.pripravPohyby(d))).finally(() => { pohybySlib = null; });
+    return pohybySlib;
+  }
+  // BMR pro výpočet „navíc nad klid“ – s hmotností platnou pro ten den
+  function bmrPohybu(den) {
+    const kg = J.hmotnostKDni(S, den);
+    return J.bmr({ ...S.profil, vaha: kg || S.profil.vaha }, den);
+  }
+  // délka kroku v metrech: ručně zadaná, jinak odhad 41,4 % výšky (orientační; nejlépe změřit)
+  function delkaKroku() {
+    const k = J.cislo(S.nastaveni.krok);
+    if (k >= 30 && k <= 150) return k / 100;
+    const v = J.cislo(S.profil.vyska);
+    return v ? Math.round(v * 0.414) / 100 : null;
+  }
+  function popisPohybu(p) {
+    const i = J.intenzitaMet(p.met) || J.INTENZITA.find(x => x.k === p.int);
+    return [p.minuty ? fc(p.minuty) + ' min' : '', p.km ? fc(p.km, p.km < 10 ? 2 : 1) + ' km' : '', p.kroky ? J.pocet(p.kroky, 'krok', 'kroky', 'kroků') : '',
+      i ? i.n + ' intenzita' : '', p.ruc ? 'energie zadaná ručně' : ''].filter(Boolean).join(' · ');
+  }
+  function naposledy(k) {
+    const r = J.rozdilDni(k, J.datumKlic(new Date())), d = J.zKlice(k);
+    return r === 0 ? 'dnes' : r === 1 ? 'včera' : 'naposledy ' + d.getDate() + '. ' + (d.getMonth() + 1) + '.';
+  }
+  function upozorneniPal() {
+    if (!J.dvojiPohyb(S)) return null;
+    const box = h('div', { class: 'upozorneni', style: { margin: '8px 14px' } },
+      'Úroveň aktivity v profilu (PAL ' + fc(S.profil.pal, 1) + ') už sport zahrnuje. Když pohyb zapisuješ a přičítáš k cíli, zvol PAL podle běžného dne bez sportu (obvykle 1,4) – jinak se výdej započítá dvakrát. ',
+      h('button', { class: 'btn mini', type: 'button', onclick: () => { S.profil.pal = 1.4; uloz(); box.remove(); vykresliVse(); D.info('Úroveň aktivity nastavena na PAL 1,4.'); } }, 'Nastavit PAL 1,4'));
+    return box;
+  }
+  // týden proti doporučení WHO (pruh + text); k = libovolný den v týdnu
+  function prehledTydnePohybu(k) {
+    const od = pondeli(k), t = J.tydenPohybu(S, od, J.posunDen(od, 6));
+    const proc = Math.min(100, t.ekvivalent / 150 * 100);
+    const pruh = h('div', { class: 'pohyb-pruh', role: 'img', 'aria-label': 'Splněno ' + fc(proc) + ' % týdenního doporučení' }, h('i', {}));
+    pruh.firstChild.style.width = proc + '%';
+    if (t.splneno) pruh.classList.add('splneno');
+    return h('div', { class: 'pohyb-tyden' },
+      h('div', { class: 'radek', style: { justifyContent: 'space-between', gap: '8px', flexWrap: 'wrap' } },
+        h('span', {}, 'Týden: ', h('b', { text: fc(t.ekvivalent) }), ' z 150 min',
+          h('span', { class: 'slabe', text: t.vysoka ? ' (' + fc(t.stredni) + ' středně + ' + fc(t.vysoka) + ' intenzivně ×2)' : '' })),
+        h('span', { class: 'slabe', text: '💪 posilování ' + t.dnySila + ' ze 2 dnů' })),
+      pruh,
+      h('div', { class: 'slabe', style: { fontSize: '.78rem' }, text: t.idealni ? 'Doporučení WHO splněno i v rozšířené míře (300 min). Skvělé!' : t.splneno ? 'Minimum WHO splněno. Další zdravotní přínos má až 300 min týdně.' : 'WHO doporučuje 150–300 min středně intenzivního pohybu týdně (minuta intenzivního se počítá dvakrát) a posilování aspoň 2 dny.' }));
+  }
+
+  // katalog se načítá asynchronně: dialog otevřít jen tehdy, když se mezitím nezměnil stav ani profil (a jen jednou)
+  let pohybOtvira = false;
+  async function sKatalogem(fn) {
+    if (pohybOtvira) return;
+    pohybOtvira = true;
+    const S0 = S, k0 = klicStavu;
+    let kat = null, chyba = null;
+    try { kat = await nactiPohyby(); } catch (e) { chyba = e; } finally { pohybOtvira = false; }
+    if (S !== S0 || klicStavu !== k0) return;
+    fn(kat, chyba);
+  }
+  function vyberPohybu(den, hledat) {
+    den = den || aktivniDen;
+    sKatalogem((kat, chyba) => vyberPohybuK(kat, chyba, den, hledat));
+  }
+  function vyberPohybuK(kat, chyba, den, hledat) {
+    if (chyba) {
+      D.chyba('Seznam pohybů se nepodařilo načíst' + (navigator.onLine === false ? ' (jsi offline)' : '') + '. Pohyb můžeš zadat ručně.');
+      upravPohybRucne(null, den);
+      return;
+    }
+    const vstup = h('input', { type: 'search', class: 'vstup', placeholder: 'Hledat – chůze, kolo, vysávání…', 'aria-label': 'Hledat pohyb', autocomplete: 'off', enterkeyhint: 'search', spellcheck: 'false' });
+    const cipy = h('div', { class: 'cipy', role: 'group', 'aria-label': 'Druh pohybu' });
+    const seznam = h('ul', { class: 'vysledky', role: 'group', 'aria-label': 'Pohyby' });
+    const kg = J.hmotnostKDni(S, den), bmr = bmrPohybu(den);
+    const nedavne = J.nedavnePohyby(S, 10);
+    let karta = nedavne.length ? 'nedavne' : 'chuze';
+    const info = h('div', { class: 'slabe', style: { padding: '6px 14px' }, 'aria-live': 'polite' });
+    const telo = h('div', { style: { display: 'flex', flexDirection: 'column', minHeight: 0, flex: '1' } },
+      h('div', { class: 'hledani' }, vstup), upozorneniPal(), cipy, info, seznam);
     const pata = h('div', { class: 'sheet-pata' },
-      p ? h('button', { class: 'btn danger', type: 'button', onclick: () => { v.zavri(); sVracenim('Smazáno: ' + (p.nazev || 'aktivita'), () => { const dd = S.dny[den]; if (dd) dd.pohyb = dd.pohyb.filter(x => x.id !== id); }); } }, '🗑️ Smazat') : null,
+      h('button', { class: 'btn mini', type: 'button', onclick: () => upravPohybRucne(null, den, () => v.zavri()) }, '✎ Zadat ručně (z hodinek)'),
+      h('a', { class: 'vpravo slabe', href: kat.url || 'https://pacompendium.com/', target: '_blank', rel: 'noopener', style: { fontSize: '.76rem' }, title: kat.zdroj, text: 'MET: Compendium 2024' }));
+    const v = otevriVrstvu({ titulek: '🏃 Přidat pohyb', telo, pata, trida: 'sheet-pridani' });
+    function polozka(p, zaznam) {
+      const odhad = kg ? J.energiePohybu(p.met, zaznam && zaznam.minuty ? zaznam.minuty : 30, kg, bmr) : null;
+      const i = J.intenzitaMet(p.met);
+      const detail = zaznam ? popisPohybu(zaznam) + ' · ' + naposledy(zaznam.den)
+        : fc(p.met, 1) + ' MET · ' + i.n + (p.nazev.includes('km/h') ? ' · ' + J.tempoMinKm(J.rychlostPohybu(p)) : p.od || p.do ? ' · ' + J.popisRychlosti(p) : '');
+      const otevri = () => detailPohybu(kat, p, { den, predvyplnit: zaznam, poUlozeni: () => v.zavri() });
+      return h('li', { class: 'vysledek', tabindex: '0', role: 'button', onclick: otevri,
+        onkeydown: e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); otevri(); } } },
+      h('span', { class: 'pohyb-int int-' + i.k, 'aria-hidden': 'true' }),
+      h('div', { class: 'nazev' }, h('div', { text: p.nazev }), h('div', { class: 'detail', text: detail })),
+      odhad ? h('span', { class: 'kc' }, en(odhad.navic), h('small', { text: 'za ' + fc(zaznam && zaznam.minuty ? zaznam.minuty : 30) + ' min' })) : null);
+    }
+    function vykresli() {
+      const q = vstup.value.trim();
+      cipy.textContent = '';
+      const cip = (k, text) => h('button', { class: 'cip', type: 'button', 'aria-pressed': String(!q && karta === k), onclick: () => { karta = k; vstup.value = ''; vykresli(); } }, text);
+      if (nedavne.length) cipy.appendChild(cip('nedavne', '🕘 Nedávné'));
+      for (const k of kat.kategorie) cipy.appendChild(cip(k.k, k.i + ' ' + k.n));
+      seznam.textContent = '';
+      let n = 0;
+      if (q) {
+        for (const p of J.hledejPohyb(kat, q, 40)) { seznam.appendChild(polozka(p)); n++; }
+        info.textContent = n ? '' : 'Nic nenalezeno. Zkus jiné slovo nebo zadej pohyb ručně.';
+      } else if (karta === 'nedavne') {
+        for (const z of nedavne) {
+          const p = z.kod && kat.kod[z.kod];
+          if (p) { seznam.appendChild(polozka(p, z)); n++; continue; }
+          // ruční záznam (z hodinek): otevře ruční formulář s minulými hodnotami
+          const otevri = () => upravPohybRucne(null, den, () => v.zavri(), z);
+          seznam.appendChild(h('li', { class: 'vysledek', tabindex: '0', role: 'button', onclick: otevri,
+            onkeydown: e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); otevri(); } } },
+          h('span', { class: 'pohyb-int' + (z.int ? ' int-' + z.int : ''), 'aria-hidden': 'true' }),
+          h('div', { class: 'nazev' }, h('div', { text: z.nazev }), h('div', { class: 'detail', text: popisPohybu(z) + ' · ' + naposledy(z.den) })),
+          h('span', { class: 'kc', text: en(z.kcal) })));
+          n++;
+        }
+        info.textContent = n ? 'Klepni a uprav dobu – předvyplní se jako minule.' : '';
+      } else {
+        for (const p of kat.seznam) if (p.kat === karta) { seznam.appendChild(polozka(p)); n++; }
+        info.textContent = '';
+      }
+      if (!kg) info.textContent = 'Pro výpočet energie doplň v Profilu hmotnost (nebo ji zadej v dalším kroku).';
+      else if (!info.textContent) info.textContent = 'Energie navíc nad klidový výdej pro ' + fc(kg, 1) + ' kg.';
+    }
+    let casovac = null;
+    vstup.addEventListener('input', () => { clearTimeout(casovac); casovac = setTimeout(vykresli, 120); });
+    vstup.addEventListener('keydown', e => { if (e.key === 'Enter') { e.preventDefault(); const prvni = seznam.querySelector('.vysledek'); if (prvni) prvni.click(); } });
+    if (hledat) vstup.value = hledat;
+    vykresli();
+    setTimeout(() => { if (!(window.matchMedia && matchMedia('(pointer:coarse)').matches)) vstup.focus(); }, 30);
+  }
+
+  // detail přednastaveného pohybu: tempo, doba / vzdálenost / kroky a živý výpočet energie
+  function detailPohybu(kat, p0, volby) {
+    const den = volby.den || aktivniDen;
+    const z = volby.zaznam || null;          // upravovaný záznam
+    const pred = z || volby.predvyplnit || null;
+    let p = p0;
+    const KROKOVE = ['chuze', 'nordic', 'pas'];
+    const SOUSEDNI = { chuze: 'beh', pas: 'beh', nordic: 'beh', beh: 'chuze' };
+    const pole = (atr) => h('input', { class: 'vstup', type: 'number', inputmode: 'decimal', ...atr });
+    // pole mají jméno z viditelného popisku (label); name slouží jen k rozlišení
+    const minuty = pole({ name: 'minuty', min: '1', max: '1440', step: '1', inputmode: 'numeric' });
+    const km = pole({ name: 'km', min: '0', max: '1000', step: '0.01' });
+    const kroky = pole({ name: 'kroky', min: '0', max: '300000', step: '1', inputmode: 'numeric' });
+    const krok = pole({ name: 'krok', min: '30', max: '150', step: '1', inputmode: 'numeric', style: { maxWidth: '6em' } });
+    const vaha = pole({ name: 'vaha', min: '25', max: '350', step: '0.1' });
+    const rucne = h('input', { type: 'checkbox', name: 'rucne' });
+    const kcal = pole({ name: 'kcal', min: '0', max: String(Math.round(E(10000))), step: '1', inputmode: 'numeric' });
+    const tempo = h('select', { class: 'vstup', name: 'tempo' });
+    const tempoPozn = h('div', { class: 'slabe', style: { fontSize: '.78rem' } });
+    const vypocet = h('div', { class: 'pohyb-vypocet' });
+    // čtečce obrazovky se hlásí jen souhrn, s prodlevou (ne celá tabulka při každém znaku)
+    const hlaseni = h('div', { class: 'sr', 'aria-live': 'polite' });
+    let hlaseniCas = null;
+    const radaPole = h('div', { class: 'pole siroke' }, h('label', { class: 'pole', style: { margin: 0 } }, 'Tempo', tempo), tempoPozn);
+    const krokyPole = h('label', { class: 'pole' }, 'Kroky', kroky);
+    const krokPole = h('label', { class: 'pole' }, 'Délka kroku (cm)', krok);
+    const kmPole = h('label', { class: 'pole' }, 'Vzdálenost (km)', km);
+    const vahaPole = h('label', { class: 'pole' }, 'Hmotnost (kg)', vaha);
+    const rucnePole = h('label', { class: 'pole' }, 'Spáleno navíc (' + ej() + ')', kcal);
+    const titulek = h('div', { class: 'pohyb-nazev' });
+    if (pred) {
+      if (pred.minuty) minuty.value = String(Math.round(pred.minuty));
+      if (pred.km && !pred.kroky) km.value = String(Math.round(pred.km * 100) / 100);
+      if (pred.kroky) kroky.value = String(pred.kroky);
+      if (z && z.ruc) { rucne.checked = true; kcal.value = String(Math.round(E(z.kcal))); }
+    }
+    const dk = delkaKroku();
+    if (dk) krok.value = String(Math.round(dk * 100));
+    const kgZname = J.hmotnostKDni(S, den);
+    if (kgZname) vaha.value = String(kgZname);
+    const telo = h('div', { class: 'sheet-telo' },
+      titulek, upozorneniPal(),
+      h('div', { class: 'form' }, radaPole,
+        h('label', { class: 'pole' }, 'Doba (min)', minuty), kmPole, krokyPole, krokPole, vahaPole),
+      h('label', { class: 'prepinac', style: { marginTop: '6px' } }, rucne, ' Spálenou energii znám (hodinky, trenažér)'),
+      h('div', { class: 'form' }, rucnePole),
+      vypocet, hlaseni,
+      h('details', { class: 'pohyb-jak' }, h('summary', { text: 'Jak se to počítá?' }),
+        h('p', { text: 'Každá činnost má v Compendiu intenzitu v MET – násobek klidového výdeje (zčásti z měření, zčásti odhad autorů). '
+          + 'Výdej = MET × tvůj klidový výdej (bazální metabolismus z profilu) × minuty; bez vyplněného profilu se bere standard 3,5 ml O₂ na kg a minutu (ACSM). '
+          + 'K dennímu cíli se přičte jen energie navíc nad klidový výdej, protože ten už cíl obsahuje. '
+          + 'Ze vzdálenosti a času se spočte rychlost a vybere se odpovídající tempo; z kroků se vzdálenost odhadne podle délky kroku (výchozí odhad je 41,4 % výšky – přesnější je změřit 10 kroků). '
+          + 'Skutečný výdej se mezi lidmi liší i o 20 % (kondice, terén, technika).' }),
+        h('p', { class: 'slabe' }, 'Zdroj: ', h('a', { href: kat.url || 'https://pacompendium.com/', target: '_blank', rel: 'noopener', text: kat.zdroj || '2024 Adult Compendium of Physical Activities' }), '. ',
+          'Intenzita: lehká pod 3 MET, střední 3–5,9 MET, vysoká od 6 MET (WHO).')));
+    const ulozit = h('button', { class: 'btn primary', type: 'button' }, z ? 'Uložit' : 'Přidat');
+    const pata = h('div', { class: 'sheet-pata' },
+      z ? h('button', { class: 'btn danger', type: 'button', onclick: () => { v.zavri(); smazPohyb(den, z); } }, '🗑️ Smazat') : null,
       h('div', { class: 'vpravo' }, h('button', { class: 'btn', type: 'button', onclick: () => v.zavri() }, 'Zrušit'), ulozit));
-    const v = otevriVrstvu({ titulek: '🏃 Pohyb', telo, pata, sirka: '440px' });
+    const v = otevriVrstvu({ titulek: '🏃 ' + (z ? 'Upravit pohyb' : 'Pohyb'), telo, pata, sirka: '520px' });
+
+    function napln() {
+      const rada = p.rada ? kat.rady[p.rada] : null;
+      radaPole.hidden = !rada;
+      tempo.textContent = '';
+      if (rada) for (const x of rada) {
+        const rych = J.rychlostPohybu(x);
+        tempo.appendChild(h('option', { value: x.kod, selected: x === p ? true : null },
+          x.nazev + (x.nazev.includes('km/h') ? '' : ' · ' + J.popisRychlosti(x)) + (p.rada === 'beh' && rych ? ' · ' + J.tempoMinKm(rych) : '')));
+      }
+      kmPole.hidden = !(p.od || p.do);
+      krokyPole.hidden = krokPole.hidden = !KROKOVE.includes(p.rada);
+    }
+    let r = null;
+    function prepocti() {
+      const kg = J.cislo(vaha.value);
+      vahaPole.hidden = !!kgZname && J.cislo(vaha.value) === kgZname && !vahaPole.dataset.ukazat;
+      rucnePole.hidden = !rucne.checked;
+      const delka = J.cislo(krok.value) >= 30 && J.cislo(krok.value) <= 150 ? J.cislo(krok.value) / 100 : null;
+      r = J.vypoctiPohyb(kat, { pohyb: p, minuty: minuty.value, km: krokyPole.hidden ? km.value : (J.cislo(kroky.value) > 0 ? null : km.value), kroky: krokyPole.hidden ? null : kroky.value, delkaKroku: delka }, kg > 0 ? kg : null, kg > 0 ? J.bmr({ ...S.profil, vaha: kg }, den) : null);
+      if (r && r.zmena) { p = r.p; tempo.value = p.kod; }
+      const zRychlosti = !!(r && r.km && J.cislo(minuty.value) > 0 && p.rada);
+      tempo.disabled = zRychlosti;
+      tempoPozn.textContent = zRychlosti ? 'Tempo určeno z rychlosti ' + fc(r.rychlost, 1) + ' km/h' + (p.rada === 'beh' ? ' (' + J.tempoMinKm(r.rychlost) + ')' : '') + '.' : '';
+      titulek.textContent = '';
+      const i = J.intenzitaMet(p.met);
+      pridat(titulek, h('b', { text: p.nazev }), ' ', h('span', { class: 'stitek int-' + i.k, text: fc(p.met, 1) + ' MET · ' + i.n }));
+      vypocet.textContent = '';
+      const radky = [];
+      if (r && r.mimo && SOUSEDNI[p.rada] && kat.rady[SOUSEDNI[p.rada]]) {
+        const jiny = SOUSEDNI[p.rada] === 'beh' ? 'běh' : 'chůzi';
+        vypocet.appendChild(h('div', { class: 'upozorneni' }, 'Rychlost ' + fc(r.rychlost, 1) + ' km/h je ' + (r.mimo === 'nad' ? 'na tuto činnost vysoká' : 'na tuto činnost nízká') + '. ',
+          h('button', { class: 'btn mini', type: 'button', onclick: () => {
+            // vzdálenost (i spočtenou z kroků) přenést, aby se tempo nové činnosti vybralo podle rychlosti
+            if (r && r.km && !(J.cislo(km.value) > 0)) { km.value = String(Math.round(r.km * 100) / 100); kroky.value = ''; }
+            p = kat.rady[SOUSEDNI[p.rada]][0]; napln(); prepocti();
+          } }, 'Přepnout na ' + jiny)));
+      }
+      if (r && r.minuty && !(J.cislo(minuty.value) > 0)) radky.push(['Doba', '≈ ' + fc(r.minuty) + ' min (při ' + fc(r.rychlost, 1) + ' km/h)']);
+      if (r && r.kroky && r.km) radky.push(['Vzdálenost', '≈ ' + fc(r.km, 2) + ' km']);
+      if (r && r.rychlost && J.cislo(minuty.value) > 0 && r.km) radky.push(['Rychlost', fc(r.rychlost, 1) + ' km/h' + (['beh', 'kolo', 'brusle', 'bezky'].includes(p.rada) || p.kat === 'beh' ? '' : '') + (p.kat === 'beh' ? ' · ' + J.tempoMinKm(r.rychlost) : '')]);
+      if (!(kg > 0)) { vahaPole.hidden = false; vahaPole.dataset.ukazat = '1'; radky.push(['Energie', 'doplň hmotnost']); }
+      else if (r && r.energie) {
+        radky.push(['Výdej celkem', '≈ ' + en(r.energie.brutto)]);
+        radky.push(['Z toho navíc nad klid', '≈ ' + en(r.energie.navic)]);
+      } else if (!krokyPole.hidden && J.cislo(kroky.value) > 0 && !delka) radky.push(['Kroky', 'doplň délku kroku (nebo výšku v Profilu)']);
+      else radky.push(['Energie', 'zadej dobu' + (kmPole.hidden ? '' : ', vzdálenost') + (krokyPole.hidden ? '' : ' nebo kroky')]);
+      if (rucne.checked && J.cislo(kcal.value) !== null) radky.push(['Použije se', en(zE(J.cislo(kcal.value))) + ' (tvoje hodnota)']);
+      const tab = h('table', { class: 'pohyb-tab' });
+      for (const [a, b] of radky) tab.appendChild(h('tr', {}, h('th', { scope: 'row', text: a }), h('td', { text: b })));
+      vypocet.appendChild(tab);
+      const kc = hodnotaKUlozeni();
+      clearTimeout(hlaseniCas);
+      hlaseniCas = setTimeout(() => { hlaseni.textContent = kc !== null ? p.nazev + ': ' + (r && r.energie ? 'výdej ' + en(r.energie.brutto) + ', ' : '') + 'navíc ' + en(kc) + '.' : ''; }, 700);
+      if (kc !== null) vypocet.appendChild(h('p', { class: 'pohyb-cil' },
+        S.nastaveni.pohybKCili ? h('span', {}, 'K cíli dne se přičte ', h('b', { text: en(kc) }), '.') : h('span', { class: 'slabe', text: 'Přičítání pohybu k cíli máš v Profilu vypnuté.' })));
+      if (p.met < 2.5) vypocet.appendChild(h('p', { class: 'slabe', style: { fontSize: '.78rem' }, text: 'Lehké běžné činnosti už obvykle zahrnuje úroveň aktivity (PAL) v profilu – zapisuj je jen tehdy, když jich bylo výrazně víc než obvykle.' }));
+      if (kg > 0 && kgZname && kg !== kgZname) vypocet.appendChild(h('p', { class: 'slabe', text: 'Počítáno s ' + fc(kg, 1) + ' kg (hodnota v profilu se nemění).' }));
+      else if (kg > 0) vypocet.appendChild(h('p', { class: 'slabe', style: { fontSize: '.78rem' } }, 'Počítáno pro ' + fc(kg, 1) + ' kg. ',
+        h('button', { class: 'btn mini plain', type: 'button', onclick: () => { vahaPole.dataset.ukazat = '1'; vahaPole.hidden = false; vaha.focus(); } }, 'Změnit')));
+    }
+    function hodnotaKUlozeni() {
+      if (rucne.checked) { const k = zE(J.cislo(kcal.value)); return k !== null && k >= 0 ? k : null; }
+      return r && r.energie ? r.energie.navic : null;
+    }
+    tempo.addEventListener('change', () => { p = kat.kod[tempo.value] || p; prepocti(); });
+    // kroky a vzdálenost se vylučují – druhé pole se smaže dřív, než se přepočítá
+    kroky.addEventListener('input', () => { if (J.cislo(kroky.value) > 0) km.value = ''; });
+    km.addEventListener('input', () => { if (J.cislo(km.value) > 0) kroky.value = ''; });
+    for (const x of [minuty, km, kroky, krok, vaha, kcal]) x.addEventListener('input', prepocti);
+    rucne.addEventListener('change', () => { prepocti(); if (rucne.checked) kcal.focus(); });
+    napln(); prepocti();
     ulozit.addEventListener('click', () => {
-      const k = zE(J.cislo(kcal.value));
-      if (k === null || k < 0 || k > 10000) { D.chyba('Zadej spálenou energii v ' + ej() + '.'); kcal.focus(); return; }
-      const x = { id: p ? p.id : J.noveId('p'), nazev: nazev.value.trim() || 'Aktivita', kcal: Math.round(k) };
-      const m = J.cislo(minuty.value); if (m) x.minuty = Math.round(m);
+      if (!vrstvy.includes(v)) return;
+      prepocti();   // nikdy neukládat zastaralý výpočet
+      const kc = hodnotaKUlozeni();
+      if (!krokyPole.hidden && J.cislo(kroky.value) > 0 && !(J.cislo(krok.value) >= 30 && J.cislo(krok.value) <= 150)) {
+        D.chyba('Pro převod kroků zadej délku kroku (30–150 cm) nebo doplň výšku v Profilu.'); krok.focus(); return;
+      }
+      if (!r || !r.minuty) { D.chyba('Zadej dobu' + (kmPole.hidden ? '' : ' nebo vzdálenost') + '.'); minuty.focus(); return; }
+      if (kc === null) {
+        if (rucne.checked) { D.chyba('Zadej spálenou energii v ' + ej() + '.'); kcal.focus(); }
+        else { D.chyba('Pro výpočet energie zadej hmotnost.'); vahaPole.hidden = false; vaha.focus(); }
+        return;
+      }
+      if (kc > 10000) { D.chyba('Tolik energie se za jeden pohyb spálit nedá – zkontroluj údaje.'); return; }
+      const krokCm = J.cislo(krok.value);
+      if (!krokyPole.hidden && J.cislo(kroky.value) > 0 && krokCm >= 30 && krokCm <= 150 && Math.round(krokCm) !== Math.round((delkaKroku() || 0) * 100)) S.nastaveni.krok = Math.round(krokCm);
+      const x = { id: z ? z.id : J.noveId('p'), nazev: p.nazev, kod: p.kod, met: p.met, minuty: Math.round(r.minuty), kcal: Math.round(kc) };
+      if (r.km) x.km = Math.round(r.km * 100) / 100;
+      if (r.kroky) x.kroky = Math.round(r.kroky);
+      if (r.energie) x.brutto = Math.round(r.energie.brutto);
+      if (p.sila) x.sila = true;
+      if (rucne.checked) x.ruc = true;
+      ulozPohyb(den, z, x);
+      v.zavri();
+      if (volby.poUlozeni) volby.poUlozeni();
+    });
+    telo.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.tagName === 'INPUT' && e.target.type !== 'checkbox') { e.preventDefault(); ulozit.click(); } });
+    setTimeout(() => minuty.focus(), 30);
+  }
+  function ulozPohyb(den, z, x) {
+    if (z) {
       // stav mohl být mezitím nahrazen (jiná záložka, Vrátit) – pracovat s aktuálním dnem
       const dd = J.den(S, den);
-      const pp = p ? dd.pohyb.find(q => q.id === p.id) : null;
-      if (pp) Object.assign(pp, x); else dd.pohyb.push(x);
-      uloz(); v.zavri(); vykresliDenik();
+      const pp = dd.pohyb.find(q => q.id === z.id);
+      if (!pp) { D.chyba('Záznam se mezitím změnil nebo byl smazán – úprava se neuložila.'); vykresliDenik(); return; }
+      for (const k of Object.keys(pp)) delete pp[k];
+      Object.assign(pp, x);
+      uloz(); vykresliDenik();
+    } else {
+      sVracenim('Přidáno: ' + x.nazev + (x.minuty ? ' (' + fc(x.minuty) + ' min)' : ''), () => { J.den(S, den).pohyb.push(x); });
+    }
+  }
+  function smazPohyb(den, z) {
+    sVracenim('Smazáno: ' + (z.nazev || 'aktivita'), () => { const dd = S.dny[den]; if (dd) dd.pohyb = dd.pohyb.filter(x => x.id !== z.id); });
+  }
+  // úprava záznamu: přednastavený pohyb otevře detail, ruční záznam (nebo bez katalogu) ruční formulář
+  function upravPohyb(id) {
+    const den = aktivniDen;
+    const p = id ? J.den(S, den).pohyb.find(x => x.id === id) : null;
+    if (!p) { vyberPohybu(den); return; }
+    if (!p.kod) { upravPohybRucne(id, den); return; }
+    sKatalogem(kat => {
+      const pp = J.den(S, den).pohyb.find(x => x.id === id);
+      if (!pp) return;
+      if (kat && kat.kod[pp.kod]) detailPohybu(kat, kat.kod[pp.kod], { den, zaznam: pp });
+      else upravPohybRucne(id, den);
     });
-    telo.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.tagName === 'INPUT') { e.preventDefault(); ulozit.click(); } });
+  }
+  // ruční záznam: energie z hodinek nebo jiné činnosti, intenzita pro týdenní přehled
+  function upravPohybRucne(id, den, poUlozeni, predvyplnit) {
+    den = den || aktivniDen;
+    const d = J.den(S, den);
+    const p = id ? d.pohyb.find(x => x.id === id) : null;
+    const q = p || predvyplnit || null;   // hodnoty do polí (úprava, nebo zopakování nedávného)
+    const nazev = h('input', { class: 'vstup', type: 'text', maxlength: '60', placeholder: 'např. Běh, kolo, posilovna', value: q ? q.nazev : '' });
+    const minuty = h('input', { class: 'vstup', type: 'number', min: '0', max: '1440', step: '1', inputmode: 'numeric', value: q && q.minuty ? String(q.minuty) : '' });
+    const kcal = h('input', { class: 'vstup', type: 'number', min: '0', max: String(Math.round(E(10000))), step: '1', inputmode: 'numeric', value: q ? String(Math.round(E(q.kcal))) : '' });
+    const celkove = h('input', { type: 'checkbox' });
+    const celkPozn = h('p', { class: 'slabe', 'aria-live': 'polite' });
+    const klidZa = m => {
+      const b = bmrPohybu(den), kg = J.hmotnostKDni(S, den);
+      return m > 0 ? (b ? b / 1440 : kg ? 3.5 * kg / 200 : null) * m : null;
+    };
+    const ukazCelk = () => {
+      celkPozn.textContent = '';
+      if (!celkove.checked) return;
+      const k = zE(J.cislo(kcal.value)), m = J.cislo(minuty.value), kl = klidZa(m);
+      celkPozn.textContent = kl === null ? 'Zadej dobu (a hmotnost v profilu) – klidový výdej se odečte za dobu aktivity.'
+        : k !== null ? 'Klidový výdej za ' + fc(m) + ' min ≈ ' + en(kl) + ' → k cíli se přičte ' + en(Math.max(0, k - kl)) + '.' : '';
+    };
+    const intenzita = h('select', { class: 'vstup' }, h('option', { value: '' }, 'neuvedeno'),
+      ...J.INTENZITA.map(i => h('option', { value: i.k, selected: q && (q.int === i.k || (!q.int && J.intenzitaMet(q.met) === i)) ? true : null },
+        i.n + (i.k === 'lehka' ? ' (procházka, úklid)' : i.k === 'stredni' ? ' (svižná chůze, kolo – zadýchání, ale mluvíš)' : ' (běh – mluvit nejde)'))));
+    const telo = h('div', { class: 'sheet-telo' },
+      upozorneniPal(),
+      p && p.kod ? h('div', { class: 'upozorneni info' }, 'Seznam pohybů teď není k dispozici (offline?) – upravíš jen základní údaje, ostatní zůstanou.') : null,
+      h('div', { class: 'form' }, h('label', { class: 'pole siroke' }, 'Aktivita', nazev),
+        h('label', { class: 'pole' }, 'Doba (min)', minuty), h('label', { class: 'pole' }, 'Spáleno (' + ej() + ')', kcal),
+        h('label', { class: 'pole siroke' }, 'Intenzita (pro týdenní přehled)', intenzita)),
+      h('label', { class: 'prepinac', style: { marginTop: '6px' } }, celkove, ' Je to celkový výdej včetně klidového (odečíst klid za dobu aktivity)'),
+      celkPozn,
+      h('p', { class: 'slabe', style: { marginTop: '10px' }, text: 'Hodinky a aplikace obvykle ukazují zvlášť „aktivní“ a „celkové“ kalorie. Zadej aktivní; máš-li jen celkové, zaškrtni volbu výše a klidový výdej se odečte (jinak by se s cílem započítal dvakrát). Přičítání k cíli lze vypnout v Profilu.' }));
+    const ulozit = h('button', { class: 'btn primary', type: 'button' }, p ? 'Uložit' : 'Přidat');
+    const pata = h('div', { class: 'sheet-pata' },
+      p ? h('button', { class: 'btn danger', type: 'button', onclick: () => { v.zavri(); smazPohyb(den, p); } }, '🗑️ Smazat') : null,
+      h('div', { class: 'vpravo' }, h('button', { class: 'btn', type: 'button', onclick: () => v.zavri() }, 'Zrušit'), ulozit));
+    const v = otevriVrstvu({ titulek: '🏃 Pohyb – ruční záznam', telo, pata, sirka: '460px' });
+    ulozit.addEventListener('click', () => {
+      let k = zE(J.cislo(kcal.value));
+      if (k === null || k < 0 || k > 10000) { D.chyba('Zadej spálenou energii v ' + ej() + '.'); kcal.focus(); return; }
+      const m = J.cislo(minuty.value);
+      if (m !== null && (m < 0 || m > 1440)) { D.chyba('Doba musí být 0–1440 minut.'); minuty.focus(); return; }
+      let celk = null;
+      if (celkove.checked) {
+        const kl = klidZa(m);
+        if (kl === null) { D.chyba('Pro odečtení klidového výdeje zadej dobu aktivity.'); minuty.focus(); return; }
+        celk = k; k = Math.max(0, k - kl);
+      }
+      // úprava záznamu z katalogu (např. offline bez seznamu pohybů) zachová jeho další údaje
+      const x = { ...(p || {}), id: p ? p.id : J.noveId('p'), nazev: nazev.value.trim() || 'Aktivita', kcal: Math.round(k) };
+      if (!p || Math.round(k) !== Math.round(p.kcal) || p.ruc) { x.ruc = true; delete x.brutto; }
+      if (celk !== null) x.brutto = Math.round(celk);
+      if (p && x.nazev !== p.nazev) { delete x.kod; delete x.sila; }
+      if (m) x.minuty = Math.round(m); else delete x.minuty;
+      if (p && x.minuty !== p.minuty) { delete x.km; delete x.kroky; }
+      if (intenzita.value) x.int = intenzita.value; else delete x.int;
+      if (x.int && x.met && J.intenzitaMet(x.met).k !== x.int) delete x.met;
+      ulozPohyb(den, p, x);
+      v.zavri();
+      if (poUlozeni) poUlozeni();
+    });
+    for (const x of [kcal, minuty, celkove]) x.addEventListener(x === celkove ? 'change' : 'input', ukazCelk);
+    telo.addEventListener('keydown', e => { if (e.key === 'Enter' && e.target.tagName === 'INPUT' && e.target.type !== 'checkbox') { e.preventDefault(); ulozit.click(); } });
     setTimeout(() => nazev.focus(), 30);
+  }
+  // rychlé zopakování nedávného pohybu ze záhlaví karty
+  function zopakujPohyb(z) {
+    if (!z.kod) { upravPohybRucne(null, aktivniDen, null, z); return; }
+    sKatalogem(kat => {
+      if (kat && kat.kod[z.kod]) detailPohybu(kat, kat.kod[z.kod], { den: aktivniDen, predvyplnit: z });
+      else upravPohybRucne(null, aktivniDen, null, z);
+    });
   }
 
   /* ----- detail všech živin dne ----- */
@@ -1976,7 +2438,7 @@
       tb.appendChild(h('tr', { class: z.pod ? 'pod' : '' },
         h('td', {}, z.n, malePokryti ? h('div', { class: 'pokryti', text: 'údaj zná ' + fc(100 * pok) + ' % zapsaného jídla' }) : null),
         h('td', { text: z.k === 'kcal' ? en(v) : Number.isFinite(v) ? fc(v, z.d) + ' ' + z.j : '–' }),
-        h('td', { text: cil ? (z.k === 'kcal' ? en(cil) : fc(cil, z.d) + ' ' + z.j) : limit ? 'max. ' + fc(limit, z.d) + ' ' + z.j : '', title: ul ? 'Horní tolerovatelný příjem (EFSA): ' + fc(ul) + ' ' + z.j : null }),
+        h('td', { text: cil ? (z.k === 'kcal' ? en(cil) : fc(cil, z.d) + ' ' + z.j) : limit ? 'max. ' + fc(limit, z.d) + ' ' + z.j : '', title: ul ? 'Horní tolerovatelný příjem (EFSA): ' + fc(ul) + ' ' + z.j + (z.k === 'vitA' ? ' – platí jen pro retinol (živočišné zdroje, doplňky), ne pro beta-karoten ze zeleniny' : z.k === 'b9' ? '' : '') : null }),
         h('td', {}, pln)));
     }
     tab.appendChild(tb);
@@ -2041,7 +2503,7 @@
   }
   function naplanuj(k) {
     const jidlo = h('select', { class: 'vstup', 'aria-label': 'Jídlo' }, ...jidla().map(j => h('option', { value: j.id }, j.nazev)));
-    jidlo.value = 'obed';
+    jidlo.value = jidla().some(j => j.id === 'obed') ? 'obed' : (jidla()[0] || {}).id || '';
     const recepty = Object.values(S.recepty).sort((a, b) => a.nazev.localeCompare(b.nazev, 'cs'));
     const sablony = Object.values(S.sablony).sort((a, b) => a.nazev.localeCompare(b.nazev, 'cs'));
     const co = h('select', { class: 'vstup', 'aria-label': 'Co' },
@@ -2531,15 +2993,18 @@
         ['Energie', en(pr.kcal || 0), c.kcal ? en(c.kcal) + ' (' + fc(100 * (pr.kcal || 0) / c.kcal) + ' %)' : ''],
         ['Bílkoviny', fc(pr.bilkoviny || 0) + ' g (' + fc(pe.bilkoviny) + ' % energie)', c.zivinyCil.bilkoviny ? fc(c.zivinyCil.bilkoviny) + ' g' + (kg ? ' · ' + fc((pr.bilkoviny || 0) / kg, 2) + ' g/kg' : '') : ''],
         ['Sacharidy', fc(pr.sacharidy || 0) + ' g (' + fc(pe.sacharidy) + ' %)', c.zivinyCil.sacharidy ? fc(c.zivinyCil.sacharidy) + ' g' : ''],
-        ['z toho cukry', fc(pr.cukry || 0) + ' g', c.limity.cukry ? 'max. ' + fc(c.limity.cukry) + ' g (volné cukry dle WHO)' : ''],
+        ['z toho cukry', fc(pr.cukry || 0) + ' g', c.limity.cukry ? 'orientačně max. ' + fc(c.limity.cukry) + ' g (WHO: limit platí pro volné cukry; zde všechny cukry)' : ''],
         ['Tuky', fc(pr.tuk || 0) + ' g (' + fc(pe.tuk) + ' %)', c.zivinyCil.tuk ? fc(c.zivinyCil.tuk) + ' g' : ''],
         ['z toho nasycené', fc(pr.nasycene || 0) + ' g', c.limity.nasycene ? 'max. ' + fc(c.limity.nasycene) + ' g' : ''],
         ['Vláknina', fc(pr.vlaknina || 0, 1) + ' g', c.zivinyCil.vlaknina ? fc(c.zivinyCil.vlaknina) + ' g' : ''],
         ['Sůl', fc(pr.sul || 0, 1) + ' g', 'max. 5 g'],
         ['Pitný režim', fc(n.pitny / 1000, 2) + ' l', c.vodaMl ? 'cca ' + fc(c.vodaMl * 0.8 / 1000, 1) + ' l z nápojů' : ''],
         ['Tekuté kalorie', en(n.kcal), fc(100 * n.podil) + ' % energie'],
-        ['Alkohol', fc(n.alk, 1) + ' g/den', fc(J.standardniNapoje(n.alkTydne), 1) + ' std. nápojů týdně · dní bez alkoholu ' + n.dnyBezAlk + ' z ' + st.zapsanych],
-        ['Pohyb (zapsaný)', pohyb ? en(pohyb) : '–', ''],
+        ['Alkohol', fc(n.alk, 1) + ' g/den', fc(J.standardniNapoje(n.alkTydne), 1) + ' standardních nápojů týdně · dní bez alkoholu ' + n.dnyBezAlk + ' z ' + st.zapsanych],
+        ['Pohyb (zapsaný, navíc nad klid)', pohyb ? en(pohyb) : '–', (() => {
+          const t = J.tydenPohybu(S, od, doK), tydnu = (J.rozdilDni(od, doK) + 1) / 7;
+          return t.ekvivalent || t.lehka ? fc(t.ekvivalent / tydnu) + ' min týdně ve středně intenzivním ekvivalentu (WHO 150–300) · posilování ' + fc(t.dnySila / tydnu, 1) + ' dní v týdnu' : '';
+        })()],
       ])));
       // graf energie a hmotnosti
       const g1 = h('div', { class: 'zprava-graf' });
@@ -2569,13 +3034,13 @@
       kont.appendChild(sekce('Hlavní zdroje energie', tabulka(['Potravina', 'Kolikrát', 'Celkem', 'Energie celkem', 'Podíl'],
         st.top.slice(0, 15).map(x => [x.nazev + (x.znacka ? ' · ' + x.znacka : ''), x.pocet + '×', fc(x.g) + ' g', en(x.kcal), fc(100 * x.kcal / (pr.kcal * zapsane.length || 1)) + ' %']))));
       // po dnech
-      kont.appendChild(sekce('Přehled po dnech', tabulka(['Datum', ej(), 'B (g)', 'S (g)', 'T (g)', 'Vlák. (g)', 'Pitný r. (l)', 'Pohyb', 'Váha', 'Poznámka'],
+      kont.appendChild(sekce('Přehled po dnech', tabulka(['Datum', ej(), 'B (g)', 'S (g)', 'T (g)', 'Vlák. (g)', 'Pitný r. (l)', 'Pohyb (' + ej() + ')', 'Váha', 'Poznámka'],
         st.dny.filter(d => d.zapsano || S.vahy[d.k] !== undefined).map(d => [J.zKlice(d.k).toLocaleDateString('cs-CZ', { weekday: 'short', day: 'numeric', month: 'numeric' }),
           d.zapsano ? fc(E(d.s.celkem.kcal || 0)) : '', d.zapsano ? fc(d.s.celkem.bilkoviny || 0) : '', d.zapsano ? fc(d.s.celkem.sacharidy || 0) : '', d.zapsano ? fc(d.s.celkem.tuk || 0) : '',
           d.zapsano ? fc(d.s.celkem.vlaknina || 0, 1) : '', fc((d.s.voda + d.s.napoje) / 1000, 2), d.s.pohyb ? fc(E(d.s.pohyb)) : '', S.vahy[d.k] !== undefined ? fc(S.vahy[d.k], 1) : '',
           ((S.dny[d.k] || {}).pozn || '').slice(0, 120)]))));
     }
-    kont.appendChild(h('p', { class: 'zprava-pata', text: 'Údaje zapsal uživatel sám; nutriční hodnoty pocházejí z Open Food Facts (ODbL), USDA FoodData Central (CC0) a vlastních údajů z etiket, referenční hodnoty z EFSA a WHO. Jde o orientační přehled, ne o lékařské vyšetření.' }));
+    kont.appendChild(h('p', { class: 'zprava-pata', text: 'Údaje zapsal uživatel sám. Nutriční hodnoty: Open Food Facts (ODbL), USDA FoodData Central (CC0), CIQUAL 2025 (ANSES, Etalab 2.0), UK CoFID 2021 (OGL v3), Frida 5.5 (DTU Food, CC BY 4.0) a vlastní údaje z etiket; odhady z receptur jsou označené. Referenční hodnoty EFSA a WHO; výdej při pohybu podle 2024 Adult Compendium of Physical Activities (Herrmann a kol., pacompendium.com). Jde o orientační přehled, ne o lékařské vyšetření.' }));
     kont.hidden = false;
     document.body.classList.add('zprava-otevrena');
     scrollTo(0, 0);
@@ -2609,7 +3074,7 @@
       if (tp.nove.length) blok.appendChild(h('div', { class: 'navrhy' }, h('span', { class: 'slabe tip-popis', text: 'Zkus přidat:' }), ...tp.nove.map(x => cip(x, true, tp))));
       karta.appendChild(blok);
     }
-    karta.appendChild(h('p', { class: 'slabe', style: { marginTop: '8px', fontSize: '.82rem' }, text: 'Průměr za ' + J.pocet(dni, 'zapsaný den', 'zapsané dny', 'zapsaných dní') + ' s aspoň 400 kcal; u jídel bez údaje se dopočítává. Doporučené hodnoty EFSA. Nejde o lékařskou radu – při dlouhodobém nedostatku se poraď s lékařem.' }));
+    karta.appendChild(h('p', { class: 'slabe', style: { marginTop: '8px', fontSize: '.82rem' }, text: 'Průměr za ' + J.pocet(dni, 'zapsaný den', 'zapsané dny', 'zapsaných dní') + ' s aspoň ' + en(400) + '; u jídel bez údaje se dopočítává. Doporučené hodnoty EFSA. Nejde o lékařskou radu – při dlouhodobém nedostatku se poraď s lékařem.' }));
     return karta;
   }
   // nápoje: pitný režim, tekuté kalorie, alkohol (průměry za zapsané dny)
@@ -2637,6 +3102,54 @@
       + 'Tekuté kalorie zahrnují všechny nápoje z deníku včetně mléka a alkoholu; do pitného režimu se počítají podle nastavení v Profilu.' }));
     return karta;
   }
+  // pohyb za období: týdny proti doporučení WHO, rozdělení podle intenzity a nejčastější činnosti
+  function kartaPohybu(od, doK) {
+    const dny = [];
+    for (let k = od; k <= doK; k = J.posunDen(k, 1)) dny.push(k);
+    const vse = [];
+    for (const k of dny) for (const p of ((S.dny[k] && S.dny[k].pohyb) || [])) vse.push({ k, p });
+    if (!vse.length) return null;
+    const karta = h('div', { class: 'karta' }, h('h2', { style: { marginBottom: '10px' }, text: '🏃 Pohyb' }));
+    const celk = J.tydenPohybu(S, od, doK);
+    const tydnu = dny.length / 7;
+    karta.appendChild(h('div', { class: 'cisla', style: { marginBottom: '10px' } },
+      karticka(fc(celk.stredni + celk.vysoka + celk.lehka + celk.nezname) + ' min', 'pohybu celkem'),
+      karticka(fc(celk.ekvivalent / tydnu) + ' min', 'týdně (WHO ekvivalent, cíl 150)'),
+      karticka(en(celk.kcal), 'energie navíc celkem'),
+      karticka(fc(celk.dnySila / tydnu, 1), 'dnů s posilováním týdně (cíl 2)')));
+    // sloupce: po dnech (týden) nebo po týdnech (delší období) – minuty středně intenzivního ekvivalentu
+    const g = h('div', {});
+    karta.appendChild(g);
+    let data, cil;
+    if (dny.length <= 14) {
+      data = dny.map(k => { const t = J.tydenPohybu(S, k, k), dt = J.zKlice(k); return { k, v: t.stredni + t.vysoka + t.lehka + t.nezname, popis: dt.toLocaleDateString('cs-CZ'), kratce: dt.getDate() + '.' + (dt.getMonth() + 1) + '.' }; });
+      cil = null;
+    } else {
+      data = [];
+      for (let k = pondeli(od); k <= doK; k = J.posunDen(k, 7)) {
+        const t = J.tydenPohybu(S, k < od ? od : k, J.posunDen(k, 6) > doK ? doK : J.posunDen(k, 6)), dt = J.zKlice(k);
+        data.push({ k, v: t.ekvivalent, popis: 'týden od ' + dt.toLocaleDateString('cs-CZ'), kratce: dt.getDate() + '.' + (dt.getMonth() + 1) + '.' });
+      }
+      cil = 150;
+    }
+    kresliPozdeji(() => G.sloupce(g, data, { cil, cilMinimum: true, jednotka: 'min', vyska: 160, popis: dny.length <= 14 ? 'Minuty pohybu po dnech' : 'Minuty pohybu po týdnech (WHO ekvivalent; cíl 150)' }));
+    // nejčastější činnosti
+    const podle = {};
+    for (const { p } of vse) {
+      const kl = p.kod || p.nazev;
+      const x = podle[kl] || (podle[kl] = { nazev: p.nazev, n: 0, min: 0, kcal: 0 });
+      x.n++; x.min += J.cislo(p.minuty) || 0; x.kcal += J.cislo(p.kcal) || 0;
+    }
+    const top = Object.values(podle).sort((a, b) => b.min - a.min || b.n - a.n).slice(0, 6);
+    const tab = h('table', { class: 'tab-ziviny', style: { marginTop: '10px' } },
+      h('thead', {}, h('tr', {}, h('th', { text: 'Činnost' }), h('th', { text: 'Krát' }), h('th', { text: 'Minut' }), h('th', { text: ej() }))));
+    const tb = h('tbody');
+    for (const x of top) tb.appendChild(h('tr', {}, h('td', { text: x.nazev }), h('td', { text: fc(x.n) }), h('td', { text: x.min ? fc(x.min) : '–' }), h('td', { text: fc(E(x.kcal)) })));
+    tab.appendChild(tb);
+    karta.appendChild(tab);
+    karta.appendChild(h('p', { class: 'slabe', style: { marginTop: '8px', fontSize: '.8rem' }, text: 'WHO (2020) doporučuje dospělým týdně 150–300 minut středně intenzivního pohybu (3–5,9 MET), nebo 75–150 minut intenzivního (od 6 MET), případně jejich kombinaci – minuta intenzivního se počítá za dvě. K tomu posilování svalů aspoň 2 dny v týdnu. Lehký pohyb se do doporučení nepočítá, ale i ten má smysl.' }));
+    return karta;
+  }
   function vykresliStatistiky() {
     const kont = $('#statistiky');
     kont.textContent = '';
@@ -2659,8 +3172,10 @@
       karticka(st.zapsanych ? fc(st.prumer.bilkoviny, 0) + ' g' : '–', 'bílkovin denně'),
       karticka(J.pocet(J.serie(S, doK), 'den', 'dny', 'dní'), 'aktuální série'),
       karticka(zmena !== null ? (zmena > 0 ? '+' : '') + fc(zmena, 1) + ' kg' : '–', 'změna hmotnosti')));
+    const kp = kartaPohybu(od, doK);
     if (!st.zapsanych) {
-      kont.appendChild(h('div', { class: 'karta prazdny', text: 'V tomto období zatím nejsou žádné záznamy.' }));
+      kont.appendChild(h('div', { class: 'karta prazdny', text: 'V tomto období zatím nejsou žádné záznamy jídla.' }));
+      if (kp) kont.appendChild(kp);
     } else {
       // energie po dnech
       const g1 = h('div', {});
@@ -2685,6 +3200,7 @@
       G.kolac(kol, [{ v: pe.bilkoviny, barva: 'var(--c-bil)', popis: 'Bílkoviny' }, { v: pe.sacharidy, barva: 'var(--c-sach)', popis: 'Sacharidy' }, { v: pe.tuk, barva: 'var(--c-tuk)', popis: 'Tuky' }, { v: pe.alk, barva: 'var(--c-alk)', popis: 'Alkohol' }],
         { popis: 'Rozložení energie: bílkoviny ' + fc(pe.bilkoviny) + ' %, sacharidy ' + fc(pe.sacharidy) + ' %, tuky ' + fc(pe.tuk) + ' %' + (pe.alk > 0.5 ? ', alkohol ' + fc(pe.alk) + ' %' : '') });
       kont.appendChild(kartaNapoju(st));
+      if (kp) kont.appendChild(kp);
       kont.appendChild(kartaTipu(od, doK, c));
       // průměrné živiny
       const pokryti = {};
@@ -2826,6 +3342,9 @@
     const p = S.profil;
     if (!f.pal.options.length) for (const a of J.AKTIVITA) f.pal.appendChild(h('option', { value: String(a.pal) }, a.n + ' – PAL ' + String(a.pal).replace('.', ',')));
     f.pohlavi.value = p.pohlavi || 'm';
+    f.stav.value = p.pohlavi === 'z' && p.stav ? p.stav : '';
+    $('#poleStav').hidden = f.pohlavi.value !== 'z';
+    if (!f.pohlavi.dataset.stav) { f.pohlavi.dataset.stav = '1'; f.pohlavi.addEventListener('change', () => { $('#poleStav').hidden = f.pohlavi.value !== 'z'; }); }
     f.narozeni.value = p.narozeni || '';
     f.vyska.value = p.vyska || '';
     const desetinne = v => (v === '' || v === null || v === undefined) ? '' : String(v).replace('.', ',');
@@ -2878,6 +3397,7 @@
       return v;
     };
     p.pohlavi = f.pohlavi.value;
+    if (p.pohlavi === 'z' && f.stav.value) p.stav = f.stav.value; else delete p.stav;
     p.narozeni = f.narozeni.value;
     if (p.narozeni && J.vek(p.narozeni) === null) chyby.push('Datum narození není platné.');
     p.vyska = rozsah('vyska', 100, 250, 'Výška');
@@ -2953,7 +3473,7 @@
       el.appendChild(h('p', { class: 'warn-text', style: { marginTop: '10px', fontSize: '.86rem' }, text: 'Cílová hmotnost neodpovídá cíli energie (hubnutí × přibírání).' }));
     }
     for (const t of c.poznamky) el.appendChild(h('p', { class: 'warn-text', style: { marginTop: '6px', fontSize: '.86rem' }, text: t }));
-    el.appendChild(h('p', { class: 'slabe', style: { marginTop: '10px' }, text: 'Výpočet: bazální metabolismus podle Mifflina–St Jeora × úroveň aktivity (PAL); 1 kg tukové tkáně ≈ 7 700 kcal. Je to odhad – sleduj vývoj hmotnosti a cíl podle něj uprav.' }));
+    el.appendChild(h('p', { class: 'slabe', style: { marginTop: '10px' }, text: 'Výpočet: bazální metabolismus podle Mifflina–St Jeora × úroveň aktivity (PAL); 1 kg tukové tkáně ≈ ' + en(7700) + '. Je to odhad – sleduj vývoj hmotnosti a cíl podle něj uprav.' }));
   }
   function vykresliVahy() {
     const ul = $('#seznamVah');
@@ -3013,14 +3533,19 @@
       h('p', { text: 'Na druhém zařízení otevři Deník jídla → Data → 📷 Přijmout přes QR a namiř kameru na tento kód. Nemusí chytit každý snímek – přenos se dokončí sám.' }),
       h('div', { class: 'qr-ram' }, platno), info,
       h('div', { class: 'radek', style: { justifyContent: 'center', marginTop: '8px' } }, rychlost, hustota));
-    const v = otevriVrstvu({ titulek: '📡 Odeslat přes QR', telo, sirka: '640px', priZavreni: () => { if (qrVysilac) qrVysilac.zastav(); qrVysilac = null; } });
+    let beh = 0;   // pořadí spuštění: starší (nebo po zavření dokončené) spuštění se hned zastaví
+    const v = otevriVrstvu({ titulek: '📡 Odeslat přes QR', telo, sirka: '640px', priZavreni: () => { beh++; if (qrVysilac) qrVysilac.zastav(); qrVysilac = null; } });
     const rozmer = () => Math.max(200, Math.min(telo.clientWidth - 8, innerHeight * 0.62));
     const spust = async () => {
+      const moje = ++beh;
       if (qrVysilac) qrVysilac.zastav();
+      qrVysilac = null;
       try {
-        qrVysilac = await UI.odesli(text, { platno, rozmer, blok: +hustota.value, fps: +rychlost.value,
+        const vys = await UI.odesli(text, { platno, rozmer, blok: +hustota.value, fps: +rychlost.value,
           naSnimek: (i, K) => { info.textContent = 'Snímek ' + i + ' · dat ' + fc(qrVysilac ? qrVysilac.bajtu / 1024 : 0, 1) + ' kB v ' + J.pocet(K, 'bloku', 'blocích', 'blocích') + ' · přenos zhruba ' + fc(Math.ceil(K * 1.3 / +rychlost.value)) + ' s'; } });
-      } catch (e) { info.textContent = e.message; }
+        if (moje !== beh || !vrstvy.includes(v)) { vys.zastav(); return; }
+        qrVysilac = vys;
+      } catch (e) { if (moje === beh) info.textContent = e.message; }
     };
     window.DENIK._qrVysilac = () => qrVysilac;   // pro testy
     rychlost.addEventListener('change', () => { if (qrVysilac) qrVysilac.rychlost(+rychlost.value); });
@@ -3038,8 +3563,8 @@
       h('p', { class: 'slabe', text: 'Namiř kameru na animovaný QR kód na druhém zařízení (Data → 📡 Odeslat přes QR). Drž ji klidně, kód může zabírat i jen část obrazu.' }),
       h('div', { class: 'qr-ram' }, video),
       h('div', { class: 'qr-prubeh', role: 'progressbar', 'aria-label': 'Průběh přenosu', 'aria-valuemin': '0', 'aria-valuemax': '100', 'aria-valuenow': '0' }, pruh), info);
-    let prijem = null;
-    const v = otevriVrstvu({ titulek: '📷 Přijmout přes QR', telo, sirka: '640px', priZavreni: () => { if (prijem) prijem.zastav(); prijem = null; } });
+    let prijem = null, zavreno = false;
+    const v = otevriVrstvu({ titulek: '📷 Přijmout přes QR', telo, sirka: '640px', priZavreni: () => { zavreno = true; if (prijem) prijem.zastav(); prijem = null; } });
     const naStav = s => {
       if (!s.K) return;
       const pr = Math.min(100, Math.round(100 * s.mam / s.K));
@@ -3054,7 +3579,9 @@
     };
     window.DENIK._qrPrijem = { naStav, naHotovo };   // pro testy
     try {
-      prijem = await UI.prijmi({ video, naStav, naHotovo, naChybu: e => { info.textContent = e.message; } });
+      const p = await UI.prijmi({ video, naStav, naHotovo, naChybu: e => { info.textContent = e.message; }, zruseno: () => zavreno });
+      if (zavreno) { p.zastav(); return; }   // dialog se zavřel během dotazu na kameru
+      prijem = p;
       if (!info.textContent.startsWith('Přijato')) info.textContent = 'Hledám QR kód…';
     } catch (e) {
       info.textContent = e && e.name === 'NotAllowedError' ? 'Kamera není povolená – povol ji v nastavení prohlížeče.' : 'Kameru se nepodařilo spustit (' + (e && e.message || e) + ').';
@@ -3192,11 +3719,12 @@
   function nastav() {
     document.querySelectorAll('.tab').forEach(t => t.addEventListener('click', () => prepni(t.dataset.v)));
     $('.tabs').addEventListener('keydown', e => {
-      if (e.key !== 'ArrowRight' && e.key !== 'ArrowLeft') return;
+      if (!['ArrowRight', 'ArrowLeft', 'Home', 'End'].includes(e.key)) return;
       const t = [...document.querySelectorAll('.tab')];
       const i = t.indexOf(document.activeElement);
       if (i < 0) return;
-      const n = t[(i + (e.key === 'ArrowRight' ? 1 : t.length - 1)) % t.length];
+      e.preventDefault();
+      const n = e.key === 'Home' ? t[0] : e.key === 'End' ? t[t.length - 1] : t[(i + (e.key === 'ArrowRight' ? 1 : t.length - 1)) % t.length];
       n.focus(); prepni(n.dataset.v);
     });
     $('#denPred').addEventListener('click', () => { aktivniDen = J.posunDen(aktivniDen, -1); vykresliDenik(); });
@@ -3239,7 +3767,7 @@
     $('#denVyber').addEventListener('change', e => { if (J.zKlice(e.target.value)) { aktivniDen = e.target.value; vykresliDenik(); } });
     // Ctrl+Z = Vrátit poslední akci (mimo textová pole, kde patří k editaci textu)
     document.addEventListener('keydown', e => {
-      if (!(e.ctrlKey || e.metaKey) || e.altKey || e.shiftKey || !listaVraceni) return;
+      if (!(e.ctrlKey || e.metaKey) || e.altKey || e.shiftKey || !listaVraceni || vrstvy.length) return;   // s otevřenou vrstvou je lišta skrytá
       const z = e.key === 'z' || e.key === 'Z' || (e.code === 'KeyZ' && !/^[a-zA-Z]$/.test(e.key));
       if (!z || /^(INPUT|TEXTAREA)$/.test(document.activeElement.tagName) || document.querySelector('dialog[open]')) return;
       e.preventDefault();

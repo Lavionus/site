@@ -262,6 +262,7 @@
     };
     const s = await navigator.mediaDevices.getUserMedia(omezeni);
     if (moje !== seance || !jeOtevrena()) { s.getTracks().forEach(t => t.stop()); throw Object.assign(new Error('zavřeno'), { name: 'Zavreno' }); }
+    if (proud && proud !== s) proud.getTracks().forEach(t => t.stop());   // souběžné spuštění – starší proud nenechat běžet
     proud = s;
     video.srcObject = proud;
     await video.play().catch(() => {});

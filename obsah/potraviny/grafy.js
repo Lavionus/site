@@ -71,7 +71,7 @@
     data.forEach((d, i) => {
       const x = okraj.l + i * sirka;
       if (d.v > 0) {
-        const nad = volby.cil && d.v > volby.cil * 1.05;
+        const nad = volby.cil && !volby.cilMinimum && d.v > volby.cil * 1.05;   // cilMinimum: překročení je v pořádku (pohyb)
         const r = el('rect', { x: x + sirka * 0.15, y: vy(d.v), width: Math.max(1, sirka * 0.7), height: Math.max(0, vy(0) - vy(d.v)),
           rx: Math.min(3, sirka * 0.15), class: 'sloupec' + (nad ? ' nad' : '') }, svg);
         const t = el('title', {}, r); t.textContent = (d.popis || d.k) + ': ' + fmt(d.v) + ' ' + (volby.jednotka || '');

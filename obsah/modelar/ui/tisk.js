@@ -183,7 +183,9 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       // sítě až na požádání (dvojice v paměti je nepotřebují – kopie celé sítě je u velkých modelů drahá)
       const nactene = new Map();
       const site = { get: id => { if (!nactene.has(id)) nactene.set(id, T.svetovaSit(id)); return nactene.get(id); } };
-      const problemy = M.kontrolaTisku(M.app.dok, deska(), site, pametPrekryvu);
+      // „jen vybraná tělesa“: problémy jen těch (překryvy hledá kontrola mezi všemi, ukázat ty s výběrem)
+      const vsechny = M.kontrolaTisku(M.app.dok, deska(), site, pametPrekryvu), vyb = new Set(M.app.vyber);
+      const problemy = nast.jenVyber && vyb.size ? vsechny.filter(p => !p.ids || p.ids.some(id => vyb.has(id))) : vsechny;
       const chyby = T.info().chyby;
       const seznam = $('tiskProblemy');
       seznam.innerHTML = (problemy.length || chyby.length) ? problemy.map((p, i) => `<li class="problem-${p.druh}">

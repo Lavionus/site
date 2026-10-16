@@ -110,7 +110,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
                   { krok: d.krok, des: d.cele ? 0 : 2, jednotka: d.jednotka || '', min: d.min, max: d.max })).join('')
             + (u.druh === 'skica' ? `<button type="button" class="tl siroke-tl" id="inspSkica">✏️ Upravit skicu</button>` : '')
             + (M.DILY && M.DILY[u.druh] && M.DILY[u.druh].tip ? `<p class="dil-tip">💡 ${esc(M.DILY[u.druh].tip)}</p>` : '')
-            + (u.vazba && M.protikusy(M.app.dok, u).length ? `<p class="vazba-info">🔗 Propojeno s: ${M.protikusy(M.app.dok, u).map(x => esc(x.nazev) + (x.zamceno ? ' (🔒 zamčený – nemění se)' : '')).join(', ')} – závit / rozměry se mění spolu.
+            + (u.vazba && M.protikusy(M.app.dok, u).length ? `<p class="vazba-info">🔗 Propojeno s: ${M.protikusy(M.app.dok, u).map(x => esc(x.nazev) + (x.zamceno ? ' (🔒 zamčený – nemění se)' : '')).join(', ')} – ${['krabice', 'vicko'].includes(u.druh) ? 'rozměry, stěna a zaoblení' : 'závit'} se mění spolu.
                 <button type="button" class="odkaz-tl" id="inspRozpojit">Zrušit propojení</button></p>` : '')
             + (u.druh === 'kolo' && u.param.druh !== 'vnitrni' ? `<button type="button" class="tl siroke-tl" id="inspProtikolo" title="Druhé kolo ve správné osové vzdálenosti, natočené tak, aby zuby zapadly">⚙ Přidat protikolo…</button>` : '')
             + `</div>`;
@@ -375,7 +375,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       // skica: nová obálka a střed, počátek skici ve světě zůstane; propojené díly (šroub ↔ matice,
       // krabička ↔ víko, i uvnitř skupin) dostanou stejnou změnu sdíleného parametru v jednom kroku historie
       if (M.app.uprava && M.zrusNahledy) M.zrusNahledy();
-      const r = M.dokSeZmenouParametru(M.app.dok, M.app.vyber, klic, v);
+      const r = M.dokSeZmenouParametru(M.app.dok, M.app.vyber, klic, v, M.scena && M.scena.deska ? { sirka: M.scena.deska.sirka, hloubka: M.scena.deska.hloubka } : null);
       if (r.dok !== M.app.dok) M.zmenDokument(r.dok, r.propojenych ? 'Tvar (i propojený díl)' : 'Tvar');
     }
     /** Odvozené pole tvaru (vnitřní průměr, průměr průřezu…): zapíše rozměr i parametry, spodek stojí. */

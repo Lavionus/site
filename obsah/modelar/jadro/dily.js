@@ -746,7 +746,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
         const rez = s(new CrossSection([b]));
         if (p.vzor === 'primy') return s.konec(s(rez.extrude(p.vyska)));
         // dělení po výšce podle zkroucení, ale v rozpočtu trojúhelníků (tenký vroubek s 300 drážkami by počítal minuty)
-        const zk = p.vyska * Math.tan(p.uhel * ST) / R / ST, del = Math.max(2, Math.min(Math.ceil(Math.abs(zk) / 2) + 1, Math.floor(MAX_TROJ_DILU / ((p.vzor === 'krizovy' ? 10 : 4) * N))));
+        const zk = p.vyska * Math.tan(p.uhel * ST) / R / ST, del = Math.max(2, Math.min(Math.ceil(Math.abs(zk) / 2) + 1, Math.floor(MAX_TROJ_DILU / ((p.vzor === 'krizovy' ? 20 : 4) * N))));
         const a = s(rez.extrude(p.vyska, del, zk));
         if (p.vzor === 'sikmy') return s.konec(a);
         // druhé vytažení o chlup delší a s jiným dělením: vrcholy obou těles se nepotkají (jinak by průnik měl
@@ -1021,8 +1021,9 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
   /** Sada šroub + matice: parametry obou dílů a posun matice vedle šroubu (mezera 3 mm, aspoň půl průměru). */
   function rozlozeniSady(p) {
     const v = Math.max(0, p.vule || 0);
-    const sroub = { velikost: p.velikost, prumer: p.prumer, stoupani: p.stoupani, delka: p.delka, hlava: p.hlava, vule: 0.8 * v, segmentu: p.segmentu };
-    const matice = { velikost: p.velikost, prumer: p.prumer, stoupani: p.stoupani, vyska: 0, vule: 0.6 * v, srazeni: true, segmentu: p.segmentu };
+    const r4 = x => Math.round(x * 1e4) / 1e4;
+    const sroub = { velikost: p.velikost, prumer: p.prumer, stoupani: p.stoupani, delka: p.delka, hlava: p.hlava, vule: r4(0.8 * v), segmentu: p.segmentu };
+    const matice = { velikost: p.velikost, prumer: p.prumer, stoupani: p.stoupani, vyska: 0, vule: r4(0.6 * v), srazeni: true, segmentu: p.segmentu };
     const a = M.DILY.sroub.obalka(sroub), b = M.DILY.matice.obalka(matice), z = zavit(p);
     return { sroub, matice, dx: a.max[0] + Math.max(3, z.d / 2) - b.min[0] };
   }

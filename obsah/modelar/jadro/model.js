@@ -628,8 +628,9 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     if (!d) return null;
     // výška nebo dno krabičky: lem víka nesmí být hlubší než dutina (jinak víko nedosedne)
     if (u.druh === 'vicko' && zdroj && zdroj.druh === 'krabice' && (klic === 'sz' || klic === 'dno')) {
-      const p = Object.assign({}, zdroj.param, { [klic]: v });
-      return { lem: Math.round(M.omez(0.8 * (p.sz - p.dno), 1, 4) * 100) / 100 };
+      const p = Object.assign({}, zdroj.param, { [klic]: v }), max = Math.round(M.omez(0.8 * (p.sz - p.dno), 1, 4) * 100) / 100;
+      // ručně nastavený mělčí lem nechat; hlubší než dutina zmenšit, po zvýšení krabičky vrátit nejvýš na 4 mm
+      return { lem: u.param.lem > max ? max : u.param.lem < max && u.param.lem >= 4 - 1e-9 ? u.param.lem : Math.min(max, Math.max(u.param.lem, Math.min(4, max))) };
     }
     if (klic === 'sloupky' && u.druh === 'vicko') return { typ: v ? 'sroubky' : 'nasazovaci' };
     if (klic === 'typ' && u.druh === 'krabice') return { sloupky: v === 'sroubky' };
@@ -643,7 +644,10 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     const vyb = new Set(ids), vse = vsechnyUzly(dok.uzly);
     const zdroje = vse.filter(u => vyb.has(u.id) && u.vazba), vazby = new Set(zdroje.map(u => u.vazba));
     if (!vazby.size) return [];
-    return vse.filter(u => u.vazba && vazby.has(u.vazba) && !vyb.has(u.id) && !u.zamceno)
+    const zamcene = new Set();
+    const sberZamcene = (uzly, z) => { for (const u of uzly) { if (z || u.zamceno) zamcene.add(u.id); if (u.deti) sberZamcene(u.deti, z || u.zamceno); } };
+    sberZamcene(dok.uzly, false);
+    return vse.filter(u => u.vazba && vazby.has(u.vazba) && !vyb.has(u.id) && !zamcene.has(u.id))
       .map(u => [u, zmenaProtikusu(u, klic, v, zdroje.find(z => z.vazba === u.vazba))]).filter(x => x[1]);
   };
   /** Protikusy uzlu (stejná vazba, kdekoli ve stromu). */
@@ -663,7 +667,13 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     const zaklad = [0, 1, 2].map(i => Math.max(0.01, Math.round((ob.max[i] - ob.min[i]) * 1e6) / 1e6));
     const k = [0, 1, 2].map(i => g.rozmer[i] / g.zaklad[i]), zr = g.zrcadlo.map(z => z ? -1 : 1);
     const d = new THREE.Vector3(...c.map((x, i) => x * k[i] * zr[i])).applyQuaternion(M.quatUzlu(g));
-    return M.normalizujUzel(Object.assign({}, g, {
+    // přesná úprava skupiny (zaoblení, skořepina) má body hran a ploch v souřadnicích skupiny: posunout s dětmi
+    const posun = b => b ? b.map((x, i) => Math.round((x - c[i]) * 1e6) / 1e6) : b;
+    const occt = g.occt && g.occt.operace !== 'odsazeni' ? Object.assign({}, g.occt, {
+      hrany: (g.occt.hrany || []).map(h => Object.assign({}, h, { stred: posun(h.stred) }, h.bod ? { bod: posun(h.bod) } : {}, h.konce ? { konce: h.konce.map(posun) } : {})),
+      plochy: (g.occt.plochy || []).map(h => Object.assign({}, h, { stred: posun(h.stred) })),
+    }) : g.occt;
+    return M.normalizujUzel(Object.assign({}, g, { occt,
       deti: deti.map(x => Object.assign({}, x, { poloha: x.poloha.map((p, i) => Math.round((p - c[i]) * 1e6) / 1e6) })),
       zaklad, rozmer: zaklad.map((z, i) => z * k[i]), poloha: g.poloha.map((p, i) => Math.round((p + d.getComponent(i)) * 1e6) / 1e6),
     }));
@@ -671,60 +681,96 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
   /** Úprava uzlu id kdekoli ve stromu (zmena = objekt nebo funkce uzel → změny); skupiny na cestě se přestaví. */
   M.upravVnorene = function (dok, id, zmena) {
     let zmeneno = false;
-    const projdi = uzly => uzly.map(u => {
-      if (u.id === id) {
-        const z = typeof zmena === 'function' ? zmena(u) : zmena;
-        if (!z) return u;
+    const projdi = (uzly, veSkupine) => {
+      const i = uzly.findIndex(u => u.id === id);
+      if (i >= 0) {
+        const u = uzly[i], z = typeof zmena === 'function' ? zmena(u) : zmena;
+        if (!z) return uzly;
         const n = M.normalizujUzel(Object.assign({}, u, z, { id: u.id }));
-        if (JSON.stringify(n) === JSON.stringify(u)) return u;
+        if (JSON.stringify(n) === JSON.stringify(u)) return uzly;
         zmeneno = true;
-        return n;
+        const out = uzly.slice(); out[i] = n;
+        return veSkupine ? posunDiryNaStenach(out, u, n) : out;
       }
-      if (!u.deti) return u;
-      const deti = projdi(u.deti);
-      return deti.every((d, i) => d === u.deti[i]) ? u : M.prestavSkupinu(u, deti);
-    });
-    const uzly = projdi(dok.uzly);
+      return uzly.map(u => {
+        if (!u.deti) return u;
+        const deti = projdi(u.deti, true);
+        return deti === u.deti || deti.every((d, k) => d === u.deti[k]) ? u : M.prestavSkupinu(u, deti);
+      });
+    };
+    /** Díry ve skupině, které prořezávají stěnu změněného dílu (přes jeho stěnu kolmou k ose), jdou se stěnou:
+        krabička se prodlouží o 20 mm → otvor pro konektor ve stěně se posune o 10 mm a dál ji prořízne. */
+    function posunDiryNaStenach(uzly, stary, novy) {
+      const a = M.obalkaUzlu(stary), b = M.obalkaUzlu(novy), tol = 1e-6;
+      return uzly.map(s => {
+        if (s === novy || s.role !== 'dira') return s;
+        const o = M.obalkaUzlu(s), posun = [0, 0, 0];
+        // díra musí ležet u dílu (překryv obálek)
+        if (![0, 1, 2].every(k => o.min[k] < a.max[k] + tol && o.max[k] > a.min[k] - tol)) return s;
+        for (let k = 0; k < 3; k++) {
+          const pres = x => o.min[k] < x - tol && o.max[k] > x + tol;          // díra přes rovinu stěny
+          const nMin = pres(a.min[k]), nMax = pres(a.max[k]);
+          if (nMin && !nMax) posun[k] = b.min[k] - a.min[k];
+          else if (nMax && !nMin) posun[k] = b.max[k] - a.max[k];
+        }
+        if (posun.every(x => Math.abs(x) < 1e-9)) return s;
+        return M.normalizujUzel(Object.assign({}, s, { poloha: s.poloha.map((p, k) => Math.round((p + posun[k]) * 1e6) / 1e6) }));
+      });
+    }
+    const uzly = projdi(dok.uzly, false);
     return zmeneno ? Object.assign({}, dok, { uzly }) : dok;
   };
   /** Změna parametru klic = v u nezamčených uzlů ids a stejná změna sdíleného parametru u jejich protikusů
       (i ve skupinách); protikus nejvyšší úrovně, který by pak zasahoval do vybraného dílu, se odsune vedle
       (mezera 5 mm, jako při vložení). Vrací {dok, propojenych}. */
-  M.dokSeZmenouParametru = function (dok, ids, klic, v) {
+  M.dokSeZmenouParametru = function (dok, ids, klic, v, deska = null) {
     const zmen = (u, z) => M.maPrirozene(u) ? M.upravPrirozeny(u, z) : { param: Object.assign({}, u.param, z) };
     const volne = ids.filter(id => { const u = M.najdiVeStromu(dok, id); return u && !u.zamceno; });
-    // přepnutí na vlastní průměr závitu: převzít průměr a stoupání dosavadní normy (závit se nezmění)
-    let zmena = { [klic]: v };
-    const prvni = volne.length && M.najdiVeStromu(dok, volne[0]);
-    if (klic === 'velikost' && v === 'vlastni' && prvni && prvni.param.velikost !== 'vlastni' && M.udajeZavitu) {
-      const z = M.udajeZavitu(prvni.param);
-      zmena = { velikost: 'vlastni', prumer: z.d, stoupani: z.p };
-    }
+    // přepnutí na vlastní průměr závitu: každý díl převezme průměr a stoupání své dosavadní normy (závit se nezmění)
+    const naVlastni = klic === 'velikost' && v === 'vlastni' && M.udajeZavitu;
+    const zmenaPro = u => {
+      if (naVlastni && u.param && u.param.velikost !== 'vlastni' && 'prumer' in u.param) { const z = M.udajeZavitu(u.param); return { velikost: 'vlastni', prumer: z.d, stoupani: z.p }; }
+      return { [klic]: v };
+    };
     const prot = new Map();
-    for (const [k, h] of Object.entries(zmena))
-      for (const [u, z] of M.propojeneZmeny(dok, volne, k, h)) prot.set(u.id, [u, Object.assign((prot.get(u.id) || [u, {}])[1], z)]);
-    let d = M.upravUzly(dok, volne, u => zmen(u, zmena));
-    for (const [u, z] of prot.values()) d = M.upravVnorene(d, u.id, x => zmen(x, z));
-    // odsunout protikus (nebo skupinu, ve které je), který se teď s vybraným dílem překrývá (šroub M24 vedle matice…)
+    for (const [u, z] of M.propojeneZmeny(dok, volne, klic, v)) prot.set(u.id, [u, naVlastni ? zmenaPro(u) : z]);
+    // překryvy před změnou (sestavený pár – matice na šroubu, víko na krabičce – se nemá rozhodit)
     const vrchol = (dd, id) => dd.uzly.find(x => x.id === id || (x.deti && vsechnyUzly(x.deti).some(y => y.id === id)));
-    const posunute = new Set();
+    const prekryv3 = (a, b) => [0, 1, 2].every(i => a.min[i] < b.max[i] - 1e-6 && a.max[i] > b.min[i] + 1e-6);
+    const predtim = new Set();
+    for (const [u] of prot.values()) for (const id of volne) {
+      const a = vrchol(dok, id), b = vrchol(dok, u.id);
+      if (a && b && a.id !== b.id && prekryv3(M.obalkaUzlu(a), M.obalkaUzlu(b))) predtim.add(b.id);
+    }
+    let d = M.upravUzly(dok, volne, u => zmen(u, zmenaPro(u)));
+    let zmenenych = 0;
+    for (const [u, z] of prot.values()) { const d2 = M.upravVnorene(d, u.id, x => zmen(x, z)); if (d2 !== d) zmenenych++; d = d2; }
+    // odsunout protikus (nebo jeho skupinu), se kterým se vybraný díl teď nově překrývá (šroub M24 vedle matice…)
+    const posunute = new Set(), vybraneVrcholy = new Set(volne.map(id => (vrchol(d, id) || {}).id));
     for (const [u] of prot.values()) {
       const top = vrchol(d, u.id);
-      if (!top || posunute.has(top.id) || !M.posunUzly) continue;
+      if (!top || posunute.has(top.id) || predtim.has(top.id) || vybraneVrcholy.has(top.id) || !M.posunUzly) continue;
       for (const id of volne) {
         const su = vrchol(d, id);
         if (!su || su.id === top.id) continue;
         const a = M.obalkaUzlu(su), b = M.obalkaUzlu(top);
-        const prekryv = a.min[0] < b.max[0] && a.max[0] > b.min[0] && a.min[1] < b.max[1] && a.max[1] > b.min[1];
-        if (!prekryv) continue;
+        if (!prekryv3(a, b)) continue;
+        // vedle vybraného dílu: nejdřív na stranu, na které byl (v X), pak druhou, pak před / za (v Y) –
+        // první možnost, kde zůstane celý na desce; nevejde-li se nikde, na původní stranu
         const vpravo = (b.min[0] + b.max[0]) >= (a.min[0] + a.max[0]);
-        const dx = vpravo ? a.max[0] + 5 - b.min[0] : a.min[0] - 5 - b.max[0];
-        d = M.posunUzly(d, [top.id], [dx, 0, 0]);
+        const vzadu = (b.min[1] + b.max[1]) >= (a.min[1] + a.max[1]);
+        const xP = [a.max[0] + 5 - b.min[0], 0, 0], xL = [a.min[0] - 5 - b.max[0], 0, 0];
+        const yP = [0, a.max[1] + 5 - b.min[1], 0], yL = [0, a.min[1] - 5 - b.max[1], 0];
+        const moznosti = vpravo ? [xP, xL] : [xL, xP];
+        moznosti.push(...(vzadu ? [yP, yL] : [yL, yP]));
+        const naDesce = v => !deska || (b.min[0] + v[0] >= -deska.sirka / 2 - 1e-6 && b.max[0] + v[0] <= deska.sirka / 2 + 1e-6
+          && b.min[1] + v[1] >= -deska.hloubka / 2 - 1e-6 && b.max[1] + v[1] <= deska.hloubka / 2 + 1e-6);
+        d = M.posunUzly(d, [top.id], moznosti.find(naDesce) || moznosti[0]);
         posunute.add(top.id);
         break;
       }
     }
-    return { dok: d, propojenych: prot.size };
+    return { dok: d, propojenych: zmenenych };
   };
   M.najdiVeStromu = (dok, id) => vsechnyUzly(dok.uzly).find(u => u.id === id) || null;
 

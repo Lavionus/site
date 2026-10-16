@@ -188,7 +188,11 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
   /** Název kopie: automatický „Kvádr 3“ dostane další volné číslo, vlastní název zůstane. */
   M.nazevKopie = function (dok, u) {
     const t = M.popisDruhu(u.druh);
-    return new RegExp('^' + t.nazev.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ' \\d+$').test(u.nazev) ? M.dalsiNazev(dok, u.druh) : u.nazev;
+    if (new RegExp('^' + t.nazev.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + ' \\d+$').test(u.nazev)) return M.dalsiNazev(dok, u.druh);
+    // vlastní název: kopie „Krabička (2)“, ať se v seznamu dají rozlišit
+    const jmena = new Set(dok.uzly.map(x => x.nazev)), zaklad = u.nazev.replace(/ \(\d+\)$/, '');
+    if (!jmena.has(u.nazev)) return u.nazev;
+    for (let i = 2; ; i++) if (!jmena.has(`${zaklad} (${i})`)) return `${zaklad} (${i})`;
   };
 
   /** Kopie uzlů na stejném místě (přidají se na konec seznamu). Vrací {dok, kopie}. */

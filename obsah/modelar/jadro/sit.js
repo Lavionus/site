@@ -228,6 +228,9 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       for (let a = i0; a <= i1; a++) for (let b = j0; b <= j1; b++) bunky[a * G + b].push(i);
     }
     return q => {
+      // bod daleko vlevo od sítě: posunout po paprsku k obálce (před ní žádný trojúhelník není, odklon by jinak
+      // vyjel z buňky)
+      if (q[0] < x0 - okraj) { const t = x0 - okraj - q[0]; q = [x0 - okraj, q[1] + SMER_PAPRSKU[1] * t, q[2] + SMER_PAPRSKU[2] * t]; }
       if (q[1] < y0 || q[1] > y1 || q[2] < z0 || q[2] > z1 || q[0] > x1 + okraj) return false;
       const sez = bunky[bunka(q[1], y0, sy) * G + bunka(q[2], z0, sz)];
       let n = 0;

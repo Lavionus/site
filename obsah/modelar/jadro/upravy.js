@@ -198,12 +198,33 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       const f = usek[j] > 0 ? (s - L[j]) / usek[j] : 0, a = b[j], c = b[j + 1];
       return [a[0] + (c[0] - a[0]) * f, a[1] + (c[1] - a[1]) * f];
     };
-    // tečna z bodů kousek před a za (u kruhu z mnohoúhelníku přesná – úsečka u vrcholu by dala chybu ± půl úseku)
-    const e = Math.min(celkem / 4, Math.max(...usek) * 0.75);
+    // tečna: u hladké křivky (kruh z mnohoúhelníku, mírné zlomy) z bodů kousek před a za – úsečka u vrcholu by dala
+    // chybu ± půl úseku; když je v okolí ostrý roh (obdélník, lomená čára), směr úseku, na kterém bod leží
+    const smer = j => Math.atan2(b[j + 1][1] - b[j][1], b[j + 1][0] - b[j][0]);
+    const usekV = s => { let j = 0; while (j < usek.length - 1 && L[j + 1] <= s + 1e-9) j++; while (j < usek.length - 1 && usek[j] < 1e-12) j++; return j; };
+    const ns = usek.length;
+    // zlom ve vrcholu k (mezi úsekem k − 1 a k); u uzavřené křivky i ve vrcholu 0
+    const zlomV = k => {
+      if (!uzavrena && (k <= 0 || k >= ns)) return 0;
+      const a = smer((k - 1 + ns) % ns), c = smer(k % ns);
+      return Math.abs(Math.atan2(Math.sin(c - a), Math.cos(c - a)));
+    };
     for (let i = 0; i < n; i++) {
-      const s = Math.min(celkem, i * krok), p = bod(s);
-      const p0 = bod(uzavrena ? s - e : Math.max(0, s - e)), p1 = bod(uzavrena ? s + e : Math.min(celkem, s + e));
-      out.push({ x: p[0], y: p[1], uhel: Math.atan2(p1[1] - p0[1], p1[0] - p0[0]) });
+      const s = Math.min(celkem, i * krok), p = bod(s), j = usekV(s), e = 0.75 * Math.max(usek[j], 1e-9);
+      // ostrý roh v okně ±e (u uzavřené křivky i přes začátek)?
+      let ostry = false;
+      for (let k = 0; k <= ns && !ostry; k++) {
+        let dd = Math.abs(L[k] - s);
+        if (uzavrena) dd = Math.min(dd, celkem - dd);
+        if (dd < e && zlomV(k) > 15 * Math.PI / 180) ostry = true;
+      }
+      let uhel;
+      if (ostry) uhel = smer(j);
+      else {
+        const p0 = bod(uzavrena ? s - e : Math.max(0, s - e)), p1 = bod(uzavrena ? s + e : Math.min(celkem, s + e));
+        uhel = Math.atan2(p1[1] - p0[1], p1[0] - p0[0]);
+      }
+      out.push({ x: p[0], y: p[1], uhel });
     }
     return out;
   };

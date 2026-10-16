@@ -228,8 +228,12 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
   // ------------------------------------------------------------ skupiny
   /** Ctrl+G: seskupí vybraná (aspoň 2 nezamčená) tělesa a vybere skupinu. */
   M.seskupVybrane = function () {
+    // šroubovice (či jiné těleso) celé uvnitř díry téže skupiny: díra by ji odečetla – poradit postup
+    const vyb = M.vybraneVolne(), diry = vyb.filter(u => u.role === 'dira').map(u => M.obalkaUzlu(u));
+    const pohlcene = vyb.filter(u => u.role !== 'dira' && diry.some(o => { const a = M.obalkaUzlu(u); return [0, 1, 2].every(k => a.min[k] >= o.min[k] - 0.05 && a.max[k] <= o.max[k] + 0.05); }));
     const r = M.seskupUzly(M.app.dok, M.app.vyber);
     if (!r.id) return null;
+    if (pohlcene.length && typeof Dialog !== 'undefined') Dialog.info(`${pohlcene.map(u => '„' + u.nazev + '“').join(', ')} leží celé v díře téže skupiny – díra ho odečte. Šroubovici (vložku) dej do díry až potom: nejdřív seskup těleso s dírou, pak k výsledku přidej šroubovici a seskup znovu (Ctrl+Z vrátí).`);
     M.zmenDokument(r.dok, 'Seskupit');
     M.nastavVyber([r.id]);
     return r.id;

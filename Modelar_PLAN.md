@@ -927,3 +927,8 @@ server i file://, DPI 1/2, šířky 420–1920), jen hlásili; opravy jsem děla
   předvolby s pamětí v soukromém okně (`modelar_vule`, `modelar_kvalitaNovych`), přístupnost (procenta mimo
   živou oblast, role img, názvy), nápověda Postupy doplněná.
 - Testy: `modelar_stl_svar.js`, `modelar_ui_revize7.py`; úpravy starších testů (počty dlaždic, klíče, segmenty 192).
+- **Druhé kolo revize** (kontrola oprav): přestavění skupiny posouvá i body hran/ploch OCCT, odsunutí protikusu jen
+  při nově vzniklém překryvu (sestavený pár zůstane), tečna pole přes ostré rohy, vlastní průměr podle každého dílu,
+  index bodu v síti i daleko v −X; úchyty změny velikosti u krabičky/víka mění parametry, úchyty ořezané plátnem,
+  kontrola tisku „jen výběr“ filtruje i problémy, zaměření vložené skládačky, rada při seskupení tělesa ležícího
+  celého v díře, stavový řádek na mobilu na jeden řádek, kopie s vlastním názvem „(2)“.

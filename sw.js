@@ -5,7 +5,7 @@
 /* Při větší aktualizaci webu zvyš číslo verze — stará cache se u návštěvníků
    smaže a vše se stáhne čerstvé (jinak SWR ukáže novou verzi až na druhé načtení). */
 const PREFIX = 'webapp-';
-const CACHE = PREFIX + 'v385';
+const CACHE = PREFIX + 'v387';
 const JADRO = [
   './',
   './index.html',
@@ -221,6 +221,7 @@ const MODELAR = [
    skenování bez sítě, dotáhne se celá sada na pozadí při prvním otevření stránky. */
 const POTRAVINY = [
   './obsah/potraviny.html',
+  './obsah/potraviny/start.js',
   './obsah/potraviny/jadro.js',
   './obsah/potraviny/aplikace.js',
   './obsah/potraviny/grafy.js',
@@ -233,6 +234,7 @@ const POTRAVINY = [
   './obsah/potraviny/data/suroviny.json',
   './obsah/potraviny/data/ciselniky.json',
   './obsah/potraviny/data/doplnky.json',
+  './obsah/potraviny/data/pohyby.json',
   './obsah/potraviny/data/slozeni.json',
   './obsah/lib/zxing/zxing-reader.js',
   './obsah/lib/zxing/zxing_reader.wasm',

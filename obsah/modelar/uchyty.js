@@ -359,8 +359,28 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
           lok = p.applyMatrix4(tah.inverze).toArray();
         }
         const z = M.zmenaVelikosti(tah.u0, tah.uchyt, lok, { krok: krok(e), uniform: e.shiftKey });
-        dok = M.upravUzly(tah.zaklad, [tah.u0.id], z);
-        text = z.rozmer.map(x => M.mm(x, 2)).join(' × ') + ' mm';
+        const dd = M.DILY && M.DILY[tah.u0.druh], u0 = tah.u0;
+        if (dd && dd.rozmerKlice && u0.rozmer.every((r, i) => Math.abs(r - u0.zaklad[i]) < 1e-6 * u0.zaklad[i])) {
+          // díl, jehož rozměry dávají parametry (krabička, víko): úchyt mění parametry – stěny a díry se
+          // nedeformují, změna platí i pro propojený protikus; osa bez parametru (výška víka) se nemění
+          const cil = M.obalkaUzlu(M.normalizujUzel(Object.assign({}, u0, z))), deska = { sirka: S.deska.sirka, hloubka: S.deska.hloubka };
+          let d = tah.zaklad;
+          dd.rozmerKlice.forEach((k, i) => {
+            if (!k || Math.abs(z.rozmer[i] - u0.rozmer[i]) < 1e-9) return;
+            const q = dd.parametry.find(x => x.klic === k);
+            d = M.dokSeZmenouParametru(d, [u0.id], k, Math.round(M.omez(z.rozmer[i], q.min, q.max) * 1e4) / 1e4, deska).dok;
+          });
+          // střed jako u natažení (protější stěna zůstane na místě), spodek na místě
+          const ob = M.obalkaUzlu(M.najdiUzel(d, u0.id));
+          const posun = [(cil.min[0] + cil.max[0] - ob.min[0] - ob.max[0]) / 2, (cil.min[1] + cil.max[1] - ob.min[1] - ob.max[1]) / 2, 0];
+          if (Math.abs(posun[0]) > 1e-9 || Math.abs(posun[1]) > 1e-9) d = M.posunUzly(d, [u0.id], posun);
+          dok = d;
+          const n = M.najdiUzel(d, u0.id);
+          text = n.rozmer.map(x => M.mm(x, 2)).join(' × ') + ' mm';
+        } else {
+          dok = M.upravUzly(tah.zaklad, [tah.u0.id], z);
+          text = z.rozmer.map(x => M.mm(x, 2)).join(' × ') + ' mm';
+        }
       } else if (tah.druh === 'vyska') {
         const t = parametrNaPrimce(px, py, tah.bod, tah.n);
         if (t == null || tah.t0 == null) return;

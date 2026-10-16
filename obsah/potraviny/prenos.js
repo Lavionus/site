@@ -289,7 +289,9 @@
       if (proud) { proud.getTracks().forEach(t => t.stop()); proud = null; }
       if (prvky.video) prvky.video.srcObject = null;
     }
+    if (prvky.zruseno && prvky.zruseno()) return { zastav() {} };
     proud = await navigator.mediaDevices.getUserMedia({ audio: false, video: { facingMode: { ideal: 'environment' }, width: { ideal: 1280 }, height: { ideal: 720 } } });
+    if (prvky.zruseno && prvky.zruseno()) bezi = false;
     if (!bezi) { proud.getTracks().forEach(t => t.stop()); return { zastav() {} }; }
     prvky.video.srcObject = proud;
     await prvky.video.play().catch(() => {});
