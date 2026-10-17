@@ -206,9 +206,10 @@
     return qrSlib;
   }
   // QR text → plátno (bílé okraje 4 moduly, ostré pixely)
-  function kresliQr(platno, text, rozmer) {
-    const q = window.qrcode(0, 'L');
-    q.addData(text, 'Alphanumeric');
+  // rezim: 'Alphanumeric' (base45 přenosu) nebo 'Byte' (odkaz); oprava chyb L, u krátkých odkazů M (čte se spolehlivěji)
+  function kresliQr(platno, text, rozmer, rezim) {
+    const q = window.qrcode(0, rezim === 'Byte' && text.length < 700 ? 'M' : 'L');
+    q.addData(text, rezim || 'Alphanumeric');
     q.make();
     const n = q.getModuleCount(), okraj = 4, celkem = n + 2 * okraj;
     const modul = Math.max(1, Math.floor(rozmer / celkem));
@@ -252,6 +253,8 @@
     const platno = document.createElement('canvas');
     async function zpracuj(texty) {
       for (const t of texty) {
+        // jednoduchý QR s odkazem na sdílený recept / uložené jídlo
+        if (prvky.naOdkaz && /#sdileni=/.test(t)) { bezi = false; zastav(); prvky.naOdkaz(t); return; }
         const v = prij.pridej(t);
         if (prvky.naStav) prvky.naStav(v);
         if (v.hotovo && v.data) {

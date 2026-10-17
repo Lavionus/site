@@ -11,7 +11,7 @@
   const G = window.DENIK_GRAFY;
   const KLIC = 'webapp_potraviny';
   // stránka, jádro a aplikace musí být ze stejné verze (při změně kódu zvýšit i v jadro.js a potraviny.html)
-  const VERZE_KODU = '2026-10-16p';
+  const VERZE_KODU = '2026-10-17b';
   if (!J || J.VERZE_KODU !== VERZE_KODU || window.DENIK_VERZE !== VERZE_KODU) {
     // jednou za minutu se soubory obnoví samy, jinak (smyčka) jen nabídka tlačítkem
     let nedavno = false;
@@ -784,7 +784,15 @@
     const cilKcal = c.kcal ? c.kcal + pohybKcal : null;
     const kruh = h('div', {});
     const bil = h('div', { class: 'bilance' });
-    el.appendChild(h('div', { class: 'souhrn-hlavni' }, kruh, bil));
+    // klepnutí na kruh nebo řádek živiny ukáže plovoucí okno: k čemu je a odkud ji dnes mám
+    const infoDne = { od: aktivniDen, doK: aktivniDen };
+    const klikaci = (kl, obsah, trida) => {
+      const v = soub.celkem[kl];
+      const b = h('button', { class: 'souhrn-ziv ' + (trida || ''), type: 'button', 'data-ziv': kl, title: 'Odkud to dnes mám a k čemu to je' }, ...[].concat(obsah));
+      pripojInfoZiviny(b, J.ZIV[kl], Number.isFinite(v) ? v : 0, stavZiviny(kl, Number.isFinite(v) ? v : 0, c), infoDne);
+      return b;
+    };
+    el.appendChild(h('div', { class: 'souhrn-hlavni' }, klikaci('kcal', kruh, 'kruh-tl'), bil));
     G.kruh(kruh, E(snedeno), cilKcal ? E(cilKcal) : cilKcal, { popis: 'Energie dne', jednotka: ej() });
     if (cilKcal) {
       const zbyva = cilKcal - snedeno;
@@ -802,10 +810,10 @@
     const radekMakra = (nazev, kl, barva) => {
       const v = soub.celkem[kl] || 0, cil = c.zivinyCil[kl];
       const pod = cil ? Math.min(100, 100 * v / cil) : 0;
-      return h('div', {},
+      return klikaci(kl, [
         h('div', { class: 'mbar-hl' }, h('span', { text: nazev }), h('span', { text: fc(v) + (cil ? ' / ' + fc(cil) : '') + ' g' })),
         h('div', { class: 'mbar' + (cil && v > cil * 1.1 ? ' nad' : ''), role: 'progressbar', 'aria-label': nazev, 'aria-valuenow': String(Math.round(v)), 'aria-valuemax': cil ? String(Math.round(cil)) : null },
-          h('i', { style: { width: pod + '%', background: barva } })));
+          h('i', { style: { width: pod + '%', background: barva } }))]);
     };
     pridat(mk, radekMakra('Bílkoviny', 'bilkoviny', 'var(--c-bil)'), radekMakra('Sacharidy', 'sacharidy', 'var(--c-sach)'), radekMakra('Tuky', 'tuk', 'var(--c-tuk)'));
     el.appendChild(mk);
@@ -814,8 +822,10 @@
       const hrana = max || min;
       const j = jed || 'g';
       const nad = max && v > max;
-      return h('div', { title: popis || (max ? 'nejvýše ' + fc(max, d || 0) + ' ' + j : min ? 'aspoň ' + fc(min, d || 0) + ' ' + j : null) }, h('span', { text: nazev }),
-        h('b', { class: nad ? (mekce ? 'warn-text' : 'chyba-text') : (min && v >= min ? 'ok-text' : ''), text: fc(v, d || 0) + (hrana ? ' / ' + fc(hrana, d || 0) : '') + ' ' + j }));
+      const b = klikaci(kl, [h('span', { text: nazev }),
+        h('b', { class: nad ? (mekce ? 'warn-text' : 'chyba-text') : (min && v >= min ? 'ok-text' : ''), text: fc(v, d || 0) + (hrana ? ' / ' + fc(hrana, d || 0) : '') + ' ' + j })]);
+      b.title = (popis || (max ? 'nejvýše ' + fc(max, d || 0) + ' ' + j : min ? 'aspoň ' + fc(min, d || 0) + ' ' + j : '')) + ' – klepni: odkud to dnes mám';
+      return b;
     };
     el.appendChild(h('div', { class: 'limity' },
       lim('Vláknina', 'vlaknina', null, c.zivinyCil.vlaknina),
@@ -2491,11 +2501,164 @@
     const c = c0.kcal && S.nastaveni.pohybKCili && s.pohyb ? { ...c0, kcal: c0.kcal + s.pohyb } : c0;
     const telo = h('div', { class: 'sheet-telo' });
     if (!s.pocet) telo.appendChild(h('p', { class: 'prazdny', text: 'V tento den zatím nic není zapsáno.' }));
-    else { telo.appendChild(tabulkaPlneni(s.celkem, c, s.pokryti, 'Za den')); telo.appendChild(kartaZdroju(k, k, true)); }
-    otevriVrstvu({ titulek: 'Živiny – ' + J.popisDne(k, J.datumKlic(new Date())), telo, sirka: '640px' });
+    else { telo.appendChild(prehledZivin(s.celkem, c, { od: k, doK: k })); telo.appendChild(kartaZdroju(k, k, true)); }
+    otevriVrstvu({ titulek: 'Živiny – ' + J.popisDne(k, J.datumKlic(new Date())), telo, sirka: '640px', priZavreni: zavriInfoZiviny });
   }
-  // tabulka hodnot s cíli; pokryti = podíl energie, u kterého je hodnota známá
-  function tabulkaPlneni(hodn, c, pokryti, nadpis) {
+  /* ----- přehled živin: barevné řádky s pruhem plnění, souhrn a okno „k čemu to je / odkud to mám“ ----- */
+  const SKUPINY_PREHLEDU = [
+    { s: 'zaklad', n: 'Energie a makroživiny', i: '⚡' },
+    { s: 'vitaminy', n: 'Vitaminy', i: '🍊' },
+    { s: 'mineraly', n: 'Minerální látky', i: '🧂' },
+    { s: 'tuky', n: 'Mastné kyseliny a cholesterol', i: '🫒' },
+    { s: 'ostatni', n: 'Ostatní', i: '💧' },
+  ];
+  const TEXT_STAVU = { ok: '✓ v pořádku', malo: 'málo', mmalo: 'velmi málo', moc: 'přes limit', ul: 'nad bezpečným maximem', nic: 'bez údajů', info: '' };
+  // stav živiny vůči cíli/limitu: ok | malo | mmalo | moc | ul | nic | info (bez cíle)
+  function stavZiviny(k, v, c) {
+    const cil = c.zivinyCil[k] || (k === 'kcal' ? c.kcal : null), limit = c.limity[k], ul = c.limity[k + '_ul'];
+    if (!Number.isFinite(v)) return { stav: (cil || limit) ? 'nic' : 'info', cil, limit, ul, p: null };
+    if (ul && v > ul) return { stav: 'ul', cil, limit, ul, p: cil ? 100 * v / cil : null };
+    if (limit && !cil) { const p = 100 * v / limit; return { stav: p > 100 ? 'moc' : 'ok', cil, limit, ul, p }; }
+    if (!cil) return { stav: 'info', cil, limit, ul, p: null };
+    const p = 100 * v / cil;
+    if (['kcal', 'tuk', 'sacharidy', 'bilkoviny'].includes(k) && p > 115) return { stav: 'moc', cil, limit, ul, p };
+    return { stav: p >= 70 ? 'ok' : p >= 30 ? 'malo' : 'mmalo', cil, limit, ul, p };
+  }
+  function prehledZivin(hodn, c, volby) {
+    volby = volby || {};
+    const vyskyt = volby.od ? J.vyskytZiviny(S, volby.od, volby.doK) : null;
+    const fmtV = (z, v) => z.k === 'kcal' ? en(v) : fc(v, z.d) + ' ' + z.j;
+    const pocty = { ok: 0, malo: 0, mmalo: 0, moc: 0, ul: 0, nic: 0 };
+    const sekce = [];
+    for (const sk of SKUPINY_PREHLEDU) {
+      if (sk.s !== 'zaklad' && !S.nastaveni.mikro) continue;
+      const radky = [];
+      for (const z of J.ZIVINY.filter(x => x.s === sk.s)) {
+        const v = hodn[z.k];
+        const st = stavZiviny(z.k, v, c);
+        if (!Number.isFinite(v) && !st.cil && !st.limit) continue;
+        if (pocty[st.stav] !== undefined) pocty[st.stav]++;
+        const ref = st.cil || st.limit;
+        const vy = vyskyt && vyskyt.n[z.k];
+        const detail = [st.cil ? 'cíl ' + fmtV(z, st.cil) : st.limit ? 'max. ' + fmtV(z, st.limit) : '',
+          st.ul && st.stav !== 'ul' ? 'bezpečné maximum ' + fmtV(z, st.ul) : '',
+          vy && vyskyt.celkem ? 'je v ' + vy.obsahuje + ' z ' + J.pocet(vyskyt.celkem, 'potraviny', 'potravin', 'potravin') + (vy.chybi ? ' · u ' + vy.chybi + ' údaj chybí' : '') : ''].filter(Boolean).join(' · ');
+        const pruh = h('div', { class: 'ziv-pruh', 'aria-hidden': 'true' });
+        if (ref && Number.isFinite(v)) {
+          const sirka = Math.min(100, 100 * v / ref);
+          const i = h('i', {}); i.style.width = sirka + '%';
+          pruh.appendChild(i);
+          if (st.limit && !st.cil) pruh.classList.add('limit');
+        }
+        const radek = h('button', { class: 'ziv-radek st-' + st.stav + (z.pod ? ' pod' : ''), type: 'button', 'data-ziv': z.k,
+          'aria-label': z.n.replace(/^z toho /, '') + ': ' + (Number.isFinite(v) ? fmtV(z, v) : 'bez údajů') + (st.p !== null ? ', ' + fc(st.p) + ' % ' + (st.cil ? 'cíle' : 'limitu') : '') + (TEXT_STAVU[st.stav] ? ', ' + TEXT_STAVU[st.stav] : '') + '. Klepni pro podrobnosti.' },
+        h('span', { class: 'ziv-hl' },
+          h('span', { class: 'ziv-nazev', text: z.n }),
+          h('span', { class: 'ziv-hodnota', text: Number.isFinite(v) ? fmtV(z, v) : '–' }),
+          h('span', { class: 'ziv-proc', text: st.p !== null ? fc(st.p) + ' %' : '' })),
+        pruh,
+        h('span', { class: 'ziv-detail' }, TEXT_STAVU[st.stav] ? h('span', { class: 'ziv-stav', text: TEXT_STAVU[st.stav] }) : null, detail ? h('span', { text: detail }) : null));
+        radky.push(radek);
+        pripojInfoZiviny(radek, z, v, st, volby);
+      }
+      if (radky.length) sekce.push(h('section', { class: 'ziv-sekce sk-' + sk.s },
+        h('h3', { class: 'ziv-sekce-hl' }, h('span', { 'aria-hidden': 'true', text: sk.i + ' ' }), sk.n), ...radky));
+    }
+    const chip = (n, t, tr) => n ? h('span', { class: 'ziv-chip ' + tr }, h('b', { text: String(n) }), ' ' + t) : null;
+    const souhrn = h('div', { class: 'ziv-souhrn' },
+      chip(pocty.ok, 'v pořádku', 'st-ok'), chip(pocty.malo + pocty.mmalo, 'málo', 'st-malo'), chip(pocty.moc + pocty.ul, 'přes limit', 'st-moc'), chip(pocty.nic, 'bez údajů', 'st-nic'));
+    return h('div', { class: 'ziv-prehled' }, souhrn,
+      h('p', { class: 'slabe', style: { margin: '0 0 8px' }, text: (jeDotykove() ? 'Klepni' : 'Najeď myší nebo klikni') + ' na živinu – uvidíš, k čemu je, odkud ji máš a kde jí je hodně.' }),
+      ...sekce,
+      h('p', { class: 'slabe', style: { marginTop: '10px' } }, 'Cíle: energie a makroživiny podle profilu; vitaminy a minerály podle referenčních hodnot ',
+        h('a', { href: 'https://multimedia.efsa.europa.eu/drvs/index.htm', target: '_blank', rel: 'noopener', text: 'EFSA' }),
+        ' pro dospělé; limity cukrů a nasycených tuků 10 % energie (WHO), sůl 5 g. „Málo“ = pod 70 % cíle, „velmi málo“ = pod 30 %. U výrobků bývají vitaminy a minerály uvedené jen zřídka – součet je pak podhodnocený. ' + J.UCINKY_ZDROJ));
+  }
+  function jeDotykove() { return !!(window.matchMedia && matchMedia('(pointer:coarse)').matches); }
+  // plovoucí okno: myš = najetí (s prodlevou), dotyk/klávesnice = klepnutí
+  let infoOkno = null, infoKotva = null, infoCas = null;
+  function zavriInfoZiviny() {
+    clearTimeout(infoCas);
+    if (infoOkno) { infoOkno.remove(); infoOkno = null; }
+    if (infoKotva) { infoKotva.setAttribute('aria-expanded', 'false'); infoKotva = null; }
+  }
+  function pripojInfoZiviny(radek, z, v, st, volby) {
+    radek.setAttribute('aria-expanded', 'false');
+    radek.addEventListener('click', () => { if (infoKotva === radek && infoOkno && infoOkno.dataset.pevne) zavriInfoZiviny(); else { ukazInfoZiviny(radek, z, v, st, volby); infoOkno.dataset.pevne = '1'; } });
+    radek.addEventListener('mouseenter', e => {
+      if (jeDotykove() || (infoOkno && infoOkno.dataset.pevne)) return;
+      clearTimeout(infoCas); infoCas = setTimeout(() => ukazInfoZiviny(radek, z, v, st, volby), 250);
+    });
+    radek.addEventListener('mouseleave', () => {
+      if (jeDotykove()) return;
+      clearTimeout(infoCas);
+      infoCas = setTimeout(() => { if (infoOkno && !infoOkno.dataset.pevne && !infoOkno.matches(':hover')) zavriInfoZiviny(); }, 250);
+    });
+  }
+  function ukazInfoZiviny(radek, z, v, st, volby) {
+    zavriInfoZiviny();
+    const fmtV = x => z.k === 'kcal' ? en(x) : fc(x, z.d) + ' ' + z.j;
+    const okno = h('div', { class: 'ziv-okno st-' + st.stav, role: 'dialog', 'aria-label': z.n.replace(/^z toho /, '') });
+    pridat(okno,
+      h('div', { class: 'ziv-okno-hl' }, h('b', { text: z.n.replace(/^z toho /, '') }),
+        h('span', { class: 'ziv-okno-hod', text: (Number.isFinite(v) ? fmtV(v) : 'bez údajů') + (st.cil ? ' z ' + fmtV(st.cil) : st.limit ? ' (max. ' + fmtV(st.limit) + ')' : '') }),
+        h('button', { class: 'btn ikona plain', type: 'button', 'aria-label': 'Zavřít', onclick: zavriInfoZiviny }, '✕')),
+      J.UCINKY[z.k] ? h('p', { class: 'ziv-okno-text', text: J.UCINKY[z.k] }) : null);
+    // odkud to mám (zapsané potraviny v období)
+    if (volby.od) {
+      const x = J.zdrojeZiviny(S, volby.od, volby.doK, z.k, 6);
+      okno.appendChild(h('div', { class: 'ziv-okno-nadpis', text: volby.od === volby.doK ? 'Odkud to dnes mám' : 'Odkud to mám (za období)' }));
+      if (!x.seznam.length) okno.appendChild(h('p', { class: 'slabe', text: Number.isFinite(v) && v > 0 ? 'Údaj nemá žádná zapsaná potravina.' : 'Zatím z žádné zapsané potraviny.' }));
+      else {
+        const ul = h('ul', { class: 'ziv-okno-seznam' });
+        for (const y of x.seznam) {
+          const podil = x.celkem ? 100 * y.hodnota / x.celkem : 0;
+          const pr = h('span', { class: 'ziv-okno-pruh', 'aria-hidden': 'true' }, h('i', {}));
+          pr.firstChild.style.width = podil + '%';
+          ul.appendChild(h('li', {}, h('span', { class: 'nazev', text: y.nazev + (y.pocet > 1 ? ' (' + y.pocet + '×)' : '') }), pr,
+            h('span', { class: 'kolik', text: fmtV(y.hodnota) + ' · ' + fc(podil) + ' %' })));
+        }
+        okno.appendChild(ul);
+        if (x.pokryti < 0.95) okno.appendChild(h('p', { class: 'slabe', text: 'Údaj chybí u potravin s ' + fc(100 * (1 - x.pokryti)) + ' % energie – skutečné množství je vyšší.' }));
+      }
+    }
+    // kde je hodně (při nedostatku, nebo vždy u vitaminů a minerálů)
+    if (DB.nacteno && !['kcal', 'sul', 'cukry', 'nasycene', 'trans', 'chol', 'alk', 'kof', 'tuk', 'sacharidy', 'voda'].includes(z.k) && (st.stav === 'malo' || st.stav === 'mmalo' || st.stav === 'nic' || z.s === 'vitaminy' || z.s === 'mineraly')) {
+      const zdr = J.nejlepsiZdroje(DB.suroviny.concat(DB.doplnky || []), z.k, 5);
+      if (zdr.length) {
+        okno.appendChild(h('div', { class: 'ziv-okno-nadpis', text: 'Hodně ho mají' }));
+        okno.appendChild(h('ul', { class: 'ziv-okno-seznam zdroje' }, ...zdr.map(y => h('li', {},
+          h('button', { class: 'odkaz-btn', type: 'button', title: 'Otevřít detail potraviny', onclick: () => { zavriInfoZiviny(); detailPotraviny(y.f, { rezim: 'pridat', den: aktivniDen, jidlo: () => vychoziJidlo() }); } }, y.f.nazev),
+          h('span', { class: 'kolik', text: fmtV(y.hodnota) + ' / ' + y.porce })))));
+      }
+    }
+    okno.addEventListener('mouseleave', () => { if (!okno.dataset.pevne && !jeDotykove()) { clearTimeout(infoCas); infoCas = setTimeout(() => { if (!radek.matches(':hover')) zavriInfoZiviny(); }, 250); } });
+    okno.addEventListener('mouseenter', () => clearTimeout(infoCas));
+    document.body.appendChild(okno);
+    infoOkno = okno; infoKotva = radek;
+    radek.setAttribute('aria-expanded', 'true');
+    umistiOkno(okno, radek);
+  }
+  function umistiOkno(okno, kotva) {
+    const r = kotva.getBoundingClientRect(), vw = document.documentElement.clientWidth, vh = innerHeight;
+    const w = Math.min(380, vw - 16);
+    okno.style.width = w + 'px';
+    okno.style.maxHeight = Math.max(200, vh - 24) + 'px';
+    const oh = okno.offsetHeight;
+    let left = vw <= 720 ? (vw - w) / 2 : Math.min(vw - w - 8, Math.max(8, r.right - w));
+    let top = r.bottom + 6;
+    if (top + oh > vh - 8) top = r.top - oh - 6;          // nevejde se pod – nad řádek
+    if (top < 8) top = Math.max(8, vh - oh - 8);           // ani nad – co nejníž
+    okno.style.left = Math.round(left) + 'px';
+    okno.style.top = Math.round(top) + 'px';
+  }
+  document.addEventListener('pointerdown', e => { if (infoOkno && !infoOkno.contains(e.target) && !(infoKotva && infoKotva.contains(e.target))) zavriInfoZiviny(); }, true);
+  document.addEventListener('keydown', e => { if (e.key === 'Escape' && infoOkno) { e.stopImmediatePropagation(); e.preventDefault(); const k = infoKotva; zavriInfoZiviny(); if (k) k.focus(); } }, true);
+  addEventListener('scroll', () => { if (infoOkno && infoKotva) { if (!document.contains(infoKotva)) zavriInfoZiviny(); else umistiOkno(infoOkno, infoKotva); } }, true);
+  addEventListener('resize', () => zavriInfoZiviny());
+
+  // tabulka hodnot s cíli (přehled pro terapeuta – tisk); vyskyt = v kolika potravinách živina je
+  function tabulkaPlneni(hodn, c, pokryti, nadpis, vyskyt) {
     const tab = h('table', { class: 'tab-ziviny' });
     tab.appendChild(h('thead', {}, h('tr', {}, h('th', { text: 'Živina' }), h('th', { text: nadpis || 'Množství' }), h('th', { text: 'Cíl / limit' }), h('th', { text: 'Plnění' }))));
     const tb = h('tbody');
@@ -2509,6 +2672,7 @@
       if (z.s !== 'zaklad' && z.s !== skup) { skup = z.s; tb.appendChild(h('tr', { class: 'skup' }, h('td', { colspan: '4', text: NAZVY_SKUPIN_ZIVIN[z.s] }))); }
       const pok = pokryti && pokryti[z.k];
       const malePokryti = z.s !== 'zaklad' && pok !== undefined && pok < 0.7;
+      const vy = vyskyt && vyskyt.n[z.k];
       let pln = null;
       const ref = cil || limit;
       if (ref && Number.isFinite(v)) {
@@ -2519,7 +2683,7 @@
       }
       const ul = c.limity[z.k + '_ul'];
       tb.appendChild(h('tr', { class: z.pod ? 'pod' : '' },
-        h('td', {}, z.n, malePokryti ? h('div', { class: 'pokryti', text: 'údaj zná ' + fc(100 * pok) + ' % zapsaného jídla' }) : null),
+        h('td', {}, z.n, malePokryti && vy ? h('div', { class: 'pokryti', text: 'údaj má jen ' + (vy.obsahuje + vy.nula) + ' z ' + J.pocet(vyskyt.celkem, 'potraviny', 'potravin', 'potravin') }) : null),
         h('td', { text: z.k === 'kcal' ? en(v) : Number.isFinite(v) ? fc(v, z.d) + ' ' + z.j : '–' }),
         h('td', { text: cil ? (z.k === 'kcal' ? en(cil) : fc(cil, z.d) + ' ' + z.j) : limit ? 'max. ' + fc(limit, z.d) + ' ' + z.j : '', title: ul ? 'Horní tolerovatelný příjem (EFSA): ' + fc(ul) + ' ' + z.j + (z.k === 'vitA' ? ' – platí jen pro retinol (živočišné zdroje, doplňky), ne pro beta-karoten ze zeleniny' : z.k === 'b9' ? '' : '') : null }),
         h('td', {}, pln)));
@@ -2673,6 +2837,7 @@
           h('div', { class: 'slabe', text: J.pocet(r.suroviny.length, 'surovina', 'suroviny', 'surovin') + ' · ' + J.pocet(v.porci, 'porce', 'porce', 'porcí') + ' · ' + kcalText((v.celkem.kcal || 0) / v.porci) + ' na porci' })),
         h('button', { class: 'btn mini', type: 'button', title: 'Přidat do deníku', onclick: () => detailPotraviny(J.receptJakoPotravina(r), { rezim: 'pridat', den: aktivniDen, jidlo: () => vychoziJidlo() }) }, '+'),
         h('button', { class: 'btn mini', type: 'button', onclick: () => editorReceptu(r) }, 'Upravit'),
+        h('button', { class: 'btn mini plain', type: 'button', title: 'Sdílet recept QR kódem nebo odkazem', 'aria-label': 'Sdílet recept ' + r.nazev, onclick: () => sdilejPolozku('r', r.id) }, '📤'),
         h('button', { class: 'btn mini plain', type: 'button', title: 'Duplikovat recept', 'aria-label': 'Duplikovat recept ' + r.nazev, onclick: () => {
           editorReceptu({ ...r, id: null, nazev: r.nazev + ' (kopie)', suroviny: r.suroviny.map(s => ({ ...s })) });
         } }, '⧉')));
@@ -2697,6 +2862,7 @@
           const n = await D.zeptej('Nový název uloženého jídla', s.nazev);
           if (n && n.trim()) { s.nazev = n.trim().slice(0, 80); s.zmeneno = Date.now(); uloz(); vykresliPotraviny(); }
         } }, 'Přejmenovat'),
+        h('button', { class: 'btn mini plain', type: 'button', title: 'Sdílet QR kódem nebo odkazem', 'aria-label': 'Sdílet uložené jídlo ' + s.nazev, onclick: () => sdilejPolozku('s', s.id) }, '📤'),
         h('button', { class: 'btn mini plain danger', type: 'button', 'aria-label': 'Smazat uložené jídlo ' + s.nazev, onclick: () => sVracenim('Smazáno uložené jídlo: ' + s.nazev, () => { delete S.sablony[s.id]; }) }, '✕')));
     }
   }
@@ -3109,7 +3275,7 @@
       // živiny
       const pokryti = {};
       for (const z of J.ZIVINY) { let e = 0, ez = 0; for (const d of zapsane) { const ee = d.s.celkem.kcal || 0; e += ee; ez += ee * (d.s.pokryti[z.k] || 0); } pokryti[z.k] = e ? ez / e : 0; }
-      kont.appendChild(sekce('Průměrný denní příjem živin', tabulkaPlneni(st.prumer, c, pokryti, 'Průměr/den')));
+      kont.appendChild(sekce('Průměrný denní příjem živin', tabulkaPlneni(st.prumer, c, pokryti, 'Průměr/den', J.vyskytZiviny(S, od, doK))));
       const tipy = J.tipyNaZiviny(S, od, doK, c, [], { mikro: S.nastaveni.mikro, limit: 8 }).tipy;
       if (tipy.length) kont.appendChild(sekce('Dlouhodobě nízký příjem (pod 75 % doporučení)', tabulka(['Živina', 'Průměr', 'Doporučeno', 'Plnění'],
         tipy.map(tp => [tp.n, fc(tp.prumer, tp.d) + ' ' + tp.j, fc(tp.cil, tp.d) + ' ' + tp.j, fc(100 * tp.podil) + ' %']))));
@@ -3293,7 +3459,7 @@
         pokryti[z.k] = e ? ez / e : 0;
       }
       const cP = c.kcal ? { ...c, kcal: c.kcal + prumPohyb } : c;
-      kont.appendChild(h('div', { class: 'karta' }, h('h2', { style: { marginBottom: '10px' }, text: 'Průměrný denní příjem živin' }), tabulkaPlneni(st.prumer, cP, pokryti, 'Průměr/den')));
+      kont.appendChild(h('div', { class: 'karta' }, h('h2', { style: { marginBottom: '10px' }, text: 'Průměrný denní příjem živin' }), prehledZivin(st.prumer, cP, { od, doK })));
       // „Odkud to mám?“ – největší zdroje zvolené živiny
       kont.appendChild(kartaZdroju(od, doK));
     }
@@ -3658,11 +3824,15 @@
     const naHotovo = async txt => {
       zavibruj(40);
       v.zavri();
+      // animovaný QR se sdíleným receptem / jídlem, jinak záloha deníku
+      let o = null; try { o = JSON.parse(txt); } catch (_) { /* záloha se ohlásí sama */ }
+      if (o && o.f === J.FORMAT_SDILENI) { prijmiSdileni(o); return; }
       await importuj(new Blob([txt], { type: 'application/json' }));
     };
-    window.DENIK._qrPrijem = { naStav, naHotovo };   // pro testy
+    const naOdkaz = t => { zavibruj(40); v.zavri(); prijmiSdileni(t); };
+    window.DENIK._qrPrijem = { naStav, naHotovo, naOdkaz };   // pro testy
     try {
-      const p = await UI.prijmi({ video, naStav, naHotovo, naChybu: e => { info.textContent = e.message; }, zruseno: () => zavreno });
+      const p = await UI.prijmi({ video, naStav, naHotovo, naOdkaz, naChybu: e => { info.textContent = e.message; }, zruseno: () => zavreno });
       if (zavreno) { p.zastav(); return; }   // dialog se zavřel během dotazu na kameru
       prijem = p;
       if (!info.textContent.startsWith('Přijato')) info.textContent = 'Hledám QR kód…';
@@ -3798,6 +3968,114 @@
       h('p', {}, 'Deník, profil a vlastní potraviny jsou uložené jen v tomto prohlížeči a nikam se neodesílají. Online se posílá jen čárový kód při hledání neznámého výrobku v Open Food Facts a načítají se fotky výrobků – obojí lze vypnout v nastavení.'));
   }
 
+  /* ================= sdílení receptu / uloženého jídla (QR kód, odkaz) ================= */
+  const MAX_ODKAZ = 2300;   // delší odkaz by dal příliš hustý QR – pak animovaný QR přes Přijmout přes QR
+  function b64url(b) { let s = ''; for (let i = 0; i < b.length; i += 0x8000) s += String.fromCharCode.apply(null, b.subarray(i, i + 0x8000)); return btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, ''); }
+  function zB64url(t) { const s = atob(t.replace(/-/g, '+').replace(/_/g, '/')); const b = new Uint8Array(s.length); for (let i = 0; i < s.length; i++) b[i] = s.charCodeAt(i); return b; }
+  async function proud(bajty, trida) { return new Uint8Array(await new Response(new Blob([bajty]).stream().pipeThrough(new trida('deflate-raw'))).arrayBuffer()); }
+  // balík → kód do odkazu: „z“ + deflate + base64url (bez CompressionStream „u“ + base64url)
+  async function kodSdileni(b) {
+    const json = new TextEncoder().encode(JSON.stringify(b));
+    if (typeof CompressionStream === 'function') { try { return 'z' + b64url(await proud(json, CompressionStream)); } catch (_) { /* bez komprese */ } }
+    return 'u' + b64url(json);
+  }
+  async function zKoduSdileni(kod) {
+    kod = String(kod || '').trim();
+    if (kod.length > 20000) throw new Error('Odkaz je příliš dlouhý.');
+    let b = zB64url(kod.slice(1));
+    if (kod[0] === 'z') {
+      if (typeof DecompressionStream !== 'function') throw new Error('Tento prohlížeč neumí rozbalit sdílená data – aktualizuj ho.');
+      b = await proud(b, DecompressionStream);
+    } else if (kod[0] !== 'u') throw new Error('Neznámý formát odkazu.');
+    if (b.length > 400000) throw new Error('Sdílená data jsou příliš velká.');
+    return JSON.parse(new TextDecoder().decode(b));
+  }
+  function odkazSdileni(kod) { return location.origin + location.pathname + '#sdileni=' + kod; }
+  async function sdilejPolozku(druh, id) {
+    let b;
+    try { b = J.balikSdileni(S, druh, id); } catch (e) { D.chyba(e.message); return; }
+    const co = druh === 'r' ? 'recept' : 'uložené jídlo';
+    const kod = await kodSdileni(b);
+    const url = odkazSdileni(kod);
+    const velky = url.length > MAX_ODKAZ;
+    window.DENIK._sdileni = url;   // pro testy
+    const platno = h('canvas', { class: 'qr-platno', role: 'img', 'aria-label': 'QR kód se sdíleným: ' + b.n });
+    const info = h('p', { class: 'slabe', 'aria-live': 'polite', style: { textAlign: 'center' } });
+    const telo = h('div', { class: 'sheet-telo qr-telo' },
+      h('p', { style: { textAlign: 'center', margin: '0 0 8px' } }, h('b', { text: b.n }), ' · ' + J.pocet(b.p.length, 'položka', 'položky', 'položek')),
+      h('div', { class: 'qr-ram' }, platno), info,
+      h('p', { class: 'slabe', text: velky
+        ? 'Je toho hodně, proto se promítá řada QR kódů. Na druhém telefonu otevři Deník jídla → Data → 📷 Přijmout přes QR a namiř kameru na obrazovku.'
+        : 'Naskenuj kód fotoaparátem druhého telefonu (otevře se Deník s nabídkou uložit ' + co + '), nebo v Deníku: Data → 📷 Přijmout přes QR. Případně pošli odkaz.' }));
+    const sdilet = h('button', { class: 'btn primary', type: 'button' }, '📤 Poslat odkaz');
+    const kopirovat = h('button', { class: 'btn', type: 'button' }, '📋 Kopírovat odkaz');
+    const pata = h('div', { class: 'sheet-pata' }, kopirovat, h('div', { class: 'vpravo' }, sdilet));
+    let vysilac = null, beh = 0;
+    const v = otevriVrstvu({ titulek: '📤 Sdílet ' + co, telo, pata, sirka: '560px', priZavreni: () => { beh++; if (vysilac) vysilac.zastav(); vysilac = null; } });
+    const rozmer = () => Math.max(200, Math.min(telo.clientWidth - 8, innerHeight * 0.55));
+    const UI = window.DENIK_PRENOS_UI;
+    try {
+      if (!UI) throw new Error('QR kód se nepodařilo načíst.');
+      if (!velky) {
+        await UI.nactiQr();
+        if (!vrstvy.includes(v)) return;
+        UI.kresliQr(platno, url, rozmer(), 'Byte');
+      } else {
+        const moje = ++beh;
+        const x = await UI.odesli(JSON.stringify(b), { platno, rozmer, blok: 250, fps: 6, naSnimek: () => {} });
+        if (moje !== beh || !vrstvy.includes(v)) { x.zastav(); return; }
+        vysilac = x;
+        info.textContent = 'Animovaný QR kód (' + J.pocet(x.K, 'blok', 'bloky', 'bloků') + ')';
+      }
+    } catch (e) { info.textContent = e.message; }
+    sdilet.addEventListener('click', async () => {
+      if (navigator.share) {
+        try { await navigator.share({ title: 'Deník jídla – ' + b.n, text: (druh === 'r' ? 'Recept' : 'Jídlo') + ' „' + b.n + '“ z Deníku jídla:', url }); return; }
+        catch (e) { if (e && e.name === 'AbortError') return; }
+      }
+      kopirovat.click();
+    });
+    kopirovat.addEventListener('click', async () => {
+      try { await navigator.clipboard.writeText(url); D.info('Odkaz zkopírován.'); }
+      catch (_) { D.zeptej('Zkopíruj odkaz', url); }
+    });
+    if (!navigator.share) sdilet.hidden = true;
+  }
+  // přijetí: z odkazu (hash), z QR s odkazem nebo z animovaného QR (balík jako JSON)
+  async function prijmiSdileni(zdroj) {
+    let b;
+    try {
+      if (typeof zdroj === 'string') {
+        const m = /#sdileni=([A-Za-z0-9_-]+)/.exec(zdroj);
+        b = await zKoduSdileni(m ? m[1] : zdroj);
+      } else b = zdroj;
+      if (!DB.nacteno) await nactiDatabazi();
+    } catch (e) { D.chyba('Sdílenou položku se nepodařilo přečíst: ' + e.message); return; }
+    let x;
+    try { x = J.zBalikuSdileni(b, id => DB.podleId.get(id) || null); }
+    catch (e) { D.chyba(e.message); return; }
+    const co = x.druh === 'r' ? 'Recept' : 'Uložené jídlo';
+    let kcal = 0;
+    for (const p of x.polozky) kcal += (p.f.n.kcal || 0) * p.g / 100;
+    const telo = h('div', { class: 'sheet-telo' },
+      h('p', {}, co + ' ', h('b', { text: x.nazev }), ' – ' + J.pocet(x.polozky.length, 'položka', 'položky', 'položek') + ', celkem ' + en(kcal) +
+        (x.druh === 'r' && x.porci > 1 ? ' (' + en(kcal / x.porci) + ' na porci, ' + J.pocet(x.porci, 'porce', 'porce', 'porcí') + ')' : '') + '.'),
+      h('ul', { class: 'seznam' }, ...x.polozky.slice(0, 40).map(p => h('li', {}, h('span', { class: 'nazev', text: p.f.nazev }), h('span', { class: 'slabe', text: fc(p.g) + ' ' + (p.f.ml ? 'ml' : 'g') })))),
+      x.nahradni.length ? h('p', { class: 'slabe', text: 'Některé potraviny (' + x.nahradni.slice(0, 5).join(', ') + (x.nahradni.length > 5 ? '…' : '') + ') v tvé databázi nejsou – použijí se základní hodnoty od odesílatele.' }) : null,
+      h('p', { class: 'slabe', text: 'Uloží se jako nový ' + (x.druh === 'r' ? 'recept (Potraviny a recepty → Recepty)' : 'uložené jídlo (Přidat → 📋 Uložená jídla)') + '. Nic dalšího se nemění.' }));
+    const ulozit = h('button', { class: 'btn primary', type: 'button' }, '💾 Uložit');
+    const pata = h('div', { class: 'sheet-pata' }, h('div', { class: 'vpravo' }, h('button', { class: 'btn', type: 'button', onclick: () => v.zavri() }, 'Zrušit'), ulozit));
+    const v = otevriVrstvu({ titulek: '📥 Přijato: ' + x.nazev, telo, pata, sirka: '520px' });
+    ulozit.addEventListener('click', () => {
+      try {
+        const nova = J.ulozSdilene(S, x);
+        uloz(); v.zavri(); obnovIndexUzivatele();
+        if (pohled === 'potraviny') vykresliPotraviny();
+        D.info(co + ' „' + nova.nazev + '“ uloženo.');
+      } catch (e) { D.chyba(e.message); }
+    });
+  }
+
   /* ================= přidání na plochu ================= */
   let instalacePrompt = null;
   function zarizeni() {
@@ -3907,7 +4185,10 @@
     $('#denMenu').addEventListener('click', e => nabidkaDne(e.currentTarget));
     $('#pismoTl').addEventListener('click', e => nabidkaPisma(e.currentTarget));
     $('#profilTl').addEventListener('click', e => nabidkaProfilu(e.currentTarget));
-    addEventListener('hashchange', () => { if (location.hash === '#spravce') { prepni('data'); vykresliSpravce(); $('#sekceSpravce').open = true; } });
+    addEventListener('hashchange', () => {
+      if (location.hash === '#spravce') { prepni('data'); vykresliSpravce(); $('#sekceSpravce').open = true; }
+      if (location.hash.startsWith('#sdileni=')) { const kod = location.hash.slice(9); history.replaceState(null, '', location.pathname); prijmiSdileni(kod); }
+    });
     $('#poslatZalohu').addEventListener('click', posliZalohu);
     $('#qrOdeslat').addEventListener('click', qrOdeslat);
     $('#qrPrijmout').addEventListener('click', qrPrijmout);
@@ -4057,6 +4338,11 @@
     try { v = sessionStorage.getItem(KLIC + '_pohled') || 'denik'; } catch (_) { /* nic */ }
     const hash = location.hash.slice(1);
     if (['denik', 'potraviny', 'statistiky', 'profil', 'data'].includes(hash)) v = hash;
+    if (hash.startsWith('sdileni=')) {
+      const kod = hash.slice(8);
+      history.replaceState(null, '', location.pathname);   // odkaz se nezpracuje znovu po obnovení
+      setTimeout(() => prijmiSdileni(kod), 300);
+    }
     if (hash === 'plocha') setTimeout(() => { history.replaceState(null, '', location.pathname); pridatNaPlochu(); }, 300);
     if (hash === 'spravce') { v = 'data'; setTimeout(() => { const s = $('#sekceSpravce'); if (s) s.open = true; }, 0); }
     obnovIndexUzivatele();

@@ -999,6 +999,172 @@
     return vys.sort((a, b) => b.b - a.b).slice(0, max || 30).map(x => x.p);
   }
 
+  /* ---------- sdílení receptu nebo uloženého jídla (QR kód, odkaz) ----------
+     Balík nese jen to nutné: u potravin ze společné databáze id, množství, název a základní živiny
+     (příjemce si vezme aktuální údaje ze své databáze, základ slouží jako záloha), u vlastních
+     potravin všechny živiny. Na řetězec (deflate + base64url) ho převádí aplikace. */
+  const FORMAT_SDILENI = 'ds1';
+  const ZAKL_SDILENI = ['kcal', 'tuk', 'nasycene', 'sacharidy', 'cukry', 'vlaknina', 'bilkoviny', 'sul'];
+  const zDatabaze = id => typeof id === 'string' && /^[svd]/.test(id);
+  function zkratN(n, vse) {
+    const o = {};
+    for (const k of Object.keys(n || {})) {
+      if (!ZIV[k] || !Number.isFinite(n[k]) || (!vse && !ZAKL_SDILENI.includes(k))) continue;
+      const v = n[k];
+      o[k] = zaokrouhli(v, v >= 100 ? 0 : v >= 10 ? 1 : v >= 1 ? 2 : 3);
+    }
+    return o;
+  }
+  function balikSdileni(stav, druh, id) {
+    const zdroj = druh === 'r' ? stav.recepty[id] : druh === 's' ? stav.sablony[id] : null;
+    if (!zdroj || !vlastniKlic(druh === 'r' ? stav.recepty : stav.sablony, id)) throw new Error('Položka ke sdílení neexistuje');
+    const polozky = druh === 'r' ? zdroj.suroviny : zdroj.polozky;
+    const b = { f: FORMAT_SDILENI, t: druh, n: zdroj.nazev, p: [] };
+    if (druh === 'r') {
+      b.porci = zdroj.porci || 1;
+      if (cislo(zdroj.hmotnost) > 0) b.hm = zdroj.hmotnost;
+      if (zdroj.postup) b.po = String(zdroj.postup).slice(0, 3000);
+    }
+    for (const x of polozky) {
+      const f = x.f, db = zDatabaze(f.id);
+      const e = { g: zaokrouhli(x.g, 1), n: f.nazev, v: zkratN(f.n, !db) };
+      if (db) e.i = f.id;
+      if (f.znacka) e.z = f.znacka;
+      if (f.ml) e.ml = 1;
+      if (f.druh) e.d = f.druh;
+      if (!db && f.porce && f.porce.length) e.pc = f.porce.slice(0, 5).map(p => [p.n, p.g]);
+      if (x.porce) e.por = [x.porce.n, x.porce.pocet];
+      if (x.rychly) e.ry = 1;
+      b.p.push(e);
+    }
+    return b;
+  }
+  // balík (nedůvěryhodný – z QR/odkazu) → { druh, nazev, porci, hmotnost, postup, polozky: [{ f, g, porce?, rychly? }], zDatabaze, nahradni }
+  // najdi(id) vrátí potravinu z databáze příjemce (nebo null – pak se použijí údaje z balíku)
+  function zBalikuSdileni(b, najdi) {
+    if (!b || typeof b !== 'object' || b.f !== FORMAT_SDILENI || (b.t !== 'r' && b.t !== 's') || !Array.isArray(b.p)) throw new Error('Tohle není sdílený recept ani uložené jídlo z Deníku jídla.');
+    const nazev = typeof b.n === 'string' && b.n.trim() ? b.n.trim().slice(0, b.t === 'r' ? 120 : 80) : '';
+    if (!nazev) throw new Error('Sdílená položka nemá název.');
+    if (!b.p.length || b.p.length > 150) throw new Error('Sdílená položka nemá platný seznam potravin.');
+    const vys = { druh: b.t, nazev, polozky: [], zDatabaze: 0, nahradni: [] };
+    if (b.t === 'r') {
+      vys.porci = Math.min(100, Math.max(1, Math.round(cislo(b.porci) || 1)));
+      if (cislo(b.hm) > 0 && cislo(b.hm) < 100000) vys.hmotnost = cislo(b.hm);
+      vys.postup = typeof b.po === 'string' ? b.po.slice(0, 5000) : '';
+    }
+    for (const e of b.p) {
+      if (!e || typeof e !== 'object') continue;
+      const g = cislo(e.g);
+      if (!(g > 0) || g > 100000) continue;
+      let f = typeof e.i === 'string' && zDatabaze(e.i) && najdi ? najdi(e.i) : null;
+      if (f) { f = snimek(f); vys.zDatabaze++; }
+      else {
+        const nz = typeof e.n === 'string' && e.n.trim() ? e.n.trim() : 'Potravina';
+        // vlastní (nebo u příjemce chybějící) potravina: nová vlastní položka ze sdílených údajů
+        const dbId = typeof e.i === 'string' && zDatabaze(e.i) ? e.i : null;
+        f = overSnimek({ id: dbId || 'm' + hash(nz + JSON.stringify(e.v || {})), typ: dbId ? dbId[0] : 'm',
+          nazev: nz, n: e.v || {}, ...(typeof e.z === 'string' ? { znacka: e.z.slice(0, 40) } : {}), ...(e.ml ? { ml: true } : {}),
+          ...(typeof e.d === 'string' ? { druh: e.d } : {}),
+          ...(Array.isArray(e.pc) ? { porce: e.pc.filter(p => Array.isArray(p) && typeof p[0] === 'string' && cislo(p[1]) > 0).map(p => ({ n: p[0].slice(0, 40), g: cislo(p[1]) })) } : {}) });
+        if (!f) continue;
+        if (!Number.isFinite(f.n.kcal)) continue;
+        if (typeof e.i === 'string') vys.nahradni.push(nz);
+      }
+      const x = { f, g };
+      if (Array.isArray(e.por) && typeof e.por[0] === 'string' && cislo(e.por[1]) > 0) x.porce = { n: e.por[0].slice(0, 40), pocet: cislo(e.por[1]) };
+      if (e.ry) x.rychly = true;
+      vys.polozky.push(x);
+    }
+    if (!vys.polozky.length) throw new Error('Ve sdílené položce nejsou žádné použitelné potraviny.');
+    return vys;
+  }
+  // uloží přijatou položku do stavu jako nový recept nebo uložené jídlo (potraviny jsou v něm jako snímky)
+  function ulozSdilene(stav, x) {
+    if (x.druh === 'r') return ulozRecept(stav, { nazev: x.nazev, porci: x.porci, hmotnost: x.hmotnost, postup: x.postup, suroviny: x.polozky.map(p => ({ f: p.f, g: p.g })) });
+    return ulozSablonu(stav, x.nazev, x.polozky);
+  }
+
+  /* ---------- k čemu živiny jsou ----------
+     Vitaminy a minerály: znění schválených zdravotních tvrzení EU (nařízení Komise (EU) č. 432/2012),
+     zkrácené na hlavní účinky. Ostatní: doporučení WHO a EFSA. */
+  const UCINKY_ZDROJ = 'Účinky vitaminů a minerálů podle schválených zdravotních tvrzení EU (nařízení Komise č. 432/2012); limity podle WHO a EFSA.';
+  const UCINKY = {
+    kcal: 'Palivo pro všechno, co tělo dělá – dech, srdce, mozek i pohyb. Dlouhodobý přebytek se ukládá jako tuk, nedostatek ho spotřebovává.',
+    tuk: 'Zdroj energie a nezbytných mastných kyselin; bez tuku se nevstřebají vitaminy A, D, E a K.',
+    nasycene: 'Hlavně máslo, sýry, tučné maso, uzeniny a kokosový tuk. Nahrazení nasycených tuků nenasycenými přispívá k udržení normální hladiny cholesterolu v krvi. WHO: pod 10 % energie.',
+    sacharidy: 'Hlavní zdroj energie pro mozek a svaly. Nejlepší jsou celozrnné přílohy, luštěniny, ovoce a zelenina.',
+    cukry: 'Rychlá energie bez dalších živin. Údaj zahrnuje i přirozený cukr z ovoce a mléka; WHO doporučuje volné (přidané) cukry pod 10 % energie kvůli zubům a hmotnosti.',
+    vlaknina: 'Podporuje trávení a pocit sytosti. Vláknina z pšeničných otrub urychluje průchod střevem, beta-glukany z ovsa a ječmene přispívají k udržení normální hladiny cholesterolu.',
+    bilkoviny: 'Stavební materiál těla: přispívají k nárůstu a udržení svalové hmoty a k udržení normálního stavu kostí. Dobře sytí.',
+    sul: 'Sodík tělo potřebuje, většina lidí ho ale jí příliš. Snížení příjmu sodíku přispívá k udržení normálního krevního tlaku. WHO: méně než 5 g soli denně.',
+    mufa: 'Olivový a řepkový olej, ořechy, avokádo. Nahrazení nasycených tuků nenasycenými přispívá k udržení normální hladiny cholesterolu v krvi.',
+    pufa: 'Rostlinné oleje, ořechy, semínka a ryby (omega-3 a omega-6). Kyselina linolová přispívá k udržení normální hladiny cholesterolu v krvi.',
+    trans: 'Hlavně ztužené tuky a průmyslové pečivo. Nemají žádný přínos a zvyšují riziko onemocnění srdce – čím méně, tím lépe (WHO).',
+    chol: 'Tělo si ho vyrábí samo. Hladinu cholesterolu v krvi ovlivňují víc nasycené a trans tuky než cholesterol z jídla.',
+    voda: 'Voda z jídla (polévky, ovoce, zelenina) kryje asi pětinu potřeby. Voda přispívá k udržení normálních tělesných a kognitivních funkcí.',
+    alk: 'Dodává 7 kcal na gram a žádné živiny. Podle WHO neexistuje bezpečná dávka alkoholu.',
+    kof: 'Zvyšuje bdělost a soustředění. Dospělí do 400 mg denně, v těhotenství a při kojení do 200 mg (EFSA).',
+    ca: 'Přispívá k udržení normálního stavu kostí a zubů, k normální činnosti svalů a k normální srážlivosti krve.',
+    fe: 'Přispívá k normální tvorbě červených krvinek a hemoglobinu, k přenosu kyslíku v těle a ke snížení míry únavy a vyčerpání.',
+    mg: 'Přispívá ke snížení míry únavy a vyčerpání, k normální činnosti svalů a nervové soustavy a k udržení normálního stavu kostí.',
+    p: 'Přispívá k udržení normálního stavu kostí a zubů a k normálnímu energetickému metabolismu.',
+    k: 'Přispívá k normální činnosti svalů a nervové soustavy a k udržení normálního krevního tlaku.',
+    zn: 'Přispívá k normální funkci imunitního systému, k udržení normálního stavu vlasů, nehtů a pokožky a k ochraně buněk před oxidativním stresem.',
+    cu: 'Přispívá k normální funkci imunitního systému, k normálnímu přenosu železa v těle a k normální pigmentaci vlasů a pokožky.',
+    mn: 'Přispívá k udržení normálního stavu kostí, k normálnímu energetickému metabolismu a k ochraně buněk před oxidativním stresem.',
+    se: 'Přispívá k normální funkci imunitního systému a štítné žlázy a k udržení normálního stavu vlasů a nehtů.',
+    jod: 'Přispívá k normální tvorbě hormonů štítné žlázy, k normální činnosti nervové soustavy a k normálním kognitivním funkcím.',
+    vitA: 'Přispívá k udržení normálního zraku a normálního stavu pokožky a k normální funkci imunitního systému.',
+    vitC: 'Přispívá k normální funkci imunitního systému, k tvorbě kolagenu (cévy, kosti, kůže, dásně), ke zvýšení vstřebávání železa a ke snížení míry únavy.',
+    vitD: 'Přispívá k normálnímu vstřebávání vápníku, k udržení normálního stavu kostí, zubů a svalů a k normální funkci imunitního systému. Hlavním zdrojem je slunce, z jídla hlavně ryby a vejce.',
+    vitE: 'Přispívá k ochraně buněk před oxidativním stresem.',
+    vitK: 'Přispívá k normální srážlivosti krve a k udržení normálního stavu kostí.',
+    b1: 'Přispívá k normálnímu energetickému metabolismu, k normální činnosti nervové soustavy a k normální funkci srdce.',
+    b2: 'Přispívá k udržení normálního zraku a normálního stavu pokožky a ke snížení míry únavy a vyčerpání.',
+    b3: 'Přispívá k normálnímu energetickému metabolismu, k normální činnosti nervové soustavy a ke snížení míry únavy a vyčerpání.',
+    b5: 'Přispívá k normálnímu energetickému metabolismu a k normální duševní výkonnosti.',
+    b6: 'Přispívá k normální tvorbě červených krvinek, k normální funkci imunitního systému a ke snížení míry únavy a vyčerpání.',
+    b9: 'Přispívá k normální krvetvorbě a ke snížení míry únavy a vyčerpání; v těhotenství k růstu mateřských tkání.',
+    b12: 'Přispívá k normální tvorbě červených krvinek, k normální činnosti nervové soustavy a ke snížení míry únavy. Ve významném množství je jen v živočišných potravinách – vegani potřebují doplněk.',
+  };
+  // v kolika (různých) potravinách z období živina je: obsahuje (> 0), nula (= 0), chybi (údaj neznámý)
+  function vyskytZiviny(stav, od, doK) {
+    const videno = new Map();
+    for (let k = od; k <= doK; k = posunDen(k, 1)) {
+      const d = stav.dny[k];
+      if (!d) continue;
+      for (const z of d.z) { const f = stav.potraviny[z.p]; if (f) videno.set(f.id + '|' + f.nazev, f); }
+    }
+    const vys = { celkem: videno.size, n: {} };
+    for (const z of ZIVINY) {
+      const x = { obsahuje: 0, nula: 0, chybi: 0 };
+      for (const f of videno.values()) {
+        const v = f.n[z.k];
+        if (!Number.isFinite(v)) x.chybi++; else if (v > 0) x.obsahuje++; else x.nula++;
+      }
+      vys.n[z.k] = x;
+    }
+    return vys;
+  }
+  // nejbohatší obecné potraviny na živinu – podle množství v obvyklé porci (koření, doplňky a alkohol stranou)
+  function nejlepsiZdroje(potraviny, kl, n) {
+    const vys = [];
+    for (const f of potraviny || []) {
+      if (!f || (f.typ !== 's' && !(f.typ === 'd' && !f.odhad)) || ['koreni', 'doplnky', 'alkohol'].includes(f.skupina)) continue;
+      const v = f.n && f.n[kl];
+      if (!(v > 0)) continue;
+      const p = (f.porce || []).find(x => x.g >= 10 && x.g <= 350 && !/^hrnek/.test(x.n) && (f.n.kcal || 0) * x.g / 100 <= 400);
+      // bez porce: 100 g, u energeticky hutných potravin (semínka, kakao) nejvýš 200 kcal
+      const g = p ? p.g : Math.round(Math.min(100, f.n.kcal > 0 ? 20000 / f.n.kcal : 100));
+      vys.push({ f, porce: p ? p.n : g + ' ' + (f.ml ? 'ml' : 'g'), g, hodnota: v * g / 100 });
+    }
+    vys.sort((a, b) => b.hodnota - a.hodnota);
+    // jedna položka na „rodinu“ (různé varianty téže potraviny) – podle prvního slova názvu
+    const rod = new Set(), out = [];
+    for (const x of vys) { const r = norm(x.f.nazev).split(/[\s,(]/)[0]; if (rod.has(r)) continue; rod.add(r); out.push(x); if (out.length >= (n || 6)) break; }
+    return out;
+  }
+
   /* ---------- stav deníku ---------- */
   function novyStav() {
     return {
@@ -2207,7 +2373,7 @@
 
   const API = {
     FORMAT_DOPLNKY, sestavDoplnky, idDoplnku, doplnekZVlastni, overDoplnek, doplnekZDat, exportDoplnku, slucDoplnky,
-    VERZE_KODU: '2026-10-16p', FORMAT, VERZE_FORMATU, ZIVINY, ZIV, ZAKLAD, MIKRO, SKUPINY, JIDLA_VYCHOZI, AKTIVITA, EFSA_DOSPELI,
+    VERZE_KODU: '2026-10-17b', FORMAT, VERZE_FORMATU, ZIVINY, ZIV, ZAKLAD, MIKRO, SKUPINY, JIDLA_VYCHOZI, AKTIVITA, EFSA_DOSPELI,
     norm, cislo, zaokrouhli, formatCislo, noveId, hash, tvar, pocet,
     datumKlic, zKlice, posunDen, rozdilDni, popisDne,
     eanKontrola, eanVarianty, eanZeme,
@@ -2220,6 +2386,8 @@
     prevodVahy, prepocetVahy, nastavPrevody, PREVODY_VAHY, namerenaVarianta, PAROVANI_ODHADU, rozeberEtiketu, pridejDoPlanu, smazZPlanu, rozvinPolozkuPlanu, souhrnPlanuDne, zapisPlanDoDeniku, nakupniSeznam, DRUHY_NAPOJU, druhNapoje, doplnNapoj, vychoziPorceNapoje, doPitnehoRezimu, standardniNapoje, zivinyZaznamu, souhrnDne, statistika, odhadVydeje, serie, nedavne, caste, uklid,
     overPotravinu, ulozVlastni, spocitejRecept, ulozRecept, receptJakoPotravina,
     exportJson, importJson, normalizujStav, overPohyb, slucStav, exportCsv, exportSouhrnyCsv, zdrojeZiviny,
+    UCINKY, UCINKY_ZDROJ, vyskytZiviny, nejlepsiZdroje,
+    FORMAT_SDILENI, balikSdileni, zBalikuSdileni, ulozSdilene,
     INTENZITA, intenzitaMet, pripravPohyby, rychlostPohybu, popisRychlosti, tempoMinKm, pohybPodleRychlosti, hmotnostKDni, energiePohybu, vypoctiPohyb, nedavnePohyby, tydenPohybu, dvojiPohyb, hledejPohyb,
     ulozSablonu, pouzijSablonu, souhrnSablony, vzdalenost, kontrolaAlergenu, slucAlergeny, ALERGENY, porovnej,
   };

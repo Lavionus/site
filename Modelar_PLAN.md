@@ -932,3 +932,14 @@ server i file://, DPI 1/2, šířky 420–1920), jen hlásili; opravy jsem děla
   index bodu v síti i daleko v −X; úchyty změny velikosti u krabičky/víka mění parametry, úchyty ořezané plátnem,
   kontrola tisku „jen výběr“ filtruje i problémy, zaměření vložené skládačky, rada při seskupení tělesa ležícího
   celého v díře, stavový řádek na mobilu na jeden řádek, kopie s vlastním názvem „(2)“.
+
+## Odsazení obrysu ve skice – offset (17. 10. 2026)
+- Jádro `M.odsadTvarSkici(t, d, {spoj, vysledek, seg})` v `jadro/skica.js` (ClipperLib, oblast tvaru NonZero jako u tělesa):
+  d > 0 ven, d < 0 dovnitř; rohy zaoblené / ostré (miter ≤ 4·d) / zkosené; výsledek odsazený obrys nebo
+  **stěna z obrysu** (pás tloušťky |d| vně nebo uvnitř – vnější rozměr se při d < 0 nezmění). Vrací tvar `polygony`,
+  otvor zůstane otvorem; tvar, který by zmizel, = česká chyba.
+- Skicář: u vybraného tvaru sekce „⇲ Odsadit obrys (offset)“ (klávesa O → fokus do vzdálenosti), čárkovaný náhled
+  (v paměti podle klíče, kreslí se při každém pohybu), výsledek Nový obrys (kopie) / Nahradit tvar / Stěna z obrysu,
+  chyba v panelu a vypnuté tlačítko, zápis do historie skicáře (Ctrl+Z).
+- Celé těleso dál přes Úpravy → Odsadit stěny (OCCT); v paletě se najde i slovem „offset“. Nápověda Postupy doplněná.
+- Testy: sekce v `_test/modelar_skica.js` (53), prohlížeč `_test/modelar_ui_offset.py` (30, server + file://).

@@ -64,7 +64,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       { id: 'zaoblitHrany', nazev: 'Zaoblit hrany (přesně)', klavesy: [], povoleno: () => M.vybraneVolne().length === 1, akce: () => M.otevriUpravuHran('zaobleni') },
       { id: 'srazitHrany', nazev: 'Srazit hrany (přesně)', klavesy: [], povoleno: () => M.vybraneVolne().length === 1, akce: () => M.otevriUpravuHran('srazeni') },
       // jen plná tělesa (trubka, torus, rámeček… už duté nebo tenké jsou)
-      { id: 'odsadit', nazev: 'Odsadit stěny – vůle (zvětšit / zmenšit těleso o mm, přesně)', klavesy: [], povoleno: () => M.vybraneVolne().length === 1, akce: () => M.otevriOdsazeni() },
+      { id: 'odsadit', nazev: 'Odsadit stěny (offset) – vůle (zvětšit / zmenšit těleso o mm, přesně)', klavesy: [], povoleno: () => M.vybraneVolne().length === 1, akce: () => M.otevriOdsazeni() },
       { id: 'skorepina', nazev: 'Skořepina – vyhloubit (přesně, plná tělesa)', klavesy: [], povoleno: () => M.vybraneVolne().length === 1 && M.lzeSkorepinu(M.vybraneVolne()[0]),
         akce: () => M.otevriUpravuHran('skorepina') },
       { id: 'vule', nazev: 'Vůle mezi dvěma tělesy (nejmenší vzdálenost)', klavesy: [], povoleno: () => M.vybraneUzly().length === 2, akce: () => M.zmerVuli() },

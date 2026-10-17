@@ -83,7 +83,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
           if (u.occt) {
             const o = u.occt, n = o.operace === 'skorepina' ? (o.plochy.length ? `otevřené plochy: ${o.plochy.length}` : 'uzavřená')
               : o.operace === 'odsazeni' ? (o.hodnota > 0 ? 'zvětšené' : 'zmenšené') : `hrany: ${o.hrany.length}`;
-            const co = { zaobleni: 'Zaoblení r', srazeni: 'Sražení', skorepina: 'Skořepina, stěna', odsazeni: 'Odsazení stěn' }[o.operace];
+            const co = { zaobleni: 'Zaoblení r', srazeni: 'Sražení', skorepina: 'Skořepina, stěna', odsazeni: 'Odsazení stěn (offset)' }[o.operace];
             h += `<div class="skupina"><div class="nadpis">Přesná úprava <span class="pozn">(OpenCascade)</span></div>
               <div class="pozn" id="inspOcct">${co} ${o.operace === 'odsazeni' && o.hodnota > 0 ? '+' : ''}${M.mm(o.hodnota, 2)} mm · ${n}</div>
               <div class="role"><button type="button" class="tl" id="inspOcctUpravit">✎ Upravit…</button>

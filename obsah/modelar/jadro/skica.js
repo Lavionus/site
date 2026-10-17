@@ -170,6 +170,43 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     return [];
   };
 
+  // ------------------------------------------------------------ odsazení obrysu (offset)
+  /** Odsazení tvaru skici o d mm (kladné ven, záporné dovnitř) přes ClipperLib.
+      volby: spoj 'kulaty' | 'ostry' | 'zkoseny', vysledek 'obrys' (odsazený obrys)
+      nebo 'stena' (pás mezi původním a odsazeným obrysem – rámeček, stěna tloušťky |d|),
+      seg = segmenty oblouků (kulaté rohy jemně jako ostatní oblouky skici).
+      Vrací tvar 'polygony' (souřadnice skici, otvor jako původní) nebo vyhodí chybu. */
+  M.odsadTvarSkici = function (t, d, volby = {}) {
+    const CL = globalThis.ClipperLib;
+    if (!CL) throw new Error('odsazení potřebuje knihovnu Clipper');
+    if (!isFinite(d) || Math.abs(d) < 0.001) throw new Error('odsazení musí být nenulové číslo');
+    if (Math.abs(d) > 1e4) throw new Error('odsazení je příliš velké');
+    const S = 1e4, seg = M.omez(Math.round(volby.seg || 64), 8, 256), vysledek = volby.vysledek === 'stena' ? 'stena' : 'obrys';
+    const naCesty = kontury => kontury.map(k => k.map(p => ({ X: Math.round(p[0] * S), Y: Math.round(p[1] * S) })));
+    // oblast tvaru jako u tělesa (nenulové vinutí): písmena s dírami, SVG s vnořenými obrysy
+    const oblast = CL.Clipper.SimplifyPolygons(naCesty(M.konturyTvaru(t, seg)), CL.PolyFillType.pftNonZero);
+    if (!oblast.length) throw new Error('tvar nemá žádnou plochu');
+    const spoj = volby.spoj === 'ostry' ? CL.JoinType.jtMiter : volby.spoj === 'zkoseny' ? CL.JoinType.jtSquare : CL.JoinType.jtRound;
+    const co = new CL.ClipperOffset(4, Math.max(0.5, Math.abs(d) * S * (1 - Math.cos(PI / seg))));   // ostré rohy nejvýš 4× d
+    co.AddPaths(oblast, spoj, CL.EndType.etClosedPolygon);
+    const odsazena = new CL.Paths();
+    co.Execute(odsazena, d * S);
+    let cesty = odsazena;
+    if (vysledek === 'stena') {
+      const c = new CL.Clipper();
+      // d > 0: pás vně původního obrysu, d < 0: pás uvnitř (stěna stejně silná, tvar se nezvětší)
+      c.AddPaths(d > 0 ? odsazena : oblast, CL.PolyType.ptSubject, true);
+      c.AddPaths(d > 0 ? oblast : odsazena, CL.PolyType.ptClip, true);
+      cesty = new CL.Paths();
+      c.Execute(CL.ClipType.ctDifference, cesty, CL.PolyFillType.pftNonZero, CL.PolyFillType.pftNonZero);
+    }
+    // drobné zbytky (pod 0,0001 mm²) pryč, body zaokrouhlené na 0,1 µm
+    const kontury = cesty.filter(k => k.length >= 3 && Math.abs(CL.Clipper.Area(k)) > 1e-4 * S * S)
+      .map(k => k.map(p => [Math.round(p.X / S * 1e4) / 1e4, Math.round(p.Y / S * 1e4) / 1e4]));
+    if (!kontury.length) throw new Error(d < 0 ? `tvar je na zmenšení o ${M.mm(-d, 3)} mm příliš tenký – zmizel by` : 'odsazení nedalo žádný obrys');
+    return normalizujTvar({ typ: 'polygony', x: 0, y: 0, meritko: 1, kontury, otvor: !!t.otvor });
+  };
+
   /** Konvexní obal 2D bodů (monotónní řetězec), vrací vrcholy. */
   function konvexniObal(body) {
     const b = body.slice().sort((p, q) => p[0] - q[0] || p[1] - q[1]);

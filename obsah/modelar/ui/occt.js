@@ -653,7 +653,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       if (v.length !== 1) { Dialog.chyba('Vyber jedno těleso, jehož stěny chceš odsadit.'); return; }
       const u = v[0];
       const ted = u.occt && u.occt.operace === 'odsazeni' ? u.occt.hodnota : 0.2;
-      const text = await Dialog.zeptej('Odsadit všechny stěny o (mm): kladné číslo těleso zvětší (třeba čep o vůli), záporné zmenší (díra o vůli, tenčí stěny). 0 = odsazení odebrat.', M.mm(ted, 3));
+      const text = await Dialog.zeptej('Odsadit všechny stěny – offset tělesa (mm): kladné číslo těleso zvětší (třeba čep o vůli), záporné zmenší (díra o vůli, tenčí stěny). 0 = odsazení odebrat.', M.mm(ted, 3));
       if (text === null) return;
       const h = M.prectiCislo(text);
       if (!isFinite(h)) { Dialog.chyba(`„${text}“ není číslo.`); return; }

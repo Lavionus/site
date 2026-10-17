@@ -7,7 +7,8 @@
    Kolečko přibližuje ke kurzoru, pravé/prostřední tlačítko posouvá.
    Panel vpravo: těleso (vytažení/rotace a jejich parametry), nový tvar
    (otvor, počet stran, písmo), vybraný tvar a bod (přesná čísla, oblouk
-   úseku = vyboulení, zaoblení rohů), podkladový obrázek. Vlastní
+   úseku = vyboulení, zaoblení rohů, odsazení obrysu – offset ven/dovnitř,
+   kopie, náhrada nebo stěna z obrysu, klávesa O), podkladový obrázek. Vlastní
    zpět/znovu (Ctrl+Z/Y). Hotovo vytvoří nebo upraví uzel 'skica'. */
 var MDL = globalThis.MDL = globalThis.MDL || {};
 (function (M) {
@@ -65,6 +66,7 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     const st = {
       uzelId: null, param: null, podklad: null, vyber: -1, bod: -1, nastroj: 'vyber', otvor: false,
       nStran: 6, zaobleni: 0, font: 'libsans', velikostPisma: 10, prichytit: true,
+      odsVzd: 2, odsSpoj: 'kulaty', odsVysledek: 'obrys', odsOtevreno: false, odsPamet: null,
       pohled: { s: 4, ox: 0, oy: 0 }, tah: null, cesta: null, kurzor: null, prichyceno: null,
       historie: [], index: -1,
     };
@@ -179,7 +181,37 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
         const [X, Y] = naObr(st.cesta[0].x, st.cesta[0].y);
         el('circle', { cx: X, cy: Y, r: 6, class: 'prvni-bod' }, svg);
       }
+      // náhled odsazení vybraného tvaru (při otevřené sekci Odsadit)
+      const ods = st.odsOtevreno && !st.tah ? nahledOdsazeni() : null;
+      if (ods) el('path', { d: dKontur(ods.kontury), class: 'odsazeni', 'fill-rule': 'nonzero' }, svg);
       if (st.prichyceno) { const [X, Y] = naObr(...st.prichyceno); el('circle', { cx: X, cy: Y, r: 7, class: 'prichyceni' }, svg); }
+    }
+
+    // ------------------------------------------------------------ odsazení (offset)
+    const volbyOdsazeni = () => ({ spoj: st.odsSpoj, vysledek: st.odsVysledek === 'stena' ? 'stena' : 'obrys', seg: st.param.segmentu });
+    /** Odsazený vybraný tvar pro náhled (v paměti – kreslí se při každém pohybu myši); null = nejde. */
+    function nahledOdsazeni() {
+      const t = st.param.tvary[st.vyber];
+      if (!t) return null;
+      const klic = JSON.stringify([t, st.odsVzd, volbyOdsazeni()]);
+      if (!st.odsPamet || st.odsPamet.klic !== klic) {
+        let tvar = null, chyba = null;
+        try { tvar = M.odsadTvarSkici(t, st.odsVzd, volbyOdsazeni()); } catch (e) { chyba = e.message; }
+        st.odsPamet = { klic, tvar, chyba };
+      }
+      return st.odsPamet.tvar;
+    }
+    function odsadVybrany() {
+      const t = st.param.tvary[st.vyber];
+      if (!t) { stav.textContent = 'Nejdřív vyber tvar, který chceš odsadit.'; return; }
+      let n;
+      try { n = M.odsadTvarSkici(t, st.odsVzd, volbyOdsazeni()); } catch (e) { Dialog.chyba('Odsazení nejde: ' + e.message + '.'); return; }
+      const pred = st.vyber;
+      if (st.odsVysledek === 'obrys') { st.param.tvary.push(n); st.vyber = st.param.tvary.length - 1; }
+      else st.param.tvary[st.vyber] = n;
+      st.bod = -1;
+      zmena(pred);
+      stav.textContent = { obrys: 'Odsazený obrys přidán, původní tvar zůstal.', nahradit: 'Tvar nahrazen odsazeným obrysem.', stena: `Z obrysu je stěna ${M.mm(Math.abs(st.odsVzd), 2)} mm.` }[st.odsVysledek] + ' Ctrl+Z vrátí.';
     }
 
     // ------------------------------------------------------------ panel
@@ -215,7 +247,18 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
         if (t.typ === 'text') h += `<label class="ip"><span class="osa">Text</span><input type="text" value="${esc(t.text)}" data-pole="t.text" class="text-pole"></label>` + pole('X', t.x, 't.x') + pole('Y', t.y, 't.y') + pole('Velikost', t.velikost, 't.velikost');
         if (t.typ === 'polygony') h += pole('X', t.x, 't.x') + pole('Y', t.y, 't.y') + pole('Měřítko', t.meritko, 't.meritko', '×', 0.1);
         h += `<label class="zaskrt"><input type="checkbox" data-pole="t.otvor" ${t.otvor ? 'checked' : ''}> Otvor</label>
-          <div class="akce"><button type="button" class="tl" data-akce="duplikovat">⧉ Duplikovat</button><button type="button" class="tl nebezpeci" data-akce="smazat">🗑 Smazat</button></div></section>`;
+          <div class="akce"><button type="button" class="tl" data-akce="duplikovat">⧉ Duplikovat</button><button type="button" class="tl nebezpeci" data-akce="smazat">🗑 Smazat</button></div>`;
+        const opt = (hodnota, volby) => volby.map(([v, n]) => `<option value="${v}"${v === hodnota ? ' selected' : ''}>${n}</option>`).join('');
+        nahledOdsazeni();
+        const chybaOds = st.odsPamet && st.odsPamet.chyba;
+        h += `<details class="odsazeni" id="skicarOdsazeni"${st.odsOtevreno ? ' open' : ''}><summary>⇲ Odsadit obrys (offset) <span class="pozn">O</span></summary>
+          ${pole('Vzdálenost', st.odsVzd, 'st.odsVzd', 'mm', 0.5)}
+          <div class="pozn">kladná ven (větší), záporná dovnitř (menší)</div>
+          <label class="ip"><span class="osa">Rohy</span><select data-pole="st.odsSpoj">${opt(st.odsSpoj, [['kulaty', 'Zaoblené'], ['ostry', 'Ostré'], ['zkoseny', 'Zkosené']])}</select></label>
+          <label class="ip"><span class="osa">Výsledek</span><select data-pole="st.odsVysledek">${opt(st.odsVysledek, [['obrys', 'Nový obrys (kopie)'], ['nahradit', 'Nahradit tvar'], ['stena', 'Stěna z obrysu']])}</select></label>
+          <div class="pozn">${st.odsVysledek === 'stena' ? 'Pás tloušťky |vzdálenost| podél obrysu – rámeček, krabička z půdorysu.' : st.odsVysledek === 'nahradit' ? 'Tvar se změní na obrysy (rozměry už nepůjdou zadat čísly).' : 'Původní tvar zůstane, přibude odsazený.'}</div>
+          ${chybaOds ? `<div class="pozn" role="alert">⚠ ${esc(chybaOds)}</div>` : ''}
+          <div class="akce"><button type="button" class="tl" data-akce="odsadit"${chybaOds ? ' disabled' : ''}>Odsadit</button></div></details></section>`;
       }
       h += `<section><h3>Podklad</h3>${st.podklad
         ? pole('Šířka obrázku', st.podklad.sirka, 'pod.sirka') + pole('Střed X', st.podklad.x, 'pod.x') + pole('Střed Y', st.podklad.y, 'pod.y') + pole('Průhlednost', st.podklad.pruhlednost, 'pod.pruhlednost', '', 0.1)
@@ -223,6 +266,8 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
         : '<button type="button" class="tl" data-akce="podklad">🖼 Vložit obrázek…</button><div class="pozn">Obkreslování výkresu nebo fotky (měřítko nastavíš šířkou).</div>'}</section>`;
       panel.innerHTML = h;
       panel.querySelector('[data-pole="param.rezim"]').value = p.rezim;
+      const det = $('skicarOdsazeni');
+      if (det) det.addEventListener('toggle', () => { if (st.odsOtevreno !== det.open) { st.odsOtevreno = det.open; vykresli(); } });
       naplnFonty();
     }
 
@@ -239,7 +284,12 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
     async function zapisPole(klic, hodnota) {
       const [kde, k] = klic.split('.');
       const t = st.param.tvary[st.vyber];
-      if (kde === 'st') { st[k] = hodnota; if (k === 'nStran') st.nStran = M.omez(Math.round(hodnota) || 6, 3, 64); vykresliPanel(); vykresli(); return; }
+      if (kde === 'st') {
+        st[k] = hodnota;
+        if (k === 'nStran') st.nStran = M.omez(Math.round(hodnota) || 6, 3, 64);
+        if (k === 'odsVzd') st.odsVzd = M.omez(hodnota, -1000, 1000);
+        vykresliPanel(); vykresli(); return;
+      }
       if (kde === 'param') st.param = M.normalizujParamSkici(Object.assign({}, st.param, { [k]: hodnota }));
       else if (kde === 'pod' && st.podklad) st.podklad[k] = k === 'pruhlednost' ? M.omez(hodnota, 0, 1) : hodnota;
       else if (kde === 't' && t) {
@@ -280,7 +330,8 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
         const k = krok() * 5;
         if (t.typ === 'cesta') t.body.forEach(p => { p.x += k; p.y -= k; }); else { t.x += k; t.y -= k; }
         st.param.tvary.push(t); st.vyber = st.param.tvary.length - 1; st.bod = -1; zmena();
-      } else if (a === 'podklad') $('skicarObrazek').click();
+      } else if (a === 'odsadit') odsadVybrany();
+      else if (a === 'podklad') $('skicarObrazek').click();
       else if (a === 'podkladPryc') { st.podklad = null; zmena(); }
     });
     $('skicarObrazek').addEventListener('change', e => {
@@ -478,6 +529,12 @@ var MDL = globalThis.MDL = globalThis.MDL || {};
       if (e.key === 'Delete' || (e.key === 'Backspace' && !st.cesta)) { e.preventDefault(); smazVybrany(); return; }
       if (e.key === 'Backspace' && st.cesta) { e.preventDefault(); st.cesta.pop(); if (!st.cesta.length) st.cesta = null; vykresli(); return; }
       if (e.key === 'Enter' && st.cesta) { e.preventDefault(); dokonciCestu(); return; }
+      if (k === 'o' && st.param.tvary[st.vyber]) {
+        // O: otevřít odsazení vybraného tvaru a skočit do vzdálenosti
+        e.preventDefault(); st.odsOtevreno = true; vykresliPanel(); vykresli();
+        const i = panel.querySelector('[data-pole="st.odsVzd"]'); if (i) { i.focus(); i.select(); }
+        return;
+      }
       const n = NASTROJE.find(x => x[3] === k);
       if (n) { e.preventDefault(); nastavNastroj(n[0]); }
     });
